@@ -63,7 +63,6 @@ void AdaptiveCI::get_excited_determinants_sr(SharedMatrix evecs, SharedVector ev
     local_timer build;
     size_t max_P = P_space.size();
     const det_hashvec& P_dets = P_space.wfn_hash();
-    int nroot = 1;
 
     det_hash<double> V_hash;
 // Loop over reference determinants
@@ -737,7 +736,7 @@ double AdaptiveCI::get_excited_determinants_batch_vecsort(
     const size_t n_dets = P_space.size();
 
     int nmo = as_ints_->nmo();
-    double max_mem = options_->get_double("ACI_MAX_MEM");
+    double max_mem = options_->get_int("ACI_MAX_MEM");
     double aci_scale = options_->get_double("ACI_SCALE_SIGMA");
 
     // Guess the total memory needed to store all singles and doubles out of all dets
@@ -760,7 +759,7 @@ double AdaptiveCI::get_excited_determinants_batch_vecsort(
     int nbin = nruns;
     outfile->Printf("\n  Setting nbin to %d based on estimated memory (%6.3f MB)", nbin, guess_mem);
 
-    if (options_->has_changed("ACI_NBATCH")) {
+    if (options_->get_int("ACI_NBATCH") > 0) {
         nbin = options_->get_int("ACI_NBATCH");
         outfile->Printf("\n  Overwriting nbin to %d based on user input", nbin);
     }
@@ -778,7 +777,6 @@ double AdaptiveCI::get_excited_determinants_batch_vecsort(
         local_timer bint;
 #pragma omp parallel
         {
-            int ntd = omp_get_num_threads();
             int tid = omp_get_thread_num();
             auto& A_b = A_b_t.first[tid];
             //                        size_t idx = 0;
@@ -872,7 +870,7 @@ AdaptiveCI::get_excited_determinants_batch(SharedMatrix evecs, SharedVector eval
     const size_t n_dets = P_space.size();
 
     int nmo = as_ints_->nmo();
-    double max_mem = options_->get_double("ACI_MAX_MEM");
+    double max_mem = options_->get_int("ACI_MAX_MEM");
     double aci_scale = options_->get_double("ACI_SCALE_SIGMA");
 
     size_t nocc2 = nalpha_ * nalpha_;
@@ -887,7 +885,7 @@ AdaptiveCI::get_excited_determinants_batch(SharedMatrix evecs, SharedVector eval
     int nbin = nruns;
     outfile->Printf("\n  Setting nbin to %d based on estimated memory (%6.3f MB)", nbin, guess_mem);
 
-    if (options_->has_changed("ACI_NBATCH")) {
+    if (options_->get_int("ACI_NBATCH") > 0) {
         nbin = options_->get_int("ACI_NBATCH");
         outfile->Printf("\n  Overwriting nbin to %d based on user input", nbin);
     }

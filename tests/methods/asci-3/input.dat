@@ -37,7 +37,7 @@ set forte {
   dl_maxiter 500
   asci_cdet 50
   asci_tdet 334
-  asci_max_cycle 8   
+  sci_max_cycle 8   
   sci_project_out_spin_contaminants true
   spin_project_full false
   e_convergence 12

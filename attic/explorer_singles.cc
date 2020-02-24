@@ -50,7 +50,7 @@ namespace forte {
  * Find all the Slater determinants with an energy lower than determinant_threshold_
  * by performing single excitations at a time
  */
-void LambdaCI::explore_singles(psi::Options& options) {
+void LambdaCI::explore_singles(std::shared_ptr<ForteOptions> options) {
     outfile->Printf("\n\n  Exploring the space of Slater determinants using the singles method\n");
     ForteTimer t;
 

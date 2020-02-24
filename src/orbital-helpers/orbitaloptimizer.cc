@@ -28,7 +28,7 @@
 
 #include "ambit/blocked_tensor.h"
 
-#include "psi4/liboptions/liboptions.h"
+
 #include "psi4/lib3index/cholesky.h"
 #include "psi4/libfock/jk.h"
 #include "psi4/libmints/matrix.h"

@@ -63,12 +63,11 @@ std::string to_string(const std::vector<std::string>& vec_str, const std::string
 
 std::string get_ms_string(double twice_ms) {
     std::string ms_str;
-    double ms = twice_ms / 2.0;
-    if ((static_cast<int>(twice_ms) % 2) == 0) {
-        ms_str = std::to_string(static_cast<int>(ms));
+    long twice_ms_long = std::lround(twice_ms);
+    if ((twice_ms_long % 2) == 0) {
+        ms_str = std::to_string(twice_ms_long / 2);
     } else {
-        int n = static_cast<int>(ms / 0.5);
-        ms_str.append(std::to_string(n));
+        ms_str.append(std::to_string(twice_ms_long));
         ms_str += "/";
         ms_str += "2";
     }

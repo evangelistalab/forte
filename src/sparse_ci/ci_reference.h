@@ -29,7 +29,7 @@
 #ifndef _ci_reference_h_
 #define _ci_reference_h_
 
-#include "psi4/liboptions/liboptions.h"
+
 
 #include "integrals/active_space_integrals.h"
 #include "sparse_ci/determinant.h"

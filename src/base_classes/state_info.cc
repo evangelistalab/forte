@@ -30,6 +30,8 @@
 #include "psi4/libmints/wavefunction.h"
 #include "psi4/libmints/molecule.h"
 
+#include "helpers/helpers.h"
+
 #include "state_info.h"
 
 namespace forte {
@@ -124,7 +126,8 @@ StateInfo make_state_info_from_psi_wfn(std::shared_ptr<psi::Wavefunction> wfn) {
 std::string StateInfo::str() {
     std::string irrep_label_out =
         irrep_label_.empty() ? "Irrep" + std::to_string(irrep_) : irrep_label();
-    return multiplicity_label() + " " + irrep_label_out;
+    return multiplicity_label() + " " + irrep_label_out + " (Ms = " + get_ms_string(twice_ms()) +
+           ")";
 }
 
 } // namespace forte

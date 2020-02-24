@@ -32,7 +32,7 @@
 
 namespace forte {
 std::shared_ptr<ForteIntegrals> make_forte_integrals(std::shared_ptr<psi::Wavefunction> ref_wfn,
-                                                     psi::Options& options,
+                                                     std::shared_ptr<forte::ForteOptions> options,
                                                      std::shared_ptr<MOSpaceInfo> mo_space_info);
 
 }

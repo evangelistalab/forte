@@ -118,10 +118,7 @@ void ASCI::startup() {
     frzcpi_ = mo_space_info_->dimension("INACTIVE_DOCC");
     nfrzc_ = mo_space_info_->size("INACTIVE_DOCC");
 
-    twice_ms_ = multiplicity_ - 1;
-    if (options_->has_changed("MS")) {
-        twice_ms_ = std::round(2.0 * options_->get_double("MS"));
-    }
+    twice_ms_ = state_.twice_ms();
 
     // Build the reference determinant and compute its energy
     CI_Reference ref(scf_info_, options_, mo_space_info_, as_ints_, multiplicity_, twice_ms_,
@@ -131,14 +128,9 @@ void ASCI::startup() {
     // Read options
     nroot_ = options_->get_int("NROOT");
 
-    max_cycle_ = 20;
-    if (options_->has_changed("ASCI_MAX_CYCLE")) {
-        max_cycle_ = options_->get_int("ASCI_MAX_CYCLE");
-    }
-    pre_iter_ = 0;
-    if (options_->has_changed("ACI_PREITERATIONS")) {
-        pre_iter_ = options_->get_int("ACI_PREITERATIONS");
-    }
+    max_cycle_ = options_->get_int("SCI_MAX_CYCLE");
+
+    pre_iter_ = options_->get_int("ACI_PREITERATIONS");
 
     max_memory_ = options_->get_int("SIGMA_VECTOR_MAX_MEMORY");
 

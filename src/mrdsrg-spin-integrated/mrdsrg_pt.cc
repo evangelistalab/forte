@@ -162,9 +162,10 @@ std::vector<std::pair<std::string, double>> MRDSRG::compute_energy_pt2_Fdiag() {
     energy.push_back({"DSRG-MRPT2 correlation energy", Ecorr});
     energy.push_back({"DSRG-MRPT2 total energy", Eref_ + Ecorr});
 
+    bool multi_state = foptions_->get_gen_list("AVG_STATE").size() != 0;
+
     // reference relaxation
-    if (foptions_->get_str("RELAX_REF") != "NONE" ||
-        (foptions_->psi_options())["AVG_STATE"].size() != 0) {
+    if (foptions_->get_str("RELAX_REF") != "NONE" || multi_state) {
         O1_.zero();
         O2_.zero();
 
@@ -398,9 +399,10 @@ std::vector<std::pair<std::string, double>> MRDSRG::compute_energy_pt2_FdiagV() 
     energy.push_back({"DSRG-MRPT2 correlation energy", Ecorr});
     energy.push_back({"DSRG-MRPT2 total energy", Eref_ + Ecorr});
 
+    bool multi_state = foptions_->get_gen_list("AVG_STATE").size() != 0;
+
     // reference relaxation
-    if (foptions_->get_str("RELAX_REF") != "NONE" ||
-        (foptions_->psi_options())["AVG_STATE"].size() != 0) {
+    if (foptions_->get_str("RELAX_REF") != "NONE" || multi_state) {
         O1_ = BTF_->build(tensor_type_, "O1", spin_cases({"aa"}));
         O2_ = BTF_->build(tensor_type_, "O2", spin_cases({"aaaa"}));
 
@@ -573,9 +575,10 @@ std::vector<std::pair<std::string, double>> MRDSRG::compute_energy_pt2_Ffull() {
     E1st = Ecorr;
     energy.push_back({"1st-order correlation energy", E1st});
 
+    bool multi_state = foptions_->get_gen_list("AVG_STATE").size() != 0;
+
     // save active part for reference relxation
-    if (foptions_->get_str("RELAX_REF") != "NONE" ||
-        (foptions_->psi_options())["AVG_STATE"].size() != 0) {
+    if (foptions_->get_str("RELAX_REF") != "NONE" || multi_state) {
         Hbar1_actv["uv"] = F_["uv"];
         Hbar1_actv["UV"] = F_["UV"];
         Hbar1_actv["uv"] += Hbar1_["uv"];
@@ -742,8 +745,7 @@ std::vector<std::pair<std::string, double>> MRDSRG::compute_energy_pt2_Ffull() {
     energy.push_back({"DSRG-MRPT2 total energy", Eref_ + Ecorr});
 
     // add 0th- and 1st-order Hbar for reference relaxation
-    if (foptions_->get_str("RELAX_REF") != "NONE" ||
-        (foptions_->psi_options())["AVG_STATE"].size() != 0) {
+    if (foptions_->get_str("RELAX_REF") != "NONE" || multi_state) {
         Hbar1_["pq"] += Hbar1_actv["pq"];
         Hbar1_["PQ"] += Hbar1_actv["PQ"];
         Hbar2_["pqrs"] += Hbar2_actv["pqrs"];
@@ -947,8 +949,9 @@ double MRDSRG::compute_energy_pt3() {
         outfile->Printf("\n    %-30s = %22.15f", str_dim.first.c_str(), str_dim.second);
     }
 
-    if (foptions_->get_str("RELAX_REF") != "NONE" ||
-        (foptions_->psi_options())["AVG_STATE"].size() != 0) {
+    bool multi_state = foptions_->get_gen_list("AVG_STATE").size() != 0;
+
+    if (foptions_->get_str("RELAX_REF") != "NONE" || multi_state) {
         O1_.zero();
         O2_.zero();
 

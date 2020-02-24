@@ -77,7 +77,8 @@ std::map<IntegralType, std::string> int_type_label{{Conventional, "Conventional"
                                                    {Own, "Own"},
                                                    {Custom, "Custom"}};
 
-ForteIntegrals::ForteIntegrals(psi::Options& options, std::shared_ptr<psi::Wavefunction> ref_wfn,
+ForteIntegrals::ForteIntegrals(std::shared_ptr<ForteOptions> options,
+                               std::shared_ptr<psi::Wavefunction> ref_wfn,
                                std::shared_ptr<MOSpaceInfo> mo_space_info,
                                IntegralSpinRestriction restricted)
     : options_(options), wfn_(ref_wfn), spin_restriction_(restricted), frozen_core_energy_(0.0),
@@ -133,11 +134,12 @@ void ForteIntegrals::startup() {
     num_tei_ = INDEX4(nmo_ - 1, nmo_ - 1, nmo_ - 1, nmo_ - 1) + 1;
     num_aptei_ = nmo_ * nmo_ * nmo_ * nmo_;
     num_threads_ = omp_get_max_threads();
-    print_ = options_.get_int("PRINT");
+    print_ = options_->get_int("PRINT");
     /// If MO_ROTATE is set in option, call rotate_mos.
     /// Wasn't really sure where to put this function, but since, integrals is
     /// always called, this seems like a good spot.
-    if (options_["ROTATE_MOS"].size() > 0) {
+    auto rotate_mos_list = options_->get_int_vec("ROTATE_MOS");
+    if (rotate_mos_list.size() > 0) {
         rotate_mos();
     }
 }
@@ -201,7 +203,7 @@ double ForteIntegrals::oei_b(size_t p, size_t q) const {
 }
 
 ambit::Tensor ForteIntegrals::oei_a_block(const std::vector<size_t>& p,
-                                                const std::vector<size_t>& q) {
+                                          const std::vector<size_t>& q) {
     ambit::Tensor t = ambit::Tensor::build(ambit::CoreTensor, "oei_a", {p.size(), q.size()});
     t.iterate(
         [&](const std::vector<size_t>& i, double& value) { value = oei_a(p[i[0]], q[i[1]]); });
@@ -209,7 +211,7 @@ ambit::Tensor ForteIntegrals::oei_a_block(const std::vector<size_t>& p,
 }
 
 ambit::Tensor ForteIntegrals::oei_b_block(const std::vector<size_t>& p,
-                                                const std::vector<size_t>& q) {
+                                          const std::vector<size_t>& q) {
     ambit::Tensor t = ambit::Tensor::build(ambit::CoreTensor, "oei_b", {p.size(), q.size()});
     t.iterate(
         [&](const std::vector<size_t>& i, double& value) { value = oei_b(p[i[0]], q[i[1]]); });
@@ -253,7 +255,8 @@ void ForteIntegrals::transform_one_electron_integrals() {
     std::shared_ptr<psi::Matrix> V =
         std::shared_ptr<psi::Matrix>(wfn_->matrix_factory()->create_matrix(PSIF_SO_V));
 
-    MintsHelper mints(wfn_->basisset(), options_, 0); // 0 here is to avoid printing of basis info
+    MintsHelper mints(wfn_->basisset(), psi::Process::environment.options,
+                      0); // 0 here is to avoid printing of basis info
     T = mints.so_kinetic();
     V = mints.so_potential();
 
@@ -347,7 +350,7 @@ void ForteIntegrals::compute_frozen_one_body_operator() {
     }
 
     std::shared_ptr<JK> JK_core;
-    if (options_.get_str("SCF_TYPE") == "GTFOCK") {
+    if (options_->get_str("SCF_TYPE") == "GTFOCK") {
 #ifdef HAVE_JK_FACTORY
         psi::Process::environment.set_legacy_molecule(wfn_->molecule());
         JK_core = std::shared_ptr<JK>(new GTFockJK(wfn_->basisset()));
@@ -355,25 +358,26 @@ void ForteIntegrals::compute_frozen_one_body_operator() {
         throw psi::PSIEXCEPTION("GTFock was not compiled in this version");
 #endif
     } else {
-        if (options_.get_str("SCF_TYPE") == "DF") {
+        if (options_->get_str("SCF_TYPE") == "DF") {
             if ((integral_type_ == DF) or (integral_type_ == DiskDF)) {
                 JK_core = JK::build_JK(wfn_->basisset(), wfn_->get_basisset("DF_BASIS_MP2"),
-                                       options_, "MEM_DF");
+                                       psi::Process::environment.options, "MEM_DF");
             } else {
                 throw psi::PSIEXCEPTION(
                     "Trying to compute the frozen one-body operator with MEM_DF but "
                     "using a non-DF integral type");
             }
         } else {
-            JK_core = JK::build_JK(wfn_->basisset(), psi::BasisSet::zero_ao_basis_set(), options_);
+            JK_core = JK::build_JK(wfn_->basisset(), psi::BasisSet::zero_ao_basis_set(),
+                                   psi::Process::environment.options);
         }
     }
 
     JK_core->set_memory(psi::Process::environment.get_memory() * 0.8);
     /// Already transform everything to C1 so make sure JK does not do this.
 
-    // JK_core->set_cutoff(options_.get_double("INTEGRAL_SCREENING"));
-    JK_core->set_cutoff(options_.get_double("INTEGRAL_SCREENING"));
+    // JK_core->set_cutoff(options_->get_double("INTEGRAL_SCREENING"));
+    JK_core->set_cutoff(options_->get_double("INTEGRAL_SCREENING"));
     JK_core->initialize();
     JK_core->set_do_J(true);
     // JK_core->set_allow_desymmetrization(true);
@@ -500,7 +504,8 @@ void ForteIntegrals::freeze_core_orbitals() {
 }
 
 void ForteIntegrals::rotate_mos() {
-    int size_mo_rotate = options_["ROTATE_MOS"].size();
+    auto rotate_mos_list = options_->get_int_vec("ROTATE_MOS");
+    int size_mo_rotate = rotate_mos_list.size();
     outfile->Printf("\n\n\n  ==> ROTATING MOS <==");
     if (size_mo_rotate % 3 != 0) {
         outfile->Printf("\n Check ROTATE_MOS array");
@@ -514,14 +519,15 @@ void ForteIntegrals::rotate_mos() {
     for (int a = 0; a < orbital_rotate_group; a++) {
         std::vector<int> rotate_mo_group(3);
         int offset_a = 3 * a;
-        rotate_mo_group[0] = options_["ROTATE_MOS"][offset_a].to_integer() - 1;
+        rotate_mo_group[0] = rotate_mos_list[offset_a] - 1;
         if (rotate_mo_group[0] > nirrep_) {
             outfile->Printf("\n Irrep:%d does not match wfn_ symmetry:%d", rotate_mo_group[0],
                             nirrep_);
             throw psi::PSIEXCEPTION("Irrep does not match wavefunction symmetry");
         }
-        rotate_mo_group[1] = options_["ROTATE_MOS"][offset_a + 1].to_integer() - 1;
-        rotate_mo_group[2] = options_["ROTATE_MOS"][offset_a + 2].to_integer() - 1;
+
+        rotate_mo_group[1] = rotate_mos_list[offset_a + 1] - 1;
+        rotate_mo_group[2] = rotate_mos_list[offset_a + 2] - 1;
         rotate_mo_list.push_back(rotate_mo_group);
 
         outfile->Printf("   %d   %d   %d\n", rotate_mo_group[0], rotate_mo_group[1],

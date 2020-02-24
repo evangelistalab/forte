@@ -410,8 +410,9 @@ double MRDSRG::compute_energy_srgpt2() {
 
     // some options
     std::string Hzero = foptions_->get_str("DSRG_PT2_H0TH");
-    bool relax_ref = foptions_->get_str("RELAX_REF") != "NONE" ||
-                     (foptions_->psi_options())["AVG_STATE"].size() != 0;
+    bool multi_state = foptions_->get_gen_list("AVG_STATE").size() != 0;
+
+    bool relax_ref = foptions_->get_str("RELAX_REF") != "NONE" || multi_state;
 
     // initialize tensors
     BlockedTensor::set_expert_mode(true);

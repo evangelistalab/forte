@@ -34,7 +34,7 @@
 #include <fstream>
 #include <utility>
 
-#include "psi4/liboptions/liboptions.h"
+
 #include "psi4/libmints/wavefunction.h"
 #include "ambit/blocked_tensor.h"
 

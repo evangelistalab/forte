@@ -59,7 +59,7 @@ using namespace ambit;
 
 namespace forte {
 
-DistDFIntegrals::DistDFIntegrals(psi::Options& options, std::shared_ptr<psi::Wavefunction> ref_wfn,
+DistDFIntegrals::DistDFIntegrals(std::shared_ptr<ForteOptions> options, std::shared_ptr<psi::Wavefunction> ref_wfn,
                                  IntegralSpinRestriction restricted,
                                  IntegralFrozenCore resort_frozen_core,
                                  std::shared_ptr<MOSpaceInfo> mo_space_info)

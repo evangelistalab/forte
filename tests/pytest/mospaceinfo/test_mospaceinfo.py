@@ -26,7 +26,7 @@ def test_mospaceinfo():
 
     options = psi4.core.get_options() # options = psi4 option object
     options.set_current_module('FORTE') # read options labeled 'FORTE'
-    forte_options.update_psi_options(options)
+    forte_options.get_options_from_psi4(options)
 
     # Setup forte and prepare the active space integral class
     mos_spaces = {'FROZEN_DOCC' :     [1,0,0,0,0,0,0,0],

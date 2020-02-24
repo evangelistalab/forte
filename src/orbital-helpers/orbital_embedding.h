@@ -31,16 +31,16 @@
 
 #include "psi4/libmints/matrix.h"
 #include "psi4/libmints/wavefunction.h"
-#include "psi4/liboptions/liboptions.h"
+
 
 #include "base_classes/forte_options.h"
 #include "base_classes/mo_space_info.h"
 
 namespace forte {
 
-void make_avas(psi::SharedWavefunction ref_wfn, psi::Options& options, psi::SharedMatrix Ps);
+void make_avas(psi::SharedWavefunction ref_wfn, std::shared_ptr<ForteOptions> options, psi::SharedMatrix Ps);
 
-std::shared_ptr<MOSpaceInfo> make_embedding(psi::SharedWavefunction ref_wfn, psi::Options& options,
+std::shared_ptr<MOSpaceInfo> make_embedding(psi::SharedWavefunction ref_wfn, std::shared_ptr<ForteOptions> options,
                                             psi::SharedMatrix Pf, int nbf_A,
                                             std::shared_ptr<MOSpaceInfo> mo_space_info);
 

@@ -94,8 +94,7 @@ void view_modified_orbitals(std::shared_ptr<psi::Wavefunction> wfn,
                             const std::shared_ptr<psi::Vector>& occupation);
 
 /**
- * Returns the Ms as a string, using
- * fractions if needed
+ * Returns the Ms as a string, using fractions if needed
  */
 std::string get_ms_string(double twice_ms);
 
