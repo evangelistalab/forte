@@ -356,17 +356,20 @@ def run_forte(name, **kwargs):
     # Get the option object
     psi4_options = psi4.core.get_options()
     psi4_options.set_current_module('FORTE')
-    forte.forte_options.get_options_from_psi4(psi4_options)
 
-    if ('DF' in forte.forte_options.get_str('INT_TYPE')):
+    # Get the forte option object
+    options = forte.forte_options
+    options.get_options_from_psi4(psi4_options)
+
+    if ('DF' in options.get_str('INT_TYPE')):
         aux_basis = psi4.core.BasisSet.build(ref_wfn.molecule(), 'DF_BASIS_MP2',
-                                         forte.forte_options.get_str('DF_BASIS_MP2'),
-                                         'RIFIT', forte.forte_options.get_str('BASIS'))
+                                         options.get_str('DF_BASIS_MP2'),
+                                         'RIFIT', options.get_str('BASIS'))
         ref_wfn.set_basisset('DF_BASIS_MP2', aux_basis)
 
-    if (forte.forte_options.get_str('MINAO_BASIS')):
+    if (options.get_str('MINAO_BASIS')):
         minao_basis = psi4.core.BasisSet.build(ref_wfn.molecule(), 'MINAO_BASIS',
-                                               forte.forte_options.get_str('MINAO_BASIS'))
+                                               options.get_str('MINAO_BASIS'))
         ref_wfn.set_basisset('MINAO_BASIS', minao_basis)
 
     # Start Forte, initialize ambit
@@ -377,17 +380,17 @@ def run_forte(name, **kwargs):
     forte.banner()
 
     # Create the MOSpaceInfo object
-    mo_space_info = forte.make_mo_space_info(ref_wfn, forte.forte_options)
+    mo_space_info = forte.make_mo_space_info(ref_wfn, options)
 
     # Call methods that project the orbitals (AVAS, embedding)
-    mo_space_info = orbital_projection(ref_wfn, forte.forte_options, mo_space_info)
+    mo_space_info = orbital_projection(ref_wfn, options, mo_space_info)
 
     state = forte.make_state_info_from_psi_wfn(ref_wfn)
     scf_info = forte.SCFInfo(ref_wfn)
-    state_weights_map = forte.make_state_weights_map(forte.forte_options,ref_wfn)
+    state_weights_map = forte.make_state_weights_map(options,ref_wfn)
 
     # Run a method
-    job_type = forte.forte_options.get_str('JOB_TYPE')
+    job_type = options.get_str('JOB_TYPE')
 
     energy = 0.0
 
@@ -398,14 +401,14 @@ def run_forte(name, **kwargs):
     start_pre_ints = time.time()
 
     # Make an integral object
-    ints = forte.make_forte_integrals(ref_wfn, forte.forte_options, mo_space_info)
+    ints = forte.make_forte_integrals(ref_wfn, options, mo_space_info)
 
     start = time.time()
 
     # Rotate orbitals before computation (e.g. localization, MP2 natural orbitals, etc.)
-    orb_type = forte.forte_options.get_str("ORBITAL_TYPE")
+    orb_type = options.get_str("ORBITAL_TYPE")
     if orb_type != 'CANONICAL':
-        orb_t = forte.make_orbital_transformation(orb_type, scf_info, forte.forte_options, ints, mo_space_info)
+        orb_t = forte.make_orbital_transformation(orb_type, scf_info, options, ints, mo_space_info)
         orb_t.compute_transformation()
         Ua = orb_t.get_Ua()
         Ub = orb_t.get_Ub()
@@ -413,9 +416,9 @@ def run_forte(name, **kwargs):
 
     # Run a method
     if (job_type == 'NEWDRIVER'):
-        energy = forte_driver(state_weights_map, scf_info, forte.forte_options, ints, mo_space_info)
+        energy = forte_driver(state_weights_map, scf_info, options, ints, mo_space_info)
     else:
-        energy = forte.forte_old_methods(ref_wfn, forte.forte_options, ints, mo_space_info)
+        energy = forte.forte_old_methods(ref_wfn, options, ints, mo_space_info)
 
     end = time.time()
 
@@ -448,18 +451,21 @@ def gradient_forte(name, **kwargs):
     if ref_wfn is None:
         ref_wfn = psi4.driver.scf_helper(name, **kwargs)
 
-    # Get the option object
+    # Get the psi4 option object
     optstash = p4util.OptionsState(['GLOBALS', 'DERTYPE'])
     psi4_options = psi4.core.get_options()
     psi4_options.set_current_module('FORTE')
-    forte.forte_options.get_options_from_psi4(psi4_options)
 
-    if ('DF' in forte.forte_options.get_str('INT_TYPE')):
+    # Get the forte option object
+    options = forte.forte_options
+    options.get_options_from_psi4(psi4_options)
+
+    if ('DF' in options.get_str('INT_TYPE')):
         raise Exception('analytic gradient is not implemented for density fitting')
 
-    if (forte.forte_options.get_str('MINAO_BASIS')):
+    if (options.get_str('MINAO_BASIS')):
         minao_basis = psi4.core.BasisSet.build(ref_wfn.molecule(), 'MINAO_BASIS',
-                                               forte.forte_options.get_str('MINAO_BASIS'))
+                                               options.get_str('MINAO_BASIS'))
         ref_wfn.set_basisset('MINAO_BASIS', minao_basis)
 
     # Start Forte, initialize ambit
@@ -470,17 +476,17 @@ def gradient_forte(name, **kwargs):
     forte.banner()
 
     # Create the MOSpaceInfo object
-    mo_space_info = forte.make_mo_space_info(ref_wfn, forte.forte_options)
+    mo_space_info = forte.make_mo_space_info(ref_wfn, options)
 
     # Call methods that project the orbitals (AVAS, embedding)
-    mo_space_info = orbital_projection(ref_wfn, forte.forte_options, mo_space_info)
+    mo_space_info = orbital_projection(ref_wfn, options, mo_space_info)
 
     state = forte.make_state_info_from_psi_wfn(ref_wfn)
     scf_info = forte.SCFInfo(ref_wfn)
-    state_weights_map = forte.make_state_weights_map(forte.forte_options,ref_wfn)
+    state_weights_map = forte.make_state_weights_map(options,ref_wfn)
 
     # Run a method
-    job_type = forte.forte_options.get_str('JOB_TYPE')
+    job_type = options.get_str('JOB_TYPE')
 
     energy = 0.0
 
@@ -490,12 +496,12 @@ def gradient_forte(name, **kwargs):
     start = time.time()
 
     # Make an integral object
-    ints = forte.make_forte_integrals(ref_wfn, forte.forte_options, mo_space_info)
+    ints = forte.make_forte_integrals(ref_wfn, options, mo_space_info)
 
     # Rotate orbitals before computation
-    orb_type = forte.forte_options.get_str("ORBITAL_TYPE")
+    orb_type = options.get_str("ORBITAL_TYPE")
     if orb_type != 'CANONICAL':
-        orb_t = forte.make_orbital_transformation(orb_type, scf_info, forte.forte_options, ints, mo_space_info)
+        orb_t = forte.make_orbital_transformation(orb_type, scf_info, options, ints, mo_space_info)
         orb_t.compute_transformation()
         Ua = orb_t.get_Ua()
         Ub = orb_t.get_Ub()
@@ -503,7 +509,7 @@ def gradient_forte(name, **kwargs):
         ints.rotate_orbitals(Ua,Ub)
 
     # Run gradient computation
-    energy = forte.forte_old_methods(ref_wfn, forte.forte_options, ints, mo_space_info)
+    energy = forte.forte_old_methods(ref_wfn, options, ints, mo_space_info)
     derivobj = psi4.core.Deriv(ref_wfn)
     derivobj.set_deriv_density_backtransformed(True)
     derivobj.set_ignore_reference(True)
