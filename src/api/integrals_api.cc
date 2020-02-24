@@ -5,7 +5,7 @@
  * t    hat implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2019 by its authors (see LICENSE, AUTHORS).
+ * Copyright (c) 2012-2020 by its authors (see LICENSE, AUTHORS).
  *
  * The copyrights for code used from other parties are included in
  * the corresponding files.
@@ -56,20 +56,23 @@ void export_ForteIntegrals(py::module& m) {
         .def(
             "tei_aa_block",
             [](ForteIntegrals& ints, const std::vector<size_t>& p, const std::vector<size_t>& q,
-               const std::vector<size_t>& r,
-               const std::vector<size_t>& s) { return ambit_to_np(ints.aptei_aa_block(p, q, r, s)); },
+               const std::vector<size_t>& r, const std::vector<size_t>& s) {
+                return ambit_to_np(ints.aptei_aa_block(p, q, r, s));
+            },
             "Return the alpha-alpha 2e-integrals in physicists' notation")
         .def(
             "tei_ab_block",
             [](ForteIntegrals& ints, const std::vector<size_t>& p, const std::vector<size_t>& q,
-               const std::vector<size_t>& r,
-               const std::vector<size_t>& s) { return ambit_to_np(ints.aptei_ab_block(p, q, r, s)); },
+               const std::vector<size_t>& r, const std::vector<size_t>& s) {
+                return ambit_to_np(ints.aptei_ab_block(p, q, r, s));
+            },
             "Return the alpha-beta 2e-integrals in physicists' notation")
         .def(
             "tei_bb_block",
             [](ForteIntegrals& ints, const std::vector<size_t>& p, const std::vector<size_t>& q,
-               const std::vector<size_t>& r,
-               const std::vector<size_t>& s) { return ambit_to_np(ints.aptei_bb_block(p, q, r, s)); },
+               const std::vector<size_t>& r, const std::vector<size_t>& s) {
+                return ambit_to_np(ints.aptei_bb_block(p, q, r, s));
+            },
             "Return the beta-beta 2e-integrals in physicists' notation");
 }
 } // namespace forte

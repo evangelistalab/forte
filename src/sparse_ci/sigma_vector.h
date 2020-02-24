@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2019 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
+ * Copyright (c) 2012-2020 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
  *
  * The copyrights for code used from other parties are included in
  * the corresponding files.
@@ -29,217 +29,81 @@
 #ifndef _sigma_vector_h_
 #define _sigma_vector_h_
 
-#include "base_classes/mo_space_info.h"
-#include "helpers/timer.h"
+#include <memory>
+#include <string>
 
 #include "sparse_ci/determinant_hashvector.h"
-#include "integrals/active_space_integrals.h"
-#include "sparse_ci/operator.h"
-#include "determinant.h"
 
-#ifdef HAVE_MPI
-#include <mpi.h>
-#endif
-
+namespace psi {
+class Vector;
+}
 
 namespace forte {
 
+enum class SigmaVectorType { Dynamic, SparseList, Full };
+
+class ActiveSpaceIntegrals;
+class DeterminantSubstitutionLists;
+
 /**
  * @brief The SigmaVector class
- * Base class for a sigma vector object.
+ *        Base class for a sigma vector object.
  */
 class SigmaVector {
   public:
-    SigmaVector(size_t size) : size_(size){};
+    SigmaVector(const DeterminantHashVec& space, std::shared_ptr<ActiveSpaceIntegrals> fci_ints,
+                SigmaVectorType sigma_vector_type, std::string label)
+        : space_(space), fci_ints_(fci_ints), size_(space.size()),
+          sigma_vector_type_(sigma_vector_type), label_(label) {}
 
     size_t size() { return size_; }
 
-    virtual void compute_sigma(psi::SharedVector sigma, psi::SharedVector b) = 0;
-    //    virtual void compute_sigma(Matrix& sigma, Matrix& b, int nroot) = 0;
+    std::shared_ptr<ActiveSpaceIntegrals> as_ints() { return fci_ints_; }
+
+    SigmaVectorType sigma_vector_type() const { return sigma_vector_type_; }
+    std::string label() const { return label_; }
+
+    virtual void compute_sigma(std::shared_ptr<psi::Vector> sigma,
+                               std::shared_ptr<psi::Vector> b) = 0;
     virtual void get_diagonal(psi::Vector& diag) = 0;
     virtual void add_bad_roots(std::vector<std::vector<std::pair<size_t, double>>>& bad_states) = 0;
+    virtual double compute_spin(const std::vector<double>& c) = 0;
 
   protected:
-    /// The length of the C/sigma vector (number of determinants)
+    const DeterminantHashVec& space_;
+    /// the active space integrals
+    std::shared_ptr<ActiveSpaceIntegrals> fci_ints_;
+    /// Diagonal elements of the Hamiltonian
+    std::vector<double> diag_;
+    /// the length of the C/sigma vector (number of determinants)
     size_t size_;
+    const SigmaVectorType sigma_vector_type_;
+    /// the type of sigma vector algorithm
+    const std::string label_;
 };
 
-/**
- * @brief The SigmaVectorSparse class
- * Computes the sigma vector from a sparse Hamiltonian.
- */
-class SigmaVectorSparse : public SigmaVector {
+class SigmaVectorFull : public SigmaVector {
   public:
-    SigmaVectorSparse(std::vector<std::pair<std::vector<size_t>, std::vector<double>>>& H,
-                      std::shared_ptr<ActiveSpaceIntegrals> fci_ints)
-        : SigmaVector(H.size()), H_(H), fci_ints_(fci_ints){};
-
-    void compute_sigma(psi::SharedVector sigma, psi::SharedVector b);
-    //   void compute_sigma(Matrix& sigma, Matrix& b, int nroot) {}
-    void get_diagonal(psi::Vector& diag);
-    void add_bad_roots(std::vector<std::vector<std::pair<size_t, double>>>& bad_states);
-
-    std::vector<std::vector<std::pair<size_t, double>>> bad_states_;
-
-  protected:
-    std::vector<std::pair<std::vector<size_t>, std::vector<double>>>& H_;
-    std::shared_ptr<ActiveSpaceIntegrals> fci_ints_;
-};
-
-/**
- * @brief The SigmaVectorList class
- * Computes the sigma vector from a sparse Hamiltonian.
- */
-class SigmaVectorList : public SigmaVector {
-  public:
-    SigmaVectorList(const std::vector<Determinant>& space, bool print_detail,
+    SigmaVectorFull(const DeterminantHashVec& space,
                     std::shared_ptr<ActiveSpaceIntegrals> fci_ints);
 
-    void compute_sigma(psi::SharedVector sigma, psi::SharedVector b);
-    //  void compute_sigma(Matrix& sigma, Matrix& b, int nroot);
-    void get_diagonal(psi::Vector& diag);
-    void get_hamiltonian(psi::Matrix& H);
-    std::vector<std::pair<std::vector<int>, std::vector<double>>> get_sparse_hamiltonian();
-    void add_bad_roots(std::vector<std::vector<std::pair<size_t, double>>>& bad_states);
-
-    std::vector<std::vector<std::pair<size_t, double>>> bad_states_;
-
-  protected:
-    const std::vector<Determinant>& space_;
-    std::shared_ptr<ActiveSpaceIntegrals> fci_ints_;
-
-    // Create the list of a_p|N>
-    std::vector<std::vector<std::pair<size_t, short>>> a_ann_list;
-    std::vector<std::vector<std::pair<size_t, short>>> b_ann_list;
-    // Create the list of a+_q |N-1>
-    std::vector<std::vector<std::pair<size_t, short>>> a_cre_list;
-    std::vector<std::vector<std::pair<size_t, short>>> b_cre_list;
-
-    // Create the list of a_q a_p|N>
-    std::vector<std::vector<std::tuple<size_t, short, short>>> aa_ann_list;
-    std::vector<std::vector<std::tuple<size_t, short, short>>> ab_ann_list;
-    std::vector<std::vector<std::tuple<size_t, short, short>>> bb_ann_list;
-    // Create the list of a+_s a+_r |N-2>
-    std::vector<std::vector<std::tuple<size_t, short, short>>> aa_cre_list;
-    std::vector<std::vector<std::tuple<size_t, short, short>>> ab_cre_list;
-    std::vector<std::vector<std::tuple<size_t, short, short>>> bb_cre_list;
-    std::vector<double> diag_;
-
-    bool print_details_ = true;
-};
-
-/* Uses ann/cre lists in sigma builds (Harrison and Zarrabian method) */
-class SigmaVectorWfn1 : public SigmaVector {
-  public:
-    SigmaVectorWfn1(const DeterminantHashVec& space, WFNOperator& op,
-                    std::shared_ptr<ActiveSpaceIntegrals> fci_ints);
-
-    void compute_sigma(psi::SharedVector sigma, psi::SharedVector b);
-    //   void compute_sigma(Matrix& sigma, Matrix& b, int nroot) {}
-    void get_diagonal(psi::Vector& diag);
-    void add_bad_roots(std::vector<std::vector<std::pair<size_t, double>>>& bad_states);
-    std::vector<std::vector<std::pair<size_t, double>>> bad_states_;
-
-  protected:
-    const DeterminantHashVec& space_;
-    std::shared_ptr<ActiveSpaceIntegrals> fci_ints_;
-    // Create the list of a_p|N>
-    // Create the list of a+_q |N-1>
-    std::vector<std::vector<std::pair<size_t, short>>>& a_ann_list_;
-    std::vector<std::vector<std::pair<size_t, short>>>& a_cre_list_;
-    std::vector<std::vector<std::pair<size_t, short>>>& b_ann_list_;
-    std::vector<std::vector<std::pair<size_t, short>>>& b_cre_list_;
-
-    // Create the list of a_q a_p|N>
-    // Create the list of a+_s a+_r |N-2>
-    std::vector<std::vector<std::tuple<size_t, short, short>>>& aa_ann_list_;
-    std::vector<std::vector<std::tuple<size_t, short, short>>>& aa_cre_list_;
-    std::vector<std::vector<std::tuple<size_t, short, short>>>& ab_ann_list_;
-    std::vector<std::vector<std::tuple<size_t, short, short>>>& ab_cre_list_;
-    std::vector<std::vector<std::tuple<size_t, short, short>>>& bb_ann_list_;
-    std::vector<std::vector<std::tuple<size_t, short, short>>>& bb_cre_list_;
-    std::vector<double> diag_;
-};
-
-/* Uses only cre lists, sparse sigma build */
-class SigmaVectorWfn2 : public SigmaVector {
-  public:
-    SigmaVectorWfn2(const DeterminantHashVec& space, WFNOperator& op,
-                    std::shared_ptr<ActiveSpaceIntegrals> fci_ints);
-
-    void compute_sigma(psi::SharedVector sigma, psi::SharedVector b);
+    void compute_sigma(std::shared_ptr<psi::Vector>, std::shared_ptr<psi::Vector>) override;
     // void compute_sigma(Matrix& sigma, Matrix& b, int nroot);
-    void get_diagonal(psi::Vector& diag);
-    void add_bad_roots(std::vector<std::vector<std::pair<size_t, double>>>& bad_states_);
-
-    std::vector<std::vector<std::pair<size_t, double>>> bad_states_;
-
-  protected:
-    bool print_;
-    bool use_disk_ = false;
-
-    const DeterminantHashVec& space_;
-    // size_t noalfa_;
-    // size_t nobeta_;
-
-    std::vector<double> diag_;
-    std::shared_ptr<ActiveSpaceIntegrals> fci_ints_;
-    std::vector<std::vector<std::pair<size_t, short>>>& a_list_;
-    std::vector<std::vector<std::pair<size_t, short>>>& b_list_;
-    std::vector<std::vector<std::tuple<size_t, short, short>>>& aa_list_;
-    std::vector<std::vector<std::tuple<size_t, short, short>>>& ab_list_;
-    std::vector<std::vector<std::tuple<size_t, short, short>>>& bb_list_;
-};
-/* Uses only cre lists, DGEMM sigma build */
-class SigmaVectorWfn3 : public SigmaVector {
-  public:
-    SigmaVectorWfn3(const DeterminantHashVec& space, WFNOperator& op,
-                    std::shared_ptr<ActiveSpaceIntegrals> fci_ints);
-
-    void compute_sigma(psi::SharedVector sigma, psi::SharedVector b);
-    // void compute_sigma(Matrix& sigma, Matrix& b, int nroot);
-    void get_diagonal(psi::Vector& diag);
-    void add_bad_roots(std::vector<std::vector<std::pair<size_t, double>>>& bad_states_);
-
-    std::vector<std::vector<std::pair<size_t, double>>> bad_states_;
-
-  protected:
-    bool print_;
-    bool use_disk_ = false;
-
-    const DeterminantHashVec& space_;
-    std::shared_ptr<ActiveSpaceIntegrals> fci_ints_;
-
-    std::vector<std::vector<std::pair<size_t, short>>>& a_list_;
-    std::vector<std::vector<std::pair<size_t, short>>>& b_list_;
-    std::vector<std::vector<std::tuple<size_t, short, short>>>& aa_list_;
-    std::vector<std::vector<std::tuple<size_t, short, short>>>& ab_list_;
-    std::vector<std::vector<std::tuple<size_t, short, short>>>& bb_list_;
-
-    std::vector<double> diag_;
-
-    psi::SharedMatrix aa_tei_;
-    psi::SharedMatrix ab_tei_;
-    psi::SharedMatrix bb_tei_;
+    void get_diagonal(psi::Vector& diag) override;
+    void add_bad_roots(std::vector<std::vector<std::pair<size_t, double>>>& bad_states_) override;
+    double compute_spin(const std::vector<double>&) override { return 0.0; }
 };
 
-#ifdef HAVE_MPI
-class SigmaVectorMPI : public SigmaVector {
-  public:
-    SigmaVectorMPI(const DeterminantHashVec& space, WFNOperator& op,
-                   std::shared_ptr<ActiveSpaceIntegrals> fci_ints);
+SigmaVectorType string_to_sigma_vector_type(std::string type);
 
-    void compute_sigma(psi::SharedVector sigma, psi::SharedVector b);
-    void compute_sigma(Matrix& sigma, Matrix& b, int nroot);
-    void get_diagonal(psi::Vector& diag);
-    void add_bad_roots(std::vector<std::vector<std::pair<size_t, double>>>& bad_states_);
+std::shared_ptr<SigmaVector> make_sigma_vector(DeterminantHashVec& space,
+                                               std::shared_ptr<ActiveSpaceIntegrals> fci_ints,
+                                               size_t max_memory, SigmaVectorType sigma_type);
 
-    std::vector<std::vector<std::pair<size_t, double>>> bad_states_;
+std::shared_ptr<SigmaVector> make_sigma_vector(const std::vector<Determinant>& space,
+                                               std::shared_ptr<ActiveSpaceIntegrals> fci_ints,
+                                               size_t max_memory, SigmaVectorType sigma_type);
 
-  protected:
-    std::shared_ptr<ActiveSpaceIntegrals> fci_ints_;
-};
-#endif
-}
+} // namespace forte
 
 #endif // _sigma_vector_h_

@@ -45,8 +45,7 @@ from .forte import *
 forte_options = forte.ForteOptions()
 
 # Register options defined in Forte in the forte_options object
-register_forte_options(forte_options)  # py-side
-forte.read_options(forte_options)  # c++-side
+register_forte_options(forte_options)
 
 # If we are running psi4, push the options defined in forte_options to psi
 if 'psi4' in sys.modules:

@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2019 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
+ * Copyright (c) 2012-2020 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
  *
  * The copyrights for code used from other parties are included in
  * the corresponding files.
@@ -26,15 +26,12 @@
  * @END LICENSE
  */
 
-#include "psi4/libmints/molecule.h"
-#include "psi4/libmints/wavefunction.h"
-#include "psi4/liboptions/liboptions.h"
-#include "psi4/libpsi4util/process.h"
+#include <cmath>
 
 #include "helpers/timer.h"
+#include "sparse_ci/determinant_substitution_lists.h"
+
 #include "ci_rdms.h"
-#include "base_classes/rdms.h"
-#include "sparse_ci/determinant.h"
 
 using namespace psi;
 
@@ -184,12 +181,15 @@ void CI_RDMS::compute_1rdm(std::vector<double>& oprdm_a, std::vector<double>& op
         outfile->Printf("\n  Time spent building 1-rdm:   %1.6f", build.get());
 }
 
-void CI_RDMS::compute_1rdm(std::vector<double>& oprdm_a, std::vector<double>& oprdm_b,
-                           WFNOperator& op) {
+void CI_RDMS::compute_1rdm_op(std::vector<double>& oprdm_a, std::vector<double>& oprdm_b) {
+
+    auto op = std::make_shared<DeterminantSubstitutionLists>(fci_ints_);
+    op->build_strings(wfn_);
+    op->op_s_lists(wfn_);
 
     // Get the references to the coupling lists
-    std::vector<std::vector<std::pair<size_t, short>>>& a_list = op.a_list_;
-    std::vector<std::vector<std::pair<size_t, short>>>& b_list = op.b_list_;
+    std::vector<std::vector<std::pair<size_t, short>>>& a_list = op->a_list_;
+    std::vector<std::vector<std::pair<size_t, short>>>& b_list = op->b_list_;
 
     local_timer build;
     oprdm_a.assign(ncmo2_, 0.0);
@@ -340,9 +340,13 @@ void CI_RDMS::compute_2rdm(std::vector<double>& tprdm_aa, std::vector<double>& t
         outfile->Printf("\n  Time spent building 2-rdm:   %1.6f", build.get());
 }
 
-void CI_RDMS::compute_2rdm(std::vector<double>& tprdm_aa, std::vector<double>& tprdm_ab,
-                           std::vector<double>& tprdm_bb, WFNOperator& op) {
+void CI_RDMS::compute_2rdm_op(std::vector<double>& tprdm_aa, std::vector<double>& tprdm_ab,
+                              std::vector<double>& tprdm_bb) {
     local_timer build;
+
+    auto op = std::make_shared<DeterminantSubstitutionLists>(fci_ints_);
+    op->build_strings(wfn_);
+    op->tp_s_lists(wfn_);
 
     const det_hashvec& dets = wfn_.wfn_hash();
 
@@ -350,9 +354,9 @@ void CI_RDMS::compute_2rdm(std::vector<double>& tprdm_aa, std::vector<double>& t
     tprdm_ab.assign(ncmo4_, 0.0);
     tprdm_bb.assign(ncmo4_, 0.0);
 
-    std::vector<std::vector<std::tuple<size_t, short, short>>>& aa_list = op.aa_list_;
-    std::vector<std::vector<std::tuple<size_t, short, short>>>& ab_list = op.ab_list_;
-    std::vector<std::vector<std::tuple<size_t, short, short>>>& bb_list = op.bb_list_;
+    std::vector<std::vector<std::tuple<size_t, short, short>>>& aa_list = op->aa_list_;
+    std::vector<std::vector<std::tuple<size_t, short, short>>>& ab_list = op->ab_list_;
+    std::vector<std::vector<std::tuple<size_t, short, short>>>& bb_list = op->bb_list_;
 
     for (size_t J = 0; J < dim_space_; ++J) {
         double cJ_sq = evecs_->get(J, root1_) * evecs_->get(J, root2_);
@@ -692,9 +696,13 @@ void CI_RDMS::compute_3rdm(std::vector<double>& tprdm_aaa, std::vector<double>& 
         outfile->Printf("\n  Time spent building 3-rdm:   %1.6f", build.get());
 }
 
-void CI_RDMS::compute_3rdm(std::vector<double>& tprdm_aaa, std::vector<double>& tprdm_aab,
-                           std::vector<double>& tprdm_abb, std::vector<double>& tprdm_bbb,
-                           WFNOperator& op) {
+void CI_RDMS::compute_3rdm_op(std::vector<double>& tprdm_aaa, std::vector<double>& tprdm_aab,
+                              std::vector<double>& tprdm_abb, std::vector<double>& tprdm_bbb) {
+
+    auto op = std::make_shared<DeterminantSubstitutionLists>(fci_ints_);
+    op->build_strings(wfn_);
+    op->three_s_lists(wfn_);
+
     size_t ncmo5 = ncmo4_ * ncmo_;
     size_t ncmo6 = ncmo3_ * ncmo3_;
 
@@ -703,10 +711,10 @@ void CI_RDMS::compute_3rdm(std::vector<double>& tprdm_aaa, std::vector<double>& 
     tprdm_abb.assign(ncmo6, 0.0);
     tprdm_bbb.assign(ncmo6, 0.0);
 
-    std::vector<std::vector<std::tuple<size_t, short, short, short>>>& aaa_list = op.aaa_list_;
-    std::vector<std::vector<std::tuple<size_t, short, short, short>>>& aab_list = op.aab_list_;
-    std::vector<std::vector<std::tuple<size_t, short, short, short>>>& abb_list = op.abb_list_;
-    std::vector<std::vector<std::tuple<size_t, short, short, short>>>& bbb_list = op.bbb_list_;
+    std::vector<std::vector<std::tuple<size_t, short, short, short>>>& aaa_list = op->aaa_list_;
+    std::vector<std::vector<std::tuple<size_t, short, short, short>>>& aab_list = op->aab_list_;
+    std::vector<std::vector<std::tuple<size_t, short, short, short>>>& abb_list = op->abb_list_;
+    std::vector<std::vector<std::tuple<size_t, short, short, short>>>& bbb_list = op->bbb_list_;
 
     // Build the diagonal part
     const det_hashvec& dets = wfn_.wfn_hash();

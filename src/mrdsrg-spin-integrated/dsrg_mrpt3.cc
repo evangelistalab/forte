@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2019 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
+ * Copyright (c) 2012-2020 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
  *
  * The copyrights for code used from other parties are included in
  * the corresponding files.
@@ -34,6 +34,8 @@
 #include <fstream>
 #include <iostream>
 
+#include "psi4/libpsi4util/process.h"
+#include "psi4/libpsi4util/PsiOutStream.h"
 #include "psi4/libmints/molecule.h"
 #include "psi4/libpsio/psio.h"
 #include "psi4/libpsio/psio.hpp"
@@ -445,9 +447,9 @@ double DSRG_MRPT3::compute_energy() {
     // compute DSRG dipole integrals part 1
     if (do_dm_) {
         print_h2("Computing 3rd-Order Dipole Moment Contribution (1/2)");
-        Mbar0_ = {dm_ref_[0], dm_ref_[1], dm_ref_[2]};
-        Mbar0_pt2_ = {dm_ref_[0], dm_ref_[1], dm_ref_[2]};
-        Mbar0_pt2c_ = {dm_ref_[0], dm_ref_[1], dm_ref_[2]};
+        Mbar0_ = {{dm_ref_[0], dm_ref_[1], dm_ref_[2]}};
+        Mbar0_pt2_ = {{dm_ref_[0], dm_ref_[1], dm_ref_[2]}};
+        Mbar0_pt2c_ = {{dm_ref_[0], dm_ref_[1], dm_ref_[2]}};
         for (int i = 0; i < 3; ++i) {
             local_timer timer;
             std::string name = "Computing direction " + dm_dirs_[i];

@@ -5,7 +5,7 @@
  * t    hat implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2019 by its authors (see LICENSE, AUTHORS).
+ * Copyright (c) 2012-2020 by its authors (see LICENSE, AUTHORS).
  *
  * The copyrights for code used from other parties are included in
  * the corresponding files.
@@ -58,7 +58,6 @@
 #include "sparse_ci/determinant.h"
 #include "post_process/spin_corr.h"
 #include "sparse_ci/determinant_hashvector.h"
-#include "sparse_ci/determinant_sq_operator.h"
 
 namespace py = pybind11;
 using namespace pybind11::literals;
@@ -70,6 +69,8 @@ void export_ambit(py::module& m);
 void export_ForteIntegrals(py::module& m);
 void export_RDMs(py::module& m);
 void export_StateInfo(py::module& m);
+void export_SigmaVector(py::module& m);
+void export_SparseCISolver(py::module& m);
 
 /// Export the ForteOptions class
 void export_ForteOptions(py::module& m) {
@@ -169,16 +170,11 @@ void export_Determinant(py::module& m) {
         .def("size", &DeterminantHashVec::size, "Get the size of the vector")
         .def("get_det", &DeterminantHashVec::get_det, "Return a specific determinant by reference")
         .def("get_idx", &DeterminantHashVec::get_idx, " Return the index of a determinant");
-
-    py::class_<DeterminantSQOperator>(m, "DeterminantSQOperator")
-        .def(py::init<>())
-        .def("add_operator", &DeterminantSQOperator::add_operator, "Add an operator");
 }
 
 // TODO: export more classes using the function above
 PYBIND11_MODULE(forte, m) {
     m.doc() = "pybind11 Forte module"; // module docstring
-    m.def("read_options", &read_options, "Read Forte options");
     m.def("startup", &startup);
     m.def("cleanup", &cleanup);
     m.def("banner", &banner, "Print forte banner");
@@ -209,7 +205,7 @@ PYBIND11_MODULE(forte, m) {
           "Make an object that holds the molecular orbital integrals for the active orbitals");
     m.def("make_dynamic_correlation_solver", &make_dynamic_correlation_solver,
           "Make a dynamical correlation solver");
-    m.def("perform_spin_analysis", &perform_spin_analysis, "Do spin analysis");    
+    m.def("perform_spin_analysis", &perform_spin_analysis, "Do spin analysis");
     m.def("make_dsrg_method", &make_dsrg_method,
           "Make a DSRG method (spin-integrated implementation)");
     m.def("make_dsrg_so_y", &make_dsrg_so_y, "Make a DSRG pointer (spin-orbital implementation)");
@@ -232,6 +228,9 @@ PYBIND11_MODULE(forte, m) {
     export_RDMs(m);
 
     export_StateInfo(m);
+
+    export_SigmaVector(m);
+    export_SparseCISolver(m);
 
     // export MOSpaceInfo
     py::class_<MOSpaceInfo, std::shared_ptr<MOSpaceInfo>>(m, "MOSpaceInfo")

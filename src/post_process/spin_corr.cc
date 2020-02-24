@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2019 by its authors (see COPYING, COPYING.LESSER,
+ * Copyright (c) 2012-2020 by its authors (see COPYING, COPYING.LESSER,
  * AUTHORS).
  *
  * The copyrights for code used from other parties are included in
@@ -27,6 +27,9 @@
  * @END LICENSE
  */
 
+#include "psi4/psi4-dec.h"
+#include "psi4/libpsi4util/PsiOutStream.h"
+#include "psi4/libpsi4util/process.h"
 
 #include "base_classes/forte_options.h"
 #include "helpers/printing.h"
@@ -37,32 +40,28 @@ using namespace psi;
 
 namespace forte {
 
-
-
-SpinCorr::SpinCorr(RDMs rdms, std::shared_ptr<ForteOptions> options, std::shared_ptr<MOSpaceInfo> mo_space_info,
-    std::shared_ptr<ActiveSpaceIntegrals> as_ints)
-      : rdms_(rdms), options_(options), mo_space_info_(mo_space_info), as_ints_(as_ints) {
+SpinCorr::SpinCorr(RDMs rdms, std::shared_ptr<ForteOptions> options,
+                   std::shared_ptr<MOSpaceInfo> mo_space_info,
+                   std::shared_ptr<ActiveSpaceIntegrals> as_ints)
+    : rdms_(rdms), options_(options), mo_space_info_(mo_space_info), as_ints_(as_ints) {
 
     nactpi_ = mo_space_info_->dimension("ACTIVE");
-    nirrep_ = nactpi_.n(); 
+    nirrep_ = nactpi_.n();
     nact_ = nactpi_.sum();
 }
 
-
 std::pair<psi::SharedMatrix, psi::SharedMatrix> SpinCorr::compute_nos() {
 
-    print_h2("Natural Orbitals"); 
+    print_h2("Natural Orbitals");
 
-    auto g1a = rdms_.g1a(); 
-    auto g1b = rdms_.g1b(); 
+    auto g1a = rdms_.g1a();
+    auto g1b = rdms_.g1b();
 
     psi::SharedMatrix Ua, Ub;
-
 
     psi::Dimension nmopi = mo_space_info_->dimension("ALL");
     psi::Dimension fdocc = mo_space_info_->dimension("FROZEN_DOCC");
     psi::Dimension rdocc = mo_space_info_->dimension("RESTRICTED_DOCC");
-
 
     std::shared_ptr<psi::Matrix> opdm_a(new psi::Matrix("OPDM_A", nirrep_, nactpi_, nactpi_));
     std::shared_ptr<psi::Matrix> opdm_b(new psi::Matrix("OPDM_B", nirrep_, nactpi_, nactpi_));
@@ -106,7 +105,7 @@ std::pair<psi::SharedMatrix, psi::SharedMatrix> SpinCorr::compute_nos() {
             }
         }
     }
-    return std::make_pair(Ua,Ub);
+    return std::make_pair(Ua, Ub);
 }
 
 void SpinCorr::spin_analysis() {
@@ -117,52 +116,52 @@ void SpinCorr::spin_analysis() {
     psi::SharedMatrix UA(new psi::Matrix(nact, nact));
     psi::SharedMatrix UB(new psi::Matrix(nact, nact));
 
-    //if (options_->get_str("SPIN_BASIS") == "IAO") {
-        // outfile->Printf("\n  Computing spin correlation in IAO basis \n");
-        // psi::SharedMatrix Ca = ints_->Ca();
-        // std::shared_ptr<IAOBuilder> IAO =
-        //     IAOBuilder::build(reference_wavefunction_->basisset(),
-        //                       reference_wavefunction_->get_basisset("MINAO_BASIS"), Ca,
-        //                       options_->;
-        // outfile->Printf("\n  Computing IAOs\n");
-        // std::map<std::string, psi::SharedMatrix> iao_info = IAO->build_iaos();
-        // psi::SharedMatrix iao_orbs(iao_info["A"]->clone());
+    // if (options_->get_str("SPIN_BASIS") == "IAO") {
+    // outfile->Printf("\n  Computing spin correlation in IAO basis \n");
+    // psi::SharedMatrix Ca = ints_->Ca();
+    // std::shared_ptr<IAOBuilder> IAO =
+    //     IAOBuilder::build(reference_wavefunction_->basisset(),
+    //                       reference_wavefunction_->get_basisset("MINAO_BASIS"), Ca,
+    //                       options_->;
+    // outfile->Printf("\n  Computing IAOs\n");
+    // std::map<std::string, psi::SharedMatrix> iao_info = IAO->build_iaos();
+    // psi::SharedMatrix iao_orbs(iao_info["A"]->clone());
 
-        // psi::SharedMatrix Cainv(Ca->clone());
-        // Cainv->invert();
-        // psi::SharedMatrix iao_coeffs = psi::Matrix::doublet(Cainv, iao_orbs, false, false);
+    // psi::SharedMatrix Cainv(Ca->clone());
+    // Cainv->invert();
+    // psi::SharedMatrix iao_coeffs = psi::Matrix::doublet(Cainv, iao_orbs, false, false);
 
-        // size_t new_dim = iao_orbs->colspi()[0];
+    // size_t new_dim = iao_orbs->colspi()[0];
 
-        // auto labels = IAO->print_IAO(iao_orbs, new_dim, nmo_, reference_wavefunction_);
-        // std::vector<int> IAO_inds;
-        // if (options_->get_bool("PI_ACTIVE_SPACE")) {
-        //     for (size_t i = 0, maxi = labels.size(); i < maxi; ++i) {
-        //         std::string label = labels[i];
-        //         if (label.find("z") != std::string::npos) {
-        //             IAO_inds.push_back(i);
-        //         }
-        //     }
-        // } else {
-        //     nact = new_dim;
-        //     for (size_t i = 0; i < new_dim; ++i) {
-        //         IAO_inds.push_back(i);
-        //     }
-        // }
+    // auto labels = IAO->print_IAO(iao_orbs, new_dim, nmo_, reference_wavefunction_);
+    // std::vector<int> IAO_inds;
+    // if (options_->get_bool("PI_ACTIVE_SPACE")) {
+    //     for (size_t i = 0, maxi = labels.size(); i < maxi; ++i) {
+    //         std::string label = labels[i];
+    //         if (label.find("z") != std::string::npos) {
+    //             IAO_inds.push_back(i);
+    //         }
+    //     }
+    // } else {
+    //     nact = new_dim;
+    //     for (size_t i = 0; i < new_dim; ++i) {
+    //         IAO_inds.push_back(i);
+    //     }
+    // }
 
-        // std::vector<size_t> active_mo = mo_space_info_->get_absolute_mo("ACTIVE");
-        // for (size_t i = 0; i < nact; ++i) {
-        //     int idx = IAO_inds[i];
-        //     outfile->Printf("\n Using IAO %d", idx);
-        //     for (size_t j = 0; j < nact; ++j) {
-        //         int mo = active_mo[j];
-        //         UA->set(j, i, iao_coeffs->get(mo, idx));
-        //     }
-        // }
-        // UB->copy(UA);
-        // outfile->Printf("\n");
+    // std::vector<size_t> active_mo = mo_space_info_->get_absolute_mo("ACTIVE");
+    // for (size_t i = 0; i < nact; ++i) {
+    //     int idx = IAO_inds[i];
+    //     outfile->Printf("\n Using IAO %d", idx);
+    //     for (size_t j = 0; j < nact; ++j) {
+    //         int mo = active_mo[j];
+    //         UA->set(j, i, iao_coeffs->get(mo, idx));
+    //     }
+    // }
+    // UB->copy(UA);
+    // outfile->Printf("\n");
 
-    //} else 
+    //} else
     if (options_->get_str("SPIN_BASIS") == "NO") {
 
         outfile->Printf("\n  Computing spin correlation in NO basis \n");
@@ -194,8 +193,8 @@ void SpinCorr::spin_analysis() {
         psi::SharedMatrix CA = as_ints_->ints()->Ca();
         psi::SharedMatrix CB = as_ints_->ints()->Cb();
 
-        psi::SharedMatrix Ca_new = psi::Matrix::doublet(CA, Ua_full, false, false);
-        psi::SharedMatrix Cb_new = psi::Matrix::doublet(CB, Ub_full, false, false);
+        psi::SharedMatrix Ca_new = psi::linalg::doublet(CA, Ua_full, false, false);
+        psi::SharedMatrix Cb_new = psi::linalg::doublet(CB, Ub_full, false, false);
 
         CA->copy(Ca_new);
         CB->copy(Cb_new);
@@ -276,7 +275,7 @@ void SpinCorr::spin_analysis() {
             spin_z->set(i, j, value);
         }
     }
-    
+
     for (size_t i = 0; i < nact; ++i) {
         for (size_t j = 0; j < nact; ++j) {
             double value = 0.0;
@@ -299,7 +298,6 @@ void SpinCorr::spin_analysis() {
             spin_fluct->set(i, j, value);
         }
     }
-
 
     outfile->Printf("\n");
     // spin_corr->print();
@@ -355,24 +353,24 @@ void SpinCorr::spin_analysis() {
             Ca->set_column(0,actpi[i], vec);
         }
     */
-    if( options_->get_bool("SPIN_TEST") ){
+    if (options_->get_bool("SPIN_TEST")) {
         // make a test
         double value = 0.0;
         for (size_t i = 0; i < nact; ++i) {
             for (size_t j = i; j < nact; ++j) {
-                value += spin_fluct->get(i,j);
+                value += spin_fluct->get(i, j);
             }
         }
 
         psi::Process::environment.globals["SPIN CORRELATION TEST"] = value;
-
     }
 }
 
-void perform_spin_analysis(RDMs rdms, std::shared_ptr<ForteOptions> options, std::shared_ptr<MOSpaceInfo> mo_space_info,std::shared_ptr<ActiveSpaceIntegrals> as_ints) {
+void perform_spin_analysis(RDMs rdms, std::shared_ptr<ForteOptions> options,
+                           std::shared_ptr<MOSpaceInfo> mo_space_info,
+                           std::shared_ptr<ActiveSpaceIntegrals> as_ints) {
     SpinCorr spin(rdms, options, mo_space_info, as_ints);
-    spin.spin_analysis();    
-
+    spin.spin_analysis();
 }
 
 } // namespace forte

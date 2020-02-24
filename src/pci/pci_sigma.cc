@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2019 by its authors (see COPYING, COPYING.LESSER,
+ * Copyright (c) 2012-2020 by its authors (see COPYING, COPYING.LESSER,
  * AUTHORS).
  *
  * The copyrights for code used from other parties are included in
@@ -31,6 +31,10 @@
 #include <cmath>
 #include <cstring>
 #include <algorithm>
+
+#include "psi4/libmints/vector.h"
+
+#include "integrals/active_space_integrals.h"
 #include "pci_sigma.h"
 
 namespace forte {
@@ -75,11 +79,11 @@ PCISigmaVector::PCISigmaVector(
         dets_max_couplings,
     double dets_single_max_coupling, double dets_double_max_coupling,
     const std::vector<std::pair<det_hashvec, std::vector<double>>>& bad_roots)
-    : SigmaVector(dets_hashvec.size()), dets_(dets_hashvec),
-      spawning_threshold_(spawning_threshold), as_ints_(as_ints), prescreen_H_CI_(prescreen_H_CI),
-      important_H_CI_CJ_(important_H_CI_CJ), dets_max_couplings_(dets_max_couplings),
-      dets_single_max_coupling_(dets_single_max_coupling), a_couplings_(a_couplings),
-      b_couplings_(b_couplings), a_couplings_size_(a_couplings.size()),
+    : SigmaVector(dets_hashvec, as_ints, SigmaVectorType::Full, "PCISigmaVector"),
+      dets_(dets_hashvec), spawning_threshold_(spawning_threshold), as_ints_(as_ints),
+      prescreen_H_CI_(prescreen_H_CI), important_H_CI_CJ_(important_H_CI_CJ),
+      dets_max_couplings_(dets_max_couplings), dets_single_max_coupling_(dets_single_max_coupling),
+      a_couplings_(a_couplings), b_couplings_(b_couplings), a_couplings_size_(a_couplings.size()),
       b_couplings_size_(b_couplings.size()), dets_double_max_coupling_(dets_double_max_coupling),
       aa_couplings_(aa_couplings), ab_couplings_(ab_couplings), bb_couplings_(bb_couplings),
       aa_couplings_size_(aa_couplings.size()), ab_couplings_size_(ab_couplings.size()),
@@ -1074,4 +1078,4 @@ void PCISigmaVector::apply_tau_H_ref_C_symm_det_dynamic_HBCI_2(
 #pragma omp atomic
     result_C[I] += diagonal_contribution;
 }
-}
+} // namespace forte

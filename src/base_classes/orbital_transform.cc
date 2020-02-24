@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2019 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
+ * Copyright (c) 2012-2020 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
  *
  * The copyrights for code used from other parties are included in
  * the corresponding files.
@@ -36,7 +36,8 @@
 namespace forte {
 
 OrbitalTransform::OrbitalTransform(std::shared_ptr<ForteIntegrals> ints,
-                                   std::shared_ptr<MOSpaceInfo> mo_space_info): ints_(ints) {}
+                                   std::shared_ptr<MOSpaceInfo> mo_space_info)
+    : ints_(ints), mo_space_info_(mo_space_info) {}
 
 std::unique_ptr<OrbitalTransform>
 make_orbital_transformation(const std::string& type, std::shared_ptr<SCFInfo> scf_info,

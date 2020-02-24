@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2019 by its authors (see COPYING, COPYING.LESSER,
+ * Copyright (c) 2012-2020 by its authors (see COPYING, COPYING.LESSER,
  * AUTHORS).
  *
  * The copyrights for code used from other parties are included in
@@ -92,15 +92,6 @@ void view_modified_orbitals(std::shared_ptr<psi::Wavefunction> wfn,
                             const std::shared_ptr<psi::Matrix>& Ca,
                             const std::shared_ptr<psi::Vector>& diag_F,
                             const std::shared_ptr<psi::Vector>& occupation);
-
-/**
- * @brief print_h2 Print a header
- * @param text The string to print in the header.
- * @param left_separator The left separator (default = "==>")
- * @param right_separator The right separator (default = "<==")
- */
-void print_h2(const std::string& text, const std::string& left_separator = "==>",
-              const std::string& right_separator = "<==");
 
 /**
  * Returns the Ms as a string, using

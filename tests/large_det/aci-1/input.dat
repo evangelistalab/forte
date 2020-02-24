@@ -29,7 +29,7 @@ set scf {
 set forte {
   active_space_solver aci
   frozen_docc [1,0,0,0,0,1,0,0]
-  diag_algorithm davidsonliulist
+  diag_algorithm dynamic
   sigma 0.0015
   gamma 0.0015
   nroot 1

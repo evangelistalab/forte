@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2019 by its authors (see COPYING, COPYING.LESSER,
+ * Copyright (c) 2012-2020 by its authors (see COPYING, COPYING.LESSER,
  * AUTHORS).
  *
  * The copyrights for code used from other parties are included in
@@ -35,17 +35,6 @@
 #include <tuple>
 #include <unordered_map>
 #include <utility>
-
-#include "boost/format.hpp"
-
-#include "psi4/libpsi4util/process.h"
-#include "psi4/libciomr/libciomr.h"
-#include "psi4/libmints/matrix.h"
-#include "psi4/libmints/molecule.h"
-#include "psi4/libmints/vector.h"
-#include "psi4/libpsio/psio.h"
-#include "psi4/libpsio/psio.hpp"
-#include "psi4/libqt/qt.h"
 
 #include "helpers/timer.h"
 #include "sparse_ci/ci_reference.h"
@@ -225,7 +214,7 @@ void ProjectorCI::sortHashVecByCoefficient(det_hashvec& dets_hashvec, std::vecto
 ProjectorCI::ProjectorCI(StateInfo state, size_t nroot, std::shared_ptr<SCFInfo> scf_info,
                          std::shared_ptr<MOSpaceInfo> mo_space_info,
                          std::shared_ptr<ActiveSpaceIntegrals> as_ints)
-    : SelectedCIMethod(state, nroot, scf_info, mo_space_info, as_ints), sparse_solver_(as_ints_) {
+    : SelectedCIMethod(state, nroot, scf_info, mo_space_info, as_ints) {
     // Copy the wavefunction information
     startup();
 }
@@ -281,16 +270,6 @@ void ProjectorCI::set_options(std::shared_ptr<ForteOptions> options) {
     //    reference_determinant_.print();
 
     post_diagonalization_ = options->get_bool("PCI_POST_DIAGONALIZE");
-    diag_method_ = DLSolver;
-    if (options->has_changed("DIAG_ALGORITHM")) {
-        if (options->get_str("DIAG_ALGORITHM") == "FULL") {
-            diag_method_ = Full;
-        } else if (options->get_str("DIAG_ALGORITHM") == "DLSTRING") {
-            diag_method_ = DLString;
-        } else if (options->get_str("DIAG_ALGORITHM") == "DLDISK") {
-            diag_method_ = DLDisk;
-        }
-    }
     //    /-> Define appropriate variable: post_diagonalization_ =
     //    options_->get_bool("EX_ALGORITHM");
 
@@ -676,7 +655,7 @@ void ProjectorCI::pre_iter_preparation() {
     sortHashVecByCoefficient(dets_hashvec_, C_);
     psi::timer_off("PCI:sort");
 
-    print_wfn(dets_hashvec_, C_);
+    //    print_wfn(dets_hashvec_, C_, 1); TODO: re-enable [sci_cleanup]
     //    det_hash<> old_space_map;
     //    for (size_t I = 0; I < dets_hashvec.size(); ++I) {
     //        old_space_map[dets_hashvec[I]] = C[I];
@@ -841,9 +820,9 @@ void ProjectorCI::post_iter_process() {
     psi::timer_off("PCI:sort");
 
     if (print_full_wavefunction_) {
-        print_wfn(dets_hashvec_, C_, C_.size());
+        //        print_wfn(dets_hashvec_, C_, 1, C_.size()); TODO: re-enable [sci_cleanup]
     } else {
-        print_wfn(dets_hashvec_, C_);
+        //        print_wfn(dets_hashvec_, C_, 1); TODO: re-enable [sci_cleanup]
     }
 
     psi::outfile->Printf("\n  %s: %f s\n", "ProjectorCI (bitset) steps finished in  ",
@@ -877,21 +856,16 @@ void ProjectorCI::post_iter_process() {
         psi::SharedMatrix apfci_evecs(new psi::Matrix("Eigenvectors", C_.size(), nroot_));
         psi::SharedVector apfci_evals(new psi::Vector("Eigenvalues", nroot_));
 
-        WFNOperator op(mo_symmetry_, as_ints_);
         DeterminantHashVec det_map(std::move(dets_hashvec_));
-        op.build_strings(det_map);
-        op.op_s_lists(det_map);
-        op.tp_s_lists(det_map);
 
         // set SparseCISolver options
-        sparse_solver_.set_sigma_vector(nullptr);
         sparse_solver_.set_spin_project(true);
-        sparse_solver_.set_sigma_method("SPARSE");
         sparse_solver_.manual_guess(false);
         sparse_solver_.set_force_diag(false);
 
-        sparse_solver_.diagonalize_hamiltonian_map(det_map, op, apfci_evals, apfci_evecs, nroot_,
-                                                   wavefunction_multiplicity_, diag_method_);
+        auto sigma_vector = make_sigma_vector(det_map, as_ints_, 0, SigmaVectorType::SparseList);
+        std::tie(apfci_evals, apfci_evecs) = sparse_solver_.diagonalize_hamiltonian(
+            det_map, sigma_vector, nroot_, wavefunction_multiplicity_);
         det_map.swap(dets_hashvec_);
 
         psi::timer_off("PCI:Post_Diag");
@@ -906,20 +880,21 @@ void ProjectorCI::post_iter_process() {
                              post_diag_energy - as_ints_->energy(reference_determinant_) -
                                  nuclear_repulsion_energy_ - as_ints_->scalar_energy());
 
-        std::vector<double> diag_C(C_.size());
+        //        std::vector<double> diag_C(C_.size());
 
-        for (size_t I = 0; I < C_.size(); ++I) {
-            diag_C[I] = apfci_evecs->get(I, current_root_);
-        }
+        //        for (size_t I = 0; I < C_.size(); ++I) {
+        //            diag_C[I] = apfci_evecs->get(I, current_root_);
+        //        }
 
         psi::timer_on("PCI:sort");
         sortHashVecByCoefficient(dets_hashvec_, C_);
         psi::timer_off("PCI:sort");
 
         if (print_full_wavefunction_) {
-            print_wfn(dets_hashvec_, diag_C, diag_C.size());
+            //            print_wfn(dets_hashvec_, apfci_evecs, 1, diag_C.size()); TODO: re-enable
+            //            [sci_cleanup]
         } else {
-            print_wfn(dets_hashvec_, diag_C);
+            //            print_wfn(dets_hashvec_, apfci_evecs, 1); TODO: re-enable [sci_cleanup]
         }
     }
 }
@@ -1007,12 +982,15 @@ double ProjectorCI::initial_guess(det_hashvec& dets_hashvec, std::vector<double>
     //   DynamicBitsetDeterminant dbs = d.to_dynamic_bitset();
     //  dyn_dets.push_back(dbs);
     // }
-    sparse_solver_.set_sigma_vector(nullptr);
     sparse_solver_.set_spin_project(true);
     sparse_solver_.manual_guess(false);
     sparse_solver_.set_force_diag(false);
-    sparse_solver_.diagonalize_hamiltonian(dets_hashvec.toVector(), evals, evecs, nroot_,
-                                           wavefunction_multiplicity_, DLSolver);
+
+    DeterminantHashVec det_map(dets_hashvec_);
+    auto sigma_vector_diag = make_sigma_vector(det_map, as_ints_, 0, SigmaVectorType::SparseList);
+    std::tie(evals, evecs) = sparse_solver_.diagonalize_hamiltonian(
+        det_map, sigma_vector_diag, nroot_, wavefunction_multiplicity_);
+
     double var_energy =
         evals->get(current_root_) + nuclear_repulsion_energy_ + as_ints_->scalar_energy();
     psi::outfile->Printf("\n\n  Initial guess energy (variational) = %20.12f Eh (root = %d)",
@@ -1134,25 +1112,40 @@ void ProjectorCI::propagate_wallCh(det_hashvec& dets_hashvec, std::vector<double
 
 void ProjectorCI::propagate_DL(det_hashvec& dets_hashvec, std::vector<double>& C,
                                double spawning_threshold) {
-    PCISigmaVector sigma_vector(dets_hashvec, C, spawning_threshold, as_ints_, prescreen_H_CI_,
-                                important_H_CI_CJ_, a_couplings_, b_couplings_, aa_couplings_,
-                                ab_couplings_, bb_couplings_, dets_max_couplings_,
-                                dets_single_max_coupling_, dets_double_max_coupling_, solutions_);
-    num_off_diag_elem_ = sigma_vector.get_num_off_diag();
-    size_t ref_size = C.size(), result_size = sigma_vector.size();
+    auto sigma_vector = std::make_shared<PCISigmaVector>(
+        dets_hashvec, C, spawning_threshold, as_ints_, prescreen_H_CI_, important_H_CI_CJ_,
+        a_couplings_, b_couplings_, aa_couplings_, ab_couplings_, bb_couplings_,
+        dets_max_couplings_, dets_single_max_coupling_, dets_double_max_coupling_, solutions_);
+    num_off_diag_elem_ = sigma_vector->get_num_off_diag();
+    size_t ref_size = C.size();
+
+    //    outfile->Printf("\n\n result_size = %zu", result_size);
+
     std::vector<std::pair<size_t, double>> guess(ref_size);
     for (size_t I = 0; I < ref_size; ++I) {
         guess[I] = std::make_pair(I, C[I]);
     }
-    sparse_solver_.set_sigma_vector(&sigma_vector);
     sparse_solver_.set_initial_guess(guess);
     sparse_solver_.set_spin_project(false);
     sparse_solver_.set_force_diag(true);
     psi::SharedMatrix PQ_evecs_;
     psi::SharedVector PQ_evals_;
-    sparse_solver_.diagonalize_hamiltonian(dets_hashvec.toVector(), PQ_evals_, PQ_evecs_, nroot_,
-                                           state_.multiplicity(), Sparse);
-    current_davidson_iter_ = sigma_vector.get_sigma_build_count();
+
+    DeterminantHashVec det_map(dets_hashvec_);
+
+    // set SparseCISolver options
+    sparse_solver_.set_spin_project(true);
+    sparse_solver_.manual_guess(false);
+    sparse_solver_.set_force_diag(false);
+
+    auto sigma_vector2 = make_sigma_vector(det_map, as_ints_, 0, SigmaVectorType::SparseList);
+
+    size_t result_size = sigma_vector->size();
+
+    std::tie(PQ_evals_, PQ_evecs_) = sparse_solver_.diagonalize_hamiltonian(
+        det_map, sigma_vector, nroot_, state_.multiplicity());
+
+    current_davidson_iter_ = sigma_vector->get_sigma_build_count();
     old_approx_energy_ = approx_energy_;
     approx_energy_ = PQ_evals_->get(0) + as_ints_->scalar_energy() + nuclear_repulsion_energy_;
     C.resize(result_size);
@@ -1285,25 +1278,18 @@ double ProjectorCI::estimate_var_energy_within_error_sigma(const det_hashvec& de
         cut_index + 1, max_error);
     double variational_energy_estimator = 0.0;
 
-    WFNOperator op(mo_symmetry_, as_ints_);
     std::vector<Determinant> sub_dets = dets_hashvec.toVector();
     sub_dets.erase(sub_dets.begin() + cut_index + 1, sub_dets.end());
     DeterminantHashVec det_map(sub_dets);
-    op.build_strings(det_map);
-    op.op_s_lists(det_map);
-    op.tp_s_lists(det_map);
-    //    std::vector<std::pair<std::vector<size_t>, std::vector<double>>> H =
-    //    op.build_H_sparse(det_map);
-    //    SigmaVectorSparse svs(H);
-    SigmaVectorWfn2 svs(det_map, op, as_ints_);
-    size_t sub_size = svs.size();
+    auto sigma_vector = make_sigma_vector(det_map, as_ints_, 0, SigmaVectorType::SparseList);
+    size_t sub_size = sigma_vector->size();
     // allocate vectors
     psi::SharedVector b(new psi::Vector("b", sub_size));
     psi::SharedVector sigma(new psi::Vector("sigma", sub_size));
     for (size_t i = 0; i < sub_size; ++i) {
         b->set(i, C[i]);
     }
-    svs.compute_sigma(sigma, b);
+    sigma_vector->compute_sigma(sigma, b);
     variational_energy_estimator = sigma->dot(b.get());
 
     variational_energy_estimator /= 1.0 - cume_ignore;
@@ -1355,63 +1341,64 @@ double ProjectorCI::estimate_var_energy_sparse(const det_hashvec& dets_hashvec,
     return variational_energy_estimator + nuclear_repulsion_energy_ + as_ints_->scalar_energy();
 }
 
-void ProjectorCI::print_wfn(const det_hashvec& space_hashvec, std::vector<double>& C,
-                            size_t max_output) {
-    psi::outfile->Printf("\n\n  Most important contributions to the wave function:\n");
+// void ProjectorCI::print_wfn(const det_hashvec& space_hashvec, std::vector<double>& C,
+//                            size_t max_output) {
+//    psi::outfile->Printf("\n\n  Most important contributions to the wave function:\n");
 
-    size_t max_dets = std::min(int(max_output), int(C.size()));
-    for (size_t I = 0; I < max_dets; ++I) {
-        psi::outfile->Printf("\n  %3zu  %13.6g %13.6g  %10zu %s  %18.12f", I, C[I], C[I] * C[I], I,
-                             str(space_hashvec[I]).c_str(),
-                             as_ints_->energy(space_hashvec[I]) + as_ints_->scalar_energy());
-    }
+//    size_t max_dets = std::min(int(max_output), int(C.size()));
+//    for (size_t I = 0; I < max_dets; ++I) {
+//        psi::outfile->Printf("\n  %3zu  %13.6g %13.6g  %10zu %s  %18.12f", I, C[I], C[I] * C[I],
+//        I,
+//                             str(space_hashvec[I]).c_str(),
+//                             as_ints_->energy(space_hashvec[I]) + as_ints_->scalar_energy());
+//    }
 
-    // Compute the expectation value of the spin
-    size_t max_sample = 1000;
-    size_t max_I = 0;
-    double sum_weight = 0.0;
-    double wfn_threshold = 0.95;
-    for (size_t I = 0; I < space_hashvec.size(); ++I) {
-        if ((sum_weight < wfn_threshold) and (I < max_sample)) {
-            sum_weight += C[I] * C[I];
-            max_I++;
-        } else if (std::fabs(C[I - 1]) - std::fabs(C[I]) < 1.0e-6) {
-            // Special case, if there are several equivalent determinants
-            sum_weight += C[I] * C[I];
-            max_I++;
-        } else {
-            break;
-        }
-    }
+//    // Compute the expectation value of the spin
+//    size_t max_sample = 1000;
+//    size_t max_I = 0;
+//    double sum_weight = 0.0;
+//    double wfn_threshold = 0.95;
+//    for (size_t I = 0; I < space_hashvec.size(); ++I) {
+//        if ((sum_weight < wfn_threshold) and (I < max_sample)) {
+//            sum_weight += C[I] * C[I];
+//            max_I++;
+//        } else if (std::fabs(C[I - 1]) - std::fabs(C[I]) < 1.0e-6) {
+//            // Special case, if there are several equivalent determinants
+//            sum_weight += C[I] * C[I];
+//            max_I++;
+//        } else {
+//            break;
+//        }
+//    }
 
-    double norm = 0.0;
-    double S2 = 0.0;
-    for (size_t I = 0; I < max_I; ++I) {
-        for (size_t J = 0; J < max_I; ++J) {
-            if (std::fabs(C[I] * C[J]) > 1.0e-12) {
-                const double S2IJ = spin2(space_hashvec[I], space_hashvec[J]);
-                S2 += C[I] * C[J] * S2IJ;
-            }
-        }
-        norm += C[I] * C[I];
-    }
-    S2 /= norm;
-    double S = std::fabs(0.5 * (std::sqrt(1.0 + 4.0 * S2) - 1.0));
+//    double norm = 0.0;
+//    double S2 = 0.0;
+//    for (size_t I = 0; I < max_I; ++I) {
+//        for (size_t J = 0; J < max_I; ++J) {
+//            if (std::fabs(C[I] * C[J]) > 1.0e-12) {
+//                const double S2IJ = spin2(space_hashvec[I], space_hashvec[J]);
+//                S2 += C[I] * C[J] * S2IJ;
+//            }
+//        }
+//        norm += C[I] * C[I];
+//    }
+//    S2 /= norm;
+//    double S = std::fabs(0.5 * (std::sqrt(1.0 + 4.0 * S2) - 1.0));
 
-    std::vector<std::string> s2_labels({"singlet", "doublet", "triplet", "quartet", "quintet",
-                                        "sextet", "septet", "octet", "nonet", "decaet"});
-    size_t nLet = std::round(S * 2.0);
-    std::string state_label;
-    if (nLet < 10) {
-        state_label = s2_labels[nLet];
-    } else {
-        state_label = std::to_string(nLet) + "-let";
-    }
+//    std::vector<std::string> s2_labels({"singlet", "doublet", "triplet", "quartet", "quintet",
+//                                        "sextet", "septet", "octet", "nonet", "decaet"});
+//    size_t nLet = std::round(S * 2.0);
+//    std::string state_label;
+//    if (nLet < 10) {
+//        state_label = s2_labels[nLet];
+//    } else {
+//        state_label = std::to_string(nLet) + "-let";
+//    }
 
-    psi::outfile->Printf("\n\n  Spin State: S^2 = %5.3f, S = %5.3f, %s (from %zu "
-                         "determinants,%.2f%%)",
-                         S2, S, state_label.c_str(), max_I, 100.0 * sum_weight);
-}
+//    psi::outfile->Printf("\n\n  Spin State: S^2 = %5.3f, S = %5.3f, %s (from %zu "
+//                         "determinants,%.2f%%)",
+//                         S2, S, state_label.c_str(), max_I, 100.0 * sum_weight);
+//}
 
 void ProjectorCI::save_wfn(det_hashvec& space, std::vector<double>& C,
                            std::vector<std::pair<det_hashvec, std::vector<double>>>& solutions) {
@@ -2241,12 +2228,13 @@ psi::SharedMatrix ProjectorCI::get_PQ_evecs() {
     }
     return evecs;
 }
+
 psi::SharedVector ProjectorCI::get_PQ_evals() {
     psi::SharedVector evals = std::make_shared<psi::Vector>("e", nroot_);
     evals->set(0, approx_energy_ - as_ints_->scalar_energy() - nuclear_repulsion_energy_);
     return evals;
 }
-WFNOperator ProjectorCI::get_op() { return WFNOperator(); }
+
 size_t ProjectorCI::get_ref_root() { return current_root_; }
 std::vector<double> ProjectorCI::get_multistate_pt2_energy_correction() {
     return std::vector<double>(nroot_);

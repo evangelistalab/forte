@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2019 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
+ * Copyright (c) 2012-2020 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
  *
  * The copyrights for code used from other parties are included in
  * the corresponding files.
@@ -37,6 +37,22 @@
 using namespace psi;
 
 namespace forte {
+
+void print_h1(const std::string& text, bool centerd, const std::string& left_separator,
+              const std::string& right_separator) {
+    int text_width = static_cast<int>(text.size());
+    int margin_width = 78 - text_width - 2;
+    int left_margin_width = centerd ? margin_width / 2 : 0;
+    int right_margin_width = margin_width - left_margin_width;
+    outfile->Printf("\n\n  %s %s %s\n", std::string(left_margin_width, '-').c_str(), text.c_str(),
+                    std::string(right_margin_width, '-').c_str());
+}
+
+void print_h2(const std::string& text, const std::string& left_separator,
+              const std::string& right_separator) {
+    outfile->Printf("\n\n  %s %s %s\n", left_separator.c_str(), text.c_str(),
+                    right_separator.c_str());
+}
 
 void print_method_banner(const std::vector<std::string>& text, const std::string& separator) {
     size_t max_width = 80;
@@ -71,4 +87,3 @@ void print_timing(const std::string& text, double seconds) {
 }
 
 } // namespace forte
-

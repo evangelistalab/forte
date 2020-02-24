@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2019 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
+ * Copyright (c) 2012-2020 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
  *
  * The copyrights for code used from other parties are included in
  * the corresponding files.
@@ -47,11 +47,13 @@ class ActiveSpaceIntegrals {
      * @brief Contructor to create integrals for an active space
      * @param ints forte integral object
      * @param active_mo the list of active orbitals
+     * @param active_mo_symmetry the symmetry of the active orbitals
      * @param rdocc_mo the list of orbitals that are doubly occupied. This information is used
      *                 to form the effective one-electron operator
      */
-    ActiveSpaceIntegrals(std::shared_ptr<ForteIntegrals> ints, std::vector<size_t> active_mo,
-                         std::vector<size_t> rdocc_mo);
+    ActiveSpaceIntegrals(std::shared_ptr<ForteIntegrals> ints, const std::vector<size_t>& active_mo,
+                         const std::vector<int>& active_mo_symmetry,
+                         const std::vector<size_t>& rdocc_mo);
 
     // ==> Class Interface <==
 
@@ -60,6 +62,8 @@ class ActiveSpaceIntegrals {
 
     /// Return the number of MOs
     size_t nmo() const { return nmo_; }
+
+    std::vector<int> active_mo_symmetry() const;
 
     std::vector<size_t> active_mo() const;
 
@@ -200,6 +204,8 @@ class ActiveSpaceIntegrals {
     std::vector<double> diag_tei_bb_;
     /// A vector of indices for the active molecular orbitals
     std::vector<size_t> active_mo_;
+    /// A vector of the symmetry ofthe active molecular orbitals
+    std::vector<int> active_mo_symmetry_;
     /// A Vector of indices for the restricted_docc molecular orbitals
     std::vector<size_t> restricted_docc_mo_;
 

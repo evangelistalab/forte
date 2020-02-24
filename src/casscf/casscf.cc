@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2019 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
+ * Copyright (c) 2012-2020 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
  *
  * The copyrights for code used from other parties are included in
  * the corresponding files.
@@ -35,6 +35,7 @@
 #include "psi4/libmints/wavefunction.h"
 #include "psi4/libqt/qt.h"
 #include "psi4/psifiles.h"
+#include "psi4/libmints/basisset.h"
 
 #include "helpers/printing.h"
 #include "helpers/helpers.h"
@@ -484,9 +485,13 @@ void CASSCF::cas_ci_final() {
 double CASSCF::cas_check(RDMs cas_ref) {
     ambit::Tensor gamma1 = ambit::Tensor::build(ambit::CoreTensor, "Gamma1", {na_, na_});
     ambit::Tensor gamma2 = ambit::Tensor::build(ambit::CoreTensor, "Gamma2", {na_, na_, na_, na_});
+
+    std::vector<size_t> rdocc = mo_space_info_->corr_absolute_mo("RESTRICTED_DOCC");
+    std::vector<size_t> active = mo_space_info_->corr_absolute_mo("ACTIVE");
+    std::vector<int> active_sym = mo_space_info_->symmetry("ACTIVE");
     std::shared_ptr<ActiveSpaceIntegrals> fci_ints =
-        std::make_shared<ActiveSpaceIntegrals>(ints_, mo_space_info_->corr_absolute_mo("ACTIVE"),
-                                               mo_space_info_->corr_absolute_mo("RESTRICTED_DOCC"));
+        std::make_shared<ActiveSpaceIntegrals>(ints_, active, active_sym, rdocc);
+
     fci_ints->set_active_integrals_and_restricted_docc();
 
     /// Spin-free ORDM = gamma1_a + gamma1_b
@@ -723,8 +728,9 @@ std::shared_ptr<ActiveSpaceIntegrals> CASSCF::get_ci_integrals() {
 
     std::vector<size_t> rdocc = mo_space_info_->corr_absolute_mo("RESTRICTED_DOCC");
     std::vector<size_t> active = mo_space_info_->corr_absolute_mo("ACTIVE");
+    std::vector<int> active_sym = mo_space_info_->symmetry("ACTIVE");
     std::shared_ptr<ActiveSpaceIntegrals> fci_ints =
-        std::make_shared<ActiveSpaceIntegrals>(ints_, active, rdocc);
+        std::make_shared<ActiveSpaceIntegrals>(ints_, active, active_sym, rdocc);
     if (!(options_->get_bool("RESTRICTED_DOCC_JK"))) {
         fci_ints->set_active_integrals_and_restricted_docc();
     } else {

@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2019 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
+ * Copyright (c) 2012-2020 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
  *
  * The copyrights for code used from other parties are included in
  * the corresponding files.
@@ -29,9 +29,30 @@
 #ifndef _printing_h_
 #define _printing_h_
 
+#include <vector>
+#include <string>
+
 namespace forte {
 
 enum class PrintLevel { Quiet = 0, Mini = 1, Default = 2, Debug = 3 };
+
+/**
+ * @brief print_h1 Print a header
+ * @param text The string to print in the header.
+ * @param left_separator The left separator (default = "-")
+ * @param right_separator The right separator (default = "-")
+ */
+void print_h1(const std::string& text, bool centerd = true, const std::string& left_filler = "-",
+              const std::string& right_filler = "-");
+
+/**
+ * @brief print_h2 Print a header
+ * @param text The string to print in the header.
+ * @param left_separator The left separator (default = "==>")
+ * @param right_separator The right separator (default = "<==")
+ */
+void print_h2(const std::string& text, const std::string& left_separator = "==>",
+              const std::string& right_separator = "<==");
 
 /**
  * @brief print_method_banner Print a banner for a method

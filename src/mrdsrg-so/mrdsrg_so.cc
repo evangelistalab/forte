@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2019 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
+ * Copyright (c) 2012-2020 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
  *
  * The copyrights for code used from other parties are included in
  * the corresponding files.
@@ -60,7 +60,7 @@ std::shared_ptr<ActiveSpaceIntegrals> MRDSRG_SO::compute_Heff_actv() {
         "Computing active-space Hamiltonian is not yet implemented for spin-orbital code.");
 
     return std::make_shared<ActiveSpaceIntegrals>(
-        ints_, mo_space_info_->corr_absolute_mo("ACTIVE"),
+        ints_, mo_space_info_->corr_absolute_mo("ACTIVE"), mo_space_info_->symmetry("ACTIVE"),
         mo_space_info_->corr_absolute_mo("RESTRICTED_DOCC"));
 
     //    // de-normal-order DSRG transformed Hamiltonian
