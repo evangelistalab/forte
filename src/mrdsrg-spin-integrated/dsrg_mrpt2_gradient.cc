@@ -279,6 +279,10 @@ void DSRG_MRPT2::set_multiplier() {
     set_z();
     set_w();
     Z.print();
+    for(size_t i=0; i<nmo_; i++){
+outfile->Printf("\n%d   %.6f",i, Fa_[i]);
+    }
+    
 }
 
 
@@ -1414,24 +1418,37 @@ void DSRG_MRPT2::compute_z_aa() {
     temp["wz"] += Z["zw"] * V["z,v,w,u1"] * I["z,u1"] * Gamma1["wv"];
 
     // Denominator
-    BlockedTensor dnt = BTF_->build(CoreTensor, "temporal denominator", {"aa"});
+    BlockedTensor dnt = BTF_->build(CoreTensor, "temporal denominator 1", {"aa"});
     dnt["wz"] = Delta1["zw"];
     dnt["wz"] -= V["w,v,z,u1"] * I["w,u1"] * Gamma1["zv"];
     dnt["wz"] -= V["z,v,w,u1"] * I["w,u1"] * Gamma1["zv"];
     dnt["wz"] += V["w,v,z,u1"] * I["z,u1"] * Gamma1["wv"];
     dnt["wz"] += V["z,v,w,u1"] * I["z,u1"] * Gamma1["wv"];
 
+    BlockedTensor temp_p = BTF_->build(CoreTensor, "temporal tensor plus Z_aa", {"aa"});
+    BlockedTensor temp_m = BTF_->build(CoreTensor, "temporal tensor subtract Z_aa", {"aa"});
 
+    temp_p["wz"] = temp["wz"];
+    temp_p["wz"] += Z["wz"];
+    temp_m["wz"] = temp["wz"];
+    temp_m["wz"] -= Z["wz"];
+
+
+    // different conditions to guarantee the convergence 
     for (const std::string& block : {"aa"}) {
         (Z.block(block)).iterate([&](const std::vector<size_t>& i, double& value) {
             if (i[0] != i[1]) {
-                double val = temp.block(block).data()[i[0] * na_ + i[1]];
-                if (fabs(val) < 1e-7) {
-                    value = 0.0;
+                double dn = dnt.block(block).data()[i[0] * na_ + i[1]];
+                if (fabs(dn) > 1.0) {
+                    value = temp.block(block).data()[i[0] * na_ + i[1]] / dn;
                 }
-                else{       
-                    value = temp.block(block).data()[i[0] * na_ + i[1]] / dnt.block(block).data()[i[0] * na_ + i[1]];
+                else if (dn >= 0) {
+                    value = temp_p.block(block).data()[i[0] * na_ + i[1]] / (dn + 1.0);
                 }
+                else {
+                    value = temp_m.block(block).data()[i[0] * na_ + i[1]] / (dn - 1.0);
+                }
+              
             }
         });
     }     
