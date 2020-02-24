@@ -242,6 +242,7 @@ mrdsrg-pt2:
    - mrdsrg-pt2-3
    - mrdsrg-pt2-5
    - mrdsrg-srgpt2-1
+  ultralong:
    - mrdsrg-srgpt2-2
 pci:
   short:
