@@ -32,7 +32,7 @@
 #include <cmath>
 #include <vector>
 #include "boost/assign.hpp"
-#include "psi4/liboptions/liboptions.h"
+
 #include "psi4/libmints/vector.h"
 #include "psi4/libmints/matrix.h"
 #include "base_classes/rdms.h"

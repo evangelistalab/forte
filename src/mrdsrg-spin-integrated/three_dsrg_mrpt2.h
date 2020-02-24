@@ -32,7 +32,7 @@
 #include <fstream>
 #include <string>
 #include <vector>
-#include "psi4/liboptions/liboptions.h"
+
 #include "psi4/libmints/wavefunction.h"
 #include "ambit/blocked_tensor.h"
 

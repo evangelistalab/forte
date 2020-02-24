@@ -40,6 +40,8 @@
 #include "psi4/libmints/wavefunction.h"
 #include "psi4/libpsio/psio.hpp"
 
+#include "base_classes/forte_options.h"
+
 #include "fragment_projector.h"
 
 using namespace psi;
@@ -47,7 +49,7 @@ using namespace psi;
 namespace forte {
 
 std::pair<psi::SharedMatrix, int> make_fragment_projector(SharedWavefunction wfn,
-                                                          Options& options) {
+                                                          std::shared_ptr<ForteOptions> options) {
     // Run this code only if user specified fragments
     std::shared_ptr<Molecule> molecule = wfn->molecule();
     int nfrag = molecule->nfragments();

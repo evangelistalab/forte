@@ -52,7 +52,7 @@ namespace forte {
 /**
  * Diagonalize the
  */
-void LambdaCI::renormalized_mrcisd(psi::Options& options) {
+void LambdaCI::renormalized_mrcisd(std::shared_ptr<ForteOptions> options) {
     outfile->Printf("\n\n  Renormalized MRCISD");
 
     int nroot = options.get_int("NROOT");
@@ -545,7 +545,7 @@ void LambdaCI::renormalized_mrcisd(psi::Options& options) {
 /**
  * Diagonalize the
  */
-void LambdaCI::renormalized_mrcisd_simple(psi::Options& options) {
+void LambdaCI::renormalized_mrcisd_simple(std::shared_ptr<ForteOptions> options) {
     outfile->Printf("\n\n  Renormalized MRCISD");
 
     int nroot = options.get_int("NROOT");
@@ -842,7 +842,7 @@ void LambdaCI::renormalized_mrcisd_simple(psi::Options& options) {
     }
 }
 
-// void Explorer::renormalized_mrcisd_simple(psi::Options& options)
+// void Explorer::renormalized_mrcisd_simple(std::shared_ptr<ForteOptions> options)
 //{
 //    typedef boost::shared_ptr<StringDeterminant> shared_det;
 //    outfile->Printf("\n\n  Renormalized MRCISD");

@@ -27,12 +27,12 @@
  */
 
 #include "psi4/libpsi4util/PsiOutStream.h"
+#include "psi4/liboptions/liboptions.h"
 
 #include "base_classes/forte_options.h"
 #include "base_classes/mo_space_info.h"
 #include "helpers/helpers.h"
 #include "helpers/string_algorithms.h"
-
 
 using namespace pybind11::literals;
 
@@ -317,8 +317,12 @@ py::object process_psi4_array_data(psi::Data& data) {
     std::string type = data.type();
     if (type == "int") {
         return py::int_(data.to_integer());
+    } else if (type == "double") {
+        return py::float_(data.to_double());
+    }else if (type == "string") {
+        return py::str(data.to_string());
     }
-    return list;
+    return std::move(list);
 }
 
 std::string ForteOptions::generate_documentation() const {

@@ -21,6 +21,7 @@ def register_forte_options(forte_options):
     register_localize_options(forte_options)
     register_casscf_options(forte_options)
     register_old_options(forte_options)
+    register_psi_options(forte_options)
 
 def register_driver_options(forte_options):
     forte_options.set_group("")
@@ -1188,3 +1189,7 @@ def register_old_options(forte_options):
 #     *  - DMRG  DMRG code
 #     *  - V2RDM V2RDM interface -*/
 #    forte_options.add_str("CAS_TYPE", "FCI", "CAS FCI ACI DMRG V2RDM")
+
+def register_psi_options(forte_options):
+        forte_options.add_double("INTS_TOLERANCE", 1.0E-12, 'Schwarz screening threshold')
+        forte_options.add_str("DF_INTS_IO", "NONE", ['NONE','SAVE','LOAD'],'IO caching for CP corrections')

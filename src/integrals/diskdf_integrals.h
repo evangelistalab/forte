@@ -42,7 +42,7 @@ namespace forte {
 /// Reading individual elements is slow
 class DISKDFIntegrals : public ForteIntegrals {
   public:
-    DISKDFIntegrals(psi::Options& options, std::shared_ptr<psi::Wavefunction> ref_wfn,
+    DISKDFIntegrals(std::shared_ptr<ForteOptions> options, std::shared_ptr<psi::Wavefunction> ref_wfn,
                     std::shared_ptr<MOSpaceInfo> mo_space_info, IntegralSpinRestriction restricted);
 
     /// aptei_xy functions are slow.  try to use three_integral_block

@@ -48,7 +48,7 @@ class ConventionalIntegrals : public ForteIntegrals {
   public:
     /// Contructor of the class.  Calls std::shared_ptr<ForteIntegrals> ints
     /// constructor
-    ConventionalIntegrals(psi::Options& options, std::shared_ptr<psi::Wavefunction> ref_wfn,
+    ConventionalIntegrals(std::shared_ptr<ForteOptions> options, std::shared_ptr<psi::Wavefunction> ref_wfn,
                           std::shared_ptr<MOSpaceInfo> mo_space_info,
                           IntegralSpinRestriction restricted);
 

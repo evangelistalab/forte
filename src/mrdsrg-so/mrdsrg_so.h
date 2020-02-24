@@ -31,7 +31,7 @@
 
 #include <cmath>
 
-#include "psi4/liboptions/liboptions.h"
+
 #include "psi4/libmints/wavefunction.h"
 #include "psi4/libpsio/psio.hpp"
 #include "psi4/libpsio/psio.h"

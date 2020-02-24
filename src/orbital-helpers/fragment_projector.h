@@ -32,11 +32,12 @@
 #include "psi4/libmints/molecule.h"
 #include "psi4/libmints/matrix.h"
 #include "psi4/libmints/basisset.h"
-#include "psi4/liboptions/liboptions.h"
 
 #define _DEBUG_FRAGMENT_PROJECTOR_ 0
 
 namespace forte {
+
+class ForteOptions;
 
 /**
  * @brief The fragment_projector class
@@ -89,7 +90,7 @@ class FragmentProjector {
 
 // Helper function
 std::pair<psi::SharedMatrix, int> make_fragment_projector(psi::SharedWavefunction ref_wfn,
-                                                          psi::Options& options);
+                                                          std::shared_ptr<ForteOptions> options);
 
 } // namespace forte
 #endif // _fragment_projector_h_

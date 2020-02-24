@@ -84,7 +84,7 @@ inline double smootherstep(double edge0, double edge1, double x) {
 /**
  * Diagonalize the Hamiltonian in the model and intermediate space, the external space is ignored
  */
-void LambdaCI::diagonalize_p_space(psi::Options& options) {
+void LambdaCI::diagonalize_p_space(std::shared_ptr<ForteOptions> options) {
     outfile->Printf("\n\n  Diagonalizing the Hamiltonian in the model + intermediate space\n");
 
     // 1) Build the Hamiltonian
@@ -276,7 +276,7 @@ void LambdaCI::print_results(SharedMatrix evecs, SharedVector evals, int nroots)
 /**
  * Diagonalize the
  */
-void LambdaCI::diagonalize_p_space_lowdin(psi::Options& options) {
+void LambdaCI::diagonalize_p_space_lowdin(std::shared_ptr<ForteOptions> options) {
     outfile->Printf("\n\n  Diagonalizing the Hamiltonian in the P space with Lowdin's "
                     "contributions from the Q space\n");
     int root = 0;
@@ -635,7 +635,7 @@ void LambdaCI::lowdin_hamiltonian(SharedMatrix H, double E) {
 /**
  * Diagonalize the Hamiltonian in the model and intermediate space, the external space is ignored
  */
-void LambdaCI::diagonalize_p_space_direct(psi::Options& options) {
+void LambdaCI::diagonalize_p_space_direct(std::shared_ptr<ForteOptions> options) {
     outfile->Printf("\n\n  Diagonalizing the Hamiltonian in the model + intermediate space\n");
 
     // 1) Build the Hamiltonian

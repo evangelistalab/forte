@@ -37,7 +37,7 @@ namespace forte {
 #ifdef HAVE_GA
 class DistDFIntegrals : public ForteIntegrals {
   public:
-    DistDFIntegrals(psi::Options& options, std::shared_ptr<psi::Wavefunction> ref_wfn,
+    DistDFIntegrals(std::shared_ptr<ForteOptions> options, std::shared_ptr<psi::Wavefunction> ref_wfn,
                     IntegralSpinRestriction restricted, std::shared_ptr<MOSpaceInfo> mo_space_info);
 
     virtual void retransform_integrals();

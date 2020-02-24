@@ -37,6 +37,7 @@ class Wavefunction;
 } // namespace psi
 
 namespace forte {
+class ForteOptions;
 
 class IAOBuilder {
 
@@ -108,7 +109,8 @@ class IAOBuilder {
     /// Build IBO with defaults from Options object (including MINAO_BASIS)
     static std::shared_ptr<IAOBuilder> build(std::shared_ptr<psi::BasisSet> primary,
                                              std::shared_ptr<psi::BasisSet> minao,
-                                             std::shared_ptr<psi::Matrix> C, psi::Options& options);
+                                             std::shared_ptr<psi::Matrix> C,
+                                             std::shared_ptr<ForteOptions> options);
     /// Build the IAOs for exporting
     std::map<std::string, std::shared_ptr<psi::Matrix>> build_iaos();
 

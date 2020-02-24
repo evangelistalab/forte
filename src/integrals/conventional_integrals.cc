@@ -53,7 +53,7 @@ namespace forte {
  * @param restricted - type of integral transformation
  * @param resort_frozen_core -
  */
-ConventionalIntegrals::ConventionalIntegrals(psi::Options& options,
+ConventionalIntegrals::ConventionalIntegrals(std::shared_ptr<ForteOptions> options,
                                              std::shared_ptr<psi::Wavefunction> ref_wfn,
                                              std::shared_ptr<MOSpaceInfo> mo_space_info,
                                              IntegralSpinRestriction restricted)

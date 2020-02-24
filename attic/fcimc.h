@@ -31,7 +31,7 @@
 
 #include <fstream>
 
-#include "psi4/liboptions/liboptions.h"
+
 #include "psi4/libmints/vector.h"
 #include "psi4/libmints/matrix.h"
 #include "psi4/libmints/wavefunction.h"

@@ -56,7 +56,8 @@ namespace forte {
  * @param restricted - type of integral transformation
  * @param resort_frozen_core -
  */
-CustomIntegrals::CustomIntegrals(psi::Options& options, std::shared_ptr<psi::Wavefunction> ref_wfn,
+CustomIntegrals::CustomIntegrals(std::shared_ptr<ForteOptions> options,
+                                 std::shared_ptr<psi::Wavefunction> ref_wfn,
                                  std::shared_ptr<MOSpaceInfo> mo_space_info,
                                  IntegralSpinRestriction restricted)
     : ForteIntegrals(options, ref_wfn, mo_space_info, restricted) {
@@ -323,11 +324,12 @@ void CustomIntegrals::custom_integrals_allocate(int norb, const std::vector<int>
     num_tei_ = INDEX4(nmo_ - 1, nmo_ - 1, nmo_ - 1, nmo_ - 1) + 1;
     num_aptei_ = nmo_ * nmo_ * nmo_ * nmo_;
     //    num_threads_ = omp_get_max_threads();
-    print_ = options_.get_int("PRINT");
+    print_ = options_->get_int("PRINT");
     /// If MO_ROTATE is set in option, call rotate_mos.
     /// Wasn't really sure where to put this function, but since, integrals is
     /// always called, this seems like a good spot.
-    if (options_["ROTATE_MOS"].size() > 0) {
+    auto rotate_mos_list = options_->get_int_vec("ROTATE_MOS");
+    if (rotate_mos_list.size() > 0) {
         outfile->Printf("\n  The option ROTATE_MOS is not supported with custom integrals\n");
         exit(1);
     }

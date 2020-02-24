@@ -312,27 +312,30 @@ def orbital_projection(ref_wfn, options, mo_space_info):
     else:
         return mo_space_info
 
-def get_options_from_psi(forte_options, psi_options):
-     forte_dict = forte_options.dict()
-     for key, value in forte_dict.items():
-         v_type = value['type']
-         if v_type == 'bool':
-             forte_dict[key]['value'] = psi_options.get_bool(key)
-         elif v_type == 'int':
-             forte_dict[key]['value'] = psi_options.get_int(key)
-         elif v_type == 'float':
-             forte_dict[key]['value'] = psi_options.get_double(key)
-         elif v_type == 'str':
-             forte_dict[key]['value'] = psi_options.get_str(key)
-         elif v_type == 'int_list':
-             forte_dict[key]['value'] = [i for i in psi_options.get_int_vector(key)]
-         elif v_type == 'float_list':
-             forte_dict[key]['value'] = [i for i in psi_options.get_double_vector(key)]
-         else:
-             # TODO: need to do this recursively
-             print(key, value, type(psi_options.get_int_vector(key)))
-             #forte_dict[key]['value'] = [i for i in psi_options.get_int_vector(key)]
-     return forte_dict
+#def get_options_from_psi(forte_options, psi_options):
+#     forte_dict = forte_options.dict()
+#     for key, value in forte_dict.items():
+#         v_type = value['type']
+#         if v_type == 'bool':
+#             forte_dict[key]['value'] = psi_options.get_bool(key)
+#         elif v_type == 'int':
+#             forte_dict[key]['value'] = psi_options.get_int(key)
+#         elif v_type == 'float':
+#             forte_dict[key]['value'] = psi_options.get_double(key)
+#         elif v_type == 'str':
+#             forte_dict[key]['value'] = psi_options.get_str(key)
+#         elif v_type == 'int_list':
+#             forte_dict[key]['value'] = [i for i in psi_options.get_int_vector(key)]
+#         elif v_type == 'float_list':
+#             forte_dict[key]['value'] = [i for i in psi_options.get_double_vector(key)]
+#         elif v_type == 'gen_list':
+#             nitems = psi_options.get(key).size()
+#             forte_dict[key]['value'] = [psi_options.get(key)[i].to_string() for i in range(nitems)]
+##             forte_dict[key]['value'] = [i for i in psi_options.get_double_vector(key)]
+#         else:
+#             print(key, value, type(psi_options.get_int_vector(key)))
+#             # TODO: need to do this recursively
+#     return forte_dict
 
 def run_forte(name, **kwargs):
     r"""Function encoding sequence of PSI module and plugin calls so that
@@ -377,7 +380,7 @@ def run_forte(name, **kwargs):
     mo_space_info = forte.make_mo_space_info(ref_wfn, forte.forte_options)
 
     # Call methods that project the orbitals (AVAS, embedding)
-    mo_space_info = orbital_projection(ref_wfn, options, mo_space_info)
+    mo_space_info = orbital_projection(ref_wfn, forte.forte_options, mo_space_info)
 
     state = forte.make_state_info_from_psi_wfn(ref_wfn)
     scf_info = forte.SCFInfo(ref_wfn)
@@ -395,7 +398,7 @@ def run_forte(name, **kwargs):
     start_pre_ints = time.time()
 
     # Make an integral object
-    ints = forte.make_forte_integrals(ref_wfn, options, mo_space_info)
+    ints = forte.make_forte_integrals(ref_wfn, forte.forte_options, mo_space_info)
 
     start = time.time()
 

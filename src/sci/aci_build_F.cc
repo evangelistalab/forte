@@ -63,7 +63,6 @@ void AdaptiveCI::get_excited_determinants_sr(SharedMatrix evecs, SharedVector ev
     local_timer build;
     size_t max_P = P_space.size();
     const det_hashvec& P_dets = P_space.wfn_hash();
-    int nroot = 1;
 
     det_hash<double> V_hash;
 // Loop over reference determinants
@@ -778,7 +777,6 @@ double AdaptiveCI::get_excited_determinants_batch_vecsort(
         local_timer bint;
 #pragma omp parallel
         {
-            int ntd = omp_get_num_threads();
             int tid = omp_get_thread_num();
             auto& A_b = A_b_t.first[tid];
             //                        size_t idx = 0;

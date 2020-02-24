@@ -29,7 +29,7 @@
 #ifndef _localize_h_
 #define _localize_h_
 
-#include "psi4/liboptions/liboptions.h"
+
 #include "psi4/libmints/wavefunction.h"
 #include "psi4/libmints/local.h"
 

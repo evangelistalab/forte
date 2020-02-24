@@ -41,7 +41,7 @@ namespace forte {
  */
 class DFIntegrals : public ForteIntegrals {
   public:
-    DFIntegrals(psi::Options& options, std::shared_ptr<psi::Wavefunction> ref_wfn,
+    DFIntegrals(std::shared_ptr<ForteOptions> options, std::shared_ptr<psi::Wavefunction> ref_wfn,
                 std::shared_ptr<MOSpaceInfo> mo_space_info, IntegralSpinRestriction restricted);
 
     double aptei_aa(size_t p, size_t q, size_t r, size_t s) override;

@@ -34,7 +34,7 @@
 #include "psi4/libmints/matrix.h"
 #include <vector>
 #include "psi4/psi4-dec.h"
-#include "psi4/liboptions/liboptions.h"
+
 #include "base_classes/mo_space_info.h"
 #include "psi4/libscf_solver/rhf.h"
 

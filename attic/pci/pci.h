@@ -32,7 +32,7 @@
 #include <fstream>
 
 #include "psi4/libmints/wavefunction.h"
-#include "psi4/liboptions/liboptions.h"
+
 #include "psi4/physconst.h"
 
 #include "forte-def.h"
