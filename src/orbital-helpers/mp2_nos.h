@@ -29,7 +29,7 @@
 #ifndef _mp2_nos_h_
 #define _mp2_nos_h_
 
-#include "psi4/liboptions/liboptions.h"
+
 #include "psi4/libmints/wavefunction.h"
 
 #include "base_classes/mo_space_info.h"

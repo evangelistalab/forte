@@ -52,7 +52,7 @@ namespace forte {
 /**
  * Diagonalize the
  */
-void LambdaCI::lambda_mrcisd(psi::Options& options) {
+void LambdaCI::lambda_mrcisd(std::shared_ptr<ForteOptions> options) {
     outfile->Printf("\n\n  Lambda-MRCISD");
 
     int nroot = options.get_int("NROOT");
@@ -616,7 +616,7 @@ void LambdaCI::print_results_lambda_sd_ci(vector<StringDeterminant>& determinant
 /**
  * Diagonalize the
  */
-void LambdaCI::lambda_mrcis(psi::Options& options) {
+void LambdaCI::lambda_mrcis(std::shared_ptr<ForteOptions> options) {
     outfile->Printf("\n\n  Lambda-MRCIS");
 
     int nroot = options.get_int("NROOT");

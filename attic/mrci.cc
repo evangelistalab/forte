@@ -30,7 +30,7 @@
 #include "psi4/libpsi4util/process.h"
 #include "psi4/libmints/molecule.h"
 #include "psi4/libmints/wavefunction.h"
-#include "psi4/liboptions/liboptions.h"
+
 
 #include "helpers/printing.h"
 #include "mrci.h"
@@ -40,7 +40,7 @@ using namespace psi;
 
 namespace forte {
 
-MRCI::MRCI(psi::SharedWavefunction ref_wfn, psi::Options& options, std::shared_ptr<ForteIntegrals> ints,
+MRCI::MRCI(psi::SharedWavefunction ref_wfn, std::shared_ptr<ForteOptions> options, std::shared_ptr<ForteIntegrals> ints,
            std::shared_ptr<MOSpaceInfo> mo_space_info, DeterminantHashVec& reference)
     : Wavefunction(options), ints_(ints),reference_(reference), mo_space_info_(mo_space_info) {
     shallow_copy(ref_wfn);

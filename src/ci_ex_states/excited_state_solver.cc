@@ -75,9 +75,7 @@ void ExcitedStateSolver::set_options(std::shared_ptr<ForteOptions> options) {
     }
 
     core_ex_ = options->get_bool("SCI_CORE_EX");
-    if (options->has_changed("ACI_QUIET_MODE")) {
-        quiet_mode_ = options->get_bool("ACI_QUIET_MODE");
-    }
+    quiet_mode_ = options->get_bool("ACI_QUIET_MODE");
     direct_rdms_ = options->get_bool("SCI_DIRECT_RDMS");
     test_rdms_ = options->get_bool("SCI_TEST_RDMS");
     save_final_wfn_ = options->get_bool("SCI_SAVE_FINAL_WFN");

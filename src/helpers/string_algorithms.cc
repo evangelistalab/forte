@@ -52,12 +52,11 @@ std::vector<std::string> split_string(const std::string& str, const std::string&
     return strings;
 }
 
-void to_upper_string(std::string& s) {
-    for (auto& c : s) {
-        std::cout << " " << c << " ";
-        //        c = ::toupper(c);
-    }
-    //    std::transform(s.begin(), s.end(), s.begin(), ::toupper);
+void to_upper_string(std::string& s) { std::transform(s.begin(), s.end(), s.begin(), ::toupper); }
+
+std::string upper_string(std::string s) {
+    std::transform(s.begin(), s.end(), s.begin(), ::toupper);
+    return s;
 }
 
 } // namespace forte

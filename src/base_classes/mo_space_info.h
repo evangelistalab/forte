@@ -129,10 +129,10 @@ class MOSpaceInfo {
     /// orbitals in space
     std::vector<std::pair<size_t, size_t>> get_relative_mo(const std::string& space);
 
-    /// Read the space info from forteoptions(inputs)
+    /// Read the space info from forte options(inputs)
     void read_options(std::shared_ptr<ForteOptions> options);
 
-    /// Read the space info from a map of spacename-dimension_vector
+    /// Read the space info from a map of space name-dimension_vector
     void read_from_map(std::map<std::string, std::vector<size_t>>& mo_space_map);
 
     /// Reorder MOs according to the input indexing vector
@@ -175,7 +175,7 @@ class MOSpaceInfo {
     /// The map from all MO to the correlated MOs (excludes frozen core/virtual)
     std::vector<size_t> mo_to_cmo_;
 
-    /// The index vector that the spaceinfo will be re-ordered
+    /// The index vector used to reorder the orbitals
     std::vector<size_t> reorder_;
 
     // ==> Class functions <==

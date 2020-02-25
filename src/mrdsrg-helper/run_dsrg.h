@@ -27,7 +27,7 @@ namespace forte {
 //     * @param ints A pointer to an allocated integral object
 //     * @param mo_space_info The MOSpaceInfo object
 //     */
-//    RUN_DSRG(RDMs rdms, psi::SharedWavefunction ref_wfn, psi::Options& options,
+//    RUN_DSRG(RDMs rdms, psi::SharedWavefunction ref_wfn, std::shared_ptr<ForteOptions> options,
 //             std::shared_ptr<ForteIntegrals> ints, std::shared_ptr<MOSpaceInfo> mo_space_info);
 
 //    /// Compute DSRG energy

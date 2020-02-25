@@ -29,7 +29,7 @@
 #ifndef CASSCF_H
 #define CASSCF_H
 
-#include "psi4/liboptions/liboptions.h"
+
 #include "psi4/libmints/wavefunction.h"
 #include "psi4/libfock/jk.h"
 

@@ -1,7 +1,7 @@
 #ifndef _dwms_mrpt2_h_
 #define _dwms_mrpt2_h_
 
-#include "psi4/liboptions/liboptions.h"
+
 
 #include "mrdsrg-spin-integrated/master_mrdsrg.h"
 #include "sci/fci_mo.h"

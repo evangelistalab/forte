@@ -136,8 +136,9 @@ void CINO::compute_transformation() {
 
 void CINO::startup() {
     wavefunction_multiplicity_ = 1;
-    if (options_->has_changed("MULTIPLICITY")) {
+    if (options_->get_int("MULTIPLICITY") >= 1) {
         wavefunction_multiplicity_ = options_->get_int("MULTIPLICITY");
+        // TODO: should read default from somewhere (Francesco)
     }
 
     // Read Options

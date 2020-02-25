@@ -72,10 +72,7 @@ AdaptiveCI::AdaptiveCI(StateInfo state, size_t nroot, std::shared_ptr<SCFInfo> s
 }
 
 void AdaptiveCI::startup() {
-    quiet_mode_ = false;
-    if (options_->has_changed("ACI_QUIET_MODE")) {
-        quiet_mode_ = options_->get_bool("ACI_QUIET_MODE");
-    }
+    quiet_mode_ = options_->get_bool("ACI_QUIET_MODE");
 
     wavefunction_symmetry_ = state_.irrep();
     multiplicity_ = state_.multiplicity();
@@ -105,14 +102,9 @@ void AdaptiveCI::startup() {
     spin_complete_ = options_->get_bool("ACI_ENFORCE_SPIN_COMPLETE");
     spin_complete_P_ = options_->get_bool("ACI_ENFORCE_SPIN_COMPLETE_P");
 
-    max_cycle_ = 20;
-    if (options_->has_changed("SCI_MAX_CYCLE")) {
-        max_cycle_ = options_->get_int("SCI_MAX_CYCLE");
-    }
-    pre_iter_ = 0;
-    if (options_->has_changed("ACI_PREITERATIONS")) {
-        pre_iter_ = options_->get_int("ACI_PREITERATIONS");
-    }
+    max_cycle_ = options_->get_int("SCI_MAX_CYCLE");
+
+    pre_iter_ = options_->get_int("ACI_PREITERATIONS");
 
     spin_tol_ = options_->get_double("ACI_SPIN_TOL");
     // set the initial S^@ guess as input multiplicity

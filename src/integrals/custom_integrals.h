@@ -41,7 +41,7 @@ class CustomIntegrals : public ForteIntegrals {
   public:
     /// Contructor of the class.  Calls std::shared_ptr<ForteIntegrals> ints
     /// constructor
-    CustomIntegrals(psi::Options& options, std::shared_ptr<psi::Wavefunction> ref_wfn,
+    CustomIntegrals(std::shared_ptr<ForteOptions> options, std::shared_ptr<psi::Wavefunction> ref_wfn,
                     std::shared_ptr<MOSpaceInfo> mo_space_info, IntegralSpinRestriction restricted);
 
     /// Grabs the antisymmetriced TEI - assumes storage in aphy_tei_*
@@ -69,7 +69,7 @@ class CustomIntegrals : public ForteIntegrals {
     void make_fock_matrix(std::shared_ptr<psi::Matrix> gamma_a,
                           std::shared_ptr<psi::Matrix> gamma_b) override;
 
-    size_t nthree() const override { throw psi::PSIEXCEPTION("Wrong Integral type"); }
+    size_t nthree() const override { throw std::runtime_error("Wrong Integral type"); }
 
     void set_tei(size_t p, size_t q, size_t r, size_t s, double value, bool alpha1,
                  bool alpha2) override;

@@ -3,7 +3,7 @@
 
 #include <memory>
 
-#include "psi4/liboptions/liboptions.h"
+
 
 #include "integrals/integrals.h"
 #include "integrals/active_space_integrals.h"

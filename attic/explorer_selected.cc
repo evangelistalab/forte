@@ -52,7 +52,7 @@ namespace forte {
 /**
  * Diagonalize the
  */
-void LambdaCI::diagonalize_selected_space(psi::Options& options) {
+void LambdaCI::diagonalize_selected_space(std::shared_ptr<ForteOptions> options) {
     outfile->Printf("\n\n  Diagonalizing the Hamiltonian in the model space (Lambda = %.2f Eh)\n",
                     space_m_threshold_);
 
@@ -412,7 +412,7 @@ SharedMatrix LambdaCI::build_select_hamiltonian_roth(Options& options, SharedVec
     return H;
 }
 
-void LambdaCI::diagonalize_renormalized_space(psi::Options& options) {
+void LambdaCI::diagonalize_renormalized_space(std::shared_ptr<ForteOptions> options) {
     outfile->Printf("\n\n  Diagonalizing the Hamiltonian in the model space");
     outfile->Printf("\n  using a renormalization procedure (Lambda = %.2f Eh)\n",
                     space_m_threshold_);
@@ -697,7 +697,7 @@ void LambdaCI::diagonalize_renormalized_space(psi::Options& options) {
     //    }
 }
 
-void LambdaCI::diagonalize_renormalized_fixed_space(psi::Options& options) {
+void LambdaCI::diagonalize_renormalized_fixed_space(std::shared_ptr<ForteOptions> options) {
 
     int nroot = options.get_int("NROOT");
     size_t ren_ndets = options.get_int("REN_MAX_NDETS");

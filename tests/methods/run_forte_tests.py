@@ -193,7 +193,11 @@ def main():
     print(summary_str)
     print('\nTotal time: %6.1f s\n' % total_time)
 
-    with open('test_results.txt', 'w') as outfile:
+    import datetime
+    now = datetime.datetime.now()
+    file_name = f'test_results_{now.strftime("%Y-%m-%d-%H%M")}.txt'
+ 
+    with open(file_name, 'w') as outfile:
         outfile.write(summary_str)
         outfile.write('\nTotal time: %6.1f s\n' % total_time)
 

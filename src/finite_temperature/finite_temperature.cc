@@ -39,7 +39,7 @@
 #include "psi4/libmints/molecule.h"
 #include "psi4/libmints/vector.h"
 #include "psi4/libmints/wavefunction.h"
-#include "psi4/liboptions/liboptions.h"
+
 #include "psi4/libpsio/psio.hpp"
 
 #include "finite_temperature/finite_temperature.h"
@@ -48,7 +48,7 @@
 
 namespace forte {
 
-FiniteTemperatureHF::FiniteTemperatureHF(psi::SharedWavefunction ref_wfn, psi::Options& options,
+FiniteTemperatureHF::FiniteTemperatureHF(psi::SharedWavefunction ref_wfn, std::shared_ptr<ForteOptions> options,
                                          std::shared_ptr<MOSpaceInfo> mo_space)
     : RHF(ref_wfn, std::make_shared<SuperFunctional>(), options, _default_psio_lib_),
       mo_space_info_(mo_space), options_(options) {

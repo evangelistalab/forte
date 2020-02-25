@@ -31,7 +31,7 @@
 
 #include "psi4/libmints/matrix.h"
 #include "psi4/libmints/basisset.h"
-#include "psi4/liboptions/liboptions.h"
+
 #include "psi4/libmints/dimension.h"
 
 #define _DEBUG_PAO_BUILDER_ 0

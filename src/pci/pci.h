@@ -34,7 +34,7 @@
 #include <functional>
 
 #include "psi4/libmints/wavefunction.h"
-#include "psi4/liboptions/liboptions.h"
+
 #include "psi4/physconst.h"
 
 #include "fci/fci_vector.h"

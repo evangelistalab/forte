@@ -59,7 +59,7 @@ namespace forte {
 /**
  * Diagonalize the
  */
-void LambdaCI::iterative_adaptive_mrcisd(psi::Options& options) {
+void LambdaCI::iterative_adaptive_mrcisd(std::shared_ptr<ForteOptions> options) {
     ForteTimer t_iamrcisd;
 
     outfile->Printf("\n\n  Iterative Adaptive MRCISD");
@@ -571,7 +571,7 @@ void LambdaCI::iterative_adaptive_mrcisd(psi::Options& options) {
 /**
  * Diagonalize the
  */
-void LambdaCI::iterative_adaptive_mrcisd_bitset(psi::Options& options) {
+void LambdaCI::iterative_adaptive_mrcisd_bitset(std::shared_ptr<ForteOptions> options) {
     ForteTimer t_iamrcisd;
     outfile->Printf("\n\n  Iterative Adaptive MRCISD");
 
