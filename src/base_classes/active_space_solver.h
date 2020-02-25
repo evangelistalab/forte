@@ -135,6 +135,9 @@ class ActiveSpaceSolver {
     /// A map of state symmetries to vectors of computed energies under given state symmetry
     std::map<StateInfo, std::vector<double>> state_energies_map_;
 
+    /// Average spin multiplets for RDMs
+    bool ms_avg_;
+
     /// Pairs of state info and the contracted CI eigen vectors
     std::map<StateInfo, std::shared_ptr<psi::Matrix>>
         state_contracted_evecs_map_; // TODO move outside?

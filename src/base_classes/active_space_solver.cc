@@ -58,6 +58,8 @@ ActiveSpaceSolver::ActiveSpaceSolver(const std::string& method,
       mo_space_info_(mo_space_info), as_ints_(as_ints), options_(options) {
 
     print_options();
+
+    ms_avg_ = options->get_bool("SPIN_AVG_DENSITY");
 }
 
 const std::map<StateInfo, std::vector<double>>& ActiveSpaceSolver::compute_energy() {
@@ -71,7 +73,7 @@ const std::map<StateInfo, std::vector<double>>& ActiveSpaceSolver::compute_energ
         state_method_map_[state] = method;
 
         int twice_ms = state.twice_ms();
-        if (twice_ms < 0) {
+        if (twice_ms < 0 and ms_avg_) {
             psi::outfile->Printf("\n  No need to compute for ms < 0. Continue to next symmetry.");
             continue;
         }
@@ -98,7 +100,7 @@ void ActiveSpaceSolver::print_energies(std::map<StateInfo, std::vector<double>>&
         int multi = state.multiplicity();
         int nstates = state_nroot.second;
         int twice_ms = state.twice_ms();
-        if (twice_ms < 0) {
+        if (twice_ms < 0 and ms_avg_) {
             continue;
         }
 
@@ -328,8 +330,6 @@ RDMs ActiveSpaceSolver::compute_average_rdms(
     // TODO: grab this info from the ActiveSpaceSolver object (Francesco)
     size_t nactive = mo_space_info_->size("ACTIVE");
 
-    bool ms_avg = options_->get_bool("SPIN_AVG_DENSITY");
-
     ambit::Tensor g1a, g1b, g2aa, g2ab, g2bb, g3aaa, g3aab, g3abb, g3bbb;
 
     g1a = ambit::Tensor::build(ambit::CoreTensor, "g1a", {nactive, nactive});
@@ -340,7 +340,7 @@ RDMs ActiveSpaceSolver::compute_average_rdms(
         g3aab = ambit::Tensor::build(ambit::CoreTensor, "g3aab", std::vector<size_t>(6, nactive));
     }
 
-    if (not ms_avg) {
+    if (not ms_avg_) {
         g1b = ambit::Tensor::build(ambit::CoreTensor, "g1b", {nactive, nactive});
         if (max_rdm_level >= 2) {
             g2aa = ambit::Tensor::build(ambit::CoreTensor, "g2aa", std::vector<size_t>(4, nactive));
@@ -403,7 +403,7 @@ RDMs ActiveSpaceSolver::compute_average_rdms(
                 scale_add(g3aab.data(), method_rdms.g3aab().data(), weight);
             }
 
-            if (not ms_avg) {
+            if (not ms_avg_) {
                 scale_add(g1b.data(), method_rdms.g1b().data(), weight);
 
                 if (max_rdm_level >= 2) {
@@ -419,7 +419,7 @@ RDMs ActiveSpaceSolver::compute_average_rdms(
             }
 
             // add ms < 0 components
-            if (ms_avg and twice_ms > 0) {
+            if (ms_avg_ and twice_ms > 0) {
                 g1a("pq") += weight * method_rdms.g1b()("pq");
 
                 if (max_rdm_level >= 2) {
@@ -433,7 +433,7 @@ RDMs ActiveSpaceSolver::compute_average_rdms(
         }
     }
 
-    if (ms_avg) {
+    if (ms_avg_) {
         if (max_rdm_level == 1) {
             return RDMs(true, g1a);
         } else if (max_rdm_level == 2) {
