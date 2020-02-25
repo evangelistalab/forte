@@ -70,6 +70,12 @@ const std::map<StateInfo, std::vector<double>>& ActiveSpaceSolver::compute_energ
             method_, state, nroot, scf_info_, mo_space_info_, as_ints_, options_);
         state_method_map_[state] = method;
 
+        int twice_ms = state.twice_ms();
+        if (twice_ms < 0) {
+            psi::outfile->Printf("\n  No need to compute for ms < 0. Continue to next symmetry.");
+            continue;
+        }
+
         method->compute_energy();
 
         const auto& energies = method->energies();
@@ -81,31 +87,30 @@ const std::map<StateInfo, std::vector<double>>& ActiveSpaceSolver::compute_energ
 
 void ActiveSpaceSolver::print_energies(std::map<StateInfo, std::vector<double>>& energies) {
     print_h2("Energy Summary");
-    psi::outfile->Printf("\n    Multi.  Irrep.  No.               Energy");
-    std::string dash(41, '-');
+    psi::outfile->Printf("\n    Multi.(ms)  Irrep.  No.               Energy");
+    std::string dash(45, '-');
     psi::outfile->Printf("\n    %s", dash.c_str());
     std::vector<std::string> irrep_symbol = psi::Process::environment.molecule()->irrep_labels();
 
-    int n = 0;
     for (const auto& state_nroot : state_nroots_map_) {
         const auto& state = state_nroot.first;
         int irrep = state.irrep();
         int multi = state.multiplicity();
         int nstates = state_nroot.second;
+        int twice_ms = state.twice_ms();
+        if (twice_ms < 0) {
+            continue;
+        }
 
         for (int i = 0; i < nstates; ++i) {
             auto label = "ENERGY ROOT " + std::to_string(i) + " " + std::to_string(multi) +
                          irrep_symbol[irrep];
             double energy = energies[state][i];
-            psi::outfile->Printf("\n     %3d     %3s    %2d   %20.12f", multi,
+            psi::outfile->Printf("\n     %3d  (%2d)   %3s    %2d   %20.12f", multi, twice_ms,
                                  irrep_symbol[irrep].c_str(), i, energy);
             psi::Process::environment.globals[label] = energy;
-            //            psi::outfile->Printf("\n %s = %f", label.c_str(),
-            //                                 energy); // TODO remove this line once we are done
-            //                                 (Francesco)
         }
 
-        n++;
         psi::outfile->Printf("\n    %s", dash.c_str());
     }
 }
@@ -142,23 +147,23 @@ void ActiveSpaceSolver::print_options() {
         nstates += state_nroot.second;
     }
 
-    int ltotal = 6 + 2 + 6 + 2 + 7 + 2;
+    int ltotal = 6 + 2 + 10 + 2 + 7;
     std::string dash(ltotal, '-');
-    psi::outfile->Printf("\n    Irrep.  Multi.  Nstates");
+    psi::outfile->Printf("\n    Irrep.  Multi.(ms)      N");
     psi::outfile->Printf("\n    %s", dash.c_str());
     for (const auto& state_nroot : state_nroots_map_) {
         const auto& state = state_nroot.first;
         int irrep = state.irrep();
         int multiplicity = state.multiplicity();
+        int twice_ms = state.twice_ms();
         int nroots = state_nroot.second;
-
-        std::stringstream ss;
-        ss << std::setw(4) << std::right << irrep_symbol[irrep] << "    " << std::setw(4)
-           << std::right << multiplicity << "    " << std::setw(5) << std::right << nroots;
-        psi::outfile->Printf("\n    %s", ss.str().c_str());
+        psi::outfile->Printf("\n    %5s   %4d (%3d)    %3d", irrep_symbol[irrep].c_str(),
+                             multiplicity, twice_ms, nroots);
     }
     psi::outfile->Printf("\n    %s", dash.c_str());
-    psi::outfile->Printf("\n    Total number of states: %d", nstates);
+    psi::outfile->Printf("\n    N: number of states");
+    psi::outfile->Printf("\n    ms: twice spin z component");
+    psi::outfile->Printf("\n    Total number of states: %3d", nstates);
     psi::outfile->Printf("\n    %s\n", dash.c_str());
 }
 
@@ -341,10 +346,11 @@ RDMs ActiveSpaceSolver::compute_average_rdms(
         g3abb = ambit::Tensor::build(ambit::CoreTensor, "g3abb", std::vector<size_t>(6, nactive));
         g3bbb = ambit::Tensor::build(ambit::CoreTensor, "g3bbb", std::vector<size_t>(6, nactive));
     }
-    // function that scale pdm by w and add scaled pdm to sa_pdm
-    auto scale_add = [](std::vector<double>& sa_pdm, std::vector<double>& pdm, const double& w) {
-        std::for_each(pdm.begin(), pdm.end(), [&](double& v) { v *= w; });
-        std::transform(sa_pdm.begin(), sa_pdm.end(), pdm.begin(), sa_pdm.begin(),
+
+    // function that scale rdm by w and add scaled rdm to sa_rdm
+    auto scale_add = [](std::vector<double>& sa_rdm, std::vector<double>& rdm, const double& w) {
+        std::for_each(rdm.begin(), rdm.end(), [&](double& v) { v *= w; });
+        std::transform(sa_rdm.begin(), sa_rdm.end(), rdm.begin(), sa_rdm.begin(),
                        std::plus<double>());
     };
 
@@ -353,6 +359,11 @@ RDMs ActiveSpaceSolver::compute_average_rdms(
         const auto& state = state_nroot.first;
         size_t nroot = state_nroot.second;
         const auto& weights = state_weights_map.at(state);
+
+        int twice_ms = state.twice_ms();
+        if (twice_ms < 0) {
+            continue;
+        }
 
         // Get the already-run method
         const auto& method = state_method_map_.at(state);
@@ -390,6 +401,25 @@ RDMs ActiveSpaceSolver::compute_average_rdms(
                 scale_add(g3aab.data(), method_rdms.g3aab().data(), weight);
                 scale_add(g3abb.data(), method_rdms.g3abb().data(), weight);
                 scale_add(g3bbb.data(), method_rdms.g3bbb().data(), weight);
+            }
+
+            // add ms < 0 components
+            if (options_->get_bool("SPIN_AVG_DENSITY") and twice_ms > 0) {
+                g1a("pq") += method_rdms.g1b()("pq");
+                g1b("pq") += method_rdms.g1a()("pq");
+
+                if (max_rdm_level >= 2) {
+                    g2aa("pqrs") += method_rdms.g2bb()("pqrs");
+                    g2ab("pqrs") += method_rdms.g2ab()("qpsr");
+                    g2bb("pqrs") += method_rdms.g2aa()("pqrs");
+                }
+
+                if (max_rdm_level >= 3) {
+                    g3aaa("pqrstu") += method_rdms.g3bbb()("pqrstu");
+                    g3aab("pqrstu") += method_rdms.g3abb()("rpqust");
+                    g3abb("pqrstu") += method_rdms.g3aab()("qrptus");
+                    g3bbb("pqrstu") += method_rdms.g3aaa()("pqrstu");
+                }
             }
         }
     }
