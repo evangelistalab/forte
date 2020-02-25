@@ -1238,7 +1238,85 @@ void DSRG_MRPT2::iter_z() {
     Z_b["wz"] -= Z["e1,f1"] * V["f1,v,e1,z"] * Gamma1["wv"];
     Z_b["wz"] -= Z["E1,F1"] * V["v,F1,z,E1"] * Gamma1["wv"];
 
+
+
+    //NOTICE: constant b for z{virtual-active}
+    temp1 = BTF_->build(CoreTensor, "temporal tensor 1", {"aphh", "aPhH"});
+    temp2 = BTF_->build(CoreTensor, "temporal tensor 2", {"vaphh", "vaPhH"});
+
+    temp1["udkl"] = V["udkl"] * Eeps2_p["klud"];
+    temp1["uDkL"] = V["uDkL"] * Eeps2_p["kLuD"];
+    temp2["ewbij"] = V["ebij"] * Eeps2_m1["ijwb"];
+    temp2["ewBiJ"] = V["eBiJ"] * Eeps2_m1["iJwB"];
+    Z_b["ew"] += 0.25 * temp1["udkl"] * temp2["ewbij"] * Gamma1["ki"] * Gamma1["lj"] * Eta1["wu"] * Eta1["bd"];
+    Z_b["ew"] += 0.50 * temp1["uDkL"] * temp2["ewBiJ"] * Gamma1["ki"] * Gamma1["LJ"] * Eta1["wu"] * Eta1["BD"];
+    temp1.zero();
+    temp2.zero();
+
+    temp1["udkl"] = V["udkl"] * Eeps2_m1["klud"];
+    temp1["uDkL"] = V["uDkL"] * Eeps2_m1["kLuD"];
+    temp2["ewbij"] = V["ebij"] * Eeps2_p["ijwb"];
+    temp2["ewBiJ"] = V["eBiJ"] * Eeps2_p["iJwB"];
+    Z_b["ew"] += 0.25 * temp1["udkl"] * temp2["ewbij"] * Gamma1["ki"] * Gamma1["lj"] * Eta1["wu"] * Eta1["bd"];
+    Z_b["ew"] += 0.50 * temp1["uDkL"] * temp2["ewBiJ"] * Gamma1["ki"] * Gamma1["LJ"] * Eta1["wu"] * Eta1["BD"];
+    temp1.zero();
+    temp2.zero();    
+
+    temp1 = BTF_->build(CoreTensor, "temporal tensor 1", {"ppah", "pPaH"});
+    temp2 = BTF_->build(CoreTensor, "temporal tensor 2", {"ppvah", "pPvaH"}); 
+
+    temp1["cdul"] = V["cdul"] * Eeps2_p["ulcd"];
+    temp1["cDuL"] = V["cDuL"] * Eeps2_p["uLcD"];
+    temp2["abewj"] = V["abej"] * Eeps2_m1["wjab"];
+    temp2["aBewJ"] = V["aBeJ"] * Eeps2_m1["wJaB"];
+    Z_b["ew"] += 0.25 * temp1["cdul"] * temp2["abewj"] * Gamma1["uw"] * Gamma1["lj"] * Eta1["ac"] * Eta1["bd"];
+    Z_b["ew"] += 0.50 * temp1["cDuL"] * temp2["aBewJ"] * Gamma1["uw"] * Gamma1["LJ"] * Eta1["ac"] * Eta1["BD"];
+    temp1.zero();
+    temp2.zero();  
+
+    temp1["cdul"] = V["cdul"] * Eeps2_m1["ulcd"];
+    temp1["cDuL"] = V["cDuL"] * Eeps2_m1["uLcD"];
+    temp2["abewj"] = V["abej"] * Eeps2_p["wjab"];
+    temp2["aBewJ"] = V["aBeJ"] * Eeps2_p["wJaB"];
+    Z_b["ew"] += 0.25 * temp1["cdul"] * temp2["abewj"] * Gamma1["uw"] * Gamma1["lj"] * Eta1["ac"] * Eta1["bd"];
+    Z_b["ew"] += 0.50 * temp1["cDuL"] * temp2["aBewJ"] * Gamma1["uw"] * Gamma1["LJ"] * Eta1["ac"] * Eta1["BD"];
+    temp1.zero();
+    temp2.zero(); 
+
+    temp1 = BTF_->build(CoreTensor, "temporal tensor 1", {"vphh", "vPhH"});
+    temp2 = BTF_->build(CoreTensor, "temporal tensor 2", {"avphh", "avPhH"});
+
+    temp1["edkl"] = V["edkl"] * Eeps2_p["kled"]; 
+    temp1["eDkL"] = V["eDkL"] * Eeps2_p["kLeD"];
+    temp2["webij"] = V["wbij"] * Eeps2_m1["ijeb"]; 
+    temp2["weBiJ"] = V["wBiJ"] * Eeps2_m1["iJeB"]; 
+    Z_b["ew"] -= 0.25 * temp1["edkl"] * temp2["webij"] * Gamma1["ki"] * Gamma1["lj"] * Eta1["bd"];
+    Z_b["ew"] -= 0.50 * temp1["eDkL"] * temp2["weBiJ"] * Gamma1["ki"] * Gamma1["LJ"] * Eta1["BD"];
+    temp1.zero();
+    temp2.zero(); 
+
+    temp1["edkl"] = V["edkl"] * Eeps2_m1["kled"]; 
+    temp1["eDkL"] = V["eDkL"] * Eeps2_m1["kLeD"];
+    temp2["webij"] = V["wbij"] * Eeps2_p["ijeb"]; 
+    temp2["weBiJ"] = V["wBiJ"] * Eeps2_p["iJeB"]; 
+    Z_b["ew"] -= 0.25 * temp1["edkl"] * temp2["webij"] * Gamma1["ki"] * Gamma1["lj"] * Eta1["bd"];
+    Z_b["ew"] -= 0.50 * temp1["eDkL"] * temp2["weBiJ"] * Gamma1["ki"] * Gamma1["LJ"] * Eta1["BD"];
+
+    Z_b["ew"] -= Z["e,f1"] * F["f1,w"];
+
+    Z_b["ew"] += Z["m1,n1"] * V["n1,v,m1,e"] * Gamma1["wv"];
+    Z_b["ew"] += Z["M1,N1"] * V["v,N1,e,M1"] * Gamma1["wv"];
+
+    Z_b["ew"] += Z["e1,f1"] * V["f1,v,e1,e"] * Gamma1["wv"];
+    Z_b["ew"] += Z["E1,F1"] * V["v,F1,e,E1"] * Gamma1["wv"];
+
+
+
+
+
     //NOTICE: constant b for z{core-active}
+
+
 
 
 
@@ -1435,6 +1513,7 @@ void DSRG_MRPT2::compute_z_aa() {
 
 
     // different conditions to guarantee the convergence 
+    // NOTICE: can be further accelerated
     for (const std::string& block : {"aa"}) {
         (Z.block(block)).iterate([&](const std::vector<size_t>& i, double& value) {
             if (i[0] != i[1]) {
@@ -1686,38 +1765,10 @@ void DSRG_MRPT2::compute_test_energy() {
 void DSRG_MRPT2::set_lagrangian() {
 	// TODO: set coefficients before the overlap integral
 
-    // Create a temporal container and an identity matrix
-    // BlockedTensor temp = BTF_->build(CoreTensor, "temporal tensor", spin_cases({"gg"}));
-    // BlockedTensor I = BTF_->build(CoreTensor, "identity matrix", spin_cases({"gg"}));
-    // I.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>&, double& value) {
-    //     value = (i[0] == i[1]) ? 1.0 : 0.0;
-    // });
 
-    // // Set core-core and core-active block entries of Lagrangian.
-    // // Alpha.
-    // W_["mp"] = F_["mp"];
-    // // Beta.
-    // W_["MP"] = F_["MP"];
-
-    // // Set active-active block entries of Lagrangian.
-    // // Alpha.
-    // temp["vp"] = Hoei_["vp"];
-    // temp["vp"] += V_["vmpn"] * I["mn"];
-    // temp["vp"] += V_["vMpN"] * I["MN"];
-    // W_["up"] += temp["vp"] * Gamma1_["uv"];
-    // W_["up"] += 0.5 * V_["xypv"] * Gamma2_["uvxy"];
-    // W_["up"] += V_["xYpV"] * Gamma2_["uVxY"];
-    // // Beta.
-    // temp["VP"] = Hoei_["VP"];
-    // temp["VP"] += V_["mVnP"] * I["mn"];
-    // temp["VP"] += V_["VMPN"] * I["MN"];
-    // W_["UP"] += temp["VP"] * Gamma1_["UV"];
-    // W_["UP"] += 0.5 * V_["XYPV"] * Gamma2_["UVXY"];
-    // W_["UP"] += V_["yXvP"] * Gamma2_["vUyX"];
-    // No need to set the rest symmetric blocks since they are 0
 }
 
-// It's not necessary to define set_tensor
+
 
 void DSRG_MRPT2::tpdm_backtransform() {
 	// Backtransform the TPDM
