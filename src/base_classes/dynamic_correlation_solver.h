@@ -52,6 +52,12 @@ class DynamicCorrelationSolver {
 
     /// The ForteOptions
     std::shared_ptr<ForteOptions> foptions_;
+
+    /// Nuclear repulsion energy
+    double Enuc_;
+
+    /// Frozen core energy
+    double Efrzc_;
 };
 
 std::shared_ptr<DynamicCorrelationSolver>

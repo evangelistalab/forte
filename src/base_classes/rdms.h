@@ -81,6 +81,13 @@ class RDMs {
          ambit::Tensor g2bb, ambit::Tensor g3aaa, ambit::Tensor g3aab, ambit::Tensor g3abb,
          ambit::Tensor g3bbb);
 
+    /// @brief Construct a RDMs object with the 1-rdm assuming ms averaging
+    RDMs(bool ms_avg, ambit::Tensor g1a);
+    /// @brief Construct a RDMs object with the 1- and 2-rdms ms averaging
+    RDMs(bool ms_avg, ambit::Tensor g1a, ambit::Tensor g2ab);
+    /// @brief Construct a RDMs object with the 1-, 2-, and 3-rdms assuming ms averaging
+    RDMs(bool ms_avg, ambit::Tensor g1a, ambit::Tensor g2ab, ambit::Tensor g3aab);
+
     // ==> Class Interface <==
 
     // Reduced density matrices (RDMs)
@@ -88,26 +95,26 @@ class RDMs {
     /// @return the alpha 1-RDM
     ambit::Tensor g1a() const { return g1a_; }
     /// @return the beta 1-RDM
-    ambit::Tensor g1b() const { return g1b_; }
+    ambit::Tensor g1b();
     /// @return the alpha-alpha 2-RDM
-    ambit::Tensor g2aa() const { return g2aa_; }
+    ambit::Tensor g2aa();
     /// @return the alpha-beta 2-RDM
     ambit::Tensor g2ab() const { return g2ab_; }
     /// @return the beta-beta 2-RDM
-    ambit::Tensor g2bb() const { return g2bb_; }
+    ambit::Tensor g2bb();
     /// @return the alpha-alpha-alpha 3-RDM
-    ambit::Tensor g3aaa() const { return g3aaa_; }
+    ambit::Tensor g3aaa();
     /// @return the alpha-alpha-beta 3-RDM
     ambit::Tensor g3aab() const { return g3aab_; }
     /// @return the alpha-beta-beta 3-RDM
-    ambit::Tensor g3abb() const { return g3abb_; }
+    ambit::Tensor g3abb();
     /// @return the beta-beta-beta 3-RDM
-    ambit::Tensor g3bbb() const { return g3bbb_; }
+    ambit::Tensor g3bbb();
 
     // Spin-free RDMs
 
     /// @return the spin-free 2-RDM
-    ambit::Tensor SFg2() const { return SFg2_; }
+    ambit::Tensor SFg2();
 
     // Reduced density cumulants
 
@@ -126,15 +133,29 @@ class RDMs {
     /// @return the beta-beta-beta 3-RDC
     ambit::Tensor L3bbb();
 
+    // Spin-free density cumulants
+
+    /// @return the spin-free 1-cumulant
+    ambit::Tensor SF_L1();
+    /// @return the spin-free 2-cumulant
+    ambit::Tensor SF_L2();
+    /// @return the spin-free 3-cumulant
+    ambit::Tensor SF_L3();
+
     // class variables
 
     size_t max_rdm_level() { return max_rdm_; }
+
+    bool ms_avg() { return ms_avg_; }
 
   protected:
     // ==> Class Data <==
 
     /// Maximum RDM/RDC rank stored by this object
     size_t max_rdm_ = 0;
+
+    /// Assume averaging over spin multiplets
+    bool ms_avg_ = false;
 
     // Reduced density matrices
 
@@ -157,8 +178,21 @@ class RDMs {
     /// The beta-beta-beta 3-RDM
     ambit::Tensor g3bbb_;
 
-    /// The spin-free 2-RDM
-    ambit::Tensor SFg2_;
+    /// Spin-free (spin-summed) 2-RDM
+    ambit::Tensor SF_g2_;
+
+    /// Was g1b built?
+    bool have_g1b_ = false;
+    /// Was g2aa built?
+    bool have_g2aa_ = false;
+    /// Was g2bb built?
+    bool have_g2bb_ = false;
+    /// Was g3aaa built?
+    bool have_g3aaa_ = false;
+    /// Was g3abb built?
+    bool have_g3abb_ = false;
+    /// Was g3bbb built?
+    bool have_g3bbb_ = false;
 
     // Reduced density cumulants
 
@@ -177,6 +211,13 @@ class RDMs {
     /// The beta-beta-beta 3-RDC
     ambit::Tensor L3bbb_;
 
+    /// Spin-free 1-cumulant
+    ambit::Tensor SF_L1_;
+    /// Spin-free 2-cumulant
+    ambit::Tensor SF_L2_;
+    /// Spin-free 3-cumulant
+    ambit::Tensor SF_L3_;
+
     /// Was L2aa built?
     bool have_L2aa_ = false;
     /// Was L2ab built?
@@ -192,6 +233,24 @@ class RDMs {
     /// Was L3bbb built?
     bool have_L3bbb_ = false;
 };
+
+/**
+ * @brief make_g2_spin_pure Make the alpha-alpha or beta-beta 2-RDM from alpha-beta 2-RDM.
+ * This function resets the tensor passed in (g2pure) aa or bb 2-RDM
+ * using the ab 2-RDM assuming ms averaging.
+ * @param g2ab the alpha-beta 2-RDM
+ * @param g2pure the alpha-alpha or beta-beta 2-RDM
+ */
+void make_g2_spin_pure(const ambit::Tensor& g2ab, ambit::Tensor& g2pure);
+
+/**
+ * @brief make_g3_spin_pure Make the aaa or bbb 3-RDM from aab 3-RDM.
+ * This function resets the tensor passed in (g3pure) aaa or bbb 3-RDM
+ * using the aab 3-RDM assuming ms averaging.
+ * @param g3aab the alpha-alpha-beta 3-RDM
+ * @param g3pure the alpha-alpha-alpha or beta-beta-beta 3-RDM
+ */
+void make_g3_spin_pure(const ambit::Tensor& g3aab, ambit::Tensor& g3pure);
 
 /**
  * @brief make_cumulant_L2aa_in_place Make the alpha-alpha 2-body cumulant.

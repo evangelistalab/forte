@@ -403,7 +403,7 @@ void SemiCanonical::build_transformation_matrices(psi::SharedMatrix& Ua, psi::Sh
     }
 }
 
-RDMs SemiCanonical::transform_rdms(ambit::Tensor& Ua, ambit::Tensor& Ub, const RDMs& rdms,
+RDMs SemiCanonical::transform_rdms(ambit::Tensor& Ua, ambit::Tensor& Ub, RDMs& rdms,
                                    const int& max_rdm_level) {
     if (max_rdm_level < 1)
         return RDMs();

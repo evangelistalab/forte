@@ -328,29 +328,32 @@ RDMs ActiveSpaceSolver::compute_average_rdms(
     // TODO: grab this info from the ActiveSpaceSolver object (Francesco)
     size_t nactive = mo_space_info_->size("ACTIVE");
 
-    ambit::Tensor g1a = ambit::Tensor::build(ambit::CoreTensor, "g1a", {nactive, nactive});
-    ambit::Tensor g1b = ambit::Tensor::build(ambit::CoreTensor, "g1b", {nactive, nactive});
+    bool ms_avg = options_->get_bool("SPIN_AVG_DENSITY");
 
-    ambit::Tensor g2aa;
-    ambit::Tensor g2ab;
-    ambit::Tensor g2bb;
+    ambit::Tensor g1a, g1b, g2aa, g2ab, g2bb, g3aaa, g3aab, g3abb, g3bbb;
 
-    ambit::Tensor g3aaa;
-    ambit::Tensor g3aab;
-    ambit::Tensor g3abb;
-    ambit::Tensor g3bbb;
-
+    g1a = ambit::Tensor::build(ambit::CoreTensor, "g1a", {nactive, nactive});
     if (max_rdm_level >= 2) {
-        g2aa = ambit::Tensor::build(ambit::CoreTensor, "g2aa", std::vector<size_t>(4, nactive));
         g2ab = ambit::Tensor::build(ambit::CoreTensor, "g2ab", std::vector<size_t>(4, nactive));
-        g2bb = ambit::Tensor::build(ambit::CoreTensor, "g2bb", std::vector<size_t>(4, nactive));
+    }
+    if (max_rdm_level >= 3) {
+        g3aab = ambit::Tensor::build(ambit::CoreTensor, "g3aab", std::vector<size_t>(6, nactive));
     }
 
-    if (max_rdm_level >= 3) {
-        g3aaa = ambit::Tensor::build(ambit::CoreTensor, "g3aaa", std::vector<size_t>(6, nactive));
-        g3aab = ambit::Tensor::build(ambit::CoreTensor, "g3aab", std::vector<size_t>(6, nactive));
-        g3abb = ambit::Tensor::build(ambit::CoreTensor, "g3abb", std::vector<size_t>(6, nactive));
-        g3bbb = ambit::Tensor::build(ambit::CoreTensor, "g3bbb", std::vector<size_t>(6, nactive));
+    if (not ms_avg) {
+        g1b = ambit::Tensor::build(ambit::CoreTensor, "g1b", {nactive, nactive});
+        if (max_rdm_level >= 2) {
+            g2aa = ambit::Tensor::build(ambit::CoreTensor, "g2aa", std::vector<size_t>(4, nactive));
+            g2bb = ambit::Tensor::build(ambit::CoreTensor, "g2bb", std::vector<size_t>(4, nactive));
+        }
+        if (max_rdm_level >= 3) {
+            g3aaa =
+                ambit::Tensor::build(ambit::CoreTensor, "g3aaa", std::vector<size_t>(6, nactive));
+            g3abb =
+                ambit::Tensor::build(ambit::CoreTensor, "g3abb", std::vector<size_t>(6, nactive));
+            g3bbb =
+                ambit::Tensor::build(ambit::CoreTensor, "g3bbb", std::vector<size_t>(6, nactive));
+        }
     }
 
     // function that scale rdm by w and add scaled rdm to sa_rdm
@@ -389,53 +392,63 @@ RDMs ActiveSpaceSolver::compute_average_rdms(
             state_ids.push_back(std::make_pair(r, r));
             RDMs method_rdms = method->rdms(state_ids, max_rdm_level)[0];
 
-            // Now the RDMs
-            // 1 RDM
+            // Average the RDMs
             scale_add(g1a.data(), method_rdms.g1a().data(), weight);
-            scale_add(g1b.data(), method_rdms.g1b().data(), weight);
 
             if (max_rdm_level >= 2) {
-                // 2 RDM
-                scale_add(g2aa.data(), method_rdms.g2aa().data(), weight);
                 scale_add(g2ab.data(), method_rdms.g2ab().data(), weight);
-                scale_add(g2bb.data(), method_rdms.g2bb().data(), weight);
             }
 
             if (max_rdm_level >= 3) {
-                // 3 RDM
-                scale_add(g3aaa.data(), method_rdms.g3aaa().data(), weight);
                 scale_add(g3aab.data(), method_rdms.g3aab().data(), weight);
-                scale_add(g3abb.data(), method_rdms.g3abb().data(), weight);
-                scale_add(g3bbb.data(), method_rdms.g3bbb().data(), weight);
             }
 
-            // add ms < 0 components
-            if (options_->get_bool("SPIN_AVG_DENSITY") and twice_ms > 0) {
-                g1a("pq") += method_rdms.g1b()("pq");
-                g1b("pq") += method_rdms.g1a()("pq");
+            if (not ms_avg) {
+                scale_add(g1b.data(), method_rdms.g1b().data(), weight);
 
                 if (max_rdm_level >= 2) {
-                    g2aa("pqrs") += method_rdms.g2bb()("pqrs");
-                    g2ab("pqrs") += method_rdms.g2ab()("qpsr");
-                    g2bb("pqrs") += method_rdms.g2aa()("pqrs");
+                    scale_add(g2aa.data(), method_rdms.g2aa().data(), weight);
+                    scale_add(g2bb.data(), method_rdms.g2bb().data(), weight);
                 }
 
                 if (max_rdm_level >= 3) {
-                    g3aaa("pqrstu") += method_rdms.g3bbb()("pqrstu");
-                    g3aab("pqrstu") += method_rdms.g3abb()("rpqust");
-                    g3abb("pqrstu") += method_rdms.g3aab()("qrptus");
-                    g3bbb("pqrstu") += method_rdms.g3aaa()("pqrstu");
+                    scale_add(g3aaa.data(), method_rdms.g3aaa().data(), weight);
+                    scale_add(g3abb.data(), method_rdms.g3abb().data(), weight);
+                    scale_add(g3bbb.data(), method_rdms.g3bbb().data(), weight);
+                }
+            }
+
+            // add ms < 0 components
+            if (ms_avg and twice_ms > 0) {
+                g1a("pq") += weight * method_rdms.g1b()("pq");
+
+                if (max_rdm_level >= 2) {
+                    g2ab("pqrs") += method_rdms.g2ab()("qpsr");
+                }
+
+                if (max_rdm_level >= 3) {
+                    g3aab("pqrstu") += weight * method_rdms.g3abb()("rpqust");
                 }
             }
         }
     }
 
-    if (max_rdm_level == 1) {
-        return RDMs(g1a, g1b);
-    } else if (max_rdm_level == 2) {
-        return RDMs(g1a, g1b, g2aa, g2ab, g2bb);
-    } else if (max_rdm_level == 3) {
-        return RDMs(g1a, g1b, g2aa, g2ab, g2bb, g3aaa, g3aab, g3abb, g3bbb);
+    if (ms_avg) {
+        if (max_rdm_level == 1) {
+            return RDMs(true, g1a);
+        } else if (max_rdm_level == 2) {
+            return RDMs(true, g1a, g2ab);
+        } else if (max_rdm_level == 3) {
+            return RDMs(true, g1a, g2ab, g3aab);
+        }
+    } else {
+        if (max_rdm_level == 1) {
+            return RDMs(g1a, g1b);
+        } else if (max_rdm_level == 2) {
+            return RDMs(g1a, g1b, g2aa, g2ab, g2bb);
+        } else if (max_rdm_level == 3) {
+            return RDMs(g1a, g1b, g2aa, g2ab, g2bb, g3aaa, g3aab, g3abb, g3bbb);
+        }
     }
     return RDMs();
 }
