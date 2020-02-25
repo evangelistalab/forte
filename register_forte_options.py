@@ -64,11 +64,11 @@ def register_driver_options(options):
 
     options.add_str('MINAO_BASIS', 'STO-3G', "The basis used to define an orbital subspace")
 
-    options.add_array("SUBSPACE", "A list of orbital subspaces");
+    options.add_array("SUBSPACE", "A list of orbital subspaces")
 
-    options.add_double("MS", 0.0, "Projection of spin onto the z axis");
+    options.add_double("MS", 0.0, "Projection of spin onto the z axis")
 
-    options.add_str("ACTIVE_REF_TYPE", "CAS", "Initial guess for active space wave functions");
+    options.add_str("ACTIVE_REF_TYPE", "CAS", "Initial guess for active space wave functions")
 
     options.add_bool("SPIN_AVG_DENSITY", False, "Form spin-averaged density if true")
 
