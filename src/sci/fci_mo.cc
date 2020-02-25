@@ -271,14 +271,16 @@ void FCI_MO::read_options() {
 void FCI_MO::print_options() {
     print_h2("Input Summary");
 
-    std::vector<std::pair<std::string, size_t>> info;
-    info.push_back({"No. a electrons in active", nalfa_ - ncore_ - nfrzc_});
-    info.push_back({"No. b electrons in active", nbeta_ - ncore_ - nfrzc_});
+    int ncore = ncore_, nfrzc = nfrzc_;
+
+    std::vector<std::pair<std::string, int>> info;
+    info.push_back({"No. a electrons in active", nalfa_ - ncore - nfrzc});
+    info.push_back({"No. b electrons in active", nbeta_ - ncore - nfrzc});
     info.push_back({"multiplicity", multi_});
     info.push_back({"spin ms (2 * Sz)", twice_ms_});
 
     for (auto& str_dim : info) {
-        outfile->Printf("\n    %-30s = %5zu", str_dim.first.c_str(), str_dim.second);
+        outfile->Printf("\n    %-30s = %5d", str_dim.first.c_str(), str_dim.second);
     }
 
     print_h2("Orbital Spaces");

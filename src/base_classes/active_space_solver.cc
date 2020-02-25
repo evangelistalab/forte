@@ -184,14 +184,31 @@ make_state_weights_map(std::shared_ptr<ForteOptions> options,
                        std::shared_ptr<psi::Wavefunction> wfn) {
     std::map<StateInfo, std::vector<double>> state_weights_map;
     auto state = make_state_info_from_psi_wfn(wfn);
-    if ((options->psi_options())["AVG_STATE"].size() == 0) {
 
+    auto multiplicity = state.multiplicity();
+    auto irrep = state.irrep();
+    auto irrep_label = state.irrep_label();
+    auto nele = state.na() + state.nb();
+
+    if ((options->psi_options())["AVG_STATE"].size() == 0) {
         int nroot = options->get_int("NROOT");
         int root = options->get_int("ROOT");
 
-        std::vector<double> weights(nroot, 0.0);
-        weights[root] = 1.0;
-        state_weights_map[state] = weights;
+        if (!options->get_bool("SPIN_AVG_DENSITY")) {
+            std::vector<double> weights(nroot, 0.0);
+            weights[root] = 1.0;
+            state_weights_map[state] = weights;
+        } else {
+            int twice_ms = multiplicity - 1;
+            for (int i = twice_ms; i >= -twice_ms;) {
+                int na = (nele + i) / 2;
+                StateInfo state_spin(na, nele - na, multiplicity, i, irrep, irrep_label);
+                std::vector<double> weights(nroot, 0.0);
+                weights[root] = 1.0 / multiplicity;
+                state_weights_map[state_spin] = weights;
+                i -= 2;
+            }
+        }
     } else {
         double sum_of_weights = 0.0;
         size_t nstates = 0;
@@ -210,6 +227,8 @@ make_state_weights_map(std::shared_ptr<ForteOptions> options,
             int multi = (options->psi_options())["AVG_STATE"][i][1].to_integer();
             // number of states with this irrep and multiplicity
             int nstates_this = (options->psi_options())["AVG_STATE"][i][2].to_integer();
+            // irreducible representation label
+            std::string irrep_label = psi::Process::environment.molecule()->irrep_labels()[irrep];
 
             // check for errors
             int nirrep = wfn->nirrep();
@@ -262,8 +281,24 @@ make_state_weights_map(std::shared_ptr<ForteOptions> options,
                 weights = std::vector<double>(nstates_this, 1.0);
             }
             sum_of_weights = std::accumulate(std::begin(weights), std::end(weights), 0.0);
-            state_weights_map[state] = weights;
-            nstates += nstates_this;
+
+            if (!options->get_bool("SPIN_AVG_DENSITY")) {
+                StateInfo state_this(state.na(), state.nb(), multi, state.twice_ms(), irrep,
+                                     irrep_label);
+                state_weights_map[state_this] = weights;
+                nstates += nstates_this;
+            } else {
+                int twice_ms = multi - 1;
+                for (int i = twice_ms; i >= -twice_ms;) {
+                    int na = (nele + i) / 2;
+                    StateInfo state_spin(na, nele - na, multi, i, irrep, irrep_label);
+                    std::vector<double> weights_spin(weights);
+                    std::transform(weights_spin.begin(), weights_spin.end(), weights_spin.begin(),
+                                   [multi](auto& w) { return w / multi; });
+                    state_weights_map[state_spin] = weights_spin;
+                    i -= 2;
+                }
+            }
         }
 
         // normalize weights
