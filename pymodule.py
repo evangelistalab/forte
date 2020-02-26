@@ -324,7 +324,7 @@ def adv_embedding_driver(state, state_weights_map, scf_info, ref_wfn, mo_space_i
     # Build fragment and f-e integrals
     ints_f = forte.make_forte_integrals(ref_wfn, options, mo_space_info_active)
     #ints_f_1 = ints_f # TODO: How the hell can I deep copy this!!!!?>??>?
-    psi4.core.print_out("\n Integral test (f original): oei_a(4, 13) = {:10.8f}".format(ints_f.oei_a(4, 13)))
+    psi4.core.print_out("\n Integral test (f original): oei_a(0, 2) = {:10.8f}".format(ints_f.oei_a(0, 2)))
     ints_e = forte.make_forte_integrals(ref_wfn, options, mo_space_info)
     psi4.core.print_out("\n Integral test (f original): int_f ncmo: {:d}".format(ints_f.ncmo()))
     psi4.core.print_out("\n Integral test (e original): int_e ncmo: {:d}".format(ints_e.ncmo()))
@@ -333,7 +333,7 @@ def adv_embedding_driver(state, state_weights_map, scf_info, ref_wfn, mo_space_i
     #options.set_bool('FORTE', 'SEMI_CANONICAL', False)
     forte.forte_options.update_psi_options(options)
     energy_high = forte_driver(state_weights_map, scf_info, forte.forte_options, ints_f, mo_space_info_active)
-    psi4.core.print_out("\n Integral test (f_1, after ldsrg2): oei_a(4, 13) = {:10.8f}".format(ints_f.oei_a(4, 13)))
+    psi4.core.print_out("\n Integral test (f_1, after ldsrg2): oei_a(0, 2) = {:10.8f}".format(ints_f.oei_a(0, 2)))
 
     # Form rdms for interaction correlation computation
     rdms = forte.RHF_DENSITY(scf_info, mo_space_info).rhf_rdms()
@@ -371,18 +371,18 @@ def adv_embedding_driver(state, state_weights_map, scf_info, ref_wfn, mo_space_i
 
     # Test new MRDSRG energy (with rotated Heff/ints)
     # eH rotation
-    psi4.core.print_out("\n Integral test (f_1 before dressing): oei_a(4, 13) = {:10.8f}".format(ints_f.oei_a(4, 13)))
+    psi4.core.print_out("\n Integral test (f_1 before dressing): oei_a(0, 2) = {:10.8f}".format(ints_f.oei_a(0, 2)))
     ints_dressed = dsrg.compute_Heff_actv()
     state_map = forte.to_state_nroots_map(state_weights_map)
     ints_f.build_from_asints(ints_dressed)
-    psi4.core.print_out("\n Integral test (f_1 after dressing): oei_a(4, 13) = {:10.8f}".format(ints_f.oei_a(4, 13)))
+    psi4.core.print_out("\n Integral test (f_1 after dressing): oei_a(0, 2) = {:10.8f}".format(ints_f.oei_a(0, 2)))
 
     # Compute MRDSRG-in-PT2 energy (folded)
     options.set_str('FORTE', 'CORR_LEVEL', frag_corr_level)
     forte.forte_options.update_psi_options(options)
     energy_high_relaxed = forte_driver(state_weights_map, scf_info, forte.forte_options, ints_f, mo_space_info_active)
 
-    psi4.core.print_out("\n Integral test (f_1 after relaxed ldsrg2): oei_a(4, 13) = {:10.8f}".format(ints_f.oei_a(4, 13)))
+    psi4.core.print_out("\n Integral test (f_1 after relaxed ldsrg2): oei_a(0, 2) = {:10.8f}".format(ints_f.oei_a(0, 2)))
 
     psi4.core.print_out("\n ==============Embedding Summary==============")
     psi4.core.print_out("\n E(fragment, unrelaxed) = {:10.12f}".format(energy_high))
@@ -394,7 +394,7 @@ def adv_embedding_driver(state, state_weights_map, scf_info, ref_wfn, mo_space_i
 
     # Update RDMs
     ints_f.build_from_asints(ints_dressed)
-    psi4.core.print_out("\n Integral test (f_1 recover to -after dressing-): oei_a(4, 13) = {:10.8f}".format(ints_f.oei_a(4, 13)))
+    psi4.core.print_out("\n Integral test (f_1 recover to -after dressing-): oei_a(0, 2) = {:10.8f}".format(ints_f.oei_a(0, 2)))
 
     # Update Integrals
     ints_e.build_from_another_ints(ints_f, 44)
@@ -415,7 +415,7 @@ def adv_embedding_driver(state, state_weights_map, scf_info, ref_wfn, mo_space_i
         state_energies_list = as_solver_full.compute_energy()
         rdms = as_solver_full.compute_average_rdms(state_weights_map, 3)
 
-    psi4.core.print_out("\n Integral test (f_1 final): oei_a(4, 13) = {:10.8f}".format(ints_f.oei_a(4, 13)))
+    psi4.core.print_out("\n Integral test (f_1 final): oei_a(0, 2) = {:10.8f}".format(ints_f.oei_a(0, 2)))
     
     # To do iteratively: 
     # ints_e = build_from_fragment_ints(ints_f)
