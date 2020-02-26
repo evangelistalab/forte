@@ -74,7 +74,9 @@ const std::map<StateInfo, std::vector<double>>& ActiveSpaceSolver::compute_energ
 
         int twice_ms = state.twice_ms();
         if (twice_ms < 0 and ms_avg_) {
-            psi::outfile->Printf("\n  No need to compute for ms < 0. Continue to next symmetry.");
+            psi::outfile->Printf(
+                "\n  Continue to next symmetry block: No need to compute for ms = %d / 2 < 0.",
+                twice_ms);
             continue;
         }
 
@@ -82,6 +84,12 @@ const std::map<StateInfo, std::vector<double>>& ActiveSpaceSolver::compute_energ
 
         const auto& energies = method->energies();
         state_energies_map_[state] = energies;
+
+        if (twice_ms > 0 and ms_avg_) {
+            StateInfo state_spin(state.nb(), state.na(), state.multiplicity(), -twice_ms,
+                                 state.irrep(), state.irrep_label());
+            state_energies_map_[state_spin] = energies;
+        }
     }
     print_energies(state_energies_map_);
     return state_energies_map_;
@@ -370,7 +378,7 @@ RDMs ActiveSpaceSolver::compute_average_rdms(
         const auto& weights = state_weights_map.at(state);
 
         int twice_ms = state.twice_ms();
-        if (twice_ms < 0) {
+        if (twice_ms < 0 and ms_avg_) {
             continue;
         }
 
