@@ -198,688 +198,605 @@ void SADSRG::init_density() {
 
 void SADSRG::fill_density() {
     // 1-particle density (make a copy)
-    ambit::Tensor L1aa = L1_.block("aa");
-    L1aa("pq") = rdms_.g1a()("pq") + rdms_.g1b()("pq");
+    ambit::Tensor L1a = L1_.block("aa");
+    L1a("pq") = rdms_.SF_L1()("pq");
 
     // 1-hole density
-    ambit::Tensor E1aa = Eta1_.block("aa");
-    E1aa.iterate(
+    ambit::Tensor E1a = Eta1_.block("aa");
+    E1a.iterate(
         [&](const std::vector<size_t>& i, double& value) { value = i[0] == i[1] ? 2.0 : 0.0; });
-    E1aa("pq") -= L1aa("pq");
+    E1a("pq") -= L1a("pq");
 
     // 2-body density cumulants (make a copy)
     ambit::Tensor L2aa = L2_.block("aaaa");
-    L2aa("pqrs") = 4.0 * rdms_.L2ab()("pqrs");
-    L2aa("pqrs") -= 2.0 * rdms_.L2ab()("pqsr");
+    L2aa("pqrs") = rdms_.SF_L2()("pqrs");
 }
 
-//void SADSRG::init_fock() {
-//    outfile->Printf("\n    Building Fock matrix ............................ ");
-//    build_fock_from_ints(ints_, Fock_);
-//    fill_Fdiag(Fock_, Fdiag_a_, Fdiag_b_);
-//    outfile->Printf("Done");
-//}
-
-//void SADSRG::build_fock_from_ints(std::shared_ptr<ForteIntegrals> ints, BlockedTensor& F) {
-//    size_t ncmo = mo_space_info_->size("CORRELATED");
-//    F = BTF_->build(tensor_type_, "Fock", spin_cases({"gg"}));
-
-//    // for convenience, directly call make_fock_matrix in ForteIntegral
-//    psi::SharedMatrix D1a(new psi::Matrix("D1a", ncmo, ncmo));
-//    psi::SharedMatrix D1b(new psi::Matrix("D1b", ncmo, ncmo));
-//    for (size_t m = 0, ncore = core_mos_.size(); m < ncore; m++) {
-//        D1a->set(core_mos_[m], core_mos_[m], 1.0);
-//        D1b->set(core_mos_[m], core_mos_[m], 1.0);
-//    }
-
-//    Gamma1_.block("aa").citerate([&](const std::vector<size_t>& i, const double& value) {
-//        D1a->set(actv_mos_[i[0]], actv_mos_[i[1]], value);
-//    });
-//    Gamma1_.block("AA").citerate([&](const std::vector<size_t>& i, const double& value) {
-//        D1b->set(actv_mos_[i[0]], actv_mos_[i[1]], value);
-//    });
-
-//    ints->make_fock_matrix(D1a, D1b);
-
-//    F.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>& spin, double& value) {
-//        if (spin[0] == AlphaSpin) {
-//            value = ints->get_fock_a(i[0], i[1]);
-//        } else {
-//            value = ints->get_fock_b(i[0], i[1]);
-//        }
-//    });
-//}
-
-//void SADSRG::fill_Fdiag(BlockedTensor& F, std::vector<double>& Fa, std::vector<double>& Fb) {
-//    size_t ncmo = mo_space_info_->size("CORRELATED");
-//    Fa.resize(ncmo);
-//    Fb.resize(ncmo);
-
-//    F.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>& spin, double& value) {
-//        if ((spin[0] == AlphaSpin) && (i[0] == i[1])) {
-//            Fa[i[0]] = value;
-//        } else if ((spin[0] == BetaSpin) && (i[0] == i[1])) {
-//            Fb[i[0]] = value;
-//        }
-//    });
-//}
-
-//void SADSRG::check_init_reference_energy() {
-//    outfile->Printf("\n    Checking reference energy ....................... ");
-//    double E = compute_reference_energy_from_ints(ints_);
-//    outfile->Printf("Done");
-
-//    double econv = foptions_->get_double("E_CONVERGENCE");
-//    econv = econv < 1.0e-12 ? 1.0e-12 : econv;
-//    if (fabs(E - Eref_) > 10.0 * econv) {
-//        outfile->Printf("\n    Warning! Inconsistent reference energy!");
-//        outfile->Printf("\n    Read from RDMs class:            %.12f", Eref_);
-//        outfile->Printf("\n    Recomputed using reference RDMs: %.12f", E);
-//        outfile->Printf("\n    Reference energy (MK vacuum) is set to recomputed value.");
-
-//        warnings_.push_back(std::make_tuple("Inconsistent ref. energy", "Use recomputed value",
-//                                            "A bug? Post an issue."));
-//        Eref_ = E;
-//    }
-
-//    psi::Process::environment.globals["DSRG REFERENCE ENERGY"] = Eref_;
-//}
-
-//double SADSRG::compute_reference_energy_from_ints(std::shared_ptr<ForteIntegrals> ints) {
-//    BlockedTensor H = BTF_->build(tensor_type_, "OEI", spin_cases({"cc", "aa"}), true);
-//    H.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>& spin, double& value) {
-//        if (spin[0] == AlphaSpin) {
-//            value = ints->oei_a(i[0], i[1]);
-//        } else {
-//            value = ints->oei_b(i[0], i[1]);
-//        }
-//    });
-
-//    BlockedTensor V = BTF_->build(tensor_type_, "APEI", spin_cases({"aaaa"}), true);
-//    V.block("aaaa")("prqs") =
-//        ints->aptei_aa_block(actv_mos_, actv_mos_, actv_mos_, actv_mos_)("prqs");
-//    V.block("aAaA")("prqs") =
-//        ints->aptei_ab_block(actv_mos_, actv_mos_, actv_mos_, actv_mos_)("prqs");
-//    V.block("AAAA")("prqs") =
-//        ints->aptei_bb_block(actv_mos_, actv_mos_, actv_mos_, actv_mos_)("prqs");
-
-//    // form Fock in batches
-//    // in cc block, only the diagonal elements are useful
-//    BlockedTensor F = BTF_->build(tensor_type_, "Fock pruned", spin_cases({"cc", "aa"}), true);
-//    F["ij"] = H["ij"];
-//    F["IJ"] = H["IJ"];
-//    F["uv"] += V["uxvy"] * Gamma1_["xy"];
-//    F["uv"] += V["uXvY"] * Gamma1_["XY"];
-//    F["UV"] += V["xUyV"] * Gamma1_["xy"];
-//    F["UV"] += V["UXVY"] * Gamma1_["XY"];
-
-//    // an identity tensor of shape 1 * nc * 1 * nc for F["mm"] <- sum_{n} V["mnmn"]
-//    size_t nc = core_mos_.size();
-//    std::vector<size_t> Idims{1, nc, 1, nc};
-//    ambit::Tensor I = ambit::Tensor::build(tensor_type_, "I", Idims);
-//    I.iterate([&](const std::vector<size_t>& i, double& value) {
-//        if (i[1] == i[3]) {
-//            value = 1.0;
-//        }
-//    });
-
-//    // an temp tensor of shape 1 * 1
-//    ambit::Tensor O = ambit::Tensor::build(tensor_type_, "ONE", std::vector<size_t>{1, 1});
-//    O.data()[0] = 1.0;
-
-//    ambit::Tensor Vtemp;
-//    for (size_t m = 0; m < nc; ++m) {
-//        size_t nm = core_mos_[m];
-//        Vtemp = ints->aptei_aa_block({nm}, core_mos_, {nm}, core_mos_);
-//        F.block("cc").data()[m * nc + m] += Vtemp("pqrs") * I("pqrs");
-
-//        Vtemp = ints->aptei_ab_block({nm}, core_mos_, {nm}, core_mos_);
-//        F.block("cc").data()[m * nc + m] += Vtemp("pqrs") * I("pqrs");
-
-//        Vtemp = ints->aptei_ab_block(core_mos_, {nm}, core_mos_, {nm});
-//        F.block("CC").data()[m * nc + m] += Vtemp("pqrs") * I("qpsr");
-
-//        Vtemp = ints->aptei_bb_block({nm}, core_mos_, {nm}, core_mos_);
-//        F.block("CC").data()[m * nc + m] += Vtemp("pqrs") * I("pqrs");
-//    }
-
-//    Vtemp = ints->aptei_aa_block(core_mos_, actv_mos_, core_mos_, actv_mos_);
-//    F.block("cc")("pq") += Vtemp("prqs") * Gamma1_.block("aa")("rs");
-//    F.block("aa")("pq") += Vtemp("rpsq") * I("irjs") * O("ij");
-
-//    Vtemp = ints->aptei_ab_block(core_mos_, actv_mos_, core_mos_, actv_mos_);
-//    F.block("cc")("pq") += Vtemp("prqs") * Gamma1_.block("AA")("rs");
-//    F.block("AA")("pq") += Vtemp("rpsq") * I("irjs") * O("ij");
-
-//    Vtemp = ints->aptei_ab_block(actv_mos_, core_mos_, actv_mos_, core_mos_);
-//    F.block("CC")("pq") += Vtemp("rpsq") * Gamma1_.block("aa")("rs");
-//    F.block("aa")("pq") += Vtemp("prqs") * I("irjs") * O("ij");
-
-//    Vtemp = ints->aptei_bb_block(core_mos_, actv_mos_, core_mos_, actv_mos_);
-//    F.block("CC")("pq") += Vtemp("prqs") * Gamma1_.block("AA")("rs");
-//    F.block("AA")("pq") += Vtemp("rpsq") * I("irjs") * O("ij");
-
-//    return compute_reference_energy(H, F, V);
-//}
-
-//double SADSRG::compute_reference_energy(BlockedTensor H, BlockedTensor F, BlockedTensor V) {
-//    /// H: bare OEI; F: Fock; V: bare APTEI.
-//    /// E = 0.5 * ( H["ij"] + F["ij"] ) * L1["ji"] + 0.25 * V["xyuv"] * L2["uvxy"]
-
-//    double E = Efrzc_ + Enuc_;
-
-//    for (const std::string block : {"cc", "CC"}) {
-//        for (size_t m = 0, nc = core_mos_.size(); m < nc; ++m) {
-//            E += 0.5 * H.block(block).data()[m * nc + m];
-//            E += 0.5 * F.block(block).data()[m * nc + m];
-//        }
-//    }
-
-//    E += 0.5 * H["uv"] * Gamma1_["vu"];
-//    E += 0.5 * H["UV"] * Gamma1_["VU"];
-//    E += 0.5 * F["uv"] * Gamma1_["vu"];
-//    E += 0.5 * F["UV"] * Gamma1_["VU"];
-
-//    E += 0.25 * V["uvxy"] * Lambda2_["xyuv"];
-//    E += 0.25 * V["UVXY"] * Lambda2_["XYUV"];
-//    E += V["uVxY"] * Lambda2_["xYuV"];
-
-//    return E;
-//}
-
-//double SADSRG::compute_reference_energy_df(BlockedTensor H, BlockedTensor F, BlockedTensor B) {
-//    /// H: bare OEI; F: Fock; V: bare APTEI; B: DF three-index
-//    /// E = 0.5 * ( H["ij"] + F["ij"] ) * L1["ji"] + 0.25 * V["xyuv"] * L2["uvxy"]
-//    /// V["pqrs"] = <pq||rs> = (pr|qs) - (ps|qr); (pr|qs) ~= B["Lpr"] * B["Lqs"]
-
-//    double E = Efrzc_ + Enuc_;
-
-//    for (const std::string block : {"cc", "CC"}) {
-//        for (size_t m = 0, nc = core_mos_.size(); m < nc; ++m) {
-//            E += 0.5 * H.block(block).data()[m * nc + m];
-//            E += 0.5 * F.block(block).data()[m * nc + m];
-//        }
-//    }
-
-//    E += 0.5 * H["uv"] * Gamma1_["vu"];
-//    E += 0.5 * H["UV"] * Gamma1_["VU"];
-//    E += 0.5 * F["uv"] * Gamma1_["vu"];
-//    E += 0.5 * F["UV"] * Gamma1_["VU"];
-
-//    E += 0.25 * B["gux"] * B["gvy"] * Lambda2_["xyuv"];
-//    E -= 0.25 * B["guy"] * B["gvx"] * Lambda2_["xyuv"];
-//    E += 0.25 * B["gUX"] * B["gVY"] * Lambda2_["XYUV"];
-//    E -= 0.25 * B["gUY"] * B["gVX"] * Lambda2_["XYUV"];
-//    E += B["gux"] * B["gVY"] * Lambda2_["xYuV"];
-
-//    return E;
-//}
-
-//void SADSRG::init_dm_ints() {
-//    outfile->Printf("\n    Preparing ambit tensors for dipole moments ...... ");
-//    Vector3 dm_nuc =
-//        psi::Process::environment.molecule()->nuclear_dipole(psi::Vector3(0.0, 0.0, 0.0));
-//    for (int i = 0; i < 3; ++i) {
-//        dm_nuc_[i] = dm_nuc[i];
-//        dm_[i] = BTF_->build(tensor_type_, "Dipole " + dm_dirs_[i], spin_cases({"gg"}));
-//    }
-
-//    std::vector<psi::SharedMatrix> dm_a = ints_->compute_MOdipole_ints(true, true);
-//    std::vector<psi::SharedMatrix> dm_b = ints_->compute_MOdipole_ints(false, true);
-//    fill_MOdm(dm_a, dm_b);
-//    compute_dm_ref();
-
-//    // prepare transformed dipole integrals
-//    if (multi_state_ || (relax_ref_ != "NONE")) {
-//        Mbar0_ = {{0.0, 0.0, 0.0}};
-//        for (int i = 0; i < 3; ++i) {
-//            Mbar1_[i] = BTF_->build(tensor_type_, "DSRG DM1 " + dm_dirs_[i], spin_cases({"aa"}));
-//            Mbar2_[i] = BTF_->build(tensor_type_, "DSRG DM2 " + dm_dirs_[i], spin_cases({"aaaa"}));
-//            if (foptions_->get_bool("FORM_MBAR3")) {
-//                Mbar3_[i] =
-//                    BTF_->build(tensor_type_, "DSRG DM3 " + dm_dirs_[i], spin_cases({"aaaaaa"}));
-//            }
-//        }
-//    }
-
-//    outfile->Printf("Done");
-//}
-
-//void SADSRG::fill_MOdm(std::vector<psi::SharedMatrix>& dm_a, std::vector<psi::SharedMatrix>& dm_b) {
-//    // consider frozen-core part
-//    std::vector<size_t> frzc_mos = mo_space_info_->absolute_mo("FROZEN_DOCC");
-//    for (int z = 0; z < 3; ++z) {
-//        double dipole = 0.0;
-//        for (const auto& p : frzc_mos) {
-//            dipole += dm_a[z]->get(p, p);
-//            dipole += dm_b[z]->get(p, p);
-//        }
-//        dm_frzc_[z] = dipole;
-//    }
-
-//    // find out correspondance between ncmo and nmo
-//    std::vector<size_t> cmo_to_mo;
-//    psi::Dimension frzcpi = mo_space_info_->dimension("FROZEN_DOCC");
-//    psi::Dimension frzvpi = mo_space_info_->dimension("FROZEN_UOCC");
-//    psi::Dimension ncmopi = mo_space_info_->dimension("CORRELATED");
-//    for (int h = 0, p = 0, nirrep = mo_space_info_->nirrep(); h < nirrep; ++h) {
-//        p += frzcpi[h];
-//        for (int r = 0; r < ncmopi[h]; ++r) {
-//            cmo_to_mo.push_back(static_cast<size_t>(p));
-//            ++p;
-//        }
-//        p += frzvpi[h];
-//    }
-
-//    // fill in dipole integrals to dm_
-//    for (int z = 0; z < 3; ++z) {
-//        dm_[z].iterate(
-//            [&](const std::vector<size_t>& i, const std::vector<SpinType>& spin, double& value) {
-//                if (spin[0] == AlphaSpin)
-//                    value = dm_a[z]->get(cmo_to_mo[i[0]], cmo_to_mo[i[1]]);
-//                if (spin[0] == BetaSpin)
-//                    value = dm_b[z]->get(cmo_to_mo[i[0]], cmo_to_mo[i[1]]);
-//            });
-//    }
-//}
-
-//void SADSRG::compute_dm_ref() {
-//    for (int z = 0; z < 3; ++z) {
-//        double dipole = dm_frzc_[z];
-//        for (const std::string& block : {"cc", "CC"}) {
-//            dm_[z].block(block).citerate([&](const std::vector<size_t>& i, const double& value) {
-//                if (i[0] == i[1]) {
-//                    dipole += value;
-//                }
-//            });
-//        }
-//        dipole += dm_[z]["uv"] * Gamma1_["uv"];
-//        dipole += dm_[z]["UV"] * Gamma1_["UV"];
-//        dm_ref_[z] = dipole;
-//        do_dm_dirs_[z] = std::fabs(dipole) > 1.0e-15 ? true : false;
-//    }
-//}
-
-//std::shared_ptr<ActiveSpaceIntegrals> SADSRG::compute_Heff_actv() {
-//    // de-normal-order DSRG transformed Hamiltonian
-//    double Edsrg = Eref_ + Hbar0_;
-//    if (foptions_->get_bool("FORM_HBAR3")) {
-//        deGNO_ints("Hamiltonian", Edsrg, Hbar1_, Hbar2_, Hbar3_);
-//        rotate_ints_semi_to_origin("Hamiltonian", Hbar1_, Hbar2_, Hbar3_);
-//    } else {
-//        deGNO_ints("Hamiltonian", Edsrg, Hbar1_, Hbar2_);
-//        rotate_ints_semi_to_origin("Hamiltonian", Hbar1_, Hbar2_);
-//    }
-
-//    // create FCIIntegral shared_ptr
-//    std::shared_ptr<ActiveSpaceIntegrals> fci_ints =
-//        std::make_shared<ActiveSpaceIntegrals>(ints_, actv_mos_, actv_mos_sym_, core_mos_);
-//    fci_ints->set_active_integrals(Hbar2_.block("aaaa"), Hbar2_.block("aAaA"),
-//                                   Hbar2_.block("AAAA"));
-//    fci_ints->set_restricted_one_body_operator(Hbar1_.block("aa").data(),
-//                                               Hbar1_.block("AA").data());
-//    fci_ints->set_scalar_energy(Edsrg - Enuc_ - Efrzc_);
-
-//    return fci_ints;
-//}
-
-//void SADSRG::deGNO_ints(const std::string& name, double& H0, BlockedTensor& H1, BlockedTensor& H2) {
-//    print_h2("De-Normal-Order DSRG Transformed " + name);
-
-//    // compute scalar
-//    local_timer t0;
-//    outfile->Printf("\n    %-40s ... ", "Computing the scalar term");
-
-//    // scalar from H1
-//    double scalar1 = 0.0;
-//    scalar1 -= H1["vu"] * Gamma1_["uv"];
-//    scalar1 -= H1["VU"] * Gamma1_["UV"];
-
-//    // scalar from H2
-//    double scalar2 = 0.0;
-//    scalar2 += 0.5 * Gamma1_["uv"] * H2["vyux"] * Gamma1_["xy"];
-//    scalar2 += 0.5 * Gamma1_["UV"] * H2["VYUX"] * Gamma1_["XY"];
-//    scalar2 += Gamma1_["uv"] * H2["vYuX"] * Gamma1_["XY"];
-
-//    scalar2 -= 0.25 * H2["xyuv"] * Lambda2_["uvxy"];
-//    scalar2 -= 0.25 * H2["XYUV"] * Lambda2_["UVXY"];
-//    scalar2 -= H2["xYuV"] * Lambda2_["uVxY"];
-
-//    H0 += scalar1 + scalar2;
-//    outfile->Printf("Done. Timing %8.3f s", t0.get());
-
-//    // compute 1-body term
-//    local_timer t1;
-//    outfile->Printf("\n    %-40s ... ", "Computing the 1-body term");
-
-//    H1["uv"] -= H2["uxvy"] * Gamma1_["yx"];
-//    H1["uv"] -= H2["uXvY"] * Gamma1_["YX"];
-//    H1["UV"] -= H2["xUyV"] * Gamma1_["yx"];
-//    H1["UV"] -= H2["UXVY"] * Gamma1_["YX"];
-//    outfile->Printf("Done. Timing %8.3f s", t1.get());
-//}
-
-//void SADSRG::deGNO_ints(const std::string& name, double& H0, BlockedTensor& H1, BlockedTensor& H2,
-//                        BlockedTensor& H3) {
-//    print_h2("De-Normal-Order DSRG Transformed " + name);
-
-//    // compute scalar
-//    local_timer t0;
-//    outfile->Printf("\n    %-40s ... ", "Computing the scalar term");
-
-//    // scalar from H1
-//    double scalar1 = 0.0;
-//    scalar1 -= H1["vu"] * Gamma1_["uv"];
-//    scalar1 -= H1["VU"] * Gamma1_["UV"];
-
-//    // scalar from H2
-//    double scalar2 = 0.0;
-//    scalar2 += 0.5 * Gamma1_["uv"] * H2["vyux"] * Gamma1_["xy"];
-//    scalar2 += 0.5 * Gamma1_["UV"] * H2["VYUX"] * Gamma1_["XY"];
-//    scalar2 += Gamma1_["uv"] * H2["vYuX"] * Gamma1_["XY"];
-
-//    scalar2 -= 0.25 * H2["xyuv"] * Lambda2_["uvxy"];
-//    scalar2 -= 0.25 * H2["XYUV"] * Lambda2_["UVXY"];
-//    scalar2 -= H2["xYuV"] * Lambda2_["uVxY"];
-
-//    // scalar from H3
-//    double scalar3 = 0.0;
-//    scalar3 -= (1.0 / 36.0) * H3.block("aaaaaa")("xyzuvw") * rdms_.L3aaa()("xyzuvw");
-//    scalar3 -= (1.0 / 36.0) * H3.block("AAAAAA")("XYZUVW") * rdms_.L3bbb()("XYZUVW");
-//    scalar3 -= 0.25 * H3.block("aaAaaA")("xyZuvW") * rdms_.L3aab()("xyZuvW");
-//    scalar3 -= 0.25 * H3.block("aAAaAA")("xYZuVW") * rdms_.L3abb()("xYZuVW");
-
-//    // TODO: form one-body intermediate for scalar and 1-body
-//    scalar3 += 0.25 * H3["xyzuvw"] * Lambda2_["uvxy"] * Gamma1_["wz"];
-//    scalar3 += 0.25 * H3["XYZUVW"] * Lambda2_["UVXY"] * Gamma1_["WZ"];
-//    scalar3 += 0.25 * H3["xyZuvW"] * Lambda2_["uvxy"] * Gamma1_["WZ"];
-//    scalar3 += H3["xzYuwV"] * Lambda2_["uVxY"] * Gamma1_["wz"];
-//    scalar3 += 0.25 * H3["zXYwUV"] * Lambda2_["UVXY"] * Gamma1_["wz"];
-//    scalar3 += H3["xZYuWV"] * Lambda2_["uVxY"] * Gamma1_["WZ"];
-
-//    scalar3 -= (1.0 / 6.0) * H3["xyzuvw"] * Gamma1_["ux"] * Gamma1_["vy"] * Gamma1_["wz"];
-//    scalar3 -= (1.0 / 6.0) * H3["XYZUVW"] * Gamma1_["UX"] * Gamma1_["VY"] * Gamma1_["WZ"];
-//    scalar3 -= 0.5 * H3["xyZuvW"] * Gamma1_["ux"] * Gamma1_["vy"] * Gamma1_["WZ"];
-//    scalar3 -= 0.5 * H3["xYZuVW"] * Gamma1_["ux"] * Gamma1_["VY"] * Gamma1_["WZ"];
-
-//    H0 += scalar1 + scalar2 + scalar3;
-//    outfile->Printf("Done. Timing %8.3f s", t0.get());
-
-//    // compute 1-body term
-//    local_timer t1;
-//    outfile->Printf("\n    %-40s ... ", "Computing the 1-body term");
-
-//    // 1-body from H2
-//    H1["uv"] -= H2["uxvy"] * Gamma1_["yx"];
-//    H1["uv"] -= H2["uXvY"] * Gamma1_["YX"];
-//    H1["UV"] -= H2["xUyV"] * Gamma1_["yx"];
-//    H1["UV"] -= H2["UXVY"] * Gamma1_["YX"];
-
-//    // 1-body from H3
-//    H1["uv"] += 0.5 * H3["uyzvxw"] * Gamma1_["xy"] * Gamma1_["wz"];
-//    H1["uv"] += 0.5 * H3["uYZvXW"] * Gamma1_["XY"] * Gamma1_["WZ"];
-//    H1["uv"] += H3["uyZvxW"] * Gamma1_["xy"] * Gamma1_["WZ"];
-
-//    H1["UV"] += 0.5 * H3["UYZVXW"] * Gamma1_["XY"] * Gamma1_["WZ"];
-//    H1["UV"] += 0.5 * H3["yzUxwV"] * Gamma1_["xy"] * Gamma1_["wz"];
-//    H1["UV"] += H3["yUZxVW"] * Gamma1_["xy"] * Gamma1_["WZ"];
-
-//    H1["uv"] -= 0.25 * H3["uxyvwz"] * Lambda2_["wzxy"];
-//    H1["uv"] -= 0.25 * H3["uXYvWZ"] * Lambda2_["WZXY"];
-//    H1["uv"] -= H3["uxYvwZ"] * Lambda2_["wZxY"];
-
-//    H1["UV"] -= 0.25 * H3["UXYVWZ"] * Lambda2_["WZXY"];
-//    H1["UV"] -= 0.25 * H3["xyUwzV"] * Lambda2_["wzxy"];
-//    H1["UV"] -= H3["xUYwVZ"] * Lambda2_["wZxY"];
-//    outfile->Printf("Done. Timing %8.3f s", t1.get());
-
-//    // compute 2-body term
-//    local_timer t2;
-//    outfile->Printf("\n    %-40s ... ", "Computing the 2-body term");
-//    H2["xyuv"] -= H3["xyzuvw"] * Gamma1_["wz"];
-//    H2["xyuv"] -= H3["xyZuvW"] * Gamma1_["WZ"];
-//    H2["xYuV"] -= H3["xYZuVW"] * Gamma1_["WZ"];
-//    H2["xYuV"] -= H3["xzYuwV"] * Gamma1_["wz"];
-//    H2["XYUV"] -= H3["XYZUVW"] * Gamma1_["WZ"];
-//    H2["XYUV"] -= H3["zXYwUV"] * Gamma1_["wz"];
-//    outfile->Printf("Done. Timing %8.3f s", t2.get());
-//}
-
-//void SADSRG::fill_three_index_ints(ambit::BlockedTensor T) {
-//    const auto& block_labels = T.block_labels();
-//    for (const std::string& string_block : block_labels) {
-//        auto mo_to_index = BTF_->get_mo_to_index();
-//        std::vector<size_t> first_index = mo_to_index[string_block.substr(0, 1)];
-//        std::vector<size_t> second_index = mo_to_index[string_block.substr(1, 1)];
-//        std::vector<size_t> third_index = mo_to_index[string_block.substr(2, 1)];
-//        ambit::Tensor block = ints_->three_integral_block(first_index, second_index, third_index);
-//        T.block(string_block).copy(block);
-//    }
-//}
-
-//ambit::BlockedTensor SADSRG::deGNO_Tamp(BlockedTensor& T1, BlockedTensor& T2, BlockedTensor& D1) {
-//    BlockedTensor T1eff = BTF_->build(tensor_type_, "T1eff from de-GNO", spin_cases({"hp"}));
-
-//    T1eff["ia"] = T1["ia"];
-//    T1eff["IA"] = T1["IA"];
-
-//    T1eff["ia"] -= T2["iuav"] * D1["vu"];
-//    T1eff["ia"] -= T2["iUaV"] * D1["VU"];
-//    T1eff["IA"] -= T2["uIvA"] * D1["vu"];
-//    T1eff["IA"] -= T2["IUAV"] * D1["VU"];
-
-//    return T1eff;
-//}
-
-//void SADSRG::rotate_ints_semi_to_origin(const std::string& name, BlockedTensor& H1,
-//                                        BlockedTensor& H2) {
-
-//    print_h2("Rotate DSRG Transformed " + name + " back to Original Basis");
-//    ambit::Tensor temp;
-//    ambit::Tensor Ua = Uactv_.block("aa");
-//    ambit::Tensor Ub = Uactv_.block("AA");
-
-//    local_timer timer;
-//    outfile->Printf("\n    %-40s ... ", "Rotating 1-body term to original basis");
-//    temp = H1.block("aa").clone(tensor_type_);
-//    H1.block("aa")("pq") = Ua("pu") * temp("uv") * Ua("qv");
-
-//    temp = H1.block("AA").clone(tensor_type_);
-//    H1.block("AA")("PQ") = Ub("PU") * temp("UV") * Ub("QV");
-//    outfile->Printf("Done. Timing %8.3f s", timer.get());
-
-//    local_timer timer2;
-//    outfile->Printf("\n    %-40s ... ", "Rotating 2-body term to original basis");
-//    temp = H2.block("aaaa").clone(tensor_type_);
-//    H2.block("aaaa")("pqrs") = Ua("pa") * Ua("qb") * temp("abcd") * Ua("rc") * Ua("sd");
-
-//    temp = H2.block("aAaA").clone(tensor_type_);
-//    H2.block("aAaA")("pQrS") = Ua("pa") * Ub("QB") * temp("aBcD") * Ua("rc") * Ub("SD");
-
-//    temp = H2.block("AAAA").clone(tensor_type_);
-//    H2.block("AAAA")("PQRS") = Ub("PA") * Ub("QB") * temp("ABCD") * Ub("RC") * Ub("SD");
-//    outfile->Printf("Done. Timing %8.3f s", timer2.get());
-//}
-
-//void SADSRG::rotate_ints_semi_to_origin(const std::string& name, BlockedTensor& H1,
-//                                        BlockedTensor& H2, BlockedTensor& H3) {
-//    print_h2("Rotate DSRG Transformed " + name + " back to Original Basis");
-//    ambit::Tensor temp;
-//    ambit::Tensor Ua = Uactv_.block("aa");
-//    ambit::Tensor Ub = Uactv_.block("AA");
-
-//    local_timer timer;
-//    outfile->Printf("\n    %-40s ... ", "Rotating 1-body term to original basis");
-//    temp = H1.block("aa").clone(tensor_type_);
-//    H1.block("aa")("pq") = Ua("pu") * temp("uv") * Ua("qv");
-
-//    temp = H1.block("AA").clone(tensor_type_);
-//    H1.block("AA")("PQ") = Ub("PU") * temp("UV") * Ub("QV");
-//    outfile->Printf("Done. Timing %8.3f s", timer.get());
-
-//    local_timer timer2;
-//    outfile->Printf("\n    %-40s ... ", "Rotating 2-body term to original basis");
-//    temp = H2.block("aaaa").clone(tensor_type_);
-//    H2.block("aaaa")("pqrs") = Ua("pa") * Ua("qb") * temp("abcd") * Ua("rc") * Ua("sd");
-
-//    temp = H2.block("aAaA").clone(tensor_type_);
-//    H2.block("aAaA")("pQrS") = Ua("pa") * Ub("QB") * temp("aBcD") * Ua("rc") * Ub("SD");
-
-//    temp = H2.block("AAAA").clone(tensor_type_);
-//    H2.block("AAAA")("PQRS") = Ub("PA") * Ub("QB") * temp("ABCD") * Ub("RC") * Ub("SD");
-//    outfile->Printf("Done. Timing %8.3f s", timer2.get());
-
-//    local_timer timer3;
-//    outfile->Printf("\n    %-40s ... ", "Rotating 3-body term to original basis");
-//    temp = H3.block("aaaaaa").clone(tensor_type_);
-//    H3.block("aaaaaa")("pqrstu") =
-//        Ua("pa") * Ua("qb") * Ua("rc") * temp("abcijk") * Ua("si") * Ua("tj") * Ua("uk");
-
-//    temp = H3.block("aaAaaA").clone(tensor_type_);
-//    H3.block("aaAaaA")("pqrstu") =
-//        Ua("pa") * Ua("qb") * Ub("rc") * temp("abcijk") * Ua("si") * Ua("tj") * Ub("uk");
-
-//    temp = H3.block("aAAaAA").clone(tensor_type_);
-//    H3.block("aAAaAA")("pqrstu") =
-//        Ua("pa") * Ub("qb") * Ub("rc") * temp("abcijk") * Ua("si") * Ub("tj") * Ub("uk");
-
-//    temp = H3.block("AAAAAA").clone(tensor_type_);
-//    H3.block("AAAAAA")("pqrstu") =
-//        Ub("pa") * Ub("qb") * Ub("rc") * temp("abcijk") * Ub("si") * Ub("tj") * Ub("uk");
-
-//    outfile->Printf("Done. Timing %8.3f s", timer3.get());
-//}
-
-//std::vector<ambit::Tensor> SADSRG::Hbar(int n) {
-//    std::vector<ambit::Tensor> out;
-//    if (n == 1) {
-//        out = {Hbar1_.block("aa"), Hbar1_.block("AA")};
-//    } else if (n == 2) {
-//        out = {Hbar2_.block("aaaa"), Hbar2_.block("aAaA"), Hbar2_.block("AAAA")};
-//    } else if (n == 3) {
-//        if (foptions_->get_bool("FORM_HBAR3")) {
-//            out = {Hbar3_.block("aaaaaa"), Hbar3_.block("aaAaaA"), Hbar3_.block("aAAaAA"),
-//                   Hbar3_.block("AAAAAA")};
-//        } else {
-//            throw psi::PSIEXCEPTION("Hbar3 is not formed. Check your code.");
-//        }
-//    } else {
-//        throw psi::PSIEXCEPTION("Only 1, 2, and 3 Hbar are in Tensor format.");
-//    }
-//    return out;
-//}
-
-//std::vector<DressedQuantity> SADSRG::deGNO_DMbar_actv() {
-//    std::vector<DressedQuantity> out;
-//    for (int z = 0; z < 3; ++z) {
-//        if (do_dm_dirs_[z] || multi_state_) {
-//            std::string name = "Dipole " + dm_dirs_[z] + " Integrals";
-//            if (foptions_->get_bool("FORM_MBAR3")) {
-//                deGNO_ints(name, Mbar0_[z], Mbar1_[z], Mbar2_[z], Mbar3_[z]);
-//                rotate_ints_semi_to_origin(name, Mbar1_[z], Mbar2_[z], Mbar3_[z]);
-//                out.emplace_back(Mbar0_[z], Mbar1_[z].block("aa"), Mbar1_[z].block("AA"),
-//                                 Mbar2_[z].block("aaaa"), Mbar2_[z].block("aAaA"),
-//                                 Mbar2_[z].block("AAAA"), Mbar3_[z].block("aaaaaa"),
-//                                 Mbar3_[z].block("aaAaaA"), Mbar3_[z].block("aAAaAA"),
-//                                 Mbar3_[z].block("AAAAAA"));
-//            } else {
-//                deGNO_ints(name, Mbar0_[z], Mbar1_[z], Mbar2_[z]);
-//                rotate_ints_semi_to_origin(name, Mbar1_[z], Mbar2_[z]);
-//                out.emplace_back(Mbar0_[z], Mbar1_[z].block("aa"), Mbar1_[z].block("AA"),
-//                                 Mbar2_[z].block("aaaa"), Mbar2_[z].block("aAaA"),
-//                                 Mbar2_[z].block("AAAA"));
-//            }
-//        } else {
-//            out.emplace_back(DressedQuantity());
-//        }
-//    }
-//    return out;
-//}
-
-//void SADSRG::H1_T1_C0(BlockedTensor& H1, BlockedTensor& T1, const double& alpha, double& C0) {
-//    local_timer timer;
-
-//    double E = 0.0;
-//    E += H1["em"] * T1["me"];
-//    E += H1["ex"] * T1["ye"] * Gamma1_["xy"];
-//    E += H1["xm"] * T1["my"] * Eta1_["yx"];
-
-//    E += H1["EM"] * T1["ME"];
-//    E += H1["EX"] * T1["YE"] * Gamma1_["XY"];
-//    E += H1["XM"] * T1["MY"] * Eta1_["YX"];
-
-//    E *= alpha;
-//    C0 += E;
-
-//    if (print_ > 2) {
-//        outfile->Printf("\n    Time for [H1, T1] -> C0 : %12.3f", timer.get());
-//    }
-//    dsrg_time_.add("110", timer.get());
-//}
-
-//void SADSRG::H1_T2_C0(BlockedTensor& H1, BlockedTensor& T2, const double& alpha, double& C0) {
-//    local_timer timer;
-//    BlockedTensor temp;
-//    double E = 0.0;
-
-//    temp = ambit::BlockedTensor::build(tensor_type_, "temp", {"aaaa"});
-//    temp["uvxy"] += H1["ex"] * T2["uvey"];
-//    temp["uvxy"] -= H1["vm"] * T2["umxy"];
-//    E += 0.5 * temp["uvxy"] * Lambda2_["xyuv"];
-
-//    temp = ambit::BlockedTensor::build(tensor_type_, "temp", {"AAAA"});
-//    temp["UVXY"] += H1["EX"] * T2["UVEY"];
-//    temp["UVXY"] -= H1["VM"] * T2["UMXY"];
-//    E += 0.5 * temp["UVXY"] * Lambda2_["XYUV"];
-
-//    temp = ambit::BlockedTensor::build(tensor_type_, "temp", {"aAaA"});
-//    temp["uVxY"] += H1["ex"] * T2["uVeY"];
-//    temp["uVxY"] += H1["EY"] * T2["uVxE"];
-//    temp["uVxY"] -= H1["VM"] * T2["uMxY"];
-//    temp["uVxY"] -= H1["um"] * T2["mVxY"];
-//    E += temp["uVxY"] * Lambda2_["xYuV"];
-
-//    E *= alpha;
-//    C0 += E;
-
-//    if (print_ > 2) {
-//        outfile->Printf("\n    Time for [H1, T2] -> C0 : %12.3f", timer.get());
-//    }
-//    dsrg_time_.add("120", timer.get());
-//}
-
-//void SADSRG::H2_T1_C0(BlockedTensor& H2, BlockedTensor& T1, const double& alpha, double& C0) {
-//    local_timer timer;
-//    BlockedTensor temp;
-//    double E = 0.0;
-
-//    temp = ambit::BlockedTensor::build(tensor_type_, "temp", {"aaaa"});
-//    temp["uvxy"] += H2["evxy"] * T1["ue"];
-//    temp["uvxy"] -= H2["uvmy"] * T1["mx"];
-//    E += 0.5 * temp["uvxy"] * Lambda2_["xyuv"];
-
-//    temp = ambit::BlockedTensor::build(tensor_type_, "temp", {"AAAA"});
-//    temp["UVXY"] += H2["EVXY"] * T1["UE"];
-//    temp["UVXY"] -= H2["UVMY"] * T1["MX"];
-//    E += 0.5 * temp["UVXY"] * Lambda2_["XYUV"];
-
-//    temp = ambit::BlockedTensor::build(tensor_type_, "temp", {"aAaA"});
-//    temp["uVxY"] += H2["eVxY"] * T1["ue"];
-//    temp["uVxY"] += H2["uExY"] * T1["VE"];
-//    temp["uVxY"] -= H2["uVmY"] * T1["mx"];
-//    temp["uVxY"] -= H2["uVxM"] * T1["MY"];
-//    E += temp["uVxY"] * Lambda2_["xYuV"];
-
-//    E *= alpha;
-//    C0 += E;
-
-//    if (print_ > 2) {
-//        outfile->Printf("\n    Time for [H2, T1] -> C0 : %12.3f", timer.get());
-//    }
-//    dsrg_time_.add("210", timer.get());
-//}
-
-//void SADSRG::H2_T2_C0(BlockedTensor& H2, BlockedTensor& T2, const double& alpha, double& C0) {
+void SADSRG::init_fock() {
+    outfile->Printf("\n    Building Fock matrix ............................ ");
+    build_fock_from_ints(ints_, Fock_);
+    fill_Fdiag(Fock_, Fdiag_);
+    outfile->Printf("Done");
+}
+
+void SADSRG::build_fock_from_ints(std::shared_ptr<ForteIntegrals> ints, BlockedTensor& F) {
+    size_t ncmo = mo_space_info_->size("CORRELATED");
+    F = BTF_->build(tensor_type_, "Fock", {"gg"});
+
+    // for convenience, directly call make_fock_matrix in ForteIntegral
+    psi::SharedMatrix D1a(new psi::Matrix("D1a", ncmo, ncmo));
+    for (size_t m = 0, ncore = core_mos_.size(); m < ncore; m++) {
+        D1a->set(core_mos_[m], core_mos_[m], 1.0);
+    }
+
+    L1_.block("aa").citerate([&](const std::vector<size_t>& i, const double& value) {
+        D1a->set(actv_mos_[i[0]], actv_mos_[i[1]], 0.5 * value);
+    });
+
+    ints->make_fock_matrix(D1a, D1a);
+
+    F.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>&, double& value) {
+        value = ints->get_fock_a(i[0], i[1]);
+    });
+}
+
+void SADSRG::fill_Fdiag(BlockedTensor& F, std::vector<double>& Fa) {
+    size_t ncmo = mo_space_info_->size("CORRELATED");
+    Fa.resize(ncmo);
+
+    F.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>&, double& value) {
+        if (i[0] == i[1]) {
+            Fa[i[0]] = value;
+        }
+    });
+}
+
+double SADSRG::compute_reference_energy_from_ints(std::shared_ptr<ForteIntegrals> ints) {
+    BlockedTensor H = BTF_->build(tensor_type_, "OEI", {"cc", "aa"}, true);
+    H.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>&, double& value) {
+        value = ints->oei_a(i[0], i[1]);
+    });
+
+    BlockedTensor V = BTF_->build(tensor_type_, "APEI", {"aaaa"}, true);
+    V.block("aaaa")("prqs") =
+        ints->aptei_ab_block(actv_mos_, actv_mos_, actv_mos_, actv_mos_)("prqs");
+
+    // form Fock in batches
+    // in cc block, only the diagonal elements are useful
+    BlockedTensor F = BTF_->build(tensor_type_, "Fock pruned", {"cc", "aa"}, true);
+    F["ij"] = H["ij"];
+    F["uv"] += V["uyvx"] * L1_["xy"];
+    F["uv"] -= 0.5 * V["uyxv"] * L1_["xy"];
+
+    // an identity tensor of shape 1 * nc * 1 * nc for F["mm"] <- sum_{n} V["mnmn"]
+    size_t nc = core_mos_.size();
+    std::vector<size_t> Idims{1, nc, 1, nc};
+    ambit::Tensor I = ambit::Tensor::build(tensor_type_, "I", Idims);
+    I.iterate([&](const std::vector<size_t>& i, double& value) {
+        if (i[1] == i[3]) {
+            value = 1.0;
+        }
+    });
+
+    // an temp tensor of shape 1 * 1
+    ambit::Tensor O = ambit::Tensor::build(tensor_type_, "ONE", std::vector<size_t>{1, 1});
+    O.data()[0] = 1.0;
+
+    ambit::Tensor Vtemp;
+    for (size_t m = 0; m < nc; ++m) {
+        size_t nm = core_mos_[m];
+        Vtemp = ints->aptei_ab_block({nm}, core_mos_, {nm}, core_mos_);
+        F.block("cc").data()[m * nc + m] += 2.0 * Vtemp("pqrs") * I("pqrs");
+
+        Vtemp = ints->aptei_ab_block({nm}, core_mos_, core_mos_, {nm});
+        F.block("cc").data()[m * nc + m] -= Vtemp("pqrs") * I("pqsr");
+    }
+
+    Vtemp = ints->aptei_ab_block(core_mos_, actv_mos_, core_mos_, actv_mos_);
+    F.block("cc")("pq") += Vtemp("prqs") * L1_.block("aa")("sr");
+    F.block("aa")("pq") += 2.0 * Vtemp("rpsq") * I("isjr") * O("ij");
+
+    Vtemp = ints->aptei_ab_block(core_mos_, actv_mos_, actv_mos_, core_mos_);
+    F.block("cc")("pq") -= 0.5 * Vtemp("prsq") * L1_.block("aa")("sr");
+    F.block("aa")("pq") -= Vtemp("rpqs") * I("isjr") * O("ij");
+
+    return compute_reference_energy(H, F, V);
+}
+
+double SADSRG::compute_reference_energy(BlockedTensor H, BlockedTensor F, BlockedTensor V) {
+    /// H: bare OEI; F: Fock; V: bare APTEI.
+    /// Spin-orbital expression:
+    /// E = 0.5 * ( H["ij"] + F["ij"] ) * L1["ji"] + 0.25 * V["xyuv"] * L2["uvxy"]
+    /// Spin-adapted expression:
+    /// E = 0.5 * ( H["ij"] + F["ij"] ) * L1["ji"] + 0.5 * V["xyuv"] * L2["uvxy"]
+    /// Note that L1_mn = 2.0 * δ_mn now
+
+    double E = Efrzc_ + Enuc_;
+
+    for (size_t m = 0, nc = core_mos_.size(); m < nc; ++m) {
+        E += H.block("cc").data()[m * nc + m];
+        E += F.block("cc").data()[m * nc + m];
+    }
+
+    E += 0.5 * H["uv"] * L1_["vu"];
+    E += 0.5 * F["uv"] * L1_["vu"];
+
+    E += 0.5 * V["uvxy"] * L2_["xyuv"];
+
+    return E;
+}
+
+void SADSRG::fill_three_index_ints(ambit::BlockedTensor T) {
+    const auto& block_labels = T.block_labels();
+    for (const std::string& string_block : block_labels) {
+        auto mo_to_index = BTF_->get_mo_to_index();
+        std::vector<size_t> first_index = mo_to_index[string_block.substr(0, 1)];
+        std::vector<size_t> second_index = mo_to_index[string_block.substr(1, 1)];
+        std::vector<size_t> third_index = mo_to_index[string_block.substr(2, 1)];
+        ambit::Tensor block = ints_->three_integral_block(first_index, second_index, third_index);
+        T.block(string_block).copy(block);
+    }
+}
+
+std::shared_ptr<ActiveSpaceIntegrals> SADSRG::compute_Heff_actv() {
+    // de-normal-order DSRG transformed Hamiltonian
+    double Edsrg = Eref_ + Hbar0_;
+    if (foptions_->get_bool("FORM_HBAR3")) {
+        deGNO_ints("Hamiltonian", Edsrg, Hbar1_, Hbar2_, Hbar3_);
+        rotate_ints_semi_to_origin("Hamiltonian", Hbar1_, Hbar2_, Hbar3_);
+    } else {
+        deGNO_ints("Hamiltonian", Edsrg, Hbar1_, Hbar2_);
+        rotate_ints_semi_to_origin("Hamiltonian", Hbar1_, Hbar2_);
+    }
+
+    // create FCIIntegral shared_ptr
+    auto fci_ints =
+        std::make_shared<ActiveSpaceIntegrals>(ints_, actv_mos_, actv_mos_sym_, core_mos_);
+    fci_ints->set_scalar_energy(Edsrg - Enuc_ - Efrzc_);
+    fci_ints->set_restricted_one_body_operator(Hbar1_.block("aa").data(),
+                                               Hbar1_.block("aa").data());
+
+    auto Hbar2aa = Hbar2_.block("aaaa").clone();
+    Hbar2aa("pqrs") -= Hbar2_.block("aaaa")("pqsr");
+    fci_ints->set_active_integrals(Hbar2aa, Hbar2_.block("aaaa"), Hbar2aa);
+
+    return fci_ints;
+}
+
+void SADSRG::deGNO_ints(const std::string& name, double& H0, BlockedTensor& H1, BlockedTensor& H2) {
+    print_h2("De-Normal-Order DSRG Transformed " + name);
+
+    // compute scalar
+    local_timer t0;
+    outfile->Printf("\n    %-40s ... ", "Computing the scalar term");
+
+    // build a temp["pqrs"] = 2 * H2["pqrs"] - H2["pqsr"]
+    auto temp = H2.block("aaaa").clone();
+    temp.scale(2.0);
+    temp("pqrs") -= H2.block("aaaa")("pqsr");
+
+    // scalar from H1
+    double scalar1 = 0.0;
+    scalar1 -= H1["vu"] * L1_["uv"];
+
+    // scalar from H2
+    double scalar2 = 0.0;
+    ambit::Tensor L1a = L1_.block("aa");
+    scalar2 += 0.25 * L1a("uv") * temp("vyux") * L1a("xy");
+
+    scalar2 -= 0.5 * H2["xyuv"] * L2_["uvxy"];
+
+    H0 += scalar1 + scalar2;
+    outfile->Printf("Done. Timing %8.3f s", t0.get());
+
+    // compute 1-body term
+    local_timer t1;
+    outfile->Printf("\n    %-40s ... ", "Computing the 1-body term");
+
+    H1.block("aa")("uv") -= 0.5 * temp("uxvy") * L1a("yx");
+    outfile->Printf("Done. Timing %8.3f s", t1.get());
+}
+
+void SADSRG::deGNO_ints(const std::string& name, double& H0, BlockedTensor& H1, BlockedTensor& H2,
+                        BlockedTensor& H3) {
+    throw psi::PSIEXCEPTION("Not yet implemented when forming Hbar3.");
+
+    print_h2("De-Normal-Order DSRG Transformed " + name);
+
+    // build a temp["pqrs"] = 2 * H2["pqrs"] - H2["pqsr"]
+    auto temp = H2.block("aaaa").clone();
+    temp.scale(2.0);
+    temp("pqrs") -= H2.block("aaaa")("pqsr");
+
+    // compute scalar
+    local_timer t0;
+    outfile->Printf("\n    %-40s ... ", "Computing the scalar term");
+
+    // scalar from H1
+    double scalar1 = 0.0;
+    scalar1 -= H1["vu"] * L1_["uv"];
+
+    // scalar from H2
+    double scalar2 = 0.0;
+    ambit::Tensor L1a = L1_.block("aa");
+    scalar2 += 0.25 * L1a("uv") * temp("vyux") * L1a("xy");
+
+    scalar2 -= 0.5 * H2["xyuv"] * L2_["uvxy"];
+
+    // scalar from H3
+    /**
+     * Different equations are obtained depending on how H3 is handled.
+     * If H3 is equivalent to aab spin case, then for L3 term becomes
+     * scalar3 -= 1/36 * H3["pqrstu"] * (2 * A - B - C - 3 * D),
+     * where A = L3["stupqr"], B = L3["stuqrp"], C = L3["sturpq"], D = L3["stuqpr"].
+     */
+    double scalar3 = 0.0;
+    //    scalar3 -= (1.0 / 36.0) * H3.block("aaaaaa")("xyzuvw") * rdms_.L3aaa()("xyzuvw");
+    //    scalar3 -= (1.0 / 36.0) * H3.block("AAAAAA")("XYZUVW") * rdms_.L3bbb()("XYZUVW");
+    //    scalar3 -= 0.25 * H3.block("aaAaaA")("xyZuvW") * rdms_.L3aab()("xyZuvW");
+    //    scalar3 -= 0.25 * H3.block("aAAaAA")("xYZuVW") * rdms_.L3abb()("xYZuVW");
+
+    //    // TODO: form one-body intermediate for scalar and 1-body
+    //    scalar3 += 0.25 * H3["xyzuvw"] * Lambda2_["uvxy"] * Gamma1_["wz"];
+    //    scalar3 += 0.25 * H3["XYZUVW"] * Lambda2_["UVXY"] * Gamma1_["WZ"];
+    //    scalar3 += 0.25 * H3["xyZuvW"] * Lambda2_["uvxy"] * Gamma1_["WZ"];
+    //    scalar3 += H3["xzYuwV"] * Lambda2_["uVxY"] * Gamma1_["wz"];
+    //    scalar3 += 0.25 * H3["zXYwUV"] * Lambda2_["UVXY"] * Gamma1_["wz"];
+    //    scalar3 += H3["xZYuWV"] * Lambda2_["uVxY"] * Gamma1_["WZ"];
+
+    //    scalar3 -= (1.0 / 6.0) * H3["xyzuvw"] * Gamma1_["ux"] * Gamma1_["vy"] * Gamma1_["wz"];
+    //    scalar3 -= (1.0 / 6.0) * H3["XYZUVW"] * Gamma1_["UX"] * Gamma1_["VY"] * Gamma1_["WZ"];
+    //    scalar3 -= 0.5 * H3["xyZuvW"] * Gamma1_["ux"] * Gamma1_["vy"] * Gamma1_["WZ"];
+    //    scalar3 -= 0.5 * H3["xYZuVW"] * Gamma1_["ux"] * Gamma1_["VY"] * Gamma1_["WZ"];
+
+    H0 += scalar1 + scalar2 + scalar3;
+    outfile->Printf("Done. Timing %8.3f s", t0.get());
+
+    // compute 1-body term
+    local_timer t1;
+    outfile->Printf("\n    %-40s ... ", "Computing the 1-body term");
+
+    // 1-body from H2
+    H1.block("aa")("uv") -= 0.5 * temp("uxvy") * L1a("yx");
+
+    // 1-body from H3
+    //    H1["uv"] += 0.5 * H3["uyzvxw"] * Gamma1_["xy"] * Gamma1_["wz"];
+    //    H1["uv"] += 0.5 * H3["uYZvXW"] * Gamma1_["XY"] * Gamma1_["WZ"];
+    //    H1["uv"] += H3["uyZvxW"] * Gamma1_["xy"] * Gamma1_["WZ"];
+
+    //    H1["UV"] += 0.5 * H3["UYZVXW"] * Gamma1_["XY"] * Gamma1_["WZ"];
+    //    H1["UV"] += 0.5 * H3["yzUxwV"] * Gamma1_["xy"] * Gamma1_["wz"];
+    //    H1["UV"] += H3["yUZxVW"] * Gamma1_["xy"] * Gamma1_["WZ"];
+
+    //    H1["uv"] -= 0.25 * H3["uxyvwz"] * Lambda2_["wzxy"];
+    //    H1["uv"] -= 0.25 * H3["uXYvWZ"] * Lambda2_["WZXY"];
+    //    H1["uv"] -= H3["uxYvwZ"] * Lambda2_["wZxY"];
+
+    //    H1["UV"] -= 0.25 * H3["UXYVWZ"] * Lambda2_["WZXY"];
+    //    H1["UV"] -= 0.25 * H3["xyUwzV"] * Lambda2_["wzxy"];
+    //    H1["UV"] -= H3["xUYwVZ"] * Lambda2_["wZxY"];
+    outfile->Printf("Done. Timing %8.3f s", t1.get());
+
+    // compute 2-body term
+    local_timer t2;
+    outfile->Printf("\n    %-40s ... ", "Computing the 2-body term");
+    //    H2["xyuv"] -= H3["xyzuvw"] * Gamma1_["wz"];
+    //    H2["xyuv"] -= H3["xyZuvW"] * Gamma1_["WZ"];
+    //    H2["xYuV"] -= H3["xYZuVW"] * Gamma1_["WZ"];
+    //    H2["xYuV"] -= H3["xzYuwV"] * Gamma1_["wz"];
+    //    H2["XYUV"] -= H3["XYZUVW"] * Gamma1_["WZ"];
+    //    H2["XYUV"] -= H3["zXYwUV"] * Gamma1_["wz"];
+    outfile->Printf("Done. Timing %8.3f s", t2.get());
+}
+
+ambit::BlockedTensor SADSRG::deGNO_Tamp(BlockedTensor& T1, BlockedTensor& T2, BlockedTensor& D1) {
+    BlockedTensor T1eff = BTF_->build(tensor_type_, "T1eff from de-GNO", spin_cases({"hp"}));
+
+    T1eff["ia"] = T1["ia"];
+
+    T1eff["ia"] -= 2.0 * T2["iuav"] * D1["vu"];
+    T1eff["ia"] += T2["iuva"] * D1["vu"];
+
+    return T1eff;
+}
+
+void SADSRG::set_Uactv(ambit::Tensor& U) {
+    Uactv_ = BTF_->build(tensor_type_, "Uactv", {"aa"});
+    Uactv_.block("aa")("pq") = U("pq");
+}
+
+void SADSRG::rotate_ints_semi_to_origin(const std::string& name, BlockedTensor& H1,
+                                        BlockedTensor& H2) {
+    print_h2("Rotate DSRG Transformed " + name + " back to Original Basis");
+    ambit::Tensor temp;
+    ambit::Tensor Ua = Uactv_.block("aa");
+
+    local_timer timer;
+    outfile->Printf("\n    %-40s ... ", "Rotating 1-body term to original basis");
+    temp = H1.block("aa").clone(tensor_type_);
+    H1.block("aa")("pq") = Ua("pu") * temp("uv") * Ua("qv");
+    outfile->Printf("Done. Timing %8.3f s", timer.get());
+
+    local_timer timer2;
+    outfile->Printf("\n    %-40s ... ", "Rotating 2-body term to original basis");
+    temp = H2.block("aaaa").clone(tensor_type_);
+    H2.block("aaaa")("pqrs") = Ua("pa") * Ua("qb") * temp("abcd") * Ua("rc") * Ua("sd");
+    outfile->Printf("Done. Timing %8.3f s", timer2.get());
+}
+
+void SADSRG::rotate_ints_semi_to_origin(const std::string& name, BlockedTensor& H1,
+                                        BlockedTensor& H2, BlockedTensor& H3) {
+    print_h2("Rotate DSRG Transformed " + name + " back to Original Basis");
+    ambit::Tensor temp;
+    ambit::Tensor Ua = Uactv_.block("aa");
+
+    local_timer timer;
+    outfile->Printf("\n    %-40s ... ", "Rotating 1-body term to original basis");
+    temp = H1.block("aa").clone(tensor_type_);
+    H1.block("aa")("pq") = Ua("pu") * temp("uv") * Ua("qv");
+    outfile->Printf("Done. Timing %8.3f s", timer.get());
+
+    local_timer timer2;
+    outfile->Printf("\n    %-40s ... ", "Rotating 2-body term to original basis");
+    temp = H2.block("aaaa").clone(tensor_type_);
+    H2.block("aaaa")("pqrs") = Ua("pa") * Ua("qb") * temp("abcd") * Ua("rc") * Ua("sd");
+    outfile->Printf("Done. Timing %8.3f s", timer2.get());
+
+    local_timer timer3;
+    outfile->Printf("\n    %-40s ... ", "Rotating 3-body term to original basis");
+    temp = H3.block("aaaaaa").clone(tensor_type_);
+    H3.block("aaaaaa")("pqrstu") =
+        Ua("pa") * Ua("qb") * Ua("rc") * temp("abcijk") * Ua("si") * Ua("tj") * Ua("uk");
+    outfile->Printf("Done. Timing %8.3f s", timer3.get());
+}
+
+bool SADSRG::check_semi_orbs() {
+    print_h2("Checking Semicanonical Orbitals");
+
+    std::string actv_type = foptions_->get_str("FCIMO_ACTV_TYPE");
+    if (actv_type == "CIS" || actv_type == "CISD") {
+        std::string job_type = foptions_->get_str("CORRELATION_SOLVER");
+        bool fci_mo = foptions_->get_str("ACTIVE_SPACE_SOLVER") == "CAS";
+        if ((job_type == "MRDSRG" || job_type == "DSRG-MRPT3") && fci_mo) {
+            std::stringstream ss;
+            ss << "Unsupported FCIMO_ACTV_TYPE for " << job_type << " code.";
+            throw psi::PSIEXCEPTION(ss.str());
+        }
+
+        outfile->Printf("\n    Incomplete active space %s is detected.", actv_type.c_str());
+        outfile->Printf("\n    Please make sure Semicanonical class has been called.");
+        outfile->Printf("\n    Abort checking semicanonical orbitals.");
+        return true;
+    }
+
+    BlockedTensor Fd = BTF_->build(tensor_type_, "Fd", {"cc", "aa", "vv"});
+    Fd["pq"] = Fock_["pq"];
+
+    Fd.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>&, double& value) {
+        if (i[0] == i[1]) {
+            value = 0.0;
+        }
+    });
+
+    bool semi = true;
+    std::vector<double> Fmax, Fnorm;
+    double e_conv = foptions_->get_double("E_CONVERGENCE");
+    double cd = foptions_->get_double("CHOLESKY_TOLERANCE");
+    e_conv = cd < e_conv ? e_conv : cd * 0.1;
+    e_conv = e_conv < 1.0e-12 ? 1.0e-12 : e_conv;
+    double threshold_max = 10.0 * e_conv;
+    for (const auto& block : {"cc", "aa", "vv"}) {
+        double fmax = Fd.block(block).norm(0);
+        double fnorm = Fd.block(block).norm(1);
+        Fmax.emplace_back(fmax);
+        Fnorm.emplace_back(fnorm);
+
+        if (fmax > threshold_max) {
+            semi = false;
+        }
+        if (fnorm > Fd.block(block).numel() * e_conv) {
+            semi = false;
+        }
+    }
+
+    std::string dash(2 + 45, '-');
+    outfile->Printf("\n    Abs. max of Fock core, active, virtual blocks (Fij, i != j)");
+    outfile->Printf("\n    %15s %15s %15s", "core", "active", "virtual");
+    outfile->Printf("\n    %s", dash.c_str());
+    outfile->Printf("\n    %15.10f %15.10f %15.10f", Fmax[0], Fmax[1], Fmax[2]);
+    outfile->Printf("\n    %s\n", dash.c_str());
+
+    outfile->Printf("\n    1-Norm of Fock core, active, virtual blocks (Fij, i != j)");
+    outfile->Printf("\n    %15s %15s %15s", "core", "active", "virtual");
+    outfile->Printf("\n    %s", dash.c_str());
+    outfile->Printf("\n    %15.10f %15.10f %15.10f", Fnorm[0], Fnorm[1], Fnorm[2]);
+    outfile->Printf("\n    %s\n", dash.c_str());
+
+    if (semi) {
+        outfile->Printf("\n    Orbitals are semi-canonicalized.");
+    } else {
+        outfile->Printf("\n    Warning! Orbitals are not semi-canonicalized!");
+    }
+
+    return semi;
+}
+
+std::vector<std::string> SADSRG::diag_one_labels() {
+    std::vector<std::string> labels;
+    for (const std::string& p : {core_label_, actv_label_, virt_label_}) {
+        labels.push_back(p + p);
+    }
+    return labels;
+}
+
+std::vector<std::string> SADSRG::od_one_labels_hp() {
+    std::vector<std::string> labels;
+    for (const std::string& p : {core_label_, actv_label_}) {
+        for (const std::string& q : {actv_label_, virt_label_}) {
+            if (p == actv_label_ && q == actv_label_) {
+                continue;
+            }
+            labels.push_back(p + q);
+        }
+    }
+    return labels;
+}
+
+std::vector<std::string> SADSRG::od_one_labels_ph() {
+    std::vector<std::string> blocks1(od_one_labels_hp());
+    for (auto& block : blocks1) {
+        std::swap(block[0], block[1]);
+    }
+    return blocks1;
+}
+
+std::vector<std::string> SADSRG::od_one_labels() {
+    std::vector<std::string> labels(od_one_labels_hp());
+    std::vector<std::string> temp(od_one_labels_ph());
+    labels.insert(std::end(labels), std::begin(temp), std::end(temp));
+    return labels;
+}
+
+std::vector<std::string> SADSRG::od_two_labels_hhpp() {
+    std::vector<std::string> labels;
+    for (const std::string& p : {core_label_, actv_label_}) {
+        for (const std::string& q : {core_label_, actv_label_}) {
+            for (const std::string& r : {actv_label_, virt_label_}) {
+                for (const std::string& s : {actv_label_, virt_label_}) {
+                    if (p == actv_label_ && q == actv_label_ && r == actv_label_ &&
+                        s == actv_label_) {
+                        continue;
+                    }
+                    labels.push_back(p + q + r + s);
+                }
+            }
+        }
+    }
+    return labels;
+}
+
+std::vector<std::string> SADSRG::od_two_labels_pphh() {
+    std::vector<std::string> labels(od_two_labels_hhpp());
+    for (auto& block : labels) {
+        std::swap(block[0], block[2]);
+        std::swap(block[1], block[3]);
+    }
+    return labels;
+}
+
+std::vector<std::string> SADSRG::od_two_labels() {
+    std::vector<std::string> labels(od_two_labels_hhpp());
+    std::vector<std::string> temp(od_two_labels_pphh());
+    labels.insert(std::end(labels), std::begin(temp), std::end(temp));
+    return labels;
+}
+
+std::vector<std::string> SADSRG::diag_two_labels() {
+    std::vector<std::string> general{core_label_, actv_label_, virt_label_};
+
+    std::vector<std::string> all;
+    for (const std::string& p : general) {
+        for (const std::string& q : general) {
+            for (const std::string& r : general) {
+                for (const std::string& s : general) {
+                    all.push_back(p + q + r + s);
+                }
+            }
+        }
+    }
+
+    std::vector<std::string> od(od_two_labels());
+    std::sort(od.begin(), od.end());
+    std::sort(all.begin(), all.end());
+
+    std::vector<std::string> labels;
+    std::set_symmetric_difference(all.begin(), all.end(), od.begin(), od.end(),
+                                  std::back_inserter(labels));
+
+    return labels;
+}
+
+std::vector<std::string> SADSRG::re_two_labels() {
+    std::vector<std::vector<std::string>> half_labels{
+        {core_label_ + core_label_},
+        {actv_label_ + actv_label_},
+        {virt_label_ + virt_label_},
+        {core_label_ + actv_label_, actv_label_ + core_label_},
+        {core_label_ + virt_label_, virt_label_ + core_label_},
+        {actv_label_ + virt_label_, virt_label_ + actv_label_}};
+
+    std::vector<std::string> labels;
+    for (const auto& half : half_labels) {
+        for (const std::string& half1 : half) {
+            for (const std::string& half2 : half) {
+                labels.push_back(half1 + half2);
+            }
+        }
+    }
+
+    return labels;
+}
+
+ void SADSRG::H1_T1_C0(BlockedTensor& H1, BlockedTensor& T1, const double& alpha, double& C0) {
+    local_timer timer;
+
+    double E = 0.0;
+    E += 2.0 * H1["ma"] * T1["ma"];
+    auto temp = ambit::BlockedTensor::build(tensor_type_, "Temp110", {"aa"});
+    temp["uv"] += H1["ve"] * T1["ue"];
+    temp["uv"] -= H1["mu"] * T1["mv"];
+    E += L1_["vu"] * temp["uv"];
+
+    E *= alpha;
+    C0 += E;
+
+    if (print_ > 2) {
+        outfile->Printf("\n    Time for [H1, T1] -> C0 : %12.3f", timer.get());
+    }
+    dsrg_time_.add("110", timer.get());
+}
+
+ void SADSRG::H1_T2_C0(BlockedTensor& H1, BlockedTensor& T2, const double& alpha, double& C0) {
+    local_timer timer;
+
+    double E = 0.0;
+    auto temp = ambit::BlockedTensor::build(tensor_type_, "Temp120", {"aaaa"});
+    temp["uvxy"] += H1["xe"] * T2["uvey"];
+    temp["uvxy"] -= H1["mv"] * T2["umxy"];
+    temp["uvxy"] += H1["ye"] * T2["uvxe"];
+    temp["uvxy"] -= H1["mu"] * T2["mvxy"];
+    E += 0.5 * L2_["xyuv"] * temp["uvxy"];
+
+    E *= alpha;
+    C0 += E;
+
+    if (print_ > 2) {
+        outfile->Printf("\n    Time for [H1, T2] -> C0 : %12.3f", timer.get());
+    }
+    dsrg_time_.add("120", timer.get());
+}
+
+ void SADSRG::H2_T1_C0(BlockedTensor& H2, BlockedTensor& T1, const double& alpha, double& C0) {
+    local_timer timer;
+
+    double E = 0.0;
+    auto temp = ambit::BlockedTensor::build(tensor_type_, "Temp120", {"aaaa"});
+    temp["uvxy"] += H2["xyev"] * T1["ue"];
+    temp["uvxy"] -= H2["myuv"] * T1["mx"];
+    temp["uvxy"] += H2["xyue"] * T1["ve"];
+    temp["uvxy"] -= H2["xmuv"] * T1["my"];
+    E += 0.5 * L2_["xyuv"] * temp["uvxy"];
+
+    E *= alpha;
+    C0 += E;
+
+    if (print_ > 2) {
+        outfile->Printf("\n    Time for [H2, T1] -> C0 : %12.3f", timer.get());
+    }
+    dsrg_time_.add("210", timer.get());
+}
+
+// void SADSRG::H2_T2_C0(BlockedTensor& H2, BlockedTensor& T2, const double& alpha, double& C0) {
 //    local_timer timer;
 
 //    // <[Hbar2, T2]> (C_2)^4
@@ -1045,7 +962,7 @@ void SADSRG::fill_density() {
 //    dsrg_time_.add("220", timer.get());
 //}
 
-//void SADSRG::H1_T1_C1(BlockedTensor& H1, BlockedTensor& T1, const double& alpha,
+// void SADSRG::H1_T1_C1(BlockedTensor& H1, BlockedTensor& T1, const double& alpha,
 //                      BlockedTensor& C1) {
 //    local_timer timer;
 
@@ -1060,52 +977,7 @@ void SADSRG::fill_density() {
 //    dsrg_time_.add("111", timer.get());
 //}
 
-//// void SADSRG::H1_T1_C1aa(BlockedTensor& H1, BlockedTensor& T1, const double& alpha,
-////                             BlockedTensor& C1) {
-////    local_timer timer;
-
-////    C1["uv"] += alpha * H1["av"] * T1["ua"];
-////    C1["uv"] -= alpha * T1["iv"] * H1["ui"];
-////    C1["UV"] += alpha * H1["AV"] * T1["UA"];
-////    C1["UV"] -= alpha * T1["IV"] * H1["UI"];
-
-////    if (print_ > 2) {
-////        outfile->Printf("\n    Time for [H1, T1] -> C1aa : %12.3f", timer.get());
-////    }
-////    dsrg_time_.add("111", timer.get());
-////}
-
-//// void SADSRG::H1_T1_C1ph(BlockedTensor& H1, BlockedTensor& T1, const double& alpha,
-////                             BlockedTensor& C1) {
-////    local_timer timer;
-
-////    C1["ui"] += alpha * H1["ai"] * T1["ua"];
-////    C1["au"] -= alpha * T1["iu"] * H1["ai"];
-////    C1["UI"] += alpha * H1["AI"] * T1["UA"];
-////    C1["AU"] -= alpha * T1["IU"] * H1["AI"];
-
-////    if (print_ > 2) {
-////        outfile->Printf("\n    Time for [H1, T1] -> C1ph : %12.3f", timer.get());
-////    }
-////    dsrg_time_.add("111", timer.get());
-////}
-
-//// void SADSRG::H1_T1_C1hp(BlockedTensor& H1, BlockedTensor& T1, const double& alpha,
-////                             BlockedTensor& C1) {
-////    local_timer timer;
-
-////    C1["ib"] += alpha * H1["ab"] * T1["ia"];
-////    C1["ja"] -= alpha * T1["ia"] * H1["ji"];
-////    C1["IB"] += alpha * H1["AB"] * T1["IA"];
-////    C1["JA"] -= alpha * T1["IA"] * H1["JI"];
-
-////    if (print_ > 2) {
-////        outfile->Printf("\n    Time for [H1, T1] -> C1hp : %12.3f", timer.get());
-////    }
-////    dsrg_time_.add("111", timer.get());
-////}
-
-//void SADSRG::H1_T2_C1(BlockedTensor& H1, BlockedTensor& T2, const double& alpha,
+// void SADSRG::H1_T2_C1(BlockedTensor& H1, BlockedTensor& T2, const double& alpha,
 //                      BlockedTensor& C1) {
 //    local_timer timer;
 
@@ -1129,41 +1001,7 @@ void SADSRG::fill_density() {
 //    dsrg_time_.add("121", timer.get());
 //}
 
-//// void SADSRG::H1_T2_C1aa(BlockedTensor& H1, BlockedTensor& T2, const double& alpha,
-////                             BlockedTensor& C1) {
-////    local_timer timer;
-
-////    C1["xy"] += alpha * H1["bm"] * T2["xmyb"];
-////    C1["xy"] += alpha * H1["bu"] * Gamma1_["uv"] * T2["xvyb"];
-////    C1["xy"] -= alpha * H1["vj"] * Gamma1_["uv"] * T2["xjyu"];
-////    C1["xy"] += alpha * H1["BM"] * T2["xMyB"];
-////    C1["xy"] += alpha * H1["BU"] * Gamma1_["UV"] * T2["xVyB"];
-////    C1["xy"] -= alpha * H1["VJ"] * Gamma1_["UV"] * T2["xJyU"];
-
-////    C1["XY"] += alpha * H1["bm"] * T2["mXbY"];
-////    C1["XY"] += alpha * H1["bu"] * Gamma1_["uv"] * T2["vXbY"];
-////    C1["XY"] -= alpha * H1["vj"] * Gamma1_["uv"] * T2["jXuY"];
-////    C1["XY"] += alpha * H1["BM"] * T2["XMYB"];
-////    C1["XY"] += alpha * H1["BU"] * Gamma1_["UV"] * T2["XVYB"];
-////    C1["XY"] -= alpha * H1["VJ"] * Gamma1_["UV"] * T2["XJYU"];
-
-////    if (print_ > 2) {
-////        outfile->Printf("\n    Time for [H1, T2] -> C1aa : %12.3f", timer.get());
-////    }
-////    dsrg_time_.add("121", timer.get());
-////}
-
-//// void SADSRG::H1_T2_C1ph(BlockedTensor& H1, BlockedTensor& T2, const double& alpha,
-////                             BlockedTensor& C1) {
-////    H1_T2_C1aa(H1, T2, alpha, C1);
-////}
-
-//// void SADSRG::H1_T2_C1hp(BlockedTensor& H1, BlockedTensor& T2, const double& alpha,
-////                             BlockedTensor& C1) {
-////    H1_T2_C1(H1, T2, alpha, C1);
-////}
-
-//void SADSRG::H2_T1_C1(BlockedTensor& H2, BlockedTensor& T1, const double& alpha,
+// void SADSRG::H2_T1_C1(BlockedTensor& H2, BlockedTensor& T1, const double& alpha,
 //                      BlockedTensor& C1) {
 //    local_timer timer;
 
@@ -1187,79 +1025,7 @@ void SADSRG::fill_density() {
 //    dsrg_time_.add("211", timer.get());
 //}
 
-//// void SADSRG::H2_T1_C1aa(BlockedTensor& H2, BlockedTensor& T1, const double& alpha,
-////                             BlockedTensor& C1) {
-////    local_timer timer;
-
-////    C1["xy"] += alpha * T1["ma"] * H2["xaym"];
-////    C1["xy"] += alpha * T1["ue"] * Gamma1_["vu"] * H2["xeyv"];
-////    C1["xy"] -= alpha * T1["mu"] * Gamma1_["uv"] * H2["xvym"];
-////    C1["xy"] += alpha * T1["MA"] * H2["xAyM"];
-////    C1["xy"] += alpha * T1["UE"] * Gamma1_["VU"] * H2["xEyV"];
-////    C1["xy"] -= alpha * T1["MU"] * Gamma1_["UV"] * H2["xVyM"];
-
-////    C1["XY"] += alpha * T1["ma"] * H2["aXmY"];
-////    C1["XY"] += alpha * T1["ue"] * Gamma1_["vu"] * H2["eXvY"];
-////    C1["XY"] -= alpha * T1["mu"] * Gamma1_["uv"] * H2["vXmY"];
-////    C1["XY"] += alpha * T1["MA"] * H2["XAYM"];
-////    C1["XY"] += alpha * T1["UE"] * Gamma1_["VU"] * H2["XEYV"];
-////    C1["XY"] -= alpha * T1["MU"] * Gamma1_["UV"] * H2["XVYM"];
-
-////    if (print_ > 2) {
-////        outfile->Printf("\n    Time for [H2, T1] -> C1aa : %12.3f", timer.get());
-////    }
-////    dsrg_time_.add("211", timer.get());
-////}
-
-//// void SADSRG::H2_T1_C1hp(BlockedTensor& H2, BlockedTensor& T1, const double& alpha,
-////                             BlockedTensor& C1) {
-////    local_timer timer;
-
-////    C1["kc"] += alpha * T1["ma"] * H2["kacm"];
-////    C1["kc"] += alpha * T1["xe"] * Gamma1_["yx"] * H2["kecy"];
-////    C1["kc"] -= alpha * T1["mu"] * Gamma1_["uv"] * H2["kvcm"];
-////    C1["kc"] += alpha * T1["MA"] * H2["kAcM"];
-////    C1["kc"] += alpha * T1["XE"] * Gamma1_["YX"] * H2["kEcY"];
-////    C1["kc"] -= alpha * T1["MU"] * Gamma1_["UV"] * H2["kVcM"];
-
-////    C1["KC"] += alpha * T1["ma"] * H2["aKmC"];
-////    C1["KC"] += alpha * T1["xe"] * Gamma1_["yx"] * H2["eKyC"];
-////    C1["KC"] -= alpha * T1["mu"] * Gamma1_["uv"] * H2["vKmC"];
-////    C1["KC"] += alpha * T1["MA"] * H2["KACM"];
-////    C1["KC"] += alpha * T1["XE"] * Gamma1_["YX"] * H2["KECY"];
-////    C1["KC"] -= alpha * T1["MU"] * Gamma1_["UV"] * H2["KVCM"];
-
-////    if (print_ > 2) {
-////        outfile->Printf("\n    Time for [H2, T1] -> C1hp : %12.3f", timer.get());
-////    }
-////    dsrg_time_.add("211", timer.get());
-////}
-
-//// void SADSRG::H2_T1_C1ph(BlockedTensor& H2, BlockedTensor& T1, const double& alpha,
-////                           BlockedTensor& C1) {
-////    local_timer timer;
-
-////    C1["ck"] += alpha * T1["ma"] * H2["cakm"];
-////    C1["ck"] += alpha * T1["xe"] * Gamma1_["yx"] * H2["ceky"];
-////    C1["ck"] -= alpha * T1["mu"] * Gamma1_["uv"] * H2["cvkm"];
-////    C1["ck"] += alpha * T1["MA"] * H2["cAkM"];
-////    C1["ck"] += alpha * T1["XE"] * Gamma1_["YX"] * H2["cEkY"];
-////    C1["ck"] -= alpha * T1["MU"] * Gamma1_["UV"] * H2["cVkM"];
-
-////    C1["CK"] += alpha * T1["ma"] * H2["aCmK"];
-////    C1["CK"] += alpha * T1["xe"] * Gamma1_["yx"] * H2["eCyK"];
-////    C1["CK"] -= alpha * T1["mu"] * Gamma1_["uv"] * H2["vCmK"];
-////    C1["CK"] += alpha * T1["MA"] * H2["CAKM"];
-////    C1["CK"] += alpha * T1["XE"] * Gamma1_["YX"] * H2["CEKY"];
-////    C1["CK"] -= alpha * T1["MU"] * Gamma1_["UV"] * H2["CVKM"];
-
-////    if (print_ > 2) {
-////        outfile->Printf("\n    Time for [H2, T1] -> C1ph : %12.3f", timer.get());
-////    }
-////    dsrg_time_.add("211", timer.get());
-////}
-
-//void SADSRG::H2_T2_C1(BlockedTensor& H2, BlockedTensor& T2, const double& alpha,
+// void SADSRG::H2_T2_C1(BlockedTensor& H2, BlockedTensor& T2, const double& alpha,
 //                      BlockedTensor& C1) {
 //    local_timer timer;
 //    BlockedTensor temp;
@@ -1422,7 +1188,7 @@ void SADSRG::fill_density() {
 //    dsrg_time_.add("221", timer.get());
 //}
 
-//void SADSRG::H1_T2_C2(BlockedTensor& H1, BlockedTensor& T2, const double& alpha,
+// void SADSRG::H1_T2_C2(BlockedTensor& H1, BlockedTensor& T2, const double& alpha,
 //                      BlockedTensor& C2) {
 //    local_timer timer;
 
@@ -1447,7 +1213,7 @@ void SADSRG::fill_density() {
 //    dsrg_time_.add("122", timer.get());
 //}
 
-//void SADSRG::H2_T1_C2(BlockedTensor& H2, BlockedTensor& T1, const double& alpha,
+// void SADSRG::H2_T1_C2(BlockedTensor& H2, BlockedTensor& T1, const double& alpha,
 //                      BlockedTensor& C2) {
 //    local_timer timer;
 
@@ -1472,7 +1238,7 @@ void SADSRG::fill_density() {
 //    dsrg_time_.add("212", timer.get());
 //}
 
-//void SADSRG::H2_T2_C2(BlockedTensor& H2, BlockedTensor& T2, const double& alpha,
+// void SADSRG::H2_T2_C2(BlockedTensor& H2, BlockedTensor& T2, const double& alpha,
 //                      BlockedTensor& C2) {
 //    local_timer timer;
 
@@ -1499,11 +1265,10 @@ void SADSRG::fill_density() {
 //    C2["PQAB"] -= alpha * Eta1_["XY"] * T2["YJAB"] * H2["PQXJ"];
 
 //    // hole-particle contractions
-//    // figure out useful blocks of temp (assume symmetric C2 blocks, if cavv exists => acvv exists)
-//    std::vector<std::string> C2_blocks(C2.block_labels());
-//    std::sort(C2_blocks.begin(), C2_blocks.end());
-//    std::vector<std::string> temp_blocks;
-//    for (const std::string& p : {"c", "a", "v"}) {
+//    // figure out useful blocks of temp (assume symmetric C2 blocks, if cavv exists => acvv
+//    exists) std::vector<std::string> C2_blocks(C2.block_labels()); std::sort(C2_blocks.begin(),
+//    C2_blocks.end()); std::vector<std::string> temp_blocks; for (const std::string& p : {"c", "a",
+//    "v"}) {
 //        for (const std::string& q : {"c", "a"}) {
 //            for (const std::string& r : {"c", "a", "v"}) {
 //                for (const std::string& s : {"a", "v"}) {
@@ -1531,9 +1296,8 @@ void SADSRG::fill_density() {
 //        C2["jqbs"] += temp["qjsb"];
 //    }
 
-//    // figure out useful blocks of temp (assume symmetric C2 blocks, if cavv exists => acvv exists)
-//    temp_blocks.clear();
-//    for (const std::string& p : {"C", "A", "V"}) {
+//    // figure out useful blocks of temp (assume symmetric C2 blocks, if cavv exists => acvv
+//    exists) temp_blocks.clear(); for (const std::string& p : {"C", "A", "V"}) {
 //        for (const std::string& q : {"C", "A"}) {
 //            for (const std::string& r : {"C", "A", "V"}) {
 //                for (const std::string& s : {"A", "V"}) {
@@ -1588,7 +1352,8 @@ void SADSRG::fill_density() {
 //    dsrg_time_.add("222", timer.get());
 //}
 
-//void SADSRG::H2_T2_C3(BlockedTensor& H2, BlockedTensor& T2, const double& alpha, BlockedTensor& C3,
+// void SADSRG::H2_T2_C3(BlockedTensor& H2, BlockedTensor& T2, const double& alpha, BlockedTensor&
+// C3,
 //                      const bool& active_only) {
 //    local_timer timer;
 
@@ -1751,7 +1516,7 @@ void SADSRG::fill_density() {
 //    dsrg_time_.add("223", timer.get());
 //}
 
-//dsrgHeff SADSRG::commutator_HT_noGNO(ambit::BlockedTensor H1, ambit::BlockedTensor H2,
+// dsrgHeff SADSRG::commutator_HT_noGNO(ambit::BlockedTensor H1, ambit::BlockedTensor H2,
 //                                     ambit::BlockedTensor T1, ambit::BlockedTensor T2) {
 //    dsrgHeff Heff;
 
@@ -1893,254 +1658,5 @@ void SADSRG::fill_density() {
 //    H2_T2_C3(H2, T2, 1.0, Heff.H3, true);
 
 //    return Heff;
-//}
-
-//bool SADSRG::check_semi_orbs() {
-//    print_h2("Checking Semicanonical Orbitals");
-
-//    std::string actv_type = foptions_->get_str("FCIMO_ACTV_TYPE");
-//    if (actv_type == "CIS" || actv_type == "CISD") {
-//        std::string job_type = foptions_->get_str("JOB_TYPE");
-//        bool fci_mo = foptions_->get_str("ACTIVE_SPACE_SOLVER") == "CAS";
-//        if ((job_type == "MRDSRG" || job_type == "DSRG-MRPT3") && fci_mo) {
-//            std::stringstream ss;
-//            ss << "Unsupported FCIMO_ACTV_TYPE for " << job_type << " code.";
-//            throw psi::PSIEXCEPTION(ss.str());
-//        }
-
-//        outfile->Printf("\n    Incomplete active space %s is detected.", actv_type.c_str());
-//        outfile->Printf("\n    Please make sure Semicanonical class has been called.");
-//        outfile->Printf("\n    Abort checking semicanonical orbitals.");
-//        return true;
-//    }
-
-//    BlockedTensor Fd = BTF_->build(tensor_type_, "Fd", spin_cases({"cc", "aa", "vv"}));
-//    Fd["pq"] = Fock_["pq"];
-//    Fd["PQ"] = Fock_["PQ"];
-
-//    Fd.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>&, double& value) {
-//        if (i[0] == i[1]) {
-//            value = 0.0;
-//        }
-//    });
-
-//    bool semi = true;
-//    std::vector<double> Fmax, Fnorm;
-//    double e_conv = foptions_->get_double("E_CONVERGENCE");
-//    double cd = foptions_->get_double("CHOLESKY_TOLERANCE");
-//    e_conv = cd < e_conv ? e_conv : cd * 0.1;
-//    e_conv = e_conv < 1.0e-12 ? 1.0e-12 : e_conv;
-//    double threshold_max = 10.0 * e_conv;
-//    for (const auto& block : {"cc", "aa", "vv", "CC", "AA", "VV"}) {
-//        double fmax = Fd.block(block).norm(0);
-//        double fnorm = Fd.block(block).norm(1);
-//        Fmax.emplace_back(fmax);
-//        Fnorm.emplace_back(fnorm);
-
-//        if (fmax > threshold_max) {
-//            semi = false;
-//        }
-//        if (fnorm > Fd.block(block).numel() * e_conv) {
-//            semi = false;
-//        }
-//    }
-
-//    std::string dash(2 + 16 * 3, '-');
-//    outfile->Printf("\n    Abs. max of Fock core, active, virtual blocks (Fij, i != j)");
-//    outfile->Printf("\n       %15s %15s %15s", "core", "active", "virtual");
-//    outfile->Printf("\n    %s", dash.c_str());
-//    outfile->Printf("\n    Fα %15.10f %15.10f %15.10f", Fmax[0], Fmax[1], Fmax[2]);
-//    outfile->Printf("\n    Fβ %15.10f %15.10f %15.10f", Fmax[3], Fmax[4], Fmax[5]);
-//    outfile->Printf("\n    %s\n", dash.c_str());
-
-//    outfile->Printf("\n    1-Norm of Fock core, active, virtual blocks (Fij, i != j)");
-//    outfile->Printf("\n       %15s %15s %15s", "core", "active", "virtual");
-//    outfile->Printf("\n    %s", dash.c_str());
-//    outfile->Printf("\n    Fα %15.10f %15.10f %15.10f", Fnorm[0], Fnorm[1], Fnorm[2]);
-//    outfile->Printf("\n    Fβ %15.10f %15.10f %15.10f", Fnorm[3], Fnorm[4], Fnorm[5]);
-//    outfile->Printf("\n    %s\n", dash.c_str());
-
-//    if (semi) {
-//        outfile->Printf("\n    Orbitals are semi-canonicalized.");
-//    } else {
-//        outfile->Printf("\n    Warning! Orbitals are not semi-canonicalized!");
-//    }
-
-//    return semi;
-//}
-
-//std::vector<std::string> SADSRG::diag_one_labels() {
-//    std::vector<std::string> labels;
-//    for (const std::string& p : {acore_label_, aactv_label_, avirt_label_}) {
-//        labels.push_back(p + p);
-//    }
-//    for (const std::string& p : {bcore_label_, bactv_label_, bvirt_label_}) {
-//        labels.push_back(p + p);
-//    }
-//    return labels;
-//}
-
-//std::vector<std::string> SADSRG::od_one_labels_hp() {
-//    std::vector<std::string> labels;
-//    for (const std::string& p : {acore_label_, aactv_label_}) {
-//        for (const std::string& q : {aactv_label_, avirt_label_}) {
-//            if (p == aactv_label_ && q == aactv_label_) {
-//                continue;
-//            }
-//            labels.push_back(p + q);
-//        }
-//    }
-
-//    for (const std::string& p : {bcore_label_, bactv_label_}) {
-//        for (const std::string& q : {bactv_label_, bvirt_label_}) {
-//            if (p == bactv_label_ && q == bactv_label_) {
-//                continue;
-//            }
-//            labels.push_back(p + q);
-//        }
-//    }
-//    return labels;
-//}
-
-//std::vector<std::string> SADSRG::od_one_labels_ph() {
-//    std::vector<std::string> blocks1(od_one_labels_hp());
-//    for (auto& block : blocks1) {
-//        std::swap(block[0], block[1]);
-//    }
-//    return blocks1;
-//}
-
-//std::vector<std::string> SADSRG::od_one_labels() {
-//    std::vector<std::string> labels(od_one_labels_hp());
-//    std::vector<std::string> temp(od_one_labels_ph());
-//    labels.insert(std::end(labels), std::begin(temp), std::end(temp));
-//    return labels;
-//}
-
-//std::vector<std::string> SADSRG::od_two_labels_hhpp() {
-//    std::map<char, std::vector<std::string>> space_map;
-//    space_map['h'] = {acore_label_, aactv_label_};
-//    space_map['H'] = {bcore_label_, bactv_label_};
-//    space_map['p'] = {aactv_label_, avirt_label_};
-//    space_map['P'] = {bactv_label_, bvirt_label_};
-
-//    auto hhpp_spin = [&](const std::string& block, const std::string& actv) {
-//        std::vector<std::string> out;
-//        for (const std::string& p : space_map[block[0]]) {
-//            for (const std::string& q : space_map[block[1]]) {
-//                for (const std::string& r : space_map[block[2]]) {
-//                    for (const std::string& s : space_map[block[3]]) {
-//                        out.push_back(p + q + r + s);
-//                    }
-//                }
-//            }
-//        }
-//        out.erase(std::remove(out.begin(), out.end(), actv), out.end());
-//        return out;
-//    };
-
-//    std::string aaaa = aactv_label_ + aactv_label_ + aactv_label_ + aactv_label_;
-//    std::string aAaA = aactv_label_ + bactv_label_ + aactv_label_ + bactv_label_;
-//    std::string AAAA = bactv_label_ + bactv_label_ + bactv_label_ + bactv_label_;
-
-//    std::vector<std::string> labels(hhpp_spin("hhpp", aaaa));
-//    std::vector<std::string> labels_ab(hhpp_spin("hHpP", aAaA));
-//    std::vector<std::string> labels_bb(hhpp_spin("HHPP", AAAA));
-
-//    labels.insert(std::end(labels), std::begin(labels_ab), std::end(labels_ab));
-//    labels.insert(std::end(labels), std::begin(labels_bb), std::end(labels_bb));
-
-//    return labels;
-//}
-
-//std::vector<std::string> SADSRG::od_two_labels_pphh() {
-//    std::vector<std::string> labels(od_two_labels_hhpp());
-//    for (auto& block : labels) {
-//        std::swap(block[0], block[2]);
-//        std::swap(block[1], block[3]);
-//    }
-//    return labels;
-//}
-
-//std::vector<std::string> SADSRG::od_two_labels() {
-//    std::vector<std::string> labels(od_two_labels_hhpp());
-//    std::vector<std::string> temp(od_two_labels_pphh());
-//    labels.insert(std::end(labels), std::begin(temp), std::end(temp));
-//    return labels;
-//}
-
-//std::vector<std::string> SADSRG::diag_two_labels() {
-//    std::map<char, std::vector<std::string>> general;
-//    general['a'] = {acore_label_, aactv_label_, avirt_label_};
-//    general['b'] = {bcore_label_, bactv_label_, bvirt_label_};
-
-//    auto all_spin = [&](const std::string& block) {
-//        std::vector<std::string> out;
-//        for (const std::string& p : general[block[0]]) {
-//            for (const std::string& q : general[block[1]]) {
-//                for (const std::string& r : general[block[2]]) {
-//                    for (const std::string& s : general[block[3]]) {
-//                        out.push_back(p + q + r + s);
-//                    }
-//                }
-//            }
-//        }
-//        return out;
-//    };
-
-//    std::vector<std::string> all(all_spin("aaaa"));
-//    std::vector<std::string> all_ab(all_spin("abab"));
-//    std::vector<std::string> all_bb(all_spin("bbbb"));
-
-//    all.insert(std::end(all), std::begin(all_ab), std::end(all_ab));
-//    all.insert(std::end(all), std::begin(all_bb), std::end(all_bb));
-
-//    std::vector<std::string> od(od_two_labels());
-//    std::sort(od.begin(), od.end());
-//    std::sort(all.begin(), all.end());
-
-//    std::vector<std::string> labels;
-//    std::set_symmetric_difference(all.begin(), all.end(), od.begin(), od.end(),
-//                                  std::back_inserter(labels));
-
-//    return labels;
-//}
-
-//std::vector<std::string> SADSRG::re_two_labels() {
-//    std::map<char, std::string> core, actv, virt;
-//    core['a'] = acore_label_;
-//    core['b'] = bcore_label_;
-//    actv['a'] = aactv_label_;
-//    actv['b'] = bactv_label_;
-//    virt['a'] = avirt_label_;
-//    virt['b'] = bvirt_label_;
-
-//    auto half_spin = [&](const std::string& spin) {
-//        const char& p = spin[0];
-//        const char& q = spin[1];
-//        std::vector<std::vector<std::string>> out{{core[p] + core[q]},
-//                                                  {actv[p] + actv[q]},
-//                                                  {virt[p] + virt[q]},
-//                                                  {core[p] + actv[q], actv[p] + core[q]},
-//                                                  {core[p] + virt[q], virt[p] + core[q]},
-//                                                  {actv[p] + virt[q], virt[p] + actv[q]}};
-//        return out;
-//    };
-//    std::vector<std::vector<std::string>> half_aa = half_spin("aa");
-//    std::vector<std::vector<std::string>> half_ab = half_spin("ab");
-//    std::vector<std::vector<std::string>> half_bb = half_spin("bb");
-
-//    std::vector<std::string> labels;
-//    for (const auto& halfs : {half_aa, half_ab, half_bb}) {
-//        for (const auto& half : halfs) {
-//            for (const std::string& half1 : half) {
-//                for (const std::string& half2 : half) {
-//                    labels.emplace_back(half1 + half2);
-//                }
-//            }
-//        }
-//    }
-
-//    return labels;
 //}
 } // namespace forte

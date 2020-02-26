@@ -45,7 +45,7 @@ class SADSRG : public DynamicCorrelationSolver {
     virtual std::shared_ptr<ActiveSpaceIntegrals> compute_Heff_actv();
 
     /// Set unitary matrix (in active space) from original to semicanonical
-    void set_Uactv(ambit::Tensor& Ua, ambit::Tensor& Ub);
+    void set_Uactv(ambit::Tensor& U);
 
     /// Set active active occupied MOs (relative to active)
     void set_actv_occ(std::vector<size_t> actv_occ) {
@@ -115,15 +115,11 @@ class SADSRG : public DynamicCorrelationSolver {
     /// The energy of the reference
     double Eref_;
 
-    /// Initial check on reference energy
-    void check_init_reference_energy();
-
     /// Compute reference (MK vacuum) energy from ForteIntegral and Fock_
     double compute_reference_energy_from_ints(std::shared_ptr<ForteIntegrals> ints);
 
     /// Compute reference (MK vacuum) energy
     double compute_reference_energy(BlockedTensor H, BlockedTensor F, BlockedTensor V);
-    double compute_reference_energy_df(BlockedTensor H, BlockedTensor F, BlockedTensor B);
 
     // ==> MO space info <==
 

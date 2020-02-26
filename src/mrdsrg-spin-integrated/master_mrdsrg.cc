@@ -1944,7 +1944,7 @@ bool MASTER_DSRG::check_semi_orbs() {
 
     std::string actv_type = foptions_->get_str("FCIMO_ACTV_TYPE");
     if (actv_type == "CIS" || actv_type == "CISD") {
-        std::string job_type = foptions_->get_str("JOB_TYPE");
+        std::string job_type = foptions_->get_str("CORRELATION_SOLVER");
         bool fci_mo = foptions_->get_str("ACTIVE_SPACE_SOLVER") == "CAS";
         if ((job_type == "MRDSRG" || job_type == "DSRG-MRPT3") && fci_mo) {
             std::stringstream ss;
