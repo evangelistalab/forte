@@ -33,7 +33,7 @@
 
 namespace forte {
 
-RDMs::RDMs() : max_rdm_(0), ms_avg_(false) {}
+RDMs::RDMs() : max_rdm_(0) {}
 
 RDMs::RDMs(ambit::Tensor g1a, ambit::Tensor g1b)
     : max_rdm_(1), have_g1b_(true), g1a_(g1a), g1b_(g1b) {}
@@ -68,7 +68,7 @@ ambit::Tensor RDMs::g1b() {
 
 ambit::Tensor RDMs::g2aa() {
     if (ms_avg_ and (not have_g2aa_)) {
-        make_g2_spin_pure(g2ab_, g2aa_);
+        g2aa_ = make_g2_high_spin_case(g2ab_);
         have_g2aa_ = true;
     }
     return g2aa_;
@@ -76,7 +76,7 @@ ambit::Tensor RDMs::g2aa() {
 
 ambit::Tensor RDMs::g2bb() {
     if (ms_avg_ and (not have_g2bb_)) {
-        make_g2_spin_pure(g2ab_, g2bb_);
+        g2bb_ = make_g2_high_spin_case(g2ab_);
         have_g2bb_ = true;
     }
     return g2bb_;
@@ -84,7 +84,7 @@ ambit::Tensor RDMs::g2bb() {
 
 ambit::Tensor RDMs::g3aaa() {
     if (ms_avg_ and (not have_g3aaa_)) {
-        make_g3_spin_pure(g3aab_, g3aaa_);
+        g3aaa_ = make_g3_high_spin_case(g3aab_);
         have_g3aaa_ = true;
     }
     return g3aaa_;
@@ -101,7 +101,7 @@ ambit::Tensor RDMs::g3abb() {
 
 ambit::Tensor RDMs::g3bbb() {
     if (ms_avg_ and (not have_g3bbb_)) {
-        make_g3_spin_pure(g3aab_, g3bbb_);
+        g3bbb_ = make_g3_high_spin_case(g3aab_);
         have_g3bbb_ = true;
     }
     return g3bbb_;
@@ -183,46 +183,53 @@ ambit::Tensor RDMs::SFg2() {
 }
 
 ambit::Tensor RDMs::SF_L1() {
-    SF_L1_ = g1a_.clone();
-    SF_L1_.scale(2.0);
+    if (not ms_avg_) {
+        throw std::runtime_error("Must turn on spin averaging.");
+    }
+    if (not have_SF_L1_) {
+        SF_L1_ = g1a_.clone();
+        SF_L1_.scale(2.0);
+    }
     return SF_L1_;
 }
 
 ambit::Tensor RDMs::SF_L2() {
-    SF_L2_ = L2ab().clone();
-    SF_L2_.scale(4.0);
-    SF_L2_("pqrs") -= 2.0 * L2ab()("pqsr");
+    if (not ms_avg_) {
+        throw std::runtime_error("Must turn on spin averaging.");
+    }
+    if (not have_SF_L2_) {
+        SF_L2_ = L2ab().clone();
+        SF_L2_.scale(4.0);
+        SF_L2_("pqrs") -= 2.0 * L2ab()("pqsr");
+    }
     return SF_L2_;
 }
 
 ambit::Tensor RDMs::SF_L3() {
-    make_g3_spin_pure(L3aab(), SF_L3_);
-    SF_L3_("pqrstu") += L3aab()("pqrstu");
-    SF_L3_("pqrstu") += L3aab()("prqsut");
-    SF_L3_("pqrstu") += L3aab()("qrptus");
-    SF_L3_.scale(2.0);
+    if (not ms_avg_) {
+        throw std::runtime_error("Must turn on spin averaging.");
+    }
+    if (not have_SF_L3_) {
+        SF_L3_ = make_g3_high_spin_case(L3aab());
+        SF_L3_("pqrstu") += L3aab()("pqrstu");
+        SF_L3_("pqrstu") += L3aab()("prqsut");
+        SF_L3_("pqrstu") += L3aab()("qrptus");
+        SF_L3_.scale(2.0);
+    }
     return SF_L3_;
 }
 
-void make_g2_spin_pure(const ambit::Tensor& g2ab, ambit::Tensor& g2pure) {
-    g2pure = g2ab.clone();
+ambit::Tensor make_g2_high_spin_case(const ambit::Tensor& g2ab) {
+    auto g2pure = g2ab.clone();
     g2pure("pqrs") -= g2ab("pqsr");
+    return g2pure;
 }
 
-void make_g3_spin_pure(const ambit::Tensor& g3aab, ambit::Tensor& g3pure) {
-    g3pure = g3aab.clone();
+ambit::Tensor make_g3_high_spin_case(const ambit::Tensor& g3aab) {
+    auto g3pure = g3aab.clone();
     g3pure("pqrstu") -= g3aab("pqrsut");
     g3pure("pqrstu") += g3aab("pqrtus");
-
-    g3pure("pqrstu") -= g3aab("prqstu");
-    g3pure("pqrstu") += g3aab("prqsut");
-    g3pure("pqrstu") -= g3aab("prqtus");
-
-    g3pure("pqrstu") += g3aab("qrpstu");
-    g3pure("pqrstu") -= g3aab("qrpsut");
-    g3pure("pqrstu") += g3aab("qrptus");
-
-    g3pure.scale(1.0 / 3.0);
+    return g3pure;
 }
 
 void make_cumulant_L2aa_in_place(const ambit::Tensor& g1a, ambit::Tensor& L2aa) {

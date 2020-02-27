@@ -151,13 +151,26 @@ class RDMs {
   protected:
     // ==> Class Data <==
 
-    /// Maximum RDM/RDC rank stored by this object
-    size_t max_rdm_ = 0;
-
     /// Assume averaging over spin multiplets
     bool ms_avg_ = false;
 
+    /// Maximum RDM/RDC rank stored by this object
+    size_t max_rdm_ = 0;
+
     // Reduced density matrices
+
+    /// Was g1b built?
+    bool have_g1b_ = false;
+    /// Was g2aa built?
+    bool have_g2aa_ = false;
+    /// Was g2bb built?
+    bool have_g2bb_ = false;
+    /// Was g3aaa built?
+    bool have_g3aaa_ = false;
+    /// Was g3abb built?
+    bool have_g3abb_ = false;
+    /// Was g3bbb built?
+    bool have_g3bbb_ = false;
 
     /// The alpha 1-RDM
     ambit::Tensor g1a_;
@@ -180,19 +193,6 @@ class RDMs {
 
     /// Spin-free (spin-summed) 2-RDM
     ambit::Tensor SF_g2_;
-
-    /// Was g1b built?
-    bool have_g1b_ = false;
-    /// Was g2aa built?
-    bool have_g2aa_ = false;
-    /// Was g2bb built?
-    bool have_g2bb_ = false;
-    /// Was g3aaa built?
-    bool have_g3aaa_ = false;
-    /// Was g3abb built?
-    bool have_g3abb_ = false;
-    /// Was g3bbb built?
-    bool have_g3bbb_ = false;
 
     // Reduced density cumulants
 
@@ -232,6 +232,13 @@ class RDMs {
     bool have_L3abb_ = false;
     /// Was L3bbb built?
     bool have_L3bbb_ = false;
+
+    /// Was SF_L1_ built?
+    bool have_SF_L1_ = false;
+    /// Was SF_L2_ built?
+    bool have_SF_L2_ = false;
+    /// Was SF_L3_ built?
+    bool have_SF_L3_ = false;
 };
 
 /**
@@ -239,18 +246,18 @@ class RDMs {
  * This function resets the tensor passed in (g2pure) aa or bb 2-RDM
  * using the ab 2-RDM assuming ms averaging.
  * @param g2ab the alpha-beta 2-RDM
- * @param g2pure the alpha-alpha or beta-beta 2-RDM
+ * @return g2pure the alpha-alpha or beta-beta 2-RDM
  */
-void make_g2_spin_pure(const ambit::Tensor& g2ab, ambit::Tensor& g2pure);
+ambit::Tensor make_g2_high_spin_case(const ambit::Tensor& g2ab);
 
 /**
  * @brief make_g3_spin_pure Make the aaa or bbb 3-RDM from aab 3-RDM.
  * This function resets the tensor passed in (g3pure) aaa or bbb 3-RDM
  * using the aab 3-RDM assuming ms averaging.
  * @param g3aab the alpha-alpha-beta 3-RDM
- * @param g3pure the alpha-alpha-alpha or beta-beta-beta 3-RDM
+ * @return g3pure the alpha-alpha-alpha or beta-beta-beta 3-RDM
  */
-void make_g3_spin_pure(const ambit::Tensor& g3aab, ambit::Tensor& g3pure);
+ambit::Tensor make_g3_high_spin_case(const ambit::Tensor& g3aab);
 
 /**
  * @brief make_cumulant_L2aa_in_place Make the alpha-alpha 2-body cumulant.
