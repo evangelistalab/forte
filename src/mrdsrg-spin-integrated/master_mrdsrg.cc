@@ -50,10 +50,6 @@ void MASTER_DSRG::startup() {
     // set Ambit MO space labels
     set_ambit_MOSpace();
 
-    // read commonly used energies
-    Enuc_ = ints_->nuclear_repulsion_energy();
-    Efrzc_ = ints_->frozen_core_energy();
-
     // initialize timer for commutator
     dsrg_time_ = DSRG_TIME();
 
@@ -92,8 +88,6 @@ void MASTER_DSRG::read_options() {
         throw psi::PSIEXCEPTION(message);
     };
 
-    print_ = foptions_->get_int("PRINT");
-
     s_ = foptions_->get_double("DSRG_S");
     if (s_ < 0) {
         throw_error("S parameter for DSRG must >= 0!");
@@ -125,12 +119,6 @@ void MASTER_DSRG::read_options() {
 
     relax_ref_ = foptions_->get_str("RELAX_REF");
 
-    eri_df_ = false;
-    ints_type_ = foptions_->get_str("INT_TYPE");
-    if (ints_type_ == "CHOLESKY" || ints_type_ == "DF" || ints_type_ == "DISKDF") {
-        eri_df_ = true;
-    }
-
     multi_state_ = foptions_->get_gen_list("AVG_STATE").size() != 0;
     multi_state_algorithm_ = foptions_->get_str("DSRG_MULTI_STATE");
 
@@ -139,20 +127,6 @@ void MASTER_DSRG::read_options() {
         if (multi_state_algorithm_ != "SA_FULL") {
             do_dm_ = false;
         }
-    }
-
-    diis_start_ = foptions_->get_int("DSRG_DIIS_START");
-    diis_freq_ = foptions_->get_int("DSRG_DIIS_FREQ");
-    diis_min_vec_ = foptions_->get_int("DSRG_DIIS_MIN_VEC");
-    diis_max_vec_ = foptions_->get_int("DSRG_DIIS_MAX_VEC");
-    if (diis_min_vec_ < 1) {
-        diis_min_vec_ = 1;
-    }
-    if (diis_max_vec_ <= diis_min_vec_) {
-        diis_max_vec_ = diis_min_vec_ + 4;
-    }
-    if (diis_freq_ < 1) {
-        diis_freq_ = 1;
     }
 
     outfile->Printf("Done");

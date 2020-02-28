@@ -128,9 +128,6 @@ class MASTER_DSRG : public DynamicCorrelationSolver {
     /// Read options
     void read_options();
 
-    /// Printing level
-    int print_;
-
     /// The flow parameter
     double s_;
     /// Source operator
@@ -139,11 +136,6 @@ class MASTER_DSRG : public DynamicCorrelationSolver {
     std::shared_ptr<DSRG_SOURCE> dsrg_source_;
     /// Threshold for the Taylor expansion of f(z) = (1-exp(-z^2))/z
     double taylor_threshold_;
-
-    /// The integral type
-    std::string ints_type_;
-    /// If ERI density fitted or Cholesky decomposed
-    bool eri_df_;
 
     /// Multi-state computation if true
     bool multi_state_;
@@ -173,10 +165,6 @@ class MASTER_DSRG : public DynamicCorrelationSolver {
 
     /// The energy of the reference
     double Eref_;
-    /// The nuclear repulsion energy
-    double Enuc_;
-    /// The frozen core energy
-    double Efrzc_;
 
     /// Initial check on reference energy
     void check_init_reference_energy();
@@ -358,17 +346,6 @@ class MASTER_DSRG : public DynamicCorrelationSolver {
     std::array<ambit::BlockedTensor, 3> Mbar2_;
     /// DSRG transformed 3-body dipole integrals (active only)
     std::array<ambit::BlockedTensor, 3> Mbar3_;
-
-    // ==> DIIS control <==
-
-    /// Cycle number to start DIIS
-    int diis_start_;
-    /// Minimum number of DIIS vectors
-    int diis_min_vec_;
-    /// Maximum number of DIIS vectors
-    int diis_max_vec_;
-    /// Frequency of extrapolating the current DIIS vectors
-    int diis_freq_;
 
     // ==> commutators <==
     /**
