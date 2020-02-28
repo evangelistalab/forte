@@ -52,8 +52,8 @@ MRDSRG::MRDSRG(RDMs rdms, std::shared_ptr<SCFInfo> scf_info, std::shared_ptr<For
                std::shared_ptr<ForteIntegrals> ints, std::shared_ptr<MOSpaceInfo> mo_space_info)
     : MASTER_DSRG(rdms, scf_info, options, ints, mo_space_info) {
 
-    print_method_banner({"Multireference Driven Similarity Renormalization Group", "Chenyang Li"});
-    outfile->Printf("\n  Additional contributions by: Tianyuan Zhang");
+    print_method_banner({"Multireference Driven Similarity Renormalization Group",
+                         "written by Chenyang Li and Tianyuan Zhang"});
 
     read_options();
     startup();

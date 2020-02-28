@@ -68,6 +68,9 @@ void SADSRG::startup() {
             value = 1.0;
         }
     });
+
+    // general printing for all derived classes
+    print_cumulant_summary();
 }
 
 void SADSRG::read_options() {
@@ -77,8 +80,6 @@ void SADSRG::read_options() {
         outfile->Printf("\n  %s", message.c_str());
         throw psi::PSIEXCEPTION(message);
     };
-
-    print_ = foptions_->get_int("PRINT");
 
     s_ = foptions_->get_double("DSRG_S");
     if (s_ < 0) {
@@ -111,28 +112,8 @@ void SADSRG::read_options() {
 
     relax_ref_ = foptions_->get_str("RELAX_REF");
 
-    eri_df_ = false;
-    ints_type_ = foptions_->get_str("INT_TYPE");
-    if (ints_type_ == "CHOLESKY" || ints_type_ == "DF" || ints_type_ == "DISKDF") {
-        eri_df_ = true;
-    }
-
     multi_state_ = foptions_->get_gen_list("AVG_STATE").size() != 0;
     multi_state_algorithm_ = foptions_->get_str("DSRG_MULTI_STATE");
-
-    diis_start_ = foptions_->get_int("DSRG_DIIS_START");
-    diis_freq_ = foptions_->get_int("DSRG_DIIS_FREQ");
-    diis_min_vec_ = foptions_->get_int("DSRG_DIIS_MIN_VEC");
-    diis_max_vec_ = foptions_->get_int("DSRG_DIIS_MAX_VEC");
-    if (diis_min_vec_ < 1) {
-        diis_min_vec_ = 1;
-    }
-    if (diis_max_vec_ <= diis_min_vec_) {
-        diis_max_vec_ = diis_min_vec_ + 4;
-    }
-    if (diis_freq_ < 1) {
-        diis_freq_ = 1;
-    }
 
     outfile->Printf("Done");
 }
@@ -916,7 +897,7 @@ void SADSRG::H2_T2_C0(BlockedTensor& H2, BlockedTensor& T2, const double& alpha,
     // <[Hbar2, T2]> C_6 C_2
     if (foptions_->get_str("THREEPDC") != "ZERO") {
         E += H2.block("vaaa")("ewxy") * T2.block("aava")("uvez") * rdms_.SF_L3()("xyzuwv");
-        E -= H2.block("aaca")["uvmz"] * T2.block("caaa")("mwxy") * rdms_.SF_L3()("xyzuwv");
+        E -= H2.block("aaca")("uvmz") * T2.block("caaa")("mwxy") * rdms_.SF_L3()("xyzuwv");
     }
 
     // multiply prefactor and copy to C0
@@ -929,7 +910,7 @@ void SADSRG::H2_T2_C0(BlockedTensor& H2, BlockedTensor& T2, const double& alpha,
     dsrg_time_.add("220", timer.get());
 }
 
- void SADSRG::H1_T1_C1(BlockedTensor& H1, BlockedTensor& T1, const double& alpha,
+void SADSRG::H1_T1_C1(BlockedTensor& H1, BlockedTensor& T1, const double& alpha,
                       BlockedTensor& C1) {
     local_timer timer;
 
@@ -942,7 +923,7 @@ void SADSRG::H2_T2_C0(BlockedTensor& H2, BlockedTensor& T2, const double& alpha,
     dsrg_time_.add("111", timer.get());
 }
 
- void SADSRG::H1_T2_C1(BlockedTensor& H1, BlockedTensor& T2, const double& alpha,
+void SADSRG::H1_T2_C1(BlockedTensor& H1, BlockedTensor& T2, const double& alpha,
                       BlockedTensor& C1) {
     local_timer timer;
 
@@ -961,7 +942,7 @@ void SADSRG::H2_T2_C0(BlockedTensor& H2, BlockedTensor& T2, const double& alpha,
     dsrg_time_.add("121", timer.get());
 }
 
- void SADSRG::H2_T1_C1(BlockedTensor& H2, BlockedTensor& T1, const double& alpha,
+void SADSRG::H2_T1_C1(BlockedTensor& H2, BlockedTensor& T1, const double& alpha,
                       BlockedTensor& C1) {
     local_timer timer;
 
@@ -980,7 +961,7 @@ void SADSRG::H2_T2_C0(BlockedTensor& H2, BlockedTensor& T2, const double& alpha,
     dsrg_time_.add("211", timer.get());
 }
 
- void SADSRG::H2_T2_C1(BlockedTensor& H2, BlockedTensor& T2, const double& alpha,
+void SADSRG::H2_T2_C1(BlockedTensor& H2, BlockedTensor& T2, const double& alpha,
                       BlockedTensor& C1) {
     local_timer timer;
 
@@ -1058,7 +1039,7 @@ void SADSRG::H2_T2_C0(BlockedTensor& H2, BlockedTensor& T2, const double& alpha,
     dsrg_time_.add("221", timer.get());
 }
 
- void SADSRG::H1_T2_C2(BlockedTensor& H1, BlockedTensor& T2, const double& alpha,
+void SADSRG::H1_T2_C2(BlockedTensor& H1, BlockedTensor& T2, const double& alpha,
                       BlockedTensor& C2) {
     local_timer timer;
 
@@ -1073,7 +1054,7 @@ void SADSRG::H2_T2_C0(BlockedTensor& H2, BlockedTensor& T2, const double& alpha,
     dsrg_time_.add("122", timer.get());
 }
 
- void SADSRG::H2_T1_C2(BlockedTensor& H2, BlockedTensor& T1, const double& alpha,
+void SADSRG::H2_T1_C2(BlockedTensor& H2, BlockedTensor& T1, const double& alpha,
                       BlockedTensor& C2) {
     local_timer timer;
 
@@ -1088,7 +1069,7 @@ void SADSRG::H2_T2_C0(BlockedTensor& H2, BlockedTensor& T2, const double& alpha,
     dsrg_time_.add("212", timer.get());
 }
 
- void SADSRG::H2_T2_C2(BlockedTensor& H2, BlockedTensor& T2, const double& alpha,
+void SADSRG::H2_T2_C2(BlockedTensor& H2, BlockedTensor& T2, const double& alpha,
                       BlockedTensor& C2) {
     local_timer timer;
 
@@ -1143,147 +1124,164 @@ void SADSRG::H2_T2_C0(BlockedTensor& H2, BlockedTensor& T2, const double& alpha,
     dsrg_time_.add("222", timer.get());
 }
 
-// dsrgHeff SADSRG::commutator_HT_noGNO(ambit::BlockedTensor H1, ambit::BlockedTensor H2,
-//                                     ambit::BlockedTensor T1, ambit::BlockedTensor T2) {
-//    dsrgHeff Heff;
+void SADSRG::print_cumulant_summary() {
+    print_h2("Density Cumulant Summary");
 
-//    Heff.H1 = BTF_->build(tensor_type_, "[H,T]1", spin_cases({"aa"}));
-//    Heff.H1a = Heff.H1.block("aa");
-//    Heff.H1b = Heff.H1.block("AA");
+    std::vector<double> maxes(2), norms(2);
 
-//    Heff.H2 = BTF_->build(tensor_type_, "[H,T]2", spin_cases({"aaaa"}));
-//    Heff.H2aa = Heff.H2.block("aaaa");
-//    Heff.H2ab = Heff.H2.block("aAaA");
-//    Heff.H2bb = Heff.H2.block("AAAA");
+    maxes[0] = L2_.norm(0);
+    norms[0] = L2_.norm(2);
 
-//    Heff.H3 = BTF_->build(tensor_type_, "[H,T]3", spin_cases({"aaaaaa"}));
-//    Heff.H3aaa = Heff.H3.block("aaaaaa");
-//    Heff.H3aab = Heff.H3.block("aaAaaA");
-//    Heff.H3abb = Heff.H3.block("aAAaAA");
-//    Heff.H3bbb = Heff.H3.block("AAAAAA");
+    maxes[1] = rdms_.SF_L3().norm(0);
+    norms[1] = rdms_.SF_L3().norm(2);
 
-//    // scalar
-//    double& H0 = Heff.H0;
-//    H0 += H1["am"] * T1["ma"];
-//    H0 += H1["AM"] * T1["MA"];
+    std::string dash(6 + 13 * 2, '-');
+    outfile->Printf("\n    %-6s %12s %12s", "", "2-cumulant", "3-cumulant");
+    outfile->Printf("\n    %s", dash.c_str());
+    outfile->Printf("\n    %-6s %12.6f %12.6f", "max", maxes[0], maxes[1]);
+    outfile->Printf("\n    %-6s %12.6f %12.6f", "norm", norms[0], norms[1]);
+    outfile->Printf("\n    %s", dash.c_str());
+}
 
-//    H0 += 0.25 * H2["abmn"] * T2["mnab"];
-//    H0 += H2["aBmN"] * T2["mNaB"];
-//    H0 += 0.25 * H2["ABMN"] * T2["MNAB"];
+std::vector<double> SADSRG::diagonalize_Fock_diagblocks(BlockedTensor& U) {
+    // map MO space label to its psi::Dimension
+    std::map<std::string, psi::Dimension> MOlabel_to_dimension;
+    MOlabel_to_dimension[core_label_] = mo_space_info_->dimension("RESTRICTED_DOCC");
+    MOlabel_to_dimension[actv_label_] = mo_space_info_->dimension("ACTIVE");
+    MOlabel_to_dimension[virt_label_] = mo_space_info_->dimension("RESTRICTED_UOCC");
 
-//    // 1-body
-//    ambit::BlockedTensor& C1 = Heff.H1;
-//    C1["vu"] += H1["eu"] * T1["ve"];
-//    C1["VU"] += H1["EU"] * T1["VE"];
+    // eigen values to be returned
+    size_t ncmo = mo_space_info_->size("CORRELATED");
+    psi::Dimension corr = mo_space_info_->dimension("CORRELATED");
+    std::vector<double> eigenvalues(ncmo, 0.0);
 
-//    C1["vu"] -= H1["vm"] * T1["mu"];
-//    C1["VU"] -= H1["VM"] * T1["MU"];
+    // map MO space label to its offset psi::Dimension
+    std::map<std::string, psi::Dimension> MOlabel_to_offset_dimension;
+    int nirrep = corr.n();
+    MOlabel_to_offset_dimension[core_label_] = psi::Dimension(std::vector<int>(nirrep, 0));
+    MOlabel_to_offset_dimension[actv_label_] = mo_space_info_->dimension("RESTRICTED_DOCC");
+    MOlabel_to_offset_dimension[virt_label_] =
+        mo_space_info_->dimension("RESTRICTED_DOCC") + mo_space_info_->dimension("ACTIVE");
 
-//    C1["vu"] += H2["avmu"] * T1["ma"];
-//    C1["vu"] += H2["vAuM"] * T1["MA"];
-//    C1["VU"] += H2["aVmU"] * T1["ma"];
-//    C1["VU"] += H2["AVMU"] * T1["MA"];
+    // figure out index
+    auto fill_eigen = [&](std::string block_label, int irrep, std::vector<double> values) {
+        int h = irrep;
+        size_t idx_begin = 0;
+        while ((--h) >= 0)
+            idx_begin += corr[h];
 
-//    C1["vu"] += H1["am"] * T2["vmua"];
-//    C1["vu"] += H1["AM"] * T2["vMuA"];
-//    C1["VU"] += H1["am"] * T2["mVaU"];
-//    C1["VU"] += H1["AM"] * T2["VMUA"];
+        std::string label(1, tolower(block_label[0]));
+        idx_begin += MOlabel_to_offset_dimension[label][irrep];
 
-//    C1["vu"] += 0.5 * H2["abum"] * T2["vmab"];
-//    C1["vu"] += H2["aBuM"] * T2["vMaB"];
-//    C1["VU"] += H2["aBmU"] * T2["mVaB"];
-//    C1["VU"] += 0.5 * H2["ABUM"] * T2["VMAB"];
+        size_t nvalues = values.size();
+        for (size_t i = 0; i < nvalues; ++i) {
+            eigenvalues[i + idx_begin] = values[i];
+        }
+    };
 
-//    C1["vu"] -= 0.5 * H2["avmn"] * T2["mnau"];
-//    C1["vu"] -= H2["vAmN"] * T2["mNuA"];
-//    C1["VU"] -= H2["aVmN"] * T2["mNaU"];
-//    C1["VU"] -= 0.5 * H2["AVMN"] * T2["MNAU"];
+    // diagonalize diagonal blocks (C-A-V ordering)
+    for (const auto& block : diag_one_labels()) {
+        auto dims = Fock_.block(block).dims();
+        size_t dim = dims[0];
 
-//    // 2-body
-//    ambit::BlockedTensor& C2 = Heff.H2;
-//    BlockedTensor temp = BTF_->build(tensor_type_, "temp", {"aaaa", "AAAA"});
+        if (dim == 0) {
+            continue;
+        } else {
+            std::string label(1, tolower(block[0]));
+            psi::Dimension space = MOlabel_to_dimension[label];
+            int nirrep = space.n();
 
-//    temp["xyuv"] = H2["eyuv"] * T1["xe"];
-//    temp["XYUV"] = H2["EYUV"] * T1["XE"];
+            // separate Fock with irrep
+            for (int h = 0; h < nirrep; ++h) {
+                size_t h_dim = space[h];
+                ambit::Tensor U_h;
+                if (h_dim == 0) {
+                    continue;
+                } else {
+                    auto F_block = Fock_.block(block).clone();
+                    auto F_h = separate_tensor(F_block, space, h);
+                    U_h = ambit::Tensor::build(tensor_type_, "U_h", std::vector<size_t>(2, h_dim));
+                    if (h_dim == 1) {
+                        U_h.data()[0] = 1.0;
+                        fill_eigen(block, h, F_h.data());
+                    } else {
+                        auto Feigen = F_h.syev(AscendingEigenvalue);
+                        U_h("pq") = Feigen["eigenvectors"]("pq");
+                        fill_eigen(block, h, Feigen["eigenvalues"].data());
+                    }
+                }
 
-//    C2["xyuv"] += temp["xyuv"];
-//    C2["XYUV"] += temp["XYUV"];
-//    C2["xyuv"] -= temp["yxuv"];
-//    C2["XYUV"] -= temp["YXUV"];
+                ambit::Tensor U_out = U.block(block);
+                combine_tensor(U_out, U_h, space, h);
+            }
+        }
+    }
+    return eigenvalues;
+}
 
-//    C2["xYuV"] += H2["eYuV"] * T1["xe"];
-//    C2["xYuV"] += H2["xEuV"] * T1["YE"];
+ambit::Tensor SADSRG::separate_tensor(ambit::Tensor& tens, const psi::Dimension& irrep,
+                                      const int& h) {
+    // test tens and irrep
+    int tens_dim = static_cast<int>(tens.dim(0));
+    if (tens_dim != irrep.sum() || tens_dim != static_cast<int>(tens.dim(1))) {
+        throw psi::PSIEXCEPTION("Wrong dimension for the to-be-separated ambit Tensor.");
+    }
+    if (h >= irrep.n()) {
+        throw psi::PSIEXCEPTION("Ask for wrong irrep.");
+    }
 
-//    temp["xyuv"] = H2["xymv"] * T1["mu"];
-//    temp["XYUV"] = H2["XYMV"] * T1["MU"];
+    // from relative (blocks) to absolute (big tensor) index
+    auto rel_to_abs = [&](size_t i, size_t j, size_t offset) {
+        return (i + offset) * tens_dim + (j + offset);
+    };
 
-//    C2["xyuv"] -= temp["xyuv"];
-//    C2["XYUV"] -= temp["XYUV"];
-//    C2["xyuv"] += temp["xyvu"];
-//    C2["XYUV"] += temp["XYVU"];
+    // compute offset
+    size_t offset = 0, h_dim = irrep[h];
+    int h_local = h;
+    while ((--h_local) >= 0)
+        offset += irrep[h_local];
 
-//    C2["xYuV"] -= H2["xYmV"] * T1["mu"];
-//    C2["xYuV"] -= H2["xYuM"] * T1["MV"];
+    // fill in values
+    auto T_h = ambit::Tensor::build(tensor_type_, "T_h", std::vector<size_t>(2, h_dim));
+    for (size_t i = 0; i < h_dim; ++i) {
+        for (size_t j = 0; j < h_dim; ++j) {
+            size_t abs_idx = rel_to_abs(i, j, offset);
+            T_h.data()[i * h_dim + j] = tens.data()[abs_idx];
+        }
+    }
 
-//    temp["xyuv"] = H1["eu"] * T2["xyev"];
-//    temp["XYUV"] = H1["EU"] * T2["XYEV"];
+    return T_h;
+}
 
-//    C2["xyuv"] += temp["xyuv"];
-//    C2["XYUV"] += temp["XYUV"];
-//    C2["xyuv"] -= temp["xyvu"];
-//    C2["XYUV"] -= temp["XYVU"];
+void SADSRG::combine_tensor(ambit::Tensor& tens, ambit::Tensor& tens_h, const psi::Dimension& irrep,
+                            const int& h) {
+    // test tens and irrep
+    if (h >= irrep.n()) {
+        throw psi::PSIEXCEPTION("Ask for wrong irrep.");
+    }
+    size_t tens_h_dim = tens_h.dim(0), h_dim = irrep[h];
+    if (tens_h_dim != h_dim || tens_h_dim != tens_h.dim(1)) {
+        throw psi::PSIEXCEPTION("Wrong dimension for the to-be-combined ambit Tensor.");
+    }
 
-//    C2["xYuV"] += H1["eu"] * T2["xYeV"];
-//    C2["xYuV"] += H1["EV"] * T2["xYuE"];
+    // from relative (blocks) to absolute (big tensor) index
+    size_t tens_dim = tens.dim(0);
+    auto rel_to_abs = [&](size_t i, size_t j, size_t offset) {
+        return (i + offset) * tens_dim + (j + offset);
+    };
 
-//    temp["xyuv"] = H1["xm"] * T2["myuv"];
-//    temp["XYUV"] = H1["XM"] * T2["MYUV"];
+    // compute offset
+    size_t offset = 0;
+    int h_local = h;
+    while ((--h_local) >= 0)
+        offset += irrep[h_local];
 
-//    C2["xyuv"] -= temp["xyuv"];
-//    C2["XYUV"] -= temp["XYUV"];
-//    C2["xyuv"] += temp["yxuv"];
-//    C2["XYUV"] += temp["YXUV"];
-
-//    C2["xYuV"] -= H1["xm"] * T2["mYuV"];
-//    C2["xYuV"] -= H1["YM"] * T2["xMuV"];
-
-//    C2["xyuv"] += 0.5 * H2["abuv"] * T2["xyab"];
-//    C2["xYuV"] += H2["aBuV"] * T2["xYaB"];
-//    C2["XYUV"] += 0.5 * H2["ABUV"] * T2["XYAB"];
-
-//    C2["xyuv"] -= 0.5 * H2["xyij"] * T2["ijuv"];
-//    C2["xYuV"] -= H2["xYiJ"] * T2["iJuV"];
-//    C2["XYUV"] -= 0.5 * H2["XYIJ"] * T2["IJUV"];
-
-//    C2["xyuv"] += H2["xyim"] * T2["imuv"];
-//    C2["xYuV"] += H2["xYiM"] * T2["iMuV"];
-//    C2["xYuV"] += H2["xYmI"] * T2["mIuV"];
-//    C2["XYUV"] += H2["XYIM"] * T2["IMUV"];
-
-//    temp["xyuv"] = H2["ayum"] * T2["xmav"];
-//    temp["xyuv"] += H2["yAuM"] * T2["xMvA"];
-//    temp["XYUV"] = H2["aYmU"] * T2["mXaV"];
-//    temp["XYUV"] += H2["AYUM"] * T2["XMAV"];
-
-//    C2["xyuv"] -= temp["xyuv"];
-//    C2["XYUV"] -= temp["XYUV"];
-//    C2["xyuv"] += temp["yxuv"];
-//    C2["XYUV"] += temp["YXUV"];
-//    C2["xyuv"] += temp["xyvu"];
-//    C2["XYUV"] += temp["XYVU"];
-//    C2["xyuv"] -= temp["yxvu"];
-//    C2["XYUV"] -= temp["YXVU"];
-
-//    C2["xYuV"] -= H2["aYuM"] * T2["xMaV"];
-//    C2["xYuV"] += H2["xaum"] * T2["mYaV"];
-//    C2["xYuV"] += H2["xAuM"] * T2["MYAV"];
-//    C2["xYuV"] += H2["aYmV"] * T2["xmua"];
-//    C2["xYuV"] += H2["AYMV"] * T2["xMuA"];
-//    C2["xYuV"] -= H2["xAmV"] * T2["mYuA"];
-
-//    // 3-body
-//    H2_T2_C3(H2, T2, 1.0, Heff.H3, true);
-
-//    return Heff;
-//}
+    // fill in values
+    for (size_t i = 0; i < h_dim; ++i) {
+        for (size_t j = 0; j < h_dim; ++j) {
+            size_t abs_idx = rel_to_abs(i, j, offset);
+            tens.data()[abs_idx] = tens_h.data()[i * h_dim + j];
+        }
+    }
+}
 } // namespace forte

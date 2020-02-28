@@ -140,6 +140,8 @@ src/mrdsrg-spin-adapted/dsrg_mrpt.cc
 src/mrdsrg-spin-adapted/dsrg_mrpt_2nd.cc
 src/mrdsrg-spin-adapted/dsrg_mrpt_amp.cc
 src/mrdsrg-spin-adapted/dsrg_mrpt_comm.cc
+src/mrdsrg-spin-adapted/sadsrg.cc
+src/mrdsrg-spin-adapted/sa_mrdsrg.cc
 src/mrdsrg-spin-integrated/active_dsrgpt2.cc
 src/mrdsrg-spin-integrated/dsrg_mrpt2.cc
 src/mrdsrg-spin-integrated/dsrg_mrpt2_ms.cc
