@@ -1633,10 +1633,6 @@ void DSRG_MRPT2::compute_z_av() {
 
 
 
-
-
-
-
     Z["we"] = Z["ew"];
 
     // Beta part
@@ -1651,6 +1647,86 @@ void DSRG_MRPT2::compute_z_av() {
 
 
 
+}
+
+
+
+
+
+void DSRG_MRPT2::compute_z_ca() {
+    BlockedTensor temp = BTF_->build(CoreTensor, "temporal tensor", {"ca"});
+
+    temp["mw"] = Z_b["mw"];
+
+    temp["mw"] += Z["e1,m1"] * V["m1,m,e1,u"] * Gamma1["uw"];
+    temp["mw"] += Z["E1,M1"] * V["m,M1,u,E1"] * Gamma1["uw"];
+    temp["mw"] += Z["e1,m1"] * V["m1,u,e1,m"] * Gamma1["uw"];
+    temp["mw"] += Z["E1,M1"] * V["u,M1,m,E1"] * Gamma1["uw"];
+
+    temp["mw"] += Z["e1,u"] * H["m,e1"] * Gamma1["uw"];
+    temp["mw"] += Z["e1,u"] * V["m,m1,e1,n1"] * Gamma1["uw"] * I["m1,n1"];
+    temp["mw"] += Z["e1,u"] * V["m,M1,e1,N1"] * Gamma1["uw"] * I["M1,N1"];
+    temp["mw"] += 0.5 * Z["e1,u"] * V["x,y,e1,m"] * Gamma2["u,w,x,y"];
+    temp["mw"] += Z["E1,U"] * V["y,X,m,E1"] * Gamma2["w,U,y,X"];
+    temp["mw"] += Z["e1,u"] * V["m,y,e1,v"] * Gamma2["u,v,w,y"];
+    temp["mw"] += 2.0 * Z["e1,u"] * V["m,Y,e1,V"] * Gamma2["u,V,w,Y"];
+
+    temp["mw"] += Z["u1,v1"] * V["v1,v,u1,m"] * Gamma1["wv"];
+    temp["mw"] += Z["U1,V1"] * V["v,V1,m,U1"] * Gamma1["wv"];
+
+    temp["mw"] += Z["wv"] * F["vm"];
+
+    temp["mw"] -= Z["e1,m"] * F["w,e1"];
+
+    temp["mw"] -= Z["e1,m1"] * V["m1,m,e1,w"];
+    temp["mw"] -= Z["E1,M1"] * V["m,M1,w,E1"];
+    temp["mw"] -= Z["e1,m1"] * V["m1,w,e1,m"];
+    temp["mw"] -= Z["E1,M1"] * V["w,M1,m,E1"];
+
+    temp["mw"] -= Z["e1,u"] * Gamma1["uv"] * V["v,m,e1,w"];
+    temp["mw"] -= Z["E1,U"] * Gamma1["UV"] * V["m,V,w,E1"];
+    temp["mw"] -= Z["e1,u"] * Gamma1["uv"] * V["v,w,e1,m"];
+    temp["mw"] -= Z["E1,U"] * Gamma1["UV"] * V["w,V,m,E1"];
+
+    temp["mw"] -= Z["uv"] * V["vwum"];
+    temp["mw"] -= Z["UV"] * V["wVmU"];
+
+
+    // Terms need to be separated
+    temp["mw"] += Z["n1,u"] * V["u,v,n1,m"] * Gamma1["wv"];
+    temp["mw"] += Z["N1,U"] * V["v,U,m,N1"] * Gamma1["wv"];
+    temp["mw"] += Z["n1,u"] * V["u,m,n1,v"] * Gamma1["wv"];
+    temp["mw"] += Z["N1,U"] * V["m,U,v,N1"] * Gamma1["wv"];
+
+    temp["mw"] -= Z["n1,u"] * H["m,n1"] * Gamma1["uw"];
+    temp["mw"] -= Z["n1,u"] * V["m,m1,n1,n"] * Gamma1["uw"] * I["m1,n"];
+    temp["mw"] -= Z["n1,u"] * V["m,M1,n1,N"] * Gamma1["uw"] * I["M1,N"];
+    temp["mw"] -= 0.5 * Z["n1,u"] * V["x,y,n1,m"] * Gamma2["u,w,x,y"];
+    temp["mw"] -= Z["N1,U"] * V["y,X,m,N1"] * Gamma2["w,U,y,X"];
+    temp["mw"] -= Z["n1,u"] * V["m,y,n1,v"] * Gamma2["u,v,w,y"];
+    temp["mw"] -= 2.0 * Z["n1,u"] * V["m,Y,n1,V"] * Gamma2["u,V,w,Y"];
+
+    temp["mw"] -= Z["n1,u"] * V["u,w,n1,m"];
+    temp["mw"] -= Z["N1,U"] * V["w,U,m,N1"];
+    temp["mw"] -= Z["n1,u"] * V["u,m,n1,w"];
+    temp["mw"] -= Z["N1,U"] * V["m,U,w,N1"];
+
+    temp["mw"] += Z["n1,u"] * Gamma1["uv"] * V["v,w,n1,m"];
+    temp["mw"] += Z["N1,U"] * Gamma1["UV"] * V["w,V,m,N1"];
+    temp["mw"] += Z["n1,u"] * Gamma1["uv"] * V["v,m,n1,w"];
+    temp["mw"] += Z["N1,U"] * Gamma1["UV"] * V["m,V,w,N1"];
+
+    temp["mw"] -= Z["mu"] * F["uw"];
+    temp["mw"] += Z["mu"] * H["vw"] * Gamma1["uv"];
+    temp["mw"] += Z["mu"] * V["v,m1,w,n1"] * Gamma1["uv"] * I["m1,n1"];
+    temp["mw"] += Z["mu"] * V["v,M1,w,N1"] * Gamma1["uv"] * I["M1,N1"];
+    temp["mw"] -= 0.50 * Z["mu"] * V["xywv"] * Gamma2["uvxy"];
+    temp["mw"] -= Z["mu"] * V["xYwV"] * Gamma2["uVxY"];
+
+    // move terms to the left side
+
+
+
 
 
 
@@ -1658,12 +1734,6 @@ void DSRG_MRPT2::compute_z_av() {
 
 
 }
-
-
-
-
-
-void DSRG_MRPT2::compute_z_ca() {}
 
 
 
