@@ -12,6 +12,7 @@
 #include "mrdsrg-so/mrdsrg_so.h"
 #include "mrdsrg-so/so-mrdsrg.h"
 #include "mrdsrg-spin-adapted/dsrg_mrpt.h"
+#include "mrdsrg-spin-adapted/sadsrg.h"
 
 namespace forte {
 
@@ -62,6 +63,11 @@ std::unique_ptr<DSRG_MRPT> make_dsrg_spin_adapted(RDMs rdms, std::shared_ptr<SCF
                                                   std::shared_ptr<ForteOptions> options,
                                                   std::shared_ptr<ForteIntegrals> ints,
                                                   std::shared_ptr<MOSpaceInfo> mo_space_info);
+
+std::unique_ptr<SADSRG> make_sadsrg_method(RDMs rdms, std::shared_ptr<SCFInfo> scf_info,
+                                           std::shared_ptr<ForteOptions> options,
+                                           std::shared_ptr<ForteIntegrals> ints,
+                                           std::shared_ptr<MOSpaceInfo> mo_space_info);
 
 } // namespace forte
 

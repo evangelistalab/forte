@@ -54,6 +54,7 @@
 #include "base_classes/scf_info.h"
 #include "mrdsrg-helper/run_dsrg.h"
 #include "mrdsrg-spin-integrated/master_mrdsrg.h"
+#include "mrdsrg-spin-adapted/sadsrg.h"
 
 #include "sparse_ci/determinant.h"
 #include "post_process/spin_corr.h"
@@ -154,15 +155,13 @@ void export_Determinant(py::module& m) {
         .def("create_beta_bit", &Determinant::create_beta_bit, "n"_a, "Create a beta bit")
         .def("destroy_alfa_bit", &Determinant::destroy_alfa_bit, "n"_a, "Destroy an alpha bit")
         .def("destroy_beta_bit", &Determinant::destroy_beta_bit, "n"_a, "Destroy a beta bit")
-        .def(
-            "gen_excitation",
-            [](Determinant& d, const std::vector<int>& aann, const std::vector<int>& acre,
-               const std::vector<int>& bann,
-               const std::vector<int>& bcre) { return gen_excitation(d, aann, acre, bann, bcre); },
-            "Apply a generic excitation")
-        .def(
-            "str", [](const Determinant& a, int n) { return str(a, n); }, "n"_a = 64,
-            "Get the string representation of the Slater determinant")
+        .def("gen_excitation",
+             [](Determinant& d, const std::vector<int>& aann, const std::vector<int>& acre,
+                const std::vector<int>& bann,
+                const std::vector<int>& bcre) { return gen_excitation(d, aann, acre, bann, bcre); },
+             "Apply a generic excitation")
+        .def("str", [](const Determinant& a, int n) { return str(a, n); }, "n"_a = 64,
+             "Get the string representation of the Slater determinant")
         .def("__repr__", [](const Determinant& a) { return str(a); })
         .def("__str__", [](const Determinant& a) { return str(a); })
         .def("__eq__", [](const Determinant& a, const Determinant& b) { return a == b; })
@@ -187,8 +186,8 @@ PYBIND11_MODULE(forte, m) {
     m.def("print_method_banner", &print_method_banner, "text"_a, "separator"_a = "-",
           "Print a method banner");
     m.def("make_mo_space_info", &make_mo_space_info, "Make a MOSpaceInfo object");
-//    m.def("make_mo_space_info_from_map", &make_mo_space_info_from_map,
-//          "Make a MOSpaceInfo object from a map of space name (string) to a vector");
+    //    m.def("make_mo_space_info_from_map", &make_mo_space_info_from_map,
+    //          "Make a MOSpaceInfo object from a map of space name (string) to a vector");
     m.def("make_mo_space_info_from_map", &make_mo_space_info_from_map, "ref_wfn"_a,
           "mo_space_map"_a, "reorder"_a = std::vector<size_t>(),
           "Make a MOSpaceInfo object using a dictionary");
@@ -218,6 +217,8 @@ PYBIND11_MODULE(forte, m) {
     m.def("perform_spin_analysis", &perform_spin_analysis, "Do spin analysis");
     m.def("make_dsrg_method", &make_dsrg_method,
           "Make a DSRG method (spin-integrated implementation)");
+    m.def("make_sadsrg_method", &make_sadsrg_method,
+          "Make a DSRG method (spin-adapted implementation)");
     m.def("make_dsrg_so_y", &make_dsrg_so_y, "Make a DSRG pointer (spin-orbital implementation)");
     m.def("make_dsrg_so_f", &make_dsrg_so_f, "Make a DSRG pointer (spin-orbital implementation)");
     m.def("make_dsrg_spin_adapted", &make_dsrg_spin_adapted,
@@ -318,11 +319,20 @@ PYBIND11_MODULE(forte, m) {
         .def("set_Uactv", &MASTER_DSRG::set_Uactv, "Ua"_a, "Ub"_a,
              "Set active part orbital rotation matrix (from original to semicanonical)");
 
+    // export SADSRG
+    py::class_<SADSRG>(m, "SADSRG")
+        .def("compute_energy", &SADSRG::compute_energy, "Compute the DSRG energy")
+        .def("compute_Heff_actv", &SADSRG::compute_Heff_actv,
+             "Return the DSRG dressed ActiveSpaceIntegrals")
+        .def("set_Uactv", &SADSRG::set_Uactv, "Ua"_a,
+             "Set active part orbital rotation matrix (from original to semicanonical)");
+
     // export MRDSRG_SO
     py::class_<MRDSRG_SO>(m, "MRDSRG_SO")
         .def("compute_energy", &MRDSRG_SO::compute_energy, "Compute DSRG energy")
         .def("compute_Heff_actv", &MRDSRG_SO::compute_Heff_actv,
              "Return the DSRG dressed ActiveSpaceIntegrals");
+
     // export SOMRDSRG
     py::class_<SOMRDSRG>(m, "SOMRDSRG")
         .def("compute_energy", &SOMRDSRG::compute_energy, "Compute DSRG energy")

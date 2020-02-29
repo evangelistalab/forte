@@ -134,6 +134,8 @@ class SA_MRDSRG : public SADSRG {
     /// Initial guess of T2
     void guess_t2_std(BlockedTensor& V, BlockedTensor& T2);
     void guess_t2_noccvv(BlockedTensor& V, BlockedTensor& T2);
+    void guess_t2_std_df(BlockedTensor& B, BlockedTensor& T2);
+    void guess_t2_noccvv_df(BlockedTensor& B, BlockedTensor& T2);
     /// Update T2 in every iteration
     void update_t2_std();
     void update_t2_noccvv();
@@ -173,6 +175,12 @@ class SA_MRDSRG : public SADSRG {
     /// Compute DSRG-transformed Hamiltonian truncated to 2-nested commutator
     void compute_hbar_qc();
 
+    /// Add H2's Hermitian conjugate to itself, H2 need to contain gGgG block
+    void add_hermitian_conjugate(BlockedTensor& H2);
+
+    /// Setup tensors for iterations
+    void setup_ldsrg2_tensors();
+
     /// Temporary one-body Hamiltonian
     ambit::BlockedTensor O1_;
     ambit::BlockedTensor C1_;
@@ -184,17 +192,17 @@ class SA_MRDSRG : public SADSRG {
     double Hbar_od_norm(const int& n, const std::vector<std::string>& blocks);
 
     /// Compute zero-body term of commutator [H2, T1]
-    void H2_T1_C0_DF(BlockedTensor& B, BlockedTensor& T1, const double& alpha, double& C0);
+    void H2_T1_C0_DF(BlockedTensor& B, BlockedTensor& T1, const double& alpha, double& C0) {}
     /// Compute zero-body term of commutator [H2, T2] with density fitting
-    void H2_T2_C0_DF(BlockedTensor& B, BlockedTensor& T2, const double& alpha, double& C0);
+    void H2_T2_C0_DF(BlockedTensor& B, BlockedTensor& T2, const double& alpha, double& C0) {}
     /// Compute one-body term of commutator [H2, T1]
-    void H2_T1_C1_DF(BlockedTensor& B, BlockedTensor& T1, const double& alpha, BlockedTensor& C1);
+    void H2_T1_C1_DF(BlockedTensor& B, BlockedTensor& T1, const double& alpha, BlockedTensor& C1) {}
     /// Compute one-body term of commutator [H2, T2] with density fitting
-    void H2_T2_C1_DF(BlockedTensor& B, BlockedTensor& T2, const double& alpha, BlockedTensor& C1);
+    void H2_T2_C1_DF(BlockedTensor& B, BlockedTensor& T2, const double& alpha, BlockedTensor& C1) {}
     /// Compute two-body term of commutator [H2, T1]
-    void H2_T1_C2_DF(BlockedTensor& B, BlockedTensor& T1, const double& alpha, BlockedTensor& C2);
+    void H2_T1_C2_DF(BlockedTensor& B, BlockedTensor& T1, const double& alpha, BlockedTensor& C2) {}
     /// Compute two-body term of commutator [H2, T2] with density fitting
-    void H2_T2_C2_DF(BlockedTensor& B, BlockedTensor& T2, const double& alpha, BlockedTensor& C2);
+    void H2_T2_C2_DF(BlockedTensor& B, BlockedTensor& T2, const double& alpha, BlockedTensor& C2) {}
 
     /// Shared pointer of DIISManager object from Psi4
     std::shared_ptr<psi::DIISManager> diis_manager_;
@@ -211,8 +219,6 @@ class SA_MRDSRG : public SADSRG {
     /// Clean up for pointers used for DIIS
     void diis_manager_cleanup();
 
-    /// Compute MR-LDSRG(2) truncated to 2-nested commutator
-    double compute_energy_ldsrg2_qc();
     /// Compute MR-LDSRG(2)
     double compute_energy_ldsrg2();
 
@@ -220,13 +226,16 @@ class SA_MRDSRG : public SADSRG {
 
     /// Print a summary of the options
     void print_options();
-    /// Print amplitudes summary
-    void print_amp_summary(const std::string& name,
-                           const std::vector<std::pair<std::vector<size_t>, double>>& list,
-                           const double& norm, const size_t& number_nonzero);
-    /// Print intruder analysis
-    void print_intruder(const std::string& name,
-                        const std::vector<std::pair<std::vector<size_t>, double>>& list);
+    /// Print t1 amplitudes summary
+    void print_t1_summary(const std::vector<std::pair<std::vector<size_t>, double>>& list,
+                          const double& norm, const size_t& number_nonzero);
+    /// Print t2 amplitudes summary
+    void print_t2_summary(const std::vector<std::pair<std::vector<size_t>, double>>& list,
+                          const double& norm, const size_t& number_nonzero);
+    /// Print t1 intruder analysis
+    void print_t1_intruder(const std::vector<std::pair<std::vector<size_t>, double>>& list);
+    /// Print t2 intruder analysis
+    void print_t2_intruder(const std::vector<std::pair<std::vector<size_t>, double>>& list);
 };
 } // namespace forte
 

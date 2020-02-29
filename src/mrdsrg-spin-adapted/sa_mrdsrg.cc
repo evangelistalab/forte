@@ -98,11 +98,11 @@ void SA_MRDSRG::startup() {
 void SA_MRDSRG::print_options() {
     // fill in information
     std::vector<std::pair<std::string, int>> calculation_info{
-        {"Number of T amplitudes", ntamp_},
         {"DIIS start", diis_start_},
         {"Min DIIS vectors", diis_min_vec_},
         {"Max DIIS vectors", diis_max_vec_},
-        {"DIIS extrapolating freq", diis_freq_}};
+        {"DIIS extrapolating freq", diis_freq_},
+        {"Number of T amplitudes", ntamp_}};
 
     std::vector<std::pair<std::string, double>> calculation_info_double{
         {"Flow parameter", s_},
@@ -114,7 +114,7 @@ void SA_MRDSRG::print_options() {
         {"Integral type", ints_type_},
         {"Source operator", source_},
         {"Reference relaxation", relax_ref_},
-        {"Core-Virtual source type", foptions_->get_str("CCVV_SOURCE")}};
+        {"Core-Virtual source type", ccvv_source_}};
 
     auto true_false_string = [](bool x) {
         if (x) {
@@ -189,13 +189,14 @@ double SA_MRDSRG::compute_energy() {
     double Etotal = Eref_;
 
     // compute energy
-    switch (corrlevelmap[corrlv_string_]) {
-    case CORR_LV::LDSRG2: {
-        Etotal += compute_energy_ldsrg2();
-        break;
-    }
-    default: { Etotal += compute_energy_ldsrg2_qc(); }
-    }
+    Etotal += compute_energy_ldsrg2();
+    //    switch (corrlevelmap[corrlv_string_]) {
+    //    case CORR_LV::LDSRG2: {
+    //        Etotal += compute_energy_ldsrg2();
+    //        break;
+    //    }
+    //    default: { Etotal += compute_energy_ldsrg2_qc(); }
+    //    }
 
     return Etotal;
 }

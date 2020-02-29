@@ -73,6 +73,8 @@ class SADSRG : public DynamicCorrelationSolver {
     double s_;
     /// Source operator
     std::string source_;
+    /// Source operator for the core-core-virtual-virtual block
+    std::string ccvv_source_;
     /// The dsrg source operator
     std::shared_ptr<DSRG_SOURCE> dsrg_source_;
     /// Threshold for the Taylor expansion of f(z) = (1-exp(-z^2))/z
@@ -237,17 +239,6 @@ class SADSRG : public DynamicCorrelationSolver {
      * This assumes no internal amplitudes !!!
      */
     ambit::BlockedTensor deGNO_Tamp(BlockedTensor& T1, BlockedTensor& T2, BlockedTensor& D1);
-
-    // ==> DIIS control <==
-
-    /// Cycle number to start DIIS
-    int diis_start_;
-    /// Minimum number of DIIS vectors
-    int diis_min_vec_;
-    /// Maximum number of DIIS vectors
-    int diis_max_vec_;
-    /// Frequency of extrapolating the current DIIS vectors
-    int diis_freq_;
 
     // ==> commutators <==
     /**

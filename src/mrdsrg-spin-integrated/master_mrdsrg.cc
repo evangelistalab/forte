@@ -905,7 +905,7 @@ void MASTER_DSRG::H2_T2_C0(BlockedTensor& H2, BlockedTensor& T2, const double& a
     E += 0.25 * H2["efmn"] * T2["mnef"];
     E += 0.25 * H2["EFMN"] * T2["MNEF"];
 
-    BlockedTensor temp = ambit::BlockedTensor::build(tensor_type_, "temp", spin_cases({"aa"}));
+    auto temp = ambit::BlockedTensor::build(tensor_type_, "temp", spin_cases({"aa"}));
     temp["vu"] += 0.5 * H2["efmu"] * T2["mvef"];
     temp["vu"] += H2["fEuM"] * T2["vMfE"];
     temp["VU"] += 0.5 * H2["EFMU"] * T2["MVEF"];

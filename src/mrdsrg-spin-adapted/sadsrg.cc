@@ -106,6 +106,7 @@ void SADSRG::read_options() {
     } else if (source_ == "DYSON") {
         dsrg_source_ = std::make_shared<DYSON_SOURCE>(s_, taylor_threshold_);
     }
+    ccvv_source_ = foptions_->get_str("CCVV_SOURCE");
 
     ntamp_ = foptions_->get_int("NTAMP");
     intruder_tamp_ = foptions_->get_double("INTRUDER_TAMP");
@@ -580,17 +581,12 @@ bool SADSRG::check_semi_orbs() {
         }
     }
 
-    std::string dash(2 + 45, '-');
-    outfile->Printf("\n    Abs. max of Fock core, active, virtual blocks (Fij, i != j)");
-    outfile->Printf("\n    %15s %15s %15s", "core", "active", "virtual");
+    std::string dash(7 + 47, '-');
+    outfile->Printf("\n    Fock core, active, virtual blocks (Fij, i != j)");
+    outfile->Printf("\n    %6s %15s %15s %15s", "", "core", "active", "virtual");
     outfile->Printf("\n    %s", dash.c_str());
-    outfile->Printf("\n    %15.10f %15.10f %15.10f", Fmax[0], Fmax[1], Fmax[2]);
-    outfile->Printf("\n    %s\n", dash.c_str());
-
-    outfile->Printf("\n    1-Norm of Fock core, active, virtual blocks (Fij, i != j)");
-    outfile->Printf("\n    %15s %15s %15s", "core", "active", "virtual");
-    outfile->Printf("\n    %s", dash.c_str());
-    outfile->Printf("\n    %15.10f %15.10f %15.10f", Fnorm[0], Fnorm[1], Fnorm[2]);
+    outfile->Printf("\n    %6s %15.10f %15.10f %15.10f", "max", Fmax[0], Fmax[1], Fmax[2]);
+    outfile->Printf("\n    %6s %15.10f %15.10f %15.10f", "1-norm", Fnorm[0], Fnorm[1], Fnorm[2]);
     outfile->Printf("\n    %s\n", dash.c_str());
 
     if (semi) {
@@ -795,15 +791,11 @@ void SADSRG::H2_T2_C0(BlockedTensor& H2, BlockedTensor& T2, const double& alpha,
     // [H2, T2] from ccvv
     build_K2_blocks({"vvcc"});
     E += K2["efmn"] * T2["mnef"];
-    //    E += 2.0 * H2["mnef"] * T2["mnef"];
-    //    E -= H2["nmef"] * T2["mnef"];
 
     // [H2, T2] L1 from cavv
     auto temp = ambit::BlockedTensor::build(tensor_type_, "temp_cavv", {"aa"});
     build_K2_blocks({"vvca"});
     temp["vu"] += K2["efmu"] * T2["mvef"];
-    //    temp["vu"] += 2.0 * H2["muef"] * T2["mvef"];
-    //    temp["vu"] -= H2["muef"] * T2["vmef"];
     E += temp["vu"] * L1_["uv"];
 
     // [H2, T2] L1 from ccav
@@ -811,16 +803,12 @@ void SADSRG::H2_T2_C0(BlockedTensor& H2, BlockedTensor& T2, const double& alpha,
     temp.set_name("temp_ccav");
     build_K2_blocks({"avcc"});
     temp["vu"] += K2["vemn"] * T2["mnue"];
-    //    temp["vu"] += 2.0 * H2["mnve"] * T2["mnue"];
-    //    temp["vu"] -= H2["mnev"] * T2["mnue"];
     E += temp["vu"] * Eta1_["uv"];
 
     // [H2, T2] L1 from aavv
     temp = ambit::BlockedTensor::build(tensor_type_, "temp_aavv", {"aaaa"});
     build_K2_blocks({"vvaa"});
     temp["yvxu"] += K2["efxu"] * T2["yvef"];
-    //    temp["yvxu"] += 2.0 * H2["xuef"] * T2["yvef"];
-    //    temp["yvxu"] -= H2["uxef"] * T2["yvef"];
     E += 0.25 * temp["yvxu"] * L1_["uv"] * L1_["xy"];
 
     // [H2, T2] L1 from ccaa
@@ -828,8 +816,6 @@ void SADSRG::H2_T2_C0(BlockedTensor& H2, BlockedTensor& T2, const double& alpha,
     temp.set_name("temp_ccaa");
     build_K2_blocks({"aacc"});
     temp["vyux"] += K2["vymn"] * T2["mnux"];
-    //    temp["vyux"] += 2.0 * H2["mnvy"] * T2["mnux"];
-    //    temp["vyux"] -= H2["mnyv"] * T2["mnux"];
     E += 0.25 * temp["vyux"] * Eta1_["uv"] * Eta1_["xy"];
 
     // [H2, T2] L1 from caav
@@ -838,10 +824,6 @@ void SADSRG::H2_T2_C0(BlockedTensor& H2, BlockedTensor& T2, const double& alpha,
     build_K2_blocks({"avca", "avac"});
     temp["uxyv"] += 0.5 * K2["vemx"] * T2["myue"];
     temp["uxyv"] += 0.5 * K2["vexm"] * T2["ymue"];
-    //    temp["uxyv"] += H2["mxve"] * T2["myue"];
-    //    temp["uxyv"] += H2["xmve"] * T2["ymue"];
-    //    temp["uxyv"] -= 0.5 * H2["xmve"] * T2["myue"];
-    //    temp["uxyv"] -= 0.5 * H2["mxve"] * T2["ymue"];
     E += temp["uxyv"] * Eta1_["uv"] * L1_["xy"];
 
     // [H2, T2] L1 from caaa and aaav
@@ -849,11 +831,7 @@ void SADSRG::H2_T2_C0(BlockedTensor& H2, BlockedTensor& T2, const double& alpha,
     temp.set_name("temp_aaav_caaa");
     build_K2_blocks({"avaa", "aaca"});
     temp["uxyv"] += 0.25 * K2["vexw"] * T2["yzue"] * L1_["wz"];
-    temp["uxyv"] += 0.25 * H2["vzmx"] * T2["myuw"] * Eta1_["wz"];
-    //    temp["uxyv"] += 0.5 * H2["xwve"] * T2["yzue"] * L1_["wz"];
-    //    temp["uxyv"] -= 0.25 * H2["wxve"] * T2["yzue"] * L1_["wz"];
-    //    temp["uxyv"] += 0.5 * H2["mxvz"] * T2["myuw"] * Eta1_["wz"];
-    //    temp["uxyv"] -= 0.25 * H2["xmvz"] * T2["myuw"] * Eta1_["wz"];
+    temp["uxyv"] += 0.25 * K2["vzmx"] * T2["myuw"] * Eta1_["wz"];
     E += temp["uxyv"] * Eta1_["uv"] * L1_["xy"];
 
     // <[Hbar2, T2]> C_4 (C_2)^2
@@ -871,24 +849,18 @@ void SADSRG::H2_T2_C0(BlockedTensor& H2, BlockedTensor& T2, const double& alpha,
     // HP
     build_K2_blocks({"avac"});
     temp["uvxy"] += K2["uexm"] * T2["vmye"];
-    //    temp["uvxy"] += 2.0 * H2["xmue"] * T2["vmye"];
-    //    temp["uvxy"] -= H2["mxue"] * T2["vmye"];
     temp["uvxy"] -= H2["xmue"] * T2["mvye"];
     temp["uvxy"] -= H2["mxve"] * T2["umey"];
 
     // HP with Gamma1
     build_K2_blocks({"vaaa"});
     temp["uvxy"] += 0.5 * K2["euwx"] * T2["zvey"] * L1_["wz"];
-    //    temp["uvxy"] += H2["wxeu"] * T2["zvey"] * L1_["wz"];
-    //    temp["uvxy"] -= 0.5 * H2["xweu"] * T2["zvey"] * L1_["wz"];
     temp["uvxy"] -= 0.5 * H2["wxeu"] * T2["vzey"] * L1_["wz"];
     temp["uvxy"] -= 0.5 * H2["xwev"] * T2["uzey"] * L1_["wz"];
 
     // HP with Eta1
     build_K2_blocks({"aaca"});
     temp["uvxy"] += 0.5 * K2["wumx"] * T2["mvzy"] * Eta1_["wz"];
-    //    temp["uvxy"] += H2["mxwu"] * T2["mvzy"] * Eta1_["wz"];
-    //    temp["uvxy"] -= 0.5 * H2["mxuw"] * T2["mvzy"] * Eta1_["wz"];
     temp["uvxy"] -= 0.5 * H2["mxwu"] * T2["mvyz"] * Eta1_["wz"];
     temp["uvxy"] -= 0.5 * H2["mxvw"] * T2["muyz"] * Eta1_["wz"];
 
@@ -947,7 +919,7 @@ void SADSRG::H2_T1_C1(BlockedTensor& H2, BlockedTensor& T1, const double& alpha,
     local_timer timer;
 
     C1["qp"] += 2.0 * alpha * T1["ma"] * H2["qapm"];
-    C1["qp"] -= alpha * T1["ma"] * H2["qapm"];
+    C1["qp"] -= alpha * T1["ma"] * H2["aqpm"];
 
     C1["qp"] += alpha * T1["xe"] * L1_["yx"] * H2["qepy"];
     C1["qp"] -= 0.5 * alpha * T1["xe"] * L1_["yx"] * H2["eqpy"];

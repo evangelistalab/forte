@@ -270,7 +270,9 @@ def compute_dsrg_unrelaxed_energy(correlation_solver_type, rdms, scf_info, optio
                                   ints, mo_space_info, Ua, Ub):
     Heff_actv_implemented = False
 
-    if correlation_solver_type == "MRDSRG_SO":
+    if correlation_solver_type == "SA-MRDSRG":
+        dsrg = forte.make_sadsrg_method(rdms, scf_info, options, ints, mo_space_info)
+    elif correlation_solver_type == "MRDSRG_SO":
         dsrg = forte.make_dsrg_so_y(rdms, scf_info, options, ints, mo_space_info)
     elif correlation_solver_type == "SOMRDSRG":
         dsrg = forte.make_dsrg_so_f(rdms, scf_info, options, ints, mo_space_info)
