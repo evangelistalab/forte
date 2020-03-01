@@ -82,7 +82,9 @@ void SA_MRDSRG::guess_t2_std(BlockedTensor& V, BlockedTensor& T2) {
 
     // transform to semi-canonical basis
     if (!semi_canonical_) {
-        T2["klcd"] = U_["ki"] * U_["lj"] * T2["ijab"] * U_["db"] * U_["ca"];
+        auto tempT2 = ambit::BlockedTensor::build(tensor_type_, "Temp T2", {"hhpp"});
+        tempT2["klab"] = U_["ki"] * U_["lj"] * T2["ijab"];
+        T2["ijcd"] = tempT2["ijab"] * U_["db"] * U_["ca"];
     }
 
     T2.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>&, double& value) {
@@ -97,7 +99,9 @@ void SA_MRDSRG::guess_t2_std(BlockedTensor& V, BlockedTensor& T2) {
 
     // transform back to non-canonical basis
     if (!semi_canonical_) {
-        T2["klcd"] = U_["ik"] * U_["jl"] * T2["ijab"] * U_["bd"] * U_["ac"];
+        auto tempT2 = ambit::BlockedTensor::build(tensor_type_, "Temp T2", {"hhpp"});
+        tempT2["klab"] = U_["ik"] * U_["jl"] * T2["ijab"];
+        T2["ijcd"] = tempT2["ijab"] * U_["bd"] * U_["ac"];
     }
 
     // zero internal amplitudes
@@ -122,7 +126,9 @@ void SA_MRDSRG::guess_t2_std_df(BlockedTensor& B, BlockedTensor& T2) {
 
     // transform to semi-canonical basis
     if (!semi_canonical_) {
-        T2["klcd"] = U_["ki"] * U_["lj"] * T2["ijab"] * U_["db"] * U_["ca"];
+        auto tempT2 = ambit::BlockedTensor::build(tensor_type_, "Temp T2", {"hhpp"});
+        tempT2["klab"] = U_["ki"] * U_["lj"] * T2["ijab"];
+        T2["ijcd"] = tempT2["ijab"] * U_["db"] * U_["ca"];
     }
 
     T2.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>&, double& value) {
@@ -137,7 +143,9 @@ void SA_MRDSRG::guess_t2_std_df(BlockedTensor& B, BlockedTensor& T2) {
 
     // transform back to non-canonical basis
     if (!semi_canonical_) {
-        T2["klcd"] = U_["ik"] * U_["jl"] * T2["ijab"] * U_["bd"] * U_["ac"];
+        auto tempT2 = ambit::BlockedTensor::build(tensor_type_, "Temp T2", {"hhpp"});
+        tempT2["klab"] = U_["ik"] * U_["jl"] * T2["ijab"];
+        T2["ijcd"] = tempT2["ijab"] * U_["bd"] * U_["ac"];
     }
 
     // zero internal amplitudes
@@ -226,7 +234,9 @@ void SA_MRDSRG::guess_t2_noccvv(BlockedTensor& V, BlockedTensor& T2) {
 
     // transform to semi-canonical basis
     if (!semi_canonical_) {
-        T2["klcd"] = U_["ki"] * U_["lj"] * T2["ijab"] * U_["db"] * U_["ca"];
+        auto tempT2 = ambit::BlockedTensor::build(tensor_type_, "Temp T2", {"hhpp"});
+        tempT2["klab"] = U_["ki"] * U_["lj"] * T2["ijab"];
+        T2["ijcd"] = tempT2["ijab"] * U_["db"] * U_["ca"];
     }
 
     // labels for ccvv blocks and the rest blocks
@@ -266,7 +276,9 @@ void SA_MRDSRG::guess_t2_noccvv(BlockedTensor& V, BlockedTensor& T2) {
 
     // transform back to non-canonical basis
     if (!semi_canonical_) {
-        T2["klcd"] = U_["ik"] * U_["jl"] * T2["ijab"] * U_["bd"] * U_["ac"];
+        auto tempT2 = ambit::BlockedTensor::build(tensor_type_, "Temp T2", {"hhpp"});
+        tempT2["klab"] = U_["ik"] * U_["jl"] * T2["ijab"];
+        T2["ijcd"] = tempT2["ijab"] * U_["bd"] * U_["ac"];
     }
 
     // zero internal amplitudes
@@ -291,7 +303,9 @@ void SA_MRDSRG::guess_t2_noccvv_df(BlockedTensor& B, BlockedTensor& T2) {
 
     // transform to semi-canonical basis
     if (!semi_canonical_) {
-        T2["klcd"] = U_["ki"] * U_["lj"] * T2["ijab"] * U_["db"] * U_["ca"];
+        auto tempT2 = ambit::BlockedTensor::build(tensor_type_, "Temp T2", {"hhpp"});
+        tempT2["klab"] = U_["ki"] * U_["lj"] * T2["ijab"];
+        T2["ijcd"] = tempT2["ijab"] * U_["db"] * U_["ca"];
     }
 
     // labels for ccvv blocks and the rest blocks
@@ -331,7 +345,9 @@ void SA_MRDSRG::guess_t2_noccvv_df(BlockedTensor& B, BlockedTensor& T2) {
 
     // transform back to non-canonical basis
     if (!semi_canonical_) {
-        T2["klcd"] = U_["ik"] * U_["jl"] * T2["ijab"] * U_["bd"] * U_["ac"];
+        auto tempT2 = ambit::BlockedTensor::build(tensor_type_, "Temp T2", {"hhpp"});
+        tempT2["klab"] = U_["ik"] * U_["jl"] * T2["ijab"];
+        T2["ijcd"] = tempT2["ijab"] * U_["bd"] * U_["ac"];
     }
 
     // zero internal amplitudes
@@ -548,10 +564,9 @@ void SA_MRDSRG::update_t1_std() {
     // transform Hbar1 to semi-canonical basis
     if (!semi_canonical_) {
         DT1_["jb"] = U_["ji"] * Hbar1_["ia"] * U_["ba"];
-        Hbar1_["ia"] = DT1_["ia"];
+    } else {
+        DT1_["ia"] = Hbar1_["ia"];
     }
-
-    DT1_["ia"] = Hbar1_["ia"];
 
     // scale Hbar1 by renormalized denominator
     DT1_.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>&, double& value) {

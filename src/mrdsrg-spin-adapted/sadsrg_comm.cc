@@ -77,15 +77,15 @@ void SADSRG::V_T1_C0_DF(BlockedTensor& B, BlockedTensor& T1, const double& alpha
     local_timer timer;
 
     double E = 0.0;
-//    auto temp = ambit::BlockedTensor::build(tensor_type_, "Temp120", {"aaaa"});
-//    temp["uvxy"] += H2["evxy"] * T1["ue"];
-//    temp["uvxy"] -= H2["uvmy"] * T1["mx"];
-//    temp["uvxy"] += H2["uexy"] * T1["ve"];
-//    temp["uvxy"] -= H2["uvxm"] * T1["my"];
-//    E += 0.5 * L2_["xyuv"] * temp["uvxy"];
 
-//    E *= alpha;
-//    C0 += E;
+    auto temp = ambit::BlockedTensor::build(tensor_type_, "DFtemp120", {"Laa"});
+    temp["gux"] += B["gex"] * T1["ue"];
+    temp["gux"] -= B["gum"] * T1["mx"];
+
+    E += L2_["xyuv"] * temp["gux"] * B["gvy"];
+
+    E *= alpha;
+    C0 += E;
 
     if (print_ > 2) {
         outfile->Printf("\n    Time for [H2, T1] -> C0 : %12.3f", timer.get());
@@ -159,30 +159,30 @@ void SADSRG::H2_T2_C0(BlockedTensor& H2, BlockedTensor& T2, const double& alpha,
     temp.set_name("temp_H2T2C0_L2");
 
     // HH
-    temp["uvxy"] += 0.5 * H2["mnuv"] * T2["mnxy"];
-    temp["uvxy"] += 0.5 * H2["mwuv"] * T2["mzxy"] * L1_["wz"];
+    temp["uvxy"] += 0.5 * H2["uvmn"] * T2["mnxy"];
+    temp["uvxy"] += 0.5 * H2["uvmw"] * T2["mzxy"] * L1_["wz"];
 
     // PP
-    temp["uvxy"] += 0.5 * H2["xyef"] * T2["uvef"];
-    temp["uvxy"] += 0.5 * H2["xyez"] * T2["uvew"] * Eta1_["wz"];
+    temp["uvxy"] += 0.5 * H2["efxy"] * T2["uvef"];
+    temp["uvxy"] += 0.5 * H2["ezxy"] * T2["uvew"] * Eta1_["wz"];
 
     // HP
     build_K2_blocks({"avac"});
     temp["uvxy"] += K2["uexm"] * T2["vmye"];
-    temp["uvxy"] -= H2["xmue"] * T2["mvye"];
-    temp["uvxy"] -= H2["mxve"] * T2["umey"];
+    temp["uvxy"] -= H2["uexm"] * T2["mvye"];
+    temp["uvxy"] -= H2["vemx"] * T2["umey"];
 
     // HP with Gamma1
     build_K2_blocks({"vaaa"});
     temp["uvxy"] += 0.5 * K2["euwx"] * T2["zvey"] * L1_["wz"];
-    temp["uvxy"] -= 0.5 * H2["wxeu"] * T2["vzey"] * L1_["wz"];
-    temp["uvxy"] -= 0.5 * H2["xwev"] * T2["uzey"] * L1_["wz"];
+    temp["uvxy"] -= 0.5 * H2["euwx"] * T2["vzey"] * L1_["wz"];
+    temp["uvxy"] -= 0.5 * H2["evxw"] * T2["uzey"] * L1_["wz"];
 
     // HP with Eta1
     build_K2_blocks({"aaca"});
     temp["uvxy"] += 0.5 * K2["wumx"] * T2["mvzy"] * Eta1_["wz"];
-    temp["uvxy"] -= 0.5 * H2["mxwu"] * T2["mvyz"] * Eta1_["wz"];
-    temp["uvxy"] -= 0.5 * H2["mxvw"] * T2["muyz"] * Eta1_["wz"];
+    temp["uvxy"] -= 0.5 * H2["wumx"] * T2["mvyz"] * Eta1_["wz"];
+    temp["uvxy"] -= 0.5 * H2["vwmx"] * T2["muyz"] * Eta1_["wz"];
 
     E += temp["uvxy"] * L2_["uvxy"];
 
@@ -210,96 +210,100 @@ void SADSRG::V_T2_C0_DF(BlockedTensor& B, BlockedTensor& T2, const double& alpha
     // <[Hbar2, T2]> (C_2)^4
 
     // form a temporary tensor K2 = 2 * H2["ijab"] - H2["ijba"]
-//    BlockedTensor K2;
-//    auto build_K2_blocks = [&](const std::vector<std::string>& blocks) {
-//        K2 = ambit::BlockedTensor::build(tensor_type_, "temp_K2", blocks);
-//        K2["abij"] = 2.0 * H2["abij"];
-//        K2["abij"] -= H2["abji"];
-//    };
+    BlockedTensor K2;
+    auto build_K2_blocks = [&](const std::vector<std::string>& blocks) {
+        K2 = ambit::BlockedTensor::build(tensor_type_, "temp_K2", blocks);
+        K2["abij"] = 2.0 * B["gai"] * B["gbj"];
+        K2["abij"] -= B["gaj"] * B["gbi"];
+    };
 
-//    // [H2, T2] from ccvv
-//    build_K2_blocks({"vvcc"});
-//    E += K2["efmn"] * T2["mnef"];
+    // [H2, T2] from ccvv
+    build_K2_blocks({"vvcc"});
+    E += K2["efmn"] * T2["mnef"];
 
-//    // [H2, T2] L1 from cavv
-//    auto temp = ambit::BlockedTensor::build(tensor_type_, "temp_cavv", {"aa"});
-//    build_K2_blocks({"vvca"});
-//    temp["vu"] += K2["efmu"] * T2["mvef"];
-//    E += temp["vu"] * L1_["uv"];
+    // [H2, T2] L1 from cavv
+    auto temp = ambit::BlockedTensor::build(tensor_type_, "temp_cavv", {"aa"});
+    build_K2_blocks({"vvca"});
+    temp["vu"] += K2["efmu"] * T2["mvef"];
+    E += temp["vu"] * L1_["uv"];
 
-//    // [H2, T2] L1 from ccav
-//    temp.zero();
-//    temp.set_name("temp_ccav");
-//    build_K2_blocks({"avcc"});
-//    temp["vu"] += K2["vemn"] * T2["mnue"];
-//    E += temp["vu"] * Eta1_["uv"];
+    // [H2, T2] L1 from ccav
+    temp.zero();
+    temp.set_name("temp_ccav");
+    build_K2_blocks({"avcc"});
+    temp["vu"] += K2["vemn"] * T2["mnue"];
+    E += temp["vu"] * Eta1_["uv"];
 
-//    // [H2, T2] L1 from aavv
-//    temp = ambit::BlockedTensor::build(tensor_type_, "temp_aavv", {"aaaa"});
-//    build_K2_blocks({"vvaa"});
-//    temp["yvxu"] += K2["efxu"] * T2["yvef"];
-//    E += 0.25 * temp["yvxu"] * L1_["uv"] * L1_["xy"];
+    // [H2, T2] L1 from aavv
+    temp = ambit::BlockedTensor::build(tensor_type_, "temp_aavv", {"aaaa"});
+    build_K2_blocks({"vvaa"});
+    temp["yvxu"] += K2["efxu"] * T2["yvef"];
+    E += 0.25 * temp["yvxu"] * L1_["uv"] * L1_["xy"];
 
-//    // [H2, T2] L1 from ccaa
-//    temp.zero();
-//    temp.set_name("temp_ccaa");
-//    build_K2_blocks({"aacc"});
-//    temp["vyux"] += K2["vymn"] * T2["mnux"];
-//    E += 0.25 * temp["vyux"] * Eta1_["uv"] * Eta1_["xy"];
+    // [H2, T2] L1 from ccaa
+    temp.zero();
+    temp.set_name("temp_ccaa");
+    build_K2_blocks({"aacc"});
+    temp["vyux"] += K2["vymn"] * T2["mnux"];
+    E += 0.25 * temp["vyux"] * Eta1_["uv"] * Eta1_["xy"];
 
-//    // [H2, T2] L1 from caav
-//    temp.zero();
-//    temp.set_name("temp_caav");
-//    build_K2_blocks({"avca", "avac"});
-//    temp["uxyv"] += 0.5 * K2["vemx"] * T2["myue"];
-//    temp["uxyv"] += 0.5 * K2["vexm"] * T2["ymue"];
-//    E += temp["uxyv"] * Eta1_["uv"] * L1_["xy"];
+    // [H2, T2] L1 from caav
+    temp.zero();
+    temp.set_name("temp_caav");
+    build_K2_blocks({"avca", "avac"});
+    temp["uxyv"] += 0.5 * K2["vemx"] * T2["myue"];
+    temp["uxyv"] += 0.5 * K2["vexm"] * T2["ymue"];
+    E += temp["uxyv"] * Eta1_["uv"] * L1_["xy"];
 
-//    // [H2, T2] L1 from caaa and aaav
-//    temp.zero();
-//    temp.set_name("temp_aaav_caaa");
-//    build_K2_blocks({"avaa", "aaca"});
-//    temp["uxyv"] += 0.25 * K2["vexw"] * T2["yzue"] * L1_["wz"];
-//    temp["uxyv"] += 0.25 * K2["vzmx"] * T2["myuw"] * Eta1_["wz"];
-//    E += temp["uxyv"] * Eta1_["uv"] * L1_["xy"];
+    // [H2, T2] L1 from caaa and aaav
+    temp.zero();
+    temp.set_name("temp_aaav_caaa");
+    build_K2_blocks({"avaa", "aaca"});
+    temp["uxyv"] += 0.25 * K2["vexw"] * T2["yzue"] * L1_["wz"];
+    temp["uxyv"] += 0.25 * K2["vzmx"] * T2["myuw"] * Eta1_["wz"];
+    E += temp["uxyv"] * Eta1_["uv"] * L1_["xy"];
 
-//    // <[Hbar2, T2]> C_4 (C_2)^2
-//    temp.zero();
-//    temp.set_name("temp_H2T2C0_L2");
+    // <[Hbar2, T2]> C_4 (C_2)^2
+    temp.zero();
+    temp.set_name("temp_H2T2C0_L2");
 
-//    // HH
-//    temp["uvxy"] += 0.5 * H2["mnuv"] * T2["mnxy"];
-//    temp["uvxy"] += 0.5 * H2["mwuv"] * T2["mzxy"] * L1_["wz"];
+    std::vector<std::string> blocks{"aacc", "aaca", "vvaa", "vaaa", "avac", "avca"};
+    auto H2 = ambit::BlockedTensor::build(tensor_type_, "temp_H2", blocks);
+    H2["abij"] = B["gai"] * B["gbj"];
 
-//    // PP
-//    temp["uvxy"] += 0.5 * H2["xyef"] * T2["uvef"];
-//    temp["uvxy"] += 0.5 * H2["xyez"] * T2["uvew"] * Eta1_["wz"];
+    // HH
+    temp["uvxy"] += 0.5 * H2["uvmn"] * T2["mnxy"];
+    temp["uvxy"] += 0.5 * H2["uvmw"] * T2["mzxy"] * L1_["wz"];
 
-//    // HP
-//    build_K2_blocks({"avac"});
-//    temp["uvxy"] += K2["uexm"] * T2["vmye"];
-//    temp["uvxy"] -= H2["xmue"] * T2["mvye"];
-//    temp["uvxy"] -= H2["mxve"] * T2["umey"];
+    // PP
+    temp["uvxy"] += 0.5 * H2["efxy"] * T2["uvef"];
+    temp["uvxy"] += 0.5 * H2["ezxy"] * T2["uvew"] * Eta1_["wz"];
 
-//    // HP with Gamma1
-//    build_K2_blocks({"vaaa"});
-//    temp["uvxy"] += 0.5 * K2["euwx"] * T2["zvey"] * L1_["wz"];
-//    temp["uvxy"] -= 0.5 * H2["wxeu"] * T2["vzey"] * L1_["wz"];
-//    temp["uvxy"] -= 0.5 * H2["xwev"] * T2["uzey"] * L1_["wz"];
+    // HP
+    build_K2_blocks({"avac"});
+    temp["uvxy"] += K2["uexm"] * T2["vmye"];
+    temp["uvxy"] -= H2["uexm"] * T2["mvye"];
+    temp["uvxy"] -= H2["vemx"] * T2["umey"];
 
-//    // HP with Eta1
-//    build_K2_blocks({"aaca"});
-//    temp["uvxy"] += 0.5 * K2["wumx"] * T2["mvzy"] * Eta1_["wz"];
-//    temp["uvxy"] -= 0.5 * H2["mxwu"] * T2["mvyz"] * Eta1_["wz"];
-//    temp["uvxy"] -= 0.5 * H2["mxvw"] * T2["muyz"] * Eta1_["wz"];
+    // HP with Gamma1
+    build_K2_blocks({"vaaa"});
+    temp["uvxy"] += 0.5 * K2["euwx"] * T2["zvey"] * L1_["wz"];
+    temp["uvxy"] -= 0.5 * H2["euwx"] * T2["vzey"] * L1_["wz"];
+    temp["uvxy"] -= 0.5 * H2["evxw"] * T2["uzey"] * L1_["wz"];
 
-//    E += temp["uvxy"] * L2_["uvxy"];
+    // HP with Eta1
+    build_K2_blocks({"aaca"});
+    temp["uvxy"] += 0.5 * K2["wumx"] * T2["mvzy"] * Eta1_["wz"];
+    temp["uvxy"] -= 0.5 * H2["wumx"] * T2["mvyz"] * Eta1_["wz"];
+    temp["uvxy"] -= 0.5 * H2["vwmx"] * T2["muyz"] * Eta1_["wz"];
 
-//    // <[Hbar2, T2]> C_6 C_2
-//    if (foptions_->get_str("THREEPDC") != "ZERO") {
-//        E += H2.block("vaaa")("ewxy") * T2.block("aava")("uvez") * rdms_.SF_L3()("xyzuwv");
-//        E -= H2.block("aaca")("uvmz") * T2.block("caaa")("mwxy") * rdms_.SF_L3()("xyzuwv");
-//    }
+    E += temp["uvxy"] * L2_["uvxy"];
+
+    // <[Hbar2, T2]> C_6 C_2
+    if (foptions_->get_str("THREEPDC") != "ZERO") {
+        E += H2.block("vaaa")("ewxy") * T2.block("aava")("uvez") * rdms_.SF_L3()("xyzuwv");
+        E -= H2.block("aaca")("uvmz") * T2.block("caaa")("mwxy") * rdms_.SF_L3()("xyzuwv");
+    }
 
     // multiply prefactor and copy to C0
     E *= alpha;
@@ -363,17 +367,21 @@ void SADSRG::H2_T1_C1(BlockedTensor& H2, BlockedTensor& T1, const double& alpha,
 }
 
 void SADSRG::V_T1_C1_DF(BlockedTensor& B, BlockedTensor& T1, const double& alpha,
-                      BlockedTensor& C1) {
+                        BlockedTensor& C1) {
     local_timer timer;
 
-//    C1["qp"] += 2.0 * alpha * T1["ma"] * H2["qapm"];
-//    C1["qp"] -= alpha * T1["ma"] * H2["aqpm"];
+    auto temp = ambit::BlockedTensor::build(tensor_type_, "DFtemp211", {"L"});
+    temp["g"] += 2.0 * alpha * T1["ma"] * B["gam"];
+    temp["g"] += alpha * T1["xe"] * L1_["yx"] * B["gey"];
+    temp["g"] -= alpha * T1["mu"] * L1_["uv"] * B["gvm"];
+    C1["qp"] += temp["g"] * B["gqp"];
 
-//    C1["qp"] += alpha * T1["xe"] * L1_["yx"] * H2["qepy"];
-//    C1["qp"] -= 0.5 * alpha * T1["xe"] * L1_["yx"] * H2["eqpy"];
+    temp = ambit::BlockedTensor::build(tensor_type_, "DFtemp211", {"Lgc"});
+    temp["gpm"] -= alpha * T1["ma"] * B["gap"];
+    temp["gpm"] += 0.5 * alpha * T1["mu"] * L1_["uv"] * B["gvp"];
+    C1["qp"] += temp["gpm"] * B["gqm"];
 
-//    C1["qp"] -= alpha * T1["mu"] * L1_["uv"] * H2["qvpm"];
-//    C1["qp"] += 0.5 * alpha * T1["mu"] * L1_["uv"] * H2["vqpm"];
+    C1["qp"] -= 0.5 * alpha * T1["xe"] * L1_["yx"] * B["gep"] * B["gqy"];
 
     if (print_ > 2) {
         outfile->Printf("\n    Time for [H2, T1] -> C1 : %12.3f", timer.get());
@@ -447,76 +455,74 @@ void SADSRG::H2_T2_C1(BlockedTensor& H2, BlockedTensor& T2, const double& alpha,
 }
 
 void SADSRG::V_T2_C1_DF(BlockedTensor& B, BlockedTensor& T2, const double& alpha,
-                      BlockedTensor& C1) {
+                        BlockedTensor& C1) {
     local_timer timer;
 
-//    // [Hbar2, T2] (C_2)^3 -> C1 particle contractions
-//    C1["ir"] += 2.0 * alpha * H2["abrm"] * T2["imab"];
-//    C1["ir"] -= alpha * H2["abrm"] * T2["miab"];
+    auto S2 = ambit::BlockedTensor::build(tensor_type_, "S2", T2.block_labels());
+    S2["ijab"] = 2.0 * T2["ijab"];
+    S2["ijab"] -= T2["ijba"];
 
-//    C1["ir"] += alpha * L1_["uv"] * T2["ivab"] * H2["abru"];
-//    C1["ir"] -= 0.5 * alpha * L1_["uv"] * T2["viab"] * H2["abru"];
+    // [Hbar2, T2] (C_2)^3 -> C1 particle contractions
+    auto temp = ambit::BlockedTensor::build(tensor_type_, "DFtemp221", {"Lhp"});
 
-//    C1["ir"] += 0.5 * alpha * T2["ijux"] * L1_["xy"] * L1_["uv"] * H2["vyrj"];
-//    C1["ir"] -= 0.25 * alpha * T2["ijxu"] * L1_["xy"] * L1_["uv"] * H2["vyrj"];
+    temp["gia"] += alpha * B["gbm"] * S2["imab"];
 
-//    C1["ir"] -= alpha * L1_["uv"] * T2["imub"] * H2["vbrm"];
-//    C1["ir"] -= alpha * L1_["uv"] * T2["miub"] * H2["bvrm"];
-//    C1["ir"] += 0.5 * alpha * L1_["uv"] * T2["imub"] * H2["bvrm"];
-//    C1["ir"] += 0.5 * alpha * L1_["uv"] * T2["imbu"] * H2["vbrm"];
+    temp["gia"] += 0.5 * alpha * L1_["uv"] * S2["ivab"] * B["gbu"];
 
-//    C1["ir"] -= 0.5 * alpha * T2["iyub"] * L1_["uv"] * L1_["xy"] * H2["vbrx"];
-//    C1["ir"] -= 0.5 * alpha * T2["iybu"] * L1_["uv"] * L1_["xy"] * H2["bvrx"];
-//    C1["ir"] += 0.25 * alpha * T2["iyub"] * L1_["uv"] * L1_["xy"] * H2["bvrx"];
-//    C1["ir"] += 0.25 * alpha * T2["iybu"] * L1_["uv"] * L1_["xy"] * H2["vbrx"];
+    temp["giv"] += 0.25 * alpha * S2["ijux"] * L1_["xy"] * L1_["uv"] * B["gyj"];
 
-//    // [Hbar2, T2] (C_2)^3 -> C1 hole contractions
-//    C1["pa"] -= 2.0 * alpha * H2["peij"] * T2["ijae"];
-//    C1["pa"] += alpha * H2["peij"] * T2["ijea"];
+    temp["giv"] -= 0.5 * alpha * L1_["uv"] * S2["imub"] * B["gbm"];
+    temp["gia"] -= 0.5 * alpha * L1_["uv"] * S2["miua"] * B["gvm"];
 
-//    C1["pa"] -= alpha * Eta1_["uv"] * T2["ijau"] * H2["pvij"];
-//    C1["pa"] += 0.5 * alpha * Eta1_["uv"] * T2["ijua"] * H2["pvij"];
+    temp["giv"] -= 0.25 * alpha * S2["iyub"] * L1_["uv"] * L1_["xy"] * B["gbx"];
+    temp["gia"] -= 0.25 * alpha * S2["iyau"] * L1_["uv"] * L1_["xy"] * B["gvx"];
 
-//    C1["pa"] -= 0.5 * alpha * T2["vyab"] * Eta1_["uv"] * Eta1_["xy"] * H2["pbux"];
-//    C1["pa"] += 0.25 * alpha * T2["yvab"] * Eta1_["uv"] * Eta1_["xy"] * H2["pbux"];
+    // [Hbar2, T2] C_4 C_2 2:2 -> C1 ir
+    temp["giu"] += 0.5 * alpha * T2["ijxy"] * L2_["xyuv"] * B["gvj"];
 
-//    C1["pa"] += alpha * Eta1_["uv"] * T2["vjae"] * H2["peuj"];
-//    C1["pa"] += alpha * Eta1_["uv"] * T2["jvae"] * H2["peju"];
-//    C1["pa"] -= 0.5 * alpha * Eta1_["uv"] * T2["jvae"] * H2["peuj"];
-//    C1["pa"] -= 0.5 * alpha * Eta1_["uv"] * T2["vjae"] * H2["peju"];
+    temp["gia"] += 0.5 * alpha * B["gux"] * S2["ivay"] * L2_["xyuv"];
+    temp["giu"] -= 0.5 * alpha * B["gax"] * T2["ivay"] * L2_["xyuv"];
+    temp["giu"] -= 0.5 * alpha * B["gax"] * T2["ivya"] * L2_["xyvu"];
 
-//    C1["pa"] += 0.5 * alpha * T2["vjax"] * Eta1_["uv"] * Eta1_["xy"] * H2["pyuj"];
-//    C1["pa"] += 0.5 * alpha * T2["jvax"] * Eta1_["xy"] * Eta1_["uv"] * H2["pyju"];
-//    C1["pa"] -= 0.25 * alpha * T2["jvax"] * Eta1_["uv"] * Eta1_["xy"] * H2["pyuj"];
-//    C1["pa"] -= 0.25 * alpha * T2["vjax"] * Eta1_["uv"] * Eta1_["xy"] * H2["pyju"];
+    C1["ir"] += temp["gia"] * B["gar"];
 
-//    // [Hbar2, T2] C_4 C_2 2:2 -> C1
-//    C1["ir"] += 0.5 * alpha * T2["ijxy"] * L2_["xyuv"] * H2["uvrj"];
+    // [Hbar2, T2] (C_2)^3 -> C1 hole contractions
+    temp.zero();
 
-//    C1["ir"] += alpha * H2["aurx"] * T2["ivay"] * L2_["xyuv"];
-//    C1["ir"] -= 0.5 * alpha * H2["uarx"] * T2["ivay"] * L2_["xyuv"];
-//    C1["ir"] -= 0.5 * alpha * H2["aurx"] * T2["ivya"] * L2_["xyuv"];
-//    C1["ir"] -= 0.5 * alpha * H2["uarx"] * T2["ivya"] * L2_["xyvu"];
+    temp["gia"] -= alpha * B["gej"] * S2["ijae"];
 
-//    C1["pa"] -= 0.5 * alpha * L2_["xyuv"] * T2["uvab"] * H2["pbxy"];
+    temp["gia"] -= 0.5 * alpha * Eta1_["uv"] * S2["ijau"] * B["gvj"];
 
-//    C1["pa"] -= alpha * H2["puix"] * T2["ivay"] * L2_["xyuv"];
-//    C1["pa"] += 0.5 * alpha * H2["puix"] * T2["viay"] * L2_["xyuv"];
-//    C1["pa"] += 0.5 * alpha * H2["puxi"] * T2["ivay"] * L2_["xyuv"];
-//    C1["pa"] += 0.5 * alpha * H2["puxi"] * T2["viay"] * L2_["xyvu"];
+    temp["gua"] -= 0.25 * alpha * S2["vyab"] * Eta1_["uv"] * Eta1_["xy"] * B["gbx"];
 
-//    // [Hbar2, T2] C_4 C_2 1:3 -> C1
-//    C1["jb"] += alpha * H2["avxy"] * T2["ujab"] * L2_["xyuv"];
-//    C1["jb"] -= 0.5 * alpha * H2["avxy"] * T2["ujba"] * L2_["xyuv"];
+    temp["gua"] += 0.5 * alpha * Eta1_["uv"] * S2["vjae"] * B["gej"];
+    temp["gia"] += 0.5 * alpha * Eta1_["uv"] * S2["ivae"] * B["geu"];
 
-//    C1["jb"] -= alpha * H2["uviy"] * T2["ijxb"] * L2_["xyuv"];
-//    C1["jb"] += 0.5 * alpha * H2["uviy"] * T2["ijbx"] * L2_["xyuv"];
+    temp["gua"] += 0.25 * alpha * S2["vjax"] * Eta1_["uv"] * Eta1_["xy"] * B["gyj"];
+    temp["gia"] += 0.25 * alpha * S2["ivax"] * Eta1_["xy"] * Eta1_["uv"] * B["gyu"];
 
-//    C1["qs"] += alpha * H2["eqxs"] * T2["uvey"] * L2_["xyuv"];
-//    C1["qs"] -= 0.5 * alpha * H2["eqsx"] * T2["uvey"] * L2_["xyuv"];
+    // [Hbar2, T2] C_4 C_2 2:2 -> C1 pa
+    temp["gxa"] -= 0.5 * alpha * L2_["xyuv"] * T2["uvab"] * B["gby"];
 
-//    C1["qs"] -= alpha * H2["uqms"] * T2["mvxy"] * L2_["xyuv"];
-//    C1["qs"] += 0.5 * alpha * H2["uqsm"] * T2["mvxy"] * L2_["xyuv"];
+    temp["gia"] -= 0.5 * alpha * B["gux"] * S2["ivay"] * L2_["xyuv"];
+    temp["gxa"] += 0.5 * alpha * B["gui"] * T2["ivay"] * L2_["xyuv"];
+    temp["gxa"] += 0.5 * alpha * B["gui"] * T2["viay"] * L2_["xyvu"];
+
+    C1["pa"] += temp["gia"] * B["gpi"];
+
+    // [Hbar2, T2] C_4 C_2 1:3 -> C1
+    C1["jb"] += 0.5 * alpha * B["gax"] * B["gvy"] * S2["ujab"] * L2_["xyuv"];
+
+    C1["jb"] -= 0.5 * alpha * B["gui"] * B["gvy"] * S2["ijxb"] * L2_["xyuv"];
+
+    temp = ambit::BlockedTensor::build(tensor_type_, "DFtemp221", {"L"});
+    temp["g"] += alpha * B["gex"] * T2["uvey"] * L2_["xyuv"];
+    temp["g"] -= alpha * B["gum"] * T2["mvxy"] * L2_["xyuv"];
+    C1["qs"] += temp["g"] * B["gqs"];
+
+    C1["qs"] -= 0.5 * alpha * B["ges"] * B["gqx"] * T2["uvey"] * L2_["xyuv"];
+
+    C1["qs"] += 0.5 * alpha * B["gus"] * B["gqm"] * T2["mvxy"] * L2_["xyuv"];
 
     if (print_ > 2) {
         outfile->Printf("\n    Time for [H2, T2] -> C1 : %12.3f", timer.get());
@@ -555,13 +561,13 @@ void SADSRG::H2_T1_C2(BlockedTensor& H2, BlockedTensor& T1, const double& alpha,
 }
 
 void SADSRG::V_T1_C2_DF(BlockedTensor& B, BlockedTensor& T1, const double& alpha,
-                      BlockedTensor& C2) {
+                        BlockedTensor& C2) {
     local_timer timer;
 
-//    C2["irpq"] += alpha * T1["ia"] * H2["arpq"];
-//    C2["ripq"] += alpha * T1["ia"] * H2["rapq"];
-//    C2["rsaq"] -= alpha * T1["ia"] * H2["rsiq"];
-//    C2["rspa"] -= alpha * T1["ia"] * H2["rspi"];
+    C2["irpq"] += alpha * T1["ia"] * B["gap"] * B["grq"];
+    C2["ripq"] += alpha * T1["ia"] * B["grp"] * B["gaq"];
+    C2["rsaq"] -= alpha * T1["ia"] * B["gri"] * B["gsq"];
+    C2["rspa"] -= alpha * T1["ia"] * B["grp"] * B["gsi"];
 
     if (print_ > 2) {
         outfile->Printf("\n    Time for [H2, T1] -> C2 : %12.3f", timer.get());
@@ -623,54 +629,53 @@ void SADSRG::H2_T2_C2(BlockedTensor& H2, BlockedTensor& T2, const double& alpha,
     dsrg_time_.add("222", timer.get());
 }
 
-void SADSRG::V_T2_C2_DF(BlockedTensor& H2, BlockedTensor& T2, const double& alpha,
-                      BlockedTensor& C2) {
+void SADSRG::V_T2_C2_DF(BlockedTensor& B, BlockedTensor& T2, const double& alpha,
+                        BlockedTensor& C2) {
     local_timer timer;
 
-//    // particle-particle contractions
-//    C2["ijrs"] += alpha * H2["abrs"] * T2["ijab"];
+    auto S2 = ambit::BlockedTensor::build(tensor_type_, "S2", T2.block_labels());
+    S2["ijab"] = 2.0 * T2["ijab"];
+    S2["ijab"] -= T2["ijba"];
 
-//    C2["ijrs"] -= 0.5 * alpha * L1_["xy"] * T2["ijxb"] * H2["ybrs"];
-//    C2["ijrs"] -= 0.5 * alpha * L1_["xy"] * T2["ijbx"] * H2["byrs"];
+    // particle-particle contractions
+    C2["ijrs"] += alpha * B["gar"] * B["gbs"] * T2["ijab"];
 
-//    // hole-hole contractions
-//    C2["pqab"] += alpha * H2["pqij"] * T2["ijab"];
+    C2["ijrs"] -= 0.5 * alpha * L1_["xy"] * T2["ijxb"] * B["gyr"] * B["gbs"];
+    C2["ijrs"] -= 0.5 * alpha * L1_["xy"] * T2["ijbx"] * B["gbr"] * B["gys"];
 
-//    C2["pqab"] -= 0.5 * alpha * Eta1_["xy"] * T2["yjab"] * H2["pqxj"];
-//    C2["pqab"] -= 0.5 * alpha * Eta1_["xy"] * T2["jyab"] * H2["pqjx"];
+    // hole-hole contractions
+    C2["pqab"] += alpha * B["gpi"] * B["gqj"] * T2["ijab"];
 
-//    // hole-particle contractions
-//    C2["qjsb"] += 2.0 * alpha * H2["aqms"] * T2["mjab"];
-//    C2["qjsb"] -= alpha * H2["aqsm"] * T2["mjab"];
-//    C2["qjsb"] -= alpha * H2["aqms"] * T2["mjba"];
+    C2["pqab"] -= 0.5 * alpha * Eta1_["xy"] * T2["yjab"] * B["gpx"] * B["gqj"];
+    C2["pqab"] -= 0.5 * alpha * Eta1_["xy"] * T2["jyab"] * B["gpj"] * B["gqx"];
 
-//    C2["qjsb"] += alpha * L1_["xy"] * T2["yjab"] * H2["aqxs"];
-//    C2["qjsb"] -= 0.5 * alpha * L1_["xy"] * T2["yjba"] * H2["aqxs"];
-//    C2["qjsb"] -= 0.5 * alpha * L1_["xy"] * T2["yjab"] * H2["aqsx"];
+    // hole-particle contractions
+    C2["qjsb"] += 2.0 * alpha * B["gam"] * B["gqs"] * T2["mjab"];
+    C2["qjsb"] -= alpha * B["gas"] * B["gqm"] * T2["mjab"];
+    C2["qjsb"] -= alpha * B["gam"] * B["gqs"] * T2["mjba"];
 
-//    C2["qjsb"] -= alpha * L1_["xy"] * T2["ijxb"] * H2["yqis"];
-//    C2["qjsb"] += 0.5 * alpha * L1_["xy"] * T2["ijbx"] * H2["yqis"];
-//    C2["qjsb"] += 0.5 * alpha * L1_["xy"] * T2["ijxb"] * H2["yqsi"];
+    C2["qjsb"] += 0.5 * alpha * L1_["xy"] * S2["yjab"] * B["gax"] * B["gqs"];
+    C2["qjsb"] -= 0.5 * alpha * L1_["xy"] * T2["yjab"] * B["gas"] * B["gqx"];
 
-//    C2["iqsb"] -= alpha * T2["imab"] * H2["aqsm"];
-//    C2["iqsb"] -= 0.5 * alpha * L1_["xy"] * T2["iyab"] * H2["aqsx"];
-//    C2["iqsb"] += 0.5 * alpha * L1_["xy"] * T2["ijxb"] * H2["yqsj"];
+    C2["qjsb"] -= 0.5 * alpha * L1_["xy"] * S2["ijxb"] * B["gyi"] * B["gqs"];
+    C2["qjsb"] += 0.5 * alpha * L1_["xy"] * T2["ijxb"] * B["gys"] * B["gqi"];
 
-//    C2["qjas"] -= alpha * T2["mjab"] * H2["qbms"];
-//    C2["qjas"] -= 0.5 * alpha * L1_["xy"] * T2["yjab"] * H2["qbxs"];
-//    C2["qjas"] += 0.5 * alpha * L1_["xy"] * T2["ijax"] * H2["qyis"];
+    C2["iqsb"] -= alpha * T2["imab"] * B["gas"] * B["gqm"];
+    C2["iqsb"] -= 0.5 * alpha * L1_["xy"] * T2["iyab"] * B["gas"] * B["gqx"];
+    C2["iqsb"] += 0.5 * alpha * L1_["xy"] * T2["ijxb"] * B["gys"] * B["gqj"];
 
-//    C2["iqas"] += 2.0 * alpha * T2["imab"] * H2["bqms"];
-//    C2["iqas"] -= alpha * T2["miab"] * H2["bqms"];
-//    C2["iqas"] -= alpha * T2["imab"] * H2["bqsm"];
+    C2["qjas"] -= alpha * T2["mjab"] * B["gqm"] * B["gbs"];
+    C2["qjas"] -= 0.5 * alpha * L1_["xy"] * T2["yjab"] * B["gqx"] * B["gbs"];
+    C2["qjas"] += 0.5 * alpha * L1_["xy"] * T2["ijax"] * B["gqi"] * B["gys"];
 
-//    C2["iqas"] += alpha * L1_["xy"] * T2["iyab"] * H2["bqxs"];
-//    C2["iqas"] -= 0.5 * alpha * L1_["xy"] * T2["yiab"] * H2["bqxs"];
-//    C2["iqas"] -= 0.5 * alpha * L1_["xy"] * T2["iyab"] * H2["bqsx"];
+    C2["iqas"] += alpha * S2["imab"] * B["gbm"] * B["gqs"];
+    C2["iqas"] -= alpha * T2["imab"] * B["gbs"] * B["gqm"];
 
-//    C2["iqas"] -= alpha * L1_["xy"] * T2["ijax"] * H2["yqjs"];
-//    C2["iqas"] += 0.5 * alpha * L1_["xy"] * T2["jiax"] * H2["yqjs"];
-//    C2["iqas"] += 0.5 * alpha * L1_["xy"] * T2["ijax"] * H2["yqsj"];
+    C2["iqas"] += 0.5 * alpha * L1_["xy"] * S2["iyab"] * B["gbx"] * B["gqs"];
+    C2["iqas"] -= 0.5 * alpha * L1_["xy"] * T2["iyab"] * B["gbs"] * B["gqx"];
+
+    C2["iqas"] -= 0.5 * alpha * L1_["xy"] * S2["ijax"] * B["gyj"] * B["gqs"];
+    C2["iqas"] += 0.5 * alpha * L1_["xy"] * T2["ijax"] * B["gys"] * B["gqj"];
 
     if (print_ > 2) {
         outfile->Printf("\n    Time for [H2, T2] -> C2 : %12.3f", timer.get());
