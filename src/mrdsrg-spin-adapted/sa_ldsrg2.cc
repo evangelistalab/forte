@@ -232,8 +232,8 @@ void SA_MRDSRG::compute_hbar() {
         H1_T1_C0(O1_, T1_, factor, C0);
         H1_T2_C0(O1_, T2_, factor, C0);
         if (n == 1 && eri_df_) {
-            H2_T1_C0_DF(B_, T1_, factor, C0);
-            H2_T2_C0_DF(B_, T2_, factor, C0);
+            V_T1_C0_DF(B_, T1_, factor, C0);
+            V_T2_C0_DF(B_, T2_, factor, C0);
         } else {
             H2_T1_C0(O2_, T1_, factor, C0);
             H2_T2_C0(O2_, T2_, factor, C0);
@@ -243,8 +243,8 @@ void SA_MRDSRG::compute_hbar() {
         H1_T1_C1(O1_, T1_, factor, C1_);
         H1_T2_C1(O1_, T2_, factor, C1_);
         if (n == 1 && eri_df_) {
-            H2_T1_C1_DF(B_, T1_, factor, C1_);
-            H2_T2_C1_DF(B_, T2_, factor, C1_);
+            V_T1_C1_DF(B_, T1_, factor, C1_);
+            V_T2_C1_DF(B_, T2_, factor, C1_);
         } else {
             H2_T1_C1(O2_, T1_, factor, C1_);
             H2_T2_C1(O2_, T2_, factor, C1_);
@@ -253,8 +253,8 @@ void SA_MRDSRG::compute_hbar() {
         // two-body
         H1_T2_C2(O1_, T2_, factor, C2_);
         if (n == 1 && eri_df_) {
-            H2_T1_C2_DF(B_, T1_, factor, C2_);
-            H2_T2_C2_DF(B_, T2_, factor, C2_);
+            V_T1_C2_DF(B_, T1_, factor, C2_);
+            V_T2_C2_DF(B_, T2_, factor, C2_);
         } else {
             H2_T1_C2(O2_, T1_, factor, C2_);
             H2_T2_C2(O2_, T2_, factor, C2_);
@@ -286,7 +286,8 @@ void SA_MRDSRG::compute_hbar() {
         double norm_C1 = C1_.norm();
         double norm_C2 = C2_.norm();
         if (print_ > 2) {
-            outfile->Printf("\n  n = %3d, C1norm = %20.15f, C2norm = %20.15f", n, norm_C1, norm_C2);
+            outfile->Printf("\n  n: %3d, C0: %20.15f, C1 max: %20.15f, C2 max: %20.15f", n, C0,
+                            C1_.norm(0), C2_.norm(0));
         }
         if (std::sqrt(norm_C2 * norm_C2 + norm_C1 * norm_C1) < ct_threshold) {
             converged = true;
@@ -433,13 +434,13 @@ void SA_MRDSRG::compute_hbar_sequential() {
         if (n == 1 && eri_df_) {
             // zero-body
             H1_T2_C0(O1_, T2_, factor, C0);
-            H2_T2_C0_DF(B, T2_, factor, C0);
+            V_T2_C0_DF(B, T2_, factor, C0);
             // one-body
             H1_T2_C1(O1_, T2_, factor, C1_);
-            H2_T2_C1_DF(B, T2_, factor, C1_);
+            V_T2_C1_DF(B, T2_, factor, C1_);
             // two-body
             H1_T2_C2(O1_, T2_, factor, C2_);
-            H2_T2_C2_DF(B, T2_, factor, C2_);
+            V_T2_C2_DF(B, T2_, factor, C2_);
         } else {
             // zero-body
             H1_T2_C0(O1_, T2_, factor, C0);
@@ -506,8 +507,8 @@ void SA_MRDSRG::compute_hbar_qc() {
     H1_T1_C1(F_, T1_, 0.5, S1);
     H1_T2_C1(F_, T2_, 0.5, S1);
     if (eri_df_) {
-        H2_T1_C1_DF(B_, T1_, 0.5, S1);
-        H2_T2_C1_DF(B_, T2_, 0.5, S1);
+        V_T1_C1_DF(B_, T1_, 0.5, S1);
+        V_T2_C1_DF(B_, T2_, 0.5, S1);
     } else {
         H2_T1_C1(V_, T1_, 0.5, S1);
         H2_T2_C1(V_, T2_, 0.5, S1);
@@ -542,8 +543,8 @@ void SA_MRDSRG::compute_hbar_qc() {
     BlockedTensor S2 = BTF_->build(tensor_type_, "S2", {"gggg"}, true);
     H1_T2_C2(F_, T2_, 0.5, S2);
     if (eri_df_) {
-        H2_T1_C2_DF(B_, T1_, 0.5, S2);
-        H2_T2_C2_DF(B_, T2_, 0.5, S2);
+        V_T1_C2_DF(B_, T1_, 0.5, S2);
+        V_T2_C2_DF(B_, T2_, 0.5, S2);
     } else {
         H2_T1_C2(V_, T1_, 0.5, S2);
         H2_T2_C2(V_, T2_, 0.5, S2);

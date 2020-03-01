@@ -191,19 +191,6 @@ class SA_MRDSRG : public SADSRG {
     /// Norm of off-diagonal Hbar1 or Hbar2
     double Hbar_od_norm(const int& n, const std::vector<std::string>& blocks);
 
-    /// Compute zero-body term of commutator [H2, T1]
-    void H2_T1_C0_DF(BlockedTensor& B, BlockedTensor& T1, const double& alpha, double& C0) {}
-    /// Compute zero-body term of commutator [H2, T2] with density fitting
-    void H2_T2_C0_DF(BlockedTensor& B, BlockedTensor& T2, const double& alpha, double& C0) {}
-    /// Compute one-body term of commutator [H2, T1]
-    void H2_T1_C1_DF(BlockedTensor& B, BlockedTensor& T1, const double& alpha, BlockedTensor& C1) {}
-    /// Compute one-body term of commutator [H2, T2] with density fitting
-    void H2_T2_C1_DF(BlockedTensor& B, BlockedTensor& T2, const double& alpha, BlockedTensor& C1) {}
-    /// Compute two-body term of commutator [H2, T1]
-    void H2_T1_C2_DF(BlockedTensor& B, BlockedTensor& T1, const double& alpha, BlockedTensor& C2) {}
-    /// Compute two-body term of commutator [H2, T2] with density fitting
-    void H2_T2_C2_DF(BlockedTensor& B, BlockedTensor& T2, const double& alpha, BlockedTensor& C2) {}
-
     /// Shared pointer of DIISManager object from Psi4
     std::shared_ptr<psi::DIISManager> diis_manager_;
     /// Amplitudes pointers

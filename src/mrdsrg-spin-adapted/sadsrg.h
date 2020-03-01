@@ -33,7 +33,7 @@ class SADSRG : public DynamicCorrelationSolver {
      * @param mo_space_info The MOSpaceInfo object
      */
     SADSRG(RDMs rdms, std::shared_ptr<SCFInfo> scf_info, std::shared_ptr<ForteOptions> options,
-                std::shared_ptr<ForteIntegrals> ints, std::shared_ptr<MOSpaceInfo> mo_space_info);
+           std::shared_ptr<ForteIntegrals> ints, std::shared_ptr<MOSpaceInfo> mo_space_info);
 
     /// Destructor
     virtual ~SADSRG();
@@ -276,10 +276,16 @@ class SADSRG : public DynamicCorrelationSolver {
     /// Compute two-body term of commutator [H2, T2]
     void H2_T2_C2(BlockedTensor& H2, BlockedTensor& T2, const double& alpha, BlockedTensor& C2);
 
+    /// Compute zero-body term of commutator [V, T1], V is constructed from B (DF/CD)
+    void V_T1_C0_DF(BlockedTensor& B, BlockedTensor& T1, const double& alpha, double& C0);
+    /// Compute zero-body term of commutator [V, T2], V is constructed from B (DF/CD)
+    void V_T2_C0_DF(BlockedTensor& B, BlockedTensor& T1, const double& alpha, double& C0);
+
     /// Compute one-body term of commutator [V, T1], V is constructed from B (DF/CD)
     void V_T1_C1_DF(BlockedTensor& B, BlockedTensor& T1, const double& alpha, BlockedTensor& C1);
     /// Compute one-body term of commutator [V, T2], V is constructed from B (DF/CD)
     void V_T2_C1_DF(BlockedTensor& B, BlockedTensor& T2, const double& alpha, BlockedTensor& C1);
+
     /// Compute two-body term of commutator [V, T1], V is constructed from B (DF/CD)
     void V_T1_C2_DF(BlockedTensor& B, BlockedTensor& T1, const double& alpha, BlockedTensor& C2);
     /// Compute two-body term of commutator [V, T2], V is constructed from B (DF/CD)
