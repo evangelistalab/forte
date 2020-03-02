@@ -279,6 +279,7 @@ void DSRG_MRPT2::set_multiplier() {
     set_z();
     set_w();
     Z.print();
+    W_.print();
     for(size_t i=0; i<nmo_; i++){
 outfile->Printf("\n%d   %.6f",i, Fa_[i]);
     }
@@ -295,6 +296,154 @@ void DSRG_MRPT2::set_z() {
 
 
 void DSRG_MRPT2::set_w() {
+
+    //NOTICE: w for {virtual-general}
+    BlockedTensor temp1 = BTF_->build(CoreTensor, "temporal tensor 1", {"pphh", "pPhH"});
+    BlockedTensor temp2 = BTF_->build(CoreTensor, "temporal tensor 2", {"hhgvp", "hHgvP"});
+
+    temp1["cdkl"] = V["cdkl"] * Eeps2_p["klcd"];
+    temp1["cDkL"] = V["cDkL"] * Eeps2_p["kLcD"];
+    temp2["ijpeb"] = V["pbij"] * Eeps2_m1["ijeb"];
+    temp2["iJpeB"] = V["pBiJ"] * Eeps2_m1["iJeB"];
+    W_["pe"] += 0.25 * temp1["cdkl"] * temp2["ijpeb"] * Gamma1["ki"] * Gamma1["lj"] * Eta1["ec"] * Eta1["bd"];
+    W_["pe"] += 0.50 * temp1["cDkL"] * temp2["iJpeB"] * Gamma1["ki"] * Gamma1["LJ"] * Eta1["ec"] * Eta1["BD"];
+    temp1.zero();
+    temp2.zero();
+
+    temp1["cdkl"] = V["cdkl"] * Eeps2_m1["klcd"];
+    temp1["cDkL"] = V["cDkL"] * Eeps2_m1["kLcD"];
+    temp2["ijpeb"] = V["pbij"] * Eeps2_p["ijeb"];
+    temp2["iJpeB"] = V["pBiJ"] * Eeps2_p["iJeB"];
+    W_["pe"] += 0.25 * temp1["cdkl"] * temp2["ijpeb"] * Gamma1["ki"] * Gamma1["lj"] * Eta1["ec"] * Eta1["bd"];
+    W_["pe"] += 0.50 * temp1["cDkL"] * temp2["iJpeB"] * Gamma1["ki"] * Gamma1["LJ"] * Eta1["ec"] * Eta1["BD"];
+
+    W_["pe"] += Z["e,m1"] * F["m1,p"];
+
+    W_["pe"] += Z["eu"] * H["vp"] * Gamma1["uv"];
+    W_["pe"] += Z["eu"] * V["v,m1,p,n1"] * Gamma1["uv"] * I["m1,n1"];
+    W_["pe"] += Z["eu"] * V["v,M1,p,N1"] * Gamma1["uv"] * I["M1,N1"];
+    W_["pe"] += 0.5 * Z["eu"] * V["xypv"] * Gamma2["uvxy"];
+    W_["pe"] += Z["eu"] * V["xYpV"] * Gamma2["uVxY"];
+
+    W_["pe"] += Z["e,f1"] * F["f1,p"];
+
+
+    W_["ei"] = W_["ie"];
+
+    //NOTICE: w for {core-hole}
+    temp1 = BTF_->build(CoreTensor, "temporal tensor 1", {"pphh", "pPhH"});
+    temp2 = BTF_->build(CoreTensor, "temporal tensor 2", {"pphch", "pPhcH"});
+
+    temp1["cdkl"] = V["cdkl"] * Eeps2_p["klcd"];
+    temp1["cDkL"] = V["cDkL"] * Eeps2_p["kLcD"];
+    temp2["abimj"] = V["abij"] * Eeps2_m1["mjab"];
+    temp2["aBimJ"] = V["aBiJ"] * Eeps2_m1["mJaB"];
+    W_["im"] += 0.25 * temp1["cdkl"] * temp2["abimj"] * Gamma1["km"] * Gamma1["lj"] * Eta1["ac"] * Eta1["bd"];
+    W_["im"] += 0.50 * temp1["cDkL"] * temp2["aBimJ"] * Gamma1["km"] * Gamma1["LJ"] * Eta1["ac"] * Eta1["BD"];
+    temp1.zero();
+    temp2.zero();
+
+    temp1["cdkl"] = V["cdkl"] * Eeps2_m1["klcd"];
+    temp1["cDkL"] = V["cDkL"] * Eeps2_m1["kLcD"];
+    temp2["abimj"] = V["abij"] * Eeps2_p["mjab"];
+    temp2["aBimJ"] = V["aBiJ"] * Eeps2_p["mJaB"];
+    W_["im"] += 0.25 * temp1["cdkl"] * temp2["abimj"] * Gamma1["km"] * Gamma1["lj"] * Eta1["ac"] * Eta1["bd"];
+    W_["im"] += 0.50 * temp1["cDkL"] * temp2["aBimJ"] * Gamma1["km"] * Gamma1["LJ"] * Eta1["ac"] * Eta1["BD"];
+
+    W_["im"] += Z["e1,m"] * F["i,e1"];
+
+    W_["im"] += Z["e1,m1"] * V["m1,m,e1,i"];
+    W_["im"] += Z["E1,M1"] * V["m,M1,i,E1"];
+    W_["im"] += Z["e1,m1"] * V["m1,i,e1,m"];
+    W_["im"] += Z["E1,M1"] * V["i,M1,m,E1"];
+
+    W_["im"] += Z["mu"] * F["ui"];
+    W_["im"] -= Z["mu"] * H["vi"] * Gamma1["uv"];
+    W_["im"] -= Z["mu"] * V["v,m1,i,n1"] * Gamma1["uv"] * I["m1,n1"];
+    W_["im"] -= Z["mu"] * V["v,M1,i,N1"] * Gamma1["uv"] * I["M1,N1"];
+    W_["im"] -= 0.5 * Z["mu"] * V["xyiv"] * Gamma2["uvxy"];
+    W_["im"] -= Z["mu"] * V["xYiV"] * Gamma2["uVxY"];
+
+    W_["im"] += Z["n1,u"] * V["u,i,n1,m"];
+    W_["im"] += Z["N1,U"] * V["i,U,m,N1"];
+    W_["im"] += Z["n1,u"] * V["u,m,n1,i"];
+    W_["im"] += Z["N1,U"] * V["m,U,i,N1"];
+
+    W_["im"] -= Z["n1,u"] * Gamma1["uv"] * V["v,i,n1,m"];
+    W_["im"] -= Z["N1,U"] * Gamma1["UV"] * V["i,V,m,N1"];
+    W_["im"] -= Z["n1,u"] * Gamma1["uv"] * V["v,m,n1,i"];
+    W_["im"] -= Z["N1,U"] * Gamma1["UV"] * V["m,V,i,N1"];
+
+    W_["im"] += Z["e1,u"] * Gamma1["uv"] * V["v,m,e1,i"];
+    W_["im"] += Z["E1,U"] * Gamma1["UV"] * V["m,V,i,E1"];
+    W_["im"] += Z["e1,u"] * Gamma1["uv"] * V["v,i,e1,m"];
+    W_["im"] += Z["E1,U"] * Gamma1["UV"] * V["i,V,m,E1"];
+
+    W_["im"] += Z["m,n1"] * F["n1,i"];
+
+    W_["im"] += Z["m1,n1"] * V["n1,i,m1,m"];
+    W_["im"] += Z["M1,N1"] * V["i,N1,m,M1"];
+
+    W_["im"] += Z["uv"] * V["vium"];
+    W_["im"] += Z["UV"] * V["iVmU"];
+
+    W_["im"] += Z["e1,f"] * V["f,i,e1,m"];
+    W_["im"] += Z["E1,F"] * V["i,F,m,E1"];
+
+
+    W_["mu"] = W_["um"];
+
+    //NOTICE: w for {active-active}
+
+
+
+
+
+
+
+
+
+    // Copy alpha-alpha to beta-beta 
+    (W_.block("CC")).iterate([&](const std::vector<size_t>& i, double& value) {
+        value = W_.block("cc").data()[i[0] * ncore_ + i[1]];
+    });
+
+    (W_.block("AA")).iterate([&](const std::vector<size_t>& i, double& value) {
+        value = W_.block("aa").data()[i[0] * na_ + i[1]];
+    });
+
+    (W_.block("VV")).iterate([&](const std::vector<size_t>& i, double& value) {
+        value = W_.block("vv").data()[i[0] * nvirt_ + i[1]];
+    });
+
+    (W_.block("CV")).iterate([&](const std::vector<size_t>& i, double& value) {
+        value = W_.block("cv").data()[i[0] * nvirt_ + i[1]];
+    });
+
+    (W_.block("VC")).iterate([&](const std::vector<size_t>& i, double& value) {
+        value = W_.block("vc").data()[i[0] * ncore_ + i[1]];
+    });
+
+    (W_.block("CA")).iterate([&](const std::vector<size_t>& i, double& value) {
+        value = W_.block("ca").data()[i[0] * na_ + i[1]];
+    });
+
+    (W_.block("AC")).iterate([&](const std::vector<size_t>& i, double& value) {
+        value = W_.block("ac").data()[i[0] * ncore_ + i[1]];
+    });
+
+    (W_.block("AV")).iterate([&](const std::vector<size_t>& i, double& value) {
+        value = W_.block("av").data()[i[0] * nvirt_ + i[1]];
+    });
+
+    (W_.block("VA")).iterate([&](const std::vector<size_t>& i, double& value) {
+        value = W_.block("va").data()[i[0] * na_ + i[1]];
+    });
+
+
+
+
+
 
 }
 
@@ -1097,7 +1246,7 @@ void DSRG_MRPT2::set_z_aa_diag() {
 void DSRG_MRPT2::iter_z() {
     bool converged = false;
     int iter = 1;
-    int maxiter = 200;
+    int maxiter = 4000;
     double convergence = 1e-6;
 
     //TODO: beta-beta part not done yet
@@ -1481,12 +1630,6 @@ void DSRG_MRPT2::compute_z_cv() {
 
 
 
-
-
-
-
-
-
 void DSRG_MRPT2::compute_z_av() {
 
     BlockedTensor temp = BTF_->build(CoreTensor, "temporal tensor", {"va"});
@@ -1694,7 +1837,6 @@ void DSRG_MRPT2::compute_z_ca() {
     temp["mw"] += Z["n1,u"] * Gamma1["uv"] * V["v,m,n1,w"];
     temp["mw"] += Z["N1,U"] * Gamma1["UV"] * V["m,V,w,N1"];
 
-    // temp["mw"] -= Z["mu"] * F["uw"];
     temp["mw"] += Z["mu"] * H["vw"] * Gamma1["uv"];
     temp["mw"] += Z["mu"] * V["v,m1,w,n1"] * Gamma1["uv"] * I["m1,n1"];
     temp["mw"] += Z["mu"] * V["v,M1,w,N1"] * Gamma1["uv"] * I["M1,N1"];
@@ -1703,7 +1845,6 @@ void DSRG_MRPT2::compute_z_ca() {
 
     // move terms to the left side
     // TODO: need check
-    // temp["mw"] += Z["mw"] * F["ww"];
     temp["mw"] -= Z["mw"] * H["vw"] * Gamma1["wv"];
     temp["mw"] -= Z["mw"] * V["v,m1,w,n1"] * Gamma1["wv"] * I["m1,n1"];
     temp["mw"] -= Z["mw"] * V["v,M1,w,N1"] * Gamma1["wv"] * I["M1,N1"];
@@ -1716,7 +1857,6 @@ void DSRG_MRPT2::compute_z_ca() {
     temp["mw"] -= 2.0 * Z["mw"] * Gamma1["wv"] * V["v,w,m,m1"] * I["m,m1"];
     temp["mw"] -= 2.0 * Z["mw"] * Gamma1["wv"] * V["v,m,m1,w"] * I["m,m1"];
 
-    // temp["mw"] += Z["mw"] * Delta1["wm"];
 
     temp["mw"] += Z["mw"] * H["m,m1"] * Gamma1["w,w1"] * I["m,m1"] * I["w,w1"];
     temp["mw"] += Z["mw"] * V["m,n,m1,n1"] * Gamma1["w,w1"] * I["m,m1"] * I["n,n1"] * I["w,w1"];
@@ -1742,7 +1882,6 @@ void DSRG_MRPT2::compute_z_ca() {
     dnt["mw"] += Delta1["wm"];
 
 
-
     BlockedTensor dnt1 = BTF_->build(CoreTensor, "temporal denominator", {"a"});
 
     dnt1["w"] -= H["vw"] * Gamma1["wv"];
@@ -1750,9 +1889,6 @@ void DSRG_MRPT2::compute_z_ca() {
     dnt1["w"] -= V["v,M1,w,N1"] * Gamma1["wv"] * I["M1,N1"];
     dnt1["w"] -= 0.5 * V["xywv"] * Gamma2["wvxy"];
     dnt1["w"] -= V["xYwV"] * Gamma2["wVxY"];
-
-
-
 
 
     BlockedTensor temp_p = BTF_->build(CoreTensor, "temporal tensor plus Z_ca", {"ca"});
@@ -1763,8 +1899,6 @@ void DSRG_MRPT2::compute_z_ca() {
     temp_p["mw"] += Z["mw"];
     temp_m["mw"] = temp["mw"];
     temp_m["mw"] -= Z["mw"];
-
-
 
     for (const std::string& block : {"ca"}) {
         (Z.block(block)).iterate([&](const std::vector<size_t>& i, double& value) {
@@ -1781,8 +1915,6 @@ void DSRG_MRPT2::compute_z_ca() {
         });
     } 
 
-
-
     Z["wm"] = Z["mw"];
 
     // Beta part
@@ -1792,8 +1924,6 @@ void DSRG_MRPT2::compute_z_ca() {
         });
     } 
     Z["WM"] = Z["MW"];
-
-
 
 }
 
