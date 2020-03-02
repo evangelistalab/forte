@@ -535,9 +535,9 @@ void SADSRG::H1_T2_C2(BlockedTensor& H1, BlockedTensor& T2, const double& alpha,
     local_timer timer;
 
     C2["ijpb"] += alpha * T2["ijab"] * H1["ap"];
-    C2["ijap"] += alpha * T2["ijab"] * H1["bp"];
+    C2["jibp"] += alpha * T2["ijab"] * H1["ap"];
     C2["qjab"] -= alpha * T2["ijab"] * H1["qi"];
-    C2["iqab"] -= alpha * T2["ijab"] * H1["qj"];
+    C2["jqba"] -= alpha * T2["ijab"] * H1["qi"];
 
     if (print_ > 2) {
         outfile->Printf("\n    Time for [H1, T2] -> C2 : %12.3f", timer.get());
@@ -550,9 +550,9 @@ void SADSRG::H2_T1_C2(BlockedTensor& H2, BlockedTensor& T1, const double& alpha,
     local_timer timer;
 
     C2["irpq"] += alpha * T1["ia"] * H2["arpq"];
-    C2["ripq"] += alpha * T1["ia"] * H2["rapq"];
+    C2["riqp"] += alpha * T1["ia"] * H2["arpq"];
     C2["rsaq"] -= alpha * T1["ia"] * H2["rsiq"];
-    C2["rspa"] -= alpha * T1["ia"] * H2["rspi"];
+    C2["srqa"] -= alpha * T1["ia"] * H2["rsiq"];
 
     if (print_ > 2) {
         outfile->Printf("\n    Time for [H2, T1] -> C2 : %12.3f", timer.get());
@@ -587,41 +587,41 @@ void SADSRG::H2_T2_C2(BlockedTensor& H2, BlockedTensor& T2, const double& alpha,
     C2["ijrs"] += alpha * H2["abrs"] * T2["ijab"];
 
     C2["ijrs"] -= 0.5 * alpha * L1_["xy"] * T2["ijxb"] * H2["ybrs"];
-    C2["ijrs"] -= 0.5 * alpha * L1_["xy"] * T2["ijbx"] * H2["byrs"];
+    C2["jisr"] -= 0.5 * alpha * L1_["xy"] * T2["ijxb"] * H2["ybrs"];
 
     // hole-hole contractions
     C2["pqab"] += alpha * H2["pqij"] * T2["ijab"];
 
     C2["pqab"] -= 0.5 * alpha * Eta1_["xy"] * T2["yjab"] * H2["pqxj"];
-    C2["pqab"] -= 0.5 * alpha * Eta1_["xy"] * T2["jyab"] * H2["pqjx"];
+    C2["qpba"] -= 0.5 * alpha * Eta1_["xy"] * T2["yjab"] * H2["pqxj"];
 
     // hole-particle contractions
-    C2["qjsb"] += 2.0 * alpha * H2["aqms"] * T2["mjab"];
+    C2["qjsb"] += alpha * H2["aqms"] * S2["mjab"];
+    C2["jqbs"] += alpha * H2["aqms"] * S2["mjab"];
+
     C2["qjsb"] -= alpha * H2["aqsm"] * T2["mjab"];
-    C2["qjsb"] -= alpha * H2["aqms"] * T2["mjba"];
+    C2["jqbs"] -= alpha * H2["aqsm"] * T2["mjab"];
+
+    C2["jqsb"] -= alpha * T2["mjba"] * H2["aqsm"];
+    C2["qjbs"] -= alpha * T2["mjba"] * H2["aqsm"];
 
     C2["qjsb"] += 0.5 * alpha * L1_["xy"] * S2["yjab"] * H2["aqxs"];
+    C2["jqbs"] += 0.5 * alpha * L1_["xy"] * S2["yjab"] * H2["aqxs"];
+
     C2["qjsb"] -= 0.5 * alpha * L1_["xy"] * T2["yjab"] * H2["aqsx"];
+    C2["jqbs"] -= 0.5 * alpha * L1_["xy"] * T2["yjab"] * H2["aqsx"];
 
     C2["qjsb"] -= 0.5 * alpha * L1_["xy"] * S2["ijxb"] * H2["yqis"];
+    C2["jqbs"] -= 0.5 * alpha * L1_["xy"] * S2["ijxb"] * H2["yqis"];
+
     C2["qjsb"] += 0.5 * alpha * L1_["xy"] * T2["ijxb"] * H2["yqsi"];
+    C2["jqbs"] += 0.5 * alpha * L1_["xy"] * T2["ijxb"] * H2["yqsi"];
 
-    C2["iqsb"] -= alpha * T2["imab"] * H2["aqsm"];
-    C2["iqsb"] -= 0.5 * alpha * L1_["xy"] * T2["iyab"] * H2["aqsx"];
-    C2["iqsb"] += 0.5 * alpha * L1_["xy"] * T2["ijxb"] * H2["yqsj"];
+    C2["jqsb"] -= 0.5 * alpha * L1_["xy"] * T2["yjba"] * H2["aqsx"];
+    C2["qjbs"] -= 0.5 * alpha * L1_["xy"] * T2["yjba"] * H2["aqsx"];
 
-    C2["qjas"] -= alpha * T2["mjab"] * H2["qbms"];
-    C2["qjas"] -= 0.5 * alpha * L1_["xy"] * T2["yjab"] * H2["qbxs"];
-    C2["qjas"] += 0.5 * alpha * L1_["xy"] * T2["ijax"] * H2["qyis"];
-
-    C2["iqas"] += alpha * S2["imab"] * H2["bqms"];
-    C2["iqas"] -= alpha * T2["imab"] * H2["bqsm"];
-
-    C2["iqas"] += 0.5 * alpha * L1_["xy"] * S2["iyab"] * H2["bqxs"];
-    C2["iqas"] -= 0.5 * alpha * L1_["xy"] * T2["iyab"] * H2["bqsx"];
-
-    C2["iqas"] -= 0.5 * alpha * L1_["xy"] * S2["ijax"] * H2["yqjs"];
-    C2["iqas"] += 0.5 * alpha * L1_["xy"] * T2["ijax"] * H2["yqsj"];
+    C2["jqsb"] += 0.5 * alpha * L1_["xy"] * T2["ijbx"] * H2["yqsi"];
+    C2["qjbs"] += 0.5 * alpha * L1_["xy"] * T2["ijbx"] * H2["yqsi"];
 
     if (print_ > 2) {
         outfile->Printf("\n    Time for [H2, T2] -> C2 : %12.3f", timer.get());
@@ -650,9 +650,8 @@ void SADSRG::V_T2_C2_DF(BlockedTensor& B, BlockedTensor& T2, const double& alpha
     C2["pqab"] -= 0.5 * alpha * Eta1_["xy"] * T2["jyab"] * B["gpj"] * B["gqx"];
 
     // hole-particle contractions
-    C2["qjsb"] += 2.0 * alpha * B["gam"] * B["gqs"] * T2["mjab"];
+    C2["qjsb"] += alpha * B["gam"] * B["gqs"] * T2["mjab"];
     C2["qjsb"] -= alpha * B["gas"] * B["gqm"] * T2["mjab"];
-    C2["qjsb"] -= alpha * B["gam"] * B["gqs"] * T2["mjba"];
 
     C2["qjsb"] += 0.5 * alpha * L1_["xy"] * S2["yjab"] * B["gax"] * B["gqs"];
     C2["qjsb"] -= 0.5 * alpha * L1_["xy"] * T2["yjab"] * B["gas"] * B["gqx"];
