@@ -534,10 +534,24 @@ void SADSRG::H1_T2_C2(BlockedTensor& H1, BlockedTensor& T2, const double& alpha,
                       BlockedTensor& C2) {
     local_timer timer;
 
-    C2["ijpb"] += alpha * T2["ijab"] * H1["ap"];
-    C2["jibp"] += alpha * T2["ijab"] * H1["ap"];
-    C2["qjab"] -= alpha * T2["ijab"] * H1["qi"];
-    C2["jqba"] -= alpha * T2["ijab"] * H1["qi"];
+    std::vector<std::string> hhpp;
+    for (const std::string& block : T2.block_labels()) {
+        if (C2.is_block(block)) {
+            hhpp.push_back(block);
+        }
+    }
+
+    auto temp = ambit::BlockedTensor::build(tensor_type_, "temp122", hhpp);
+    temp["ijab"] += alpha * T2["ijcb"] * H1["ca"];
+    temp["ijab"] -= alpha * T2["kjab"] * H1["ik"];
+    C2["ijab"] += temp["ijab"];
+    C2["jiba"] += temp["ijab"];
+
+    C2["ijmb"] += alpha * T2["ijab"] * H1["am"];
+    C2["jibm"] += alpha * T2["ijab"] * H1["am"];
+
+    C2["ejab"] -= alpha * T2["ijab"] * H1["ei"];
+    C2["jeba"] -= alpha * T2["ijab"] * H1["ei"];
 
     if (print_ > 2) {
         outfile->Printf("\n    Time for [H1, T2] -> C2 : %12.3f", timer.get());
@@ -551,6 +565,7 @@ void SADSRG::H2_T1_C2(BlockedTensor& H2, BlockedTensor& T1, const double& alpha,
 
     C2["irpq"] += alpha * T1["ia"] * H2["arpq"];
     C2["riqp"] += alpha * T1["ia"] * H2["arpq"];
+
     C2["rsaq"] -= alpha * T1["ia"] * H2["rsiq"];
     C2["srqa"] -= alpha * T1["ia"] * H2["rsiq"];
 
@@ -565,9 +580,9 @@ void SADSRG::V_T1_C2_DF(BlockedTensor& B, BlockedTensor& T1, const double& alpha
     local_timer timer;
 
     C2["irpq"] += alpha * T1["ia"] * B["gap"] * B["grq"];
-    C2["ripq"] += alpha * T1["ia"] * B["grp"] * B["gaq"];
+    C2["riqp"] += alpha * T1["ia"] * B["gap"] * B["grq"];
     C2["rsaq"] -= alpha * T1["ia"] * B["gri"] * B["gsq"];
-    C2["rspa"] -= alpha * T1["ia"] * B["grp"] * B["gsi"];
+    C2["srqa"] -= alpha * T1["ia"] * B["gri"] * B["gsq"];
 
     if (print_ > 2) {
         outfile->Printf("\n    Time for [H2, T1] -> C2 : %12.3f", timer.get());
@@ -596,32 +611,40 @@ void SADSRG::H2_T2_C2(BlockedTensor& H2, BlockedTensor& T2, const double& alpha,
     C2["qpba"] -= 0.5 * alpha * Eta1_["xy"] * T2["yjab"] * H2["pqxj"];
 
     // hole-particle contractions
-    C2["qjsb"] += alpha * H2["aqms"] * S2["mjab"];
-    C2["jqbs"] += alpha * H2["aqms"] * S2["mjab"];
+    std::vector<std::string> blocks;
+    for (const std::string& block: C2.block_labels()) {
+        if (block.substr(1, 1) == virt_label_ or block.substr(3, 1) == core_label_)
+            continue;
+        else
+            blocks.push_back(block);
+    }
 
-    C2["qjsb"] -= alpha * H2["aqsm"] * T2["mjab"];
-    C2["jqbs"] -= alpha * H2["aqsm"] * T2["mjab"];
+    auto temp = ambit::BlockedTensor::build(tensor_type_, "temp", blocks);
+    temp["qjsb"] += alpha * H2["aqms"] * S2["mjab"];
+    temp["qjsb"] -= alpha * H2["aqsm"] * T2["mjab"];
+    temp["qjsb"] += 0.5 * alpha * L1_["xy"] * S2["yjab"] * H2["aqxs"];
+    temp["qjsb"] -= 0.5 * alpha * L1_["xy"] * T2["yjab"] * H2["aqsx"];
+    temp["qjsb"] -= 0.5 * alpha * L1_["xy"] * S2["ijxb"] * H2["yqis"];
+    temp["qjsb"] += 0.5 * alpha * L1_["xy"] * T2["ijxb"] * H2["yqsi"];
 
-    C2["jqsb"] -= alpha * T2["mjba"] * H2["aqsm"];
-    C2["qjbs"] -= alpha * T2["mjba"] * H2["aqsm"];
+    C2["qjsb"] += temp["qjsb"];
+    C2["jqbs"] += temp["qjsb"];
 
-    C2["qjsb"] += 0.5 * alpha * L1_["xy"] * S2["yjab"] * H2["aqxs"];
-    C2["jqbs"] += 0.5 * alpha * L1_["xy"] * S2["yjab"] * H2["aqxs"];
+    blocks.clear();
+    for (const std::string& block: C2.block_labels()) {
+        if (block.substr(0, 1) == virt_label_ or block.substr(3, 1) == core_label_)
+            continue;
+        else
+            blocks.push_back(block);
+    }
 
-    C2["qjsb"] -= 0.5 * alpha * L1_["xy"] * T2["yjab"] * H2["aqsx"];
-    C2["jqbs"] -= 0.5 * alpha * L1_["xy"] * T2["yjab"] * H2["aqsx"];
+    temp = ambit::BlockedTensor::build(tensor_type_, "temp", blocks);
+    temp["jqsb"] -= alpha * H2["aqsm"] * T2["mjba"];
+    temp["jqsb"] -= 0.5 * alpha * L1_["xy"] * T2["yjba"] * H2["aqsx"];
+    temp["jqsb"] += 0.5 * alpha * L1_["xy"] * T2["ijbx"] * H2["yqsi"];
 
-    C2["qjsb"] -= 0.5 * alpha * L1_["xy"] * S2["ijxb"] * H2["yqis"];
-    C2["jqbs"] -= 0.5 * alpha * L1_["xy"] * S2["ijxb"] * H2["yqis"];
-
-    C2["qjsb"] += 0.5 * alpha * L1_["xy"] * T2["ijxb"] * H2["yqsi"];
-    C2["jqbs"] += 0.5 * alpha * L1_["xy"] * T2["ijxb"] * H2["yqsi"];
-
-    C2["jqsb"] -= 0.5 * alpha * L1_["xy"] * T2["yjba"] * H2["aqsx"];
-    C2["qjbs"] -= 0.5 * alpha * L1_["xy"] * T2["yjba"] * H2["aqsx"];
-
-    C2["jqsb"] += 0.5 * alpha * L1_["xy"] * T2["ijbx"] * H2["yqsi"];
-    C2["qjbs"] += 0.5 * alpha * L1_["xy"] * T2["ijbx"] * H2["yqsi"];
+    C2["jqsb"] += temp["jqsb"];
+    C2["qjbs"] += temp["jqsb"];
 
     if (print_ > 2) {
         outfile->Printf("\n    Time for [H2, T2] -> C2 : %12.3f", timer.get());
@@ -675,6 +698,28 @@ void SADSRG::V_T2_C2_DF(BlockedTensor& B, BlockedTensor& T2, const double& alpha
 
     C2["iqas"] -= 0.5 * alpha * L1_["xy"] * S2["ijax"] * B["gyj"] * B["gqs"];
     C2["iqas"] += 0.5 * alpha * L1_["xy"] * T2["ijax"] * B["gys"] * B["gqj"];
+
+    //    C2["qjsb"] += alpha * H2["aqms"] * S2["mjab"];
+    //    C2["qjsb"] -= alpha * H2["aqsm"] * T2["mjab"];
+    //    C2["qjsb"] += 0.5 * alpha * L1_["xy"] * S2["yjab"] * H2["aqxs"];
+    //    C2["qjsb"] -= 0.5 * alpha * L1_["xy"] * T2["yjab"] * H2["aqsx"];
+    //    C2["qjsb"] -= 0.5 * alpha * L1_["xy"] * S2["ijxb"] * H2["yqis"];
+    //    C2["qjsb"] += 0.5 * alpha * L1_["xy"] * T2["ijxb"] * H2["yqsi"];
+
+    //    C2["jqbs"] += alpha * H2["aqms"] * S2["mjab"];
+    //    C2["jqbs"] -= alpha * H2["aqsm"] * T2["mjab"];
+    //    C2["jqbs"] += 0.5 * alpha * L1_["xy"] * S2["yjab"] * H2["aqxs"];
+    //    C2["jqbs"] -= 0.5 * alpha * L1_["xy"] * T2["yjab"] * H2["aqsx"];
+    //    C2["jqbs"] -= 0.5 * alpha * L1_["xy"] * S2["ijxb"] * H2["yqis"];
+    //    C2["jqbs"] += 0.5 * alpha * L1_["xy"] * T2["ijxb"] * H2["yqsi"];
+
+    //    C2["jqsb"] -= alpha * H2["aqsm"] * T2["mjba"];
+    //    C2["jqsb"] -= 0.5 * alpha * L1_["xy"] * T2["yjba"] * H2["aqsx"];
+    //    C2["jqsb"] += 0.5 * alpha * L1_["xy"] * T2["ijbx"] * H2["yqsi"];
+
+    //    C2["qjbs"] -= alpha * H2["aqsm"] * T2["mjba"];
+    //    C2["qjbs"] -= 0.5 * alpha * L1_["xy"] * T2["yjba"] * H2["aqsx"];
+    //    C2["qjbs"] += 0.5 * alpha * L1_["xy"] * T2["ijbx"] * H2["yqsi"];
 
     if (print_ > 2) {
         outfile->Printf("\n    Time for [H2, T2] -> C2 : %12.3f", timer.get());
