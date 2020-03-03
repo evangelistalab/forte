@@ -100,58 +100,37 @@ void SADSRG::H2_T2_C0(BlockedTensor& H2, BlockedTensor& T2, const double& alpha,
 
     // <[Hbar2, T2]> (C_2)^4
 
-    // form a temporary tensor K2 = 2 * H2["ijab"] - H2["ijba"]
-    BlockedTensor K2;
-    auto build_K2_blocks = [&](const std::vector<std::string>& blocks) {
-        K2 = ambit::BlockedTensor::build(tensor_type_, "temp_K2", blocks);
-        K2["abij"] = 2.0 * H2["abij"];
-        K2["abij"] -= H2["abji"];
-    };
+    // form a temporary tensor S2 = 2 * T2["ijab"] - T2["ijba"]
+    auto S2 = ambit::BlockedTensor::build(tensor_type_, "S2", T2.block_labels());
+    S2["ijab"] = 2.0 * T2["ijab"];
+    S2["ijab"] -= T2["ijba"];
 
     // [H2, T2] from ccvv
-    build_K2_blocks({"vvcc"});
-    E += K2["efmn"] * T2["mnef"];
+    E += H2["efmn"] * S2["mnef"];
 
     // [H2, T2] L1 from cavv
-    auto temp = ambit::BlockedTensor::build(tensor_type_, "temp_cavv", {"aa"});
-    build_K2_blocks({"vvca"});
-    temp["vu"] += K2["efmu"] * T2["mvef"];
-    E += temp["vu"] * L1_["uv"];
+    E += H2["efmu"] * S2["mvef"] * L1_["uv"];
 
     // [H2, T2] L1 from ccav
-    temp.zero();
-    temp.set_name("temp_ccav");
-    build_K2_blocks({"avcc"});
-    temp["vu"] += K2["vemn"] * T2["mnue"];
-    E += temp["vu"] * Eta1_["uv"];
+    E += H2["vemn"] * S2["mnue"] * Eta1_["uv"];
 
     // [H2, T2] L1 from aavv
-    temp = ambit::BlockedTensor::build(tensor_type_, "temp_aavv", {"aaaa"});
-    build_K2_blocks({"vvaa"});
-    temp["yvxu"] += K2["efxu"] * T2["yvef"];
-    E += 0.25 * temp["yvxu"] * L1_["uv"] * L1_["xy"];
+    E += 0.25 * H2["efxu"] * S2["yvef"] * L1_["uv"] * L1_["xy"];
 
     // [H2, T2] L1 from ccaa
-    temp.zero();
-    temp.set_name("temp_ccaa");
-    build_K2_blocks({"aacc"});
-    temp["vyux"] += K2["vymn"] * T2["mnux"];
-    E += 0.25 * temp["vyux"] * Eta1_["uv"] * Eta1_["xy"];
+    E += 0.25 * H2["vymn"] * S2["mnux"] * Eta1_["uv"] * Eta1_["xy"];
 
     // [H2, T2] L1 from caav
-    temp.zero();
-    temp.set_name("temp_caav");
-    build_K2_blocks({"avca", "avac"});
-    temp["uxyv"] += 0.5 * K2["vemx"] * T2["myue"];
-    temp["uxyv"] += 0.5 * K2["vexm"] * T2["ymue"];
+    auto temp = ambit::BlockedTensor::build(tensor_type_, "temp_caav", {"aaaa"});
+    temp["uxyv"] += 0.5 * H2["vemx"] * S2["myue"];
+    temp["uxyv"] += 0.5 * H2["vexm"] * S2["ymue"];
     E += temp["uxyv"] * Eta1_["uv"] * L1_["xy"];
 
     // [H2, T2] L1 from caaa and aaav
     temp.zero();
     temp.set_name("temp_aaav_caaa");
-    build_K2_blocks({"avaa", "aaca"});
-    temp["uxyv"] += 0.25 * K2["vexw"] * T2["yzue"] * L1_["wz"];
-    temp["uxyv"] += 0.25 * K2["vzmx"] * T2["myuw"] * Eta1_["wz"];
+    temp["uxyv"] += 0.25 * H2["vexw"] * S2["yzue"] * L1_["wz"];
+    temp["uxyv"] += 0.25 * H2["vzmx"] * S2["myuw"] * Eta1_["wz"];
     E += temp["uxyv"] * Eta1_["uv"] * L1_["xy"];
 
     // <[Hbar2, T2]> C_4 (C_2)^2
@@ -167,21 +146,18 @@ void SADSRG::H2_T2_C0(BlockedTensor& H2, BlockedTensor& T2, const double& alpha,
     temp["uvxy"] += 0.5 * H2["ezxy"] * T2["uvew"] * Eta1_["wz"];
 
     // HP
-    build_K2_blocks({"avac"});
-    temp["uvxy"] += K2["uexm"] * T2["vmye"];
-    temp["uvxy"] -= H2["uexm"] * T2["mvye"];
+    temp["uvxy"] += H2["uexm"] * S2["vmye"];
+    temp["uvxy"] -= H2["uemx"] * T2["vmye"];
     temp["uvxy"] -= H2["vemx"] * T2["umey"];
 
     // HP with Gamma1
-    build_K2_blocks({"vaaa"});
-    temp["uvxy"] += 0.5 * K2["euwx"] * T2["zvey"] * L1_["wz"];
-    temp["uvxy"] -= 0.5 * H2["euwx"] * T2["vzey"] * L1_["wz"];
+    temp["uvxy"] += 0.5 * H2["euwx"] * S2["zvey"] * L1_["wz"];
+    temp["uvxy"] -= 0.5 * H2["euxw"] * T2["zvey"] * L1_["wz"];
     temp["uvxy"] -= 0.5 * H2["evxw"] * T2["uzey"] * L1_["wz"];
 
     // HP with Eta1
-    build_K2_blocks({"aaca"});
-    temp["uvxy"] += 0.5 * K2["wumx"] * T2["mvzy"] * Eta1_["wz"];
-    temp["uvxy"] -= 0.5 * H2["wumx"] * T2["mvyz"] * Eta1_["wz"];
+    temp["uvxy"] += 0.5 * H2["wumx"] * S2["mvzy"] * Eta1_["wz"];
+    temp["uvxy"] -= 0.5 * H2["wuxm"] * T2["mvzy"] * Eta1_["wz"];
     temp["uvxy"] -= 0.5 * H2["vwmx"] * T2["muyz"] * Eta1_["wz"];
 
     E += temp["uvxy"] * L2_["uvxy"];
@@ -209,67 +185,44 @@ void SADSRG::V_T2_C0_DF(BlockedTensor& B, BlockedTensor& T2, const double& alpha
 
     // <[Hbar2, T2]> (C_2)^4
 
-    // form a temporary tensor K2 = 2 * H2["ijab"] - H2["ijba"]
-    BlockedTensor K2;
-    auto build_K2_blocks = [&](const std::vector<std::string>& blocks) {
-        K2 = ambit::BlockedTensor::build(tensor_type_, "temp_K2", blocks);
-        K2["abij"] = 2.0 * B["gai"] * B["gbj"];
-        K2["abij"] -= B["gaj"] * B["gbi"];
-    };
+    // form a temporary tensor S2 = 2 * T2["ijab"] - T2["ijba"]
+    auto S2 = ambit::BlockedTensor::build(tensor_type_, "S2", T2.block_labels());
+    S2["ijab"] = 2.0 * T2["ijab"];
+    S2["ijab"] -= T2["ijba"];
 
-    // [H2, T2] from ccvv
-    build_K2_blocks({"vvcc"});
-    E += K2["efmn"] * T2["mnef"];
+    // [H2, T2] from ccvv, cavv, and ccav
+    auto temp = ambit::BlockedTensor::build(tensor_type_, "temp_220", {"Lvc"});
+    temp["gem"] += B["gfn"] * S2["mnef"];
+    temp["gem"] += B["gfu"] * S2["mvef"] * L1_["uv"];
+    temp["gem"] += B["gvn"] * S2["nmue"] * Eta1_["uv"];
+    E += temp["gem"] * B["gem"];
 
-    // [H2, T2] L1 from cavv
-    auto temp = ambit::BlockedTensor::build(tensor_type_, "temp_cavv", {"aa"});
-    build_K2_blocks({"vvca"});
-    temp["vu"] += K2["efmu"] * T2["mvef"];
-    E += temp["vu"] * L1_["uv"];
-
-    // [H2, T2] L1 from ccav
-    temp.zero();
-    temp.set_name("temp_ccav");
-    build_K2_blocks({"avcc"});
-    temp["vu"] += K2["vemn"] * T2["mnue"];
-    E += temp["vu"] * Eta1_["uv"];
+    std::vector<std::string> blocks{"aacc", "aaca", "vvaa", "vaaa", "avac", "avca"};
+    auto H2 = ambit::BlockedTensor::build(tensor_type_, "temp_H2", blocks);
+    H2["abij"] = B["gai"] * B["gbj"];
 
     // [H2, T2] L1 from aavv
-    temp = ambit::BlockedTensor::build(tensor_type_, "temp_aavv", {"aaaa"});
-    build_K2_blocks({"vvaa"});
-    temp["yvxu"] += K2["efxu"] * T2["yvef"];
-    E += 0.25 * temp["yvxu"] * L1_["uv"] * L1_["xy"];
+    E += 0.25 * H2["efxu"] * S2["yvef"] * L1_["uv"] * L1_["xy"];
 
     // [H2, T2] L1 from ccaa
-    temp.zero();
-    temp.set_name("temp_ccaa");
-    build_K2_blocks({"aacc"});
-    temp["vyux"] += K2["vymn"] * T2["mnux"];
-    E += 0.25 * temp["vyux"] * Eta1_["uv"] * Eta1_["xy"];
+    E += 0.25 * H2["vymn"] * S2["mnux"] * Eta1_["uv"] * Eta1_["xy"];
 
     // [H2, T2] L1 from caav
-    temp.zero();
-    temp.set_name("temp_caav");
-    build_K2_blocks({"avca", "avac"});
-    temp["uxyv"] += 0.5 * K2["vemx"] * T2["myue"];
-    temp["uxyv"] += 0.5 * K2["vexm"] * T2["ymue"];
+    temp = ambit::BlockedTensor::build(tensor_type_, "temp_caav", {"aaaa"});
+    temp["uxyv"] += 0.5 * H2["vemx"] * S2["myue"];
+    temp["uxyv"] += 0.5 * H2["vexm"] * S2["ymue"];
     E += temp["uxyv"] * Eta1_["uv"] * L1_["xy"];
 
     // [H2, T2] L1 from caaa and aaav
     temp.zero();
     temp.set_name("temp_aaav_caaa");
-    build_K2_blocks({"avaa", "aaca"});
-    temp["uxyv"] += 0.25 * K2["vexw"] * T2["yzue"] * L1_["wz"];
-    temp["uxyv"] += 0.25 * K2["vzmx"] * T2["myuw"] * Eta1_["wz"];
+    temp["uxyv"] += 0.25 * H2["vexw"] * S2["yzue"] * L1_["wz"];
+    temp["uxyv"] += 0.25 * H2["vzmx"] * S2["myuw"] * Eta1_["wz"];
     E += temp["uxyv"] * Eta1_["uv"] * L1_["xy"];
 
     // <[Hbar2, T2]> C_4 (C_2)^2
     temp.zero();
     temp.set_name("temp_H2T2C0_L2");
-
-    std::vector<std::string> blocks{"aacc", "aaca", "vvaa", "vaaa", "avac", "avca"};
-    auto H2 = ambit::BlockedTensor::build(tensor_type_, "temp_H2", blocks);
-    H2["abij"] = B["gai"] * B["gbj"];
 
     // HH
     temp["uvxy"] += 0.5 * H2["uvmn"] * T2["mnxy"];
@@ -280,21 +233,18 @@ void SADSRG::V_T2_C0_DF(BlockedTensor& B, BlockedTensor& T2, const double& alpha
     temp["uvxy"] += 0.5 * H2["ezxy"] * T2["uvew"] * Eta1_["wz"];
 
     // HP
-    build_K2_blocks({"avac"});
-    temp["uvxy"] += K2["uexm"] * T2["vmye"];
-    temp["uvxy"] -= H2["uexm"] * T2["mvye"];
+    temp["uvxy"] += H2["uexm"] * S2["vmye"];
+    temp["uvxy"] -= H2["uemx"] * T2["vmye"];
     temp["uvxy"] -= H2["vemx"] * T2["umey"];
 
     // HP with Gamma1
-    build_K2_blocks({"vaaa"});
-    temp["uvxy"] += 0.5 * K2["euwx"] * T2["zvey"] * L1_["wz"];
-    temp["uvxy"] -= 0.5 * H2["euwx"] * T2["vzey"] * L1_["wz"];
+    temp["uvxy"] += 0.5 * H2["euwx"] * S2["zvey"] * L1_["wz"];
+    temp["uvxy"] -= 0.5 * H2["euxw"] * T2["zvey"] * L1_["wz"];
     temp["uvxy"] -= 0.5 * H2["evxw"] * T2["uzey"] * L1_["wz"];
 
     // HP with Eta1
-    build_K2_blocks({"aaca"});
-    temp["uvxy"] += 0.5 * K2["wumx"] * T2["mvzy"] * Eta1_["wz"];
-    temp["uvxy"] -= 0.5 * H2["wumx"] * T2["mvyz"] * Eta1_["wz"];
+    temp["uvxy"] += 0.5 * H2["wumx"] * S2["mvzy"] * Eta1_["wz"];
+    temp["uvxy"] -= 0.5 * H2["wuxm"] * T2["mvzy"] * Eta1_["wz"];
     temp["uvxy"] -= 0.5 * H2["vwmx"] * T2["muyz"] * Eta1_["wz"];
 
     E += temp["uvxy"] * L2_["uvxy"];
