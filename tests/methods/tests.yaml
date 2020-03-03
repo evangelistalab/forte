@@ -245,6 +245,11 @@ mrdsrg-pt2:
    - mrdsrg-srgpt2-1
   ultralong:
    - mrdsrg-srgpt2-2
+mrdsrg-spin-adapted:
+  short:
+   - mrdsrg-spin-adapted-1
+  long:
+   - mrdsrg-spin-adapted-2
 pci:
   short:
    - pci-1
