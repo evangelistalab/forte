@@ -95,6 +95,10 @@ double SA_MRDSRG::compute_energy_ldsrg2() {
 
     // start iteration
     for (int cycle = 1; cycle <= maxiter; ++cycle) {
+        // use DT2_ as an intermediate used for compute Hbar
+        DT2_["ijab"] = 2.0 * T2_["ijab"];
+        DT2_["ijab"] -= T2_["ijba"];
+
         // compute Hbar
         local_timer t_hbar;
         timer hbar("Compute Hbar");

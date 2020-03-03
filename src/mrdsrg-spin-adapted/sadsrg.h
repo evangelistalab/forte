@@ -291,10 +291,6 @@ class SADSRG : public DynamicCorrelationSolver {
     /// Compute two-body term of commutator [V, T2], V is constructed from B (DF/CD)
     void V_T2_C2_DF(BlockedTensor& B, BlockedTensor& T2, const double& alpha, BlockedTensor& C2);
 
-    /// Compute two-body term of commutator [V, T2], V is constructed from B (DF/CD) in batches
-    void V_T2_C2_DF_BATCH(BlockedTensor& B, BlockedTensor& T2, const double& alpha,
-                          BlockedTensor& C2);
-
     /// Diagonalize the diagonal blocks of the Fock matrix
     std::vector<double> diagonalize_Fock_diagblocks(BlockedTensor& U);
     /// Separate an 2D ambit::Tensor according to its irrep

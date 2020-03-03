@@ -223,6 +223,26 @@ class SA_MRDSRG : public SADSRG {
     void print_t1_intruder(const std::vector<std::pair<std::vector<size_t>, double>>& list);
     /// Print t2 intruder analysis
     void print_t2_intruder(const std::vector<std::pair<std::vector<size_t>, double>>& list);
+
+    // => More specific commutators for LDSRG(2) <=
+
+    /// Compute zero-body term of commutator [H2, T2]
+    void H2_T2_C0(BlockedTensor& H2, BlockedTensor& T2, const double& alpha, double& C0);
+
+    /// Compute zero-body term of commutator [V, T2], V is constructed from B (DF/CD)
+    void V_T2_C0_DF(BlockedTensor& B, BlockedTensor& T1, const double& alpha, double& C0);
+
+    /// Compute one-body term of commutator [H2, T2]
+    void H2_T2_C1(BlockedTensor& H2, BlockedTensor& T2, const double& alpha, BlockedTensor& C1);
+
+    /// Compute two-body term of commutator [H2, T2]
+    void H2_T2_C2(BlockedTensor& H2, BlockedTensor& T2, const double& alpha, BlockedTensor& C2);
+
+    /// Compute one-body term of commutator [V, T2], V is constructed from B (DF/CD)
+    void V_T2_C1_DF(BlockedTensor& B, BlockedTensor& T2, const double& alpha, BlockedTensor& C1);
+
+    /// Compute two-body term of commutator [V, T2], V is constructed from B (DF/CD)
+    void V_T2_C2_DF(BlockedTensor& B, BlockedTensor& T2, const double& alpha, BlockedTensor& C2);
 };
 } // namespace forte
 

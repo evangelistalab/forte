@@ -511,9 +511,10 @@ void SADSRG::V_T2_C1_DF(BlockedTensor& B, BlockedTensor& T2, const double& alpha
     C1["pa"] += temp["gia"] * B["gpi"];
 
     // [Hbar2, T2] C_4 C_2 1:3 -> C1
-    C1["jb"] += 0.5 * alpha * B["gax"] * B["gvy"] * S2["ujab"] * L2_["xyuv"];
-
-    C1["jb"] -= 0.5 * alpha * B["gui"] * B["gvy"] * S2["ijxb"] * L2_["xyuv"];
+    temp = ambit::BlockedTensor::build(tensor_type_, "DFtemp221", {"Laa"});
+    temp["gxu"] = B["gvy"] * L2_["xyuv"];
+    C1["jb"] += 0.5 * alpha * B["gax"] * S2["ujab"] * temp["gxu"];
+    C1["jb"] -= 0.5 * alpha * B["gui"] * S2["ijxb"] * temp["gxu"];
 
     temp = ambit::BlockedTensor::build(tensor_type_, "DFtemp221", {"L"});
     temp["g"] += alpha * B["gex"] * T2["uvey"] * L2_["xyuv"];
@@ -534,24 +535,11 @@ void SADSRG::H1_T2_C2(BlockedTensor& H1, BlockedTensor& T2, const double& alpha,
                       BlockedTensor& C2) {
     local_timer timer;
 
-    std::vector<std::string> hhpp;
-    for (const std::string& block : T2.block_labels()) {
-        if (C2.is_block(block)) {
-            hhpp.push_back(block);
-        }
-    }
+    C2["ijpb"] += alpha * T2["ijab"] * H1["ap"];
+    C2["jibp"] += alpha * T2["ijab"] * H1["ap"];
 
-    auto temp = ambit::BlockedTensor::build(tensor_type_, "temp122", hhpp);
-    temp["ijab"] += alpha * T2["ijcb"] * H1["ca"];
-    temp["ijab"] -= alpha * T2["kjab"] * H1["ik"];
-    C2["ijab"] += temp["ijab"];
-    C2["jiba"] += temp["ijab"];
-
-    C2["ijmb"] += alpha * T2["ijab"] * H1["am"];
-    C2["jibm"] += alpha * T2["ijab"] * H1["am"];
-
-    C2["ejab"] -= alpha * T2["ijab"] * H1["ei"];
-    C2["jeba"] -= alpha * T2["ijab"] * H1["ei"];
+    C2["qjab"] -= alpha * T2["ijab"] * H1["qi"];
+    C2["jqba"] -= alpha * T2["ijab"] * H1["qi"];
 
     if (print_ > 2) {
         outfile->Printf("\n    Time for [H1, T2] -> C2 : %12.3f", timer.get());
@@ -656,70 +644,46 @@ void SADSRG::V_T2_C2_DF(BlockedTensor& B, BlockedTensor& T2, const double& alpha
                         BlockedTensor& C2) {
     local_timer timer;
 
-    auto S2 = ambit::BlockedTensor::build(tensor_type_, "S2", T2.block_labels());
-    S2["ijab"] = 2.0 * T2["ijab"];
-    S2["ijab"] -= T2["ijba"];
-
     // particle-particle contractions
-    C2["ijrs"] += alpha * B["gar"] * B["gbs"] * T2["ijab"];
+    C2["ijrs"] += batched("r", alpha * B["gar"] * B["gbs"] * T2["ijab"]);
 
-    C2["ijrs"] -= 0.5 * alpha * L1_["xy"] * T2["ijxb"] * B["gyr"] * B["gbs"];
-    C2["ijrs"] -= 0.5 * alpha * L1_["xy"] * T2["ijbx"] * B["gbr"] * B["gys"];
+    C2["ijrs"] -= batched("r", 0.5 * alpha * L1_["xy"] * T2["ijxb"] * B["gyr"] * B["gbs"]);
+    C2["jisr"] -= batched("r", 0.5 * alpha * L1_["xy"] * T2["ijxb"] * B["gyr"] * B["gbs"]);
 
     // hole-hole contractions
     C2["pqab"] += alpha * B["gpi"] * B["gqj"] * T2["ijab"];
 
     C2["pqab"] -= 0.5 * alpha * Eta1_["xy"] * T2["yjab"] * B["gpx"] * B["gqj"];
-    C2["pqab"] -= 0.5 * alpha * Eta1_["xy"] * T2["jyab"] * B["gpj"] * B["gqx"];
+    C2["qpba"] -= 0.5 * alpha * Eta1_["xy"] * T2["yjab"] * B["gpx"] * B["gqj"];
 
     // hole-particle contractions
-    C2["qjsb"] += alpha * B["gam"] * B["gqs"] * T2["mjab"];
+    auto S2 = ambit::BlockedTensor::build(tensor_type_, "S2", T2.block_labels());
+    S2["ijab"] = 2.0 * T2["ijab"];
+    S2["ijab"] -= T2["ijba"];
+
+    auto temp = ambit::BlockedTensor::build(tensor_type_, "DFtemp222", {"Lhp"});
+    temp["gjb"] += alpha * B["gam"] * S2["mjab"];
+    temp["gjb"] += 0.5 * alpha * L1_["xy"] * S2["yjab"] * B["gax"];
+    temp["gjb"] -= 0.5 * alpha * L1_["xy"] * S2["ijxb"] * B["gyi"];
+
+    C2["qjsb"] += alpha * temp["gjb"] * B["gqs"];
+    C2["jqbs"] += alpha * temp["gjb"] * B["gqs"];
+
     C2["qjsb"] -= alpha * B["gas"] * B["gqm"] * T2["mjab"];
-
-    C2["qjsb"] += 0.5 * alpha * L1_["xy"] * S2["yjab"] * B["gax"] * B["gqs"];
     C2["qjsb"] -= 0.5 * alpha * L1_["xy"] * T2["yjab"] * B["gas"] * B["gqx"];
-
-    C2["qjsb"] -= 0.5 * alpha * L1_["xy"] * S2["ijxb"] * B["gyi"] * B["gqs"];
     C2["qjsb"] += 0.5 * alpha * L1_["xy"] * T2["ijxb"] * B["gys"] * B["gqi"];
 
-    C2["iqsb"] -= alpha * T2["imab"] * B["gas"] * B["gqm"];
-    C2["iqsb"] -= 0.5 * alpha * L1_["xy"] * T2["iyab"] * B["gas"] * B["gqx"];
-    C2["iqsb"] += 0.5 * alpha * L1_["xy"] * T2["ijxb"] * B["gys"] * B["gqj"];
+    C2["jqbs"] -= alpha * B["gas"] * B["gqm"] * T2["mjab"];
+    C2["jqbs"] -= 0.5 * alpha * L1_["xy"] * T2["yjab"] * B["gas"] * B["gqx"];
+    C2["jqbs"] += 0.5 * alpha * L1_["xy"] * T2["ijxb"] * B["gys"] * B["gqi"];
 
-    C2["qjas"] -= alpha * T2["mjab"] * B["gqm"] * B["gbs"];
-    C2["qjas"] -= 0.5 * alpha * L1_["xy"] * T2["yjab"] * B["gqx"] * B["gbs"];
-    C2["qjas"] += 0.5 * alpha * L1_["xy"] * T2["ijax"] * B["gqi"] * B["gys"];
+    C2["jqsb"] -= alpha * B["gas"] * B["gqm"] * T2["mjba"];
+    C2["jqsb"] -= 0.5 * alpha * L1_["xy"] * T2["yjba"] * B["gas"] * B["gqx"];
+    C2["jqsb"] += 0.5 * alpha * L1_["xy"] * T2["ijbx"] * B["gys"] * B["gqi"];
 
-    C2["iqas"] += alpha * S2["imab"] * B["gbm"] * B["gqs"];
-    C2["iqas"] -= alpha * T2["imab"] * B["gbs"] * B["gqm"];
-
-    C2["iqas"] += 0.5 * alpha * L1_["xy"] * S2["iyab"] * B["gbx"] * B["gqs"];
-    C2["iqas"] -= 0.5 * alpha * L1_["xy"] * T2["iyab"] * B["gbs"] * B["gqx"];
-
-    C2["iqas"] -= 0.5 * alpha * L1_["xy"] * S2["ijax"] * B["gyj"] * B["gqs"];
-    C2["iqas"] += 0.5 * alpha * L1_["xy"] * T2["ijax"] * B["gys"] * B["gqj"];
-
-    //    C2["qjsb"] += alpha * H2["aqms"] * S2["mjab"];
-    //    C2["qjsb"] -= alpha * H2["aqsm"] * T2["mjab"];
-    //    C2["qjsb"] += 0.5 * alpha * L1_["xy"] * S2["yjab"] * H2["aqxs"];
-    //    C2["qjsb"] -= 0.5 * alpha * L1_["xy"] * T2["yjab"] * H2["aqsx"];
-    //    C2["qjsb"] -= 0.5 * alpha * L1_["xy"] * S2["ijxb"] * H2["yqis"];
-    //    C2["qjsb"] += 0.5 * alpha * L1_["xy"] * T2["ijxb"] * H2["yqsi"];
-
-    //    C2["jqbs"] += alpha * H2["aqms"] * S2["mjab"];
-    //    C2["jqbs"] -= alpha * H2["aqsm"] * T2["mjab"];
-    //    C2["jqbs"] += 0.5 * alpha * L1_["xy"] * S2["yjab"] * H2["aqxs"];
-    //    C2["jqbs"] -= 0.5 * alpha * L1_["xy"] * T2["yjab"] * H2["aqsx"];
-    //    C2["jqbs"] -= 0.5 * alpha * L1_["xy"] * S2["ijxb"] * H2["yqis"];
-    //    C2["jqbs"] += 0.5 * alpha * L1_["xy"] * T2["ijxb"] * H2["yqsi"];
-
-    //    C2["jqsb"] -= alpha * H2["aqsm"] * T2["mjba"];
-    //    C2["jqsb"] -= 0.5 * alpha * L1_["xy"] * T2["yjba"] * H2["aqsx"];
-    //    C2["jqsb"] += 0.5 * alpha * L1_["xy"] * T2["ijbx"] * H2["yqsi"];
-
-    //    C2["qjbs"] -= alpha * H2["aqsm"] * T2["mjba"];
-    //    C2["qjbs"] -= 0.5 * alpha * L1_["xy"] * T2["yjba"] * H2["aqsx"];
-    //    C2["qjbs"] += 0.5 * alpha * L1_["xy"] * T2["ijbx"] * H2["yqsi"];
+    C2["qjbs"] -= alpha * B["gas"] * B["gqm"] * T2["mjba"];
+    C2["qjbs"] -= 0.5 * alpha * L1_["xy"] * T2["yjba"] * B["gas"] * B["gqx"];
+    C2["qjbs"] += 0.5 * alpha * L1_["xy"] * T2["ijbx"] * B["gys"] * B["gqi"];
 
     if (print_ > 2) {
         outfile->Printf("\n    Time for [H2, T2] -> C2 : %12.3f", timer.get());
