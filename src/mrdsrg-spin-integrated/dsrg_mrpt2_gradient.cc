@@ -394,13 +394,82 @@ void DSRG_MRPT2::set_w() {
     W_["mu"] = W_["um"];
 
     //NOTICE: w for {active-active}
+    temp1 = BTF_->build(CoreTensor, "temporal tensor 1", {"pphh", "pPhH"});
+    temp2 = BTF_->build(CoreTensor, "temporal tensor 2", {"aaphh", "aaPhH"});
 
+    temp1["cdkl"] = V["cdkl"] * Eeps2_p["klcd"];
+    temp1["cDkL"] = V["cDkL"] * Eeps2_p["kLcD"];
+    temp2["zwbij"] = V["zbij"] * Eeps2_m1["ijwb"];
+    temp2["zwBiJ"] = V["zBiJ"] * Eeps2_m1["iJwB"];
+    W_["zw"] += 0.25 * temp1["cdkl"] * temp2["zwbij"] * Gamma1["ki"] * Gamma1["lj"] * Eta1["wc"] * Eta1["bd"];
+    W_["zw"] += 0.50 * temp1["cDkL"] * temp2["zwBiJ"] * Gamma1["ki"] * Gamma1["LJ"] * Eta1["wc"] * Eta1["BD"];
+    temp1.zero();
+    temp2.zero();
 
+    temp1["cdkl"] = V["cdkl"] * Eeps2_m1["klcd"];
+    temp1["cDkL"] = V["cDkL"] * Eeps2_m1["kLcD"];
+    temp2["zwbij"] = V["zbij"] * Eeps2_p["ijwb"];
+    temp2["zwBiJ"] = V["zBiJ"] * Eeps2_p["iJwB"];
+    W_["zw"] += 0.25 * temp1["cdkl"] * temp2["zwbij"] * Gamma1["ki"] * Gamma1["lj"] * Eta1["wc"] * Eta1["bd"];
+    W_["zw"] += 0.50 * temp1["cDkL"] * temp2["zwBiJ"] * Gamma1["ki"] * Gamma1["LJ"] * Eta1["wc"] * Eta1["BD"];
 
+    temp1 = BTF_->build(CoreTensor, "temporal tensor 1", {"pphh", "pPhH"});
+    temp2 = BTF_->build(CoreTensor, "temporal tensor 2", {"ppaah", "pPaaH"});
 
+    temp1["cdkl"] = V["cdkl"] * Eeps2_p["klcd"];
+    temp1["cDkL"] = V["cDkL"] * Eeps2_p["kLcD"];
+    temp2["abzwj"] = V["abzj"] * Eeps2_m1["wjab"];
+    temp2["aBzwJ"] = V["aBzJ"] * Eeps2_m1["wJaB"];
+    W_["zw"] += 0.25 * temp1["cdkl"] * temp2["abzwj"] * Gamma1["kw"] * Gamma1["lj"] * Eta1["ac"] * Eta1["bd"];
+    W_["zw"] += 0.50 * temp1["cDkL"] * temp2["aBzwJ"] * Gamma1["kw"] * Gamma1["LJ"] * Eta1["ac"] * Eta1["BD"];
+    temp1.zero();
+    temp2.zero();
 
+    temp1["cdkl"] = V["cdkl"] * Eeps2_m1["klcd"];
+    temp1["cDkL"] = V["cDkL"] * Eeps2_m1["kLcD"];
+    temp2["abzwj"] = V["abzj"] * Eeps2_p["wjab"];
+    temp2["aBzwJ"] = V["aBzJ"] * Eeps2_p["wJaB"];
+    W_["zw"] += 0.25 * temp1["cdkl"] * temp2["abzwj"] * Gamma1["kw"] * Gamma1["lj"] * Eta1["ac"] * Eta1["bd"];
+    W_["zw"] += 0.50 * temp1["cDkL"] * temp2["aBzwJ"] * Gamma1["kw"] * Gamma1["LJ"] * Eta1["ac"] * Eta1["BD"];
 
+    W_["zw"] += Z["e1,m1"] * V["m1,z,e1,u"] * Gamma1["uw"]; 
+    W_["zw"] += Z["E1,M1"] * V["z,M1,u,E1"] * Gamma1["uw"]; 
+    W_["zw"] += Z["e1,m1"] * V["m1,u,e1,z"] * Gamma1["uw"]; 
+    W_["zw"] += Z["E1,M1"] * V["u,M1,z,E1"] * Gamma1["uw"];
 
+    W_["zw"] += Z["n1,w"] * F["z,n1"];
+
+    W_["zw"] += Z["n1,u"] * V["u,v,n1,z"] * Gamma1["wv"];
+    W_["zw"] += Z["N1,U"] * V["v,U,z,N1"] * Gamma1["wv"];
+    W_["zw"] += Z["n1,u"] * V["u,z,n1,v"] * Gamma1["wv"];
+    W_["zw"] += Z["N1,U"] * V["z,U,v,N1"] * Gamma1["wv"];
+    
+    W_["zw"] -= Z["n1,u"] * H["z,n1"] * Gamma1["uw"];
+    W_["zw"] -= Z["n1,u"] * V["z,m1,n1,m"] * Gamma1["uw"] * I["m1,m"];
+    W_["zw"] -= Z["n1,u"] * V["z,M1,n1,M"] * Gamma1["uw"] * I["M1,M"];
+    W_["zw"] -= 0.5 * Z["n1,u"] * V["x,y,n1,z"] * Gamma2["u,w,x,y"];
+    W_["zw"] -= Z["N1,U"] * V["y,X,z,N1"] * Gamma2["w,U,y,X"];
+    W_["zw"] -= Z["n1,u"] * V["z,y,n1,v"] * Gamma2["u,v,w,y"];
+    W_["zw"] -= 2.0 * Z["n1,u"] * V["z,Y,n1,V"] * Gamma2["u,V,w,Y"];
+
+    W_["zw"] += Z["e1,u"] * H["z,e1"] * Gamma1["uw"];
+    W_["zw"] += Z["e1,u"] * V["z,m1,e1,m"] * Gamma1["uw"] * I["m1,m"];
+    W_["zw"] += Z["e1,u"] * V["z,M1,e1,M"] * Gamma1["uw"] * I["M1,M"];
+    W_["zw"] += 0.5 * Z["e1,u"] * V["x,y,e1,z"] * Gamma2["u,w,x,y"];
+    W_["zw"] += Z["E1,U"] * V["y,X,z,E1"] * Gamma2["w,U,y,X"];
+    W_["zw"] += Z["e1,u"] * V["z,y,e1,v"] * Gamma2["u,v,w,y"];
+    W_["zw"] += 2.0 * Z["e1,u"] * V["z,Y,e1,V"] * Gamma2["u,V,w,Y"];
+
+    W_["zw"] += Z["m1,n1"] * V["n1,v,m1,z"] * Gamma1["wv"];
+    W_["zw"] += Z["M1,N1"] * V["v,N1,z,M1"] * Gamma1["wv"];
+
+    W_["zw"] += Z["e1,f1"] * V["f1,v,e1,z"] * Gamma1["wv"];
+    W_["zw"] += Z["E1,F1"] * V["v,F1,z,E1"] * Gamma1["wv"];
+
+    W_["zw"] += Z["u1,v1"] * V["v1,v,u1,z"] * Gamma1["wv"];
+    W_["zw"] += Z["U1,V1"] * V["v,V1,z,U1"] * Gamma1["wv"];
+
+    W_["zw"] += Z["wv"] * F["vz"];
 
 
     // Copy alpha-alpha to beta-beta 
@@ -439,11 +508,6 @@ void DSRG_MRPT2::set_w() {
     (W_.block("VA")).iterate([&](const std::vector<size_t>& i, double& value) {
         value = W_.block("va").data()[i[0] * na_ + i[1]];
     });
-
-
-
-
-
 
 }
 
