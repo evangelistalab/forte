@@ -145,7 +145,6 @@ src/mrdsrg-spin-adapted/sadsrg_comm.cc
 src/mrdsrg-spin-adapted/sa_ldsrg2.cc
 src/mrdsrg-spin-adapted/sa_mrdsrg.cc
 src/mrdsrg-spin-adapted/sa_mrdsrg_amps.cc
-src/mrdsrg-spin-adapted/sa_mrdsrg_comm.cc
 src/mrdsrg-spin-adapted/sa_mrdsrg_diis.cc
 src/mrdsrg-spin-integrated/active_dsrgpt2.cc
 src/mrdsrg-spin-integrated/dsrg_mrpt2.cc

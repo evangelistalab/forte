@@ -257,8 +257,9 @@ class SADSRG : public DynamicCorrelationSolver {
     void H1_T2_C0(BlockedTensor& H1, BlockedTensor& T2, const double& alpha, double& C0);
     /// Compute zero-body term of commutator [H2, T1]
     void H2_T1_C0(BlockedTensor& H2, BlockedTensor& T1, const double& alpha, double& C0);
-    /// Compute zero-body term of commutator [H2, T2]
-    void H2_T2_C0(BlockedTensor& H2, BlockedTensor& T2, const double& alpha, double& C0);
+    /// Compute zero-body term of commutator [H2, T2], S2[ijab] = 2 * T[ijab] - T[ijba]
+    void H2_T2_C0(BlockedTensor& H2, BlockedTensor& T2, BlockedTensor& S2, const double& alpha,
+                  double& C0);
 
     /// Compute one-body term of commutator [H1, T1]
     void H1_T1_C1(BlockedTensor& H1, BlockedTensor& T1, const double& alpha, BlockedTensor& C1);
@@ -266,30 +267,38 @@ class SADSRG : public DynamicCorrelationSolver {
     void H1_T2_C1(BlockedTensor& H1, BlockedTensor& T2, const double& alpha, BlockedTensor& C1);
     /// Compute one-body term of commutator [H2, T1]
     void H2_T1_C1(BlockedTensor& H2, BlockedTensor& T1, const double& alpha, BlockedTensor& C1);
-    /// Compute one-body term of commutator [H2, T2]
-    void H2_T2_C1(BlockedTensor& H2, BlockedTensor& T2, const double& alpha, BlockedTensor& C1);
+    /// Compute one-body term of commutator [H2, T2], S2[ijab] = 2 * T[ijab] - T[ijba]
+    void H2_T2_C1(BlockedTensor& H2, BlockedTensor& T2, BlockedTensor& S2, const double& alpha,
+                  BlockedTensor& C1);
 
     /// Compute two-body term of commutator [H2, T1]
     void H2_T1_C2(BlockedTensor& H2, BlockedTensor& T1, const double& alpha, BlockedTensor& C2);
     /// Compute two-body term of commutator [H1, T2]
     void H1_T2_C2(BlockedTensor& H1, BlockedTensor& T2, const double& alpha, BlockedTensor& C2);
-    /// Compute two-body term of commutator [H2, T2]
-    void H2_T2_C2(BlockedTensor& H2, BlockedTensor& T2, const double& alpha, BlockedTensor& C2);
+    /// Compute two-body term of commutator [H2, T2], S2[ijab] = 2 * T[ijab] - T[ijba]
+    void H2_T2_C2(BlockedTensor& H2, BlockedTensor& T2, BlockedTensor& S2, const double& alpha,
+                  BlockedTensor& C2);
 
     /// Compute zero-body term of commutator [V, T1], V is constructed from B (DF/CD)
     void V_T1_C0_DF(BlockedTensor& B, BlockedTensor& T1, const double& alpha, double& C0);
     /// Compute zero-body term of commutator [V, T2], V is constructed from B (DF/CD)
-    void V_T2_C0_DF(BlockedTensor& B, BlockedTensor& T1, const double& alpha, double& C0);
+    void V_T2_C0_DF(BlockedTensor& B, BlockedTensor& T1, BlockedTensor& S2, const double& alpha,
+                    double& C0);
 
     /// Compute one-body term of commutator [V, T1], V is constructed from B (DF/CD)
     void V_T1_C1_DF(BlockedTensor& B, BlockedTensor& T1, const double& alpha, BlockedTensor& C1);
     /// Compute one-body term of commutator [V, T2], V is constructed from B (DF/CD)
-    void V_T2_C1_DF(BlockedTensor& B, BlockedTensor& T2, const double& alpha, BlockedTensor& C1);
+    void V_T2_C1_DF(BlockedTensor& B, BlockedTensor& T2, BlockedTensor& S2, const double& alpha,
+                    BlockedTensor& C1);
 
     /// Compute two-body term of commutator [V, T1], V is constructed from B (DF/CD)
     void V_T1_C2_DF(BlockedTensor& B, BlockedTensor& T1, const double& alpha, BlockedTensor& C2);
     /// Compute two-body term of commutator [V, T2], V is constructed from B (DF/CD)
-    void V_T2_C2_DF(BlockedTensor& B, BlockedTensor& T2, const double& alpha, BlockedTensor& C2);
+    void V_T2_C2_DF(BlockedTensor& B, BlockedTensor& T2, BlockedTensor& S2, const double& alpha,
+                    BlockedTensor& C2);
+    /// Compute two-body term of commutator [V, T2], exchange of particle-hole contraction
+    void V_T2_C2_DF_PH_X(BlockedTensor& B, BlockedTensor& T2, const double& alpha,
+                         BlockedTensor& C2);
 
     /// Diagonalize the diagonal blocks of the Fock matrix
     std::vector<double> diagonalize_Fock_diagblocks(BlockedTensor& U);

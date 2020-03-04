@@ -237,10 +237,10 @@ void SA_MRDSRG::compute_hbar() {
         H1_T2_C0(O1_, T2_, factor, C0);
         if (n == 1 && eri_df_) {
             V_T1_C0_DF(B_, T1_, factor, C0);
-            V_T2_C0_DF(B_, T2_, factor, C0);
+            V_T2_C0_DF(B_, T2_, DT2_, factor, C0);
         } else {
             H2_T1_C0(O2_, T1_, factor, C0);
-            H2_T2_C0(O2_, T2_, factor, C0);
+            H2_T2_C0(O2_, T2_, DT2_, factor, C0);
         }
 
         // one-body
@@ -248,20 +248,20 @@ void SA_MRDSRG::compute_hbar() {
         H1_T2_C1(O1_, T2_, factor, C1_);
         if (n == 1 && eri_df_) {
             V_T1_C1_DF(B_, T1_, factor, C1_);
-            V_T2_C1_DF(B_, T2_, factor, C1_);
+            V_T2_C1_DF(B_, T2_, DT2_, factor, C1_);
         } else {
             H2_T1_C1(O2_, T1_, factor, C1_);
-            H2_T2_C1(O2_, T2_, factor, C1_);
+            H2_T2_C1(O2_, T2_, DT2_, factor, C1_);
         }
 
         // two-body
         H1_T2_C2(O1_, T2_, factor, C2_);
         if (n == 1 && eri_df_) {
             V_T1_C2_DF(B_, T1_, factor, C2_);
-            V_T2_C2_DF(B_, T2_, factor, C2_);
+            V_T2_C2_DF(B_, T2_, DT2_, factor, C2_);
         } else {
             H2_T1_C2(O2_, T1_, factor, C2_);
-            H2_T2_C2(O2_, T2_, factor, C2_);
+            H2_T2_C2(O2_, T2_, DT2_, factor, C2_);
         }
 
         // printing level
@@ -345,33 +345,27 @@ void SA_MRDSRG::compute_hbar_sequential() {
     });
     Hbar0_ += 0.5 * Hbar1_["uv"] * L1_["vu"];
 
+    // for simplicity, create a core-core density matrix
+    BlockedTensor D1c = BTF_->build(tensor_type_, "L1 core", {"cc"});
+    for (size_t m = 0, nc = core_mos_.size(); m < nc; ++m) {
+        D1c.block("cc").data()[m * nc + m] = 2.0;
+    }
+
     // Hbar1 becomes "Fock"
     ambit::BlockedTensor B;
     if (eri_df_) {
         B = BTF_->build(tensor_type_, "B 3-idx", {"Lgg"});
         B["grs"] = U1["rp"] * B_["gpq"] * U1["sq"];
 
-        // for simplicity, create a core-core density matrix
-        BlockedTensor D1c = BTF_->build(tensor_type_, "L1 core", {"cc"});
-        for (size_t m = 0, nc = core_mos_.size(); m < nc; ++m) {
-            D1c.block("cc").data()[m * nc + m] = 2.0;
-        }
-
         BlockedTensor temp = BTF_->build(tensor_type_, "B temp", {"L"});
         temp["g"] = B["gmn"] * D1c["mn"];
         temp["g"] += B["guv"] * L1_["uv"];
         Hbar1_["pq"] += temp["g"] * B["gpq"];
 
-        Hbar1_["pq"] -= 0.5 * B["gpn"] * B["gmq"] * D1c["mn"];
-        Hbar1_["pq"] -= 0.5 * B["gpv"] * B["guq"] * L1_["uv"];
+        Hbar1_["pq"] -= 0.5 * B["gpm"] * B["gnq"] * D1c["mn"];
+        Hbar1_["pq"] -= 0.5 * B["gpu"] * B["gvq"] * L1_["uv"];
     } else {
         Hbar2_["pqrs"] = U1["pt"] * U1["qo"] * V_["t,o,g0,g1"] * U1["r,g0"] * U1["s,g1"];
-
-        // for simplicity, create a core-core density matrix
-        BlockedTensor D1c = BTF_->build(tensor_type_, "Gamma1 core", {"cc"});
-        for (size_t m = 0, nc = core_mos_.size(); m < nc; ++m) {
-            D1c.block("cc").data()[m * nc + m] = 2.0;
-        }
 
         Hbar1_["pq"] += Hbar2_["pnqm"] * D1c["mn"];
         Hbar1_["pq"] -= 0.5 * Hbar2_["npqm"] * D1c["mn"];
@@ -389,7 +383,6 @@ void SA_MRDSRG::compute_hbar_sequential() {
 
     if (eri_df_) {
         Hbar0_ += 0.5 * B["gux"] * B["gvy"] * L2_["xyuv"];
-        Hbar0_ -= 0.5 * B["guy"] * B["gvx"] * L2_["xyuv"];
     } else {
         Hbar0_ += 0.5 * Hbar2_["uvxy"] * L2_["xyuv"];
     }
@@ -411,7 +404,6 @@ void SA_MRDSRG::compute_hbar_sequential() {
     O1_["pq"] = Hbar1_["pq"];
     if (eri_df_) {
         Hbar2_["pqrs"] = B["gpr"] * B["gqs"];
-        Hbar2_["pqrs"] -= B["gps"] * B["gqr"];
     } else {
         O2_["pqrs"] = Hbar2_["pqrs"];
     }
@@ -438,23 +430,23 @@ void SA_MRDSRG::compute_hbar_sequential() {
         if (n == 1 && eri_df_) {
             // zero-body
             H1_T2_C0(O1_, T2_, factor, C0);
-            V_T2_C0_DF(B, T2_, factor, C0);
+            V_T2_C0_DF(B, T2_, DT2_, factor, C0);
             // one-body
             H1_T2_C1(O1_, T2_, factor, C1_);
-            V_T2_C1_DF(B, T2_, factor, C1_);
+            V_T2_C1_DF(B, T2_, DT2_, factor, C1_);
             // two-body
             H1_T2_C2(O1_, T2_, factor, C2_);
-            V_T2_C2_DF(B, T2_, factor, C2_);
+            V_T2_C2_DF(B, T2_, DT2_, factor, C2_);
         } else {
             // zero-body
             H1_T2_C0(O1_, T2_, factor, C0);
-            H2_T2_C0(O2_, T2_, factor, C0);
+            H2_T2_C0(O2_, T2_, DT2_, factor, C0);
             // one-body
             H1_T2_C1(O1_, T2_, factor, C1_);
-            H2_T2_C1(O2_, T2_, factor, C1_);
+            H2_T2_C1(O2_, T2_, DT2_, factor, C1_);
             // two-body
             H1_T2_C2(O1_, T2_, factor, C2_);
-            H2_T2_C2(O2_, T2_, factor, C2_);
+            H2_T2_C2(O2_, T2_, DT2_, factor, C2_);
         }
 
         // printing level
@@ -483,7 +475,8 @@ void SA_MRDSRG::compute_hbar_sequential() {
         double norm_C1 = C1_.norm();
         double norm_C2 = C2_.norm();
         if (print_ > 2) {
-            outfile->Printf("\n  n = %3d, C1norm = %20.15f, C2norm = %20.15f", n, norm_C1, norm_C2);
+            outfile->Printf("\n  n: %3d, C0: %20.15f, C1 max: %20.15f, C2 max: %20.15f", n, C0,
+                            C1_.norm(0), C2_.norm(0));
         }
         if (std::sqrt(norm_C2 * norm_C2 + norm_C1 * norm_C1) < ct_threshold) {
             converged = true;
@@ -501,7 +494,7 @@ void SA_MRDSRG::compute_hbar_qc() {
     Hbar0_ = 0.0;
     Hbar1_["ia"] = F_["ia"];
     if (eri_df_) {
-        Hbar2_["ijab"] = B_["Lia"] * B_["Ljb"];
+        Hbar2_["ijab"] = B_["gia"] * B_["gjb"];
     } else {
         Hbar2_["ijab"] = V_["ijab"];
     }
@@ -512,10 +505,10 @@ void SA_MRDSRG::compute_hbar_qc() {
     H1_T2_C1(F_, T2_, 0.5, S1);
     if (eri_df_) {
         V_T1_C1_DF(B_, T1_, 0.5, S1);
-        V_T2_C1_DF(B_, T2_, 0.5, S1);
+        V_T2_C1_DF(B_, T2_, DT2_, 0.5, S1);
     } else {
         H2_T1_C1(V_, T1_, 0.5, S1);
-        H2_T2_C1(V_, T2_, 0.5, S1);
+        H2_T2_C1(V_, T2_, DT2_, 0.5, S1);
     }
 
     auto temp = BTF_->build(tensor_type_, "temp", {"gg"}, true);
@@ -548,10 +541,10 @@ void SA_MRDSRG::compute_hbar_qc() {
     H1_T2_C2(F_, T2_, 0.5, S2);
     if (eri_df_) {
         V_T1_C2_DF(B_, T1_, 0.5, S2);
-        V_T2_C2_DF(B_, T2_, 0.5, S2);
+        V_T2_C2_DF(B_, T2_, DT2_, 0.5, S2);
     } else {
         H2_T1_C2(V_, T1_, 0.5, S2);
-        H2_T2_C2(V_, T2_, 0.5, S2);
+        H2_T2_C2(V_, T2_, DT2_, 0.5, S2);
     }
 
     // 0.5 * [H, T]^+
@@ -559,7 +552,7 @@ void SA_MRDSRG::compute_hbar_qc() {
 
     // add bare Hamiltonian contribution
     if (eri_df_) {
-        S2["pqrs"] += B_["Lpr"] * B_["Lqs"];
+        S2["pqrs"] += B_["gpr"] * B_["gqs"];
     } else {
         S2["pqrs"] += V_["pqrs"];
     }
@@ -567,21 +560,21 @@ void SA_MRDSRG::compute_hbar_qc() {
     // compute Hbar = [S2, A]
     //   Step 1: [S2, T]_{ab}^{ij}
     H2_T1_C0(S2, T1_, 2.0, Hbar0_);
-    H2_T2_C0(S2, T2_, 2.0, Hbar0_);
+    H2_T2_C0(S2, T2_, DT2_, 2.0, Hbar0_);
     H2_T1_C1(S2, T1_, 1.0, Hbar1_);
-    H2_T2_C1(S2, T2_, 1.0, Hbar1_);
+    H2_T2_C1(S2, T2_, DT2_, 1.0, Hbar1_);
     H2_T1_C2(S2, T1_, 1.0, Hbar2_);
-    H2_T2_C2(S2, T2_, 1.0, Hbar2_);
+    H2_T2_C2(S2, T2_, DT2_, 1.0, Hbar2_);
 
     //   Step 2: [S2, T]_{ij}^{ab}
     temp = BTF_->build(tensor_type_, "temp", {"ph"}, true);
     H2_T1_C1(S2, T1_, 1.0, temp);
-    H2_T2_C1(S2, T2_, 1.0, temp);
+    H2_T2_C1(S2, T2_, DT2_, 1.0, temp);
     Hbar1_["ia"] += temp["ai"];
 
     temp = BTF_->build(tensor_type_, "temp", {"pphh"}, true);
     H2_T1_C2(S2, T1_, 1.0, temp);
-    H2_T2_C2(S2, T2_, 1.0, temp);
+    H2_T2_C2(S2, T2_, DT2_, 1.0, temp);
     Hbar2_["ijab"] += temp["abij"];
 }
 

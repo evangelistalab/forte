@@ -187,9 +187,13 @@ def forte_driver(state_weights_map, scf_info, options, ints, mo_space_info):
                 Ub = semi.Ub_t()
 
                 # Compute DSRG in the semicanonical basis
-                dsrg = forte.make_dsrg_method(correlation_solver_type, rdms,
-                                              scf_info, options, ints, mo_space_info)
-                dsrg.set_Uactv(Ua, Ub)
+                if correlation_solver_type == "SA-MRDSRG":
+                    dsrg = forte.make_sadsrg_method(rdms, scf_info, options, ints, mo_space_info)
+                    dsrg.set_Uactv(Ua)
+                else:
+                    dsrg = forte.make_dsrg_method(correlation_solver_type, rdms,
+                                                  scf_info, options, ints, mo_space_info)
+                    dsrg.set_Uactv(Ua, Ub)
                 Edsrg = dsrg.compute_energy()
 
                 if do_dipole:
