@@ -615,8 +615,13 @@ As such, the memory requirement of MR-LDSRG(2) is significantly reduced when we 
 and combine with integral factorization techniques with a batched algorithm for tensor contractions.
 
 Since much less number of tensor elements are involved, NIVO approximation dramatically reduces computation time.
-However, the overall time scaling of MR-LDSRG(2) remain unchanged (prefector reduction).
+However, the overall time scaling of MR-LDSRG(2) remain unchanged (prefactor reduction).
 The error introduced by the NIVO approximation is usually negligible.
+
+.. note::
+  If conventional two-electron integrals are used, NIVO starts from the bare Hamiltonian term
+  (i.e., :math:`\hat{H}` and all the commutators in the BCH expansion of :math:`\bar{H}` are approximated).
+  For DF or CD intregrals, however, NIVO will start from the first commutator :math:`[\hat{H}, \hat{A}]`.
 
 5. Zeroth-order Hamiltonian of DSRG-MRPT2 in MRDSRG Class
 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++
