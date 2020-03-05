@@ -73,41 +73,60 @@ void SADSRG::H2_T1_C0(BlockedTensor& H2, BlockedTensor& T1, const double& alpha,
     dsrg_time_.add("210", timer.get());
 }
 
-void SADSRG::H2_T2_C0(BlockedTensor& H2, BlockedTensor& T2, BlockedTensor& S2,
-                         const double& alpha, double& C0) {
+void SADSRG::H2_T2_C0(BlockedTensor& H2, BlockedTensor& T2, BlockedTensor& S2, const double& alpha,
+                      double& C0) {
     local_timer timer;
 
     double E = 0.0;
 
-    // <[Hbar2, T2]> (C_2)^4
-
-    // [H2, T2] from ccvv
+    // [H2, T2] (C_2)^4 from ccvv
     E += H2["efmn"] * S2["mnef"];
 
-    // [H2, T2] L1 from cavv
+    // [H2, T2] (C_2)^4 L1 from cavv
     E += H2["efmu"] * S2["mvef"] * L1_["uv"];
 
-    // [H2, T2] L1 from ccav
+    // [H2, T2] (C_2)^4 L1 from ccav
     E += H2["vemn"] * S2["mnue"] * Eta1_["uv"];
 
+    // other terms involving T2 with at least two active indices
+    H2_T2_C0_T2small(H2, T2, S2, E);
+
+    // multiply prefactor and copy to C0
+    E *= alpha;
+    C0 += E;
+
+    if (print_ > 2) {
+        outfile->Printf("\n    Time for [H2, T2] -> C0 : %12.3f", timer.get());
+    }
+    dsrg_time_.add("220", timer.get());
+}
+
+void SADSRG::H2_T2_C0_T2small(BlockedTensor& H2, BlockedTensor& T2, BlockedTensor& S2, double& C0) {
+    /**
+     * Note the following blocks should be available in memory.
+     * H2: vvaa, aacc, avca, avac, vaaa, aaca
+     * T2: aavv, ccaa, caav, acav, aava, caaa
+     * S2: aavv, ccaa, caav, acav, aava, caaa
+     */
+
     // [H2, T2] L1 from aavv
-    E += 0.25 * H2["efxu"] * S2["yvef"] * L1_["uv"] * L1_["xy"];
+    C0 += 0.25 * H2["efxu"] * S2["yvef"] * L1_["uv"] * L1_["xy"];
 
     // [H2, T2] L1 from ccaa
-    E += 0.25 * H2["vymn"] * S2["mnux"] * Eta1_["uv"] * Eta1_["xy"];
+    C0 += 0.25 * H2["vymn"] * S2["mnux"] * Eta1_["uv"] * Eta1_["xy"];
 
     // [H2, T2] L1 from caav
     auto temp = ambit::BlockedTensor::build(tensor_type_, "temp_caav", {"aaaa"});
     temp["uxyv"] += 0.5 * H2["vemx"] * S2["myue"];
     temp["uxyv"] += 0.5 * H2["vexm"] * S2["ymue"];
-    E += temp["uxyv"] * Eta1_["uv"] * L1_["xy"];
+    C0 += temp["uxyv"] * Eta1_["uv"] * L1_["xy"];
 
     // [H2, T2] L1 from caaa and aaav
     temp.zero();
     temp.set_name("temp_aaav_caaa");
-    temp["uxyv"] += 0.25 * H2["vexw"] * S2["yzue"] * L1_["wz"];
+    temp["uxyv"] += 0.25 * H2["evwx"] * S2["zyeu"] * L1_["wz"];
     temp["uxyv"] += 0.25 * H2["vzmx"] * S2["myuw"] * Eta1_["wz"];
-    E += temp["uxyv"] * Eta1_["uv"] * L1_["xy"];
+    C0 += temp["uxyv"] * Eta1_["uv"] * L1_["xy"];
 
     // <[Hbar2, T2]> C_4 (C_2)^2
     temp.zero();
@@ -124,7 +143,7 @@ void SADSRG::H2_T2_C0(BlockedTensor& H2, BlockedTensor& T2, BlockedTensor& S2,
     // HP
     temp["uvxy"] += H2["uexm"] * S2["vmye"];
     temp["uvxy"] -= H2["uemx"] * T2["vmye"];
-    temp["uvxy"] -= H2["vemx"] * T2["umey"];
+    temp["uvxy"] -= H2["vemx"] * T2["muye"];
 
     // HP with Gamma1
     temp["uvxy"] += 0.5 * H2["euwx"] * S2["zvey"] * L1_["wz"];
@@ -133,25 +152,16 @@ void SADSRG::H2_T2_C0(BlockedTensor& H2, BlockedTensor& T2, BlockedTensor& S2,
 
     // HP with Eta1
     temp["uvxy"] += 0.5 * H2["wumx"] * S2["mvzy"] * Eta1_["wz"];
-    temp["uvxy"] -= 0.5 * H2["wuxm"] * T2["mvzy"] * Eta1_["wz"];
+    temp["uvxy"] -= 0.5 * H2["uwmx"] * T2["mvzy"] * Eta1_["wz"];
     temp["uvxy"] -= 0.5 * H2["vwmx"] * T2["muyz"] * Eta1_["wz"];
 
-    E += temp["uvxy"] * L2_["uvxy"];
+    C0 += temp["uvxy"] * L2_["uvxy"];
 
     // <[Hbar2, T2]> C_6 C_2
     if (foptions_->get_str("THREEPDC") != "ZERO") {
-        E += H2.block("vaaa")("ewxy") * T2.block("aava")("uvez") * rdms_.SF_L3()("xyzuwv");
-        E -= H2.block("aaca")("uvmz") * T2.block("caaa")("mwxy") * rdms_.SF_L3()("xyzuwv");
+        C0 += H2.block("vaaa")("ewxy") * T2.block("aava")("uvez") * rdms_.SF_L3()("xyzuwv");
+        C0 -= H2.block("aaca")("uvmz") * T2.block("caaa")("mwxy") * rdms_.SF_L3()("xyzuwv");
     }
-
-    // multiply prefactor and copy to C0
-    E *= alpha;
-    C0 += E;
-
-    if (print_ > 2) {
-        outfile->Printf("\n    Time for [H2, T2] -> C0 : %12.3f", timer.get());
-    }
-    dsrg_time_.add("220", timer.get());
 }
 
 void SADSRG::H1_T1_C1(BlockedTensor& H1, BlockedTensor& T1, const double& alpha,
@@ -205,8 +215,8 @@ void SADSRG::H2_T1_C1(BlockedTensor& H2, BlockedTensor& T1, const double& alpha,
     dsrg_time_.add("211", timer.get());
 }
 
-void SADSRG::H2_T2_C1(BlockedTensor& H2, BlockedTensor& T2, BlockedTensor& S2,
-                         const double& alpha, BlockedTensor& C1) {
+void SADSRG::H2_T2_C1(BlockedTensor& H2, BlockedTensor& T2, BlockedTensor& S2, const double& alpha,
+                      BlockedTensor& C1) {
     local_timer timer;
 
     // [Hbar2, T2] (C_2)^3 -> C1 particle contractions
@@ -298,8 +308,8 @@ void SADSRG::H2_T1_C2(BlockedTensor& H2, BlockedTensor& T1, const double& alpha,
     dsrg_time_.add("212", timer.get());
 }
 
-void SADSRG::H2_T2_C2(BlockedTensor& H2, BlockedTensor& T2, BlockedTensor& S2,
-                         const double& alpha, BlockedTensor& C2) {
+void SADSRG::H2_T2_C2(BlockedTensor& H2, BlockedTensor& T2, BlockedTensor& S2, const double& alpha,
+                      BlockedTensor& C2) {
     local_timer timer;
 
     // particle-particle contractions
@@ -376,78 +386,25 @@ void SADSRG::V_T1_C0_DF(BlockedTensor& B, BlockedTensor& T1, const double& alpha
     dsrg_time_.add("210", timer.get());
 }
 
-void SADSRG::V_T2_C0_DF(BlockedTensor& B, BlockedTensor& T2, BlockedTensor& S2,
-                           const double& alpha, double& C0) {
+void SADSRG::V_T2_C0_DF(BlockedTensor& B, BlockedTensor& T2, BlockedTensor& S2, const double& alpha,
+                        double& C0) {
     local_timer timer;
 
     double E = 0.0;
 
-    // <[Hbar2, T2]> (C_2)^4
-
-    // [H2, T2] from ccvv, cavv, and ccav
+    // [H2, T2] (C_2)^4 from ccvv, cavv, and ccav
     auto temp = ambit::BlockedTensor::build(tensor_type_, "temp_220", {"Lvc"});
     temp["gem"] += B["gfn"] * S2["mnef"];
     temp["gem"] += B["gfu"] * S2["mvef"] * L1_["uv"];
     temp["gem"] += B["gvn"] * S2["nmue"] * Eta1_["uv"];
     E += temp["gem"] * B["gem"];
 
+    // form H2 for other blocks that fits memory
     std::vector<std::string> blocks{"aacc", "aaca", "vvaa", "vaaa", "avac", "avca"};
     auto H2 = ambit::BlockedTensor::build(tensor_type_, "temp_H2", blocks);
     H2["abij"] = B["gai"] * B["gbj"];
 
-    // [H2, T2] L1 from aavv
-    E += 0.25 * H2["efxu"] * S2["yvef"] * L1_["uv"] * L1_["xy"];
-
-    // [H2, T2] L1 from ccaa
-    E += 0.25 * H2["vymn"] * S2["mnux"] * Eta1_["uv"] * Eta1_["xy"];
-
-    // [H2, T2] L1 from caav
-    temp = ambit::BlockedTensor::build(tensor_type_, "temp_caav", {"aaaa"});
-    temp["uxyv"] += 0.5 * H2["vemx"] * S2["myue"];
-    temp["uxyv"] += 0.5 * H2["vexm"] * S2["ymue"];
-    E += temp["uxyv"] * Eta1_["uv"] * L1_["xy"];
-
-    // [H2, T2] L1 from caaa and aaav
-    temp.zero();
-    temp.set_name("temp_aaav_caaa");
-    temp["uxyv"] += 0.25 * H2["evwx"] * S2["yzue"] * L1_["wz"];
-    temp["uxyv"] += 0.25 * H2["vzmx"] * S2["myuw"] * Eta1_["wz"];
-    E += temp["uxyv"] * Eta1_["uv"] * L1_["xy"];
-
-    // <[Hbar2, T2]> C_4 (C_2)^2
-    temp.zero();
-    temp.set_name("temp_H2T2C0_L2");
-
-    // HH
-    temp["uvxy"] += 0.5 * H2["uvmn"] * T2["mnxy"];
-    temp["uvxy"] += 0.5 * H2["uvmw"] * T2["mzxy"] * L1_["wz"];
-
-    // PP
-    temp["uvxy"] += 0.5 * H2["efxy"] * T2["uvef"];
-    temp["uvxy"] += 0.5 * H2["ezxy"] * T2["uvew"] * Eta1_["wz"];
-
-    // HP
-    temp["uvxy"] += H2["uexm"] * S2["vmye"];
-    temp["uvxy"] -= H2["uemx"] * T2["vmye"];
-    temp["uvxy"] -= H2["vemx"] * T2["umey"];
-
-    // HP with Gamma1
-    temp["uvxy"] += 0.5 * H2["euwx"] * S2["zvey"] * L1_["wz"];
-    temp["uvxy"] -= 0.5 * H2["euxw"] * T2["zvey"] * L1_["wz"];
-    temp["uvxy"] -= 0.5 * H2["evxw"] * T2["uzey"] * L1_["wz"];
-
-    // HP with Eta1
-    temp["uvxy"] += 0.5 * H2["wumx"] * S2["mvzy"] * Eta1_["wz"];
-    temp["uvxy"] -= 0.5 * H2["uwmx"] * T2["mvzy"] * Eta1_["wz"];
-    temp["uvxy"] -= 0.5 * H2["vwmx"] * T2["muyz"] * Eta1_["wz"];
-
-    E += temp["uvxy"] * L2_["uvxy"];
-
-    // <[Hbar2, T2]> C_6 C_2
-    if (foptions_->get_str("THREEPDC") != "ZERO") {
-        E += H2.block("vaaa")("ewxy") * T2.block("aava")("uvez") * rdms_.SF_L3()("xyzuwv");
-        E -= H2.block("aaca")("uvmz") * T2.block("caaa")("mwxy") * rdms_.SF_L3()("xyzuwv");
-    }
+    H2_T2_C0_T2small(H2, T2, S2, E);
 
     // multiply prefactor and copy to C0
     E *= alpha;
@@ -482,8 +439,8 @@ void SADSRG::V_T1_C1_DF(BlockedTensor& B, BlockedTensor& T1, const double& alpha
     dsrg_time_.add("211", timer.get());
 }
 
-void SADSRG::V_T2_C1_DF(BlockedTensor& B, BlockedTensor& T2, BlockedTensor& S2,
-                           const double& alpha, BlockedTensor& C1) {
+void SADSRG::V_T2_C1_DF(BlockedTensor& B, BlockedTensor& T2, BlockedTensor& S2, const double& alpha,
+                        BlockedTensor& C1) {
     local_timer timer;
 
     // [Hbar2, T2] (C_2)^3 -> C1 particle contractions
@@ -570,8 +527,8 @@ void SADSRG::V_T1_C2_DF(BlockedTensor& B, BlockedTensor& T1, const double& alpha
     dsrg_time_.add("212", timer.get());
 }
 
-void SADSRG::V_T2_C2_DF(BlockedTensor& B, BlockedTensor& T2, BlockedTensor& S2,
-                           const double& alpha, BlockedTensor& C2) {
+void SADSRG::V_T2_C2_DF(BlockedTensor& B, BlockedTensor& T2, BlockedTensor& S2, const double& alpha,
+                        BlockedTensor& C2) {
     local_timer timer;
 
     // particle-particle contractions
@@ -605,7 +562,7 @@ void SADSRG::V_T2_C2_DF(BlockedTensor& B, BlockedTensor& T2, BlockedTensor& S2,
 }
 
 void SADSRG::V_T2_C2_DF_PH_X(BlockedTensor& B, BlockedTensor& T2, const double& alpha,
-                                BlockedTensor& C2) {
+                             BlockedTensor& C2) {
 
     std::vector<std::string> qjsb_small, qjsb_large, jqsb_small, jqsb_large;
 
