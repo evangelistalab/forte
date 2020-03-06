@@ -53,8 +53,7 @@ SA_MRDSRG::SA_MRDSRG(RDMs rdms, std::shared_ptr<SCFInfo> scf_info,
                      std::shared_ptr<MOSpaceInfo> mo_space_info)
     : SADSRG(rdms, scf_info, options, ints, mo_space_info) {
 
-    print_method_banner({"Spin-Adapted Multireference Driven Similarity Renormalization Group",
-                         "written by Chenyang Li"});
+    print_method_banner({"Nonperturbative MR-DSRG"});
 
     read_options();
     startup();
@@ -102,7 +101,7 @@ void SA_MRDSRG::print_options() {
         {"Min DIIS vectors", diis_min_vec_},
         {"Max DIIS vectors", diis_max_vec_},
         {"DIIS extrapolating freq", diis_freq_},
-        {"Number of T amplitudes", ntamp_}};
+        {"Number of amplitudes for printing", ntamp_}};
 
     std::vector<std::pair<std::string, double>> calculation_info_double{
         {"Flow parameter", s_},

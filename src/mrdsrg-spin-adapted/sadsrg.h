@@ -241,6 +241,7 @@ class SADSRG : public DynamicCorrelationSolver {
     ambit::BlockedTensor deGNO_Tamp(BlockedTensor& T1, BlockedTensor& T2, BlockedTensor& D1);
 
     // ==> commutators <==
+
     /**
      * H1, C1, G1: a rank 2 tensor of all MOs in general
      * H2, C2, G2: a rank 4 tensor of all MOs in general
@@ -319,6 +320,8 @@ class SADSRG : public DynamicCorrelationSolver {
     void H_T_C2a_smallS(BlockedTensor& H1, BlockedTensor& H2, BlockedTensor& T1, BlockedTensor& T2,
                         BlockedTensor& S2, BlockedTensor& C2);
 
+    // ==> miscellaneous <==
+
     /// Diagonalize the diagonal blocks of the Fock matrix
     std::vector<double> diagonalize_Fock_diagblocks(BlockedTensor& U);
     /// Separate an 2D ambit::Tensor according to its irrep
@@ -329,6 +332,25 @@ class SADSRG : public DynamicCorrelationSolver {
 
     /// Print the summary of 2- and 3-body density cumulant
     void print_cumulant_summary();
+
+    // ==> common aplitudes analysis and printing <==
+
+    /// Check T1 and return the largest amplitudes
+    std::vector<std::pair<std::vector<size_t>, double>> check_t1(BlockedTensor& T1);
+    /// Check T2 and return the largest amplitudes
+    std::vector<std::pair<std::vector<size_t>, double>> check_t2(BlockedTensor& T2);
+    /// Analyze T1 and T2 amplitudes
+    void analyze_amplitudes(std::string name, BlockedTensor& T1, BlockedTensor& T2);
+    /// Print t1 amplitudes summary
+    void print_t1_summary(const std::vector<std::pair<std::vector<size_t>, double>>& list,
+                          const double& norm, const size_t& number_nonzero);
+    /// Print t2 amplitudes summary
+    void print_t2_summary(const std::vector<std::pair<std::vector<size_t>, double>>& list,
+                          const double& norm, const size_t& number_nonzero);
+    /// Print t1 intruder analysis
+    void print_t1_intruder(const std::vector<std::pair<std::vector<size_t>, double>>& list);
+    /// Print t2 intruder analysis
+    void print_t2_intruder(const std::vector<std::pair<std::vector<size_t>, double>>& list);
 };
 } // namespace forte
 

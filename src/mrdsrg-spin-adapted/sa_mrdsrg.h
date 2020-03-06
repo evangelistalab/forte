@@ -73,6 +73,9 @@ class SA_MRDSRG : public SADSRG {
     /// Read options
     void read_options();
 
+    /// Print a summary of the options
+    void print_options();
+
     /// Are orbitals semi-canonicalized?
     bool semi_canonical_;
 
@@ -120,8 +123,6 @@ class SA_MRDSRG : public SADSRG {
     void guess_t_df(BlockedTensor& B, BlockedTensor& T2, BlockedTensor& F, BlockedTensor& T1);
     /// Update T amplitude in every iteration
     void update_t();
-    /// Analyze T1 and T2 amplitudes
-    void analyze_amplitudes(std::string name, BlockedTensor& T1, BlockedTensor& T2);
 
     /// RMS of T2
     double T2rms_;
@@ -129,8 +130,6 @@ class SA_MRDSRG : public SADSRG {
     double T2norm_;
     /// Signed max of T2
     double T2max_;
-    /// Check T2 and store the largest amplitudes
-    void check_t2(BlockedTensor& T2);
     /// Initial guess of T2
     void guess_t2_std(BlockedTensor& V, BlockedTensor& T2);
     void guess_t2_noccvv(BlockedTensor& V, BlockedTensor& T2);
@@ -146,27 +145,12 @@ class SA_MRDSRG : public SADSRG {
     double T1norm_;
     /// Signed max of T1
     double T1max_;
-    /// Check T1 and store the largest amplitudes
-    void check_t1(BlockedTensor& T1);
     /// Initial guess of T1
     void guess_t1_std(BlockedTensor& F, BlockedTensor& T2, BlockedTensor& T1);
     void guess_t1_nocv(BlockedTensor& F, BlockedTensor& T2, BlockedTensor& T1);
     /// Update T1 in every iteration
     void update_t1_std();
     void update_t1_nocv();
-
-    /// Write T2 to a psi4 file
-    void write_t2_file(BlockedTensor& T2);
-    /// Read T2 from a psi4 file
-    void read_t2_file(BlockedTensor& T2);
-    /// Write T1 to a psi4 file
-    void write_t1_file(BlockedTensor& T1);
-    /// Read T1 from a psi4 file
-    void read_t1_file(BlockedTensor& T1);
-
-    /// List of large amplitudes
-    std::vector<std::pair<std::vector<size_t>, double>> lt1_;
-    std::vector<std::pair<std::vector<size_t>, double>> lt2_;
 
     /// Compute DSRG-transformed Hamiltonian
     void compute_hbar();
@@ -208,21 +192,6 @@ class SA_MRDSRG : public SADSRG {
 
     /// Compute MR-LDSRG(2)
     double compute_energy_ldsrg2();
-
-    // => Useful printings <= //
-
-    /// Print a summary of the options
-    void print_options();
-    /// Print t1 amplitudes summary
-    void print_t1_summary(const std::vector<std::pair<std::vector<size_t>, double>>& list,
-                          const double& norm, const size_t& number_nonzero);
-    /// Print t2 amplitudes summary
-    void print_t2_summary(const std::vector<std::pair<std::vector<size_t>, double>>& list,
-                          const double& norm, const size_t& number_nonzero);
-    /// Print t1 intruder analysis
-    void print_t1_intruder(const std::vector<std::pair<std::vector<size_t>, double>>& list);
-    /// Print t2 intruder analysis
-    void print_t2_intruder(const std::vector<std::pair<std::vector<size_t>, double>>& list);
 };
 } // namespace forte
 
