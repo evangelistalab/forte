@@ -302,6 +302,23 @@ class SADSRG : public DynamicCorrelationSolver {
     void V_T2_C2_DF_PH_X(BlockedTensor& B, BlockedTensor& T2, const double& alpha,
                          BlockedTensor& C2);
 
+    /// Compute the active part of commutator C1 + C2 = alpha * [H1 + H2, A1 + A2]
+    void H_A_Ca(BlockedTensor& H1, BlockedTensor& H2, BlockedTensor& T1, BlockedTensor& T2,
+                const double& alpha, BlockedTensor& C1, BlockedTensor& C2);
+    /// Compute the active part of commutator C1 + C2 = alpha * [H1 + H2, A1 + A2]
+    /// G2[pqrs] = 2 * H2[pqrs] - H2[pqsr], S2[ijab] = 2 * T2[ijab] - T2[ijba]
+    void H_A_Ca_small(BlockedTensor& H1, BlockedTensor& H2, BlockedTensor& G2, BlockedTensor& T1,
+                      BlockedTensor& T2, BlockedTensor& S2, const double& alpha, BlockedTensor& C1,
+                      BlockedTensor& C2);
+    /// Compute the active part of commutator C1 = [H2, T1 + T2] that uses G2
+    void H_T_C1a_smallG(BlockedTensor& G2, BlockedTensor& T1, BlockedTensor& T2, BlockedTensor& C1);
+    /// Compute the active part of commutator C1 = [H1 + H2, T1 + T2] that uses S2
+    void H_T_C1a_smallS(BlockedTensor& H1, BlockedTensor& H2, BlockedTensor& T2, BlockedTensor& S2,
+                        BlockedTensor& C1);
+    /// Compute the active part of commutator C2 = [H1 + H2, T1 + T2] that uses S2
+    void H_T_C2a_smallS(BlockedTensor& H1, BlockedTensor& H2, BlockedTensor& T1, BlockedTensor& T2,
+                        BlockedTensor& S2, BlockedTensor& C2);
+
     /// Diagonalize the diagonal blocks of the Fock matrix
     std::vector<double> diagonalize_Fock_diagblocks(BlockedTensor& U);
     /// Separate an 2D ambit::Tensor according to its irrep
