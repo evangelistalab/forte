@@ -43,7 +43,23 @@ std::vector<std::pair<std::vector<size_t>, double>> SADSRG::check_t2(BlockedTens
     std::vector<std::pair<std::vector<size_t>, double>> t2;
     std::vector<std::pair<std::vector<size_t>, double>> lt2;
 
-    for (const std::string& block : T2.block_labels()) {
+    // check blocks
+    std::vector<std::string> T2blocks;
+    std::vector<std::vector<std::string>> equivalent_blocks{
+        {"aaaa"},         {"aavv"},         {"ccaa"},         {"ccvv"},         {"aaav", "aava"},
+        {"ccav", "ccva"}, {"caaa", "acaa"}, {"acvv", "cavv"}, {"caav", "acva"}, {"acav", "cava"}};
+    for (const auto& blocks : equivalent_blocks) {
+        for (const std::string& block : blocks) {
+            if (T2.is_block(block)) {
+                T2blocks.push_back(block);
+                break;
+            }
+        }
+    }
+
+    for (const std::string& block : T2blocks) {
+        bool sym = (block[0] == block[1]) and (block[2] == block[3]);
+        outfile->Printf("\n %s", block.c_str());
         T2.block(block).citerate([&](const std::vector<size_t>& i, const double& value) {
             if (std::fabs(value) > 1.0e-15) {
                 size_t idx0 = label_to_spacemo_[block[0]][i[0]];
@@ -53,7 +69,8 @@ std::vector<std::pair<std::vector<size_t>, double>> SADSRG::check_t2(BlockedTens
 
                 ++nonzero;
 
-                if ((idx0 <= idx1) && (idx2 <= idx3)) {
+                // for blocks like ccvv, only test c0 < c1 or (c0 = c1 and v0 <= v1)
+                if ((!sym) or (sym && (i[0] <= i[1]) && (i[0] != i[1] or i[2] <= i[3]))) {
                     std::vector<size_t> indices{idx0, idx1, idx2, idx3};
                     std::pair<std::vector<size_t>, double> idx_value =
                         std::make_pair(indices, value);

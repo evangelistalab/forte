@@ -135,11 +135,12 @@ void SA_MRPT2::build_ints() {
 
     // prepare two-electron integrals or three-index B
     if (eri_df_) {
+        V_ = BTF_->build(tensor_type_, "V", {"vvaa", "aacc", "avca", "avac", "vaaa", "aaca", "aaaa"});
         if (ints_type_ != "DISKDF") {
             B_ = BTF_->build(tensor_type_, "B 3-idx", {"Lph"});
             fill_three_index_ints(B_);
+            V_["pqrs"] = B_["gpr"] * B_["gqs"];
         }
-        V_ = BTF_->build(tensor_type_, "V", {"vvaa", "aacc", "avca", "avac", "vaaa", "aaca"});
     } else {
         V_ = BTF_->build(tensor_type_, "V", {"pphh"});
 
@@ -157,7 +158,7 @@ void SA_MRPT2::build_ints() {
 
 void SA_MRPT2::init_amps() {
     T1_ = BTF_->build(tensor_type_, "T1 Amplitudes", {"hp"});
-    if (!eri_df_) {
+    if (eri_df_) {
         std::vector<std::string> blocks{"aavv", "ccaa", "caav", "acav", "aava", "caaa", "aaaa"};
         T2_ = BTF_->build(tensor_type_, "T2 Amplitudes", blocks);
         S2_ = BTF_->build(tensor_type_, "T2 Amplitudes", blocks);
@@ -169,6 +170,9 @@ void SA_MRPT2::init_amps() {
 
 double SA_MRPT2::compute_energy() {
     // build amplitudes
+    compute_t2();
+    compute_t1();
+    analyze_amplitudes("First-Order", T1_, T2_);
 
     // compute energy
     double Ecorr = 0.0;
@@ -177,7 +181,7 @@ double SA_MRPT2::compute_energy() {
 }
 
 void SA_MRPT2::compute_t2_df_minimal() {
-    // ONLY these blocks are stored: aavv, ccaa, caav, acav, aava, caaa, aaaa
+    // ONLY these T2 blocks are stored: aavv, ccaa, caav, acav, aava, caaa, aaaa
 
     // initialize T2 with V
     T2_["ijab"] = V_["abij"];
