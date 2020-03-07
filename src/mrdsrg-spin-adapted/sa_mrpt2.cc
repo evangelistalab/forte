@@ -38,6 +38,7 @@
 #include "psi4/libmints/molecule.h"
 #include "psi4/libqt/qt.h"
 
+#include "helpers/timer.h"
 #include "helpers/printing.h"
 #include "sa_mrpt2.h"
 
@@ -58,15 +59,7 @@ SA_MRPT2::SA_MRPT2(RDMs rdms, std::shared_ptr<SCFInfo> scf_info,
 
 void SA_MRPT2::startup() {
     // test semi-canonical
-    semi_canonical_ = check_semi_orbs();
-
     if (!semi_canonical_) {
-        if (ints_type_ == "DISKDF") {
-            outfile->Printf("\n  Orbitals are not semicanonicalized: ");
-            outfile->Printf("NOT OK for DSRG-MRPT2 with DISKDF integrals.");
-            throw std::runtime_error("Orbitals are not semicanonicalized for DSRG-MRPT2. Quit.");
-        }
-
         outfile->Printf("\n    Orbital invariant formalism will be employed for MR-DSRG.");
         U_ = ambit::BlockedTensor::build(tensor_type_, "U", {"gg"});
         Fdiag_ = diagonalize_Fock_diagblocks(U_);
@@ -77,6 +70,9 @@ void SA_MRPT2::startup() {
 
     // prepare integrals
     build_ints();
+
+    // initialize tensors for amplitudes
+    init_amps();
 }
 
 void SA_MRPT2::read_options() {
@@ -143,6 +139,7 @@ void SA_MRPT2::build_ints() {
             B_ = BTF_->build(tensor_type_, "B 3-idx", {"Lph"});
             fill_three_index_ints(B_);
         }
+        V_ = BTF_->build(tensor_type_, "V", {"vvaa", "aacc", "avca", "avac", "vaaa", "aaca"});
     } else {
         V_ = BTF_->build(tensor_type_, "V", {"pphh"});
 
@@ -158,6 +155,18 @@ void SA_MRPT2::build_ints() {
     }
 }
 
+void SA_MRPT2::init_amps() {
+    T1_ = BTF_->build(tensor_type_, "T1 Amplitudes", {"hp"});
+    if (!eri_df_) {
+        std::vector<std::string> blocks{"aavv", "ccaa", "caav", "acav", "aava", "caaa", "aaaa"};
+        T2_ = BTF_->build(tensor_type_, "T2 Amplitudes", blocks);
+        S2_ = BTF_->build(tensor_type_, "T2 Amplitudes", blocks);
+    } else {
+        T2_ = BTF_->build(tensor_type_, "T2 Amplitudes", {"hhpp"});
+        S2_ = BTF_->build(tensor_type_, "T2 Amplitudes", {"hhpp"});
+    }
+}
+
 double SA_MRPT2::compute_energy() {
     // build amplitudes
 
@@ -167,9 +176,174 @@ double SA_MRPT2::compute_energy() {
     return Ecorr;
 }
 
-void SA_MRPT2::compute_t2_minimal() {}
+void SA_MRPT2::compute_t2_df_minimal() {
+    // ONLY these blocks are stored: aavv, ccaa, caav, acav, aava, caaa, aaaa
 
-void SA_MRPT2::compute_t1() {}
+    // initialize T2 with V
+    T2_["ijab"] = V_["abij"];
+
+    // transform to semi-canonical basis
+    BlockedTensor tempT2;
+    if (!semi_canonical_) {
+        tempT2 = ambit::BlockedTensor::build(tensor_type_, "TempT2", T2_.block_labels());
+        tempT2["klab"] = U_["ki"] * U_["lj"] * T2_["ijab"];
+        T2_["ijcd"] = tempT2["ijab"] * U_["db"] * U_["ca"];
+    }
+
+    // build T2
+    T2_.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>&, double& value) {
+        double denom = Fdiag_[i[0]] + Fdiag_[i[1]] - Fdiag_[i[2]] - Fdiag_[i[3]];
+        value *= dsrg_source_->compute_renormalized_denominator(denom);
+    });
+
+    // transform back to non-canonical basis
+    if (!semi_canonical_) {
+        tempT2["klab"] = U_["ik"] * U_["jl"] * T2_["ijab"];
+        T2_["ijcd"] = tempT2["ijab"] * U_["bd"] * U_["ac"];
+    }
+
+    // internal amplitudes
+    if (internal_amp_.find("DOUBLES") != std::string::npos) {
+        // TODO: to be filled
+    } else {
+        T2_.block("aaaa").zero();
+    }
+
+    // form S2 = 2 * J - K
+    // aavv, ccaa, caav, acav, aava, caaa, aaaa
+    S2_["ijab"] = 2.0 * T2_["ijab"] - T2_["ijba"];
+    S2_["muve"] = 2.0 * T2_["muve"] - T2_["umve"];
+    S2_["umve"] = 2.0 * T2_["umve"] - T2_["muve"];
+    S2_["uvex"] = 2.0 * T2_["uvex"] - T2_["vuex"];
+}
+
+void SA_MRPT2::compute_t2() {
+    if (eri_df_) {
+        compute_t2_df_minimal();
+        return;
+    }
+
+    // initialize T2 with V
+    T2_["ijab"] = V_["abij"];
+
+    // transform to semi-canonical basis
+    BlockedTensor tempT2;
+    if (!semi_canonical_) {
+        tempT2 = ambit::BlockedTensor::build(tensor_type_, "TempT2", T2_.block_labels());
+        tempT2["klab"] = U_["ki"] * U_["lj"] * T2_["ijab"];
+        T2_["ijcd"] = tempT2["ijab"] * U_["db"] * U_["ca"];
+    }
+
+    // block labels for ccvv blocks and others
+    std::vector<std::string> T2blocks(T2_.block_labels());
+    if (ccvv_source_ == "ZERO") {
+        T2blocks.erase(std::remove(T2blocks.begin(), T2blocks.end(), "ccvv"), T2blocks.end());
+        T2_.block("ccvv").iterate([&](const std::vector<size_t>& i, double& value) {
+            size_t i0 = core_mos_[i[0]];
+            size_t i1 = core_mos_[i[1]];
+            size_t i2 = virt_mos_[i[2]];
+            size_t i3 = virt_mos_[i[3]];
+            value /= Fdiag_[i0] + Fdiag_[i1] - Fdiag_[i2] - Fdiag_[i3];
+        });
+    }
+
+    // build T2
+    for (const std::string& block : T2blocks) {
+        T2_.block(block).iterate([&](const std::vector<size_t>& i, double& value) {
+            size_t i0 = label_to_spacemo_[block[0]][i[0]];
+            size_t i1 = label_to_spacemo_[block[1]][i[1]];
+            size_t i2 = label_to_spacemo_[block[2]][i[2]];
+            size_t i3 = label_to_spacemo_[block[3]][i[3]];
+            double denom = Fdiag_[i0] + Fdiag_[i1] - Fdiag_[i2] - Fdiag_[i3];
+            value *= dsrg_source_->compute_renormalized_denominator(denom);
+        });
+    }
+
+    // transform back to non-canonical basis
+    if (!semi_canonical_) {
+        tempT2["klab"] = U_["ik"] * U_["jl"] * T2_["ijab"];
+        T2_["ijcd"] = tempT2["ijab"] * U_["bd"] * U_["ac"];
+    }
+
+    // internal amplitudes
+    if (internal_amp_.find("DOUBLES") != std::string::npos) {
+        // TODO: to be filled
+    } else {
+        T2_.block("aaaa").zero();
+    }
+
+    // form 2 * J - K
+    S2_["ijab"] = 2.0 * T2_["ijab"] - T2_["ijba"];
+}
+
+void SA_MRPT2::compute_t1() {
+    BlockedTensor temp = BTF_->build(tensor_type_, "temp", {"aa"});
+    temp["xu"] = L1_["xu"];
+
+    // transform to semi-canonical basis
+    BlockedTensor tempX;
+    if (!semi_canonical_) {
+        tempX = ambit::BlockedTensor::build(tensor_type_, "Temp Gamma", {"aa"});
+        tempX["uv"] = U_["ux"] * temp["xy"] * U_["vy"];
+        temp["uv"] = tempX["uv"];
+    }
+
+    // scale by delta
+    temp.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>&, double& value) {
+        value *= Fdiag_[i[0]] - Fdiag_[i[1]];
+    });
+
+    // transform back to non-canonical basis
+    if (!semi_canonical_) {
+        tempX["uv"] = U_["xu"] * temp["xy"] * U_["yv"];
+        temp["uv"] = tempX["uv"];
+    }
+
+    T1_["ia"] = F_["ia"];
+    T1_["ia"] += temp["xu"] * T2_["iuax"];
+    T1_["ia"] -= 0.5 * temp["xu"] * T2_["iuxa"];
+
+    // transform to semi-canonical basis
+    if (!semi_canonical_) {
+        tempX = ambit::BlockedTensor::build(tensor_type_, "Temp T1", {"hp"});
+        tempX["jb"] = U_["ji"] * T1_["ia"] * U_["ba"];
+        T1_["ia"] = tempX["ia"];
+    }
+
+    // labels for cv blocks and the rest blocks
+    std::vector<std::string> T1blocks(T1_.block_labels());
+    if (ccvv_source_ == "ZERO") {
+        T1blocks.erase(std::remove(T1blocks.begin(), T1blocks.end(), "cv"), T1blocks.end());
+        T1_.block("cv").iterate([&](const std::vector<size_t>& i, double& value) {
+            size_t i0 = core_mos_[i[0]];
+            size_t i1 = virt_mos_[i[1]];
+            value /= Fdiag_[i0] - Fdiag_[i1];
+        });
+    }
+
+    // build T1
+    for (const std::string& block : T1blocks) {
+        T1_.block(block).iterate([&](const std::vector<size_t>& i, double& value) {
+            size_t i0 = label_to_spacemo_[block[0]][i[0]];
+            size_t i1 = label_to_spacemo_[block[1]][i[1]];
+            value *= dsrg_source_->compute_renormalized_denominator(Fdiag_[i0] - Fdiag_[i1]);
+        });
+    }
+
+    // transform back to non-canonical basis
+    if (!semi_canonical_) {
+        tempX["jb"] = U_["ij"] * T1_["ia"] * U_["ab"];
+        T1_["ia"] = tempX["ia"];
+    }
+
+    // internal amplitudes
+    if (internal_amp_.find("SINGLES") != std::string::npos) {
+        // TODO: to be filled
+    } else {
+        T1_.block("aa").zero();
+    }
+}
 
 void SA_MRPT2::compute_hbar() {}
+
 } // namespace forte

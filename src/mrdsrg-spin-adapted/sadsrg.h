@@ -202,8 +202,13 @@ class SADSRG : public DynamicCorrelationSolver {
     void build_fock_from_ints(std::shared_ptr<ForteIntegrals> ints, BlockedTensor& F);
     /// Fill in diagonal elements of Fock matrix to Fdiag
     void fill_Fdiag(BlockedTensor& F, std::vector<double>& Fdiag);
+
     /// Check orbitals if semicanonical
     bool check_semi_orbs();
+    /// Are orbitals semi-canonicalized?
+    bool semi_canonical_;
+    /// Unitary matrix to block diagonal Fock
+    ambit::BlockedTensor U_;
 
     // ==> integrals <==
 

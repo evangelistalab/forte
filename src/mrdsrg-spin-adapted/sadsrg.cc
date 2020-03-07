@@ -73,6 +73,9 @@ void SADSRG::startup() {
 
     // general printing for all derived classes
     print_cumulant_summary();
+
+    // check if using semicanonical orbitals
+    semi_canonical_ = check_semi_orbs();
 }
 
 void SADSRG::read_options() {
@@ -474,7 +477,7 @@ void SADSRG::deGNO_ints(const std::string& name, double& H0, BlockedTensor& H1, 
 }
 
 ambit::BlockedTensor SADSRG::deGNO_Tamp(BlockedTensor& T1, BlockedTensor& T2, BlockedTensor& D1) {
-    BlockedTensor T1eff = BTF_->build(tensor_type_, "T1eff from de-GNO", spin_cases({"hp"}));
+    BlockedTensor T1eff = BTF_->build(tensor_type_, "T1eff from de-GNO", {"hp"});
 
     T1eff["ia"] = T1["ia"];
 

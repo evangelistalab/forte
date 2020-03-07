@@ -85,8 +85,6 @@ void SA_MRDSRG::startup() {
     F_ = Fock_;
 
     // test semi-canonical
-    semi_canonical_ = check_semi_orbs();
-
     if (!semi_canonical_) {
         outfile->Printf("\n    Orbital invariant formalism will be employed for MR-DSRG.");
         U_ = ambit::BlockedTensor::build(tensor_type_, "U", {"gg"});
@@ -172,8 +170,8 @@ void SA_MRDSRG::build_ints() {
 double SA_MRDSRG::compute_energy() {
     // build initial amplitudes
     print_h2("Build Initial Amplitude from DSRG-MRPT2");
-    T1_ = BTF_->build(tensor_type_, "T1 Amplitudes", spin_cases({"hp"}));
-    T2_ = BTF_->build(tensor_type_, "T2 Amplitudes", spin_cases({"hhpp"}));
+    T1_ = BTF_->build(tensor_type_, "T1 Amplitudes", {"hp"});
+    T2_ = BTF_->build(tensor_type_, "T2 Amplitudes", {"hhpp"});
 
     if (eri_df_) {
         guess_t_df(B_, T2_, F_, T1_);

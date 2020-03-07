@@ -79,8 +79,8 @@ class SA_MRPT2 : public SADSRG {
     /// Fill up integrals
     void build_ints();
 
-    /// Are orbitals semi-canonicalized?
-    bool semi_canonical_;
+    /// Initialize amplitude tensors
+    void init_amps();
 
     /// Include internal amplitudes or not?
     std::string internal_amp_;
@@ -101,14 +101,13 @@ class SA_MRPT2 : public SADSRG {
     ambit::BlockedTensor T1_;
     /// Double excitation amplitude
     ambit::BlockedTensor T2_;
-
-    /// Unitary matrix to block diagonal Fock
-    ambit::BlockedTensor U_;
+    /// Double excitation amplitude (2 * J - K)
+    ambit::BlockedTensor S2_;
 
     /// compute 1st-order T2 amplitudes
     void compute_t2();
     /// compute 1st-order T2 amplitudes with at least two active indices
-    void compute_t2_minimal();
+    void compute_t2_df_minimal();
 
     /// compute 1st-order T1 amplitudes
     void compute_t1();

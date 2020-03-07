@@ -76,9 +76,6 @@ class SA_MRDSRG : public SADSRG {
     /// Print a summary of the options
     void print_options();
 
-    /// Are orbitals semi-canonicalized?
-    bool semi_canonical_;
-
     /// Is the H_bar evaluated sequentially?
     bool sequential_Hbar_;
 
@@ -114,8 +111,6 @@ class SA_MRDSRG : public SADSRG {
     ambit::BlockedTensor DT1_;
     /// Difference of consecutive doubles
     ambit::BlockedTensor DT2_;
-    /// Unitary matrix to block diagonal Fock
-    ambit::BlockedTensor U_;
 
     /// Initial guess of T amplitudes
     void guess_t(BlockedTensor& V, BlockedTensor& T2, BlockedTensor& F, BlockedTensor& T1);
@@ -131,13 +126,12 @@ class SA_MRDSRG : public SADSRG {
     /// Signed max of T2
     double T2max_;
     /// Initial guess of T2
-    void guess_t2_std(BlockedTensor& V, BlockedTensor& T2);
-    void guess_t2_noccvv(BlockedTensor& V, BlockedTensor& T2);
-    void guess_t2_std_df(BlockedTensor& B, BlockedTensor& T2);
-    void guess_t2_noccvv_df(BlockedTensor& B, BlockedTensor& T2);
+    void guess_t2(BlockedTensor& V, BlockedTensor& T2);
+    void guess_t2_df(BlockedTensor& B, BlockedTensor& T2);
+    /// Initial guess of T2 where T2 has been initialized with H2
+    void guess_t2_impl(BlockedTensor& T2);
     /// Update T2 in every iteration
-    void update_t2_std();
-    void update_t2_noccvv();
+    void update_t2();
 
     /// RMS of T1
     double T1rms_;
@@ -146,11 +140,9 @@ class SA_MRDSRG : public SADSRG {
     /// Signed max of T1
     double T1max_;
     /// Initial guess of T1
-    void guess_t1_std(BlockedTensor& F, BlockedTensor& T2, BlockedTensor& T1);
-    void guess_t1_nocv(BlockedTensor& F, BlockedTensor& T2, BlockedTensor& T1);
+    void guess_t1(BlockedTensor& F, BlockedTensor& T2, BlockedTensor& T1);
     /// Update T1 in every iteration
-    void update_t1_std();
-    void update_t1_nocv();
+    void update_t1();
 
     /// Compute DSRG-transformed Hamiltonian
     void compute_hbar();
