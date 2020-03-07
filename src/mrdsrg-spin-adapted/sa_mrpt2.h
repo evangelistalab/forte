@@ -26,8 +26,8 @@
  * @END LICENSE
  */
 
-#ifndef _sa_mrdsrg_h_
-#define _sa_mrdsrg_h_
+#ifndef _sa_mrpt2_h_
+#define _sa_mrpt2_h_
 
 #include <cmath>
 #include <memory>
@@ -42,7 +42,6 @@
 #include "integrals/integrals.h"
 #include "base_classes/rdms.h"
 #include "helpers/blockedtensorfactory.h"
-#include "sparse_ci/determinant.h"
 #include "sadsrg.h"
 
 using namespace ambit;
@@ -121,4 +120,4 @@ class SA_MRPT2 : public SADSRG {
 };
 } // namespace forte
 
-#endif // _sa_mrdsrg_h_
+#endif // _sa_mrpt2_h_

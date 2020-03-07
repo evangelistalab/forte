@@ -1,6 +1,8 @@
 #ifndef _run_dsrg_h_
 #define _run_dsrg_h_
 
+#include <memory>
+
 #include "base_classes/forte_options.h"
 #include "sci/fci_mo.h"
 #include "mrdsrg-helper/dsrg_transformed.h"
