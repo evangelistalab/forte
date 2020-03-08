@@ -517,6 +517,12 @@ void SA_MRPT2::renormalize_integrals() {
     rF.stop();
 }
 
+std::vector<ambit::Tensor> SA_MRPT2::init_tensor_vecs(int number_of_tensors) {
+    std::vector<ambit::Tensor> out;
+    out.reserve(number_of_tensors);
+    return out;
+}
+
 double SA_MRPT2::E_V_T2_CCVV() {
     /**
      * Compute <[V, T2]> (C_2)^4 ccvv term
@@ -530,26 +536,16 @@ double SA_MRPT2::E_V_T2_CCVV() {
     auto nv = virt_mos_.size();
     auto nc = core_mos_.size();
 
-    int n_threads = 1;
-#ifdef _OPENMP
-    n_threads = omp_get_max_threads();
-#endif
-    outfile->Printf("\n number of thread: %d", n_threads);
-
-    auto init_tensor_vecs = [n_threads]() {
-        std::vector<ambit::Tensor> out;
-        out.reserve(n_threads);
-        return out;
-    };
-
     // TODO: need to check for memeory for these tensors
     // TODO: if orbitals not canonical
 
+    int n_threads = n_threads_;
+
     // some tensors used for threading
-    std::vector<ambit::Tensor> Bm_vec = init_tensor_vecs();
-    std::vector<ambit::Tensor> Bn_vec = init_tensor_vecs();
-    std::vector<ambit::Tensor> J_vec = init_tensor_vecs();
-    std::vector<ambit::Tensor> JK_vec = init_tensor_vecs();
+    std::vector<ambit::Tensor> Bm_vec = init_tensor_vecs(n_threads);
+    std::vector<ambit::Tensor> Bn_vec = init_tensor_vecs(n_threads);
+    std::vector<ambit::Tensor> J_vec = init_tensor_vecs(n_threads);
+    std::vector<ambit::Tensor> JK_vec = init_tensor_vecs(n_threads);
 
     for (int i = 0; i < n_threads; i++) {
         std::string t = std::to_string(i);
@@ -641,25 +637,16 @@ void SA_MRPT2::compute_Hbar1V_diskDF(ambit::Tensor& Hbar1, bool Vr) {
     auto nc = core_mos_.size();
     auto na = actv_mos_.size();
 
-    int n_threads = 1;
-#ifdef _OPENMP
-    n_threads = omp_get_max_threads();
-#endif
-
-    auto init_tensor_vecs = [n_threads]() {
-        std::vector<ambit::Tensor> out;
-        out.reserve(n_threads);
-        return out;
-    };
-
     // TODO: need to check memory for these tensors
     // TODO: if orbitals not canonical
 
+    int n_threads = n_threads_;
+
     // some tensors used for threading
-    std::vector<ambit::Tensor> Bm_vec = init_tensor_vecs();
-    std::vector<ambit::Tensor> V_vec = init_tensor_vecs();
-    std::vector<ambit::Tensor> S_vec = init_tensor_vecs();
-    std::vector<ambit::Tensor> C_vec = init_tensor_vecs();
+    std::vector<ambit::Tensor> Bm_vec = init_tensor_vecs(n_threads);
+    std::vector<ambit::Tensor> V_vec = init_tensor_vecs(n_threads);
+    std::vector<ambit::Tensor> S_vec = init_tensor_vecs(n_threads);
+    std::vector<ambit::Tensor> C_vec = init_tensor_vecs(n_threads);
 
     // TODO: test indices permutations for speed
     for (int i = 0; i < n_threads; i++) {
@@ -749,28 +736,16 @@ void SA_MRPT2::compute_Hbar1C_diskDF(ambit::Tensor& Hbar1, bool Vr) {
     auto nc = core_mos_.size();
     auto na = actv_mos_.size();
 
-    int n_threads = 1;
-#ifdef _OPENMP
-    n_threads = omp_get_max_threads();
-#endif
-
-    auto init_tensor_vecs = [n_threads]() {
-        std::vector<ambit::Tensor> out;
-        out.reserve(n_threads);
-        return out;
-    };
-
-    // TODO: need to check memory for these tensors
     // TODO: if orbitals not canonical
 
     // some tensors used for threading
-    std::vector<ambit::Tensor> Be_vec = init_tensor_vecs();
-    std::vector<ambit::Tensor> V_vec = init_tensor_vecs();
-    std::vector<ambit::Tensor> S_vec = init_tensor_vecs();
-    std::vector<ambit::Tensor> C_vec = init_tensor_vecs();
+    std::vector<ambit::Tensor> Be_vec = init_tensor_vecs(n_threads_);
+    std::vector<ambit::Tensor> V_vec = init_tensor_vecs(n_threads_);
+    std::vector<ambit::Tensor> S_vec = init_tensor_vecs(n_threads_);
+    std::vector<ambit::Tensor> C_vec = init_tensor_vecs(n_threads_);
 
     // TODO: test indices permutations for speed
-    for (int i = 0; i < n_threads; i++) {
+    for (int i = 0; i < n_threads_; i++) {
         std::string t = std::to_string(i);
         Be_vec.push_back(ambit::Tensor::build(tensor_type_, "Bm_thread" + t, {nQ, nc}));
         V_vec.push_back(ambit::Tensor::build(tensor_type_, "V_thread" + t, {na, nc, nc}));
@@ -815,7 +790,7 @@ void SA_MRPT2::compute_Hbar1C_diskDF(ambit::Tensor& Hbar1, bool Vr) {
     }
 
     // finalize results
-    for (int thread = 0; thread < n_threads; thread++) {
+    for (int thread = 0; thread < n_threads_; thread++) {
         Hbar1("vu") += C_vec[thread]("vu");
     }
 

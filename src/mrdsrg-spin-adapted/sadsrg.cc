@@ -17,8 +17,14 @@ SADSRG::SADSRG(RDMs rdms, std::shared_ptr<SCFInfo> scf_info, std::shared_ptr<For
                std::shared_ptr<ForteIntegrals> ints, std::shared_ptr<MOSpaceInfo> mo_space_info)
     : DynamicCorrelationSolver(rdms, scf_info, options, ints, mo_space_info),
       BTF_(new BlockedTensorFactory()), tensor_type_(ambit::CoreTensor) {
+    n_threads_ = 1;
+#ifdef _OPENMP
+    n_threads_ = omp_get_max_threads();
+#endif
+    std::string thread_title =
+        std::to_string(n_threads_) + (n_threads_ > 1 ? " OMP threads" : " OMP thread");
     print_method_banner({"Spin-Adapted Multireference Driven Similarity Renormalization Group",
-                         "written by Chenyang Li"});
+                         "written by Chenyang Li", thread_title});
     startup();
 }
 

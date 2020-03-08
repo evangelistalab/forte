@@ -104,6 +104,9 @@ class SADSRG : public DynamicCorrelationSolver {
     void rotate_ints_semi_to_origin(const std::string& name, BlockedTensor& H1, BlockedTensor& H2,
                                     BlockedTensor& H3);
 
+    /// Number of threads
+    int n_threads_;
+
     // ==> some common energies for all DSRG levels <==
 
     /// The energy of the reference

@@ -128,7 +128,10 @@ class SA_MRPT2 : public SADSRG {
     /// Compute Hbar1 from core contraction, renormalize V if Vr is true
     void compute_Hbar1C_diskDF(ambit::Tensor& Hbar1, bool Vr = true);
     /// Compute Hbar1 from virtual contraction, renormalize V if Vr is true
-    void compute_Hbar1V_diskDF(ambit::Tensor &Hbar1, bool Vr = true);
+    void compute_Hbar1V_diskDF(ambit::Tensor& Hbar1, bool Vr = true);
+
+    /// Return a vector of empty ambit Tensor objects
+    std::vector<ambit::Tensor> init_tensor_vecs(int number_of_tensors);
 };
 } // namespace forte
 
