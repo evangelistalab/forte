@@ -247,6 +247,8 @@ double SA_MRPT2::compute_energy() {
         E_VT2_comp = E_VT2_small;
         auto Eccvv = E_V_T2_CCVV();
         outfile->Printf("\n Eccvv: %.15f", Eccvv);
+        auto Ecavv = E_V_T2_CAVV();
+        outfile->Printf("\n Ecavv: %.15f", Ecavv);
     }
     double E_VT2 = E_VT2_comp[0] + E_VT2_comp[1] + E_VT2_comp[2];
 
@@ -510,26 +512,30 @@ void SA_MRPT2::renormalize_integrals() {
 double SA_MRPT2::E_V_T2_CCVV() {
     /**
      * Compute <[V, T2]> (C_2)^4 ccvv term
-     * E = (em|fn) * [ 2 * (me|nf) - (mf|ne)] * [1 - e^(-2 * s * D)] / D
+     * E = (em|fn) * [ 2 * (me|nf) - (mf|ne)] * [1 - exp(-2 * s * D^2)] / D
      *
      * Batching: for a given m and n, form B(ef) = Bm(L|e) * Bn(L|f)
      */
 
+    timer t_ccvv("Compute CCVV energy term");
     auto nQ = aux_mos_.size();
     auto nv = virt_mos_.size();
     auto nc = core_mos_.size();
 
-    int n_thread = 1;
+    int n_threads = 1;
 #ifdef _OPENMP
-    n_thread = omp_get_max_threads();
+    n_threads = omp_get_max_threads();
 #endif
-    outfile->Printf("\n number of thread: %d", n_thread);
+    outfile->Printf("\n number of thread: %d", n_threads);
 
-    auto init_tensor_vecs = [n_thread]() {
+    auto init_tensor_vecs = [n_threads]() {
         std::vector<ambit::Tensor> out;
-        out.reserve(n_thread);
+        out.reserve(n_threads);
         return out;
     };
+
+    // TODO: need to check for memeory for these tensors
+    // TODO: if orbitals not canonical
 
     // some tensors used for threading
     std::vector<ambit::Tensor> Bm_vec = init_tensor_vecs();
@@ -537,7 +543,7 @@ double SA_MRPT2::E_V_T2_CCVV() {
     std::vector<ambit::Tensor> J_vec = init_tensor_vecs();
     std::vector<ambit::Tensor> JK_vec = init_tensor_vecs();
 
-    for (int i = 0; i < n_thread; i++) {
+    for (int i = 0; i < n_threads; i++) {
         std::string t = std::to_string(i);
         Bm_vec.push_back(ambit::Tensor::build(tensor_type_, "Bm_thread" + t, {nQ, nv}));
         Bn_vec.push_back(ambit::Tensor::build(tensor_type_, "Bn_thread" + t, {nQ, nv}));
@@ -548,7 +554,7 @@ double SA_MRPT2::E_V_T2_CCVV() {
     double E = 0.0;
     bool complete_ccvv = (ccvv_source_ == "ZERO");
 
-#pragma omp parallel for num_threads(num_threads_) reduction(+ : E)
+#pragma omp parallel for num_threads(n_threads) reduction(+ : E)
     for (size_t m = 0; m < nc; ++m) {
         auto im = core_mos_[m];
         double Fm = Fdiag_[im];
@@ -571,9 +577,6 @@ double SA_MRPT2::E_V_T2_CCVV() {
                     ints_->three_integral_block(aux_mos_, virt_mos_, {in}).data();
             }
 
-            J_vec[thread].zero();
-            JK_vec[thread].zero();
-
             J_vec[thread]("ef") = Bm_vec[thread]("ge") * Bn_vec[thread]("gf");
             JK_vec[thread]("ef") = 2.0 * J_vec[thread]("ef") - J_vec[thread]("fe");
 
@@ -591,54 +594,118 @@ double SA_MRPT2::E_V_T2_CCVV() {
         }
     }
 
+    t_ccvv.stop();
     return E;
 }
 
 double SA_MRPT2::E_V_T2_CAVV() {
+    timer t("Compute [V, T2] CAVV energy term");
+
+    auto na = actv_mos_.size();
+    auto C1 = ambit::Tensor::build(tensor_type_, "C1 VT2 CAVV", {na, na});
+
+    compute_Hbar1V_diskDF(C1, true);
+
+    double E = C1("vu") * L1_.block("aa")("uv");
+
+    t.stop();
+    return E;
+}
+
+void SA_MRPT2::compute_Hbar1V_diskDF(ambit::Tensor& Hbar1, bool Vr) {
     /**
-     * Compute <[V, T2]> (C_2)^4 cavv term
+     * Compute Hbar1["uv"] += V["efmu"] * (2 * T["mvef"] - T["mvfe"])
      *
-     * E = L1_uv * (em|fu) * [1 + exp(-s * D1)] * [ 2 * (me|vf) - (mf|ve)] * [1 - e^(-s * D2)] / D2
+     * - if Vr is false: V["efmu"] = B(L|em) * B(L|fu)
+     * - if Vr is true: V["efmu"] = B(L|em) * B(L|fu) * [1 + exp(-s * D1^2)]
+     * - T["mvef"] = [2 * (me|vf) - (mf|ve)] * [1 - exp(-s * D2^2)] / D2
      *
      * where the two denominators are:
      *   D1 = F_m + F_u - F_e - F_f
      *   D2 = F_m + F_v - F_e - F_f
      *
-     * Batching: for a given m, form V1(efu) and V2(efv)
+     * Batching: for a given m, form V(efu) and S(efv)
      */
 
+    timer t("Compute C1 virtual comtraction");
     auto nQ = aux_mos_.size();
     auto nv = virt_mos_.size();
     auto nc = core_mos_.size();
     auto na = actv_mos_.size();
 
-    int n_thread = 1;
+    int n_threads = 1;
 #ifdef _OPENMP
-    n_thread = omp_get_max_threads();
+    n_threads = omp_get_max_threads();
 #endif
 
-    auto init_tensor_vecs = [n_thread]() {
+    auto init_tensor_vecs = [n_threads]() {
         std::vector<ambit::Tensor> out;
-        out.reserve(n_thread);
+        out.reserve(n_threads);
         return out;
     };
 
-//    // some tensors used for threading
-//    std::vector<ambit::Tensor> Bm_vec = init_tensor_vecs();
-//    std::vector<ambit::Tensor> Bn_vec = init_tensor_vecs();
-//    std::vector<ambit::Tensor> J_vec = init_tensor_vecs();
-//    std::vector<ambit::Tensor> JK_vec = init_tensor_vecs();
+    // TODO: need to check memory for these tensors
+    // TODO: if orbitals not canonical
 
-//    for (int i = 0; i < n_thread; i++) {
-//        std::string t = std::to_string(i);
-//        Bm_vec.push_back(ambit::Tensor::build(tensor_type_, "Bm_thread" + t, {nQ, nv}));
-//        Bn_vec.push_back(ambit::Tensor::build(tensor_type_, "Bn_thread" + t, {nQ, nv}));
-//        J_vec.push_back(ambit::Tensor::build(tensor_type_, "J_thread" + t, {nv, nv}));
-//        JK_vec.push_back(ambit::Tensor::build(tensor_type_, "(2J - K) thread" + t, {nv, nv}));
-//    }
+    // some tensors used for threading
+    std::vector<ambit::Tensor> Bm_vec = init_tensor_vecs();
+    std::vector<ambit::Tensor> V_vec = init_tensor_vecs();
+    std::vector<ambit::Tensor> S_vec = init_tensor_vecs();
+    std::vector<ambit::Tensor> C_vec = init_tensor_vecs();
+
+    for (int i = 0; i < n_threads; i++) {
+        std::string t = std::to_string(i);
+        Bm_vec.push_back(ambit::Tensor::build(tensor_type_, "Bm_thread" + t, {nQ, nv}));
+        V_vec.push_back(ambit::Tensor::build(tensor_type_, "V_thread" + t, {nv, nv, na}));
+        S_vec.push_back(ambit::Tensor::build(tensor_type_, "T_thread" + t, {nv, nv, na}));
+        C_vec.push_back(ambit::Tensor::build(tensor_type_, "C_thread" + t, {na, na}));
+    }
+
+    auto Bav = ints_->three_integral_block(aux_mos_, virt_mos_, actv_mos_);
+
+#pragma omp parallel for num_threads(n_threads)
+    for (size_t m = 0; m < nc; ++m) {
+        auto im = core_mos_[m];
+        double Fm = Fdiag_[im];
+
+        int thread = 0;
+#ifdef _OPENMP
+        thread = omp_get_thread_num();
+#endif
+#pragma omp critical
+        { Bm_vec[thread].data() = ints_->three_integral_block(aux_mos_, virt_mos_, {im}).data(); }
+
+        V_vec[thread]("efu") = Bm_vec[thread]("ge") * Bav("gfu");
+        S_vec[thread]("efu") = 2.0 * V_vec[thread]("efu") - V_vec[thread]("feu");
+
+        // scale V by 1 + exp(-s * D^2)
+        if (Vr) {
+            V_vec[thread].iterate([&](const std::vector<size_t>& i, double& value) {
+                double denom = Fm + Fdiag_[actv_mos_[i[2]]] - Fdiag_[virt_mos_[i[0]]] - Fdiag_[virt_mos_[i[1]]];
+                value *= 1.0 + dsrg_source_->compute_renormalized(denom);
+            });
+        }
+
+        // scale T by [1 - exp(-s * D^2)] / D
+        S_vec[thread].iterate([&](const std::vector<size_t>& i, double& value) {
+            double denom = Fm + Fdiag_[actv_mos_[i[2]]] - Fdiag_[virt_mos_[i[0]]] - Fdiag_[virt_mos_[i[1]]];
+            value *= dsrg_source_->compute_renormalized_denominator(denom);
+        });
+
+        C_vec[thread]("vu") += V_vec[thread]("efu") * S_vec[thread]("efv");
+    }
+
+    // finalize results
+    for (int thread = 0; thread < n_threads; thread++) {
+        Hbar1("vu") += C_vec[thread]("vu");
+    }
+
+    t.stop();
 }
 
 double SA_MRPT2::E_V_T2_CCAV() {}
+
+void SA_MRPT2::compute_Hbar1C_diskDF(ambit::Tensor &Hbar1, bool Vr) {}
 
 void SA_MRPT2::compute_hbar() {}
 

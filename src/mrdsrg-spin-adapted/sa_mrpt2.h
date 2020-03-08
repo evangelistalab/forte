@@ -125,10 +125,10 @@ class SA_MRPT2 : public SADSRG {
 
     /// Compute DSRG-transformed Hamiltonian
     void compute_hbar();
-    /// Compute Hbar1 from core contraction when doing DiskDF
-    void compute_Hbar1C_diskDF(ambit::BlockedTensor& Hbar1);
-    /// Compute Hbar1 from virtual contraction when doing DiskDF
-    void compute_Hbar1V_diskDF(ambit::BlockedTensor& Hbar1);
+    /// Compute Hbar1 from core contraction, renormalize V if Vr is true
+    void compute_Hbar1C_diskDF(ambit::Tensor& Hbar1, bool Vr = true);
+    /// Compute Hbar1 from virtual contraction, renormalize V if Vr is true
+    void compute_Hbar1V_diskDF(ambit::Tensor &Hbar1, bool Vr = true);
 };
 } // namespace forte
 
