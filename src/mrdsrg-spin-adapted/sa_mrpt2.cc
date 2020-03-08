@@ -245,6 +245,8 @@ double SA_MRPT2::compute_energy() {
     } else {
         auto E_VT2_small = H2_T2_C0_T2small(V_, T2_, S2_);
         E_VT2_comp = E_VT2_small;
+        auto Eccvv = E_V_T2_CCVV();
+        outfile->Printf("\n Eccvv: %.15f", Eccvv);
     }
     double E_VT2 = E_VT2_comp[0] + E_VT2_comp[1] + E_VT2_comp[2];
 
@@ -504,6 +506,139 @@ void SA_MRPT2::renormalize_integrals() {
 
     rF.stop();
 }
+
+double SA_MRPT2::E_V_T2_CCVV() {
+    /**
+     * Compute <[V, T2]> (C_2)^4 ccvv term
+     * E = (em|fn) * [ 2 * (me|nf) - (mf|ne)] * [1 - e^(-2 * s * D)] / D
+     *
+     * Batching: for a given m and n, form B(ef) = Bm(L|e) * Bn(L|f)
+     */
+
+    auto nQ = aux_mos_.size();
+    auto nv = virt_mos_.size();
+    auto nc = core_mos_.size();
+
+    int n_thread = 1;
+#ifdef _OPENMP
+    n_thread = omp_get_max_threads();
+#endif
+    outfile->Printf("\n number of thread: %d", n_thread);
+
+    auto init_tensor_vecs = [n_thread]() {
+        std::vector<ambit::Tensor> out;
+        out.reserve(n_thread);
+        return out;
+    };
+
+    // some tensors used for threading
+    std::vector<ambit::Tensor> Bm_vec = init_tensor_vecs();
+    std::vector<ambit::Tensor> Bn_vec = init_tensor_vecs();
+    std::vector<ambit::Tensor> J_vec = init_tensor_vecs();
+    std::vector<ambit::Tensor> JK_vec = init_tensor_vecs();
+
+    for (int i = 0; i < n_thread; i++) {
+        std::string t = std::to_string(i);
+        Bm_vec.push_back(ambit::Tensor::build(tensor_type_, "Bm_thread" + t, {nQ, nv}));
+        Bn_vec.push_back(ambit::Tensor::build(tensor_type_, "Bn_thread" + t, {nQ, nv}));
+        J_vec.push_back(ambit::Tensor::build(tensor_type_, "J_thread" + t, {nv, nv}));
+        JK_vec.push_back(ambit::Tensor::build(tensor_type_, "(2J - K) thread" + t, {nv, nv}));
+    }
+
+    double E = 0.0;
+    bool complete_ccvv = (ccvv_source_ == "ZERO");
+
+#pragma omp parallel for num_threads(num_threads_) reduction(+ : E)
+    for (size_t m = 0; m < nc; ++m) {
+        auto im = core_mos_[m];
+        double Fm = Fdiag_[im];
+
+        int thread = 0;
+#ifdef _OPENMP
+        thread = omp_get_thread_num();
+#endif
+#pragma omp critical
+        { Bm_vec[thread].data() = ints_->three_integral_block(aux_mos_, virt_mos_, {im}).data(); }
+
+        for (size_t n = m; n < nc; ++n) {
+            auto in = core_mos_[n];
+            double Fn = Fdiag_[in];
+            double factor = (m < n) ? 2.0 : 1.0;
+
+#pragma omp critical
+            {
+                Bn_vec[thread].data() =
+                    ints_->three_integral_block(aux_mos_, virt_mos_, {in}).data();
+            }
+
+            J_vec[thread].zero();
+            JK_vec[thread].zero();
+
+            J_vec[thread]("ef") = Bm_vec[thread]("ge") * Bn_vec[thread]("gf");
+            JK_vec[thread]("ef") = 2.0 * J_vec[thread]("ef") - J_vec[thread]("fe");
+
+            J_vec[thread].iterate([&](const std::vector<size_t>& i, double& value) {
+                double D = Fm + Fn - Fdiag_[virt_mos_[i[0]]] - Fdiag_[virt_mos_[i[1]]];
+                if (complete_ccvv)
+                    value /= D;
+                else {
+                    double rV = 1.0 + dsrg_source_->compute_renormalized(D);
+                    value *= dsrg_source_->compute_renormalized_denominator(D) * rV;
+                }
+            });
+
+            E += factor * J_vec[thread]("ef") * JK_vec[thread]("ef");
+        }
+    }
+
+    return E;
+}
+
+double SA_MRPT2::E_V_T2_CAVV() {
+    /**
+     * Compute <[V, T2]> (C_2)^4 cavv term
+     *
+     * E = L1_uv * (em|fu) * [1 + exp(-s * D1)] * [ 2 * (me|vf) - (mf|ve)] * [1 - e^(-s * D2)] / D2
+     *
+     * where the two denominators are:
+     *   D1 = F_m + F_u - F_e - F_f
+     *   D2 = F_m + F_v - F_e - F_f
+     *
+     * Batching: for a given m, form V1(efu) and V2(efv)
+     */
+
+    auto nQ = aux_mos_.size();
+    auto nv = virt_mos_.size();
+    auto nc = core_mos_.size();
+    auto na = actv_mos_.size();
+
+    int n_thread = 1;
+#ifdef _OPENMP
+    n_thread = omp_get_max_threads();
+#endif
+
+    auto init_tensor_vecs = [n_thread]() {
+        std::vector<ambit::Tensor> out;
+        out.reserve(n_thread);
+        return out;
+    };
+
+//    // some tensors used for threading
+//    std::vector<ambit::Tensor> Bm_vec = init_tensor_vecs();
+//    std::vector<ambit::Tensor> Bn_vec = init_tensor_vecs();
+//    std::vector<ambit::Tensor> J_vec = init_tensor_vecs();
+//    std::vector<ambit::Tensor> JK_vec = init_tensor_vecs();
+
+//    for (int i = 0; i < n_thread; i++) {
+//        std::string t = std::to_string(i);
+//        Bm_vec.push_back(ambit::Tensor::build(tensor_type_, "Bm_thread" + t, {nQ, nv}));
+//        Bn_vec.push_back(ambit::Tensor::build(tensor_type_, "Bn_thread" + t, {nQ, nv}));
+//        J_vec.push_back(ambit::Tensor::build(tensor_type_, "J_thread" + t, {nv, nv}));
+//        JK_vec.push_back(ambit::Tensor::build(tensor_type_, "(2J - K) thread" + t, {nv, nv}));
+//    }
+}
+
+double SA_MRPT2::E_V_T2_CCAV() {}
 
 void SA_MRPT2::compute_hbar() {}
 

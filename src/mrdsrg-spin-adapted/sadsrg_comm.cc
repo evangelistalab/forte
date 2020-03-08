@@ -85,12 +85,18 @@ std::vector<double> SADSRG::H2_T2_C0(BlockedTensor& H2, BlockedTensor& T2, Block
 
     // [H2, T2] (C_2)^4 from ccvv
     E += H2["efmn"] * S2["mnef"];
+    double Etemp = E;
+    outfile->Printf("\n Eccvv: %.15f", E);
 
     // [H2, T2] (C_2)^4 L1 from cavv
     E += H2["efmu"] * S2["mvef"] * L1_["uv"];
+    outfile->Printf("\n Ecavv: %.15f", E - Etemp);
+    Etemp = E;
 
     // [H2, T2] (C_2)^4 L1 from ccav
     E += H2["vemn"] * S2["mnue"] * Eta1_["uv"];
+    outfile->Printf("\n Ecaav: %.15f", E - Etemp);
+    Etemp = E;
 
     Eout[0] += E;
 

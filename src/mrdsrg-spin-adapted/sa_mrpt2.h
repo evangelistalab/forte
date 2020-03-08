@@ -116,6 +116,13 @@ class SA_MRPT2 : public SADSRG {
     /// Renormalize integrals
     void renormalize_integrals();
 
+    /// Energy contribution from CCVV block
+    double E_V_T2_CCVV();
+    /// Energy contribution from CAVV block
+    double E_V_T2_CAVV();
+    /// Energy contribution from CCAV block
+    double E_V_T2_CCAV();
+
     /// Compute DSRG-transformed Hamiltonian
     void compute_hbar();
     /// Compute Hbar1 from core contraction when doing DiskDF
