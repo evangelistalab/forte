@@ -77,6 +77,8 @@ class SA_MRPT2 : public SADSRG {
 
     /// Fill up integrals
     void build_ints();
+    /// Build minimal blocks of V from 3-index B
+    void build_minimal_V();
 
     /// Initialize amplitude tensors
     void init_amps();
@@ -103,13 +105,16 @@ class SA_MRPT2 : public SADSRG {
     /// Double excitation amplitude (2 * J - K)
     ambit::BlockedTensor S2_;
 
-    /// compute 1st-order T2 amplitudes
+    /// Compute 1st-order T2 amplitudes
     void compute_t2();
-    /// compute 1st-order T2 amplitudes with at least two active indices
+    /// Compute 1st-order T2 amplitudes with at least two active indices
     void compute_t2_df_minimal();
 
-    /// compute 1st-order T1 amplitudes
+    /// Compute 1st-order T1 amplitudes
     void compute_t1();
+
+    /// Renormalize integrals
+    void renormalize_integrals();
 
     /// Compute DSRG-transformed Hamiltonian
     void compute_hbar();

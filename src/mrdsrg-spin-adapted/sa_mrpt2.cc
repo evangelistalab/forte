@@ -103,10 +103,10 @@ void SA_MRPT2::print_options() {
         {"Internal amplitudes", internal_amp_}};
 
     if (multi_state_) {
-        calculation_info_string.push_back({"State type", "multiple state"});
+        calculation_info_string.push_back({"State type", "MULTIPLE STATES"});
         calculation_info_string.push_back({"Multi-state type", multi_state_algorithm_});
     } else {
-        calculation_info_string.push_back({"State type", "state specific"});
+        calculation_info_string.push_back({"State type", "SINGLE STATE"});
     }
 
     if (internal_amp_ != "NONE") {
@@ -127,6 +127,8 @@ void SA_MRPT2::print_options() {
 }
 
 void SA_MRPT2::build_ints() {
+    timer t("Initialize integrals");
+
     // prepare one-electron integrals
     H_ = BTF_->build(tensor_type_, "H", {"gg"});
     H_.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>&, double& value) {
@@ -135,11 +137,14 @@ void SA_MRPT2::build_ints() {
 
     // prepare two-electron integrals or three-index B
     if (eri_df_) {
-        V_ = BTF_->build(tensor_type_, "V", {"vvaa", "aacc", "avca", "avac", "vaaa", "aaca", "aaaa"});
+        std::vector<std::string> blocks{"vvaa", "aacc", "avca", "avac", "vaaa", "aaca", "aaaa"};
+        V_ = BTF_->build(tensor_type_, "V", blocks);
         if (ints_type_ != "DISKDF") {
             B_ = BTF_->build(tensor_type_, "B 3-idx", {"Lph"});
             fill_three_index_ints(B_);
-            V_["pqrs"] = B_["gpr"] * B_["gqs"];
+            V_["abij"] = B_["gai"] * B_["gbj"];
+        } else {
+            build_minimal_V();
         }
     } else {
         V_ = BTF_->build(tensor_type_, "V", {"pphh"});
@@ -154,9 +159,57 @@ void SA_MRPT2::build_ints() {
             V_.block(block).copy(Vblock);
         }
     }
+
+    // prepare Hbar
+    if (relax_ref_ != "NONE" || multi_state_) {
+        Hbar1_ = BTF_->build(tensor_type_, "1-body Hbar", {"aa"});
+        Hbar2_ = BTF_->build(tensor_type_, "2-body Hbar", {"aaaa"});
+        Hbar1_["uv"] = F_["uv"];
+        Hbar2_["uvxy"] = V_["uvxy"];
+    }
+
+    t.stop();
+}
+
+void SA_MRPT2::build_minimal_V() {
+    timer t("Build minimal V");
+
+    // TODO: add memory check
+    std::vector<std::string> Bblocks{"Lva", "Lac", "Laa"};
+
+    auto B = ambit::BlockedTensor::build(tensor_type_, "B 3-idx", Bblocks);
+    fill_three_index_ints(B);
+    V_["abij"] = B["gai"] * B["gbj"];
+
+    // the only block left is avac of V
+    if (std::find(Bblocks.begin(), Bblocks.end(), "Lvc") == Bblocks.end()) {
+        auto nQ = aux_mos_.size();
+        auto nc = core_mos_.size();
+        auto na = actv_mos_.size();
+        auto nv = virt_mos_.size();
+
+        auto& Vavac = V_.block("avac").data();
+        auto dim2 = na * nc;
+        auto dim1 = nv * dim2;
+
+        for (size_t c = 0; c < nc; ++c) {
+            auto Bsub = ambit::Tensor::build(tensor_type_, "Bsub PT2", {nQ, nv});
+            Bsub.data() = ints_->three_integral_block(aux_mos_, virt_mos_, {core_mos_[c]}).data();
+
+            auto Vsub = ambit::Tensor::build(tensor_type_, "Vsub PT2", {na, nv, na});
+            Vsub("uev") = B.block("Laa")("guv") * Bsub("ge");
+
+            Vsub.citerate([&](const std::vector<size_t>& i, const double& value) {
+                Vavac[i[0] * dim1 + i[1] * dim2 + i[2] * nc + c] = value;
+            });
+        }
+    }
+
+    t.stop();
 }
 
 void SA_MRPT2::init_amps() {
+    timer t("Initialize T1 and T2");
     T1_ = BTF_->build(tensor_type_, "T1 Amplitudes", {"hp"});
     if (eri_df_) {
         std::vector<std::string> blocks{"aavv", "ccaa", "caav", "acav", "aava", "caaa", "aaaa"};
@@ -166,6 +219,7 @@ void SA_MRPT2::init_amps() {
         T2_ = BTF_->build(tensor_type_, "T2 Amplitudes", {"hhpp"});
         S2_ = BTF_->build(tensor_type_, "T2 Amplitudes", {"hhpp"});
     }
+    t.stop();
 }
 
 double SA_MRPT2::compute_energy() {
@@ -174,13 +228,57 @@ double SA_MRPT2::compute_energy() {
     compute_t1();
     analyze_amplitudes("First-Order", T1_, T2_);
 
+    // scale the integrals
+    renormalize_integrals();
+
     // compute energy
     double Ecorr = 0.0;
 
-    return Ecorr;
+    double E_FT1 = H1_T1_C0(F_, T1_, 1.0, Ecorr);
+    double E_FT2 = H1_T2_C0(F_, T2_, 1.0, Ecorr);
+
+    double E_VT1 = H2_T1_C0(V_, T1_, 1.0, Ecorr);
+
+    std::vector<double> E_VT2_comp;
+    if (!eri_df_) {
+        E_VT2_comp = H2_T2_C0(V_, T2_, S2_, 1.0, Ecorr);
+    } else {
+        auto E_VT2_small = H2_T2_C0_T2small(V_, T2_, S2_);
+        E_VT2_comp = E_VT2_small;
+    }
+    double E_VT2 = E_VT2_comp[0] + E_VT2_comp[1] + E_VT2_comp[2];
+
+    double Etotal = Ecorr + Eref_;
+    Hbar0_ = Ecorr;
+
+    // printing
+    std::vector<std::pair<std::string, double>> energy;
+    energy.push_back({"E0 (reference)", Eref_});
+    energy.push_back({"< Phi_0 | [Fr, T1] | Phi_0 >", E_FT1});
+    energy.push_back({"< Phi_0 | [Fr, T2] | Phi_0 >", E_FT2});
+    energy.push_back({"< Phi_0 | [Vr, T1] | Phi_0 >", E_VT1});
+    energy.push_back({"< Phi_0 | [Vr, T2] | Phi_0 >", E_VT2});
+    energy.push_back({"  - [Vr, T2] L1 contribution", E_VT2_comp[0]});
+    energy.push_back({"  - [Vr, T2] L2 contribution", E_VT2_comp[1]});
+    energy.push_back({"  - [Vr, T2] L3 contribution", E_VT2_comp[2]});
+    energy.push_back({"DSRG-MRPT2 correlation energy", Ecorr});
+    energy.push_back({"DSRG-MRPT2 total energy", Etotal});
+
+    print_h2("DSRG-MRPT2 Energy Summary");
+    for (auto& str_dim : energy) {
+        outfile->Printf("\n    %-30s = %22.15f", str_dim.first.c_str(), str_dim.second);
+    }
+
+    // reference relaxation
+    if (relax_ref_ != "NONE" || multi_state_) {
+        compute_hbar();
+    }
+
+    return Etotal;
 }
 
 void SA_MRPT2::compute_t2_df_minimal() {
+    timer t2min("Compute minimal T2");
     // ONLY these T2 blocks are stored: aavv, ccaa, caav, acav, aava, caaa, aaaa
 
     // initialize T2 with V
@@ -216,12 +314,16 @@ void SA_MRPT2::compute_t2_df_minimal() {
     // form S2 = 2 * J - K
     // aavv, ccaa, caav, acav, aava, caaa, aaaa
     S2_["ijab"] = 2.0 * T2_["ijab"] - T2_["ijba"];
-    S2_["muve"] = 2.0 * T2_["muve"] - T2_["umve"];
-    S2_["umve"] = 2.0 * T2_["umve"] - T2_["muve"];
-    S2_["uvex"] = 2.0 * T2_["uvex"] - T2_["vuex"];
+    S2_["muve"] -= T2_["umve"];
+    S2_["umve"] -= T2_["muve"];
+    S2_["uvex"] -= T2_["vuex"];
+
+    t2min.stop();
 }
 
 void SA_MRPT2::compute_t2() {
+    timer t2("Compute T2");
+
     if (eri_df_) {
         compute_t2_df_minimal();
         return;
@@ -278,36 +380,26 @@ void SA_MRPT2::compute_t2() {
 
     // form 2 * J - K
     S2_["ijab"] = 2.0 * T2_["ijab"] - T2_["ijba"];
+
+    t2.stop();
 }
 
 void SA_MRPT2::compute_t1() {
-    BlockedTensor temp = BTF_->build(tensor_type_, "temp", {"aa"});
-    temp["xu"] = L1_["xu"];
+    timer t1("Compute T1");
+
+    // initialize T1 with F + [H0, A]
+    T1_["ia"] = F_["ia"];
+    T1_["ia"] += 0.5 * S2_["ivaw"] * F_["wu"] * L1_["uv"];
+    T1_["ia"] -= 0.5 * S2_["iwau"] * F_["vw"] * L1_["uv"];
+
+    // need to consider the S2 blocks that are not stored
+    if (eri_df_) {
+        T1_["me"] += 0.5 * S2_["vmwe"] * F_["wu"] * L1_["uv"];
+        T1_["me"] -= 0.5 * S2_["wmue"] * F_["vw"] * L1_["uv"];
+    }
 
     // transform to semi-canonical basis
     BlockedTensor tempX;
-    if (!semi_canonical_) {
-        tempX = ambit::BlockedTensor::build(tensor_type_, "Temp Gamma", {"aa"});
-        tempX["uv"] = U_["ux"] * temp["xy"] * U_["vy"];
-        temp["uv"] = tempX["uv"];
-    }
-
-    // scale by delta
-    temp.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>&, double& value) {
-        value *= Fdiag_[i[0]] - Fdiag_[i[1]];
-    });
-
-    // transform back to non-canonical basis
-    if (!semi_canonical_) {
-        tempX["uv"] = U_["xu"] * temp["xy"] * U_["yv"];
-        temp["uv"] = tempX["uv"];
-    }
-
-    T1_["ia"] = F_["ia"];
-    T1_["ia"] += temp["xu"] * T2_["iuax"];
-    T1_["ia"] -= 0.5 * temp["xu"] * T2_["iuxa"];
-
-    // transform to semi-canonical basis
     if (!semi_canonical_) {
         tempX = ambit::BlockedTensor::build(tensor_type_, "Temp T1", {"hp"});
         tempX["jb"] = U_["ji"] * T1_["ia"] * U_["ba"];
@@ -346,6 +438,71 @@ void SA_MRPT2::compute_t1() {
     } else {
         T1_.block("aa").zero();
     }
+
+    t1.stop();
+}
+
+void SA_MRPT2::renormalize_integrals() {
+    // add R = H + [F, A] contributions to H
+
+    timer rV("Renormalize V");
+
+    // to semicanonical orbitals
+    BlockedTensor tempX;
+    if (!semi_canonical_) {
+        tempX = ambit::BlockedTensor::build(tensor_type_, "TempV", V_.block_labels());
+        tempX["klab"] = U_["ki"] * U_["lj"] * V_["ijab"];
+        V_["ijcd"] = tempX["ijab"] * U_["db"] * U_["ca"];
+    }
+
+    V_.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>&, double& value) {
+        double denom = Fdiag_[i[0]] + Fdiag_[i[1]] - Fdiag_[i[2]] - Fdiag_[i[3]];
+        value *= 1.0 + dsrg_source_->compute_renormalized(denom);
+    });
+
+    // transform back if necessary
+    if (!semi_canonical_) {
+        tempX["klab"] = U_["ik"] * U_["jl"] * V_["ijab"];
+        V_["ijcd"] = tempX["ijab"] * U_["bd"] * U_["ac"];
+    }
+
+    rV.stop();
+
+    timer rF("Renormalize F");
+
+    auto temp = ambit::BlockedTensor::build(tensor_type_, "temp", {"ph"});
+    temp["ai"] = F_["ai"];
+    temp["ai"] += 0.5 * S2_["ivaw"] * F_["wu"] * L1_["uv"];
+    temp["ai"] -= 0.5 * S2_["iwau"] * F_["vw"] * L1_["uv"];
+
+    // need to consider the S2 blocks that are not stored
+    if (eri_df_) {
+        temp["em"] += 0.5 * S2_["vmwe"] * F_["wu"] * L1_["uv"];
+        temp["em"] -= 0.5 * S2_["wmue"] * F_["vw"] * L1_["uv"];
+    }
+
+    // to semicanonical basis
+    if (!semi_canonical_) {
+        tempX = ambit::BlockedTensor::build(tensor_type_, "TempV", {"ph"});
+        tempX["bj"] = U_["ba"] * temp["ai"] * U_["ji"];
+        temp["ai"] = tempX["ai"];
+    }
+
+    // scale by exp(-s * D^2)
+    temp.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>&, double& value) {
+        double denom = Fdiag_[i[0]] - Fdiag_[i[1]];
+        value *= dsrg_source_->compute_renormalized(denom);
+    });
+
+    // transform back if necessary
+    if (!semi_canonical_) {
+        tempX["bj"] = U_["ab"] * temp["ai"] * U_["ij"];
+        temp["ai"] = tempX["ai"];
+    }
+
+    F_["ai"] += temp["ai"];
+
+    rF.stop();
 }
 
 void SA_MRPT2::compute_hbar() {}

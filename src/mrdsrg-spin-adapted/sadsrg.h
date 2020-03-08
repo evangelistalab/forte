@@ -213,7 +213,7 @@ class SADSRG : public DynamicCorrelationSolver {
     // ==> integrals <==
 
     /// Fill the tensor T with three-index DF or CD integrals
-    void fill_three_index_ints(ambit::BlockedTensor T);
+    void fill_three_index_ints(ambit::BlockedTensor B);
 
     /// Scalar of the DSRG transformed Hamiltonian
     double Hbar0_;
@@ -258,16 +258,16 @@ class SADSRG : public DynamicCorrelationSolver {
      */
 
     /// Compute zero-body term of commutator [H1, T1]
-    void H1_T1_C0(BlockedTensor& H1, BlockedTensor& T1, const double& alpha, double& C0);
+    double H1_T1_C0(BlockedTensor& H1, BlockedTensor& T1, const double& alpha, double& C0);
     /// Compute zero-body term of commutator [H1, T2]
-    void H1_T2_C0(BlockedTensor& H1, BlockedTensor& T2, const double& alpha, double& C0);
+    double H1_T2_C0(BlockedTensor& H1, BlockedTensor& T2, const double& alpha, double& C0);
     /// Compute zero-body term of commutator [H2, T1]
-    void H2_T1_C0(BlockedTensor& H2, BlockedTensor& T1, const double& alpha, double& C0);
+    double H2_T1_C0(BlockedTensor& H2, BlockedTensor& T1, const double& alpha, double& C0);
     /// Compute zero-body term of commutator [H2, T2], S2[ijab] = 2 * T[ijab] - T[ijba]
-    void H2_T2_C0(BlockedTensor& H2, BlockedTensor& T2, BlockedTensor& S2, const double& alpha,
-                  double& C0);
+    std::vector<double> H2_T2_C0(BlockedTensor& H2, BlockedTensor& T2, BlockedTensor& S2,
+                                 const double& alpha, double& C0);
     /// Compute zero-body term of commutator [H2, T2], T2 and S2 contain at least two active indices
-    void H2_T2_C0_T2small(BlockedTensor& H2, BlockedTensor& T2, BlockedTensor& S2, double& C0);
+    std::vector<double> H2_T2_C0_T2small(BlockedTensor& H2, BlockedTensor& T2, BlockedTensor& S2);
 
     /// Compute one-body term of commutator [H1, T1]
     void H1_T1_C1(BlockedTensor& H1, BlockedTensor& T1, const double& alpha, BlockedTensor& C1);
@@ -290,8 +290,8 @@ class SADSRG : public DynamicCorrelationSolver {
     /// Compute zero-body term of commutator [V, T1], V is constructed from B (DF/CD)
     void V_T1_C0_DF(BlockedTensor& B, BlockedTensor& T1, const double& alpha, double& C0);
     /// Compute zero-body term of commutator [V, T2], V is constructed from B (DF/CD)
-    void V_T2_C0_DF(BlockedTensor& B, BlockedTensor& T1, BlockedTensor& S2, const double& alpha,
-                    double& C0);
+    std::vector<double> V_T2_C0_DF(BlockedTensor& B, BlockedTensor& T1, BlockedTensor& S2,
+                                   const double& alpha, double& C0);
 
     /// Compute one-body term of commutator [V, T1], V is constructed from B (DF/CD)
     void V_T1_C1_DF(BlockedTensor& B, BlockedTensor& T1, const double& alpha, BlockedTensor& C1);

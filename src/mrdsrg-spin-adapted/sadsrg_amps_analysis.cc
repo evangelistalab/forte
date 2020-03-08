@@ -59,7 +59,7 @@ std::vector<std::pair<std::vector<size_t>, double>> SADSRG::check_t2(BlockedTens
 
     for (const std::string& block : T2blocks) {
         bool sym = (block[0] == block[1]) and (block[2] == block[3]);
-        outfile->Printf("\n %s", block.c_str());
+
         T2.block(block).citerate([&](const std::vector<size_t>& i, const double& value) {
             if (std::fabs(value) > 1.0e-15) {
                 size_t idx0 = label_to_spacemo_[block[0]][i[0]];
