@@ -48,4 +48,4 @@ Emcscf, wfn = energy('mcscf', return_wfn=True)
 compare_values(refmcscf, Emcscf, 10, "MCSCF energy")
 
 Eldsrg2 = energy('forte',ref_wfn=wfn)
-compare_values(refldsrg2, Eldsrg2, 10, "unrelaxed MR-LDSRG(2) energy")
+compare_values(refldsrg2, Eldsrg2, 8, "unrelaxed MR-LDSRG(2) energy")
