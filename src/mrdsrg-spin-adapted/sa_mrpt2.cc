@@ -141,9 +141,9 @@ void SA_MRPT2::build_ints() {
         std::vector<std::string> blocks{"vvaa", "aacc", "avca", "avac", "vaaa", "aaca", "aaaa"};
         V_ = BTF_->build(tensor_type_, "V", blocks);
         if (ints_type_ != "DISKDF") {
-            B_ = BTF_->build(tensor_type_, "B 3-idx", {"Lph"});
-            fill_three_index_ints(B_);
-            V_["abij"] = B_["gai"] * B_["gbj"];
+            auto B = BTF_->build(tensor_type_, "B 3-idx", {"Lph"});
+            fill_three_index_ints(B);
+            V_["abij"] = B["gai"] * B["gbj"];
         } else {
             build_minimal_V();
         }
@@ -278,7 +278,7 @@ double SA_MRPT2::compute_energy() {
     energy.push_back({"DSRG-MRPT2 total energy", Etotal});
 
     print_h2("DSRG-MRPT2 Energy Summary");
-    for (auto& str_dim : energy) {
+    for (const auto& str_dim : energy) {
         outfile->Printf("\n    %-30s = %22.15f", str_dim.first.c_str(), str_dim.second);
     }
 
@@ -871,6 +871,30 @@ void SA_MRPT2::compute_Hbar1C_diskDF(ambit::Tensor& Hbar1, bool Vr) {
     t.stop();
 }
 
-void SA_MRPT2::compute_hbar() {}
+void SA_MRPT2::compute_hbar() {
+    // Note F_ and V_ are renormalized integrals
+    if (!eri_df_) {
+        H_A_Ca(F_, V_, T1_, T2_, S2_, 0.5, Hbar1_, Hbar2_);
+    } else {
+        // set up G2["pqrs"] = 2 * H2["pqrs"] - H2["pqsr"]
+        auto G2 = ambit::BlockedTensor::build(tensor_type_, "G2H", {"avac", "aaac", "avaa"});
+        G2["uevm"] += 2.0 * V_["uevm"] - V_["uemv"];
+        G2["uvwm"] += 2.0 * V_["vumw"] - V_["uvmw"];
+        G2["uexy"] += 2.0 * V_["euyx"] - V_["euxy"];
+
+        H_A_Ca_small(F_, V_, G2, T1_, T2_, S2_, 0.5, Hbar1_, Hbar2_);
+
+        auto na = actv_mos_.size();
+        auto temp = ambit::Tensor::build(ambit::CoreTensor, "PT2Hbar1temp", {na, na});
+        compute_Hbar1V_diskDF(temp);
+        Hbar1_.block("aa")("uv") += 0.5 * temp("uv");
+        Hbar1_.block("aa")("vu") += 0.5 * temp("uv");
+
+        temp.zero();
+        compute_Hbar1C_diskDF(temp);
+        Hbar1_.block("aa")("uv") -= 0.5 * temp("uv");
+        Hbar1_.block("aa")("vu") -= 0.5 * temp("uv");
+    }
+}
 
 } // namespace forte

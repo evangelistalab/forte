@@ -313,7 +313,7 @@ class SADSRG : public DynamicCorrelationSolver {
 
     /// Compute the active part of commutator C1 + C2 = alpha * [H1 + H2, A1 + A2]
     void H_A_Ca(BlockedTensor& H1, BlockedTensor& H2, BlockedTensor& T1, BlockedTensor& T2,
-                const double& alpha, BlockedTensor& C1, BlockedTensor& C2);
+                BlockedTensor& S2, const double& alpha, BlockedTensor& C1, BlockedTensor& C2);
     /// Compute the active part of commutator C1 + C2 = alpha * [H1 + H2, A1 + A2]
     /// G2[pqrs] = 2 * H2[pqrs] - H2[pqsr], S2[ijab] = 2 * T2[ijab] - T2[ijba]
     void H_A_Ca_small(BlockedTensor& H1, BlockedTensor& H2, BlockedTensor& G2, BlockedTensor& T1,

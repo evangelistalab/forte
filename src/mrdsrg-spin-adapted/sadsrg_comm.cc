@@ -662,11 +662,7 @@ void SADSRG::V_T2_C2_DF_PH_X(BlockedTensor& B, BlockedTensor& T2, const double& 
 }
 
 void SADSRG::H_A_Ca(BlockedTensor& H1, BlockedTensor& H2, BlockedTensor& T1, BlockedTensor& T2,
-                    const double& alpha, BlockedTensor& C1, BlockedTensor& C2) {
-    // set up S2["ijab"] = 2 * T2["ijab"] - T2["ijba"]
-    auto S2 = ambit::BlockedTensor::build(tensor_type_, "S2T", {"hhpp"});
-    S2["ijab"] = 2.0 * T2["ijab"] - T2["ijba"];
-
+                    BlockedTensor& S2, const double& alpha, BlockedTensor& C1, BlockedTensor& C2) {
     // set up G2["pqrs"] = 2 * H2["pqrs"] - H2["pqsr"]
     auto G2 = ambit::BlockedTensor::build(tensor_type_, "G2H", {"avac", "aaac", "avaa"});
     G2["pqrs"] = 2.0 * H2["pqrs"] - H2["pqsr"];
@@ -674,8 +670,8 @@ void SADSRG::H_A_Ca(BlockedTensor& H1, BlockedTensor& H2, BlockedTensor& T1, Blo
     H_A_Ca_small(H1, H2, G2, T1, T2, S2, alpha, C1, C2);
 
     auto temp = ambit::BlockedTensor::build(ambit::CoreTensor, "tempHACa", {"aa"});
-    temp["wz"] += H2["abzm"] * S2["wmab"];
-    temp["wz"] -= H2["weij"] * S2["ijze"];
+    temp["wz"] += H2["efzm"] * S2["wmef"];
+    temp["wz"] -= H2["wemn"] * S2["mnze"];
 
     C1["uv"] += alpha * temp["uv"];
     C1["vu"] += alpha * temp["uv"];
@@ -687,7 +683,9 @@ void SADSRG::H_A_Ca_small(BlockedTensor& H1, BlockedTensor& H2, BlockedTensor& G
     /**
      * The following blocks should be available in memory:
      * G2: avac, aaac, avaa
-     * H2, T2, S2: all blocks with at least two active indices
+     * H2: vvaa, aacc, avca, avac, vaaa, aaca, aaaa
+     * T2: aavv, ccaa, caav, acav, aava, caaa, aaaa
+     * S2: the same as T2
      */
 
     auto temp = ambit::BlockedTensor::build(ambit::CoreTensor, "tempHACa", {"aa"});
@@ -728,39 +726,84 @@ void SADSRG::H_T_C1a_smallG(BlockedTensor& G2, BlockedTensor& T1, BlockedTensor&
 
 void SADSRG::H_T_C1a_smallS(BlockedTensor& H1, BlockedTensor& H2, BlockedTensor& T2,
                             BlockedTensor& S2, BlockedTensor& C1) {
-    /// H2, T2, and S2 should contain all blocks with at least two active indices.
+    /**
+     * The following blocks should be available in memory:
+     * H2: vvaa, aacc, avca, avac, vaaa, aaca, aaaa
+     * T2: aavv, ccaa, caav, acav, aava, caaa, aaaa
+     * S2: the same as T2
+     */
 
-    C1["uv"] += H1["bm"] * S2["umvb"];
-    C1["uv"] += 0.5 * H1["bx"] * S2["uyvb"] * L1_["xy"];
-    C1["uv"] -= 0.5 * H1["yj"] * S2["ujvx"] * L1_["xy"];
+    // C1["uv"] += H1["bm"] * S2["umvb"];
+    C1["uv"] += H1["em"] * S2["umve"];
+    C1["uv"] += H1["xm"] * S2["muxv"];
+
+    // C1["uv"] += 0.5 * H1["bx"] * S2["uyvb"] * L1_["xy"];
+    C1["uv"] += 0.5 * H1["ex"] * S2["yuev"] * L1_["xy"];
+    C1["uv"] += 0.5 * H1["wx"] * S2["uyvw"] * L1_["xy"];
+
+    // C1["uv"] -= 0.5 * H1["yj"] * S2["ujvx"] * L1_["xy"];
+    C1["uv"] -= 0.5 * H1["ym"] * S2["muxv"] * L1_["xy"];
+    C1["uv"] -= 0.5 * H1["yw"] * S2["uwvx"] * L1_["xy"];
+
+    C1["wz"] += H2["uemz"] * S2["mwue"];
+    C1["wz"] += H2["uezm"] * S2["wmue"];
+    C1["wz"] += H2["vumz"] * S2["mwvu"];
+
+    C1["wz"] -= H2["wemu"] * S2["muze"];
+    C1["wz"] -= H2["weum"] * S2["umze"];
+    C1["wz"] -= H2["ewvu"] * S2["vuez"];
 
     auto temp = ambit::BlockedTensor::build(ambit::CoreTensor, "temp", {"aaaa"});
-    temp["wzuv"] += 0.5 * S2["wvab"] * H2["abzu"];
-    temp["wzuv"] -= 0.5 * S2["wmub"] * H2["vbzm"];
-    temp["wzuv"] -= 0.5 * S2["mwub"] * H2["bvzm"];
-    temp["wzuv"] += 0.25 * S2["wjux"] * L1_["xy"] * H2["vyzj"];
-    temp["wzuv"] -= 0.25 * S2["wyub"] * L1_["xy"] * H2["vbzx"];
+
+    // temp["wzuv"] += 0.5 * S2["wvab"] * H2["abzu"];
+    temp["wzuv"] += 0.5 * S2["wvef"] * H2["efzu"];
+    temp["wzuv"] += 0.5 * S2["wvex"] * H2["exzu"];
+    temp["wzuv"] += 0.5 * S2["vwex"] * H2["exuz"];
+    temp["wzuv"] += 0.5 * S2["wvxy"] * H2["xyzu"];
+
+    // temp["wzuv"] -= 0.5 * S2["wmub"] * H2["vbzm"];
+    temp["wzuv"] -= 0.5 * S2["wmue"] * H2["vezm"];
+    temp["wzuv"] -= 0.5 * S2["mwxu"] * H2["xvmz"];
+
+    // temp["wzuv"] -= 0.5 * S2["mwub"] * H2["bvzm"];
+    temp["wzuv"] -= 0.5 * S2["mwue"] * H2["vemz"];
+    temp["wzuv"] -= 0.5 * S2["mwux"] * H2["vxmz"];
+
+    temp["wzuv"] += 0.25 * S2["jwxu"] * L1_["xy"] * H2["yvjz"];
+    temp["wzuv"] -= 0.25 * S2["ywbu"] * L1_["xy"] * H2["bvxz"];
     temp["wzuv"] -= 0.25 * S2["wybu"] * L1_["xy"] * H2["bvzx"];
     C1["wz"] += temp["wzuv"] * L1_["uv"];
 
     temp.zero();
-    temp["wzuv"] -= 0.5 * S2["ijzu"] * H2["wvij"];
-    temp["wzuv"] += 0.5 * S2["vjze"] * H2["weuj"];
-    temp["wzuv"] += 0.5 * S2["jvze"] * H2["weju"];
-    temp["wzuv"] -= 0.25 * S2["vyzb"] * Eta1_["xy"] * H2["wbux"];
-    temp["wzuv"] += 0.25 * S2["vjzx"] * Eta1_["xy"] * H2["wyuj"];
+
+    // temp["wzuv"] -= 0.5 * S2["ijzu"] * H2["wvij"];
+    temp["wzuv"] -= 0.5 * S2["mnzu"] * H2["wvmn"];
+    temp["wzuv"] -= 0.5 * S2["mxzu"] * H2["wvmx"];
+    temp["wzuv"] -= 0.5 * S2["mxuz"] * H2["vwmx"];
+    temp["wzuv"] -= 0.5 * S2["xyzu"] * H2["wvxy"];
+
+    // temp["wzuv"] += 0.5 * S2["vjze"] * H2["weuj"];
+    temp["wzuv"] += 0.5 * S2["vmze"] * H2["weum"];
+    temp["wzuv"] += 0.5 * S2["xvez"] * H2["ewxu"];
+
+    // temp["wzuv"] += 0.5 * S2["jvze"] * H2["weju"];
+    temp["wzuv"] += 0.5 * S2["mvze"] * H2["wemu"];
+    temp["wzuv"] += 0.5 * S2["vxez"] * H2["ewux"];
+
+    temp["wzuv"] -= 0.25 * S2["yvbz"] * Eta1_["xy"] * H2["bwxu"];
+    temp["wzuv"] += 0.25 * S2["jvxz"] * Eta1_["xy"] * H2["ywju"];
     temp["wzuv"] += 0.25 * S2["jvzx"] * Eta1_["xy"] * H2["wyju"];
     C1["wz"] += temp["wzuv"] * Eta1_["uv"];
 
-    C1["wz"] += 0.5 * H2["uvzj"] * T2["jwyx"] * L2_["xyuv"];
+    C1["wz"] += 0.5 * H2["vujz"] * T2["jwyx"] * L2_["xyuv"];
     C1["wz"] += 0.5 * H2["auzx"] * S2["wvay"] * L2_["xyuv"];
-    C1["wz"] -= 0.5 * H2["uazx"] * T2["wvay"] * L2_["xyuv"];
-    C1["wz"] -= 0.5 * H2["uazx"] * T2["wvya"] * L2_["xyvu"];
+    C1["wz"] -= 0.5 * H2["auxz"] * T2["wvay"] * L2_["xyuv"];
+    C1["wz"] -= 0.5 * H2["auxz"] * T2["vway"] * L2_["xyvu"];
 
-    C1["wz"] -= 0.5 * H2["wbxy"] * T2["uvzb"] * L2_["xyuv"];
+    C1["wz"] -= 0.5 * H2["bwyx"] * T2["vubz"] * L2_["xyuv"];
     C1["wz"] -= 0.5 * H2["wuix"] * S2["ivzy"] * L2_["xyuv"];
-    C1["wz"] += 0.5 * H2["wuxi"] * T2["ivzy"] * L2_["xyuv"];
-    C1["wz"] += 0.5 * H2["wuxi"] * T2["ivyz"] * L2_["xyvu"];
+    C1["wz"] += 0.5 * H2["uwix"] * T2["ivzy"] * L2_["xyuv"];
+    C1["wz"] += 0.5 * H2["uwix"] * T2["ivyz"] * L2_["xyvu"];
 
     C1["wz"] += 0.5 * H2["avxy"] * S2["uwaz"] * L2_["xyuv"];
     C1["wz"] -= 0.5 * H2["uviy"] * S2["iwxz"] * L2_["xyuv"];
@@ -768,10 +811,24 @@ void SADSRG::H_T_C1a_smallS(BlockedTensor& H1, BlockedTensor& H2, BlockedTensor&
 
 void SADSRG::H_T_C2a_smallS(BlockedTensor& H1, BlockedTensor& H2, BlockedTensor& T1,
                             BlockedTensor& T2, BlockedTensor& S2, BlockedTensor& C2) {
-    /// H2, T2, and S2 should contain all blocks with at least two active indices.
+    /**
+     * The following blocks should be available in memory:
+     * H2: vvaa, aacc, avca, avac, vaaa, aaca, aaaa
+     * T2: aavv, ccaa, caav, acav, aava, caaa, aaaa
+     * S2: the same as T2
+     */
 
-    C2["uvxy"] += H2["abxy"] * T2["uvab"];
-    C2["uvxy"] += H2["uvij"] * T2["ijxy"];
+    // C2["uvxy"] += H2["abxy"] * T2["uvab"];
+    C2["uvxy"] += H2["efxy"] * T2["uvef"];
+    C2["uvxy"] += H2["wzxy"] * T2["uvwz"];
+    C2["uvxy"] += H2["ewxy"] * T2["uvew"];
+    C2["uvxy"] += H2["ewyx"] * T2["vuew"];
+
+    // C2["uvxy"] += H2["uvij"] * T2["ijxy"];
+    C2["uvxy"] += H2["uvmn"] * T2["mnxy"];
+    C2["uvxy"] += H2["uvwz"] * T2["wzxy"];
+    C2["uvxy"] += H2["vumw"] * T2["mwyx"];
+    C2["uvxy"] += H2["uvmw"] * T2["mwxy"];
 
     auto temp = ambit::BlockedTensor::build(ambit::CoreTensor, "temp", {"aaaa"});
     temp["uvxy"] += H1["ax"] * T2["uvay"];
@@ -779,20 +836,29 @@ void SADSRG::H_T_C2a_smallS(BlockedTensor& H1, BlockedTensor& H2, BlockedTensor&
     temp["uvxy"] += T1["ua"] * H2["avxy"];
     temp["uvxy"] -= T1["ix"] * H2["uviy"];
 
-    temp["uvxy"] -= 0.5 * L1_["wz"] * T2["uvwa"] * H2["zaxy"];
-    temp["uvxy"] -= 0.5 * Eta1_["wz"] * T2["zixy"] * H2["uvwi"];
+    temp["uvxy"] -= 0.5 * L1_["wz"] * T2["vuaw"] * H2["azyx"];
+    temp["uvxy"] -= 0.5 * Eta1_["wz"] * T2["izyx"] * H2["vuiw"];
 
-    temp["uvxy"] += H2["aumx"] * S2["mvay"];
+    // temp["uvxy"] += H2["aumx"] * S2["mvay"];
+    temp["uvxy"] += H2["uexm"] * S2["vmye"];
+    temp["uvxy"] += H2["wumx"] * S2["mvwy"];
+
     temp["uvxy"] += 0.5 * L1_["wz"] * S2["zvay"] * H2["auwx"];
     temp["uvxy"] -= 0.5 * L1_["wz"] * S2["ivwy"] * H2["zuix"];
 
-    temp["uvxy"] -= H2["auxm"] * T2["mvay"];
-    temp["uvxy"] -= 0.5 * L1_["wz"] * T2["zvay"] * H2["auxw"];
-    temp["uvxy"] += 0.5 * L1_["wz"] * T2["ivwy"] * H2["zuxi"];
+    // temp["uvxy"] -= H2["auxm"] * T2["mvay"];
+    temp["uvxy"] -= H2["uemx"] * T2["vmye"];
+    temp["uvxy"] -= H2["uwmx"] * T2["mvwy"];
 
-    temp["uvxy"] -= H2["avxm"] * T2["muya"];
-    temp["uvxy"] -= 0.5 * L1_["wz"] * T2["zuya"] * H2["avxw"];
-    temp["uvxy"] += 0.5 * L1_["wz"] * T2["iuyw"] * H2["zvxi"];
+    temp["uvxy"] -= 0.5 * L1_["wz"] * T2["zvay"] * H2["auxw"];
+    temp["uvxy"] += 0.5 * L1_["wz"] * T2["ivwy"] * H2["uzix"];
+
+    // temp["uvxy"] -= H2["avxm"] * T2["muya"];
+    temp["uvxy"] -= H2["vemx"] * T2["muye"];
+    temp["uvxy"] -= H2["vwmx"] * T2["muyw"];
+
+    temp["uvxy"] -= 0.5 * L1_["wz"] * T2["uzay"] * H2["avxw"];
+    temp["uvxy"] += 0.5 * L1_["wz"] * T2["iuyw"] * H2["vzix"];
 
     C2["uvxy"] += temp["uvxy"];
     C2["vuyx"] += temp["uvxy"];

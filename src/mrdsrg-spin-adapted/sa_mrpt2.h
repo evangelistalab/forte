@@ -94,8 +94,6 @@ class SA_MRPT2 : public SADSRG {
     ambit::BlockedTensor H_;
     /// Two-electron integral
     ambit::BlockedTensor V_;
-    /// Three-index integrals
-    ambit::BlockedTensor B_;
     /// Generalized Fock matrix
     ambit::BlockedTensor F_;
     /// Single excitation amplitude
