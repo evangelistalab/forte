@@ -228,13 +228,12 @@ class DSRG_MRPT2 : public MASTER_DSRG {
     size_t ncore_;
     size_t nvirt_;
     size_t na_;
+    size_t nirrep_;
 
 
     void set_dsrg_tensor();
 
    
-    /// Set the Lagrangian
-    void set_lagrangian();
     /// Write the Lagrangian
     void write_lagrangian();
     /// Write spin_dependent one-RDMs coefficients
@@ -285,6 +284,10 @@ class DSRG_MRPT2 : public MASTER_DSRG {
     std::vector<std::pair<unsigned long, unsigned long>,
                 std::allocator<std::pair<unsigned long, unsigned long>>>
         actv_mos_relative;
+    /// List of relative virtual MOs
+    std::vector<std::pair<unsigned long, unsigned long>,
+                std::allocator<std::pair<unsigned long, unsigned long>>>
+        virt_mos_relative;
 
     /// Dimension of different irreps
     psi::Dimension irrep_vec;

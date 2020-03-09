@@ -57,12 +57,14 @@ void DSRG_MRPT2::set_all_variables() {
     actv_all_ = mo_space_info_->get_absolute_mo("ACTIVE");
     core_mos_relative = mo_space_info_->get_relative_mo("RESTRICTED_DOCC");
     actv_mos_relative = mo_space_info_->get_relative_mo("ACTIVE");
+    virt_mos_relative = mo_space_info_->get_relative_mo("RESTRICTED_UOCC");
     irrep_vec = mo_space_info_->get_dimension("ALL");
 
 
     na_ = mo_space_info_->size("ACTIVE");
     ncore_ = mo_space_info_->size("RESTRICTED_DOCC");
     nvirt_ = mo_space_info_->size("RESTRICTED_UOCC");
+    nirrep_ = mo_space_info_->nirrep();
 
     // // Set MO spaces.
     // set_ambit_space();
@@ -280,9 +282,9 @@ void DSRG_MRPT2::set_multiplier() {
     set_w();
     Z.print();
     W_.print();
-    for(size_t i=0; i<nmo_; i++){
-outfile->Printf("\n%d   %.6f",i, Fa_[i]);
-    }
+// for(size_t i=0; i<nmo_; i++){
+//     outfile->Printf("\n%d   %.6f",i, Fa_[i]);
+// }
     
 }
 
@@ -1598,10 +1600,8 @@ void DSRG_MRPT2::iter_z() {
 
     Z_b["wm"] = Z_b["mw"];
 
-
-
+    // For test use
     Z_b.print();
-
 
     BlockedTensor Zold = BTF_->build(CoreTensor, "Old Z Matrix", spin_cases({"gg"}));
     while (iter <= maxiter) {
@@ -1614,7 +1614,6 @@ void DSRG_MRPT2::iter_z() {
 
         Zold["pq"] -= Z["pq"];
 
-
         double Znorm = Zold.norm();
 
         if (Znorm < convergence) {
@@ -1624,7 +1623,6 @@ void DSRG_MRPT2::iter_z() {
         iter++;
     }
     outfile->Printf("\n    iterations                     =  %d", iter);
-
 
 }
 
@@ -1687,7 +1685,6 @@ void DSRG_MRPT2::compute_z_cv() {
         });
     } 
     Z["ME"] = Z["EM"];
-
 
 }
 
@@ -1788,8 +1785,6 @@ void DSRG_MRPT2::compute_z_av() {
     dnt1["w"] += V["xYwV"] * Gamma2["wVxY"];
 
 
-
-
     BlockedTensor temp_p = BTF_->build(CoreTensor, "temporal tensor plus Z_va", {"va"});
     BlockedTensor temp_m = BTF_->build(CoreTensor, "temporal tensor subtract Z_va", {"va"});
 
@@ -1798,8 +1793,6 @@ void DSRG_MRPT2::compute_z_av() {
     temp_p["ew"] += Z["ew"];
     temp_m["ew"] = temp["ew"];
     temp_m["ew"] -= Z["ew"];
-
-
 
     for (const std::string& block : {"va"}) {
         (Z.block(block)).iterate([&](const std::vector<size_t>& i, double& value) {
@@ -1816,8 +1809,6 @@ void DSRG_MRPT2::compute_z_av() {
         });
     } 
 
-
-
     Z["we"] = Z["ew"];
 
     // Beta part
@@ -1829,12 +1820,7 @@ void DSRG_MRPT2::compute_z_av() {
     Z["WE"] = Z["EW"];
 
 
-
-
-
 }
-
-
 
 
 
@@ -2117,20 +2103,6 @@ void DSRG_MRPT2::compute_z_aa() {
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 //NOTICE Only for test use, need to delete when done
 void DSRG_MRPT2::compute_test_energy() {
 
@@ -2330,12 +2302,6 @@ void DSRG_MRPT2::compute_test_energy() {
 
 
 
-void DSRG_MRPT2::set_lagrangian() {
-	// TODO: set coefficients before the overlap integral
-
-
-}
-
 
 
 void DSRG_MRPT2::tpdm_backtransform() {
@@ -2363,15 +2329,15 @@ SharedMatrix DSRG_MRPT2::compute_gradient() {
     print_method_banner({"DSRG-MRPT2 Gradient", "Shuhe Wang"});
     set_all_variables();
     set_multiplier();
-    // write_lagrangian();
-    // write_1rdm_spin_dependent();
+    write_lagrangian();
+    write_1rdm_spin_dependent();
     // write_2rdm_spin_dependent();
     // tpdm_backtransform();
 
 
 
     //NOTICE Just for test
-    compute_test_energy();
+    // compute_test_energy();
 
     outfile->Printf("\n    Computing Gradient .............................. Done\n");
 
@@ -2383,10 +2349,41 @@ SharedMatrix DSRG_MRPT2::compute_gradient() {
 
 
 void DSRG_MRPT2::write_lagrangian() {
-	// TODO: write the Lagrangian
+	// NOTICE: write the Lagrangian
     outfile->Printf("\n    Writing Lagrangian .............................. ");
 
-    set_lagrangian();
+    SharedMatrix L(new Matrix("Lagrangian", nirrep_, irrep_vec, irrep_vec));
+
+    for (const std::string& block : {"cc", "CC", "aa", "AA", "ca", "ac", "CA", "AC",
+                    "vv", "VV", "av", "cv", "va", "vc", "AV", "CV", "VA", "VC"}) {
+        std::vector<std::vector<std::pair<unsigned long, unsigned long>,
+                                std::allocator<std::pair<unsigned long, unsigned long>>>>
+            spin_pair;
+        for (size_t idx : {0, 1}) {
+            auto spin = std::tolower(block.at(idx));
+            if (spin == 'c') {
+                spin_pair.push_back(core_mos_relative);
+            } else if (spin == 'a') {
+                spin_pair.push_back(actv_mos_relative);
+            }
+            else if (spin == 'v') {
+                spin_pair.push_back(virt_mos_relative);
+            }
+        }
+
+        (W_.block(block)).iterate([&](const std::vector<size_t>& i, double& value) {
+            if (spin_pair[0][i[0]].first == spin_pair[1][i[1]].first) {
+                L->add(spin_pair[0][i[0]].first, spin_pair[0][i[0]].second,
+                       spin_pair[1][i[1]].second, value);
+            }
+        });
+    }
+
+    L->print();
+
+    L->back_transform(ints_->Ca());
+    // ints_->wfn()->Lagrangian()->print();
+    ints_->wfn()->Lagrangian()->copy(L);
 
 
     outfile->Printf("Done");
@@ -2394,10 +2391,77 @@ void DSRG_MRPT2::write_lagrangian() {
 
 
 
-void DSRG_MRPT2::write_1rdm_spin_dependent() {
-	// TODO: write spin_dependent one-RDMs coefficients. 
-    outfile->Printf("\n    Writing 1RDM Coefficients ....................... ");
 
+
+
+
+/**
+ * Write spin_dependent one-RDMs coefficients.
+ *
+ * We force "Da == Db". This function needs be changed if such constraint is revoked.
+ */
+void DSRG_MRPT2::write_1rdm_spin_dependent() {
+
+	// NOTICE: write spin_dependent one-RDMs coefficients. 
+    outfile->Printf("\n    Writing 1RDM Coefficients ....................... ");
+    SharedMatrix D1(new Matrix("1rdm coefficients contribution", nirrep_, irrep_vec, irrep_vec));
+
+    (Z.block("vc")).iterate([&](const std::vector<size_t>& i, double& value) {
+        if (virt_mos_relative[i[0]].first == core_mos_relative[i[1]].first) {
+            D1->set(virt_mos_relative[i[0]].first, virt_mos_relative[i[0]].second,
+                core_mos_relative[i[1]].second, 2.0 * value);
+        }
+    });
+
+    BlockedTensor temp = BTF_->build(CoreTensor, "temporal tensor", {"ca"});
+    temp["nu"] = 2.0 * Z["un"];
+    temp["nv"] -= 2.0 * Z["un"] * Gamma1["uv"];
+
+    (temp.block("ca")).iterate([&](const std::vector<size_t>& i, double& value) {
+        if (core_mos_relative[i[0]].first == actv_mos_relative[i[1]].first) {
+            D1->set(core_mos_relative[i[0]].first, core_mos_relative[i[0]].second,
+                actv_mos_relative[i[1]].second, value);
+        }
+    });
+
+    temp = BTF_->build(CoreTensor, "temporal tensor", {"va"});
+    temp["ev"] = 2.0 * Z["eu"] * Gamma1["uv"];
+
+
+    (temp.block("va")).iterate([&](const std::vector<size_t>& i, double& value) {
+        if (virt_mos_relative[i[0]].first == actv_mos_relative[i[1]].first) {
+            D1->set(virt_mos_relative[i[0]].first, virt_mos_relative[i[0]].second,
+                actv_mos_relative[i[1]].second, value);
+        }
+    });
+
+    (Z.block("cc")).iterate([&](const std::vector<size_t>& i, double& value) {
+        if (core_mos_relative[i[0]].first == core_mos_relative[i[1]].first) {
+            D1->set(core_mos_relative[i[0]].first, core_mos_relative[i[0]].second,
+                core_mos_relative[i[1]].second, value);
+        }
+    });
+
+    (Z.block("aa")).iterate([&](const std::vector<size_t>& i, double& value) {
+        if (actv_mos_relative[i[0]].first == actv_mos_relative[i[1]].first) {
+            D1->set(actv_mos_relative[i[0]].first, actv_mos_relative[i[0]].second,
+                actv_mos_relative[i[1]].second, value);
+        }
+    });
+
+    (Z.block("vv")).iterate([&](const std::vector<size_t>& i, double& value) {
+        if (virt_mos_relative[i[0]].first == virt_mos_relative[i[1]].first) {
+            D1->set(virt_mos_relative[i[0]].first, virt_mos_relative[i[0]].second,
+                virt_mos_relative[i[1]].second, value);
+        }
+    });
+
+
+    // D1->print();
+
+    D1->back_transform(ints_->Ca());
+    ints_->wfn()->Da()->copy(D1);
+    ints_->wfn()->Db()->copy(D1);
 
     outfile->Printf("Done");
 }
