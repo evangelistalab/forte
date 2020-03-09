@@ -463,19 +463,35 @@ void SA_MRPT2::renormalize_integrals() {
     BlockedTensor tempX;
     if (!semi_canonical_) {
         tempX = ambit::BlockedTensor::build(tensor_type_, "TempV", V_.block_labels());
-        tempX["klab"] = U_["ki"] * U_["lj"] * V_["ijab"];
-        V_["ijcd"] = tempX["ijab"] * U_["db"] * U_["ca"];
+        tempX["abkl"] = U_["ki"] * U_["lj"] * V_["abij"];
+        V_["cdij"] = tempX["abij"] * U_["db"] * U_["ca"];
     }
 
-    V_.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>&, double& value) {
-        double denom = Fdiag_[i[0]] + Fdiag_[i[1]] - Fdiag_[i[2]] - Fdiag_[i[3]];
-        value *= 1.0 + dsrg_source_->compute_renormalized(denom);
-    });
+    std::vector<std::string> Vblocks(V_.block_labels());
+    if (ccvv_source_ == "ZERO") {
+        Vblocks.erase(std::remove(Vblocks.begin(), Vblocks.end(), "vvcc"), Vblocks.end());
+    }
+
+    for (const std::string& block : Vblocks) {
+        V_.block(block).iterate([&](const std::vector<size_t>& i, double& value) {
+            size_t i0 = label_to_spacemo_[block[0]][i[0]];
+            size_t i1 = label_to_spacemo_[block[1]][i[1]];
+            size_t i2 = label_to_spacemo_[block[2]][i[2]];
+            size_t i3 = label_to_spacemo_[block[3]][i[3]];
+            double denom = Fdiag_[i0] + Fdiag_[i1] - Fdiag_[i2] - Fdiag_[i3];
+            value *= 1.0 + dsrg_source_->compute_renormalized(denom);
+        });
+    }
+
+//    V_.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>&, double& value) {
+//        double denom = Fdiag_[i[0]] + Fdiag_[i[1]] - Fdiag_[i[2]] - Fdiag_[i[3]];
+//        value *= 1.0 + dsrg_source_->compute_renormalized(denom);
+//    });
 
     // transform back if necessary
     if (!semi_canonical_) {
-        tempX["klab"] = U_["ik"] * U_["jl"] * V_["ijab"];
-        V_["ijcd"] = tempX["ijab"] * U_["bd"] * U_["ac"];
+        tempX["abkl"] = U_["ik"] * U_["jl"] * V_["abij"];
+        V_["cdij"] = tempX["abij"] * U_["bd"] * U_["ac"];
     }
 
     rV.stop();
@@ -537,7 +553,6 @@ double SA_MRPT2::E_V_T2_CCVV() {
     auto nc = core_mos_.size();
 
     // TODO: need to check for memeory for these tensors
-    // TODO: if orbitals not canonical
 
     int n_threads = n_threads_;
 
@@ -546,6 +561,8 @@ double SA_MRPT2::E_V_T2_CCVV() {
     std::vector<ambit::Tensor> Bn_vec = init_tensor_vecs(n_threads);
     std::vector<ambit::Tensor> J_vec = init_tensor_vecs(n_threads);
     std::vector<ambit::Tensor> JK_vec = init_tensor_vecs(n_threads);
+    std::vector<ambit::Tensor> Xm_vec = init_tensor_vecs(n_threads);
+    std::vector<ambit::Tensor> Xn_vec = init_tensor_vecs(n_threads);
 
     for (int i = 0; i < n_threads; i++) {
         std::string t = std::to_string(i);
@@ -553,6 +570,13 @@ double SA_MRPT2::E_V_T2_CCVV() {
         Bn_vec.push_back(ambit::Tensor::build(tensor_type_, "Bn_thread" + t, {nQ, nv}));
         J_vec.push_back(ambit::Tensor::build(tensor_type_, "J_thread" + t, {nv, nv}));
         JK_vec.push_back(ambit::Tensor::build(tensor_type_, "(2J - K) thread" + t, {nv, nv}));
+    }
+    if (!semi_canonical_) {
+        for (int i = 0; i < n_threads; i++) {
+            std::string t = std::to_string(i);
+            Xm_vec.push_back(ambit::Tensor::build(tensor_type_, "Xm_thread" + t, {nQ, nv}));
+            Xn_vec.push_back(ambit::Tensor::build(tensor_type_, "Xn_thread" + t, {nQ, nv}));
+        }
     }
 
     double E = 0.0;
@@ -568,7 +592,13 @@ double SA_MRPT2::E_V_T2_CCVV() {
         thread = omp_get_thread_num();
 #endif
 #pragma omp critical
-        { Bm_vec[thread].data() = ints_->three_integral_block(aux_mos_, virt_mos_, {im}).data(); }
+        {
+            Bm_vec[thread].data() = ints_->three_integral_block(aux_mos_, virt_mos_, {im}).data();
+            if (!semi_canonical_) {
+                Xm_vec[thread]("gf") = Bm_vec[thread]("ge") * U_.block("vv")("fe");
+                Bm_vec[thread]("gf") = Xm_vec[thread]("gf");
+            }
+        }
 
         for (size_t n = m; n < nc; ++n) {
             auto in = core_mos_[n];
@@ -579,6 +609,10 @@ double SA_MRPT2::E_V_T2_CCVV() {
             {
                 Bn_vec[thread].data() =
                     ints_->three_integral_block(aux_mos_, virt_mos_, {in}).data();
+                if (!semi_canonical_) {
+                    Xn_vec[thread]("gf") = Bn_vec[thread]("ge") * U_.block("vv")("fe");
+                    Bn_vec[thread]("gf") = Xn_vec[thread]("gf");
+                }
             }
 
             J_vec[thread]("ef") = Bm_vec[thread]("ge") * Bn_vec[thread]("gf");
@@ -638,7 +672,6 @@ void SA_MRPT2::compute_Hbar1V_diskDF(ambit::Tensor& Hbar1, bool Vr) {
     auto na = actv_mos_.size();
 
     // TODO: need to check memory for these tensors
-    // TODO: if orbitals not canonical
 
     int n_threads = n_threads_;
 
@@ -647,6 +680,7 @@ void SA_MRPT2::compute_Hbar1V_diskDF(ambit::Tensor& Hbar1, bool Vr) {
     std::vector<ambit::Tensor> V_vec = init_tensor_vecs(n_threads);
     std::vector<ambit::Tensor> S_vec = init_tensor_vecs(n_threads);
     std::vector<ambit::Tensor> C_vec = init_tensor_vecs(n_threads);
+    std::vector<ambit::Tensor> X_vec = init_tensor_vecs(n_threads);
 
     // TODO: test indices permutations for speed
     for (int i = 0; i < n_threads; i++) {
@@ -656,8 +690,19 @@ void SA_MRPT2::compute_Hbar1V_diskDF(ambit::Tensor& Hbar1, bool Vr) {
         S_vec.push_back(ambit::Tensor::build(tensor_type_, "S_thread" + t, {nv, nv, na}));
         C_vec.push_back(ambit::Tensor::build(tensor_type_, "C_thread" + t, {na, na}));
     }
+    if (!semi_canonical_) {
+        for (int i = 0; i < n_threads; i++) {
+            std::string t = std::to_string(i);
+            X_vec.push_back(ambit::Tensor::build(tensor_type_, "X_thread" + t, {nQ, nv}));
+        }
+    }
 
     auto Bva = ints_->three_integral_block(aux_mos_, virt_mos_, actv_mos_);
+    if (!semi_canonical_) {
+        auto X = ambit::Tensor::build(tensor_type_, "tempCAVV", {nQ, nv, na});
+        X("gev") = Bva("geu") * U_.block("aa")("vu");
+        Bva("gfv") = X("gev") * U_.block("vv")("fe");
+    }
 
 #pragma omp parallel for num_threads(n_threads)
     for (size_t m = 0; m < nc; ++m) {
@@ -669,7 +714,13 @@ void SA_MRPT2::compute_Hbar1V_diskDF(ambit::Tensor& Hbar1, bool Vr) {
         thread = omp_get_thread_num();
 #endif
 #pragma omp critical
-        { Bm_vec[thread].data() = ints_->three_integral_block(aux_mos_, virt_mos_, {im}).data(); }
+        {
+            Bm_vec[thread].data() = ints_->three_integral_block(aux_mos_, virt_mos_, {im}).data();
+            if (!semi_canonical_) {
+                X_vec[thread]("gf") = Bm_vec[thread]("ge") * U_.block("vv")("fe");
+                Bm_vec[thread]("gf") = X_vec[thread]("gf");
+            }
+        }
 
         V_vec[thread]("efu") = Bm_vec[thread]("ge") * Bva("gfu");
         S_vec[thread]("efu") = 2.0 * V_vec[thread]("efu") - V_vec[thread]("feu");
@@ -694,9 +745,19 @@ void SA_MRPT2::compute_Hbar1V_diskDF(ambit::Tensor& Hbar1, bool Vr) {
     }
 
     // finalize results
+    auto C = ambit::Tensor::build(tensor_type_, "C1total_CAVV", {na, na});
     for (int thread = 0; thread < n_threads; thread++) {
-        Hbar1("vu") += C_vec[thread]("vu");
+        C("vu") += C_vec[thread]("vu");
     }
+
+    // rotate back to original orbital basis
+    if (!semi_canonical_) {
+        auto X = ambit::Tensor::build(tensor_type_, "tempCAVV", {na, na});
+        X("xv") = C("uv") * U_.block("aa")("ux");
+        C("xy") = X("xv") * U_.block("aa")("vy");
+    }
+
+    Hbar1("uv") += C("uv");
 
     t.stop();
 }
@@ -736,13 +797,12 @@ void SA_MRPT2::compute_Hbar1C_diskDF(ambit::Tensor& Hbar1, bool Vr) {
     auto nc = core_mos_.size();
     auto na = actv_mos_.size();
 
-    // TODO: if orbitals not canonical
-
     // some tensors used for threading
     std::vector<ambit::Tensor> Be_vec = init_tensor_vecs(n_threads_);
     std::vector<ambit::Tensor> V_vec = init_tensor_vecs(n_threads_);
     std::vector<ambit::Tensor> S_vec = init_tensor_vecs(n_threads_);
     std::vector<ambit::Tensor> C_vec = init_tensor_vecs(n_threads_);
+    std::vector<ambit::Tensor> X_vec = init_tensor_vecs(n_threads_);
 
     // TODO: test indices permutations for speed
     for (int i = 0; i < n_threads_; i++) {
@@ -752,8 +812,19 @@ void SA_MRPT2::compute_Hbar1C_diskDF(ambit::Tensor& Hbar1, bool Vr) {
         S_vec.push_back(ambit::Tensor::build(tensor_type_, "S_thread" + t, {na, nc, nc}));
         C_vec.push_back(ambit::Tensor::build(tensor_type_, "C_thread" + t, {na, na}));
     }
+    if (!semi_canonical_) {
+        for (int i = 0; i < n_threads_; i++) {
+            std::string t = std::to_string(i);
+            X_vec.push_back(ambit::Tensor::build(tensor_type_, "X_thread" + t, {nQ, nc}));
+        }
+    }
 
     auto Bac = ints_->three_integral_block(aux_mos_, actv_mos_, core_mos_);
+    if (!semi_canonical_) {
+        auto X = ambit::Tensor::build(tensor_type_, "tempCCAV", {nQ, na, nc});
+        X("gun") = Bac("gum") * U_.block("cc")("nm");
+        Bac("gvn") = X("gun") * U_.block("aa")("vu");
+    }
 
 #pragma omp parallel for num_threads(n_threads)
     for (size_t e = 0; e < nv; ++e) {
@@ -765,7 +836,12 @@ void SA_MRPT2::compute_Hbar1C_diskDF(ambit::Tensor& Hbar1, bool Vr) {
         thread = omp_get_thread_num();
 #endif
 #pragma omp critical
-        { Be_vec[thread].data() = ints_->three_integral_block(aux_mos_, core_mos_, {ie}).data(); }
+        { Be_vec[thread].data() = ints_->three_integral_block(aux_mos_, core_mos_, {ie}).data();
+            if (!semi_canonical_) {
+                X_vec[thread]("gn") = Be_vec[thread]("gm") * U_.block("cc")("nm");
+                Be_vec[thread]("gn") = X_vec[thread]("gn");
+            }
+        }
 
         V_vec[thread]("vmn") = Bac("gvm") * Be_vec[thread]("gn");
         S_vec[thread]("vmn") = 2.0 * V_vec[thread]("vmn") - V_vec[thread]("vnm");
@@ -790,9 +866,19 @@ void SA_MRPT2::compute_Hbar1C_diskDF(ambit::Tensor& Hbar1, bool Vr) {
     }
 
     // finalize results
+    auto C = ambit::Tensor::build(tensor_type_, "C1total_CCAV", {na, na});
     for (int thread = 0; thread < n_threads_; thread++) {
-        Hbar1("vu") += C_vec[thread]("vu");
+        C("vu") += C_vec[thread]("vu");
     }
+
+    // rotate back to original orbital basis
+    if (!semi_canonical_) {
+        auto X = ambit::Tensor::build(tensor_type_, "tempCCAV", {na, na});
+        X("xv") = C("uv") * U_.block("aa")("ux");
+        C("xy") = X("xv") * U_.block("aa")("vy");
+    }
+
+    Hbar1("uv") += C("uv");
 
     t.stop();
 }
