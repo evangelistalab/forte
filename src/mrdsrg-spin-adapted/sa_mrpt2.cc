@@ -38,6 +38,7 @@
 #include "psi4/libmints/molecule.h"
 #include "psi4/libqt/qt.h"
 
+#include "forte-def.h"
 #include "helpers/timer.h"
 #include "helpers/printing.h"
 #include "sa_mrpt2.h"
@@ -483,11 +484,6 @@ void SA_MRPT2::renormalize_integrals() {
         });
     }
 
-//    V_.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>&, double& value) {
-//        double denom = Fdiag_[i[0]] + Fdiag_[i[1]] - Fdiag_[i[2]] - Fdiag_[i[3]];
-//        value *= 1.0 + dsrg_source_->compute_renormalized(denom);
-//    });
-
     // transform back if necessary
     if (!semi_canonical_) {
         tempX["abkl"] = U_["ik"] * U_["jl"] * V_["abij"];
@@ -587,10 +583,7 @@ double SA_MRPT2::E_V_T2_CCVV() {
         auto im = core_mos_[m];
         double Fm = Fdiag_[im];
 
-        int thread = 0;
-#ifdef _OPENMP
-        thread = omp_get_thread_num();
-#endif
+        int thread = omp_get_thread_num();
 #pragma omp critical
         {
             Bm_vec[thread].data() = ints_->three_integral_block(aux_mos_, virt_mos_, {im}).data();
@@ -709,10 +702,7 @@ void SA_MRPT2::compute_Hbar1V_diskDF(ambit::Tensor& Hbar1, bool Vr) {
         auto im = core_mos_[m];
         double Fm = Fdiag_[im];
 
-        int thread = 0;
-#ifdef _OPENMP
-        thread = omp_get_thread_num();
-#endif
+        int thread = omp_get_thread_num();
 #pragma omp critical
         {
             Bm_vec[thread].data() = ints_->three_integral_block(aux_mos_, virt_mos_, {im}).data();
@@ -826,17 +816,15 @@ void SA_MRPT2::compute_Hbar1C_diskDF(ambit::Tensor& Hbar1, bool Vr) {
         Bac("gvn") = X("gun") * U_.block("aa")("vu");
     }
 
-#pragma omp parallel for num_threads(n_threads)
+#pragma omp parallel for num_threads(n_threads_)
     for (size_t e = 0; e < nv; ++e) {
         auto ie = virt_mos_[e];
         double Fe = Fdiag_[ie];
 
-        int thread = 0;
-#ifdef _OPENMP
-        thread = omp_get_thread_num();
-#endif
+        int thread = omp_get_thread_num();
 #pragma omp critical
-        { Be_vec[thread].data() = ints_->three_integral_block(aux_mos_, core_mos_, {ie}).data();
+        {
+            Be_vec[thread].data() = ints_->three_integral_block(aux_mos_, core_mos_, {ie}).data();
             if (!semi_canonical_) {
                 X_vec[thread]("gn") = Be_vec[thread]("gm") * U_.block("cc")("nm");
                 Be_vec[thread]("gn") = X_vec[thread]("gn");
