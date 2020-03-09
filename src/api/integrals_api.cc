@@ -35,6 +35,7 @@
 namespace py = pybind11;
 
 namespace forte {
+
 /// export ForteIntegrals
 void export_ForteIntegrals(py::module& m) {
     py::class_<ForteIntegrals, std::shared_ptr<ForteIntegrals>>(m, "ForteIntegrals")

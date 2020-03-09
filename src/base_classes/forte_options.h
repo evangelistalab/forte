@@ -89,7 +89,14 @@ class ForteOptions {
      * @param label Option label
      * @return a py::object containing the result
      */
-    std::pair<py::object, std::string> get(const std::string& label);
+    std::pair<py::object, std::string> get(const std::string& label) const;
+
+    /**
+     * @brief Set a python object option
+     * @param label Option label
+     * @param a py::object containing the value to be set
+     */
+    void set(const std::string& label, const py::object val);
 
     /**
      * @brief Add a boolean option
@@ -186,6 +193,55 @@ class ForteOptions {
      * @param label Option label
      */
     std::vector<double> get_double_vec(const std::string& label);
+
+    /**
+     * @brief Set a boolean option
+     * @param label Option label
+     * @param val Option value
+     */
+    void set_bool(const std::string& label, bool val);
+
+    /**
+     * @brief Get a integer option
+     * @param label Option label
+     * @param val Option value
+     */
+    void set_int(const std::string& label, int val);
+
+    /**
+     * @brief Get a double option
+     * @param label Option label
+     * @param val Option value
+     */
+    void set_double(const std::string& label, double val);
+
+    /**
+     * @brief Get a string option
+     * @param label Option label
+     * @param val Option value
+     */
+    void set_str(const std::string& label, const std::string& val);
+
+    /**
+     * @brief Get a general python list
+     * @param label Option label
+     * @param val Option value (a python list)
+     */
+    void set_gen_list(const std::string& label, py::list val);
+
+    /**
+     * @brief Get a vector of int option
+     * @param label Option label
+     * @param val Option value
+     */
+    void set_int_vec(const std::string& label, const std::vector<int>& val);
+
+    /**
+     * @brief Get a vector of int option
+     * @param label Option label
+     * @param val Option value
+     */
+    void set_double_vec(const std::string& label, const std::vector<double>& val);
 
     /**
      * @brief Register the options with Psi4's options object

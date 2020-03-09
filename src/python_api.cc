@@ -68,44 +68,11 @@ namespace forte {
 // see the files in src/api for the implementation of the following methods
 void export_ambit(py::module& m);
 void export_ForteIntegrals(py::module& m);
+void export_ForteOptions(py::module& m);
 void export_RDMs(py::module& m);
 void export_StateInfo(py::module& m);
 void export_SigmaVector(py::module& m);
 void export_SparseCISolver(py::module& m);
-
-/// Export the ForteOptions class
-void export_ForteOptions(py::module& m) {
-    py::class_<ForteOptions, std::shared_ptr<ForteOptions>>(m, "ForteOptions")
-        .def(py::init<>())
-        .def("set_dict", &ForteOptions::set_dict)
-        .def("dict", &ForteOptions::dict)
-        .def("set_group", &ForteOptions::set_group, "Set the options group")
-        .def("add_bool", &ForteOptions::add_bool, "Add a boolean option")
-        .def("add_int", &ForteOptions::add_int, "Add an integer option")
-        .def("add_double", &ForteOptions::add_double, "Add a double option")
-        .def("add_str",
-             (void (ForteOptions::*)(const std::string&, const std::string&, const std::string&)) &
-                 ForteOptions::add_str,
-             "Add a string option")
-        .def("add_str",
-             (void (ForteOptions::*)(const std::string&, const std::string&,
-                                     const std::vector<std::string>&, const std::string&)) &
-                 ForteOptions::add_str,
-             "Add a string option")
-        .def("add_int_array", &ForteOptions::add_int_array, "Add an array of integers option")
-        .def("add_double_array", &ForteOptions::add_double_array, "Add an array of doubles option")
-        .def("add_array", &ForteOptions::add_array, "Add an array option for general elements")
-        .def("get_bool", &ForteOptions::get_bool, "Get a boolean option")
-        .def("get_int", &ForteOptions::get_int, "Get an integer option")
-        .def("get_double", &ForteOptions::get_double, "Get a double option")
-        .def("get_str", &ForteOptions::get_str, "Get a string option")
-        .def("get_int_vec", &ForteOptions::get_int_vec, "Get a vector of integers option")
-        .def("push_options_to_psi4", &ForteOptions::push_options_to_psi4,
-             "Push the options list to Psi4")
-        .def("get_options_from_psi4", &ForteOptions::get_options_from_psi4,
-             "Read the value of options from Psi4")
-        .def("generate_documentation", &ForteOptions::generate_documentation);
-}
 
 /// Export the ActiveSpaceMethod class
 void export_ActiveSpaceMethod(py::module& m) {

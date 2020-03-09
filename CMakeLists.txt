@@ -78,6 +78,7 @@ pybind11_add_module(forte
 src/api/ambit_api.cc
 src/api/integrals_api.cc
 src/api/rdms_api.cc
+src/api/options_api.cc
 src/api/sci_api.cc
 src/api/state_info_api.cc
 src/base_classes/active_space_method.cc
