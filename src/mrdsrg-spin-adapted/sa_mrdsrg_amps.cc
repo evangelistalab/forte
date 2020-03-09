@@ -147,33 +147,14 @@ void SA_MRDSRG::guess_t1(BlockedTensor& F, BlockedTensor& T2, BlockedTensor& T1)
     outfile->Printf("\n    %-35s", str.c_str());
     T1max_ = 0.0, T1norm_ = 0.0, T1rms_ = 0.0;
 
-    BlockedTensor temp = BTF_->build(tensor_type_, "temp", {"aa"});
-    temp["xu"] = L1_["xu"];
+    T1["ia"] = F["ia"];
+    T1["ia"] += T2["ivaw"] * F["wu"] * L1_["uv"];
+    T1["ia"] -= 0.5 * T2["ivwa"] * F["wu"] * L1_["uv"];
+    T1["ia"] -= T2["iwau"] * F["vw"] * L1_["uv"];
+    T1["ia"] -= 0.5 * T2["iwua"] * F["vw"] * L1_["uv"];
 
     // transform to semi-canonical basis
     BlockedTensor tempX;
-    if (!semi_canonical_) {
-        tempX = ambit::BlockedTensor::build(tensor_type_, "Temp Gamma", {"aa"});
-        tempX["uv"] = U_["ux"] * temp["xy"] * U_["vy"];
-        temp["uv"] = tempX["uv"];
-    }
-
-    // scale by delta
-    temp.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>&, double& value) {
-        value *= Fdiag_[i[0]] - Fdiag_[i[1]];
-    });
-
-    // transform back to non-canonical basis
-    if (!semi_canonical_) {
-        tempX["uv"] = U_["xu"] * temp["xy"] * U_["yv"];
-        temp["uv"] = tempX["uv"];
-    }
-
-    T1["ia"] = F["ia"];
-    T1["ia"] += temp["xu"] * T2["iuax"];
-    T1["ia"] -= 0.5 * temp["xu"] * T2["iuxa"];
-
-    // transform to semi-canonical basis
     if (!semi_canonical_) {
         tempX = ambit::BlockedTensor::build(tensor_type_, "Temp T1", T1.block_labels());
         tempX["jb"] = U_["ji"] * T1["ia"] * U_["ba"];
