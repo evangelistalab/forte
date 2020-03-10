@@ -23,7 +23,7 @@ set globals{
   d_convergence          8
   mcscf_e_convergence    12
   mcscf_r_convergence    8
-  mcscf_diis_start       20
+  mcscf_diis_start       10
   mcscf_max_rot          0.2
   reference_sym          1
   restricted_docc        [2,0,0,0,0,2,0,0]

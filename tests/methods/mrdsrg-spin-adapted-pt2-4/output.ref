@@ -23,9 +23,9 @@
     -----------------------------------------------------------------------
 
 
-    Psi4 started on: Tuesday, 10 March 2020 02:58PM
+    Psi4 started on: Tuesday, 10 March 2020 05:09PM
 
-    Process ID: 56979
+    Process ID: 67123
     Host:       Yorks-Mac.local
     PSIDATADIR: /Users/york/src/psi4group/psi4/share/psi4
     Memory:     500.0 MiB
@@ -59,7 +59,7 @@ set globals{
   d_convergence          8
   mcscf_e_convergence    12
   mcscf_r_convergence    8
-  mcscf_diis_start       20
+  mcscf_diis_start       10
   mcscf_max_rot          0.2
   reference_sym          1
   restricted_docc        [2,0,0,0,0,2,0,0]
@@ -96,7 +96,7 @@ compare_values(Ept2_r, Erpt2, 9, "DSRG-MRPT2 relaxed energy")
 Scratch directory: /Users/york/scratch/psi4/
 
 *** tstart() called on Yorks-Mac.local
-*** at Tue Mar 10 14:58:19 2020
+*** at Tue Mar 10 17:09:25 2020
 
    => Loading Basis Set <=
 
@@ -285,13 +285,13 @@ Properties computed using the SCF density matrix
      X:     0.0000      Y:     0.0000      Z:     0.0000     Total:     0.0000
 
 
-*** tstop() called on Yorks-Mac.local at Tue Mar 10 14:58:19 2020
+*** tstop() called on Yorks-Mac.local at Tue Mar 10 17:09:25 2020
 Module time:
-	user time   =       0.46 seconds =       0.01 minutes
+	user time   =       0.45 seconds =       0.01 minutes
 	system time =       0.01 seconds =       0.00 minutes
 	total time  =          0 seconds =       0.00 minutes
 Total time:
-	user time   =       0.46 seconds =       0.01 minutes
+	user time   =       0.45 seconds =       0.01 minutes
 	system time =       0.01 seconds =       0.00 minutes
 	total time  =          0 seconds =       0.00 minutes
  MINTS: Wrapper to libmints.
@@ -441,20 +441,14 @@ Warning: iopen=0,opentype!=closed. Making iopen=1
    @MCSCF  8:   -149.707629236870   -4.5008e-06  3.12e-04  3.40e-07    4    1  TS
    @MCSCF  9:   -149.707630596052   -1.3592e-06  1.74e-04  1.99e-07    4    1  TS
    @MCSCF 10:   -149.707631009235   -4.1318e-07  9.64e-05  1.14e-07    4    1  TS
-   @MCSCF 11:   -149.707631135192   -1.2596e-07  5.35e-05  6.39e-08    4    1  TS
-   @MCSCF 12:   -149.707631173638   -3.8445e-08  2.96e-05  3.57e-08    4    1  TS
-   @MCSCF 13:   -149.707631185379   -1.1741e-08  1.64e-05  1.98e-08    4    1  TS
-   @MCSCF 14:   -149.707631188965   -3.5866e-09  9.07e-06  1.10e-08    4    1  TS
-   @MCSCF 15:   -149.707631190061   -1.0959e-09  5.02e-06  6.10e-09    4    1  TS
-   @MCSCF 16:   -149.707631190396   -3.3475e-10  2.77e-06  3.38e-09    4    1  TS
-   @MCSCF 17:   -149.707631190498   -1.0229e-10  1.53e-06  1.87e-09    4    1  TS
-   @MCSCF 18:   -149.707631190530   -3.1292e-11  8.48e-07  1.03e-09    4    1  TS
-   @MCSCF 19:   -149.707631190539   -9.6065e-12  4.69e-07  5.72e-10    4    1  TS
-   @MCSCF 20:   -149.707631190542   -2.8990e-12  2.59e-07  3.16e-10    4    1  TS
-   @MCSCF 21:   -149.707631190543   -8.5265e-13  1.43e-07  1.75e-10    4    1  TS, DIIS
-   @MCSCF 22:   -149.707631190543   -3.1264e-13  7.92e-08  9.67e-11    4    1  TS, DIIS
-   @MCSCF 23:   -149.707631190543   -8.5265e-14  2.48e-08  3.59e-12    5    1  TS, DIIS
-   @MCSCF 24:   -149.707631190543   -2.8422e-14  3.59e-09  2.32e-13    6    1  TS, DIIS
+   @MCSCF 11:   -149.707631135192   -1.2596e-07  5.35e-05  6.39e-08    4    1  TS, DIIS
+   @MCSCF 12:   -149.707631173638   -3.8445e-08  2.96e-05  3.57e-08    4    1  TS, DIIS
+   @MCSCF 13:   -149.707631184712   -1.1075e-08  1.73e-05  3.05e-09    5    1  TS, DIIS
+   @MCSCF 14:   -149.707631190467   -5.7541e-09  1.99e-06  9.84e-10    5    1  TS, DIIS
+   @MCSCF 15:   -149.707631190499   -3.2628e-11  1.50e-06  2.23e-10    5    1  TS, DIIS
+   @MCSCF 16:   -149.707631190543   -4.3599e-11  1.59e-07  8.67e-11    5    1  TS, DIIS
+   @MCSCF 17:   -149.707631190543   -5.4001e-13  1.18e-08  9.39e-12    5    1  TS, DIIS
+   @MCSCF 18:   -149.707631190543   -2.8422e-14  8.01e-10  7.04e-13    5    1  TS, DIIS
 
           @MCSCF has converged!
 
@@ -469,7 +463,7 @@ Warning: iopen=0,opentype!=closed. Making iopen=1
 
    ==> MCSCF root 0 information <==
 
-    MCSCF Root 0 energy =  -149.707631190543310
+    MCSCF Root 0 energy =  -149.707631190543282
 
    Active Space Natural occupation numbers:
 
@@ -486,12 +480,12 @@ Warning: iopen=0,opentype!=closed. Making iopen=1
     *   6    0.073351  (    0,    3)  3AgA 1B2gX 1B3gA 3B1uB 1B2uX 1B3uA 
     *   7   -0.073351  (    0,    4)  3AgA 1B2gA 1B3gX 3B1uB 1B2uA 1B3uX 
     *   8   -0.044338  (    3,   10)  1B2gX 1B3gX 3B1uX 1B2uA 1B3uA 
-    *   9    0.019639  (    2,    7)  3AgA 1B2gA 1B3gX 3B1uA 1B2uB 1B3uX 
-    *  10   -0.019639  (    1,    9)  3AgA 1B2gX 1B3gA 3B1uA 1B2uX 1B3uB 
+    *   9   -0.019639  (    1,    9)  3AgA 1B2gX 1B3gA 3B1uA 1B2uX 1B3uB 
+    *  10    0.019639  (    2,    7)  3AgA 1B2gA 1B3gX 3B1uA 1B2uB 1B3uX 
     *  11   -0.019302  (    2,    6)  3AgX 1B2gA 1B3gA 3B1uX 1B3uX 
     *  12   -0.019302  (    1,    8)  3AgX 1B2gA 1B3gA 3B1uX 1B2uX 
-    *  13   -0.007414  (    5,   17)  3AgA 1B2gB 1B3gX 3B1uA 1B2uA 1B3uX 
-    *  14    0.007414  (    4,   19)  3AgA 1B2gX 1B3gB 3B1uA 1B2uX 1B3uA 
+    *  13    0.007414  (    4,   19)  3AgA 1B2gX 1B3gB 3B1uA 1B2uX 1B3uA 
+    *  14   -0.007414  (    5,   17)  3AgA 1B2gB 1B3gX 3B1uA 1B2uA 1B3uX 
     *  15    0.001179  (    4,   18)  3AgX 1B2gX 3B1uX 1B2uA 1B3uA 
     *  16    0.001179  (    5,   16)  3AgX 1B3gX 3B1uX 1B2uA 1B3uA 
 
@@ -582,7 +576,7 @@ Scratch directory: /Users/york/scratch/psi4/
   Whereas there are 3081 unique shell quartets.
 
 
-  Conventional integrals take 0.38499043 s
+  Conventional integrals take 0.37995349 s
 
   ==> Summary of Active Space Solver Input <==
 
@@ -611,7 +605,7 @@ Scratch directory: /Users/york/scratch/psi4/
               ---------------------------------------------------
 
   Forming alpha and beta strings      ...  Done. Timing        0.000072 s
-  Forming determinants                ...  Done. Timing        0.000026 s
+  Forming determinants                ...  Done. Timing        0.000025 s
 
   ==> Determinants Summary <==
 
@@ -624,17 +618,17 @@ Scratch directory: /Users/york/scratch/psi4/
 
   ==> Computing Coupling Lists <==
   --------------------------------
-        α          0.000232 s
+        α          0.000228 s
         β          0.000208 s
-        αα         0.000318 s
-        ββ         0.000337 s
-        αβ         0.000740 s
+        αα         0.000306 s
+        ββ         0.000291 s
+        αβ         0.000783 s
   --------------------------------
 
   Davidson-Liu solver algorithm using SigmaVectorSparseList sigma algorithm
   Found 12 roots with 2S+1 = 1
   Found 14 roots with 2S+1 = 3 *
-  Found 2 roots with 2S+1 = 5  Done. Timing        0.003283 s
+  Found 2 roots with 2S+1 = 5  Done. Timing        0.003274 s
 
   * * * * * * * * * * * * * * * * *
   *  CI Vectors & Configurations  *
@@ -642,18 +636,18 @@ Scratch directory: /Users/york/scratch/psi4/
 
   ==> Root No. 0 <==
 
-    2 b a 0 2 2          0.6833889437
-    2 a b 0 2 2         -0.6833889437
-    2 2 2 0 b a          0.1186866026
-    2 2 2 0 a b         -0.1186866026
-    0 a b 2 2 2          0.0662720381
-    0 b a 2 2 2         -0.0662720381
-    a a 2 b b 2          0.0657539148
-    b b 2 a a 2         -0.0657539148
-    a 2 a b 2 b         -0.0657539148
-    b 2 b a 2 a          0.0657539148
+    2 b a 0 2 2          0.6833889438
+    2 a b 0 2 2         -0.6833889438
+    2 2 2 0 b a          0.1186866033
+    2 2 2 0 a b         -0.1186866033
+    0 a b 2 2 2          0.0662720380
+    0 b a 2 2 2         -0.0662720380
+    a a 2 b b 2          0.0657539143
+    b b 2 a a 2         -0.0657539143
+    a 2 a b 2 b         -0.0657539143
+    b 2 b a 2 a          0.0657539143
 
-    Total Energy:   -149.707631190543196
+    Total Energy:   -149.707631190543424
 
 
 
@@ -681,16 +675,16 @@ Scratch directory: /Users/york/scratch/psi4/
 
   ==> Computing Coupling Lists <==
   --------------------------------
-        α          0.000169 s
-        β          0.000101 s
-        αα         0.000296 s
-        ββ         0.000098 s
-        αβ         0.000444 s
+        α          0.000171 s
+        β          0.000102 s
+        αα         0.000291 s
+        ββ         0.000099 s
+        αβ         0.000442 s
   --------------------------------
 
   Davidson-Liu solver algorithm using SigmaVectorSparseList sigma algorithm
   Found 14 roots with 2S+1 = 3 *
-  Found 2 roots with 2S+1 = 5  Done. Timing        0.001798 s
+  Found 2 roots with 2S+1 = 5  Done. Timing        0.001797 s
 
   * * * * * * * * * * * * * * * * *
   *  CI Vectors & Configurations  *
@@ -698,15 +692,15 @@ Scratch directory: /Users/york/scratch/psi4/
 
   ==> Root No. 0 <==
 
-    2 a a 0 2 2         -0.9664579126
-    2 2 2 0 a a         -0.1678482031
-    0 a a 2 2 2          0.0937228151
-    b 2 a a 2 a          0.0855756080
-    b a 2 a a 2         -0.0855756080
-    a 2 a b 2 a         -0.0733506838
-    a a 2 b a 2          0.0733506838
+    2 a a 0 2 2         -0.9664579128
+    2 2 2 0 a a         -0.1678482041
+    0 a a 2 2 2          0.0937228150
+    b 2 a a 2 a          0.0855756071
+    b a 2 a a 2         -0.0855756071
+    a a 2 b a 2          0.0733506826
+    a 2 a b 2 a         -0.0733506826
 
-    Total Energy:   -149.707631190543168
+    Total Energy:   -149.707631190543481
 
 
 
@@ -723,19 +717,19 @@ Scratch directory: /Users/york/scratch/psi4/
     ---------------------------------------------
        3  ( 2)   B1g     0      -149.707631190543
     ---------------------------------------------
- Computing  1RDMs (0 Triplet B1g - 0 Triplet B1g) ... Done. Timing        0.000455 s
- Computing  2RDMs (0 Triplet B1g - 0 Triplet B1g) ... Done. Timing        0.001214 s
- Computing  3RDMs (0 Triplet B1g - 0 Triplet B1g) ... Done. Timing        0.004741 s
+ Computing  1RDMs (0 Triplet B1g - 0 Triplet B1g) ... Done. Timing        0.000463 s
+ Computing  2RDMs (0 Triplet B1g - 0 Triplet B1g) ... Done. Timing        0.001230 s
+ Computing  3RDMs (0 Triplet B1g - 0 Triplet B1g) ... Done. Timing        0.004579 s
  Computing  1RDMs (0 Triplet B1g - 0 Triplet B1g) ... Done. Timing        0.000275 s
  Computing  2RDMs (0 Triplet B1g - 0 Triplet B1g) ... Done. Timing        0.000749 s
- Computing  3RDMs (0 Triplet B1g - 0 Triplet B1g) ... Done. Timing        0.003644 s
+ Computing  3RDMs (0 Triplet B1g - 0 Triplet B1g) ... Done. Timing        0.003642 s
 
        -----------------------------------------------------------------
                             Semi-Canonical Orbitals
          Chenyang Li, Jeffrey B. Schriber and Francesco A. Evangelista
        -----------------------------------------------------------------
 
-  Took 0.000559 s to build Fock matrix
+  Took 0.000864 s to build Fock matrix
 
   ==> Checking Fock Matrix Diagonal Blocks <==
 
@@ -790,18 +784,19 @@ Scratch directory: /Users/york/scratch/psi4/
                   --------------------------------------------
 
 
-  ==> Calculation Information <==
+  ==> Computation Information <==
 
-    Number of amplitudes for printing                     15
-    Flow parameter                                 1.000e+00
-    Taylor expansion threshold                     1.000e-03
-    Intruder amplitudes threshold                  1.000e-01
     Integral type                               CONVENTIONAL
     Source operator                                 STANDARD
     Core-Virtual source type                          NORMAL
     Reference relaxation                               TWICE
     Internal amplitudes                                 NONE
     State type                                  SINGLE STATE
+    Flow parameter                                 1.000e+00
+    Taylor expansion threshold                     1.000e-03
+    Intruder amplitudes threshold                  1.000e-01
+    Number of amplitudes for printing                     15
+
 
   ==> First-Order Excitation Amplitudes Summary <==
 
@@ -810,24 +805,24 @@ Scratch directory: /Users/york/scratch/psi4/
         i    a                i    a                i    a
     -----------------------------------------------------------------
     [   0    1] 0.1685184 [  15   16] 0.0935945 [  15   17] 0.0580175
-    [  15   19] 0.0512977 [  10   11] 0.0483173 [   7    8] 0.0483173
-    [   1    2] 0.0089491 [  23   24] 0.0085826 [  20   21] 0.0085826
+    [  15   19] 0.0512977 [   7    8] 0.0483173 [  10   11] 0.0483173
+    [   1    2] 0.0089491 [  20   21] 0.0085826 [  23   24] 0.0085826
     [  14   15] 0.0057445 [   1    5] 0.0051416 [   1    3] 0.0023396
-    [  20   22] 0.0018048 [  23   25] 0.0018048 [  10   12] 0.0009221
+    [  23   25] 0.0018048 [  20   22] 0.0018048 [   7    9] 0.0009221
     -----------------------------------------------------------------
-    2-Norm of T1 vector:                            0.219375272826352
+    2-Norm of T1 vector:                            0.219375281037609
     Number of nonzero elements:                                    22
     -----------------------------------------------------------------
     Largest T2 amplitudes (absolute values):
         i    j    a    b                i    j    a    b                i    j    a    b
     -----------------------------------------------------------------------------------------------
-    [  15    7   15    8] 0.1027154 [  15   10   15   11] 0.1027154 [  15   23   15   24] 0.0878892
-    [  15   20   15   21] 0.0878892 [  15    1   15    2] 0.0831976 [   1    7    1    8] 0.0817827
-    [   1   10    1   11] 0.0817827 [   7    7    7    8] 0.0796821 [  10   10   10   11] 0.0796821
-    [  23    7   23    8] 0.0728997 [  20   10   20   11] 0.0728997 [  10    7   10    8] 0.0720904
-    [   7   10    7   11] 0.0720904 [  15   15    1    5] 0.0720241 [   0    0    1    1] 0.0702381
+    [  15   10   15   11] 0.1027154 [  15    7   15    8] 0.1027154 [  15   20   15   21] 0.0878892
+    [  15   23   15   24] 0.0878892 [  15    1   15    2] 0.0831976 [   1   10    1   11] 0.0817827
+    [   1    7    1    8] 0.0817827 [   7    7    7    8] 0.0796821 [  10   10   10   11] 0.0796821
+    [  23    7   23    8] 0.0728997 [  20   10   20   11] 0.0728997 [   7   10    7   11] 0.0720904
+    [  10    7   10    8] 0.0720904 [  15   15    1    5] 0.0720241 [   0    0    1    1] 0.0702381
     -----------------------------------------------------------------------------------------------
-    2-Norm of T2 vector:                                                          0.883124557786153
+    2-Norm of T2 vector:                                                          0.883124556203771
     Number of nonzero elements:                                                                3032
     -----------------------------------------------------------------------------------------------
 
@@ -836,27 +831,27 @@ Scratch directory: /Users/york/scratch/psi4/
     T1 amplitudes larger than 0.1000:
      Amplitudes      Value                   Denominator
     ----------------------------------------------------------------
-    [   0    1]  -0.168518409 ( -1.465258 -  -0.827979 =  -0.637280)
+    [   0    1]  -0.168518413 ( -1.465258 -  -0.827979 =  -0.637280)
     ----------------------------------------------------------------
     T2 amplitudes larger than 0.1000:
      Amplitudes      Value                   Denominator
     ----------------------------------------------------------------------------------------------------
-    [  15    7   15    8]   0.102715405 (  0.567708 +  -0.221341 -   0.567708 -   1.221413 =  -1.442754)
-    [  15   10   15   11]   0.102715405 (  0.567708 +  -0.221341 -   0.567708 -   1.221413 =  -1.442754)
+    [  15   10   15   11]   0.102715406 (  0.567708 +  -0.221341 -   0.567708 -   1.221413 =  -1.442754)
+    [  15    7   15    8]   0.102715406 (  0.567708 +  -0.221341 -   0.567708 -   1.221413 =  -1.442754)
     ----------------------------------------------------------------------------------------------------
 
   ==> DSRG-MRPT2 Energy Summary <==
 
-    E0 (reference)                 =   -149.707631190543367
-    < Phi_0 | [Fr, T1] | Phi_0 >   =     -0.017779120493555
-    < Phi_0 | [Fr, T2] | Phi_0 >   =      0.014424429272676
-    < Phi_0 | [Vr, T1] | Phi_0 >   =      0.015516714799857
-    < Phi_0 | [Vr, T2] | Phi_0 >   =     -0.267951283870072
-      - [Vr, T2] L1 contribution   =     -0.387196306087883
-      - [Vr, T2] L2 contribution   =      0.100901604198705
-      - [Vr, T2] L3 contribution   =      0.018343418019106
-    DSRG-MRPT2 correlation energy  =     -0.255789260291093
-    DSRG-MRPT2 total energy        =   -149.963420450834462
+    E0 (reference)                 =   -149.707631190543310
+    < Phi_0 | [Fr, T1] | Phi_0 >   =     -0.017779121105311
+    < Phi_0 | [Fr, T2] | Phi_0 >   =      0.014424429414498
+    < Phi_0 | [Vr, T1] | Phi_0 >   =      0.015516714686452
+    < Phi_0 | [Vr, T2] | Phi_0 >   =     -0.267951283276593
+      - [Vr, T2] L1 contribution   =     -0.387196304967691
+      - [Vr, T2] L2 contribution   =      0.100901603659957
+      - [Vr, T2] L3 contribution   =      0.018343418031141
+    DSRG-MRPT2 correlation energy  =     -0.255789260280954
+    DSRG-MRPT2 total energy        =   -149.963420450824259
 
   ==> De-Normal-Order DSRG Transformed Hamiltonian <==
 
@@ -894,7 +889,7 @@ Scratch directory: /Users/york/scratch/psi4/
                                   Chenyang Li
               ---------------------------------------------------
 
-  Forming alpha and beta strings      ...  Done. Timing        0.000061 s
+  Forming alpha and beta strings      ...  Done. Timing        0.000062 s
   Forming determinants                ...  Done. Timing        0.000019 s
 
   ==> Determinants Summary <==
@@ -908,17 +903,17 @@ Scratch directory: /Users/york/scratch/psi4/
 
   ==> Computing Coupling Lists <==
   --------------------------------
-        α          0.000208 s
-        β          0.000200 s
-        αα         0.000296 s
-        ββ         0.000284 s
-        αβ         0.000718 s
+        α          0.000286 s
+        β          0.000268 s
+        αα         0.000300 s
+        ββ         0.000289 s
+        αβ         0.000737 s
   --------------------------------
 
   Davidson-Liu solver algorithm using SigmaVectorSparseList sigma algorithm
   Found 12 roots with 2S+1 = 1
   Found 14 roots with 2S+1 = 3 *
-  Found 2 roots with 2S+1 = 5  Done. Timing        0.002951 s
+  Found 2 roots with 2S+1 = 5  Done. Timing        0.003300 s
 
   * * * * * * * * * * * * * * * * *
   *  CI Vectors & Configurations  *
@@ -926,18 +921,18 @@ Scratch directory: /Users/york/scratch/psi4/
 
   ==> Root No. 0 <==
 
-    2 b a 0 2 2         -0.6871854812
-    2 a b 0 2 2          0.6871854812
-    2 2 2 0 b a         -0.1195955408
-    2 2 2 0 a b          0.1195955408
-    a a 2 b b 2         -0.0564194890
-    b b 2 a a 2          0.0564194890
-    a 2 a b 2 b          0.0564194890
-    b 2 b a 2 a         -0.0564194890
-    0 a b 2 2 2         -0.0557073068
-    0 b a 2 2 2          0.0557073068
+    2 b a 0 2 2         -0.6871854811
+    2 a b 0 2 2          0.6871854811
+    2 2 2 0 b a         -0.1195955406
+    2 2 2 0 a b          0.1195955406
+    a a 2 b b 2         -0.0564194892
+    b b 2 a a 2          0.0564194892
+    a 2 a b 2 b          0.0564194892
+    b 2 b a 2 a         -0.0564194892
+    0 a b 2 2 2         -0.0557073072
+    0 b a 2 2 2          0.0557073072
 
-    Total Energy:   -149.965037166169708
+    Total Energy:   -149.965037165984654
 
 
 
@@ -951,7 +946,7 @@ Scratch directory: /Users/york/scratch/psi4/
                                   Chenyang Li
               ---------------------------------------------------
 
-  Forming alpha and beta strings      ...  Done. Timing        0.000048 s
+  Forming alpha and beta strings      ...  Done. Timing        0.000051 s
   Forming determinants                ...  Done. Timing        0.000013 s
 
   ==> Determinants Summary <==
@@ -965,16 +960,16 @@ Scratch directory: /Users/york/scratch/psi4/
 
   ==> Computing Coupling Lists <==
   --------------------------------
-        α          0.000161 s
-        β          0.000097 s
-        αα         0.000285 s
-        ββ         0.000095 s
-        αβ         0.000430 s
+        α          0.000168 s
+        β          0.000101 s
+        αα         0.000291 s
+        ββ         0.000097 s
+        αβ         0.000436 s
   --------------------------------
 
   Davidson-Liu solver algorithm using SigmaVectorSparseList sigma algorithm
   Found 14 roots with 2S+1 = 3 *
-  Found 2 roots with 2S+1 = 5  Done. Timing        0.001817 s
+  Found 2 roots with 2S+1 = 5  Done. Timing        0.001787 s
 
   * * * * * * * * * * * * * * * * *
   *  CI Vectors & Configurations  *
@@ -983,14 +978,14 @@ Scratch directory: /Users/york/scratch/psi4/
   ==> Root No. 0 <==
 
     2 a a 0 2 2         -0.9718270273
-    2 2 2 0 a a         -0.1691336359
-    0 a a 2 2 2          0.0787820288
-    b a 2 a a 2         -0.0729778471
-    b 2 a a 2 a          0.0729778471
-    a a 2 b a 2          0.0602309178
-    a 2 a b 2 a         -0.0602309178
+    2 2 2 0 a a         -0.1691336355
+    0 a a 2 2 2          0.0787820294
+    b 2 a a 2 a          0.0729778473
+    b a 2 a a 2         -0.0729778473
+    a 2 a b 2 a         -0.0602309176
+    a a 2 b a 2          0.0602309176
 
-    Total Energy:   -149.965037166169736
+    Total Energy:   -149.965037165984597
 
 
 
@@ -1003,23 +998,23 @@ Scratch directory: /Users/york/scratch/psi4/
 
     Multi.(ms)  Irrep.  No.               Energy
     ---------------------------------------------
-       3  ( 0)   B1g     0      -149.965037166170
+       3  ( 0)   B1g     0      -149.965037165985
     ---------------------------------------------
-       3  ( 2)   B1g     0      -149.965037166170
+       3  ( 2)   B1g     0      -149.965037165985
     ---------------------------------------------
- Computing  1RDMs (0 Triplet B1g - 0 Triplet B1g) ... Done. Timing        0.000422 s
- Computing  2RDMs (0 Triplet B1g - 0 Triplet B1g) ... Done. Timing        0.001178 s
- Computing  3RDMs (0 Triplet B1g - 0 Triplet B1g) ... Done. Timing        0.004576 s
- Computing  1RDMs (0 Triplet B1g - 0 Triplet B1g) ... Done. Timing        0.000269 s
- Computing  2RDMs (0 Triplet B1g - 0 Triplet B1g) ... Done. Timing        0.000729 s
- Computing  3RDMs (0 Triplet B1g - 0 Triplet B1g) ... Done. Timing        0.003655 s
+ Computing  1RDMs (0 Triplet B1g - 0 Triplet B1g) ... Done. Timing        0.000433 s
+ Computing  2RDMs (0 Triplet B1g - 0 Triplet B1g) ... Done. Timing        0.001197 s
+ Computing  3RDMs (0 Triplet B1g - 0 Triplet B1g) ... Done. Timing        0.004941 s
+ Computing  1RDMs (0 Triplet B1g - 0 Triplet B1g) ... Done. Timing        0.000271 s
+ Computing  2RDMs (0 Triplet B1g - 0 Triplet B1g) ... Done. Timing        0.000743 s
+ Computing  3RDMs (0 Triplet B1g - 0 Triplet B1g) ... Done. Timing        0.003618 s
 
   ==> RDMs Transformation to Semicanonical Basis <==
 
     Transformed 1 RDM.
     Transformed 2 RDM.
     Transformed 3 RDM.
-  Took 0.000816 s to build Fock matrix
+  Took 0.000608 s to build Fock matrix
 
   ==> Checking Fock Matrix Diagonal Blocks <==
 
@@ -1058,7 +1053,7 @@ Scratch directory: /Users/york/scratch/psi4/
     Transformed 1 RDM.
     Transformed 2 RDM.
     Transformed 3 RDM.
-  SemiCanonicalize takes 0.954604 s.
+  SemiCanonicalize takes 0.975687 s.
 
     -----------------------------------------------------------------------
       Spin-Adapted Multireference Driven Similarity Renormalization Group
@@ -1098,18 +1093,19 @@ Scratch directory: /Users/york/scratch/psi4/
                   --------------------------------------------
 
 
-  ==> Calculation Information <==
+  ==> Computation Information <==
 
-    Number of amplitudes for printing                     15
-    Flow parameter                                 1.000e+00
-    Taylor expansion threshold                     1.000e-03
-    Intruder amplitudes threshold                  1.000e-01
     Integral type                               CONVENTIONAL
     Source operator                                 STANDARD
     Core-Virtual source type                          NORMAL
     Reference relaxation                               TWICE
     Internal amplitudes                                 NONE
     State type                                  SINGLE STATE
+    Flow parameter                                 1.000e+00
+    Taylor expansion threshold                     1.000e-03
+    Intruder amplitudes threshold                  1.000e-01
+    Number of amplitudes for printing                     15
+
 
   ==> Total Timings (s) for Computing Commutators <==
 
@@ -1131,9 +1127,9 @@ Scratch directory: /Users/york/scratch/psi4/
     [  15   19] 0.0514478 [   7    8] 0.0481307 [  10   11] 0.0481307
     [   1    2] 0.0085739 [  23   24] 0.0083076 [  20   21] 0.0083076
     [  14   15] 0.0062140 [   1    5] 0.0052936 [   1    3] 0.0022934
-    [  23   25] 0.0018423 [  20   22] 0.0018423 [  10   12] 0.0009882
+    [  20   22] 0.0018423 [  23   25] 0.0018423 [  10   12] 0.0009882
     -----------------------------------------------------------------
-    2-Norm of T1 vector:                            0.218849975131889
+    2-Norm of T1 vector:                            0.218849983336422
     Number of nonzero elements:                                    22
     -----------------------------------------------------------------
     Largest T2 amplitudes (absolute values):
@@ -1142,10 +1138,10 @@ Scratch directory: /Users/york/scratch/psi4/
     [  15    7   15    8] 0.1027306 [  15   10   15   11] 0.1027306 [  15   20   15   21] 0.0878583
     [  15   23   15   24] 0.0878583 [  15    1   15    2] 0.0830605 [   1    7    1    8] 0.0817948
     [   1   10    1   11] 0.0817948 [   7    7    7    8] 0.0796940 [  10   10   10   11] 0.0796940
-    [  23    7   23    8] 0.0729105 [  20   10   20   11] 0.0729105 [  10    7   10    8] 0.0721012
-    [   7   10    7   11] 0.0721012 [  15   15    1    5] 0.0720154 [   0    0    1    1] 0.0703068
+    [  23    7   23    8] 0.0729105 [  20   10   20   11] 0.0729105 [   7   10    7   11] 0.0721012
+    [  10    7   10    8] 0.0721012 [  15   15    1    5] 0.0720154 [   0    0    1    1] 0.0703068
     -----------------------------------------------------------------------------------------------
-    2-Norm of T2 vector:                                                          0.882886307877113
+    2-Norm of T2 vector:                                                          0.882886306299654
     Number of nonzero elements:                                                                3032
     -----------------------------------------------------------------------------------------------
 
@@ -1154,27 +1150,27 @@ Scratch directory: /Users/york/scratch/psi4/
     T1 amplitudes larger than 0.1000:
      Amplitudes      Value                   Denominator
     ----------------------------------------------------------------
-    [   0    1]  -0.168232237 ( -1.466288 -  -0.832134 =  -0.634154)
+    [   0    1]  -0.168232240 ( -1.466288 -  -0.832134 =  -0.634154)
     ----------------------------------------------------------------
     T2 amplitudes larger than 0.1000:
      Amplitudes      Value                   Denominator
     ----------------------------------------------------------------------------------------------------
-    [  15    7   15    8]  -0.102730639 (  0.570807 +  -0.221239 -   0.570807 -   1.220982 =  -1.442221)
-    [  15   10   15   11]  -0.102730639 (  0.570807 +  -0.221239 -   0.570807 -   1.220982 =  -1.442221)
+    [  15    7   15    8]  -0.102730640 (  0.570807 +  -0.221239 -   0.570807 -   1.220982 =  -1.442221)
+    [  15   10   15   11]  -0.102730640 (  0.570807 +  -0.221239 -   0.570807 -   1.220982 =  -1.442221)
     ----------------------------------------------------------------------------------------------------
 
   ==> DSRG-MRPT2 Energy Summary <==
 
-    E0 (reference)                 =   -149.705558467000031
-    < Phi_0 | [Fr, T1] | Phi_0 >   =     -0.015424863700326
-    < Phi_0 | [Fr, T2] | Phi_0 >   =      0.013410928946208
-    < Phi_0 | [Vr, T1] | Phi_0 >   =      0.014334250718200
-    < Phi_0 | [Vr, T2] | Phi_0 >   =     -0.272192769069051
-      - [Vr, T2] L1 contribution   =     -0.382891399612815
-      - [Vr, T2] L2 contribution   =      0.092928066222113
-      - [Vr, T2] L3 contribution   =      0.017770564321651
-    DSRG-MRPT2 correlation energy  =     -0.259872453104969
-    DSRG-MRPT2 total energy        =   -149.965430920105007
+    E0 (reference)                 =   -149.705558467220499
+    < Phi_0 | [Fr, T1] | Phi_0 >   =     -0.015424864249783
+    < Phi_0 | [Fr, T2] | Phi_0 >   =      0.013410929106157
+    < Phi_0 | [Vr, T1] | Phi_0 >   =      0.014334250676650
+    < Phi_0 | [Vr, T2] | Phi_0 >   =     -0.272192768277708
+      - [Vr, T2] L1 contribution   =     -0.382891398730784
+      - [Vr, T2] L2 contribution   =      0.092928066150067
+      - [Vr, T2] L3 contribution   =      0.017770564303008
+    DSRG-MRPT2 correlation energy  =     -0.259872452744684
+    DSRG-MRPT2 total energy        =   -149.965430919965172
 
   ==> De-Normal-Order DSRG Transformed Hamiltonian <==
 
@@ -1213,7 +1209,7 @@ Scratch directory: /Users/york/scratch/psi4/
               ---------------------------------------------------
 
   Forming alpha and beta strings      ...  Done. Timing        0.000062 s
-  Forming determinants                ...  Done. Timing        0.000020 s
+  Forming determinants                ...  Done. Timing        0.000019 s
 
   ==> Determinants Summary <==
 
@@ -1226,17 +1222,17 @@ Scratch directory: /Users/york/scratch/psi4/
 
   ==> Computing Coupling Lists <==
   --------------------------------
-        α          0.000212 s
-        β          0.000205 s
-        αα         0.000304 s
-        ββ         0.000292 s
-        αβ         0.000739 s
+        α          0.000215 s
+        β          0.000210 s
+        αα         0.000298 s
+        ββ         0.000291 s
+        αβ         0.000740 s
   --------------------------------
 
   Davidson-Liu solver algorithm using SigmaVectorSparseList sigma algorithm
   Found 12 roots with 2S+1 = 1
   Found 14 roots with 2S+1 = 3 *
-  Found 2 roots with 2S+1 = 5  Done. Timing        0.003043 s
+  Found 2 roots with 2S+1 = 5  Done. Timing        0.003099 s
 
   * * * * * * * * * * * * * * * * *
   *  CI Vectors & Configurations  *
@@ -1246,16 +1242,16 @@ Scratch directory: /Users/york/scratch/psi4/
 
     2 b a 0 2 2         -0.6870420667
     2 a b 0 2 2          0.6870420667
-    2 2 2 0 b a         -0.1202237370
-    2 2 2 0 a b          0.1202237370
-    a a 2 b b 2         -0.0565007029
-    b b 2 a a 2          0.0565007029
-    a 2 a b 2 b          0.0565007029
-    b 2 b a 2 a         -0.0565007029
-    0 a b 2 2 2         -0.0558650891
-    0 b a 2 2 2          0.0558650891
+    2 2 2 0 b a         -0.1202237367
+    2 2 2 0 a b          0.1202237367
+    a 2 a b 2 b          0.0565007031
+    b 2 b a 2 a         -0.0565007031
+    b b 2 a a 2          0.0565007031
+    a a 2 b b 2         -0.0565007031
+    0 a b 2 2 2         -0.0558650895
+    0 b a 2 2 2          0.0558650895
 
-    Total Energy:   -149.965431642782505
+    Total Energy:   -149.965431642642841
 
 
 
@@ -1269,7 +1265,7 @@ Scratch directory: /Users/york/scratch/psi4/
                                   Chenyang Li
               ---------------------------------------------------
 
-  Forming alpha and beta strings      ...  Done. Timing        0.000049 s
+  Forming alpha and beta strings      ...  Done. Timing        0.000050 s
   Forming determinants                ...  Done. Timing        0.000013 s
 
   ==> Determinants Summary <==
@@ -1285,14 +1281,14 @@ Scratch directory: /Users/york/scratch/psi4/
   --------------------------------
         α          0.000169 s
         β          0.000101 s
-        αα         0.000294 s
-        ββ         0.000099 s
-        αβ         0.000441 s
+        αα         0.000296 s
+        ββ         0.000098 s
+        αβ         0.000480 s
   --------------------------------
 
   Davidson-Liu solver algorithm using SigmaVectorSparseList sigma algorithm
   Found 14 roots with 2S+1 = 3 *
-  Found 2 roots with 2S+1 = 5  Done. Timing        0.001795 s
+  Found 2 roots with 2S+1 = 5  Done. Timing        0.001844 s
 
   * * * * * * * * * * * * * * * * *
   *  CI Vectors & Configurations  *
@@ -1301,14 +1297,14 @@ Scratch directory: /Users/york/scratch/psi4/
   ==> Root No. 0 <==
 
     2 a a 0 2 2         -0.9716242087
-    2 2 2 0 a a         -0.1700220393
-    0 a a 2 2 2          0.0790051667
-    b a 2 a a 2         -0.0730472401
-    b 2 a a 2 a          0.0730472401
-    a 2 a b 2 a         -0.0603231439
-    a a 2 b a 2          0.0603231439
+    2 2 2 0 a a         -0.1700220389
+    0 a a 2 2 2          0.0790051673
+    b 2 a a 2 a          0.0730472403
+    b a 2 a a 2         -0.0730472403
+    a a 2 b a 2          0.0603231436
+    a 2 a b 2 a         -0.0603231436
 
-    Total Energy:   -149.965431642782619
+    Total Energy:   -149.965431642642841
 
 
 
@@ -1321,9 +1317,9 @@ Scratch directory: /Users/york/scratch/psi4/
 
     Multi.(ms)  Irrep.  No.               Energy
     ---------------------------------------------
-       3  ( 0)   B1g     0      -149.965431642783
+       3  ( 0)   B1g     0      -149.965431642643
     ---------------------------------------------
-       3  ( 2)   B1g     0      -149.965431642783
+       3  ( 2)   B1g     0      -149.965431642643
     ---------------------------------------------
 
   => SA-MRDSRG Reference Relaxation Energy Summary <=
@@ -1332,27 +1328,27 @@ Scratch directory: /Users/york/scratch/psi4/
            -------------------------------  -------------------------------
     Iter.          Total Energy      Delta          Total Energy      Delta
     -----------------------------------------------------------------------
-        1     -149.963420450834 -1.500e+02     -149.965037166170 -1.500e+02
-        2     -149.965430920105 -2.010e-03     -149.965431642783 -3.945e-04
+        1     -149.963420450824 -1.500e+02     -149.965037165985 -1.500e+02
+        2     -149.965430919965 -2.010e-03     -149.965431642643 -3.945e-04
     -----------------------------------------------------------------------
 
   ==> Total Timings (s) for Computing Commutators <==
 
              [H1, T1]    [H1, T2]    [H2, T1]    [H2, T2]
     -----------------------------------------------------
-    -> C0       0.001       0.001       0.001       0.042
+    -> C0       0.001       0.002       0.001       0.043
     -> C1       0.000       0.000       0.000       0.000
     -> C2                   0.000       0.000       0.000
     -----------------------------------------------------
 
 
-  Time to prepare integrals: 0.3913841247558594 seconds
-  Time to run job          : 2.1500778198242188 seconds
-  Total                    : 2.1500778198242188 seconds    DSRG-MRPT2 unrelaxed energy.......................................PASSED
+  Time to prepare integrals: 0.38634610176086426 seconds
+  Time to run job          : 2.1895649433135986 seconds
+  Total                    : 2.1895649433135986 seconds    DSRG-MRPT2 unrelaxed energy.......................................PASSED
     DSRG-MRPT2 partially relaxed energy...............................PASSED
     DSRG-MRPT2 relaxed energy.........................................PASSED
 
-    Psi4 stopped on: Tuesday, 10 March 2020 02:58PM
-    Psi4 wall time for execution: 0:00:03.99
+    Psi4 stopped on: Tuesday, 10 March 2020 05:09PM
+    Psi4 wall time for execution: 0:00:03.96
 
 *** Psi4 exiting successfully. Buy a developer a beer!

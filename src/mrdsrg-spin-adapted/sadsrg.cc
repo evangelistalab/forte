@@ -767,4 +767,23 @@ void SADSRG::combine_tensor(ambit::Tensor& tens, ambit::Tensor& tens_h, const ps
         }
     }
 }
+
+
+void SADSRG::print_options_info(
+    const std::string& title,
+    const std::vector<std::pair<std::string, std::string>>& calculation_info_string,
+    const std::vector<std::pair<std::string, double>>& calculation_info_double,
+    const std::vector<std::pair<std::string, int>>& calculation_info_int) {
+    print_h2(title);
+    for (auto& str_dim : calculation_info_string) {
+        outfile->Printf("\n    %-40s %15s", str_dim.first.c_str(), str_dim.second.c_str());
+    }
+    for (auto& str_dim : calculation_info_double) {
+        outfile->Printf("\n    %-40s %15.3e", str_dim.first.c_str(), str_dim.second);
+    }
+    for (auto& str_dim : calculation_info_int) {
+        outfile->Printf("\n    %-40s %15d", str_dim.first.c_str(), str_dim.second);
+    }
+    outfile->Printf("\n");
+}
 } // namespace forte

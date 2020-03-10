@@ -5,7 +5,7 @@ import forte
 memory 500 mb
 
 Ecas_psi4 = -108.789661409534418
-Eldsrg2   = -108.971703003705528
+Eldsrg2   = -108.971703002972987
 
 molecule {
 0 1
@@ -21,8 +21,8 @@ set globals{
   d_convergence          8
   mcscf_e_convergence    12
   mcscf_r_convergence    8
-  mcscf_diis_start       20
-  mcscf_max_rot          0.2
+  mcscf_diis_start       10
+  mcscf_max_rot          0.1
   restricted_docc        [2,0,0,0,0,2,0,0]
   active                 [1,0,1,1,0,1,1,1]
 }

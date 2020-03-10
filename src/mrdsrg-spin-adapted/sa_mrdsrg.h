@@ -76,14 +76,21 @@ class SA_MRDSRG : public SADSRG {
     /// Print a summary of the options
     void print_options();
 
-    /// Is the H_bar evaluated sequentially?
+    /// Fill up integrals
+    void build_ints();
+
+    /// Maximum number of iterations
+    int maxiter_;
+    /// Energy convergence criteria
+    double e_conv_;
+    /// Residual convergence criteria
+    double r_conv_;
+
+    /// Is the Hbar evaluated sequentially?
     bool sequential_Hbar_;
 
     /// Omitting blocks with >= 3 virtual indices?
     bool nivo_;
-
-    /// Fill up integrals
-    void build_ints();
 
     // => DSRG related <= //
 
@@ -94,6 +101,11 @@ class SA_MRDSRG : public SADSRG {
     enum class CORR_LV { LDSRG2, LDSRG2_QC };
     std::map<std::string, CORR_LV> corrlevelmap{{"LDSRG2", CORR_LV::LDSRG2},
                                                 {"LDSRG2_QC", CORR_LV::LDSRG2_QC}};
+
+    /// Max number of commutators considered in recursive single commutator algorithm
+    int rsc_ncomm_;
+    /// Convergenve threshold for Hbar in recursive single commutator algorithm
+    double rsc_conv_;
 
     /// One-electron integral
     ambit::BlockedTensor H_;

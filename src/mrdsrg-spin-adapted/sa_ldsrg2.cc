@@ -81,9 +81,6 @@ double SA_MRDSRG::compute_energy_ldsrg2() {
 
     // iteration variables
     double Ecorr = 0.0;
-    int maxiter = foptions_->get_int("MAXITER");
-    double e_conv = foptions_->get_double("E_CONVERGENCE");
-    double r_conv = foptions_->get_double("R_CONVERGENCE");
     bool converged = false;
 
     setup_ldsrg2_tensors();
@@ -94,7 +91,7 @@ double SA_MRDSRG::compute_energy_ldsrg2() {
     }
 
     // start iteration
-    for (int cycle = 1; cycle <= maxiter; ++cycle) {
+    for (int cycle = 1; cycle <= maxiter_; ++cycle) {
         // use DT2_ as an intermediate used for compute Hbar
         DT2_["ijab"] = 2.0 * T2_["ijab"];
         DT2_["ijab"] -= T2_["ijba"];
@@ -148,14 +145,14 @@ double SA_MRDSRG::compute_energy_ldsrg2() {
 
         // test convergence
         double rms = T1rms_ > T2rms_ ? T1rms_ : T2rms_;
-        if (std::fabs(Edelta) < e_conv && rms < r_conv) {
+        if (std::fabs(Edelta) < e_conv_ && rms < r_conv_) {
             converged = true;
             break;
         }
 
-        if (cycle == maxiter) {
+        if (cycle == maxiter_) {
             outfile->Printf(
-                "\n\n    The computation does not converge in %d iterations! Quitting.\n", maxiter);
+                "\n\n    The computation does not converge in %d iterations! Quitting.\n", maxiter_);
         }
         if (cycle > 5 and std::fabs(rms) > 10.0) {
             outfile->Printf("\n\n    Large RMS for amplitudes. Likely no convergence. Quitting.\n");
@@ -213,11 +210,9 @@ void SA_MRDSRG::compute_hbar() {
 
     // iteration variables
     bool converged = false;
-    int maxn = foptions_->get_int("DSRG_RSC_NCOMM");
-    double ct_threshold = foptions_->get_double("DSRG_RSC_THRESHOLD");
 
     // compute Hbar recursively
-    for (int n = 1; n <= maxn; ++n) {
+    for (int n = 1; n <= rsc_ncomm_; ++n) {
         // prefactor before n-nested commutator
         double factor = 1.0 / n;
 
@@ -293,13 +288,13 @@ void SA_MRDSRG::compute_hbar() {
             outfile->Printf("\n  n: %3d, C0: %20.15f, C1 max: %20.15f, C2 max: %20.15f", n, C0,
                             C1_.norm(0), C2_.norm(0));
         }
-        if (std::sqrt(norm_C2 * norm_C2 + norm_C1 * norm_C1) < ct_threshold) {
+        if (std::sqrt(norm_C2 * norm_C2 + norm_C1 * norm_C1) < rsc_conv_) {
             converged = true;
             break;
         }
     }
     if (!converged) {
-        outfile->Printf("\n    Warning! Hbar is not converged in %3d-nested commutators!", maxn);
+        outfile->Printf("\n    Warning! Hbar is not converged in %3d-nested commutators!", rsc_ncomm_);
         outfile->Printf("\n    Please increase DSRG_RSC_NCOMM.");
     }
 }
@@ -395,8 +390,6 @@ void SA_MRDSRG::compute_hbar_sequential() {
 
     // iteration variables
     bool converged = false;
-    int maxn = foptions_->get_int("DSRG_RSC_NCOMM");
-    double ct_threshold = foptions_->get_double("DSRG_RSC_THRESHOLD");
 
     timer comm("Hbar T2 commutator");
 
@@ -412,7 +405,7 @@ void SA_MRDSRG::compute_hbar_sequential() {
     converged = false;
 
     // compute Hbar recursively
-    for (int n = 1; n <= maxn; ++n) {
+    for (int n = 1; n <= rsc_ncomm_; ++n) {
         // prefactor before n-nested commutator
         double factor = 1.0 / n;
 
@@ -478,13 +471,13 @@ void SA_MRDSRG::compute_hbar_sequential() {
             outfile->Printf("\n  n: %3d, C0: %20.15f, C1 max: %20.15f, C2 max: %20.15f", n, C0,
                             C1_.norm(0), C2_.norm(0));
         }
-        if (std::sqrt(norm_C2 * norm_C2 + norm_C1 * norm_C1) < ct_threshold) {
+        if (std::sqrt(norm_C2 * norm_C2 + norm_C1 * norm_C1) < rsc_conv_) {
             converged = true;
             break;
         }
     }
     if (!converged) {
-        outfile->Printf("\n    Warning! Hbar is not converged in %3d-nested commutators!", maxn);
+        outfile->Printf("\n    Warning! Hbar is not converged in %3d-nested commutators!", rsc_ncomm_);
         outfile->Printf("\n    Please increase DSRG_RSC_NCOMM.");
     }
 }

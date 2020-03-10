@@ -52,12 +52,9 @@ SA_MRDSRG::SA_MRDSRG(RDMs rdms, std::shared_ptr<SCFInfo> scf_info,
                      std::shared_ptr<ForteOptions> options, std::shared_ptr<ForteIntegrals> ints,
                      std::shared_ptr<MOSpaceInfo> mo_space_info)
     : SADSRG(rdms, scf_info, options, ints, mo_space_info) {
-
-    print_method_banner({"Nonperturbative MR-DSRG"});
-
     read_options();
-    startup();
     print_options();
+    startup();
 }
 
 void SA_MRDSRG::read_options() {
@@ -75,6 +72,13 @@ void SA_MRDSRG::read_options() {
 
     sequential_Hbar_ = foptions_->get_bool("DSRG_HBAR_SEQ");
     nivo_ = foptions_->get_bool("DSRG_NIVO");
+
+    rsc_ncomm_ = foptions_->get_int("DSRG_RSC_NCOMM");
+    rsc_conv_ = foptions_->get_double("DSRG_RSC_THRESHOLD");
+
+    maxiter_ = foptions_->get_int("MAXITER");
+    e_conv_ = foptions_->get_double("E_CONVERGENCE");
+    r_conv_ = foptions_->get_double("R_CONVERGENCE");
 }
 
 void SA_MRDSRG::startup() {
@@ -94,7 +98,9 @@ void SA_MRDSRG::startup() {
 
 void SA_MRDSRG::print_options() {
     // fill in information
-    std::vector<std::pair<std::string, int>> calculation_info{
+    std::vector<std::pair<std::string, int>> calculation_info_int{
+        {"Max number of iterations", maxiter_},
+        {"Max nested commutators", rsc_ncomm_},
         {"DIIS start", diis_start_},
         {"Min DIIS vectors", diis_min_vec_},
         {"Max DIIS vectors", diis_max_vec_},
@@ -103,6 +109,9 @@ void SA_MRDSRG::print_options() {
 
     std::vector<std::pair<std::string, double>> calculation_info_double{
         {"Flow parameter", s_},
+        {"Energy convergence threshold", e_conv_},
+        {"Residual convergence threshold", r_conv_},
+        {"Recursive single commutator threshold", rsc_conv_},
         {"Taylor expansion threshold", pow(10.0, -double(taylor_threshold_))},
         {"Intruder amplitudes threshold", intruder_tamp_}};
 
@@ -126,17 +135,8 @@ void SA_MRDSRG::print_options() {
         {"Omit blocks of >= 3 virtual indices", true_false_string(nivo_)});
 
     // print some information
-    print_h2("Calculation Information");
-    for (auto& str_dim : calculation_info) {
-        outfile->Printf("\n    %-40s %15d", str_dim.first.c_str(), str_dim.second);
-    }
-    for (auto& str_dim : calculation_info_double) {
-        outfile->Printf("\n    %-40s %15.3e", str_dim.first.c_str(), str_dim.second);
-    }
-    for (auto& str_dim : calculation_info_string) {
-        outfile->Printf("\n    %-40s %15s", str_dim.first.c_str(), str_dim.second.c_str());
-    }
-    outfile->Printf("\n");
+    print_options_info("Computation Information", calculation_info_string, calculation_info_double,
+                       calculation_info_int);
 }
 
 void SA_MRDSRG::build_ints() {

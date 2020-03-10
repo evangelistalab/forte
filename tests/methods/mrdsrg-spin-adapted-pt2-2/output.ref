@@ -23,9 +23,9 @@
     -----------------------------------------------------------------------
 
 
-    Psi4 started on: Monday, 09 March 2020 03:57PM
+    Psi4 started on: Tuesday, 10 March 2020 05:05PM
 
-    Process ID: 58080
+    Process ID: 66680
     Host:       Yorks-Mac.local
     PSIDATADIR: /Users/york/src/psi4group/psi4/share/psi4
     Memory:     500.0 MiB
@@ -110,7 +110,7 @@ Scratch directory: /Users/york/scratch/psi4/
 
 
 *** tstart() called on Yorks-Mac.local
-*** at Mon Mar  9 15:57:46 2020
+*** at Tue Mar 10 17:05:34 2020
 
 
          ------------------------------------------
@@ -483,14 +483,14 @@ Scratch directory: /Users/york/scratch/psi4/
   MCSCF Execution Completed.
 
 
-*** tstop() called on Yorks-Mac.local at Mon Mar  9 15:57:46 2020
+*** tstop() called on Yorks-Mac.local at Tue Mar 10 17:05:34 2020
 Module time:
-	user time   =       0.19 seconds =       0.00 minutes
-	system time =       0.03 seconds =       0.00 minutes
+	user time   =       0.18 seconds =       0.00 minutes
+	system time =       0.02 seconds =       0.00 minutes
 	total time  =          0 seconds =       0.00 minutes
 Total time:
-	user time   =       0.19 seconds =       0.00 minutes
-	system time =       0.03 seconds =       0.00 minutes
+	user time   =       0.18 seconds =       0.00 minutes
+	system time =       0.02 seconds =       0.00 minutes
 	total time  =          0 seconds =       0.00 minutes
     CASSCF(2,2) energy................................................PASSED
 
@@ -508,7 +508,7 @@ Scratch directory: /Users/york/scratch/psi4/
   ----------------------------------------------------------------------------
   A suite of quantum chemistry methods for strongly correlated electrons
 
-    git branch: spin-adapted-dsrg - git commit: f47a6314
+    git branch: spin-adapted-dsrg - git commit: c914f2dd
 
   Developed by:
     Francesco A. Evangelista, Chenyang Li, Kevin P. Hannon,
@@ -546,7 +546,7 @@ Scratch directory: /Users/york/scratch/psi4/
   Overall Conventional Integrals timings
 
 
-  Conventional integrals take 0.07560691 s
+  Conventional integrals take 0.07374028 s
 
   ==> Summary of Active Space Solver Input <==
 
@@ -565,8 +565,8 @@ Scratch directory: /Users/york/scratch/psi4/
                                   Chenyang Li
               ---------------------------------------------------
 
-  Forming alpha and beta strings      ...  Done. Timing        0.000050 s
-  Forming determinants                ...  Done. Timing        0.000017 s
+  Forming alpha and beta strings      ...  Done. Timing        0.000037 s
+  Forming determinants                ...  Done. Timing        0.000013 s
 
   ==> Determinants Summary <==
 
@@ -579,16 +579,16 @@ Scratch directory: /Users/york/scratch/psi4/
 
   ==> Computing Coupling Lists <==
   --------------------------------
-        α          0.000038 s
-        β          0.000012 s
-        αα         0.000010 s
+        α          0.000036 s
+        β          0.000011 s
+        αα         0.000008 s
         ββ         0.000003 s
-        αβ         0.000020 s
+        αβ         0.000015 s
   --------------------------------
 
   Davidson-Liu solver algorithm using SigmaVectorSparseList sigma algorithm
   Found 3 roots with 2S+1 = 1 *
-  Found 1 roots with 2S+1 = 3  Done. Timing        0.000752 s
+  Found 1 roots with 2S+1 = 3  Done. Timing        0.000477 s
 
   * * * * * * * * * * * * * * * * *
   *  CI Vectors & Configurations  *
@@ -615,9 +615,9 @@ Scratch directory: /Users/york/scratch/psi4/
     ---------------------------------------------
        1  ( 0)    A1     0       -99.939316382624
     ---------------------------------------------
- Computing  1RDMs (0 Singlet A1 - 0 Singlet A1) ... Done. Timing        0.000110 s
- Computing  2RDMs (0 Singlet A1 - 0 Singlet A1) ... Done. Timing        0.000079 s
- Computing  3RDMs (0 Singlet A1 - 0 Singlet A1) ... Done. Timing        0.000086 s
+ Computing  1RDMs (0 Singlet A1 - 0 Singlet A1) ... Done. Timing        0.000096 s
+ Computing  2RDMs (0 Singlet A1 - 0 Singlet A1) ... Done. Timing        0.000070 s
+ Computing  3RDMs (0 Singlet A1 - 0 Singlet A1) ... Done. Timing        0.000074 s
 
        -----------------------------------------------------------------
                             Semi-Canonical Orbitals
@@ -664,18 +664,19 @@ Scratch directory: /Users/york/scratch/psi4/
 
     Orbital invariant formalism will be employed for MR-DSRG.
 
-  ==> Calculation Information <==
+  ==> Computation Information <==
 
-    Number of amplitudes for printing                     15
-    Flow parameter                                 1.000e+00
-    Taylor expansion threshold                     1.000e-03
-    Intruder amplitudes threshold                  1.000e-01
     Integral type                               CONVENTIONAL
     Source operator                                 STANDARD
     Core-Virtual source type                            ZERO
     Reference relaxation                                NONE
     Internal amplitudes                                 NONE
     State type                                  SINGLE STATE
+    Flow parameter                                 1.000e+00
+    Taylor expansion threshold                     1.000e-03
+    Intruder amplitudes threshold                  1.000e-01
+    Number of amplitudes for printing                     15
+
 
   ==> First-Order Excitation Amplitudes Summary <==
 
@@ -713,9 +714,6 @@ Scratch directory: /Users/york/scratch/psi4/
     [   3    5]  -0.137779457 (  0.089097 -   1.444927 =  -1.355830)
     ----------------------------------------------------------------
     T2 amplitudes larger than 0.1000: NULL
- Eccvv: -0.093588622144656
- Ecavv: -0.035391379271116
- Ecaav: -0.009332798270920
 
   ==> DSRG-MRPT2 Energy Summary <==
 
@@ -734,15 +732,15 @@ Scratch directory: /Users/york/scratch/psi4/
 
              [H1, T1]    [H1, T2]    [H2, T1]    [H2, T2]
     -----------------------------------------------------
-    -> C0       0.001       0.001       0.001       0.025
+    -> C0       0.001       0.001       0.001       0.027
     -> C1       0.000       0.000       0.000       0.000
     -> C2                   0.000       0.000       0.000
     -----------------------------------------------------
 
 
-  Time to prepare integrals: 0.08127999305725098 seconds
-  Time to run job          : 0.2273879051208496 seconds
-  Total                    : 0.2273879051208496 seconds    DSRG-MRPT2 (CCVV=ZERO, SEMI=FALSE) energy.........................PASSED
+  Time to prepare integrals: 0.07830691337585449 seconds
+  Time to run job          : 0.23885202407836914 seconds
+  Total                    : 0.23885202407836914 seconds    DSRG-MRPT2 (CCVV=ZERO, SEMI=FALSE) energy.........................PASSED
 
 Scratch directory: /Users/york/scratch/psi4/
    => Loading Basis Set <=
@@ -758,7 +756,7 @@ Scratch directory: /Users/york/scratch/psi4/
   ----------------------------------------------------------------------------
   A suite of quantum chemistry methods for strongly correlated electrons
 
-    git branch: spin-adapted-dsrg - git commit: f47a6314
+    git branch: spin-adapted-dsrg - git commit: c914f2dd
 
   Developed by:
     Francesco A. Evangelista, Chenyang Li, Kevin P. Hannon,
@@ -793,7 +791,7 @@ Scratch directory: /Users/york/scratch/psi4/
   Two-electron integral type:              Cholesky decomposition
 
 
-  Timing for computing Cholesky integrals:                    0.123 s.
+  Timing for computing Cholesky integrals:                    0.126 s.
 
   ==> Summary of Active Space Solver Input <==
 
@@ -812,7 +810,7 @@ Scratch directory: /Users/york/scratch/psi4/
                                   Chenyang Li
               ---------------------------------------------------
 
-  Forming alpha and beta strings      ...  Done. Timing        0.000029 s
+  Forming alpha and beta strings      ...  Done. Timing        0.000027 s
   Forming determinants                ...  Done. Timing        0.000007 s
 
   ==> Determinants Summary <==
@@ -826,16 +824,16 @@ Scratch directory: /Users/york/scratch/psi4/
 
   ==> Computing Coupling Lists <==
   --------------------------------
-        α          0.000015 s
-        β          0.000010 s
+        α          0.000016 s
+        β          0.000011 s
         αα         0.000005 s
         ββ         0.000003 s
-        αβ         0.000010 s
+        αβ         0.000011 s
   --------------------------------
 
   Davidson-Liu solver algorithm using SigmaVectorSparseList sigma algorithm
   Found 3 roots with 2S+1 = 1 *
-  Found 1 roots with 2S+1 = 3  Done. Timing        0.000287 s
+  Found 1 roots with 2S+1 = 3  Done. Timing        0.000299 s
 
   * * * * * * * * * * * * * * * * *
   *  CI Vectors & Configurations  *
@@ -862,9 +860,9 @@ Scratch directory: /Users/york/scratch/psi4/
     ---------------------------------------------
        1  ( 0)    A1     0       -99.939316382624
     ---------------------------------------------
- Computing  1RDMs (0 Singlet A1 - 0 Singlet A1) ... Done. Timing        0.000067 s
- Computing  2RDMs (0 Singlet A1 - 0 Singlet A1) ... Done. Timing        0.000060 s
- Computing  3RDMs (0 Singlet A1 - 0 Singlet A1) ... Done. Timing        0.000062 s
+ Computing  1RDMs (0 Singlet A1 - 0 Singlet A1) ... Done. Timing        0.000071 s
+ Computing  2RDMs (0 Singlet A1 - 0 Singlet A1) ... Done. Timing        0.000061 s
+ Computing  3RDMs (0 Singlet A1 - 0 Singlet A1) ... Done. Timing        0.000063 s
 
        -----------------------------------------------------------------
                             Semi-Canonical Orbitals
@@ -911,19 +909,20 @@ Scratch directory: /Users/york/scratch/psi4/
 
     Orbital invariant formalism will be employed for MR-DSRG.
 
-  ==> Calculation Information <==
+  ==> Computation Information <==
 
-    Number of amplitudes for printing                     15
-    Flow parameter                                 1.000e+00
-    Taylor expansion threshold                     1.000e-03
-    Intruder amplitudes threshold                  1.000e-01
-    Cholesky tolerance                             1.000e-12
     Integral type                                   CHOLESKY
     Source operator                                 STANDARD
     Core-Virtual source type                            ZERO
     Reference relaxation                                NONE
     Internal amplitudes                                 NONE
     State type                                  SINGLE STATE
+    Flow parameter                                 1.000e+00
+    Taylor expansion threshold                     1.000e-03
+    Intruder amplitudes threshold                  1.000e-01
+    Cholesky tolerance                             1.000e-12
+    Number of amplitudes for printing                     15
+
 
   ==> First-Order Excitation Amplitudes Summary <==
 
@@ -985,9 +984,9 @@ Scratch directory: /Users/york/scratch/psi4/
     -----------------------------------------------------
 
 
-  Time to prepare integrals: 0.12749600410461426 seconds
-  Time to run job          : 0.17692804336547852 seconds
-  Total                    : 0.17692804336547852 seconds    DSRG-MRPT2 (CHOLESKY, CCVV=ZERO, SEMI=FALSE) energy...............PASSED
+  Time to prepare integrals: 0.12981820106506348 seconds
+  Time to run job          : 0.18283796310424805 seconds
+  Total                    : 0.18283796310424805 seconds    DSRG-MRPT2 (CHOLESKY, CCVV=ZERO, SEMI=FALSE) energy...............PASSED
 
 Scratch directory: /Users/york/scratch/psi4/
    => Loading Basis Set <=
@@ -1003,7 +1002,7 @@ Scratch directory: /Users/york/scratch/psi4/
   ----------------------------------------------------------------------------
   A suite of quantum chemistry methods for strongly correlated electrons
 
-    git branch: spin-adapted-dsrg - git commit: f47a6314
+    git branch: spin-adapted-dsrg - git commit: c914f2dd
 
   Developed by:
     Francesco A. Evangelista, Chenyang Li, Kevin P. Hannon,
@@ -1038,7 +1037,7 @@ Scratch directory: /Users/york/scratch/psi4/
   Two-electron integral type:              Cholesky decomposition
 
 
-  Timing for computing Cholesky integrals:                    0.121 s.
+  Timing for computing Cholesky integrals:                    0.127 s.
 
   ==> Summary of Active Space Solver Input <==
 
@@ -1057,7 +1056,7 @@ Scratch directory: /Users/york/scratch/psi4/
                                   Chenyang Li
               ---------------------------------------------------
 
-  Forming alpha and beta strings      ...  Done. Timing        0.000029 s
+  Forming alpha and beta strings      ...  Done. Timing        0.000027 s
   Forming determinants                ...  Done. Timing        0.000008 s
 
   ==> Determinants Summary <==
@@ -1071,16 +1070,16 @@ Scratch directory: /Users/york/scratch/psi4/
 
   ==> Computing Coupling Lists <==
   --------------------------------
-        α          0.000015 s
-        β          0.000010 s
+        α          0.000016 s
+        β          0.000011 s
         αα         0.000005 s
         ββ         0.000003 s
-        αβ         0.000010 s
+        αβ         0.000012 s
   --------------------------------
 
   Davidson-Liu solver algorithm using SigmaVectorSparseList sigma algorithm
   Found 3 roots with 2S+1 = 1 *
-  Found 1 roots with 2S+1 = 3  Done. Timing        0.000298 s
+  Found 1 roots with 2S+1 = 3  Done. Timing        0.000316 s
 
   * * * * * * * * * * * * * * * * *
   *  CI Vectors & Configurations  *
@@ -1107,16 +1106,16 @@ Scratch directory: /Users/york/scratch/psi4/
     ---------------------------------------------
        1  ( 0)    A1     0       -99.939316382624
     ---------------------------------------------
- Computing  1RDMs (0 Singlet A1 - 0 Singlet A1) ... Done. Timing        0.000065 s
- Computing  2RDMs (0 Singlet A1 - 0 Singlet A1) ... Done. Timing        0.000059 s
- Computing  3RDMs (0 Singlet A1 - 0 Singlet A1) ... Done. Timing        0.000061 s
+ Computing  1RDMs (0 Singlet A1 - 0 Singlet A1) ... Done. Timing        0.000070 s
+ Computing  2RDMs (0 Singlet A1 - 0 Singlet A1) ... Done. Timing        0.000062 s
+ Computing  3RDMs (0 Singlet A1 - 0 Singlet A1) ... Done. Timing        0.000064 s
 
        -----------------------------------------------------------------
                             Semi-Canonical Orbitals
          Chenyang Li, Jeffrey B. Schriber and Francesco A. Evangelista
        -----------------------------------------------------------------
 
-  Took 0.013914 s to build Fock matrix
+  Took 0.015145 s to build Fock matrix
 
   ==> Checking Fock Matrix Diagonal Blocks <==
 
@@ -1139,7 +1138,7 @@ Scratch directory: /Users/york/scratch/psi4/
     Transformed 1 RDM.
     Transformed 2 RDM.
     Transformed 3 RDM.
-  SemiCanonicalize takes 0.737958 s.
+  SemiCanonicalize takes 0.756883 s.
 
     -----------------------------------------------------------------------
       Spin-Adapted Multireference Driven Similarity Renormalization Group
@@ -1179,19 +1178,20 @@ Scratch directory: /Users/york/scratch/psi4/
                   --------------------------------------------
 
 
-  ==> Calculation Information <==
+  ==> Computation Information <==
 
-    Number of amplitudes for printing                     15
-    Flow parameter                                 1.000e+00
-    Taylor expansion threshold                     1.000e-03
-    Intruder amplitudes threshold                  1.000e-01
-    Cholesky tolerance                             1.000e-12
     Integral type                                   CHOLESKY
     Source operator                                 STANDARD
     Core-Virtual source type                            ZERO
     Reference relaxation                                NONE
     Internal amplitudes                                 NONE
     State type                                  SINGLE STATE
+    Flow parameter                                 1.000e+00
+    Taylor expansion threshold                     1.000e-03
+    Intruder amplitudes threshold                  1.000e-01
+    Cholesky tolerance                             1.000e-12
+    Number of amplitudes for printing                     15
+
 
   ==> First-Order Excitation Amplitudes Summary <==
 
@@ -1253,11 +1253,11 @@ Scratch directory: /Users/york/scratch/psi4/
     -----------------------------------------------------
 
 
-  Time to prepare integrals: 0.12486004829406738 seconds
-  Time to run job          : 0.8209528923034668 seconds
-  Total                    : 0.8209528923034668 seconds    DSRG-MRPT2 (CHOLESKY, CCVV=ZERO, SEMI=TRUE) energy................PASSED
+  Time to prepare integrals: 0.13094329833984375 seconds
+  Time to run job          : 0.8446109294891357 seconds
+  Total                    : 0.8446109294891357 seconds    DSRG-MRPT2 (CHOLESKY, CCVV=ZERO, SEMI=TRUE) energy................PASSED
 
-    Psi4 stopped on: Monday, 09 March 2020 03:57PM
-    Psi4 wall time for execution: 0:00:02.05
+    Psi4 stopped on: Tuesday, 10 March 2020 05:05PM
+    Psi4 wall time for execution: 0:00:02.02
 
 *** Psi4 exiting successfully. Buy a developer a beer!
