@@ -275,6 +275,7 @@ class DSRG_MRPT2 : public MASTER_DSRG {
     std::vector<size_t> core_all_;
     /// List of active MOs (Absolute)
     std::vector<size_t> actv_all_;
+    std::vector<size_t> virt_all_;
 
     /// List of relative core MOs
     std::vector<std::pair<unsigned long, unsigned long>,

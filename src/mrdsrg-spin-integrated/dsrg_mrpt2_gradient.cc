@@ -53,8 +53,11 @@ void DSRG_MRPT2::set_all_variables() {
     core_mos_ = mo_space_info_->get_corr_abs_mo("RESTRICTED_DOCC");
     actv_mos_ = mo_space_info_->get_corr_abs_mo("ACTIVE");
     virt_mos_ = mo_space_info_->get_corr_abs_mo("RESTRICTED_UOCC");
+
     core_all_ = mo_space_info_->get_absolute_mo("RESTRICTED_DOCC");
     actv_all_ = mo_space_info_->get_absolute_mo("ACTIVE");
+    virt_all_ = mo_space_info_->get_absolute_mo("RESTRICTED_UOCC");
+
     core_mos_relative = mo_space_info_->get_relative_mo("RESTRICTED_DOCC");
     actv_mos_relative = mo_space_info_->get_relative_mo("ACTIVE");
     virt_mos_relative = mo_space_info_->get_relative_mo("RESTRICTED_UOCC");
@@ -2331,7 +2334,7 @@ SharedMatrix DSRG_MRPT2::compute_gradient() {
     set_multiplier();
     write_lagrangian();
     write_1rdm_spin_dependent();
-    // write_2rdm_spin_dependent();
+    write_2rdm_spin_dependent();
     // tpdm_backtransform();
 
 
@@ -2468,6 +2471,17 @@ void DSRG_MRPT2::write_1rdm_spin_dependent() {
 }
 
 
+
+/**
+ * Write spin_dependent two-RDMs coefficients using IWL.
+ *
+ * Coefficients in d2aa and d2bb need be multiplied with additional 1/2!
+ * Specifically:
+ * If you have v_aa as coefficients before 2-RDMs_alpha_alpha, v_bb before
+ * 2-RDMs_beta_beta and v_bb before 2-RDMs_alpha_beta, you need to write
+ * 0.5 * v_aa, 0.5 * v_bb and v_ab into the IWL file instead of using
+ * the original coefficients v_aa, v_bb and v_ab.
+ */
 void DSRG_MRPT2::write_2rdm_spin_dependent() {
 	// TODO: write spin_dependent two-RDMs coefficients using IWL
     outfile->Printf("\n    Writing 2RDM Coefficients ....................... ");
@@ -2479,6 +2493,31 @@ void DSRG_MRPT2::write_2rdm_spin_dependent() {
 
 
 	// TODO: write coefficients here
+
+
+    for (size_t i = 0, size_c = core_all_.size(); i < size_c; ++i) {
+        auto m = core_all_[i];
+        for (size_t a = 0, size_v = virt_all_.size(); a < size_v; ++a) {
+            auto e = virt_all_[a];
+            auto idx = a * ncore_ + i;
+            auto z_a = Z.block("vc").data()[idx];
+            auto z_b = Z.block("VC").data()[idx];
+            for (size_t j = 0; j < size_c; ++j) {
+                auto m1 = core_all_[j];
+                
+                d2aa.write_value(m, e, m1, m1, z_a, 0, "NULL", 0);
+                d2bb.write_value(m, e, m1, m1, z_b, 0, "NULL", 0);
+                d2aa.write_value(m, m1, m1, e, -z_a, 0, "NULL", 0);
+                d2bb.write_value(m, m1, m1, e, -z_b, 0, "NULL", 0);
+                
+                d2ab.write_value(m, e, m1, m1, 2.0 * (z_a + z_b), 0, "NULL", 0);
+            }
+        }
+    }
+
+
+
+
 
     d2aa.flush(1);
     d2bb.flush(1);
