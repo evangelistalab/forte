@@ -2381,9 +2381,10 @@ void DSRG_MRPT2::write_lagrangian() {
 
     L->print();
 
-    L->back_transform(ints_->Ca());
-    // ints_->wfn()->Lagrangian()->print();
+    // L->back_transform(ints_->Ca());
+    ints_->wfn()->set_Lagrangian(SharedMatrix(new Matrix("Lagrangian", nirrep_, irrep_vec, irrep_vec)));
     ints_->wfn()->Lagrangian()->copy(L);
+    ints_->wfn()->Lagrangian()->print();
 
 
     outfile->Printf("Done");
