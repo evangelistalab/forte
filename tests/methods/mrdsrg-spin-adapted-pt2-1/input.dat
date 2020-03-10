@@ -52,4 +52,4 @@ set forte{
   cholesky_tolerance 1e-12
 }
 Ept2_cholesky = energy('forte', ref_wfn=wfn)
-compare_values(refpt2, Ept2_cholesky, 10, "DSRG-MRPT2 (CHOLESKY) energy")
+compare_values(refpt2, Ept2_cholesky, 10, "CD-DSRG-MRPT2 energy")

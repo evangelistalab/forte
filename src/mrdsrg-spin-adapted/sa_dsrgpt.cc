@@ -50,11 +50,14 @@ namespace forte {
 SA_DSRGPT::SA_DSRGPT(RDMs rdms, std::shared_ptr<SCFInfo> scf_info,
                      std::shared_ptr<ForteOptions> options, std::shared_ptr<ForteIntegrals> ints,
                      std::shared_ptr<MOSpaceInfo> mo_space_info)
-    : SADSRG(rdms, scf_info, options, ints, mo_space_info) {}
+    : SADSRG(rdms, scf_info, options, ints, mo_space_info) {
+    init_fock();
+}
 
 void SA_DSRGPT::read_options() {
     internal_amp_ = foptions_->get_str("INTERNAL_AMP");
     internal_amp_select_ = foptions_->get_str("INTERNAL_AMP_SELECT");
+    form_Hbar_ = (relax_ref_ != "NONE" || multi_state_);
 }
 
 void SA_DSRGPT::print_options() {
@@ -94,6 +97,17 @@ void SA_DSRGPT::print_options() {
     // Print some information
     print_options_info("Computation Information", calculation_info_string, calculation_info_double,
                        calculation_info_int);
+}
+
+void SA_DSRGPT::init_fock() {
+    // link F_ with Fock_ of SADSRG
+    F_ = Fock_;
+
+    F0th_ = BTF_->build(tensor_type_, "Fock 0th", diag_one_labels());
+    F0th_["pq"] = F_["pq"];
+
+    F1st_ = BTF_->build(tensor_type_, "Fock 1st", od_one_labels());
+    F1st_["pq"] = F_["pq"];
 }
 
 void SA_DSRGPT::compute_t2_full() {
@@ -158,14 +172,14 @@ void SA_DSRGPT::compute_t1() {
     timer t1("Compute T1");
 
     // initialize T1 with F + [H0, A]
-    T1_["ia"] = F_["ia"];
-    T1_["ia"] += 0.5 * S2_["ivaw"] * F_["wu"] * L1_["uv"];
-    T1_["ia"] -= 0.5 * S2_["iwau"] * F_["vw"] * L1_["uv"];
+    T1_["ia"] = F_["ai"];
+    T1_["ia"] += 0.5 * S2_["ivaw"] * F0th_["wu"] * L1_["uv"];
+    T1_["ia"] -= 0.5 * S2_["iwau"] * F0th_["vw"] * L1_["uv"];
 
     // need to consider the S2 blocks that are not stored
-    if (eri_df_) {
-        T1_["me"] += 0.5 * S2_["vmwe"] * F_["wu"] * L1_["uv"];
-        T1_["me"] -= 0.5 * S2_["wmue"] * F_["vw"] * L1_["uv"];
+    if (!S2_.is_block("cava")) {
+        T1_["me"] += 0.5 * S2_["vmwe"] * F0th_["wu"] * L1_["uv"];
+        T1_["me"] -= 0.5 * S2_["wmue"] * F0th_["vw"] * L1_["uv"];
     }
 
     // transform to semi-canonical basis
@@ -266,13 +280,13 @@ void SA_DSRGPT::renormalize_integrals(bool add) {
 
     auto temp = ambit::BlockedTensor::build(tensor_type_, "temp", {"ph"});
     temp["ai"] = F_["ai"];
-    temp["ai"] += 0.5 * S2_["ivaw"] * F_["wu"] * L1_["uv"];
-    temp["ai"] -= 0.5 * S2_["iwau"] * F_["vw"] * L1_["uv"];
+    temp["ai"] += 0.5 * S2_["ivaw"] * F0th_["wu"] * L1_["uv"];
+    temp["ai"] -= 0.5 * S2_["iwau"] * F0th_["vw"] * L1_["uv"];
 
     // need to consider the S2 blocks that are not stored
-    if (eri_df_) {
-        temp["em"] += 0.5 * S2_["vmwe"] * F_["wu"] * L1_["uv"];
-        temp["em"] -= 0.5 * S2_["wmue"] * F_["vw"] * L1_["uv"];
+    if (!S2_.is_block("cava")) {
+        temp["em"] += 0.5 * S2_["vmwe"] * F0th_["wu"] * L1_["uv"];
+        temp["em"] -= 0.5 * S2_["wmue"] * F0th_["vw"] * L1_["uv"];
     }
 
     // to semicanonical basis

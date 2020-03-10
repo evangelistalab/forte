@@ -558,7 +558,9 @@ void SADSRG::V_T2_C2_DF(BlockedTensor& B, BlockedTensor& T2, BlockedTensor& S2, 
     local_timer timer;
 
     // particle-particle contractions
-    C2["ijrs"] += batched("r", alpha * B["gar"] * B["gbs"] * T2["ijab"]);
+    C2["ijes"] += batched("e", alpha * B["gae"] * B["gbs"] * T2["ijab"]);
+    C2["ijus"] += batched("u", alpha * B["gau"] * B["gbs"] * T2["ijab"]);
+    C2["ijms"] += batched("m", alpha * B["gam"] * B["gbs"] * T2["ijab"]);
 
     C2["ijrs"] -= 0.5 * alpha * L1_["xy"] * T2["ijxb"] * B["gyr"] * B["gbs"];
     C2["jisr"] -= 0.5 * alpha * L1_["xy"] * T2["ijxb"] * B["gyr"] * B["gbs"];

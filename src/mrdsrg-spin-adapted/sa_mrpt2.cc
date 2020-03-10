@@ -66,9 +66,6 @@ void SA_MRPT2::startup() {
         Fdiag_ = diagonalize_Fock_diagblocks(U_);
     }
 
-    // link F_ with Fock_ of SADSRG
-    F_ = Fock_;
-
     // prepare integrals
     build_ints();
 
@@ -158,10 +155,10 @@ void SA_MRPT2::init_amps() {
     if (eri_df_) {
         std::vector<std::string> blocks{"aavv", "ccaa", "caav", "acav", "aava", "caaa", "aaaa"};
         T2_ = BTF_->build(tensor_type_, "T2 Amplitudes", blocks);
-        S2_ = BTF_->build(tensor_type_, "T2 Amplitudes", blocks);
+        S2_ = BTF_->build(tensor_type_, "S2 Amplitudes", blocks);
     } else {
         T2_ = BTF_->build(tensor_type_, "T2 Amplitudes", {"hhpp"});
-        S2_ = BTF_->build(tensor_type_, "T2 Amplitudes", {"hhpp"});
+        S2_ = BTF_->build(tensor_type_, "S2 Amplitudes", {"hhpp"});
     }
     t.stop();
 }
@@ -226,7 +223,7 @@ double SA_MRPT2::compute_energy() {
     }
 
     // reference relaxation
-    if (relax_ref_ != "NONE" || multi_state_) {
+    if (form_Hbar_) {
         compute_hbar();
     }
 

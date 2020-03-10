@@ -36,6 +36,7 @@
 #include "mrdsrg-spin-integrated/three_dsrg_mrpt2.h"
 #include "mrdsrg-spin-adapted/sa_mrdsrg.h"
 #include "mrdsrg-spin-adapted/sa_mrpt2.h"
+#include "mrdsrg-spin-adapted/sa_mrpt3.h"
 
 #include "run_dsrg.h"
 
@@ -70,6 +71,8 @@ std::unique_ptr<SADSRG> make_sadsrg_method(RDMs rdms, std::shared_ptr<SCFInfo> s
     auto corr_level = options->get_str("CORR_LEVEL");
     if (corr_level == "PT2") {
         dsrg_method = std::make_unique<SA_MRPT2>(rdms, scf_info, options, ints, mo_space_info);
+    } else if (corr_level == "PT3") {
+        dsrg_method = std::make_unique<SA_MRPT3>(rdms, scf_info, options, ints, mo_space_info);
     } else {
         dsrg_method = std::make_unique<SA_MRDSRG>(rdms, scf_info, options, ints, mo_space_info);
     }
