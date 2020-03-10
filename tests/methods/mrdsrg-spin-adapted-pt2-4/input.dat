@@ -1,0 +1,55 @@
+#! Generated using commit GITCOMMIT
+
+import forte
+
+memory 500 mb
+
+Ecas_psi4 = -149.707631190543310
+Ept2_ur   = -149.963420450834462
+Ept2_pr   = -149.965037166169708
+Ept2_r    = -149.965430920105007
+
+molecule {
+0 3
+O
+O 1 1.251
+}
+
+set globals{
+  basis                  cc-pvdz
+  reference              rohf
+  scf_type               pk
+  e_convergence          12
+  d_convergence          8
+  mcscf_e_convergence    12
+  mcscf_r_convergence    8
+  mcscf_diis_start       20
+  mcscf_max_rot          0.2
+  reference_sym          1
+  restricted_docc        [2,0,0,0,0,2,0,0]
+  active                 [1,0,1,1,0,1,1,1]
+}
+Ecas, wfn = energy('casscf', return_wfn=True)
+compare_values(Ecas_psi4, Ecas, 9, "CASSCF(6,6)/cc-pVDZ (PSI4) energy")
+
+set forte{
+  active_space_solver    cas
+  correlation_solver     sa-mrdsrg
+  spin_avg_density       true
+  corr_level             pt2
+  frozen_docc            [1,0,0,0,0,1,0,0]
+  restricted_docc        [1,0,0,0,0,1,0,0]
+  active                 [1,0,1,1,0,1,1,1]
+  root_sym               1
+  dsrg_s                 1.0
+  relax_ref              twice
+  e_convergence          12
+  r_convergence          8
+}
+energy('forte', ref_wfn=wfn)
+Eupt2 = variable("UNRELAXED ENERGY")
+Eprpt2 = variable("PARTIALLY RELAXED ENERGY")
+Erpt2 = variable("RELAXED ENERGY")
+compare_values(Ept2_ur, Eupt2, 9, "DSRG-MRPT2 unrelaxed energy")
+compare_values(Ept2_pr, Eprpt2, 9, "DSRG-MRPT2 partially relaxed energy")
+compare_values(Ept2_r, Erpt2, 9, "DSRG-MRPT2 relaxed energy")
