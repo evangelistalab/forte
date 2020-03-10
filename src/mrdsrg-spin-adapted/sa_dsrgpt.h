@@ -26,8 +26,8 @@
  * @END LICENSE
  */
 
-#ifndef _sa_mrpt2_h_
-#define _sa_mrpt2_h_
+#ifndef _sa_dsrgpt_h_
+#define _sa_dsrgpt_h_
 
 #include <memory>
 
@@ -38,61 +38,60 @@
 #include "integrals/integrals.h"
 #include "base_classes/rdms.h"
 #include "helpers/blockedtensorfactory.h"
-#include "sa_dsrgpt.h"
+#include "sadsrg.h"
 
 using namespace ambit;
 
 namespace forte {
 
-class SA_MRPT2 : public SA_DSRGPT {
+class SA_DSRGPT : public SADSRG {
   public:
     /**
-     * SA_MRPT2 Constructor
+     * SA_DSRGPT Constructor
      * @param scf_info The SCFInfo
      * @param options The ForteOption
      * @param ints A pointer to an allocated integral object
      * @param mo_space_info The MOSpaceInfo object
      */
-    SA_MRPT2(RDMs rdms, std::shared_ptr<SCFInfo> scf_info, std::shared_ptr<ForteOptions> options,
-             std::shared_ptr<ForteIntegrals> ints, std::shared_ptr<MOSpaceInfo> mo_space_info);
+    SA_DSRGPT(RDMs rdms, std::shared_ptr<SCFInfo> scf_info, std::shared_ptr<ForteOptions> options,
+              std::shared_ptr<ForteIntegrals> ints, std::shared_ptr<MOSpaceInfo> mo_space_info);
 
     /// Compute the corr_level energy with fixed reference
-    virtual double compute_energy();
+    virtual double compute_energy() = 0;
 
   protected:
-    /// Start-up function called in the constructor
-    void startup();
+    /// Read options
+    void read_options();
 
-    /// Fill up integrals
-    void build_ints();
-    /// Build minimal blocks of V from 3-index B
-    void build_minimal_V();
+    /// Print a summary of the options
+    void print_options();
 
-    /// Initialize amplitude tensors
-    void init_amps();
+    /// Include internal amplitudes or not?
+    std::string internal_amp_;
+    /// Include which part of internal amplitudes?
+    std::string internal_amp_select_;
+
+    /// Two-electron integral
+    ambit::BlockedTensor V_;
+    /// Generalized Fock matrix
+    ambit::BlockedTensor F_;
+    /// Single excitation amplitude
+    ambit::BlockedTensor T1_;
+    /// Double excitation amplitude
+    ambit::BlockedTensor T2_;
+    /// Double excitation amplitude (2 * J - K)
+    ambit::BlockedTensor S2_;
 
     /// Compute 1st-order T2 amplitudes
-    void compute_t2();
-    /// Compute 1st-order T2 amplitudes with at least two active indices
-    void compute_t2_df_minimal();
+    void compute_t2_full();
 
-    /// Energy contribution from CCVV block
-    double E_V_T2_CCVV();
-    /// Energy contribution from CAVV block
-    double E_V_T2_CAVV();
-    /// Energy contribution from CCAV block
-    double E_V_T2_CCAV();
+    /// Compute 1st-order T1 amplitudes
+    void compute_t1();
 
-    /// Compute DSRG-transformed Hamiltonian
-    void compute_hbar();
-    /// Compute Hbar1 from core contraction, renormalize V if Vr is true
-    void compute_Hbar1C_diskDF(ambit::Tensor& Hbar1, bool Vr = true);
-    /// Compute Hbar1 from virtual contraction, renormalize V if Vr is true
-    void compute_Hbar1V_diskDF(ambit::Tensor& Hbar1, bool Vr = true);
-
-    /// Return a vector of empty ambit Tensor objects
-    std::vector<ambit::Tensor> init_tensor_vecs(int number_of_tensors);
+    /// Renormalize integrals
+    /// if add == True: scale by 1 + exp(-s * D^2); else: scale by exp(-s * D^2)
+    void renormalize_integrals(bool add);
 };
 } // namespace forte
 
-#endif // _sa_mrpt2_h_
+#endif // _sa_dsrgpt_h_

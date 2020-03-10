@@ -144,6 +144,7 @@ src/mrdsrg-spin-adapted/sadsrg.cc
 src/mrdsrg-spin-adapted/sadsrg_amps_analysis.cc
 src/mrdsrg-spin-adapted/sadsrg_block_labels.cc
 src/mrdsrg-spin-adapted/sadsrg_comm.cc
+src/mrdsrg-spin-adapted/sa_dsrgpt.cc
 src/mrdsrg-spin-adapted/sa_ldsrg2.cc
 src/mrdsrg-spin-adapted/sa_mrdsrg.cc
 src/mrdsrg-spin-adapted/sa_mrdsrg_amps.cc

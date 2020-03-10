@@ -50,12 +50,12 @@ namespace forte {
 SA_MRPT2::SA_MRPT2(RDMs rdms, std::shared_ptr<SCFInfo> scf_info,
                    std::shared_ptr<ForteOptions> options, std::shared_ptr<ForteIntegrals> ints,
                    std::shared_ptr<MOSpaceInfo> mo_space_info)
-    : SADSRG(rdms, scf_info, options, ints, mo_space_info) {
+    : SA_DSRGPT(rdms, scf_info, options, ints, mo_space_info) {
 
     print_method_banner({"MR-DSRG Second-Order Perturbation Theory"});
-    startup();
     read_options();
     print_options();
+    startup();
 }
 
 void SA_MRPT2::startup() {
@@ -76,57 +76,8 @@ void SA_MRPT2::startup() {
     init_amps();
 }
 
-void SA_MRPT2::read_options() {
-    internal_amp_ = foptions_->get_str("INTERNAL_AMP");
-    internal_amp_select_ = foptions_->get_str("INTERNAL_AMP_SELECT");
-}
-
-void SA_MRPT2::print_options() {
-    // Print a summary
-    std::vector<std::pair<std::string, int>> calculation_info_int{
-        {"Number of amplitudes for printing", ntamp_}};
-
-    std::vector<std::pair<std::string, double>> calculation_info_double{
-        {"Flow parameter", s_},
-        {"Taylor expansion threshold", std::pow(10.0, -double(taylor_threshold_))},
-        {"Intruder amplitudes threshold", intruder_tamp_}};
-
-    if (ints_type_ == "CHOLESKY") {
-        auto cholesky_threshold = foptions_->get_double("CHOLESKY_TOLERANCE");
-        calculation_info_double.push_back({"Cholesky tolerance", cholesky_threshold});
-    }
-
-    std::vector<std::pair<std::string, std::string>> calculation_info_string{
-        {"Integral type", ints_type_},
-        {"Source operator", source_},
-        {"Core-Virtual source type", ccvv_source_},
-        {"Reference relaxation", relax_ref_},
-        {"Internal amplitudes", internal_amp_}};
-
-    if (multi_state_) {
-        calculation_info_string.push_back({"State type", "MULTIPLE STATES"});
-        calculation_info_string.push_back({"Multi-state type", multi_state_algorithm_});
-    } else {
-        calculation_info_string.push_back({"State type", "SINGLE STATE"});
-    }
-
-    if (internal_amp_ != "NONE") {
-        calculation_info_string.push_back({"Internal amplitudes selection", internal_amp_select_});
-    }
-
-    // Print some information
-    print_options_info("Computation Information", calculation_info_string, calculation_info_double,
-                       calculation_info_int);
-}
-
 void SA_MRPT2::build_ints() {
     timer t("Initialize integrals");
-
-    // prepare one-electron integrals
-    H_ = BTF_->build(tensor_type_, "H", {"gg"});
-    H_.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>&, double& value) {
-        value = ints_->oei_a(i[0], i[1]);
-    });
 
     // prepare two-electron integrals or three-index B
     if (eri_df_) {
@@ -222,7 +173,7 @@ double SA_MRPT2::compute_energy() {
     analyze_amplitudes("First-Order", T1_, T2_);
 
     // scale the integrals
-    renormalize_integrals();
+    renormalize_integrals(true);
 
     // compute energy
     double Ecorr = 0.0;
@@ -331,194 +282,11 @@ void SA_MRPT2::compute_t2() {
 
     if (eri_df_) {
         compute_t2_df_minimal();
-        return;
-    }
-
-    // initialize T2 with V
-    T2_["ijab"] = V_["abij"];
-
-    // transform to semi-canonical basis
-    BlockedTensor tempT2;
-    if (!semi_canonical_) {
-        tempT2 = ambit::BlockedTensor::build(tensor_type_, "TempT2", T2_.block_labels());
-        tempT2["klab"] = U_["ki"] * U_["lj"] * T2_["ijab"];
-        T2_["ijcd"] = tempT2["ijab"] * U_["db"] * U_["ca"];
-    }
-
-    // block labels for ccvv blocks and others
-    std::vector<std::string> T2blocks(T2_.block_labels());
-    if (ccvv_source_ == "ZERO") {
-        T2blocks.erase(std::remove(T2blocks.begin(), T2blocks.end(), "ccvv"), T2blocks.end());
-        T2_.block("ccvv").iterate([&](const std::vector<size_t>& i, double& value) {
-            size_t i0 = core_mos_[i[0]];
-            size_t i1 = core_mos_[i[1]];
-            size_t i2 = virt_mos_[i[2]];
-            size_t i3 = virt_mos_[i[3]];
-            value /= Fdiag_[i0] + Fdiag_[i1] - Fdiag_[i2] - Fdiag_[i3];
-        });
-    }
-
-    // build T2
-    for (const std::string& block : T2blocks) {
-        T2_.block(block).iterate([&](const std::vector<size_t>& i, double& value) {
-            size_t i0 = label_to_spacemo_[block[0]][i[0]];
-            size_t i1 = label_to_spacemo_[block[1]][i[1]];
-            size_t i2 = label_to_spacemo_[block[2]][i[2]];
-            size_t i3 = label_to_spacemo_[block[3]][i[3]];
-            double denom = Fdiag_[i0] + Fdiag_[i1] - Fdiag_[i2] - Fdiag_[i3];
-            value *= dsrg_source_->compute_renormalized_denominator(denom);
-        });
-    }
-
-    // transform back to non-canonical basis
-    if (!semi_canonical_) {
-        tempT2["klab"] = U_["ik"] * U_["jl"] * T2_["ijab"];
-        T2_["ijcd"] = tempT2["ijab"] * U_["bd"] * U_["ac"];
-    }
-
-    // internal amplitudes
-    if (internal_amp_.find("DOUBLES") != std::string::npos) {
-        // TODO: to be filled
     } else {
-        T2_.block("aaaa").zero();
+        compute_t2_full();
     }
-
-    // form 2 * J - K
-    S2_["ijab"] = 2.0 * T2_["ijab"] - T2_["ijba"];
 
     t2.stop();
-}
-
-void SA_MRPT2::compute_t1() {
-    timer t1("Compute T1");
-
-    // initialize T1 with F + [H0, A]
-    T1_["ia"] = F_["ia"];
-    T1_["ia"] += 0.5 * S2_["ivaw"] * F_["wu"] * L1_["uv"];
-    T1_["ia"] -= 0.5 * S2_["iwau"] * F_["vw"] * L1_["uv"];
-
-    // need to consider the S2 blocks that are not stored
-    if (eri_df_) {
-        T1_["me"] += 0.5 * S2_["vmwe"] * F_["wu"] * L1_["uv"];
-        T1_["me"] -= 0.5 * S2_["wmue"] * F_["vw"] * L1_["uv"];
-    }
-
-    // transform to semi-canonical basis
-    BlockedTensor tempX;
-    if (!semi_canonical_) {
-        tempX = ambit::BlockedTensor::build(tensor_type_, "Temp T1", {"hp"});
-        tempX["jb"] = U_["ji"] * T1_["ia"] * U_["ba"];
-        T1_["ia"] = tempX["ia"];
-    }
-
-    // labels for cv blocks and the rest blocks
-    std::vector<std::string> T1blocks(T1_.block_labels());
-    if (ccvv_source_ == "ZERO") {
-        T1blocks.erase(std::remove(T1blocks.begin(), T1blocks.end(), "cv"), T1blocks.end());
-        T1_.block("cv").iterate([&](const std::vector<size_t>& i, double& value) {
-            size_t i0 = core_mos_[i[0]];
-            size_t i1 = virt_mos_[i[1]];
-            value /= Fdiag_[i0] - Fdiag_[i1];
-        });
-    }
-
-    // build T1
-    for (const std::string& block : T1blocks) {
-        T1_.block(block).iterate([&](const std::vector<size_t>& i, double& value) {
-            size_t i0 = label_to_spacemo_[block[0]][i[0]];
-            size_t i1 = label_to_spacemo_[block[1]][i[1]];
-            value *= dsrg_source_->compute_renormalized_denominator(Fdiag_[i0] - Fdiag_[i1]);
-        });
-    }
-
-    // transform back to non-canonical basis
-    if (!semi_canonical_) {
-        tempX["jb"] = U_["ij"] * T1_["ia"] * U_["ab"];
-        T1_["ia"] = tempX["ia"];
-    }
-
-    // internal amplitudes
-    if (internal_amp_.find("SINGLES") != std::string::npos) {
-        // TODO: to be filled
-    } else {
-        T1_.block("aa").zero();
-    }
-
-    t1.stop();
-}
-
-void SA_MRPT2::renormalize_integrals() {
-    // add R = H + [F, A] contributions to H
-
-    timer rV("Renormalize V");
-
-    // to semicanonical orbitals
-    BlockedTensor tempX;
-    if (!semi_canonical_) {
-        tempX = ambit::BlockedTensor::build(tensor_type_, "TempV", V_.block_labels());
-        tempX["abkl"] = U_["ki"] * U_["lj"] * V_["abij"];
-        V_["cdij"] = tempX["abij"] * U_["db"] * U_["ca"];
-    }
-
-    std::vector<std::string> Vblocks(V_.block_labels());
-    if (ccvv_source_ == "ZERO") {
-        Vblocks.erase(std::remove(Vblocks.begin(), Vblocks.end(), "vvcc"), Vblocks.end());
-    }
-
-    for (const std::string& block : Vblocks) {
-        V_.block(block).iterate([&](const std::vector<size_t>& i, double& value) {
-            size_t i0 = label_to_spacemo_[block[0]][i[0]];
-            size_t i1 = label_to_spacemo_[block[1]][i[1]];
-            size_t i2 = label_to_spacemo_[block[2]][i[2]];
-            size_t i3 = label_to_spacemo_[block[3]][i[3]];
-            double denom = Fdiag_[i0] + Fdiag_[i1] - Fdiag_[i2] - Fdiag_[i3];
-            value *= 1.0 + dsrg_source_->compute_renormalized(denom);
-        });
-    }
-
-    // transform back if necessary
-    if (!semi_canonical_) {
-        tempX["abkl"] = U_["ik"] * U_["jl"] * V_["abij"];
-        V_["cdij"] = tempX["abij"] * U_["bd"] * U_["ac"];
-    }
-
-    rV.stop();
-
-    timer rF("Renormalize F");
-
-    auto temp = ambit::BlockedTensor::build(tensor_type_, "temp", {"ph"});
-    temp["ai"] = F_["ai"];
-    temp["ai"] += 0.5 * S2_["ivaw"] * F_["wu"] * L1_["uv"];
-    temp["ai"] -= 0.5 * S2_["iwau"] * F_["vw"] * L1_["uv"];
-
-    // need to consider the S2 blocks that are not stored
-    if (eri_df_) {
-        temp["em"] += 0.5 * S2_["vmwe"] * F_["wu"] * L1_["uv"];
-        temp["em"] -= 0.5 * S2_["wmue"] * F_["vw"] * L1_["uv"];
-    }
-
-    // to semicanonical basis
-    if (!semi_canonical_) {
-        tempX = ambit::BlockedTensor::build(tensor_type_, "TempV", {"ph"});
-        tempX["bj"] = U_["ba"] * temp["ai"] * U_["ji"];
-        temp["ai"] = tempX["ai"];
-    }
-
-    // scale by exp(-s * D^2)
-    temp.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>&, double& value) {
-        double denom = Fdiag_[i[0]] - Fdiag_[i[1]];
-        value *= dsrg_source_->compute_renormalized(denom);
-    });
-
-    // transform back if necessary
-    if (!semi_canonical_) {
-        tempX["bj"] = U_["ab"] * temp["ai"] * U_["ij"];
-        temp["ai"] = tempX["ai"];
-    }
-
-    F_["ai"] += temp["ai"];
-
-    rF.stop();
 }
 
 std::vector<ambit::Tensor> SA_MRPT2::init_tensor_vecs(int number_of_tensors) {

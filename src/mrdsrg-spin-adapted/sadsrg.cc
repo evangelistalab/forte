@@ -768,7 +768,6 @@ void SADSRG::combine_tensor(ambit::Tensor& tens, ambit::Tensor& tens_h, const ps
     }
 }
 
-
 void SADSRG::print_options_info(
     const std::string& title,
     const std::vector<std::pair<std::string, std::string>>& calculation_info_string,
