@@ -151,7 +151,7 @@ void SA_MRDSRG::guess_t1(BlockedTensor& F, BlockedTensor& T2, BlockedTensor& T1)
     T1["ia"] += T2["ivaw"] * F["wu"] * L1_["uv"];
     T1["ia"] -= 0.5 * T2["ivwa"] * F["wu"] * L1_["uv"];
     T1["ia"] -= T2["iwau"] * F["vw"] * L1_["uv"];
-    T1["ia"] -= 0.5 * T2["iwua"] * F["vw"] * L1_["uv"];
+    T1["ia"] += 0.5 * T2["iwua"] * F["vw"] * L1_["uv"];
 
     // transform to semi-canonical basis
     BlockedTensor tempX;
