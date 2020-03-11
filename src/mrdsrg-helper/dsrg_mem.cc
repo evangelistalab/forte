@@ -49,12 +49,6 @@ void DSRG_MEM::add_entry(const std::string& des, const size_t& mem_use, bool sub
     }
 }
 
-void DSRG_MEM::add_entry(const std::string& des, const std::string& labels, int multiple,
-                         bool subtract) {
-    size_t nele = compute_n_elements(labels);
-    add_entry(des, nele * multiple * sizeof(double), subtract);
-}
-
 void DSRG_MEM::add_entry(const std::string& des, const std::vector<std::string>& labels_vec,
                          int multiple, bool subtract) {
     size_t total_nele = 0;
@@ -75,8 +69,12 @@ size_t DSRG_MEM::compute_n_elements(const std::string& labels) {
     return nele;
 }
 
-size_t DSRG_MEM::compute_memory(const std::string& labels) {
-    return sizeof(double) * compute_n_elements(labels);
+size_t DSRG_MEM::compute_memory(const std::vector<std::string>& labels_vec, int multiple) {
+    size_t total = 0;
+    for (const std::string& labels: labels_vec) {
+        total += sizeof(double) * compute_n_elements(labels);
+    }
+    return multiple * total;
 }
 
 size_t DSRG_MEM::max_memory(const std::vector<std::string>& labels_vec) {

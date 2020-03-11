@@ -71,6 +71,9 @@ void SA_MRPT3::startup() {
 
     // initialize tensors for amplitudes
     init_amps();
+
+    // check memory and terminate if not enough
+    check_memory();
 }
 
 void SA_MRPT3::build_ints() {
@@ -82,6 +85,7 @@ void SA_MRPT3::build_ints() {
         B_ = BTF_->build(tensor_type_, "B 3-idx", {"Lgg"});
         fill_three_index_ints(B_);
         V_["pqrs"] = B_["gpr"] * B_["gqs"];
+        dsrg_mem_.add_entry("3-index integrals", {"Lgg"});
     } else {
         for (const std::string& block : V_.block_labels()) {
             auto mo_to_index = BTF_->get_mo_to_index();
@@ -93,6 +97,7 @@ void SA_MRPT3::build_ints() {
             V_.block(block).copy(Vblock);
         }
     }
+    dsrg_mem_.add_entry("2-electron (4-index) integrals", {"pphh"});
 
     // prepare Hbar
     if (relax_ref_ != "NONE" || multi_state_) {
@@ -100,6 +105,7 @@ void SA_MRPT3::build_ints() {
         Hbar2_ = BTF_->build(tensor_type_, "2-body Hbar", {"aaaa"});
         Hbar1_["uv"] = F_["uv"];
         Hbar2_["uvxy"] = V_["uvxy"];
+        dsrg_mem_.add_entry("1- and 2-body Hbar", {"aa", "aaaa"});
     }
 
     t.stop();
@@ -110,7 +116,34 @@ void SA_MRPT3::init_amps() {
     T1_ = BTF_->build(tensor_type_, "T1 Amplitudes", {"hp"});
     T2_ = BTF_->build(tensor_type_, "T2 Amplitudes", {"hhpp"});
     S2_ = BTF_->build(tensor_type_, "S2 Amplitudes", {"hhpp"});
+    dsrg_mem_.add_entry("1- and 2-body cluster amplitudes", {"hp", "hhpp", "hhpp"});
     t.stop();
+}
+
+void SA_MRPT3::check_memory() {
+    dsrg_mem_.add_entry("Global 1- and 2-body intermediates", {"hp", "hhpp", "hhpp"});
+
+    std::vector<size_t> local_mem;
+
+    auto local1 = dsrg_mem_.compute_memory({"hp", "hhpp"}, 3);
+    local_mem.push_back(local1);
+    dsrg_mem_.add_entry("Local intermediates (energy part 1)", local1, false);
+
+    auto local2 = dsrg_mem_.compute_memory({"ph", "pphh"});
+    if (!eri_df_) {
+        local2 += dsrg_mem_.compute_memory({"gggg"});
+    }
+    local_mem.push_back(local2);
+    dsrg_mem_.add_entry("Local intermediates (energy part 2)", local2, false);
+
+    auto local_comm = dsrg_mem_.compute_memory({"pphh"});
+    local_mem.push_back(local_comm);
+    dsrg_mem_.add_entry("Local intermediates for commutators", local_comm, false);
+
+    auto max_local = std::max_element(local_mem.begin(), local_mem.end());
+    dsrg_mem_.add_entry("Max memory for local intermediates", *max_local);
+
+    dsrg_mem_.print("DSRG-MRPT3");
 }
 
 double SA_MRPT3::compute_energy() {

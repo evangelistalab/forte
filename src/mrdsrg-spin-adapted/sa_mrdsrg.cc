@@ -145,36 +145,35 @@ void SA_MRDSRG::print_options() {
 void SA_MRDSRG::check_memory() {
     std::vector<size_t> local_mem;
 
-    dsrg_mem_.add_entry("1- and 2-amplitudes and residuals", {"hp", "hhpp", "hp", "hhpp"});
+    // T2, S2, DT2
+    dsrg_mem_.add_entry("1- and 2-amplitudes and residuals", {"hp", "hhpp"}, 3);
 
     if (corrlv_string_ == "LDSRG2_QC") {
         dsrg_mem_.add_entry("1- and 2-body Hbar", {"hhpp", "hp"});
         dsrg_mem_.add_entry("1- and 2-body intermediates", {"gg", "gggg", "hhpp"});
     } else {
-        dsrg_mem_.add_entry("1-body intermediates (global)", "gg", 3);
+        dsrg_mem_.add_entry("Global 1-body intermediates", {"gg"}, 3);
         if (nivo_) {
-            dsrg_mem_.add_entry("2-body intermediates (global)", nivo_labels(), 3);
+            dsrg_mem_.add_entry("Global 2-body intermediates", nivo_labels(), 3);
         } else {
-            dsrg_mem_.add_entry("2-body intermediates (global)", "gggg", 3);
+            dsrg_mem_.add_entry("Global 2-body intermediates", {"gggg"}, 3);
         }
 
         if (sequential_Hbar_) {
-            auto mem_seq = dsrg_mem_.compute_memory(eri_df_ ? "Lgg" : "gggg");
+            size_t mem_seq =
+                eri_df_ ? dsrg_mem_.compute_memory({"Lgg"}) : dsrg_mem_.compute_memory({"gggg"});
             local_mem.push_back(mem_seq);
-            dsrg_mem_.add_entry("Intermediates for sequential Hbar (local)", mem_seq, false);
+            dsrg_mem_.add_entry("Local intermediates for sequential Hbar", mem_seq, false);
         }
     }
 
     // intermediates used in actual commutator computation
-    size_t mem_comm;
-    if (eri_df_) {
-        mem_comm = dsrg_mem_.max_memory({"Lhp", "Lgc", "ppg", "hhpp"});
-    } else {
-        mem_comm = dsrg_mem_.max_memory({"cavv", "vvvh"});
+    size_t mem_comm = dsrg_mem_.compute_memory({"hhpp", "ahpp", "hhhp"}) * 2;
+    if ((!eri_df_) and (!nivo_)) {
+        mem_comm = std::max(mem_comm, dsrg_mem_.max_memory({"happ", "ppph"}));
     }
-    mem_comm = std::max(mem_comm, dsrg_mem_.compute_memory("hhpp") * 2);
     local_mem.push_back(mem_comm);
-    dsrg_mem_.add_entry("Intermediates for commutators (local)", mem_comm, false);
+    dsrg_mem_.add_entry("Local intermediates for commutators", mem_comm, false);
 
     auto max_local = std::max_element(local_mem.begin(), local_mem.end());
     dsrg_mem_.add_entry("Max memory for local intermediates", *max_local);

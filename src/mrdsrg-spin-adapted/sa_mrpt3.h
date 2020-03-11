@@ -76,6 +76,9 @@ class SA_MRPT3 : public SA_DSRGPT {
     /// Two-body temp tensor ([[H0th,A1st],A1st] or 1st-order amplitudes)
     ambit::BlockedTensor O2_;
 
+    /// Check memory
+    void check_memory();
+
     /// 2nd-order energy and transformed Hamiltonian
     double compute_energy_pt2();
     /// 3rd-order energy contribution 1.0 / 12.0 * [[[H0th,A1st],A1st],A1st] (done before pt2)

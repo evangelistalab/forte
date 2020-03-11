@@ -55,10 +55,6 @@ class DSRG_MEM {
     void add_entry(const std::string& des, const size_t& mem_use, bool subtract = true);
 
     /// Add entry using the description and the block labels
-    void add_entry(const std::string& des, const std::string& labels, int multiple,
-                   bool subtract = true);
-
-    /// Add entry using the description and the block labels
     void add_entry(const std::string& des, const std::vector<std::string>& labels_vec,
                    int multiple = 1, bool subtract = true);
 
@@ -66,7 +62,7 @@ class DSRG_MEM {
     size_t compute_n_elements(const std::string& labels);
 
     /// Compute the memory requirement of a given labels
-    size_t compute_memory(const std::string& labels);
+    size_t compute_memory(const std::vector<std::string>& labels_vec, int multiple = 1);
 
     /// Subtract from available memory
     void subtract(size_t mem) { mem_avai_ -= mem; }
