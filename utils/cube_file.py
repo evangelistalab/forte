@@ -8,10 +8,12 @@ class CubeFile():
     This class assumes that all coordinates (atoms, grid points)
     are stored in atomic units
 
+    Uses code from the parse_cube function written by Andy Simmonett
+
     Attributes
     ----------
-    data : type
-        description
+    data : numpy array
+        The values on a grid stored as a 3d array
 
     Methods
     -------
@@ -25,18 +27,18 @@ class CubeFile():
         Load a cube file using numpy's .npz format
     scale(factor)
         Multiply the data by a given factor
-        Performs: self.data *= factor
+        Performs self.data *= factor
     add(other)
         To each grid point add the value of grid poins from another CubeFile
         Performs: self.data += other.data
     pointwise_product(other):
-        Multiply every grid point with the value of grid points from another CubeFile.
+        Multiply every grid point with the value of grid points from another CubeFile
         Performs: self.data *= other.data
     """
     def __init__(self, filename = None):
         self.filename = filename
-        self.comment1 = None
-        self.comment2 = None
+        self.title = None
+        self.comment = None
         self.levels = []
         self.num = [None, None, None]
         self.min = [None, None, None]
@@ -51,10 +53,10 @@ class CubeFile():
 
     def load(self, filename):
         with open(filename) as fp:
-            self.comment1 = fp.readline().rstrip()
-            self.comment2 = fp.readline().rstrip()
+            self.title = fp.readline().rstrip()
+            self.comment = fp.readline().rstrip()
             m = re.search(r"\(([-+]?[0-9]*\.?[0-9]+)\,([-+]?[0-9]*\.?[0-9]+)\)",
-            self.comment2)
+            self.comment)
             if (m):
                 self.levels = [float(s) for s in m.groups()]
 
@@ -98,7 +100,7 @@ class CubeFile():
 
     def save(self, filename):
         with open(filename,'w+') as fp:
-            fp.write('{}\n{}\n'.format(self.comment1,self.comment2))
+            fp.write('{}\n{}\n'.format(self.title,self.comment))
             fp.write('{0:6d} {1[0]:10.6f} {1[1]:10.6f} {1[2]:10.6f}\n'.format(self.natoms,
             self.min))
             fp.write('{:6d} {:10.6f} {:10.6f} {:10.6f}\n'.format(self.num[0], self.inc[0], 0.0, 0.0))
@@ -121,8 +123,8 @@ class CubeFile():
 
     def save_npz(self, filename):
         np.savez_compressed(file=filename,
-            comment1=self.comment1,
-            comment2=self.comment2,
+            title=self.title,
+            comment=self.comment,
             num=self.num,
             min=self.min,
             max=self.max,
@@ -136,8 +138,8 @@ class CubeFile():
 
     def load_npz(self, filename):
         file = np.load(filename)
-        self.comment1=file['comment1']
-        self.comment2=file['comment2']
+        self.title=file['title']
+        self.comment=file['comment']
         self.num=file['num']
         self.min=file['min']
         self.max=file['max']
@@ -163,7 +165,7 @@ class CubeFile():
         self.levels = []
 
     def __str__(self):
-        s = 'title: {}\ncomment: {}'.format(self.comment1, self.comment2)
+        s = 'title: {}\ncomment: {}'.format(self.title, self.comment)
         s += '\ntotal grid points = {}'.format(self.num[0] * self.num[1] * self.num[2])
         s += '\ngrid points = [{0[0]},{0[1]},{0[2]}]'.format(self.num)
         s += '\nmin = [{0[0]:9.3f},{0[1]:9.3f},{0[2]:9.3f}]'.format(self.min)
@@ -172,73 +174,3 @@ class CubeFile():
         s += '\ndata = {}'.format(self.data)
         return s
 
-def parse_cube(filename: str) -> dict:
-    """
-    Parse a cube file and return a dictionary with the information contained in it.
-
-    The cubefile data is stored in a numpy array.
-
-    Written by Andy Simmonett.
-
-    Parameters
-    ----------
-    filename : str
-        The name of the cube file
-    """
-
-    with open(filename) as fp:
-        results = {}
-
-        # skip over the title
-        title = fp.readline()
-        comment = fp.readline()
-        m = re.search(r"\(([-+]?[0-9]*\.?[0-9]+)\,([-+]?[0-9]*\.?[0-9]+)\)",
-                      comment)
-        if (m):
-            results['levels'] = [float(s) for s in m.groups()]
-
-        origin = fp.readline().split()
-        natoms = int(origin[0])
-        results['minx'] = minx = float(origin[1])
-        results['miny'] = miny = float(origin[2])
-        results['minz'] = minz = float(origin[3])
-
-        infox = fp.readline().split()
-        numx = int(infox[0])
-        incx = float(infox[1])
-        results['incx'] = incx
-        results['numx'] = numx
-        results['maxx'] = minx + incx * numx
-
-        infoy = fp.readline().split()
-        numy = int(infoy[0])
-        incy = float(infoy[2])
-        results['incy'] = incy
-        results['numy'] = numy
-        results['maxy'] = miny + incy * numy
-
-        infoz = fp.readline().split()
-        numz = int(infoz[0])
-        incz = float(infoz[3])
-        results['incz'] = incz
-        results['numz'] = numz
-        results['maxz'] = minz + incz * numz
-
-        atnums = []
-        coords = []
-        for atom in range(natoms):
-            coordinfo = fp.readline().split()
-            atnums.append(int(coordinfo[0]))
-            coords.append(list(map(float, coordinfo[2:])))
-        results['atom_numbers'] = np.array(atnums)
-        results['atom_coords'] = np.array(coords)
-
-        data = np.array(
-            [float(entry) for line in fp for entry in line.split()])
-        if len(data) != numx * numy * numz:
-            raise Exception(
-                "Amount of parsed data is inconsistent with header in Cube file!"
-            )
-        results['data'] = data.reshape((numx, numy, numz))
-
-        return results

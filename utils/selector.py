@@ -23,30 +23,7 @@ import time
 import psi4
 import forte
 
-def prepare_forte_objects(wfn):
-    # fill in the options object
-    psi4_options = psi4.core.get_options()
-    psi4_options.set_current_module('FORTE')
-    options = forte.forte_options
-    options.get_options_from_psi4(psi4_options)
 
-    if ('DF' in options.get_str('INT_TYPE')):
-        aux_basis = psi4.core.BasisSet.build(wfn.molecule(), 'DF_BASIS_MP2',
-                                         psi4.core.get_global_option('DF_BASIS_MP2'),
-                                         'RIFIT', psi4.core.get_global_option('BASIS'))
-        wfn.set_basisset('DF_BASIS_MP2', aux_basis)
-
-    if (options.get_str('MINAO_BASIS')):
-        minao_basis = psi4.core.BasisSet.build(wfn.molecule(), 'MINAO_BASIS',
-                                               psi4_options.get_str('MINAO_BASIS'))
-        wfn.set_basisset('MINAO_BASIS', minao_basis)
-
-    # Prepare base objects
-    scf_info = forte.SCFInfo(wfn)
-    mo_space_info = forte.make_mo_space_info(wfn, options)
-    ints = forte.make_forte_integrals(wfn, options, mo_space_info)
-
-    return ints, scf_info, mo_space_info
 
 def get_occ(ordm, nact):
     alfa = np.asarray(ordm[0])
