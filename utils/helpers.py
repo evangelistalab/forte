@@ -1,8 +1,26 @@
 import psi4
 import forte
 
-def psi4_scf(geom, basis, reference, functional = 'hf', options = {}):
- 
+def psi4_scf(geom, basis, reference, functional = 'hf', options = {}) -> (double, psi4Wavefunction):
+    """
+    Run a psi4 scf computation and return the energy and the Wavefunction object
+
+    Parameters
+    ----------
+    geom : str
+        The molecular geometry (in xyz or zmat)
+    basis : str
+        The computational basis set
+    reference : str
+        The type of reference (rhf, uhf, rohf)
+    functional : str
+        The functional type for DFT (default = HF exchange)
+
+    Returns
+    -------
+    tuple(double, psi4::Wavefunction)
+        a tuple containing the energy and the Wavefunction object
+    """
     # build the molecule object
     mol = psi4.geometry(geom)
 
@@ -21,7 +39,21 @@ def psi4_scf(geom, basis, reference, functional = 'hf', options = {}):
 
     return (E_scf, wfn)
 
+
 def prepare_forte_objects(wfn):
+    """
+    Take a psi4 wavefunction object and prepare the ForteIntegrals, SCFInfo, and MOSpaceInfo objects
+
+    Parameters
+    ----------
+    wfn : psi4Wavefunction
+        A psi4 Wavefunction object
+
+    Returns
+    -------
+    tuple(ForteIntegrals, SCFInfo, MOSpaceInfo)
+        a tuple containing the ForteIntegrals, SCFInfo, and MOSpaceInfo objects
+    """
     # fill in the options object
     psi4_options = psi4.core.get_options()
     psi4_options.set_current_module('FORTE')
@@ -44,4 +76,4 @@ def prepare_forte_objects(wfn):
     mo_space_info = forte.make_mo_space_info(wfn, options)
     ints = forte.make_forte_integrals(wfn, options, mo_space_info)
 
-    return ints, scf_info, mo_space_info
+    return (ints, scf_info, mo_space_info)
