@@ -2,4 +2,4 @@
 
 from .helpers import psi4_scf, prepare_forte_objects
 from .cube_file import CubeFile
-#from .pyforte import *
+from .py3js_renderer import Py3JSRenderer

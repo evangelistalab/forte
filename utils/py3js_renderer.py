@@ -7,7 +7,6 @@ import skimage.measure
 from IPython.display import display
 from pythreejs import *
 from .atom_data import *
-from .parse_cube import *
 
 def xyz_to_atoms_list(xyz):
     atoms_list = []
@@ -56,7 +55,7 @@ def compute_isosurface(data, level=None, color=None, extent=None):
     return (vertices, faces)
 
 
-class FortePy3JSRenderer():
+class Py3JSRenderer():
     """
     A lightweight molecule and orbital renderer
 

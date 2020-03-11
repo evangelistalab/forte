@@ -23,8 +23,6 @@ import time
 import psi4
 import forte
 
-
-
 def get_occ(ordm, nact):
     alfa = np.asarray(ordm[0])
     beta = np.asarray(ordm[1])
