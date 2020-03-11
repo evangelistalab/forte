@@ -259,7 +259,7 @@ void SADSRG::init_fock() {
     outfile->Printf("\n    Building Fock matrix ............................ ");
     build_fock_from_ints(ints_, Fock_);
     fill_Fdiag(Fock_, Fdiag_);
-    dsrg_mem_.add_entry("Fock matrix", {"g", "gg"});
+    dsrg_mem_.add_entry("Generalized Fock matrix", {"g", "gg"});
     outfile->Printf("Done");
 }
 

@@ -65,10 +65,16 @@ class DSRG_MEM {
     size_t compute_memory(const std::vector<std::string>& labels_vec, int multiple = 1);
 
     /// Subtract from available memory
-    void subtract(size_t mem) { mem_avai_ -= mem; }
+    void subtract_memory_available(size_t mem) { mem_avai_ -= mem; }
+
+    /// Add to available memory
+    void add_memory_available(size_t mem) { mem_avai_ += mem; }
+
+    /// Return the available memory
+    size_t available() { return mem_avai_; }
 
     /// Max memory usage among the vector of labels
-    size_t max_memory(const std::vector<std::string>& labels_vec);
+    size_t max_memory_from_labels(const std::vector<std::string>& labels_vec);
 
     /// Print the current data
     void print(const std::string& name);

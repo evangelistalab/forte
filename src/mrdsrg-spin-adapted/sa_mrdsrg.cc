@@ -90,7 +90,7 @@ void SA_MRDSRG::startup() {
 
     // test semi-canonical
     if (!semi_canonical_) {
-        outfile->Printf("\n    Orbital invariant formalism will be employed for MR-DSRG.");
+        outfile->Printf("\n  Orbital invariant formalism will be employed for MR-DSRG.");
         U_ = ambit::BlockedTensor::build(tensor_type_, "U", {"gg"});
         Fdiag_ = diagonalize_Fock_diagblocks(U_);
     }
@@ -170,7 +170,7 @@ void SA_MRDSRG::check_memory() {
     // intermediates used in actual commutator computation
     size_t mem_comm = dsrg_mem_.compute_memory({"hhpp", "ahpp", "hhhp"}) * 2;
     if ((!eri_df_) and (!nivo_)) {
-        mem_comm = std::max(mem_comm, dsrg_mem_.max_memory({"happ", "ppph"}));
+        mem_comm = std::max(mem_comm, dsrg_mem_.compute_memory({"ppph"}));
     }
     local_mem.push_back(mem_comm);
     dsrg_mem_.add_entry("Local intermediates for commutators", mem_comm, false);

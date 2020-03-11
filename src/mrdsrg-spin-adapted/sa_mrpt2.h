@@ -71,6 +71,12 @@ class SA_MRPT2 : public SA_DSRGPT {
     /// Initialize amplitude tensors
     void init_amps();
 
+    /// Check memory
+    void check_memory();
+
+    /// Memory requirements for the three batched energy terms
+    std::map<std::string, size_t> mem_batched_;
+
     /// Compute 1st-order T2 amplitudes
     void compute_t2();
     /// Compute 1st-order T2 amplitudes with at least two active indices

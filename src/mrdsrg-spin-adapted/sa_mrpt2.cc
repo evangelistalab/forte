@@ -55,13 +55,14 @@ SA_MRPT2::SA_MRPT2(RDMs rdms, std::shared_ptr<SCFInfo> scf_info,
     print_method_banner({"MR-DSRG Second-Order Perturbation Theory"});
     read_options();
     print_options();
+    check_memory();
     startup();
 }
 
 void SA_MRPT2::startup() {
     // test semi-canonical
     if (!semi_canonical_) {
-        outfile->Printf("\n    Orbital invariant formalism will be employed for MR-DSRG.");
+        outfile->Printf("\n  Orbital invariant formalism will be employed for DSRG-MRPT2.");
         U_ = ambit::BlockedTensor::build(tensor_type_, "U", {"gg"});
         Fdiag_ = diagonalize_Fock_diagblocks(U_);
     }
@@ -102,7 +103,7 @@ void SA_MRPT2::build_ints() {
     }
 
     // prepare Hbar
-    if (relax_ref_ != "NONE" || multi_state_) {
+    if (form_Hbar_) {
         Hbar1_ = BTF_->build(tensor_type_, "1-body Hbar", {"aa"});
         Hbar2_ = BTF_->build(tensor_type_, "2-body Hbar", {"aaaa"});
         Hbar1_["uv"] = F_["uv"];
@@ -115,7 +116,6 @@ void SA_MRPT2::build_ints() {
 void SA_MRPT2::build_minimal_V() {
     timer t("Build minimal V");
 
-    // TODO: add memory check
     std::vector<std::string> Bblocks{"Lva", "Lac", "Laa"};
 
     auto B = ambit::BlockedTensor::build(tensor_type_, "B 3-idx", Bblocks);
@@ -123,27 +123,26 @@ void SA_MRPT2::build_minimal_V() {
     V_["abij"] = B["gai"] * B["gbj"];
 
     // the only block left is avac of V
-    if (std::find(Bblocks.begin(), Bblocks.end(), "Lvc") == Bblocks.end()) {
-        auto nQ = aux_mos_.size();
-        auto nc = core_mos_.size();
-        auto na = actv_mos_.size();
-        auto nv = virt_mos_.size();
+    auto nQ = aux_mos_.size();
+    auto nc = core_mos_.size();
+    auto na = actv_mos_.size();
+    auto nv = virt_mos_.size();
 
-        auto& Vavac = V_.block("avac").data();
-        auto dim2 = na * nc;
-        auto dim1 = nv * dim2;
+    auto& Vavac = V_.block("avac").data();
+    auto dim2 = na * nc;
+    auto dim1 = nv * dim2;
 
-        for (size_t c = 0; c < nc; ++c) {
-            auto Bsub = ambit::Tensor::build(tensor_type_, "Bsub PT2", {nQ, nv});
-            Bsub.data() = ints_->three_integral_block(aux_mos_, virt_mos_, {core_mos_[c]}).data();
+    auto Bsub = ambit::Tensor::build(tensor_type_, "Bsub PT2", {nQ, nv});
+    auto Vsub = ambit::Tensor::build(tensor_type_, "Vsub PT2", {na, nv, na});
 
-            auto Vsub = ambit::Tensor::build(tensor_type_, "Vsub PT2", {na, nv, na});
-            Vsub("uev") = B.block("Laa")("guv") * Bsub("ge");
+    for (size_t c = 0; c < nc; ++c) {
+        Bsub.data() = ints_->three_integral_block(aux_mos_, virt_mos_, {core_mos_[c]}).data();
 
-            Vsub.citerate([&](const std::vector<size_t>& i, const double& value) {
-                Vavac[i[0] * dim1 + i[1] * dim2 + i[2] * nc + c] = value;
-            });
-        }
+        Vsub("uev") = B.block("Laa")("guv") * Bsub("ge");
+
+        Vsub.citerate([&](const std::vector<size_t>& i, const double& value) {
+            Vavac[i[0] * dim1 + i[1] * dim2 + i[2] * nc + c] = value;
+        });
     }
 
     t.stop();
@@ -151,7 +150,9 @@ void SA_MRPT2::build_minimal_V() {
 
 void SA_MRPT2::init_amps() {
     timer t("Initialize T1 and T2");
+
     T1_ = BTF_->build(tensor_type_, "T1 Amplitudes", {"hp"});
+
     if (eri_df_) {
         std::vector<std::string> blocks{"aavv", "ccaa", "caav", "acav", "aava", "caaa", "aaaa"};
         T2_ = BTF_->build(tensor_type_, "T2 Amplitudes", blocks);
@@ -160,7 +161,85 @@ void SA_MRPT2::init_amps() {
         T2_ = BTF_->build(tensor_type_, "T2 Amplitudes", {"hhpp"});
         S2_ = BTF_->build(tensor_type_, "S2 Amplitudes", {"hhpp"});
     }
+
     t.stop();
+}
+
+void SA_MRPT2::check_memory() {
+    // memory of ints and amps
+    if (eri_df_) {
+        std::vector<std::string> blocks{"vvaa", "aacc", "avca", "avac", "vaaa", "aaca", "aaaa"};
+        auto mem_blocks = dsrg_mem_.compute_memory(blocks);
+        dsrg_mem_.add_entry("2-electron (4-index) integrals", mem_blocks);
+        dsrg_mem_.add_entry("T2 cluster amplitudes", 2 * mem_blocks);
+        if (ints_type_ != "DISKDF") {
+            dsrg_mem_.add_entry("3-index auxiliary integrals", {"Lph"});
+        }
+    } else {
+        dsrg_mem_.add_entry("2-electron (4-index) integrals", {"pphh"});
+        dsrg_mem_.add_entry("T2 cluster amplitudes", {"pphh"});
+    }
+    dsrg_mem_.add_entry("T1 cluster amplitudes", {"hp"});
+
+    if (form_Hbar_) {
+        dsrg_mem_.add_entry("1- and 2-body Hbar", {"aa", "aaaa"});
+    }
+
+    std::vector<size_t> local_mem{0}; // pass a zero element for safety of std::max_element
+
+    // local memory for computing minimal V
+    if (eri_df_ and ints_type_ == "DISKDF") {
+        auto mem_V = dsrg_mem_.compute_memory({"Lca", "Laa", "Lav"});
+        local_mem.push_back(mem_V);
+        dsrg_mem_.add_entry("Local 3-index integrals", mem_V, false);
+    }
+
+    // compute energy
+    if (eri_df_) {
+        auto size_Lv = dsrg_mem_.compute_memory({"Lv"});
+        auto size_acc = dsrg_mem_.compute_memory({"acc"});
+
+        auto mem_ccvv = 2 * (size_Lv + dsrg_mem_.compute_memory({"vv"}));
+        auto mem_cavv = size_Lv + dsrg_mem_.compute_memory({"vva", "vva", "aa", "Lva"});
+        auto mem_ccav = 2 * size_acc + dsrg_mem_.compute_memory({"Lc", "aa", "Lac"});
+
+        if (!semi_canonical_) {
+            mem_ccvv += 2 * size_Lv;
+            mem_cavv += size_Lv + dsrg_mem_.compute_memory({"Lva"});
+            mem_ccav += dsrg_mem_.compute_memory({"Lc", "Lac"});
+        }
+
+        mem_batched_["ccvv"] = mem_ccvv;
+        local_mem.push_back(mem_ccvv);
+        dsrg_mem_.add_entry("Local integrals for CCVV energy", mem_ccvv, false);
+
+        mem_batched_["cavv"] = mem_cavv;
+        local_mem.push_back(mem_cavv);
+        dsrg_mem_.add_entry("Local integrals for CAVV energy", mem_cavv, false);
+
+        mem_batched_["ccav"] = mem_ccav;
+        local_mem.push_back(mem_ccav);
+        dsrg_mem_.add_entry("Local integrals for CCAV energy", mem_ccav, false);
+    } else {
+        auto mem_temp = dsrg_mem_.compute_memory({"aa", "aaaa"});
+        local_mem.push_back(mem_temp);
+        dsrg_mem_.add_entry("Local 1- and 2-body intermediates", mem_temp, false);
+    }
+
+    // compute Hbar
+    if (form_Hbar_) {
+        auto mem_Hbar = dsrg_mem_.compute_memory({"avac", "aaac", "avaa", "paaa", "aaaa"});
+        local_mem.push_back(mem_Hbar);
+        dsrg_mem_.add_entry("Local integrals for forming Hbar", mem_Hbar, false);
+    }
+
+    auto max_local = std::max_element(local_mem.begin(), local_mem.end());
+    dsrg_mem_.add_entry("Max memory for local intermediates", *max_local);
+
+    dsrg_mem_.print("DSRG-MRPT2");
+
+    // reset local memory portion
+    dsrg_mem_.add_memory_available(*max_local);
 }
 
 double SA_MRPT2::compute_energy() {
@@ -305,9 +384,15 @@ double SA_MRPT2::E_V_T2_CCVV() {
     auto nv = virt_mos_.size();
     auto nc = core_mos_.size();
 
-    // TODO: need to check for memeory for these tensors
-
+    // check memory
     int n_threads = n_threads_;
+    while (n_threads * mem_batched_["ccvv"] > dsrg_mem_.available()) {
+        n_threads -= 1;
+    }
+    if (n_threads != n_threads_) {
+        outfile->Printf("\n  Use %d threads to compute CCVV energy due to memory shortage.",
+                        n_threads);
+    }
 
     // some tensors used for threading
     std::vector<ambit::Tensor> Bm_vec = init_tensor_vecs(n_threads);
@@ -421,9 +506,15 @@ void SA_MRPT2::compute_Hbar1V_diskDF(ambit::Tensor& Hbar1, bool Vr) {
     auto nc = core_mos_.size();
     auto na = actv_mos_.size();
 
-    // TODO: need to check memory for these tensors
-
+    // check memory
     int n_threads = n_threads_;
+    while (n_threads * mem_batched_["cavv"] > dsrg_mem_.available()) {
+        n_threads -= 1;
+    }
+    if (n_threads != n_threads_) {
+        outfile->Printf("\n  Use %d threads to compute CAVV energy due to memory shortage.",
+                        n_threads);
+    }
 
     // some tensors used for threading
     std::vector<ambit::Tensor> Bm_vec = init_tensor_vecs(n_threads);
@@ -544,15 +635,25 @@ void SA_MRPT2::compute_Hbar1C_diskDF(ambit::Tensor& Hbar1, bool Vr) {
     auto nc = core_mos_.size();
     auto na = actv_mos_.size();
 
+    // check memory
+    int n_threads = n_threads_;
+    while (n_threads * mem_batched_["ccav"] > dsrg_mem_.available()) {
+        n_threads -= 1;
+    }
+    if (n_threads != n_threads) {
+        outfile->Printf("\n  Use %d threads to compute CCAV energy due to memory shortage.",
+                        n_threads);
+    }
+
     // some tensors used for threading
-    std::vector<ambit::Tensor> Be_vec = init_tensor_vecs(n_threads_);
-    std::vector<ambit::Tensor> V_vec = init_tensor_vecs(n_threads_);
-    std::vector<ambit::Tensor> S_vec = init_tensor_vecs(n_threads_);
-    std::vector<ambit::Tensor> C_vec = init_tensor_vecs(n_threads_);
-    std::vector<ambit::Tensor> X_vec = init_tensor_vecs(n_threads_);
+    std::vector<ambit::Tensor> Be_vec = init_tensor_vecs(n_threads);
+    std::vector<ambit::Tensor> V_vec = init_tensor_vecs(n_threads);
+    std::vector<ambit::Tensor> S_vec = init_tensor_vecs(n_threads);
+    std::vector<ambit::Tensor> C_vec = init_tensor_vecs(n_threads);
+    std::vector<ambit::Tensor> X_vec = init_tensor_vecs(n_threads);
 
     // TODO: test indices permutations for speed
-    for (int i = 0; i < n_threads_; i++) {
+    for (int i = 0; i < n_threads; i++) {
         std::string t = std::to_string(i);
         Be_vec.push_back(ambit::Tensor::build(tensor_type_, "Bm_thread" + t, {nQ, nc}));
         V_vec.push_back(ambit::Tensor::build(tensor_type_, "V_thread" + t, {na, nc, nc}));
@@ -560,7 +661,7 @@ void SA_MRPT2::compute_Hbar1C_diskDF(ambit::Tensor& Hbar1, bool Vr) {
         C_vec.push_back(ambit::Tensor::build(tensor_type_, "C_thread" + t, {na, na}));
     }
     if (!semi_canonical_) {
-        for (int i = 0; i < n_threads_; i++) {
+        for (int i = 0; i < n_threads; i++) {
             std::string t = std::to_string(i);
             X_vec.push_back(ambit::Tensor::build(tensor_type_, "X_thread" + t, {nQ, nc}));
         }
@@ -612,7 +713,7 @@ void SA_MRPT2::compute_Hbar1C_diskDF(ambit::Tensor& Hbar1, bool Vr) {
 
     // finalize results
     auto C = ambit::Tensor::build(tensor_type_, "C1total_CCAV", {na, na});
-    for (int thread = 0; thread < n_threads_; thread++) {
+    for (int thread = 0; thread < n_threads; thread++) {
         C("vu") += C_vec[thread]("vu");
     }
 

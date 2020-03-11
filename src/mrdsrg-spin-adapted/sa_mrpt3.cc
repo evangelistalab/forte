@@ -61,7 +61,7 @@ SA_MRPT3::SA_MRPT3(RDMs rdms, std::shared_ptr<SCFInfo> scf_info,
 void SA_MRPT3::startup() {
     // test semi-canonical
     if (!semi_canonical_) {
-        outfile->Printf("\n    Orbital invariant formalism will be employed for MR-DSRG.");
+        outfile->Printf("\n  Orbital invariant formalism will be employed for DSRG-MRPT3.");
         U_ = ambit::BlockedTensor::build(tensor_type_, "U", {"gg"});
         Fdiag_ = diagonalize_Fock_diagblocks(U_);
     }

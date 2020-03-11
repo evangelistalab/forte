@@ -77,7 +77,7 @@ size_t DSRG_MEM::compute_memory(const std::vector<std::string>& labels_vec, int 
     return multiple * total;
 }
 
-size_t DSRG_MEM::max_memory(const std::vector<std::string>& labels_vec) {
+size_t DSRG_MEM::max_memory_from_labels(const std::vector<std::string>& labels_vec) {
     std::vector<size_t> nele;
     for (const std::string& labels : labels_vec) {
         nele.push_back(compute_n_elements(labels));
@@ -90,7 +90,7 @@ void DSRG_MEM::print(const std::string& name) {
     for (const auto& pair : data_) {
         std::string description = pair.first;
         auto xb_pair = to_xb(pair.second, 1);
-        psi::outfile->Printf("\n    %-50s %7.2f %2s", description.c_str(), xb_pair.first,
+        psi::outfile->Printf("\n    %-45s %7.2f %2s", description.c_str(), xb_pair.first,
                              xb_pair.second.c_str());
     }
 
@@ -103,8 +103,9 @@ void DSRG_MEM::print(const std::string& name) {
         throw psi::PSIEXCEPTION(error);
     } else {
         auto xb_pair = to_xb(mem_avai_, 1);
-        psi::outfile->Printf("\n    %-50s %7.2f %2s", "Memory available", xb_pair.first,
+        psi::outfile->Printf("\n    %-45s %7.2f %2s", "Memory available", xb_pair.first,
                              xb_pair.second.c_str());
     }
+    psi::outfile->Printf("\n");
 }
 } // namespace forte
