@@ -57,6 +57,9 @@ void SADSRG::startup() {
     // initialize timer for commutator
     dsrg_time_ = DSRG_TIME();
 
+    // set memory variables
+    check_init_memory();
+
     // prepare density matrix and cumulants
     init_density();
 
@@ -176,6 +179,45 @@ void SADSRG::set_ambit_MOSpace() {
     }
 
     outfile->Printf("Done");
+}
+
+void SADSRG::check_init_memory() {
+    mem_sys_ = psi::Process::environment.get_memory();
+    auto mem_left = static_cast<int64_t>(0.98 * mem_sys_);
+
+    // integrals already stored by the ForteIntegrals
+    size_t n_ele = 0;
+    auto ng = mo_space_info_->size("CORRELATED");
+    if (eri_df_) {
+        if (ints_type_ != "DISKDF") {
+            auto nQ = aux_mos_.size();
+            n_ele = nQ * ng * ng;
+        }
+    } else {
+        n_ele = ng * ng * ng * ng;
+    }
+
+    mem_left -= n_ele * sizeof(double);
+    if (mem_left < 0) {
+        throw psi::PSIEXCEPTION("Not enough memory to run FORTE.");
+    }
+
+    // prepare DSRG_MEM
+    std::map<char, size_t> label_to_size;
+    label_to_size['c'] = core_mos_.size();
+    label_to_size['a'] = actv_mos_.size();
+    label_to_size['v'] = virt_mos_.size();
+    label_to_size['h'] = label_to_size['c'] + label_to_size['a'];
+    label_to_size['p'] = label_to_size['v'] + label_to_size['a'];
+    label_to_size['g'] = label_to_size['c'] + label_to_size['p'];
+    if (eri_df_) {
+        label_to_size['L'] = aux_mos_.size();
+    }
+    dsrg_mem_.set_mem_avai(mem_left);
+    dsrg_mem_.set_label_to_size(label_to_size);
+
+    dsrg_mem_.add_entry("Memory assigned by the user", mem_sys_, false);
+    dsrg_mem_.add_entry("Memory available for MR-DSRG", mem_left, false);
 }
 
 void SADSRG::init_density() {

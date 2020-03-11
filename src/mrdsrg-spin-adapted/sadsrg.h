@@ -15,6 +15,7 @@
 #include "base_classes/rdms.h"
 #include "base_classes/mo_space_info.h"
 #include "helpers/blockedtensorfactory.h"
+#include "mrdsrg-helper/dsrg_mem.h"
 #include "mrdsrg-helper/dsrg_source.h"
 #include "mrdsrg-helper/dsrg_time.h"
 #include "mrdsrg-helper/dsrg_tensors.h"
@@ -113,6 +114,16 @@ class SADSRG : public DynamicCorrelationSolver {
 
     /// Number of threads
     int n_threads_;
+
+    // ==> system memory related <==
+
+    /// Total memory available set by the user
+    size_t mem_sys_;
+    /// Memory checker and printer
+    DSRG_MEM dsrg_mem_;
+
+    /// Check initial memory
+    void check_init_memory();
 
     // ==> some common energies for all DSRG levels <==
 

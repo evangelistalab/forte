@@ -130,6 +130,7 @@ src/integrals/own_integrals.cc
 src/integrals/parallel_ccvv_algorithms.cc
 src/integrals/paralleldfmo.cc
 src/main.cc
+src/mrdsrg-helper/dsrg_mem.cc
 src/mrdsrg-helper/dsrg_source.cc
 src/mrdsrg-helper/dsrg_time.cc
 src/mrdsrg-helper/dsrg_transformed.cc
