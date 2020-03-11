@@ -120,6 +120,8 @@ void SADSRG::read_options() {
     }
     ccvv_source_ = foptions_->get_str("CCVV_SOURCE");
 
+    do_cu3_ = foptions_->get_str("THREEPDC") != "ZERO";
+
     ntamp_ = foptions_->get_int("NTAMP");
     intruder_tamp_ = foptions_->get_double("INTRUDER_TAMP");
 
@@ -197,6 +199,13 @@ void SADSRG::check_init_memory() {
         n_ele = ng * ng * ng * ng;
     }
 
+    // densities already stored by RDMs
+    auto na = actv_mos_.size();
+    n_ele += na * na + na * na * na * na;
+    if (do_cu3_) {
+        n_ele += na * na * na * na * na * na;
+    }
+
     mem_left -= n_ele * sizeof(double);
     if (mem_left < 0) {
         throw psi::PSIEXCEPTION("Not enough memory to run FORTE.");
@@ -205,7 +214,7 @@ void SADSRG::check_init_memory() {
     // prepare DSRG_MEM
     std::map<char, size_t> label_to_size;
     label_to_size['c'] = core_mos_.size();
-    label_to_size['a'] = actv_mos_.size();
+    label_to_size['a'] = na;
     label_to_size['v'] = virt_mos_.size();
     label_to_size['h'] = label_to_size['c'] + label_to_size['a'];
     label_to_size['p'] = label_to_size['v'] + label_to_size['a'];
@@ -225,6 +234,7 @@ void SADSRG::init_density() {
     Eta1_ = BTF_->build(tensor_type_, "Eta1", {"aa"});
     L1_ = BTF_->build(tensor_type_, "L1", {"aa"});
     L2_ = BTF_->build(tensor_type_, "L2", {"aaaa"});
+    dsrg_mem_.add_entry("1- and 2-density cumulants", {"aa", "aa", "aaaa"});
     fill_density();
     outfile->Printf("Done");
 }
@@ -249,6 +259,7 @@ void SADSRG::init_fock() {
     outfile->Printf("\n    Building Fock matrix ............................ ");
     build_fock_from_ints(ints_, Fock_);
     fill_Fdiag(Fock_, Fdiag_);
+    dsrg_mem_.add_entry("Fock matrix", {"g", "gg"});
     outfile->Printf("Done");
 }
 

@@ -88,6 +88,9 @@ class SADSRG : public DynamicCorrelationSolver {
     /// Threshold for the Taylor expansion of f(z) = (1-exp(-z^2))/z
     double taylor_threshold_;
 
+    /// Compute contributions from 3 cumulant
+    bool do_cu3_;
+
     /// Multi-state computation if true
     bool multi_state_;
     /// Multi-state algorithm
@@ -195,6 +198,8 @@ class SADSRG : public DynamicCorrelationSolver {
     std::vector<std::string> od_two_labels();
     std::vector<std::string> od_two_labels_hhpp();
     std::vector<std::string> od_two_labels_pphh();
+    /// Compute the blocks labels used in NIVO (number of virtual < 3)
+    std::vector<std::string> nivo_labels();
 
     // ==> fill in densities from RDMs <==
 

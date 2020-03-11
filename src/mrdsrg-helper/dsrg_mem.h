@@ -58,6 +58,22 @@ class DSRG_MEM {
     void add_entry(const std::string& des, const std::string& labels, int multiple,
                    bool subtract = true);
 
+    /// Add entry using the description and the block labels
+    void add_entry(const std::string& des, const std::vector<std::string>& labels_vec,
+                   int multiple = 1, bool subtract = true);
+
+    /// Compute the number of elements of a given labels
+    size_t compute_n_elements(const std::string& labels);
+
+    /// Compute the memory requirement of a given labels
+    size_t compute_memory(const std::string& labels);
+
+    /// Subtract from available memory
+    void subtract(size_t mem) { mem_avai_ -= mem; }
+
+    /// Max memory usage among the vector of labels
+    size_t max_memory(const std::vector<std::string>& labels_vec);
+
     /// Print the current data
     void print(const std::string& name);
 
@@ -66,7 +82,7 @@ class DSRG_MEM {
     int64_t mem_avai_;
 
     /// Map from description to the number of elements
-    std::map<std::string, size_t> data_;
+    std::vector<std::pair<std::string, size_t>> data_;
 
     /// Map from MO labels to sizes
     std::map<char, size_t> label_to_size_;

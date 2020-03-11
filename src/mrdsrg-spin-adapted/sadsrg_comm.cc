@@ -174,7 +174,7 @@ std::vector<double> SADSRG::H2_T2_C0_T2small(BlockedTensor& H2, BlockedTensor& T
     E2 += temp["uvxy"] * L2_["uvxy"];
 
     // <[Hbar2, T2]> C_6 C_2
-    if (foptions_->get_str("THREEPDC") != "ZERO") {
+    if (do_cu3_) {
         E3 += H2.block("vaaa")("ewxy") * T2.block("aava")("uvez") * rdms_.SF_L3()("xyzuwv");
         E3 -= H2.block("aaca")("uvmz") * T2.block("caaa")("mwxy") * rdms_.SF_L3()("xyzuwv");
     }
@@ -558,21 +558,45 @@ void SADSRG::V_T2_C2_DF(BlockedTensor& B, BlockedTensor& T2, BlockedTensor& S2, 
     local_timer timer;
 
     // particle-particle contractions
+    // TODO: need to investigate why using "r" fails when C2 does not contain all "rs"
     C2["ijes"] += batched("e", alpha * B["gae"] * B["gbs"] * T2["ijab"]);
     C2["ijus"] += batched("u", alpha * B["gau"] * B["gbs"] * T2["ijab"]);
     C2["ijms"] += batched("m", alpha * B["gam"] * B["gbs"] * T2["ijab"]);
 
-    C2["ijrs"] -= 0.5 * alpha * L1_["xy"] * T2["ijxb"] * B["gyr"] * B["gbs"];
-    C2["jisr"] -= 0.5 * alpha * L1_["xy"] * T2["ijxb"] * B["gyr"] * B["gbs"];
+    std::vector<std::string> C2blocks;
+    for (const std::string& block : C2.block_labels()) {
+        if (block[0] == virt_label_[0] or block[1] == virt_label_[0])
+            continue;
+        C2blocks.push_back(block);
+    }
+
+    auto temp = ambit::BlockedTensor::build(tensor_type_, "DFtemp222", C2blocks);
+    temp["ijes"] += batched("e", L1_["xy"] * T2["ijxb"] * B["gye"] * B["gbs"]);
+    temp["ijks"] += L1_["xy"] * T2["ijxb"] * B["gyk"] * B["gbs"];
+
+    C2["ijrs"] -= 0.5 * alpha * temp["ijrs"];
+    C2["jisr"] -= 0.5 * alpha * temp["ijrs"];
 
     // hole-hole contractions
-    C2["pqab"] += alpha * B["gpi"] * B["gqj"] * T2["ijab"];
+    std::vector<std::string> Vblocks;
+    for (const std::string& block : C2.block_labels()) {
+        if (block[2] == core_label_[0] or block[3] == core_label_[0])
+            continue;
+        std::string s = block.substr(0, 2) + "hh";
+        if (std::find(Vblocks.begin(), Vblocks.end(), s) == Vblocks.end())
+            Vblocks.push_back(s);
+    }
 
-    C2["pqab"] -= 0.5 * alpha * Eta1_["xy"] * T2["yjab"] * B["gpx"] * B["gqj"];
-    C2["qpba"] -= 0.5 * alpha * Eta1_["xy"] * T2["yjab"] * B["gpx"] * B["gqj"];
+    temp = ambit::BlockedTensor::build(tensor_type_, "DFtemp222", Vblocks);
+    temp["pqij"] = B["gpi"] * B["gqj"];
+
+    C2["pqab"] += alpha * temp["pqij"] * T2["ijab"];
+
+    C2["pqab"] -= 0.5 * alpha * Eta1_["xy"] * T2["yjab"] * temp["pqxj"];
+    C2["qpba"] -= 0.5 * alpha * Eta1_["xy"] * T2["yjab"] * temp["pqxj"];
 
     // hole-particle contractions
-    auto temp = ambit::BlockedTensor::build(tensor_type_, "DFtemp222", {"Lhp"});
+    temp = ambit::BlockedTensor::build(tensor_type_, "DFtemp222", {"Lhp"});
     temp["gjb"] += alpha * B["gam"] * S2["mjab"];
     temp["gjb"] += 0.5 * alpha * L1_["xy"] * S2["yjab"] * B["gax"];
     temp["gjb"] -= 0.5 * alpha * L1_["xy"] * S2["ijxb"] * B["gyi"];

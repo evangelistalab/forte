@@ -94,6 +94,9 @@ void SA_MRDSRG::startup() {
         U_ = ambit::BlockedTensor::build(tensor_type_, "U", {"gg"});
         Fdiag_ = diagonalize_Fock_diagblocks(U_);
     }
+
+    // check out memory usage
+    check_memory();
 }
 
 void SA_MRDSRG::print_options() {
@@ -139,6 +142,46 @@ void SA_MRDSRG::print_options() {
                        calculation_info_int);
 }
 
+void SA_MRDSRG::check_memory() {
+    std::vector<size_t> local_mem;
+
+    dsrg_mem_.add_entry("1- and 2-amplitudes and residuals", {"hp", "hhpp", "hp", "hhpp"});
+
+    if (corrlv_string_ == "LDSRG2_QC") {
+        dsrg_mem_.add_entry("1- and 2-body Hbar", {"hhpp", "hp"});
+        dsrg_mem_.add_entry("1- and 2-body intermediates", {"gg", "gggg", "hhpp"});
+    } else {
+        dsrg_mem_.add_entry("1-body intermediates (global)", "gg", 3);
+        if (nivo_) {
+            dsrg_mem_.add_entry("2-body intermediates (global)", nivo_labels(), 3);
+        } else {
+            dsrg_mem_.add_entry("2-body intermediates (global)", "gggg", 3);
+        }
+
+        if (sequential_Hbar_) {
+            auto mem_seq = dsrg_mem_.compute_memory(eri_df_ ? "Lgg" : "gggg");
+            local_mem.push_back(mem_seq);
+            dsrg_mem_.add_entry("Intermediates for sequential Hbar (local)", mem_seq, false);
+        }
+    }
+
+    // intermediates used in actual commutator computation
+    size_t mem_comm;
+    if (eri_df_) {
+        mem_comm = dsrg_mem_.max_memory({"Lhp", "Lgc", "ppg", "hhpp"});
+    } else {
+        mem_comm = dsrg_mem_.max_memory({"cavv", "vvvh"});
+    }
+    mem_comm = std::max(mem_comm, dsrg_mem_.compute_memory("hhpp") * 2);
+    local_mem.push_back(mem_comm);
+    dsrg_mem_.add_entry("Intermediates for commutators (local)", mem_comm, false);
+
+    auto max_local = std::max_element(local_mem.begin(), local_mem.end());
+    dsrg_mem_.add_entry("Max memory for local intermediates", *max_local);
+
+    dsrg_mem_.print("MR-DSRG (" + corrlv_string_ + ")");
+}
+
 void SA_MRDSRG::build_ints() {
     // prepare one-electron integrals
     H_ = BTF_->build(tensor_type_, "H", {"gg"});
@@ -150,6 +193,7 @@ void SA_MRDSRG::build_ints() {
     if (eri_df_) {
         B_ = BTF_->build(tensor_type_, "B 3-idx", {"Lgg"});
         fill_three_index_ints(B_);
+        dsrg_mem_.add_entry("1-electron and 3-index integrals", {"gg", "Lgg"});
     } else {
         V_ = BTF_->build(tensor_type_, "V", {"gggg"});
 
@@ -164,6 +208,7 @@ void SA_MRDSRG::build_ints() {
             auto Vblock = ints_->aptei_ab_block(i0, i1, i2, i3);
             V_.block(block).copy(Vblock);
         }
+        dsrg_mem_.add_entry("1- and 2-electron integrals", {"gg", "gggg"});
     }
 }
 

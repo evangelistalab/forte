@@ -65,8 +65,6 @@ class SA_MRDSRG : public SADSRG {
     virtual double compute_energy();
 
   protected:
-    // => Class initialization and termination <= //
-
     /// Start-up function called in the constructor
     void startup();
 
@@ -78,6 +76,9 @@ class SA_MRDSRG : public SADSRG {
 
     /// Fill up integrals
     void build_ints();
+
+    /// Check memory
+    void check_memory();
 
     /// Maximum number of iterations
     int maxiter_;
@@ -91,8 +92,6 @@ class SA_MRDSRG : public SADSRG {
 
     /// Omitting blocks with >= 3 virtual indices?
     bool nivo_;
-
-    // => DSRG related <= //
 
     /// Correlation level option
     std::string corrlv_string_;

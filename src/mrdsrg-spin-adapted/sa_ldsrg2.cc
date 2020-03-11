@@ -55,9 +55,9 @@ double SA_MRDSRG::compute_energy_ldsrg2() {
     outfile->Printf("\n    Reference:");
     outfile->Printf("\n      J. Chem. Phys. 2016, 144, 164114.\n");
 
-    timer ldsrg2("Energy_ldsrg2");
+    timer ldsrg2("Energy LDSRG(2)");
 
-    if (foptions_->get_str("THREEPDC") == "ZERO") {
+    if (do_cu3_) {
         outfile->Printf("\n    Skip 3-cumulant contributions in [O2, T2].");
     }
 
@@ -164,7 +164,7 @@ double SA_MRDSRG::compute_energy_ldsrg2() {
         diis_manager_cleanup();
     }
 
-    timer final("Summary");
+    timer final("Summary LDSRG(2)");
     // print summary
     outfile->Printf("\n    %s", dash.c_str());
     outfile->Printf("\n\n  ==> MR-LDSRG(2)%s Energy Summary <==\n", level.c_str());
@@ -560,15 +560,15 @@ void SA_MRDSRG::compute_hbar_qc() {
     H2_T2_C2(S2, T2_, DT2_, 1.0, Hbar2_);
 
     //   Step 2: [S2, T]_{ij}^{ab}
+    temp.zero();
+    H2_T1_C2(S2, T1_, 1.0, temp);
+    H2_T2_C2(S2, T2_, DT2_, 1.0, temp);
+    Hbar2_["ijab"] += temp["abij"];
+
     temp = BTF_->build(tensor_type_, "temp", {"ph"}, true);
     H2_T1_C1(S2, T1_, 1.0, temp);
     H2_T2_C1(S2, T2_, DT2_, 1.0, temp);
     Hbar1_["ia"] += temp["ai"];
-
-    temp = BTF_->build(tensor_type_, "temp", {"pphh"}, true);
-    H2_T1_C2(S2, T1_, 1.0, temp);
-    H2_T2_C2(S2, T2_, DT2_, 1.0, temp);
-    Hbar2_["ijab"] += temp["abij"];
 }
 
 void SA_MRDSRG::setup_ldsrg2_tensors() {
@@ -580,19 +580,7 @@ void SA_MRDSRG::setup_ldsrg2_tensors() {
     } else {
         if (nivo_) {
             // Generate blocks for Hbar2_, O2_ and C2_
-            std::vector<std::string> blocks_exclude_V3;
-            for (std::string s0 : {"c", "a", "v"}) {
-                for (std::string s1 : {"c", "a", "v"}) {
-                    for (std::string s2 : {"c", "a", "v"}) {
-                        for (std::string s3 : {"c", "a", "v"}) {
-                            std::string s = s0 + s1 + s2 + s3;
-                            if (std::count(s.begin(), s.end(), 'v') < 3) {
-                                blocks_exclude_V3.push_back(s);
-                            }
-                        }
-                    }
-                }
-            }
+            std::vector<std::string> blocks_exclude_V3 = nivo_labels();
             Hbar2_ = BTF_->build(tensor_type_, "Hbar2", blocks_exclude_V3);
             O2_ = BTF_->build(tensor_type_, "O2", blocks_exclude_V3);
             C2_ = BTF_->build(tensor_type_, "C2", blocks_exclude_V3);

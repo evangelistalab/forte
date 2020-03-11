@@ -126,4 +126,24 @@ std::vector<std::string> SADSRG::re_two_labels() {
     return labels;
 }
 
+std::vector<std::string> SADSRG::nivo_labels() {
+    std::vector<std::string> elementary_labels{core_label_, actv_label_, virt_label_};
+    std::vector<std::string> blocks_exclude_V3;
+
+    for (std::string s0 : elementary_labels) {
+        for (std::string s1 : elementary_labels) {
+            for (std::string s2 : elementary_labels) {
+                for (std::string s3 : elementary_labels) {
+                    std::string s = s0 + s1 + s2 + s3;
+                    if (std::count(s.begin(), s.end(), virt_label_[0]) < 3) {
+                        blocks_exclude_V3.push_back(s);
+                    }
+                }
+            }
+        }
+    }
+
+    return blocks_exclude_V3;
+}
+
 } // namespace forte
