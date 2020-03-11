@@ -2516,6 +2516,54 @@ void DSRG_MRPT2::write_2rdm_spin_dependent() {
     }
 
 
+    for (size_t i = 0, size_c = core_all_.size(); i < size_c; ++i) {
+        auto n = core_all_[i];
+        for (size_t a = 0, size_a = actv_all_.size(); a < size_a; ++a) {
+            auto u = actv_all_[a];
+            auto idx = a * ncore_ + i;
+            auto z_a = Z.block("ac").data()[idx];
+            auto z_b = Z.block("AC").data()[idx];
+            for (size_t j = 0; j < size_c; ++j) {
+                auto m1 = core_all_[j];
+                
+                d2aa.write_value(u, n, m1, m1, z_a, 0, "NULL", 0);
+                d2bb.write_value(u, n, m1, m1, z_b, 0, "NULL", 0);
+                d2aa.write_value(u, m1, m1, n, -z_a, 0, "NULL", 0);
+                d2bb.write_value(u, m1, m1, n, -z_b, 0, "NULL", 0);
+                
+                d2ab.write_value(u, n, m1, m1, 2.0 * (z_a + z_b), 0, "NULL", 0);
+            }
+        }
+    }
+
+
+    BlockedTensor temp = BTF_->build(CoreTensor, "temporal tensor", {"va", "VA"});
+
+    temp["ev"] = Z["eu"] * Gamma1["uv"];
+    temp["EV"] = Z["EU"] * Gamma1["UV"];
+
+    for (size_t i = 0, size_a = actv_all_.size(); i < size_a; ++i) {
+        auto u = actv_all_[i];
+        for (size_t a = 0, size_v = virt_all_.size(); a < size_v; ++a) {
+            auto e = virt_all_[a];
+            auto idx = a * na_ + i;
+            auto z_a = temp.block("va").data()[idx];
+            auto z_b = temp.block("VA").data()[idx];
+            for (size_t j = 0, size_c = core_all_.size(); j < size_c; ++j) {
+                auto m1 = core_all_[j];
+                
+                d2aa.write_value(v, e, m1, m1, z_a, 0, "NULL", 0);
+                d2bb.write_value(v, e, m1, m1, z_b, 0, "NULL", 0);
+                d2aa.write_value(v, m1, m1, e, -z_a, 0, "NULL", 0);
+                d2bb.write_value(v, m1, m1, e, -z_b, 0, "NULL", 0);
+                
+                d2ab.write_value(v, e, m1, m1, 2.0 * (z_a + z_b), 0, "NULL", 0);
+            }
+        }
+    }
+
+    
+
 
 
 
