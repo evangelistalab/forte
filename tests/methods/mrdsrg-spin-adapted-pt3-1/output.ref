@@ -23,9 +23,9 @@
     -----------------------------------------------------------------------
 
 
-    Psi4 started on: Wednesday, 11 March 2020 02:35AM
+    Psi4 started on: Thursday, 12 March 2020 08:45PM
 
-    Process ID: 7653
+    Process ID: 35827
     Host:       Yorks-Mac.local
     PSIDATADIR: /Users/york/src/psi4group/psi4/share/psi4
     Memory:     500.0 MiB
@@ -109,7 +109,7 @@ Scratch directory: /Users/york/scratch/psi4/
 
 
 *** tstart() called on Yorks-Mac.local
-*** at Wed Mar 11 02:35:33 2020
+*** at Thu Mar 12 20:45:09 2020
 
 
          ------------------------------------------
@@ -443,15 +443,15 @@ Scratch directory: /Users/york/scratch/psi4/
   MCSCF Execution Completed.
 
 
-*** tstop() called on Yorks-Mac.local at Wed Mar 11 02:35:33 2020
+*** tstop() called on Yorks-Mac.local at Thu Mar 12 20:45:10 2020
 Module time:
-	user time   =       0.16 seconds =       0.00 minutes
+	user time   =       0.14 seconds =       0.00 minutes
 	system time =       0.02 seconds =       0.00 minutes
-	total time  =          0 seconds =       0.00 minutes
+	total time  =          1 seconds =       0.02 minutes
 Total time:
-	user time   =       0.16 seconds =       0.00 minutes
+	user time   =       0.14 seconds =       0.00 minutes
 	system time =       0.02 seconds =       0.00 minutes
-	total time  =          0 seconds =       0.00 minutes
+	total time  =          1 seconds =       0.02 minutes
     MCSCF energy......................................................PASSED
 
 Scratch directory: /Users/york/scratch/psi4/
@@ -468,7 +468,7 @@ Scratch directory: /Users/york/scratch/psi4/
   ----------------------------------------------------------------------------
   A suite of quantum chemistry methods for strongly correlated electrons
 
-    git branch: spin-adapted-dsrg - git commit: 7569927b
+    git branch: spin-adapted-dsrg - git commit: f405f75d
 
   Developed by:
     Francesco A. Evangelista, Chenyang Li, Kevin P. Hannon,
@@ -522,7 +522,7 @@ Scratch directory: /Users/york/scratch/psi4/
   Whereas there are 406 unique shell quartets.
 
 
-  Conventional integrals take 0.07158248 s
+  Conventional integrals take 0.05967569 s
 
   ==> Summary of Active Space Solver Input <==
 
@@ -548,7 +548,7 @@ Scratch directory: /Users/york/scratch/psi4/
          Chenyang Li, Jeffrey B. Schriber and Francesco A. Evangelista
        -----------------------------------------------------------------
 
-  Took 0.000065 s to build Fock matrix
+  Took 0.000040 s to build Fock matrix
 
   ==> Checking Fock Matrix Diagonal Blocks <==
 
@@ -587,7 +587,7 @@ Scratch directory: /Users/york/scratch/psi4/
     Transformed 1 RDM.
     Transformed 2 RDM.
     Transformed 3 RDM.
-  SemiCanonicalize takes 0.664711 s.
+  SemiCanonicalize takes 0.650871 s.
 
     -----------------------------------------------------------------------
       Spin-Adapted Multireference Driven Similarity Renormalization Group
@@ -641,6 +641,23 @@ Scratch directory: /Users/york/scratch/psi4/
     Number of amplitudes for printing                     15
 
 
+  ==> DSRG-MRPT3 Memory Information <==
+
+    Memory assigned by the user                    500.00 MB
+    Memory available for MR-DSRG                   489.92 MB
+    1- and 2-density cumulants                     192.00  B
+    Generalized Fock matrix                        880.00  B
+    2-electron (4-index) integrals                   9.80 KB
+    T1 and T2 cluster amplitudes                    19.88 KB
+    1- and 2-body Hbar                             160.00  B
+    Global 1- and 2-body intermediates              19.88 KB
+    Local intermediates (energy part 1)             30.24 KB
+    Local intermediates (energy part 2)             90.08 KB
+    Local intermediates for commutators              9.80 KB
+    Max memory for local intermediates              90.08 KB
+    Memory currently available                     489.87 MB
+
+
   ==> First-Order Excitation Amplitudes Summary <==
 
     Active Indices:    1    2
@@ -680,19 +697,19 @@ Scratch directory: /Users/york/scratch/psi4/
 
   ==> Computing 3rd-Order Energy Contribution (1/3) <==
 
-    Computing 3rd-order energy (1/3)         ...  Done. Timing      0.549 s
-    Computing integrals for ref. relaxation  ...  Done. Timing      0.079 s
+    Computing 3rd-order energy (1/3)         ...  Done. Timing      0.545 s
+    Computing integrals for ref. relaxation  ...  Done. Timing      0.076 s
 
   ==> Computing 2nd-Order Correlation Energy <==
 
-    Computing 2nd-order energy               ...  Done. Timing      0.029 s
-    Computing integrals for ref. relaxation  ...  Done. Timing      0.083 s
+    Computing 2nd-order energy               ...  Done. Timing      0.028 s
+    Computing integrals for ref. relaxation  ...  Done. Timing      0.081 s
 
   ==> Computing 3rd-Order Energy Contribution (2/3) <==
 
-    Preparing 2nd-order amplitudes           ...  Done. Timing      0.752 s
-    Computing 3rd-order energy (2/3)         ...  Done. Timing      0.029 s
-    Computing integrals for ref. relaxation  ...  Done. Timing      0.077 s
+    Preparing 2nd-order amplitudes           ...  Done. Timing      0.769 s
+    Computing 3rd-order energy (2/3)         ...  Done. Timing      0.027 s
+    Computing integrals for ref. relaxation  ...  Done. Timing      0.075 s
 
   ==> Second-Order Excitation Amplitudes Summary <==
 
@@ -729,8 +746,8 @@ Scratch directory: /Users/york/scratch/psi4/
 
   ==> Computing 3rd-Order Energy Contribution (3/3) <==
 
-    Computing 3rd-order energy (3/3)         ...  Done. Timing      0.029 s
-    Computing integrals for ref. relaxation  ...  Done. Timing      0.080 s
+    Computing 3rd-order energy (3/3)         ...  Done. Timing      0.028 s
+    Computing integrals for ref. relaxation  ...  Done. Timing      0.078 s
 
   ==> DSRG-MRPT3 Energy Summary <==
 
@@ -792,15 +809,15 @@ Scratch directory: /Users/york/scratch/psi4/
 
              [H1, T1]    [H1, T2]    [H2, T1]    [H2, T2]
     -----------------------------------------------------
-    -> C0       0.004       0.005       0.005       0.101
-    -> C1       0.008       0.048       0.046       0.514
-    -> C2                   0.065       0.093       0.487
+    -> C0       0.004       0.005       0.004       0.098
+    -> C1       0.008       0.047       0.044       0.510
+    -> C2                   0.064       0.100       0.503
     -----------------------------------------------------
 
 
-  Time to prepare integrals: 0.07456421852111816 seconds
-  Time to run job          : 2.42112398147583 seconds
-  Total                    : 2.42112398147583 seconds    DSRG-MRPT3 partially relaxed energy...............................PASSED
+  Time to prepare integrals: 0.06260395050048828 seconds
+  Time to run job          : 2.4047141075134277 seconds
+  Total                    : 2.4047141075134277 seconds    DSRG-MRPT3 partially relaxed energy...............................PASSED
 
 Scratch directory: /Users/york/scratch/psi4/
    => Loading Basis Set <=
@@ -816,7 +833,7 @@ Scratch directory: /Users/york/scratch/psi4/
   ----------------------------------------------------------------------------
   A suite of quantum chemistry methods for strongly correlated electrons
 
-    git branch: spin-adapted-dsrg - git commit: 7569927b
+    git branch: spin-adapted-dsrg - git commit: f405f75d
 
   Developed by:
     Francesco A. Evangelista, Chenyang Li, Kevin P. Hannon,
@@ -867,7 +884,7 @@ Scratch directory: /Users/york/scratch/psi4/
   Whereas there are 406 unique shell quartets.
 
 
-  Timing for computing Cholesky integrals:                    0.050 s.
+  Timing for computing Cholesky integrals:                    0.048 s.
 
   ==> Summary of Active Space Solver Input <==
 
@@ -893,7 +910,7 @@ Scratch directory: /Users/york/scratch/psi4/
          Chenyang Li, Jeffrey B. Schriber and Francesco A. Evangelista
        -----------------------------------------------------------------
 
-  Took 0.003726 s to build Fock matrix
+  Took 0.003948 s to build Fock matrix
 
   ==> Checking Fock Matrix Diagonal Blocks <==
 
@@ -963,6 +980,24 @@ Scratch directory: /Users/york/scratch/psi4/
     Number of amplitudes for printing                     15
 
 
+  ==> DSRG-MRPT3 Memory Information <==
+
+    Memory assigned by the user                    500.00 MB
+    Memory available for MR-DSRG                   489.95 MB
+    1- and 2-density cumulants                     192.00  B
+    Generalized Fock matrix                        880.00  B
+    2-electron (4-index) integrals                   9.80 KB
+    3-index integrals                               50.40 KB
+    T1 and T2 cluster amplitudes                    19.88 KB
+    1- and 2-body Hbar                             160.00  B
+    Global 1- and 2-body intermediates              19.88 KB
+    Local intermediates (energy part 1)             30.24 KB
+    Local intermediates (energy part 2)             10.08 KB
+    Local intermediates for commutators              9.80 KB
+    Max memory for local intermediates              30.24 KB
+    Memory currently available                     489.85 MB
+
+
   ==> First-Order Excitation Amplitudes Summary <==
 
     Active Indices:    1    2
@@ -1002,19 +1037,19 @@ Scratch directory: /Users/york/scratch/psi4/
 
   ==> Computing 3rd-Order Energy Contribution (1/3) <==
 
-    Computing 3rd-order energy (1/3)         ...  Done. Timing      0.550 s
-    Computing integrals for ref. relaxation  ...  Done. Timing      0.077 s
+    Computing 3rd-order energy (1/3)         ...  Done. Timing      0.533 s
+    Computing integrals for ref. relaxation  ...  Done. Timing      0.074 s
 
   ==> Computing 2nd-Order Correlation Energy <==
 
-    Computing 2nd-order energy               ...  Done. Timing      0.029 s
-    Computing integrals for ref. relaxation  ...  Done. Timing      0.084 s
+    Computing 2nd-order energy               ...  Done. Timing      0.028 s
+    Computing integrals for ref. relaxation  ...  Done. Timing      0.080 s
 
   ==> Computing 3rd-Order Energy Contribution (2/3) <==
 
-    Preparing 2nd-order amplitudes           ...  Done. Timing      0.936 s
+    Preparing 2nd-order amplitudes           ...  Done. Timing      0.832 s
     Computing 3rd-order energy (2/3)         ...  Done. Timing      0.028 s
-    Computing integrals for ref. relaxation  ...  Done. Timing      0.077 s
+    Computing integrals for ref. relaxation  ...  Done. Timing      0.074 s
 
   ==> Second-Order Excitation Amplitudes Summary <==
 
@@ -1051,8 +1086,8 @@ Scratch directory: /Users/york/scratch/psi4/
 
   ==> Computing 3rd-Order Energy Contribution (3/3) <==
 
-    Computing 3rd-order energy (3/3)         ...  Done. Timing      0.029 s
-    Computing integrals for ref. relaxation  ...  Done. Timing      0.080 s
+    Computing 3rd-order energy (3/3)         ...  Done. Timing      0.028 s
+    Computing integrals for ref. relaxation  ...  Done. Timing      0.078 s
 
   ==> DSRG-MRPT3 Energy Summary <==
 
@@ -1114,17 +1149,17 @@ Scratch directory: /Users/york/scratch/psi4/
 
              [H1, T1]    [H1, T2]    [H2, T1]    [H2, T2]
     -----------------------------------------------------
-    -> C0       0.004       0.005       0.005       0.101
-    -> C1       0.008       0.049       0.044       0.429
-    -> C2                   0.065       0.112       0.745
+    -> C0       0.004       0.005       0.005       0.098
+    -> C1       0.008       0.046       0.043       0.418
+    -> C2                   0.063       0.108       0.644
     -----------------------------------------------------
 
 
-  Time to prepare integrals: 0.052423954010009766 seconds
-  Time to run job          : 1.9502151012420654 seconds
-  Total                    : 1.9502151012420654 seconds    CD-DSRG-MRPT3 partially relaxed energy............................PASSED
+  Time to prepare integrals: 0.05036187171936035 seconds
+  Time to run job          : 1.8124091625213623 seconds
+  Total                    : 1.8124091625213623 seconds    CD-DSRG-MRPT3 partially relaxed energy............................PASSED
 
-    Psi4 stopped on: Wednesday, 11 March 2020 02:35AM
-    Psi4 wall time for execution: 0:00:04.89
+    Psi4 stopped on: Thursday, 12 March 2020 08:45PM
+    Psi4 wall time for execution: 0:00:04.64
 
 *** Psi4 exiting successfully. Buy a developer a beer!

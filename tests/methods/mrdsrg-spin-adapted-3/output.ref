@@ -23,9 +23,9 @@
     -----------------------------------------------------------------------
 
 
-    Psi4 started on: Tuesday, 10 March 2020 04:57PM
+    Psi4 started on: Thursday, 12 March 2020 10:41PM
 
-    Process ID: 65959
+    Process ID: 37713
     Host:       Yorks-Mac.local
     PSIDATADIR: /Users/york/src/psi4group/psi4/share/psi4
     Memory:     500.0 MiB
@@ -109,7 +109,7 @@ Scratch directory: /Users/york/scratch/psi4/
 
 
 *** tstart() called on Yorks-Mac.local
-*** at Tue Mar 10 16:57:56 2020
+*** at Thu Mar 12 22:41:27 2020
 
 
          ------------------------------------------
@@ -443,7 +443,7 @@ Scratch directory: /Users/york/scratch/psi4/
   MCSCF Execution Completed.
 
 
-*** tstop() called on Yorks-Mac.local at Tue Mar 10 16:57:56 2020
+*** tstop() called on Yorks-Mac.local at Thu Mar 12 22:41:27 2020
 Module time:
 	user time   =       0.14 seconds =       0.00 minutes
 	system time =       0.02 seconds =       0.00 minutes
@@ -468,7 +468,7 @@ Scratch directory: /Users/york/scratch/psi4/
   ----------------------------------------------------------------------------
   A suite of quantum chemistry methods for strongly correlated electrons
 
-    git branch: spin-adapted-dsrg - git commit: c914f2dd
+    git branch: spin-adapted-dsrg - git commit: f405f75d
 
   Developed by:
     Francesco A. Evangelista, Chenyang Li, Kevin P. Hannon,
@@ -519,7 +519,7 @@ Scratch directory: /Users/york/scratch/psi4/
   Whereas there are 406 unique shell quartets.
 
 
-  Timing for computing Cholesky integrals:                    0.049 s.
+  Timing for computing Cholesky integrals:                    0.047 s.
 
   ==> Summary of Active Space Solver Input <==
 
@@ -545,7 +545,7 @@ Scratch directory: /Users/york/scratch/psi4/
          Chenyang Li, Jeffrey B. Schriber and Francesco A. Evangelista
        -----------------------------------------------------------------
 
-  Took 0.003321 s to build Fock matrix
+  Took 0.003280 s to build Fock matrix
 
   ==> Checking Fock Matrix Diagonal Blocks <==
 
@@ -584,7 +584,7 @@ Scratch directory: /Users/york/scratch/psi4/
     Transformed 1 RDM.
     Transformed 2 RDM.
     Transformed 3 RDM.
-  SemiCanonicalize takes 0.650956 s.
+  SemiCanonicalize takes 0.670422 s.
 
     -----------------------------------------------------------------------
       Spin-Adapted Multireference Driven Similarity Renormalization Group
@@ -643,9 +643,27 @@ Scratch directory: /Users/york/scratch/psi4/
     Number of amplitudes for printing                     15
 
 
+  ==> MR-DSRG (LDSRG2) Memory Information <==
+
+    Memory assigned by the user                    500.00 MB
+    Memory available for MR-DSRG                   489.96 MB
+    1- and 2-density cumulants                     192.00  B
+    Generalized Fock matrix                        880.00  B
+    1-electron and 3-index integrals                35.20 KB
+    T1 cluster amplitudes and residuals            560.00  B
+    T2 cluster amplitudes and residuals             29.40 KB
+    1- and 2-body Hbar                              80.80 KB
+    1-body intermediates                             1.60 KB
+    2-body intermediates                           110.00 KB
+    Local intermediates for sequential Hbar         34.40 KB
+    Local intermediates for commutators             41.44 KB
+    Max memory for local intermediates              41.44 KB
+    Memory currently available                     489.71 MB
+
+
   ==> Build Initial Amplitude from DSRG-MRPT2 <==
 
-    Computing T2 amplitudes ...          Done. Timing      0.004 s
+    Computing T2 amplitudes ...          Done. Timing      0.005 s
     Computing T1 amplitudes ...          Done. Timing      0.007 s
 
   ==> First-Order Excitation Amplitudes Summary <==
@@ -694,22 +712,22 @@ Scratch directory: /Users/york/scratch/psi4/
            ---------------------------  ---------------------  ---------------------  -----------------
     Iter.        Corr.         Delta       Hbar1      Hbar2        T1         T2        Hbar     Amp.    DIIS
     ---------------------------------------------------------------------------------------------------------
-       1    -0.089444203128 -8.944e-02   9.137e-02  4.203e-01   2.321e-02  1.231e-01     6.547    0.006
-       2    -0.092338495741 -2.894e-03   9.403e-02  1.962e-01   1.005e-02  3.891e-02     7.157    0.006  S
-       3    -0.092710577260 -3.721e-04   8.088e-02  1.437e-01   2.285e-03  1.298e-02     6.474    0.005  S/E
-       4    -0.092830387573 -1.198e-04   8.191e-02  1.434e-01   4.902e-04  1.676e-03     6.465    0.005  S/E
-       5    -0.092817440168  1.295e-05   8.173e-02  1.430e-01   1.206e-04  3.567e-04     6.548    0.006  S/E
-       6    -0.092814876338  2.564e-06   8.166e-02  1.429e-01   1.325e-05  6.039e-05     6.513    0.006  S/E
-       7    -0.092815034745 -1.584e-07   8.166e-02  1.429e-01   3.419e-06  1.542e-05     6.531    0.005  S/E
-       8    -0.092814859848  1.749e-07   8.166e-02  1.429e-01   7.588e-07  2.229e-06     6.486    0.006  S/E
-       9    -0.092814882891 -2.304e-08   8.166e-02  1.429e-01   1.650e-07  6.420e-07     6.643    0.006  S/E
-      10    -0.092814888429 -5.538e-09   8.166e-02  1.429e-01   2.718e-08  1.467e-07     6.716    0.006  S/E
+       1    -0.089444203128 -8.944e-02   9.137e-02  4.203e-01   2.321e-02  1.231e-01     6.628    0.006
+       2    -0.092338495741 -2.894e-03   9.403e-02  1.962e-01   1.005e-02  3.891e-02     7.235    0.006  S
+       3    -0.092710577260 -3.721e-04   8.088e-02  1.437e-01   2.285e-03  1.298e-02     6.689    0.006  S/E
+       4    -0.092830387573 -1.198e-04   8.191e-02  1.434e-01   4.902e-04  1.676e-03     6.581    0.006  S/E
+       5    -0.092817440168  1.295e-05   8.173e-02  1.430e-01   1.206e-04  3.567e-04     6.681    0.006  S/E
+       6    -0.092814876338  2.564e-06   8.166e-02  1.429e-01   1.325e-05  6.039e-05     6.550    0.005  S/E
+       7    -0.092815034745 -1.584e-07   8.166e-02  1.429e-01   3.419e-06  1.542e-05     6.549    0.007  S/E
+       8    -0.092814859848  1.749e-07   8.166e-02  1.429e-01   7.588e-07  2.229e-06     6.651    0.005  S/E
+       9    -0.092814882891 -2.304e-08   8.166e-02  1.429e-01   1.650e-07  6.420e-07     6.633    0.006  S/E
+      10    -0.092814888429 -5.538e-09   8.166e-02  1.429e-01   2.718e-08  1.467e-07     6.716    0.005  S/E
     ---------------------------------------------------------------------------------------------------------
 
   ==> MR-LDSRG(2) Energy Summary <==
 
     E0 (reference)                 =     -99.406062695553146
-    MR-LDSRG(2) correlation energy =      -0.092814888429458
+    MR-LDSRG(2) correlation energy =      -0.092814888429461
     MR-LDSRG(2) total energy       =     -99.498877583982605
 
   ==> Final Excitation Amplitudes Summary <==
@@ -779,7 +797,7 @@ Scratch directory: /Users/york/scratch/psi4/
     Transformed 1 RDM.
     Transformed 2 RDM.
     Transformed 3 RDM.
-  Took 0.003140 s to build Fock matrix
+  Took 0.003226 s to build Fock matrix
 
   ==> Checking Fock Matrix Diagonal Blocks <==
 
@@ -818,7 +836,7 @@ Scratch directory: /Users/york/scratch/psi4/
     Transformed 1 RDM.
     Transformed 2 RDM.
     Transformed 3 RDM.
-  SemiCanonicalize takes 0.706590 s.
+  SemiCanonicalize takes 0.658045 s.
 
     -----------------------------------------------------------------------
       Spin-Adapted Multireference Driven Similarity Renormalization Group
@@ -877,20 +895,38 @@ Scratch directory: /Users/york/scratch/psi4/
     Number of amplitudes for printing                     15
 
 
+  ==> MR-DSRG (LDSRG2) Memory Information <==
+
+    Memory assigned by the user                    500.00 MB
+    Memory available for MR-DSRG                   489.96 MB
+    1- and 2-density cumulants                     192.00  B
+    Generalized Fock matrix                        880.00  B
+    1-electron and 3-index integrals                35.20 KB
+    T1 cluster amplitudes and residuals            560.00  B
+    T2 cluster amplitudes and residuals             29.40 KB
+    1- and 2-body Hbar                              80.80 KB
+    1-body intermediates                             1.60 KB
+    2-body intermediates                           110.00 KB
+    Local intermediates for sequential Hbar         34.40 KB
+    Local intermediates for commutators             41.44 KB
+    Max memory for local intermediates              41.44 KB
+    Memory currently available                     489.71 MB
+
+
   ==> Total Timings (s) for Computing Commutators <==
 
              [H1, T1]    [H1, T2]    [H2, T1]    [H2, T2]
     -----------------------------------------------------
-    -> C0       0.000       0.120       0.000       3.502
-    -> C1       0.000       1.482       0.000      18.543
-    -> C2                   3.733       0.000      37.366
+    -> C0       0.000       0.124       0.000       3.594
+    -> C1       0.000       1.517       0.000      18.965
+    -> C2                   3.851       0.000      37.502
     -----------------------------------------------------
 
 
   ==> Build Initial Amplitude from DSRG-MRPT2 <==
 
     Computing T2 amplitudes ...          Done. Timing      0.004 s
-    Computing T1 amplitudes ...          Done. Timing      0.008 s
+    Computing T1 amplitudes ...          Done. Timing      0.007 s
 
   ==> First-Order Excitation Amplitudes Summary <==
 
@@ -904,19 +940,19 @@ Scratch directory: /Users/york/scratch/psi4/
     [   8    9] 0.0018567 [   0    5] 0.0010755 [   0    4] 0.0000783
     [   0    3] 0.0000770
     -----------------------------------------------------------------
-    2-Norm of T1 vector:                            0.149461401449121
+    2-Norm of T1 vector:                            0.149461401449147
     Number of nonzero elements:                                    13
     -----------------------------------------------------------------
     Largest T2 amplitudes (absolute values):
         i    j    a    b                i    j    a    b                i    j    a    b
     -----------------------------------------------------------------------------------------------
     [   2    2    1    4] 0.0751202 [   2    2    2    3] 0.0747873 [   0    0    1    1] 0.0606305
-    [   2    2    3    3] 0.0520698 [   1    2    1    3] 0.0508114 [   2    8    1    9] 0.0504185
-    [   2    6    1    7] 0.0504185 [   1    2    1    4] 0.0497653 [   1    6    1    7] 0.0482525
+    [   2    2    3    3] 0.0520698 [   1    2    1    3] 0.0508114 [   2    6    1    7] 0.0504185
+    [   2    8    1    9] 0.0504185 [   1    2    1    4] 0.0497653 [   1    6    1    7] 0.0482525
     [   1    8    1    9] 0.0482525 [   1    2    2    4] 0.0463767 [   2    1    2    3] 0.0443522
     [   2    6    2    7] 0.0404440 [   2    8    2    9] 0.0404440 [   6    6    7    7] 0.0363409
     -----------------------------------------------------------------------------------------------
-    2-Norm of T2 vector:                                                          0.349793194723009
+    2-Norm of T2 vector:                                                          0.349793194723005
     Number of nonzero elements:                                                                 261
     -----------------------------------------------------------------------------------------------
 
@@ -938,22 +974,22 @@ Scratch directory: /Users/york/scratch/psi4/
            ---------------------------  ---------------------  ---------------------  -----------------
     Iter.        Corr.         Delta       Hbar1      Hbar2        T1         T2        Hbar     Amp.    DIIS
     ---------------------------------------------------------------------------------------------------------
-       1    -0.092837955252 -9.284e-02   9.585e-02  4.240e-01   2.406e-02  1.251e-01     6.900    0.006
-       2    -0.095580263581 -2.742e-03   9.667e-02  2.014e-01   9.955e-03  4.036e-02     7.565    0.006  S
-       3    -0.095952026306 -3.718e-04   8.392e-02  1.469e-01   2.233e-03  1.349e-02     7.238    0.007  S/E
-       4    -0.096057165300 -1.051e-04   8.491e-02  1.469e-01   4.877e-04  1.661e-03     6.998    0.006  S/E
-       5    -0.096048865928  8.299e-06   8.477e-02  1.464e-01   1.273e-04  3.671e-04     7.003    0.006  S/E
-       6    -0.096046846785  2.019e-06   8.469e-02  1.464e-01   1.378e-05  6.272e-05     6.973    0.006  S/E
-       7    -0.096047014347 -1.676e-07   8.469e-02  1.463e-01   4.074e-06  1.702e-05     6.956    0.006  S/E
-       8    -0.096046803549  2.108e-07   8.469e-02  1.463e-01   7.903e-07  2.157e-06     6.837    0.006  S/E
-       9    -0.096046808106 -4.557e-09   8.469e-02  1.463e-01   1.240e-07  6.490e-07     6.836    0.006  S/E
+       1    -0.092837955252 -9.284e-02   9.585e-02  4.240e-01   2.406e-02  1.251e-01     6.553    0.006
+       2    -0.095580263581 -2.742e-03   9.667e-02  2.014e-01   9.955e-03  4.036e-02     7.363    0.006  S
+       3    -0.095952026306 -3.718e-04   8.392e-02  1.469e-01   2.233e-03  1.349e-02     6.549    0.005  S/E
+       4    -0.096057165300 -1.051e-04   8.491e-02  1.469e-01   4.877e-04  1.661e-03     6.606    0.006  S/E
+       5    -0.096048865928  8.299e-06   8.477e-02  1.464e-01   1.273e-04  3.671e-04     6.604    0.006  S/E
+       6    -0.096046846785  2.019e-06   8.469e-02  1.464e-01   1.378e-05  6.272e-05     6.589    0.006  S/E
+       7    -0.096047014347 -1.676e-07   8.469e-02  1.463e-01   4.074e-06  1.702e-05     6.569    0.006  S/E
+       8    -0.096046803549  2.108e-07   8.469e-02  1.463e-01   7.903e-07  2.157e-06     6.501    0.005  S/E
+       9    -0.096046808105 -4.557e-09   8.469e-02  1.463e-01   1.240e-07  6.490e-07     6.594    0.005  S/E
     ---------------------------------------------------------------------------------------------------------
 
   ==> MR-LDSRG(2) Energy Summary <==
 
-    E0 (reference)                 =     -99.404150505657725
-    MR-LDSRG(2) correlation energy =      -0.096046808105505
-    MR-LDSRG(2) total energy       =     -99.500197313763223
+    E0 (reference)                 =     -99.404150505657981
+    MR-LDSRG(2) correlation energy =      -0.096046808105449
+    MR-LDSRG(2) total energy       =     -99.500197313763437
 
   ==> Final Excitation Amplitudes Summary <==
 
@@ -967,19 +1003,19 @@ Scratch directory: /Users/york/scratch/psi4/
     [   8    9] 0.0005829 [   0    4] 0.0005669 [   0    3] 0.0004782
     [   0    5] 0.0001318
     -----------------------------------------------------------------
-    2-Norm of T1 vector:                            0.138007031112400
+    2-Norm of T1 vector:                            0.138007031112427
     Number of nonzero elements:                                    13
     -----------------------------------------------------------------
     Largest T2 amplitudes (absolute values):
         i    j    a    b                i    j    a    b                i    j    a    b
     -----------------------------------------------------------------------------------------------
     [   0    0    1    1] 0.0665292 [   2    2    2    3] 0.0576953 [   1    2    1    3] 0.0474793
-    [   2    1    2    3] 0.0455820 [   6    6    7    7] 0.0414841 [   8    8    9    9] 0.0414841
+    [   2    1    2    3] 0.0455820 [   8    8    9    9] 0.0414841 [   6    6    7    7] 0.0414841
     [   1    6    1    7] 0.0407582 [   1    8    1    9] 0.0407582 [   0    0    1    2] 0.0391724
     [   2    2    3    3] 0.0384926 [   2    6    1    7] 0.0348380 [   2    8    1    9] 0.0348380
     [   2    2    1    4] 0.0344644 [   6    8    7    9] 0.0298934 [   2    6    2    7] 0.0298010
     -----------------------------------------------------------------------------------------------
-    2-Norm of T2 vector:                                                          0.296612078678061
+    2-Norm of T2 vector:                                                          0.296612078678044
     Number of nonzero elements:                                                                 261
     -----------------------------------------------------------------------------------------------
 
@@ -1031,19 +1067,19 @@ Scratch directory: /Users/york/scratch/psi4/
 
              [H1, T1]    [H1, T2]    [H2, T1]    [H2, T2]
     -----------------------------------------------------
-    -> C0       0.000       0.115       0.000       3.355
-    -> C1       0.000       1.414       0.000      17.781
-    -> C2                   3.553       0.000      35.817
+    -> C0       0.000       0.110       0.000       3.224
+    -> C1       0.000       1.360       0.000      16.941
+    -> C2                   3.431       0.000      33.651
     -----------------------------------------------------
 
 
-  Time to prepare integrals: 0.05152297019958496 seconds
-  Time to run job          : 131.58195090293884 seconds
-  Total                    : 131.58195090293884 seconds    MRDSRG unrelaxed energy...........................................PASSED
+  Time to prepare integrals: 0.050066232681274414 seconds
+  Time to run job          : 128.996408700943 seconds
+  Total                    : 128.996408700943 seconds    MRDSRG unrelaxed energy...........................................PASSED
     MRDSRG partially relaxed energy...................................PASSED
     MRDSRG relaxed energy.............................................PASSED
 
-    Psi4 stopped on: Tuesday, 10 March 2020 05:00PM
-    Psi4 wall time for execution: 0:02:11.92
+    Psi4 stopped on: Thursday, 12 March 2020 10:43PM
+    Psi4 wall time for execution: 0:02:09.32
 
 *** Psi4 exiting successfully. Buy a developer a beer!

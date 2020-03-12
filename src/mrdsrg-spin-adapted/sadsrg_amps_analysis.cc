@@ -27,6 +27,10 @@ void SADSRG::analyze_amplitudes(std::string name, BlockedTensor& T1, BlockedTens
     outfile->Printf("\n\n  ==> Possible Intruders <==\n");
     print_t1_intruder(lt1);
     print_t2_intruder(lt2);
+    if (!semi_canonical_) {
+        outfile->Printf(
+            "\n  Warning: Amplitudes are not in semicanonical basis, but denominators are!");
+    }
 }
 
 std::vector<std::pair<std::vector<size_t>, double>> SADSRG::check_t2(BlockedTensor& T2) {
@@ -180,9 +184,6 @@ void SADSRG::print_t2_summary(const std::vector<std::pair<std::vector<size_t>, d
 
 void SADSRG::print_t1_intruder(const std::vector<std::pair<std::vector<size_t>, double>>& list) {
     outfile->Printf("\n    T1 amplitudes larger than %.4f:", intruder_tamp_);
-    if (!semi_canonical_) {
-        outfile->Printf(" Warning: T1 amplitudes are not in semicanonical basis!");
-    }
 
     size_t nele = list.size();
     if (nele == 0) {
@@ -207,9 +208,6 @@ void SADSRG::print_t1_intruder(const std::vector<std::pair<std::vector<size_t>, 
 
 void SADSRG::print_t2_intruder(const std::vector<std::pair<std::vector<size_t>, double>>& list) {
     outfile->Printf("\n    T2 amplitudes larger than %.4f:", intruder_tamp_);
-    if (!semi_canonical_) {
-        outfile->Printf(" Warning: T2 amplitudes are not in semicanonical basis!");
-    }
 
     size_t nele = list.size();
     if (nele == 0) {

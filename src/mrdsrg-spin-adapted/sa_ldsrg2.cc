@@ -57,7 +57,7 @@ double SA_MRDSRG::compute_energy_ldsrg2() {
 
     timer ldsrg2("Energy LDSRG(2)");
 
-    if (do_cu3_) {
+    if (!do_cu3_) {
         outfile->Printf("\n    Skip 3-cumulant contributions in [O2, T2].");
     }
 

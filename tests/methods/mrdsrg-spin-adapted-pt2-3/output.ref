@@ -23,9 +23,9 @@
     -----------------------------------------------------------------------
 
 
-    Psi4 started on: Tuesday, 10 March 2020 05:06PM
+    Psi4 started on: Thursday, 12 March 2020 08:44PM
 
-    Process ID: 66755
+    Process ID: 35809
     Host:       Yorks-Mac.local
     PSIDATADIR: /Users/york/src/psi4group/psi4/share/psi4
     Memory:     500.0 MiB
@@ -108,7 +108,7 @@ compare_values(Ept2_pr, Eprpt2, 9, "DSRG-MRPT2 partially relaxed energy")
 Scratch directory: /Users/york/scratch/psi4/
 
 *** tstart() called on Yorks-Mac.local
-*** at Tue Mar 10 17:06:08 2020
+*** at Thu Mar 12 20:44:28 2020
 
    => Loading Basis Set <=
 
@@ -334,15 +334,15 @@ Properties computed using the SCF density matrix
      X:     0.0000      Y:     0.0000      Z:     0.0000     Total:     0.0000
 
 
-*** tstop() called on Yorks-Mac.local at Tue Mar 10 17:06:11 2020
+*** tstop() called on Yorks-Mac.local at Thu Mar 12 20:44:30 2020
 Module time:
-	user time   =       2.27 seconds =       0.04 minutes
-	system time =       0.08 seconds =       0.00 minutes
-	total time  =          3 seconds =       0.05 minutes
+	user time   =       2.12 seconds =       0.04 minutes
+	system time =       0.06 seconds =       0.00 minutes
+	total time  =          2 seconds =       0.03 minutes
 Total time:
-	user time   =       2.27 seconds =       0.04 minutes
-	system time =       0.08 seconds =       0.00 minutes
-	total time  =          3 seconds =       0.05 minutes
+	user time   =       2.12 seconds =       0.04 minutes
+	system time =       0.06 seconds =       0.00 minutes
+	total time  =          2 seconds =       0.03 minutes
   Constructing Basis Sets for MCSCF...
 
    => Loading Basis Set <=
@@ -549,7 +549,7 @@ Scratch directory: /Users/york/scratch/psi4/
   ----------------------------------------------------------------------------
   A suite of quantum chemistry methods for strongly correlated electrons
 
-    git branch: spin-adapted-dsrg - git commit: c914f2dd
+    git branch: spin-adapted-dsrg - git commit: f405f75d
 
   Developed by:
     Francesco A. Evangelista, Chenyang Li, Kevin P. Hannon,
@@ -591,12 +591,12 @@ Scratch directory: /Users/york/scratch/psi4/
   DFHelper Memory: AOs need 0.045 GiB; user supplied 1.907 GiB. Using in-core AOs.
 
 
-    Computing DF Integrals               ......Done. Timing        0.312617 s  DFHelper Memory: AOs need 0.045 GiB; user supplied 2.980 GiB. Using in-core AOs.
+    Computing DF Integrals               ......Done. Timing        0.298518 s  DFHelper Memory: AOs need 0.045 GiB; user supplied 2.980 GiB. Using in-core AOs.
 
 
   Resorting integrals after freezing core.
- Resorting integrals takes   0.00002050s
-  Timing for disk-based density-fitted integrals:             2.480 s.
+ Resorting integrals takes   0.00002796s
+  Timing for disk-based density-fitted integrals:             2.344 s.
 
   ==> Summary of Active Space Solver Input <==
 
@@ -615,8 +615,8 @@ Scratch directory: /Users/york/scratch/psi4/
                                   Chenyang Li
               ---------------------------------------------------
 
-  Forming alpha and beta strings      ...  Done. Timing        0.000195 s
-  Forming determinants                ...  Done. Timing        0.000367 s
+  Forming alpha and beta strings      ...  Done. Timing        0.000210 s
+  Forming determinants                ...  Done. Timing        0.000409 s
 
   ==> Determinants Summary <==
 
@@ -629,11 +629,11 @@ Scratch directory: /Users/york/scratch/psi4/
 
   ==> Computing Coupling Lists <==
   --------------------------------
-        α          0.004318 s
-        β          0.004242 s
-        αα         0.005260 s
-        ββ         0.005522 s
-        αβ         0.012444 s
+        α          0.004170 s
+        β          0.003950 s
+        αα         0.005149 s
+        ββ         0.005137 s
+        αβ         0.012073 s
   --------------------------------
 
   Davidson-Liu solver algorithm using SigmaVectorSparseList sigma algorithm
@@ -682,7 +682,7 @@ Scratch directory: /Users/york/scratch/psi4/
      29     -300.330428153857  +5.684e-14  +7.921e-09
   -----------------------------------------------------
   The Davidson-Liu algorithm converged in 30 iterations.
-  Davidson-Liu procedure took  0.196605 s  Done. Timing        0.231853 s
+  Davidson-Liu procedure took  0.177205 s  Done. Timing        0.211231 s
 
   * * * * * * * * * * * * * * * * *
   *  CI Vectors & Configurations  *
@@ -724,9 +724,9 @@ Scratch directory: /Users/york/scratch/psi4/
     ---------------------------------------------
        1  ( 0)    Ag     0      -229.495450424145
     ---------------------------------------------
- Computing  1RDMs (0 Singlet Ag - 0 Singlet Ag) ... Done. Timing        0.008975 s
- Computing  2RDMs (0 Singlet Ag - 0 Singlet Ag) ... Done. Timing        0.025751 s
- Computing  3RDMs (0 Singlet Ag - 0 Singlet Ag) ... Done. Timing        0.077083 s
+ Computing  1RDMs (0 Singlet Ag - 0 Singlet Ag) ... Done. Timing        0.008119 s
+ Computing  2RDMs (0 Singlet Ag - 0 Singlet Ag) ... Done. Timing        0.022786 s
+ Computing  3RDMs (0 Singlet Ag - 0 Singlet Ag) ... Done. Timing        0.068651 s
 
        -----------------------------------------------------------------
                             Semi-Canonical Orbitals
@@ -739,7 +739,7 @@ Scratch directory: /Users/york/scratch/psi4/
 
   39337984 / 375000000 = 0
   Block_size = 512 num_block = 1
-  Took 1.175241 s to build Fock matrix
+  Took 1.094170 s to build Fock matrix
 
   ==> Checking Fock Matrix Diagonal Blocks <==
 
@@ -762,19 +762,19 @@ Scratch directory: /Users/york/scratch/psi4/
   DFHelper Memory: AOs need 0.045 GiB; user supplied 1.907 GiB. Using in-core AOs.
 
 
-    Computing DF Integrals               ......Done. Timing        0.215124 s
+    Computing DF Integrals               ......Done. Timing        0.220927 s
  Integrals are about to be updated.  DFHelper Memory: AOs need 0.045 GiB; user supplied 2.980 GiB. Using in-core AOs.
 
 
   Resorting integrals after freezing core.
- Resorting integrals takes   0.00002256s
+ Resorting integrals takes   0.00002788s
 
   ==> RDMs Transformation to Semicanonical Basis <==
 
     Transformed 1 RDM.
     Transformed 2 RDM.
     Transformed 3 RDM.
-  SemiCanonicalize takes 4.327231 s.
+  SemiCanonicalize takes 4.079620 s.
 
     -----------------------------------------------------------------------
       Spin-Adapted Multireference Driven Similarity Renormalization Group
@@ -834,6 +834,25 @@ Scratch directory: /Users/york/scratch/psi4/
     Number of amplitudes for printing                     15
 
 
+  ==> DSRG-MRPT2 Memory Information <==
+
+    Memory assigned by the user                    500.00 MB
+    Memory available for MR-DSRG                   487.87 MB
+    1- and 2-density cumulants                      33.79 KB
+    Generalized Fock matrix                         77.62 KB
+    2-electron (4-index) integrals                   4.55 MB
+    T2 cluster amplitudes                            9.10 MB
+    T1 cluster amplitudes                           12.67 KB
+    1- and 2-body Hbar                              33.28 KB
+    Local 3-index integrals                          3.21 MB
+    Local integrals for CCVV energy                757.76 KB
+    Local integrals for CAVV energy                  3.77 MB
+    Local integrals for CCAV energy                381.95 KB
+    Local integrals for forming Hbar                 1.17 MB
+    Max memory for local intermediates               3.77 MB
+    Memory currently available                     474.07 MB
+
+
   ==> First-Order Excitation Amplitudes Summary <==
 
     Active Indices:    3   35   41   42   49   55   56   65
@@ -846,7 +865,7 @@ Scratch directory: /Users/york/scratch/psi4/
     [  56   61] 0.0146542 [  63   65] 0.0132080 [   3    7] 0.0120912
     [   2    3] 0.0120057 [   3    9] 0.0118598 [  65   74] 0.0116732
     -----------------------------------------------------------------
-    2-Norm of T1 vector:                            0.103287867764142
+    2-Norm of T1 vector:                            0.103287867764141
     Number of nonzero elements:                                   845
     -----------------------------------------------------------------
     Largest T2 amplitudes (absolute values):
@@ -888,7 +907,7 @@ Scratch directory: /Users/york/scratch/psi4/
   ==> Rotate DSRG Transformed Hamiltonian back to Original Basis <==
 
     Rotating 1-body term to original basis   ... Done. Timing    0.000 s
-    Rotating 2-body term to original basis   ... Done. Timing    0.009 s
+    Rotating 2-body term to original basis   ... Done. Timing    0.011 s
 
   ==> Summary of Active Space Solver Input <==
 
@@ -907,8 +926,8 @@ Scratch directory: /Users/york/scratch/psi4/
                                   Chenyang Li
               ---------------------------------------------------
 
-  Forming alpha and beta strings      ...  Done. Timing        0.000172 s
-  Forming determinants                ...  Done. Timing        0.000340 s
+  Forming alpha and beta strings      ...  Done. Timing        0.000183 s
+  Forming determinants                ...  Done. Timing        0.000370 s
 
   ==> Determinants Summary <==
 
@@ -921,11 +940,11 @@ Scratch directory: /Users/york/scratch/psi4/
 
   ==> Computing Coupling Lists <==
   --------------------------------
-        α          0.004236 s
-        β          0.004331 s
-        αα         0.005676 s
-        ββ         0.005679 s
-        αβ         0.013485 s
+        α          0.004118 s
+        β          0.004037 s
+        αα         0.005064 s
+        ββ         0.005423 s
+        αβ         0.012205 s
   --------------------------------
 
   Davidson-Liu solver algorithm using SigmaVectorSparseList sigma algorithm
@@ -943,9 +962,9 @@ Scratch directory: /Users/york/scratch/psi4/
   -----------------------------------------------------
     Iter.      Avg. Energy       Delta_E     Res. Norm
   -----------------------------------------------------
-      1     -299.310845147515  -2.993e+02  +1.048e-01
-      2     -299.323439104675  -1.259e-02  +2.860e-02
-      3     -299.324182023090  -7.429e-04  +9.274e-03
+      1     -299.310845147516  -2.993e+02  +1.048e-01
+      2     -299.323439104676  -1.259e-02  +2.860e-02
+      3     -299.324182023091  -7.429e-04  +9.274e-03
       4     -299.324259142795  -7.712e-05  +3.751e-03
       5     -299.324267992430  -8.850e-06  +1.385e-03
       6     -299.324270158071  -2.166e-06  +5.262e-04
@@ -954,20 +973,20 @@ Scratch directory: /Users/york/scratch/psi4/
       9     -299.324270445530  -1.245e-08  +5.392e-05
      10     -299.324270447726  -2.197e-09  +2.657e-05
      11     -299.324270448175  -4.489e-10  +1.266e-05
-     12     -299.324270448310  -1.342e-10  +5.145e-06
-     13     -299.324270448333  -2.336e-11  +3.063e-06
-     14     -299.324270448339  -6.253e-12  +1.434e-06
+     12     -299.324270448309  -1.341e-10  +5.145e-06
+     13     -299.324270448333  -2.376e-11  +3.063e-06
+     14     -299.324270448339  -6.310e-12  +1.434e-06
      15     -299.324270448342  -2.387e-12  +7.624e-07
-     16     -299.324270448342  -5.684e-13  +4.180e-07
-     17     -299.324270448342  -1.137e-13  +1.934e-07
-     18     -299.324270448342  +0.000e+00  +8.071e-08
-     19     -299.324270448342  +1.137e-13  +5.039e-08
-     20     -299.324270448342  +5.684e-14  +2.337e-08
-     21     -299.324270448342  +0.000e+00  +1.233e-08
+     16     -299.324270448342  -2.274e-13  +4.180e-07
+     17     -299.324270448342  -5.684e-14  +1.934e-07
+     18     -299.324270448342  -1.137e-13  +8.071e-08
+     19     -299.324270448342  +5.684e-14  +5.039e-08
+     20     -299.324270448342  +0.000e+00  +2.337e-08
+     21     -299.324270448342  +5.684e-14  +1.233e-08
      22     -299.324270448342  -1.137e-13  +6.949e-09
   -----------------------------------------------------
   The Davidson-Liu algorithm converged in 23 iterations.
-  Davidson-Liu procedure took  0.151250 s  Done. Timing        0.187926 s
+  Davidson-Liu procedure took  0.136019 s  Done. Timing        0.170068 s
 
   * * * * * * * * * * * * * * * * *
   *  CI Vectors & Configurations  *
@@ -983,10 +1002,10 @@ Scratch directory: /Users/york/scratch/psi4/
     a 2 b0 0 2b a          0.0707658275
     2 0 20 2 20 0          0.0647666035
     2 2 00 0 22 0          0.0618830767
-    b 2 b0 0 2a a         -0.0576454908
     a 2 a0 0 2b b         -0.0576454908
+    b 2 b0 0 2a a         -0.0576454908
 
-    Total Energy:   -230.150511597966187
+    Total Energy:   -230.150511597966300
 
 
 
@@ -1021,13 +1040,13 @@ Scratch directory: /Users/york/scratch/psi4/
     -----------------------------------------------------
 
 
-  Time to prepare integrals: 2.535459280014038 seconds
-  Time to run job          : 21.427489042282104 seconds
-  Total                    : 21.427489042282104 seconds    CASSCF(8,8)/cc-pVDZ-JKFIT (FORTE) energy..........................PASSED
+  Time to prepare integrals: 2.394859790802002 seconds
+  Time to run job          : 19.73006319999695 seconds
+  Total                    : 19.73006319999695 seconds    CASSCF(8,8)/cc-pVDZ-JKFIT (FORTE) energy..........................PASSED
     DSRG-MRPT2 unrelaxed energy.......................................PASSED
     DSRG-MRPT2 partially relaxed energy...............................PASSED
 
-    Psi4 stopped on: Tuesday, 10 March 2020 05:06PM
-    Psi4 wall time for execution: 0:00:32.91
+    Psi4 stopped on: Thursday, 12 March 2020 08:44PM
+    Psi4 wall time for execution: 0:00:30.90
 
 *** Psi4 exiting successfully. Buy a developer a beer!
