@@ -251,13 +251,18 @@ mrdsrg-spin-adapted:
    - mrdsrg-spin-adapted-2
    - mrdsrg-spin-adapted-3
    - mrdsrg-spin-adapted-4
+# long:
+#  - mrdsrg-spin-adapted-2
+mrdsrg-spin-adapted-pt2:
+  short:
    - mrdsrg-spin-adapted-pt2-1
    - mrdsrg-spin-adapted-pt2-2
    - mrdsrg-spin-adapted-pt2-3
    - mrdsrg-spin-adapted-pt2-4
+mrdsrg-spin-adapted-pt3:
+  short:
    - mrdsrg-spin-adapted-pt3-1
-# long:
-#  - mrdsrg-spin-adapted-2
+   - mrdsrg-spin-adapted-pt3-2
 pci:
   short:
    - pci-1
