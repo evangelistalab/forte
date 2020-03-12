@@ -54,6 +54,7 @@ SA_MRDSRG::SA_MRDSRG(RDMs rdms, std::shared_ptr<SCFInfo> scf_info,
     : SADSRG(rdms, scf_info, options, ints, mo_space_info) {
     read_options();
     print_options();
+    check_memory();
     startup();
 }
 
@@ -94,9 +95,6 @@ void SA_MRDSRG::startup() {
         U_ = ambit::BlockedTensor::build(tensor_type_, "U", {"gg"});
         Fdiag_ = diagonalize_Fock_diagblocks(U_);
     }
-
-    // check out memory usage
-    check_memory();
 }
 
 void SA_MRDSRG::print_options() {
@@ -143,26 +141,30 @@ void SA_MRDSRG::print_options() {
 }
 
 void SA_MRDSRG::check_memory() {
-    std::vector<size_t> local_mem;
+    if (eri_df_) {
+        dsrg_mem_.add_entry("1-electron and 3-index integrals", {"gg", "Lgg"});
+    } else {
+        dsrg_mem_.add_entry("1- and 2-electron integrals", {"gg", "gggg"});
+    }
 
-    // T2, S2, DT2
-    dsrg_mem_.add_entry("1- and 2-amplitudes and residuals", {"hp", "hhpp"}, 3);
+    dsrg_mem_.add_entry("T1 cluster amplitudes and residuals", {"hp"}, 2);
+    dsrg_mem_.add_entry("T2 cluster amplitudes and residuals", {"hhpp"}, 3); // T2, S2, DT2
 
     if (corrlv_string_ == "LDSRG2_QC") {
         dsrg_mem_.add_entry("1- and 2-body Hbar", {"hhpp", "hp"});
         dsrg_mem_.add_entry("1- and 2-body intermediates", {"gg", "gggg", "hhpp"});
     } else {
-        dsrg_mem_.add_entry("Global 1-body intermediates", {"gg"}, 3);
+        dsrg_mem_.add_entry("1- and 2-body Hbar", {"gggg", "gg"});
+        dsrg_mem_.add_entry("1-body intermediates", {"gg"}, 2);
         if (nivo_) {
-            dsrg_mem_.add_entry("Global 2-body intermediates", nivo_labels(), 3);
+            dsrg_mem_.add_entry("2-body intermediates", nivo_labels(), 2);
         } else {
-            dsrg_mem_.add_entry("Global 2-body intermediates", {"gggg"}, 3);
+            dsrg_mem_.add_entry("2-body intermediates", {"gggg"}, 2);
         }
 
         if (sequential_Hbar_) {
             size_t mem_seq =
                 eri_df_ ? dsrg_mem_.compute_memory({"Lgg"}) : dsrg_mem_.compute_memory({"gggg"});
-            local_mem.push_back(mem_seq);
             dsrg_mem_.add_entry("Local intermediates for sequential Hbar", mem_seq, false);
         }
     }
@@ -172,11 +174,7 @@ void SA_MRDSRG::check_memory() {
     if ((!eri_df_) and (!nivo_)) {
         mem_comm = std::max(mem_comm, dsrg_mem_.compute_memory({"ppph"}));
     }
-    local_mem.push_back(mem_comm);
     dsrg_mem_.add_entry("Local intermediates for commutators", mem_comm, false);
-
-    auto max_local = std::max_element(local_mem.begin(), local_mem.end());
-    dsrg_mem_.add_entry("Max memory for local intermediates", *max_local);
 
     dsrg_mem_.print("MR-DSRG (" + corrlv_string_ + ")");
 }
@@ -192,7 +190,6 @@ void SA_MRDSRG::build_ints() {
     if (eri_df_) {
         B_ = BTF_->build(tensor_type_, "B 3-idx", {"Lgg"});
         fill_three_index_ints(B_);
-        dsrg_mem_.add_entry("1-electron and 3-index integrals", {"gg", "Lgg"});
     } else {
         V_ = BTF_->build(tensor_type_, "V", {"gggg"});
 
@@ -207,7 +204,6 @@ void SA_MRDSRG::build_ints() {
             auto Vblock = ints_->aptei_ab_block(i0, i1, i2, i3);
             V_.block(block).copy(Vblock);
         }
-        dsrg_mem_.add_entry("1- and 2-electron integrals", {"gg", "gggg"});
     }
 }
 
