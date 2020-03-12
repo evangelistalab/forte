@@ -2494,7 +2494,6 @@ void DSRG_MRPT2::write_2rdm_spin_dependent() {
 
 	// TODO: write coefficients here
 
-
     for (size_t i = 0, size_c = core_all_.size(); i < size_c; ++i) {
         auto m = core_all_[i];
         for (size_t a = 0, size_v = virt_all_.size(); a < size_v; ++a) {
@@ -2516,13 +2515,19 @@ void DSRG_MRPT2::write_2rdm_spin_dependent() {
     }
 
 
+    BlockedTensor temp = BTF_->build(CoreTensor, "temporal tensor", {"ac", "AC"});
+    temp["un"] = Z["un"];
+    temp["un"] -= Z["vn"] * Gamma1["uv"];
+    temp["UN"] = Z["UN"];
+    temp["UN"] -= Z["VN"] * Gamma1["UV"];
+
     for (size_t i = 0, size_c = core_all_.size(); i < size_c; ++i) {
         auto n = core_all_[i];
         for (size_t a = 0, size_a = actv_all_.size(); a < size_a; ++a) {
             auto u = actv_all_[a];
             auto idx = a * ncore_ + i;
-            auto z_a = Z.block("ac").data()[idx];
-            auto z_b = Z.block("AC").data()[idx];
+            auto z_a = temp.block("ac").data()[idx];
+            auto z_b = temp.block("AC").data()[idx];
             for (size_t j = 0; j < size_c; ++j) {
                 auto m1 = core_all_[j];
                 
@@ -2537,13 +2542,13 @@ void DSRG_MRPT2::write_2rdm_spin_dependent() {
     }
 
 
-    BlockedTensor temp = BTF_->build(CoreTensor, "temporal tensor", {"va", "VA"});
+    temp = BTF_->build(CoreTensor, "temporal tensor", {"va", "VA"});
 
     temp["ev"] = Z["eu"] * Gamma1["uv"];
     temp["EV"] = Z["EU"] * Gamma1["UV"];
 
     for (size_t i = 0, size_a = actv_all_.size(); i < size_a; ++i) {
-        auto u = actv_all_[i];
+        auto v = actv_all_[i];
         for (size_t a = 0, size_v = virt_all_.size(); a < size_v; ++a) {
             auto e = virt_all_[a];
             auto idx = a * na_ + i;
@@ -2562,7 +2567,123 @@ void DSRG_MRPT2::write_2rdm_spin_dependent() {
         }
     }
 
-    
+
+
+    for (size_t i = 0, size_c = core_all_.size(); i < size_c; ++i) {
+        auto n = core_all_[i];
+        for (size_t k = 0; k < size_c; ++k) {
+            auto m = core_all_[k];
+            auto idx = k * ncore_ + i;
+            auto z_a = temp.block("cc").data()[idx];
+            auto z_b = temp.block("CC").data()[idx];
+            for (size_t j = 0; j < size_c; ++j) {
+                auto m1 = core_all_[j];
+                
+                d2aa.write_value(n, m, m1, m1, 0.5 * z_a, 0, "NULL", 0);
+                d2bb.write_value(n, m, m1, m1, 0.5 * z_b, 0, "NULL", 0);
+                d2aa.write_value(n, m1, m1, m, -0.5 * z_a, 0, "NULL", 0);
+                d2bb.write_value(n, m1, m1, m, -0.5 * z_b, 0, "NULL", 0);
+                
+                d2ab.write_value(n, m, m1, m1, (z_a + z_b), 0, "NULL", 0);
+            }
+        }
+    }
+
+
+    for (size_t i = 0, size_a = actv_all_.size(); i < size_a; ++i) {
+        auto v = actv_all_[i];
+        for (size_t k = 0; k < size_a; ++k) {
+            auto u = actv_all_[k];
+            auto idx = k * na_ + i;
+            auto z_a = temp.block("aa").data()[idx];
+            auto z_b = temp.block("AA").data()[idx];
+            for (size_t j = 0, size_c = core_all_.size(); j < size_c; ++j) {
+                auto m1 = core_all_[j];
+                
+                d2aa.write_value(v, u, m1, m1, 0.5 * z_a, 0, "NULL", 0);
+                d2bb.write_value(v, u, m1, m1, 0.5 * z_b, 0, "NULL", 0);
+                d2aa.write_value(v, m1, m1, u, -0.5 * z_a, 0, "NULL", 0);
+                d2bb.write_value(v, m1, m1, u, -0.5 * z_b, 0, "NULL", 0);
+                
+                d2ab.write_value(v, u, m1, m1, (z_a + z_b), 0, "NULL", 0);
+            }
+        }
+    }
+
+
+    for (size_t i = 0, size_v = virt_all_.size(); i < size_v; ++i) {
+        auto f = virt_all_[i];
+        for (size_t k = 0; k < size_v; ++k) {
+            auto e = virt_all_[k];
+            auto idx = k * nvirt_ + i;
+            auto z_a = temp.block("vv").data()[idx];
+            auto z_b = temp.block("VV").data()[idx];
+            for (size_t j = 0, size_c = core_all_.size(); j < size_c; ++j) {
+                auto m1 = core_all_[j];
+                
+                d2aa.write_value(f, e, m1, m1, 0.5 * z_a, 0, "NULL", 0);
+                d2bb.write_value(f, e, m1, m1, 0.5 * z_b, 0, "NULL", 0);
+                d2aa.write_value(f, m1, m1, e, -0.5 * z_a, 0, "NULL", 0);
+                d2bb.write_value(f, m1, m1, e, -0.5 * z_b, 0, "NULL", 0);
+                
+                d2ab.write_value(f, e, m1, m1, (z_a + z_b), 0, "NULL", 0);
+            }
+        }
+    }
+
+
+    for (size_t i = 0, size_c = core_all_.size(); i < size_c; ++i) {
+        auto n = core_all_[i];
+        for (size_t j = 0; j < size_c; ++j) {
+            auto m = core_all_[j];
+            auto idx = j * ncore_ + i;
+            auto z_a = Z.block("cc").data()[idx];
+            auto z_b = Z.block("CC").data()[idx];
+            for (size_t k = 0, size_a = actv_all_.size(); k < size_a; ++k) {
+                auto v1 = actv_all_[k];
+                for (size_t l = 0; l < size_a; ++l) {
+                    auto u1 = actv_all_[l];
+                    auto idx1 = l * na_ + k;
+                    auto g_a = Gamma1.block("aa").data()[idx1];
+                    auto g_b = Gamma1.block("AA").data()[idx1];
+                
+                    d2aa.write_value(n, m, v1, u1, 0.5 * z_a * g_a, 0, "NULL", 0);
+                    d2bb.write_value(n, m, v1, u1, 0.5 * z_b * g_b, 0, "NULL", 0);
+                    d2aa.write_value(n, u1, v1, m, -0.5 * z_a * g_a, 0, "NULL", 0);
+                    d2bb.write_value(n, u1, v1, m, -0.5 * z_b * g_b, 0, "NULL", 0);
+                    
+                    d2ab.write_value(n, m, v1, u1, (z_a * g_b + z_b * g_a), 0, "NULL", 0);
+                }
+            }
+        }
+    }
+
+    for (size_t i = 0, size_v = virt_all_.size(); i < size_v; ++i) {
+        auto f = virt_all_[i];
+        for (size_t j = 0; j < size_v; ++j) {
+            auto e = virt_all_[j];
+            auto idx = j * nvirt_ + i;
+            auto z_a = Z.block("vv").data()[idx];
+            auto z_b = Z.block("VV").data()[idx];
+            for (size_t k = 0, size_a = actv_all_.size(); k < size_a; ++k) {
+                auto v1 = actv_all_[k];
+                for (size_t l = 0; l < size_a; ++l) {
+                    auto u1 = actv_all_[l];
+                    auto idx1 = l * na_ + k;
+                    auto g_a = Gamma1.block("aa").data()[idx1];
+                    auto g_b = Gamma1.block("AA").data()[idx1];
+                
+                    d2aa.write_value(f, e, v1, u1, 0.5 * z_a * g_a, 0, "NULL", 0);
+                    d2bb.write_value(f, e, v1, u1, 0.5 * z_b * g_b, 0, "NULL", 0);
+                    d2aa.write_value(f, u1, v1, e, -0.5 * z_a * g_a, 0, "NULL", 0);
+                    d2bb.write_value(f, u1, v1, e, -0.5 * z_b * g_b, 0, "NULL", 0);
+                    
+                    d2ab.write_value(f, e, v1, u1, (z_a * g_b + z_b * g_a), 0, "NULL", 0);
+                }
+            }
+        }
+    }
+
 
 
 
