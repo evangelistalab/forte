@@ -29,15 +29,6 @@ void SADSRG::analyze_amplitudes(std::string name, BlockedTensor& T1, BlockedTens
     print_t2_intruder(lt2);
 }
 
-// Binary function to achieve sorting a vector of pair<vector, double>
-// according to the double value in decending order
-template <class T1, class T2, class G3 = std::greater<T2>> struct rsort_pair_second {
-    bool operator()(const std::pair<T1, T2>& left, const std::pair<T1, T2>& right) {
-        G3 p;
-        return p(std::fabs(left.second), std::fabs(right.second));
-    }
-};
-
 std::vector<std::pair<std::vector<size_t>, double>> SADSRG::check_t2(BlockedTensor& T2) {
     size_t nonzero = 0;
     std::vector<std::pair<std::vector<size_t>, double>> t2;
@@ -76,8 +67,7 @@ std::vector<std::pair<std::vector<size_t>, double>> SADSRG::check_t2(BlockedTens
                         std::make_pair(indices, value);
 
                     t2.push_back(idx_value);
-                    std::sort(t2.begin(), t2.end(),
-                              rsort_pair_second<std::vector<size_t>, double>());
+                    std::sort(t2.begin(), t2.end(), sort_pair_second_descend);
                     if (t2.size() == ntamp_ + 1) {
                         t2.pop_back();
                     }
@@ -85,8 +75,7 @@ std::vector<std::pair<std::vector<size_t>, double>> SADSRG::check_t2(BlockedTens
                     if (std::fabs(value) > std::fabs(intruder_tamp_)) {
                         lt2.push_back(idx_value);
                     }
-                    std::sort(lt2.begin(), lt2.end(),
-                              rsort_pair_second<std::vector<size_t>, double>());
+                    std::sort(lt2.begin(), lt2.end(), sort_pair_second_descend);
                 }
             }
         });
@@ -116,7 +105,7 @@ std::vector<std::pair<std::vector<size_t>, double>> SADSRG::check_t1(BlockedTens
                 ++nonzero;
 
                 t1.push_back(idx_value);
-                std::sort(t1.begin(), t1.end(), rsort_pair_second<std::vector<size_t>, double>());
+                std::sort(t1.begin(), t1.end(), sort_pair_second_descend);
                 if (t1.size() == ntamp_ + 1) {
                     t1.pop_back();
                 }
@@ -124,7 +113,7 @@ std::vector<std::pair<std::vector<size_t>, double>> SADSRG::check_t1(BlockedTens
                 if (std::fabs(value) > std::fabs(intruder_tamp_)) {
                     lt1.push_back(idx_value);
                 }
-                std::sort(lt1.begin(), lt1.end(), rsort_pair_second<std::vector<size_t>, double>());
+                std::sort(lt1.begin(), lt1.end(), sort_pair_second_descend);
             }
         });
     }
@@ -191,6 +180,9 @@ void SADSRG::print_t2_summary(const std::vector<std::pair<std::vector<size_t>, d
 
 void SADSRG::print_t1_intruder(const std::vector<std::pair<std::vector<size_t>, double>>& list) {
     outfile->Printf("\n    T1 amplitudes larger than %.4f:", intruder_tamp_);
+    if (!semi_canonical_) {
+        outfile->Printf(" Warning: T1 amplitudes are not in semicanonical basis!");
+    }
 
     size_t nele = list.size();
     if (nele == 0) {
@@ -215,6 +207,9 @@ void SADSRG::print_t1_intruder(const std::vector<std::pair<std::vector<size_t>, 
 
 void SADSRG::print_t2_intruder(const std::vector<std::pair<std::vector<size_t>, double>>& list) {
     outfile->Printf("\n    T2 amplitudes larger than %.4f:", intruder_tamp_);
+    if (!semi_canonical_) {
+        outfile->Printf(" Warning: T2 amplitudes are not in semicanonical basis!");
+    }
 
     size_t nele = list.size();
     if (nele == 0) {

@@ -382,6 +382,12 @@ class SADSRG : public DynamicCorrelationSolver {
     void print_t1_intruder(const std::vector<std::pair<std::vector<size_t>, double>>& list);
     /// Print t2 intruder analysis
     void print_t2_intruder(const std::vector<std::pair<std::vector<size_t>, double>>& list);
+
+    /// Comparison function used to sort pair<vector, double>
+    static bool sort_pair_second_descend(const std::pair<std::vector<size_t>, double>& left,
+                                         const std::pair<std::vector<size_t>, double>& right) {
+        return std::fabs(left.second) > std::fabs(right.second);
+    }
 };
 } // namespace forte
 
