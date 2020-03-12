@@ -27,21 +27,10 @@
  */
 
 #include <algorithm>
-#include <cmath>
-#include <map>
-#include <vector>
-
-#include "boost/format.hpp"
 
 #include "psi4/libpsi4util/PsiOutStream.h"
-#include "psi4/libmints/molecule.h"
 
-#include "base_classes/active_space_solver.h"
-#include "fci/fci_solver.h"
-#include "sci/fci_mo.h"
 #include "helpers/printing.h"
-#include "orbital-helpers/semi_canonicalize.h"
-#include "orbital-helpers/mp2_nos.h"
 #include "sa_mrdsrg.h"
 
 using namespace psi;

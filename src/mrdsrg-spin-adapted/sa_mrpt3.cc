@@ -27,18 +27,8 @@
  * @END LICENSE
  */
 
-#include <algorithm>
-#include <cctype>
-#include <map>
-#include <memory>
-#include <vector>
+#include "psi4/libpsi4util/PsiOutStream.h"
 
-#include "psi4/libpsi4util/process.h"
-#include "psi4/libdiis/diismanager.h"
-#include "psi4/libmints/molecule.h"
-#include "psi4/libqt/qt.h"
-
-#include "forte-def.h"
 #include "helpers/timer.h"
 #include "helpers/printing.h"
 #include "sa_mrpt3.h"

@@ -29,15 +29,6 @@
 #ifndef _sa_dsrgpt_h_
 #define _sa_dsrgpt_h_
 
-#include <memory>
-
-#include "psi4/libpsio/psio.hpp"
-#include "psi4/libpsio/psio.h"
-#include "ambit/blocked_tensor.h"
-
-#include "integrals/integrals.h"
-#include "base_classes/rdms.h"
-#include "helpers/blockedtensorfactory.h"
 #include "sadsrg.h"
 
 using namespace ambit;

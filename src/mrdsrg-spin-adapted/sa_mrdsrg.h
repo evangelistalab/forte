@@ -29,20 +29,9 @@
 #ifndef _sa_mrdsrg_h_
 #define _sa_mrdsrg_h_
 
-#include <cmath>
-#include <memory>
-
 #include "psi4/libdiis/diismanager.h"
+#include "psi4/libpsi4util/PsiOutStream.h"
 
-#include "psi4/libmints/wavefunction.h"
-#include "psi4/libpsio/psio.hpp"
-#include "psi4/libpsio/psio.h"
-#include "ambit/blocked_tensor.h"
-
-#include "integrals/integrals.h"
-#include "base_classes/rdms.h"
-#include "helpers/blockedtensorfactory.h"
-#include "sparse_ci/determinant.h"
 #include "sadsrg.h"
 
 using namespace ambit;

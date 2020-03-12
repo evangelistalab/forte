@@ -27,7 +27,6 @@
  */
 
 #include "psi4/libdiis/diismanager.h"
-#include "ambit/blocked_tensor.h"
 
 #include "sa_mrdsrg.h"
 
