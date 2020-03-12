@@ -563,7 +563,7 @@ void SA_MRPT2::compute_Hbar1V_diskDF(ambit::Tensor& Hbar1, bool Vr) {
             value *= dsrg_source_->compute_renormalized_denominator(denom);
         });
 
-        C_vec[thread]("vu") += V_vec[thread]("efu") * S_vec[thread]("efv");
+        C_vec[thread]("vu") += S_vec[thread]("efv") * V_vec[thread]("efu");
     }
 
     // finalize results
@@ -624,7 +624,7 @@ void SA_MRPT2::compute_Hbar1C_diskDF(ambit::Tensor& Hbar1, bool Vr) {
     while (n_threads * mem_batched_["ccav"] > dsrg_mem_.available()) {
         n_threads -= 1;
     }
-    if (n_threads != n_threads) {
+    if (n_threads != n_threads_) {
         outfile->Printf("\n  Use %d threads to compute CCAV energy due to memory shortage.",
                         n_threads);
     }
