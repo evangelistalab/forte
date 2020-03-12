@@ -225,8 +225,10 @@ void SADSRG::check_init_memory() {
     dsrg_mem_.set_mem_avai(mem_left);
     dsrg_mem_.set_label_to_size(label_to_size);
 
-    dsrg_mem_.add_entry("Memory assigned by the user", mem_sys_, false);
-    dsrg_mem_.add_entry("Memory available for MR-DSRG", mem_left, false);
+    dsrg_mem_.add_print_entry("Memory assigned by the user", mem_sys_);
+    dsrg_mem_.add_print_entry("Memory available for MR-DSRG", mem_left);
+    dsrg_mem_.add_entry("1- and 2-density cumulants", {"aa", "aa", "aaaa"});
+    dsrg_mem_.add_entry("Generalized Fock matrix", {"g", "gg"});
 }
 
 void SADSRG::init_density() {
@@ -234,7 +236,6 @@ void SADSRG::init_density() {
     Eta1_ = BTF_->build(tensor_type_, "Eta1", {"aa"});
     L1_ = BTF_->build(tensor_type_, "L1", {"aa"});
     L2_ = BTF_->build(tensor_type_, "L2", {"aaaa"});
-    dsrg_mem_.add_entry("1- and 2-density cumulants", {"aa", "aa", "aaaa"});
     fill_density();
     outfile->Printf("Done");
 }
@@ -259,7 +260,6 @@ void SADSRG::init_fock() {
     outfile->Printf("\n    Building Fock matrix ............................ ");
     build_fock_from_ints(ints_, Fock_);
     fill_Fdiag(Fock_, Fdiag_);
-    dsrg_mem_.add_entry("Generalized Fock matrix", {"g", "gg"});
     outfile->Printf("Done");
 }
 

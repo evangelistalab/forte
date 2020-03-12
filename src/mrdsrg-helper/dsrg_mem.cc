@@ -26,6 +26,8 @@
  * @END LICENSE
  */
 
+#include <algorithm>
+
 #include "psi4/libpsi4util/PsiOutStream.h"
 
 #include "base_classes/mo_space_info.h"
@@ -42,10 +44,23 @@ DSRG_MEM::DSRG_MEM() { mem_avai_ = 0; }
 DSRG_MEM::DSRG_MEM(int64_t mem_avai, std::map<char, size_t> label_to_size)
     : mem_avai_(mem_avai), label_to_size_(label_to_size) {}
 
-void DSRG_MEM::add_entry(const std::string& des, const size_t& mem_use, bool subtract) {
+size_t DSRG_MEM::max_local_memory() {
+    if (mem_local_.size() == 0) {
+        return 0;
+    }
+    return *std::max_element(mem_local_.begin(), mem_local_.end());
+}
+
+void DSRG_MEM::add_print_entry(const std::string& des, const size_t& mem_use) {
     data_.push_back(std::make_pair(des, mem_use));
+}
+
+void DSRG_MEM::add_entry(const std::string& des, const size_t& mem_use, bool subtract) {
+    add_print_entry(des, mem_use);
     if (subtract) {
         mem_avai_ -= mem_use;
+    } else {
+        mem_local_.push_back(mem_use);
     }
 }
 
@@ -71,22 +86,15 @@ size_t DSRG_MEM::compute_n_elements(const std::string& labels) {
 
 size_t DSRG_MEM::compute_memory(const std::vector<std::string>& labels_vec, int multiple) {
     size_t total = 0;
-    for (const std::string& labels: labels_vec) {
+    for (const std::string& labels : labels_vec) {
         total += sizeof(double) * compute_n_elements(labels);
     }
     return multiple * total;
 }
 
-size_t DSRG_MEM::max_memory_from_labels(const std::vector<std::string>& labels_vec) {
-    std::vector<size_t> nele;
-    for (const std::string& labels : labels_vec) {
-        nele.push_back(compute_n_elements(labels));
-    }
-    return *std::max_element(nele.begin(), nele.end()) * sizeof(double);
-}
-
 void DSRG_MEM::print(const std::string& name) {
     print_h2(name + " Memory Information");
+
     for (const auto& pair : data_) {
         std::string description = pair.first;
         auto xb_pair = to_xb(pair.second, 1);
@@ -94,17 +102,24 @@ void DSRG_MEM::print(const std::string& name) {
                              xb_pair.second.c_str());
     }
 
-    if (mem_avai_ < 0) {
-        auto xb_pair = to_xb(-mem_avai_, 1);
+    auto max_local = max_local_memory();
+    auto local_xb_pair = to_xb(max_local, 1);
+    double local_value = local_xb_pair.first;
+    std::string local_unit = local_xb_pair.second;
+    psi::outfile->Printf("\n    %-45s %7.2f %2s", "Max memory for local intermediates", local_value,
+                         local_unit.c_str());
+
+    if (mem_avai_ < 0 or static_cast<size_t>(mem_avai_) < max_local) {
+        auto xb_pair = to_xb(max_local - mem_avai_, 1);
         std::string error = "Not enough memory to compute " + name + " energy.";
         psi::outfile->Printf("\n  %s", error.c_str());
         psi::outfile->Printf("\n  Please increase memory by at least %.2f %s.",
                              1.024 * xb_pair.first, xb_pair.second.c_str());
         throw psi::PSIEXCEPTION(error);
     } else {
-        auto xb_pair = to_xb(mem_avai_, 1);
-        psi::outfile->Printf("\n    %-45s %7.2f %2s", "Memory available", xb_pair.first,
-                             xb_pair.second.c_str());
+        auto avai_xb_pair = to_xb(mem_avai_, 1);
+        psi::outfile->Printf("\n    %-45s %7.2f %2s", "Memory currently available", avai_xb_pair.first,
+                             avai_xb_pair.second.c_str());
     }
     psi::outfile->Printf("\n");
 }

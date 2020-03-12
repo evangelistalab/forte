@@ -185,13 +185,9 @@ void SA_MRPT2::check_memory() {
         dsrg_mem_.add_entry("1- and 2-body Hbar", {"aa", "aaaa"});
     }
 
-    std::vector<size_t> local_mem{0}; // pass a zero element for safety of std::max_element
-
     // local memory for computing minimal V
-    if (eri_df_ and ints_type_ == "DISKDF") {
-        auto mem_V = dsrg_mem_.compute_memory({"Lca", "Laa", "Lav"});
-        local_mem.push_back(mem_V);
-        dsrg_mem_.add_entry("Local 3-index integrals", mem_V, false);
+    if (ints_type_ == "DISKDF") {
+        dsrg_mem_.add_entry("Local 3-index integrals", {"Lca", "Laa", "Lav"}, 1, false);
     }
 
     // compute energy
@@ -210,36 +206,24 @@ void SA_MRPT2::check_memory() {
         }
 
         mem_batched_["ccvv"] = mem_ccvv;
-        local_mem.push_back(mem_ccvv);
         dsrg_mem_.add_entry("Local integrals for CCVV energy", mem_ccvv, false);
 
         mem_batched_["cavv"] = mem_cavv;
-        local_mem.push_back(mem_cavv);
         dsrg_mem_.add_entry("Local integrals for CAVV energy", mem_cavv, false);
 
         mem_batched_["ccav"] = mem_ccav;
-        local_mem.push_back(mem_ccav);
         dsrg_mem_.add_entry("Local integrals for CCAV energy", mem_ccav, false);
     } else {
-        auto mem_temp = dsrg_mem_.compute_memory({"aa", "aaaa"});
-        local_mem.push_back(mem_temp);
-        dsrg_mem_.add_entry("Local 1- and 2-body intermediates", mem_temp, false);
+        dsrg_mem_.add_entry("Local 1- and 2-body intermediates", {"aa", "aaaa"}, 1, false);
     }
 
     // compute Hbar
     if (form_Hbar_) {
-        auto mem_Hbar = dsrg_mem_.compute_memory({"avac", "aaac", "avaa", "paaa", "aaaa"});
-        local_mem.push_back(mem_Hbar);
-        dsrg_mem_.add_entry("Local integrals for forming Hbar", mem_Hbar, false);
+        dsrg_mem_.add_entry("Local integrals for forming Hbar",
+                            {"avac", "aaac", "avaa", "paaa", "aaaa"}, 1, false);
     }
 
-    auto max_local = std::max_element(local_mem.begin(), local_mem.end());
-    dsrg_mem_.add_entry("Max memory for local intermediates", *max_local);
-
     dsrg_mem_.print("DSRG-MRPT2");
-
-    // reset local memory portion
-    dsrg_mem_.add_memory_available(*max_local);
 }
 
 double SA_MRPT2::compute_energy() {

@@ -51,6 +51,18 @@ class DSRG_MEM {
     /// Set the map from MO label to the corresponding size
     void set_label_to_size(std::map<char, size_t> label_to_size) { label_to_size_ = label_to_size; }
 
+    /// Return the available memory
+    size_t available() { return mem_avai_; }
+
+    /// Clean up local memories
+    void clean_local_memory() { mem_local_.clear(); }
+
+    /// Max memory usage among the vector of local memories
+    size_t max_local_memory();
+
+    /// Add an innocent entry using description and its number of elements
+    void add_print_entry(const std::string& des, const size_t& mem_use);
+
     /// Add entry using description and its number of elements
     void add_entry(const std::string& des, const size_t& mem_use, bool subtract = true);
 
@@ -64,24 +76,15 @@ class DSRG_MEM {
     /// Compute the memory requirement of a given labels
     size_t compute_memory(const std::vector<std::string>& labels_vec, int multiple = 1);
 
-    /// Subtract from available memory
-    void subtract_memory_available(size_t mem) { mem_avai_ -= mem; }
-
-    /// Add to available memory
-    void add_memory_available(size_t mem) { mem_avai_ += mem; }
-
-    /// Return the available memory
-    size_t available() { return mem_avai_; }
-
-    /// Max memory usage among the vector of labels
-    size_t max_memory_from_labels(const std::vector<std::string>& labels_vec);
-
     /// Print the current data
     void print(const std::string& name);
 
   private:
     /// Memory currently available
     int64_t mem_avai_;
+
+    /// Memory currently available for local storage
+    std::vector<size_t> mem_local_;
 
     /// Map from description to the number of elements
     std::vector<std::pair<std::string, size_t>> data_;
