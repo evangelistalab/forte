@@ -1468,6 +1468,7 @@ Add test cases when DWMS is back to life.
   mrdsrg-spin-adapted-pt2-2     SS, U               :math:`\text{HF}`            CD, non-semicanonical orbitals, zero ccvv source
   mrdsrg-spin-adapted-pt2-3     SS, PR              p-benzyne                    DiskDF
   mrdsrg-spin-adapted-pt2-4     SS, R               :math:`\text{O}_2`           triplet ground state, CASSCF(8e,6o)
+  mrdsrg-spin-adapted-pt2-5     SA, R               :math:`\text{C}_2`           CASSCF(8e,8o), zero 3 cumulant
   mrdsrg-spin-adapted-pt3-1     SS, PR              :math:`\text{HF}`            CD
   mrdsrg-spin-adapted-pt3-2     SA                  ethylene                     lowest three singlet states
   ============================  ==================  ===========================  =================================================

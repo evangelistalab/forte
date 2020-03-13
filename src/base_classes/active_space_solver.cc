@@ -26,6 +26,7 @@
  * @END LICENSE
  */
 
+#include <algorithm>
 #include <numeric>
 #include <iomanip>
 
@@ -118,6 +119,9 @@ void ActiveSpaceSolver::print_energies(std::map<StateInfo, std::vector<double>>&
             double energy = energies[state][i];
             psi::outfile->Printf("\n     %3d  (%2d)   %3s    %2d   %20.12f", multi, twice_ms,
                                  irrep_symbol[irrep].c_str(), i, energy);
+
+            // make label case insensitive as required by Psi4 Python side
+            std::transform(label.begin(), label.end(), label.begin(), ::toupper);
             psi::Process::environment.globals[label] = energy;
         }
 

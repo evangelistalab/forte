@@ -254,8 +254,12 @@ void SADSRG::check_init_memory() {
 
     dsrg_mem_.add_print_entry("Memory assigned by the user", mem_sys_);
     dsrg_mem_.add_print_entry("Memory available for MR-DSRG", mem_left);
-    dsrg_mem_.add_entry("1- and 2-density cumulants", {"aa", "aa", "aaaa"});
     dsrg_mem_.add_entry("Generalized Fock matrix", {"g", "gg"});
+    if (do_cu3_) {
+        dsrg_mem_.add_entry("1-, 2-, and 3-density cumulants", {"aa", "aa", "aaaa", "aaaaaa"});
+    } else {
+        dsrg_mem_.add_entry("1- and 2-density cumulants", {"aa", "aa", "aaaa"});
+    }
 }
 
 void SADSRG::init_density() {
@@ -695,8 +699,13 @@ void SADSRG::print_cumulant_summary() {
     maxes[0] = L2_.norm(0);
     norms[0] = L2_.norm(2);
 
-    maxes[1] = rdms_.SF_L3().norm(0);
-    norms[1] = rdms_.SF_L3().norm(2);
+    if (do_cu3_) {
+        maxes[1] = rdms_.SF_L3().norm(0);
+        norms[1] = rdms_.SF_L3().norm(2);
+    } else {
+        maxes[1] = 0.0;
+        norms[1] = 0.0;
+    }
 
     std::string dash(6 + 13 * 2, '-');
     outfile->Printf("\n    %-6s %12s %12s", "", "2-cumulant", "3-cumulant");
