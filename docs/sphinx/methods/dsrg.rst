@@ -16,10 +16,18 @@ Driven Similarity Renormalization Group
   Depending on the features used, the user is encouraged to cite the corresponding articles listed :ref:`here <dsrg_ref>`.
 
 .. caution::
-  The current implementation does not employ spin-adapted equations and it does not work for even spin multiplicities (doublet, quartets, etc.).
-  For odd multiplicities, we assume low-spin configurations (by default, no need to specify in the input file).
-  For those in desperate need to perform computations on doublets, an alternative way is to add a hydrogen atom far away from the system and perform a singlet computation.
-  Spin adaptation is on the TODO list.
+  The examples used in this manual are written based on the spin-integrated code
+  that works only for singlet molecules and those with odd multiplicities.
+  To invoke the spin-adated implementation (that works for general multiplicities),
+  the user needs to specify the following keywords:
+  ::
+
+     correlation_solver  sa-mrdsrg  # spin-adapted DSRG computation
+     spin_avg_density    true       # must use spin-averaged densities
+     corr_level          ldsrg2     # spin-adapted theories: PT2, PT3, LDSRG2_QC, LDSRG2
+
+  The spin-adapted version should be at least 2-3 times faster than the corresponding spin-integrated code,
+  and it also saves some memory.
 
 .. _`basic_dsrg`:
 
@@ -344,7 +352,7 @@ There are several things to notice.
    There are other choices of :code:`CORR_LEVEL` but they are mainly for testing new ideas.
 
 2. We specify the energy convergence keyword :code:`E_CONVERGENCE` and the RSC threshold :code:`DSRG_RSC_THRESHOLD`,
-which controls the truncation of the recursive single commutator (RSC) approximation of the DSRG Hamiltonian.
+   which controls the truncation of the recursive single commutator (RSC) approximation of the DSRG Hamiltonian.
    In general, the value of :code:`DSRG_RSC_THRESHOLD` should be smaller than that of :code:`E_CONVERGENCE`.
    Making :code:`DSRG_RSC_THRESHOLD` larger will stop the BCH series earlier and thus saves some time.
    It is OK to leave :code:`DSRG_RSC_THRESHOLD` as the default value, which is :math:`10^{-12}` a.u.
@@ -1281,17 +1289,12 @@ TODOs
 
 These are disabled due to a infrastructure change.
 
-1. Spin Adaptation
-++++++++++++++++++
-
-This is done for unrelaxed DSRG-MRPT2 but not complete for general LDSRG(2).
-
-2. DSRG-MRPT2 Analytic Energy Gradients
+1. DSRG-MRPT2 Analytic Energy Gradients
 +++++++++++++++++++++++++++++++++++++++
 
 This is an ongoing project.
 
-3. MR-DSRG(T) with Perturbative Triples
+2. MR-DSRG(T) with Perturbative Triples
 +++++++++++++++++++++++++++++++++++++++
 
 This is an ongoing project.
@@ -1450,6 +1453,24 @@ Acronyms used in the following text:
 +++++++++++++++++++++++++++
 
 Add test cases when DWMS is back to life.
+
+6. Spin-Adapted MR-DSRG Test Cases
+++++++++++++++++++++++++++++++++++
+
+  ============================  ==================  ===========================  =================================================
+              Name              Variants            Molecule                     Notes
+  ============================  ==================  ===========================  =================================================
+  mrdsrg-spin-adapted-1         SS, U               :math:`\text{HF}`            LDSRG(2) truncated to 2-nested commutator
+  mrdsrg-spin-adapted-2         SS, PR              :math:`\text{HF}`            long, LDSRG(2), non-semicanonical orbitals
+  mrdsrg-spin-adapted-3         SS, R, SQ, NIVO     :math:`\text{HF}`            long, CD, LDSRG(2)
+  mrdsrg-spin-adapted-4         SS, U               :math:`\text{N}_2`           long, CD, LDSRG(2), non-semicanonical, zero ccvv
+  mrdsrg-spin-adapted-pt2-1     SS, U               :math:`\text{HF}`            CD
+  mrdsrg-spin-adapted-pt2-2     SS, U               :math:`\text{HF}`            CD, non-semicanonical orbitals, zero ccvv source
+  mrdsrg-spin-adapted-pt2-3     SS, PR              p-benzyne                    DiskDF
+  mrdsrg-spin-adapted-pt2-4     SS, R               :math:`\text{O}_2`           triplet ground state, CASSCF(8e,6o)
+  mrdsrg-spin-adapted-pt3-1     SS, PR              :math:`\text{HF}`            CD
+  mrdsrg-spin-adapted-pt3-2     SA                  ethylene                     lowest three singlet states
+  ============================  ==================  ===========================  =================================================
 
 .. _`dsrg_ref`:
 
