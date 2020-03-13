@@ -1,7 +1,9 @@
 import psi4
 import forte
 
-def psi4_scf(geom, basis, reference, functional = 'hf', options = {}) -> (double, psi4Wavefunction):
+from .cube_file import CubeFile
+
+def psi4_scf(geom, basis, reference, functional = 'hf', options = {}) -> (float, psi4.core.Wavefunction):
     """
     Run a psi4 scf computation and return the energy and the Wavefunction object
 
@@ -25,11 +27,22 @@ def psi4_scf(geom, basis, reference, functional = 'hf', options = {}) -> (double
     mol = psi4.geometry(geom)
 
     # add basis/reference/scf_type to options passed by the user
-    options['basis'] = basis
-    options['reference'] = reference
-    options['scf_type'] = 'pk'
+    default_options = {'SCF_TYPE' : 'pk',
+                       'E_CONVERGENCE' : 1.0e-10,
+                       'D_CONVERGENCE' : 1.0e-6}
 
-    psi4.set_options(options)
+    # capitalize the options
+    options =  {k.upper(): v for k, v in options.items()}
+    default_options = {k.upper(): v for k, v in default_options.items()}
+
+    # merge the two dictionaries. The user-provided options will overwrite the default ones
+    merged_options = {**default_options, **options}
+
+    # add the mandatory arguments
+    merged_options['BASIS'] = basis
+    merged_options['REFERENCE'] = reference
+
+    psi4.set_options(merged_options)
 
     # pipe output to the file output.dat
     psi4.core.set_output_file('output.dat', True)
@@ -39,6 +52,49 @@ def psi4_scf(geom, basis, reference, functional = 'hf', options = {}) -> (double
 
     return (E_scf, wfn)
 
+
+def psi4_cubeprop(wfn, path = '.', orbs = [], nocc = 3, nvir = 3, load = False):
+    """
+    Run a psi4 cubeprop computation to generate cube files from a given Wavefunction object
+    By default this function plots from the HOMO -2 to the LUMO + 2
+
+    Parameters
+    ----------
+    wfn : psi4Wavefunction
+        A psi4 Wavefunction object
+    path : str
+        The path of the directory that will contain the cube files
+    orbs : list
+        The list of orbitals to convert to cube files (one based).
+    nocc : int
+        The number of occupied orbitals
+    nvir : int
+        The number of virtual orbitals
+    """
+
+    import os.path
+
+    if nocc + nvir > 0:
+        na = wfn.nalpha()
+        nmo = wfn.nmo()
+        min_orb = max(1,na - nocc + 1)
+        max_orb = min(nmo,na + nvir + 1)
+        orbs = [k for k in range(min_orb,max_orb)]
+
+    print(orbs)
+
+    if not os.path.exists(path):
+        os.makedirs(path)
+
+    psi4.set_options({'CUBEPROP_ORBITALS' : orbs, 'CUBEPROP_FILEPATH' : path})
+    psi4.cubeprop(wfn)
+    if load:
+        import os
+        cube_files = {}
+        for file in os.listdir(path):
+            if file.endswith('.cube'):
+                cube_files[file] = CubeFile(os.path.join(path,file))
+        return cube_files
 
 def prepare_forte_objects(wfn):
     """
