@@ -73,6 +73,7 @@ void export_RDMs(py::module& m);
 void export_StateInfo(py::module& m);
 void export_SigmaVector(py::module& m);
 void export_SparseCISolver(py::module& m);
+void export_ForteCubeFile(py::module& m);
 
 /// Export the ActiveSpaceMethod class
 void export_ActiveSpaceMethod(py::module& m) {
@@ -209,6 +210,8 @@ PYBIND11_MODULE(forte, m) {
 
     export_SigmaVector(m);
     export_SparseCISolver(m);
+
+    export_ForteCubeFile(m);
 
     // export MOSpaceInfo
     py::class_<MOSpaceInfo, std::shared_ptr<MOSpaceInfo>>(m, "MOSpaceInfo")

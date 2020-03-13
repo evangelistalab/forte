@@ -76,6 +76,7 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-c++1z-extensions") # avoid warnings
 # List of CC files
 pybind11_add_module(forte
 src/api/ambit_api.cc
+src/api/cube_file_api.cc
 src/api/integrals_api.cc
 src/api/rdms_api.cc
 src/api/options_api.cc
