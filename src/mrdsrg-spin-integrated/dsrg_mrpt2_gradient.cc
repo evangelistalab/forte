@@ -2574,8 +2574,8 @@ void DSRG_MRPT2::write_2rdm_spin_dependent() {
         for (size_t k = 0; k < size_c; ++k) {
             auto m = core_all_[k];
             auto idx = k * ncore_ + i;
-            auto z_a = temp.block("cc").data()[idx];
-            auto z_b = temp.block("CC").data()[idx];
+            auto z_a = Z.block("cc").data()[idx];
+            auto z_b = Z.block("CC").data()[idx];
             for (size_t j = 0; j < size_c; ++j) {
                 auto m1 = core_all_[j];
                 
@@ -2595,8 +2595,8 @@ void DSRG_MRPT2::write_2rdm_spin_dependent() {
         for (size_t k = 0; k < size_a; ++k) {
             auto u = actv_all_[k];
             auto idx = k * na_ + i;
-            auto z_a = temp.block("aa").data()[idx];
-            auto z_b = temp.block("AA").data()[idx];
+            auto z_a = Z.block("aa").data()[idx];
+            auto z_b = Z.block("AA").data()[idx];
             for (size_t j = 0, size_c = core_all_.size(); j < size_c; ++j) {
                 auto m1 = core_all_[j];
                 
@@ -2616,8 +2616,8 @@ void DSRG_MRPT2::write_2rdm_spin_dependent() {
         for (size_t k = 0; k < size_v; ++k) {
             auto e = virt_all_[k];
             auto idx = k * nvirt_ + i;
-            auto z_a = temp.block("vv").data()[idx];
-            auto z_b = temp.block("VV").data()[idx];
+            auto z_a = Z.block("vv").data()[idx];
+            auto z_b = Z.block("VV").data()[idx];
             for (size_t j = 0, size_c = core_all_.size(); j < size_c; ++j) {
                 auto m1 = core_all_[j];
                 
@@ -2683,6 +2683,58 @@ void DSRG_MRPT2::write_2rdm_spin_dependent() {
             }
         }
     }
+
+
+    // terms with overlap
+    temp = BTF_->build(CoreTensor, "temporal tensor", {"pphh", "PPHH", "pPhH"});
+    BlockedTensor temp1 = BTF_->build(CoreTensor, "temporal tensor 1", {"pphh", "PPHH", "pPhH"});
+
+    temp1["cdkl"] = V["cdkl"] * Eeps2_p["klcd"];
+    temp1["CDKL"] = V["CDKL"] * Eeps2_p["KLCD"];
+    temp1["cDkL"] = V["cDkL"] * Eeps2_p["kLcD"];
+    temp["abij"] += 0.25 * temp1["cdkl"] * Eeps2_m1["ijab"] * Gamma1["ki"] * Gamma1["lj"] * Eta1["ac"] * Eta1["bd"];
+    temp["ABIJ"] += 0.25 * temp1["CDKL"] * Eeps2_m1["IJAB"] * Gamma1["KI"] * Gamma1["LJ"] * Eta1["AC"] * Eta1["BD"];
+    temp["aBiJ"] += 0.25 * temp1["cDkL"] * Eeps2_m1["iJaB"] * Gamma1["ki"] * Gamma1["LJ"] * Eta1["ac"] * Eta1["BD"];
+    temp1.zero();
+
+    temp1["cdkl"] = V["cdkl"] * Eeps2_m1["klcd"];
+    temp1["CDKL"] = V["CDKL"] * Eeps2_m1["KLCD"];
+    temp1["cDkL"] = V["cDkL"] * Eeps2_m1["kLcD"];
+    temp["abij"] += 0.25 * temp1["cdkl"] * Eeps2_p["ijab"] * Gamma1["ki"] * Gamma1["lj"] * Eta1["ac"] * Eta1["bd"];
+    temp["ABIJ"] += 0.25 * temp1["CDKL"] * Eeps2_p["IJAB"] * Gamma1["KI"] * Gamma1["LJ"] * Eta1["AC"] * Eta1["BD"];
+    temp["aBiJ"] += 0.25 * temp1["cDkL"] * Eeps2_p["iJaB"] * Gamma1["ki"] * Gamma1["LJ"] * Eta1["ac"] * Eta1["BD"];
+
+
+    temp["eumv"] += 2.0 * Z["em"] * Gamma1["uv"];
+    temp["EUMV"] += 2.0 * Z["EM"] * Gamma1["UV"];
+
+
+
+    temp["u,v1,n,u1"] += 2.0 * Z["un"] * Gamma1["u1,v1"]; 
+    temp["U,V1,N,U1"] += 2.0 * Z["UN"] * Gamma1["U1,V1"];
+
+
+
+    temp["xynv"] -= Z["un"] * Gamma2["uvxy"]; 
+    temp["XYNV"] -= Z["UN"] * Gamma2["UVXY"]; 
+
+
+
+
+    temp["evxy"] += Z["eu"] * Gamma2["uvxy"];
+    temp["EVXY"] += Z["EU"] * Gamma2["UVXY"];
+
+
+
+
+
+    temp["v,v1,u,u1"] += Z["uv"] * Gamma1["u1,v1"];
+    temp["V,V1,U,U1"] += Z["UV"] * Gamma1["U1,V1"];
+
+
+
+
+
 
 
 
