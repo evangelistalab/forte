@@ -86,8 +86,9 @@ class CubeFile():
                 coordinfo = fp.readline().split()
                 atnums.append(int(coordinfo[0]))
                 coords.append(list(map(float, coordinfo[2:])))
-                self.atom_numbers = np.array(atnums)
-                self.atom_coords = np.array(coords)
+
+            self.atom_numbers = np.array(atnums)
+            self.atom_coords = np.array(coords)
 
             data = np.array(
             [float(entry) for line in fp for entry in line.split()])

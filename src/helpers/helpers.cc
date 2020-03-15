@@ -78,6 +78,14 @@ py::array_t<double> ambit_to_np(ambit::Tensor t) {
     return py::array_t<double>(t.dims(), &(t.data()[0]));
 }
 
+py::array_t<double> vector_to_np(const std::vector<double>& v, const std::vector<size_t>& dims) {
+    return py::array_t<double>(dims, &(v.data()[0]));
+}
+
+py::array_t<double> vector_to_np(const std::vector<double>& v, const std::vector<int>& dims) {
+    return py::array_t<double>(dims, &(v.data()[0]));
+}
+
 psi::SharedMatrix tensor_to_matrix(ambit::Tensor t) {
     size_t size1 = t.dim(0);
     size_t size2 = t.dim(1);

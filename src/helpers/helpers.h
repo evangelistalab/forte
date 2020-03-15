@@ -61,6 +61,9 @@ namespace forte {
  */
 py::array_t<double> ambit_to_np(ambit::Tensor t);
 
+py::array_t<double> vector_to_np(const std::vector<double>& v, const std::vector<size_t>& dims);
+py::array_t<double> vector_to_np(const std::vector<double>& v, const std::vector<int>& dims);
+
 /**
  * @brief tensor_to_matrix
  * @param t The input tensor

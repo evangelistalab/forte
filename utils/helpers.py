@@ -1,7 +1,7 @@
 import psi4
 import forte
 
-from .cube_file import CubeFile
+#from .cube_file import CubeFile
 
 def psi4_scf(geom, basis, reference, functional = 'hf', options = {}) -> (float, psi4.core.Wavefunction):
     """
@@ -93,7 +93,7 @@ def psi4_cubeprop(wfn, path = '.', orbs = [], nocc = 3, nvir = 3, load = False):
         cube_files = {}
         for file in os.listdir(path):
             if file.endswith('.cube'):
-                cube_files[file] = CubeFile(os.path.join(path,file))
+                cube_files[file] = forte.CubeFile(os.path.join(path,file))
         return cube_files
 
 def prepare_forte_objects(wfn):

@@ -12,7 +12,6 @@ import re
 from PIL import Image
 
 from .renderer import FortePy3JSRenderer
-from .parse_cube import CubeFile
 
 # %matplotlib notebook
 #from ipywidgets.widgets.interaction import show_inline_matplotlib_plots

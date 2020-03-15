@@ -27,7 +27,9 @@
  */
 
 #include <pybind11/pybind11.h>
+#include <pybind11/stl.h>
 
+#include "helpers/helpers.h"
 #include "helpers/cube_file.h"
 
 namespace py = pybind11;
@@ -38,7 +40,18 @@ namespace forte {
 void export_ForteCubeFile(py::module& m) {
     py::class_<CubeFile, std::shared_ptr<CubeFile>>(m, "CubeFile")
         .def(py::init<const std::string&>())
-        .def("data", &CubeFile::data, "Get the data");
+        .def("num", &CubeFile::num, "Get the number of grid point in each direction")
+        .def("min", &CubeFile::min, "Get the minimum value of a coordinate")
+        .def("max", &CubeFile::max, "Get the maximum value of a coordinate")
+        .def("inc", &CubeFile::inc, "Get the increment in each direction")
+        .def("natoms", &CubeFile::natoms, "The number of atoms")
+        .def("atom_numbers", &CubeFile::atom_numbers, "The atomic numbers")
+        .def("atom_coords", &CubeFile::atom_coords, "The atomic numbers")
+        .def(
+            "data", [](CubeFile& cf) { return vector_to_np(cf.data(), cf.num()); }, "Get the data")
+        .def("scale", &CubeFile::scale, "The atomic numbers")
+        .def("add", &CubeFile::add, "The atomic numbers")
+        .def("pointwise_product", &CubeFile::pointwise_product, "The atomic numbers");
 }
 
 } // namespace forte

@@ -115,6 +115,7 @@ src/gradient_tpdm/backtransform_tpdm.cc
 src/gradient_tpdm/integraltransform_sort_so_tpdm.cc
 src/gradient_tpdm/integraltransform_tpdm_unrestricted.cc
 src/helpers/blockedtensorfactory.cc
+src/helpers/cube_file.cc
 src/helpers/helpers.cc
 src/helpers/iterative_solvers.cc
 src/helpers/printing.cc

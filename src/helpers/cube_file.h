@@ -38,7 +38,18 @@ class CubeFile {
   public:
     CubeFile(const std::string& filename);
 
+    const std::vector<int>& num() const;
+    const std::vector<double>& min() const;
+    const std::vector<double>& max() const;
+    const std::vector<double>& inc() const;
+    int natoms() const;
+    const std::vector<double>& atom_numbers() const;
+    const std::vector<std::tuple<double, double, double>>& atom_coords() const;
     const std::vector<double>& data() const;
+
+    void scale(double factor);
+    void add(const CubeFile& cf);
+    void pointwise_product(const CubeFile& cf);
 
   private:
     void load(std::string filename);
@@ -48,11 +59,11 @@ class CubeFile {
     std::string comments_;
     std::vector<double> levels_;
 
-    std::vector<double> num_;
+    int natoms_;
+    std::vector<int> num_;
     std::vector<double> min_;
     std::vector<double> max_;
     std::vector<double> inc_;
-    int natoms_;
     std::vector<double> atom_numbers_;
     std::vector<std::tuple<double, double, double>> atom_coords_;
     std::vector<double> data_;

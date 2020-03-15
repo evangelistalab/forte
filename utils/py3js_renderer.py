@@ -351,30 +351,6 @@ class Py3JSRenderer():
 
         return self.renderer
 
-    def load_cube_geometry(self, filename, do_display=True):
-        cube = parse_cube(filename)
-        atoms_list = []
-        for Z, xyz in zip(cube['atom_numbers'], cube['atom_coords']):
-            symbol = ATOM_DATA[Z]['symbol']
-            atoms_list.append((symbol, xyz[0], xyz[1], xyz[2]))
-        self.add_molecule_dict(atoms_list, bohr=True)
-
-    def add_isosurface(self, filename, levels=None, colors=None):
-        cube = parse_cube(filename)
-        if 'levels' in cube:
-            levels = cube['levels']
-        if colors == None:
-            colors = ['#f2a900', '#0033a0']
-        data = cube['data']
-        extent = [[cube['minx'], cube['maxx']], [cube['miny'], cube['maxy']],
-                  [cube['minz'], cube['maxz']]]
-        for level, color in zip(levels, colors):
-            if abs(level) > 1.0e-4:
-                mesh = self.isosurface(
-                    data, level=level, color=color, extent=extent)
-                self.iso.append(mesh)
-                self.scene.add(mesh)
-
     def add_cubefile(self, cube, add_geom=True, levels=None, colors=None):
         if add_geom:
             atoms_list = []
@@ -437,3 +413,28 @@ class Py3JSRenderer():
 
     def renderer(self):
         return self.renderer
+
+
+#    def load_cube_geometry(self, filename, do_display=True):
+#        cube = parse_cube(filename)
+#        atoms_list = []
+#        for Z, xyz in zip(cube['atom_numbers'], cube['atom_coords']):
+#            symbol = ATOM_DATA[Z]['symbol']
+#            atoms_list.append((symbol, xyz[0], xyz[1], xyz[2]))
+#        self.add_molecule_dict(atoms_list, bohr=True)
+
+#    def add_isosurface(self, filename, levels=None, colors=None):
+#        cube = parse_cube(filename)
+#        if 'levels' in cube:
+#            levels = cube['levels']
+#        if colors == None:
+#            colors = ['#f2a900', '#0033a0']
+#        data = cube['data']
+#        extent = [[cube['minx'], cube['maxx']], [cube['miny'], cube['maxy']],
+#                  [cube['minz'], cube['maxz']]]
+#        for level, color in zip(levels, colors):
+#            if abs(level) > 1.0e-4:
+#                mesh = self.isosurface(
+#                    data, level=level, color=color, extent=extent)
+#                self.iso.append(mesh)
+#                self.scene.add(mesh)
