@@ -50,6 +50,11 @@ SADSRG::SADSRG(RDMs rdms, std::shared_ptr<SCFInfo> scf_info, std::shared_ptr<For
         std::to_string(n_threads_) + (n_threads_ > 1 ? " OMP threads" : " OMP thread");
     print_method_banner({"Spin-Adapted Multireference Driven Similarity Renormalization Group",
                          "written by Chenyang Li", thread_title});
+    outfile->Printf("\n  Disclaimer:");
+    outfile->Printf("\n    The spin-adapted DSRG code is largely adopted from the spin-integrated "
+                    "code developed by");
+    outfile->Printf(
+        "\n    Chenyang Li, Kevin P. Hannon, Tianyuan Zhang, and Francesco A. Evangelista.");
     startup();
 }
 
