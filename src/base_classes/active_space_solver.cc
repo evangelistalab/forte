@@ -303,22 +303,35 @@ make_state_weights_map(std::shared_ptr<ForteOptions> options,
         }
     }
 
+    // print function
+    auto print_state_weights_map = [](const std::map<StateInfo, std::vector<double>>& state_weights_map) {
+        for (const auto& state_weights : state_weights_map) {
+            const auto& state = state_weights.first;
+            const auto& weights = state_weights.second;
+            psi::outfile->Printf("\n  State: %s", state.str().c_str());
+            for (auto x : weights) {
+                psi::outfile->Printf("\n  %18.12f", x);
+            }
+        }
+    };
+
+    // If not average over ms, directly return
+    if (not options->get_bool("SPIN_AVG_DENSITY")) {
+        if (options->get_int("PRINT") > 1) {
+            print_state_weights_map(state_weights_map);
+        }
+        return state_weights_map;
+    }
+
     // If we average over ms, then each multiplet will be considered as a "state".
     // The weight will be divided by its multiplicity.
     // For example, state-specific triplet will be treated as [1, 0, -1] each of weight 1/3.
-
-    if (not options->get_bool("SPIN_AVG_DENSITY"))
-        return state_weights_map;
 
     std::map<StateInfo, std::vector<double>> state_weights_map_ms_avg;
 
     for (const auto& state_weights : state_weights_map) {
         const auto& state = state_weights.first;
         const auto& weights = state_weights.second;
-        psi::outfile->Printf("\n State: %s", state.str().c_str());
-        for (auto x : weights) {
-            psi::outfile->Printf("\n %20.12f", x);
-        }
 
         auto multiplicity = state.multiplicity();
         auto irrep = state.irrep();
@@ -338,13 +351,8 @@ make_state_weights_map(std::shared_ptr<ForteOptions> options,
         }
     }
 
-    for (const auto& state_weights : state_weights_map_ms_avg) {
-        const auto& state = state_weights.first;
-        const auto& weights = state_weights.second;
-        psi::outfile->Printf("\n New State: %s", state.str().c_str());
-        for (auto x : weights) {
-            psi::outfile->Printf("\n %20.12f", x);
-        }
+    if (options->get_int("PRINT") > 1) {
+        print_state_weights_map(state_weights_map_ms_avg);
     }
 
     return state_weights_map_ms_avg;
