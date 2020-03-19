@@ -76,7 +76,7 @@ const std::map<StateInfo, std::vector<double>>& ActiveSpaceSolver::compute_energ
         int twice_ms = state.twice_ms();
         if (twice_ms < 0 and ms_avg_) {
             psi::outfile->Printf(
-                "\n  Continue to next symmetry block: No need to compute for ms = %d / 2 < 0.",
+                "\n  Continue to next symmetry block: No need to find solution for ms = %d / 2 < 0.",
                 twice_ms);
             continue;
         }
