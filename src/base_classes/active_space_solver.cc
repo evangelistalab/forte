@@ -98,7 +98,7 @@ const std::map<StateInfo, std::vector<double>>& ActiveSpaceSolver::compute_energ
 
 void ActiveSpaceSolver::print_energies(std::map<StateInfo, std::vector<double>>& energies) {
     print_h2("Energy Summary");
-    psi::outfile->Printf("\n    Multi.(ms)  Irrep.  No.               Energy");
+    psi::outfile->Printf("\n    Multi.(2ms)  Irrep.  No.               Energy");
     std::string dash(45, '-');
     psi::outfile->Printf("\n    %s", dash.c_str());
     std::vector<std::string> irrep_symbol = psi::Process::environment.molecule()->irrep_labels();
@@ -117,7 +117,7 @@ void ActiveSpaceSolver::print_energies(std::map<StateInfo, std::vector<double>>&
             auto label = "ENERGY ROOT " + std::to_string(i) + " " + std::to_string(multi) +
                          irrep_symbol[irrep];
             double energy = energies[state][i];
-            psi::outfile->Printf("\n     %3d  (%2d)   %3s    %2d   %20.12f", multi, twice_ms,
+            psi::outfile->Printf("\n     %3d  (%3d)   %3s    %2d   %20.12f", multi, twice_ms,
                                  irrep_symbol[irrep].c_str(), i, energy);
 
             // make label case insensitive as required by Psi4 Python side
@@ -163,7 +163,7 @@ void ActiveSpaceSolver::print_options() {
 
     int ltotal = 6 + 2 + 10 + 2 + 6;
     std::string dash(ltotal, '-');
-    psi::outfile->Printf("\n    Irrep.  Multi.(ms)      N");
+    psi::outfile->Printf("\n    Irrep.  Multi.(2ms)      N");
     psi::outfile->Printf("\n    %s", dash.c_str());
     for (const auto& state_nroot : state_nroots_map_) {
         const auto& state = state_nroot.first;
@@ -171,7 +171,7 @@ void ActiveSpaceSolver::print_options() {
         int multiplicity = state.multiplicity();
         int twice_ms = state.twice_ms();
         int nroots = state_nroot.second;
-        psi::outfile->Printf("\n    %5s   %4d (%3d)    %3d", irrep_symbol[irrep].c_str(),
+        psi::outfile->Printf("\n    %5s   %4d  (%3d)    %3d", irrep_symbol[irrep].c_str(),
                              multiplicity, twice_ms, nroots);
     }
     psi::outfile->Printf("\n    %s", dash.c_str());
@@ -304,16 +304,17 @@ make_state_weights_map(std::shared_ptr<ForteOptions> options,
     }
 
     // print function
-    auto print_state_weights_map = [](const std::map<StateInfo, std::vector<double>>& state_weights_map) {
-        for (const auto& state_weights : state_weights_map) {
-            const auto& state = state_weights.first;
-            const auto& weights = state_weights.second;
-            psi::outfile->Printf("\n  State: %s", state.str().c_str());
-            for (auto x : weights) {
-                psi::outfile->Printf("\n  %18.12f", x);
+    auto print_state_weights_map =
+        [](const std::map<StateInfo, std::vector<double>>& state_weights_map) {
+            for (const auto& state_weights : state_weights_map) {
+                const auto& state = state_weights.first;
+                const auto& weights = state_weights.second;
+                psi::outfile->Printf("\n  State: %s", state.str().c_str());
+                for (auto x : weights) {
+                    psi::outfile->Printf("\n  %18.12f", x);
+                }
             }
-        }
-    };
+        };
 
     // If not average over ms, directly return
     if (not options->get_bool("SPIN_AVG_DENSITY")) {
@@ -325,7 +326,7 @@ make_state_weights_map(std::shared_ptr<ForteOptions> options,
 
     // If we average over ms, then each multiplet will be considered as a "state".
     // The weight will be divided by its multiplicity.
-    // For example, state-specific triplet will be treated as [1, 0, -1] each of weight 1/3.
+    // For example, a triplet state will be treated as [1, 0, -1] each of weight 1/3.
 
     std::map<StateInfo, std::vector<double>> state_weights_map_ms_avg;
 
@@ -361,41 +362,112 @@ make_state_weights_map(std::shared_ptr<ForteOptions> options,
 RDMs ActiveSpaceSolver::compute_average_rdms(
     const std::map<StateInfo, std::vector<double>>& state_weights_map, int max_rdm_level) {
 
-    // TODO: grab this info from the ActiveSpaceSolver object (Francesco)
-    size_t nactive = mo_space_info_->size("ACTIVE");
+    if (ms_avg_) {
+        return compute_avg_rdms_ms_avg(state_weights_map, max_rdm_level);
+    }
 
-    ambit::Tensor g1a, g1b, g2aa, g2ab, g2bb, g3aaa, g3aab, g3abb, g3bbb;
+    return compute_avg_rdms(state_weights_map, max_rdm_level);
+}
 
-    g1a = ambit::Tensor::build(ambit::CoreTensor, "g1a", {nactive, nactive});
+RDMs ActiveSpaceSolver::compute_avg_rdms(
+    const std::map<StateInfo, std::vector<double>>& state_weights_map, int max_rdm_level) {
+    if (max_rdm_level <= 0) {
+        return RDMs();
+    }
+
+    size_t na = mo_space_info_->size("ACTIVE");
+
+    auto g1a = ambit::Tensor::build(ambit::CoreTensor, "g1a", {na, na});
+    auto g1b = ambit::Tensor::build(ambit::CoreTensor, "g1b", {na, na});
+
+    ambit::Tensor g2aa, g2ab, g2bb, g3aaa, g3aab, g3abb, g3bbb;
+
     if (max_rdm_level >= 2) {
-        g2ab = ambit::Tensor::build(ambit::CoreTensor, "g2ab", std::vector<size_t>(4, nactive));
+        g2aa = ambit::Tensor::build(ambit::CoreTensor, "g2aa", std::vector<size_t>(4, na));
+        g2ab = ambit::Tensor::build(ambit::CoreTensor, "g2ab", std::vector<size_t>(4, na));
+        g2bb = ambit::Tensor::build(ambit::CoreTensor, "g2bb", std::vector<size_t>(4, na));
     }
+
     if (max_rdm_level >= 3) {
-        g3aab = ambit::Tensor::build(ambit::CoreTensor, "g3aab", std::vector<size_t>(6, nactive));
+        g3aaa = ambit::Tensor::build(ambit::CoreTensor, "g3aaa", std::vector<size_t>(6, na));
+        g3aab = ambit::Tensor::build(ambit::CoreTensor, "g3aab", std::vector<size_t>(6, na));
+        g3abb = ambit::Tensor::build(ambit::CoreTensor, "g3abb", std::vector<size_t>(6, na));
+        g3bbb = ambit::Tensor::build(ambit::CoreTensor, "g3bbb", std::vector<size_t>(6, na));
     }
 
-    if (not ms_avg_) {
-        g1b = ambit::Tensor::build(ambit::CoreTensor, "g1b", {nactive, nactive});
-        if (max_rdm_level >= 2) {
-            g2aa = ambit::Tensor::build(ambit::CoreTensor, "g2aa", std::vector<size_t>(4, nactive));
-            g2bb = ambit::Tensor::build(ambit::CoreTensor, "g2bb", std::vector<size_t>(4, nactive));
-        }
-        if (max_rdm_level >= 3) {
-            g3aaa =
-                ambit::Tensor::build(ambit::CoreTensor, "g3aaa", std::vector<size_t>(6, nactive));
-            g3abb =
-                ambit::Tensor::build(ambit::CoreTensor, "g3abb", std::vector<size_t>(6, nactive));
-            g3bbb =
-                ambit::Tensor::build(ambit::CoreTensor, "g3bbb", std::vector<size_t>(6, nactive));
+    // Loop through references, add to master ref
+    for (const auto& state_nroot : state_nroots_map_) {
+        const auto& state = state_nroot.first;
+        size_t nroot = state_nroot.second;
+        const auto& weights = state_weights_map.at(state);
+
+        // Get the already-run method
+        const auto& method = state_method_map_.at(state);
+
+        // Loop through roots in the method
+        for (size_t r = 0; r < nroot; r++) {
+
+            // Get the weight
+            double weight = weights[r];
+
+            // Don't bother if the weight is zero
+            if (weight <= 1e-15)
+                continue;
+
+            // Get the RDMs
+            std::vector<std::pair<size_t, size_t>> state_ids;
+            state_ids.push_back(std::make_pair(r, r));
+            RDMs method_rdms = method->rdms(state_ids, max_rdm_level)[0];
+
+            // Average the RDMs
+            g1a("pq") += weight * method_rdms.g1a()("pq");
+            g1b("pq") += weight * method_rdms.g1b()("pq");
+
+            if (max_rdm_level >= 2) {
+                g2aa("pqrs") += weight * method_rdms.g2aa()("pqrs");
+                g2ab("pqrs") += weight * method_rdms.g2ab()("pqrs");
+                g2bb("pqrs") += weight * method_rdms.g2bb()("pqrs");
+            }
+
+            if (max_rdm_level >= 3) {
+                g3aaa("pqrstu") += weight * method_rdms.g3aaa()("pqrstu");
+                g3aab("pqrstu") += weight * method_rdms.g3aab()("pqrstu");
+                g3abb("pqrstu") += weight * method_rdms.g3abb()("pqrstu");
+                g3bbb("pqrstu") += weight * method_rdms.g3bbb()("pqrstu");
+            }
         }
     }
 
-    // function that scale rdm by w and add scaled rdm to sa_rdm
-    auto scale_add = [](std::vector<double>& sa_rdm, std::vector<double>& rdm, const double& w) {
-        std::for_each(rdm.begin(), rdm.end(), [&](double& v) { v *= w; });
-        std::transform(sa_rdm.begin(), sa_rdm.end(), rdm.begin(), sa_rdm.begin(),
-                       std::plus<double>());
-    };
+    if (max_rdm_level == 1) {
+        return RDMs(g1a, g1b);
+    }
+
+    if (max_rdm_level == 2) {
+        return RDMs(g1a, g1b, g2aa, g2ab, g2bb);
+    }
+
+    return RDMs(g1a, g1b, g2aa, g2ab, g2bb, g3aaa, g3aab, g3abb, g3bbb);
+}
+
+RDMs ActiveSpaceSolver::compute_avg_rdms_ms_avg(
+    const std::map<StateInfo, std::vector<double>>& state_weights_map, int max_rdm_level) {
+    if (max_rdm_level <= 0) {
+        return RDMs();
+    }
+
+    size_t na = mo_space_info_->size("ACTIVE");
+
+    auto g1a = ambit::Tensor::build(ambit::CoreTensor, "g1a", {na, na});
+
+    ambit::Tensor g2ab, g3aab;
+
+    if (max_rdm_level >= 2) {
+        g2ab = ambit::Tensor::build(ambit::CoreTensor, "g2ab", std::vector<size_t>(4, na));
+    }
+
+    if (max_rdm_level >= 3) {
+        g3aab = ambit::Tensor::build(ambit::CoreTensor, "g3aab", std::vector<size_t>(6, na));
+    }
 
     // Loop through references, add to master ref
     for (const auto& state_nroot : state_nroots_map_) {
@@ -404,7 +476,7 @@ RDMs ActiveSpaceSolver::compute_average_rdms(
         const auto& weights = state_weights_map.at(state);
 
         int twice_ms = state.twice_ms();
-        if (twice_ms < 0 and ms_avg_) {
+        if (twice_ms < 0) {
             continue;
         }
 
@@ -427,37 +499,22 @@ RDMs ActiveSpaceSolver::compute_average_rdms(
             RDMs method_rdms = method->rdms(state_ids, max_rdm_level)[0];
 
             // Average the RDMs
-            scale_add(g1a.data(), method_rdms.g1a().data(), weight);
+            g1a("pq") += weight * method_rdms.g1a()("pq");
 
             if (max_rdm_level >= 2) {
-                scale_add(g2ab.data(), method_rdms.g2ab().data(), weight);
+                g2ab("pqrs") += weight * method_rdms.g2ab()("pqrs");
             }
 
             if (max_rdm_level >= 3) {
-                scale_add(g3aab.data(), method_rdms.g3aab().data(), weight);
-            }
-
-            if (not ms_avg_) {
-                scale_add(g1b.data(), method_rdms.g1b().data(), weight);
-
-                if (max_rdm_level >= 2) {
-                    scale_add(g2aa.data(), method_rdms.g2aa().data(), weight);
-                    scale_add(g2bb.data(), method_rdms.g2bb().data(), weight);
-                }
-
-                if (max_rdm_level >= 3) {
-                    scale_add(g3aaa.data(), method_rdms.g3aaa().data(), weight);
-                    scale_add(g3abb.data(), method_rdms.g3abb().data(), weight);
-                    scale_add(g3bbb.data(), method_rdms.g3bbb().data(), weight);
-                }
+                g3aab("pqrstu") += weight * method_rdms.g3aab()("pqrstu");
             }
 
             // add ms < 0 components
-            if (ms_avg_ and twice_ms > 0) {
+            if (twice_ms > 0) {
                 g1a("pq") += weight * method_rdms.g1b()("pq");
 
                 if (max_rdm_level >= 2) {
-                    g2ab("pqrs") += method_rdms.g2ab()("qpsr");
+                    g2ab("pqrs") += weight * method_rdms.g2ab()("qpsr");
                 }
 
                 if (max_rdm_level >= 3) {
@@ -467,24 +524,15 @@ RDMs ActiveSpaceSolver::compute_average_rdms(
         }
     }
 
-    if (ms_avg_) {
-        if (max_rdm_level == 1) {
-            return RDMs(true, g1a);
-        } else if (max_rdm_level == 2) {
-            return RDMs(true, g1a, g2ab);
-        } else if (max_rdm_level == 3) {
-            return RDMs(true, g1a, g2ab, g3aab);
-        }
-    } else {
-        if (max_rdm_level == 1) {
-            return RDMs(g1a, g1b);
-        } else if (max_rdm_level == 2) {
-            return RDMs(g1a, g1b, g2aa, g2ab, g2bb);
-        } else if (max_rdm_level == 3) {
-            return RDMs(g1a, g1b, g2aa, g2ab, g2bb, g3aaa, g3aab, g3abb, g3bbb);
-        }
+    if (max_rdm_level == 1) {
+        return RDMs(true, g1a);
     }
-    return RDMs();
+
+    if (max_rdm_level == 2) {
+        return RDMs(true, g1a, g2ab);
+    }
+
+    return RDMs(true, g1a, g2ab, g3aab);
 }
 
 const std::map<StateInfo, std::vector<double>>&
