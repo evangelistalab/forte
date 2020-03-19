@@ -287,7 +287,7 @@ make_state_weights_map(std::shared_ptr<ForteOptions> options,
                     weights.push_back(w);
                 }
             }
-            sum_of_weights = std::accumulate(std::begin(weights), std::end(weights), 0.0);
+            sum_of_weights += std::accumulate(std::begin(weights), std::end(weights), 0.0);
 
             StateInfo state_this(state.na(), state.nb(), multi, state.twice_ms(), irrep,
                                  irrep_label);
