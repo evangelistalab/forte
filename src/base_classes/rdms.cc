@@ -220,16 +220,16 @@ ambit::Tensor RDMs::SF_L3() {
 }
 
 ambit::Tensor make_g2_high_spin_case(const ambit::Tensor& g2ab) {
-    auto g2pure = g2ab.clone();
-    g2pure("pqrs") -= g2ab("pqsr");
-    return g2pure;
+    auto g2hs = g2ab.clone();
+    g2hs("pqrs") -= g2ab("pqsr");
+    return g2hs;
 }
 
 ambit::Tensor make_g3_high_spin_case(const ambit::Tensor& g3aab) {
-    auto g3pure = g3aab.clone();
-    g3pure("pqrstu") -= g3aab("pqrsut");
-    g3pure("pqrstu") += g3aab("pqrtus");
-    return g3pure;
+    auto g3hs = g3aab.clone();
+    g3hs("pqrstu") -= g3aab("pqrsut");
+    g3hs("pqrstu") += g3aab("pqrtus");
+    return g3hs;
 }
 
 void make_cumulant_L2aa_in_place(const ambit::Tensor& g1a, ambit::Tensor& L2aa) {

@@ -111,9 +111,11 @@ class RDMs {
     /// @return the beta-beta-beta 3-RDM
     ambit::Tensor g3bbb();
 
-    // Spin-free RDMs
+    // Spin-free (spin-summed) RDMs
 
     /// @return the spin-free 2-RDM
+    /// If ms is NOT averaged, G2 will be computed using the definition (see SF_g2_ below).
+    /// If ms is averaged, G2 will be computed using only g2ab to avoid computing g2aa and g2bb.
     ambit::Tensor SFg2();
 
     // Reduced density cumulants
@@ -133,7 +135,7 @@ class RDMs {
     /// @return the beta-beta-beta 3-RDC
     ambit::Tensor L3bbb();
 
-    // Spin-free density cumulants
+    // Spin-free (spin-summed) density cumulants
 
     /// @return the spin-free 1-cumulant
     ambit::Tensor SF_L1();
@@ -191,7 +193,8 @@ class RDMs {
     /// The beta-beta-beta 3-RDM
     ambit::Tensor g3bbb_;
 
-    /// Spin-free (spin-summed) 2-RDM
+    /// Spin-free (spin-summed) 2-RDM defined as
+    /// G2[pqrs] = g2aa[pqrs] + g2ab[pqrs] + g2ab[qpsr] + g2bb[pqrs]
     ambit::Tensor SF_g2_;
 
     // Reduced density cumulants
@@ -211,11 +214,11 @@ class RDMs {
     /// The beta-beta-beta 3-RDC
     ambit::Tensor L3bbb_;
 
-    /// Spin-free 1-cumulant
+    /// Spin-free (spin-summed) 1-cumulant
     ambit::Tensor SF_L1_;
-    /// Spin-free 2-cumulant
+    /// Spin-free (spin-summed) 2-cumulant
     ambit::Tensor SF_L2_;
-    /// Spin-free 3-cumulant
+    /// Spin-free (spin-summed) 3-cumulant
     ambit::Tensor SF_L3_;
 
     /// Was L2aa built?
@@ -242,20 +245,18 @@ class RDMs {
 };
 
 /**
- * @brief make_g2_spin_pure Make the alpha-alpha or beta-beta 2-RDM from alpha-beta 2-RDM.
- * This function resets the tensor passed in (g2pure) aa or bb 2-RDM
- * using the ab 2-RDM assuming ms averaging.
+ * @brief make_g2_high_spin_case Make the alpha-alpha or beta-beta 2-RDM from alpha-beta 2-RDM.
+ * This function returns the aa or bb 2-RDM using the ab 2-RDM assuming ms averaging.
  * @param g2ab the alpha-beta 2-RDM
- * @return g2pure the alpha-alpha or beta-beta 2-RDM
+ * @return the alpha-alpha or beta-beta 2-RDM
  */
 ambit::Tensor make_g2_high_spin_case(const ambit::Tensor& g2ab);
 
 /**
- * @brief make_g3_spin_pure Make the aaa or bbb 3-RDM from aab 3-RDM.
- * This function resets the tensor passed in (g3pure) aaa or bbb 3-RDM
- * using the aab 3-RDM assuming ms averaging.
+ * @brief make_g3_high_spin_case Make the aaa or bbb 3-RDM from aab 3-RDM.
+ * This function returns the aaa or bbb 3-RDM using the aab 3-RDM assuming ms averaging.
  * @param g3aab the alpha-alpha-beta 3-RDM
- * @return g3pure the alpha-alpha-alpha or beta-beta-beta 3-RDM
+ * @return the alpha-alpha-alpha or beta-beta-beta 3-RDM
  */
 ambit::Tensor make_g3_high_spin_case(const ambit::Tensor& g3aab);
 
