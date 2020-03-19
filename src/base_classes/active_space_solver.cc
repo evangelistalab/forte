@@ -75,8 +75,8 @@ const std::map<StateInfo, std::vector<double>>& ActiveSpaceSolver::compute_energ
 
         int twice_ms = state.twice_ms();
         if (twice_ms < 0 and ms_avg_) {
-            psi::outfile->Printf("\n  Continue to next symmetry block: No need to find solution "
-                                 "for ms = %d / 2 < 0.",
+            psi::outfile->Printf("\n  Continue to the next symmetry block: No need to find the "
+                                 "solution for ms = %d / 2 < 0.",
                                  twice_ms);
             continue;
         }
@@ -202,38 +202,17 @@ std::map<StateInfo, std::vector<double>>
 make_state_weights_map(std::shared_ptr<ForteOptions> options,
                        std::shared_ptr<psi::Wavefunction> wfn) {
     std::map<StateInfo, std::vector<double>> state_weights_map;
-    auto state = make_state_info_from_psi_wfn(wfn);
-
-    auto multiplicity = state.multiplicity();
-    auto irrep = state.irrep();
-    auto irrep_label = state.irrep_label();
-    auto nele = state.na() + state.nb();
+    auto state = make_state_info_from_psi_wfn(wfn); // assumes low-spin
 
     py::list avg_state = options->get_gen_list("AVG_STATE");
-
-    // If we average over ms, then each multiplet will be considered as a "state".
-    // The weight will be divided by its multiplicity.
-    // For example, state-specific triplet will be treated as [1, 0, -1] each of weight 1/3.
 
     if (avg_state.size() == 0) {
         int nroot = options->get_int("NROOT");
         int root = options->get_int("ROOT");
 
-        if (not options->get_bool("SPIN_AVG_DENSITY")) {
-            std::vector<double> weights(nroot, 0.0);
-            weights[root] = 1.0;
-            state_weights_map[state] = weights;
-        } else {
-            int twice_ms = multiplicity - 1;
-            for (int i = twice_ms; i >= -twice_ms;) {
-                int na = (nele + i) / 2;
-                StateInfo state_spin(na, nele - na, multiplicity, i, irrep, irrep_label);
-                std::vector<double> weights(nroot, 0.0);
-                weights[root] = 1.0 / multiplicity;
-                state_weights_map[state_spin] = weights;
-                i -= 2;
-            }
-        }
+        std::vector<double> weights(nroot, 0.0);
+        weights[root] = 1.0;
+        state_weights_map[state] = weights;
     } else {
         double sum_of_weights = 0.0;
         size_t nstates = 0;
@@ -241,8 +220,8 @@ make_state_weights_map(std::shared_ptr<ForteOptions> options,
         for (size_t i = 0; i < nentry; ++i) {
             py::list avg_state_list = avg_state[i];
             if (avg_state_list.size() != 3) {
-                psi::outfile->Printf("\n  Error: invalid input of AVG_STATE. Each "
-                                     "entry should take an array of three numbers.");
+                psi::outfile->Printf("\n  Error: invalid input of AVG_STATE.");
+                psi::outfile->Printf("\n  Each entry should take an array of three numbers.");
                 throw std::runtime_error("Invalid input of AVG_STATE");
             }
 
@@ -259,10 +238,9 @@ make_state_weights_map(std::shared_ptr<ForteOptions> options,
             // check for errors
             int nirrep = wfn->nirrep();
             if (irrep >= nirrep || irrep < 0) {
-                psi::outfile->Printf("\n  Error: invalid irrep in AVG_STATE. Please "
-                                     "check the input irrep (start from 0) not to "
-                                     "exceed %d",
-                                     nirrep - 1);
+                psi::outfile->Printf("\n  Error: invalid irrep in AVG_STATE.");
+                psi::outfile->Printf(
+                    "\n  Please check the input irrep (start from 0) not to exceed %d", nirrep - 1);
                 throw std::runtime_error("Invalid irrep in AVG_STATE");
             }
             if (multi < 1) {
@@ -271,9 +249,9 @@ make_state_weights_map(std::shared_ptr<ForteOptions> options,
             }
 
             if (nstates_this < 1) {
-                psi::outfile->Printf("\n  Error: invalid nstates in AVG_STATE. "
-                                     "nstates of a certain irrep and multiplicity "
-                                     "should greater than 0.");
+                psi::outfile->Printf("\n  Error: invalid \"number of states\" in AVG_STATE.");
+                psi::outfile->Printf(
+                    "\n  \"Number of states\" of a irrep and multiplicity must > 0.");
                 throw std::runtime_error("Invalid nstates in AVG_STATE.");
             }
 
@@ -284,20 +262,20 @@ make_state_weights_map(std::shared_ptr<ForteOptions> options,
                 weights = std::vector<double>(nstates_this, 1.0);
             } else {
                 if (avg_weight.size() != nentry) {
-                    psi::outfile->Printf("\n  Error: mismatched number of entries in "
-                                         "AVG_STATE (%d) and AVG_WEIGHT (%d).",
+                    psi::outfile->Printf("\n  Error: mismatched number of entries in AVG_STATE "
+                                         "(%d) and AVG_WEIGHT (%d).",
                                          nentry, avg_weight.size());
-                    throw std::runtime_error("Mismatched number of entries in AVG_STATE "
-                                             "and AVG_WEIGHT.");
+                    throw std::runtime_error(
+                        "Mismatched number of entries in AVG_STATE and AVG_WEIGHT.");
                 }
 
                 py::list avg_weight_list = avg_weight[i];
                 int nweights = avg_weight_list.size();
                 if (nweights != nstates_this) {
-                    psi::outfile->Printf("\n  Error: mismatched number of weights "
-                                         "in entry %d of AVG_WEIGHT. Asked for %d "
-                                         "states but only %d weights.",
-                                         i, nstates_this, nweights);
+                    psi::outfile->Printf(
+                        "\n  Error: mismatched number of weights in entry %d of AVG_WEIGHT.", i);
+                    psi::outfile->Printf("\n  Asked for %d states but only %d weights.",
+                                         nstates_this, nweights);
                     throw std::runtime_error("Mismatched number of weights in AVG_WEIGHT.");
                 }
                 for (int n = 0; n < nstates_this; ++n) {
@@ -311,23 +289,10 @@ make_state_weights_map(std::shared_ptr<ForteOptions> options,
             }
             sum_of_weights = std::accumulate(std::begin(weights), std::end(weights), 0.0);
 
-            if (not options->get_bool("SPIN_AVG_DENSITY")) {
-                StateInfo state_this(state.na(), state.nb(), multi, state.twice_ms(), irrep,
-                                     irrep_label);
-                state_weights_map[state_this] = weights;
-                nstates += nstates_this;
-            } else {
-                int twice_ms = multi - 1;
-                for (int i = twice_ms; i >= -twice_ms;) {
-                    int na = (nele + i) / 2;
-                    StateInfo state_spin(na, nele - na, multi, i, irrep, irrep_label);
-                    std::vector<double> weights_spin(weights);
-                    std::transform(weights_spin.begin(), weights_spin.end(), weights_spin.begin(),
-                                   [multi](auto& w) { return w / multi; });
-                    state_weights_map[state_spin] = weights_spin;
-                    i -= 2;
-                }
-            }
+            StateInfo state_this(state.na(), state.nb(), multi, state.twice_ms(), irrep,
+                                 irrep_label);
+            state_weights_map[state_this] = weights;
+            nstates += nstates_this;
         }
 
         // normalize weights
@@ -337,7 +302,52 @@ make_state_weights_map(std::shared_ptr<ForteOptions> options,
                            [sum_of_weights](auto& w) { return w / sum_of_weights; });
         }
     }
-    return state_weights_map;
+
+    // If we average over ms, then each multiplet will be considered as a "state".
+    // The weight will be divided by its multiplicity.
+    // For example, state-specific triplet will be treated as [1, 0, -1] each of weight 1/3.
+
+    if (not options->get_bool("SPIN_AVG_DENSITY"))
+        return state_weights_map;
+
+    std::map<StateInfo, std::vector<double>> state_weights_map_ms_avg;
+
+    for (const auto& state_weights : state_weights_map) {
+        const auto& state = state_weights.first;
+        const auto& weights = state_weights.second;
+        psi::outfile->Printf("\n State: %s", state.str().c_str());
+        for (auto x : weights) {
+            psi::outfile->Printf("\n %20.12f", x);
+        }
+
+        auto multiplicity = state.multiplicity();
+        auto irrep = state.irrep();
+        auto irrep_label = state.irrep_label();
+        auto nele = state.na() + state.nb();
+
+        int max_twice_ms = multiplicity - 1;
+        for (int i = max_twice_ms; i >= -max_twice_ms; i -= 2) {
+            int na = (nele + i) / 2;
+            StateInfo state_ms(na, nele - na, multiplicity, i, irrep, irrep_label);
+
+            std::vector<double> weights_ms(weights);
+            std::transform(weights_ms.begin(), weights_ms.end(), weights_ms.begin(),
+                           [multiplicity](auto& w) { return w / multiplicity; });
+
+            state_weights_map_ms_avg[state_ms] = weights_ms;
+        }
+    }
+
+    for (const auto& state_weights : state_weights_map_ms_avg) {
+        const auto& state = state_weights.first;
+        const auto& weights = state_weights.second;
+        psi::outfile->Printf("\n New State: %s", state.str().c_str());
+        for (auto x : weights) {
+            psi::outfile->Printf("\n %20.12f", x);
+        }
+    }
+
+    return state_weights_map_ms_avg;
 }
 
 RDMs ActiveSpaceSolver::compute_average_rdms(

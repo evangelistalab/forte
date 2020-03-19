@@ -70,7 +70,7 @@ class StateInfo {
     bool operator==(const StateInfo& rhs) const;
 
     /// string representation of this object
-    std::string str();
+    std::string str() const;
 
   private:
     // number of alpha electrons (including core, excludes ecp)

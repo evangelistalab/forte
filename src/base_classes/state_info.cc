@@ -123,7 +123,7 @@ StateInfo make_state_info_from_psi_wfn(std::shared_ptr<psi::Wavefunction> wfn) {
     return StateInfo(na, nb, multiplicity, twice_ms, irrep, irrep_label);
 }
 
-std::string StateInfo::str() {
+std::string StateInfo::str() const {
     std::string irrep_label_out =
         irrep_label_.empty() ? "Irrep" + std::to_string(irrep_) : irrep_label();
     return multiplicity_label() + " " + irrep_label_out + " (Ms = " + get_ms_string(twice_ms()) +
