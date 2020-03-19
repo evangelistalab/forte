@@ -3,8 +3,8 @@
 Driven Similarity Renormalization Group
 =======================================
 
-.. codeauthor:: Francesco A. Evangelista, Chenyang Li, Kevin Hannon, Tianyuan Zhang
-.. sectionauthor:: Chenyang Li, Tianyuan Zhang, Kevin P. Hannon
+.. codeauthor:: Chenyang Li, Kevin P. Hannon, Tianyuan Zhang, Francesco A. Evangelista
+.. sectionauthor:: Chenyang Li, Tianyuan Zhang, Kevin P. Hannon, Francesco A. Evangelista
 
 .. important::
   Any publication utilizing the DSRG code should acknowledge the following articles:
@@ -16,18 +16,27 @@ Driven Similarity Renormalization Group
   Depending on the features used, the user is encouraged to cite the corresponding articles listed :ref:`here <dsrg_ref>`.
 
 .. caution::
-  The examples used in this manual are written based on the spin-integrated code
-  that works only for singlet molecules and those with odd multiplicities.
-  To invoke the spin-adated implementation (that works for general multiplicities),
-  the user needs to specify the following keywords:
+  The examples used in this manual are written based on the spin-integrated code.
+  To make the spin-integrated code work properly for molecules with even multiplicities,
+  the user should specify the following keyword:
+  ::
+
+     spin_avg_density    true       # use spin-summed reduced density matrices
+
+  to invoke the use of spin-free densities, which are computed by averaging all spin multiplets.
+  For odd multiplicities, there is no need to do so.
+
+  The latest version of Forte also has the spin-adapted MR-DSRG implemented for
+  DSRG-MRPT2, DSRG-MRPT3, and MR-LDSRG(2) (and its variants).
+  To invoke the spin-adated implementation, the user needs to specify the following keywords:
   ::
 
      correlation_solver  sa-mrdsrg  # spin-adapted DSRG computation
-     spin_avg_density    true       # must use spin-averaged densities
      corr_level          ldsrg2     # spin-adapted theories: PT2, PT3, LDSRG2_QC, LDSRG2
 
   The spin-adapted version should be at least 2-3 times faster than the corresponding spin-integrated code,
   and it also saves some memory.
+  Note that the spin-adapted code will ignore the `spin_avg_density` keyword and always treat it as `true`.
 
 .. _`basic_dsrg`:
 
@@ -1358,6 +1367,7 @@ Acronyms used in the following text:
   dsrg-mrpt2-10-CO               SS, PR    :math:`\text{CO}`                             dipole moment (not linear response)
   dsrg-mrpt2-11-C2H4             SA        ethylene :math:`\text{C}_2\text{H}_4`         lowest three singlet states
   dsrg-mrpt2-12-localized-actv   SA        butadiene :math:`\text{C}_4\text{H}_6`        long, localized active orbitals
+  dsrg-mrpt2-13                  SS        :math:`\text{N}_2` and N atom                 size-consistency check
   aci-dsrg-mrpt2-1               SS, U     :math:`\text{N}_2`                            ACI(:math:`\sigma=0`)
   aci-dsrg-mrpt2-2               SS, U     :math:`\text{H}_4` (rectangular)              ACI(:math:`\sigma=0`)
   aci-dsrg-mrpt2-3               SS, PR    :math:`\text{H}_4` (rectangular)              ACI(:math:`\sigma=0`)
