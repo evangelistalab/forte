@@ -37,7 +37,6 @@ set forte{
   restricted_docc         [2,0,1,1]
   active                  [2,0,0,0]
   dsrg_s                  1.0
-  spin_avg_density        true
   e_convergence           10
   ccvv_source             zero
   semi_canonical          false

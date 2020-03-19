@@ -41,7 +41,6 @@ set forte{
   active_space_solver  cas
   correlation_solver   sa-mrdsrg
   corr_level           pt3
-  spin_avg_density     true
   calc_type            sa
   frozen_docc          [2,0,0,0]
   restricted_docc      [3,0,0,2]

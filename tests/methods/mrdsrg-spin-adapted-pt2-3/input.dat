@@ -47,7 +47,6 @@ Ecas, wfn = energy('casscf', return_wfn=True)
 set forte{
   active_space_solver    cas
   correlation_solver     sa-mrdsrg
-  spin_avg_density       true
   corr_level             pt2
   frozen_docc            [2,1,0,0,0,0,2,1]
   restricted_docc        [3,2,0,0,0,0,2,3]

@@ -37,7 +37,7 @@ import psi4.driver.p4util as p4util
 from psi4.driver.procrouting import proc_util
 
 def forte_driver(state_weights_map, scf_info, options, ints, mo_space_info):
-    max_rdm_level = 3 if options.get_str("THREEPDC") != "ZERO" else 2 # TODO: set this (Francesco)
+    max_rdm_level = 3 if options.get_str("THREEPDC") != "ZERO" else 2
     return_en = 0.0
 
     state_map = forte.to_state_nroots_map(state_weights_map)
@@ -392,6 +392,12 @@ def run_forte(name, **kwargs):
 
     # Call methods that project the orbitals (AVAS, embedding)
     mo_space_info = orbital_projection(ref_wfn, options, mo_space_info)
+
+    # Averaging spin multiplets if doing spin-adapted computation
+    if options.get_str('CORRELATION_SOLVER') == 'SA-MRDSRG':
+        options_dict = options.dict()
+        options_dict['SPIN_AVG_DENSITY']['value'] = True
+        options.set_dict(options_dict)
 
     state = forte.make_state_info_from_psi_wfn(ref_wfn)
     scf_info = forte.SCFInfo(ref_wfn)

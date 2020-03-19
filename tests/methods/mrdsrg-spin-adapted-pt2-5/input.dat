@@ -43,7 +43,6 @@ compare_values(Ecas_psi4, Ecas, 9, "CASSCF(8,8)/cc-pCVDZ energy")
 set forte{
   active_space_solver  cas
   correlation_solver   sa-mrdsrg
-  spin_avg_density     true
   corr_level           pt2
   frozen_docc          [0,0,0,0,0,0,0,0]
   restricted_docc      [1,0,0,0,0,1,0,0]
