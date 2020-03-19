@@ -136,6 +136,8 @@ class ActiveSpaceSolver {
     std::map<StateInfo, std::vector<double>> state_energies_map_;
 
     /// Average spin multiplets for RDMs
+    /// If true, the weight of a state will be averaged by its multiplicity.
+    /// Moreover, all its ms components will be computed by the solver.
     bool ms_avg_;
 
     /// Pairs of state info and the contracted CI eigen vectors

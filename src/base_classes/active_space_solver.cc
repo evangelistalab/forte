@@ -75,9 +75,9 @@ const std::map<StateInfo, std::vector<double>>& ActiveSpaceSolver::compute_energ
 
         int twice_ms = state.twice_ms();
         if (twice_ms < 0 and ms_avg_) {
-            psi::outfile->Printf(
-                "\n  Continue to next symmetry block: No need to find solution for ms = %d / 2 < 0.",
-                twice_ms);
+            psi::outfile->Printf("\n  Continue to next symmetry block: No need to find solution "
+                                 "for ms = %d / 2 < 0.",
+                                 twice_ms);
             continue;
         }
 
@@ -211,11 +211,15 @@ make_state_weights_map(std::shared_ptr<ForteOptions> options,
 
     py::list avg_state = options->get_gen_list("AVG_STATE");
 
+    // If we average over ms, then each multiplet will be considered as a "state".
+    // The weight will be divided by its multiplicity.
+    // For example, state-specific triplet will be treated as [1, 0, -1] each of weight 1/3.
+
     if (avg_state.size() == 0) {
         int nroot = options->get_int("NROOT");
         int root = options->get_int("ROOT");
 
-        if (!options->get_bool("SPIN_AVG_DENSITY")) {
+        if (not options->get_bool("SPIN_AVG_DENSITY")) {
             std::vector<double> weights(nroot, 0.0);
             weights[root] = 1.0;
             state_weights_map[state] = weights;
@@ -307,7 +311,7 @@ make_state_weights_map(std::shared_ptr<ForteOptions> options,
             }
             sum_of_weights = std::accumulate(std::begin(weights), std::end(weights), 0.0);
 
-            if (!options->get_bool("SPIN_AVG_DENSITY")) {
+            if (not options->get_bool("SPIN_AVG_DENSITY")) {
                 StateInfo state_this(state.na(), state.nb(), multi, state.twice_ms(), irrep,
                                      irrep_label);
                 state_weights_map[state_this] = weights;
