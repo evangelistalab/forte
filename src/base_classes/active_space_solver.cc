@@ -117,7 +117,7 @@ void ActiveSpaceSolver::print_energies(std::map<StateInfo, std::vector<double>>&
             auto label = "ENERGY ROOT " + std::to_string(i) + " " + std::to_string(multi) +
                          irrep_symbol[irrep];
             double energy = energies[state][i];
-            psi::outfile->Printf("\n     %3d  (%3d)   %3s    %2d   %20.12f", multi, twice_ms,
+            psi::outfile->Printf("\n     %3d  (%3d)   %3s    %2d  %20.12f", multi, twice_ms,
                                  irrep_symbol[irrep].c_str(), i, energy);
 
             // make label case insensitive as required by Psi4 Python side
@@ -176,7 +176,7 @@ void ActiveSpaceSolver::print_options() {
     }
     psi::outfile->Printf("\n    %s", dash.c_str());
     psi::outfile->Printf("\n    N: number of roots");
-    psi::outfile->Printf("\n    ms: twice spin z component");
+    psi::outfile->Printf("\n    ms: spin z component");
     psi::outfile->Printf("\n    Total number of roots: %3d", nstates);
     psi::outfile->Printf("\n    %s\n", dash.c_str());
 }

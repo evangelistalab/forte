@@ -35,7 +35,7 @@ set {
   avg_states          [0,1,2]
 }
 Ecas, wfn = energy('casscf', return_wfn=True)
-compare_values(ref_cas,Ecas,8,"CASSCF energy")
+compare_values(ref_cas, Ecas, 8, "CASSCF energy")
 
 set forte{
   active_space_solver  cas

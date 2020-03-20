@@ -5,8 +5,8 @@ import forte
 memory 500 mb
 
 Ecas_psi4 = -75.547269671169772
-Ept2_0    = -75.782347142186822
-Ept2_1    = -75.686430520964535
+Ept2_0    = -75.781989502581368
+Ept2_1    = -75.679593509886715
 
 molecule {
 0 1
@@ -38,7 +38,7 @@ set detci {
   calc_s_squared     true
 }
 Ecas, wfn = energy('casscf', return_wfn=True)
-compare_values(Ecas_psi4, Ecas, 9, "CASSCF(8,8)/cc-pCVDZ energy")
+compare_values(Ecas_psi4, Ecas, 9, "CASSCF(8,8)/cc-pCVDZ (PSI4) energy")
 
 set forte{
   active_space_solver  cas
@@ -51,12 +51,13 @@ set forte{
   e_convergence        12
   r_convergence        8
   calc_type            sa
-  avg_state            [[0,1,2]]
+  avg_state            [[0,1,3]]
+  avg_weight           [[1,1,0]]  # Delta state is the 3rd state before but 2nd state after PT2
   threepdc             zero
-  relax_ref            twice
+  relax_ref            once
 }
 energy('forte', ref_wfn=wfn)
 Eroot0 = variable("ENERGY ROOT 0 1AG")
-Eroot1 = variable("ENERGY ROOT 1 1AG")
-compare_values(Ept2_0, Eroot0, 9, "SA-DSRG-MRPT2 relaxed energy singlet Ag root 0")
-compare_values(Ept2_1, Eroot1, 9, "SA-DSRG-MRPT2 relaxed energy singlet Ag root 1")
+Eroot1 = variable("ENERGY ROOT 2 1AG")
+compare_values(Ept2_0, Eroot0, 9, "SA-DSRG-MRPT2 relaxed energy singlet Sigma_g^+ root 0")
+compare_values(Ept2_1, Eroot1, 9, "SA-DSRG-MRPT2 relaxed energy singlet Sigma_g^+ root 1")

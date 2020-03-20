@@ -23,9 +23,9 @@
     -----------------------------------------------------------------------
 
 
-    Psi4 started on: Thursday, 12 March 2020 08:44PM
+    Psi4 started on: Saturday, 21 March 2020 12:44AM
 
-    Process ID: 35807
+    Process ID: 46313
     Host:       Yorks-Mac.local
     PSIDATADIR: /Users/york/src/psi4group/psi4/share/psi4
     Memory:     500.0 MiB
@@ -64,8 +64,29 @@ set mcscf{
   maxiter                 1000
   level_shift             1.0
 }
+Emcscf, wfn = energy('mcscf', return_wfn=True)
+compare_values(refcas, Emcscf, 10, "CASSCF(2,2) (PSI4 MCSCF) energy")
+
+set globals {
+  scf_type               direct
+  reference              rhf
+}
+set forte{
+  job_type               casscf
+  casscf_ci_solver       fci
+  restricted_docc        [2,0,1,1]
+  active                 [2,0,0,0]
+  e_convergence          12
+  r_convergence          8
+  casscf_g_convergence   1e-8
+  casscf_e_convergence   1e-12
+}
+Escf, wfn = energy('scf', return_wfn=True)
+Ecas, wfn = energy('forte', ref_wfn=wfn, return_wfn=True)
+compare_values(refcas, Emcscf, 10, "CASSCF(2,2) (FORTE) energy")
 
 set forte{
+  job_type                newdriver
   active_space_solver     cas
   correlation_solver      sa-mrdsrg
   corr_level              pt2
@@ -73,12 +94,8 @@ set forte{
   restricted_docc         [2,0,1,1]
   active                  [2,0,0,0]
   dsrg_s                  1.0
-  spin_avg_density        true
   e_convergence           10
 }
-
-Emcscf, wfn = energy('mcscf', return_wfn=True)
-compare_values(refcas, Emcscf, 10, "CASSCF(2,2) energy")
 
 Ept2 = energy('forte', ref_wfn=wfn)
 compare_values(refpt2, Ept2, 10, "DSRG-MRPT2 energy")
@@ -104,7 +121,7 @@ Scratch directory: /Users/york/scratch/psi4/
 
 
 *** tstart() called on Yorks-Mac.local
-*** at Thu Mar 12 20:44:23 2020
+*** at Sat Mar 21 00:44:14 2020
 
 
          ------------------------------------------
@@ -477,16 +494,662 @@ Scratch directory: /Users/york/scratch/psi4/
   MCSCF Execution Completed.
 
 
-*** tstop() called on Yorks-Mac.local at Thu Mar 12 20:44:23 2020
+*** tstop() called on Yorks-Mac.local at Sat Mar 21 00:44:15 2020
 Module time:
-	user time   =       0.18 seconds =       0.00 minutes
-	system time =       0.02 seconds =       0.00 minutes
-	total time  =          0 seconds =       0.00 minutes
+	user time   =       0.20 seconds =       0.00 minutes
+	system time =       0.03 seconds =       0.00 minutes
+	total time  =          1 seconds =       0.02 minutes
 Total time:
-	user time   =       0.18 seconds =       0.00 minutes
+	user time   =       0.20 seconds =       0.00 minutes
+	system time =       0.03 seconds =       0.00 minutes
+	total time  =          1 seconds =       0.02 minutes
+    CASSCF(2,2) (PSI4 MCSCF) energy...................................PASSED
+
+Scratch directory: /Users/york/scratch/psi4/
+
+*** tstart() called on Yorks-Mac.local
+*** at Sat Mar 21 00:44:15 2020
+
+   => Loading Basis Set <=
+
+    Name: CC-PVDZ
+    Role: ORBITAL
+    Keyword: BASIS
+    atoms 1 entry F          line   228 file /Users/york/src/psi4group/psi4/share/psi4/basis/cc-pvdz.gbs 
+    atoms 2 entry H          line    22 file /Users/york/src/psi4group/psi4/share/psi4/basis/cc-pvdz.gbs 
+
+
+         ---------------------------------------------------------
+                                   SCF
+               by Justin Turney, Rob Parrish, Andy Simmonett
+                          and Daniel G. A. Smith
+                              RHF Reference
+                        1 Threads,    476 MiB Core
+         ---------------------------------------------------------
+
+  ==> Geometry <==
+
+    Molecular point group: c2v
+    Full point group: C_inf_v
+
+    Geometry (in Angstrom), charge = 0, multiplicity = 1:
+
+       Center              X                  Y                   Z               Mass       
+    ------------   -----------------  -----------------  -----------------  -----------------
+         F            0.000000000000     0.000000000000    -0.075563346255    18.998403162730
+         H            0.000000000000     0.000000000000     1.424436653745     1.007825032230
+
+  Running in c2v symmetry.
+
+  Rotational constants: A = ************  B =      7.82847  C =      7.82847 [cm^-1]
+  Rotational constants: A = ************  B = 234691.66104  C = 234691.66104 [MHz]
+  Nuclear repulsion =    3.175063264020000
+
+  Charge       = 0
+  Multiplicity = 1
+  Electrons    = 10
+  Nalpha       = 5
+  Nbeta        = 5
+
+  ==> Algorithm <==
+
+  SCF Algorithm Type is DIRECT.
+  DIIS enabled.
+  MOM disabled.
+  Fractional occupation disabled.
+  Guess Type is SAD.
+  Energy threshold   = 1.00e-15
+  Density threshold  = 1.00e-12
+  Integral threshold = 0.00e+00
+
+  ==> Primary Basis <==
+
+  Basis Set: CC-PVDZ
+    Blend: CC-PVDZ
+    Number of shells: 9
+    Number of basis function: 19
+    Number of Cartesian functions: 20
+    Spherical Harmonics?: true
+    Max angular momentum: 2
+
+   => Loading Basis Set <=
+
+    Name: (CC-PVDZ AUX)
+    Role: JKFIT
+    Keyword: DF_BASIS_SCF
+    atoms 1 entry F          line   271 file /Users/york/src/psi4group/psi4/share/psi4/basis/cc-pvdz-jkfit.gbs 
+    atoms 2 entry H          line    51 file /Users/york/src/psi4group/psi4/share/psi4/basis/cc-pvdz-jkfit.gbs 
+
+  Starting with a DF guess...
+
+  ==> Pre-Iterations <==
+
+   -------------------------------------------------------
+    Irrep   Nso     Nmo     Nalpha   Nbeta   Ndocc  Nsocc
+   -------------------------------------------------------
+     A1        10      10       0       0       0       0
+     A2         1       1       0       0       0       0
+     B1         4       4       0       0       0       0
+     B2         4       4       0       0       0       0
+   -------------------------------------------------------
+    Total      19      19       5       5       5       0
+   -------------------------------------------------------
+
+  ==> Integral Setup <==
+
+  DFHelper Memory: AOs need 0.000 GiB; user supplied 0.349 GiB. Using in-core AOs.
+
+  ==> MemDFJK: Density-Fitted J/K Matrices <==
+
+    J tasked:                   Yes
+    K tasked:                   Yes
+    wK tasked:                   No
+    OpenMP threads:               1
+    Memory [MiB]:               357
+    Algorithm:                 Core
+    Schwarz Cutoff:           1E-12
+    Mask sparsity (%):       0.0000
+    Fitting Condition:        1E-10
+
+   => Auxiliary Basis Set <=
+
+  Basis Set: (CC-PVDZ AUX)
+    Blend: CC-PVDZ-JKFIT
+    Number of shells: 33
+    Number of basis function: 93
+    Number of Cartesian functions: 106
+    Spherical Harmonics?: true
+    Max angular momentum: 3
+
+  Minimum eigenvalue in the overlap matrix is 1.3340269817E-01.
+  Reciprocal condition number of the overlap matrix is 5.7946734818E-02.
+    Using symmetric orthogonalization.
+  SCF Guess: Superposition of Atomic Densities via on-the-fly atomic UHF.
+
+  ==> Iterations <==
+
+                           Total Energy        Delta E     RMS |[F,P]|
+
+   @DF-RHF iter SAD:   -99.27377095935125   -9.92738e+01   0.00000e+00 
+   @DF-RHF iter   1:   -99.77292039981788   -4.99149e-01   3.58792e-02 DIIS
+   @DF-RHF iter   2:   -99.82685767114265   -5.39373e-02   3.40175e-02 DIIS
+   @DF-RHF iter   3:   -99.87047224199613   -4.36146e-02   4.81154e-03 DIIS
+   @DF-RHF iter   4:   -99.87267238923239   -2.20015e-03   1.44616e-03 DIIS
+   @DF-RHF iter   5:   -99.87284816450273   -1.75775e-04   1.38877e-04 DIIS
+   @DF-RHF iter   6:   -99.87285074348256   -2.57898e-06   1.78380e-05 DIIS
+   @DF-RHF iter   7:   -99.87285077621635   -3.27338e-08   2.42160e-06 DIIS
+   @DF-RHF iter   8:   -99.87285077653904   -3.22686e-10   3.11253e-07 DIIS
+   @DF-RHF iter   9:   -99.87285077654663   -7.58860e-12   2.52388e-08 DIIS
+   @DF-RHF iter  10:   -99.87285077654674   -1.13687e-13   7.65775e-10 DIIS
+   @DF-RHF iter  11:   -99.87285077654670    4.26326e-14   1.08833e-10 DIIS
+   @DF-RHF iter  12:   -99.87285077654670    0.00000e+00   1.31935e-11 DIIS
+   @DF-RHF iter  13:   -99.87285077654667    2.84217e-14   7.06460e-13 DIIS
+   @DF-RHF iter  14:   -99.87285077654673   -5.68434e-14   5.86965e-14 DIIS
+   @DF-RHF iter  15:   -99.87285077654678   -5.68434e-14   1.35979e-14 DIIS
+   @DF-RHF iter  16:   -99.87285077654673    5.68434e-14   6.48802e-15 DIIS
+   @DF-RHF iter  17:   -99.87285077654670    2.84217e-14   5.32567e-15 DIIS
+   @DF-RHF iter  18:   -99.87285077654676   -5.68434e-14   3.59034e-15 DIIS
+   @DF-RHF iter  19:   -99.87285077654677   -1.42109e-14   3.30724e-15 DIIS
+   @DF-RHF iter  20:   -99.87285077654670    7.10543e-14   3.26059e-15 DIIS
+   @DF-RHF iter  21:   -99.87285077654674   -4.26326e-14   3.46591e-15 DIIS
+   @DF-RHF iter  22:   -99.87285077654666    8.52651e-14   3.71093e-15 DIIS
+   @DF-RHF iter  23:   -99.87285077654671   -5.68434e-14   3.13452e-15 DIIS
+   @DF-RHF iter  24:   -99.87285077654673   -1.42109e-14   2.94099e-15 DIIS
+   @DF-RHF iter  25:   -99.87285077654674   -1.42109e-14   2.72486e-15 DIIS
+   @DF-RHF iter  26:   -99.87285077654663    1.13687e-13   3.35286e-15 DIIS
+   @DF-RHF iter  27:   -99.87285077654677   -1.42109e-13   3.29983e-15 DIIS
+   @DF-RHF iter  28:   -99.87285077654670    7.10543e-14   3.81854e-15 DIIS
+   @DF-RHF iter  29:   -99.87285077654681   -1.13687e-13   2.62438e-15 DIIS
+   @DF-RHF iter  30:   -99.87285077654674    7.10543e-14   2.76407e-15 DIIS
+   @DF-RHF iter  31:   -99.87285077654667    7.10543e-14   2.22757e-15 DIIS
+   @DF-RHF iter  32:   -99.87285077654677   -9.94760e-14   3.18430e-15 DIIS
+   @DF-RHF iter  33:   -99.87285077654668    8.52651e-14   3.19804e-15 DIIS
+   @DF-RHF iter  34:   -99.87285077654673   -4.26326e-14   3.32340e-15 DIIS
+   @DF-RHF iter  35:   -99.87285077654674   -1.42109e-14   2.32066e-15 DIIS
+   @DF-RHF iter  36:   -99.87285077654677   -2.84217e-14   2.48482e-15 DIIS
+   @DF-RHF iter  37:   -99.87285077654664    1.27898e-13   3.84172e-15 DIIS
+   @DF-RHF iter  38:   -99.87285077654667   -2.84217e-14   2.49443e-15 DIIS
+   @DF-RHF iter  39:   -99.87285077654676   -8.52651e-14   1.89891e-15 DIIS
+   @DF-RHF iter  40:   -99.87285077654674    1.42109e-14   4.10675e-15 DIIS
+   @DF-RHF iter  41:   -99.87285077654670    4.26326e-14   2.73113e-15 DIIS
+   @DF-RHF iter  42:   -99.87285077654673   -2.84217e-14   3.25887e-15 DIIS
+   @DF-RHF iter  43:   -99.87285077654670    2.84217e-14   2.71328e-15 DIIS
+   @DF-RHF iter  44:   -99.87285077654673   -2.84217e-14   3.99373e-15 DIIS
+   @DF-RHF iter  45:   -99.87285077654671    1.42109e-14   2.09697e-15 DIIS
+   @DF-RHF iter  46:   -99.87285077654671    0.00000e+00   2.10488e-15 DIIS
+
+  DF guess converged.
+
+  ==> DirectJK: Integral-Direct J/K Matrices <==
+
+    J tasked:                  Yes
+    K tasked:                  Yes
+    wK tasked:                  No
+    Integrals threads:           1
+    Schwarz Cutoff:          1E-12
+
+   @RHF iter  47:   -99.87285247164381   -9.98729e+01   6.40106e-06 DIIS
+   @RHF iter  48:   -99.87285247439937   -2.75556e-09   1.44887e-06 DIIS
+   @RHF iter  49:   -99.87285247445982   -6.04530e-11   8.76948e-07 DIIS
+   @RHF iter  50:   -99.87285247449518   -3.53566e-11   8.65207e-08 DIIS
+   @RHF iter  51:   -99.87285247449567   -4.97380e-13   2.06410e-08 DIIS
+   @RHF iter  52:   -99.87285247449564    2.84217e-14   5.62638e-09 DIIS
+   @RHF iter  53:   -99.87285247449560    4.26326e-14   5.50037e-10 DIIS
+   @RHF iter  54:   -99.87285247449570   -9.94760e-14   5.11769e-11 DIIS
+   @RHF iter  55:   -99.87285247449569    1.42109e-14   2.46996e-12 DIIS
+   @RHF iter  56:   -99.87285247449576   -7.10543e-14   4.76803e-13 DIIS
+   @RHF iter  57:   -99.87285247449567    8.52651e-14   7.76870e-14 DIIS
+   @RHF iter  58:   -99.87285247449567    0.00000e+00   1.21472e-14 DIIS
+  Energy and wave function converged.
+
+
+  ==> Post-Iterations <==
+
+    Orbital Energies [Eh]
+    ---------------------
+
+    Doubly Occupied:                                                      
+
+       1A1   -26.279422     2A1    -1.484580     1B2    -0.593977  
+       1B1    -0.593977     3A1    -0.565055  
+
+    Virtual:                                                              
+
+       4A1     0.016621     5A1     0.576770     2B1     1.315282  
+       2B2     1.315282     6A1     1.463904     3B1     1.599282  
+       3B2     1.599282     7A1     1.633070     8A1     2.300773  
+       4B1     4.038213     4B2     4.038213     9A1     4.041123  
+       1A2     4.041123    10A1     4.220284  
+
+    Final Occupation by Irrep:
+             A1    A2    B1    B2 
+    DOCC [     3,    0,    1,    1 ]
+
+  @RHF Final Energy:   -99.87285247449567
+
+   => Energetics <=
+
+    Nuclear Repulsion Energy =              3.1750632640200003
+    One-Electron Energy =                -147.0618097613904638
+    Two-Electron Energy =                  44.0138940228747941
+    Total Energy =                        -99.8728524744956729
+
+Computation Completed
+
+
+Properties will be evaluated at   0.000000,   0.000000,   0.000000 [a0]
+
+Properties computed using the SCF density matrix
+
+  Nuclear Dipole Moment: [e a0]
+     X:     0.0000      Y:     0.0000      Z:     1.4066
+
+  Electronic Dipole Moment: [e a0]
+     X:     0.0000      Y:     0.0000      Z:    -0.2428
+
+  Dipole Moment: [e a0]
+     X:     0.0000      Y:     0.0000      Z:     1.1639     Total:     1.1639
+
+  Dipole Moment: [D]
+     X:     0.0000      Y:     0.0000      Z:     2.9583     Total:     2.9583
+
+
+*** tstop() called on Yorks-Mac.local at Sat Mar 21 00:44:16 2020
+Module time:
+	user time   =       1.19 seconds =       0.02 minutes
 	system time =       0.02 seconds =       0.00 minutes
-	total time  =          0 seconds =       0.00 minutes
-    CASSCF(2,2) energy................................................PASSED
+	total time  =          1 seconds =       0.02 minutes
+Total time:
+	user time   =       1.42 seconds =       0.02 minutes
+	system time =       0.05 seconds =       0.00 minutes
+	total time  =          2 seconds =       0.03 minutes
+
+Scratch directory: /Users/york/scratch/psi4/
+   => Loading Basis Set <=
+
+    Name: STO-3G
+    Role: ORBITAL
+    Keyword: MINAO_BASIS
+    atoms 1 entry F          line    91 file /Users/york/src/psi4group/psi4/share/psi4/basis/sto-3g.gbs 
+    atoms 2 entry H          line    19 file /Users/york/src/psi4group/psi4/share/psi4/basis/sto-3g.gbs 
+
+
+  Forte
+  ----------------------------------------------------------------------------
+  A suite of quantum chemistry methods for strongly correlated electrons
+
+    git branch: spin-adapted-dsrg - git commit: f405f75d
+
+  Developed by:
+    Francesco A. Evangelista, Chenyang Li, Kevin P. Hannon,
+    Jeffrey B. Schriber, Tianyuan Zhang, Chenxi Cai,
+    Nan He, Nicholas Stair, Shuhe Wang, Renke Huang
+  ----------------------------------------------------------------------------
+
+  Size of Determinant class: 128 bits
+  Read options for space RESTRICTED_DOCC
+  Read options for space ACTIVE
+
+  ==> MO Space Information <==
+
+  -------------------------------------------------
+                       A1    A2    B1    B2   Sum
+  -------------------------------------------------
+    FROZEN_DOCC         0     0     0     0     0
+    RESTRICTED_DOCC     2     0     1     1     4
+    ACTIVE              2     0     0     0     2
+    RESTRICTED_UOCC     6     1     3     3    13
+    FROZEN_UOCC         0     0     0     0     0
+    Total              10     1     4     4    19
+  -------------------------------------------------
+
+  ==> Integral Transformation <==
+
+  Number of molecular orbitals:                    19
+  Number of correlated molecular orbitals:         19
+  Number of frozen occupied orbitals:               0
+  Number of frozen unoccupied orbitals:             0
+  Two-electron integral type:              Conventional
+
+
+  Overall Conventional Integrals timings
+
+
+  Conventional integrals take 0.06970315 s
+
+                -----------------------------------------------
+                  Complete Active Space Self Consistent Field
+                                 Kevin Hannon
+                -----------------------------------------------
+
+
+  ==> CASSCF Iteration <==
+
+ iter    ||g||           Delta_E            E_CASSCF       CONV_TYPE
+ CSO2SO takes   0.0000 s.
+
+  ==> Summary of Active Space Solver Input <==
+
+    Irrep.  Multi.(2ms)      N
+    --------------------------
+       A1      1  (  0)      1
+    --------------------------
+    N: number of roots
+    ms: spin z component
+    Total number of roots:   1
+    --------------------------
+
+
+  ==> Energy Summary <==
+
+    Multi.(2ms)  Irrep.  No.               Energy
+    ---------------------------------------------
+       1  (  0)    A1     0      -99.910210806037
+    ---------------------------------------------
+ Integrals are about to be computed.
+ Integrals are about to be updated.
+    0   0.026484923308   -99.910210806037   -99.910210806037    0.172070 s       ~
+ CSO2SO takes   0.0000 s.
+
+  ==> Summary of Active Space Solver Input <==
+
+    Irrep.  Multi.(2ms)      N
+    --------------------------
+       A1      1  (  0)      1
+    --------------------------
+    N: number of roots
+    ms: spin z component
+    Total number of roots:   1
+    --------------------------
+
+
+  ==> Energy Summary <==
+
+    Multi.(2ms)  Irrep.  No.               Energy
+    ---------------------------------------------
+       1  (  0)    A1     0      -99.936704645403
+    ---------------------------------------------
+ Integrals are about to be computed.
+ Integrals are about to be updated.
+    1   0.012800674336   -0.026493839366   -99.936704645403    0.175462 s       ~
+ CSO2SO takes   0.0000 s.
+
+  ==> Summary of Active Space Solver Input <==
+
+    Irrep.  Multi.(2ms)      N
+    --------------------------
+       A1      1  (  0)      1
+    --------------------------
+    N: number of roots
+    ms: spin z component
+    Total number of roots:   1
+    --------------------------
+
+
+  ==> Energy Summary <==
+
+    Multi.(2ms)  Irrep.  No.               Energy
+    ---------------------------------------------
+       1  (  0)    A1     0      -99.938896191099
+    ---------------------------------------------
+ Integrals are about to be computed.
+ Integrals are about to be updated.
+    2   0.004673670545   -0.002191545696   -99.938896191099    0.173122 s       ~
+ CSO2SO takes   0.0000 s.
+
+  ==> Summary of Active Space Solver Input <==
+
+    Irrep.  Multi.(2ms)      N
+    --------------------------
+       A1      1  (  0)      1
+    --------------------------
+    N: number of roots
+    ms: spin z component
+    Total number of roots:   1
+    --------------------------
+
+
+  ==> Energy Summary <==
+
+    Multi.(2ms)  Irrep.  No.               Energy
+    ---------------------------------------------
+       1  (  0)    A1     0      -99.939234002628
+    ---------------------------------------------
+ Integrals are about to be computed.
+ Integrals are about to be updated.
+    3   0.001885213783   -0.000337811529   -99.939234002628    0.171807 s       ~
+ CSO2SO takes   0.0000 s.
+
+  ==> Summary of Active Space Solver Input <==
+
+    Irrep.  Multi.(2ms)      N
+    --------------------------
+       A1      1  (  0)      1
+    --------------------------
+    N: number of roots
+    ms: spin z component
+    Total number of roots:   1
+    --------------------------
+
+
+  ==> Energy Summary <==
+
+    Multi.(2ms)  Irrep.  No.               Energy
+    ---------------------------------------------
+       1  (  0)    A1     0      -99.939298339841
+    ---------------------------------------------
+ Integrals are about to be computed.
+ Integrals are about to be updated.
+    4   0.000829793823   -0.000064337213   -99.939298339841    0.171220 s  DIIS ~
+ CSO2SO takes   0.0000 s.
+
+  ==> Summary of Active Space Solver Input <==
+
+    Irrep.  Multi.(2ms)      N
+    --------------------------
+       A1      1  (  0)      1
+    --------------------------
+    N: number of roots
+    ms: spin z component
+    Total number of roots:   1
+    --------------------------
+
+
+  ==> Energy Summary <==
+
+    Multi.(2ms)  Irrep.  No.               Energy
+    ---------------------------------------------
+       1  (  0)    A1     0      -99.939312101888
+    ---------------------------------------------
+ Integrals are about to be computed.
+ Integrals are about to be updated.
+    5   0.000385336969   -0.000013762047   -99.939312101888    0.171044 s  DIIS ~
+ CSO2SO takes   0.0000 s.
+
+  ==> Summary of Active Space Solver Input <==
+
+    Irrep.  Multi.(2ms)      N
+    --------------------------
+       A1      1  (  0)      1
+    --------------------------
+    N: number of roots
+    ms: spin z component
+    Total number of roots:   1
+    --------------------------
+
+
+  ==> Energy Summary <==
+
+    Multi.(2ms)  Irrep.  No.               Energy
+    ---------------------------------------------
+       1  (  0)    A1     0      -99.939316302809
+    ---------------------------------------------
+ Integrals are about to be computed.
+ Integrals are about to be updated.
+    6   0.000060543872   -0.000004200920   -99.939316302809    0.169734 s  DIIS ~
+ CSO2SO takes   0.0000 s.
+
+  ==> Summary of Active Space Solver Input <==
+
+    Irrep.  Multi.(2ms)      N
+    --------------------------
+       A1      1  (  0)      1
+    --------------------------
+    N: number of roots
+    ms: spin z component
+    Total number of roots:   1
+    --------------------------
+
+
+  ==> Energy Summary <==
+
+    Multi.(2ms)  Irrep.  No.               Energy
+    ---------------------------------------------
+       1  (  0)    A1     0      -99.939316380122
+    ---------------------------------------------
+ Integrals are about to be computed.
+ Integrals are about to be updated.
+    7   0.000010526218   -0.000000077314   -99.939316380122    0.176092 s  DIIS ~
+ CSO2SO takes   0.0000 s.
+
+  ==> Summary of Active Space Solver Input <==
+
+    Irrep.  Multi.(2ms)      N
+    --------------------------
+       A1      1  (  0)      1
+    --------------------------
+    N: number of roots
+    ms: spin z component
+    Total number of roots:   1
+    --------------------------
+
+
+  ==> Energy Summary <==
+
+    Multi.(2ms)  Irrep.  No.               Energy
+    ---------------------------------------------
+       1  (  0)    A1     0      -99.939316382589
+    ---------------------------------------------
+ Integrals are about to be computed.
+ Integrals are about to be updated.
+    8   0.000001876262   -0.000000002467   -99.939316382589    0.178050 s  DIIS ~
+ CSO2SO takes   0.0000 s.
+
+  ==> Summary of Active Space Solver Input <==
+
+    Irrep.  Multi.(2ms)      N
+    --------------------------
+       A1      1  (  0)      1
+    --------------------------
+    N: number of roots
+    ms: spin z component
+    Total number of roots:   1
+    --------------------------
+
+
+  ==> Energy Summary <==
+
+    Multi.(2ms)  Irrep.  No.               Energy
+    ---------------------------------------------
+       1  (  0)    A1     0      -99.939316382622
+    ---------------------------------------------
+ Integrals are about to be computed.
+ Integrals are about to be updated.
+    9   0.000000438145   -0.000000000033   -99.939316382622    0.176697 s  DIIS ~
+ CSO2SO takes   0.0000 s.
+
+  ==> Summary of Active Space Solver Input <==
+
+    Irrep.  Multi.(2ms)      N
+    --------------------------
+       A1      1  (  0)      1
+    --------------------------
+    N: number of roots
+    ms: spin z component
+    Total number of roots:   1
+    --------------------------
+
+
+  ==> Energy Summary <==
+
+    Multi.(2ms)  Irrep.  No.               Energy
+    ---------------------------------------------
+       1  (  0)    A1     0      -99.939316382624
+    ---------------------------------------------
+ Integrals are about to be computed.
+ Integrals are about to be updated.
+   10   0.000000092031   -0.000000000002   -99.939316382624    0.176262 s  DIIS ~
+ CSO2SO takes   0.0000 s.
+
+  ==> Summary of Active Space Solver Input <==
+
+    Irrep.  Multi.(2ms)      N
+    --------------------------
+       A1      1  (  0)      1
+    --------------------------
+    N: number of roots
+    ms: spin z component
+    Total number of roots:   1
+    --------------------------
+
+
+  ==> Energy Summary <==
+
+    Multi.(2ms)  Irrep.  No.               Energy
+    ---------------------------------------------
+       1  (  0)    A1     0      -99.939316382624
+    ---------------------------------------------
+ Integrals are about to be computed.
+ Integrals are about to be updated.
+   11   0.000000013047   -0.000000000000   -99.939316382624    0.177130 s  DIIS ~
+ CSO2SO takes   0.0000 s.
+
+  ==> Summary of Active Space Solver Input <==
+
+    Irrep.  Multi.(2ms)      N
+    --------------------------
+       A1      1  (  0)      1
+    --------------------------
+    N: number of roots
+    ms: spin z component
+    Total number of roots:   1
+    --------------------------
+
+
+  ==> Energy Summary <==
+
+    Multi.(2ms)  Irrep.  No.               Energy
+    ---------------------------------------------
+       1  (  0)    A1     0      -99.939316382624
+    ---------------------------------------------
+   12   0.000000004287   0.000000000000   -99.939316382624    0.107885 s
+
+ A miracle has come to pass. The CASSCF iterations have converged.
+
+  ==> Summary of Active Space Solver Input <==
+
+    Irrep.  Multi.(2ms)      N
+    --------------------------
+       A1      1  (  0)      1
+    --------------------------
+    N: number of roots
+    ms: spin z component
+    Total number of roots:   1
+    --------------------------
+
+
+  ==> Energy Summary <==
+
+    Multi.(2ms)  Irrep.  No.               Energy
+    ---------------------------------------------
+       1  (  0)    A1     0      -99.939316382624
+    ---------------------------------------------
+ @E(CASSCF) =   -99.939316382624 
+
+
+  Time to prepare integrals: 0.07366299629211426 seconds
+  Time to run job          : 2.2616240978240967 seconds
+  Total                    : 2.2616240978240967 seconds    CASSCF(2,2) (FORTE) energy........................................PASSED
 
 Scratch directory: /Users/york/scratch/psi4/
    => Loading Basis Set <=
@@ -540,16 +1203,16 @@ Scratch directory: /Users/york/scratch/psi4/
   Overall Conventional Integrals timings
 
 
-  Conventional integrals take 0.06845490 s
+  Conventional integrals take 0.06840164 s
 
   ==> Summary of Active Space Solver Input <==
 
-    Irrep.  Multi.(ms)      N
+    Irrep.  Multi.(2ms)      N
     --------------------------
-       A1      1 (  0)      1
+       A1      1  (  0)      1
     --------------------------
     N: number of roots
-    ms: twice spin z component
+    ms: spin z component
     Total number of roots:   1
     --------------------------
 
@@ -559,8 +1222,8 @@ Scratch directory: /Users/york/scratch/psi4/
                                   Chenyang Li
               ---------------------------------------------------
 
-  Forming alpha and beta strings      ...  Done. Timing        0.000038 s
-  Forming determinants                ...  Done. Timing        0.000015 s
+  Forming alpha and beta strings      ...  Done. Timing        0.000036 s
+  Forming determinants                ...  Done. Timing        0.000008 s
 
   ==> Determinants Summary <==
 
@@ -573,8 +1236,8 @@ Scratch directory: /Users/york/scratch/psi4/
 
   ==> Computing Coupling Lists <==
   --------------------------------
-        α          0.000031 s
-        β          0.000011 s
+        α          0.000027 s
+        β          0.000010 s
         αα         0.000008 s
         ββ         0.000003 s
         αβ         0.000016 s
@@ -582,7 +1245,7 @@ Scratch directory: /Users/york/scratch/psi4/
 
   Davidson-Liu solver algorithm using SigmaVectorSparseList sigma algorithm
   Found 3 roots with 2S+1 = 1 *
-  Found 1 roots with 2S+1 = 3  Done. Timing        0.000488 s
+  Found 1 roots with 2S+1 = 3  Done. Timing        0.000438 s
 
   * * * * * * * * * * * * * * * * *
   *  CI Vectors & Configurations  *
@@ -590,8 +1253,10 @@ Scratch directory: /Users/york/scratch/psi4/
 
   ==> Root No. 0 <==
 
-    20          0.9549017127
-    02         -0.2969220757
+    20          0.9491109569
+    02         -0.2911313189
+    ba         -0.0849439423
+    ab         -0.0849439423
 
     Total Energy:   -99.939316382624028
 
@@ -605,11 +1270,11 @@ Scratch directory: /Users/york/scratch/psi4/
 
   ==> Energy Summary <==
 
-    Multi.(ms)  Irrep.  No.               Energy
+    Multi.(2ms)  Irrep.  No.               Energy
     ---------------------------------------------
-       1  ( 0)    A1     0       -99.939316382624
+       1  (  0)    A1     0      -99.939316382624
     ---------------------------------------------
- Computing  1RDMs (0 Singlet A1 - 0 Singlet A1) ... Done. Timing        0.000088 s
+ Computing  1RDMs (0 Singlet A1 - 0 Singlet A1) ... Done. Timing        0.000089 s
  Computing  2RDMs (0 Singlet A1 - 0 Singlet A1) ... Done. Timing        0.000064 s
  Computing  3RDMs (0 Singlet A1 - 0 Singlet A1) ... Done. Timing        0.000070 s
 
@@ -618,20 +1283,20 @@ Scratch directory: /Users/york/scratch/psi4/
          Chenyang Li, Jeffrey B. Schriber and Francesco A. Evangelista
        -----------------------------------------------------------------
 
-  Took 0.000176 s to build Fock matrix
+  Took 0.000187 s to build Fock matrix
 
   ==> Checking Fock Matrix Diagonal Blocks <==
 
     Off-Diag. Elements       Max           2-Norm
     ------------------------------------------------
-    Fa actv              0.0356704692   0.0504456613
-    Fb actv              0.0356704692   0.0504456613
+    Fa actv              0.0070720625   0.0100014066
+    Fb actv              0.0070720625   0.0100014066
     ------------------------------------------------
-    Fa core              0.0000000000   0.0000000000
-    Fb core              0.0000000000   0.0000000000
+    Fa core              0.0001509307   0.0002134482
+    Fb core              0.0001509307   0.0002134482
     ------------------------------------------------
-    Fa virt              0.0000000000   0.0000000000
-    Fb virt              0.0000000000   0.0000000000
+    Fa virt              0.0442039132   0.1404492332
+    Fb virt              0.0442039132   0.1404492332
     ------------------------------------------------
  Integrals are about to be computed.
  Integrals are about to be updated.
@@ -641,7 +1306,7 @@ Scratch directory: /Users/york/scratch/psi4/
     Transformed 1 RDM.
     Transformed 2 RDM.
     Transformed 3 RDM.
-  SemiCanonicalize takes 0.669590 s.
+  SemiCanonicalize takes 0.644898 s.
 
     -----------------------------------------------------------------------
       Spin-Adapted Multireference Driven Similarity Renormalization Group
@@ -649,6 +1314,9 @@ Scratch directory: /Users/york/scratch/psi4/
                                  1 OMP thread
     -----------------------------------------------------------------------
 
+  Disclaimer:
+    The spin-adapted DSRG code is largely adopted from the spin-integrated code developed by
+    Chenyang Li, Kevin P. Hannon, Tianyuan Zhang, and Francesco A. Evangelista.
 
   ==> Multireference Driven Similarity Renormalization Group <==
 
@@ -699,8 +1367,8 @@ Scratch directory: /Users/york/scratch/psi4/
 
     Memory assigned by the user                    500.00 MB
     Memory available for MR-DSRG                   488.96 MB
-    1- and 2-density cumulants                     192.00  B
     Generalized Fock matrix                          3.04 KB
+    1-, 2-, and 3-density cumulants                704.00  B
     2-electron (4-index) integrals                  64.80 KB
     T2 cluster amplitudes                           64.80 KB
     T1 cluster amplitudes                          720.00  B
@@ -721,19 +1389,19 @@ Scratch directory: /Users/york/scratch/psi4/
     [   2    4] 0.0044873 [   2    9] 0.0010444 [  15   16] 0.0005833
     [  11   12] 0.0005833 [  15   17] 0.0003908 [  11   13] 0.0003908
     -----------------------------------------------------------------
-    2-Norm of T1 vector:                            0.173009438502668
-    Number of nonzero elements:                                    31
+    2-Norm of T1 vector:                            0.173009449272467
+    Number of nonzero elements:                                    30
     -----------------------------------------------------------------
     Largest T2 amplitudes (absolute values):
         i    j    a    b                i    j    a    b                i    j    a    b
     -----------------------------------------------------------------------------------------------
     [   3    3    2    5] 0.0721205 [   2    3    2    5] 0.0684310 [   2    3    3    5] 0.0631041
     [   1    1    2    2] 0.0617192 [   3   15    2   16] 0.0602498 [   3   11    2   12] 0.0602498
-    [   2   15    2   16] 0.0545247 [   2   11    2   12] 0.0545247 [   3    3    3    4] 0.0492960
+    [   2   11    2   12] 0.0545247 [   2   15    2   16] 0.0545247 [   3    3    3    4] 0.0492960
     [   3    3    4    4] 0.0453009 [   3    3    5    5] 0.0452553 [   2    2    2    6] 0.0447028
-    [   3    2    3    4] 0.0444919 [   2   11    2   13] 0.0443148 [   2   15    2   17] 0.0443148
+    [   3    2    3    4] 0.0444919 [   2   15    2   17] 0.0443148 [   2   11    2   13] 0.0443148
     -----------------------------------------------------------------------------------------------
-    2-Norm of T2 vector:                                                          0.434264145654949
+    2-Norm of T2 vector:                                                          0.434264148716408
     Number of nonzero elements:                                                                1538
     -----------------------------------------------------------------------------------------------
 
@@ -742,36 +1410,36 @@ Scratch directory: /Users/york/scratch/psi4/
     T1 amplitudes larger than 0.1000:
      Amplitudes      Value                   Denominator
     ----------------------------------------------------------------
-    [   3    5]   0.136560620 (  0.089097 -   1.444927 =  -1.355830)
+    [   3    5]   0.136560630 (  0.089097 -   1.444927 =  -1.355830)
     ----------------------------------------------------------------
     T2 amplitudes larger than 0.1000: NULL
 
   ==> DSRG-MRPT2 Energy Summary <==
 
-    E0 (reference)                 =    -99.939316382624014
-    < Phi_0 | [Fr, T1] | Phi_0 >   =     -0.013715300729443
-    < Phi_0 | [Fr, T2] | Phi_0 >   =      0.012640147628200
-    < Phi_0 | [Vr, T1] | Phi_0 >   =      0.012638722782006
-    < Phi_0 | [Vr, T2] | Phi_0 >   =     -0.175138321681539
-      - [Vr, T2] L1 contribution   =     -0.216434465241503
-      - [Vr, T2] L2 contribution   =      0.044500921123388
-      - [Vr, T2] L3 contribution   =     -0.003204777563424
-    DSRG-MRPT2 correlation energy  =     -0.163574752000776
-    DSRG-MRPT2 total energy        =   -100.102891134624784
+    E0 (reference)                 =    -99.939316382624128
+    < Phi_0 | [Fr, T1] | Phi_0 >   =     -0.013715302499520
+    < Phi_0 | [Fr, T2] | Phi_0 >   =      0.012640148448865
+    < Phi_0 | [Vr, T1] | Phi_0 >   =      0.012638723705587
+    < Phi_0 | [Vr, T2] | Phi_0 >   =     -0.175138321602655
+      - [Vr, T2] L1 contribution   =     -0.216434466134419
+      - [Vr, T2] L2 contribution   =      0.044500922165330
+      - [Vr, T2] L3 contribution   =     -0.003204777633566
+    DSRG-MRPT2 correlation energy  =     -0.163574751947723
+    DSRG-MRPT2 total energy        =   -100.102891134571848
 
   ==> Total Timings (s) for Computing Commutators <==
 
              [H1, T1]    [H1, T2]    [H2, T1]    [H2, T2]
     -----------------------------------------------------
-    -> C0       0.001       0.001       0.001       0.026
+    -> C0       0.001       0.001       0.001       0.025
     -> C1       0.000       0.000       0.000       0.000
     -> C2                   0.000       0.000       0.000
     -----------------------------------------------------
 
 
-  Time to prepare integrals: 0.07278180122375488 seconds
-  Time to run job          : 0.736685037612915 seconds
-  Total                    : 0.736685037612915 seconds    DSRG-MRPT2 energy.................................................PASSED
+  Time to prepare integrals: 0.07231283187866211 seconds
+  Time to run job          : 0.7100362777709961 seconds
+  Total                    : 0.7100362777709961 seconds    DSRG-MRPT2 energy.................................................PASSED
 
 Scratch directory: /Users/york/scratch/psi4/
    => Loading Basis Set <=
@@ -822,16 +1490,16 @@ Scratch directory: /Users/york/scratch/psi4/
   Two-electron integral type:              Cholesky decomposition
 
 
-  Timing for computing Cholesky integrals:                    0.121 s.
+  Timing for computing Cholesky integrals:                    0.119 s.
 
   ==> Summary of Active Space Solver Input <==
 
-    Irrep.  Multi.(ms)      N
+    Irrep.  Multi.(2ms)      N
     --------------------------
-       A1      1 (  0)      1
+       A1      1  (  0)      1
     --------------------------
     N: number of roots
-    ms: twice spin z component
+    ms: spin z component
     Total number of roots:   1
     --------------------------
 
@@ -841,7 +1509,7 @@ Scratch directory: /Users/york/scratch/psi4/
                                   Chenyang Li
               ---------------------------------------------------
 
-  Forming alpha and beta strings      ...  Done. Timing        0.000026 s
+  Forming alpha and beta strings      ...  Done. Timing        0.000027 s
   Forming determinants                ...  Done. Timing        0.000007 s
 
   ==> Determinants Summary <==
@@ -858,13 +1526,13 @@ Scratch directory: /Users/york/scratch/psi4/
         α          0.000016 s
         β          0.000010 s
         αα         0.000005 s
-        ββ         0.000003 s
-        αβ         0.000011 s
+        ββ         0.000002 s
+        αβ         0.000010 s
   --------------------------------
 
   Davidson-Liu solver algorithm using SigmaVectorSparseList sigma algorithm
   Found 3 roots with 2S+1 = 1 *
-  Found 1 roots with 2S+1 = 3  Done. Timing        0.000288 s
+  Found 1 roots with 2S+1 = 3  Done. Timing        0.000282 s
 
   * * * * * * * * * * * * * * * * *
   *  CI Vectors & Configurations  *
@@ -872,12 +1540,12 @@ Scratch directory: /Users/york/scratch/psi4/
 
   ==> Root No. 0 <==
 
-    20          0.9508640232
-    02         -0.2928843861
-    ba          0.0709800880
-    ab          0.0709800880
+    20          0.9508640239
+    02         -0.2928843860
+    ba         -0.0709800833
+    ab         -0.0709800833
 
-    Total Energy:   -99.939316382623829
+    Total Energy:   -99.939316382623872
 
 
 
@@ -889,20 +1557,20 @@ Scratch directory: /Users/york/scratch/psi4/
 
   ==> Energy Summary <==
 
-    Multi.(ms)  Irrep.  No.               Energy
+    Multi.(2ms)  Irrep.  No.               Energy
     ---------------------------------------------
-       1  ( 0)    A1     0       -99.939316382624
+       1  (  0)    A1     0      -99.939316382624
     ---------------------------------------------
- Computing  1RDMs (0 Singlet A1 - 0 Singlet A1) ... Done. Timing        0.000067 s
+ Computing  1RDMs (0 Singlet A1 - 0 Singlet A1) ... Done. Timing        0.000064 s
  Computing  2RDMs (0 Singlet A1 - 0 Singlet A1) ... Done. Timing        0.000059 s
- Computing  3RDMs (0 Singlet A1 - 0 Singlet A1) ... Done. Timing        0.000062 s
+ Computing  3RDMs (0 Singlet A1 - 0 Singlet A1) ... Done. Timing        0.000060 s
 
        -----------------------------------------------------------------
                             Semi-Canonical Orbitals
          Chenyang Li, Jeffrey B. Schriber and Francesco A. Evangelista
        -----------------------------------------------------------------
 
-  Took 0.014565 s to build Fock matrix
+  Took 0.014211 s to build Fock matrix
 
   ==> Checking Fock Matrix Diagonal Blocks <==
 
@@ -925,6 +1593,9 @@ Scratch directory: /Users/york/scratch/psi4/
                                  1 OMP thread
     -----------------------------------------------------------------------
 
+  Disclaimer:
+    The spin-adapted DSRG code is largely adopted from the spin-integrated code developed by
+    Chenyang Li, Kevin P. Hannon, Tianyuan Zhang, and Francesco A. Evangelista.
 
   ==> Multireference Driven Similarity Renormalization Group <==
 
@@ -976,8 +1647,8 @@ Scratch directory: /Users/york/scratch/psi4/
 
     Memory assigned by the user                    500.00 MB
     Memory available for MR-DSRG                   489.50 MB
-    1- and 2-density cumulants                     192.00  B
     Generalized Fock matrix                          3.04 KB
+    1-, 2-, and 3-density cumulants                704.00  B
     2-electron (4-index) integrals                  10.46 KB
     T2 cluster amplitudes                           20.93 KB
     3-index auxiliary integrals                    124.56 KB
@@ -1001,19 +1672,19 @@ Scratch directory: /Users/york/scratch/psi4/
     [   2    4] 0.0044873 [   2    9] 0.0010444 [  15   16] 0.0005833
     [  11   12] 0.0005833 [  15   17] 0.0003908 [  11   13] 0.0003908
     -----------------------------------------------------------------
-    2-Norm of T1 vector:                            0.173009438502712
-    Number of nonzero elements:                                    31
+    2-Norm of T1 vector:                            0.173009449272510
+    Number of nonzero elements:                                    30
     -----------------------------------------------------------------
     Largest T2 amplitudes (absolute values):
         i    j    a    b                i    j    a    b                i    j    a    b
     -----------------------------------------------------------------------------------------------
     [   3    3    5    2] 0.0721205 [   3    2    5    2] 0.0684310 [   3    2    5    3] 0.0631041
-    [   1    1    2    2] 0.0617192 [   3   15    2   16] 0.0602498 [   3   11    2   12] 0.0602498
-    [   2   15    2   16] 0.0545247 [   2   11    2   12] 0.0545247 [   3    3    4    3] 0.0492960
+    [   1    1    2    2] 0.0617192 [   3   11    2   12] 0.0602498 [   3   15    2   16] 0.0602498
+    [   2   11    2   12] 0.0545247 [   2   15    2   16] 0.0545247 [   3    3    4    3] 0.0492960
     [   3    3    4    4] 0.0453009 [   3    3    5    5] 0.0452553 [   2    2    6    2] 0.0447028
-    [   2    3    4    3] 0.0444919 [   2   11    2   13] 0.0443148 [   2   15    2   17] 0.0443148
+    [   2    3    4    3] 0.0444919 [   2   15    2   17] 0.0443148 [   2   11    2   13] 0.0443148
     -----------------------------------------------------------------------------------------------
-    2-Norm of T2 vector:                                                          0.304518625880390
+    2-Norm of T2 vector:                                                          0.304518628130847
     Number of nonzero elements:                                                                 388
     -----------------------------------------------------------------------------------------------
 
@@ -1022,22 +1693,22 @@ Scratch directory: /Users/york/scratch/psi4/
     T1 amplitudes larger than 0.1000:
      Amplitudes      Value                   Denominator
     ----------------------------------------------------------------
-    [   3    5]   0.136560620 (  0.089097 -   1.444927 =  -1.355830)
+    [   3    5]   0.136560630 (  0.089097 -   1.444927 =  -1.355830)
     ----------------------------------------------------------------
     T2 amplitudes larger than 0.1000: NULL
 
   ==> DSRG-MRPT2 Energy Summary <==
 
-    E0 (reference)                 =    -99.939316382623829
-    < Phi_0 | [Fr, T1] | Phi_0 >   =     -0.013715300729470
-    < Phi_0 | [Fr, T2] | Phi_0 >   =      0.012640147628211
-    < Phi_0 | [Vr, T1] | Phi_0 >   =      0.012638722782027
-    < Phi_0 | [Vr, T2] | Phi_0 >   =     -0.175138321681555
-      - [Vr, T2] L1 contribution   =     -0.216434465241493
-      - [Vr, T2] L2 contribution   =      0.044500921123358
-      - [Vr, T2] L3 contribution   =     -0.003204777563420
-    DSRG-MRPT2 correlation energy  =     -0.163574752000788
-    DSRG-MRPT2 total energy        =   -100.102891134624613
+    E0 (reference)                 =    -99.939316382623886
+    < Phi_0 | [Fr, T1] | Phi_0 >   =     -0.013715302499547
+    < Phi_0 | [Fr, T2] | Phi_0 >   =      0.012640148448876
+    < Phi_0 | [Vr, T1] | Phi_0 >   =      0.012638723705608
+    < Phi_0 | [Vr, T2] | Phi_0 >   =     -0.175138321602672
+      - [Vr, T2] L1 contribution   =     -0.216434466134410
+      - [Vr, T2] L2 contribution   =      0.044500922165300
+      - [Vr, T2] L3 contribution   =     -0.003204777633562
+    DSRG-MRPT2 correlation energy  =     -0.163574751947735
+    DSRG-MRPT2 total energy        =   -100.102891134571621
 
   ==> Total Timings (s) for Computing Commutators <==
 
@@ -1049,11 +1720,11 @@ Scratch directory: /Users/york/scratch/psi4/
     -----------------------------------------------------
 
 
-  Time to prepare integrals: 0.12481093406677246 seconds
-  Time to run job          : 0.0994119644165039 seconds
-  Total                    : 0.0994119644165039 seconds    CD-DSRG-MRPT2 energy..............................................PASSED
+  Time to prepare integrals: 0.1226968765258789 seconds
+  Time to run job          : 0.09818220138549805 seconds
+  Total                    : 0.09818220138549805 seconds    CD-DSRG-MRPT2 energy..............................................PASSED
 
-    Psi4 stopped on: Thursday, 12 March 2020 08:44PM
-    Psi4 wall time for execution: 0:00:01.42
+    Psi4 stopped on: Saturday, 21 March 2020 12:44AM
+    Psi4 wall time for execution: 0:00:05.01
 
 *** Psi4 exiting successfully. Buy a developer a beer!

@@ -23,9 +23,9 @@
     -----------------------------------------------------------------------
 
 
-    Psi4 started on: Thursday, 12 March 2020 08:44PM
+    Psi4 started on: Saturday, 21 March 2020 12:44AM
 
-    Process ID: 35808
+    Process ID: 46314
     Host:       Yorks-Mac.local
     PSIDATADIR: /Users/york/src/psi4group/psi4/share/psi4
     Memory:     500.0 MiB
@@ -73,7 +73,6 @@ set forte{
   restricted_docc         [2,0,1,1]
   active                  [2,0,0,0]
   dsrg_s                  1.0
-  spin_avg_density        true
   e_convergence           10
   ccvv_source             zero
   semi_canonical          false
@@ -111,7 +110,7 @@ Scratch directory: /Users/york/scratch/psi4/
 
 
 *** tstart() called on Yorks-Mac.local
-*** at Thu Mar 12 20:44:25 2020
+*** at Sat Mar 21 00:44:20 2020
 
 
          ------------------------------------------
@@ -484,13 +483,13 @@ Scratch directory: /Users/york/scratch/psi4/
   MCSCF Execution Completed.
 
 
-*** tstop() called on Yorks-Mac.local at Thu Mar 12 20:44:25 2020
+*** tstop() called on Yorks-Mac.local at Sat Mar 21 00:44:20 2020
 Module time:
-	user time   =       0.17 seconds =       0.00 minutes
+	user time   =       0.18 seconds =       0.00 minutes
 	system time =       0.02 seconds =       0.00 minutes
 	total time  =          0 seconds =       0.00 minutes
 Total time:
-	user time   =       0.17 seconds =       0.00 minutes
+	user time   =       0.18 seconds =       0.00 minutes
 	system time =       0.02 seconds =       0.00 minutes
 	total time  =          0 seconds =       0.00 minutes
     CASSCF(2,2) energy................................................PASSED
@@ -547,16 +546,16 @@ Scratch directory: /Users/york/scratch/psi4/
   Overall Conventional Integrals timings
 
 
-  Conventional integrals take 0.06970555 s
+  Conventional integrals take 0.07671989 s
 
   ==> Summary of Active Space Solver Input <==
 
-    Irrep.  Multi.(ms)      N
+    Irrep.  Multi.(2ms)      N
     --------------------------
-       A1      1 (  0)      1
+       A1      1  (  0)      1
     --------------------------
     N: number of roots
-    ms: twice spin z component
+    ms: spin z component
     Total number of roots:   1
     --------------------------
 
@@ -580,16 +579,16 @@ Scratch directory: /Users/york/scratch/psi4/
 
   ==> Computing Coupling Lists <==
   --------------------------------
-        α          0.000032 s
+        α          0.000031 s
         β          0.000011 s
         αα         0.000008 s
         ββ         0.000003 s
-        αβ         0.000017 s
+        αβ         0.000018 s
   --------------------------------
 
   Davidson-Liu solver algorithm using SigmaVectorSparseList sigma algorithm
   Found 3 roots with 2S+1 = 1 *
-  Found 1 roots with 2S+1 = 3  Done. Timing        0.000479 s
+  Found 1 roots with 2S+1 = 3  Done. Timing        0.000474 s
 
   * * * * * * * * * * * * * * * * *
   *  CI Vectors & Configurations  *
@@ -612,13 +611,13 @@ Scratch directory: /Users/york/scratch/psi4/
 
   ==> Energy Summary <==
 
-    Multi.(ms)  Irrep.  No.               Energy
+    Multi.(2ms)  Irrep.  No.               Energy
     ---------------------------------------------
-       1  ( 0)    A1     0       -99.939316382624
+       1  (  0)    A1     0      -99.939316382624
     ---------------------------------------------
- Computing  1RDMs (0 Singlet A1 - 0 Singlet A1) ... Done. Timing        0.000091 s
- Computing  2RDMs (0 Singlet A1 - 0 Singlet A1) ... Done. Timing        0.000066 s
- Computing  3RDMs (0 Singlet A1 - 0 Singlet A1) ... Done. Timing        0.000071 s
+ Computing  1RDMs (0 Singlet A1 - 0 Singlet A1) ... Done. Timing        0.000089 s
+ Computing  2RDMs (0 Singlet A1 - 0 Singlet A1) ... Done. Timing        0.000067 s
+ Computing  3RDMs (0 Singlet A1 - 0 Singlet A1) ... Done. Timing        0.000073 s
 
        -----------------------------------------------------------------
                             Semi-Canonical Orbitals
@@ -632,6 +631,9 @@ Scratch directory: /Users/york/scratch/psi4/
                                  1 OMP thread
     -----------------------------------------------------------------------
 
+  Disclaimer:
+    The spin-adapted DSRG code is largely adopted from the spin-integrated code developed by
+    Chenyang Li, Kevin P. Hannon, Tianyuan Zhang, and Francesco A. Evangelista.
 
   ==> Multireference Driven Similarity Renormalization Group <==
 
@@ -682,8 +684,8 @@ Scratch directory: /Users/york/scratch/psi4/
 
     Memory assigned by the user                    500.00 MB
     Memory available for MR-DSRG                   488.96 MB
-    1- and 2-density cumulants                     192.00  B
     Generalized Fock matrix                          3.04 KB
+    1-, 2-, and 3-density cumulants                704.00  B
     2-electron (4-index) integrals                  64.80 KB
     T2 cluster amplitudes                           64.80 KB
     T1 cluster amplitudes                          720.00  B
@@ -723,12 +725,13 @@ Scratch directory: /Users/york/scratch/psi4/
 
   ==> Possible Intruders <==
 
-    T1 amplitudes larger than 0.1000: Warning: T1 amplitudes are not in semicanonical basis!
+    T1 amplitudes larger than 0.1000:
      Amplitudes      Value                   Denominator
     ----------------------------------------------------------------
     [   3    5]  -0.137779457 (  0.089097 -   1.444927 =  -1.355830)
     ----------------------------------------------------------------
-    T2 amplitudes larger than 0.1000: Warning: T2 amplitudes are not in semicanonical basis! NULL
+    T2 amplitudes larger than 0.1000: NULL
+  Warning: Amplitudes are not in semicanonical basis, but denominators are!
 
   ==> DSRG-MRPT2 Energy Summary <==
 
@@ -753,9 +756,9 @@ Scratch directory: /Users/york/scratch/psi4/
     -----------------------------------------------------
 
 
-  Time to prepare integrals: 0.07379412651062012 seconds
-  Time to run job          : 0.22365379333496094 seconds
-  Total                    : 0.22365379333496094 seconds    DSRG-MRPT2 (CCVV=ZERO, SEMI=FALSE) energy.........................PASSED
+  Time to prepare integrals: 0.08091902732849121 seconds
+  Time to run job          : 0.22641801834106445 seconds
+  Total                    : 0.22641801834106445 seconds    DSRG-MRPT2 (CCVV=ZERO, SEMI=FALSE) energy.........................PASSED
 
 Scratch directory: /Users/york/scratch/psi4/
    => Loading Basis Set <=
@@ -796,6 +799,8 @@ Scratch directory: /Users/york/scratch/psi4/
     FROZEN_UOCC         0     0     0     0     0
     Total              10     1     4     4    19
   -------------------------------------------------
+  State: Singlet A1 (Ms = 0)
+      1.000000000000
 
   ==> Integral Transformation <==
 
@@ -809,7 +814,7 @@ Scratch directory: /Users/york/scratch/psi4/
   Computing the Cholesky Vectors 
 
   Computing CD Integrals               ......Done.
-  Timing for cholesky transformation:                         0.098 s.
+  Timing for cholesky transformation:                         0.097 s.
   Need 499.62 KB to store CD integrals in core
 
   Number of Cholesky vectors required for 1.000e-12 tolerance: 173
@@ -819,12 +824,12 @@ Scratch directory: /Users/york/scratch/psi4/
 
   ==> Summary of Active Space Solver Input <==
 
-    Irrep.  Multi.(ms)      N
+    Irrep.  Multi.(2ms)      N
     --------------------------
-       A1      1 (  0)      1
+       A1      1  (  0)      1
     --------------------------
     N: number of roots
-    ms: twice spin z component
+    ms: spin z component
     Total number of roots:   1
     --------------------------
 
@@ -873,7 +878,7 @@ Scratch directory: /Users/york/scratch/psi4/
 
   ==> Computing Coupling Lists <==
   --------------------------------
-        α          0.000016 s
+        α          0.000017 s
         β          0.000010 s
         αα         0.000005 s
         ββ         0.000003 s
@@ -882,7 +887,7 @@ Scratch directory: /Users/york/scratch/psi4/
 
   Davidson-Liu solver algorithm using SigmaVectorSparseList sigma algorithm
   Found 3 roots with 2S+1 = 1 *
-  Found 1 roots with 2S+1 = 3  Done. Timing        0.000283 s
+  Found 1 roots with 2S+1 = 3  Done. Timing        0.000301 s
 
   * * * * * * * * * * * * * * * * *
   *  CI Vectors & Configurations  *
@@ -905,11 +910,11 @@ Scratch directory: /Users/york/scratch/psi4/
 
   ==> Energy Summary <==
 
-    Multi.(ms)  Irrep.  No.               Energy
+    Multi.(2ms)  Irrep.  No.               Energy
     ---------------------------------------------
-       1  ( 0)    A1     0       -99.939316382624
+       1  (  0)    A1     0      -99.939316382624
     ---------------------------------------------
- Computing  1RDMs (0 Singlet A1 - 0 Singlet A1) ... Done. Timing        0.000110 s
+ Computing  1RDMs (0 Singlet A1 - 0 Singlet A1) ... Done. Timing        0.000065 s
  Computing  2RDMs (0 Singlet A1 - 0 Singlet A1) ... Done. Timing        0.000059 s
  Computing  3RDMs (0 Singlet A1 - 0 Singlet A1) ... Done. Timing        0.000061 s
 
@@ -925,6 +930,9 @@ Scratch directory: /Users/york/scratch/psi4/
                                  1 OMP thread
     -----------------------------------------------------------------------
 
+  Disclaimer:
+    The spin-adapted DSRG code is largely adopted from the spin-integrated code developed by
+    Chenyang Li, Kevin P. Hannon, Tianyuan Zhang, and Francesco A. Evangelista.
 
   ==> Multireference Driven Similarity Renormalization Group <==
 
@@ -952,6 +960,28 @@ Scratch directory: /Users/york/scratch/psi4/
 
     Warning! Orbitals are not semi-canonicalized!
 
+  ==> Semicanonical Orbital Energy <==
+
+    F[   0] =     -26.322903464897
+    F[   1] =      -1.519005438919
+    F[   2] =      -0.537967945842
+    F[   3] =       0.087067758984
+    F[   4] =       0.558369345657
+    F[   5] =       1.444926811792
+    F[   6] =       1.586078610514
+    F[   7] =       2.287527166717
+    F[   8] =       3.995162649681
+    F[   9] =       4.177516375068
+    F[  10] =       3.995162649681
+    F[  11] =      -0.638630613219
+    F[  12] =       1.324241730735
+    F[  13] =       1.602014354849
+    F[  14] =       3.991409093224
+    F[  15] =      -0.638630613219
+    F[  16] =       1.324241730735
+    F[  17] =       1.602014354849
+    F[  18] =       3.991409093224
+
                   --------------------------------------------
                     MR-DSRG Second-Order Perturbation Theory
                   --------------------------------------------
@@ -976,8 +1006,8 @@ Scratch directory: /Users/york/scratch/psi4/
 
     Memory assigned by the user                    500.00 MB
     Memory available for MR-DSRG                   489.50 MB
-    1- and 2-density cumulants                     192.00  B
     Generalized Fock matrix                          3.04 KB
+    1-, 2-, and 3-density cumulants                704.00  B
     2-electron (4-index) integrals                  10.46 KB
     T2 cluster amplitudes                           20.93 KB
     3-index auxiliary integrals                    124.56 KB
@@ -1020,12 +1050,13 @@ Scratch directory: /Users/york/scratch/psi4/
 
   ==> Possible Intruders <==
 
-    T1 amplitudes larger than 0.1000: Warning: T1 amplitudes are not in semicanonical basis!
+    T1 amplitudes larger than 0.1000:
      Amplitudes      Value                   Denominator
     ----------------------------------------------------------------
     [   3    5]  -0.137779457 (  0.089097 -   1.444927 =  -1.355830)
     ----------------------------------------------------------------
-    T2 amplitudes larger than 0.1000: Warning: T2 amplitudes are not in semicanonical basis! NULL
+    T2 amplitudes larger than 0.1000: NULL
+  Warning: Amplitudes are not in semicanonical basis, but denominators are!
   DF-PT2 CCVV energy:     -0.093588622144656
   DF-PT2 CAVV energy:     -0.035391379271122
   DF-PT2 CCAV energy:     -0.009332798270917
@@ -1053,9 +1084,9 @@ Scratch directory: /Users/york/scratch/psi4/
     -----------------------------------------------------
 
 
-  Time to prepare integrals: 0.12330913543701172 seconds
-  Time to run job          : 0.1756758689880371 seconds
-  Total                    : 0.1756758689880371 seconds    DSRG-MRPT2 (CHOLESKY, CCVV=ZERO, SEMI=FALSE) energy...............PASSED
+  Time to prepare integrals: 0.12301206588745117 seconds
+  Time to run job          : 0.17607688903808594 seconds
+  Total                    : 0.17607688903808594 seconds    DSRG-MRPT2 (CHOLESKY, CCVV=ZERO, SEMI=FALSE) energy...............PASSED
 
 Scratch directory: /Users/york/scratch/psi4/
    => Loading Basis Set <=
@@ -1096,6 +1127,8 @@ Scratch directory: /Users/york/scratch/psi4/
     FROZEN_UOCC         0     0     0     0     0
     Total              10     1     4     4    19
   -------------------------------------------------
+  State: Singlet A1 (Ms = 0)
+      1.000000000000
 
   ==> Integral Transformation <==
 
@@ -1109,22 +1142,22 @@ Scratch directory: /Users/york/scratch/psi4/
   Computing the Cholesky Vectors 
 
   Computing CD Integrals               ......Done.
-  Timing for cholesky transformation:                         0.097 s.
+  Timing for cholesky transformation:                         0.099 s.
   Need 499.62 KB to store CD integrals in core
 
   Number of Cholesky vectors required for 1.000e-12 tolerance: 173
 
   Timing for freezing core and virtual orbitals:              0.000 s.
-  Timing for computing Cholesky integrals:                    0.118 s.
+  Timing for computing Cholesky integrals:                    0.122 s.
 
   ==> Summary of Active Space Solver Input <==
 
-    Irrep.  Multi.(ms)      N
+    Irrep.  Multi.(2ms)      N
     --------------------------
-       A1      1 (  0)      1
+       A1      1  (  0)      1
     --------------------------
     N: number of roots
-    ms: twice spin z component
+    ms: spin z component
     Total number of roots:   1
     --------------------------
 
@@ -1152,7 +1185,7 @@ Scratch directory: /Users/york/scratch/psi4/
     ACTIVE                        [    2     0     0     0 ]
     VIRTUAL                       [    6     1     3     3 ]
   Forming alpha and beta strings      ...  Done. Timing        0.000022 s
-  Forming determinants                ...  Done. Timing        0.000007 s
+  Forming determinants                ...  Done. Timing        0.000008 s
 
   ==> Determinants Summary <==
 
@@ -1174,7 +1207,7 @@ Scratch directory: /Users/york/scratch/psi4/
   ==> Computing Coupling Lists <==
   --------------------------------
         α          0.000016 s
-        β          0.000011 s
+        β          0.000010 s
         αα         0.000005 s
         ββ         0.000003 s
         αβ         0.000011 s
@@ -1182,7 +1215,7 @@ Scratch directory: /Users/york/scratch/psi4/
 
   Davidson-Liu solver algorithm using SigmaVectorSparseList sigma algorithm
   Found 3 roots with 2S+1 = 1 *
-  Found 1 roots with 2S+1 = 3  Done. Timing        0.000303 s
+  Found 1 roots with 2S+1 = 3  Done. Timing        0.000291 s
 
   * * * * * * * * * * * * * * * * *
   *  CI Vectors & Configurations  *
@@ -1205,20 +1238,20 @@ Scratch directory: /Users/york/scratch/psi4/
 
   ==> Energy Summary <==
 
-    Multi.(ms)  Irrep.  No.               Energy
+    Multi.(2ms)  Irrep.  No.               Energy
     ---------------------------------------------
-       1  ( 0)    A1     0       -99.939316382624
+       1  (  0)    A1     0      -99.939316382624
     ---------------------------------------------
- Computing  1RDMs (0 Singlet A1 - 0 Singlet A1) ... Done. Timing        0.000066 s
- Computing  2RDMs (0 Singlet A1 - 0 Singlet A1) ... Done. Timing        0.000059 s
- Computing  3RDMs (0 Singlet A1 - 0 Singlet A1) ... Done. Timing        0.000061 s
+ Computing  1RDMs (0 Singlet A1 - 0 Singlet A1) ... Done. Timing        0.000067 s
+ Computing  2RDMs (0 Singlet A1 - 0 Singlet A1) ... Done. Timing        0.000060 s
+ Computing  3RDMs (0 Singlet A1 - 0 Singlet A1) ... Done. Timing        0.000062 s
 
        -----------------------------------------------------------------
                             Semi-Canonical Orbitals
          Chenyang Li, Jeffrey B. Schriber and Francesco A. Evangelista
        -----------------------------------------------------------------
 
-  Took 0.014067 s to build Fock matrix
+  Took 0.014848 s to build Fock matrix
 
   ==> Checking Fock Matrix Diagonal Blocks <==
 
@@ -1237,7 +1270,7 @@ Scratch directory: /Users/york/scratch/psi4/
   Computing the Cholesky Vectors 
 
   Computing CD Integrals               ......Done.
-  Timing for cholesky transformation:                         0.097 s.
+  Timing for cholesky transformation:                         0.099 s.
   Need 499.62 KB to store CD integrals in core
 
   Number of Cholesky vectors required for 1.000e-12 tolerance: 173
@@ -1250,7 +1283,7 @@ Scratch directory: /Users/york/scratch/psi4/
     Transformed 1 RDM.
     Transformed 2 RDM.
     Transformed 3 RDM.
-  SemiCanonicalize takes 0.721222 s.
+  SemiCanonicalize takes 0.741596 s.
 
     -----------------------------------------------------------------------
       Spin-Adapted Multireference Driven Similarity Renormalization Group
@@ -1258,6 +1291,9 @@ Scratch directory: /Users/york/scratch/psi4/
                                  1 OMP thread
     -----------------------------------------------------------------------
 
+  Disclaimer:
+    The spin-adapted DSRG code is largely adopted from the spin-integrated code developed by
+    Chenyang Li, Kevin P. Hannon, Tianyuan Zhang, and Francesco A. Evangelista.
 
   ==> Multireference Driven Similarity Renormalization Group <==
 
@@ -1285,6 +1321,28 @@ Scratch directory: /Users/york/scratch/psi4/
 
     Orbitals are semi-canonicalized.
 
+  ==> Semicanonical Orbital Energy <==
+
+    F[   0] =     -26.322903464897
+    F[   1] =      -1.519005438919
+    F[   2] =      -0.539997054073
+    F[   3] =       0.089096867216
+    F[   4] =       0.558369345657
+    F[   5] =       1.444926811792
+    F[   6] =       1.586078610514
+    F[   7] =       2.287527166717
+    F[   8] =       3.995162649681
+    F[   9] =       4.177516375068
+    F[  10] =       3.995162649681
+    F[  11] =      -0.638630613219
+    F[  12] =       1.324241730735
+    F[  13] =       1.602014354849
+    F[  14] =       3.991409093224
+    F[  15] =      -0.638630613219
+    F[  16] =       1.324241730735
+    F[  17] =       1.602014354849
+    F[  18] =       3.991409093224
+
                   --------------------------------------------
                     MR-DSRG Second-Order Perturbation Theory
                   --------------------------------------------
@@ -1309,8 +1367,8 @@ Scratch directory: /Users/york/scratch/psi4/
 
     Memory assigned by the user                    500.00 MB
     Memory available for MR-DSRG                   489.50 MB
-    1- and 2-density cumulants                     192.00  B
     Generalized Fock matrix                          3.04 KB
+    1-, 2-, and 3-density cumulants                704.00  B
     2-electron (4-index) integrals                  10.46 KB
     T2 cluster amplitudes                           20.93 KB
     3-index auxiliary integrals                    124.56 KB
@@ -1385,11 +1443,11 @@ Scratch directory: /Users/york/scratch/psi4/
     -----------------------------------------------------
 
 
-  Time to prepare integrals: 0.12177824974060059 seconds
-  Time to run job          : 0.8056108951568604 seconds
-  Total                    : 0.8056108951568604 seconds    DSRG-MRPT2 (CHOLESKY, CCVV=ZERO, SEMI=TRUE) energy................PASSED
+  Time to prepare integrals: 0.12671208381652832 seconds
+  Time to run job          : 0.8273248672485352 seconds
+  Total                    : 0.8273248672485352 seconds    DSRG-MRPT2 (CHOLESKY, CCVV=ZERO, SEMI=TRUE) energy................PASSED
 
-    Psi4 stopped on: Thursday, 12 March 2020 08:44PM
-    Psi4 wall time for execution: 0:00:01.90
+    Psi4 stopped on: Saturday, 21 March 2020 12:44AM
+    Psi4 wall time for execution: 0:00:01.95
 
 *** Psi4 exiting successfully. Buy a developer a beer!

@@ -23,9 +23,9 @@
     -----------------------------------------------------------------------
 
 
-    Psi4 started on: Thursday, 12 March 2020 10:43PM
+    Psi4 started on: Saturday, 21 March 2020 12:38AM
 
-    Process ID: 37851
+    Process ID: 45831
     Host:       Yorks-Mac.local
     PSIDATADIR: /Users/york/src/psi4group/psi4/share/psi4
     Memory:     500.0 MiB
@@ -68,7 +68,6 @@ compare_values(Ecas_psi4, Ecas, 9, "CASSCF(6,6)/cc-pVDZ energy")
 set forte{
   active_space_solver    fci
   correlation_solver     sa-mrdsrg
-  spin_avg_density       true
   corr_level             ldsrg2
   frozen_docc            [1,0,0,0,0,1,0,0]
   restricted_docc        [1,0,0,0,0,1,0,0]
@@ -93,7 +92,7 @@ compare_values(Eldsrg2, Eu, 7, "MR-LDSRG(2) (NCOMM=4) unrelaxed energy")
 Scratch directory: /Users/york/scratch/psi4/
 
 *** tstart() called on Yorks-Mac.local
-*** at Thu Mar 12 22:43:37 2020
+*** at Sat Mar 21 00:38:42 2020
 
    => Loading Basis Set <=
 
@@ -277,15 +276,15 @@ Properties computed using the SCF density matrix
      X:     0.0000      Y:     0.0000      Z:     0.0000     Total:     0.0000
 
 
-*** tstop() called on Yorks-Mac.local at Thu Mar 12 22:43:38 2020
+*** tstop() called on Yorks-Mac.local at Sat Mar 21 00:38:42 2020
 Module time:
-	user time   =       0.45 seconds =       0.01 minutes
-	system time =       0.01 seconds =       0.00 minutes
-	total time  =          1 seconds =       0.02 minutes
+	user time   =       0.57 seconds =       0.01 minutes
+	system time =       0.02 seconds =       0.00 minutes
+	total time  =          0 seconds =       0.00 minutes
 Total time:
-	user time   =       0.45 seconds =       0.01 minutes
-	system time =       0.01 seconds =       0.00 minutes
-	total time  =          1 seconds =       0.02 minutes
+	user time   =       0.57 seconds =       0.01 minutes
+	system time =       0.02 seconds =       0.00 minutes
+	total time  =          0 seconds =       0.00 minutes
  MINTS: Wrapper to libmints.
    by Justin Turney
 
@@ -542,6 +541,8 @@ Scratch directory: /Users/york/scratch/psi4/
     FROZEN_UOCC         0     0     0     0     0     0     0     0     0
     Total               7     1     3     3     1     7     3     3    28
   -------------------------------------------------------------------------
+  State: Singlet Ag (Ms = 0)
+      1.000000000000
 
   ==> Integral Transformation <==
 
@@ -555,7 +556,7 @@ Scratch directory: /Users/york/scratch/psi4/
   Computing the Cholesky Vectors 
 
   Computing CD Integrals               ......Done.
-  Timing for cholesky transformation:                         0.412 s.
+  Timing for cholesky transformation:                         0.525 s.
   Need 1.99 MB to store CD integrals in core
 
   Number of Cholesky vectors required for 1.000e-12 tolerance: 317
@@ -577,19 +578,19 @@ Scratch directory: /Users/york/scratch/psi4/
 
 
   Frozen-core energy            -95.815327602251 a.u.
-  Timing for frozen one-body operator:                        0.131 s.
+  Timing for frozen one-body operator:                        0.166 s.
   Resorting integrals after freezing core.
-  Timing for freezing core and virtual orbitals:              0.135 s.
-  Timing for computing Cholesky integrals:                    0.629 s.
+  Timing for freezing core and virtual orbitals:              0.172 s.
+  Timing for computing Cholesky integrals:                    0.804 s.
 
   ==> Summary of Active Space Solver Input <==
 
-    Irrep.  Multi.(ms)      N
+    Irrep.  Multi.(2ms)      N
     --------------------------
-       Ag      1 (  0)      1
+       Ag      1  (  0)      1
     --------------------------
     N: number of roots
-    ms: twice spin z component
+    ms: spin z component
     Total number of roots:   1
     --------------------------
 
@@ -669,7 +670,7 @@ Scratch directory: /Users/york/scratch/psi4/
      35     -106.927700430019  2.000  triplet
      36     -106.057800613076  0.000  singlet
   ---------------------------------------------
-  Timing for initial guess  =      0.016 s
+  Timing for initial guess  =      0.020 s
 
   Projecting out root 0
   Projecting out root 2
@@ -839,16 +840,16 @@ Collapsing eigenvectors.
 
   ==> Energy Summary <==
 
-    Multi.(ms)  Irrep.  No.               Energy
+    Multi.(2ms)  Irrep.  No.               Energy
     ---------------------------------------------
-       1  ( 0)    Ag     0      -108.789661409534
+       1  (  0)    Ag     0     -108.789661409534
     ---------------------------------------------
 
   ==> Computing RDMs for Root No. 0 <==
 
     Timing for 1-RDM: 0.000 s
-    Timing for 2-RDM: 0.001 s
-    Timing for 3-RDM: 0.029 s
+    Timing for 2-RDM: 0.002 s
+    Timing for 3-RDM: 0.036 s
 
   ==> NATURAL ORBITALS <==
 
@@ -868,6 +869,9 @@ Collapsing eigenvectors.
                                  1 OMP thread
     -----------------------------------------------------------------------
 
+  Disclaimer:
+    The spin-adapted DSRG code is largely adopted from the spin-integrated code developed by
+    Chenyang Li, Kevin P. Hannon, Tianyuan Zhang, and Francesco A. Evangelista.
 
   ==> Multireference Driven Similarity Renormalization Group <==
 
@@ -894,6 +898,35 @@ Collapsing eigenvectors.
     ------------------------------------------------------
 
     Orbitals are semi-canonicalized.
+
+  ==> Semicanonical Orbital Energy <==
+
+    F[   0] =      -1.009672679275
+    F[   1] =      -0.379482878548
+    F[   2] =       1.002789285584
+    F[   3] =       1.127101389543
+    F[   4] =       1.843043186976
+    F[   5] =       2.026782882500
+    F[   6] =       2.026782882500
+    F[   7] =      -0.111206848517
+    F[   8] =       1.018845777206
+    F[   9] =       2.183823738612
+    F[  10] =      -0.111206848517
+    F[  11] =       1.018845777206
+    F[  12] =       2.183823738612
+    F[  13] =       2.055586137910
+    F[  14] =      -0.906791118537
+    F[  15] =       0.059741871889
+    F[  16] =       0.927736739291
+    F[  17] =       1.360393212095
+    F[  18] =       2.055586137910
+    F[  19] =       2.684995299877
+    F[  20] =      -0.260157228251
+    F[  21] =       0.912398596246
+    F[  22] =       1.940462733673
+    F[  23] =      -0.260157228251
+    F[  24] =       0.912398596246
+    F[  25] =       1.940462733673
 
   ==> Computation Information <==
 
@@ -923,8 +956,8 @@ Collapsing eigenvectors.
 
     Memory assigned by the user                    500.00 MB
     Memory available for MR-DSRG                   487.90 MB
-    1- and 2-density cumulants                      10.94 KB
     Generalized Fock matrix                          5.62 KB
+    1-, 2-, and 3-density cumulants                384.19 KB
     1-electron and 3-index integrals                 1.72 MB
     T1 cluster amplitudes and residuals              3.07 KB
     T2 cluster amplitudes and residuals            884.74 KB
@@ -933,13 +966,13 @@ Collapsing eigenvectors.
     2-body intermediates                             7.31 MB
     Local intermediates for commutators              1.23 MB
     Max memory for local intermediates               1.23 MB
-    Memory currently available                     474.29 MB
+    Memory currently available                     473.92 MB
 
 
   ==> Build Initial Amplitude from DSRG-MRPT2 <==
 
-    Computing T2 amplitudes ...          Done. Timing      0.028 s
-    Computing T1 amplitudes ...          Done. Timing      0.008 s
+    Computing T2 amplitudes ...          Done. Timing      0.040 s
+    Computing T1 amplitudes ...          Done. Timing      0.012 s
 
   ==> First-Order Excitation Amplitudes Summary <==
 
@@ -987,200 +1020,200 @@ Collapsing eigenvectors.
   ==> Computing the DSRG Transformed Hamiltonian <==
 
     --------------------------------------
-    Time for [H1, T1] -> C0 :        0.001
+    Time for [H1, T1] -> C0 :        0.002
     Time for [H1, T2] -> C0 :        0.002
-    Time for [H2, T1] -> C0 :        0.003
-    Time for [H2, T2] -> C0 :        0.045
-    Time for [H1, T1] -> C1 :        0.003
-    Time for [H1, T2] -> C1 :        0.018
-    Time for [H2, T1] -> C1 :        0.042
-    Time for [H2, T2] -> C1 :        0.198
-    Time for [H1, T2] -> C2 :        0.062
-    Time for [H2, T1] -> C2 :        0.289
-    Time for [H2, T2] -> C2 :        1.441
+    Time for [H2, T1] -> C0 :        0.004
+    Time for [H2, T2] -> C0 :        0.058
+    Time for [H1, T1] -> C1 :        0.004
+    Time for [H1, T2] -> C1 :        0.023
+    Time for [H2, T1] -> C1 :        0.051
+    Time for [H2, T2] -> C1 :        0.236
+    Time for [H1, T2] -> C2 :        0.075
+    Time for [H2, T1] -> C2 :        0.364
+    Time for [H2, T2] -> C2 :        1.730
     --------------------------------------
 
   n:   1, C0:   -0.350033840324306, C1 max:    0.171054736723878, C2 max:    0.239519038573012
     --------------------------------------
     Time for [H1, T1] -> C0 :        0.001
-    Time for [H1, T2] -> C0 :        0.001
-    Time for [H2, T1] -> C0 :        0.002
-    Time for [H2, T2] -> C0 :        0.055
+    Time for [H1, T2] -> C0 :        0.002
+    Time for [H2, T1] -> C0 :        0.003
+    Time for [H2, T2] -> C0 :        0.066
     Time for [H1, T1] -> C1 :        0.004
-    Time for [H1, T2] -> C1 :        0.018
-    Time for [H2, T1] -> C1 :        0.027
-    Time for [H2, T2] -> C1 :        0.246
-    Time for [H1, T2] -> C2 :        0.060
-    Time for [H2, T1] -> C2 :        0.143
-    Time for [H2, T2] -> C2 :        0.588
+    Time for [H1, T2] -> C1 :        0.022
+    Time for [H2, T1] -> C1 :        0.032
+    Time for [H2, T2] -> C1 :        0.304
+    Time for [H1, T2] -> C2 :        0.075
+    Time for [H2, T1] -> C2 :        0.177
+    Time for [H2, T2] -> C2 :        0.745
     --------------------------------------
 
   n:   2, C0:    0.169688032724296, C1 max:    0.085612649861113, C2 max:    0.123601578152068
     --------------------------------------
     Time for [H1, T1] -> C0 :        0.001
-    Time for [H1, T2] -> C0 :        0.001
-    Time for [H2, T1] -> C0 :        0.002
-    Time for [H2, T2] -> C0 :        0.054
-    Time for [H1, T1] -> C1 :        0.003
-    Time for [H1, T2] -> C1 :        0.018
-    Time for [H2, T1] -> C1 :        0.026
-    Time for [H2, T2] -> C1 :        0.244
-    Time for [H1, T2] -> C2 :        0.061
-    Time for [H2, T1] -> C2 :        0.144
-    Time for [H2, T2] -> C2 :        0.594
+    Time for [H1, T2] -> C0 :        0.002
+    Time for [H2, T1] -> C0 :        0.003
+    Time for [H2, T2] -> C0 :        0.068
+    Time for [H1, T1] -> C1 :        0.004
+    Time for [H1, T2] -> C1 :        0.022
+    Time for [H2, T1] -> C1 :        0.032
+    Time for [H2, T2] -> C1 :        0.304
+    Time for [H1, T2] -> C2 :        0.073
+    Time for [H2, T1] -> C2 :        0.193
+    Time for [H2, T2] -> C2 :        0.728
     --------------------------------------
 
   n:   3, C0:    0.004495262944983, C1 max:    0.009076040378586, C2 max:    0.008534721458042
     --------------------------------------
     Time for [H1, T1] -> C0 :        0.001
     Time for [H1, T2] -> C0 :        0.002
-    Time for [H2, T1] -> C0 :        0.002
-    Time for [H2, T2] -> C0 :        0.054
-    Time for [H1, T1] -> C1 :        0.003
-    Time for [H1, T2] -> C1 :        0.018
-    Time for [H2, T1] -> C1 :        0.026
-    Time for [H2, T2] -> C1 :        0.247
-    Time for [H1, T2] -> C2 :        0.063
-    Time for [H2, T1] -> C2 :        0.146
-    Time for [H2, T2] -> C2 :        0.611
+    Time for [H2, T1] -> C0 :        0.003
+    Time for [H2, T2] -> C0 :        0.067
+    Time for [H1, T1] -> C1 :        0.004
+    Time for [H1, T2] -> C1 :        0.022
+    Time for [H2, T1] -> C1 :        0.032
+    Time for [H2, T2] -> C1 :        0.303
+    Time for [H1, T2] -> C2 :        0.075
+    Time for [H2, T1] -> C2 :        0.176
+    Time for [H2, T2] -> C2 :        0.727
     --------------------------------------
 
   n:   4, C0:   -0.000922257766571, C1 max:    0.002011128144669, C2 max:    0.003530663060829
     Warning! Hbar is not converged in   4-nested commutators!
     Please increase DSRG_RSC_NCOMM.
-       1    -0.176772802422 -1.768e-01   1.081e-01  4.434e-01   3.827e-02  2.204e-01     5.706    0.056
+       1    -0.176772802422 -1.768e-01   1.081e-01  4.434e-01   3.827e-02  2.204e-01     7.006    0.068
 
   ==> Computing the DSRG Transformed Hamiltonian <==
 
     --------------------------------------
-    Time for [H1, T1] -> C0 :        0.001
+    Time for [H1, T1] -> C0 :        0.002
     Time for [H1, T2] -> C0 :        0.002
-    Time for [H2, T1] -> C0 :        0.003
-    Time for [H2, T2] -> C0 :        0.045
-    Time for [H1, T1] -> C1 :        0.003
-    Time for [H1, T2] -> C1 :        0.020
-    Time for [H2, T1] -> C1 :        0.042
-    Time for [H2, T2] -> C1 :        0.220
-    Time for [H1, T2] -> C2 :        0.063
-    Time for [H2, T1] -> C2 :        0.296
-    Time for [H2, T2] -> C2 :        1.404
+    Time for [H2, T1] -> C0 :        0.004
+    Time for [H2, T2] -> C0 :        0.065
+    Time for [H1, T1] -> C1 :        0.005
+    Time for [H1, T2] -> C1 :        0.024
+    Time for [H2, T1] -> C1 :        0.052
+    Time for [H2, T2] -> C1 :        0.234
+    Time for [H1, T2] -> C2 :        0.075
+    Time for [H2, T1] -> C2 :        0.356
+    Time for [H2, T2] -> C2 :        1.677
     --------------------------------------
 
   n:   1, C0:   -0.357156483590193, C1 max:    0.124779032231993, C2 max:    0.179002975896570
     --------------------------------------
     Time for [H1, T1] -> C0 :        0.001
-    Time for [H1, T2] -> C0 :        0.002
+    Time for [H1, T2] -> C0 :        0.001
     Time for [H2, T1] -> C0 :        0.002
-    Time for [H2, T2] -> C0 :        0.056
-    Time for [H1, T1] -> C1 :        0.004
-    Time for [H1, T2] -> C1 :        0.018
-    Time for [H2, T1] -> C1 :        0.027
-    Time for [H2, T2] -> C1 :        0.246
-    Time for [H1, T2] -> C2 :        0.062
-    Time for [H2, T1] -> C2 :        0.143
-    Time for [H2, T2] -> C2 :        0.598
+    Time for [H2, T2] -> C0 :        0.057
+    Time for [H1, T1] -> C1 :        0.003
+    Time for [H1, T2] -> C1 :        0.019
+    Time for [H2, T1] -> C1 :        0.028
+    Time for [H2, T2] -> C1 :        0.274
+    Time for [H1, T2] -> C2 :        0.074
+    Time for [H2, T1] -> C2 :        0.176
+    Time for [H2, T2] -> C2 :        0.719
     --------------------------------------
 
   n:   2, C0:    0.173188576090489, C1 max:    0.046830317240493, C2 max:    0.074065948785359
     --------------------------------------
     Time for [H1, T1] -> C0 :        0.001
-    Time for [H1, T2] -> C0 :        0.001
-    Time for [H2, T1] -> C0 :        0.002
-    Time for [H2, T2] -> C0 :        0.053
-    Time for [H1, T1] -> C1 :        0.003
-    Time for [H1, T2] -> C1 :        0.017
-    Time for [H2, T1] -> C1 :        0.026
-    Time for [H2, T2] -> C1 :        0.246
-    Time for [H1, T2] -> C2 :        0.061
-    Time for [H2, T1] -> C2 :        0.143
-    Time for [H2, T2] -> C2 :        0.591
+    Time for [H1, T2] -> C0 :        0.002
+    Time for [H2, T1] -> C0 :        0.003
+    Time for [H2, T2] -> C0 :        0.066
+    Time for [H1, T1] -> C1 :        0.004
+    Time for [H1, T2] -> C1 :        0.022
+    Time for [H2, T1] -> C1 :        0.033
+    Time for [H2, T2] -> C1 :        0.293
+    Time for [H1, T2] -> C2 :        0.072
+    Time for [H2, T1] -> C2 :        0.174
+    Time for [H2, T2] -> C2 :        0.737
     --------------------------------------
 
   n:   3, C0:    0.003829826476952, C1 max:    0.004077680064138, C2 max:    0.003272601479434
     --------------------------------------
     Time for [H1, T1] -> C0 :        0.001
-    Time for [H1, T2] -> C0 :        0.001
-    Time for [H2, T1] -> C0 :        0.002
-    Time for [H2, T2] -> C0 :        0.054
-    Time for [H1, T1] -> C1 :        0.003
-    Time for [H1, T2] -> C1 :        0.018
-    Time for [H2, T1] -> C1 :        0.026
-    Time for [H2, T2] -> C1 :        0.245
-    Time for [H1, T2] -> C2 :        0.061
-    Time for [H2, T1] -> C2 :        0.143
-    Time for [H2, T2] -> C2 :        0.606
+    Time for [H1, T2] -> C0 :        0.002
+    Time for [H2, T1] -> C0 :        0.003
+    Time for [H2, T2] -> C0 :        0.066
+    Time for [H1, T1] -> C1 :        0.004
+    Time for [H1, T2] -> C1 :        0.022
+    Time for [H2, T1] -> C1 :        0.032
+    Time for [H2, T2] -> C1 :        0.287
+    Time for [H1, T2] -> C2 :        0.072
+    Time for [H2, T1] -> C2 :        0.173
+    Time for [H2, T2] -> C2 :        0.719
     --------------------------------------
 
   n:   4, C0:   -0.000479324363789, C1 max:    0.000670295930565, C2 max:    0.001054713744070
     Warning! Hbar is not converged in   4-nested commutators!
     Please increase DSRG_RSC_NCOMM.
-       2    -0.180617405387 -3.845e-03   1.544e-01  4.726e-01   1.366e-02  5.217e-02     5.701    0.056  S
+       2    -0.180617405387 -3.845e-03   1.544e-01  4.726e-01   1.366e-02  5.217e-02     6.809    0.069  S
 
   ==> Computing the DSRG Transformed Hamiltonian <==
 
     --------------------------------------
     Time for [H1, T1] -> C0 :        0.001
     Time for [H1, T2] -> C0 :        0.002
-    Time for [H2, T1] -> C0 :        0.003
-    Time for [H2, T2] -> C0 :        0.046
-    Time for [H1, T1] -> C1 :        0.003
-    Time for [H1, T2] -> C1 :        0.018
-    Time for [H2, T1] -> C1 :        0.041
-    Time for [H2, T2] -> C1 :        0.182
-    Time for [H1, T2] -> C2 :        0.060
-    Time for [H2, T1] -> C2 :        0.281
-    Time for [H2, T2] -> C2 :        1.379
+    Time for [H2, T1] -> C0 :        0.004
+    Time for [H2, T2] -> C0 :        0.055
+    Time for [H1, T1] -> C1 :        0.004
+    Time for [H1, T2] -> C1 :        0.022
+    Time for [H2, T1] -> C1 :        0.051
+    Time for [H2, T2] -> C1 :        0.235
+    Time for [H1, T2] -> C2 :        0.071
+    Time for [H2, T1] -> C2 :        0.348
+    Time for [H2, T2] -> C2 :        1.729
     --------------------------------------
 
   n:   1, C0:   -0.364474591982125, C1 max:    0.135251911446767, C2 max:    0.196386957663992
     --------------------------------------
     Time for [H1, T1] -> C0 :        0.001
-    Time for [H1, T2] -> C0 :        0.001
-    Time for [H2, T1] -> C0 :        0.002
-    Time for [H2, T2] -> C0 :        0.055
-    Time for [H1, T1] -> C1 :        0.003
-    Time for [H1, T2] -> C1 :        0.018
-    Time for [H2, T1] -> C1 :        0.027
-    Time for [H2, T2] -> C1 :        0.247
-    Time for [H1, T2] -> C2 :        0.061
-    Time for [H2, T1] -> C2 :        0.145
-    Time for [H2, T2] -> C2 :        0.595
+    Time for [H1, T2] -> C0 :        0.002
+    Time for [H2, T1] -> C0 :        0.003
+    Time for [H2, T2] -> C0 :        0.067
+    Time for [H1, T1] -> C1 :        0.004
+    Time for [H1, T2] -> C1 :        0.022
+    Time for [H2, T1] -> C1 :        0.032
+    Time for [H2, T2] -> C1 :        0.304
+    Time for [H1, T2] -> C2 :        0.075
+    Time for [H2, T1] -> C2 :        0.178
+    Time for [H2, T2] -> C2 :        0.722
     --------------------------------------
 
   n:   2, C0:    0.178448131463998, C1 max:    0.054075866122959, C2 max:    0.084267323285363
     --------------------------------------
     Time for [H1, T1] -> C0 :        0.001
-    Time for [H1, T2] -> C0 :        0.001
-    Time for [H2, T1] -> C0 :        0.002
-    Time for [H2, T2] -> C0 :        0.054
-    Time for [H1, T1] -> C1 :        0.003
-    Time for [H1, T2] -> C1 :        0.018
-    Time for [H2, T1] -> C1 :        0.026
-    Time for [H2, T2] -> C1 :        0.247
-    Time for [H1, T2] -> C2 :        0.061
-    Time for [H2, T1] -> C2 :        0.143
-    Time for [H2, T2] -> C2 :        0.594
+    Time for [H1, T2] -> C0 :        0.002
+    Time for [H2, T1] -> C0 :        0.003
+    Time for [H2, T2] -> C0 :        0.067
+    Time for [H1, T1] -> C1 :        0.004
+    Time for [H1, T2] -> C1 :        0.022
+    Time for [H2, T1] -> C1 :        0.031
+    Time for [H2, T2] -> C1 :        0.296
+    Time for [H1, T2] -> C2 :        0.074
+    Time for [H2, T1] -> C2 :        0.179
+    Time for [H2, T2] -> C2 :        0.730
     --------------------------------------
 
   n:   3, C0:    0.004001561225189, C1 max:    0.005173658653435, C2 max:    0.004477719814204
     --------------------------------------
     Time for [H1, T1] -> C0 :        0.001
     Time for [H1, T2] -> C0 :        0.002
-    Time for [H2, T1] -> C0 :        0.002
-    Time for [H2, T2] -> C0 :        0.055
-    Time for [H1, T1] -> C1 :        0.003
-    Time for [H1, T2] -> C1 :        0.018
-    Time for [H2, T1] -> C1 :        0.027
-    Time for [H2, T2] -> C1 :        0.246
-    Time for [H1, T2] -> C2 :        0.061
-    Time for [H2, T1] -> C2 :        0.144
-    Time for [H2, T2] -> C2 :        0.593
+    Time for [H2, T1] -> C0 :        0.003
+    Time for [H2, T2] -> C0 :        0.065
+    Time for [H1, T1] -> C1 :        0.004
+    Time for [H1, T2] -> C1 :        0.021
+    Time for [H2, T1] -> C1 :        0.033
+    Time for [H2, T2] -> C1 :        0.311
+    Time for [H1, T2] -> C2 :        0.087
+    Time for [H2, T1] -> C2 :        0.194
+    Time for [H2, T2] -> C2 :        0.677
     --------------------------------------
 
   n:   4, C0:   -0.000552360297476, C1 max:    0.000917613897572, C2 max:    0.001448160229412
     Warning! Hbar is not converged in   4-nested commutators!
     Please increase DSRG_RSC_NCOMM.
-       3    -0.182577259590 -1.960e-03   1.374e-01  4.017e-01   3.562e-03  1.539e-02     5.611    0.055  SDIIS coefficients:  0.126  0.874 
+       3    -0.182577259590 -1.960e-03   1.374e-01  4.017e-01   3.562e-03  1.539e-02     6.910    0.057  SDIIS coefficients:  0.126  0.874 
 /E
 
   ==> Computing the DSRG Transformed Hamiltonian <==
@@ -1188,66 +1221,66 @@ Collapsing eigenvectors.
     --------------------------------------
     Time for [H1, T1] -> C0 :        0.001
     Time for [H1, T2] -> C0 :        0.002
-    Time for [H2, T1] -> C0 :        0.003
-    Time for [H2, T2] -> C0 :        0.046
+    Time for [H2, T1] -> C0 :        0.004
+    Time for [H2, T2] -> C0 :        0.047
     Time for [H1, T1] -> C1 :        0.003
     Time for [H1, T2] -> C1 :        0.018
     Time for [H2, T1] -> C1 :        0.041
-    Time for [H2, T2] -> C1 :        0.189
-    Time for [H1, T2] -> C2 :        0.061
-    Time for [H2, T1] -> C2 :        0.285
-    Time for [H2, T2] -> C2 :        1.394
+    Time for [H2, T2] -> C1 :        0.198
+    Time for [H1, T2] -> C2 :        0.062
+    Time for [H2, T1] -> C2 :        0.299
+    Time for [H2, T2] -> C2 :        1.482
     --------------------------------------
 
   n:   1, C0:   -0.365394941501440, C1 max:    0.132179705323916, C2 max:    0.192618263421819
     --------------------------------------
     Time for [H1, T1] -> C0 :        0.001
     Time for [H1, T2] -> C0 :        0.002
-    Time for [H2, T1] -> C0 :        0.002
-    Time for [H2, T2] -> C0 :        0.055
+    Time for [H2, T1] -> C0 :        0.003
+    Time for [H2, T2] -> C0 :        0.059
     Time for [H1, T1] -> C1 :        0.003
     Time for [H1, T2] -> C1 :        0.018
     Time for [H2, T1] -> C1 :        0.027
-    Time for [H2, T2] -> C1 :        0.253
-    Time for [H1, T2] -> C2 :        0.063
-    Time for [H2, T1] -> C2 :        0.145
-    Time for [H2, T2] -> C2 :        0.619
+    Time for [H2, T2] -> C1 :        0.267
+    Time for [H1, T2] -> C2 :        0.078
+    Time for [H2, T1] -> C2 :        0.181
+    Time for [H2, T2] -> C2 :        0.646
     --------------------------------------
 
   n:   2, C0:    0.179795244970940, C1 max:    0.051608647568544, C2 max:    0.082103030424619
     --------------------------------------
     Time for [H1, T1] -> C0 :        0.001
-    Time for [H1, T2] -> C0 :        0.002
-    Time for [H2, T1] -> C0 :        0.003
-    Time for [H2, T2] -> C0 :        0.061
-    Time for [H1, T1] -> C1 :        0.004
+    Time for [H1, T2] -> C0 :        0.001
+    Time for [H2, T1] -> C0 :        0.002
+    Time for [H2, T2] -> C0 :        0.055
+    Time for [H1, T1] -> C1 :        0.003
     Time for [H1, T2] -> C1 :        0.018
-    Time for [H2, T1] -> C1 :        0.026
-    Time for [H2, T2] -> C1 :        0.253
-    Time for [H1, T2] -> C2 :        0.062
-    Time for [H2, T1] -> C2 :        0.145
-    Time for [H2, T2] -> C2 :        0.704
+    Time for [H2, T1] -> C1 :        0.027
+    Time for [H2, T2] -> C1 :        0.269
+    Time for [H1, T2] -> C2 :        0.063
+    Time for [H2, T1] -> C2 :        0.152
+    Time for [H2, T2] -> C2 :        0.624
     --------------------------------------
 
   n:   3, C0:    0.004074264034272, C1 max:    0.004984183433463, C2 max:    0.004152082210605
     --------------------------------------
     Time for [H1, T1] -> C0 :        0.001
     Time for [H1, T2] -> C0 :        0.002
-    Time for [H2, T1] -> C0 :        0.003
-    Time for [H2, T2] -> C0 :        0.056
+    Time for [H2, T1] -> C0 :        0.002
+    Time for [H2, T2] -> C0 :        0.055
     Time for [H1, T1] -> C1 :        0.004
-    Time for [H1, T2] -> C1 :        0.018
-    Time for [H2, T1] -> C1 :        0.026
-    Time for [H2, T2] -> C1 :        0.246
-    Time for [H1, T2] -> C2 :        0.063
-    Time for [H2, T1] -> C2 :        0.148
-    Time for [H2, T2] -> C2 :        0.594
+    Time for [H1, T2] -> C1 :        0.019
+    Time for [H2, T1] -> C1 :        0.029
+    Time for [H2, T2] -> C1 :        0.265
+    Time for [H1, T2] -> C2 :        0.062
+    Time for [H2, T1] -> C2 :        0.150
+    Time for [H2, T2] -> C2 :        0.638
     --------------------------------------
 
   n:   4, C0:   -0.000551870172391, C1 max:    0.000859857790693, C2 max:    0.001339272548890
     Warning! Hbar is not converged in   4-nested commutators!
     Please increase DSRG_RSC_NCOMM.
-       4    -0.182077302669  5.000e-04   1.401e-01  4.095e-01   9.484e-04  5.117e-03     5.818    0.055  SDIIS coefficients:  -0.095  -0.216  1.311 
+       4    -0.182077302669  5.000e-04   1.401e-01  4.095e-01   9.484e-04  5.117e-03     6.028    0.056  SDIIS coefficients:  -0.095  -0.216  1.311 
 /E
 
   ==> Computing the DSRG Transformed Hamiltonian <==
@@ -1257,13 +1290,13 @@ Collapsing eigenvectors.
     Time for [H1, T2] -> C0 :        0.001
     Time for [H2, T1] -> C0 :        0.003
     Time for [H2, T2] -> C0 :        0.046
-    Time for [H1, T1] -> C1 :        0.003
+    Time for [H1, T1] -> C1 :        0.005
     Time for [H1, T2] -> C1 :        0.018
     Time for [H2, T1] -> C1 :        0.042
-    Time for [H2, T2] -> C1 :        0.194
+    Time for [H2, T2] -> C1 :        0.193
     Time for [H1, T2] -> C2 :        0.063
-    Time for [H2, T1] -> C2 :        0.303
-    Time for [H2, T2] -> C2 :        1.405
+    Time for [H2, T1] -> C2 :        0.311
+    Time for [H2, T2] -> C2 :        1.452
     --------------------------------------
 
   n:   1, C0:   -0.365777416667626, C1 max:    0.131804123066797, C2 max:    0.193362847088872
@@ -1271,133 +1304,133 @@ Collapsing eigenvectors.
     Time for [H1, T1] -> C0 :        0.001
     Time for [H1, T2] -> C0 :        0.002
     Time for [H2, T1] -> C0 :        0.002
-    Time for [H2, T2] -> C0 :        0.054
-    Time for [H1, T1] -> C1 :        0.003
-    Time for [H1, T2] -> C1 :        0.018
+    Time for [H2, T2] -> C0 :        0.058
+    Time for [H1, T1] -> C1 :        0.004
+    Time for [H1, T2] -> C1 :        0.019
     Time for [H2, T1] -> C1 :        0.027
-    Time for [H2, T2] -> C1 :        0.247
-    Time for [H1, T2] -> C2 :        0.062
-    Time for [H2, T1] -> C2 :        0.141
-    Time for [H2, T2] -> C2 :        0.590
+    Time for [H2, T2] -> C1 :        0.253
+    Time for [H1, T2] -> C2 :        0.065
+    Time for [H2, T1] -> C2 :        0.154
+    Time for [H2, T2] -> C2 :        0.652
     --------------------------------------
 
   n:   2, C0:    0.180194587091922, C1 max:    0.051173442476711, C2 max:    0.082371671769321
     --------------------------------------
     Time for [H1, T1] -> C0 :        0.001
-    Time for [H1, T2] -> C0 :        0.001
-    Time for [H2, T1] -> C0 :        0.002
-    Time for [H2, T2] -> C0 :        0.054
-    Time for [H1, T1] -> C1 :        0.003
-    Time for [H1, T2] -> C1 :        0.018
-    Time for [H2, T1] -> C1 :        0.027
-    Time for [H2, T2] -> C1 :        0.246
-    Time for [H1, T2] -> C2 :        0.061
-    Time for [H2, T1] -> C2 :        0.143
-    Time for [H2, T2] -> C2 :        0.592
+    Time for [H1, T2] -> C0 :        0.002
+    Time for [H2, T1] -> C0 :        0.003
+    Time for [H2, T2] -> C0 :        0.064
+    Time for [H1, T1] -> C1 :        0.004
+    Time for [H1, T2] -> C1 :        0.019
+    Time for [H2, T1] -> C1 :        0.030
+    Time for [H2, T2] -> C1 :        0.313
+    Time for [H1, T2] -> C2 :        0.075
+    Time for [H2, T1] -> C2 :        0.173
+    Time for [H2, T2] -> C2 :        0.712
     --------------------------------------
 
   n:   3, C0:    0.004046766807185, C1 max:    0.005029623237074, C2 max:    0.004192434395598
     --------------------------------------
     Time for [H1, T1] -> C0 :        0.001
-    Time for [H1, T2] -> C0 :        0.001
-    Time for [H2, T1] -> C0 :        0.002
-    Time for [H2, T2] -> C0 :        0.053
-    Time for [H1, T1] -> C1 :        0.003
+    Time for [H1, T2] -> C0 :        0.002
+    Time for [H2, T1] -> C0 :        0.003
+    Time for [H2, T2] -> C0 :        0.059
+    Time for [H1, T1] -> C1 :        0.004
     Time for [H1, T2] -> C1 :        0.018
     Time for [H2, T1] -> C1 :        0.027
-    Time for [H2, T2] -> C1 :        0.246
-    Time for [H1, T2] -> C2 :        0.062
-    Time for [H2, T1] -> C2 :        0.145
-    Time for [H2, T2] -> C2 :        0.594
+    Time for [H2, T2] -> C1 :        0.265
+    Time for [H1, T2] -> C2 :        0.066
+    Time for [H2, T1] -> C2 :        0.154
+    Time for [H2, T2] -> C2 :        0.636
     --------------------------------------
 
   n:   4, C0:   -0.000549210282911, C1 max:    0.000859689681128, C2 max:    0.001341751759500
     Warning! Hbar is not converged in   4-nested commutators!
     Please increase DSRG_RSC_NCOMM.
-       5    -0.182085273051 -7.970e-06   1.402e-01  4.082e-01   3.333e-04  9.485e-04     5.663    0.054  SDIIS coefficients:  -0.022  -0.073  0.180  0.915 
+       5    -0.182085273051 -7.970e-06   1.402e-01  4.082e-01   3.333e-04  9.485e-04     6.155    0.058  SDIIS coefficients:  -0.022  -0.073  0.180  0.915 
 /E
 
   ==> Computing the DSRG Transformed Hamiltonian <==
 
     --------------------------------------
     Time for [H1, T1] -> C0 :        0.001
-    Time for [H1, T2] -> C0 :        0.001
+    Time for [H1, T2] -> C0 :        0.002
     Time for [H2, T1] -> C0 :        0.003
-    Time for [H2, T2] -> C0 :        0.043
-    Time for [H1, T1] -> C1 :        0.003
+    Time for [H2, T2] -> C0 :        0.048
+    Time for [H1, T1] -> C1 :        0.004
     Time for [H1, T2] -> C1 :        0.019
-    Time for [H2, T1] -> C1 :        0.040
-    Time for [H2, T2] -> C1 :        0.187
-    Time for [H1, T2] -> C2 :        0.061
-    Time for [H2, T1] -> C2 :        0.288
-    Time for [H2, T2] -> C2 :        1.446
+    Time for [H2, T1] -> C1 :        0.045
+    Time for [H2, T2] -> C1 :        0.206
+    Time for [H1, T2] -> C2 :        0.064
+    Time for [H2, T1] -> C2 :        0.316
+    Time for [H2, T2] -> C2 :        1.511
     --------------------------------------
 
   n:   1, C0:   -0.365899005226805, C1 max:    0.131841476256946, C2 max:    0.193353595556421
     --------------------------------------
     Time for [H1, T1] -> C0 :        0.001
     Time for [H1, T2] -> C0 :        0.002
-    Time for [H2, T1] -> C0 :        0.002
+    Time for [H2, T1] -> C0 :        0.003
     Time for [H2, T2] -> C0 :        0.057
     Time for [H1, T1] -> C1 :        0.004
-    Time for [H1, T2] -> C1 :        0.018
-    Time for [H2, T1] -> C1 :        0.027
-    Time for [H2, T2] -> C1 :        0.253
-    Time for [H1, T2] -> C2 :        0.063
-    Time for [H2, T1] -> C2 :        0.147
-    Time for [H2, T2] -> C2 :        0.636
+    Time for [H1, T2] -> C1 :        0.019
+    Time for [H2, T1] -> C1 :        0.029
+    Time for [H2, T2] -> C1 :        0.262
+    Time for [H1, T2] -> C2 :        0.065
+    Time for [H2, T1] -> C2 :        0.156
+    Time for [H2, T2] -> C2 :        0.628
     --------------------------------------
 
   n:   2, C0:    0.180344159320716, C1 max:    0.051201017643628, C2 max:    0.082452170367588
     --------------------------------------
     Time for [H1, T1] -> C0 :        0.001
-    Time for [H1, T2] -> C0 :        0.001
-    Time for [H2, T1] -> C0 :        0.002
-    Time for [H2, T2] -> C0 :        0.054
-    Time for [H1, T1] -> C1 :        0.003
-    Time for [H1, T2] -> C1 :        0.018
-    Time for [H2, T1] -> C1 :        0.027
-    Time for [H2, T2] -> C1 :        0.254
-    Time for [H1, T2] -> C2 :        0.063
-    Time for [H2, T1] -> C2 :        0.149
-    Time for [H2, T2] -> C2 :        0.594
+    Time for [H1, T2] -> C0 :        0.002
+    Time for [H2, T1] -> C0 :        0.003
+    Time for [H2, T2] -> C0 :        0.062
+    Time for [H1, T1] -> C1 :        0.004
+    Time for [H1, T2] -> C1 :        0.019
+    Time for [H2, T1] -> C1 :        0.029
+    Time for [H2, T2] -> C1 :        0.261
+    Time for [H1, T2] -> C2 :        0.064
+    Time for [H2, T1] -> C2 :        0.153
+    Time for [H2, T2] -> C2 :        0.640
     --------------------------------------
 
   n:   3, C0:    0.004060212408419, C1 max:    0.005030993042422, C2 max:    0.004191425762211
     --------------------------------------
     Time for [H1, T1] -> C0 :        0.001
-    Time for [H1, T2] -> C0 :        0.001
+    Time for [H1, T2] -> C0 :        0.002
     Time for [H2, T1] -> C0 :        0.002
-    Time for [H2, T2] -> C0 :        0.053
+    Time for [H2, T2] -> C0 :        0.057
     Time for [H1, T1] -> C1 :        0.003
     Time for [H1, T2] -> C1 :        0.018
-    Time for [H2, T1] -> C1 :        0.026
-    Time for [H2, T2] -> C1 :        0.247
-    Time for [H1, T2] -> C2 :        0.061
-    Time for [H2, T1] -> C2 :        0.144
-    Time for [H2, T2] -> C2 :        0.597
+    Time for [H2, T1] -> C1 :        0.027
+    Time for [H2, T2] -> C1 :        0.260
+    Time for [H1, T2] -> C2 :        0.065
+    Time for [H2, T1] -> C2 :        0.171
+    Time for [H2, T2] -> C2 :        0.643
     --------------------------------------
 
   n:   4, C0:   -0.000551150986434, C1 max:    0.000861561949645, C2 max:    0.001343483138069
     Warning! Hbar is not converged in   4-nested commutators!
     Please increase DSRG_RSC_NCOMM.
-       6    -0.182045784484  3.949e-05   1.400e-01  4.077e-01   4.613e-05  1.823e-04     5.761    0.058  SDIIS coefficients:  0.009  0.023  -0.074  -0.238  1.280 
+       6    -0.182045784484  3.949e-05   1.400e-01  4.077e-01   4.613e-05  1.823e-04     6.085    0.060  SDIIS coefficients:  0.009  0.023  -0.074  -0.238  1.280 
 /E
 
   ==> Computing the DSRG Transformed Hamiltonian <==
 
     --------------------------------------
     Time for [H1, T1] -> C0 :        0.001
-    Time for [H1, T2] -> C0 :        0.001
+    Time for [H1, T2] -> C0 :        0.002
     Time for [H2, T1] -> C0 :        0.003
-    Time for [H2, T2] -> C0 :        0.047
+    Time for [H2, T2] -> C0 :        0.048
     Time for [H1, T1] -> C1 :        0.004
-    Time for [H1, T2] -> C1 :        0.018
-    Time for [H2, T1] -> C1 :        0.042
-    Time for [H2, T2] -> C1 :        0.192
-    Time for [H1, T2] -> C2 :        0.060
-    Time for [H2, T1] -> C2 :        0.284
-    Time for [H2, T2] -> C2 :        1.513
+    Time for [H1, T2] -> C1 :        0.019
+    Time for [H2, T1] -> C1 :        0.044
+    Time for [H2, T2] -> C1 :        0.202
+    Time for [H1, T2] -> C2 :        0.064
+    Time for [H2, T1] -> C2 :        0.311
+    Time for [H2, T2] -> C2 :        1.483
     --------------------------------------
 
   n:   1, C0:   -0.365871633825493, C1 max:    0.131832752387637, C2 max:    0.193341028342303
@@ -1405,14 +1438,14 @@ Collapsing eigenvectors.
     Time for [H1, T1] -> C0 :        0.001
     Time for [H1, T2] -> C0 :        0.002
     Time for [H2, T1] -> C0 :        0.002
-    Time for [H2, T2] -> C0 :        0.056
-    Time for [H1, T1] -> C1 :        0.003
-    Time for [H1, T2] -> C1 :        0.018
-    Time for [H2, T1] -> C1 :        0.026
-    Time for [H2, T2] -> C1 :        0.242
+    Time for [H2, T2] -> C0 :        0.055
+    Time for [H1, T1] -> C1 :        0.004
+    Time for [H1, T2] -> C1 :        0.019
+    Time for [H2, T1] -> C1 :        0.028
+    Time for [H2, T2] -> C1 :        0.260
     Time for [H1, T2] -> C2 :        0.062
-    Time for [H2, T1] -> C2 :        0.144
-    Time for [H2, T2] -> C2 :        0.595
+    Time for [H2, T1] -> C2 :        0.153
+    Time for [H2, T2] -> C2 :        0.628
     --------------------------------------
 
   n:   2, C0:    0.180320944564371, C1 max:    0.051195920721325, C2 max:    0.082437284514158
@@ -1420,51 +1453,51 @@ Collapsing eigenvectors.
     Time for [H1, T1] -> C0 :        0.001
     Time for [H1, T2] -> C0 :        0.002
     Time for [H2, T1] -> C0 :        0.002
-    Time for [H2, T2] -> C0 :        0.054
-    Time for [H1, T1] -> C1 :        0.003
-    Time for [H1, T2] -> C1 :        0.017
-    Time for [H2, T1] -> C1 :        0.026
-    Time for [H2, T2] -> C1 :        0.241
-    Time for [H1, T2] -> C2 :        0.062
-    Time for [H2, T1] -> C2 :        0.146
-    Time for [H2, T2] -> C2 :        0.594
+    Time for [H2, T2] -> C0 :        0.058
+    Time for [H1, T1] -> C1 :        0.004
+    Time for [H1, T2] -> C1 :        0.019
+    Time for [H2, T1] -> C1 :        0.029
+    Time for [H2, T2] -> C1 :        0.266
+    Time for [H1, T2] -> C2 :        0.064
+    Time for [H2, T1] -> C2 :        0.152
+    Time for [H2, T2] -> C2 :        0.620
     --------------------------------------
 
   n:   3, C0:    0.004058433511719, C1 max:    0.005029590400799, C2 max:    0.004190524325332
     --------------------------------------
     Time for [H1, T1] -> C0 :        0.001
-    Time for [H1, T2] -> C0 :        0.001
+    Time for [H1, T2] -> C0 :        0.002
     Time for [H2, T1] -> C0 :        0.002
-    Time for [H2, T2] -> C0 :        0.054
-    Time for [H1, T1] -> C1 :        0.003
-    Time for [H1, T2] -> C1 :        0.018
-    Time for [H2, T1] -> C1 :        0.026
-    Time for [H2, T2] -> C1 :        0.244
-    Time for [H1, T2] -> C2 :        0.060
-    Time for [H2, T1] -> C2 :        0.140
-    Time for [H2, T2] -> C2 :        0.592
+    Time for [H2, T2] -> C0 :        0.058
+    Time for [H1, T1] -> C1 :        0.004
+    Time for [H1, T2] -> C1 :        0.019
+    Time for [H2, T1] -> C1 :        0.028
+    Time for [H2, T2] -> C1 :        0.258
+    Time for [H1, T2] -> C2 :        0.063
+    Time for [H2, T1] -> C2 :        0.151
+    Time for [H2, T2] -> C2 :        0.628
     --------------------------------------
 
   n:   4, C0:   -0.000550998033337, C1 max:    0.000861192271163, C2 max:    0.001343335288146
     Warning! Hbar is not converged in   4-nested commutators!
     Please increase DSRG_RSC_NCOMM.
-       7    -0.182043253783  2.531e-06   1.401e-01  4.077e-01   1.375e-05  4.878e-05     5.744    0.055  SDIIS coefficients:  -0.001  -0.000  0.003  0.003  -0.236  1.231 
+       7    -0.182043253783  2.531e-06   1.401e-01  4.077e-01   1.375e-05  4.878e-05     5.969    0.056  SDIIS coefficients:  -0.001  -0.000  0.003  0.003  -0.236  1.231 
 /E
 
   ==> Computing the DSRG Transformed Hamiltonian <==
 
     --------------------------------------
     Time for [H1, T1] -> C0 :        0.001
-    Time for [H1, T2] -> C0 :        0.001
+    Time for [H1, T2] -> C0 :        0.002
     Time for [H2, T1] -> C0 :        0.003
-    Time for [H2, T2] -> C0 :        0.045
-    Time for [H1, T1] -> C1 :        0.003
-    Time for [H1, T2] -> C1 :        0.018
-    Time for [H2, T1] -> C1 :        0.040
-    Time for [H2, T2] -> C1 :        0.190
+    Time for [H2, T2] -> C0 :        0.046
+    Time for [H1, T1] -> C1 :        0.004
+    Time for [H1, T2] -> C1 :        0.019
+    Time for [H2, T1] -> C1 :        0.044
+    Time for [H2, T2] -> C1 :        0.196
     Time for [H1, T2] -> C2 :        0.063
-    Time for [H2, T1] -> C2 :        0.287
-    Time for [H2, T2] -> C2 :        1.375
+    Time for [H2, T1] -> C2 :        0.304
+    Time for [H2, T2] -> C2 :        1.470
     --------------------------------------
 
   n:   1, C0:   -0.365870372345081, C1 max:    0.131837220257592, C2 max:    0.193338320067510
@@ -1472,14 +1505,14 @@ Collapsing eigenvectors.
     Time for [H1, T1] -> C0 :        0.001
     Time for [H1, T2] -> C0 :        0.002
     Time for [H2, T1] -> C0 :        0.002
-    Time for [H2, T2] -> C0 :        0.056
+    Time for [H2, T2] -> C0 :        0.059
     Time for [H1, T1] -> C1 :        0.003
     Time for [H1, T2] -> C1 :        0.018
     Time for [H2, T1] -> C1 :        0.027
-    Time for [H2, T2] -> C1 :        0.253
-    Time for [H1, T2] -> C2 :        0.062
-    Time for [H2, T1] -> C2 :        0.142
-    Time for [H2, T2] -> C2 :        0.588
+    Time for [H2, T2] -> C1 :        0.255
+    Time for [H1, T2] -> C2 :        0.064
+    Time for [H2, T1] -> C2 :        0.148
+    Time for [H2, T2] -> C2 :        0.640
     --------------------------------------
 
   n:   2, C0:    0.180321117986175, C1 max:    0.051199727758286, C2 max:    0.082435488754489
@@ -1487,169 +1520,102 @@ Collapsing eigenvectors.
     Time for [H1, T1] -> C0 :        0.001
     Time for [H1, T2] -> C0 :        0.001
     Time for [H2, T1] -> C0 :        0.002
-    Time for [H2, T2] -> C0 :        0.054
-    Time for [H1, T1] -> C1 :        0.003
-    Time for [H1, T2] -> C1 :        0.018
-    Time for [H2, T1] -> C1 :        0.027
-    Time for [H2, T2] -> C1 :        0.242
-    Time for [H1, T2] -> C2 :        0.061
-    Time for [H2, T1] -> C2 :        0.143
-    Time for [H2, T2] -> C2 :        0.591
+    Time for [H2, T2] -> C0 :        0.058
+    Time for [H1, T1] -> C1 :        0.004
+    Time for [H1, T2] -> C1 :        0.019
+    Time for [H2, T1] -> C1 :        0.029
+    Time for [H2, T2] -> C1 :        0.261
+    Time for [H1, T2] -> C2 :        0.065
+    Time for [H2, T1] -> C2 :        0.150
+    Time for [H2, T2] -> C2 :        0.667
     --------------------------------------
 
   n:   3, C0:    0.004058287061214, C1 max:    0.005029708379213, C2 max:    0.004190566083746
     --------------------------------------
     Time for [H1, T1] -> C0 :        0.001
-    Time for [H1, T2] -> C0 :        0.001
-    Time for [H2, T1] -> C0 :        0.002
-    Time for [H2, T2] -> C0 :        0.054
-    Time for [H1, T1] -> C1 :        0.003
-    Time for [H1, T2] -> C1 :        0.017
-    Time for [H2, T1] -> C1 :        0.027
-    Time for [H2, T2] -> C1 :        0.241
-    Time for [H1, T2] -> C2 :        0.060
-    Time for [H2, T1] -> C2 :        0.140
-    Time for [H2, T2] -> C2 :        0.584
+    Time for [H1, T2] -> C0 :        0.002
+    Time for [H2, T1] -> C0 :        0.003
+    Time for [H2, T2] -> C0 :        0.061
+    Time for [H1, T1] -> C1 :        0.004
+    Time for [H1, T2] -> C1 :        0.020
+    Time for [H2, T1] -> C1 :        0.029
+    Time for [H2, T2] -> C1 :        0.269
+    Time for [H1, T2] -> C2 :        0.064
+    Time for [H2, T1] -> C2 :        0.153
+    Time for [H2, T2] -> C2 :        0.626
     --------------------------------------
 
   n:   4, C0:   -0.000551033622054, C1 max:    0.000861210673604, C2 max:    0.001343434004289
     Warning! Hbar is not converged in   4-nested commutators!
     Please increase DSRG_RSC_NCOMM.
-       8    -0.182042000920  1.253e-06   1.400e-01  4.077e-01   3.076e-06  1.283e-05     5.590    0.054  SDIIS coefficients:  1.109  0.000  -0.000  0.000  -0.021  -0.088 
+       8    -0.182042000920  1.253e-06   1.400e-01  4.077e-01   3.076e-06  1.283e-05     6.006    0.056  SDIIS coefficients:  1.109  0.000  -0.000  0.000  -0.021  -0.088 
 /E
 
   ==> Computing the DSRG Transformed Hamiltonian <==
 
     --------------------------------------
     Time for [H1, T1] -> C0 :        0.001
-    Time for [H1, T2] -> C0 :        0.001
+    Time for [H1, T2] -> C0 :        0.002
     Time for [H2, T1] -> C0 :        0.003
-    Time for [H2, T2] -> C0 :        0.044
-    Time for [H1, T1] -> C1 :        0.003
-    Time for [H1, T2] -> C1 :        0.017
-    Time for [H2, T1] -> C1 :        0.040
-    Time for [H2, T2] -> C1 :        0.188
-    Time for [H1, T2] -> C2 :        0.063
-    Time for [H2, T1] -> C2 :        0.287
-    Time for [H2, T2] -> C2 :        1.396
+    Time for [H2, T2] -> C0 :        0.047
+    Time for [H1, T1] -> C1 :        0.004
+    Time for [H1, T2] -> C1 :        0.019
+    Time for [H2, T1] -> C1 :        0.044
+    Time for [H2, T2] -> C1 :        0.202
+    Time for [H1, T2] -> C2 :        0.066
+    Time for [H2, T1] -> C2 :        0.303
+    Time for [H2, T2] -> C2 :        1.487
     --------------------------------------
 
   n:   1, C0:   -0.365870589944622, C1 max:    0.131836833197377, C2 max:    0.193337584018075
     --------------------------------------
     Time for [H1, T1] -> C0 :        0.001
-    Time for [H1, T2] -> C0 :        0.001
-    Time for [H2, T1] -> C0 :        0.002
-    Time for [H2, T2] -> C0 :        0.053
-    Time for [H1, T1] -> C1 :        0.003
-    Time for [H1, T2] -> C1 :        0.017
-    Time for [H2, T1] -> C1 :        0.026
-    Time for [H2, T2] -> C1 :        0.243
-    Time for [H1, T2] -> C2 :        0.060
-    Time for [H2, T1] -> C2 :        0.141
-    Time for [H2, T2] -> C2 :        0.591
+    Time for [H1, T2] -> C0 :        0.002
+    Time for [H2, T1] -> C0 :        0.003
+    Time for [H2, T2] -> C0 :        0.061
+    Time for [H1, T1] -> C1 :        0.004
+    Time for [H1, T2] -> C1 :        0.018
+    Time for [H2, T1] -> C1 :        0.028
+    Time for [H2, T2] -> C1 :        0.275
+    Time for [H1, T2] -> C2 :        0.069
+    Time for [H2, T1] -> C2 :        0.153
+    Time for [H2, T2] -> C2 :        0.629
     --------------------------------------
 
   n:   2, C0:    0.180321643020490, C1 max:    0.051199534627532, C2 max:    0.082435146039143
     --------------------------------------
     Time for [H1, T1] -> C0 :        0.001
-    Time for [H1, T2] -> C0 :        0.001
+    Time for [H1, T2] -> C0 :        0.002
     Time for [H2, T1] -> C0 :        0.002
-    Time for [H2, T2] -> C0 :        0.054
-    Time for [H1, T1] -> C1 :        0.003
-    Time for [H1, T2] -> C1 :        0.018
-    Time for [H2, T1] -> C1 :        0.026
-    Time for [H2, T2] -> C1 :        0.246
-    Time for [H1, T2] -> C2 :        0.061
-    Time for [H2, T1] -> C2 :        0.144
-    Time for [H2, T2] -> C2 :        0.587
+    Time for [H2, T2] -> C0 :        0.058
+    Time for [H1, T1] -> C1 :        0.004
+    Time for [H1, T2] -> C1 :        0.019
+    Time for [H2, T1] -> C1 :        0.029
+    Time for [H2, T2] -> C1 :        0.257
+    Time for [H1, T2] -> C2 :        0.063
+    Time for [H2, T1] -> C2 :        0.153
+    Time for [H2, T2] -> C2 :        0.639
     --------------------------------------
 
   n:   3, C0:    0.004058250479384, C1 max:    0.005029685526849, C2 max:    0.004190540546541
     --------------------------------------
     Time for [H1, T1] -> C0 :        0.001
     Time for [H1, T2] -> C0 :        0.002
-    Time for [H2, T1] -> C0 :        0.003
-    Time for [H2, T2] -> C0 :        0.064
+    Time for [H2, T1] -> C0 :        0.002
+    Time for [H2, T2] -> C0 :        0.070
     Time for [H1, T1] -> C1 :        0.004
-    Time for [H1, T2] -> C1 :        0.021
-    Time for [H2, T1] -> C1 :        0.031
-    Time for [H2, T2] -> C1 :        0.264
-    Time for [H1, T2] -> C2 :        0.061
-    Time for [H2, T1] -> C2 :        0.144
-    Time for [H2, T2] -> C2 :        0.620
+    Time for [H1, T2] -> C1 :        0.019
+    Time for [H2, T1] -> C1 :        0.027
+    Time for [H2, T2] -> C1 :        0.269
+    Time for [H1, T2] -> C2 :        0.067
+    Time for [H2, T1] -> C2 :        0.160
+    Time for [H2, T2] -> C2 :        0.628
     --------------------------------------
 
   n:   4, C0:   -0.000551047139532, C1 max:    0.000861189630605, C2 max:    0.001343436716091
     Warning! Hbar is not converged in   4-nested commutators!
     Please increase DSRG_RSC_NCOMM.
-       9    -0.182041743584  2.573e-07   1.400e-01  4.077e-01   9.839e-07  3.612e-06     5.683    0.056  SDIIS coefficients:  -0.016  1.075  -0.000  0.000  0.010  -0.070 
-/E
-
-  ==> Computing the DSRG Transformed Hamiltonian <==
-
-    --------------------------------------
-    Time for [H1, T1] -> C0 :        0.001
-    Time for [H1, T2] -> C0 :        0.001
-    Time for [H2, T1] -> C0 :        0.003
-    Time for [H2, T2] -> C0 :        0.045
-    Time for [H1, T1] -> C1 :        0.003
-    Time for [H1, T2] -> C1 :        0.017
-    Time for [H2, T1] -> C1 :        0.039
-    Time for [H2, T2] -> C1 :        0.185
-    Time for [H1, T2] -> C2 :        0.060
-    Time for [H2, T1] -> C2 :        0.286
-    Time for [H2, T2] -> C2 :        1.386
-    --------------------------------------
-
-  n:   1, C0:   -0.365870667247297, C1 max:    0.131837064440848, C2 max:    0.193337815880016
-    --------------------------------------
-    Time for [H1, T1] -> C0 :        0.001
-    Time for [H1, T2] -> C0 :        0.001
-    Time for [H2, T1] -> C0 :        0.002
-    Time for [H2, T2] -> C0 :        0.054
-    Time for [H1, T1] -> C1 :        0.004
-    Time for [H1, T2] -> C1 :        0.018
-    Time for [H2, T1] -> C1 :        0.026
-    Time for [H2, T2] -> C1 :        0.248
-    Time for [H1, T2] -> C2 :        0.060
-    Time for [H2, T1] -> C2 :        0.141
-    Time for [H2, T2] -> C2 :        0.599
-    --------------------------------------
-
-  n:   2, C0:    0.180321857060485, C1 max:    0.051199746613583, C2 max:    0.082435170542562
-    --------------------------------------
-    Time for [H1, T1] -> C0 :        0.001
-    Time for [H1, T2] -> C0 :        0.001
-    Time for [H2, T1] -> C0 :        0.002
-    Time for [H2, T2] -> C0 :        0.054
-    Time for [H1, T1] -> C1 :        0.003
-    Time for [H1, T2] -> C1 :        0.018
-    Time for [H2, T1] -> C1 :        0.027
-    Time for [H2, T2] -> C1 :        0.248
-    Time for [H1, T2] -> C2 :        0.062
-    Time for [H2, T1] -> C2 :        0.144
-    Time for [H2, T2] -> C2 :        0.586
-    --------------------------------------
-
-  n:   3, C0:    0.004058236076797, C1 max:    0.005029704967599, C2 max:    0.004190556141128
-    --------------------------------------
-    Time for [H1, T1] -> C0 :        0.001
-    Time for [H1, T2] -> C0 :        0.001
-    Time for [H2, T1] -> C0 :        0.002
-    Time for [H2, T2] -> C0 :        0.055
-    Time for [H1, T1] -> C1 :        0.003
-    Time for [H1, T2] -> C1 :        0.017
-    Time for [H2, T1] -> C1 :        0.025
-    Time for [H2, T2] -> C1 :        0.244
-    Time for [H1, T2] -> C2 :        0.060
-    Time for [H2, T1] -> C2 :        0.139
-    Time for [H2, T2] -> C2 :        0.585
-    --------------------------------------
-
-  n:   4, C0:   -0.000551048323684, C1 max:    0.000861189669396, C2 max:    0.001343443157765
-    Warning! Hbar is not converged in   4-nested commutators!
-    Please increase DSRG_RSC_NCOMM.
-      10    -0.182041622434  1.212e-07   1.400e-01  4.077e-01   1.985e-07  8.932e-07     5.597    0.055  SDIIS coefficients:  -0.065  0.024  1.038  -0.000  0.002  0.001 
+       9    -0.182041743584  2.573e-07   1.400e-01  4.077e-01   9.839e-07  3.612e-06     6.041    0.057  SDIIS coefficients:  -0.016  1.075  -0.000  0.000  0.010  -0.070 
 /E
 
   ==> Computing the DSRG Transformed Hamiltonian <==
@@ -1659,13 +1625,80 @@ Collapsing eigenvectors.
     Time for [H1, T2] -> C0 :        0.001
     Time for [H2, T1] -> C0 :        0.003
     Time for [H2, T2] -> C0 :        0.046
-    Time for [H1, T1] -> C1 :        0.003
+    Time for [H1, T1] -> C1 :        0.004
+    Time for [H1, T2] -> C1 :        0.019
+    Time for [H2, T1] -> C1 :        0.041
+    Time for [H2, T2] -> C1 :        0.196
+    Time for [H1, T2] -> C2 :        0.064
+    Time for [H2, T1] -> C2 :        0.304
+    Time for [H2, T2] -> C2 :        1.466
+    --------------------------------------
+
+  n:   1, C0:   -0.365870667247297, C1 max:    0.131837064440848, C2 max:    0.193337815880016
+    --------------------------------------
+    Time for [H1, T1] -> C0 :        0.001
+    Time for [H1, T2] -> C0 :        0.002
+    Time for [H2, T1] -> C0 :        0.002
+    Time for [H2, T2] -> C0 :        0.060
+    Time for [H1, T1] -> C1 :        0.004
+    Time for [H1, T2] -> C1 :        0.019
+    Time for [H2, T1] -> C1 :        0.027
+    Time for [H2, T2] -> C1 :        0.282
+    Time for [H1, T2] -> C2 :        0.073
+    Time for [H2, T1] -> C2 :        0.156
+    Time for [H2, T2] -> C2 :        0.645
+    --------------------------------------
+
+  n:   2, C0:    0.180321857060485, C1 max:    0.051199746613583, C2 max:    0.082435170542562
+    --------------------------------------
+    Time for [H1, T1] -> C0 :        0.001
+    Time for [H1, T2] -> C0 :        0.002
+    Time for [H2, T1] -> C0 :        0.002
+    Time for [H2, T2] -> C0 :        0.056
+    Time for [H1, T1] -> C1 :        0.004
     Time for [H1, T2] -> C1 :        0.018
-    Time for [H2, T1] -> C1 :        0.042
-    Time for [H2, T2] -> C1 :        0.186
-    Time for [H1, T2] -> C2 :        0.060
-    Time for [H2, T1] -> C2 :        0.283
-    Time for [H2, T2] -> C2 :        1.388
+    Time for [H2, T1] -> C1 :        0.026
+    Time for [H2, T2] -> C1 :        0.253
+    Time for [H1, T2] -> C2 :        0.064
+    Time for [H2, T1] -> C2 :        0.148
+    Time for [H2, T2] -> C2 :        0.633
+    --------------------------------------
+
+  n:   3, C0:    0.004058236076797, C1 max:    0.005029704967599, C2 max:    0.004190556141128
+    --------------------------------------
+    Time for [H1, T1] -> C0 :        0.001
+    Time for [H1, T2] -> C0 :        0.002
+    Time for [H2, T1] -> C0 :        0.002
+    Time for [H2, T2] -> C0 :        0.056
+    Time for [H1, T1] -> C1 :        0.004
+    Time for [H1, T2] -> C1 :        0.018
+    Time for [H2, T1] -> C1 :        0.028
+    Time for [H2, T2] -> C1 :        0.260
+    Time for [H1, T2] -> C2 :        0.069
+    Time for [H2, T1] -> C2 :        0.159
+    Time for [H2, T2] -> C2 :        0.627
+    --------------------------------------
+
+  n:   4, C0:   -0.000551048323684, C1 max:    0.000861189669396, C2 max:    0.001343443157765
+    Warning! Hbar is not converged in   4-nested commutators!
+    Please increase DSRG_RSC_NCOMM.
+      10    -0.182041622434  1.212e-07   1.400e-01  4.077e-01   1.985e-07  8.932e-07     6.010    0.082  SDIIS coefficients:  -0.065  0.024  1.038  -0.000  0.002  0.001 
+/E
+
+  ==> Computing the DSRG Transformed Hamiltonian <==
+
+    --------------------------------------
+    Time for [H1, T1] -> C0 :        0.002
+    Time for [H1, T2] -> C0 :        0.002
+    Time for [H2, T1] -> C0 :        0.005
+    Time for [H2, T2] -> C0 :        0.064
+    Time for [H1, T1] -> C1 :        0.005
+    Time for [H1, T2] -> C1 :        0.023
+    Time for [H2, T1] -> C1 :        0.058
+    Time for [H2, T2] -> C1 :        0.233
+    Time for [H1, T2] -> C2 :        0.077
+    Time for [H2, T1] -> C2 :        0.356
+    Time for [H2, T2] -> C2 :        1.758
     --------------------------------------
 
   n:   1, C0:   -0.365870679405887, C1 max:    0.131836987899003, C2 max:    0.193337831211255
@@ -1673,14 +1706,14 @@ Collapsing eigenvectors.
     Time for [H1, T1] -> C0 :        0.001
     Time for [H1, T2] -> C0 :        0.001
     Time for [H2, T1] -> C0 :        0.002
-    Time for [H2, T2] -> C0 :        0.054
-    Time for [H1, T1] -> C1 :        0.003
+    Time for [H2, T2] -> C0 :        0.055
+    Time for [H1, T1] -> C1 :        0.004
     Time for [H1, T2] -> C1 :        0.018
-    Time for [H2, T1] -> C1 :        0.026
-    Time for [H2, T2] -> C1 :        0.247
-    Time for [H1, T2] -> C2 :        0.060
-    Time for [H2, T1] -> C2 :        0.142
-    Time for [H2, T2] -> C2 :        0.598
+    Time for [H2, T1] -> C1 :        0.028
+    Time for [H2, T2] -> C1 :        0.256
+    Time for [H1, T2] -> C2 :        0.064
+    Time for [H2, T1] -> C2 :        0.149
+    Time for [H2, T2] -> C2 :        0.639
     --------------------------------------
 
   n:   2, C0:    0.180321882883694, C1 max:    0.051199682089361, C2 max:    0.082435184688453
@@ -1688,14 +1721,14 @@ Collapsing eigenvectors.
     Time for [H1, T1] -> C0 :        0.001
     Time for [H1, T2] -> C0 :        0.002
     Time for [H2, T1] -> C0 :        0.003
-    Time for [H2, T2] -> C0 :        0.057
+    Time for [H2, T2] -> C0 :        0.058
     Time for [H1, T1] -> C1 :        0.004
     Time for [H1, T2] -> C1 :        0.018
-    Time for [H2, T1] -> C1 :        0.029
-    Time for [H2, T2] -> C1 :        0.252
-    Time for [H1, T2] -> C2 :        0.062
-    Time for [H2, T1] -> C2 :        0.143
-    Time for [H2, T2] -> C2 :        0.613
+    Time for [H2, T1] -> C1 :        0.027
+    Time for [H2, T2] -> C1 :        0.270
+    Time for [H1, T2] -> C2 :        0.064
+    Time for [H2, T1] -> C2 :        0.149
+    Time for [H2, T2] -> C2 :        0.655
     --------------------------------------
 
   n:   3, C0:    0.004058228746500, C1 max:    0.005029709373896, C2 max:    0.004190553341962
@@ -1703,36 +1736,36 @@ Collapsing eigenvectors.
     Time for [H1, T1] -> C0 :        0.001
     Time for [H1, T2] -> C0 :        0.001
     Time for [H2, T1] -> C0 :        0.002
-    Time for [H2, T2] -> C0 :        0.053
+    Time for [H2, T2] -> C0 :        0.055
     Time for [H1, T1] -> C1 :        0.003
-    Time for [H1, T2] -> C1 :        0.017
-    Time for [H2, T1] -> C1 :        0.027
-    Time for [H2, T2] -> C1 :        0.242
-    Time for [H1, T2] -> C2 :        0.061
-    Time for [H2, T1] -> C2 :        0.142
-    Time for [H2, T2] -> C2 :        0.584
+    Time for [H1, T2] -> C1 :        0.018
+    Time for [H2, T1] -> C1 :        0.030
+    Time for [H2, T2] -> C1 :        0.269
+    Time for [H1, T2] -> C2 :        0.067
+    Time for [H2, T1] -> C2 :        0.155
+    Time for [H2, T2] -> C2 :        0.625
     --------------------------------------
 
   n:   4, C0:   -0.000551048290683, C1 max:    0.000861188261700, C2 max:    0.001343442464972
     Warning! Hbar is not converged in   4-nested commutators!
     Please increase DSRG_RSC_NCOMM.
-      11    -0.182041616066  6.367e-09   1.400e-01  4.077e-01   4.260e-08  1.928e-07     5.641    0.054  SDIIS coefficients:  0.009  -0.042  -0.109  1.141  -0.001  0.003 
+      11    -0.182041616066  6.367e-09   1.400e-01  4.077e-01   4.260e-08  1.928e-07     6.440    0.057  SDIIS coefficients:  0.009  -0.042  -0.109  1.141  -0.001  0.003 
 /E
 
   ==> Computing the DSRG Transformed Hamiltonian <==
 
     --------------------------------------
     Time for [H1, T1] -> C0 :        0.001
-    Time for [H1, T2] -> C0 :        0.001
+    Time for [H1, T2] -> C0 :        0.002
     Time for [H2, T1] -> C0 :        0.003
-    Time for [H2, T2] -> C0 :        0.044
+    Time for [H2, T2] -> C0 :        0.048
     Time for [H1, T1] -> C1 :        0.003
-    Time for [H1, T2] -> C1 :        0.017
-    Time for [H2, T1] -> C1 :        0.040
-    Time for [H2, T2] -> C1 :        0.184
-    Time for [H1, T2] -> C2 :        0.061
-    Time for [H2, T1] -> C2 :        0.287
-    Time for [H2, T2] -> C2 :        1.400
+    Time for [H1, T2] -> C1 :        0.018
+    Time for [H2, T1] -> C1 :        0.041
+    Time for [H2, T2] -> C1 :        0.199
+    Time for [H1, T2] -> C2 :        0.064
+    Time for [H2, T1] -> C2 :        0.299
+    Time for [H2, T2] -> C2 :        1.922
     --------------------------------------
 
   n:   1, C0:   -0.365870671046198, C1 max:    0.131836992492048, C2 max:    0.193337839610448
@@ -1740,50 +1773,50 @@ Collapsing eigenvectors.
     Time for [H1, T1] -> C0 :        0.001
     Time for [H1, T2] -> C0 :        0.001
     Time for [H2, T1] -> C0 :        0.002
-    Time for [H2, T2] -> C0 :        0.055
-    Time for [H1, T1] -> C1 :        0.003
-    Time for [H1, T2] -> C1 :        0.018
+    Time for [H2, T2] -> C0 :        0.056
+    Time for [H1, T1] -> C1 :        0.004
+    Time for [H1, T2] -> C1 :        0.019
     Time for [H2, T1] -> C1 :        0.027
-    Time for [H2, T2] -> C1 :        0.256
-    Time for [H1, T2] -> C2 :        0.063
-    Time for [H2, T1] -> C2 :        0.148
-    Time for [H2, T2] -> C2 :        0.623
+    Time for [H2, T2] -> C1 :        0.260
+    Time for [H1, T2] -> C2 :        0.067
+    Time for [H2, T1] -> C2 :        0.153
+    Time for [H2, T2] -> C2 :        0.639
     --------------------------------------
 
   n:   2, C0:    0.180321882567061, C1 max:    0.051199687171842, C2 max:    0.082435189209630
     --------------------------------------
     Time for [H1, T1] -> C0 :        0.001
-    Time for [H1, T2] -> C0 :        0.001
+    Time for [H1, T2] -> C0 :        0.002
     Time for [H2, T1] -> C0 :        0.002
     Time for [H2, T2] -> C0 :        0.055
     Time for [H1, T1] -> C1 :        0.003
     Time for [H1, T2] -> C1 :        0.018
-    Time for [H2, T1] -> C1 :        0.026
-    Time for [H2, T2] -> C1 :        0.248
-    Time for [H1, T2] -> C2 :        0.062
-    Time for [H2, T1] -> C2 :        0.144
-    Time for [H2, T2] -> C2 :        0.598
+    Time for [H2, T1] -> C1 :        0.027
+    Time for [H2, T2] -> C1 :        0.261
+    Time for [H1, T2] -> C2 :        0.063
+    Time for [H2, T1] -> C2 :        0.151
+    Time for [H2, T2] -> C2 :        0.803
     --------------------------------------
 
   n:   3, C0:    0.004058229447112, C1 max:    0.005029708426861, C2 max:    0.004190553654675
     --------------------------------------
-    Time for [H1, T1] -> C0 :        0.001
-    Time for [H1, T2] -> C0 :        0.001
-    Time for [H2, T1] -> C0 :        0.002
-    Time for [H2, T2] -> C0 :        0.054
-    Time for [H1, T1] -> C1 :        0.003
-    Time for [H1, T2] -> C1 :        0.018
-    Time for [H2, T1] -> C1 :        0.026
-    Time for [H2, T2] -> C1 :        0.246
-    Time for [H1, T2] -> C2 :        0.061
-    Time for [H2, T1] -> C2 :        0.143
-    Time for [H2, T2] -> C2 :        0.591
+    Time for [H1, T1] -> C0 :        0.002
+    Time for [H1, T2] -> C0 :        0.002
+    Time for [H2, T1] -> C0 :        0.004
+    Time for [H2, T2] -> C0 :        0.084
+    Time for [H1, T1] -> C1 :        0.005
+    Time for [H1, T2] -> C1 :        0.028
+    Time for [H2, T1] -> C1 :        0.041
+    Time for [H2, T2] -> C1 :        0.387
+    Time for [H1, T2] -> C2 :        0.084
+    Time for [H2, T1] -> C2 :        0.171
+    Time for [H2, T2] -> C2 :        0.722
     --------------------------------------
 
   n:   4, C0:   -0.000551048383245, C1 max:    0.000861188484414, C2 max:    0.001343442740979
     Warning! Hbar is not converged in   4-nested commutators!
     Please increase DSRG_RSC_NCOMM.
-      12    -0.182041607415  8.651e-09   1.400e-01  4.077e-01   1.340e-08  5.030e-08     5.679    0.055  SDIIS coefficients:  0.002  0.001  -0.031  0.018  1.011  -0.000 
+      12    -0.182041607415  8.651e-09   1.400e-01  4.077e-01   1.340e-08  5.030e-08     6.910    0.070  SDIIS coefficients:  0.002  0.001  -0.031  0.018  1.011  -0.000 
 /E
     ---------------------------------------------------------------------------------------------------------
 
@@ -1830,17 +1863,17 @@ Collapsing eigenvectors.
 
              [H1, T1]    [H1, T2]    [H2, T1]    [H2, T2]
     -----------------------------------------------------
-    -> C0       0.057       0.073       0.122       2.520
-    -> C1       0.166       0.860       1.452      11.201
-    -> C2                   2.949       8.629      38.538
+    -> C0       0.064       0.083       0.138       2.808
+    -> C1       0.186       0.948       1.609      12.491
+    -> C2                   3.284       9.703      43.184
     -----------------------------------------------------
 
 
-  Time to prepare integrals: 0.6351461410522461 seconds
-  Time to run job          : 69.22624087333679 seconds
-  Total                    : 69.22624087333679 seconds    MR-LDSRG(2) (NCOMM=4) unrelaxed energy............................PASSED
+  Time to prepare integrals: 0.8112199306488037 seconds
+  Time to run job          : 77.60860705375671 seconds
+  Total                    : 77.60860705375671 seconds    MR-LDSRG(2) (NCOMM=4) unrelaxed energy............................PASSED
 
-    Psi4 stopped on: Thursday, 12 March 2020 10:44PM
-    Psi4 wall time for execution: 0:01:11.22
+    Psi4 stopped on: Saturday, 21 March 2020 12:40AM
+    Psi4 wall time for execution: 0:01:20.16
 
 *** Psi4 exiting successfully. Buy a developer a beer!

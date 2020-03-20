@@ -23,9 +23,9 @@
     -----------------------------------------------------------------------
 
 
-    Psi4 started on: Thursday, 12 March 2020 10:38PM
+    Psi4 started on: Saturday, 21 March 2020 12:33AM
 
-    Process ID: 37559
+    Process ID: 45480
     Host:       Yorks-Mac.local
     PSIDATADIR: /Users/york/src/psi4group/psi4/share/psi4
     Memory:     500.0 MiB
@@ -51,33 +51,33 @@ molecule HF{
 }
 
 set globals{
-   basis                   cc-pvdz
-   reference               twocon
-   scf_type                pk
-   d_convergence           12
-   e_convergence           15
+  basis                   cc-pvdz
+  reference               twocon
+  scf_type                pk
+  d_convergence           12
+  e_convergence           15
 }
 
 set mcscf{
-   docc                    [2,0,1,1]
-   socc                    [2,0,0,0]
-   maxiter                 1000
-   level_shift             1.0
+  docc                    [2,0,1,1]
+  socc                    [2,0,0,0]
+  maxiter                 1000
+  level_shift             1.0
 }
 
 set forte{
-   active_space_solver     cas
-   correlation_solver      sa-mrdsrg
-   corr_level              ldsrg2_qc
-   frozen_docc             [0,0,0,0]
-   restricted_docc         [2,0,1,1]
-   active                  [2,0,0,0]
-   root_sym                0
-   nroot                   1
-   dsrg_s                  1.0
-   spin_avg_density        true
-   e_convergence           8
-   r_convergence           6
+  active_space_solver     cas
+  correlation_solver      sa-mrdsrg
+  corr_level              ldsrg2_qc
+  frozen_docc             [0,0,0,0]
+  restricted_docc         [2,0,1,1]
+  active                  [2,0,0,0]
+  root_sym                0
+  nroot                   1
+  dsrg_s                  1.0
+  spin_avg_density        true  # optional
+  e_convergence           8
+  r_convergence           6
 }
 
 Emcscf, wfn = energy('mcscf', return_wfn=True)
@@ -100,7 +100,7 @@ Scratch directory: /Users/york/scratch/psi4/
 
 
 *** tstart() called on Yorks-Mac.local
-*** at Thu Mar 12 22:38:46 2020
+*** at Sat Mar 21 00:33:14 2020
 
 
          ------------------------------------------
@@ -473,13 +473,13 @@ Scratch directory: /Users/york/scratch/psi4/
   MCSCF Execution Completed.
 
 
-*** tstop() called on Yorks-Mac.local at Thu Mar 12 22:38:47 2020
+*** tstop() called on Yorks-Mac.local at Sat Mar 21 00:33:15 2020
 Module time:
-	user time   =       0.18 seconds =       0.00 minutes
+	user time   =       0.20 seconds =       0.00 minutes
 	system time =       0.02 seconds =       0.00 minutes
 	total time  =          1 seconds =       0.02 minutes
 Total time:
-	user time   =       0.18 seconds =       0.00 minutes
+	user time   =       0.20 seconds =       0.00 minutes
 	system time =       0.02 seconds =       0.00 minutes
 	total time  =          1 seconds =       0.02 minutes
     MCSCF energy......................................................PASSED
@@ -536,16 +536,16 @@ Scratch directory: /Users/york/scratch/psi4/
   Overall Conventional Integrals timings
 
 
-  Conventional integrals take 0.06818009 s
+  Conventional integrals take 0.06770108 s
 
   ==> Summary of Active Space Solver Input <==
 
-    Irrep.  Multi.(ms)      N
+    Irrep.  Multi.(2ms)      N
     --------------------------
-       A1      1 (  0)      1
+       A1      1  (  0)      1
     --------------------------
     N: number of roots
-    ms: twice spin z component
+    ms: spin z component
     Total number of roots:   1
     --------------------------
 
@@ -555,7 +555,7 @@ Scratch directory: /Users/york/scratch/psi4/
                                   Chenyang Li
               ---------------------------------------------------
 
-  Forming alpha and beta strings      ...  Done. Timing        0.000037 s
+  Forming alpha and beta strings      ...  Done. Timing        0.000038 s
   Forming determinants                ...  Done. Timing        0.000014 s
 
   ==> Determinants Summary <==
@@ -569,16 +569,16 @@ Scratch directory: /Users/york/scratch/psi4/
 
   ==> Computing Coupling Lists <==
   --------------------------------
-        α          0.000033 s
-        β          0.000010 s
+        α          0.000031 s
+        β          0.000011 s
         αα         0.000008 s
         ββ         0.000003 s
-        αβ         0.000016 s
+        αβ         0.000017 s
   --------------------------------
 
   Davidson-Liu solver algorithm using SigmaVectorSparseList sigma algorithm
   Found 3 roots with 2S+1 = 1 *
-  Found 1 roots with 2S+1 = 3  Done. Timing        0.000493 s
+  Found 1 roots with 2S+1 = 3  Done. Timing        0.000479 s
 
   * * * * * * * * * * * * * * * * *
   *  CI Vectors & Configurations  *
@@ -601,20 +601,20 @@ Scratch directory: /Users/york/scratch/psi4/
 
   ==> Energy Summary <==
 
-    Multi.(ms)  Irrep.  No.               Energy
+    Multi.(2ms)  Irrep.  No.               Energy
     ---------------------------------------------
-       1  ( 0)    A1     0       -99.939316382624
+       1  (  0)    A1     0      -99.939316382624
     ---------------------------------------------
  Computing  1RDMs (0 Singlet A1 - 0 Singlet A1) ... Done. Timing        0.000091 s
- Computing  2RDMs (0 Singlet A1 - 0 Singlet A1) ... Done. Timing        0.000066 s
- Computing  3RDMs (0 Singlet A1 - 0 Singlet A1) ... Done. Timing        0.000075 s
+ Computing  2RDMs (0 Singlet A1 - 0 Singlet A1) ... Done. Timing        0.000067 s
+ Computing  3RDMs (0 Singlet A1 - 0 Singlet A1) ... Done. Timing        0.000072 s
 
        -----------------------------------------------------------------
                             Semi-Canonical Orbitals
          Chenyang Li, Jeffrey B. Schriber and Francesco A. Evangelista
        -----------------------------------------------------------------
 
-  Took 0.000186 s to build Fock matrix
+  Took 0.000209 s to build Fock matrix
 
   ==> Checking Fock Matrix Diagonal Blocks <==
 
@@ -637,7 +637,7 @@ Scratch directory: /Users/york/scratch/psi4/
     Transformed 1 RDM.
     Transformed 2 RDM.
     Transformed 3 RDM.
-  SemiCanonicalize takes 0.682835 s.
+  SemiCanonicalize takes 0.655552 s.
 
     -----------------------------------------------------------------------
       Spin-Adapted Multireference Driven Similarity Renormalization Group
@@ -645,6 +645,9 @@ Scratch directory: /Users/york/scratch/psi4/
                                  1 OMP thread
     -----------------------------------------------------------------------
 
+  Disclaimer:
+    The spin-adapted DSRG code is largely adopted from the spin-integrated code developed by
+    Chenyang Li, Kevin P. Hannon, Tianyuan Zhang, and Francesco A. Evangelista.
 
   ==> Multireference Driven Similarity Renormalization Group <==
 
@@ -700,8 +703,8 @@ Scratch directory: /Users/york/scratch/psi4/
 
     Memory assigned by the user                    500.00 MB
     Memory available for MR-DSRG                   488.96 MB
-    1- and 2-density cumulants                     192.00  B
     Generalized Fock matrix                          3.04 KB
+    1-, 2-, and 3-density cumulants                704.00  B
     1- and 2-electron integrals                      1.05 MB
     T1 cluster amplitudes and residuals              1.44 KB
     T2 cluster amplitudes and residuals            194.40 KB
@@ -714,8 +717,8 @@ Scratch directory: /Users/york/scratch/psi4/
 
   ==> Build Initial Amplitude from DSRG-MRPT2 <==
 
-    Computing T2 amplitudes ...          Done. Timing      0.006 s
-    Computing T1 amplitudes ...          Done. Timing      0.008 s
+    Computing T2 amplitudes ...          Done. Timing      0.005 s
+    Computing T1 amplitudes ...          Done. Timing      0.007 s
 
   ==> First-Order Excitation Amplitudes Summary <==
 
@@ -763,18 +766,18 @@ Scratch directory: /Users/york/scratch/psi4/
            ---------------------------  ---------------------  ---------------------  -----------------
     Iter.        Corr.         Delta       Hbar1      Hbar2        T1         T2        Hbar     Amp.    DIIS
     ---------------------------------------------------------------------------------------------------------
-       1    -0.169115936085 -1.691e-01   1.660e-01  5.380e-01   4.658e-02  1.866e-01     2.301    0.015
-       2    -0.171366490815 -2.251e-03   2.022e-01  3.826e-01   2.922e-02  8.868e-02     2.300    0.015  S
-       3    -0.172032364448 -6.659e-04   1.675e-01  2.760e-01   1.087e-02  4.059e-02     2.286    0.015  S/E
-       4    -0.172182479681 -1.501e-04   1.738e-01  2.744e-01   7.592e-04  3.094e-03     2.290    0.015  S/E
-       5    -0.172134863507  4.762e-05   1.737e-01  2.738e-01   2.893e-04  7.793e-04     2.270    0.014  S/E
-       6    -0.172117236482  1.763e-05   1.736e-01  2.737e-01   8.258e-05  2.156e-04     2.346    0.015  S/E
-       7    -0.172112587985  4.648e-06   1.736e-01  2.737e-01   2.132e-05  6.446e-05     2.271    0.014  S/E
-       8    -0.172110741469  1.847e-06   1.736e-01  2.737e-01   5.173e-06  1.881e-05     2.262    0.015  S/E
-       9    -0.172110411494  3.300e-07   1.736e-01  2.737e-01   1.278e-06  5.337e-06     2.272    0.015  S/E
-      10    -0.172110319310  9.218e-08   1.736e-01  2.737e-01   3.369e-07  1.514e-06     2.278    0.015  S/E
-      11    -0.172110296929  2.238e-08   1.736e-01  2.737e-01   4.865e-08  3.718e-07     2.324    0.015  S/E
-      12    -0.172110290485  6.444e-09   1.736e-01  2.737e-01   1.520e-08  8.674e-08     2.312    0.015  S/E
+       1    -0.169115936085 -1.691e-01   1.660e-01  5.380e-01   4.658e-02  1.866e-01     2.245    0.014
+       2    -0.171366490815 -2.251e-03   2.022e-01  3.826e-01   2.922e-02  8.868e-02     2.218    0.014  S
+       3    -0.172032364448 -6.659e-04   1.675e-01  2.760e-01   1.087e-02  4.059e-02     2.235    0.015  S/E
+       4    -0.172182479681 -1.501e-04   1.738e-01  2.744e-01   7.592e-04  3.094e-03     2.527    0.017  S/E
+       5    -0.172134863507  4.762e-05   1.737e-01  2.738e-01   2.893e-04  7.793e-04     2.251    0.014  S/E
+       6    -0.172117236482  1.763e-05   1.736e-01  2.737e-01   8.258e-05  2.156e-04     2.227    0.015  S/E
+       7    -0.172112587985  4.648e-06   1.736e-01  2.737e-01   2.132e-05  6.446e-05     2.232    0.014  S/E
+       8    -0.172110741469  1.847e-06   1.736e-01  2.737e-01   5.173e-06  1.881e-05     2.235    0.014  S/E
+       9    -0.172110411494  3.300e-07   1.736e-01  2.737e-01   1.278e-06  5.337e-06     2.227    0.014  S/E
+      10    -0.172110319310  9.218e-08   1.736e-01  2.737e-01   3.369e-07  1.514e-06     2.234    0.015  S/E
+      11    -0.172110296929  2.238e-08   1.736e-01  2.737e-01   4.865e-08  3.718e-07     2.242    0.014  S/E
+      12    -0.172110290485  6.444e-09   1.736e-01  2.737e-01   1.520e-08  8.674e-08     2.237    0.015  S/E
     ---------------------------------------------------------------------------------------------------------
 
   ==> MR-LDSRG(2)-C2 Energy Summary <==
@@ -824,17 +827,17 @@ Scratch directory: /Users/york/scratch/psi4/
 
              [H1, T1]    [H1, T2]    [H2, T1]    [H2, T2]
     -----------------------------------------------------
-    -> C0       0.014       0.014       0.026       0.459
-    -> C1       0.092       0.463       0.576       5.550
-    -> C2                   0.967       1.901       8.665
+    -> C0       0.013       0.014       0.027       0.473
+    -> C1       0.089       0.446       0.558       5.465
+    -> C2                   0.957       1.869       8.545
     -----------------------------------------------------
 
 
-  Time to prepare integrals: 0.07272911071777344 seconds
-  Time to run job          : 28.45234990119934 seconds
-  Total                    : 28.45234990119934 seconds    unrelaxed MR-LDSRG(2) energy......................................PASSED
+  Time to prepare integrals: 0.07187604904174805 seconds
+  Time to run job          : 28.02078604698181 seconds
+  Total                    : 28.02078604698181 seconds    unrelaxed MR-LDSRG(2) energy......................................PASSED
 
-    Psi4 stopped on: Thursday, 12 March 2020 10:39PM
-    Psi4 wall time for execution: 0:00:28.86
+    Psi4 stopped on: Saturday, 21 March 2020 12:33AM
+    Psi4 wall time for execution: 0:00:28.46
 
 *** Psi4 exiting successfully. Buy a developer a beer!

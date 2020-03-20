@@ -23,9 +23,9 @@
     -----------------------------------------------------------------------
 
 
-    Psi4 started on: Thursday, 12 March 2020 08:45PM
+    Psi4 started on: Saturday, 21 March 2020 12:47AM
 
-    Process ID: 35828
+    Process ID: 46633
     Host:       Yorks-Mac.local
     PSIDATADIR: /Users/york/src/psi4group/psi4/share/psi4
     Memory:     500.0 MiB
@@ -71,13 +71,12 @@ set {
   avg_states          [0,1,2]
 }
 Ecas, wfn = energy('casscf', return_wfn=True)
-compare_values(ref_cas,Ecas,8,"CASSCF energy")
+compare_values(ref_cas, Ecas, 8, "CASSCF energy")
 
 set forte{
   active_space_solver  cas
   correlation_solver   sa-mrdsrg
   corr_level           pt3
-  spin_avg_density     true
   calc_type            sa
   frozen_docc          [2,0,0,0]
   restricted_docc      [3,0,0,2]
@@ -94,7 +93,7 @@ compare_values(ref_pt3, Eroot0, 8, "SA-DSRG-PT3 energy root 0")
 Scratch directory: /Users/york/scratch/psi4/
 
 *** tstart() called on Yorks-Mac.local
-*** at Thu Mar 12 20:45:15 2020
+*** at Sat Mar 21 00:47:16 2020
 
    => Loading Basis Set <=
 
@@ -272,14 +271,14 @@ Properties computed using the SCF density matrix
      X:     0.0000      Y:     0.0000      Z:    -0.0000     Total:     0.0000
 
 
-*** tstop() called on Yorks-Mac.local at Thu Mar 12 20:45:16 2020
+*** tstop() called on Yorks-Mac.local at Sat Mar 21 00:47:17 2020
 Module time:
-	user time   =       1.04 seconds =       0.02 minutes
-	system time =       0.04 seconds =       0.00 minutes
+	user time   =       1.03 seconds =       0.02 minutes
+	system time =       0.03 seconds =       0.00 minutes
 	total time  =          1 seconds =       0.02 minutes
 Total time:
-	user time   =       1.04 seconds =       0.02 minutes
-	system time =       0.04 seconds =       0.00 minutes
+	user time   =       1.03 seconds =       0.02 minutes
+	system time =       0.03 seconds =       0.00 minutes
 	total time  =          1 seconds =       0.02 minutes
  MINTS: Wrapper to libmints.
    by Justin Turney
@@ -523,16 +522,16 @@ Scratch directory: /Users/york/scratch/psi4/
   Overall Conventional Integrals timings
 
 
-  Conventional integrals take 1.95255440 s
+  Conventional integrals take 2.06416647 s
 
   ==> Summary of Active Space Solver Input <==
 
-    Irrep.  Multi.(ms)      N
+    Irrep.  Multi.(2ms)      N
     --------------------------
-       A1      1 (  0)      3
+       A1      1  (  0)      3
     --------------------------
     N: number of roots
-    ms: twice spin z component
+    ms: spin z component
     Total number of roots:   3
     --------------------------
 
@@ -542,8 +541,8 @@ Scratch directory: /Users/york/scratch/psi4/
                                   Chenyang Li
               ---------------------------------------------------
 
-  Forming alpha and beta strings      ...  Done. Timing        0.000038 s
-  Forming determinants                ...  Done. Timing        0.000013 s
+  Forming alpha and beta strings      ...  Done. Timing        0.000048 s
+  Forming determinants                ...  Done. Timing        0.000016 s
 
   ==> Determinants Summary <==
 
@@ -556,16 +555,16 @@ Scratch directory: /Users/york/scratch/psi4/
 
   ==> Computing Coupling Lists <==
   --------------------------------
-        α          0.000031 s
-        β          0.000010 s
-        αα         0.000007 s
+        α          0.000037 s
+        β          0.000013 s
+        αα         0.000010 s
         ββ         0.000003 s
-        αβ         0.000015 s
+        αβ         0.000021 s
   --------------------------------
 
   Davidson-Liu solver algorithm using SigmaVectorSparseList sigma algorithm
   Found 3 roots with 2S+1 = 1 *
-  Found 1 roots with 2S+1 = 3  Done. Timing        0.000499 s
+  Found 1 roots with 2S+1 = 3  Done. Timing        0.000866 s
 
   * * * * * * * * * * * * * * * * *
   *  CI Vectors & Configurations  *
@@ -617,28 +616,28 @@ Scratch directory: /Users/york/scratch/psi4/
 
   ==> Energy Summary <==
 
-    Multi.(ms)  Irrep.  No.               Energy
+    Multi.(2ms)  Irrep.  No.               Energy
     ---------------------------------------------
-       1  ( 0)    A1     0       -78.054893417938
-       1  ( 0)    A1     1       -77.689989505679
-       1  ( 0)    A1     2       -77.501494639854
+       1  (  0)    A1     0      -78.054893417938
+       1  (  0)    A1     1      -77.689989505679
+       1  (  0)    A1     2      -77.501494639854
     ---------------------------------------------
- Computing  1RDMs (0 Singlet A1 - 0 Singlet A1) ... Done. Timing        0.000089 s
- Computing  2RDMs (0 Singlet A1 - 0 Singlet A1) ... Done. Timing        0.000066 s
- Computing  3RDMs (0 Singlet A1 - 0 Singlet A1) ... Done. Timing        0.000071 s
- Computing  1RDMs (1 Singlet A1 - 1 Singlet A1) ... Done. Timing        0.000058 s
- Computing  2RDMs (1 Singlet A1 - 1 Singlet A1) ... Done. Timing        0.000058 s
- Computing  3RDMs (1 Singlet A1 - 1 Singlet A1) ... Done. Timing        0.000059 s
- Computing  1RDMs (2 Singlet A1 - 2 Singlet A1) ... Done. Timing        0.000057 s
- Computing  2RDMs (2 Singlet A1 - 2 Singlet A1) ... Done. Timing        0.000057 s
- Computing  3RDMs (2 Singlet A1 - 2 Singlet A1) ... Done. Timing        0.000060 s
+ Computing  1RDMs (0 Singlet A1 - 0 Singlet A1) ... Done. Timing        0.000132 s
+ Computing  2RDMs (0 Singlet A1 - 0 Singlet A1) ... Done. Timing        0.000113 s
+ Computing  3RDMs (0 Singlet A1 - 0 Singlet A1) ... Done. Timing        0.000108 s
+ Computing  1RDMs (1 Singlet A1 - 1 Singlet A1) ... Done. Timing        0.000181 s
+ Computing  2RDMs (1 Singlet A1 - 1 Singlet A1) ... Done. Timing        0.000377 s
+ Computing  3RDMs (1 Singlet A1 - 1 Singlet A1) ... Done. Timing        0.000147 s
+ Computing  1RDMs (2 Singlet A1 - 2 Singlet A1) ... Done. Timing        0.000091 s
+ Computing  2RDMs (2 Singlet A1 - 2 Singlet A1) ... Done. Timing        0.000096 s
+ Computing  3RDMs (2 Singlet A1 - 2 Singlet A1) ... Done. Timing        0.000083 s
 
        -----------------------------------------------------------------
                             Semi-Canonical Orbitals
          Chenyang Li, Jeffrey B. Schriber and Francesco A. Evangelista
        -----------------------------------------------------------------
 
-  Took 0.001941 s to build Fock matrix
+  Took 0.003522 s to build Fock matrix
 
   ==> Checking Fock Matrix Diagonal Blocks <==
 
@@ -661,6 +660,9 @@ Scratch directory: /Users/york/scratch/psi4/
                                  1 OMP thread
     -----------------------------------------------------------------------
 
+  Disclaimer:
+    The spin-adapted DSRG code is largely adopted from the spin-integrated code developed by
+    Chenyang Li, Kevin P. Hannon, Tianyuan Zhang, and Francesco A. Evangelista.
 
   ==> Multireference Driven Similarity Renormalization Group <==
 
@@ -712,8 +714,8 @@ Scratch directory: /Users/york/scratch/psi4/
 
     Memory assigned by the user                    524.29 MB
     Memory available for MR-DSRG                   477.98 MB
-    1- and 2-density cumulants                     192.00  B
     Generalized Fock matrix                         17.30 KB
+    1-, 2-, and 3-density cumulants                704.00  B
     2-electron (4-index) integrals                 658.95 KB
     T1 and T2 cluster amplitudes                     1.32 MB
     1- and 2-body Hbar                             160.00  B
@@ -760,19 +762,19 @@ Scratch directory: /Users/york/scratch/psi4/
 
   ==> Computing 3rd-Order Energy Contribution (1/3) <==
 
-    Computing 3rd-order energy (1/3)         ...  Done. Timing      0.686 s
-    Computing integrals for ref. relaxation  ...  Done. Timing      0.078 s
+    Computing 3rd-order energy (1/3)         ...  Done. Timing      1.000 s
+    Computing integrals for ref. relaxation  ...  Done. Timing      0.097 s
 
   ==> Computing 2nd-Order Correlation Energy <==
 
-    Computing 2nd-order energy               ...  Done. Timing      0.031 s
-    Computing integrals for ref. relaxation  ...  Done. Timing      0.084 s
+    Computing 2nd-order energy               ...  Done. Timing      0.032 s
+    Computing integrals for ref. relaxation  ...  Done. Timing      0.091 s
 
   ==> Computing 3rd-Order Energy Contribution (2/3) <==
 
-    Preparing 2nd-order amplitudes           ...  Done. Timing      1.903 s
-    Computing 3rd-order energy (2/3)         ...  Done. Timing      0.030 s
-    Computing integrals for ref. relaxation  ...  Done. Timing      0.076 s
+    Preparing 2nd-order amplitudes           ...  Done. Timing      2.579 s
+    Computing 3rd-order energy (2/3)         ...  Done. Timing      0.039 s
+    Computing integrals for ref. relaxation  ...  Done. Timing      0.098 s
 
   ==> Second-Order Excitation Amplitudes Summary <==
 
@@ -809,8 +811,8 @@ Scratch directory: /Users/york/scratch/psi4/
 
   ==> Computing 3rd-Order Energy Contribution (3/3) <==
 
-    Computing 3rd-order energy (3/3)         ...  Done. Timing      0.030 s
-    Computing integrals for ref. relaxation  ...  Done. Timing      0.079 s
+    Computing 3rd-order energy (3/3)         ...  Done. Timing      0.038 s
+    Computing integrals for ref. relaxation  ...  Done. Timing      0.105 s
 
   ==> DSRG-MRPT3 Energy Summary <==
 
@@ -838,16 +840,16 @@ Scratch directory: /Users/york/scratch/psi4/
   ==> Rotate DSRG Transformed Hamiltonian back to Original Basis <==
 
     Rotating 1-body term to original basis   ... Done. Timing    0.000 s
-    Rotating 2-body term to original basis   ... Done. Timing    0.008 s
+    Rotating 2-body term to original basis   ... Done. Timing    0.010 s
 
   ==> Summary of Active Space Solver Input <==
 
-    Irrep.  Multi.(ms)      N
+    Irrep.  Multi.(2ms)      N
     --------------------------
-       A1      1 (  0)      3
+       A1      1  (  0)      3
     --------------------------
     N: number of roots
-    ms: twice spin z component
+    ms: spin z component
     Total number of roots:   3
     --------------------------
 
@@ -857,8 +859,8 @@ Scratch directory: /Users/york/scratch/psi4/
                                   Chenyang Li
               ---------------------------------------------------
 
-  Forming alpha and beta strings      ...  Done. Timing        0.000030 s
-  Forming determinants                ...  Done. Timing        0.000007 s
+  Forming alpha and beta strings      ...  Done. Timing        0.000037 s
+  Forming determinants                ...  Done. Timing        0.000009 s
 
   ==> Determinants Summary <==
 
@@ -871,16 +873,16 @@ Scratch directory: /Users/york/scratch/psi4/
 
   ==> Computing Coupling Lists <==
   --------------------------------
-        α          0.000015 s
-        β          0.000010 s
-        αα         0.000005 s
-        ββ         0.000002 s
-        αβ         0.000010 s
+        α          0.000019 s
+        β          0.000013 s
+        αα         0.000006 s
+        ββ         0.000003 s
+        αβ         0.000013 s
   --------------------------------
 
   Davidson-Liu solver algorithm using SigmaVectorSparseList sigma algorithm
   Found 3 roots with 2S+1 = 1 *
-  Found 1 roots with 2S+1 = 3  Done. Timing        0.000306 s
+  Found 1 roots with 2S+1 = 3  Done. Timing        0.000383 s
 
   * * * * * * * * * * * * * * * * *
   *  CI Vectors & Configurations  *
@@ -932,28 +934,28 @@ Scratch directory: /Users/york/scratch/psi4/
 
   ==> Energy Summary <==
 
-    Multi.(ms)  Irrep.  No.               Energy
+    Multi.(2ms)  Irrep.  No.               Energy
     ---------------------------------------------
-       1  ( 0)    A1     0       -78.337068954171
-       1  ( 0)    A1     1       -78.005524018341
-       1  ( 0)    A1     2       -77.816592931068
+       1  (  0)    A1     0      -78.337068954171
+       1  (  0)    A1     1      -78.005524018341
+       1  (  0)    A1     2      -77.816592931068
     ---------------------------------------------
 
   ==> Total Timings (s) for Computing Commutators <==
 
              [H1, T1]    [H1, T2]    [H2, T1]    [H2, T2]
     -----------------------------------------------------
-    -> C0       0.004       0.005       0.005       0.109
-    -> C1       0.008       0.067       0.100       0.659
-    -> C2                   0.105       0.129       0.710
+    -> C0       0.005       0.006       0.005       0.131
+    -> C1       0.010       0.084       0.145       0.910
+    -> C2                   0.160       0.183       0.952
     -----------------------------------------------------
 
 
-  Time to prepare integrals: 1.9624629020690918 seconds
-  Time to run job          : 3.3164870738983154 seconds
-  Total                    : 3.3164870738983154 seconds    SA-DSRG-PT3 energy root 0.........................................PASSED
+  Time to prepare integrals: 2.0742599964141846 seconds
+  Time to run job          : 4.481821060180664 seconds
+  Total                    : 4.481821060180664 seconds    SA-DSRG-PT3 energy root 0.........................................PASSED
 
-    Psi4 stopped on: Thursday, 12 March 2020 08:45PM
-    Psi4 wall time for execution: 0:00:08.38
+    Psi4 stopped on: Saturday, 21 March 2020 12:47AM
+    Psi4 wall time for execution: 0:00:09.76
 
 *** Psi4 exiting successfully. Buy a developer a beer!

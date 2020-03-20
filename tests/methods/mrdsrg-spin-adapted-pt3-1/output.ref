@@ -23,9 +23,9 @@
     -----------------------------------------------------------------------
 
 
-    Psi4 started on: Thursday, 12 March 2020 08:45PM
+    Psi4 started on: Saturday, 21 March 2020 12:47AM
 
-    Process ID: 35827
+    Process ID: 46632
     Host:       Yorks-Mac.local
     PSIDATADIR: /Users/york/src/psi4group/psi4/share/psi4
     Memory:     500.0 MiB
@@ -71,7 +71,6 @@ set forte{
   active_space_solver    fci
   correlation_solver     sa-mrdsrg
   corr_level             pt3
-  spin_avg_density       true
   frozen_docc            [1,0,0,0]
   restricted_docc        [1,0,1,1]
   active                 [2,0,0,0]
@@ -109,7 +108,7 @@ Scratch directory: /Users/york/scratch/psi4/
 
 
 *** tstart() called on Yorks-Mac.local
-*** at Thu Mar 12 20:45:09 2020
+*** at Sat Mar 21 00:47:11 2020
 
 
          ------------------------------------------
@@ -443,15 +442,15 @@ Scratch directory: /Users/york/scratch/psi4/
   MCSCF Execution Completed.
 
 
-*** tstop() called on Yorks-Mac.local at Thu Mar 12 20:45:10 2020
+*** tstop() called on Yorks-Mac.local at Sat Mar 21 00:47:11 2020
 Module time:
 	user time   =       0.14 seconds =       0.00 minutes
 	system time =       0.02 seconds =       0.00 minutes
-	total time  =          1 seconds =       0.02 minutes
+	total time  =          0 seconds =       0.00 minutes
 Total time:
 	user time   =       0.14 seconds =       0.00 minutes
 	system time =       0.02 seconds =       0.00 minutes
-	total time  =          1 seconds =       0.02 minutes
+	total time  =          0 seconds =       0.00 minutes
     MCSCF energy......................................................PASSED
 
 Scratch directory: /Users/york/scratch/psi4/
@@ -522,25 +521,25 @@ Scratch directory: /Users/york/scratch/psi4/
   Whereas there are 406 unique shell quartets.
 
 
-  Conventional integrals take 0.05967569 s
+  Conventional integrals take 0.06027163 s
 
   ==> Summary of Active Space Solver Input <==
 
-    Irrep.  Multi.(ms)      N
+    Irrep.  Multi.(2ms)      N
     --------------------------
-       A1      1 (  0)      1
+       A1      1  (  0)      1
     --------------------------
     N: number of roots
-    ms: twice spin z component
+    ms: spin z component
     Total number of roots:   1
     --------------------------
 
 
   ==> Energy Summary <==
 
-    Multi.(ms)  Irrep.  No.               Energy
+    Multi.(2ms)  Irrep.  No.               Energy
     ---------------------------------------------
-       1  ( 0)    A1     0       -99.406065223640
+       1  (  0)    A1     0      -99.406065223640
     ---------------------------------------------
 
        -----------------------------------------------------------------
@@ -548,7 +547,7 @@ Scratch directory: /Users/york/scratch/psi4/
          Chenyang Li, Jeffrey B. Schriber and Francesco A. Evangelista
        -----------------------------------------------------------------
 
-  Took 0.000040 s to build Fock matrix
+  Took 0.000042 s to build Fock matrix
 
   ==> Checking Fock Matrix Diagonal Blocks <==
 
@@ -587,7 +586,7 @@ Scratch directory: /Users/york/scratch/psi4/
     Transformed 1 RDM.
     Transformed 2 RDM.
     Transformed 3 RDM.
-  SemiCanonicalize takes 0.650871 s.
+  SemiCanonicalize takes 0.666156 s.
 
     -----------------------------------------------------------------------
       Spin-Adapted Multireference Driven Similarity Renormalization Group
@@ -595,6 +594,9 @@ Scratch directory: /Users/york/scratch/psi4/
                                  1 OMP thread
     -----------------------------------------------------------------------
 
+  Disclaimer:
+    The spin-adapted DSRG code is largely adopted from the spin-integrated code developed by
+    Chenyang Li, Kevin P. Hannon, Tianyuan Zhang, and Francesco A. Evangelista.
 
   ==> Multireference Driven Similarity Renormalization Group <==
 
@@ -645,8 +647,8 @@ Scratch directory: /Users/york/scratch/psi4/
 
     Memory assigned by the user                    500.00 MB
     Memory available for MR-DSRG                   489.92 MB
-    1- and 2-density cumulants                     192.00  B
     Generalized Fock matrix                        880.00  B
+    1-, 2-, and 3-density cumulants                704.00  B
     2-electron (4-index) integrals                   9.80 KB
     T1 and T2 cluster amplitudes                    19.88 KB
     1- and 2-body Hbar                             160.00  B
@@ -697,19 +699,19 @@ Scratch directory: /Users/york/scratch/psi4/
 
   ==> Computing 3rd-Order Energy Contribution (1/3) <==
 
-    Computing 3rd-order energy (1/3)         ...  Done. Timing      0.545 s
+    Computing 3rd-order energy (1/3)         ...  Done. Timing      0.532 s
     Computing integrals for ref. relaxation  ...  Done. Timing      0.076 s
 
   ==> Computing 2nd-Order Correlation Energy <==
 
     Computing 2nd-order energy               ...  Done. Timing      0.028 s
-    Computing integrals for ref. relaxation  ...  Done. Timing      0.081 s
+    Computing integrals for ref. relaxation  ...  Done. Timing      0.082 s
 
   ==> Computing 3rd-Order Energy Contribution (2/3) <==
 
-    Preparing 2nd-order amplitudes           ...  Done. Timing      0.769 s
+    Preparing 2nd-order amplitudes           ...  Done. Timing      0.726 s
     Computing 3rd-order energy (2/3)         ...  Done. Timing      0.027 s
-    Computing integrals for ref. relaxation  ...  Done. Timing      0.075 s
+    Computing integrals for ref. relaxation  ...  Done. Timing      0.074 s
 
   ==> Second-Order Excitation Amplitudes Summary <==
 
@@ -775,25 +777,25 @@ Scratch directory: /Users/york/scratch/psi4/
   ==> Rotate DSRG Transformed Hamiltonian back to Original Basis <==
 
     Rotating 1-body term to original basis   ... Done. Timing    0.000 s
-    Rotating 2-body term to original basis   ... Done. Timing    0.008 s
+    Rotating 2-body term to original basis   ... Done. Timing    0.007 s
 
   ==> Summary of Active Space Solver Input <==
 
-    Irrep.  Multi.(ms)      N
+    Irrep.  Multi.(2ms)      N
     --------------------------
-       A1      1 (  0)      1
+       A1      1  (  0)      1
     --------------------------
     N: number of roots
-    ms: twice spin z component
+    ms: spin z component
     Total number of roots:   1
     --------------------------
 
 
   ==> Energy Summary <==
 
-    Multi.(ms)  Irrep.  No.               Energy
+    Multi.(2ms)  Irrep.  No.               Energy
     ---------------------------------------------
-       1  ( 0)    A1     0       -99.498903267931
+       1  (  0)    A1     0      -99.498903267931
     ---------------------------------------------
 
   => SA-MRDSRG Reference Relaxation Energy Summary <=
@@ -809,15 +811,15 @@ Scratch directory: /Users/york/scratch/psi4/
 
              [H1, T1]    [H1, T2]    [H2, T1]    [H2, T2]
     -----------------------------------------------------
-    -> C0       0.004       0.005       0.004       0.098
-    -> C1       0.008       0.047       0.044       0.510
-    -> C2                   0.064       0.100       0.503
+    -> C0       0.004       0.004       0.005       0.098
+    -> C1       0.008       0.047       0.045       0.498
+    -> C2                   0.062       0.090       0.470
     -----------------------------------------------------
 
 
-  Time to prepare integrals: 0.06260395050048828 seconds
-  Time to run job          : 2.4047141075134277 seconds
-  Total                    : 2.4047141075134277 seconds    DSRG-MRPT3 partially relaxed energy...............................PASSED
+  Time to prepare integrals: 0.06311297416687012 seconds
+  Time to run job          : 2.365283727645874 seconds
+  Total                    : 2.365283727645874 seconds    DSRG-MRPT3 partially relaxed energy...............................PASSED
 
 Scratch directory: /Users/york/scratch/psi4/
    => Loading Basis Set <=
@@ -888,21 +890,21 @@ Scratch directory: /Users/york/scratch/psi4/
 
   ==> Summary of Active Space Solver Input <==
 
-    Irrep.  Multi.(ms)      N
+    Irrep.  Multi.(2ms)      N
     --------------------------
-       A1      1 (  0)      1
+       A1      1  (  0)      1
     --------------------------
     N: number of roots
-    ms: twice spin z component
+    ms: spin z component
     Total number of roots:   1
     --------------------------
 
 
   ==> Energy Summary <==
 
-    Multi.(ms)  Irrep.  No.               Energy
+    Multi.(2ms)  Irrep.  No.               Energy
     ---------------------------------------------
-       1  ( 0)    A1     0       -99.406065223640
+       1  (  0)    A1     0      -99.406065223640
     ---------------------------------------------
 
        -----------------------------------------------------------------
@@ -910,7 +912,7 @@ Scratch directory: /Users/york/scratch/psi4/
          Chenyang Li, Jeffrey B. Schriber and Francesco A. Evangelista
        -----------------------------------------------------------------
 
-  Took 0.003948 s to build Fock matrix
+  Took 0.003556 s to build Fock matrix
 
   ==> Checking Fock Matrix Diagonal Blocks <==
 
@@ -933,6 +935,9 @@ Scratch directory: /Users/york/scratch/psi4/
                                  1 OMP thread
     -----------------------------------------------------------------------
 
+  Disclaimer:
+    The spin-adapted DSRG code is largely adopted from the spin-integrated code developed by
+    Chenyang Li, Kevin P. Hannon, Tianyuan Zhang, and Francesco A. Evangelista.
 
   ==> Multireference Driven Similarity Renormalization Group <==
 
@@ -984,8 +989,8 @@ Scratch directory: /Users/york/scratch/psi4/
 
     Memory assigned by the user                    500.00 MB
     Memory available for MR-DSRG                   489.95 MB
-    1- and 2-density cumulants                     192.00  B
     Generalized Fock matrix                        880.00  B
+    1-, 2-, and 3-density cumulants                704.00  B
     2-electron (4-index) integrals                   9.80 KB
     3-index integrals                               50.40 KB
     T1 and T2 cluster amplitudes                    19.88 KB
@@ -1037,17 +1042,17 @@ Scratch directory: /Users/york/scratch/psi4/
 
   ==> Computing 3rd-Order Energy Contribution (1/3) <==
 
-    Computing 3rd-order energy (1/3)         ...  Done. Timing      0.533 s
+    Computing 3rd-order energy (1/3)         ...  Done. Timing      0.531 s
     Computing integrals for ref. relaxation  ...  Done. Timing      0.074 s
 
   ==> Computing 2nd-Order Correlation Energy <==
 
     Computing 2nd-order energy               ...  Done. Timing      0.028 s
-    Computing integrals for ref. relaxation  ...  Done. Timing      0.080 s
+    Computing integrals for ref. relaxation  ...  Done. Timing      0.096 s
 
   ==> Computing 3rd-Order Energy Contribution (2/3) <==
 
-    Preparing 2nd-order amplitudes           ...  Done. Timing      0.832 s
+    Preparing 2nd-order amplitudes           ...  Done. Timing      0.846 s
     Computing 3rd-order energy (2/3)         ...  Done. Timing      0.028 s
     Computing integrals for ref. relaxation  ...  Done. Timing      0.074 s
 
@@ -1115,25 +1120,25 @@ Scratch directory: /Users/york/scratch/psi4/
   ==> Rotate DSRG Transformed Hamiltonian back to Original Basis <==
 
     Rotating 1-body term to original basis   ... Done. Timing    0.000 s
-    Rotating 2-body term to original basis   ... Done. Timing    0.008 s
+    Rotating 2-body term to original basis   ... Done. Timing    0.007 s
 
   ==> Summary of Active Space Solver Input <==
 
-    Irrep.  Multi.(ms)      N
+    Irrep.  Multi.(2ms)      N
     --------------------------
-       A1      1 (  0)      1
+       A1      1  (  0)      1
     --------------------------
     N: number of roots
-    ms: twice spin z component
+    ms: spin z component
     Total number of roots:   1
     --------------------------
 
 
   ==> Energy Summary <==
 
-    Multi.(ms)  Irrep.  No.               Energy
+    Multi.(2ms)  Irrep.  No.               Energy
     ---------------------------------------------
-       1  ( 0)    A1     0       -99.498903267931
+       1  (  0)    A1     0      -99.498903267931
     ---------------------------------------------
 
   => SA-MRDSRG Reference Relaxation Energy Summary <=
@@ -1149,17 +1154,17 @@ Scratch directory: /Users/york/scratch/psi4/
 
              [H1, T1]    [H1, T2]    [H2, T1]    [H2, T2]
     -----------------------------------------------------
-    -> C0       0.004       0.005       0.005       0.098
-    -> C1       0.008       0.046       0.043       0.418
-    -> C2                   0.063       0.108       0.644
+    -> C0       0.004       0.004       0.004       0.098
+    -> C1       0.009       0.055       0.043       0.417
+    -> C2                   0.068       0.109       0.643
     -----------------------------------------------------
 
 
-  Time to prepare integrals: 0.05036187171936035 seconds
-  Time to run job          : 1.8124091625213623 seconds
-  Total                    : 1.8124091625213623 seconds    CD-DSRG-MRPT3 partially relaxed energy............................PASSED
+  Time to prepare integrals: 0.05059313774108887 seconds
+  Time to run job          : 1.8415570259094238 seconds
+  Total                    : 1.8415570259094238 seconds    CD-DSRG-MRPT3 partially relaxed energy............................PASSED
 
-    Psi4 stopped on: Thursday, 12 March 2020 08:45PM
-    Psi4 wall time for execution: 0:00:04.64
+    Psi4 stopped on: Saturday, 21 March 2020 12:47AM
+    Psi4 wall time for execution: 0:00:04.63
 
 *** Psi4 exiting successfully. Buy a developer a beer!

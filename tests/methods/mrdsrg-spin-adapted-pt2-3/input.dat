@@ -4,9 +4,9 @@ import forte
 
 memory 500 mb
 Ecas_psi4_jk  = -229.495450424144593
-Ecas_forte_jk = -229.495450424145588
-Ept2_ur       = -230.143766446499200
-Ept2_pr       = -230.150511597965732
+Ecas_forte_jk = -229.495450424145076
+Ept2_ur       = -230.143771791121878
+Ept2_pr       = -230.150516562986667
 
 molecule pbenzyne{
   0 1
@@ -34,17 +34,32 @@ set globals{
   e_convergence          12
   mcscf_type             df
   mcscf_e_convergence    12
-  mcscf_r_convergence    10
+  mcscf_r_convergence    8
   mcscf_diis_start       8
-  mcscf_max_rot          0.1
+  mcscf_max_rot          0.2
   docc                   [5,3,1,1,0,1,5,4]
   restricted_docc        [5,3,0,0,0,0,4,4]
   active                 [1,0,1,2,1,2,1,0]
 }
-Ecas, wfn = energy('casscf', return_wfn=True)
+Escf, wfn = energy('scf', return_wfn=True)
 #compare_values(Ecas_psi4_jk, Ecas, 9, "CASSCF(8,8)/cc-pVDZ-JKFIT (PSI4) energy")
 
 set forte{
+  job_type               casscf
+  casscf_ci_solver       fci
+  restricted_docc        [5,3,0,0,0,0,4,4]
+  active                 [1,0,1,2,1,2,1,0]
+  e_convergence          12
+  r_convergence          8
+  casscf_g_convergence   1e-8
+  casscf_e_convergence   1e-12
+  int_type               df
+}
+Ecas, wfn = energy('forte', ref_wfn=wfn, return_wfn=True)
+compare_values(Ecas_forte_jk, Ecas, 9, "CASSCF(8,8)/cc-pVDZ-JKFIT (FORTE) energy")
+
+set forte{
+  job_type               newdriver
   active_space_solver    cas
   correlation_solver     sa-mrdsrg
   corr_level             pt2
@@ -58,9 +73,7 @@ set forte{
   int_type               diskdf
 }
 energy('forte', ref_wfn=wfn)
-Ecas = variable("DSRG REFERENCE ENERGY")
 Eupt2 = variable("UNRELAXED ENERGY")
 Eprpt2 = variable("PARTIALLY RELAXED ENERGY")
-compare_values(Ecas_forte_jk, Ecas, 9, "CASSCF(8,8)/cc-pVDZ-JKFIT (FORTE) energy")
 compare_values(Ept2_ur, Eupt2, 9, "DSRG-MRPT2 unrelaxed energy")
 compare_values(Ept2_pr, Eprpt2, 9, "DSRG-MRPT2 partially relaxed energy")

@@ -28,8 +28,29 @@ set mcscf{
   maxiter                 1000
   level_shift             1.0
 }
+Emcscf, wfn = energy('mcscf', return_wfn=True)
+compare_values(refcas, Emcscf, 10, "CASSCF(2,2) (PSI4 MCSCF) energy")
+
+set globals {
+  scf_type               direct
+  reference              rhf
+}
+set forte{
+  job_type               casscf
+  casscf_ci_solver       fci
+  restricted_docc        [2,0,1,1]
+  active                 [2,0,0,0]
+  e_convergence          12
+  r_convergence          8
+  casscf_g_convergence   1e-8
+  casscf_e_convergence   1e-12
+}
+Escf, wfn = energy('scf', return_wfn=True)
+Ecas, wfn = energy('forte', ref_wfn=wfn, return_wfn=True)
+compare_values(refcas, Emcscf, 10, "CASSCF(2,2) (FORTE) energy")
 
 set forte{
+  job_type                newdriver
   active_space_solver     cas
   correlation_solver      sa-mrdsrg
   corr_level              pt2
@@ -39,9 +60,6 @@ set forte{
   dsrg_s                  1.0
   e_convergence           10
 }
-
-Emcscf, wfn = energy('mcscf', return_wfn=True)
-compare_values(refcas, Emcscf, 10, "CASSCF(2,2) energy")
 
 Ept2 = energy('forte', ref_wfn=wfn)
 compare_values(refpt2, Ept2, 10, "DSRG-MRPT2 energy")
