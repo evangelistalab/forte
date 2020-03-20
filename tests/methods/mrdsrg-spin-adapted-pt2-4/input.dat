@@ -29,8 +29,8 @@ set globals{
   restricted_docc        [2,0,0,0,0,2,0,0]
   active                 [1,0,1,1,0,1,1,1]
 }
-Ecas, wfn = energy('casscf', return_wfn=True)
-compare_values(Ecas_psi4, Ecas, 9, "CASSCF(6,6)/cc-pVDZ (PSI4) energy")
+#Ecas, wfn = energy('casscf', return_wfn=True)
+#compare_values(Ecas_psi4, Ecas, 9, "CASSCF(6,6)/cc-pVDZ (PSI4) energy")
 
 set scf_type direct
 set forte{
