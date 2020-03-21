@@ -309,7 +309,7 @@ make_state_weights_map(std::shared_ptr<ForteOptions> options,
             for (const auto& state_weights : state_weights_map) {
                 const auto& state = state_weights.first;
                 const auto& weights = state_weights.second;
-                psi::outfile->Printf("\n  State: %s", state.str().c_str());
+                psi::outfile->Printf("\n  State %s weights:", state.str().c_str());
                 for (auto x : weights) {
                     psi::outfile->Printf("\n  %18.12f", x);
                 }

@@ -115,14 +115,6 @@ void SADSRG::startup() {
 
     // check if using semicanonical orbitals
     semi_canonical_ = check_semi_orbs();
-
-    // print
-    if (print_ > 1) {
-        print_h2("Semicanonical Orbital Energy");
-        for (size_t i = 0, n = Fdiag_.size(); i < n; ++i) {
-            outfile->Printf("\n    F[%4zu] = %20.12f", i, Fdiag_[i]);
-        }
-    }
 }
 
 void SADSRG::read_options() {
