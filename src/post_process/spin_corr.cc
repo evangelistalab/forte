@@ -202,7 +202,7 @@ void SpinCorr::spin_analysis() {
     } else if (options_->get_str("SPIN_BASIS") == "LOCAL") {
         outfile->Printf("\n  Computing spin correlation in local basis \n");
 
-        auto loc = std::make_shared<LOCALIZE>(options_, as_ints_->ints(), mo_space_info_);
+        auto loc = std::make_shared<Localize>(options_, as_ints_->ints(), mo_space_info_);
 
         std::vector<size_t> actmo = mo_space_info_->absolute_mo("ACTIVE");
         std::vector<int> loc_mo(2);

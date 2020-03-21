@@ -80,8 +80,10 @@ src/api/cube_file_api.cc
 src/api/integrals_api.cc
 src/api/rdms_api.cc
 src/api/options_api.cc
+src/api/orbital_api.cc
 src/api/sci_api.cc
 src/api/state_info_api.cc
+src/api/forte_python_module.cc
 src/base_classes/active_space_method.cc
 src/base_classes/active_space_solver.cc
 src/base_classes/dynamic_correlation_solver.cc
@@ -187,7 +189,6 @@ src/orbital-helpers/unpaired_density.cc
 src/pci/pci.cc
 src/pci/pci_sigma.cc
 src/post_process/spin_corr.cc
-src/python_api.cc
 src/sci/aci.cc
 src/sci/aci_build_F.cc
 src/sci/asci.cc

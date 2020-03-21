@@ -239,7 +239,7 @@ class Py3JSRenderer():
         ]
         return R
 
-    def isosurface(self, data, level=None, color=None, extent=None):
+    def isosurface(self, data, level=None, color=None, extent=None, opacity = 1.0):
         vertices, faces = compute_isosurface(
             data, level=level, color=color, extent=extent)
 
@@ -263,7 +263,7 @@ class Py3JSRenderer():
             metalness=0.0,
             side='DoubleSide',
             transparent=True,
-            opacity=1.0)
+            opacity=opacity)
 
 
 
@@ -273,12 +273,12 @@ class Py3JSRenderer():
         return isoSurfaceMesh
 
 
-    def add_molecule_xyz(self, xyz, bohr=False):
+    def add_molecule_xyz(self, xyz, bohr=False, scale = 1.0):
         atoms_list = xyz_to_atoms_list(xyz)
-        self.add_molecule_dict(atoms_list, bohr)
+        self.add_molecule_dict(atoms_list, bohr, scale)
 
 
-    def add_molecule_dict(self, atoms_list, bohr=False):
+    def add_molecule_dict(self, atoms_list, bohr=False, scale = 1.0):
         """Add a molecule"""
         if bohr == False:
             atoms_list2 = []
@@ -321,7 +321,7 @@ class Py3JSRenderer():
 
         # determine the molecule dimension (l)
         extents = self.molecule_extents(atoms_list)
-        l = 1.75 * max(max(extents), abs(min(extents)))
+        l = 1.75 * max(max(extents), abs(min(extents))) / scale
 
         camera = OrthographicCamera(
             left=-l * aspect,
@@ -351,27 +351,42 @@ class Py3JSRenderer():
 
         return self.renderer
 
-    def add_cubefile(self, cube, add_geom=True, levels=None, colors=None):
+    def add_cubefile(self, cube, add_geom=True, levels=None, colors=None, colorscheme=None,opacity=1.0,scale=1.0):
         if add_geom:
             atoms_list = []
-            for Z, xyz in zip(cube.atom_numbers, cube.atom_coords):
+            for Z, xyz in zip(cube.atom_numbers(), cube.atom_coords()):
                 symbol = ATOM_DATA[Z]['symbol']
                 atoms_list.append((symbol, xyz[0], xyz[1], xyz[2]))
-            self.add_molecule_dict(atoms_list, bohr=True)
+            self.add_molecule_dict(atoms_list, bohr=True, scale=scale)
 
         if not levels:
-            if cube.levels:
-                levels = cube.levels
-        if colors == None:
-            colors = ['#f2a900', '#0033a0']
-        data = cube.data
-        extent = [[cube.min[0], cube.max[0]],
-                  [cube.min[1], cube.max[1]],
-                  [cube.min[2], cube.max[2]]]
+            if len(cube.levels()) > 0:
+                levels = cube.levels()
+            else:
+                levels = [0.04, -0.04]
+
+        # select the color scheme
+        if colorscheme == 'national':
+            colors = ['#e60000', '#0033a0']
+        elif colorscheme == 'bright':
+            colors = ['#ffcc00','#00bfff']
+        elif colorscheme == 'electron':
+            colors = ['#ff00bf','#2eb82e']
+        elif colorscheme == 'wow':
+            colors = ['#AC07F2','#D7F205']
+        else:
+            if colors == None:
+                colors = ['#f2a900', '#0033a0']
+
+        # grab the data and extents
+        data = cube.data()
+        extent = [[cube.min()[0], cube.max()[0]],
+                  [cube.min()[1], cube.max()[1]],
+                  [cube.min()[2], cube.max()[2]]]
         for level, color in zip(levels, colors):
             if abs(level) > 1.0e-4:
                 mesh = self.isosurface(
-                    data, level=level, color=color, extent=extent)
+                    data, level=level, color=color, extent=extent,opacity=opacity)
                 self.iso.append(mesh)
                 self.scene.add(mesh)
 
@@ -414,6 +429,59 @@ class Py3JSRenderer():
     def renderer(self):
         return self.renderer
 
+def plot_cubes(cubes, scale = 1.0, font_size=16, font_family='Helvetica', ncols = 4, width = 900, show_text=True, Renderer = Py3JSRenderer):
+    """
+    Use the
+
+    Parameters
+    ----------
+    cubes : dict
+        a dictionary of CubeFile objects
+    scale : float
+        the scale factor used to make a molecule smaller or bigger (default = 1.0)
+    font_size : int
+        the font size (default = 16)
+    font_family : str
+        the font used to label the orbitals (default = Helvetica)
+    ncols : int
+        the number of columns (default = 4)
+    width : int
+        the width of the plot in pixels (default = 900)
+    show_text : bool
+        show the name of the cube file under the plot? (default = True)
+    """
+
+    import ipywidgets as widgets
+
+    col_width = width / ncols
+    mo_widgets = []
+    box_layout = widgets.Layout(border='0px solid black',
+        width=f'{col_width}px',
+        height=f'{col_width + 35}px')
+    mo_renderers = []
+    keys = sorted(cubes.keys())
+    for label in keys:
+        cube = cubes[label]
+
+        mo_renderer = Renderer(width=col_width, height=col_width)
+        mo_renderer.add_cubefile(cube,scale=scale)
+        if show_text:
+            # check if this cube file was generated by psi4
+            psi4_label_re = r'Psi_([a|b])_(\d+)_(\d+)-([\w\d]*)\.cube'
+            m = re.match(psi4_label_re, label)
+            if m:
+                mo_label = f'MO {m.groups()[1]} ({m.groups()[2]}{m.groups()[3]})'
+            else:
+                mo_label = label
+
+            style = f'font-size:{font_size}px;font-family:{font_family};font-weight: bold;'
+            mo_label = widgets.HTML(value=f'<div align="center" style="{style}">{mo_label}</div>')
+            mo_widgets.append(widgets.VBox([mo_renderer.renderer,mo_label],layout=box_layout))
+        else:
+            mo_widgets.append(mo_renderer.renderer)
+        mo_renderers.append(mo_renderer)
+    box = widgets.GridBox(mo_widgets, layout=widgets.Layout(grid_template_columns=f'repeat({ncols}, {col_width}px)'))
+    return box
 
 #    def load_cube_geometry(self, filename, do_display=True):
 #        cube = parse_cube(filename)

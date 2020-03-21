@@ -40,7 +40,7 @@ using namespace psi;
 
 namespace forte {
 
-LOCALIZE::LOCALIZE(std::shared_ptr<ForteOptions> options, std::shared_ptr<ForteIntegrals> ints,
+Localize::Localize(std::shared_ptr<ForteOptions> options, std::shared_ptr<ForteIntegrals> ints,
                    std::shared_ptr<MOSpaceInfo> mo_space_info)
     : OrbitalTransform(ints, mo_space_info) {
 
@@ -56,11 +56,11 @@ LOCALIZE::LOCALIZE(std::shared_ptr<ForteOptions> options, std::shared_ptr<ForteI
     outfile->Printf("\n  Localize method: %s", local_method_.c_str());
 }
 
-void LOCALIZE::set_orbital_space(std::vector<int>& orbital_spaces) {
+void Localize::set_orbital_space(std::vector<int>& orbital_spaces) {
     orbital_spaces_ = orbital_spaces;
 }
 
-void LOCALIZE::set_orbital_space(std::vector<std::string>& labels) {
+void Localize::set_orbital_space(std::vector<std::string>& labels) {
 
     for (const auto& label : labels) {
         std::vector<size_t> mos = mo_space_info_->corr_absolute_mo(label);
@@ -69,7 +69,7 @@ void LOCALIZE::set_orbital_space(std::vector<std::string>& labels) {
     }
 }
 
-void LOCALIZE::compute_transformation() {
+void Localize::compute_transformation() {
 
     if (orbital_spaces_.size() == 0) {
         outfile->Printf("\n  Error: Orbital space for localization is not set!");
@@ -136,7 +136,7 @@ void LOCALIZE::compute_transformation() {
     }
 }
 
-psi::SharedMatrix LOCALIZE::get_Ua() { return Ua_; }
-psi::SharedMatrix LOCALIZE::get_Ub() { return Ub_; }
+psi::SharedMatrix Localize::get_Ua() { return Ua_; }
+psi::SharedMatrix Localize::get_Ub() { return Ub_; }
 
 } // namespace forte

@@ -40,6 +40,8 @@ namespace forte {
 void export_ForteCubeFile(py::module& m) {
     py::class_<CubeFile, std::shared_ptr<CubeFile>>(m, "CubeFile")
         .def(py::init<const std::string&>())
+        .def(py::init<const CubeFile&>())
+        .def("levels", &CubeFile::levels, "Get the isocontour levels to plot")
         .def("num", &CubeFile::num, "Get the number of grid point in each direction")
         .def("min", &CubeFile::min, "Get the minimum value of a coordinate")
         .def("max", &CubeFile::max, "Get the maximum value of a coordinate")
@@ -49,6 +51,8 @@ void export_ForteCubeFile(py::module& m) {
         .def("atom_coords", &CubeFile::atom_coords, "The atomic numbers")
         .def(
             "data", [](CubeFile& cf) { return vector_to_np(cf.data(), cf.num()); }, "Get the data")
+        .def("compute_levels", &CubeFile::compute_levels,
+             "Compute the isolevel that encompasses a give fraction of the total density")
         .def("scale", &CubeFile::scale, "The atomic numbers")
         .def("add", &CubeFile::add, "The atomic numbers")
         .def("pointwise_product", &CubeFile::pointwise_product, "The atomic numbers");

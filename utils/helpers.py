@@ -77,11 +77,11 @@ def psi4_cubeprop(wfn, path = '.', orbs = [], nocc = 3, nvir = 3, load = False):
     if nocc + nvir > 0:
         na = wfn.nalpha()
         nmo = wfn.nmo()
-        min_orb = max(1,na - nocc + 1)
-        max_orb = min(nmo,na + nvir + 1)
-        orbs = [k for k in range(min_orb,max_orb)]
+        min_orb = max(1,na + 1 - nocc)
+        max_orb = min(nmo,na + nvir)
+        orbs = [k for k in range(min_orb,max_orb + 1)]
 
-    print(orbs)
+    print(f'Preparing cube files for orbitals: {", ".join([str(orb) for orb in orbs])}')
 
     if not os.path.exists(path):
         os.makedirs(path)

@@ -74,6 +74,8 @@ void export_StateInfo(py::module& m);
 void export_SigmaVector(py::module& m);
 void export_SparseCISolver(py::module& m);
 void export_ForteCubeFile(py::module& m);
+void export_OrbitalTransform(py::module& m);
+void export_Localize(py::module& m);
 
 /// Export the ActiveSpaceMethod class
 void export_ActiveSpaceMethod(py::module& m) {
@@ -93,14 +95,6 @@ void export_ActiveSpaceSolver(py::module& m) {
 
     m.def("compute_average_state_energy", &compute_average_state_energy,
           "Compute the average energy given the energies and weights of each state");
-}
-
-/// Export the OrbitalTransform class
-void export_OrbitalTransform(py::module& m) {
-    py::class_<OrbitalTransform>(m, "OrbitalTransform")
-        .def("compute_transformation", &OrbitalTransform::compute_transformation)
-        .def("get_Ua", &OrbitalTransform::get_Ua, "Get Ua rotation")
-        .def("get_Ub", &OrbitalTransform::get_Ub, "Get Ub rotation");
 }
 
 /// Export the Determinant class
@@ -201,6 +195,7 @@ PYBIND11_MODULE(forte, m) {
     export_ForteIntegrals(m);
 
     export_OrbitalTransform(m);
+    export_Localize(m);
 
     export_Determinant(m);
 

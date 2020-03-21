@@ -31,21 +31,27 @@
 
 #include <string>
 #include <vector>
+#include <utility>
 
 namespace forte {
 
 class CubeFile {
   public:
     CubeFile(const std::string& filename);
+    CubeFile(const CubeFile& cube) = default;
 
     const std::vector<int>& num() const;
     const std::vector<double>& min() const;
     const std::vector<double>& max() const;
     const std::vector<double>& inc() const;
     int natoms() const;
-    const std::vector<double>& atom_numbers() const;
+    const std::vector<int>& atom_numbers() const;
     const std::vector<std::tuple<double, double, double>>& atom_coords() const;
     const std::vector<double>& data() const;
+    const std::vector<double>& levels() const;
+    /// Compute the isolevel that encompasses a give fraction of the total density
+    /// @param type the type of cube file ("mo" or "density")
+    std::pair<double, double> compute_levels(std::string type, double fraction) const;
 
     void scale(double factor);
     void add(const CubeFile& cf);
@@ -64,7 +70,7 @@ class CubeFile {
     std::vector<double> min_;
     std::vector<double> max_;
     std::vector<double> inc_;
-    std::vector<double> atom_numbers_;
+    std::vector<int> atom_numbers_;
     std::vector<std::tuple<double, double, double>> atom_coords_;
     std::vector<double> data_;
 };

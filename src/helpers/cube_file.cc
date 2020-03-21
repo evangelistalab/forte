@@ -29,6 +29,9 @@
 #include <algorithm>
 #include <functional>
 #include <fstream>
+#include <regex>
+#include <cmath>
+#include <numeric>
 
 #include "helpers/string_algorithms.h"
 
@@ -43,11 +46,12 @@ const std::vector<int>& CubeFile::num() const { return num_; }
 const std::vector<double>& CubeFile::min() const { return min_; }
 const std::vector<double>& CubeFile::max() const { return max_; }
 const std::vector<double>& CubeFile::inc() const { return inc_; }
-const std::vector<double>& CubeFile::atom_numbers() const { return atom_numbers_; }
+const std::vector<int>& CubeFile::atom_numbers() const { return atom_numbers_; }
 const std::vector<std::tuple<double, double, double>>& CubeFile::atom_coords() const {
     return atom_coords_;
 }
 const std::vector<double>& CubeFile::data() const { return data_; }
+const std::vector<double>& CubeFile::levels() const { return levels_; }
 
 void CubeFile::scale(double factor) {
     for (auto& d : data_) {
@@ -63,10 +67,41 @@ void CubeFile::add(const CubeFile& cf) {
 }
 
 void CubeFile::pointwise_product(const CubeFile& cf) {
-    //    if (cf.data().size() == data().size()) {
-    //        std::transform(data_.begin(), data_.end(), cf.data().begin(), data_.begin(),
-    //                       std::times<double>());
-    //    }
+    if (cf.data().size() == data().size()) {
+        std::transform(data_.begin(), data_.end(), cf.data().begin(), data_.begin(),
+                       [](double i, double j) { return i * j; });
+    }
+}
+
+std::pair<double, double> CubeFile::compute_levels(std::string type, double fraction) const {
+    std::vector<double> sorted_data(data_);
+    std::sort(sorted_data.begin(), sorted_data.end(),
+              [](double i, double j) { return std::fabs(i) > std::fabs(j); });
+    double power = 2.;
+    if (type == "density") {
+        power = 1.;
+    } else if (type == "mo") {
+        power = 2.;
+    }
+
+    double neg_level = 0.0;
+    double pos_level = 0.0;
+    double sum = std::accumulate(data_.begin(), data_.end(), 0.0,
+                                 [&](double i, double j) { return i + std::pow(j, power); });
+    double partial_sum = 0;
+    for (size_t n = 0, maxn = sorted_data.size(); n < maxn; ++n) {
+        partial_sum += std::pow(sorted_data[n], power);
+        if (partial_sum / sum < fraction) {
+            if (sorted_data[n] < 0.0) {
+                neg_level = sorted_data[n];
+            } else {
+                pos_level = sorted_data[n];
+            }
+        } else {
+            break;
+        }
+    }
+    return std::make_pair(pos_level, neg_level);
 }
 
 void CubeFile::load(std::string filename) {
@@ -83,6 +118,17 @@ void CubeFile::load(std::string filename) {
         comments_ = line;
 
         // parse comments and set levels
+        std::regex levels_regex("\(([-+]?[0-9]*\.?[0-9]+)\,([-+]?[0-9]*\.?[0-9]+)\)");
+        auto words_begin = std::sregex_iterator(line.begin(), line.end(), levels_regex);
+        auto words_end = std::sregex_iterator();
+        for (std::sregex_iterator i = words_begin; i != words_end; ++i) {
+            std::smatch match = *i;
+            std::string match_str = match.str();
+            //            std::cout << match_str << '\n';
+            auto match_string_split = split_string(match_str, ",");
+            levels_.push_back(std::stod(match_string_split[0]));
+            levels_.push_back(std::stod(match_string_split[1]));
+        }
 
         getline(myfile, line);
         line_split = split_string(line, " ");
@@ -124,8 +170,8 @@ void CubeFile::load(std::string filename) {
 
         //        for (int batch = 0; batch < nbatch; ++batch) {
         //            getline(myfile, line);
-        //            sscanf(line.c_str(), "%lE %lE %lE %lE %lE %lE", &d[0], &d[1], &d[2], &d[3],
-        //            &d[4],
+        //            sscanf(line.c_str(), "%lE %lE %lE %lE %lE %lE", &d[0], &d[1], &d[2],
+        //            &d[3], &d[4],
         //                   &d[5]);
         //            for (int k = 0; k < 6; ++k)
         //                data_[batch * 6 + k] = d[k];
