@@ -41,21 +41,27 @@ void export_ForteCubeFile(py::module& m) {
     py::class_<CubeFile, std::shared_ptr<CubeFile>>(m, "CubeFile")
         .def(py::init<const std::string&>())
         .def(py::init<const CubeFile&>())
-        .def("levels", &CubeFile::levels, "Get the isocontour levels to plot")
+        .def("load", &CubeFile::load, "Load a cube file")
+        .def("save", &CubeFile::save, "Save a cube file")
         .def("num", &CubeFile::num, "Get the number of grid point in each direction")
         .def("min", &CubeFile::min, "Get the minimum value of a coordinate")
         .def("max", &CubeFile::max, "Get the maximum value of a coordinate")
         .def("inc", &CubeFile::inc, "Get the increment in each direction")
         .def("natoms", &CubeFile::natoms, "The number of atoms")
         .def("atom_numbers", &CubeFile::atom_numbers, "The atomic numbers")
-        .def("atom_coords", &CubeFile::atom_coords, "The atomic numbers")
+        .def("atom_coords", &CubeFile::atom_coords, "The (x,y,z) atomic coordinates (in Angstrom)")
         .def(
-            "data", [](CubeFile& cf) { return vector_to_np(cf.data(), cf.num()); }, "Get the data")
+            "data", [](CubeFile& cf) { return vector_to_np(cf.data(), cf.num()); },
+            "Get the the grid points stored as a numpy array")
         .def("compute_levels", &CubeFile::compute_levels,
-             "Compute the isolevel that encompasses a give fraction of the total density")
-        .def("scale", &CubeFile::scale, "The atomic numbers")
-        .def("add", &CubeFile::add, "The atomic numbers")
-        .def("pointwise_product", &CubeFile::pointwise_product, "The atomic numbers");
+             "Compute the isolevels that encompasses a give fraction of the total density")
+        .def("zero", &CubeFile::zero, "Zero this cube file")
+        .def("scale", &CubeFile::scale,
+             "Scale the value of the cube file at each point by a factor")
+        .def("add", &CubeFile::add,
+             "Add to each grid point the value of another cube file times a scaling factor")
+        .def("pointwise_product", &CubeFile::pointwise_product,
+             " Multiply each grid point by the value of another cube file");
 }
 
 } // namespace forte

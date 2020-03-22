@@ -202,42 +202,42 @@ class ForteOptions {
     void set_bool(const std::string& label, bool val);
 
     /**
-     * @brief Get a integer option
+     * @brief Set a integer option
      * @param label Option label
      * @param val Option value
      */
     void set_int(const std::string& label, int val);
 
     /**
-     * @brief Get a double option
+     * @brief Set a double option
      * @param label Option label
      * @param val Option value
      */
     void set_double(const std::string& label, double val);
 
     /**
-     * @brief Get a string option
+     * @brief Set a string option
      * @param label Option label
      * @param val Option value
      */
     void set_str(const std::string& label, const std::string& val);
 
     /**
-     * @brief Get a general python list
+     * @brief Set a general python list
      * @param label Option label
      * @param val Option value (a python list)
      */
     void set_gen_list(const std::string& label, py::list val);
 
     /**
-     * @brief Get a vector of int option
+     * @brief Set a vector of int option
      * @param label Option label
      * @param val Option value
      */
     void set_int_vec(const std::string& label, const std::vector<int>& val);
 
     /**
-     * @brief Get a vector of int option
+     * @brief Set a vector of int option
      * @param label Option label
      * @param val Option value
      */

@@ -39,7 +39,7 @@
 
 namespace forte {
 
-CubeFile::CubeFile(const std::string& filename) : filename_(filename) { load(filename_); }
+CubeFile::CubeFile(const std::string& filename) { load(filename); }
 
 int CubeFile::natoms() const { return natoms_; }
 const std::vector<int>& CubeFile::num() const { return num_; }
@@ -51,7 +51,8 @@ const std::vector<std::tuple<double, double, double>>& CubeFile::atom_coords() c
     return atom_coords_;
 }
 const std::vector<double>& CubeFile::data() const { return data_; }
-const std::vector<double>& CubeFile::levels() const { return levels_; }
+
+void CubeFile::zero() { std::fill(data_.begin(), data_.end(), 0.0); }
 
 void CubeFile::scale(double factor) {
     for (auto& d : data_) {
@@ -59,16 +60,16 @@ void CubeFile::scale(double factor) {
     }
 }
 
-void CubeFile::add(const CubeFile& cf) {
-    if (cf.data().size() == data().size()) {
-        std::transform(data_.begin(), data_.end(), cf.data().begin(), data_.begin(),
-                       std::plus<double>());
+void CubeFile::add(const CubeFile& other, double factor) {
+    if (other.data().size() == data().size()) {
+        std::transform(data_.begin(), data_.end(), other.data().begin(), data_.begin(),
+                       [&](double i, double j) { return i + factor * j; });
     }
 }
 
-void CubeFile::pointwise_product(const CubeFile& cf) {
-    if (cf.data().size() == data().size()) {
-        std::transform(data_.begin(), data_.end(), cf.data().begin(), data_.begin(),
+void CubeFile::pointwise_product(const CubeFile& other) {
+    if (other.data().size() == data().size()) {
+        std::transform(data_.begin(), data_.end(), other.data().begin(), data_.begin(),
                        [](double i, double j) { return i * j; });
     }
 }
@@ -107,60 +108,45 @@ std::pair<double, double> CubeFile::compute_levels(std::string type, double frac
 void CubeFile::load(std::string filename) {
     std::string line;
     std::vector<std::string> line_split;
-    std::ifstream myfile(filename);
-    if (myfile.is_open()) {
-        // title
-        getline(myfile, line);
+    std::ifstream file(filename);
+    if (file.is_open()) {
+        // 1. title
+        getline(file, line);
         title_ = line;
 
-        // comment
-        getline(myfile, line);
+        // 2. comment
+        getline(file, line);
         comments_ = line;
 
-        // parse comments and set levels
-        std::regex levels_regex("\(([-+]?[0-9]*\.?[0-9]+)\,([-+]?[0-9]*\.?[0-9]+)\)");
-        auto words_begin = std::sregex_iterator(line.begin(), line.end(), levels_regex);
-        auto words_end = std::sregex_iterator();
-        for (std::sregex_iterator i = words_begin; i != words_end; ++i) {
-            std::smatch match = *i;
-            std::string match_str = match.str();
-            //            std::cout << match_str << '\n';
-            auto match_string_split = split_string(match_str, ",");
-            levels_.push_back(std::stod(match_string_split[0]));
-            levels_.push_back(std::stod(match_string_split[1]));
-        }
-
-        getline(myfile, line);
+        // 3. number of atoms plus origin of grid
+        getline(file, line);
         line_split = split_string(line, " ");
         natoms_ = std::stoi(line_split[0]);
         min_ = {std::stod(line_split[1]), std::stod(line_split[2]), std::stod(line_split[3])};
 
-        // info for x coordinate
+        // 4. number of points along axis, displacement along x,y,z
         for (int n = 0; n < 3; ++n) {
-            getline(myfile, line);
+            getline(file, line);
             line_split = split_string(line, " ");
             num_.push_back(std::stoi(line_split[0]));
             inc_.push_back(std::stod(line_split[n + 1]));
             max_.push_back(min_[n] + num_[n] * inc_[n]);
         }
-
+        // 5. atoms of molecule (Z, Q?, x, y, z)
         for (int atom = 0; atom < natoms_; ++atom) {
-            getline(myfile, line);
+            getline(file, line);
             line_split = split_string(line, " ");
             atom_numbers_.push_back(std::stoi(line_split[0]));
             atom_coords_.push_back(
                 {std::stod(line_split[2]), std::stod(line_split[3]), std::stod(line_split[4])});
         }
-
+        // 6. Data, striped (x, y, z)
         int ndata = num_[0] * num_[1] * num_[2];
         data_.resize(ndata);
 
-        int remainder = ndata % 6;
-        int nbatch = (ndata - remainder) / 6;
         double d[6];
-        int batch_start = 0;
         for (int n = 0; n < ndata; n += 6) {
-            getline(myfile, line);
+            getline(file, line);
             sscanf(line.c_str(), "%lE %lE %lE %lE %lE %lE", &d[0], &d[1], &d[2], &d[3], &d[4],
                    &d[5]);
             int nread = std::min(6, ndata - n);
@@ -168,30 +154,83 @@ void CubeFile::load(std::string filename) {
                 data_[n + k] = d[k];
         }
 
-        //        for (int batch = 0; batch < nbatch; ++batch) {
-        //            getline(myfile, line);
-        //            sscanf(line.c_str(), "%lE %lE %lE %lE %lE %lE", &d[0], &d[1], &d[2],
-        //            &d[3], &d[4],
-        //                   &d[5]);
-        //            for (int k = 0; k < 6; ++k)
-        //                data_[batch * 6 + k] = d[k];
-        //        }
-        //        if (remainder > 0) {
-        //            getline(myfile, line);
-        //            sscanf(line.c_str(), "%lE %lE %lE %lE %lE", &d[0], &d[1], &d[2], &d[3],
-        //            &d[4]); for (int k = 0; k < remainder; ++k)
-        //                data_[nbatch * 6 + k] = d[k];
-        //        }
-
-        myfile.close();
+        file.close();
 
         if (data_.size() != num_[0] * num_[1] * num_[2]) {
             throw std::runtime_error(
                 "Number of data points is inconsistent with header in Cube file!");
         }
     } else {
-        throw std::runtime_error("Unable to open file: " + filename_);
+        throw std::runtime_error("Unable to open input file: " + filename);
     }
 }
 
+void CubeFile::save(std::string filename) const {
+    FILE* fh = fopen(filename.c_str(), "w");
+    // 1. title
+    fprintf(fh, "%s\n", title_.c_str());
+    // 2. comment
+    fprintf(fh, "%s\n", comments_.c_str());
+    // 3. number of atoms plus origin of grid
+    fprintf(fh, "%6d %10.6f %10.6f %10.6f\n", natoms_, min_[0], min_[1], min_[2]);
+    // 4. number of points along axis, displacement along x,y,z
+    fprintf(fh, "%6d %10.6f %10.6f %10.6f\n", num_[0], inc_[0], 0.0, 0.0);
+    fprintf(fh, "%6d %10.6f %10.6f %10.6f\n", num_[1], 0.0, inc_[1], 0.0);
+    fprintf(fh, "%6d %10.6f %10.6f %10.6f\n", num_[2], 0.0, 0.0, inc_[2]);
+    // 5. atoms of molecule (Z, Q?, x, y, z)
+    for (int A = 0; A < natoms_; A++) {
+        fprintf(fh, "%3d %10.6f %10.6f %10.6f %10.6f\n", atom_numbers_[A], 0.0,
+                std::get<0>(atom_coords_[A]), std::get<1>(atom_coords_[A]),
+                std::get<2>(atom_coords_[A]));
+    }
+
+    // Data, striped (x, y, z)
+    for (size_t ind = 0, npoints = data_.size(); ind < npoints; ind++) {
+        fprintf(fh, "%12.5E ", data_[ind]);
+        if (ind % 6 == 5)
+            fprintf(fh, "\n");
+    }
+
+    fclose(fh);
+    //    std::ofstream file(filename, std::ios::trunc); // ios::trunc = previous content deleted
+    //    if (file.is_open()) {
+    //        // 1. title
+    //        file << title_ << std::endl;
+    //        // 2. comment
+    //        file << comments_ << std::endl;
+    //        // 3. number of atoms plus origin of grid
+    //        file << natoms_ << " " << min_[0] << " " << min_[1] << " " << min_[2] << std::endl;
+    //
+    //        file << num_[0] << " " << inc_[0] << " 0.0 0.0" << std::endl;
+    //        file << num_[1] << " 0.0 " << inc_[1] << " 0.0" << std::endl;
+    //        file << num_[2] << " 0.0 0.0 " << inc_[2] << std::endl;
+    //        // 5. atoms of molecule (Z, Q?, x, y, z)
+    //        for (int A = 0; A < natoms_; A++) {
+    //            file << atom_numbers_[A] << " 0 " << std::get<0>(atom_coords_[A]) << " "
+    //                 << std::get<1>(atom_coords_[A]) << " " << std::get<2>(atom_coords_[A])
+    //                 << std::endl;
+    //        }
+    //        // 6. Data, striped (x, y, z)
+    //        size_t ndata = num_[0] * num_[1] * num_[2];
+    //        for (size_t n = 0; n < ndata; n++) {
+    //            file << data_[n] << (n % 6 == 5 ? "\n" : " "); // end line every 6 entries
+    //        }
+    //    } else {
+    //        throw std::runtime_error("Unable to open output file: " + filename);
+    //    }
+}
+
 } // namespace forte
+
+//        // parse comments and set levels
+//        std::regex levels_regex("\(([-+]?[0-9]*\.?[0-9]+)\,([-+]?[0-9]*\.?[0-9]+)\)");
+//        auto words_begin = std::sregex_iterator(line.begin(), line.end(), levels_regex);
+//        auto words_end = std::sregex_iterator();
+//        for (std::sregex_iterator i = words_begin; i != words_end; ++i) {
+//            std::smatch match = *i;
+//            std::string match_str = match.str();
+//            //            std::cout << match_str << '\n';
+//            auto match_string_split = split_string(match_str, ",");
+//            levels_.push_back(std::stod(match_string_split[0]));
+//            levels_.push_back(std::stod(match_string_split[1]));
+//        }

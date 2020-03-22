@@ -351,7 +351,7 @@ class Py3JSRenderer():
 
         return self.renderer
 
-    def add_cubefile(self, cube, add_geom=True, levels=None, colors=None, colorscheme=None,opacity=1.0,scale=1.0):
+    def add_cubefile(self, cube, add_geom=True, levels=None, colors=None, colorscheme=None,opacity=1.0,scale=1.0,sumlevel=0.85):
         if add_geom:
             atoms_list = []
             for Z, xyz in zip(cube.atom_numbers(), cube.atom_coords()):
@@ -360,10 +360,7 @@ class Py3JSRenderer():
             self.add_molecule_dict(atoms_list, bohr=True, scale=scale)
 
         if not levels:
-            if len(cube.levels()) > 0:
-                levels = cube.levels()
-            else:
-                levels = [0.04, -0.04]
+            levels = cube.compute_levels('mo', sumlevel)
 
         # select the color scheme
         if colorscheme == 'national':
