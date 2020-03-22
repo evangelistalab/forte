@@ -52,7 +52,7 @@ void export_OrbitalTransform(py::module& m) {
 
 /// Export the ForteOptions class
 void export_Localize(py::module& m) {
-    py::class_<Localize, std::shared_ptr<Localize>>(m, "Localize")
+    py::class_<Localize>(m, "Localize")
         .def(py::init<std::shared_ptr<ForteOptions>, std::shared_ptr<ForteIntegrals>,
                       std::shared_ptr<MOSpaceInfo>>())
         .def("compute_transformation", &Localize::compute_transformation,

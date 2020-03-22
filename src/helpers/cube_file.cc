@@ -192,45 +192,6 @@ void CubeFile::save(std::string filename) const {
     }
 
     fclose(fh);
-    //    std::ofstream file(filename, std::ios::trunc); // ios::trunc = previous content deleted
-    //    if (file.is_open()) {
-    //        // 1. title
-    //        file << title_ << std::endl;
-    //        // 2. comment
-    //        file << comments_ << std::endl;
-    //        // 3. number of atoms plus origin of grid
-    //        file << natoms_ << " " << min_[0] << " " << min_[1] << " " << min_[2] << std::endl;
-    //
-    //        file << num_[0] << " " << inc_[0] << " 0.0 0.0" << std::endl;
-    //        file << num_[1] << " 0.0 " << inc_[1] << " 0.0" << std::endl;
-    //        file << num_[2] << " 0.0 0.0 " << inc_[2] << std::endl;
-    //        // 5. atoms of molecule (Z, Q?, x, y, z)
-    //        for (int A = 0; A < natoms_; A++) {
-    //            file << atom_numbers_[A] << " 0 " << std::get<0>(atom_coords_[A]) << " "
-    //                 << std::get<1>(atom_coords_[A]) << " " << std::get<2>(atom_coords_[A])
-    //                 << std::endl;
-    //        }
-    //        // 6. Data, striped (x, y, z)
-    //        size_t ndata = num_[0] * num_[1] * num_[2];
-    //        for (size_t n = 0; n < ndata; n++) {
-    //            file << data_[n] << (n % 6 == 5 ? "\n" : " "); // end line every 6 entries
-    //        }
-    //    } else {
-    //        throw std::runtime_error("Unable to open output file: " + filename);
-    //    }
 }
 
 } // namespace forte
-
-//        // parse comments and set levels
-//        std::regex levels_regex("\(([-+]?[0-9]*\.?[0-9]+)\,([-+]?[0-9]*\.?[0-9]+)\)");
-//        auto words_begin = std::sregex_iterator(line.begin(), line.end(), levels_regex);
-//        auto words_end = std::sregex_iterator();
-//        for (std::sregex_iterator i = words_begin; i != words_end; ++i) {
-//            std::smatch match = *i;
-//            std::string match_str = match.str();
-//            //            std::cout << match_str << '\n';
-//            auto match_string_split = split_string(match_str, ",");
-//            levels_.push_back(std::stod(match_string_split[0]));
-//            levels_.push_back(std::stod(match_string_split[1]));
-//        }

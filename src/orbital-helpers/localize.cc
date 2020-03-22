@@ -51,7 +51,7 @@ Localize::Localize(std::shared_ptr<ForteOptions> options, std::shared_ptr<ForteI
     orbital_spaces_ = options->get_int_vec("LOCALIZE_SPACE");
     local_method_ = options->get_str("LOCALIZE");
 
-    print_h2("ORBITAL LOCALIZER");
+    print_h2("Orbital Localizer");
 
     outfile->Printf("\n  Localize method: %s", local_method_.c_str());
 }
