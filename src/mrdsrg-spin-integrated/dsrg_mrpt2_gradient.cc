@@ -2694,7 +2694,7 @@ void DSRG_MRPT2::write_2rdm_spin_dependent() {
     temp1["cDkL"] = V["cDkL"] * Eeps2_p["kLcD"];
     temp["abij"] += 0.25 * temp1["cdkl"] * Eeps2_m1["ijab"] * Gamma1["ki"] * Gamma1["lj"] * Eta1["ac"] * Eta1["bd"];
     temp["ABIJ"] += 0.25 * temp1["CDKL"] * Eeps2_m1["IJAB"] * Gamma1["KI"] * Gamma1["LJ"] * Eta1["AC"] * Eta1["BD"];
-    temp["aBiJ"] += 0.25 * temp1["cDkL"] * Eeps2_m1["iJaB"] * Gamma1["ki"] * Gamma1["LJ"] * Eta1["ac"] * Eta1["BD"];
+    temp["aBiJ"] += temp1["cDkL"] * Eeps2_m1["iJaB"] * Gamma1["ki"] * Gamma1["LJ"] * Eta1["ac"] * Eta1["BD"];
     temp1.zero();
 
     temp1["cdkl"] = V["cdkl"] * Eeps2_m1["klcd"];
@@ -2702,41 +2702,31 @@ void DSRG_MRPT2::write_2rdm_spin_dependent() {
     temp1["cDkL"] = V["cDkL"] * Eeps2_m1["kLcD"];
     temp["abij"] += 0.25 * temp1["cdkl"] * Eeps2_p["ijab"] * Gamma1["ki"] * Gamma1["lj"] * Eta1["ac"] * Eta1["bd"];
     temp["ABIJ"] += 0.25 * temp1["CDKL"] * Eeps2_p["IJAB"] * Gamma1["KI"] * Gamma1["LJ"] * Eta1["AC"] * Eta1["BD"];
-    temp["aBiJ"] += 0.25 * temp1["cDkL"] * Eeps2_p["iJaB"] * Gamma1["ki"] * Gamma1["LJ"] * Eta1["ac"] * Eta1["BD"];
+    temp["aBiJ"] += temp1["cDkL"] * Eeps2_p["iJaB"] * Gamma1["ki"] * Gamma1["LJ"] * Eta1["ac"] * Eta1["BD"];
 
 
     temp["eumv"] += 2.0 * Z["em"] * Gamma1["uv"];
     temp["EUMV"] += 2.0 * Z["EM"] * Gamma1["UV"];
-
+    temp["eUmV"] += 4.0 * Z["em"] * Gamma1["UV"];
 
 
     temp["u,v1,n,u1"] += 2.0 * Z["un"] * Gamma1["u1,v1"]; 
     temp["U,V1,N,U1"] += 2.0 * Z["UN"] * Gamma1["U1,V1"];
-
+    temp["u,V1,n,U1"] += 4.0 * Z["un"] * Gamma1["U1,V1"]; 
 
 
     temp["xynv"] -= Z["un"] * Gamma2["uvxy"]; 
     temp["XYNV"] -= Z["UN"] * Gamma2["UVXY"]; 
-
-
-
+    temp["xYnV"] -= 4.0 * Z["un"] * Gamma2["uVxY"]; 
 
     temp["evxy"] += Z["eu"] * Gamma2["uvxy"];
     temp["EVXY"] += Z["EU"] * Gamma2["UVXY"];
-
-
-
+    temp["eVxY"] += 4.0 * Z["eu"] * Gamma2["uVxY"];
 
 
     temp["v,v1,u,u1"] += Z["uv"] * Gamma1["u1,v1"];
     temp["V,V1,U,U1"] += Z["UV"] * Gamma1["U1,V1"];
-
-
-
-
-
-
-
+    temp["v,V1,u,U1"] += 2.0 * Z["uv"] * Gamma1["U1,V1"];
 
 
 
