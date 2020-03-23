@@ -19,17 +19,24 @@ def xyz_to_atoms_list(xyz):
     return atoms_list
 
 def compute_isosurface(data, level=None, color=None, extent=None):
-    """Plot a surface at constant value (like a 2d contour).
-    :param data: 3d numpy array
-    :param float level: value where the surface should lie
-    :param color: color of the surface, although it can be an array, the length is difficult to predict beforehand,
-                  if per vertex color are needed, it is better to set them on the returned mesh afterwards.
-    :param bool wireframe: draw lines between the vertices
-    :param bool surface: draw faces/triangles between the vertices
-    :param bool controls: add controls to change the isosurface
-    :param extent: list of [[xmin, xmax], [ymin, ymax], [zmin, zmax]] values that define the bounding box of the mesh,
-                   otherwise the viewport is used
-    :return: :any:`Mesh`
+    """
+    Plot a surface at constant value
+
+    Parameters
+    ----------
+    data : numpy.ndarray
+        Grid data stored as a numpy 3D tensor
+    level : float
+        The isocontour value that defines the surface
+    color :
+        color of a face
+    extent : list
+        list of [[xmin, xmax], [ymin, ymax], [zmin, zmax]] values that define the bounding box of the mesh,
+        otherwise the viewport is used
+
+    Returns
+    -------
+    a tuple of vertices and faces
     """
     values = skimage.measure.marching_cubes_lewiner(data, level)
     sk_verts, sk_faces, normals, values = values
@@ -79,6 +86,16 @@ class Py3JSRenderer():
     """
 
     def __init__(self, width=400, height=400):
+        """
+        Class initialization function
+
+        Parameters
+        ----------
+        width : int
+            The width of the scene (default = 400)
+        height : int
+            The height of the scene (default = 400)
+        """
         self.atoms = []
         self.bonds = []
         self.iso = []
@@ -94,6 +111,16 @@ class Py3JSRenderer():
         self.scene = Scene()
 
     def get_atom_geometry(self, symbol, shininess=75):
+        """
+        This function returns a sphere geomtry object with radius proportional to the covalent atomic radius
+
+        Parameters
+        ----------
+        symbol : str
+            The symbol of the atom (e.g. 'Li')
+        shininess : int
+            The shininess of the sphere (default = 75)
+        """
         if symbol in self.atom_geometries:
             return self.atom_geometries[symbol]
         atom_data = ATOM_DATA[ATOM_SYMBOL_TO_Z[symbol]]

@@ -1,3 +1,6 @@
+"""
+    A map from atom symbols to atomic number
+"""
 ATOM_SYMBOL_TO_Z = {
     'Xx': 0,
     'H': 1,
@@ -102,6 +105,9 @@ ATOM_SYMBOL_TO_Z = {
     'Fm': 100
 }
 
+"""
+    A map from atom symbols to atomic data
+"""
 ATOM_DATA = [{'symbol': 'Xx',
   'name': 'Dummy',
   'mass': 0,

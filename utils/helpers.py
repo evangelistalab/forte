@@ -1,8 +1,6 @@
 import psi4
 import forte
 
-#from .cube_file import CubeFile
-
 def psi4_scf(geom, basis, reference, functional = 'hf', options = {}) -> (float, psi4.core.Wavefunction):
     """
     Run a psi4 scf computation and return the energy and the Wavefunction object
