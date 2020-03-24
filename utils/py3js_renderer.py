@@ -453,6 +453,35 @@ class Py3JSRenderer():
     def renderer(self):
         return self.renderer
 
+
+def cube_file_viewer(cubes, scale = 0.5, font_size=16, font_family='Helvetica', width = 300, height = 300, show_text=True):
+    # convert cube file names into human readable text
+    labels_to_filename = {}
+    psi4_label_re = r'Psi_([a|b])_(\d+)_(\d+)-([\w\d]*)\.cube'
+    for k in cubes.keys():
+        m = re.match(psi4_label_re, k)
+        if m:
+            label = f'MO {m.groups()[1]} ({m.groups()[2]}{m.groups()[3]})'
+        else:
+            label = label
+        labels_to_filename[label] = k
+    sorted_labels = sorted(labels_to_filename.keys())
+
+    box_layout = widgets.Layout(border='0px solid black',width=f'{width}px',height=f'{height + 35}px')
+
+    def f(label, cubes, labels_to_filename):
+        cube = cubes[labels_to_filename[label]]
+        renderer = forte.utils.Py3JSRenderer(width=width, height=height)
+        renderer.add_cubefile(cube,scale=scale)
+        style = f'font-size:{font_size}px;font-family:{font_family};font-weight: bold;'
+        mo_label = widgets.HTML(value=f'<div align="center" style="{style}">{label}</div>')
+        return widgets.VBox([renderer.renderer,mo_label],layout=box_layout)
+
+    widgets.interact(f, label=sorted_labels,cubes=widgets.fixed(cubes),labels_to_filename=widgets.fixed(labels_to_filename));
+
+
+
+
 def plot_cubes(cubes, scale = 1.0, font_size=16, font_family='Helvetica', ncols = 4, width = 900, show_text=True, Renderer = Py3JSRenderer):
     """
     Use the
@@ -505,7 +534,7 @@ def plot_cubes(cubes, scale = 1.0, font_size=16, font_family='Helvetica', ncols 
             mo_widgets.append(mo_renderer.renderer)
         mo_renderers.append(mo_renderer)
     box = widgets.GridBox(mo_widgets, layout=widgets.Layout(grid_template_columns=f'repeat({ncols}, {col_width}px)'))
-    return box
+    return (box,mo_renderers)
 
 #    def load_cube_geometry(self, filename, do_display=True):
 #        cube = parse_cube(filename)

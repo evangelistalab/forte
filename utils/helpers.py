@@ -51,6 +51,24 @@ def psi4_scf(geom, basis, reference, functional = 'hf', options = {}) -> (float,
     return (E_scf, wfn)
 
 
+def load_cubes(path = '.'):
+    """
+    Load all the cubefiles (suffix ".cube" ) in a given path
+
+    Parameters
+    ----------
+    path : str
+        The path of the directory that will contain the cube files
+    """
+
+    import os
+    cube_files = {}
+    for file in os.listdir(path):
+        if file.endswith('.cube'):
+            cube_files[file] = forte.CubeFile(os.path.join(path,file))
+    return cube_files
+
+
 def psi4_cubeprop(wfn, path = '.', orbs = [], nocc = 3, nvir = 3, load = False):
     """
     Run a psi4 cubeprop computation to generate cube files from a given Wavefunction object
@@ -87,12 +105,7 @@ def psi4_cubeprop(wfn, path = '.', orbs = [], nocc = 3, nvir = 3, load = False):
     psi4.set_options({'CUBEPROP_ORBITALS' : orbs, 'CUBEPROP_FILEPATH' : path})
     psi4.cubeprop(wfn)
     if load:
-        import os
-        cube_files = {}
-        for file in os.listdir(path):
-            if file.endswith('.cube'):
-                cube_files[file] = forte.CubeFile(os.path.join(path,file))
-        return cube_files
+        return load_cubes(path)
 
 def prepare_forte_objects(wfn):
     """
