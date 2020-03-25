@@ -69,7 +69,7 @@ def load_cubes(path = '.'):
     return cube_files
 
 
-def psi4_cubeprop(wfn, path = '.', orbs = [], nocc = 3, nvir = 3, load = False):
+def psi4_cubeprop(wfn, path = '.', orbs = [], nocc = 0, nvir = 0, density = False, frontier_orbitals = False, load = False):
     """
     Run a psi4 cubeprop computation to generate cube files from a given Wavefunction object
     By default this function plots from the HOMO -2 to the LUMO + 2
@@ -80,7 +80,7 @@ def psi4_cubeprop(wfn, path = '.', orbs = [], nocc = 3, nvir = 3, load = False):
         A psi4 Wavefunction object
     path : str
         The path of the directory that will contain the cube files
-    orbs : list
+    orbs : list or string
         The list of orbitals to convert to cube files (one based).
     nocc : int
         The number of occupied orbitals
@@ -90,19 +90,28 @@ def psi4_cubeprop(wfn, path = '.', orbs = [], nocc = 3, nvir = 3, load = False):
 
     import os.path
 
-    if nocc + nvir > 0:
-        na = wfn.nalpha()
-        nmo = wfn.nmo()
-        min_orb = max(1,na + 1 - nocc)
-        max_orb = min(nmo,na + nvir)
-        orbs = [k for k in range(min_orb,max_orb + 1)]
+    cubeprop_tasks = []
 
-    print(f'Preparing cube files for orbitals: {", ".join([str(orb) for orb in orbs])}')
+    if isinstance(orbs, str):
+        if (orbs == 'frontier_orbitals'):
+            cubeprop_tasks.append('FRONTIER_ORBITALS')
+    else:
+        cubeprop_tasks.append('ORBITALS')
+        if nocc + nvir > 0:
+            na = wfn.nalpha()
+            nmo = wfn.nmo()
+            min_orb = max(1,na + 1 - nocc)
+            max_orb = min(nmo,na + nvir)
+            orbs = [k for k in range(min_orb,max_orb + 1)]
+        print(f'Preparing cube files for orbitals: {", ".join([str(orb) for orb in orbs])}')
+
+    if density:
+        cubeprop_tasks.append('DENSITY')
 
     if not os.path.exists(path):
         os.makedirs(path)
 
-    psi4.set_options({'CUBEPROP_ORBITALS' : orbs, 'CUBEPROP_FILEPATH' : path})
+    psi4.set_options({'CUBEPROP_TASKS' : cubeprop_tasks, 'CUBEPROP_ORBITALS' : orbs, 'CUBEPROP_FILEPATH' : path})
     psi4.cubeprop(wfn)
     if load:
         return load_cubes(path)
