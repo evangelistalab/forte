@@ -109,11 +109,12 @@ class Py3JSRenderer():
         self.atom_materials = {}
         self.bond_materials = {}
         self.bond_geometry = None
+        # create a Scene
         self.scene = Scene()
 
     def get_atom_geometry(self, symbol, shininess=75):
         """
-        This function returns a sphere geomtry object with radius proportional to the covalent atomic radius
+        This function returns a sphere geometry object with radius proportional to the covalent atomic radius
 
         Parameters
         ----------
@@ -132,6 +133,10 @@ class Py3JSRenderer():
         return geometry
 
     def get_bond_geometry(self):
+        """
+        This function returns a cylinder geometry object of unit height used to draw bonds
+
+        """
         if self.bond_geometry:
             return self.bond_geometry
         self.bond_geometry = CylinderGeometry(
@@ -143,23 +148,19 @@ class Py3JSRenderer():
             openEnded=False)
         return self.bond_geometry
 
-    def get_atom_material(self, symbol, shininess=75):
-        if symbol in self.atom_materials:
-            return self.atom_materials[symbol]
-        atom_data = ATOM_DATA[ATOM_SYMBOL_TO_Z[symbol]]
-        color = 'rgb({0[0]},{0[1]},{0[2]})'.format(atom_data['color'])
-#        material = MeshPhongMaterial(color=color, shininess=shininess)
-        material = MeshStandardMaterial(
-            color=color,
-            roughness=0.25,
-            metalness=0.1)
-        self.atom_materials[symbol] = material
-        return material
-
     def get_bond_material(self, color, shininess=75):
+        """
+        This function returns a Material object used to draw bonds
+
+        Parameters
+        ----------
+        color : str
+            Hexadecimal color code
+        shininess : int
+            The shininess of the cylinder used to draw the bond (default = 75)
+        """
         if color in self.bond_materials:
             return self.bond_materials[color]
-#        material = MeshPhongMaterial(color=color, shininess=shininess)
         material = MeshStandardMaterial(
             color=color,
             roughness=0.25,
@@ -168,6 +169,15 @@ class Py3JSRenderer():
         return material
 
     def atom(self, atom_info):
+        """
+        This function returns a Mesh object (Geometry + Material) that represents an atom
+
+        Parameters
+        ----------
+        atom_info : tuple(str, float, float, float)
+            A tuple containing the atomic symbol and coordinates of the atom using the format
+            (atomic symbol , x, y, z)
+        """
         symbol, x, y, z = atom_info
         geometry = self.get_atom_geometry(symbol)
         material = self.get_atom_material(symbol)
@@ -175,6 +185,23 @@ class Py3JSRenderer():
         return mesh
 
     def cylinder(self, xyz1, xyz2, radius1, radius2, color):
+        """
+        This function returns a Mesh object (Geometry + Material) that represents a bond between
+        atoms 1 and 2
+
+        Parameters
+        ----------
+        xyz1 : tuple(float, float, float)
+            The (x1, y1, z1) coordinates of atom 1
+        xyz2 : tuple(float, float, float)
+            The (x2, y2, z2) coordinates of atom 2
+        radius1 : float
+            The radius of the bond at atom 1
+        radius2 : float
+            The radius of the bond at atom 2
+        color : str
+            Hexadecimal color code
+        """
         x1, y1, z1 = xyz1
         x2, y2, z2 = xyz2
         d = sqrt((x1 - x2)**2 + (y1 - y2)**2 + (z1 - z2)**2)
@@ -191,16 +218,12 @@ class Py3JSRenderer():
 
         # If the bond rotation is 180 deg then return
         if y1 - y2 == d:
-            mesh.rotateX(3.14159265359) #math.pi)
+            mesh.rotateX(3.14159265359)
             return mesh
 
         R = self.cylinder_rotation_matrix(xyz1, xyz2, d)
         mesh.setRotationFromMatrix(R)
         return mesh
-
-    def add_cylinder(self, xyz1, xyz2, radius1, radius2, color):
-        mesh = self.cylinder(xyz1, xyz2, radius1, radius2, color)
-        self.scene.add(mesh)
 
     def add_arrow(self,
                   xyz1,
@@ -620,3 +643,25 @@ def plot_cubes(cubes, scale = 1.0, font_size=16, font_family='Helvetica', ncols 
 #                    data, level=level, color=color, extent=extent)
 #                self.iso.append(mesh)
 #                self.scene.add(mesh)
+
+
+#    def get_atom_material(self, symbol, shininess=75):
+#        """
+#        This function returns a cylinder geometry object of unit height used to draw bonds
+
+#        """
+#        if symbol in self.atom_materials:
+#            return self.atom_materials[symbol]
+#        atom_data = ATOM_DATA[ATOM_SYMBOL_TO_Z[symbol]]
+#        color = 'rgb({0[0]},{0[1]},{0[2]})'.format(atom_data['color'])
+##        material = MeshPhongMaterial(color=color, shininess=shininess)
+#        material = MeshStandardMaterial(
+#            color=color,
+#            roughness=0.25,
+#            metalness=0.1)
+#        self.atom_materials[symbol] = material
+#        return material
+
+#    def add_cylinder(self, xyz1, xyz2, radius1, radius2, color):
+#        mesh = self.cylinder(xyz1, xyz2, radius1, radius2, color)
+#        self.scene.add(mesh)
