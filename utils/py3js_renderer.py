@@ -10,6 +10,19 @@ from .atom_data import *
 
 
 def xyz_to_atoms_list(xyz):
+    """
+    Converts an xyz geometry to a list of the form
+
+    Parameters
+    ----------
+    xyz : str
+        An xyz geometry where each entry has the format "<atom symbol> <x> <y> <z>".
+        Any comment will be ignored
+
+    Returns
+    -------
+    A list(tuple(str, float, float, float)) containing the atomic symbol and coordinates of the atom.
+    """
     atoms_list = []
     re_xyz = re.compile(
         r"(\w+)\s+([-+]?[0-9]*\.?[0-9]+)\s+([-+]?[0-9]*\.?[0-9]+)\s+([-+]?[0-9]*\.?[0-9]+)"
@@ -17,53 +30,9 @@ def xyz_to_atoms_list(xyz):
     for line in xyz.split('\n'):
         m = re.search(re_xyz, line)
         if (m):
-            label, x, y, z = m.groups()
-            atoms_list.append((label, float(x), float(y), float(z)))
+            symbol, x, y, z = m.groups()
+            atoms_list.append((symbol, float(x), float(y), float(z)))
     return atoms_list
-
-
-def compute_isosurface(data, level=None, color=None, extent=None):
-    """
-    Plot a surface at constant value
-
-    Parameters
-    ----------
-    data : numpy.ndarray
-        Grid data stored as a numpy 3D tensor
-    level : float
-        The isocontour value that defines the surface
-    color :
-        color of a face
-    extent : list
-        list of [[xmin, xmax], [ymin, ymax], [zmin, zmax]] values that define the bounding box of the mesh,
-        otherwise the viewport is used
-
-    Returns
-    -------
-    a tuple of vertices and faces
-    """
-    values = skimage.measure.marching_cubes_lewiner(data, level)
-    sk_verts, sk_faces, normals, values = values
-    x, y, z = sk_verts.T
-
-    # Rescale coordinates to given limits
-    if extent:
-        xlim, ylim, zlim = extent
-        x = x * np.diff(xlim) / (data.shape[0] - 1) + xlim[0]
-        y = y * np.diff(ylim) / (data.shape[1] - 1) + ylim[0]
-        z = z * np.diff(zlim) / (data.shape[2] - 1) + zlim[0]
-
-    # Assemble the list of vertices
-    vertices = []
-    for n in range(len(x)):
-        vertices.append([x[n], y[n], z[n]])
-
-    # Assemble the list of faces
-    faces = []
-    for face in sk_faces:
-        i, j, k = face
-        faces.append((i, j, k, None, (color, color, color), None))
-    return (vertices, faces)
 
 
 class Py3JSRenderer():
@@ -105,6 +74,8 @@ class Py3JSRenderer():
         self.iso = []
         self.width = width
         self.height = height
+        # aspect ratio
+        self.aspect = float(self.width) / float(self.height)
         self.bond_radius = 0.175  # a.u.
         self.bond_color = '#555555'
         self.angtobohr = 1.88973  # TODO: use Psi4's value
@@ -113,8 +84,43 @@ class Py3JSRenderer():
         self.atom_materials = {}
         self.bond_materials = {}
         self.bond_geometry = None
+
+        # set an initial scene size
+        self.camera_width = 5.0
+        self.camera_height = self.camera_width / self.aspect
+        self.initialize_pythreejs_renderer()
+
+    def initialize_pythreejs_renderer(self):
+        """
+        Create a pythreejs Scene and a Camera and add them to a Renderer
+        """
         # create a Scene
         self.scene = Scene()
+        # create a camera
+        self.camera = OrthographicCamera(
+            left=-self.camera_width / 2,
+            right=self.camera_width / 2,
+            top=self.camera_height / 2,
+            bottom=-self.camera_height / 2,
+            position=[0, self.camera_height * 1.5, self.camera_height * 1.5],
+            up=[0, 1, 0],
+            children=[
+                DirectionalLight(color='white',
+                                 position=[5, 5, 1],
+                                 intensity=0.5)
+            ],
+            near=.1,
+            far=1000)
+
+        # add the camera and some ambiend light to the scene
+        self.scene.add([self.camera, AmbientLight(color='#999999')])
+
+        self.renderer = Renderer(
+            camera=self.camera,
+            scene=self.scene,
+            controls=[OrbitControls(controlling=self.camera)],
+            width=self.width,
+            height=self.height)
 
     def get_atom_geometry(self, symbol, shininess=75):
         """
@@ -152,11 +158,10 @@ class Py3JSRenderer():
             return self.atom_materials[symbol]
         atom_data = ATOM_DATA[ATOM_SYMBOL_TO_Z[symbol]]
         color = 'rgb({0[0]},{0[1]},{0[2]})'.format(atom_data['color'])
-#        material = MeshPhongMaterial(color=color, shininess=shininess)
-        material = MeshStandardMaterial(
-            color=color,
-            roughness=0.25,
-            metalness=0.1)
+        #        material = MeshPhongMaterial(color=color, shininess=shininess)
+        material = MeshStandardMaterial(color=color,
+                                        roughness=0.25,
+                                        metalness=0.1)
         self.atom_materials[symbol] = material
         return material
 
@@ -246,7 +251,7 @@ class Py3JSRenderer():
             mesh.rotateX(3.14159265359)
             return mesh
 
-        R = self.cylinder_rotation_matrix(xyz1, xyz2, d)
+        R = self.cylinder_rotation_matrix(xyz1, xyz2)
         mesh.setRotationFromMatrix(R)
         return mesh
 
@@ -255,7 +260,8 @@ class Py3JSRenderer():
                   xyz2,
                   color,
                   radius_small=0.1,
-                  radius_large=0.3):
+                  radius_large=0.3,
+                  arrow_height=0.6):
         """
         This function adds an arrow  between two points
         atoms 1 and 2
@@ -271,11 +277,14 @@ class Py3JSRenderer():
         radius_small : float
             The radius of the arrow tail
         radius_large : float
-            The radius of the base of the cone
+            The radius of the base of the arrow cone
+        arrow_height : float
+            The height of the arrow cone
         """
         x1, y1, z1 = xyz1
         x2, y2, z2 = xyz2
-        fraction = 0.9
+        d = sqrt((x1 - x2)**2 + (y1 - y2)**2 + (z1 - z2)**2)
+        fraction = (d - arrow_height) / d
         xyz_base = [
             x1 + (x2 - x1) * fraction, y1 + (y2 - y1) * fraction,
             z1 + (z2 - z1) * fraction
@@ -328,16 +337,38 @@ class Py3JSRenderer():
             mesh.rotateX(3.14159265359)  #math.pi)
             return mesh
 
-        R = self.cylinder_rotation_matrix([x1, y1, z1], [x2, y2, z2], d)
+        R = self.cylinder_rotation_matrix([x1, y1, z1], [x2, y2, z2])
         mesh.setRotationFromMatrix(R)
         return mesh
 
     def bond_cutoff(self, r1, r2):
+        """
+        Compute the cutoff value for displaying a bond between two atoms
+
+        Parameters
+        ----------
+        r1 : float
+            The radius of atom 1
+        r2 : float
+            The radius of atom 2
+        """
         return 1.5 * self.angtobohr * (r1 + r2)
 
-    def cylinder_rotation_matrix(self, xyz1, xyz2, d):
+    def cylinder_rotation_matrix(self, xyz1, xyz2):
+        """
+        Computes the rotation matrix that converts a cylinder geometry in its standard
+        orientation to a cylinder that starts at point xyz1 and ends at xyz2
+
+        Parameters
+        ----------
+        xyz1 : tuple(float, float, float)
+            The (x1, y1, z1) coordinates of the beginning of the cylinder
+        xyz2 : tuple(float, float, float)
+            The (x2, y2, z2) coordinates of the end of the cylinder
+        """
         x1, y1, z1 = xyz1
         x2, y2, z2 = xyz2
+        d = sqrt((x1 - x2)**2 + (y1 - y2)**2 + (z1 - z2)**2)
         b1 = (x2 - x1) / d
         b2 = (y2 - y1) / d
         b3 = (z2 - z1) / d
@@ -349,30 +380,34 @@ class Py3JSRenderer():
         ]
         return R
 
-    def isosurface(self,
-                   data,
-                   level=None,
-                   color=None,
-                   extent=None,
-                   opacity=1.0):
-        vertices, faces = compute_isosurface(data,
-                                             level=level,
-                                             color=color,
-                                             extent=extent)
+    def isosurface(self, data, level, color, extent=None, opacity=1.0):
+        """
+        This function returns a Mesh object (Geometry + Material) for an isosurface
+
+        Parameters
+        ----------
+        data : numpy.ndarray
+            A 3D array containing the values on a grid
+        level : float
+            The isosurface level. This must be included in the range of values on the grid
+        color : str
+            Hexadecimal code for the color used to display the surface
+        extent : list
+            list of [[xmin, xmax], [ymin, ymax], [zmin, zmax]] values that define the bounding box of the mesh,
+            otherwise the viewport is used
+        opacity : float
+            The opacity of the surface (default = 1.0)
+        """
+        vertices, faces = self.compute_isosurface(data,
+                                                  level=level,
+                                                  color=color,
+                                                  extent=extent)
 
         # Create the geometry
         isoSurfaceGeometry = Geometry(vertices=vertices, faces=faces)
 
         # Calculate normals per vertex for round edges
         isoSurfaceGeometry.exec_three_obj_method('computeVertexNormals')
-
-        # Note that the material need to be told to use the vertex colors
-        #        material = MeshPhongMaterial(
-        #            vertexColors='VertexColors',
-        #            shinyness=5,
-        #            side='DoubleSide',
-        #            transparent=True,
-        #            opacity=1.0)
 
         material = MeshStandardMaterial(vertexColors='VertexColors',
                                         roughness=0.3,
@@ -387,11 +422,36 @@ class Py3JSRenderer():
         return isoSurfaceMesh
 
     def add_molecule_xyz(self, xyz, bohr=False, scale=1.0):
-        atoms_list = xyz_to_atoms_list(xyz)
-        self.add_molecule_dict(atoms_list, bohr, scale)
+        """
+        Add a molecular geometry to the scene. The geometry is passed in the xyz format
 
-    def add_molecule_dict(self, atoms_list, bohr=False, scale=1.0):
-        """Add a molecule"""
+        Parameters
+        ----------
+        xyz : str
+            An xyz geometry where each entry has the format "<atom symbol> <x> <y> <z>".
+            Any comment will be ignored
+        bohr : bool
+            Are the coordinate in units of bohr? (default = False)
+        scale : float
+            Scale factor to change the size of the scene (default = 1.0)
+        """
+        atoms_list = xyz_to_atoms_list(xyz)
+        self.add_molecule_list(atoms_list, bohr, scale)
+
+    def add_molecule_list(self, atoms_list, bohr=False, scale=1.0):
+        """
+        Add a molecular geometry to the scene. The geometry is passed as a list of atoms.
+
+        Parameters
+        ----------
+        atoms_list : list(tuple(str, float, float, float))
+            A list of tuples containing the atomic symbol and coordinates of the atom using the format
+            (atomic symbol,x,y,z)
+        bohr : bool
+            Are the coordinate in units of bohr? (default = False)
+        scale : float
+            Scale factor to change the size of the scene (default = 1.0)
+        """
         if bohr == False:
             atoms_list2 = []
             for atom in atoms_list:
@@ -401,28 +461,25 @@ class Py3JSRenderer():
                 atoms_list2.append(new_atom)
             atoms_list = atoms_list2
 
-        self.com = self.center_of_mass(
-            atoms_list)  # TODO: fix this if multiple molecules are added
+        self.com = self.center_of_mass(atoms_list)
 
         self.molecule = Group()
 
-        #        self.atoms = []
-        #        for atom in atoms_list:
-        #            self.atoms.append(self.atom(atom))
-
+        # Add the atoms
         # Performance optimization using CloneArray
+        # First find all the atoms of the same type
         atom_positions = collections.defaultdict(list)
         for atom in atoms_list:
             symbol, x, y, z = atom
             atom_positions[symbol].append([x, y, z])
-
+        # Then add the unique atoms at all the positions
         for atom_type in atom_positions:
             atom_mesh = self.atom((atom_type, 0.0, 0.0, 0.0))
             clone_geom = CloneArray(original=atom_mesh,
                                     positions=atom_positions[atom_type])
             self.atoms.append(clone_geom)
 
-        self.bonds = []
+        # Add the bonds
         for i in range(len(atoms_list)):
             atom1 = atoms_list[i]
             for j in range(i + 1, len(atoms_list)):
@@ -431,36 +488,12 @@ class Py3JSRenderer():
                 if bond:
                     self.bonds.append(bond)
 
-        aspect = float(self.width) / float(self.height)
-
-        # determine the molecule dimension (l)
+        # Determine the molecule dimension (l)
         extents = self.molecule_extents(atoms_list)
         l = 1.75 * max(max(extents), abs(min(extents))) / scale
 
-        camera = OrthographicCamera(left=-l * aspect,
-                                    right=l * aspect,
-                                    top=l,
-                                    bottom=-l,
-                                    position=[0, l * 1.5, l * 1.5],
-                                    up=[0, 1, 0],
-                                    children=[
-                                        DirectionalLight(color='white',
-                                                         position=[5, 5, 1],
-                                                         intensity=0.5)
-                                    ],
-                                    near=.1,
-                                    far=1000)
-
-        scene_children = [camera, AmbientLight(color='#999999')]
-        scene_children = scene_children + self.atoms + self.bonds  #+ x_box,y_box,z_box
-
-        self.scene.add(scene_children)
-
-        self.renderer = Renderer(camera=camera,
-                                 scene=self.scene,
-                                 controls=[OrbitControls(controlling=camera)],
-                                 width=self.width,
-                                 height=self.height)
+        # add the atoms and bonds to the scene
+        self.scene.add(self.atoms + self.bonds)
 
         return self.renderer
 
@@ -474,12 +507,39 @@ class Py3JSRenderer():
                      opacity=1.0,
                      scale=1.0,
                      sumlevel=0.85):
+        """
+        Add a cube file (and optionally the molecular geometry) to the scene. This function will automatically select the levels and colors
+        with which to plot the surfaces
+
+        Parameters
+        ----------
+        cube : CubeFile
+            A CubeFile object
+        type : str
+            The type of cube file ('mo' or 'density')
+        add_geom : bool
+            Show the molecular geometry (default = True)
+        levels : list(float)
+            The levels to plot (default = None). If not provided, levels will be automatically selected
+            using the compute_levels() function of the CubeFile class. The variable sumlevel is used to
+            select the levels
+        color : list(str)
+            The color of each surface passed as a list of hexadecimal color codes (default = None)
+        colorscheme : str
+            A predefined color scheme (default = 'emory'). Possible options are ['emory', 'national', 'bright', 'electron', 'wow']
+        opacity : float
+            Opacity of the surfaces (default = 1.0)
+        scale : float
+            Scale factor to change the size of the scene (default = 1.0)
+        sumlevel : float
+            Cumulative electron density threshold used to find the isosurface levels
+        """
         if add_geom:
             atoms_list = []
             for Z, xyz in zip(cube.atom_numbers(), cube.atom_coords()):
                 symbol = ATOM_DATA[Z]['symbol']
                 atoms_list.append((symbol, xyz[0], xyz[1], xyz[2]))
-            self.add_molecule_dict(atoms_list, bohr=True, scale=scale)
+            self.add_molecule_list(atoms_list, bohr=True, scale=scale)
 
         if not levels:
             levels = cube.compute_levels(type, sumlevel)
@@ -493,9 +553,8 @@ class Py3JSRenderer():
             colors = ['#ff00bf', '#2eb82e']
         elif colorscheme == 'wow':
             colors = ['#AC07F2', '#D7F205']
-        else:
-            if colors == None:
-                colors = ['#f2a900', '#0033a0']
+        elif colors == None or colorscheme == 'emory':
+            colors = ['#f2a900', '#0033a0']
 
         # grab the data and extents
         data = cube.data()
@@ -513,6 +572,20 @@ class Py3JSRenderer():
                 self.scene.add(mesh)
 
     def molecule_extents(self, atoms_list):
+        """
+        Compute the extent of a molecule
+
+        Parameters
+        ----------
+        atoms_list : list(tuple(str, float, float, float))
+            A list of tuples containing the atomic symbol and coordinates of the atom using the format
+            (atomic symbol,x,y,z)
+
+        Returns
+        -------
+        A tuple(float, float, float, float, float, float)  containing the minimum and maximum
+        coordinates of this molecule in the format (minx, maxx, miny, maxy, minz, maxz)
+        """
         minx = min(map(lambda x: x[1], atoms_list))
         maxx = min(map(lambda x: x[1], atoms_list))
         miny = min(map(lambda x: x[2], atoms_list))
@@ -521,7 +594,7 @@ class Py3JSRenderer():
         maxz = min(map(lambda x: x[3], atoms_list))
         return (minx, maxx, miny, maxy, minz, maxz)
 
-    def shift_to_com(self,com):
+    def shift_to_com(self, com):
         """
         Shift the molecule to the center of mass
 
@@ -572,178 +645,116 @@ class Py3JSRenderer():
         """
         return self.renderer
 
+    def compute_isosurface(self, data, level, color, extent=None):
+        """
+        Compute the vertices and faces of an isosurface from grid data
 
-#def cube_file_viewer(cubes, scale = 0.5, font_size=16, font_family='Helvetica', width = 300, height = 300, show_text=True):
-#    # convert cube file names into human readable text
-#    labels_to_filename = {}
-#    psi4_label_re = r'Psi_([a|b])_(\d+)_(\d+)-([\w\d]*)\.cube'
-#    for k in cubes.keys():
-#        m = re.match(psi4_label_re, k)
-#        if m:
-#            label = f'MO {m.groups()[1]} ({m.groups()[2]}{m.groups()[3]})'
+        Parameters
+        ----------
+        data : numpy.ndarray
+            Grid data stored as a numpy 3D tensor
+        level : float
+            The isocontour value that defines the surface
+        color :
+            color of a face
+        extent : list
+            list of [[xmin, xmax], [ymin, ymax], [zmin, zmax]] values that define the bounding box of the mesh,
+            otherwise the viewport is used
+
+        Returns
+        -------
+        a tuple of vertices and faces
+        """
+        values = skimage.measure.marching_cubes_lewiner(data, level)
+        sk_verts, sk_faces, normals, values = values
+        x, y, z = sk_verts.T
+
+        # Rescale coordinates to given limits
+        if extent:
+            xlim, ylim, zlim = extent
+            x = x * np.diff(xlim) / (data.shape[0] - 1) + xlim[0]
+            y = y * np.diff(ylim) / (data.shape[1] - 1) + ylim[0]
+            z = z * np.diff(zlim) / (data.shape[2] - 1) + zlim[0]
+
+        # Assemble the list of vertices
+        vertices = []
+        for n in range(len(x)):
+            vertices.append([x[n], y[n], z[n]])
+
+        # Assemble the list of faces
+        faces = []
+        for face in sk_faces:
+            i, j, k = face
+            faces.append((i, j, k, None, (color, color, color), None))
+        return (vertices, faces)
+
+
+#def plot_cubes(cubes,
+#               scale=1.0,
+#               font_size=16,
+#               font_family='Helvetica',
+#               ncols=4,
+#               width=900,
+#               show_text=True,
+#               Renderer=Py3JSRenderer):
+#    """
+#    Use the
+
+#    Parameters
+#    ----------
+#    cubes : dict
+#        a dictionary of CubeFile objects
+#    scale : float
+#        the scale factor used to make a molecule smaller or bigger (default = 1.0)
+#    font_size : int
+#        the font size (default = 16)
+#    font_family : str
+#        the font used to label the orbitals (default = Helvetica)
+#    ncols : int
+#        the number of columns (default = 4)
+#    width : int
+#        the width of the plot in pixels (default = 900)
+#    show_text : bool
+#        show the name of the cube file under the plot? (default = True)
+#    """
+
+#    import ipywidgets as widgets
+
+#    col_width = width / ncols
+#    mo_widgets = []
+#    box_layout = widgets.Layout(border='0px solid black',
+#                                width=f'{col_width}px',
+#                                height=f'{col_width + 35}px')
+#    mo_renderers = []
+#    keys = sorted(cubes.keys())
+#    for label in keys:
+#        cube = cubes[label]
+
+#        mo_renderer = Renderer(width=col_width, height=col_width)
+#        mo_renderer.add_cubefile(cube, scale=scale)
+#        if show_text:
+#            # check if this cube file was generated by psi4
+#            psi4_label_re = r'Psi_([a|b])_(\d+)_(\d+)-([\w\d]*)\.cube'
+#            m = re.match(psi4_label_re, label)
+#            if m:
+#                mo_label = f'MO {m.groups()[1]} ({m.groups()[2]}{m.groups()[3]})'
+#            else:
+#                mo_label = label
+
+#            style = f'font-size:{font_size}px;font-family:{font_family};font-weight: bold;'
+#            mo_label = widgets.HTML(
+#                value=f'<div align="center" style="{style}">{mo_label}</div>')
+#            mo_widgets.append(
+#                widgets.VBox([mo_renderer.renderer, mo_label],
+#                             layout=box_layout))
 #        else:
-#            label = label
-#        labels_to_filename[label] = k
-#    sorted_labels = sorted(labels_to_filename.keys())
-
-#    box_layout = widgets.Layout(border='0px solid black',width=f'{width}px',height=f'{height + 35}px')
-
-#    def f(label, cubes, labels_to_filename):
-#        cube = cubes[labels_to_filename[label]]
-#        renderer = forte.utils.Py3JSRenderer(width=width, height=height)
-#        renderer.add_cubefile(cube,scale=scale)
-#        style = f'font-size:{font_size}px;font-family:{font_family};font-weight: bold;'
-#        mo_label = widgets.HTML(value=f'<div align="center" style="{style}">{label}</div>')
-#        return widgets.VBox([renderer.renderer,mo_label],layout=box_layout)
-
-#    widgets.interact(f, label=sorted_labels,cubes=widgets.fixed(cubes),labels_to_filename=widgets.fixed(labels_to_filename));
-
-
-def cube_file_viewer(cubes,
-                     scale=0.5,
-                     font_size=16,
-                     font_family='Helvetica',
-                     width=400,
-                     height=400,
-                     show_text=True):
-    # convert cube file names into human readable text
-    import ipywidgets as widgets
-    import re
-    labels_to_filename = {}
-    psi4_mo_label_re = r'Psi_([a|b])_(\d+)_(\d+)-([\w\d]*)\.cube'
-    psi4_density_label_re = r'D(\w)\.cube'
-    for k in cubes.keys():
-        m1 = re.match(psi4_mo_label_re, k)
-        m2 = re.match(psi4_density_label_re, k)
-        if m1:
-            label = f'MO {int(m1.groups()[1]):4d}{m1.groups()[0]} ({m1.groups()[2]}-{m1.groups()[3]})'
-        elif m2:
-            if m2.groups()[0] == 'a':
-                label = 'Density (alpha)'
-            if m2.groups()[0] == 'b':
-                label = 'Density (beta)'
-            if m2.groups()[0] == 's':
-                label = 'Density (spin)'
-            if m2.groups()[0] == 't':
-                label = 'Density (total)'
-        else:
-            label = k
-        labels_to_filename[label] = k
-    sorted_labels = sorted(labels_to_filename.keys())
-
-    box_layout = widgets.Layout(border='0px solid black',
-                                width=f'{width + 50}px',
-                                height=f'{height + 100}px')
-
-    def f(label, cubes, labels_to_filename):
-        filename = labels_to_filename[label]
-        cube = cubes[filename]
-        renderer = Py3JSRenderer(width=width, height=height)
-        type = 'mo'
-        if label[0] == 'D':
-            type = 'density'
-        renderer.add_cubefile(cube, scale=scale, type=type)
-        style = f'font-size:{font_size}px;font-family:{font_family};font-weight: bold;'
-        mo_label = widgets.HTML(
-            value=f'<div align="center" style="{style}">{label}</div>')
-        file_label = widgets.HTML(
-            value=f'<div align="center">({filename})</div>')
-        display(
-            widgets.VBox([mo_label, renderer.renderer, file_label],
-                         layout=box_layout))
-
-    ws = widgets.Select(options=sorted_labels, description='Cube files:')
-    interactive_widget = widgets.interactive(
-        f,
-        label=ws,
-        cubes=widgets.fixed(cubes),
-        labels_to_filename=widgets.fixed(labels_to_filename))
-    output = interactive_widget.children[-1]
-    output.layout.height = f'{height + 100}px'
-    style = """
-    <style>
-       .jupyter-widgets-output-area .output_scroll {
-            height: unset !important;
-            border-radius: unset !important;
-            -webkit-box-shadow: unset !important;
-            box-shadow: unset !important;
-        }
-        .jupyter-widgets-output-area  {
-            height: auto !important;
-        }
-    </style>
-    """
-    display(widgets.HTML(style))
-    display(interactive_widget)
-
-
-def plot_cubes(cubes,
-               scale=1.0,
-               font_size=16,
-               font_family='Helvetica',
-               ncols=4,
-               width=900,
-               show_text=True,
-               Renderer=Py3JSRenderer):
-    """
-    Use the
-
-    Parameters
-    ----------
-    cubes : dict
-        a dictionary of CubeFile objects
-    scale : float
-        the scale factor used to make a molecule smaller or bigger (default = 1.0)
-    font_size : int
-        the font size (default = 16)
-    font_family : str
-        the font used to label the orbitals (default = Helvetica)
-    ncols : int
-        the number of columns (default = 4)
-    width : int
-        the width of the plot in pixels (default = 900)
-    show_text : bool
-        show the name of the cube file under the plot? (default = True)
-    """
-
-    import ipywidgets as widgets
-
-    col_width = width / ncols
-    mo_widgets = []
-    box_layout = widgets.Layout(border='0px solid black',
-                                width=f'{col_width}px',
-                                height=f'{col_width + 35}px')
-    mo_renderers = []
-    keys = sorted(cubes.keys())
-    for label in keys:
-        cube = cubes[label]
-
-        mo_renderer = Renderer(width=col_width, height=col_width)
-        mo_renderer.add_cubefile(cube, scale=scale)
-        if show_text:
-            # check if this cube file was generated by psi4
-            psi4_label_re = r'Psi_([a|b])_(\d+)_(\d+)-([\w\d]*)\.cube'
-            m = re.match(psi4_label_re, label)
-            if m:
-                mo_label = f'MO {m.groups()[1]} ({m.groups()[2]}{m.groups()[3]})'
-            else:
-                mo_label = label
-
-            style = f'font-size:{font_size}px;font-family:{font_family};font-weight: bold;'
-            mo_label = widgets.HTML(
-                value=f'<div align="center" style="{style}">{mo_label}</div>')
-            mo_widgets.append(
-                widgets.VBox([mo_renderer.renderer, mo_label],
-                             layout=box_layout))
-        else:
-            mo_widgets.append(mo_renderer.renderer)
-        mo_renderers.append(mo_renderer)
-    box = widgets.GridBox(
-        mo_widgets,
-        layout=widgets.Layout(
-            grid_template_columns=f'repeat({ncols}, {col_width}px)'))
-    return (box, mo_renderers)
-
+#            mo_widgets.append(mo_renderer.renderer)
+#        mo_renderers.append(mo_renderer)
+#    box = widgets.GridBox(
+#        mo_widgets,
+#        layout=widgets.Layout(
+#            grid_template_columns=f'repeat({ncols}, {col_width}px)'))
+#    return (box, mo_renderers)
 
 #    def load_cube_geometry(self, filename, do_display=True):
 #        cube = parse_cube(filename)
@@ -751,7 +762,7 @@ def plot_cubes(cubes,
 #        for Z, xyz in zip(cube['atom_numbers'], cube['atom_coords']):
 #            symbol = ATOM_DATA[Z]['symbol']
 #            atoms_list.append((symbol, xyz[0], xyz[1], xyz[2]))
-#        self.add_molecule_dict(atoms_list, bohr=True)
+#        self.add_molecule_list(atoms_list, bohr=True)
 
 #    def add_isosurface(self, filename, levels=None, colors=None):
 #        cube = parse_cube(filename)
@@ -768,8 +779,6 @@ def plot_cubes(cubes,
 #                    data, level=level, color=color, extent=extent)
 #                self.iso.append(mesh)
 #                self.scene.add(mesh)
-
-
 
 #    def add_cylinder(self, xyz1, xyz2, radius1, radius2, color):
 #        mesh = self.cylinder(xyz1, xyz2, radius1, radius2, color)
