@@ -137,6 +137,29 @@ class Py3JSRenderer():
         self.atom_geometries[symbol] = geometry
         return geometry
 
+    def get_atom_material(self, symbol, shininess=75):
+        """
+        This function returns a Material object used to draw atoms
+
+        Parameters
+        ----------
+        symbol : str
+            The symbol of the atom (e.g. 'Li')
+        shininess : int
+            The shininess of the material (default = 75)
+        """
+        if symbol in self.atom_materials:
+            return self.atom_materials[symbol]
+        atom_data = ATOM_DATA[ATOM_SYMBOL_TO_Z[symbol]]
+        color = 'rgb({0[0]},{0[1]},{0[2]})'.format(atom_data['color'])
+#        material = MeshPhongMaterial(color=color, shininess=shininess)
+        material = MeshStandardMaterial(
+            color=color,
+            roughness=0.25,
+            metalness=0.1)
+        self.atom_materials[symbol] = material
+        return material
+
     def get_bond_geometry(self):
         """
         This function returns a cylinder geometry object of unit height used to draw bonds
@@ -161,7 +184,7 @@ class Py3JSRenderer():
         color : str
             Hexadecimal color code
         shininess : int
-            The shininess of the cylinder used to draw the bond (default = 75)
+            The shininess of the material (default = 75)
         """
         if color in self.bond_materials:
             return self.bond_materials[color]
@@ -231,8 +254,8 @@ class Py3JSRenderer():
                   xyz1,
                   xyz2,
                   color,
-                  radius_small=0.075,
-                  radius_large=0.2):
+                  radius_small=0.1,
+                  radius_large=0.3):
         """
         This function adds an arrow  between two points
         atoms 1 and 2
@@ -246,21 +269,21 @@ class Py3JSRenderer():
         color : str
             Hexadecimal color code
         radius_small : float
-            The radius of the arrow
+            The radius of the arrow tail
         radius_large : float
-            The radius of the arrow
+            The radius of the base of the cone
         """
         x1, y1, z1 = xyz1
         x2, y2, z2 = xyz2
-        fraction = 0.7
+        fraction = 0.9
         xyz_base = [
             x1 + (x2 - x1) * fraction, y1 + (y2 - y1) * fraction,
             z1 + (z2 - z1) * fraction
         ]
         mesh = self.cylinder(xyz1, xyz_base, radius_small, radius_small, color)
-        self.scene.add(mesh)
+        self.scene.add([mesh])
         mesh = self.cylinder(xyz_base, xyz2, radius_large, 0.0, color)
-        self.scene.add(mesh)
+        self.scene.add([mesh])
 
     def bond(self, atom1_info, atom2_info, radius=None):
         """
@@ -746,22 +769,7 @@ def plot_cubes(cubes,
 #                self.iso.append(mesh)
 #                self.scene.add(mesh)
 
-#    def get_atom_material(self, symbol, shininess=75):
-#        """
-#        This function returns a cylinder geometry object of unit height used to draw bonds
 
-#        """
-#        if symbol in self.atom_materials:
-#            return self.atom_materials[symbol]
-#        atom_data = ATOM_DATA[ATOM_SYMBOL_TO_Z[symbol]]
-#        color = 'rgb({0[0]},{0[1]},{0[2]})'.format(atom_data['color'])
-##        material = MeshPhongMaterial(color=color, shininess=shininess)
-#        material = MeshStandardMaterial(
-#            color=color,
-#            roughness=0.25,
-#            metalness=0.1)
-#        self.atom_materials[symbol] = material
-#        return material
 
 #    def add_cylinder(self, xyz1, xyz2, radius1, radius2, color):
 #        mesh = self.cylinder(xyz1, xyz2, radius1, radius2, color)
