@@ -22,6 +22,7 @@ import time
 import psi4
 import forte
 
+
 def get_occ(ordm, nact):
     alfa = np.asarray(ordm[0])
     beta = np.asarray(ordm[1])
@@ -44,8 +45,9 @@ def run_sci(ints, scf_info, wfn, selector):
     #     print(mo_space_map)
     #     print(mo_reordering)
 
-    mo_space_info = forte.make_mo_space_info_from_map(
-        wfn, mo_space_map, reorder=mo_reordering)
+    mo_space_info = forte.make_mo_space_info_from_map(wfn,
+                                                      mo_space_map,
+                                                      reorder=mo_reordering)
 
     #     print(mo_space_info.get_corr_abs_mo('ACTIVE'))
     #     print(mo_space_info.get_corr_abs_mo('RESTRICTED_DOCC'))
@@ -58,9 +60,9 @@ def run_sci(ints, scf_info, wfn, selector):
     nactv = sum(mo_space_map['ACTIVE'])
     nrdocc = sum(mo_space_map['RESTRICTED_DOCC'])
 
-#    options = psi4.core.get_options()
-#    options.set_current_module('FORTE')
-#    forte.forte_options.update_psi_options(options)
+    #    options = psi4.core.get_options()
+    #    options.set_current_module('FORTE')
+    #    forte.forte_options.update_psi_options(options)
 
     options = forte.forte_options
     options.set_str('ACTIVE_REF_TYPE', 'CISD')
@@ -94,17 +96,16 @@ def run_sci(ints, scf_info, wfn, selector):
         num_dets = min(
             3,
             int(
-                scipy.special.binom(nactv, na_act) * scipy.special.binom(
-                    nactv, nb_act)))
+                scipy.special.binom(nactv, na_act) *
+                scipy.special.binom(nactv, nb_act)))
         #         print(k, num_dets)
         twice_ms = na - nb + 2 * k
         multiplicity = twice_ms + 1
-        state = forte.StateInfo(
-            na=na + k,
-            nb=nb - k,
-            multiplicity=multiplicity,
-            twice_ms=twice_ms,
-            irrep=0)
+        state = forte.StateInfo(na=na + k,
+                                nb=nb - k,
+                                multiplicity=multiplicity,
+                                twice_ms=twice_ms,
+                                irrep=0)
         #         state_vec.append((,num_dets))
         if num_dets > 0:
             state_map[state] = num_dets
@@ -126,8 +127,8 @@ def run_sci(ints, scf_info, wfn, selector):
     for key, val in en.items():
         for n, energy in enumerate(val):
             ref = as_solver.rdms({(key, key): [(n, n)]}, 1)
-#            ordm = forte.get_rdm_data(ref[0], 1) # TODO-PR reintroduce
-#            occs.append(get_occ(ordm, nact)) # TODO-PR reintroduce
+            #            ordm = forte.get_rdm_data(ref[0], 1) # TODO-PR reintroduce
+            #            occs.append(get_occ(ordm, nact)) # TODO-PR reintroduce
             occs.append(0.0)
             label = "{}-{}".format(n + 1, key.multiplicity_label())
             energies.append((en[key][n], label, key.multiplicity()))
@@ -140,17 +141,14 @@ def make_mo_plot(energies, occs):
 
     rgb_colors = [
         (0, 0, 0),  # Black  
-        (
-            0, 78, 139
+        (0, 78, 139
         ),  # Dark blue                                                                                 
         (89, 171, 131),  # green          
         (225, 27, 46),  # Reddish                
         (255, 205, 65),  # Dark yellow    
-        (
-            97, 202, 228
+        (97, 202, 228
         ),  # Light blue                                                                                                                                                                           
-        (
-            0, 130, 183
+        (0, 130, 183
         ),  # Blue                                                                                      
     ]
 
@@ -165,14 +163,13 @@ def make_mo_plot(energies, occs):
 
     ax = plt.gca()
 
-    ax.tick_params(
-        direction='out',
-        width=1.0,
-        length=3.0,
-        axis='x',
-        which='both',
-        bottom=False,
-        top=False)
+    ax.tick_params(direction='out',
+                   width=1.0,
+                   length=3.0,
+                   axis='x',
+                   which='both',
+                   bottom=False,
+                   top=False)
 
     ax.spines['right'].set_visible(False)
     ax.spines['top'].set_visible(False)
@@ -224,7 +221,9 @@ def make_mo_plot(energies, occs):
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+
 class Selector():
+
     def __init__(self, ints, scf_info, wfn, cube_dir='.', run=False):
         self.box_width = 200
         self.box_height = 200
@@ -277,20 +276,19 @@ class Selector():
         maxwidgets_per_row = 4
         widget_rows = []
 
-        box_layout = widgets.Layout(
-            border='0px solid black',
-            width='',
-            height='',
-            flex_direction='row',
-            display='flex')
+        box_layout = widgets.Layout(border='0px solid black',
+                                    width='',
+                                    height='',
+                                    flex_direction='row',
+                                    display='flex')
 
         rows = []
         current_row = []
         button_list = []
         for mo in mo_list:
             cube_file_name = self.cube_dir + '/' + mo['file_name'] + '.cube'
-            mol_renderer = FortePy3JSRenderer(
-                width=self.box_width, height=self.box_height)
+            mol_renderer = FortePy3JSRenderer(width=self.box_width,
+                                              height=self.box_height)
             cubefile = CubeFile(cube_file_name)
             mol_renderer.add_cubefile(cubefile)
             image = mol_renderer.renderer
@@ -298,8 +296,9 @@ class Selector():
             label = '{}) {} {} (eps={:.3f},occ={})'.format(
                 mo['mo_num'] + 1, mo['symmetry'][0], mo['symmetry'][1],
                 mo['epsilon'], mo['occ'])
-            button = widgets.ToggleButton(
-                value=False, description=label, layout={'width': '200px'})
+            button = widgets.ToggleButton(value=False,
+                                          description=label,
+                                          layout={'width': '200px'})
 
             hb = widgets.VBox([image, button], layout=box_layout)
             button_list.append(button)
@@ -312,28 +311,26 @@ class Selector():
             rows.append(widgets.HBox(current_row))
 
         if self.debug:
-            self.occ_w = widgets.Textarea(
-                value='',
-                placeholder='',
-                description='Orbital Spaces Size:',
-                disabled=True,
-                layout={
-                    'height': '100px',
-                    'width': '800px',
-                    'margin': '0px 0px 0px 0px'
-                })
+            self.occ_w = widgets.Textarea(value='',
+                                          placeholder='',
+                                          description='Orbital Spaces Size:',
+                                          disabled=True,
+                                          layout={
+                                              'height': '100px',
+                                              'width': '800px',
+                                              'margin': '0px 0px 0px 0px'
+                                          })
             rows.append(self.occ_w)
 
-            self.plot = widgets.Textarea(
-                value='',
-                placeholder='',
-                description='CI Results',
-                disabled=True,
-                layout={
-                    'height': '100px',
-                    'width': '800px',
-                    'margin': '0px 0px 0px 0px'
-                })
+            self.plot = widgets.Textarea(value='',
+                                         placeholder='',
+                                         description='CI Results',
+                                         disabled=True,
+                                         layout={
+                                             'height': '100px',
+                                             'width': '800px',
+                                             'margin': '0px 0px 0px 0px'
+                                         })
             rows.append(self.plot)
 
         self.out = widgets.Output()

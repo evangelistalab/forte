@@ -8,15 +8,19 @@ from IPython.display import display
 from pythreejs import *
 from .atom_data import *
 
+
 def xyz_to_atoms_list(xyz):
     atoms_list = []
-    re_xyz = re.compile(r"(\w+)\s+([-+]?[0-9]*\.?[0-9]+)\s+([-+]?[0-9]*\.?[0-9]+)\s+([-+]?[0-9]*\.?[0-9]+)")
+    re_xyz = re.compile(
+        r"(\w+)\s+([-+]?[0-9]*\.?[0-9]+)\s+([-+]?[0-9]*\.?[0-9]+)\s+([-+]?[0-9]*\.?[0-9]+)"
+    )
     for line in xyz.split('\n'):
-        m = re.search(re_xyz,line)
+        m = re.search(re_xyz, line)
         if (m):
-            label,x,y,z = m.groups()
-            atoms_list.append((label,float(x),float(y),float(z)))
+            label, x, y, z = m.groups()
+            atoms_list.append((label, float(x), float(y), float(z)))
     return atoms_list
+
 
 def compute_isosurface(data, level=None, color=None, extent=None):
     """
@@ -127,8 +131,9 @@ class Py3JSRenderer():
             return self.atom_geometries[symbol]
         atom_data = ATOM_DATA[ATOM_SYMBOL_TO_Z[symbol]]
         radius_covalent = atom_data['radius_covalent'] * self.angtobohr
-        geometry = SphereGeometry(
-            radius=self.atom_size * radius_covalent, widthSegments=24, heightSegments=24)
+        geometry = SphereGeometry(radius=self.atom_size * radius_covalent,
+                                  widthSegments=24,
+                                  heightSegments=24)
         self.atom_geometries[symbol] = geometry
         return geometry
 
@@ -139,13 +144,12 @@ class Py3JSRenderer():
         """
         if self.bond_geometry:
             return self.bond_geometry
-        self.bond_geometry = CylinderGeometry(
-            radiusTop=self.bond_radius,
-            radiusBottom=self.bond_radius,
-            height=1,
-            radialSegments=12,
-            heightSegments=6,
-            openEnded=False)
+        self.bond_geometry = CylinderGeometry(radiusTop=self.bond_radius,
+                                              radiusBottom=self.bond_radius,
+                                              height=1,
+                                              radialSegments=12,
+                                              heightSegments=6,
+                                              openEnded=False)
         return self.bond_geometry
 
     def get_bond_material(self, color, shininess=75):
@@ -161,10 +165,9 @@ class Py3JSRenderer():
         """
         if color in self.bond_materials:
             return self.bond_materials[color]
-        material = MeshStandardMaterial(
-            color=color,
-            roughness=0.25,
-            metalness=0.1)
+        material = MeshStandardMaterial(color=color,
+                                        roughness=0.25,
+                                        metalness=0.1)
         self.bond_materials[color] = material
         return material
 
@@ -206,13 +209,12 @@ class Py3JSRenderer():
         x2, y2, z2 = xyz2
         d = sqrt((x1 - x2)**2 + (y1 - y2)**2 + (z1 - z2)**2)
         position = [(x2 + x1) / 2, (y2 + y1) / 2, (z2 + z1) / 2]
-        geometry = CylinderGeometry(
-            radiusTop=radius2,
-            radiusBottom=radius1,
-            height=d,
-            radialSegments=12,
-            heightSegments=6,
-            openEnded=False)
+        geometry = CylinderGeometry(radiusTop=radius2,
+                                    radiusBottom=radius1,
+                                    height=d,
+                                    radialSegments=12,
+                                    heightSegments=6,
+                                    openEnded=False)
         material = MeshPhongMaterial(color=color, shininess=100)
         mesh = Mesh(geometry=geometry, material=material, position=position)
 
@@ -231,6 +233,23 @@ class Py3JSRenderer():
                   color,
                   radius_small=0.075,
                   radius_large=0.2):
+        """
+        This function adds an arrow  between two points
+        atoms 1 and 2
+
+        Parameters
+        ----------
+        xyz1 : tuple(float, float, float)
+            The (x1, y1, z1) coordinates of the beginning of the arrow
+        xyz2 : tuple(float, float, float)
+            The (x2, y2, z2) coordinates of the end of the arrow
+        color : str
+            Hexadecimal color code
+        radius_small : float
+            The radius of the arrow
+        radius_large : float
+            The radius of the arrow
+        """
         x1, y1, z1 = xyz1
         x2, y2, z2 = xyz2
         fraction = 0.7
@@ -244,6 +263,23 @@ class Py3JSRenderer():
         self.scene.add(mesh)
 
     def bond(self, atom1_info, atom2_info, radius=None):
+        """
+        This function adds a bond between two atoms
+        atoms 1 and 2
+
+        Parameters
+        ----------
+        xyz1 : tuple(float, float, float)
+            The (x1, y1, z1) coordinates of the beginning of the arrow
+        xyz2 : tuple(float, float, float)
+            The (x2, y2, z2) coordinates of the end of the arrow
+        color : str
+            Hexadecimal color code
+        radius_small : float
+            The radius of the arrow
+        radius_large : float
+            The radius of the arrow
+        """
         symbol1, x1, y1, z1 = atom1_info
         symbol2, x2, y2, z2 = atom2_info
         d = sqrt((x1 - x2)**2 + (y1 - y2)**2 + (z1 - z2)**2)
@@ -263,13 +299,13 @@ class Py3JSRenderer():
         geometry = self.get_bond_geometry()
         material = self.get_bond_material(color=self.bond_color)
         mesh = Mesh(geometry=geometry, material=material, position=position)
-        mesh.scale = (1,d,1)
+        mesh.scale = (1, d, 1)
         # If the bond rotation is 180 deg then return
         if y1 - y2 == d:
-            mesh.rotateX(3.14159265359) #math.pi)
+            mesh.rotateX(3.14159265359)  #math.pi)
             return mesh
 
-        R = self.cylinder_rotation_matrix([x1,y1,z1], [x2,y2,z2], d)
+        R = self.cylinder_rotation_matrix([x1, y1, z1], [x2, y2, z2], d)
         mesh.setRotationFromMatrix(R)
         return mesh
 
@@ -290,9 +326,16 @@ class Py3JSRenderer():
         ]
         return R
 
-    def isosurface(self, data, level=None, color=None, extent=None, opacity = 1.0):
-        vertices, faces = compute_isosurface(
-            data, level=level, color=color, extent=extent)
+    def isosurface(self,
+                   data,
+                   level=None,
+                   color=None,
+                   extent=None,
+                   opacity=1.0):
+        vertices, faces = compute_isosurface(data,
+                                             level=level,
+                                             color=color,
+                                             extent=extent)
 
         # Create the geometry
         isoSurfaceGeometry = Geometry(vertices=vertices, faces=faces)
@@ -301,35 +344,30 @@ class Py3JSRenderer():
         isoSurfaceGeometry.exec_three_obj_method('computeVertexNormals')
 
         # Note that the material need to be told to use the vertex colors
-#        material = MeshPhongMaterial(
-#            vertexColors='VertexColors',
-#            shinyness=5,
-#            side='DoubleSide',
-#            transparent=True,
-#            opacity=1.0)
+        #        material = MeshPhongMaterial(
+        #            vertexColors='VertexColors',
+        #            shinyness=5,
+        #            side='DoubleSide',
+        #            transparent=True,
+        #            opacity=1.0)
 
-        material = MeshStandardMaterial(
-            vertexColors='VertexColors',
-            roughness=0.3,
-            metalness=0.0,
-            side='DoubleSide',
-            transparent=True,
-            opacity=opacity)
-
-
+        material = MeshStandardMaterial(vertexColors='VertexColors',
+                                        roughness=0.3,
+                                        metalness=0.0,
+                                        side='DoubleSide',
+                                        transparent=True,
+                                        opacity=opacity)
 
         # Create a mesh
         isoSurfaceMesh = Mesh(geometry=isoSurfaceGeometry, material=material)
 
         return isoSurfaceMesh
 
-
-    def add_molecule_xyz(self, xyz, bohr=False, scale = 1.0):
+    def add_molecule_xyz(self, xyz, bohr=False, scale=1.0):
         atoms_list = xyz_to_atoms_list(xyz)
         self.add_molecule_dict(atoms_list, bohr, scale)
 
-
-    def add_molecule_dict(self, atoms_list, bohr=False, scale = 1.0):
+    def add_molecule_dict(self, atoms_list, bohr=False, scale=1.0):
         """Add a molecule"""
         if bohr == False:
             atoms_list2 = []
@@ -340,23 +378,25 @@ class Py3JSRenderer():
                 atoms_list2.append(new_atom)
             atoms_list = atoms_list2
 
-        self.com = self.center_of_mass(atoms_list) # TODO: fix this if multiple molecules are added
+        self.com = self.center_of_mass(
+            atoms_list)  # TODO: fix this if multiple molecules are added
 
         self.molecule = Group()
 
-#        self.atoms = []
-#        for atom in atoms_list:
-#            self.atoms.append(self.atom(atom))
+        #        self.atoms = []
+        #        for atom in atoms_list:
+        #            self.atoms.append(self.atom(atom))
 
         # Performance optimization using CloneArray
         atom_positions = collections.defaultdict(list)
         for atom in atoms_list:
             symbol, x, y, z = atom
-            atom_positions[symbol].append([x,y,z])
+            atom_positions[symbol].append([x, y, z])
 
         for atom_type in atom_positions:
-            atom_mesh = self.atom((atom_type,0.0,0.0,0.0))
-            clone_geom = CloneArray(original=atom_mesh,positions=atom_positions[atom_type])
+            atom_mesh = self.atom((atom_type, 0.0, 0.0, 0.0))
+            clone_geom = CloneArray(original=atom_mesh,
+                                    positions=atom_positions[atom_type])
             self.atoms.append(clone_geom)
 
         self.bonds = []
@@ -374,35 +414,43 @@ class Py3JSRenderer():
         extents = self.molecule_extents(atoms_list)
         l = 1.75 * max(max(extents), abs(min(extents))) / scale
 
-        camera = OrthographicCamera(
-            left=-l * aspect,
-            right=l * aspect,
-            top=l,
-            bottom=-l,
-            position=[0, l * 1.5, l * 1.5],
-            up=[0, 1, 0],
-            children=[
-                DirectionalLight(
-                    color='white', position=[5, 5, 1], intensity=0.5)
-            ],
-            near=.1,
-            far=1000)
+        camera = OrthographicCamera(left=-l * aspect,
+                                    right=l * aspect,
+                                    top=l,
+                                    bottom=-l,
+                                    position=[0, l * 1.5, l * 1.5],
+                                    up=[0, 1, 0],
+                                    children=[
+                                        DirectionalLight(color='white',
+                                                         position=[5, 5, 1],
+                                                         intensity=0.5)
+                                    ],
+                                    near=.1,
+                                    far=1000)
 
         scene_children = [camera, AmbientLight(color='#999999')]
         scene_children = scene_children + self.atoms + self.bonds  #+ x_box,y_box,z_box
 
         self.scene.add(scene_children)
 
-        self.renderer = Renderer(
-            camera=camera,
-            scene=self.scene,
-            controls=[OrbitControls(controlling=camera)],
-            width=self.width,
-            height=self.height)
+        self.renderer = Renderer(camera=camera,
+                                 scene=self.scene,
+                                 controls=[OrbitControls(controlling=camera)],
+                                 width=self.width,
+                                 height=self.height)
 
         return self.renderer
 
-    def add_cubefile(self, cube, type = 'mo', add_geom=True, levels=None, colors=None, colorscheme=None,opacity=1.0,scale=1.0,sumlevel=0.85):
+    def add_cubefile(self,
+                     cube,
+                     type='mo',
+                     add_geom=True,
+                     levels=None,
+                     colors=None,
+                     colorscheme=None,
+                     opacity=1.0,
+                     scale=1.0,
+                     sumlevel=0.85):
         if add_geom:
             atoms_list = []
             for Z, xyz in zip(cube.atom_numbers(), cube.atom_coords()):
@@ -417,24 +465,27 @@ class Py3JSRenderer():
         if colorscheme == 'national':
             colors = ['#e60000', '#0033a0']
         elif colorscheme == 'bright':
-            colors = ['#ffcc00','#00bfff']
+            colors = ['#ffcc00', '#00bfff']
         elif colorscheme == 'electron':
-            colors = ['#ff00bf','#2eb82e']
+            colors = ['#ff00bf', '#2eb82e']
         elif colorscheme == 'wow':
-            colors = ['#AC07F2','#D7F205']
+            colors = ['#AC07F2', '#D7F205']
         else:
             if colors == None:
                 colors = ['#f2a900', '#0033a0']
 
         # grab the data and extents
         data = cube.data()
-        extent = [[cube.min()[0], cube.max()[0]],
-                  [cube.min()[1], cube.max()[1]],
+        extent = [[cube.min()[0],
+                   cube.max()[0]], [cube.min()[1], cube.max()[1]],
                   [cube.min()[2], cube.max()[2]]]
         for level, color in zip(levels, colors):
             if abs(level) > 1.0e-4:
-                mesh = self.isosurface(
-                    data, level=level, color=color, extent=extent,opacity=opacity)
+                mesh = self.isosurface(data,
+                                       level=level,
+                                       color=color,
+                                       extent=extent,
+                                       opacity=opacity)
                 self.iso.append(mesh)
                 self.scene.add(mesh)
 
@@ -447,24 +498,39 @@ class Py3JSRenderer():
         maxz = min(map(lambda x: x[3], atoms_list))
         return (minx, maxx, miny, maxy, minz, maxz)
 
-    def shift_to_com(self):
-        X, Y ,Z = self.com
+    def shift_to_com(self,com):
+        """
+        Shift the molecule to the center of mass
+
+        Parameters
+        ----------
+        com : tuple(float, float, float)
+            The (X,Y,Z) coordinates of the center of mass
+        """
+        X, Y, Z = com
         for atom in self.atoms:
             pos = atom.position
-            atom.position = (pos[0] - X, pos[1] - Y,pos[2] - Z)
+            atom.position = (pos[0] - X, pos[1] - Y, pos[2] - Z)
         for bond in self.bonds:
             pos = bond.position
-            bond.position = (pos[0] - X, pos[1] - Y,pos[2] - Z)
+            bond.position = (pos[0] - X, pos[1] - Y, pos[2] - Z)
 
     def center_of_mass(self, atoms_list):
+        """
+        This function returns the center of mass of a molecule
+
+        Parameters
+        ----------
+        atoms_list : list(tuple(str, float, float, float))
+            A list of tuples containing the atomic symbol and coordinates of the atom using the format
+            (atomic symbol,x,y,z)
+        """
         X = 0.0
         Y = 0.0
         Z = 0.0
         M = 0.0
-        for atom_info in atoms_list:
-            symbol, x, y, z = atom_info
-            mass = ATOM_DATA[
-            ATOM_SYMBOL_TO_Z[symbol]]['mass']
+        for (symbol, x, y, z) in atoms_list:
+            mass = ATOM_DATA[ATOM_SYMBOL_TO_Z[symbol]]['mass']
             X += mass * x
             Y += mass * y
             Z += mass * z
@@ -472,9 +538,15 @@ class Py3JSRenderer():
         return (X / M, Y / M, Z / M)
 
     def display(self):
+        """
+        Display this renderer
+        """
         display(self.renderer)
 
     def renderer(self):
+        """
+        Return the Renderer object
+        """
         return self.renderer
 
 
@@ -504,7 +576,13 @@ class Py3JSRenderer():
 #    widgets.interact(f, label=sorted_labels,cubes=widgets.fixed(cubes),labels_to_filename=widgets.fixed(labels_to_filename));
 
 
-def cube_file_viewer(cubes, scale = 0.5, font_size=16, font_family='Helvetica', width = 400, height = 400, show_text=True):
+def cube_file_viewer(cubes,
+                     scale=0.5,
+                     font_size=16,
+                     font_family='Helvetica',
+                     width=400,
+                     height=400,
+                     show_text=True):
     # convert cube file names into human readable text
     import ipywidgets as widgets
     import re
@@ -530,7 +608,9 @@ def cube_file_viewer(cubes, scale = 0.5, font_size=16, font_family='Helvetica', 
         labels_to_filename[label] = k
     sorted_labels = sorted(labels_to_filename.keys())
 
-    box_layout = widgets.Layout(border='0px solid black',width=f'{width + 50}px',height=f'{height + 100}px')
+    box_layout = widgets.Layout(border='0px solid black',
+                                width=f'{width + 50}px',
+                                height=f'{height + 100}px')
 
     def f(label, cubes, labels_to_filename):
         filename = labels_to_filename[label]
@@ -539,14 +619,22 @@ def cube_file_viewer(cubes, scale = 0.5, font_size=16, font_family='Helvetica', 
         type = 'mo'
         if label[0] == 'D':
             type = 'density'
-        renderer.add_cubefile(cube,scale=scale,type=type)
+        renderer.add_cubefile(cube, scale=scale, type=type)
         style = f'font-size:{font_size}px;font-family:{font_family};font-weight: bold;'
-        mo_label = widgets.HTML(value=f'<div align="center" style="{style}">{label}</div>')
-        file_label = widgets.HTML(value=f'<div align="center">({filename})</div>')
-        display(widgets.VBox([mo_label,renderer.renderer,file_label],layout=box_layout))
+        mo_label = widgets.HTML(
+            value=f'<div align="center" style="{style}">{label}</div>')
+        file_label = widgets.HTML(
+            value=f'<div align="center">({filename})</div>')
+        display(
+            widgets.VBox([mo_label, renderer.renderer, file_label],
+                         layout=box_layout))
 
-    ws = widgets.Select(options=sorted_labels,description='Cube files:')
-    interactive_widget = widgets.interactive(f, label=ws,cubes=widgets.fixed(cubes),labels_to_filename=widgets.fixed(labels_to_filename));
+    ws = widgets.Select(options=sorted_labels, description='Cube files:')
+    interactive_widget = widgets.interactive(
+        f,
+        label=ws,
+        cubes=widgets.fixed(cubes),
+        labels_to_filename=widgets.fixed(labels_to_filename))
     output = interactive_widget.children[-1]
     output.layout.height = f'{height + 100}px'
     style = """
@@ -566,7 +654,14 @@ def cube_file_viewer(cubes, scale = 0.5, font_size=16, font_family='Helvetica', 
     display(interactive_widget)
 
 
-def plot_cubes(cubes, scale = 1.0, font_size=16, font_family='Helvetica', ncols = 4, width = 900, show_text=True, Renderer = Py3JSRenderer):
+def plot_cubes(cubes,
+               scale=1.0,
+               font_size=16,
+               font_family='Helvetica',
+               ncols=4,
+               width=900,
+               show_text=True,
+               Renderer=Py3JSRenderer):
     """
     Use the
 
@@ -593,15 +688,15 @@ def plot_cubes(cubes, scale = 1.0, font_size=16, font_family='Helvetica', ncols 
     col_width = width / ncols
     mo_widgets = []
     box_layout = widgets.Layout(border='0px solid black',
-        width=f'{col_width}px',
-        height=f'{col_width + 35}px')
+                                width=f'{col_width}px',
+                                height=f'{col_width + 35}px')
     mo_renderers = []
     keys = sorted(cubes.keys())
     for label in keys:
         cube = cubes[label]
 
         mo_renderer = Renderer(width=col_width, height=col_width)
-        mo_renderer.add_cubefile(cube,scale=scale)
+        mo_renderer.add_cubefile(cube, scale=scale)
         if show_text:
             # check if this cube file was generated by psi4
             psi4_label_re = r'Psi_([a|b])_(\d+)_(\d+)-([\w\d]*)\.cube'
@@ -612,13 +707,20 @@ def plot_cubes(cubes, scale = 1.0, font_size=16, font_family='Helvetica', ncols 
                 mo_label = label
 
             style = f'font-size:{font_size}px;font-family:{font_family};font-weight: bold;'
-            mo_label = widgets.HTML(value=f'<div align="center" style="{style}">{mo_label}</div>')
-            mo_widgets.append(widgets.VBox([mo_renderer.renderer,mo_label],layout=box_layout))
+            mo_label = widgets.HTML(
+                value=f'<div align="center" style="{style}">{mo_label}</div>')
+            mo_widgets.append(
+                widgets.VBox([mo_renderer.renderer, mo_label],
+                             layout=box_layout))
         else:
             mo_widgets.append(mo_renderer.renderer)
         mo_renderers.append(mo_renderer)
-    box = widgets.GridBox(mo_widgets, layout=widgets.Layout(grid_template_columns=f'repeat({ncols}, {col_width}px)'))
-    return (box,mo_renderers)
+    box = widgets.GridBox(
+        mo_widgets,
+        layout=widgets.Layout(
+            grid_template_columns=f'repeat({ncols}, {col_width}px)'))
+    return (box, mo_renderers)
+
 
 #    def load_cube_geometry(self, filename, do_display=True):
 #        cube = parse_cube(filename)
@@ -643,7 +745,6 @@ def plot_cubes(cubes, scale = 1.0, font_size=16, font_family='Helvetica', ncols 
 #                    data, level=level, color=color, extent=extent)
 #                self.iso.append(mesh)
 #                self.scene.add(mesh)
-
 
 #    def get_atom_material(self, symbol, shininess=75):
 #        """
