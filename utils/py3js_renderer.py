@@ -102,7 +102,7 @@ class Py3JSRenderer():
             right=self.camera_width / 2,
             top=self.camera_height / 2,
             bottom=-self.camera_height / 2,
-            position=[0, self.camera_height * 1.5, self.camera_height * 1.5],
+            position=[0, 0, self.camera_height * 2.0],
             up=[0, 1, 0],
             children=[
                 DirectionalLight(color='white',
@@ -294,6 +294,86 @@ class Py3JSRenderer():
         mesh = self.cylinder(xyz_base, xyz2, radius_large, 0.0, color)
         self.scene.add([mesh])
 
+
+    def plane_rotation_matrix(self, normal):
+        """
+        Computes the rotation matrix that converts a plane (circle/square) geometry in
+        its standard orientation to one in which the plane is orthogonal to a given
+        vector (normal). By default, planes in pythreejs are orthogonal to the vector (0,0,1),
+        that is, they lay on the xy plane
+
+        Parameters
+        ----------
+        normal : tuple(float, float, float)
+            The vector to which we want to make a plane orthogonal
+        """
+        # normalize the vector
+        x, y, z = normal
+        d = sqrt(x**2 + y**2 + z**2)
+        x /= d
+        y /= d
+        z /= d
+
+        # compute the cross product: normal x (0,0,1)
+        c0 = normal[1]
+        c1 = -normal[0]
+        c2 = 0.0
+
+        # compute the dot product: normal . (0,0,1)
+        dot = normal[2]
+        c = dot
+        s = sqrt(1 - c**2)
+
+        # rotation matrix, see https://en.wikipedia.org/wiki/Rotation_matrix#Rotation_matrix_from_axis_and_angle
+        R = [
+            c + (1 - c) * c0**2, c0 * c1 * (1 - c), c1 * s,
+            c0 * c1 * (1 - c), c + (1 - c) * c1**2, -c0 * s,
+            -c1 * s, c0 * s, c
+        ]
+        return R
+
+    def add_plane(self,position,plane = None, normal = None,color = '#000000',opacity=1.0,type='circle',width=4,height=4):
+        if type == 'plane':
+            geometry = PlaneGeometry(width=width,height=height,widthSegments=10,heightSegments=10)
+        else:
+            geometry = CircleGeometry(radius=width, segments=24)
+
+        material = MeshStandardMaterial(vertexColors='VertexColors',
+                                        roughness=0.0,
+                                        metalness=0.4,
+                                        side='DoubleSide',
+                                        transparent=True,
+                                        opacity=opacity)
+
+        mesh = Mesh(geometry=geometry, material=material, position=position)
+
+        # If the bond rotation is 180 deg then return
+        if normal[2] != 1.0 or normal[2] != -1.0:
+            R = self.plane_rotation_matrix(normal)
+            mesh.setRotationFromMatrix(R)
+        self.scene.add(mesh)
+
+    def add_box(self,color,width,height,depth,position,opacity=1.0,normal=(0,0,1)):
+        geometry = BoxGeometry(width=width,height=height,depth=depth,widthSegments=10,heightSegments=10,depthSegments=10)
+
+        # width = x
+        # height = y
+        # depth = z
+        material = MeshStandardMaterial(vertexColors='VertexColors',
+                                        roughness=0.0,
+                                        metalness=0.4,
+                                        side='DoubleSide',
+                                        transparent=True,
+                                        opacity=opacity)
+
+        mesh = Mesh(geometry=geometry, material=material, position=position)
+
+        # If the bond rotation is 180 deg then return
+        if z != 1.0 or z != -1.0:
+            R = self.plane_rotation_matrix((x,y,z))
+            mesh.setRotationFromMatrix(R)
+        self.scene.add(mesh)
+
     def bond(self, atom1_info, atom2_info, radius=None):
         """
         This function adds a bond between two atoms
@@ -409,7 +489,14 @@ class Py3JSRenderer():
         # Calculate normals per vertex for round edges
         isoSurfaceGeometry.exec_three_obj_method('computeVertexNormals')
 
-        material = MeshStandardMaterial(vertexColors='VertexColors',
+        if opacity == 1.0:
+            material = MeshStandardMaterial(vertexColors='VertexColors',
+                                        roughness=0.3,
+                                        metalness=0.0,
+                                        side='DoubleSide',
+                                        transparent=False)
+        else:
+            material = MeshStandardMaterial(vertexColors='VertexColors',
                                         roughness=0.3,
                                         metalness=0.0,
                                         side='DoubleSide',
