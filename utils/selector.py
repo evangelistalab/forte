@@ -141,14 +141,17 @@ def make_mo_plot(energies, occs):
 
     rgb_colors = [
         (0, 0, 0),  # Black  
-        (0, 78, 139
+        (
+            0, 78, 139
         ),  # Dark blue                                                                                 
         (89, 171, 131),  # green          
         (225, 27, 46),  # Reddish                
         (255, 205, 65),  # Dark yellow    
-        (97, 202, 228
+        (
+            97, 202, 228
         ),  # Light blue                                                                                                                                                                           
-        (0, 130, 183
+        (
+            0, 130, 183
         ),  # Blue                                                                                      
     ]
 
@@ -223,7 +226,6 @@ def make_mo_plot(energies, occs):
 
 
 class Selector():
-
     def __init__(self, ints, scf_info, wfn, cube_dir='.', run=False):
         self.box_width = 200
         self.box_height = 200

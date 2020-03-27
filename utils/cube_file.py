@@ -36,7 +36,6 @@ class CubeFile():
         Multiply every grid point with the value of grid points from another CubeFile
         Performs: self.data *= other.data
     """
-
     def __init__(self, filename=None):
         self.filename = filename
         self.title = None
@@ -57,8 +56,9 @@ class CubeFile():
         with open(filename) as fp:
             self.title = fp.readline().rstrip()
             self.comment = fp.readline().rstrip()
-            m = re.search(r"\(([-+]?[0-9]*\.?[0-9]+)\,([-+]?[0-9]*\.?[0-9]+)\)",
-                          self.comment)
+            m = re.search(
+                r"\(([-+]?[0-9]*\.?[0-9]+)\,([-+]?[0-9]*\.?[0-9]+)\)",
+                self.comment)
             if (m):
                 self.levels = [float(s) for s in m.groups()]
 
@@ -80,8 +80,8 @@ class CubeFile():
 
             self.num = (numx, numy, numz)
             self.inc = (incx, incy, incz)
-            self.max = tuple(
-                self.min[i] + self.inc[i] * self.num[i] for i in range(3))
+            self.max = tuple(self.min[i] + self.inc[i] * self.num[i]
+                             for i in range(3))
 
             atnums = []
             coords = []

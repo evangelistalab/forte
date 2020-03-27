@@ -9,6 +9,13 @@ from pythreejs import *
 from .atom_data import *
 
 
+def rgb2hex(r, g, b):
+    r = max(0, min(r, 255))
+    g = max(0, min(g, 255))
+    b = max(0, min(b, 255))
+    return '#%02x%02x%02x' % (r, g, b)
+
+
 def xyz_to_atoms_list(xyz):
     """
     Converts an xyz geometry to a list of the form
@@ -57,7 +64,6 @@ class Py3JSRenderer():
     says(sound=None)
         Prints the animals name and what sound it makes
     """
-
     def __init__(self, width=400, height=400):
         """
         Class initialization function
@@ -233,6 +239,9 @@ class Py3JSRenderer():
         color : str
             Hexadecimal color code
         """
+
+        radius1 = max(0.01, radius1)
+        radius2 = max(0.01, radius2)
         x1, y1, z1 = xyz1
         x2, y2, z2 = xyz2
         d = sqrt((x1 - x2)**2 + (y1 - y2)**2 + (z1 - z2)**2)
@@ -294,7 +303,6 @@ class Py3JSRenderer():
         mesh = self.cylinder(xyz_base, xyz2, radius_large, 0.0, color)
         self.scene.add([mesh])
 
-
     def plane_rotation_matrix(self, normal):
         """
         Computes the rotation matrix that converts a plane (circle/square) geometry in
@@ -315,53 +323,103 @@ class Py3JSRenderer():
         z /= d
 
         # compute the cross product: normal x (0,0,1)
-        c0 = normal[1]
-        c1 = -normal[0]
+        c0 = y
+        c1 = -x
         c2 = 0.0
 
         # compute the dot product: normal . (0,0,1)
-        dot = normal[2]
+        dot = z
         c = dot
         s = sqrt(1 - c**2)
 
         # rotation matrix, see https://en.wikipedia.org/wiki/Rotation_matrix#Rotation_matrix_from_axis_and_angle
         R = [
-            c + (1 - c) * c0**2, c0 * c1 * (1 - c), c1 * s,
-            c0 * c1 * (1 - c), c + (1 - c) * c1**2, -c0 * s,
-            -c1 * s, c0 * s, c
+            c + (1 - c) * c0**2, c0 * c1 * (1 - c), c1 * s, c0 * c1 * (1 - c),
+            c + (1 - c) * c1**2, -c0 * s, -c1 * s, c0 * s, c
         ]
         return R
 
-    def add_plane(self,position,plane = None, normal = None,color = '#000000',opacity=1.0,type='circle',width=4,height=4):
-        if type == 'plane':
-            geometry = PlaneGeometry(width=width,height=height,widthSegments=10,heightSegments=10)
-        else:
-            geometry = CircleGeometry(radius=width, segments=24)
+    def add_plane(self,
+                  position,
+                  color,
+                  plane=None,
+                  normal=(0.0, 0.0, 1.0),
+                  type='circle',
+                  width=4,
+                  height=4,
+                  opacity=1.0):
+        """
+        This function adds a plane
 
-        material = MeshStandardMaterial(vertexColors='VertexColors',
-                                        roughness=0.0,
-                                        metalness=0.4,
+        Parameters
+        ----------
+        position : tuple(float, float, float)
+            The (x, y, z) coordinates of the center of the plane
+        plane : str
+            The type of plane ('xy', 'xz', 'yz') (default = None). This overrides the `normal` argument
+        normal : tuple(float, float, float)
+            A vector (x, y, z) to which the plane is orthogonal (default = (0,0,1))
+        color : str
+            Hexadecimal color code
+        type : str
+            The type of plane ('circle', 'square') (default = 'circle')
+        width : float
+            The width (radius) of the plane (default = 4.0)
+        height : float
+            The height of the plane (default = 4.0)
+        opacity : float
+            The opacity of the plane (default = 1.0)
+        """
+        if type == 'square':
+            geometry = PlaneGeometry(width=width,
+                                     height=height,
+                                     widthSegments=10,
+                                     heightSegments=10)
+        else:
+            geometry = CircleGeometry(radius=width / 2, segments=48)
+
+        material = MeshStandardMaterial(color=color,
+                                        roughness=0.3,
+                                        metalness=0.0,
                                         side='DoubleSide',
                                         transparent=True,
                                         opacity=opacity)
 
         mesh = Mesh(geometry=geometry, material=material, position=position)
 
-        # If the bond rotation is 180 deg then return
+        if plane == 'xy' or plane == 'yx':
+            normal = (0.0, 0.0, 1.0)
+        elif plane == 'xz' or plane == 'zx':
+            normal = (0.0, 1.0, 0.0)
+        elif plane == 'yz' or plane == 'zy':
+            normal = (1.0, 0.0, 0.0)
+
+        # If the plane is not rotated skip the rotation step
         if normal[2] != 1.0 or normal[2] != -1.0:
             R = self.plane_rotation_matrix(normal)
             mesh.setRotationFromMatrix(R)
         self.scene.add(mesh)
 
-    def add_box(self,color,width,height,depth,position,opacity=1.0,normal=(0,0,1)):
-        geometry = BoxGeometry(width=width,height=height,depth=depth,widthSegments=10,heightSegments=10,depthSegments=10)
-
+    def add_box(self,
+                position,
+                width,
+                height,
+                depth,
+                color,
+                opacity=1.0,
+                normal=(0, 0, 1)):
+        geometry = BoxGeometry(width=width,
+                               height=height,
+                               depth=depth,
+                               widthSegments=10,
+                               heightSegments=10,
+                               depthSegments=10)
         # width = x
         # height = y
         # depth = z
-        material = MeshStandardMaterial(vertexColors='VertexColors',
-                                        roughness=0.0,
-                                        metalness=0.4,
+        material = MeshStandardMaterial(color=color,
+                                        roughness=0.3,
+                                        metalness=0.0,
                                         side='DoubleSide',
                                         transparent=True,
                                         opacity=opacity)
@@ -369,9 +427,49 @@ class Py3JSRenderer():
         mesh = Mesh(geometry=geometry, material=material, position=position)
 
         # If the bond rotation is 180 deg then return
-        if z != 1.0 or z != -1.0:
-            R = self.plane_rotation_matrix((x,y,z))
-            mesh.setRotationFromMatrix(R)
+        R = self.plane_rotation_matrix(normal)
+        mesh.setRotationFromMatrix(R)
+        self.scene.add(mesh)
+
+    def add_sphere(self, position, radius, color, opacity=1.0):
+        geometry = SphereGeometry(radius=radius,
+                                  widthSegments=24,
+                                  heightSegments=24)
+        material = MeshStandardMaterial(color=color,
+                                        roughness=0.0,
+                                        metalness=0.0,
+                                        side='DoubleSide',
+                                        transparent=True,
+                                        opacity=opacity)
+
+        mesh = Mesh(geometry=geometry, material=material, position=position)
+        self.scene.add(mesh)
+
+    def add_cylinder(self, xyz1, xyz2, color, radius):
+        if isinstance(radius, float):
+            mesh = self.cylinder(xyz1, xyz2, radius, radius, color)
+            self.scene.add(mesh)
+        elif isinstance(radius, (list, tuple)):
+            if len(radius) == 2:
+                mesh = self.cylinder(xyz1, xyz2, radius[0], radius[1], color)
+                self.scene.add(mesh)
+            else:
+                print(
+                    f'add_cylinder(): radius (= {radius}) must be either a float or a list/tuple with two elements'
+                )
+
+    def add_sphere(self, position, radius, color, opacity=1.0):
+        geometry = SphereGeometry(radius=radius,
+                                  widthSegments=24,
+                                  heightSegments=24)
+        material = MeshStandardMaterial(color=color,
+                                        roughness=0.0,
+                                        metalness=0.0,
+                                        side='DoubleSide',
+                                        transparent=True,
+                                        opacity=opacity)
+
+        mesh = Mesh(geometry=geometry, material=material, position=position)
         self.scene.add(mesh)
 
     def bond(self, atom1_info, atom2_info, radius=None):
@@ -491,17 +589,17 @@ class Py3JSRenderer():
 
         if opacity == 1.0:
             material = MeshStandardMaterial(vertexColors='VertexColors',
-                                        roughness=0.3,
-                                        metalness=0.0,
-                                        side='DoubleSide',
-                                        transparent=False)
+                                            roughness=0.3,
+                                            metalness=0.0,
+                                            side='DoubleSide',
+                                            transparent=False)
         else:
             material = MeshStandardMaterial(vertexColors='VertexColors',
-                                        roughness=0.3,
-                                        metalness=0.0,
-                                        side='DoubleSide',
-                                        transparent=True,
-                                        opacity=opacity)
+                                            roughness=0.3,
+                                            metalness=0.0,
+                                            side='DoubleSide',
+                                            transparent=True,
+                                            opacity=opacity)
 
         # Create a mesh
         isoSurfaceMesh = Mesh(geometry=isoSurfaceGeometry, material=material)
@@ -646,7 +744,8 @@ class Py3JSRenderer():
         # grab the data and extents
         data = cube.data()
         extent = [[cube.min()[0],
-                   cube.max()[0]], [cube.min()[1], cube.max()[1]],
+                   cube.max()[0]], [cube.min()[1],
+                                    cube.max()[1]],
                   [cube.min()[2], cube.max()[2]]]
         for level, color in zip(levels, colors):
             if abs(level) > 1.0e-4:
