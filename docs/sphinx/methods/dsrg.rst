@@ -4,7 +4,7 @@ Driven Similarity Renormalization Group
 =======================================
 
 .. codeauthor:: Chenyang Li, Kevin P. Hannon, Tianyuan Zhang, Francesco A. Evangelista
-.. sectionauthor:: Chenyang Li, Tianyuan Zhang, Kevin P. Hannon, Francesco A. Evangelista
+.. sectionauthor:: Chenyang Li, Francesco A. Evangelista, Tianyuan Zhang, Kevin P. Hannon
 
 .. important::
   Any publication utilizing the DSRG code should acknowledge the following articles:
@@ -17,15 +17,18 @@ Driven Similarity Renormalization Group
 
 .. caution::
   The examples used in this manual are written based on the spin-integrated code.
-  To make the spin-integrated code work properly for molecules with even multiplicities,
+  To make the spin-integrated code work properly for molecules with **even** multiplicities [S \* (S + 1) = 2, 4, 6, ...],
   the user should specify the following keyword:
   ::
 
      spin_avg_density    true       # use spin-summed reduced density matrices
 
-  to invoke the use of spin-free densities, which are computed by averaging all spin multiplets.
-  For odd multiplicities, there is no need to do so.
+  to invoke the use of spin-free densities.
+  The spin-free densities are computed by averaging all spin multiplets (e.g., Ms = 1/2 or -1/2 for doublets).
+  For odd multiplicities [S \* (S + 1) = 1, 3, 5, ...], there is no need to do so.
+  Please check test case :ref:`dsrg-mrpt2-13 <dsrg_example>` for details.
 
+.. Note::
   The latest version of Forte also has the spin-adapted MR-DSRG implemented for
   DSRG-MRPT2, DSRG-MRPT3, and MR-LDSRG(2) (and its variants).
   To invoke the spin-adated implementation, the user needs to specify the following keywords:
@@ -36,7 +39,7 @@ Driven Similarity Renormalization Group
 
   The spin-adapted version should be at least 2-3 times faster than the corresponding spin-integrated code,
   and it also saves some memory.
-  Note that the spin-adapted code will ignore the `spin_avg_density` keyword and always treat it as `true`.
+  Note that the spin-adapted code will ignore the ``spin_avg_density`` keyword and always treat it as ``true``.
 
 .. _`basic_dsrg`:
 
@@ -1479,6 +1482,7 @@ Add test cases when DWMS is back to life.
   mrdsrg-spin-adapted-pt2-3     SS, PR              p-benzyne                    DiskDF
   mrdsrg-spin-adapted-pt2-4     SS, R               :math:`\text{O}_2`           triplet ground state, CASSCF(8e,6o)
   mrdsrg-spin-adapted-pt2-5     SA, R               :math:`\text{C}_2`           CASSCF(8e,8o), zero 3 cumulant
+  mrdsrg-spin-adapted-pt2-6     SA                  benzene                      Exotic state-average weights
   mrdsrg-spin-adapted-pt3-1     SS, PR              :math:`\text{HF}`            CD
   mrdsrg-spin-adapted-pt3-2     SA                  ethylene                     lowest three singlet states
   ============================  ==================  ===========================  =================================================
