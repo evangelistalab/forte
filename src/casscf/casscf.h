@@ -109,24 +109,24 @@ class CASSCF : public ActiveSpaceMethod {
     std::shared_ptr<ForteIntegrals> ints_;
 
     /// The dimension for number of molecular orbitals (CORRELATED or ALL)
-    psi::Dimension nmopi_;
+    psi::Dimension corr_dim_;
     /// The number of correlated molecular orbitals (Restricted Core + Active +
     /// Restricted_UOCC + Frozen_Virt
-    size_t nmo_;
+    size_t ncmo_;
     /// The number of active orbitals
-    size_t na_;
+    size_t nactv_;
     /// The number of irreps
     size_t nirrep_;
     /// The number of SO (AO for C matrices)
     psi::Dimension nsopi_;
     /// the number of restricted_docc
-    size_t nrdocc_;
+    size_t ncore_;
     /// The number of frozen_docc
-    size_t nfrozen_;
+    size_t nfrzc_;
     /// The number of virtual orbitals
-    size_t nvir_;
+    size_t nvirt_;
     /// The number of NMO including frozen core
-    size_t all_nmo_;
+    size_t nmo_;
 
     // These are essential variables and functions for computing CASSCF gradient.
     /// Set Ambit tensor labels
@@ -160,19 +160,19 @@ class CASSCF : public ActiveSpaceMethod {
     /// List of virtual MOs (Correlated)
     std::vector<size_t> virt_mos_;
     /// List of core MOs (Absolute)
-    std::vector<size_t> core_all_;
+    std::vector<size_t> core_mos_abs_;
     /// List of active MOs (Absolute)
-    std::vector<size_t> actv_all_;
+    std::vector<size_t> actv_mos_abs_;
     /// List of relative core MOs
     std::vector<std::pair<unsigned long, unsigned long>,
                 std::allocator<std::pair<unsigned long, unsigned long>>>
-        core_mos_relative;
+        core_mos_rel_;
     /// List of relative active MOs
     std::vector<std::pair<unsigned long, unsigned long>,
                 std::allocator<std::pair<unsigned long, unsigned long>>>
-        actv_mos_relative;
+        actv_mos_rel_;
     /// Dimension of different irreps
-    psi::Dimension irrep_vec;
+    psi::Dimension nmo_dim_;
     /// One-particle density matrix
     ambit::BlockedTensor Gamma1_;
     /// Two-body denisty tensor
@@ -220,27 +220,21 @@ class CASSCF : public ActiveSpaceMethod {
     /// Compute the restricted_one_body operator for FCI(done also in
     /// OrbitalOptimizer)
 
-    // Recompute reference
-    void cas_ci_final();
-
     std::vector<std::vector<double>> compute_restricted_docc_operator();
 
     double scalar_energy_ = 0.0;
     /// The psi::Dimensions for the major orbitals spaces involved in CASSCF
     /// Trying to get these all in the startup, so I can use them repeatly
     /// rather than create them in different places
-    psi::Dimension frozen_docc_dim_;
-    psi::Dimension restricted_docc_dim_;
-    psi::Dimension active_dim_;
-    psi::Dimension restricted_uocc_dim_;
-    psi::Dimension inactive_docc_dim_;
+    psi::Dimension frzc_dim_;
+    psi::Dimension core_dim_;
+    psi::Dimension actv_dim_;
+    psi::Dimension virt_dim_;
+    psi::Dimension closed_dim_;
 
-    std::vector<size_t> frozen_docc_abs_;
-    std::vector<size_t> restricted_docc_abs_;
-    std::vector<size_t> active_abs_;
-    std::vector<size_t> restricted_uocc_abs_;
-    std::vector<size_t> inactive_docc_abs_;
-    std::vector<size_t> nmo_abs_;
+    std::vector<size_t> frzc_mos_;
+    std::vector<size_t> closed_mos_;
+    std::vector<size_t> corr_mos_;
     /// Transform the active integrals
     ambit::Tensor transform_integrals();
     std::pair<ambit::Tensor, std::vector<double>> CI_Integrals();
