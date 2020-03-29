@@ -383,16 +383,6 @@ void CASSCF::cas_ci() {
             gamma2_ = cas_ref_.SFg2();
         }
         */
-    //    ambit::Tensor g2aa = cas_ref_.g2aa();
-    //    ambit::Tensor g2ab = cas_ref_.g2ab();
-    //    ambit::Tensor g2bb = cas_ref_.g2bb();
-    //    ambit::Tensor g1a = cas_ref_.g1a();
-    //    ambit::Tensor g1b = cas_ref_.g1b();
-
-    //    gamma2_ = ambit::Tensor::build(ambit::CoreTensor, "gamma2", {na_, na_, na_, na_});
-    //    gamma2_("u,v,x,y") += g2aa("u,v,x,y");
-    //    gamma2_("u,v,x,y") += g2ab("u,v,x,y");
-    //    gamma2_.scale(2.0);
 
     // Compute 1-RDM
     gamma1_ = cas_ref_.g1a().clone();
