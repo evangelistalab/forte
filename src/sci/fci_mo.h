@@ -344,8 +344,8 @@ class FCI_MO : public ActiveSpaceMethod {
     std::string ipea_;
 
     /// Number of Alpha and Beta Electrons
-    long int nalfa_;
-    long int nbeta_;
+    int nalfa_;
+    int nbeta_;
 
     /// Active Space Type: CAS, CIS, CISD
     std::string actv_space_type_;

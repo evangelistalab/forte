@@ -37,7 +37,7 @@ import psi4.driver.p4util as p4util
 from psi4.driver.procrouting import proc_util
 
 def forte_driver(state_weights_map, scf_info, options, ints, mo_space_info):
-    max_rdm_level = 3 # TODO: set this (Francesco)
+    max_rdm_level = 3 if options.get_str("THREEPDC") != "ZERO" else 2
     return_en = 0.0
 
     state_map = forte.to_state_nroots_map(state_weights_map)
@@ -61,7 +61,7 @@ def forte_driver(state_weights_map, scf_info, options, ints, mo_space_info):
     correlation_solver_type = options.get_str('CORRELATION_SOLVER')
     if correlation_solver_type != 'NONE':
         # Grab the reference
-        rdms = active_space_solver.compute_average_rdms(state_weights_map, 3) # TODO: max_rdm_level should be chosen in a smart way
+        rdms = active_space_solver.compute_average_rdms(state_weights_map, max_rdm_level)
 
         # Compute unitary matrices Ua and Ub that rotate the orbitals to the semicanonical basis
         semi = forte.SemiCanonical(mo_space_info, ints, options)
@@ -156,7 +156,7 @@ def forte_driver(state_weights_map, scf_info, options, ints, mo_space_info):
                     psi4.core.print_out("\n  !DSRG transition dipoles are disabled temporarily.")
                     warnings.warn("DSRG transition dipoles are disabled temporarily.", UserWarning)
                 else:
-                    rdms = as_solver_relaxed.compute_average_rdms(state_weights_map, 3)
+                    rdms = as_solver_relaxed.compute_average_rdms(state_weights_map, max_rdm_level)
                     x, y, z, t = dipole_routine(dsrg, rdms)
                     dsrg_dipoles.append(((udm_x, udm_y, udm_z, udm_t), (x, y, z, t)))
                     psi4.core.print_out("\n\n    {} partially relaxed dipole moment:".format(correlation_solver_type))
@@ -178,8 +178,8 @@ def forte_driver(state_weights_map, scf_info, options, ints, mo_space_info):
                 if do_dipole and (not is_multi_state):
                     rdms = semi.transform_rdms(Ua, Ub, rdms, max_rdm_level)
                 else:
-                    rdms = semi.transform_rdms(Ua, Ub, as_solver_relaxed.compute_average_rdms(state_weights_map, 3),
-                                                         max_rdm_level)
+                    rdms = as_solver_relaxed.compute_average_rdms(state_weights_map, max_rdm_level)
+                    rdms = semi.transform_rdms(Ua, Ub, rdms, max_rdm_level)
 
                 # Now semicanonicalize the reference and orbitals
                 semi.semicanonicalize(rdms, max_rdm_level)
@@ -187,9 +187,13 @@ def forte_driver(state_weights_map, scf_info, options, ints, mo_space_info):
                 Ub = semi.Ub_t()
 
                 # Compute DSRG in the semicanonical basis
-                dsrg = forte.make_dsrg_method(correlation_solver_type, rdms,
-                                              scf_info, options, ints, mo_space_info)
-                dsrg.set_Uactv(Ua, Ub)
+                if correlation_solver_type == "SA-MRDSRG":
+                    dsrg = forte.make_sadsrg_method(rdms, scf_info, options, ints, mo_space_info)
+                    dsrg.set_Uactv(Ua)
+                else:
+                    dsrg = forte.make_dsrg_method(correlation_solver_type, rdms,
+                                                  scf_info, options, ints, mo_space_info)
+                    dsrg.set_Uactv(Ua, Ub)
                 Edsrg = dsrg.compute_energy()
 
                 if do_dipole:
@@ -270,7 +274,11 @@ def compute_dsrg_unrelaxed_energy(correlation_solver_type, rdms, scf_info, optio
                                   ints, mo_space_info, Ua, Ub):
     Heff_actv_implemented = False
 
-    if correlation_solver_type == "MRDSRG_SO":
+    if correlation_solver_type == "SA-MRDSRG":
+        dsrg = forte.make_sadsrg_method(rdms, scf_info, options, ints, mo_space_info)
+        Heff_actv_implemented = True
+        dsrg.set_Uactv(Ua)
+    elif correlation_solver_type == "MRDSRG_SO":
         dsrg = forte.make_dsrg_so_y(rdms, scf_info, options, ints, mo_space_info)
     elif correlation_solver_type == "SOMRDSRG":
         dsrg = forte.make_dsrg_so_f(rdms, scf_info, options, ints, mo_space_info)
@@ -384,6 +392,12 @@ def run_forte(name, **kwargs):
 
     # Call methods that project the orbitals (AVAS, embedding)
     mo_space_info = orbital_projection(ref_wfn, options, mo_space_info)
+
+    # Averaging spin multiplets if doing spin-adapted computation
+    if options.get_str('CORRELATION_SOLVER') == 'SA-MRDSRG':
+        options_dict = options.dict()
+        options_dict['SPIN_AVG_DENSITY']['value'] = True
+        options.set_dict(options_dict)
 
     state = forte.make_state_info_from_psi_wfn(ref_wfn)
     scf_info = forte.SCFInfo(ref_wfn)

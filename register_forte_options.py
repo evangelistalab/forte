@@ -41,7 +41,7 @@ def register_driver_options(options):
     )  # TODO: why is PCI running even if it is not in this list (Francesco)
     options.add_str(
         'CORRELATION_SOLVER', 'NONE',
-        ['DSRG-MRPT2', 'THREE-DSRG-MRPT2', 'DSRG-MRPT3', 'MRDSRG'],
+        ['DSRG-MRPT2', 'THREE-DSRG-MRPT2', 'DSRG-MRPT3', 'MRDSRG', 'SA-MRDSRG'],
         'Dynamical correlation solver type')
     options.add_str('CALC_TYPE', 'SS', ['SS', 'SA', 'MS', 'DWMS'],
                           'The type of computation')
@@ -61,13 +61,16 @@ def register_driver_options(options):
     options.add_str("ORBITAL_TYPE", "CANONICAL",
                           ['CANONICAL', 'LOCAL', 'MP2_NO'],
                           'Type of orbitals to use')
-    options.add_str('MINAO_BASIS', 'STO-3G', "The basis used to define an orbital subspace");
 
-    options.add_array("SUBSPACE", "A list of orbital subspaces");
+    options.add_str('MINAO_BASIS', 'STO-3G', "The basis used to define an orbital subspace")
 
-    options.add_double("MS", 0.0, "Projection of spin onto the z axis");
+    options.add_array("SUBSPACE", "A list of orbital subspaces")
 
-    options.add_str("ACTIVE_REF_TYPE", "CAS", "Initial guess for active space wave functions");
+    options.add_double("MS", 0.0, "Projection of spin onto the z axis")
+
+    options.add_str("ACTIVE_REF_TYPE", "CAS", "Initial guess for active space wave functions")
+
+    options.add_bool("SPIN_AVG_DENSITY", False, "Form spin-averaged density if true")
 
     options.add_int("PRINT", 0,"""Set the print level.""")
 

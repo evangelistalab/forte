@@ -1,0 +1,59 @@
+#! Generated using commit GITCOMMIT
+
+import forte
+
+refmcscf   = -99.406065223640
+refudsrg   = -99.498877581701
+refprdsrg  = -99.500379478002
+refrdsrg   = -99.500197313857
+
+memory 500 mb
+
+molecule HF{
+  0 1
+  F
+  H  1 R
+  R = 1.50
+}
+
+set globals{
+   basis                  3-21g
+   reference              twocon
+   e_convergence          8
+   maxiter                100
+   docc                   [3,0,1,1]
+}
+
+set mcscf{
+   docc                   [2,0,1,1]
+   socc                   [2,0,0,0]
+   maxiter                1000
+   level_shift            0.5
+   d_convergence          10
+   e_convergence          12
+}
+
+set forte{
+   active_space_solver    fci
+   correlation_solver     sa-mrdsrg
+   int_type               cholesky
+   cholesky_tolerance     1e-4
+   corr_level             ldsrg2
+   frozen_docc            [1,0,0,0]
+   restricted_docc        [1,0,1,1]
+   active                 [2,0,0,0]
+   dsrg_s                 1.0
+   maxiter                100
+   e_convergence          8
+   dsrg_hbar_seq          true
+   dsrg_nivo              true
+   relax_ref              twice
+}
+
+Emcscf, wfn = energy('mcscf', return_wfn=True)
+compare_values(refmcscf,variable("CURRENT ENERGY"),10,"MCSCF energy")
+
+energy('forte', ref_wfn=wfn)
+compare_values(refudsrg,variable("UNRELAXED ENERGY"),8,"MRDSRG unrelaxed energy")
+compare_values(refprdsrg,variable("PARTIALLY RELAXED ENERGY"),8,"MRDSRG partially relaxed energy")
+compare_values(refrdsrg,variable("RELAXED ENERGY"),8,"MRDSRG relaxed energy")

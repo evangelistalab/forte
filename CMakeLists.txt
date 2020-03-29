@@ -130,6 +130,7 @@ src/integrals/own_integrals.cc
 src/integrals/parallel_ccvv_algorithms.cc
 src/integrals/paralleldfmo.cc
 src/main.cc
+src/mrdsrg-helper/dsrg_mem.cc
 src/mrdsrg-helper/dsrg_source.cc
 src/mrdsrg-helper/dsrg_time.cc
 src/mrdsrg-helper/dsrg_transformed.cc
@@ -140,6 +141,17 @@ src/mrdsrg-spin-adapted/dsrg_mrpt.cc
 src/mrdsrg-spin-adapted/dsrg_mrpt_2nd.cc
 src/mrdsrg-spin-adapted/dsrg_mrpt_amp.cc
 src/mrdsrg-spin-adapted/dsrg_mrpt_comm.cc
+src/mrdsrg-spin-adapted/sadsrg.cc
+src/mrdsrg-spin-adapted/sadsrg_amps_analysis.cc
+src/mrdsrg-spin-adapted/sadsrg_block_labels.cc
+src/mrdsrg-spin-adapted/sadsrg_comm.cc
+src/mrdsrg-spin-adapted/sa_dsrgpt.cc
+src/mrdsrg-spin-adapted/sa_ldsrg2.cc
+src/mrdsrg-spin-adapted/sa_mrdsrg.cc
+src/mrdsrg-spin-adapted/sa_mrdsrg_amps.cc
+src/mrdsrg-spin-adapted/sa_mrdsrg_diis.cc
+src/mrdsrg-spin-adapted/sa_mrpt2.cc
+src/mrdsrg-spin-adapted/sa_mrpt3.cc
 src/mrdsrg-spin-integrated/active_dsrgpt2.cc
 src/mrdsrg-spin-integrated/dsrg_mrpt2.cc
 src/mrdsrg-spin-integrated/dsrg_mrpt2_ms.cc

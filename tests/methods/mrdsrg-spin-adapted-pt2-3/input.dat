@@ -1,0 +1,79 @@
+#! Generated using commit GITCOMMIT
+
+import forte
+
+memory 500 mb
+Ecas_psi4_jk  = -229.495450424144593
+Ecas_forte_jk = -229.495450424145076
+Ept2_ur       = -230.143771791121878
+Ept2_pr       = -230.150516562986667
+
+molecule pbenzyne{
+  0 1
+   C   0.0000000000  -2.5451795941   0.0000000000
+   C   0.0000000000   2.5451795941   0.0000000000
+   C  -2.2828001669  -1.3508352528   0.0000000000
+   C   2.2828001669  -1.3508352528   0.0000000000
+   C   2.2828001669   1.3508352528   0.0000000000
+   C  -2.2828001669   1.3508352528   0.0000000000
+   H  -4.0782187459  -2.3208602146   0.0000000000
+   H   4.0782187459  -2.3208602146   0.0000000000
+   H   4.0782187459   2.3208602146   0.0000000000
+   H  -4.0782187459   2.3208602146   0.0000000000
+
+  units bohr
+}
+
+set globals{
+  basis                  cc-pvdz
+  df_basis_scf           cc-pvdz-jkfit
+  df_basis_mp2           cc-pvdz-jkfit
+  reference              rhf
+  scf_type               df
+  d_convergence          8
+  e_convergence          12
+  mcscf_type             df
+  mcscf_e_convergence    12
+  mcscf_r_convergence    8
+  mcscf_diis_start       8
+  mcscf_max_rot          0.2
+  docc                   [5,3,1,1,0,1,5,4]
+  restricted_docc        [5,3,0,0,0,0,4,4]
+  active                 [1,0,1,2,1,2,1,0]
+}
+Escf, wfn = energy('scf', return_wfn=True)
+#compare_values(Ecas_psi4_jk, Ecas, 9, "CASSCF(8,8)/cc-pVDZ-JKFIT (PSI4) energy")
+
+set forte{
+  job_type               casscf
+  casscf_ci_solver       fci
+  restricted_docc        [5,3,0,0,0,0,4,4]
+  active                 [1,0,1,2,1,2,1,0]
+  e_convergence          12
+  r_convergence          8
+  casscf_g_convergence   1e-8
+  casscf_e_convergence   1e-12
+  int_type               df
+}
+Ecas, wfn = energy('forte', ref_wfn=wfn, return_wfn=True)
+compare_values(Ecas_forte_jk, Ecas, 9, "CASSCF(8,8)/cc-pVDZ-JKFIT (FORTE) energy")
+
+set forte{
+  job_type               newdriver
+  active_space_solver    cas
+  correlation_solver     sa-mrdsrg
+  corr_level             pt2
+  frozen_docc            [2,1,0,0,0,0,2,1]
+  restricted_docc        [3,2,0,0,0,0,2,3]
+  active                 [1,0,1,2,1,2,1,0]
+  dsrg_s                 0.5
+  relax_ref              once
+  e_convergence          12
+  r_convergence          8
+  int_type               diskdf
+}
+energy('forte', ref_wfn=wfn)
+Eupt2 = variable("UNRELAXED ENERGY")
+Eprpt2 = variable("PARTIALLY RELAXED ENERGY")
+compare_values(Ept2_ur, Eupt2, 9, "DSRG-MRPT2 unrelaxed energy")
+compare_values(Ept2_pr, Eprpt2, 9, "DSRG-MRPT2 partially relaxed energy")

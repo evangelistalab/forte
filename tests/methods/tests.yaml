@@ -135,6 +135,7 @@ dsrg-mrpt2:
 #  - dsrg-mrpt2-9-xms
    - dsrg-mrpt2-10-CO
    - dsrg-mrpt2-11-sa-C2H4
+   - dsrg-mrpt2-13
    - aci-dsrg-mrpt2-1
    - aci-dsrg-mrpt2-2
    - aci-dsrg-mrpt2-3
@@ -244,6 +245,25 @@ mrdsrg-pt2:
    - mrdsrg-srgpt2-1
   ultralong:
    - mrdsrg-srgpt2-2
+mrdsrg-spin-adapted:
+  short:
+   - mrdsrg-spin-adapted-1
+   - mrdsrg-spin-adapted-2
+   - mrdsrg-spin-adapted-3
+   - mrdsrg-spin-adapted-4
+# long:
+#  - mrdsrg-spin-adapted-2
+mrdsrg-spin-adapted-pt2:
+  short:
+   - mrdsrg-spin-adapted-pt2-1
+   - mrdsrg-spin-adapted-pt2-2
+   - mrdsrg-spin-adapted-pt2-3
+   - mrdsrg-spin-adapted-pt2-4
+   - mrdsrg-spin-adapted-pt2-5
+mrdsrg-spin-adapted-pt3:
+  short:
+   - mrdsrg-spin-adapted-pt3-1
+   - mrdsrg-spin-adapted-pt3-2
 pci:
   short:
    - pci-1

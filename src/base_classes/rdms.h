@@ -81,6 +81,13 @@ class RDMs {
          ambit::Tensor g2bb, ambit::Tensor g3aaa, ambit::Tensor g3aab, ambit::Tensor g3abb,
          ambit::Tensor g3bbb);
 
+    /// @brief Construct a RDMs object with the 1-rdm assuming ms averaging
+    RDMs(bool ms_avg, ambit::Tensor g1a);
+    /// @brief Construct a RDMs object with the 1- and 2-rdms ms averaging
+    RDMs(bool ms_avg, ambit::Tensor g1a, ambit::Tensor g2ab);
+    /// @brief Construct a RDMs object with the 1-, 2-, and 3-rdms assuming ms averaging
+    RDMs(bool ms_avg, ambit::Tensor g1a, ambit::Tensor g2ab, ambit::Tensor g3aab);
+
     // ==> Class Interface <==
 
     // Reduced density matrices (RDMs)
@@ -88,26 +95,28 @@ class RDMs {
     /// @return the alpha 1-RDM
     ambit::Tensor g1a() const { return g1a_; }
     /// @return the beta 1-RDM
-    ambit::Tensor g1b() const { return g1b_; }
+    ambit::Tensor g1b();
     /// @return the alpha-alpha 2-RDM
-    ambit::Tensor g2aa() const { return g2aa_; }
+    ambit::Tensor g2aa();
     /// @return the alpha-beta 2-RDM
     ambit::Tensor g2ab() const { return g2ab_; }
     /// @return the beta-beta 2-RDM
-    ambit::Tensor g2bb() const { return g2bb_; }
+    ambit::Tensor g2bb();
     /// @return the alpha-alpha-alpha 3-RDM
-    ambit::Tensor g3aaa() const { return g3aaa_; }
+    ambit::Tensor g3aaa();
     /// @return the alpha-alpha-beta 3-RDM
     ambit::Tensor g3aab() const { return g3aab_; }
     /// @return the alpha-beta-beta 3-RDM
-    ambit::Tensor g3abb() const { return g3abb_; }
+    ambit::Tensor g3abb();
     /// @return the beta-beta-beta 3-RDM
-    ambit::Tensor g3bbb() const { return g3bbb_; }
+    ambit::Tensor g3bbb();
 
-    // Spin-free RDMs
+    // Spin-free (spin-summed) RDMs
 
     /// @return the spin-free 2-RDM
-    ambit::Tensor SFg2() const { return SFg2_; }
+    /// If ms is NOT averaged, G2 will be computed using the definition (see SF_g2_ below).
+    /// If ms is averaged, G2 will be computed using only g2ab to avoid computing g2aa and g2bb.
+    ambit::Tensor SFg2();
 
     // Reduced density cumulants
 
@@ -126,17 +135,44 @@ class RDMs {
     /// @return the beta-beta-beta 3-RDC
     ambit::Tensor L3bbb();
 
+    // Spin-free (spin-summed) density cumulants
+
+    /// @return the spin-free 1-cumulant
+    ambit::Tensor SF_L1();
+    /// @return the spin-free 2-cumulant
+    ambit::Tensor SF_L2();
+    /// @return the spin-free 3-cumulant
+    ambit::Tensor SF_L3();
+
     // class variables
 
     size_t max_rdm_level() { return max_rdm_; }
 
+    bool ms_avg() { return ms_avg_; }
+
   protected:
     // ==> Class Data <==
+
+    /// Assume averaging over spin multiplets
+    bool ms_avg_ = false;
 
     /// Maximum RDM/RDC rank stored by this object
     size_t max_rdm_ = 0;
 
     // Reduced density matrices
+
+    /// Was g1b built?
+    bool have_g1b_ = false;
+    /// Was g2aa built?
+    bool have_g2aa_ = false;
+    /// Was g2bb built?
+    bool have_g2bb_ = false;
+    /// Was g3aaa built?
+    bool have_g3aaa_ = false;
+    /// Was g3abb built?
+    bool have_g3abb_ = false;
+    /// Was g3bbb built?
+    bool have_g3bbb_ = false;
 
     /// The alpha 1-RDM
     ambit::Tensor g1a_;
@@ -157,8 +193,9 @@ class RDMs {
     /// The beta-beta-beta 3-RDM
     ambit::Tensor g3bbb_;
 
-    /// The spin-free 2-RDM
-    ambit::Tensor SFg2_;
+    /// Spin-free (spin-summed) 2-RDM defined as
+    /// G2[pqrs] = g2aa[pqrs] + g2ab[pqrs] + g2ab[qpsr] + g2bb[pqrs]
+    ambit::Tensor SF_g2_;
 
     // Reduced density cumulants
 
@@ -177,6 +214,13 @@ class RDMs {
     /// The beta-beta-beta 3-RDC
     ambit::Tensor L3bbb_;
 
+    /// Spin-free (spin-summed) 1-cumulant
+    ambit::Tensor SF_L1_;
+    /// Spin-free (spin-summed) 2-cumulant
+    ambit::Tensor SF_L2_;
+    /// Spin-free (spin-summed) 3-cumulant
+    ambit::Tensor SF_L3_;
+
     /// Was L2aa built?
     bool have_L2aa_ = false;
     /// Was L2ab built?
@@ -191,7 +235,30 @@ class RDMs {
     bool have_L3abb_ = false;
     /// Was L3bbb built?
     bool have_L3bbb_ = false;
+
+    /// Was SF_L1_ built?
+    bool have_SF_L1_ = false;
+    /// Was SF_L2_ built?
+    bool have_SF_L2_ = false;
+    /// Was SF_L3_ built?
+    bool have_SF_L3_ = false;
 };
+
+/**
+ * @brief make_g2_high_spin_case Make the alpha-alpha or beta-beta 2-RDM from alpha-beta 2-RDM.
+ * This function returns the aa or bb 2-RDM using the ab 2-RDM assuming ms averaging.
+ * @param g2ab the alpha-beta 2-RDM
+ * @return the alpha-alpha or beta-beta 2-RDM
+ */
+ambit::Tensor make_g2_high_spin_case(const ambit::Tensor& g2ab);
+
+/**
+ * @brief make_g3_high_spin_case Make the aaa or bbb 3-RDM from aab 3-RDM.
+ * This function returns the aaa or bbb 3-RDM using the aab 3-RDM assuming ms averaging.
+ * @param g3aab the alpha-alpha-beta 3-RDM
+ * @return the alpha-alpha-alpha or beta-beta-beta 3-RDM
+ */
+ambit::Tensor make_g3_high_spin_case(const ambit::Tensor& g3aab);
 
 /**
  * @brief make_cumulant_L2aa_in_place Make the alpha-alpha 2-body cumulant.
