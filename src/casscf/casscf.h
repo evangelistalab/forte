@@ -88,8 +88,8 @@ class CASSCF : public ActiveSpaceMethod {
                                       std::shared_ptr<ActiveSpaceMethod> method2,
                                       int max_rdm_level) override;
 
-    /// check the cas_ci energy with spin-free RDM
-    double cas_check(RDMs cas);
+//    /// check the cas_ci energy with spin-free RDM
+//    double cas_check(RDMs cas);
 
   private:
     /// SCF information
@@ -199,10 +199,10 @@ class CASSCF : public ActiveSpaceMethod {
     std::shared_ptr<psi::JK> JK_;
     /// Perform a CAS-CI with the updated MO coefficients
     void cas_ci();
-    /// Sets up the FCI
-    void set_up_fci();
-    /// Set up a SA-FCI
-    //  void set_up_sa_fci();
+//    /// Sets up the FCI
+//    void set_up_fci();
+//    /// Set up a SA-FCI
+//    //  void set_up_sa_fci();
     /// Read all the mospace info and assign correct dimensions
     void startup();
     /// Compute overlap between old_c and new_c
@@ -220,7 +220,7 @@ class CASSCF : public ActiveSpaceMethod {
     /// Compute the restricted_one_body operator for FCI(done also in
     /// OrbitalOptimizer)
 
-    std::vector<std::vector<double>> compute_restricted_docc_operator();
+    std::vector<double> compute_restricted_docc_operator();
 
     double scalar_energy_ = 0.0;
     /// The psi::Dimensions for the major orbitals spaces involved in CASSCF
@@ -237,7 +237,7 @@ class CASSCF : public ActiveSpaceMethod {
     std::vector<size_t> corr_mos_;
     /// Transform the active integrals
     ambit::Tensor transform_integrals();
-    std::pair<ambit::Tensor, std::vector<double>> CI_Integrals();
+//    std::pair<ambit::Tensor, std::vector<double>> CI_Integrals();
     /// The transform integrals computed from transform_integrals
     ambit::Tensor tei_paaa_;
     int print_;
