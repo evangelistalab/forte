@@ -235,7 +235,7 @@ void UPDensity::compute_unpaired_density(std::vector<double>& oprdm_a,
     // relocalize to atoms
 
     // Grab matrix that takes the transforms from the NO basis to our local basis
-    auto loc = std::make_shared<LOCALIZE>(options_, ints_, mo_space_info_);
+    auto loc = std::make_shared<Localize>(options_, ints_, mo_space_info_);
 
     std::vector<size_t> actmo = mo_space_info_->absolute_mo("ACTIVE");
     std::vector<int> loc_mo(2);

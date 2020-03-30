@@ -55,11 +55,21 @@ namespace forte {
 
 /**
  * @brief Convert an ambit tensor to a numpy ndarray.
- *        The returned tensors are stored according to the C storage convention.
+ *        The returned tensor is stored according to the C storage convention.
  * @param t The input tensor
  * @return A numpy array
  */
 py::array_t<double> ambit_to_np(ambit::Tensor t);
+
+/**
+ * @brief Convert a std::vector<double> to a numpy ndarray.
+ *        The returned tensor is stored according to the C storage convention.
+ * @param v The input vector
+ * @param dims The dimensions of the tensor
+ * @return A numpy array
+ */
+py::array_t<double> vector_to_np(const std::vector<double>& v, const std::vector<size_t>& dims);
+py::array_t<double> vector_to_np(const std::vector<double>& v, const std::vector<int>& dims);
 
 /**
  * @brief tensor_to_matrix

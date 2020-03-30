@@ -76,10 +76,14 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-c++1z-extensions") # avoid warnings
 # List of CC files
 pybind11_add_module(forte
 src/api/ambit_api.cc
+src/api/cube_file_api.cc
 src/api/integrals_api.cc
 src/api/rdms_api.cc
+src/api/options_api.cc
+src/api/orbital_api.cc
 src/api/sci_api.cc
 src/api/state_info_api.cc
+src/api/forte_python_module.cc
 src/base_classes/active_space_method.cc
 src/base_classes/active_space_solver.cc
 src/base_classes/dynamic_correlation_solver.cc
@@ -113,6 +117,7 @@ src/gradient_tpdm/backtransform_tpdm.cc
 src/gradient_tpdm/integraltransform_sort_so_tpdm.cc
 src/gradient_tpdm/integraltransform_tpdm_unrestricted.cc
 src/helpers/blockedtensorfactory.cc
+src/helpers/cube_file.cc
 src/helpers/helpers.cc
 src/helpers/iterative_solvers.cc
 src/helpers/printing.cc
@@ -184,7 +189,6 @@ src/orbital-helpers/unpaired_density.cc
 src/pci/pci.cc
 src/pci/pci_sigma.cc
 src/post_process/spin_corr.cc
-src/python_api.cc
 src/sci/aci.cc
 src/sci/aci_build_F.cc
 src/sci/asci.cc

@@ -48,7 +48,7 @@ make_orbital_transformation(const std::string& type, std::shared_ptr<SCFInfo> sc
     std::unique_ptr<OrbitalTransform> orb_t;
 
     if (type == "LOCAL") {
-        orb_t = std::make_unique<LOCALIZE>(options, ints, mo_space_info);
+        orb_t = std::make_unique<Localize>(options, ints, mo_space_info);
     }
     if (type == "MP2_NOS") {
         orb_t = std::make_unique<MP2_NOS>(scf_info, options, ints, mo_space_info);
