@@ -441,9 +441,9 @@ def run_forte(name, **kwargs):
 
     psi4.core.set_scalar_variable('CURRENT ENERGY', energy)
 
-    psi4.core.print_out(f'\n\n  Time to prepare integrals: {start - start_pre_ints} seconds')
-    psi4.core.print_out(f'\n  Time to run job          : {end - start} seconds')
-    psi4.core.print_out(f'\n  Total                    : {end - start} seconds')
+    psi4.core.print_out(f'\n\n  Time to prepare integrals: {start - start_pre_ints:12.3f} seconds')
+    psi4.core.print_out(f'\n  Time to run job          : {end - start:12.3f} seconds')
+    psi4.core.print_out(f'\n  Total                    : {end - start:12.3f} seconds')
     return ref_wfn
 
 

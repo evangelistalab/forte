@@ -72,7 +72,7 @@ def register_driver_options(options):
 
     options.add_bool("SPIN_AVG_DENSITY", False, "Form spin-averaged density if true")
 
-    options.add_int("PRINT", 0,"""Set the print level.""")
+    options.add_int("PRINT", 1,"""Set the print level.""")
 
 
 def register_avas_options(options):
