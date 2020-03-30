@@ -219,7 +219,7 @@ void CASSCF::set_tensor() {
  */
 void CASSCF::tpdm_backtransform() {
     // This line of code is to deceive Psi4 and avoid computing scf gradient
-    // Remove once TravisCI is updated
+    // TODO: Remove once TravisCI is updated
      ints_->wfn()->set_reference_wavefunction(ints_->wfn());
 
     std::vector<std::shared_ptr<psi::MOSpace>> spaces;

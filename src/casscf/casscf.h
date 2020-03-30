@@ -192,7 +192,7 @@ class CASSCF : public ActiveSpaceMethod {
     /// Equation 9
 
     /// The Fock matrix due to Frozen core orbitals
-    psi::SharedMatrix F_froze_;
+    psi::SharedMatrix Ffrzc_;
     /// The One Electron integrals (H = T + V)  (in AO basis)
     psi::SharedMatrix Hcore_;
     /// The JK object.  Built in constructor
@@ -236,10 +236,10 @@ class CASSCF : public ActiveSpaceMethod {
     std::vector<size_t> closed_mos_;
     std::vector<size_t> corr_mos_;
     /// Transform the active integrals
-    ambit::Tensor transform_integrals();
+    ambit::Tensor transform_integrals(std::shared_ptr<psi::Matrix> Ca);
 //    std::pair<ambit::Tensor, std::vector<double>> CI_Integrals();
     /// The transform integrals computed from transform_integrals
-    ambit::Tensor tei_paaa_;
+    ambit::Tensor tei_gaaa_;
     int print_;
     /// The CISolutions per iteration
     std::vector<std::vector<std::shared_ptr<FCIVector>>> CISolutions_;

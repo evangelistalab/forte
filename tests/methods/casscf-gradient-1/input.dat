@@ -46,7 +46,7 @@ set forte{
    casscf_ci_solver     FCI
 #   print                 0
    CASSCF_DO_DIIS       true
-   dertype              first
+#  dertype              first
 }
 
 set findif{

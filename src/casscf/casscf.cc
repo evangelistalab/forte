@@ -63,7 +63,7 @@ CASSCF::CASSCF(StateInfo state, size_t nroot, std::shared_ptr<SCFInfo> scf_info,
                std::shared_ptr<ActiveSpaceIntegrals> as_ints)
     : ActiveSpaceMethod(state, nroot, mo_space_info, as_ints), scf_info_(scf_info),
       options_(options), ints_(as_ints->ints()) {
-    print_method_banner({"Complete Active Space Self Consistent Field", "Kevin Hannon"});
+    print_method_banner({"Complete Active Space Self Consistent Field", "Kevin P. Hannon"});
     startup();
 }
 
@@ -161,7 +161,7 @@ double CASSCF::compute_energy() {
 
     // Frozen-core C Matrix is never rotated
     if (nfrzc_ > 0) {
-        F_froze_ = set_frozen_core_orbitals();
+        Ffrzc_ = set_frozen_core_orbitals();
     }
 
     // DIIS options
@@ -171,7 +171,7 @@ double CASSCF::compute_energy() {
     int diis_max_vec = options_->get_int("CASSCF_DIIS_MAX_VEC");
     double diis_gradient_norm = options_->get_double("CASSCF_DIIS_NORM");
 
-    // CI step options
+    // CI update options
     bool ci_step = options_->get_bool("CASSCF_CI_STEP");
     int casscf_freq = options_->get_int("CASSCF_CI_FREQ");
 
@@ -192,32 +192,30 @@ double CASSCF::compute_energy() {
 
     E_casscf_ = 0.0;
     double E_casscf_old = 0.0, Ediff = 0.0;
-    psi::SharedMatrix C_start(ints_->Ca()->clone());
+    std::shared_ptr<psi::Matrix> C_start = ints_->Ca()->clone();
     double econv = options_->get_double("CASSCF_E_CONVERGENCE");
     double gconv = options_->get_double("CASSCF_G_CONVERGENCE");
 
     psi::SharedMatrix Ca = ints_->Ca();
-    psi::SharedMatrix Cb = ints_->Cb();
+
     print_h2("CASSCF Iteration");
-    outfile->Printf("\n iter    ||g||           Delta_E            E_CASSCF       CONV_TYPE");
+    outfile->Printf("\n  iter    ||g||           Delta_E            E_CASSCF       CONV_TYPE");
 
     for (int iter = 0; iter < maxiter; iter++) {
         local_timer casscf_total_iter;
 
-        local_timer transform_integrals_timer;
-        tei_paaa_ = transform_integrals();
+        local_timer trans_ints_timer;
+        tei_gaaa_ = transform_integrals(Ca);
         if (print_ > 0) {
-            outfile->Printf("\n\n Transform Integrals takes %8.8f s.",
-                            transform_integrals_timer.get());
+            outfile->Printf("\n\n  Transform Integrals takes %8.8f s.", trans_ints_timer.get());
         }
         iter_con.push_back(iter);
 
         // Perform a CASCI
-        // If CASSCF_DEBUG_PRINTING is on, will compare CAS-CI with SPIN-FREE RDM
         E_casscf_old = E_casscf_;
         if (print_ > 0) {
-            outfile->Printf("\n\n  Performing a CAS with %s",
-                            options_->get_str("CASSCF_CI_SOLVER").c_str());
+            std::string ci_type = options_->get_str("CASSCF_CI_SOLVER");
+            outfile->Printf("\n\n  Performing a CAS with %s", ci_type.c_str());
         }
         local_timer cas_timer;
         // Perform a DMRG-CI, ACI, FCI inside an active space
@@ -233,18 +231,14 @@ double CASSCF::compute_energy() {
         if (print_ > 0) {
             outfile->Printf("\n\n CAS took %8.6f seconds.", cas_timer.get());
         }
-        Ca = ints_->Ca();
-        Cb = ints_->Cb();
 
-        CASSCFOrbitalOptimizer orbital_optimizer(gamma1_, gamma2_, tei_paaa_, options_,
+        CASSCFOrbitalOptimizer orbital_optimizer(gamma1_, gamma2_, tei_gaaa_, options_,
                                                  mo_space_info_);
 
         orbital_optimizer.set_scf_info(scf_info_);
-        orbital_optimizer.set_frozen_one_body(F_froze_);
+        orbital_optimizer.set_frozen_one_body(Ffrzc_);
         orbital_optimizer.set_symmmetry_mo(Ca);
-        // orbital_optimizer.one_body(Hcore_);
-        psi::SharedMatrix Hcore(Hcore_->clone());
-        orbital_optimizer.one_body(Hcore);
+        orbital_optimizer.one_body(Hcore_->clone());
         if (print_ > 0) {
             orbital_optimizer.set_print_timings(true);
         }
@@ -253,55 +247,43 @@ double CASSCF::compute_energy() {
         double g_norm = orbital_optimizer.orbital_gradient_norm();
 
         Ediff = E_casscf_ - E_casscf_old;
-        if ((std::fabs(Ediff) < econv) && (g_norm < gconv) && (iter > 1)) {
+        if (iter > 1 && std::fabs(Ediff) < econv && g_norm < gconv) {
 
-            outfile->Printf("\n %4d   %10.12f   %10.12f   %10.12f  %10.6f s", iter, g_norm, Ediff,
+            outfile->Printf("\n  %4d   %10.12f   %10.12f   %10.12f  %10.6f s", iter, g_norm, Ediff,
                             E_casscf_, casscf_total_iter.get());
 
             outfile->Printf(
-                "\n\n A miracle has come to pass. The CASSCF iterations have converged.");
+                "\n\n  A miracle has come to pass. The CASSCF iterations have converged.");
             break;
         }
 
         Sstep = orbital_optimizer.approx_solve();
 
-        // "Borrowed"(Stolen) from Daniel Smith's code.
-        double maxS = 0.0;
-        for (int h = 0; h < Sstep->nirrep(); h++) {
-            for (int i = 0; i < Sstep->rowspi()[h]; i++) {
-                for (int j = 0; j < Sstep->colspi()[h]; j++) {
-                    if (std::fabs(Sstep->get(h, i, j)) > maxS)
-                        maxS = std::fabs(Sstep->get(h, i, j));
-                }
-            }
-        }
+        // Max rotation
+        double maxS = Sstep->absmax();
         if (maxS > rotation_max_value) {
             Sstep->scale(rotation_max_value / maxS);
         }
 
         // Add step to overall rotation
-
         S->add(Sstep);
 
         // TODO:  Add options controlled.  Iteration and g_norm
-        if (do_diis && (iter > diis_start && g_norm < diis_gradient_norm)) {
+        if (do_diis and (iter >= diis_start or g_norm < diis_gradient_norm)) {
             diis_manager->add_entry(2, Sstep.get(), S.get());
             diis_count++;
         }
 
-        if (do_diis && (!(diis_count % diis_freq) && iter > diis_start)) {
+        if (do_diis and iter > diis_start and (diis_count % diis_freq == 0)) {
             diis_manager->extrapolate(1, S.get());
         }
         psi::SharedMatrix Cp = orbital_optimizer.rotate_orbitals(C_start, S);
 
-        /// ENFORCE Ca = Cb
+        // update MO coefficients
         Ca->copy(Cp);
-        Cb->copy(Cp);
-
-        ints_->update_orbitals(Ca, Cb); // Perhaps slow down code.
 
         std::string diis_start_label = "";
-        if (iter >= diis_start && do_diis == true && g_norm < diis_gradient_norm) {
+        if (do_diis and (iter > diis_start or g_norm < diis_gradient_norm)) {
             diis_start_label = "DIIS";
         }
         outfile->Printf("\n %4d   %10.12f   %10.12f   %10.12f  %10.6f s  %4s ~", iter, g_norm,
@@ -322,10 +304,8 @@ double CASSCF::compute_energy() {
         throw psi::PSIEXCEPTION("CASSCF did not converge.");
     }
 
-    // INSERT HERE
-    // restransform integrals using DF_BASIS_MP2 for
-    // consistent energies in correlation treatment
-    //    ints_->update_orbitals(Ca, Cb);
+    // restransform integrals if derivatives are needed
+    ints_->update_orbitals(Ca, Ca);
 
     cas_ci();
     outfile->Printf("\n @E(CASSCF) = %18.12f \n", E_casscf_);
@@ -501,16 +481,15 @@ std::shared_ptr<psi::Matrix> CASSCF::set_frozen_core_orbitals() {
     return F_core;
 }
 
-ambit::Tensor CASSCF::transform_integrals() {
+ambit::Tensor CASSCF::transform_integrals(std::shared_ptr<psi::Matrix> Ca) {
     // This function will do an integral transformation using the JK builder,
     // and return the integrals of type <px|uy> = (pu|xy).
     // This was borrowed from Kevin Hannon's IntegralTransform Plugin.
 
     // Transform C matrix to C1 symmetry
     size_t nso = scf_info_->nso();
-    psi::SharedMatrix Ca_sym = ints_->Ca();
     psi::SharedMatrix aotoso = ints_->aotoso();
-    auto Call = std::make_shared<psi::Matrix>(nso, nmo_);
+    auto Ca_nosym = std::make_shared<psi::Matrix>(nso, nmo_);
 
     // Transform from the SO to the AO basis for the C matrix.
     // just transfroms the C_{mu_ao i} -> C_{mu_so i}
@@ -523,8 +502,8 @@ ambit::Tensor CASSCF::transform_integrals() {
             if (!nso)
                 continue;
 
-            C_DGEMV('N', nao, nso, 1.0, aotoso->pointer(h)[0], nso, &Ca_sym->pointer(h)[0][i],
-                    nmo_dim_[h], 0.0, &Call->pointer()[0][index], nmo_dim_.sum());
+            C_DGEMV('N', nao, nso, 1.0, aotoso->pointer(h)[0], nso, &Ca->pointer(h)[0][i],
+                    nmo_dim_[h], 0.0, &Ca_nosym->pointer()[0][index], nmo_dim_.sum());
 
             index += 1;
         }
@@ -537,12 +516,12 @@ ambit::Tensor CASSCF::transform_integrals() {
     auto Cact = std::make_shared<psi::Matrix>("Cact", nso, nactv_);
     std::vector<std::shared_ptr<psi::Matrix>> Cact_vec(nactv_);
     for (size_t x = 0; x < nactv_; x++) {
-        psi::SharedVector Call_vec = Call->get_column(0, actv_mos_abs_[x]);
-        Cact->set_column(0, x, Call_vec);
+        psi::SharedVector Ca_nosym_vec = Ca_nosym->get_column(0, actv_mos_abs_[x]);
+        Cact->set_column(0, x, Ca_nosym_vec);
 
         std::string name = "Cact slice " + std::to_string(x);
         auto temp = std::make_shared<psi::Matrix>(name, nso, 1);
-        temp->set_column(0, 0, Call_vec);
+        temp->set_column(0, 0, Ca_nosym_vec);
         Cact_vec[x] = temp;
     }
 
@@ -580,7 +559,7 @@ ambit::Tensor CASSCF::transform_integrals() {
         shift += x;
         for (size_t y = x; y < nactv_; ++y) {
             std::shared_ptr<psi::Matrix> J = JK_->J()[x * nactv_ + y - shift];
-            half_trans = psi::linalg::triplet(Call, J, Cact, true, false, false);
+            half_trans = psi::linalg::triplet(Ca_nosym, J, Cact, true, false, false);
 
             for (size_t p = 0; p < ncmo_; ++p) {
                 for (size_t u = 0; u < nactv_; ++u) {
@@ -622,7 +601,7 @@ std::shared_ptr<ActiveSpaceIntegrals> CASSCF::get_ci_integrals() {
                                               {nactv_, nactv_, nactv_, nactv_});
         auto active_ab = ambit::Tensor::build(ambit::CoreTensor, "ActiveIntegralsAB",
                                               {nactv_, nactv_, nactv_, nactv_});
-        const std::vector<double>& tei_paaa_data = tei_paaa_.data();
+        const std::vector<double>& tei_paaa_data = tei_gaaa_.data();
 
         size_t nactv2 = nactv_ * nactv_;
         size_t nactv3 = nactv2 * nactv_;
