@@ -3,7 +3,7 @@
 
 import ipywidgets as widgets
 import re
-
+from .py3js_renderer import Py3JSRenderer
 
 def cube_viewer(cubes,
                 scale=1.0,
