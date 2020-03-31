@@ -2335,9 +2335,7 @@ SharedMatrix DSRG_MRPT2::compute_gradient() {
     write_lagrangian();
     write_1rdm_spin_dependent();
     write_2rdm_spin_dependent();
-    // tpdm_backtransform();
-
-
+    tpdm_backtransform();
 
     //NOTICE Just for test
     // compute_test_energy();
@@ -2694,7 +2692,7 @@ void DSRG_MRPT2::write_2rdm_spin_dependent() {
     temp1["cDkL"] = V["cDkL"] * Eeps2_p["kLcD"];
     temp["abij"] += 0.25 * temp1["cdkl"] * Eeps2_m1["ijab"] * Gamma1["ki"] * Gamma1["lj"] * Eta1["ac"] * Eta1["bd"];
     temp["ABIJ"] += 0.25 * temp1["CDKL"] * Eeps2_m1["IJAB"] * Gamma1["KI"] * Gamma1["LJ"] * Eta1["AC"] * Eta1["BD"];
-    temp["aBiJ"] += temp1["cDkL"] * Eeps2_m1["iJaB"] * Gamma1["ki"] * Gamma1["LJ"] * Eta1["ac"] * Eta1["BD"];
+    temp["aBiJ"] += 0.25 * temp1["cDkL"] * Eeps2_m1["iJaB"] * Gamma1["ki"] * Gamma1["LJ"] * Eta1["ac"] * Eta1["BD"];
     temp1.zero();
 
     temp1["cdkl"] = V["cdkl"] * Eeps2_m1["klcd"];
@@ -2702,31 +2700,135 @@ void DSRG_MRPT2::write_2rdm_spin_dependent() {
     temp1["cDkL"] = V["cDkL"] * Eeps2_m1["kLcD"];
     temp["abij"] += 0.25 * temp1["cdkl"] * Eeps2_p["ijab"] * Gamma1["ki"] * Gamma1["lj"] * Eta1["ac"] * Eta1["bd"];
     temp["ABIJ"] += 0.25 * temp1["CDKL"] * Eeps2_p["IJAB"] * Gamma1["KI"] * Gamma1["LJ"] * Eta1["AC"] * Eta1["BD"];
-    temp["aBiJ"] += temp1["cDkL"] * Eeps2_p["iJaB"] * Gamma1["ki"] * Gamma1["LJ"] * Eta1["ac"] * Eta1["BD"];
+    temp["aBiJ"] += 0.25 * temp1["cDkL"] * Eeps2_p["iJaB"] * Gamma1["ki"] * Gamma1["LJ"] * Eta1["ac"] * Eta1["BD"];
 
 
     temp["eumv"] += 2.0 * Z["em"] * Gamma1["uv"];
     temp["EUMV"] += 2.0 * Z["EM"] * Gamma1["UV"];
-    temp["eUmV"] += 4.0 * Z["em"] * Gamma1["UV"];
+    temp["eUmV"] += 2.0 * Z["em"] * Gamma1["UV"];
 
 
     temp["u,v1,n,u1"] += 2.0 * Z["un"] * Gamma1["u1,v1"]; 
     temp["U,V1,N,U1"] += 2.0 * Z["UN"] * Gamma1["U1,V1"];
-    temp["u,V1,n,U1"] += 4.0 * Z["un"] * Gamma1["U1,V1"]; 
+    temp["u,V1,n,U1"] += 2.0 * Z["un"] * Gamma1["U1,V1"]; 
 
 
     temp["xynv"] -= Z["un"] * Gamma2["uvxy"]; 
     temp["XYNV"] -= Z["UN"] * Gamma2["UVXY"]; 
-    temp["xYnV"] -= 4.0 * Z["un"] * Gamma2["uVxY"]; 
+    temp["xYnV"] -= Z["un"] * Gamma2["uVxY"]; 
 
     temp["evxy"] += Z["eu"] * Gamma2["uvxy"];
     temp["EVXY"] += Z["EU"] * Gamma2["UVXY"];
-    temp["eVxY"] += 4.0 * Z["eu"] * Gamma2["uVxY"];
+    temp["eVxY"] += Z["eu"] * Gamma2["uVxY"];
 
 
     temp["v,v1,u,u1"] += Z["uv"] * Gamma1["u1,v1"];
     temp["V,V1,U,U1"] += Z["UV"] * Gamma1["U1,V1"];
-    temp["v,V1,u,U1"] += 2.0 * Z["uv"] * Gamma1["U1,V1"];
+    temp["v,V1,u,U1"] += Z["uv"] * Gamma1["U1,V1"];
+
+
+    //loop
+
+
+    // (temp.block("va")).iterate([&](const std::vector<size_t>& i, double& value) {
+    //     if (virt_mos_relative[i[0]].first == actv_mos_relative[i[1]].first) {
+    //         d2aa.write_value(i[0], i[2], i[1], i[3], value, 0, "NULL", 0);        
+    //     }
+    // });
+
+
+    BlockedTensor temp2 = BTF_->build(CoreTensor, "temporal tensor 2", {"phph","phPH"});
+
+    // // (ac|ac) - (ac|ac)   aacc
+    // temp2["xmyn"] += temp["xymn"]; 
+    // temp2["xnym"] -= temp["xymn"]; 
+
+    // // (ac|vc) - (ac|vc)   avcc
+    // temp2["xmen"] += temp["xemn"];
+    // temp2["xnem"] -= temp["xemn"];
+
+    // // (vc|ac) - (vc|ac)   vacc
+    // temp2["emxn"] += temp["exmn"];
+    // temp2["enxm"] -= temp["exmn"];
+
+    // // (vc|vc) - (vc|vc)   vvcc
+    // temp2["emfn"] += temp["efmn"];
+    // temp2["enfm"] -= temp["efmn"];
+
+    // // (ac|aa) - (aa|ac)   aaca
+    // temp2["xmyu"] += temp["xymu"];
+    // temp2["xuym"] -= temp["xymu"];
+
+    // // (ac|va) - (aa|vc)   avca
+    // temp2["xmey"] += temp["xemy"];
+    // temp2["xyem"] -= temp["xemy"];
+
+    // // (vc|aa) - (va|ac)   vaca
+    // temp2["emxy"] += temp["exmy"];
+    // temp2["eyxm"] -= temp["exmy"];
+
+    // // (vc|va) - (va|vc)   vvca
+    // temp2["emfx"] += temp["efmx"];
+    // temp2["exfm"] -= temp["efmx"];
+
+    // // (aa|ac) - (ac|aa)   aaac
+    // temp2["xuym"] += temp["xyum"];
+    // temp2["xmyu"] -= temp["xyum"];
+
+    // // (aa|vc) - (ac|va)   avac
+    // temp2["xyem"] += temp["xeym"];
+    // temp2["xmey"] -= temp["xeym"];
+
+    // // (va|ac) - (vc|aa)   vaac
+    // temp2["eyxm"] += temp["exym"];
+    // temp2["emxy"] -= temp["exym"];
+
+    // // (va|vc) - (vc|va)   vvac
+    // temp2["exfm"] += temp["efxm"];
+    // temp2["emfx"] -= temp["efxm"];
+
+    // // (aa|aa) - (aa|aa)   aaaa
+    // temp2["xuyv"] += temp["xyuv"];
+    // temp2["xvyu"] -= temp["xyuv"];
+
+    // // (aa|va) - (aa|va)   avaa
+    // temp2["xuev"] += temp["xeuv"];
+    // temp2["xveu"] -= temp["xeuv"];
+
+    // // (va|aa) - (va|aa)   vaaa
+    // temp2["euxv"] += temp["exuv"];
+    // temp2["evxu"] -= temp["exuv"];
+
+    // // (va|va) - (va|va)   vvaa
+    // temp2["exfy"] += temp["efxy"];
+    // temp2["eyfx"] -= temp["efxy"];
+
+
+    temp2["ckdl"] += temp["cdkl"];
+    temp2["cldk"] -= temp["cdkl"];
+
+
+
+    temp2["ckDL"] += 2.0 * temp["cDkL"];
+    // NOTICE: need check
+    temp2["clDK"] += 2.0 * temp["cDlK"];
+    // temp2["clDK"] -= 2.0 * temp["cDlK"];
+
+
+
+    temp2.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>& spin, double& value) {
+        if (spin[2] == AlphaSpin) {
+            d2aa.write_value(i[0], i[1], i[2], i[3], value, 0, "NULL", 0);          
+            d2bb.write_value(i[0], i[1], i[2], i[3], value, 0, "NULL", 0);          
+        }
+        else {
+            d2ab.write_value(i[0], i[1], i[2], i[3], value, 0, "NULL", 0); 
+        }
+    });
+
+
+
+
 
 
 

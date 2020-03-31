@@ -455,11 +455,12 @@ def gradient_forte(name, **kwargs):
 
     # Run a method
     job_type = options.get_str('JOB_TYPE')
+    correlation_solver = options.get_str('CORRELATION_SOLVER')
 
     energy = 0.0
 
-    if not job_type == 'CASSCF':
-        raise Exception('analytic gradient is only implemented for CASSCF')
+    if not job_type == 'CASSCF' and not correlation_solver == 'DSRG-MRPT2':
+        raise Exception('analytic gradient is only implemented for CASSCF and DSRG-MRPT2')
 
     start = timeit.timeit()
 
