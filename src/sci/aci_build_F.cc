@@ -131,8 +131,6 @@ void AdaptiveCI::get_excited_determinants_sr(SharedMatrix evecs, SharedVector ev
                             new_det.set_alfa_bit(aa, true);
                             if (is_gasdet(new_det, gas_bitmasks, gas_min_, gas_max_)) {
                                 V_hash_t[new_det] += HIJ;
-                            } else {
-                                outfile->Printf("\n %s is not in GAS", str(new_det, nact_).c_str());
                             }
                         }
                     }
@@ -151,8 +149,6 @@ void AdaptiveCI::get_excited_determinants_sr(SharedMatrix evecs, SharedVector ev
                             new_det.set_beta_bit(aa, true);
                             if (is_gasdet(new_det, gas_bitmasks, gas_min_, gas_max_)) {
                                 V_hash_t[new_det] += HIJ;
-                            } else {
-                                outfile->Printf("\n %s is not in GAS", str(new_det, nact_).c_str());
                             }
                         }
                     }
@@ -175,9 +171,6 @@ void AdaptiveCI::get_excited_determinants_sr(SharedMatrix evecs, SharedVector ev
                                     HIJ *= new_det.double_excitation_aa(ii, jj, aa, bb);
                                     if (is_gasdet(new_det, gas_bitmasks, gas_min_, gas_max_)) {
                                         V_hash_t[new_det] += HIJ;
-                                    } else {
-                                        outfile->Printf("\n %s is not in GAS",
-                                                        str(new_det, nact_).c_str());
                                     }
                                 }
                             }
@@ -202,9 +195,6 @@ void AdaptiveCI::get_excited_determinants_sr(SharedMatrix evecs, SharedVector ev
                                     HIJ *= new_det.double_excitation_ab(ii, jj, aa, bb);
                                     if (is_gasdet(new_det, gas_bitmasks, gas_min_, gas_max_)) {
                                         V_hash_t[new_det] += HIJ;
-                                    } else {
-                                        outfile->Printf("\n %s is not in GAS",
-                                                        str(new_det, nact_).c_str());
                                     }
                                 }
                             }
@@ -230,9 +220,6 @@ void AdaptiveCI::get_excited_determinants_sr(SharedMatrix evecs, SharedVector ev
                                     HIJ *= new_det.double_excitation_bb(ii, jj, aa, bb);
                                     if (is_gasdet(new_det, gas_bitmasks, gas_min_, gas_max_)) {
                                         V_hash_t[new_det] += HIJ;
-                                    } else {
-                                        outfile->Printf("\n %s is not in GAS",
-                                                        str(new_det, nact_).c_str());
                                     }
                                 }
                             }
