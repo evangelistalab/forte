@@ -536,6 +536,12 @@ def register_aci_options(options):
     options.add_bool("FORCE_DIAG_METHOD", False,
                            "Force the diagonalization procedure?")
 
+    options.add_int("GASACI_NSPACE",0, "Number of GASACI spaces")
+    options.add_int_array("GASACI_GAS_MIN", "Minimum number of electrons in each space")
+    options.add_int_array("GASACI_GAS_MAX", "Minimum number of electrons in each space")
+    options.add_int_array("GASACI_SPACE1", "Orbitals in the GAS I space")
+    options.add_int_array("GASACI_SPACE2", "Orbitals in the GAS II space")
+    options.add_int_array("GASACI_SPACE3", "Orbitals in the GAS III space")
 
 def register_davidson_liu_options(options):
     options.set_group("Davidson-Liu")

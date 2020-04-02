@@ -179,6 +179,11 @@ class AdaptiveCI : public SelectedCIMethod {
     size_t pre_iter_;
     bool set_ints_ = false;
 
+    int gasaci_nspace_ = 0;
+    std::vector<int> gas_min_;
+    std::vector<int> gas_max_;
+    std::vector<std::vector<int>> gas_spaces_;
+
     // ==> ACI Options <==
     /// The threshold applied to the primary space
     double sigma_;

@@ -102,6 +102,15 @@ void AdaptiveCI::startup() {
     spin_complete_ = options_->get_bool("ACI_ENFORCE_SPIN_COMPLETE");
     spin_complete_P_ = options_->get_bool("ACI_ENFORCE_SPIN_COMPLETE_P");
 
+    gasaci_nspace_ = options_->get_int("GASACI_NSPACE");
+
+    gas_min_ = options_->get_int_vec("GASACI_GAS_MIN");
+    gas_max_ = options_->get_int_vec("GASACI_GAS_MAX");
+
+    gas_spaces_.push_back(options_->get_int_vec("GASACI_SPACE1"));
+    gas_spaces_.push_back(options_->get_int_vec("GASACI_SPACE2"));
+    gas_spaces_.push_back(options_->get_int_vec("GASACI_SPACE3"));
+
     max_cycle_ = options_->get_int("SCI_MAX_CYCLE");
 
     pre_iter_ = options_->get_int("ACI_PREITERATIONS");
@@ -181,6 +190,17 @@ void AdaptiveCI::print_info() {
 
         for (int n = 0, maxn = actmo.size(); n < maxn; ++n) {
             outfile->Printf("\n   %da: %1.6f ", n, epsilon_a->get(actmo[n]));
+        }
+    }
+
+    if (gasaci_nspace_) {
+        outfile->Printf("\n  Performing a GAS-ACI computation with %d spaces", gasaci_nspace_);
+        for (int n = 0; n < gasaci_nspace_; ++n) {
+            outfile->Printf("\n  Space %d: min = %3d max = %3d", n, gas_min_[n], gas_max_[n]);
+            outfile->Printf("\n  Orbitals: ");
+            for (int i = 0; i < gas_spaces_[n].size(); ++i) {
+                outfile->Printf("%d, ", gas_spaces_[n][i]);
+            }
         }
     }
 }
