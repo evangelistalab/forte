@@ -476,14 +476,20 @@ def gradient_forte(name, **kwargs):
         Ub = orb_t.get_Ub()
 
         ints.rotate_orbitals(Ua,Ub)
-    # Run gradient computation
-    energy = forte.forte_old_methods(ref_wfn, options, ints, mo_space_info)
+
+
+    #NOTICE Run gradient computation
+    if (job_type == 'NEWDRIVER'):
+        energy = forte_driver(state_weights_map, scf_info, forte.forte_options, ints, mo_space_info)
+    else:
+        energy = forte.forte_old_methods(ref_wfn, options, ints, mo_space_info)
     derivobj = psi4.core.Deriv(ref_wfn)
     derivobj.set_deriv_density_backtransformed(True)
     derivobj.set_ignore_reference(True)
     grad = derivobj.compute(psi4.core.DerivCalcType.Correlated)
     ref_wfn.set_gradient(grad)    
-    optstash.restore()        
+    optstash.restore()
+       
 
     end = timeit.timeit()
     #print('\n\n  Your calculation took ', (end - start), ' seconds');
