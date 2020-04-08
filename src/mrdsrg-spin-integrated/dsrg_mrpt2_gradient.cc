@@ -1272,7 +1272,7 @@ void DSRG_MRPT2::iter_z() {
     bool converged = false;
     int iter = 1;
     int maxiter = 4000;
-    double convergence = 1e-6;
+    double convergence = 1e-8;
 
     //TODO: beta-beta part not done yet
 
@@ -2510,10 +2510,12 @@ void DSRG_MRPT2::write_2rdm_spin_dependent() {
             for (size_t j = 0; j < size_c; ++j) {
                 auto m1 = core_all_[j];
                 
-                d2aa.write_value(u, n, m1, m1, z_a, 0, "NULL", 0);
-                d2bb.write_value(u, n, m1, m1, z_b, 0, "NULL", 0);
-                d2aa.write_value(u, m1, m1, n, -z_a, 0, "NULL", 0);
-                d2bb.write_value(u, m1, m1, n, -z_b, 0, "NULL", 0);
+                if (n != m1) {
+                    d2aa.write_value(u, n, m1, m1, z_a, 0, "NULL", 0);
+                    d2bb.write_value(u, n, m1, m1, z_b, 0, "NULL", 0);
+                    d2aa.write_value(u, m1, m1, n, -z_a, 0, "NULL", 0);
+                    d2bb.write_value(u, m1, m1, n, -z_b, 0, "NULL", 0);
+                }
                 
                 d2ab.write_value(u, n, m1, m1, 2.0 * (z_a + z_b), 0, "NULL", 0);
             }
@@ -2557,11 +2559,12 @@ void DSRG_MRPT2::write_2rdm_spin_dependent() {
             auto z_b = Z.block("CC").data()[idx];
             for (size_t j = 0; j < size_c; ++j) {
                 auto m1 = core_all_[j];
-                
-                d2aa.write_value(n, m, m1, m1, 0.5 * z_a, 0, "NULL", 0);
-                d2bb.write_value(n, m, m1, m1, 0.5 * z_b, 0, "NULL", 0);
-                d2aa.write_value(n, m1, m1, m, -0.5 * z_a, 0, "NULL", 0);
-                d2bb.write_value(n, m1, m1, m, -0.5 * z_b, 0, "NULL", 0);
+                if (m != m1) {
+                    d2aa.write_value(n, m, m1, m1, 0.5 * z_a, 0, "NULL", 0);
+                    d2bb.write_value(n, m, m1, m1, 0.5 * z_b, 0, "NULL", 0);
+                    d2aa.write_value(n, m1, m1, m, -0.5 * z_a, 0, "NULL", 0);
+                    d2bb.write_value(n, m1, m1, m, -0.5 * z_b, 0, "NULL", 0);
+                }
                 
                 d2ab.write_value(n, m, m1, m1, (z_a + z_b), 0, "NULL", 0);
             }
@@ -2708,14 +2711,7 @@ void DSRG_MRPT2::write_2rdm_spin_dependent() {
     temp["v,V1,u,U1"] += Z["uv"] * Gamma1["U1,V1"];
 
 
-    //loop
 
-
-    // (temp.block("va")).iterate([&](const std::vector<size_t>& i, double& value) {
-    //     if (virt_mos_relative[i[0]].first == actv_mos_relative[i[1]].first) {
-    //         d2aa.write_value(i[0], i[2], i[1], i[3], value, 0, "NULL", 0);        
-    //     }
-    // });
 
 
     BlockedTensor temp2 = BTF_->build(CoreTensor, "temporal tensor 2", {"phph","phPH"});
@@ -2791,16 +2787,14 @@ void DSRG_MRPT2::write_2rdm_spin_dependent() {
 
 
     temp2["ckDL"] += 2.0 * temp["cDkL"];
-    // NOTICE: need check
     temp2["clDK"] += 2.0 * temp["cDlK"];
-    // temp2["clDK"] -= 2.0 * temp["cDlK"];
 
 
 
     temp2.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>& spin, double& value) {
         if (spin[2] == AlphaSpin) {
-            d2aa.write_value(i[0], i[1], i[2], i[3], value, 0, "NULL", 0);          
-            d2bb.write_value(i[0], i[1], i[2], i[3], value, 0, "NULL", 0);          
+            d2aa.write_value(i[0], i[1], i[2], i[3], 0.5 * value, 0, "NULL", 0);          
+            d2bb.write_value(i[0], i[1], i[2], i[3], 0.5 * value, 0, "NULL", 0);          
         }
         else {
             d2ab.write_value(i[0], i[1], i[2], i[3], value, 0, "NULL", 0); 
