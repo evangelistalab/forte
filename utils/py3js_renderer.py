@@ -339,7 +339,8 @@ class Py3JSRenderer():
             self.scene.add(mesh)
         elif isinstance(radius, (list, tuple)):
             if len(radius) == 2:
-                mesh = self.__get_cylinder_mesh(xyz1, xyz2, radius[0], radius[1], color)
+                mesh = self.__get_cylinder_mesh(xyz1, xyz2, radius[0],
+                                                radius[1], color)
                 self.scene.add(mesh)
             else:
                 print(
@@ -379,9 +380,11 @@ class Py3JSRenderer():
             x1 + (x2 - x1) * fraction, y1 + (y2 - y1) * fraction,
             z1 + (z2 - z1) * fraction
         ]
-        mesh = self.__get_cylinder_mesh(xyz1, xyz_base, radius_small, radius_small, color)
+        mesh = self.__get_cylinder_mesh(xyz1, xyz_base, radius_small,
+                                        radius_small, color)
         self.scene.add([mesh])
-        mesh = self.__get_cylinder_mesh(xyz_base, xyz2, radius_large, 0.0, color)
+        mesh = self.__get_cylinder_mesh(xyz_base, xyz2, radius_large, 0.0,
+                                        color)
         self.scene.add([mesh])
 
     def add_plane(self,
