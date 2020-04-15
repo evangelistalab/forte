@@ -779,13 +779,31 @@ void DSRG_MRPT2::compute_t1() {
         temp["UV"] = tempG["UV"];
     }
 
-    T1_["ia"] = F_["ai"];
-    T1_["ia"] += temp["xu"] * T2_["iuax"];
-    T1_["ia"] += temp["XU"] * T2_["iUaX"];
+    if (!foptions_->get_bool("DSRG_NO_FTOT1")) {
+        T1_["ia"] = F_["ai"];
+        T1_["IA"] = F_["AI"];
+        if (!foptions_->get_bool("DSRG_NO_T2TOT1")) {
+            // Normal approach
+            T1_["ia"] += temp["xu"] * T2_["iuax"];
+            T1_["ia"] += temp["XU"] * T2_["iUaX"];
+    
+            T1_["IA"] += temp["xu"] * T2_["uIxA"];
+            T1_["IA"] += temp["XU"] * T2_["IUAX"];
+        }
+        else {
+            outfile->Printf("\n Skip T2 to T1 contribution");
+        }
+        // No T2 to T1 coupling terms
+    }
+    else {
+        // No Fock terms
+        outfile->Printf("\n Skip Fock term contribution");
+        T1_["ia"] = temp["xu"] * T2_["iuax"];
+        T1_["ia"] += temp["XU"] * T2_["iUaX"];
 
-    T1_["IA"] = F_["AI"];
-    T1_["IA"] += temp["xu"] * T2_["uIxA"];
-    T1_["IA"] += temp["XU"] * T2_["IUAX"];
+        T1_["IA"] = temp["xu"] * T2_["uIxA"];
+        T1_["IA"] += temp["XU"] * T2_["IUAX"];
+    }
 
     // transform to semi-canonical basis
     if (!semi_canonical_) {

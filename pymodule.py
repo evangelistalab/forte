@@ -330,11 +330,14 @@ def adv_embedding_driver(state, state_weights_map, scf_info, ref_wfn, mo_space_i
     psi4.core.print_out("\n Integral test (e original): int_e ncmo: {:d}".format(ints_e.ncmo()))
     # compute higher-level with mo_space_info_active(inner) and methods in options, -> E_high(origin)
     options.set_str('FORTE', 'CORR_LEVEL', frag_corr_level)
+    fold = options.get_bool('FORTE', 'DSRG_FOLD')
+    options.set_bool('FORTE', 'DSRG_FOLD', False)
     #options.set_bool('FORTE', 'SEMI_CANONICAL', False)
     forte.forte_options.update_psi_options(options)
     energy_high = forte_driver(state_weights_map, scf_info, forte.forte_options, ints_f, mo_space_info_active)
     psi4.core.print_out("\n Integral test (f_1, after ldsrg2): oei_a(0, 2) = {:10.8f}".format(ints_f.oei_a(0, 2)))
 
+    options.set_bool('FORTE', 'DSRG_FOLD', fold)
     # Form rdms for interaction correlation computation
     rdms = forte.RHF_DENSITY(scf_info, mo_space_info).rhf_rdms()
     if options.get_str('fragment_density') == "CASSCF": 
@@ -379,6 +382,7 @@ def adv_embedding_driver(state, state_weights_map, scf_info, ref_wfn, mo_space_i
 
     # Compute MRDSRG-in-PT2 energy (folded)
     options.set_str('FORTE', 'CORR_LEVEL', frag_corr_level)
+    options.set_bool('FORTE', 'DSRG_FOLD', False)
     forte.forte_options.update_psi_options(options)
     energy_high_relaxed = forte_driver(state_weights_map, scf_info, forte.forte_options, ints_f, mo_space_info_active)
 
@@ -517,6 +521,8 @@ def run_forte(name, **kwargs):
 
     if job_type == 'NONE':
         forte.cleanup()
+        energy = 0.0
+        psi4.core.set_scalar_variable('CURRENT ENERGY', energy)
         return ref_wfn
 
     start = timeit.timeit()
