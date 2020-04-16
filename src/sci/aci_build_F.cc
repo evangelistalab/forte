@@ -57,6 +57,729 @@ bool pair_compd(const std::pair<Determinant, double> E1, const std::pair<Determi
     return E1.first < E2.first;
 }
 
+det_hash<double> AdaptiveCI::single_excitation_sr(Determinant det, std::vector<int> occ,
+                                                  std::vector<int> vir, double Cp, std::string sp,
+                                                  det_hash<double> V_hash_t) {
+    Determinant new_det(det);
+    for (size_t i = 0; i < occ.size(); ++i) {
+        size_t ii = occ[i];
+        for (size_t a = 0; a < vir.size(); ++a) {
+            size_t aa = vir[a];
+            if ((mo_symmetry_[ii] ^ mo_symmetry_[aa]) == 0) {
+                if (sp == "a") {
+                    double HIJ = as_ints_->slater_rules_single_alpha(det, ii, aa) * Cp;
+                    if (std::abs(HIJ) >= screen_thresh_) {
+                        new_det = det;
+                        new_det.set_alfa_bit(ii, false);
+                        new_det.set_alfa_bit(aa, true);
+                        V_hash_t[new_det] += HIJ;
+                    }
+                } else if (sp == "b") {
+                    double HIJ = as_ints_->slater_rules_single_beta(det, ii, aa) * Cp;
+                    if (std::abs(HIJ) >= screen_thresh_) {
+                        new_det = det;
+                        new_det.set_beta_bit(ii, false);
+                        new_det.set_beta_bit(aa, true);
+                        V_hash_t[new_det] += HIJ;
+                    }
+                }
+            }
+        }
+    }
+    return V_hash_t;
+}
+
+det_hash<double> AdaptiveCI::double_excitation_sr(Determinant det, std::vector<int> occ1,
+                                                  std::vector<int> occ2, std::vector<int> vir1,
+                                                  std::vector<int> vir2, double Cp, std::string sp,
+                                                  det_hash<double> V_hash_t) {
+    Determinant new_det(det);
+    if (sp == "ab") {
+        for (size_t i = 0; i < occ1.size(); ++i) {
+            size_t ii = occ1[i];
+            for (size_t j = 0; j < occ2.size(); ++j) {
+                size_t jj = occ2[j];
+                for (size_t a = 0; a < vir1.size(); ++a) {
+                    size_t aa = vir1[a];
+                    for (size_t b = 0; b < vir2.size(); ++b) {
+                        size_t bb = vir2[b];
+                        if ((mo_symmetry_[ii] ^ mo_symmetry_[jj] ^ mo_symmetry_[aa] ^
+                             mo_symmetry_[bb]) == 0) {
+                            double HIJ = as_ints_->tei_ab(ii, jj, aa, bb) * Cp;
+                            if (std::abs(HIJ) >= screen_thresh_) {
+                                new_det = det;
+                                HIJ *= new_det.double_excitation_ab(ii, jj, aa, bb);
+                                V_hash_t[new_det] += HIJ;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    } else {
+        for (size_t i = 0; i < occ1.size(); ++i) {
+            size_t ii = occ1[i];
+            int jstart = (occ1 == occ2 ? i + 1 : 0);
+            for (size_t j = jstart; j < occ2.size(); ++j) {
+                size_t jj = occ2[j];
+                for (size_t a = 0; a < vir1.size(); ++a) {
+                    size_t aa = vir1[a];
+                    int bstart = (vir1 == vir2 ? a + 1 : 0);
+                    for (size_t b = bstart; b < vir2.size(); ++b) {
+                        size_t bb = vir2[b];
+                        if ((mo_symmetry_[ii] ^ mo_symmetry_[jj] ^ mo_symmetry_[aa] ^
+                             mo_symmetry_[bb]) == 0) {
+                            if (sp == "aa") {
+                                double HIJ = as_ints_->tei_aa(ii, jj, aa, bb) * Cp;
+                                if (std::abs(HIJ) >= screen_thresh_) {
+                                    new_det = det;
+                                    HIJ *= new_det.double_excitation_aa(ii, jj, aa, bb);
+                                    V_hash_t[new_det] += HIJ;
+                                }
+                            } else if (sp == "bb") {
+                                double HIJ = as_ints_->tei_bb(ii, jj, aa, bb) * Cp;
+                                if (std::abs(HIJ) >= screen_thresh_) {
+                                    new_det = det;
+                                    HIJ *= new_det.double_excitation_bb(ii, jj, aa, bb);
+                                    V_hash_t[new_det] += HIJ;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+    return V_hash_t;
+}
+
+std::vector<std::pair<Determinant, std::vector<double>>> AdaptiveCI::single_excitation_avg(
+    Determinant det, std::vector<int> occ, std::vector<int> vir, double evecs_P_row_norm,
+    std::string sp, int nroot, size_t P, SharedMatrix evecs, DeterminantHashVec& P_space,
+    std::vector<std::pair<Determinant, std::vector<double>>> thread_ex_dets) {
+    Determinant new_det(det);
+    for (size_t i = 0; i < occ.size(); ++i) {
+        size_t ii = occ[i];
+        for (size_t a = 0; a < vir.size(); ++a) {
+            size_t aa = vir[a];
+            if ((mo_symmetry_[ii] ^ mo_symmetry_[aa]) == 0) {
+                if (sp == "a") {
+                    double HIJ = as_ints_->slater_rules_single_alpha(det, ii, aa);
+                    if ((std::fabs(HIJ) * evecs_P_row_norm >= screen_thresh_)) {
+                        new_det = det;
+                        new_det.set_alfa_bit(ii, false);
+                        new_det.set_alfa_bit(aa, true);
+                        if (!(P_space.has_det(new_det))) {
+                            std::vector<double> coupling(nroot, 0.0);
+                            for (int n = 0; n < nroot; ++n) {
+                                coupling[n] += HIJ * evecs->get(P, n);
+                            }
+                            thread_ex_dets.push_back(std::make_pair(new_det, coupling));
+                        }
+                    }
+                } else if (sp == "b") {
+                    double HIJ = as_ints_->slater_rules_single_beta(det, ii, aa);
+                    if (std::abs(HIJ) * evecs_P_row_norm >= screen_thresh_) {
+                        new_det = det;
+                        new_det.set_beta_bit(ii, false);
+                        new_det.set_beta_bit(aa, true);
+                        if (!(P_space.has_det(new_det))) {
+                            std::vector<double> coupling(nroot, 0.0);
+                            for (int n = 0; n < nroot; ++n) {
+                                coupling[n] += HIJ * evecs->get(P, n);
+                            }
+                            thread_ex_dets.push_back(std::make_pair(new_det, coupling));
+                        }
+                    }
+                }
+            }
+        }
+    }
+    return thread_ex_dets;
+}
+
+std::vector<std::pair<Determinant, std::vector<double>>> AdaptiveCI::double_excitation_avg(
+    Determinant det, std::vector<int> occ1, std::vector<int> occ2, std::vector<int> vir1,
+    std::vector<int> vir2, double evecs_P_row_norm, std::string sp, int nroot, size_t P,
+    SharedMatrix evecs, DeterminantHashVec& P_space,
+    std::vector<std::pair<Determinant, std::vector<double>>> thread_ex_dets) {
+    Determinant new_det(det);
+    if (sp == "ab") {
+        for (size_t i = 0; i < occ1.size(); ++i) {
+            size_t ii = occ1[i];
+            for (size_t j = 0; j < occ2.size(); ++j) {
+                size_t jj = occ2[j];
+                for (size_t a = 0; a < vir1.size(); ++a) {
+                    size_t aa = vir1[a];
+                    for (size_t b = 0; b < vir2.size(); ++b) {
+                        size_t bb = vir2[b];
+                        if ((mo_symmetry_[ii] ^ mo_symmetry_[jj] ^ mo_symmetry_[aa] ^
+                             mo_symmetry_[bb]) == 0) {
+                            double HIJ = as_ints_->tei_ab(ii, jj, aa, bb);
+                            if ((std::fabs(HIJ) * evecs_P_row_norm >= screen_thresh_)) {
+                                new_det = det;
+                                HIJ *= new_det.double_excitation_ab(ii, jj, aa, bb);
+                                if (!(P_space.has_det(new_det))) {
+                                    std::vector<double> coupling(nroot, 0.0);
+                                    for (int n = 0; n < nroot; ++n) {
+                                        coupling[n] += HIJ * evecs->get(P, n);
+                                    }
+                                    thread_ex_dets.push_back(std::make_pair(new_det, coupling));
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    } else {
+        for (size_t i = 0; i < occ1.size(); ++i) {
+            size_t ii = occ1[i];
+            int jstart = (occ1 == occ2 ? i + 1 : 0);
+            for (size_t j = jstart; j < occ2.size(); ++j) {
+                size_t jj = occ2[j];
+                for (size_t a = 0; a < vir1.size(); ++a) {
+                    size_t aa = vir1[a];
+                    int bstart = (vir1 == vir2 ? a + 1 : 0);
+                    for (size_t b = bstart; b < vir2.size(); ++b) {
+                        size_t bb = vir2[b];
+                        if ((mo_symmetry_[ii] ^ mo_symmetry_[jj] ^ mo_symmetry_[aa] ^
+                             mo_symmetry_[bb]) == 0) {
+                            if (sp == "aa") {
+                                double HIJ = as_ints_->tei_aa(ii, jj, aa, bb);
+                                if ((std::fabs(HIJ) * evecs_P_row_norm >= screen_thresh_)) {
+                                    new_det = det;
+                                    HIJ *= new_det.double_excitation_aa(ii, jj, aa, bb);
+                                    if (!(P_space.has_det(new_det))) {
+                                        std::vector<double> coupling(nroot, 0.0);
+                                        for (int n = 0; n < nroot; ++n) {
+                                            coupling[n] += HIJ * evecs->get(P, n);
+                                        }
+                                        thread_ex_dets.push_back(std::make_pair(new_det, coupling));
+                                    }
+                                }
+                            } else if (sp == "bb") {
+                                double HIJ = as_ints_->tei_bb(ii, jj, aa, bb);
+                                if ((std::fabs(HIJ) * evecs_P_row_norm >= screen_thresh_)) {
+                                    new_det = det;
+                                    HIJ *= new_det.double_excitation_bb(ii, jj, aa, bb);
+                                    if (!(P_space.has_det(new_det))) {
+                                        std::vector<double> coupling(nroot, 0.0);
+                                        for (int n = 0; n < nroot; ++n) {
+                                            coupling[n] += HIJ * evecs->get(P, n);
+                                        }
+                                        thread_ex_dets.push_back(std::make_pair(new_det, coupling));
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+    return thread_ex_dets;
+}
+
+void AdaptiveCI::get_gas_excited_determinants_sr(
+    SharedMatrix evecs, SharedVector evals, DeterminantHashVec& P_space,
+    std::vector<std::pair<double, Determinant>>& F_space) {
+    local_timer build;
+    size_t max_P = P_space.size();
+    const det_hashvec& P_dets = P_space.wfn_hash();
+
+    det_hash<double> V_hash;
+// Loop over reference determinants
+#pragma omp parallel
+    {
+        local_timer gas;
+        size_t num_thread = omp_get_num_threads();
+        size_t tid = omp_get_thread_num();
+        size_t bin_size = max_P / num_thread;
+        bin_size += (tid < (max_P % num_thread)) ? 1 : 0;
+        size_t start_idx =
+            (tid < (max_P % num_thread))
+                ? tid * bin_size
+                : (max_P % num_thread) * (bin_size + 1) + (tid - (max_P % num_thread)) * bin_size;
+        size_t end_idx = start_idx + bin_size;
+
+        det_hash<double> V_hash_t;
+        for (size_t P = start_idx; P < end_idx; ++P) {
+            const Determinant& det(P_dets[P]);
+            double Cp = evecs->get(P, ref_root_);
+
+            // outfile->Printf(     "\n  %s", str(det,nact_).c_str());
+
+            // Generate the occupied/virtual alpha/beta orbitals for different GAS
+            std::vector<std::vector<int>> gas_occ_a;
+            std::vector<std::vector<int>> gas_vir_a;
+            std::vector<std::vector<int>> gas_occ_b;
+            std::vector<std::vector<int>> gas_vir_b;
+            for (size_t gas_count = 0; gas_count < gas_num_; gas_count++) {
+                std::vector<int> occ_a;
+                std::vector<int> occ_b;
+                std::vector<int> vir_a;
+                std::vector<int> vir_b;
+                for (const auto& p : relative_gas_mo_[gas_count]) {
+                    if (det.get_alfa_bit(p)) {
+                        occ_a.push_back(p);
+                    } else {
+                        vir_a.push_back(p);
+                    }
+                    if (det.get_beta_bit(p)) {
+                        occ_b.push_back(p);
+                    } else {
+                        vir_b.push_back(p);
+                    }
+                }
+                gas_occ_a.push_back(occ_a);
+                gas_vir_a.push_back(vir_a);
+                gas_occ_b.push_back(occ_b);
+                gas_vir_b.push_back(vir_b);
+            }
+
+            // Generate the number of electrons in each GAS
+            std::vector<int> gas_configuration;
+            for (size_t gas_count = 0; gas_count < 6; gas_count++) {
+                if (gas_count < gas_num_) {
+                    gas_configuration.push_back(gas_occ_a[gas_count].size());
+                    gas_configuration.push_back(gas_occ_b[gas_count].size());
+                } else {
+                    gas_configuration.push_back(0);
+                    gas_configuration.push_back(0);
+                }
+            }
+
+            // find out the index number of this GAS occupation (maybe better to put in a map?)
+            std::vector<int> zero_occ(12, 0);
+            size_t gas_config_n;
+            gas_electrons_.push_back(zero_occ);
+            auto found_config =
+                std::find(gas_electrons_.begin(), gas_electrons_.end(), gas_configuration);
+            if (found_config != gas_electrons_.end()) {
+                gas_config_n = std::distance(gas_electrons_.begin(), found_config);
+            } else {
+                outfile->Printf("\n");
+                for (size_t i = 0; i < gas_configuration.size(); i++) {
+                    outfile->Printf("%d  ", gas_configuration[i]);
+                }
+                outfile->Printf("\n  Configuration not found in the GAS!");
+                exit(1);
+            }
+            gas_electrons_.pop_back();
+            // Generate single excitations
+            for (size_t gas_count_1 = 0; gas_count_1 < gas_num_; gas_count_1++) {
+                for (size_t gas_count_2 = 0; gas_count_2 < gas_num_; gas_count_2++) {
+                    if (gas_single_criterion_.first[gas_config_n][gas_count_1][gas_count_2]) {
+                        Determinant new_det(det);
+                        for (size_t i = 0; i < gas_occ_a[gas_count_1].size(); ++i) {
+                            size_t ii = gas_occ_a[gas_count_1][i];
+                            for (size_t a = 0; a < gas_vir_a[gas_count_2].size(); ++a) {
+                                size_t aa = gas_vir_a[gas_count_2][a];
+                                if ((mo_symmetry_[ii] ^ mo_symmetry_[aa]) == 0) {
+                                    double HIJ =
+                                        as_ints_->slater_rules_single_alpha(det, ii, aa) * Cp;
+                                    if (std::abs(HIJ) >= screen_thresh_) {
+                                        new_det = det;
+                                        new_det.set_alfa_bit(ii, false);
+                                        new_det.set_alfa_bit(aa, true);
+                                        V_hash_t[new_det] += HIJ;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    if (gas_single_criterion_.first[gas_config_n][gas_count_1][gas_count_2]) {
+                        Determinant new_det(det);
+                        for (size_t i = 0; i < gas_occ_b[gas_count_1].size(); ++i) {
+                            size_t ii = gas_occ_b[gas_count_1][i];
+                            for (size_t a = 0; a < gas_vir_b[gas_count_2].size(); ++a) {
+                                size_t aa = gas_vir_b[gas_count_2][a];
+                                if ((mo_symmetry_[ii] ^ mo_symmetry_[aa]) == 0) {
+                                    double HIJ =
+                                        as_ints_->slater_rules_single_beta(det, ii, aa) * Cp;
+                                    if (std::abs(HIJ) >= screen_thresh_) {
+                                        new_det = det;
+                                        new_det.set_beta_bit(ii, false);
+                                        new_det.set_beta_bit(aa, true);
+                                        V_hash_t[new_det] += HIJ;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            // Generate aa and bb excitations
+            for (size_t gas_count_1 = 0; gas_count_1 < gas_num_; gas_count_1++) {
+                for (size_t gas_count_2 = gas_count_1; gas_count_2 < gas_num_; gas_count_2++) {
+                    for (size_t gas_count_3 = 0; gas_count_3 < gas_num_; gas_count_3++) {
+                        for (size_t gas_count_4 = gas_count_3; gas_count_4 < gas_num_;
+                             gas_count_4++) {
+                            size_t ip =
+                                (2 * gas_num_ - gas_count_1 - 1) * gas_count_1 / 2 + gas_count_2;
+                            size_t jp =
+                                (2 * gas_num_ - gas_count_3 - 1) * gas_count_3 / 2 + gas_count_4;
+                            if (std::get<0>(gas_double_criterion_)[gas_config_n][ip][jp]) {
+                                Determinant new_det(det);
+                                for (size_t i = 0; i < gas_occ_a[gas_count_1].size(); ++i) {
+                                    size_t ii = gas_occ_a[gas_count_1][i];
+                                    int jstart =
+                                        (gas_occ_a[gas_count_1] == gas_occ_a[gas_count_2] ? i + 1
+                                                                                          : 0);
+                                    for (size_t j = jstart; j < gas_occ_a[gas_count_2].size();
+                                         ++j) {
+                                        size_t jj = gas_occ_a[gas_count_2][j];
+                                        for (size_t a = 0; a < gas_vir_a[gas_count_3].size(); ++a) {
+                                            size_t aa = gas_vir_a[gas_count_3][a];
+                                            int bstart =
+                                                (gas_vir_a[gas_count_3] == gas_vir_a[gas_count_4]
+                                                     ? a + 1
+                                                     : 0);
+                                            for (size_t b = bstart;
+                                                 b < gas_vir_a[gas_count_4].size(); ++b) {
+                                                size_t bb = gas_vir_a[gas_count_4][b];
+                                                if ((mo_symmetry_[ii] ^ mo_symmetry_[jj] ^
+                                                     mo_symmetry_[aa] ^ mo_symmetry_[bb]) == 0) {
+                                                    double HIJ =
+                                                        as_ints_->tei_aa(ii, jj, aa, bb) * Cp;
+                                                    if (std::abs(HIJ) >= screen_thresh_) {
+                                                        new_det = det;
+                                                        HIJ *= new_det.double_excitation_aa(ii, jj,
+                                                                                            aa, bb);
+                                                        V_hash_t[new_det] += HIJ;
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                            if (std::get<1>(gas_double_criterion_)[gas_config_n][ip][jp]) {
+                                Determinant new_det(det);
+                                for (size_t i = 0; i < gas_occ_b[gas_count_1].size(); ++i) {
+                                    size_t ii = gas_occ_b[gas_count_1][i];
+                                    int jstart =
+                                        (gas_occ_b[gas_count_1] == gas_occ_b[gas_count_2] ? i + 1
+                                                                                          : 0);
+                                    for (size_t j = jstart; j < gas_occ_b[gas_count_2].size();
+                                         ++j) {
+                                        size_t jj = gas_occ_b[gas_count_2][j];
+                                        for (size_t a = 0; a < gas_vir_b[gas_count_3].size(); ++a) {
+                                            size_t aa = gas_vir_b[gas_count_3][a];
+                                            int bstart =
+                                                (gas_vir_b[gas_count_3] == gas_vir_b[gas_count_4]
+                                                     ? a + 1
+                                                     : 0);
+                                            for (size_t b = bstart;
+                                                 b < gas_vir_b[gas_count_4].size(); ++b) {
+                                                size_t bb = gas_vir_b[gas_count_4][b];
+                                                if ((mo_symmetry_[ii] ^ mo_symmetry_[jj] ^
+                                                     mo_symmetry_[aa] ^ mo_symmetry_[bb]) == 0) {
+                                                    double HIJ =
+                                                        as_ints_->tei_bb(ii, jj, aa, bb) * Cp;
+                                                    if (std::abs(HIJ) >= screen_thresh_) {
+                                                        new_det = det;
+                                                        HIJ *= new_det.double_excitation_bb(ii, jj,
+                                                                                            aa, bb);
+                                                        V_hash_t[new_det] += HIJ;
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            // Generate ab excitations
+            for (size_t gas_count_1 = 0; gas_count_1 < gas_num_; gas_count_1++) {
+                for (size_t gas_count_2 = 0; gas_count_2 < gas_num_; gas_count_2++) {
+                    for (size_t gas_count_3 = 0; gas_count_3 < gas_num_; gas_count_3++) {
+                        for (size_t gas_count_4 = 0; gas_count_4 < gas_num_; gas_count_4++) {
+                            size_t ip = gas_count_1 * gas_num_ + gas_count_2;
+                            size_t jp = gas_count_3 * gas_num_ + gas_count_4;
+                            if (std::get<2>(gas_double_criterion_)[gas_config_n][ip][jp]) {
+                                Determinant new_det(det);
+                                for (size_t i = 0; i < gas_occ_a[gas_count_1].size(); ++i) {
+                                    size_t ii = gas_occ_a[gas_count_1][i];
+                                    for (size_t j = 0; j < gas_occ_b[gas_count_2].size(); ++j) {
+                                        size_t jj = gas_occ_b[gas_count_2][j];
+                                        for (size_t a = 0; a < gas_vir_a[gas_count_3].size(); ++a) {
+                                            size_t aa = gas_vir_a[gas_count_3][a];
+                                            for (size_t b = 0; b < gas_vir_b[gas_count_4].size();
+                                                 ++b) {
+                                                size_t bb = gas_vir_b[gas_count_4][b];
+                                                if ((mo_symmetry_[ii] ^ mo_symmetry_[jj] ^
+                                                     mo_symmetry_[aa] ^ mo_symmetry_[bb]) == 0) {
+                                                    double HIJ =
+                                                        as_ints_->tei_ab(ii, jj, aa, bb) * Cp;
+                                                    if (std::abs(HIJ) >= screen_thresh_) {
+                                                        new_det = det;
+                                                        HIJ *= new_det.double_excitation_ab(ii, jj,
+                                                                                            aa, bb);
+                                                        V_hash_t[new_det] += HIJ;
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        if (tid == 0)
+            outfile->Printf("\n  Time spent forming F space: %20.6f", build.get());
+        local_timer merge_t;
+#pragma omp critical
+        {
+            for (auto& pair : V_hash_t) {
+                const Determinant& det = pair.first;
+                V_hash[det] += pair.second;
+            }
+        }
+        if (tid == 0)
+            outfile->Printf("\n  Time spent merging thread F spaces: %20.6f", merge_t.get());
+    } // Close threads
+
+    // Remove P space
+    const det_hashvec& pdets = P_space.wfn_hash();
+    for (det_hashvec::iterator it = pdets.begin(), endit = pdets.end(); it != endit; ++it) {
+        V_hash.erase(*it);
+    }
+
+    // Loop through hash, compute criteria
+    local_timer convert;
+
+    size_t max = V_hash.size();
+    outfile->Printf("\n  size of hash: %zu", max);
+    F_space.resize(max);
+#pragma omp parallel
+    {
+        int num_thread = omp_get_num_threads();
+        int tid = omp_get_thread_num();
+        size_t N = 0;
+        for (const auto& I : V_hash) {
+            if ((N % num_thread) == tid) {
+                double delta = as_ints_->energy(I.first) - evals->get(ref_root_);
+                double V = I.second;
+                double criteria = 0.5 * (delta - sqrt(delta * delta + V * V * 4.0));
+                F_space[N] = std::make_pair(std::fabs(criteria), I.first);
+            }
+            N++;
+        }
+    }
+    outfile->Printf("\n  Time spent building sorting list: %1.6f", convert.get());
+    outfile->Printf("\n  Size of F space: %zu", F_space.size());
+} // namespace forte
+
+void AdaptiveCI::get_gas_excited_determinants_avg(
+    int nroot, SharedMatrix evecs, SharedVector evals, DeterminantHashVec& P_space,
+    std::vector<std::pair<double, Determinant>>& F_space) {
+    size_t max_P = P_space.size();
+    const det_hashvec& P_dets = P_space.wfn_hash();
+
+    det_hash<std::vector<double>> V_hash;
+// Loop over reference determinants
+#pragma omp parallel
+    {
+        size_t num_thread = omp_get_num_threads();
+        size_t tid = omp_get_thread_num();
+        size_t bin_size = max_P / num_thread;
+        bin_size += (tid < (max_P % num_thread)) ? 1 : 0;
+        size_t start_idx =
+            (tid < (max_P % num_thread))
+                ? tid * bin_size
+                : (max_P % num_thread) * (bin_size + 1) + (tid - (max_P % num_thread)) * bin_size;
+        size_t end_idx = start_idx + bin_size;
+
+        if (omp_get_thread_num() == 0 and !quiet_mode_) {
+            outfile->Printf("\n  Using %d threads.", num_thread);
+        }
+        // This will store the excited determinant info for each thread
+        std::vector<std::pair<Determinant, std::vector<double>>>
+            thread_ex_dets; //( noalpha * nvalpha  );
+
+        for (size_t P = start_idx; P < end_idx; ++P) {
+            const Determinant& det(P_dets[P]);
+            double evecs_P_row_norm = evecs->get_row(0, P)->norm();
+
+            // Generate the occupied/virtual alpha/beta orbitals for different GAS
+            std::vector<std::vector<int>> gas_occ_a;
+            std::vector<std::vector<int>> gas_vir_a;
+            std::vector<std::vector<int>> gas_occ_b;
+            std::vector<std::vector<int>> gas_vir_b;
+            for (size_t gas_count = 0; gas_count < gas_num_; gas_count++) {
+                std::vector<int> occ_a;
+                std::vector<int> occ_b;
+                std::vector<int> vir_a;
+                std::vector<int> vir_b;
+                for (const auto& p : relative_gas_mo_[gas_count]) {
+                    if (det.get_alfa_bit(p)) {
+                        occ_a.push_back(p);
+                    } else {
+                        vir_a.push_back(p);
+                    }
+                    if (det.get_beta_bit(p)) {
+                        occ_b.push_back(p);
+                    } else {
+                        vir_b.push_back(p);
+                    }
+                }
+                gas_occ_a.push_back(occ_a);
+                gas_vir_a.push_back(vir_a);
+                gas_occ_b.push_back(occ_b);
+                gas_vir_b.push_back(vir_b);
+            }
+
+            // Generate the number of electrons in each GAS
+            std::vector<int> gas_configuration;
+            for (size_t gas_count = 0; gas_count < 6; gas_count++) {
+                if (gas_count < gas_num_) {
+                    gas_configuration.push_back(gas_occ_a[gas_count].size());
+                    gas_configuration.push_back(gas_occ_b[gas_count].size());
+                } else {
+                    gas_configuration.push_back(0);
+                    gas_configuration.push_back(0);
+                }
+            }
+
+            // find out the index number of this GAS occupation (maybe better to put in a map?)
+            std::vector<int> zero_occ(12, 0);
+            size_t gas_config_n;
+            gas_electrons_.push_back(zero_occ);
+            auto found_config =
+                std::find(gas_electrons_.begin(), gas_electrons_.end(), gas_configuration);
+            if (found_config != gas_electrons_.end()) {
+                gas_config_n = std::distance(gas_electrons_.begin(), found_config);
+            } else {
+                outfile->Printf("\n");
+                for (size_t i = 0; i < gas_configuration.size(); i++) {
+                    outfile->Printf("%d  ", gas_configuration[i]);
+                }
+                outfile->Printf("\n  Configuration not found in the GAS!");
+                exit(1);
+            }
+            gas_electrons_.pop_back();
+
+            // Generate single excitations
+            for (size_t gas_count_1 = 0; gas_count_1 < gas_num_; gas_count_1++) {
+                for (size_t gas_count_2 = 0; gas_count_2 < gas_num_; gas_count_2++) {
+                    if (gas_single_criterion_.first[gas_config_n][gas_count_1][gas_count_2]) {
+                        thread_ex_dets = single_excitation_avg(
+                            det, gas_occ_a[gas_count_1], gas_vir_a[gas_count_2], evecs_P_row_norm,
+                            "a", nroot, P, evecs, P_space, thread_ex_dets);
+                    }
+                    if (gas_single_criterion_.first[gas_config_n][gas_count_1][gas_count_2]) {
+                        thread_ex_dets = single_excitation_avg(
+                            det, gas_occ_b[gas_count_1], gas_vir_b[gas_count_2], evecs_P_row_norm,
+                            "b", nroot, P, evecs, P_space, thread_ex_dets);
+                    }
+                }
+            }
+            // Generate aa and bb excitations
+            for (size_t gas_count_1 = 0; gas_count_1 < gas_num_; gas_count_1++) {
+                for (size_t gas_count_2 = gas_count_1; gas_count_2 < gas_num_; gas_count_2++) {
+                    for (size_t gas_count_3 = 0; gas_count_3 < gas_num_; gas_count_3++) {
+                        for (size_t gas_count_4 = gas_count_3; gas_count_4 < gas_num_;
+                             gas_count_4++) {
+                            size_t ii =
+                                (2 * gas_num_ - gas_count_1 - 1) * gas_count_1 / 2 + gas_count_2;
+                            size_t jj =
+                                (2 * gas_num_ - gas_count_3 - 1) * gas_count_3 / 2 + gas_count_4;
+                            if (std::get<0>(gas_double_criterion_)[gas_config_n][ii][jj]) {
+                                thread_ex_dets = double_excitation_avg(
+                                    det, gas_occ_a[gas_count_1], gas_occ_a[gas_count_2],
+                                    gas_vir_a[gas_count_3], gas_vir_a[gas_count_4],
+                                    evecs_P_row_norm, "aa", nroot, P, evecs, P_space,
+                                    thread_ex_dets);
+                            }
+                            if (std::get<1>(gas_double_criterion_)[gas_config_n][ii][jj]) {
+                                thread_ex_dets = double_excitation_avg(
+                                    det, gas_occ_b[gas_count_1], gas_occ_b[gas_count_2],
+                                    gas_vir_b[gas_count_3], gas_vir_b[gas_count_4],
+                                    evecs_P_row_norm, "bb", nroot, P, evecs, P_space,
+                                    thread_ex_dets);
+                            }
+                        }
+                    }
+                }
+            }
+
+            // Generate ab excitations
+            for (size_t gas_count_1 = 0; gas_count_1 < gas_num_; gas_count_1++) {
+                for (size_t gas_count_2 = 0; gas_count_2 < gas_num_; gas_count_2++) {
+                    for (size_t gas_count_3 = 0; gas_count_3 < gas_num_; gas_count_3++) {
+                        for (size_t gas_count_4 = 0; gas_count_4 < gas_num_; gas_count_4++) {
+                            size_t ii = gas_count_1 * gas_num_ + gas_count_2;
+                            size_t jj = gas_count_3 * gas_num_ + gas_count_4;
+                            if (std::get<2>(gas_double_criterion_)[gas_config_n][ii][jj]) {
+                                thread_ex_dets = double_excitation_avg(
+                                    det, gas_occ_a[gas_count_1], gas_occ_b[gas_count_2],
+                                    gas_vir_a[gas_count_3], gas_vir_b[gas_count_4],
+                                    evecs_P_row_norm, "ab", nroot, P, evecs, P_space,
+                                    thread_ex_dets);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+#pragma omp critical
+        {
+            for (size_t I = 0, maxI = thread_ex_dets.size(); I < maxI; ++I) {
+                std::vector<double>& coupling = thread_ex_dets[I].second;
+                Determinant& det = thread_ex_dets[I].first;
+                if (V_hash.count(det) != 0) {
+                    for (int n = 0; n < nroot; ++n) {
+                        V_hash[det][n] += coupling[n];
+                    }
+                } else {
+                    V_hash[det] = coupling;
+                }
+            }
+        }
+    } // Close threads
+
+    local_timer convert;
+
+    size_t max = V_hash.size();
+
+    F_space.resize(max);
+
+#pragma omp parallel
+    {
+        int tid = omp_get_thread_num();
+        int ntd = omp_get_num_threads();
+
+        size_t N = 0;
+        for (const auto& detpair : V_hash) {
+            if ((N % ntd) == tid) {
+                double EI = as_ints_->energy(detpair.first);
+                std::vector<double> criteria(nroot, 0.0);
+                for (int n = 0; n < nroot; ++n) {
+                    double V = detpair.second[n];
+                    double delta = EI - evals->get(n);
+                    double criterion = 0.5 * (delta - sqrt(delta * delta + V * V * 4.0));
+                    criteria[n] = std::fabs(criterion);
+                }
+                double value = average_q_values(criteria);
+
+                F_space[N] = std::make_pair(value, detpair.first);
+            }
+            N++;
+        }
+    }
+    outfile->Printf("\n  Time spent building sorting list: %1.6f", convert.get());
+    outfile->Printf("\n  Size of F space: %zu", F_space.size());
+}
+
 void AdaptiveCI::get_excited_determinants_sr(SharedMatrix evecs, SharedVector evals,
                                              DeterminantHashVec& P_space,
                                              std::vector<std::pair<double, Determinant>>& F_space) {
@@ -80,6 +803,7 @@ void AdaptiveCI::get_excited_determinants_sr(SharedMatrix evecs, SharedVector ev
 
         det_hash<double> V_hash_t;
         for (size_t P = start_idx; P < end_idx; ++P) {
+            local_timer single;
             const Determinant& det(P_dets[P]);
             double Cp = evecs->get(P, ref_root_);
 
@@ -288,7 +1012,8 @@ void AdaptiveCI::get_excited_determinants_avg(
                     if ((mo_symmetry_[ii] ^ mo_symmetry_[aa]) == 0) {
                         double HIJ = as_ints_->slater_rules_single_alpha(det, ii, aa);
                         if ((std::fabs(HIJ) * evecs_P_row_norm >= screen_thresh_)) {
-                            //      if( std::abs(HIJ * evecs->get(0, P)) > screen_thresh_ ){
+                            //      if( std::abs(HIJ * evecs->get(0, P)) >
+                            //      screen_thresh_ ){
                             new_det = det;
                             new_det.set_alfa_bit(ii, false);
                             new_det.set_alfa_bit(aa, true);
@@ -347,7 +1072,8 @@ void AdaptiveCI::get_excited_determinants_avg(
                                 if ((std::fabs(HIJ) * evecs_P_row_norm >= screen_thresh_)) {
                                     new_det = det;
                                     HIJ *= new_det.double_excitation_aa(ii, jj, aa, bb);
-                                    // if( std::abs(HIJ * evecs->get(0, P)) > screen_thresh_ ){
+                                    // if( std::abs(HIJ * evecs->get(0, P)) >
+                                    // screen_thresh_ ){
 
                                     if (!(P_space.has_det(new_det))) {
                                         std::vector<double> coupling(nroot, 0.0);
@@ -382,7 +1108,8 @@ void AdaptiveCI::get_excited_determinants_avg(
                                 if ((std::fabs(HIJ) * evecs_P_row_norm >= screen_thresh_)) {
                                     new_det = det;
                                     HIJ *= new_det.double_excitation_ab(ii, jj, aa, bb);
-                                    // if( std::abs(HIJ * evecs->get(0, P)) > screen_thresh_ ){
+                                    // if( std::abs(HIJ * evecs->get(0, P)) >
+                                    // screen_thresh_ ){
 
                                     if (!(P_space.has_det(new_det))) {
                                         std::vector<double> coupling(nroot, 0.0);
@@ -414,7 +1141,8 @@ void AdaptiveCI::get_excited_determinants_avg(
                                  (mo_symmetry_[jj] ^ (mo_symmetry_[aa] ^ mo_symmetry_[bb]))) == 0) {
                                 double HIJ = as_ints_->tei_bb(ii, jj, aa, bb);
                                 if ((std::fabs(HIJ) * evecs_P_row_norm >= screen_thresh_)) {
-                                    // if( std::abs(HIJ * evecs->get(0, P)) >= screen_thresh_ ){
+                                    // if( std::abs(HIJ * evecs->get(0, P)) >=
+                                    // screen_thresh_ ){
                                     new_det = det;
                                     HIJ *= new_det.double_excitation_bb(ii, jj, aa, bb);
 
@@ -533,7 +1261,8 @@ void AdaptiveCI::get_excited_determinants_core(
                         ((aa != hole_) or (!det.get_beta_bit(aa)))) {
                         double HIJ = as_ints_->slater_rules_single_alpha(det, ii, aa);
                         if ((std::fabs(HIJ) * evecs_P_row_norm >= screen_thresh_)) {
-                            //      if( std::abs(HIJ * evecs->get(0, P)) > screen_thresh_ ){
+                            //      if( std::abs(HIJ * evecs->get(0, P)) >
+                            //      screen_thresh_ ){
                             new_det = det;
                             new_det.set_alfa_bit(ii, false);
                             new_det.set_alfa_bit(aa, true);
@@ -593,7 +1322,8 @@ void AdaptiveCI::get_excited_determinants_core(
                                 if ((std::fabs(HIJ) * evecs_P_row_norm >= screen_thresh_)) {
                                     new_det = det;
                                     HIJ *= new_det.double_excitation_aa(ii, jj, aa, bb);
-                                    // if( std::abs(HIJ * evecs->get(0, P)) > screen_thresh_ ){
+                                    // if( std::abs(HIJ * evecs->get(0, P)) >
+                                    // screen_thresh_ ){
 
                                     if (!(P_space.has_det(new_det))) {
                                         std::vector<double> coupling(nroot, 0.0);
@@ -629,7 +1359,8 @@ void AdaptiveCI::get_excited_determinants_core(
                                 if ((std::fabs(HIJ) * evecs_P_row_norm >= screen_thresh_)) {
                                     new_det = det;
                                     HIJ *= new_det.double_excitation_ab(ii, jj, aa, bb);
-                                    // if( std::abs(HIJ * evecs->get(0, P)) > screen_thresh_ ){
+                                    // if( std::abs(HIJ * evecs->get(0, P)) >
+                                    // screen_thresh_ ){
 
                                     if (!(P_space.has_det(new_det))) {
                                         std::vector<double> coupling(nroot, 0.0);
@@ -663,7 +1394,8 @@ void AdaptiveCI::get_excited_determinants_core(
                                 (aa != hole_ and bb != hole_)) {
                                 double HIJ = as_ints_->tei_bb(ii, jj, aa, bb);
                                 if ((std::fabs(HIJ) * evecs_P_row_norm >= screen_thresh_)) {
-                                    // if( std::abs(HIJ * evecs->get(0, P)) >= screen_thresh_ ){
+                                    // if( std::abs(HIJ * evecs->get(0, P)) >=
+                                    // screen_thresh_ ){
                                     new_det = det;
                                     HIJ *= new_det.double_excitation_bb(ii, jj, aa, bb);
 
@@ -742,10 +1474,12 @@ double AdaptiveCI::get_excited_determinants_batch_vecsort(
     // Guess the total memory needed to store all singles and doubles out of all dets
     //    size_t nsingle_a = nalpha_ * (ncmo_ - nalpha_);
     //    size_t nsingle_b = nbeta_ * (ncmo_ - nbeta_);
-    //    size_t ndouble_aa = nalpha_ * (nalpha_ - 1) * (ncmo_ - nalpha_) * (ncmo_ - nalpha_ - 1) /
-    //    4; size_t ndouble_bb = nbeta_ * (nbeta_ - 1) * (ncmo_ - nbeta_) * (ncmo_ - nbeta_ - 1) /
-    //    4; size_t ndouble_ab = nsingle_a * nsingle_b; size_t nexcitations = nsingle_a + nsingle_b
-    //    + ndouble_aa + ndouble_bb + ndouble_ab; size_t guess_size = n_dets * nexcitations;
+    //    size_t ndouble_aa = nalpha_ * (nalpha_ - 1) * (ncmo_ - nalpha_) * (ncmo_ -
+    //    nalpha_ - 1) / 4; size_t ndouble_bb = nbeta_ * (nbeta_ - 1) * (ncmo_ - nbeta_)
+    //    * (ncmo_ - nbeta_ - 1) / 4; size_t ndouble_ab = nsingle_a * nsingle_b; size_t
+    //    nexcitations = nsingle_a + nsingle_b
+    //    + ndouble_aa + ndouble_bb + ndouble_ab; size_t guess_size = n_dets *
+    //    nexcitations;
 
     size_t nocc2 = nalpha_ * nalpha_;
     size_t nvir2 = (nmo - nalpha_) * (nmo - nalpha_);
@@ -781,8 +1515,8 @@ double AdaptiveCI::get_excited_determinants_batch_vecsort(
             auto& A_b = A_b_t.first[tid];
             //                        size_t idx = 0;
             double E0 = evals->get(0);
-            //            outfile->Printf("\n td %d, Ab: %zu, abt: %zu", tid ,A_b.size(),
-            //            A_b_t.second[tid]);
+            //            outfile->Printf("\n td %d, Ab: %zu, abt: %zu", tid
+            //            ,A_b.size(), A_b_t.second[tid]);
             for (size_t I = 0, max_I = A_b_t.second[tid]; I < max_I; I++) {
                 auto& pair = A_b[I];
                 double& V = pair.second;
@@ -800,7 +1534,8 @@ double AdaptiveCI::get_excited_determinants_batch_vecsort(
         //  #pragma omp parallel
         //  {
         //      int tid = omp_get_thread_num();
-        //      std::sort(A_b_t.first[tid].begin(), A_b_t.first[tid].begin() + A_b_t.second[tid],
+        //      std::sort(A_b_t.first[tid].begin(), A_b_t.first[tid].begin() +
+        //      A_b_t.second[tid],
         //                [](const std::pair<Determinant, double>& a,
         //                   const std::pair<Determinant, double>& b) -> bool {
         //                    return a.second < b.second;
@@ -1005,8 +1740,8 @@ det_hash<double> AdaptiveCI::get_bin_F_space(int bin, int nbin, double E0, Share
         // size_t guess_bb = guess_b * guess_b / 4;
         // size_t guess_ab = guess_a * guess_b;
 
-        // size_t guess = (n_dets / nbin) * (guess_a + guess_b + guess_aa + guess_bb + guess_ab);
-        // outfile->Printf("\n Guessing %zu dets in bin %d", guess, bin);
+        // size_t guess = (n_dets / nbin) * (guess_a + guess_b + guess_aa + guess_bb +
+        // guess_ab); outfile->Printf("\n Guessing %zu dets in bin %d", guess, bin);
         //        A_b.reserve(guess);
         for (size_t I = start_idx; I < end_idx; ++I) {
             double c_I = evecs->get(I, 0);
@@ -1099,8 +1834,9 @@ det_hash<double> AdaptiveCI::get_bin_F_space(int bin, int nbin, double E0, Share
                                                 A_b[new_det] +=
                                                     (HIJ * det.slater_sign_aaaa(ii, jj, aa, bb));
                                                 //} else if (std::fabs(HIJ) >= 1e-12) {
-                                                //    E_b[new_det] += HIJ * det.slater_sign_aaaa(ii,
-                                                //    jj, aa, bb);
+                                                //    E_b[new_det] += HIJ *
+                                                //    det.slater_sign_aaaa(ii, jj, aa,
+                                                //    bb);
                                             }
                                         }
                                         new_det.set_alfa_bit(bb, false);
@@ -1142,8 +1878,9 @@ det_hash<double> AdaptiveCI::get_bin_F_space(int bin, int nbin, double E0, Share
                                                 A_b[new_det] +=
                                                     (HIJ * det.slater_sign_bbbb(ii, jj, aa, bb));
                                                 //} else if (std::fabs(HIJ) >= 1e-12) {
-                                                //    E_b[new_det] += HIJ * det.slater_sign_bbbb(ii,
-                                                //    jj, aa, bb);
+                                                //    E_b[new_det] += HIJ *
+                                                //    det.slater_sign_bbbb(ii, jj, aa,
+                                                //    bb);
                                             }
                                         }
                                         new_det.set_beta_bit(bb, false);
@@ -1281,11 +2018,12 @@ AdaptiveCI::get_bin_F_space_vecsort(int bin, int nbin, SharedMatrix evecs,
         // Loop over P space determinants
         // size_t guess_a = nalpha_ * (ncmo_ - nalpha_);
         // size_t guess_b = nbeta_ * (ncmo_ - nbeta_);
-        // size_t guess_aa = nalpha_ * (nalpha_ - 1) * (ncmo_ - nalpha_) * (ncmo_ - nalpha_ - 1) /
-        // 4; size_t guess_bb = nbeta_ * (nbeta_ - 1) * (ncmo_ - nbeta_) * (ncmo_ - nbeta_ - 1) / 4;
-        // size_t guess_ab = guess_a * guess_b;
+        // size_t guess_aa = nalpha_ * (nalpha_ - 1) * (ncmo_ - nalpha_) * (ncmo_ -
+        // nalpha_ - 1) / 4; size_t guess_bb = nbeta_ * (nbeta_ - 1) * (ncmo_ - nbeta_)
+        // * (ncmo_ - nbeta_ - 1) / 4; size_t guess_ab = guess_a * guess_b;
 
-        // size_t guess = (n_dets / nbin) * (guess_a + guess_b + guess_aa + guess_bb + guess_ab);
+        // size_t guess = (n_dets / nbin) * (guess_a + guess_b + guess_aa + guess_bb +
+        // guess_ab);
 
         size_t nocc2 = nalpha_ * nalpha_;
         size_t nvir2 = (nmo - nalpha_) * (nmo - nalpha_);
@@ -1479,9 +2217,9 @@ AdaptiveCI::get_bin_F_space_vecsort(int bin, int nbin, SharedMatrix evecs,
 
         //        outfile->Printf("\n  Added %zu dets", A_b.size());
         //        if( thread_id == 0 ){
-        //          outfile->Printf("\n  Time spent forming vec_A_b: %1.6f", build.get());
-        //          outfile->Printf("\n  Generated %zu determinants out of %zu guessed",
-        //          num_new_dets, guess);
+        //          outfile->Printf("\n  Time spent forming vec_A_b: %1.6f",
+        //          build.get()); outfile->Printf("\n  Generated %zu determinants out of
+        //          %zu guessed", num_new_dets, guess);
         //      }
 
         // Sort the determinant contributions
@@ -1521,7 +2259,8 @@ AdaptiveCI::get_bin_F_space_vecsort(int bin, int nbin, SharedMatrix evecs,
         pos += (pos == 0) ? 0 : 1;
 
         //   #pragma omp critical
-        //   outfile->Printf("\n  Time spent combining unique elements of vec_A_b: %1.6f",
+        //   outfile->Printf("\n  Time spent combining unique elements of vec_A_b:
+        //   %1.6f",
         //                   Combine.get());
 
         // store the number of unique determinants
@@ -1662,9 +2401,9 @@ std::vector<std::pair<int, Determinant>> AdaptiveCI::ras_masks() {
 void AdaptiveCI::get_excited_determinants_restrict(int nroot, SharedMatrix evecs,
                                           SharedVector evals,
                                           DeterminantHashVec& P_space,
-                                          std::vector<std::pair<double,Determinant>>& F_space) {
-    size_t max_P = P_space.size();
-    const det_hashvec& P_dets = P_space.wfn_hash();
+                                          std::vector<std::pair<double,Determinant>>&
+F_space) { size_t max_P = P_space.size(); const det_hashvec& P_dets =
+P_space.wfn_hash();
 
     auto mask_pairs = ras_masks();
 
@@ -1679,8 +2418,8 @@ void AdaptiveCI::get_excited_determinants_restrict(int nroot, SharedMatrix evecs
         size_t start_idx =
             (tid < (max_P % num_thread))
                 ? tid * bin_size
-                : (max_P % num_thread) * (bin_size + 1) + (tid - (max_P % num_thread)) * bin_size;
-        size_t end_idx = start_idx + bin_size;
+                : (max_P % num_thread) * (bin_size + 1) + (tid - (max_P % num_thread)) *
+bin_size; size_t end_idx = start_idx + bin_size;
 
         if (omp_get_thread_num() == 0 and !quiet_mode_) {
             outfile->Printf("\n  Using %d threads.", num_thread);
@@ -1712,9 +2451,8 @@ void AdaptiveCI::get_excited_determinants_restrict(int nroot, SharedMatrix evecs
                     if ((mo_symmetry_[ii] ^ mo_symmetry_[aa]) == 0) {
                         double HIJ = as_ints_->slater_rules_single_alpha(det, ii, aa);
                         if ((std::fabs(HIJ) * evecs_P_row_norm >= screen_thresh_)) {
-                            //      if( std::abs(HIJ * evecs->get(0, P)) > screen_thresh_ ){
-                            new_det = det;
-                            new_det.set_alfa_bit(ii, false);
+                            //      if( std::abs(HIJ * evecs->get(0, P)) >
+screen_thresh_ ){ new_det = det; new_det.set_alfa_bit(ii, false);
                             new_det.set_alfa_bit(aa, true);
                             if (!(P_space.has_det(new_det))) {
                                 std::vector<double> coupling(nroot, 0.0);
@@ -1723,7 +2461,8 @@ void AdaptiveCI::get_excited_determinants_restrict(int nroot, SharedMatrix evecs
                                 }
                                 // thread_ex_dets[i * noalpha + a] =
                                 // std::make_pair(new_det,coupling);
-                                thread_ex_dets.push_back(std::make_pair(new_det, coupling));
+                                thread_ex_dets.push_back(std::make_pair(new_det,
+coupling));
                             }
                         }
                     }
@@ -1749,7 +2488,8 @@ void AdaptiveCI::get_excited_determinants_restrict(int nroot, SharedMatrix evecs
                                 }
                                 // thread_ex_dets[i * nobeta + a] =
                                 // std::make_pair(new_det,coupling);
-                                thread_ex_dets.push_back(std::make_pair(new_det, coupling));
+                                thread_ex_dets.push_back(std::make_pair(new_det,
+coupling));
                             }
                         }
                     }
@@ -1765,20 +2505,20 @@ void AdaptiveCI::get_excited_determinants_restrict(int nroot, SharedMatrix evecs
                         size_t aa = avir[a];
                         for (size_t b = a + 1; b < nvalpha; ++b) {
                             size_t bb = avir[b];
-                            if ((mo_symmetry_[ii] ^ mo_symmetry_[jj] ^ mo_symmetry_[aa] ^
-                                 mo_symmetry_[bb]) == 0) {
-                                double HIJ = as_ints_->tei_aa(ii, jj, aa, bb);
-                                if ((std::fabs(HIJ) * evecs_P_row_norm >= screen_thresh_)) {
-                                    new_det = det;
-                                    HIJ *= new_det.double_excitation_aa(ii, jj, aa, bb);
-                                    // if( std::abs(HIJ * evecs->get(0, P)) > screen_thresh_ ){
+                            if ((mo_symmetry_[ii] ^ mo_symmetry_[jj] ^ mo_symmetry_[aa]
+^ mo_symmetry_[bb]) == 0) { double HIJ = as_ints_->tei_aa(ii, jj, aa, bb); if
+((std::fabs(HIJ) * evecs_P_row_norm >= screen_thresh_)) { new_det = det; HIJ *=
+new_det.double_excitation_aa(ii, jj, aa, bb);
+                                    // if( std::abs(HIJ * evecs->get(0, P)) >
+screen_thresh_ ){
 
                                     if (!(P_space.has_det(new_det))) {
                                         std::vector<double> coupling(nroot, 0.0);
                                         for (int n = 0; n < nroot; ++n) {
                                             coupling[n] += HIJ * evecs->get(P, n);
                                         }
-                                        thread_ex_dets.push_back(std::make_pair(new_det, coupling));
+                                        thread_ex_dets.push_back(std::make_pair(new_det,
+coupling));
                                     }
                                 }
                             }
@@ -1796,13 +2536,12 @@ void AdaptiveCI::get_excited_determinants_restrict(int nroot, SharedMatrix evecs
                         size_t aa = avir[a];
                         for (size_t b = 0; b < nvbeta; ++b) {
                             size_t bb = bvir[b];
-                            if ((mo_symmetry_[ii] ^ mo_symmetry_[jj] ^ mo_symmetry_[aa] ^
-                                 mo_symmetry_[bb]) == 0) {
-                                double HIJ = as_ints_->tei_ab(ii, jj, aa, bb);
-                                if ((std::fabs(HIJ) * evecs_P_row_norm >= screen_thresh_)) {
-                                    new_det = det;
-                                    HIJ *= new_det.double_excitation_ab(ii, jj, aa, bb);
-                                    // if( std::abs(HIJ * evecs->get(0, P)) > screen_thresh_ ){
+                            if ((mo_symmetry_[ii] ^ mo_symmetry_[jj] ^ mo_symmetry_[aa]
+^ mo_symmetry_[bb]) == 0) { double HIJ = as_ints_->tei_ab(ii, jj, aa, bb); if
+((std::fabs(HIJ) * evecs_P_row_norm >= screen_thresh_)) { new_det = det; HIJ *=
+new_det.double_excitation_ab(ii, jj, aa, bb);
+                                    // if( std::abs(HIJ * evecs->get(0, P)) >
+screen_thresh_ ){
 
                                     if (!(P_space.has_det(new_det))) {
                                         std::vector<double> coupling(nroot, 0.0);
@@ -1812,7 +2551,8 @@ void AdaptiveCI::get_excited_determinants_restrict(int nroot, SharedMatrix evecs
                                         // thread_ex_dets[i * nobeta * nvalpha
                                         // *nvbeta + j * bvalpha * nvbeta + a *
                                         // nvalpha]
-                                        thread_ex_dets.push_back(std::make_pair(new_det, coupling));
+                                        thread_ex_dets.push_back(std::make_pair(new_det,
+coupling));
                                     }
                                 }
                             }
@@ -1831,19 +2571,19 @@ void AdaptiveCI::get_excited_determinants_restrict(int nroot, SharedMatrix evecs
                         for (size_t b = a + 1; b < nvbeta; ++b) {
                             size_t bb = bvir[b];
                             if ((mo_symmetry_[ii] ^
-                                 (mo_symmetry_[jj] ^ (mo_symmetry_[aa] ^ mo_symmetry_[bb]))) == 0) {
-                                double HIJ = as_ints_->tei_bb(ii, jj, aa, bb);
-                                if ((std::fabs(HIJ) * evecs_P_row_norm >= screen_thresh_)) {
-                                    // if( std::abs(HIJ * evecs->get(0, P)) >= screen_thresh_ ){
-                                    new_det = det;
-                                    HIJ *= new_det.double_excitation_bb(ii, jj, aa, bb);
+                                 (mo_symmetry_[jj] ^ (mo_symmetry_[aa] ^
+mo_symmetry_[bb]))) == 0) { double HIJ = as_ints_->tei_bb(ii, jj, aa, bb); if
+((std::fabs(HIJ) * evecs_P_row_norm >= screen_thresh_)) {
+                                    // if( std::abs(HIJ * evecs->get(0, P)) >=
+screen_thresh_ ){ new_det = det; HIJ *= new_det.double_excitation_bb(ii, jj, aa, bb);
 
                                     if (!(P_space.has_det(new_det))) {
                                         std::vector<double> coupling(nroot, 0.0);
                                         for (int n = 0; n < nroot; ++n) {
                                             coupling[n] += HIJ * evecs->get(P, n);
                                         }
-                                        thread_ex_dets.push_back(std::make_pair(new_det, coupling));
+                                        thread_ex_dets.push_back(std::make_pair(new_det,
+coupling));
                                     }
                                 }
                             }

@@ -132,6 +132,9 @@ class MOSpaceInfo {
     /// Read the space info from forte options(inputs)
     void read_options(std::shared_ptr<ForteOptions> options);
 
+    /// Read the gas space info from forte options(inputs);
+    void read_gas_options(std::shared_ptr<ForteOptions> options);
+
     /// Read the space info from a map of space name-dimension_vector
     void read_from_map(std::map<std::string, std::vector<size_t>>& mo_space_map);
 
@@ -141,8 +144,18 @@ class MOSpaceInfo {
     /// Process current MOSpaceInfo: calculate frozen core, count, and assign orbitals
     void compute_space_info();
 
+    /// Process current GAS Info: calculate General Active Space orbitals
+    int compute_gas_info(psi::Dimension nactpi);
+
+    /// Make GasInfo from inputs(options)
+    std::pair<int, std::map<std::string, SpaceInfo>>
+    make_gas_info(std::shared_ptr<ForteOptions> options);
+
     /// @return The number of irreps
     size_t nirrep() { return nirrep_; }
+
+    /// return gas_info_
+    std::pair<int, std::map<std::string, SpaceInfo>> gas_info();
 
   private:
     // ==> Class Data <==
@@ -153,11 +166,17 @@ class MOSpaceInfo {
     psi::Dimension nmopi_;
     /// Information about each elementary space stored in a map
     std::map<std::string, SpaceInfo> mo_spaces_;
+    /// Information about each GAS space stored in a map
+    std::map<std::string, SpaceInfo> general_active_spaces_;
 
     std::vector<std::string> elementary_spaces_{"FROZEN_DOCC", "RESTRICTED_DOCC", "ACTIVE",
                                                 "RESTRICTED_UOCC", "FROZEN_UOCC"};
     std::vector<std::string> elementary_spaces_priority_{
         "ACTIVE", "RESTRICTED_UOCC", "RESTRICTED_DOCC", "FROZEN_DOCC", "FROZEN_UOCC"};
+    /// Names of GAS
+    std::vector<std::string> gas_subspaces_{"GAS1", "GAS2", "GAS3", "GAS4", "GAS5", "GAS6"};
+    /// The pair with the number of GAS and general_active_spaces_
+    std::pair<int, std::map<std::string, SpaceInfo>> gas_info_;
 
     /// Defines composite orbital spaces
     std::map<std::string, std::vector<std::string>> composite_spaces_{

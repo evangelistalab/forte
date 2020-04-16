@@ -22,6 +22,7 @@ def register_forte_options(options):
     register_casscf_options(options)
     register_old_options(options)
     register_psi_options(options)
+    register_gas_options(options)
 
 def register_driver_options(options):
     options.set_group("")
@@ -217,6 +218,24 @@ def register_mo_space_info_options(options):
     options.add_int_array("NROOTPI",
                             "Number of roots per irrep (in Cotton order)")
 
+    options.add_int_array("GAS1", 
+            "NUmber of GAS1 orbitals per irrep (in Cotton order)"
+    )
+    options.add_int_array("GAS2",
+            "Number of GAS2 orbitals per irrep (in Cotton order)"
+    )
+    options.add_int_array("GAS3",
+            "Number of GAS3 orbitals per irrep (in Cotton order)"
+    )
+    options.add_int_array("GAS4",
+            "Number of GAS4 orbitals per irrep (in Cotton order)"
+    )
+    options.add_int_array("GAS5",
+            "Number of GAS5 orbitals per irrep (in Cotton order)"
+    )
+    options.add_int_array("GAS6",
+            "Number of GAS6 orbitals per irrep (in Cotton order)"
+    )
 
 def register_active_space_solver_options(options):
     options.set_group("Active Space Solver")
@@ -259,7 +278,7 @@ def register_pci_options(options):
 
     options.add_double("PCI_TAU", 1.0,
                              "The time step in imaginary time (a.u.)")
-
+    
     options.add_double("PCI_E_CONVERGENCE", 1.0e-8,
                              "The energy convergence criterion")
     options.add_double("PCI_R_CONVERGENCE", 1.0,
@@ -532,6 +551,12 @@ def register_aci_options(options):
 
     options.add_bool("FORCE_DIAG_METHOD", False,
                            "Force the diagonalization procedure?")
+
+    options.add_bool("SINGLE_CALCULATION", False, 
+            "Doing single calculation instead of ACI iterations?")
+
+    options.add_bool("GAS_ITERATION", False,
+            "Doing ACI iterations within GAS")
 
 
 def register_davidson_liu_options(options):
@@ -895,6 +920,33 @@ def register_psi_options(options):
     options.add_double("INTS_TOLERANCE", 1.0E-12, 'Schwarz screening threshold')
     options.add_str("DF_INTS_IO", "NONE", ['NONE','SAVE','LOAD'],'IO caching for CP corrections')
     options.add_str('DF_BASIS_MP2','','Auxiliary basis set for density fitting computations')
+
+def register_gas_options(options):
+    options.set_group("GAS")
+    options.add_int("GAS1MAX",200,"The maximum number of electrons in GAS1")
+    options.add_int("GAS1MIN",0,"The minimum number of electrons in GAS1")
+    options.add_int("GAS2MAX",200,"The maximum number of electrons in GAS2")
+    options.add_int("GAS2MIN",0,"The minimum number of electrons in GAS2")
+    options.add_int("GAS3MAX",200,"The maximum number of electrons in GAS3")
+    options.add_int("GAS3MIN",0,"The minimum number of electrons in GAS3")
+    options.add_int("GAS4MAX",200,"The maximum number of electrons in GAS4")
+    options.add_int("GAS4MIN",0,"The minimum number of electrons in GAS4")
+    options.add_int("GAS5MAX",200,"The maximum number of electrons in GAS5")
+    options.add_int("GAS5MIN",0,"The minimum number of electrons in GAS5")
+    options.add_int("GAS6MAX",200,"The maximum number of electrons in GAS6")
+    options.add_int("GAS6MIN",0,"The minimum number of electrons in GAS6")
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

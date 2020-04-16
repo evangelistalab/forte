@@ -102,7 +102,15 @@ void AdaptiveCI::startup() {
     spin_complete_ = options_->get_bool("ACI_ENFORCE_SPIN_COMPLETE");
     spin_complete_P_ = options_->get_bool("ACI_ENFORCE_SPIN_COMPLETE_P");
 
-    max_cycle_ = options_->get_int("SCI_MAX_CYCLE");
+    single_calculation_ = options_->get_bool("SINGLE_CALCULATION");
+    gas_iteration_ = options_->get_bool("GAS_ITERATION");
+    if (single_calculation_) {
+        max_cycle_ = 0;
+    } else {
+        max_cycle_ = options_->get_int("SCI_MAX_CYCLE");
+    }
+
+    // max_cycle_ = options_->get_int("SCI_MAX_CYCLE");
 
     pre_iter_ = options_->get_int("ACI_PREITERATIONS");
 
@@ -220,15 +228,25 @@ void AdaptiveCI::find_q_space() {
 
     // Get the excited determiants
     double remainder = 0.0;
+
     if (screen_alg == "AVERAGE") {
+    	 if (gas_iteration_) {
+    		 get_gas_excited_determinants_avg(nroot_, P_evecs_, P_evals_, P_space_, F_space);
+    	 }
         // multiroot
-        get_excited_determinants_avg(nroot_, P_evecs_, P_evals_, P_space_, F_space);
+    	 else{
+        get_excited_determinants_avg(nroot_, P_evecs_, P_evals_, P_space_, F_space);}
     } else if (screen_alg == "SR") {
-        // single-root optimized
-        get_excited_determinants_sr(P_evecs_, P_evals_, P_space_, F_space);
-        //    } else if ( (screen_alg == "RESTRICTED")){
-        //        // restricted
-        //        get_excited_determinants_restrict(nroot_, P_evecs_, P_evals_, P_space_, F_space);
+        if (gas_iteration_) {
+            get_gas_excited_determinants_sr(P_evecs_, P_evals_, P_space_, F_space);
+        } else {
+            // single-root optimized
+            get_excited_determinants_sr(P_evecs_, P_evals_, P_space_, F_space);
+            //    } else if ( (screen_alg == "RESTRICTED")){
+            //        // restricted
+            //        get_excited_determinants_restrict(nroot_, P_evecs_, P_evals_, P_space_,
+            //        F_space);
+        }
     } else if (screen_alg == "CORE") {
         get_excited_determinants_core(P_evecs_, P_evals_, P_space_, F_space);
     } else if (screen_alg == "BATCH_HASH" or screen_alg == "BATCH_CORE") {
@@ -559,7 +577,43 @@ void AdaptiveCI::pre_iter_preparation() {
     CI_Reference ref(scf_info_, options_, mo_space_info_, as_ints_, multiplicity_, twice_ms_,
                      wavefunction_symmetry_);
     ref.build_reference(initial_reference_);
-    P_space_ = initial_reference_;
+
+    if (single_calculation_) {
+        PQ_space_ = initial_reference_;
+    } else {
+        P_space_ = initial_reference_;
+    }
+
+    // P_space_ = initial_reference_;
+
+    // If the ACI iteration is within the gas space, calculate
+    // gas_info and the criterion for single and double excitations
+
+
+
+    if (gas_iteration_) {
+        const auto gas_info = mo_space_info_->gas_info();
+        auto act_mo = mo_space_info_->absolute_mo("ACTIVE");
+        std::map<int, int> re_ab_mo;
+        for (size_t i = 0; i< act_mo.size(); i++){
+        	re_ab_mo[act_mo[i]] = i;
+        }
+        gas_single_criterion_ = ref.gas_single_criterion();
+        gas_double_criterion_ = ref.gas_double_criterion();
+        gas_electrons_ = ref.gas_electrons();
+        gas_num_ = gas_info.first;
+        std::vector<std::string> gas_subspaces = {"GAS1", "GAS2", "GAS3", "GAS4", "GAS5", "GAS6"};
+        std::map<std::string, SpaceInfo> general_active_spaces = gas_info.second;
+        for (size_t gas_count = 0; gas_count < 6; gas_count++) {
+            std::string space = gas_subspaces.at(gas_count);
+            std::vector<size_t> relative_mo;
+            auto vec_mo_info = general_active_spaces[space].second;
+            for (size_t i = 0; i < vec_mo_info.size(); ++i) {
+                relative_mo.push_back(re_ab_mo[std::get<0>(vec_mo_info[i])]);
+            }
+            relative_gas_mo_.push_back(relative_mo);
+        }
+    }
 
     if ((options_->get_bool("SCI_CORE_EX")) and (root_ > 0)) {
 
@@ -691,6 +745,10 @@ void AdaptiveCI::diagonalize_PQ_space() {
     print_h2("Diagonalizing the Hamiltonian in the P + Q space");
 
     num_ref_roots_ = std::min(nroot_, int(PQ_space_.size()));
+
+    if (single_calculation_) {
+        zero_multistate_pt2_energy_correction();
+    }
 
     // Step 3. Diagonalize the Hamiltonian in the P + Q space
     local_timer diag_pq;
@@ -887,6 +945,14 @@ size_t AdaptiveCI::get_ref_root() { return ref_root_; }
 std::vector<double> AdaptiveCI::get_multistate_pt2_energy_correction() {
     return multistate_pt2_energy_correction_;
 }
+
+void AdaptiveCI::zero_multistate_pt2_energy_correction() {
+    multistate_pt2_energy_correction_.resize(nroot_);
+    for (int n = 0; n < nroot_; ++n) {
+        multistate_pt2_energy_correction_[n] = 0.0;
+    }
+}
+
 void AdaptiveCI::post_iter_process() {
     print_nos();
     full_mrpt2();

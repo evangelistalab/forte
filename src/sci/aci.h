@@ -267,6 +267,9 @@ class AdaptiveCI : public SelectedCIMethod {
     /// The alpha MO always unoccupied
     size_t hole_;
 
+    /// Whether iteration is within gas space
+    bool gas_iteration_;
+
     /// Timing variables
     double build_H_;
     double diag_H_;
@@ -338,6 +341,16 @@ class AdaptiveCI : public SelectedCIMethod {
                                            DeterminantHashVec& P_space,
                                            std::vector<std::pair<double, Determinant>>& F_space);
 
+    // Optimized for a single root, in GAS
+    void get_gas_excited_determinants_sr(psi::SharedMatrix evecs, psi::SharedVector evals,
+                                         DeterminantHashVec& P_space,
+                                         std::vector<std::pair<double, Determinant>>& F_space);
+
+    /// Basic determinant generator (threaded, no batching, all determinants stored), in GAS
+    void get_gas_excited_determinants_avg(
+        int nroot, psi::SharedMatrix evecs, psi::SharedVector evals, DeterminantHashVec& P_space,
+        std::vector<std::pair<double, Determinant>>& F_space);
+
     /// (DEFAULT)  Builds excited determinants for a bin, uses all threads, hash-based
     det_hash<double> get_bin_F_space(int bin, int nbin, double E0, psi::SharedMatrix evecs,
                                      DeterminantHashVec& P_space);
@@ -368,6 +381,55 @@ class AdaptiveCI : public SelectedCIMethod {
 
     /// Add roots to be projected out in DL
     void add_bad_roots(DeterminantHashVec& dets);
+
+    /// Set PT2 energy correction to zero;
+    void zero_multistate_pt2_energy_correction();
+
+    /// Single excitation for single root
+    det_hash<double> single_excitation_sr(Determinant det, std::vector<int> occ,
+                                          std::vector<int> vir, double Cp, std::string sp,
+                                          det_hash<double> V_hash_t);
+
+    /// Double excitation for single root
+    det_hash<double> double_excitation_sr(Determinant det, std::vector<int> occ1,
+                                          std::vector<int> occ2, std::vector<int> vir1,
+                                          std::vector<int> vir2, double Cp, std::string sp,
+                                          det_hash<double> V_hash_t);
+
+    /// Single excitation for multi root
+    std::vector<std::pair<Determinant, std::vector<double>>>
+    single_excitation_avg(Determinant det, std::vector<int> occ, std::vector<int> vir,
+                          double evecs_P_row_norm, std::string sp, int nroot, size_t P,
+                          psi::SharedMatrix evecs, DeterminantHashVec& P_space,
+                          std::vector<std::pair<Determinant, std::vector<double>>> thread_ex_dets);
+
+    /// Double excitation for multi root
+    std::vector<std::pair<Determinant, std::vector<double>>>
+    double_excitation_avg(Determinant det, std::vector<int> occ1, std::vector<int> occ2, std::vector<int> vir1,
+    		std::vector<int> vir2,
+                          double evecs_P_row_norm, std::string sp, int nroot, size_t P,
+                          psi::SharedMatrix evecs, DeterminantHashVec& P_space,
+                          std::vector<std::pair<Determinant, std::vector<double>>> thread_ex_dets);
+
+    /// number of GAS
+    size_t gas_num_;
+
+    /// Whether single excitation from one GAS to another GAS is allowed for one gas_configuration
+    std::pair<std::vector<std::vector<std::vector<bool>>>,
+              std::vector<std::vector<std::vector<bool>>>>
+        gas_single_criterion_;
+
+    ///Whether double excitation from two GAS to another two GAS is allowed for one gas_configuration
+    std::tuple<std::vector<std::vector<std::vector<bool>>>,
+               std::vector<std::vector<std::vector<bool>>>,
+               std::vector<std::vector<std::vector<bool>>>>
+        gas_double_criterion_;
+
+    /// Electron configurations
+    std::vector<std::vector<int>> gas_electrons_;
+
+    /// Relative mo in the entire active space for each GAS;
+    std::vector<std::vector<size_t>> relative_gas_mo_;
 };
 
 } // namespace forte
