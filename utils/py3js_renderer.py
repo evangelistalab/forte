@@ -41,7 +41,6 @@ def xyz_to_atoms_list(xyz):
             atoms_list.append((symbol, float(x), float(y), float(z)))
     return atoms_list
 
-
 class Py3JSRenderer():
     """
     A lightweight molecule and orbital renderer
@@ -122,6 +121,12 @@ class Py3JSRenderer():
         Return the Renderer object
         """
         return self.renderer
+
+    def show_molecule(self,wfn, shift_to_com=True):
+        mol = wfn.molecule()
+        natom = mol.natom()
+        atoms_list = [(mol.symbol(i),mol.x(i),mol.y(i),mol.z(i)) for i in range(natom)]
+        self.add_molecule(atoms_list, bohr=True)
 
     def add_molecule(self, atoms_list, bohr=False, shift_to_com=True):
         """

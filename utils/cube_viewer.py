@@ -6,36 +6,50 @@ import re
 from .py3js_renderer import Py3JSRenderer
 
 
-def cube_viewer(cubes,
+def cube_viewer(cubes=None,
+                path='.',
+                width=400,
+                height=400,
                 scale=1.0,
                 font_size=16,
                 font_family='Helvetica',
-                width=400,
-                height=400,
                 show_text=True):
     """
-    A simple widget for viewing cube files
+    A simple widget for viewing cube files. Cube files are authomatically loaded from the current
+    directory. Alternatively, the user can pass a path or a dictionary containing CubeFile objects
 
     Parameters
     ----------
+    path : str
+        The path used to load cube files (default = '.')
     cubes : dict
-        a dictionary of CubeFile objects
+        A dictionary {'filename.cube' : CubeFile } containing the cube files to be plotted
+    width : int
+        the width of the plot in pixels (default = 400)
+    height : int
+        the height of the plot in pixels (default = 400)
     scale : float
         the scale factor used to make a molecule smaller or bigger (default = 1.0)
     font_size : int
         the font size (default = 16)
     font_family : str
         the font used to label the orbitals (default = Helvetica)
-    width : int
-        the width of the plot in pixels (default = 400)
-    height : int
-        the height of the plot in pixels (default = 400)
     show_text : bool
         show the name of the cube file under the plot? (default = True)
     """
+
+    if cubes == None:
+        print(f'cube_viewer: loading cube files from the directory {path}')
+        cubes = load_cubes(path)
+
+
+    if len(cubes) == 0:
+        print(f'cube_viewer: no cube files provided. No output will be displayed')
+        return
+
     # convert cube file names into human readable text
     labels_to_filename = {}
-    psi4_mo_label_re = r'Psi_([a|b])_(\d+)_(\d+)-([\w\d]*)\.cube'
+    psi4_mo_label_re = r'Psi_([a|b])_(\d+)_(\d+)-([\w\d\'\"]*)\.cube'
     psi4_density_label_re = r'D(\w)\.cube'
     for k in cubes.keys():
         m1 = re.match(psi4_mo_label_re, k)
