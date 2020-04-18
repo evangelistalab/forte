@@ -103,7 +103,11 @@ void AdaptiveCI::startup() {
     spin_complete_P_ = options_->get_bool("ACI_ENFORCE_SPIN_COMPLETE_P");
 
     single_calculation_ = options_->get_bool("SINGLE_CALCULATION");
+    // Run only one calculation with initial ansatz;
+    // Can be used for CIS/CISD/CAS/GAS-CI for test
     gas_iteration_ = options_->get_bool("GAS_ITERATION");
+    // Iterations are within in GAS
+
     if (single_calculation_) {
         max_cycle_ = 0;
     } else {

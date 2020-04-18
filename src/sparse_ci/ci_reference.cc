@@ -101,9 +101,11 @@ void CI_Reference::build_reference(std::vector<Determinant>& ref_space) {
     if (ref_type_ == "CAS") {
         build_cas_reference(ref_space);
     } else if (ref_type_ == "GAS") {
+        // Complete GAS
         get_gas_occupation();
         build_gas_reference(ref_space);
     } else if (ref_type_ == "GAS_SINGLE") {
+        // Low(est) energy one in GAS
         get_gas_occupation();
         build_gas_single(ref_space);
     } else {
@@ -479,7 +481,7 @@ void CI_Reference::build_cas_reference(std::vector<Determinant>& ref_space) {
 
 void CI_Reference::build_gas_single(std::vector<Determinant>& ref_space) {
 
-    /// build one single low energy determinant within the gas space
+    // build one single low energy determinant in the gas space
 
     size_t nact = mo_space_info_->size("ACTIVE");
     size_t ninact = mo_space_info_->size("INACTIVE_DOCC");
@@ -800,6 +802,7 @@ void CI_Reference::build_gas_single(std::vector<Determinant>& ref_space) {
 }
 
 void CI_Reference::build_gas_reference(std::vector<Determinant>& ref_space) {
+    // Build the entire GAS space
 
     // The relative_mo of each GAS, without sorting the energy
     std::vector<std::vector<size_t>> relative_gas_mo;
