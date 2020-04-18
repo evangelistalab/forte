@@ -138,17 +138,17 @@ class CI_Reference {
     /// Set the reference type
     void set_ref_type(const std::string& ref_type) { ref_type_ = ref_type; }
 
-    /// Return the bool vector for single excitation between different GAS
+    /// Return a pair for single excitation between different GAS
     /// alpha, beta
-    std::pair<std::vector<std::vector<std::vector<bool>>>,
-              std::vector<std::vector<std::vector<bool>>>>
+    std::pair<std::map<std::vector<int>, std::vector<std::pair<size_t, size_t>>>,
+              std::map<std::vector<int>, std::vector<std::pair<size_t, size_t>>>>
     gas_single_criterion();
 
-    /// Return a tuple of bool vectors for double excitation between different GAS
+    /// Return a tuple of maps for double excitation between different GAS
     /// alphaalpha, betabeta, alphabeta
-    std::tuple<std::vector<std::vector<std::vector<bool>>>,
-               std::vector<std::vector<std::vector<bool>>>,
-               std::vector<std::vector<std::vector<bool>>>>
+    std::tuple<std::map<std::vector<int>, std::vector<std::tuple<size_t, size_t, size_t, size_t>>>,
+               std::map<std::vector<int>, std::vector<std::tuple<size_t, size_t, size_t, size_t>>>,
+               std::map<std::vector<int>, std::vector<std::tuple<size_t, size_t, size_t, size_t>>>>
     gas_double_criterion();
 
     /// return gas_electrons_

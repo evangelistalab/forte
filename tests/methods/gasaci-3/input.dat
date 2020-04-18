@@ -1,0 +1,48 @@
+# GAS-ACI calculation for mg atom core excited state 
+
+import forte
+
+gasaci = -150.9507407468  #TEST
+gasacipt2 = -150.9517395423 #TEST
+
+molecule Mg{
+Mg
+}
+
+set {
+  basis 6-31g**
+  e_convergence 10
+  d_convergence 10
+  r_convergence 10
+  guess gwh
+}
+
+set scf {
+  scf_type pk
+  reference rohf
+}
+
+set forte {
+  active_space_solver aci
+  single_calculation False
+  multiplicity 1
+  ms 0
+  sigma 0.001
+  nroot 1
+  root_sym 0
+  charge 0
+  aci_enforce_spin_complete true
+  r_convergence 0.1
+  active_ref_type gas_single
+  gas_iteration true
+  GAS1 [1,0,0,0,0,0,0,0]
+  GAS1MAX 1
+}
+
+energy_scf = ('scf')
+
+energy_2 = energy('forte')
+
+compare_values(gasaci, variable("ACI ENERGY"),9, "ACI energy") #TEST
+compare_values(gasacipt2, variable("ACI+PT2 ENERGY"),9, "ACI+PT2 energy") #TEST	
+#

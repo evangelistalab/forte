@@ -1,0 +1,72 @@
+# GAS-ACI calculation for Na atom ground and core excited states
+
+import forte
+
+
+gsgasaci = -161.8428167085  #TEST
+gsgasacipt2 = -161.8438106035  #TEST
+exgasaci = -121.7510816479  #TEST
+exgasacipt2 = -121.7520814981  #TEST
+
+
+molecule na{
+0 2
+Na
+}
+
+set {
+  basis 6-31g**
+  e_convergence 10
+  d_convergence 10
+  r_convergence 10
+  guess gwh
+}
+
+set scf {
+  scf_type pk
+  reference rohf
+}
+
+set forte {
+  active_space_solver aci
+  single_calculation False
+  multiplicity 2
+  sigma 0.001
+  nroot 1
+  root_sym 0
+  charge 0
+  aci_enforce_spin_complete true
+  r_convergence 0.1
+  active_ref_type gas_single
+  gas_iteration true
+  GAS1 [1,0,0,0,0,0,0,0]
+  GAS1MAX 2
+}
+
+energy('scf')
+
+energy('forte')
+
+compare_values(gsgasaci, variable("ACI ENERGY"),9, "ACI core excited energy") #TEST
+compare_values(gsgasacipt2, variable("ACI+PT2 ENERGY"),9, "ACI core excited energy + PT2") #TEST
+
+set forte {
+  active_space_solver aci
+  single_calculation False
+  multiplicity 2
+  sigma 0.001
+  nroot 1
+  root_sym 0
+  charge 0
+  aci_enforce_spin_complete true
+  r_convergence 0.1
+  active_ref_type gas_single
+  gas_iteration true
+  GAS1MAX 1
+}
+
+energy_2 = energy('forte')
+
+compare_values(exgasaci, variable("ACI ENERGY"),9, "ACI core excited energy") #TEST
+compare_values(exgasacipt2, variable("ACI+PT2 ENERGY"),9, "ACI core excited energy + PT2") #TEST
+#

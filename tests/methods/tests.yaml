@@ -255,3 +255,12 @@ pci:
 #   - pci-7
    - pci-8
 #   - pci-9
+gasci:
+  short:
+   - gasci-1
+   - gasaci-1
+   - gasaci-2
+   - gasaci-4
+  long:
+   - gasaci-3
+                  

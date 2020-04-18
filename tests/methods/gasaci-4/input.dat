@@ -1,0 +1,51 @@
+#! This tests the EX-CI procedure using energy selection
+#! Generated using commit GITCOMMIT
+# This option tests the selection criteria
+
+import forte 
+
+refscf = -14.5754349811462358 #TEST
+refaci = -14.508218401691 #TEST
+refacipt2 = -14.515584070704 #TEST
+
+molecule li2{
+   Li
+   Li 1 1.0000
+}
+
+set {
+  basis DZ
+  e_convergence 10
+  d_convergence 10
+  r_convergence 10
+}
+
+set scf {
+  scf_type pk
+  reference rhf
+  docc = [2,0,0,0,0,1,0,0]
+  guess gwh
+}
+
+set forte {
+  active_space_solver aci
+  multiplicity 1
+  sci_excited_algorithm average
+  aci_n_average 2
+  aci_average_offset 1
+  sigma 0.01
+  nroot 3
+  root 1 
+  charge 0
+ # aci_initial_space cis
+  aci_enforce_spin_complete true
+  gas_iteration true
+  active_ref_type gas_single
+}
+
+energy('scf')
+
+compare_values(refscf, variable("CURRENT ENERGY"),9, "SCF energy") #TEST
+
+energy('forte')
+compare_values(refaci, variable("ACI ENERGY"),9, "ACI energy") #TEST

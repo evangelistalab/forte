@@ -112,7 +112,8 @@ void CI_Reference::build_reference(std::vector<Determinant>& ref_space) {
     }
 }
 
-std::pair<std::vector<std::vector<std::vector<bool>>>, std::vector<std::vector<std::vector<bool>>>>
+std::pair<std::map<std::vector<int>, std::vector<std::pair<size_t, size_t>>>,
+          std::map<std::vector<int>, std::vector<std::pair<size_t, size_t>>>>
 CI_Reference::gas_single_criterion() {
     // return the bool vector for whether it is possible to excite one electron
     // from one GAS to another
@@ -125,46 +126,40 @@ CI_Reference::gas_single_criterion() {
     // for each possible occupation (gas_config), when adding one electron
     // from gas_count_1 to gas_count_2, is the result new possble GAS occupation
     // still within gas_electrons?
-    std::vector<std::vector<std::vector<bool>>> alpha_criterion;
-    std::vector<std::vector<std::vector<bool>>> beta_criterion;
+    std::map<std::vector<int>, std::vector<std::pair<size_t, size_t>>> alpha_criterion;
+    std::map<std::vector<int>, std::vector<std::pair<size_t, size_t>>> beta_criterion;
     for (int gas_config = 0; gas_config < gas_config_number; ++gas_config) {
-        std::vector<std::vector<bool>> tmp_vector_vectora;
-        std::vector<std::vector<bool>> tmp_vector_vectorb;
+        auto gas_configuration = gas_electrons_[gas_config];
+        std::vector<std::pair<size_t, size_t>> tmp_vectora;
+        std::vector<std::pair<size_t, size_t>> tmp_vectorb;
         for (int gas_count_1 = 0; gas_count_1 < gas_num_; ++gas_count_1) {
-            std::vector<bool> tmp_vectora;
-            std::vector<bool> tmp_vectorb;
             for (int gas_count_2 = 0; gas_count_2 < gas_num_; ++gas_count_2) {
-                std::vector<int> gas_configuration_copya = gas_electrons_.at(gas_config);
+                std::vector<int> gas_configuration_copya = gas_configuration;
                 gas_configuration_copya.at(2 * gas_count_1) -= 1;
                 gas_configuration_copya.at(2 * gas_count_2) += 1;
                 if (std::find(gas_electrons_.begin(), gas_electrons_.end(),
                               gas_configuration_copya) != gas_electrons_.end()) {
-                    tmp_vectora.push_back(true);
-                } else {
-                    tmp_vectora.push_back(false);
+                    tmp_vectora.push_back(std::make_pair(gas_count_1, gas_count_2));
                 }
-                std::vector<int> gas_configuration_copyb = gas_electrons_.at(gas_config);
+                std::vector<int> gas_configuration_copyb = gas_configuration;
                 gas_configuration_copyb.at(2 * gas_count_1 + 1) -= 1;
                 gas_configuration_copyb.at(2 * gas_count_2 + 1) += 1;
                 if (std::find(gas_electrons_.begin(), gas_electrons_.end(),
                               gas_configuration_copyb) != gas_electrons_.end()) {
-                    tmp_vectorb.push_back(true);
-                } else {
-                    tmp_vectorb.push_back(false);
+                    tmp_vectorb.push_back(std::make_pair(gas_count_1, gas_count_2));
                 }
             }
-            tmp_vector_vectora.push_back(tmp_vectora);
-            tmp_vector_vectorb.push_back(tmp_vectorb);
         }
-        alpha_criterion.push_back(tmp_vector_vectora);
-        beta_criterion.push_back(tmp_vector_vectorb);
+        alpha_criterion[gas_configuration] = tmp_vectora;
+        beta_criterion[gas_configuration] = tmp_vectorb;
     }
     gas_electrons_.pop_back();
     return std::make_pair(alpha_criterion, beta_criterion);
 }
 
-std::tuple<std::vector<std::vector<std::vector<bool>>>, std::vector<std::vector<std::vector<bool>>>,
-           std::vector<std::vector<std::vector<bool>>>>
+std::tuple<std::map<std::vector<int>, std::vector<std::tuple<size_t, size_t, size_t, size_t>>>,
+           std::map<std::vector<int>, std::vector<std::tuple<size_t, size_t, size_t, size_t>>>,
+           std::map<std::vector<int>, std::vector<std::tuple<size_t, size_t, size_t, size_t>>>>
 CI_Reference::gas_double_criterion() {
     // return the bool vector for whether it is possible to excite two electrons
     // from two GAS to other two GAS
@@ -174,73 +169,68 @@ CI_Reference::gas_double_criterion() {
     gas_electrons_.push_back(zero_occ);
 
     // for each possible occupation (gas_config), when adding two electrons
-    // from gas_count_1 and gas_count_2 to gas_count_3 and gas_count4, \
+    // from gas_count_1 and gas_count_2 to gas_count_3 and gas_count4,
     // is the resulted new  GAS occupation still within gas_electrons?
-    std::vector<std::vector<std::vector<bool>>> aa_criterion;
-    std::vector<std::vector<std::vector<bool>>> bb_criterion;
-    std::vector<std::vector<std::vector<bool>>> ab_criterion;
+    std::map<std::vector<int>, std::vector<std::tuple<size_t, size_t, size_t, size_t>>>
+        aa_criterion;
+    std::map<std::vector<int>, std::vector<std::tuple<size_t, size_t, size_t, size_t>>>
+        bb_criterion;
+    std::map<std::vector<int>, std::vector<std::tuple<size_t, size_t, size_t, size_t>>>
+        ab_criterion;
     for (size_t gas_config = 0; gas_config < gas_config_number; ++gas_config) {
-        std::vector<std::vector<bool>> tmp_vector_vectoraa;
-        std::vector<std::vector<bool>> tmp_vector_vectorbb;
+        auto gas_configuration = gas_electrons_[gas_config];
+        std::vector<std::tuple<size_t, size_t, size_t, size_t>> tmp_vectoraa;
+        std::vector<std::tuple<size_t, size_t, size_t, size_t>> tmp_vectorbb;
+        std::vector<std::tuple<size_t, size_t, size_t, size_t>> tmp_vectorab;
         for (size_t gas_count_1 = 0; gas_count_1 < gas_num_; ++gas_count_1) {
             for (size_t gas_count_2 = gas_count_1; gas_count_2 < gas_num_; ++gas_count_2) {
-                std::vector<bool> tmp_vectoraa;
-                std::vector<bool> tmp_vectorbb;
                 for (size_t gas_count_3 = 0; gas_count_3 < gas_num_; ++gas_count_3) {
                     for (size_t gas_count_4 = gas_count_3; gas_count_4 < gas_num_; ++gas_count_4) {
-                        std::vector<int> gas_configuration_copyaa = gas_electrons_.at(gas_config);
+                        std::vector<int> gas_configuration_copyaa = gas_configuration;
                         gas_configuration_copyaa.at(2 * gas_count_1) -= 1;
                         gas_configuration_copyaa.at(2 * gas_count_2) -= 1;
                         gas_configuration_copyaa.at(2 * gas_count_3) += 1;
                         gas_configuration_copyaa.at(2 * gas_count_4) += 1;
                         if (std::find(gas_electrons_.begin(), gas_electrons_.end(),
                                       gas_configuration_copyaa) != gas_electrons_.end()) {
-                            tmp_vectoraa.push_back(true);
-                        } else {
-                            tmp_vectoraa.push_back(false);
+                            tmp_vectoraa.push_back(std::make_tuple(gas_count_1, gas_count_2,
+                                                                   gas_count_3, gas_count_4));
                         }
-                        std::vector<int> gas_configuration_copybb = gas_electrons_.at(gas_config);
+                        std::vector<int> gas_configuration_copybb = gas_configuration;
                         gas_configuration_copybb.at(2 * gas_count_1 + 1) -= 1;
                         gas_configuration_copybb.at(2 * gas_count_2 + 1) -= 1;
                         gas_configuration_copybb.at(2 * gas_count_3 + 1) += 1;
                         gas_configuration_copybb.at(2 * gas_count_4 + 1) += 1;
                         if (std::find(gas_electrons_.begin(), gas_electrons_.end(),
                                       gas_configuration_copybb) != gas_electrons_.end()) {
-                            tmp_vectorbb.push_back(true);
-                        } else {
-                            tmp_vectorbb.push_back(false);
+                            tmp_vectorbb.push_back(std::make_tuple(gas_count_1, gas_count_2,
+                                                                   gas_count_3, gas_count_4));
                         }
                     }
                 }
-                tmp_vector_vectoraa.push_back(tmp_vectoraa);
-                tmp_vector_vectorbb.push_back(tmp_vectorbb);
             }
         }
-        std::vector<std::vector<bool>> tmp_vector_vectorab;
         for (size_t gas_count_1 = 0; gas_count_1 < gas_num_; ++gas_count_1) {
             for (size_t gas_count_2 = 0; gas_count_2 < gas_num_; ++gas_count_2) {
-                std::vector<bool> tmp_vectorab;
                 for (size_t gas_count_3 = 0; gas_count_3 < gas_num_; ++gas_count_3) {
                     for (size_t gas_count_4 = 0; gas_count_4 < gas_num_; ++gas_count_4) {
-                        std::vector<int> gas_configuration_copyab = gas_electrons_.at(gas_config);
+                        std::vector<int> gas_configuration_copyab = gas_configuration;
                         gas_configuration_copyab.at(2 * gas_count_1) -= 1;
                         gas_configuration_copyab.at(2 * gas_count_2 + 1) -= 1;
                         gas_configuration_copyab.at(2 * gas_count_3) += 1;
                         gas_configuration_copyab.at(2 * gas_count_4 + 1) += 1;
                         if (std::find(gas_electrons_.begin(), gas_electrons_.end(),
                                       gas_configuration_copyab) != gas_electrons_.end()) {
-                            tmp_vectorab.push_back(true);
-                        } else {
-                            tmp_vectorab.push_back(false);
+                            tmp_vectorab.push_back(std::make_tuple(gas_count_1, gas_count_2,
+                                                                   gas_count_3, gas_count_4));
                         }
                     }
                 }
-                tmp_vector_vectorab.push_back(tmp_vectorab);
             }
         }
-        aa_criterion.push_back(tmp_vector_vectoraa);
-        bb_criterion.push_back(tmp_vector_vectorbb);
-        ab_criterion.push_back(tmp_vector_vectorab);
+        aa_criterion[gas_configuration] = tmp_vectoraa;
+        bb_criterion[gas_configuration] = tmp_vectorbb;
+        ab_criterion[gas_configuration] = tmp_vectorab;
     }
     gas_electrons_.pop_back();
     return std::make_tuple(aa_criterion, bb_criterion, ab_criterion);
@@ -424,7 +414,7 @@ void CI_Reference::build_cas_reference(std::vector<Determinant>& ref_space) {
                 // Build determinant
                 Determinant det(core_det);
                 int sym = 0;
-                for (int p = 0; p < na; ++p) {
+                for (size_t p = 0; p < na; ++p) {
                     det.set_alfa_bit(active_subspace[p], tmp_det_a[p]);
                     det.set_beta_bit(active_subspace[p], tmp_det_b[p]);
                     if (tmp_det_a[p]) {
@@ -507,14 +497,14 @@ void CI_Reference::build_gas_single(std::vector<Determinant>& ref_space) {
         std::vector<std::pair<double, int>> gas_orb_e;
         for (size_t i = 0; i < vec_mo_info.size(); ++i) {
             auto orb = std::get<0>(vec_mo_info[i]);
-            gas_orb_e.push_back(std::make_pair(epsilon_a->get(orb), i+total_act));
+            gas_orb_e.push_back(std::make_pair(epsilon_a->get(orb), i + total_act));
         }
         total_act += gas_orb_e.size();
         std::sort(gas_orb_e.begin(), gas_orb_e.end());
         for (size_t i = 0; i < gas_orb_e.size(); i++) {
             auto act_orb = gas_orb_e[i].second;
             relative_mo_sorted.push_back(act_orb);
-            //outfile->Printf("\n GAS %d %f %d ",gas_count+1,gas_orb_e[i].first, act_orb);
+            // outfile->Printf("\n GAS %d %f %d ",gas_count+1,gas_orb_e[i].first, act_orb);
         }
         relative_gas_mo.push_back(relative_mo_sorted);
     }
@@ -618,118 +608,170 @@ void CI_Reference::build_gas_single(std::vector<Determinant>& ref_space) {
         std::sort(begin(tmp_det_gas6_a), end(tmp_det_gas6_a));
         std::sort(begin(tmp_det_gas6_b), end(tmp_det_gas6_b));
 
-        // Reverse so all start from low energy ones
-        std::reverse(begin(tmp_det_gas1_a), end(tmp_det_gas1_a));
-        std::reverse(begin(tmp_det_gas1_b), end(tmp_det_gas1_b));
-        std::reverse(begin(tmp_det_gas2_a), end(tmp_det_gas2_a));
-        std::reverse(begin(tmp_det_gas2_b), end(tmp_det_gas2_b));
-        std::reverse(begin(tmp_det_gas3_a), end(tmp_det_gas3_a));
-        std::reverse(begin(tmp_det_gas3_b), end(tmp_det_gas3_b));
-        std::reverse(begin(tmp_det_gas4_a), end(tmp_det_gas4_a));
-        std::reverse(begin(tmp_det_gas4_b), end(tmp_det_gas4_b));
-        std::reverse(begin(tmp_det_gas5_a), end(tmp_det_gas5_a));
-        std::reverse(begin(tmp_det_gas5_b), end(tmp_det_gas5_b));
-        std::reverse(begin(tmp_det_gas6_a), end(tmp_det_gas6_a));
-        std::reverse(begin(tmp_det_gas6_b), end(tmp_det_gas6_b));
+        // Save all permutations
+        std::vector<std::vector<bool>> alldet_gas1_a;
+        std::vector<std::vector<bool>> alldet_gas1_b;
+        std::vector<std::vector<bool>> alldet_gas2_a;
+        std::vector<std::vector<bool>> alldet_gas2_b;
+        std::vector<std::vector<bool>> alldet_gas3_a;
+        std::vector<std::vector<bool>> alldet_gas3_b;
+        std::vector<std::vector<bool>> alldet_gas4_a;
+        std::vector<std::vector<bool>> alldet_gas4_b;
+        std::vector<std::vector<bool>> alldet_gas5_a;
+        std::vector<std::vector<bool>> alldet_gas5_b;
+        std::vector<std::vector<bool>> alldet_gas6_a;
+        std::vector<std::vector<bool>> alldet_gas6_b;
+
+        do {
+            alldet_gas1_a.push_back(tmp_det_gas1_a);
+        } while (std::next_permutation(tmp_det_gas1_a.begin(), tmp_det_gas1_a.begin() + gas1_size));
+        do {
+            alldet_gas1_b.push_back(tmp_det_gas1_b);
+        } while (std::next_permutation(tmp_det_gas1_b.begin(), tmp_det_gas1_b.begin() + gas1_size));
+        do {
+            alldet_gas2_a.push_back(tmp_det_gas2_a);
+        } while (std::next_permutation(tmp_det_gas2_a.begin(), tmp_det_gas2_a.begin() + gas2_size));
+        do {
+            alldet_gas2_b.push_back(tmp_det_gas2_b);
+        } while (std::next_permutation(tmp_det_gas2_b.begin(), tmp_det_gas2_b.begin() + gas2_size));
+        do {
+            alldet_gas3_a.push_back(tmp_det_gas3_a);
+        } while (std::next_permutation(tmp_det_gas3_a.begin(), tmp_det_gas3_a.begin() + gas3_size));
+        do {
+            alldet_gas3_b.push_back(tmp_det_gas3_b);
+        } while (std::next_permutation(tmp_det_gas3_b.begin(), tmp_det_gas3_b.begin() + gas3_size));
+        do {
+            alldet_gas4_a.push_back(tmp_det_gas4_a);
+        } while (std::next_permutation(tmp_det_gas4_a.begin(), tmp_det_gas4_a.begin() + gas4_size));
+        do {
+            alldet_gas4_b.push_back(tmp_det_gas4_b);
+        } while (std::next_permutation(tmp_det_gas4_b.begin(), tmp_det_gas4_b.begin() + gas4_size));
+        do {
+            alldet_gas5_a.push_back(tmp_det_gas5_a);
+        } while (std::next_permutation(tmp_det_gas5_a.begin(), tmp_det_gas5_a.begin() + gas5_size));
+        do {
+            alldet_gas5_b.push_back(tmp_det_gas5_b);
+        } while (std::next_permutation(tmp_det_gas5_b.begin(), tmp_det_gas5_b.begin() + gas5_size));
+        do {
+            alldet_gas6_a.push_back(tmp_det_gas6_a);
+        } while (std::next_permutation(tmp_det_gas6_a.begin(), tmp_det_gas6_a.begin() + gas6_size));
+        do {
+            alldet_gas6_b.push_back(tmp_det_gas6_b);
+        } while (std::next_permutation(tmp_det_gas6_b.begin(), tmp_det_gas6_b.begin() + gas6_size));
+
+        // Reverse for the low energy
+        std::reverse(begin(alldet_gas1_a), end(alldet_gas1_a));
+        std::reverse(begin(alldet_gas1_b), end(alldet_gas1_b));
+        std::reverse(begin(alldet_gas2_a), end(alldet_gas2_a));
+        std::reverse(begin(alldet_gas2_b), end(alldet_gas2_b));
+        std::reverse(begin(alldet_gas3_a), end(alldet_gas3_a));
+        std::reverse(begin(alldet_gas3_b), end(alldet_gas3_b));
+        std::reverse(begin(alldet_gas4_a), end(alldet_gas4_a));
+        std::reverse(begin(alldet_gas4_b), end(alldet_gas4_b));
+        std::reverse(begin(alldet_gas5_a), end(alldet_gas5_a));
+        std::reverse(begin(alldet_gas5_b), end(alldet_gas5_b));
+        std::reverse(begin(alldet_gas6_a), end(alldet_gas6_a));
+        std::reverse(begin(alldet_gas6_b), end(alldet_gas6_b));
 
         // Permutation of all the orbitals
-        do {
-            do {
-                do {
-                    do {
-                        do {
-                            do {
-                                do {
-                                    do {
-                                        do {
-                                            do {
-                                                do {
-                                                    do {
+        for (const auto& det_gas1_a : alldet_gas1_a) {
+            for (const auto& det_gas1_b : alldet_gas1_b) {
+                for (const auto& det_gas2_a : alldet_gas2_a) {
+                    for (const auto& det_gas2_b : alldet_gas2_b) {
+                        for (const auto& det_gas3_a : alldet_gas3_a) {
+                            for (const auto& det_gas3_b : alldet_gas3_b) {
+                                for (const auto& det_gas4_a : alldet_gas4_a) {
+                                    for (const auto& det_gas4_b : alldet_gas4_b) {
+                                        for (const auto& det_gas5_a : alldet_gas5_a) {
+                                            for (const auto& det_gas5_b : alldet_gas5_b) {
+                                                for (const auto& det_gas6_a : alldet_gas6_a) {
+                                                    for (const auto& det_gas6_b : alldet_gas6_b) {
                                                         // Build determinant
-                                                        //outfile->Printf(
-                                                         //   "\n Possible Configurations");
+                                                        // outfile->Printf(
+                                                        //   "\n Possible
+                                                        //   Configurations");
                                                         Determinant det;
                                                         int sym = 0;
-                                                        for (int p = 0; p < gas1_size; ++p) {
+                                                        for (size_t p = 0; p < gas1_size; ++p) {
                                                             det.set_alfa_bit(relative_gas_mo[0][p],
-                                                                             tmp_det_gas1_a[p]);
+                                                                             det_gas1_a[p]);
                                                             det.set_beta_bit(relative_gas_mo[0][p],
-                                                                             tmp_det_gas1_b[p]);
-                                                            if (tmp_det_gas1_a[p]) {
+                                                                             det_gas1_b[p]);
+                                                            if (det_gas1_a[p]) {
                                                                 sym ^= mo_symmetry_
                                                                     [relative_gas_mo[0][p]];
                                                             }
-                                                            if (tmp_det_gas1_b[p]) {
+                                                            if (det_gas1_b[p]) {
                                                                 sym ^= mo_symmetry_
                                                                     [relative_gas_mo[0][p]];
                                                             }
                                                         }
-                                                        for (int p = 0; p < gas2_size; ++p) {
+                                                        for (size_t p = 0; p < gas2_size; ++p) {
                                                             det.set_alfa_bit(relative_gas_mo[1][p],
-                                                                             tmp_det_gas2_a[p]);
+                                                                             det_gas2_a[p]);
                                                             det.set_beta_bit(relative_gas_mo[1][p],
-                                                                             tmp_det_gas2_b[p]);
-                                                            if (tmp_det_gas2_a[p]) {
+                                                                             det_gas2_b[p]);
+                                                            if (det_gas2_a[p]) {
                                                                 sym ^= mo_symmetry_
                                                                     [relative_gas_mo[1][p]];
                                                             }
-                                                            if (tmp_det_gas2_b[p]) {
+                                                            if (det_gas2_b[p]) {
                                                                 sym ^= mo_symmetry_
                                                                     [relative_gas_mo[1][p]];
                                                             }
                                                         }
-                                                        for (int p = 0; p < gas3_size; ++p) {
+                                                        for (size_t p = 0; p < gas3_size; ++p) {
                                                             det.set_alfa_bit(relative_gas_mo[2][p],
-                                                                             tmp_det_gas3_a[p]);
+                                                                             det_gas3_a[p]);
                                                             det.set_beta_bit(relative_gas_mo[2][p],
-                                                                             tmp_det_gas3_b[p]);
-                                                            if (tmp_det_gas3_a[p]) {
+                                                                             det_gas3_b[p]);
+                                                            if (det_gas3_a[p]) {
                                                                 sym ^= mo_symmetry_
                                                                     [relative_gas_mo[2][p]];
                                                             }
-                                                            if (tmp_det_gas3_b[p]) {
+                                                            if (det_gas3_b[p]) {
                                                                 sym ^= mo_symmetry_
                                                                     [relative_gas_mo[2][p]];
                                                             }
                                                         }
-                                                        for (int p = 0; p < gas4_size; ++p) {
+                                                        for (size_t p = 0; p < gas4_size; ++p) {
                                                             det.set_alfa_bit(relative_gas_mo[3][p],
-                                                                             tmp_det_gas4_a[p]);
+                                                                             det_gas4_a[p]);
                                                             det.set_beta_bit(relative_gas_mo[3][p],
-                                                                             tmp_det_gas4_b[p]);
-                                                            if (tmp_det_gas4_a[p]) {
+                                                                             det_gas4_b[p]);
+                                                            if (det_gas4_a[p]) {
                                                                 sym ^= mo_symmetry_
                                                                     [relative_gas_mo[3][p]];
                                                             }
-                                                            if (tmp_det_gas4_b[p]) {
+                                                            if (det_gas4_b[p]) {
                                                                 sym ^= mo_symmetry_
                                                                     [relative_gas_mo[3][p]];
                                                             }
                                                         }
-                                                        for (int p = 0; p < gas5_size; ++p) {
+                                                        for (size_t p = 0; p < gas5_size; ++p) {
                                                             det.set_alfa_bit(relative_gas_mo[4][p],
-                                                                             tmp_det_gas5_a[p]);
+                                                                             det_gas5_a[p]);
                                                             det.set_beta_bit(relative_gas_mo[4][p],
-                                                                             tmp_det_gas5_b[p]);
-                                                            if (tmp_det_gas5_a[p]) {
+                                                                             det_gas5_b[p]);
+                                                            if (det_gas5_a[p]) {
                                                                 sym ^= mo_symmetry_
                                                                     [relative_gas_mo[4][p]];
                                                             }
-                                                            if (tmp_det_gas5_b[p]) {
+                                                            if (det_gas5_b[p]) {
                                                                 sym ^= mo_symmetry_
                                                                     [relative_gas_mo[4][p]];
                                                             }
                                                         }
-                                                        for (int p = 0; p < gas6_size; ++p) {
+                                                        for (size_t p = 0; p < gas6_size; ++p) {
                                                             det.set_alfa_bit(relative_gas_mo[5][p],
-                                                                             tmp_det_gas6_a[p]);
+                                                                             det_gas6_a[p]);
                                                             det.set_beta_bit(relative_gas_mo[5][p],
-                                                                             tmp_det_gas6_b[p]);
-                                                            if (tmp_det_gas6_a[p]) {
+                                                                             det_gas6_b[p]);
+                                                            if (det_gas6_a[p]) {
                                                                 sym ^= mo_symmetry_
                                                                     [relative_gas_mo[5][p]];
                                                             }
-                                                            if (tmp_det_gas6_b[p]) {
+                                                            if (det_gas6_b[p]) {
                                                                 sym ^= mo_symmetry_
                                                                     [relative_gas_mo[5][p]];
                                                             }
@@ -737,43 +779,24 @@ void CI_Reference::build_gas_single(std::vector<Determinant>& ref_space) {
                                                         // Check symmetry
                                                         if (sym == root_sym_) {
                                                             ref_space.push_back(det);
-
                                                             outfile->Printf(
                                                                 "\n Ref: %s",
                                                                 str(det, nact_).c_str());
-                                                                return;
+                                                            return;
                                                         }
-
-                                                    } while (std::next_permutation(
-                                                        tmp_det_gas1_a.begin(),
-                                                        tmp_det_gas1_a.begin() + gas1_size));
-                                                } while (std::next_permutation(
-                                                    tmp_det_gas1_b.begin(),
-                                                    tmp_det_gas1_b.begin() + gas1_size));
-                                            } while (std::next_permutation(tmp_det_gas2_a.begin(),
-                                                                           tmp_det_gas2_a.begin() +
-                                                                               gas2_size));
-                                        } while (std::next_permutation(tmp_det_gas2_b.begin(),
-                                                                       tmp_det_gas2_b.begin() +
-                                                                           gas2_size));
-                                    } while (
-                                        std::next_permutation(tmp_det_gas3_a.begin(),
-                                                              tmp_det_gas3_a.begin() + gas3_size));
-                                } while (std::next_permutation(tmp_det_gas3_b.begin(),
-                                                               tmp_det_gas3_b.begin() + gas3_size));
-                            } while (std::next_permutation(tmp_det_gas4_a.begin(),
-                                                           tmp_det_gas4_a.begin() + gas4_size));
-                        } while (std::next_permutation(tmp_det_gas4_b.begin(),
-                                                       tmp_det_gas4_b.begin() + gas4_size));
-                    } while (std::next_permutation(tmp_det_gas5_a.begin(),
-                                                   tmp_det_gas5_a.begin() + gas5_size));
-                } while (std::next_permutation(tmp_det_gas5_b.begin(),
-                                               tmp_det_gas5_b.begin() + gas5_size));
-            } while (
-                std::next_permutation(tmp_det_gas6_a.begin(), tmp_det_gas6_a.begin() + gas6_size));
-        } while (std::next_permutation(tmp_det_gas6_b.begin(), tmp_det_gas6_b.begin() + gas6_size));
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
     }
-    //  outfile->Printf("\n ref size: %zu", ref_space.size());
 }
 
 void CI_Reference::build_gas_reference(std::vector<Determinant>& ref_space) {
@@ -781,16 +804,18 @@ void CI_Reference::build_gas_reference(std::vector<Determinant>& ref_space) {
     // The relative_mo of each GAS, without sorting the energy
     std::vector<std::vector<size_t>> relative_gas_mo;
     auto act_mo = mo_space_info_->absolute_mo("ACTIVE");
-           std::map<int, int> re_ab_mo;
-           for (size_t i = 0; i< act_mo.size(); i++){
-           	re_ab_mo[act_mo[i]] = i;
-           }
+    std::map<int, int> re_ab_mo;
+    for (size_t i = 0; i < act_mo.size(); i++) {
+        re_ab_mo[act_mo[i]] = i;
+    }
     for (size_t gas_count = 0; gas_count < 6; gas_count++) {
         std::string space = gas_subspaces_.at(gas_count);
         std::vector<size_t> relative_mo;
         auto vec_mo_info = general_active_spaces_[space].second;
-        for (size_t i = 0; i < vec_mo_info.size(); ++i) {
+        for (size_t i = 0, maxi = vec_mo_info.size(); i < maxi; ++i) {
             relative_mo.push_back(re_ab_mo[std::get<0>(vec_mo_info[i])]);
+            //            outfile->Printf("\n GAS %d %d ", std::get<0>(vec_mo_info[i]),
+            //                            re_ab_mo[std::get<0>(vec_mo_info[i])]);
         }
         relative_gas_mo.push_back(relative_mo);
     }
@@ -893,117 +918,156 @@ void CI_Reference::build_gas_reference(std::vector<Determinant>& ref_space) {
         std::sort(begin(tmp_det_gas6_a), end(tmp_det_gas6_a));
         std::sort(begin(tmp_det_gas6_b), end(tmp_det_gas6_b));
 
-        // Reverse so all start from low energy ones
-        std::reverse(begin(tmp_det_gas1_a), end(tmp_det_gas1_a));
-        std::reverse(begin(tmp_det_gas1_b), end(tmp_det_gas1_b));
-        std::reverse(begin(tmp_det_gas2_a), end(tmp_det_gas2_a));
-        std::reverse(begin(tmp_det_gas2_b), end(tmp_det_gas2_b));
-        std::reverse(begin(tmp_det_gas3_a), end(tmp_det_gas3_a));
-        std::reverse(begin(tmp_det_gas3_b), end(tmp_det_gas3_b));
-        std::reverse(begin(tmp_det_gas4_a), end(tmp_det_gas4_a));
-        std::reverse(begin(tmp_det_gas4_b), end(tmp_det_gas4_b));
-        std::reverse(begin(tmp_det_gas5_a), end(tmp_det_gas5_a));
-        std::reverse(begin(tmp_det_gas5_b), end(tmp_det_gas5_b));
-        std::reverse(begin(tmp_det_gas6_a), end(tmp_det_gas6_a));
-        std::reverse(begin(tmp_det_gas6_b), end(tmp_det_gas6_b));
+        // Save all permutations
+        std::vector<std::vector<bool>> alldet_gas1_a;
+        std::vector<std::vector<bool>> alldet_gas1_b;
+        std::vector<std::vector<bool>> alldet_gas2_a;
+        std::vector<std::vector<bool>> alldet_gas2_b;
+        std::vector<std::vector<bool>> alldet_gas3_a;
+        std::vector<std::vector<bool>> alldet_gas3_b;
+        std::vector<std::vector<bool>> alldet_gas4_a;
+        std::vector<std::vector<bool>> alldet_gas4_b;
+        std::vector<std::vector<bool>> alldet_gas5_a;
+        std::vector<std::vector<bool>> alldet_gas5_b;
+        std::vector<std::vector<bool>> alldet_gas6_a;
+        std::vector<std::vector<bool>> alldet_gas6_b;
+
+        do {
+            alldet_gas1_a.push_back(tmp_det_gas1_a);
+        } while (std::next_permutation(tmp_det_gas1_a.begin(), tmp_det_gas1_a.begin() + gas1_size));
+        do {
+            alldet_gas1_b.push_back(tmp_det_gas1_b);
+        } while (std::next_permutation(tmp_det_gas1_b.begin(), tmp_det_gas1_b.begin() + gas1_size));
+        do {
+            alldet_gas2_a.push_back(tmp_det_gas2_a);
+        } while (std::next_permutation(tmp_det_gas2_a.begin(), tmp_det_gas2_a.begin() + gas2_size));
+        do {
+            alldet_gas2_b.push_back(tmp_det_gas2_b);
+        } while (std::next_permutation(tmp_det_gas2_b.begin(), tmp_det_gas2_b.begin() + gas2_size));
+        do {
+            alldet_gas3_a.push_back(tmp_det_gas3_a);
+        } while (std::next_permutation(tmp_det_gas3_a.begin(), tmp_det_gas3_a.begin() + gas3_size));
+        do {
+            alldet_gas3_b.push_back(tmp_det_gas3_b);
+        } while (std::next_permutation(tmp_det_gas3_b.begin(), tmp_det_gas3_b.begin() + gas3_size));
+        do {
+            alldet_gas4_a.push_back(tmp_det_gas4_a);
+        } while (std::next_permutation(tmp_det_gas4_a.begin(), tmp_det_gas4_a.begin() + gas4_size));
+        do {
+            alldet_gas4_b.push_back(tmp_det_gas4_b);
+        } while (std::next_permutation(tmp_det_gas4_b.begin(), tmp_det_gas4_b.begin() + gas4_size));
+        do {
+            alldet_gas5_a.push_back(tmp_det_gas5_a);
+        } while (std::next_permutation(tmp_det_gas5_a.begin(), tmp_det_gas5_a.begin() + gas5_size));
+        do {
+            alldet_gas5_b.push_back(tmp_det_gas5_b);
+        } while (std::next_permutation(tmp_det_gas5_b.begin(), tmp_det_gas5_b.begin() + gas5_size));
+        do {
+            alldet_gas6_a.push_back(tmp_det_gas6_a);
+        } while (std::next_permutation(tmp_det_gas6_a.begin(), tmp_det_gas6_a.begin() + gas6_size));
+        do {
+            alldet_gas6_b.push_back(tmp_det_gas6_b);
+        } while (std::next_permutation(tmp_det_gas6_b.begin(), tmp_det_gas6_b.begin() + gas6_size));
 
         // Permutation of all the orbitals
-        do {
-            do {
-                do {
-                    do {
-                        do {
-                            do {
-                                do {
-                                    do {
-                                        do {
-                                            do {
-                                                do {
-                                                    do {
+        for (const auto& det_gas1_a : alldet_gas1_a) {
+            for (const auto& det_gas1_b : alldet_gas1_b) {
+                for (const auto& det_gas2_a : alldet_gas2_a) {
+                    for (const auto& det_gas2_b : alldet_gas2_b) {
+                        for (const auto& det_gas3_a : alldet_gas3_a) {
+                            for (const auto& det_gas3_b : alldet_gas3_b) {
+                                for (const auto& det_gas4_a : alldet_gas4_a) {
+                                    for (const auto& det_gas4_b : alldet_gas4_b) {
+                                        for (const auto& det_gas5_a : alldet_gas5_a) {
+                                            for (const auto& det_gas5_b : alldet_gas5_b) {
+                                                for (const auto& det_gas6_a : alldet_gas6_a) {
+                                                    for (const auto& det_gas6_b : alldet_gas6_b) {
                                                         // Build determinant
-                                                        // outfile->Printf("\n Possible Configurations ");
+                                                        // outfile->Printf(
+                                                        //   "\n Possible
+                                                        //   Configurations");
                                                         Determinant det;
                                                         int sym = 0;
-                                                        for (int p = 0; p < gas1_size; ++p) {
+                                                        for (size_t p = 0; p < gas1_size; ++p) {
                                                             det.set_alfa_bit(relative_gas_mo[0][p],
-                                                                             tmp_det_gas1_a[p]);
+                                                                             det_gas1_a[p]);
                                                             det.set_beta_bit(relative_gas_mo[0][p],
-                                                                             tmp_det_gas1_b[p]);
-                                                            if (tmp_det_gas1_a[p]) {
+                                                                             det_gas1_b[p]);
+                                                            if (det_gas1_a[p]) {
                                                                 sym ^= mo_symmetry_
                                                                     [relative_gas_mo[0][p]];
                                                             }
-                                                            if (tmp_det_gas1_b[p]) {
+                                                            if (det_gas1_b[p]) {
                                                                 sym ^= mo_symmetry_
                                                                     [relative_gas_mo[0][p]];
                                                             }
                                                         }
-                                                        for (int p = 0; p < gas2_size; ++p) {
+                                                        for (size_t p = 0; p < gas2_size; ++p) {
                                                             det.set_alfa_bit(relative_gas_mo[1][p],
-                                                                             tmp_det_gas2_a[p]);
+                                                                             det_gas2_a[p]);
                                                             det.set_beta_bit(relative_gas_mo[1][p],
-                                                                             tmp_det_gas2_b[p]);
-                                                            if (tmp_det_gas2_a[p]) {
+                                                                             det_gas2_b[p]);
+                                                            if (det_gas2_a[p]) {
                                                                 sym ^= mo_symmetry_
                                                                     [relative_gas_mo[1][p]];
                                                             }
-                                                            if (tmp_det_gas2_b[p]) {
+                                                            if (det_gas2_b[p]) {
                                                                 sym ^= mo_symmetry_
                                                                     [relative_gas_mo[1][p]];
                                                             }
                                                         }
-                                                        for (int p = 0; p < gas3_size; ++p) {
+                                                        for (size_t p = 0; p < gas3_size; ++p) {
                                                             det.set_alfa_bit(relative_gas_mo[2][p],
-                                                                             tmp_det_gas3_a[p]);
+                                                                             det_gas3_a[p]);
                                                             det.set_beta_bit(relative_gas_mo[2][p],
-                                                                             tmp_det_gas3_b[p]);
-                                                            if (tmp_det_gas3_a[p]) {
+                                                                             det_gas3_b[p]);
+                                                            if (det_gas3_a[p]) {
                                                                 sym ^= mo_symmetry_
                                                                     [relative_gas_mo[2][p]];
                                                             }
-                                                            if (tmp_det_gas3_b[p]) {
+                                                            if (det_gas3_b[p]) {
                                                                 sym ^= mo_symmetry_
                                                                     [relative_gas_mo[2][p]];
                                                             }
                                                         }
-                                                        for (int p = 0; p < gas4_size; ++p) {
+                                                        for (size_t p = 0; p < gas4_size; ++p) {
                                                             det.set_alfa_bit(relative_gas_mo[3][p],
-                                                                             tmp_det_gas4_a[p]);
+                                                                             det_gas4_a[p]);
                                                             det.set_beta_bit(relative_gas_mo[3][p],
-                                                                             tmp_det_gas4_b[p]);
-                                                            if (tmp_det_gas4_a[p]) {
+                                                                             det_gas4_b[p]);
+                                                            if (det_gas4_a[p]) {
                                                                 sym ^= mo_symmetry_
                                                                     [relative_gas_mo[3][p]];
                                                             }
-                                                            if (tmp_det_gas4_b[p]) {
+                                                            if (det_gas4_b[p]) {
                                                                 sym ^= mo_symmetry_
                                                                     [relative_gas_mo[3][p]];
                                                             }
                                                         }
-                                                        for (int p = 0; p < gas5_size; ++p) {
+                                                        for (size_t p = 0; p < gas5_size; ++p) {
                                                             det.set_alfa_bit(relative_gas_mo[4][p],
-                                                                             tmp_det_gas5_a[p]);
+                                                                             det_gas5_a[p]);
                                                             det.set_beta_bit(relative_gas_mo[4][p],
-                                                                             tmp_det_gas5_b[p]);
-                                                            if (tmp_det_gas5_a[p]) {
+                                                                             det_gas5_b[p]);
+                                                            if (det_gas5_a[p]) {
                                                                 sym ^= mo_symmetry_
                                                                     [relative_gas_mo[4][p]];
                                                             }
-                                                            if (tmp_det_gas5_b[p]) {
+                                                            if (det_gas5_b[p]) {
                                                                 sym ^= mo_symmetry_
                                                                     [relative_gas_mo[4][p]];
                                                             }
                                                         }
-                                                        for (int p = 0; p < gas6_size; ++p) {
+                                                        for (size_t p = 0; p < gas6_size; ++p) {
                                                             det.set_alfa_bit(relative_gas_mo[5][p],
-                                                                             tmp_det_gas6_a[p]);
+                                                                             det_gas6_a[p]);
                                                             det.set_beta_bit(relative_gas_mo[5][p],
-                                                                             tmp_det_gas6_b[p]);
-                                                            if (tmp_det_gas6_a[p]) {
+                                                                             det_gas6_b[p]);
+                                                            if (det_gas6_a[p]) {
                                                                 sym ^= mo_symmetry_
                                                                     [relative_gas_mo[5][p]];
                                                             }
-                                                            if (tmp_det_gas6_b[p]) {
+                                                            if (det_gas6_b[p]) {
                                                                 sym ^= mo_symmetry_
                                                                     [relative_gas_mo[5][p]];
                                                             }
@@ -1011,38 +1075,23 @@ void CI_Reference::build_gas_reference(std::vector<Determinant>& ref_space) {
                                                         // Check symmetry
                                                         if (sym == root_sym_) {
                                                             ref_space.push_back(det);
-                                                            outfile->Printf(
-                                                                "\n  %s", str(det, nact_).c_str());
-                                                        }
 
-                                                    } while (std::next_permutation(
-                                                        tmp_det_gas1_a.begin(),
-                                                        tmp_det_gas1_a.begin() + gas1_size));
-                                                } while (std::next_permutation(
-                                                    tmp_det_gas1_b.begin(),
-                                                    tmp_det_gas1_b.begin() + gas1_size));
-                                            } while (std::next_permutation(tmp_det_gas2_a.begin(),
-                                                                           tmp_det_gas2_a.begin() +
-                                                                               gas2_size));
-                                        } while (std::next_permutation(tmp_det_gas2_b.begin(),
-                                                                       tmp_det_gas2_b.begin() +
-                                                                           gas2_size));
-                                    } while (
-                                        std::next_permutation(tmp_det_gas3_a.begin(),
-                                                              tmp_det_gas3_a.begin() + gas3_size));
-                                } while (std::next_permutation(tmp_det_gas3_b.begin(),
-                                                               tmp_det_gas3_b.begin() + gas3_size));
-                            } while (std::next_permutation(tmp_det_gas4_a.begin(),
-                                                           tmp_det_gas4_a.begin() + gas4_size));
-                        } while (std::next_permutation(tmp_det_gas4_b.begin(),
-                                                       tmp_det_gas4_b.begin() + gas4_size));
-                    } while (std::next_permutation(tmp_det_gas5_a.begin(),
-                                                   tmp_det_gas5_a.begin() + gas5_size));
-                } while (std::next_permutation(tmp_det_gas5_b.begin(),
-                                               tmp_det_gas5_b.begin() + gas5_size));
-            } while (
-                std::next_permutation(tmp_det_gas6_a.begin(), tmp_det_gas6_a.begin() + gas6_size));
-        } while (std::next_permutation(tmp_det_gas6_b.begin(), tmp_det_gas6_b.begin() + gas6_size));
+                                                            //                                                            outfile->Printf(
+                                                            //                                                                "\n Ref: %s",
+                                                            //                                                                str(det, nact_).c_str());
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
     }
     //  outfile->Printf("\n ref size: %zu", ref_space.size());
 }

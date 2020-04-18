@@ -33,7 +33,6 @@
 #include "fci/fci_solver.h"
 #include "casscf/casscf.h"
 #include "sci/aci.h"
-#include "sci/gas_ci.h"
 #include "sci/asci.h"
 #include "sci/fci_mo.h"
 #include "pci/pci.h"

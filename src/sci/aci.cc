@@ -230,12 +230,13 @@ void AdaptiveCI::find_q_space() {
     double remainder = 0.0;
 
     if (screen_alg == "AVERAGE") {
-    	 if (gas_iteration_) {
-    		 get_gas_excited_determinants_avg(nroot_, P_evecs_, P_evals_, P_space_, F_space);
-    	 }
+        if (gas_iteration_) {
+            get_gas_excited_determinants_avg(nroot_, P_evecs_, P_evals_, P_space_, F_space);
+        }
         // multiroot
-    	 else{
-        get_excited_determinants_avg(nroot_, P_evecs_, P_evals_, P_space_, F_space);}
+        else {
+            get_excited_determinants_avg(nroot_, P_evecs_, P_evals_, P_space_, F_space);
+        }
     } else if (screen_alg == "SR") {
         if (gas_iteration_) {
             get_gas_excited_determinants_sr(P_evecs_, P_evals_, P_space_, F_space);
@@ -589,14 +590,12 @@ void AdaptiveCI::pre_iter_preparation() {
     // If the ACI iteration is within the gas space, calculate
     // gas_info and the criterion for single and double excitations
 
-
-
     if (gas_iteration_) {
         const auto gas_info = mo_space_info_->gas_info();
         auto act_mo = mo_space_info_->absolute_mo("ACTIVE");
         std::map<int, int> re_ab_mo;
-        for (size_t i = 0; i< act_mo.size(); i++){
-        	re_ab_mo[act_mo[i]] = i;
+        for (size_t i = 0; i < act_mo.size(); i++) {
+            re_ab_mo[act_mo[i]] = i;
         }
         gas_single_criterion_ = ref.gas_single_criterion();
         gas_double_criterion_ = ref.gas_double_criterion();
