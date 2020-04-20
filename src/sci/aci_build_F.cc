@@ -925,7 +925,6 @@ void AdaptiveCI::get_excited_determinants_sr(SharedMatrix evecs, SharedVector ev
                                     new_det = det;
                                     HIJ *= new_det.double_excitation_aa(ii, jj, aa, bb);
                                     V_hash_t[new_det] += HIJ;
-                                    outfile->Printf("\n aa hij %f", HIJ);
                                 }
                             }
                         }
