@@ -33,8 +33,8 @@ set globals{
 set forte{
    active_space_solver  fci
    correlation_solver   dsrg-mrpt2
-   restricted_docc      [5]
-   active               [0]
+   restricted_docc      [0]
+   active               [5]
    root_sym             0
    nroot                1
    dsrg_s               1.0
@@ -51,85 +51,3 @@ gradient('forte',ref_wfn=wfn)
 
 
 
-
-
-# molecule {
-#   0 1
-#   F         50.000000000000     0.000000000000     0.000000000000
-#   F        -50.000000000000     0.000000000000     0.000000000000
-#   no_reorient
-# }
-
-
-
-
-# set globals{
-#    scf_type             pk
-#    d_convergence        12
-#    e_convergence        15
-#    basis                3-21g
-
-#    restricted_docc      [2,0,1,1,0,2,1,1]
-#    active               [1,0,0,0,0,1,0,0]
-
-#    maxiter              100
-#    reference            RHF
-#    mcscf_type           conv
-#    mcscf_maxiter        100
-#    mcscf_diis_start     20
-#    MCSCF_E_CONVERGENCE  12
-#    MCSCF_R_CONVERGENCE  10
-# }
-
-# set scf_type direct
-
-# set mcscf{
-#    reference            twocon
-#    docc                 [2,0,1,1,0,2,1,1]
-#    socc                 [1,0,0,0,0,1,0,0]
-#    maxiter              1000
-# }
-
-# set forte{
-#    active_space_solver  fci
-#    correlation_solver   dsrg-mrpt2
-#    restricted_docc      [2,0,1,1,0,2,1,1]
-#    active               [1,0,0,0,0,1,0,0]
-#    root_sym             0
-#    nroot                1
-#    dsrg_s               1.0
-#    dsrgpt               true
-#    print_denom2         true
-#    multiplicity         1 
-# }
-
-# # set forte{
-# #    job_type             casscf
-# #    CASSCF_REFERENCE      true
-# #    CASSCF_ITERATIONS      100
-# #    CASSCF_G_CONVERGENCE   1e-6
-# #    CASSCF_E_CONVERGENCE   1e-8
-# #    restricted_docc         [2,1,1,0,0,1,1,1]
-# #    active                  [1,0,0,0,0,0,0,2]
-# #    int_type             conventional
-# #    casscf_ci_solver      FCI
-# #    print                 0
-# #    CASSCF_DO_DIIS        true
-# #    dertype               first
-# # }
-
-
-# # gradient('forte')
-
-# scf_energy, wfn = energy('casscf', return_wfn=True)
-# #compare_values(refmcscf,variable("CURRENT ENERGY"),10,"MCSCF energy") #TEST
-
-# energy('forte',ref_wfn=wfn)
-# # gradient('forte',ref_wfn=wfn)
-# # compare_values(refdsrgpt2,variable("CURRENT ENERGY"),10,"DSRG-MRPT2 energy") #TEST
-
-
-# set findif{ 
-#   points 5
-# }
-# gradient('forte',ref_wfn=wfn,dertype='energy')
