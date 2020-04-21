@@ -260,7 +260,6 @@ class DSRG_MRPT2 : public MASTER_DSRG {
 
 
 
-
     double s;
 
 

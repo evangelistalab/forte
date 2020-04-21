@@ -33,8 +33,9 @@ set globals{
 set forte{
    active_space_solver  fci
    correlation_solver   dsrg-mrpt2
-   restricted_docc      [0]
-   active               [5]
+   restricted_docc      [5]
+   active               [2]
+   restricted_uocc      [6]
    root_sym             0
    nroot                1
    dsrg_s               1.0

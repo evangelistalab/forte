@@ -1277,8 +1277,6 @@ void DSRG_MRPT2::iter_z() {
     int maxiter = 4000;
     double convergence = 1e-8;
 
-    //TODO: beta-beta part not done yet
-
     //NOTICE: constant b for z{core-virtual}
     BlockedTensor temp1 = BTF_->build(CoreTensor, "temporal tensor 1", {"ppch", "pPcH"});
     BlockedTensor temp2 = BTF_->build(CoreTensor, "temporal tensor 2", {"ppvch", "pPvcH"});
@@ -1585,6 +1583,7 @@ void DSRG_MRPT2::iter_z() {
         iter++;
         if (iter%5==0) {outfile->Printf("\niter=%d    Znorm                     =  %.8f",iter, Znorm);}
     }
+
     outfile->Printf("\n    iterations                     =  %d", iter);
 
 }
@@ -1697,7 +1696,8 @@ void DSRG_MRPT2::compute_z_av() {
     temp["ew"] -= 0.5 * Z["n1,u"] * V["x,y,n1,e"] * Gamma2["u,w,x,y"];
     temp["ew"] -= Z["N1,U"] * V["y,X,e,N1"] * Gamma2["w,U,y,X"];
     temp["ew"] -= Z["n1,u"] * V["e,y,n1,v"] * Gamma2["u,v,w,y"];
-    temp["ew"] -= 2.0 * Z["n1,u"] * V["e,Y,n1,V"] * Gamma2["u,V,w,Y"];
+    temp["ew"] -= Z["n1,u"] * V["e,Y,n1,V"] * Gamma2["u,V,w,Y"];
+    temp["ew"] -= Z["N1,U"] * V["e,Y,v,N1"] * Gamma2["v,U,w,Y"];
 
     temp["ew"] += Z["u1,v1"] * V["v1,v,u1,e"] * Gamma1["wv"];
     temp["ew"] += Z["U1,V1"] * V["v,V1,e,U1"] * Gamma1["wv"];
@@ -1720,7 +1720,6 @@ void DSRG_MRPT2::compute_z_av() {
     temp["ew"] -= Z["eu"] * V["v,M,w,M1"] * Gamma1["uv"] * I["M,M1"];
     temp["ew"] -= 0.5 * Z["eu"] * V["xywv"] * Gamma2["uvxy"];
     temp["ew"] -= Z["eu"] * V["xYwV"] * Gamma2["uVxY"];
-
 
 
     // move terms to the left side
@@ -1760,28 +1759,25 @@ void DSRG_MRPT2::compute_z_av() {
 
 
     temp_p["ew"] = temp["ew"];
-    temp_p["ew"] += 25 * Z["ew"];
+    temp_p["ew"] += 15 * Z["ew"];
     temp_m["ew"] = temp["ew"];
-    temp_m["ew"] -= 25 * Z["ew"];
+    temp_m["ew"] -= 15 * Z["ew"];
 
 
     for (const std::string& block : {"va"}) {
         (Z.block(block)).iterate([&](const std::vector<size_t>& i, double& value) {
             double dn = dnt.block(block).data()[i[0] * na_ + i[1]] + dnt1.block("a").data()[i[1]];
-            if (std::fabs(dn) > 25.0) {
+            if (std::fabs(dn) > 15.0) {
                 value = temp.block(block).data()[i[0] * na_ + i[1]] / dn;
             }
             else if (dn >= 0) {
-                value = temp_p.block(block).data()[i[0] * na_ + i[1]] / (dn + 25.0);
+                value = temp_p.block(block).data()[i[0] * na_ + i[1]] / (dn + 15.0);
             }
             else {
-                value = temp_m.block(block).data()[i[0] * na_ + i[1]] / (dn - 25.0);
+                value = temp_m.block(block).data()[i[0] * na_ + i[1]] / (dn - 15.0);
             }
         });
     } 
-
-
-
 
     Z["we"] = Z["ew"];
 
@@ -1795,131 +1791,6 @@ void DSRG_MRPT2::compute_z_av() {
 
 }
 
-
-
-// void DSRG_MRPT2::compute_z_av() {
-
-//     BlockedTensor temp = BTF_->build(CoreTensor, "temporal tensor", {"va"});
-
-//     temp["ew"] = Z_b["ew"];
-
-//     temp["ew"] -= Z["e,m1"] * F["m1,w"];
-
-//     temp["ew"] += Z["e1,m1"] * V["m1,e,e1,u"] * Gamma1["uw"];
-//     temp["ew"] += Z["E1,M1"] * V["e,M1,u,E1"] * Gamma1["uw"];
-//     temp["ew"] += Z["e1,m1"] * V["m1,u,e1,e"] * Gamma1["uw"];
-//     temp["ew"] += Z["E1,M1"] * V["u,M1,e,E1"] * Gamma1["uw"];
-
-//     temp["ew"] += Z["n1,u"] * V["u,v,n1,e"] * Gamma1["wv"];
-//     temp["ew"] += Z["N1,U"] * V["v,U,e,N1"] * Gamma1["wv"];
-//     temp["ew"] += Z["n1,u"] * V["u,e,n1,v"] * Gamma1["wv"];
-//     temp["ew"] += Z["N1,U"] * V["e,U,v,N1"] * Gamma1["wv"];
-
-//     temp["ew"] -= Z["n1,u"] * H["e,n1"] * Gamma1["uw"];
-//     temp["ew"] -= Z["n1,u"] * V["e,m,n1,m1"] * Gamma1["uw"] * I["m,m1"];
-//     temp["ew"] -= Z["n1,u"] * V["e,M,n1,M1"] * Gamma1["uw"] * I["M,M1"];
-//     temp["ew"] -= 0.5 * Z["n1,u"] * V["x,y,n1,e"] * Gamma2["u,w,x,y"];
-//     temp["ew"] -= Z["N1,U"] * V["y,X,e,N1"] * Gamma2["w,U,y,X"];
-//     temp["ew"] -= Z["n1,u"] * V["e,y,n1,v"] * Gamma2["u,v,w,y"];
-//     temp["ew"] -= 2.0 * Z["n1,u"] * V["e,Y,n1,V"] * Gamma2["u,V,w,Y"];
-
-//     temp["ew"] += Z["u1,v1"] * V["v1,v,u1,e"] * Gamma1["wv"];
-//     temp["ew"] += Z["U1,V1"] * V["v,V1,e,U1"] * Gamma1["wv"];
-
-//     temp["ew"] += Z["wv"] * F["ve"];
-
-
-//     // Terms need to be separated
-//     temp["ew"] += Z["e1,u"] * H["e,e1"] * Gamma1["uw"];
-//     temp["ew"] += Z["e1,u"] * V["e,m,e1,m1"] * Gamma1["uw"] * I["m,m1"];
-//     temp["ew"] += Z["e1,u"] * V["e,M,e1,M1"] * Gamma1["uw"] * I["M,M1"];
-//     temp["ew"] += 0.5 * Z["e1,u"] * V["x,y,e1,e"] * Gamma2["u,w,x,y"];
-//     temp["ew"] += Z["E1,U"] * V["y,X,e,E1"] * Gamma2["w,U,y,X"];
-//     temp["ew"] += Z["e1,u"] * V["e,y,e1,v"] * Gamma2["u,v,w,y"];
-//     temp["ew"] += 2.0 * Z["e1,u"] * V["e,Y,e1,V"] * Gamma2["u,V,w,Y"];
-
-//     temp["ew"] -= Z["eu"] * H["vw"] * Gamma1["uv"];
-//     temp["ew"] -= Z["eu"] * V["v,m,w,m1"] * Gamma1["uv"] * I["m,m1"];
-//     temp["ew"] -= Z["eu"] * V["v,M,w,M1"] * Gamma1["uv"] * I["M,M1"];
-//     temp["ew"] -= 0.5 * Z["eu"] * V["xywv"] * Gamma2["uvxy"];
-//     temp["ew"] -= Z["eu"] * V["xYwV"] * Gamma2["uVxY"];
-
-
-
-//     // move terms to the left side
-//     temp["ew"] -= Z["ew"] * H["e,e1"] * Gamma1["w,w1"] * I["e,e1"] * I["w,w1"];
-//     temp["ew"] -= Z["ew"] * V["e,m,e1,m1"] * Gamma1["w,w1"] * I["e,e1"] * I["w,w1"] * I["m,m1"];
-//     temp["ew"] -= Z["ew"] * V["e,M,e1,M1"] * Gamma1["w,w1"] * I["e,e1"] * I["w,w1"] * I["M,M1"];
-//     temp["ew"] -= 0.5 * Z["ew"] * V["x,y,e,e1"] * Gamma2["w,w1,x,y"] * I["e,e1"] * I["w,w1"];
-//     temp["ew"] -= Z["ew"] * V["e,y,e1,v"] * Gamma2["w,v,w1,y"] * I["e,e1"] * I["w,w1"];
-//     temp["ew"] -= Z["ew"] * V["e,Y,e1,V"] * Gamma2["w,V,w1,Y"] * I["e,e1"] * I["w,w1"];
-
-//     temp["ew"] += Z["ew"] * H["vw"] * Gamma1["wv"];
-//     temp["ew"] += Z["ew"] * V["v,m,w,m1"] * Gamma1["wv"] * I["m,m1"];
-//     temp["ew"] += Z["ew"] * V["v,M,w,M1"] * Gamma1["wv"] * I["M,M1"];
-//     temp["ew"] += 0.5 * Z["ew"] * V["xywv"] * Gamma2["wvxy"];
-//     temp["ew"] += Z["ew"] * V["xYwV"] * Gamma2["wVxY"];
-
-
-//     // Denominator
-//     BlockedTensor dnt = BTF_->build(CoreTensor, "temporal denominator", {"va"});
-//     dnt["ew"] -= H["e,e1"] * Gamma1["w,w1"] * I["e,e1"] * I["w,w1"];
-//     dnt["ew"] -= V["e,m,e1,m1"] * Gamma1["w,w1"] * I["e,e1"] * I["w,w1"] * I["m,m1"];
-//     dnt["ew"] -= V["e,M,e1,M1"] * Gamma1["w,w1"] * I["e,e1"] * I["w,w1"] * I["M,M1"];
-//     dnt["ew"] -= 0.5 * V["x,y,e,e1"] * Gamma2["w,w1,x,y"] * I["e,e1"] * I["w,w1"];
-//     dnt["ew"] -= V["e,y,e1,v"] * Gamma2["w,v,w1,y"] * I["e,e1"] * I["w,w1"];
-//     dnt["ew"] -= V["e,Y,e1,V"] * Gamma2["w,V,w1,Y"] * I["e,e1"] * I["w,w1"];
-
-//     BlockedTensor dnt1 = BTF_->build(CoreTensor, "temporal denominator", {"a"});
-//     dnt1["w"] += H["vw"] * Gamma1["wv"];
-//     dnt1["w"] += V["v,m,w,m1"] * Gamma1["wv"] * I["m,m1"];
-//     dnt1["w"] += V["v,M,w,M1"] * Gamma1["wv"] * I["M,M1"];
-//     dnt1["w"] += 0.5 * V["xywv"] * Gamma2["wvxy"];
-//     dnt1["w"] += V["xYwV"] * Gamma2["wVxY"];
-
-
-
-
-//     BlockedTensor temp_p = BTF_->build(CoreTensor, "temporal tensor plus Z_va", {"va"});
-//     BlockedTensor temp_m = BTF_->build(CoreTensor, "temporal tensor subtract Z_va", {"va"});
-
-
-//     temp_p["ew"] = temp["ew"];
-//     temp_p["ew"] += 25 * Z["ew"];
-//     temp_m["ew"] = temp["ew"];
-//     temp_m["ew"] -= 25 * Z["ew"];
-
-
-//     for (const std::string& block : {"va"}) {
-//         (Z.block(block)).iterate([&](const std::vector<size_t>& i, double& value) {
-//             double dn = dnt.block(block).data()[i[0] * na_ + i[1]] + dnt1.block("a").data()[i[1]];
-//             if (std::fabs(dn) > 25.0) {
-//                 value = temp.block(block).data()[i[0] * na_ + i[1]] / dn;
-//             }
-//             else if (dn >= 0) {
-//                 value = temp_p.block(block).data()[i[0] * na_ + i[1]] / (dn + 25.0);
-//             }
-//             else {
-//                 value = temp_m.block(block).data()[i[0] * na_ + i[1]] / (dn - 25.0);
-//             }
-//         });
-//     } 
-
-
-
-
-//     Z["we"] = Z["ew"];
-
-//     // Beta part
-//     for (const std::string& block : {"VA"}) {
-//         (Z.block(block)).iterate([&](const std::vector<size_t>& i, double& value) {
-//             value = Z.block("va").data()[i[0] * na_ + i[1]];
-//         });
-//     } 
-//     Z["WE"] = Z["EW"];
-
-
-// }
 
 
 
@@ -1939,7 +1810,8 @@ void DSRG_MRPT2::compute_z_ca() {
     temp["mw"] += 0.5 * Z["e1,u"] * V["x,y,e1,m"] * Gamma2["u,w,x,y"];
     temp["mw"] += Z["E1,U"] * V["y,X,m,E1"] * Gamma2["w,U,y,X"];
     temp["mw"] += Z["e1,u"] * V["m,y,e1,v"] * Gamma2["u,v,w,y"];
-    temp["mw"] += 2.0 * Z["e1,u"] * V["m,Y,e1,V"] * Gamma2["u,V,w,Y"];
+    temp["mw"] += Z["e1,u"] * V["m,Y,e1,V"] * Gamma2["u,V,w,Y"];
+    temp["mw"] += Z["E1,U"] * V["m,Y,v,E1"] * Gamma2["v,U,w,Y"];
 
     temp["mw"] += Z["u1,v1"] * V["v1,v,u1,m"] * Gamma1["wv"];
     temp["mw"] += Z["U1,V1"] * V["v,V1,m,U1"] * Gamma1["wv"];
@@ -1974,7 +1846,8 @@ void DSRG_MRPT2::compute_z_ca() {
     temp["mw"] -= 0.5 * Z["n1,u"] * V["x,y,n1,m"] * Gamma2["u,w,x,y"];
     temp["mw"] -= Z["N1,U"] * V["y,X,m,N1"] * Gamma2["w,U,y,X"];
     temp["mw"] -= Z["n1,u"] * V["m,y,n1,v"] * Gamma2["u,v,w,y"];
-    temp["mw"] -= 2.0 * Z["n1,u"] * V["m,Y,n1,V"] * Gamma2["u,V,w,Y"];
+    temp["mw"] -= Z["n1,u"] * V["m,Y,n1,V"] * Gamma2["u,V,w,Y"];
+    temp["mw"] -= Z["N1,U"] * V["m,Y,v,N1"] * Gamma2["v,U,w,Y"];
 
     temp["mw"] -= Z["n1,u"] * V["u,w,n1,m"];
     temp["mw"] -= Z["N1,U"] * V["w,U,m,N1"];
@@ -1989,7 +1862,7 @@ void DSRG_MRPT2::compute_z_ca() {
     temp["mw"] += Z["mu"] * H["vw"] * Gamma1["uv"];
     temp["mw"] += Z["mu"] * V["v,m1,w,n1"] * Gamma1["uv"] * I["m1,n1"];
     temp["mw"] += Z["mu"] * V["v,M1,w,N1"] * Gamma1["uv"] * I["M1,N1"];
-    temp["mw"] += 0.50 * Z["mu"] * V["xywv"] * Gamma2["uvxy"];
+    temp["mw"] += 0.5 * Z["mu"] * V["xywv"] * Gamma2["uvxy"];
     temp["mw"] += Z["mu"] * V["xYwV"] * Gamma2["uVxY"];
 
     // move terms to the left side
@@ -2110,7 +1983,8 @@ void DSRG_MRPT2::compute_z_aa() {
     temp["wz"] -= 0.5 * Z["n1,u"] * V["x,y,n1,w"] * Gamma2["u,z,x,y"];
     temp["wz"] -= Z["N1,U"] * V["y,X,w,N1"] * Gamma2["z,U,y,X"];
     temp["wz"] -= Z["n1,u"] * V["w,y,n1,v"] * Gamma2["u,v,z,y"];
-    temp["wz"] -= 2.0 * Z["n1,u"] * V["w,Y,n1,V"] * Gamma2["u,V,z,Y"];
+    temp["wz"] -= Z["n1,u"] * V["w,Y,n1,V"] * Gamma2["u,V,z,Y"];
+    temp["wz"] -= Z["N1,U"] * V["w,Y,v,N1"] * Gamma2["v,U,z,Y"];
 
     temp["wz"] += Z["e1,u"] * H["w,e1"] * Gamma1["uz"];
     temp["wz"] += Z["e1,u"] * V["w,m1,e1,m"] * Gamma1["uz"] * I["m1,m"];
@@ -2137,7 +2011,8 @@ void DSRG_MRPT2::compute_z_aa() {
     temp["wz"] += 0.5 * Z["n1,u"] * V["x,y,n1,z"] * Gamma2["u,w,x,y"];
     temp["wz"] += Z["N1,U"] * V["y,X,z,N1"] * Gamma2["w,U,y,X"];
     temp["wz"] += Z["n1,u"] * V["z,y,n1,v"] * Gamma2["u,v,w,y"];
-    temp["wz"] += 2.0 * Z["n1,u"] * V["z,Y,n1,V"] * Gamma2["u,V,w,Y"];
+    temp["wz"] += Z["n1,u"] * V["z,Y,n1,V"] * Gamma2["u,V,w,Y"];
+    temp["wz"] += Z["N1,U"] * V["z,Y,v,N1"] * Gamma2["v,U,w,Y"];
 
     temp["wz"] += Z["u1,v1"] * V["v1,v,u1,w"] * Gamma1["zv"];
     temp["wz"] += Z["U1,V1"] * V["v,V1,w,U1"] * Gamma1["zv"];
@@ -2380,10 +2255,6 @@ void DSRG_MRPT2::compute_test_energy() {
 
     // outfile->Printf("\n    Energy tested.                 =  %6.12lf", Eg);
 
-
-
-
-
     temp = BTF_->build(CoreTensor, "temp", spin_cases({"pphh"}));
     temp["cdkl"] = V["cdkl"] * Eeps2_p["klcd"];
     temp["CDKL"] = V["CDKL"] * Eeps2_p["KLCD"];
@@ -2528,7 +2399,6 @@ void DSRG_MRPT2::write_1rdm_spin_dependent() {
     temp = BTF_->build(CoreTensor, "temporal tensor", {"va"});
     temp["ev"] = Z["eu"] * Gamma1["uv"];
 
-
     (temp.block("va")).iterate([&](const std::vector<size_t>& i, double& value) {
         if (virt_mos_relative[i[0]].first == actv_mos_relative[i[1]].first) {
             D1->set(virt_mos_relative[i[0]].first, virt_mos_relative[i[0]].second,
@@ -2610,7 +2480,6 @@ void DSRG_MRPT2::write_2rdm_spin_dependent() {
         }
     }
 
-
     BlockedTensor temp = BTF_->build(CoreTensor, "temporal tensor", {"ac", "AC"});
     temp["un"] = Z["un"];
     temp["un"] -= Z["vn"] * Gamma1["uv"];
@@ -2664,7 +2533,6 @@ void DSRG_MRPT2::write_2rdm_spin_dependent() {
             }
         }
     }
-
 
 
     for (size_t i = 0, size_c = core_all_.size(); i < size_c; ++i) {
@@ -2841,7 +2709,7 @@ void DSRG_MRPT2::write_2rdm_spin_dependent() {
 
 
     temp2.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>& spin, double& value) {
-        if (std::fabs(value) > 1e-8) {
+        if (std::fabs(value) > 1e-12) {
             if (spin[2] == AlphaSpin) {
                 d2aa.write_value(i[0], i[1], i[2], i[3], 0.5 * value, 0, "NULL", 0);          
                 d2bb.write_value(i[0], i[1], i[2], i[3], 0.5 * value, 0, "NULL", 0);          
