@@ -88,7 +88,7 @@ class MODiagram:
             for (k, (e, h, i, occ)) in enumerate(ea_vir_data)
         ]
 
-        b_spin = '' if self.restricted else 'a'
+        b_spin = '' if self.restricted else 'b'
         bocc_labels = [
             f'MO{k + 1}{b_spin} {i+1}{self.irrep_labels[h]} (e = {e:.3f} Eh)'
             for (k, (e, h, i, occ)) in enumerate(eb_occ_data)
