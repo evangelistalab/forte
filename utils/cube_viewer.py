@@ -5,7 +5,6 @@ import ipywidgets as widgets
 import re
 from .py3js_renderer import Py3JSRenderer
 
-
 def cube_viewer(cubes=None,
                 path='.',
                 width=400,
@@ -41,7 +40,6 @@ def cube_viewer(cubes=None,
     if cubes == None:
         print(f'cube_viewer: loading cube files from the directory {path}')
         cubes = load_cubes(path)
-
 
     if len(cubes) == 0:
         print(f'cube_viewer: no cube files provided. No output will be displayed')
