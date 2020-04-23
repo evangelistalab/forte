@@ -172,7 +172,7 @@ class DavidsonLiuSolver {
     double timing_ = 0.0;
     bool last_update_collapsed_ = false;
 
-    /// Current set of guess vectors stored by row
+    /// Current set of basis vectors stored by row
     psi::SharedMatrix b_;
     /// Guess vectors formed from old vectors, stored by row
     psi::SharedMatrix bnew;

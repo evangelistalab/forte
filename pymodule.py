@@ -522,7 +522,6 @@ def gradient_forte(name, **kwargs):
 
         ints.rotate_orbitals(Ua,Ub)
 
-    # Run gradient computation
     energy = forte.forte_old_methods(ref_wfn, options, ints, mo_space_info)
     derivobj = psi4.core.Deriv(ref_wfn)
     derivobj.set_deriv_density_backtransformed(True)

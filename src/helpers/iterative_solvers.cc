@@ -62,10 +62,11 @@ void DavidsonLiuSolver::startup(psi::SharedVector diagonal) {
     subspace_size_ = std::min(subspace_per_root_ * nroot_, size_);
 
     basis_size_ = 0; // start with no vectors
-    sigma_size_ = 0; // start with no sigmas vectors
+    sigma_size_ = 0; // start with no sigma vectors
     iter_ = 0;
     converged_ = 0;
 
+    // store the basis vectors (each row is a vector)
     b_ = std::make_shared<psi::Matrix>("b", subspace_size_, size_);
     b_->zero();
     bnew = std::make_shared<psi::Matrix>("bnew", subspace_size_, size_);
@@ -77,8 +78,8 @@ void DavidsonLiuSolver::startup(psi::SharedVector diagonal) {
     alpha = std::make_shared<psi::Matrix>("alpha", subspace_size_, subspace_size_);
 
     lambda = std::make_shared<psi::Vector>("lambda", subspace_size_);
-    lambda_old = std::make_shared<psi::Vector>("lambda", subspace_size_);
-    h_diag = std::make_shared<psi::Vector>("lambda", size_);
+    lambda_old = std::make_shared<psi::Vector>("lambda_old", subspace_size_);
+    h_diag = std::make_shared<psi::Vector>("h_diag", size_);
 
     h_diag->copy(*diagonal);
 }
