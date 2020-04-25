@@ -118,6 +118,8 @@ void export_Determinant(py::module& m) {
         .def("create_beta_bit", &Determinant::create_beta_bit, "n"_a, "Create a beta bit")
         .def("destroy_alfa_bit", &Determinant::destroy_alfa_bit, "n"_a, "Destroy an alpha bit")
         .def("destroy_beta_bit", &Determinant::destroy_beta_bit, "n"_a, "Destroy a beta bit")
+        .def("count_alfa", &Determinant::count_alfa, "Count the number of set alpha bits")
+        .def("count_beta", &Determinant::count_beta, "Count the number of set beta bits")
         .def(
             "gen_excitation",
             [](Determinant& d, const std::vector<int>& aann, const std::vector<int>& acre,
