@@ -9,6 +9,7 @@
  * (5), Back-transform the TPDM.
  */
 #include <algorithm>
+#include <vector>
 #include <math.h>
 #include <numeric>
 #include <ctype.h>
@@ -1568,9 +1569,9 @@ void DSRG_MRPT2::iter_z() {
         Zold["pq"] = Z["pq"];
 
         compute_z_cv();
-        compute_z_aa();
-        compute_z_av();
-        compute_z_ca();
+        // compute_z_aa();
+        // compute_z_av();
+        // compute_z_ca();
 
         Zold["pq"] -= Z["pq"];
 
@@ -2076,6 +2077,107 @@ void DSRG_MRPT2::compute_z_aa() {
 }
 
 
+void DSRG_MRPT2::math_test() {
+
+    // int N=5;
+    // int NRHS=1, LDA=N,LDB=N;
+    // int n = N, nrhs = NRHS, lda = LDA, ldb = LDB;
+    // int ipiv[5];
+
+    // std::vector<double> a{
+    //     6.80, -2.11,  5.66,  5.97,  8.23,
+    //    -6.05, -3.30,  5.36, -4.44,  1.08,
+    //    -0.45,  2.58, -2.70,  0.27,  9.04,
+    //     8.32,  2.71,  4.35, -7.17,  2.14,
+    //    -9.67, -5.14, -7.26,  6.08, -6.87
+    // };
+
+    // std::vector<double> b{
+    //     4.02,  6.19, -8.22, -7.57, -3.03
+    // };
+
+    // int i, j;
+    // for( i = 0; i < lda; i++ ) {
+    //         for( j = 0; j < lda; j++ ) outfile->Printf( " %6.2f", a[i+j*lda] );
+    //         outfile->Printf( "\n" );
+    // }
+
+    // outfile->Printf( "\n\n" );
+
+
+    // for( i = 0; i < lda; i++ ) {
+    //         for( j = 0; j < NRHS; j++ ) outfile->Printf( " %6.2f", b[i+j*lda] );
+    //         outfile->Printf( "\n" );
+    // }
+    // outfile->Printf( "\n\n" );
+
+    // C_DGESV( n, nrhs, &a[0], lda, ipiv, &b[0], ldb);
+
+
+    // for( i = 0; i < lda; i++ ) {
+    //         for( j = 0; j < NRHS; j++ ) outfile->Printf( " %6.2f", b[i+j*lda] );
+    //         outfile->Printf( "\n" );
+    // }
+    // outfile->Printf( "\n\n" );
+
+    // for( i = 0; i < lda; i++ ) {
+    //         outfile->Printf( " %d", ipiv[i] );
+    // }
+    // outfile->Printf( "\n\n" );
+
+
+    int dim = nvirt_ * ncore_;
+    int N=dim;
+    int NRHS=1, LDA=N,LDB=N;
+    int n = N, nrhs = NRHS, lda = LDA, ldb = LDB;
+    std::vector<int> ipiv(N);
+
+    BlockedTensor temp1 = BTF_->build(CoreTensor, "temporal tensor 1", {"vcvc","vcVC"});
+    temp1["e,m,e1,m1"] -= V["m1,m,e1,e"];
+    temp1["e,m,e1,m1"] -= V["m1,e,e1,m"];
+    temp1["e,m,e1,m1"] += Delta1["m1,e1"] * I["e1,e"] * I["m1,m"];
+
+    temp1["e,m,E1,M1"] -= V["m,M1,e,E1"];
+    temp1["e,m,E1,M1"] -= V["e,M1,m,E1"];
+
+
+    std::vector<double> at(nvirt_ * ncore_ * nvirt_ * ncore_);
+    std::vector<double> bt(nvirt_ * ncore_);
+
+    for (const std::string& block : {"vc"}) {
+        (Z_b.block(block)).iterate([&](const std::vector<size_t>& i, double& value) {
+            bt[i[0] * ncore_ + i[1]] = value;
+        });
+    } 
+
+    for (const std::string& block : {"vcvc","vcVC"}) {
+        (temp1.block(block)).iterate([&](const std::vector<size_t>& i, double& value) {
+            int index = (i[0] * ncore_ + i[1]) * dim + (i[2] * ncore_ + i[3]);
+            at[index] += value;
+        });
+    } 
+
+
+    for(int i = 0; i < lda; i++ ) {
+            for(int j = 0; j < NRHS; j++ ) outfile->Printf( " %.7f", bt[i+j*lda] );
+            outfile->Printf( "\n" );
+    }
+    outfile->Printf( "\n\n" );
+
+    C_DGESV( n, nrhs, &at[0], lda, &ipiv[0], &bt[0], ldb);
+
+    for(int i = 0; i < nvirt_; i++ ) {
+            for(int j = 0; j < ncore_; j++ ) outfile->Printf( " %.10f", bt[i*ncore_+j] );
+            outfile->Printf( "\n" );
+    }
+    outfile->Printf( "\n\n" );
+
+
+
+
+}
+
+
 
 
 //NOTICE Only for test use, need to delete when done
@@ -2296,10 +2398,16 @@ void DSRG_MRPT2::tpdm_backtransform() {
 
 
 SharedMatrix DSRG_MRPT2::compute_gradient() {
+
+
 	// TODO: compute the DSRG_MRPT2 gradient 
     print_method_banner({"DSRG-MRPT2 Gradient", "Shuhe Wang"});
     set_all_variables();
     set_multiplier();
+
+    //NOTICE Just for test
+    math_test();
+
     write_lagrangian();
     write_1rdm_spin_dependent();
     write_2rdm_spin_dependent();
@@ -2307,6 +2415,7 @@ SharedMatrix DSRG_MRPT2::compute_gradient() {
 
     //NOTICE Just for test
     // compute_test_energy();
+
 
     outfile->Printf("\n    Computing Gradient .............................. Done\n");
 

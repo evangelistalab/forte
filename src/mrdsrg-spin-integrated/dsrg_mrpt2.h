@@ -208,6 +208,7 @@ class DSRG_MRPT2 : public MASTER_DSRG {
     // NOTICE These are essential variables and functions for computing DSRG-MRPT2 gradient.
     // Some variables may be redundant thus need further elimination
     ///NOTICE for test
+    void math_test();
     void compute_test_energy();
     /// Set ambit tensor labels
     void set_ambit_space();
