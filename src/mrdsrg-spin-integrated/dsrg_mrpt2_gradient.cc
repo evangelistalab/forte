@@ -2396,8 +2396,84 @@ void DSRG_MRPT2::math_test() {
 
     //NOTICE:CORE-ACTIVE
 
+    temp1["m,w,e1,m1"] += F["w,e1"] * I["m,m1"];
+    temp1["m,w,e1,m1"] += V["m1,m,e1,w"];
+    temp1["m,w,E1,M1"] += V["m,M1,w,E1"];
+    temp1["m,w,e1,m1"] += V["m1,w,e1,m"];
+    temp1["m,w,E1,M1"] += V["w,M1,m,E1"];
+
+    temp1["m,w,m1,u"] += F["uw"] * I["m1,m"];
+    temp1["m,w,m1,u"] -= H["vw"] * Gamma1["uv"] * I["m1,m"];
+    temp1["m,w,m1,u"] -= V["v,n1,w,n"] * Gamma1["uv"] * I["n,n1"] * I["m,m1"];
+    temp1["m,w,m1,u"] -= V["v,N1,w,N"] * Gamma1["uv"] * I["N,N1"] * I["m,m1"];
+    temp1["m,w,m1,u"] -= 0.5 * V["xywv"] * Gamma2["uvxy"] * I["m,m1"];
+    temp1["m,w,m1,u"] -= V["xYwV"] * Gamma2["uVxY"] * I["m,m1"];
+
+    temp1["m,w,n1,u"] += V["u,w,n1,m"];
+    temp1["m,w,N1,U"] += V["w,U,m,N1"];
+    temp1["m,w,n1,u"] += V["u,m,n1,w"];
+    temp1["m,w,N1,U"] += V["m,U,w,N1"];
+
+    temp1["m,w,n1,u"] -= Gamma1["uv"] * V["v,w,n1,m"];
+    temp1["m,w,N1,U"] -= Gamma1["UV"] * V["w,V,m,N1"];
+    temp1["m,w,n1,u"] -= Gamma1["uv"] * V["v,m,n1,w"];
+    temp1["m,w,N1,U"] -= Gamma1["UV"] * V["m,V,w,N1"];
+
+    temp1["m,w,e1,u"] -= Gamma1["uv"] * V["v,m,e1,w"];
+    temp1["m,w,E1,U"] -= Gamma1["UV"] * V["m,V,w,E1"];
+    temp1["m,w,e1,u"] -= Gamma1["uv"] * V["v,w,e1,m"];
+    temp1["m,w,E1,U"] -= Gamma1["UV"] * V["w,V,m,E1"];
+
+    temp1["m,w,u,v"] -= V["vwum"];
+    temp1["m,w,U,V"] -= V["wVmU"];
+
+    temp1["m,w,e1,m1"] -= V["m1,m,e1,u"] * Gamma1["uw"];
+    temp1["m,w,E1,M1"] -= V["m,M1,u,E1"] * Gamma1["uw"];
+    temp1["m,w,e1,m1"] -= V["m1,u,e1,m"] * Gamma1["uw"];
+    temp1["m,w,E1,M1"] -= V["u,M1,m,E1"] * Gamma1["uw"];
+
+    temp1["m,w,n1,w1"] -= F["m,n1"] * I["w,w1"];
+
+    temp1["m,w,n1,u"] -= V["u,v,n1,m"] * Gamma1["wv"];
+    temp1["m,w,N1,U"] -= V["v,U,m,N1"] * Gamma1["wv"];
+    temp1["m,w,n1,u"] -= V["u,m,n1,v"] * Gamma1["wv"];
+    temp1["m,w,N1,U"] -= V["m,U,v,N1"] * Gamma1["wv"];
+
+    temp1["m,w,n1,u"] += H["m,n1"] * Gamma1["uw"];
+    temp1["m,w,n1,u"] += V["m,m2,n1,n2"] * Gamma1["uw"] * I["m2,n2"];
+    temp1["m,w,n1,u"] += V["m,M2,n1,N2"] * Gamma1["uw"] * I["M2,N2"];
+    temp1["m,w,n1,u"] += 0.5 * V["x,y,n1,m"] * Gamma2["u,w,x,y"];
+    temp1["m,w,N1,U"] += V["y,X,m,N1"] * Gamma2["w,U,y,X"];
+    temp1["m,w,n1,u"] += V["m,y,n1,v"] * Gamma2["u,v,w,y"];
+    temp1["m,w,n1,u"] += V["m,Y,n1,V"] * Gamma2["u,V,w,Y"];
+    temp1["m,w,N1,U"] += V["m,Y,v,N1"] * Gamma2["v,U,w,Y"];
+
+    temp1["m,w,e1,u"] -= H["m,e1"] * Gamma1["uw"];
+    temp1["m,w,e1,u"] -= V["m,m2,e1,n2"] * Gamma1["uw"] * I["m2,n2"];
+    temp1["m,w,e1,u"] -= V["m,M2,e1,N2"] * Gamma1["uw"] * I["M2,N2"];
+    temp1["m,w,e1,u"] -= 0.5 * V["x,y,e1,m"] * Gamma2["u,w,x,y"];
+    temp1["m,w,E1,U"] -= V["y,X,m,E1"] * Gamma2["w,U,y,X"];
+    temp1["m,w,e1,u"] -= V["m,y,e1,v"] * Gamma2["u,v,w,y"];
+    temp1["m,w,e1,u"] -= V["m,Y,e1,V"] * Gamma2["u,V,w,Y"];
+    temp1["m,w,E1,U"] -= V["m,Y,v,E1"] * Gamma2["v,U,w,Y"];
+
+    temp1["m,w,u1,v1"] -= V["v1,v,u1,m"] * Gamma1["wv"];
+    temp1["m,w,U1,V1"] -= V["v,V1,m,U1"] * Gamma1["wv"];
+
+    temp1["m,w,w1,v"] -= F["vm"] * I["w,w1"];
 
 
+    //NOTICE:VIRTUAL-ACTIVE
+
+
+
+
+
+
+
+
+
+    //NOTICE:ACTIVE-ACTIVE
     
 
 
