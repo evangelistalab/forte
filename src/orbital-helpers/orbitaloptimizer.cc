@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2019 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
+ * Copyright (c) 2012-2020 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
  *
  * The copyrights for code used from other parties are included in
  * the corresponding files.
@@ -28,11 +28,10 @@
 
 #include "ambit/blocked_tensor.h"
 
-#include "psi4/liboptions/liboptions.h"
+
 #include "psi4/lib3index/cholesky.h"
 #include "psi4/libfock/jk.h"
 #include "psi4/libmints/matrix.h"
-#include "psi4/libqt/qt.h"
 #include "psi4/psifiles.h"
 #include "psi4/libpsi4util/PsiOutStream.h"
 
@@ -90,19 +89,19 @@ void OrbitalOptimizer::update() {
 }
 
 void OrbitalOptimizer::startup() {
-    frozen_docc_dim_ = mo_space_info_->get_dimension("FROZEN_DOCC");
-    restricted_docc_dim_ = mo_space_info_->get_dimension("RESTRICTED_DOCC");
-    active_dim_ = mo_space_info_->get_dimension("ACTIVE");
-    restricted_uocc_dim_ = mo_space_info_->get_dimension("RESTRICTED_UOCC");
-    inactive_docc_dim_ = mo_space_info_->get_dimension("INACTIVE_DOCC");
-    nmopi_ = mo_space_info_->get_dimension("CORRELATED");
+    frozen_docc_dim_ = mo_space_info_->dimension("FROZEN_DOCC");
+    restricted_docc_dim_ = mo_space_info_->dimension("RESTRICTED_DOCC");
+    active_dim_ = mo_space_info_->dimension("ACTIVE");
+    restricted_uocc_dim_ = mo_space_info_->dimension("RESTRICTED_UOCC");
+    inactive_docc_dim_ = mo_space_info_->dimension("INACTIVE_DOCC");
+    nmopi_ = mo_space_info_->dimension("CORRELATED");
 
-    frozen_docc_abs_ = mo_space_info_->get_corr_abs_mo("FROZEN_DOCC");
-    restricted_docc_abs_ = mo_space_info_->get_corr_abs_mo("RESTRICTED_DOCC");
-    active_abs_ = mo_space_info_->get_corr_abs_mo("ACTIVE");
-    restricted_uocc_abs_ = mo_space_info_->get_corr_abs_mo("RESTRICTED_UOCC");
-    inactive_docc_abs_ = mo_space_info_->get_corr_abs_mo("INACTIVE_DOCC");
-    nmo_abs_ = mo_space_info_->get_corr_abs_mo("CORRELATED");
+    frozen_docc_abs_ = mo_space_info_->corr_absolute_mo("FROZEN_DOCC");
+    restricted_docc_abs_ = mo_space_info_->corr_absolute_mo("RESTRICTED_DOCC");
+    active_abs_ = mo_space_info_->corr_absolute_mo("ACTIVE");
+    restricted_uocc_abs_ = mo_space_info_->corr_absolute_mo("RESTRICTED_UOCC");
+    inactive_docc_abs_ = mo_space_info_->corr_absolute_mo("INACTIVE_DOCC");
+    nmo_abs_ = mo_space_info_->corr_absolute_mo("CORRELATED");
     if (frozen_docc_abs_.size() && !(options_->get_bool("OPTIMIZE_FROZEN_CORE"))) {
         casscf_freeze_core_ = true;
     } else {
@@ -149,7 +148,7 @@ void OrbitalOptimizer::startup() {
 }
 void OrbitalOptimizer::orbital_gradient() {
     // std::vector<size_t> nmo_array =
-    // mo_space_info_->get_corr_abs_mo("CORRELATED");
+    // mo_space_info_->corr_absolute_mo("CORRELATED");
     /// From Y_{pt} = F_{pu}^{core} * Gamma_{tu}
     ambit::Tensor Y = ambit::Tensor::build(ambit::CoreTensor, "Y", {nmo_, na_});
     ambit::Tensor F_pu = ambit::Tensor::build(ambit::CoreTensor, "F_pu", {nmo_, na_});
@@ -178,7 +177,7 @@ void OrbitalOptimizer::orbital_gradient() {
     // gamma2 = gamma2aa + gamma2ab + gamma2ba + gamma2bb
     /// lambda2 = gamma1*gamma1
 
-    // std::vector<size_t> na_array = mo_space_info_->get_corr_abs_mo("ACTIVE");
+    // std::vector<size_t> na_array = mo_space_info_->corr_absolute_mo("ACTIVE");
     /// SInce the integrals class assumes that the indices are relative,
     /// pass the relative indices to the integrals code.
     ambit::Tensor Z = ambit::Tensor::build(ambit::CoreTensor, "Z", {nmo_, na_});
@@ -205,19 +204,19 @@ void OrbitalOptimizer::orbital_gradient() {
     // GOTCHA:  Z and T are of size nmo by na
     // The absolute MO should not be used to access elements of Z, Y, or Gamma
     // since these are of 0....na_ arrays
-    // auto occ_array = mo_space_info_->get_corr_abs_mo("RESTRICTED_DOCC");
-    // auto virt_array = mo_space_info_->get_corr_abs_mo("RESTRICTED_UOCC");
-    // auto active_array = mo_space_info_->get_corr_abs_mo("ACTIVE");
+    // auto occ_array = mo_space_info_->corr_absolute_mo("RESTRICTED_DOCC");
+    // auto virt_array = mo_space_info_->corr_absolute_mo("RESTRICTED_UOCC");
+    // auto active_array = mo_space_info_->corr_absolute_mo("ACTIVE");
 
     size_t nhole = nrdocc_ + na_;
     size_t npart = na_ + nvir_;
     psi::SharedMatrix Orb_grad(new psi::Matrix("G_pq", nhole, npart));
     Orb_grad->set_name("CASSCF Gradient");
 
-    auto generalized_hole_abs = mo_space_info_->get_corr_abs_mo("GENERALIZED HOLE");
-    auto generalized_part_abs = mo_space_info_->get_corr_abs_mo("GENERALIZED PARTICLE");
-    psi::Dimension general_hole_dim = mo_space_info_->get_dimension("GENERALIZED HOLE");
-    psi::Dimension general_part_dim = mo_space_info_->get_dimension("GENERALIZED PARTICLE");
+    auto generalized_hole_abs = mo_space_info_->corr_absolute_mo("GENERALIZED HOLE");
+    auto generalized_part_abs = mo_space_info_->corr_absolute_mo("GENERALIZED PARTICLE");
+    psi::Dimension general_hole_dim = mo_space_info_->dimension("GENERALIZED HOLE");
+    psi::Dimension general_part_dim = mo_space_info_->dimension("GENERALIZED PARTICLE");
     auto generalized_hole_rel = mo_space_info_->get_relative_mo("GENERALIZED HOLE");
     auto generalized_part_rel = mo_space_info_->get_relative_mo("GENERALIZED PARTICLE");
     if (casscf_debug_print_) {
@@ -505,14 +504,14 @@ psi::SharedMatrix OrbitalOptimizer::AugmentedHessianSolve() {
 }
 
 psi::SharedMatrix OrbitalOptimizer::rotate_orbitals(psi::SharedMatrix C, psi::SharedMatrix S) {
-    psi::Dimension nhole_dim = mo_space_info_->get_dimension("GENERALIZED HOLE");
-    psi::Dimension nvirt_dim = mo_space_info_->get_dimension("GENERALIZED PARTICLE");
+    psi::Dimension nhole_dim = mo_space_info_->dimension("GENERALIZED HOLE");
+    psi::Dimension nvirt_dim = mo_space_info_->dimension("GENERALIZED PARTICLE");
     /// Clone the C matrix
     psi::SharedMatrix C_rot(C->clone());
     psi::SharedMatrix S_mat(S->clone());
     psi::SharedMatrix S_sym(new psi::Matrix("Exp(K)", mo_space_info_->nirrep(),
-                                            mo_space_info_->get_dimension("ALL"),
-                                            mo_space_info_->get_dimension("ALL")));
+                                            mo_space_info_->dimension("ALL"),
+                                            mo_space_info_->dimension("ALL")));
     int offset_hole = 0;
     int offset_part = 0;
     for (size_t h = 0; h < nirrep_; h++) {
@@ -571,7 +570,7 @@ std::shared_ptr<psi::Matrix> OrbitalOptimizer::make_c_sym_aware(psi::SharedMatri
     /// Since I want to use these in a symmetry aware basis,
     /// I will move the C matrix into a Pfitzer ordering
 
-    psi::Dimension nmopi = mo_space_info_->get_dimension("ALL");
+    psi::Dimension nmopi = mo_space_info_->dimension("ALL");
 
     /// I want a C matrix in the C1 basis but symmetry aware
     size_t nso = scf_info_->nso();
@@ -767,7 +766,7 @@ void CASSCFOrbitalOptimizer::form_fock_intermediates() {
     psi::SharedMatrix F_active_c1(new psi::Matrix("F_act", nmo_, nmo_));
     int offset_nofroze = 0;
     int offset_froze = 0;
-    psi::Dimension no_frozen_dim = mo_space_info_->get_dimension("ALL");
+    psi::Dimension no_frozen_dim = mo_space_info_->dimension("ALL");
 
     for (size_t h = 0; h < nirrep_; h++) {
         int froze = frozen_docc_dim_[h];

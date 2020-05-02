@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2019 by its authors (see COPYING, COPYING.LESSER,
+ * Copyright (c) 2012-2020 by its authors (see COPYING, COPYING.LESSER,
  * AUTHORS).
  *
  * The copyrights for code used from other parties are included in
@@ -34,7 +34,7 @@
 #include <functional>
 
 #include "psi4/libmints/wavefunction.h"
-#include "psi4/liboptions/liboptions.h"
+
 #include "psi4/physconst.h"
 
 #include "fci/fci_vector.h"
@@ -104,7 +104,6 @@ class ProjectorCI : public SelectedCIMethod {
     DeterminantHashVec get_PQ_space() override;
     psi::SharedMatrix get_PQ_evecs() override;
     psi::SharedVector get_PQ_evals() override;
-    WFNOperator get_op() override;
     size_t get_ref_root() override;
     std::vector<double> get_multistate_pt2_energy_correction() override;
 
@@ -186,8 +185,6 @@ class ProjectorCI : public SelectedCIMethod {
     /// Diagonalize the Hamiltonian in the APIFCI basis after running a ground
     /// state calculation?
     bool post_diagonalization_;
-    /// The eigensolver type
-    DiagonalizationMethod diag_method_;
     /// Print full wavefunction in the APIFCI basis after running a ground state
     /// calculation?
     bool print_full_wavefunction_;
@@ -277,10 +274,6 @@ class ProjectorCI : public SelectedCIMethod {
 
     /// All that happens before we compute the energy
     void startup();
-
-    /// Print a wave function
-    void print_wfn(const det_hashvec& space_hashvec, std::vector<double>& C,
-                   size_t max_output = 10);
 
     /// Save a wave function
     void save_wfn(det_hashvec& space, std::vector<double>& C,

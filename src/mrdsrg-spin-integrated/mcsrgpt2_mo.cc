@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2019 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
+ * Copyright (c) 2012-2020 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
  *
  * The copyrights for code used from other parties are included in
  * the corresponding files.
@@ -33,6 +33,8 @@
 #include <numeric>
 #include <string>
 #include <utility>
+
+#include "psi4/libpsi4util/PsiOutStream.h"
 
 #include "boost/algorithm/string/predicate.hpp"
 #include "boost/format.hpp"
@@ -96,9 +98,9 @@ void MCSRGPT2_MO::prepare_mo_space() {
     nvirt_ = mo_space_info_->size("RESTRICTED_UOCC");
 
     // obtain absolute indices of core, active and virtual
-    core_mos_ = mo_space_info_->get_corr_abs_mo("RESTRICTED_DOCC");
-    actv_mos_ = mo_space_info_->get_corr_abs_mo("ACTIVE");
-    virt_mos_ = mo_space_info_->get_corr_abs_mo("RESTRICTED_UOCC");
+    core_mos_ = mo_space_info_->corr_absolute_mo("RESTRICTED_DOCC");
+    actv_mos_ = mo_space_info_->corr_absolute_mo("ACTIVE");
+    virt_mos_ = mo_space_info_->corr_absolute_mo("RESTRICTED_UOCC");
 
     // setup hole and particle indices (Active must start first)
     nhole_ = ncore_ + nactv_;
@@ -109,8 +111,8 @@ void MCSRGPT2_MO::prepare_mo_space() {
     part_mos_.insert(part_mos_.end(), virt_mos_.begin(), virt_mos_.end());
 
     // setup symmetry index of active/correlated orbitals
-    auto actv_dim = mo_space_info_->get_dimension("ACTIVE");
-    auto ncmopi = mo_space_info_->get_dimension("CORRELATED");
+    auto actv_dim = mo_space_info_->dimension("ACTIVE");
+    auto ncmopi = mo_space_info_->dimension("CORRELATED");
     for (int h = 0, nirrep = mo_space_info_->nirrep(); h < nirrep; ++h) {
         for (size_t i = 0; i < size_t(actv_dim[h]); ++i) {
             sym_actv_.push_back(h);

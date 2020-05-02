@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2019 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
+ * Copyright (c) 2012-2020 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
  *
  * The copyrights for code used from other parties are included in
  * the corresponding files.
@@ -32,14 +32,27 @@
 
 #include "psi4/libpsi4util/PsiOutStream.h"
 #include "psi4/physconst.h"
-#include "excited_state_solver.h"
-#include "sci/sci.h"
+
 #include "base_classes/mo_space_info.h"
-#include "sparse_ci/operator.h"
+#include "sci/sci.h"
+#include "sparse_ci/determinant_substitution_lists.h"
 #include "helpers/helpers.h"
 #include "helpers/printing.h"
+#include "helpers/timer.h"
 #include "ci_rdm/ci_rdms.h"
+
+#include "excited_state_solver.h"
+
+#ifdef _OPENMP
+#include <omp.h>
+#else
+#define omp_get_max_threads() 1
+#define omp_get_thread_num() 0
+#define omp_get_num_threads() 1
+#endif
+
 namespace forte {
+
 ExcitedStateSolver::ExcitedStateSolver(StateInfo state, size_t nroot,
                                        std::shared_ptr<MOSpaceInfo> mo_space_info,
                                        std::shared_ptr<ActiveSpaceIntegrals> as_ints,
@@ -56,20 +69,18 @@ void ExcitedStateSolver::set_options(std::shared_ptr<ForteOptions> options) {
 
     // TODO: move all ACI_* options to SCI_* and update register_forte_options.py
     ex_alg_ = options->get_str("SCI_EXCITED_ALGORITHM");
-    // set a default 
-    if( (nroot_ > 1) and (ex_alg_ == "NONE") ){
+    // set a default
+    if ((nroot_ > 1) and (ex_alg_ == "NONE")) {
         ex_alg_ = "ROOT_ORTHOGONALIZE";
-    }    
+    }
 
     core_ex_ = options->get_bool("SCI_CORE_EX");
-    if (options->has_changed("ACI_QUIET_MODE")) {
-        quiet_mode_ = options->get_bool("ACI_QUIET_MODE");
-    }
+    quiet_mode_ = options->get_bool("ACI_QUIET_MODE");
     direct_rdms_ = options->get_bool("SCI_DIRECT_RDMS");
     test_rdms_ = options->get_bool("SCI_TEST_RDMS");
     save_final_wfn_ = options->get_bool("SCI_SAVE_FINAL_WFN");
     first_iter_roots_ = options->get_bool("SCI_FIRST_ITER_ROOTS");
-    sparse_solver_ = std::make_shared<SparseCISolver>(as_ints_);
+    sparse_solver_ = std::make_shared<SparseCISolver>();
     sparse_solver_->set_parallel(true);
     sparse_solver_->set_force_diag(options->get_bool("FORCE_DIAG_METHOD"));
     sparse_solver_->set_e_convergence(options->get_double("E_CONVERGENCE"));
@@ -78,9 +89,6 @@ void ExcitedStateSolver::set_options(std::shared_ptr<ForteOptions> options) {
     sparse_solver_->set_spin_project_full(options->get_bool("SCI_PROJECT_OUT_SPIN_CONTAMINANTS"));
     sparse_solver_->set_guess_dimension(options->get_int("DL_GUESS_SIZE"));
     sparse_solver_->set_num_vecs(options->get_int("N_GUESS_VEC"));
-    sparse_solver_->set_sigma_method(options->get_str("SIGMA_BUILD_TYPE"));
-    sparse_solver_->set_max_memory(options->get_int("SIGMA_VECTOR_MAX_MEMORY"));
-
     sci_->set_options(options);
 }
 
@@ -193,7 +201,7 @@ double ExcitedStateSolver::compute_energy() {
             root_ = i;
         }
     }
-    op_ = sci_->get_op();
+    //    op_ = sci_->get_op();
     multistate_pt2_energy_correction_ = sci_->get_multistate_pt2_energy_correction();
 
     dim = PQ_space.size();
@@ -207,8 +215,9 @@ double ExcitedStateSolver::compute_energy() {
         PQ_evals = energies;
     }
 
-    std::vector<int> mo_symmetry = mo_space_info_->symmetry("ACTIVE");
-    WFNOperator op_c(mo_symmetry, as_ints_);
+    std::shared_ptr<DeterminantSubstitutionLists> op_c =
+        std::make_shared<DeterminantSubstitutionLists>(as_ints_);
+
     if (ex_alg_ == "ROOT_COMBINE") {
         psi::outfile->Printf("\n\n  ==> Diagonalizing Final Space <==");
         dim = full_space.size();
@@ -219,13 +228,12 @@ double ExcitedStateSolver::compute_energy() {
 
         psi::outfile->Printf("\n  Size of combined space: %zu", dim);
 
-        if (diag_method_ != Dynamic) {
-            op_c.build_strings(full_space);
-            op_c.op_lists(full_space);
-            op_c.tp_lists(full_space);
-        }
-        sparse_solver_->diagonalize_hamiltonian_map(full_space, op_c, PQ_evals, PQ_evecs, nroot_,
-                                                    state_.multiplicity(), diag_method_);
+        size_t max_memory = sci_->max_memory();
+
+        auto sigma_type = sci_->sigma_vector_type();
+        auto sigma_vector = make_sigma_vector(full_space, as_ints_, max_memory, sigma_type);
+        std::tie(PQ_evals, PQ_evecs) = sparse_solver_->diagonalize_hamiltonian(
+            full_space, sigma_vector, nroot_, state_.multiplicity());
     }
 
     if (ex_alg_ == "MULTISTATE") {
@@ -373,19 +381,20 @@ void ExcitedStateSolver::print_final(DeterminantHashVec& dets, psi::SharedMatrix
                             as_ints_->scalar_energy();
         double exc_energy = pc_hartree2ev * (PQ_evals->get(i) - PQ_evals->get(0));
 
-        if( full_pt2_ ){
-            psi::outfile->Printf("\n  * Selected-CI Energy Root %3d             = %.12f Eh = %8.4f eV", i,
-                                 abs_energy, exc_energy);
-            psi::outfile->Printf("\n  * Selected-CI Energy Root %3d + full EPT2 = %.12f Eh = %8.4f eV", i,
-                                 abs_energy + multistate_pt2_energy_correction_[i],
-                                 exc_energy +
-                                     pc_hartree2ev * (multistate_pt2_energy_correction_[i] -
-                                                      multistate_pt2_energy_correction_[0]));
+        if (full_pt2_) {
+            psi::outfile->Printf(
+                "\n  * Selected-CI Energy Root %3d             = %.12f Eh = %8.4f eV", i,
+                abs_energy, exc_energy);
+            psi::outfile->Printf(
+                "\n  * Selected-CI Energy Root %3d + full EPT2 = %.12f Eh = %8.4f eV", i,
+                abs_energy + multistate_pt2_energy_correction_[i],
+                exc_energy + pc_hartree2ev * (multistate_pt2_energy_correction_[i] -
+                                              multistate_pt2_energy_correction_[0]));
         } else {
-            psi::outfile->Printf("\n  * Selected-CI Energy Root %3d        = %.12f Eh = %8.4f eV", i,
-                                 abs_energy, exc_energy);
-            psi::outfile->Printf("\n  * Selected-CI Energy Root %3d + EPT2 = %.12f Eh = %8.4f eV", i,
-                                 abs_energy + multistate_pt2_energy_correction_[i],
+            psi::outfile->Printf("\n  * Selected-CI Energy Root %3d        = %.12f Eh = %8.4f eV",
+                                 i, abs_energy, exc_energy);
+            psi::outfile->Printf("\n  * Selected-CI Energy Root %3d + EPT2 = %.12f Eh = %8.4f eV",
+                                 i, abs_energy + multistate_pt2_energy_correction_[i],
                                  exc_energy +
                                      pc_hartree2ev * (multistate_pt2_energy_correction_[i] -
                                                       multistate_pt2_energy_correction_[0]));
@@ -395,17 +404,17 @@ void ExcitedStateSolver::print_final(DeterminantHashVec& dets, psi::SharedMatrix
     if ((ex_alg_ != "ROOT_ORTHOGONALIZE") or (nroot_ == 1)) {
         psi::outfile->Printf("\n\n  ==> Wavefunction Information <==");
 
-        print_wfn(dets, op_, PQ_evecs, nroot_);
+        print_wfn(dets, PQ_evecs, nroot_);
     }
 }
 
-void ExcitedStateSolver::print_wfn(DeterminantHashVec& space, WFNOperator& op,
-                                   psi::SharedMatrix evecs, int nroot) {
+void ExcitedStateSolver::print_wfn(DeterminantHashVec& space, std::shared_ptr<psi::Matrix> evecs,
+                                   int nroot) {
     std::string state_label;
     std::vector<std::string> s2_labels({"singlet", "doublet", "triplet", "quartet", "quintet",
                                         "sextet", "septet", "octet", "nonet", "decatet"});
 
-    std::vector<std::pair<double, double>> spins = compute_spin(space, op, evecs, nroot);
+    //    std::vector<std::pair<double, double>> spins = compute_spin(space, op, evecs, nroot);
 
     //    std::vector<std::pair<double, double>> root_spin_vec;
 
@@ -421,11 +430,12 @@ void ExcitedStateSolver::print_wfn(DeterminantHashVec& space, WFNOperator& op,
         for (size_t I = 0; I < max_dets; ++I) {
             psi::outfile->Printf("\n  %3zu  %9.6f %.9f  %10zu %s", I, tmp_evecs[I],
                                  tmp_evecs[I] * tmp_evecs[I], space.get_idx(tmp.get_det(I)),
-                                 tmp.get_det(I).str(nact_).c_str());
+                                 str(tmp.get_det(I), nact_).c_str());
         }
-        state_label = s2_labels[std::round(spins[n].first * 2.0)];
-        psi::outfile->Printf("\n\n  Spin state for root %zu: S^2 = %5.6f, S = %5.3f, %s", n,
-                             spins[n].first, spins[n].second, state_label.c_str());
+        //        state_label = s2_labels[std::round(spins[n].first * 2.0)];
+        //        psi::outfile->Printf("\n\n  Spin state for root %zu: S^2 = %5.6f, S = %5.3f, %s",
+        //        n,
+        //                             spins[n].first, spins[n].second, state_label.c_str());
     }
 }
 
@@ -437,57 +447,9 @@ void ExcitedStateSolver::wfn_to_file(DeterminantHashVec& det_space, psi::SharedM
     const det_hashvec& detmap = det_space.wfn_hash();
     for (size_t I = 0, maxI = detmap.size(); I < maxI; ++I) {
         final_wfn << std::scientific << std::setw(20) << std::setprecision(11)
-                  << evecs->get(I, root) << " \t " << detmap[I].str(nact_).c_str() << std::endl;
+                  << evecs->get(I, root) << " \t " << str(detmap[I], nact_).c_str() << std::endl;
     }
     final_wfn.close();
-}
-
-std::vector<std::pair<double, double>> ExcitedStateSolver::compute_spin(DeterminantHashVec& space,
-                                                                        WFNOperator& op,
-                                                                        psi::SharedMatrix evecs,
-                                                                        int nroot) {
-    // WFNOperator op(mo_symmetry_);
-
-    // op.build_strings(space);
-    // op.op_lists(space);
-    // op.tp_lists(space);
-
-    std::vector<std::pair<double, double>> spin_vec(nroot);
-    if (sparse_solver_->sigma_method_ == "HZ") {
-        op.clear_op_s_lists();
-        op.clear_tp_s_lists();
-        op.build_strings(space);
-        op.op_lists(space);
-        op.tp_lists(space);
-    }
-
-    if (diag_method_ == Dynamic) {
-        for (size_t n = 0; n < nroot_; ++n) {
-            double S2 = op.s2_direct(space, evecs, n);
-            double S = std::fabs(0.5 * (std::sqrt(1.0 + 4.0 * S2) - 1.0));
-            spin_vec[n] = std::make_pair(S, S2);
-        }
-    } else {
-        for (size_t n = 0; n < nroot_; ++n) {
-            double S2 = op.s2(space, evecs, n);
-            double S = std::fabs(0.5 * (std::sqrt(1.0 + 4.0 * S2) - 1.0));
-            spin_vec[n] = std::make_pair(S, S2);
-        }
-    }
-    return spin_vec;
-}
-
-double ExcitedStateSolver::compute_spin_contamination(DeterminantHashVec& space, WFNOperator& op,
-                                                      psi::SharedMatrix evecs, int nroot) {
-    auto spins = compute_spin(space, op, evecs, nroot);
-    double spin_contam = 0.0;
-    for (int n = 0; n < nroot; ++n) {
-        spin_contam += spins[n].second;
-    }
-    spin_contam /= static_cast<double>(nroot);
-    spin_contam -= (0.25 * (state_.multiplicity() * state_.multiplicity() - 1.0));
-
-    return spin_contam;
 }
 
 std::vector<RDMs> ExcitedStateSolver::rdms(const std::vector<std::pair<size_t, size_t>>& root_list,
@@ -496,9 +458,8 @@ std::vector<RDMs> ExcitedStateSolver::rdms(const std::vector<std::pair<size_t, s
     std::vector<RDMs> refs;
 
     for (const auto& root_pair : root_list) {
-
-        refs.push_back(compute_rdms(as_ints_, final_wfn_, op_, evecs_, root_pair.first,
-                                    root_pair.second, max_rdm_level));
+        refs.push_back(compute_rdms(as_ints_, final_wfn_, evecs_, root_pair.first, root_pair.second,
+                                    max_rdm_level));
     }
     return refs;
 }
@@ -512,23 +473,25 @@ ExcitedStateSolver::transition_rdms(const std::vector<std::pair<size_t, size_t>>
 }
 
 RDMs ExcitedStateSolver::compute_rdms(std::shared_ptr<ActiveSpaceIntegrals> fci_ints,
-                                      DeterminantHashVec& dets, WFNOperator& op,
-                                      psi::SharedMatrix& PQ_evecs, int root1, int root2,
-                                      int max_rdm_level) {
+                                      DeterminantHashVec& dets, psi::SharedMatrix& PQ_evecs,
+                                      int root1, int root2, int max_rdm_level) {
 
+    // TODO: this code might be OBSOLETE (Francesco)
     if (!direct_rdms_) {
-        op.clear_op_s_lists();
-        op.clear_tp_s_lists();
-        if (diag_method_ == Dynamic) {
-            op.build_strings(dets);
+        auto op = std::make_shared<DeterminantSubstitutionLists>(fci_ints);
+        if (sci_->sigma_vector_type() == SigmaVectorType::Dynamic) {
+            op->build_strings(dets);
         }
-        op.op_s_lists(dets);
-        op.tp_s_lists(dets);
+        op->op_s_lists(dets);
+
+        //        if (max_rdm_level >= 2) {
+        op->tp_s_lists(dets);
+        //        }
 
         if (max_rdm_level >= 3) {
             psi::outfile->Printf("\n  Computing 3-list...    ");
             local_timer l3;
-            op_.three_s_lists(final_wfn_);
+            op->three_s_lists(final_wfn_);
             psi::outfile->Printf(" done (%1.5f s)", l3.get());
         }
     }
@@ -575,7 +538,7 @@ RDMs ExcitedStateSolver::compute_rdms(std::shared_ptr<ActiveSpaceIntegrals> fci_
             ordm_a = ambit::Tensor::build(ambit::CoreTensor, "g1a", {nact_, nact_});
             ordm_b = ambit::Tensor::build(ambit::CoreTensor, "g1b", {nact_, nact_});
 
-            ci_rdms.compute_1rdm(ordm_a.data(), ordm_b.data(), op);
+            ci_rdms.compute_1rdm_op(ordm_a.data(), ordm_b.data());
             psi::outfile->Printf("\n  1-RDM  took %2.6f s (determinant)", one_r.get());
 
             //            if (options_->get_bool("ACI_PRINT_NO")) {
@@ -588,7 +551,7 @@ RDMs ExcitedStateSolver::compute_rdms(std::shared_ptr<ActiveSpaceIntegrals> fci_
             trdm_ab = ambit::Tensor::build(ambit::CoreTensor, "g2ab", {nact_, nact_, nact_, nact_});
             trdm_bb = ambit::Tensor::build(ambit::CoreTensor, "g2bb", {nact_, nact_, nact_, nact_});
 
-            ci_rdms.compute_2rdm(trdm_aa.data(), trdm_ab.data(), trdm_bb.data(), op);
+            ci_rdms.compute_2rdm_op(trdm_aa.data(), trdm_ab.data(), trdm_bb.data());
             psi::outfile->Printf("\n  2-RDMS took %2.6f s (determinant)", two_r.get());
         }
         if (max_rdm_level >= 3) {
@@ -602,8 +565,8 @@ RDMs ExcitedStateSolver::compute_rdms(std::shared_ptr<ActiveSpaceIntegrals> fci_
             trdm_bbb = ambit::Tensor::build(ambit::CoreTensor, "g2bbb",
                                             {nact_, nact_, nact_, nact_, nact_, nact_});
 
-            ci_rdms.compute_3rdm(trdm_aaa.data(), trdm_aab.data(), trdm_abb.data(), trdm_bbb.data(),
-                                 op);
+            ci_rdms.compute_3rdm_op(trdm_aaa.data(), trdm_aab.data(), trdm_abb.data(),
+                                    trdm_bbb.data());
             psi::outfile->Printf("\n  3-RDMs took %2.6f s (determinant)", tr.get());
         }
     }
@@ -645,4 +608,4 @@ void ExcitedStateSolver::set_excitation_algorithm(std::string ex_alg) { ex_alg_ 
 void ExcitedStateSolver::set_core_excitation(bool core_ex) { core_ex_ = core_ex; }
 
 void ExcitedStateSolver::set_quiet(bool quiet) { quiet_mode_ = quiet; }
-}
+} // namespace forte

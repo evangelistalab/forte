@@ -28,19 +28,16 @@
 #ifndef IAO_BUILDER_H
 #define IAO_BUILDER_H
 
-#include "psi4/libmints/matrix.h"
-#include "psi4/libmints/integral.h"
-#include "psi4/libmints/factory.h"
-#include "psi4/libqt/qt.h"
-#include "psi4/libmints/molecule.h"
-#include "psi4/libmints/wavefunction.h"
-#include "psi4/libmints/mintshelper.h"
-#include "psi4/libmints/basisset.h"
-#include "psi4/libcubeprop/cubeprop.h"
+#include <map>
 
-#include "boost/format.hpp"
+namespace psi {
+class Matrix;
+class BasisSet;
+class Wavefunction;
+} // namespace psi
 
 namespace forte {
+class ForteOptions;
 
 class IAOBuilder {
 
@@ -69,7 +66,7 @@ class IAOBuilder {
     double condition_;
 
     /// Occupied orbitals, in primary basis
-    psi::SharedMatrix C_;
+    std::shared_ptr<psi::Matrix> C_;
     /// Primary orbital basis set
     std::shared_ptr<psi::BasisSet> primary_;
     /// MinAO orbital baiss set
@@ -94,9 +91,9 @@ class IAOBuilder {
     std::vector<int> iaos_to_atoms_;
 
     /// Overlap matrix in full basis
-    psi::SharedMatrix S_;
+    std::shared_ptr<psi::Matrix> S_;
     /// Non-ghosted IAOs in full basis
-    psi::SharedMatrix A_;
+    std::shared_ptr<psi::Matrix> A_;
 
     /// Set defaults
     void common_init();
@@ -112,24 +109,27 @@ class IAOBuilder {
     /// Build IBO with defaults from Options object (including MINAO_BASIS)
     static std::shared_ptr<IAOBuilder> build(std::shared_ptr<psi::BasisSet> primary,
                                              std::shared_ptr<psi::BasisSet> minao,
-                                             std::shared_ptr<psi::Matrix> C, psi::Options& options);
+                                             std::shared_ptr<psi::Matrix> C,
+                                             std::shared_ptr<ForteOptions> options);
     /// Build the IAOs for exporting
-    std::map<std::string, psi::SharedMatrix> build_iaos();
+    std::map<std::string, std::shared_ptr<psi::Matrix>> build_iaos();
 
-    std::vector<std::string> print_IAO(psi::SharedMatrix A, int nmin, int nbf,
-                                       psi::SharedWavefunction wfn_);
+    std::vector<std::string> print_IAO(std::shared_ptr<psi::Matrix> A, int nmin, int nbf,
+                                       std::shared_ptr<psi::Wavefunction> wfn_);
 
-    std::map<std::string, psi::SharedMatrix>
-    ibo_localizer(psi::SharedMatrix L, const std::vector<std::vector<int>>& minao_inds,
+    std::map<std::string, std::shared_ptr<psi::Matrix>>
+    ibo_localizer(std::shared_ptr<psi::Matrix> L, const std::vector<std::vector<int>>& minao_inds,
                   const std::vector<std::pair<int, int>>& rot_inds, double convergence, int maxiter,
                   int power);
 
-    std::map<std::string, psi::SharedMatrix>
-    localize(psi::SharedMatrix Cocc, psi::SharedMatrix Focc, const std::vector<int>& ranges2);
+    std::map<std::string, std::shared_ptr<psi::Matrix>> localize(std::shared_ptr<psi::Matrix> Cocc,
+                                                                 std::shared_ptr<psi::Matrix> Focc,
+                                                                 const std::vector<int>& ranges2);
 
-    psi::SharedMatrix reorder_orbitals(psi::SharedMatrix F, const std::vector<int>& ranges);
+    std::shared_ptr<psi::Matrix> reorder_orbitals(std::shared_ptr<psi::Matrix> F,
+                                                  const std::vector<int>& ranges);
 
-    psi::SharedMatrix orbital_charges(psi::SharedMatrix L);
+    std::shared_ptr<psi::Matrix> orbital_charges(std::shared_ptr<psi::Matrix> L);
 
     // => Knobs <= //
 

@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2019 by its authors (see COPYING, COPYING.LESSER,
+ * Copyright (c) 2012-2020 by its authors (see COPYING, COPYING.LESSER,
  * AUTHORS).
  *
  * The copyrights for code used from other parties are included in
@@ -40,7 +40,6 @@
 #include "ambit/blocked_tensor.h"
 #include "psi4/libmints/matrix.h"
 #include "psi4/libmints/vector.h"
-#include "psi4/libqt/qt.h"
 #include "base_classes/forte_options.h"
 
 namespace psi {
@@ -117,23 +116,23 @@ class MOSpaceInfo {
     /// @return The number of orbitals in a space
     size_t size(const std::string& space);
     /// @return The psi::Dimension object for space
-    psi::Dimension get_dimension(const std::string& space);
+    psi::Dimension dimension(const std::string& space);
     /// @return The symmetry of each orbital
     std::vector<int> symmetry(const std::string& space);
     /// @return The list of the absolute index of the molecular orbitals in a
     /// space
-    std::vector<size_t> get_absolute_mo(const std::string& space);
+    std::vector<size_t> absolute_mo(const std::string& space);
     /// @return The list of the absolute index of the molecular orbitals in a
     /// space excluding the frozen core/virtual orbitals
-    std::vector<size_t> get_corr_abs_mo(const std::string& space);
+    std::vector<size_t> corr_absolute_mo(const std::string& space);
     /// @return The list of the relative index (h,p_rel) of the molecular
     /// orbitals in space
     std::vector<std::pair<size_t, size_t>> get_relative_mo(const std::string& space);
 
-    /// Read the space info from forteoptions(inputs)
+    /// Read the space info from forte options(inputs)
     void read_options(std::shared_ptr<ForteOptions> options);
 
-    /// Read the space info from a map of spacename-dimension_vector
+    /// Read the space info from a map of space name-dimension_vector
     void read_from_map(std::map<std::string, std::vector<size_t>>& mo_space_map);
 
     /// Reorder MOs according to the input indexing vector
@@ -176,7 +175,7 @@ class MOSpaceInfo {
     /// The map from all MO to the correlated MOs (excludes frozen core/virtual)
     std::vector<size_t> mo_to_cmo_;
 
-    /// The index vector that the spaceinfo will be re-ordered
+    /// The index vector used to reorder the orbitals
     std::vector<size_t> reorder_;
 
     // ==> Class functions <==

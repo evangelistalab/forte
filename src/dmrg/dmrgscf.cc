@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2019 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
+ * Copyright (c) 2012-2020 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
  *
  * The copyrights for code used from other parties are included in
  * the corresponding files.
@@ -109,7 +109,7 @@ void DMRGSCF::buildTmatrix(CheMPS2::DMRGSCFmatrix* theTmatrix, CheMPS2::DMRGSCFi
     const int nirrep = ints_->nirrep();
     const int nmo = mo_space_info_->size("ALL");
     const int nTriMo = nmo * (nmo + 1) / 2;
-    int* mopi = mo_space_info_->get_dimension("ALL");
+    int* mopi = mo_space_info_->dimension("ALL");
     int* sopi = scf_info_->nsopi();
     const int nso = scf_info_->nso();
     const int nTriSo = nso * (nso + 1) / 2;
@@ -143,7 +143,7 @@ void DMRGSCF::buildJK(psi::SharedMatrix MO_RDM, psi::SharedMatrix MO_JK, psi::Sh
     const int nso = scf_info_->nso();
     int* nsopi = scf_info_->nsopi();
     const int nmo = mo_space_info_->size("ALL");
-    int* nmopi = mo_space_info_->get_dimension("ALL");
+    int* nmopi = mo_space_info_->dimension("ALL");
     const int nirrep = ints_->nirrep();
 
     // nso can be different from nmo
@@ -300,7 +300,7 @@ void DMRGSCF::buildHamDMRGForte(CheMPS2::DMRGSCFmatrix* theQmatOCC,
     /// Retransform all the integrals for now (TODO:  CASSCF-like integral
     /// transformation)
     size_t na = mo_space_info_->size("ACTIVE");
-    std::vector<size_t> active_orbs = mo_space_info_->get_corr_abs_mo("ACTIVE");
+    std::vector<size_t> active_orbs = mo_space_info_->corr_absolute_mo("ACTIVE");
     ambit::Tensor VMat = ints_->aptei_ab_block(active_orbs, active_orbs, active_orbs, active_orbs);
     for (size_t u = 0; u < na; u++) {
         for (size_t v = 0; v < na; v++) {
@@ -334,7 +334,7 @@ void DMRGSCF::fillRotatedTEI_coulomb(std::shared_ptr<psi::IntegralTransform> int
         const int nTriMo = nmo * (nmo + 1) / 2;
         const int nso = scf_info_->nso();
         const int nTriSo = nso * (nso + 1) / 2;
-        int* mopi = mo_space_info_->get_dimension("ALL");
+        int* mopi = mo_space_info_->dimension("ALL");
         int* sopi = scf_info_->nsopi();
         double* work1 = new double[nTriSo];
         double* work2 = new double[nTriSo];
@@ -505,7 +505,7 @@ double DMRGSCF::compute_energy() {
     // int * active                      = options_->get_int_array("ACTIVE");
     /// Sebastian optimizes the frozen_docc
     int* frozen_docc = options_->get_int_vec("DMRG_FROZEN_DOCC").data();
-    psi::Dimension active = mo_space_info_->get_dimension("ACTIVE");
+    psi::Dimension active = mo_space_info_->dimension("ACTIVE");
     const double dmrgscf_convergence = options_->get_double("D_CONVERGENCE");
     const bool dmrgscf_store_unit = options_->get_bool("DMRG_STORE_UNIT");
     const bool dmrgscf_do_diis = options_->get_bool("DMRG_DO_DIIS");
@@ -533,7 +533,7 @@ double DMRGSCF::compute_energy() {
     const int SyGroup = state_.irrep();
     const int nmo = mo_space_info_->size("ALL");
     const int nirrep = ints_->nirrep();
-    int* orbspi = mo_space_info_->get_dimension("ALL");
+    int* orbspi = mo_space_info_->dimension("ALL");
     int* docc = scf_info_->doccpi();
     int* socc = scf_info_->soccpi();
     if (wfn_irrep < 0) {

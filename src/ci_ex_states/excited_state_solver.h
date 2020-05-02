@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2019 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
+ * Copyright (c) 2012-2020 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
  *
  * The copyrights for code used from other parties are included in
  * the corresponding files.
@@ -29,21 +29,18 @@
 #ifndef _excited_state_solver_h_
 #define _excited_state_solver_h_
 
-#include "sparse_ci/determinant_hashvector.h"
 #include "base_classes/active_space_method.h"
 #include "base_classes/rdms.h"
+#include "sparse_ci/determinant_hashvector.h"
 #include "sparse_ci/sparse_ci_solver.h"
 
-#ifdef _OPENMP
-#include <omp.h>
-#else
-#define omp_get_max_threads() 1
-#define omp_get_thread_num() 0
-#define omp_get_num_threads() 1
-#endif
+namespace psi {
+class Matrix;
+}
 
 namespace forte {
 class SelectedCIMethod;
+class DeterminantSubstitutionLists;
 
 class ExcitedStateSolver : public ActiveSpaceMethod {
   public:
@@ -86,7 +83,6 @@ class ExcitedStateSolver : public ActiveSpaceMethod {
 
   protected:
     DeterminantHashVec final_wfn_;
-    WFNOperator op_;
 
     /// The number of active orbitals
     size_t nact_;
@@ -102,10 +98,8 @@ class ExcitedStateSolver : public ActiveSpaceMethod {
     std::vector<std::vector<std::pair<Determinant, double>>> old_roots_;
     /// The PT2 energy correction
     std::vector<double> multistate_pt2_energy_correction_;
-    /// The eigensolver type
-    DiagonalizationMethod diag_method_ = DLString;
     /// The CI coeffiecients
-    psi::SharedMatrix evecs_;
+    std::shared_ptr<psi::Matrix> evecs_;
     /// Computes RDMs without coupling lists
     bool direct_rdms_ = false;
     /// Run test for the RDMs
@@ -121,28 +115,23 @@ class ExcitedStateSolver : public ActiveSpaceMethod {
     /// Print information about this calculation
     void print_info();
     /// Save older roots
-    void save_old_root(DeterminantHashVec& dets, psi::SharedMatrix& PQ_evecs, int root,
+    void save_old_root(DeterminantHashVec& dets, std::shared_ptr<psi::Matrix>& PQ_evecs, int root,
                        int ref_root);
 
     void compute_multistate(psi::SharedVector& PQ_evals);
-    /// Computes spin
-    std::vector<std::pair<double, double>> compute_spin(DeterminantHashVec& space, WFNOperator& op,
-                                                        psi::SharedMatrix evecs, int nroot);
-    /// Check for spin contamination
-    double compute_spin_contamination(DeterminantHashVec& space, WFNOperator& op,
-                                      psi::SharedMatrix evecs, int nroot);
+
     /// Print Summary
-    void print_final(DeterminantHashVec& dets, psi::SharedMatrix& PQ_evecs,
+    void print_final(DeterminantHashVec& dets, std::shared_ptr<psi::Matrix>& PQ_evecs,
                      psi::SharedVector& PQ_evals, size_t cycle);
     /// Save a wave function
-    void wfn_to_file(DeterminantHashVec& det_space, psi::SharedMatrix evecs, int root);
+    void wfn_to_file(DeterminantHashVec& det_space, std::shared_ptr<psi::Matrix> evecs, int root);
     /// Print a wave function
-    void print_wfn(DeterminantHashVec& space, WFNOperator& op, psi::SharedMatrix evecs, int nroot);
+    void print_wfn(DeterminantHashVec& space, std::shared_ptr<psi::Matrix> evecs, int nroot);
 
     /// Compute the RDMs
     RDMs compute_rdms(std::shared_ptr<ActiveSpaceIntegrals> fci_ints, DeterminantHashVec& dets,
-                      WFNOperator& op, psi::SharedMatrix& PQ_evecs, int root1, int root2,
+                      std::shared_ptr<psi::Matrix>& PQ_evecs, int root1, int root2,
                       int max_rdm_level);
 };
-}
+} // namespace forte
 #endif // _excited_state_solver_h_

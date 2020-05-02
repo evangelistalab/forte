@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2019 by its authors (see COPYING, COPYING.LESSER,
+ * Copyright (c) 2012-2020 by its authors (see COPYING, COPYING.LESSER,
  * AUTHORS).
  *
  * The copyrights for code used from other parties are included in
@@ -41,7 +41,7 @@ namespace forte {
  */
 class DFIntegrals : public ForteIntegrals {
   public:
-    DFIntegrals(psi::Options& options, std::shared_ptr<psi::Wavefunction> ref_wfn,
+    DFIntegrals(std::shared_ptr<ForteOptions> options, std::shared_ptr<psi::Wavefunction> ref_wfn,
                 std::shared_ptr<MOSpaceInfo> mo_space_info, IntegralSpinRestriction restricted);
 
     double aptei_aa(size_t p, size_t q, size_t r, size_t s) override;

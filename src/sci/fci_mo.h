@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2019 by its authors (see COPYING, COPYING.LESSER,
+ * Copyright (c) 2012-2020 by its authors (see COPYING, COPYING.LESSER,
  * AUTHORS).
  *
  * The copyrights for code used from other parties are included in
@@ -299,6 +299,9 @@ class FCI_MO : public ActiveSpaceMethod {
     /// Convergence
     double econv_;
 
+    /// Convergence
+    double rconv_;
+
     /// Multiplicity
     int multi_;
     int twice_ms_;
@@ -341,8 +344,8 @@ class FCI_MO : public ActiveSpaceMethod {
     std::string ipea_;
 
     /// Number of Alpha and Beta Electrons
-    long int nalfa_;
-    long int nbeta_;
+    int nalfa_;
+    int nbeta_;
 
     /// Active Space Type: CAS, CIS, CISD
     std::string actv_space_type_;

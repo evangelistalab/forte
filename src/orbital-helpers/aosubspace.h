@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2019 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
+ * Copyright (c) 2012-2020 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
  *
  * The copyrights for code used from other parties are included in
  * the corresponding files.
@@ -31,11 +31,12 @@
 
 #include "psi4/libmints/molecule.h"
 #include "psi4/libmints/basisset.h"
-#include "psi4/liboptions/liboptions.h"
+
 
 #define _DEBUG_AOSUBSPACE_ 0
 
 namespace forte {
+class ForteOptions;
 
 /**
  * @brief The AOInfo class
@@ -226,7 +227,8 @@ class AOSubspace {
 };
 
 // Helper function to make a projector using info in wfn and options
-psi::SharedMatrix make_aosubspace_projector(psi::SharedWavefunction wfn, psi::Options& options);
+psi::SharedMatrix make_aosubspace_projector(psi::SharedWavefunction wfn,
+                                            std::shared_ptr<ForteOptions> options);
 } // namespace forte
 
 #endif // _aosubspace_h_

@@ -4,8 +4,8 @@
 import forte
 
 refscf = -14.84351701863007 
-refaci = -14.880501440889
-refacipt2 = -14.880559935217
+refaci = -14.880501440898 #-14.880501440889
+refacipt2 = -14.880559933778 #-14.880559935217
 
 molecule li2{
   Li
@@ -29,8 +29,7 @@ set scf {
 set forte {
   active_space_solver aci
   frozen_docc [1,0,0,0,0,1,0,0]
-  ACI_SELECT_TYPE aimed_energy
-  diag_algorithm davidsonliulist
+  diag_algorithm dynamic
   sigma 0.0015
   gamma 0.0015
   nroot 1

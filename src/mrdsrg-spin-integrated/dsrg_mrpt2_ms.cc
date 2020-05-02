@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2019 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
+ * Copyright (c) 2012-2020 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
  *
  * The copyrights for code used from other parties are included in
  * the corresponding files.
@@ -29,6 +29,7 @@
 #include <iomanip>
 
 #include "helpers/timer.h"
+#include "helpers/printing.h"
 #include "ci_rdm/ci_rdms.h"
 #include "fci/fci_solver.h"
 #include "sci/fci_mo.h"
@@ -38,7 +39,7 @@ using namespace psi;
 
 namespace forte {
 
-//double DSRG_MRPT2::compute_energy_multi_state() {
+// double DSRG_MRPT2::compute_energy_multi_state() {
 //    // throw a waring if states with different symmetry
 //    int nentry = eigens_.size();
 //    if (nentry > 1) {
@@ -89,7 +90,7 @@ namespace forte {
 //    return Edsrg_ms[0][0];
 //}
 
-//std::vector<std::vector<double>> DSRG_MRPT2::compute_energy_sa() {
+// std::vector<std::vector<double>> DSRG_MRPT2::compute_energy_sa() {
 //    // compute DSRG-MRPT2 energy using SA densities
 //    compute_energy();
 
@@ -161,7 +162,8 @@ namespace forte {
 //                std::stringstream ss;
 //                ss << std::setw(14) << p.first;
 //                for (int i = 0; i < 3; ++i) {
-//                    ss << "  " << std::setw(10) << std::fixed << std::right << std::setprecision(6)
+//                    ss << "  " << std::setw(10) << std::fixed << std::right <<
+//                    std::setprecision(6)
 //                       << p.second[i] + dm_nuc_[i];
 //                }
 //                outfile->Printf("\n    %s", ss.str().c_str());
@@ -177,15 +179,15 @@ namespace forte {
 //            }
 
 //            print_h2("SA-DSRG-PT2 Oscillator Strength (in a.u.) Summary");
-//            outfile->Printf("\n    %32s  %10s  %10s  %10s  %10s", "State", "X", "Y", "Z", "Total");
-//            dash = std::string(80, '-');
-//            outfile->Printf("\n    %s", dash.c_str());
-//            for (const auto& p : osc) {
+//            outfile->Printf("\n    %32s  %10s  %10s  %10s  %10s", "State", "X", "Y", "Z",
+//            "Total"); dash = std::string(80, '-'); outfile->Printf("\n    %s", dash.c_str()); for
+//            (const auto& p : osc) {
 //                std::stringstream ss;
 //                ss << std::setw(32) << p.first;
 //                double total = 0.0;
 //                for (int i = 0; i < 3; ++i) {
-//                    ss << "  " << std::setw(10) << std::fixed << std::right << std::setprecision(6)
+//                    ss << "  " << std::setw(10) << std::fixed << std::right <<
+//                    std::setprecision(6)
 //                       << p.second[i];
 //                    total += p.second[i];
 //                }
@@ -228,11 +230,10 @@ namespace forte {
 //                nelec -= charge;
 //                int ms = (multi + 1) % 2;
 //                auto nelec_actv = nelec;
-//                //                - 2 * mo_space_info_->size("FROZEN_DOCC") - 2 * core_mos_.size();
-//                auto na = (nelec_actv + ms) / 2;
-//                auto nb = nelec_actv - na;
+//                //                - 2 * mo_space_info_->size("FROZEN_DOCC") - 2 *
+//                core_mos_.size(); auto na = (nelec_actv + ms) / 2; auto nb = nelec_actv - na;
 
-//                psi::Dimension active_dim = mo_space_info_->get_dimension("ACTIVE");
+//                psi::Dimension active_dim = mo_space_info_->dimension("ACTIVE");
 //                int ntrial_per_root = foptions_->get_int("NTRIAL_PER_ROOT");
 
 //                StateInfo state(na, nb, multi, multi - 1, irrep); // assumes highes Ms
@@ -353,7 +354,7 @@ std::vector<std::vector<double>> DSRG_MRPT2::compute_energy_xms() {
 
     // prepare FCI integrals (a fake one)
     std::shared_ptr<ActiveSpaceIntegrals> fci_ints =
-        std::make_shared<ActiveSpaceIntegrals>(ints_, actv_mos_, core_mos_);
+        std::make_shared<ActiveSpaceIntegrals>(ints_, actv_mos_, actv_mos_sym_, core_mos_);
     //    ambit::Tensor actv_aa = ints_->aptei_aa_block(aactv_mos_, aactv_mos_,
     //    aactv_mos_, aactv_mos_);
     //    ambit::Tensor actv_ab = ints_->aptei_ab_block(aactv_mos_, aactv_mos_,
@@ -371,8 +372,11 @@ std::vector<std::vector<double>> DSRG_MRPT2::compute_energy_xms() {
     std::vector<std::vector<double>> Edsrg_ms(nentry, std::vector<double>());
 
     for (int n = 0; n < nentry; ++n) {
-        int irrep = (foptions_->psi_options())["AVG_STATE"][n][0].to_integer();
-        int multi = (foptions_->psi_options())["AVG_STATE"][n][1].to_integer();
+        py::list avg_state_list = foptions_->get_gen_list("AVG_STATE")[n];
+
+        int irrep = py::cast<int>(avg_state_list[0]);
+        int multi = py::cast<int>(avg_state_list[1]);
+
         int nstates = eigens_[n].size();
         std::vector<forte::Determinant> p_space = p_spaces_[n];
 
@@ -957,8 +961,8 @@ void DSRG_MRPT2::compute_cumulants(std::shared_ptr<ActiveSpaceIntegrals> fci_int
 }
 
 void DSRG_MRPT2::compute_rdms(std::shared_ptr<ActiveSpaceIntegrals> fci_ints,
-                                   std::vector<forte::Determinant>& p_space,
-                                   psi::SharedMatrix evecs, const int& root1, const int& root2) {
+                              std::vector<forte::Determinant>& p_space, psi::SharedMatrix evecs,
+                              const int& root1, const int& root2) {
     CI_RDMS ci_rdms(fci_ints, p_space, evecs, root1, root2);
 
     // 1 density

@@ -60,7 +60,7 @@ script:
      python run_forte_tests.py --bw --failed_dump;
     fi
   - cd ${TRAVIS_BUILD_DIR}
-  - ./forte_tests
-  - ./forte_benchmarks
+#  - ./forte_tests
+#  - ./forte_benchmarks
   - cd ${TRAVIS_BUILD_DIR}/tests/pytest
   - pytest

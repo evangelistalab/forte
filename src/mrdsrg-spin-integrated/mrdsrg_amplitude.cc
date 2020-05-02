@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2019 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
+ * Copyright (c) 2012-2020 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
  *
  * The copyrights for code used from other parties are included in
  * the corresponding files.
@@ -746,6 +746,12 @@ void MRDSRG::update_t2_std() {
 
     // Step 1: work on Hbar2 where DT2 is treated as intermediate
 
+    // make a copy of the active part of Hbar2 as it will be used as intermediate
+    auto Hbar2copy = BlockedTensor::build(tensor_type_, "Hbar2 active copy", spin_cases({"aaaa"}));
+    Hbar2copy["uvxy"] = Hbar2_["uvxy"];
+    Hbar2copy["uVxY"] = Hbar2_["uVxY"];
+    Hbar2copy["UVXY"] = Hbar2_["UVXY"];
+
     timer t1("transform Hbar2 to semi-canonical basis");
     // transform Hbar2 to semi-canonical basis
     if (!semi_canonical_) {
@@ -779,13 +785,6 @@ void MRDSRG::update_t2_std() {
         });
     t2.stop();
 
-    //  timer t3("copy renormalized Hbar2 to DT2");
-    //  // copy renormalized Hbar2 to DT2
-    //  DT2_["ijab"] = Hbar2_["ijab"];
-    //  DT2_["iJaB"] = Hbar2_["iJaB"];
-    //  DT2_["IJAB"] = Hbar2_["IJAB"];
-    //  t3.stop();
-
     // Step 2: work on T2 where Hbar2 is treated as intermediate
 
     timer t4("copy T2 to Hbar2");
@@ -798,8 +797,7 @@ void MRDSRG::update_t2_std() {
     timer t5("transform T2 to semi-canonical basis");
     // transform T2 to semi-canonical basis
     if (!semi_canonical_) {
-        BlockedTensor temp =
-            ambit::BlockedTensor::build(tensor_type_, "temp for T2 update", spin_cases({"hhpp"}));
+        auto temp = BlockedTensor::build(tensor_type_, "temp for T2 update", spin_cases({"hhpp"}));
         temp["klab"] = U_["ki"] * U_["lj"] * T2_["ijab"];
         temp["kLaB"] = U_["ki"] * U_["LJ"] * T2_["iJaB"];
         temp["KLAB"] = U_["KI"] * U_["LJ"] * T2_["IJAB"];
@@ -882,6 +880,11 @@ void MRDSRG::update_t2_std() {
     t2ab_norm_ = std::sqrt(t2ab_norm_);
     t2bb_norm_ = std::sqrt(t2bb_norm_);
     t10.stop();
+
+    // reset the active part of Hbar2
+    Hbar2_["uvxy"] = Hbar2copy["uvxy"];
+    Hbar2_["uVxY"] = Hbar2copy["uVxY"];
+    Hbar2_["UVXY"] = Hbar2copy["UVXY"];
 }
 
 void MRDSRG::update_t1_std() {
@@ -896,6 +899,11 @@ void MRDSRG::update_t1_std() {
      **/
 
     // Step 1: work on Hbar1 where DT1 is treated as intermediate
+
+    // make a copy of the active part of Hbar2 as it will be used as intermediate
+    auto Hbar1copy = BlockedTensor::build(tensor_type_, "Hbar1 active copy", spin_cases({"aa"}));
+    Hbar1copy["uv"] = Hbar1_["uv"];
+    Hbar1copy["UV"] = Hbar1_["UV"];
 
     // transform Hbar1 to semi-canonical basis
     if (!semi_canonical_) {
@@ -917,10 +925,6 @@ void MRDSRG::update_t1_std() {
                 value *= dsrg_source_->compute_renormalized_denominator(Fb_[i[0]] - Fb_[i[1]]);
             }
         });
-
-    //  // copy renormalized Hbar1 to DT1
-    //  DT1_["ia"] = Hbar1_["ia"];
-    //  DT1_["IA"] = Hbar1_["IA"];
 
     // Step 2: work on T1 where Hbar1 is treated as intermediate
 
@@ -988,6 +992,10 @@ void MRDSRG::update_t1_std() {
     T1norm_ = std::sqrt(t1a_norm_ + t1b_norm_);
     t1a_norm_ = std::sqrt(t1a_norm_);
     t1b_norm_ = std::sqrt(t1b_norm_);
+
+    // reset the active part of Hbar2
+    Hbar1_["uv"] = Hbar1copy["uv"];
+    Hbar1_["UV"] = Hbar1copy["UV"];
 }
 
 void MRDSRG::update_t2_noccvv() {
@@ -1552,9 +1560,10 @@ void MRDSRG::print_intruder(const std::string& name,
             double down = fi + fj - fa - fb;
             double v = datapair.second;
 
-            output += "\n" + indent + str(boost::format("[%3d %3d %3d %3d] %13.8f (%10.6f + "
-                                                        "%10.6f - %10.6f - %10.6f = %10.6f)") %
-                                          i % j % a % b % v % fi % fj % fa % fb % down);
+            output += "\n" + indent +
+                      str(boost::format("[%3d %3d %3d %3d] %13.8f (%10.6f + "
+                                        "%10.6f - %10.6f - %10.6f = %10.6f)") %
+                          i % j % a % b % v % fi % fj % fa % fb % down);
         }
     } else {
         outfile->Printf("\n    Printing of amplitude is implemented only for T1 and T2!");
@@ -1568,4 +1577,4 @@ void MRDSRG::print_intruder(const std::string& name,
     }
     outfile->Printf("\n%s", output.c_str());
 }
-}
+} // namespace forte

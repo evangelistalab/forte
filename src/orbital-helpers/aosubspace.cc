@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2019 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
+ * Copyright (c) 2012-2020 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
  *
  * The copyrights for code used from other parties are included in
  * the corresponding files.
@@ -31,6 +31,10 @@
 #include <regex>
 #include <vector>
 
+#include <pybind11/pybind11.h>
+
+namespace py = pybind11;
+
 #include "psi4/libpsi4util/PsiOutStream.h"
 #include "psi4/libmints/element_to_Z.h"
 #include "psi4/libmints/integral.h"
@@ -40,6 +44,9 @@
 #include "psi4/masses.h"
 
 #include "boost/format.hpp"
+
+#include "helpers/string_algorithms.h"
+#include "base_classes/forte_options.h"
 
 #include "aosubspace.h"
 
@@ -56,15 +63,20 @@ using namespace psi;
 
 namespace forte {
 
-psi::SharedMatrix make_aosubspace_projector(psi::SharedWavefunction wfn, psi::Options& options) {
+psi::SharedMatrix make_aosubspace_projector(psi::SharedWavefunction wfn,
+                                            std::shared_ptr<ForteOptions> options) {
     psi::SharedMatrix Ps;
 
     // Run this code only if user specified a subspace
-    if (options["SUBSPACE"].size() > 0) {
+    py::list subspace_list = options->get_gen_list("SUBSPACE");
+
+    int subspace_list_size = subspace_list.size();
+    if (subspace_list_size > 0) {
         std::vector<std::string> subspace_str;
-        for (int entry = 0; entry < (int)options["SUBSPACE"].size(); ++entry) {
-            std::string s = options["SUBSPACE"][entry].to_string();
+        for (int entry = 0; entry < subspace_list_size; ++entry) {
+            std::string s = py::str(subspace_list[entry]);
             // convert to upper case
+            to_upper_string(s);
             subspace_str.push_back(s);
         }
 
@@ -102,7 +114,7 @@ psi::SharedMatrix make_aosubspace_projector(psi::SharedWavefunction wfn, psi::Op
         psi::SharedMatrix CPsC = Ps->clone();
         CPsC->transform(wfn->Ca());
         double print_threshold = 1.0e-6;
-        outfile->Printf("\n  Orbital overlap with ao subspace (> %e):\n",print_threshold);
+        outfile->Printf("\n  Orbital overlap with ao subspace (> %e):\n", print_threshold);
         outfile->Printf("    ========================\n");
         outfile->Printf("    Irrep   MO   <phi|P|phi>\n");
         outfile->Printf("    ------------------------\n");

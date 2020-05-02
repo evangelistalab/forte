@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2019 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
+ * Copyright (c) 2012-2020 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
  *
  * The copyrights for code used from other parties are included in
  * the corresponding files.
@@ -31,6 +31,9 @@
 #include <map>
 #include <vector>
 
+#include "boost/format.hpp"
+
+#include "psi4/libpsi4util/PsiOutStream.h"
 #include "psi4/libmints/molecule.h"
 
 #include "base_classes/active_space_solver.h"
@@ -38,7 +41,6 @@
 #include "sci/fci_mo.h"
 #include "helpers/printing.h"
 #include "orbital-helpers/semi_canonicalize.h"
-#include "boost/format.hpp"
 #include "orbital-helpers/mp2_nos.h"
 #include "mrdsrg.h"
 
@@ -46,13 +48,12 @@ using namespace psi;
 
 namespace forte {
 
-MRDSRG::MRDSRG(RDMs rdms, std::shared_ptr<SCFInfo> scf_info,
-               std::shared_ptr<ForteOptions> options, std::shared_ptr<ForteIntegrals> ints,
-               std::shared_ptr<MOSpaceInfo> mo_space_info)
+MRDSRG::MRDSRG(RDMs rdms, std::shared_ptr<SCFInfo> scf_info, std::shared_ptr<ForteOptions> options,
+               std::shared_ptr<ForteIntegrals> ints, std::shared_ptr<MOSpaceInfo> mo_space_info)
     : MASTER_DSRG(rdms, scf_info, options, ints, mo_space_info) {
 
-    print_method_banner({"Multireference Driven Similarity Renormalization Group", "Chenyang Li"});
-    outfile->Printf("\n  Additional contributions by: Tianyuan Zhang");
+    print_method_banner({"Multireference Driven Similarity Renormalization Group",
+                         "written by Chenyang Li and Tianyuan Zhang"});
 
     read_options();
     startup();
@@ -86,6 +87,11 @@ void MRDSRG::read_options() {
 
     sequential_Hbar_ = foptions_->get_bool("DSRG_HBAR_SEQ");
     nivo_ = foptions_->get_bool("DSRG_NIVO");
+
+    pt2_h0th_ = foptions_->get_str("DSRG_PT2_H0TH");
+    if (pt2_h0th_ != "FFULL" and pt2_h0th_ != "FDIAG_VACTV" and pt2_h0th_ != "FDIAG_VDIAG") {
+        pt2_h0th_ = "FDIAG";
+    }
 }
 
 void MRDSRG::startup() {
@@ -128,23 +134,29 @@ void MRDSRG::startup() {
 void MRDSRG::print_options() {
     // fill in information
     std::vector<std::pair<std::string, int>> calculation_info{
-        {"ntamp", ntamp_},
-        {"diis_min_vecs", foptions_->get_int("DIIS_MIN_VECS")},
-        {"diis_max_vecs", foptions_->get_int("DIIS_MAX_VECS")}};
+        {"Number of T amplitudes", ntamp_},
+        {"DIIS start", diis_start_},
+        {"Min DIIS vectors", diis_min_vec_},
+        {"Max DIIS vectors", diis_max_vec_},
+        {"DIIS extrapolating freq", diis_freq_}};
 
     std::vector<std::pair<std::string, double>> calculation_info_double{
-        {"flow parameter", s_},
-        {"taylor expansion threshold", pow(10.0, -double(taylor_threshold_))},
-        {"intruder_tamp", intruder_tamp_}};
+        {"Flow parameter", s_},
+        {"Taylor expansion threshold", pow(10.0, -double(taylor_threshold_))},
+        {"Intruder amplitudes threshold", intruder_tamp_}};
 
     std::vector<std::pair<std::string, std::string>> calculation_info_string{
-        {"corr_level", corrlv_string_},
-        {"int_type", ints_type_},
-        {"source operator", source_},
-        {"smart_dsrg_s", foptions_->get_str("SMART_DSRG_S")},
-        {"reference relaxation", relax_ref_},
-        {"dsrg transformation type", dsrg_trans_type_},
-        {"core virtual source type", foptions_->get_str("CCVV_SOURCE")}};
+        {"Correlation level", corrlv_string_},
+        {"Integral type", ints_type_},
+        {"Source operator", source_},
+        {"Adaptive DSRG flow type", foptions_->get_str("SMART_DSRG_S")},
+        {"Reference relaxation", relax_ref_},
+        {"DSRG transformation type", dsrg_trans_type_},
+        {"Core-Virtual source type", foptions_->get_str("CCVV_SOURCE")}};
+
+    if (corrlv_string_ == "PT2") {
+        calculation_info_string.push_back({"PT2 0-order Hamiltonian", pt2_h0th_});
+    }
 
     auto true_false_string = [](bool x) {
         if (x) {
@@ -154,20 +166,20 @@ void MRDSRG::print_options() {
         }
     };
     calculation_info_string.push_back(
-        {"sequential dsrg transformation", true_false_string(sequential_Hbar_)});
+        {"Sequential DSRG transformation", true_false_string(sequential_Hbar_)});
     calculation_info_string.push_back(
-        {"omit blocks of >= 3 virtual indices", true_false_string(nivo_)});
+        {"Omit blocks of >= 3 virtual indices", true_false_string(nivo_)});
 
     // print some information
     print_h2("Calculation Information");
     for (auto& str_dim : calculation_info) {
-        outfile->Printf("\n    %-35s %15d", str_dim.first.c_str(), str_dim.second);
+        outfile->Printf("\n    %-40s %15d", str_dim.first.c_str(), str_dim.second);
     }
     for (auto& str_dim : calculation_info_double) {
-        outfile->Printf("\n    %-35s %15.3e", str_dim.first.c_str(), str_dim.second);
+        outfile->Printf("\n    %-40s %15.3e", str_dim.first.c_str(), str_dim.second);
     }
     for (auto& str_dim : calculation_info_string) {
-        outfile->Printf("\n    %-35s %15s", str_dim.first.c_str(), str_dim.second.c_str());
+        outfile->Printf("\n    %-40s %15s", str_dim.first.c_str(), str_dim.second.c_str());
     }
     outfile->Printf("\n");
 }
@@ -184,11 +196,6 @@ void MRDSRG::build_ints() {
     // prepare two-electron integrals or three-index B
     if (eri_df_) {
         fill_three_index_ints(B_);
-
-        //        B_.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>&, double&
-        //        value) {
-        ////            value = ints_->three_integral(i[0], i[1], i[2]);
-        //        });
     } else {
         V_.iterate(
             [&](const std::vector<size_t>& i, const std::vector<SpinType>& spin, double& value) {
@@ -353,9 +360,7 @@ double MRDSRG::compute_energy() {
         Etotal += compute_energy_pt3();
         break;
     }
-    default: {
-        Etotal += compute_energy_pt2();
-    }
+    default: { Etotal += compute_energy_pt2(); }
     }
 
     return Etotal;
@@ -389,13 +394,13 @@ std::vector<std::vector<double>> MRDSRG::diagonalize_Fock_diagblocks(BlockedTens
 
     // map MO space label to its psi::Dimension
     std::map<std::string, psi::Dimension> MOlabel_to_dimension;
-    MOlabel_to_dimension[acore_label_] = mo_space_info_->get_dimension("RESTRICTED_DOCC");
-    MOlabel_to_dimension[aactv_label_] = mo_space_info_->get_dimension("ACTIVE");
-    MOlabel_to_dimension[avirt_label_] = mo_space_info_->get_dimension("RESTRICTED_UOCC");
+    MOlabel_to_dimension[acore_label_] = mo_space_info_->dimension("RESTRICTED_DOCC");
+    MOlabel_to_dimension[aactv_label_] = mo_space_info_->dimension("ACTIVE");
+    MOlabel_to_dimension[avirt_label_] = mo_space_info_->dimension("RESTRICTED_UOCC");
 
     // eigen values to be returned
     size_t ncmo = mo_space_info_->size("CORRELATED");
-    psi::Dimension corr = mo_space_info_->get_dimension("CORRELATED");
+    psi::Dimension corr = mo_space_info_->dimension("CORRELATED");
     std::vector<double> eigenvalues_a(ncmo, 0.0);
     std::vector<double> eigenvalues_b(ncmo, 0.0);
 
@@ -403,9 +408,9 @@ std::vector<std::vector<double>> MRDSRG::diagonalize_Fock_diagblocks(BlockedTens
     std::map<std::string, psi::Dimension> MOlabel_to_offset_dimension;
     int nirrep = corr.n();
     MOlabel_to_offset_dimension[acore_label_] = psi::Dimension(std::vector<int>(nirrep, 0));
-    MOlabel_to_offset_dimension[aactv_label_] = mo_space_info_->get_dimension("RESTRICTED_DOCC");
+    MOlabel_to_offset_dimension[aactv_label_] = mo_space_info_->dimension("RESTRICTED_DOCC");
     MOlabel_to_offset_dimension[avirt_label_] =
-        mo_space_info_->get_dimension("RESTRICTED_DOCC") + mo_space_info_->get_dimension("ACTIVE");
+        mo_space_info_->dimension("RESTRICTED_DOCC") + mo_space_info_->dimension("ACTIVE");
 
     // figure out index
     auto fill_eigen = [&](std::string block_label, int irrep, std::vector<double> values) {
@@ -634,4 +639,29 @@ void MRDSRG::check_density(BlockedTensor& D, const std::string& name) {
     output += indent + sep;
     outfile->Printf("%s", output.c_str());
 }
+
+double MRDSRG::Hbar1od_norm(const std::vector<std::string>& blocks) {
+    double norm = 0.0;
+
+    for (auto& block : blocks) {
+        double norm_block = Hbar1_.block(block).norm();
+        norm += 2.0 * norm_block * norm_block;
+    }
+    norm = std::sqrt(norm);
+
+    return norm;
+}
+
+double MRDSRG::Hbar2od_norm(const std::vector<std::string>& blocks) {
+    double norm = 0.0;
+
+    for (auto& block : blocks) {
+        double norm_block = Hbar2_.block(block).norm();
+        norm += 2.0 * norm_block * norm_block;
+    }
+    norm = std::sqrt(norm);
+
+    return norm;
+}
+
 } // namespace forte

@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2019 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
+ * Copyright (c) 2012-2020 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
  *
  * The copyrights for code used from other parties are included in
  * the corresponding files.
@@ -72,9 +72,9 @@ void V2RDM::startup() {
     // number of MO per irrep
     nmopi_ = this->nmopi();
     nirrep_ = this->nirrep();
-    fdoccpi_ = mo_space_info_->get_dimension("FROZEN_DOCC");
-    rdoccpi_ = mo_space_info_->get_dimension("RESTRICTED_DOCC");
-    active_ = mo_space_info_->get_dimension("ACTIVE");
+    fdoccpi_ = mo_space_info_->dimension("FROZEN_DOCC");
+    rdoccpi_ = mo_space_info_->dimension("RESTRICTED_DOCC");
+    active_ = mo_space_info_->dimension("ACTIVE");
 
     // map active absolute index to relative index
     for (size_t h = 0, offset_abs = 0, offset_rel = 0; h < nirrep_; ++h) {
@@ -103,8 +103,8 @@ void V2RDM::startup() {
     frozen_core_energy_ = ints_->frozen_core_energy();
 
     // orbital spaces
-    core_mos_ = mo_space_info_->get_corr_abs_mo("RESTRICTED_DOCC");
-    actv_mos_ = mo_space_info_->get_corr_abs_mo("ACTIVE");
+    core_mos_ = mo_space_info_->corr_absolute_mo("RESTRICTED_DOCC");
+    actv_mos_ = mo_space_info_->corr_absolute_mo("ACTIVE");
 
     // write density to files
     if (options_.get_str("WRITE_DENSITY_TYPE") == "DENSITY") {

@@ -1,0 +1,63 @@
+#! Generated using commit GITCOMMIT
+
+import forte
+
+memory 500 mb
+
+Ecas_psi4 = -75.547269671169772
+Ept2_0    = -75.781989502581368
+Ept2_1    = -75.679593509886715
+
+molecule {
+0 1
+C
+C 1 1.2
+}
+
+set globals{
+  basis                  cc-pcvdz
+  reference              rhf
+  scf_type               pk
+  e_convergence          12
+  d_convergence          8
+  mcscf_e_convergence    12
+  mcscf_r_convergence    8
+  mcscf_diis_start       10
+  mcscf_max_rot          0.2
+  restricted_docc        [1,0,0,0,0,1,0,0]
+  active                 [2,0,1,1,0,2,1,1]
+}
+
+set detci {
+  num_roots          2
+  filter_guess       true
+  filter_guess_sign  1
+  filter_guess_det1  [56, 56]
+  filter_guess_det2  [66, 66]
+  avg_states         [0, 1]
+  calc_s_squared     true
+}
+Ecas, wfn = energy('casscf', return_wfn=True)
+compare_values(Ecas_psi4, Ecas, 9, "CASSCF(8,8)/cc-pCVDZ (PSI4) energy")
+
+set forte{
+  active_space_solver  cas
+  correlation_solver   sa-mrdsrg
+  corr_level           pt2
+  frozen_docc          [0,0,0,0,0,0,0,0]
+  restricted_docc      [1,0,0,0,0,1,0,0]
+  active               [2,0,1,1,0,2,1,1]
+  dsrg_s               1.0
+  e_convergence        12
+  r_convergence        8
+  calc_type            sa
+  avg_state            [[0,1,3]]
+  avg_weight           [[1,1,0]]  # Delta state is the 3rd state before but 2nd state after PT2
+  threepdc             zero
+  relax_ref            once
+}
+energy('forte', ref_wfn=wfn)
+Eroot0 = variable("ENERGY ROOT 0 1AG")
+Eroot1 = variable("ENERGY ROOT 2 1AG")
+compare_values(Ept2_0, Eroot0, 9, "SA-DSRG-MRPT2 relaxed energy singlet Sigma_g^+ root 0")
+compare_values(Ept2_1, Eroot1, 9, "SA-DSRG-MRPT2 relaxed energy singlet Sigma_g^+ root 1")

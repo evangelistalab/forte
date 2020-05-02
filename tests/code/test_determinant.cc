@@ -5,12 +5,15 @@
 
 #include "catch.hpp"
 
-#include "../../src/sparse_ci/ui64_determinant.h"
+#include "../../src/sparse_ci/determinant.h"
+#include "../../src/sparse_ci/determinant.hpp"
+#include "../../src/sparse_ci/bitarray.hpp"
+#include "test_determinant.hpp"
 
 using namespace forte;
 
-UI64Determinant make_det_from_string(std::string s) {
-    UI64Determinant d;
+Determinant make_det_from_string(std::string s) {
+    Determinant d;
     size_t n = s.size() / 2;
     if (n % 2 == 0) {
         for (std::string::size_type i = 0; i < n; ++i) {
@@ -24,8 +27,8 @@ UI64Determinant make_det_from_string(std::string s) {
     return d;
 }
 
-UI64Determinant make_det_from_string(std::string s_a, std::string s_b) {
-    UI64Determinant d;
+Determinant make_det_from_string(std::string s_a, std::string s_b) {
+    Determinant d;
     if (s_a.size() == s_b.size()) {
         for (std::string::size_type i = 0; i < s_a.size(); ++i) {
             d.set_alfa_bit(i, s_a[i] == '0' ? 0 : 1);
@@ -58,9 +61,75 @@ unsigned int Factorial(unsigned int number) {
     return number <= 1 ? number : Factorial(number - 1) * number;
 }
 
-TEST_CASE("Empty determinant", "[UI64Determinant]") {
-    UI64Determinant det_test;
-    UI64Determinant det_ref =
+// ==> TESTS <==
+
+// Test that a BitArray object is initialized to zero
+TEST_CASE("Initialization [BitArray]", "[BitArray]") {
+    test_bitarray_init<64>();
+    test_bitarray_init<128>();
+    test_bitarray_init<192>();
+    test_bitarray_init<256>();
+    test_bitarray_init<320>();
+    test_bitarray_init<384>();
+    test_bitarray_init<448>();
+    test_bitarray_init<512>();
+    test_bitarray_init<1024>();
+}
+
+// Test that a BitArray object is initialized to zero
+TEST_CASE("Initialization [DeterminantImpl]", "[DeterminantImpl]") {
+    test_determinantimpl_init<128>();
+    test_determinantimpl_init<256>();
+    test_determinantimpl_init<384>();
+    test_determinantimpl_init<512>();
+    test_determinantimpl_init<640>();
+    test_determinantimpl_init<768>();
+    test_determinantimpl_init<896>();
+    test_determinantimpl_init<1024>();
+}
+
+TEST_CASE("Set/get [BitArray]", "[BitArray]") {
+    test_bitarray_setget<64>();
+    test_bitarray_setget<128>();
+    test_bitarray_setget<192>();
+    test_bitarray_setget<256>();
+    test_bitarray_setget<320>();
+    test_bitarray_setget<384>();
+    test_bitarray_setget<448>();
+    test_bitarray_setget<512>();
+    test_bitarray_setget<1024>();
+}
+
+TEST_CASE("Set/get [DeterminantImpl]", "[DeterminantImpl]") {
+    test_determinantimpl_setget<128>();
+    test_determinantimpl_setget<256>();
+    test_determinantimpl_setget<384>();
+    test_determinantimpl_setget<512>();
+    test_determinantimpl_setget<1024>();
+}
+
+TEST_CASE("Determinant sign [DeterminantImpl]", "[DeterminantImpl]") {
+    test_determinantimpl_sign_functions<128>();
+    test_determinantimpl_sign_functions<256>();
+    test_determinantimpl_sign_functions<384>();
+    test_determinantimpl_sign_functions<512>();
+    test_determinantimpl_sign_functions<1024>();
+}
+
+TEST_CASE("Determinant count [DeterminantImpl]", "[DeterminantImpl]") {
+    test_determinantimpl_count_functions<128>();
+    test_determinantimpl_count_functions<256>();
+    test_determinantimpl_count_functions<384>();
+    test_determinantimpl_count_functions<512>();
+    test_determinantimpl_count_functions<640>();
+    test_determinantimpl_count_functions<768>();
+    test_determinantimpl_count_functions<896>();
+    test_determinantimpl_count_functions<1024>();
+}
+
+TEST_CASE("Empty determinant", "[Determinant]") {
+    Determinant det_test;
+    Determinant det_ref =
         make_det_from_string("0000000000000000000000000000000000000000000000000000000000000000",
                              "0000000000000000000000000000000000000000000000000000000000000000");
 
@@ -69,13 +138,13 @@ TEST_CASE("Empty determinant", "[UI64Determinant]") {
     REQUIRE(det_test.count_beta() == 0);
     REQUIRE(det_test.npair() == 0);
 
-    std::vector<int> aocc = det_test.get_alfa_occ(UI64Determinant::num_str_bits);
-    std::vector<int> bocc = det_test.get_beta_occ(UI64Determinant::num_str_bits);
+    std::vector<int> aocc = det_test.get_alfa_occ(Determinant::nbits_half);
+    std::vector<int> bocc = det_test.get_beta_occ(Determinant::nbits_half);
 
     std::vector<int> aocc_ref{};
     std::vector<int> bocc_ref{};
-    std::vector<int> avir_ref = get_complementary_occupation(aocc, 64);
-    std::vector<int> bvir_ref = get_complementary_occupation(bocc, 64);
+    std::vector<int> avir_ref = get_complementary_occupation(aocc, Determinant::nbits_half);
+    std::vector<int> bvir_ref = get_complementary_occupation(bocc, Determinant::nbits_half);
 
     REQUIRE(aocc == aocc_ref);
     REQUIRE(bocc == bocc_ref);
@@ -88,8 +157,8 @@ TEST_CASE("Empty determinant", "[UI64Determinant]") {
     REQUIRE(det_test.slater_sign_b(63) == 1.0);
 }
 
-TEST_CASE("Bit counting", "[UI64Determinant]") {
-    UI64Determinant det_test =
+TEST_CASE("Bit counting", "[Determinant]") {
+    Determinant det_test =
         make_det_from_string("1001100000000000000000000000000000000000000000000000000000010000",
                              "0001000000000000001000000000000000000000000000000000000000000001");
 
@@ -97,15 +166,15 @@ TEST_CASE("Bit counting", "[UI64Determinant]") {
     REQUIRE(det_test.count_beta() == 3);
     REQUIRE(det_test.npair() == 1);
 
-    std::vector<int> aocc = det_test.get_alfa_occ(UI64Determinant::num_str_bits);
-    std::vector<int> bocc = det_test.get_beta_occ(UI64Determinant::num_str_bits);
-    std::vector<int> avir = det_test.get_alfa_vir(UI64Determinant::num_str_bits);
-    std::vector<int> bvir = det_test.get_beta_vir(UI64Determinant::num_str_bits);
+    std::vector<int> aocc = det_test.get_alfa_occ(Determinant::nbits_half);
+    std::vector<int> bocc = det_test.get_beta_occ(Determinant::nbits_half);
+    std::vector<int> avir = det_test.get_alfa_vir(Determinant::nbits_half);
+    std::vector<int> bvir = det_test.get_beta_vir(Determinant::nbits_half);
 
     std::vector<int> aocc_ref{0, 3, 4, 59};
     std::vector<int> bocc_ref{3, 18, 63};
-    std::vector<int> avir_ref = get_complementary_occupation(aocc_ref, 64);
-    std::vector<int> bvir_ref = get_complementary_occupation(bocc_ref, 64);
+    std::vector<int> avir_ref = get_complementary_occupation(aocc_ref, Determinant::nbits_half);
+    std::vector<int> bvir_ref = get_complementary_occupation(bocc_ref, Determinant::nbits_half);
 
     REQUIRE(aocc == aocc_ref);
     REQUIRE(bocc == bocc_ref);
@@ -132,8 +201,8 @@ TEST_CASE("Bit counting", "[UI64Determinant]") {
     REQUIRE(det_test.slater_sign_b(63) == 1.0);
 }
 
-TEST_CASE("Full determinant", "[UI64Determinant]") {
-    UI64Determinant det_test =
+TEST_CASE("Full determinant", "[Determinant]") {
+    Determinant det_test =
         make_det_from_string("1111111111111111111111111111111111111111111111111111111111111111",
                              "1111111111111111111111111111111111111111111111111111111111111111");
 
@@ -141,15 +210,17 @@ TEST_CASE("Full determinant", "[UI64Determinant]") {
     REQUIRE(det_test.count_beta() == 64);
     REQUIRE(det_test.npair() == 64);
 
-    std::vector<int> aocc = det_test.get_alfa_occ(UI64Determinant::num_str_bits);
-    std::vector<int> bocc = det_test.get_beta_occ(UI64Determinant::num_str_bits);
-    std::vector<int> avir = det_test.get_alfa_vir(UI64Determinant::num_str_bits);
-    std::vector<int> bvir = det_test.get_beta_vir(UI64Determinant::num_str_bits);
+    std::vector<int> aocc = det_test.get_alfa_occ(Determinant::nbits_half);
+    std::vector<int> bocc = det_test.get_beta_occ(Determinant::nbits_half);
+    std::vector<int> avir = det_test.get_alfa_vir(Determinant::nbits_half);
+    std::vector<int> bvir = det_test.get_beta_vir(Determinant::nbits_half);
 
-    std::vector<int> avir_ref{};
-    std::vector<int> bvir_ref{};
-    std::vector<int> aocc_ref = get_complementary_occupation(avir_ref, 64);
-    std::vector<int> bocc_ref = get_complementary_occupation(bvir_ref, 64);
+    std::vector<int> aocc_ref(64);
+    std::vector<int> bocc_ref(64);
+    std::iota(aocc_ref.begin(), aocc_ref.end(), 0);
+    std::iota(bocc_ref.begin(), bocc_ref.end(), 0);
+    std::vector<int> avir_ref = get_complementary_occupation(aocc_ref, Determinant::nbits_half);
+    std::vector<int> bvir_ref = get_complementary_occupation(bocc_ref, Determinant::nbits_half);
 
     REQUIRE(aocc == aocc_ref);
     REQUIRE(bocc == bocc_ref);

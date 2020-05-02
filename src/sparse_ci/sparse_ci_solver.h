@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2019 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
+ * Copyright (c) 2012-2020 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
  *
  * The copyrights for code used from other parties are included in
  * the corresponding files.
@@ -29,26 +29,20 @@
 #ifndef _sparse_ci_h_
 #define _sparse_ci_h_
 
-#include "integrals/active_space_integrals.h"
 #include "sparse_ci/determinant_hashvector.h"
-#include "operator.h"
-#include "sparse_ci/operator.h"
-#include "base_classes/mo_space_info.h"
-
-#include "determinant.h"
-#include "sigma_vector.h"
-
-#ifdef HAVE_MPI
-#include <mpi.h>
-#endif
 
 #define BIGNUM 1E100
 #define MAXIT 100
 
+namespace psi {
+class Matrix;
+class Vector;
+} // namespace psi
 
 namespace forte {
 
-enum DiagonalizationMethod { Full, DLSolver, DLString, DLDisk, MPI, Sparse, Direct, Dynamic };
+class SigmaVector;
+class ActiveSpaceIntegrals;
 
 /**
  * @brief The SparseCISolver class
@@ -69,15 +63,26 @@ class SparseCISolver {
      * singlet, 2 = doublet, ...
      */
 
-    SparseCISolver(std::shared_ptr<ActiveSpaceIntegrals> fci_ints) { fci_ints_ = fci_ints; }
+    SparseCISolver();
 
-    void diagonalize_hamiltonian(const std::vector<Determinant>& space, psi::SharedVector& evals,
-                                 psi::SharedMatrix& evecs, int nroot, int multiplicity,
-                                 DiagonalizationMethod diag_method);
+    /// Diagonalize the Hamiltonian
+    std::pair<std::shared_ptr<psi::Vector>, std::shared_ptr<psi::Matrix>>
+    diagonalize_hamiltonian(const DeterminantHashVec& space, std::shared_ptr<SigmaVector> sigma_vec,
+                            int nroot, int multiplicity);
 
-    void diagonalize_hamiltonian_map(const DeterminantHashVec& space, WFNOperator& op,
-                                     psi::SharedVector& evals, psi::SharedMatrix& evecs, int nroot,
-                                     int multiplicity, DiagonalizationMethod diag_method);
+    std::pair<std::shared_ptr<psi::Vector>, std::shared_ptr<psi::Matrix>>
+    diagonalize_hamiltonian(const std::vector<Determinant>& space,
+                            std::shared_ptr<SigmaVector> sigma_vec, int nroot, int multiplicity);
+
+    /// Diagonalize the full Hamiltonian
+    std::pair<std::shared_ptr<psi::Vector>, std::shared_ptr<psi::Matrix>>
+    diagonalize_hamiltonian_full(const std::vector<Determinant>& space,
+                                 std::shared_ptr<ActiveSpaceIntegrals> as_ints, int nroot,
+                                 int multiplicity);
+
+    std::vector<double> spin() { return spin_; }
+
+    std::vector<double> energy() { return energies_; }
 
     /// Enable/disable the parallel algorithms
     void set_parallel(bool parallel) { parallel_ = parallel; }
@@ -94,14 +99,19 @@ class SparseCISolver {
     /// Enable/disable root projection
     void set_root_project(bool value);
 
-    /// Set convergence threshold
+    /// Set the energy convergence threshold
     void set_e_convergence(double value);
+
+    /// Set the residual 2-norm convergence threshold
+    void set_r_convergence(double value);
 
     /// The maximum number of iterations for the Davidson algorithm
     void set_maxiter_davidson(int value);
-    psi::SharedMatrix build_full_hamiltonian(const std::vector<Determinant>& space);
-    std::vector<std::pair<std::vector<int>, std::vector<double>>>
-    build_sparse_hamiltonian(const std::vector<Determinant>& space);
+
+    /// Build the full Hamiltonian matrix
+    std::shared_ptr<psi::Matrix>
+    build_full_hamiltonian(const std::vector<Determinant>& space,
+                           std::shared_ptr<forte::ActiveSpaceIntegrals> as_ints);
 
     /// Add roots to project out during Davidson-Liu procedure
     void add_bad_states(std::vector<std::vector<std::pair<size_t, double>>>& roots);
@@ -112,65 +122,26 @@ class SparseCISolver {
     /// Set the size of the guess space
     void set_guess_dimension(size_t value) { dl_guess_ = value; }
 
-    /// Set the maximum amount of memory (in number of doubles)
-    void set_max_memory(size_t value);
-
     /// Set the initial guess
     void set_initial_guess(std::vector<std::pair<size_t, double>>& guess);
     void manual_guess(bool value);
     void set_num_vecs(size_t value);
-    void set_sigma_method(std::string value);
-    std::string sigma_method_ = "SPARSE";
-
-    /// Set a customized SigmaVector for Davidson-Liu algorithm
-    void set_sigma_vector(SigmaVector* sigma_vec) { sigma_vec_ = sigma_vec; }
 
   private:
-    /// Form the full Hamiltonian and diagonalize it (for debugging)
-    void diagonalize_full(const std::vector<Determinant>& space, psi::SharedVector& evals,
-                          psi::SharedMatrix& evecs, int nroot, int multiplicity);
-
-    void diagonalize_mpi(const DeterminantHashVec& space, WFNOperator& op, psi::SharedVector& evals,
-                         psi::SharedMatrix& evecs, int nroot, int multiplicity);
-
-    void diagonalize_dl(const DeterminantHashVec& space, WFNOperator& op, psi::SharedVector& evals,
-                        psi::SharedMatrix& evecs, int nroot, int multiplicity);
-
-    void diagonalize_dl_sparse(const DeterminantHashVec& space, WFNOperator& op,
-                               psi::SharedVector& evals, psi::SharedMatrix& evecs, int nroot,
-                               int multiplicity);
-
-    /// Use a direct algorithm that does not require substitution lists
-    void diagonalize_dl_direct(const DeterminantHashVec& space, WFNOperator& op,
-                               psi::SharedVector& evals, psi::SharedMatrix& evecs, int nroot,
-                               int multiplicity);
-    /// Use a dynamic algorithm that does not require substitution lists
-    void diagonalize_dl_dynamic(const DeterminantHashVec& space,
-                                psi::SharedVector& evals, psi::SharedMatrix& evecs, int nroot,
-                                int multiplicity);
-
-    void diagonalize_davidson_liu_solver(const std::vector<Determinant>& space, psi::SharedVector& evals,
-                                         psi::SharedMatrix& evecs, int nroot, int multiplicity);
-
-    //   void diagonalize_davidson_liu_string(
-    //       const std::vector<Determinant>& space, psi::SharedVector& evals,
-    //       psi::SharedMatrix& evecs, int nroot, int multiplicity, bool disk);
-    /// Build the full Hamiltonian matrix
-
     std::vector<std::pair<double, std::vector<std::pair<size_t, double>>>>
-    initial_guess(const std::vector<Determinant>& space, int nroot, int multiplicity);
+    initial_guess(const DeterminantHashVec& space, std::shared_ptr<SigmaVector> sigma_vector,
+                  int nroot, int multiplicity);
 
-    std::vector<std::pair<double, std::vector<std::pair<size_t, double>>>>
-    initial_guess_map(const DeterminantHashVec& space, int nroot, int multiplicity);
-
-    /// The Davidson-Liu algorithm
-    bool davidson_liu_solver(const std::vector<Determinant>& space, SigmaVector* sigma_vector,
-                             psi::SharedVector Eigenvalues, psi::SharedMatrix Eigenvectors, int nroot,
+    bool davidson_liu_solver(const DeterminantHashVec& space,
+                             std::shared_ptr<SigmaVector> sigma_vector,
+                             std::shared_ptr<psi::Vector> Eigenvalues,
+                             std::shared_ptr<psi::Matrix> Eigenvectors, int nroot,
                              int multiplicity);
 
-    bool davidson_liu_solver_map(const DeterminantHashVec& space, SigmaVector* sigma_vector,
-                                 psi::SharedVector Eigenvalues, psi::SharedMatrix Eigenvectors, int nroot,
-                                 int multiplicity);
+    /// The energy of each state
+    std::vector<double> energies_;
+    /// The expectation value of S^2 for each state
+    std::vector<double> spin_;
     /// Use a OMP parallel algorithm?
     bool parallel_ = false;
     /// Print details?
@@ -183,6 +154,8 @@ class SparseCISolver {
     bool root_project_ = false;
     /// The energy convergence threshold
     double e_convergence_ = 1.0e-12;
+    /// The residual 2-norm convergence threshold
+    double r_convergence_ = 1.0e-6;
     /// Number of collapse vectors per roots
     int ncollapse_per_root_ = 2;
     /// Number of max subspace vectors per roots
@@ -193,9 +166,6 @@ class SparseCISolver {
     size_t dl_guess_ = 200;
     /// Options for forcing diagonalization method
     bool force_diag_ = false;
-    /// Maximum amount of memory available
-    size_t max_memory_ = 0;
-
     /// Additional roots to project out
     std::vector<std::vector<std::pair<size_t, double>>> bad_states_;
 
@@ -204,11 +174,7 @@ class SparseCISolver {
     std::vector<std::pair<size_t, double>> guess_;
     // Number of guess vectors
     size_t nvec_ = 10;
-    std::shared_ptr<ActiveSpaceIntegrals> fci_ints_;
-
-    /// The SigmaVector object for Davidson-Liu algorithm
-    SigmaVector* sigma_vec_ = nullptr;
 };
-}
+} // namespace forte
 
 #endif // _sparse_ci_h_

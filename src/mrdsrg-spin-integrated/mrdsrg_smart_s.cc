@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2019 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
+ * Copyright (c) 2012-2020 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
  *
  * The copyrights for code used from other parties are included in
  * the corresponding files.
@@ -71,7 +71,7 @@ double MRDSRG::make_s_smart() {
 }
 
 double MRDSRG::smart_s_min_delta1() {
-    psi::Dimension virt = mo_space_info_->get_dimension("RESTRICTED_UOCC");
+    psi::Dimension virt = mo_space_info_->dimension("RESTRICTED_UOCC");
     int nirrep = virt.n();
     std::vector<double> lowest_virt;
     for (int h = 0; h < nirrep; ++h) {
@@ -96,7 +96,7 @@ double MRDSRG::smart_s_min_delta1() {
 }
 
 double MRDSRG::smart_s_max_delta1() {
-    psi::Dimension virt = mo_space_info_->get_dimension("RESTRICTED_UOCC");
+    psi::Dimension virt = mo_space_info_->dimension("RESTRICTED_UOCC");
     int nirrep = virt.n();
     std::vector<double> lowest_virt;
     for (int h = 0; h < nirrep; ++h) {
@@ -122,7 +122,7 @@ double MRDSRG::smart_s_max_delta1() {
 
 double MRDSRG::smart_s_davg_min_delta1() {
     // obtain a vector of the lowest virtual energies with irrep
-    psi::Dimension virt = mo_space_info_->get_dimension("RESTRICTED_UOCC");
+    psi::Dimension virt = mo_space_info_->dimension("RESTRICTED_UOCC");
     int nirrep = virt.n();
     std::vector<double> lowest_virt;
     for (int h = 0; h < nirrep; ++h) {
@@ -156,7 +156,7 @@ double MRDSRG::smart_s_davg_min_delta1() {
 
 double MRDSRG::smart_s_davg_max_delta1() {
     // obtain a vector of the lowest virtual energies with irrep
-    psi::Dimension virt = mo_space_info_->get_dimension("RESTRICTED_UOCC");
+    psi::Dimension virt = mo_space_info_->dimension("RESTRICTED_UOCC");
     int nirrep = virt.n();
     std::vector<double> lowest_virt;
     for (int h = 0; h < nirrep; ++h) {

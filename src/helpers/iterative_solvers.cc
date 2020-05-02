@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2019 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
+ * Copyright (c) 2012-2020 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
  *
  * The copyrights for code used from other parties are included in
  * the corresponding files.
@@ -53,6 +53,7 @@ namespace forte {
 DavidsonLiuSolver::DavidsonLiuSolver(size_t size, size_t nroot) : size_(size), nroot_(nroot) {
     if (size_ == 0)
         throw std::runtime_error("DavidsonLiuSolver called with space of dimension zero.");
+    residual_.resize(nroot, 0.0);
 }
 
 void DavidsonLiuSolver::startup(psi::SharedVector diagonal) {
@@ -140,6 +141,8 @@ psi::SharedVector DavidsonLiuSolver::eigenvector(size_t n) const {
     return evec;
 }
 
+std::vector<double> DavidsonLiuSolver::residuals() const { return residual_; }
+
 SolverStatus DavidsonLiuSolver::update() {
     // If converged or exceeded the maximum number of iterations return true
     // if ((converged_ >= nroot_) or (iter_ > maxiter_)) return
@@ -221,11 +224,13 @@ void DavidsonLiuSolver::form_correction_vectors() {
     double** alpha_p = alpha->pointer();
     double** sigma_p = sigma_->pointer();
 
-    for (size_t k = 0; k < nroot_; k++) {    // loop over roots
+    for (size_t k = 0; k < nroot_; k++) { // loop over roots
+        residual_[k] = 0.0;
         for (size_t I = 0; I < size_; I++) { // loop over elements
             for (size_t i = 0; i < basis_size_; i++) {
                 f_p[k][I] += alpha_p[i][k] * (sigma_p[I][i] - lambda_p[k] * b_p[i][I]);
             }
+            residual_[k] += std::pow(f_p[k][I], 2.0);
             double denom = lambda_p[k] - Adiag_p[I];
             if (std::fabs(denom) > 1e-6) {
                 f_p[k][I] /= denom;
@@ -233,6 +238,26 @@ void DavidsonLiuSolver::form_correction_vectors() {
                 f_p[k][I] = 0.0;
             }
         }
+        residual_[k] = std::sqrt(residual_[k]);
+    }
+}
+
+void DavidsonLiuSolver::compute_residual_norm() {
+    double* lambda_p = lambda->pointer();
+    double** b_p = b_->pointer();
+    double** alpha_p = alpha->pointer();
+    double** sigma_p = sigma_->pointer();
+
+    for (size_t k = 0; k < nroot_; k++) { // loop over roots
+        residual_[k] = 0.0;
+        for (size_t I = 0; I < size_; I++) { // loop over elements
+            double r = 0.0;
+            for (size_t i = 0; i < basis_size_; i++) {
+                r += alpha_p[i][k] * (sigma_p[I][i] - lambda_p[k] * b_p[i][I]);
+            }
+            residual_[k] += std::pow(r, 2.0);
+        }
+        residual_[k] = std::sqrt(residual_[k]);
     }
 }
 
@@ -344,6 +369,7 @@ void DavidsonLiuSolver::collapse_vectors() {
 }
 
 bool DavidsonLiuSolver::check_convergence() {
+    compute_residual_norm();
     // check convergence on all roots
     bool has_converged = false;
     converged_ = 0;
@@ -354,7 +380,7 @@ bool DavidsonLiuSolver::check_convergence() {
     for (size_t k = 0; k < nroot_; k++) {
         double diff = std::fabs(lambda->get(k) - lambda_old->get(k));
         bool this_converged = false;
-        if (diff < e_convergence_) {
+        if ((diff < e_convergence_) and (residual_[k] < r_convergence_)) {
             this_converged = true;
             converged_++;
         }
@@ -440,4 +466,4 @@ bool DavidsonLiuSolver::check_orthogonality() {
     }
     return is_orthonormal;
 }
-}
+} // namespace forte

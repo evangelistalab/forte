@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2019 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
+ * Copyright (c) 2012-2020 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
  *
  * The copyrights for code used from other parties are included in
  * the corresponding files.
@@ -40,15 +40,16 @@
 #include "psi4/libmints/wavefunction.h"
 #include "psi4/libpsio/psio.hpp"
 
+#include "base_classes/forte_options.h"
+
 #include "fragment_projector.h"
 
 using namespace psi;
 
 namespace forte {
 
-psi::SharedMatrix make_fragment_projector(SharedWavefunction wfn, Options& options) {
-    psi::SharedMatrix Pf;
-
+std::pair<psi::SharedMatrix, int> make_fragment_projector(SharedWavefunction wfn,
+                                                          std::shared_ptr<ForteOptions> options) {
     // Run this code only if user specified fragments
     std::shared_ptr<Molecule> molecule = wfn->molecule();
     int nfrag = molecule->nfragments();
@@ -67,9 +68,13 @@ psi::SharedMatrix make_fragment_projector(SharedWavefunction wfn, Options& optio
 
     // Create a fragmentprojector with the second constructor if we want to project to minAO or use
     // IAO procedure FragmentProjector FP(molecule, prime_basis, minao_basis);
+
     // Compute and return the projector matrix
-    Pf = FP.build_f_projector(molecule, prime_basis);
-    return Pf;
+    psi::SharedMatrix Pf = FP.build_f_projector(prime_basis);
+    int nbfA = FP.get_nbf_A();
+    std::pair<psi::SharedMatrix, int> Projector = std::make_pair(Pf, nbfA);
+
+    return Projector;
 }
 
 FragmentProjector::FragmentProjector(std::shared_ptr<Molecule> molecule,
@@ -105,8 +110,7 @@ void FragmentProjector::startup() {
     nbf_A_ = count_basis;
 }
 
-SharedMatrix FragmentProjector::build_f_projector(std::shared_ptr<Molecule> molecule,
-                                                  std::shared_ptr<psi::BasisSet> basis) {
+SharedMatrix FragmentProjector::build_f_projector(std::shared_ptr<psi::BasisSet> basis) {
 
     std::vector<int> zeropi(1, 0);
     Dimension A_begin(zeropi);

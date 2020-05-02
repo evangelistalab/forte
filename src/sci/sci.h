@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2019 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
+ * Copyright (c) 2012-2020 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
  *
  * The copyrights for code used from other parties are included in
  * the corresponding files.
@@ -28,21 +28,25 @@
 
 #ifndef _sci_h_
 #define _sci_h_
+
 #include <memory>
 #include <vector>
 
 #include "base_classes/active_space_method.h"
 #include "base_classes/state_info.h"
 #include "sparse_ci/determinant_hashvector.h"
-#include "sparse_ci/operator.h"
+#include "sparse_ci/determinant_substitution_lists.h"
+#include "sparse_ci/sigma_vector.h"
 
 namespace forte {
+
 class ActiveSpaceIntegrals;
 class ForteIntegrals;
 class ForteOptions;
 class MOSpaceInfo;
 class Reference;
 class SCFInfo;
+class SparseCISolver;
 
 class SelectedCIMethod {
   public:
@@ -89,10 +93,17 @@ class SelectedCIMethod {
     virtual DeterminantHashVec get_PQ_space() = 0;
     virtual psi::SharedMatrix get_PQ_evecs() = 0;
     virtual psi::SharedVector get_PQ_evals() = 0;
-    virtual WFNOperator get_op() = 0;
+    //    virtual std::shared_ptr<WFNOperator> get_op() = 0;
     virtual size_t get_ref_root() = 0;
     virtual std::vector<double> get_multistate_pt2_energy_correction() = 0;
     virtual size_t get_cycle();
+
+    void print_wfn(DeterminantHashVec& space, psi::SharedMatrix evecs, int nroot,
+                   size_t max_dets_to_print = 10);
+
+    SigmaVectorType sigma_vector_type() const;
+    /// Return the maximum amount of memory allowed
+    size_t max_memory() const;
 
   protected:
     /// The state to calculate
@@ -100,6 +111,9 @@ class SelectedCIMethod {
 
     /// The number of roots (default = 1)
     size_t nroot_ = 1;
+
+    /// The sigma vector type
+    SigmaVectorType sigma_vector_type_ = SigmaVectorType::Dynamic;
 
     /// The MOSpaceInfo object
     std::shared_ptr<MOSpaceInfo> mo_space_info_;
@@ -113,11 +127,21 @@ class SelectedCIMethod {
     /// Some HF info
     std::shared_ptr<SCFInfo> scf_info_;
 
+    /// The sparse CI solver (allocated at creation by the base class)
+    std::shared_ptr<SparseCISolver> sparse_solver_;
+
     /// The current iteration
     size_t cycle_;
 
     /// Maximum number of SCI iterations
     size_t max_cycle_;
+
+    /// Maximum memory size
+    size_t max_memory_ = 0;
+
+    /// The number of active orbitals
+    size_t nact_;
 };
 } // namespace forte
+
 #endif // _sci_h_

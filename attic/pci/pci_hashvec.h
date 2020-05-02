@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2019 by its authors (see COPYING, COPYING.LESSER,
+ * Copyright (c) 2012-2020 by its authors (see COPYING, COPYING.LESSER,
  * AUTHORS).
  *
  * The copyrights for code used from other parties are included in
@@ -33,7 +33,7 @@
 #include <fstream>
 
 #include "psi4/libmints/wavefunction.h"
-#include "psi4/liboptions/liboptions.h"
+
 #include "psi4/physconst.h"
 
 #include "fci/fci_vector.h"

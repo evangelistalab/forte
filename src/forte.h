@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2019 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
+ * Copyright (c) 2012-2020 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
  *
  * The copyrights for code used from other parties are included in
  * the corresponding files.
@@ -32,22 +32,11 @@ namespace forte {
 
 class ForteIntegrals;
 
-void forte_options(ForteOptions& options);
-
 std::pair<int, int> startup();
 void banner();
 void cleanup();
 
-void read_options(ForteOptions& options);
-psi::SharedWavefunction run_forte(psi::SharedWavefunction ref_wfn, psi::Options& options);
-
-std::shared_ptr<MOSpaceInfo> make_mo_space_info(psi::SharedWavefunction ref_wfn,
-                                                std::shared_ptr<ForteOptions> options);
-
-void make_ci_nos(psi::SharedWavefunction ref_wfn, psi::Options& options,
-                 std::shared_ptr<ForteIntegrals> ints, std::shared_ptr<MOSpaceInfo> mo_space_info);
-
-double forte_old_methods(psi::SharedWavefunction ref_wfn, psi::Options& options,
+double forte_old_methods(psi::SharedWavefunction ref_wfn, std::shared_ptr<ForteOptions> options,
                          std::shared_ptr<ForteIntegrals> ints,
                          std::shared_ptr<MOSpaceInfo> mo_space_info);
 } // namespace forte

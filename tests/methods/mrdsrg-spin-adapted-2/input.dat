@@ -1,0 +1,56 @@
+#! Generated using commit GITCOMMIT
+
+import forte
+
+Emcscf     =  -99.939316382624
+Eldsrg2_u  = -100.112784378794
+Eldsrg2_pr = -100.115962352711
+
+memory 500 mb
+
+molecule HF{
+  0 1
+  F
+  H  1 R
+  R = 1.50
+}
+
+set globals{
+  basis                cc-pvdz
+  reference            twocon
+  scf_type             pk
+  d_convergence        8
+  e_convergence        12
+}
+
+set mcscf{
+  docc                 [2,0,1,1]
+  socc                 [2,0,0,0]
+  maxiter              1000
+  level_shift          1.0
+}
+
+set forte{
+  active_space_solver  cas
+  correlation_solver   sa-mrdsrg
+  corr_level           ldsrg2
+  frozen_docc          [0,0,0,0]
+  restricted_docc      [2,0,1,1]
+  active               [2,0,0,0]
+  root_sym             0
+  nroot                1
+  dsrg_s               1.0
+  e_convergence        8
+  r_convergence        6
+  relax_ref            once
+  semi_canonical       false
+}
+
+Eref, wfn = energy('mcscf', return_wfn=True)
+compare_values(Emcscf, Eref, 10, "MCSCF energy")
+
+energy('forte',ref_wfn=wfn)
+Eu = variable("UNRELAXED ENERGY")
+Epr = variable("PARTIALLY RELAXED ENERGY")
+compare_values(Eldsrg2_u, Eu, 7, "MR-LDSRG(2) unrelaxed energy")
+compare_values(Eldsrg2_pr, Epr, 7, "MR-LDSRG(2) partially relaxed energy")

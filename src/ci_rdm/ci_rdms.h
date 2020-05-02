@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2019 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
+ * Copyright (c) 2012-2020 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
  *
  * The copyrights for code used from other parties are included in
  * the corresponding files.
@@ -29,19 +29,12 @@
 #ifndef _ci_rdms_h_
 #define _ci_rdms_h_
 
-#include <cmath>
-#include <numeric>
+#include "psi4/libmints/matrix.h"
 
-#include "psi4/libmints/wavefunction.h"
-#include "psi4/liboptions/liboptions.h"
-
-#include "sparse_ci/determinant_hashvector.h"
-#include "sparse_ci/operator.h"
-#include "sparse_ci/determinant.h"
-#include "sparse_ci/sorted_string_list.h"
-#include "fci/string_lists.h"
 #include "integrals/active_space_integrals.h"
 
+#include "sparse_ci/determinant_hashvector.h"
+#include "sparse_ci/sorted_string_list.h"
 
 namespace forte {
 
@@ -84,41 +77,24 @@ class CI_RDMS {
     // Compute rdms
     void compute_1rdm(std::vector<double>& oprdm_a, std::vector<double>& oprdm_b);
 
-    void compute_1rdm(std::vector<double>& oprdm_a, std::vector<double>& oprdm_b, WFNOperator& op);
-    //    void compute_1rdm_str(std::vector<double>& oprdm_a,
-    //                          std::vector<double>& oprdm_b);
+    void compute_1rdm_op(std::vector<double>& oprdm_a, std::vector<double>& oprdm_b);
+
     void compute_2rdm(std::vector<double>& tprdm_aa, std::vector<double>& tprdm_ab,
                       std::vector<double>& tprdm_bb);
 
-//    void compute_2rdm_dynamic(std::vector<double>& tprdm_aa, std::vector<double>& tprdm_ab,
-//                      std::vector<double>& tprdm_bb);
+    void compute_2rdm_op(std::vector<double>& tprdm_aa, std::vector<double>& tprdm_ab,
+                         std::vector<double>& tprdm_bb);
 
-    void compute_2rdm(std::vector<double>& tprdm_aa, std::vector<double>& tprdm_ab,
-                      std::vector<double>& tprdm_bb, WFNOperator& op);
-    //    void compute_2rdm_str(std::vector<double>& tprdm_aa,
-    //                          std::vector<double>& tprdm_ab,
-    //                          std::vector<double>& tprdm_bb);
     void compute_3rdm(std::vector<double>& tprdm_aaa, std::vector<double>& tprdm_aab,
                       std::vector<double>& tprdm_abb, std::vector<double>& tprdm_bbb);
 
-//    void compute_3rdm_dynamic(std::vector<double>& tprdm_aaa, std::vector<double>& tprdm_aab,
-//                      std::vector<double>& tprdm_abb, std::vector<double>& tprdm_bbb);
+    void compute_3rdm_op(std::vector<double>& tprdm_aaa, std::vector<double>& tprdm_aab,
+                         std::vector<double>& tprdm_abb, std::vector<double>& tprdm_bbb);
 
-    void compute_3rdm(std::vector<double>& tprdm_aaa, std::vector<double>& tprdm_aab,
-                      std::vector<double>& tprdm_abb, std::vector<double>& tprdm_bbb,
-                      WFNOperator& op);
-    //    void compute_3rdm_str(std::vector<double>& tprdm_aaa,
-    //                          std::vector<double>& tprdm_aab,
-    //                          std::vector<double>& tprdm_abb,
-    //                          std::vector<double>& tprdm_bbb);
-    void compute_rdms_dynamic(std::vector<double>& oprdm_a,
-                              std::vector<double>& oprdm_b,
-                              std::vector<double>& tprdm_aa,
-                              std::vector<double>& tprdm_ab,
-                              std::vector<double>& tprdm_bb,
-                              std::vector<double>& tprdm_aaa,
-                              std::vector<double>& tprdm_aab,
-                              std::vector<double>& tprdm_abb,
+    void compute_rdms_dynamic(std::vector<double>& oprdm_a, std::vector<double>& oprdm_b,
+                              std::vector<double>& tprdm_aa, std::vector<double>& tprdm_ab,
+                              std::vector<double>& tprdm_bb, std::vector<double>& tprdm_aaa,
+                              std::vector<double>& tprdm_aab, std::vector<double>& tprdm_abb,
                               std::vector<double>& tprdm_bbb);
 
     double get_energy(std::vector<double>& oprdm_a, std::vector<double>& oprdm_b,
@@ -145,7 +121,6 @@ class CI_RDMS {
     DeterminantHashVec wfn_;
     // The FCI integrals
     std::shared_ptr<ActiveSpaceIntegrals> fci_ints_;
-
 
     // The Determinant Space
     const std::vector<Determinant> det_space_;
@@ -188,11 +163,6 @@ class CI_RDMS {
 
     int max_rdm_;
 
-    // Objects for dynamic builds
-//    SortedStringList_UI64 a_sorted_string_list_;
-//    SortedStringList_UI64 b_sorted_string_list_;
-
-
     // The list of a_p |N>
     std::vector<std::vector<std::pair<size_t, short>>> a_ann_list_;
     std::vector<std::vector<std::pair<size_t, short>>> b_ann_list_;
@@ -204,10 +174,6 @@ class CI_RDMS {
     // The list of a^(+)_q |N-1>
     std::vector<std::vector<std::pair<size_t, short>>> a_cre_list_;
     std::vector<std::vector<std::pair<size_t, short>>> b_cre_list_;
-
-    // The list of a^(+)_q |N-1>
-    //    std::vector<std::pair<size_t, short>> a_cre_list_s_;
-    //    std::vector<std::pair<size_t, short>> b_cre_list_s_;
 
     // The list of a_q a_p|N>
     std::vector<std::vector<std::tuple<size_t, short, short>>> aa_ann_list_;
@@ -223,11 +189,6 @@ class CI_RDMS {
     std::vector<std::vector<std::tuple<size_t, short, short>>> aa_cre_list_;
     std::vector<std::vector<std::tuple<size_t, short, short>>> ab_cre_list_;
     std::vector<std::vector<std::tuple<size_t, short, short>>> bb_cre_list_;
-
-    // The list of a_q^(+) a_p^(+)|N-2>
-    //    std::vector<std::tuple<size_t, short, short>> aa_cre_list_s_;
-    //    std::vector<std::tuple<size_t, size_t, short, short>> ab_cre_list_s_;
-    //    std::vector<std::tuple<size_t, short, short>> bb_cre_list_s_;
 
     // The list of a_r a_q a_p |N>
     std::vector<std::vector<std::tuple<size_t, short, short, short>>> aaa_ann_list_;
@@ -247,14 +208,6 @@ class CI_RDMS {
     std::vector<std::tuple<size_t, short, short, short>> abb_ann_list_s_;
     std::vector<std::tuple<size_t, short, short, short>> bbb_ann_list_s_;
 
-    // The list of a^(+)_r a^(+)_q a^(+)_p |N-3>
-    //    std::vector<std::tuple<size_t, short, short, short>> aaa_cre_list_s_;
-    //    std::vector<std::tuple<size_t, size_t, short, short, short>>
-    //        aab_cre_list_s_;
-    //    std::vector<std::tuple<size_t, size_t, short, short, short>>
-    //        abb_cre_list_s_;
-    //    std::vector<std::tuple<size_t, short, short, short>> bbb_cre_list_s_;
-
     /* Class functions*/
 
     // Startup function, mostly just gathering all variables
@@ -272,12 +225,14 @@ class CI_RDMS {
     //*- Functions for Dynamic RDM builds -*//
 
     // Function to fill 3rdm with all (or half of all) permutations of the 6 indices
-    void fill_3rdm( std::vector<double>& tprdm, double value, int p, int q, int r, int s, int t, int u , bool half = false);
+    void fill_3rdm(std::vector<double>& tprdm, double value, int p, int q, int r, int s, int t,
+                   int u, bool half = false);
 
     // Function to build non-trivial mixed-spin components of 1-, 2-, and 3- RDMs
-    void make_ab(SortedStringList_UI64 a_sorted_string_list_,const  std::vector<UI64Determinant::bit_t>& sorted_astr,const std::vector<UI64Determinant>& sorted_a_dets,
-                std::vector<double>& tprdm_ab, std::vector<double>& tprdm_aab,std::vector<double>& tprdm_abb);
+    void make_ab(SortedStringList a_sorted_string_list_, const std::vector<String>& sorted_astr,
+                 const std::vector<Determinant>& sorted_a_dets, std::vector<double>& tprdm_ab,
+                 std::vector<double>& tprdm_aab, std::vector<double>& tprdm_abb);
 };
-}
+} // namespace forte
 
 #endif // _ci_rdms_h_

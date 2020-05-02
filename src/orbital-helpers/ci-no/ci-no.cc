@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2019 by its authors (see COPYING, COPYING.LESSER,
+ * Copyright (c) 2012-2020 by its authors (see COPYING, COPYING.LESSER,
  * AUTHORS).
  *
  * The copyrights for code used from other parties are included in
@@ -26,6 +26,11 @@
  *
  * @END LICENSE
  */
+
+#include "psi4/libpsi4util/PsiOutStream.h"
+
+#include "base_classes/mo_space_info.h"
+#include "sparse_ci/sigma_vector.h"
 
 #include "ci-no.h"
 
@@ -55,14 +60,12 @@ std::string dimension_to_string(psi::Dimension dim) {
 
 CINO::CINO(std::shared_ptr<SCFInfo> scf_info, std::shared_ptr<ForteOptions> options,
            std::shared_ptr<ForteIntegrals> ints, std::shared_ptr<MOSpaceInfo> mo_space_info)
-    : OrbitalTransform(ints, mo_space_info), options_(options),
-      mo_space_info_(mo_space_info) {
+    : OrbitalTransform(ints, mo_space_info), options_(options) {
+    fci_ints_ = std::make_shared<ActiveSpaceIntegrals>(
+        ints, mo_space_info_->corr_absolute_mo("ACTIVE"), mo_space_info_->symmetry("ACTIVE"),
+        mo_space_info_->corr_absolute_mo("RESTRICTED_DOCC"));
 
-    fci_ints_ =
-        std::make_shared<ActiveSpaceIntegrals>(ints, mo_space_info_->get_corr_abs_mo("ACTIVE"),
-                                               mo_space_info_->get_corr_abs_mo("RESTRICTED_DOCC"));
-
-    auto active_mo = mo_space_info_->get_corr_abs_mo("ACTIVE");
+    auto active_mo = mo_space_info_->corr_absolute_mo("ACTIVE");
     ambit::Tensor tei_active_aa = ints->aptei_aa_block(active_mo, active_mo, active_mo, active_mo);
     ambit::Tensor tei_active_ab = ints->aptei_ab_block(active_mo, active_mo, active_mo, active_mo);
     ambit::Tensor tei_active_bb = ints->aptei_bb_block(active_mo, active_mo, active_mo, active_mo);
@@ -133,20 +136,11 @@ void CINO::compute_transformation() {
 
 void CINO::startup() {
     wavefunction_multiplicity_ = 1;
-    if (options_->has_changed("MULTIPLICITY")) {
+    if (options_->get_int("MULTIPLICITY") >= 1) {
         wavefunction_multiplicity_ = options_->get_int("MULTIPLICITY");
+        // TODO: should read default from somewhere (Francesco)
     }
 
-    diag_method_ = DLSolver;
-    if (options_->has_changed("DIAG_ALGORITHM")) {
-        if (options_->get_str("DIAG_ALGORITHM") == "FULL") {
-            diag_method_ = Full;
-        } else if (options_->get_str("DIAG_ALGORITHM") == "DLSTRING") {
-            diag_method_ = DLString;
-        } else if (options_->get_str("DIAG_ALGORITHM") == "DLDISK") {
-            diag_method_ = DLDisk;
-        }
-    }
     // Read Options
     rdm_level_ = options_->get_int("ACI_MAX_RDM");
     nactv_ = mo_space_info_->size("ACTIVE");
@@ -154,11 +148,11 @@ void CINO::startup() {
            mo_space_info_->size("ACTIVE") + mo_space_info_->size("FROZEN_UOCC") +
            mo_space_info_->size("RESTRICTED_UOCC");
 
-    actvpi_ = mo_space_info_->get_dimension("ACTIVE");
-    fdoccpi_ = mo_space_info_->get_dimension("FROZEN_DOCC");
-    rdoccpi_ = mo_space_info_->get_dimension("RESTRICTED_DOCC");
-    fuoccpi_ = mo_space_info_->get_dimension("FROZEN_UOCC");
-    ruoccpi_ = mo_space_info_->get_dimension("RESTRICTED_UOCC");
+    actvpi_ = mo_space_info_->dimension("ACTIVE");
+    fdoccpi_ = mo_space_info_->dimension("FROZEN_DOCC");
+    rdoccpi_ = mo_space_info_->dimension("RESTRICTED_DOCC");
+    fuoccpi_ = mo_space_info_->dimension("FROZEN_UOCC");
+    ruoccpi_ = mo_space_info_->dimension("RESTRICTED_UOCC");
 
     ncmo2_ = nactv_ * nactv_;
 
@@ -300,9 +294,8 @@ std::vector<Determinant> CINO::build_dets(int irrep) {
 /// Diagonalize the Hamiltonian in this basis
 std::pair<psi::SharedVector, psi::SharedMatrix>
 CINO::diagonalize_hamiltonian(const std::vector<Determinant>& dets, int nsolutions) {
-    std::pair<psi::SharedVector, psi::SharedMatrix> evals_evecs;
 
-    SparseCISolver sparse_solver(fci_ints_);
+    SparseCISolver sparse_solver;
     sparse_solver.set_parallel(true);
     sparse_solver.set_e_convergence(options_->get_double("E_CONVERGENCE"));
     sparse_solver.set_maxiter_davidson(options_->get_int("DL_MAXITER"));
@@ -311,8 +304,11 @@ CINO::diagonalize_hamiltonian(const std::vector<Determinant>& dets, int nsolutio
     sparse_solver.set_spin_project_full(true);
     sparse_solver.set_print_details(true);
 
-    sparse_solver.diagonalize_hamiltonian(dets, evals_evecs.first, evals_evecs.second, nsolutions,
-                                          wavefunction_multiplicity_, DLSolver);
+    // Here we use the SparseList algorithm to diagonalize the Hamiltonian
+    DeterminantHashVec detmap(dets);
+    auto sigma_vector = make_sigma_vector(detmap, fci_ints_, 0, SigmaVectorType::SparseList);
+    auto evals_evecs = sparse_solver.diagonalize_hamiltonian(detmap, sigma_vector, nsolutions,
+                                                             wavefunction_multiplicity_);
 
     outfile->Printf("\n\n    STATE      CI ENERGY");
     outfile->Printf("\n  ----------------------------");
@@ -362,7 +358,7 @@ CINO::build_density_matrix(const std::vector<Determinant>& dets, psi::SharedMatr
     }
     // Invert vector to matrix
     //    psi::Dimension nmopi = reference_wavefunction_->nmopi();
-    //    psi::Dimension ncmopi = mo_space_info_->get_dimension("CORRELATED");
+    //    psi::Dimension ncmopi = mo_space_info_->dimension("CORRELATED");
 
     std::shared_ptr<psi::Matrix> opdm_a(new psi::Matrix("OPDM_A", actvpi_, actvpi_));
     std::shared_ptr<psi::Matrix> opdm_b(new psi::Matrix("OPDM_B", actvpi_, actvpi_));
@@ -487,7 +483,7 @@ CINO::diagonalize_density_matrix(std::pair<psi::SharedMatrix, psi::SharedMatrix>
 void CINO::find_active_space_and_transform(
     std::tuple<psi::SharedVector, psi::SharedMatrix, psi::SharedVector, psi::SharedMatrix> no_U) {
 
-    auto nmopi = mo_space_info_->get_dimension("ALL");
+    auto nmopi = mo_space_info_->dimension("ALL");
 
     Ua_.reset(new psi::Matrix("U", nmopi, nmopi));
     psi::SharedMatrix NO_A = std::get<1>(no_U);

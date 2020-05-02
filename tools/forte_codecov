@@ -2,19 +2,42 @@
 
 export CODECOV_TOKEN="f2ca5872-66d7-48dc-8464-e286452dd05b"
 
+
 lcov --directory . --zerocounters
 
 # Run tests
 cd tests/methods
-python run_forte_tests.py
-cd ../..
-forte_tests
-forte_benchmarks
-cd tests/pytest
-pytest
+python run_forte_tests.py --failed_dump --bw
+test1=$?
 
+cd ../..
 # Gather data
 lcov --directory . --capture --output-file coverage.info
 lcov --remove coverage.info '/usr/*' --output-file coverage.info # filter system-files
 lcov --list coverage.info #debug info
 bash <(curl -s https://codecov.io/bash) -f coverage.info || echo "Codecov did not collect coverage reports"
+
+./forte_tests
+test2=$?
+
+./forte_benchmarks
+test3=$?
+
+cd tests/pytest
+pytest
+test4=$?
+
+
+if [ $test1 -eq 0 ] && [ $test2 -eq 0 ] && [ $test3 -eq 0 ] && [ $test4 -eq 0 ];
+then
+  echo "All tests were successful"
+  exit 0
+else
+  echo "Some test(s) failed"
+  echo $test1
+  echo $test2
+  echo $test3
+  echo $test4
+  exit 1
+fi
+

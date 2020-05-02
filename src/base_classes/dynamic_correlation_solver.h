@@ -3,16 +3,16 @@
 
 #include <memory>
 
-#include "psi4/liboptions/liboptions.h"
+
 
 #include "integrals/integrals.h"
 #include "integrals/active_space_integrals.h"
 #include "base_classes/rdms.h"
+#include "base_classes/forte_options.h"
 
 namespace forte {
 
 class SCFInfo;
-class ForteOptions;
 
 class DynamicCorrelationSolver {
   public:
@@ -52,6 +52,34 @@ class DynamicCorrelationSolver {
 
     /// The ForteOptions
     std::shared_ptr<ForteOptions> foptions_;
+
+    /// Common settings
+    void startup();
+
+    /// Nuclear repulsion energy
+    double Enuc_;
+
+    /// Frozen core energy
+    double Efrzc_;
+
+    /// Printing level
+    int print_;
+
+    /// The integral type
+    std::string ints_type_;
+    /// If ERI density fitted or Cholesky decomposed
+    bool eri_df_;
+
+    // ==> DIIS control <==
+
+    /// Cycle number to start DIIS
+    int diis_start_;
+    /// Minimum number of DIIS vectors
+    int diis_min_vec_;
+    /// Maximum number of DIIS vectors
+    int diis_max_vec_;
+    /// Frequency of extrapolating the current DIIS vectors
+    int diis_freq_;
 };
 
 std::shared_ptr<DynamicCorrelationSolver>

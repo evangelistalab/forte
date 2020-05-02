@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2019 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
+ * Copyright (c) 2012-2020 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
  *
  * The copyrights for code used from other parties are included in
  * the corresponding files.
@@ -31,7 +31,6 @@
 
 #include <tuple>
 
-#include "psi4/liboptions/liboptions.h"
 #include "psi4/libmints/wavefunction.h"
 
 #include "base_classes/mo_space_info.h"
@@ -64,8 +63,7 @@ class SemiCanonical {
                           const bool& transform = true);
 
     /// Transform all cumulants, rebuild 2-RDMs using 2-cumulants
-    RDMs transform_rdms(ambit::Tensor& Ua, ambit::Tensor& Ub, const RDMs& rdms,
-                        const int& max_rdm_level);
+    RDMs transform_rdms(ambit::Tensor& Ua, ambit::Tensor& Ub, RDMs& rdms, const int& max_rdm_level);
 
     /// Set active hole and particle dimensions
     void set_actv_dims(const psi::Dimension& actv_docc, const psi::Dimension& actv_virt);

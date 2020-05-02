@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2019 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
+ * Copyright (c) 2012-2020 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
  *
  * The copyrights for code used from other parties are included in
  * the corresponding files.
@@ -29,7 +29,7 @@
 #ifndef SA_FCISOLVER_H
 #define SA_FCISOLVER_H
 
-#include "psi4/liboptions/liboptions.h"
+
 #include "psi4/libmints/wavefunction.h"
 #include "psi4/libmints/wavefunction.h"
 
@@ -43,7 +43,7 @@ namespace forte {
 /// RDMS and average them
 class SA_FCISolver {
   public:
-    SA_FCISolver(psi::Options& options, std::shared_ptr<psi::Wavefunction> wfn);
+    SA_FCISolver(std::shared_ptr<ForteOptions> options, std::shared_ptr<psi::Wavefunction> wfn);
 
     /// E_{sa-casscf} = gamma_{avg} h_{pq} + Gamma_{avg} g_{pqrs}
     double compute_energy();

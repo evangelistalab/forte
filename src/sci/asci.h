@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2019 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
+ * Copyright (c) 2012-2020 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
  *
  * The copyrights for code used from other parties are included in
  * the corresponding files.
@@ -29,26 +29,9 @@
 #ifndef _as_ci_h_
 #define _as_ci_h_
 
-#include "base_classes/forte_options.h"
 #include "sci/sci.h"
-#include "ci_rdm/ci_rdms.h"
-#include "sparse_ci/ci_reference.h"
-#include "integrals/active_space_integrals.h"
-#include "mrpt2.h"
-#include "orbital-helpers/unpaired_density.h"
-#include "sparse_ci/determinant_hashvector.h"
-#include "base_classes/rdms.h"
-#include "base_classes/active_space_method.h"
 #include "sparse_ci/sparse_ci_solver.h"
-#include "orbital-helpers/localize.h"
-
-#ifdef _OPENMP
-#include <omp.h>
-#else
-#define omp_get_max_threads() 1
-#define omp_get_thread_num() 0
-#define omp_get_num_threads() 1
-#endif
+#include "helpers/timer.h"
 
 namespace forte {
 
@@ -87,11 +70,11 @@ class ASCI : public SelectedCIMethod {
     void compute_nos();
 
     void set_fci_ints(std::shared_ptr<ActiveSpaceIntegrals> fci_ints);
-    
+
     void pre_iter_preparation() override;
     void diagonalize_P_space() override;
     void diagonalize_PQ_space() override;
-    void post_iter_process() override{};
+    void post_iter_process() override;
 
     void set_method_variables(
         std::string ex_alg, size_t nroot_method, size_t root,
@@ -101,9 +84,9 @@ class ASCI : public SelectedCIMethod {
     psi::SharedMatrix get_PQ_evecs() override;
     psi::SharedVector get_PQ_evals() override;
 
-    WFNOperator get_op() override;
+    //    std::shared_ptr<WFNOperator> get_op() override;
 
-    size_t get_ref_root() override; 
+    size_t get_ref_root() override;
 
     /// Check if the procedure has converged
     bool check_convergence() override;
@@ -117,9 +100,6 @@ class ASCI : public SelectedCIMethod {
     // ==> Class data <==
 
     DeterminantHashVec final_wfn_;
-
-    WFNOperator op_;
-
     // Temporarily added
     psi::SharedMatrix P_evecs_;
     psi::SharedVector P_evals_;
@@ -128,7 +108,6 @@ class ASCI : public SelectedCIMethod {
     std::vector<double> P_ref_evecs_;
     std::vector<double> P_energies_;
     std::vector<std::vector<double>> energy_history_;
-    SparseCISolver sparse_solver_;
     size_t ref_root_;
     size_t root_;
     std::string ex_alg_;
@@ -167,8 +146,6 @@ class ASCI : public SelectedCIMethod {
     psi::Dimension frzcpi_;
     /// The number of active orbitals per irrep
     psi::Dimension nactpi_;
-    /// The number of active orbitals
-    size_t nact_;
     /// The nuclear repulsion energy
     double nuclear_repulsion_energy_;
     /// The reference determinant
@@ -185,8 +162,6 @@ class ASCI : public SelectedCIMethod {
     /// The threshold applied to the secondary space
     int t_det_;
 
-    /// The eigensolver type
-    DiagonalizationMethod diag_method_ = DLString;
     /// Compute 1-RDM?
     bool compute_rdms_;
     /// The CI coeffiecients
@@ -226,42 +201,27 @@ class ASCI : public SelectedCIMethod {
     void startup();
 
     /// Print information about this calculation
-    void print_info();
-
-    /// Print a wave function
-    void print_wfn(DeterminantHashVec& space, WFNOperator& op, psi::SharedMatrix evecs, int nroot);
-
+    void print_info() override;
 
     // Optimized for a single root
     void get_excited_determinants_sr(psi::SharedMatrix evecs, DeterminantHashVec& P_space,
                                      det_hash<double>& V_hash);
 
     /// Prune the space of determinants
-    void prune_PQ_to_P();
-
-
-    /// Computes spin
-    std::vector<std::pair<double, double>> compute_spin(DeterminantHashVec& space, WFNOperator& op,
-                                                        psi::SharedMatrix evecs, int nroot);
-
-    /// Check for spin contamination
-    double compute_spin_contamination(DeterminantHashVec& space, WFNOperator& op,
-                                      psi::SharedMatrix evecs, int nroot);
+    void prune_PQ_to_P() override;
 
     /// Print natural orbitals
     void print_nos();
 
     /// Compute the RDMs
     void compute_rdms(std::shared_ptr<ActiveSpaceIntegrals> fci_ints, DeterminantHashVec& dets,
-                      WFNOperator& op, psi::SharedMatrix& PQ_evecs, int root1, int root2,
+                      DeterminantSubstitutionLists& op, psi::SharedMatrix& PQ_evecs, int root1, int root2,
                       int max_level);
 
     void add_bad_roots(DeterminantHashVec& dets);
 
     int root_follow(DeterminantHashVec& P_ref, std::vector<double>& P_ref_evecs,
-                                DeterminantHashVec& P_space, psi::SharedMatrix P_evecs,
-                                int num_ref_roots);
-
+                    DeterminantHashVec& P_space, psi::SharedMatrix P_evecs, int num_ref_roots);
 };
 
 } // namespace forte

@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2019 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
+ * Copyright (c) 2012-2020 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
  *
  * The copyrights for code used from other parties are included in
  * the corresponding files.
@@ -49,8 +49,7 @@ namespace forte {
 
 MP2_NOS::MP2_NOS(std::shared_ptr<SCFInfo> scf_info, std::shared_ptr<ForteOptions> options,
                  std::shared_ptr<ForteIntegrals> ints, std::shared_ptr<MOSpaceInfo> mo_space_info)
-    : OrbitalTransform(ints, mo_space_info), scf_info_(scf_info), options_(options),
-      mo_space_info_(mo_space_info) {}
+    : OrbitalTransform(ints, mo_space_info), scf_info_(scf_info), options_(options) {}
 
 psi::SharedMatrix MP2_NOS::get_Ua() { return Ua_; }
 psi::SharedMatrix MP2_NOS::get_Ub() { return Ub_; }
@@ -80,11 +79,11 @@ void MP2_NOS::compute_transformation() {
     /// Map from all the MOs to the beta virtual
     std::map<size_t, size_t> mos_to_bvir;
 
-    psi::Dimension ncmopi_ = mo_space_info_->get_dimension("CORRELATED");
-    psi::Dimension frzcpi = mo_space_info_->get_dimension("FROZEN_DOCC");
-    psi::Dimension frzvpi = mo_space_info_->get_dimension("FROZEN_UOCC");
+    psi::Dimension ncmopi_ = mo_space_info_->dimension("CORRELATED");
+    psi::Dimension frzcpi = mo_space_info_->dimension("FROZEN_DOCC");
+    psi::Dimension frzvpi = mo_space_info_->dimension("FROZEN_UOCC");
 
-    psi::Dimension nmopi = mo_space_info_->get_dimension("ALL");
+    psi::Dimension nmopi = mo_space_info_->dimension("ALL");
     psi::Dimension doccpi = scf_info_->doccpi();
     psi::Dimension soccpi = scf_info_->soccpi();
 

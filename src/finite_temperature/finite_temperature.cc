@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2019 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
+ * Copyright (c) 2012-2020 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
  *
  * The copyrights for code used from other parties are included in
  * the corresponding files.
@@ -39,7 +39,7 @@
 #include "psi4/libmints/molecule.h"
 #include "psi4/libmints/vector.h"
 #include "psi4/libmints/wavefunction.h"
-#include "psi4/liboptions/liboptions.h"
+
 #include "psi4/libpsio/psio.hpp"
 
 #include "finite_temperature/finite_temperature.h"
@@ -48,7 +48,7 @@
 
 namespace forte {
 
-FiniteTemperatureHF::FiniteTemperatureHF(psi::SharedWavefunction ref_wfn, psi::Options& options,
+FiniteTemperatureHF::FiniteTemperatureHF(psi::SharedWavefunction ref_wfn, std::shared_ptr<ForteOptions> options,
                                          std::shared_ptr<MOSpaceInfo> mo_space)
     : RHF(ref_wfn, std::make_shared<SuperFunctional>(), options, _default_psio_lib_),
       mo_space_info_(mo_space), options_(options) {
@@ -106,13 +106,13 @@ void FiniteTemperatureHF::frac_occupation() {
     if (nmo_ > 0) {
         ef_ = bisection(ni, T);
     }
-    auto active_vector = mo_space_info_->get_absolute_mo("ALL");
+    auto active_vector = mo_space_info_->absolute_mo("ALL");
     /// Fill the occupation for active with variable occupations
     for (auto& active_array : active_vector) {
         fermidirac_[active_array] = ni[active_array];
     }
 
-    psi::Dimension nmopi = mo_space_info_->get_dimension("ALL");
+    psi::Dimension nmopi = mo_space_info_->dimension("ALL");
     psi::SharedVector Dirac_sym(new Vector("Dirac_Symmetry", nirrep_, nmopi));
 
     int offset = 0;
@@ -149,14 +149,14 @@ void FiniteTemperatureHF::frac_occupation() {
     C_occ_a_ = C_no_scale;
 }
 void FiniteTemperatureHF::initialize_occupation_vector(std::vector<double>& dirac) {
-    auto nmo_vector = mo_space_info_->get_absolute_mo("ALL");
+    auto nmo_vector = mo_space_info_->absolute_mo("ALL");
     for (auto& active_array : nmo_vector) {
         dirac[active_array] = 1.0;
     }
 }
 std::vector<std::pair<double, int>> FiniteTemperatureHF::get_active_orbital_energy() {
     int nirrep = this->nirrep();
-    psi::Dimension nmopi = mo_space_info_->get_dimension("ALL");
+    psi::Dimension nmopi = mo_space_info_->dimension("ALL");
     std::vector<std::pair<double, int>> nmo_vec;
     int offset = 0;
     for (int h = 0; h < nirrep; h++) {

@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2019 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
+ * Copyright (c) 2012-2020 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
  *
  * The copyrights for code used from other parties are included in
  * the corresponding files.
@@ -102,8 +102,6 @@ class MRCINO : public OrbitalTransform {
     // ==> MRCINO Options <==
     /// Add missing degenerate determinants excluded from the aimed selection?
     bool project_out_spin_contaminants_ = true;
-    /// The eigensolver type
-    DiagonalizationMethod diag_method_;
     /// The multiplicity of the reference
     int wavefunction_multiplicity_ = 0;
     // The number of correlated mos

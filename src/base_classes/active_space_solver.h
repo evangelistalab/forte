@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2019 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
+ * Copyright (c) 2012-2020 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
  *
  * The copyrights for code used from other parties are included in
  * the corresponding files.
@@ -89,7 +89,7 @@ class ActiveSpaceSolver {
         std::map<std::pair<StateInfo, StateInfo>, std::vector<std::pair<size_t, size_t>>>& elements,
         int max_rdm_level);
 
-    /// Compute a state-averaged reference
+    /// Compute the state-averaged reference
     RDMs compute_average_rdms(const std::map<StateInfo, std::vector<double>>& state_weights_map,
                               int max_rdm_level);
 
@@ -134,6 +134,19 @@ class ActiveSpaceSolver {
 
     /// A map of state symmetries to vectors of computed energies under given state symmetry
     std::map<StateInfo, std::vector<double>> state_energies_map_;
+
+    /// Average spin multiplets for RDMs
+    /// If true, the weight of a state will be averaged by its multiplicity.
+    /// Moreover, all its ms components will be computed by the solver.
+    bool ms_avg_;
+
+    /// Compute the state-averaged reference when spin multiplets are also averaged
+    RDMs compute_avg_rdms_ms_avg(const std::map<StateInfo, std::vector<double>>& state_weights_map,
+                                 int max_rdm_level);
+
+    /// Compute the state-averaged reference when spin multiplets are also averaged
+    RDMs compute_avg_rdms(const std::map<StateInfo, std::vector<double>>& state_weights_map,
+                          int max_rdm_level);
 
     /// Pairs of state info and the contracted CI eigen vectors
     std::map<StateInfo, std::shared_ptr<psi::Matrix>>

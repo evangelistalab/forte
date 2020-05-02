@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2019 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
+ * Copyright (c) 2012-2020 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
  *
  * The copyrights for code used from other parties are included in
  * the corresponding files.
@@ -34,6 +34,8 @@
 #include <fstream>
 #include <iostream>
 
+#include "psi4/libpsi4util/process.h"
+#include "psi4/libpsi4util/PsiOutStream.h"
 #include "psi4/libmints/molecule.h"
 #include "psi4/libpsio/psio.h"
 #include "psi4/libpsio/psio.hpp"
@@ -160,15 +162,6 @@ void DSRG_MRPT3::startup() {
     mem_total_ -= nelement * sizeof(double);
 
     // Prepare Hbar
-    if (relax_ref_ != "NONE" && relax_ref_ != "ONCE") {
-        outfile->Printf("\n\n  Warning: RELAX_REF option \"%s\" is not supported. Change to ONCE.",
-                        relax_ref_.c_str());
-        relax_ref_ = "ONCE";
-
-        warnings_.push_back(std::make_tuple("Unsupported RELAX_REF", "Change to ONCE",
-                                            "Change options in input.dat"));
-    }
-
     if (relax_ref_ != "NONE" || multi_state_) {
         Hbar1_ = BTF_->build(tensor_type_, "One-body Hbar", spin_cases({"aa"}));
         Hbar2_ = BTF_->build(tensor_type_, "Two-body Hbar", spin_cases({"aaaa"}));
@@ -454,9 +447,9 @@ double DSRG_MRPT3::compute_energy() {
     // compute DSRG dipole integrals part 1
     if (do_dm_) {
         print_h2("Computing 3rd-Order Dipole Moment Contribution (1/2)");
-        Mbar0_ = {dm_ref_[0], dm_ref_[1], dm_ref_[2]};
-        Mbar0_pt2_ = {dm_ref_[0], dm_ref_[1], dm_ref_[2]};
-        Mbar0_pt2c_ = {dm_ref_[0], dm_ref_[1], dm_ref_[2]};
+        Mbar0_ = {{dm_ref_[0], dm_ref_[1], dm_ref_[2]}};
+        Mbar0_pt2_ = {{dm_ref_[0], dm_ref_[1], dm_ref_[2]}};
+        Mbar0_pt2c_ = {{dm_ref_[0], dm_ref_[1], dm_ref_[2]}};
         for (int i = 0; i < 3; ++i) {
             local_timer timer;
             std::string name = "Computing direction " + dm_dirs_[i];
@@ -1430,7 +1423,7 @@ void DSRG_MRPT3::renormalize_F(const bool& plusone) {
 //                //                - 2 * mo_space_info_->size("FROZEN_DOCC") - 2 *
 //                core_mos_.size(); auto na = (nelec_actv + ms) / 2; auto nb = nelec_actv - na;
 
-//                psi::Dimension active_dim = mo_space_info_->get_dimension("ACTIVE");
+//                psi::Dimension active_dim = mo_space_info_->dimension("ACTIVE");
 //                StateInfo state(na, nb, multi, multi - 1, irrep); // assumes highes Ms
 //                // TODO use base class info
 //                auto fci = make_active_space_method("FCI", state, nstates, scf_info_,
@@ -1582,7 +1575,6 @@ void DSRG_MRPT3::renormalize_F(const bool& plusone) {
 //        auto state = make_state_info_from_psi_wfn(ints_->wfn());
 //        size_t nroot = foptions_->get_int("NROOT");
 //        AdaptiveCI aci(state, nroot, scf_info_, foptions_, mo_space_info_, fci_ints);
-//        aci.set_fci_ints(fci_ints);
 //        if ((foptions_->psi_options())["ACI_RELAX_SIGMA"].has_changed()) {
 //            aci.update_sigma();
 //        }
@@ -3754,9 +3746,9 @@ void DSRG_MRPT3::V_T2_C2_DF_VV(BlockedTensor& B, BlockedTensor& T2, const double
 
                 if (nbatch0 != 1) {
 
-                    ambit::Tensor B0 =
+                    ambit::Tensor B0vv =
                         ambit::Tensor::build(tensor_type_, "B0 vv", {sL, sv_sub0, sh0});
-                    B0.iterate([&](const std::vector<size_t>& i, double& value) {
+                    B0vv.iterate([&](const std::vector<size_t>& i, double& value) {
                         size_t idx = i[0] * sv * sh0 + virt_mo_sub0[i[1]] * sh0 + i[2];
                         value = B.block(Blabel0).data()[idx];
                     });
@@ -3770,10 +3762,10 @@ void DSRG_MRPT3::V_T2_C2_DF_VV(BlockedTensor& B, BlockedTensor& T2, const double
                             value = B.block(Blabel1).data()[idx];
                         });
 
-                        H2("rsef") = B0("ger") * B1("gfs");
+                        H2("rsef") = B0vv("ger") * B1("gfs");
                     } else {
 
-                        H2("rsef") = B0("ger") * B.block(Blabel1)("gfs");
+                        H2("rsef") = B0vv("ger") * B.block(Blabel1)("gfs");
                     }
 
                 } else {
@@ -4716,7 +4708,7 @@ void DSRG_MRPT3::V_T2_C2_DF_VA_EX(BlockedTensor& B, BlockedTensor& T2, const dou
     } // end loop "qs"
 }
 
-//void DSRG_MRPT3::V_T2_C2_DF_VH_EX(BlockedTensor& B, BlockedTensor& T2, const double& alpha,
+// void DSRG_MRPT3::V_T2_C2_DF_VH_EX(BlockedTensor& B, BlockedTensor& T2, const double& alpha,
 //                                  BlockedTensor& C2,
 //                                  const std::vector<std::vector<std::string>>& qs,
 //                                  const std::vector<std::vector<std::string>>& jb) {
@@ -4761,7 +4753,8 @@ void DSRG_MRPT3::V_T2_C2_DF_VA_EX(BlockedTensor& B, BlockedTensor& T2, const dou
 
 //    size_t nbatch = 1;
 //    size_t svs = sv / nbatch;
-//    size_t nele_total = sL * smax_s * svs + smax_qs * svs * smax_hole + smax_hole * smax_jb * svs +
+//    size_t nele_total = sL * smax_s * svs + smax_qs * svs * smax_hole + smax_hole * smax_jb * svs
+//    +
 //                        smax_jb * smax_qs;
 //    while (nele_total * sizeof(double) > static_cast<size_t>(0.95 * mem_total_)) {
 //        nbatch += 1;
@@ -4895,7 +4888,8 @@ void DSRG_MRPT3::V_T2_C2_DF_VA_EX(BlockedTensor& B, BlockedTensor& T2, const dou
 //                    }
 
 //                    // O2 intermediate for C2 permutations
-//                    ambit::Tensor O2s = ambit::Tensor::build(tensor_type_, "O2s", {sq, sj, ss, sb});
+//                    ambit::Tensor O2s = ambit::Tensor::build(tensor_type_, "O2s", {sq, sj, ss,
+//                    sb});
 
 //                    if (i == 'c' || i == 'C') {
 //                        O2s("qjsb") -= alpha * H2("qsam") * T2s("mjab");
@@ -5216,13 +5210,13 @@ std::vector<std::vector<double>> DSRG_MRPT3::diagonalize_Fock_diagblocks(Blocked
 
     // map MO space label to its psi::Dimension
     std::map<std::string, psi::Dimension> MOlabel_to_dimension;
-    MOlabel_to_dimension[acore_label_] = mo_space_info_->get_dimension("RESTRICTED_DOCC");
-    MOlabel_to_dimension[aactv_label_] = mo_space_info_->get_dimension("ACTIVE");
-    MOlabel_to_dimension[avirt_label_] = mo_space_info_->get_dimension("RESTRICTED_UOCC");
+    MOlabel_to_dimension[acore_label_] = mo_space_info_->dimension("RESTRICTED_DOCC");
+    MOlabel_to_dimension[aactv_label_] = mo_space_info_->dimension("ACTIVE");
+    MOlabel_to_dimension[avirt_label_] = mo_space_info_->dimension("RESTRICTED_UOCC");
 
     // eigen values to be returned
     size_t ncmo = mo_space_info_->size("CORRELATED");
-    psi::Dimension corr = mo_space_info_->get_dimension("CORRELATED");
+    psi::Dimension corr = mo_space_info_->dimension("CORRELATED");
     std::vector<double> eigenvalues_a(ncmo, 0.0);
     std::vector<double> eigenvalues_b(ncmo, 0.0);
 
@@ -5230,9 +5224,9 @@ std::vector<std::vector<double>> DSRG_MRPT3::diagonalize_Fock_diagblocks(Blocked
     std::map<std::string, psi::Dimension> MOlabel_to_offset_dimension;
     int nirrep = corr.n();
     MOlabel_to_offset_dimension["c"] = psi::Dimension(std::vector<int>(nirrep, 0));
-    MOlabel_to_offset_dimension["a"] = mo_space_info_->get_dimension("RESTRICTED_DOCC");
+    MOlabel_to_offset_dimension["a"] = mo_space_info_->dimension("RESTRICTED_DOCC");
     MOlabel_to_offset_dimension["v"] =
-        mo_space_info_->get_dimension("RESTRICTED_DOCC") + mo_space_info_->get_dimension("ACTIVE");
+        mo_space_info_->dimension("RESTRICTED_DOCC") + mo_space_info_->dimension("ACTIVE");
 
     // figure out index
     auto fill_eigen = [&](std::string block_label, int irrep, std::vector<double> values) {

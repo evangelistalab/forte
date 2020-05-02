@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2019 by its authors (see COPYING, COPYING.LESSER,
+ * Copyright (c) 2012-2020 by its authors (see COPYING, COPYING.LESSER,
  * AUTHORS).
  *
  * The copyrights for code used from other parties are included in
@@ -42,7 +42,7 @@ namespace forte {
 /// Reading individual elements is slow
 class DISKDFIntegrals : public ForteIntegrals {
   public:
-    DISKDFIntegrals(psi::Options& options, std::shared_ptr<psi::Wavefunction> ref_wfn,
+    DISKDFIntegrals(std::shared_ptr<ForteOptions> options, std::shared_ptr<psi::Wavefunction> ref_wfn,
                     std::shared_ptr<MOSpaceInfo> mo_space_info, IntegralSpinRestriction restricted);
 
     /// aptei_xy functions are slow.  try to use three_integral_block

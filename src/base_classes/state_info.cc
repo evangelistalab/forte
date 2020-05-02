@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2019 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
+ * Copyright (c) 2012-2020 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
  *
  * The copyrights for code used from other parties are included in
  * the corresponding files.
@@ -29,6 +29,8 @@
 #include "psi4/libpsi4util/process.h"
 #include "psi4/libmints/wavefunction.h"
 #include "psi4/libmints/molecule.h"
+
+#include "helpers/helpers.h"
 
 #include "state_info.h"
 
@@ -119,6 +121,13 @@ StateInfo make_state_info_from_psi_wfn(std::shared_ptr<psi::Wavefunction> wfn) {
 
     std::string irrep_label = psi::Process::environment.molecule()->irrep_labels()[irrep];
     return StateInfo(na, nb, multiplicity, twice_ms, irrep, irrep_label);
+}
+
+std::string StateInfo::str() const {
+    std::string irrep_label_out =
+        irrep_label_.empty() ? "Irrep" + std::to_string(irrep_) : irrep_label();
+    return multiplicity_label() + " " + irrep_label_out + " (Ms = " + get_ms_string(twice_ms()) +
+           ")";
 }
 
 } // namespace forte

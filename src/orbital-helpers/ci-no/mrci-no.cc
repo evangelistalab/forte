@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2019 by its authors (see COPYING, COPYING.LESSER,
+ * Copyright (c) 2012-2020 by its authors (see COPYING, COPYING.LESSER,
  * AUTHORS).
  *
  * The copyrights for code used from other parties are included in
@@ -27,18 +27,22 @@
  * @END LICENSE
  */
 
-#include "psi4/psi4-dec.h"
-#include "psi4/libmints/molecule.h"
-#include "psi4/libmints/pointgrp.h"
+#include "psi4/libpsi4util/PsiOutStream.h"
+
+//#include "psi4/psi4-dec.h"
+#include "psi4/libmints/vector.h"
+//#include "psi4/libmints/pointgrp.h"
 #include "helpers/timer.h"
 #include "ci_rdm/ci_rdms.h"
+#include "base_classes/mo_space_info.h"
 #include "integrals/active_space_integrals.h"
-#include "base_classes/forte_options.h"
+
+//#include "base_classes/forte_options.h"
 #include "sparse_ci/sparse_ci_solver.h"
 #include "sparse_ci/determinant.h"
 #include "mrci-no.h"
 #include "ci-no.h"
-//#include "hash_vector.h"
+#include "sparse_ci/sigma_vector.h"
 
 using namespace psi;
 
@@ -66,18 +70,16 @@ namespace forte {
 
 MRCINO::MRCINO(std::shared_ptr<SCFInfo> scf_info, std::shared_ptr<ForteOptions> options,
                std::shared_ptr<ForteIntegrals> ints, std::shared_ptr<MOSpaceInfo> mo_space_info)
-    : OrbitalTransform(ints, mo_space_info), scf_info_(scf_info), options_(options),
-      mo_space_info_(mo_space_info) {
+    : OrbitalTransform(ints, mo_space_info), scf_info_(scf_info), options_(options) {
     // Copy the wavefunction information
 
     std::vector<size_t> active_mo(mo_space_info_->size("CORRELATED"));
     std::iota(active_mo.begin(), active_mo.end(), 0);
 
-    fci_ints_ = std::make_shared<ActiveSpaceIntegrals>(ints, active_mo, std::vector<size_t>());
+    auto active_mo_symmetry = mo_space_info_->symmetry("CORRELATED");
 
-    //    for (auto& i: active_mo){
-    //        outfile->Printf("\n %zu", i);
-    //    }
+    fci_ints_ = std::make_shared<ActiveSpaceIntegrals>(ints, active_mo, active_mo_symmetry,
+                                                       std::vector<size_t>());
 
     ambit::Tensor tei_active_aa = ints->aptei_aa_block(active_mo, active_mo, active_mo, active_mo);
     ambit::Tensor tei_active_ab = ints->aptei_ab_block(active_mo, active_mo, active_mo, active_mo);
@@ -149,33 +151,23 @@ void MRCINO::compute_transformation() {
 
 void MRCINO::startup() {
     wavefunction_multiplicity_ = 1;
-    if (options_->has_changed("MULTIPLICITY")) {
+    if (options_->get_int("MULTIPLICITY") >= 1) {
         wavefunction_multiplicity_ = options_->get_int("MULTIPLICITY");
     }
 
     nirrep_ = ints_->nirrep();
 
-    diag_method_ = DLSolver;
-    if (options_->has_changed("DIAG_ALGORITHM")) {
-        if (options_->get_str("DIAG_ALGORITHM") == "FULL") {
-            diag_method_ = Full;
-        } else if (options_->get_str("DIAG_ALGORITHM") == "DLSTRING") {
-            diag_method_ = DLString;
-        } else if (options_->get_str("DIAG_ALGORITHM") == "DLDISK") {
-            diag_method_ = DLDisk;
-        }
-    }
     // Read Options
     rdm_level_ = options_->get_int("ACI_MAX_RDM");
     nactv_ = mo_space_info_->size("ACTIVE");
     corr_ = mo_space_info_->size("CORRELATED");
 
-    actvpi_ = mo_space_info_->get_dimension("ACTIVE");
-    fdoccpi_ = mo_space_info_->get_dimension("FROZEN_DOCC");
-    rdoccpi_ = mo_space_info_->get_dimension("RESTRICTED_DOCC");
-    fuoccpi_ = mo_space_info_->get_dimension("FROZEN_UOCC");
-    ruoccpi_ = mo_space_info_->get_dimension("RESTRICTED_UOCC");
-    corrpi_ = mo_space_info_->get_dimension("CORRELATED");
+    actvpi_ = mo_space_info_->dimension("ACTIVE");
+    fdoccpi_ = mo_space_info_->dimension("FROZEN_DOCC");
+    rdoccpi_ = mo_space_info_->dimension("RESTRICTED_DOCC");
+    fuoccpi_ = mo_space_info_->dimension("FROZEN_UOCC");
+    ruoccpi_ = mo_space_info_->dimension("RESTRICTED_UOCC");
+    corrpi_ = mo_space_info_->dimension("CORRELATED");
 
     ncmo2_ = corr_ * corr_;
 
@@ -461,9 +453,7 @@ MRCINO::diagonalize_hamiltonian(const std::vector<Determinant>& dets, int nsolut
     //        outfile->Printf("  Energy: %20.15f", fci_ints_->energy(d));
     //    }
 
-    std::pair<psi::SharedVector, psi::SharedMatrix> evals_evecs;
-
-    SparseCISolver sparse_solver(fci_ints_);
+    SparseCISolver sparse_solver;
     sparse_solver.set_parallel(true);
     sparse_solver.set_e_convergence(options_->get_double("E_CONVERGENCE"));
     sparse_solver.set_maxiter_davidson(options_->get_int("DL_MAXITER"));
@@ -473,8 +463,12 @@ MRCINO::diagonalize_hamiltonian(const std::vector<Determinant>& dets, int nsolut
     sparse_solver.set_print_details(true);
 
     outfile->Printf("\n size is %d\n", dets.size());
-    sparse_solver.diagonalize_hamiltonian(dets, evals_evecs.first, evals_evecs.second, nsolutions,
-                                          wavefunction_multiplicity_, DLSolver);
+
+    // Here we use the SparseList algorithm to diagonalize the Hamiltonian
+    DeterminantHashVec detmap(dets);
+    auto sigma_vector = make_sigma_vector(detmap, fci_ints_, 0, SigmaVectorType::SparseList);
+    auto evals_evecs = sparse_solver.diagonalize_hamiltonian(detmap, sigma_vector, nsolutions,
+                                                             wavefunction_multiplicity_);
 
     outfile->Printf("\n\n    STATE      CI ENERGY");
     outfile->Printf("\n  ----------------------------");
@@ -524,7 +518,7 @@ MRCINO::build_density_matrix(const std::vector<Determinant>& dets, psi::SharedMa
     }
     // Invert vector to matrix
     //    psi::Dimension nmopi = reference_wavefunction_->nmopi();
-    //    psi::Dimension ncmopi = mo_space_info_->get_dimension("CORRELATED");
+    //    psi::Dimension ncmopi = mo_space_info_->dimension("CORRELATED");
 
     std::shared_ptr<psi::Matrix> opdm_a(new psi::Matrix("OPDM_A", corrpi_, corrpi_));
     std::shared_ptr<psi::Matrix> opdm_b(new psi::Matrix("OPDM_B", corrpi_, corrpi_));
@@ -620,7 +614,7 @@ MRCINO::diagonalize_density_matrix(std::pair<psi::SharedMatrix, psi::SharedMatri
 void MRCINO::find_active_space_and_transform(
     std::tuple<psi::SharedVector, psi::SharedMatrix, psi::SharedVector, psi::SharedMatrix> no_U) {
 
-    auto nmopi = mo_space_info_->get_dimension("ALL");
+    auto nmopi = mo_space_info_->dimension("ALL");
     Ua_.reset(new psi::Matrix("U", nmopi, nmopi));
     Ub_.reset(new psi::Matrix("U", nmopi, nmopi));
     psi::SharedMatrix NO_A = std::get<1>(no_U);

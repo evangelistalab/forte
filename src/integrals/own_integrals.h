@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2019 by its authors (see COPYING, COPYING.LESSER,
+ * Copyright (c) 2012-2020 by its authors (see COPYING, COPYING.LESSER,
  * AUTHORS).
  *
  * The copyrights for code used from other parties are included in
@@ -42,7 +42,7 @@ namespace forte {
 /// AO-DSRG-MRPT2
 class OwnIntegrals : public ForteIntegrals {
   public:
-    OwnIntegrals(psi::Options& options, std::shared_ptr<psi::Wavefunction> ref_wfn,
+    OwnIntegrals(std::shared_ptr<ForteOptions> options, std::shared_ptr<psi::Wavefunction> ref_wfn,
                  std::shared_ptr<MOSpaceInfo> mo_space_info, IntegralSpinRestriction restricted);
 
     void retransform_integrals() {}
@@ -71,7 +71,7 @@ class OwnIntegrals : public ForteIntegrals {
     }
 
     double** three_integral_pointer() override {
-        throw psi::PSIEXCEPTION("Integrals are distributed.  Pointer does not exist");
+        throw std::runtime_error("Integrals are distributed.  Pointer does not exist");
     }
     /// Read a block of the DFIntegrals and return an Ambit tensor of size A by
     /// p by q

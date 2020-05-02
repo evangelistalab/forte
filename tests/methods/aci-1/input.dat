@@ -4,8 +4,8 @@
 import forte
 
 refscf = -14.839846512738 #TEST
-refaci = -14.888681221669 #TEST
-refacipt2 = -14.890314474716 #TEST
+refaci = -14.889051449776 #TEST
+refacipt2 = -14.890048359302 #TEST
 
 molecule li2{
 0 1
@@ -31,14 +31,12 @@ set forte {
   active_space_solver aci
   multiplicity 1
   ms 0.0
-  ACI_SELECT_TYPE energy
-  sigma 0.00001000
-  gamma 100.0
+  sigma 0.001
   nroot 1
   root_sym 0
   charge 0
-  aci_perturb_select true
   aci_enforce_spin_complete false
+  r_convergence 0.1
   active_ref_type hf 
 }
 

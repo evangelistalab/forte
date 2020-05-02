@@ -6,7 +6,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2019 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
+ * Copyright (c) 2012-2020 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
  *
  * The copyrights for code used from other parties are included in
  * the corresponding files.
@@ -30,7 +30,7 @@
 #include "psi4/libpsi4util/process.h"
 #include "psi4/libmints/molecule.h"
 #include "psi4/libmints/wavefunction.h"
-#include "psi4/liboptions/liboptions.h"
+
 
 #include "helpers/printing.h"
 #include "mrci.h"
@@ -40,7 +40,7 @@ using namespace psi;
 
 namespace forte {
 
-MRCI::MRCI(psi::SharedWavefunction ref_wfn, psi::Options& options, std::shared_ptr<ForteIntegrals> ints,
+MRCI::MRCI(psi::SharedWavefunction ref_wfn, std::shared_ptr<ForteOptions> options, std::shared_ptr<ForteIntegrals> ints,
            std::shared_ptr<MOSpaceInfo> mo_space_info, DeterminantHashVec& reference)
     : Wavefunction(options), ints_(ints),reference_(reference), mo_space_info_(mo_space_info) {
     shallow_copy(ref_wfn);
@@ -55,11 +55,11 @@ void MRCI::startup() {
     mo_symmetry_ = mo_space_info_->symmetry("GENERALIZED PARTICLE");
 
     // Define the correlated space
-    auto correlated_mo = mo_space_info_->get_corr_abs_mo("GENERALIZED PARTICLE");
+    auto correlated_mo = mo_space_info_->corr_absolute_mo("GENERALIZED PARTICLE");
     std::sort(correlated_mo.begin(), correlated_mo.end());
 
     fci_ints_ = std::make_shared<ActiveSpaceIntegrals>(ints_, correlated_mo,
-                                               mo_space_info_->get_corr_abs_mo("RESTRICTED_DOCC"));
+                                               mo_space_info_->corr_absolute_mo("RESTRICTED_DOCC"));
 
     // Set the integrals
     ambit::Tensor tei_active_aa =
@@ -137,7 +137,7 @@ double MRCI::compute_energy() {
 void MRCI::get_excited_determinants() {
     // Only excite into the restricted uocc
 
-    auto external_mo = mo_space_info_->get_corr_abs_mo("RESTRICTED_UOCC");
+    auto external_mo = mo_space_info_->corr_absolute_mo("RESTRICTED_UOCC");
     size_t nact = mo_space_info_->size("ACTIVE");
 
     DeterminantHashVec external;
@@ -260,8 +260,8 @@ void MRCI::get_excited_determinants() {
 void MRCI::upcast_reference() {
     //    auto mo_sym = mo_space_info_->symmetry("GENERALIZED PARTICLE");
 
-    //    psi::Dimension old_dim = mo_space_info_->get_dimension("ACTIVE");
-    //    psi::Dimension new_dim = mo_space_info_->get_dimension("GENERALIZED PARTICLE");
+    //    psi::Dimension old_dim = mo_space_info_->dimension("ACTIVE");
+    //    psi::Dimension new_dim = mo_space_info_->dimension("GENERALIZED PARTICLE");
     //    size_t nact = mo_space_info_->size("ACTIVE");
     //    size_t ncorr = mo_space_info_->size("GENERALIZED PARTICLE");
     //    int n_irrep = old_dim.n();

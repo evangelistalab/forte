@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2019 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
+ * Copyright (c) 2012-2020 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
  *
  * The copyrights for code used from other parties are included in
  * the corresponding files.
@@ -77,12 +77,12 @@ void SemiCanonical::startup() {
     nirrep_ = mo_space_info_->nirrep();
     ncmo_ = mo_space_info_->size("CORRELATED");
     nact_ = mo_space_info_->size("ACTIVE");
-    nmopi_ = mo_space_info_->get_dimension("ALL");
-    ncmopi_ = mo_space_info_->get_dimension("CORRELATED");
-    fdocc_ = mo_space_info_->get_dimension("FROZEN_DOCC");
-    rdocc_ = mo_space_info_->get_dimension("RESTRICTED_DOCC");
-    actv_ = mo_space_info_->get_dimension("ACTIVE");
-    ruocc_ = mo_space_info_->get_dimension("RESTRICTED_UOCC");
+    nmopi_ = mo_space_info_->dimension("ALL");
+    ncmopi_ = mo_space_info_->dimension("CORRELATED");
+    fdocc_ = mo_space_info_->dimension("FROZEN_DOCC");
+    rdocc_ = mo_space_info_->dimension("RESTRICTED_DOCC");
+    actv_ = mo_space_info_->dimension("ACTIVE");
+    ruocc_ = mo_space_info_->dimension("RESTRICTED_UOCC");
 
     // Preapare orbital rotation matrix, which transforms all MOs
     Ua_ = std::make_shared<psi::Matrix>("Ua", nmopi_, nmopi_);
@@ -403,21 +403,48 @@ void SemiCanonical::build_transformation_matrices(psi::SharedMatrix& Ua, psi::Sh
     }
 }
 
-RDMs SemiCanonical::transform_rdms(ambit::Tensor& Ua, ambit::Tensor& Ub, const RDMs& rdms,
+RDMs SemiCanonical::transform_rdms(ambit::Tensor& Ua, ambit::Tensor& Ub, RDMs& rdms,
                                    const int& max_rdm_level) {
     if (max_rdm_level < 1)
         return RDMs();
 
     print_h2("RDMs Transformation to Semicanonical Basis");
 
+    if (rdms.ms_avg()) {
+        auto g1 = rdms.g1a();
+        auto g1T = ambit::Tensor::build(ambit::CoreTensor, "g1aT", {nact_, nact_});
+        g1T("pq") = Ua("ap") * g1("ab") * Ua("bq");
+        outfile->Printf("\n    Transformed 1 RDM.");
+        if (max_rdm_level == 1) {
+            return RDMs(true, g1T);
+        }
+
+        auto g2 = rdms.g2ab();
+        auto g2T = ambit::Tensor::build(ambit::CoreTensor, "g2abT", {nact_, nact_, nact_, nact_});
+        g2T("pQrS") = Ua("ap") * Ua("BQ") * g2("aBcD") * Ua("cr") * Ua("DS");
+        outfile->Printf("\n    Transformed 2 RDM.");
+        if (max_rdm_level == 2)
+            return RDMs(true, g1T, g2T);
+
+        auto g3 = rdms.g3aab();
+        auto g3T = ambit::Tensor::build(ambit::CoreTensor, "g3aabT", std::vector<size_t>(6, nact_));
+        g3T("pqRstU") =
+            Ua("ap") * Ua("bq") * Ua("CR") * g3("abCijK") * Ua("is") * Ua("jt") * Ua("KU");
+        outfile->Printf("\n    Transformed 3 RDM.");
+        return RDMs(true, g1T, g2T, g3T);
+    }
+
     // Transform the 1-cumulants
     ambit::Tensor g1a0 = rdms.g1a();
     ambit::Tensor g1b0 = rdms.g1b();
 
-    ambit::Tensor g1aT = ambit::Tensor::build(ambit::CoreTensor, "Transformed L1a", {nact_, nact_});
-    ambit::Tensor g1bT = ambit::Tensor::build(ambit::CoreTensor, "Transformed L1b", {nact_, nact_});
+    ambit::Tensor g1aT = ambit::Tensor::build(ambit::CoreTensor, "g1aT", {nact_, nact_});
+    ambit::Tensor g1bT = ambit::Tensor::build(ambit::CoreTensor, "g1bT", {nact_, nact_});
+
     g1aT("pq") = Ua("ap") * g1a0("ab") * Ua("bq");
     g1bT("PQ") = Ub("AP") * g1b0("AB") * Ub("BQ");
+
+    outfile->Printf("\n    Transformed 1 RDMs.");
 
     if (max_rdm_level == 1)
         return RDMs(g1aT, g1bT);
@@ -428,18 +455,15 @@ RDMs SemiCanonical::transform_rdms(ambit::Tensor& Ua, ambit::Tensor& Ub, const R
     ambit::Tensor g2bb0 = rdms.g2bb();
 
     //   aa spin
-    ambit::Tensor g2Taa =
-        ambit::Tensor::build(ambit::CoreTensor, "Transformed L2aa", {nact_, nact_, nact_, nact_});
+    auto g2Taa = ambit::Tensor::build(ambit::CoreTensor, "g2aaT", {nact_, nact_, nact_, nact_});
     g2Taa("pqrs") = Ua("ap") * Ua("bq") * g2aa0("abcd") * Ua("cr") * Ua("ds");
 
     //   ab spin
-    ambit::Tensor g2Tab =
-        ambit::Tensor::build(ambit::CoreTensor, "Transformed L2ab", {nact_, nact_, nact_, nact_});
+    auto g2Tab = ambit::Tensor::build(ambit::CoreTensor, "g2abT", {nact_, nact_, nact_, nact_});
     g2Tab("pQrS") = Ua("ap") * Ub("BQ") * g2ab0("aBcD") * Ua("cr") * Ub("DS");
 
     //   bb spin
-    ambit::Tensor g2Tbb =
-        ambit::Tensor::build(ambit::CoreTensor, "Transformed L2bb", {nact_, nact_, nact_, nact_});
+    auto g2Tbb = ambit::Tensor::build(ambit::CoreTensor, "g2bbT", {nact_, nact_, nact_, nact_});
     g2Tbb("PQRS") = Ub("AP") * Ub("BQ") * g2bb0("ABCD") * Ub("CR") * Ub("DS");
 
     outfile->Printf("\n    Transformed 2 RDMs.");
@@ -453,27 +477,24 @@ RDMs SemiCanonical::transform_rdms(ambit::Tensor& Ua, ambit::Tensor& Ub, const R
     ambit::Tensor g3abb0 = rdms.g3abb();
     ambit::Tensor g3bbb0 = rdms.g3bbb();
 
-    ambit::Tensor g3Taaa =
-        ambit::Tensor::build(ambit::CoreTensor, "Transformed g3aaa", std::vector<size_t>(6, nact_));
+    auto g3Taaa = ambit::Tensor::build(ambit::CoreTensor, "g3aaaT", std::vector<size_t>(6, nact_));
     g3Taaa("pqrstu") =
         Ua("ap") * Ua("bq") * Ua("cr") * g3aaa0("abcijk") * Ua("is") * Ua("jt") * Ua("ku");
 
-    ambit::Tensor g3Taab =
-        ambit::Tensor::build(ambit::CoreTensor, "Transformed g3aab", std::vector<size_t>(6, nact_));
+    auto g3Taab = ambit::Tensor::build(ambit::CoreTensor, "g3aabT", std::vector<size_t>(6, nact_));
     g3Taab("pqRstU") =
         Ua("ap") * Ua("bq") * Ub("CR") * g3aab0("abCijK") * Ua("is") * Ua("jt") * Ub("KU");
 
-    ambit::Tensor g3Tabb =
-        ambit::Tensor::build(ambit::CoreTensor, "Transformed g3abb", std::vector<size_t>(6, nact_));
+    auto g3Tabb = ambit::Tensor::build(ambit::CoreTensor, "g3abbT", std::vector<size_t>(6, nact_));
     g3Tabb("pQRsTU") =
         Ua("ap") * Ub("BQ") * Ub("CR") * g3abb0("aBCiJK") * Ua("is") * Ub("JT") * Ub("KU");
 
-    ambit::Tensor g3Tbbb =
-        ambit::Tensor::build(ambit::CoreTensor, "Transformed g3bbb", std::vector<size_t>(6, nact_));
+    auto g3Tbbb = ambit::Tensor::build(ambit::CoreTensor, "g3bbbT", std::vector<size_t>(6, nact_));
     g3Tbbb("PQRSTU") =
         Ub("AP") * Ub("BQ") * Ub("CR") * g3bbb0("ABCIJK") * Ub("IS") * Ub("JT") * Ub("KU");
 
-    outfile->Printf("\n    Transformed 3 cumulants.");
+    outfile->Printf("\n    Transformed 3 RDMs.");
+
     return RDMs(g1aT, g1bT, g2Taa, g2Tab, g2Tbb, g3Taaa, g3Taab, g3Tabb, g3Tbbb);
 }
 } // namespace forte

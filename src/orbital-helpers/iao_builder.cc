@@ -25,6 +25,20 @@
  * @END LICENSE
  */
 
+#include "boost/format.hpp"
+
+#include "psi4/psi4-dec.h"
+#include "psi4/libpsi4util/PsiOutStream.h"
+
+#include "psi4/libqt/qt.h"
+#include "psi4/libmints/matrix.h"
+#include "psi4/libmints/basisset.h"
+#include "psi4/libmints/molecule.h"
+#include "psi4/libmints/integral.h"
+#include "psi4/libcubeprop/cubeprop.h"
+
+#include "base_classes/forte_options.h"
+
 #include "iao_builder.h"
 
 using namespace psi;
@@ -58,29 +72,32 @@ void IAOBuilder::common_init() {
 }
 std::shared_ptr<IAOBuilder> IAOBuilder::build(std::shared_ptr<psi::BasisSet> primary,
                                               std::shared_ptr<psi::BasisSet> minao,
-                                              psi::SharedMatrix C, psi::Options& options) {
-    //    psi::Options& options = psi::Process::environment.options;
+                                              psi::SharedMatrix C,
+                                              std::shared_ptr<ForteOptions> options) {
+    //    std::shared_ptr<ForteOptions> options = psi::Process::environment.options;
 
     //  std::shared_ptr<psi::BasisSet> minao =
     //  psi::BasisSet::pyconstruct_orbital(primary->molecule(),
-    //      "BASIS", options.get_str("MINAO_BASIS"));
+    //      "BASIS", options->get_str("MINAO_BASIS"));
 
     std::shared_ptr<IAOBuilder> local(new IAOBuilder(primary, minao, C));
 
-    local->set_print(options.get_int("PRINT"));
-    local->set_debug(options.get_int("DEBUG"));
-    local->set_bench(options.get_int("BENCH"));
-    local->set_convergence(options.get_double("LOCAL_CONVERGENCE"));
-    local->set_maxiter(options.get_int("LOCAL_MAXITER"));
-    local->set_use_ghosts(options.get_bool("LOCAL_USE_GHOSTS"));
-    local->set_condition(options.get_double("LOCAL_IBO_CONDITION"));
-    local->set_power(options.get_double("LOCAL_IBO_POWER"));
-    local->set_use_stars(options.get_bool("LOCAL_IBO_USE_STARS"));
-    local->set_stars_completeness(options.get_double("LOCAL_IBO_STARS_COMPLETENESS"));
+    local->set_print(options->get_int("PRINT"));
+    local->set_debug(options->get_int("DEBUG"));
+    local->set_bench(options->get_int("BENCH"));
+    local->set_convergence(options->get_double("LOCAL_CONVERGENCE"));
+    local->set_maxiter(options->get_int("LOCAL_MAXITER"));
+    local->set_use_ghosts(options->get_bool("LOCAL_USE_GHOSTS"));
+    local->set_condition(options->get_double("LOCAL_IBO_CONDITION"));
+    local->set_power(options->get_double("LOCAL_IBO_POWER"));
+    local->set_use_stars(options->get_bool("LOCAL_IBO_USE_STARS"));
+    local->set_stars_completeness(options->get_double("LOCAL_IBO_STARS_COMPLETENESS"));
 
     std::vector<int> stars;
-    for (size_t ind = 0; ind < options["LOCAL_IBO_STARS"].size(); ind++) {
-        stars.push_back(options["LOCAL_IBO_STARS"][ind].to_integer() - 1);
+
+    py::list rotate_mos_list = options->get_gen_list("LOCAL_IBO_STARS");
+    for (size_t ind = 0; ind < rotate_mos_list.size(); ind++) {
+        stars.push_back(py::cast<int>(rotate_mos_list[ind]) - 1);
     }
     local->set_stars(stars);
 

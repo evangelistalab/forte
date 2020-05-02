@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2019 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
+ * Copyright (c) 2012-2020 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
  *
  * The copyrights for code used from other parties are included in
  * the corresponding files.
@@ -37,12 +37,14 @@
 
 #include "integrals/active_space_integrals.h"
 #include "sparse_ci/determinant.h"
+#include "sparse_ci/determinant_functions.hpp"
 #include "helpers/iterative_solvers.h"
 
 #include "fci_solver.h"
 #include "fci_vector.h"
 #include "string_lists.h"
 #include "helpers/helpers.h"
+#include "helpers/printing.h"
 
 #ifdef HAVE_GA
 #include <ga.h>
@@ -62,7 +64,7 @@ class MOSpaceInfo;
 FCISolver::FCISolver(StateInfo state, size_t nroot, std::shared_ptr<MOSpaceInfo> mo_space_info,
                      std::shared_ptr<ActiveSpaceIntegrals> as_ints)
     : ActiveSpaceMethod(state, nroot, mo_space_info, as_ints),
-      active_dim_(mo_space_info->get_dimension("ACTIVE")), nirrep_(as_ints->ints()->nirrep()),
+      active_dim_(mo_space_info->dimension("ACTIVE")), nirrep_(as_ints->ints()->nirrep()),
       symmetry_(state.irrep()), multiplicity_(state.multiplicity()) {
     // TODO: read this info from the base class
     na_ = state.na() - core_mo_.size() - mo_space_info->size("FROZEN_DOCC");
@@ -116,6 +118,7 @@ void FCISolver::set_options(std::shared_ptr<ForteOptions> options) {
     set_ntrial_per_root(options->get_int("NTRIAL_PER_ROOT"));
     set_print(options->get_int("PRINT"));
     set_e_convergence(options->get_double("E_CONVERGENCE"));
+    set_r_convergence(options->get_double("R_CONVERGENCE"));
 }
 
 /*
@@ -142,6 +145,7 @@ double FCISolver::compute_energy() {
 
     DavidsonLiuSolver dls(fci_size, nroot_);
     dls.set_e_convergence(e_convergence_);
+    dls.set_r_convergence(r_convergence_);
     dls.set_print_level(print_);
     dls.set_collapse_per_root(collapse_per_root_);
     dls.set_subspace_per_root(subspace_per_root_);
@@ -195,10 +199,10 @@ double FCISolver::compute_energy() {
     SolverStatus converged = SolverStatus::NotConverged;
 
     if (print_) {
-        outfile->Printf("\n  ==> Diagonalizing Hamiltonian <==\n");
-        outfile->Printf("\n  ----------------------------------------");
-        outfile->Printf("\n    Iter.      Avg. Energy       Delta_E");
-        outfile->Printf("\n  ----------------------------------------");
+        outfile->Printf("\n\n  ==> Diagonalizing Hamiltonian <==\n");
+        outfile->Printf("\n  -----------------------------------------------------");
+        outfile->Printf("\n    Iter.      Avg. Energy       Delta_E     Res. Norm");
+        outfile->Printf("\n  -----------------------------------------------------");
     }
 
     double old_avg_energy = 0.0;
@@ -216,14 +220,21 @@ double FCISolver::compute_energy() {
         converged = dls.update();
 
         if (converged != SolverStatus::Collapse) {
+            // compute the average energy
             double avg_energy = 0.0;
             for (size_t r = 0; r < nroot_; ++r) {
                 avg_energy += dls.eigenvalues()->get(r);
             }
             avg_energy /= static_cast<double>(nroot_);
+
+            // compute the average residual
+            auto r = dls.residuals();
+            double avg_residual =
+                std::accumulate(r.begin(), r.end(), 0.0) / static_cast<double>(nroot_);
+
             if (print_) {
-                outfile->Printf("\n    %3d  %20.12f  %+.3e", real_cycle, avg_energy,
-                                avg_energy - old_avg_energy);
+                outfile->Printf("\n    %3d  %20.12f  %+.3e  %+.3e", real_cycle, avg_energy,
+                                avg_energy - old_avg_energy, avg_residual);
             }
             old_avg_energy = avg_energy;
             real_cycle++;
@@ -234,7 +245,7 @@ double FCISolver::compute_energy() {
     }
 
     if (print_) {
-        outfile->Printf("\n  ----------------------------------------");
+        outfile->Printf("\n  -----------------------------------------------------");
         if (converged == SolverStatus::Converged) {
             outfile->Printf("\n  The Davidson-Liu algorithm converged in %d iterations.",
                             real_cycle);
@@ -265,7 +276,7 @@ double FCISolver::compute_energy() {
             C_->copy(dls.eigenvector(r));
             std::vector<std::tuple<double, double, size_t, size_t, size_t>> dets_config =
                 C_->max_abs_elements(guess_size * ntrial_per_root_);
-            // psi::Dimension nactvpi = mo_space_info_->get_dimension("ACTIVE");
+            // psi::Dimension nactvpi = mo_space_info_->dimension("ACTIVE");
 
             for (auto& det_config : dets_config) {
                 double ci_abs, ci;
@@ -275,9 +286,8 @@ double FCISolver::compute_energy() {
                 if (ci_abs < 0.1)
                     continue;
 
-                std::bitset<Determinant::num_str_bits> Ia_v = lists_->alfa_str(h, add_Ia);
-                std::bitset<Determinant::num_str_bits> Ib_v =
-                    lists_->beta_str(h ^ symmetry_, add_Ib);
+                std::bitset<Determinant::nbits_half> Ia_v = lists_->alfa_str(h, add_Ia);
+                std::bitset<Determinant::nbits_half> Ib_v = lists_->beta_str(h ^ symmetry_, add_Ib);
 
                 outfile->Printf("\n    ");
                 size_t offset = 0;
@@ -383,8 +393,8 @@ FCISolver::initial_guess(FCIVector& diag, size_t n,
         double e;
         size_t h, add_Ia, add_Ib;
         std::tie(e, h, add_Ia, add_Ib) = det;
-        std::bitset<Determinant::num_str_bits> Ia_v = lists_->alfa_str(h, add_Ia);
-        std::bitset<Determinant::num_str_bits> Ib_v = lists_->beta_str(h ^ symmetry_, add_Ib);
+        std::bitset<Determinant::nbits_half> Ia_v = lists_->alfa_str(h, add_Ia);
+        std::bitset<Determinant::nbits_half> Ib_v = lists_->beta_str(h ^ symmetry_, add_Ib);
 
         std::vector<bool> Ia(nact, false);
         std::vector<bool> Ib(nact, false);

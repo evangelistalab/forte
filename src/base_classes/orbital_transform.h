@@ -31,11 +31,13 @@ class OrbitalTransform {
 
     // The integrals
     std::shared_ptr<ForteIntegrals> ints_;
+    /// The MOSpace info
+    std::shared_ptr<MOSpaceInfo> mo_space_info_;
+
   private:
     psi::SharedMatrix Ua_;
 
     psi::SharedMatrix Ub_;
-
 };
 
 std::unique_ptr<OrbitalTransform>

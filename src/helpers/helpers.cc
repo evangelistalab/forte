@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2019 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
+ * Copyright (c) 2012-2020 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
  *
  * The copyrights for code used from other parties are included in
  * the corresponding files.
@@ -43,16 +43,11 @@
 #include "psi4/libpsio/psio.h"
 
 #include "base_classes/mo_space_info.h"
+#include "helpers/helpers.h"
 
 using namespace psi;
 
 namespace forte {
-
-void print_h2(const std::string& text, const std::string& left_separator,
-              const std::string& right_separator) {
-    outfile->Printf("\n\n  %s %s %s\n", left_separator.c_str(), text.c_str(),
-                    right_separator.c_str());
-}
 
 std::string to_string(const std::vector<std::string>& vec_str, const std::string& sep) {
     if (vec_str.size() == 0)
@@ -68,16 +63,27 @@ std::string to_string(const std::vector<std::string>& vec_str, const std::string
 
 std::string get_ms_string(double twice_ms) {
     std::string ms_str;
-    double ms = twice_ms / 2.0;
-    if ((static_cast<int>(twice_ms) % 2) == 0) {
-        ms_str = std::to_string(static_cast<int>(ms));
+    long twice_ms_long = std::lround(twice_ms);
+    if ((twice_ms_long % 2) == 0) {
+        ms_str = std::to_string(twice_ms_long / 2);
     } else {
-        int n = static_cast<int>(ms / 0.5);
-        ms_str.append(std::to_string(n));
+        ms_str.append(std::to_string(twice_ms_long));
         ms_str += "/";
         ms_str += "2";
     }
     return ms_str;
+}
+
+py::array_t<double> ambit_to_np(ambit::Tensor t) {
+    return py::array_t<double>(t.dims(), &(t.data()[0]));
+}
+
+py::array_t<double> vector_to_np(const std::vector<double>& v, const std::vector<size_t>& dims) {
+    return py::array_t<double>(dims, &(v.data()[0]));
+}
+
+py::array_t<double> vector_to_np(const std::vector<double>& v, const std::vector<int>& dims) {
+    return py::array_t<double>(dims, &(v.data()[0]));
 }
 
 psi::SharedMatrix tensor_to_matrix(ambit::Tensor t) {

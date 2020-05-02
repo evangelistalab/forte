@@ -5,8 +5,9 @@
 import forte
 
 refscf = -14.839846512738 #TEST
-refaci = -14.889029534777 #TEST
-refacipt2 = -14.890144527518 #TEST
+refaci = -14.889166993732 #TEST
+refaci_spin = 0.0
+refacipt2 = -14.890166618940 #TEST
 
 molecule li2{
    Li
@@ -29,13 +30,11 @@ set mcscf {
 set forte {
   active_space_solver aci
   frozen_docc = [0,0,0,0,0,0,0,0]
-  aci_SELECT_TYPE amp
-  gamma 10.00
-  sigma 0.001000
+  sigma 0.001
   aci_enforce_spin_complete false
   nroot 1
   charge 0
-  diag_algorithm  full
+  diag_algorithm full 
 }
 
 energy('mcscf')
@@ -44,4 +43,5 @@ compare_values(refscf, variable("CURRENT ENERGY"),9, "SCF energy") #TEST
 
 energy('forte')
 compare_values(refaci, variable("ACI ENERGY"),9, "ACI energy") #TEST
+#compare_values(refaci_spin, variable("ACI SPIN"),9, "ACI spin") #TEST
 compare_values(refacipt2, variable("ACI+PT2 ENERGY"),8, "ACI+PT2 energy") #TEST

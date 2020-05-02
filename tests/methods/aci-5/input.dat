@@ -27,8 +27,6 @@ set {
 
 set forte {
   active_space_solver aci
-  aci_SELECT_TYPE aimed_energy
-  aci_perturb_select false
   sci_excited_algorithm state_average
   aci_pq_function average
   root 0

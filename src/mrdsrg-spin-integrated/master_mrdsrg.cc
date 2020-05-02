@@ -4,7 +4,7 @@
 #include "psi4/libmints/molecule.h"
 #include "psi4/libmints/dipole.h"
 
-#include "helpers/helpers.h"
+#include "helpers/printing.h"
 #include "helpers/timer.h"
 
 #include "master_mrdsrg.h"
@@ -50,10 +50,6 @@ void MASTER_DSRG::startup() {
     // set Ambit MO space labels
     set_ambit_MOSpace();
 
-    // read commonly used energies
-    Enuc_ = ints_->nuclear_repulsion_energy();
-    Efrzc_ = ints_->frozen_core_energy();
-
     // initialize timer for commutator
     dsrg_time_ = DSRG_TIME();
 
@@ -92,8 +88,6 @@ void MASTER_DSRG::read_options() {
         throw psi::PSIEXCEPTION(message);
     };
 
-    print_ = foptions_->get_int("PRINT");
-
     s_ = foptions_->get_double("DSRG_S");
     if (s_ < 0) {
         throw_error("S parameter for DSRG must >= 0!");
@@ -125,13 +119,7 @@ void MASTER_DSRG::read_options() {
 
     relax_ref_ = foptions_->get_str("RELAX_REF");
 
-    eri_df_ = false;
-    ints_type_ = foptions_->get_str("INT_TYPE");
-    if (ints_type_ == "CHOLESKY" || ints_type_ == "DF" || ints_type_ == "DISKDF") {
-        eri_df_ = true;
-    }
-
-    multi_state_ = (foptions_->psi_options())["AVG_STATE"].size() != 0;
+    multi_state_ = foptions_->get_gen_list("AVG_STATE").size() != 0;
     multi_state_algorithm_ = foptions_->get_str("DSRG_MULTI_STATE");
 
     do_dm_ = foptions_->get_bool("DSRG_DIPOLE");
@@ -145,9 +133,10 @@ void MASTER_DSRG::read_options() {
 }
 
 void MASTER_DSRG::read_MOSpaceInfo() {
-    core_mos_ = mo_space_info_->get_corr_abs_mo("RESTRICTED_DOCC");
-    actv_mos_ = mo_space_info_->get_corr_abs_mo("ACTIVE");
-    virt_mos_ = mo_space_info_->get_corr_abs_mo("RESTRICTED_UOCC");
+    core_mos_ = mo_space_info_->corr_absolute_mo("RESTRICTED_DOCC");
+    actv_mos_ = mo_space_info_->corr_absolute_mo("ACTIVE");
+    virt_mos_ = mo_space_info_->corr_absolute_mo("RESTRICTED_UOCC");
+    actv_mos_sym_ = mo_space_info_->symmetry("ACTIVE");
 
     if (eri_df_) {
         aux_mos_ = std::vector<size_t>(ints_->nthree());
@@ -169,12 +158,14 @@ void MASTER_DSRG::set_ambit_MOSpace() {
     bvirt_label_ = "V";
 
     // add Ambit index labels
-    BTF_->add_mo_space(acore_label_, "mn", core_mos_, AlphaSpin);
-    BTF_->add_mo_space(bcore_label_, "MN", core_mos_, BetaSpin);
-    BTF_->add_mo_space(aactv_label_, "uvwxyz123", actv_mos_, AlphaSpin);
-    BTF_->add_mo_space(bactv_label_, "UVWXYZ!@#", actv_mos_, BetaSpin);
-    BTF_->add_mo_space(avirt_label_, "ef", virt_mos_, AlphaSpin);
-    BTF_->add_mo_space(bvirt_label_, "EF", virt_mos_, BetaSpin);
+    BTF_->add_mo_space(acore_label_, "m,n,c0,c1,c2,c3,c4,c5,c6,c7,c8,c9", core_mos_, AlphaSpin);
+    BTF_->add_mo_space(bcore_label_, "M,N,C0,C1,C2,C3,C4,C5,C6,C7,C8,C9", core_mos_, BetaSpin);
+    BTF_->add_mo_space(aactv_label_, "u,v,w,x,y,z,1,2,3,a0,a1,a2,a3,a4,a5,a6,a7,a8,a9", actv_mos_,
+                       AlphaSpin);
+    BTF_->add_mo_space(bactv_label_, "U,V,W,X,Y,Z,!,@,#,A0,A1,A2,A3,A4,A5,A6,A7,A8,A9", actv_mos_,
+                       BetaSpin);
+    BTF_->add_mo_space(avirt_label_, "e,f,v0,v1,v2,v3,v4,v5,v6,v7,v8,v9", virt_mos_, AlphaSpin);
+    BTF_->add_mo_space(bvirt_label_, "E,F,V0,V1,V2,V3,V4,V5,V6,V7,V8,V9", virt_mos_, BetaSpin);
 
     // map space labels to mo spaces
     label_to_spacemo_[acore_label_[0]] = core_mos_;
@@ -185,12 +176,18 @@ void MASTER_DSRG::set_ambit_MOSpace() {
     label_to_spacemo_[bvirt_label_[0]] = virt_mos_;
 
     // define composite spaces
-    BTF_->add_composite_mo_space("h", "ijkl", {acore_label_, aactv_label_});
-    BTF_->add_composite_mo_space("H", "IJKL", {bcore_label_, bactv_label_});
-    BTF_->add_composite_mo_space("p", "abcd", {aactv_label_, avirt_label_});
-    BTF_->add_composite_mo_space("P", "ABCD", {bactv_label_, bvirt_label_});
-    BTF_->add_composite_mo_space("g", "pqrsto456", {acore_label_, aactv_label_, avirt_label_});
-    BTF_->add_composite_mo_space("G", "PQRSTO789", {bcore_label_, bactv_label_, bvirt_label_});
+    BTF_->add_composite_mo_space("h", "i,j,k,l,h0,h1,h2,h3,h4,h5,h6,h7,h8,h9",
+                                 {acore_label_, aactv_label_});
+    BTF_->add_composite_mo_space("H", "I,J,K,L,H0,H1,H2,H3,H4,H5,H6,H7,H8,H9",
+                                 {bcore_label_, bactv_label_});
+    BTF_->add_composite_mo_space("p", "a,b,c,d,p0,p1,p2,p3,p4,p5,p6,p7,p8,p9",
+                                 {aactv_label_, avirt_label_});
+    BTF_->add_composite_mo_space("P", "A,B,C,D,P0,P1,P2,P3,P4,P5,P6,P7,P8,P9",
+                                 {bactv_label_, bvirt_label_});
+    BTF_->add_composite_mo_space("g", "p,q,r,s,t,o,4,5,6,g0,g1,g2,g3,g4,g5,g6,g7,g8,g9",
+                                 {acore_label_, aactv_label_, avirt_label_});
+    BTF_->add_composite_mo_space("G", "P,Q,R,S,T,O,7,8,9,G0,G1,G2,G3,G4,G5,G6,G7,G8,G9",
+                                 {bcore_label_, bactv_label_, bvirt_label_});
 
     // if DF/CD
     if (eri_df_) {
@@ -466,7 +463,7 @@ void MASTER_DSRG::init_dm_ints() {
 void MASTER_DSRG::fill_MOdm(std::vector<psi::SharedMatrix>& dm_a,
                             std::vector<psi::SharedMatrix>& dm_b) {
     // consider frozen-core part
-    std::vector<size_t> frzc_mos = mo_space_info_->get_absolute_mo("FROZEN_DOCC");
+    std::vector<size_t> frzc_mos = mo_space_info_->absolute_mo("FROZEN_DOCC");
     for (int z = 0; z < 3; ++z) {
         double dipole = 0.0;
         for (const auto& p : frzc_mos) {
@@ -478,9 +475,9 @@ void MASTER_DSRG::fill_MOdm(std::vector<psi::SharedMatrix>& dm_a,
 
     // find out correspondance between ncmo and nmo
     std::vector<size_t> cmo_to_mo;
-    psi::Dimension frzcpi = mo_space_info_->get_dimension("FROZEN_DOCC");
-    psi::Dimension frzvpi = mo_space_info_->get_dimension("FROZEN_UOCC");
-    psi::Dimension ncmopi = mo_space_info_->get_dimension("CORRELATED");
+    psi::Dimension frzcpi = mo_space_info_->dimension("FROZEN_DOCC");
+    psi::Dimension frzvpi = mo_space_info_->dimension("FROZEN_UOCC");
+    psi::Dimension ncmopi = mo_space_info_->dimension("CORRELATED");
     for (int h = 0, p = 0, nirrep = mo_space_info_->nirrep(); h < nirrep; ++h) {
         p += frzcpi[h];
         for (int r = 0; r < ncmopi[h]; ++r) {
@@ -532,7 +529,7 @@ std::shared_ptr<ActiveSpaceIntegrals> MASTER_DSRG::compute_Heff_actv() {
 
     // create FCIIntegral shared_ptr
     std::shared_ptr<ActiveSpaceIntegrals> fci_ints =
-        std::make_shared<ActiveSpaceIntegrals>(ints_, actv_mos_, core_mos_);
+        std::make_shared<ActiveSpaceIntegrals>(ints_, actv_mos_, actv_mos_sym_, core_mos_);
     fci_ints->set_active_integrals(Hbar2_.block("aaaa"), Hbar2_.block("aAaA"),
                                    Hbar2_.block("AAAA"));
     fci_ints->set_restricted_one_body_operator(Hbar1_.block("aa").data(),
@@ -908,7 +905,7 @@ void MASTER_DSRG::H2_T2_C0(BlockedTensor& H2, BlockedTensor& T2, const double& a
     E += 0.25 * H2["efmn"] * T2["mnef"];
     E += 0.25 * H2["EFMN"] * T2["MNEF"];
 
-    BlockedTensor temp = ambit::BlockedTensor::build(tensor_type_, "temp", spin_cases({"aa"}));
+    auto temp = ambit::BlockedTensor::build(tensor_type_, "temp", spin_cases({"aa"}));
     temp["vu"] += 0.5 * H2["efmu"] * T2["mvef"];
     temp["vu"] += H2["fEuM"] * T2["vMfE"];
     temp["VU"] += 0.5 * H2["EFMU"] * T2["MVEF"];
@@ -1921,7 +1918,7 @@ bool MASTER_DSRG::check_semi_orbs() {
 
     std::string actv_type = foptions_->get_str("FCIMO_ACTV_TYPE");
     if (actv_type == "CIS" || actv_type == "CISD") {
-        std::string job_type = foptions_->get_str("JOB_TYPE");
+        std::string job_type = foptions_->get_str("CORRELATION_SOLVER");
         bool fci_mo = foptions_->get_str("ACTIVE_SPACE_SOLVER") == "CAS";
         if ((job_type == "MRDSRG" || job_type == "DSRG-MRPT3") && fci_mo) {
             std::stringstream ss;

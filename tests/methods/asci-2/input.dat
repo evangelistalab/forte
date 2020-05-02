@@ -34,10 +34,11 @@ set forte {
   dl_maxiter 500
   asci_cdet 100
   asci_tdet 1000
-  asci_max_cycle 8   
+  sci_max_cycle 8   
   asci_e_convergence 1e-5
   sci_project_out_spin_contaminants true
   spin_project_full false
+  R_CONVERGENCE 1.0
 }                                        
                                          
 Escf, scf_wfn = energy('scf', return_wfn=True)

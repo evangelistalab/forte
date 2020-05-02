@@ -18,13 +18,12 @@ aci:
    - aci-11
    - aci-12
    - aci-13
-#   - aci-14
+   - aci-14
    - aci-15
    - aci-16
    - aci-17
    - aci-18
    - aci-19
-   - aci-20
    - aci-local-20
    - aci_scf-1
    - aci-full-pt2-1
@@ -65,6 +64,7 @@ embedding:
    - embedding-2
    - embedding-3
    - embedding-4
+   - embedding-5
 casscf:
   short:
    - casscf
@@ -87,6 +87,14 @@ cd-dsrg-mrpt2:
    - cd-dsrg-mrpt2-5
    - cd-dsrg-mrpt2-6
    - cd-dsrg-mrpt2-7-sa
+diag-alg:
+  short:
+   - diag-alg-1-dynamic
+   - diag-alg-2-dynamic
+   - diag-alg-1-sparse
+   - diag-alg-2-sparse
+  long:
+   - diag-alg-3-dynamic
 df-dsrg-mrpt2:
   short:
    - df-dsrg-mrpt2-1
@@ -127,6 +135,7 @@ dsrg-mrpt2:
 #  - dsrg-mrpt2-9-xms
    - dsrg-mrpt2-10-CO
    - dsrg-mrpt2-11-sa-C2H4
+   - dsrg-mrpt2-13
    - aci-dsrg-mrpt2-1
    - aci-dsrg-mrpt2-2
    - aci-dsrg-mrpt2-3
@@ -232,16 +241,37 @@ mrdsrg-pt2:
    - mrdsrg-pt2-4
   long:
    - mrdsrg-pt2-3
+   - mrdsrg-pt2-5
    - mrdsrg-srgpt2-1
+  ultralong:
    - mrdsrg-srgpt2-2
+mrdsrg-spin-adapted:
+  short:
+   - mrdsrg-spin-adapted-1
+   - mrdsrg-spin-adapted-2
+   - mrdsrg-spin-adapted-3
+   - mrdsrg-spin-adapted-4
+# long:
+#  - mrdsrg-spin-adapted-2
+mrdsrg-spin-adapted-pt2:
+  short:
+   - mrdsrg-spin-adapted-pt2-1
+   - mrdsrg-spin-adapted-pt2-2
+   - mrdsrg-spin-adapted-pt2-3
+   - mrdsrg-spin-adapted-pt2-4
+   - mrdsrg-spin-adapted-pt2-5
+mrdsrg-spin-adapted-pt3:
+  short:
+   - mrdsrg-spin-adapted-pt3-1
+   - mrdsrg-spin-adapted-pt3-2
 pci:
   short:
    - pci-1
-   - pci-2
+#   - pci-2
    - pci-3
    - pci-4
-   - pci-5
+#   - pci-5
    - pci-6
-   - pci-7
+#   - pci-7
    - pci-8
-   - pci-9
+#   - pci-9

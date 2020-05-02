@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2019 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
+ * Copyright (c) 2012-2020 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
  *
  * The copyrights for code used from other parties are included in
  * the corresponding files.
@@ -31,7 +31,6 @@
 
 #include <map>
 #include "psi4/libmints/wavefunction.h"
-#include "psi4/libiwl/iwl.h"
 #include "psi4/libpsio/psio.hpp"
 #include "integrals/integrals.h"
 #include "base_classes/rdms.h"

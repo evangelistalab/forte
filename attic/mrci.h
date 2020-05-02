@@ -7,7 +7,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2019 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
+ * Copyright (c) 2012-2020 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
  *
  * The copyrights for code used from other parties are included in
  * the corresponding files.
@@ -30,7 +30,7 @@
 
 #include "psi4/libmints/molecule.h"
 #include "psi4/libmints/wavefunction.h"
-#include "psi4/liboptions/liboptions.h"
+
 
 #include "base_classes/mo_space_info.h"
 #include "integrals/integrals.h"
@@ -44,7 +44,7 @@ namespace forte {
 class MRCI : public psi::Wavefunction {
   public:
     // Class constructor and destructor
-    MRCI(psi::SharedWavefunction ref_wfn, psi::Options& options, std::shared_ptr<ForteIntegrals> ints,
+    MRCI(psi::SharedWavefunction ref_wfn, std::shared_ptr<ForteOptions> options, std::shared_ptr<ForteIntegrals> ints,
          std::shared_ptr<MOSpaceInfo> mo_space_info, DeterminantHashVec& reference);
 
     ~MRCI();

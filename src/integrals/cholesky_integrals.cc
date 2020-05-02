@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2019 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
+ * Copyright (c) 2012-2020 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
  *
  * The copyrights for code used from other parties are included in
  * the corresponding files.
@@ -43,6 +43,9 @@
 #include "helpers/timer.h"
 #include "helpers/printing.h"
 #include "helpers/memory.h"
+
+#include "base_classes/forte_options.h"
+
 #include "cholesky_integrals.h"
 
 using namespace ambit;
@@ -50,7 +53,7 @@ using namespace psi;
 
 namespace forte {
 
-CholeskyIntegrals::CholeskyIntegrals(psi::Options& options,
+CholeskyIntegrals::CholeskyIntegrals(std::shared_ptr<ForteOptions> options,
                                      std::shared_ptr<psi::Wavefunction> ref_wfn,
                                      std::shared_ptr<MOSpaceInfo> mo_space_info,
                                      IntegralSpinRestriction restricted)
@@ -160,16 +163,16 @@ void CholeskyIntegrals::gather_integrals() {
     /// Needed to generate sieve information
     std::shared_ptr<IntegralFactory> integral(
         new IntegralFactory(primary, primary, primary, primary));
-    double tol_cd = options_.get_double("CHOLESKY_TOLERANCE");
+    double tol_cd = options_->get_double("CHOLESKY_TOLERANCE");
 
     // This is creates the cholesky decomposed AO integrals
     local_timer timer;
     std::shared_ptr<CholeskyERI> Ch(new CholeskyERI(std::shared_ptr<TwoBodyAOInt>(integral->eri()),
-                                                    options_.get_double("INTS_TOLERANCE"), tol_cd,
+                                                    options_->get_double("INTS_TOLERANCE"), tol_cd,
                                                     psi::Process::environment.get_memory()));
-    if (options_.get_str("DF_INTS_IO") == "LOAD") {
+    if (options_->get_str("DF_INTS_IO") == "LOAD") {
         std::shared_ptr<ERISieve> sieve(
-            new ERISieve(primary, options_.get_double("INTS_TOLERANCE")));
+            new ERISieve(primary, options_->get_double("INTS_TOLERANCE")));
         const std::vector<std::pair<int, int>>& function_pairs = sieve->function_pairs();
         size_t ntri = sieve->function_pairs().size();
         size_t nbf = primary->nbf();

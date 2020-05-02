@@ -32,11 +32,9 @@ set forte {
   aci_n_average 2
   active_ref_type CIS
   sci_excited_algorithm average
-  aci_pq_function average
 }
 
 energy('scf')
 compare_values(refscf, variable("SCF total energy"),10, "SCF energy") #TEST
 energy('forte')
 compare_values(refaci, variable("ACI ENERGY"),10, "ACI energy") #TEST
-compare_values(refacipt2, variable("ACI+PT2 ENERGY"),10, "ACI+PT2 energy") #TEST

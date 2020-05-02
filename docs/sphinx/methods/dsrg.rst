@@ -3,8 +3,8 @@
 Driven Similarity Renormalization Group
 =======================================
 
-.. codeauthor:: Francesco A. Evangelista, Chenyang Li, Kevin Hannon, Tianyuan Zhang
-.. sectionauthor:: Chenyang Li, Tianyuan Zhang, Kevin P. Hannon
+.. codeauthor:: Chenyang Li, Kevin P. Hannon, Tianyuan Zhang, Francesco A. Evangelista
+.. sectionauthor:: Chenyang Li, Francesco A. Evangelista, Tianyuan Zhang, Kevin P. Hannon
 
 .. important::
   Any publication utilizing the DSRG code should acknowledge the following articles:
@@ -16,10 +16,30 @@ Driven Similarity Renormalization Group
   Depending on the features used, the user is encouraged to cite the corresponding articles listed :ref:`here <dsrg_ref>`.
 
 .. caution::
-  The current implementation does not employ spin-adapted equations and it does not work for even spin multiplicities (doublet, quartets, etc.).
-  For odd multiplicities, we assume low-spin configurations (by default, no need to specify in the input file).
-  For those in desperate need to perform computations on doublets, an alternative way is to add a hydrogen atom far away from the system and perform a singlet computation.
-  Spin adaptation is on the TODO list.
+  The examples used in this manual are written based on the spin-integrated code.
+  To make the spin-integrated code work properly for molecules with **even** multiplicities [S \* (S + 1) = 2, 4, 6, ...],
+  the user should specify the following keyword:
+  ::
+
+     spin_avg_density    true       # use spin-summed reduced density matrices
+
+  to invoke the use of spin-free densities.
+  The spin-free densities are computed by averaging all spin multiplets (e.g., Ms = 1/2 or -1/2 for doublets).
+  For odd multiplicities [S \* (S + 1) = 1, 3, 5, ...], there is no need to do so.
+  Please check test case :ref:`dsrg-mrpt2-13 <dsrg_example>` for details.
+
+.. Note::
+  The latest version of Forte also has the spin-adapted MR-DSRG implemented for
+  DSRG-MRPT2, DSRG-MRPT3, and MR-LDSRG(2) (and its variants).
+  To invoke the spin-adated implementation, the user needs to specify the following keywords:
+  ::
+
+     correlation_solver  sa-mrdsrg  # spin-adapted DSRG computation
+     corr_level          ldsrg2     # spin-adapted theories: PT2, PT3, LDSRG2_QC, LDSRG2
+
+  The spin-adapted version should be at least 2-3 times faster than the corresponding spin-integrated code,
+  and it also saves some memory.
+  Note that the spin-adapted code will ignore the ``spin_avg_density`` keyword and always treat it as ``true``.
 
 .. _`basic_dsrg`:
 
@@ -344,7 +364,7 @@ There are several things to notice.
    There are other choices of :code:`CORR_LEVEL` but they are mainly for testing new ideas.
 
 2. We specify the energy convergence keyword :code:`E_CONVERGENCE` and the RSC threshold :code:`DSRG_RSC_THRESHOLD`,
-which controls the truncation of the recursive single commutator (RSC) approximation of the DSRG Hamiltonian.
+   which controls the truncation of the recursive single commutator (RSC) approximation of the DSRG Hamiltonian.
    In general, the value of :code:`DSRG_RSC_THRESHOLD` should be smaller than that of :code:`E_CONVERGENCE`.
    Making :code:`DSRG_RSC_THRESHOLD` larger will stop the BCH series earlier and thus saves some time.
    It is OK to leave :code:`DSRG_RSC_THRESHOLD` as the default value, which is :math:`10^{-12}` a.u.
@@ -354,9 +374,11 @@ which controls the truncation of the recursive single commutator (RSC) approxima
    Here we use the fully relaxed version, which is done by setting :code:`RELAX_REF` to :code:`ITERATE`.
 
 .. note::
-  The reference relaxation procedure is performed in a tick-tock way (see :ref:`dsrg_variants`), by alternatinge the solution of the DSRG amplitude equations and the diagonalization of the DSRG Hamiltonian.
+  The reference relaxation procedure is performed in a tick-tock way (see :ref:`dsrg_variants`),
+  by alternating the solution of the DSRG amplitude equations and the diagonalization of the DSRG Hamiltonian.
   This procedure may not monotonically converge and is potentially numerically unstable.
-  We therefore suggest using a moderate energy threshold (:math:`\geq 10^{-8}` a.u.) for the iterative reference relaxation, which is controlled by the option :code:`RELAX_E_CONVERGENCE` .
+  We therefore suggest using a moderate energy threshold (:math:`\geq 10^{-8}` a.u.) for the iterative reference relaxation,
+  which is controlled by the option :code:`RELAX_E_CONVERGENCE` .
 
 For a given reference wave function, the output prints out a summary of:
 
@@ -416,7 +438,9 @@ Let us introduce the nomenclature for reference relaxation.
    d) Fully Relaxed      :code:`-100.113533289341`  last iter.; relaxed ref.
    ====================  =========================  =============================
 
-   The unrelaxed energy is a diagonalize-then-perturb scheme, while the partially relaxed energy corresponds to a diagonalize-then-perturb-then-diagonalize method. In this example, the fully relaxed energy is well reproduced by
+   The unrelaxed energy is a diagonalize-then-perturb scheme,
+   while the partially relaxed energy corresponds to a diagonalize-then-perturb-then-diagonalize method.
+   In this example, the fully relaxed energy is well reproduced by
    the relaxed energy with a small error (:math:`< 10^{-4}` a.u.).
 
 **Other Examples**
@@ -492,6 +516,36 @@ For example, 3 means Taylor expansion is performed if denominators are smaller t
 
 * Type: integer
 * Default: 3
+
+**DSRG_DIIS_START**
+
+The minimum iteration to start storing DIIS vectors for MRDSRG amplitudes.
+Any number smaller than 1 will turn off the DIIS procedure.
+
+* Type: int
+* Default: 2
+
+**DSRG_DIIS_FREQ**
+
+How often to do a DIIS extrapolation in MRDSRG iterations.
+For example, 1 means do DIIS every iteration and 2 is for every other iteration, etc.
+
+* Type: int
+* Default: 1
+
+**DSRG_DIIS_MIN_VEC**
+
+Minimum number of error vectors stored for DIIS extrapolation in MRDSRG.
+
+* Type: int
+* Default: 2
+
+**DSRG_DIIS_MAX_VEC**
+
+Maximum number of error vectors stored for DIIS extrapolation in MRDSRG.
+
+* Type: int
+* Default: 6
 
 .. _dsrg_variants:
 
@@ -581,10 +635,51 @@ As such, the memory requirement of MR-LDSRG(2) is significantly reduced when we 
 and combine with integral factorization techniques with a batched algorithm for tensor contractions.
 
 Since much less number of tensor elements are involved, NIVO approximation dramatically reduces computation time.
-However, the overall time scaling of MR-LDSRG(2) remain unchanged (prefector reduction).
+However, the overall time scaling of MR-LDSRG(2) remain unchanged (prefactor reduction).
 The error introduced by the NIVO approximation is usually negligible.
 
-5. Examples
+.. note::
+  If conventional two-electron integrals are used, NIVO starts from the bare Hamiltonian term
+  (i.e., :math:`\hat{H}` and all the commutators in the BCH expansion of :math:`\bar{H}` are approximated).
+  For DF or CD intregrals, however, NIVO will start from the first commutator :math:`[\hat{H}, \hat{A}]`.
+
+5. Zeroth-order Hamiltonian of DSRG-MRPT2 in MRDSRG Class
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+DSRG-MRPT2 is also implemented in the MRDSRG class for testing other zeroth-order Hamiltonian.
+The general equation for all choices is to compute the summed second-order Hamiltonian:
+
+.. math:: \bar{H}^{[2]} = \hat{H} + [\hat{H}, \hat{A}^{(1)}] + [\hat{H}^{(0)}, \hat{A}^{(2)}] + \frac{1}{2} [[\hat{H}^{(0)}, \hat{A}^{(1)}], \hat{A}^{(1)}]
+
+where for brevity the :math:`(s)` notation is ignored and the superscripts of parentheses indicate the orders of perturbation.
+We have implemented the following choices for the zeroth-order Hamiltonian.
+
+**Diagonal Fock operator (Fdiag)**
+
+  This choice contains the three diagonal blocks of the Fock matrix,
+  that is, core-core, active-active, and virtual-virtual.
+  Due to its simplicity, :math:`\bar{H}^{[2]}` can be obtained in a non-iterative manner in the semicanonical basis.
+
+**Fock operator (Ffull)**
+
+  This choice contains all the blocks of the Fock matrix.
+  Since Fock matrix contains non-diagonal contributions, :math:`[\hat{H}^{(0)}, \hat{A}^{(2)}]` can contribute to the energy.
+  As such, both first- and second-order amplitudes are solved iteratively.
+
+**Dyall Hamiltonian (Fdiag_Vactv)**
+
+  This choice contains the diagonal Fock matrix and the part of V labeled only by active indices.
+  We solve the first-order amplitudes iteratively.
+  However, :math:`[\hat{H}^{(0)}, \hat{A}]` will neither contribute to the energy nor the active part of the :math:`\bar{H}^{[2]}`.
+
+**Fink Hamiltonian (Fdiag_Vdiag)**
+
+  This choice contains all the blocks of Dyall Hamiltonian plus other parts of V that do not change the excitation level.
+  For example, these additional blocks include: cccc, aaaa, vvvv, caca, caac, acac, acca,
+  cvcv, cvvc, vcvc, vccv, avav, avva, vava, and vaav.
+  The computation procedure is similar to that of Dyall Hamiltonian.
+
+6. Examples
 +++++++++++
 
 Here we slightly modify the more advanced example in :ref:`General DSRG Examples <basic_dsrg_example>`
@@ -611,7 +706,7 @@ to adopt the sequential transformation and NIVO approximation. ::
   Since the test case is very small, invoking these two keywords does not make the computation faster.
   A significant speed improvement can be observed for a decent amout of basis functions (:math:`\sim 100`).
 
-6. Related Options
+7. Related Options
 ++++++++++++++++++
 
 **RELAX_REF**
@@ -658,6 +753,14 @@ Apply non-interacting virtual orbital (NIVO) approximation in evaluating the tra
 
 * Type: boolean
 * Default: False
+
+**DSRG_PT2_H0TH**
+
+The zeroth-order Hamiltonian used in the MRDSRG code for computing DSRG-MRPT2 energy.
+
+* Type: string
+* Options: FDIAG, FFULL, FDIAG_VACTV, FDIAG_VDIAG
+* Default: FDIAG
 
 
 Density Fitted (DF) and Cholesky Decomposition (CD) Implementations
@@ -1198,17 +1301,12 @@ TODOs
 
 These are disabled due to a infrastructure change.
 
-1. Spin Adaptation
-++++++++++++++++++
-
-This is done for unrelaxed DSRG-MRPT2 but not complete for general LDSRG(2).
-
-2. DSRG-MRPT2 Analytic Energy Gradients
+1. DSRG-MRPT2 Analytic Energy Gradients
 +++++++++++++++++++++++++++++++++++++++
 
 This is an ongoing project.
 
-3. MR-DSRG(T) with Perturbative Triples
+2. MR-DSRG(T) with Perturbative Triples
 +++++++++++++++++++++++++++++++++++++++
 
 This is an ongoing project.
@@ -1272,6 +1370,7 @@ Acronyms used in the following text:
   dsrg-mrpt2-10-CO               SS, PR    :math:`\text{CO}`                             dipole moment (not linear response)
   dsrg-mrpt2-11-C2H4             SA        ethylene :math:`\text{C}_2\text{H}_4`         lowest three singlet states
   dsrg-mrpt2-12-localized-actv   SA        butadiene :math:`\text{C}_4\text{H}_6`        long, localized active orbitals
+  dsrg-mrpt2-13                  SS        :math:`\text{N}_2` and N atom                 size-consistency check
   aci-dsrg-mrpt2-1               SS, U     :math:`\text{N}_2`                            ACI(:math:`\sigma=0`)
   aci-dsrg-mrpt2-2               SS, U     :math:`\text{H}_4` (rectangular)              ACI(:math:`\sigma=0`)
   aci-dsrg-mrpt2-3               SS, PR    :math:`\text{H}_4` (rectangular)              ACI(:math:`\sigma=0`)
@@ -1341,6 +1440,7 @@ Acronyms used in the following text:
   mrdsrg-pt2-2                        SS, PR                   :math:`\text{BeH}_{2}`                        PT2
   mrdsrg-pt2-3                        SS, FR                   :math:`\text{BeH}_{2}`                        long, PT2
   mrdsrg-pt2-4                        SS, FR                   :math:`\text{HF}`                             PT2
+  mrdsrg-pt2-5                        SS, R                    :math:`\text{HF}`                             long, PT2, DIIS, 0th-order Hamiltonian
   mrdsrg-srgpt2-1                     SS, U                    :math:`\text{BeH}_{2}`                        Long, SRG_PT2
   mrdsrg-srgpt2-2                     SS, U                    :math:`\text{BeH}_{2}`                        LONG, SRG_PT2, Dyall Hamiltonian
   mrdsrg-ldsrg2-df-1                  SS, R                    :math:`\text{BeH}_{2}`                        CD, long
@@ -1366,6 +1466,26 @@ Acronyms used in the following text:
 +++++++++++++++++++++++++++
 
 Add test cases when DWMS is back to life.
+
+6. Spin-Adapted MR-DSRG Test Cases
+++++++++++++++++++++++++++++++++++
+
+  ============================  ==================  ===========================  =================================================
+              Name              Variants            Molecule                     Notes
+  ============================  ==================  ===========================  =================================================
+  mrdsrg-spin-adapted-1         SS, U               :math:`\text{HF}`            LDSRG(2) truncated to 2-nested commutator
+  mrdsrg-spin-adapted-2         SS, PR              :math:`\text{HF}`            long, LDSRG(2), non-semicanonical orbitals
+  mrdsrg-spin-adapted-3         SS, R, SQ, NIVO     :math:`\text{HF}`            long, CD, LDSRG(2)
+  mrdsrg-spin-adapted-4         SS, U               :math:`\text{N}_2`           long, CD, LDSRG(2), non-semicanonical, zero ccvv
+  mrdsrg-spin-adapted-pt2-1     SS, U               :math:`\text{HF}`            CD
+  mrdsrg-spin-adapted-pt2-2     SS, U               :math:`\text{HF}`            CD, non-semicanonical orbitals, zero ccvv source
+  mrdsrg-spin-adapted-pt2-3     SS, PR              p-benzyne                    DiskDF
+  mrdsrg-spin-adapted-pt2-4     SS, R               :math:`\text{O}_2`           triplet ground state, CASSCF(8e,6o)
+  mrdsrg-spin-adapted-pt2-5     SA, R               :math:`\text{C}_2`           CASSCF(8e,8o), zero 3 cumulant
+  mrdsrg-spin-adapted-pt2-6     SA                  benzene                      Exotic state-average weights
+  mrdsrg-spin-adapted-pt3-1     SS, PR              :math:`\text{HF}`            CD
+  mrdsrg-spin-adapted-pt3-2     SA                  ethylene                     lowest three singlet states
+  ============================  ==================  ===========================  =================================================
 
 .. _`dsrg_ref`:
 

@@ -3,7 +3,7 @@ import forte
 memory 2 gb
 
 escf = -304.9057795504939463
-eaci = -305.390029668114892 
+eaci = -305.39002965581
 
 molecule ene2{
 0 1
@@ -55,7 +55,7 @@ set forte {
   sigma 0.001
   diag_algorithm dynamic
   sci_direct_rdms true
-  aci_batched_screening true
+  aci_screen_alg batch_hash
   aci_nbatch 4
   nroot 1
   root_sym 0

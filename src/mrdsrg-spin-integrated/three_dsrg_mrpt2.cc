@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2019 by its authors (see COPYING, COPYING.LESSER,
+ * Copyright (c) 2012-2020 by its authors (see COPYING, COPYING.LESSER,
  * AUTHORS).
  *
  * The copyrights for code used from other parties are included in
@@ -139,16 +139,16 @@ void THREE_DSRG_MRPT2::startup() {
     ref_type_ = foptions_->get_str("REFERENCE");
     detail_time_ = foptions_->get_bool("THREE_MRPT2_TIMINGS");
 
-    ncmopi_ = mo_space_info_->get_dimension("CORRELATED");
+    ncmopi_ = mo_space_info_->dimension("CORRELATED");
     ncmo_ = mo_space_info_->size("CORRELATED");
 
     // include internal amplitudes or not
     internal_amp_ = foptions_->get_str("INTERNAL_AMP") != "NONE";
     internal_amp_select_ = foptions_->get_str("INTERNAL_AMP_SELECT");
 
-    rdoccpi_ = mo_space_info_->get_dimension("RESTRICTED_DOCC");
-    actvpi_ = mo_space_info_->get_dimension("ACTIVE");
-    ruoccpi_ = mo_space_info_->get_dimension("RESTRICTED_UOCC");
+    rdoccpi_ = mo_space_info_->dimension("RESTRICTED_DOCC");
+    actvpi_ = mo_space_info_->dimension("ACTIVE");
+    ruoccpi_ = mo_space_info_->dimension("RESTRICTED_UOCC");
 
     ncore_ = core_mos_.size();
     nactive_ = actv_mos_.size();
@@ -1244,7 +1244,7 @@ double THREE_DSRG_MRPT2::E_VT2_2() {
 
     // Calculates all but ccvv, cCvV, and CCVV energies
     double Eccvv = 0.0;
-    std::string ccvv_algorithm = foptions_->get_str("ccvv_algorithm");
+    std::string ccvv_algorithm = foptions_->get_str("CCVV_ALGORITHM");
     local_timer ccvv_timer;
     if (my_proc == 0) {
         outfile->Printf("\n    %-40s ...", "Computing <[V, T2]> (C_2)^4 ccvv");
@@ -2323,7 +2323,7 @@ double THREE_DSRG_MRPT2::E_VT2_2_AO_Slow() {
     psi::SharedMatrix Virtual_Density = ao_helper.PVir();
     Occupied_Density->print();
     Virtual_Density->print();
-    size_t nmo = mo_space_info_->get_dimension("ALL").sum();
+    size_t nmo = mo_space_info_->dimension("ALL").sum();
 
     ambit::Tensor POcc = ambit::Tensor::build(tensor_type_, "POcc", {weights, nmo, nmo});
     ambit::Tensor PVir = ambit::Tensor::build(tensor_type_, "Pvir", {weights, nmo, nmo});
@@ -3127,7 +3127,7 @@ void THREE_DSRG_MRPT2::form_Hbar() {
 void THREE_DSRG_MRPT2::set_Ufull(psi::SharedMatrix& Ua, psi::SharedMatrix& Ub) {
     outfile->Printf("\n here");
 
-    psi::Dimension nmopi = mo_space_info_->get_dimension("ALL");
+    psi::Dimension nmopi = mo_space_info_->dimension("ALL");
 
     Ua_full_.reset(new psi::Matrix("Ua", nmopi, nmopi));
     Ub_full_.reset(new psi::Matrix("Ub", nmopi, nmopi));
@@ -3451,7 +3451,7 @@ void THREE_DSRG_MRPT2::compute_Hbar1V_diskDF(ambit::BlockedTensor& Hbar1, bool s
 //    } else {
 
 //        // common (SS and SA) setup
-//        psi::Dimension active_dim = mo_space_info_->get_dimension("ACTIVE");
+//        psi::Dimension active_dim = mo_space_info_->dimension("ACTIVE");
 //        std::shared_ptr<psi::Molecule> molecule = psi::Process::environment.molecule();
 //        double Enuc = ints_->nuclear_repulsion_energy();
 //        int charge = molecule->molecular_charge();
@@ -3831,13 +3831,13 @@ std::vector<std::vector<double>> THREE_DSRG_MRPT2::diagonalize_Fock_diagblocks(B
 
     // map MO space label to its psi::Dimension
     std::map<std::string, psi::Dimension> MOlabel_to_dimension;
-    MOlabel_to_dimension["c"] = mo_space_info_->get_dimension("RESTRICTED_DOCC");
-    MOlabel_to_dimension["a"] = mo_space_info_->get_dimension("ACTIVE");
-    MOlabel_to_dimension["v"] = mo_space_info_->get_dimension("RESTRICTED_UOCC");
+    MOlabel_to_dimension["c"] = mo_space_info_->dimension("RESTRICTED_DOCC");
+    MOlabel_to_dimension["a"] = mo_space_info_->dimension("ACTIVE");
+    MOlabel_to_dimension["v"] = mo_space_info_->dimension("RESTRICTED_UOCC");
 
     // eigen values to be returned
     size_t ncmo = mo_space_info_->size("CORRELATED");
-    psi::Dimension corr = mo_space_info_->get_dimension("CORRELATED");
+    psi::Dimension corr = mo_space_info_->dimension("CORRELATED");
     std::vector<double> eigenvalues_a(ncmo, 0.0);
     std::vector<double> eigenvalues_b(ncmo, 0.0);
 
@@ -3845,9 +3845,9 @@ std::vector<std::vector<double>> THREE_DSRG_MRPT2::diagonalize_Fock_diagblocks(B
     std::map<std::string, psi::Dimension> MOlabel_to_offset_dimension;
     int nirrep = corr.n();
     MOlabel_to_offset_dimension["c"] = psi::Dimension(std::vector<int>(nirrep, 0));
-    MOlabel_to_offset_dimension["a"] = mo_space_info_->get_dimension("RESTRICTED_DOCC");
+    MOlabel_to_offset_dimension["a"] = mo_space_info_->dimension("RESTRICTED_DOCC");
     MOlabel_to_offset_dimension["v"] =
-        mo_space_info_->get_dimension("RESTRICTED_DOCC") + mo_space_info_->get_dimension("ACTIVE");
+        mo_space_info_->dimension("RESTRICTED_DOCC") + mo_space_info_->dimension("ACTIVE");
 
     // figure out index
     auto fill_eigen = [&](std::string block_label, int irrep, std::vector<double> values) {

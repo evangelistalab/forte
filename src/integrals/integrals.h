@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2019 by its authors (see COPYING, COPYING.LESSER,
+ * Copyright (c) 2012-2020 by its authors (see COPYING, COPYING.LESSER,
  * AUTHORS).
  *
  * The copyrights for code used from other parties are included in
@@ -105,7 +105,7 @@ class ForteIntegrals {
      * @param restricted Select a restricted or unrestricted transformation
      * @param mo_space_info The MOSpaceInfo object
      */
-    ForteIntegrals(psi::Options& options, std::shared_ptr<psi::Wavefunction> ref_wfn,
+    ForteIntegrals(std::shared_ptr<ForteOptions> options, std::shared_ptr<psi::Wavefunction> ref_wfn,
                    std::shared_ptr<MOSpaceInfo> mo_space_info, IntegralSpinRestriction restricted);
 
     /// Virtual destructor to enable deletion of a Derived* through a Base*
@@ -195,18 +195,23 @@ class ForteIntegrals {
     /// notation <pq||rs>
     virtual double aptei_bb(size_t p, size_t q, size_t r, size_t s) = 0;
 
+    /// @return a tensor with a block of the alpha one-electron integrals
+    ambit::Tensor oei_a_block(const std::vector<size_t>& p, const std::vector<size_t>& q);
+    /// @return a tensor with a block of the beta one-electron integrals
+    ambit::Tensor oei_b_block(const std::vector<size_t>& p, const std::vector<size_t>& q);
+
     /// Grab a block of the integrals and return a tensor
     /// p, q, r, s correspond to the vector of indices you want for your tensor
     /// if p, q, r, s is equal to an array of all of the mos, then this will
-    /// return a tensor of dimension nmo^4.
+    /// @return a tensor with a block of the alpha-alpha antisymmetrized two-electron integrals
     virtual ambit::Tensor aptei_aa_block(const std::vector<size_t>& p, const std::vector<size_t>& q,
                                          const std::vector<size_t>& r,
                                          const std::vector<size_t>& s) = 0;
-    /// Same as above but reads alpha-beta chunck
+    /// @return a tensor with a block of the alpha-beta antisymmetrized two-electron integrals
     virtual ambit::Tensor aptei_ab_block(const std::vector<size_t>& p, const std::vector<size_t>& q,
                                          const std::vector<size_t>& r,
                                          const std::vector<size_t>& s) = 0;
-    /// The beta-beta integrals
+    /// @return a tensor with a block of the beta-beta antisymmetrized two-electron integrals
     virtual ambit::Tensor aptei_bb_block(const std::vector<size_t>& p, const std::vector<size_t>& q,
                                          const std::vector<size_t>& r,
                                          const std::vector<size_t>& s) = 0;
@@ -214,8 +219,7 @@ class ForteIntegrals {
     virtual ambit::Tensor three_integral_block(const std::vector<size_t>& A,
                                                const std::vector<size_t>& p,
                                                const std::vector<size_t>& q) = 0;
-    /// This function is only used by DiskDF and it is used to go from a Apq->Aq
-    /// tensor
+    /// This function is only used by DiskDF and it is used to go from a Apq->Aq tensor
     virtual ambit::Tensor three_integral_block_two_index(const std::vector<size_t>& A, size_t p,
                                                          const std::vector<size_t>& q) = 0;
 
@@ -291,7 +295,7 @@ class ForteIntegrals {
     // ==> Class data <==
 
     /// The options object
-    psi::Options& options_;
+    std::shared_ptr<ForteOptions> options_;
 
     /// The Wavefunction object
     std::shared_ptr<psi::Wavefunction> wfn_;

@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2019 by its authors (see COPYING, COPYING.LESSER,
+ * Copyright (c) 2012-2020 by its authors (see COPYING, COPYING.LESSER,
  * AUTHORS).
  *
  * The copyrights for code used from other parties are included in
@@ -37,14 +37,39 @@
 #include <string>
 #include <vector>
 
+#include <pybind11/pybind11.h>
+#include <pybind11/numpy.h>
+
+#include "ambit/tensor.h"
 #include "ambit/blocked_tensor.h"
+
 #include "psi4/libmints/matrix.h"
 #include "psi4/libmints/vector.h"
 #include "psi4/libqt/qt.h"
 
+namespace py = pybind11;
+
 class Options;
 
 namespace forte {
+
+/**
+ * @brief Convert an ambit tensor to a numpy ndarray.
+ *        The returned tensor is stored according to the C storage convention.
+ * @param t The input tensor
+ * @return A numpy array
+ */
+py::array_t<double> ambit_to_np(ambit::Tensor t);
+
+/**
+ * @brief Convert a std::vector<double> to a numpy ndarray.
+ *        The returned tensor is stored according to the C storage convention.
+ * @param v The input vector
+ * @param dims The dimensions of the tensor
+ * @return A numpy array
+ */
+py::array_t<double> vector_to_np(const std::vector<double>& v, const std::vector<size_t>& dims);
+py::array_t<double> vector_to_np(const std::vector<double>& v, const std::vector<int>& dims);
 
 /**
  * @brief tensor_to_matrix
@@ -79,17 +104,7 @@ void view_modified_orbitals(std::shared_ptr<psi::Wavefunction> wfn,
                             const std::shared_ptr<psi::Vector>& occupation);
 
 /**
- * @brief print_h2 Print a header
- * @param text The string to print in the header.
- * @param left_separator The left separator (default = "==>")
- * @param right_separator The right separator (default = "<==")
- */
-void print_h2(const std::string& text, const std::string& left_separator = "==>",
-              const std::string& right_separator = "<==");
-
-/**
- * Returns the Ms as a string, using
- * fractions if needed
+ * Returns the Ms as a string, using fractions if needed
  */
 std::string get_ms_string(double twice_ms);
 

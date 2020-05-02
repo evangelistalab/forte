@@ -182,21 +182,21 @@ private:
     void screen_mos();
     /// Find the determinants with energy below a given threshold
     void explore(Options &options);
-    void explore_original(psi::Options& options);
-    void explore_singles(psi::Options& options);
-    void explore_singles_sequential(psi::Options& options);
+    void explore_original(std::shared_ptr<ForteOptions> options);
+    void explore_singles(std::shared_ptr<ForteOptions> options);
+    void explore_singles_sequential(std::shared_ptr<ForteOptions> options);
     /// Diagonalize the Hamiltonian in the P space (model + intermediate space)
-    void diagonalize_p_space(psi::Options& options);
+    void diagonalize_p_space(std::shared_ptr<ForteOptions> options);
     /// Diagonalize the Hamiltonian in the P space (model + intermediate space)
-    void diagonalize_p_space_direct(psi::Options& options);
+    void diagonalize_p_space_direct(std::shared_ptr<ForteOptions> options);
     /// Diagonalize the Hamiltonian in the P space including the Lowdin contribution to the energy
-    void diagonalize_p_space_lowdin(psi::Options& options);
+    void diagonalize_p_space_lowdin(std::shared_ptr<ForteOptions> options);
     /// Diagonalize the Hamiltonian in the main space and include only contributions relevant to each state
-    void diagonalize_selected_space(psi::Options& options);
+    void diagonalize_selected_space(std::shared_ptr<ForteOptions> options);
     /// Diagonalize the Hamiltonian using a renormalization procedure that selects determinants
-    void diagonalize_renormalized_space(psi::Options& options);
+    void diagonalize_renormalized_space(std::shared_ptr<ForteOptions> options);
     /// Diagonalize the Hamiltonian using a renormalization procedure that selects determinants and keeps only a fixed amount
-    void diagonalize_renormalized_fixed_space(psi::Options& options);
+    void diagonalize_renormalized_fixed_space(std::shared_ptr<ForteOptions> options);
     /// Print the results of a computation
     void print_results(SharedMatrix evecs,SharedVector evals,int nroots);
     void print_results_lambda_sd_ci(std::vector<StringDeterminant>& determinants,
@@ -231,20 +231,20 @@ private:
     void evaluate_perturbative_corrections(SharedVector evals,SharedMatrix evecs);
 
     // Lambda+SD-CI
-    void lambda_mrcisd(psi::Options& options);
+    void lambda_mrcisd(std::shared_ptr<ForteOptions> options);
     // Lambda+S-CI
-    void lambda_mrcis(psi::Options& options);
+    void lambda_mrcis(std::shared_ptr<ForteOptions> options);
     /// A renormalized MRCISD
-    void renormalized_mrcisd(psi::Options& options);
-    void renormalized_mrcisd_simple(psi::Options& options);
+    void renormalized_mrcisd(std::shared_ptr<ForteOptions> options);
+    void renormalized_mrcisd_simple(std::shared_ptr<ForteOptions> options);
 
     /// Iterative and adaptive MRCISD
-    void iterative_adaptive_mrcisd(psi::Options& options);
+    void iterative_adaptive_mrcisd(std::shared_ptr<ForteOptions> options);
     /// Iterative and adaptive MRCISD
-    void iterative_adaptive_mrcisd_bitset(psi::Options& options);
+    void iterative_adaptive_mrcisd_bitset(std::shared_ptr<ForteOptions> options);
 
     /// Factorized CI multireference wave functions
-    void factorized_ci(psi::Options& options);
+    void factorized_ci(std::shared_ptr<ForteOptions> options);
 
 
     // Functions for generating combination

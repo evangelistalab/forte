@@ -5,8 +5,8 @@
 import forte
 
 refscf = -75.0525898286472852 
-refaci = -75.394396759749 
-refacipt2 = -75.437282606139
+refaci = -75.354835591518 
+refacipt2 = -75.374833674568
 
 molecule N2{
 0 1
@@ -32,15 +32,14 @@ set {
 set forte {
   active_space_solver aci
   multiplicity 1
-  aci_select_type amp
+  m_s 0.0
   frozen_docc [1,0,0,0,0,1,0,0]
   root_sym 0
-  sigma 0.01
+  sigma 0.02
   nroot 1
   charge 0
   aci_enforce_spin_complete true
-  aci_prescreen_threshold 0.0
-  diag_algorithm solver
+  diag_algorithm sparse
   active_ref_type hf
 }
 

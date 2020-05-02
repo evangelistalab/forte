@@ -1,0 +1,70 @@
+#! Generated using commit GITCOMMIT
+
+import forte
+
+memory 500 mb
+
+Ecas_psi4 = -149.707631190543310
+Ept2_ur   = -149.963428643411589
+Ept2_pr   = -149.965045206030538
+Ept2_r    = -149.965438934490152
+
+molecule {
+0 3
+O
+O 1 1.251
+}
+
+set globals{
+  basis                  cc-pvdz
+  reference              rohf
+  scf_type               pk
+  e_convergence          12
+  d_convergence          8
+  mcscf_e_convergence    12
+  mcscf_r_convergence    8
+  mcscf_diis_start       10
+  mcscf_max_rot          0.2
+  reference_sym          1
+  restricted_docc        [2,0,0,0,0,2,0,0]
+  active                 [1,0,1,1,0,1,1,1]
+}
+#Ecas, wfn = energy('casscf', return_wfn=True)
+#compare_values(Ecas_psi4, Ecas, 9, "CASSCF(6,6)/cc-pVDZ (PSI4) energy")
+
+set scf_type direct
+set forte{
+  job_type               casscf
+  casscf_ci_solver       fci
+  restricted_docc        [2,0,0,0,0,2,0,0]
+  active                 [1,0,1,1,0,1,1,1]
+  root_sym               1
+  e_convergence          12
+  r_convergence          8
+  casscf_g_convergence   1e-8
+  casscf_e_convergence   1e-12
+  spin_avg_density       true
+}
+Escf, wfn = energy('scf', return_wfn=True)
+Ecas, wfn = energy('forte', ref_wfn=wfn, return_wfn=True)
+compare_values(Ecas_psi4, Ecas, 9, "CASSCF(6,6)/cc-pVDZ (FORTE) energy")
+
+set forte{
+  job_type               newdriver
+  active_space_solver    cas
+  correlation_solver     sa-mrdsrg
+  corr_level             pt2
+  frozen_docc            [1,0,0,0,0,1,0,0]
+  restricted_docc        [1,0,0,0,0,1,0,0]
+  active                 [1,0,1,1,0,1,1,1]
+  root_sym               1
+  dsrg_s                 1.0
+  relax_ref              twice
+  e_convergence          12
+  r_convergence          8
+}
+energy('forte', ref_wfn=wfn)
+names = ["UNRELAXED ENERGY", "PARTIALLY RELAXED ENERGY", "RELAXED ENERGY"]
+refs = [Ept2_ur, Ept2_pr, Ept2_r]
+for name, Eref in zip(names, refs):
+    compare_values(Eref, variable(name), 9, "DSRG-MRPT2 " + name.lower())

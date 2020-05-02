@@ -1,0 +1,1170 @@
+
+    -----------------------------------------------------------------------
+          Psi4: An Open-Source Ab Initio Electronic Structure Package
+                               Psi4 1.4a2.dev313 
+
+                         Git: Rev {master} 65c0921 
+
+
+    R. M. Parrish, L. A. Burns, D. G. A. Smith, A. C. Simmonett,
+    A. E. DePrince III, E. G. Hohenstein, U. Bozkaya, A. Yu. Sokolov,
+    R. Di Remigio, R. M. Richard, J. F. Gonthier, A. M. James,
+    H. R. McAlexander, A. Kumar, M. Saitow, X. Wang, B. P. Pritchard,
+    P. Verma, H. F. Schaefer III, K. Patkowski, R. A. King, E. F. Valeev,
+    F. A. Evangelista, J. M. Turney, T. D. Crawford, and C. D. Sherrill,
+    J. Chem. Theory Comput. 13(7) pp 3185--3197 (2017).
+    (doi: 10.1021/acs.jctc.7b00174)
+
+
+                         Additional Contributions by
+    P. Kraus, H. Kruse, M. H. Lechner, M. C. Schieber, R. A. Shaw,
+    A. Alenaizan, R. Galvelis, Z. L. Glick, S. Lehtola, and J. P. Misiewicz
+
+    -----------------------------------------------------------------------
+
+
+    Psi4 started on: Saturday, 21 March 2020 12:47AM
+
+    Process ID: 46632
+    Host:       Yorks-Mac.local
+    PSIDATADIR: /Users/york/src/psi4group/psi4/share/psi4
+    Memory:     500.0 MiB
+    Threads:    1
+    
+  ==> Input File <==
+
+--------------------------------------------------------------------------
+#! Generated using commit GITCOMMIT
+
+import forte
+memory 500 mb
+
+refmcscf     = -99.406065223639615
+refdsrgpt3   = -99.498903267935276
+
+molecule HF{
+  0 1
+  F
+  H  1 R
+  R = 1.50
+}
+
+set globals{
+  basis                  3-21g
+  reference              twocon
+  scf_type               pk
+  e_convergence          8
+  maxiter                100
+  docc                   [3,0,1,1]
+}
+
+set mcscf{
+  docc                   [2,0,1,1]
+  socc                   [2,0,0,0]
+  maxiter                1000
+  level_shift            0.5
+  d_convergence          10
+  e_convergence          12
+}
+
+set forte{
+  active_space_solver    fci
+  correlation_solver     sa-mrdsrg
+  corr_level             pt3
+  frozen_docc            [1,0,0,0]
+  restricted_docc        [1,0,1,1]
+  active                 [2,0,0,0]
+  dsrg_s                 1.0
+  relax_ref              once
+  maxiter                100
+  e_convergence          10
+  r_convergence          8
+}
+
+Emcscf, wfn = energy('mcscf', return_wfn=True)
+compare_values(refmcscf, Emcscf, 10, "MCSCF energy")
+
+Ept3 = energy('forte', ref_wfn=wfn)
+compare_values(refdsrgpt3, Ept3, 9, "DSRG-MRPT3 partially relaxed energy")
+
+set forte{
+  int_type           cholesky
+  cholesky_tolerance 1e-12
+}
+Ept3 = energy('forte', ref_wfn=wfn)
+compare_values(refdsrgpt3, Ept3, 9, "CD-DSRG-MRPT3 partially relaxed energy")
+--------------------------------------------------------------------------
+
+  Memory set to 476.837 MiB by Python driver.
+
+Scratch directory: /Users/york/scratch/psi4/
+   => Loading Basis Set <=
+
+    Name: 3-21G
+    Role: ORBITAL
+    Keyword: BASIS
+    atoms 1 entry F          line   101 file /Users/york/src/psi4group/psi4/share/psi4/basis/3-21g.gbs 
+    atoms 2 entry H          line    21 file /Users/york/src/psi4group/psi4/share/psi4/basis/3-21g.gbs 
+
+
+*** tstart() called on Yorks-Mac.local
+*** at Sat Mar 21 00:47:11 2020
+
+
+         ------------------------------------------
+           MCSCF: a self-consistent field program
+            written by Francesco A. Evangelista
+         ------------------------------------------
+
+  MOs per irrep:                                      A1  A2  B1  B2 Total
+  ----------------------------------------------------------------------------
+  Total                                                7    0    2    2    11
+  Doubly Occupied                                      2    0    1    1     4
+  Active/Singly Occupied                               2    0    0    0     2
+  ----------------------------------------------------------------------------
+
+  Running an SCF calculation
+  TWOCON MOs = [2 (A1),3 (A1)]
+
+  Generated 66 pairs
+  Distributed as [34 A1][4 A2][14 B1][14 B2]
+  batch   0 pq = [       0,      34] index = [               0,             595]
+
+  Allocated the PK matrix (595 elements) 
+  Allocated the  K matrix (595 elements) 
+  Reading the two-electron integrals to form PK and K ... 
+  batch   0 ... done.
+
+
+  =========================================================================================
+         Cycle          Energy               D(Energy)            D(Density)            DIIS
+  ===========================================================================================
+  Setting level shift to 0.500 S
+  @SCF    0      -90.711680138176     -90.711680138176       0.179571426993
+    ci      = [ 0.00000000, 0.00000000]
+    ci_grad = [ 0.00000000, 0.00000000]
+  Setting level shift to 0.500 S
+  @SCF    1      -99.209208290096      -8.497528151920       0.171539036662
+    ci      = [ 0.00000000, 0.00000000]
+    ci_grad = [ 0.00000000, 0.00000000]
+  Setting level shift to 0.500 S
+  @SCF    2      -99.181126225880       0.028082064215       0.014194650111
+    ci      = [ 0.00000000, 0.00000000]
+    ci_grad = [ 0.00000000, 0.00000000]
+  Setting level shift to 0.500 S
+  @SCF    3      -99.187147056378      -0.006020830498       0.007187093304
+    ci      = [ 0.00000000, 0.00000000]
+    ci_grad = [ 0.00000000, 0.00000000]
+  Setting level shift to 0.500 S
+  @SCF    4      -99.185505238746       0.001641817632       0.004582734282
+    ci      = [ 0.00000000, 0.00000000]
+    ci_grad = [ 0.00000000, 0.00000000]
+  Setting level shift to 0.500 S
+  @SCF    5      -99.188474395194      -0.002969156448       0.002877713567
+    ci      = [ 0.00000000, 0.00000000]
+    ci_grad = [ 0.00000000, 0.00000000]
+  Setting level shift to 0.500 S
+  @SCF    6      -99.186908015658       0.001566379536       0.001957181741
+    ci      = [ 0.00000000, 0.00000000]
+    ci_grad = [ 0.00000000, 0.00000000]
+  Setting level shift to 0.500 S/E
+  @SCF    7      -99.189018416397      -0.002110400739       0.001358833744
+    ci      = [ 0.00000000, 0.00000000]
+    ci_grad = [ 0.00000000, 0.00000000]
+  Setting level shift to 0.500 S/E
+  @SCF    8      -99.188321587265       0.000696829132       0.000571003453
+    ci      = [ 0.00000000, 0.00000000]
+    ci_grad = [ 0.00000000, 0.00000000]
+  Setting level shift to 0.500 S/E
+  @SCF    9      -99.188265995913       0.000055591352       0.000013369739
+    ci      = [ 0.00000000, 0.00000000]
+    ci_grad = [ 0.00000000, 0.00000000]
+  Setting level shift to 0.500 S/E
+  @SCF   10      -99.188257103781       0.000008892132       0.000002169527
+    ci      = [-0.93934204, 0.34298182]
+    ci_grad = [ 0.00000000, 0.00000000]
+  Setting level shift to 0.500 S/E
+  @SCF   11      -99.188255335433       0.000001768348       0.000000855765
+    ci      = [-0.93934230, 0.34298111]
+    ci_grad = [-0.00000152, 0.00000100]
+  Setting level shift to 0.500 S/E
+  @SCF   12      -99.188255068850       0.000000266583       0.000000113202
+    ci      = [-0.93934223, 0.34298130]
+    ci_grad = [-0.00000029,-0.00000001]
+  Setting level shift to 0.500 S/E
+  @SCF   13      -99.188257583813      -0.000002514963       0.000000557778
+    ci      = [-0.93934249, 0.34298060]
+    ci_grad = [ 0.00000250,-0.00000048]
+  Setting level shift to 0.500 S/E
+  @SCF   14      -99.188256442097       0.000001141716       0.000000350187
+    ci      = [-0.93934242, 0.34298079]
+    ci_grad = [-0.00000111, 0.00000029]
+  Setting level shift to 0.500 S/E
+  @SCF   15      -99.188256647874      -0.000000205777       0.000000028682
+    ci      = [-0.93934243, 0.34298075]
+    ci_grad = [ 0.00000020,-0.00000005]
+  Setting level shift to 0.500 S/E
+  @SCF   16      -99.188272229983      -0.000015582109       0.000001972231
+    ci      = [-0.93934243, 0.34298075]
+    ci_grad = [ 0.00001561,-0.00000267]
+  Setting level shift to 0.500 S/E
+  @SCF   17      -99.188250688480       0.000021541503       0.000002905226
+    ci      = [-0.93934243, 0.34298075]
+    ci_grad = [-0.00002004, 0.00000793]
+  Setting level shift to 0.500 S/E
+  @SCF   18      -99.338046758829      -0.149796070349       0.036362494025
+    ci      = [-0.93934243, 0.34298075]
+    ci_grad = [ 0.16014411, 0.02875829]
+  Setting level shift to 0.500 S/E
+  @SCF   19      -99.382572780712      -0.044526021883       0.017270878187
+    ci      = [-0.93934243, 0.34298075]
+    ci_grad = [ 0.05098351, 0.01344601]
+  Setting level shift to 0.500 S/E
+  @SCF   20      -99.390968161838      -0.008395381126       0.006384921484
+    ci      = [-0.93934243, 0.34298075]
+    ci_grad = [ 0.01839851, 0.03073809]
+  Setting level shift to 0.500 S/E
+  @SCF   21      -99.396561382565      -0.005593220727       0.005328712658
+    ci      = [-0.93934243, 0.34298075]
+    ci_grad = [ 0.01348753, 0.02339500]
+  Setting level shift to 0.500 S/E
+  @SCF   22      -99.401998510850      -0.005437128285       0.006433020461
+    ci      = [-0.93934243, 0.34298075]
+    ci_grad = [ 0.01315600, 0.02274320]
+  Setting level shift to 0.500 S/E
+  @SCF   23      -99.404431434302      -0.002432923452       0.004495074278
+    ci      = [-0.93934243, 0.34298075]
+    ci_grad = [ 0.00880414, 0.01862573]
+  Setting level shift to 0.500 S/E
+  @SCF   24      -99.405882232624      -0.001450798321       0.005181398448
+    ci      = [-0.93934243, 0.34298075]
+    ci_grad = [ 0.00790542, 0.01900486]
+  Setting level shift to 0.500 S/E
+  @SCF   25      -99.405932226283      -0.000049993659       0.000647153713
+    ci      = [-0.93934243, 0.34298075]
+    ci_grad = [ 0.00658829, 0.01947783]
+  Setting level shift to 0.500 S/E
+  @SCF   26      -99.405964114028      -0.000031887745       0.000487050411
+    ci      = [-0.93934243, 0.34298075]
+    ci_grad = [ 0.00660653, 0.01959654]
+  Setting level shift to 0.500 S/E
+  @SCF   27      -99.405975047781      -0.000010933753       0.000411811953
+    ci      = [-0.93934243, 0.34298075]
+    ci_grad = [ 0.00657141, 0.01955391]
+  Setting level shift to 0.500 S/E
+  @SCF   28      -99.405963063814       0.000011983967       0.000197471255
+    ci      = [-0.93934243, 0.34298075]
+    ci_grad = [ 0.00647342, 0.01931283]
+  Setting level shift to 0.500 S/E
+  @SCF   29      -99.405970566618      -0.000007502804       0.000151661673
+    ci      = [-0.94801043, 0.31823925]
+    ci_grad = [ 0.00652327, 0.01940875]
+  Setting level shift to 0.500 S/E
+  @SCF   30      -99.405971012452      -0.000000445834       0.000041049560
+    ci      = [-0.94801253, 0.31823301]
+    ci_grad = [ 0.00000206, 0.00000473]
+  Setting level shift to 0.500 S/E
+  @SCF   31      -99.405968227205       0.000002785247       0.000018251098
+    ci      = [-0.94799156, 0.31829547]
+    ci_grad = [-0.00001902,-0.00004790]
+  Setting level shift to 0.500 S/E
+  @SCF   32      -99.405962685737       0.000005541468       0.000032998895
+    ci      = [-0.94795111, 0.31841592]
+    ci_grad = [-0.00003685,-0.00009229]
+  Setting level shift to 0.500 S/E
+  @SCF   33      -99.405957420857       0.000005264880       0.000034892311
+    ci      = [-0.94791410, 0.31852607]
+    ci_grad = [-0.00003389,-0.00008431]
+  Setting level shift to 0.500 S/E
+  @SCF   34      -99.405974325056      -0.000016904199       0.000129284655
+    ci      = [-0.94791410, 0.31852607]
+    ci_grad = [ 0.00011142, 0.00027886]
+  Setting level shift to 0.500 S/E
+  @SCF   35      -99.406017328362      -0.000043003306       0.000415566228
+    ci      = [-0.94791410, 0.31852607]
+    ci_grad = [ 0.00043263, 0.00115859]
+  Setting level shift to 0.500 S/E
+  @SCF   36      -99.406031686698      -0.000014358335       0.000183027938
+    ci      = [-0.94791410, 0.31852607]
+    ci_grad = [ 0.00053504, 0.00155802]
+  Setting level shift to 0.500 S/E
+  @SCF   37      -99.406062271076      -0.000030584379       0.000670255008
+    ci      = [-0.94791410, 0.31852607]
+    ci_grad = [ 0.00102744, 0.00300159]
+  Setting level shift to 0.500 S/E
+  @SCF   38      -99.406062913553      -0.000000642477       0.000032727804
+    ci      = [-0.94921470, 0.31462908]
+    ci_grad = [ 0.00102168, 0.00308029]
+  Setting level shift to 0.500 S/E
+  @SCF   39      -99.406062987149      -0.000000073596       0.000038123541
+    ci      = [-0.94921398, 0.31463124]
+    ci_grad = [-0.00000050,-0.00000173]
+  Setting level shift to 0.500 S/E
+  @SCF   40      -99.406064986173      -0.000001999024       0.000171926787
+    ci      = [-0.94936489, 0.31417560]
+    ci_grad = [ 0.00012120, 0.00035988]
+  Setting level shift to 0.500 S/E
+  @SCF   41      -99.406065075344      -0.000000089171       0.000024013874
+    ci      = [-0.94937948, 0.31413152]
+    ci_grad = [ 0.00001162, 0.00003485]
+  Setting level shift to 0.500 S/E
+  @SCF   42      -99.406065202333      -0.000000126989       0.000044343529
+    ci      = [-0.94941566, 0.31402214]
+    ci_grad = [ 0.00002876, 0.00008655]
+  Setting level shift to 0.500 S/E
+  @SCF   43      -99.406065217368      -0.000000015035       0.000011241348
+    ci      = [-0.94942554, 0.31399228]
+    ci_grad = [ 0.00000783, 0.00002363]
+  Setting level shift to 0.500 S/E
+  @SCF   44      -99.406065223490      -0.000000006122       0.000013313322
+    ci      = [-0.94943693, 0.31395784]
+    ci_grad = [ 0.00000902, 0.00002727]
+  Setting level shift to 0.500 S/E
+  @SCF   45      -99.406065223008       0.000000000482       0.000004349788
+    ci      = [-0.94944061, 0.31394670]
+    ci_grad = [ 0.00000291, 0.00000882]
+  Setting level shift to 0.500 S/E
+  @SCF   46      -99.406065223618      -0.000000000611       0.000004522665
+    ci      = [-0.94943679, 0.31395825]
+    ci_grad = [-0.00000302,-0.00000915]
+  Setting level shift to 0.500 S/E
+  @SCF   47      -99.406065223615       0.000000000003       0.000001207083
+    ci      = [-0.94943762, 0.31395575]
+    ci_grad = [ 0.00000065, 0.00000198]
+  Setting level shift to 0.500 S/E
+  @SCF   48      -99.406065223632      -0.000000000017       0.000000357766
+    ci      = [-0.94943730, 0.31395670]
+    ci_grad = [-0.00000025,-0.00000075]
+  Setting level shift to 0.500 S/E
+  @SCF   49      -99.406065223638      -0.000000000005       0.000000565139
+    ci      = [-0.94943679, 0.31395825]
+    ci_grad = [-0.00000041,-0.00000123]
+  Setting level shift to 0.500 S/E
+  @SCF   50      -99.406065223639      -0.000000000001       0.000000268835
+    ci      = [-0.94943703, 0.31395752]
+    ci_grad = [ 0.00000019, 0.00000057]
+  Setting level shift to 0.500 S/E
+  @SCF   51      -99.406065223639      -0.000000000000       0.000000106321
+    ci      = [-0.94943694, 0.31395779]
+    ci_grad = [-0.00000007,-0.00000021]
+  Setting level shift to 0.500 S/E
+  @SCF   52      -99.406065223640      -0.000000000000       0.000000035532
+    ci      = [-0.94943695, 0.31395777]
+    ci_grad = [ 0.00000000, 0.00000001]
+  Setting level shift to 0.500 S/E
+  @SCF   53      -99.406065223640      -0.000000000000       0.000000029700
+    ci      = [-0.94943697, 0.31395771]
+    ci_grad = [ 0.00000002, 0.00000005]
+  Setting level shift to 0.500 S/E
+  @SCF   54      -99.406065223640       0.000000000000       0.000000008554
+    ci      = [-0.94943696, 0.31395772]
+    ci_grad = [-0.00000000,-0.00000001]
+  Setting level shift to 0.500 S/E
+  @SCF   55      -99.406065223640      -0.000000000000       0.000000009691
+    ci      = [-0.94943696, 0.31395772]
+    ci_grad = [ 0.00000000, 0.00000000]
+  Setting level shift to 0.500 S/E
+  @SCF   56      -99.406065223640       0.000000000000       0.000000004699
+    ci      = [-0.94943697, 0.31395771]
+    ci_grad = [ 0.00000000, 0.00000000]
+  Setting level shift to 0.500 S/E
+  @SCF   57      -99.406065223640       0.000000000000       0.000000003491
+    ci      = [-0.94943697, 0.31395771]
+    ci_grad = [ 0.00000000, 0.00000000]
+  Setting level shift to 0.500 S/E
+  @SCF   58      -99.406065223640       0.000000000000       0.000000002435
+    ci      = [-0.94943697, 0.31395771]
+    ci_grad = [ 0.00000000, 0.00000000]
+  Setting level shift to 0.500 S/E
+  @SCF   59      -99.406065223640       0.000000000000       0.000000001981
+    ci      = [-0.94943697, 0.31395771]
+    ci_grad = [ 0.00000000, 0.00000000]
+  Setting level shift to 0.500 S/E
+  @SCF   60      -99.406065223640       0.000000000000       0.000000000504
+    ci      = [-0.94943697, 0.31395771]
+    ci_grad = [-0.00000000,-0.00000000]
+  Setting level shift to 0.500 S/E
+  @SCF   61      -99.406065223640      -0.000000000000       0.000000000291
+    ci      = [-0.94943697, 0.31395771]
+    ci_grad = [-0.00000000,-0.00000000]
+  Setting level shift to 0.500 S/E
+  @SCF   62      -99.406065223640      -0.000000000000       0.000000000114
+    ci      = [-0.94943697, 0.31395771]
+    ci_grad = [ 0.00000000, 0.00000000]
+  Setting level shift to 0.500 S/E
+  @SCF   63      -99.406065223640      -0.000000000000       0.000000000120
+    ci      = [-0.94943697, 0.31395771]
+    ci_grad = [-0.00000000,-0.00000000]
+  Setting level shift to 0.500 S/E
+  @SCF   64      -99.406065223640      -0.000000000000       0.000000000252
+    ci      = [-0.94943697, 0.31395771]
+    ci_grad = [ 0.00000000, 0.00000000]
+  Setting level shift to 0.500 S/E
+  @SCF   65      -99.406065223640       0.000000000000       0.000000000071
+    ci      = [-0.94943697, 0.31395771]
+    ci_grad = [-0.00000000,-0.00000000]
+  Setting level shift to 0.500 S/E
+  @SCF   66      -99.406065223640      -0.000000000000       0.000000000040
+    ci      = [-0.94943697, 0.31395771]
+    ci_grad = [ 0.00000000, 0.00000000]
+  Setting level shift to 0.500 S/E
+  @SCF   67      -99.406065223639       0.000000000000       0.000000000008
+    ci      = [-0.94943697, 0.31395771]
+    ci_grad = [-0.00000000,-0.00000000]
+  =========================================================================================
+
+      * SCF total energy   =     -99.406065223639
+
+
+      CI coefficients  = [-0.949436969, 0.313957709]
+
+  End of SCF
+  MOs orthonormality check passed.
+
+  Orbitals are canonicalized as:
+  inactive (docc + uocc) : Fock(core)
+  active   (actv)        : Fock(core)
+
+  =========================================================================
+  Eigenvalues (Eh)
+  -------------------------------------------------------------------------
+  Doubly occupied orbitals
+      1    -26.175209  A1      2     -1.495695  A1      3     -0.623385  B1
+      4     -0.623385  B2
+  Active orbitals
+      5     -0.510102  A1      6      0.074682  A1
+  Unoccupied orbitals
+      7      1.595133  A1      8      2.709370  B2      9      2.709370  B1
+     10      2.796416  A1     11      3.870480  A1
+  =========================================================================
+
+
+  MCSCF Execution Completed.
+
+
+*** tstop() called on Yorks-Mac.local at Sat Mar 21 00:47:11 2020
+Module time:
+	user time   =       0.14 seconds =       0.00 minutes
+	system time =       0.02 seconds =       0.00 minutes
+	total time  =          0 seconds =       0.00 minutes
+Total time:
+	user time   =       0.14 seconds =       0.00 minutes
+	system time =       0.02 seconds =       0.00 minutes
+	total time  =          0 seconds =       0.00 minutes
+    MCSCF energy......................................................PASSED
+
+Scratch directory: /Users/york/scratch/psi4/
+   => Loading Basis Set <=
+
+    Name: STO-3G
+    Role: ORBITAL
+    Keyword: MINAO_BASIS
+    atoms 1 entry F          line    91 file /Users/york/src/psi4group/psi4/share/psi4/basis/sto-3g.gbs 
+    atoms 2 entry H          line    19 file /Users/york/src/psi4group/psi4/share/psi4/basis/sto-3g.gbs 
+
+
+  Forte
+  ----------------------------------------------------------------------------
+  A suite of quantum chemistry methods for strongly correlated electrons
+
+    git branch: spin-adapted-dsrg - git commit: f405f75d
+
+  Developed by:
+    Francesco A. Evangelista, Chenyang Li, Kevin P. Hannon,
+    Jeffrey B. Schriber, Tianyuan Zhang, Chenxi Cai,
+    Nan He, Nicholas Stair, Shuhe Wang, Renke Huang
+  ----------------------------------------------------------------------------
+
+  Size of Determinant class: 128 bits
+  Read options for space FROZEN_DOCC
+  Read options for space RESTRICTED_DOCC
+  Read options for space ACTIVE
+
+  ==> MO Space Information <==
+
+  -------------------------------------------------
+                       A1    A2    B1    B2   Sum
+  -------------------------------------------------
+    FROZEN_DOCC         1     0     0     0     1
+    RESTRICTED_DOCC     1     0     1     1     3
+    ACTIVE              2     0     0     0     2
+    RESTRICTED_UOCC     3     0     1     1     5
+    FROZEN_UOCC         0     0     0     0     0
+    Total               7     0     2     2    11
+  -------------------------------------------------
+
+  ==> Integral Transformation <==
+
+  Number of molecular orbitals:                    11
+  Number of correlated molecular orbitals:         10
+  Number of frozen occupied orbitals:               1
+  Number of frozen unoccupied orbitals:             0
+  Two-electron integral type:              Conventional
+
+
+  Overall Conventional Integrals timings
+
+  Using in-core PK algorithm.
+   Calculation information:
+      Number of atoms:                   2
+      Number of AO shells:               7
+      Number of primitives:             12
+      Number of atomic orbitals:        11
+      Number of basis functions:        11
+
+      Integral cutoff                 1.00e-12
+      Number of threads:                 1
+
+  Performing in-core PK
+  Using 4422 doubles for integral storage.
+  We computed 406 shell quartets total.
+  Whereas there are 406 unique shell quartets.
+
+
+  Conventional integrals take 0.06027163 s
+
+  ==> Summary of Active Space Solver Input <==
+
+    Irrep.  Multi.(2ms)      N
+    --------------------------
+       A1      1  (  0)      1
+    --------------------------
+    N: number of roots
+    ms: spin z component
+    Total number of roots:   1
+    --------------------------
+
+
+  ==> Energy Summary <==
+
+    Multi.(2ms)  Irrep.  No.               Energy
+    ---------------------------------------------
+       1  (  0)    A1     0      -99.406065223640
+    ---------------------------------------------
+
+       -----------------------------------------------------------------
+                            Semi-Canonical Orbitals
+         Chenyang Li, Jeffrey B. Schriber and Francesco A. Evangelista
+       -----------------------------------------------------------------
+
+  Took 0.000042 s to build Fock matrix
+
+  ==> Checking Fock Matrix Diagonal Blocks <==
+
+    Off-Diag. Elements       Max           2-Norm
+    ------------------------------------------------
+    Fa actv              0.0348818653   0.0493304070
+    Fb actv              0.0348818653   0.0493304070
+    ------------------------------------------------
+    Fa core              0.0000000000   0.0000000000
+    Fb core              0.0000000000   0.0000000000
+    ------------------------------------------------
+    Fa virt              0.0000000000   0.0000000000
+    Fb virt              0.0000000000   0.0000000000
+    ------------------------------------------------
+ Integrals are about to be computed.
+ Integrals are about to be updated.  Using in-core PK algorithm.
+   Calculation information:
+      Number of atoms:                   2
+      Number of AO shells:               7
+      Number of primitives:             12
+      Number of atomic orbitals:        11
+      Number of basis functions:        11
+
+      Integral cutoff                 1.00e-12
+      Number of threads:                 1
+
+  Performing in-core PK
+  Using 4422 doubles for integral storage.
+  We computed 406 shell quartets total.
+  Whereas there are 406 unique shell quartets.
+
+
+
+  ==> RDMs Transformation to Semicanonical Basis <==
+
+    Transformed 1 RDM.
+    Transformed 2 RDM.
+    Transformed 3 RDM.
+  SemiCanonicalize takes 0.666156 s.
+
+    -----------------------------------------------------------------------
+      Spin-Adapted Multireference Driven Similarity Renormalization Group
+                            written by Chenyang Li
+                                 1 OMP thread
+    -----------------------------------------------------------------------
+
+  Disclaimer:
+    The spin-adapted DSRG code is largely adopted from the spin-integrated code developed by
+    Chenyang Li, Kevin P. Hannon, Tianyuan Zhang, and Francesco A. Evangelista.
+
+  ==> Multireference Driven Similarity Renormalization Group <==
+
+    Reading DSRG options ............................ Done
+    Setting ambit MO space .......................... Done
+    Preparing tensors for density cumulants ......... Done
+    Building Fock matrix ............................ Done
+
+  ==> Density Cumulant Summary <==
+
+             2-cumulant   3-cumulant
+    --------------------------------
+    max        0.589490     0.283339
+    norm       1.043928     0.856044
+    --------------------------------
+
+  ==> Checking Semicanonical Orbitals <==
+
+    Fock core, active, virtual blocks (Fij, i != j)
+                      core          active         virtual
+    ------------------------------------------------------
+       max    0.0000000000    0.0000000000    0.0000000000
+    1-norm    0.0000000000    0.0000000000    0.0000000000
+    ------------------------------------------------------
+
+    Orbitals are semi-canonicalized.
+
+                  -------------------------------------------
+                    MR-DSRG Third-Order Perturbation Theory
+                  -------------------------------------------
+
+
+  ==> Computation Information <==
+
+    Integral type                               CONVENTIONAL
+    Source operator                                 STANDARD
+    Core-Virtual source type                          NORMAL
+    Reference relaxation                                ONCE
+    Internal amplitudes                                 NONE
+    State type                                  SINGLE STATE
+    Flow parameter                                 1.000e+00
+    Taylor expansion threshold                     1.000e-03
+    Intruder amplitudes threshold                  1.000e-01
+    Number of amplitudes for printing                     15
+
+
+  ==> DSRG-MRPT3 Memory Information <==
+
+    Memory assigned by the user                    500.00 MB
+    Memory available for MR-DSRG                   489.92 MB
+    Generalized Fock matrix                        880.00  B
+    1-, 2-, and 3-density cumulants                704.00  B
+    2-electron (4-index) integrals                   9.80 KB
+    T1 and T2 cluster amplitudes                    19.88 KB
+    1- and 2-body Hbar                             160.00  B
+    Global 1- and 2-body intermediates              19.88 KB
+    Local intermediates (energy part 1)             30.24 KB
+    Local intermediates (energy part 2)             90.08 KB
+    Local intermediates for commutators              9.80 KB
+    Max memory for local intermediates              90.08 KB
+    Memory currently available                     489.87 MB
+
+
+  ==> First-Order Excitation Amplitudes Summary <==
+
+    Active Indices:    1    2
+    Largest T1 amplitudes (absolute values):
+        i    a                i    a                i    a
+    -----------------------------------------------------------------
+    [   2    4] 0.1024810 [   2    3] 0.0962284 [   0    1] 0.0396427
+    [   1    4] 0.0204894 [   1    3] 0.0075672 [   0    2] 0.0067706
+    [   2    5] 0.0048926 [   1    5] 0.0030815 [   6    7] 0.0003125
+    [   8    9] 0.0003125 [   0    3] 0.0000939 [   0    5] 0.0000429
+    [   0    4] 0.0000230
+    -----------------------------------------------------------------
+    2-Norm of T1 vector:                            0.147953920254210
+    Number of nonzero elements:                                    13
+    -----------------------------------------------------------------
+    Largest T2 amplitudes (absolute values):
+        i    j    a    b                i    j    a    b                i    j    a    b
+    -----------------------------------------------------------------------------------------------
+    [   2    2    2    3] 0.0758662 [   2    2    1    4] 0.0743884 [   0    0    1    1] 0.0601581
+    [   2    2    3    3] 0.0517171 [   1    2    1    3] 0.0507796 [   1    2    1    4] 0.0502763
+    [   2    6    1    7] 0.0500089 [   2    8    1    9] 0.0500089 [   1    6    1    7] 0.0487696
+    [   1    8    1    9] 0.0487696 [   1    2    2    4] 0.0464250 [   2    1    2    3] 0.0440728
+    [   2    6    2    7] 0.0398940 [   2    8    2    9] 0.0398940 [   6    6    7    7] 0.0363273
+    -----------------------------------------------------------------------------------------------
+    2-Norm of T2 vector:                                                          0.349806856604166
+    Number of nonzero elements:                                                                 261
+    -----------------------------------------------------------------------------------------------
+
+  ==> Possible Intruders <==
+
+    T1 amplitudes larger than 0.1000:
+     Amplitudes      Value                   Denominator
+    ----------------------------------------------------------------
+    [   2    4]  -0.102480978 (  0.076755 -   2.296416 =  -2.219660)
+    ----------------------------------------------------------------
+    T2 amplitudes larger than 0.1000: NULL
+
+  ==> Computing 3rd-Order Energy Contribution (1/3) <==
+
+    Computing 3rd-order energy (1/3)         ...  Done. Timing      0.532 s
+    Computing integrals for ref. relaxation  ...  Done. Timing      0.076 s
+
+  ==> Computing 2nd-Order Correlation Energy <==
+
+    Computing 2nd-order energy               ...  Done. Timing      0.028 s
+    Computing integrals for ref. relaxation  ...  Done. Timing      0.082 s
+
+  ==> Computing 3rd-Order Energy Contribution (2/3) <==
+
+    Preparing 2nd-order amplitudes           ...  Done. Timing      0.726 s
+    Computing 3rd-order energy (2/3)         ...  Done. Timing      0.027 s
+    Computing integrals for ref. relaxation  ...  Done. Timing      0.074 s
+
+  ==> Second-Order Excitation Amplitudes Summary <==
+
+    Active Indices:    1    2
+    Largest T1 amplitudes (absolute values):
+        i    a                i    a                i    a
+    -----------------------------------------------------------------
+    [   2    4] 0.0138337 [   0    1] 0.0074282 [   2    3] 0.0058913
+    [   0    2] 0.0027200 [   2    5] 0.0026265 [   1    4] 0.0017871
+    [   1    3] 0.0013489 [   8    9] 0.0012445 [   6    7] 0.0012445
+    [   1    5] 0.0007192 [   0    4] 0.0004866 [   0    3] 0.0002930
+    [   0    5] 0.0000513
+    -----------------------------------------------------------------
+    2-Norm of T1 vector:                            0.017450104726473
+    Number of nonzero elements:                                    13
+    -----------------------------------------------------------------
+    Largest T2 amplitudes (absolute values):
+        i    j    a    b                i    j    a    b                i    j    a    b
+    -----------------------------------------------------------------------------------------------
+    [   2    2    1    4] 0.0503223 [   1    2    1    4] 0.0235399 [   1    2    2    4] 0.0187617
+    [   2    2    4    4] 0.0166101 [   2    6    1    7] 0.0164731 [   2    8    1    9] 0.0164731
+    [   2    1    2    4] 0.0161957 [   2    2    2    4] 0.0151988 [   2    2    3    3] 0.0144520
+    [   2    1    1    4] 0.0142410 [   2    8    2    9] 0.0123639 [   2    6    2    7] 0.0123639
+    [   1    1    2    3] 0.0103931 [   2    2    1    3] 0.0098813 [   1    6    1    7] 0.0091676
+    -----------------------------------------------------------------------------------------------
+    2-Norm of T2 vector:                                                          0.114322940601056
+    Number of nonzero elements:                                                                 261
+    -----------------------------------------------------------------------------------------------
+
+  ==> Possible Intruders <==
+
+    T1 amplitudes larger than 0.1000: NULL
+    T2 amplitudes larger than 0.1000: NULL
+
+  ==> Computing 3rd-Order Energy Contribution (3/3) <==
+
+    Computing 3rd-order energy (3/3)         ...  Done. Timing      0.028 s
+    Computing integrals for ref. relaxation  ...  Done. Timing      0.078 s
+
+  ==> DSRG-MRPT3 Energy Summary <==
+
+    Reference energy                         =    -99.406065223639629
+    2nd-order correlation energy             =     -0.088928975224680
+    3rd-order correlation energy part 1      =      0.000737113267053
+    3rd-order correlation energy part 2      =     -0.003286304020681
+    3rd-order correlation energy part 3      =     -0.000028012737620
+    3rd-order correlation energy             =     -0.002577203491248
+    DSRG-MRPT3 correlation energy            =     -0.091506178715928
+    DSRG-MRPT3 total energy                  =    -99.497571402355561
+
+    Notes:
+      3rd-order energy part 1: -1.0 / 12.0 * [[[H0th, A1st], A1st], A1st]
+      3rd-order energy part 2: 0.5 * [H1st + Hbar1st, A2nd]
+      3rd-order energy part 3: 0.5 * [Hbar2nd, A1st]
+      Hbar1st = H1st + [H0th, A1st]
+      Hbar2nd = 0.5 * [H1st + Hbar1st, A1st] + [H0th, A2nd]
+
+  ==> De-Normal-Order DSRG Transformed Hamiltonian <==
+
+    Computing the scalar term                ... Done. Timing    0.001 s
+    Computing the 1-body term                ... Done. Timing    0.000 s
+
+  ==> Rotate DSRG Transformed Hamiltonian back to Original Basis <==
+
+    Rotating 1-body term to original basis   ... Done. Timing    0.000 s
+    Rotating 2-body term to original basis   ... Done. Timing    0.007 s
+
+  ==> Summary of Active Space Solver Input <==
+
+    Irrep.  Multi.(2ms)      N
+    --------------------------
+       A1      1  (  0)      1
+    --------------------------
+    N: number of roots
+    ms: spin z component
+    Total number of roots:   1
+    --------------------------
+
+
+  ==> Energy Summary <==
+
+    Multi.(2ms)  Irrep.  No.               Energy
+    ---------------------------------------------
+       1  (  0)    A1     0      -99.498903267931
+    ---------------------------------------------
+
+  => SA-MRDSRG Reference Relaxation Energy Summary <=
+
+                         Fixed Ref. (a.u.)              Relaxed Ref. (a.u.)
+           -------------------------------  -------------------------------
+    Iter.          Total Energy      Delta          Total Energy      Delta
+    -----------------------------------------------------------------------
+        1      -99.497571402356 -9.950e+01      -99.498903267931 -9.950e+01
+    -----------------------------------------------------------------------
+
+  ==> Total Timings (s) for Computing Commutators <==
+
+             [H1, T1]    [H1, T2]    [H2, T1]    [H2, T2]
+    -----------------------------------------------------
+    -> C0       0.004       0.004       0.005       0.098
+    -> C1       0.008       0.047       0.045       0.498
+    -> C2                   0.062       0.090       0.470
+    -----------------------------------------------------
+
+
+  Time to prepare integrals: 0.06311297416687012 seconds
+  Time to run job          : 2.365283727645874 seconds
+  Total                    : 2.365283727645874 seconds    DSRG-MRPT3 partially relaxed energy...............................PASSED
+
+Scratch directory: /Users/york/scratch/psi4/
+   => Loading Basis Set <=
+
+    Name: STO-3G
+    Role: ORBITAL
+    Keyword: MINAO_BASIS
+    atoms 1 entry F          line    91 file /Users/york/src/psi4group/psi4/share/psi4/basis/sto-3g.gbs 
+    atoms 2 entry H          line    19 file /Users/york/src/psi4group/psi4/share/psi4/basis/sto-3g.gbs 
+
+
+  Forte
+  ----------------------------------------------------------------------------
+  A suite of quantum chemistry methods for strongly correlated electrons
+
+    git branch: spin-adapted-dsrg - git commit: f405f75d
+
+  Developed by:
+    Francesco A. Evangelista, Chenyang Li, Kevin P. Hannon,
+    Jeffrey B. Schriber, Tianyuan Zhang, Chenxi Cai,
+    Nan He, Nicholas Stair, Shuhe Wang, Renke Huang
+  ----------------------------------------------------------------------------
+
+  Size of Determinant class: 128 bits
+  Read options for space FROZEN_DOCC
+  Read options for space RESTRICTED_DOCC
+  Read options for space ACTIVE
+
+  ==> MO Space Information <==
+
+  -------------------------------------------------
+                       A1    A2    B1    B2   Sum
+  -------------------------------------------------
+    FROZEN_DOCC         1     0     0     0     1
+    RESTRICTED_DOCC     1     0     1     1     3
+    ACTIVE              2     0     0     0     2
+    RESTRICTED_UOCC     3     0     1     1     5
+    FROZEN_UOCC         0     0     0     0     0
+    Total               7     0     2     2    11
+  -------------------------------------------------
+
+  ==> Integral Transformation <==
+
+  Number of molecular orbitals:                    11
+  Number of correlated molecular orbitals:         10
+  Number of frozen occupied orbitals:               1
+  Number of frozen unoccupied orbitals:             0
+  Two-electron integral type:              Cholesky decomposition
+
+  Using in-core PK algorithm.
+   Calculation information:
+      Number of atoms:                   2
+      Number of AO shells:               7
+      Number of primitives:             12
+      Number of atomic orbitals:        11
+      Number of basis functions:        11
+
+      Integral cutoff                 1.00e-12
+      Number of threads:                 1
+
+  Performing in-core PK
+  Using 4422 doubles for integral storage.
+  We computed 406 shell quartets total.
+  Whereas there are 406 unique shell quartets.
+
+
+  Timing for computing Cholesky integrals:                    0.048 s.
+
+  ==> Summary of Active Space Solver Input <==
+
+    Irrep.  Multi.(2ms)      N
+    --------------------------
+       A1      1  (  0)      1
+    --------------------------
+    N: number of roots
+    ms: spin z component
+    Total number of roots:   1
+    --------------------------
+
+
+  ==> Energy Summary <==
+
+    Multi.(2ms)  Irrep.  No.               Energy
+    ---------------------------------------------
+       1  (  0)    A1     0      -99.406065223640
+    ---------------------------------------------
+
+       -----------------------------------------------------------------
+                            Semi-Canonical Orbitals
+         Chenyang Li, Jeffrey B. Schriber and Francesco A. Evangelista
+       -----------------------------------------------------------------
+
+  Took 0.003556 s to build Fock matrix
+
+  ==> Checking Fock Matrix Diagonal Blocks <==
+
+    Off-Diag. Elements       Max           2-Norm
+    ------------------------------------------------
+    Fa actv              0.0000000000   0.0000000000
+    Fb actv              0.0000000000   0.0000000000
+    ------------------------------------------------
+    Fa core              0.0000000000   0.0000000000
+    Fb core              0.0000000000   0.0000000000
+    ------------------------------------------------
+    Fa virt              0.0000000000   0.0000000000
+    Fb virt              0.0000000000   0.0000000000
+    ------------------------------------------------
+  Orbitals are already semicanonicalized.
+
+    -----------------------------------------------------------------------
+      Spin-Adapted Multireference Driven Similarity Renormalization Group
+                            written by Chenyang Li
+                                 1 OMP thread
+    -----------------------------------------------------------------------
+
+  Disclaimer:
+    The spin-adapted DSRG code is largely adopted from the spin-integrated code developed by
+    Chenyang Li, Kevin P. Hannon, Tianyuan Zhang, and Francesco A. Evangelista.
+
+  ==> Multireference Driven Similarity Renormalization Group <==
+
+    Reading DSRG options ............................ Done
+    Setting ambit MO space .......................... Done
+    Preparing tensors for density cumulants ......... Done
+    Building Fock matrix ............................ Done
+
+  ==> Density Cumulant Summary <==
+
+             2-cumulant   3-cumulant
+    --------------------------------
+    max        0.589490     0.283339
+    norm       1.043928     0.856044
+    --------------------------------
+
+  ==> Checking Semicanonical Orbitals <==
+
+    Fock core, active, virtual blocks (Fij, i != j)
+                      core          active         virtual
+    ------------------------------------------------------
+       max    0.0000000000    0.0000000000    0.0000000000
+    1-norm    0.0000000000    0.0000000000    0.0000000000
+    ------------------------------------------------------
+
+    Orbitals are semi-canonicalized.
+
+                  -------------------------------------------
+                    MR-DSRG Third-Order Perturbation Theory
+                  -------------------------------------------
+
+
+  ==> Computation Information <==
+
+    Integral type                                   CHOLESKY
+    Source operator                                 STANDARD
+    Core-Virtual source type                          NORMAL
+    Reference relaxation                                ONCE
+    Internal amplitudes                                 NONE
+    State type                                  SINGLE STATE
+    Flow parameter                                 1.000e+00
+    Taylor expansion threshold                     1.000e-03
+    Intruder amplitudes threshold                  1.000e-01
+    Cholesky tolerance                             1.000e-12
+    Number of amplitudes for printing                     15
+
+
+  ==> DSRG-MRPT3 Memory Information <==
+
+    Memory assigned by the user                    500.00 MB
+    Memory available for MR-DSRG                   489.95 MB
+    Generalized Fock matrix                        880.00  B
+    1-, 2-, and 3-density cumulants                704.00  B
+    2-electron (4-index) integrals                   9.80 KB
+    3-index integrals                               50.40 KB
+    T1 and T2 cluster amplitudes                    19.88 KB
+    1- and 2-body Hbar                             160.00  B
+    Global 1- and 2-body intermediates              19.88 KB
+    Local intermediates (energy part 1)             30.24 KB
+    Local intermediates (energy part 2)             10.08 KB
+    Local intermediates for commutators              9.80 KB
+    Max memory for local intermediates              30.24 KB
+    Memory currently available                     489.85 MB
+
+
+  ==> First-Order Excitation Amplitudes Summary <==
+
+    Active Indices:    1    2
+    Largest T1 amplitudes (absolute values):
+        i    a                i    a                i    a
+    -----------------------------------------------------------------
+    [   2    4] 0.1024810 [   2    3] 0.0962284 [   0    1] 0.0396427
+    [   1    4] 0.0204894 [   1    3] 0.0075672 [   0    2] 0.0067706
+    [   2    5] 0.0048926 [   1    5] 0.0030815 [   6    7] 0.0003125
+    [   8    9] 0.0003125 [   0    3] 0.0000939 [   0    5] 0.0000429
+    [   0    4] 0.0000230
+    -----------------------------------------------------------------
+    2-Norm of T1 vector:                            0.147953920254216
+    Number of nonzero elements:                                    13
+    -----------------------------------------------------------------
+    Largest T2 amplitudes (absolute values):
+        i    j    a    b                i    j    a    b                i    j    a    b
+    -----------------------------------------------------------------------------------------------
+    [   2    2    2    3] 0.0758662 [   2    2    1    4] 0.0743884 [   0    0    1    1] 0.0601581
+    [   2    2    3    3] 0.0517171 [   1    2    1    3] 0.0507796 [   1    2    1    4] 0.0502763
+    [   2    6    1    7] 0.0500089 [   2    8    1    9] 0.0500089 [   1    6    1    7] 0.0487696
+    [   1    8    1    9] 0.0487696 [   1    2    2    4] 0.0464250 [   2    1    2    3] 0.0440728
+    [   2    6    2    7] 0.0398940 [   2    8    2    9] 0.0398940 [   6    6    7    7] 0.0363273
+    -----------------------------------------------------------------------------------------------
+    2-Norm of T2 vector:                                                          0.349806856604170
+    Number of nonzero elements:                                                                 261
+    -----------------------------------------------------------------------------------------------
+
+  ==> Possible Intruders <==
+
+    T1 amplitudes larger than 0.1000:
+     Amplitudes      Value                   Denominator
+    ----------------------------------------------------------------
+    [   2    4]  -0.102480978 (  0.076755 -   2.296416 =  -2.219660)
+    ----------------------------------------------------------------
+    T2 amplitudes larger than 0.1000: NULL
+
+  ==> Computing 3rd-Order Energy Contribution (1/3) <==
+
+    Computing 3rd-order energy (1/3)         ...  Done. Timing      0.531 s
+    Computing integrals for ref. relaxation  ...  Done. Timing      0.074 s
+
+  ==> Computing 2nd-Order Correlation Energy <==
+
+    Computing 2nd-order energy               ...  Done. Timing      0.028 s
+    Computing integrals for ref. relaxation  ...  Done. Timing      0.096 s
+
+  ==> Computing 3rd-Order Energy Contribution (2/3) <==
+
+    Preparing 2nd-order amplitudes           ...  Done. Timing      0.846 s
+    Computing 3rd-order energy (2/3)         ...  Done. Timing      0.028 s
+    Computing integrals for ref. relaxation  ...  Done. Timing      0.074 s
+
+  ==> Second-Order Excitation Amplitudes Summary <==
+
+    Active Indices:    1    2
+    Largest T1 amplitudes (absolute values):
+        i    a                i    a                i    a
+    -----------------------------------------------------------------
+    [   2    4] 0.0138337 [   0    1] 0.0074282 [   2    3] 0.0058913
+    [   0    2] 0.0027200 [   2    5] 0.0026265 [   1    4] 0.0017871
+    [   1    3] 0.0013489 [   8    9] 0.0012445 [   6    7] 0.0012445
+    [   1    5] 0.0007192 [   0    4] 0.0004866 [   0    3] 0.0002930
+    [   0    5] 0.0000513
+    -----------------------------------------------------------------
+    2-Norm of T1 vector:                            0.017450104726479
+    Number of nonzero elements:                                    13
+    -----------------------------------------------------------------
+    Largest T2 amplitudes (absolute values):
+        i    j    a    b                i    j    a    b                i    j    a    b
+    -----------------------------------------------------------------------------------------------
+    [   2    2    1    4] 0.0503223 [   1    2    1    4] 0.0235399 [   1    2    2    4] 0.0187617
+    [   2    2    4    4] 0.0166101 [   2    8    1    9] 0.0164731 [   2    6    1    7] 0.0164731
+    [   2    1    2    4] 0.0161957 [   2    2    2    4] 0.0151988 [   2    2    3    3] 0.0144520
+    [   2    1    1    4] 0.0142410 [   2    6    2    7] 0.0123639 [   2    8    2    9] 0.0123639
+    [   1    1    2    3] 0.0103931 [   2    2    1    3] 0.0098813 [   1    6    1    7] 0.0091676
+    -----------------------------------------------------------------------------------------------
+    2-Norm of T2 vector:                                                          0.114322940601098
+    Number of nonzero elements:                                                                 261
+    -----------------------------------------------------------------------------------------------
+
+  ==> Possible Intruders <==
+
+    T1 amplitudes larger than 0.1000: NULL
+    T2 amplitudes larger than 0.1000: NULL
+
+  ==> Computing 3rd-Order Energy Contribution (3/3) <==
+
+    Computing 3rd-order energy (3/3)         ...  Done. Timing      0.028 s
+    Computing integrals for ref. relaxation  ...  Done. Timing      0.078 s
+
+  ==> DSRG-MRPT3 Energy Summary <==
+
+    Reference energy                         =    -99.406065223639615
+    2nd-order correlation energy             =     -0.088928975224707
+    3rd-order correlation energy part 1      =      0.000737113267057
+    3rd-order correlation energy part 2      =     -0.003286304020691
+    3rd-order correlation energy part 3      =     -0.000028012737621
+    3rd-order correlation energy             =     -0.002577203491256
+    DSRG-MRPT3 correlation energy            =     -0.091506178715963
+    DSRG-MRPT3 total energy                  =    -99.497571402355575
+
+    Notes:
+      3rd-order energy part 1: -1.0 / 12.0 * [[[H0th, A1st], A1st], A1st]
+      3rd-order energy part 2: 0.5 * [H1st + Hbar1st, A2nd]
+      3rd-order energy part 3: 0.5 * [Hbar2nd, A1st]
+      Hbar1st = H1st + [H0th, A1st]
+      Hbar2nd = 0.5 * [H1st + Hbar1st, A1st] + [H0th, A2nd]
+
+  ==> De-Normal-Order DSRG Transformed Hamiltonian <==
+
+    Computing the scalar term                ... Done. Timing    0.001 s
+    Computing the 1-body term                ... Done. Timing    0.000 s
+
+  ==> Rotate DSRG Transformed Hamiltonian back to Original Basis <==
+
+    Rotating 1-body term to original basis   ... Done. Timing    0.000 s
+    Rotating 2-body term to original basis   ... Done. Timing    0.007 s
+
+  ==> Summary of Active Space Solver Input <==
+
+    Irrep.  Multi.(2ms)      N
+    --------------------------
+       A1      1  (  0)      1
+    --------------------------
+    N: number of roots
+    ms: spin z component
+    Total number of roots:   1
+    --------------------------
+
+
+  ==> Energy Summary <==
+
+    Multi.(2ms)  Irrep.  No.               Energy
+    ---------------------------------------------
+       1  (  0)    A1     0      -99.498903267931
+    ---------------------------------------------
+
+  => SA-MRDSRG Reference Relaxation Energy Summary <=
+
+                         Fixed Ref. (a.u.)              Relaxed Ref. (a.u.)
+           -------------------------------  -------------------------------
+    Iter.          Total Energy      Delta          Total Energy      Delta
+    -----------------------------------------------------------------------
+        1      -99.497571402356 -9.950e+01      -99.498903267931 -9.950e+01
+    -----------------------------------------------------------------------
+
+  ==> Total Timings (s) for Computing Commutators <==
+
+             [H1, T1]    [H1, T2]    [H2, T1]    [H2, T2]
+    -----------------------------------------------------
+    -> C0       0.004       0.004       0.004       0.098
+    -> C1       0.009       0.055       0.043       0.417
+    -> C2                   0.068       0.109       0.643
+    -----------------------------------------------------
+
+
+  Time to prepare integrals: 0.05059313774108887 seconds
+  Time to run job          : 1.8415570259094238 seconds
+  Total                    : 1.8415570259094238 seconds    CD-DSRG-MRPT3 partially relaxed energy............................PASSED
+
+    Psi4 stopped on: Saturday, 21 March 2020 12:47AM
+    Psi4 wall time for execution: 0:00:04.63
+
+*** Psi4 exiting successfully. Buy a developer a beer!

@@ -32,9 +32,8 @@ class MASTER_DSRG : public DynamicCorrelationSolver {
      * @param ints A pointer to an allocated integral object
      * @param mo_space_info The MOSpaceInfo object
      */
-    MASTER_DSRG(RDMs rdms, std::shared_ptr<SCFInfo> scf_info,
-                std::shared_ptr<ForteOptions> options, std::shared_ptr<ForteIntegrals> ints,
-                std::shared_ptr<MOSpaceInfo> mo_space_info);
+    MASTER_DSRG(RDMs rdms, std::shared_ptr<SCFInfo> scf_info, std::shared_ptr<ForteOptions> options,
+                std::shared_ptr<ForteIntegrals> ints, std::shared_ptr<MOSpaceInfo> mo_space_info);
 
     /// Destructor
     virtual ~MASTER_DSRG();
@@ -129,9 +128,6 @@ class MASTER_DSRG : public DynamicCorrelationSolver {
     /// Read options
     void read_options();
 
-    /// Printing level
-    int print_;
-
     /// The flow parameter
     double s_;
     /// Source operator
@@ -140,11 +136,6 @@ class MASTER_DSRG : public DynamicCorrelationSolver {
     std::shared_ptr<DSRG_SOURCE> dsrg_source_;
     /// Threshold for the Taylor expansion of f(z) = (1-exp(-z^2))/z
     double taylor_threshold_;
-
-    /// The integral type
-    std::string ints_type_;
-    /// If ERI density fitted or Cholesky decomposed
-    bool eri_df_;
 
     /// Multi-state computation if true
     bool multi_state_;
@@ -174,10 +165,6 @@ class MASTER_DSRG : public DynamicCorrelationSolver {
 
     /// The energy of the reference
     double Eref_;
-    /// The nuclear repulsion energy
-    double Enuc_;
-    /// The frozen core energy
-    double Efrzc_;
 
     /// Initial check on reference energy
     void check_init_reference_energy();
@@ -200,6 +187,8 @@ class MASTER_DSRG : public DynamicCorrelationSolver {
     std::vector<size_t> actv_mos_;
     /// List of virtual MOs
     std::vector<size_t> virt_mos_;
+    /// List of the symmetry of the active MOs
+    std::vector<int> actv_mos_sym_;
 
     /// List of active active occupied MOs (relative to active)
     std::vector<size_t> actv_occ_mos_;

@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2019 by its authors (see COPYING, COPYING.LESSER,
+ * Copyright (c) 2012-2020 by its authors (see COPYING, COPYING.LESSER,
  * AUTHORS).
  *
  * The copyrights for code used from other parties are included in
@@ -33,7 +33,7 @@
 #include "psi4/libmints/wavefunction.h"
 #include "psi4/libpsi4util/process.h"
 #include "psi4/libpsi4util/PsiOutStream.h"
-#include "psi4/liboptions/liboptions.h"
+
 #include "psi4/libmints/pointgrp.h"
 
 #include "base_classes/mo_space_info.h"
@@ -63,7 +63,7 @@ size_t MOSpaceInfo::size(const std::string& space) {
     return s;
 }
 
-psi::Dimension MOSpaceInfo::get_dimension(const std::string& space) {
+psi::Dimension MOSpaceInfo::dimension(const std::string& space) {
     psi::Dimension result(nirrep_);
     if (composite_spaces_.count(space) == 0) {
         std::string msg = "\n  MOSpaceInfo::size - composite space " + space + " is not defined.";
@@ -78,7 +78,7 @@ psi::Dimension MOSpaceInfo::get_dimension(const std::string& space) {
 }
 
 std::vector<int> MOSpaceInfo::symmetry(const std::string& space) {
-    psi::Dimension dims = get_dimension(space);
+    psi::Dimension dims = dimension(space);
     std::vector<int> result;
     for (int h = 0; h < dims.n(); ++h) {
         for (int i = 0; i < dims[h]; ++i) {
@@ -88,7 +88,7 @@ std::vector<int> MOSpaceInfo::symmetry(const std::string& space) {
     return result;
 }
 
-std::vector<size_t> MOSpaceInfo::get_absolute_mo(const std::string& space) {
+std::vector<size_t> MOSpaceInfo::absolute_mo(const std::string& space) {
     std::vector<size_t> result;
     if (composite_spaces_.count(space) == 0) {
         std::string msg = "\n  MOSpaceInfo::size - composite space " + space + " is not defined.";
@@ -106,7 +106,7 @@ std::vector<size_t> MOSpaceInfo::get_absolute_mo(const std::string& space) {
     return result;
 }
 
-std::vector<size_t> MOSpaceInfo::get_corr_abs_mo(const std::string& space) {
+std::vector<size_t> MOSpaceInfo::corr_absolute_mo(const std::string& space) {
     std::vector<size_t> result;
     if (composite_spaces_.count(space) == 0) {
         std::string msg = "\n  MOSpaceInfo::size - composite space " + space + " is not defined.";

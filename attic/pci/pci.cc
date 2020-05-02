@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2019 by its authors (see COPYING, COPYING.LESSER,
+ * Copyright (c) 2012-2020 by its authors (see COPYING, COPYING.LESSER,
  * AUTHORS).
  *
  * The copyrights for code used from other parties are included in
@@ -131,11 +131,11 @@ ProjectorCI::transition_rdms(const std::vector<std::pair<size_t, size_t>>& root_
 
 void ProjectorCI::startup() {
     // The number of correlated molecular orbitals
-    nact_ = mo_space_info_->get_corr_abs_mo("ACTIVE").size();
-    nactpi_ = mo_space_info_->get_dimension("ACTIVE");
+    nact_ = mo_space_info_->corr_absolute_mo("ACTIVE").size();
+    nactpi_ = mo_space_info_->dimension("ACTIVE");
 
     // Include frozen_docc and restricted_docc
-    frzcpi_ = mo_space_info_->get_dimension("INACTIVE_DOCC");
+    frzcpi_ = mo_space_info_->dimension("INACTIVE_DOCC");
     nfrzc_ = mo_space_info_->size("INACTIVE_DOCC");
 
     nuclear_repulsion_energy_ = as_ints_->ints()->nuclear_repulsion_energy();

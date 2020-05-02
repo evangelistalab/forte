@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2019 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
+ * Copyright (c) 2012-2020 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
  *
  * The copyrights for code used from other parties are included in
  * the corresponding files.
@@ -35,21 +35,81 @@ namespace forte {
 
 RDMs::RDMs() : max_rdm_(0) {}
 
-RDMs::RDMs(ambit::Tensor g1a, ambit::Tensor g1b) : max_rdm_(1), g1a_(g1a), g1b_(g1b) {}
+RDMs::RDMs(ambit::Tensor g1a, ambit::Tensor g1b)
+    : max_rdm_(1), have_g1b_(true), g1a_(g1a), g1b_(g1b) {}
 
 RDMs::RDMs(ambit::Tensor g1a, ambit::Tensor g1b, ambit::Tensor g2aa, ambit::Tensor g2ab,
-                     ambit::Tensor g2bb)
-    : max_rdm_(2), g1a_(g1a), g1b_(g1b), g2aa_(g2aa), g2ab_(g2ab), g2bb_(g2bb) {}
+           ambit::Tensor g2bb)
+    : max_rdm_(2), have_g1b_(true), have_g2aa_(true), have_g2bb_(true), g1a_(g1a), g1b_(g1b),
+      g2aa_(g2aa), g2ab_(g2ab), g2bb_(g2bb) {}
 
 RDMs::RDMs(ambit::Tensor g1a, ambit::Tensor g1b, ambit::Tensor g2aa, ambit::Tensor g2ab,
-                     ambit::Tensor g2bb, ambit::Tensor g3aaa, ambit::Tensor g3aab,
-                     ambit::Tensor g3abb, ambit::Tensor g3bbb)
-    : max_rdm_(3), g1a_(g1a), g1b_(g1b), g2aa_(g2aa), g2ab_(g2ab), g2bb_(g2bb), g3aaa_(g3aaa),
-      g3aab_(g3aab), g3abb_(g3abb), g3bbb_(g3bbb) {}
+           ambit::Tensor g2bb, ambit::Tensor g3aaa, ambit::Tensor g3aab, ambit::Tensor g3abb,
+           ambit::Tensor g3bbb)
+    : max_rdm_(3), have_g1b_(true), have_g2aa_(true), have_g2bb_(true), have_g3aaa_(true),
+      have_g3abb_(true), have_g3bbb_(true), g1a_(g1a), g1b_(g1b), g2aa_(g2aa), g2ab_(g2ab),
+      g2bb_(g2bb), g3aaa_(g3aaa), g3aab_(g3aab), g3abb_(g3abb), g3bbb_(g3bbb) {}
+
+RDMs::RDMs(bool ms_avg, ambit::Tensor g1a) : ms_avg_(ms_avg), max_rdm_(1), g1a_(g1a) {}
+
+RDMs::RDMs(bool ms_avg, ambit::Tensor g1a, ambit::Tensor g2ab)
+    : ms_avg_(ms_avg), max_rdm_(2), g1a_(g1a), g2ab_(g2ab) {}
+
+RDMs::RDMs(bool ms_avg, ambit::Tensor g1a, ambit::Tensor g2ab, ambit::Tensor g3aab)
+    : ms_avg_(ms_avg), max_rdm_(3), g1a_(g1a), g2ab_(g2ab), g3aab_(g3aab) {}
+
+ambit::Tensor RDMs::g1b() {
+    if (ms_avg_ and (not have_g1b_)) {
+        g1b_ = g1a_.clone();
+        have_g1b_ = true;
+    }
+    return g1b_;
+}
+
+ambit::Tensor RDMs::g2aa() {
+    if (ms_avg_ and (not have_g2aa_)) {
+        g2aa_ = make_g2_high_spin_case(g2ab_);
+        have_g2aa_ = true;
+    }
+    return g2aa_;
+}
+
+ambit::Tensor RDMs::g2bb() {
+    if (ms_avg_ and (not have_g2bb_)) {
+        g2bb_ = make_g2_high_spin_case(g2ab_);
+        have_g2bb_ = true;
+    }
+    return g2bb_;
+}
+
+ambit::Tensor RDMs::g3aaa() {
+    if (ms_avg_ and (not have_g3aaa_)) {
+        g3aaa_ = make_g3_high_spin_case(g3aab_);
+        have_g3aaa_ = true;
+    }
+    return g3aaa_;
+}
+
+ambit::Tensor RDMs::g3abb() {
+    if (ms_avg_ and (not have_g3abb_)) {
+        g3abb_ = g3aab_.clone();
+        g3abb_("rpqust") = g3aab_("pqrstu");
+        have_g3abb_ = true;
+    }
+    return g3abb_;
+}
+
+ambit::Tensor RDMs::g3bbb() {
+    if (ms_avg_ and (not have_g3bbb_)) {
+        g3bbb_ = make_g3_high_spin_case(g3aab_);
+        have_g3bbb_ = true;
+    }
+    return g3bbb_;
+}
 
 ambit::Tensor RDMs::L2aa() {
     if (not have_L2aa_) {
-        L2aa_ = g2aa_.clone();
+        L2aa_ = g2aa().clone();
         make_cumulant_L2aa_in_place(g1a_, L2aa_);
         have_L2aa_ = true;
     }
@@ -59,7 +119,7 @@ ambit::Tensor RDMs::L2aa() {
 ambit::Tensor RDMs::L2ab() {
     if (not have_L2ab_) {
         L2ab_ = g2ab_.clone();
-        make_cumulant_L2ab_in_place(g1a_, g1b_, L2ab_);
+        make_cumulant_L2ab_in_place(g1a_, g1b(), L2ab_);
         have_L2ab_ = true;
     }
     return L2ab_;
@@ -67,8 +127,8 @@ ambit::Tensor RDMs::L2ab() {
 
 ambit::Tensor RDMs::L2bb() {
     if (not have_L2bb_) {
-        L2bb_ = g2bb_.clone();
-        make_cumulant_L2bb_in_place(g1b_, L2bb_);
+        L2bb_ = g2bb().clone();
+        make_cumulant_L2bb_in_place(g1b(), L2bb_);
         have_L2bb_ = true;
     }
     return L2bb_;
@@ -76,8 +136,8 @@ ambit::Tensor RDMs::L2bb() {
 
 ambit::Tensor RDMs::L3aaa() {
     if (not have_L3aaa_) {
-        L3aaa_ = g3aaa_.clone();
-        make_cumulant_L3aaa_in_place(g1a_, L2aa_, L3aaa_);
+        L3aaa_ = g3aaa().clone();
+        make_cumulant_L3aaa_in_place(g1a_, L2aa(), L3aaa_);
         have_L3aaa_ = true;
     }
     return L3aaa_;
@@ -86,7 +146,7 @@ ambit::Tensor RDMs::L3aaa() {
 ambit::Tensor RDMs::L3aab() {
     if (not have_L3aab_) {
         L3aab_ = g3aab_.clone();
-        make_cumulant_L3aab_in_place(g1a_, g1b_, L2aa_, L2ab_, L3aab_);
+        make_cumulant_L3aab_in_place(g1a_, g1b(), L2aa(), L2ab_, L3aab_);
         have_L3aab_ = true;
     }
     return L3aab_;
@@ -94,8 +154,8 @@ ambit::Tensor RDMs::L3aab() {
 
 ambit::Tensor RDMs::L3abb() {
     if (not have_L3abb_) {
-        L3abb_ = g3abb_.clone();
-        make_cumulant_L3abb_in_place(g1a_, g1b_, L2ab_, L2bb_, L3abb_);
+        L3abb_ = g3abb().clone();
+        make_cumulant_L3abb_in_place(g1a_, g1b(), L2ab_, L2bb(), L3abb_);
         have_L3abb_ = true;
     }
     return L3abb_;
@@ -103,11 +163,73 @@ ambit::Tensor RDMs::L3abb() {
 
 ambit::Tensor RDMs::L3bbb() {
     if (not have_L3bbb_) {
-        L3bbb_ = g3bbb_.clone();
-        make_cumulant_L3bbb_in_place(g1b_, L2bb_, L3bbb_);
+        L3bbb_ = g3bbb().clone();
+        make_cumulant_L3bbb_in_place(g1b(), L2bb(), L3bbb_);
         have_L3bbb_ = true;
     }
     return L3bbb_;
+}
+
+ambit::Tensor RDMs::SFg2() {
+    SF_g2_ = g2ab_.clone();
+    if (ms_avg_) {
+        SF_g2_.scale(4.0);
+        SF_g2_("pqrs") -= 2.0 * g2ab_("pqsr");
+    } else {
+        SF_g2_("pqrs") += g2ab_("qpsr");
+        SF_g2_("pqrs") += g2aa()("pqrs") + g2bb()("pqrs");
+    }
+    return SF_g2_;
+}
+
+ambit::Tensor RDMs::SF_L1() {
+    if (not ms_avg_) {
+        throw std::runtime_error("Must turn on spin averaging.");
+    }
+    if (not have_SF_L1_) {
+        SF_L1_ = g1a_.clone();
+        SF_L1_.scale(2.0);
+    }
+    return SF_L1_;
+}
+
+ambit::Tensor RDMs::SF_L2() {
+    if (not ms_avg_) {
+        throw std::runtime_error("Must turn on spin averaging.");
+    }
+    if (not have_SF_L2_) {
+        SF_L2_ = L2ab().clone();
+        SF_L2_.scale(4.0);
+        SF_L2_("pqrs") -= 2.0 * L2ab()("pqsr");
+    }
+    return SF_L2_;
+}
+
+ambit::Tensor RDMs::SF_L3() {
+    if (not ms_avg_) {
+        throw std::runtime_error("Must turn on spin averaging.");
+    }
+    if (not have_SF_L3_) {
+        SF_L3_ = make_g3_high_spin_case(L3aab());
+        SF_L3_("pqrstu") += L3aab()("pqrstu");
+        SF_L3_("pqrstu") += L3aab()("prqsut");
+        SF_L3_("pqrstu") += L3aab()("qrptus");
+        SF_L3_.scale(2.0);
+    }
+    return SF_L3_;
+}
+
+ambit::Tensor make_g2_high_spin_case(const ambit::Tensor& g2ab) {
+    auto g2hs = g2ab.clone();
+    g2hs("pqrs") -= g2ab("pqsr");
+    return g2hs;
+}
+
+ambit::Tensor make_g3_high_spin_case(const ambit::Tensor& g3aab) {
+    auto g3hs = g3aab.clone();
+    g3hs("pqrstu") -= g3aab("pqrsut");
+    g3hs("pqrstu") += g3aab("pqrtus");
+    return g3hs;
 }
 
 void make_cumulant_L2aa_in_place(const ambit::Tensor& g1a, ambit::Tensor& L2aa) {
@@ -216,13 +338,13 @@ void make_cumulant_L3bbb_in_place(const ambit::Tensor& g1b, const ambit::Tensor&
 }
 
 double compute_Eref_from_rdms(RDMs& ref, std::shared_ptr<ForteIntegrals> ints,
-                                   std::shared_ptr<MOSpaceInfo> mo_space_info) {
+                              std::shared_ptr<MOSpaceInfo> mo_space_info) {
     // similar to MASTER_DSRG::compute_reference_energy_from_ints (use Fock and cumulants)
     // here I form two density and directly use bare Hamiltonian
     double E = ints->nuclear_repulsion_energy() + ints->frozen_core_energy();
 
-    std::vector<size_t> core_mos = mo_space_info->get_corr_abs_mo("RESTRICTED_DOCC");
-    std::vector<size_t> actv_mos = mo_space_info->get_corr_abs_mo("ACTIVE");
+    std::vector<size_t> core_mos = mo_space_info->corr_absolute_mo("RESTRICTED_DOCC");
+    std::vector<size_t> actv_mos = mo_space_info->corr_absolute_mo("ACTIVE");
     size_t ncore = core_mos.size();
     size_t nactv = actv_mos.size();
 

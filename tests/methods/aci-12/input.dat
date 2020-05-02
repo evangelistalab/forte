@@ -6,7 +6,7 @@ import forte
 
 refscf = -75.0525898286472284 
 refaci = -75.383717530874
-refacipt2  = -75.439721740377
+refacipt2  = -75.433623094732
 
 molecule N2{
 C 
@@ -21,7 +21,6 @@ set {
   reference rhf 
   e_convergence 10
   d_convergence 10
-  r_convergence 10
   docc [2,0,0,0,0,2,1,1]
   guess gwh
 }
@@ -31,7 +30,6 @@ set {
 set forte {
   active_space_solver aci
   multiplicity 1
-  aci_SELECT_TYPE aimed_energy
   frozen_docc [1,0,0,0,0,1,0,0]
   sci_excited_algorithm average
   sigma 0.05
@@ -49,4 +47,5 @@ compare_values(refscf, variable("CURRENT ENERGY"),9, "SCF energy") #TEST
 
 energy('forte')
 compare_values(refaci, variable("ACI ENERGY"),9, "ACI energy") #TEST
-compare_values(refacipt2, variable("ACI+PT2 ENERGY"),8, "ACI+PT2 energy") #TEST
+compare_values(refacipt2, variable("ACI+PT2 ENERGY"),7, "ACI+PT2 energy") #TEST
+

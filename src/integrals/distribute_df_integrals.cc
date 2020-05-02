@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2019 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
+ * Copyright (c) 2012-2020 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
  *
  * The copyrights for code used from other parties are included in
  * the corresponding files.
@@ -59,7 +59,7 @@ using namespace ambit;
 
 namespace forte {
 
-DistDFIntegrals::DistDFIntegrals(psi::Options& options, std::shared_ptr<psi::Wavefunction> ref_wfn,
+DistDFIntegrals::DistDFIntegrals(std::shared_ptr<ForteOptions> options, std::shared_ptr<psi::Wavefunction> ref_wfn,
                                  IntegralSpinRestriction restricted,
                                  IntegralFrozenCore resort_frozen_core,
                                  std::shared_ptr<MOSpaceInfo> mo_space_info)
@@ -240,8 +240,8 @@ void DistDFIntegrals::test_distributed_integrals() {
     if (b_one_df.norm(2.0) > 1.0e-6)
         throw psi::PSIEXCEPTION("three_integral_block for B_11");
 
-    auto rdocc = mo_space_info_->get_corr_abs_mo("RESTRICTED_DOCC");
-    auto active = mo_space_info_->get_corr_abs_mo("ACTIVE");
+    auto rdocc = mo_space_info_->corr_absolute_mo("RESTRICTED_DOCC");
+    auto active = mo_space_info_->corr_absolute_mo("ACTIVE");
     ambit::Tensor b_mn_df = test_int->three_integral_block(Avec, rdocc, rdocc);
     ambit::Tensor b_mn_dist = three_integral_block(Avec, rdocc, rdocc);
     b_mn_df("Q, p, q") -= b_mn_dist("Q, p, q");
@@ -277,7 +277,7 @@ ambit::Tensor DistDFIntegrals::read_integral_chunk(std::shared_ptr<Tensor>& B, s
     // This map says p_map[5] = 1.
     // Used in correct ordering for the tensor.
 
-    std::vector<size_t> all_mos = mo_space_info_->get_corr_abs_mo("ALL");
+    std::vector<size_t> all_mos = mo_space_info_->corr_absolute_mo("ALL");
     int p_idx = 0;
     int q_idx = 0;
     std::vector<size_t> p_map(nmo_);

@@ -38,16 +38,16 @@ set globals{
 set forte {
   multiplicity 1
   frozen_docc                       [2,1,0,0,0,0,2,1]
-  restricted_docc	                  [3,2,0,0,0,0,2,3]
+  restricted_docc	                [3,2,0,0,0,0,2,3]
   active                            [1,0,1,2,1,2,1,0]
   root_sym                          0
-  nroot                         1
+  nroot                             1
   active_space_solver               aci
   sigma	                            0.001
   aci_add_aimed_degenerate          false
   sci_project_out_spin_contaminants false
   diag_algorithm                    full
-  aci_batched_screening             true
+  aci_screen_alg                    batch_hash
   aci_nbatch                        8
   active_guess_size                 100
 }

@@ -3,7 +3,7 @@
           Psi4: An Open-Source Ab Initio Electronic Structure Package
                                Psi4 undefined 
 
-                         Git: Rev {master} 3c26e8e 
+                         Git: Rev {mints_oei} 4aa373e 
 
 
     R. M. Parrish, L. A. Burns, D. G. A. Smith, A. C. Simmonett,
@@ -17,16 +17,17 @@
 
 
                          Additional Contributions by
-    P. Kraus, H. Kruse, M. H. Lechner, M. C. Schieber, and R. A. Shaw
+    P. Kraus, H. Kruse, M. H. Lechner, M. C. Schieber, R. A. Shaw,
+    A. Alenaizan, R. Galvelis, Z. L. Glick, S. Lehtola, and J. P. Misiewicz
 
     -----------------------------------------------------------------------
 
 
-    Psi4 started on: Thursday, 25 October 2018 03:15PM
+    Psi4 started on: Sunday, 19 January 2020 06:09PM
 
-    Process ID: 91047
-    Host:       jeffschriber
-    PSIDATADIR: /Users/jeffschriber/src/psi4-debug-install/share/psi4
+    Process ID: 82402
+    Host:       CHE-FEVANGE-01I (2)
+    PSIDATADIR: /Users/fevange/Source/psi4/objdir-Debug/stage/share/psi4
     Memory:     500.0 MiB
     Threads:    1
     
@@ -40,7 +41,7 @@ import forte
 #nucenergy =   23.253113522963400  #TEST
 nucenergy =   23.2531136143627961
 #refenergy =  -96.68319147222      #TEST
-refenergy =  -96.683191472300308
+refenergy = -96.683191504310784
 
 molecule arwater {
     Ar  0.000000000000     0.000000000000     3.000000000000
@@ -57,7 +58,7 @@ set = {
 }
 
 set forte {
-  job_type fci
+  active_space_solver fci
   restricted_docc  [4,0,1,1]
   active           [2,0,2,2]
 }
@@ -67,25 +68,27 @@ compare_values(nucenergy, arwater.nuclear_repulsion_energy(), 9, "Nuclear repuls
 compare_values(refenergy, e, 9, "FCI energy with ECP")                                          #TEST
 --------------------------------------------------------------------------
 
-*** tstart() called on jeffschriber
-*** at Thu Oct 25 15:15:37 2018
+Scratch directory: /tmp/
+
+*** tstart() called on CHE-FEVANGE-01I (2)
+*** at Sun Jan 19 18:09:29 2020
 
    => Loading Basis Set <=
 
     Name: LANL2DZ
     Role: ORBITAL
     Keyword: BASIS
-    atoms 1   entry AR         line   286 (ECP: line  1702) file /Users/jeffschriber/src/psi4-debug-install/share/psi4/basis/lanl2dz.gbs 
-    atoms 2   entry O          line   136 file /Users/jeffschriber/src/psi4-debug-install/share/psi4/basis/lanl2dz.gbs 
-    atoms 3-4 entry H          line    19 file /Users/jeffschriber/src/psi4-debug-install/share/psi4/basis/lanl2dz.gbs 
+    atoms 1   entry AR         line   286 (ECP: line  1702) file /Users/fevange/Source/psi4/objdir-Debug/stage/share/psi4/basis/lanl2dz.gbs 
+    atoms 2   entry O          line   136 file /Users/fevange/Source/psi4/objdir-Debug/stage/share/psi4/basis/lanl2dz.gbs 
+    atoms 3-4 entry H          line    19 file /Users/fevange/Source/psi4/objdir-Debug/stage/share/psi4/basis/lanl2dz.gbs 
 
     !!!  WARNING: ECP capability is in beta. Please check occupations closely.  !!!
 
 
          ---------------------------------------------------------
                                    SCF
-            by Justin Turney, Rob Parrish, Andy Simmonett
-                             and Daniel Smith
+               by Justin Turney, Rob Parrish, Andy Simmonett
+                          and Daniel G. A. Smith
                               RHF Reference
                         1 Threads,    500 MiB Core
          ---------------------------------------------------------
@@ -99,15 +102,15 @@ compare_values(refenergy, e, 9, "FCI energy with ECP")                          
 
        Center              X                  Y                   Z               Mass       
     ------------   -----------------  -----------------  -----------------  -----------------
-         AR           0.000000000000     0.000000000000     0.932015639979    39.962383122510
-         O            0.000000000000     0.000000000000    -2.139127396213    15.994914619560
-         H            0.000000000000    -0.758215806856    -1.503438554220     1.007825032070
-         H           -0.000000000000     0.758215806856    -1.503438554220     1.007825032070
+         AR           0.000000000000     0.000000000000     0.932015639969    39.962383123700
+         O            0.000000000000     0.000000000000    -2.139127396223    15.994914619570
+         H            0.000000000000    -0.758215806856    -1.503438554230     1.007825032230
+         H           -0.000000000000     0.758215806856    -1.503438554230     1.007825032230
 
   Running in c2v symmetry.
 
   Rotational constants: A =     14.54775  B =      0.14990  C =      0.14837 [cm^-1]
-  Rotational constants: A = 436130.43480  B =   4493.85305  C =   4448.02100 [MHz]
+  Rotational constants: A = 436130.43473  B =   4493.85305  C =   4448.02100 [MHz]
   Nuclear repulsion =   23.253113614362796
 
   Charge       = 0
@@ -185,29 +188,28 @@ compare_values(refenergy, e, 9, "FCI energy with ECP")                          
     OpenMP threads:              1
 
   Minimum eigenvalue in the overlap matrix is 5.5953492778E-02.
-  Using Symmetric Orthogonalization.
-
+    Using symmetric orthogonalization.
   SCF Guess: Superposition of Atomic Densities via on-the-fly atomic UHF.
 
   ==> Iterations <==
 
                         Total Energy        Delta E     RMS |[F,P]|
 
-   @RHF iter   0:   -87.85010368230613   -8.78501e+01   2.06874e-01 
-   @RHF iter   1:   -96.47796284550643   -8.62786e+00   3.67731e-02 
-   @RHF iter   2:   -96.64397025051365   -1.66007e-01   1.88201e-02 DIIS
-   @RHF iter   3:   -96.67058807236106   -2.66178e-02   4.68949e-03 DIIS
-   @RHF iter   4:   -96.67343787526482   -2.84980e-03   9.50370e-04 DIIS
-   @RHF iter   5:   -96.67355040700383   -1.12532e-04   2.01213e-04 DIIS
-   @RHF iter   6:   -96.67355757435894   -7.16736e-06   4.07239e-05 DIIS
-   @RHF iter   7:   -96.67355792922800   -3.54869e-07   7.89392e-06 DIIS
-   @RHF iter   8:   -96.67355794013675   -1.09087e-08   1.07077e-06 DIIS
-   @RHF iter   9:   -96.67355794045001   -3.13264e-10   2.71517e-07 DIIS
-   @RHF iter  10:   -96.67355794046762   -1.76072e-11   3.55776e-08 DIIS
-   @RHF iter  11:   -96.67355794046766   -4.26326e-14   2.03408e-09 DIIS
-   @RHF iter  12:   -96.67355794046765    1.42109e-14   3.75334e-10 DIIS
-   @RHF iter  13:   -96.67355794046769   -4.26326e-14   2.97528e-11 DIIS
-  Energy converged.
+   @RHF iter SAD:   -94.19846026886249   -9.41985e+01   0.00000e+00 
+   @RHF iter   1:   -96.58599335194990   -2.38753e+00   3.19658e-02 DIIS
+   @RHF iter   2:   -96.65069260924822   -6.46993e-02   1.85168e-02 DIIS
+   @RHF iter   3:   -96.67305685048642   -2.23642e-02   1.89992e-03 DIIS
+   @RHF iter   4:   -96.67353268975899   -4.75839e-04   4.10617e-04 DIIS
+   @RHF iter   5:   -96.67355587949956   -2.31897e-05   9.98844e-05 DIIS
+   @RHF iter   6:   -96.67355791226393   -2.03276e-06   1.25559e-05 DIIS
+   @RHF iter   7:   -96.67355793997282   -2.77089e-08   1.76172e-06 DIIS
+   @RHF iter   8:   -96.67355794046085   -4.88029e-10   1.84680e-07 DIIS
+   @RHF iter   9:   -96.67355794046755   -6.69331e-12   2.19353e-08 DIIS
+   @RHF iter  10:   -96.67355794046763   -8.52651e-14   5.49100e-09 DIIS
+   @RHF iter  11:   -96.67355794046766   -2.84217e-14   1.13076e-09 DIIS
+   @RHF iter  12:   -96.67355794046759    7.10543e-14   1.23128e-10 DIIS
+   @RHF iter  13:   -96.67355794046765   -5.68434e-14   2.18456e-11 DIIS
+  Energy and wave function converged.
 
 
   ==> Post-Iterations <==
@@ -232,14 +234,14 @@ compare_values(refenergy, e, 9, "FCI energy with ECP")                          
              A1    A2    B1    B2 
     DOCC [     5,    0,    2,    2 ]
 
-  @RHF Final Energy:   -96.67355794046769
+  @RHF Final Energy:   -96.67355794046765
 
    => Energetics <=
 
     Nuclear Repulsion Energy =             23.2531136143627961
-    One-Electron Energy =                -186.2124139309867985
-    Two-Electron Energy =                  66.2857423761563069
-    Total Energy =                        -96.6735579404676884
+    One-Electron Energy =                -186.2124139306490918
+    Two-Electron Energy =                  66.2857423758186428
+    Total Energy =                        -96.6735579404676457
 
 Computation Completed
 
@@ -261,47 +263,43 @@ Properties computed using the SCF density matrix
      X:     0.0000      Y:     0.0000      Z:     2.8788     Total:     2.8788
 
 
-*** tstop() called on jeffschriber at Thu Oct 25 15:15:38 2018
+*** tstop() called on CHE-FEVANGE-01I (2) at Sun Jan 19 18:09:29 2020
 Module time:
-	user time   =       0.96 seconds =       0.02 minutes
+	user time   =       0.90 seconds =       0.02 minutes
 	system time =       0.02 seconds =       0.00 minutes
-	total time  =          1 seconds =       0.02 minutes
+	total time  =          0 seconds =       0.00 minutes
 Total time:
-	user time   =       0.96 seconds =       0.02 minutes
+	user time   =       0.90 seconds =       0.02 minutes
 	system time =       0.02 seconds =       0.00 minutes
-	total time  =          1 seconds =       0.02 minutes
+	total time  =          0 seconds =       0.00 minutes
    => Loading Basis Set <=
 
     Name: STO-3G
     Role: ORBITAL
     Keyword: MINAO_BASIS
-    atoms 1   entry AR         line   209 file /Users/jeffschriber/src/psi4-debug-install/share/psi4/basis/sto-3g.gbs 
-    atoms 2   entry O          line    81 file /Users/jeffschriber/src/psi4-debug-install/share/psi4/basis/sto-3g.gbs 
-    atoms 3-4 entry H          line    19 file /Users/jeffschriber/src/psi4-debug-install/share/psi4/basis/sto-3g.gbs 
-
-
-Reading options from the FORTE block
-Calling plugin forte.so.
-
+    atoms 1   entry AR         line   209 file /Users/fevange/Source/psi4/objdir-Debug/stage/share/psi4/basis/sto-3g.gbs 
+    atoms 2   entry O          line    81 file /Users/fevange/Source/psi4/objdir-Debug/stage/share/psi4/basis/sto-3g.gbs 
+    atoms 3-4 entry H          line    19 file /Users/fevange/Source/psi4/objdir-Debug/stage/share/psi4/basis/sto-3g.gbs 
 
 
   Forte
   ----------------------------------------------------------------------------
   A suite of quantum chemistry methods for strongly correlated electrons
 
-    git branch: master - git commit: 9480afcf
+    git branch: onedet - git commit: f245d93e
 
   Developed by:
     Francesco A. Evangelista, Chenyang Li, Kevin P. Hannon,
-    Jeffrey B. Schriber, Tianyuan Zhang, Chenxi Cai
+    Jeffrey B. Schriber, Tianyuan Zhang, Chenxi Cai,
+    Nan He, Nicholas Stair, Shuhe Wang, Renke Huang
   ----------------------------------------------------------------------------
 
-  Size of Determinant class: 16
+  Size of Determinant class: 256 bits
+  Read options for space RESTRICTED_DOCC
+  Read options for space ACTIVE
 
   ==> MO Space Information <==
 
-  Read options for space RESTRICTED_DOCC
-  Read options for space ACTIVE
   -------------------------------------------------
                        A1    A2    B1    B2   Sum
   -------------------------------------------------
@@ -333,23 +331,21 @@ Calling plugin forte.so.
 	Starting second half-transformation.
 	Two-electron integral transformation complete.
 
-  Integral transformation done. 0.01886257 s
+  Integral transformation done. 0.02824613 s
   Reading the two-electron integrals from disk
   Size of two-electron integrals:   0.004347 GB
   Timing for freezing core and virtual orbitals:              0.000 s.
-  Conventional integrals take 0.44108485 s
+  Conventional integrals take 0.10859361 s
 
-                -----------------------------------------------
-                  String-based Full Configuration Interaction
-                          by Francesco A. Evangelista
-                -----------------------------------------------
+  ==> Summary of Active Space Solver Input <==
 
-  Number of electrons: 18
-  Charge: 0
-  Multiplicity: 1
-  Davidson subspace max dim: 8
-  Davidson subspace min dim: 2
-  M_s: 0
+    Irrep.  Multi.  Nstates
+    -------------------------
+      A1       1        1
+    -------------------------
+    Total number of states: 1
+    -------------------------
+
 
   ==> String Lists <==
 
@@ -368,7 +364,7 @@ Calling plugin forte.so.
   Timing for 1-hole strings =      0.000 s
   Timing for 2-hole strings =      0.000 s
   Timing for 3-hole strings =      0.000 s
-  Total timing              =      0.001 s
+  Total timing              =      0.002 s
 
   ==> FCI Solver <==
 
@@ -389,36 +385,36 @@ Calling plugin forte.so.
     Root            Energy     <S^2>   Spin
   ---------------------------------------------
       0      -96.676794170873  0.000  singlet
-      1      -96.253102362465  2.000  triplet
+      1      -96.253102362467  2.000  triplet
       2      -96.212900981322  0.000  singlet
-      3      -95.982462912560  2.000  triplet
-      4      -95.971952233402  0.000  singlet
-      5      -95.828878979588  2.000  triplet
-      6      -95.672478116497  0.000  singlet
-      7      -95.630800998306  6.000  quintet
-      8      -95.614534967695  2.000  triplet
-      9      -95.593393697970  0.000  singlet
-     10      -95.558323088088  0.000  singlet
-     11      -95.547327777384  2.000  triplet
-     12      -95.538808640243  0.000  singlet
-     13      -95.466034051989  0.000  singlet
-     14      -95.436172653747  2.000  triplet
-     15      -95.425527898282  0.000  singlet
-     16      -95.354712477517  0.000  singlet
-     17      -95.351243906226  6.000  quintet
-     18      -95.269972843409  2.000  triplet
-     19      -95.251667733655  2.000  triplet
-     20      -95.244186016206  6.000  quintet
-     21      -95.232454207993  2.000  triplet
-     22      -95.226302428109  0.000  singlet
-     23      -95.215230668054  0.000  singlet
-     24      -95.214708795983  2.000  triplet
-     25      -95.060433883111  2.000  triplet
-     26      -94.997495149658  0.000  singlet
-     27      -94.990748567866  2.000  triplet
-     28      -94.973393986927  0.000  singlet
+      3      -95.982462912561  2.000  triplet
+      4      -95.971952233404  0.000  singlet
+      5      -95.828878979587  2.000  triplet
+      6      -95.672478116516  0.000  singlet
+      7      -95.630800998297  6.000  quintet
+      8      -95.614534967686  2.000  triplet
+      9      -95.593393697972  0.000  singlet
+     10      -95.558323088103  0.000  singlet
+     11      -95.547327777374  2.000  triplet
+     12      -95.538808640238  0.000  singlet
+     13      -95.466034052007  0.000  singlet
+     14      -95.436172653739  2.000  triplet
+     15      -95.425527898273  0.000  singlet
+     16      -95.354712477536  0.000  singlet
+     17      -95.351243906232  6.000  quintet
+     18      -95.269972843415  2.000  triplet
+     19      -95.251667733661  2.000  triplet
+     20      -95.244186016208  6.000  quintet
+     21      -95.232454207995  2.000  triplet
+     22      -95.226302428117  0.000  singlet
+     23      -95.215230668056  0.000  singlet
+     24      -95.214708795985  2.000  triplet
+     25      -95.060433883122  2.000  triplet
+     26      -94.997495149668  0.000  singlet
+     27      -94.990748567869  2.000  triplet
+     28      -94.973393986931  0.000  singlet
   ---------------------------------------------
-  Timing for initial guess  =      0.006 s
+  Timing for initial guess  =      0.042 s
 
   Projecting out root 1
   Projecting out root 3
@@ -435,36 +431,41 @@ Calling plugin forte.so.
   Projecting out root 24
   Projecting out root 25
   Projecting out root 27
+
   ==> Diagonalizing Hamiltonian <==
 
-  ----------------------------------------
-    Iter.      Avg. Energy       Delta_E
-  ----------------------------------------
-      1      -96.676794170873  -9.668e+01
-      2      -96.683131772480  -6.338e-03
-      3      -96.683190583157  -5.881e-05
-      4      -96.683191472300  -8.891e-07
-  ----------------------------------------
-  The Davidson-Liu algorithm converged in 5 iterations.
+  -----------------------------------------------------
+    Iter.      Avg. Energy       Delta_E     Res. Norm
+  -----------------------------------------------------
+      1      -96.676794170873  -9.668e+01  +1.148e-01
+      2      -96.683131772480  -6.338e-03  +9.432e-03
+      3      -96.683190583157  -5.881e-05  +1.303e-03
+      4      -96.683191472300  -8.891e-07  +2.255e-04
+      5      -96.683191503873  -3.157e-08  +2.890e-05
+      6      -96.683191504305  -4.320e-10  +3.372e-06
+      7      -96.683191504311  -5.386e-12  +3.658e-07
+  -----------------------------------------------------
+  The Davidson-Liu algorithm converged in 8 iterations.
 
   ==> Root No. 0 <==
 
-    20 20 20      0.99733643
+    20 20 20      0.99733844
 
-    Total Energy:       -96.683191472300010
+    Total Energy:       -96.683191504310784
 
-  ==> Computing RDMs for Root No. 0 <==
+  ==> Energy Summary <==
 
-    Timing for 1-RDM: 0.000 s
+    Multi.  Irrep.  No.               Energy
+    -----------------------------------------
+       1      A1     0       -96.683191504311
+    -----------------------------------------
 
-  ==> NATURAL ORBITALS <==
+  Time to prepare integrals: 0.45072317123413086 seconds
+  Time to run job          : 0.05760788917541504 seconds
+  Total                    : 0.05760788917541504 seconds    Nuclear repulsion energy..........................................PASSED
+    FCI energy with ECP...............................................PASSED
 
-        1B2     1.999839      1A1     1.997366      1B1     1.992409  
-        2B1     0.007305      2A1     0.002193      2B2     0.000887  
-	Nuclear repulsion energy..........................................PASSED
-	FCI energy with ECP...............................................PASSED
-
-    Psi4 stopped on: Thursday, 25 October 2018 03:15PM
-    Psi4 wall time for execution: 0:00:01.98
+    Psi4 stopped on: Sunday, 19 January 2020 06:09PM
+    Psi4 wall time for execution: 0:00:01.51
 
 *** Psi4 exiting successfully. Buy a developer a beer!

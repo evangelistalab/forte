@@ -11,7 +11,7 @@ set(forte_AUTHORS      "Francesco A. Evangelista and Group")
 set(forte_DESCRIPTION  "Quantum Chemistry Methods for Strongly Correlated Electrons plugin to Psi4")
 set(forte_URL          "https://github.com/evangelistalab/forte")
 set(forte_LICENSE      "GPL-3.0+")
-set(CMAKE_CXX_STANDARD 14)
+set(CMAKE_CXX_STANDARD 17)
 set(TargetOpenMP_FIND_COMPONENTS "CXX")
 
 cmake_minimum_required(VERSION 3.1 FATAL_ERROR)
@@ -64,63 +64,42 @@ endif()
 add_compile_options(-Wall -Wextra -pedantic) # -Werror)
 
 if(ENABLE_CODECOV)
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} --coverage") # enabling coverage
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} --coverage")
 endif()
 
 if(ENABLE_UNTESTED_CODE)
     add_definitions(-DENABLE_UNTESTED_CODE)
 endif()
 
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-c++1z-extensions") # avoid warnings for C++17
+
 # List of CC files
 pybind11_add_module(forte
+src/api/ambit_api.cc
+src/api/cube_file_api.cc
+src/api/integrals_api.cc
+src/api/rdms_api.cc
+src/api/options_api.cc
+src/api/orbital_api.cc
+src/api/sci_api.cc
+src/api/state_info_api.cc
+src/api/forte_python_module.cc
 src/base_classes/active_space_method.cc
 src/base_classes/active_space_solver.cc
-src/casscf/casscf.cc
-src/casscf/casscf_gradient.cc
-src/ci_rdm/ci_rdms.cc
-src/ci_rdm/ci_rdms_dynamic.cc
-src/gradient_tpdm/backtransform_tpdm.cc
-src/gradient_tpdm/integraltransform_sort_so_tpdm.cc
-src/gradient_tpdm/integraltransform_tpdm_unrestricted.cc
-src/sparse_ci/ci_reference.cc
-src/sparse_ci/determinant_hashvector.cc
-src/sparse_ci/determinant_sq_operator.cc
-src/dmrg/dmrgscf.cc
-src/dmrg/dmrgsolver.cc
 src/base_classes/dynamic_correlation_solver.cc
-src/finite_temperature/finite_temperature.cc
-src/forte_old_methods.cc
-src/helpers/iterative_solvers.cc
-src/helpers/helpers.cc
-src/main.cc
-src/sparse_ci/operator.cc
-src/options.cc
-src/orbital-helpers/orbitaloptimizer.cc
-src/python_api.cc
-src/base_classes/rdms.cc
-src/base_classes/state_info.cc
-src/base_classes/scf_info.cc
 src/base_classes/forte_options.cc
 src/base_classes/mo_space_info.cc
 src/base_classes/orbital_transform.cc
-src/sci/aci.cc
-src/sci/aci_build_F.cc
-src/sci/asci.cc
-src/sci/fci_mo.cc
-src/sci/mrpt2.cc
-src/sci/sci.cc
+src/base_classes/rdms.cc
+src/base_classes/scf_info.cc
+src/base_classes/state_info.cc
+src/casscf/casscf.cc
+src/casscf/casscf_gradient.cc
 src/ci_ex_states/excited_state_solver.cc
-src/sparse_ci/sparse_ci_solver.cc
-src/sparse_ci/sigma_vector.cc
-src/sparse_ci/sigma_vector_dynamic.cc
-src/sparse_ci/stl_bitset_determinant.cc
-src/sparse_ci/stl_bitset_string.cc
-src/sparse_ci/sorted_string_list.cc
-src/sparse_ci/ui64_determinant.cc
-src/sparse_ci/ui64_determinant_functions.cc
-src/orbital-helpers/aosubspace.cc
-src/orbital-helpers/ci-no/ci-no.cc
-src/orbital-helpers/ci-no/mrci-no.cc
+src/ci_rdm/ci_rdms.cc
+src/ci_rdm/ci_rdms_dynamic.cc
+src/dmrg/dmrgscf.cc
+src/dmrg/dmrgsolver.cc
 src/fci/binary_graph.cc
 src/fci/fci_solver.cc
 src/fci/fci_vector.cc
@@ -132,9 +111,18 @@ src/fci/string_lists.cc
 src/fci/string_oo_list.cc
 src/fci/string_vo_list.cc
 src/fci/string_vvoo_list.cc
+src/finite_temperature/finite_temperature.cc
+src/forte_old_methods.cc
+src/gradient_tpdm/backtransform_tpdm.cc
+src/gradient_tpdm/integraltransform_sort_so_tpdm.cc
+src/gradient_tpdm/integraltransform_tpdm_unrestricted.cc
 src/helpers/blockedtensorfactory.cc
+src/helpers/cube_file.cc
+src/helpers/helpers.cc
+src/helpers/iterative_solvers.cc
 src/helpers/printing.cc
 src/helpers/string_algorithms.cc
+src/integrals/active_space_integrals.cc
 src/integrals/cholesky_integrals.cc
 src/integrals/conventional_integrals.cc
 src/integrals/custom_integrals.cc
@@ -142,11 +130,12 @@ src/integrals/df_integrals.cc
 src/integrals/diskdf_integrals.cc
 src/integrals/distribute_df_integrals.cc
 src/integrals/integrals.cc
+src/integrals/make_integrals.cc
 src/integrals/own_integrals.cc
 src/integrals/parallel_ccvv_algorithms.cc
 src/integrals/paralleldfmo.cc
-src/integrals/make_integrals.cc
-src/integrals/active_space_integrals.cc
+src/main.cc
+src/mrdsrg-helper/dsrg_mem.cc
 src/mrdsrg-helper/dsrg_source.cc
 src/mrdsrg-helper/dsrg_time.cc
 src/mrdsrg-helper/dsrg_transformed.cc
@@ -157,31 +146,64 @@ src/mrdsrg-spin-adapted/dsrg_mrpt.cc
 src/mrdsrg-spin-adapted/dsrg_mrpt_2nd.cc
 src/mrdsrg-spin-adapted/dsrg_mrpt_amp.cc
 src/mrdsrg-spin-adapted/dsrg_mrpt_comm.cc
-src/mrdsrg-spin-integrated/master_mrdsrg.cc
+src/mrdsrg-spin-adapted/sadsrg.cc
+src/mrdsrg-spin-adapted/sadsrg_amps_analysis.cc
+src/mrdsrg-spin-adapted/sadsrg_block_labels.cc
+src/mrdsrg-spin-adapted/sadsrg_comm.cc
+src/mrdsrg-spin-adapted/sa_dsrgpt.cc
+src/mrdsrg-spin-adapted/sa_ldsrg2.cc
+src/mrdsrg-spin-adapted/sa_mrdsrg.cc
+src/mrdsrg-spin-adapted/sa_mrdsrg_amps.cc
+src/mrdsrg-spin-adapted/sa_mrdsrg_diis.cc
+src/mrdsrg-spin-adapted/sa_mrpt2.cc
+src/mrdsrg-spin-adapted/sa_mrpt3.cc
+src/mrdsrg-spin-integrated/active_dsrgpt2.cc
 src/mrdsrg-spin-integrated/dsrg_mrpt2.cc
 src/mrdsrg-spin-integrated/dsrg_mrpt2_ms.cc
 src/mrdsrg-spin-integrated/dsrg_mrpt3.cc
+src/mrdsrg-spin-integrated/dwms_mrpt2.cc
+src/mrdsrg-spin-integrated/master_mrdsrg.cc
 src/mrdsrg-spin-integrated/mcsrgpt2_mo.cc
 src/mrdsrg-spin-integrated/mrdsrg.cc
 src/mrdsrg-spin-integrated/mrdsrg_amplitude.cc
 src/mrdsrg-spin-integrated/mrdsrg_commutator.cc
+src/mrdsrg-spin-integrated/mrdsrg_diis.cc
 src/mrdsrg-spin-integrated/mrdsrg_nonpt.cc
 src/mrdsrg-spin-integrated/mrdsrg_pt.cc
 src/mrdsrg-spin-integrated/mrdsrg_smart_s.cc
 src/mrdsrg-spin-integrated/mrdsrg_srg.cc
 src/mrdsrg-spin-integrated/three_dsrg_mrpt2.cc
-src/mrdsrg-spin-integrated/dwms_mrpt2.cc
-src/mrdsrg-spin-integrated/active_dsrgpt2.cc
 src/orbital-helpers/ao_helper.cc
-src/orbital-helpers/localize.cc
+src/orbital-helpers/aosubspace.cc
+src/orbital-helpers/ci-no/ci-no.cc
+src/orbital-helpers/ci-no/mrci-no.cc
+src/orbital-helpers/fragment_projector.cc
 src/orbital-helpers/iao_builder.cc
+src/orbital-helpers/localize.cc
 src/orbital-helpers/mp2_nos.cc
 src/orbital-helpers/orbital_embedding.cc
+src/orbital-helpers/orbitaloptimizer.cc
+src/orbital-helpers/pao_builder.cc
 src/orbital-helpers/semi_canonicalize.cc
 src/orbital-helpers/unpaired_density.cc
-src/orbital-helpers/fragment_projector.cc
 src/pci/pci.cc
 src/pci/pci_sigma.cc
+src/post_process/spin_corr.cc
+src/sci/aci.cc
+src/sci/aci_build_F.cc
+src/sci/asci.cc
+src/sci/fci_mo.cc
+src/sci/mrpt2.cc
+src/sci/sci.cc
+src/sparse_ci/ci_reference.cc
+src/sparse_ci/determinant_functions.cc
+src/sparse_ci/determinant_hashvector.cc
+src/sparse_ci/determinant_substitution_lists.cc
+src/sparse_ci/sigma_vector.cc
+src/sparse_ci/sigma_vector_dynamic.cc
+src/sparse_ci/sigma_vector_sparse_list.cc
+src/sparse_ci/sorted_string_list.cc
+src/sparse_ci/sparse_ci_solver.cc
 src/v2rdm/v2rdm.cc
 )
 
@@ -201,7 +223,6 @@ if(MAX_DET_ORB)
     add_definitions(-DMAX_DET_ORB=${MAX_DET_ORB})
 else()
     add_definitions(-DMAX_DET_ORB=64)
-    add_definitions(-DSMALL_BITSET)
 endif()
 
 if(ENABLE_MPI)
@@ -224,18 +245,11 @@ if (ENABLE_ForteTests)
   project (forte_tests)
   include_directories(${CMAKE_BINARY_DIR} ${CMAKE_BINARY_DIR}/catch2/src/catch2/single_include)
   add_executable(forte_tests
-    src/sparse_ci/ui64_determinant.cc
-    tests/code/test_determinant.cc)
+    tests/code/test_determinant.cc
+    tests/code/test_uint64.cc)
 
   project (forte_benchmarks)
   include_directories(${CMAKE_BINARY_DIR})
   add_executable(forte_benchmarks
-    src/sparse_ci/ui64_determinant.cc
     tests/benchmark/determinant_benchmark.cc)
-
 endif (ENABLE_ForteTests)
-
-get_property(dirs DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY INCLUDE_DIRECTORIES)
-foreach(dir ${dirs})
-  message(STATUS "dir='${dir}'")
-endforeach()

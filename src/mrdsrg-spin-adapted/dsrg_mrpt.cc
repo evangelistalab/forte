@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2019 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
+ * Copyright (c) 2012-2020 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
  *
  * The copyrights for code used from other parties are included in
  * the corresponding files.
@@ -49,96 +49,8 @@ DSRG_MRPT::DSRG_MRPT(RDMs rdms, std::shared_ptr<SCFInfo> scf_info,
     print_citation();
     read_options();
     print_options();
-    //    hack_doublet();
     startup();
 }
-
-/*
-void DSRG_MRPT::hack_doublet() {
-    // form spin multiplets averaged densities
-    ambit::Tensor D1 = rdms_.g1a().clone();
-    D1("pq") += rdms_.g1b()("pq");
-    D1.scale(0.5);
-    rdms_.set_L1a(D1);
-    rdms_.set_L1b(D1.clone());
-
-    ambit::Tensor D2aa = rdms_.L2aa().clone();
-    D2aa("pqrs") += rdms_.L2bb()("pqrs");
-    D2aa.scale(0.5);
-
-    D2aa("pqrs") -= D1("pr") * D1("qs");
-    D2aa("pqrs") += D1("ps") * D1("qr");
-
-    ambit::Tensor D2ab = rdms_.L2ab().clone();
-    D2ab("pqrs") += rdms_.L2ab()("qpsr");
-    D2ab.scale(0.5);
-
-    D2ab("pqrs") -= D1("pr") * D1("qs");
-
-    rdms_.set_L2aa(D2aa);
-    rdms_.set_L2ab(D2ab);
-    rdms_.set_L2bb(D2aa.clone());
-
-    ambit::Tensor D3aaa = rdms_.L3aaa().clone();
-    D3aaa("pqrstu") += rdms_.L3bbb()("pqrstu");
-    D3aaa.scale(0.5);
-
-    D3aaa("pqrstu") -= D1("ps") * D2aa("qrtu");
-    D3aaa("pqrstu") += D1("pt") * D2aa("qrsu");
-    D3aaa("pqrstu") += D1("pu") * D2aa("qrts");
-
-    D3aaa("pqrstu") -= D1("qt") * D2aa("prsu");
-    D3aaa("pqrstu") += D1("qs") * D2aa("prtu");
-    D3aaa("pqrstu") += D1("qu") * D2aa("prst");
-
-    D3aaa("pqrstu") -= D1("ru") * D2aa("pqst");
-    D3aaa("pqrstu") += D1("rs") * D2aa("pqut");
-    D3aaa("pqrstu") += D1("rt") * D2aa("pqsu");
-
-    D3aaa("pqrstu") -= D1("ps") * D1("qt") * D1("ru");
-    D3aaa("pqrstu") -= D1("pt") * D1("qu") * D1("rs");
-    D3aaa("pqrstu") -= D1("pu") * D1("qs") * D1("rt");
-
-    D3aaa("pqrstu") += D1("ps") * D1("qu") * D1("rt");
-    D3aaa("pqrstu") += D1("pu") * D1("qt") * D1("rs");
-    D3aaa("pqrstu") += D1("pt") * D1("qs") * D1("ru");
-
-    ambit::Tensor D3aab = rdms_.L3aab().clone();
-    D3aab("pqrstu") += rdms_.L3abb()("rpqust");
-    D3aab.scale(0.5);
-
-    D3aab("pqRstU") -= D1("ps") * D2ab("qRtU");
-    D3aab("pqRstU") += D1("pt") * D2ab("qRsU");
-
-    D3aab("pqRstU") -= D1("qt") * D2ab("pRsU");
-    D3aab("pqRstU") += D1("qs") * D2ab("pRtU");
-
-    D3aab("pqRstU") -= D1("RU") * D2aa("pqst");
-
-    D3aab("pqRstU") -= D1("ps") * D1("qt") * D1("RU");
-    D3aab("pqRstU") += D1("pt") * D1("qs") * D1("RU");
-
-    ambit::Tensor D3abb = rdms_.L3abb().clone();
-    D3abb("pqrstu") += rdms_.L3aab()("qrptus");
-    D3abb.scale(0.5);
-
-    D3abb("pQRsTU") -= D1("ps") * D2aa("QRTU");
-
-    D3abb("pQRsTU") -= D1("QT") * D2ab("pRsU");
-    D3abb("pQRsTU") += D1("QU") * D2ab("pRsT");
-
-    D3abb("pQRsTU") -= D1("RU") * D2ab("pQsT");
-    D3abb("pQRsTU") += D1("RT") * D2ab("pQsU");
-
-    D3abb("pQRsTU") -= D1("ps") * D1("QT") * D1("RU");
-    D3abb("pQRsTU") += D1("ps") * D1("QU") * D1("RT");
-
-    rdms_.set_L3aaa(D3aaa);
-    rdms_.set_L3aab(D3aab);
-    rdms_.set_L3abb(D3abb);
-    rdms_.set_L3bbb(D3aaa.clone());
-}
-*/
 
 DSRG_MRPT::~DSRG_MRPT() { cleanup(); }
 
@@ -235,9 +147,9 @@ void DSRG_MRPT::startup() {
     Eref_ = compute_Eref_from_rdms(rdms_, ints_, mo_space_info_);
 
     // orbital spaces
-    core_mos_ = mo_space_info_->get_corr_abs_mo("RESTRICTED_DOCC");
-    actv_mos_ = mo_space_info_->get_corr_abs_mo("ACTIVE");
-    virt_mos_ = mo_space_info_->get_corr_abs_mo("RESTRICTED_UOCC");
+    core_mos_ = mo_space_info_->corr_absolute_mo("RESTRICTED_DOCC");
+    actv_mos_ = mo_space_info_->corr_absolute_mo("ACTIVE");
+    virt_mos_ = mo_space_info_->corr_absolute_mo("RESTRICTED_UOCC");
 
     // define space labels
     ambit::BlockedTensor::reset_mo_spaces();
@@ -321,8 +233,8 @@ std::shared_ptr<ActiveSpaceIntegrals> DSRG_MRPT::compute_Heff_actv() {
         "Computing active-space Hamiltonian is not yet implemented for spin-adapted code.");
 
     return std::make_shared<ActiveSpaceIntegrals>(
-        ints_, mo_space_info_->get_corr_abs_mo("ACTIVE"),
-        mo_space_info_->get_corr_abs_mo("RESTRICTED_DOCC"));
+        ints_, mo_space_info_->corr_absolute_mo("ACTIVE"), mo_space_info_->symmetry("ACTIVE"),
+        mo_space_info_->corr_absolute_mo("RESTRICTED_DOCC"));
 }
 
 void DSRG_MRPT::build_ints() {
@@ -338,68 +250,71 @@ void DSRG_MRPT::build_ints() {
 }
 
 void DSRG_MRPT::build_density() {
-    // test OPDC
-    ambit::Tensor diff = ambit::Tensor::build(tensor_type_, "diff_L1", rdms_.g1a().dims());
-    diff("pq") = rdms_.g1a()("pq") - rdms_.g1b()("pq");
-    if (diff.norm() > 1.0e-8) {
-        outfile->Printf("\n  Error: one-particle density cumulant cannot be spin-adapted!");
-        outfile->Printf("\n  |L1a - L1b| = %20.15f  <== This should be 0.0.", diff.norm());
-        throw psi::PSIEXCEPTION("One-particle density cumulant cannot be spin-adapted!");
-    }
+//    // test OPDC
+//    ambit::Tensor diff = ambit::Tensor::build(tensor_type_, "diff_L1", rdms_.g1a().dims());
+//    diff("pq") = rdms_.g1a()("pq") - rdms_.g1b()("pq");
+//    if (diff.norm() > 1.0e-8) {
+//        outfile->Printf("\n  Error: one-particle density cumulant cannot be spin-adapted!");
+//        outfile->Printf("\n  |L1a - L1b| = %20.15f  <== This should be 0.0.", diff.norm());
+//        throw psi::PSIEXCEPTION("One-particle density cumulant cannot be spin-adapted!");
+//    }
 
     // fill spin-summed OPDC
     ambit::Tensor L1aa = L1_.block("aa");
-    L1aa("pq") = rdms_.g1a()("pq") + rdms_.g1b()("pq");
+//    L1aa("pq") = rdms_.g1a()("pq") + rdms_.g1b()("pq");
+    L1aa("pq") = rdms_.SF_L1()("pq");
 
     ambit::Tensor E1aa = Eta1_.block("aa");
     E1aa.iterate(
         [&](const std::vector<size_t>& i, double& value) { value = i[0] == i[1] ? 2.0 : 0.0; });
     E1aa("pq") -= L1aa("pq");
 
-    // test T2PDC
-    diff = ambit::Tensor::build(tensor_type_, "diff_L2", rdms_.L2aa().dims());
-    diff("pqrs") = rdms_.L2aa()("pqrs") - rdms_.L2ab()("pqrs") + rdms_.L2ab()("pqsr");
-    if (diff.norm() > 1.0e-8) {
-        outfile->Printf("\n  Error: two-particle density cumulant cannot be spin-adapted!");
-        outfile->Printf("\n  |L2[pqrs] - (L2[pQrS] - L2[pQsR])| = %20.15f  <== "
-                        "This should be 0.0.",
-                        diff.norm());
-        throw psi::PSIEXCEPTION("Two-particle density cumulant cannot be spin-adapted!");
-    }
+//    // test T2PDC
+//    diff = ambit::Tensor::build(tensor_type_, "diff_L2", rdms_.L2aa().dims());
+//    diff("pqrs") = rdms_.L2aa()("pqrs") - rdms_.L2ab()("pqrs") + rdms_.L2ab()("pqsr");
+//    if (diff.norm() > 1.0e-8) {
+//        outfile->Printf("\n  Error: two-particle density cumulant cannot be spin-adapted!");
+//        outfile->Printf("\n  |L2[pqrs] - (L2[pQrS] - L2[pQsR])| = %20.15f  <== "
+//                        "This should be 0.0.",
+//                        diff.norm());
+//        throw psi::PSIEXCEPTION("Two-particle density cumulant cannot be spin-adapted!");
+//    }
 
     // fill spin-summed T2PDC
     ambit::Tensor L2aa = L2_.block("aaaa");
-    L2aa("pqrs") += 4.0 * rdms_.L2ab()("pqrs");
-    L2aa("pqrs") -= 2.0 * rdms_.L2ab()("pqsr");
+//    L2aa("pqrs") += 4.0 * rdms_.L2ab()("pqrs");
+//    L2aa("pqrs") -= 2.0 * rdms_.L2ab()("pqsr");
+    L2aa("pqrs") = rdms_.SF_L2()("pqrs");
 
     // T3PDC
     if (foptions_->get_str("THREEPDC") != "ZERO") {
-        // test spin adaptation
-        diff = ambit::Tensor::build(tensor_type_, "diff_L3", rdms_.L3aaa().dims());
-        diff("pqrstu") +=
-            rdms_.L3aab()("pqrstu") - rdms_.L3aab()("pqrsut") + rdms_.L3aab()("pqrtus");
-        diff("pqrstu") -=
-            rdms_.L3aab()("prqstu") - rdms_.L3aab()("prqsut") + rdms_.L3aab()("prqtus");
-        diff("pqrstu") +=
-            rdms_.L3aab()("qrpstu") - rdms_.L3aab()("qrpsut") + rdms_.L3aab()("qrptus");
-        diff.scale(1.0 / 3.0);
-        diff("pqrstu") -= rdms_.L3aaa()("pqrstu");
-        if (diff.norm() > 1.0e-8) {
-            outfile->Printf("\n  Error: three-particle density cumulant cannot "
-                            "be spin-adapted!");
-            outfile->Printf("\n  |L3aaa - 1/3 * P(L3aab)| = %20.15f  <== This "
-                            "should be 0.0.",
-                            diff.norm());
-            throw psi::PSIEXCEPTION("Three-particle density cumulant cannot be spin-adapted!");
-        }
+//        // test spin adaptation
+//        diff = ambit::Tensor::build(tensor_type_, "diff_L3", rdms_.L3aaa().dims());
+//        diff("pqrstu") +=
+//            rdms_.L3aab()("pqrstu") - rdms_.L3aab()("pqrsut") + rdms_.L3aab()("pqrtus");
+//        diff("pqrstu") -=
+//            rdms_.L3aab()("prqstu") - rdms_.L3aab()("prqsut") + rdms_.L3aab()("prqtus");
+//        diff("pqrstu") +=
+//            rdms_.L3aab()("qrpstu") - rdms_.L3aab()("qrpsut") + rdms_.L3aab()("qrptus");
+//        diff.scale(1.0 / 3.0);
+//        diff("pqrstu") -= rdms_.L3aaa()("pqrstu");
+//        if (diff.norm() > 1.0e-8) {
+//            outfile->Printf("\n  Error: three-particle density cumulant cannot "
+//                            "be spin-adapted!");
+//            outfile->Printf("\n  |L3aaa - 1/3 * P(L3aab)| = %20.15f  <== This "
+//                            "should be 0.0.",
+//                            diff.norm());
+//            throw psi::PSIEXCEPTION("Three-particle density cumulant cannot be spin-adapted!");
+//        }
 
         // fill spin-summed T3PDC
         ambit::Tensor L3aaa = L3_.block("aaaaaa");
-        L3aaa("pqrstu") += rdms_.L3aaa()("pqrstu");
-        L3aaa("pqrstu") += rdms_.L3aab()("pqrstu");
-        L3aaa("pqrstu") += rdms_.L3aab()("prqsut");
-        L3aaa("pqrstu") += rdms_.L3aab()("qrptus");
-        L3aaa.scale(2.0);
+//        L3aaa("pqrstu") += rdms_.L3aaa()("pqrstu");
+//        L3aaa("pqrstu") += rdms_.L3aab()("pqrstu");
+//        L3aaa("pqrstu") += rdms_.L3aab()("prqsut");
+//        L3aaa("pqrstu") += rdms_.L3aab()("qrptus");
+//        L3aaa.scale(2.0);
+        L3aaa("pqrstu") = rdms_.SF_L3()("pqrstu");
     }
 }
 

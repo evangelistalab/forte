@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2019 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
+ * Copyright (c) 2012-2020 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
  *
  * The copyrights for code used from other parties are included in
  * the corresponding files.
@@ -35,6 +35,7 @@
 #include "psi4/libmints/wavefunction.h"
 #include "psi4/libqt/qt.h"
 #include "psi4/psifiles.h"
+#include "psi4/libmints/basisset.h"
 
 #include "helpers/printing.h"
 #include "helpers/helpers.h"
@@ -95,8 +96,8 @@ double CASSCF::compute_energy() {
     double diis_gradient_norm = options_->get_double("CASSCF_DIIS_NORM");
     double rotation_max_value = options_->get_double("CASSCF_MAX_ROTATION");
 
-    psi::Dimension nhole_dim = mo_space_info_->get_dimension("GENERALIZED HOLE");
-    psi::Dimension npart_dim = mo_space_info_->get_dimension("GENERALIZED PARTICLE");
+    psi::Dimension nhole_dim = mo_space_info_->dimension("GENERALIZED HOLE");
+    psi::Dimension npart_dim = mo_space_info_->dimension("GENERALIZED PARTICLE");
     psi::SharedMatrix S(new psi::Matrix("Orbital Rotation", nirrep_, nhole_dim, npart_dim));
     psi::SharedMatrix Sstep;
 
@@ -265,21 +266,21 @@ void CASSCF::startup() {
 
     casscf_debug_print_ = options_->get_bool("CASSCF_DEBUG_PRINTING");
 
-    frozen_docc_dim_ = mo_space_info_->get_dimension("FROZEN_DOCC");
-    restricted_docc_dim_ = mo_space_info_->get_dimension("RESTRICTED_DOCC");
-    active_dim_ = mo_space_info_->get_dimension("ACTIVE");
-    restricted_uocc_dim_ = mo_space_info_->get_dimension("RESTRICTED_UOCC");
-    inactive_docc_dim_ = mo_space_info_->get_dimension("INACTIVE_DOCC");
+    frozen_docc_dim_ = mo_space_info_->dimension("FROZEN_DOCC");
+    restricted_docc_dim_ = mo_space_info_->dimension("RESTRICTED_DOCC");
+    active_dim_ = mo_space_info_->dimension("ACTIVE");
+    restricted_uocc_dim_ = mo_space_info_->dimension("RESTRICTED_UOCC");
+    inactive_docc_dim_ = mo_space_info_->dimension("INACTIVE_DOCC");
 
-    frozen_docc_abs_ = mo_space_info_->get_corr_abs_mo("FROZEN_DOCC");
-    restricted_docc_abs_ = mo_space_info_->get_corr_abs_mo("RESTRICTED_DOCC");
-    active_abs_ = mo_space_info_->get_corr_abs_mo("ACTIVE");
-    restricted_uocc_abs_ = mo_space_info_->get_corr_abs_mo("RESTRICTED_UOCC");
-    inactive_docc_abs_ = mo_space_info_->get_corr_abs_mo("INACTIVE_DOCC");
-    nmo_abs_ = mo_space_info_->get_corr_abs_mo("CORRELATED");
+    frozen_docc_abs_ = mo_space_info_->corr_absolute_mo("FROZEN_DOCC");
+    restricted_docc_abs_ = mo_space_info_->corr_absolute_mo("RESTRICTED_DOCC");
+    active_abs_ = mo_space_info_->corr_absolute_mo("ACTIVE");
+    restricted_uocc_abs_ = mo_space_info_->corr_absolute_mo("RESTRICTED_UOCC");
+    inactive_docc_abs_ = mo_space_info_->corr_absolute_mo("INACTIVE_DOCC");
+    nmo_abs_ = mo_space_info_->corr_absolute_mo("CORRELATED");
     nmo_ = mo_space_info_->size("CORRELATED");
     all_nmo_ = mo_space_info_->size("ALL");
-    nmopi_ = mo_space_info_->get_dimension("CORRELATED");
+    nmopi_ = mo_space_info_->dimension("CORRELATED");
     nrdocc_ = restricted_docc_abs_.size();
     nvir_ = restricted_uocc_abs_.size();
 
@@ -309,11 +310,7 @@ void CASSCF::startup() {
     psi::SharedMatrix OneInt = T;
     OneInt->zero();
 
-    T->load(psio_, PSIF_OEI);
-    V->load(psio_, PSIF_OEI);
-    Hcore_ = ints_->wfn()->matrix_factory()->create_shared_matrix("Core Hamiltonian");
-    Hcore_->add(T);
-    Hcore_->add(V);
+    Hcore_ = SharedMatrix(ints_->wfn()->H()->clone());
 
     local_timer JK_initialize;
     if (options_->get_str("SCF_TYPE") == "GTFOCK") {
@@ -330,7 +327,7 @@ void CASSCF::startup() {
                 std::make_shared<DiskDFJK>(ints_->basisset(), ints_->get_basisset("DF_BASIS_SCF"));
         } else {
             JK_ = JK::build_JK(ints_->basisset(), psi::BasisSet::zero_ao_basis_set(),
-                               options_->psi_options());
+                               psi::Process::environment.options);
         }
     }
     JK_->set_memory(psi::Process::environment.get_memory() * 0.8);
@@ -488,9 +485,13 @@ void CASSCF::cas_ci_final() {
 double CASSCF::cas_check(RDMs cas_ref) {
     ambit::Tensor gamma1 = ambit::Tensor::build(ambit::CoreTensor, "Gamma1", {na_, na_});
     ambit::Tensor gamma2 = ambit::Tensor::build(ambit::CoreTensor, "Gamma2", {na_, na_, na_, na_});
+
+    std::vector<size_t> rdocc = mo_space_info_->corr_absolute_mo("RESTRICTED_DOCC");
+    std::vector<size_t> active = mo_space_info_->corr_absolute_mo("ACTIVE");
+    std::vector<int> active_sym = mo_space_info_->symmetry("ACTIVE");
     std::shared_ptr<ActiveSpaceIntegrals> fci_ints =
-        std::make_shared<ActiveSpaceIntegrals>(ints_, mo_space_info_->get_corr_abs_mo("ACTIVE"),
-                                               mo_space_info_->get_corr_abs_mo("RESTRICTED_DOCC"));
+        std::make_shared<ActiveSpaceIntegrals>(ints_, active, active_sym, rdocc);
+
     fci_ints->set_active_integrals_and_restricted_docc();
 
     /// Spin-free ORDM = gamma1_a + gamma1_b
@@ -523,7 +524,7 @@ double CASSCF::cas_check(RDMs cas_ref) {
 
     double E_casscf = 0.0;
 
-    std::vector<size_t> na_array = mo_space_info_->get_corr_abs_mo("ACTIVE");
+    std::vector<size_t> na_array = mo_space_info_->corr_absolute_mo("ACTIVE");
 
     ambit::Tensor tei_ab = ints_->aptei_ab_block(na_array, na_array, na_array, na_array);
 
@@ -555,7 +556,7 @@ double CASSCF::cas_check(RDMs cas_ref) {
 std::shared_ptr<psi::Matrix> CASSCF::set_frozen_core_orbitals() {
     psi::SharedMatrix Ca = ints_->Ca();
     psi::Dimension nsopi = scf_info_->nsopi();
-    psi::Dimension frozen_dim = mo_space_info_->get_dimension("FROZEN_DOCC");
+    psi::Dimension frozen_dim = mo_space_info_->dimension("FROZEN_DOCC");
     psi::SharedMatrix C_core(new psi::Matrix("C_core", nirrep_, nsopi, frozen_dim));
     // Need to get the frozen block of the C matrix
     for (size_t h = 0; h < nirrep_; h++) {
@@ -596,13 +597,13 @@ ambit::Tensor CASSCF::transform_integrals() {
     size_t nmo_no_froze = mo_space_info_->size("ALL");
     size_t nmo_with_froze = mo_space_info_->size("CORRELATED");
     psi::SharedMatrix CAct(new psi::Matrix("CAct", nsopi_.sum(), na_));
-    auto active_abs = mo_space_info_->get_absolute_mo("ACTIVE");
+    auto active_abs = mo_space_info_->absolute_mo("ACTIVE");
 
     /// Step 1: Obtain guess MO coefficients C_{mup}
     /// Since I want to use these in a symmetry aware basis,
     /// I will move the C matrix into a Pfitzer ordering
 
-    psi::Dimension nmopi = mo_space_info_->get_dimension("ALL");
+    psi::Dimension nmopi = mo_space_info_->dimension("ALL");
 
     psi::SharedMatrix aotoso = ints_->aotoso();
 
@@ -686,8 +687,8 @@ ambit::Tensor CASSCF::transform_integrals() {
 
     psi::SharedMatrix half_trans(new psi::Matrix("Trans", nmo_no_froze, na_));
     int count = 0;
-    auto absolute_all = mo_space_info_->get_absolute_mo("CORRELATED");
-    auto corr_abs = mo_space_info_->get_corr_abs_mo("CORRELATED");
+    auto absolute_all = mo_space_info_->absolute_mo("CORRELATED");
+    auto corr_abs = mo_space_info_->corr_absolute_mo("CORRELATED");
     for (auto d : D_vec) {
         int i = d.second[0];
         int j = d.second[1];
@@ -725,14 +726,15 @@ void CASSCF::set_up_fci() {
 
 std::shared_ptr<ActiveSpaceIntegrals> CASSCF::get_ci_integrals() {
 
-    std::vector<size_t> rdocc = mo_space_info_->get_corr_abs_mo("RESTRICTED_DOCC");
-    std::vector<size_t> active = mo_space_info_->get_corr_abs_mo("ACTIVE");
+    std::vector<size_t> rdocc = mo_space_info_->corr_absolute_mo("RESTRICTED_DOCC");
+    std::vector<size_t> active = mo_space_info_->corr_absolute_mo("ACTIVE");
+    std::vector<int> active_sym = mo_space_info_->symmetry("ACTIVE");
     std::shared_ptr<ActiveSpaceIntegrals> fci_ints =
-        std::make_shared<ActiveSpaceIntegrals>(ints_, active, rdocc);
+        std::make_shared<ActiveSpaceIntegrals>(ints_, active, active_sym, rdocc);
     if (!(options_->get_bool("RESTRICTED_DOCC_JK"))) {
         fci_ints->set_active_integrals_and_restricted_docc();
     } else {
-        auto na_array = mo_space_info_->get_corr_abs_mo("ACTIVE");
+        auto na_array = mo_space_info_->corr_absolute_mo("ACTIVE");
 
         ambit::Tensor active_aa =
             ambit::Tensor::build(ambit::CoreTensor, "ActiveIntegralsAA", {na_, na_, na_, na_});
@@ -788,10 +790,10 @@ std::shared_ptr<ActiveSpaceIntegrals> CASSCF::get_ci_integrals() {
 
 std::vector<std::vector<double>> CASSCF::compute_restricted_docc_operator() {
     ///
-    psi::Dimension restricted_docc_dim = mo_space_info_->get_dimension("INACTIVE_DOCC");
+    psi::Dimension restricted_docc_dim = mo_space_info_->dimension("INACTIVE_DOCC");
     psi::Dimension nsopi = scf_info_->nsopi();
     int nirrep = mo_space_info_->nirrep();
-    psi::Dimension nmopi = mo_space_info_->get_dimension("ALL");
+    psi::Dimension nmopi = mo_space_info_->dimension("ALL");
 
     psi::SharedMatrix Cdocc(new psi::Matrix("C_RESTRICTED", nirrep, nsopi, restricted_docc_dim));
     psi::SharedMatrix Ca = ints_->Ca();
@@ -852,7 +854,7 @@ std::vector<std::vector<double>> CASSCF::compute_restricted_docc_operator() {
     std::vector<double> oei_a(nmo2);
     std::vector<double> oei_b(nmo2);
 
-    auto absolute_active = mo_space_info_->get_absolute_mo("ACTIVE");
+    auto absolute_active = mo_space_info_->absolute_mo("ACTIVE");
     for (size_t u = 0; u < na_; u++) {
         for (size_t v = 0; v < na_; v++) {
             double value = F_restric_c1->get(absolute_active[u], absolute_active[v]);
@@ -863,7 +865,7 @@ std::vector<std::vector<double>> CASSCF::compute_restricted_docc_operator() {
                 outfile->Printf("\n oei(%d, %d) = %8.8f", u, v, value);
         }
     }
-    psi::Dimension restricted_docc = mo_space_info_->get_dimension("INACTIVE_DOCC");
+    psi::Dimension restricted_docc = mo_space_info_->dimension("INACTIVE_DOCC");
     double E_restricted = 0.0;
     for (int h = 0; h < nirrep; h++) {
         for (int rd = 0; rd < restricted_docc[h]; rd++) {
@@ -904,11 +906,11 @@ void CASSCF::set_up_sa_fci() {
     SA_FCISolver sa_fcisolver(options_->psi_options(), ints_->wfn());
     sa_fcisolver.set_mo_space_info(mo_space_info_);
     sa_fcisolver.set_integrals(ints_);
-    std::vector<size_t> rdocc = mo_space_info_->get_corr_abs_mo("RESTRICTED_DOCC");
-    std::vector<size_t> active = mo_space_info_->get_corr_abs_mo("ACTIVE");
+    std::vector<size_t> rdocc = mo_space_info_->corr_absolute_mo("RESTRICTED_DOCC");
+    std::vector<size_t> active = mo_space_info_->corr_absolute_mo("ACTIVE");
     std::shared_ptr<ActiveSpaceIntegrals> fci_ints =
         std::make_shared<ActiveSpaceIntegrals>(ints_, active, rdocc);
-    auto na_array = mo_space_info_->get_corr_abs_mo("ACTIVE");
+    auto na_array = mo_space_info_->corr_absolute_mo("ACTIVE");
 
     ambit::Tensor active_aa =
         ambit::Tensor::build(ambit::CoreTensor, "ActiveIntegralsAA", {na_, na_, na_, na_});
@@ -991,7 +993,7 @@ void CASSCF::write_orbitals_molden() {
 std::pair<ambit::Tensor, std::vector<double>> CASSCF::CI_Integrals() {
     std::vector<std::vector<double>> oei_vector = compute_restricted_docc_operator();
 
-    auto na_array = mo_space_info_->get_corr_abs_mo("ACTIVE");
+    auto na_array = mo_space_info_->corr_absolute_mo("ACTIVE");
     const std::vector<double>& tei_paaa_data = tei_paaa_.data();
     ambit::Tensor active_ab =
         ambit::Tensor::build(ambit::CoreTensor, "ActiveIntegralsBB", {na_, na_, na_, na_});

@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2019 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
+ * Copyright (c) 2012-2020 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
  *
  * The copyrights for code used from other parties are included in
  * the corresponding files.
@@ -26,6 +26,7 @@
  * @END LICENSE
  */
 
+#include "psi4/psi4-dec.h"
 #include "psi4/libpsi4util/PsiOutStream.h"
 
 #include "ci_reference.h"
@@ -58,23 +59,20 @@ CI_Reference::CI_Reference(std::shared_ptr<SCFInfo> scf_info, std::shared_ptr<Fo
 
     // Frozen DOCC + RDOCC
     size_t ninact = mo_space_info_->size("INACTIVE_DOCC");
-    frzcpi_ = mo_space_info_->get_dimension("INACTIVE_DOCC");
+    frzcpi_ = mo_space_info_->dimension("INACTIVE_DOCC");
 
     // Symmetry of each MO
     mo_symmetry_ = mo_space_info_->symmetry("ACTIVE");
 
     // Size of total active space
     nact_ = mo_space_info_->size("ACTIVE");
-    nactpi_ = mo_space_info_->get_dimension("ACTIVE");
+    nactpi_ = mo_space_info_->dimension("ACTIVE");
 
     // Size of subspace
     subspace_size_ = options->get_int("ACTIVE_GUESS_SIZE");
 
     // Reference type
-    ref_type_ = "CAS";
-    if (options->has_changed("ACTIVE_REF_TYPE")) {
-        ref_type_ = options->get_str("ACTIVE_REF_TYPE");
-    }
+    ref_type_ = options->get_str("ACTIVE_REF_TYPE");
 
     // First determine number of alpha and beta electrons
     // Assume twice_ms =( Na - Nb )
@@ -106,8 +104,15 @@ void CI_Reference::build_reference(std::vector<Determinant>& ref_space) {
 }
 
 void CI_Reference::build_ci_reference(std::vector<Determinant>& ref_space) {
+    // Special case. If there are no active orbitals return an empty determinant
+    if (nact_ == 0) {
+        Determinant det;
+        ref_space.push_back(det);
+        return;
+    }
+
     Determinant det(get_occupation());
-    outfile->Printf("\n  %s", det.str(nact_).c_str());
+    outfile->Printf("\n  %s", str(det, nact_).c_str());
 
     ref_space.push_back(det);
 
@@ -397,10 +402,14 @@ std::vector<std::tuple<double, int, int>> CI_Reference::sym_labeled_orbitals(std
 
 Determinant CI_Reference::get_occupation() {
     int nact = mo_space_info_->size("ACTIVE");
-    //    Determinant det(nact); <- xsize
     Determinant det;
 
-    // nyms denotes the number of electrons needed to assign symmetry and
+    // If there are no electrons return an empty determinant
+    if (nalpha_ + nbeta_ == 0) {
+        return det;
+    }
+
+    // nsym denotes the number of electrons needed to assign symmetry and
     // multiplicity
     int nsym = twice_ms_;
     int orb_sym = root_sym_;
@@ -448,7 +457,7 @@ Determinant CI_Reference::get_occupation() {
         // Add electron to lowest-energy orbital of proper symmetry
         // Loop from current occupation to max MO until correct orbital is
         // reached
-        for (int i = nalpha_ - k, maxi = nact; i < maxi; ++i) {
+        for (int i = std::max(nalpha_ - k, 0), maxi = nact; i < maxi; ++i) {
             if (orb_sym == std::get<1>(labeled_orb_en[i]) and
                 det.get_alfa_bit(std::get<2>(labeled_orb_en[i])) != true) {
                 det.set_alfa_bit(std::get<2>(labeled_orb_en[i]), true);
@@ -461,7 +470,7 @@ Determinant CI_Reference::get_occupation() {
         }
         // If a new occupation could not be created, put electron back and
         // remove a different one
-        if (!add) {
+        if (!add and (nalpha_ - k > 0)) {
             det.set_alfa_bit(std::get<2>(labeled_orb_en[nalpha_ - k]), true);
             //            occupation[] = 1;
             ++k;
@@ -472,4 +481,4 @@ Determinant CI_Reference::get_occupation() {
     } // End loop over k
     return det;
 }
-}
+} // namespace forte

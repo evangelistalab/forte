@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2019 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
+ * Copyright (c) 2012-2020 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
  *
  * The copyrights for code used from other parties are included in
  * the corresponding files.
@@ -46,7 +46,7 @@ using namespace psi;
 
 namespace forte {
 
-SA_FCISolver::SA_FCISolver(psi::Options& options, std::shared_ptr<psi::Wavefunction> wfn)
+SA_FCISolver::SA_FCISolver(std::shared_ptr<ForteOptions> options, std::shared_ptr<psi::Wavefunction> wfn)
     : options_(options), wfn_(wfn) {
     read_options();
 }
@@ -214,9 +214,9 @@ double SA_FCISolver::compute_energy() {
         int nroot;
         std::tie(symmetry, multiplicity, nroot, std::ignore) = cas_solutions;
 
-        psi::Dimension active_dim = mo_space_info_->get_dimension("ACTIVE");
-        std::vector<size_t> rdocc = mo_space_info_->get_corr_abs_mo("RESTRICTED_DOCC");
-        std::vector<size_t> active = mo_space_info_->get_corr_abs_mo("ACTIVE");
+        psi::Dimension active_dim = mo_space_info_->dimension("ACTIVE");
+        std::vector<size_t> rdocc = mo_space_info_->corr_absolute_mo("RESTRICTED_DOCC");
+        std::vector<size_t> active = mo_space_info_->corr_absolute_mo("ACTIVE");
 
         int charge = psi::Process::environment.molecule()->molecular_charge();
         if (options_["CHARGE"].has_changed()) {

@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2019 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
+ * Copyright (c) 2012-2020 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
  *
  * The copyrights for code used from other parties are included in
  * the corresponding files.
@@ -26,11 +26,12 @@
  * @END LICENSE
  */
 
-#include "psi4/libpsi4util/process.h"
-#include "psi4/libqt/qt.h"
+#include "psi4/psi4-dec.h"
+#include "psi4/libpsi4util/PsiOutStream.h"
 #include "psi4/libmints/matrix.h"
 #include "psi4/libmints/vector.h"
-#include "helpers/helpers.h"
+
+#include "helpers/printing.h"
 #include "base_classes/rdms.h"
 
 #include "localize.h"
@@ -39,9 +40,9 @@ using namespace psi;
 
 namespace forte {
 
-LOCALIZE::LOCALIZE(std::shared_ptr<ForteOptions> options, std::shared_ptr<ForteIntegrals> ints,
+Localize::Localize(std::shared_ptr<ForteOptions> options, std::shared_ptr<ForteIntegrals> ints,
                    std::shared_ptr<MOSpaceInfo> mo_space_info)
-    : OrbitalTransform(ints, mo_space_info), mo_space_info_(mo_space_info) {
+    : OrbitalTransform(ints, mo_space_info) {
 
     if (ints_->nirrep() > 1) {
         throw psi::PSIEXCEPTION("\n\n ERROR: Localizer only implemented for C1 symmetry!");
@@ -50,26 +51,25 @@ LOCALIZE::LOCALIZE(std::shared_ptr<ForteOptions> options, std::shared_ptr<ForteI
     orbital_spaces_ = options->get_int_vec("LOCALIZE_SPACE");
     local_method_ = options->get_str("LOCALIZE");
 
-    print_h2("ORBITAL LOCALIZER");
+    print_h2("Orbital Localizer");
 
     outfile->Printf("\n  Localize method: %s", local_method_.c_str());
 }
 
-
-void LOCALIZE::set_orbital_space(std::vector<int>& orbital_spaces) {
+void Localize::set_orbital_space(std::vector<int>& orbital_spaces) {
     orbital_spaces_ = orbital_spaces;
 }
 
-void LOCALIZE::set_orbital_space(std::vector<std::string>& labels) {
+void Localize::set_orbital_space(std::vector<std::string>& labels) {
 
-    for( const auto& label : labels ){
-        std::vector<size_t> mos = mo_space_info_->get_corr_abs_mo(label);
-        orbital_spaces_.push_back(mos[0]); 
-        orbital_spaces_.push_back(mos.back()); 
+    for (const auto& label : labels) {
+        std::vector<size_t> mos = mo_space_info_->corr_absolute_mo(label);
+        orbital_spaces_.push_back(mos[0]);
+        orbital_spaces_.push_back(mos.back());
     }
 }
 
-void LOCALIZE::compute_transformation() {
+void Localize::compute_transformation() {
 
     if (orbital_spaces_.size() == 0) {
         outfile->Printf("\n  Error: Orbital space for localization is not set!");
@@ -136,7 +136,7 @@ void LOCALIZE::compute_transformation() {
     }
 }
 
-psi::SharedMatrix LOCALIZE::get_Ua() { return Ua_; }
-psi::SharedMatrix LOCALIZE::get_Ub() { return Ub_; }
+psi::SharedMatrix Localize::get_Ua() { return Ua_; }
+psi::SharedMatrix Localize::get_Ub() { return Ub_; }
 
 } // namespace forte

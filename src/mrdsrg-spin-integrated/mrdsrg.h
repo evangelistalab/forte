@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2019 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
+ * Copyright (c) 2012-2020 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
  *
  * The copyrights for code used from other parties are included in
  * the corresponding files.
@@ -32,7 +32,8 @@
 #include <cmath>
 #include <memory>
 
-#include "psi4/liboptions/liboptions.h"
+#include "psi4/libdiis/diismanager.h"
+
 #include "psi4/libmints/wavefunction.h"
 #include "psi4/libpsio/psio.hpp"
 #include "psi4/libpsio/psio.h"
@@ -328,6 +329,21 @@ class MRDSRG : public MASTER_DSRG {
                          BlockedTensor& T2, const std::vector<std::string>& label2,
                          const std::vector<double>& data);
 
+    /// Shared pointer of DIISManager object from Psi4
+    std::shared_ptr<psi::DIISManager> diis_manager_;
+    /// Amplitudes pointers
+    std::vector<double*> amp_ptrs_;
+    /// Residual pointers
+    std::vector<double*> res_ptrs_;
+    /// Initialize DIISManager
+    void diis_manager_init();
+    /// Add entry for DIISManager
+    void diis_manager_add_entry();
+    /// Extrapolate for DIISManager
+    void diis_manager_extrapolate();
+    /// Clean up for pointers used for DIIS
+    void diis_manager_cleanup();
+
     /// Add H2's Hermitian conjugate to itself, H2 need to contain gggg (or
     /// GGGG) block
     void tensor_add_HC_aa(BlockedTensor& H2, const bool& spin_alpha = true);
@@ -341,6 +357,8 @@ class MRDSRG : public MASTER_DSRG {
 
     /// Zeroth-order Hamiltonian
     ambit::BlockedTensor H0th_;
+    /// DSRG-MRPT2 zeroth-order Hamiltonian
+    std::string pt2_h0th_;
     /// Compute DSRG-MRPT2 energy
     double compute_energy_pt2();
     /// Compute DSRG-MRPT3 energy
@@ -352,8 +370,6 @@ class MRDSRG : public MASTER_DSRG {
     std::vector<std::pair<std::string, double>> compute_energy_pt2_Ffull();
     /// Compute DSRG-MRPT2 energy using Fdiag_Vactv or Fdiag_Vdiag as H0th
     std::vector<std::pair<std::string, double>> compute_energy_pt2_FdiagV();
-    /// Compute DSRG-MRPT2 energy using Fdiag_Vdiag as H0th
-    std::vector<std::pair<std::string, double>> compute_energy_pt2_FdiagVdiag();
 
     // => MR-SRG <= //
 

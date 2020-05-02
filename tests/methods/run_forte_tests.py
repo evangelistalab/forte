@@ -183,14 +183,23 @@ def main():
                 failed_tests[test_group] = group_failed_tests 
  
     # print a summary of the tests
-    print('Summary:')
-    print(' ' * 4 + '=' * 76)
-    print('    TEST' + ' ' * 57 + 'RESULT TIME (s)')
-    print(' ' * 4 + '-' * 76)
-    print('\n'.join(summary))
-    print(' ' * 4 + '=' * 76)
+    summary_str  = 'Summary:\n'
+    summary_str += ' ' * 4 + '=' * 76 + '\n'
+    summary_str += '    TEST' + ' ' * 57 + 'RESULT TIME (s)\n'
+    summary_str += ' ' * 4 + '-' * 76 + '\n'
+    summary_str += '\n'.join(summary) + '\n'
+    summary_str += ' ' * 4 + '=' * 76 
 
+    print(summary_str)
     print('\nTotal time: %6.1f s\n' % total_time)
+
+    import datetime
+    now = datetime.datetime.now()
+    file_name = f'test_results_{now.strftime("%Y-%m-%d-%H%M")}.txt'
+ 
+    with open(file_name, 'w') as outfile:
+        outfile.write(summary_str)
+        outfile.write('\nTotal time: %6.1f s\n' % total_time)
 
     # save the list of failed tests
     with open('failed_tests.yaml', 'w') as outfile:

@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2019 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
+ * Copyright (c) 2012-2020 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
  *
  * The copyrights for code used from other parties are included in
  * the corresponding files.
@@ -53,7 +53,7 @@ using namespace psi;
 
 namespace forte {
 
-DISKDFIntegrals::DISKDFIntegrals(psi::Options& options, std::shared_ptr<psi::Wavefunction> ref_wfn,
+DISKDFIntegrals::DISKDFIntegrals(std::shared_ptr<ForteOptions> options, std::shared_ptr<psi::Wavefunction> ref_wfn,
                                  std::shared_ptr<MOSpaceInfo> mo_space_info,
                                  IntegralSpinRestriction restricted)
     : ForteIntegrals(options, ref_wfn, mo_space_info, restricted) {
@@ -453,7 +453,7 @@ void DISKDFIntegrals::make_fock_matrix(std::shared_ptr<psi::Matrix> gamma_aM,
 
     ////Figure out exactly what I need to contract the Coloumb term
     /// Only h + a is nonzero for RDM
-    std::vector<size_t> generalized_hole = mo_space_info_->get_corr_abs_mo("GENERALIZED HOLE");
+    std::vector<size_t> generalized_hole = mo_space_info_->corr_absolute_mo("GENERALIZED HOLE");
 
     fock_a.iterate([&](const std::vector<size_t>& i, double& value) {
         value = one_electron_integrals_a_[i[0] * aptei_idx_ + i[1]];

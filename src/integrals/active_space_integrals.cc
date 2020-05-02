@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2019 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
+ * Copyright (c) 2012-2020 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
  *
  * The copyrights for code used from other parties are included in
  * the corresponding files.
@@ -28,18 +28,22 @@
 
 #include <cmath>
 
+#include "psi4/psi4-dec.h"
 #include "psi4/libpsi4util/PsiOutStream.h"
 
 #include "base_classes/mo_space_info.h"
 #include "integrals/active_space_integrals.h"
 
+#define FAST_SLATER_RULES 0
+
 namespace forte {
 
 ActiveSpaceIntegrals::ActiveSpaceIntegrals(std::shared_ptr<ForteIntegrals> ints,
-                                           std::vector<size_t> active_mo,
-                                           std::vector<size_t> restricted_docc_mo)
+                                           const std::vector<size_t>& active_mo,
+                                           const std::vector<int>& active_mo_symmetry,
+                                           const std::vector<size_t>& restricted_docc_mo)
     : nmo_(active_mo.size()), ints_(ints), active_mo_(active_mo),
-      restricted_docc_mo_(restricted_docc_mo) {
+      active_mo_symmetry_(active_mo_symmetry), restricted_docc_mo_(restricted_docc_mo) {
     startup();
 }
 
@@ -156,81 +160,61 @@ void ActiveSpaceIntegrals::set_active_integrals_and_restricted_docc() {
 
 std::vector<size_t> ActiveSpaceIntegrals::active_mo() const { return active_mo_; }
 
+std::vector<int> ActiveSpaceIntegrals::active_mo_symmetry() const { return active_mo_symmetry_; }
+
 std::vector<size_t> ActiveSpaceIntegrals::restricted_docc_mo() const { return restricted_docc_mo_; }
 
 double ActiveSpaceIntegrals::energy(const Determinant& det) const {
     double energy = frozen_core_energy_;
 
-#ifdef SMALL_BITSET
-    uint64_t Ia = det.get_alfa_bits();
-    uint64_t Ib = det.get_beta_bits();
+    String Ia = det.get_alfa_bits();
+    String Ib = det.get_beta_bits();
+    String Iac;
+    String Ibc;
 
-    int naocc = det.count_alfa();
-    int nbocc = det.count_beta();
+    int naocc = Ia.count();
+    int nbocc = Ib.count();
 
     for (int A = 0; A < naocc; ++A) {
-        int p = lowest_one_idx(Ia);
+        int p = Ia.find_and_clear_first_one();
         energy += oei_a_[p * nmo_ + p];
-        Ia = clear_lowest_one(Ia);
-        uint64_t Iac = Ia;
 
+        Iac = Ia;
         for (int AA = A + 1; AA < naocc; ++AA) {
-            int q = lowest_one_idx(Iac);
+            int q = Iac.find_and_clear_first_one();
             energy += tei_aa_[p * nmo3_ + q * nmo2_ + p * nmo_ + q];
-            Iac = clear_lowest_one(Iac);
         }
 
-        uint64_t Ibc = Ib;
+        Ibc = Ib;
         for (int B = 0; B < nbocc; ++B) {
-            int q = lowest_one_idx(Ibc);
+            int q = Ibc.find_and_clear_first_one();
             energy += tei_ab_[p * nmo3_ + q * nmo2_ + p * nmo_ + q];
-            Ibc = clear_lowest_one(Ibc);
         }
     }
 
     for (int B = 0; B < nbocc; ++B) {
-        int p = lowest_one_idx(Ib);
+        int p = Ib.find_and_clear_first_one();
         energy += oei_b_[p * nmo_ + p];
-        Ib = clear_lowest_one(Ib);
-        uint64_t Ibc = Ib;
+        Ibc = Ib;
         for (int BB = B + 1; BB < nbocc; ++BB) {
-            int q = lowest_one_idx(Ibc);
+            int q = Ibc.find_and_clear_first_one();
             energy += tei_bb_[p * nmo3_ + q * nmo2_ + p * nmo_ + q];
-            Ibc = clear_lowest_one(Ibc);
         }
     }
-#else
-    for (size_t p = 0; p < nmo_; p++) {
-        if (det.get_alfa_bit(p)) {
-            energy += oei_a_[p * nmo_ + p];
-            for (size_t q = p + 1; q < nmo_; ++q) {
-                if (det.get_alfa_bit(q)) {
-                    energy += tei_aa_[p * nmo3_ + q * nmo2_ + p * nmo_ + q];
-                }
-            }
-            for (size_t q = 0; q < nmo_; ++q) {
-                if (det.get_beta_bit(q)) {
-                    energy += tei_ab_[p * nmo3_ + q * nmo2_ + p * nmo_ + q];
-                }
-            }
-        }
-        if (det.get_beta_bit(p)) {
-            energy += oei_b_[p * nmo_ + p];
-            for (size_t q = p + 1; q < nmo_; ++q) {
-                if (det.get_beta_bit(q)) {
-                    energy += tei_bb_[p * nmo3_ + q * nmo2_ + p * nmo_ + q];
-                }
-            }
-        }
-    }
-#endif
 
     return energy;
 }
 
 double ActiveSpaceIntegrals::slater_rules(const Determinant& lhs, const Determinant& rhs) const {
+    // we first check that the two determinants have equal Ms
+    if ((lhs.count_alfa() != rhs.count_alfa()) or (lhs.count_beta() != rhs.count_beta()))
+        return 0.0;
+
     int nadiff = 0;
     int nbdiff = 0;
+
+#if FAST_SLATER_RULES
+#else
     // Count how many differences in mos are there
     for (size_t n = 0; n < nmo_; ++n) {
         if (lhs.get_alfa_bit(n) != rhs.get_alfa_bit(n))
@@ -388,6 +372,7 @@ double ActiveSpaceIntegrals::slater_rules(const Determinant& lhs, const Determin
         double sign = lhs.slater_sign_aa(i, k) * lhs.slater_sign_bb(j, l);
         matrix_element = sign * tei_ab_[i * nmo3_ + j * nmo2_ + k * nmo_ + l];
     }
+#endif
     return (matrix_element);
 }
 
@@ -516,15 +501,17 @@ make_active_space_ints(std::shared_ptr<MOSpaceInfo> mo_space_info,
                        const std::vector<std::string>& core_spaces) {
 
     // get the active/core vectors
-    auto active_mo = mo_space_info->get_corr_abs_mo(active_space);
+    auto active_mo = mo_space_info->corr_absolute_mo(active_space);
+    auto active_mo_symmetry = mo_space_info->symmetry(active_space);
     std::vector<size_t> core_mo;
     for (const auto space : core_spaces) {
-        auto mos = mo_space_info->get_corr_abs_mo(space);
+        auto mos = mo_space_info->corr_absolute_mo(space);
         core_mo.insert(core_mo.end(), mos.begin(), mos.end());
     }
 
     // allocate the active space integral object
-    auto as_ints = std::make_shared<ActiveSpaceIntegrals>(ints, active_mo, core_mo);
+    auto as_ints =
+        std::make_shared<ActiveSpaceIntegrals>(ints, active_mo, active_mo_symmetry, core_mo);
 
     // grab the integrals from the ForteIntegrals object
     ambit::Tensor tei_active_aa = ints->aptei_aa_block(active_mo, active_mo, active_mo, active_mo);

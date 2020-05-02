@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2019 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
+ * Copyright (c) 2012-2020 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
  *
  * The copyrights for code used from other parties are included in
  * the corresponding files.
@@ -95,11 +95,11 @@ void ACTIVE_DSRGPT2::startup() {
         ref_wfns_ = std::vector<psi::SharedMatrix>(nirrep, psi::SharedMatrix());
 
         // determined absolute orbitals indices in C1 symmetry
-        psi::Dimension nmopi = mo_space_info_->get_dimension("ALL");
-        psi::Dimension frzcpi = mo_space_info_->get_dimension("FROZEN_DOCC");
-        psi::Dimension corepi = mo_space_info_->get_dimension("RESTRICTED_DOCC");
-        psi::Dimension actvpi = mo_space_info_->get_dimension("ACTIVE");
-        psi::Dimension virtpi = mo_space_info_->get_dimension("RESTRICTED_UOCC");
+        psi::Dimension nmopi = mo_space_info_->dimension("ALL");
+        psi::Dimension frzcpi = mo_space_info_->dimension("FROZEN_DOCC");
+        psi::Dimension corepi = mo_space_info_->dimension("RESTRICTED_DOCC");
+        psi::Dimension actvpi = mo_space_info_->dimension("ACTIVE");
+        psi::Dimension virtpi = mo_space_info_->dimension("RESTRICTED_UOCC");
 
         coreIdxC1_ = std::vector<vector<size_t>>(nirrep, std::vector<size_t>());
         actvIdxC1_ = std::vector<vector<size_t>>(nirrep, std::vector<size_t>());
@@ -654,8 +654,8 @@ Vector4 ACTIVE_DSRGPT2::compute_td_ref_root(std::shared_ptr<ActiveSpaceIntegrals
                                             psi::SharedMatrix evecs, const int& root0,
                                             const int& root1) {
     int nirrep = mo_space_info_->nirrep();
-    psi::Dimension nmopi = mo_space_info_->get_dimension("ALL");
-    psi::Dimension actvpi = mo_space_info_->get_dimension("ACTIVE");
+    psi::Dimension nmopi = mo_space_info_->dimension("ALL");
+    psi::Dimension actvpi = mo_space_info_->dimension("ACTIVE");
     size_t nactv = actvpi.sum();
     size_t nmo = nmopi.sum();
 
@@ -765,9 +765,9 @@ void ACTIVE_DSRGPT2::compute_osc_pt2(const int& irrep, const int& root, const do
     space_C1_idx['v'] = virtIdxC1_;
 
     std::map<char, psi::Dimension> space_offsets;
-    space_offsets['c'] = mo_space_info_->get_dimension("FROZEN_DOCC");
-    space_offsets['a'] = space_offsets['c'] + mo_space_info_->get_dimension("RESTRICTED_DOCC");
-    space_offsets['v'] = space_offsets['a'] + mo_space_info_->get_dimension("ACTIVE");
+    space_offsets['c'] = mo_space_info_->dimension("FROZEN_DOCC");
+    space_offsets['a'] = space_offsets['c'] + mo_space_info_->dimension("RESTRICTED_DOCC");
+    space_offsets['v'] = space_offsets['a'] + mo_space_info_->dimension("ACTIVE");
 
     // step 2: copy data to psi::SharedMatrix
     size_t nmo = modipole_ints_[0]->nrow();
@@ -997,14 +997,14 @@ void ACTIVE_DSRGPT2::transform_integrals(psi::SharedMatrix Ca0, psi::SharedMatri
 
     // transform integrals
     outfile->Printf("\n\n");
-    std::vector<size_t> idx_a = mo_space_info_->get_corr_abs_mo("ACTIVE");
+    std::vector<size_t> idx_a = mo_space_info_->corr_absolute_mo("ACTIVE");
     ints_->update_orbitals(Ca, Cb);
     ambit::Tensor tei_active_aa = ints_->aptei_aa_block(idx_a, idx_a, idx_a, idx_a);
     ambit::Tensor tei_active_ab = ints_->aptei_ab_block(idx_a, idx_a, idx_a, idx_a);
     ambit::Tensor tei_active_bb = ints_->aptei_bb_block(idx_a, idx_a, idx_a, idx_a);
     auto fci_ints =
-        std::make_shared<ActiveSpaceIntegrals>(ints_, mo_space_info_->get_corr_abs_mo("ACTIVE"),
-                                               mo_space_info_->get_corr_abs_mo("RESTRICTED_DOCC"));
+        std::make_shared<ActiveSpaceIntegrals>(ints_, mo_space_info_->corr_absolute_mo("ACTIVE"),
+                                               mo_space_info_->corr_absolute_mo("RESTRICTED_DOCC"));
     fci_ints->set_active_integrals(tei_active_aa, tei_active_ab, tei_active_bb);
     fci_ints->compute_restricted_one_body_operator();
     fci_mo_->set_fci_int(fci_ints);
@@ -1205,7 +1205,7 @@ void ACTIVE_DSRGPT2::print_summary() {
 }
 
 std::string ACTIVE_DSRGPT2::compute_ex_type(const Determinant& det, const Determinant& ref_det) {
-    psi::Dimension active = mo_space_info_->get_dimension("ACTIVE");
+    psi::Dimension active = mo_space_info_->dimension("ACTIVE");
     size_t nact = mo_space_info_->size("ACTIVE");
     int nirrep = mo_space_info_->nirrep();
     std::vector<std::string> sym_active;
@@ -1355,8 +1355,8 @@ ACTIVE_DSRGPT2::p_space_actv_to_nmo(const std::vector<Determinant>& p_space,
     std::map<Determinant, double> detsmap;
 
     size_t nact = mo_space_info_->size("ACTIVE");
-    std::vector<size_t> core_mos = mo_space_info_->get_corr_abs_mo("RESTRICTED_DOCC");
-    std::vector<size_t> actv_mos = mo_space_info_->get_corr_abs_mo("ACTIVE");
+    std::vector<size_t> core_mos = mo_space_info_->corr_absolute_mo("RESTRICTED_DOCC");
+    std::vector<size_t> actv_mos = mo_space_info_->corr_absolute_mo("ACTIVE");
 
     for (size_t I = 0, sp = p_space.size(); I < sp; ++I) {
         double ci = wfn->get(I);
@@ -1697,7 +1697,7 @@ void ACTIVE_DSRGPT2::compute_osc_pt2_dets(const int& irrep, const int& root, con
     //    std::plus<double>());
 
     // translate tdm to C1 Pitzer ordering
-    psi::Dimension nmopi = mo_space_info_->get_dimension("ALL");
+    psi::Dimension nmopi = mo_space_info_->dimension("ALL");
     std::vector<std::tuple<double, int, int>> order;
     int nirrep = mo_space_info_->nirrep();
     for (int h = 0; h < nirrep; ++h) {
@@ -1707,8 +1707,8 @@ void ACTIVE_DSRGPT2::compute_osc_pt2_dets(const int& irrep, const int& root, con
     }
     std::sort(order.begin(), order.end(), std::less<std::tuple<double, int, int>>());
 
-    psi::Dimension frzcpi = mo_space_info_->get_dimension("FROZEN_DOCC");
-    psi::Dimension ncmopi = mo_space_info_->get_dimension("CORRELATED");
+    psi::Dimension frzcpi = mo_space_info_->dimension("FROZEN_DOCC");
+    psi::Dimension ncmopi = mo_space_info_->dimension("CORRELATED");
     std::vector<size_t> indices(ncmo, 0);
     for (size_t idx = 0, si = order.size(); idx < si; ++idx) {
         int i = std::get<1>(order[idx]);
@@ -1834,7 +1834,7 @@ void ACTIVE_DSRGPT2::compute_osc_pt2_overlap(const int& irrep, const int& root,
     std::map<Determinant, double> wfn1_x = excited_wfn_1st(wfn0_x, T1_x, T2_x);
 
     // figure out C1 Pitzer ordering
-    psi::Dimension nmopi = mo_space_info_->get_dimension("ALL");
+    psi::Dimension nmopi = mo_space_info_->dimension("ALL");
     std::vector<std::tuple<double, int, int>> order;
     int nirrep = mo_space_info_->nirrep();
     for (int h = 0; h < nirrep; ++h) {
@@ -1845,8 +1845,8 @@ void ACTIVE_DSRGPT2::compute_osc_pt2_overlap(const int& irrep, const int& root,
     std::sort(order.begin(), order.end(), std::less<std::tuple<double, int, int>>());
 
     size_t ncmo = mo_space_info_->size("CORRELATED");
-    psi::Dimension frzcpi = mo_space_info_->get_dimension("FROZEN_DOCC");
-    psi::Dimension ncmopi = mo_space_info_->get_dimension("CORRELATED");
+    psi::Dimension frzcpi = mo_space_info_->dimension("FROZEN_DOCC");
+    psi::Dimension ncmopi = mo_space_info_->dimension("CORRELATED");
     std::vector<size_t> indices(ncmo, 0);
     for (size_t idx = 0, si = order.size(); idx < si; ++idx) {
         int i = std::get<1>(order[idx]);
