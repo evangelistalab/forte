@@ -207,6 +207,7 @@ PYBIND11_MODULE(forte, m) {
     m.def("make_dsrg_so_f", &make_dsrg_so_f, "Make a DSRG pointer (spin-orbital implementation)");
     m.def("make_dsrg_spin_adapted", &make_dsrg_spin_adapted,
           "Make a DSRG pointer (spin-adapted implementation)");
+    m.def("spin2", &spin2<Determinant::nbits>);
 
     export_ForteOptions(m);
 
