@@ -208,7 +208,6 @@ class DSRG_MRPT2 : public MASTER_DSRG {
     // NOTICE These are essential variables and functions for computing DSRG-MRPT2 gradient.
     // Some variables may be redundant thus need further elimination
     ///NOTICE for test
-    void math_test();
     void compute_test_energy();
     /// Set ambit tensor labels
     void set_ambit_space();
@@ -247,7 +246,9 @@ class DSRG_MRPT2 : public MASTER_DSRG {
    
     void set_multiplier(); 
 
+    void solve_z();
     void set_z();
+    void set_b();
     void iter_z();
     void set_z_cc();
     void set_z_vv();

@@ -15,7 +15,7 @@ molecule {
 set globals{
    scf_type             pk
    d_convergence        12
-   e_convergence        15
+   e_convergence        12
    basis                3-21g
    # restricted_docc      [2,0,1,1,0,2,1,1]
    # active               [1,0,0,0,0,1,0,0]
