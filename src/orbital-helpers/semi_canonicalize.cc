@@ -273,6 +273,9 @@ bool SemiCanonical::check_fock_matrix() {
             }
         }
 
+        outfile->Printf("\n  -------------------Check Fock---------------------- \n");
+        Fa->print();
+
         // zero diagonal elements
         Fa->zero_diagonal();
         Fb->zero_diagonal();

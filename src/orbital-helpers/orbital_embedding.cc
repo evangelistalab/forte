@@ -760,6 +760,12 @@ std::shared_ptr<MOSpaceInfo> make_embedding(psi::SharedWavefunction ref_wfn, psi
     std::shared_ptr<MOSpaceInfo> mo_space_info_emb =
         make_mo_space_info_from_map(ref_wfn, mo_space_map, reorder);
 
+    // Check MCSCF Fock matrix
+    outfile->Printf("\n  --------------- Fock Matrix --------------- \n");
+    SharedMatrix F_mo = psi::linalg::triplet(Ca_Rt, ref_wfn->Fa(), Ca_Rt, true, false, false);
+    F_mo->print();
+    outfile->Printf("\n");
+
     // Return the new embedding MOSpaceInfo to pymodule
     outfile->Printf("\n\n  --------------- End of Frozen-orbital Embedding --------------- ");
     return mo_space_info_emb;

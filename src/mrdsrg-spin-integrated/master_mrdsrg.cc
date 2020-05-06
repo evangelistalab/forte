@@ -472,7 +472,7 @@ void MASTER_DSRG::init_dm_ints() {
     fill_MOdm(dm_a, dm_b);
     compute_dm_ref();
 
-    // prepare transformed dipole integrals
+    // prepare transformed dipole integra
     if (multi_state_ || (relax_ref_ != "NONE")) {
         Mbar0_ = {{0.0, 0.0, 0.0}};
         for (int i = 0; i < 3; ++i) {

@@ -115,6 +115,11 @@ void MRDSRG::startup() {
 
     // test semi-canonical
     semi_canonical_ = check_semi_orbs();
+    bool semi_skip = foptions_->get_bool("EMBEDDING_DISABLE_SEMI_CHECK");
+    bool embedding = foptions_->get_bool("EMBEDDING");
+    if (embedding && semi_skip) {
+        semi_canonical_ = true; // Avoid rotating orbitals in ASET(2)
+    }
 
     if (!semi_canonical_) {
         outfile->Printf("\n    Orbital invariant formalism will be employed for MR-DSRG.");

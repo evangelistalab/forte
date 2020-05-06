@@ -67,6 +67,12 @@ def forte_driver(state_weights_map, scf_info, options, ints, mo_space_info):
         Ua = semi.Ua_t()
         Ub = semi.Ub_t()
 
+       # if options.get_str('JOB_TYPE') == "ADV_EMBEDDING":
+       #     semi_2 = forte.SemiCanonical(mo_space_info, ints, options)
+       #     semi_2.semicanonicalize(rdms, max_rdm_level)
+       #     Ua = semi_2.Ua_t()
+       #     Ub = semi_2.Ub_t()
+
         Edsrg, dsrg, Heff_actv_implemented = compute_dsrg_unrelaxed_energy(correlation_solver_type,
                                                                            rdms, scf_info, options,
                                                                            ints, mo_space_info,
@@ -330,14 +336,19 @@ def adv_embedding_driver(state, state_weights_map, scf_info, ref_wfn, mo_space_i
     psi4.core.print_out("\n Integral test (e original): int_e ncmo: {:d}".format(ints_e.ncmo()))
     # compute higher-level with mo_space_info_active(inner) and methods in options, -> E_high(origin)
     options.set_str('FORTE', 'CORR_LEVEL', frag_corr_level)
-    fold = options.get_bool('FORTE', 'DSRG_FOLD')
+    fold = options.get_bool('DSRG_FOLD')
+    relax = options.get_str('RELAX_REF')
     options.set_bool('FORTE', 'DSRG_FOLD', False)
+    options.set_str('FORTE', 'RELAX_REF', relax)
+    options.set_bool('FORTE', 'EMBEDDING_DISABLE_SEMI_CHECK', False)
     #options.set_bool('FORTE', 'SEMI_CANONICAL', False)
     forte.forte_options.update_psi_options(options)
     energy_high = forte_driver(state_weights_map, scf_info, forte.forte_options, ints_f, mo_space_info_active)
     psi4.core.print_out("\n Integral test (f_1, after ldsrg2): oei_a(0, 2) = {:10.8f}".format(ints_f.oei_a(0, 2)))
 
     options.set_bool('FORTE', 'DSRG_FOLD', fold)
+    options.set_bool('FORTE', 'EMBEDDING_DISABLE_SEMI_CHECK', True)
+    options.set_str('FORTE', 'RELAX_REF', "ONCE")  # Test only
     # Form rdms for interaction correlation computation
     rdms = forte.RHF_DENSITY(scf_info, mo_space_info).rhf_rdms()
     if options.get_str('fragment_density') == "CASSCF": 
@@ -383,7 +394,11 @@ def adv_embedding_driver(state, state_weights_map, scf_info, ref_wfn, mo_space_i
     # Compute MRDSRG-in-PT2 energy (folded)
     options.set_str('FORTE', 'CORR_LEVEL', frag_corr_level)
     options.set_bool('FORTE', 'DSRG_FOLD', False)
+    options.set_str('FORTE', 'RELAX_REF', relax)
+    options.set_bool('FORTE', 'EMBEDDING_DISABLE_SEMI_CHECK', False)
     forte.forte_options.update_psi_options(options)
+
+    # Compute Ec1 dressed
     energy_high_relaxed = forte_driver(state_weights_map, scf_info, forte.forte_options, ints_f, mo_space_info_active)
 
     psi4.core.print_out("\n Integral test (f_1 after relaxed ldsrg2): oei_a(0, 2) = {:10.8f}".format(ints_f.oei_a(0, 2)))
