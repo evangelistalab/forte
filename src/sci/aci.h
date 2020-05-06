@@ -385,6 +385,12 @@ class AdaptiveCI : public SelectedCIMethod {
     /// Set PT2 energy correction to zero;
     void zero_multistate_pt2_energy_correction();
 
+    /// Print GAS information
+    void print_gas_wfn(DeterminantHashVec& space, psi::SharedMatrix evecs);
+
+    /// Print occ number
+    void print_occ_number(DeterminantHashVec& space, psi::SharedMatrix evecs);
+
     /// number of GAS
     size_t gas_num_;
 

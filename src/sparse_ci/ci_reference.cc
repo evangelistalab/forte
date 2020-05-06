@@ -492,6 +492,9 @@ void CI_Reference::build_gas_single(std::vector<Determinant>& ref_space) {
     // Sort the aboslute_mo in the increasing order of energy for each GAS
     std::vector<std::vector<size_t>> relative_gas_mo;
     size_t total_act = 0;
+    outfile->Printf("\n");
+    outfile->Printf("\n  GAS Orbital Energies");
+    outfile->Printf("\n  GAS   Energies    Orb ");
     for (size_t gas_count = 0; gas_count < 6; gas_count++) {
         std::string space = gas_subspaces_.at(gas_count);
         std::vector<size_t> relative_mo_sorted;
@@ -503,10 +506,11 @@ void CI_Reference::build_gas_single(std::vector<Determinant>& ref_space) {
         }
         total_act += gas_orb_e.size();
         std::sort(gas_orb_e.begin(), gas_orb_e.end());
+
         for (size_t i = 0; i < gas_orb_e.size(); i++) {
             auto act_orb = gas_orb_e[i].second;
             relative_mo_sorted.push_back(act_orb);
-            // outfile->Printf("\n GAS %d %f %d ",gas_count+1,gas_orb_e[i].first, act_orb);
+            outfile->Printf("\n   %d  %12.9f  %d ", gas_count + 1, gas_orb_e[i].first, act_orb);
         }
         relative_gas_mo.push_back(relative_mo_sorted);
     }
@@ -781,8 +785,9 @@ void CI_Reference::build_gas_single(std::vector<Determinant>& ref_space) {
                                                         // Check symmetry
                                                         if (sym == root_sym_) {
                                                             ref_space.push_back(det);
+                                                            outfile->Printf("\n");
                                                             outfile->Printf(
-                                                                "\n Ref: %s",
+                                                                "\n  Ref: %s",
                                                                 str(det, nact_).c_str());
                                                             return;
                                                         }
