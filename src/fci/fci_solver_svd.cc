@@ -46,6 +46,7 @@
 
 #include <iostream>
 #include <fstream>
+#include <iomanip>
 
 using namespace psi;
 
@@ -419,7 +420,7 @@ void FCISolver::ap_sci(std::vector<SharedMatrix>& C, double ETA,
     }
     std::cout << "/* Npar (FCI) =           " << Npar << std::endl;
     std::cout << "/* Size of sorted_CI =    " << sorted_CI.size() << std::endl;
-    std::cout << "/* Wave function norm =   " << wfn_nrm << std::endl;
+    std::cout << "/* Wave function norm =   "<< std::setprecision (17) << wfn_nrm << std::endl;
 
     // sort them
 
