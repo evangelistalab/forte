@@ -422,7 +422,7 @@ void FCISolver::ap_sci(std::vector<SharedMatrix>& C, double ETA,
     }
     std::cout << "/* Npar (FCI) =           " << Npar << std::endl;
     std::cout << "/* Size of sorted_CI =    " << sorted_CI.size() << std::endl;
-    std::cout << "/* Wave function norm =   "<< std::setprecision (17) << wfn_nrm << std::endl;
+    std::cout << "/* Wave function norm =   " << std::setprecision (17) << wfn_nrm << std::endl;
 
     // sort them
     std::sort(sorted_CI.begin(), sorted_CI.end());
@@ -472,7 +472,7 @@ void FCISolver::ap_sci(std::vector<SharedMatrix>& C, double ETA,
 
     std::cout << "\n/* Nred =           " << Nred << std::endl;
     std::cout << "/* Tau ap-SCI =     " << std::setprecision (17) << ETA << std::endl;
-    std::cout << "/* Trunc. norm =    " << std::setprecision (17) << trunk_norm << std::endl;
+    std::cout << "/* 1-Trunc. Nrm. =  " << std::setprecision (17) << 1.0 - trunk_norm << std::endl;
     std::cout << "/* New norm =       " << std::setprecision (17) << Norm << std::endl;
 
     // do other stuff...
