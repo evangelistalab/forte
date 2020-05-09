@@ -439,7 +439,8 @@ void FCISolver::ap_sci(std::vector<SharedMatrix>& C, double ETA,
     // reconstruct C_ with only largest eigenvalues
     double sum_val = 0.0;
     int tk = 0; // the tau index
-    while (sum_val <= ETA) { // should skip entirely if ETA = 0.0
+    while (sum_val < ETA) {
+        // should skip entirely if ETA = 0.0
         int h_ = std::get<1>(sorted_CI[tk]);
         int i_ = std::get<2>(sorted_CI[tk]);
         int j_ = std::get<3>(sorted_CI[tk]);
@@ -470,8 +471,9 @@ void FCISolver::ap_sci(std::vector<SharedMatrix>& C, double ETA,
     }
 
     std::cout << "\n/* Nred =           " << Nred << std::endl;
-    std::cout << "\n/* Trunc. norm =    " << std::setprecision (17) << trunk_norm << std::endl;
-    std::cout << "\n/* New norm =       " << std::setprecision (17) << Norm << std::endl;
+    std::cout << "/* Tau ap-SCI =     " << std::setprecision (17) << ETA << std::endl;
+    std::cout << "/* Trunc. norm =    " << std::setprecision (17) << trunk_norm << std::endl;
+    std::cout << "/* New norm =       " << std::setprecision (17) << Norm << std::endl;
 
     // do other stuff...
 }
