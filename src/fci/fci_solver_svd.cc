@@ -412,9 +412,11 @@ void FCISolver::ap_sci(std::vector<SharedMatrix>& C, double ETA,
     for (int h=0; h<nirrep; h++) {
         for(int i=0; i<C[h]->coldim(); i++){
             for(int j=0; j<C[h]->rowdim(); j++){
-                double val = std::pow(C[h]->get(i,j), 2);
-                wfn_nrm += val;
-                sorted_CI.push_back(std::make_tuple(val, h, i, j));
+                double val1 = std::pow(C[h]->get(i,j), 2);
+                wfn_nrm += val1;
+
+                double val2 = std::abs(C[h]->get(i,j));
+                sorted_CI.push_back(std::make_tuple(val2, h, i, j));
             }
         }
     }
@@ -423,8 +425,16 @@ void FCISolver::ap_sci(std::vector<SharedMatrix>& C, double ETA,
     std::cout << "/* Wave function norm =   "<< std::setprecision (17) << wfn_nrm << std::endl;
 
     // sort them
+    std::sort(sorted_CI.rbegin(), sorted_CI.rend());
 
     // make sure the sort is corret, print largest and smallest 5 coeffs.
+    std::cout << "\n/* Largest and smallest |Ci| values */" << std::endl;
+    std::cout << "    small idx" << "    Ci" << "                big idx" << "    Ci" << '\n';
+    for (int k=0; k<7; k++) {
+        std::cout << "    " << k << "    " << std::setprecision (17) << std::get<0>(sorted_CI[k])
+                  << "    " << k << "    " << std::setprecision (17) << std::get<0>(sorted_CI[Npar-1-k])
+                  << std::endl;
+    }
 
     // reconstruct C_ with only largest eigenvalues
 
