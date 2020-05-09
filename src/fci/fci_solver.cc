@@ -846,6 +846,9 @@ if(options_.get_bool("CHUNK_SPACE_ENERGY")){
           //print unadultarated C matrix
           //py_mat_print(C_temp[0], "C_fci.mat");
 
+          // Add new funciton "FCI_APS"
+          std::cout << "New Function Added!" << std::endl;
+
           if(options_.get_bool("FCI_TILE_CHOPPER")){
             for(int h=0; h<nirrep_; h++){
               C_temp_clone_tc[h] = C_temp[h]->clone();

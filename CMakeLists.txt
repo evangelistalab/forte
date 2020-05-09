@@ -41,8 +41,8 @@ if (OPENMP_FOUND)
 endif()
 
 include(cmake/git-version.cmake)
-link_directories(/Users/nstair/Src/amb_instdir/lib)
-include_directories(/Users/nstair/Src/amb_instdir/include)
+link_directories(/home/nstair/Src/amb_instdir/lib)
+include_directories(/home/nstair/Src/amb_instdir/include)
 include_directories(src/mini-boost)
 
 add_psi4_plugin(forte
