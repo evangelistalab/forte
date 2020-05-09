@@ -456,6 +456,16 @@ void FCISolver::ap_sci(std::vector<SharedMatrix>& C, double ETA,
 
     int Nred = Npar - tk;
 
+    double trnk_wfn_nrm = 0.0;
+    for (int h=0; h<nirrep; h++) {
+        for(int i=0; i<C[h]->coldim(); i++){
+            for(int j=0; j<C[h]->rowdim(); j++){
+                double val1 = std::pow(C[h]->get(i,j), 2);
+                trnk_wfn_nrm += val1;
+            }
+        }
+    }
+
     // re-Normalize
     double trunk_norm = 0.0;
     for (auto C_h : C) {
@@ -474,6 +484,7 @@ void FCISolver::ap_sci(std::vector<SharedMatrix>& C, double ETA,
     std::cout << "\n/* Nred =           " << Nred << std::endl;
     std::cout << "/* Tau ap-SCI =     " << std::setprecision (17) << ETA << std::endl;
     std::cout << "/* sum_val =        " << std::setprecision (17) << sum_val << std::endl;
+    std::cout << "/* 1-manual nrm  =  " << std::setprecision (17) << 1.0 - trnk_wfn_nrm << std::endl;
     std::cout << "/* 1-Trunc. Nrm. =  " << std::setprecision (17) << 1.0 - trunk_norm << std::endl;
     std::cout << "/* New norm =       " << std::setprecision (17) << Norm << std::endl;
 
