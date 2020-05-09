@@ -388,6 +388,8 @@ void FCISolver::ap_sci(std::vector<SharedMatrix>& C, double ETA,
                              FCIVector& HC, std::shared_ptr<FCIIntegrals> fci_ints,
                              double fci_energy, std::vector<double>& Tau_info)
 {
+
+    /// ** Pt. 1 **
     double nuclear_repulsion_energy =
         Process::environment.molecule()->nuclear_repulsion_energy({0, 0, 0});
 
@@ -399,10 +401,35 @@ void FCISolver::ap_sci(std::vector<SharedMatrix>& C, double ETA,
       Npar += (C_h->rowdim()) * (C_h->coldim());
     }
 
-    std::cout << "/* Npar (FCI) = " << Npar << std::endl;
+    std::cout << "\n==> AP-SCI <==" << std::endl;
 
     /// A sorted vector of CI coefficients
-    std::vector<std::tuple<double, int, int, int> > sorted_CI(Npar);
+    std::vector<std::tuple<double, int, int, int> > sorted_CI;
+
+    // set values of sorted_CI to actual coefs^2
+    double wfn_nrm = 0.0;
+    for (int h=0; h<nirrep; h++) {
+        for(int i=0; i<C[h]->coldim(); i++){
+            for(int j=0; j<C[h]->rowdim(); j++){
+                double val = std::pow(C[h]->get(i,j), 2)
+                wfn_nrm += val;
+                sorted_CI.push_back(std::make_tuple(val, h, i, j));
+            }
+        }
+    }
+    std::cout << "/* Npar (FCI) =           " << Npar << std::endl;
+    std::cout << "/* Size of sorted_CI =    " << sorted_CI.size() << std::endl;
+    std::cout << "/* Wave function norm =   " << wfn_nrm << std::endl;
+
+    // sort them
+
+    // make sure the sort is corret, print largest and smallest 5 coeffs.
+
+    // reconstruct C_ with only largest eigenvalues
+
+    // re-Normalize
+
+    // do other stuff...
 }
 
 
