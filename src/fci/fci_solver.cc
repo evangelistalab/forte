@@ -836,6 +836,9 @@ if(options_.get_bool("CHUNK_SPACE_ENERGY")){
 
           std::vector<SharedMatrix> C_temp = C_->coefficients_blocks();
 
+          // 1. make Matrix vector for ap_sci()
+          std::vector<SharedMatrix> C_temp_clone_ap(nirrep_);
+
           std::vector<SharedMatrix> C_temp_clone_tc(nirrep_);
           std::vector<SharedMatrix> C_temp_clone_st(nirrep_);
           std::vector<SharedMatrix> C_temp_clone_tile_svd(nirrep_);
@@ -846,8 +849,12 @@ if(options_.get_bool("CHUNK_SPACE_ENERGY")){
           //print unadultarated C matrix
           //py_mat_print(C_temp[0], "C_fci.mat");
 
-          // Add new funciton "FCI_APS"
-          std::cout << "New Function Added!" << std::endl;
+          // 2. Get copy of C_ for ap_sci()
+          if(options_.get_bool("FCI_APS")){
+            for(int h=0; h<nirrep_; h++){
+              C_temp_clone_ap[h] = C_temp[h]->clone();
+            }
+          }
 
           if(options_.get_bool("FCI_TILE_CHOPPER")){
             for(int h=0; h<nirrep_; h++){
@@ -872,6 +879,25 @@ if(options_.get_bool("CHUNK_SPACE_ENERGY")){
               C_temp_clone_full_svd[h] = C_temp[h]->clone();
             }
           }
+
+          // 3. call new ap_sci() funciton
+          if(options_.get_bool("FCI_APS")){
+            double fci_nergy = dls.eigenvalues()->get(root_) + nuclear_repulsion_energy;
+
+            // sets C_ and calculates properties from it.
+            ap_sci(C_temp, Tau, HC, fci_ints, fci_nergy, Tau_info);
+
+            //use modified C_ to get correlation/entanglement info
+            tau_method = std::to_string(Tau)+ "_AP_";
+            twomulent_correlation(Tau_2RCM_cor_info, tau_method);
+            entanglement_info_1orb(Tau_1oee_info);
+            //reset C_ global
+            C_->set_coefficient_blocks(C_temp_clone_ap);
+            //reset C_temp
+            C_temp = C_->coefficients_blocks();
+
+          }
+          //// ***** /////
 
 
           if(options_.get_bool("FCI_TILE_CHOPPER")){

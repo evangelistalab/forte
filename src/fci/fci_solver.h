@@ -231,6 +231,11 @@ class FCISolver {
     void string_trimmer(std::vector<SharedMatrix>& C, double DELTA, FCIVector& HC,
                         std::shared_ptr<FCIIntegrals> fci_ints, double fci_energy, std::vector<double>& Tau_info);
 
+    /// Add ap_sci function to headder file
+    void ap_sci(std::vector<SharedMatrix>& C, double ETA,
+                      FCIVector& HC, std::shared_ptr<FCIIntegrals> fci_ints,
+                      double fci_energy, std::vector<double>& Tau_info);
+
     void tile_chopper(std::vector<SharedMatrix>& C, double ETA,
                       FCIVector& HC, std::shared_ptr<FCIIntegrals> fci_ints,
                       double fci_energy, int dim, std::vector<double>& Tau_info);

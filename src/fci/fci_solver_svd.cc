@@ -384,6 +384,27 @@ void FCISolver::entanglement_info_1orb(std::vector<std::vector<double> >& Tau_1o
   Tau_1oee_info.push_back(one_orb_ee);
 }
 
+void FCISolver::ap_sci(std::vector<SharedMatrix>& C, double ETA,
+                             FCIVector& HC, std::shared_ptr<FCIIntegrals> fci_ints,
+                             double fci_energy, std::vector<double>& Tau_info)
+{
+    double nuclear_repulsion_energy =
+        Process::environment.molecule()->nuclear_repulsion_energy({0, 0, 0});
+
+    int nirrep = C.size();
+
+    //find total number of parameters
+    int Npar = 0;
+    for( auto C_h: C){
+      Npar += (C_h->rowdim()) * (C_h->coldim());
+    }
+
+    std::cout << "/* Npar (FCI) = " << Npar << std::endl;
+
+    /// A sorted vector of CI coefficients
+    std::vector<std::tuple<double, int, int, int> > sorted_CI(Npar);
+}
+
 
 void FCISolver::tile_chopper(std::vector<SharedMatrix>& C, double ETA,
                              FCIVector& HC, std::shared_ptr<FCIIntegrals> fci_ints,
