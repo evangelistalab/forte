@@ -411,7 +411,7 @@ void FCISolver::ap_sci(std::vector<SharedMatrix>& C, double ETA,
     for (int h=0; h<nirrep; h++) {
         for(int i=0; i<C[h]->coldim(); i++){
             for(int j=0; j<C[h]->rowdim(); j++){
-                double val = std::pow(C[h]->get(i,j), 2)
+                double val = std::pow(C[h]->get(i,j), 2);
                 wfn_nrm += val;
                 sorted_CI.push_back(std::make_tuple(val, h, i, j));
             }
