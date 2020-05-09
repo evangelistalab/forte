@@ -443,16 +443,16 @@ void FCISolver::ap_sci(std::vector<SharedMatrix>& C, double ETA,
         int h_ = std::get<1>(sorted_CI[tk]);
         int i_ = std::get<2>(sorted_CI[tk]);
         int j_ = std::get<3>(sorted_CI[tk]);
-        double Ci_ = C[h_]->get(i_, j_)
+        double Ci_ = C[h_]->get(i_, j_);
 
         // souce of a problem may be here, squaring small numbers may cause issues?
-        sum_val += std::pow(Ci_, 2)
+        sum_val += std::pow(Ci_, 2);
 
-        C[h_]->set(i_, j_, 0.0)
-        tk ++
+        C[h_]->set(i_, j_, 0.0);
+        tk++;
     }
 
-    int Nred = Npar - tk
+    int Nred = Npar - tk;
 
     // re-Normalize
     double trunk_norm = 0.0;
