@@ -450,7 +450,7 @@ void FCISolver::ap_sci(std::vector<SharedMatrix>& C, double ETA,
         sum_val += std::pow(Ci_, 2);
 
         C[h_]->set(i_, j_, 0.0);
-        C[h_]->set(j_, i_, 0.0);
+        // C[h_]->set(j_, i_, 0.0);
         tk++;
     }
 
