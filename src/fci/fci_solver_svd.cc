@@ -425,7 +425,7 @@ void FCISolver::ap_sci(std::vector<SharedMatrix>& C, double ETA,
     std::cout << "/* Wave function norm =   " << std::setprecision (17) << wfn_nrm << std::endl;
 
     // sort them
-    std::sort(sorted_CI.begin(), sorted_CI.end());
+    std::stable_sort(sorted_CI.begin(), sorted_CI.end());
 
     // make sure the sort is corret, print largest and smallest 5 coeffs.
     std::cout << "\n/* Largest and smallest |Ci| values */" << std::endl;
@@ -450,6 +450,7 @@ void FCISolver::ap_sci(std::vector<SharedMatrix>& C, double ETA,
         sum_val += std::pow(Ci_, 2);
 
         C[h_]->set(i_, j_, 0.0);
+        C[h_]->set(j_, i_, 0.0);
         tk++;
     }
 
@@ -472,6 +473,7 @@ void FCISolver::ap_sci(std::vector<SharedMatrix>& C, double ETA,
 
     std::cout << "\n/* Nred =           " << Nred << std::endl;
     std::cout << "/* Tau ap-SCI =     " << std::setprecision (17) << ETA << std::endl;
+    std::cout << "/* sum_val =        " << std::setprecision (17) << sum_val << std::endl;
     std::cout << "/* 1-Trunc. Nrm. =  " << std::setprecision (17) << 1.0 - trunk_norm << std::endl;
     std::cout << "/* New norm =       " << std::setprecision (17) << Norm << std::endl;
 
