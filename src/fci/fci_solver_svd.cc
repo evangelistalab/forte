@@ -425,20 +425,53 @@ void FCISolver::ap_sci(std::vector<SharedMatrix>& C, double ETA,
     std::cout << "/* Wave function norm =   "<< std::setprecision (17) << wfn_nrm << std::endl;
 
     // sort them
-    std::sort(sorted_CI.rbegin(), sorted_CI.rend());
+    std::sort(sorted_CI.begin(), sorted_CI.end());
 
     // make sure the sort is corret, print largest and smallest 5 coeffs.
     std::cout << "\n/* Largest and smallest |Ci| values */" << std::endl;
-    std::cout << "    small idx" << "    Ci" << "                big idx" << "    Ci" << '\n';
-    for (int k=0; k<7; k++) {
-        std::cout << "    " << k << "    " << std::setprecision (17) << std::get<0>(sorted_CI[k])
-                  << "    " << k << "    " << std::setprecision (17) << std::get<0>(sorted_CI[Npar-1-k])
+    std::cout << "    big idx" << "    Ci" << "                big idx" << "    Ci" << '\n';
+    for (int k=0; k<5; k++) {
+        std::cout << "    " << Npar-1-k << "        " << std::setprecision (17) << std::get<0>(sorted_CI[Npar-1-k])
+                  << "    " <<        k << "        " << std::setprecision (17) << std::get<0>(sorted_CI[k])
                   << std::endl;
     }
 
     // reconstruct C_ with only largest eigenvalues
+    double sum_val = 0.0;
+    int tk = 0; // the tau index
+    while (sum_val <= ETA) { // should skip entirely if ETA = 0.0
+        int h_ = std::get<1>(sorted_CI[tk]);
+        int i_ = std::get<2>(sorted_CI[tk]);
+        int j_ = std::get<3>(sorted_CI[tk]);
+        double Ci_ = C[h_]->get(i_, j_)
+
+        // souce of a problem may be here, squaring small numbers may cause issues?
+        sum_val += std::pow(Ci_, 2)
+
+        C[h_]->set(i_, j_, 0.0)
+        tk ++
+    }
+
+    int Nred = Npar - tk
 
     // re-Normalize
+    double trunk_norm = 0.0;
+    for (auto C_h : C) {
+        trunk_norm += C_h->sum_of_squares();
+    }
+    trunk_norm = std::sqrt(trunk_norm);
+    for (auto C_h : C) {
+        C_h->scale(1. / trunk_norm);
+    }
+
+    double Norm = 0.0;
+    for(auto C_h: C){
+      Norm += C_h->sum_of_squares();
+    }
+
+    std::cout << "\n/* Nred =           " << Nred << std::endl;
+    std::cout << "\n/* Trunc. norm =    " << std::setprecision (17) << trunk_norm << std::endl;
+    std::cout << "\n/* New norm =       " << std::setprecision (17) << Norm << std::endl;
 
     // do other stuff...
 }
