@@ -450,31 +450,10 @@ void FCISolver::ap_sci(std::vector<SharedMatrix>& C, double ETA,
         sum_val += std::pow(Ci_, 2);
 
         C[h_]->set(i_, j_, 0.0);
-        // C[h_]->set(j_, i_, 0.0);
         tk++;
     }
 
     int Nred = Npar - tk;
-
-    // double trnk_wfn_nrm = 0.0;
-    // for (int h=0; h<nirrep; h++) {
-    //     for(int i=0; i<C[h]->coldim(); i++){
-    //         for(int j=0; j<C[h]->rowdim(); j++){
-    //             double val1 = std::pow(C[h]->get(i,j), 2);
-    //             trnk_wfn_nrm += val1;
-    //         }
-    //     }
-    // }
-    //
-    // double trnk_wfn_nrm_sqrt = std::sqrt(trnk_wfn_nrm);
-    //
-    // for (int h=0; h<nirrep; h++) {
-    //     for(int i=0; i<C[h]->coldim(); i++){
-    //         for(int j=0; j<C[h]->rowdim(); j++){
-    //             C[h]->set(i,j, (1.0/trnk_wfn_nrm_sqrt) * C[h]->get(i,j));
-    //         }
-    //     }
-    // }
 
     // re-Normalize
     double trunk_norm = 0.0;
@@ -494,11 +473,37 @@ void FCISolver::ap_sci(std::vector<SharedMatrix>& C, double ETA,
     std::cout << "\n/* Nred =           " << Nred << std::endl;
     std::cout << "/* Tau ap-SCI =     " << std::setprecision (17) << ETA << std::endl;
     std::cout << "/* sum_val =        " << std::setprecision (17) << sum_val << std::endl;
-    // std::cout << "/* 1-manual nrm  =  " << std::setprecision (17) << 1.0 - trnk_wfn_nrm << std::endl;
     std::cout << "/* 1-Trunc. Nrm. =  " << std::setprecision (17) << 1.0 - trunk_norm << std::endl;
     std::cout << "/* New norm =       " << std::setprecision (17) << Norm << std::endl;
 
-    // do other stuff...
+    // Set HC = H C
+    C_->Hamiltonian(HC, fci_ints, twoSubstituitionVVOO);
+
+    // Calculate E = C^T HC
+    double E_apSCI = HC.dot(C_) + nuclear_repulsion_energy;
+
+    Tau_info.push_back(Nred);
+    Tau_info.push_back(E_apSCI-fci_energy);
+
+    std::cout << "\n/* Nred =           " << Nred << std::endl;
+    std::cout << "/* Tau ap-SCI =     " << std::setprecision (17) << ETA << std::endl;
+    std::cout << "/* sum_val =        " << std::setprecision (17) << sum_val << std::endl;
+    std::cout << "/* 1-Trunc. Nrm. =  " << std::setprecision (17) << 1.0 - trunk_norm << std::endl;
+    std::cout << "/* New norm =       " << std::setprecision (17) << Norm << std::endl;
+    std::cout << "/* Delta(E) =       " << std::setprecision (17) << E_apSCI - fci_energy << std::endl;
+
+
+    outfile->Printf("\n////////////////// ap-sCI /////////////////");
+    outfile->Printf("\n");
+    outfile->Printf("\n Tau ap-sCI        = %20.12f", ETA);
+    outfile->Printf("\n 1-Reduced Norm    = %20.12f", 1.0 - trunk_norm);
+    outfile->Printf("\n Norm              = %20.12f", Norm);
+    outfile->Printf("\n E_fci             = %20.12f", fci_energy);
+    outfile->Printf("\n E_ap-sCI          = %20.12f", E_apSCI);
+    outfile->Printf("\n Delta(E)          = %20.12f", E_apSCI-fci_energy);
+    outfile->Printf("\n Npar ap-sCI       =     %6d", Nred);
+    outfile->Printf("\n");
+
 }
 
 
