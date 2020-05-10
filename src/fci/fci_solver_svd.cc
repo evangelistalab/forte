@@ -466,13 +466,13 @@ void FCISolver::ap_sci(std::vector<SharedMatrix>& C, double ETA,
         }
     }
 
-    trnk_wfn_nrm = std::sqrt(trnk_wfn_nrm)
+    trnk_wfn_nrm = std::sqrt(trnk_wfn_nrm);
 
     for (int h=0; h<nirrep; h++) {
         for(int i=0; i<C[h]->coldim(); i++){
             for(int j=0; j<C[h]->rowdim(); j++){
                 double val1 = std::pow(C[h]->get(i,j), 2);
-                C[h]->set(i,j, (1.0/trnk_wfn_nrm) * val)
+                C[h]->set(i,j, (1.0/trnk_wfn_nrm) * val);
             }
         }
     }
