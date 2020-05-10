@@ -496,7 +496,7 @@ void FCISolver::ap_sci(std::vector<SharedMatrix>& C, double ETA,
     std::cout << "/* Tau ap-SCI =     " << std::setprecision (17) << ETA << std::endl;
     std::cout << "/* sum_val =        " << std::setprecision (17) << sum_val << std::endl;
     std::cout << "/* 1-manual nrm  =  " << std::setprecision (17) << 1.0 - trnk_wfn_nrm << std::endl;
-    std::cout << "/* 1-Trunc. Nrm. =  " << std::setprecision (17) << 1.0 - trunk_norm << std::endl;
+    // std::cout << "/* 1-Trunc. Nrm. =  " << std::setprecision (17) << 1.0 - trunk_norm << std::endl;
     std::cout << "/* New norm =       " << std::setprecision (17) << Norm << std::endl;
 
     // do other stuff...
