@@ -429,7 +429,7 @@ void FCISolver::ap_sci(std::vector<SharedMatrix>& C, double ETA,
 
     // make sure the sort is corret, print largest and smallest 5 coeffs.
     std::cout << "\n/* Largest and smallest |Ci| values */" << std::endl;
-    std::cout << "    big idx" << "    Ci" << "                big idx" << "    Ci" << '\n';
+    std::cout << "    big idx" << "        Ci" << "                 small idx" << "      Ci" << '\n';
     for (int k=0; k<5; k++) {
         std::cout << "    " << Npar-1-k << "        " << std::setprecision (17) << std::get<0>(sorted_CI[Npar-1-k])
                   << "    " <<        k << "        " << std::setprecision (17) << std::get<0>(sorted_CI[k])
@@ -469,12 +469,6 @@ void FCISolver::ap_sci(std::vector<SharedMatrix>& C, double ETA,
     for(auto C_h: C){
       Norm += C_h->sum_of_squares();
     }
-
-    std::cout << "\n/* Nred =           " << Nred << std::endl;
-    std::cout << "/* Tau ap-SCI =     " << std::setprecision (17) << ETA << std::endl;
-    std::cout << "/* sum_val =        " << std::setprecision (17) << sum_val << std::endl;
-    std::cout << "/* 1-Trunc. Nrm. =  " << std::setprecision (17) << 1.0 - trunk_norm << std::endl;
-    std::cout << "/* New norm =       " << std::setprecision (17) << Norm << std::endl;
 
     // Set HC = H C
     C_->Hamiltonian(HC, fci_ints, twoSubstituitionVVOO);
