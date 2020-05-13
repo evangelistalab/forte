@@ -112,6 +112,9 @@ class MRDSRG : public MASTER_DSRG {
     /// Omitting blocks with >= 3 virtual indices?
     bool nivo_;
 
+    /// Read amplitudes from previous computations
+    bool restart_;
+
     /// CASCI eigen values and eigen vectors for state averaging
     std::vector<std::vector<std::pair<psi::SharedVector, double>>> eigens_;
     /// Determinants in the model space
@@ -234,6 +237,9 @@ class MRDSRG : public MASTER_DSRG {
     /// Update T1 in every iteration
     void update_t1_std();
     void update_t1_nocv();
+
+    /// Dump the converged amplitudes to file
+    void dump_amps_to_file();
 
     /// Write T2 to files MRDSRG_T2_XX.dat, XX = AA, AB, BB
     void write_t2_file(BlockedTensor& T2, const std::string& spin);

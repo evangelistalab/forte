@@ -116,6 +116,21 @@ class MASTER_DSRG : public DynamicCorrelationSolver {
         actv_uocc_mos_ = std::vector<size_t>(actv_uocc);
     }
 
+    /// Set master file name for T1
+    void set_t1_file(const std::string& filename) { t1_file_ = filename; }
+
+    /// Set master file name for T2
+    void set_t2_file(const std::string& filename) { t2_file_ = filename; }
+
+    /// Get master file name for T1
+    std::string t1_file() { return t1_file_; }
+
+    /// Get master file name for T2
+    std::string t2_file() { return t2_file_; }
+
+    /// Clean up amplitudes checkpoint files
+    void clean_checkpoints();
+
   protected:
     /// Startup function called in constructor
     void startup();
@@ -160,6 +175,16 @@ class MASTER_DSRG : public DynamicCorrelationSolver {
     /// Rotate 3-body DSRG transformed integrals from semicanonical back to original
     void rotate_ints_semi_to_origin(const std::string& name, BlockedTensor& H1, BlockedTensor& H2,
                                     BlockedTensor& H3);
+
+    // ==> file names for disk support <==
+
+    /// Prefix for file name
+    std::string filename_prefix_;
+
+    /// Master checkpoint file for T1
+    std::string t1_file_;
+    /// Master checkpoint file for T2
+    std::string t2_file_;
 
     // ==> some common energies for all DSRG levels <==
 

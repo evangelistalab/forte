@@ -205,14 +205,6 @@ double SA_MRDSRG::compute_energy() {
     T2_ = BTF_->build(tensor_type_, "T2 Amplitudes", {"hhpp"});
 
     guess_t(V_, T2_, F_, T1_, B_);
-//    if (eri_df_) {
-//        guess_t_df(B_, T2_, F_, T1_);
-//    } else {
-//        guess_t(V_, T2_, F_, T1_);
-//    }
-
-//    // check initial amplitudes
-//    analyze_amplitudes("First-Order", T1_, T2_);
 
     // get reference energy
     double Etotal = Eref_;

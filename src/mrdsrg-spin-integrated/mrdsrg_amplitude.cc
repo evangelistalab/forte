@@ -34,6 +34,8 @@
 #include "psi4/libpsi4util/PsiOutStream.h"
 
 #include "base_classes/mo_space_info.h"
+#include "helpers/disk_io.h"
+#include "helpers/printing.h"
 #include "helpers/timer.h"
 #include "boost/format.hpp"
 #include "mrdsrg.h"
@@ -43,29 +45,69 @@ using namespace psi;
 namespace forte {
 
 void MRDSRG::guess_t(BlockedTensor& V, BlockedTensor& T2, BlockedTensor& F, BlockedTensor& T1) {
+    print_h2("Build Initial Amplitudes Guesses");
+
     // if fully decouple core-core-virtual-virtual block
     std::string ccvv_source = foptions_->get_str("CCVV_SOURCE");
 
-    if (ccvv_source == "ZERO") {
-        guess_t2_noccvv(V, T2);
-        guess_t1_nocv(F, T2, T1);
-    } else if (ccvv_source == "NORMAL") {
-        guess_t2_std(V, T2);
-        guess_t1_std(F, T2, T1);
+    if (restart_ and (not t2_file_.empty())) {
+        outfile->Printf("\n    Reading previous T2 amplitudes from disk ...");
+        read_disk_BT(T2, t2_file_);
+        outfile->Printf(" Done.");
+    } else {
+        if (ccvv_source == "ZERO") {
+            guess_t2_noccvv(V, T2);
+        } else if (ccvv_source == "NORMAL") {
+            guess_t2_std(V, T2);
+        }
     }
+
+    if (restart_ and (not t1_file_.empty())) {
+        outfile->Printf("\n    Reading previous T1 amplitudes from disk ...");
+        read_disk_BT(T1, t1_file_);
+        outfile->Printf(" Done.");
+    } else {
+        if (ccvv_source == "ZERO") {
+            guess_t1_nocv(F, T2, T1);
+        } else if (ccvv_source == "NORMAL") {
+            guess_t1_std(F, T2, T1);
+        }
+    }
+
+    analyze_amplitudes("Initial", T1_, T2_);
 }
 
 void MRDSRG::guess_t_df(BlockedTensor& B, BlockedTensor& T2, BlockedTensor& F, BlockedTensor& T1) {
+    print_h2("Build Initial Amplitudes Guesses");
+
     // if fully decouple core-core-virtual-virtual block
     std::string ccvv_source = foptions_->get_str("CCVV_SOURCE");
 
-    if (ccvv_source == "ZERO") {
-        guess_t2_noccvv_df(B, T2);
-        guess_t1_nocv(F, T2, T1);
-    } else if (ccvv_source == "NORMAL") {
-        guess_t2_std_df(B, T2);
-        guess_t1_std(F, T2, T1);
+    if (restart_ and (not t2_file_.empty())) {
+        outfile->Printf("\n    Reading previous T2 amplitudes from disk ...");
+        read_disk_BT(T2, t2_file_);
+        outfile->Printf(" Done.");
+    } else {
+        if (ccvv_source == "ZERO") {
+            guess_t2_noccvv_df(B, T2);
+        } else if (ccvv_source == "NORMAL") {
+            guess_t2_std_df(B, T2);
+        }
     }
+
+    if (restart_ and (not t1_file_.empty())) {
+        outfile->Printf("\n    Reading previous T1 amplitudes from disk ...");
+        read_disk_BT(T1, t1_file_);
+        outfile->Printf(" Done.");
+    } else {
+        if (ccvv_source == "ZERO") {
+            guess_t1_nocv(F, T2, T1);
+        } else if (ccvv_source == "NORMAL") {
+            guess_t1_std(F, T2, T1);
+        }
+    }
+
+    analyze_amplitudes("Initial", T1_, T2_);
 }
 
 void MRDSRG::update_t() {
@@ -1576,5 +1618,10 @@ void MRDSRG::print_intruder(const std::string& name,
         output = title + " NULL";
     }
     outfile->Printf("\n%s", output.c_str());
+}
+
+void MRDSRG::dump_amps_to_file() {
+    t1_file_ = write_disk_BT(T1_, "t1", filename_prefix_);
+    t2_file_ = write_disk_BT(T2_, "t2", filename_prefix_);
 }
 } // namespace forte

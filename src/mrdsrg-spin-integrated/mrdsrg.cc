@@ -92,6 +92,8 @@ void MRDSRG::read_options() {
     if (pt2_h0th_ != "FFULL" and pt2_h0th_ != "FDIAG_VACTV" and pt2_h0th_ != "FDIAG_VDIAG") {
         pt2_h0th_ = "FDIAG";
     }
+
+    restart_ = foptions_->get_bool("DSRG_RESTART");
 }
 
 void MRDSRG::startup() {
@@ -165,6 +167,7 @@ void MRDSRG::print_options() {
             return std::string("FALSE");
         }
     };
+    calculation_info_string.push_back({"Restart amplitudes", true_false_string(restart_)});
     calculation_info_string.push_back(
         {"Sequential DSRG transformation", true_false_string(sequential_Hbar_)});
     calculation_info_string.push_back(
@@ -313,7 +316,7 @@ double MRDSRG::compute_energy() {
 
     if (initialize_T) {
         // build initial amplitudes
-        print_h2("Build Initial Amplitude from DSRG-MRPT2");
+//        print_h2("Build Initial Amplitude from DSRG-MRPT2");
         T1_ = BTF_->build(tensor_type_, "T1 Amplitudes", spin_cases({"hp"}));
         T2_ = BTF_->build(tensor_type_, "T2 Amplitudes", spin_cases({"hhpp"}));
         if (eri_df_) {
@@ -322,8 +325,8 @@ double MRDSRG::compute_energy() {
             guess_t(V_, T2_, F_, T1_);
         }
 
-        // check initial amplitudes
-        analyze_amplitudes("First-Order", T1_, T2_);
+//        // check initial amplitudes
+//        analyze_amplitudes("First-Order", T1_, T2_);
     }
 
     // get reference energy
@@ -360,7 +363,14 @@ double MRDSRG::compute_energy() {
         Etotal += compute_energy_pt3();
         break;
     }
-    default: { Etotal += compute_energy_pt2(); }
+    default: {
+        Etotal += compute_energy_pt2();
+    }
+    }
+
+    // dump amplitudes to file
+    if (restart_ and (corrlv_string_.find("DSRG") != corrlv_string_.npos)) {
+        dump_amps_to_file();
     }
 
     return Etotal;

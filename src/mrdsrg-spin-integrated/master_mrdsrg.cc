@@ -1,9 +1,11 @@
 #include <numeric>
 
-#include "psi4/libpsi4util/process.h"
 #include "psi4/libmints/molecule.h"
 #include "psi4/libmints/dipole.h"
+#include "psi4/libpsi4util/process.h"
+#include "psi4/libpsio/psio.hpp"
 
+#include "helpers/disk_io.h"
 #include "helpers/printing.h"
 #include "helpers/timer.h"
 
@@ -78,6 +80,11 @@ void MASTER_DSRG::startup() {
             value = 1.0;
         }
     });
+
+    // set up file name prefix
+    filename_prefix_ = psi::PSIOManager::shared_object()->get_default_path() + "forte." +
+                       std::to_string(getpid()) + "." +
+                       psi::Process::environment.molecule()->name();
 }
 
 void MASTER_DSRG::read_options() {
@@ -2160,5 +2167,14 @@ std::vector<std::string> MASTER_DSRG::re_two_labels() {
     }
 
     return labels;
+}
+
+void MASTER_DSRG::clean_checkpoints() {
+    if (not t1_file_.empty()) {
+        delete_disk_BT(t1_file_);
+    }
+    if (not t2_file_.empty()) {
+        delete_disk_BT(t2_file_);
+    }
 }
 } // namespace forte

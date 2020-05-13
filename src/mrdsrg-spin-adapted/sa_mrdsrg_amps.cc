@@ -446,18 +446,4 @@ void SA_MRDSRG::dump_amps_to_file() {
     t2_file_ = write_disk_BT(T2_, "t2", filename_prefix_);
 }
 
-// std::vector<int> SA_MRDSRG::read_amps_from_file() {
-//    std::vector<int> out{t1_file_.empty(), t2_file_.empty()};
-
-//    if (!out[0]) {
-//        read_disk_BT(T1_, t1_file_);
-//    }
-
-//    if (!out[1]) {
-//        read_disk_BT(T2_, t2_file_);
-//    }
-
-//    return out;
-//}
-
 } // namespace forte

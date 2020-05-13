@@ -118,6 +118,11 @@ void SADSRG::startup() {
 
     // check if using semicanonical orbitals
     semi_canonical_ = check_semi_orbs();
+
+    // set up file name prefix
+    filename_prefix_ = psi::PSIOManager::shared_object()->get_default_path() + "forte." +
+                       std::to_string(getpid()) + "." +
+                       psi::Process::environment.molecule()->name();
 }
 
 void SADSRG::read_options() {
@@ -164,10 +169,6 @@ void SADSRG::read_options() {
 
     multi_state_ = foptions_->get_gen_list("AVG_STATE").size() != 0;
     multi_state_algorithm_ = foptions_->get_str("DSRG_MULTI_STATE");
-
-    filename_prefix_ = psi::PSIOManager::shared_object()->get_default_path() + "forte." +
-                       std::to_string(getpid()) + "." +
-                       psi::Process::environment.molecule()->name();
 
     outfile->Printf("Done");
 }
