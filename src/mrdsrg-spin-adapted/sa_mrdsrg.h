@@ -82,6 +82,9 @@ class SA_MRDSRG : public SADSRG {
     /// Omitting blocks with >= 3 virtual indices?
     bool nivo_;
 
+    /// Read amplitudes from previous computations
+    bool restart_;
+
     /// Correlation level option
     std::string corrlv_string_;
 
@@ -143,6 +146,9 @@ class SA_MRDSRG : public SADSRG {
     void guess_t1(BlockedTensor& F, BlockedTensor& T2, BlockedTensor& T1);
     /// Update T1 in every iteration
     void update_t1();
+
+    /// Dump the converged amplitudes to file
+    void dump_amps_to_file();
 
     /// Compute DSRG-transformed Hamiltonian
     void compute_hbar();

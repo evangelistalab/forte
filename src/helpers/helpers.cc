@@ -112,14 +112,21 @@ psi::SharedMatrix tensor_to_matrix(ambit::Tensor t, psi::Dimension dims) {
     return M_sym;
 }
 
-void write_disk_vector_double(const std::string& filename, const std::vector<double>& data) {
+void write_disk_vector_double(const std::string& filename, const std::vector<double>& data,
+                              bool overwrite) {
     // check if file exists or not
     struct stat buf;
-    bool exist = stat(filename.c_str(), &buf) == 0;
-    if (exist) {
-        std::stringstream error;
-        error << "File " << filename << " already exists.";
-        throw psi::PSIEXCEPTION(error.str().c_str());
+    if (stat(filename.c_str(), &buf) == 0) {
+        if (overwrite) {
+            // delete the file
+            if (remove(filename.c_str()) != 0) {
+                std::string msg = "Error when deleting " + filename;
+                perror(msg.c_str());
+            }
+        } else {
+            std::string error = "File " + filename + " already exists.";
+            throw psi::PSIEXCEPTION(error.c_str());
+        }
     }
 
     // write data to file

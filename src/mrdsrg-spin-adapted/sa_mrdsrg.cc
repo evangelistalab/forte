@@ -69,6 +69,8 @@ void SA_MRDSRG::read_options() {
     maxiter_ = foptions_->get_int("MAXITER");
     e_conv_ = foptions_->get_double("E_CONVERGENCE");
     r_conv_ = foptions_->get_double("R_CONVERGENCE");
+
+    restart_ = foptions_->get_bool("DSRG_RESTART");
 }
 
 void SA_MRDSRG::startup() {
@@ -119,6 +121,7 @@ void SA_MRDSRG::print_options() {
             return std::string("FALSE");
         }
     };
+    calculation_info_string.push_back({"Restart amplitudes", true_false_string(restart_)});
     calculation_info_string.push_back(
         {"Sequential DSRG transformation", true_false_string(sequential_Hbar_)});
     calculation_info_string.push_back(
@@ -224,6 +227,11 @@ double SA_MRDSRG::compute_energy() {
     //    default: { Etotal += compute_energy_ldsrg2_qc(); }
     //    }
 
+    // dump amplitudes to file
+    if (restart_) {
+        dump_amps_to_file();
+    }
+
     return Etotal;
 }
 
@@ -240,5 +248,4 @@ double SA_MRDSRG::Hbar_od_norm(const int& n, const std::vector<std::string>& blo
 
     return norm;
 }
-
 } // namespace forte

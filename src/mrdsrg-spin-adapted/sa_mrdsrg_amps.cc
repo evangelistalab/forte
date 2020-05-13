@@ -27,6 +27,8 @@
  */
 
 #include <algorithm>
+#include <cstdio>
+#include <sys/stat.h>
 
 #include "psi4/libpsi4util/PsiOutStream.h"
 
@@ -38,14 +40,32 @@ using namespace psi;
 namespace forte {
 
 void SA_MRDSRG::guess_t(BlockedTensor& V, BlockedTensor& T2, BlockedTensor& F, BlockedTensor& T1) {
-    guess_t2(V, T2);
-    guess_t1(F, T2, T1);
+    if (restart_ and (not t2_file_.empty())) {
+        read_disk_BT(T2, t2_file_);
+    } else {
+        guess_t2(V, T2);
+    }
+
+    if (restart_ and (not t1_file_.empty())) {
+        read_disk_BT(T1, t1_file_);
+    } else {
+        guess_t1(F, T2, T1);
+    }
 }
 
 void SA_MRDSRG::guess_t_df(BlockedTensor& B, BlockedTensor& T2, BlockedTensor& F,
                            BlockedTensor& T1) {
-    guess_t2_df(B, T2);
-    guess_t1(F, T2, T1);
+    if (restart_ and (not t2_file_.empty())) {
+        read_disk_BT(T2, t2_file_);
+    } else {
+        guess_t2_df(B, T2);
+    }
+
+    if (restart_ and (not t1_file_.empty())) {
+        read_disk_BT(T1, t1_file_);
+    } else {
+        guess_t1(F, T2, T1);
+    }
 }
 
 void SA_MRDSRG::update_t() {
@@ -433,4 +453,24 @@ void SA_MRDSRG::update_t1() {
     // reset the active part of Hbar2
     Hbar1_["uv"] = Hbar1copy["uv"];
 }
+
+void SA_MRDSRG::dump_amps_to_file() {
+    t1_file_ = write_disk_BT(T1_, "t1");
+    t2_file_ = write_disk_BT(T2_, "t2");
+}
+
+//std::vector<int> SA_MRDSRG::read_amps_from_file() {
+//    std::vector<int> out{t1_file_.empty(), t2_file_.empty()};
+
+//    if (!out[0]) {
+//        read_disk_BT(T1_, t1_file_);
+//    }
+
+//    if (!out[1]) {
+//        read_disk_BT(T2_, t2_file_);
+//    }
+
+//    return out;
+//}
+
 } // namespace forte

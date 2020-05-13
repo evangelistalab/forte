@@ -77,6 +77,10 @@ def forte_driver(state_weights_map, scf_info, options, ints, mo_space_info):
         if not Heff_actv_implemented:
             return Edsrg
 
+        # grab t1 and t2 file names
+        file_t1 = dsrg.t1_file()
+        file_t2 = dsrg.t2_file()
+
         # dipole moment related
         do_dipole = options.get_bool("DSRG_DIPOLE")
         if do_dipole:
@@ -190,6 +194,8 @@ def forte_driver(state_weights_map, scf_info, options, ints, mo_space_info):
                 if correlation_solver_type == "SA-MRDSRG":
                     dsrg = forte.make_sadsrg_method(rdms, scf_info, options, ints, mo_space_info)
                     dsrg.set_Uactv(Ua)
+                    dsrg.set_t1_file(file_t1)
+                    dsrg.set_t2_file(file_t2)
                 else:
                     dsrg = forte.make_dsrg_method(correlation_solver_type, rdms,
                                                   scf_info, options, ints, mo_space_info)

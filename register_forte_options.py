@@ -594,7 +594,9 @@ def register_integral_options(options):
 
 def register_dsrg_options(options):
     options.set_group("DSRG")
+
     options.add_double("DSRG_S", 1.0e10,"The end value of the integration parameter s")
+
     options.add_double("DSRG_POWER", 2.0, "The power of the parameter s in the regularizer")
 
     options.add_str("CORR_LEVEL", "PT2",
@@ -733,6 +735,8 @@ def register_dsrg_options(options):
     options.add_int("DSRG_DIIS_MIN_VEC", 2, "Minimum size of DIIS vectors")
 
     options.add_int("DSRG_DIIS_MAX_VEC", 6, "Maximum size of DIIS vectors")
+
+    options.add_bool("DSRG_RESTART", True, "Restart DSRG amplitudes from a previous calculation")
 
 def register_dwms_options(options):
     options.set_group("DWMS")

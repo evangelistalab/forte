@@ -117,13 +117,15 @@ void export_Determinant(py::module& m) {
         .def("create_beta_bit", &Determinant::create_beta_bit, "n"_a, "Create a beta bit")
         .def("destroy_alfa_bit", &Determinant::destroy_alfa_bit, "n"_a, "Destroy an alpha bit")
         .def("destroy_beta_bit", &Determinant::destroy_beta_bit, "n"_a, "Destroy a beta bit")
-        .def("gen_excitation",
-             [](Determinant& d, const std::vector<int>& aann, const std::vector<int>& acre,
-                const std::vector<int>& bann,
-                const std::vector<int>& bcre) { return gen_excitation(d, aann, acre, bann, bcre); },
-             "Apply a generic excitation")
-        .def("str", [](const Determinant& a, int n) { return str(a, n); }, "n"_a = 64,
-             "Get the string representation of the Slater determinant")
+        .def(
+            "gen_excitation",
+            [](Determinant& d, const std::vector<int>& aann, const std::vector<int>& acre,
+               const std::vector<int>& bann,
+               const std::vector<int>& bcre) { return gen_excitation(d, aann, acre, bann, bcre); },
+            "Apply a generic excitation")
+        .def(
+            "str", [](const Determinant& a, int n) { return str(a, n); }, "n"_a = 64,
+            "Get the string representation of the Slater determinant")
         .def("__repr__", [](const Determinant& a) { return str(a); })
         .def("__str__", [](const Determinant& a) { return str(a); })
         .def("__eq__", [](const Determinant& a, const Determinant& b) { return a == b; })
@@ -290,7 +292,11 @@ PYBIND11_MODULE(forte, m) {
         .def("compute_Heff_actv", &SADSRG::compute_Heff_actv,
              "Return the DSRG dressed ActiveSpaceIntegrals")
         .def("set_Uactv", &SADSRG::set_Uactv, "Ua"_a,
-             "Set active part orbital rotation matrix (from original to semicanonical)");
+             "Set active part orbital rotation matrix (from original to semicanonical)")
+        .def("set_t1_file", &SADSRG::set_t1_file, "Set the master file name for T1")
+        .def("set_t2_file", &SADSRG::set_t2_file, "Set the master file name for T2")
+        .def("t1_file", &SADSRG::t1_file, "Get the master file name for T1")
+        .def("t2_file", &SADSRG::t2_file, "Get the master file name for T2");
 
     // export MRDSRG_SO
     py::class_<MRDSRG_SO>(m, "MRDSRG_SO")

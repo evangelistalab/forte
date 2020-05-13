@@ -28,8 +28,10 @@
 
 #include <numeric>
 
+#include "psi4/libmints/molecule.h"
 #include "psi4/libpsi4util/process.h"
 #include "psi4/libpsi4util/PsiOutStream.h"
+#include "psi4/libpsio/psio.hpp"
 
 #include "forte-def.h"
 #include "helpers/printing.h"
@@ -161,6 +163,10 @@ void SADSRG::read_options() {
 
     multi_state_ = foptions_->get_gen_list("AVG_STATE").size() != 0;
     multi_state_algorithm_ = foptions_->get_str("DSRG_MULTI_STATE");
+
+    filename_prefix_ = psi::PSIOManager::shared_object()->get_default_path() + "forte." +
+                       std::to_string(getpid()) + "." +
+                       psi::Process::environment.molecule()->name();
 
     outfile->Printf("Done");
 }
