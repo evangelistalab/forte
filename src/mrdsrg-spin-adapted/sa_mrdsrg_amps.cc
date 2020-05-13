@@ -32,40 +32,36 @@
 
 #include "psi4/libpsi4util/PsiOutStream.h"
 
+#include "helpers/disk_io.h"
 #include "helpers/timer.h"
+#include "helpers/printing.h"
 #include "sa_mrdsrg.h"
 
 using namespace psi;
 
 namespace forte {
 
-void SA_MRDSRG::guess_t(BlockedTensor& V, BlockedTensor& T2, BlockedTensor& F, BlockedTensor& T1) {
+void SA_MRDSRG::guess_t(BlockedTensor& V, BlockedTensor& T2, BlockedTensor& F, BlockedTensor& T1,
+                        BlockedTensor& B) {
+    print_h2("Build Initial Amplitudes Guesses");
+
     if (restart_ and (not t2_file_.empty())) {
+        outfile->Printf("\n    Reading previous T2 amplitudes from disk ...");
         read_disk_BT(T2, t2_file_);
+        outfile->Printf(" Done.");
     } else {
-        guess_t2(V, T2);
+        guess_t2(V, T2, B);
     }
 
     if (restart_ and (not t1_file_.empty())) {
+        outfile->Printf("\n    Reading previous T1 amplitudes from disk ...");
         read_disk_BT(T1, t1_file_);
+        outfile->Printf(" Done.");
     } else {
         guess_t1(F, T2, T1);
     }
-}
 
-void SA_MRDSRG::guess_t_df(BlockedTensor& B, BlockedTensor& T2, BlockedTensor& F,
-                           BlockedTensor& T1) {
-    if (restart_ and (not t2_file_.empty())) {
-        read_disk_BT(T2, t2_file_);
-    } else {
-        guess_t2_df(B, T2);
-    }
-
-    if (restart_ and (not t1_file_.empty())) {
-        read_disk_BT(T1, t1_file_);
-    } else {
-        guess_t1(F, T2, T1);
-    }
+    analyze_amplitudes("Initial", T1_, T2_);
 }
 
 void SA_MRDSRG::update_t() {
@@ -73,26 +69,17 @@ void SA_MRDSRG::update_t() {
     update_t1();
 }
 
-void SA_MRDSRG::guess_t2(BlockedTensor& V, BlockedTensor& T2) {
+void SA_MRDSRG::guess_t2(BlockedTensor& V, BlockedTensor& T2, BlockedTensor& B) {
     local_timer timer;
     std::string str = "Computing T2 amplitudes ...";
     outfile->Printf("\n    %-35s", str.c_str());
     T2max_ = 0.0, T2norm_ = 0.0, T2rms_ = 0.0;
 
-    T2["ijab"] = V["ijab"];
-
-    guess_t2_impl(T2);
-
-    outfile->Printf("  Done. Timing %10.3f s", timer.get());
-}
-
-void SA_MRDSRG::guess_t2_df(BlockedTensor& B, BlockedTensor& T2) {
-    local_timer timer;
-    std::string str = "Computing T2 amplitudes ...";
-    outfile->Printf("\n    %-35s", str.c_str());
-    T2max_ = 0.0, T2norm_ = 0.0, T2rms_ = 0.0;
-
-    T2["ijab"] = B["gia"] * B["gjb"];
+    if (eri_df_) {
+        T2["ijab"] = B["gia"] * B["gjb"];
+    } else {
+        T2["ijab"] = V["ijab"];
+    }
 
     guess_t2_impl(T2);
 
@@ -455,11 +442,11 @@ void SA_MRDSRG::update_t1() {
 }
 
 void SA_MRDSRG::dump_amps_to_file() {
-    t1_file_ = write_disk_BT(T1_, "t1");
-    t2_file_ = write_disk_BT(T2_, "t2");
+    t1_file_ = write_disk_BT(T1_, "t1", filename_prefix_);
+    t2_file_ = write_disk_BT(T2_, "t2", filename_prefix_);
 }
 
-//std::vector<int> SA_MRDSRG::read_amps_from_file() {
+// std::vector<int> SA_MRDSRG::read_amps_from_file() {
 //    std::vector<int> out{t1_file_.empty(), t2_file_.empty()};
 
 //    if (!out[0]) {

@@ -53,6 +53,7 @@
 #include "sparse_ci/sigma_vector.h"
 #include "orbital-helpers/semi_canonicalize.h"
 #include "orbital-helpers/iao_builder.h"
+#include "helpers/disk_io.h"
 #include "helpers/printing.h"
 #include "helpers/timer.h"
 

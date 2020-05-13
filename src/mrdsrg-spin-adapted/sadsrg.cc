@@ -34,6 +34,7 @@
 #include "psi4/libpsio/psio.hpp"
 
 #include "forte-def.h"
+#include "helpers/disk_io.h"
 #include "helpers/printing.h"
 #include "helpers/timer.h"
 
@@ -884,5 +885,14 @@ void SADSRG::print_options_info(
         outfile->Printf("\n    %-40s %15d", str_dim.first.c_str(), str_dim.second);
     }
     outfile->Printf("\n");
+}
+
+void SADSRG::clean_checkpoints() {
+    if (not t1_file_.empty()) {
+        delete_disk_BT(t1_file_);
+    }
+    if (not t2_file_.empty()) {
+        delete_disk_BT(t2_file_);
+    }
 }
 } // namespace forte

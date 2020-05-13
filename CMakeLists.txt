@@ -118,6 +118,7 @@ src/gradient_tpdm/integraltransform_sort_so_tpdm.cc
 src/gradient_tpdm/integraltransform_tpdm_unrestricted.cc
 src/helpers/blockedtensorfactory.cc
 src/helpers/cube_file.cc
+src/helpers/disk_io.cc
 src/helpers/helpers.cc
 src/helpers/iterative_solvers.cc
 src/helpers/printing.cc
@@ -150,7 +151,6 @@ src/mrdsrg-spin-adapted/sadsrg.cc
 src/mrdsrg-spin-adapted/sadsrg_amps_analysis.cc
 src/mrdsrg-spin-adapted/sadsrg_block_labels.cc
 src/mrdsrg-spin-adapted/sadsrg_comm.cc
-src/mrdsrg-spin-adapted/sadsrg_io.cc
 src/mrdsrg-spin-adapted/sa_dsrgpt.cc
 src/mrdsrg-spin-adapted/sa_ldsrg2.cc
 src/mrdsrg-spin-adapted/sa_mrdsrg.cc

@@ -101,6 +101,9 @@ class SADSRG : public DynamicCorrelationSolver {
     /// Get master file name for T2
     std::string t2_file() { return t2_file_; }
 
+    /// Clean up amplitudes checkpoint files
+    void clean_checkpoints();
+
   protected:
     /// Startup function called in constructor
     void startup();
@@ -161,25 +164,10 @@ class SADSRG : public DynamicCorrelationSolver {
     /// Number of threads
     int n_threads_;
 
-    // ==> file read/write controls <==
+    // ==> file names for disk support <==
 
     /// Prefix for file name
     std::string filename_prefix_;
-
-    /**
-     * @brief Save a BlockedTensor to file
-     * @param BT The BlockedTensor to be dumped to files
-     * @param name The abbreviated name of the BlockedTensor BT
-     * @return The master file name that handles all blocks
-     */
-    std::string write_disk_BT(BlockedTensor& BT, const std::string& name);
-
-    /**
-     * @brief Read a BlockedTensor from file
-     * @param BT The BlockedTensor to be filled
-     * @param filename The master file name that stores file names for all blocks
-     */
-    void read_disk_BT(BlockedTensor& BT, const std::string& filename);
 
     /// Master checkpoint file for T1
     std::string t1_file_;

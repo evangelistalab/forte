@@ -87,22 +87,6 @@ psi::SharedMatrix tensor_to_matrix(ambit::Tensor t);
 psi::SharedMatrix tensor_to_matrix(ambit::Tensor t, psi::Dimension dims);
 
 /**
- * @brief Save a vector of double to file
- * @param filename The file name
- * @param data The data to be dumped
- * @param overwrite Overwrite if the file exists
- */
-void write_disk_vector_double(const std::string& filename, const std::vector<double>& data,
-                              bool overwrite=false);
-
-/**
- * @brief Read a vector of double from file
- * @param filename The file name
- * @param data The data to be read
- */
-void read_disk_vector_double(const std::string& filename, std::vector<double>& data);
-
-/**
  * @brief view_modified_orbitals Write orbitals using molden
  * @param Ca  The Ca matrix to be viewed with MOLDEN
  * @param diag_F -> The Orbital energies (diagonal elements of Fock operator)

@@ -186,7 +186,8 @@ def forte_driver(state_weights_map, scf_info, options, ints, mo_space_info):
                     rdms = semi.transform_rdms(Ua, Ub, rdms, max_rdm_level)
 
                 # Now semicanonicalize the reference and orbitals
-                semi.semicanonicalize(rdms, max_rdm_level)
+                if options.get_bool("SEMI_CANONICAL"):
+                    semi.semicanonicalize(rdms, max_rdm_level)
                 Ua = semi.Ua_t()
                 Ub = semi.Ub_t()
 
@@ -207,6 +208,9 @@ def forte_driver(state_weights_map, scf_info, options, ints, mo_space_info):
                     udm_y = psi4.core.variable('UNRELAXED DIPOLE Y')
                     udm_z = psi4.core.variable('UNRELAXED DIPOLE Z')
                     udm_t = psi4.core.variable('UNRELAXED DIPOLE')
+
+        # clean up DSRG files
+        dsrg.clean_checkpoints()
 
         # printing
         if (not is_multi_state) or maxiter > 1:
@@ -257,7 +261,7 @@ def forte_driver(state_weights_map, scf_info, options, ints, mo_space_info):
             psi4.core.set_scalar_variable('CURRENT UNRELAXED ENERGY', dsrg_energies[-1][0])
             psi4.core.set_scalar_variable('CURRENT RELAXED ENERGY', dsrg_energies[-1][1])
             psi4.core.set_scalar_variable('CURRENT ENERGY', dsrg_energies[-1][1])
-            raise psi4.core.ConvergenceError("DSRG relaxation does not converge in {} cycles".format(maxiter))
+            raise psi4.p4util.PsiException(f"DSRG relaxation does not converge in {maxiter} cycles")
         else:
             if relax_mode != 'ONCE' and relax_mode != 'TWICE':
                 psi4.core.set_scalar_variable('FULLY RELAXED ENERGY', dsrg_energies[-1][1])

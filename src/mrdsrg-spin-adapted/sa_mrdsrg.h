@@ -116,9 +116,8 @@ class SA_MRDSRG : public SADSRG {
     ambit::BlockedTensor DT2_;
 
     /// Initial guess of T amplitudes
-    void guess_t(BlockedTensor& V, BlockedTensor& T2, BlockedTensor& F, BlockedTensor& T1);
-    /// Initial guess of T amplitudes with density fitted B tensor.
-    void guess_t_df(BlockedTensor& B, BlockedTensor& T2, BlockedTensor& F, BlockedTensor& T1);
+    void guess_t(BlockedTensor& V, BlockedTensor& T2, BlockedTensor& F, BlockedTensor& T1,
+                 BlockedTensor& B);
     /// Update T amplitude in every iteration
     void update_t();
 
@@ -129,8 +128,7 @@ class SA_MRDSRG : public SADSRG {
     /// Signed max of T2
     double T2max_;
     /// Initial guess of T2
-    void guess_t2(BlockedTensor& V, BlockedTensor& T2);
-    void guess_t2_df(BlockedTensor& B, BlockedTensor& T2);
+    void guess_t2(BlockedTensor& V, BlockedTensor& T2, BlockedTensor& B);
     /// Initial guess of T2 where T2 has been initialized with H2
     void guess_t2_impl(BlockedTensor& T2);
     /// Update T2 in every iteration

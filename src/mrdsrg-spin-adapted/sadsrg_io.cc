@@ -31,7 +31,7 @@
 #include <sstream>
 
 #include "ambit/blocked_tensor.h"
-#include "helpers/helpers.h"
+#include "helpers/disk_io.h"
 #include "sadsrg.h"
 
 using namespace psi;
@@ -79,7 +79,7 @@ void SADSRG::read_disk_BT(BlockedTensor& BT, const std::string& filename) {
 
         // test if sizes match
         if (nele != BT.block(block).numel()) {
-            std::string msg = "Number of elements NOT match: ";
+            std::string msg = "Number of elements do NOT match: ";
             msg += BT.name() + "(" + std::to_string(BT.block(block).numel()) + "); ";
             msg += filename + "(" + std::to_string(nele) + ")";
             throw PSIEXCEPTION(msg);
@@ -87,6 +87,37 @@ void SADSRG::read_disk_BT(BlockedTensor& BT, const std::string& filename) {
 
         // read data
         read_disk_vector_double(filename, BT.block(block).data());
+    }
+
+    infile.close();
+}
+
+void SADSRG::delete_disk_BT(const std::string& filename) {
+    std::ifstream infile(filename);
+    if (!infile.good()) {
+        std::string error = "File " + filename + " does not exist.";
+        throw psi::PSIEXCEPTION(error.c_str());
+    }
+
+    // delete every block
+    std::string line;
+    while (std::getline(infile, line)) {
+        std::istringstream iss(line);
+        std::string block, filename_block;
+        size_t nele;
+        iss >> block >> filename_block >> nele;
+
+        if (remove(filename_block.c_str()) != 0) {
+            std::string msg = "Error when deleting " + filename_block;
+            perror(msg.c_str());
+        }
+    }
+    infile.close();
+
+    // delete the master file
+    if (remove(filename.c_str()) != 0) {
+        std::string msg = "Error when deleting " + filename;
+        perror(msg.c_str());
     }
 }
 

@@ -296,7 +296,9 @@ PYBIND11_MODULE(forte, m) {
         .def("set_t1_file", &SADSRG::set_t1_file, "Set the master file name for T1")
         .def("set_t2_file", &SADSRG::set_t2_file, "Set the master file name for T2")
         .def("t1_file", &SADSRG::t1_file, "Get the master file name for T1")
-        .def("t2_file", &SADSRG::t2_file, "Get the master file name for T2");
+        .def("t2_file", &SADSRG::t2_file, "Get the master file name for T2")
+        .def("clean_checkpoints", &SADSRG::clean_checkpoints,
+             "Delete amplitudes checkpoint files");
 
     // export MRDSRG_SO
     py::class_<MRDSRG_SO>(m, "MRDSRG_SO")
