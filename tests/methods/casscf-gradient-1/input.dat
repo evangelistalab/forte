@@ -53,10 +53,10 @@ set findif{
   points 5
 }
 
-
 grad = gradient('forte')
+# grad = gradient('forte',dertype="energy")
 
-#compare_matrices(ref_grad, grad, 6, "CASSCF gradient on BeH2 with c2v symmetry")  #TEST
+compare_matrices(ref_grad, grad, 6, "CASSCF gradient on BeH2 with c2v symmetry")  #TEST
 
 
 

@@ -3,24 +3,20 @@
 import forte
 
 
-
-molecule {
-  O       
-  H             1    0.956022
-  H             1    0.956022      2  104.155814
-  symmetry c1
+molecule HF {
+0 3
+H
+F 1 1.300
 }
 
-
-set globals{
-   scf_type             pk
-   d_convergence        12
-   e_convergence        12
-   basis                3-21g
-   # restricted_docc      [2,0,1,1,0,2,1,1]
-   # active               [1,0,0,0,0,1,0,0]
-   maxiter              100
-   reference            RHF
+set {
+basis 3-21g
+reference rohf
+scf_type pk
+e_convergence 10
+d_convergence 10
+docc [2,0,1,1]
+socc [2,0,0,0]
    mcscf_type           conv
    mcscf_maxiter        100
    mcscf_diis_start     20
@@ -29,26 +25,48 @@ set globals{
 }
 
 
+set scf_type direct
+
+# set forte {
+# active_space_solver fci
+# correlation_solver dsrg-mrpt2
+# # frozen_docc [1,0,0,0]
+# restricted_docc [2,0,1,1]
+# active [2,0,0,0]
+# dsrg_s 1.0
+#    dsrgpt               true
+#    print_denom2         true
+#    multiplicity         3 
+# }
 
 set forte{
-   active_space_solver  fci
-   correlation_solver   dsrg-mrpt2
-   restricted_docc      [4]
-   active               [1]
-   restricted_uocc      [8]
-   root_sym             0
-   nroot                1
-   dsrg_s               1.0
-   dsrgpt               true
-   print_denom2         true
-   multiplicity         1 
+   job_type             casscf
+   CASSCF_REFERENCE      true
+   CASSCF_ITERATIONS      100
+   CASSCF_G_CONVERGENCE   1e-10
+   CASSCF_E_CONVERGENCE   1e-10
+   restricted_docc        [2,0,1,1]
+   active                 [2,0,0,0]
+   int_type             conventional
+   casscf_ci_solver      FCI
+   print                 0
+   CASSCF_DO_DIIS        true
+   dertype               first
+   multiplicity         3
 }
 
+set findif{ 
+  points 5
+  DISP_SIZE 0.01
+}
 
-scf_energy, wfn = energy('scf', return_wfn=True)
-gradient('forte',ref_wfn=wfn)
+# scf_energy, wfn = energy('scf', return_wfn=True)
+# # energy('forte')
+# gradient('forte',ref_wfn=wfn)
 
-
-
+energy("forte")
+# grad = gradient('forte')
+# grad = gradient('forte',dertype="energy")
+# energy("scf")
 
 

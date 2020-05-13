@@ -102,8 +102,7 @@ void ForteIntegrals::startup() {
     Cb_ = (spin_restriction_ == IntegralSpinRestriction::Restricted ? wfn_->Ca()->clone()
                                                                     : wfn_->Cb()->clone());
 
-    nucrep_ = psi::Process::environment.molecule()->nuclear_repulsion_energy(
-        wfn_->get_dipole_field_strength());
+    nucrep_ = wfn_->molecule()->nuclear_repulsion_energy(wfn_->get_dipole_field_strength());
 
     nirrep_ = wfn_->nirrep();
     nso_ = wfn_->nso();

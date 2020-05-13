@@ -263,6 +263,7 @@ void DSRG_MRPT2::set_dsrg_tensor() {
 
 void DSRG_MRPT2::set_multiplier() {
     set_z();
+    Z.print();
     outfile->Printf("\n    Solving Entries of W ............................ ");
     set_w();   
     outfile->Printf("Done");
@@ -276,9 +277,9 @@ void DSRG_MRPT2::set_z() {
     set_z_aa_diag();
     outfile->Printf("Done");
     // Jacobi iterative solver
-    // iter_z();
+    iter_z();
     // LAPACK solver
-    solve_z();
+    // solve_z();
 }
 
 
@@ -2285,7 +2286,12 @@ void DSRG_MRPT2::solve_z() {
                 (temp1.block(row + col)).iterate([&](const std::vector<size_t>& i, double& value) {
                     int index = (pre1 + i[0] * idx1 + i[1]) 
                                  + dim * (pre2 + i[2] * idx2 + i[3]);
-                    A.at(index) += value;
+                    // if (row != col && std::fabs(value) > 1e-10) {A.at(index) += value;}
+                    // else if (row == col) {
+                        // if (std::fabs(value) > 1e-10) 
+                            A.at(index) += value;
+                    // }
+
                 });
             }
             else if (row == "aa" && col != "aa" && col != "AA") {       
@@ -2293,7 +2299,8 @@ void DSRG_MRPT2::solve_z() {
                     if (i[0] > i[1] ) {
                         int index = (pre1 + i[0] * (i[0] - 1) / 2 + i[1])
                                      + dim * (pre2 + i[2] * idx2 + i[3]);
-                        A.at(index) += value;    
+                        // if (std::fabs(value) > 1e-10) 
+                            A.at(index) += value;    
                     }
                 });
             }
@@ -2304,7 +2311,8 @@ void DSRG_MRPT2::solve_z() {
                     if (i2 != i3 ) {
                         int index = (pre1 + i[0] * idx1 + i[1]) 
                                      + dim * (pre2 + i2 * (i2 - 1) / 2 + i3);
-                        A.at(index) += value;    
+                        // if (std::fabs(value) > 1e-10) 
+                            A.at(index) += value;    
                     }
                 });   
             }
@@ -2321,6 +2329,7 @@ void DSRG_MRPT2::solve_z() {
             }
         }
     } 
+
 
     outfile->Printf("Done");
     outfile->Printf("\n    Solving Off-diagonal Blocks of Z ................ ");
@@ -2403,6 +2412,8 @@ void DSRG_MRPT2::solve_z() {
     Z["ME"] = Z["EM"];
     Z["WM"] = Z["MW"];
     Z["WE"] = Z["EW"];
+
+    Z.print();
 
     outfile->Printf("Done");
 }
