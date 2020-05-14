@@ -116,6 +116,11 @@ double CASSCF::compute_energy() {
 
     psi::SharedMatrix Ca = ints_->Ca();
     psi::SharedMatrix Cb = ints_->Cb();
+    psi::SharedMatrix S_ao = ints_->S_ao();
+
+    auto S_mo = psi::linalg::triplet(Ca, S_ao, Ca, true, false, false);
+    S_mo->print();
+
     print_h2("CASSCF Iteration");
     outfile->Printf("\n iter    ||g||           Delta_E            E_CASSCF       CONV_TYPE");
 
@@ -245,6 +250,9 @@ double CASSCF::compute_energy() {
     // restransform integrals using DF_BASIS_MP2 for
     // consistent energies in correlation treatment
     //    ints_->update_orbitals(Ca, Cb);
+
+    outfile->Printf("\n Final CASSCF MOS \n");
+    Ca->print();
 
     cas_ci_final();
     outfile->Printf("\n @E(CASSCF) = %18.12f \n", E_casscf_);

@@ -74,8 +74,7 @@ def load_cubes(path='.'):
     if isdir:
         for file in os.listdir(path):
             if file.endswith('.cube'):
-                cf = CubeFile()
-                cf.load(os.path.join(path, file))
+                cf = forte.CubeFile(os.path.join(path, file))
                 cube_files[file] = cf
         if len(cube_files) == 0:
             print(f'load_cubes: no cube files found in directory {path}')

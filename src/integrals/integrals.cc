@@ -103,8 +103,9 @@ void ForteIntegrals::startup() {
     Cb_ = (spin_restriction_ == IntegralSpinRestriction::Restricted ? wfn_->Ca()->clone()
                                                                     : wfn_->Cb()->clone());
 
-    nucrep_ = psi::Process::environment.molecule()->nuclear_repulsion_energy(
-        wfn_->get_dipole_field_strength());
+    S_ao_ = wfn_->S()->clone();
+
+    nucrep_ = wfn_->molecule()->nuclear_repulsion_energy(wfn_->get_dipole_field_strength());
 
     nirrep_ = wfn_->nirrep();
     nso_ = wfn_->nso();
@@ -159,6 +160,8 @@ void ForteIntegrals::allocate() {
 std::shared_ptr<psi::Matrix> ForteIntegrals::Ca() const { return Ca_; }
 
 std::shared_ptr<psi::Matrix> ForteIntegrals::Cb() const { return Cb_; }
+
+std::shared_ptr<psi::Matrix> ForteIntegrals::S_ao() const { return S_ao_; }
 
 double ForteIntegrals::nuclear_repulsion_energy() const { return nucrep_; }
 

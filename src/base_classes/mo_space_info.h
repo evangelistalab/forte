@@ -111,16 +111,19 @@ class MOSpaceInfo {
 
     // ==> Class Interface <==
 
-    /// @return The names of orbital spaces
+    /// @return The names of the elmentary orbital spaces
     std::vector<std::string> space_names() const { return elementary_spaces_; }
+    /// @return The names of the composite orbital spaces
+    std::map<std::string, std::vector<std::string>> composite_space_names() const {
+        return composite_spaces_;
+    }
     /// @return The number of orbitals in a space
     size_t size(const std::string& space);
     /// @return The psi::Dimension object for space
     psi::Dimension dimension(const std::string& space);
     /// @return The symmetry of each orbital
     std::vector<int> symmetry(const std::string& space);
-    /// @return The list of the absolute index of the molecular orbitals in a
-    /// space
+    /// @return The list of the absolute index of the molecular orbitals in a space
     std::vector<size_t> absolute_mo(const std::string& space);
     /// @return The list of the absolute index of the molecular orbitals in a
     /// space excluding the frozen core/virtual orbitals
@@ -190,7 +193,7 @@ class MOSpaceInfo {
                            std::map<std::string, std::vector<size_t>>& mo_space_map);
 };
 
-/// Make MOSpaceInfo from inputs(options)
+/// Make MOSpaceInfo from an options object
 std::shared_ptr<MOSpaceInfo> make_mo_space_info(std::shared_ptr<psi::Wavefunction> ref_wfn,
                                                 std::shared_ptr<ForteOptions> options);
 
@@ -199,6 +202,10 @@ std::shared_ptr<MOSpaceInfo>
 make_mo_space_info_from_map(std::shared_ptr<psi::Wavefunction> ref_wfn,
                             std::map<std::string, std::vector<size_t>>& mo_space_map,
                             std::vector<size_t> reorder);
+
+/// Make MOSpaceInfo from a map "ACTIVE" : {"A1" : [0,1], "B1" : [3]}
+std::shared_ptr<MOSpaceInfo> make_mo_space_info_from_indices(
+    std::map<std::string, std::map<std::string, std::vector<size_t>>>& space_spec);
 
 } // namespace forte
 

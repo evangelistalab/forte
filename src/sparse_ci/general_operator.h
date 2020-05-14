@@ -35,6 +35,8 @@
 
 namespace forte {
 
+class ActiveSpaceIntegrals;
+
 using op_t = std::pair<double, std::vector<std::tuple<bool, bool, int>>>;
 using py_op_t = std::pair<double, std::vector<std::tuple<bool, bool, int>>>;
 
@@ -57,7 +59,18 @@ class GeneralOperator {
 };
 
 det_hash<double> apply_general_operator(GeneralOperator& gop, det_hash<double>& state);
+det_hash<double> apply_general_operator_spin(GeneralOperator& gop, det_hash<double>& state);
 det_hash<double> apply_exp_general_operator(GeneralOperator& gop, det_hash<double> state, int maxn);
+det_hash<double> apply_exp_general_operator_matrix(GeneralOperator& gop, det_hash<double> state,
+                                                   int norbs, int maxn);
+det_hash<double> apply_exp_general_operator_spin(GeneralOperator& gop, det_hash<double> state,
+
+                                                 int maxn);
+det_hash<double> apply_number_projector(int na, int nb, det_hash<double>& state);
+double overlap(det_hash<double>& left_state, det_hash<double>& right_state);
+
+double energy_expectation_value(det_hash<double>& left_state, det_hash<double>& right_state,
+                                std::shared_ptr<ActiveSpaceIntegrals> as_ints);
 
 } // namespace forte
 

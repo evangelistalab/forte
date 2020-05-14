@@ -38,7 +38,7 @@ set forte{
    job_type             casscf
    CASSCF_REFERENCE     true
    CASSCF_ITERATIONS    100
-  CASSCF_G_CONVERGENCE 1e-6
+   CASSCF_G_CONVERGENCE 1e-6
    CASSCF_E_CONVERGENCE 1e-8
    restricted_docc      [2,0,0,0]
    active               [1,0,0,1]
@@ -54,6 +54,6 @@ set findif{
 }
 
 
-grad = gradient('forte')
+grad = gradient('forte',dertype='energy')
 
 compare_matrices(ref_grad, grad, 6, "CASSCF gradient on BeH2 with c2v symmetry")  #TEST

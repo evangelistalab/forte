@@ -44,10 +44,39 @@
 
 #include "base_classes/mo_space_info.h"
 #include "helpers/helpers.h"
+#include "helpers/string_algorithms.h"
 
 using namespace psi;
 
 namespace forte {
+
+std::map<std::string, std::vector<std::string>> __irrep_labels{
+    {"C1", {"A"}},
+    {"CS", {"Ap", "App"}},
+    {"CI", {"Ag", "Au"}},
+    {"C2", {"A", "B"}},
+    {"C2H", {"Ag", "Bg", "Au", "Bu"}},
+    {"C2V", {"A1", "A2", "B1", "B2"}},
+    {"D2", {"A", "B1", "B2", "B3"}},
+    {"D2H", {"Ag", "B1g", "B2g", "B3g", "Au", "B1u", "B2u", "B3u"}}};
+
+std::string irrep_label(const std::string& point_group, int h) {
+    auto& irrep_labels_ = irrep_labels(point_group);
+    if (h > irrep_labels_.size()) {
+        throw std::runtime_error("irrep_label(): irrep index outside of limits");
+    }
+    return irrep_labels_[h];
+}
+
+const std::vector<std::string>& irrep_labels(const std::string& point_group) {
+    auto point_group_capitalized = upper_string(point_group);
+    const auto it = __irrep_labels.find(point_group_capitalized);
+    if (it == __irrep_labels.end()) {
+        throw std::runtime_error("irrep_labels(): point_group " + point_group_capitalized +
+                                 " is invalid");
+    }
+    return it->second;
+}
 
 std::string to_string(const std::vector<std::string>& vec_str, const std::string& sep) {
     if (vec_str.size() == 0)

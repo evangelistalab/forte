@@ -149,8 +149,15 @@ void export_Determinant(py::module& m) {
         .def("amplitudes", &GeneralOperator::amplitudes)
         .def("op_indices", &GeneralOperator::op_indices)
         .def("op_list", &GeneralOperator::op_list);
+    m.def("spin2", &spin2<Determinant::nbits>);
     m.def("apply_general_operator", &apply_general_operator);
+    m.def("apply_general_operator_spin", &apply_general_operator_spin);
     m.def("apply_exp_general_operator", &apply_exp_general_operator);
+    m.def("apply_exp_general_operator_spin", &apply_exp_general_operator_spin);
+    m.def("apply_exp_general_operator_matrix", &apply_exp_general_operator_matrix);
+    m.def("apply_number_projector", &apply_number_projector);
+    m.def("energy_expectation_value", &energy_expectation_value);
+    m.def("overlap", &overlap);
 }
 
 // TODO: export more classes using the function above

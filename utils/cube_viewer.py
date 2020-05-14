@@ -4,6 +4,7 @@
 import ipywidgets as widgets
 import re
 from .py3js_renderer import Py3JSRenderer
+from .helpers import load_cubes
 
 def cube_viewer(cubes=None,
                 path='.',

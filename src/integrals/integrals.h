@@ -105,7 +105,8 @@ class ForteIntegrals {
      * @param restricted Select a restricted or unrestricted transformation
      * @param mo_space_info The MOSpaceInfo object
      */
-    ForteIntegrals(std::shared_ptr<ForteOptions> options, std::shared_ptr<psi::Wavefunction> ref_wfn,
+    ForteIntegrals(std::shared_ptr<ForteOptions> options,
+                   std::shared_ptr<psi::Wavefunction> ref_wfn,
                    std::shared_ptr<MOSpaceInfo> mo_space_info, IntegralSpinRestriction restricted);
 
     /// Virtual destructor to enable deletion of a Derived* through a Base*
@@ -117,6 +118,8 @@ class ForteIntegrals {
     std::shared_ptr<psi::Matrix> Ca() const;
     /// Return Cb
     std::shared_ptr<psi::Matrix> Cb() const;
+    /// Return the AO overlap matrix
+    std::shared_ptr<psi::Matrix> S_ao() const;
     /// Return nuclear repulsion energy
     double nuclear_repulsion_energy() const;
 
@@ -311,6 +314,9 @@ class ForteIntegrals {
 
     // Cb matrix from psi
     std::shared_ptr<psi::Matrix> Cb_;
+
+    // The S matrix from psi
+    std::shared_ptr<psi::Matrix> S_ao_;
 
     // Nuclear repulsion energy
     double nucrep_;
