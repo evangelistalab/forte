@@ -895,6 +895,7 @@ def register_old_options(options):
 
 def register_psi_options(options):
     options.add_str('BASIS','','The primary basis set')
+    options.add_str('BASIS_RELATIVISTIC','','The basis set used to run relativistic computations')
     options.add_double("INTS_TOLERANCE", 1.0E-12, 'Schwarz screening threshold')
     options.add_str("DF_INTS_IO", "NONE", ['NONE','SAVE','LOAD'],'IO caching for CP corrections')
     options.add_str('DF_BASIS_MP2','','Auxiliary basis set for density fitting computations')

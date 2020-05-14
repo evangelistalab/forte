@@ -380,6 +380,11 @@ def run_forte(name, **kwargs):
                                                options.get_str('MINAO_BASIS'))
         ref_wfn.set_basisset('MINAO_BASIS', minao_basis)
 
+    if (options.get_str('BASIS_RELATIVISTIC')):
+        relativistic_basis = psi4.core.BasisSet.build(ref_wfn.molecule(), 'BASIS_RELATIVISTIC',
+                                               options.get_str('BASIS_RELATIVISTIC'))
+        ref_wfn.set_basisset('BASIS_RELATIVISTIC', relativistic_basis)
+
     # Start Forte, initialize ambit
     my_proc_n_nodes = forte.startup()
     my_proc, n_nodes = my_proc_n_nodes

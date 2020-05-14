@@ -6,8 +6,9 @@ molecule h2o {
 }
 
 set {
-  basis sto-3g
+  basis cc-pVDZ-DK
   relativistic X2C
+  BASIS_RELATIVISTIC cc-pVDZ-DK
   scf_type pk
   reference rhf
   e_convergence 10
