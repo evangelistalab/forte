@@ -287,7 +287,6 @@ std::vector<double> DavidsonLiuSolver::normalize_vectors(psi::SharedMatrix v, si
         }
         norm = std::sqrt(norm);
         v_norm.push_back(norm);
-        outfile->Printf("\n  Norm of vector %zu = %e", k, norm);
         for (size_t I = 0; I < size_; I++) {
             v_p[k][I] /= norm;
         }
