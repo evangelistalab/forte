@@ -220,7 +220,8 @@ double SA_MRDSRG::compute_energy() {
     //    }
 
     // dump amplitudes to file
-    if (restart_) {
+    bool restart_useful = (relax_ref_ != "NONE" or multi_state_);
+    if (restart_ and restart_useful) {
         dump_amps_to_file();
     }
 

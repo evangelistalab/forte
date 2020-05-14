@@ -195,12 +195,12 @@ def forte_driver(state_weights_map, scf_info, options, ints, mo_space_info):
                 if correlation_solver_type == "SA-MRDSRG":
                     dsrg = forte.make_sadsrg_method(rdms, scf_info, options, ints, mo_space_info)
                     dsrg.set_Uactv(Ua)
-                    dsrg.set_t1_file(file_t1)
-                    dsrg.set_t2_file(file_t2)
                 else:
                     dsrg = forte.make_dsrg_method(correlation_solver_type, rdms,
                                                   scf_info, options, ints, mo_space_info)
                     dsrg.set_Uactv(Ua, Ub)
+                dsrg.set_t1_file(file_t1)
+                dsrg.set_t2_file(file_t2)
                 Edsrg = dsrg.compute_energy()
 
                 if do_dipole:

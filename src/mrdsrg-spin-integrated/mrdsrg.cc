@@ -369,7 +369,9 @@ double MRDSRG::compute_energy() {
     }
 
     // dump amplitudes to file
-    if (restart_ and (corrlv_string_.find("DSRG") != corrlv_string_.npos)) {
+    bool restart_useful = (relax_ref_ != "NONE" or multi_state_);
+    bool dsrg_iterative = (corrlv_string_.find("DSRG") != corrlv_string_.npos);
+    if (restart_ and restart_useful and dsrg_iterative) {
         dump_amps_to_file();
     }
 
