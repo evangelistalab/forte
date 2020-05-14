@@ -277,9 +277,9 @@ void DSRG_MRPT2::set_z() {
     set_z_aa_diag();
     outfile->Printf("Done");
     // Jacobi iterative solver
-    iter_z();
+    // iter_z();
     // LAPACK solver
-    // solve_z();
+    solve_z();
 }
 
 
@@ -457,6 +457,16 @@ void DSRG_MRPT2::set_w() {
 
     W_["zw"] += Z["wv"] * F["vz"];
 
+    // CASSCF reference
+    temp1 = BTF_->build(CoreTensor, "temporal tensor 1", spin_cases({"gg"}));
+
+    W_["mp"] += F["mp"];
+    temp1["vp"] = H["vp"];
+    temp1["vp"] += V["vmpn"] * I["mn"];
+    temp1["vp"] += V["vMpN"] * I["MN"];
+    W_["up"] += temp1["vp"] * Gamma1["uv"];
+    W_["up"] += 0.5 * V["xypv"] * Gamma2["uvxy"];
+    W_["up"] += V["xYpV"] * Gamma2["uVxY"];
 
     // Copy alpha-alpha to beta-beta 
     (W_.block("CC")).iterate([&](const std::vector<size_t>& i, double& value) {
@@ -2756,6 +2766,19 @@ void DSRG_MRPT2::write_1rdm_spin_dependent() {
         }
     });
 
+    // CASSCF reference
+    for (size_t i = 0, size_c = core_mos_relative.size(); i < size_c; ++i) {
+        D1->add(core_mos_relative[i].first, core_mos_relative[i].second,
+                core_mos_relative[i].second, 1.0);
+    }
+
+    (Gamma1_.block("aa")).iterate([&](const std::vector<size_t>& i, double& value) {
+        if (actv_mos_relative[i[0]].first == actv_mos_relative[i[1]].first) {
+            D1->add(actv_mos_relative[i[0]].first, actv_mos_relative[i[0]].second,
+                    actv_mos_relative[i[1]].second, value);
+        }
+    });
+
     D1->print();
 
     D1->back_transform(ints_->Ca());
@@ -2866,14 +2889,24 @@ void DSRG_MRPT2::write_2rdm_spin_dependent() {
             auto z_b = Z.block("CC").data()[idx];
             for (size_t j = 0; j < size_c; ++j) {
                 auto m1 = core_all_[j];
+
+                double v1 = 0.5 * z_a, v2 = 0.5 * z_b, v3 = z_a + z_b;
+
+                if (m == n) {
+                    v1 += 0.25;
+                    v2 += 0.25;
+                    v3 += 1.00;
+                }
+
                 if (m != m1) {
-                    d2aa.write_value(n, m, m1, m1, 0.5 * z_a, 0, "NULL", 0);
-                    d2bb.write_value(n, m, m1, m1, 0.5 * z_b, 0, "NULL", 0);
-                    d2aa.write_value(n, m1, m1, m, -0.5 * z_a, 0, "NULL", 0);
-                    d2bb.write_value(n, m1, m1, m, -0.5 * z_b, 0, "NULL", 0);
+
+                    d2aa.write_value(n, m, m1, m1,  v1, 0, "NULL", 0);
+                    d2bb.write_value(n, m, m1, m1,  v2, 0, "NULL", 0);
+                    d2aa.write_value(n, m1, m1, m, -v1, 0, "NULL", 0);
+                    d2bb.write_value(n, m1, m1, m, -v2, 0, "NULL", 0);
                 }
                 
-                d2ab.write_value(n, m, m1, m1, (z_a + z_b), 0, "NULL", 0);
+                d2ab.write_value(n, m, m1, m1, v3, 0, "NULL", 0);
             }
         }
     }
@@ -2885,15 +2918,21 @@ void DSRG_MRPT2::write_2rdm_spin_dependent() {
             auto idx = k * na_ + i;
             auto z_a = Z.block("aa").data()[idx];
             auto z_b = Z.block("AA").data()[idx];
+            auto gamma_a = Gamma1_.block("aa").data()[idx];
+            auto gamma_b = Gamma1_.block("AA").data()[idx];
+
+            auto v1 = z_a + gamma_a;
+            auto v2 = z_b + gamma_b;
+
             for (size_t j = 0, size_c = core_all_.size(); j < size_c; ++j) {
                 auto m1 = core_all_[j];
                 
-                d2aa.write_value(v, u, m1, m1, 0.5 * z_a, 0, "NULL", 0);
-                d2bb.write_value(v, u, m1, m1, 0.5 * z_b, 0, "NULL", 0);
-                d2aa.write_value(v, m1, m1, u, -0.5 * z_a, 0, "NULL", 0);
-                d2bb.write_value(v, m1, m1, u, -0.5 * z_b, 0, "NULL", 0);
+                d2aa.write_value(v, u, m1, m1, 0.5 * v1, 0, "NULL", 0);
+                d2bb.write_value(v, u, m1, m1, 0.5 * v2, 0, "NULL", 0);
+                d2aa.write_value(v, m1, m1, u, -0.5 * v1, 0, "NULL", 0);
+                d2bb.write_value(v, m1, m1, u, -0.5 * v2, 0, "NULL", 0);
                 
-                d2ab.write_value(v, u, m1, m1, (z_a + z_b), 0, "NULL", 0);
+                d2ab.write_value(v, u, m1, m1, (v1 + v2), 0, "NULL", 0);
             }
         }
     }
@@ -2998,6 +3037,11 @@ void DSRG_MRPT2::write_2rdm_spin_dependent() {
     temp["EVXY"] += Z["EU"] * Gamma2["UVXY"];
     temp["eVxY"] += Z["eu"] * Gamma2["uVxY"];
 
+    // CASSCF reference
+    temp["xyuv"] += 0.25 * Gamma2["uvxy"];
+    temp["XYUV"] += 0.25 * Gamma2["UVXY"];
+    temp["xYuV"] += 0.25 * Gamma2["uVxY"];
+
     // all-alpha and all-beta
     temp2["ckdl"] += temp["cdkl"];
     temp2["cldk"] -= temp["cdkl"];
@@ -3017,6 +3061,7 @@ void DSRG_MRPT2::write_2rdm_spin_dependent() {
     temp["v,v1,u,u1"] += Z["uv"] * Gamma1["u1,v1"];
     temp["V,V1,U,U1"] += Z["UV"] * Gamma1["U1,V1"];
     temp["v,V1,u,U1"] += Z["uv"] * Gamma1["U1,V1"];
+
 
     // all-alpha and all-beta
     temp2["ckdl"] += temp["cdkl"];
