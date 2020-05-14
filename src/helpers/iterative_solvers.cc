@@ -92,6 +92,10 @@ void DavidsonLiuSolver::set_e_convergence(double value) { e_convergence_ = value
 
 void DavidsonLiuSolver::set_r_convergence(double value) { r_convergence_ = value; }
 
+double DavidsonLiuSolver::get_e_convergence() const { return e_convergence_; }
+
+double DavidsonLiuSolver::get_r_convergence() const { return r_convergence_; }
+
 void DavidsonLiuSolver::set_collapse_per_root(int value) { collapse_per_root_ = value; }
 
 void DavidsonLiuSolver::set_subspace_per_root(int value) { subspace_per_root_ = value; }
@@ -195,7 +199,7 @@ SolverStatus DavidsonLiuSolver::update() {
     for (size_t k = 0; k < nroot_; k++) {
         if (basis_size_ < subspace_size_) {
             // check that the norm of the correction vector (before normalization) is "not small"
-            if (f_norm[k] > schmidt_threshold_) {
+            if (f_norm[k] > 0.1 * r_convergence_) {
                 // Schmidt-orthogonalize the correction vector
                 if (schmidt_add(b_->pointer(), basis_size_, size_, f->pointer()[k])) {
                     basis_size_++; // <- Increase L if we add one more basis vector

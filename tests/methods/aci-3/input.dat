@@ -19,9 +19,8 @@ H -0.1  0.5 1.0
 
 set {
   basis cc-pVDZ
-  e_convergence 10
-  d_convergence 10
-  r_convergence 10
+  e_convergence 12
+  d_convergence  6
   scf_type pk
   guess gwh
 }
@@ -30,6 +29,8 @@ set forte {
   multiplicity 1
   ms 0.0
   active_space_solver aci
+  e_convergence 11
+  r_convergence  7
   sigma 0.001000
   nroot 1
   charge 0

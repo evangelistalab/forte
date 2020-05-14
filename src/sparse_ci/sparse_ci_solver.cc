@@ -507,6 +507,8 @@ bool SparseCISolver::davidson_liu_solver(const DeterminantHashVec& space,
 
     if (print_details_) {
         outfile->Printf("\n\n  ==> Diagonalizing Hamiltonian <==\n");
+        outfile->Printf("\n  Energy   convergence: %.2e", dls.get_e_convergence());
+        outfile->Printf("\n  Residual convergence: %.2e", dls.get_r_convergence());
         outfile->Printf("\n  -----------------------------------------------------");
         outfile->Printf("\n    Iter.      Avg. Energy       Delta_E     Res. Norm");
         outfile->Printf("\n  -----------------------------------------------------");

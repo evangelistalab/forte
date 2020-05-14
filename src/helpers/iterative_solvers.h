@@ -85,6 +85,10 @@ class DavidsonLiuSolver {
     void set_e_convergence(double value);
     /// Set the residual convergence
     void set_r_convergence(double value);
+    /// Get the energy convergence
+    double get_e_convergence() const;
+    /// Get the residual convergence
+    double get_r_convergence() const;
     /// Set the number of collapse vectors for each root
     void set_collapse_per_root(int value);
     /// Set the maximum subspace size for each root
@@ -151,7 +155,7 @@ class DavidsonLiuSolver {
     /// Residual convergence threshold
     double r_convergence_ = 1.0e-6;
     /// The threshold used to discard correction vectors
-    double schmidt_threshold_ = 1.0e-6;
+    double schmidt_threshold_ = 1.0e-8;
     /// The dimension of the vectors
     size_t size_;
     /// The number of roots requested
