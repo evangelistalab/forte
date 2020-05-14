@@ -35,7 +35,7 @@
 #include "helpers/iterative_solvers.h"
 
 #define PRINT_VARS(msg)                                                                            \
-//    std::vector<std::pair<size_t,std::string>> v = \
+    //    std::vector<std::pair<size_t,std::string>> v = \
 //        {{collapse_size_,"collapse_size_"}, \
 //        {subspace_size_,"subspace_size_"}, \
 //        {basis_size_,"basis_size_"}, \
@@ -62,10 +62,11 @@ void DavidsonLiuSolver::startup(psi::SharedVector diagonal) {
     subspace_size_ = std::min(subspace_per_root_ * nroot_, size_);
 
     basis_size_ = 0; // start with no vectors
-    sigma_size_ = 0; // start with no sigmas vectors
+    sigma_size_ = 0; // start with no sigma vectors
     iter_ = 0;
     converged_ = 0;
 
+    // store the basis vectors (each row is a vector)
     b_ = std::make_shared<psi::Matrix>("b", subspace_size_, size_);
     b_->zero();
     bnew = std::make_shared<psi::Matrix>("bnew", subspace_size_, size_);
@@ -77,8 +78,8 @@ void DavidsonLiuSolver::startup(psi::SharedVector diagonal) {
     alpha = std::make_shared<psi::Matrix>("alpha", subspace_size_, subspace_size_);
 
     lambda = std::make_shared<psi::Vector>("lambda", subspace_size_);
-    lambda_old = std::make_shared<psi::Vector>("lambda", subspace_size_);
-    h_diag = std::make_shared<psi::Vector>("lambda", size_);
+    lambda_old = std::make_shared<psi::Vector>("lambda_old", subspace_size_);
+    h_diag = std::make_shared<psi::Vector>("h_diag", size_);
 
     h_diag->copy(*diagonal);
 }
@@ -183,26 +184,21 @@ SolverStatus DavidsonLiuSolver::update() {
     // form preconditioned residue vectors
     form_correction_vectors();
 
-    //    psi::SharedMatrix old_f;
-    //    old_f = f->clone();
     // Step #3b: Project out undesired roots
     project_out_roots(f);
-    //    old_f->subtract(f);
-    //    outfile->Printf("\n Residual: %1.8f", old_f->sum_of_squares());
 
-    // Step #4: Orthonormalize the Correction Vectors
-    normalize_vectors(f, nroot_);
+    // Step #4: Normalize the Correction Vectors
+    auto f_norm = normalize_vectors(f, nroot_);
 
     // schmidt orthogonalize the f[k] against the set of b[i] and add new
     // vectors
     for (size_t k = 0; k < nroot_; k++) {
         if (basis_size_ < subspace_size_) {
-            double norm_bnew_k = std::fabs(f->get_row(0, k)->norm());
-            if (norm_bnew_k > schmidt_threshold_) {
+            // check that the norm of the correction vector (before normalization) is "not small"
+            if (f_norm[k] > schmidt_threshold_) {
+                // Schmidt-orthogonalize the correction vector
                 if (schmidt_add(b_->pointer(), basis_size_, size_, f->pointer()[k])) {
-                    basis_size_++; // <- Increase L if we add one more basis
-                                   // vector
-                } else {
+                    basis_size_++; // <- Increase L if we add one more basis vector
                 }
             }
         }
@@ -280,8 +276,9 @@ void DavidsonLiuSolver::project_out_roots(psi::SharedMatrix v) {
     }
 }
 
-void DavidsonLiuSolver::normalize_vectors(psi::SharedMatrix v, size_t n) {
+std::vector<double> DavidsonLiuSolver::normalize_vectors(psi::SharedMatrix v, size_t n) {
     // normalize each residual
+    std::vector<double> v_norm;
     double** v_p = v->pointer();
     for (size_t k = 0; k < n; k++) {
         double norm = 0.0;
@@ -289,10 +286,13 @@ void DavidsonLiuSolver::normalize_vectors(psi::SharedMatrix v, size_t n) {
             norm += v_p[k][I] * v_p[k][I];
         }
         norm = std::sqrt(norm);
+        v_norm.push_back(norm);
+        outfile->Printf("\n  Norm of vector %zu = %e", k, norm);
         for (size_t I = 0; I < size_; I++) {
             v_p[k][I] /= norm;
         }
     }
+    return v_norm;
 }
 
 bool DavidsonLiuSolver::subspace_collapse() {

@@ -134,8 +134,9 @@ class DavidsonLiuSolver {
     void compute_residual_norm();
     /// Project out undesired roots
     void project_out_roots(psi::SharedMatrix v);
-    /// Normalize the correction vectors
-    void normalize_vectors(psi::SharedMatrix v, size_t n);
+    /// Normalize the correction vectors and return the norm of the vectors before they were
+    /// normalized
+    std::vector<double> normalize_vectors(psi::SharedMatrix v, size_t n);
     /// Perform subspace collapse
     bool subspace_collapse();
     /// Collapse the vectors
@@ -149,8 +150,8 @@ class DavidsonLiuSolver {
     double e_convergence_ = 1.0e-12;
     /// Residual convergence threshold
     double r_convergence_ = 1.0e-6;
-    /// The threshold used to discard vectors
-    double schmidt_threshold_ = 1.0e-3;
+    /// The threshold used to discard correction vectors
+    double schmidt_threshold_ = 1.0e-6;
     /// The dimension of the vectors
     size_t size_;
     /// The number of roots requested
@@ -172,7 +173,7 @@ class DavidsonLiuSolver {
     double timing_ = 0.0;
     bool last_update_collapsed_ = false;
 
-    /// Current set of guess vectors stored by row
+    /// Current set of basis vectors stored by row
     psi::SharedMatrix b_;
     /// Guess vectors formed from old vectors, stored by row
     psi::SharedMatrix bnew;
