@@ -75,7 +75,7 @@ void ExcitedStateSolver::set_options(std::shared_ptr<ForteOptions> options) {
     }
 
     core_ex_ = options->get_bool("SCI_CORE_EX");
-    quiet_mode_ = options->get_bool("ACI_QUIET_MODE");
+    quiet_mode_ = options->get_bool("SCI_QUIET_MODE");
     direct_rdms_ = options->get_bool("SCI_DIRECT_RDMS");
     test_rdms_ = options->get_bool("SCI_TEST_RDMS");
     save_final_wfn_ = options->get_bool("SCI_SAVE_FINAL_WFN");
@@ -424,7 +424,7 @@ void ExcitedStateSolver::print_wfn(DeterminantHashVec& space, std::shared_ptr<ps
 
         psi::outfile->Printf("\n\n  Most important contributions to root %3d:", n);
 
-        size_t max_dets = std::min(10, evecs->nrow());
+        size_t max_dets = std::min(100, evecs->nrow());
         tmp.subspace(space, evecs, tmp_evecs, max_dets, n);
 
         for (size_t I = 0; I < max_dets; ++I) {

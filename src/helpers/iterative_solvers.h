@@ -131,7 +131,8 @@ class DavidsonLiuSolver {
     /// Check that the eigenvectors are orthogonal
     bool check_orthogonality();
     /// Check if the the iterative procedure has converged
-    bool check_convergence();
+    /// @return a pair of boolean (is_energy_converged,is_residual_converged)
+    std::pair<bool, bool> check_convergence();
     /// Build the correction vectors
     void form_correction_vectors();
     /// Compute the 2-norm of the residual

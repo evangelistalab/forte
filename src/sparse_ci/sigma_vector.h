@@ -56,6 +56,9 @@ class SigmaVector {
         : space_(space), fci_ints_(fci_ints), size_(space.size()),
           sigma_vector_type_(sigma_vector_type), label_(label) {}
 
+    /// Virtual destructor to enable deletion of a Derived* through a Base*
+    virtual ~SigmaVector() = default;
+
     size_t size() { return size_; }
 
     std::shared_ptr<ActiveSpaceIntegrals> as_ints() { return fci_ints_; }

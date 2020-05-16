@@ -11,6 +11,7 @@ def register_forte_options(options):
     register_pt2_options(options)
     register_pci_options(options)
     register_fci_options(options)
+    register_sci_options(options)
     register_aci_options(options)
     register_asci_options(options)
     register_fci_mo_options(options)
@@ -367,6 +368,14 @@ def register_fci_options(options):
         'NTRIAL_PER_ROOT', 10,
         'The number of trial guess vectors to generate per root')
 
+def register_sci_options(options):
+    options.set_group("SCI")
+
+    options.add_bool("SCI_ENFORCE_SPIN_COMPLETE", True,
+                           "Enforce determinant spaces to be spin-complete?")
+
+    options.add_bool("SCI_ENFORCE_SPIN_COMPLETE_P", False,
+                           "Enforce determinant in the P space to be spin-complete?")
 
 def register_aci_options(options):
     options.set_group("ACI")
@@ -401,12 +410,6 @@ def register_aci_options(options):
      2 - Project only after converged PQ space
      3 - Do 1 and 2""")
 
-    options.add_bool("ACI_ENFORCE_SPIN_COMPLETE", True,
-                           "Enforce determinant spaces to be spin-complete?")
-
-    options.add_bool("ACI_ENFORCE_SPIN_COMPLETE_P", False,
-                           "Enforce determinant in the P space to be spin-complete?")
-
     options.add_bool(
         "SCI_PROJECT_OUT_SPIN_CONTAMINANTS", True,
         "Project out spin contaminants in Davidson-Liu's algorithm?")
@@ -421,13 +424,13 @@ def register_aci_options(options):
 
     options.add_int("SCI_MAX_CYCLE", 20, "Maximum number of cycles")
 
-    options.add_bool("ACI_QUIET_MODE", False,
+    options.add_bool("SCI_QUIET_MODE", False,
                            "Print during ACI procedure?")
 
    # options.add_bool("ACI_STREAMLINE_Q", False,
    #                        "Do streamlined algorithm?")
 
-    options.add_int("ACI_PREITERATIONS", 0,
+    options.add_int("SCI_PREITERATIONS", 0,
                           "Number of iterations to run SA-ACI before SS-ACI")
 
     options.add_int("ACI_N_AVERAGE", 1, "Number of roots to averag")
@@ -440,7 +443,7 @@ def register_aci_options(options):
 
     options.add_bool("ACI_PRINT_REFS", False, "Print the P space?")
 
-    options.add_int("DL_GUESS_SIZE", 100,
+    options.add_int("DL_GUESS_SIZE",26,
                           "Set the initial guess space size for DL solver")
 
     options.add_int("N_GUESS_VEC", 10,

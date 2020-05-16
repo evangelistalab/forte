@@ -34,7 +34,7 @@ set forte {
   sigma 0.07
   nroot 1
   charge 0
-  aci_enforce_spin_complete true
+  sci_enforce_spin_complete true
   aci_add_aimed_degenerate true
   sci_project_out_spin_contaminants true
 }

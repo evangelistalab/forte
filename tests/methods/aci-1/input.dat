@@ -16,8 +16,7 @@ molecule li2{
 set {
   basis DZ
   e_convergence 10
-  d_convergence 10
-  r_convergence 10
+  d_convergence  8
   guess gwh
 }
 
@@ -35,8 +34,8 @@ set forte {
   nroot 1
   root_sym 0
   charge 0
-  aci_enforce_spin_complete false
-  r_convergence 0.1
+  sci_enforce_spin_complete false
+#  r_convergence 0.1
   active_ref_type hf 
 }
 

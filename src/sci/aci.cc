@@ -27,6 +27,8 @@
  * @END LICENSE
  */
 
+#include <algorithm>
+
 #include "psi4/libmints/molecule.h"
 #include "psi4/libmints/pointgrp.h"
 #include "psi4/physconst.h"
@@ -61,53 +63,20 @@ AdaptiveCI::AdaptiveCI(StateInfo state, size_t nroot, std::shared_ptr<SCFInfo> s
                        std::shared_ptr<ForteOptions> options,
                        std::shared_ptr<MOSpaceInfo> mo_space_info,
                        std::shared_ptr<ActiveSpaceIntegrals> as_ints)
-    : SelectedCIMethod(state, nroot, scf_info, mo_space_info, as_ints), options_(options) {
-    // select the sigma vector type
-    sigma_vector_type_ = string_to_sigma_vector_type(options_->get_str("DIAG_ALGORITHM"));
-    mo_symmetry_ = mo_space_info_->symmetry("ACTIVE");
-    sigma_ = options_->get_double("SIGMA");
-    nuclear_repulsion_energy_ = as_ints->ints()->nuclear_repulsion_energy();
-    nroot_ = nroot;
+    : SelectedCIMethod(state, nroot, scf_info, options, mo_space_info, as_ints) {
     startup();
 }
 
 void AdaptiveCI::startup() {
-    quiet_mode_ = options_->get_bool("ACI_QUIET_MODE");
-
-    wavefunction_symmetry_ = state_.irrep();
-    multiplicity_ = state_.multiplicity();
-
-    nact_ = mo_space_info_->size("ACTIVE");
-    nactpi_ = mo_space_info_->dimension("ACTIVE");
-
-    // Include frozen_docc and restricted_docc
-    frzcpi_ = mo_space_info_->dimension("INACTIVE_DOCC");
-    nfrzc_ = mo_space_info_->size("INACTIVE_DOCC");
-
-    nalpha_ = state_.na() - nfrzc_;
-    nbeta_ = state_.nb() - nfrzc_;
-
-    // "Correlated" includes restricted_docc
-    ncmo_ = mo_space_info_->size("CORRELATED");
-
-    nirrep_ = mo_space_info_->nirrep();
-
-    twice_ms_ = state_.twice_ms();
-
-    // Read options
+    // Read ACI-specific options
+    sigma_ = options_->get_double("SIGMA");
     gamma_ = options_->get_double("GAMMA");
     screen_thresh_ = options_->get_double("ACI_PRESCREEN_THRESHOLD");
     add_aimed_degenerate_ = options_->get_bool("ACI_ADD_AIMED_DEGENERATE");
-    project_out_spin_contaminants_ = options_->get_bool("SCI_PROJECT_OUT_SPIN_CONTAMINANTS");
-    spin_complete_ = options_->get_bool("ACI_ENFORCE_SPIN_COMPLETE");
-    spin_complete_P_ = options_->get_bool("ACI_ENFORCE_SPIN_COMPLETE_P");
-
-    max_cycle_ = options_->get_int("SCI_MAX_CYCLE");
-
-    pre_iter_ = options_->get_int("ACI_PREITERATIONS");
 
     spin_tol_ = options_->get_double("ACI_SPIN_TOL");
-    // set the initial S^@ guess as input multiplicity
+
+    // set the initial S^2 guess as input multiplicity
     int S = (multiplicity_ - 1.0) / 2.0;
     int S2 = multiplicity_ - 1.0;
     for (int n = 0; n < nroot_; ++n) {
@@ -119,8 +88,6 @@ void AdaptiveCI::startup() {
     print_weights_ = options_->get_bool("ACI_PRINT_WEIGHTS");
 
     hole_ = 0;
-
-    max_memory_ = options_->get_int("SIGMA_VECTOR_MAX_MEMORY");
 
     // Decide when to compute coupling lists
     build_lists_ = true;
@@ -612,7 +579,7 @@ void AdaptiveCI::pre_iter_preparation() {
 void AdaptiveCI::diagonalize_P_space() {
     cycle_time_.reset();
     // Step 1. Diagonalize the Hamiltonian in the P space
-    num_ref_roots_ = std::min(nroot_, int(P_space_.size()));
+    num_ref_roots_ = std::min(nroot_, P_space_.size());
     std::string cycle_h = "Cycle " + std::to_string(cycle_);
 
     follow_ = false;
@@ -690,7 +657,7 @@ void AdaptiveCI::diagonalize_P_space() {
 void AdaptiveCI::diagonalize_PQ_space() {
     print_h2("Diagonalizing the Hamiltonian in the P + Q space");
 
-    num_ref_roots_ = std::min(nroot_, int(PQ_space_.size()));
+    num_ref_roots_ = std::min(nroot_, PQ_space_.size());
 
     // Step 3. Diagonalize the Hamiltonian in the P + Q space
     local_timer diag_pq;
@@ -730,7 +697,7 @@ void AdaptiveCI::diagonalize_PQ_space() {
         outfile->Printf("\n");
     }
 
-    num_ref_roots_ = std::min(nroot_, int(PQ_space_.size()));
+    num_ref_roots_ = std::min(nroot_, PQ_space_.size());
 
     // If doing root-following, grab the initial root
     if (follow_ and ((pre_iter_ == 0 and cycle_ == 0) or cycle_ == (pre_iter_ - 1))) {

@@ -29,7 +29,7 @@ set {
 
 set forte {
   active_space_solver aci
-  aci_enforce_spin_complete false
+  sci_enforce_spin_complete false
   sigma 0.001
   nroot 1
   charge 0
@@ -37,7 +37,7 @@ set forte {
   spin_analysis true
   spin_basis NO
   spin_test true
-  r_convergence 1
+  r_convergence 6
   e_convergence 12
 }
 

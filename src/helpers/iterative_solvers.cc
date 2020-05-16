@@ -35,15 +35,14 @@
 #include "helpers/iterative_solvers.h"
 
 #define PRINT_VARS(msg)                                                                            \
-    //    std::vector<std::pair<size_t,std::string>> v = \
-//        {{collapse_size_,"collapse_size_"}, \
-//        {subspace_size_,"subspace_size_"}, \
-//        {basis_size_,"basis_size_"}, \
-//        {sigma_size_,"sigma_size_"}, \
-//        {nroot_,"nroot_"}}; \
-//    outfile->Printf("\n\n => %s <=",msg); \
-//    for (auto vk : v){ \
-//        outfile->Printf("\n    %-30s  %zu",vk.second.c_str(),vk.first); \
+    //    std::vector<std::pair<size_t, std::string>> v = {{collapse_size_, "collapse_size_"},           \
+//                                                     {subspace_size_, "subspace_size_"},           \
+//                                                     {basis_size_, "basis_size_"},                 \
+//                                                     {sigma_size_, "sigma_size_"},                 \
+//                                                     {nroot_, "nroot_"}};                          \
+//    outfile->Printf("\n\n => %s <=", msg);                                                         \
+//    for (auto vk : v) {                                                                            \
+//        outfile->Printf("\n    %-30s  %zu", vk.second.c_str(), vk.first);                          \
 //    }
 
 using namespace psi;
@@ -164,8 +163,13 @@ SolverStatus DavidsonLiuSolver::update() {
     G->gemm(false, false, 1.0, b_, sigma_, 0.0);
     G->diagonalize(alpha, lambda);
 
+    bool is_energy_converged = false;
+    bool is_residual_converged = false;
     if (not last_update_collapsed_) {
-        if (check_convergence()) {
+        auto converged = check_convergence();
+        is_energy_converged = converged.first;
+        is_residual_converged = converged.second;
+        if (is_energy_converged and is_residual_converged) {
             get_results();
             return SolverStatus::Converged;
         }
@@ -196,16 +200,26 @@ SolverStatus DavidsonLiuSolver::update() {
 
     // schmidt orthogonalize the f[k] against the set of b[i] and add new
     // vectors
+    size_t num_added = 0;
     for (size_t k = 0; k < nroot_; k++) {
         if (basis_size_ < subspace_size_) {
             // check that the norm of the correction vector (before normalization) is "not small"
-            if (f_norm[k] > 0.1 * r_convergence_) {
+            if (f_norm[k] > 0.01 * r_convergence_) {
                 // Schmidt-orthogonalize the correction vector
                 if (schmidt_add(b_->pointer(), basis_size_, size_, f->pointer()[k])) {
                     basis_size_++; // <- Increase L if we add one more basis vector
+                    num_added += 1;
+                } else {
+                    outfile->Printf("\n  Rejected new correction vector %d with norm: %f", k,
+                                    f_norm[k]);
                 }
             }
         }
+    }
+
+    // if we do not add any new vector then we are in trouble and we better finish the computation
+    if ((num_added == 0) and is_energy_converged) {
+        return SolverStatus::Converged;
     }
 
     iter_++;
@@ -231,8 +245,9 @@ void DavidsonLiuSolver::form_correction_vectors() {
                 f_p[k][I] += alpha_p[i][k] * (sigma_p[I][i] - lambda_p[k] * b_p[i][I]);
             }
             residual_[k] += std::pow(f_p[k][I], 2.0);
+
             double denom = lambda_p[k] - Adiag_p[I];
-            if (std::fabs(denom) > 1e-6) {
+            if (std::fabs(denom) > 1.0e-6) {
                 f_p[k][I] /= denom;
             } else {
                 f_p[k][I] = 0.0;
@@ -371,33 +386,42 @@ void DavidsonLiuSolver::collapse_vectors() {
     }
 }
 
-bool DavidsonLiuSolver::check_convergence() {
+std::pair<bool, bool> DavidsonLiuSolver::check_convergence() {
     compute_residual_norm();
     // check convergence on all roots
-    bool has_converged = false;
+    int num_converged_energy = 0;
+    int num_converged_residual = 0;
     converged_ = 0;
     if (print_level_ > 1) {
         outfile->Printf("\n  Root      Eigenvalue        Delta   Converged?\n");
         outfile->Printf("  ---- -------------------- --------- ----------\n");
     }
     for (size_t k = 0; k < nroot_; k++) {
+        // check if the energy converged
         double diff = std::fabs(lambda->get(k) - lambda_old->get(k));
-        bool this_converged = false;
-        if ((diff < e_convergence_) and (residual_[k] < r_convergence_)) {
-            this_converged = true;
+        bool this_energy_converged = (diff < e_convergence_);
+        // check if the residual converged
+        bool this_residual_converged = (residual_[k] < r_convergence_);
+        // update counters
+        num_converged_energy += this_energy_converged;
+        num_converged_residual += this_residual_converged;
+
+        if (this_energy_converged and this_residual_converged) {
             converged_++;
         }
+        // update the old eigenvalue
         lambda_old->set(k, lambda->get(k));
+
         if (print_level_ > 1) {
+            bool this_converged = (this_energy_converged and this_residual_converged);
             outfile->Printf("  %3d  %20.14f %4.3e      %1s\n", k, lambda->get(k), diff,
                             this_converged ? "Y" : "N");
         }
     }
 
-    if (converged_ == nroot_) {
-        has_converged = true;
-    }
-    return has_converged;
+    bool is_energy_converged = (num_converged_energy == nroot_);
+    bool is_residual_converged = (num_converged_residual == nroot_);
+    return std::make_pair(is_energy_converged, is_residual_converged);
 }
 
 void DavidsonLiuSolver::get_results() {
