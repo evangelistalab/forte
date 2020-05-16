@@ -118,11 +118,6 @@ void SADSRG::startup() {
 
     // check if using semicanonical orbitals
     semi_canonical_ = check_semi_orbs();
-
-    // set up file name prefix
-    filename_prefix_ = psi::PSIOManager::shared_object()->get_default_path() + "forte." +
-                       std::to_string(getpid()) + "." +
-                       psi::Process::environment.molecule()->name();
 }
 
 void SADSRG::read_options() {

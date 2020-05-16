@@ -46,14 +46,14 @@ std::string SADSRG::write_disk_BT(BlockedTensor& BT, const std::string& name) {
 
     for (const std::string& block : block_labels) {
         size_t nele = BT.block(block).numel();
-        std::string filename = filename_prefix_ + "." + name + "." + block + ".bin";
+        std::string filename = restart_file_prefix_ + "." + name + "." + block + ".bin";
         block_file_names.push_back(block + " " + filename + " " + std::to_string(nele));
         write_disk_vector_double(filename, BT.block(block).data(), true);
     }
 
     // write master file
     std::ofstream of;
-    std::string filename = filename_prefix_ + "." + name + ".master.txt";
+    std::string filename = restart_file_prefix_ + "." + name + ".master.txt";
     of.open(filename, std::ios::trunc);
     for (const std::string& str : block_file_names) {
         of << str << std::endl;

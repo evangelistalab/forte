@@ -85,6 +85,14 @@ class SA_MRDSRG : public SADSRG {
     /// Read amplitudes from previous computations
     bool restart_;
 
+    /// Prefix for file name for restart
+    std::string restart_file_prefix_;
+
+    /// Dump amplitudes to current directory
+    bool dump_amps_cwd_;
+    /// Read amplitudes from current directory
+    bool read_amps_cwd_;
+
     /// Correlation level option
     std::string corrlv_string_;
 
@@ -146,7 +154,7 @@ class SA_MRDSRG : public SADSRG {
     void update_t1();
 
     /// Dump the converged amplitudes to file
-    void dump_amps_to_file();
+    void dump_amps_to_disk();
 
     /// Compute DSRG-transformed Hamiltonian
     void compute_hbar();

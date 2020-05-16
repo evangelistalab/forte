@@ -28,7 +28,10 @@
 
 #include <algorithm>
 
+#include "psi4/libmints/molecule.h"
+#include "psi4/libpsi4util/process.h"
 #include "psi4/libpsi4util/PsiOutStream.h"
+#include "psi4/libpsio/psio.hpp"
 
 #include "helpers/printing.h"
 #include "sa_mrdsrg.h"
@@ -71,6 +74,8 @@ void SA_MRDSRG::read_options() {
     r_conv_ = foptions_->get_double("R_CONVERGENCE");
 
     restart_ = foptions_->get_bool("DSRG_RESTART");
+    dump_amps_cwd_ = foptions_->get_bool("DSRG_DUMP_AMPS");
+    read_amps_cwd_ = foptions_->get_bool("DSRG_READ_AMPS");
 }
 
 void SA_MRDSRG::startup() {
@@ -86,6 +91,11 @@ void SA_MRDSRG::startup() {
         U_ = ambit::BlockedTensor::build(tensor_type_, "U", {"gg"});
         Fdiag_ = diagonalize_Fock_diagblocks(U_);
     }
+
+    // determine file names
+    restart_file_prefix_ = psi::PSIOManager::shared_object()->get_default_path() + "forte." +
+                           std::to_string(getpid()) + "." +
+                           psi::Process::environment.molecule()->name();
 }
 
 void SA_MRDSRG::print_options() {
@@ -126,6 +136,8 @@ void SA_MRDSRG::print_options() {
         {"Sequential DSRG transformation", true_false_string(sequential_Hbar_)});
     calculation_info_string.push_back(
         {"Omit blocks of >= 3 virtual indices", true_false_string(nivo_)});
+    calculation_info_string.push_back({"Read amplitudes from CWD", true_false_string(read_amps_cwd_)});
+    calculation_info_string.push_back({"Write amplitudes to CWD", true_false_string(dump_amps_cwd_)});
 
     // print some information
     print_options_info("Computation Information", calculation_info_string, calculation_info_double,
@@ -203,7 +215,6 @@ double SA_MRDSRG::compute_energy() {
     // build initial amplitudes
     T1_ = BTF_->build(tensor_type_, "T1 Amplitudes", {"hp"});
     T2_ = BTF_->build(tensor_type_, "T2 Amplitudes", {"hhpp"});
-
     guess_t(V_, T2_, F_, T1_, B_);
 
     // get reference energy
@@ -219,11 +230,8 @@ double SA_MRDSRG::compute_energy() {
     //    default: { Etotal += compute_energy_ldsrg2_qc(); }
     //    }
 
-    // dump amplitudes to file
-    bool restart_useful = (relax_ref_ != "NONE" or multi_state_);
-    if (restart_ and restart_useful) {
-        dump_amps_to_file();
-    }
+    // dump amplitudes to disk
+    dump_amps_to_disk();
 
     return Etotal;
 }

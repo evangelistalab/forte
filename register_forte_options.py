@@ -738,6 +738,10 @@ def register_dsrg_options(options):
 
     options.add_bool("DSRG_RESTART", True, "Restart DSRG amplitudes from a previous calculation")
 
+    options.add_bool("DSRG_READ_AMPS", False, "Read initial amplitudes from the current directory")
+
+    options.add_bool("DSRG_DUMP_AMPS", False, "Dump converged amplitudes to the current directory")
+
 def register_dwms_options(options):
     options.set_group("DWMS")
     options.add_double("DWMS_ZETA", 0.0, """Automatic Gaussian width cutoff for the density weights

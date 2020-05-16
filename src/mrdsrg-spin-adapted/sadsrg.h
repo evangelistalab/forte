@@ -164,10 +164,7 @@ class SADSRG : public DynamicCorrelationSolver {
     /// Number of threads
     int n_threads_;
 
-    // ==> file names for disk support <==
-
-    /// Prefix for file name
-    std::string filename_prefix_;
+    // ==> amplitudes file names <==
 
     /// Master checkpoint file for T1
     std::string t1_file_;
