@@ -1,0 +1,16 @@
+ccaa forte.mrdsrg.t2.ccaa.aaaa.bin 144
+ccav forte.mrdsrg.t2.ccav.aaaa.bin 432
+ccva forte.mrdsrg.t2.ccva.aaaa.bin 432
+ccvv forte.mrdsrg.t2.ccvv.aaaa.bin 1296
+caaa forte.mrdsrg.t2.caaa.aaaa.bin 432
+caav forte.mrdsrg.t2.caav.aaaa.bin 1296
+cava forte.mrdsrg.t2.cava.aaaa.bin 1296
+cavv forte.mrdsrg.t2.cavv.aaaa.bin 3888
+acaa forte.mrdsrg.t2.acaa.aaaa.bin 432
+acav forte.mrdsrg.t2.acav.aaaa.bin 1296
+acva forte.mrdsrg.t2.acva.aaaa.bin 1296
+acvv forte.mrdsrg.t2.acvv.aaaa.bin 3888
+aaaa forte.mrdsrg.t2.aaaa.aaaa.bin 1296
+aaav forte.mrdsrg.t2.aaav.aaaa.bin 3888
+aava forte.mrdsrg.t2.aava.aaaa.bin 3888
+aavv forte.mrdsrg.t2.aavv.aaaa.bin 11664

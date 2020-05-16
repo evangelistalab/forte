@@ -136,8 +136,10 @@ void SA_MRDSRG::print_options() {
         {"Sequential DSRG transformation", true_false_string(sequential_Hbar_)});
     calculation_info_string.push_back(
         {"Omit blocks of >= 3 virtual indices", true_false_string(nivo_)});
-    calculation_info_string.push_back({"Read amplitudes from CWD", true_false_string(read_amps_cwd_)});
-    calculation_info_string.push_back({"Write amplitudes to CWD", true_false_string(dump_amps_cwd_)});
+    calculation_info_string.push_back(
+        {"Read amplitudes from current dir", true_false_string(read_amps_cwd_)});
+    calculation_info_string.push_back(
+        {"Write amplitudes to current dir", true_false_string(dump_amps_cwd_)});
 
     // print some information
     print_options_info("Computation Information", calculation_info_string, calculation_info_double,
