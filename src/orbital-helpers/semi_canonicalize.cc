@@ -88,9 +88,6 @@ void SemiCanonical::startup() {
     Ua_ = std::make_shared<psi::Matrix>("Ua", nmopi_, nmopi_);
     Ub_ = std::make_shared<psi::Matrix>("Ub", nmopi_, nmopi_);
 
-    Ua_->identity();
-    Ub_->identity();
-
     // Preapare orbital rotation matrix, which transforms only active MOs
     Ua_t_ = ambit::Tensor::build(ambit::CoreTensor, "Ua", {nact_, nact_});
     Ub_t_ = ambit::Tensor::build(ambit::CoreTensor, "Ub", {nact_, nact_});
@@ -263,7 +260,6 @@ bool SemiCanonical::check_fock_matrix() {
         psi::SharedMatrix Fb(new psi::Matrix(name_b, npi, npi));
 
         for (size_t h = 0; h < nirrep_; ++h) {
-            // TODO: try omp here
             for (int i = 0; i < npi[h]; ++i) {
                 for (int j = 0; j < npi[h]; ++j) {
                     Fa->set(h, i, j, ints_->get_fock_a(cmo_idx_[name][h][i], cmo_idx_[name][h][j]));
@@ -342,7 +338,6 @@ void SemiCanonical::build_transformation_matrices(psi::SharedMatrix& Ua, psi::Sh
             psi::SharedMatrix Fb(new psi::Matrix(name_b, npi, npi));
 
             for (size_t h = 0; h < nirrep_; ++h) {
-                // TODO: try omp here
                 for (int i = 0; i < npi[h]; ++i) {
                     for (int j = 0; j < npi[h]; ++j) {
                         Fa->set(h, i, j,
@@ -364,7 +359,6 @@ void SemiCanonical::build_transformation_matrices(psi::SharedMatrix& Ua, psi::Sh
             // fill in Ua and Ub
             for (size_t h = 0; h < nirrep_; ++h) {
                 int offset = offsets_[name][h];
-                // TODO: try omp here
                 for (int i = 0; i < npi[h]; ++i) {
                     for (int j = 0; j < npi[h]; ++j) {
                         Ua->set(h, offset + i, offset + j, UsubA->get(h, i, j));
@@ -372,18 +366,48 @@ void SemiCanonical::build_transformation_matrices(psi::SharedMatrix& Ua, psi::Sh
                     }
                 }
             }
+        }
+    }
 
-            // fill in UaData and UbData if this block is active
-            if (name.find("actv") != std::string::npos) {
-                for (size_t h = 0; h < nirrep_; ++h) {
-                    int actv_off = actv_offsets_[name][h];
-                    for (int u = 0; u < npi[h]; ++u) {
-                        for (int v = 0; v < npi[h]; ++v) {
-                            int nu = actv_off + u;
-                            int nv = actv_off + v;
-                            UaData[nu * nact_ + nv] = UsubA->get(h, u, v);
-                            UbData[nu * nact_ + nv] = UsubB->get(h, u, v);
-                        }
+    // keep phase and order unchanged
+    auto Cnew = psi::linalg::doublet(ints_->Ca(), Ua, false, false);
+    auto Smo = psi::linalg::triplet(ints_->Ca(), ints_->wfn()->S(), Cnew, true, false, false);
+    auto T = Ua->clone();
+    T->zero();
+    for (int h = 0; h < nirrep_; ++h) {
+        for (int q = 0; q < T->coldim(h); ++q) {
+            double max = 0.0;
+            size_t temp = q;
+            double sign = 1.0;
+            for (int p = 0; p < T->rowdim(h); ++p) {
+                if (std::fabs(Smo->get(h, p, q)) > max) {
+                    max = std::fabs(Smo->get(h, p, q));
+                    temp = p;
+                    sign = Smo->get(h, p, q) < 0 ? -1.0 : 1.0;
+                }
+            }
+            T->set(h, temp, q, sign);
+        }
+    }
+    Ua = psi::linalg::doublet(Ua, T, false, false);
+    Ub = Ua->clone();
+
+    // fill in UaData and UbData
+    for (const auto& name_dim_pair : mo_dims_) {
+        std::string name = name_dim_pair.first;
+        psi::Dimension npi = name_dim_pair.second;
+        bool FockDo = checked_results_[name];
+
+        if (FockDo and (name.find("actv") != std::string::npos)) {
+            for (size_t h = 0; h < nirrep_; ++h) {
+                int actv_off = actv_offsets_[name][h];
+                int offset = offsets_[name][h];
+                for (int u = 0; u < npi[h]; ++u) {
+                    for (int v = 0; v < npi[h]; ++v) {
+                        int nu = actv_off + u;
+                        int nv = actv_off + v;
+                        UaData[nu * nact_ + nv] = Ua->get(h, offset + u, offset + v);
+                        UbData[nu * nact_ + nv] = Ub->get(h, offset + u, offset + v);
                     }
                 }
             }
