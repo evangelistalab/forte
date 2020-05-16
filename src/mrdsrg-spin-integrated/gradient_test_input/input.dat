@@ -4,7 +4,7 @@ import forte
 
 
 molecule HF {
-0 1
+0 3
 H
 F 1 1.3
 # symmetry c1
@@ -12,11 +12,12 @@ F 1 1.3
 
 set {
 basis 3-21g
-reference rhf
+reference rohf
 scf_type pk
 e_convergence 10
 d_convergence 10
-
+docc [2,0,1,1]
+socc [2,0,0,0]
    mcscf_type           conv
    mcscf_maxiter        100
    mcscf_diis_start     20
@@ -30,14 +31,12 @@ set scf_type direct
 set forte {
 active_space_solver cas
 correlation_solver dsrg-mrpt2
-# restricted_docc [5]
-# active [6]
-restricted_docc [3,0,1,1]
-active          [4,0,1,1]
+restricted_docc [2,0,1,1]
+active [2,0,0,0]
 dsrg_s 1.0
    dsrgpt               true
    print_denom2         true
-   multiplicity         1 
+   multiplicity         3 
 }
 
 # set forte{
@@ -46,8 +45,8 @@ dsrg_s 1.0
 #    CASSCF_ITERATIONS      100
 #    CASSCF_G_CONVERGENCE   1e-8
 #    CASSCF_E_CONVERGENCE   1e-8
-#   restricted_docc [3,0,1,1]
-#   active          [4,0,1,1]
+#    restricted_docc [2,0,1,1]
+#    active          [2,0,0,0]
 #    int_type             conventional
 #    casscf_ci_solver      cas
 #    print                 0
@@ -55,12 +54,12 @@ dsrg_s 1.0
 #    dertype               first
 # }
 
-# energy("forte")
+
 grad = gradient('forte')
 
 set findif{ 
   points 5
-  DISP_SIZE 0.01
+  # DISP_SIZE 0.01
 }
 # grad = gradient('forte',dertype="energy")
 

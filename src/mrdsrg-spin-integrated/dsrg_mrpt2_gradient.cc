@@ -435,7 +435,8 @@ void DSRG_MRPT2::set_w() {
     W_["zw"] -= 0.5 * Z["n1,u"] * V["x,y,n1,z"] * Gamma2["u,w,x,y"];
     W_["zw"] -= Z["N1,U"] * V["y,X,z,N1"] * Gamma2["w,U,y,X"];
     W_["zw"] -= Z["n1,u"] * V["z,y,n1,v"] * Gamma2["u,v,w,y"];
-    W_["zw"] -= 2.0 * Z["n1,u"] * V["z,Y,n1,V"] * Gamma2["u,V,w,Y"];
+    W_["zw"] -= Z["n1,u"] * V["z,Y,n1,V"] * Gamma2["u,V,w,Y"];
+    W_["zw"] -= Z["N1,U"] * V["z,Y,v,N1"] * Gamma2["v,U,w,Y"];
 
     W_["zw"] += Z["e1,u"] * H["z,e1"] * Gamma1["uw"];
     W_["zw"] += Z["e1,u"] * V["z,m1,e1,m"] * Gamma1["uw"] * I["m1,m"];
@@ -3041,7 +3042,7 @@ void DSRG_MRPT2::write_2rdm_spin_dependent() {
     temp["xyuv"] += 0.25 * Gamma2["uvxy"];
     temp["XYUV"] += 0.25 * Gamma2["UVXY"];
     temp["xYuV"] += 0.25 * Gamma2["uVxY"];
-
+ 
     // all-alpha and all-beta
     temp2["ckdl"] += temp["cdkl"];
     temp2["cldk"] -= temp["cdkl"];
