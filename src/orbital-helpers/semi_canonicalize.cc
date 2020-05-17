@@ -370,35 +370,15 @@ void SemiCanonical::build_transformation_matrices(psi::SharedMatrix& Ua, psi::Sh
     }
 
     // keep phase and order unchanged
-    auto Cnew = psi::linalg::doublet(ints_->Ca(), Ua, false, false);
-    auto Smo = psi::linalg::triplet(ints_->Ca(), ints_->wfn()->S(), Cnew, true, false, false);
-    auto T = Ua->clone();
-    T->zero();
-    for (int h = 0; h < nirrep_; ++h) {
-        for (int q = 0; q < T->coldim(h); ++q) {
-            double max = 0.0;
-            size_t temp = q;
-            double sign = 1.0;
-            for (int p = 0; p < T->rowdim(h); ++p) {
-                if (std::fabs(Smo->get(h, p, q)) > max) {
-                    max = std::fabs(Smo->get(h, p, q));
-                    temp = p;
-                    sign = Smo->get(h, p, q) < 0 ? -1.0 : 1.0;
-                }
-            }
-            T->set(h, temp, q, sign);
-        }
-    }
-    Ua = psi::linalg::doublet(Ua, T, false, false);
-    Ub = Ua->clone();
+    fix_orbital_phase(Ua, ints_->Ca());
+    fix_orbital_phase(Ub, ints_->Cb());
 
     // fill in UaData and UbData
     for (const auto& name_dim_pair : mo_dims_) {
         std::string name = name_dim_pair.first;
         psi::Dimension npi = name_dim_pair.second;
-        bool FockDo = checked_results_[name];
 
-        if (FockDo and (name.find("actv") != std::string::npos)) {
+        if (checked_results_[name] and (name.find("actv") != std::string::npos)) {
             for (size_t h = 0; h < nirrep_; ++h) {
                 int actv_off = actv_offsets_[name][h];
                 int offset = offsets_[name][h];
@@ -520,5 +500,72 @@ RDMs SemiCanonical::transform_rdms(ambit::Tensor& Ua, ambit::Tensor& Ub, RDMs& r
     outfile->Printf("\n    Transformed 3 RDMs.");
 
     return RDMs(g1aT, g1bT, g2Taa, g2Tab, g2Tbb, g3Taaa, g3Taab, g3Tabb, g3Tbbb);
+}
+
+void SemiCanonical::fix_orbital_phase(psi::SharedMatrix& Ua, const psi::SharedMatrix& Ca) {
+    // build MO overlap matrix (old by new)
+    auto Cnew = psi::linalg::doublet(Ca, Ua, false, false);
+    Cnew->set_name("MO coefficients (new)");
+
+    auto Smo = psi::linalg::triplet(Ca, ints_->wfn()->S(), Cnew, true, false, false);
+    Smo->set_name("MO overlap (old by new)");
+
+    // transformation matrix
+    auto T = Ua->clone();
+    T->set_name("Reordering matrix");
+    T->zero();
+
+    for (size_t h = 0; h < nirrep_; ++h) {
+        auto ncol = T->coldim(h);
+        auto nrow = T->rowdim(h);
+        for (int q = 0; q < ncol; ++q) {
+            double max = 0.0, sign = 1.0;
+            int p_temp = q;
+
+            for (int p = 0; p < nrow; ++p) {
+                double v = Smo->get(h, p, q);
+                if (std::fabs(v) > max) {
+                    max = std::fabs(v);
+                    p_temp = p;
+                    sign = v < 0 ? -1.0 : 1.0;
+                }
+            }
+
+            T->set(h, p_temp, q, sign);
+        }
+    }
+
+    // test transformation matrix
+    bool trans_ok = true;
+    for (size_t h = 0; h < nirrep_; ++h) {
+        auto nrow = T->rowdim(h);
+        auto ncol = T->coldim(h);
+
+        for (int i = 0; i < nrow; ++i) {
+            double sum = 0.0;
+            for (int j = 0; j < ncol; ++j) {
+                sum += std::fabs(T->get(h, i, j));
+            }
+            if (sum - 1.0 > 1.0e-3) {
+                trans_ok = false;
+                break;
+            }
+        }
+
+        if (not trans_ok) {
+            break;
+        }
+    }
+
+    // transform Ua
+    if (trans_ok) {
+        Ua = psi::linalg::doublet(Ua, T, false, false);
+    } else {
+        psi::outfile->Printf("\n  Failed to fix orbital phase and order.");
+        Ca->print();
+        Cnew->print();
+        Smo->print();
+        T->print();
+    }
 }
 } // namespace forte

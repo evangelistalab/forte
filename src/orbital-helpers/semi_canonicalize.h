@@ -159,6 +159,9 @@ class SemiCanonical {
      */
     void build_transformation_matrices(psi::SharedMatrix& Ua, psi::SharedMatrix& Ub,
                                        ambit::Tensor& Ua_t, ambit::Tensor& Ub_t);
+
+    /// Fix phase and order of the transformation
+    void fix_orbital_phase(psi::SharedMatrix& Ua, const psi::SharedMatrix& Ca);
 };
 } // namespace forte
 
