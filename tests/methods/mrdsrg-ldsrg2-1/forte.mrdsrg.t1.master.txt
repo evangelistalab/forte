@@ -1,0 +1,8 @@
+ca forte.mrdsrg.t1.ca.aa.bin 24
+cv forte.mrdsrg.t1.cv.aa.bin 32
+CA forte.mrdsrg.t1.ca.bb.bin 24
+CV forte.mrdsrg.t1.cv.bb.bin 32
+aa forte.mrdsrg.t1.aa.aa.bin 36
+av forte.mrdsrg.t1.av.aa.bin 48
+AA forte.mrdsrg.t1.aa.bb.bin 36
+AV forte.mrdsrg.t1.av.bb.bin 48

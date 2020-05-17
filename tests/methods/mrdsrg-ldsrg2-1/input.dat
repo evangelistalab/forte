@@ -1,0 +1,53 @@
+#! Generated using commit GITCOMMIT
+
+import forte
+
+refrhf  = -108.867618373021401
+refdsrg = -109.100877299246122
+
+memory 500 mb
+
+molecule N2{
+  0 1
+  N
+  N  1 R
+  R = 1.1
+}
+
+set globals{
+   basis                   6-31g
+   reference               rhf
+   scf_type                pk
+   d_convergence           8
+   e_convergence           12
+}
+
+set forte{
+   active_space_solver    fci
+   correlation_solver     mrdsrg
+   corr_level             ldsrg2
+   restricted_docc        [2,0,0,0,0,2,0,0]
+   active                 [1,0,1,1,0,1,1,1]
+   dsrg_s                 1.0
+   e_convergence          8
+   r_convergence          7
+   dsrg_read_amps         true
+}
+
+Escf, wfn = energy('scf', return_wfn=True)
+compare_values(refrhf, Escf, 10, "SCF energy")
+
+# fix orbital phase
+Ca = wfn.Ca().clone()
+nirrep = wfn.nirrep()
+coldim = Ca.coldim()
+for h in range(nirrep):
+    for i in range(coldim[h]):
+        v = Ca.get(h, 0, i)
+        if v < 0:
+            col = Ca.get_column(h, i)
+            col.scale(-1.0)
+            Ca.set_column(h, i, vec)
+
+energy('forte', ref_wfn=wfn)
+compare_values(refdsrg, variable("CURRENT ENERGY"), 8, "MR-LDSRG(2) unrelaxed energy")

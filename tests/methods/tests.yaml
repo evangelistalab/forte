@@ -215,6 +215,7 @@ mrdsrg_so:
    - mrdsrg_so-2
 mrdsrg-ldsrg2-df:
   short:
+   - mrdsrg-ldsrg2-1
    - mrdsrg-ldsrg2-df-4
    - mrdsrg-ldsrg2-qc-1
    - mrdsrg-ldsrg2-qc-2
