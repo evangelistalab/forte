@@ -562,8 +562,8 @@ void SemiCanonical::fix_orbital_phase(psi::SharedMatrix& Ua, const psi::SharedMa
         Ua = psi::linalg::doublet(Ua, T, false, false);
     } else {
         psi::outfile->Printf("\n  Failed to fix orbital phase and order.\n");
-        Ca->print();
-        Cnew->print();
+        //        Ca->print();
+        //        Cnew->print();
         Smo->print();
         T->print();
     }

@@ -93,7 +93,12 @@ void MRDSRG::guess_t_df(BlockedTensor& B, BlockedTensor& T2, BlockedTensor& F, B
     // if fully decouple core-core-virtual-virtual block
     std::string ccvv_source = foptions_->get_str("CCVV_SOURCE");
 
-    if (restart_ and (not t2_file_.empty())) {
+    struct stat buf;
+    if (read_amps_cwd_ and (stat("forte.mrdsrg.t2.master.txt", &buf) == 0) and t2_file_.empty()) {
+        outfile->Printf("\n    Reading T2 amplitudes from disk ...");
+        read_disk_BT(T2, "forte.mrdsrg.t2.master.txt");
+        outfile->Printf(" Done.");
+    } else if (restart_ and (not t2_file_.empty())) {
         outfile->Printf("\n    Reading previous T2 amplitudes from disk ...");
         read_disk_BT(T2, t2_file_);
         outfile->Printf(" Done.");
@@ -105,7 +110,11 @@ void MRDSRG::guess_t_df(BlockedTensor& B, BlockedTensor& T2, BlockedTensor& F, B
         }
     }
 
-    if (restart_ and (not t1_file_.empty())) {
+    if (read_amps_cwd_ and (stat("forte.mrdsrg.t1.master.txt", &buf) == 0) and t1_file_.empty()) {
+        outfile->Printf("\n    Reading T1 amplitudes from disk ...");
+        read_disk_BT(T1, "forte.mrdsrg.t1.master.txt");
+        outfile->Printf(" Done.");
+    } else if (restart_ and (not t1_file_.empty())) {
         outfile->Printf("\n    Reading previous T1 amplitudes from disk ...");
         read_disk_BT(T1, t1_file_);
         outfile->Printf(" Done.");

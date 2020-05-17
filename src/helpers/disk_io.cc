@@ -103,7 +103,7 @@ std::string write_disk_BT(ambit::BlockedTensor& BT, const std::string& name,
 
         // need to deal with case insensitivity
         std::string block_lowercase, spin;
-        for (const char& i: block) {
+        for (const char& i : block) {
             if (isupper(i)) {
                 block_lowercase += tolower(i);
                 spin += 'b';
@@ -114,7 +114,7 @@ std::string write_disk_BT(ambit::BlockedTensor& BT, const std::string& name,
         }
 
         std::string filename = file_prefix;
-        for (const std::string& s: {name, block_lowercase, spin, std::string("bin")}) {
+        for (const std::string& s : {name, block_lowercase, spin, std::string("bin")}) {
             filename += "." + s;
         }
         block_file_names.push_back(block + " " + filename + " " + std::to_string(nele));
