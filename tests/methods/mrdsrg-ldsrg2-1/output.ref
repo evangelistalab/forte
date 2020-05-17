@@ -23,9 +23,9 @@
     -----------------------------------------------------------------------
 
 
-    Psi4 started on: Monday, 18 May 2020 01:28AM
+    Psi4 started on: Monday, 18 May 2020 01:46AM
 
-    Process ID: 87424
+    Process ID: 88768
     Host:       Yorks-Mac.local
     PSIDATADIR: /Users/york/src/psi4new/psi4/share/psi4
     Memory:     500.0 MiB
@@ -77,13 +77,14 @@ compare_values(refrhf, Escf, 10, "SCF energy")
 Ca = wfn.Ca().clone()
 nirrep = wfn.nirrep()
 coldim = Ca.coldim()
+rowdim = Ca.rowdim()
 for h in range(nirrep):
     for i in range(coldim[h]):
         v = Ca.get(h, 0, i)
         if v < 0:
-            col = Ca.get_column(h, i)
-            col.scale(-1.0)
-            Ca.set_column(h, i, vec)
+            for j in range(rowdim[h]):
+                Ca.set(h, j, i, -1.0 * Ca.get(h, j, i))
+wfn.Ca().copy(Ca)
 
 energy('forte', ref_wfn=wfn)
 compare_values(refdsrg, variable("CURRENT ENERGY"), 8, "MR-LDSRG(2) unrelaxed energy")
@@ -94,7 +95,7 @@ compare_values(refdsrg, variable("CURRENT ENERGY"), 8, "MR-LDSRG(2) unrelaxed en
 Scratch directory: /Users/york/scratch/psi4/
 
 *** tstart() called on Yorks-Mac.local
-*** at Mon May 18 01:28:38 2020
+*** at Mon May 18 01:46:48 2020
 
    => Loading Basis Set <=
 
@@ -275,13 +276,13 @@ Properties computed using the SCF density matrix
      X:     0.0000      Y:     0.0000      Z:     0.0000     Total:     0.0000
 
 
-*** tstop() called on Yorks-Mac.local at Mon May 18 01:28:38 2020
+*** tstop() called on Yorks-Mac.local at Mon May 18 01:46:48 2020
 Module time:
-	user time   =       0.33 seconds =       0.01 minutes
+	user time   =       0.32 seconds =       0.01 minutes
 	system time =       0.01 seconds =       0.00 minutes
 	total time  =          0 seconds =       0.00 minutes
 Total time:
-	user time   =       0.33 seconds =       0.01 minutes
+	user time   =       0.32 seconds =       0.01 minutes
 	system time =       0.01 seconds =       0.00 minutes
 	total time  =          0 seconds =       0.00 minutes
     SCF energy........................................................PASSED
@@ -344,11 +345,11 @@ Scratch directory: /Users/york/scratch/psi4/
 	Starting second half-transformation.
 	Two-electron integral transformation complete.
 
-  Integral transformation done. 0.01067341 s
+  Integral transformation done. 0.00971502 s
   Reading the two-electron integrals from disk
   Size of two-electron integrals:   0.002346 GB
   Timing for freezing core and virtual orbitals:              0.000 s.
-  Conventional integrals take 0.05800297 s
+  Conventional integrals take 0.05375543 s
 
   ==> Summary of Active Space Solver Input <==
 
@@ -425,7 +426,7 @@ Scratch directory: /Users/york/scratch/psi4/
      23     -107.233273111680  2.000  triplet
      24     -107.156821797536  0.000  singlet
   ---------------------------------------------
-  Timing for initial guess  =      0.008 s
+  Timing for initial guess  =      0.007 s
 
   Projecting out root 1
   Projecting out root 2
@@ -475,7 +476,7 @@ Scratch directory: /Users/york/scratch/psi4/
 
     Timing for 1-RDM: 0.000 s
     Timing for 2-RDM: 0.001 s
-    Timing for 3-RDM: 0.030 s
+    Timing for 3-RDM: 0.029 s
 
   ==> NATURAL ORBITALS <==
 
@@ -488,7 +489,7 @@ Scratch directory: /Users/york/scratch/psi4/
          Chenyang Li, Jeffrey B. Schriber and Francesco A. Evangelista
        -----------------------------------------------------------------
 
-  Took 0.000301 s to build Fock matrix
+  Took 0.000319 s to build Fock matrix
 
   ==> Checking Fock Matrix Diagonal Blocks <==
 
@@ -512,7 +513,7 @@ Scratch directory: /Users/york/scratch/psi4/
 	Starting second half-transformation.
 	Two-electron integral transformation complete.
 
-  Integral transformation done. 0.00820225 s
+  Integral transformation done. 0.00843606 s
   Reading the two-electron integrals from disk
   Size of two-electron integrals:   0.002346 GB
  Integrals are about to be updated.
@@ -523,7 +524,7 @@ Scratch directory: /Users/york/scratch/psi4/
     Transformed 1 RDMs.
     Transformed 2 RDMs.
     Transformed 3 RDMs.
-  SemiCanonicalize takes 0.320059 s.
+  SemiCanonicalize takes 0.312555 s.
 
   ==> Multireference Driven Similarity Renormalization Group <==
 
@@ -645,7 +646,7 @@ Scratch directory: /Users/york/scratch/psi4/
     [  5  16   5  17]-0.054934 [  7  14   7  15]-0.054934 [ 16  16  16  17]-0.054039 
     [ 14  14  14  15]-0.054039 [  2  10   2  12] 0.053068 [  5  14   6  14]-0.050882 
     --------------------------------------------------------------------------------
-    Norm of T2AB vector: (nonzero elements: 2608)                -1.000000000000000.
+    Norm of T2AB vector: (nonzero elements: 2608)                 0.000000000000000.
     --------------------------------------------------------------------------------
     Largest T2 amplitudes for spin case BB:
        _   _   _   _              _   _   _   _              _   _   _   _           
@@ -677,10 +678,10 @@ Scratch directory: /Users/york/scratch/psi4/
            ---------------------------  ---------------------  ---------------------  -----------------
     Iter.        Corr.         Delta       Hbar1      Hbar2        T1         T2        Hbar     Amp.    DIIS
     ---------------------------------------------------------------------------------------------------------
-       1    -0.153866609170 -1.539e-01   3.901e-02  8.611e-01   1.706e-07  9.500e-07     7.418    0.020
-       2    -0.153866606569  2.602e-09   3.901e-02  8.611e-01   4.404e-08  3.225e-07     7.369    0.020  S
-       3    -0.153866606135  4.339e-10   3.901e-02  8.611e-01   1.460e-08  1.190e-07     7.351    0.020  S/E
-       4    -0.153866605752  3.830e-10   3.901e-02  8.611e-01   3.242e-09  2.913e-08     7.330    0.020  S/E
+       1    -0.153866609170 -1.539e-01   3.901e-02  8.611e-01   1.706e-07  9.500e-07     7.561    0.021
+       2    -0.153866606569  2.602e-09   3.901e-02  8.611e-01   4.404e-08  3.225e-07     7.587    0.021  S
+       3    -0.153866606135  4.339e-10   3.901e-02  8.611e-01   1.460e-08  1.190e-07     7.741    0.022  S/E
+       4    -0.153866605752  3.830e-10   3.901e-02  8.611e-01   3.242e-09  2.913e-08     7.956    0.021  S/E
     ---------------------------------------------------------------------------------------------------------
 
   ==> MR-LDSRG(2) Energy Summary <==
@@ -763,17 +764,17 @@ Scratch directory: /Users/york/scratch/psi4/
 
              [H1, T1]    [H1, T2]    [H2, T1]    [H2, T2]
     -----------------------------------------------------
-    -> C0       0.031       0.085       0.285       4.357
-    -> C1       0.067       0.372       0.609       7.667
-    -> C2                   1.148       2.463      11.872
+    -> C0       0.032       0.088       0.297       4.539
+    -> C1       0.069       0.391       0.641       8.053
+    -> C2                   1.206       2.571      12.409
     -----------------------------------------------------
 
 
-  Time to prepare integrals:        0.065 seconds
-  Time to run job          :       30.034 seconds
-  Total                    :       30.034 seconds    MR-LDSRG(2) unrelaxed energy......................................PASSED
+  Time to prepare integrals:        0.060 seconds
+  Time to run job          :       31.405 seconds
+  Total                    :       31.405 seconds    MR-LDSRG(2) unrelaxed energy......................................PASSED
 
-    Psi4 stopped on: Monday, 18 May 2020 01:29AM
-    Psi4 wall time for execution: 0:00:30.55
+    Psi4 stopped on: Monday, 18 May 2020 01:47AM
+    Psi4 wall time for execution: 0:00:31.90
 
 *** Psi4 exiting successfully. Buy a developer a beer!

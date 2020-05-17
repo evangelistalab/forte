@@ -23,9 +23,9 @@
     -----------------------------------------------------------------------
 
 
-    Psi4 started on: Saturday, 16 May 2020 10:48PM
+    Psi4 started on: Monday, 18 May 2020 01:46AM
 
-    Process ID: 40121
+    Process ID: 88751
     Host:       Yorks-Mac.local
     PSIDATADIR: /Users/york/src/psi4new/psi4/share/psi4
     Memory:     500.0 MiB
@@ -65,6 +65,19 @@ set {
 Ecas, wfn = energy('casscf', return_wfn=True)
 compare_values(ref_casscf, Ecas, 9, "CASSCF energy")
 
+# fix orbital phase
+Ca = wfn.Ca().clone()
+nirrep = wfn.nirrep()
+coldim = Ca.coldim()
+rowdim = Ca.rowdim()
+for h in range(nirrep):
+    for i in range(coldim[h]):
+        v = Ca.get(h, 0, i)
+        if v < 0:
+            for j in range(rowdim[h]):
+                Ca.set(h, j, i, -1.0 * Ca.get(h, j, i))
+wfn.Ca().copy(Ca)
+
 set forte {
   active_space_solver cas
   correlation_solver  sa-mrdsrg
@@ -73,19 +86,32 @@ set forte {
   restricted_docc     [1,0,0,0,0,1,0,0]
   active              [1,0,1,1,0,1,1,1]
   dsrg_s              0.5
+  e_convergence       6
+  r_convergence       4
+  dsrg_dump_amps      true
+}
+
+Eforte, wfn = energy('forte', ref_wfn=wfn, return_wfn=True)
+
+set forte {
   e_convergence       8
-  r_convergence       8
+  r_convergence       7
   dsrg_read_amps      true
 }
 
 Eforte, wfn = energy('forte', ref_wfn=wfn, return_wfn=True)
 compare_values(ref_ldsrg2, Eforte, 8, "MR-LDSRG(2) relaxed energy")
+
+# remove amplitudes files
+import glob, os
+for f in glob.glob("forte.mrdsrg.*"):
+    os.remove(f)
 --------------------------------------------------------------------------
 
 Scratch directory: /Users/york/scratch/psi4/
 
 *** tstart() called on Yorks-Mac.local
-*** at Sat May 16 22:48:28 2020
+*** at Mon May 18 01:46:42 2020
 
    => Loading Basis Set <=
 
@@ -269,14 +295,14 @@ Properties computed using the SCF density matrix
      X:     0.0000      Y:     0.0000      Z:     0.0000     Total:     0.0000
 
 
-*** tstop() called on Yorks-Mac.local at Sat May 16 22:48:29 2020
+*** tstop() called on Yorks-Mac.local at Mon May 18 01:46:43 2020
 Module time:
-	user time   =       0.45 seconds =       0.01 minutes
-	system time =       0.01 seconds =       0.00 minutes
+	user time   =       0.47 seconds =       0.01 minutes
+	system time =       0.02 seconds =       0.00 minutes
 	total time  =          1 seconds =       0.02 minutes
 Total time:
-	user time   =       0.45 seconds =       0.01 minutes
-	system time =       0.01 seconds =       0.00 minutes
+	user time   =       0.47 seconds =       0.01 minutes
+	system time =       0.02 seconds =       0.00 minutes
 	total time  =          1 seconds =       0.02 minutes
  MINTS: Wrapper to libmints.
    by Justin Turney
@@ -553,7 +579,7 @@ Scratch directory: /Users/york/scratch/psi4/
 	Starting second half-transformation.
 	Two-electron integral transformation complete.
 
-  Integral transformation done. 0.02394745 s
+  Integral transformation done. 0.02113087 s
   Reading the two-electron integrals from disk
   Size of two-electron integrals:   0.013739 GB  Using in-core PK algorithm.
    Calculation information:
@@ -573,10 +599,10 @@ Scratch directory: /Users/york/scratch/psi4/
 
 
   Frozen-core energy           -100.804452607394 a.u.
-  Timing for frozen one-body operator:                        0.124 s.
+  Timing for frozen one-body operator:                        0.122 s.
   Resorting integrals after freezing core.
-  Timing for freezing core and virtual orbitals:              0.195 s.
-  Conventional integrals take 0.36253109 s
+  Timing for freezing core and virtual orbitals:              0.194 s.
+  Conventional integrals take 0.35864321 s
 
   ==> Summary of Active Space Solver Input <==
 
@@ -612,8 +638,8 @@ Scratch directory: /Users/york/scratch/psi4/
     CORE                          [    1     0     0     0     0     1     0     0 ]
     ACTIVE                        [    1     0     1     1     0     1     1     1 ]
     VIRTUAL                       [    4     1     2     2     1     4     2     2 ]
-  Forming alpha and beta strings      ...  Done. Timing        0.000079 s
-  Forming determinants                ...  Done. Timing        0.000031 s
+  Forming alpha and beta strings      ...  Done. Timing        0.000080 s
+  Forming determinants                ...  Done. Timing        0.000033 s
 
   ==> Determinants Summary <==
 
@@ -626,17 +652,17 @@ Scratch directory: /Users/york/scratch/psi4/
 
   ==> Computing Coupling Lists <==
   --------------------------------
-        α          0.000375 s
-        β          0.000362 s
-        αα         0.000350 s
-        ββ         0.000325 s
-        αβ         0.000792 s
+        α          0.000440 s
+        β          0.000327 s
+        αα         0.000347 s
+        ββ         0.000321 s
+        αβ         0.000811 s
   --------------------------------
 
   Davidson-Liu solver algorithm using SigmaVectorSparseList sigma algorithm
   Found 32 roots with 2S+1 = 1 *
   Found 18 roots with 2S+1 = 3
-  Found 6 roots with 2S+1 = 5  Done. Timing        0.005584 s
+  Found 6 roots with 2S+1 = 5  Done. Timing        0.005676 s
 
   * * * * * * * * * * * * * * * * *
   *  CI Vectors & Configurations  *
@@ -644,13 +670,13 @@ Scratch directory: /Users/york/scratch/psi4/
 
   ==> Root No. 0 <==
 
-    2 0 0 0 2 2          0.9647938933
-    2 2 0 0 2 0         -0.1258989115
-    2 0 2 0 0 2         -0.1258989115
-    2 b a 0 b a          0.0791849904
-    2 a b 0 a b          0.0791849904
+    2 0 0 0 2 2         -0.9647938933
+    2 2 0 0 2 0          0.1258989115
+    2 0 2 0 0 2          0.1258989115
+    2 b a 0 b a         -0.0791849904
+    2 a b 0 a b         -0.0791849904
 
-    Total Energy:   -109.090719613198530
+    Total Energy:   -109.090719613198502
 
 
 
@@ -665,16 +691,412 @@ Scratch directory: /Users/york/scratch/psi4/
     ---------------------------------------------
        1  (  0)    Ag     0     -109.090719613199
     ---------------------------------------------
- Computing  1RDMs (0 Singlet Ag - 0 Singlet Ag) ... Done. Timing        0.000695 s
- Computing  2RDMs (0 Singlet Ag - 0 Singlet Ag) ... Done. Timing        0.001270 s
- Computing  3RDMs (0 Singlet Ag - 0 Singlet Ag) ... Done. Timing        0.002112 s
+ Computing  1RDMs (0 Singlet Ag - 0 Singlet Ag) ... Done. Timing        0.000669 s
+ Computing  2RDMs (0 Singlet Ag - 0 Singlet Ag) ... Done. Timing        0.001245 s
+ Computing  3RDMs (0 Singlet Ag - 0 Singlet Ag) ... Done. Timing        0.002178 s
 
        -----------------------------------------------------------------
                             Semi-Canonical Orbitals
          Chenyang Li, Jeffrey B. Schriber and Francesco A. Evangelista
        -----------------------------------------------------------------
 
-  Took 0.000731 s to build Fock matrix
+  Took 0.000695 s to build Fock matrix
+
+  ==> Checking Fock Matrix Diagonal Blocks <==
+
+    Off-Diag. Elements       Max           2-Norm
+    ------------------------------------------------
+    Fa actv              0.0000000000   0.0000000000
+    Fb actv              0.0000000000   0.0000000000
+    ------------------------------------------------
+    Fa core              0.0000000000   0.0000000000
+    Fb core              0.0000000000   0.0000000000
+    ------------------------------------------------
+    Fa virt              0.0000000000   0.0000000000
+    Fb virt              0.0000000000   0.0000000000
+    ------------------------------------------------
+  Orbitals are already semicanonicalized.
+
+    -----------------------------------------------------------------------
+      Spin-Adapted Multireference Driven Similarity Renormalization Group
+                            written by Chenyang Li
+                                 1 OMP thread
+    -----------------------------------------------------------------------
+
+  Disclaimer:
+    The spin-adapted DSRG code is largely adopted from the spin-integrated code developed by
+    Chenyang Li, Kevin P. Hannon, Tianyuan Zhang, and Francesco A. Evangelista.
+
+  ==> Multireference Driven Similarity Renormalization Group <==
+
+    Reading DSRG options ............................ Done
+    Setting ambit MO space .......................... Done
+    Preparing tensors for density cumulants ......... Done
+    Building Fock matrix ............................ Done
+
+  ==> Density Cumulant Summary <==
+
+             2-cumulant   3-cumulant
+    --------------------------------
+    max        0.265304     0.062931
+    norm       0.961555     0.550326
+    --------------------------------
+
+  ==> Checking Semicanonical Orbitals <==
+
+    Fock core, active, virtual blocks (Fij, i != j)
+                      core          active         virtual
+    ------------------------------------------------------
+       max    0.0000000000    0.0000000000    0.0000000000
+    1-norm    0.0000000000    0.0000000000    0.0000000000
+    ------------------------------------------------------
+
+    Orbitals are semi-canonicalized.
+
+  ==> Computation Information <==
+
+    Correlation level                                 LDSRG2
+    Integral type                               CONVENTIONAL
+    Source operator                                 STANDARD
+    Reference relaxation                                NONE
+    Core-Virtual source type                          NORMAL
+    Restart amplitudes                                  TRUE
+    Sequential DSRG transformation                     FALSE
+    Omit blocks of >= 3 virtual indices                FALSE
+    Read amplitudes from current dir                   FALSE
+    Write amplitudes to current dir                     TRUE
+    Flow parameter                                 5.000e-01
+    Energy convergence threshold                   1.000e-06
+    Residual convergence threshold                 1.000e-04
+    Recursive single commutator threshold          1.000e-12
+    Taylor expansion threshold                     1.000e-03
+    Intruder amplitudes threshold                  1.000e-01
+    Max number of iterations                             300
+    Max nested commutators                                20
+    DIIS start                                             2
+    Min DIIS vectors                                       2
+    Max DIIS vectors                                       6
+    DIIS extrapolating freq                                1
+    Number of amplitudes for printing                     15
+
+
+  ==> MR-DSRG (LDSRG2) Memory Information <==
+
+    Memory assigned by the user                    524.29 MB
+    Memory available for MR-DSRG                   509.76 MB
+    Generalized Fock matrix                          5.62 KB
+    1-, 2-, and 3-density cumulants                384.19 KB
+    1- and 2-electron integrals                      3.66 MB
+    T1 cluster amplitudes and residuals              3.07 KB
+    T2 cluster amplitudes and residuals            884.74 KB
+    1- and 2-body Hbar                               3.66 MB
+    1-body intermediates                            10.82 KB
+    2-body intermediates                             7.31 MB
+    Local intermediates for commutators              1.23 MB
+    Max memory for local intermediates               1.23 MB
+    Memory currently available                     493.84 MB
+
+
+  ==> Build Initial Amplitudes Guesses <==
+
+    Computing T2 amplitudes from PT2 ...  Done. Timing      0.020 s
+    Computing T1 amplitudes from PT2 ...  Done. Timing      0.002 s
+
+  ==> Initial Excitation Amplitudes Summary <==
+
+    Active Indices:    1    7   10   15   20   23
+    Largest T1 amplitudes (absolute values):
+        i    a                i    a                i    a
+    -----------------------------------------------------------------
+    [  15   19] 0.2063691 [   7    8] 0.0880753 [  10   11] 0.0880753
+    [   7    9] 0.0557950 [  10   12] 0.0557950 [  15   16] 0.0549705
+    [  15   17] 0.0346349 [  23   24] 0.0127467 [  20   21] 0.0127467
+    [   0    1] 0.0102525 [  20   22] 0.0074716 [  23   25] 0.0074716
+    [   1    2] 0.0035536 [   1    5] 0.0032008 [  14   15] 0.0017162
+    -----------------------------------------------------------------
+    2-Norm of T1 vector:                            0.262904212338586
+    Number of nonzero elements:                                    22
+    -----------------------------------------------------------------
+    Largest T2 amplitudes (absolute values):
+        i    j    a    b                i    j    a    b                i    j    a    b
+    -----------------------------------------------------------------------------------------------
+    [  15   20   15   21] 0.0796734 [  15   23   15   24] 0.0796734 [   1    1    1    2] 0.0755014
+    [  15    1   15    2] 0.0740437 [   1   20    1   21] 0.0724921 [   1   23    1   24] 0.0724921
+    [  15   15   15   19] 0.0647342 [  10   20   10   21] 0.0635587 [   7   23    7   24] 0.0635587
+    [   1   15    1   19] 0.0618366 [   7   20    7   21] 0.0568684 [  10   23   10   24] 0.0568684
+    [  15    0   15    3] 0.0561127 [  20   20   20   21] 0.0506823 [  23   23   23   24] 0.0506823
+    -----------------------------------------------------------------------------------------------
+    2-Norm of T2 vector:                                                          0.698988018176178
+    Number of nonzero elements:                                                                3032
+    -----------------------------------------------------------------------------------------------
+
+  ==> Possible Intruders <==
+
+    T1 amplitudes larger than 0.1000:
+     Amplitudes      Value                   Denominator
+    ----------------------------------------------------------------
+    [  15   19]  -0.206369073 (  1.200555 -   3.143773 =  -1.943218)
+    ----------------------------------------------------------------
+    T2 amplitudes larger than 0.1000: NULL
+
+  ==> Computing MR-LDSRG(2) Energy <==
+
+    Reference:
+      J. Chem. Phys. 2016, 144, 164114.
+
+                  Energy (a.u.)           Non-Diagonal Norm        Amplitude RMS         Timings (s)
+           ---------------------------  ---------------------  ---------------------  -----------------
+    Iter.        Corr.         Delta       Hbar1      Hbar2        T1         T2        Hbar     Amp.    DIIS
+    ---------------------------------------------------------------------------------------------------------
+       1    -0.173077351782 -1.731e-01   7.706e-01  9.706e-01   4.503e-02  1.928e-01     2.957    0.043
+       2    -0.180072557936 -6.995e-03   8.238e-01  9.769e-01   1.749e-02  5.765e-02     2.869    0.045  S
+       3    -0.181956625794 -1.884e-03   8.063e-01  9.138e-01   4.554e-03  1.865e-02     2.956    0.043  S/E
+       4    -0.182010816784 -5.419e-05   8.098e-01  9.188e-01   4.129e-04  6.849e-03     2.774    0.043  S/E
+       5    -0.182061141750 -5.032e-05   8.099e-01  9.170e-01   1.316e-04  1.668e-03     2.791    0.046  S/E
+       6    -0.182073237588 -1.210e-05   8.098e-01  9.166e-01   5.779e-05  6.539e-04     2.807    0.045  S/E
+       7    -0.182069426910  3.811e-06   8.099e-01  9.166e-01   1.524e-05  2.775e-04     2.836    0.045  S/E
+       8    -0.182065132495  4.294e-06   8.099e-01  9.166e-01   7.461e-06  1.154e-04     2.853    0.045  S/E
+       9    -0.182063948470  1.184e-06   8.099e-01  9.166e-01   1.843e-06  3.923e-05     2.838    0.048  S/E
+      10    -0.182063344949  6.035e-07   8.099e-01  9.166e-01   1.065e-06  1.026e-05     2.855    0.046  S/E
+    ---------------------------------------------------------------------------------------------------------
+
+  ==> MR-LDSRG(2) Energy Summary <==
+
+    E0 (reference)                 =    -109.090719613198388
+    MR-LDSRG(2) correlation energy =      -0.182063344949275
+    MR-LDSRG(2) total energy       =    -109.272782958147658
+
+  ==> Final Excitation Amplitudes Summary <==
+
+    Active Indices:    1    7   10   15   20   23
+    Largest T1 amplitudes (absolute values):
+        i    a                i    a                i    a
+    -----------------------------------------------------------------
+    [  15   19] 0.1821726 [   7    8] 0.0771894 [  10   11] 0.0771894
+    [  15   16] 0.0527731 [   7    9] 0.0523782 [  10   12] 0.0523782
+    [  15   17] 0.0310517 [   0    1] 0.0098672 [  20   22] 0.0066040
+    [  23   25] 0.0066040 [  23   24] 0.0060242 [  20   21] 0.0060242
+    [  14   15] 0.0056743 [   1    5] 0.0032791 [  14   17] 0.0027744
+    -----------------------------------------------------------------
+    2-Norm of T1 vector:                            0.233796340800733
+    Number of nonzero elements:                                    22
+    -----------------------------------------------------------------
+    Largest T2 amplitudes (absolute values):
+        i    j    a    b                i    j    a    b                i    j    a    b
+    -----------------------------------------------------------------------------------------------
+    [  15    1   15    2] 0.0736066 [  15   20   15   21] 0.0678540 [  15   23   15   24] 0.0678540
+    [   1    1    1    2] 0.0676196 [   1   20    1   21] 0.0601327 [   1   23    1   24] 0.0601327
+    [  15    0   15    3] 0.0575674 [  10   20   10   21] 0.0543405 [   7   23    7   24] 0.0543405
+    [  14   14    7    7] 0.0496099 [  14   14   10   10] 0.0496099 [   1    0    1    3] 0.0493837
+    [   7    0    7    3] 0.0487023 [  10    0   10    3] 0.0487023 [  15   14   15   16] 0.0471506
+    -----------------------------------------------------------------------------------------------
+    2-Norm of T2 vector:                                                          0.655299144971364
+    Number of nonzero elements:                                                                3032
+    -----------------------------------------------------------------------------------------------
+
+  ==> Possible Intruders <==
+
+    T1 amplitudes larger than 0.1000:
+     Amplitudes      Value                   Denominator
+    ----------------------------------------------------------------
+    [  15   19]  -0.182172588 (  1.200555 -   3.143773 =  -1.943218)
+    ----------------------------------------------------------------
+    T2 amplitudes larger than 0.1000: NULL
+
+  ==> Total Timings (s) for Computing Commutators <==
+
+             [H1, T1]    [H1, T2]    [H2, T1]    [H2, T2]
+    -----------------------------------------------------
+    -> C0       0.044       0.048       0.096       1.983
+    -> C1       0.092       0.490       0.739       7.316
+    -> C2                   1.119       3.018      12.939
+    -----------------------------------------------------
+
+
+  Time to prepare integrals:        0.367 seconds
+  Time to run job          :       29.105 seconds
+  Total                    :       29.105 seconds
+Scratch directory: /Users/york/scratch/psi4/
+   => Loading Basis Set <=
+
+    Name: STO-3G
+    Role: ORBITAL
+    Keyword: MINAO_BASIS
+    atoms 1-2 entry N          line    71 file /Users/york/src/psi4new/psi4/share/psi4/basis/sto-3g.gbs 
+
+
+  Forte
+  ----------------------------------------------------------------------------
+  A suite of quantum chemistry methods for strongly correlated electrons
+
+    git branch: dsrg_file_io - git commit: 4899039e
+
+  Developed by:
+    Francesco A. Evangelista, Chenyang Li, Kevin P. Hannon,
+    Jeffrey B. Schriber, Tianyuan Zhang, Chenxi Cai,
+    Nan He, Nicholas Stair, Shuhe Wang, Renke Huang
+  ----------------------------------------------------------------------------
+
+  Size of Determinant class: 128 bits
+  Read options for space FROZEN_DOCC
+  Read options for space RESTRICTED_DOCC
+  Read options for space ACTIVE
+
+  ==> MO Space Information <==
+
+  -------------------------------------------------------------------------
+                       Ag   B1g   B2g   B3g    Au   B1u   B2u   B3u   Sum
+  -------------------------------------------------------------------------
+    FROZEN_DOCC         1     0     0     0     0     1     0     0     2
+    RESTRICTED_DOCC     1     0     0     0     0     1     0     0     2
+    ACTIVE              1     0     1     1     0     1     1     1     6
+    RESTRICTED_UOCC     4     1     2     2     1     4     2     2    18
+    FROZEN_UOCC         0     0     0     0     0     0     0     0     0
+    Total               7     1     3     3     1     7     3     3    28
+  -------------------------------------------------------------------------
+
+  ==> Integral Transformation <==
+
+  Number of molecular orbitals:                    28
+  Number of correlated molecular orbitals:         26
+  Number of frozen occupied orbitals:               2
+  Number of frozen unoccupied orbitals:             0
+  Two-electron integral type:              Conventional
+
+
+  Overall Conventional Integrals timings
+
+	Presorting SO-basis two-electron integrals.
+	Sorting File: SO Ints (nn|nn) nbuckets = 1
+	Transforming the one-electron integrals and constructing Fock matrices
+	Starting first half-transformation.
+	Sorting half-transformed integrals.
+	First half integral transformation complete.
+	Starting second half-transformation.
+	Two-electron integral transformation complete.
+
+  Integral transformation done. 0.01772186 s
+  Reading the two-electron integrals from disk
+  Size of two-electron integrals:   0.013739 GB  Using in-core PK algorithm.
+   Calculation information:
+      Number of atoms:                   2
+      Number of AO shells:              12
+      Number of primitives:             44
+      Number of atomic orbitals:        30
+      Number of basis functions:        28
+
+      Integral cutoff                 1.00e-12
+      Number of threads:                 1
+
+  Performing in-core PK
+  Using 165242 doubles for integral storage.
+  We computed 3081 shell quartets total.
+  Whereas there are 3081 unique shell quartets.
+
+
+  Frozen-core energy           -100.804452607394 a.u.
+  Timing for frozen one-body operator:                        0.133 s.
+  Resorting integrals after freezing core.
+  Timing for freezing core and virtual orbitals:              0.205 s.
+  Conventional integrals take 0.37053172 s
+
+  ==> Summary of Active Space Solver Input <==
+
+    Irrep.  Multi.(2ms)      N
+    --------------------------
+       Ag      1  (  0)      1
+    --------------------------
+    N: number of roots
+    ms: spin z component
+    Total number of roots:   1
+    --------------------------
+
+
+              ---------------------------------------------------
+                Complete Active Space Configuration Interaction
+                                  Chenyang Li
+              ---------------------------------------------------
+
+
+  ==> Input Summary <==
+
+    No. a electrons in active      =     3
+    No. b electrons in active      =     3
+    multiplicity                   =     1
+    spin ms (2 * Sz)               =     0
+
+  ==> Orbital Spaces <==
+
+    TOTAL MO                      [    7     1     3     3     1     7     3     3 ]
+    FROZEN CORE                   [    1     0     0     0     0     1     0     0 ]
+    FROZEN VIRTUAL                [    0     0     0     0     0     0     0     0 ]
+    CORRELATED MO                 [    6     1     3     3     1     6     3     3 ]
+    CORE                          [    1     0     0     0     0     1     0     0 ]
+    ACTIVE                        [    1     0     1     1     0     1     1     1 ]
+    VIRTUAL                       [    4     1     2     2     1     4     2     2 ]
+  Forming alpha and beta strings      ...  Done. Timing        0.000068 s
+  Forming determinants                ...  Done. Timing        0.000031 s
+
+  ==> Determinants Summary <==
+
+    number of alpha active electrons         =     3
+    number of beta active electrons          =     3
+    root symmetry (zero based)               =     0
+    number of determinants                   =    56
+
+  Diagonalizing Hamiltonian           ...
+
+  ==> Computing Coupling Lists <==
+  --------------------------------
+        α          0.000341 s
+        β          0.000336 s
+        αα         0.000341 s
+        ββ         0.000326 s
+        αβ         0.000786 s
+  --------------------------------
+
+  Davidson-Liu solver algorithm using SigmaVectorSparseList sigma algorithm
+  Found 32 roots with 2S+1 = 1 *
+  Found 18 roots with 2S+1 = 3
+  Found 6 roots with 2S+1 = 5  Done. Timing        0.005428 s
+
+  * * * * * * * * * * * * * * * * *
+  *  CI Vectors & Configurations  *
+  * * * * * * * * * * * * * * * * *
+
+  ==> Root No. 0 <==
+
+    2 0 0 0 2 2         -0.9647938933
+    2 2 0 0 2 0          0.1258989115
+    2 0 2 0 0 2          0.1258989115
+    2 b a 0 b a         -0.0791849904
+    2 a b 0 a b         -0.0791849904
+
+    Total Energy:   -109.090719613198502
+
+
+
+  ==> Permanent Dipole Moments (Ag) <==
+
+  Only print nonzero (> 1.0e-5) elements.
+
+
+  ==> Energy Summary <==
+
+    Multi.(2ms)  Irrep.  No.               Energy
+    ---------------------------------------------
+       1  (  0)    Ag     0     -109.090719613199
+    ---------------------------------------------
+ Computing  1RDMs (0 Singlet Ag - 0 Singlet Ag) ... Done. Timing        0.000671 s
+ Computing  2RDMs (0 Singlet Ag - 0 Singlet Ag) ... Done. Timing        0.001291 s
+ Computing  3RDMs (0 Singlet Ag - 0 Singlet Ag) ... Done. Timing        0.002229 s
+
+       -----------------------------------------------------------------
+                            Semi-Canonical Orbitals
+         Chenyang Li, Jeffrey B. Schriber and Francesco A. Evangelista
+       -----------------------------------------------------------------
+
+  Took 0.000728 s to build Fock matrix
 
   ==> Checking Fock Matrix Diagonal Blocks <==
 
@@ -738,10 +1160,10 @@ Scratch directory: /Users/york/scratch/psi4/
     Sequential DSRG transformation                     FALSE
     Omit blocks of >= 3 virtual indices                FALSE
     Read amplitudes from current dir                    TRUE
-    Write amplitudes to current dir                    FALSE
+    Write amplitudes to current dir                     TRUE
     Flow parameter                                 5.000e-01
     Energy convergence threshold                   1.000e-08
-    Residual convergence threshold                 1.000e-08
+    Residual convergence threshold                 1.000e-07
     Recursive single commutator threshold          1.000e-12
     Taylor expansion threshold                     1.000e-03
     Intruder amplitudes threshold                  1.000e-01
@@ -773,8 +1195,8 @@ Scratch directory: /Users/york/scratch/psi4/
 
   ==> Build Initial Amplitudes Guesses <==
 
-    Reading T2 amplitudes from disk ...  Done. Timing      0.008 s
-    Reading T1 amplitudes from disk ...  Done. Timing      0.001 s
+    Reading T2 amplitudes from disk ...  Done. Timing      0.001 s
+    Reading T1 amplitudes from disk ...  Done. Timing      0.000 s
 
   ==> Initial Excitation Amplitudes Summary <==
 
@@ -782,25 +1204,25 @@ Scratch directory: /Users/york/scratch/psi4/
     Largest T1 amplitudes (absolute values):
         i    a                i    a                i    a
     -----------------------------------------------------------------
-    [  15   19] 0.1821723 [   7    8] 0.0771893 [  10   11] 0.0771893
-    [  15   16] 0.0527730 [   7    9] 0.0523783 [  10   12] 0.0523783
-    [  15   17] 0.0310516 [   0    1] 0.0098672 [  20   22] 0.0066040
-    [  23   25] 0.0066040 [  23   24] 0.0060241 [  20   21] 0.0060241
-    [  14   15] 0.0056736 [   1    5] 0.0032787 [  14   17] 0.0027744
+    [  15   19] 0.1821726 [   7    8] 0.0771894 [  10   11] 0.0771894
+    [  15   16] 0.0527731 [   7    9] 0.0523782 [  10   12] 0.0523782
+    [  15   17] 0.0310517 [   0    1] 0.0098672 [  20   22] 0.0066040
+    [  23   25] 0.0066040 [  23   24] 0.0060242 [  20   21] 0.0060242
+    [  14   15] 0.0056743 [   1    5] 0.0032791 [  14   17] 0.0027744
     -----------------------------------------------------------------
-    2-Norm of T1 vector:                            0.233796011688263
+    2-Norm of T1 vector:                            0.233796340800733
     Number of nonzero elements:                                    22
     -----------------------------------------------------------------
     Largest T2 amplitudes (absolute values):
         i    j    a    b                i    j    a    b                i    j    a    b
     -----------------------------------------------------------------------------------------------
-    [  15    1   15    2] 0.0736069 [  15   20   15   21] 0.0678539 [  15   23   15   24] 0.0678539
-    [   1    1    1    2] 0.0676179 [   1   20    1   21] 0.0601330 [   1   23    1   24] 0.0601330
-    [  15    0   15    3] 0.0575676 [  10   20   10   21] 0.0543407 [   7   23    7   24] 0.0543407
-    [  14   14   10   10] 0.0496121 [  14   14    7    7] 0.0496121 [   1    0    1    3] 0.0493857
-    [   7    0    7    3] 0.0487020 [  10    0   10    3] 0.0487020 [  15   14   15   16] 0.0471508
+    [  15    1   15    2] 0.0736066 [  15   20   15   21] 0.0678540 [  15   23   15   24] 0.0678540
+    [   1    1    1    2] 0.0676196 [   1   20    1   21] 0.0601327 [   1   23    1   24] 0.0601327
+    [  15    0   15    3] 0.0575674 [  10   20   10   21] 0.0543405 [   7   23    7   24] 0.0543405
+    [  14   14    7    7] 0.0496099 [  14   14   10   10] 0.0496099 [   1    0    1    3] 0.0493837
+    [   7    0    7    3] 0.0487023 [  10    0   10    3] 0.0487023 [  15   14   15   16] 0.0471506
     -----------------------------------------------------------------------------------------------
-    2-Norm of T2 vector:                                                          0.655298335541554
+    2-Norm of T2 vector:                                                          0.655299144971364
     Number of nonzero elements:                                                                3032
     -----------------------------------------------------------------------------------------------
 
@@ -809,7 +1231,7 @@ Scratch directory: /Users/york/scratch/psi4/
     T1 amplitudes larger than 0.1000:
      Amplitudes      Value                   Denominator
     ----------------------------------------------------------------
-    [  15   19]   0.182172259 (  1.200555 -   3.143773 =  -1.943218)
+    [  15   19]  -0.182172588 (  1.200555 -   3.143773 =  -1.943218)
     ----------------------------------------------------------------
     T2 amplitudes larger than 0.1000: NULL
 
@@ -822,22 +1244,18 @@ Scratch directory: /Users/york/scratch/psi4/
            ---------------------------  ---------------------  ---------------------  -----------------
     Iter.        Corr.         Delta       Hbar1      Hbar2        T1         T2        Hbar     Amp.    DIIS
     ---------------------------------------------------------------------------------------------------------
-       1    -0.182063344949 -1.821e-01   8.099e-01  9.166e-01   1.065e-06  1.026e-05     2.747    0.044
-       2    -0.182063392809 -4.786e-08   8.099e-01  9.166e-01   4.037e-07  5.101e-06     2.704    0.043  S
-       3    -0.182063425214 -3.241e-08   8.099e-01  9.166e-01   1.431e-07  2.820e-06     2.669    0.043  S/E
-       4    -0.182063440674 -1.546e-08   8.099e-01  9.166e-01   2.509e-08  9.837e-07     2.641    0.042  S/E
-       5    -0.182063441204 -5.299e-10   8.099e-01  9.166e-01   2.856e-08  3.516e-07     2.644    0.043  S/E
-       6    -0.182063437502  3.702e-09   8.099e-01  9.166e-01   6.087e-09  9.548e-08     2.664    0.043  S/E
-       7    -0.182063436168  1.334e-09   8.099e-01  9.166e-01   1.980e-09  3.244e-08     2.659    0.043  S/E
-       8    -0.182063435373  7.958e-10   8.099e-01  9.166e-01   1.267e-09  1.027e-08     2.618    0.044  S/E
-       9    -0.182063435176  1.960e-10   8.099e-01  9.166e-01   5.410e-10  3.199e-09     2.654    0.042  S/E
+       1    -0.182063355181 -1.821e-01   8.099e-01  9.166e-01   4.222e-07  3.210e-06     2.963    0.047
+       2    -0.182063408996 -5.382e-08   8.099e-01  9.166e-01   1.364e-07  1.545e-06     2.989    0.050  S
+       3    -0.182063422245 -1.325e-08   8.099e-01  9.166e-01   5.616e-08  7.983e-07     2.798    0.044  S/E
+       4    -0.182063432769 -1.052e-08   8.099e-01  9.166e-01   1.210e-08  2.785e-07     2.805    0.044  S/E
+       5    -0.182063436124 -3.356e-09   8.099e-01  9.166e-01   4.575e-09  7.617e-08     2.768    0.043  S/E
     ---------------------------------------------------------------------------------------------------------
 
   ==> MR-LDSRG(2) Energy Summary <==
 
-    E0 (reference)                 =    -109.090719613198431
-    MR-LDSRG(2) correlation energy =      -0.182063435176489
-    MR-LDSRG(2) total energy       =    -109.272783048374919
+    E0 (reference)                 =    -109.090719613198388
+    MR-LDSRG(2) correlation energy =      -0.182063436124187
+    MR-LDSRG(2) total energy       =    -109.272783049322570
 
   ==> Final Excitation Amplitudes Summary <==
 
@@ -851,19 +1269,19 @@ Scratch directory: /Users/york/scratch/psi4/
     [  23   25] 0.0066039 [  23   24] 0.0060242 [  20   21] 0.0060242
     [  14   15] 0.0056747 [   1    5] 0.0032789 [  14   17] 0.0027744
     -----------------------------------------------------------------
-    2-Norm of T1 vector:                            0.233796268273190
+    2-Norm of T1 vector:                            0.233796268446774
     Number of nonzero elements:                                    22
     -----------------------------------------------------------------
     Largest T2 amplitudes (absolute values):
         i    j    a    b                i    j    a    b                i    j    a    b
     -----------------------------------------------------------------------------------------------
     [  15    1   15    2] 0.0736065 [  15   20   15   21] 0.0678540 [  15   23   15   24] 0.0678540
-    [   1    1    1    2] 0.0676201 [   1   23    1   24] 0.0601326 [   1   20    1   21] 0.0601326
+    [   1    1    1    2] 0.0676201 [   1   20    1   21] 0.0601326 [   1   23    1   24] 0.0601326
     [  15    0   15    3] 0.0575673 [  10   20   10   21] 0.0543403 [   7   23    7   24] 0.0543403
-    [  14   14   10   10] 0.0496100 [  14   14    7    7] 0.0496100 [   1    0    1    3] 0.0493829
+    [  14   14    7    7] 0.0496100 [  14   14   10   10] 0.0496100 [   1    0    1    3] 0.0493829
     [   7    0    7    3] 0.0487023 [  10    0   10    3] 0.0487023 [  15   14   15   16] 0.0471505
     -----------------------------------------------------------------------------------------------
-    2-Norm of T2 vector:                                                          0.655298982200621
+    2-Norm of T2 vector:                                                          0.655298980476575
     Number of nonzero elements:                                                                3032
     -----------------------------------------------------------------------------------------------
 
@@ -872,7 +1290,7 @@ Scratch directory: /Users/york/scratch/psi4/
     T1 amplitudes larger than 0.1000:
      Amplitudes      Value                   Denominator
     ----------------------------------------------------------------
-    [  15   19]   0.182172515 (  1.200555 -   3.143773 =  -1.943218)
+    [  15   19]  -0.182172515 (  1.200555 -   3.143773 =  -1.943218)
     ----------------------------------------------------------------
     T2 amplitudes larger than 0.1000: NULL
 
@@ -880,17 +1298,17 @@ Scratch directory: /Users/york/scratch/psi4/
 
              [H1, T1]    [H1, T2]    [H2, T1]    [H2, T2]
     -----------------------------------------------------
-    -> C0       0.037       0.040       0.080       1.620
-    -> C1       0.077       0.407       0.609       6.124
-    -> C2                   0.962       2.552      10.947
+    -> C0       0.022       0.024       0.048       0.991
+    -> C1       0.045       0.242       0.365       3.663
+    -> C2                   0.571       1.514       6.503
     -----------------------------------------------------
 
 
-  Time to prepare integrals:        0.371 seconds
-  Time to run job          :       24.485 seconds
-  Total                    :       24.485 seconds    MR-LDSRG(2) relaxed energy........................................PASSED
+  Time to prepare integrals:        0.380 seconds
+  Time to run job          :       14.636 seconds
+  Total                    :       14.636 seconds    MR-LDSRG(2) relaxed energy........................................PASSED
 
-    Psi4 stopped on: Saturday, 16 May 2020 10:48PM
-    Psi4 wall time for execution: 0:00:27.86
+    Psi4 stopped on: Monday, 18 May 2020 01:47AM
+    Psi4 wall time for execution: 0:00:45.87
 
 *** Psi4 exiting successfully. Buy a developer a beer!
