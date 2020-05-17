@@ -422,7 +422,7 @@ void SA_MRDSRG::update_t1() {
     Hbar1_["uv"] = Hbar1copy["uv"];
 }
 
-void SA_MRDSRG::dump_amps_to_disk() {
+void SA_MRDSRG::dump_amps_to_cwd() {
     // dump to psi4 scratch directory for reference relaxation
     if (restart_ and (relax_ref_ != "NONE")) {
         t1_file_ = write_disk_BT(T1_, "t1", restart_file_prefix_);

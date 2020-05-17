@@ -48,7 +48,10 @@ class SA_MRPT2 : public SA_DSRGPT {
              std::shared_ptr<ForteIntegrals> ints, std::shared_ptr<MOSpaceInfo> mo_space_info);
 
     /// Compute the corr_level energy with fixed reference
-    virtual double compute_energy();
+    double compute_energy() override;
+
+    /// Dump DSRG-MRPT2 amplitudes to file
+    void dump_amps_to_cwd() override;
 
   protected:
     /// Start-up function called in the constructor

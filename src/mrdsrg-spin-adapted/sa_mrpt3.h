@@ -48,7 +48,7 @@ class SA_MRPT3 : public SA_DSRGPT {
              std::shared_ptr<ForteIntegrals> ints, std::shared_ptr<MOSpaceInfo> mo_space_info);
 
     /// Compute the corr_level energy with fixed reference
-    virtual double compute_energy();
+    double compute_energy() override;
 
   protected:
     /// Start-up function called in the constructor

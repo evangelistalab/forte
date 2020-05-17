@@ -74,8 +74,6 @@ void SA_MRDSRG::read_options() {
     r_conv_ = foptions_->get_double("R_CONVERGENCE");
 
     restart_ = foptions_->get_bool("DSRG_RESTART");
-    dump_amps_cwd_ = foptions_->get_bool("DSRG_DUMP_AMPS");
-    read_amps_cwd_ = foptions_->get_bool("DSRG_READ_AMPS");
 }
 
 void SA_MRDSRG::startup() {
@@ -233,7 +231,7 @@ double SA_MRDSRG::compute_energy() {
     //    }
 
     // dump amplitudes to disk
-    dump_amps_to_disk();
+    dump_amps_to_cwd();
 
     return Etotal;
 }

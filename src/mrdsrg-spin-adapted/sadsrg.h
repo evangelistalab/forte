@@ -101,6 +101,9 @@ class SADSRG : public DynamicCorrelationSolver {
     /// Get master file name for T2
     std::string t2_file() { return t2_file_; }
 
+    /// Dump the converged amplitudes to file
+    virtual void dump_amps_to_cwd() = 0;
+
     /// Clean up amplitudes checkpoint files
     void clean_checkpoints();
 
@@ -170,6 +173,11 @@ class SADSRG : public DynamicCorrelationSolver {
     std::string t1_file_;
     /// Master checkpoint file for T2
     std::string t2_file_;
+
+    /// Dump amplitudes to current directory
+    bool dump_amps_cwd_;
+    /// Read amplitudes from current directory
+    bool read_amps_cwd_;
 
     // ==> system memory related <==
 

@@ -51,7 +51,10 @@ class SA_MRDSRG : public SADSRG {
               std::shared_ptr<ForteIntegrals> ints, std::shared_ptr<MOSpaceInfo> mo_space_info);
 
     /// Compute the corr_level energy with fixed reference
-    virtual double compute_energy();
+    double compute_energy() override;
+
+    /// Dump the converged amplitudes to file
+    void dump_amps_to_cwd() override;
 
   protected:
     /// Start-up function called in the constructor
@@ -87,11 +90,6 @@ class SA_MRDSRG : public SADSRG {
 
     /// Prefix for file name for restart
     std::string restart_file_prefix_;
-
-    /// Dump amplitudes to current directory
-    bool dump_amps_cwd_;
-    /// Read amplitudes from current directory
-    bool read_amps_cwd_;
 
     /// Correlation level option
     std::string corrlv_string_;
@@ -152,9 +150,6 @@ class SA_MRDSRG : public SADSRG {
     void guess_t1(BlockedTensor& F, BlockedTensor& T2, BlockedTensor& T1);
     /// Update T1 in every iteration
     void update_t1();
-
-    /// Dump the converged amplitudes to file
-    void dump_amps_to_disk();
 
     /// Compute DSRG-transformed Hamiltonian
     void compute_hbar();
