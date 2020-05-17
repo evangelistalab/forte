@@ -80,11 +80,6 @@ void MASTER_DSRG::startup() {
             value = 1.0;
         }
     });
-
-    // set up file name prefix
-    filename_prefix_ = psi::PSIOManager::shared_object()->get_default_path() + "forte." +
-                       std::to_string(getpid()) + "." +
-                       psi::Process::environment.molecule()->name();
 }
 
 void MASTER_DSRG::read_options() {
@@ -123,6 +118,9 @@ void MASTER_DSRG::read_options() {
 
     ntamp_ = foptions_->get_int("NTAMP");
     intruder_tamp_ = foptions_->get_double("INTRUDER_TAMP");
+
+    dump_amps_cwd_ = foptions_->get_bool("DSRG_DUMP_AMPS");
+    read_amps_cwd_ = foptions_->get_bool("DSRG_READ_AMPS");
 
     relax_ref_ = foptions_->get_str("RELAX_REF");
 

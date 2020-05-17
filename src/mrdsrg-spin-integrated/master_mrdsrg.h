@@ -178,13 +178,15 @@ class MASTER_DSRG : public DynamicCorrelationSolver {
 
     // ==> file names for disk support <==
 
-    /// Prefix for file name
-    std::string filename_prefix_;
-
     /// Master checkpoint file for T1
     std::string t1_file_;
     /// Master checkpoint file for T2
     std::string t2_file_;
+
+    /// Dump amplitudes to current directory
+    bool dump_amps_cwd_;
+    /// Read amplitudes from current directory
+    bool read_amps_cwd_;
 
     // ==> some common energies for all DSRG levels <==
 

@@ -33,6 +33,8 @@
 
 #include "boost/format.hpp"
 
+#include "psi4/libmints/molecule.h"
+#include "psi4/libpsi4util/process.h"
 #include "psi4/libpsi4util/PsiOutStream.h"
 #include "psi4/libmints/molecule.h"
 
@@ -131,6 +133,11 @@ void MRDSRG::startup() {
         Fa_ = eigens[0];
         Fb_ = eigens[1];
     }
+
+    // set up file name prefix
+    restart_file_prefix_ = psi::PSIOManager::shared_object()->get_default_path() + "forte." +
+                           std::to_string(getpid()) + "." +
+                           psi::Process::environment.molecule()->name();
 }
 
 void MRDSRG::print_options() {
@@ -172,6 +179,10 @@ void MRDSRG::print_options() {
         {"Sequential DSRG transformation", true_false_string(sequential_Hbar_)});
     calculation_info_string.push_back(
         {"Omit blocks of >= 3 virtual indices", true_false_string(nivo_)});
+    calculation_info_string.push_back(
+        {"Read amplitudes from current dir", true_false_string(read_amps_cwd_)});
+    calculation_info_string.push_back(
+        {"Write amplitudes to current dir", true_false_string(dump_amps_cwd_)});
 
     // print some information
     print_h2("Calculation Information");
@@ -315,8 +326,6 @@ double MRDSRG::compute_energy() {
     }
 
     if (initialize_T) {
-        // build initial amplitudes
-//        print_h2("Build Initial Amplitude from DSRG-MRPT2");
         T1_ = BTF_->build(tensor_type_, "T1 Amplitudes", spin_cases({"hp"}));
         T2_ = BTF_->build(tensor_type_, "T2 Amplitudes", spin_cases({"hhpp"}));
         if (eri_df_) {
@@ -324,9 +333,6 @@ double MRDSRG::compute_energy() {
         } else {
             guess_t(V_, T2_, F_, T1_);
         }
-
-//        // check initial amplitudes
-//        analyze_amplitudes("First-Order", T1_, T2_);
     }
 
     // get reference energy
@@ -369,9 +375,7 @@ double MRDSRG::compute_energy() {
     }
 
     // dump amplitudes to file
-    bool restart_useful = (relax_ref_ != "NONE" or multi_state_);
-    bool dsrg_iterative = (corrlv_string_.find("DSRG") != corrlv_string_.npos);
-    if (restart_ and restart_useful and dsrg_iterative) {
+    if (corrlv_string_.find("DSRG") != corrlv_string_.npos) {
         dump_amps_to_file();
     }
 

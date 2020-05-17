@@ -115,6 +115,12 @@ class MRDSRG : public MASTER_DSRG {
     /// Read amplitudes from previous computations
     bool restart_;
 
+    /// Prefix for file name
+    std::string restart_file_prefix_;
+
+    /// Dump the converged amplitudes to file
+    void dump_amps_to_file();
+
     /// CASCI eigen values and eigen vectors for state averaging
     std::vector<std::vector<std::pair<psi::SharedVector, double>>> eigens_;
     /// Determinants in the model space
@@ -237,18 +243,6 @@ class MRDSRG : public MASTER_DSRG {
     /// Update T1 in every iteration
     void update_t1_std();
     void update_t1_nocv();
-
-    /// Dump the converged amplitudes to file
-    void dump_amps_to_file();
-
-    /// Write T2 to files MRDSRG_T2_XX.dat, XX = AA, AB, BB
-    void write_t2_file(BlockedTensor& T2, const std::string& spin);
-    /// Read T2 from files MRDSRG_T2_XX.dat, XX = AA, AB, BB
-    void read_t2_file(BlockedTensor& T2, const std::string& spin);
-    /// Write T1 to files MRDSRG_T1_X.dat, X = A, B
-    void write_t1_file(BlockedTensor& T1, const std::string& spin);
-    /// Read T1 from files MRDSRG_T1_X.dat, X = A, B
-    void read_t1_file(BlockedTensor& T1, const std::string& spin);
 
     /// List of large amplitudes
     std::vector<std::pair<std::vector<size_t>, double>> lt1a_;

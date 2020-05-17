@@ -29,6 +29,7 @@
 #include <algorithm>
 #include <map>
 #include <vector>
+#include <sys/stat.h>
 
 #include "psi4/psi4-dec.h"
 #include "psi4/libpsi4util/PsiOutStream.h"
@@ -50,7 +51,12 @@ void MRDSRG::guess_t(BlockedTensor& V, BlockedTensor& T2, BlockedTensor& F, Bloc
     // if fully decouple core-core-virtual-virtual block
     std::string ccvv_source = foptions_->get_str("CCVV_SOURCE");
 
-    if (restart_ and (not t2_file_.empty())) {
+    struct stat buf;
+    if (read_amps_cwd_ and (stat("forte.mrdsrg.t2.master.txt", &buf) == 0) and t2_file_.empty()) {
+        outfile->Printf("\n    Reading T2 amplitudes from disk ...");
+        read_disk_BT(T2, "forte.mrdsrg.t2.master.txt");
+        outfile->Printf(" Done.");
+    } else if (restart_ and (not t2_file_.empty())) {
         outfile->Printf("\n    Reading previous T2 amplitudes from disk ...");
         read_disk_BT(T2, t2_file_);
         outfile->Printf(" Done.");
@@ -62,7 +68,11 @@ void MRDSRG::guess_t(BlockedTensor& V, BlockedTensor& T2, BlockedTensor& F, Bloc
         }
     }
 
-    if (restart_ and (not t1_file_.empty())) {
+    if (read_amps_cwd_ and (stat("forte.mrdsrg.t1.master.txt", &buf) == 0) and t1_file_.empty()) {
+        outfile->Printf("\n    Reading T1 amplitudes from disk ...");
+        read_disk_BT(T1, "forte.mrdsrg.t1.master.txt");
+        outfile->Printf(" Done.");
+    } else if (restart_ and (not t1_file_.empty())) {
         outfile->Printf("\n    Reading previous T1 amplitudes from disk ...");
         read_disk_BT(T1, t1_file_);
         outfile->Printf(" Done.");
@@ -1621,7 +1631,16 @@ void MRDSRG::print_intruder(const std::string& name,
 }
 
 void MRDSRG::dump_amps_to_file() {
-    t1_file_ = write_disk_BT(T1_, "t1", filename_prefix_);
-    t2_file_ = write_disk_BT(T2_, "t2", filename_prefix_);
+    // dump to psi4 scratch directory for reference relaxation
+    if (restart_ and (relax_ref_ != "NONE")) {
+        t1_file_ = write_disk_BT(T1_, "t1", restart_file_prefix_);
+        t2_file_ = write_disk_BT(T2_, "t2", restart_file_prefix_);
+    }
+
+    // dump amplitudes to the current directory
+    if (dump_amps_cwd_) {
+        write_disk_BT(T1_, "t1", "forte.mrdsrg");
+        write_disk_BT(T2_, "t2", "forte.mrdsrg");
+    }
 }
 } // namespace forte
