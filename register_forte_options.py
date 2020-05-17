@@ -443,7 +443,7 @@ def register_aci_options(options):
 
     options.add_bool("ACI_PRINT_REFS", False, "Print the P space?")
 
-    options.add_int("DL_GUESS_SIZE",26,
+    options.add_int("DL_GUESS_SIZE",50,
                           "Set the initial guess space size for DL solver")
 
     options.add_int("N_GUESS_VEC", 10,
