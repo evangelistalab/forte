@@ -355,7 +355,7 @@ Here we look at a more advanced example of MR-LDSRG(2) using the same molecule. 
     }
 
 .. warning::
-  This example takes a long time to finish (~30 min on a laptop using 8 threads).
+  This example takes a long time to finish (~5 min on a laptop).
 
 There are several things to notice.
 
@@ -679,7 +679,46 @@ We have implemented the following choices for the zeroth-order Hamiltonian.
   cvcv, cvvc, vcvc, vccv, avav, avva, vava, and vaav.
   The computation procedure is similar to that of Dyall Hamiltonian.
 
-6. Examples
+6. Restart iterative MRDSRG from a previous computation
++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+The convergence of iterative MRDSRG [e.g., MR-LDSRG(2)] can be greatly improved if it starts from good initial guesses
+(e.g., from PT3, loosely converged, or near-by geometry).
+The amplitudes can be dumped to the current working directory on disk for later use by turning on the ``DSRG_DUMP_AMPS`` keyword.
+These amplitudes are stored in the following way:
+
+  - The master file (e.g., ``forte.mrdsrg.t1.master.txt``) stores the block name, the corresponding file name,
+    and the number of elements for each block of the tensor (e.g., T1 amplitudes).
+  - For each block, the actual amplitudes data are stored in a binary file that starts with the number of elements,
+    followed by the actual data.
+
+To read these amplitudes in the current directory, the user needs to invoke the ``DSRG_READ_AMPS`` keyword.
+
+.. note::
+  In general, we should make sure the orbital phases are consistent between reading and writing amplitudes.
+  For example, the following shows part of the input to ensure the coefficient of the first AO being positive for all MOs. ::
+
+    ...
+    Escf, wfn = energy('scf', return_wfn=True)
+
+    # fix orbital phase
+    Ca = wfn.Ca().clone()
+    nirrep = wfn.nirrep()
+    rowdim, coldim = Ca.rowdim(), Ca.coldim()
+    for h in range(nirrep):
+        for i in range(coldim[h]):
+            v = Ca.get(h, 0, i)
+            if v < 0:
+                for j in range(rowdim[h]):
+                    Ca.set(h, j, i, -1.0 * Ca.get(h, j, i))
+    wfn.Ca().copy(Ca)
+
+    energy('forte', ref_wfn=wfn)
+
+For reference relaxation, initial amplitudes are obtained from the previous converged values by default.
+To turn this feature off (not recommended), please set ``DSRG_RELAX_RESTART`` to ``False``.
+
+7. Examples
 +++++++++++
 
 Here we slightly modify the more advanced example in :ref:`General DSRG Examples <basic_dsrg_example>`
@@ -706,7 +745,7 @@ to adopt the sequential transformation and NIVO approximation. ::
   Since the test case is very small, invoking these two keywords does not make the computation faster.
   A significant speed improvement can be observed for a decent amout of basis functions (:math:`\sim 100`).
 
-7. Related Options
+8. Related Options
 ++++++++++++++++++
 
 **RELAX_REF**
@@ -730,6 +769,13 @@ Max macro iterations for MR-DSRG reference relaxation.
 
 * Type: integer
 * Default: 15
+
+**DSRG_RELAX_RESTART**
+
+Use initial amplitudes guesses from the previous reference relaxation step.
+
+* Type: boolean
+* Default: True
 
 **SEMI_CANONICAL**
 
@@ -761,6 +807,25 @@ The zeroth-order Hamiltonian used in the MRDSRG code for computing DSRG-MRPT2 en
 * Type: string
 * Options: FDIAG, FFULL, FDIAG_VACTV, FDIAG_VDIAG
 * Default: FDIAG
+
+**DSRG_DUMP_AMPS**
+
+Dump amplitudes to the current directory for a MRDSRG method.
+File names for T1 and T2 amplitudes are ``forte.mrdsrg.t1.mater.txt``
+and ``forte.mrdsrg.t2.master.txt``, respectively.
+Each "master" file stores the info about tensor block name, file name, and the number of elements,
+where the actual data of a tensor block are stored as a binary file.
+
+* Type: boolean
+* Default: False
+
+**DSRG_READ_AMPS**
+
+Read amplitudes from the current directory for iterative MRDSRG methods.
+File format and content should match those with ``DSRG_DUMP_AMPS``.
+
+* Type: boolean
+* Default: False
 
 
 Density Fitted (DF) and Cholesky Decomposition (CD) Implementations
@@ -1299,7 +1364,7 @@ TODOs
 0. Re-enable MS, XMS, and DWMS
 ++++++++++++++++++++++++++++++
 
-These are disabled due to a infrastructure change.
+These are disabled due to an infrastructure change.
 
 1. DSRG-MRPT2 Analytic Energy Gradients
 +++++++++++++++++++++++++++++++++++++++
@@ -1443,6 +1508,7 @@ Acronyms used in the following text:
   mrdsrg-pt2-5                        SS, R                    :math:`\text{HF}`                             long, PT2, DIIS, 0th-order Hamiltonian
   mrdsrg-srgpt2-1                     SS, U                    :math:`\text{BeH}_{2}`                        Long, SRG_PT2
   mrdsrg-srgpt2-2                     SS, U                    :math:`\text{BeH}_{2}`                        LONG, SRG_PT2, Dyall Hamiltonian
+  mrdsrg-ldsrg2-1                     SS, U                    :math:`\text{N}_{2}`                          long, read amplitudes
   mrdsrg-ldsrg2-df-1                  SS, R                    :math:`\text{BeH}_{2}`                        CD, long
   mrdsrg-ldsrg2-df-2                  SS, R                    :math:`\text{HF}`                             CD, long
   mrdsrg-ldsrg2-df-3                  SS, U                    :math:`\text{H}_4` (rectangular)              CD, long
@@ -1477,6 +1543,7 @@ Add test cases when DWMS is back to life.
   mrdsrg-spin-adapted-2         SS, PR              :math:`\text{HF}`            long, LDSRG(2), non-semicanonical orbitals
   mrdsrg-spin-adapted-3         SS, R, SQ, NIVO     :math:`\text{HF}`            long, CD, LDSRG(2)
   mrdsrg-spin-adapted-4         SS, U               :math:`\text{N}_2`           long, CD, LDSRG(2), non-semicanonical, zero ccvv
+  mrdsrg-spin-adapted-5         SS, U               :math:`\text{N}_2`           long, read/dump amplitudes
   mrdsrg-spin-adapted-pt2-1     SS, U               :math:`\text{HF}`            CD
   mrdsrg-spin-adapted-pt2-2     SS, U               :math:`\text{HF}`            CD, non-semicanonical orbitals, zero ccvv source
   mrdsrg-spin-adapted-pt2-3     SS, PR              p-benzyne                    DiskDF
