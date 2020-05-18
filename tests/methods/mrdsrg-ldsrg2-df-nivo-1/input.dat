@@ -77,6 +77,7 @@ set forte {
   e_convergence          8
   relax_ref              twice
   dsrg_nivo              true
+  dsrg_read_amps         true
 }
 
 Escf, wfn = energy('scf', return_wfn=True)
