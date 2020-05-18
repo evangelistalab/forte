@@ -14,7 +14,8 @@ MAINDIR = os.getcwd()
 
 TIMING_RE = re.compile(r'Psi4 exiting successfully. Buy a developer a beer!')
 
-TEST_LEVELS = {'short': ['short'], 'long': ['long'], 'all': ['short', 'long']}
+TEST_LEVELS = {'short': ['short'], 'long': ['short', 'long'], 'ultralong': ['ultralong'],
+               'all': ['short', 'long', 'ultralong']}
 
 class bcolors:
     HEADER = '\033[95m'
@@ -24,7 +25,7 @@ class bcolors:
     FAIL = '\033[91m'
     ENDC = '\033[0m'
 
-    
+
 def run_job(jobdir, psi4command, test_results, test_time):
     """Run a test in jobdir using the psi4command"""
     start = time.time()
@@ -100,7 +101,7 @@ def setup_argument_parser():
     parser.add_argument(
         '--type',
         help='which type of test to run? (default: short)',
-        choices={'short', 'long', 'all'},
+        choices={'short', 'long', 'ultralong', 'all'},
         default='short')
     parser.add_argument(
         '--group',
@@ -180,15 +181,15 @@ def main():
                     if len(local_failed_tests) > 0:
                         group_failed_tests[test_level] = local_failed_tests
             if len(group_failed_tests) > 0:
-                failed_tests[test_group] = group_failed_tests 
- 
+                failed_tests[test_group] = group_failed_tests
+
     # print a summary of the tests
     summary_str  = 'Summary:\n'
     summary_str += ' ' * 4 + '=' * 76 + '\n'
     summary_str += '    TEST' + ' ' * 57 + 'RESULT TIME (s)\n'
     summary_str += ' ' * 4 + '-' * 76 + '\n'
     summary_str += '\n'.join(summary) + '\n'
-    summary_str += ' ' * 4 + '=' * 76 
+    summary_str += ' ' * 4 + '=' * 76
 
     print(summary_str)
     print('\nTotal time: %6.1f s\n' % total_time)
@@ -196,7 +197,7 @@ def main():
     import datetime
     now = datetime.datetime.now()
     file_name = f'test_results_{now.strftime("%Y-%m-%d-%H%M")}.txt'
- 
+
     with open(file_name, 'w') as outfile:
         outfile.write(summary_str)
         outfile.write('\nTotal time: %6.1f s\n' % total_time)

@@ -215,7 +215,6 @@ mrdsrg_so:
    - mrdsrg_so-2
 mrdsrg-ldsrg2-df:
   short:
-   - mrdsrg-ldsrg2-1
    - mrdsrg-ldsrg2-df-4
    - mrdsrg-ldsrg2-qc-1
    - mrdsrg-ldsrg2-qc-2
@@ -226,7 +225,7 @@ mrdsrg-ldsrg2-df:
    - mrdsrg-ldsrg2-df-seq-nivo-1
    - mrdsrg-ldsrg2-df-seq-nivo-2
    - mrdsrg-ldsrg2-df-seq-nivo-3
-  unused:
+  ultralong:
    - mrdsrg-ldsrg2-df-1
    - mrdsrg-ldsrg2-df-2
    - mrdsrg-ldsrg2-df-3
@@ -235,8 +234,9 @@ mrdsrg-ldsrg2-df:
    - mrdsrg-ldsrg2-df-nivo-3
    - mrdsrg-ldsrg2-df-seq-4
    - mrdsrg-ldsrg2-qc-df-2
-mrdsrg-pt2:
+mrdsrg-spin-integrated:
   short:
+   - mrdsrg-ldsrg2-1
    - mrdsrg-pt2-1
    - mrdsrg-pt2-2
    - mrdsrg-pt2-4
