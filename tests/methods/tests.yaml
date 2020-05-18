@@ -102,6 +102,7 @@ df-dsrg-mrpt2:
    - df-dsrg-mrpt2-3
    - df-dsrg-mrpt2-4
    - df-dsrg-mrpt2-5
+   - df-dsrg-mrpt2-6
    - df-dsrg-mrpt2-threading1
    - df-dsrg-mrpt2-threading2
    - df-dsrg-mrpt2-threading4
@@ -115,7 +116,6 @@ df-dsrg-mrpt2:
    - df-aci-dsrg-mrpt2-1
    - df-aci-dsrg-mrpt2-2
   long:
-   - df-dsrg-mrpt2-6
    - df-dsrg-mrpt2-7-localized-actv
   unused:
    - df-dsrg-mrpt2-testccvv
@@ -211,38 +211,38 @@ mr-dsrg-pt2:
 mrdsrg_so:
   short:
    - mrdsrg_so-1
-  long:
+  untralong:
    - mrdsrg_so-2
 mrdsrg-ldsrg2-df:
   short:
-   - mrdsrg-ldsrg2-df-4
-   - mrdsrg-ldsrg2-qc-1
-   - mrdsrg-ldsrg2-qc-2
+   - mrdsrg-ldsrg2-df-3
+   - mrdsrg-ldsrg2-qc-df-2
+   - mrdsrg-ldsrg2-df-nivo-1
+   - mrdsrg-ldsrg2-df-seq-nivo-1
+   - mrdsrg-ldsrg2-df-seq-nivo-3
   long:
+   - mrdsrg-ldsrg2-df-1
+   - mrdsrg-ldsrg2-df-4
+   - mrdsrg-ldsrg2-df-nivo-3
    - mrdsrg-ldsrg2-df-seq-1
    - mrdsrg-ldsrg2-df-seq-2
    - mrdsrg-ldsrg2-df-seq-3
-   - mrdsrg-ldsrg2-df-seq-nivo-1
-   - mrdsrg-ldsrg2-df-seq-nivo-2
-   - mrdsrg-ldsrg2-df-seq-nivo-3
-  ultralong:
-   - mrdsrg-ldsrg2-df-1
-   - mrdsrg-ldsrg2-df-2
-   - mrdsrg-ldsrg2-df-3
-   - mrdsrg-ldsrg2-df-nivo-1
-   - mrdsrg-ldsrg2-df-nivo-2
-   - mrdsrg-ldsrg2-df-nivo-3
    - mrdsrg-ldsrg2-df-seq-4
-   - mrdsrg-ldsrg2-qc-df-2
+   - mrdsrg-ldsrg2-df-seq-nivo-2
+  ultralong:
+   - mrdsrg-ldsrg2-df-2
+   - mrdsrg-ldsrg2-df-nivo-2
 mrdsrg-spin-integrated:
   short:
-   - mrdsrg-ldsrg2-1
    - mrdsrg-pt2-1
    - mrdsrg-pt2-2
    - mrdsrg-pt2-4
+   - mrdsrg-ldsrg2-1
+   - mrdsrg-ldsrg2-qc-2
   long:
    - mrdsrg-pt2-3
    - mrdsrg-pt2-5
+   - mrdsrg-ldsrg2-qc-1
    - mrdsrg-srgpt2-1
   ultralong:
    - mrdsrg-srgpt2-2
