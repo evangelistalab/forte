@@ -424,7 +424,7 @@ void ExcitedStateSolver::print_wfn(DeterminantHashVec& space, std::shared_ptr<ps
 
         psi::outfile->Printf("\n\n  Most important contributions to root %3d:", n);
 
-        size_t max_dets = std::min(100, evecs->nrow());
+        size_t max_dets = std::min(10, evecs->nrow());
         tmp.subspace(space, evecs, tmp_evecs, max_dets, n);
 
         for (size_t I = 0; I < max_dets; ++I) {

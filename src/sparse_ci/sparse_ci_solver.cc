@@ -574,7 +574,6 @@ bool SparseCISolver::davidson_liu_solver(const DeterminantHashVec& space,
 
                 bad_roots.push_back(std::get<2>(g));
                 rejected += 1;
-                //            }
             }
             count += 1;
         }

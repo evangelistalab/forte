@@ -4,8 +4,8 @@
 import forte
 
 refscf = -14.839846512738 #TEST
-refaci = -14.889051449776 #TEST
-refacipt2 = -14.890048359302 #TEST
+refaci = -14.889166993726 #TEST
+refacipt2 = -14.890166618934 #TEST
 
 molecule li2{
 0 1
@@ -35,13 +35,13 @@ set forte {
   root_sym 0
   charge 0
   sci_enforce_spin_complete false
-#  r_convergence 0.1
+  sci_project_out_spin_contaminants false
   active_ref_type hf 
 }
 
 energy('scf')
 
-#compare_values(refscf, variable("CURRENT ENERGY"),9, "SCF energy") #TEST
+compare_values(refscf, variable("CURRENT ENERGY"),9, "SCF energy") #TEST
 
 energy('forte')
 compare_values(refaci, variable("ACI ENERGY"),9, "ACI energy") #TEST
