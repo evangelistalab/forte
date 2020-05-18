@@ -355,7 +355,7 @@ Here we look at a more advanced example of MR-LDSRG(2) using the same molecule. 
     }
 
 .. warning::
-  This example takes a long time to finish (~5 min on a laptop).
+  This example takes a long time to finish (~3 min on a 2018 15-inch MacBook Pro).
 
 There are several things to notice.
 
