@@ -233,6 +233,12 @@ PYBIND11_MODULE(forte, m) {
         .def("oei_b", &ForteIntegrals::oei_b, "Get the beta one-electron integral")
         //.def("set_oei_from_asints", &ForteIntegrals::set_oei_from_asints)
         //.def("set_tei_from_asints", &ForteIntegrals::set_tei_from_asints)
+        .def("frozen_core_energy", &ForteIntegrals::frozen_core_energy,
+             "Get the frozen core energy (contribution from FROZEN_DOCC)")
+        .def("scalar", &ForteIntegrals::scalar,
+             "Get the constant scalar of H")
+        .def("set_scalar", &ForteIntegrals::set_scalar,
+             "Set the scalar value of H")
         .def("build_from_asints", &ForteIntegrals::build_from_asints)
         .def("build_from_another_ints", &ForteIntegrals::build_from_another_ints);
 

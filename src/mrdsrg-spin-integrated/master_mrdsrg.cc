@@ -402,7 +402,7 @@ double MASTER_DSRG::compute_reference_energy_from_ints(std::shared_ptr<ForteInte
     F.block("CC")("pq") += Vtemp("prqs") * Gamma1_.block("AA")("rs");
     F.block("AA")("pq") += Vtemp("rpsq") * I("irjs") * O("ij");
 
-    return compute_reference_energy(H, F, V);
+    return compute_reference_energy(H, F, V) + ints->scalar();
 }
 
 double MASTER_DSRG::compute_reference_energy(BlockedTensor H, BlockedTensor F, BlockedTensor V) {
@@ -563,6 +563,13 @@ std::shared_ptr<ActiveSpaceIntegrals> MASTER_DSRG::compute_Heff_actv() {
     fci_ints->set_restricted_one_body_operator(Hbar1_.block("aa").data(),
                                                Hbar1_.block("AA").data());
     fci_ints->set_scalar_energy(Edsrg - Enuc_ - Efrzc_);
+    if(foptions_->get_bool("EMBEDDING_ALIGN_FROZEN") == true)
+    {
+        fci_ints->set_scalar_energy(Edsrg - Enuc_ - Hbar0_);
+        outfile->Printf("\n ===============Shift set to: %8.8f =================", Edsrg - Enuc_ - Hbar0_);
+    }
+    outfile->Printf("\n ===============Enuc_: %8.8f, Efrzc_: %8.8f, Hbar1_: %8.8f, Hbar2_: %8.8f =================", Enuc_, Efrzc_, Hbar1_, Hbar2_);
+    outfile->Printf("\n ===============Integer shift: Refrence: %8.8f, Hbar0: %8.8f, Scalar: %8.8f, EDSRG: %8.8f =================", Eref_, Hbar0_, Edsrg - Enuc_ - Efrzc_, Edsrg);
 
     return fci_ints;
 }

@@ -217,9 +217,14 @@ void ConventionalIntegrals::set_tei_from_another_ints(std::shared_ptr<ForteInteg
         for (size_t q = 0; q < ncmo_; ++q) {
             for (size_t r = 0; r < ncmo_; ++r) {
                 for (size_t s = 0; s < ncmo_; ++s) {
-                    if (p > ncmo_star - 1 && q > ncmo_star - 1) {
+                    int p1 = p - ncmo_star + 1;
+                    int q1 = q - ncmo_star + 1;
+                    int r1 = r - ncmo_star + 1;
+                    int s1 = s - ncmo_star + 1;
+                    if (p1 > 0 && q1 > 0 && r1 > 0 && s1 > 0) {
                         size_t index = aptei_index(p, q, r, s);
                         if (alpha1 == true and alpha2 == true)
+                            outfile->Printf("\n  Updating from ints_2(%d, %d, %d, %d)[%8.8f] to %d, %d, %d, %d of ints_1[%8.8f]", p - ncmo_star, q - ncmo_star, r - ncmo_star, s - ncmo_star, ints_b->aptei_aa(p - ncmo_star, q - ncmo_star, r - ncmo_star, s - ncmo_star), p, q, r, s, aptei_aa(p, q, r, s));
                             aphys_tei_aa[index] = ints_b->aptei_aa(p - ncmo_star, q - ncmo_star, r - ncmo_star, s - ncmo_star);
                         if (alpha1 == true and alpha2 == false)
                             aphys_tei_ab[index] = ints_b->aptei_ab(p - ncmo_star, q - ncmo_star, r - ncmo_star, s - ncmo_star);
@@ -240,6 +245,9 @@ void ConventionalIntegrals::build_from_asints(std::shared_ptr<ActiveSpaceIntegra
     set_tei_from_asints(as_ints, true, true);
     set_tei_from_asints(as_ints, true, false);
     set_tei_from_asints(as_ints, false, false);
+    //outfile->Printf("\n  Updating scalar energy from %8.8f to %8.8f", scalar(), as_ints->scalar_energy());
+    //set_scalar(as_ints->scalar_energy());
+    // Should allign scalar in python driver or other codes!
 }
 
 void ConventionalIntegrals::build_from_another_ints(std::shared_ptr<ForteIntegrals> ints_b, int ncmo_star) {
@@ -250,6 +258,9 @@ void ConventionalIntegrals::build_from_another_ints(std::shared_ptr<ForteIntegra
     set_tei_from_another_ints(ints_b, true, true, ncmo_star);
     set_tei_from_another_ints(ints_b, true, false, ncmo_star);
     set_tei_from_another_ints(ints_b, false, false, ncmo_star);
+    //outfile->Printf("\n  Updating scalar energy from %8.8f to %8.8f", scalar(), ints_b->scalar());
+    //set_scalar(ints_b->scalar());
+    // Should allign scalar in python driver or other codes!
 }
 
 void ConventionalIntegrals::gather_integrals() {

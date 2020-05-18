@@ -324,8 +324,12 @@ void ForteIntegrals::set_oei_from_another_ints(std::shared_ptr<ForteIntegrals> i
     std::vector<double>& p_oei = alpha ? one_electron_integrals_a_ : one_electron_integrals_b_;
     for (size_t p = 0; p < aptei_idx_; ++p) {
         for (size_t q = 0; q < aptei_idx_; ++q) {
-            if (p > ncmo_star - 1 && q > ncmo_star - 1) {
+            int p1 = p - ncmo_star + 1;
+            int q1 = q - ncmo_star + 1;
+            if (p1 > 0 && q1 > 0) {
+                outfile->Printf("\n Older value for (%d, %d): %8.8f", p, q, p_oei[p * aptei_idx_ + q]);
                 p_oei[p * aptei_idx_ + q] = alpha ? ints_b->oei_a(p - ncmo_star, q - ncmo_star) : ints_b->oei_b(p - ncmo_star, q - ncmo_star);
+                outfile->Printf("Updated value for (%d, %d): %8.8f, from ints_2(%d, %d)", p, q, p_oei[p * aptei_idx_ + q], p - ncmo_star, q - ncmo_star);
             }
         }
     }

@@ -183,6 +183,9 @@ def register_embedding_options(forte_options):
     forte_options.add_bool(
         "embedding_disable_semi_check", True,
         "Skip semi-canonicalization check in DSRG code when computing ASET(2)")
+    forte_options.add_bool(
+        "embedding_align_frozen", True,
+        "Align frozen-core energy for different layers")
     forte_options.add_int(
         "embedding_iterations", 1,
         "Number of iterations to relax H_bar, use higher number for stronger correlated environment")
