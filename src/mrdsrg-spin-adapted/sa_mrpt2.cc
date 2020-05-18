@@ -730,15 +730,4 @@ void SA_MRPT2::compute_hbar() {
         Hbar1_.block("aa")("vu") -= 0.5 * temp("uv");
     }
 }
-
-void SA_MRPT2::dump_amps_to_cwd() {
-    if (dump_amps_cwd_) {
-        write_disk_BT(T1_, "t1", "forte.mrdsrg");
-
-        if (ints_type_ == "DISKDF") {
-            outfile->Printf("\n  Warning: not all blocks of T2 are stored.");
-        }
-        write_disk_BT(T2_, "t2", "forte.mrdsrg");
-    }
-}
 } // namespace forte

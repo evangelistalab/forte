@@ -310,11 +310,4 @@ void SA_DSRGPT::renormalize_integrals(bool add) {
 
     rF.stop();
 }
-
-void SA_DSRGPT::dump_amps_to_cwd() {
-    if (dump_amps_cwd_) {
-        write_disk_BT(T1_, "t1", "forte.mrdsrg");
-        write_disk_BT(T2_, "t2", "forte.mrdsrg");
-    }
-}
 } // namespace forte

@@ -109,7 +109,7 @@ class MRDSRG : public MASTER_DSRG {
     bool nivo_;
 
     /// Read amplitudes from previous computations
-    bool restart_;
+    bool restart_amps_relax_;
 
     /// Prefix for file name
     std::string restart_file_prefix_;

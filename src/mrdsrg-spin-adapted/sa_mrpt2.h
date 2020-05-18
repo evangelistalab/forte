@@ -50,9 +50,6 @@ class SA_MRPT2 : public SA_DSRGPT {
     /// Compute the corr_level energy with fixed reference
     double compute_energy() override;
 
-    /// Dump DSRG-MRPT2 amplitudes to file
-    void dump_amps_to_cwd() override;
-
   protected:
     /// Start-up function called in the constructor
     void startup();

@@ -95,7 +95,7 @@ void MRDSRG::read_options() {
         pt2_h0th_ = "FDIAG";
     }
 
-    restart_ = foptions_->get_bool("DSRG_RESTART");
+    restart_amps_relax_ = foptions_->get_bool("DSRG_RELAX_RESTART");
 }
 
 void MRDSRG::startup() {
@@ -174,7 +174,8 @@ void MRDSRG::print_options() {
             return std::string("FALSE");
         }
     };
-    calculation_info_string.push_back({"Restart amplitudes", true_false_string(restart_)});
+    calculation_info_string.push_back(
+        {"Restart amplitudes", true_false_string(restart_amps_relax_)});
     calculation_info_string.push_back(
         {"Sequential DSRG transformation", true_false_string(sequential_Hbar_)});
     calculation_info_string.push_back(
@@ -372,11 +373,6 @@ double MRDSRG::compute_energy() {
     default: {
         Etotal += compute_energy_pt2();
     }
-    }
-
-    // dump amplitudes to file
-    if (corrlv_string_.find("DSRG") != corrlv_string_.npos) {
-        dump_amps_to_file();
     }
 
     return Etotal;

@@ -73,7 +73,7 @@ void SA_MRDSRG::read_options() {
     e_conv_ = foptions_->get_double("E_CONVERGENCE");
     r_conv_ = foptions_->get_double("R_CONVERGENCE");
 
-    restart_ = foptions_->get_bool("DSRG_RESTART");
+    restart_amps_relax_ = foptions_->get_bool("DSRG_RELAX_RESTART");
 }
 
 void SA_MRDSRG::startup() {
@@ -129,7 +129,8 @@ void SA_MRDSRG::print_options() {
             return std::string("FALSE");
         }
     };
-    calculation_info_string.push_back({"Restart amplitudes", true_false_string(restart_)});
+    calculation_info_string.push_back(
+        {"Restart amplitudes", true_false_string(restart_amps_relax_)});
     calculation_info_string.push_back(
         {"Sequential DSRG transformation", true_false_string(sequential_Hbar_)});
     calculation_info_string.push_back(
@@ -229,9 +230,6 @@ double SA_MRDSRG::compute_energy() {
     //    }
     //    default: { Etotal += compute_energy_ldsrg2_qc(); }
     //    }
-
-    // dump amplitudes to disk
-    dump_amps_to_cwd();
 
     return Etotal;
 }

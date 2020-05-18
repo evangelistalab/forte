@@ -822,8 +822,12 @@ double MRDSRG::compute_energy_ldsrg2() {
     // analyze converged amplitudes
     analyze_amplitudes("Final", T1_, T2_);
 
+    // dump amplitudes to file
+    dump_amps_to_file();
+
     // fail to converge
     if (!converged) {
+        clean_checkpoints(); // clean amplitudes in scratch directory
         throw psi::PSIEXCEPTION("The MR-LDSRG(2) computation does not converge.");
     }
     final.stop();
@@ -1099,8 +1103,12 @@ double MRDSRG::compute_energy_ldsrg2_qc() {
     // analyze converged amplitudes
     analyze_amplitudes("Final", T1_, T2_);
 
+    // dump amplitudes to file
+    dump_amps_to_file();
+
     // fail to converge
     if (!converged) {
+        clean_checkpoints(); // clean amplitudes in scratch directory
         throw psi::PSIEXCEPTION("The MR-LDSRG(2)-QC computation does not converge.");
     }
 

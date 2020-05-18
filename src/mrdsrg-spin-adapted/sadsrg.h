@@ -102,7 +102,8 @@ class SADSRG : public DynamicCorrelationSolver {
     std::string t2_file() { return t2_file_; }
 
     /// Dump the converged amplitudes to file
-    virtual void dump_amps_to_cwd() = 0;
+    /// Iterative DSRG methods should override this function
+    virtual void dump_amps_to_cwd() {}
 
     /// Clean up amplitudes checkpoint files
     void clean_checkpoints();

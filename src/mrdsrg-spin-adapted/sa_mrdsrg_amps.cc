@@ -63,7 +63,7 @@ void SA_MRDSRG::guess_t2(BlockedTensor& V, BlockedTensor& T2, BlockedTensor& B) 
     if (read_amps_cwd_ and (stat("forte.mrdsrg.t2.master.txt", &buf) == 0) and t2_file_.empty()) {
         outfile->Printf("\n    Reading T2 amplitudes from disk ...");
         read_disk_BT(T2, "forte.mrdsrg.t2.master.txt");
-    } else if (restart_ and (not t2_file_.empty())) {
+    } else if (restart_amps_relax_ and (not t2_file_.empty())) {
         outfile->Printf("\n    Reading previous T2 amplitudes from disk ...");
         read_disk_BT(T2, t2_file_);
     } else {
@@ -134,7 +134,7 @@ void SA_MRDSRG::guess_t1(BlockedTensor& F, BlockedTensor& T2, BlockedTensor& T1)
     if (read_amps_cwd_ and (stat("forte.mrdsrg.t1.master.txt", &buf) == 0) and t1_file_.empty()) {
         outfile->Printf("\n    Reading T1 amplitudes from disk ...");
         read_disk_BT(T1, "forte.mrdsrg.t1.master.txt");
-    } else if (restart_ and (not t1_file_.empty())) {
+    } else if (restart_amps_relax_ and (not t1_file_.empty())) {
         outfile->Printf("\n    Reading previous T1 amplitudes from disk ...");
         read_disk_BT(T1, t1_file_);
     } else {
@@ -424,15 +424,19 @@ void SA_MRDSRG::update_t1() {
 
 void SA_MRDSRG::dump_amps_to_cwd() {
     // dump to psi4 scratch directory for reference relaxation
-    if (restart_ and (relax_ref_ != "NONE")) {
+    if (restart_amps_relax_ and (relax_ref_ != "NONE")) {
+        outfile->Printf("\n    Dumping amplitudes to scratch directory ...");
         t1_file_ = write_disk_BT(T1_, "t1", restart_file_prefix_);
         t2_file_ = write_disk_BT(T2_, "t2", restart_file_prefix_);
+        outfile->Printf(" Done.");
     }
 
     // dump amplitudes to the current directory
     if (dump_amps_cwd_) {
+        outfile->Printf("\n    Dumping amplitudes to disk ...");
         write_disk_BT(T1_, "t1", "forte.mrdsrg");
         write_disk_BT(T2_, "t2", "forte.mrdsrg");
+        outfile->Printf(" Done.");
     }
 }
 

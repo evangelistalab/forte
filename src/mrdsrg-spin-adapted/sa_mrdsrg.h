@@ -85,8 +85,8 @@ class SA_MRDSRG : public SADSRG {
     /// Omitting blocks with >= 3 virtual indices?
     bool nivo_;
 
-    /// Read amplitudes from previous computations
-    bool restart_;
+    /// Read amplitudes from previous reference relaxation step
+    bool restart_amps_relax_;
 
     /// Prefix for file name for restart
     std::string restart_file_prefix_;

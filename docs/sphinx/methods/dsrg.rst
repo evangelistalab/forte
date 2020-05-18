@@ -683,7 +683,7 @@ We have implemented the following choices for the zeroth-order Hamiltonian.
 +++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 The convergence of iterative MRDSRG [e.g., MR-LDSRG(2)] can be greatly improved if it starts from good initial guesses
-(e.g., from PT3, loosely converged, or near-by geometry).
+(e.g., from loosely converged amplitudes or those of a near-by geometry).
 The amplitudes can be dumped to the current working directory on disk for later use by turning on the ``DSRG_DUMP_AMPS`` keyword.
 These amplitudes are stored in the following way:
 

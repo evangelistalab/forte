@@ -665,7 +665,8 @@ def register_dsrg_options(options):
                       "Form 3-body mbar (only used in dsrg-mrpt2 for testing)")
 
     options.add_bool("DSRGPT", True,
-                      "Renormalize (if true) the integrals for purturbitive calculation (only used in toy code mcsrgpt2)")
+                      "Renormalize (if true) the integrals for purturbitive calculation"
+                      "(only used in toy code mcsrgpt2)")
 
     options.add_str("INTERNAL_AMP", "NONE", ["NONE", "SINGLES_DOUBLES", "SINGLES", "DOUBLES"],
                      "Include internal amplitudes for VCIS/VCISD-DSRG acording to excitation level")
@@ -691,8 +692,8 @@ def register_dsrg_options(options):
                         "used in toy code mcsrgpt2)")
 
     options.add_str("CCVV_SOURCE", "NORMAL", ["ZERO", "NORMAL"],
-                     "Definition of source oporator: special treatment for the CCVV term in DSRG-MRPT2 (used "
-                     "in three-dsrg-mrpt2 code)")
+                     "Definition of source oporator: special treatment for the CCVV term in
+                     "DSRG-MRPT2 (used in three-dsrg-mrpt2 code)")
 
     options.add_str("CCVV_ALGORITHM", "FLY_AMBIT",
                      ["CORE", "FLY_AMBIT", "FLY_LOOP", "BATCH_CORE", "BATCH_VIRTUAL",
@@ -728,7 +729,8 @@ def register_dsrg_options(options):
     options.add_bool("IGNORE_MEMORY_WARNINGS", False, "Force running the DSRG-MRPT3 code using the batched algorithm")
 
     options.add_int("DSRG_DIIS_START", 2,
-                          "Iteration cycle to start adding error vectors for DSRG DIIS (< 1 for not doing DIIS)")
+                    "Iteration cycle to start adding error vectors for DSRG DIIS "
+                    "(< 1 for not doing DIIS)")
 
     options.add_int("DSRG_DIIS_FREQ", 1, "Frequency of extrapolating error vectors for DSRG DIIS")
 
@@ -736,7 +738,8 @@ def register_dsrg_options(options):
 
     options.add_int("DSRG_DIIS_MAX_VEC", 6, "Maximum size of DIIS vectors")
 
-    options.add_bool("DSRG_RESTART", True, "Restart DSRG amplitudes from a previous calculation")
+    options.add_bool("DSRG_RELAX_RESTART", True,
+                     "Restart DSRG amplitudes from a previous reference relaxation step")
 
     options.add_bool("DSRG_READ_AMPS", False, "Read initial amplitudes from the current directory")
 
