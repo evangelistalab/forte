@@ -219,7 +219,6 @@ mrdsrg-ldsrg2-df:
    - mrdsrg-ldsrg2-qc-df-2
    - mrdsrg-ldsrg2-df-nivo-1
    - mrdsrg-ldsrg2-df-seq-nivo-1
-   - mrdsrg-ldsrg2-df-seq-nivo-3
   long:
    - mrdsrg-ldsrg2-df-1
    - mrdsrg-ldsrg2-df-4
@@ -229,6 +228,7 @@ mrdsrg-ldsrg2-df:
    - mrdsrg-ldsrg2-df-seq-3
    - mrdsrg-ldsrg2-df-seq-4
    - mrdsrg-ldsrg2-df-seq-nivo-2
+   - mrdsrg-ldsrg2-df-seq-nivo-3
   ultralong:
    - mrdsrg-ldsrg2-df-2
    - mrdsrg-ldsrg2-df-nivo-2
