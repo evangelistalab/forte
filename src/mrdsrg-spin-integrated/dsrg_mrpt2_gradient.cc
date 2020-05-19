@@ -263,7 +263,6 @@ void DSRG_MRPT2::set_dsrg_tensor() {
 
 void DSRG_MRPT2::set_multiplier() {
     set_z();
-    Z.print();
     outfile->Printf("\n    Solving Entries of W ............................ ");
     set_w();   
     outfile->Printf("Done");
@@ -2424,7 +2423,7 @@ void DSRG_MRPT2::solve_z() {
     Z["WM"] = Z["MW"];
     Z["WE"] = Z["EW"];
 
-    Z.print();
+
 
     outfile->Printf("Done");
 }
@@ -2780,7 +2779,7 @@ void DSRG_MRPT2::write_1rdm_spin_dependent() {
         }
     });
 
-    D1->print();
+    // D1->print();
 
     D1->back_transform(ints_->Ca());
     ints_->wfn()->Da()->copy(D1);
@@ -3097,5 +3096,5 @@ void DSRG_MRPT2::write_2rdm_spin_dependent() {
     outfile->Printf("Done");
 }
 
-}
+} 
 
