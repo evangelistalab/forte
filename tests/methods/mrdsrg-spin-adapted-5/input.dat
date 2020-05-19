@@ -59,7 +59,7 @@ Eforte, wfn = energy('forte', ref_wfn=wfn, return_wfn=True)
 
 set forte {
   e_convergence       8
-  r_convergence       7
+  r_convergence       6
   dsrg_read_amps      true
 }
 
