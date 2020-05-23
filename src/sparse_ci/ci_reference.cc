@@ -495,6 +495,11 @@ void CI_Reference::build_gas_single(std::vector<Determinant>& ref_space) {
     outfile->Printf("\n");
     outfile->Printf("\n  GAS Orbital Energies");
     outfile->Printf("\n  GAS   Energies    Orb ");
+    auto act_mo = mo_space_info_->absolute_mo("ACTIVE");
+    std::map<int, int> re_ab_mo;
+    for (size_t i = 0; i < act_mo.size(); i++) {
+        re_ab_mo[act_mo[i]] = i;
+    }
     for (size_t gas_count = 0; gas_count < 6; gas_count++) {
         std::string space = gas_subspaces_.at(gas_count);
         std::vector<size_t> relative_mo_sorted;
@@ -502,7 +507,7 @@ void CI_Reference::build_gas_single(std::vector<Determinant>& ref_space) {
         std::vector<std::pair<double, int>> gas_orb_e;
         for (size_t i = 0; i < vec_mo_info.size(); ++i) {
             auto orb = std::get<0>(vec_mo_info[i]);
-            gas_orb_e.push_back(std::make_pair(epsilon_a->get(orb), i + total_act));
+            gas_orb_e.push_back(std::make_pair(epsilon_a->get(orb), re_ab_mo[orb]));
         }
         total_act += gas_orb_e.size();
         std::sort(gas_orb_e.begin(), gas_orb_e.end());
@@ -782,8 +787,11 @@ void CI_Reference::build_gas_single(std::vector<Determinant>& ref_space) {
                                                                     [relative_gas_mo[5][p]];
                                                             }
                                                         }
-                                                        // Check symmetry
-                                                        if (sym == root_sym_) {
+                                                        int nunpair =
+                                                            nalpha_ + nbeta_ - 2 * det.npair();
+                                                        // Check symmetry and multiplicity
+                                                        if (sym == root_sym_ &&
+                                                            nunpair + 1 == multiplicity_) {
                                                             ref_space.push_back(det);
                                                             outfile->Printf("\n");
                                                             outfile->Printf(
@@ -810,6 +818,12 @@ void CI_Reference::build_gas_reference(std::vector<Determinant>& ref_space) {
     // Build the entire GAS space
 
     // The relative_mo of each GAS, without sorting the energy
+
+    std::shared_ptr<Vector> epsilon_a = scf_info_->epsilon_a();
+    outfile->Printf("\n");
+    outfile->Printf("\n  GAS Orbital Energies");
+    outfile->Printf("\n  GAS   Energies    Orb ");
+
     std::vector<std::vector<size_t>> relative_gas_mo;
     auto act_mo = mo_space_info_->absolute_mo("ACTIVE");
     std::map<int, int> re_ab_mo;
@@ -821,9 +835,10 @@ void CI_Reference::build_gas_reference(std::vector<Determinant>& ref_space) {
         std::vector<size_t> relative_mo;
         auto vec_mo_info = general_active_spaces_[space].second;
         for (size_t i = 0, maxi = vec_mo_info.size(); i < maxi; ++i) {
-            relative_mo.push_back(re_ab_mo[std::get<0>(vec_mo_info[i])]);
-            //            outfile->Printf("\n GAS %d %d ", std::get<0>(vec_mo_info[i]),
-            //                            re_ab_mo[std::get<0>(vec_mo_info[i])]);
+            size_t orb = std::get<0>(vec_mo_info[i]);
+            relative_mo.push_back(re_ab_mo[orb]);
+            outfile->Printf("\n  %d  %12.9f  %d ", gas_count + 1, epsilon_a->get(orb),
+                            re_ab_mo[orb]);
         }
         relative_gas_mo.push_back(relative_mo);
     }
@@ -1080,8 +1095,11 @@ void CI_Reference::build_gas_reference(std::vector<Determinant>& ref_space) {
                                                                     [relative_gas_mo[5][p]];
                                                             }
                                                         }
-                                                        // Check symmetry
-                                                        if (sym == root_sym_) {
+                                                        int nunpair =
+                                                            nalpha_ + nbeta_ - det.npair();
+                                                        // Check symmetry and multiplicity
+                                                        if (sym == root_sym_ &&
+                                                            nunpair + 1 == multiplicity_) {
                                                             ref_space.push_back(det);
 
                                                             //                                                            outfile->Printf(

@@ -251,8 +251,8 @@ int MOSpaceInfo::compute_gas_info(psi::Dimension nactpi) {
         for (std::string space : gas_subspaces_) {
             size_t n = general_active_spaces_[space].first[h];
             for (size_t q = 0; q < n; ++q) {
-            	size_t qp = q + totaln;
-				size_t p_order = active_mo[qp];
+                size_t qp = q + totaln;
+                size_t p_order = active_mo[qp];
                 size_t p_rel = std::get<1>(relative_mo[qp]);
                 general_active_spaces_[space].second.push_back(std::make_tuple(p_order, h, p_rel));
             }
@@ -293,7 +293,7 @@ int MOSpaceInfo::compute_gas_info(psi::Dimension nactpi) {
     }
     outfile->Printf("%6d", nactpi.sum());
     outfile->Printf("\n  %s", std::string(banner_width, '-').c_str());
-    return gas_num;// return the number of GAS spaces
+    return gas_num; // return the number of GAS spaces
 }
 
 void MOSpaceInfo::compute_space_info() {
@@ -461,9 +461,10 @@ std::shared_ptr<MOSpaceInfo> make_mo_space_info(psi::SharedWavefunction ref_wfn,
 
 std::pair<int, std::map<std::string, SpaceInfo>>
 MOSpaceInfo::make_gas_info(std::shared_ptr<ForteOptions> options) {
-	// calculate the GAS information from mo_space_info
+    // calculate the GAS information from mo_space_info
     psi::Dimension nactpi = mo_spaces_["ACTIVE"].first;
     int num_gas;
+    general_active_spaces_.clear();
     read_gas_options(options);
     num_gas = compute_gas_info(nactpi);
     gas_info_ = std::make_pair(num_gas, general_active_spaces_);

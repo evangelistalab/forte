@@ -549,7 +549,7 @@ int AdaptiveCI::root_follow(DeterminantHashVec& P_ref, std::vector<double>& P_re
 
         new_overlap = std::fabs(new_overlap);
         if (!quiet_mode_) {
-            outfile->Printf("\n  Root %d has overlap %f", n, new_overlap);
+            outfile->Printf("\n Root %d has overlap %f", n, new_overlap);
         }
         // If the overlap is larger, set it as the new root and reference, for
         // now
@@ -611,6 +611,7 @@ void AdaptiveCI::pre_iter_preparation() {
             std::string space = gas_subspaces.at(gas_count);
             std::vector<size_t> relative_mo;
             auto vec_mo_info = general_active_spaces[space].second;
+            size_t ii = 0;
             for (size_t i = 0; i < vec_mo_info.size(); ++i) {
                 relative_mo.push_back(re_ab_mo[std::get<0>(vec_mo_info[i])]);
             }

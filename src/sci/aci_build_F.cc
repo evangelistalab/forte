@@ -310,7 +310,7 @@ void AdaptiveCI::get_gas_excited_determinants_sr(
             const Determinant& det(P_dets[P]);
             double Cp = evecs->get(P, ref_root_);
 
-            // outfile->Printf(     "\n  %s", str(det,nact_).c_str());
+            //            outfile->Printf("\n  %s", str(det, nact_).c_str());
 
             // Generate the occupied/virtual alpha/beta orbitals for different GAS
             std::vector<std::vector<int>> gas_occ_a;
@@ -351,10 +351,16 @@ void AdaptiveCI::get_gas_excited_determinants_sr(
                     gas_configuration.push_back(0);
                 }
             }
+            //            outfile->Printf("\n");
+            //            for (size_t ii = 0; ii < gas_configuration.size(); ii++) {
+            //                outfile->Printf("  %d", gas_configuration[ii]);
+            //            }
+            //            outfile->Printf("\n");
             // Generate a excitations
             for (auto& gas_count : gas_single_criterion_.first[gas_configuration]) {
                 size_t gas_count_1 = gas_count.first;
                 size_t gas_count_2 = gas_count.second;
+                //                outfile->Printf("\n Allowed a %d %d", gas_count_1, gas_count_2);
                 auto& occ = gas_occ_a[gas_count_1];
                 auto& vir = gas_vir_a[gas_count_2];
                 Determinant new_det(det);
@@ -377,6 +383,7 @@ void AdaptiveCI::get_gas_excited_determinants_sr(
             for (auto& gas_count : gas_single_criterion_.second[gas_configuration]) {
                 size_t gas_count_1 = gas_count.first;
                 size_t gas_count_2 = gas_count.second;
+                //                outfile->Printf("\n Allowed b %d %d", gas_count_1, gas_count_2);
                 auto& occ = gas_occ_b[gas_count_1];
                 auto& vir = gas_vir_b[gas_count_2];
                 Determinant new_det(det);
@@ -406,6 +413,9 @@ void AdaptiveCI::get_gas_excited_determinants_sr(
                 auto& occ2 = gas_occ_a[gas_count_2];
                 auto& vir1 = gas_vir_a[gas_count_3];
                 auto& vir2 = gas_vir_a[gas_count_4];
+                //                outfile->Printf("\n Allowed aa %d %d %d %d", gas_count_1,
+                //                gas_count_2, gas_count_3,
+                //                                gas_count_4);
                 for (size_t i = 0, maxi = occ1.size(); i < maxi; ++i) {
                     size_t ii = occ1[i];
                     size_t jstart = (gas_count_1 == gas_count_2 ? i + 1 : 0);
@@ -442,6 +452,9 @@ void AdaptiveCI::get_gas_excited_determinants_sr(
                 auto& occ2 = gas_occ_b[gas_count_2];
                 auto& vir1 = gas_vir_a[gas_count_3];
                 auto& vir2 = gas_vir_b[gas_count_4];
+                //                outfile->Printf("\n Allowed ab %d %d %d %d", gas_count_1,
+                //                gas_count_2, gas_count_3,
+                //                                gas_count_4);
                 for (size_t ii : occ1) {
                     for (size_t jj : occ2) {
                         for (size_t aa : vir1) {
@@ -472,6 +485,9 @@ void AdaptiveCI::get_gas_excited_determinants_sr(
                 auto& occ2 = gas_occ_b[gas_count_2];
                 auto& vir1 = gas_vir_b[gas_count_3];
                 auto& vir2 = gas_vir_b[gas_count_4];
+                //                outfile->Printf("\n Allowed bb %d %d %d %d", gas_count_1,
+                //                gas_count_2, gas_count_3,
+                //                                gas_count_4);
                 for (size_t i = 0, maxi = occ1.size(); i < maxi; ++i) {
                     size_t ii = occ1[i];
                     size_t jstart = (gas_count_1 == gas_count_2 ? i + 1 : 0);
