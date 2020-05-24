@@ -716,7 +716,7 @@ To read these amplitudes in the current directory, the user needs to invoke the 
     energy('forte', ref_wfn=wfn)
 
 For reference relaxation, initial amplitudes are obtained from the previous converged values by default.
-To turn this feature off (not recommended), please set ``DSRG_RELAX_RESTART`` to ``False``.
+To turn this feature off (not recommended), please set ``DSRG_RESTART_AMPS`` to ``False``.
 
 7. Examples
 +++++++++++
@@ -770,9 +770,9 @@ Max macro iterations for MR-DSRG reference relaxation.
 * Type: integer
 * Default: 15
 
-**DSRG_RELAX_RESTART**
+**DSRG_RESTART_AMPS**
 
-Use initial amplitudes guesses from the previous reference relaxation step.
+Use initial amplitudes guesses from the previous step.
 
 * Type: boolean
 * Default: True

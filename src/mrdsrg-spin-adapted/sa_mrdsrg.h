@@ -86,7 +86,7 @@ class SA_MRDSRG : public SADSRG {
     bool nivo_;
 
     /// Read amplitudes from previous reference relaxation step
-    bool restart_amps_relax_;
+    bool restart_amps_;
 
     /// Prefix for file name for restart
     std::string restart_file_prefix_;
