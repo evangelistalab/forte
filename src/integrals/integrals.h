@@ -258,6 +258,12 @@ class ForteIntegrals {
     /// @param Cb the betaa MO coefficients
     void update_orbitals(std::shared_ptr<psi::Matrix> Ca, std::shared_ptr<psi::Matrix> Cb);
 
+    /// Make the orbital phase consistent when updating orbitals
+    /// @param U the unitary transformation matrix so that C_new = C_old * U
+    /// @param is_alpha target Ca if true else Cb
+    /// @param debug print MO overlap and transformation matrix if true
+    void fix_orbital_phases(std::shared_ptr<psi::Matrix> U, bool is_alpha, bool debug = false);
+
     /// Expert Option: just try and use three_integral
     virtual double** three_integral_pointer() = 0;
 

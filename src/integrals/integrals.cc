@@ -483,6 +483,78 @@ void ForteIntegrals::update_orbitals(std::shared_ptr<psi::Matrix> Ca,
     }
 }
 
+void ForteIntegrals::fix_orbital_phases(std::shared_ptr<psi::Matrix> U, bool is_alpha, bool debug) {
+    // grab the old orbitals
+    std::shared_ptr<psi::Matrix> Cold = is_alpha ? Ca_ : Cb_;
+
+    // build MO overlap matrix (old by new)
+    auto Cnew = psi::linalg::doublet(Cold, U, false, false);
+    Cnew->set_name("MO coefficients (new)");
+
+    auto Smo = psi::linalg::triplet(Cold, wfn_->S(), Cnew, true, false, false);
+    Smo->set_name("MO overlap (old by new)");
+
+    // transformation matrix
+    auto T = U->clone();
+    T->set_name("Reordering matrix");
+    T->zero();
+
+    for (int h = 0; h < nirrep_; ++h) {
+        auto ncol = T->coldim(h);
+        auto nrow = T->rowdim(h);
+        for (int q = 0; q < ncol; ++q) {
+            double max = 0.0, sign = 1.0;
+            int p_temp = q;
+
+            for (int p = 0; p < nrow; ++p) {
+                double v = Smo->get(h, p, q);
+                if (std::fabs(v) > max) {
+                    max = std::fabs(v);
+                    p_temp = p;
+                    sign = v < 0 ? -1.0 : 1.0;
+                }
+            }
+
+            T->set(h, p_temp, q, sign);
+        }
+    }
+
+    // test transformation matrix
+    bool trans_ok = true;
+    for (int h = 0; h < nirrep_; ++h) {
+        auto nrow = T->rowdim(h);
+        auto ncol = T->coldim(h);
+
+        for (int i = 0; i < nrow; ++i) {
+            double sum = 0.0;
+            for (int j = 0; j < ncol; ++j) {
+                sum += std::fabs(T->get(h, i, j));
+            }
+            if (sum - 1.0 > 1.0e-3) {
+                trans_ok = false;
+                break;
+            }
+        }
+
+        if (not trans_ok) {
+            break;
+        }
+    }
+
+    // transform Ua
+    if (trans_ok) {
+        auto Unew = psi::linalg::doublet(U, T, false, false);
+        U->copy(Unew);
+    } else {
+        psi::outfile->Printf("\n  Failed to fix orbital phase and order.");
+        if (debug) {
+            psi::outfile->Printf("\n  Printing the MO overlap and transformation matrix.\n");
+            Smo->print();
+            T->print();
+        }
+    }
+}
+
 bool ForteIntegrals::test_orbital_spin_restriction(std::shared_ptr<psi::Matrix> A,
                                                    std::shared_ptr<psi::Matrix> B) const {
     std::shared_ptr<psi::Matrix> A_minus_B = A->clone();

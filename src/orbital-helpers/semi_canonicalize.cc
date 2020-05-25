@@ -370,8 +370,8 @@ void SemiCanonical::build_transformation_matrices(psi::SharedMatrix& Ua, psi::Sh
     }
 
     // keep phase and order unchanged
-    fix_orbital_phase(Ua, ints_->Ca());
-    fix_orbital_phase(Ub, ints_->Cb());
+    ints_->fix_orbital_phases(Ua, true);
+    ints_->fix_orbital_phases(Ub, false);
 
     // fill in UaData and UbData
     for (const auto& name_dim_pair : mo_dims_) {
