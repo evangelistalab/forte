@@ -101,6 +101,12 @@ class ActiveSpaceSolver {
         return state_energies_map_;
     }
 
+    /// Pass a set of ActiveSpaceIntegrals to the solver (e.g. an effective Hamiltonian)
+    /// @param as_ints the pointer to a set of acitve-space integrals
+    void set_active_space_integrals(std::shared_ptr<ActiveSpaceIntegrals> as_ints) {
+        as_ints_ = as_ints;
+    }
+
   protected:
     /// a string that specifies the method used (e.g. "FCI", "ACI", ...)
     std::string method_;

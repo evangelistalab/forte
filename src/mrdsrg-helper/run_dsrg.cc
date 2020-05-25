@@ -42,11 +42,11 @@
 
 namespace forte {
 
-std::unique_ptr<MASTER_DSRG> make_dsrg_method(const std::string& method, RDMs rdms,
-                                              std::shared_ptr<SCFInfo> scf_info,
+std::unique_ptr<MASTER_DSRG> make_dsrg_method(RDMs rdms, std::shared_ptr<SCFInfo> scf_info,
                                               std::shared_ptr<ForteOptions> options,
                                               std::shared_ptr<ForteIntegrals> ints,
                                               std::shared_ptr<MOSpaceInfo> mo_space_info) {
+    std::string method = options->get_str("CORRELATION_SOLVER");
     std::unique_ptr<MASTER_DSRG> dsrg_method;
     if (method == "DSRG-MRPT2") {
         dsrg_method = std::make_unique<DSRG_MRPT2>(rdms, scf_info, options, ints, mo_space_info);
