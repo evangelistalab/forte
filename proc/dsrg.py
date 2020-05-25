@@ -121,12 +121,14 @@ class ProcedureDSRG:
 
     def dsrg_post_setup(self):
         """ Grab DSRG parameters after a computation. """
-        self.t1_file = self.dsrg_solver.t1_file()
-        self.t2_file = self.dsrg_solver.t2_file()
+        if self.Heff_implemented:
+            self.t1_file = self.dsrg_solver.t1_file()
+            self.t2_file = self.dsrg_solver.t2_file()
 
     def dsrg_cleanup(self):
         """ Clean up for reference relaxation. """
-        self.dsrg_solver.clean_checkpoints()
+        if self.Heff_implemented:
+            self.dsrg_solver.clean_checkpoints()
 
     def compute_energy(self):
         """ Compute energy with reference relaxation and return current DSRG energy. """
@@ -138,6 +140,7 @@ class ProcedureDSRG:
         self.dsrg_setup()
         Edsrg = self.dsrg_solver.compute_energy()
         self.dsrg_post_setup()
+        psi4.core.set_scalar_variable("UNRELAXED ENERGY", Edsrg)
 
         # Spit out energy if reference relaxation not implemented
         if not self.Heff_implemented:
@@ -190,7 +193,7 @@ class ProcedureDSRG:
             self.Ua, self.Ub = self.semi.Ua_t(), self.semi.Ub_t()
 
             # - Compute DSRG energy
-            self.dsrg_solver = self.make_dsrg_solver()
+            self.make_dsrg_solver()
             self.dsrg_setup()
             Edsrg = self.dsrg_solver.compute_energy()
             self.dsrg_post_setup()
@@ -235,7 +238,7 @@ class ProcedureDSRG:
         if n != 0 and self.relax_ref == "ITERATE":
             Ediff_u = abs(self.energies[-1][0] - self.energies[-2][0])
             Ediff_r = abs(self.energies[-1][1] - self.energies[-2][1])
-            Ediff = abs(Edsrg0 - Erelax)
+            Ediff = abs(self.energies[-1][0] - self.energies[-1][1])
             if all(e < self.relax_convergence for e in [Ediff_u, Ediff_r]) and Ediff < self.e_convergence:
                 self.converged = True
 
@@ -243,7 +246,7 @@ class ProcedureDSRG:
 
     def print_summary(self):
         """ Print energies and dipole moment to output file. """
-        if self.relax_maxiter <= 1:
+        if self.relax_maxiter < 1:
             return
 
         if (not self.do_multi_state) or self.relax_maxiter > 1:
@@ -295,7 +298,8 @@ class ProcedureDSRG:
 
         if self.relax_maxiter > 1:
             psi4.core.set_scalar_variable('RELAXED ENERGY', self.energies[1][0])
-            psi4.core.set_scalar_variable('RELAXED DIPOLE', self.dipoles[1][0][-1])
+            if self.do_dipole and (not self.do_multi_state):
+                psi4.core.set_scalar_variable('RELAXED DIPOLE', self.dipoles[1][0][-1])
 
             if self.relax_ref == "ITERATE":
                 if not self.converged:

@@ -202,7 +202,7 @@ class MRDSRG : public MASTER_DSRG {
     void analyze_amplitudes(std::string name, BlockedTensor& T1, BlockedTensor& T2);
 
     /// RMS of T2
-    double T2rms_;
+    double T2rms_ = 0.0;
     /// Norm of T2
     double T2norm_;
     double t2aa_norm_;
@@ -222,9 +222,11 @@ class MRDSRG : public MASTER_DSRG {
     void update_t2_std();
     void update_t2_noccvv();
     void update_t2_pt();
+    /// Compute T2 amplitudes norms
+    void compute_t2_norm();
 
     /// RMS of T1
-    double T1rms_;
+    double T1rms_ = 0.0;
     /// Norm of T1
     double T1norm_;
     double t1a_norm_;
@@ -239,6 +241,8 @@ class MRDSRG : public MASTER_DSRG {
     /// Update T1 in every iteration
     void update_t1_std();
     void update_t1_nocv();
+    /// Compute T1 amplitudes norms
+    void compute_t1_norm();
 
     /// List of large amplitudes
     std::vector<std::pair<std::vector<size_t>, double>> lt1a_;
