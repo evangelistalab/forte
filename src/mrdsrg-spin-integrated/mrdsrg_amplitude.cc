@@ -126,8 +126,6 @@ void MRDSRG::guess_t_df(BlockedTensor& B, BlockedTensor& T2, BlockedTensor& F, B
         }
     }
 
-    compute_t1_norm();
-    compute_t2_norm();
     analyze_amplitudes("Initial", T1_, T2_);
 }
 
@@ -1220,6 +1218,9 @@ void MRDSRG::compute_t2_norm() {
 }
 
 void MRDSRG::analyze_amplitudes(std::string name, BlockedTensor& T1, BlockedTensor& T2) {
+    compute_t1_norm();
+    compute_t2_norm();
+
     if (!name.empty())
         name += " ";
     outfile->Printf("\n\n  ==> %sExcitation Amplitudes Summary <==\n", name.c_str());
