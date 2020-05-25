@@ -106,7 +106,13 @@ void AdaptiveCI::startup() {
     // Run only one calculation with initial ansatz;
     // Can be used for CIS/CISD/CAS/GAS-CI for test
     gas_iteration_ = options_->get_bool("GAS_ITERATION");
+    if (options_->get_str("ACTIVE_REF_TYPE") == "GAS_SINGLE") {
+        gas_iteration_ = true;
+    }
     // Iterations are within in GAS
+
+    // Whether to do the occupation analysis after calculation
+    occ_analysis_ = options_->get_bool("OCC_ANALYSIS");
 
     if (single_calculation_) {
         max_cycle_ = 0;
@@ -585,6 +591,7 @@ void AdaptiveCI::pre_iter_preparation() {
 
     if (single_calculation_) {
         PQ_space_ = initial_reference_;
+        PQ_space_.make_spin_complete(nact_);
     } else {
         P_space_ = initial_reference_;
     }
@@ -611,7 +618,6 @@ void AdaptiveCI::pre_iter_preparation() {
             std::string space = gas_subspaces.at(gas_count);
             std::vector<size_t> relative_mo;
             auto vec_mo_info = general_active_spaces[space].second;
-            size_t ii = 0;
             for (size_t i = 0; i < vec_mo_info.size(); ++i) {
                 relative_mo.push_back(re_ab_mo[std::get<0>(vec_mo_info[i])]);
             }
@@ -974,7 +980,7 @@ void AdaptiveCI::print_gas_wfn(DeterminantHashVec& space, psi::SharedMatrix evec
         size_t max_dets = static_cast<size_t>(evecs->nrow());
         tmp.subspace(space, evecs, tmp_evecs, max_dets, n);
 
-        const int gas_config_num = gas_electrons_.size();
+        const size_t gas_config_num = gas_electrons_.size();
         std::vector<double> gas_amp(gas_config_num, 0.0);
         for (size_t I = 0; I < max_dets; ++I) {
             const Determinant& det = tmp.get_det(I);
@@ -1063,7 +1069,6 @@ void AdaptiveCI::print_occ_number(DeterminantHashVec& space, psi::SharedMatrix e
         size_t max_dets = static_cast<size_t>(evecs->nrow());
         tmp.subspace(space, evecs, tmp_evecs, max_dets, n);
 
-        const int gas_config_num = gas_electrons_.size();
         std::vector<double> alpha_occ(nact_, 0.0);
         std::vector<double> beta_occ(nact_, 0.0);
         std::vector<std::vector<double>> alpha_occ_square(nact_, std::vector<double>(nact_, 0.0));
@@ -1192,10 +1197,10 @@ void AdaptiveCI::print_occ_number(DeterminantHashVec& space, psi::SharedMatrix e
                 size_t tmp_alpha_occ = 0;
                 size_t tmp_beta_occ = 0;
                 for (size_t j : corr_orb) {
-                    if (tmp.get_det(I).get_alfa_bit(j)) {
+                    if (det.get_alfa_bit(j)) {
                         tmp_alpha_occ += 1;
                     }
-                    if (tmp.get_det(I).get_beta_bit(j)) {
+                    if (det.get_beta_bit(j)) {
                         tmp_beta_occ += 1;
                     }
                 }
@@ -1216,7 +1221,7 @@ void AdaptiveCI::print_occ_number(DeterminantHashVec& space, psi::SharedMatrix e
             //                outfile->Printf("\n  %d  %.5f", k, gas_occ_beta[k]);
             //            }
             outfile->Printf("\n  Number of Total electrons:");
-            for (size_t k = 0; k <= max_occ; k++) {
+            for (size_t k = 0; k <= max_occ * 2; k++) {
                 outfile->Printf("\n  %d  %.5f", k, gas_occ_total[k]);
             }
             outfile->Printf("\n  ");
@@ -1228,7 +1233,9 @@ void AdaptiveCI::post_iter_process() {
     if (gas_iteration_) {
         print_gas_wfn(PQ_space_, PQ_evecs_);
     }
-    print_occ_number(PQ_space_, PQ_evecs_);
+    if (occ_analysis_) {
+        print_occ_number(PQ_space_, PQ_evecs_);
+    }
     print_nos();
     full_mrpt2();
 }

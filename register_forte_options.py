@@ -557,6 +557,9 @@ def register_aci_options(options):
 
     options.add_bool("GAS_ITERATION", False,
             "Doing ACI iterations within GAS")
+    
+    options.add_bool("OCC_ANALYSIS", False,
+            "Doing post calcualtion occupation analysis?")
 
     options.add_double("OCC_LIMIT",0.0001,
             "Occupation limit for considering if an orbital is occupied/unoccupied "
@@ -565,6 +568,7 @@ def register_aci_options(options):
     options.add_double("CORR_LIMIT", -0.01,
             "Correlation limit for considering if two orbitals are correlated"
             "in the post calculation analysis.")
+
 
 
 

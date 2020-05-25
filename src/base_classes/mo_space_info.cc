@@ -221,7 +221,7 @@ int MOSpaceInfo::compute_gas_info(psi::Dimension nactpi) {
     // Check if all the GAS have some orbitals
     bool gas_previous_empty = false;
     bool gas_current_empty;
-    int gas_count = 0;
+    size_t gas_count = 0;
     for (std::string space : gas_subspaces_) {
         // Assign MOs to the undefined space
         if (general_active_spaces_[space].first.sum() == 0) {

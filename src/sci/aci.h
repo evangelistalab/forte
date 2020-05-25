@@ -270,6 +270,9 @@ class AdaptiveCI : public SelectedCIMethod {
     /// Whether iteration is within gas space
     bool gas_iteration_;
 
+    /// Whether an occupation analysis is ran after
+    bool occ_analysis_;
+
     /// Timing variables
     double build_H_;
     double diag_H_;

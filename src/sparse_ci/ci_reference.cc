@@ -130,12 +130,12 @@ CI_Reference::gas_single_criterion() {
     // still within gas_electrons?
     std::map<std::vector<int>, std::vector<std::pair<size_t, size_t>>> alpha_criterion;
     std::map<std::vector<int>, std::vector<std::pair<size_t, size_t>>> beta_criterion;
-    for (int gas_config = 0; gas_config < gas_config_number; ++gas_config) {
+    for (size_t gas_config = 0; gas_config < gas_config_number; ++gas_config) {
         auto gas_configuration = gas_electrons_[gas_config];
         std::vector<std::pair<size_t, size_t>> tmp_vectora;
         std::vector<std::pair<size_t, size_t>> tmp_vectorb;
-        for (int gas_count_1 = 0; gas_count_1 < gas_num_; ++gas_count_1) {
-            for (int gas_count_2 = 0; gas_count_2 < gas_num_; ++gas_count_2) {
+        for (size_t gas_count_1 = 0; gas_count_1 < gas_num_; ++gas_count_1) {
+            for (size_t gas_count_2 = 0; gas_count_2 < gas_num_; ++gas_count_2) {
                 std::vector<int> gas_configuration_copya = gas_configuration;
                 gas_configuration_copya.at(2 * gas_count_1) -= 1;
                 gas_configuration_copya.at(2 * gas_count_2) += 1;
@@ -483,9 +483,6 @@ void CI_Reference::build_gas_single(std::vector<Determinant>& ref_space) {
 
     // build one single low energy determinant in the gas space
 
-    size_t nact = mo_space_info_->size("ACTIVE");
-    size_t ninact = mo_space_info_->size("INACTIVE_DOCC");
-
     std::shared_ptr<Vector> epsilon_a = scf_info_->epsilon_a();
 
     // relative_mo of each GAS
@@ -791,7 +788,7 @@ void CI_Reference::build_gas_single(std::vector<Determinant>& ref_space) {
                                                             nalpha_ + nbeta_ - 2 * det.npair();
                                                         // Check symmetry and multiplicity
                                                         if (sym == root_sym_ &&
-                                                            nunpair + 1 == multiplicity_) {
+                                                            nunpair + 1 >= multiplicity_) {
                                                             ref_space.push_back(det);
                                                             outfile->Printf("\n");
                                                             outfile->Printf(
@@ -1096,10 +1093,9 @@ void CI_Reference::build_gas_reference(std::vector<Determinant>& ref_space) {
                                                             }
                                                         }
                                                         int nunpair =
-                                                            nalpha_ + nbeta_ - det.npair();
+                                                            nalpha_ + nbeta_ - 2 * det.npair();
                                                         // Check symmetry and multiplicity
-                                                        if (sym == root_sym_ &&
-                                                            nunpair + 1 == multiplicity_) {
+                                                        if (sym == root_sym_) {
                                                             ref_space.push_back(det);
 
                                                             //                                                            outfile->Printf(
@@ -1184,7 +1180,7 @@ void CI_Reference::get_gas_occupation() {
     std::vector<int> gas_mine;
     std::vector<int> gas_orbital;
 
-    for (int gas_count = 0; gas_count < 6; gas_count++) {
+    for (size_t gas_count = 0; gas_count < 6; gas_count++) {
         std::string space = gas_subspaces_.at(gas_count);
         int orbital_maximum = general_active_spaces_[space].first.sum();
         gas_orbital.push_back(orbital_maximum);
