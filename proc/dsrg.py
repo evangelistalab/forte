@@ -132,15 +132,20 @@ class ProcedureDSRG:
 
     def compute_energy(self):
         """ Compute energy with reference relaxation and return current DSRG energy. """
-        self.dipoles = []
+        # Notes (York):
+        # cases to run active space solver: reference relaxation, state-average dsrg
+        # cases to run contracted ci solver (will be put in ActiveSpaceSolver): contracted state-average dsrg
+
+        e_relax = 0.0  # initialize this to avoid PyCharm warning
         self.energies = []
+        self.dipoles = []
 
         # Perform the initial un-relaxed DSRG
         self.make_dsrg_solver()
         self.dsrg_setup()
-        Edsrg = self.dsrg_solver.compute_energy()
+        e_dsrg = self.dsrg_solver.compute_energy()
         self.dsrg_post_setup()
-        psi4.core.set_scalar_variable("UNRELAXED ENERGY", Edsrg)
+        psi4.core.set_scalar_variable("UNRELAXED ENERGY", e_dsrg)
 
         # Spit out energy if reference relaxation not implemented
         if not self.Heff_implemented:
@@ -157,15 +162,15 @@ class ProcedureDSRG:
             if self.do_multi_state and self.multi_state_type == "SA_SUB":
                 max_rdm_level = 3 if self.options.get_bool("FORM_HBAR3") else 2
                 state_energies_list = self.active_space_solver.compute_contracted_energy(ints_dressed, max_rdm_level)
-                Erelax = forte.compute_average_state_energy(state_energies_list, self.state_weights_map)
-                self.energies.append((Edsrg, Erelax))
+                e_relax = forte.compute_average_state_energy(state_energies_list, self.state_weights_map)
+                self.energies.append((e_dsrg, e_relax))
                 break
 
             # Solver active space using dressed integrals
             self.active_space_solver.set_active_space_integrals(ints_dressed)
             state_energies_list = self.active_space_solver.compute_energy()
-            Erelax = forte.compute_average_state_energy(state_energies_list, self.state_weights_map)
-            self.energies.append((Edsrg, Erelax))
+            e_relax = forte.compute_average_state_energy(state_energies_list, self.state_weights_map)
+            self.energies.append((e_dsrg, e_relax))
 
             # Compute relaxed dipole
             if self.do_dipole:
@@ -195,14 +200,14 @@ class ProcedureDSRG:
             # - Compute DSRG energy
             self.make_dsrg_solver()
             self.dsrg_setup()
-            Edsrg = self.dsrg_solver.compute_energy()
+            e_dsrg = self.dsrg_solver.compute_energy()
             self.dsrg_post_setup()
 
         self.dsrg_cleanup()
 
-        psi4.core.set_scalar_variable("CURRENT ENERGY", Edsrg)
+        psi4.core.set_scalar_variable("CURRENT ENERGY", e_dsrg)
 
-        return Erelax if len(self.energies) else Edsrg
+        return e_dsrg if len(self.energies) == 0 else e_relax
 
     def compute_dipole_relaxed(self):
         """ Compute dipole moments. """
@@ -236,10 +241,10 @@ class ProcedureDSRG:
             self.converged = True
 
         if n != 0 and self.relax_ref == "ITERATE":
-            Ediff_u = abs(self.energies[-1][0] - self.energies[-2][0])
-            Ediff_r = abs(self.energies[-1][1] - self.energies[-2][1])
-            Ediff = abs(self.energies[-1][0] - self.energies[-1][1])
-            if all(e < self.relax_convergence for e in [Ediff_u, Ediff_r]) and Ediff < self.e_convergence:
+            e_diff_u = abs(self.energies[-1][0] - self.energies[-2][0])
+            e_diff_r = abs(self.energies[-1][1] - self.energies[-2][1])
+            e_diff = abs(self.energies[-1][0] - self.energies[-1][1])
+            if all(e < self.relax_convergence for e in [e_diff_u, e_diff_r]) and e_diff < self.e_convergence:
                 self.converged = True
 
         return self.converged
@@ -258,12 +263,12 @@ class ProcedureDSRG:
             title += f"{indent}{'Iter.':5}  {'Total Energy':>20} {'Delta':>10}  {'Total Energy':>20} {'Delta':>10}\n"
             psi4.core.print_out("\n{}".format(title + indent + dash))
 
-            E0_old, E1_old = 0.0, 0.0
+            e0_old, e1_old = 0.0, 0.0
             for n, pair in enumerate(self.energies, 1):
-                E0, E1 = pair
-                E0_diff, E1_diff = E0 - E0_old, E1 - E1_old
-                psi4.core.print_out(f"\n{indent}{n:>5}  {E0:>20.12f} {E0_diff:>10.3e}  {E1:>20.12f} {E1_diff:>10.3e}")
-                E0_old, E1_old = E0, E1
+                e0, e1 = pair
+                e0_diff, e1_diff = e0 - e0_old, e1 - e1_old
+                psi4.core.print_out(f"\n{indent}{n:>5}  {e0:>20.12f} {e0_diff:>10.3e}  {e1:>20.12f} {e1_diff:>10.3e}")
+                e0_old, e1_old = e0, e1
 
             psi4.core.print_out(f"\n{indent}{dash}")
 
