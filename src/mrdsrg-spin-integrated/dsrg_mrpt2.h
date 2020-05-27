@@ -248,6 +248,7 @@ class DSRG_MRPT2 : public MASTER_DSRG {
 
     void solve_z();
     void set_z();
+    void set_alpha();
     void set_b();
     void iter_z();
     void set_z_cc();
@@ -327,6 +328,7 @@ class DSRG_MRPT2 : public MASTER_DSRG {
     // Lagrange multiplier
     ambit::BlockedTensor Z;
     ambit::BlockedTensor Z_b;
+    double Alpha;
 
 
 

@@ -89,6 +89,7 @@ void DSRG_MRPT2::set_all_variables() {
     //NOTICE: The dimension may be further reduced.
     Z = BTF_->build(CoreTensor, "Z Matrix", spin_cases({"gg"}));
     Z_b = BTF_->build(CoreTensor, "b(AX=b)", spin_cases({"gg"}));
+    Alpha = 0.0;
 
     I = BTF_->build(CoreTensor, "identity matrix", spin_cases({"gg"}));
     I.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>&, double& value) {
@@ -266,6 +267,7 @@ void DSRG_MRPT2::set_dsrg_tensor() {
 
 void DSRG_MRPT2::set_multiplier() {
     set_z();
+    set_alpha();
     outfile->Printf("\n    Solving Entries of W ............................ ");
     set_w();   
     outfile->Printf("Done");
@@ -284,6 +286,88 @@ void DSRG_MRPT2::set_z() {
     solve_z();
 }
 
+
+void DSRG_MRPT2::set_alpha() {
+    outfile->Printf("\n    Setting the Multiplier Alpha .................... ");
+
+    Alpha += H["vu"] * Gamma1["uv"];
+    Alpha += H["VU"] * Gamma1["UV"];
+
+    Alpha += V["v,m,u,m1"] * Gamma1["uv"] * I["m,m1"];
+    Alpha += V["v,M,u,M1"] * Gamma1["uv"] * I["M,M1"];
+    Alpha += V["V,M,U,M1"] * Gamma1["UV"] * I["M,M1"];
+    Alpha += V["m,V,m1,U"] * Gamma1["UV"] * I["m,m1"];
+
+    Alpha += 0.25 * V["xyuv"] * Gamma2["uvxy"];
+    Alpha += 0.25 * V["XYUV"] * Gamma2["UVXY"];
+    Alpha += V["xYuV"] * Gamma2["uVxY"];
+
+    Alpha += 0.50 * V_["cdkl"] * T2_["ijab"] * Gamma1["ki"] * Gamma1["lj"] * Eta1["ac"] *Eta1["bd"];
+    Alpha += 0.50 * V_["CDKL"] * T2_["IJAB"] * Gamma1["KI"] * Gamma1["LJ"] * Eta1["AC"] *Eta1["BD"];
+    Alpha += 2.00 * V_["cDkL"] * T2_["iJaB"] * Gamma1["ki"] * Gamma1["LJ"] * Eta1["ac"] * Eta1["BD"];
+
+    Alpha -= 0.25 * V_["cdkl"] * T2_["ijab"] * Gamma1["ki"] * Gamma1["lj"] * Gamma1["ac"] *Eta1["bd"];
+    Alpha -= 0.25 * V_["CDKL"] * T2_["IJAB"] * Gamma1["KI"] * Gamma1["LJ"] * Gamma1["AC"] *Eta1["BD"];
+    Alpha -= V_["cDkL"] * T2_["iJaB"] * Gamma1["ki"] * Gamma1["LJ"] * Gamma1["ac"] * Eta1["BD"];
+
+    Alpha -= 0.25 * V_["cdkl"] * T2_["ijab"] * Gamma1["ki"] * Gamma1["lj"] * Eta1["ac"] *Gamma1["bd"];
+    Alpha -= 0.25 * V_["CDKL"] * T2_["IJAB"] * Gamma1["KI"] * Gamma1["LJ"] * Eta1["AC"] *Gamma1["BD"];
+    Alpha -= V_["cDkL"] * T2_["iJaB"] * Gamma1["ki"] * Gamma1["LJ"] * Eta1["ac"] * Gamma1["BD"];
+
+    Alpha += 2.00 * Z["em"] * V["m,v1,e,u1"] * Gamma1["u1,v1"];
+    Alpha += 2.00 * Z["em"] * V["m,V1,e,U1"] * Gamma1["U1,V1"];
+    Alpha += 2.00 * Z["EM"] * V["M,V1,E,U1"] * Gamma1["U1,V1"];
+    Alpha += 2.00 * Z["EM"] * V["v1,M,u1,E"] * Gamma1["u1,v1"];
+
+    Alpha += Z["mn"] * V["m,v1,n,u1"] * Gamma1["u1,v1"];
+    Alpha += Z["mn"] * V["m,V1,n,U1"] * Gamma1["U1,V1"];
+    Alpha += Z["MN"] * V["M,V1,N,U1"] * Gamma1["U1,V1"];
+    Alpha += Z["MN"] * V["v1,M,u1,N"] * Gamma1["u1,v1"];
+
+    Alpha += Z["uv"] * V["u,v1,v,u1"] * Gamma1["u1,v1"];
+    Alpha += Z["uv"] * V["u,V1,v,U1"] * Gamma1["U1,V1"];
+    Alpha += Z["UV"] * V["U,V1,V,U1"] * Gamma1["U1,V1"];
+    Alpha += Z["UV"] * V["v1,U,u1,V"] * Gamma1["u1,v1"];
+
+    Alpha += Z["ef"] * V["e,v1,f,u1"] * Gamma1["u1,v1"];
+    Alpha += Z["ef"] * V["e,V1,f,U1"] * Gamma1["U1,V1"];
+    Alpha += Z["EF"] * V["E,V1,F,U1"] * Gamma1["U1,V1"];
+    Alpha += Z["EF"] * V["v1,E,u1,F"] * Gamma1["u1,v1"];
+
+    Alpha += 2.00 * Z["un"] * V["u,v1,n,u1"] * Gamma1["u1,v1"];
+    Alpha += 2.00 * Z["un"] * V["u,V1,n,U1"] * Gamma1["U1,V1"];
+    Alpha += 2.00 * Z["UN"] * V["U,V1,N,U1"] * Gamma1["U1,V1"];
+    Alpha += 2.00 * Z["UN"] * V["v1,U,u1,N"] * Gamma1["u1,v1"];
+
+    Alpha -= 2.00 * Z["un"] * H["vn"] * Gamma1["uv"];
+    Alpha -= 2.00 * Z["UN"] * H["VN"] * Gamma1["UV"];
+
+    Alpha -= 2.00 * Z["un"] * V["v,m,n,m1"] * Gamma1["uv"] * I["m,m1"];
+    Alpha -= 2.00 * Z["un"] * V["v,M,n,M1"] * Gamma1["uv"] * I["M,M1"];
+    Alpha -= 2.00 * Z["UN"] * V["V,M,N,M1"] * Gamma1["UV"] * I["M,M1"];
+    Alpha -= 2.00 * Z["UN"] * V["m,V,m1,N"] * Gamma1["UV"] * I["m,m1"];
+
+    Alpha -= Z["un"] * V["xynv"] * Gamma2["uvxy"];
+    Alpha -= 2.00 * Z["un"] * V["xYnV"] * Gamma2["uVxY"];
+    Alpha -= Z["UN"] * V["XYNV"] * Gamma2["UVXY"];
+    Alpha -= 2.00 * Z["UN"] * V["yXvN"] * Gamma2["vUyX"];
+
+
+    Alpha += 2.00 * Z["eu"] * H["ve"] * Gamma1["uv"];
+    Alpha += 2.00 * Z["EU"] * H["VE"] * Gamma1["UV"];
+
+    Alpha += 2.00 * Z["eu"] * V["v,m,e,m1"] * Gamma1["uv"] * I["m,m1"];
+    Alpha += 2.00 * Z["eu"] * V["v,M,e,M1"] * Gamma1["uv"] * I["M,M1"];
+    Alpha += 2.00 * Z["EU"] * V["V,M,E,M1"] * Gamma1["UV"] * I["M,M1"];
+    Alpha += 2.00 * Z["EU"] * V["m,V,m1,E"] * Gamma1["UV"] * I["m,m1"];
+
+    Alpha += Z["eu"] * V["xyev"] * Gamma2["uvxy"];
+    Alpha += 2.00 * Z["eu"] * V["xYeV"] * Gamma2["uVxY"];
+    Alpha += Z["EU"] * V["XYEV"] * Gamma2["UVXY"];
+    Alpha += 2.00 * Z["EU"] * V["yXvE"] * Gamma2["vUyX"];
+
+    outfile->Printf("Done");
+}
 
 void DSRG_MRPT2::set_w() {
     //NOTICE: w for {virtual-general}
@@ -2692,26 +2776,6 @@ void DSRG_MRPT2::tpdm_backtransform() {
 }
 
 
-SharedMatrix DSRG_MRPT2::compute_gradient() {
-	// NOTICE: compute the DSRG_MRPT2 gradient 
-    print_method_banner({"DSRG-MRPT2 Gradient", "Shuhe Wang"});
-    set_all_variables();
-    set_multiplier();
-    write_lagrangian();
-    write_1rdm_spin_dependent();
-    write_2rdm_spin_dependent();
-    tpdm_backtransform();
-    //NOTICE Just for test
-    // compute_test_energy();
-
-    outfile->Printf("\n    Computing Gradient .............................. Done\n");
-
-    return std::make_shared<Matrix>("nullptr", 0, 0);
-}
-
-
-
-
 void DSRG_MRPT2::write_lagrangian() {
 	// NOTICE: write the Lagrangian
     outfile->Printf("\n    Writing Lagrangian .............................. ");
@@ -3147,6 +3211,25 @@ void DSRG_MRPT2::write_2rdm_spin_dependent() {
 
     outfile->Printf("Done");
 }
+
+
+SharedMatrix DSRG_MRPT2::compute_gradient() {
+    // NOTICE: compute the DSRG_MRPT2 gradient 
+    print_method_banner({"DSRG-MRPT2 Gradient", "Shuhe Wang"});
+    set_all_variables();
+    set_multiplier();
+    write_lagrangian();
+    write_1rdm_spin_dependent();
+    write_2rdm_spin_dependent();
+    tpdm_backtransform();
+    //NOTICE Just for test
+    // compute_test_energy();
+
+    outfile->Printf("\n    Computing Gradient .............................. Done\n");
+
+    return std::make_shared<Matrix>("nullptr", 0, 0);
+}
+
 
 } 
 
