@@ -108,6 +108,9 @@ class SparseCISolver {
     /// The maximum number of iterations for the Davidson algorithm
     void set_maxiter_davidson(int value);
 
+    void set_ncollapse_per_root(int value);
+    void set_nsubspace_per_root(int value);
+
     /// Build the full Hamiltonian matrix
     std::shared_ptr<psi::Matrix>
     build_full_hamiltonian(const std::vector<Determinant>& space,

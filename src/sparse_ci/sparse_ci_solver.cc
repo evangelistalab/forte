@@ -62,6 +62,10 @@ void SparseCISolver::set_r_convergence(double value) { r_convergence_ = value; }
 
 void SparseCISolver::set_maxiter_davidson(int value) { maxiter_davidson_ = value; }
 
+void SparseCISolver::set_ncollapse_per_root(int value) { ncollapse_per_root_ = value; }
+
+void SparseCISolver::set_nsubspace_per_root(int value) { nsubspace_per_root_ = value; }
+
 void SparseCISolver::set_spin_project_full(bool value) { spin_project_full_ = value; }
 
 void SparseCISolver::set_force_diag(bool value) { force_diag_ = value; }

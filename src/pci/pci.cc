@@ -860,7 +860,7 @@ void ProjectorCI::post_iter_process() {
         DeterminantHashVec det_map(std::move(dets_hashvec_));
 
         // set SparseCISolver options
-        sparse_solver_.set_spin_project(true);
+        sparse_solver_.set_spin_project(options_->get_bool("SCI_PROJECT_OUT_SPIN_CONTAMINANTS"));
         sparse_solver_.manual_guess(false);
         sparse_solver_.set_force_diag(false);
 

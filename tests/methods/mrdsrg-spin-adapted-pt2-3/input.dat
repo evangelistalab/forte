@@ -5,8 +5,8 @@ import forte
 memory 500 mb
 Ecas_psi4_jk  = -229.495450424144593
 Ecas_forte_jk = -229.495450424145076
-Ept2_ur       = -230.143771791121878
-Ept2_pr       = -230.150516562986667
+Ept2_ur       = -230.143771796409
+Ept2_pr       = -230.150516563759
 
 molecule pbenzyne{
   0 1
@@ -71,6 +71,8 @@ set forte{
   e_convergence          12
   r_convergence          8
   int_type               diskdf
+#  sci_enforce_spin_complete false
+ # sci_project_out_spin_contaminants false
 }
 energy('forte', ref_wfn=wfn)
 Eupt2 = variable("UNRELAXED ENERGY")

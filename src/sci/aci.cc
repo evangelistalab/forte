@@ -574,6 +574,8 @@ void AdaptiveCI::pre_iter_preparation() {
     sparse_solver_->set_guess_dimension(options_->get_int("DL_GUESS_SIZE"));
     sparse_solver_->set_num_vecs(options_->get_int("N_GUESS_VEC"));
     sparse_solver_->set_spin_project_full(false);
+    sparse_solver_->set_ncollapse_per_root(options_->get_int("DL_COLLAPSE_PER_ROOT"));
+    sparse_solver_->set_nsubspace_per_root(options_->get_int("DL_SUBSPACE_PER_ROOT"));
 }
 
 void AdaptiveCI::diagonalize_P_space() {
