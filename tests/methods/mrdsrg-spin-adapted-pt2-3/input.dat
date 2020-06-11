@@ -71,8 +71,7 @@ set forte{
   e_convergence          12
   r_convergence          8
   int_type               diskdf
-#  sci_enforce_spin_complete false
- # sci_project_out_spin_contaminants false
+  sci_project_out_spin_contaminants false
 }
 energy('forte', ref_wfn=wfn)
 Eupt2 = variable("UNRELAXED ENERGY")

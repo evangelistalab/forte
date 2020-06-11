@@ -339,48 +339,6 @@ SparseCISolver::initial_guess(const DeterminantHashVec& space,
             std::make_pair(d, space.get_idx(d))); // store a det and its position
     }
 
-    //    for (size_t n = 0; n < ndets; n++) {
-    //        outfile->Printf("\n %7d  %s", n, str(detmap[n], nmo).c_str());
-    //    }
-
-    // old code
-    //    std::vector<Determinant> guess_det;
-    //    for (size_t i = 0; i < nguess; i++) {
-    //        const Determinant& detI = smallest[i].second;
-    //        guess_dets_pos.push_back(
-    //            std::make_pair(detI, space.get_idx(detI))); // store a det and its position
-    //        guess_det.push_back(detI);
-    //        outfile->Printf("\n  %s", str(detI, nmo).c_str());
-    //    }
-
-    //    if (spin_project_) {
-    //        find_minimum_spin_complete(guess_det, nmo);
-
-    //        enforce_spin_completeness(guess_det, sigma_vector->as_ints()->nmo());
-    //        if (guess_det.size() > nguess) {
-    //            size_t nnew_dets = guess_det.size() - nguess;
-    //            if (print_details_)
-    //                outfile->Printf("\n  Initial guess space is incomplete!\n  "
-    //                                "Trying to add %d determinant(s).",
-    //                                nnew_dets);
-    //            int nfound = 0;
-    //            for (size_t i = 0; i < nnew_dets; ++i) {
-    //                for (size_t j = nguess; j < ndets; ++j) {
-    //                    const Determinant& detJ = smallest[j].second;
-    //                    if (detJ == guess_det[nguess + i]) {
-    //                        guess_dets_pos.push_back(std::make_pair(
-    //                            detJ, space.get_idx(detJ))); // store a det and its position
-    //                        nfound++;
-    //                        break;
-    //                    }
-    //                }
-    //            }
-    //            if (print_details_)
-    //                outfile->Printf("  %d determinant(s) added.", nfound);
-    //        }
-    //        nguess = guess_dets_pos.size();
-    //    }
-
     // Form the S^2 operator matrix and diagonalize it
     Matrix S2("S^2", nguess, nguess);
     for (size_t I = 0; I < nguess; I++) {
@@ -483,8 +441,6 @@ SparseCISolver::initial_guess(const DeterminantHashVec& space,
             }
             double E = HS2evals.get(r);
             guess.push_back(std::make_tuple(m, E, det_C));
-            //            outfile->Printf("\n  Guess state %4zu: E = %12.9f  2S+1 = %2d",
-            //            guess.size(), E, m);
         }
     }
     outfile->Printf("\n  ========================");
