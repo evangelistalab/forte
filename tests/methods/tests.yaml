@@ -276,3 +276,7 @@ pci:
 #   - pci-7
    - pci-8
 #   - pci-9
+x2c:
+  short:
+   - x2c-1
+
