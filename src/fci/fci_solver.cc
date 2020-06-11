@@ -256,7 +256,7 @@ double FCISolver::compute_energy() {
 
     if (converged == SolverStatus::NotConverged) {
         outfile->Printf("\n  FCI did not converge!");
-        throw psi::PSIEXCEPTION("FCI did not converge. Try increasing FCI_ITERATIONS.");
+        throw psi::PSIEXCEPTION("FCI did not converge. Try increasing FCI_MAXITER.");
     }
 
     // Compute final eigenvectors

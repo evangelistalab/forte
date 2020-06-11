@@ -103,6 +103,7 @@ SparseCISolver::diagonalize_hamiltonian(const DeterminantHashVec& space,
 
     if ((!force_diag_ and (space.size() <= 200)) or
         sigma_vector->sigma_vector_type() == SigmaVectorType::Full) {
+        outfile->Printf("\n\n  Performing diagonalization of the H matrix");
         const std::vector<Determinant> dets = space.determinants();
         return diagonalize_hamiltonian_full(dets, sigma_vector->as_ints(), nroot, multiplicity);
     }
