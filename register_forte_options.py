@@ -32,6 +32,8 @@ def register_driver_options(options):
 
     options.add_str('DERTYPE', 'NONE', ['NONE', 'FIRST'], 'Derivative order')
 
+    options.add_str('BASIS_RELATIVISTIC', '','Relativistic basis set')
+
     options.add_double("E_CONVERGENCE", 1.0e-9, "The energy convergence criterion")
     options.add_double("D_CONVERGENCE", 1.0e-6, "The density convergence criterion")
 
