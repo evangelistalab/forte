@@ -21,6 +21,7 @@ set {
 }
 
 set forte {
+  basis_relativistic cc-pVDZ-DK
   active_space_solver fci
   restricted_docc [2,0,0,0]
   active          [2,0,1,3]
