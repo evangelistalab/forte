@@ -3,10 +3,10 @@ sudo: false
 matrix:
   include:
     - env:
-      - PYTHON_VER='3.6'
+      - PYTHON_VER='3.7'
       - MAX_DET_ORB=64
     - env:
-      - PYTHON_VER='3.6'
+      - PYTHON_VER='3.7'
       - MAX_DET_ORB=128
 
 install:
