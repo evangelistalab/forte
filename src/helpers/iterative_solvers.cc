@@ -332,8 +332,7 @@ bool DavidsonLiuSolver::subspace_collapse() {
             double norm_bnew_k = std::fabs(bnew->get_row(0, k)->norm());
             if (norm_bnew_k > schmidt_threshold_) {
                 if (schmidt_add(b_->pointer(), k, size_, bnew->pointer()[k])) {
-                    basis_size_++; // <- Increase L if we add one more basis
-                                   // vector
+                    basis_size_++; // <- Increase L if we add one more basis vector
                 }
             }
         }

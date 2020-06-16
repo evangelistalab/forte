@@ -311,13 +311,10 @@ SparseCISolver::initial_guess(const DeterminantHashVec& space,
     }
     std::sort(smallest.begin(), smallest.end());
 
-    //    outfile->Printf("\n  Guess determinants:");
-
     std::vector<Determinant> guess_det;
     for (size_t i = 0; i < nguess; i++) {
         const Determinant& detI = smallest[i].second;
         guess_det.push_back(detI);
-        //        outfile->Printf("\n  %s", str(detI, nmo).c_str());
     }
 
     outfile->Printf("\n  Initial guess determinants:         %zu", guess_det.size());
@@ -357,7 +354,6 @@ SparseCISolver::initial_guess(const DeterminantHashVec& space,
 
     // Form the Hamiltonian
     Matrix H("H", nguess, nguess);
-    Matrix H2("H", nguess, nguess);
     for (size_t I = 0; I < nguess; I++) {
         for (size_t J = I; J < nguess; J++) {
             const Determinant& detI = guess_dets_pos[I].first;
@@ -365,11 +361,9 @@ SparseCISolver::initial_guess(const DeterminantHashVec& space,
             double HIJ = as_ints->slater_rules(detI, detJ);
             H.set(I, J, HIJ);
             H.set(J, I, HIJ);
-            H2.set(I, J, HIJ);
-            H2.set(J, I, HIJ);
         }
     }
-    // H.print();
+
     // Project H onto the spin-adapted subspace
     H.transform(S2evecs);
 
@@ -380,10 +374,6 @@ SparseCISolver::initial_guess(const DeterminantHashVec& space,
         double mult = std::sqrt(1.0 + 4.0 * S2evals.get(i)); // 2S + 1 = Sqrt(1 + 4 S (S + 1))
         int mult_int = std::round(mult);
         double error = mult - static_cast<double>(mult_int);
-
-        //        outfile->Printf("\n  Guess %3d -> S(S+1) : %12.9f,  mult = %f, mult_int = %d", i,
-        //                        S2evals.get(i), mult, mult_int);
-
         if (std::fabs(error) < Stollerance) {
             mult_list[mult_int].push_back(i);
         } else if (print_details_) {

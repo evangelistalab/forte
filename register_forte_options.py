@@ -32,11 +32,8 @@ def register_driver_options(options):
 
     options.add_str('DERTYPE', 'NONE', ['NONE', 'FIRST'], 'Derivative order')
 
-    options.add_str('BASIS_RELATIVISTIC', '','Relativistic basis set')
-
     options.add_double("E_CONVERGENCE", 1.0e-9, "The energy convergence criterion")
     options.add_double("D_CONVERGENCE", 1.0e-6, "The density convergence criterion")
-
 
     options.add_str(
         'ACTIVE_SPACE_SOLVER', '', ['FCI', 'ACI', 'CAS'],
@@ -393,18 +390,14 @@ def register_sci_options(options):
     options.add_bool("SCI_QUIET_MODE", False,
                            "Print during ACI procedure?")
 
-   # options.add_bool("ACI_STREAMLINE_Q", False,
-   #                        "Do streamlined algorithm?")
-
     options.add_int("SCI_PREITERATIONS", 0,
                           "Number of iterations to run SA-ACI before SS-ACI")
-
 
     options.add_bool("SCI_DIRECT_RDMS", False,
                            "Computes RDMs without coupling lists?")
 
     options.add_bool("SCI_SAVE_FINAL_WFN", False,
-                           "Print final wavefunction to file?")
+                           "Save final wavefunction to file?")
 
     options.add_bool("SCI_TEST_RDMS", False, "Run test for the RDMs?")
 
@@ -412,7 +405,6 @@ def register_sci_options(options):
 
     options.add_bool("SCI_CORE_EX", False,
                            "Use core excitation algorithm")
-
 
 
 def register_aci_options(options):
@@ -461,7 +453,7 @@ def register_aci_options(options):
     options.add_bool("ACI_PRINT_REFS", False, "Print the P space?")
 
     options.add_int("DL_GUESS_SIZE",50,
-                          "Set the initial guess space size for DL solver")
+                          "Set the number of determinants in the initial guess space for the DL solver")
 
     options.add_int("N_GUESS_VEC", 10,
                           "Number of guess vectors for Sparse CI solver")

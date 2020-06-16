@@ -165,7 +165,7 @@ class SparseCISolver {
     int nsubspace_per_root_ = 4;
     /// Maximum number of iterations in the Davidson-Liu algorithm
     int maxiter_davidson_ = 100;
-    /// Initial guess size per root
+    /// Number of determinants used to form guess vector per root
     size_t dl_guess_ = 50;
     /// Options for forcing diagonalization method
     bool force_diag_ = false;
