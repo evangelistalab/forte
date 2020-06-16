@@ -32,7 +32,7 @@ set forte {
   aci_n_average 2
   charge 0
   root_sym 0
-  aci_preiterations 2
+  sci_preiterations 2
   dl_maxiter 100
 }
 

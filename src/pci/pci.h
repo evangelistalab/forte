@@ -69,7 +69,7 @@ class ProjectorCI : public SelectedCIMethod {
      * @param options The main options object
      * @param ints A pointer to an allocated integral object
      */
-    ProjectorCI(StateInfo state, size_t nroot, std::shared_ptr<forte::SCFInfo> scf_info,
+    ProjectorCI(StateInfo state, size_t nroot, std::shared_ptr<forte::SCFInfo> scf_info, std::shared_ptr<ForteOptions> options,
                   std::shared_ptr<MOSpaceInfo> mo_space_info,
                   std::shared_ptr<ActiveSpaceIntegrals> as_ints);
 

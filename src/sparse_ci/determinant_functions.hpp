@@ -33,6 +33,8 @@ Determinant union_occupation(const Determinant& lhs, const Determinant& rhs);
 
 void enforce_spin_completeness(std::vector<Determinant>& det_space, int nmo);
 
+std::vector<Determinant> find_minimum_spin_complete(std::vector<Determinant>& det_space, int nmo);
+
 } // namespace forte
 
 #endif // _determinant_functions_hpp_

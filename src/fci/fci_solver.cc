@@ -200,6 +200,8 @@ double FCISolver::compute_energy() {
 
     if (print_) {
         outfile->Printf("\n\n  ==> Diagonalizing Hamiltonian <==\n");
+        outfile->Printf("\n  Energy   convergence: %.2e", dls.get_e_convergence());
+        outfile->Printf("\n  Residual convergence: %.2e", dls.get_r_convergence());
         outfile->Printf("\n  -----------------------------------------------------");
         outfile->Printf("\n    Iter.      Avg. Energy       Delta_E     Res. Norm");
         outfile->Printf("\n  -----------------------------------------------------");
@@ -254,7 +256,7 @@ double FCISolver::compute_energy() {
 
     if (converged == SolverStatus::NotConverged) {
         outfile->Printf("\n  FCI did not converge!");
-        throw psi::PSIEXCEPTION("FCI did not converge. Try increasing FCI_ITERATIONS.");
+        throw psi::PSIEXCEPTION("FCI did not converge. Try increasing FCI_MAXITER.");
     }
 
     // Compute final eigenvectors

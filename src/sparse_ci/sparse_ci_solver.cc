@@ -30,6 +30,7 @@
 #include <algorithm>
 #include <numeric>
 
+#include "psi4/psi4-dec.h"
 #include "psi4/libpsi4util/PsiOutStream.h"
 
 #include "forte-def.h"
@@ -60,6 +61,10 @@ void SparseCISolver::set_e_convergence(double value) { e_convergence_ = value; }
 void SparseCISolver::set_r_convergence(double value) { r_convergence_ = value; }
 
 void SparseCISolver::set_maxiter_davidson(int value) { maxiter_davidson_ = value; }
+
+void SparseCISolver::set_ncollapse_per_root(int value) { ncollapse_per_root_ = value; }
+
+void SparseCISolver::set_nsubspace_per_root(int value) { nsubspace_per_root_ = value; }
 
 void SparseCISolver::set_spin_project_full(bool value) { spin_project_full_ = value; }
 
@@ -98,6 +103,7 @@ SparseCISolver::diagonalize_hamiltonian(const DeterminantHashVec& space,
 
     if ((!force_diag_ and (space.size() <= 200)) or
         sigma_vector->sigma_vector_type() == SigmaVectorType::Full) {
+        outfile->Printf("\n\n  Performing diagonalization of the H matrix");
         const std::vector<Determinant> dets = space.determinants();
         return diagonalize_hamiltonian_full(dets, sigma_vector->as_ints(), nroot, multiplicity);
     }
@@ -284,13 +290,13 @@ SparseCISolver::build_full_hamiltonian(const std::vector<Determinant>& space,
     return H;
 }
 
-std::vector<std::pair<double, std::vector<std::pair<size_t, double>>>>
+std::vector<std::tuple<int, double, std::vector<std::pair<size_t, double>>>>
 SparseCISolver::initial_guess(const DeterminantHashVec& space,
                               std::shared_ptr<SigmaVector> sigma_vector, int nroot,
                               int multiplicity) {
     size_t ndets = space.size();
     size_t nguess = std::min(static_cast<size_t>(nroot) * dl_guess_, ndets);
-    std::vector<std::pair<double, std::vector<std::pair<size_t, double>>>> guess(nguess);
+    std::vector<std::tuple<int, double, std::vector<std::pair<size_t, double>>>> guess;
 
     // Find the ntrial lowest diagonals
     std::vector<std::pair<Determinant, size_t>> guess_dets_pos;
@@ -298,6 +304,7 @@ SparseCISolver::initial_guess(const DeterminantHashVec& space,
     const det_hashvec& detmap = space.wfn_hash();
 
     auto as_ints = sigma_vector->as_ints();
+    size_t nmo = as_ints->nmo();
 
     for (const Determinant& det : detmap) {
         smallest.push_back(std::make_pair(as_ints->energy(det), det));
@@ -307,35 +314,27 @@ SparseCISolver::initial_guess(const DeterminantHashVec& space,
     std::vector<Determinant> guess_det;
     for (size_t i = 0; i < nguess; i++) {
         const Determinant& detI = smallest[i].second;
-        guess_dets_pos.push_back(
-            std::make_pair(detI, space.get_idx(detI))); // store a det and its position
         guess_det.push_back(detI);
     }
 
+    outfile->Printf("\n  Initial guess determinants:         %zu", guess_det.size());
+
     if (spin_project_) {
-        enforce_spin_completeness(guess_det, sigma_vector->as_ints()->nmo());
-        if (guess_det.size() > nguess) {
-            size_t nnew_dets = guess_det.size() - nguess;
-            if (print_details_)
-                outfile->Printf("\n  Initial guess space is incomplete!\n  "
-                                "Trying to add %d determinant(s).",
-                                nnew_dets);
-            int nfound = 0;
-            for (size_t i = 0; i < nnew_dets; ++i) {
-                for (size_t j = nguess; j < ndets; ++j) {
-                    const Determinant& detJ = smallest[j].second;
-                    if (detJ == guess_det[nguess + i]) {
-                        guess_dets_pos.push_back(std::make_pair(
-                            detJ, space.get_idx(detJ))); // store a det and its position
-                        nfound++;
-                        break;
-                    }
-                }
-            }
-            if (print_details_)
-                outfile->Printf("  %d determinant(s) added.", nfound);
-        }
-        nguess = guess_dets_pos.size();
+        outfile->Printf(
+            "\n\n  Spin-adaptation of the initial guess based on minimum spin-complete subset");
+        auto spin_complete_guess_det = find_minimum_spin_complete(guess_det, nmo);
+        outfile->Printf("\n  Guess determinants after screening: %zu",
+                        spin_complete_guess_det.size());
+        guess_det = spin_complete_guess_det;
+    } else {
+        outfile->Printf("\n\n  Skipping spin-adaptation of the initial guess");
+    }
+
+    nguess = guess_det.size();
+
+    for (const auto& d : guess_det) {
+        guess_dets_pos.push_back(
+            std::make_pair(d, space.get_idx(d))); // store a det and its position
     }
 
     // Form the S^2 operator matrix and diagonalize it
@@ -364,7 +363,7 @@ SparseCISolver::initial_guess(const DeterminantHashVec& space,
             H.set(J, I, HIJ);
         }
     }
-    // H.print();
+
     // Project H onto the spin-adapted subspace
     H.transform(S2evecs);
 
@@ -399,12 +398,17 @@ SparseCISolver::initial_guess(const DeterminantHashVec& space,
     }
     std::sort(mult_vals.begin(), mult_vals.end());
 
+    outfile->Printf("\n\n  Initial guess solutions");
+    outfile->Printf("\n  ========================");
+    outfile->Printf("\n  Number   2S+1   Selected");
+    outfile->Printf("\n  ------------------------");
+
     for (int m : mult_vals) {
         std::vector<int>& mult_list_s = mult_list[m];
         int nspin_states = mult_list_s.size();
         if (print_details_)
-            outfile->Printf("\n  Initial guess found %d solutions with 2S+1 = %d %c", nspin_states,
-                            m, m == multiplicity ? '*' : ' ');
+            outfile->Printf("\n %5d    %4d       %c", nspin_states, m,
+                            m == multiplicity ? '*' : ' ');
         // Extract the spin manifold
         Matrix HS2("HS2", nspin_states, nspin_states);
         Vector HS2evals("HS2", nspin_states);
@@ -426,10 +430,11 @@ SparseCISolver::initial_guess(const DeterminantHashVec& space,
                 }
                 det_C.push_back(std::make_pair(guess_dets_pos[I].second, CIr));
             }
-            guess.push_back(std::make_pair(m, det_C));
+            double E = HS2evals.get(r);
+            guess.push_back(std::make_tuple(m, E, det_C));
         }
     }
-
+    outfile->Printf("\n  ========================");
     return guess;
 }
 
@@ -456,11 +461,27 @@ bool SparseCISolver::davidson_liu_solver(const DeterminantHashVec& space,
     std::vector<std::vector<std::pair<size_t, double>>> bad_roots;
     size_t guess_size = std::min(nvec_, dls.collapse_size());
 
+    // generate a set of initial guesses
     auto guess = initial_guess(space, sigma_vector, nroot, multiplicity);
-    if (!set_guess_) {
+
+    double guess_max_energy = -1.0e10;
+
+    outfile->Printf("\n\n  Setting initial guess and roots to project");
+
+    if (set_guess_) {
+        // Use previous solution as guess
+        b->zero();
+        for (size_t I = 0, max_I = guess_.size(); I < max_I; ++I) {
+            b->set(guess_[I].first, guess_[I].second);
+        }
+        double norm = sqrt(1.0 / b->norm());
+        b->scale(norm);
+        dls.add_guess(b);
+    } else {
+        // Use the initial guess. Here we sort out the roots of correct multiplicity
         std::vector<int> guess_list;
         for (size_t g = 0; g < guess.size(); ++g) {
-            if (guess[g].first == multiplicity)
+            if (std::get<0>(guess[g]) == multiplicity)
                 guess_list.push_back(g);
         }
 
@@ -474,39 +495,51 @@ bool SparseCISolver::davidson_liu_solver(const DeterminantHashVec& space,
 
         for (size_t n = 0; n < nguess; ++n) {
             b->zero();
-            for (auto& guess_vec_info : guess[guess_list[n]].second) {
+            for (auto& guess_vec_info : std::get<2>(guess[guess_list[n]])) {
                 b->set(guess_vec_info.first, guess_vec_info.second);
             }
+            int guess_multiplicity = std::get<0>(guess[guess_list[n]]);
+            double guess_energy = std::get<1>(guess[guess_list[n]]);
+
             if (print_details_)
-                outfile->Printf("\n  Adding guess %d (multiplicity = %f)", n,
-                                guess[guess_list[n]].first);
-
+                outfile->Printf("\n  Adding guess %-3d      2S+1 = %-3d  E = %.6f", n,
+                                guess_multiplicity, guess_energy);
             dls.add_guess(b);
+            guess_max_energy = std::max(guess_max_energy, guess_energy);
         }
     }
 
-    // Prepare a list of bad roots to project out and pass them to the solver
-    for (auto& g : guess) {
-        if (g.first != multiplicity)
-            bad_roots.push_back(g.second);
-    }
-    dls.set_project_out(bad_roots);
+    if (spin_project_) {
+        // Prepare a list of bad roots to project out and pass them to the solver
+        bad_roots.clear();
+        size_t rejected = 0;
+        size_t count = 0;
+        for (auto& g : guess) {
+            int guess_multiplicity = std::get<0>(g);
+            double guess_energy = std::get<1>(g);
+            // project out the guess with differnt multiplicity and energy lower than the good
+            // guesses
+            if ((guess_multiplicity != multiplicity) and (guess_energy <= guess_max_energy)) {
+                outfile->Printf("\n  Projecting out guess  2S+1 = %-3d  E = %.6f",
+                                guess_multiplicity, guess_energy);
 
-    if (set_guess_) {
-        // Use previous solution as guess
-        b->zero();
-        for (size_t I = 0, max_I = guess_.size(); I < max_I; ++I) {
-            b->set(guess_[I].first, guess_[I].second);
+                bad_roots.push_back(std::get<2>(g));
+                rejected += 1;
+            }
+            count += 1;
         }
-        double norm = sqrt(1.0 / b->norm());
-        b->scale(norm);
-        dls.add_guess(b);
+        outfile->Printf("\n\n  Projecting out %zu solutions", rejected);
+        dls.set_project_out(bad_roots);
+    } else {
+        outfile->Printf("\n\n  Projecting out no solutions");
     }
 
     SolverStatus converged = SolverStatus::NotConverged;
 
     if (print_details_) {
         outfile->Printf("\n\n  ==> Diagonalizing Hamiltonian <==\n");
+        outfile->Printf("\n  Energy   convergence: %.2e", dls.get_e_convergence());
+        outfile->Printf("\n  Residual convergence: %.2e", dls.get_r_convergence());
         outfile->Printf("\n  -----------------------------------------------------");
         outfile->Printf("\n    Iter.      Avg. Energy       Delta_E     Res. Norm");
         outfile->Printf("\n  -----------------------------------------------------");

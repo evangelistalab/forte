@@ -38,7 +38,7 @@ set forte {
   sigma 0.02
   nroot 1
   charge 0
-  aci_enforce_spin_complete true
+  sci_enforce_spin_complete true
   diag_algorithm sparse
   active_ref_type hf
 }

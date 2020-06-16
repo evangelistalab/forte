@@ -92,7 +92,7 @@ std::unique_ptr<ActiveSpaceMethod> make_active_space_method(
     } else if (type == "PCI") {
         solver = std::make_unique<ExcitedStateSolver>(
             state, nroot, mo_space_info, as_ints,
-            std::make_unique<ProjectorCI>(state, nroot, scf_info, mo_space_info, as_ints));
+            std::make_unique<ProjectorCI>(state, nroot, scf_info, options, mo_space_info, as_ints));
     } else {
         throw psi::PSIEXCEPTION("make_active_space_method: type = " + type + " was not recognized");
     }

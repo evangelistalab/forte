@@ -38,8 +38,8 @@ namespace forte {
 class RDMs;
 
 /**
- * @brief The AdaptiveCI class
- * This class implements an adaptive CI algorithm
+ * @brief The ASCI class
+ * This class implements the Adaptively Selected CI algorithm
  */
 class ASCI : public SelectedCIMethod {
   public:
@@ -115,8 +115,6 @@ class ASCI : public SelectedCIMethod {
     bool follow_;
     local_timer cycle_time_;
 
-    bool project_out_spin_contaminants_;
-
     // Temporarily added interface to ExcitedStateSolver
     psi::SharedMatrix PQ_evecs_;
     psi::SharedVector PQ_evals_;
@@ -126,35 +124,12 @@ class ASCI : public SelectedCIMethod {
     /// Storage of past roots
     std::vector<std::vector<std::pair<Determinant, double>>> old_roots_;
 
-    /// HF info
-    std::shared_ptr<SCFInfo> scf_info_;
-    /// Options
-    std::shared_ptr<ForteOptions> options_;
-    /// The wave function symmetry
-    int wavefunction_symmetry_;
-    /// The symmetry of each orbital in Pitzer ordering
-    std::vector<int> mo_symmetry_;
-    /// The multiplicity of the reference
-    int multiplicity_;
-    /// M_s of the reference
-    int twice_ms_;
-    /// Number of irreps
-    size_t nirrep_;
-    /// The number of frozen core orbitals
-    int nfrzc_;
-    /// The number of frozen core orbital per irrets
-    psi::Dimension frzcpi_;
-    /// The number of active orbitals per irrep
-    psi::Dimension nactpi_;
-    /// The nuclear repulsion energy
-    double nuclear_repulsion_energy_;
     /// The reference determinant
     std::vector<Determinant> initial_reference_;
     /// The PT2 energy correction
     std::vector<double> multistate_pt2_energy_correction_;
     /// The last iteration
     bool set_ints_ = false;
-    size_t pre_iter_;
 
     // ==> ASCI Options <==
     /// The threshold applied to the primary space
@@ -166,8 +141,6 @@ class ASCI : public SelectedCIMethod {
     bool compute_rdms_;
     /// The CI coeffiecients
     psi::SharedMatrix evecs_;
-
-    bool quiet_mode_ = false;
 
     bool build_lists_;
     bool print_weights_ = false;
@@ -183,17 +156,6 @@ class ASCI : public SelectedCIMethod {
     double build_space_;
     double screen_space_;
     double spin_trans_;
-
-    // The RDMS
-    ambit::Tensor ordm_a_;
-    ambit::Tensor ordm_b_;
-    ambit::Tensor trdm_aa_;
-    ambit::Tensor trdm_ab_;
-    ambit::Tensor trdm_bb_;
-    ambit::Tensor trdm_aaa_;
-    ambit::Tensor trdm_aab_;
-    ambit::Tensor trdm_abb_;
-    ambit::Tensor trdm_bbb_;
 
     // ==> Class functions <==
 

@@ -35,7 +35,7 @@ set forte {
   sigma 0.005
   nroot 2
   charge 0
-  aci_enforce_spin_complete false
+  sci_enforce_spin_complete false
   active_guess_size 56
 }
 
