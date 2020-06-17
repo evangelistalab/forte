@@ -249,6 +249,7 @@ class DSRG_MRPT2 : public MASTER_DSRG {
     void solve_z();
     void set_z();
     void set_alpha();
+    void set_CI();
     void set_b();
     void iter_z();
     void set_z_cc();
@@ -262,6 +263,23 @@ class DSRG_MRPT2 : public MASTER_DSRG {
     void compute_z_aa();
 
 
+
+    void change_val1(ambit::BlockedTensor& temp1, 
+        ambit::BlockedTensor& temp2, ambit::BlockedTensor& val1);
+    void change_zmn_normal(ambit::BlockedTensor& temp1, 
+        ambit::BlockedTensor& temp2, ambit::BlockedTensor& zmn, bool reverse_mn);
+    void change_zmn_degenerate(ambit::BlockedTensor& temp1, 
+        ambit::BlockedTensor& temp2, ambit::BlockedTensor& zmn_d, double coeff);
+    void change_val2(ambit::BlockedTensor& temp1, 
+        ambit::BlockedTensor& temp2, ambit::BlockedTensor& val2);
+    void change_zef_normal(ambit::BlockedTensor& temp1, 
+        ambit::BlockedTensor& temp2, ambit::BlockedTensor& zef, bool reverse_ef);
+    void change_zef_degenerate(ambit::BlockedTensor& temp1, 
+        ambit::BlockedTensor& temp2, ambit::BlockedTensor& zef_d, double coeff);
+    void change_val3(ambit::BlockedTensor& temp1, 
+        ambit::BlockedTensor& temp2, ambit::BlockedTensor& val3, bool first_parts);
+    void change_b(ambit::BlockedTensor& temp1, 
+        ambit::BlockedTensor& temp2, ambit::BlockedTensor& Z_b, const std::string block);
 
     double s;
 
@@ -329,6 +347,16 @@ class DSRG_MRPT2 : public MASTER_DSRG {
     ambit::BlockedTensor Z;
     ambit::BlockedTensor Z_b;
     double Alpha;
+
+    // Tensors for solving CI equations
+    ambit::BlockedTensor CI_1;
+    ambit::BlockedTensor CI_2;
+
+    ambit::BlockedTensor V_N_Alpha;
+    ambit::BlockedTensor V_N_Beta;
+    ambit::BlockedTensor V_R_Alpha;
+    ambit::BlockedTensor V_R_Beta;
+
 
 
 
