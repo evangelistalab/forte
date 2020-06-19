@@ -349,6 +349,15 @@ PYBIND11_MODULE(forte, m) {
     py::class_<DressedQuantity>(m, "DressedQuantity")
         .def("contract_with_rdms", &DressedQuantity::contract_with_rdms, "reference"_a,
              "Contract densities with quantity");
+
+//    // export FCI_MO
+//    py::class_<FCI_MO>(m, "FCI_MO")
+//        .def("coupling_coeffcients_1a", &FCI_MO::coupling_coeffcients_1a)
+//        .def("coupling_coeffcients_1b", &FCI_MO::coupling_coeffcients_1b)
+//        .def("coupling_coeffcients_2aa", &FCI_MO::coupling_coeffcients_2aa)
+//        .def("coupling_coeffcients_2ab", &FCI_MO::coupling_coeffcients_2ab)
+//        .def("coupling_coeffcients_2bb", &FCI_MO::coupling_coeffcients_2bb)
+//        .def("eigen_vector", &FCI_MO::eigen_vector, "root"_a);
 }
 
 } // namespace forte
