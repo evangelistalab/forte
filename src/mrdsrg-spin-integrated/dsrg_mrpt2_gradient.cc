@@ -2950,6 +2950,41 @@ void DSRG_MRPT2::write_1rdm_spin_dependent() {
     outfile->Printf("Done");
 }
 
+void DSRG_MRPT2::change_2rdm(BlockedTensor& temp1,
+        BlockedTensor& temp2, BlockedTensor& temp) {
+    BlockedTensor temp3 = BTF_->build(CoreTensor, "temporal tensor 3", spin_cases({"gggg"}));
+    BlockedTensor temp4 = BTF_->build(CoreTensor, "temporal tensor 4", spin_cases({"gggg"}));
+
+    temp3["cdkj"] = temp1["cdkl"] * Gamma1["lj"];
+    temp4["cdij"] = temp3["cdkj"] * Gamma1["ki"];
+    temp3.zero();
+    temp3["cbij"] = temp4["cdij"] * Eta1["bd"];
+    temp4.zero();
+    temp4["abij"] = temp3["cbij"] * Eta1["ac"];
+    temp["abij"] += 0.25 * temp4["abij"] * temp2["ijab"];
+    temp3.zero();
+    temp4.zero();
+
+    temp3["CDKJ"] = temp1["CDKL"] * Gamma1["LJ"];
+    temp4["CDIJ"] = temp3["CDKJ"] * Gamma1["KI"];
+    temp3.zero();
+    temp3["CBIJ"] = temp4["CDIJ"] * Eta1["BD"];
+    temp4.zero();
+    temp4["ABIJ"] = temp3["CBIJ"] * Eta1["AC"];
+    temp["ABIJ"] += 0.25 * temp4["ABIJ"] * temp2["IJAB"];
+    temp3.zero();
+    temp4.zero();
+
+    temp3["cDkJ"] = temp1["cDkL"] * Gamma1["LJ"];
+    temp4["cDiJ"] = temp3["cDkJ"] * Gamma1["ki"];
+    temp3.zero();
+    temp3["cBiJ"] = temp4["cDiJ"] * Eta1["BD"];
+    temp4.zero();
+    temp4["aBiJ"] = temp3["cBiJ"] * Eta1["ac"];
+    temp["aBiJ"] += 0.25 * temp4["aBiJ"] * temp2["iJaB"];
+
+    temp1.zero();
+}
 
 /**
  * Write spin_dependent two-RDMs coefficients using IWL.
@@ -3180,17 +3215,12 @@ void DSRG_MRPT2::write_2rdm_spin_dependent() {
         temp1["cdkl"] = V["cdkl"] * Eeps2_p["klcd"];
         temp1["CDKL"] = V["CDKL"] * Eeps2_p["KLCD"];
         temp1["cDkL"] = V["cDkL"] * Eeps2_p["kLcD"];
-        temp["abij"] += 0.25 * temp1["cdkl"] * Eeps2_m1["ijab"] * Gamma1["ki"] * Gamma1["lj"] * Eta1["ac"] * Eta1["bd"];
-        temp["ABIJ"] += 0.25 * temp1["CDKL"] * Eeps2_m1["IJAB"] * Gamma1["KI"] * Gamma1["LJ"] * Eta1["AC"] * Eta1["BD"];
-        temp["aBiJ"] += 0.25 * temp1["cDkL"] * Eeps2_m1["iJaB"] * Gamma1["ki"] * Gamma1["LJ"] * Eta1["ac"] * Eta1["BD"];
-        temp1.zero();
+        change_2rdm(temp1, Eeps2_m1, temp);
 
         temp1["cdkl"] = V["cdkl"] * Eeps2_m1["klcd"];
         temp1["CDKL"] = V["CDKL"] * Eeps2_m1["KLCD"];
         temp1["cDkL"] = V["cDkL"] * Eeps2_m1["kLcD"];
-        temp["abij"] += 0.25 * temp1["cdkl"] * Eeps2_p["ijab"] * Gamma1["ki"] * Gamma1["lj"] * Eta1["ac"] * Eta1["bd"];
-        temp["ABIJ"] += 0.25 * temp1["CDKL"] * Eeps2_p["IJAB"] * Gamma1["KI"] * Gamma1["LJ"] * Eta1["AC"] * Eta1["BD"];
-        temp["aBiJ"] += 0.25 * temp1["cDkL"] * Eeps2_p["iJaB"] * Gamma1["ki"] * Gamma1["LJ"] * Eta1["ac"] * Eta1["BD"];
+        change_2rdm(temp1, Eeps2_p, temp);
     }
 
     temp["xynv"] -= Z["un"] * Gamma2["uvxy"]; 
