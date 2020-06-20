@@ -280,6 +280,11 @@ class DSRG_MRPT2 : public MASTER_DSRG {
         ambit::BlockedTensor& temp2, ambit::BlockedTensor& val3, bool first_parts);
     void change_b(ambit::BlockedTensor& temp1, 
         ambit::BlockedTensor& temp2, ambit::BlockedTensor& Z_b, const std::string block);
+    void change_w(ambit::BlockedTensor& temp1, 
+        ambit::BlockedTensor& temp2, ambit::BlockedTensor& W_, const std::string block);
+    void change_2rdm(BlockedTensor& temp1,
+        BlockedTensor& temp2, BlockedTensor& temp);
+
 
     double s;
 
