@@ -110,7 +110,9 @@ void export_ActiveSpaceSolver(py::module& m) {
              "as_ints"_a, "max_body"_a,
              "Solve the contracted CI eigenvalue problem using given integrals")
         .def("compute_average_rdms", &ActiveSpaceSolver::compute_average_rdms,
-             "Compute the weighted average reference");
+             "Compute the weighted average reference")
+        .def("coupling_coefficients", &ActiveSpaceSolver::coupling_coefficients)
+        .def("eigen_vectors", &ActiveSpaceSolver::eigen_vectors);
 
     m.def("compute_average_state_energy", &compute_average_state_energy,
           "Compute the average energy given the energies and weights of each state");
@@ -349,15 +351,6 @@ PYBIND11_MODULE(forte, m) {
     py::class_<DressedQuantity>(m, "DressedQuantity")
         .def("contract_with_rdms", &DressedQuantity::contract_with_rdms, "reference"_a,
              "Contract densities with quantity");
-
-//    // export FCI_MO
-//    py::class_<FCI_MO>(m, "FCI_MO")
-//        .def("coupling_coeffcients_1a", &FCI_MO::coupling_coeffcients_1a)
-//        .def("coupling_coeffcients_1b", &FCI_MO::coupling_coeffcients_1b)
-//        .def("coupling_coeffcients_2aa", &FCI_MO::coupling_coeffcients_2aa)
-//        .def("coupling_coeffcients_2ab", &FCI_MO::coupling_coeffcients_2ab)
-//        .def("coupling_coeffcients_2bb", &FCI_MO::coupling_coeffcients_2bb)
-//        .def("eigen_vector", &FCI_MO::eigen_vector, "root"_a);
 }
 
 } // namespace forte

@@ -75,6 +75,7 @@ endif()
 pybind11_add_module(forte
 src/base_classes/active_space_method.cc
 src/base_classes/active_space_solver.cc
+src/base_classes/coupling_coefficients.cc
 src/casscf/casscf.cc
 src/casscf/casscf_gradient.cc
 src/ci_rdm/ci_rdms.cc

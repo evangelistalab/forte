@@ -3024,14 +3024,36 @@ ambit::Tensor FCI_MO::coupling_coeffcients_2bb() {
     return out;
 }
 
-ambit::Tensor FCI_MO::eigen_vector(int root) {
+std::vector<ambit::Tensor> FCI_MO::eigen_vectors() {
     size_t ndets = determinant_.size();
-    auto out = ambit::Tensor::build(ambit::CoreTensor, "evec_" + std::to_string(root), {ndets});
 
-    for (size_t I = 0; I < ndets; ++I) {
-        out.data()[I] = (eigen_[root].first)->get(I);
+    std::vector<ambit::Tensor> out;
+    out.reserve(nroot_);
+
+    for (size_t root = 0; root < nroot_; ++root) {
+        auto tmp = ambit::Tensor::build(ambit::CoreTensor, "evec_" + std::to_string(root), {ndets});
+
+        for (size_t I = 0; I < ndets; ++I) {
+            tmp.data()[I] = (eigen_[root].first)->get(I);
+        }
+
+        out.push_back(tmp);
     }
 
     return out;
+}
+
+CouplingCoefficients FCI_MO::coupling_coefficients(int level) {
+    if (level != 2) {
+        throw PSIEXCEPTION("Not implemented other than level 2");
+    }
+
+    auto cc1a = coupling_coeffcients_1a();
+    auto cc1b = coupling_coeffcients_1b();
+    auto cc2aa = coupling_coeffcients_2aa();
+    auto cc2ab = coupling_coeffcients_2ab();
+    auto cc2bb = coupling_coeffcients_2bb();
+
+    return CouplingCoefficients(cc1a, cc1b, cc2aa, cc2ab, cc2bb);
 }
 } // namespace forte

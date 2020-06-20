@@ -112,6 +112,9 @@ class FCI_MO : public ActiveSpaceMethod {
     /// Compute state-specific CASCI energy
     std::vector<double> compute_ss_energies();
 
+    /// Return the coupling coefficients
+    CouplingCoefficients coupling_coefficients(int level) override;
+
     /// Compute the reduced density matrices up to a given particle rank (max_rdm_level)
     std::vector<RDMs> rdms(const std::vector<std::pair<size_t, size_t>>& root_list,
                            int max_rdm_level) override;
@@ -276,7 +279,7 @@ class FCI_MO : public ActiveSpaceMethod {
     ambit::Tensor coupling_coeffcients_2bb();
 
     /// Return the eigen vector in ambit Tensor format
-    ambit::Tensor eigen_vector(int root);
+    std::vector<ambit::Tensor> eigen_vectors() override;
 
   protected:
     /// Basic Preparation

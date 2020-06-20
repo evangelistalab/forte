@@ -29,12 +29,14 @@
 #ifndef _active_space_solver_h_
 #define _active_space_solver_h_
 
+#include <map>
 #include <vector>
 #include <string>
 
 #include "psi4/libmints/matrix.h"
 
 #include "base_classes/state_info.h"
+#include "base_classes/coupling_coefficients.h"
 
 namespace forte {
 
@@ -100,6 +102,12 @@ class ActiveSpaceSolver {
     const std::map<StateInfo, std::vector<double>>& state_energies_map() const {
         return state_energies_map_;
     }
+
+    /// Return the coupling coefficients for a given state
+    CouplingCoefficients coupling_coefficients(const StateInfo& state, int max_level = 2);
+
+    /// Return the eigen vectors for a given state
+    std::vector<ambit::Tensor> eigen_vectors(const StateInfo& state);
 
   protected:
     /// a string that specifies the method used (e.g. "FCI", "ACI", ...)
