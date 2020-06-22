@@ -74,6 +74,7 @@ casscf:
    - casscf-5
    - casscf-6
    - casscf-7
+   - casscf-9
    - df-casscf-1
    - casscf-gradient-1
   unused:
