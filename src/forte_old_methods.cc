@@ -27,7 +27,6 @@
  * @END LICENSE
  */
 
-
 #include "psi4/libpsi4util/PsiOutStream.h"
 
 #include "base_classes/scf_info.h"
@@ -76,9 +75,8 @@ double forte_old_methods(psi::SharedWavefunction ref_wfn, std::shared_ptr<ForteO
     auto state_map = to_state_nroots_map(state_weights_map);
 
     if (options->get_bool("CASSCF_REFERENCE") == true or options->get_str("JOB_TYPE") == "CASSCF") {
-//        auto as_ints = make_active_space_ints(mo_space_info, ints, "ACTIVE", {{"RESTRICTED_DOCC"}});
-        auto casscf = std::make_shared<CASSCF>(state, nroot, std::make_shared<SCFInfo>(ref_wfn),
-                                               options, mo_space_info, ints);
+        auto casscf = std::make_shared<CASSCF>(
+            state_weights_map, std::make_shared<SCFInfo>(ref_wfn), options, mo_space_info, ints);
         final_energy = casscf->compute_energy();
         if (options->get_str("DERTYPE") == "FIRST") {
             casscf->compute_gradient();

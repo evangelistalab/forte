@@ -29,6 +29,8 @@
 #ifndef _casscf_h_
 #define _casscf_h_
 
+#include <map>
+
 #include "psi4/libmints/wavefunction.h"
 #include "psi4/libfock/jk.h"
 
@@ -60,9 +62,9 @@ class CASSCF {
      * This reference has a nice algorithmic flowchart.  Look it up
      *
      */
-    CASSCF(StateInfo state, size_t nroot, std::shared_ptr<forte::SCFInfo> scf_info,
-           std::shared_ptr<ForteOptions> options, std::shared_ptr<MOSpaceInfo> mo_space_info,
-           std::shared_ptr<ForteIntegrals> ints);
+    CASSCF(const std::map<StateInfo, std::vector<double>>& state_weights_map,
+           std::shared_ptr<forte::SCFInfo> scf_info, std::shared_ptr<ForteOptions> options,
+           std::shared_ptr<MOSpaceInfo> mo_space_info, std::shared_ptr<ForteIntegrals> ints);
 
     /// Return the final gamma1
     ambit::Tensor gamma1() { return gamma1_; }
@@ -90,6 +92,8 @@ class CASSCF {
     double cas_check(RDMs cas);
 
   private:
+    /// The list of states to computed. Passed to the ActiveSpaceSolver
+    std::map<StateInfo, std::vector<double>> state_weights_map_;
     /// SCF information
     std::shared_ptr<SCFInfo> scf_info_;
     /// The options
@@ -98,7 +102,6 @@ class CASSCF {
     std::shared_ptr<MOSpaceInfo> mo_space_info_;
     /// The active one RDM in the MO basis
     ambit::Tensor gamma1_;
-
     /// The active two RDM (may need to be symmetrized)
     ambit::Tensor gamma2_;
     /// The reference object generated from Francesco's Full CI

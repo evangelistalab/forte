@@ -58,10 +58,11 @@
 
 namespace forte {
 
-CASSCF::CASSCF(StateInfo state, size_t nroot, std::shared_ptr<SCFInfo> scf_info,
-               std::shared_ptr<ForteOptions> options, std::shared_ptr<MOSpaceInfo> mo_space_info,
-               std::shared_ptr<ForteIntegrals> ints)
-    : scf_info_(scf_info), mo_space_info_(mo_space_info), options_(options), ints_(ints) {
+CASSCF::CASSCF(const std::map<StateInfo, std::vector<double>>& state_weights_map,
+               std::shared_ptr<SCFInfo> scf_info, std::shared_ptr<ForteOptions> options,
+               std::shared_ptr<MOSpaceInfo> mo_space_info, std::shared_ptr<ForteIntegrals> ints)
+    : state_weights_map_(state_weights_map), scf_info_(scf_info), options_(options),
+      mo_space_info_(mo_space_info), ints_(ints) {
     startup();
 }
 
@@ -304,13 +305,13 @@ void CASSCF::startup() {
             outfile->Printf(" %d", virtual_index);
         }
     }
-    std::shared_ptr<PSIO> psio_ = PSIO::shared_object();
-    psi::SharedMatrix T =
-        psi::SharedMatrix(ints_->wfn()->matrix_factory()->create_matrix(PSIF_SO_T));
-    psi::SharedMatrix V =
-        psi::SharedMatrix(ints_->wfn()->matrix_factory()->create_matrix(PSIF_SO_V));
-    psi::SharedMatrix OneInt = T;
-    OneInt->zero();
+
+    //    psi::SharedMatrix T =
+    //        psi::SharedMatrix(ints_->wfn()->matrix_factory()->create_matrix(PSIF_SO_T));
+    //    psi::SharedMatrix V =
+    //        psi::SharedMatrix(ints_->wfn()->matrix_factory()->create_matrix(PSIF_SO_V));
+    //    psi::SharedMatrix OneInt = T;
+    //    OneInt->zero();
 
     Hcore_ = SharedMatrix(ints_->wfn()->H()->clone());
 
@@ -353,16 +354,15 @@ void CASSCF::diagonalize_hamiltonian() {
 
     std::shared_ptr<ActiveSpaceIntegrals> fci_ints = get_ci_integrals();
 
-    auto state_weights_map = make_state_weights_map(options_, ints_->wfn());
-    auto state_map = to_state_nroots_map(state_weights_map);
-
     std::string casscf_ci_type = options_->get_str("CASSCF_CI_SOLVER");
+
+    auto state_map = to_state_nroots_map(state_weights_map_);
     auto active_space_solver = make_active_space_solver(casscf_ci_type, state_map, scf_info_,
                                                         mo_space_info_, fci_ints, options_);
     active_space_solver->set_print(print_);
     const auto state_energies_map = active_space_solver->compute_energy();
-    cas_ref_ = active_space_solver->compute_average_rdms(state_weights_map, 2);
-    double average_energy = compute_average_state_energy(state_energies_map, state_weights_map);
+    cas_ref_ = active_space_solver->compute_average_rdms(state_weights_map_, 2);
+    double average_energy = compute_average_state_energy(state_energies_map, state_weights_map_);
     // return the average energy
     E_casscf_ = average_energy;
 
