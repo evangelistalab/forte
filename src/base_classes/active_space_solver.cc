@@ -63,6 +63,8 @@ ActiveSpaceSolver::ActiveSpaceSolver(const std::string& method,
     ms_avg_ = options->get_bool("SPIN_AVG_DENSITY");
 }
 
+void ActiveSpaceSolver::set_print(int level) { print_ = level; }
+
 const std::map<StateInfo, std::vector<double>>& ActiveSpaceSolver::compute_energy() {
     state_energies_map_.clear();
     for (const auto& state_nroot : state_nroots_map_) {
@@ -71,6 +73,7 @@ const std::map<StateInfo, std::vector<double>>& ActiveSpaceSolver::compute_energ
         // compute the energy of state and save it
         std::shared_ptr<ActiveSpaceMethod> method = make_active_space_method(
             method_, state, nroot, scf_info_, mo_space_info_, as_ints_, options_);
+        method->set_print(print_);
         state_method_map_[state] = method;
 
         int twice_ms = state.twice_ms();

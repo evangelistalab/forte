@@ -75,6 +75,10 @@ class ActiveSpaceSolver {
 
     // ==> Class Interface <==
 
+    /// Set the print level
+    /// @param level the print level (0 = no printing, 1 default)
+    void set_print(int level);
+
     /// Compute the energy and return it // TODO: document (Francesco)
     const std::map<StateInfo, std::vector<double>>& compute_energy();
 
@@ -147,6 +151,9 @@ class ActiveSpaceSolver {
     /// Compute the state-averaged reference when spin multiplets are also averaged
     RDMs compute_avg_rdms(const std::map<StateInfo, std::vector<double>>& state_weights_map,
                           int max_rdm_level);
+
+    /// A variable to control printing information
+    int print_ = 1;
 
     /// Pairs of state info and the contracted CI eigen vectors
     std::map<StateInfo, std::shared_ptr<psi::Matrix>>

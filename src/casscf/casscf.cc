@@ -60,9 +60,8 @@ namespace forte {
 
 CASSCF::CASSCF(StateInfo state, size_t nroot, std::shared_ptr<SCFInfo> scf_info,
                std::shared_ptr<ForteOptions> options, std::shared_ptr<MOSpaceInfo> mo_space_info,
-               std::shared_ptr<ActiveSpaceIntegrals> as_ints)
-    : ActiveSpaceMethod(state, nroot, mo_space_info, as_ints), scf_info_(scf_info),
-      options_(options), ints_(as_ints->ints()) {
+               std::shared_ptr<ForteIntegrals> ints)
+    : scf_info_(scf_info), mo_space_info_(mo_space_info), options_(options), ints_(ints) {
     startup();
 }
 
@@ -76,14 +75,14 @@ double CASSCF::compute_energy() {
                                 "matter at this point");
     }
 
-    int maxiter = options_->get_int("CASSCF_ITERATIONS");
+    int maxiter = options_->get_int("CASSCF_MAXITER");
 
     /// Provide a nice summary at the end for iterations
     std::vector<int> iter_con;
     /// FrozenCore C Matrix is never rotated
     /// Can bring this out of loop
     if (nfrozen_ > 0) {
-        F_froze_ = set_frozen_core_orbitals();
+        F_frozen_core_ = set_frozen_core_orbitals();
     }
 
     /// Setup the DIIS manager
@@ -144,10 +143,10 @@ double CASSCF::compute_energy() {
         /// TODO:  Maybe make this run the orbital optimization
         if (ci_step) {
             if ((iter < casscf_freq) || (iter % casscf_freq) == 0) {
-                cas_ci();
+                diagonalize_hamiltonian();
             }
         } else {
-            cas_ci();
+            diagonalize_hamiltonian();
         }
         if (print_ > 0) {
             outfile->Printf("\n\n CAS took %8.6f seconds.", cas_timer.get());
@@ -159,7 +158,7 @@ double CASSCF::compute_energy() {
                                                  mo_space_info_);
 
         orbital_optimizer.set_scf_info(scf_info_);
-        orbital_optimizer.set_frozen_one_body(F_froze_);
+        orbital_optimizer.set_frozen_one_body(F_frozen_core_);
         orbital_optimizer.set_symmmetry_mo(Ca);
         // orbital_optimizer.one_body(Hcore_);
         psi::SharedMatrix Hcore(Hcore_->clone());
@@ -223,8 +222,8 @@ double CASSCF::compute_energy() {
         if (iter >= diis_start && do_diis == true && g_norm < diis_gradient_norm) {
             diis_start_label = "DIIS";
         }
-        outfile->Printf("\n %4d   %10.12f   %10.12f   %10.12f  %10.6f s  %4s ~", iter, g_norm,
-                        Ediff, E_casscf_, casscf_total_iter.get(), diis_start_label.c_str());
+        outfile->Printf("\n %4d %14.12f %18.12f %18.12f %6.1f s  %4s ~", iter, g_norm, Ediff,
+                        E_casscf_, casscf_total_iter.get(), diis_start_label.c_str());
     }
     // if(casscf_debug_print_)
     //{
@@ -246,13 +245,16 @@ double CASSCF::compute_energy() {
     // consistent energies in correlation treatment
     //    ints_->update_orbitals(Ca, Cb);
 
-    cas_ci_final();
+    // diagonalize the Hamiltonian one last time
+    diagonalize_hamiltonian();
+
     outfile->Printf("\n @E(CASSCF) = %18.12f \n", E_casscf_);
     psi::Process::environment.globals["CURRENT ENERGY"] = E_casscf_;
     psi::Process::environment.globals["CASSCF_ENERGY"] = E_casscf_;
 
     return E_casscf_;
 }
+
 void CASSCF::startup() {
     print_method_banner({"Complete Active Space Self Consistent Field", "Kevin Hannon"});
     na_ = mo_space_info_->size("ACTIVE");
@@ -338,7 +340,8 @@ void CASSCF::startup() {
         outfile->Printf("\n     JK takes %5.5f s to initialize while using %s", JK_initialize.get(),
                         options_->get_str("SCF_TYPE").c_str());
 }
-void CASSCF::cas_ci() {
+
+void CASSCF::diagonalize_hamiltonian() {
     /// Calls francisco's FCI code and does a CAS-CI with the active given in
     /// the input
     // tei_paaa_ = transform_integrals();
@@ -356,6 +359,7 @@ void CASSCF::cas_ci() {
     std::string casscf_ci_type = options_->get_str("CASSCF_CI_SOLVER");
     auto active_space_solver = make_active_space_solver(casscf_ci_type, state_map, scf_info_,
                                                         mo_space_info_, fci_ints, options_);
+    active_space_solver->set_print(print_);
     const auto state_energies_map = active_space_solver->compute_energy();
     cas_ref_ = active_space_solver->compute_average_rdms(state_weights_map, 2);
     double average_energy = compute_average_state_energy(state_energies_map, state_weights_map);
@@ -433,55 +437,6 @@ void CASSCF::cas_ci() {
     gamma1_ = gamma_no_spin;
 }
 
-void CASSCF::cas_ci_final() {
-
-    /// Calls Francesco's FCI code and does a CAS-CI with the active given in
-    /// the input
-    bool quiet = true;
-    if (print_ > 0) {
-        quiet = false;
-    }
-    cas_ci();
-    //    if (options_->get_str("CASSCF_CI_SOLVER") == "FCI") {
-    //        // Used to grab the computed energy and RDMs.
-    //        //        if (options_->psi_options()["AVG_STATE"].size() == 0) {
-    ////        set_up_fci();
-    //        //} else {
-    //        //    set_up_sa_fci();
-    //        //        }
-    //    } else if (options_->get_str("CASSCF_CI_SOLVER") == "CAS") {
-    //        set_up_fcimo();
-    //    } else if (options_->get_str("CASSCF_CI_SOLVER") == "ACI") {
-    //        as_ints_ = get_ci_integrals();
-    //        AdaptiveCI aci(state_, nroot_, scf_info_, options_, mo_space_info_, as_ints_);
-    //        aci.set_max_rdm(3);
-    //        aci.set_quiet(quiet);
-    //        aci.compute_energy();
-    //        E_casscf_ = aci.energies()[0]; // TODO: Check if this should be root_
-
-    //        std::vector<std::pair<size_t, size_t>> roots;
-    //        roots.push_back(std::make_pair(0, 0));
-    //        cas_ref_ = aci.reference(roots)[0];
-
-    //    } else if (options_->get_str("CASSCF_CI_SOLVER") == "DMRG") {
-    //#ifdef HAVE_CHEMPS2
-    //        DMRGSolver dmrg(state_, scf_info_, options_, ints_, mo_space_info_);
-    //        dmrg.set_max_rdm(3);
-    //        dmrg.spin_free_rdm(true);
-    //        std::pair<ambit::Tensor, std::vector<double>> integral_pair = CI_Integrals();
-    //        dmrg.set_up_integrals(integral_pair.first, integral_pair.second);
-    //        dmrg.set_scalar(scalar_energy_ + ints_->frozen_core_energy() +
-    //                        ints_->nuclear_repulsion_energy());
-    //        dmrg.compute_energy();
-
-    //        cas_ref_ = dmrg.reference();
-    //        E_casscf_ = cas_ref_.get_Eref();
-    //#else
-    //        throw psi::PSIEXCEPTION("Did not compile with CHEMPS2 so DMRG will not work");
-    //#endif
-    //    }
-}
-
 double CASSCF::cas_check(RDMs cas_ref) {
     ambit::Tensor gamma1 = ambit::Tensor::build(ambit::CoreTensor, "Gamma1", {na_, na_});
     ambit::Tensor gamma2 = ambit::Tensor::build(ambit::CoreTensor, "Gamma2", {na_, na_, na_, na_});
@@ -553,6 +508,7 @@ double CASSCF::cas_check(RDMs cas_ref) {
 
     return E_casscf;
 }
+
 std::shared_ptr<psi::Matrix> CASSCF::set_frozen_core_orbitals() {
     psi::SharedMatrix Ca = ints_->Ca();
     psi::Dimension nsopi = scf_info_->nsopi();
@@ -585,6 +541,7 @@ std::shared_ptr<psi::Matrix> CASSCF::set_frozen_core_orbitals() {
 
     return F_core;
 }
+
 ambit::Tensor CASSCF::transform_integrals() {
     if (options_->get_str("SCF_TYPE") == "OUT_OF_CORE") {
         outfile->Printf("\n To use Out_of_core for scf_type, I need to "
@@ -706,22 +663,6 @@ ambit::Tensor CASSCF::transform_integrals() {
         }
     }
     return active_int;
-}
-
-void CASSCF::set_up_fci() {
-    auto as_ints = make_active_space_ints(mo_space_info_, ints_, "ACTIVE", {{"RESTRICTED_DOCC"}});
-
-    std::shared_ptr<ActiveSpaceMethod> fcisolver = make_active_space_method(
-        "FCI", state_, nroot_, scf_info_, mo_space_info_, as_ints, options_);
-
-    fcisolver->set_root(options_->get_int("ROOT"));
-    std::shared_ptr<ActiveSpaceIntegrals> fci_ints = get_ci_integrals();
-    fcisolver->set_active_space_integrals(fci_ints);
-    E_casscf_ = fcisolver->compute_energy();
-
-    std::vector<std::pair<size_t, size_t>> roots;
-    roots.push_back(std::make_pair(0, 0));
-    cas_ref_ = fcisolver->rdms(roots, 2)[0];
 }
 
 std::shared_ptr<ActiveSpaceIntegrals> CASSCF::get_ci_integrals() {
@@ -887,6 +828,7 @@ std::vector<std::vector<double>> CASSCF::compute_restricted_docc_operator() {
     oei_container.push_back(oei_b);
     return oei_container;
 }
+
 void CASSCF::overlap_orbitals(const psi::SharedMatrix& C_old, const psi::SharedMatrix& C_new) {
     psi::SharedMatrix S_orbitals(
         new psi::Matrix("Overlap", scf_info_->nsopi(), scf_info_->nsopi()));
@@ -901,76 +843,6 @@ void CASSCF::overlap_orbitals(const psi::SharedMatrix& C_old, const psi::SharedM
         }
     }
 }
-/*
-void CASSCF::set_up_sa_fci() {
-    SA_FCISolver sa_fcisolver(options_->psi_options(), ints_->wfn());
-    sa_fcisolver.set_mo_space_info(mo_space_info_);
-    sa_fcisolver.set_integrals(ints_);
-    std::vector<size_t> rdocc = mo_space_info_->corr_absolute_mo("RESTRICTED_DOCC");
-    std::vector<size_t> active = mo_space_info_->corr_absolute_mo("ACTIVE");
-    std::shared_ptr<ActiveSpaceIntegrals> fci_ints =
-        std::make_shared<ActiveSpaceIntegrals>(ints_, active, rdocc);
-    auto na_array = mo_space_info_->corr_absolute_mo("ACTIVE");
-
-    ambit::Tensor active_aa =
-        ambit::Tensor::build(ambit::CoreTensor, "ActiveIntegralsAA", {na_, na_, na_, na_});
-    ambit::Tensor active_ab =
-        ambit::Tensor::build(ambit::CoreTensor, "ActiveIntegralsAB", {na_, na_, na_, na_});
-    ambit::Tensor active_bb =
-        ambit::Tensor::build(ambit::CoreTensor, "ActiveIntegralsBB", {na_, na_, na_, na_});
-    const std::vector<double>& tei_paaa_data = tei_paaa_.data();
-
-    active_ab.iterate([&](const std::vector<size_t>& i, double& value) {
-        value =
-            tei_paaa_data[na_array[i[0]] * na_ * na_ * na_ + i[1] * na_ * na_ + i[2] * na_ + i[3]];
-    });
-    active_aa.copy(active_ab);
-    active_bb.copy(active_ab);
-    active_aa("u,v,x,y") -= active_ab("u, v, y, x");
-    active_bb.copy(active_aa);
-
-    fci_ints->set_active_integrals(active_aa, active_ab, active_bb);
-    if (casscf_debug_print_) {
-        outfile->Printf("\n\n tei_active_aa: %8.8f tei_active_ab: %8.8f", active_aa.norm(2),
-                        active_ab.norm(2));
-    }
-
-    std::vector<std::vector<double>> oei_vector;
-    if ((nrdocc_ + nfrozen_) > 0) {
-        oei_vector = compute_restricted_docc_operator();
-        fci_ints->set_restricted_one_body_operator(oei_vector[0], oei_vector[1]);
-        fci_ints->set_scalar_energy(scalar_energy_);
-        sa_fcisolver.set_integral_pointer(fci_ints);
-    } else {
-        std::vector<double> oei_a(na_ * na_);
-        std::vector<double> oei_b(na_ * na_);
-
-        for (size_t p = 0; p < na_; ++p) {
-            size_t pp = active[p];
-            for (size_t q = 0; q < na_; ++q) {
-                size_t qq = active[q];
-                size_t idx = na_ * p + q;
-                oei_a[idx] = ints_->oei_a(pp, qq);
-                oei_b[idx] = ints_->oei_b(pp, qq);
-            }
-        }
-        oei_vector.push_back(oei_a);
-        oei_vector.push_back(oei_b);
-        scalar_energy_ = 0.00;
-        fci_ints->set_restricted_one_body_operator(oei_vector[0], oei_vector[1]);
-        fci_ints->set_scalar_energy(scalar_energy_);
-        sa_fcisolver.set_integral_pointer(fci_ints);
-    }
-
-    E_casscf_ = sa_fcisolver.compute_energy();
-    cas_ref_ = sa_fcisolver.reference();
-    //    if (options_->get_bool("MONITOR_SA_SOLUTION")) {
-    //        std::vector<std::shared_ptr<FCIVector>> StateAveragedFCISolver =
-    //            sa_fcisolver.StateAveragedCISolution();
-    //        CISolutions_.push_back(StateAveragedFCISolver);
-    //    }
-}
-*/
 
 void CASSCF::write_orbitals_molden() {
     psi::SharedVector occ_vector(new psi::Vector(nirrep_, nmopi_));
@@ -1007,20 +879,20 @@ std::pair<ambit::Tensor, std::vector<double>> CASSCF::CI_Integrals() {
     return pair_return;
 }
 
-std::vector<RDMs> CASSCF::rdms(const std::vector<std::pair<size_t, size_t>>& /*root_list*/,
-                               int /*max_rdm_level*/) {
-    // TODO (York): this does not seem the correct thing to do.
-    std::vector<RDMs> refs;
-    refs.push_back(cas_ref_);
-    return refs;
-}
+// std::vector<RDMs> CASSCF::rdms(const std::vector<std::pair<size_t, size_t>>& /*root_list*/,
+//                               int /*max_rdm_level*/) {
+//    // TODO (York): this does not seem the correct thing to do.
+//    std::vector<RDMs> refs;
+//    refs.push_back(cas_ref_);
+//    return refs;
+//}
 
-std::vector<RDMs>
-CASSCF::transition_rdms(const std::vector<std::pair<size_t, size_t>>& /*root_list*/,
-                        std::shared_ptr<ActiveSpaceMethod> /*method2*/, int /*max_rdm_level*/) {
-    std::vector<RDMs> refs;
-    throw std::runtime_error("FCISolver::transition_rdms is not implemented!");
-    return refs;
-}
+// std::vector<RDMs>
+// CASSCF::transition_rdms(const std::vector<std::pair<size_t, size_t>>& /*root_list*/,
+//                        std::shared_ptr<ActiveSpaceMethod> /*method2*/, int /*max_rdm_level*/) {
+//    std::vector<RDMs> refs;
+//    throw std::runtime_error("FCISolver::transition_rdms is not implemented!");
+//    return refs;
+//}
 
 } // namespace forte

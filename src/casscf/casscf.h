@@ -26,9 +26,8 @@
  * @END LICENSE
  */
 
-#ifndef CASSCF_H
-#define CASSCF_H
-
+#ifndef _casscf_h_
+#define _casscf_h_
 
 #include "psi4/libmints/wavefunction.h"
 #include "psi4/libfock/jk.h"
@@ -45,10 +44,9 @@
 
 namespace forte {
 
-// class ActiveSpaceIntegrals;
 class SCFInfo;
 
-class CASSCF : public ActiveSpaceMethod {
+class CASSCF {
   public:
     /**
      * @brief CASSCF::CASSCF
@@ -64,29 +62,29 @@ class CASSCF : public ActiveSpaceMethod {
      */
     CASSCF(StateInfo state, size_t nroot, std::shared_ptr<forte::SCFInfo> scf_info,
            std::shared_ptr<ForteOptions> options, std::shared_ptr<MOSpaceInfo> mo_space_info,
-           std::shared_ptr<ActiveSpaceIntegrals> as_ints);
-    /// Use daniels code to compute Orbital optimization
-    // void compute_casscf_soscf();
+           std::shared_ptr<ForteIntegrals> ints);
+
     /// Return the final gamma1
     ambit::Tensor gamma1() { return gamma1_; }
     /// Return the final gamma2;
     ambit::Tensor gamma2() { return gamma2_; }
-    double compute_energy() override;
-
-    /// Compute CASSCF gradient
+    /// Compute the CASSCF energy
+    double compute_energy();
+    /// Compute the CASSCF energy gradient
     psi::SharedMatrix compute_gradient();
 
-    void set_options(std::shared_ptr<ForteOptions>) override{};
+    //    void set_options(std::shared_ptr<ForteOptions>) override{};
 
-    /// Returns the reduced density matrices up to a given level (max_rdm_level)
-    std::vector<RDMs> rdms(const std::vector<std::pair<size_t, size_t>>& root_list,
-                           int max_rdm_level) override;
+    //    /// Returns the reduced density matrices up to a given level (max_rdm_level)
+    //    std::vector<RDMs> rdms(const std::vector<std::pair<size_t, size_t>>& root_list,
+    //                           int max_rdm_level) override;
 
-    /// Returns the transition reduced density matrices between roots of different symmetry up to a
-    /// given level (max_rdm_level)
-    std::vector<RDMs> transition_rdms(const std::vector<std::pair<size_t, size_t>>& root_list,
-                                      std::shared_ptr<ActiveSpaceMethod> method2,
-                                      int max_rdm_level) override;
+    //    /// Returns the transition reduced density matrices between roots of different symmetry up
+    //    to a
+    //    /// given level (max_rdm_level)
+    //    std::vector<RDMs> transition_rdms(const std::vector<std::pair<size_t, size_t>>& root_list,
+    //                                      std::shared_ptr<ActiveSpaceMethod> method2,
+    //                                      int max_rdm_level) override;
 
     /// check the cas_ci energy with spin-free RDM
     double cas_check(RDMs cas);
@@ -96,7 +94,8 @@ class CASSCF : public ActiveSpaceMethod {
     std::shared_ptr<SCFInfo> scf_info_;
     /// The options
     std::shared_ptr<ForteOptions> options_;
-
+    /// The MOSpaceInfo object
+    std::shared_ptr<MOSpaceInfo> mo_space_info_;
     /// The active one RDM in the MO basis
     ambit::Tensor gamma1_;
 
@@ -191,18 +190,14 @@ class CASSCF : public ActiveSpaceMethod {
     /// These member variables are all summarized in Algorithm 1
     /// Equation 9
 
-    /// The Fock matrix due to Frozen core orbitals
-    psi::SharedMatrix F_froze_;
-    /// The One Electron integrals (H = T + V)  (in AO basis)
+    /// The Fock matrix due to frozen core orbitals
+    psi::SharedMatrix F_frozen_core_;
+    /// The one-electron integral matrix in the AO basis (H = T + V)
     psi::SharedMatrix Hcore_;
     /// The JK object.  Built in constructor
     std::shared_ptr<psi::JK> JK_;
-    /// Perform a CAS-CI with the updated MO coefficients
-    void cas_ci();
-    /// Sets up the FCI
-    void set_up_fci();
-    /// Set up a SA-FCI
-    //  void set_up_sa_fci();
+    /// Diagonalize the Hamiltonian using the updated MO coefficients (does FCI, sCI, DMRG, etc.)
+    void diagonalize_hamiltonian();
     /// Read all the mospace info and assign correct dimensions
     void startup();
     /// Compute overlap between old_c and new_c
@@ -241,16 +236,21 @@ class CASSCF : public ActiveSpaceMethod {
     std::vector<size_t> restricted_uocc_abs_;
     std::vector<size_t> inactive_docc_abs_;
     std::vector<size_t> nmo_abs_;
+
     /// Transform the active integrals
     ambit::Tensor transform_integrals();
+
     std::pair<ambit::Tensor, std::vector<double>> CI_Integrals();
+
     /// The transform integrals computed from transform_integrals
     ambit::Tensor tei_paaa_;
-    int print_;
+
+    /// The print level
+    int print_ = 0;
     /// The CISolutions per iteration
     std::vector<std::vector<std::shared_ptr<FCIVector>>> CISolutions_;
     std::shared_ptr<ActiveSpaceIntegrals> get_ci_integrals();
 };
 } // namespace forte
 
-#endif // CASSCF_H
+#endif // _casscf_h_
