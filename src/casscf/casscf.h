@@ -75,22 +75,6 @@ class CASSCF {
     /// Compute the CASSCF energy gradient
     psi::SharedMatrix compute_gradient();
 
-    //    void set_options(std::shared_ptr<ForteOptions>) override{};
-
-    //    /// Returns the reduced density matrices up to a given level (max_rdm_level)
-    //    std::vector<RDMs> rdms(const std::vector<std::pair<size_t, size_t>>& root_list,
-    //                           int max_rdm_level) override;
-
-    //    /// Returns the transition reduced density matrices between roots of different symmetry up
-    //    to a
-    //    /// given level (max_rdm_level)
-    //    std::vector<RDMs> transition_rdms(const std::vector<std::pair<size_t, size_t>>& root_list,
-    //                                      std::shared_ptr<ActiveSpaceMethod> method2,
-    //                                      int max_rdm_level) override;
-
-    /// check the cas_ci energy with spin-free RDM
-    double cas_check(RDMs cas);
-
   private:
     /// The list of states to computed. Passed to the ActiveSpaceSolver
     std::map<StateInfo, std::vector<double>> state_weights_map_;
@@ -110,25 +94,68 @@ class CASSCF {
     double E_casscf_;
     std::shared_ptr<ForteIntegrals> ints_;
 
-    /// The dimension for number of molecular orbitals (CORRELATED or ALL)
-    psi::Dimension nmopi_;
-    /// The number of correlated molecular orbitals (Restricted Core + Active +
-    /// Restricted_UOCC + Frozen_Virt
-    size_t nmo_;
+    /// The number of correlated molecular orbitals (not frozen)
+    size_t ncmo_;
     /// The number of active orbitals
-    size_t na_;
+    size_t nactv_;
     /// The number of irreps
     size_t nirrep_;
     /// The number of SO (AO for C matrices)
     psi::Dimension nsopi_;
+
     /// the number of restricted_docc
     size_t nrdocc_;
     /// The number of frozen_docc
-    size_t nfrozen_;
+    size_t nfdocc_;
     /// The number of virtual orbitals
-    size_t nvir_;
+    size_t nruocc_;
     /// The number of NMO including frozen core
-    size_t all_nmo_;
+    size_t nmo_;
+
+    /// List of core MOs (Correlated)
+    std::vector<size_t> rdocc_mos_;
+    /// List of active MOs (Correlated)
+    std::vector<size_t> actv_mos_;
+    /// List of virtual MOs (Correlated)
+    std::vector<size_t> ruocc_mos_;
+    /// List of correlated MOs
+    std::vector<size_t> corr_mos_;
+
+    /// List of core MOs (Absolute)
+    std::vector<size_t> core_mos_abs_;
+    /// List of active MOs (Absolute)
+    std::vector<size_t> actv_mos_abs_;
+
+    /// The psi::Dimensions for frozen docc
+    psi::Dimension frozen_docc_dim_;
+    /// The psi::Dimensions for restricted docc
+    psi::Dimension restricted_docc_dim_;
+    /// The psi::Dimensions for active
+    psi::Dimension active_dim_;
+    /// The psi::Dimensions for restricted uocc
+    psi::Dimension restricted_uocc_dim_;
+    /// The psi::Dimensions for frozen uocc
+    psi::Dimension inactive_docc_dim_;
+    /// The psi::Dimensions for all correlated orbitals
+    psi::Dimension corr_dim_;
+    /// The psi::Dimensions for all orbitals
+    psi::Dimension nmo_dim_;
+
+    /// List of relative core MOs
+    std::vector<std::pair<unsigned long, unsigned long>,
+                std::allocator<std::pair<unsigned long, unsigned long>>>
+        core_mos_rel_;
+    /// List of relative active MOs
+    std::vector<std::pair<unsigned long, unsigned long>,
+                std::allocator<std::pair<unsigned long, unsigned long>>>
+        actv_mos_rel_;
+
+    std::vector<size_t> frozen_docc_abs_;
+    std::vector<size_t> restricted_docc_abs_;
+    std::vector<size_t> active_abs_;
+    std::vector<size_t> restricted_uocc_abs_;
+    std::vector<size_t> inactive_docc_abs_;
+    std::vector<size_t> nmo_abs_;
 
     // These are essential variables and functions for computing CASSCF gradient.
     /// Set Ambit tensor labels
@@ -155,26 +182,7 @@ class CASSCF {
     void write_2rdm_spin_dependent();
     /// TPDM backtransform
     void tpdm_backtransform();
-    /// List of core MOs (Correlated)
-    std::vector<size_t> core_mos_;
-    /// List of active MOs (Correlated)
-    std::vector<size_t> actv_mos_;
-    /// List of virtual MOs (Correlated)
-    std::vector<size_t> virt_mos_;
-    /// List of core MOs (Absolute)
-    std::vector<size_t> core_all_;
-    /// List of active MOs (Absolute)
-    std::vector<size_t> actv_all_;
-    /// List of relative core MOs
-    std::vector<std::pair<unsigned long, unsigned long>,
-                std::allocator<std::pair<unsigned long, unsigned long>>>
-        core_mos_relative;
-    /// List of relative active MOs
-    std::vector<std::pair<unsigned long, unsigned long>,
-                std::allocator<std::pair<unsigned long, unsigned long>>>
-        actv_mos_relative;
-    /// Dimension of different irreps
-    psi::Dimension irrep_vec;
+
     /// One-particle density matrix
     ambit::BlockedTensor Gamma1_;
     /// Two-body denisty tensor
@@ -218,38 +226,19 @@ class CASSCF {
     /// Compute the restricted_one_body operator for FCI(done also in
     /// OrbitalOptimizer)
 
-    // Recompute reference
-    void cas_ci_final();
-
-    std::vector<std::vector<double>> compute_restricted_docc_operator();
+    std::vector<double> compute_restricted_docc_operator();
 
     double scalar_energy_ = 0.0;
-    /// The psi::Dimensions for the major orbitals spaces involved in CASSCF
-    /// Trying to get these all in the startup, so I can use them repeatly
-    /// rather than create them in different places
-    psi::Dimension frozen_docc_dim_;
-    psi::Dimension restricted_docc_dim_;
-    psi::Dimension active_dim_;
-    psi::Dimension restricted_uocc_dim_;
-    psi::Dimension inactive_docc_dim_;
-
-    std::vector<size_t> frozen_docc_abs_;
-    std::vector<size_t> restricted_docc_abs_;
-    std::vector<size_t> active_abs_;
-    std::vector<size_t> restricted_uocc_abs_;
-    std::vector<size_t> inactive_docc_abs_;
-    std::vector<size_t> nmo_abs_;
 
     /// Transform the active integrals
-    ambit::Tensor transform_integrals();
-
-    std::pair<ambit::Tensor, std::vector<double>> CI_Integrals();
+    ambit::Tensor transform_integrals(std::shared_ptr<psi::Matrix> Ca);
 
     /// The transform integrals computed from transform_integrals
-    ambit::Tensor tei_paaa_;
+    ambit::Tensor tei_gaaa_;
 
     /// The print level
     int print_ = 0;
+
     /// The CISolutions per iteration
     std::vector<std::vector<std::shared_ptr<FCIVector>>> CISolutions_;
     std::shared_ptr<ActiveSpaceIntegrals> get_ci_integrals();
