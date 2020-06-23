@@ -1,11 +1,13 @@
 import forte                              
 
-# This test reproduces the ASCI energy of C2 reported in the Table 2 of the following paper:
+# This test is similar to the ASCI energy of C2 reported in the Table 2 of the following paper:
 #   Tubman, N. M., Lee, J., Takeshita, T. Y., Head-Gordon, M., & Whaley, K. B. (2016). 
 #   J. Chem. Phys., 145 (4), 044112. http://doi.org/doi: 10.1063/1.4955109
+#
+#   In this test we use a smaller basis (6-31G) and compute two states using an average algorithm
 
 refscf = -75.34896498316222 
-refasci = -75.550651284593 
+refasci = -75.550740036607
                                          
 molecule CH2{                            
 0 1
@@ -16,9 +18,7 @@ C 1 1.27273
                                          
 set {                                    
   scf_type pk                            
-  #multiplicity 1                         
   basis 6-31g                      
-  reference rohf
   e_convergence 10
 }                                        
                                          
@@ -38,10 +38,9 @@ set forte {
   asci_cdet 50
   asci_tdet 334
   sci_max_cycle 8   
-  sci_project_out_spin_contaminants true
+  sci_project_out_spin_contaminants false
   spin_project_full false
   e_convergence 12
-  r_convergence 0.1
 }                                        
                                          
 Escf, scf_wfn = energy('scf', return_wfn=True)

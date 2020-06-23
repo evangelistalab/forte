@@ -902,7 +902,7 @@ void FCI_MO::Diagonalize_H(const vecdet& p_space, const int& multi, const int& n
     SparseCISolver sparse_solver;
     sparse_solver.set_e_convergence(econv_);
     sparse_solver.set_r_convergence(rconv_);
-    sparse_solver.set_spin_project(true);
+    sparse_solver.set_spin_project(options_->get_bool("SCI_PROJECT_OUT_SPIN_CONTAMINANTS"));
     sparse_solver.set_maxiter_davidson(options_->get_int("DL_MAXITER"));
     sparse_solver.set_guess_dimension(options_->get_int("DL_GUESS_SIZE"));
     if (projected_roots_.size() != 0) {

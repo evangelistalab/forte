@@ -39,10 +39,25 @@ set globals{
   mcscf_diis_start       8
   mcscf_max_rot          0.2
   docc                   [5,3,1,1,0,1,5,4]
-# restricted_docc        [5,3,0,0,0,0,4,4]
-# active                 [1,0,1,2,1,2,1,0]
-  restricted_docc        [5,3,1,1,0,1,4,4]
-  active                 [1,0,0,0,0,0,1,0]
+#  restricted_docc        [5,3,1,1,0,1,4,4]
+#  active                 [1,0,0,0,0,0,1,0]
+  restricted_docc        [5,3,0,0,0,0,4,4]
+  active                 [1,0,1,2,1,2,1,0]
+}
+Escf, wfn = energy('scf', return_wfn=True)
+#compare_values(Ecas_psi4_jk, Ecas, 9, "CASSCF(8,8)/cc-pVDZ-JKFIT (PSI4) energy")
+
+set forte{
+  job_type               casscf
+  casscf_ci_solver       fci
+  restricted_docc        [5,3,0,0,0,0,4,4]
+  active                 [1,0,1,2,1,2,1,0]
+  e_convergence          12
+  r_convergence          9
+  casscf_g_convergence   1e-8
+  casscf_e_convergence   1e-12
+  int_type               df
+  fci_maxiter            50
 }
 Ecas, wfn = energy('casscf', return_wfn=True)
 compare_values(Ecas_psi4, Ecas, 9, "CASSCF(2,2)/STO-3G energy (PSI4)")
@@ -57,8 +72,9 @@ set forte{
   dsrg_s                 0.5
   relax_ref              once
   e_convergence          12
-  r_convergence          8
+  r_convergence          9
   int_type               diskdf
+  fci_maxiter            50
 }
 energy('forte', ref_wfn=wfn)
 Eupt2 = variable("UNRELAXED ENERGY")

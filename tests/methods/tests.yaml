@@ -186,6 +186,7 @@ fci:
    - fci-4
    - fci-5
    - fci-7
+   - fci-8
    - fci-ecp-1
    - fci-ecp-2
    - fci-ex-1
@@ -276,3 +277,7 @@ pci:
 #   - pci-7
    - pci-8
 #   - pci-9
+#x2c:
+#  short:
+#   - x2c-1
+

@@ -160,6 +160,11 @@ void apply_permutation_in_place(std::vector<T>& vec, const std::vector<std::size
     }
 }
 
+namespace math {
+/// Return the number of combinations of n identical objects
+size_t combinations(size_t n, size_t k);
+} // namespace math
+
 } // namespace forte
 
 #endif // _helpers_h_

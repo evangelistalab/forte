@@ -11,6 +11,7 @@ def register_forte_options(options):
     register_pt2_options(options)
     register_pci_options(options)
     register_fci_options(options)
+    register_sci_options(options)
     register_aci_options(options)
     register_asci_options(options)
     register_fci_mo_options(options)
@@ -33,7 +34,6 @@ def register_driver_options(options):
 
     options.add_double("E_CONVERGENCE", 1.0e-9, "The energy convergence criterion")
     options.add_double("D_CONVERGENCE", 1.0e-6, "The density convergence criterion")
-
 
     options.add_str(
         'ACTIVE_SPACE_SOLVER', '', ['FCI', 'ACI', 'CAS'],
@@ -367,6 +367,45 @@ def register_fci_options(options):
         'NTRIAL_PER_ROOT', 10,
         'The number of trial guess vectors to generate per root')
 
+def register_sci_options(options):
+    options.set_group("SCI")
+
+    options.add_bool("SCI_ENFORCE_SPIN_COMPLETE", True,
+                           "Enforce determinant spaces (P and Q) to be spin-complete?")
+
+    options.add_bool("SCI_ENFORCE_SPIN_COMPLETE_P", False,
+                           "Enforce determinant space P to be spin-complete?")
+
+    options.add_bool(
+        "SCI_PROJECT_OUT_SPIN_CONTAMINANTS", True,
+        "Project out spin contaminants in Davidson-Liu's algorithm?")
+
+    options.add_str(
+        "SCI_EXCITED_ALGORITHM", "NONE",
+        ['AVERAGE', 'ROOT_ORTHOGONALIZE', 'ROOT_COMBINE', 'MULTISTATE'],
+        "The selected CI excited state algorithm")
+
+    options.add_int("SCI_MAX_CYCLE", 20, "Maximum number of cycles")
+
+    options.add_bool("SCI_QUIET_MODE", False,
+                           "Print during ACI procedure?")
+
+    options.add_int("SCI_PREITERATIONS", 0,
+                          "Number of iterations to run SA-ACI before SS-ACI")
+
+    options.add_bool("SCI_DIRECT_RDMS", False,
+                           "Computes RDMs without coupling lists?")
+
+    options.add_bool("SCI_SAVE_FINAL_WFN", False,
+                           "Save final wavefunction to file?")
+
+    options.add_bool("SCI_TEST_RDMS", False, "Run test for the RDMs?")
+
+    options.add_bool("SCI_FIRST_ITER_ROOTS", False, "Compute all roots on first iteration?")
+
+    options.add_bool("SCI_CORE_EX", False,
+                           "Use core excitation algorithm")
+
 
 def register_aci_options(options):
     options.set_group("ACI")
@@ -389,10 +428,6 @@ def register_aci_options(options):
     options.add_str("ACI_PQ_FUNCTION", "AVERAGE", ['AVERAGE', 'MAX'],
                           "Function of q-space criteria, per root for SA-ACI")
 
-    options.add_str(
-        "SCI_EXCITED_ALGORITHM", "NONE",
-        ['AVERAGE', 'ROOT_ORTHOGONALIZE', 'ROOT_COMBINE', 'MULTISTATE'],
-        "The excited state algorithm")
 
     options.add_int(
         "ACI_SPIN_PROJECTION", 0, """Type of spin projection
@@ -400,16 +435,6 @@ def register_aci_options(options):
      1 - Project initial P spaces at each iteration
      2 - Project only after converged PQ space
      3 - Do 1 and 2""")
-
-    options.add_bool("ACI_ENFORCE_SPIN_COMPLETE", True,
-                           "Enforce determinant spaces to be spin-complete?")
-
-    options.add_bool("ACI_ENFORCE_SPIN_COMPLETE_P", False,
-                           "Enforce determinant in the P space to be spin-complete?")
-
-    options.add_bool(
-        "SCI_PROJECT_OUT_SPIN_CONTAMINANTS", True,
-        "Project out spin contaminants in Davidson-Liu's algorithm?")
 
     options.add_bool(
         "SPIN_PROJECT_FULL", False,
@@ -419,29 +444,16 @@ def register_aci_options(options):
         "ACI_ADD_AIMED_DEGENERATE", True,
         "Add degenerate determinants not included in the aimed selection")
 
-    options.add_int("SCI_MAX_CYCLE", 20, "Maximum number of cycles")
-
-    options.add_bool("ACI_QUIET_MODE", False,
-                           "Print during ACI procedure?")
-
-   # options.add_bool("ACI_STREAMLINE_Q", False,
-   #                        "Do streamlined algorithm?")
-
-    options.add_int("ACI_PREITERATIONS", 0,
-                          "Number of iterations to run SA-ACI before SS-ACI")
 
     options.add_int("ACI_N_AVERAGE", 1, "Number of roots to averag")
 
     options.add_int("ACI_AVERAGE_OFFSET", 0,
                           "Offset for state averaging")
 
-    options.add_bool("SCI_SAVE_FINAL_WFN", False,
-                           "Print final wavefunction to file?")
-
     options.add_bool("ACI_PRINT_REFS", False, "Print the P space?")
 
-    options.add_int("DL_GUESS_SIZE", 100,
-                          "Set the initial guess space size for DL solver")
+    options.add_int("DL_GUESS_SIZE",50,
+                          "Set the number of determinants in the initial guess space for the DL solver")
 
     options.add_int("N_GUESS_VEC", 10,
                           "Number of guess vectors for Sparse CI solver")
@@ -452,10 +464,6 @@ def register_aci_options(options):
     options.add_double("ACI_SPIN_TOL", 0.02, "Tolerance for S^2 value")
 
     options.add_bool("ACI_APPROXIMATE_RDM", False, "Approximate the RDMs?")
-
-    options.add_bool("SCI_TEST_RDMS", False, "Run test for the RDMs?")
-
-    options.add_bool("SCI_FIRST_ITER_ROOTS", False, "Compute all roots on first iteration?")
 
     options.add_bool("ACI_PRINT_WEIGHTS", False, "Print weights for active space prediction?")
 
@@ -474,9 +482,6 @@ def register_aci_options(options):
 
     options.add_bool("ACI_REF_RELAX", False,
                            "Do reference relaxation in ACI?")
-
-    options.add_bool("SCI_CORE_EX", False,
-                           "Use core excitation algorithm")
 
     options.add_int("ACI_NFROZEN_CORE", 0,
                           "Number of orbitals to freeze for core excitations")
@@ -523,9 +528,6 @@ def register_aci_options(options):
 
     options.add_double("ACI_SCALE_SIGMA", 0.5,
                              "Scales sigma in batched algorithm")
-
-    options.add_bool("SCI_DIRECT_RDMS", False,
-                           "Computes RDMs without coupling lists?")
 
     options.add_int("ACTIVE_GUESS_SIZE", 1000,
                           "Number of determinants for CI guess")
@@ -889,6 +891,7 @@ def register_old_options(options):
 
 def register_psi_options(options):
     options.add_str('BASIS','','The primary basis set')
+    options.add_str('BASIS_RELATIVISTIC','','The basis set used to run relativistic computations')
     options.add_double("INTS_TOLERANCE", 1.0E-12, 'Schwarz screening threshold')
     options.add_str("DF_INTS_IO", "NONE", ['NONE','SAVE','LOAD'],'IO caching for CP corrections')
     options.add_str('DF_BASIS_MP2','','Auxiliary basis set for density fitting computations')
