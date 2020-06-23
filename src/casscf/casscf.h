@@ -145,6 +145,8 @@ class CASSCF {
     std::vector<std::pair<size_t, size_t>> core_mos_rel_;
     /// List of relative MOs for active
     std::vector<std::pair<size_t, size_t>> actv_mos_rel_;
+    /// List of relative MOs for restricted docc
+    std::vector<std::pair<size_t, size_t>> virt_mos_rel_;
 
     std::vector<size_t> frozen_docc_abs_;
     std::vector<size_t> restricted_docc_abs_;

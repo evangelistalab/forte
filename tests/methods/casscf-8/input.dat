@@ -67,5 +67,4 @@ set forte {
 }
 
 Eforte, wfn = energy('forte', ref_wfn=wfn, return_wfn=True)
-Eforte, wfn = energy('forte', ref_wfn=wfn, return_wfn=True)
-#compare_values(refpt2_relax, Eforte, 8, "DSRG-MRPT2 relaxed energy")
+compare_values(refpt2_relax, Eforte, 8, "DSRG-MRPT2 relaxed energy")

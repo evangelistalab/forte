@@ -92,6 +92,7 @@ void CASSCF::startup() {
     actv_mos_abs_ = mo_space_info_->absolute_mo("ACTIVE");
     core_mos_rel_ = mo_space_info_->get_relative_mo("RESTRICTED_DOCC");
     actv_mos_rel_ = mo_space_info_->get_relative_mo("ACTIVE");
+    virt_mos_rel_ = mo_space_info_->get_relative_mo("RESTRICTED_UOCC");
 
     frozen_docc_dim_ = mo_space_info_->dimension("FROZEN_DOCC");
     restricted_docc_dim_ = mo_space_info_->dimension("RESTRICTED_DOCC");
@@ -590,14 +591,73 @@ std::vector<double> CASSCF::compute_restricted_docc_operator() {
 }
 
 std::shared_ptr<psi::Matrix> CASSCF::semicanonicalize(std::shared_ptr<psi::Matrix> Ca) {
+    print_h2("Semi-canonicalize Orbitals");
+
     // build averaged Fock matrix
+    outfile->Printf("\n    Building Fock matrix  ...");
     auto F = build_fock(Ca);
+    outfile->Printf(" Done.");
 
-    // diagonalize three sub-blocks (restricted_docc, active, restricted_uocc)
-
-    // build the large unitary rotation matrix
+    // unitary rotation matrix for output
     auto U = std::make_shared<psi::Matrix>("U_CAS_SEMI", nmo_dim_, nmo_dim_);
     U->identity();
+
+    // diagonalize three sub-blocks (restricted_docc, active, restricted_uocc)
+    std::vector<psi::Dimension> mos_dim{restricted_docc_dim_, active_dim_, restricted_uocc_dim_};
+    std::vector<psi::Dimension> mos_offsets{frozen_docc_dim_, inactive_docc_dim_,
+                                            inactive_docc_dim_ + active_dim_};
+    for (int i = 0; i < 3; ++i) {
+        outfile->Printf("\n    Diagonalizing block " + std::to_string(i) + " ...");
+
+        auto dim = mos_dim[i];
+        auto offset_dim = mos_offsets[i];
+
+        auto Fsub = std::make_shared<psi::Matrix>("Fsub_" + std::to_string(i), dim, dim);
+
+        for (size_t h = 0; h < nirrep_; ++h) {
+            for (int p = 0; p < dim[h]; ++p) {
+                size_t np = p + offset_dim[h];
+                for (int q = 0; q < dim[h]; ++q) {
+                    size_t nq = q + offset_dim[h];
+                    Fsub->set(h, p, q, F->get(h, np, nq));
+                }
+            }
+        }
+
+        // test off-diagonal elements to decide if need to diagonalize this block
+        auto Fsub_od = Fsub->clone();
+        Fsub_od->zero_diagonal();
+
+        double Fsub_max = Fsub_od->absmax();
+        double Fsub_norm = std::sqrt(Fsub_od->sum_of_squares());
+
+        double threshold_max = 0.1 * options_->get_double("CASSCF_G_CONVERGENCE");
+        if (ints_->integral_type() == Cholesky) {
+            double cd_tlr = options_->get_double("CHOLESKY_TOLERANCE");
+            threshold_max = (threshold_max < 0.5 * cd_tlr) ? 0.5 * cd_tlr : threshold_max;
+        }
+        double threshold_rms = std::sqrt(dim.sum() * (dim.sum() - 1) / 2.0) * threshold_max;
+
+        // diagonalize
+        if (Fsub_max > threshold_max or Fsub_norm > threshold_rms) {
+            auto Usub = std::make_shared<psi::Matrix>("Usub_" + std::to_string(i), dim, dim);
+            auto Esub = std::make_shared<psi::Vector>("Esub_" + std::to_string(i), dim);
+            Fsub->diagonalize(Usub, Esub);
+
+            // fill in data
+            for (size_t h = 0; h < nirrep_; ++h) {
+                for (int p = 0; p < dim[h]; ++p) {
+                    size_t np = p + offset_dim[h];
+                    for (int q = 0; q < dim[h]; ++q) {
+                        size_t nq = q + offset_dim[h];
+                        U->set(h, np, nq, Usub->get(h, p, q));
+                    }
+                }
+            }
+        } // end if need to diagonalize
+
+        outfile->Printf(" Done.");
+    } // end sub blocl
 
     return U;
 }
@@ -608,6 +668,7 @@ std::shared_ptr<psi::Matrix> CASSCF::build_fock(std::shared_ptr<psi::Matrix> Ca)
 
     auto Fock = F_i->clone();
     Fock->add(F_a);
+    Fock->set_name("Fock");
     return Fock;
 }
 
