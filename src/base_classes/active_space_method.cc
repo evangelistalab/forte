@@ -98,8 +98,4 @@ std::unique_ptr<ActiveSpaceMethod> make_active_space_method(
     solver->set_options(options);
     return solver;
 }
-
-// else if (type == "CASSCF") {
-//        solver = std::make_unique<CASSCF>(state, nroot, scf_info, options, mo_space_info, as_ints);
-
 } // namespace forte
