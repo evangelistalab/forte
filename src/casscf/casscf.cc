@@ -317,6 +317,7 @@ double CASSCF::compute_energy() {
     //        overlap_coefficients();
     //    }
 
+    outfile->Printf("\n\n @ Final CASSCF Energy = %20.15f\n", E_casscf_);
     if (iter_con.size() == size_t(maxiter) && maxiter > 1) {
         outfile->Printf("\n CASSCF did not converge");
         throw psi::PSIEXCEPTION("CASSCF did not converge.");
@@ -338,7 +339,6 @@ double CASSCF::compute_energy() {
         ints_->wfn()->Ca()->copy(Ca_semi);
     }
 
-    outfile->Printf("\n @E(CASSCF) = %18.12f\n", E_casscf_);
     psi::Process::environment.globals["CURRENT ENERGY"] = E_casscf_;
     psi::Process::environment.globals["CASSCF_ENERGY"] = E_casscf_;
 
@@ -591,7 +591,7 @@ std::vector<double> CASSCF::compute_restricted_docc_operator() {
 }
 
 std::shared_ptr<psi::Matrix> CASSCF::semicanonicalize(std::shared_ptr<psi::Matrix> Ca) {
-    print_h2("Semi-canonicalize Orbitals");
+    print_h2("Semi-canonicalize CASSCF Orbitals");
 
     // build averaged Fock matrix
     outfile->Printf("\n    Building Fock matrix  ...");
