@@ -94,21 +94,21 @@ class CASSCF {
     double E_casscf_;
     std::shared_ptr<ForteIntegrals> ints_;
 
-    /// The number of correlated molecular orbitals (not frozen)
-    size_t ncmo_;
-    /// The number of active orbitals
-    size_t nactv_;
     /// The number of irreps
     size_t nirrep_;
     /// The number of SO (AO for C matrices)
     psi::Dimension nsopi_;
 
+    /// The number of active orbitals
+    size_t nactv_;
     /// the number of restricted_docc
     size_t nrdocc_;
     /// The number of frozen_docc
     size_t nfdocc_;
     /// The number of virtual orbitals
     size_t nruocc_;
+    /// The number of correlated molecular orbitals (not frozen)
+    size_t ncmo_;
     /// The number of NMO including frozen core
     size_t nmo_;
 
@@ -141,14 +141,10 @@ class CASSCF {
     /// The psi::Dimensions for all orbitals
     psi::Dimension nmo_dim_;
 
-    /// List of relative core MOs
-    std::vector<std::pair<unsigned long, unsigned long>,
-                std::allocator<std::pair<unsigned long, unsigned long>>>
-        core_mos_rel_;
-    /// List of relative active MOs
-    std::vector<std::pair<unsigned long, unsigned long>,
-                std::allocator<std::pair<unsigned long, unsigned long>>>
-        actv_mos_rel_;
+    /// List of relative MOs for restricted docc
+    std::vector<std::pair<size_t, size_t>> core_mos_rel_;
+    /// List of relative MOs for active
+    std::vector<std::pair<size_t, size_t>> actv_mos_rel_;
 
     std::vector<size_t> frozen_docc_abs_;
     std::vector<size_t> restricted_docc_abs_;
