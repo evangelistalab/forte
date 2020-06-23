@@ -211,8 +211,6 @@ class CASSCF {
     void overlap_orbitals(const psi::SharedMatrix& C_old, const psi::SharedMatrix& C_new);
     void overlap_coefficients();
     void write_orbitals_molden();
-    /// Diagonalize F_I + F_A
-    std::pair<psi::SharedMatrix, psi::SharedVector> casscf_canonicalize();
 
     /// DEBUG PRINTING
     bool casscf_debug_print_;
@@ -238,6 +236,15 @@ class CASSCF {
     /// The CISolutions per iteration
     std::vector<std::vector<std::shared_ptr<FCIVector>>> CISolutions_;
     std::shared_ptr<ActiveSpaceIntegrals> get_ci_integrals();
+
+    /// Semi-canonicalize orbital and return the rotation matrix
+    std::shared_ptr<psi::Matrix> semicanonicalize(std::shared_ptr<psi::Matrix> Ca);
+    /// Build Fock matrix
+    std::shared_ptr<psi::Matrix> build_fock(std::shared_ptr<psi::Matrix> Ca);
+    /// Build the inactive Fock (part that does not depend on 1RDM), includes frozen docc
+    std::shared_ptr<psi::Matrix> build_fock_inactive(std::shared_ptr<psi::Matrix> Ca);
+    /// Build the active Fock (part that does depend on 1RDM)
+    std::shared_ptr<psi::Matrix> build_fock_active(std::shared_ptr<psi::Matrix> Ca);
 };
 } // namespace forte
 

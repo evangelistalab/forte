@@ -217,7 +217,7 @@ double CASSCF::compute_energy() {
     print_h2("CASSCF Iteration");
     outfile->Printf("\n  iter    ||g||           Delta_E            E_CASSCF       CONV_TYPE");
 
-    for (int iter = 0; iter < maxiter; iter++) {
+    for (int iter = 1; iter <= maxiter; iter++) {
         local_timer casscf_total_iter;
 
         local_timer trans_ints_timer;
@@ -268,8 +268,7 @@ double CASSCF::compute_energy() {
             outfile->Printf("\n  %4d   %10.12f   %10.12f   %10.12f  %10.6f s", iter, g_norm, Ediff,
                             E_casscf_, casscf_total_iter.get());
 
-            outfile->Printf(
-                "\n\n  A miracle has come to pass. The CASSCF iterations have converged.");
+            outfile->Printf("\n\n  A miracle has come to pass: CASSCF iterations have converged.");
             break;
         }
 
@@ -322,13 +321,23 @@ double CASSCF::compute_energy() {
         throw psi::PSIEXCEPTION("CASSCF did not converge.");
     }
 
+    // semicanonicalize orbitals
+    auto U = semicanonicalize(Ca);
+    auto Ca_semi = linalg::doublet(Ca, U, false, false);
+    Ca_semi->set_name(Ca->name());
+
     // restransform integrals if derivatives are needed
-    ints_->update_orbitals(Ca, Ca);
+    if (options_->get_str("DERTYPE") == "FIRST") {
+        print_h2("Final Integral Transformation for CASSCF Gradients");
+        ints_->update_orbitals(Ca_semi, Ca_semi);
 
-    // diagonalize the Hamiltonian one last time
-    diagonalize_hamiltonian();
+        // diagonalize the Hamiltonian one last time
+        diagonalize_hamiltonian();
+    } else {
+        ints_->wfn()->Ca()->copy(Ca_semi);
+    }
 
-    outfile->Printf("\n @E(CASSCF) = %18.12f \n", E_casscf_);
+    outfile->Printf("\n @E(CASSCF) = %18.12f\n", E_casscf_);
     psi::Process::environment.globals["CURRENT ENERGY"] = E_casscf_;
     psi::Process::environment.globals["CASSCF_ENERGY"] = E_casscf_;
 
@@ -519,85 +528,25 @@ std::shared_ptr<ActiveSpaceIntegrals> CASSCF::get_ci_integrals() {
 
 std::vector<double> CASSCF::compute_restricted_docc_operator() {
     auto Ca = ints_->Ca();
-    std::vector<double> oei(nactv_ * nactv_); // output
 
-    double Edocc = 0.0; // energy from restricted docc
+    double Edocc = 0.0;                         // energy from restricted docc
     double Efrzc = ints_->frozen_core_energy(); // energy from frozen docc
-    scalar_energy_ = ints_->scalar(); // scalar energy from the Integral class
+    scalar_energy_ = ints_->scalar();           // scalar energy from the Integral class
+
+    // bare one-electron integrals
+    std::shared_ptr<psi::Matrix> Hcore = Hcore_->clone();
+    Hcore->transform(Ca);
+
+    // one-electron integrals dressed by inactive orbitals
+    std::vector<double> oei(nactv_ * nactv_, 0.0);
+    // one-electron integrals in SharedMatrix format, set to MO Hcore by default
+    std::shared_ptr<psi::Matrix> oei_shared_matrix = Hcore;
 
     // special case when there is no inactive docc
-    if (nrdocc_ + nfdocc_ == 0) {
-        std::shared_ptr<psi::Matrix> Hcore = Hcore_->clone();
-        Hcore->transform(Ca);
-
-        for (size_t p = 0; p < nactv_; ++p) {
-            size_t hp = actv_mos_rel_[p].first;
-            size_t pp = actv_mos_rel_[p].second;
-
-            for (size_t q = 0; q < nactv_; ++q) {
-                if (actv_mos_rel_[q].first != hp) {
-                    continue;
-                }
-
-                size_t qq = actv_mos_rel_[q].second;
-
-                size_t idx = p * nactv_ + q;
-                oei[idx] = Hcore->get(hp, pp, qq);
-            }
-        }
-    } else {
-        // grab part of Ca from inactive docc
-        auto Cdocc =
-            std::make_shared<psi::Matrix>("C_INACTIVE", nirrep_, nsopi_, inactive_docc_dim_);
-        for (size_t h = 0; h < nirrep_; h++) {
-            for (int i = 0; i < inactive_docc_dim_[h]; i++) {
-                Cdocc->set_column(h, i, Ca->get_column(h, i));
-            }
-        }
-
-        // F_frozen = D_{uv}^{frozen} * (2 * (uv|rs) - (us|rv))
-        // F_restricted = D_{uv}^{restricted} * (2 * (uv|rs) - (us|rv))
-        // F_inactive = F_frozen + F_restricted + H_{pq}^{core}
-        // D_{uv}^{frozen} = \sum_{i}^{frozen} C_{ui} * C_{vi}
-        // D_{uv}^{inactive} = \sum_{i}^{inactive} C_{ui} * C_{vi}
-
-        // This section of code computes the fock matrix for the INACTIVE_DOCC
-
-        std::vector<std::shared_ptr<psi::Matrix>>& Cl = JK_->C_left();
-        std::vector<std::shared_ptr<psi::Matrix>>& Cr = JK_->C_right();
-
-        JK_->set_do_K(true);
-        Cl.clear();
-        Cr.clear();
-        Cl.push_back(Cdocc); // Cr is the same as Cl
-        JK_->compute();
-
-        std::shared_ptr<psi::Matrix> Fdocc = (JK_->J()[0])->clone();
-        Fdocc->scale(2.0);
-        Fdocc->subtract(JK_->K()[0]);
-
-        // create the OneInt integrals from scratch
-        std::shared_ptr<psi::Matrix> Hcore = Hcore_->clone();
-        Fdocc->add(Hcore);
-        Fdocc->transform(Ca);
-        Hcore->transform(Ca);
-
-        auto Fdocc_c1 = std::make_shared<psi::Matrix>("Fdocc", nmo_, nmo_);
-        for (size_t h = 0, offset = 0; h < nirrep_; h++) {
-            for (int p = 0; p < nmo_dim_[h]; p++) {
-                for (int q = 0; q < nmo_dim_[h]; q++) {
-                    Fdocc_c1->set(p + offset, q + offset, Fdocc->get(h, p, q));
-                }
-            }
-            offset += nmo_dim_[h];
-        }
-
-        // fill in data to oei
-        for (size_t u = 0; u < nactv_; u++) {
-            for (size_t v = 0; v < nactv_; v++) {
-                oei[u * nactv_ + v] = Fdocc_c1->get(actv_mos_abs_[u], actv_mos_abs_[v]);
-            }
-        }
+    if (nrdocc_ + nfdocc_ != 0) {
+        // compute inactive Fock
+        auto Fdocc = build_fock_inactive(Ca);
+        oei_shared_matrix = Fdocc;
 
         // compute energy from inactive docc
         for (size_t h = 0; h < nirrep_; h++) {
@@ -608,6 +557,21 @@ std::vector<double> CASSCF::compute_restricted_docc_operator() {
 
         // Edocc includes frozen-core energy and should be subtracted
         scalar_energy_ += Edocc - Efrzc;
+    }
+
+    // fill in oei data
+    for (size_t u = 0; u < nactv_; ++u) {
+        size_t h = actv_mos_rel_[u].first;   // irrep
+        size_t nu = actv_mos_rel_[u].second; // index
+
+        for (size_t v = 0; v < nactv_; ++v) {
+            if (actv_mos_rel_[v].first != h)
+                continue;
+
+            size_t nv = actv_mos_rel_[v].second;
+
+            oei[u * nactv_ + v] = oei_shared_matrix->get(h, nu, nv);
+        }
     }
 
     if (casscf_debug_print_) {
@@ -623,6 +587,127 @@ std::vector<double> CASSCF::compute_restricted_docc_operator() {
     }
 
     return oei;
+}
+
+std::shared_ptr<psi::Matrix> CASSCF::semicanonicalize(std::shared_ptr<psi::Matrix> Ca) {
+    // build averaged Fock matrix
+    auto F = build_fock(Ca);
+
+    // diagonalize three sub-blocks (restricted_docc, active, restricted_uocc)
+
+    // build the large unitary rotation matrix
+    auto U = std::make_shared<psi::Matrix>("U_CAS_SEMI", nmo_dim_, nmo_dim_);
+    U->identity();
+
+    return U;
+}
+
+std::shared_ptr<psi::Matrix> CASSCF::build_fock(std::shared_ptr<psi::Matrix> Ca) {
+    auto F_i = build_fock_inactive(Ca);
+    auto F_a = build_fock_active(Ca);
+
+    auto Fock = F_i->clone();
+    Fock->add(F_a);
+    return Fock;
+}
+
+std::shared_ptr<psi::Matrix> CASSCF::build_fock_inactive(std::shared_ptr<psi::Matrix> Ca) {
+    // Implementation Notes (in AO basis)
+    // F_frozen = D_{uv}^{frozen} * (2 * (uv|rs) - (us|rv))
+    // F_restricted = D_{uv}^{restricted} * (2 * (uv|rs) - (us|rv))
+    // F_inactive = Hcore + F_frozen + F_restricted
+    // D_{uv}^{frozen} = \sum_{i}^{frozen} C_{ui} * C_{vi}
+    // D_{uv}^{restricted} = \sum_{i}^{restricted} C_{ui} * C_{vi}
+
+    // grab part of Ca for inactive docc
+    auto Cdocc = std::make_shared<psi::Matrix>("C_INACTIVE", nirrep_, nsopi_, inactive_docc_dim_);
+    for (size_t h = 0; h < nirrep_; h++) {
+        for (int i = 0; i < inactive_docc_dim_[h]; i++) {
+            Cdocc->set_column(h, i, Ca->get_column(h, i));
+        }
+    }
+
+    // JK build
+    std::vector<std::shared_ptr<psi::Matrix>>& Cl = JK_->C_left();
+    std::vector<std::shared_ptr<psi::Matrix>>& Cr = JK_->C_right();
+
+    JK_->set_do_K(true);
+    Cl.clear();
+    Cr.clear();
+    Cl.push_back(Cdocc); // Cr is the same as Cl
+    JK_->compute();
+
+    std::shared_ptr<psi::Matrix> Fdocc = (JK_->J()[0])->clone();
+    Fdocc->scale(2.0);
+    Fdocc->subtract(JK_->K()[0]);
+
+    Fdocc->add(Hcore_);
+    Fdocc->transform(Ca);
+    Fdocc->set_name("Fock_inactive");
+
+    if (casscf_debug_print_) {
+        Fdocc->print();
+    }
+
+    return Fdocc;
+}
+
+std::shared_ptr<psi::Matrix> CASSCF::build_fock_active(std::shared_ptr<psi::Matrix> Ca) {
+    // Implementation Notes (in AO basis)
+    // F_active = D_{uv}^{active} * ( (uv|rs) - 0.5 * (us|rv) )
+    // D_{uv}^{active} = \sum_{xy}^{active} C_{ux} * C_{vy} * Gamma1_{xy}
+
+    // grab part of Ca for active docc
+    auto Cactv = std::make_shared<psi::Matrix>("C_ACTIVE", nirrep_, nsopi_, active_dim_);
+    for (size_t h = 0; h < nirrep_; h++) {
+        for (int i = 0; i < active_dim_[h]; i++) {
+            int offset = frozen_docc_dim_[h] + restricted_docc_dim_[h];
+            Cactv->set_column(h, i, Ca->get_column(h, i + offset));
+        }
+    }
+
+    // put one-density to SharedMatrix form
+    auto Gamma1 = std::make_shared<psi::Matrix>("Gamma1", active_dim_, active_dim_);
+    const auto& gamma1_data = gamma1_.data();
+
+    for (size_t h = 0, offset = 0; h < nirrep_; ++h) {
+        for (int u = 0; u < active_dim_[h]; ++u) {
+            size_t nu = u + offset;
+            for (int v = 0; v < active_dim_[h]; ++v) {
+                size_t nv = v + offset;
+                Gamma1->set(h, u, v, gamma1_data[nu * nactv_ + nv]);
+            }
+        }
+        offset += active_dim_[h];
+    }
+
+    // dress Cactv by one-density, which will the C_right for JK
+    auto Cactv_dressed = linalg::doublet(Cactv, Gamma1, false, false);
+
+    // JK build
+    std::vector<std::shared_ptr<psi::Matrix>>& Cl = JK_->C_left();
+    std::vector<std::shared_ptr<psi::Matrix>>& Cr = JK_->C_right();
+
+    JK_->set_do_K(true);
+    Cl.clear();
+    Cr.clear();
+    Cl.push_back(Cactv);
+    Cr.push_back(Cactv_dressed);
+    JK_->compute();
+
+    std::shared_ptr<psi::Matrix> Factv = (JK_->K()[0])->clone();
+    Factv->scale(-0.5);
+    Factv->add(JK_->J()[0]);
+
+    // transform to MO
+    Factv->transform(Ca);
+    Factv->set_name("Fock_active");
+
+    if (casscf_debug_print_) {
+        Factv->print();
+    }
+
+    return Factv;
 }
 
 void CASSCF::overlap_orbitals(const psi::SharedMatrix& C_old, const psi::SharedMatrix& C_new) {
