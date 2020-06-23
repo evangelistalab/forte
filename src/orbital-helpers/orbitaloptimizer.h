@@ -44,14 +44,10 @@ namespace forte {
 class SCFInfo;
 
 /**
-* @brief OrbitalOptimizer does an orbital optimization given an RDM-1, RDM-2,
-and the integrals
-* Forms an orbital gradient:  g_{pq} =[ h_{pq} gamma_{pq} + Gamma_{pq}^{rs} <pq
-|| rs> - A(p->q)]
-* Right now, Only forms a diagonal hessian of orbitals:  Look at  Hohenstein
-J.Chem.Phys, 142, 224103.
-* Diagonal Hessian only requires (p u | x y) integrals (many are built in JK
-library)
+* @brief OrbitalOptimizer does an orbital optimization given an 1RDM, 2RDM, and the integrals
+* Forms an orbital gradient:  g_{pq} = [ h_{pq} gamma_{pq} + Gamma_{pq}^{rs} <pq||rs> - A(p->q)]
+* Here only form a diagonal hessian of orbitals: Look at Hohenstein J. Chem. Phys. 142, 224103.
+* Diagonal Hessian only requires (pu|xy) integrals (many are built in JK library)
 * Daniel Smith's CASSCF code in PSI4 was integral in debugging.
 *
 * Usage of this class:  Contructor will just set_up the basic values
@@ -84,7 +80,7 @@ class OrbitalOptimizer {
      * orbital optimization
      * OrbitalOptimizer returns a orbital rotation parameter that allows you to
      * update your orbitals
-     * @param Gamma1 The SYMMETRIZED 1-RDM:  gamma1_a + gamma2_b
+     * @param Gamma1 The SYMMETRIZED 1-RDM:  gamma1_a + gamma1_b
      * @param Gamma2 The SYMMETRIZED 2-RDM:  Look at code ( Gamma = rdm_2aa +
      * rdm_2ab) with prefactors
      * @param two_body_ab (pu|xy) integrals(NOTE:  This is only valid if you are
@@ -92,7 +88,6 @@ class OrbitalOptimizer {
      * @param options The options object
      * @param mo_space_info MOSpace object for handling active/rdocc/ruocc
      */
-
     OrbitalOptimizer(ambit::Tensor Gamma1, ambit::Tensor Gamma2, ambit::Tensor two_body_ab,
                      std::shared_ptr<ForteOptions> options,
                      std::shared_ptr<MOSpaceInfo> mo_space_info);

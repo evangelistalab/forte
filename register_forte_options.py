@@ -794,7 +794,7 @@ def register_casscf_options(options):
     options.set_group("CASSCF")
     options.add_str("CASSCF_CI_SOLVER", "CAS",
                           "The active space solver to use in CASSCF")
-    options.add_int("CASSCF_ITERATIONS", 30,
+    options.add_int("CASSCF_MAXITER", 30,
                           "The maximum number of CASSCF iterations")
     options.add_bool("CASSCF_REFERENCE", False,
                            "Run a FCI followed by CASSCF computation?")

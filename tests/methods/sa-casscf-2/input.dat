@@ -36,7 +36,7 @@ set forte{
   active_space_solver     fci
   casscf_reference        true
   int_type                conventional
-  casscf_iterations       25
+  casscf_maxiter          25
   print                   1
   avg_state               [[0, 1, 2]]
   casscf_debug_printing   false

@@ -67,16 +67,17 @@ embedding:
    - embedding-5
 casscf:
   short:
-   - casscf
+   - casscf-1
    - casscf-2
    - casscf-3
    - casscf-4
    - casscf-5
    - casscf-6
    - casscf-7
+   - casscf-9
    - df-casscf-1
    - casscf-gradient-1
-  unused:
+  long:
    - casscf-8
 cd-dsrg-mrpt2:
   short:
