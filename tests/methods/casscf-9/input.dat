@@ -2,27 +2,29 @@
 
 import forte
 
-refcasscf = -109.103762844662384
+refcasscf = -100.038625208209481
 
-molecule N2{
+molecule HF{
   0 1
-  N
-  N  1 R
+  H
+  F  1 R
 
-  R = 1.120
+  R = 1.0
 }
 
 set {
   basis                  cc-pvdz
+  df_basis_scf           cc-pvdz-jkfit
   reference              rhf
-  scf_type               direct
+  scf_type               df
   maxiter                300
   e_convergence          10
   d_convergence          8
-  docc                   [3,0,0,0,0,2,1,1]
-  restricted_docc        [0,0,0,0,0,0,0,0]
-  active                 [3,0,1,1,0,3,1,1]
+  docc                   [3,0,1,1]
+  restricted_docc        [0,0,0,0]
+  active                 [4,0,1,1]
   mcscf_maxiter          100
+  mcscf_type             df
   mcscf_r_convergence    8
   mcscf_e_convergence    10
   mcscf_diis_start       6
@@ -34,9 +36,10 @@ compare_values(refcasscf, Ecasscf, 8, "CASSCF energy")
 set forte {
   job_type            casscf
   active_space_solver cas
+  int_type            df
   multiplicity        1
-  restricted_docc     [0,0,0,0,0,0,0,0]
-  active              [3,0,1,1,0,3,1,1]
+  restricted_docc     [0,0,0,0]
+  active              [4,0,1,1]
   root_sym            0
   nroot               1
   e_convergence       10
