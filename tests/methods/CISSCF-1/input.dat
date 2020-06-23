@@ -34,7 +34,7 @@ set scf_type  direct
 set forte{
    CASSCF_REFERENCE        true
    int_type                conventional
-   CASSCF_ITERATIONS       36
+   CASSCF_MAXITER       36
    active                  [2, 0, 0, 0, 0, 0, 0, 0]
    active_space_solver                 CAS
    multiplicity             3

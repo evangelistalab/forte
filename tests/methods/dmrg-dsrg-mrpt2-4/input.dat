@@ -34,7 +34,7 @@ set forte{
     job_type              dsrg-mrpt2
     dsrg_s               0.5
     cholesky_tolerance   1e-10
-    CASSCF_ITERATIONS    25
+    CASSCF_MAXITER    25
     casscf_debug_printing false
     casscf_reference      false
 } 
