@@ -147,16 +147,15 @@ void OrbitalOptimizer::startup() {
     cas_ = true;
 }
 void OrbitalOptimizer::orbital_gradient() {
-    // std::vector<size_t> nmo_array =
-    // mo_space_info_->corr_absolute_mo("CORRELATED");
     /// From Y_{pt} = F_{pu}^{core} * Gamma_{tu}
     ambit::Tensor Y = ambit::Tensor::build(ambit::CoreTensor, "Y", {nmo_, na_});
     ambit::Tensor F_pu = ambit::Tensor::build(ambit::CoreTensor, "F_pu", {nmo_, na_});
-    if (nrdocc_ > 0 or nfrozen_ > 0) {
-        F_pu.iterate([&](const std::vector<size_t>& i, double& value) {
-            value = F_core_->get(nmo_abs_[i[0]], active_abs_[i[1]]);
-        });
-    }
+
+    // F_core (part does not depend on 1RDM) is non-zero even if there is no frozen/restricted_docc
+    F_pu.iterate([&](const std::vector<size_t>& i, double& value) {
+        value = F_core_->get(nmo_abs_[i[0]], active_abs_[i[1]]);
+    });
+
     Y("p,t") = F_pu("p,u") * gamma1_("t, u");
 
     psi::SharedMatrix Y_m(new psi::Matrix("Y_m", nmo_, na_));

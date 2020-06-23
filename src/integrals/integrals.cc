@@ -103,8 +103,7 @@ void ForteIntegrals::startup() {
     Cb_ = (spin_restriction_ == IntegralSpinRestriction::Restricted ? wfn_->Ca()->clone()
                                                                     : wfn_->Cb()->clone());
 
-    nucrep_ = psi::Process::environment.molecule()->nuclear_repulsion_energy(
-        wfn_->get_dipole_field_strength());
+    nucrep_ = wfn_->molecule()->nuclear_repulsion_energy(wfn_->get_dipole_field_strength());
 
     nirrep_ = wfn_->nirrep();
     nso_ = wfn_->nso();
@@ -247,23 +246,9 @@ std::vector<std::shared_ptr<psi::Matrix>> ForteIntegrals::AOdipole_ints() const 
 }
 
 void ForteIntegrals::transform_one_electron_integrals() {
-    // Now we want the reference (SCF) wavefunction
-    std::shared_ptr<PSIO> psio_ = PSIO::shared_object();
-
-    std::shared_ptr<psi::Matrix> T =
-        std::shared_ptr<psi::Matrix>(wfn_->matrix_factory()->create_matrix(PSIF_SO_T));
-    std::shared_ptr<psi::Matrix> V =
-        std::shared_ptr<psi::Matrix>(wfn_->matrix_factory()->create_matrix(PSIF_SO_V));
-
-    MintsHelper mints(wfn_->basisset(), psi::Process::environment.options,
-                      0); // 0 here is to avoid printing of basis info
-    T = mints.so_kinetic();
-    V = mints.so_potential();
-
-    std::shared_ptr<psi::Matrix> Ha = T->clone();
-    std::shared_ptr<psi::Matrix> Hb = T->clone();
-    Ha->add(V);
-    Hb->add(V);
+    // Grab the one-electron integrals from psi4's wave function object
+    std::shared_ptr<psi::Matrix> Ha = wfn_->H()->clone();
+    std::shared_ptr<psi::Matrix> Hb = wfn_->H()->clone();
 
     OneIntsAO_ = Ha->clone();
 

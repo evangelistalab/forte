@@ -76,10 +76,14 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-c++1z-extensions") # avoid warnings
 # List of CC files
 pybind11_add_module(forte
 src/api/ambit_api.cc
+src/api/cube_file_api.cc
 src/api/integrals_api.cc
 src/api/rdms_api.cc
+src/api/options_api.cc
+src/api/orbital_api.cc
 src/api/sci_api.cc
 src/api/state_info_api.cc
+src/api/forte_python_module.cc
 src/base_classes/active_space_method.cc
 src/base_classes/active_space_solver.cc
 src/base_classes/dynamic_correlation_solver.cc
@@ -113,6 +117,7 @@ src/gradient_tpdm/backtransform_tpdm.cc
 src/gradient_tpdm/integraltransform_sort_so_tpdm.cc
 src/gradient_tpdm/integraltransform_tpdm_unrestricted.cc
 src/helpers/blockedtensorfactory.cc
+src/helpers/cube_file.cc
 src/helpers/helpers.cc
 src/helpers/iterative_solvers.cc
 src/helpers/printing.cc
@@ -130,6 +135,7 @@ src/integrals/own_integrals.cc
 src/integrals/parallel_ccvv_algorithms.cc
 src/integrals/paralleldfmo.cc
 src/main.cc
+src/mrdsrg-helper/dsrg_mem.cc
 src/mrdsrg-helper/dsrg_source.cc
 src/mrdsrg-helper/dsrg_time.cc
 src/mrdsrg-helper/dsrg_transformed.cc
@@ -140,6 +146,17 @@ src/mrdsrg-spin-adapted/dsrg_mrpt.cc
 src/mrdsrg-spin-adapted/dsrg_mrpt_2nd.cc
 src/mrdsrg-spin-adapted/dsrg_mrpt_amp.cc
 src/mrdsrg-spin-adapted/dsrg_mrpt_comm.cc
+src/mrdsrg-spin-adapted/sadsrg.cc
+src/mrdsrg-spin-adapted/sadsrg_amps_analysis.cc
+src/mrdsrg-spin-adapted/sadsrg_block_labels.cc
+src/mrdsrg-spin-adapted/sadsrg_comm.cc
+src/mrdsrg-spin-adapted/sa_dsrgpt.cc
+src/mrdsrg-spin-adapted/sa_ldsrg2.cc
+src/mrdsrg-spin-adapted/sa_mrdsrg.cc
+src/mrdsrg-spin-adapted/sa_mrdsrg_amps.cc
+src/mrdsrg-spin-adapted/sa_mrdsrg_diis.cc
+src/mrdsrg-spin-adapted/sa_mrpt2.cc
+src/mrdsrg-spin-adapted/sa_mrpt3.cc
 src/mrdsrg-spin-integrated/active_dsrgpt2.cc
 src/mrdsrg-spin-integrated/dsrg_mrpt2.cc
 src/mrdsrg-spin-integrated/dsrg_mrpt2_ms.cc
@@ -172,7 +189,6 @@ src/orbital-helpers/unpaired_density.cc
 src/pci/pci.cc
 src/pci/pci_sigma.cc
 src/post_process/spin_corr.cc
-src/python_api.cc
 src/sci/aci.cc
 src/sci/aci_build_F.cc
 src/sci/asci.cc

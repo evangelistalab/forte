@@ -61,12 +61,7 @@ bool pairCompDescend(const std::pair<double, Determinant> E1,
 ASCI::ASCI(StateInfo state, size_t nroot, std::shared_ptr<SCFInfo> scf_info,
            std::shared_ptr<ForteOptions> options, std::shared_ptr<MOSpaceInfo> mo_space_info,
            std::shared_ptr<ActiveSpaceIntegrals> as_ints)
-    : SelectedCIMethod(state, nroot, scf_info, mo_space_info, as_ints), scf_info_(scf_info),
-      options_(options) {
-    // select the sigma vector type
-    sigma_vector_type_ = string_to_sigma_vector_type(options_->get_str("DIAG_ALGORITHM"));
-    mo_symmetry_ = mo_space_info_->symmetry("ACTIVE");
-    nuclear_repulsion_energy_ = as_ints->ints()->nuclear_repulsion_energy();
+    : SelectedCIMethod(state, nroot, scf_info, options, mo_space_info, as_ints) {
     startup();
 }
 
@@ -102,24 +97,6 @@ void ASCI::pre_iter_preparation() {
 }
 
 void ASCI::startup() {
-
-    //    if (!set_ints_) {
-    //        set_asci_ints(ints_); // TODO: maybe a BUG?
-    //    }
-
-    wavefunction_symmetry_ = state_.irrep();
-    multiplicity_ = state_.multiplicity();
-
-    nact_ = mo_space_info_->size("ACTIVE");
-    nactpi_ = mo_space_info_->dimension("ACTIVE");
-
-    nirrep_ = mo_space_info_->nirrep();
-    // Include frozen_docc and restricted_docc
-    frzcpi_ = mo_space_info_->dimension("INACTIVE_DOCC");
-    nfrzc_ = mo_space_info_->size("INACTIVE_DOCC");
-
-    twice_ms_ = state_.twice_ms();
-
     // Build the reference determinant and compute its energy
     CI_Reference ref(scf_info_, options_, mo_space_info_, as_ints_, multiplicity_, twice_ms_,
                      wavefunction_symmetry_);
@@ -127,12 +104,6 @@ void ASCI::startup() {
 
     // Read options
     nroot_ = options_->get_int("NROOT");
-
-    max_cycle_ = options_->get_int("SCI_MAX_CYCLE");
-
-    pre_iter_ = options_->get_int("ACI_PREITERATIONS");
-
-    max_memory_ = options_->get_int("SIGMA_VECTOR_MAX_MEMORY");
 
     // Decide when to compute coupling lists
     build_lists_ = true;

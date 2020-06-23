@@ -67,16 +67,17 @@ embedding:
    - embedding-5
 casscf:
   short:
-   - casscf
+   - casscf-1
    - casscf-2
    - casscf-3
    - casscf-4
    - casscf-5
    - casscf-6
    - casscf-7
+   - casscf-9
    - df-casscf-1
    - casscf-gradient-1
-  unused:
+  long:
    - casscf-8
 cd-dsrg-mrpt2:
   short:
@@ -135,6 +136,7 @@ dsrg-mrpt2:
 #  - dsrg-mrpt2-9-xms
    - dsrg-mrpt2-10-CO
    - dsrg-mrpt2-11-sa-C2H4
+   - dsrg-mrpt2-13
    - aci-dsrg-mrpt2-1
    - aci-dsrg-mrpt2-2
    - aci-dsrg-mrpt2-3
@@ -184,6 +186,7 @@ fci:
    - fci-4
    - fci-5
    - fci-7
+   - fci-8
    - fci-ecp-1
    - fci-ecp-2
    - fci-ex-1
@@ -244,6 +247,25 @@ mrdsrg-pt2:
    - mrdsrg-srgpt2-1
   ultralong:
    - mrdsrg-srgpt2-2
+mrdsrg-spin-adapted:
+  short:
+   - mrdsrg-spin-adapted-1
+   - mrdsrg-spin-adapted-2
+   - mrdsrg-spin-adapted-3
+   - mrdsrg-spin-adapted-4
+# long:
+#  - mrdsrg-spin-adapted-2
+mrdsrg-spin-adapted-pt2:
+  short:
+   - mrdsrg-spin-adapted-pt2-1
+   - mrdsrg-spin-adapted-pt2-2
+   - mrdsrg-spin-adapted-pt2-3
+   - mrdsrg-spin-adapted-pt2-4
+   - mrdsrg-spin-adapted-pt2-5
+mrdsrg-spin-adapted-pt3:
+  short:
+   - mrdsrg-spin-adapted-pt3-1
+   - mrdsrg-spin-adapted-pt3-2
 pci:
   short:
    - pci-1
@@ -255,6 +277,7 @@ pci:
 #   - pci-7
    - pci-8
 #   - pci-9
+
 gasci:
   short:
    - gasci-1
@@ -264,3 +287,9 @@ gasci:
   long:
    - gasaci-3
                   
+
+#x2c:
+#  short:
+#   - x2c-1
+
+

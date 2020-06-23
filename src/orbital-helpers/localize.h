@@ -45,9 +45,9 @@
 
 namespace forte {
 
-class LOCALIZE : public OrbitalTransform {
+class Localize : public OrbitalTransform {
   public:
-    LOCALIZE(std::shared_ptr<ForteOptions> options, std::shared_ptr<ForteIntegrals> ints,
+    Localize(std::shared_ptr<ForteOptions> options, std::shared_ptr<ForteIntegrals> ints,
              std::shared_ptr<MOSpaceInfo> mo_space_info);
 
     // Compute the rotation matrices

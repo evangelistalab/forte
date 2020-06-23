@@ -1,0 +1,69 @@
+import forte
+
+Escf = -230.53543239670859
+Ept2 = {"1AG":  {0: -231.319065668045, 1: -231.006602969564},
+        "1B1G": {0: -231.006798885089},
+        "1B2U": {0: -231.067788818100, 1: -231.026801831595},
+        "1B3U": {0: -231.125817636184, 1: -231.026830664732},
+        "3AG":  {0: -231.035884871274, 1: -230.931365758204},
+        "5AG":  {0: -230.983595393967, 1: -230.749287428947}}
+
+memory 1 gb
+
+molecule benzene{
+0 1
+
+H   0.000000   2.484212   0.000000
+H   0.000000  -2.484212   0.000000
+H   2.151390   1.242106   0.000000
+H  -2.151390  -1.242106   0.000000
+H  -2.151390   1.242106   0.000000
+H   2.151390  -1.242106   0.000000
+C   0.000000   1.396792   0.000000
+C   0.000000  -1.396792   0.000000
+C   1.209657   0.698396   0.000000
+C  -1.209657  -0.698396   0.000000
+C  -1.209657   0.698396   0.000000
+C   1.209657  -0.698396   0.000000
+
+noreorient
+}
+
+set {
+  reference      rhf
+  scf_type       df
+  basis          def2-svp
+  df_basis_scf   def2-svp-jkfit
+  df_basis_mp2   def2-svp-ri
+  e_convergence  12
+  d_convergence  10
+  maxiter        100
+  docc           [6,3,1,1,0,1,5,4]
+}
+Escf, wfn = energy('scf', return_wfn=True)
+compare_values(Escf, variable("CURRENT ENERGY"), 8, "DF-SCF(RHF) energy")
+
+set forte{
+  int_type             df
+  active_space_solver  cas
+  correlation_solver   sa-mrdsrg
+  corr_level           pt2
+  calc_type            sa
+  dsrg_s               0.50
+  frozen_docc          [2,1,0,0,0,0,2,1]
+  restricted_docc      [4,2,0,0,0,0,3,3]
+  active               [0,0,1,2,1,2,0,0]
+  e_convergence        12
+  r_convergence        8
+  # just to test if the state average weights are computed correctly
+  avg_state            [[0,1,2], [1,1,1], [6,1,2], [7,1,2], [0,3,2], [0,5,2]]
+  avg_weight           [[1,2], [2], [0,1], [0,1], [0.25,0.25], [0.5,0.5]]
+  print                2
+}
+
+energy('forte', ref_wfn=wfn)
+for sym, roots in Ept2.items():
+    for n, Eref in roots.items():
+        name = f"ENERGY ROOT {n} {sym}"
+        msg = f"SA-DSRG-PT2 energy on {sym:>4s} root {n}"
+        compare_values(Eref, variable(name), 8, msg)

@@ -1,0 +1,78 @@
+#! Generated using commit GITCOMMIT
+
+import forte
+
+E2_cas = -108.776828474020519
+E2_pt2 = -108.943387904662131
+E1_cas =  -54.388414237010380
+E1_pt2 =  -54.471693952303461
+
+molecule N2{
+  0 1
+  N
+  N  1 R
+
+  R = 1000.0
+}
+
+molecule N {
+0 4
+N
+}
+
+activate(N2)
+
+set {
+  basis               cc-pvdz
+  reference           rhf
+  scf_type            out_of_core
+  maxiter             300
+  e_convergence       10
+  d_convergence       8
+  docc                [3,0,0,0,0,2,1,1]
+  restricted_docc     [2,0,0,0,0,2,0,0]
+  active              [1,0,1,1,0,1,1,1]
+  mcscf_maxiter       100
+  mcscf_r_convergence 8
+  mcscf_e_convergence 10
+  mcscf_diis_start    6
+}
+Ecas, wfn_cas = energy('casscf', return_wfn=True)
+compare_values(E2_cas, Ecas, 9, "CASSCF energy of N2")
+
+set forte {
+  active_space_solver cas
+  correlation_solver  dsrg-mrpt2
+  frozen_docc         [1,0,0,0,0,1,0,0]
+  frozen_uocc         [0,0,0,0,0,0,0,0]
+  restricted_docc     [1,0,0,0,0,1,0,0]
+  active              [1,0,1,1,0,1,1,1]
+  dsrg_s              0.5
+  ntrial_per_root     56
+  relax_ref           once
+}
+Eforte2, wfn_cas = energy('forte', ref_wfn=wfn_cas, return_wfn=True)
+compare_values(E2_pt2, Eforte2, 9, "DSRG-MRPT2 relaxed energy of N2")
+
+clean()
+
+activate(N)
+
+set {
+  reference rohf
+  docc      [2,0,0,0,0,0,0,0]
+  socc      [0,0,0,0,0,1,1,1]
+}
+Ecas, wfn_cas = energy('scf', return_wfn=True)
+compare_values(E1_cas, Ecas, 9, "CASSCF energy of N atom")
+
+set forte {
+  frozen_docc      [1,0,0,0,0,0,0,0]
+  restricted_docc  [1,0,0,0,0,0,0,0]
+  active           [0,0,0,0,0,1,1,1]
+  root_sym         4
+  spin_avg_density true
+}
+Eforte1, wfn_cas = energy('forte', ref_wfn=wfn_cas, return_wfn=True)
+compare_values(E1_pt2, Eforte1, 9, "DSRG-MRPT2 relaxed energy of N atom")
+compare_values(Eforte2, 2.0 * Eforte1, 8, "Size consistency error: E_N2 - 2 * E_N")

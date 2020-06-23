@@ -73,8 +73,6 @@ class DSRG_MRPT : public DynamicCorrelationSolver {
     std::shared_ptr<ActiveSpaceIntegrals> compute_Heff_actv();
 
   protected:
-    // void hack_doublet();
-
     // => Class initialization and termination <= //
 
     /// Start-up function called in the constructor

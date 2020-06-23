@@ -271,14 +271,16 @@ void FCI_MO::read_options() {
 void FCI_MO::print_options() {
     print_h2("Input Summary");
 
-    std::vector<std::pair<std::string, size_t>> info;
-    info.push_back({"No. a electrons in active", nalfa_ - ncore_ - nfrzc_});
-    info.push_back({"No. b electrons in active", nbeta_ - ncore_ - nfrzc_});
+    int ncore = ncore_, nfrzc = nfrzc_;
+
+    std::vector<std::pair<std::string, int>> info;
+    info.push_back({"No. a electrons in active", nalfa_ - ncore - nfrzc});
+    info.push_back({"No. b electrons in active", nbeta_ - ncore - nfrzc});
     info.push_back({"multiplicity", multi_});
     info.push_back({"spin ms (2 * Sz)", twice_ms_});
 
     for (auto& str_dim : info) {
-        outfile->Printf("\n    %-30s = %5zu", str_dim.first.c_str(), str_dim.second);
+        outfile->Printf("\n    %-30s = %5d", str_dim.first.c_str(), str_dim.second);
     }
 
     print_h2("Orbital Spaces");
@@ -899,7 +901,7 @@ void FCI_MO::Diagonalize_H(const vecdet& p_space, const int& multi, const int& n
     SparseCISolver sparse_solver;
     sparse_solver.set_e_convergence(econv_);
     sparse_solver.set_r_convergence(rconv_);
-    sparse_solver.set_spin_project(true);
+    sparse_solver.set_spin_project(options_->get_bool("SCI_PROJECT_OUT_SPIN_CONTAMINANTS"));
     sparse_solver.set_maxiter_davidson(options_->get_int("DL_MAXITER"));
     sparse_solver.set_guess_dimension(options_->get_int("DL_GUESS_SIZE"));
     if (projected_roots_.size() != 0) {

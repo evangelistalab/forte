@@ -134,49 +134,11 @@ class AdaptiveCI : public SelectedCIMethod {
     DeterminantHashVec PQ_space_;
 
     // ==> Class data <==
-    /// Forte options
-    std::shared_ptr<ForteOptions> options_;
-    /// The wave function symmetry
-    int wavefunction_symmetry_;
-    /// The symmetry of each orbital in Pitzer ordering
-    std::vector<int> mo_symmetry_;
-    /// The number of correlated molecular orbitals
-    int ncmo_;
-    /// The multiplicity of the reference
-    int multiplicity_;
-    /// M_s of the reference
-    int twice_ms_;
-    /// The number of active electrons
-    int nactel_;
-    /// The number of correlated alpha electrons
-    int nalpha_;
-    /// The number of correlated beta electrons
-    int nbeta_;
-    /// The number of frozen core orbitals
-    int nfrzc_;
-    psi::Dimension frzcpi_;
-    /// The number of correlated molecular orbitals per irrep
-    psi::Dimension ncmopi_;
-    /// The number of restricted docc orbitals per irrep
-    psi::Dimension rdoccpi_;
-    /// The number of active orbitals per irrep
-    psi::Dimension nactpi_;
-    /// The number of restricted docc
-    size_t rdocc_;
-    /// The number of restricted virtual
-    size_t rvir_;
-    /// The number of frozen virtual
-    size_t fvir_;
-    /// The number of irreps
-    size_t nirrep_;
 
-    /// The nuclear repulsion energy
-    double nuclear_repulsion_energy_;
     /// The reference determinant
     std::vector<Determinant> initial_reference_;
     /// The PT2 energy correction
     std::vector<double> multistate_pt2_energy_correction_;
-    size_t pre_iter_;
     bool set_ints_ = false;
 
     // ==> ACI Options <==
@@ -186,15 +148,12 @@ class AdaptiveCI : public SelectedCIMethod {
     double gamma_;
     /// The prescreening threshold
     double screen_thresh_;
-    /// The number of roots computed
-    int nroot_;
     /// Use threshold from perturbation theory?
     bool perturb_select_;
 
     /// Add missing degenerate determinants excluded from the aimed selection?
     bool add_aimed_degenerate_;
-    /// Add missing degenerate determinants excluded from the aimed selection?
-    bool project_out_spin_contaminants_;
+
 
     /// The function of the q-space criteria per root
     std::string pq_function_;
@@ -220,18 +179,11 @@ class AdaptiveCI : public SelectedCIMethod {
     double spin_tol_;
     /// Compute 1-RDM?
     bool compute_rdms_;
-    /// Enforce spin completeness of the P and P + Q spaces?
-    bool spin_complete_;
-    /// Enforce spin completeness of the P space?
-    bool spin_complete_P_ = false;
     /// Print a determinant analysis?
     bool det_hist_;
     /// Save dets to file?
     bool det_save_;
-    /// Order of RDM to compute
-    //    int rdm_level_;
-    /// Control amount of printing
-    bool quiet_mode_;
+
     /// Control streamlining
     bool streamline_qspace_;
     /// The CI coeffiecients
@@ -279,27 +231,6 @@ class AdaptiveCI : public SelectedCIMethod {
     double build_space_;
     double screen_space_;
     double spin_trans_;
-
-    // The RDMS
-    //    std::vector<double> ordm_a_;
-    //    std::vector<double> ordm_b_;
-    //    std::vector<double> trdm_aa_;
-    //    std::vector<double> trdm_ab_;
-    //    std::vector<double> trdm_bb_;
-    //    std::vector<double> trdm_aaa_;
-    //    std::vector<double> trdm_aab_;
-    //    std::vector<double> trdm_abb_;
-    //    std::vector<double> trdm_bbb_;
-
-    ambit::Tensor ordm_a_;
-    ambit::Tensor ordm_b_;
-    ambit::Tensor trdm_aa_;
-    ambit::Tensor trdm_ab_;
-    ambit::Tensor trdm_bb_;
-    ambit::Tensor trdm_aaa_;
-    ambit::Tensor trdm_aab_;
-    ambit::Tensor trdm_abb_;
-    ambit::Tensor trdm_bbb_;
 
     // ==> Class functions <==
 

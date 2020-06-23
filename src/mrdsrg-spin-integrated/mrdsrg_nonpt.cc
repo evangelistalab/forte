@@ -204,7 +204,8 @@ void MRDSRG::compute_hbar() {
         double norm_C1 = C1_.norm();
         double norm_C2 = C2_.norm();
         if (print_ > 2) {
-            outfile->Printf("\n  n = %3d, C1norm = %20.15f, C2norm = %20.15f", n, norm_C1, norm_C2);
+            outfile->Printf("\n  n: %3d, C0: %20.15f, C1 max: %20.15f, C2 max: %20.15f", n, C0,
+                            C1_.norm(0), C2_.norm(0));
         }
         if (std::sqrt(norm_C2 * norm_C2 + norm_C1 * norm_C1) < ct_threshold) {
             converged = true;
@@ -309,7 +310,8 @@ void MRDSRG::compute_hbar_sequential() {
         double norm_C1 = C1_.norm();
         double norm_C2 = C2_.norm();
         if (print_ > 2) {
-            outfile->Printf("\n  n = %3d, C1norm = %20.15f, C2norm = %20.15f", n, norm_C1, norm_C2);
+            outfile->Printf("\n  n: %3d, C0: %20.15f, C1 max: %20.15f, C2 max: %20.15f", n, C0,
+                            C1_.norm(0), C2_.norm(0));
         }
         if (std::sqrt(norm_C2 * norm_C2 + norm_C1 * norm_C1) < ct_threshold) {
             converged = true;
@@ -651,7 +653,8 @@ void MRDSRG::compute_hbar_sequential_rotation() {
         double norm_C1 = C1_.norm();
         double norm_C2 = C2_.norm();
         if (print_ > 2) {
-            outfile->Printf("\n  n = %3d, C1norm = %20.15f, C2norm = %20.15f", n, norm_C1, norm_C2);
+            outfile->Printf("\n  n: %3d, C0: %20.15f, C1 max: %20.15f, C2 max: %20.15f", n, C0,
+                            C1_.norm(0), C2_.norm(0));
         }
         if (std::sqrt(norm_C2 * norm_C2 + norm_C1 * norm_C1) < ct_threshold) {
             converged = true;

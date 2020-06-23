@@ -32,16 +32,56 @@
 #include "psi4/libpsi4util/PsiOutStream.h"
 #include "psi4/libmints/matrix.h"
 
+#include "base_classes/mo_space_info.h"
+
 #include "helpers/timer.h"
 #include "sparse_ci/sparse_ci_solver.h"
 #include "sci.h"
 
 namespace forte {
 SelectedCIMethod::SelectedCIMethod(StateInfo state, size_t nroot, std::shared_ptr<SCFInfo> scf_info,
+                                   std::shared_ptr<ForteOptions> options,
                                    std::shared_ptr<MOSpaceInfo> mo_space_info,
                                    std::shared_ptr<ActiveSpaceIntegrals> as_ints)
     : state_(state), nroot_(nroot), mo_space_info_(mo_space_info), as_ints_(as_ints),
-      scf_info_(scf_info), sparse_solver_(std::make_shared<SparseCISolver>()) {}
+      scf_info_(scf_info), options_(options), sparse_solver_(std::make_shared<SparseCISolver>()) {
+    base_startup();
+}
+
+void SelectedCIMethod::base_startup() {
+    // select the sigma vector type
+    nuclear_repulsion_energy_ = as_ints_->ints()->nuclear_repulsion_energy();
+
+    // Information stored in the MOSpaceInfo object
+    mo_symmetry_ = mo_space_info_->symmetry("ACTIVE");
+    nirrep_ = mo_space_info_->nirrep();
+    nact_ = mo_space_info_->size("ACTIVE");
+    nactpi_ = mo_space_info_->dimension("ACTIVE");
+    nirrep_ = mo_space_info_->nirrep();
+    // Information about occupied orbitals that are Correlated (restricted_docc)
+    ncmo_ = mo_space_info_->size("CORRELATED");
+
+    // Information about occupied orbitals that are frozen (frozen_docc + restricted_docc)
+    frzcpi_ = mo_space_info_->dimension("INACTIVE_DOCC");
+    nfrzc_ = mo_space_info_->size("INACTIVE_DOCC");
+
+    // Information stored in the StateInfo object
+    wavefunction_symmetry_ = state_.irrep();
+    multiplicity_ = state_.multiplicity();
+    nalpha_ = state_.na() - nfrzc_;
+    nbeta_ = state_.nb() - nfrzc_;
+    twice_ms_ = state_.twice_ms();
+
+    // Read options
+    quiet_mode_ = options_->get_bool("SCI_QUIET_MODE");
+    max_memory_ = options_->get_int("SIGMA_VECTOR_MAX_MEMORY");
+    sigma_vector_type_ = string_to_sigma_vector_type(options_->get_str("DIAG_ALGORITHM"));
+    pre_iter_ = options_->get_int("SCI_PREITERATIONS");
+    max_cycle_ = options_->get_int("SCI_MAX_CYCLE");
+    spin_complete_ = options_->get_bool("SCI_ENFORCE_SPIN_COMPLETE");
+    spin_complete_P_ = options_->get_bool("SCI_ENFORCE_SPIN_COMPLETE_P");
+    project_out_spin_contaminants_ = options_->get_bool("SCI_PROJECT_OUT_SPIN_CONTAMINANTS");
+}
 
 double SelectedCIMethod::compute_energy() {
     timer energy_timer("SelectedCIMethod:Energy");

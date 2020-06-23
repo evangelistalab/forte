@@ -78,6 +78,14 @@ py::array_t<double> ambit_to_np(ambit::Tensor t) {
     return py::array_t<double>(t.dims(), &(t.data()[0]));
 }
 
+py::array_t<double> vector_to_np(const std::vector<double>& v, const std::vector<size_t>& dims) {
+    return py::array_t<double>(dims, &(v.data()[0]));
+}
+
+py::array_t<double> vector_to_np(const std::vector<double>& v, const std::vector<int>& dims) {
+    return py::array_t<double>(dims, &(v.data()[0]));
+}
+
 psi::SharedMatrix tensor_to_matrix(ambit::Tensor t) {
     size_t size1 = t.dim(0);
     size_t size2 = t.dim(1);
@@ -202,5 +210,23 @@ std::pair<std::vector<size_t>, std::vector<size_t>> split_up_tasks(size_t size_o
 
     return my_lists;
 }
+
+namespace math {
+size_t combinations(size_t n, size_t k) {
+    if (k > n)
+        return 0;
+    if (k * 2 > n)
+        k = n - k;
+    if (k == 0)
+        return 1;
+
+    size_t result = n;
+    for (size_t i = 2; i <= k; ++i) {
+        result *= (n - i + 1);
+        result /= i;
+    }
+    return result;
+}
+} // namespace math
 
 } // namespace forte

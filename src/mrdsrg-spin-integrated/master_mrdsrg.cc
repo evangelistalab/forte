@@ -50,10 +50,6 @@ void MASTER_DSRG::startup() {
     // set Ambit MO space labels
     set_ambit_MOSpace();
 
-    // read commonly used energies
-    Enuc_ = ints_->nuclear_repulsion_energy();
-    Efrzc_ = ints_->frozen_core_energy();
-
     // initialize timer for commutator
     dsrg_time_ = DSRG_TIME();
 
@@ -92,8 +88,6 @@ void MASTER_DSRG::read_options() {
         throw psi::PSIEXCEPTION(message);
     };
 
-    print_ = foptions_->get_int("PRINT");
-
     s_ = foptions_->get_double("DSRG_S");
     if (s_ < 0) {
         throw_error("S parameter for DSRG must >= 0!");
@@ -125,12 +119,6 @@ void MASTER_DSRG::read_options() {
 
     relax_ref_ = foptions_->get_str("RELAX_REF");
 
-    eri_df_ = false;
-    ints_type_ = foptions_->get_str("INT_TYPE");
-    if (ints_type_ == "CHOLESKY" || ints_type_ == "DF" || ints_type_ == "DISKDF") {
-        eri_df_ = true;
-    }
-
     multi_state_ = foptions_->get_gen_list("AVG_STATE").size() != 0;
     multi_state_algorithm_ = foptions_->get_str("DSRG_MULTI_STATE");
 
@@ -139,20 +127,6 @@ void MASTER_DSRG::read_options() {
         if (multi_state_algorithm_ != "SA_FULL") {
             do_dm_ = false;
         }
-    }
-
-    diis_start_ = foptions_->get_int("DSRG_DIIS_START");
-    diis_freq_ = foptions_->get_int("DSRG_DIIS_FREQ");
-    diis_min_vec_ = foptions_->get_int("DSRG_DIIS_MIN_VEC");
-    diis_max_vec_ = foptions_->get_int("DSRG_DIIS_MAX_VEC");
-    if (diis_min_vec_ < 1) {
-        diis_min_vec_ = 1;
-    }
-    if (diis_max_vec_ <= diis_min_vec_) {
-        diis_max_vec_ = diis_min_vec_ + 4;
-    }
-    if (diis_freq_ < 1) {
-        diis_freq_ = 1;
     }
 
     outfile->Printf("Done");
@@ -931,7 +905,7 @@ void MASTER_DSRG::H2_T2_C0(BlockedTensor& H2, BlockedTensor& T2, const double& a
     E += 0.25 * H2["efmn"] * T2["mnef"];
     E += 0.25 * H2["EFMN"] * T2["MNEF"];
 
-    BlockedTensor temp = ambit::BlockedTensor::build(tensor_type_, "temp", spin_cases({"aa"}));
+    auto temp = ambit::BlockedTensor::build(tensor_type_, "temp", spin_cases({"aa"}));
     temp["vu"] += 0.5 * H2["efmu"] * T2["mvef"];
     temp["vu"] += H2["fEuM"] * T2["vMfE"];
     temp["VU"] += 0.5 * H2["EFMU"] * T2["MVEF"];
@@ -1944,7 +1918,7 @@ bool MASTER_DSRG::check_semi_orbs() {
 
     std::string actv_type = foptions_->get_str("FCIMO_ACTV_TYPE");
     if (actv_type == "CIS" || actv_type == "CISD") {
-        std::string job_type = foptions_->get_str("JOB_TYPE");
+        std::string job_type = foptions_->get_str("CORRELATION_SOLVER");
         bool fci_mo = foptions_->get_str("ACTIVE_SPACE_SOLVER") == "CAS";
         if ((job_type == "MRDSRG" || job_type == "DSRG-MRPT3") && fci_mo) {
             std::stringstream ss;

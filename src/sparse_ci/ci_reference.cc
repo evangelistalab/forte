@@ -239,6 +239,13 @@ CI_Reference::gas_double_criterion() {
 }
 
 void CI_Reference::build_ci_reference(std::vector<Determinant>& ref_space) {
+    // Special case. If there are no active orbitals return an empty determinant
+    if (nact_ == 0) {
+        Determinant det;
+        ref_space.push_back(det);
+        return;
+    }
+
     Determinant det(get_occupation());
     outfile->Printf("\n  %s", str(det, nact_).c_str());
 
@@ -1288,10 +1295,14 @@ std::vector<std::vector<int>> CI_Reference::gas_electrons() { return gas_electro
 
 Determinant CI_Reference::get_occupation() {
     int nact = mo_space_info_->size("ACTIVE");
-    //    Determinant det(nact); <- xsize
     Determinant det;
 
-    // nyms denotes the number of electrons needed to assign symmetry and
+    // If there are no electrons return an empty determinant
+    if (nalpha_ + nbeta_ == 0) {
+        return det;
+    }
+
+    // nsym denotes the number of electrons needed to assign symmetry and
     // multiplicity
     int nsym = twice_ms_;
     int orb_sym = root_sym_;
@@ -1339,7 +1350,7 @@ Determinant CI_Reference::get_occupation() {
         // Add electron to lowest-energy orbital of proper symmetry
         // Loop from current occupation to max MO until correct orbital is
         // reached
-        for (int i = nalpha_ - k, maxi = nact; i < maxi; ++i) {
+        for (int i = std::max(nalpha_ - k, 0), maxi = nact; i < maxi; ++i) {
             if (orb_sym == std::get<1>(labeled_orb_en[i]) and
                 det.get_alfa_bit(std::get<2>(labeled_orb_en[i])) != true) {
                 det.set_alfa_bit(std::get<2>(labeled_orb_en[i]), true);
@@ -1352,7 +1363,7 @@ Determinant CI_Reference::get_occupation() {
         }
         // If a new occupation could not be created, put electron back and
         // remove a different one
-        if (!add) {
+        if (!add and (nalpha_ - k > 0)) {
             det.set_alfa_bit(std::get<2>(labeled_orb_en[nalpha_ - k]), true);
             //            occupation[] = 1;
             ++k;

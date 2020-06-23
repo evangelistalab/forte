@@ -108,6 +108,9 @@ class SparseCISolver {
     /// The maximum number of iterations for the Davidson algorithm
     void set_maxiter_davidson(int value);
 
+    void set_ncollapse_per_root(int value);
+    void set_nsubspace_per_root(int value);
+
     /// Build the full Hamiltonian matrix
     std::shared_ptr<psi::Matrix>
     build_full_hamiltonian(const std::vector<Determinant>& space,
@@ -128,7 +131,7 @@ class SparseCISolver {
     void set_num_vecs(size_t value);
 
   private:
-    std::vector<std::pair<double, std::vector<std::pair<size_t, double>>>>
+    std::vector<std::tuple<int, double, std::vector<std::pair<size_t, double>>>>
     initial_guess(const DeterminantHashVec& space, std::shared_ptr<SigmaVector> sigma_vector,
                   int nroot, int multiplicity);
 
@@ -162,8 +165,8 @@ class SparseCISolver {
     int nsubspace_per_root_ = 4;
     /// Maximum number of iterations in the Davidson-Liu algorithm
     int maxiter_davidson_ = 100;
-    /// Initial guess size per root
-    size_t dl_guess_ = 200;
+    /// Number of determinants used to form guess vector per root
+    size_t dl_guess_ = 50;
     /// Options for forcing diagonalization method
     bool force_diag_ = false;
     /// Additional roots to project out

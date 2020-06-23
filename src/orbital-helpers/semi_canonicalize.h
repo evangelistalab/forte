@@ -31,7 +31,6 @@
 
 #include <tuple>
 
-
 #include "psi4/libmints/wavefunction.h"
 
 #include "base_classes/mo_space_info.h"
@@ -64,8 +63,7 @@ class SemiCanonical {
                           const bool& transform = true);
 
     /// Transform all cumulants, rebuild 2-RDMs using 2-cumulants
-    RDMs transform_rdms(ambit::Tensor& Ua, ambit::Tensor& Ub, const RDMs& rdms,
-                        const int& max_rdm_level);
+    RDMs transform_rdms(ambit::Tensor& Ua, ambit::Tensor& Ub, RDMs& rdms, const int& max_rdm_level);
 
     /// Set active hole and particle dimensions
     void set_actv_dims(const psi::Dimension& actv_docc, const psi::Dimension& actv_virt);
