@@ -26,9 +26,10 @@
  * @END LICENSE
  */
 
-#ifndef CASSCF_H
-#define CASSCF_H
+#ifndef _casscf_h_
+#define _casscf_h_
 
+#include <map>
 
 #include "psi4/libmints/wavefunction.h"
 #include "psi4/libfock/jk.h"
@@ -45,10 +46,9 @@
 
 namespace forte {
 
-// class ActiveSpaceIntegrals;
 class SCFInfo;
 
-class CASSCF : public ActiveSpaceMethod {
+class CASSCF {
   public:
     /**
      * @brief CASSCF::CASSCF
@@ -62,44 +62,30 @@ class CASSCF : public ActiveSpaceMethod {
      * This reference has a nice algorithmic flowchart.  Look it up
      *
      */
-    CASSCF(StateInfo state, size_t nroot, std::shared_ptr<forte::SCFInfo> scf_info,
-           std::shared_ptr<ForteOptions> options, std::shared_ptr<MOSpaceInfo> mo_space_info,
-           std::shared_ptr<ActiveSpaceIntegrals> as_ints);
-    /// Use daniels code to compute Orbital optimization
-    // void compute_casscf_soscf();
+    CASSCF(const std::map<StateInfo, std::vector<double>>& state_weights_map,
+           std::shared_ptr<forte::SCFInfo> scf_info, std::shared_ptr<ForteOptions> options,
+           std::shared_ptr<MOSpaceInfo> mo_space_info, std::shared_ptr<ForteIntegrals> ints);
+
     /// Return the final gamma1
     ambit::Tensor gamma1() { return gamma1_; }
     /// Return the final gamma2;
     ambit::Tensor gamma2() { return gamma2_; }
-    double compute_energy() override;
-
-    /// Compute CASSCF gradient
+    /// Compute the CASSCF energy
+    double compute_energy();
+    /// Compute the CASSCF energy gradient
     psi::SharedMatrix compute_gradient();
 
-    void set_options(std::shared_ptr<ForteOptions>) override{};
-
-    /// Returns the reduced density matrices up to a given level (max_rdm_level)
-    std::vector<RDMs> rdms(const std::vector<std::pair<size_t, size_t>>& root_list,
-                           int max_rdm_level) override;
-
-    /// Returns the transition reduced density matrices between roots of different symmetry up to a
-    /// given level (max_rdm_level)
-    std::vector<RDMs> transition_rdms(const std::vector<std::pair<size_t, size_t>>& root_list,
-                                      std::shared_ptr<ActiveSpaceMethod> method2,
-                                      int max_rdm_level) override;
-
-    /// check the cas_ci energy with spin-free RDM
-    double cas_check(RDMs cas);
-
   private:
+    /// The list of states to computed. Passed to the ActiveSpaceSolver
+    std::map<StateInfo, std::vector<double>> state_weights_map_;
     /// SCF information
     std::shared_ptr<SCFInfo> scf_info_;
     /// The options
     std::shared_ptr<ForteOptions> options_;
-
+    /// The MOSpaceInfo object
+    std::shared_ptr<MOSpaceInfo> mo_space_info_;
     /// The active one RDM in the MO basis
     ambit::Tensor gamma1_;
-
     /// The active two RDM (may need to be symmetrized)
     ambit::Tensor gamma2_;
     /// The reference object generated from Francesco's Full CI
@@ -108,25 +94,66 @@ class CASSCF : public ActiveSpaceMethod {
     double E_casscf_;
     std::shared_ptr<ForteIntegrals> ints_;
 
-    /// The dimension for number of molecular orbitals (CORRELATED or ALL)
-    psi::Dimension nmopi_;
-    /// The number of correlated molecular orbitals (Restricted Core + Active +
-    /// Restricted_UOCC + Frozen_Virt
-    size_t nmo_;
-    /// The number of active orbitals
-    size_t na_;
     /// The number of irreps
     size_t nirrep_;
     /// The number of SO (AO for C matrices)
     psi::Dimension nsopi_;
+
+    /// The number of active orbitals
+    size_t nactv_;
     /// the number of restricted_docc
     size_t nrdocc_;
     /// The number of frozen_docc
-    size_t nfrozen_;
+    size_t nfdocc_;
     /// The number of virtual orbitals
-    size_t nvir_;
+    size_t nruocc_;
+    /// The number of correlated molecular orbitals (not frozen)
+    size_t ncmo_;
     /// The number of NMO including frozen core
-    size_t all_nmo_;
+    size_t nmo_;
+
+    /// List of core MOs (Correlated)
+    std::vector<size_t> rdocc_mos_;
+    /// List of active MOs (Correlated)
+    std::vector<size_t> actv_mos_;
+    /// List of virtual MOs (Correlated)
+    std::vector<size_t> ruocc_mos_;
+    /// List of correlated MOs
+    std::vector<size_t> corr_mos_;
+
+    /// List of core MOs (Absolute)
+    std::vector<size_t> core_mos_abs_;
+    /// List of active MOs (Absolute)
+    std::vector<size_t> actv_mos_abs_;
+
+    /// The psi::Dimensions for frozen docc
+    psi::Dimension frozen_docc_dim_;
+    /// The psi::Dimensions for restricted docc
+    psi::Dimension restricted_docc_dim_;
+    /// The psi::Dimensions for active
+    psi::Dimension active_dim_;
+    /// The psi::Dimensions for restricted uocc
+    psi::Dimension restricted_uocc_dim_;
+    /// The psi::Dimensions for frozen uocc
+    psi::Dimension inactive_docc_dim_;
+    /// The psi::Dimensions for all correlated orbitals
+    psi::Dimension corr_dim_;
+    /// The psi::Dimensions for all orbitals
+    psi::Dimension nmo_dim_;
+
+    /// List of relative MOs for restricted docc
+    std::vector<std::pair<size_t, size_t>> core_mos_rel_;
+    /// List of relative MOs for active
+    std::vector<std::pair<size_t, size_t>> actv_mos_rel_;
+    /// List of relative MOs for restricted docc
+    std::vector<std::pair<size_t, size_t>> virt_mos_rel_;
+
+    std::vector<size_t> frozen_docc_abs_;
+    std::vector<size_t> restricted_docc_abs_;
+    std::vector<size_t> active_abs_;
+    std::vector<size_t> restricted_uocc_abs_;
+    std::vector<size_t> inactive_docc_abs_;
+    std::vector<size_t> nmo_abs_;
 
     // These are essential variables and functions for computing CASSCF gradient.
     /// Set Ambit tensor labels
@@ -153,26 +180,7 @@ class CASSCF : public ActiveSpaceMethod {
     void write_2rdm_spin_dependent();
     /// TPDM backtransform
     void tpdm_backtransform();
-    /// List of core MOs (Correlated)
-    std::vector<size_t> core_mos_;
-    /// List of active MOs (Correlated)
-    std::vector<size_t> actv_mos_;
-    /// List of virtual MOs (Correlated)
-    std::vector<size_t> virt_mos_;
-    /// List of core MOs (Absolute)
-    std::vector<size_t> core_all_;
-    /// List of active MOs (Absolute)
-    std::vector<size_t> actv_all_;
-    /// List of relative core MOs
-    std::vector<std::pair<unsigned long, unsigned long>,
-                std::allocator<std::pair<unsigned long, unsigned long>>>
-        core_mos_relative;
-    /// List of relative active MOs
-    std::vector<std::pair<unsigned long, unsigned long>,
-                std::allocator<std::pair<unsigned long, unsigned long>>>
-        actv_mos_relative;
-    /// Dimension of different irreps
-    psi::Dimension irrep_vec;
+
     /// One-particle density matrix
     ambit::BlockedTensor Gamma1_;
     /// Two-body denisty tensor
@@ -191,26 +199,20 @@ class CASSCF : public ActiveSpaceMethod {
     /// These member variables are all summarized in Algorithm 1
     /// Equation 9
 
-    /// The Fock matrix due to Frozen core orbitals
-    psi::SharedMatrix F_froze_;
-    /// The One Electron integrals (H = T + V)  (in AO basis)
+    /// The Fock matrix due to frozen core orbitals
+    psi::SharedMatrix F_frozen_core_;
+    /// The one-electron integral matrix in the AO basis (H = T + V)
     psi::SharedMatrix Hcore_;
     /// The JK object.  Built in constructor
     std::shared_ptr<psi::JK> JK_;
-    /// Perform a CAS-CI with the updated MO coefficients
-    void cas_ci();
-    /// Sets up the FCI
-    void set_up_fci();
-    /// Set up a SA-FCI
-    //  void set_up_sa_fci();
+    /// Diagonalize the Hamiltonian using the updated MO coefficients (does FCI, sCI, DMRG, etc.)
+    void diagonalize_hamiltonian();
     /// Read all the mospace info and assign correct dimensions
     void startup();
     /// Compute overlap between old_c and new_c
     void overlap_orbitals(const psi::SharedMatrix& C_old, const psi::SharedMatrix& C_new);
     void overlap_coefficients();
     void write_orbitals_molden();
-    /// Diagonalize F_I + F_A
-    std::pair<psi::SharedMatrix, psi::SharedVector> casscf_canonicalize();
 
     /// DEBUG PRINTING
     bool casscf_debug_print_;
@@ -220,37 +222,32 @@ class CASSCF : public ActiveSpaceMethod {
     /// Compute the restricted_one_body operator for FCI(done also in
     /// OrbitalOptimizer)
 
-    // Recompute reference
-    void cas_ci_final();
-
-    std::vector<std::vector<double>> compute_restricted_docc_operator();
+    std::vector<double> compute_restricted_docc_operator();
 
     double scalar_energy_ = 0.0;
-    /// The psi::Dimensions for the major orbitals spaces involved in CASSCF
-    /// Trying to get these all in the startup, so I can use them repeatly
-    /// rather than create them in different places
-    psi::Dimension frozen_docc_dim_;
-    psi::Dimension restricted_docc_dim_;
-    psi::Dimension active_dim_;
-    psi::Dimension restricted_uocc_dim_;
-    psi::Dimension inactive_docc_dim_;
 
-    std::vector<size_t> frozen_docc_abs_;
-    std::vector<size_t> restricted_docc_abs_;
-    std::vector<size_t> active_abs_;
-    std::vector<size_t> restricted_uocc_abs_;
-    std::vector<size_t> inactive_docc_abs_;
-    std::vector<size_t> nmo_abs_;
     /// Transform the active integrals
-    ambit::Tensor transform_integrals();
-    std::pair<ambit::Tensor, std::vector<double>> CI_Integrals();
+    ambit::Tensor transform_integrals(std::shared_ptr<psi::Matrix> Ca);
+
     /// The transform integrals computed from transform_integrals
-    ambit::Tensor tei_paaa_;
-    int print_;
+    ambit::Tensor tei_gaaa_;
+
+    /// The print level
+    int print_ = 0;
+
     /// The CISolutions per iteration
     std::vector<std::vector<std::shared_ptr<FCIVector>>> CISolutions_;
     std::shared_ptr<ActiveSpaceIntegrals> get_ci_integrals();
+
+    /// Semi-canonicalize orbital and return the rotation matrix
+    std::shared_ptr<psi::Matrix> semicanonicalize(std::shared_ptr<psi::Matrix> Ca);
+    /// Build Fock matrix
+    std::shared_ptr<psi::Matrix> build_fock(std::shared_ptr<psi::Matrix> Ca);
+    /// Build the inactive Fock (part that does not depend on 1RDM), includes frozen docc
+    std::shared_ptr<psi::Matrix> build_fock_inactive(std::shared_ptr<psi::Matrix> Ca);
+    /// Build the active Fock (part that does depend on 1RDM)
+    std::shared_ptr<psi::Matrix> build_fock_active(std::shared_ptr<psi::Matrix> Ca);
 };
 } // namespace forte
 
-#endif // CASSCF_H
+#endif // _casscf_h_

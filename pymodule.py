@@ -209,6 +209,8 @@ def gradient_forte(name, **kwargs):
 
     # Get the psi4 option object
     optstash = p4util.OptionsState(['GLOBALS', 'DERTYPE'])
+    psi4.core.set_global_option('DERTYPE', 'FIRST')
+
     psi4_options = psi4.core.get_options()
     psi4_options.set_current_module('FORTE')
 

@@ -4,9 +4,10 @@ import forte
 
 memory 500 mb
 
-Ecas_psi4  = -226.574527271815526
-Ept2_ur    = -226.911835889672631
-Ept2_pr    = -226.915446301068442
+Ecas_psi4_jk  = -229.495450424144593
+Ecas_forte_jk = -229.495450424145076
+Ept2_ur       = -230.143766443102606
+Ept2_pr       = -230.150511595148799
 
 molecule pbenzyne{
   0 1
