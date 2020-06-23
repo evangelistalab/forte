@@ -810,6 +810,13 @@ void AdaptiveCI::diagonalize_PQ_space() {
     if (follow_ and (num_ref_roots_ > 1) and (cycle_ >= pre_iter_)) {
         ref_root_ = root_follow(P_ref_, P_ref_evecs_, PQ_space_, PQ_evecs_, num_ref_roots_);
     }
+
+    if (gas_iteration_) {
+        print_gas_wfn(PQ_space_, PQ_evecs_);
+    }
+    if (occ_analysis_) {
+        print_occ_number(PQ_space_, PQ_evecs_);
+    }
 }
 
 bool AdaptiveCI::check_convergence() {
@@ -1037,11 +1044,29 @@ void AdaptiveCI::print_gas_wfn(DeterminantHashVec& space, psi::SharedMatrix evec
             outfile->Printf("  %s  ", gas_electron_name[j].c_str());
         }
         outfile->Printf("      Cont  \n");
+        std::map<std::vector<size_t>, double> gas_total_amp;
         for (size_t i = 0; i < gas_config_num; i++) {
             for (size_t j = 0; j < 2 * gas_num_; j++) {
                 outfile->Printf("     %d    ", gas_electrons_[i][j]);
             }
-            psi::outfile->Printf("    %.9f  \n", i, gas_amp[i]);
+            std::vector<size_t> sum_gas;
+            for (size_t j = 0; j < 2 * gas_num_; j += 2) {
+                sum_gas.push_back(gas_electrons_[i][j] + gas_electrons_[i][j + 1]);
+            }
+            auto map_found = gas_total_amp.find(sum_gas);
+            if (map_found == gas_total_amp.end()) {
+                gas_total_amp[sum_gas] = gas_amp[i];
+            } else {
+                gas_total_amp[sum_gas] += gas_amp[i];
+            }
+            psi::outfile->Printf("    %.9f  \n", gas_amp[i]);
+        }
+        outfile->Printf("\n");
+        for (auto element : gas_total_amp) {
+            for (size_t j = 0; j < gas_num_; j++) {
+                outfile->Printf("           %d       ", element.first[j]);
+            }
+            outfile->Printf("     %.9f  \n", element.second);
         }
     }
 }
@@ -1230,12 +1255,12 @@ void AdaptiveCI::print_occ_number(DeterminantHashVec& space, psi::SharedMatrix e
 } // namespace forte
 
 void AdaptiveCI::post_iter_process() {
-    if (gas_iteration_) {
-        print_gas_wfn(PQ_space_, PQ_evecs_);
-    }
-    if (occ_analysis_) {
-        print_occ_number(PQ_space_, PQ_evecs_);
-    }
+    //    if (gas_iteration_) {
+    //        print_gas_wfn(PQ_space_, PQ_evecs_);
+    //    }
+    //    if (occ_analysis_) {
+    //        print_occ_number(PQ_space_, PQ_evecs_);
+    //    }
     print_nos();
     full_mrpt2();
 }

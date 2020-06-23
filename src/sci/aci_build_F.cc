@@ -294,7 +294,6 @@ void AdaptiveCI::get_gas_excited_determinants_sr(
 // Loop over reference determinants
 #pragma omp parallel
     {
-        local_timer gas;
         size_t num_thread = omp_get_num_threads();
         size_t tid = omp_get_thread_num();
         size_t bin_size = max_P / num_thread;
