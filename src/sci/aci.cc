@@ -74,14 +74,13 @@ void AdaptiveCI::startup() {
     screen_thresh_ = options_->get_double("ACI_PRESCREEN_THRESHOLD");
     add_aimed_degenerate_ = options_->get_bool("ACI_ADD_AIMED_DEGENERATE");
     project_out_spin_contaminants_ = options_->get_bool("SCI_PROJECT_OUT_SPIN_CONTAMINANTS");
-    spin_complete_ = options_->get_bool("ACI_ENFORCE_SPIN_COMPLETE");
-    spin_complete_P_ = options_->get_bool("ACI_ENFORCE_SPIN_COMPLETE_P");
 
     single_calculation_ = options_->get_bool("SINGLE_CALCULATION");
     // Run only one calculation with initial ansatz;
     // Can be used for CIS/CISD/CAS/GAS-CI for test
     gas_iteration_ = options_->get_bool("GAS_ITERATION");
-    if (options_->get_str("ACTIVE_REF_TYPE") == "GAS_SINGLE") {
+    if (options_->get_str("ACTIVE_REF_TYPE") == "GAS_SINGLE" or
+        options_->get_str("ACTIVE_REF_TYPE") == "GAS") {
         gas_iteration_ = true;
     }
     // Iterations are within in GAS
@@ -96,8 +95,6 @@ void AdaptiveCI::startup() {
     }
 
     // max_cycle_ = options_->get_int("SCI_MAX_CYCLE");
-
-    pre_iter_ = options_->get_int("ACI_PREITERATIONS");
 
     spin_tol_ = options_->get_double("ACI_SPIN_TOL");
 
