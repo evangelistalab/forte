@@ -56,6 +56,18 @@ def forte_driver(state_weights_map, scf_info, options, ints, mo_space_info):
     # Create a dynamical correlation solver object
     correlation_solver_type = options.get_str('CORRELATION_SOLVER')
     if correlation_solver_type != 'NONE':
+
+        # Grab coupling coefficients
+        # NOTE: Orbitals have to be semicanonicalized already to make sure
+        #       DSRG reads consistent CI coefficients before and after SemiCanonical class.
+        do_grad = options.get_str('DERTYPE') == 'FIRST'
+        if active_space_solver_type == "CAS" and do_grad:
+            # This is OK only when running state-specific calculations
+            state = list(state_map.keys())[0]
+
+            coupling_coefficients = active_space_solver.coupling_coefficients(state, 2)
+            ci_vectors = active_space_solver.eigen_vectors(state)
+
         # Grab the reference
         rdms = active_space_solver.compute_average_rdms(state_weights_map, 3) # TODO: max_rdm_level should be chosen in a smart way
 
@@ -70,7 +82,11 @@ def forte_driver(state_weights_map, scf_info, options, ints, mo_space_info):
                                                                            rdms, scf_info, options,
                                                                            ints, mo_space_info,
                                                                            Ua, Ub)
-        if True:     # need to be substituted with the gradient option
+        if do_grad:     # need to be substituted with the gradient option
+            # set ci vectors and coupling coefficients
+            dsrg.set_coupling_coefficients(coupling_coefficients)
+            dsrg.set_ci_vectors(ci_vectors)
+
             dsrg.compute_gradient()
 
         if not Heff_actv_implemented:
@@ -423,6 +439,8 @@ def gradient_forte(name, **kwargs):
 
     # Get the option object
     optstash = p4util.OptionsState(['GLOBALS', 'DERTYPE'])
+    psi4.core.set_global_option('DERTYPE', 'FIRST')
+
     options = psi4.core.get_options()
     options.set_current_module('FORTE')
     forte.forte_options.update_psi_options(options)

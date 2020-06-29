@@ -8,6 +8,7 @@
 #include "integrals/integrals.h"
 #include "integrals/active_space_integrals.h"
 #include "base_classes/rdms.h"
+#include "base_classes/coupling_coefficients.h"
 
 namespace forte {
 
@@ -37,6 +38,16 @@ class DynamicCorrelationSolver {
     /// Destructor
     virtual ~DynamicCorrelationSolver() = default;
 
+    /// Set coupling coefficients
+    /// TODO: remove this when implemented more efficient way of computing CI response
+    virtual void set_coupling_coefficients(const CouplingCoefficients& cc) { coupling_coefficnets_ = cc; }
+
+    /// Set CI coefficients
+    /// TODO: remove this when implemented more efficient way of computing CI response
+    virtual void set_ci_vectors(const std::vector<ambit::Tensor>& ci_vectors) {
+        ci_vectors_ = ci_vectors;
+    }
+
   protected:
     /// The molecular integrals
     std::shared_ptr<ForteIntegrals> ints_;
@@ -52,6 +63,12 @@ class DynamicCorrelationSolver {
 
     /// The ForteOptions
     std::shared_ptr<ForteOptions> foptions_;
+
+    /// The coupling coefficients
+    CouplingCoefficients coupling_coefficnets_;
+
+    /// The CI coefficients
+    std::vector<ambit::Tensor> ci_vectors_;
 };
 
 std::shared_ptr<DynamicCorrelationSolver>
