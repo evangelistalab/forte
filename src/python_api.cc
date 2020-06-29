@@ -260,7 +260,9 @@ PYBIND11_MODULE(forte, m) {
     // export DynamicCorrelationSolver
     py::class_<DynamicCorrelationSolver, std::shared_ptr<DynamicCorrelationSolver>>(
         m, "DynamicCorrelationSolver")
-        .def("compute_energy", &DynamicCorrelationSolver::compute_energy);
+        .def("compute_energy", &DynamicCorrelationSolver::compute_energy)
+        .def("set_coupling_coefficients", &DynamicCorrelationSolver::set_coupling_coefficients)
+        .def("set_ci_vectors", &DynamicCorrelationSolver::set_ci_vectors);
 
     // export ActiveSpaceIntegrals
     py::class_<ActiveSpaceIntegrals, std::shared_ptr<ActiveSpaceIntegrals>>(m,
@@ -314,6 +316,9 @@ PYBIND11_MODULE(forte, m) {
         .def("L3abb_data", &RDMs::L3abb_data, "Return the alpha-beta-beta 3-cumulant data")
         .def("L3bbb_data", &RDMs::L3bbb_data, "Return the beta-beta-beta 3-cumulant data");
 
+    // export CouplingCoefficients
+    py::class_<CouplingCoefficients>(m, "CouplingCoefficients");
+
     // export ambit::Tensor
     py::class_<ambit::Tensor>(m, "ambitTensor");
 
@@ -328,7 +333,9 @@ PYBIND11_MODULE(forte, m) {
         .def("nuclear_dipole", &MASTER_DSRG::nuclear_dipole,
              "Return nuclear components of dipole moments")
         .def("set_Uactv", &MASTER_DSRG::set_Uactv, "Ua"_a, "Ub"_a,
-             "Set active part orbital rotation matrix (from original to semicanonical)");
+             "Set active part orbital rotation matrix (from original to semicanonical)")
+        .def("set_coupling_coefficients", &MASTER_DSRG::set_coupling_coefficients)
+        .def("set_ci_vectors", &MASTER_DSRG::set_ci_vectors);
 
     // export MRDSRG_SO
     py::class_<MRDSRG_SO>(m, "MRDSRG_SO")

@@ -3314,6 +3314,7 @@ void DSRG_MRPT2::write_2rdm_spin_dependent() {
 SharedMatrix DSRG_MRPT2::compute_gradient() {
     // NOTICE: compute the DSRG_MRPT2 gradient 
     print_method_banner({"DSRG-MRPT2 Gradient", "Shuhe Wang"});
+    ci_vectors_[0].print();
     set_all_variables();
     set_multiplier();
     write_lagrangian();
