@@ -2466,6 +2466,26 @@ void DSRG_MRPT2::solve_z() {
     temp1["w,z,u1,v1"] += V["v1,v,u1,z"] * Gamma1["wv"];
     temp1["w,z,U1,V1"] += V["v,V1,z,U1"] * Gamma1["wv"];
 
+
+    // CI contribution
+    // size_t ndets = determinant_.size();
+    // auto ndets = fci_mo.det_size();
+    size_t ndets = 5;
+    std::vector<size_t> ci_p(5);
+    // ci_p.push_back(2);
+    // ci_p.push_back(3);
+    // ci_p.push_back(1);
+    // ci_p.push_back(4);
+
+    ci_p[0] = 2;
+    ci_p[1] = 3;
+    ci_p[2] = 1;
+    ci_p[3] = 4;
+
+    for (std::vector<size_t>::const_iterator i = ci_p.begin(); i != ci_p.end(); ++i)
+    std::cout << *i << ' ';
+
+
     for (const std::string& row : {"vc","ca","va","aa"}) {
         int idx1 = block_dim[row];
         int pre1 = preidx[row];

@@ -3043,6 +3043,10 @@ std::vector<ambit::Tensor> FCI_MO::eigen_vectors() {
     return out;
 }
 
+size_t FCI_MO::det_size() {
+    return determinant_.size();
+}
+
 CouplingCoefficients FCI_MO::coupling_coefficients(int level) {
     if (level != 2) {
         throw PSIEXCEPTION("Not implemented other than level 2");

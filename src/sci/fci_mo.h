@@ -281,6 +281,9 @@ class FCI_MO : public ActiveSpaceMethod {
     /// Return the eigen vector in ambit Tensor format
     std::vector<ambit::Tensor> eigen_vectors() override;
 
+    /// Return the size of determinants
+    size_t det_size();
+
   protected:
     /// Basic Preparation
     void startup();
