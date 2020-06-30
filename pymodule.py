@@ -194,10 +194,10 @@ def gradient_forte(name, **kwargs):
     r"""Function encoding sequence of PSI module and plugin calls so that
     forte can be called via :py:func:`~driver.energy`. For post-scf plugins.
 
-    >>> gradient('forte') 
+    >>> gradient('forte')
         available for : CASSCF
-
     """
+
     lowername = name.lower()
     kwargs = p4util.kwargs_lower(kwargs)
 
@@ -269,8 +269,8 @@ def gradient_forte(name, **kwargs):
     derivobj.set_ignore_reference(True)
     grad = derivobj.compute()
     # psi4.core.DerivCalcType.Correlated
-    ref_wfn.set_gradient(grad)    
-    optstash.restore()        
+    ref_wfn.set_gradient(grad)
+    optstash.restore()
 
     end = time.time()
     psi4.core.print_out(f'\n\n  Your calculation took {end - start:12.3f} seconds.')

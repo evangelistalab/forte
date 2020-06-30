@@ -2169,10 +2169,14 @@ std::vector<std::string> MASTER_DSRG::re_two_labels() {
 
 void MASTER_DSRG::clean_checkpoints() {
     if (not t1_file_.empty()) {
-        delete_disk_BT(t1_file_);
+        if (remove(t1_file_.c_str()) != 0) {
+            perror("Error when deleting T1 checkpoint.");
+        }
     }
     if (not t2_file_.empty()) {
-        delete_disk_BT(t2_file_);
+        if (remove(t2_file_.c_str()) != 0) {
+            perror("Error when deleting T2 checkpoint.");
+        }
     }
 }
 } // namespace forte
