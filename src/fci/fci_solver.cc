@@ -272,8 +272,8 @@ double FCISolver::compute_energy() {
                 size_t h, add_Ia, add_Ib;
                 std::tie(ci_abs, ci, h, add_Ia, add_Ib) = det_config;
 
-                if (ci_abs < 0.1)
-                    continue;
+                //if (ci_abs < 0.1)
+                //    continue;
 
                 std::bitset<Determinant::num_str_bits> Ia_v = lists_->alfa_str(h, add_Ia);
                 std::bitset<Determinant::num_str_bits> Ib_v =
@@ -440,10 +440,17 @@ FCISolver::initial_guess(FCIVector& diag, size_t n,
                 HIJ += scalar_energy;
             H.set(I, J, HIJ);
             H.set(J, I, HIJ);
+            outfile->Printf("\n H[%d][%d] = %10.10f", I, J, HIJ);
         }
     }
 
     H.diagonalize(evecs, evals);
+
+    // For test
+    evals.print();
+    evecs.print();
+
+    outfile->Printf("\n NRE: %10.10f", nuclear_repulsion_energy);
 
     std::vector<std::pair<int, std::vector<std::tuple<size_t, size_t, size_t, double>>>> guess;
 

@@ -37,6 +37,13 @@
 #include "psi4/liboptions/liboptions.h"
 #include "psi4/libpsi4util/process.h"
 #include "psi4/libpsio/psio.hpp"
+#include "psi4/libtrans/integraltransform.h"
+#include "psi4/psi4-dec.h"
+#include "psi4/psifiles.h"
+
+#include "psi4/libmints/factory.h"
+#include "psi4/libmints/mintshelper.h"
+#include "psi4/libfock/jk.h"
 
 #include "helpers/helpers.h"
 #include "helpers/printing.h"
@@ -46,10 +53,11 @@
 using namespace psi;
 
 namespace forte {
-
 psi::SharedMatrix semicanonicalize_block(psi::SharedWavefunction ref_wfn, psi::SharedMatrix C_tilde,
                                          std::vector<int>& mos, int offset,
                                          bool prevent_rotate = false);
+
+void Build_CAS_AO_Fock(psi::SharedWavefunction ref_wfn, psi::Options& options, int nirrep, psi::Dimension doccpi, psi::Dimension actvpi, psi::Dimension nmopi);
 
 void make_avas(psi::SharedWavefunction ref_wfn, psi::Options& options, psi::SharedMatrix Ps) {
     if (Ps) {
@@ -386,6 +394,13 @@ std::shared_ptr<MOSpaceInfo> make_embedding(psi::SharedWavefunction ref_wfn, psi
     outfile->Printf("\n nroccpi[0] = %d, actv_a[0] = %d, nrvirpi[0] = %d, diff = %d, diff2 = %d.",
                     nroccpi[0], actv_a[0], nrvirpi[0], diff, diff2);
 
+    if (options.get_bool("EMBEDDING_FOCK_BUILD")) {
+        // Initialize AO Fock matrix for semi-canonicalization
+        psi::Dimension doccpi_tmp = mo_space_info->get_dimension("RESTRICTED_DOCC");
+        doccpi_tmp[0] += frzopi[0];
+        Build_CAS_AO_Fock(ref_wfn, options, nirrep, doccpi_tmp, actv_a, nmopi);
+    }
+
     // Define corresponding blocks (slices), occ slick will start at frzopi
     Slice occ(frzopi, nroccpi + frzopi);
     Slice vir(frzopi + nroccpi + actv_a, nmopi - frzvpi);
@@ -616,6 +631,10 @@ std::shared_ptr<MOSpaceInfo> make_embedding(psi::SharedWavefunction ref_wfn, psi
     // Build and semi-canonicalize BO, AO, AV and BV blocks from rotated Ca()
     auto C_ao = semicanonicalize_block(ref_wfn, Ca_tilde, index_A_occ, 0, false);
     auto C_av = semicanonicalize_block(ref_wfn, Ca_tilde, index_A_vir, 0, false);
+    if (options.get_bool("EMBEDDING_SEMICANONICALIZE_INACTIVE") == false) {
+        C_ao = semicanonicalize_block(ref_wfn, Ca_tilde, index_A_occ, 0, true);
+        C_av = semicanonicalize_block(ref_wfn, Ca_tilde, index_A_vir, 0, true);
+    }
 
     auto C_bo = semicanonicalize_block(ref_wfn, Ca_tilde, index_B_occ, 0, true);
     auto C_bv = semicanonicalize_block(ref_wfn, Ca_tilde, index_B_vir, 0, true);
@@ -801,9 +820,222 @@ psi::SharedMatrix semicanonicalize_block(psi::SharedWavefunction ref_wfn, psi::S
     }
 }
 
+/*
+void Build_CAS_AO_Fock(psi::SharedWavefunction ref_wfn, psi::Options& options, std::shared_ptr<MOSpaceInfo> mo_space_info_current) {
+    CASSCF cas_1(state, nroot, scf_info, options, mo_space_info_current, as_ints);
+    cas_1.compute_energy();
+    outfile->Printf("\n ===================CASSCF Done====================");
+
+    std::vector<std::pair<size_t, size_t>> root_list;
+    std::vector<RDMs> rdms_vec = cas_1.rdms(root_list, 3);
+}
+*/
+
+void Build_CAS_AO_Fock(psi::SharedWavefunction ref_wfn, psi::Options& options, int nirrep, psi::Dimension doccpi, psi::Dimension actvpi, psi::Dimension nmopi) {
+    outfile->Printf("\n\n  --------------- Build AO Fock Matrix --------------- \n ");
+    outfile->Printf("\n docc: %d, actv: %d \n", doccpi[0], actvpi[0]);
+
+    std::shared_ptr<PSIO> psio(_default_psio_lib_);
+    const psi::SharedMatrix Ca = ref_wfn->Ca()->clone();
+
+    outfile->Printf("\n Inactive size: %d, active size: %d \n ", doccpi[0], actvpi[0]);
+    // Build inactive Fock
+    psi::Dimension test_occ_pi = doccpi;
+    //test_occ_pi[0] += actvpi[0]/2;
+
+    psi::SharedMatrix C_occ(new Matrix("C_occ", nirrep, nmopi, test_occ_pi));
+    for (int u = 0; u < nmopi[0]; ++u) {
+        for (int i = 0; i < test_occ_pi[0]; ++i) {
+            C_occ->set(0, u, i, Ca->get(0, u, i));
+        }
+    }
+
+    outfile->Printf("\n\n  --------------- C_docc --------------- \n ");
+    C_occ->print();
+    
+    outfile->Printf("\n\n  --------------- Build F(inactive) --------------- \n ");
+    std::shared_ptr<psi::JK> JK_occ;
+    JK_occ = JK::build_JK(ref_wfn->basisset(), ref_wfn->get_basisset("DF_BASIS_SCF"), options);
+    JK_occ->set_memory(Process::environment.get_memory() * 0.8);
+
+    JK_occ->initialize();
+    JK_occ->set_do_J(true);
+    JK_occ->set_do_K(true);
+
+    std::vector<std::shared_ptr<psi::Matrix>>& Cl = JK_occ->C_left();
+    std::vector<std::shared_ptr<psi::Matrix>>& Cr = JK_occ->C_right();
+    Cl.clear();
+    Cr.clear();
+    Cl.push_back(C_occ);
+    Cr.push_back(C_occ);
+
+    JK_occ->compute();
+
+    psi::SharedMatrix F_inactive = JK_occ->J()[0];
+    psi::SharedMatrix K_inactive = JK_occ->K()[0];
+
+    F_inactive->scale(2.0);
+    F_inactive->subtract(K_inactive); //2J-K
+
+    psi::SharedMatrix T = SharedMatrix(ref_wfn->matrix_factory()->create_matrix(PSIF_SO_T)); //initialize matrix of wfn's SO size
+    psi::SharedMatrix V_oe = SharedMatrix(ref_wfn->matrix_factory()->create_matrix(PSIF_SO_V));
+    psi::SharedMatrix S = SharedMatrix(ref_wfn->matrix_factory()->create_matrix(PSIF_SO_S));
+
+    psi::MintsHelper mints(ref_wfn);
+    T = mints.so_kinetic();
+    V_oe = mints.so_potential();
+    S = mints.so_overlap();
+
+    psi::SharedMatrix Ha = T->clone();
+
+    Ha->add(V_oe);
+    //Ha->transform(Ca);
+    //F_inactive->transform(Ca); // Transform to MO basis
+
+    F_inactive->add(Ha); //F_uv = H_uv + G_uv
+
+    // Build active Fock
+    outfile->Printf("\n\n  --------------- Build F(active) --------------- \n ");
+
+    psi::SharedMatrix C_actv(new Matrix("C_actv", nirrep, nmopi, actvpi));
+    for (int u = 0; u < nmopi[0]; ++u) {
+        for (int i = 0; i < actvpi[0]; ++i) {
+            C_actv->set(0, u, i, Ca->get(0, u, i+doccpi[0]));
+        }
+    }
+
+    outfile->Printf("\n\n  --------------- C_actv --------------- \n ");
+    C_actv->print();
+    
+    // Test D
+    psi::SharedMatrix D(ref_wfn->Da()->clone());
+    //psi::SharedMatrix rD(new Matrix("RDM", nirrep, nmopi, nmopi));
+    //psi::SharedMatrix rD = psi::linalg::triplet(Ca, D, Ca, true, false, false);
+
+    //outfile->Printf("\n  --------------- AO opdm from psi4 --------------- \n ");
+    //psi::SharedMatrix D_test_ao = SharedMatrix(ref_wfn->matrix_factory()->create_matrix("AO basis OPDM"));
+    //D_test_ao->load(_default_psio_lib_, PSIF_AO_OPDM);
+    //D_test_ao->print();
+
+    //outfile->Printf("\n  --------------- AO opdm from psi4 --------------- \n ");
+    //psi::SharedMatrix D_test_mo = SharedMatrix(ref_wfn->matrix_factory()->create_matrix("MO basis OPDM"));
+    //D_test_mo->load(_default_psio_lib_, PSIF_MO_OPDM);
+    //D_test_mo->print();
+
+    //outfile->Printf("\n  --------------- rD all --------------- \n ");
+    //rD->print();
+
+    //psi::SharedMatrix rD_AO = psi::linalg::triplet(Ca, rD, Ca, false, false, true);
+    //outfile->Printf("\n  --------------- rD all (transformed) --------------- \n ");
+    //rD_AO->print();
+
+    //psi::SharedMatrix rD_occ = psi::linalg::triplet(C_occ, D, C_occ, true, false, false);
+    //psi::SharedMatrix rD_occ_AO = psi::linalg::triplet(C_occ, rD_occ, C_occ, false, false, true);
+    //outfile->Printf("\n  --------------- rD occ (transformed) --------------- \n ");
+    //rD_occ_AO->print();
+
+    //psi::SharedMatrix rD_actv(new Matrix("RDM", nirrep, actvpi, actvpi));
+    psi::SharedMatrix rD_actv = psi::linalg::triplet(C_actv, D, C_actv, true, false, false);
+
+    //Put in the RDM value to test
+    if (options.get_bool("EMBEDDING_USE_DEBUG_DENSITY")) {
+        rD_actv->set(0, 0, 0.9908766);
+        rD_actv->set(0, 1, -0.0008101);
+        rD_actv->set(1, 0, -0.0008101);
+        rD_actv->set(1, 1, 0.0091234);
+    }
+
+    outfile->Printf("\n  --------------- rD active --------------- \n ");
+    rD_actv->print();
+
+    outfile->Printf("\n  --------------- Da original --------------- \n ");
+    D->print();
+
+    //Back transform D with C S^-1
+    //S->print();
+
+    D->transpose_this();
+    //S->invert();
+    
+    //outfile->Printf("\n  --------------- C^T S^-1 C --------------- \n ");
+    //SharedMatrix identity_test = psi::linalg::triplet(Ca, S, Ca, true, false, false);
+    //identity_test->print();
+
+    SharedMatrix back_M = psi::linalg::doublet(S, Ca, false, false);
+    SharedMatrix gamma = psi::linalg::triplet(back_M, D, back_M, true, false, false);
+    outfile->Printf("\n  --------------- MO gamma --------------- \n ");
+    gamma->print();
+
+    for (int s = 0; s < actvpi[0]; ++s) {
+        for (int t = 0; t < actvpi[0]; ++t) {
+            rD_actv->set(0, s, t, gamma->get(0, s+doccpi[0], t+doccpi[0]));
+        }
+    }
+
+    outfile->Printf("\n  --------------- rD active updated --------------- \n ");
+    rD_actv->print();
+
+    std::shared_ptr<psi::JK> JK_actv;
+    JK_actv = JK::build_JK(ref_wfn->basisset(), ref_wfn->get_basisset("DF_BASIS_SCF"), options);
+    JK_actv->set_memory(Process::environment.get_memory() * 0.8);
+
+    JK_actv->initialize();
+    JK_actv->set_do_J(true);
+    JK_actv->set_do_K(true);
+
+    std::vector<std::shared_ptr<psi::Matrix>>& Cl_actv = JK_actv->C_left();
+    std::vector<std::shared_ptr<psi::Matrix>>& Cr_actv = JK_actv->C_right();
+    Cl_actv.clear();
+    Cr_actv.clear();
+    if (options.get_str("EMBEDDING_DEBUG")=="T1") {
+        psi::SharedMatrix C_actv_right = psi::linalg::doublet(C_actv, rD_actv, false, false); //Test squeeze 2*2 matrix?
+        Cl_actv.push_back(C_actv); // C^T
+        Cr_actv.push_back(C_actv_right); // rD * C
+    }
+
+    if (options.get_str("EMBEDDING_DEBUG")=="T2") {
+        Cl_actv.push_back(C_actv); // C^T
+        Cr_actv.push_back(C_actv); // C only
+    }
+
+    if (options.get_str("EMBEDDING_DEBUG")=="T3") {
+        psi::SharedMatrix C_actv_left = psi::linalg::doublet(C_actv, rD_actv, false, false); //Test squeeze 2*2 matrix?
+        Cl_actv.push_back(C_actv_left); // C^T
+        Cr_actv.push_back(C_actv); // rD * C
+    }
+
+    JK_actv->compute();
+
+    psi::SharedMatrix F_active = JK_actv->J()[0];
+    psi::SharedMatrix K_active = JK_actv->K()[0];
+
+    K_active->scale(0.5);
+    F_active->subtract(K_active); //J-0.5K since actv is half fill
+    F_active->scale(2.0); //Why I need this?
+
+    outfile->Printf("\n\n  --------------- Write AO Fock to wfn --------------- \n ");
+    psi::SharedMatrix F_tot(F_inactive->clone());
+    F_tot->add(F_active);
+    ref_wfn->Fa()->copy(F_tot);
+
+    outfile->Printf("\n\n  --------------- Fock inactive (MO basis) --------------- \n ");
+    F_inactive->transform(Ca);
+    F_inactive->print();
+    outfile->Printf("\n\n  --------------- Fock active (MO basis) --------------- \n ");
+    F_active->transform(Ca);
+    F_active->print();
+
+    outfile->Printf("\n\n  --------------- MO Fock (should be block diagonal!) --------------- \n ");
+    F_inactive->add(F_active);
+    F_inactive->print();
+
+    outfile->Printf("\n\n  --------------- AO Fock Matrix Done --------------- \n ");
+}
+
 size_t index_exp(size_t na, size_t p, size_t q, size_t r, size_t s) {
     return na * na * na * p + na * na * q + na * r + s;
 }
+
 
 RDMs build_casscf_density(StateInfo state, size_t nroot, std::shared_ptr<SCFInfo> scf_info,
                           std::shared_ptr<ForteOptions> options,
