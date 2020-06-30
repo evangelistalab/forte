@@ -685,14 +685,11 @@ We have implemented the following choices for the zeroth-order Hamiltonian.
 The convergence of iterative MRDSRG [e.g., MR-LDSRG(2)] can be greatly improved if it starts from good initial guesses
 (e.g., from loosely converged amplitudes or those of a near-by geometry).
 The amplitudes can be dumped to the current working directory on disk for later use by turning on the ``DSRG_DUMP_AMPS`` keyword.
-These amplitudes are stored in the following way:
-
-  - The master file (e.g., ``forte.mrdsrg.t1.master.txt``) stores the block name, the corresponding file name,
-    and the number of elements for each block of the tensor (e.g., T1 amplitudes).
-  - For each block, the actual amplitudes data are stored in a binary file that starts with the number of elements,
-    followed by the actual data.
-
-To read these amplitudes in the current directory, the user needs to invoke the ``DSRG_READ_AMPS`` keyword.
+These amplitudes are stored in a binary file using Ambit (version later than 06/30/2020).
+For example, T1 amplitudes are stored as ``forte.mrdsrg.spin.t1.bin`` for the spin-integrated code
+and ``forte.mrdsrg.adapted.t1.bin`` for spin-adapted code (i.e., `correlation_solver` set to `sa-mrdsrg`).
+To read amplitudes in the current directory (must follow the same file name convention),
+the user needs to invoke the ``DSRG_READ_AMPS`` keyword.
 
 .. note::
   In general, we should make sure the orbital phases are consistent between reading and writing amplitudes.
@@ -772,7 +769,7 @@ Max macro iterations for MR-DSRG reference relaxation.
 
 **DSRG_RESTART_AMPS**
 
-Use initial amplitudes guesses from the previous step.
+Use converged amplitudes from the previous step as initial guesses of the current amplitudes.
 
 * Type: boolean
 * Default: True
@@ -811,10 +808,10 @@ The zeroth-order Hamiltonian used in the MRDSRG code for computing DSRG-MRPT2 en
 **DSRG_DUMP_AMPS**
 
 Dump amplitudes to the current directory for a MRDSRG method.
-File names for T1 and T2 amplitudes are ``forte.mrdsrg.t1.mater.txt``
-and ``forte.mrdsrg.t2.master.txt``, respectively.
-Each "master" file stores the info about tensor block name, file name, and the number of elements,
-where the actual data of a tensor block are stored as a binary file.
+File names for T1 and T2 amplitudes are ``forte.mrdsrg.CODE.t1.bin``
+and ``forte.mrdsrg.CODE.t2.bin``, respectively.
+Here, ``CODE`` will be ``adapted`` if using the spin-adapted implementation,
+while ``spin`` if using the spin-integrated code.
 
 * Type: boolean
 * Default: False
