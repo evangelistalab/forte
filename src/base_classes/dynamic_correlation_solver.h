@@ -3,8 +3,6 @@
 
 #include <memory>
 
-
-
 #include "integrals/integrals.h"
 #include "integrals/active_space_integrals.h"
 #include "base_classes/rdms.h"
@@ -36,6 +34,12 @@ class DynamicCorrelationSolver {
 
     /// Destructor
     virtual ~DynamicCorrelationSolver() = default;
+
+    /// Set whether to read amplitudes or not manually
+    void set_read_amps_cwd(bool read) { read_amps_cwd_ = read; }
+
+    /// Clean up amplitudes checkpoint files
+    void clean_checkpoints();
 
   protected:
     /// The molecular integrals
@@ -80,6 +84,27 @@ class DynamicCorrelationSolver {
     int diis_max_vec_;
     /// Frequency of extrapolating the current DIIS vectors
     int diis_freq_;
+
+    // ==> amplitudes file names <==
+
+    /// Checkpoint file for T1 amplitudes
+    std::string t1_file_chk_;
+    /// Checkpoint file for T2 amplitudes
+    std::string t2_file_chk_;
+
+    /// File name for T1 amplitudes to be saved in current directory
+    std::string t1_file_cwd_;
+    /// File name for T2 amplitudes to be saved in current directory
+    std::string t2_file_cwd_;
+
+    /// Dump amplitudes to current directory
+    bool dump_amps_cwd_ = false;
+    /// Read amplitudes from current directory
+    bool read_amps_cwd_ = false;
+
+    /// Dump the converged amplitudes to disk
+    /// Iterative methods should override this function
+    virtual void dump_amps_to_disk() {}
 };
 
 std::shared_ptr<DynamicCorrelationSolver>

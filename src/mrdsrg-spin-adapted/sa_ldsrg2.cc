@@ -173,7 +173,7 @@ double SA_MRDSRG::compute_energy_ldsrg2() {
     analyze_amplitudes("Final", T1_, T2_);
 
     // dump amplitudes to disk
-    dump_amps_to_cwd();
+    dump_amps_to_disk();
 
     // fail to converge
     if (!converged) {

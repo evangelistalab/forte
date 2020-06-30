@@ -89,25 +89,6 @@ class SADSRG : public DynamicCorrelationSolver {
         actv_uocc_mos_ = std::vector<size_t>(actv_uocc);
     }
 
-    /// Set master file name for T1
-    void set_t1_file(const std::string& filename) { t1_file_ = filename; }
-
-    /// Set master file name for T2
-    void set_t2_file(const std::string& filename) { t2_file_ = filename; }
-
-    /// Get master file name for T1
-    std::string t1_file() { return t1_file_; }
-
-    /// Get master file name for T2
-    std::string t2_file() { return t2_file_; }
-
-    /// Dump the converged amplitudes to file
-    /// Iterative DSRG methods should override this function
-    virtual void dump_amps_to_cwd() {}
-
-    /// Clean up amplitudes checkpoint files
-    void clean_checkpoints();
-
   protected:
     /// Startup function called in constructor
     void startup();
@@ -167,18 +148,6 @@ class SADSRG : public DynamicCorrelationSolver {
 
     /// Number of threads
     int n_threads_;
-
-    // ==> amplitudes file names <==
-
-    /// Master checkpoint file for T1
-    std::string t1_file_;
-    /// Master checkpoint file for T2
-    std::string t2_file_;
-
-    /// Dump amplitudes to current directory
-    bool dump_amps_cwd_;
-    /// Read amplitudes from current directory
-    bool read_amps_cwd_;
 
     // ==> system memory related <==
 

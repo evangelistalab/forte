@@ -114,8 +114,8 @@ class MRDSRG : public MASTER_DSRG {
     /// Prefix for file name
     std::string restart_file_prefix_;
 
-    /// Dump the converged amplitudes to file
-    void dump_amps_to_file();
+    /// Dump the converged amplitudes to disk
+    void dump_amps_to_disk() override;
 
     /// CASCI eigen values and eigen vectors for state averaging
     std::vector<std::vector<std::pair<psi::SharedVector, double>>> eigens_;

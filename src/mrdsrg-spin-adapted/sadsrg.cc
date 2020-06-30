@@ -885,17 +885,4 @@ void SADSRG::print_options_info(
     }
     outfile->Printf("\n");
 }
-
-void SADSRG::clean_checkpoints() {
-    if (not t1_file_.empty()) {
-        if (remove(t1_file_.c_str()) != 0) {
-            perror("Error when deleting T1 checkpoint.");
-        }
-    }
-    if (not t2_file_.empty()) {
-        if (remove(t2_file_.c_str()) != 0) {
-            perror("Error when deleting T2 checkpoint.");
-        }
-    }
-}
 } // namespace forte

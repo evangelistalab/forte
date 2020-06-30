@@ -287,10 +287,8 @@ PYBIND11_MODULE(forte, m) {
              "Return nuclear components of dipole moments")
         .def("set_Uactv", &MASTER_DSRG::set_Uactv, "Ua"_a, "Ub"_a,
              "Set active part orbital rotation matrix (from original to semicanonical)")
-        .def("set_t1_file", &MASTER_DSRG::set_t1_file, "Set the master file name for T1")
-        .def("set_t2_file", &MASTER_DSRG::set_t2_file, "Set the master file name for T2")
-        .def("t1_file", &MASTER_DSRG::t1_file, "Get the master file name for T1")
-        .def("t2_file", &MASTER_DSRG::t2_file, "Get the master file name for T2")
+        .def("set_read_cwd_amps", &MASTER_DSRG::set_read_amps_cwd,
+             "Set if reading amplitudes in the current directory or not")
         .def("clean_checkpoints", &MASTER_DSRG::clean_checkpoints,
              "Delete amplitudes checkpoint files");
 
@@ -301,11 +299,8 @@ PYBIND11_MODULE(forte, m) {
              "Return the DSRG dressed ActiveSpaceIntegrals")
         .def("set_Uactv", &SADSRG::set_Uactv, "Ua"_a,
              "Set active part orbital rotation matrix (from original to semicanonical)")
-        .def("set_t1_file", &SADSRG::set_t1_file, "Set the master file name for T1")
-        .def("set_t2_file", &SADSRG::set_t2_file, "Set the master file name for T2")
-        .def("t1_file", &SADSRG::t1_file, "Get the master file name for T1")
-        .def("t2_file", &SADSRG::t2_file, "Get the master file name for T2")
-        .def("dump_amplitudes", &SADSRG::dump_amps_to_cwd, "Dump amplitudes to current directory")
+        .def("set_read_cwd_amps", &SADSRG::set_read_amps_cwd,
+             "Set if reading amplitudes in the current directory or not")
         .def("clean_checkpoints", &SADSRG::clean_checkpoints, "Delete amplitudes checkpoint files");
 
     // export MRDSRG_SO

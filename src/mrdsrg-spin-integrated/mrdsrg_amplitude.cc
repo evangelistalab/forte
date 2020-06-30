@@ -52,13 +52,13 @@ void MRDSRG::guess_t(BlockedTensor& V, BlockedTensor& T2, BlockedTensor& F, Bloc
     std::string ccvv_source = foptions_->get_str("CCVV_SOURCE");
 
     struct stat buf;
-    if (read_amps_cwd_ and (stat("forte.mrdsrg.spin.t2.bin", &buf) == 0) and t2_file_.empty()) {
-        outfile->Printf("\n    Reading T2 amplitudes from disk ...");
-        ambit::load(T2, "forte.mrdsrg.spin.t2.bin");
+    if (read_amps_cwd_ and (stat(t2_file_cwd_.c_str(), &buf) == 0)) {
+        outfile->Printf("\n    Reading T2 amplitudes from current directory ...");
+        ambit::load(T2, t2_file_cwd_);
         outfile->Printf(" Done.");
-    } else if (restart_amps_ and (not t2_file_.empty())) {
-        outfile->Printf("\n    Reading previous T2 amplitudes from disk ...");
-        ambit::load(T2, t2_file_);
+    } else if (restart_amps_ and (stat(t2_file_chk_.c_str(), &buf) == 0)) {
+        outfile->Printf("\n    Reading previous T2 amplitudes from scratch directory ...");
+        ambit::load(T2, t2_file_chk_);
         outfile->Printf(" Done.");
     } else {
         if (ccvv_source == "ZERO") {
@@ -68,13 +68,13 @@ void MRDSRG::guess_t(BlockedTensor& V, BlockedTensor& T2, BlockedTensor& F, Bloc
         }
     }
 
-    if (read_amps_cwd_ and (stat("forte.mrdsrg.spin.t1.bin", &buf) == 0) and t1_file_.empty()) {
-        outfile->Printf("\n    Reading T1 amplitudes from disk ...");
-        ambit::load(T1, "forte.mrdsrg.spin.t1.bin");
+    if (read_amps_cwd_ and (stat(t1_file_cwd_.c_str(), &buf) == 0)) {
+        outfile->Printf("\n    Reading T1 amplitudes from current directory ...");
+        ambit::load(T1, t1_file_cwd_);
         outfile->Printf(" Done.");
-    } else if (restart_amps_ and (not t1_file_.empty())) {
-        outfile->Printf("\n    Reading previous T1 amplitudes from disk ...");
-        ambit::load(T1, t1_file_);
+    } else if (restart_amps_ and (stat(t1_file_chk_.c_str(), &buf) == 0)) {
+        outfile->Printf("\n    Reading previous T1 amplitudes from scratch directory ...");
+        ambit::load(T1, t1_file_chk_);
         outfile->Printf(" Done.");
     } else {
         if (ccvv_source == "ZERO") {
@@ -94,13 +94,13 @@ void MRDSRG::guess_t_df(BlockedTensor& B, BlockedTensor& T2, BlockedTensor& F, B
     std::string ccvv_source = foptions_->get_str("CCVV_SOURCE");
 
     struct stat buf;
-    if (read_amps_cwd_ and (stat("forte.mrdsrg.spin.t2.bin", &buf) == 0) and t2_file_.empty()) {
-        outfile->Printf("\n    Reading T2 amplitudes from disk ...");
-        ambit::load(T2, "forte.mrdsrg.spin.t2.bin");
+    if (read_amps_cwd_ and (stat(t2_file_cwd_.c_str(), &buf) == 0)) {
+        outfile->Printf("\n    Reading T2 amplitudes from current directory ...");
+        ambit::load(T2, t2_file_cwd_);
         outfile->Printf(" Done.");
-    } else if (restart_amps_ and (not t2_file_.empty())) {
-        outfile->Printf("\n    Reading previous T2 amplitudes from disk ...");
-        ambit::load(T2, t2_file_);
+    } else if (restart_amps_ and (stat(t2_file_chk_.c_str(), &buf) == 0)) {
+        outfile->Printf("\n    Reading previous T2 amplitudes from scratch directory ...");
+        ambit::load(T2, t2_file_chk_);
         outfile->Printf(" Done.");
     } else {
         if (ccvv_source == "ZERO") {
@@ -110,13 +110,13 @@ void MRDSRG::guess_t_df(BlockedTensor& B, BlockedTensor& T2, BlockedTensor& F, B
         }
     }
 
-    if (read_amps_cwd_ and (stat("forte.mrdsrg.spin.t1.bin", &buf) == 0) and t1_file_.empty()) {
-        outfile->Printf("\n    Reading T1 amplitudes from disk ...");
-        ambit::load(T1, "forte.mrdsrg.spin.t1.bin");
+    if (read_amps_cwd_ and (stat(t1_file_cwd_.c_str(), &buf) == 0)) {
+        outfile->Printf("\n    Reading T1 amplitudes from current directory ...");
+        ambit::load(T1, t1_file_cwd_);
         outfile->Printf(" Done.");
-    } else if (restart_amps_ and (not t1_file_.empty())) {
-        outfile->Printf("\n    Reading previous T1 amplitudes from disk ...");
-        ambit::load(T1, t1_file_);
+    } else if (restart_amps_ and (stat(t1_file_chk_.c_str(), &buf) == 0)) {
+        outfile->Printf("\n    Reading previous T1 amplitudes from scratch directory ...");
+        ambit::load(T1, t1_file_chk_);
         outfile->Printf(" Done.");
     } else {
         if (ccvv_source == "ZERO") {
@@ -1522,22 +1522,20 @@ void MRDSRG::print_intruder(const std::string& name,
     outfile->Printf("\n%s", output.c_str());
 }
 
-void MRDSRG::dump_amps_to_file() {
+void MRDSRG::dump_amps_to_disk() {
     // dump to psi4 scratch directory for reference relaxation
     if (restart_amps_ and (relax_ref_ != "NONE")) {
         outfile->Printf("\n    Dumping amplitudes to scratch directory ...");
-        t1_file_ = restart_file_prefix_ + "mrdsrg.spin.t1.bin";
-        t2_file_ = restart_file_prefix_ + "mrdsrg.spin.t2.bin";
-        ambit::save(T1_, t1_file_);
-        ambit::save(T2_, t2_file_);
+        ambit::save(T1_, t1_file_chk_);
+        ambit::save(T2_, t2_file_chk_);
         outfile->Printf(" Done.");
     }
 
     // dump amplitudes to the current directory
     if (dump_amps_cwd_) {
-        outfile->Printf("\n    Dumping amplitudes to disk ...");
-        ambit::save(T1_, "forte.mrdsrg.spin.t1.bin");
-        ambit::save(T2_, "forte.mrdsrg.spin.t2.bin");
+        outfile->Printf("\n    Dumping amplitudes to current directory ...");
+        ambit::save(T1_, t1_file_cwd_);
+        ambit::save(T2_, t2_file_cwd_);
         outfile->Printf(" Done.");
     }
 }

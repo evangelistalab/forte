@@ -53,9 +53,6 @@ class SA_MRDSRG : public SADSRG {
     /// Compute the corr_level energy with fixed reference
     double compute_energy() override;
 
-    /// Dump the converged amplitudes to file
-    void dump_amps_to_cwd() override;
-
   protected:
     /// Start-up function called in the constructor
     void startup();
@@ -90,6 +87,9 @@ class SA_MRDSRG : public SADSRG {
 
     /// Prefix for file name for restart
     std::string restart_file_prefix_;
+
+    /// Dump the converged amplitudes to disk
+    void dump_amps_to_disk() override;
 
     /// Correlation level option
     std::string corrlv_string_;

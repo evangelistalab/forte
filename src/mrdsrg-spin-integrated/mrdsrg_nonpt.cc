@@ -823,7 +823,7 @@ double MRDSRG::compute_energy_ldsrg2() {
     analyze_amplitudes("Final", T1_, T2_);
 
     // dump amplitudes to file
-    dump_amps_to_file();
+    dump_amps_to_disk();
 
     // fail to converge
     if (!converged) {
@@ -1104,7 +1104,7 @@ double MRDSRG::compute_energy_ldsrg2_qc() {
     analyze_amplitudes("Final", T1_, T2_);
 
     // dump amplitudes to file
-    dump_amps_to_file();
+    dump_amps_to_disk();
 
     // fail to converge
     if (!converged) {

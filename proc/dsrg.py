@@ -32,6 +32,8 @@ class ProcedureDSRG:
         self.relax_convergence = float('inf')
         self.e_convergence = options.get_double("E_CONVERGENCE")
 
+        self.restart_amps = options.get_bool("DSRG_RESTART_AMPS")
+
         if self.relax_ref == "NONE":
             self.relax_maxiter = 0
         elif self.relax_ref == "ONCE":
@@ -76,7 +78,6 @@ class ProcedureDSRG:
         self.Heff_implemented = False
         self.converged = False
         self.energies = []  # energies along the relaxation steps
-        self.t1_file, self.t2_file = "", ""  # amplitudes file names for restart
 
         # Compute RDMs from initial ActiveSpaceSolver
         self.rdms = active_space_solver.compute_average_rdms(state_weights_map, self.max_rdm_level)
@@ -111,19 +112,9 @@ class ProcedureDSRG:
 
         if self.solver_type in ["SA-MRDSRG", "SA_MRDSRG"]:
             self.dsrg_solver.set_Uactv(self.Ua)
-            self.dsrg_solver.set_t1_file(self.t1_file)
-            self.dsrg_solver.set_t2_file(self.t2_file)
 
         if self.solver_type in ["MRDSRG", "DSRG-MRPT2", "DSRG-MRPT3", "THREE-DSRG-MRPT2"]:
             self.dsrg_solver.set_Uactv(self.Ua, self.Ub)
-            self.dsrg_solver.set_t1_file(self.t1_file)
-            self.dsrg_solver.set_t2_file(self.t2_file)
-
-    def dsrg_post_setup(self):
-        """ Grab DSRG parameters after a computation. """
-        if self.Heff_implemented:
-            self.t1_file = self.dsrg_solver.t1_file()
-            self.t2_file = self.dsrg_solver.t2_file()
 
     def dsrg_cleanup(self):
         """ Clean up for reference relaxation. """
@@ -144,7 +135,6 @@ class ProcedureDSRG:
         self.make_dsrg_solver()
         self.dsrg_setup()
         e_dsrg = self.dsrg_solver.compute_energy()
-        self.dsrg_post_setup()
         psi4.core.set_scalar_variable("UNRELAXED ENERGY", e_dsrg)
 
         # Spit out energy if reference relaxation not implemented
@@ -200,8 +190,8 @@ class ProcedureDSRG:
             # - Compute DSRG energy
             self.make_dsrg_solver()
             self.dsrg_setup()
+            self.dsrg_solver.set_read_cwd_amps(not self.restart_amps)  # don't read from cwd if checkpoint available
             e_dsrg = self.dsrg_solver.compute_energy()
-            self.dsrg_post_setup()
 
         self.dsrg_cleanup()
 

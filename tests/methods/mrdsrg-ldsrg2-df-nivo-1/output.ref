@@ -23,9 +23,9 @@
     -----------------------------------------------------------------------
 
 
-    Psi4 started on: Tuesday, 30 June 2020 01:31PM
+    Psi4 started on: Tuesday, 30 June 2020 07:10PM
 
-    Process ID: 20613
+    Process ID: 34334
     Host:       Yorks-Mac.local
     PSIDATADIR: /Users/york/src/psi4new/psi4/share/psi4
     Memory:     500.0 MiB
@@ -128,15 +128,15 @@ compare_values(refrdsrg,variable("RELAXED ENERGY"),8,"MRDSRG relaxed energy")
 Scratch directory: /Users/york/scratch/psi4/
 
 *** tstart() called on Yorks-Mac.local
-*** at Tue Jun 30 13:31:26 2020
+*** at Tue Jun 30 19:10:07 2020
 
    => Loading Basis Set <=
 
-    Name: ANONYMOUS164270C7
+    Name: ANONYMOUSB01D3907
     Role: ORBITAL
     Keyword: BASIS
-    atoms 1   entry BE         line     5 inputblock anonymous164270c7 
-    atoms 2-3 entry H          line    25 inputblock anonymous164270c7 
+    atoms 1   entry BE         line     5 inputblock anonymousb01d3907 
+    atoms 2-3 entry H          line    25 inputblock anonymousb01d3907 
 
 
          ---------------------------------------------------------
@@ -185,8 +185,8 @@ Scratch directory: /Users/york/scratch/psi4/
 
   ==> Primary Basis <==
 
-  Basis Set: ANONYMOUS164270C7
-    Blend: ANONYMOUS164270C7
+  Basis Set: ANONYMOUSB01D3907
+    Blend: ANONYMOUSB01D3907
     Number of shells: 9
     Number of basis function: 13
     Number of Cartesian functions: 13
@@ -312,15 +312,15 @@ Properties computed using the SCF density matrix
      X:     0.0000      Y:     0.0000      Z:    -0.2548     Total:     0.2548
 
 
-*** tstop() called on Yorks-Mac.local at Tue Jun 30 13:31:26 2020
+*** tstop() called on Yorks-Mac.local at Tue Jun 30 19:10:08 2020
 Module time:
 	user time   =       0.15 seconds =       0.00 minutes
-	system time =       0.00 seconds =       0.00 minutes
-	total time  =          0 seconds =       0.00 minutes
+	system time =       0.01 seconds =       0.00 minutes
+	total time  =          1 seconds =       0.02 minutes
 Total time:
 	user time   =       0.15 seconds =       0.00 minutes
-	system time =       0.00 seconds =       0.00 minutes
-	total time  =          0 seconds =       0.00 minutes
+	system time =       0.01 seconds =       0.00 minutes
+	total time  =          1 seconds =       0.02 minutes
     ROHF energy.......................................................PASSED
 
 Scratch directory: /Users/york/scratch/psi4/
@@ -375,7 +375,7 @@ Scratch directory: /Users/york/scratch/psi4/
   Computing the Cholesky Vectors 
 
   Computing CD Integrals               ......Done.
-  Timing for cholesky transformation:                         0.007 s.
+  Timing for cholesky transformation:                         0.006 s.
   Need 74.36 KB to store CD integrals in core
 
   Number of Cholesky vectors required for 1.000e-04 tolerance: 55
@@ -397,10 +397,10 @@ Scratch directory: /Users/york/scratch/psi4/
 
 
   Frozen-core energy            -14.929378863416 a.u.
-  Timing for frozen one-body operator:                        0.010 s.
+  Timing for frozen one-body operator:                        0.009 s.
   Resorting integrals after freezing core.
-  Timing for freezing core and virtual orbitals:              0.010 s.
-  Timing for computing Cholesky integrals:                    0.018 s.
+  Timing for freezing core and virtual orbitals:              0.009 s.
+  Timing for computing Cholesky integrals:                    0.017 s.
 
   ==> Summary of Active Space Solver Input <==
 
@@ -495,7 +495,7 @@ Scratch directory: /Users/york/scratch/psi4/
          Chenyang Li, Jeffrey B. Schriber and Francesco A. Evangelista
        -----------------------------------------------------------------
 
-  Took 0.000536 s to build Fock matrix
+  Took 0.000470 s to build Fock matrix
 
   ==> Checking Fock Matrix Diagonal Blocks <==
 
@@ -514,7 +514,7 @@ Scratch directory: /Users/york/scratch/psi4/
   Computing the Cholesky Vectors 
 
   Computing CD Integrals               ......Done.
-  Timing for cholesky transformation:                         0.007 s.
+  Timing for cholesky transformation:                         0.006 s.
   Need 74.36 KB to store CD integrals in core
 
   Number of Cholesky vectors required for 1.000e-04 tolerance: 55
@@ -537,16 +537,16 @@ Scratch directory: /Users/york/scratch/psi4/
 
 
   Frozen-core energy            -14.929378863416 a.u.
-  Timing for frozen one-body operator:                        0.010 s.
+  Timing for frozen one-body operator:                        0.009 s.
   Resorting integrals after freezing core.
-  Timing for freezing core and virtual orbitals:              0.010 s.
+  Timing for freezing core and virtual orbitals:              0.009 s.
 
   ==> RDMs Transformation to Semicanonical Basis <==
 
     Transformed 1 RDMs.
     Transformed 2 RDMs.
     Transformed 3 RDMs.
-  SemiCanonicalize takes 0.287085 s.
+  SemiCanonicalize takes 0.281643 s.
 
   ==> Multireference Driven Similarity Renormalization Group <==
 
@@ -618,8 +618,8 @@ Scratch directory: /Users/york/scratch/psi4/
 
   ==> Build Initial Amplitudes Guesses <==
 
-    Reading T2 amplitudes from disk ... Done.
-    Reading T1 amplitudes from disk ... Done.
+    Reading T2 amplitudes from current directory ... Done.
+    Reading T1 amplitudes from current directory ... Done.
 
   ==> Initial Excitation Amplitudes Summary <==
 
@@ -700,8 +700,8 @@ Scratch directory: /Users/york/scratch/psi4/
            ---------------------------  ---------------------  ---------------------  -----------------
     Iter.        Corr.         Delta       Hbar1      Hbar2        T1         T2        Hbar     Amp.    DIIS
     ---------------------------------------------------------------------------------------------------------
-       1    -0.062015633537 -6.202e-02   1.302e-01  3.863e-01   2.544e-08  1.301e-07     5.783    0.005
-       2    -0.062015632171  1.366e-09   1.302e-01  3.863e-01   8.372e-09  4.258e-08     5.560    0.005  S
+       1    -0.062015633537 -6.202e-02   1.302e-01  3.863e-01   2.544e-08  1.301e-07     5.654    0.005
+       2    -0.062015632171  1.366e-09   1.302e-01  3.863e-01   8.372e-09  4.258e-08     5.606    0.005  S
     ---------------------------------------------------------------------------------------------------------
 
   ==> MR-LDSRG(2) Energy Summary <==
@@ -872,7 +872,7 @@ Scratch directory: /Users/york/scratch/psi4/
     Transformed 1 RDMs.
     Transformed 2 RDMs.
     Transformed 3 RDMs.
-  Took 0.000448 s to build Fock matrix
+  Took 0.000454 s to build Fock matrix
 
   ==> Checking Fock Matrix Diagonal Blocks <==
 
@@ -923,7 +923,7 @@ Scratch directory: /Users/york/scratch/psi4/
     Transformed 1 RDMs.
     Transformed 2 RDMs.
     Transformed 3 RDMs.
-  SemiCanonicalize takes 0.264478 s.
+  SemiCanonicalize takes 0.271155 s.
 
   ==> Multireference Driven Similarity Renormalization Group <==
 
@@ -997,16 +997,16 @@ Scratch directory: /Users/york/scratch/psi4/
 
              [H1, T1]    [H1, T2]    [H2, T1]    [H2, T2]
     -----------------------------------------------------
-    -> C0       0.009       0.029       0.092       1.210
-    -> C1       0.025       0.130       0.229       3.330
-    -> C2                   0.421       0.968       4.731
+    -> C0       0.010       0.030       0.092       1.225
+    -> C1       0.026       0.134       0.232       3.316
+    -> C2                   0.401       0.898       4.728
     -----------------------------------------------------
 
 
   ==> Build Initial Amplitudes Guesses <==
 
-    Reading previous T2 amplitudes from disk ... Done.
-    Reading previous T1 amplitudes from disk ... Done.
+    Reading previous T2 amplitudes from scratch directory ... Done.
+    Reading previous T1 amplitudes from scratch directory ... Done.
 
   ==> Initial Excitation Amplitudes Summary <==
 
@@ -1087,13 +1087,13 @@ Scratch directory: /Users/york/scratch/psi4/
            ---------------------------  ---------------------  ---------------------  -----------------
     Iter.        Corr.         Delta       Hbar1      Hbar2        T1         T2        Hbar     Amp.    DIIS
     ---------------------------------------------------------------------------------------------------------
-       1    -0.062237976000 -6.224e-02   1.257e-01  3.862e-01   2.230e-03  1.570e-03     5.620    0.005
-       2    -0.062026221318  2.118e-04   1.267e-01  3.856e-01   1.716e-04  4.135e-04     5.644    0.005  S
-       3    -0.062021004878  5.216e-06   1.267e-01  3.857e-01   4.689e-05  1.106e-04     5.613    0.005  S/E
-       4    -0.062018944599  2.060e-06   1.267e-01  3.857e-01   6.468e-06  2.430e-05     5.640    0.005  S/E
-       5    -0.062018683250  2.613e-07   1.267e-01  3.857e-01   1.141e-06  4.905e-06     5.742    0.005  S/E
-       6    -0.062018733555 -5.031e-08   1.267e-01  3.857e-01   2.437e-07  1.035e-06     5.750    0.005  S/E
-       7    -0.062018737398 -3.843e-09   1.267e-01  3.857e-01   2.011e-08  2.048e-07     5.831    0.005  S/E
+       1    -0.062237976000 -6.224e-02   1.257e-01  3.862e-01   2.230e-03  1.570e-03     5.681    0.006
+       2    -0.062026221318  2.118e-04   1.267e-01  3.856e-01   1.716e-04  4.135e-04     5.699    0.005  S
+       3    -0.062021004878  5.216e-06   1.267e-01  3.857e-01   4.689e-05  1.106e-04     5.670    0.005  S/E
+       4    -0.062018944599  2.060e-06   1.267e-01  3.857e-01   6.468e-06  2.430e-05     5.817    0.005  S/E
+       5    -0.062018683250  2.613e-07   1.267e-01  3.857e-01   1.141e-06  4.905e-06     5.714    0.005  S/E
+       6    -0.062018733555 -5.031e-08   1.267e-01  3.857e-01   2.437e-07  1.035e-06     5.775    0.005  S/E
+       7    -0.062018737398 -3.843e-09   1.267e-01  3.857e-01   2.011e-08  2.048e-07     5.794    0.005  S/E
     ---------------------------------------------------------------------------------------------------------
 
   ==> MR-LDSRG(2) Energy Summary <==
@@ -1262,19 +1262,19 @@ Scratch directory: /Users/york/scratch/psi4/
 
              [H1, T1]    [H1, T2]    [H2, T1]    [H2, T2]
     -----------------------------------------------------
-    -> C0       0.032       0.102       0.326       4.296
-    -> C1       0.087       0.460       0.806      11.736
-    -> C2                   1.440       3.267      16.703
+    -> C0       0.034       0.105       0.328       4.300
+    -> C1       0.090       0.467       0.811      11.863
+    -> C2                   1.442       3.227      16.877
     -----------------------------------------------------
 
 
-  Time to prepare integrals:        0.019 seconds
-  Time to run job          :       52.078 seconds
-  Total                    :       52.078 seconds    MRDSRG unrelaxed energy...........................................PASSED
+  Time to prepare integrals:        0.018 seconds
+  Time to run job          :       52.302 seconds
+  Total                    :       52.302 seconds    MRDSRG unrelaxed energy...........................................PASSED
     MRDSRG partially relaxed energy...................................PASSED
     MRDSRG relaxed energy.............................................PASSED
 
-    Psi4 stopped on: Tuesday, 30 June 2020 01:32PM
-    Psi4 wall time for execution: 0:00:52.28
+    Psi4 stopped on: Tuesday, 30 June 2020 07:11PM
+    Psi4 wall time for execution: 0:00:52.51
 
 *** Psi4 exiting successfully. Buy a developer a beer!

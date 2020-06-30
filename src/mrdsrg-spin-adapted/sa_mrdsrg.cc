@@ -95,6 +95,15 @@ void SA_MRDSRG::startup() {
     restart_file_prefix_ = psi::PSIOManager::shared_object()->get_default_path() + "forte." +
                            std::to_string(getpid()) + "." +
                            psi::Process::environment.molecule()->name();
+    t1_file_chk_.clear();
+    t2_file_chk_.clear();
+    if (restart_amps_ and (relax_ref_ != "NONE")) {
+        t1_file_chk_ = restart_file_prefix_ + ".mrdsrg.adapted.t1.bin";
+        t2_file_chk_ = restart_file_prefix_ + ".mrdsrg.adapted.t2.bin";
+    }
+
+    t1_file_cwd_ = "forte.mrdsrg.adapted.t1.bin";
+    t2_file_cwd_ = "forte.mrdsrg.adapted.t2.bin";
 }
 
 void SA_MRDSRG::print_options() {
