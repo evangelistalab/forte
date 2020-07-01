@@ -70,22 +70,6 @@ class OwnIntegrals : public ForteIntegrals {
         return blank_tensor_;
     }
 
-    double** three_integral_pointer() override {
-        throw std::runtime_error("Integrals are distributed.  Pointer does not exist");
-    }
-    /// Read a block of the DFIntegrals and return an Ambit tensor of size A by
-    /// p by q
-    ambit::Tensor three_integral_block(const std::vector<size_t>& /*A*/,
-                                       const std::vector<size_t>& /*p*/,
-                                       const std::vector<size_t>& /*q*/) override {
-        return blank_tensor_;
-    }
-    /// return ambit tensor of size A by q
-    ambit::Tensor three_integral_block_two_index(const std::vector<size_t>& /*A*/, size_t /*p*/,
-                                                 const std::vector<size_t>& /*q*/) override {
-        return blank_tensor_;
-    }
-
     void set_tei(size_t, size_t, size_t, size_t, double, bool, bool) override {}
 
     void make_fock_matrix(std::shared_ptr<psi::Matrix> /*gamma_a*/,

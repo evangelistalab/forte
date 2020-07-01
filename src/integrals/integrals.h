@@ -105,7 +105,8 @@ class ForteIntegrals {
      * @param restricted Select a restricted or unrestricted transformation
      * @param mo_space_info The MOSpaceInfo object
      */
-    ForteIntegrals(std::shared_ptr<ForteOptions> options, std::shared_ptr<psi::Wavefunction> ref_wfn,
+    ForteIntegrals(std::shared_ptr<ForteOptions> options,
+                   std::shared_ptr<psi::Wavefunction> ref_wfn,
                    std::shared_ptr<MOSpaceInfo> mo_space_info, IntegralSpinRestriction restricted);
 
     /// Virtual destructor to enable deletion of a Derived* through a Base*
@@ -216,12 +217,17 @@ class ForteIntegrals {
                                          const std::vector<size_t>& r,
                                          const std::vector<size_t>& s) = 0;
 
+    // Three-index integral functions (DF, Cholesky)
     virtual ambit::Tensor three_integral_block(const std::vector<size_t>& A,
                                                const std::vector<size_t>& p,
-                                               const std::vector<size_t>& q) = 0;
+                                               const std::vector<size_t>& q);
+
     /// This function is only used by DiskDF and it is used to go from a Apq->Aq tensor
     virtual ambit::Tensor three_integral_block_two_index(const std::vector<size_t>& A, size_t p,
-                                                         const std::vector<size_t>& q) = 0;
+                                                         const std::vector<size_t>& q);
+
+    /// Expert Option: just try and use three_integral
+    virtual double** three_integral_pointer();
 
     /// Make a Fock matrix computed with respect to a given determinant
     virtual void make_fock_matrix(std::shared_ptr<psi::Matrix> gamma_a,
@@ -249,17 +255,14 @@ class ForteIntegrals {
 
     /// Rotate the MO coefficients, update psi::Wavefunction, and re-transform integrals
     /// @param Ua the alpha unitary transformation matrix
-    /// @param Ub the alpha unitary transformation matrix
+    /// @param Ub the beta unitary transformation matrix
     void rotate_orbitals(std::shared_ptr<psi::Matrix> Ua, std::shared_ptr<psi::Matrix> Ub);
 
     /// Copy these MO coeffs to class variables, update psi::Wavefunction, and re-transform
     /// integrals
     /// @param Ca the alpha MO coefficients
-    /// @param Cb the betaa MO coefficients
+    /// @param Cb the beta MO coefficients
     void update_orbitals(std::shared_ptr<psi::Matrix> Ca, std::shared_ptr<psi::Matrix> Cb);
-
-    /// Expert Option: just try and use three_integral
-    virtual double** three_integral_pointer() = 0;
 
     /// Return the type of spin restriction enforced
     IntegralSpinRestriction spin_restriction() const;

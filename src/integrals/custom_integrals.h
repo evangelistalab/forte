@@ -60,12 +60,6 @@ class CustomIntegrals : public ForteIntegrals {
                                  const std::vector<size_t>& r,
                                  const std::vector<size_t>& s) override;
 
-    ambit::Tensor three_integral_block(const std::vector<size_t>&, const std::vector<size_t>&,
-                                       const std::vector<size_t>&) override;
-    ambit::Tensor three_integral_block_two_index(const std::vector<size_t>&, size_t,
-                                                 const std::vector<size_t>&) override;
-    double** three_integral_pointer() override;
-
     void make_fock_matrix(std::shared_ptr<psi::Matrix> gamma_a,
                           std::shared_ptr<psi::Matrix> gamma_b) override;
 

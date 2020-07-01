@@ -613,6 +613,37 @@ void ForteIntegrals::print_ints() {
     */
 }
 
+ambit::Tensor ForteIntegrals::three_integral_block(const std::vector<size_t>& A,
+                                                   const std::vector<size_t>& p,
+                                                   const std::vector<size_t>& q) {
+    outfile->Printf("\n  ForteIntegrals::three_integral_block() not supported for integral type " +
+                    std::to_string(integral_type()));
+    throw std::runtime_error(
+        "ForteIntegrals::three_integral_block() not supported for integral type " +
+        std::to_string(integral_type()));
+}
+
+/// This function is only used by DiskDF and it is used to go from a Apq->Aq tensor
+ambit::Tensor ForteIntegrals::three_integral_block_two_index(const std::vector<size_t>& A, size_t p,
+                                                             const std::vector<size_t>& q) {
+    outfile->Printf(
+        "\n  ForteIntegrals::three_integral_block_two_index() not supported for integral type " +
+        std::to_string(integral_type()));
+    throw std::runtime_error(
+        "ForteIntegrals::three_integral_block_two_index() not supported for integral type " +
+        std::to_string(integral_type()));
+}
+
+/// Expert Option: just try and use three_integral
+double** ForteIntegrals::three_integral_pointer() {
+    outfile->Printf(
+        "\n  ForteIntegrals::three_integral_pointer() not supported for integral type " +
+        std::to_string(integral_type()));
+    throw std::runtime_error(
+        "ForteIntegrals::three_integral_pointer() not supported for integral type " +
+        std::to_string(integral_type()));
+}
+
 void ForteIntegrals::build_AOdipole_ints() {
     std::shared_ptr<psi::BasisSet> basisset = wfn_->basisset();
     std::shared_ptr<IntegralFactory> ints_fac = std::make_shared<IntegralFactory>(basisset);
