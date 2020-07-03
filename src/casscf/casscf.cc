@@ -143,10 +143,10 @@ void CASSCF::startup() {
 #endif
     } else {
         if (options_->get_str("SCF_TYPE") == "DF") {
-            auto df_basis = ints_->get_basisset("DF_BASIS_SCF");
-            JK_ = std::make_shared<DiskDFJK>(ints_->basisset(), df_basis);
+            auto df_basis = ints_->wfn()->get_basisset("DF_BASIS_SCF");
+            JK_ = std::make_shared<DiskDFJK>(ints_->wfn()->basisset(), df_basis);
         } else {
-            JK_ = JK::build_JK(ints_->basisset(), psi::BasisSet::zero_ao_basis_set(),
+            JK_ = JK::build_JK(ints_->wfn()->basisset(), psi::BasisSet::zero_ao_basis_set(),
                                psi::Process::environment.options);
         }
     }
@@ -404,7 +404,7 @@ ambit::Tensor CASSCF::transform_integrals(std::shared_ptr<psi::Matrix> Ca) {
 
     // Transform C matrix to C1 symmetry
     size_t nso = scf_info_->nso();
-    psi::SharedMatrix aotoso = ints_->aotoso();
+    psi::SharedMatrix aotoso = ints_->wfn()->aotoso();
     auto Ca_nosym = std::make_shared<psi::Matrix>(nso, nmo_);
 
     // Transform from the SO to the AO basis for the C matrix.

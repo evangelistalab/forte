@@ -38,7 +38,6 @@
 #include "psi4/libmints/integral.h"
 #include "psi4/libmints/mintshelper.h"
 #include "psi4/libmints/wavefunction.h"
-#include "psi4/libpsio/psio.hpp"
 #include "psi4/libqt/qt.h"
 #include "psi4/libtrans/integraltransform.h"
 #include "psi4/psi4-dec.h"
@@ -74,7 +73,6 @@ std::map<IntegralType, std::string> int_type_label{{Conventional, "Conventional"
                                                    {Cholesky, "Cholesky decomposition"},
                                                    {DiskDF, "Disk-based density fitting"},
                                                    {DistDF, "Distributed density fitting"},
-                                                   {Own, "Own"},
                                                    {Custom, "Custom"}};
 
 ForteIntegrals::ForteIntegrals(std::shared_ptr<ForteOptions> options,
@@ -86,13 +84,10 @@ ForteIntegrals::ForteIntegrals(std::shared_ptr<ForteOptions> options,
     startup();
     allocate();
     transform_one_electron_integrals();
-    build_AOdipole_ints();
+    build_dipole_ints_ao();
 }
 
 void ForteIntegrals::startup() {
-    // Grab the global (default) PSIO object, for file I/O
-    std::shared_ptr<PSIO> psio(_default_psio_lib_);
-
     if (not wfn_) {
         outfile->Printf("\n  No wave function object found!  Run a scf calculation first!\n");
         exit(1);
@@ -163,18 +158,6 @@ double ForteIntegrals::nuclear_repulsion_energy() const { return nucrep_; }
 
 std::shared_ptr<psi::Wavefunction> ForteIntegrals::wfn() { return wfn_; }
 
-std::shared_ptr<psi::BasisSet> ForteIntegrals::basisset() { return wfn_->basisset(); }
-
-std::shared_ptr<psi::BasisSet> ForteIntegrals::get_basisset(std::string str) {
-    return wfn_->get_basisset(str);
-}
-
-std::shared_ptr<psi::Matrix> ForteIntegrals::aotoso() { return wfn_->aotoso(); }
-
-std::shared_ptr<psi::Matrix> ForteIntegrals::Ca_subset(std::string str) {
-    return wfn_->Ca_subset(str);
-}
-
 size_t ForteIntegrals::nmo() const { return nmo_; }
 
 int ForteIntegrals::nirrep() const { return nirrep_; }
@@ -242,7 +225,7 @@ std::shared_ptr<psi::Matrix> ForteIntegrals::OneBodyAO() const { return OneIntsA
 int ForteIntegrals::ga_handle() { return 0; }
 
 std::vector<std::shared_ptr<psi::Matrix>> ForteIntegrals::AOdipole_ints() const {
-    return AOdipole_ints_;
+    return dipole_ints_ao_;
 }
 
 void ForteIntegrals::transform_one_electron_integrals() {
@@ -613,9 +596,9 @@ void ForteIntegrals::print_ints() {
     */
 }
 
-ambit::Tensor ForteIntegrals::three_integral_block(const std::vector<size_t>& A,
-                                                   const std::vector<size_t>& p,
-                                                   const std::vector<size_t>& q) {
+ambit::Tensor ForteIntegrals::three_integral_block(const std::vector<size_t>& ,
+                                                   const std::vector<size_t>& ,
+                                                   const std::vector<size_t>& ) {
     outfile->Printf("\n  ForteIntegrals::three_integral_block() not supported for integral type " +
                     std::to_string(integral_type()));
     throw std::runtime_error(
@@ -624,8 +607,8 @@ ambit::Tensor ForteIntegrals::three_integral_block(const std::vector<size_t>& A,
 }
 
 /// This function is only used by DiskDF and it is used to go from a Apq->Aq tensor
-ambit::Tensor ForteIntegrals::three_integral_block_two_index(const std::vector<size_t>& A, size_t p,
-                                                             const std::vector<size_t>& q) {
+ambit::Tensor ForteIntegrals::three_integral_block_two_index(const std::vector<size_t>& , size_t ,
+                                                             const std::vector<size_t>& ) {
     outfile->Printf(
         "\n  ForteIntegrals::three_integral_block_two_index() not supported for integral type " +
         std::to_string(integral_type()));
@@ -644,36 +627,36 @@ double** ForteIntegrals::three_integral_pointer() {
         std::to_string(integral_type()));
 }
 
-void ForteIntegrals::build_AOdipole_ints() {
+void ForteIntegrals::build_dipole_ints_ao() {
     std::shared_ptr<psi::BasisSet> basisset = wfn_->basisset();
     std::shared_ptr<IntegralFactory> ints_fac = std::make_shared<IntegralFactory>(basisset);
     int nbf = basisset->nbf();
 
-    AOdipole_ints_.clear();
+    dipole_ints_ao_.clear();
     for (const std::string& direction : {"X", "Y", "Z"}) {
         std::string name = "AO Dipole " + direction;
-        AOdipole_ints_.push_back(std::make_shared<psi::Matrix>(name, nbf, nbf));
+        dipole_ints_ao_.push_back(std::make_shared<psi::Matrix>(name, nbf, nbf));
     }
     std::shared_ptr<OneBodyAOInt> aodOBI(ints_fac->ao_dipole());
-    aodOBI->compute(AOdipole_ints_);
+    aodOBI->compute(dipole_ints_ao_);
 }
 
 std::vector<std::shared_ptr<psi::Matrix>>
 ForteIntegrals::compute_MOdipole_ints(const bool& alpha, const bool& resort) {
     if (alpha) {
-        return MOdipole_ints_helper(wfn_->Ca_subset("AO"), wfn_->epsilon_a(), resort);
+        return dipole_ints_mo_helper(wfn_->Ca_subset("AO"), wfn_->epsilon_a(), resort);
     } else {
-        return MOdipole_ints_helper(wfn_->Cb_subset("AO"), wfn_->epsilon_b(), resort);
+        return dipole_ints_mo_helper(wfn_->Cb_subset("AO"), wfn_->epsilon_b(), resort);
     }
 }
 
 std::vector<std::shared_ptr<psi::Matrix>>
-ForteIntegrals::MOdipole_ints_helper(std::shared_ptr<psi::Matrix> Cao, psi::SharedVector epsilon,
-                                     const bool& resort) {
+ForteIntegrals::dipole_ints_mo_helper(std::shared_ptr<psi::Matrix> Cao, psi::SharedVector epsilon,
+                                      const bool& resort) {
     std::vector<std::shared_ptr<psi::Matrix>> MOdipole_ints;
     std::vector<std::string> names{"X", "Y", "Z"};
     for (int i = 0; i < 3; ++i) {
-        std::shared_ptr<psi::Matrix> modipole(AOdipole_ints_[i]->clone());
+        std::shared_ptr<psi::Matrix> modipole(dipole_ints_ao_[i]->clone());
         modipole->set_name("MO Dipole " + names[i]);
         modipole->transform(Cao);
         MOdipole_ints.push_back(modipole);

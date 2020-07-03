@@ -38,7 +38,6 @@
 #include "integrals/df_integrals.h"
 #include "integrals/diskdf_integrals.h"
 #include "integrals/conventional_integrals.h"
-#include "integrals/own_integrals.h"
 
 #include "make_integrals.h"
 
@@ -69,12 +68,9 @@ std::shared_ptr<ForteIntegrals> make_forte_integrals(std::shared_ptr<psi::Wavefu
     } else if (options->get_str("INT_TYPE") == "CUSTOM") {
         ints = std::make_shared<CustomIntegrals>(options, ref_wfn, mo_space_info,
                                                  IntegralSpinRestriction::Restricted);
-    } else if (options->get_str("INT_TYPE") == "OWNINTEGRALS") {
-        ints = std::make_shared<OwnIntegrals>(options, ref_wfn, mo_space_info,
-                                              IntegralSpinRestriction::Restricted);
     } else {
         psi::outfile->Printf("\n Please check your int_type. Choices are CHOLESKY, DF, DISKDF , "
-                             "DISTRIBUTEDDF Effective, CONVENTIONAL or OwnIntegrals");
+                             "DISTRIBUTEDDF, or CONVENTIONAL");
         throw std::runtime_error("INT_TYPE is not correct.  Check options");
     }
 

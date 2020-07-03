@@ -98,7 +98,6 @@ class ConventionalIntegrals : public ForteIntegrals {
     }
 
     // ==> Class private virtual functions <==
-
     void gather_integrals() override;
     void resort_integrals_after_freezing() override;
 };

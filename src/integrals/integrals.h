@@ -63,7 +63,7 @@ enum class IntegralSpinRestriction { Restricted, Unrestricted };
  *
  * This decides the type of integral used in a Forte computation
  */
-enum IntegralType { Conventional, DF, Cholesky, DiskDF, DistDF, Own, Custom };
+enum IntegralType { Conventional, DF, Cholesky, DiskDF, DistDF, Custom };
 
 /**
  * @brief The ForteIntegrals class is a base class for transforming and storing MO integrals
@@ -123,14 +123,6 @@ class ForteIntegrals {
 
     /// temporary solution for not having a Wavefunction
     std::shared_ptr<psi::Wavefunction> wfn();
-    /// temporary solution for basisset
-    std::shared_ptr<psi::BasisSet> basisset();
-    /// temporary solution for get_basisset
-    std::shared_ptr<psi::BasisSet> get_basisset(std::string str);
-    /// temporary solution for aotoso
-    std::shared_ptr<psi::Matrix> aotoso();
-    /// temporary solution for Ca_subset
-    std::shared_ptr<psi::Matrix> Ca_subset(std::string str);
 
     /// Return the total number of molecular orbitals (this number includes frozen MOs)
     size_t nmo() const;
@@ -142,7 +134,6 @@ class ForteIntegrals {
     psi::Dimension& frzcpi();
     /// Return the number of frozen virtual orbitals per irrep
     psi::Dimension& frzvpi();
-
     /// The number of correlated MOs per irrep (non frozen).  This is nmopi - nfzcpi - nfzvpi.
     psi::Dimension& ncmopi();
 
@@ -218,13 +209,13 @@ class ForteIntegrals {
                                          const std::vector<size_t>& s) = 0;
 
     // Three-index integral functions (DF, Cholesky)
-    virtual ambit::Tensor three_integral_block(const std::vector<size_t>& A,
-                                               const std::vector<size_t>& p,
-                                               const std::vector<size_t>& q);
+    virtual ambit::Tensor three_integral_block(const std::vector<size_t>&,
+                                               const std::vector<size_t>&,
+                                               const std::vector<size_t>&);
 
     /// This function is only used by DiskDF and it is used to go from a Apq->Aq tensor
     virtual ambit::Tensor three_integral_block_two_index(const std::vector<size_t>& A, size_t p,
-                                                         const std::vector<size_t>& q);
+                                                         const std::vector<size_t>&);
 
     /// Expert Option: just try and use three_integral
     virtual double** three_integral_pointer();
@@ -397,13 +388,13 @@ class ForteIntegrals {
     std::shared_ptr<psi::Matrix> OneIntsAO_;
 
     /// AO dipole integrals
-    std::vector<std::shared_ptr<psi::Matrix>> AOdipole_ints_;
+    std::vector<std::shared_ptr<psi::Matrix>> dipole_ints_ao_;
     /// Compute AO dipole integrals
-    void build_AOdipole_ints();
+    void build_dipole_ints_ao();
     /// Compute MO dipole integrals
     std::vector<std::shared_ptr<psi::Matrix>>
-    MOdipole_ints_helper(std::shared_ptr<psi::Matrix> Cao, std::shared_ptr<psi::Vector> epsilon,
-                         const bool& resort);
+    dipole_ints_mo_helper(std::shared_ptr<psi::Matrix> Cao, std::shared_ptr<psi::Vector> epsilon,
+                          const bool& resort);
 
     // ==> Class private functions <==
 
@@ -437,6 +428,17 @@ class ForteIntegrals {
     /// Remove the doubly occupied and virtual orbitals and resort the rest so
     /// that we are left only with ncmo = nmo - nfzc - nfzv
     virtual void resort_integrals_after_freezing() = 0;
+};
+
+/**
+ * @brief Interface to integrals read from psi4
+ *
+ * This class assumes the Cholesky tensors can be stored in memory.
+ */
+class Psi4Integrals : public ForteIntegrals {
+  public:
+    Psi4Integrals(std::shared_ptr<ForteOptions> options, std::shared_ptr<psi::Wavefunction> ref_wfn,
+                  std::shared_ptr<MOSpaceInfo> mo_space_info, IntegralSpinRestriction restricted);
 };
 
 } // namespace forte
