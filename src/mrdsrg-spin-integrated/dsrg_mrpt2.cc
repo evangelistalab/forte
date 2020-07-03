@@ -1521,7 +1521,7 @@ void DSRG_MRPT2::compute_dm1d_pt2(BlockedTensor& M, double& Mbar0, BlockedTensor
     //    psi::SharedMatrix AOdens(new psi::Matrix("AO density ", nao, nao));
     //    AOdens->remove_symmetry(SOdens, sotoao);
 
-    //    std::vector<psi::SharedMatrix> aodipole_ints = ints_->AOdipole_ints();
+    //    std::vector<psi::SharedMatrix> aodipole_ints = ints_->ao_dipole_ints();
     //    std::vector<double> de(4, 0.0);
     //    for (int i = 0; i < 3; ++i) {
     //        de[i] = 2.0 * AOdens->vector_dot(aodipole_ints[i]); // 2.0 for beta spin

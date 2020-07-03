@@ -163,7 +163,7 @@ std::shared_ptr<psi::Matrix> ForteIntegrals::OneBodyAO() const { return OneIntsA
 
 int ForteIntegrals::ga_handle() { return 0; }
 
-std::vector<std::shared_ptr<psi::Matrix>> ForteIntegrals::AOdipole_ints() const {
+std::vector<std::shared_ptr<psi::Matrix>> ForteIntegrals::ao_dipole_ints() const {
     return dipole_ints_ao_;
 }
 
@@ -331,9 +331,11 @@ double** ForteIntegrals::three_integral_pointer() { _undefined_function("three_i
 
 void ForteIntegrals::rotate_mos() { _undefined_function("rotate_mos"); }
 
-std::vector<std::shared_ptr<psi::Matrix>>
-ForteIntegrals::compute_MOdipole_ints(const bool& alpha, const bool& resort) {
+std::vector<std::shared_ptr<psi::Matrix>> ForteIntegrals::mo_dipole_ints(const bool& alpha,
+                                                                         const bool& resort) {
+    std::vector<std::shared_ptr<psi::Matrix>> mo_dipole_ints_;
     _undefined_function("compute_MOdipole_ints");
+    return mo_dipole_ints_;
 }
 
 void ForteIntegrals::_undefined_function(const std::string& method) {

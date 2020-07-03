@@ -288,7 +288,7 @@ class ForteIntegrals {
 
     /// Obtain AO dipole integrals [X, Y, Z]
     /// Each direction is a std::shared_ptr<psi::Matrix> of dimension nmo * nmo
-    std::vector<std::shared_ptr<psi::Matrix>> AOdipole_ints() const;
+    std::vector<std::shared_ptr<psi::Matrix>> ao_dipole_ints() const;
 
     /**
      * Compute MO dipole integrals
@@ -297,8 +297,8 @@ class ForteIntegrals {
      * @return a vector of MOdipole ints in X, Y, Z order,
      *         each of which is a nmo by nmo std::shared_ptr<psi::Matrix>
      */
-    virtual std::vector<std::shared_ptr<psi::Matrix>>
-    compute_MOdipole_ints(const bool& alpha = true, const bool& resort = false);
+    virtual std::vector<std::shared_ptr<psi::Matrix>> mo_dipole_ints(const bool& alpha = true,
+                                                                     const bool& resort = false);
 
   protected:
     // ==> Class data <==
@@ -465,8 +465,8 @@ class Psi4Integrals : public ForteIntegrals {
     void update_orbitals(std::shared_ptr<psi::Matrix> Ca, std::shared_ptr<psi::Matrix> Cb) override;
     void rotate_mos() override;
 
-    std::vector<std::shared_ptr<psi::Matrix>> compute_MOdipole_ints(const bool& alpha,
-                                                                    const bool& resort) override;
+    std::vector<std::shared_ptr<psi::Matrix>> mo_dipole_ints(const bool& alpha,
+                                                             const bool& resort) override;
 
     std::vector<std::shared_ptr<psi::Matrix>>
     dipole_ints_mo_helper(std::shared_ptr<psi::Matrix> Cao, std::shared_ptr<psi::Vector> epsilon,

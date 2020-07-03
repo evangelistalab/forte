@@ -1009,7 +1009,7 @@ void FCI_MO::compute_permanent_dipole() {
     outfile->Printf("\n  Only print nonzero (> 1.0e-5) elements.");
 
     // obtain AO dipole from ForteIntegrals
-    std::vector<psi::SharedMatrix> aodipole_ints = integral_->AOdipole_ints();
+    std::vector<psi::SharedMatrix> aodipole_ints = integral_->ao_dipole_ints();
 
     // Nuclear dipole contribution
     Vector3 ndip =
@@ -1109,7 +1109,7 @@ void FCI_MO::compute_transition_dipole() {
     outfile->Printf("\n  Only print nonzero (> 1.0e-5) elements.");
 
     // obtain AO dipole from libmints
-    std::vector<psi::SharedMatrix> aodipole_ints = integral_->AOdipole_ints();
+    std::vector<psi::SharedMatrix> aodipole_ints = integral_->ao_dipole_ints();
 
     // SO to AO transformer
     psi::SharedMatrix sotoao(integral_->wfn()->aotoso()->transpose());

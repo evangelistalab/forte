@@ -411,7 +411,7 @@ void Psi4Integrals::build_dipole_ints_ao() {
     aodOBI->compute(dipole_ints_ao_);
 }
 
-std::vector<std::shared_ptr<psi::Matrix>> Psi4Integrals::compute_MOdipole_ints(const bool& alpha,
+std::vector<std::shared_ptr<psi::Matrix>> Psi4Integrals::mo_dipole_ints(const bool& alpha,
                                                                                const bool& resort) {
     if (alpha) {
         return dipole_ints_mo_helper(wfn_->Ca_subset("AO"), wfn_->epsilon_a(), resort);
