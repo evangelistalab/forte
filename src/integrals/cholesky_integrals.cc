@@ -57,9 +57,11 @@ CholeskyIntegrals::CholeskyIntegrals(std::shared_ptr<ForteOptions> options,
                                      std::shared_ptr<psi::Wavefunction> ref_wfn,
                                      std::shared_ptr<MOSpaceInfo> mo_space_info,
                                      IntegralSpinRestriction restricted)
-    : ForteIntegrals(options, ref_wfn, mo_space_info, restricted) {
+    : Psi4Integrals(options, ref_wfn, mo_space_info, Cholesky, restricted) {
+    initialize();
+}
 
-    integral_type_ = Cholesky;
+void CholeskyIntegrals::initialize() {
     print_info();
     local_timer int_timer;
     gather_integrals();

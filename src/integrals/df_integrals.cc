@@ -56,11 +56,15 @@ using namespace psi;
 
 namespace forte {
 
-DFIntegrals::DFIntegrals(std::shared_ptr<ForteOptions> options, std::shared_ptr<psi::Wavefunction> ref_wfn,
+DFIntegrals::DFIntegrals(std::shared_ptr<ForteOptions> options,
+                         std::shared_ptr<psi::Wavefunction> ref_wfn,
                          std::shared_ptr<MOSpaceInfo> mo_space_info,
                          IntegralSpinRestriction restricted)
-    : ForteIntegrals(options, ref_wfn, mo_space_info, restricted) {
-    integral_type_ = DF;
+    : Psi4Integrals(options, ref_wfn, mo_space_info, DF, restricted) {
+    initialize();
+}
+
+void DFIntegrals::initialize() {
     // If code calls constructor print things
     // But if someone calls retransform integrals do not print it
     print_info();

@@ -57,9 +57,11 @@ ConventionalIntegrals::ConventionalIntegrals(std::shared_ptr<ForteOptions> optio
                                              std::shared_ptr<psi::Wavefunction> ref_wfn,
                                              std::shared_ptr<MOSpaceInfo> mo_space_info,
                                              IntegralSpinRestriction restricted)
-    : ForteIntegrals(options, ref_wfn, mo_space_info, restricted) {
+    : Psi4Integrals(options, ref_wfn, mo_space_info, Conventional, restricted) {
+    initialize();
+}
 
-    integral_type_ = Conventional;
+void ConventionalIntegrals::initialize() {
     print_info();
     outfile->Printf("\n  Overall Conventional Integrals timings\n\n");
     local_timer ConvTime;

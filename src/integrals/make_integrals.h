@@ -31,10 +31,16 @@
 #define _make_integrals_h_
 
 namespace forte {
-std::shared_ptr<ForteIntegrals> make_forte_integrals(std::shared_ptr<psi::Wavefunction> ref_wfn,
-                                                     std::shared_ptr<forte::ForteOptions> options,
-                                                     std::shared_ptr<MOSpaceInfo> mo_space_info);
+std::shared_ptr<ForteIntegrals>
+make_forte_integrals_from_psi4(std::shared_ptr<psi::Wavefunction> ref_wfn,
+                               std::shared_ptr<forte::ForteOptions> options,
+                               std::shared_ptr<MOSpaceInfo> mo_space_info);
 
-}
+std::shared_ptr<ForteIntegrals>
+make_forte_integrals_from_fcidump(const std::string& filename,
+                                  std::shared_ptr<ForteOptions> options,
+                                  std::shared_ptr<MOSpaceInfo> mo_space_info);
+
+} // namespace forte
 
 #endif // _make_integrals_h_

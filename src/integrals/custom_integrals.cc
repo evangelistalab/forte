@@ -57,11 +57,11 @@ namespace forte {
  * @param resort_frozen_core -
  */
 CustomIntegrals::CustomIntegrals(std::shared_ptr<ForteOptions> options,
-                                 std::shared_ptr<psi::Wavefunction> ref_wfn,
                                  std::shared_ptr<MOSpaceInfo> mo_space_info,
                                  IntegralSpinRestriction restricted)
-    : ForteIntegrals(options, ref_wfn, mo_space_info, restricted) {
-    integral_type_ = Custom;
+    : ForteIntegrals(options, mo_space_info, Custom, restricted) {}
+
+void CustomIntegrals::initialize() {
     print_info();
     outfile->Printf("\n  Using Custom integrals\n\n");
 

@@ -53,12 +53,15 @@ using namespace psi;
 
 namespace forte {
 
-DISKDFIntegrals::DISKDFIntegrals(std::shared_ptr<ForteOptions> options, std::shared_ptr<psi::Wavefunction> ref_wfn,
+DISKDFIntegrals::DISKDFIntegrals(std::shared_ptr<ForteOptions> options,
+                                 std::shared_ptr<psi::Wavefunction> ref_wfn,
                                  std::shared_ptr<MOSpaceInfo> mo_space_info,
                                  IntegralSpinRestriction restricted)
-    : ForteIntegrals(options, ref_wfn, mo_space_info, restricted) {
+    : Psi4Integrals(options, ref_wfn, mo_space_info, DiskDF, restricted) {
+    initialize();
+}
 
-    integral_type_ = DiskDF;
+void DISKDFIntegrals::initialize() {
     print_info();
     local_timer int_timer;
 

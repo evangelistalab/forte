@@ -415,7 +415,7 @@ def run_forte(name, **kwargs):
     start_pre_ints = time.time()
 
     # Make an integral object
-    ints = forte.make_forte_integrals(ref_wfn, options, mo_space_info)
+    ints = forte.make_ints_from_psi4(ref_wfn, options, mo_space_info)
 
     start = time.time()
 
@@ -512,7 +512,7 @@ def gradient_forte(name, **kwargs):
     start = time.time()
 
     # Make an integral object
-    ints = forte.make_forte_integrals(ref_wfn, options, mo_space_info)
+    ints = forte.make_ints_from_psi4(ref_wfn, options, mo_space_info)
 
     # Rotate orbitals before computation
     orb_type = options.get_str("ORBITAL_TYPE")

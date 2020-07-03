@@ -107,12 +107,25 @@ class ForteIntegrals {
      */
     ForteIntegrals(std::shared_ptr<ForteOptions> options,
                    std::shared_ptr<psi::Wavefunction> ref_wfn,
-                   std::shared_ptr<MOSpaceInfo> mo_space_info, IntegralSpinRestriction restricted);
+                   std::shared_ptr<MOSpaceInfo> mo_space_info, IntegralType integral_type,
+                   IntegralSpinRestriction restricted);
+
+    /**
+     * @brief Class constructor
+     * @param options The main options object
+     * @param restricted Select a restricted or unrestricted transformation
+     * @param mo_space_info The MOSpaceInfo object
+     */
+    ForteIntegrals(std::shared_ptr<ForteOptions> options,
+                   std::shared_ptr<MOSpaceInfo> mo_space_info, IntegralType integral_type,
+                   IntegralSpinRestriction restricted);
 
     /// Virtual destructor to enable deletion of a Derived* through a Base*
     virtual ~ForteIntegrals() = default;
 
     // ==> Class Interface <==
+
+    virtual void initialize() = 0;
 
     /// Return Ca
     std::shared_ptr<psi::Matrix> Ca() const;
@@ -247,13 +260,15 @@ class ForteIntegrals {
     /// Rotate the MO coefficients, update psi::Wavefunction, and re-transform integrals
     /// @param Ua the alpha unitary transformation matrix
     /// @param Ub the beta unitary transformation matrix
-    void rotate_orbitals(std::shared_ptr<psi::Matrix> Ua, std::shared_ptr<psi::Matrix> Ub);
+    virtual void rotate_orbitals(std::shared_ptr<psi::Matrix> Ua,
+                                 std::shared_ptr<psi::Matrix> Ub) = 0;
 
     /// Copy these MO coeffs to class variables, update psi::Wavefunction, and re-transform
     /// integrals
     /// @param Ca the alpha MO coefficients
     /// @param Cb the beta MO coefficients
-    void update_orbitals(std::shared_ptr<psi::Matrix> Ca, std::shared_ptr<psi::Matrix> Cb);
+    virtual void update_orbitals(std::shared_ptr<psi::Matrix> Ca,
+                                 std::shared_ptr<psi::Matrix> Cb) = 0;
 
     /// Return the type of spin restriction enforced
     IntegralSpinRestriction spin_restriction() const;
@@ -282,8 +297,8 @@ class ForteIntegrals {
      * @return a vector of MOdipole ints in X, Y, Z order,
      *         each of which is a nmo by nmo std::shared_ptr<psi::Matrix>
      */
-    std::vector<std::shared_ptr<psi::Matrix>> compute_MOdipole_ints(const bool& alpha = true,
-                                                                    const bool& resort = false);
+    virtual std::vector<std::shared_ptr<psi::Matrix>>
+    compute_MOdipole_ints(const bool& alpha = true, const bool& resort = false);
 
   protected:
     // ==> Class data <==
@@ -360,7 +375,7 @@ class ForteIntegrals {
     double frozen_core_energy_;
 
     /// Scalar energy term
-    double scalar_;
+    double scalar_energy_;
 
     /// The MOSpaceInfo object
     std::shared_ptr<MOSpaceInfo> mo_space_info_;
@@ -390,31 +405,25 @@ class ForteIntegrals {
     /// AO dipole integrals
     std::vector<std::shared_ptr<psi::Matrix>> dipole_ints_ao_;
     /// Compute AO dipole integrals
-    void build_dipole_ints_ao();
+    virtual void build_dipole_ints_ao();
     /// Compute MO dipole integrals
-    std::vector<std::shared_ptr<psi::Matrix>>
+    virtual std::vector<std::shared_ptr<psi::Matrix>>
     dipole_ints_mo_helper(std::shared_ptr<psi::Matrix> Cao, std::shared_ptr<psi::Vector> epsilon,
-                          const bool& resort);
+                          const bool& resort) = 0;
 
     // ==> Class private functions <==
 
     /// Class initializer
     void startup();
 
-    /// Allocate the memory required to store the one-electron integrals and fock matrices
-    void allocate();
-
-    /// Transform the one-electron integrals
-    void transform_one_electron_integrals();
-
     /// This function manages freezing core and virtual orbitals
-    void freeze_core_orbitals();
+    virtual void freeze_core_orbitals() = 0;
 
     /// Compute the one-body operator modified by the frozen core orbitals
-    void compute_frozen_one_body_operator();
+    virtual void compute_frozen_one_body_operator() = 0;
 
     /// Function used to rotate MOs during contructor
-    void rotate_mos();
+    virtual void rotate_mos();
 
     /// Test if two matrices are approximately identical
     bool test_orbital_spin_restriction(std::shared_ptr<psi::Matrix> A,
@@ -428,18 +437,44 @@ class ForteIntegrals {
     /// Remove the doubly occupied and virtual orbitals and resort the rest so
     /// that we are left only with ncmo = nmo - nfzc - nfzv
     virtual void resort_integrals_after_freezing() = 0;
+
+    void _undefined_function(const std::string& method);
 };
 
 /**
  * @brief Interface to integrals read from psi4
- *
- * This class assumes the Cholesky tensors can be stored in memory.
  */
 class Psi4Integrals : public ForteIntegrals {
   public:
     Psi4Integrals(std::shared_ptr<ForteOptions> options, std::shared_ptr<psi::Wavefunction> ref_wfn,
-                  std::shared_ptr<MOSpaceInfo> mo_space_info, IntegralSpinRestriction restricted);
-};
+                  std::shared_ptr<MOSpaceInfo> mo_space_info, IntegralType integral_type,
+                  IntegralSpinRestriction restricted)
+        : ForteIntegrals(options, ref_wfn, mo_space_info, integral_type, restricted) {
+        base_initialize_psi4();
+    }
+
+  private:
+    void base_initialize_psi4();
+    void setup_psi4_ints();
+
+    void allocate();
+    void transform_one_electron_integrals();
+    void build_dipole_ints_ao() override;
+    void compute_frozen_one_body_operator() override;
+    void rotate_orbitals(std::shared_ptr<psi::Matrix> Ua, std::shared_ptr<psi::Matrix> Ub) override;
+    void update_orbitals(std::shared_ptr<psi::Matrix> Ca, std::shared_ptr<psi::Matrix> Cb) override;
+    void rotate_mos() override;
+
+    std::vector<std::shared_ptr<psi::Matrix>> compute_MOdipole_ints(const bool& alpha,
+                                                                    const bool& resort) override;
+
+    std::vector<std::shared_ptr<psi::Matrix>>
+    dipole_ints_mo_helper(std::shared_ptr<psi::Matrix> Cao, std::shared_ptr<psi::Vector> epsilon,
+                          const bool& resort) override;
+
+  protected:
+    void freeze_core_orbitals() override;
+}; // namespace forte
 
 } // namespace forte
 

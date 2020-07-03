@@ -41,8 +41,10 @@ class CustomIntegrals : public ForteIntegrals {
   public:
     /// Contructor of the class.  Calls std::shared_ptr<ForteIntegrals> ints
     /// constructor
-    CustomIntegrals(std::shared_ptr<ForteOptions> options, std::shared_ptr<psi::Wavefunction> ref_wfn,
+    CustomIntegrals(std::shared_ptr<ForteOptions> options,
                     std::shared_ptr<MOSpaceInfo> mo_space_info, IntegralSpinRestriction restricted);
+
+    void initialize() override;
 
     /// Grabs the antisymmetriced TEI - assumes storage in aphy_tei_*
     double aptei_aa(size_t p, size_t q, size_t r, size_t s) override;

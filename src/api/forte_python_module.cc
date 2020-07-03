@@ -117,13 +117,15 @@ void export_Determinant(py::module& m) {
         .def("create_beta_bit", &Determinant::create_beta_bit, "n"_a, "Create a beta bit")
         .def("destroy_alfa_bit", &Determinant::destroy_alfa_bit, "n"_a, "Destroy an alpha bit")
         .def("destroy_beta_bit", &Determinant::destroy_beta_bit, "n"_a, "Destroy a beta bit")
-        .def("gen_excitation",
-             [](Determinant& d, const std::vector<int>& aann, const std::vector<int>& acre,
-                const std::vector<int>& bann,
-                const std::vector<int>& bcre) { return gen_excitation(d, aann, acre, bann, bcre); },
-             "Apply a generic excitation")
-        .def("str", [](const Determinant& a, int n) { return str(a, n); }, "n"_a = 64,
-             "Get the string representation of the Slater determinant")
+        .def(
+            "gen_excitation",
+            [](Determinant& d, const std::vector<int>& aann, const std::vector<int>& acre,
+               const std::vector<int>& bann,
+               const std::vector<int>& bcre) { return gen_excitation(d, aann, acre, bann, bcre); },
+            "Apply a generic excitation")
+        .def(
+            "str", [](const Determinant& a, int n) { return str(a, n); }, "n"_a = 64,
+            "Get the string representation of the Slater determinant")
         .def("__repr__", [](const Determinant& a) { return str(a); })
         .def("__str__", [](const Determinant& a) { return str(a); })
         .def("__eq__", [](const Determinant& a, const Determinant& b) { return a == b; })
@@ -159,7 +161,8 @@ PYBIND11_MODULE(forte, m) {
     m.def("make_fragment_projector", &make_fragment_projector,
           "Make a fragment(embedding) projector");
     m.def("make_embedding", &make_embedding, "Apply fragment projector to embed");
-    m.def("make_forte_integrals", &make_forte_integrals, "Make Forte integrals");
+    m.def("make_ints_from_psi4", &make_forte_integrals_from_psi4, "Make Forte integrals");
+    m.def("make_ints_from_fcidump", &make_forte_integrals_from_fcidump, "Make Forte integrals");
     m.def("forte_old_methods", &forte_old_methods, "Run Forte methods");
     m.def("make_active_space_method", &make_active_space_method, "Make an active space method");
     m.def("make_active_space_solver", &make_active_space_solver, "Make an active space solver");

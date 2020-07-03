@@ -39,10 +39,12 @@ namespace forte {
  *
  * This class assumes the density-fitting tensors can be stored in memory.
  */
-class DFIntegrals : public ForteIntegrals {
+class DFIntegrals : public Psi4Integrals {
   public:
     DFIntegrals(std::shared_ptr<ForteOptions> options, std::shared_ptr<psi::Wavefunction> ref_wfn,
                 std::shared_ptr<MOSpaceInfo> mo_space_info, IntegralSpinRestriction restricted);
+
+    void initialize() override;
 
     double aptei_aa(size_t p, size_t q, size_t r, size_t s) override;
     double aptei_ab(size_t p, size_t q, size_t r, size_t s) override;
