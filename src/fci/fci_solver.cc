@@ -440,17 +440,17 @@ FCISolver::initial_guess(FCIVector& diag, size_t n,
                 HIJ += scalar_energy;
             H.set(I, J, HIJ);
             H.set(J, I, HIJ);
-            outfile->Printf("\n H[%d][%d] = %10.10f", I, J, HIJ);
+            //outfile->Printf("\n H[%d][%d] = %10.10f", I, J, HIJ);
         }
     }
 
     H.diagonalize(evecs, evals);
 
     // For test
-    evals.print();
-    evecs.print();
+    //evals.print();
+    //evecs.print();
 
-    outfile->Printf("\n NRE: %10.10f", nuclear_repulsion_energy);
+    //outfile->Printf("\n NRE: %10.10f", nuclear_repulsion_energy);
 
     std::vector<std::pair<int, std::vector<std::tuple<size_t, size_t, size_t, double>>>> guess;
 

@@ -81,7 +81,7 @@ void FCIVector::form_H_diagonal(std::shared_ptr<ActiveSpaceIntegrals> fci_ints) 
                 size_t addIa = alfa_graph_->rel_add(Ia);
                 size_t addIb = beta_graph_->rel_add(Ib);
                 C_ha[addIa][addIb] = determinant_energy(Ia, Ib, n, fci_ints);
-                outfile->Printf("\n C_ha[%d][%d] = %20.12f", static_cast<int>(addIa), static_cast<int>(addIb), C_ha[addIa][addIb]);
+                //outfile->Printf("\n C_ha[%d][%d] = %20.12f", static_cast<int>(addIa), static_cast<int>(addIb), C_ha[addIa][addIb]);
             }
         } while (std::next_permutation(Ib, Ib + n));
 
