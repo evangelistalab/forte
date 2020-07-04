@@ -260,15 +260,13 @@ class ForteIntegrals {
     /// Rotate the MO coefficients, update psi::Wavefunction, and re-transform integrals
     /// @param Ua the alpha unitary transformation matrix
     /// @param Ub the beta unitary transformation matrix
-    virtual void rotate_orbitals(std::shared_ptr<psi::Matrix> Ua,
-                                 std::shared_ptr<psi::Matrix> Ub) = 0;
+    virtual void rotate_orbitals(std::shared_ptr<psi::Matrix> Ua, std::shared_ptr<psi::Matrix> Ub);
 
     /// Copy these MO coeffs to class variables, update psi::Wavefunction, and re-transform
     /// integrals
     /// @param Ca the alpha MO coefficients
     /// @param Cb the beta MO coefficients
-    virtual void update_orbitals(std::shared_ptr<psi::Matrix> Ca,
-                                 std::shared_ptr<psi::Matrix> Cb) = 0;
+    virtual void update_orbitals(std::shared_ptr<psi::Matrix> Ca, std::shared_ptr<psi::Matrix> Cb);
 
     /// Return the type of spin restriction enforced
     IntegralSpinRestriction spin_restriction() const;
@@ -409,7 +407,7 @@ class ForteIntegrals {
     /// Compute MO dipole integrals
     virtual std::vector<std::shared_ptr<psi::Matrix>>
     dipole_ints_mo_helper(std::shared_ptr<psi::Matrix> Cao, std::shared_ptr<psi::Vector> epsilon,
-                          const bool& resort) = 0;
+                          const bool& resort);
 
     // ==> Class private functions <==
 
@@ -417,10 +415,10 @@ class ForteIntegrals {
     void startup();
 
     /// This function manages freezing core and virtual orbitals
-    virtual void freeze_core_orbitals() = 0;
+    virtual void freeze_core_orbitals();
 
     /// Compute the one-body operator modified by the frozen core orbitals
-    virtual void compute_frozen_one_body_operator() = 0;
+    virtual void compute_frozen_one_body_operator();
 
     /// Function used to rotate MOs during contructor
     virtual void rotate_mos();
@@ -464,10 +462,8 @@ class Psi4Integrals : public ForteIntegrals {
     void rotate_orbitals(std::shared_ptr<psi::Matrix> Ua, std::shared_ptr<psi::Matrix> Ub) override;
     void update_orbitals(std::shared_ptr<psi::Matrix> Ca, std::shared_ptr<psi::Matrix> Cb) override;
     void rotate_mos() override;
-
     std::vector<std::shared_ptr<psi::Matrix>> mo_dipole_ints(const bool& alpha,
                                                              const bool& resort) override;
-
     std::vector<std::shared_ptr<psi::Matrix>>
     dipole_ints_mo_helper(std::shared_ptr<psi::Matrix> Cao, std::shared_ptr<psi::Vector> epsilon,
                           const bool& resort) override;

@@ -352,14 +352,9 @@ def run_forte(name, **kwargs):
     >>> energy('forte')
 
     """
+
     lowername = name.lower()
     kwargs = p4util.kwargs_lower(kwargs)
-
-    # Compute a SCF reference, a wavefunction is return which holds the molecule used, orbitals
-    # Fock matrices, and more
-    ref_wfn = kwargs.get('ref_wfn', None)
-    if ref_wfn is None:
-        ref_wfn = psi4.driver.scf_helper(name, **kwargs)
 
     # Get the option object
     psi4_options = psi4.core.get_options()
@@ -369,39 +364,52 @@ def run_forte(name, **kwargs):
     options = forte.forte_options
     options.get_options_from_psi4(psi4_options)
 
-    if ('DF' in options.get_str('INT_TYPE')):
-        aux_basis = psi4.core.BasisSet.build(ref_wfn.molecule(), 'DF_BASIS_MP2',
-                                         options.get_str('DF_BASIS_MP2'),
-                                         'RIFIT', options.get_str('BASIS'))
-        ref_wfn.set_basisset('DF_BASIS_MP2', aux_basis)
-
-    if (options.get_str('MINAO_BASIS')):
-        minao_basis = psi4.core.BasisSet.build(ref_wfn.molecule(), 'MINAO_BASIS',
-                                               options.get_str('MINAO_BASIS'))
-        ref_wfn.set_basisset('MINAO_BASIS', minao_basis)
-
     # Start Forte, initialize ambit
     my_proc_n_nodes = forte.startup()
     my_proc, n_nodes = my_proc_n_nodes
 
+    if 'CUSTOM' not in options.get_str('INT_TYPE'):
+        # Compute a SCF reference using psi4 and obtain a wavefunction object
+        # which holds the molecule used, orbitals, Fock matrices, and more
+        ref_wfn = kwargs.get('ref_wfn', None)
+        if ref_wfn is None:
+            ref_wfn = psi4.driver.scf_helper(name, **kwargs)
+
+
+        if ('DF' in options.get_str('INT_TYPE')):
+            aux_basis = psi4.core.BasisSet.build(ref_wfn.molecule(), 'DF_BASIS_MP2',
+                                             options.get_str('DF_BASIS_MP2'),
+                                             'RIFIT', options.get_str('BASIS'))
+            ref_wfn.set_basisset('DF_BASIS_MP2', aux_basis)
+
+        if (options.get_str('MINAO_BASIS')):
+            minao_basis = psi4.core.BasisSet.build(ref_wfn.molecule(), 'MINAO_BASIS',
+                                               options.get_str('MINAO_BASIS'))
+            ref_wfn.set_basisset('MINAO_BASIS', minao_basis)
+
     # Print the banner
     forte.banner()
 
-    # Create the MOSpaceInfo object
-    mo_space_info = forte.make_mo_space_info(ref_wfn, options)
+    Continue working on this from here.
 
-    # Call methods that project the orbitals (AVAS, embedding)
-    mo_space_info = orbital_projection(ref_wfn, options, mo_space_info)
+    if 'CUSTOM' in options.get_str('INT_TYPE'):
+    else:
+        # Create the MOSpaceInfo object
+        nmopi = ref_wfn.nmopi()
+        mo_space_info = forte.make_mo_space_info(nmopi, options)
 
-    # Averaging spin multiplets if doing spin-adapted computation
-    if options.get_str('CORRELATION_SOLVER') == 'SA-MRDSRG':
-        options_dict = options.dict()
-        options_dict['SPIN_AVG_DENSITY']['value'] = True
-        options.set_dict(options_dict)
+        # Call methods that project the orbitals (AVAS, embedding)
+        mo_space_info = orbital_projection(ref_wfn, options, mo_space_info)
 
-    state = forte.make_state_info_from_psi_wfn(ref_wfn)
-    scf_info = forte.SCFInfo(ref_wfn)
-    state_weights_map = forte.make_state_weights_map(options,ref_wfn)
+        # Averaging spin multiplets if doing spin-adapted computation
+        if options.get_str('CORRELATION_SOLVER') == 'SA-MRDSRG':
+            options_dict = options.dict()
+            options_dict['SPIN_AVG_DENSITY']['value'] = True
+            options.set_dict(options_dict)
+
+        state = forte.make_state_info_from_psi_wfn(ref_wfn)
+        scf_info = forte.SCFInfo(ref_wfn)
+        state_weights_map = forte.make_state_weights_map(options,ref_wfn)
 
     # Run a method
     job_type = options.get_str('JOB_TYPE')

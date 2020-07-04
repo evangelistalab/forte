@@ -296,8 +296,8 @@ void ForteIntegrals::print_ints() {
 void ForteIntegrals::build_dipole_ints_ao() { _undefined_function("build_dipole_ints_ao"); }
 
 std::vector<std::shared_ptr<psi::Matrix>>
-ForteIntegrals::dipole_ints_mo_helper(std::shared_ptr<psi::Matrix> Cao, psi::SharedVector epsilon,
-                                      const bool& resort) {
+ForteIntegrals::dipole_ints_mo_helper(std::shared_ptr<psi::Matrix>, psi::SharedVector,
+                                      const bool&) {
     std::vector<std::shared_ptr<psi::Matrix>> MOdipole_ints;
     _undefined_function("dipole_ints_mo_helper");
 
@@ -306,14 +306,16 @@ ForteIntegrals::dipole_ints_mo_helper(std::shared_ptr<psi::Matrix> Cao, psi::Sha
 
 // The following functions throw an error by default
 
-void ForteIntegrals::rotate_orbitals(std::shared_ptr<psi::Matrix> Ua,
-                                     std::shared_ptr<psi::Matrix> Ub) {
+void ForteIntegrals::rotate_orbitals(std::shared_ptr<psi::Matrix>, std::shared_ptr<psi::Matrix>) {
     _undefined_function("rotate_orbitals");
 }
 
-void ForteIntegrals::update_orbitals(std::shared_ptr<psi::Matrix> Ca,
-                                     std::shared_ptr<psi::Matrix> Cb) {
+void ForteIntegrals::update_orbitals(std::shared_ptr<psi::Matrix>, std::shared_ptr<psi::Matrix>) {
     _undefined_function("update_orbitals");
+}
+
+void ForteIntegrals::compute_frozen_one_body_operator() {
+    _undefined_function("compute_frozen_one_body_operator");
 }
 
 ambit::Tensor ForteIntegrals::three_integral_block(const std::vector<size_t>&,
@@ -331,8 +333,7 @@ double** ForteIntegrals::three_integral_pointer() { _undefined_function("three_i
 
 void ForteIntegrals::rotate_mos() { _undefined_function("rotate_mos"); }
 
-std::vector<std::shared_ptr<psi::Matrix>> ForteIntegrals::mo_dipole_ints(const bool& alpha,
-                                                                         const bool& resort) {
+std::vector<std::shared_ptr<psi::Matrix>> ForteIntegrals::mo_dipole_ints(const bool&, const bool&) {
     std::vector<std::shared_ptr<psi::Matrix>> mo_dipole_ints_;
     _undefined_function("compute_MOdipole_ints");
     return mo_dipole_ints_;
