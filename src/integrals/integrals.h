@@ -137,6 +137,12 @@ class ForteIntegrals {
     /// temporary solution for not having a Wavefunction
     std::shared_ptr<psi::Wavefunction> wfn();
 
+    // The number of symmetry-adapted orbitals
+    // see https://github.com/psi4/psi4/wiki/OrbitalDimensions
+    size_t nso() const;
+    /// Return the number of symmetry-adapted orbitals per irrep
+    const psi::Dimension& nsopi() const;
+
     /// Return the total number of molecular orbitals (this number includes frozen MOs)
     size_t nmo() const;
 
@@ -144,11 +150,11 @@ class ForteIntegrals {
     int nirrep() const;
 
     /// Return the number of frozen core orbitals per irrep
-    psi::Dimension& frzcpi();
+    const psi::Dimension& frzcpi() const;
     /// Return the number of frozen virtual orbitals per irrep
-    psi::Dimension& frzvpi();
+    const psi::Dimension& frzvpi() const;
     /// The number of correlated MOs per irrep (non frozen).  This is nmopi - nfzcpi - nfzvpi.
-    psi::Dimension& ncmopi();
+    const psi::Dimension& ncmopi() const;
 
     /// Return the total number of correlated molecular orbitals (this number excludes frozen MOs)
     size_t ncmo() const;
@@ -325,6 +331,8 @@ class ForteIntegrals {
     /// Number of irreps
     int nirrep_;
 
+    /// The number of symmetry-adapted orbitals
+    size_t nso_;
     /// The number of MOs, including the ones that are frozen.
     size_t nmo_;
 
@@ -334,7 +342,7 @@ class ForteIntegrals {
     /// The mapping from correlated MO to full MO (frozen + correlated)
     std::vector<size_t> cmotomo_;
 
-    /// The number of symmetrized AOs per irrep.
+    /// The number of symmetry-adapted orbitals per irrep.
     psi::Dimension nsopi_;
     /// The number of MOs per irrep.
     psi::Dimension nmopi_;
@@ -349,8 +357,6 @@ class ForteIntegrals {
     /// The number of orbitals used in indexing routines (nmo or ncmo if core orbitals are frozen)
     /// The correct value is set by the integrals class
     size_t aptei_idx_;
-    /// The number of symmetry orbitals
-    size_t nso_;
 
     // OMP
     // Is OMP available?

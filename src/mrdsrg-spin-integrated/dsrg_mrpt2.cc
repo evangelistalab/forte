@@ -1705,7 +1705,7 @@ void DSRG_MRPT2::compute_dm1d_pt2(BlockedTensor& M, double& Mbar0, BlockedTensor
 
 //    // diagonalize Hbar depending on CAS_TYPE
 //    if (foptions_->get_str("CAS_TYPE") == "CAS") {
-//        auto state = make_state_info_from_psi_wfn(ints_->wfn());
+//        auto state = make_state_info_from_psi(ints_->wfn());
 //        FCI_MO fci_mo(state, nroot, scf_info_, foptions_, mo_space_info_, fci_ints);
 //        fci_mo.set_localize_actv(false);
 //        Erelax = fci_mo.compute_energy();
@@ -1734,12 +1734,12 @@ void DSRG_MRPT2::compute_dm1d_pt2(BlockedTensor& M, double& Mbar0, BlockedTensor
 //        }
 //    } else if (foptions_->get_str("CAS_TYPE") == "ACI") {
 
-//        auto state = make_state_info_from_psi_wfn(ints_->wfn());
+//        auto state = make_state_info_from_psi(ints_->wfn());
 //        AdaptiveCI aci(state, nroot, scf_info_, foptions_, mo_space_info_, fci_ints);
 
 //        Erelax = aci.compute_energy();
 //    } else {
-//        auto state = make_state_info_from_psi_wfn(ints_->wfn());
+//        auto state = make_state_info_from_psi(ints_->wfn());
 //        auto fci = make_active_space_method("FCI", state, nroot, scf_info_, mo_space_info_, ints_,
 //                                            foptions_);
 //        fci->set_active_space_integrals(fci_ints);

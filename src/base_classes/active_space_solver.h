@@ -186,12 +186,12 @@ to_state_nroots_map(const std::map<StateInfo, std::vector<double>>& state_weight
 /**
  * @brief Make a list of states and weights.
  * @param options user-provided options
- * @param wfn a psi wave function
+ * @param mo_space_info orbital space information
  * @return a unique pointer to an ActiveSpaceSolver object
  */
 std::map<StateInfo, std::vector<double>>
 make_state_weights_map(std::shared_ptr<ForteOptions> options,
-                       std::shared_ptr<psi::Wavefunction> wfn);
+                       std::shared_ptr<forte::MOSpaceInfo> mo_space_info);
 
 /**
  * @brief Compute the average energy for a set of states

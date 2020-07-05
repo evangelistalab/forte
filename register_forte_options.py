@@ -47,17 +47,17 @@ def register_driver_options(options):
                           'The type of computation')
 
     options.add_int(
-        "CHARGE", 0,
+        "CHARGE", None,
         """The charge of the molecule. If a value is provided it overrides the charge of the SCF solution."""
     )
     options.add_int(
-        "MULTIPLICITY", 0,
+        "MULTIPLICITY", None,
         """The multiplicity = (2S + 1) of the electronic state.
     For example, 1 = singlet, 2 = doublet, 3 = triplet, ...
     If a value is provided it overrides the multiplicity of the SCF solution"""
     )
     options.add_int(
-        "ROOT_SYM", 0, 'The symmetry of the electronic state. (zero based)')
+        "ROOT_SYM", None, 'The symmetry of the electronic state. (zero based)')
     options.add_str("ORBITAL_TYPE", "CANONICAL",
                           ['CANONICAL', 'LOCAL', 'MP2_NO'],
                           'Type of orbitals to use')
@@ -66,7 +66,7 @@ def register_driver_options(options):
 
     options.add_array("SUBSPACE", "A list of orbital subspaces")
 
-    options.add_double("MS", 0.0, "Projection of spin onto the z axis")
+    options.add_double("MS", None, "Projection of spin onto the z axis")
 
     options.add_str("ACTIVE_REF_TYPE", "CAS", "Initial guess for active space wave functions")
 
@@ -580,11 +580,15 @@ def register_integral_options(options):
     options.set_group("Integrals")
     options.add_str(
         "INT_TYPE", "CONVENTIONAL",
-        ["CONVENTIONAL", "DF", "CHOLESKY", "DISKDF", "DISTDF", "OWNINTEGRALS"],
-        "The algorithm used to screen the determinant"
-        "- CONVENTIONAL Conventional two-electron integrals"
+        ["CONVENTIONAL","CHOLESKY", "DF", "DISKDF", "FCIDUMP"],
+        "The type of molecular integrals used in a computation"
+        "- CONVENTIONAL Conventional four-index two-electron integrals"
         "- DF Density fitted two-electron integrals"
-        "- CHOLESKY Cholesky decomposed two-electron integrals")
+        "- CHOLESKY Cholesky decomposed two-electron integrals"
+        "- FCIDUMP Read integrals from a file in the FCIDUMP format")
+
+    options.add_str('FCIDUMP_FILE','INTDUMP','The file that stores the FCIDUMP integrals')
+
     options.add_double(
         "INTEGRAL_SCREENING", 1.0e-12,
         "The screening threshold for JK builds and DF libraries")

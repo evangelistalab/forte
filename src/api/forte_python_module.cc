@@ -168,7 +168,7 @@ PYBIND11_MODULE(forte, m) {
     m.def("make_active_space_solver", &make_active_space_solver, "Make an active space solver");
     m.def("make_orbital_transformation", &make_orbital_transformation,
           "Make an orbital transformation");
-    m.def("make_state_info_from_psi_wfn", &make_state_info_from_psi_wfn,
+    m.def("make_state_info_from_psi", &make_state_info_from_psi,
           "Make a state info object from a psi4 Wavefunction");
     m.def("to_state_nroots_map", &to_state_nroots_map,
           "Convert a map of StateInfo to weight lists to a map of StateInfo to number of "
@@ -237,7 +237,9 @@ PYBIND11_MODULE(forte, m) {
 
     // export SCFInfo
     py::class_<SCFInfo, std::shared_ptr<SCFInfo>>(m, "SCFInfo")
-        .def(py::init<psi::SharedWavefunction>());
+        .def(py::init<psi::SharedWavefunction>())
+        .def(py::init<const psi::Dimension&, const psi::Dimension&, double,
+                      std::shared_ptr<psi::Vector>, std::shared_ptr<psi::Vector>>());
 
     // export DynamicCorrelationSolver
     py::class_<DynamicCorrelationSolver, std::shared_ptr<DynamicCorrelationSolver>>(

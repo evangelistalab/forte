@@ -212,15 +212,14 @@ class CASSCF {
     /// Compute overlap between old_c and new_c
     void overlap_orbitals(const psi::SharedMatrix& C_old, const psi::SharedMatrix& C_new);
     void overlap_coefficients();
-    void write_orbitals_molden();
+//    void write_orbitals_molden();
 
     /// DEBUG PRINTING
     bool casscf_debug_print_;
     /// Freeze the core and leave them unchanged
     /// set frozen_core_orbitals
     std::shared_ptr<psi::Matrix> set_frozen_core_orbitals();
-    /// Compute the restricted_one_body operator for FCI(done also in
-    /// OrbitalOptimizer)
+    /// Compute the restricted_one_body operator for FCI (done also in OrbitalOptimizer)
 
     std::vector<double> compute_restricted_docc_operator();
 

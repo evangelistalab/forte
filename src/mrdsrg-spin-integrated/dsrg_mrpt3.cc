@@ -1572,7 +1572,7 @@ void DSRG_MRPT3::renormalize_F(const bool& plusone) {
 //            dm_relax = fci_mo.compute_ref_relaxed_dm(Mbar0_, Mbar1_, Mbar2_);
 //        }
 //    } else if (foptions_->get_str("CAS_TYPE") == "ACI") {
-//        auto state = make_state_info_from_psi_wfn(ints_->wfn());
+//        auto state = make_state_info_from_psi(ints_->wfn());
 //        size_t nroot = foptions_->get_int("NROOT");
 //        AdaptiveCI aci(state, nroot, scf_info_, foptions_, mo_space_info_, fci_ints);
 //        if ((foptions_->psi_options())["ACI_RELAX_SIGMA"].has_changed()) {
@@ -1583,7 +1583,7 @@ void DSRG_MRPT3::renormalize_F(const bool& plusone) {
 //    } else {
 //        size_t nroot = foptions_->get_int("NROOT");
 
-//        auto state = make_state_info_from_psi_wfn(ints_->wfn());
+//        auto state = make_state_info_from_psi(ints_->wfn());
 //        auto fci = make_active_space_method("FCI", state, nroot, scf_info_, mo_space_info_, ints_,
 //                                            foptions_);
 //        fci->set_max_rdm_level(1);

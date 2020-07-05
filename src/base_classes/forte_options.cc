@@ -108,32 +108,54 @@ void ForteOptions::set(const std::string& label, const py::object val) {
     }
 }
 
-void ForteOptions::add_bool(const std::string& label, bool value, const std::string& description) {
-    add(label, "bool", py::bool_(value), description);
+void ForteOptions::add_bool(const std::string& label, py::object default_value,
+                            const std::string& description) {
+    if (default_value.is_none()) {
+        add(label, "bool", py::none(), description);
+    } else {
+        add(label, "bool", py::bool_(default_value), description);
+    }
 }
 
-void ForteOptions::add_int(const std::string& label, int value, const std::string& description) {
-    add(label, "int", py::int_(value), description);
-}
-
-void ForteOptions::add_double(const std::string& label, double value,
-                              const std::string& description) {
-    add(label, "float", py::float_(value), description);
-}
-
-void ForteOptions::add_str(const std::string& label, const std::string& value,
+void ForteOptions::add_int(const std::string& label, py::object default_value,
                            const std::string& description) {
-    add(label, "str", py::str(value), description);
+    if (default_value.is_none()) {
+        add(label, "int", py::none(), description);
+    } else {
+        add(label, "int", py::int_(default_value), description);
+    }
 }
 
-void ForteOptions::add_str(const std::string& label, const std::string& value,
+void ForteOptions::add_double(const std::string& label, py::object default_value,
+                              const std::string& description) {
+    if (default_value.is_none()) {
+        add(label, "float", py::none(), description);
+    } else {
+        add(label, "float", py::float_(default_value), description);
+    }
+}
+
+void ForteOptions::add_str(const std::string& label, py::object default_value,
+                           const std::string& description) {
+    if (default_value.is_none()) {
+        add(label, "str", py::none(), description);
+    } else {
+        add(label, "str", py::str(default_value), description);
+    }
+}
+
+void ForteOptions::add_str(const std::string& label, py::object default_value,
                            const std::vector<std::string>& allowed_values,
                            const std::string& description) {
     auto allowed_values_list = py::list();
     for (const auto& s : allowed_values) {
         allowed_values_list.append(py::str(s));
     }
-    add(label, "str", py::str(value), allowed_values_list, description);
+    if (default_value.is_none()) {
+        add(label, "str", py::none(), allowed_values_list, description);
+    } else {
+        add(label, "str", py::str(default_value), allowed_values_list, description);
+    }
 }
 
 void ForteOptions::add_array(const std::string& label, const std::string& description) {
@@ -148,11 +170,24 @@ void ForteOptions::add_double_array(const std::string& label, const std::string&
     add(label, "float_list", py::list(), description);
 }
 
+void check_options_none(py::object obj, const std::string& type, const std::string& label) {
+    if (obj.is_none()) {
+        std::string msg =
+            "Called ForteOptions::get_" + type + "(" + label + ") but the value is set to None";
+        throw std::runtime_error(msg);
+    }
+}
+
 void throw_options_get_error(const std::string& correct_type, const std::string& label,
                              const std::string& type) {
     std::string msg = "Called ForteOptions::get_" + correct_type + "(" + label +
                       ") but the type for this option is " + type;
     throw std::runtime_error(msg);
+}
+
+bool ForteOptions::is_none(const std::string& label) const {
+    auto value_type = get(label);
+    return value_type.first.is_none();
 }
 
 bool ForteOptions::get_bool(const std::string& label) {
@@ -166,6 +201,10 @@ bool ForteOptions::get_bool(const std::string& label) {
 
 int ForteOptions::get_int(const std::string& label) {
     auto value_type = get(label);
+    if (value_type.first.is_none()) {
+        std::string msg = "Called ForteOptions::get_int() but the value is None";
+        throw std::runtime_error(msg);
+    }
     if (value_type.second == "int") {
         return py::cast<int>(value_type.first);
     }
@@ -175,6 +214,7 @@ int ForteOptions::get_int(const std::string& label) {
 
 double ForteOptions::get_double(const std::string& label) {
     auto value_type = get(label);
+    check_options_none(value_type.first, "double", label);
     if (value_type.second == "float") {
         return py::cast<double>(value_type.first);
     }
@@ -316,13 +356,25 @@ void ForteOptions::push_options_to_psi4(psi::Options& options) {
         auto type = py::cast<std::string>(item.second["type"]);
         auto py_default_value = item.second["default_value"];
         if (type == "bool") {
-            options.add_bool(label, py::cast<bool>(py_default_value));
+            if (py_default_value.is_none()) {
+                options.add_bool(label, false);
+            } else {
+                options.add_bool(label, py::cast<bool>(py_default_value));
+            }
         }
         if (type == "int") {
-            options.add_int(label, py::cast<int>(py_default_value));
+            if (py_default_value.is_none()) {
+                options.add_int(label, 0);
+            } else {
+                options.add_int(label, py::cast<int>(py_default_value));
+            }
         }
         if (type == "float") {
-            options.add_double(label, py::cast<double>(py_default_value));
+            if (py_default_value.is_none()) {
+                options.add_double(label, 0.0);
+            } else {
+                options.add_double(label, py::cast<double>(py_default_value));
+            }
         }
         if (type == "str") {
             if (item.second.contains("allowed_values")) {
@@ -333,9 +385,18 @@ void ForteOptions::push_options_to_psi4(psi::Options& options) {
                     allowed_values_vec.push_back(py::str(s));
                 }
                 std::string allowed = to_string(allowed_values_vec, " ");
-                options.add_str(label, py::cast<std::string>(py_default_value), allowed);
+
+                if (py_default_value.is_none()) {
+                    options.add_str(label, "", allowed);
+                } else {
+                    options.add_str(label, py::cast<std::string>(py_default_value), allowed);
+                }
             } else {
-                options.add_str(label, py::cast<std::string>(py_default_value));
+                if (py_default_value.is_none()) {
+                    options.add_str(label, py::cast<std::string>(py_default_value));
+                } else {
+                    options.add_str(label, "");
+                }
             }
         }
         if ((type == "int_list") or (type == "float_list") or (type == "gen_list")) {
@@ -347,48 +408,53 @@ void ForteOptions::push_options_to_psi4(psi::Options& options) {
 void ForteOptions::get_options_from_psi4(psi::Options& options) {
     for (auto item : dict_) {
         auto label = py::cast<std::string>(item.first);
-        auto type = py::cast<std::string>(item.second["type"]);
-        if (type == "bool") {
-            bool value = options.get_bool(label);
-            item.second["value"] = py::cast(value);
-        }
-        if (type == "int") {
-            int value = options.get_int(label);
-            item.second["value"] = py::cast(value);
-        }
-        if (type == "float") {
-            double value = options.get_double(label);
-            item.second["value"] = py::cast(value);
-        }
-        if (type == "str") {
-            std::string value = options.get_str(label);
-            item.second["value"] = py::cast(value);
-        }
-        if (type == "int_list") {
-            std::vector<int> value = options.get_int_vector(label);
-            auto py_list = py::list();
-            for (auto e : value) {
-                py_list.append(py::int_(e));
+        // only change the values if an option was set
+        // this is done to properly handle the case in which there is no default
+        // value for an option and value = default_value = None
+        if (options[label].has_changed()) {
+            auto type = py::cast<std::string>(item.second["type"]);
+            if (type == "bool") {
+                bool value = options.get_bool(label);
+                item.second["value"] = py::cast(value);
             }
-            item.second["value"] = py_list;
-        }
-        if (type == "float_list") {
-            std::vector<double> value = options.get_double_vector(label);
-            auto py_list = py::list();
-            for (auto e : value) {
-                py_list.append(py::float_(e));
+            if (type == "int") {
+                int value = options.get_int(label);
+                item.second["value"] = py::cast(value);
             }
-            item.second["value"] = py_list;
-        }
-        if (type == "gen_list") {
-            auto& psi_array_data = options[label];
-            auto py_list = py::list();
-            size_t nentry = psi_array_data.size();
-            for (size_t i = 0; i < nentry; i++) {
-                auto result = process_psi4_array_data(psi_array_data[i]);
-                py_list.append(result);
+            if (type == "float") {
+                double value = options.get_double(label);
+                item.second["value"] = py::cast(value);
             }
-            item.second["value"] = py_list;
+            if (type == "str") {
+                std::string value = options.get_str(label);
+                item.second["value"] = py::cast(value);
+            }
+            if (type == "int_list") {
+                std::vector<int> value = options.get_int_vector(label);
+                auto py_list = py::list();
+                for (auto e : value) {
+                    py_list.append(py::int_(e));
+                }
+                item.second["value"] = py_list;
+            }
+            if (type == "float_list") {
+                std::vector<double> value = options.get_double_vector(label);
+                auto py_list = py::list();
+                for (auto e : value) {
+                    py_list.append(py::float_(e));
+                }
+                item.second["value"] = py_list;
+            }
+            if (type == "gen_list") {
+                auto& psi_array_data = options[label];
+                auto py_list = py::list();
+                size_t nentry = psi_array_data.size();
+                for (size_t i = 0; i < nentry; i++) {
+                    auto result = process_psi4_array_data(psi_array_data[i]);
+                    py_list.append(result);
+                }
+                item.second["value"] = py_list;
+            }
         }
     }
 }

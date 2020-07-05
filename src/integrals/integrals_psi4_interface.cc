@@ -40,21 +40,12 @@
 #include "psi4/libmints/matrix.h"
 #include "psi4/libmints/molecule.h"
 #include "psi4/libmints/wavefunction.h"
-
 #include "psi4/libpsi4util/process.h"
-////#include "psi4/libmints/factory.h"
-////#include "psi4/libmints/mintshelper.h"
-////#include "psi4/libqt/qt.h"
-////#include "psi4/libtrans/integraltransform.h"
-////#include "psi4/psifiles.h"
 
-//#include "helpers/blockedtensorfactory.h"
-//#include "base_classes/forte_options.h"
 #include "base_classes/mo_space_info.h"
 #include "helpers/printing.h"
 #include "helpers/timer.h"
 #include "integrals/integrals.h"
-//#include "memory.h"
 
 #ifdef HAVE_GA
 #include <ga.h>
@@ -62,7 +53,6 @@
 #endif
 
 using namespace psi;
-// using namespace ambit;
 
 namespace forte {
 

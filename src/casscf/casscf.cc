@@ -84,7 +84,7 @@ void CASSCF::startup() {
     print_ = options_->get_int("PRINT");
     casscf_debug_print_ = options_->get_bool("CASSCF_DEBUG_PRINTING");
 
-    nsopi_ = scf_info_->nsopi();
+    nsopi_ = ints_->nsopi();
     nirrep_ = mo_space_info_->nirrep();
 
     // Set MOs containers
@@ -250,9 +250,8 @@ double CASSCF::compute_energy() {
         }
 
         CASSCFOrbitalOptimizer orbital_optimizer(gamma1_, gamma2_, tei_gaaa_, options_,
-                                                 mo_space_info_);
+                                                 mo_space_info_, ints_);
 
-        orbital_optimizer.set_scf_info(scf_info_);
         orbital_optimizer.set_frozen_one_body(F_frozen_core_);
         orbital_optimizer.set_symmmetry_mo(Ca);
         orbital_optimizer.one_body(Hcore_->clone());
@@ -403,7 +402,7 @@ ambit::Tensor CASSCF::transform_integrals(std::shared_ptr<psi::Matrix> Ca) {
     // This was borrowed from Kevin Hannon's IntegralTransform Plugin.
 
     // Transform C matrix to C1 symmetry
-    size_t nso = scf_info_->nso();
+    size_t nso = ints_->nso();
     psi::SharedMatrix aotoso = ints_->wfn()->aotoso();
     auto Ca_nosym = std::make_shared<psi::Matrix>(nso, nmo_);
 
@@ -772,8 +771,7 @@ std::shared_ptr<psi::Matrix> CASSCF::build_fock_active(std::shared_ptr<psi::Matr
 }
 
 void CASSCF::overlap_orbitals(const psi::SharedMatrix& C_old, const psi::SharedMatrix& C_new) {
-    psi::SharedMatrix S_orbitals(
-        new psi::Matrix("Overlap", scf_info_->nsopi(), scf_info_->nsopi()));
+    psi::SharedMatrix S_orbitals(new psi::Matrix("Overlap", nsopi_, nsopi_));
     psi::SharedMatrix S_basis = ints_->wfn()->S();
     S_orbitals = psi::linalg::triplet(C_old, S_basis, C_new, true, false, false);
     S_orbitals->set_name("C^T S C (Overlap)");
@@ -786,10 +784,10 @@ void CASSCF::overlap_orbitals(const psi::SharedMatrix& C_old, const psi::SharedM
     }
 }
 
-void CASSCF::write_orbitals_molden() {
-    psi::SharedVector occ_vector(new psi::Vector(nirrep_, corr_dim_));
-    view_modified_orbitals(ints_->wfn(), ints_->Ca(), scf_info_->epsilon_a(), occ_vector);
-}
+//void CASSCF::write_orbitals_molden() {
+//    psi::SharedVector occ_vector(new psi::Vector(nirrep_, corr_dim_));
+//    view_modified_orbitals(ints_->wfn(), ints_->Ca(), scf_info_->epsilon_a(), occ_vector);
+//}
 
 // void CASSCF::overlap_coefficients() {
 //    outfile->Printf("\n iter  Overlap_{i-1} Overlap_{i}");

@@ -48,11 +48,11 @@ void export_ForteOptions(py::module& m) {
         .def("add_int", &ForteOptions::add_int, "Add an integer option")
         .def("add_double", &ForteOptions::add_double, "Add a double option")
         .def("add_str",
-             (void (ForteOptions::*)(const std::string&, const std::string&, const std::string&)) &
+             (void (ForteOptions::*)(const std::string&, py::object, const std::string&)) &
                  ForteOptions::add_str,
              "Add a string option")
         .def("add_str",
-             (void (ForteOptions::*)(const std::string&, const std::string&,
+             (void (ForteOptions::*)(const std::string&, py::object,
                                      const std::vector<std::string>&, const std::string&)) &
                  ForteOptions::add_str,
              "Add a string option")

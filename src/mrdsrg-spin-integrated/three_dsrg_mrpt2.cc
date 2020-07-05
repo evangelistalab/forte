@@ -3425,7 +3425,7 @@ void THREE_DSRG_MRPT2::compute_Hbar1V_diskDF(ambit::BlockedTensor& Hbar1, bool s
 
 //        size_t nroot = foptions_->get_int("NROOT");
 //        // Only do ground state ACI for now
-//        auto state = make_state_info_from_psi_wfn(ints_->wfn());
+//        auto state = make_state_info_from_psi(ints_->wfn());
 //        AdaptiveCI aci(state, nroot, scf_info_, foptions_, mo_space_info_,
 //                       fci_ints); // ints_->wfn() is implicitly converted to StateInfo
 //        if ((foptions_->psi_options())["ACI_RELAX_SIGMA"].has_changed()) {

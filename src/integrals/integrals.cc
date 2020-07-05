@@ -33,18 +33,6 @@
 #include "psi4/libpsi4util/PsiOutStream.h"
 #include "psi4/libmints/wavefunction.h"
 
-//#include "psi4/libmints/molecule.h"
-//#include "psi4/libpsi4util/process.h"
-//#include "psi4/libfock/jk.h"
-//#include "psi4/libmints/basisset.h"
-//#include "psi4/libmints/factory.h"
-//#include "psi4/libmints/integral.h"
-//#include "psi4/libmints/mintshelper.h"
-//#include "psi4/libqt/qt.h"
-//#include "psi4/libtrans/integraltransform.h"
-//#include "psi4/psi4-dec.h"
-//#include "psi4/psifiles.h"
-
 #include "helpers/blockedtensorfactory.h"
 #include "base_classes/forte_options.h"
 #include "base_classes/mo_space_info.h"
@@ -97,15 +85,19 @@ double ForteIntegrals::nuclear_repulsion_energy() const { return nucrep_; }
 
 std::shared_ptr<psi::Wavefunction> ForteIntegrals::wfn() { return wfn_; }
 
+size_t ForteIntegrals::nso() const { return nso_; }
+
 size_t ForteIntegrals::nmo() const { return nmo_; }
 
 int ForteIntegrals::nirrep() const { return nirrep_; }
 
-psi::Dimension& ForteIntegrals::frzcpi() { return frzcpi_; }
+const psi::Dimension& ForteIntegrals::frzcpi() const { return frzcpi_; }
 
-psi::Dimension& ForteIntegrals::frzvpi() { return frzvpi_; }
+const psi::Dimension& ForteIntegrals::frzvpi() const { return frzvpi_; }
 
-psi::Dimension& ForteIntegrals::ncmopi() { return ncmopi_; }
+const psi::Dimension& ForteIntegrals::nsopi() const { return nsopi_; }
+
+const psi::Dimension& ForteIntegrals::ncmopi() const { return ncmopi_; }
 
 size_t ForteIntegrals::ncmo() const { return ncmo_; }
 
