@@ -30,6 +30,8 @@ def register_driver_options(options):
         'NONE','NEWDRIVER','MR-DSRG-PT2', 'CASSCF'
     ], 'Specify the job type')
 
+    options.add_str("SCF_TYPE", None, "The integrals used in the SCF calculation")
+
     options.add_str('DERTYPE', 'NONE', ['NONE', 'FIRST'], 'Derivative order')
 
     options.add_double("E_CONVERGENCE", 1.0e-9, "The energy convergence criterion")
@@ -594,7 +596,8 @@ def register_integral_options(options):
         "The screening threshold for JK builds and DF libraries")
     options.add_double("CHOLESKY_TOLERANCE", 1.0e-6,
                              "The tolerance for cholesky integrals")
-
+    options.add_double("INTS_TOLERANCE", 1.0e-12,
+                             "The tolerance for cholesky integrals")
     options.add_bool("PRINT_INTS", False,
                            "Print the one- and two-electron integrals?")
 
@@ -862,7 +865,6 @@ def register_old_options(options):
 
     options.add_bool("MEMORY_SUMMARY", False, "Print summary of memory")
 
-    options.add_str("SCF_TYPE", "PK", "The integrals used in the SCF calculation")
     options.add_str("REFERENCE", "", "The SCF refernce type")
 
     options.add_int("DIIS_MAX_VECS",5,"The maximum number of DIIS vectors");

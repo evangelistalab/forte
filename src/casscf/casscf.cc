@@ -134,20 +134,45 @@ void CASSCF::startup() {
     Hcore_ = SharedMatrix(ints_->wfn()->H()->clone());
 
     local_timer JK_initialize;
-    if (options_->get_str("SCF_TYPE") == "GTFOCK") {
-#ifdef HAVE_JK_FACTORY
-        psi::Process::environment.set_legacy_molecule(ints_->wfn()->molecule());
-        JK_ = std::shared_ptr<JK>(new GTFockJK(ints_->basisset()));
-#else
-        throw psi::PSIEXCEPTION("GTFock was not compiled in this version");
-#endif
-    } else {
+    auto integral_type = ints_->integral_type();
+    auto basis_set = ints_->wfn()->basisset();
+    if (integral_type == Conventional) {
+        JK_ = JK::build_JK(basis_set, psi::BasisSet::zero_ao_basis_set(),
+                           psi::Process::environment.options, "PK");
+    } else if (integral_type == Cholesky) {
+        //        JK_ = JK::build_JK(basis_set, psi::BasisSet::zero_ao_basis_set(),
+        //                           psi::Process::environment.options, "CD");
+        psi::Options& options = psi::Process::environment.options;
+        CDJK* jk = new CDJK(wfn_->basisset(), options_->get_double("CHOLESKY_TOLERANCE"));
+
+        if (options["INTS_TOLERANCE"].has_changed())
+            jk->set_cutoff(options.get_double("INTS_TOLERANCE"));
+        if (options["SCREENING"].has_changed())
+            jk->set_csam(options.get_str("SCREENING") == "CSAM");
+        if (options["PRINT"].has_changed())
+            jk->set_print(options.get_int("PRINT"));
+        if (options["DEBUG"].has_changed())
+            jk->set_debug(options.get_int("DEBUG"));
+        if (options["BENCH"].has_changed())
+            jk->set_bench(options.get_int("BENCH"));
+        if (options["DF_INTS_IO"].has_changed())
+            jk->set_df_ints_io(options.get_str("DF_INTS_IO"));
+        jk->set_condition(options.get_double("DF_FITTING_CONDITION"));
+        if (options["DF_INTS_NUM_THREADS"].has_changed())
+            jk->set_df_ints_num_threads(options.get_int("DF_INTS_NUM_THREADS"));
+
+        JK_core = std::shared_ptr<JK>(jk);
+
+    } else if ((integral_type == DF) or (integral_type == DiskDF) or (integral_type == DistDF)) {
         if (options_->get_str("SCF_TYPE") == "DF") {
-            auto df_basis = ints_->wfn()->get_basisset("DF_BASIS_SCF");
-            JK_ = std::make_shared<DiskDFJK>(ints_->wfn()->basisset(), df_basis);
+            JK_ = JK::build_JK(basis_set, ints_->wfn()->get_basisset("DF_BASIS_SCF"),
+                               psi::Process::environment.options, "MEM_DF");
+            //            auto df_basis = ints_->wfn()->get_basisset("DF_BASIS_SCF");
+            //            JK_ = std::make_shared<DiskDFJK>(basis_set, df_basis);
         } else {
-            JK_ = JK::build_JK(ints_->wfn()->basisset(), psi::BasisSet::zero_ao_basis_set(),
-                               psi::Process::environment.options);
+            throw psi::PSIEXCEPTION(
+                "Trying to compute the frozen one-body operator with MEM_DF but "
+                "using a non-DF integral type");
         }
     }
 
@@ -784,7 +809,7 @@ void CASSCF::overlap_orbitals(const psi::SharedMatrix& C_old, const psi::SharedM
     }
 }
 
-//void CASSCF::write_orbitals_molden() {
+// void CASSCF::write_orbitals_molden() {
 //    psi::SharedVector occ_vector(new psi::Vector(nirrep_, corr_dim_));
 //    view_modified_orbitals(ints_->wfn(), ints_->Ca(), scf_info_->epsilon_a(), occ_vector);
 //}

@@ -82,23 +82,11 @@ class ConventionalIntegrals : public Psi4Integrals {
   private:
     // ==> Class data <==
 
-    /// Two-electron integrals stored as a vector
-    std::vector<double> aphys_tei_aa;
-    std::vector<double> aphys_tei_ab;
-    std::vector<double> aphys_tei_bb;
-
     // ==> Class private functions <==
 
     /// Transform the integrals
     std::shared_ptr<psi::IntegralTransform> transform_integrals();
     void resort_four(std::vector<double>& tei, std::vector<size_t>& map);
-
-    /// An addressing function to for two-electron integrals
-    /// @return the address of the integral <pq|rs> or <pq||rs>
-    size_t aptei_index(size_t p, size_t q, size_t r, size_t s) {
-        return aptei_idx_ * aptei_idx_ * aptei_idx_ * p + aptei_idx_ * aptei_idx_ * q +
-               aptei_idx_ * r + s;
-    }
 
     // ==> Class private virtual functions <==
     void gather_integrals() override;

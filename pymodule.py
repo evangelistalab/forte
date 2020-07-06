@@ -462,6 +462,7 @@ def prepare_forte_objects_from_fcidump(options):
     print(options.dict()['FCIDUMP_FILE'])
     filename = options.get_str('FCIDUMP_FILE')
     fcidump = psi4.fcidump_from_file(filename)
+    # todo: enable symmetry here
 #    if 'pntgrp' in fcidump:
 #    else:
      # assume C1 symmetry
@@ -495,7 +496,7 @@ def prepare_forte_objects_from_fcidump(options):
 
     state_weights_map = forte.make_state_weights_map(options, mo_space_info)
 
-    return (state_weights_map, mo_space_info, scf_info)
+    return (state_weights_map, mo_space_info, scf_info,fcidump)
 
 def run_forte(name, **kwargs):
     r"""Function encoding sequence of PSI module and plugin calls so that
@@ -525,7 +526,7 @@ def run_forte(name, **kwargs):
 
     if 'FCIDUMP' in options.get_str('INT_TYPE'):
         psi4.core.print_out('\n  Preparing forte objects from a custom source')
-        state_weights_map, mo_space_info, scf_info = prepare_forte_objects_from_fcidump(options)
+        state_weights_map, mo_space_info, scf_info, fcidump = prepare_forte_objects_from_fcidump(options)
     else:
         psi4.core.print_out('\n  Preparing forte objects from a psi4 Wavefunction object')
         # Compute a SCF reference using psi4 and obtain a wavefunction object
@@ -549,6 +550,9 @@ def run_forte(name, **kwargs):
 
     if 'FCIDUMP' in options.get_str('INT_TYPE'):
         psi4.core.print_out('\n  Forte will use custom integrals')
+        # Make an integral object from the psi4 wavefunction object
+        ints = forte.make_custom_ints(options, mo_space_info)
+        forte.fill_ints_with_fcidump(fcidump)
     else:
         psi4.core.print_out('\n  Forte will use psi4 integrals')
         # Make an integral object from the psi4 wavefunction object
@@ -602,16 +606,15 @@ def gradient_forte(name, **kwargs):
     lowername = name.lower()
     kwargs = p4util.kwargs_lower(kwargs)
 
-    # Compute a SCF reference, a wavefunction is return which holds the molecule used, orbitals
-    # Fock matrices, and more
-    ref_wfn = kwargs.get('ref_wfn', None)
-    if ref_wfn is None:
-        ref_wfn = psi4.driver.scf_helper(name, **kwargs)
-
     # Get the psi4 option object
     optstash = p4util.OptionsState(['GLOBALS', 'DERTYPE'])
     psi4.core.set_global_option('DERTYPE', 'FIRST')
 
+    # Start Forte, initialize ambit
+    my_proc_n_nodes = forte.startup()
+    my_proc, n_nodes = my_proc_n_nodes
+
+    # Get the option object
     psi4_options = psi4.core.get_options()
     psi4_options.set_current_module('FORTE')
 
@@ -619,32 +622,23 @@ def gradient_forte(name, **kwargs):
     options = forte.forte_options
     options.get_options_from_psi4(psi4_options)
 
-    if ('DF' in options.get_str('INT_TYPE')):
-        raise Exception(
-            'analytic gradient is not implemented for density fitting')
-
-    if (options.get_str('MINAO_BASIS')):
-        minao_basis = psi4.core.BasisSet.build(ref_wfn.molecule(),
-                                               'MINAO_BASIS',
-                                               options.get_str('MINAO_BASIS'))
-        ref_wfn.set_basisset('MINAO_BASIS', minao_basis)
-
-    # Start Forte, initialize ambit
-    my_proc_n_nodes = forte.startup()
-    my_proc, n_nodes = my_proc_n_nodes
-
     # Print the banner
     forte.banner()
 
-    # Create the MOSpaceInfo object
-    mo_space_info = forte.make_mo_space_info(ref_wfn, options)
+    if 'FCIDUMP' in options.get_str('INT_TYPE'):
+        psi4.core.print_out('\n  Gradients are not implemented for non-psi4 integrals')
+        exit()
+    else:
+        psi4.core.print_out('\n  Preparing forte objects from a psi4 Wavefunction object')
+        # Compute a SCF reference using psi4 and obtain a wavefunction object
+        # which holds the molecule used, orbitals, Fock matrices, and more
+        ref_wfn = kwargs.get('ref_wfn', None)
+        if ref_wfn is None:
+            psi4.core.print_out('\n  No reference wavefunction provided. Computing one with psi4\n')
+            ref_wfn = psi4.driver.scf_helper(name, **kwargs)
 
-    # Call methods that project the orbitals (AVAS, embedding)
-    mo_space_info = orbital_projection(ref_wfn, options, mo_space_info)
-
-    state = forte.make_state_info_from_psi(ref_wfn)
-    scf_info = forte.SCFInfo(ref_wfn)
-    state_weights_map = forte.make_state_weights_map(options, mo_space_info)
+        state_weights_map, mo_space_info, scf_info = prepare_forte_objects_from_psi4_wfn(
+            options, ref_wfn)
 
     # Run a method
     job_type = options.get_str('JOB_TYPE')

@@ -37,7 +37,7 @@ set forte{
    active_space_solver    fci
    correlation_solver     sa-mrdsrg
    int_type               cholesky
-   cholesky_tolerance     1e-4
+   cholesky_tolerance     1e-12
    corr_level             ldsrg2
    frozen_docc            [1,0,0,0]
    restricted_docc        [1,0,1,1]

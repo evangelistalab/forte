@@ -63,9 +63,16 @@ namespace forte {
 #define omp_get_thread_num() 0
 #endif
 
+Psi4Integrals::Psi4Integrals(std::shared_ptr<ForteOptions> options,
+                             std::shared_ptr<psi::Wavefunction> ref_wfn,
+                             std::shared_ptr<MOSpaceInfo> mo_space_info, IntegralType integral_type,
+                             IntegralSpinRestriction restricted)
+    : ForteIntegrals(options, ref_wfn, mo_space_info, integral_type, restricted) {
+    base_initialize_psi4();
+}
+
 void Psi4Integrals::base_initialize_psi4() {
     setup_psi4_ints();
-    allocate();
     transform_one_electron_integrals();
     build_dipole_ints_ao();
 }
@@ -80,38 +87,10 @@ void Psi4Integrals::setup_psi4_ints() {
     Ca_ = wfn_->Ca()->clone();
     Cb_ = (spin_restriction_ == IntegralSpinRestriction::Restricted ? wfn_->Ca()->clone()
                                                                     : wfn_->Cb()->clone());
-
+    nso_ = wfn_->nso();
+    nsopi_ = wfn_->nsopi();
     nucrep_ = wfn_->molecule()->nuclear_repulsion_energy(wfn_->get_dipole_field_strength());
 
-    nirrep_ = wfn_->nirrep();
-    nso_ = wfn_->nso();
-    nmo_ = wfn_->nmo();
-    nsopi_ = wfn_->nsopi();
-    nmopi_ = wfn_->nmopi();
-    frzcpi_ = mo_space_info_->dimension("FROZEN_DOCC");
-    frzvpi_ = mo_space_info_->dimension("FROZEN_UOCC");
-    ncmopi_ = mo_space_info_->dimension("CORRELATED");
-
-    ncmo_ = ncmopi_.sum();
-
-    // Create an array that maps the CMOs to the MOs (cmotomo_).
-    for (int h = 0, q = 0; h < nirrep_; ++h) {
-        q += frzcpi_[h]; // skip the frozen core
-        for (int r = 0; r < ncmopi_[h]; ++r) {
-            cmotomo_.push_back(q);
-            q++;
-        }
-        q += frzvpi_[h]; // skip the frozen virtual
-    }
-
-    // Indexing
-    // This is important!  Set the indexing to work using the number of
-    // molecular integrals
-    aptei_idx_ = nmo_;
-    num_tei_ = INDEX4(nmo_ - 1, nmo_ - 1, nmo_ - 1, nmo_ - 1) + 1;
-    num_aptei_ = nmo_ * nmo_ * nmo_ * nmo_;
-    num_threads_ = omp_get_max_threads();
-    print_ = options_->get_int("PRINT");
     /// If MO_ROTATE is set in option, call rotate_mos.
     /// Wasn't really sure where to put this function, but since, integrals is
     /// always called, this seems like a good spot.
@@ -119,18 +98,6 @@ void Psi4Integrals::setup_psi4_ints() {
     if (rotate_mos_list.size() > 0) {
         rotate_mos();
     }
-}
-
-void Psi4Integrals::allocate() {
-    // full one-electron integrals
-    full_one_electron_integrals_a_.assign(nmo_ * nmo_, 0.0);
-    full_one_electron_integrals_b_.assign(nmo_ * nmo_, 0.0);
-
-    // these will hold only the correlated part
-    one_electron_integrals_a_.assign(ncmo_ * ncmo_, 0.0);
-    one_electron_integrals_b_.assign(ncmo_ * ncmo_, 0.0);
-    fock_matrix_a_.assign(ncmo_ * ncmo_, 0.0);
-    fock_matrix_b_.assign(ncmo_ * ncmo_, 0.0);
 }
 
 void Psi4Integrals::transform_one_electron_integrals() {
@@ -190,26 +157,43 @@ void Psi4Integrals::compute_frozen_one_body_operator() {
     }
 
     std::shared_ptr<JK> JK_core;
-    if (options_->get_str("SCF_TYPE") == "GTFOCK") {
-#ifdef HAVE_JK_FACTORY
-        psi::Process::environment.set_legacy_molecule(wfn_->molecule());
-        JK_core = std::shared_ptr<JK>(new GTFockJK(wfn_->basisset()));
-#else
-        throw psi::PSIEXCEPTION("GTFock was not compiled in this version");
-#endif
-    } else {
+    if (integral_type_ == Conventional) {
+        outfile->Printf("\n  Building frozen-core operator using PK integrals");
+        JK_core = JK::build_JK(wfn_->basisset(), psi::BasisSet::zero_ao_basis_set(),
+                               psi::Process::environment.options, "PK");
+    } else if (integral_type_ == Cholesky) {
+        outfile->Printf("\n  Building frozen-core operator using Cholesky integrals");
+        //        JK_core = JK::build_JK(wfn_->basisset(), psi::BasisSet::zero_ao_basis_set(),
+        //                               psi::Process::environment.options, "CD");
+        psi::Options& options = psi::Process::environment.options;
+        CDJK* jk = new CDJK(wfn_->basisset(), options_->get_double("CHOLESKY_TOLERANCE"));
+
+        if (options["INTS_TOLERANCE"].has_changed())
+            jk->set_cutoff(options.get_double("INTS_TOLERANCE"));
+        if (options["SCREENING"].has_changed())
+            jk->set_csam(options.get_str("SCREENING") == "CSAM");
+        if (options["PRINT"].has_changed())
+            jk->set_print(options.get_int("PRINT"));
+        if (options["DEBUG"].has_changed())
+            jk->set_debug(options.get_int("DEBUG"));
+        if (options["BENCH"].has_changed())
+            jk->set_bench(options.get_int("BENCH"));
+        if (options["DF_INTS_IO"].has_changed())
+            jk->set_df_ints_io(options.get_str("DF_INTS_IO"));
+        jk->set_condition(options.get_double("DF_FITTING_CONDITION"));
+        if (options["DF_INTS_NUM_THREADS"].has_changed())
+            jk->set_df_ints_num_threads(options.get_int("DF_INTS_NUM_THREADS"));
+
+        JK_core = std::shared_ptr<JK>(jk);
+    } else if ((integral_type_ == DF) or (integral_type_ == DiskDF) or (integral_type_ == DistDF)) {
         if (options_->get_str("SCF_TYPE") == "DF") {
-            if ((integral_type_ == DF) or (integral_type_ == DiskDF)) {
-                JK_core = JK::build_JK(wfn_->basisset(), wfn_->get_basisset("DF_BASIS_MP2"),
-                                       psi::Process::environment.options, "MEM_DF");
-            } else {
-                throw psi::PSIEXCEPTION(
-                    "Trying to compute the frozen one-body operator with MEM_DF but "
-                    "using a non-DF integral type");
-            }
+            outfile->Printf("\n  Building frozen-core operator using DF integrals");
+            JK_core = JK::build_JK(wfn_->basisset(), wfn_->get_basisset("DF_BASIS_MP2"),
+                                   psi::Process::environment.options, "MEM_DF");
         } else {
-            JK_core = JK::build_JK(wfn_->basisset(), psi::BasisSet::zero_ao_basis_set(),
-                                   psi::Process::environment.options);
+            throw psi::PSIEXCEPTION(
+                "Trying to compute the frozen one-body operator with MEM_DF but "
+                "using a non-DF integral type");
         }
     }
 
@@ -402,7 +386,7 @@ void Psi4Integrals::build_dipole_ints_ao() {
 }
 
 std::vector<std::shared_ptr<psi::Matrix>> Psi4Integrals::mo_dipole_ints(const bool& alpha,
-                                                                               const bool& resort) {
+                                                                        const bool& resort) {
     if (alpha) {
         return dipole_ints_mo_helper(wfn_->Ca_subset("AO"), wfn_->epsilon_a(), resort);
     } else {

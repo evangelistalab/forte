@@ -66,11 +66,6 @@ void ConventionalIntegrals::initialize() {
     outfile->Printf("\n  Overall Conventional Integrals timings\n\n");
     local_timer ConvTime;
 
-    // Allocate the memory required to store the two-electron integrals
-    aphys_tei_aa.assign(num_aptei_, 0.0);
-    aphys_tei_ab.assign(num_aptei_, 0.0);
-    aphys_tei_bb.assign(num_aptei_, 0.0);
-
     gather_integrals();
     freeze_core_orbitals();
 

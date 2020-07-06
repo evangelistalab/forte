@@ -67,15 +67,82 @@ ForteIntegrals::ForteIntegrals(std::shared_ptr<ForteOptions> options,
                                std::shared_ptr<psi::Wavefunction> ref_wfn,
                                std::shared_ptr<MOSpaceInfo> mo_space_info,
                                IntegralType integral_type, IntegralSpinRestriction restricted)
-    : options_(options), wfn_(ref_wfn), integral_type_(integral_type),
-      spin_restriction_(restricted), frozen_core_energy_(0.0), scalar_energy_(0.0),
-      mo_space_info_(mo_space_info) {}
+    : options_(options), mo_space_info_(mo_space_info), wfn_(ref_wfn),
+      integral_type_(integral_type), spin_restriction_(restricted), frozen_core_energy_(0.0),
+      scalar_energy_(0.0) {
+    common_initialize();
+}
 
 ForteIntegrals::ForteIntegrals(std::shared_ptr<ForteOptions> options,
                                std::shared_ptr<MOSpaceInfo> mo_space_info,
                                IntegralType integral_type, IntegralSpinRestriction restricted)
-    : options_(options), integral_type_(integral_type), spin_restriction_(restricted),
-      frozen_core_energy_(0.0), scalar_energy_(0.0), mo_space_info_(mo_space_info) {}
+    : options_(options), mo_space_info_(mo_space_info), integral_type_(integral_type),
+      spin_restriction_(restricted), frozen_core_energy_(0.0), scalar_energy_(0.0) {
+    common_initialize();
+}
+
+void ForteIntegrals::common_initialize() {
+    read_information();
+    allocate();
+}
+void ForteIntegrals::read_information() {
+    // Extract information from options
+    print_ = options_->get_int("PRINT");
+
+    nirrep_ = mo_space_info_->nirrep();
+
+    nmopi_ = mo_space_info_->dimension("ALL");
+    frzcpi_ = mo_space_info_->dimension("FROZEN_DOCC");
+    frzvpi_ = mo_space_info_->dimension("FROZEN_UOCC");
+    ncmopi_ = mo_space_info_->dimension("CORRELATED");
+
+    nmo_ = nmopi_.sum();
+    ncmo_ = ncmopi_.sum();
+
+    // Create an array that maps the CMOs to the MOs (cmotomo_).
+    for (int h = 0, q = 0; h < nirrep_; ++h) {
+        q += frzcpi_[h]; // skip the frozen core
+        for (int r = 0; r < ncmopi_[h]; ++r) {
+            cmotomo_.push_back(q);
+            q++;
+        }
+        q += frzvpi_[h]; // skip the frozen virtual
+    }
+
+    // Set the indexing to work using the number of molecular integrals
+    aptei_idx_ = nmo_;
+    num_tei_ = INDEX4(nmo_ - 1, nmo_ - 1, nmo_ - 1, nmo_ - 1) + 1;
+    num_aptei_ = nmo_ * nmo_ * nmo_ * nmo_;
+    num_threads_ = omp_get_max_threads();
+}
+
+void ForteIntegrals::allocate() {
+    //        std::vector<double> full_one_electron_integrals_a_;
+    //        std::vector<double> full_one_electron_integrals_b_;
+    //        std::vector<double> one_electron_integrals_a_;
+    //        std::vector<double> one_electron_integrals_b_;
+    //        std::vector<double> fock_matrix_a_;
+    //        std::vector<double> fock_matrix_b_;
+
+    // full one-electron integrals
+    full_one_electron_integrals_a_.assign(nmo_ * nmo_, 0.0);
+    full_one_electron_integrals_b_.assign(nmo_ * nmo_, 0.0);
+
+    // these will hold only the correlated part
+    one_electron_integrals_a_.assign(ncmo_ * ncmo_, 0.0);
+    one_electron_integrals_b_.assign(ncmo_ * ncmo_, 0.0);
+    fock_matrix_a_.assign(ncmo_ * ncmo_, 0.0);
+    fock_matrix_b_.assign(ncmo_ * ncmo_, 0.0);
+
+    if ((integral_type_ == Conventional) or (integral_type_ == Custom)) {
+        // Allocate the memory required to store the two-electron integrals
+        aphys_tei_aa.assign(num_aptei_, 0.0);
+        aphys_tei_ab.assign(num_aptei_, 0.0);
+        aphys_tei_bb.assign(num_aptei_, 0.0);
+
+        int_mem_ = sizeof(double) * 3 * 8 * num_aptei_ / 1073741824.0;
+    }
+}
 
 std::shared_ptr<psi::Matrix> ForteIntegrals::Ca() const { return Ca_; }
 
@@ -145,6 +212,18 @@ std::vector<double> ForteIntegrals::get_fock_b() const { return fock_matrix_b_; 
 
 void ForteIntegrals::set_scalar(double value) { scalar_energy_ = value; }
 
+void ForteIntegrals::set_oei(const std::vector<double>& oei_a, const std::vector<double>& oei_b) {
+    one_electron_integrals_a_ = oei_a;
+    one_electron_integrals_b_ = oei_b;
+}
+
+void ForteIntegrals::set_tei(const std::vector<double>& tei_aa, const std::vector<double>& tei_ab,
+                             const std::vector<double>& tei_bb) {
+    aphys_tei_aa = tei_aa;
+    aphys_tei_ab = tei_ab;
+    aphys_tei_bb = tei_bb;
+}
+
 IntegralSpinRestriction ForteIntegrals::spin_restriction() const { return spin_restriction_; }
 
 IntegralType ForteIntegrals::integral_type() const { return integral_type_; }
@@ -157,25 +236,6 @@ int ForteIntegrals::ga_handle() { return 0; }
 
 std::vector<std::shared_ptr<psi::Matrix>> ForteIntegrals::ao_dipole_ints() const {
     return dipole_ints_ao_;
-}
-
-void ForteIntegrals::set_fock_a(const std::vector<double>& fock_stl) {
-    size_t fock_size = fock_stl.size();
-    if (fock_size != ncmo_ * ncmo_) {
-        throw psi::PSIEXCEPTION("Cannot fill in fock_matrix_a because the vector is out-of-range.");
-    } else {
-        fock_matrix_a_ = fock_stl;
-    }
-}
-
-/// Set the beta fock matrix
-void ForteIntegrals::set_fock_b(const std::vector<double>& fock_stl) {
-    size_t fock_size = fock_stl.size();
-    if (fock_size != ncmo_ * ncmo_) {
-        throw psi::PSIEXCEPTION("Cannot fill in fock_matrix_b because the vector is out-of-range.");
-    } else {
-        fock_matrix_b_ = fock_stl;
-    }
 }
 
 void ForteIntegrals::set_oei(double** ints, bool alpha) {

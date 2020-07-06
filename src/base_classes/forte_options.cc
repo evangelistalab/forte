@@ -27,6 +27,7 @@
  */
 
 #include "psi4/libpsi4util/PsiOutStream.h"
+#include "psi4/libpsi4util/process.h"
 #include "psi4/liboptions/liboptions.h"
 
 #include "base_classes/forte_options.h"
@@ -393,9 +394,9 @@ void ForteOptions::push_options_to_psi4(psi::Options& options) {
                 }
             } else {
                 if (py_default_value.is_none()) {
-                    options.add_str(label, py::cast<std::string>(py_default_value));
-                } else {
                     options.add_str(label, "");
+                } else {
+                    options.add_str(label, py::cast<std::string>(py_default_value));
                 }
             }
         }
@@ -405,12 +406,19 @@ void ForteOptions::push_options_to_psi4(psi::Options& options) {
     }
 }
 
-void ForteOptions::get_options_from_psi4(psi::Options& options) {
+void ForteOptions::get_options_from_psi4(psi::Options& options1) {
+    psi::Options& options = psi::Process::environment.options;
     for (auto item : dict_) {
         auto label = py::cast<std::string>(item.first);
         // only change the values if an option was set
         // this is done to properly handle the case in which there is no default
         // value for an option and value = default_value = None
+        // | Has changed | default_value |     action            |
+        // |-------------|---------------|-----------------------|
+        // |     Yes     |   != None     |  Read from psi        |
+        // |     Yes     |    = None     |  Read from psi        |
+        // |      No     |   != None     |  Use Forte default    |
+        // |      No     |    = None     |  Return None          |
         if (options[label].has_changed()) {
             auto type = py::cast<std::string>(item.second["type"]);
             if (type == "bool") {
