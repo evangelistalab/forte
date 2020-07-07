@@ -117,13 +117,6 @@ void ForteIntegrals::read_information() {
 }
 
 void ForteIntegrals::allocate() {
-    //        std::vector<double> full_one_electron_integrals_a_;
-    //        std::vector<double> full_one_electron_integrals_b_;
-    //        std::vector<double> one_electron_integrals_a_;
-    //        std::vector<double> one_electron_integrals_b_;
-    //        std::vector<double> fock_matrix_a_;
-    //        std::vector<double> fock_matrix_b_;
-
     // full one-electron integrals
     full_one_electron_integrals_a_.assign(nmo_ * nmo_, 0.0);
     full_one_electron_integrals_b_.assign(nmo_ * nmo_, 0.0);
@@ -133,10 +126,8 @@ void ForteIntegrals::allocate() {
     one_electron_integrals_b_.assign(ncmo_ * ncmo_, 0.0);
     fock_matrix_a_.assign(ncmo_ * ncmo_, 0.0);
     fock_matrix_b_.assign(ncmo_ * ncmo_, 0.0);
-    outfile->Printf("\n  ForteIntegrals::allocate() called with num_aptei_ = %zu\n", num_aptei_);
 
     if ((integral_type_ == Conventional) or (integral_type_ == Custom)) {
-        outfile->Printf("\n  Passed (integral_type_ == Custom) check\n");
         // Allocate the memory required to store the two-electron integrals
         aphys_tei_aa.assign(num_aptei_, 0.0);
         aphys_tei_ab.assign(num_aptei_, 0.0);

@@ -82,7 +82,6 @@ const std::map<StateInfo, std::vector<double>>& ActiveSpaceSolver::compute_energ
                                  twice_ms);
             continue;
         }
-        psi::outfile->Printf("\n  --> %s", "D");
         method->compute_energy();
         const auto& energies = method->energies();
         state_energies_map_[state] = energies;
