@@ -59,13 +59,20 @@ namespace forte {
 CustomIntegrals::CustomIntegrals(std::shared_ptr<ForteOptions> options,
                                  std::shared_ptr<MOSpaceInfo> mo_space_info,
                                  IntegralSpinRestriction restricted)
-    : ForteIntegrals(options, mo_space_info, Custom, restricted) {}
+    : ForteIntegrals(options, mo_space_info, Custom, restricted) {
+    initialize();
+}
 
 void CustomIntegrals::initialize() {
+    Ca_ = std::make_shared<psi::Matrix>(nmopi_, nmopi_);
+    Cb_ = std::make_shared<psi::Matrix>(nmopi_, nmopi_);
+    Ca_->identity();
+    Cb_->identity();
+
     print_info();
     outfile->Printf("\n  Using Custom integrals\n\n");
-    gather_integrals();
-    freeze_core_orbitals();
+    //    gather_integrals();
+    //    freeze_core_orbitals();
 }
 
 // set()
@@ -73,10 +80,10 @@ void CustomIntegrals::initialize() {
 //        std::shared_ptr<psi::Matrix> Ca_;
 //        std::shared_ptr<psi::Matrix> Cb_;
 //        double nucrep_;
-//        size_t nso_;
-//        psi::Dimension nsopi_;
 //        double frozen_core_energy_;
 //        double scalar_energy_;
+//        size_t nso_;
+//        psi::Dimension nsopi_;
 //        std::shared_ptr<psi::Matrix> OneBody_symm_;
 //        std::shared_ptr<psi::Matrix> OneIntsAO_;
 
@@ -142,66 +149,6 @@ void CustomIntegrals::set_tei(size_t p, size_t q, size_t r, size_t s, double val
 }
 
 void CustomIntegrals::gather_integrals() {}
-
-void CustomIntegrals::custom_integrals_allocate(int norb, const std::vector<int>& orbsym) {
-    auto result = std::max_element(orbsym.begin(), orbsym.end());
-    nirrep_ = *result; // set the number of irreps
-    nso_ = norb;
-    nmo_ = norb;
-    std::vector<int> nmopi(nirrep_, 0);
-    for (int sym : orbsym) {
-        nmopi[sym - 1] += 1;
-    }
-    nsopi_ = nmopi;
-    nmopi_ = nmopi;
-
-    frzcpi_ = mo_space_info_->dimension("FROZEN_DOCC");
-    frzvpi_ = mo_space_info_->dimension("FROZEN_UOCC");
-    ncmopi_ = mo_space_info_->dimension("CORRELATED");
-
-    ncmo_ = ncmopi_.sum();
-
-    // Create an array that maps the CMOs to the MOs (cmotomo_).
-    for (int h = 0, q = 0; h < nirrep_; ++h) {
-        q += frzcpi_[h]; // skip the frozen core
-        for (int r = 0; r < ncmopi_[h]; ++r) {
-            cmotomo_.push_back(q);
-            q++;
-        }
-        q += frzvpi_[h]; // skip the frozen virtual
-    }
-
-    // Indexing
-    // This is important!  Set the indexing to work using the number of
-    // molecular integrals
-    aptei_idx_ = nmo_;
-    num_tei_ = INDEX4(nmo_ - 1, nmo_ - 1, nmo_ - 1, nmo_ - 1) + 1;
-    num_aptei_ = nmo_ * nmo_ * nmo_ * nmo_;
-    //    num_threads_ = omp_get_max_threads();
-    print_ = options_->get_int("PRINT");
-    /// If MO_ROTATE is set in option, call rotate_mos.
-    /// Wasn't really sure where to put this function, but since, integrals is
-    /// always called, this seems like a good spot.
-    auto rotate_mos_list = options_->get_int_vec("ROTATE_MOS");
-    if (rotate_mos_list.size() > 0) {
-        outfile->Printf("\n  The option ROTATE_MOS is not supported with custom integrals\n");
-        exit(1);
-    }
-    // full one-electron integrals
-    full_one_electron_integrals_a_.assign(nmo_ * nmo_, 0.0);
-    full_one_electron_integrals_b_.assign(nmo_ * nmo_, 0.0);
-
-    // these will hold only the correlated part
-    one_electron_integrals_a_.assign(ncmo_ * ncmo_, 0.0);
-    one_electron_integrals_b_.assign(ncmo_ * ncmo_, 0.0);
-    fock_matrix_a_.assign(ncmo_ * ncmo_, 0.0);
-    fock_matrix_b_.assign(ncmo_ * ncmo_, 0.0);
-
-    // Allocate the memory required to store the two-electron integrals
-    aphys_tei_aa.resize(num_aptei_);
-    aphys_tei_ab.resize(num_aptei_);
-    aphys_tei_bb.resize(num_aptei_);
-}
 
 void CustomIntegrals::resort_integrals_after_freezing() {
     if (print_ > 0) {

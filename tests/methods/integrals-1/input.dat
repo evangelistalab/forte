@@ -22,8 +22,8 @@ set {
 set forte {
   active_space_solver fci
   int_type conventional
-  frozen_docc      [2 ,0 ,0 ,0]
-  restricted_docc  [2 ,0 ,0 ,0]
+  frozen_docc      [0 ,0 ,0 ,0]
+  restricted_docc  [4 ,0 ,0 ,0]
   active           [2 ,2 ,2 ,2]
   e_convergence 12
 }

@@ -161,8 +161,9 @@ PYBIND11_MODULE(forte, m) {
     m.def("make_fragment_projector", &make_fragment_projector,
           "Make a fragment(embedding) projector");
     m.def("make_embedding", &make_embedding, "Apply fragment projector to embed");
-    m.def("make_ints_from_psi4", &make_forte_integrals_from_psi4, "Make Forte integrals");
-    m.def("make_ints_from_fcidump", &make_forte_integrals_from_fcidump, "Make Forte integrals");
+    m.def("make_ints_from_psi4", &make_forte_integrals_from_psi4,
+          "Make Forte integral object from psi4");
+    m.def("make_custom_ints", &make_custom_forte_integrals, "Make a custom integral object");
     m.def("forte_old_methods", &forte_old_methods, "Run Forte methods");
     m.def("make_active_space_method", &make_active_space_method, "Make an active space method");
     m.def("make_active_space_solver", &make_active_space_solver, "Make an active space solver");

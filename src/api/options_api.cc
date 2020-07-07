@@ -59,6 +59,7 @@ void export_ForteOptions(py::module& m) {
         .def("add_int_array", &ForteOptions::add_int_array, "Add an array of integers option")
         .def("add_double_array", &ForteOptions::add_double_array, "Add an array of doubles option")
         .def("add_array", &ForteOptions::add_array, "Add an array option for general elements")
+        .def("is_none", &ForteOptions::is_none, "Is this variable defined?")
         .def("get_bool", &ForteOptions::get_bool, "Get a boolean option")
         .def("get_int", &ForteOptions::get_int, "Get an integer option")
         .def("get_double", &ForteOptions::get_double, "Get a double option")

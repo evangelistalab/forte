@@ -71,14 +71,6 @@ class CustomIntegrals : public ForteIntegrals {
                  bool alpha2) override;
 
   private:
-    // ==> Class data <==
-
-    /// Used to store the two-electron integrals (pq|rs) in chemist notation with 8-fold symmetry
-    /// and addressed with the function four(p,q,r,s)
-    std::vector<double> aphys_tei_aa;
-    std::vector<double> aphys_tei_ab;
-    std::vector<double> aphys_tei_bb;
-
     // ==> Class private functions <==
 
     void resort_four(std::vector<double>& tei, std::vector<size_t>& map);

@@ -77,7 +77,7 @@ ForteIntegrals::ForteIntegrals(std::shared_ptr<ForteOptions> options,
                                std::shared_ptr<MOSpaceInfo> mo_space_info,
                                IntegralType integral_type, IntegralSpinRestriction restricted)
     : options_(options), mo_space_info_(mo_space_info), integral_type_(integral_type),
-      spin_restriction_(restricted), frozen_core_energy_(0.0), scalar_energy_(0.0) {
+      spin_restriction_(restricted) {
     common_initialize();
 }
 
@@ -133,8 +133,10 @@ void ForteIntegrals::allocate() {
     one_electron_integrals_b_.assign(ncmo_ * ncmo_, 0.0);
     fock_matrix_a_.assign(ncmo_ * ncmo_, 0.0);
     fock_matrix_b_.assign(ncmo_ * ncmo_, 0.0);
+    outfile->Printf("\n  ForteIntegrals::allocate() called with num_aptei_ = %zu\n", num_aptei_);
 
     if ((integral_type_ == Conventional) or (integral_type_ == Custom)) {
+        outfile->Printf("\n  Passed (integral_type_ == Custom) check\n");
         // Allocate the memory required to store the two-electron integrals
         aphys_tei_aa.assign(num_aptei_, 0.0);
         aphys_tei_ab.assign(num_aptei_, 0.0);
@@ -210,15 +212,19 @@ std::vector<double> ForteIntegrals::get_fock_a() const { return fock_matrix_a_; 
 
 std::vector<double> ForteIntegrals::get_fock_b() const { return fock_matrix_b_; }
 
+void ForteIntegrals::set_nuclear_repulsion(double value) { nucrep_ = value; }
+
 void ForteIntegrals::set_scalar(double value) { scalar_energy_ = value; }
 
-void ForteIntegrals::set_oei(const std::vector<double>& oei_a, const std::vector<double>& oei_b) {
+void ForteIntegrals::set_oei_all(const std::vector<double>& oei_a,
+                                 const std::vector<double>& oei_b) {
     one_electron_integrals_a_ = oei_a;
     one_electron_integrals_b_ = oei_b;
 }
 
-void ForteIntegrals::set_tei(const std::vector<double>& tei_aa, const std::vector<double>& tei_ab,
-                             const std::vector<double>& tei_bb) {
+void ForteIntegrals::set_tei_all(const std::vector<double>& tei_aa,
+                                 const std::vector<double>& tei_ab,
+                                 const std::vector<double>& tei_bb) {
     aphys_tei_aa = tei_aa;
     aphys_tei_ab = tei_ab;
     aphys_tei_bb = tei_bb;
@@ -228,9 +234,9 @@ IntegralSpinRestriction ForteIntegrals::spin_restriction() const { return spin_r
 
 IntegralType ForteIntegrals::integral_type() const { return integral_type_; }
 
-std::shared_ptr<psi::Matrix> ForteIntegrals::OneBody_symm() const { return OneBody_symm_; }
+// std::shared_ptr<psi::Matrix> ForteIntegrals::OneBody_symm() const { return OneBody_symm_; }
 
-std::shared_ptr<psi::Matrix> ForteIntegrals::OneBodyAO() const { return OneIntsAO_; }
+// std::shared_ptr<psi::Matrix> ForteIntegrals::OneBodyAO() const { return OneIntsAO_; }
 
 int ForteIntegrals::ga_handle() { return 0; }
 
@@ -238,14 +244,14 @@ std::vector<std::shared_ptr<psi::Matrix>> ForteIntegrals::ao_dipole_ints() const
     return dipole_ints_ao_;
 }
 
-void ForteIntegrals::set_oei(double** ints, bool alpha) {
-    std::vector<double>& p_oei = alpha ? one_electron_integrals_a_ : one_electron_integrals_b_;
-    for (size_t p = 0; p < aptei_idx_; ++p) {
-        for (size_t q = 0; q < aptei_idx_; ++q) {
-            p_oei[p * aptei_idx_ + q] = ints[p][q];
-        }
-    }
-}
+// void ForteIntegrals::set_oei(double** ints, bool alpha) {
+//    std::vector<double>& p_oei = alpha ? one_electron_integrals_a_ : one_electron_integrals_b_;
+//    for (size_t p = 0; p < aptei_idx_; ++p) {
+//        for (size_t q = 0; q < aptei_idx_; ++q) {
+//            p_oei[p * aptei_idx_ + q] = ints[p][q];
+//        }
+//    }
+//}
 
 void ForteIntegrals::set_oei(size_t p, size_t q, double value, bool alpha) {
     std::vector<double>& p_oei = alpha ? one_electron_integrals_a_ : one_electron_integrals_b_;
@@ -282,20 +288,21 @@ void ForteIntegrals::print_info() {
 }
 
 void ForteIntegrals::print_ints() {
+    //    Ca_->print();
+    //    Cb_->print();
+    outfile->Printf("\n  nmo_ = %zu", nmo_);
 
-    Ca_->print();
-    Cb_->print();
-
+    outfile->Printf("\n  Nuclear repulsion energy: %20.12f", nucrep_);
+    outfile->Printf("\n  Scalar energy:            %20.12f", scalar_energy_);
+    outfile->Printf("\n  Frozen-core energt:       %20.12f", frozen_core_energy_);
     outfile->Printf("\n  Alpha one-electron integrals (T + V_{en})");
     Matrix ha(" Alpha one-electron integrals (T + V_{en})", nmo_, nmo_);
     for (size_t p = 0; p < nmo_; ++p) {
         for (size_t q = 0; q < nmo_; ++q) {
-            //       ha.set(p, q, oei_a(p, q));
             if (std::abs(oei_a(p, q)) >= 1e-14)
                 outfile->Printf("\n  h[%6d][%6d] = %20.12f", p, q, oei_a(p, q));
         }
     }
-    //  ha.print();
 
     outfile->Printf("\n  Beta one-electron integrals (T + V_{en})");
     for (size_t p = 0; p < nmo_; ++p) {
@@ -304,45 +311,44 @@ void ForteIntegrals::print_ints() {
                 outfile->Printf("\n  h[%6d][%6d] = %20.12f", p, q, oei_b(p, q));
         }
     }
-    /*
-        outfile->Printf("\n  Alpha-alpha two-electron integrals <pq||rs>");
-        for (size_t p = 0; p < nmo_; ++p) {
-            for (size_t q = 0; q < nmo_; ++q) {
-                for (size_t r = 0; r < nmo_; ++r) {
-                    for (size_t s = 0; s < nmo_; ++s) {
-                    if( std::abs(aptei_aa(p,q,r,s)) >= 1e-14 )
+
+    outfile->Printf("\n  Alpha-alpha two-electron integrals <pq||rs>");
+    for (size_t p = 0; p < nmo_; ++p) {
+        for (size_t q = 0; q < nmo_; ++q) {
+            for (size_t r = 0; r < nmo_; ++r) {
+                for (size_t s = 0; s < nmo_; ++s) {
+                    if (std::abs(aptei_aa(p, q, r, s)) >= 1e-14)
                         outfile->Printf("\n  v[%6d][%6d][%6d][%6d] = %20.12f", p, q, r, s,
                                         aptei_aa(p, q, r, s));
-                    }
                 }
             }
         }
+    }
 
-        outfile->Printf("\n  Alpha-beta two-electron integrals <pq||rs>");
-        for (size_t p = 0; p < nmo_; ++p) {
-            for (size_t q = 0; q < nmo_; ++q) {
-                for (size_t r = 0; r < nmo_; ++r) {
-                    for (size_t s = 0; s < nmo_; ++s) {
-                    if( std::abs(aptei_ab(p,q,r,s)) >= 1e-14 )
+    outfile->Printf("\n  Alpha-beta two-electron integrals <pq||rs>");
+    for (size_t p = 0; p < nmo_; ++p) {
+        for (size_t q = 0; q < nmo_; ++q) {
+            for (size_t r = 0; r < nmo_; ++r) {
+                for (size_t s = 0; s < nmo_; ++s) {
+                    if (std::abs(aptei_ab(p, q, r, s)) >= 1e-14)
                         outfile->Printf("\n  v[%6d][%6d][%6d][%6d] = %20.12f", p, q, r, s,
                                         aptei_ab(p, q, r, s));
-                    }
                 }
             }
         }
-        outfile->Printf("\n  Beta-beta two-electron integrals <pq||rs>");
-        for (size_t p = 0; p < nmo_; ++p) {
-            for (size_t q = 0; q < nmo_; ++q) {
-                for (size_t r = 0; r < nmo_; ++r) {
-                    for (size_t s = 0; s < nmo_; ++s) {
-                    if( std::abs(aptei_bb(p,q,r,s)) >= 1e-14 )
+    }
+    outfile->Printf("\n  Beta-beta two-electron integrals <pq||rs>");
+    for (size_t p = 0; p < nmo_; ++p) {
+        for (size_t q = 0; q < nmo_; ++q) {
+            for (size_t r = 0; r < nmo_; ++r) {
+                for (size_t s = 0; s < nmo_; ++s) {
+                    if (std::abs(aptei_bb(p, q, r, s)) >= 1e-14)
                         outfile->Printf("\n  v[%6d][%6d][%6d][%6d] = %20.12f", p, q, r, s,
                                         aptei_bb(p, q, r, s));
-                    }
                 }
             }
         }
-    */
+    }
 }
 
 void ForteIntegrals::build_dipole_ints_ao() { _undefined_function("build_dipole_ints_ao"); }

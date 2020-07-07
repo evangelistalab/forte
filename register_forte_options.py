@@ -49,6 +49,10 @@ def register_driver_options(options):
                           'The type of computation')
 
     options.add_int(
+        "NEL", None,
+        """The number of electrons. Used when reading from FCIDUMP files."""
+    )
+    options.add_int(
         "CHARGE", None,
         """The charge of the molecule. If a value is provided it overrides the charge of the SCF solution."""
     )

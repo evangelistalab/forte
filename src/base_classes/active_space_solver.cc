@@ -82,12 +82,10 @@ const std::map<StateInfo, std::vector<double>>& ActiveSpaceSolver::compute_energ
                                  twice_ms);
             continue;
         }
-
+        psi::outfile->Printf("\n  --> %s", "D");
         method->compute_energy();
-
         const auto& energies = method->energies();
         state_energies_map_[state] = energies;
-
         if (twice_ms > 0 and ms_avg_) {
             StateInfo state_spin(state.nb(), state.na(), state.multiplicity(), -twice_ms,
                                  state.irrep(), state.irrep_label());

@@ -143,7 +143,7 @@ void CASSCF::startup() {
         //        JK_ = JK::build_JK(basis_set, psi::BasisSet::zero_ao_basis_set(),
         //                           psi::Process::environment.options, "CD");
         psi::Options& options = psi::Process::environment.options;
-        CDJK* jk = new CDJK(wfn_->basisset(), options_->get_double("CHOLESKY_TOLERANCE"));
+        CDJK* jk = new CDJK(basis_set, options_->get_double("CHOLESKY_TOLERANCE"));
 
         if (options["INTS_TOLERANCE"].has_changed())
             jk->set_cutoff(options.get_double("INTS_TOLERANCE"));
@@ -161,7 +161,7 @@ void CASSCF::startup() {
         if (options["DF_INTS_NUM_THREADS"].has_changed())
             jk->set_df_ints_num_threads(options.get_int("DF_INTS_NUM_THREADS"));
 
-        JK_core = std::shared_ptr<JK>(jk);
+        JK_ = std::shared_ptr<JK>(jk);
 
     } else if ((integral_type == DF) or (integral_type == DiskDF) or (integral_type == DistDF)) {
         if (options_->get_str("SCF_TYPE") == "DF") {

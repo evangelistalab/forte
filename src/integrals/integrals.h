@@ -240,29 +240,24 @@ class ForteIntegrals {
     virtual void make_fock_matrix(std::shared_ptr<psi::Matrix> gamma_a,
                                   std::shared_ptr<psi::Matrix> gamma_b) = 0;
 
+
+    void set_nuclear_repulsion(double value);
+
     /// Set the value of the scalar part of the Hamiltonian
     /// @param value the new value of the scalar part of the Hamiltonian
     void set_scalar(double value);
 
-    /// Set the value of the one-electron integrals
-    /// @param oei_a vector of alpha one-electron integrals stored with no symmetry
-    /// @param oei_b vector of beta one-electron integrals stored with no symmetry///
-    void set_oei(const std::vector<double>& oei_a, const std::vector<double>& oei_b);
+    /// Set the value of the one-electron integrals (stored with no symmetry)
+    /// @param oei_a vector of alpha one-electron integrals
+    /// @param oei_b vector of beta one-electron integrals
+    void set_oei_all(const std::vector<double>& oei_a, const std::vector<double>& oei_b);
 
-    /// Set the value of the two-electron integrals
-    /// @param tei_aa vector of antisymmetrized alpha-alpha two-electron integrals stored with no
-    /// symmetry
-    /// @param tei_ab vector of antisymmetrized alpha-alpha two-electron integrals stored with no
-    /// symmetry
-    /// @param tei_bb vector of antisymmetrized alpha-alpha two-electron integrals stored with no
-    /// symmetry
-    void set_tei(const std::vector<double>& tei_aa, const std::vector<double>& tei_ab,
-                 const std::vector<double>& tei_bb);
-
-    /// Set the value of the one-electron integrals
-    /// @param ints pointer to the integrals
-    /// @param alpha the spin type of the integrals
-    void set_oei(double** ints, bool alpha);
+    /// Set the value of the two-electron integrals (stored with no symmetry)
+    /// @param tei_aa vector of antisymmetrized alpha-alpha two-electron integrals
+    /// @param tei_ab vector of antisymmetrized alpha-alpha two-electron integrals
+    /// @param tei_bb vector of antisymmetrized alpha-alpha two-electron integrals
+    void set_tei_all(const std::vector<double>& tei_aa, const std::vector<double>& tei_ab,
+                     const std::vector<double>& tei_bb);
 
     /// Set the value of the one-electron integrals
     /// @param p the integral index

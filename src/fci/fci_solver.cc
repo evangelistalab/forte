@@ -80,9 +80,22 @@ void FCISolver::set_collapse_per_root(int value) { collapse_per_root_ = value; }
 void FCISolver::set_subspace_per_root(int value) { subspace_per_root_ = value; }
 
 void FCISolver::startup() {
+    psi::outfile->Printf("\n  --> %s", "E1");
+
+    active_dim_.print();
+    for (size_t h = 0; h < active_mo_.size(); h++) {
+        psi::outfile->Printf("\n active_mo_[%d] = %d", h, active_mo_[h]);
+    }
+    for (size_t h = 0; h < core_mo_.size(); h++) {
+        psi::outfile->Printf("\n core_mo_[%d] = %d", h, core_mo_[h]);
+    }
+    psi::outfile->Printf("\n core_mo_, na_, nb_, print_ = %d %d %d", na_, nb_, print_);
+
     // Create the string lists
     lists_ = std::shared_ptr<StringLists>(
         new StringLists(twoSubstituitionVVOO, active_dim_, core_mo_, active_mo_, na_, nb_, print_));
+
+    psi::outfile->Printf("\n  --> %s", "E2");
 
     size_t ndfci = 0;
     for (int h = 0; h < nirrep_; ++h) {
@@ -90,6 +103,8 @@ void FCISolver::startup() {
         size_t nbstr = lists_->beta_graph()->strpi(h ^ symmetry_);
         ndfci += nastr * nbstr;
     }
+    psi::outfile->Printf("\n  --> %s", "E3");
+
     if (print_) {
         // Print a summary of options
         std::vector<std::pair<std::string, int>> calculation_info{
@@ -126,14 +141,18 @@ void FCISolver::set_options(std::shared_ptr<ForteOptions> options) {
  */
 double FCISolver::compute_energy() {
     local_timer t;
+    psi::outfile->Printf("\n  --> %s", "E");
     startup();
+    psi::outfile->Printf("\n  --> %s", "F");
 
     FCIVector::allocate_temp_space(lists_, print_);
+    psi::outfile->Printf("\n  --> %s", "G");
 
     FCIVector Hdiag(lists_, symmetry_);
     C_ = std::make_shared<FCIVector>(lists_, symmetry_);
     FCIVector HC(lists_, symmetry_);
     C_->set_print(print_);
+    psi::outfile->Printf("\n  --> %s", "H");
 
     size_t fci_size = Hdiag.size();
     Hdiag.form_H_diagonal(as_ints_);
@@ -159,6 +178,8 @@ double FCISolver::compute_energy() {
         if (guess[g].first == multiplicity_)
             guess_list.push_back(g);
     }
+
+    psi::outfile->Printf("\n  --> %s", "I");
 
     // number of guess to be used
     size_t nguess = std::min(guess_list.size(), guess_size);

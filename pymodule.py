@@ -31,11 +31,11 @@ import time
 import math
 import warnings
 
+import numpy as np
 import psi4
 import forte
 import psi4.driver.p4util as p4util
 from psi4.driver.procrouting import proc_util
-
 
 def forte_driver(state_weights_map, scf_info, options, ints, mo_space_info):
     max_rdm_level = 3 if options.get_str("THREEPDC") != "ZERO" else 2
@@ -50,8 +50,9 @@ def forte_driver(state_weights_map, scf_info, options, ints, mo_space_info):
     active_space_solver = forte.make_active_space_solver(
         active_space_solver_type, state_map, scf_info, mo_space_info, as_ints,
         options)
+    print("Started to compute energy")
     state_energies_list = active_space_solver.compute_energy()
-
+    print("Ended compute energy")
     if options.get_bool('SPIN_ANALYSIS'):
         rdms = active_space_solver.compute_average_rdms(state_weights_map, 2)
         forte.perform_spin_analysis(rdms, options, mo_space_info, as_ints)
@@ -458,6 +459,43 @@ def prepare_forte_objects_from_psi4_wfn(options, wfn):
 
     return (state_weights_map, mo_space_info, scf_info)
 
+def make_state_info_from_fcidump(fcidump,options):
+    nel = fcidump['nelec']
+    if not options.is_none("NEL"):
+        nel = options.get_int("NEL")
+
+    multiplicity = fcidump['ms2'] + 1
+    if not options.is_none("MULTIPLICITY"):
+        multiplicity = options.get_int("MULTIPLICITY")
+
+
+    # If the user did not specify ms determine the value from the input or
+    #// take the lowest value consistent with the value of "MULTIPLICITY"
+    #// For example:
+    #//    singlet: multiplicity = 1 -> twice_ms = 0 (ms = 0)
+    #//    doublet: multiplicity = 2 -> twice_ms = 1 (ms = 1/2)
+    #//    triplet: multiplicity = 3 -> twice_ms = 0 (ms = 0)
+    twice_ms = (multiplicity + 1) % 2
+#    if not options.is_none("MS"):
+#        twice_ms = std::round(2.0 * options->get_double("MS"));
+#    }
+#TODO implement
+
+#    if (((nel - twice_ms) % 2) != 0)
+#        throw psi::PSIEXCEPTION("\n\n  make_state_info_from_psi: Wrong value of M_s.\n\n");
+
+    na = (nel + twice_ms) // 2
+    nb = nel - na
+
+    irrep = 0
+
+    if not options.is_none("ROOT_SYM"):
+        irrep = options.get_int("ROOT_SYM")
+
+#    std::string irrep_label = psi::Process::environment.molecule()->irrep_labels()[irrep];
+    return forte.StateInfo(na, nb, multiplicity, twice_ms, irrep)
+
+
 def prepare_forte_objects_from_fcidump(options):
     print(options.dict()['FCIDUMP_FILE'])
     filename = options.get_str('FCIDUMP_FILE')
@@ -489,14 +527,39 @@ def prepare_forte_objects_from_fcidump(options):
     doccpi = psi4.core.Dimension([nb])
     soccpi = psi4.core.Dimension([ms2])
     if 'epsilon' in fcidump:
-        epsilon = psi4.core.Vector(fcidump['epsilon'])
+        epsilon = psi4.core.Vector.from_array(fcidump['epsilon'])
     else:
         epsilon = psi4.core.Vector(nmopi)
     scf_info = forte.SCFInfo(doccpi,soccpi,0.0,epsilon,epsilon)
 
-    state_weights_map = forte.make_state_weights_map(options, mo_space_info)
+    state_info = make_state_info_from_fcidump(fcidump,options)
+    state_weights_map = {state_info : [1.0]}
+
+#    state_weights_map = forte.make_state_weights_map(options, mo_space_info)
+
+#    print(state_weights_map)
 
     return (state_weights_map, mo_space_info, scf_info,fcidump)
+
+def fill_ints_with_fcidump(fcidump, ints):
+    ints.set_nuclear_repulsion(fcidump['enuc'])
+    ints.set_oei(fcidump['hcore'].flatten(),fcidump['hcore'].flatten())
+#    ints.set_tei(fcidump['hcore'].flatten(),fcidump['hcore'].flatten())
+    eri = fcidump['eri']
+    nmo = fcidump['norb']
+#    idx = np.arange(nmo)
+    eri_aa = np.zeros((nmo, nmo, nmo, nmo))
+    eri_ab = np.zeros((nmo, nmo, nmo, nmo))
+    eri_bb = np.zeros((nmo, nmo, nmo, nmo))
+#    eri_aa = ints[(idx)]
+#    eri_aa[(idxs[sl, 0], idxs[sl, 1], idxs[sl, 2], idxs[sl, 3])] = ints[sl]
+    # <ij||kl> = (ik|jl) - (il|jk)
+    eri_aa += np.einsum('ikjl->ijkl', eri)
+    eri_aa -= np.einsum('iljk->ijkl', eri)
+    eri_ab = np.einsum('ikjl->ijkl', eri)
+    eri_bb += np.einsum('ikjl->ijkl', eri)
+    eri_bb -= np.einsum('iljk->ijkl', eri)
+    ints.set_tei(eri_aa.flatten(),eri_ab.flatten(),eri_bb.flatten())
 
 def run_forte(name, **kwargs):
     r"""Function encoding sequence of PSI module and plugin calls so that
@@ -552,11 +615,13 @@ def run_forte(name, **kwargs):
         psi4.core.print_out('\n  Forte will use custom integrals')
         # Make an integral object from the psi4 wavefunction object
         ints = forte.make_custom_ints(options, mo_space_info)
-        forte.fill_ints_with_fcidump(fcidump)
+        fill_ints_with_fcidump(fcidump, ints)
+        ints.print_ints()
     else:
         psi4.core.print_out('\n  Forte will use psi4 integrals')
         # Make an integral object from the psi4 wavefunction object
         ints = forte.make_ints_from_psi4(ref_wfn, options, mo_space_info)
+        ints.print_ints()
 
     start = time.time()
 
@@ -592,7 +657,9 @@ def run_forte(name, **kwargs):
         f'\n  Time to run job          : {end - start:12.3f} seconds')
     psi4.core.print_out(
         f'\n  Total                    : {end - start:12.3f} seconds')
-    return ref_wfn
+
+    if 'FCIDUMP' not in options.get_str('INT_TYPE'):
+        return ref_wfn
 
 
 def gradient_forte(name, **kwargs):
