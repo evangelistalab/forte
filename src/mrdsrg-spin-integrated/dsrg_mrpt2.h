@@ -287,6 +287,7 @@ class DSRG_MRPT2 : public MASTER_DSRG {
 
 
     double s;
+    double scale_ci;
 
 
     /// List of core MOs (Correlated)
@@ -352,6 +353,7 @@ class DSRG_MRPT2 : public MASTER_DSRG {
     ambit::BlockedTensor Z;
     ambit::BlockedTensor Z_b;
     double Alpha;
+    ambit::Tensor x_ci;
 
     // Tensors for solving CI equations
     ambit::BlockedTensor CI_1;

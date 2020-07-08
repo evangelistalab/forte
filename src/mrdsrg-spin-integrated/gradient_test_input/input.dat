@@ -54,6 +54,8 @@ dsrg_s 1.0
 #    dertype               first
 # }
 
+# Ecas, ref = energy('casscf', return_wfn=True)
+
 
 grad = gradient('forte')
 

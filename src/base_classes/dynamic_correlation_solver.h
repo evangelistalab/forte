@@ -40,7 +40,7 @@ class DynamicCorrelationSolver {
 
     /// Set coupling coefficients
     /// TODO: remove this when implemented more efficient way of computing CI response
-    virtual void set_coupling_coefficients(const CouplingCoefficients& cc) { coupling_coefficnets_ = cc; }
+    virtual void set_coupling_coefficients(const CouplingCoefficients& cc) { coupling_coefficients_ = cc; }
 
     /// Set CI coefficients
     /// TODO: remove this when implemented more efficient way of computing CI response
@@ -65,7 +65,7 @@ class DynamicCorrelationSolver {
     std::shared_ptr<ForteOptions> foptions_;
 
     /// The coupling coefficients
-    CouplingCoefficients coupling_coefficnets_;
+    CouplingCoefficients coupling_coefficients_;
 
     /// The CI coefficients
     std::vector<ambit::Tensor> ci_vectors_;
