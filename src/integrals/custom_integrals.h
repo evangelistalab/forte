@@ -42,7 +42,10 @@ class CustomIntegrals : public ForteIntegrals {
     /// Contructor of the class.  Calls std::shared_ptr<ForteIntegrals> ints
     /// constructor
     CustomIntegrals(std::shared_ptr<ForteOptions> options,
-                    std::shared_ptr<MOSpaceInfo> mo_space_info, IntegralSpinRestriction restricted);
+                    std::shared_ptr<MOSpaceInfo> mo_space_info, IntegralSpinRestriction restricted,
+                    double scalar, const std::vector<double>& oei_a,
+                    const std::vector<double>& oei_b, const std::vector<double>& tei_aa,
+                    const std::vector<double>& tei_ab, const std::vector<double>& tei_bb);
 
     void initialize() override;
 

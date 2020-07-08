@@ -38,6 +38,7 @@ import psi4.driver.p4util as p4util
 from psi4.driver.procrouting import proc_util
 import forte.proc.fcidump
 
+
 def forte_driver(state_weights_map, scf_info, options, ints, mo_space_info):
     max_rdm_level = 3 if options.get_str("THREEPDC") != "ZERO" else 2
     return_en = 0.0
@@ -496,7 +497,8 @@ def make_state_info_from_fcidump(fcidump, options):
 
 def prepare_forte_objects_from_fcidump(options):
     filename = options.get_str('FCIDUMP_FILE')
-    psi4.core.print_out(f'\n  Reading integral information from FCIDUMP file {filename}')
+    psi4.core.print_out(
+        f'\n  Reading integral information from FCIDUMP file {filename}')
     fcidump = forte.proc.fcidump_from_file(filename, convert_to_psi4=True)
 
     irrep_size = {
@@ -551,9 +553,8 @@ def prepare_forte_objects_from_fcidump(options):
     return (state_weights_map, mo_space_info, scf_info, fcidump)
 
 
-def fill_ints_with_fcidump(fcidump, ints):
-    ints.set_nuclear_repulsion(fcidump['enuc'])
-    ints.set_oei(fcidump['hcore'].flatten(), fcidump['hcore'].flatten())
+def make_ints_from_fcidump(fcidump, options, mo_space_info):
+    # transform two-electron integrals from chemist to physicist notation
     eri = fcidump['eri']
     nmo = fcidump['norb']
     eri_aa = np.zeros((nmo, nmo, nmo, nmo))
@@ -568,9 +569,10 @@ def fill_ints_with_fcidump(fcidump, ints):
     eri_bb += np.einsum('ikjl->ijkl', eri)
     eri_bb -= np.einsum('iljk->ijkl', eri)
 
-    ints.set_tei(eri_aa.flatten(), eri_ab.flatten(), eri_bb.flatten())
-
-    ints.initialize()
+    return forte.make_custom_ints(options, mo_space_info, fcidump['enuc'],
+                                  fcidump['hcore'].flatten(),
+                                  fcidump['hcore'].flatten(), eri_aa.flatten(),
+                                  eri_ab.flatten(), eri_bb.flatten())
 
 
 def run_forte(name, **kwargs):
@@ -630,8 +632,7 @@ def run_forte(name, **kwargs):
     if 'FCIDUMP' in options.get_str('INT_TYPE'):
         psi4.core.print_out('\n  Forte will use custom integrals')
         # Make an integral object from the psi4 wavefunction object
-        ints = forte.make_custom_ints(options, mo_space_info)
-        fill_ints_with_fcidump(fcidump, ints)
+        ints = make_ints_from_fcidump(fcidump, options, mo_space_info)
     else:
         psi4.core.print_out('\n  Forte will use psi4 integrals')
         # Make an integral object from the psi4 wavefunction object

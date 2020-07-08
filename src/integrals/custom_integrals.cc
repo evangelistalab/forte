@@ -60,8 +60,17 @@ namespace forte {
  */
 CustomIntegrals::CustomIntegrals(std::shared_ptr<ForteOptions> options,
                                  std::shared_ptr<MOSpaceInfo> mo_space_info,
-                                 IntegralSpinRestriction restricted)
-    : ForteIntegrals(options, mo_space_info, Custom, restricted) {}
+                                 IntegralSpinRestriction restricted, double scalar,
+                                 const std::vector<double>& oei_a, const std::vector<double>& oei_b,
+                                 const std::vector<double>& tei_aa,
+                                 const std::vector<double>& tei_ab,
+                                 const std::vector<double>& tei_bb)
+    : ForteIntegrals(options, mo_space_info, Custom, restricted) {
+    set_scalar(scalar);
+    set_oei_all(oei_a, oei_b);
+    set_tei_all(tei_aa, tei_ab, tei_bb);
+    initialize();
+}
 
 void CustomIntegrals::initialize() {
     Ca_ = std::make_shared<psi::Matrix>(nmopi_, nmopi_);
