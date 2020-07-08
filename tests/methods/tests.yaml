@@ -141,6 +141,7 @@ dsrg-mrpt2:
    - aci-dsrg-mrpt2-2
    - aci-dsrg-mrpt2-3
    - aci-dsrg-mrpt2-4
+   - dsrg-mrpt2-fcidump-1
   long:
    - aci-dsrg-mrpt2-5
    - dsrg-mrpt2-12-localized-actv
