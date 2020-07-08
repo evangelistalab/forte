@@ -71,6 +71,14 @@ class CustomIntegrals : public ForteIntegrals {
                  bool alpha2) override;
 
   private:
+    // ==> Class private data <==
+
+    /// Full two-electron integrals stored as a vector with redundant elements (no permutational
+    /// symmetry) (includes frozen orbitals)
+    std::vector<double> full_aphys_tei_aa_;
+    std::vector<double> full_aphys_tei_ab_;
+    std::vector<double> full_aphys_tei_bb_;
+
     // ==> Class private functions <==
 
     void resort_four(std::vector<double>& tei, std::vector<size_t>& map);

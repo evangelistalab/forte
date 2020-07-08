@@ -89,15 +89,15 @@ void CustomIntegrals::initialize() {
 }
 
 double CustomIntegrals::aptei_aa(size_t p, size_t q, size_t r, size_t s) {
-    return aphys_tei_aa[aptei_index(p, q, r, s)];
+    return aphys_tei_aa_[aptei_index(p, q, r, s)];
 }
 
 double CustomIntegrals::aptei_ab(size_t p, size_t q, size_t r, size_t s) {
-    return aphys_tei_ab[aptei_index(p, q, r, s)];
+    return aphys_tei_ab_[aptei_index(p, q, r, s)];
 }
 
 double CustomIntegrals::aptei_bb(size_t p, size_t q, size_t r, size_t s) {
-    return aphys_tei_bb[aptei_index(p, q, r, s)];
+    return aphys_tei_bb_[aptei_index(p, q, r, s)];
 }
 
 ambit::Tensor CustomIntegrals::aptei_aa_block(const std::vector<size_t>& p,
@@ -140,11 +140,11 @@ void CustomIntegrals::set_tei(size_t p, size_t q, size_t r, size_t s, double val
                               bool alpha2) {
     size_t index = aptei_index(p, q, r, s);
     if (alpha1 == true and alpha2 == true)
-        aphys_tei_aa[index] = value;
+        aphys_tei_aa_[index] = value;
     if (alpha1 == true and alpha2 == false)
-        aphys_tei_ab[index] = value;
+        aphys_tei_ab_[index] = value;
     if (alpha1 == false and alpha2 == false)
-        aphys_tei_bb[index] = value;
+        aphys_tei_bb_[index] = value;
 }
 
 void CustomIntegrals::gather_integrals() {}
@@ -154,9 +154,9 @@ void CustomIntegrals::resort_integrals_after_freezing() {
         outfile->Printf("\n  Resorting integrals after freezing core.");
     }
     // Resort the four-index integrals
-    resort_four(aphys_tei_aa, cmotomo_);
-    resort_four(aphys_tei_ab, cmotomo_);
-    resort_four(aphys_tei_bb, cmotomo_);
+    resort_four(aphys_tei_aa_, cmotomo_);
+    resort_four(aphys_tei_ab_, cmotomo_);
+    resort_four(aphys_tei_bb_, cmotomo_);
 }
 
 void CustomIntegrals::resort_four(std::vector<double>& tei, std::vector<size_t>& map) {

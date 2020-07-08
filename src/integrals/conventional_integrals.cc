@@ -112,15 +112,15 @@ std::shared_ptr<psi::IntegralTransform> ConventionalIntegrals::transform_integra
 }
 
 double ConventionalIntegrals::aptei_aa(size_t p, size_t q, size_t r, size_t s) {
-    return aphys_tei_aa[aptei_index(p, q, r, s)];
+    return aphys_tei_aa_[aptei_index(p, q, r, s)];
 }
 
 double ConventionalIntegrals::aptei_ab(size_t p, size_t q, size_t r, size_t s) {
-    return aphys_tei_ab[aptei_index(p, q, r, s)];
+    return aphys_tei_ab_[aptei_index(p, q, r, s)];
 }
 
 double ConventionalIntegrals::aptei_bb(size_t p, size_t q, size_t r, size_t s) {
-    return aphys_tei_bb[aptei_index(p, q, r, s)];
+    return aphys_tei_bb_[aptei_index(p, q, r, s)];
 }
 
 ambit::Tensor ConventionalIntegrals::aptei_aa_block(const std::vector<size_t>& p,
@@ -165,11 +165,11 @@ void ConventionalIntegrals::set_tei(size_t p, size_t q, size_t r, size_t s, doub
                                     bool alpha1, bool alpha2) {
     size_t index = aptei_index(p, q, r, s);
     if (alpha1 == true and alpha2 == true)
-        aphys_tei_aa[index] = value;
+        aphys_tei_aa_[index] = value;
     if (alpha1 == true and alpha2 == false)
-        aphys_tei_ab[index] = value;
+        aphys_tei_ab_[index] = value;
     if (alpha1 == false and alpha2 == false)
-        aphys_tei_bb[index] = value;
+        aphys_tei_bb_[index] = value;
 }
 
 void ConventionalIntegrals::gather_integrals() {
@@ -188,11 +188,11 @@ void ConventionalIntegrals::gather_integrals() {
     }
     int_mem_ = sizeof(double) * 3 * 8 * num_aptei_ / 1073741824.0;
     for (size_t pqrs = 0; pqrs < num_aptei_; ++pqrs)
-        aphys_tei_aa[pqrs] = 0.0;
+        aphys_tei_aa_[pqrs] = 0.0;
     for (size_t pqrs = 0; pqrs < num_aptei_; ++pqrs)
-        aphys_tei_ab[pqrs] = 0.0;
+        aphys_tei_ab_[pqrs] = 0.0;
     for (size_t pqrs = 0; pqrs < num_aptei_; ++pqrs)
-        aphys_tei_bb[pqrs] = 0.0;
+        aphys_tei_bb_[pqrs] = 0.0;
 
     if (spin_restriction_ == IntegralSpinRestriction::Restricted) {
         std::vector<double> two_electron_integrals(num_tei_, 0.0);
@@ -231,9 +231,9 @@ void ConventionalIntegrals::gather_integrals() {
                         double direct = two_electron_integrals[INDEX4(p, r, q, s)];
                         double exchange = two_electron_integrals[INDEX4(p, s, q, r)];
                         size_t index = aptei_index(p, q, r, s);
-                        aphys_tei_aa[index] = direct - exchange;
-                        aphys_tei_ab[index] = direct;
-                        aphys_tei_bb[index] = direct - exchange;
+                        aphys_tei_aa_[index] = direct - exchange;
+                        aphys_tei_ab_[index] = direct;
+                        aphys_tei_bb_[index] = direct - exchange;
                     }
                 }
             }
@@ -253,9 +253,9 @@ void ConventionalIntegrals::resort_integrals_after_freezing() {
         outfile->Printf("\n  Resorting integrals after freezing core.");
     }
     // Resort the four-index integrals
-    resort_four(aphys_tei_aa, cmotomo_);
-    resort_four(aphys_tei_ab, cmotomo_);
-    resort_four(aphys_tei_bb, cmotomo_);
+    resort_four(aphys_tei_aa_, cmotomo_);
+    resort_four(aphys_tei_ab_, cmotomo_);
+    resort_four(aphys_tei_bb_, cmotomo_);
 }
 
 void ConventionalIntegrals::resort_four(std::vector<double>& tei, std::vector<size_t>& map) {

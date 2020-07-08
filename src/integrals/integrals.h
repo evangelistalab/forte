@@ -404,9 +404,9 @@ class ForteIntegrals {
 
     /// Two-electron integrals stored as a vector with redundant elements (no permutational
     /// symmetry). These are addressed with the function aptei_index
-    std::vector<double> aphys_tei_aa;
-    std::vector<double> aphys_tei_ab;
-    std::vector<double> aphys_tei_bb;
+    std::vector<double> aphys_tei_aa_;
+    std::vector<double> aphys_tei_ab_;
+    std::vector<double> aphys_tei_bb_;
 
     /// The type of tensor that ambit uses -> CoreTensor
     ambit::TensorType tensor_type_ = ambit::CoreTensor;

@@ -129,9 +129,9 @@ void ForteIntegrals::allocate() {
 
     if ((integral_type_ == Conventional) or (integral_type_ == Custom)) {
         // Allocate the memory required to store the two-electron integrals
-        aphys_tei_aa.assign(num_aptei_, 0.0);
-        aphys_tei_ab.assign(num_aptei_, 0.0);
-        aphys_tei_bb.assign(num_aptei_, 0.0);
+        aphys_tei_aa_.assign(num_aptei_, 0.0);
+        aphys_tei_ab_.assign(num_aptei_, 0.0);
+        aphys_tei_bb_.assign(num_aptei_, 0.0);
 
         int_mem_ = sizeof(double) * 3 * 8 * num_aptei_ / 1073741824.0;
     }
@@ -216,9 +216,9 @@ void ForteIntegrals::set_oei_all(const std::vector<double>& oei_a,
 void ForteIntegrals::set_tei_all(const std::vector<double>& tei_aa,
                                  const std::vector<double>& tei_ab,
                                  const std::vector<double>& tei_bb) {
-    aphys_tei_aa = tei_aa;
-    aphys_tei_ab = tei_ab;
-    aphys_tei_bb = tei_bb;
+    aphys_tei_aa_ = tei_aa;
+    aphys_tei_ab_ = tei_ab;
+    aphys_tei_bb_ = tei_bb;
 }
 
 IntegralSpinRestriction ForteIntegrals::spin_restriction() const { return spin_restriction_; }
