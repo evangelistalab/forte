@@ -3,9 +3,9 @@
 import forte
 
 refmcscf   = -99.406065223640
-refudsrg   = -99.498877581701
-refprdsrg  = -99.500379478002
-refrdsrg   = -99.500197313857
+refudsrg   = -99.498870943028
+refprdsrg  = -99.500372786457
+refrdsrg   = -99.500190629197
 
 memory 500 mb
 
@@ -37,7 +37,7 @@ set forte{
    active_space_solver    fci
    correlation_solver     sa-mrdsrg
    int_type               cholesky
-   cholesky_tolerance     1e-12
+   cholesky_tolerance     1e-4
    corr_level             ldsrg2
    frozen_docc            [1,0,0,0]
    restricted_docc        [1,0,1,1]

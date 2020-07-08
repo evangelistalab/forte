@@ -84,9 +84,9 @@ class CustomIntegrals : public ForteIntegrals {
     void custom_integrals_allocate(int norb, const std::vector<int>& orbsym);
 
     // ==> Class private virtual functions <==
-
     void gather_integrals() override;
     void resort_integrals_after_freezing() override;
+    void compute_frozen_one_body_operator() override;
 };
 
 } // namespace forte

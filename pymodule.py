@@ -570,6 +570,8 @@ def fill_ints_with_fcidump(fcidump, ints):
 
     ints.set_tei(eri_aa.flatten(), eri_ab.flatten(), eri_bb.flatten())
 
+    ints.initialize()
+
 
 def run_forte(name, **kwargs):
     r"""Function encoding sequence of PSI module and plugin calls so that

@@ -212,28 +212,24 @@ void CholeskyIntegrals::gather_integrals() {
         } else {
             outfile->Printf("\n File PSIF_DFSCF_BJ(cholesky integrals) was not generated");
             outfile->Printf("\n");
-            std::string str = "Computing CD Integrals";
             if (print_) {
-                outfile->Printf("\n  %-36s ...", str.c_str());
+                outfile->Printf("\n  Computing CD Integrals");
             }
             Ch->choleskify();
             nthree_ = Ch->Q();
             L_ao_ = Ch->L();
             if (print_) {
-                outfile->Printf("...Done.");
                 print_timing("cholesky transformation", timer.get());
             }
         }
     } else {
-        std::string str = "Computing CD Integrals";
         if (print_) {
-            outfile->Printf("\n  %-36s ...", str.c_str());
+            outfile->Printf("\n  Computing CD Integrals");
         }
         Ch->choleskify();
         nthree_ = Ch->Q();
         L_ao_ = Ch->L();
         if (print_) {
-            outfile->Printf("...Done.");
             print_timing("cholesky transformation", timer.get());
         }
     }

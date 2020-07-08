@@ -418,7 +418,6 @@ class ForteIntegrals {
 
     /// The One Electron Integrals (T + V) in SO Basis
     std::shared_ptr<psi::Matrix> OneBody_symm_;
-    std::shared_ptr<psi::Matrix> OneIntsAO_;
 
     /// AO dipole integrals
     std::vector<std::shared_ptr<psi::Matrix>> dipole_ints_ao_;

@@ -105,8 +105,6 @@ void Psi4Integrals::transform_one_electron_integrals() {
     std::shared_ptr<psi::Matrix> Ha = wfn_->H()->clone();
     std::shared_ptr<psi::Matrix> Hb = wfn_->H()->clone();
 
-    OneIntsAO_ = Ha->clone();
-
     Ha->transform(Ca_);
     Hb->transform(Cb_);
 
@@ -158,11 +156,11 @@ void Psi4Integrals::compute_frozen_one_body_operator() {
 
     std::shared_ptr<JK> JK_core;
     if (integral_type_ == Conventional) {
-        outfile->Printf("\n  Building frozen-core operator using PK integrals");
+        outfile->Printf("\n  Building frozen-core operator using PK integrals\n");
         JK_core = JK::build_JK(wfn_->basisset(), psi::BasisSet::zero_ao_basis_set(),
                                psi::Process::environment.options, "PK");
     } else if (integral_type_ == Cholesky) {
-        outfile->Printf("\n  Building frozen-core operator using Cholesky integrals");
+        outfile->Printf("\n  Building frozen-core operator using Cholesky integrals\n");
         //        JK_core = JK::build_JK(wfn_->basisset(), psi::BasisSet::zero_ao_basis_set(),
         //                               psi::Process::environment.options, "CD");
         psi::Options& options = psi::Process::environment.options;
@@ -187,14 +185,17 @@ void Psi4Integrals::compute_frozen_one_body_operator() {
         JK_core = std::shared_ptr<JK>(jk);
     } else if ((integral_type_ == DF) or (integral_type_ == DiskDF) or (integral_type_ == DistDF)) {
         if (options_->get_str("SCF_TYPE") == "DF") {
-            outfile->Printf("\n  Building frozen-core operator using DF integrals");
+            outfile->Printf("\n  Building frozen-core operator using DF integrals\n");
             JK_core = JK::build_JK(wfn_->basisset(), wfn_->get_basisset("DF_BASIS_MP2"),
                                    psi::Process::environment.options, "MEM_DF");
         } else {
             throw psi::PSIEXCEPTION(
                 "Trying to compute the frozen one-body operator with MEM_DF but "
-                "using a non-DF integral type");
+                "using a non-DF integral type for the SCF procedure");
         }
+    } else {
+        throw psi::PSIEXCEPTION(
+            "Trying to compute the frozen one-body operator with unknown integral type");
     }
 
     JK_core->set_memory(psi::Process::environment.get_memory() * 0.8);
@@ -247,15 +248,11 @@ void Psi4Integrals::compute_frozen_one_body_operator() {
     F_core->add(OneBody_symm_);
 
     frozen_core_energy_ = 0.0;
-    double E_frozen = 0.0;
     for (int h = 0; h < nirrep_; h++) {
         for (int fr = 0; fr < frozen_dim[h]; fr++) {
-            E_frozen += OneBody_symm_->get(h, fr, fr) + F_core->get(h, fr, fr);
+            frozen_core_energy_ += OneBody_symm_->get(h, fr, fr) + F_core->get(h, fr, fr);
         }
     }
-
-    OneBody_symm_ = F_core;
-    frozen_core_energy_ = E_frozen;
 
     if (print_ > 0) {
         outfile->Printf("\n  Frozen-core energy        %20.12f a.u.", frozen_core_energy_);
@@ -301,9 +298,9 @@ void Psi4Integrals::update_orbitals(std::shared_ptr<psi::Matrix> Ca,
     my_proc = GA_Nodeid();
 #endif
     if (my_proc == 0) {
-        outfile->Printf("\n Integrals are about to be computed.");
+        outfile->Printf("\n  Integrals are about to be computed.");
         gather_integrals();
-        outfile->Printf("\n Integrals are about to be updated.");
+        outfile->Printf("\n  Integrals are about to be updated.");
         freeze_core_orbitals();
     }
 }

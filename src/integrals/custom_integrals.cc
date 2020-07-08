@@ -39,6 +39,8 @@
 #include "base_classes/mo_space_info.h"
 #include "helpers/blockedtensorfactory.h"
 #include "helpers/string_algorithms.h"
+#include "helpers/timer.h"
+#include "helpers/printing.h"
 
 #include "custom_integrals.h"
 
@@ -59,35 +61,32 @@ namespace forte {
 CustomIntegrals::CustomIntegrals(std::shared_ptr<ForteOptions> options,
                                  std::shared_ptr<MOSpaceInfo> mo_space_info,
                                  IntegralSpinRestriction restricted)
-    : ForteIntegrals(options, mo_space_info, Custom, restricted) {
-    initialize();
-}
+    : ForteIntegrals(options, mo_space_info, Custom, restricted) {}
 
 void CustomIntegrals::initialize() {
     Ca_ = std::make_shared<psi::Matrix>(nmopi_, nmopi_);
     Cb_ = std::make_shared<psi::Matrix>(nmopi_, nmopi_);
     Ca_->identity();
     Cb_->identity();
+    nsopi_ = nmopi_;
+    nso_ = nmo_;
 
     print_info();
     outfile->Printf("\n  Using Custom integrals\n\n");
     //    gather_integrals();
-    //    freeze_core_orbitals();
+
+    // Copy the correlated part into one_electron_integrals_a/one_electron_integrals_b
+    for (size_t p = 0; p < ncmo_; ++p) {
+        for (size_t q = 0; q < ncmo_; ++q) {
+            one_electron_integrals_a_[p * ncmo_ + q] =
+                full_one_electron_integrals_a_[cmotomo_[p] * nmo_ + cmotomo_[q]];
+            one_electron_integrals_b_[p * ncmo_ + q] =
+                full_one_electron_integrals_b_[cmotomo_[p] * nmo_ + cmotomo_[q]];
+        }
+    }
+
+    freeze_core_orbitals();
 }
-
-// set()
-//{
-//        std::shared_ptr<psi::Matrix> Ca_;
-//        std::shared_ptr<psi::Matrix> Cb_;
-//        double nucrep_;
-//        double frozen_core_energy_;
-//        double scalar_energy_;
-//        size_t nso_;
-//        psi::Dimension nsopi_;
-//        std::shared_ptr<psi::Matrix> OneBody_symm_;
-//        std::shared_ptr<psi::Matrix> OneIntsAO_;
-
-//}
 
 double CustomIntegrals::aptei_aa(size_t p, size_t q, size_t r, size_t s) {
     return aphys_tei_aa[aptei_index(p, q, r, s)];
@@ -217,13 +216,65 @@ void CustomIntegrals::make_fock_matrix(std::shared_ptr<psi::Matrix> gamma_a,
     }
 }
 
+void CustomIntegrals::compute_frozen_one_body_operator() {
+    local_timer timer_frozen_one_body;
+
+    //    local_timer timer_frozen_one_body;
+    psi::Dimension frozen_dim = mo_space_info_->dimension("FROZEN_DOCC");
+    psi::Dimension nmopi = mo_space_info_->dimension("ALL");
+
+    std::vector<size_t> frozen_mos = mo_space_info_->absolute_mo("FROZEN_DOCC");
+
+    // This loop grabs only the correlated part of the correction
+    int full_offset = 0;
+    int corr_offset = 0;
+    for (int h = 0; h < nirrep_; h++) {
+        for (int p = 0; p < ncmopi_[h]; ++p) {
+            for (int q = 0; q < ncmopi_[h]; ++q) {
+                // the index of p and q in the full block of irrep h
+                size_t p_full = cmotomo_[p + corr_offset]; // - full_offset;
+                size_t q_full = cmotomo_[q + corr_offset]; // - full_offset;
+                for (size_t m_full : frozen_mos) {
+                    one_electron_integrals_a_[(p + corr_offset) * ncmo_ + (q + corr_offset)] +=
+                        aptei_aa(p_full, m_full, q_full, m_full) +
+                        aptei_ab(p_full, m_full, q_full, m_full);
+
+                    one_electron_integrals_b_[(p + corr_offset) * ncmo_ + (q + corr_offset)] +=
+                        aptei_bb(p_full, m_full, q_full, m_full) +
+                        aptei_ab(m_full, p_full, m_full, q_full);
+                }
+            }
+        }
+        full_offset += nmopi_[h];
+        corr_offset += ncmopi_[h];
+    }
+
+    frozen_core_energy_ = 0.0;
+    for (int m : frozen_mos) {
+        frozen_core_energy_ += full_one_electron_integrals_a_[m * nmo_ + m] +
+                               full_one_electron_integrals_b_[m * nmo_ + m];
+        for (int n : frozen_mos) {
+            frozen_core_energy_ += 0.5 * aptei_aa(m, n, m, n) + 1.0 * aptei_ab(m, n, m, n) +
+                                   0.5 * aptei_bb(m, n, m, n);
+        }
+    }
+
+    if (print_ > 0) {
+        outfile->Printf("\n  Frozen-core energy        %20.12f a.u.", frozen_core_energy_);
+        print_timing("frozen one-body operator", timer_frozen_one_body.get());
+    }
+} // namespace forte
+
+// void CustomIntegrals::resort_integrals_after_freezing() {}
+
 //    // Read the integrals from a file
 //    std::string filename("INTDUMP");
 //    std::ifstream file(filename);
 
 //    if (not file.is_open()) {
 //    }
-//    std::string str((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
+//    std::string str((std::istreambuf_iterator<char>(file)),
+//    std::istreambuf_iterator<char>());
 
 //    std::vector<std::string> lines = split_string(str, "\n");
 
@@ -241,7 +292,8 @@ void CustomIntegrals::make_fock_matrix(std::shared_ptr<psi::Matrix> gamma_a,
 //        outfile->Printf("\n%s", line.c_str());
 //        if (line.find(close_tag) != std::string::npos) {
 //            parsing_section = false;
-//            // now we know how many orbitals are there and we can allocate memory for the one- and
+//            // now we know how many orbitals are there and we can allocate memory for the
+//            one- and
 //            // two-electron integrals
 //            custom_integrals_allocate(norb, orbsym);
 //            two_electron_integrals_chemist.assign(num_tei_, 0.0);
@@ -282,14 +334,16 @@ void CustomIntegrals::make_fock_matrix(std::shared_ptr<psi::Matrix> gamma_a,
 //                        // orbital energies, skip them
 //                    } else if ((r == 0) and (s == 0)) {
 //                        // one-electron integrals
-//                        full_one_electron_integrals_a_[(p - 1) * aptei_idx_ + q - 1] = integral;
-//                        full_one_electron_integrals_b_[(p - 1) * aptei_idx_ + q - 1] = integral;
-//                        full_one_electron_integrals_a_[(q - 1) * aptei_idx_ + p - 1] = integral;
-//                        full_one_electron_integrals_b_[(q - 1) * aptei_idx_ + p - 1] = integral;
-//                        one_electron_integrals_a_[(p - 1) * aptei_idx_ + q - 1] = integral;
-//                        one_electron_integrals_b_[(p - 1) * aptei_idx_ + q - 1] = integral;
-//                        one_electron_integrals_a_[(q - 1) * aptei_idx_ + p - 1] = integral;
-//                        one_electron_integrals_b_[(q - 1) * aptei_idx_ + p - 1] = integral;
+//                        full_one_electron_integrals_a_[(p - 1) * aptei_idx_ + q - 1] =
+//                        integral; full_one_electron_integrals_b_[(p - 1) * aptei_idx_ + q
+//                        - 1] = integral; full_one_electron_integrals_a_[(q - 1) *
+//                        aptei_idx_ + p - 1] = integral; full_one_electron_integrals_b_[(q
+//                        - 1) * aptei_idx_ + p - 1] = integral;
+//                        one_electron_integrals_a_[(p - 1) * aptei_idx_ + q - 1] =
+//                        integral; one_electron_integrals_b_[(p - 1) * aptei_idx_ + q - 1]
+//                        = integral; one_electron_integrals_a_[(q - 1) * aptei_idx_ + p -
+//                        1] = integral; one_electron_integrals_b_[(q - 1) * aptei_idx_ + p
+//                        - 1] = integral;
 //                    } else {
 //                        // two-electron integrals
 //                        two_electron_integrals_chemist[four(p, q, r, s)] = integral;

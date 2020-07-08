@@ -35,9 +35,11 @@
 #include "psi4/libpsio/psio.hpp"
 #include "psi4/libtrans/integraltransform.h"
 
-#include "helpers/blockedtensorfactory.h"
 #include "base_classes/mo_space_info.h"
+
+#include "helpers/blockedtensorfactory.h"
 #include "helpers/timer.h"
+#include "helpers/printing.h"
 
 #include "conventional_integrals.h"
 
@@ -171,6 +173,10 @@ void ConventionalIntegrals::set_tei(size_t p, size_t q, size_t r, size_t s, doub
 }
 
 void ConventionalIntegrals::gather_integrals() {
+    if (print_) {
+        outfile->Printf("\n  Computing Conventional Integrals");
+    }
+    local_timer timer;
     MintsHelper mints = MintsHelper(wfn_->basisset());
     mints.integrals();
     auto integral_transform = transform_integrals();
@@ -236,6 +242,9 @@ void ConventionalIntegrals::gather_integrals() {
         outfile->Printf("\n  Unrestricted orbitals are currently disabled");
         throw psi::PSIEXCEPTION("Unrestricted orbitals are currently disabled in "
                                 "ConventionalIntegrals");
+    }
+    if (print_) {
+        print_timing("conventional integral transformation", timer.get());
     }
 }
 

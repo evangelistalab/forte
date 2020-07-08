@@ -209,8 +209,8 @@ void ForteIntegrals::set_scalar(double value) { scalar_energy_ = value; }
 
 void ForteIntegrals::set_oei_all(const std::vector<double>& oei_a,
                                  const std::vector<double>& oei_b) {
-    one_electron_integrals_a_ = oei_a;
-    one_electron_integrals_b_ = oei_b;
+    full_one_electron_integrals_a_ = oei_a;
+    full_one_electron_integrals_b_ = oei_b;
 }
 
 void ForteIntegrals::set_tei_all(const std::vector<double>& tei_aa,
