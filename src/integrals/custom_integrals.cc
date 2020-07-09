@@ -323,16 +323,6 @@ void CustomIntegrals::transform_one_electron_integrals() {
         }
         offset += nmopi_[h];
     }
-
-//    // Copy the correlated part into one_electron_integrals_a/one_electron_integrals_b
-//    for (size_t p = 0; p < ncmo_; ++p) {
-//        for (size_t q = 0; q < ncmo_; ++q) {
-//            one_electron_integrals_a_[p * ncmo_ + q] =
-//                full_one_electron_integrals_a_[cmotomo_[p] * nmo_ + cmotomo_[q]];
-//            one_electron_integrals_b_[p * ncmo_ + q] =
-//                full_one_electron_integrals_b_[cmotomo_[p] * nmo_ + cmotomo_[q]];
-//        }
-//    }
 }
 
 void CustomIntegrals::transform_two_electron_integrals() {
@@ -351,15 +341,17 @@ void CustomIntegrals::transform_two_electron_integrals() {
     auto Ca = ambit::Tensor::build(tensor_type_, "Ca", {nmo_, nmo_});
     auto Cb = ambit::Tensor::build(tensor_type_, "Cb", {nmo_, nmo_});
 
+    auto& Ca_data = Ca.data();
+    auto& Cb_data = Cb.data();
+
     int offset = 0;
-    std::vector<size_t> idx(2);
     for (int h = 0; h < nirrep_; ++h) {
         for (int p = 0; p < nmopi_[h]; ++p) {
             for (int q = 0; q < nmopi_[h]; ++q) {
-                idx[0] = p + offset;
-                idx[1] = q + offset;
-                Ca.at(idx) = Ca_->get(h, p, q);
-                Cb.at(idx) = Cb_->get(h, p, q);
+                int p_full = p + offset;
+                int q_full = q + offset;
+                Ca_data[p_full * nmo_ + q_full] = Ca_->get(h, p, q);
+                Cb_data[p_full * nmo_ + q_full] = Cb_->get(h, p, q);
             }
         }
         offset += nmopi_[h];
