@@ -75,12 +75,12 @@ double forte_old_methods(psi::SharedWavefunction ref_wfn, std::shared_ptr<ForteO
     auto state_map = to_state_nroots_map(state_weights_map);
 
     if (options->get_bool("CASSCF_REFERENCE") == true or options->get_str("JOB_TYPE") == "CASSCF") {
-        auto casscf = std::make_shared<CASSCF>(
-            state_weights_map, std::make_shared<SCFInfo>(ref_wfn), options, mo_space_info, ints);
-        final_energy = casscf->compute_energy();
-        if (options->get_str("DERTYPE") == "FIRST") {
-            casscf->compute_gradient();
-        }
+//        auto casscf = std::make_shared<CASSCF>(
+//            state_weights_map, std::make_shared<SCFInfo>(ref_wfn), options, mo_space_info, ints);
+//        final_energy = casscf->compute_energy();
+//        if (options->get_str("DERTYPE") == "FIRST") {
+//            casscf->compute_gradient();
+//        }
     }
     if (options->get_str("JOB_TYPE") == "MR-DSRG-PT2") {
         std::string cas_type = options->get_str("ACTIVE_SPACE_SOLVER");

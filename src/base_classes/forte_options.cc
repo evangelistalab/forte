@@ -202,10 +202,7 @@ bool ForteOptions::get_bool(const std::string& label) {
 
 int ForteOptions::get_int(const std::string& label) {
     auto value_type = get(label);
-    if (value_type.first.is_none()) {
-        std::string msg = "Called ForteOptions::get_int() but the value is None";
-        throw std::runtime_error(msg);
-    }
+    check_options_none(value_type.first, "int", label);
     if (value_type.second == "int") {
         return py::cast<int>(value_type.first);
     }
@@ -225,6 +222,7 @@ double ForteOptions::get_double(const std::string& label) {
 
 std::string ForteOptions::get_str(const std::string& label) {
     auto value_type = get(label);
+    check_options_none(value_type.first, "str", label);
     if (value_type.second == "str") {
         return py::cast<std::string>(value_type.first);
     }
@@ -234,6 +232,7 @@ std::string ForteOptions::get_str(const std::string& label) {
 
 py::list ForteOptions::get_gen_list(const std::string& label) {
     auto value_type = get(label);
+    check_options_none(value_type.first, "gen_list", label);
     if (value_type.second == "gen_list") {
         return value_type.first;
     }
@@ -244,6 +243,7 @@ py::list ForteOptions::get_gen_list(const std::string& label) {
 std::vector<int> ForteOptions::get_int_vec(const std::string& label) {
     std::vector<int> result;
     auto value_type = get(label);
+    check_options_none(value_type.first, "int_vec", label);
     if (value_type.second == "int_list") {
         for (const auto& s : value_type.first) {
             result.push_back(py::cast<int>(s));
@@ -257,6 +257,7 @@ std::vector<int> ForteOptions::get_int_vec(const std::string& label) {
 std::vector<double> ForteOptions::get_double_vec(const std::string& label) {
     std::vector<double> result;
     auto value_type = get(label);
+    check_options_none(value_type.first, "double_vec", label);
     if (value_type.second == "float_list") {
         for (const auto& s : value_type.first) {
             result.push_back(py::cast<double>(s));

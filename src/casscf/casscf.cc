@@ -75,10 +75,12 @@ void CASSCF::startup() {
         throw psi::PSIEXCEPTION("CASSCF only supports restricted reference (RHF or ROHF).");
     }
 
-    auto scf_type = options_->get_str("SCF_TYPE");
-    if (scf_type == "PK" or scf_type == "OUT_OF_CORE") {
-        outfile->Printf("\n\n  Please change SCF_TYPE to DIRECT for conventional integrals.");
-        throw psi::PSIEXCEPTION("Please change SCF_TYPE to DIRECT.");
+    if (not options_->is_none("SCF_TYPE")) {
+        auto scf_type = options_->get_str("SCF_TYPE");
+        if (scf_type == "PK" or scf_type == "OUT_OF_CORE") {
+            outfile->Printf("\n\n  Please change SCF_TYPE to DIRECT for conventional integrals.");
+            throw psi::PSIEXCEPTION("Please change SCF_TYPE to DIRECT.");
+        }
     }
 
     print_ = options_->get_int("PRINT");
@@ -182,8 +184,7 @@ void CASSCF::startup() {
     JK_->C_right().clear();
 
     if (print_ > 0)
-        outfile->Printf("\n    JK takes %5.5f s to initialize while using %s", JK_initialize.get(),
-                        scf_type.c_str());
+        outfile->Printf("\n    JK takes %5.5f s", JK_initialize.get());
 }
 
 double CASSCF::compute_energy() {
@@ -807,6 +808,13 @@ void CASSCF::overlap_orbitals(const psi::SharedMatrix& C_old, const psi::SharedM
             }
         }
     }
+}
+
+std::unique_ptr<CASSCF>
+make_casscf(const std::map<StateInfo, std::vector<double>>& state_weight_map,
+            std::shared_ptr<SCFInfo> scf_info, std::shared_ptr<ForteOptions> options,
+            std::shared_ptr<MOSpaceInfo> mo_space_info, std::shared_ptr<ForteIntegrals> ints) {
+    return std::make_unique<CASSCF>(state_weight_map, scf_info, options, mo_space_info, ints);
 }
 
 // void CASSCF::write_orbitals_molden() {

@@ -48,6 +48,8 @@
 #include "orbital-helpers/fragment_projector.h"
 
 #include "forte.h"
+
+#include "casscf/casscf.h"
 #include "fci/fci_solver.h"
 #include "base_classes/dynamic_correlation_solver.h"
 #include "base_classes/state_info.h"
@@ -95,6 +97,12 @@ void export_ActiveSpaceSolver(py::module& m) {
 
     m.def("compute_average_state_energy", &compute_average_state_energy,
           "Compute the average energy given the energies and weights of each state");
+}
+
+void export_CASSCF(py::module& m) {
+    py::class_<CASSCF>(m, "CASSCF")
+        .def("compute_energy", &CASSCF::compute_energy, "Compute the CASSCF energy")
+        .def("compute_gradient", &CASSCF::compute_gradient, "Compute the CASSCF gradient");
 }
 
 /// Export the Determinant class
@@ -189,6 +197,7 @@ PYBIND11_MODULE(forte, m) {
     m.def("make_dsrg_so_f", &make_dsrg_so_f, "Make a DSRG pointer (spin-orbital implementation)");
     m.def("make_dsrg_spin_adapted", &make_dsrg_spin_adapted,
           "Make a DSRG pointer (spin-adapted implementation)");
+    m.def("make_casscf", &make_casscf, "Make a CASSCF object");
 
     export_ambit(m);
 
@@ -196,6 +205,8 @@ PYBIND11_MODULE(forte, m) {
 
     export_ActiveSpaceMethod(m);
     export_ActiveSpaceSolver(m);
+
+    export_CASSCF(m);
     export_ForteIntegrals(m);
 
     export_OrbitalTransform(m);

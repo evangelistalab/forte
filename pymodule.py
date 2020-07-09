@@ -652,10 +652,15 @@ def run_forte(name, **kwargs):
 
     # Run a method
     energy = 0.0
+
+    if (options.get_bool("CASSCF_REFERENCE") == True or job_type == "CASSCF"):
+        casscf = forte.make_casscf(state_weights_map, scf_info, options, mo_space_info, ints)
+        energy = casscf.compute_energy()
+
     if (job_type == 'NEWDRIVER'):
         energy = forte_driver(state_weights_map, scf_info, options, ints,
                               mo_space_info)
-    else:
+    elif (job_type == 'MR-DSRG-PT2'):
         energy = forte.forte_old_methods(ref_wfn, options, ints, mo_space_info)
 
     end = time.time()
@@ -752,6 +757,11 @@ def gradient_forte(name, **kwargs):
 
     # Run gradient computation
     energy = forte.forte_old_methods(ref_wfn, options, ints, mo_space_info)
+
+    casscf = make_casscf(state_weights_map, scf_info, options, mo_space_info, ints)
+    energy = casscf.compute_energy()
+    casscf.compute_gradient();
+
     derivobj = psi4.core.Deriv(ref_wfn)
     derivobj.set_deriv_density_backtransformed(True)
     derivobj.set_ignore_reference(True)

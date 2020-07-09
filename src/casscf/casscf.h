@@ -212,7 +212,7 @@ class CASSCF {
     /// Compute overlap between old_c and new_c
     void overlap_orbitals(const psi::SharedMatrix& C_old, const psi::SharedMatrix& C_new);
     void overlap_coefficients();
-//    void write_orbitals_molden();
+    //    void write_orbitals_molden();
 
     /// DEBUG PRINTING
     bool casscf_debug_print_;
@@ -247,6 +247,12 @@ class CASSCF {
     /// Build the active Fock (part that does depend on 1RDM)
     std::shared_ptr<psi::Matrix> build_fock_active(std::shared_ptr<psi::Matrix> Ca);
 };
+
+std::unique_ptr<CASSCF>
+make_casscf(const std::map<StateInfo, std::vector<double>>& state_weight_map,
+            std::shared_ptr<SCFInfo> ref_wfn, std::shared_ptr<ForteOptions> options,
+            std::shared_ptr<MOSpaceInfo> mo_space_info, std::shared_ptr<ForteIntegrals> ints);
+
 } // namespace forte
 
 #endif // _casscf_h_
