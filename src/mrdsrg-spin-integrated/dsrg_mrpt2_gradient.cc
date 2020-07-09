@@ -105,6 +105,7 @@ void DSRG_MRPT2::set_all_variables() {
     V_N_Beta = BTF_->build(CoreTensor, "normal Dimention-reduced Electron Repulsion Integral beta", {"gg"});
     V_R_Alpha = BTF_->build(CoreTensor, "index-reversed Dimention-reduced Electron Repulsion Integral alpha", {"gg"});
     V_R_Beta = BTF_->build(CoreTensor, "index-reversed Dimention-reduced Electron Repulsion Integral beta", {"GG"});
+    V_all_Beta = BTF_->build(CoreTensor, "normal Dimention-reduced Electron Repulsion Integral all beta", {"GG"});
 
 
 
@@ -182,6 +183,8 @@ void DSRG_MRPT2::set_v() {
     V_R_Alpha["pq"] = V["mpnq"] * I["mn"];
     // Summation of V["mPmQ"] over index "m"
     V_R_Beta["PQ"] = V["mPnQ"] * I["mn"];
+    // Summation of V["PMQM"] over index "M"
+    V_all_Beta["PQ"] = V["PMQN"] * I["MN"];
 
 }
 
@@ -2823,6 +2826,14 @@ void DSRG_MRPT2::solve_z() {
     ck_ca_a("Knu") -= 2 * V.block("aaca")("xynv") * cc2aa_("KJuvxy") * ci("J");
     ck_ca_a("Knu") -= 4 * V.block("aAcA")("xYnV") * cc2ab_("KJuVxY") * ci("J");
 
+    // NOTICE beta
+    ck_ca_b("KNU") += 4 * V.block("AACA")("UYNX") * cc1b_("KJXY") * ci("J");
+    ck_ca_b("KNU") += 4 * V.block("aAaC")("yUxN") * cc1a_("KJxy") * ci("J");
+    ck_ca_b("KNU") -= 4 * H.block("AC")("VN") * cc1b_("KJUV") * ci("J");
+    ck_ca_b("KNU") -= 4 * V_all_Beta.block("AC")("VN") * cc1b_("KJUV") * ci("J");
+    ck_ca_b("KNU") -= 4 * V_R_Beta.block("AC")("VN") * cc1b_("KJUV") * ci("J");
+    ck_ca_b("KNU") -= 2 * V.block("AACA")("XYNV") * cc2bb_("KJUVXY") * ci("J");
+    ck_ca_b("KNU") -= 4 * V.block("aAaC")("xYvN") * cc2ab_("KJvUxY") * ci("J");
 
     /// contribution from Alpha
     ck_ca_a("Knu") += -4 * ci("K") * V.block("aaca")("uynx") * Gamma1.block("aa")("xy");
@@ -2833,8 +2844,14 @@ void DSRG_MRPT2::solve_z() {
     ck_ca_a("Knu") +=  2 * ci("K") * V.block("aaca")("xynv") * Gamma2.block("aaaa")("uvxy");
     ck_ca_a("Knu") +=  4 * ci("K") * V.block("aAcA")("xYnV") * Gamma2.block("aAaA")("uVxY");
 
-    // NOTICE use restricted orbital constraints
-    ck_ca_b("KNU") += ck_ca_a("KNU");
+    // NOTICE beta
+    ck_ca_b("KNU") += -4 * ci("K") * V.block("AACA")("UYNX") * Gamma1.block("AA")("XY");
+    ck_ca_b("KNU") += -4 * ci("K") * V.block("aAaC")("yUxN") * Gamma1.block("aa")("xy");
+    ck_ca_b("KNU") +=  4 * ci("K") * H.block("AC")("VN") * Gamma1.block("AA")("UV");
+    ck_ca_b("KNU") +=  4 * ci("K") * V_all_Beta.block("AC")("VN") * Gamma1.block("AA")("UV");
+    ck_ca_b("KNU") +=  4 * ci("K") * V_R_Beta.block("AC")("VN") * Gamma1.block("AA")("UV");
+    ck_ca_b("KNU") +=  2 * ci("K") * V.block("AACA")("XYNV") * Gamma2.block("AAAA")("UVXY");
+    ck_ca_b("KNU") +=  4 * ci("K") * V.block("aAaC")("xYvN") * Gamma2.block("aAaA")("vUxY");
 
     // virtual-active
     ck_va_a("Keu") += 4 * H.block("av")("ve") * cc1a_("KJuv") * ci("J");
@@ -2843,6 +2860,13 @@ void DSRG_MRPT2::solve_z() {
     ck_va_a("Keu") += 2 * V.block("aava")("xyev") * cc2aa_("KJuvxy") * ci("J");
     ck_va_a("Keu") += 4 * V.block("aAvA")("xYeV") * cc2ab_("KJuVxY") * ci("J");
 
+    // NOTICE beta
+    ck_va_b("KEU") += 4 * H.block("AV")("VE") * cc1b_("KJUV") * ci("J");
+    ck_va_b("KEU") += 4 * V_all_Beta.block("AV")("VE") * cc1b_("KJUV") * ci("J");
+    ck_va_b("KEU") += 4 * V_R_Beta.block("AV")("VE") * cc1b_("KJUV") * ci("J");
+    ck_va_b("KEU") += 2 * V.block("AAVA")("XYEV") * cc2bb_("KJUVXY") * ci("J");
+    ck_va_b("KEU") += 4 * V.block("aAaV")("xYvE") * cc2ab_("KJvUxY") * ci("J");
+
     /// contribution from Alpha
     ck_va_a("Keu") += -4 * ci("K") * H.block("av")("ve") * Gamma1.block("aa")("uv");
     ck_va_a("Keu") += -4 * ci("K") * V_N_Alpha.block("av")("ve") * Gamma1.block("aa")("uv");
@@ -2850,10 +2874,12 @@ void DSRG_MRPT2::solve_z() {
     ck_va_a("Keu") += -2 * ci("K") * V.block("aava")("xyev") * Gamma2.block("aaaa")("uvxy");
     ck_va_a("Keu") += -4 * ci("K") * V.block("aAvA")("xYeV") * Gamma2.block("aAaA")("uVxY");
 
-
-    // NOTICE use restricted orbital constraints
-    ck_va_b("KEU") += ck_va_a("KEU");
-
+    // NOTICE beta
+    ck_va_b("KEU") += -4 * ci("K") * H.block("AV")("VE") * Gamma1.block("AA")("UV");
+    ck_va_b("KEU") += -4 * ci("K") * V_all_Beta.block("AV")("VE") * Gamma1.block("AA")("UV");
+    ck_va_b("KEU") += -4 * ci("K") * V_R_Beta.block("AV")("VE") * Gamma1.block("AA")("UV");
+    ck_va_b("KEU") += -2 * ci("K") * V.block("AAVA")("XYEV") * Gamma2.block("AAAA")("UVXY");
+    ck_va_b("KEU") += -4 * ci("K") * V.block("aAaV")("xYvE") * Gamma2.block("aAaA")("vUxY");
 
 
 
@@ -2861,16 +2887,20 @@ void DSRG_MRPT2::solve_z() {
     ck_aa_a("Kuv") += 2 * V.block("aaaa")("uyvx") * cc1a_("KJxy") * ci("J");
     ck_aa_a("Kuv") += 2 * V.block("aAaA")("uYvX") * cc1b_("KJXY") * ci("J");
 
-    // NOTICE use restricted orbital constraints
-    ck_aa_b("KUV") += ck_aa_a("KUV");
-
+    // NOTICE beta
+    ck_aa_b("KUV") += 2 * V.block("AAAA")("UYVX") * cc1b_("KJXY") * ci("J");
+    ck_aa_b("KUV") += 2 * V.block("aAaA")("yUxV") * cc1a_("KJxy") * ci("J");
 
     /// contribution from Alpha
     ck_aa_a("Kuv") += -2 * ci("K") * V.block("aaaa")("uyvx") * Gamma1.block("aa")("xy");
     ck_aa_a("Kuv") += -2 * ci("K") * V.block("aAaA")("uYvX") * Gamma1.block("AA")("XY");
 
+    // NOTICE beta
     ck_aa_b("KUV") += -2 * ci("K") * V.block("AAAA")("UYVX") * Gamma1.block("AA")("XY");
     ck_aa_b("KUV") += -2 * ci("K") * V.block("aAaA")("yUxV") * Gamma1.block("aa")("xy");
+
+
+
 
     // CI equations' contribution to A
 
@@ -2943,55 +2973,66 @@ void DSRG_MRPT2::solve_z() {
 
     auto ck_ci = ambit::Tensor::build(ambit::CoreTensor, "ci equations ci multiplier part", {ndets, ndets});
     auto I_ci = ambit::Tensor::build(ambit::CoreTensor, "identity", {ndets, ndets});
+    auto one_ci = ambit::Tensor::build(ambit::CoreTensor, "one", {ndets, ndets});
     x_ci = ambit::Tensor::build(ambit::CoreTensor, "solution for ci multipliers", {ndets});
-    double E0 = -99.232223650513404;
 
     I_ci.iterate([&](const std::vector<size_t>& i, double& value) {
         value = (i[0] == i[1]) ? 1.0 : 0.0;
     });
+    one_ci.iterate([&](const std::vector<size_t>& i, double& value) {
+        value = 1.0;
+    });
 
+    ck_ci("KI") += H.block("cc")("mn") * I.block("cc")("mn") * I_ci("KI");
+    ck_ci("KI") += H.block("CC")("MN") * I.block("CC")("MN") * I_ci("KI");
     ck_ci("KI") += cc1a_("KIuv") * H.block("aa")("uv");
     ck_ci("KI") += cc1b_("KIUV") * H.block("AA")("UV");
+
+    ck_ci("KI") += 0.5 * V["m,n,m1,n1"] * I["m,m1"] * I["n,n1"] * I_ci("KI");
+    ck_ci("KI") += 0.5 * V["M,N,M1,N1"] * I["M,M1"] * I["N,N1"] * I_ci("KI");
+    ck_ci("KI") +=       V["m,N,m1,N1"] * I["m,m1"] * I["N,N1"] * I_ci("KI");
+
+    ck_ci("KI") += cc1a_("KIuv") * V.block("acac")("umvn") * I.block("cc")("mn");
+    ck_ci("KI") += cc1b_("KIUV") * V.block("ACAC")("UMVN") * I.block("CC")("MN");
+    
+    ck_ci("KI") += cc1a_("KIuv") * V_N_Beta.block("aa")("uv");
+    ck_ci("KI") += cc1b_("KIUV") * V_R_Beta.block("AA")("UV");
+
     ck_ci("KI") += 0.25 * cc2aa_("KIuvxy") * V.block("aaaa")("uvxy");
     ck_ci("KI") += 0.25 * cc2bb_("KIUVXY") * V.block("AAAA")("UVXY");
     ck_ci("KI") += 1.00 * cc2ab_("KIuVxY") * V.block("aAaA")("uVxY");
+
+    ck_ci("KI") += ints_->frozen_core_energy() * one_ci("KI");
+    ck_ci("KI") += ints_->nuclear_repulsion_energy() * one_ci("KI");
     ck_ci.print();
 
 
-    
 
-
-
-    // double Et = 0.0;
-    // Et += cc1a_("KIuv") * H.block("aa")("uv") * ci("I") * ci("K");
-    // Et += cc1b_("KIUV") * H.block("AA")("UV") * ci("I") * ci("K");
-    // Et += 0.25 * cc2aa_("KIuvxy") * V.block("aaaa")("uvxy") * ci("I") * ci("K");
-    // Et += 0.25 * cc2bb_("KIUVXY") * V.block("AAAA")("UVXY") * ci("I") * ci("K");
-    // Et += 1.00 * cc2ab_("KIuVxY") * V.block("aAaA")("uVxY") * ci("I") * ci("K");
-    // std::cout<< "E test = " << Et << std::endl;
 
 
     double Et = 0.0;
-    double coef = I_ci("KI") * ci("I") * ci("K");
-    Et += H.block("cc")("mn") * I.block("cc")("mn") * coef;
-    Et += H.block("CC")("MN") * I.block("CC")("MN") * coef;
-
-    Et += 0.5 * V["m,n,m1,n1"] * I["m,m1"] * I["n,n1"] * coef;
-    Et += 0.5 * V["M,N,M1,N1"] * I["M,M1"] * I["N,N1"] * coef;
-    Et +=       V["m,N,m1,N1"] * I["m,m1"] * I["N,N1"] * coef;
+    Et += H.block("cc")("mn") * I.block("cc")("mn");
+    Et += H.block("CC")("MN") * I.block("CC")("MN");
     Et += cc1a_("KIuv") * H.block("aa")("uv") * ci("I") * ci("K");
     Et += cc1b_("KIUV") * H.block("AA")("UV") * ci("I") * ci("K");
+
+    Et += 0.5 * V["m,n,m1,n1"] * I["m,m1"] * I["n,n1"];
+    Et += 0.5 * V["M,N,M1,N1"] * I["M,M1"] * I["N,N1"];
+    Et +=       V["m,N,m1,N1"] * I["m,m1"] * I["N,N1"];
+
     Et += 0.25 * cc2aa_("KIuvxy") * V.block("aaaa")("uvxy") * ci("I") * ci("K");
     Et += 0.25 * cc2bb_("KIUVXY") * V.block("AAAA")("UVXY") * ci("I") * ci("K");
     Et += 1.00 * cc2ab_("KIuVxY") * V.block("aAaA")("uVxY") * ci("I") * ci("K");
 
-    Et += 0.25 * cc1a_("KIuv") * V.block("acac")("umvn") * ci("I") * ci("K") * I.block("cc")("mn");
-    Et += 0.25 * cc1b_("KIUV") * V.block("ACAC")("UMVN") * ci("I") * ci("K") * I.block("CC")("MN");
-    Et += 1.00 * cc1a_("KIuv") * V.block("aCaC")("uMvN") * ci("I") * ci("K") * I.block("CC")("MN");
+    Et += cc1a_("KIuv") * V.block("acac")("umvn") * ci("I") * ci("K") * I.block("cc")("mn");
+    Et += cc1b_("KIUV") * V.block("ACAC")("UMVN") * ci("I") * ci("K") * I.block("CC")("MN");
+    Et += cc1a_("KIuv") * V.block("aCaC")("uMvN") * ci("I") * ci("K") * I.block("CC")("MN");
+    Et += cc1b_("KIUV") * V.block("cAcA")("mUnV") * ci("I") * ci("K") * I.block("cc")("mn");
+
     
     Et += ints_->frozen_core_energy();
     Et += ints_->nuclear_repulsion_energy();
-    std::cout<< "E test = " << Et << std::endl;
+    std::cout<< "E test = " << std::setprecision(9) << Et << std::endl;
 
     std::cout<< "ndet = " << ndets << std::endl;
 
@@ -3000,31 +3041,6 @@ void DSRG_MRPT2::solve_z() {
 
     ck_ci.print();
 
-
-    // double casscf_energy = ints_->nuclear_repulsion_energy();
-
-    // casscf_energy += H["m,n"] * I["m,n"];
-    // casscf_energy += H["M,N"] * I["M,N"];
-    // casscf_energy += 0.5 * V["m,n,m1,n1"] * I["m,m1"] * I["n,n1"];
-    // casscf_energy += 0.5 * V["M,N,M1,N1"] * I["M,M1"] * I["N,N1"];
-    // casscf_energy +=       V["m,N,m1,N1"] * I["m,m1"] * I["N,N1"];
-
-    // temp = BTF_->build(CoreTensor, "temporal tensor", spin_cases({"gg"}));
-    // temp["uv"]  = H["uv"];
-    // temp["uv"] += V["umvn"] * I["mn"];
-    // temp["uv"] += V["uMvN"] * I["MN"];
-    // casscf_energy += temp["uv"] * Gamma1["vu"];
-
-    // temp["UV"]  = H["UV"];
-    // temp["UV"] += V["mUnV"] * I["mn"];
-    // temp["UV"] += V["UMVN"] * I["MN"];
-
-    // casscf_energy += temp["UV"] * Gamma1["VU"];
-    // casscf_energy += 0.25 * V["uvxy"] * Gamma2["xyuv"];
-    // casscf_energy += 0.25 * V["UVXY"] * Gamma2["XYUV"];
-    // casscf_energy +=        V["uVxY"] * Gamma2["xYuV"];
-
-    // std::cout<< "casscf energy  = "<< casscf_energy;
 
 
 
