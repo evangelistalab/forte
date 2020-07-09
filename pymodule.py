@@ -761,7 +761,7 @@ def gradient_forte(name, **kwargs):
     # Run gradient computation
     energy = forte.forte_old_methods(ref_wfn, options, ints, mo_space_info)
 
-    casscf = make_casscf(state_weights_map, scf_info, options, mo_space_info, ints)
+    casscf = forte.make_casscf(state_weights_map, scf_info, options, mo_space_info, ints)
     energy = casscf.compute_energy()
     casscf.compute_gradient();
 
