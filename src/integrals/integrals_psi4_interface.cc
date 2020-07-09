@@ -260,15 +260,6 @@ void Psi4Integrals::compute_frozen_one_body_operator() {
     }
 }
 
-void Psi4Integrals::rotate_orbitals(std::shared_ptr<psi::Matrix> Ua,
-                                    std::shared_ptr<psi::Matrix> Ub) {
-    // 1. Rotate the orbital coefficients and store them in the ForteIntegral object
-    auto Ca_rotated = psi::linalg::doublet(Ca_, Ua);
-    auto Cb_rotated = psi::linalg::doublet(Cb_, Ub);
-
-    update_orbitals(Ca_rotated, Cb_rotated);
-}
-
 void Psi4Integrals::update_orbitals(std::shared_ptr<psi::Matrix> Ca,
                                     std::shared_ptr<psi::Matrix> Cb) {
 

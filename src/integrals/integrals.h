@@ -166,7 +166,7 @@ class ForteIntegrals {
     void set_print(int print);
 
     /// Return the number of auxiliary functions
-    virtual size_t nthree() const = 0;
+    virtual size_t nthree() const;
 
     /// Return the frozen core energy
     double frozen_core_energy();
@@ -240,7 +240,6 @@ class ForteIntegrals {
     virtual void make_fock_matrix(std::shared_ptr<psi::Matrix> gamma_a,
                                   std::shared_ptr<psi::Matrix> gamma_b) = 0;
 
-
     void set_nuclear_repulsion(double value);
 
     /// Set the value of the scalar part of the Hamiltonian
@@ -273,7 +272,7 @@ class ForteIntegrals {
     /// Rotate the MO coefficients, update psi::Wavefunction, and re-transform integrals
     /// @param Ua the alpha unitary transformation matrix
     /// @param Ub the beta unitary transformation matrix
-    virtual void rotate_orbitals(std::shared_ptr<psi::Matrix> Ua, std::shared_ptr<psi::Matrix> Ub);
+    void rotate_orbitals(std::shared_ptr<psi::Matrix> Ua, std::shared_ptr<psi::Matrix> Ub);
 
     /// Copy these MO coeffs to class variables, update psi::Wavefunction, and re-transform
     /// integrals
@@ -448,7 +447,7 @@ class ForteIntegrals {
                aptei_idx_ * r + s;
     }
 
-    void _undefined_function(const std::string& method);
+    void _undefined_function(const std::string& method) const;
 
     // ==> Class private virtual functions <==
 
@@ -485,7 +484,8 @@ class Psi4Integrals : public ForteIntegrals {
     void transform_one_electron_integrals();
     void build_dipole_ints_ao() override;
     void compute_frozen_one_body_operator() override;
-    void rotate_orbitals(std::shared_ptr<psi::Matrix> Ua, std::shared_ptr<psi::Matrix> Ub) override;
+    //    void rotate_orbitals(std::shared_ptr<psi::Matrix> Ua, std::shared_ptr<psi::Matrix> Ub)
+    //    override;
     void update_orbitals(std::shared_ptr<psi::Matrix> Ca, std::shared_ptr<psi::Matrix> Cb) override;
     void rotate_mos() override;
     std::vector<std::shared_ptr<psi::Matrix>> mo_dipole_ints(const bool& alpha,

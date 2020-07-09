@@ -82,6 +82,17 @@ class CustomIntegrals : public ForteIntegrals {
     std::vector<double> full_aphys_tei_ab_;
     std::vector<double> full_aphys_tei_bb_;
 
+    std::vector<double> original_full_one_electron_integrals_a_;
+    std::vector<double> original_full_one_electron_integrals_b_;
+
+    bool save_original_tei_ = false;
+    ambit::Tensor original_V_aa_;
+    ambit::Tensor original_V_ab_;
+    ambit::Tensor original_V_bb_;
+    std::vector<double> original_full_aphys_tei_aa_;
+    std::vector<double> original_full_aphys_tei_ab_;
+    std::vector<double> original_full_aphys_tei_bb_;
+
     // ==> Class private functions <==
 
     void resort_four(std::vector<double>& tei, std::vector<size_t>& map);
@@ -91,13 +102,16 @@ class CustomIntegrals : public ForteIntegrals {
         return aptei_idx_ * aptei_idx_ * aptei_idx_ * p + aptei_idx_ * aptei_idx_ * q +
                aptei_idx_ * r + s;
     }
-    /// Set the number of orbitals and allocate the memory
-    void custom_integrals_allocate(int norb, const std::vector<int>& orbsym);
+
+    void update_orbitals(std::shared_ptr<psi::Matrix> Ca, std::shared_ptr<psi::Matrix> Cb) override;
 
     // ==> Class private virtual functions <==
     void gather_integrals() override;
     void resort_integrals_after_freezing() override;
     void compute_frozen_one_body_operator() override;
+
+    void transform_one_electron_integrals();
+    void transform_two_electron_integrals();
 };
 
 } // namespace forte

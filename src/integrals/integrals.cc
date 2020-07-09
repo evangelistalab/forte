@@ -353,11 +353,16 @@ ForteIntegrals::dipole_ints_mo_helper(std::shared_ptr<psi::Matrix>, psi::SharedV
     return MOdipole_ints;
 }
 
-// The following functions throw an error by default
+void ForteIntegrals::rotate_orbitals(std::shared_ptr<psi::Matrix> Ua,
+                                     std::shared_ptr<psi::Matrix> Ub) {
+    // 1. Rotate the orbital coefficients and store them in the ForteIntegral object
+    auto Ca_rotated = psi::linalg::doublet(Ca_, Ua);
+    auto Cb_rotated = psi::linalg::doublet(Cb_, Ub);
 
-void ForteIntegrals::rotate_orbitals(std::shared_ptr<psi::Matrix>, std::shared_ptr<psi::Matrix>) {
-    _undefined_function("rotate_orbitals");
+    update_orbitals(Ca_rotated, Cb_rotated);
 }
+
+// The following functions throw an error by default
 
 void ForteIntegrals::update_orbitals(std::shared_ptr<psi::Matrix>, std::shared_ptr<psi::Matrix>) {
     _undefined_function("update_orbitals");
@@ -366,6 +371,8 @@ void ForteIntegrals::update_orbitals(std::shared_ptr<psi::Matrix>, std::shared_p
 void ForteIntegrals::compute_frozen_one_body_operator() {
     _undefined_function("compute_frozen_one_body_operator");
 }
+
+size_t ForteIntegrals::nthree() const { _undefined_function("nthree"); }
 
 ambit::Tensor ForteIntegrals::three_integral_block(const std::vector<size_t>&,
                                                    const std::vector<size_t>&,
@@ -388,7 +395,7 @@ std::vector<std::shared_ptr<psi::Matrix>> ForteIntegrals::mo_dipole_ints(const b
     return mo_dipole_ints_;
 }
 
-void ForteIntegrals::_undefined_function(const std::string& method) {
+void ForteIntegrals::_undefined_function(const std::string& method) const {
     outfile->Printf("\n  ForteIntegrals::" + method + "not supported for integral type " +
                     std::to_string(integral_type()));
     throw std::runtime_error("ForteIntegrals::" + method + " not supported for integral type " +

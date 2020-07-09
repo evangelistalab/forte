@@ -65,10 +65,10 @@ CustomIntegrals::CustomIntegrals(std::shared_ptr<ForteOptions> options,
                                  const std::vector<double>& tei_aa,
                                  const std::vector<double>& tei_ab,
                                  const std::vector<double>& tei_bb)
-    : ForteIntegrals(options, mo_space_info, Custom, restricted) {
-    set_scalar(scalar);
+    : ForteIntegrals(options, mo_space_info, Custom, restricted), full_aphys_tei_aa_(tei_aa),
+      full_aphys_tei_ab_(tei_ab), full_aphys_tei_bb_(tei_bb) {
+    set_nuclear_repulsion(scalar);
     set_oei_all(oei_a, oei_b);
-    set_tei_all(tei_aa, tei_ab, tei_bb);
     initialize();
 }
 
@@ -82,17 +82,7 @@ void CustomIntegrals::initialize() {
 
     print_info();
     outfile->Printf("\n  Using Custom integrals\n\n");
-    //    gather_integrals();
-
-    // Copy the correlated part into one_electron_integrals_a/one_electron_integrals_b
-    for (size_t p = 0; p < ncmo_; ++p) {
-        for (size_t q = 0; q < ncmo_; ++q) {
-            one_electron_integrals_a_[p * ncmo_ + q] =
-                full_one_electron_integrals_a_[cmotomo_[p] * nmo_ + cmotomo_[q]];
-            one_electron_integrals_b_[p * ncmo_ + q] =
-                full_one_electron_integrals_b_[cmotomo_[p] * nmo_ + cmotomo_[q]];
-        }
-    }
+    gather_integrals();
 
     freeze_core_orbitals();
 }
@@ -156,7 +146,20 @@ void CustomIntegrals::set_tei(size_t p, size_t q, size_t r, size_t s, double val
         aphys_tei_bb_[index] = value;
 }
 
-void CustomIntegrals::gather_integrals() {}
+void CustomIntegrals::gather_integrals() {
+    // Copy the correlated part into one_electron_integrals_a/one_electron_integrals_b
+    for (size_t p = 0; p < ncmo_; ++p) {
+        for (size_t q = 0; q < ncmo_; ++q) {
+            one_electron_integrals_a_[p * ncmo_ + q] =
+                full_one_electron_integrals_a_[cmotomo_[p] * nmo_ + cmotomo_[q]];
+            one_electron_integrals_b_[p * ncmo_ + q] =
+                full_one_electron_integrals_b_[cmotomo_[p] * nmo_ + cmotomo_[q]];
+        }
+    }
+    aphys_tei_aa_ = full_aphys_tei_aa_;
+    aphys_tei_ab_ = full_aphys_tei_ab_;
+    aphys_tei_bb_ = full_aphys_tei_bb_;
+}
 
 void CustomIntegrals::resort_integrals_after_freezing() {
     if (print_ > 0) {
@@ -272,7 +275,132 @@ void CustomIntegrals::compute_frozen_one_body_operator() {
         outfile->Printf("\n  Frozen-core energy        %20.12f a.u.", frozen_core_energy_);
         print_timing("frozen one-body operator", timer_frozen_one_body.get());
     }
-} // namespace forte
+}
+
+void CustomIntegrals::transform_one_electron_integrals() {
+    // the first time we transform, we keep a copy of the original integrals
+    if (original_full_one_electron_integrals_a_.size() == 0) {
+        original_full_one_electron_integrals_a_ = full_one_electron_integrals_a_;
+        original_full_one_electron_integrals_b_ = full_one_electron_integrals_b_;
+    }
+
+    // Grab the one-electron integrals from psi4's wave function object
+    auto Ha = std::make_shared<psi::Matrix>(nmopi_, nmopi_);
+    auto Hb = std::make_shared<psi::Matrix>(nmopi_, nmopi_);
+
+    // Read the one-electron integrals (T + V)
+    int offset = 0;
+    for (int h = 0; h < nirrep_; ++h) {
+        for (int p = 0; p < nmopi_[h]; ++p) {
+            for (int q = 0; q < nmopi_[h]; ++q) {
+                Ha->set(h, p, q,
+                        original_full_one_electron_integrals_a_[(p + offset) * nmo_ + q + offset]);
+                Hb->set(h, p, q,
+                        original_full_one_electron_integrals_b_[(p + offset) * nmo_ + q + offset]);
+            }
+        }
+        offset += nmopi_[h];
+    }
+
+    // transform the one-electron integrals
+    Ha->transform(Ca_);
+    Hb->transform(Cb_);
+
+    OneBody_symm_ = Ha;
+
+    // zero these vectors
+    std::fill(full_one_electron_integrals_a_.begin(), full_one_electron_integrals_a_.end(), 0.0);
+    std::fill(full_one_electron_integrals_b_.begin(), full_one_electron_integrals_b_.end(), 0.0);
+
+    // Read the one-electron integrals (T + V, restricted)
+    offset = 0;
+    for (int h = 0; h < nirrep_; ++h) {
+        for (int p = 0; p < nmopi_[h]; ++p) {
+            for (int q = 0; q < nmopi_[h]; ++q) {
+                full_one_electron_integrals_a_[(p + offset) * nmo_ + q + offset] = Ha->get(h, p, q);
+                full_one_electron_integrals_b_[(p + offset) * nmo_ + q + offset] = Hb->get(h, p, q);
+            }
+        }
+        offset += nmopi_[h];
+    }
+
+//    // Copy the correlated part into one_electron_integrals_a/one_electron_integrals_b
+//    for (size_t p = 0; p < ncmo_; ++p) {
+//        for (size_t q = 0; q < ncmo_; ++q) {
+//            one_electron_integrals_a_[p * ncmo_ + q] =
+//                full_one_electron_integrals_a_[cmotomo_[p] * nmo_ + cmotomo_[q]];
+//            one_electron_integrals_b_[p * ncmo_ + q] =
+//                full_one_electron_integrals_b_[cmotomo_[p] * nmo_ + cmotomo_[q]];
+//        }
+//    }
+}
+
+void CustomIntegrals::transform_two_electron_integrals() {
+    if (not save_original_tei_) {
+        original_V_aa_ = ambit::Tensor::build(tensor_type_, "V_aa", {nmo_, nmo_, nmo_, nmo_});
+        original_V_ab_ = ambit::Tensor::build(tensor_type_, "V_ab", {nmo_, nmo_, nmo_, nmo_});
+        original_V_bb_ = ambit::Tensor::build(tensor_type_, "V_bb", {nmo_, nmo_, nmo_, nmo_});
+
+        original_V_aa_.data() = full_aphys_tei_aa_;
+        original_V_ab_.data() = full_aphys_tei_ab_;
+        original_V_bb_.data() = full_aphys_tei_bb_;
+
+        save_original_tei_ = true;
+    }
+
+    auto Ca = ambit::Tensor::build(tensor_type_, "Ca", {nmo_, nmo_});
+    auto Cb = ambit::Tensor::build(tensor_type_, "Cb", {nmo_, nmo_});
+
+    int offset = 0;
+    std::vector<size_t> idx(2);
+    for (int h = 0; h < nirrep_; ++h) {
+        for (int p = 0; p < nmopi_[h]; ++p) {
+            for (int q = 0; q < nmopi_[h]; ++q) {
+                idx[0] = p + offset;
+                idx[1] = q + offset;
+                Ca.at(idx) = Ca_->get(h, p, q);
+                Cb.at(idx) = Cb_->get(h, p, q);
+            }
+        }
+        offset += nmopi_[h];
+    }
+
+    auto T = ambit::Tensor::build(tensor_type_, "temp", {nmo_, nmo_, nmo_, nmo_});
+
+    T("ijkl") = original_V_aa_("pqrs") * Ca("pi") * Ca("qj") * Ca("rk") * Ca("sl");
+    full_aphys_tei_aa_ = T.data();
+
+    T("ijkl") = original_V_ab_("pqrs") * Ca("pi") * Cb("qj") * Ca("rk") * Cb("sl");
+    full_aphys_tei_ab_ = T.data();
+
+    T("ijkl") = original_V_bb_("pqrs") * Cb("pi") * Cb("qj") * Cb("rk") * Cb("sl");
+    full_aphys_tei_bb_ = T.data();
+}
+
+void CustomIntegrals::update_orbitals(std::shared_ptr<psi::Matrix> Ca,
+                                      std::shared_ptr<psi::Matrix> Cb) {
+    // 1. Copy orbitals and, if necessary, test they meet the spin restriction condition
+    Ca_->copy(Ca);
+    Cb_->copy(Cb);
+
+    if (spin_restriction_ == IntegralSpinRestriction::Restricted) {
+        if (not test_orbital_spin_restriction(Ca, Cb)) {
+            Ca->print();
+            Cb->print();
+            auto msg = "ForteIntegrals::update_orbitals was passed two different sets of orbitals"
+                       "\n  but the integral object assumes restricted orbitals";
+            throw std::runtime_error(msg);
+        }
+    }
+
+    // 2. Re-transform the integrals
+    aptei_idx_ = nmo_;
+    transform_one_electron_integrals();
+    transform_two_electron_integrals();
+    gather_integrals();
+    outfile->Printf("\n  Integrals are about to be updated.");
+    freeze_core_orbitals();
+}
 
 // void CustomIntegrals::resort_integrals_after_freezing() {}
 

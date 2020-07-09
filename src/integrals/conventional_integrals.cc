@@ -159,8 +159,6 @@ ambit::Tensor ConventionalIntegrals::aptei_bb_block(const std::vector<size_t>& p
     return ReturnTensor;
 }
 
-size_t ConventionalIntegrals::nthree() const { throw psi::PSIEXCEPTION("Wrong Int_Type"); }
-
 void ConventionalIntegrals::set_tei(size_t p, size_t q, size_t r, size_t s, double value,
                                     bool alpha1, bool alpha2) {
     size_t index = aptei_index(p, q, r, s);
@@ -187,12 +185,10 @@ void ConventionalIntegrals::gather_integrals() {
                         double(3 * 8 * num_aptei_) / 1073741824.0);
     }
     int_mem_ = sizeof(double) * 3 * 8 * num_aptei_ / 1073741824.0;
-    for (size_t pqrs = 0; pqrs < num_aptei_; ++pqrs)
-        aphys_tei_aa_[pqrs] = 0.0;
-    for (size_t pqrs = 0; pqrs < num_aptei_; ++pqrs)
-        aphys_tei_ab_[pqrs] = 0.0;
-    for (size_t pqrs = 0; pqrs < num_aptei_; ++pqrs)
-        aphys_tei_bb_[pqrs] = 0.0;
+
+    std::fill(aphys_tei_aa_.begin(), aphys_tei_aa_.end(), 0.0);
+    std::fill(aphys_tei_ab_.begin(), aphys_tei_ab_.end(), 0.0);
+    std::fill(aphys_tei_bb_.begin(), aphys_tei_bb_.end(), 0.0);
 
     if (spin_restriction_ == IntegralSpinRestriction::Restricted) {
         std::vector<double> two_electron_integrals(num_tei_, 0.0);
