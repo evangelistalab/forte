@@ -36,12 +36,12 @@ namespace forte {
 
 class SCFInfo {
   public:
-    /// Constructor based on Psi4 Wavefunction
-    SCFInfo(psi::SharedWavefunction wfn);
-
-    /// Constructor based on Psi4 Wavefunction
+    /// Constructor
     SCFInfo(const psi::Dimension& doccpi, const psi::Dimension& soccpi, double reference_energy,
             std::shared_ptr<psi::Vector> epsilon_a, std::shared_ptr<psi::Vector> epsilon_b);
+
+    /// Constructor based on Psi4 Wavefunction
+    SCFInfo(psi::SharedWavefunction wfn);
 
     /// return doccpi
     psi::Dimension doccpi();

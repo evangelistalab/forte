@@ -49,7 +49,7 @@ def fcidump(wfn, fname='INTDUMP', oe_ints=None, write_pntgrp=False):
 
     :returns: None
 
-    :raises: ValidationError when SCF wavefunction is not RHF
+    :raises: ValidationError when SCF wavefunction is not RHF, ROHF, or UHF
 
     :type wfn: :py:class:`~psi4.core.Wavefunction`
     :param wfn: set of molecule, basis, orbitals from which to generate cube files
