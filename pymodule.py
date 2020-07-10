@@ -514,6 +514,7 @@ def prepare_forte_objects_from_fcidump(options):
         nirrep = irrep_size[fcidump['pntgrp'].lower()]
         nmopi_list = [fcidump['orbsym'].count(x) for x in range(nirrep)]
     else:
+        fcidump['isym'] = 0 # shift by -1 
         nirrep = 1
         nmopi_list = [nmo]
 
