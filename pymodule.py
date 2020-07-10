@@ -470,25 +470,22 @@ def make_state_info_from_fcidump(fcidump, options):
         multiplicity = options.get_int("MULTIPLICITY")
 
     # If the user did not specify ms determine the value from the input or
-    #// take the lowest value consistent with the value of "MULTIPLICITY"
-    #// For example:
-    #//    singlet: multiplicity = 1 -> twice_ms = 0 (ms = 0)
-    #//    doublet: multiplicity = 2 -> twice_ms = 1 (ms = 1/2)
-    #//    triplet: multiplicity = 3 -> twice_ms = 0 (ms = 0)
+    # take the lowest value consistent with the value of "MULTIPLICITY"
+    # For example:
+    #    singlet: multiplicity = 1 -> twice_ms = 0 (ms = 0)
+    #    doublet: multiplicity = 2 -> twice_ms = 1 (ms = 1/2)
+    #    triplet: multiplicity = 3 -> twice_ms = 0 (ms = 0)
     twice_ms = (multiplicity + 1) % 2
-    #    if not options.is_none("MS"):
-    #        twice_ms = std::round(2.0 * options->get_double("MS"));
-    #    }
-    #TODO implement
+    if not options.is_none("MS"):
+        twice_ms = int(round(2.0 * options.get_double("MS")))
 
-    #    if (((nel - twice_ms) % 2) != 0)
-    #        throw psi::PSIEXCEPTION("\n\n  make_state_info_from_psi: Wrong value of M_s.\n\n");
+    if (((nel - twice_ms) % 2) != 0):
+        raise Exception(f'Forte: the value of MS ({twice_ms}/2) is incompatible with the number of electrons ({nel})')
 
     na = (nel + twice_ms) // 2
     nb = nel - na
 
-    irrep = 0
-
+    irrep = fcidump['isym']
     if not options.is_none("ROOT_SYM"):
         irrep = options.get_int("ROOT_SYM")
 
@@ -549,7 +546,6 @@ def prepare_forte_objects_from_fcidump(options):
 
     state_info = make_state_info_from_fcidump(fcidump, options)
     state_weights_map = {state_info: [1.0]}
-    #    state_weights_map = forte.make_state_weights_map(options, mo_space_info)
     return (state_weights_map, mo_space_info, scf_info, fcidump)
 
 

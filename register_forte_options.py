@@ -225,7 +225,11 @@ def register_mo_space_info_options(options):
     )
     options.add_int_array("NROOTPI",
                             "Number of roots per irrep (in Cotton order)")
-
+    # Options for state-averaged CASSCF
+    options.add_array(
+        "STATES",
+        "An array of states [[irrep1, multi1, nstates1], [irrep2, multi2, nstates2], ...]"
+    )
 
 def register_active_space_solver_options(options):
     options.set_group("Active Space Solver")

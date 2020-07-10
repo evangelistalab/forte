@@ -311,6 +311,7 @@ def fcidump_from_file(fname, convert_to_psi4=False):
         irrep_map_inverse = _irrep_map_inverse(intdump['pntgrp'])
         psi4_irrep_map = map(lambda x: irrep_map_inverse[x], intdump['orbsym'])
         intdump['orbsym'] = list(psi4_irrep_map)
+        intdump['isym'] = irrep_map_inverse[intdump['isym']]
 
     # Read the data and index, skip header
     raw_ints = np.genfromtxt(fname, skip_header=skiplines)

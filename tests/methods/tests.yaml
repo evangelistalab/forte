@@ -209,6 +209,7 @@ integrals:
    - integrals-fcidump-3
    - integrals-fcidump-4
    - integrals-fcidump-5
+   - integrals-fcidump-6
   unused:
    - integrals-6
 mr-dsrg-pt2:

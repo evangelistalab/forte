@@ -67,6 +67,8 @@ void export_ForteOptions(py::module& m) {
         .def("get_int_vec", &ForteOptions::get_int_vec, "Get a vector of integers option")
         .def("get_double_vec", &ForteOptions::get_double_vec,
              "Get a vector of doubles (py::float) option")
+        .def("get_gen_vec", &ForteOptions::get_gen_list,
+             "Get a general vector")
         .def("set_bool", &ForteOptions::set_bool, "Set a boolean option")
         .def("set_int", &ForteOptions::set_int, "Set an integer option")
         .def("set_double", &ForteOptions::set_double, "Set a double option")
