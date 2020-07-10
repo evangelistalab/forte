@@ -40,11 +40,13 @@ namespace forte {
 /// DF_Helper
 /// Aptei_xy are extremely slow -> Try to use three_electron_block.  Much faster
 /// Reading individual elements is slow
-class DISKDFIntegrals : public ForteIntegrals {
+class DISKDFIntegrals : public Psi4Integrals {
   public:
-    DISKDFIntegrals(std::shared_ptr<ForteOptions> options, std::shared_ptr<psi::Wavefunction> ref_wfn,
+    DISKDFIntegrals(std::shared_ptr<ForteOptions> options,
+                    std::shared_ptr<psi::Wavefunction> ref_wfn,
                     std::shared_ptr<MOSpaceInfo> mo_space_info, IntegralSpinRestriction restricted);
 
+    void initialize() override;
     /// aptei_xy functions are slow.  try to use three_integral_block
 
     // ==> Class public virtual functions <==

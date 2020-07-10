@@ -3,9 +3,9 @@
 import forte
 
 refrohf    = -15.611546532146
-refudsrg   = -15.545759344420639 # unrelaxed
-refprdsrg  = -15.545769720215544 # partially relaxed
-refrdsrg   = -15.545742761115429 # relaxed
+refudsrg   = -15.545754710485 # unrelaxed
+refprdsrg  = -15.545765073793 # partially relaxed
+refrdsrg   = -15.545738149048 # relaxed
 
 molecule {
   0 3

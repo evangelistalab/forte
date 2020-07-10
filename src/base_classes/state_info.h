@@ -37,11 +37,13 @@ class Wavefunction;
 }
 
 namespace forte {
+class ForteOptions;
 
 class StateInfo {
   public:
     /// Constructor
-    StateInfo(int na, int nb, int multiplicity, int twice_ms, int irrep, const std::string& irrep_label = "");
+    StateInfo(int na, int nb, int multiplicity, int twice_ms, int irrep,
+              const std::string& irrep_label = "");
 
     StateInfo() = default;
 
@@ -88,12 +90,11 @@ class StateInfo {
 };
 
 /**
- * @brief make_state_info_from_psi_wfn Make a StateInfo object by reading variables set in a psi4
- *        Wavefunction object
- * @param wfn the psi wave function object
+ * @brief make_state_info_from_psi Make a StateInfo object by reading variables set in the psi4
+ *        environmental variables
  * @return a StateInfo object
  */
-StateInfo make_state_info_from_psi_wfn(std::shared_ptr<psi::Wavefunction> wfn);
+StateInfo make_state_info_from_psi(std::shared_ptr<ForteOptions> options);
 
 } // namespace forte
 

@@ -74,6 +74,13 @@ void export_ForteIntegrals(py::module& m) {
                const std::vector<size_t>& r, const std::vector<size_t>& s) {
                 return ambit_to_np(ints.aptei_bb_block(p, q, r, s));
             },
-            "Return the beta-beta 2e-integrals in physicists' notation");
+            "Return the beta-beta 2e-integrals in physicists' notation")
+        .def("set_nuclear_repulsion", &ForteIntegrals::set_nuclear_repulsion,
+             "Set the nuclear repulsion energy")
+        .def("set_scalar", &ForteIntegrals::set_scalar, "Set the scalar energy")
+        .def("set_oei", &ForteIntegrals::set_oei_all, "Set the one-electron integrals")
+        .def("set_tei", &ForteIntegrals::set_tei_all, "Set the two-electron integrals")
+        .def("initialize", &ForteIntegrals::initialize, "Initialize the integrals")
+        .def("print_ints", &ForteIntegrals::print_ints, "Print the integrals");
 }
 } // namespace forte

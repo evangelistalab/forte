@@ -34,8 +34,9 @@ def test_sparse_ci():
     forte_options.get_options_from_psi4(psi4_options)
 
     # Setup forte and prepare the active space integral class
-    mo_space_info = forte.make_mo_space_info(wfn, forte_options)
-    ints = forte.make_forte_integrals(wfn, forte_options, mo_space_info)
+    nmopi = wfn.nmopi()
+    mo_space_info = forte.make_mo_space_info(nmopi, forte_options)
+    ints = forte.make_ints_from_psi4(wfn, forte_options, mo_space_info)
     as_ints = forte.make_active_space_ints(mo_space_info, ints, 'ACTIVE', ['RESTRICTED_DOCC'])
     as_ints.print()
 
@@ -99,5 +100,3 @@ def test_sparse_ci():
 
     # Clean up forte (necessary)
     forte.cleanup()
-
-test_sparse_ci()

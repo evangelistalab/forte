@@ -48,6 +48,8 @@
 #include "orbital-helpers/fragment_projector.h"
 
 #include "forte.h"
+
+#include "casscf/casscf.h"
 #include "fci/fci_solver.h"
 #include "base_classes/dynamic_correlation_solver.h"
 #include "base_classes/state_info.h"
@@ -97,6 +99,12 @@ void export_ActiveSpaceSolver(py::module& m) {
           "Compute the average energy given the energies and weights of each state");
 }
 
+void export_CASSCF(py::module& m) {
+    py::class_<CASSCF>(m, "CASSCF")
+        .def("compute_energy", &CASSCF::compute_energy, "Compute the CASSCF energy")
+        .def("compute_gradient", &CASSCF::compute_gradient, "Compute the CASSCF gradient");
+}
+
 /// Export the Determinant class
 void export_Determinant(py::module& m) {
     py::class_<Determinant>(m, "Determinant")
@@ -117,13 +125,15 @@ void export_Determinant(py::module& m) {
         .def("create_beta_bit", &Determinant::create_beta_bit, "n"_a, "Create a beta bit")
         .def("destroy_alfa_bit", &Determinant::destroy_alfa_bit, "n"_a, "Destroy an alpha bit")
         .def("destroy_beta_bit", &Determinant::destroy_beta_bit, "n"_a, "Destroy a beta bit")
-        .def("gen_excitation",
-             [](Determinant& d, const std::vector<int>& aann, const std::vector<int>& acre,
-                const std::vector<int>& bann,
-                const std::vector<int>& bcre) { return gen_excitation(d, aann, acre, bann, bcre); },
-             "Apply a generic excitation")
-        .def("str", [](const Determinant& a, int n) { return str(a, n); }, "n"_a = 64,
-             "Get the string representation of the Slater determinant")
+        .def(
+            "gen_excitation",
+            [](Determinant& d, const std::vector<int>& aann, const std::vector<int>& acre,
+               const std::vector<int>& bann,
+               const std::vector<int>& bcre) { return gen_excitation(d, aann, acre, bann, bcre); },
+            "Apply a generic excitation")
+        .def(
+            "str", [](const Determinant& a, int n) { return str(a, n); }, "n"_a = 64,
+            "Get the string representation of the Slater determinant")
         .def("__repr__", [](const Determinant& a) { return str(a); })
         .def("__str__", [](const Determinant& a) { return str(a); })
         .def("__eq__", [](const Determinant& a, const Determinant& b) { return a == b; })
@@ -159,13 +169,15 @@ PYBIND11_MODULE(forte, m) {
     m.def("make_fragment_projector", &make_fragment_projector,
           "Make a fragment(embedding) projector");
     m.def("make_embedding", &make_embedding, "Apply fragment projector to embed");
-    m.def("make_forte_integrals", &make_forte_integrals, "Make Forte integrals");
+    m.def("make_ints_from_psi4", &make_forte_integrals_from_psi4,
+          "Make Forte integral object from psi4");
+    m.def("make_custom_ints", &make_custom_forte_integrals, "Make a custom integral object");
     m.def("forte_old_methods", &forte_old_methods, "Run Forte methods");
     m.def("make_active_space_method", &make_active_space_method, "Make an active space method");
     m.def("make_active_space_solver", &make_active_space_solver, "Make an active space solver");
     m.def("make_orbital_transformation", &make_orbital_transformation,
           "Make an orbital transformation");
-    m.def("make_state_info_from_psi_wfn", &make_state_info_from_psi_wfn,
+    m.def("make_state_info_from_psi", &make_state_info_from_psi,
           "Make a state info object from a psi4 Wavefunction");
     m.def("to_state_nroots_map", &to_state_nroots_map,
           "Convert a map of StateInfo to weight lists to a map of StateInfo to number of "
@@ -185,6 +197,7 @@ PYBIND11_MODULE(forte, m) {
     m.def("make_dsrg_so_f", &make_dsrg_so_f, "Make a DSRG pointer (spin-orbital implementation)");
     m.def("make_dsrg_spin_adapted", &make_dsrg_spin_adapted,
           "Make a DSRG pointer (spin-adapted implementation)");
+    m.def("make_casscf", &make_casscf, "Make a CASSCF object");
 
     export_ambit(m);
 
@@ -192,6 +205,8 @@ PYBIND11_MODULE(forte, m) {
 
     export_ActiveSpaceMethod(m);
     export_ActiveSpaceSolver(m);
+
+    export_CASSCF(m);
     export_ForteIntegrals(m);
 
     export_OrbitalTransform(m);
@@ -234,7 +249,9 @@ PYBIND11_MODULE(forte, m) {
 
     // export SCFInfo
     py::class_<SCFInfo, std::shared_ptr<SCFInfo>>(m, "SCFInfo")
-        .def(py::init<psi::SharedWavefunction>());
+        .def(py::init<psi::SharedWavefunction>())
+        .def(py::init<const psi::Dimension&, const psi::Dimension&, double,
+                      std::shared_ptr<psi::Vector>, std::shared_ptr<psi::Vector>>());
 
     // export DynamicCorrelationSolver
     py::class_<DynamicCorrelationSolver, std::shared_ptr<DynamicCorrelationSolver>>(

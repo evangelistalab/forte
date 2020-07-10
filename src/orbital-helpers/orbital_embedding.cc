@@ -52,7 +52,8 @@ psi::SharedMatrix semicanonicalize_block(psi::SharedWavefunction ref_wfn, psi::S
                                          std::vector<int>& mos, int offset,
                                          bool prevent_rotate = false);
 
-void make_avas(psi::SharedWavefunction ref_wfn, std::shared_ptr<ForteOptions> options, psi::SharedMatrix Ps) {
+void make_avas(psi::SharedWavefunction ref_wfn, std::shared_ptr<ForteOptions> options,
+               psi::SharedMatrix Ps) {
     if (Ps) {
         outfile->Printf("\n  Generating AVAS orbitals\n");
         int nocc = ref_wfn->nalpha();
@@ -309,7 +310,8 @@ void make_avas(psi::SharedWavefunction ref_wfn, std::shared_ptr<ForteOptions> op
     }
 }
 
-std::shared_ptr<MOSpaceInfo> make_embedding(psi::SharedWavefunction ref_wfn, std::shared_ptr<ForteOptions> options,
+std::shared_ptr<MOSpaceInfo> make_embedding(psi::SharedWavefunction ref_wfn,
+                                            std::shared_ptr<ForteOptions> options,
                                             psi::SharedMatrix Pf, int nbf_A,
                                             std::shared_ptr<MOSpaceInfo> mo_space_info) {
 
@@ -352,7 +354,7 @@ std::shared_ptr<MOSpaceInfo> make_embedding(psi::SharedWavefunction ref_wfn, std
 
     std::shared_ptr<PSIO> psio(_default_psio_lib_);
 
-    Dimension nmopi = ref_wfn->nmopi();
+    const Dimension nmopi = ref_wfn->nmopi();
     Dimension zeropi = nmopi - nmopi;
     int nirrep = ref_wfn->nirrep();
     if (nirrep > 1) {
@@ -673,8 +675,8 @@ std::shared_ptr<MOSpaceInfo> make_embedding(psi::SharedWavefunction ref_wfn, std
     SharedMatrix C_Fo(new Matrix("Fo_coeff_block", nirrep, nmopi, frzopi));
     SharedMatrix C_Fv(new Matrix("Fv_coeff_block", nirrep, nmopi, frzvpi));
 
-	C_Fo->copy(semicanonicalize_block(ref_wfn, Ca_save, index_frozen_core, 0, !semi_f));
-	C_Fv->copy(semicanonicalize_block(ref_wfn, Ca_save, index_frozen_virtual, 0, !semi_f));
+    C_Fo->copy(semicanonicalize_block(ref_wfn, Ca_save, index_frozen_core, 0, !semi_f));
+    C_Fv->copy(semicanonicalize_block(ref_wfn, Ca_save, index_frozen_virtual, 0, !semi_f));
 
     // Form new C matrix: Frozen-core, B_occ, A_occ, Active, A_vir, B_vir, Frozen-virtual
     SharedMatrix Ca_Rt(new Matrix("Ca rotated tilde", nirrep, nmopi, nmopi));
@@ -734,7 +736,7 @@ std::shared_ptr<MOSpaceInfo> make_embedding(psi::SharedWavefunction ref_wfn, std
     outfile->Printf("\n  Updating MOSpaceInfo");
     std::vector<size_t> reorder;
     std::shared_ptr<MOSpaceInfo> mo_space_info_emb =
-        make_mo_space_info_from_map(ref_wfn, mo_space_map, reorder);
+        make_mo_space_info_from_map(nmopi, mo_space_map, reorder);
 
     // Return the new embedding MOSpaceInfo to pymodule
     outfile->Printf("\n\n  --------------- End of Frozen-orbital Embedding --------------- ");

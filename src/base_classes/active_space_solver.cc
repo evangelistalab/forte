@@ -34,7 +34,6 @@
 #include "psi4/libpsi4util/PsiOutStream.h"
 #include "psi4/libmints/molecule.h"
 #include "psi4/libmints/pointgrp.h"
-#include "psi4/libmints/wavefunction.h"
 #include "psi4/libpsi4util/process.h"
 
 #include "base_classes/forte_options.h"
@@ -83,12 +82,9 @@ const std::map<StateInfo, std::vector<double>>& ActiveSpaceSolver::compute_energ
                                  twice_ms);
             continue;
         }
-
         method->compute_energy();
-
         const auto& energies = method->energies();
         state_energies_map_[state] = energies;
-
         if (twice_ms > 0 and ms_avg_) {
             StateInfo state_spin(state.nb(), state.na(), state.multiplicity(), -twice_ms,
                                  state.irrep(), state.irrep_label());
@@ -203,9 +199,9 @@ to_state_nroots_map(const std::map<StateInfo, std::vector<double>>& state_weight
 
 std::map<StateInfo, std::vector<double>>
 make_state_weights_map(std::shared_ptr<ForteOptions> options,
-                       std::shared_ptr<psi::Wavefunction> wfn) {
+                       std::shared_ptr<MOSpaceInfo> mo_space_info) {
     std::map<StateInfo, std::vector<double>> state_weights_map;
-    auto state = make_state_info_from_psi_wfn(wfn); // assumes low-spin
+    auto state = make_state_info_from_psi(options); // assumes low-spin
 
     py::list avg_state = options->get_gen_list("AVG_STATE");
 
@@ -239,7 +235,7 @@ make_state_weights_map(std::shared_ptr<ForteOptions> options,
             int nstates_this = py::cast<int>(avg_state_list[2]);
 
             // check for errors
-            int nirrep = wfn->nirrep();
+            int nirrep = mo_space_info->nirrep();
             if (irrep >= nirrep || irrep < 0) {
                 psi::outfile->Printf("\n  Error: invalid irrep in AVG_STATE.");
                 psi::outfile->Printf(

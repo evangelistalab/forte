@@ -42,7 +42,7 @@ using namespace psi;
 
 namespace forte {
 
-MOSpaceInfo::MOSpaceInfo(psi::Dimension& nmopi) : nirrep_(nmopi.n()), nmopi_(nmopi) {
+MOSpaceInfo::MOSpaceInfo(const Dimension& nmopi) : nirrep_(nmopi.n()), nmopi_(nmopi) {
     // Add the elementary spaces to the list of composite spaces
     for (const std::string& es : elementary_spaces_) {
         composite_spaces_[es] = {es};
@@ -285,16 +285,19 @@ std::pair<SpaceInfo, bool> MOSpaceInfo::read_mo_space(const std::string& space,
     bool read = false;
     psi::Dimension space_dim(nirrep_);
     std::vector<MOInfo> vec_mo_info;
-    if (options->get_int_vec(space).size() == nirrep_) {
+    size_t vec_size = options->get_int_vec(space).size();
+    if (vec_size == nirrep_) {
         for (size_t h = 0; h < nirrep_; ++h) {
             space_dim[h] = options->get_int_vec(space)[h];
         }
         read = true;
         outfile->Printf("\n  Read options for space %s", space.c_str());
-    } else {
-        //        outfile->Printf("\n  The size of space \"%s\" (%d) does not
-        //        match the number of irreducible representations (%zu).",
-        //                        space.c_str(),options[space].size(),nirrep_);
+    } else if (vec_size > 0) {
+        std::string msg = "\n  The size of space " + space + " (" + std::to_string(vec_size) +
+                          ") does not match the number of irreducible representations (" +
+                          std::to_string(nirrep_) + ").";
+        outfile->Printf("\n%s", msg.c_str());
+        throw std::runtime_error(msg);
     }
     SpaceInfo space_info(space_dim, vec_mo_info);
     return std::make_pair(space_info, read);
@@ -317,18 +320,16 @@ MOSpaceInfo::read_mo_space_from_map(const std::string& space,
             }
             read = true;
         } else {
-            throw std::runtime_error(
-                "\n  The size of space vector does not match the number of "
-                "irreducible representations.");
+            throw std::runtime_error("\n  The size of space vector does not match the number of "
+                                     "irreducible representations.");
         }
     }
     SpaceInfo space_info(space_dim, vec_mo_info);
     return std::make_pair(space_info, read);
 }
 
-std::shared_ptr<MOSpaceInfo> make_mo_space_info(psi::SharedWavefunction ref_wfn,
+std::shared_ptr<MOSpaceInfo> make_mo_space_info(const psi::Dimension& nmopi,
                                                 std::shared_ptr<ForteOptions> options) {
-    psi::Dimension nmopi = ref_wfn->nmopi();
     auto mo_space_info = std::make_shared<MOSpaceInfo>(nmopi);
     mo_space_info->read_options(options);
     mo_space_info->compute_space_info();
@@ -336,10 +337,9 @@ std::shared_ptr<MOSpaceInfo> make_mo_space_info(psi::SharedWavefunction ref_wfn,
 }
 
 std::shared_ptr<MOSpaceInfo>
-make_mo_space_info_from_map(std::shared_ptr<psi::Wavefunction> ref_wfn,
+make_mo_space_info_from_map(const psi::Dimension& nmopi,
                             std::map<std::string, std::vector<size_t>>& mo_space_map,
                             std::vector<size_t> reorder) {
-    psi::Dimension nmopi = ref_wfn->nmopi();
     auto mo_space_info = std::make_shared<MOSpaceInfo>(nmopi);
     mo_space_info->set_reorder(reorder);
     mo_space_info->read_from_map(mo_space_map);

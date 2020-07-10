@@ -68,19 +68,19 @@ double forte_old_methods(psi::SharedWavefunction ref_wfn, std::shared_ptr<ForteO
     double final_energy = 0.0;
 
     size_t nroot = options->get_int("NROOT");
-    StateInfo state = make_state_info_from_psi_wfn(ref_wfn); // TODO move py-side
+    StateInfo state = make_state_info_from_psi(options); // TODO move py-side
     auto scf_info = std::make_shared<SCFInfo>(ref_wfn);
     // generate a list of states with their own weights
-    auto state_weights_map = make_state_weights_map(options, ref_wfn);
+    auto state_weights_map = make_state_weights_map(options, mo_space_info);
     auto state_map = to_state_nroots_map(state_weights_map);
 
     if (options->get_bool("CASSCF_REFERENCE") == true or options->get_str("JOB_TYPE") == "CASSCF") {
-        auto casscf = std::make_shared<CASSCF>(
-            state_weights_map, std::make_shared<SCFInfo>(ref_wfn), options, mo_space_info, ints);
-        final_energy = casscf->compute_energy();
-        if (options->get_str("DERTYPE") == "FIRST") {
-            casscf->compute_gradient();
-        }
+//        auto casscf = std::make_shared<CASSCF>(
+//            state_weights_map, std::make_shared<SCFInfo>(ref_wfn), options, mo_space_info, ints);
+//        final_energy = casscf->compute_energy();
+//        if (options->get_str("DERTYPE") == "FIRST") {
+//            casscf->compute_gradient();
+//        }
     }
     if (options->get_str("JOB_TYPE") == "MR-DSRG-PT2") {
         std::string cas_type = options->get_str("ACTIVE_SPACE_SOLVER");
