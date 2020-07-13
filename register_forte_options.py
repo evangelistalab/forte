@@ -883,7 +883,8 @@ def register_casscf_options(options):
                           "When to start skipping CI steps")
     options.add_bool("MONITOR_SA_SOLUTION", False,
                            "Monitor the CAS-CI solutions through iterations")
-
+    options.add_bool("CASSCF_SEMICANONICALIZE", True,
+                           "Semicanonicalize the orbitals after CASSCF?")
 
 def register_old_options(options):
     options.set_group("Old")

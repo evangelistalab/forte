@@ -336,7 +336,11 @@ double CASSCF::compute_energy() {
         // diagonalize the Hamiltonian one last time
         diagonalize_hamiltonian();
     } else {
-        ints_->wfn()->Ca()->copy(Ca_semi);
+        if (options_->get_bool("CASSCF_SEMICANONICALIZE")) {
+            ints_->wfn()->Ca()->copy(Ca_semi);
+        } else {
+            ints_->wfn()->Ca()->copy(Ca);
+        }
     }
 
     psi::Process::environment.globals["CURRENT ENERGY"] = E_casscf_;

@@ -235,8 +235,16 @@ class OrbitalOptimizer {
     std::map<size_t, size_t> nhole_map_;
     std::map<size_t, size_t> npart_map_;
     bool cas_;
+    bool gas_;
+    /// Number of GAS
+    size_t gas_num_;
     enum MATRIX_EXP { PSI4, TAYLOR };
     void zero_redunant(psi::SharedMatrix& matrix);
+
+    /// Information about GAS
+    std::pair<int, std::map<std::string, SpaceInfo>> gas_info_;
+
+    std::vector<std::vector<size_t>> relative_gas_mo_;
 };
 /// A Class for use in CASSCFOrbitalOptimizer (computes FockCore and FockActive
 /// using JK builders)

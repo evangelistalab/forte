@@ -28,7 +28,6 @@
 
 #include "ambit/blocked_tensor.h"
 
-
 #include "psi4/lib3index/cholesky.h"
 #include "psi4/libfock/jk.h"
 #include "psi4/libmints/matrix.h"
@@ -145,6 +144,12 @@ void OrbitalOptimizer::startup() {
         throw psi::PSIEXCEPTION("You did not specify your CASSCF_CI_SOLVER correctly.");
     }
     cas_ = true;
+    if (options_->get_str("ACTIVE_REF_TYPE") == "GAS" or
+        options_->get_str("ACTIVE_REF_TYPE") == "GAS_SINGLE") {
+        cas_ = false;
+        gas_ = true;
+        gas_info_ = mo_space_info_->gas_info();
+    }
 }
 void OrbitalOptimizer::orbital_gradient() {
     /// From Y_{pt} = F_{pu}^{core} * Gamma_{tu}
@@ -203,7 +208,7 @@ void OrbitalOptimizer::orbital_gradient() {
     // GOTCHA:  Z and T are of size nmo by na
     // The absolute MO should not be used to access elements of Z, Y, or Gamma
     // since these are of 0....na_ arrays
-    // auto occ_array = mo_space_info_->corr_absolute_mo("RESTRICTED_DOCC");
+    // auto occ_array = mo_spac/e_info_->corr_absolute_mo("RESTRICTED_DOCC");
     // auto virt_array = mo_space_info_->corr_absolute_mo("RESTRICTED_UOCC");
     // auto active_array = mo_space_info_->corr_absolute_mo("ACTIVE");
 
@@ -333,6 +338,40 @@ void OrbitalOptimizer::orbital_gradient() {
         zero_redunant(Orb_grad_Fock);
     }
 
+    if (gas_) {
+        gas_num_ = gas_info_.first;
+        std::map<int, int> re_ab_mo;
+        for (size_t i = 0; i < na_; i++) {
+            re_ab_mo[active_abs_[i]] = i;
+        }
+        std::vector<std::string> gas_subspaces = {"GAS1", "GAS2", "GAS3", "GAS4", "GAS5", "GAS6"};
+        std::map<std::string, SpaceInfo> general_active_spaces = gas_info_.second;
+        std::vector<size_t> absolute_mo_sum;
+        for (size_t gas_count = 0; gas_count < 6; gas_count++) {
+            std::string space = gas_subspaces.at(gas_count);
+            std::vector<size_t> relative_mo;
+            std::vector<size_t> absolute_mo;
+            auto vec_mo_info = general_active_spaces[space].second;
+            //            outfile->Printf("\n GAS %d, ", gas_count);
+            for (size_t i = 0; i < vec_mo_info.size(); ++i) {
+                relative_mo.push_back(re_ab_mo[std::get<0>(vec_mo_info[i])]);
+                absolute_mo.push_back(std::get<0>(vec_mo_info[i]));
+                absolute_mo_sum.push_back(std::get<0>(vec_mo_info[i]));
+                //                outfile->Printf("\n %d  %d  ", std::get<0>(vec_mo_info[i]),
+                //                                re_ab_mo[std::get<0>(vec_mo_info[i])]);
+            }
+            for (size_t ii : absolute_mo) {
+                for (size_t jj : absolute_mo_sum) {
+                    Orb_grad_Fock->set(nhole_map_[ii], npart_map_[jj], 0.0);
+                }
+            }
+
+            // Zeroout diagonal and one-block of the off-diagonal matrix
+            relative_gas_mo_.push_back(relative_mo);
+        }
+        //        Orb_grad_Fock->set(0, 1, 0.0);
+    }
+
     if (casscf_debug_print_) {
         Orb_grad_Fock->print();
     }
@@ -340,6 +379,7 @@ void OrbitalOptimizer::orbital_gradient() {
     g_ = Orb_grad_Fock;
     g_->set_name("CASSCF_GRADIENT");
 }
+
 void OrbitalOptimizer::diagonal_hessian() {
     size_t nhole = nrdocc_ + na_;
     size_t npart = na_ + nvir_;
@@ -391,11 +431,129 @@ void OrbitalOptimizer::diagonal_hessian() {
             D->set(nhole_map_[uo], npart_map_[vo], 1.0);
         }
     }
+    // aa block for GASSCF
+    if (gas_) {
+        ambit::Tensor Trans_na_nmo = ambit::Tensor::build(ambit::CoreTensor, "Tr", {na_, nmo_});
+        Trans_na_nmo.iterate([&](const std::vector<size_t>& i, double& value) {
+            value = (active_abs_[i[0]] == i[1]) ? 1.0 : 0.0;
+        });
+
+        ambit::Tensor integral_a =
+            ambit::Tensor::build(ambit::CoreTensor, "Tr", {na_, na_, na_, na_});
+        integral_a("p,q,r,s") = Trans_na_nmo("p,w") * integral_("w,q,r,s");
+        //        std::vector<double>& ints_data = integral_.data();
+        //        std::vector<double>& ints_act_data = integral_a.data();
+        //        double nacubic = na_ * na_ * na_;
+        //        for (size_t i1 = 0; i1 < na_; i1++) {
+        //            for (size_t i2 = 0; i2 < nmo_; i2++) {
+        //                if (active_abs_[i1] == nmo_abs_[i2]) {
+        //                    for (size_t j = 0; j < nacubic; j++) {
+        //                        ints_act_data[i1 * nacubic + j] = ints_data[i2 * nacubic + j];
+        //                    }
+        //                }
+        //            }
+        //    }
+        //        ambit::Tensor Z_prime = ambit::Tensor::build(ambit::CoreTensor, "Z_prime", {na_,
+        //        na_}); Z_prime("u, v") = 2.0 * integral_a("u, p, u, q") * gamma2_("v, p, v, q");
+        //        Z_prime("u, v") += 2.0 * integral_a("v, p, v, q") * gamma2_("u, p, u, q");
+        //        Z_prime("u, v") += integral_a("v, v, p, q") * gamma2_("u, u, p, q");
+        //        Z_prime("u, v") += integral_a("u, u, p, q") * gamma2_("v, v, p, q");
+        //        Z_prime("u, v") -= 4.0 * integral_a("u, p, v, q") * gamma2_("u, q, v, p");
+        //        Z_prime("u, v") -= 2.0 * integral_a("u, v, p, q") * gamma2_("u, v, p, q");
+        psi::SharedMatrix I_act(new psi::Matrix("I_act", na_ * na_, na_ * na_));
+        integral_a.iterate([&](const std::vector<size_t>& i, double& value) {
+            I_act->set(i[0] * na_ + i[1], i[2] * na_ + i[3], value);
+        });
+
+        if (casscf_debug_print_) {
+            I_act->print();
+        }
+        // Loop over spaces, last space will have no rotations
+        for (size_t gas_count = 0; gas_count < gas_num_; gas_count++) {
+            for (size_t gas_count_2 = 0; gas_count_2 < gas_count; gas_count_2++) {
+                // Loop over pairs
+                for (size_t u : relative_gas_mo_[gas_count_2]) {
+                    for (size_t v : relative_gas_mo_[gas_count]) {
+                        size_t uo = active_abs_[u];
+                        size_t vo = active_abs_[v];
+                        double value_aa = 0.0;
+                        value_aa += 2.0 * gamma1M_->get(v, v) * F_core_->get(uo, uo);
+                        value_aa += 2.0 * gamma1M_->get(u, u) * F_core_->get(vo, vo);
+                        value_aa -= 4.0 * gamma1M_->get(u, v) * F_core_->get(uo, vo);
+                        value_aa -= 2.0 * Y_->get(uo, u) + 2.0 * Z_->get(uo, u);
+                        value_aa -= 2.0 * Y_->get(vo, v) + 2.0 * Z_->get(vo, v);
+                        size_t uu = u * na_ + u;
+                        size_t vv = v * na_ + v;
+                        size_t uv = u * na_ + v;
+                        for (size_t p = 0; p < na_; p++) {
+                            for (size_t q = 0; q < na_; q++) {
+                                size_t up = u * na_ + p;
+                                size_t uq = u * na_ + q;
+                                size_t vp = v * na_ + p;
+                                size_t vq = v * na_ + q;
+                                size_t pq = p * na_ + q;
+                                size_t qp = q * na_ + p;
+                                size_t pv = p * na_ + v;
+                                size_t qv = q * na_ + v;
+                                size_t pu = p * na_ + u;
+                                value_aa += 2.0 * I_act->get(uu, pq) *
+                                            (gamma2M_->get(vv, pq) + gamma2M_->get(pv, vq));
+                                value_aa += 2.0 * I_act->get(vv, pq) *
+                                            (gamma2M_->get(uu, pq) + gamma2M_->get(pu, uq));
+                                value_aa += 1.0 * I_act->get(vp, vq) *
+                                            (gamma2M_->get(up, uq) + gamma2M_->get(uq, up));
+                                value_aa += 1.0 * I_act->get(up, uq) *
+                                            (gamma2M_->get(vp, vq) + gamma2M_->get(vq, vp));
+                                value_aa -= 4.0 * I_act->get(uv, pq) *
+                                            (gamma2M_->get(uv, qp) + gamma2M_->get(up, qv));
+                                value_aa -= 2.0 * I_act->get(up, vq) *
+                                            (gamma2M_->get(up, vq) + gamma2M_->get(uq, vp));
+
+                                //                                value_aa += 2.0 * I_act->get(up,
+                                //                                uq) *
+                                //                                            (gamma2M_->get(vp, vq)
+                                //                                            + gamma2M_->get(pv,
+                                //                                            vq));
+                                //                                value_aa += 2.0 * I_act->get(vp,
+                                //                                vq) *
+                                //                                            (gamma2M_->get(up, uq)
+                                //                                            + gamma2M_->get(pu,
+                                //                                            uq));
+                                //                                value_aa += 1.0 * I_act->get(vv,
+                                //                                pq) *
+                                //                                            (gamma2M_->get(uu, pq)
+                                //                                            + gamma2M_->get(uu,
+                                //                                            qp));
+                                //                                value_aa += 1.0 * I_act->get(uu,
+                                //                                pq) *
+                                //                                            (gamma2M_->get(vv, pq)
+                                //                                            + gamma2M_->get(vv,
+                                //                                            qp));
+                                //                                value_aa -= 4.0 * I_act->get(up,
+                                //                                vq) *
+                                //                                            (gamma2M_->get(uq, vp)
+                                //                                            + gamma2M_->get(uq,
+                                //                                            pv));
+                                //                                value_aa -= 2.0 * I_act->get(uv,
+                                //                                pq) *
+                                //                                            (gamma2M_->get(uv, pq)
+                                //                                            + gamma2M_->get(uv,
+                                //                                            qp));
+                            }
+                        }
+                        //                        outfile->Printf("%d %d %f \n", u, v, value_aa);
+                        D->set(nhole_map_[uo], npart_map_[vo], value_aa);
+                    } // End i loop
+                }     // End a loop
+            }
+        }
+    } // End Gas_
+
     d_ = D;
     if (casscf_debug_print_) {
         d_->print();
     }
-}
+} // namespace forte
 psi::SharedMatrix OrbitalOptimizer::approx_solve() {
     psi::Dimension nhole_dim = restricted_docc_dim_ + active_dim_;
     psi::Dimension nvirt_dim = restricted_uocc_dim_ + active_dim_;
@@ -438,7 +596,8 @@ psi::SharedMatrix OrbitalOptimizer::approx_solve() {
     for (size_t h = 0; h < nirrep_; h++) {
         for (int u = 0; u < active_dim_[h]; u++) {
             for (int v = 0; v < active_dim_[h]; v++) {
-                S_tmp->set(h, restricted_docc_dim_[h] + u, v, 0.0);
+                int uu = restricted_docc_dim_[h] + u;
+                S_tmp->set(h, uu, v, G_grad->get(h, uu, v) / D_grad->get(h, uu, v));
             }
         }
     }

@@ -371,6 +371,10 @@ void AdaptiveCI::get_gas_excited_determinants_sr(
                                 new_det = det;
                                 new_det.set_alfa_bit(ii, false);
                                 new_det.set_alfa_bit(aa, true);
+                                //                                outfile->Printf("\n a %d %d %f",
+                                //                                ii, aa,
+                                //                                                as_ints_->slater_rules_single_alpha(det,
+                                //                                                ii, aa));
                                 V_hash_t[new_det] += HIJ;
                             }
                         }
@@ -892,6 +896,7 @@ void AdaptiveCI::get_excited_determinants_sr(SharedMatrix evecs, SharedVector ev
             size_t nvalpha = avir.size();
             size_t nvbeta = bvir.size();
             Determinant new_det(det);
+            //            outfile->Printf("\n  %s", str(det, nact_).c_str());
             // Generate alpha excitations
             for (size_t i = 0; i < noalpha; ++i) {
                 size_t ii = aocc[i];
