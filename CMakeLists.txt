@@ -95,6 +95,7 @@ src/base_classes/scf_info.cc
 src/base_classes/state_info.cc
 src/casscf/casscf.cc
 src/casscf/casscf_gradient.cc
+src/casscf/casscf_hess.cc
 src/ci_ex_states/excited_state_solver.cc
 src/ci_rdm/ci_rdms.cc
 src/ci_rdm/ci_rdms_dynamic.cc

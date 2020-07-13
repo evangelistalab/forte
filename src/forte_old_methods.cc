@@ -33,6 +33,7 @@
 #include "base_classes/state_info.h"
 #include "base_classes/active_space_solver.h"
 #include "casscf/casscf.h"
+#include "casscf/casscf_hess.h"
 #include "mrdsrg-spin-integrated/mcsrgpt2_mo.h"
 
 #include "helpers/timer.h"
@@ -81,6 +82,11 @@ double forte_old_methods(psi::SharedWavefunction ref_wfn, std::shared_ptr<ForteO
         if (options->get_str("DERTYPE") == "FIRST") {
             casscf->compute_gradient();
         }
+    }
+    if (options->get_str("JOB_TYPE") == "CASSCF_HESS") {
+        auto casscf = std::make_shared<CASSCF_HESS>(
+            state_weights_map, std::make_shared<SCFInfo>(ref_wfn), options, mo_space_info, ints);
+        final_energy = casscf->compute_energy();
     }
     if (options->get_str("JOB_TYPE") == "MR-DSRG-PT2") {
         std::string cas_type = options->get_str("ACTIVE_SPACE_SOLVER");
