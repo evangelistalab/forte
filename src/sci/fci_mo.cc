@@ -1009,7 +1009,7 @@ void FCI_MO::compute_permanent_dipole() {
     outfile->Printf("\n  Only print nonzero (> 1.0e-5) elements.");
 
     // obtain AO dipole from ForteIntegrals
-    std::vector<psi::SharedMatrix> aodipole_ints = integral_->AOdipole_ints();
+    std::vector<psi::SharedMatrix> aodipole_ints = integral_->ao_dipole_ints();
 
     // Nuclear dipole contribution
     Vector3 ndip =
@@ -1017,7 +1017,7 @@ void FCI_MO::compute_permanent_dipole() {
     //        DipoleInt::nuclear_contribution(psi::Process::environment.molecule(), );
 
     // SO to AO transformer
-    psi::SharedMatrix sotoao(integral_->aotoso()->transpose());
+    psi::SharedMatrix sotoao(integral_->wfn()->aotoso()->transpose());
 
     // prepare eigen vectors for ci_rdm
     int dim = (eigen_[0].first)->dim();
@@ -1109,10 +1109,10 @@ void FCI_MO::compute_transition_dipole() {
     outfile->Printf("\n  Only print nonzero (> 1.0e-5) elements.");
 
     // obtain AO dipole from libmints
-    std::vector<psi::SharedMatrix> aodipole_ints = integral_->AOdipole_ints();
+    std::vector<psi::SharedMatrix> aodipole_ints = integral_->ao_dipole_ints();
 
     // SO to AO transformer
-    psi::SharedMatrix sotoao(integral_->aotoso()->transpose());
+    psi::SharedMatrix sotoao(integral_->wfn()->aotoso()->transpose());
 
     //    // obtain SO dipole from libmints
     //    std::vector<psi::SharedMatrix> dipole_ints;
@@ -1803,7 +1803,7 @@ double FCI_MO::ref_relaxed_dm_helper(const double& dm0, BlockedTensor& dm1, Bloc
 d3 FCI_MO::compute_orbital_extents() {
 
     // compute AO quadrupole integrals
-    std::shared_ptr<psi::BasisSet> basisset = integral_->basisset();
+    std::shared_ptr<psi::BasisSet> basisset = integral_->wfn()->basisset();
     std::shared_ptr<IntegralFactory> ints = std::shared_ptr<IntegralFactory>(
         new IntegralFactory(basisset, basisset, basisset, basisset));
 
@@ -1816,7 +1816,7 @@ d3 FCI_MO::compute_orbital_extents() {
     aoqOBI->compute(ao_Qpole);
 
     // orbital coefficients arranged by orbital energies
-    psi::SharedMatrix Ca_ao = integral_->Ca_subset("AO");
+    psi::SharedMatrix Ca_ao = integral_->wfn()->Ca_subset("AO");
     int nao = Ca_ao->nrow();
     int nmo = Ca_ao->ncol();
 

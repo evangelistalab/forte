@@ -90,6 +90,7 @@ void FCISolver::startup() {
         size_t nbstr = lists_->beta_graph()->strpi(h ^ symmetry_);
         ndfci += nastr * nbstr;
     }
+
     if (print_) {
         // Print a summary of options
         std::vector<std::pair<std::string, int>> calculation_info{

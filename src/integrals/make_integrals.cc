@@ -38,15 +38,15 @@
 #include "integrals/df_integrals.h"
 #include "integrals/diskdf_integrals.h"
 #include "integrals/conventional_integrals.h"
-#include "integrals/own_integrals.h"
 
 #include "make_integrals.h"
 
 namespace forte {
 
-std::shared_ptr<ForteIntegrals> make_forte_integrals(std::shared_ptr<psi::Wavefunction> ref_wfn,
-                                                     std::shared_ptr<ForteOptions> options,
-                                                     std::shared_ptr<MOSpaceInfo> mo_space_info) {
+std::shared_ptr<ForteIntegrals>
+make_forte_integrals_from_psi4(std::shared_ptr<psi::Wavefunction> ref_wfn,
+                               std::shared_ptr<ForteOptions> options,
+                               std::shared_ptr<MOSpaceInfo> mo_space_info) {
     timer int_timer("Integrals");
     std::shared_ptr<ForteIntegrals> ints;
     if (options->get_str("INT_TYPE") == "CHOLESKY") {
@@ -66,15 +66,9 @@ std::shared_ptr<ForteIntegrals> make_forte_integrals(std::shared_ptr<psi::Wavefu
         ints = std::make_shared<DistDFIntegrals>(options, ref_wfn, mo_space_info,
                                                  IntegralSpinRestriction::Restricted);
 #endif
-    } else if (options->get_str("INT_TYPE") == "CUSTOM") {
-        ints = std::make_shared<CustomIntegrals>(options, ref_wfn, mo_space_info,
-                                                 IntegralSpinRestriction::Restricted);
-    } else if (options->get_str("INT_TYPE") == "OWNINTEGRALS") {
-        ints = std::make_shared<OwnIntegrals>(options, ref_wfn, mo_space_info,
-                                              IntegralSpinRestriction::Restricted);
     } else {
         psi::outfile->Printf("\n Please check your int_type. Choices are CHOLESKY, DF, DISKDF , "
-                             "DISTRIBUTEDDF Effective, CONVENTIONAL or OwnIntegrals");
+                             "DISTRIBUTEDDF, or CONVENTIONAL");
         throw std::runtime_error("INT_TYPE is not correct.  Check options");
     }
 
@@ -83,6 +77,17 @@ std::shared_ptr<ForteIntegrals> make_forte_integrals(std::shared_ptr<psi::Wavefu
     }
 
     return ints;
+}
+
+std::shared_ptr<ForteIntegrals>
+make_custom_forte_integrals(std::shared_ptr<ForteOptions> options,
+                            std::shared_ptr<MOSpaceInfo> mo_space_info, double scalar,
+                            const std::vector<double>& oei_a, const std::vector<double>& oei_b,
+                            const std::vector<double>& tei_aa, const std::vector<double>& tei_ab,
+                            const std::vector<double>& tei_bb) {
+    return std::make_shared<CustomIntegrals>(options, mo_space_info,
+                                             IntegralSpinRestriction::Restricted, scalar, oei_a,
+                                             oei_b, tei_aa, tei_ab, tei_bb);
 }
 
 } // namespace forte

@@ -57,9 +57,11 @@ CholeskyIntegrals::CholeskyIntegrals(std::shared_ptr<ForteOptions> options,
                                      std::shared_ptr<psi::Wavefunction> ref_wfn,
                                      std::shared_ptr<MOSpaceInfo> mo_space_info,
                                      IntegralSpinRestriction restricted)
-    : ForteIntegrals(options, ref_wfn, mo_space_info, restricted) {
+    : Psi4Integrals(options, ref_wfn, mo_space_info, Cholesky, restricted) {
+    initialize();
+}
 
-    integral_type_ = Cholesky;
+void CholeskyIntegrals::initialize() {
     print_info();
     local_timer int_timer;
     gather_integrals();
@@ -210,28 +212,24 @@ void CholeskyIntegrals::gather_integrals() {
         } else {
             outfile->Printf("\n File PSIF_DFSCF_BJ(cholesky integrals) was not generated");
             outfile->Printf("\n");
-            std::string str = "Computing CD Integrals";
             if (print_) {
-                outfile->Printf("\n  %-36s ...", str.c_str());
+                outfile->Printf("\n  Computing CD Integrals");
             }
             Ch->choleskify();
             nthree_ = Ch->Q();
             L_ao_ = Ch->L();
             if (print_) {
-                outfile->Printf("...Done.");
                 print_timing("cholesky transformation", timer.get());
             }
         }
     } else {
-        std::string str = "Computing CD Integrals";
         if (print_) {
-            outfile->Printf("\n  %-36s ...", str.c_str());
+            outfile->Printf("\n  Computing CD Integrals");
         }
         Ch->choleskify();
         nthree_ = Ch->Q();
         L_ao_ = Ch->L();
         if (print_) {
-            outfile->Printf("...Done.");
             print_timing("cholesky transformation", timer.get());
         }
     }

@@ -53,12 +53,15 @@ using namespace psi;
 
 namespace forte {
 
-DISKDFIntegrals::DISKDFIntegrals(std::shared_ptr<ForteOptions> options, std::shared_ptr<psi::Wavefunction> ref_wfn,
+DISKDFIntegrals::DISKDFIntegrals(std::shared_ptr<ForteOptions> options,
+                                 std::shared_ptr<psi::Wavefunction> ref_wfn,
                                  std::shared_ptr<MOSpaceInfo> mo_space_info,
                                  IntegralSpinRestriction restricted)
-    : ForteIntegrals(options, ref_wfn, mo_space_info, restricted) {
+    : Psi4Integrals(options, ref_wfn, mo_space_info, DiskDF, restricted) {
+    initialize();
+}
 
-    integral_type_ = DiskDF;
+void DISKDFIntegrals::initialize() {
     print_info();
     local_timer int_timer;
 
@@ -429,10 +432,9 @@ void DISKDFIntegrals::gather_integrals() {
     // Finally computes the df integrals
     // Does the timings also
     local_timer timer;
-    std::string str = "Computing DF Integrals";
-    outfile->Printf("\n    %-36s ...", str.c_str());
+    outfile->Printf("\n  Computing DF Integrals");
     df_->transform();
-    outfile->Printf("...Done. Timing %15.6f s", timer.get());
+    print_timing("computing density-fitted integrals", timer.get());
 }
 
 void DISKDFIntegrals::make_fock_matrix(std::shared_ptr<psi::Matrix> gamma_aM,
@@ -580,7 +582,7 @@ void DISKDFIntegrals::make_fock_matrix(std::shared_ptr<psi::Matrix> gamma_aM,
     });
 
     if (num_block != 1) {
-        outfile->Printf("\n Created Fock matrix %8.8f s", block_read.get());
+        outfile->Printf("\n  Created Fock matrix %8.8f s", block_read.get());
     }
 }
 
@@ -591,7 +593,7 @@ void DISKDFIntegrals::resort_integrals_after_freezing() {
     // Create an array that maps the CMOs to the MOs (cmo2mo).
     // resort_three(ThreeIntegral_,cmo2mo);
 
-    outfile->Printf("\n Resorting integrals takes   %8.8fs", resort_integrals.get());
+    print_timing("resorting integrals", resort_integrals.get());
 }
 ambit::Tensor DISKDFIntegrals::three_integral_block_two_index(const std::vector<size_t>& A,
                                                               size_t p,

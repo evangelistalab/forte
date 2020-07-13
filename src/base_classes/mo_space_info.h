@@ -107,7 +107,7 @@ using SpaceInfo = std::pair<psi::Dimension, std::vector<MOInfo>>;
 class MOSpaceInfo {
   public:
     // ==> Class Constructor <==
-    MOSpaceInfo(psi::Dimension& nmopi);
+    MOSpaceInfo(const psi::Dimension& nmopi);
 
     // ==> Class Interface <==
 
@@ -191,12 +191,12 @@ class MOSpaceInfo {
 };
 
 /// Make MOSpaceInfo from inputs(options)
-std::shared_ptr<MOSpaceInfo> make_mo_space_info(std::shared_ptr<psi::Wavefunction> ref_wfn,
+std::shared_ptr<MOSpaceInfo> make_mo_space_info(const psi::Dimension& nmopi,
                                                 std::shared_ptr<ForteOptions> options);
 
 /// Make MOSpaceInfo from a map of spacename-dimension_vector ("ACTIVE", [size_t, size_t, ...])
 std::shared_ptr<MOSpaceInfo>
-make_mo_space_info_from_map(std::shared_ptr<psi::Wavefunction> ref_wfn,
+make_mo_space_info_from_map(const psi::Dimension& nmopi,
                             std::map<std::string, std::vector<size_t>>& mo_space_map,
                             std::vector<size_t> reorder);
 

@@ -27,10 +27,11 @@
  */
 
 #include "psi4/libpsi4util/process.h"
-#include "psi4/libmints/wavefunction.h"
 #include "psi4/libmints/molecule.h"
 
 #include "helpers/helpers.h"
+
+#include "base_classes/forte_options.h"
 
 #include "state_info.h"
 
@@ -77,10 +78,10 @@ bool StateInfo::operator==(const StateInfo& rhs) const {
            std::tie(rhs.na_, rhs.nb_, rhs.multiplicity_, rhs.twice_ms_, rhs.irrep_);
 }
 
-StateInfo make_state_info_from_psi_wfn(std::shared_ptr<psi::Wavefunction> wfn) {
+StateInfo make_state_info_from_psi(std::shared_ptr<ForteOptions> options) {
     int charge = psi::Process::environment.molecule()->molecular_charge();
-    if (wfn->options()["CHARGE"].has_changed()) {
-        charge = wfn->options().get_int("CHARGE");
+    if (not options->is_none("CHARGE")) {
+        charge = options->get_int("CHARGE");
     }
 
     int nel = 0;
@@ -93,8 +94,8 @@ StateInfo make_state_info_from_psi_wfn(std::shared_ptr<psi::Wavefunction> wfn) {
     nel -= charge;
 
     size_t multiplicity = psi::Process::environment.molecule()->multiplicity();
-    if (wfn->options()["MULTIPLICITY"].has_changed()) {
-        multiplicity = wfn->options().get_int("MULTIPLICITY");
+    if (not options->is_none("MULTIPLICITY")) {
+        multiplicity = options->get_int("MULTIPLICITY");
     }
 
     // If the user did not specify ms determine the value from the input or
@@ -104,19 +105,20 @@ StateInfo make_state_info_from_psi_wfn(std::shared_ptr<psi::Wavefunction> wfn) {
     //    doublet: multiplicity = 2 -> twice_ms = 1 (ms = 1/2)
     //    triplet: multiplicity = 3 -> twice_ms = 0 (ms = 0)
     size_t twice_ms = (multiplicity + 1) % 2;
-    if (wfn->options()["MS"].has_changed()) {
-        twice_ms = std::round(2.0 * wfn->options().get_double("MS"));
+    if (not options->is_none("MS")) {
+        twice_ms = std::round(2.0 * options->get_double("MS"));
     }
 
     if (((nel - twice_ms) % 2) != 0)
-        throw psi::PSIEXCEPTION("\n\n  make_state_info_from_psi_wfn: Wrong value of M_s.\n\n");
+        throw psi::PSIEXCEPTION("\n\n  make_state_info_from_psi: Wrong value of M_s.\n\n");
 
     size_t na = (nel + twice_ms) / 2;
     size_t nb = nel - na;
 
     size_t irrep = 0;
-    if (wfn->options()["ROOT_SYM"].has_changed()) {
-        irrep = wfn->options().get_int("ROOT_SYM");
+
+    if (not options->is_none("ROOT_SYM")) {
+        irrep = options->get_int("ROOT_SYM");
     }
 
     std::string irrep_label = psi::Process::environment.molecule()->irrep_labels()[irrep];

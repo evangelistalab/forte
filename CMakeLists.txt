@@ -131,8 +131,8 @@ src/integrals/df_integrals.cc
 src/integrals/diskdf_integrals.cc
 src/integrals/distribute_df_integrals.cc
 src/integrals/integrals.cc
+src/integrals/integrals_psi4_interface.cc
 src/integrals/make_integrals.cc
-src/integrals/own_integrals.cc
 src/integrals/parallel_ccvv_algorithms.cc
 src/integrals/paralleldfmo.cc
 src/main.cc

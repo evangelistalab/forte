@@ -141,6 +141,8 @@ dsrg-mrpt2:
    - aci-dsrg-mrpt2-2
    - aci-dsrg-mrpt2-3
    - aci-dsrg-mrpt2-4
+   - dsrg-mrpt2-fcidump-1
+   - dsrg-mrpt2-10-CO-fcidump
   long:
    - aci-dsrg-mrpt2-5
    - dsrg-mrpt2-12-localized-actv
@@ -202,6 +204,12 @@ integrals:
    - integrals-3
    - integrals-4
    - integrals-5
+   - integrals-fcidump-1
+   - integrals-fcidump-2
+   - integrals-fcidump-3
+   - integrals-fcidump-4
+   - integrals-fcidump-5
+   - integrals-fcidump-6
   unused:
    - integrals-6
 mr-dsrg-pt2:
