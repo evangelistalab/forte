@@ -2565,16 +2565,29 @@ void DSRG_MRPT2::solve_z() {
     auto cc2ab_ = cc.cc2ab();
 
 
+    auto ci_vc = ambit::Tensor::build(ambit::CoreTensor, "ci contribution to z{vc}", {ndets, nvirt_, ncore_});
     auto ci_ca = ambit::Tensor::build(ambit::CoreTensor, "ci contribution to z{ca}", {ndets, ncore_, na_});
     auto ci_va = ambit::Tensor::build(ambit::CoreTensor, "ci contribution to z{va}", {ndets, nvirt_, na_});
     auto ci_aa = ambit::Tensor::build(ambit::CoreTensor, "ci contribution to z{aa}", {ndets, na_, na_});
 
 
-    // NOTICE: CI contribution to Z{VC} is 0
+    // CI contribution to Z{VC}
+    ci_vc("Iem") += 2 * H.block("vc")("em") * ci("I");
+    ci_vc("Iem") += 2 * V_N_Alpha.block("cv")("me") * ci("I");
+    ci_vc("Iem") += 2 * V_N_Beta.block("cv")("me") * ci("I");
+    ci_vc("Iem") += 2 * V.block("acav")("umve") * cc1a_("IJuv") * ci("J");
+    ci_vc("Iem") += 2 * V.block("cAvA")("mUeV") * cc1b_("IJUV") * ci("J");
+
 
     // CI contribution to Z{CA}
     ci_ca("Imw") += H.block("ac")("vm") * cc1a_("IJwv") * ci("J");
     ci_ca("Imw") += H.block("ca")("mu") * cc1a_("IJuw") * ci("J");
+
+    ci_ca("Imw") += V_N_Alpha.block("ac")("um") * cc1a_("IJuw") * ci("J");
+    ci_ca("Imw") += V_N_Beta.block("ac")("um") * cc1a_("IJuw") * ci("J");
+
+    ci_ca("Imw") += V_N_Alpha.block("ca")("mv") * cc1a_("IJwv") * ci("J"); 
+    ci_ca("Imw") += V_N_Beta.block("ca")("mv") * cc1a_("IJwv") * ci("J"); 
 
     ci_ca("Imw") += 0.25 * V.block("caaa")("mvxy") * cc2aa_("IJwvxy") * ci("J");
     ci_ca("Imw") += 0.50 * V.block("cAaA")("mVxY") * cc2ab_("IJwVxY") * ci("J");
@@ -2588,9 +2601,20 @@ void DSRG_MRPT2::solve_z() {
     ci_ca("Imw") += 0.25 * V.block("aaac")("uvxm") * cc2aa_("IJuvxw") * ci("J");
     ci_ca("Imw") += 0.50 * V.block("aAcA")("uVmX") * cc2ab_("IJuVwX") * ci("J");
 
+    ci_ca("Imw") -= 2 * H.block("ac")("wm") * ci("I");
+    ci_ca("Imw") -= 2 * V_N_Alpha.block("ca")("mw") * ci("I");
+    ci_ca("Imw") -= 2 * V_N_Beta.block("ca")("mw") * ci("I");
+    ci_ca("Imw") -= 2 * V.block("acaa")("umvw") * cc1a_("IJuv") * ci("J");
+    ci_ca("Imw") -= 2 * V.block("cAaA")("mUwV") * cc1b_("IJUV") * ci("J");
+
     // CI contribution to Z{VA}
     ci_va("Iew") += H.block("av")("ve") * cc1a_("IJwv") * ci("J");
     ci_va("Iew") += H.block("va")("eu") * cc1a_("IJuw") * ci("J");
+
+    ci_va("Iew") += V_N_Alpha.block("av")("ue") * cc1a_("IJuw") * ci("J");
+    ci_va("Iew") += V_N_Beta.block("av")("ue") * cc1a_("IJuw") * ci("J");
+    ci_va("Iew") += V_N_Alpha.block("va")("ev") * cc1a_("IJwv") * ci("J");
+    ci_va("Iew") += V_N_Beta.block("va")("ev") * cc1a_("IJwv") * ci("J");
 
     ci_va("Iew") += 0.25 * V.block("vaaa")("evxy") * cc2aa_("IJwvxy") * ci("J");
     ci_va("Iew") += 0.50 * V.block("vAaA")("eVxY") * cc2ab_("IJwVxY") * ci("J");
@@ -2609,6 +2633,16 @@ void DSRG_MRPT2::solve_z() {
     ci_aa("Iwz") += H.block("aa")("wu") * cc1a_("IJuz") * ci("J");
     ci_aa("Iwz") -= H.block("aa")("vz") * cc1a_("IJwv") * ci("J");
     ci_aa("Iwz") -= H.block("aa")("zu") * cc1a_("IJuw") * ci("J");
+
+    ci_aa("Iwz") += V_N_Alpha.block("aa")("uw") * cc1a_("IJuz") * ci("J");
+    ci_aa("Iwz") += V_N_Beta.block("aa")("uw") * cc1a_("IJuz") * ci("J");
+    ci_aa("Iwz") += V_N_Alpha.block("aa")("wv") * cc1a_("IJzv") * ci("J");
+    ci_aa("Iwz") += V_N_Beta.block("aa")("wv") * cc1a_("IJzv") * ci("J");
+
+    ci_aa("Iwz") -= V_N_Alpha.block("aa")("uz") * cc1a_("IJuw") * ci("J");
+    ci_aa("Iwz") -= V_N_Beta.block("aa")("uz") * cc1a_("IJuw") * ci("J");
+    ci_aa("Iwz") -= V_N_Alpha.block("aa")("zv") * cc1a_("IJwv") * ci("J");
+    ci_aa("Iwz") -= V_N_Beta.block("aa")("zv") * cc1a_("IJwv") * ci("J");
 
     ci_aa("Iwz") += 0.25 * V.block("aaaa")("wvxy") * cc2aa_("IJzvxy") * ci("J");
     ci_aa("Iwz") += 0.50 * V.block("aAaA")("wVxY") * cc2ab_("IJzVxY") * ci("J");
@@ -2635,11 +2669,12 @@ void DSRG_MRPT2::solve_z() {
     ci_aa("Iwz") -= 0.50 * V.block("aAaA")("uVzX") * cc2ab_("IJuVwX") * ci("J");
 
 
-    for (const std::string& row : {"ca","va","aa"}) {
+    for (const std::string& row : {"vc","ca","va","aa"}) {
         int idx1 = block_dim[row];
         int pre1 = preidx[row];
-        auto temp_ci = ci_ca;
-        if (row == "va") temp_ci = ci_va;
+        auto temp_ci = ci_vc;
+        if (row == "ca") temp_ci = ci_ca;
+        else if (row == "va") temp_ci = ci_va;
         else if (row == "aa") temp_ci = ci_aa;
 
         for (const std::string& col : {"ci"}) {
@@ -2741,10 +2776,6 @@ void DSRG_MRPT2::solve_z() {
     b_ck("K") += 0.5 * T2_["imab"] * V_["cdkm"] * Gamma1["ki"] * Eta1["ac"] * Eta1["bd"] * ci("K");
     b_ck("K") += 0.5 * T2_["IMAB"] * V_["CDKM"] * Gamma1["KI"] * Eta1["AC"] * Eta1["BD"] * ci("K");
     b_ck("K") += 2.0 * T2_["iMaB"] * V_["cDkM"] * Gamma1["ki"] * Eta1["ac"] * Eta1["BD"] * ci("K");
-
-
-
-
 
 
 
@@ -3103,8 +3134,6 @@ void DSRG_MRPT2::solve_z() {
     Et += cc1a_("KIuv") * V.block("aCaC")("uMvN") * ci("I") * ci("K") * I.block("CC")("MN");
     Et += cc1b_("KIUV") * V.block("cAcA")("mUnV") * ci("I") * ci("K") * I.block("cc")("mn");
 
-    
-    Et += ints_->frozen_core_energy();
     Et += ints_->nuclear_repulsion_energy();
     std::cout<< "E test = " << std::setprecision(9) << Et << std::endl;
 
@@ -3574,7 +3603,7 @@ void DSRG_MRPT2::write_1rdm_spin_dependent() {
     // CASSCF reference
     for (size_t i = 0, size_c = core_mos_relative.size(); i < size_c; ++i) {
         D1->add(core_mos_relative[i].first, core_mos_relative[i].second,
-                core_mos_relative[i].second, 1.0 * scale_ci);
+                core_mos_relative[i].second, 1.0);
     }
 
     (Gamma1_.block("aa")).iterate([&](const std::vector<size_t>& i, double& value) {
@@ -3584,7 +3613,36 @@ void DSRG_MRPT2::write_1rdm_spin_dependent() {
         }
     });
 
-    // D1->print();
+    // CI contribution
+    auto cc = coupling_coefficients_;
+    auto ci = ci_vectors_[0];
+    auto cc1a_ = cc.cc1a();
+    auto cc1b_ = cc.cc1b();
+    auto cc2aa_ = cc.cc2aa();
+    auto cc2bb_ = cc.cc2bb();
+    auto cc2ab_ = cc.cc2ab();
+
+    auto tp = ambit::Tensor::build(ambit::CoreTensor, "temporal tensor", {na_, na_});
+
+    // it has been tested that cc1a_ and cc1b_ yield the same tensor tp
+    tp("uv") = x_ci("I") * cc1a_("IJuv") * ci("J");
+
+    (tp).iterate([&](const std::vector<size_t>& i, double& value) {
+        if (actv_mos_relative[i[0]].first == actv_mos_relative[i[1]].first) {
+            D1->add(actv_mos_relative[i[0]].first, actv_mos_relative[i[0]].second,
+                    actv_mos_relative[i[1]].second, value);
+        }
+    });
+
+
+
+
+
+
+
+
+
+
 
     D1->back_transform(ints_->Ca());
     ints_->wfn()->Da()->copy(D1);
