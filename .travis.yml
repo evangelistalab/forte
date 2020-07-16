@@ -19,7 +19,7 @@ install:
   - conda create -q -n tenv python=$PYTHON_VER gcc_linux-64 gxx_linux-64 gfortran_linux-64 cmake mkl-devel hdf5 psi4=1.4a2.dev208 psi4-dev ci-psi4 boost -c psi4/label/dev
   - source activate tenv
   - conda install pytest pytest-cov codecov lcov -c conda-forge
-  - conda remove ambit
+  - conda remove --force ambit
   - pip install pytest-shutil
   
 before_script:
