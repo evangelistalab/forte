@@ -3644,16 +3644,6 @@ void DSRG_MRPT2::write_1rdm_spin_dependent() {
         }
     });
 
-
-
-
-
-
-
-
-
-
-
     D1->back_transform(ints_->Ca());
     ints_->wfn()->Da()->copy(D1);
     ints_->wfn()->Db()->copy(D1);
@@ -3711,6 +3701,13 @@ void DSRG_MRPT2::write_2rdm_spin_dependent() {
     // TODO: write spin_dependent two-RDMs coefficients using IWL
     outfile->Printf("\n    Writing 2RDM Coefficients ....................... ");
 
+    auto cc = coupling_coefficients_;
+    auto ci = ci_vectors_[0];
+    auto cc1a_ = cc.cc1a();
+    auto cc1b_ = cc.cc1b();
+    auto cc2aa_ = cc.cc2aa();
+    auto cc2bb_ = cc.cc2bb();
+    auto cc2ab_ = cc.cc2ab();
     auto psio_ = _default_psio_lib_;
     IWL d2aa(psio_.get(), PSIF_MO_AA_TPDM, 1.0e-14, 0, 0);
     IWL d2ab(psio_.get(), PSIF_MO_AB_TPDM, 1.0e-14, 0, 0);
@@ -3801,9 +3798,9 @@ void DSRG_MRPT2::write_2rdm_spin_dependent() {
                 double v1 = 0.5 * z_a, v2 = 0.5 * z_b, v3 = z_a + z_b;
 
                 if (m == n) {
-                    v1 += 0.25 * scale_ci;
-                    v2 += 0.25 * scale_ci;
-                    v3 += 1.00 * scale_ci;
+                    v1 += 0.25;
+                    v2 += 0.25;
+                    v3 += 1.00;
                 }
 
                 if (m != m1) {
@@ -3819,6 +3816,12 @@ void DSRG_MRPT2::write_2rdm_spin_dependent() {
         }
     }
 
+    auto ci_g1_a = ambit::Tensor::build(ambit::CoreTensor, "effective alpha gamma tensor", {na_, na_});
+    auto ci_g1_b = ambit::Tensor::build(ambit::CoreTensor, "effective beta gamma tensor", {na_, na_});
+
+    ci_g1_a("uv") += x_ci("I") * cc1a_("IJuv") * ci("J");
+    ci_g1_b("UV") += x_ci("I") * cc1b_("IJUV") * ci("J");
+
     for (size_t i = 0, size_a = actv_all_.size(); i < size_a; ++i) {
         auto v = actv_all_[i];
         for (size_t k = 0; k < size_a; ++k) {
@@ -3828,9 +3831,10 @@ void DSRG_MRPT2::write_2rdm_spin_dependent() {
             auto z_b = Z.block("AA").data()[idx];
             auto gamma_a = Gamma1_.block("aa").data()[idx];
             auto gamma_b = Gamma1_.block("AA").data()[idx];
-
-            auto v1 = z_a + scale_ci * gamma_a;
-            auto v2 = z_b + scale_ci * gamma_b;
+            auto ci_gamma_a = ci_g1_a.data()[idx];
+            auto ci_gamma_b = ci_g1_b.data()[idx];
+            auto v1 = z_a + scale_ci * gamma_a + ci_gamma_a;
+            auto v2 = z_b + scale_ci * gamma_b + ci_gamma_b;
 
             for (size_t j = 0, size_c = core_all_.size(); j < size_c; ++j) {
                 auto m1 = core_all_[j];
@@ -3946,7 +3950,12 @@ void DSRG_MRPT2::write_2rdm_spin_dependent() {
     temp["xyuv"] += 0.25 * scale_ci * Gamma2["uvxy"];
     temp["XYUV"] += 0.25 * scale_ci * Gamma2["UVXY"];
     temp["xYuV"] += 0.25 * scale_ci * Gamma2["uVxY"];
- 
+
+    // CI contribution
+    temp.block("aaaa")("xyuv") += 0.25 * cc2aa_("IJuvxy") * x_ci("I") * ci("J");
+    temp.block("AAAA")("XYUV") += 0.25 * cc2bb_("IJUVXY") * x_ci("I") * ci("J");
+    temp.block("aAaA")("xYuV") += 0.25 * cc2ab_("IJuVxY") * x_ci("I") * ci("J");
+
     // all-alpha and all-beta
     temp2["ckdl"] += temp["cdkl"];
     temp2["cldk"] -= temp["cdkl"];
