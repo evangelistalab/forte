@@ -34,7 +34,8 @@ def test_mospaceinfo():
                   'FROZEN_UOCC' :     [1,0,0,0,0,0,0,0]}
 
     nmopi = wfn.nmopi()
-    mo_space_info = forte.make_mo_space_info_from_map(nmopi,mos_spaces,[])
+    point_group = wfn.molecule().point_group().symbol()
+    mo_space_info = forte.make_mo_space_info_from_map(nmopi,point_group,mos_spaces,[])
 
     assert mo_space_info.nirrep() == 8
 
