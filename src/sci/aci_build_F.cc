@@ -972,6 +972,7 @@ det_hash<double> AdaptiveCI::get_bin_F_space(int bin, int nbin, double E0, Share
     std::vector<int> act_mo = mo_space_info_->dimension("ACTIVE").blocks();
 
     std::vector<det_hash<double>> A_b_t;
+    double value = 0.0;
 
 #pragma omp parallel reduction(+ : value)
     {
