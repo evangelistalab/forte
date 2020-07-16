@@ -106,7 +106,7 @@ def setup_argument_parser():
     parser.add_argument('--type',
                         help='which type of test to run? (default: short)',
                         choices={'short', 'medium','long','regular', 'all'},
-                        default='regular')
+                        default='standard')
     parser.add_argument('--group',
                         help='which group of tests to run? (default: all)',
                         default=None)
