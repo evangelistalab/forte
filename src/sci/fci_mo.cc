@@ -39,6 +39,7 @@
 #include "psi4/libmints/molecule.h"
 #include "psi4/libmints/integral.h"
 #include "psi4/libmints/basisset.h"
+#include "psi4/libpsio/psio.hpp"
 
 #include "sparse_ci/determinant_hashvector.h"
 #include "fci/fci_vector.h"
