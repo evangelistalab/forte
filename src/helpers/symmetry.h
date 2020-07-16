@@ -56,29 +56,22 @@ class Symmetry {
     const std::vector<std::string>& irrep_labels() const { return __irrep_labels.at(pg_); }
     const std::string& irrep_label(size_t h) const { return __irrep_labels.at(pg_)[h]; }
     size_t nirrep() const { return __irrep_labels.at(pg_).size(); }
+    size_t irrep_product(size_t h, size_t g) const { return h ^ g; }
+    std::string point_group_label() const {
+        for (const auto& p : __str_to_pg) {
+            if (p.second == pg_) {
+                return p.first;
+            }
+        }
+        return std::string("");
+    }
 
   private:
     PointGroup pg_;
-    const std::map<std::string, PointGroup> __str_to_pg{{"C1", PointGroup::C1},
-                                                        {"CS", PointGroup::Cs},
-                                                        {"CI", PointGroup::Ci},
-                                                        {
-                                                            "C2",
-                                                            PointGroup::C2,
-                                                        },
-                                                        {
-                                                            "C2H",
-                                                            PointGroup::C2h,
-                                                        },
-                                                        {
-                                                            "C2V",
-                                                            PointGroup::C2v,
-                                                        },
-                                                        {
-                                                            "D2",
-                                                            PointGroup::D2,
-                                                        },
-                                                        {"D2H", PointGroup::D2h}};
+    const std::map<std::string, PointGroup> __str_to_pg{
+        {"C1", PointGroup::C1}, {"CS", PointGroup::Cs},   {"CI", PointGroup::Ci},
+        {"C2", PointGroup::C2}, {"C2H", PointGroup::C2h}, {"C2V", PointGroup::C2v},
+        {"D2", PointGroup::D2}, {"D2H", PointGroup::D2h}};
 
     const std::map<PointGroup, std::vector<std::string>> __irrep_labels{
         {PointGroup::C1, {"A"}},

@@ -114,8 +114,12 @@ class MOSpaceInfo {
 
     // ==> Class Interface <==
 
+    /// @return A vector of labels of each irrep (e.g. ["A1","A2"])
     const std::vector<std::string>& irrep_labels() const { return symmetry_.irrep_labels(); }
+    /// @return The label of each irrep h (e.g. h = 0 -> "A1")
     const std::string& irrep_label(size_t h) const { return symmetry_.irrep_label(h); }
+    /// @return The label of the molecular point groupo (e.g. "C2V")
+    std::string point_group_label() const { return symmetry_.point_group_label(); }
     /// @return The names of orbital spaces
     std::vector<std::string> space_names() const { return elementary_spaces_; }
     /// @return The number of orbitals in a space

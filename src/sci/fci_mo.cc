@@ -36,14 +36,9 @@
 
 #include "psi4/libpsi4util/PsiOutStream.h"
 #include "psi4/libpsi4util/process.h"
-//#include "psi4/libmints/basisset.h"
-//#include "psi4/libmints/vector.h"
-//#include "psi4/libmints/dipole.h"
-//#include "psi4/libmints/oeprop.h"
-//#include "psi4/libmints/integral.h"
-//#include "psi4/libmints/petitelist.h"
-//#include "psi4/libmints/molecule.h"
-//#include "psi4/libpsio/psio.hpp"
+#include "psi4/libmints/molecule.h"
+#include "psi4/libmints/integral.h"
+#include "psi4/libmints/basisset.h"
 
 #include "sparse_ci/determinant_hashvector.h"
 #include "fci/fci_vector.h"
@@ -1003,9 +998,7 @@ void FCI_MO::print_CI(const int& nroot, const double& CI_threshold,
 }
 
 void FCI_MO::compute_permanent_dipole() {
-
-    CharacterTable ct = psi::Process::environment.molecule()->point_group()->char_table();
-    std::string irrep_symbol = ct.gamma(root_sym_).symbol();
+    std::string irrep_symbol = mo_space_info_->irrep_label(root_sym_);
     std::string title = "Permanent Dipole Moments (" + irrep_symbol + ")";
     print_h2(title);
     outfile->Printf("\n  Only print nonzero (> 1.0e-5) elements.");
@@ -1103,8 +1096,7 @@ psi::SharedMatrix FCI_MO::reformat_1rdm(const std::string& name, const std::vect
 }
 
 void FCI_MO::compute_transition_dipole() {
-    CharacterTable ct = psi::Process::environment.molecule()->point_group()->char_table();
-    std::string irrep_symbol = ct.gamma(root_sym_).symbol();
+    std::string irrep_symbol = mo_space_info_->irrep_label(root_sym_);
     std::stringstream title;
     title << "Transition Dipole Moments (" << irrep_symbol << " -> " << irrep_symbol << ")";
     print_h2(title.str());
@@ -1208,9 +1200,7 @@ void FCI_MO::compute_transition_dipole() {
 }
 
 void FCI_MO::compute_oscillator_strength() {
-
-    CharacterTable ct = psi::Process::environment.molecule()->point_group()->char_table();
-    std::string irrep_symbol = ct.gamma(root_sym_).symbol();
+    std::string irrep_symbol = mo_space_info_->irrep_label(root_sym_);
     std::stringstream title;
     title << "Oscillator Strength (" << irrep_symbol << " -> " << irrep_symbol << ")";
     print_h2(title.str());
@@ -1255,7 +1245,8 @@ FCI_MO::compute_ref_relaxed_dm(const std::vector<double>& dm0, std::vector<Block
         do_dm.push_back(std::fabs(dm0[z]) > 1.0e-12 ? true : false);
     }
 
-    std::string pg = (psi::Process::environment.molecule()->point_group()->char_table()).symbol();
+    std::string pg = mo_space_info_->point_group_label();
+    to_lower_string(pg);
     int width = 2;
     if (pg == "cs" || pg == "d2h") {
         width = 3;
@@ -1352,7 +1343,8 @@ FCI_MO::compute_ref_relaxed_dm(const std::vector<double>& dm0, std::vector<Block
         do_dm.push_back(std::fabs(dm0[z]) > 1.0e-12 ? true : false);
     }
 
-    std::string pg = (psi::Process::environment.molecule()->point_group()->char_table()).symbol();
+    std::string pg = mo_space_info_->point_group_label();
+    to_lower_string(pg);
     int width = 2;
     if (pg == "cs" || pg == "d2h") {
         width = 3;
@@ -1445,7 +1437,8 @@ std::map<std::string, std::vector<double>>
 FCI_MO::compute_ref_relaxed_osc(std::vector<BlockedTensor>& dm1, std::vector<BlockedTensor>& dm2) {
     std::map<std::string, std::vector<double>> out;
 
-    std::string pg = (psi::Process::environment.molecule()->point_group()->char_table()).symbol();
+    std::string pg = mo_space_info_->point_group_label();
+    to_lower_string(pg);
     int width = 2;
     if (pg == "cs" || pg == "d2h") {
         width = 3;
@@ -1564,7 +1557,8 @@ FCI_MO::compute_ref_relaxed_osc(std::vector<BlockedTensor>& dm1, std::vector<Blo
                                 std::vector<BlockedTensor>& dm3) {
     std::map<std::string, std::vector<double>> out;
 
-    std::string pg = (psi::Process::environment.molecule()->point_group()->char_table()).symbol();
+    std::string pg = mo_space_info_->point_group_label();
+    to_lower_string(pg);
     int width = 2;
     if (pg == "cs" || pg == "d2h") {
         width = 3;
