@@ -444,7 +444,7 @@ def prepare_forte_objects_from_psi4_wfn(options, wfn):
     # Create the MOSpaceInfo object
     nmopi = wfn.nmopi()
     point_group = wfn.molecule().point_group().symbol()
-    mo_space_info = forte.make_mo_space_info(nmopi,point_group, options)
+    mo_space_info = forte.make_mo_space_info(nmopi, point_group, options)
 
     # Call methods that project the orbitals (AVAS, embedding)
     mo_space_info = orbital_projection(wfn, options, mo_space_info)
@@ -481,7 +481,9 @@ def make_state_info_from_fcidump(fcidump, options):
         twice_ms = int(round(2.0 * options.get_double("MS")))
 
     if (((nel - twice_ms) % 2) != 0):
-        raise Exception(f'Forte: the value of MS ({twice_ms}/2) is incompatible with the number of electrons ({nel})')
+        raise Exception(
+            f'Forte: the value of MS ({twice_ms}/2) is incompatible with the number of electrons ({nel})'
+        )
 
     na = (nel + twice_ms) // 2
     nb = nel - na
@@ -515,8 +517,8 @@ def prepare_forte_objects_from_fcidump(options):
         nirrep = irrep_size[fcidump['pntgrp'].lower()]
         nmopi_list = [fcidump['orbsym'].count(x) for x in range(nirrep)]
     else:
-        fcidump['pntgrp'] = 'C1' # set the point group to C1
-        fcidump['isym'] = 0 # shift by -1 
+        fcidump['pntgrp'] = 'C1'  # set the point group to C1
+        fcidump['isym'] = 0  # shift by -1
         nirrep = 1
         nmopi_list = [nmo]
 
@@ -654,9 +656,12 @@ def run_forte(name, **kwargs):
 
     if (options.get_bool("CASSCF_REFERENCE") == True or job_type == "CASSCF"):
         if options.get_str('INT_TYPE') == 'FCIDUMP':
-            raise Exception('Forte: the CASSCF code cannot use integrals read from a FCIDUMP file')
+            raise Exception(
+                'Forte: the CASSCF code cannot use integrals read from a FCIDUMP file'
+            )
 
-        casscf = forte.make_casscf(state_weights_map, scf_info, options, mo_space_info, ints)
+        casscf = forte.make_casscf(state_weights_map, scf_info, options,
+                                   mo_space_info, ints)
         energy = casscf.compute_energy()
 
     if (job_type == 'NEWDRIVER'):
@@ -760,9 +765,10 @@ def gradient_forte(name, **kwargs):
     # Run gradient computation
     energy = forte.forte_old_methods(ref_wfn, options, ints, mo_space_info)
 
-    casscf = forte.make_casscf(state_weights_map, scf_info, options, mo_space_info, ints)
+    casscf = forte.make_casscf(state_weights_map, scf_info, options,
+                               mo_space_info, ints)
     energy = casscf.compute_energy()
-    casscf.compute_gradient();
+    casscf.compute_gradient()
 
     derivobj = psi4.core.Deriv(ref_wfn)
     derivobj.set_deriv_density_backtransformed(True)
