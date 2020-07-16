@@ -28,6 +28,7 @@
 
 #include <cmath>
 
+#include "psi4/libpsi4util/PsiOutStream.h"
 #include "psi4/libmints/dimension.h"
 
 #include "sparse_ci/determinant_substitution_lists.h"

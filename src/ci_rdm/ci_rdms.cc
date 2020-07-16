@@ -28,6 +28,9 @@
 
 #include <cmath>
 
+#include "psi4/libpsi4util/PsiOutStream.h"
+#include "psi4/libpsi4util/process.h"
+
 #include "helpers/timer.h"
 #include "sparse_ci/determinant_substitution_lists.h"
 

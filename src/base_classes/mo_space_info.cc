@@ -31,10 +31,9 @@
 
 #include "psi4/libmints/molecule.h"
 #include "psi4/libmints/wavefunction.h"
-#include "psi4/libpsi4util/process.h"
+//#include "psi4/libpsi4util/process.h"
 #include "psi4/libpsi4util/PsiOutStream.h"
-
-#include "psi4/libmints/pointgrp.h"
+#include "psi4/psi4-dec.h"
 
 #include "base_classes/mo_space_info.h"
 
@@ -257,11 +256,11 @@ void MOSpaceInfo::compute_space_info() {
     }
 
     int banner_width = label_size + 4 + 6 * (nirrep_ + 1);
-    CharacterTable ct = psi::Process::environment.molecule()->point_group()->char_table();
+
     outfile->Printf("\n  %s", std::string(banner_width, '-').c_str());
     outfile->Printf("\n    %s", std::string(label_size, ' ').c_str());
     for (size_t h = 0; h < nirrep_; ++h)
-        outfile->Printf(" %5s", ct.gamma(h).symbol());
+        outfile->Printf(" %5s", irrep_label(h).c_str());
     outfile->Printf("   Sum");
     outfile->Printf("\n  %s", std::string(banner_width, '-').c_str());
 

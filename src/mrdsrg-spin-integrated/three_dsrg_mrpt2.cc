@@ -32,6 +32,7 @@
 #include <string>
 #include <sstream>
 #include <vector>
+
 #ifdef HAVE_MPI
 #include <mpi.h>
 #endif
@@ -43,6 +44,8 @@
 #define GA_Nodeid() 0
 #endif
 
+#include "psi4/libpsi4util/PsiOutStream.h"
+#include "psi4/libpsi4util/process.h"
 #include "psi4/lib3index/dftensor.h"
 #include "psi4/libmints/matrix.h"
 #include "psi4/libmints/molecule.h"

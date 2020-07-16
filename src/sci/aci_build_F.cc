@@ -29,6 +29,7 @@
 
 #include <cmath>
 
+#include "psi4/libpsi4util/PsiOutStream.h"
 #include "psi4/libmints/matrix.h"
 
 #include "base_classes/forte_options.h"

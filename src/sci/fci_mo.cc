@@ -34,14 +34,16 @@
 #include <sstream>
 #include <string>
 
-#include "psi4/libmints/basisset.h"
-#include "psi4/libmints/vector.h"
-#include "psi4/libmints/dipole.h"
-#include "psi4/libmints/oeprop.h"
-#include "psi4/libmints/integral.h"
-#include "psi4/libmints/petitelist.h"
-#include "psi4/libmints/molecule.h"
-#include "psi4/libpsio/psio.hpp"
+#include "psi4/libpsi4util/PsiOutStream.h"
+#include "psi4/libpsi4util/process.h"
+//#include "psi4/libmints/basisset.h"
+//#include "psi4/libmints/vector.h"
+//#include "psi4/libmints/dipole.h"
+//#include "psi4/libmints/oeprop.h"
+//#include "psi4/libmints/integral.h"
+//#include "psi4/libmints/petitelist.h"
+//#include "psi4/libmints/molecule.h"
+//#include "psi4/libpsio/psio.hpp"
 
 #include "sparse_ci/determinant_hashvector.h"
 #include "fci/fci_vector.h"
@@ -192,7 +194,7 @@ void FCI_MO::read_options() {
 
     // number of Irrep
     nirrep_ = mo_space_info_->nirrep();
-    irrep_symbols_ = psi::Process::environment.molecule()->irrep_labels();
+    irrep_symbols_ = mo_space_info_->irrep_labels();
 
     // obtain MOs
     nmo_ = mo_space_info_->size("ALL");

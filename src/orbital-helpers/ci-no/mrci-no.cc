@@ -31,15 +31,12 @@
 
 #include "psi4/libpsi4util/PsiOutStream.h"
 
-//#include "psi4/psi4-dec.h"
 #include "psi4/libmints/vector.h"
-//#include "psi4/libmints/pointgrp.h"
 #include "helpers/timer.h"
 #include "ci_rdm/ci_rdms.h"
 #include "base_classes/mo_space_info.h"
 #include "integrals/active_space_integrals.h"
 
-//#include "base_classes/forte_options.h"
 #include "sparse_ci/sparse_ci_solver.h"
 #include "sparse_ci/determinant.h"
 #include "mrci-no.h"

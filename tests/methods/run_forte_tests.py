@@ -199,7 +199,7 @@ def main():
 
     import datetime
     now = datetime.datetime.now()
-    file_name = f'test_results_{now.strftime("%Y-%m-%d-%H%M")}.txt'
+    file_name = 'test_results_%s.txt' % now.strftime("%Y-%m-%d-%H%M")
 
     with open(file_name, 'w') as outfile:
         outfile.write(summary_str)
