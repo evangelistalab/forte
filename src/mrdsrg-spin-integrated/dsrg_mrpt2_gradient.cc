@@ -539,6 +539,13 @@ void DSRG_MRPT2::change_w(BlockedTensor& temp1,
 
 
 void DSRG_MRPT2::set_w() {
+    auto cc = coupling_coefficients_;
+    auto ci = ci_vectors_[0];
+    auto cc1a_ = cc.cc1a();
+    auto cc1b_ = cc.cc1b();
+    auto cc2aa_ = cc.cc2aa();
+    auto cc2bb_ = cc.cc2bb();
+    auto cc2ab_ = cc.cc2ab();
     //NOTICE: w for {virtual-general}
     BlockedTensor temp1 = BTF_->build(CoreTensor, "temporal tensor 1", {"pphh", "pPhH"});
     BlockedTensor temp2 = BTF_->build(CoreTensor, "temporal tensor 2", {"hhgvp", "hHgvP"});
@@ -627,6 +634,22 @@ void DSRG_MRPT2::set_w() {
     W_["im"] += Z["e1,f"] * V["f,i,e1,m"];
     W_["im"] += Z["E1,F"] * V["i,F,m,E1"];
 
+    // CI contribution
+    W_.block("cc")("nm") += (1.0 - scale_ci) * H.block("cc")("nm");
+    W_.block("cc")("nm") += (1.0 - scale_ci) * V_N_Alpha.block("cc")("mn");
+    W_.block("cc")("nm") += (1.0 - scale_ci) * V_N_Beta.block("cc")("mn");
+    W_.block("cc")("nm") += V.block("acac")("umvn") * x_ci("I") * ci("J") * cc1a_("IJuv");
+    W_.block("cc")("nm") += V.block("cAcA")("mUnV") * x_ci("I") * ci("J") * cc1b_("IJUV");
+
+    W_.block("ac")("xm") += (1.0 - scale_ci) * H.block("ac")("xm");
+    W_.block("ac")("xm") += (1.0 - scale_ci) * V_N_Alpha.block("ca")("mx");
+    W_.block("ac")("xm") += (1.0 - scale_ci) * V_N_Beta.block("ca")("mx");
+    W_.block("ac")("xm") += V.block("acaa")("umvx") * x_ci("I") * ci("J") * cc1a_("IJuv");
+    W_.block("ac")("xm") += V.block("cAaA")("mUxV") * x_ci("I") * ci("J") * cc1b_("IJUV");
+
+
+
+
     W_["mu"] = W_["um"];
 
     //NOTICE: w for {active-active}
@@ -703,40 +726,27 @@ void DSRG_MRPT2::set_w() {
 
     W_["zw"] += Z["wv"] * F["vz"];
 
-    auto temp_aa = ambit::Tensor::build(ambit::CoreTensor, "temp_aa", {na_, na_});
-    auto cc = coupling_coefficients_;
-    auto ci = ci_vectors_[0];
-    auto cc1a_ = cc.cc1a();
-    auto cc1b_ = cc.cc1b();
-    auto cc2aa_ = cc.cc2aa();
-    auto cc2bb_ = cc.cc2bb();
-    auto cc2ab_ = cc.cc2ab();
     
-    temp_aa("zw") += x_ci("I") * H.block("aa")("vz") * cc1a_("IJwv") * ci("J");
-    temp_aa("zw") += x_ci("I") * H.block("aa")("zu") * cc1a_("IJuw") * ci("J");
+    W_.block("aa")("zw") += 0.5 * x_ci("I") * H.block("aa")("vz") * cc1a_("IJwv") * ci("J");
+    W_.block("aa")("zw") += 0.5 * x_ci("I") * H.block("aa")("zu") * cc1a_("IJuw") * ci("J");
+
+    W_.block("aa")("zw") += 0.5 * V_N_Alpha.block("aa")("uz") * cc1a_("IJuw") * x_ci("I") * ci("J"); 
+    W_.block("aa")("zw") += 0.5 * V_N_Beta.block("aa")("uz") * cc1a_("IJuw") * x_ci("I") * ci("J"); 
+    W_.block("aa")("zw") += 0.5 * V_N_Alpha.block("aa")("zv") * cc1a_("IJwv") * x_ci("I") * ci("J"); 
+    W_.block("aa")("zw") += 0.5 * V_N_Beta.block("aa")("zv") * cc1a_("IJwv") * x_ci("I") * ci("J"); 
 
 
-    temp_aa("zw") += 0.25 * x_ci("I") * V.block("aaaa")("zvxy") * cc2aa_("IJwvxy") * ci("J");
-    temp_aa("zw") += 0.50 * x_ci("I") * V.block("aAaA")("zVxY") * cc2ab_("IJwVxY") * ci("J");
+    W_.block("aa")("zw") += 0.125 * x_ci("I") * V.block("aaaa")("zvxy") * cc2aa_("IJwvxy") * ci("J");
+    W_.block("aa")("zw") += 0.250 * x_ci("I") * V.block("aAaA")("zVxY") * cc2ab_("IJwVxY") * ci("J");
 
-    temp_aa("zw") += 0.25 * x_ci("I") * V.block("aaaa")("uzxy") * cc2aa_("IJuwxy") * ci("J");
-    temp_aa("zw") += 0.50 * x_ci("I") * V.block("aAaA")("zUxY") * cc2ab_("IJwUxY") * ci("J");
+    W_.block("aa")("zw") += 0.125 * x_ci("I") * V.block("aaaa")("uzxy") * cc2aa_("IJuwxy") * ci("J");
+    W_.block("aa")("zw") += 0.250 * x_ci("I") * V.block("aAaA")("zUxY") * cc2ab_("IJwUxY") * ci("J");
 
-    temp_aa("zw") += 0.25 * x_ci("I") * V.block("aaaa")("uvzy") * cc2aa_("IJuvwy") * ci("J");
-    temp_aa("zw") += 0.50 * x_ci("I") * V.block("aAaA")("uVzY") * cc2ab_("IJuVwY") * ci("J");
+    W_.block("aa")("zw") += 0.125 * x_ci("I") * V.block("aaaa")("uvzy") * cc2aa_("IJuvwy") * ci("J");
+    W_.block("aa")("zw") += 0.250 * x_ci("I") * V.block("aAaA")("uVzY") * cc2ab_("IJuVwY") * ci("J");
 
-    temp_aa("zw") += 0.25 * x_ci("I") * V.block("aaaa")("uvxz") * cc2aa_("IJuvxw") * ci("J");
-    temp_aa("zw") += 0.50 * x_ci("I") * V.block("aAaA")("uVzX") * cc2ab_("IJuVwX") * ci("J");
-
-    // (W_.block("aa")).iterate([&](const std::vector<size_t>& i, double& value) {
-    //     value += temp_aa.data()[i[0] * na_ + i[1]];
-    // });
-
-    (temp_aa).iterate([&](const std::vector<size_t>& i, double& value) {
-        W_.block("aa").data()[i[0] * na_ + i[1]] += value;
-    });
-
-
+    W_.block("aa")("zw") += 0.125 * x_ci("I") * V.block("aaaa")("uvxz") * cc2aa_("IJuvxw") * ci("J");
+    W_.block("aa")("zw") += 0.250 * x_ci("I") * V.block("aAaA")("uVzX") * cc2ab_("IJuVwX") * ci("J");
 
 
     // CASSCF reference
