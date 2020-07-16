@@ -27,6 +27,7 @@
  * @END LICENSE
  */
 
+#include <algorithm>
 #include <numeric>
 
 #include "psi4/libmints/molecule.h"
