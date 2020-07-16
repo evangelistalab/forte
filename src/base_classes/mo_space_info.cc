@@ -232,17 +232,14 @@ void MOSpaceInfo::compute_space_info() {
     std::iota(vec.begin(), vec.end(), 0);
 
     // Remove the frozen core/virtuals
-    std::vector<int> removed_list;
     for (MOInfo& mo_info : mo_spaces_["FROZEN_DOCC"].second) {
         size_t removed_mo = std::get<0>(mo_info);
         vec.erase(std::remove(vec.begin(), vec.end(), removed_mo), vec.end());
-        removed_list.push_back(std::get<0>(mo_info));
     }
     for (MOInfo& mo_info : mo_spaces_["FROZEN_UOCC"].second) {
         size_t removed_mo = std::get<0>(mo_info);
         vec.erase(std::remove(vec.begin(), vec.end(), removed_mo), vec.end());
     }
-    //    outfile->Printf("\n Removed orbitals %d", std::get<0>(mo_info));
 
     mo_to_cmo_.assign(nmopi_.sum(), 1000000000);
     for (size_t n = 0; n < vec.size(); ++n) {

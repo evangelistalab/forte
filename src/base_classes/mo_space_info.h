@@ -30,16 +30,6 @@
 #ifndef _mo_space_info_h_
 #define _mo_space_info_h_
 
-//#include <algorithm>
-//#include <chrono>
-//#include <map>
-//
-//#include <string>
-//#include <vector>
-
-//#include "ambit/blocked_tensor.h"
-//#include "psi4/libmints/matrix.h"
-//#include "psi4/libmints/vector.h"
 #include "psi4/libmints/dimension.h"
 
 #include "helpers/symmetry.h"
