@@ -48,7 +48,8 @@ using namespace psi;
 
 namespace forte {
 
-DeterminantSubstitutionLists::DeterminantSubstitutionLists(std::shared_ptr<ActiveSpaceIntegrals> fci_ints)
+DeterminantSubstitutionLists::DeterminantSubstitutionLists(
+    std::shared_ptr<ActiveSpaceIntegrals> fci_ints)
     : ncmo_(fci_ints->nmo()), mo_symmetry_(fci_ints->active_mo_symmetry()), fci_ints_(fci_ints) {}
 
 void DeterminantSubstitutionLists::set_quiet_mode(bool mode) { quiet_ = mode; }
@@ -66,7 +67,7 @@ void DeterminantSubstitutionLists::build_strings(const DeterminantHashVec& wfn) 
         for (size_t I = 0, max_I = wfn_map.size(); I < max_I; ++I) {
             // Grab mutable copy of determinant
             Determinant detI(wfn_map[I]);
-            detI.zero_spin(DetSpinType::Alpha);
+            detI.zero_alfa();
 
             det_hash<size_t>::iterator it = beta_str_hash.find(detI);
             size_t b_add;
@@ -88,7 +89,7 @@ void DeterminantSubstitutionLists::build_strings(const DeterminantHashVec& wfn) 
         for (size_t I = 0, max_I = wfn_map.size(); I < max_I; ++I) {
             // Grab mutable copy of determinant
             Determinant detI(wfn_map[I]);
-            detI.zero_spin(DetSpinType::Beta);
+            detI.zero_beta();
 
             det_hash<size_t>::iterator it = alfa_str_hash.find(detI);
             size_t a_add;
@@ -109,7 +110,7 @@ void DeterminantSubstitutionLists::build_strings(const DeterminantHashVec& wfn) 
     for (size_t I = 0, max_I = wfn_map.size(); I < max_I; ++I) {
         // Grab mutable copy of determinant
         Determinant detI(wfn_map[I]);
-        detI.zero_spin(DetSpinType::Beta);
+        detI.zero_beta();
         const std::vector<int>& aocc = detI.get_alfa_occ(ncmo_);
         for (int i = 0, nalfa = aocc.size(); i < nalfa; ++i) {
             int ii = aocc[i];
@@ -470,7 +471,7 @@ void DeterminantSubstitutionLists::three_s_lists(const DeterminantHashVec& wfn) 
         for (size_t I = 0, max_I = wfn_map.size(); I < max_I; ++I) {
             // Grab mutable copy of determinant
             Determinant detI(wfn_map[I]);
-            detI.zero_spin(DetSpinType::Alpha);
+            detI.zero_alfa();
             std::vector<int> bocc = detI.get_beta_occ(ncmo_);
             for (int i = 0, nbeta = bocc.size(); i < nbeta; ++i) {
                 int ii = bocc[i];

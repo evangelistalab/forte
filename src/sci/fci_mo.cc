@@ -34,6 +34,8 @@
 #include <sstream>
 #include <string>
 
+#include "boost/algorithm/string/predicate.hpp"
+
 #include "psi4/libpsi4util/PsiOutStream.h"
 #include "psi4/libpsi4util/process.h"
 #include "psi4/libmints/molecule.h"
@@ -41,18 +43,19 @@
 #include "psi4/libmints/basisset.h"
 #include "psi4/libpsio/psio.hpp"
 
-#include "sparse_ci/determinant_hashvector.h"
-#include "fci/fci_vector.h"
-#include "fci_mo.h"
 #include "base_classes/forte_options.h"
 #include "base_classes/scf_info.h"
-#include "boost/algorithm/string/predicate.hpp"
+#include "helpers/printing.h"
+#include "helpers/timer.h"
+
+#include "sparse_ci/determinant_hashvector.h"
 #include "sparse_ci/determinant_substitution_lists.h"
 #include "sparse_ci/sigma_vector.h"
 #include "orbital-helpers/semi_canonicalize.h"
 #include "orbital-helpers/iao_builder.h"
-#include "helpers/printing.h"
-#include "helpers/timer.h"
+#include "fci/fci_vector.h"
+
+#include "fci_mo.h"
 
 using namespace psi;
 using namespace ambit;
@@ -892,7 +895,6 @@ void FCI_MO::Diagonalize_H(const vecdet& p_space, const int& multi, const int& n
     if (!quiet_) {
         outfile->Printf("\n  %-35s ...", "Diagonalizing Hamiltonian");
     }
-    size_t det_size = p_space.size();
     eigen.clear();
 
     // DL solver

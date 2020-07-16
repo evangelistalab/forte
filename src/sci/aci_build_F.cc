@@ -965,17 +965,13 @@ det_hash<double> AdaptiveCI::get_bin_F_space(int bin, int nbin, double E0, Share
                                              DeterminantHashVec& P_space) {
 
     det_hash<double> bin_f_space;
-    // det_hash<double> bin_E_space;
     local_timer build;
 
     const size_t n_dets = P_space.size();
     const det_hashvec& dets = P_space.wfn_hash();
-    int nmo = as_ints_->nmo();
     std::vector<int> act_mo = mo_space_info_->dimension("ACTIVE").blocks();
 
     std::vector<det_hash<double>> A_b_t;
-    // std::vector<det_hash<double>> E_b_t;
-    double value = 0.0;
 
 #pragma omp parallel reduction(+ : value)
     {
@@ -1019,7 +1015,7 @@ det_hash<double> AdaptiveCI::get_bin_F_space(int bin, int nbin, double E0, Share
 
             Determinant new_det(det);
             // Generate alpha excitations
-            for (int h = 0; h < nirrep_; ++h) {
+            for (size_t h = 0; h < nirrep_; ++h) {
                 // Precompute indices
                 const auto& noalpha_h = noalpha[h];
                 const auto& nvalpha_h = nvalpha[h];
@@ -1304,7 +1300,7 @@ AdaptiveCI::get_bin_F_space_vecsort(int bin, int nbin, SharedMatrix evecs,
             Determinant new_det(det);
 
             // Generate alpha excitations
-            for (int h = 0; h < nirrep_; ++h) {
+            for (size_t h = 0; h < nirrep_; ++h) {
 
                 // Precompute indices
                 const auto& noalpha_h = noalpha[h];
