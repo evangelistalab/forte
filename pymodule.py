@@ -443,7 +443,8 @@ def prepare_forte_objects_from_psi4_wfn(options, wfn):
 
     # Create the MOSpaceInfo object
     nmopi = wfn.nmopi()
-    mo_space_info = forte.make_mo_space_info(nmopi, options)
+    point_group = wfn.molecule().point_group().symbol()
+    mo_space_info = forte.make_mo_space_info(nmopi,point_group, options)
 
     # Call methods that project the orbitals (AVAS, embedding)
     mo_space_info = orbital_projection(wfn, options, mo_space_info)
@@ -514,6 +515,7 @@ def prepare_forte_objects_from_fcidump(options):
         nirrep = irrep_size[fcidump['pntgrp'].lower()]
         nmopi_list = [fcidump['orbsym'].count(x) for x in range(nirrep)]
     else:
+        fcidump['pntgrp'] = 'C1' # set the point group to C1
         fcidump['isym'] = 0 # shift by -1 
         nirrep = 1
         nmopi_list = [nmo]
@@ -521,7 +523,7 @@ def prepare_forte_objects_from_fcidump(options):
     nmopi = psi4.core.Dimension(nmopi_list)
 
     # Create the MOSpaceInfo object
-    mo_space_info = forte.make_mo_space_info(nmopi, options)
+    mo_space_info = forte.make_mo_space_info(nmopi, fcidump['pntgrp'], options)
 
     # Call methods that project the orbitals (AVAS, embedding)
     # skipped due to lack of functionality

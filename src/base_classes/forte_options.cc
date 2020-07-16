@@ -407,8 +407,7 @@ void ForteOptions::push_options_to_psi4(psi::Options& options) {
     }
 }
 
-void ForteOptions::get_options_from_psi4(psi::Options& options1) {
-    psi::Options& options = psi::Process::environment.options;
+void ForteOptions::get_options_from_psi4(psi::Options& options) {
     for (auto item : dict_) {
         auto label = py::cast<std::string>(item.first);
         // only change the values if an option was set

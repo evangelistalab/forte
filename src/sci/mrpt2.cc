@@ -29,6 +29,9 @@
 
 #include <cmath>
 
+#include "psi4/libmints/vector.h"
+#include "psi4/libmints/matrix.h"
+
 #include "base_classes/forte_options.h"
 #include "mrpt2.h"
 #include "helpers/timer.h"
@@ -48,8 +51,8 @@ namespace forte {
 MRPT2::MRPT2(std::shared_ptr<ForteOptions> options, std::shared_ptr<ActiveSpaceIntegrals> as_ints,
              std::shared_ptr<MOSpaceInfo> mo_space_info, DeterminantHashVec& reference,
              psi::SharedMatrix evecs, psi::SharedVector evals, int nroot)
-    : as_ints_(as_ints), options_(options), reference_(reference), nroot_(nroot),
-      mo_space_info_(mo_space_info), evecs_(evecs), evals_(evals) {
+    : mo_space_info_(mo_space_info), as_ints_(as_ints), reference_(reference), options_(options),
+      nroot_(nroot), evecs_(evecs), evals_(evals) {
     outfile->Printf("\n  ==> Full EN-MRPT2 correction  <==");
     //    print_method_banner(
     //        {"Deterministic MR-PT2", "Jeff Schriber"});

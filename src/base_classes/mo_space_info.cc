@@ -27,7 +27,7 @@
  * @END LICENSE
  */
 
-#include <iomanip>
+#include <numeric>
 
 #include "psi4/libmints/molecule.h"
 #include "psi4/libmints/wavefunction.h"
@@ -42,7 +42,8 @@ using namespace psi;
 
 namespace forte {
 
-MOSpaceInfo::MOSpaceInfo(const Dimension& nmopi) : nirrep_(nmopi.n()), nmopi_(nmopi) {
+MOSpaceInfo::MOSpaceInfo(const psi::Dimension& nmopi, const std::string& point_group)
+    : symmetry_(point_group), nirrep_(nmopi.n()), nmopi_(nmopi) {
     // Add the elementary spaces to the list of composite spaces
     for (const std::string& es : elementary_spaces_) {
         composite_spaces_[es] = {es};
@@ -329,18 +330,20 @@ MOSpaceInfo::read_mo_space_from_map(const std::string& space,
 }
 
 std::shared_ptr<MOSpaceInfo> make_mo_space_info(const psi::Dimension& nmopi,
+                                                const std::string& point_group,
                                                 std::shared_ptr<ForteOptions> options) {
-    auto mo_space_info = std::make_shared<MOSpaceInfo>(nmopi);
+    auto mo_space_info = std::make_shared<MOSpaceInfo>(nmopi, point_group);
     mo_space_info->read_options(options);
     mo_space_info->compute_space_info();
     return mo_space_info;
 }
 
 std::shared_ptr<MOSpaceInfo>
-make_mo_space_info_from_map(const psi::Dimension& nmopi,
+make_mo_space_info_from_map(const psi::Dimension& nmopi, const std::string& point_group,
                             std::map<std::string, std::vector<size_t>>& mo_space_map,
                             std::vector<size_t> reorder) {
-    auto mo_space_info = std::make_shared<MOSpaceInfo>(nmopi);
+
+    auto mo_space_info = std::make_shared<MOSpaceInfo>(nmopi, point_group);
     mo_space_info->set_reorder(reorder);
     mo_space_info->read_from_map(mo_space_map);
     mo_space_info->compute_space_info();

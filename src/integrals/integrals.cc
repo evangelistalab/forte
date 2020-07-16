@@ -32,6 +32,7 @@
 
 #include "psi4/libpsi4util/PsiOutStream.h"
 #include "psi4/libmints/wavefunction.h"
+#include "psi4/libmints/matrix.h"
 
 #include "helpers/blockedtensorfactory.h"
 #include "base_classes/forte_options.h"
@@ -224,10 +225,6 @@ void ForteIntegrals::set_tei_all(const std::vector<double>& tei_aa,
 IntegralSpinRestriction ForteIntegrals::spin_restriction() const { return spin_restriction_; }
 
 IntegralType ForteIntegrals::integral_type() const { return integral_type_; }
-
-// std::shared_ptr<psi::Matrix> ForteIntegrals::OneBody_symm() const { return OneBody_symm_; }
-
-// std::shared_ptr<psi::Matrix> ForteIntegrals::OneBodyAO() const { return OneIntsAO_; }
 
 int ForteIntegrals::ga_handle() { return 0; }
 

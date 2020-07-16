@@ -29,6 +29,8 @@
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 
+#include "psi4/libmints/matrix.h"
+
 #include "base_classes/orbital_transform.h"
 #include "base_classes/forte_options.h"
 #include "base_classes/mo_space_info.h"
