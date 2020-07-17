@@ -110,7 +110,7 @@ class MOSpaceInfo {
     const std::string& irrep_label(size_t h) const { return symmetry_.irrep_label(h); }
     /// @return The label of the molecular point groupo (e.g. "C2V")
     std::string point_group_label() const { return symmetry_.point_group_label(); }
-    /// @return The names of the elmentary orbital spaces
+    /// @return The names of the elementary orbital spaces
     std::vector<std::string> space_names() const { return elementary_spaces_; }
     /// @return The names of the composite orbital spaces
     std::map<std::string, std::vector<std::string>> composite_space_names() const {
