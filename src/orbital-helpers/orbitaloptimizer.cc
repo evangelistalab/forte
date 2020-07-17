@@ -28,7 +28,6 @@
 
 #include "ambit/blocked_tensor.h"
 
-
 #include "psi4/lib3index/cholesky.h"
 #include "psi4/libfock/jk.h"
 #include "psi4/libmints/matrix.h"
@@ -54,9 +53,10 @@ OrbitalOptimizer::OrbitalOptimizer() {}
 
 OrbitalOptimizer::OrbitalOptimizer(ambit::Tensor Gamma1, ambit::Tensor Gamma2,
                                    ambit::Tensor two_body_ab, std::shared_ptr<ForteOptions> options,
-                                   std::shared_ptr<MOSpaceInfo> mo_space_info)
+                                   std::shared_ptr<MOSpaceInfo> mo_space_info,
+                                   std::shared_ptr<ForteIntegrals> ints)
     : gamma1_(Gamma1), gamma2_(Gamma2), integral_(two_body_ab), mo_space_info_(mo_space_info),
-      options_(options) {}
+      options_(options), nsopi_(ints->nsopi()) {}
 void OrbitalOptimizer::update() {
     startup();
     fill_shared_density_matrices();
@@ -120,7 +120,6 @@ void OrbitalOptimizer::startup() {
     nvir_ = restricted_uocc_abs_.size();
     casscf_debug_print_ = options_->get_bool("CASSCF_DEBUG_PRINTING");
     nirrep_ = mo_space_info_->nirrep();
-    nsopi_ = scf_info_->nsopi();
 
     if (options_->get_str("CASSCF_CI_SOLVER") == "FCI") {
         cas_ = true;
@@ -147,16 +146,15 @@ void OrbitalOptimizer::startup() {
     cas_ = true;
 }
 void OrbitalOptimizer::orbital_gradient() {
-    // std::vector<size_t> nmo_array =
-    // mo_space_info_->corr_absolute_mo("CORRELATED");
     /// From Y_{pt} = F_{pu}^{core} * Gamma_{tu}
     ambit::Tensor Y = ambit::Tensor::build(ambit::CoreTensor, "Y", {nmo_, na_});
     ambit::Tensor F_pu = ambit::Tensor::build(ambit::CoreTensor, "F_pu", {nmo_, na_});
-    if (nrdocc_ > 0 or nfrozen_ > 0) {
-        F_pu.iterate([&](const std::vector<size_t>& i, double& value) {
-            value = F_core_->get(nmo_abs_[i[0]], active_abs_[i[1]]);
-        });
-    }
+
+    // F_core (part does not depend on 1RDM) is non-zero even if there is no frozen/restricted_docc
+    F_pu.iterate([&](const std::vector<size_t>& i, double& value) {
+        value = F_core_->get(nmo_abs_[i[0]], active_abs_[i[1]]);
+    });
+
     Y("p,t") = F_pu("p,u") * gamma1_("t, u");
 
     psi::SharedMatrix Y_m(new psi::Matrix("Y_m", nmo_, na_));
@@ -565,37 +563,37 @@ void OrbitalOptimizer::fill_shared_density_matrices() {
         gamma2M_->print();
     }
 }
-std::shared_ptr<psi::Matrix> OrbitalOptimizer::make_c_sym_aware(psi::SharedMatrix aotoso) {
-    /// Step 1: Obtain guess MO coefficients C_{mup}
-    /// Since I want to use these in a symmetry aware basis,
-    /// I will move the C matrix into a Pfitzer ordering
+// std::shared_ptr<psi::Matrix> OrbitalOptimizer::make_c_sym_aware(psi::SharedMatrix aotoso) {
+//    /// Step 1: Obtain guess MO coefficients C_{mup}
+//    /// Since I want to use these in a symmetry aware basis,
+//    /// I will move the C matrix into a Pfitzer ordering
 
-    psi::Dimension nmopi = mo_space_info_->dimension("ALL");
+//    psi::Dimension nmopi = mo_space_info_->dimension("ALL");
 
-    /// I want a C matrix in the C1 basis but symmetry aware
-    size_t nso = scf_info_->nso();
-    nirrep_ = mo_space_info_->nirrep();
-    psi::SharedMatrix Call(new psi::Matrix(nso, nmopi.sum()));
+//    /// I want a C matrix in the C1 basis but symmetry aware
+//    size_t nso = nsopi_.sum();
+//    nirrep_ = mo_space_info_->nirrep();
+//    psi::SharedMatrix Call(new psi::Matrix(nso, nmopi.sum()));
 
-    // Transform from the SO to the AO basis for the C matrix.
-    // just transfroms the C_{mu_ao i} -> C_{mu_so i}
-    for (size_t h = 0, index = 0; h < nirrep_; ++h) {
-        for (int i = 0; i < nmopi[h]; ++i) {
-            size_t nao = nso;
-            size_t nso = nsopi_[h];
+//    // Transform from the SO to the AO basis for the C matrix.
+//    // just transfroms the C_{mu_ao i} -> C_{mu_so i}
+//    for (size_t h = 0, index = 0; h < nirrep_; ++h) {
+//        for (int i = 0; i < nmopi[h]; ++i) {
+//            size_t nao = nso;
+//            size_t nso = nsopi_[h];
 
-            if (!nso)
-                continue;
+//            if (!nso)
+//                continue;
 
-            C_DGEMV('N', nao, nso, 1.0, aotoso->pointer(h)[0], nso, &Ca_sym_->pointer(h)[0][i],
-                    nmopi[h], 0.0, &Call->pointer()[0][index], nmopi.sum());
+//            C_DGEMV('N', nao, nso, 1.0, aotoso->pointer(h)[0], nso, &Ca_sym_->pointer(h)[0][i],
+//                    nmopi[h], 0.0, &Call->pointer()[0][index], nmopi.sum());
 
-            index += 1;
-        }
-    }
+//            index += 1;
+//        }
+//    }
 
-    return Call;
-}
+//    return Call;
+//}
 psi::SharedMatrix OrbitalOptimizer::matrix_exp(const psi::SharedMatrix& unitary) {
     psi::SharedMatrix U(unitary->clone());
     if (false) {
@@ -635,8 +633,9 @@ void OrbitalOptimizer::zero_redunant(psi::SharedMatrix& matrix) {
 CASSCFOrbitalOptimizer::CASSCFOrbitalOptimizer(ambit::Tensor Gamma1, ambit::Tensor Gamma2,
                                                ambit::Tensor two_body_ab,
                                                std::shared_ptr<ForteOptions> options,
-                                               std::shared_ptr<MOSpaceInfo> mo_space_info)
-    : OrbitalOptimizer(Gamma1, Gamma2, two_body_ab, options, mo_space_info) {}
+                                               std::shared_ptr<MOSpaceInfo> mo_space_info,
+                                               std::shared_ptr<ForteIntegrals> ints)
+    : OrbitalOptimizer(Gamma1, Gamma2, two_body_ab, options, mo_space_info, ints) {}
 CASSCFOrbitalOptimizer::~CASSCFOrbitalOptimizer() {}
 
 void CASSCFOrbitalOptimizer::form_fock_intermediates() {
@@ -791,11 +790,13 @@ void CASSCFOrbitalOptimizer::form_fock_intermediates() {
         F_act_->print();
     }
 }
+
 PostCASSCFOrbitalOptimizer::PostCASSCFOrbitalOptimizer(ambit::Tensor Gamma1, ambit::Tensor Gamma2,
                                                        ambit::Tensor two_body_ab,
                                                        std::shared_ptr<ForteOptions> options,
-                                                       std::shared_ptr<MOSpaceInfo> mo_space_info)
-    : OrbitalOptimizer(Gamma1, Gamma2, two_body_ab, options, mo_space_info) {}
+                                                       std::shared_ptr<MOSpaceInfo> mo_space_info,
+                                                       std::shared_ptr<ForteIntegrals> ints)
+    : OrbitalOptimizer(Gamma1, Gamma2, two_body_ab, options, mo_space_info, ints) {}
 PostCASSCFOrbitalOptimizer::~PostCASSCFOrbitalOptimizer() {}
 void PostCASSCFOrbitalOptimizer::form_fock_intermediates() {
     psi::SharedMatrix F_core_c1(new psi::Matrix("F_core_no_sym", nmo_, nmo_));

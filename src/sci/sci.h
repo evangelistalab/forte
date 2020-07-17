@@ -38,6 +38,11 @@
 #include "sparse_ci/determinant_substitution_lists.h"
 #include "sparse_ci/sigma_vector.h"
 
+namespace psi {
+class Vector;
+class Matrix;
+} // namespace psi
+
 namespace forte {
 
 class ActiveSpaceIntegrals;
@@ -51,6 +56,7 @@ class SparseCISolver;
 class SelectedCIMethod {
   public:
     SelectedCIMethod(StateInfo state, size_t nroot, std::shared_ptr<SCFInfo> scf_info,
+                     std::shared_ptr<ForteOptions> options,
                      std::shared_ptr<MOSpaceInfo> mo_space_info,
                      std::shared_ptr<ActiveSpaceIntegrals> as_ints);
 
@@ -91,15 +97,16 @@ class SelectedCIMethod {
         const std::vector<std::vector<std::pair<Determinant, double>>>& old_roots) = 0;
     /// Getters
     virtual DeterminantHashVec get_PQ_space() = 0;
-    virtual psi::SharedMatrix get_PQ_evecs() = 0;
-    virtual psi::SharedVector get_PQ_evals() = 0;
+    virtual std::shared_ptr<psi::Matrix> get_PQ_evecs() = 0;
+    virtual std::shared_ptr<psi::Vector> get_PQ_evals() = 0;
     //    virtual std::shared_ptr<WFNOperator> get_op() = 0;
     virtual size_t get_ref_root() = 0;
     virtual std::vector<double> get_multistate_pt2_energy_correction() = 0;
     virtual size_t get_cycle();
 
-    void print_wfn(DeterminantHashVec& space, psi::SharedMatrix evecs, int nroot,
-                   size_t max_dets_to_print = 10);
+    void base_startup();
+    void print_wfn(DeterminantHashVec& space, std::shared_ptr<psi::Matrix> evecs, int nroot,
+                   size_t max_dets_to_print = 20);
 
     SigmaVectorType sigma_vector_type() const;
     /// Return the maximum amount of memory allowed
@@ -111,6 +118,9 @@ class SelectedCIMethod {
 
     /// The number of roots (default = 1)
     size_t nroot_ = 1;
+
+    /// The nuclear repulsion energy
+    double nuclear_repulsion_energy_;
 
     /// The sigma vector type
     SigmaVectorType sigma_vector_type_ = SigmaVectorType::Dynamic;
@@ -124,8 +134,11 @@ class SelectedCIMethod {
     /// doubly occupied orbitals specified by the core_mo_ vector.
     std::shared_ptr<ActiveSpaceIntegrals> as_ints_;
 
-    /// Some HF info
+    /// HF info
     std::shared_ptr<SCFInfo> scf_info_;
+
+    /// Options
+    std::shared_ptr<ForteOptions> options_;
 
     /// The sparse CI solver (allocated at creation by the base class)
     std::shared_ptr<SparseCISolver> sparse_solver_;
@@ -133,14 +146,73 @@ class SelectedCIMethod {
     /// The current iteration
     size_t cycle_;
 
+    /// TODO needs documentation
+    size_t pre_iter_;
+
     /// Maximum number of SCI iterations
     size_t max_cycle_;
 
     /// Maximum memory size
     size_t max_memory_ = 0;
 
+    /// Control amount of printing
+    bool quiet_mode_;
+
+    /// Add missing degenerate determinants excluded from the aimed selection?
+    bool project_out_spin_contaminants_;
+
+    /// The wave function symmetry
+    int wavefunction_symmetry_;
+    /// The symmetry of each orbital in Pitzer ordering
+    std::vector<int> mo_symmetry_;
+    /// The number of correlated molecular orbitals
+    int ncmo_;
+    /// The multiplicity of the reference
+    int multiplicity_;
+    /// M_s of the reference
+    int twice_ms_;
+    /// The number of active electrons
+    int nactel_;
+    /// The number of correlated alpha electrons
+    int nalpha_;
+    /// The number of correlated beta electrons
+    int nbeta_;
+    /// The number of frozen core orbitals
+    int nfrzc_;
+    /// The number of irreps
+    size_t nirrep_;
+    psi::Dimension frzcpi_;
+    /// The number of correlated molecular orbitals per irrep
+    psi::Dimension ncmopi_;
+    /// The number of restricted docc orbitals per irrep
+    psi::Dimension rdoccpi_;
+    /// The number of active orbitals per irrep
+    psi::Dimension nactpi_;
+    /// The number of restricted docc
+    size_t rdocc_;
+    /// The number of restricted virtual
+    size_t rvir_;
+    /// The number of frozen virtual
+    size_t fvir_;
+
     /// The number of active orbitals
     size_t nact_;
+
+    /// Enforce spin completeness of the P and P + Q spaces?
+    bool spin_complete_;
+    /// Enforce spin completeness of the P space?
+    bool spin_complete_P_;
+
+    // The RDMS
+    ambit::Tensor ordm_a_;
+    ambit::Tensor ordm_b_;
+    ambit::Tensor trdm_aa_;
+    ambit::Tensor trdm_ab_;
+    ambit::Tensor trdm_bb_;
+    ambit::Tensor trdm_aaa_;
+    ambit::Tensor trdm_aab_;
+    ambit::Tensor trdm_abb_;
+    ambit::Tensor trdm_bbb_;
 };
 } // namespace forte
 

@@ -75,6 +75,10 @@ class ActiveSpaceSolver {
 
     // ==> Class Interface <==
 
+    /// Set the print level
+    /// @param level the print level (0 = no printing, 1 default)
+    void set_print(int level);
+
     /// Compute the energy and return it // TODO: document (Francesco)
     const std::map<StateInfo, std::vector<double>>& compute_energy();
 
@@ -148,6 +152,9 @@ class ActiveSpaceSolver {
     RDMs compute_avg_rdms(const std::map<StateInfo, std::vector<double>>& state_weights_map,
                           int max_rdm_level);
 
+    /// A variable to control printing information
+    int print_ = 1;
+
     /// Pairs of state info and the contracted CI eigen vectors
     std::map<StateInfo, std::shared_ptr<psi::Matrix>>
         state_contracted_evecs_map_; // TODO move outside?
@@ -179,12 +186,12 @@ to_state_nroots_map(const std::map<StateInfo, std::vector<double>>& state_weight
 /**
  * @brief Make a list of states and weights.
  * @param options user-provided options
- * @param wfn a psi wave function
+ * @param mo_space_info orbital space information
  * @return a unique pointer to an ActiveSpaceSolver object
  */
 std::map<StateInfo, std::vector<double>>
 make_state_weights_map(std::shared_ptr<ForteOptions> options,
-                       std::shared_ptr<psi::Wavefunction> wfn);
+                       std::shared_ptr<forte::MOSpaceInfo> mo_space_info);
 
 /**
  * @brief Compute the average energy for a set of states

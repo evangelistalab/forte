@@ -56,11 +56,15 @@ using namespace psi;
 
 namespace forte {
 
-DFIntegrals::DFIntegrals(std::shared_ptr<ForteOptions> options, std::shared_ptr<psi::Wavefunction> ref_wfn,
+DFIntegrals::DFIntegrals(std::shared_ptr<ForteOptions> options,
+                         std::shared_ptr<psi::Wavefunction> ref_wfn,
                          std::shared_ptr<MOSpaceInfo> mo_space_info,
                          IntegralSpinRestriction restricted)
-    : ForteIntegrals(options, ref_wfn, mo_space_info, restricted) {
-    integral_type_ = DF;
+    : Psi4Integrals(options, ref_wfn, mo_space_info, DF, restricted) {
+    initialize();
+}
+
+void DFIntegrals::initialize() {
     // If code calls constructor print things
     // But if someone calls retransform integrals do not print it
     print_info();
@@ -174,7 +178,7 @@ void DFIntegrals::set_tei(size_t, size_t, size_t, size_t, double, bool, bool) {
 void DFIntegrals::gather_integrals() {
 
     if (print_ > 0) {
-        outfile->Printf("\n  Computing Density fitted integrals \n");
+        outfile->Printf("\n  Computing density fitted integrals \n");
     }
 
     std::shared_ptr<psi::BasisSet> primary = wfn_->basisset();
@@ -233,13 +237,11 @@ void DFIntegrals::gather_integrals() {
     // Finally computes the df integrals
     // Does the timings also
     local_timer timer;
-    std::string str = "Transforming DF Integrals";
     if (print_ > 0) {
-        outfile->Printf("\n  %-36s ...", str.c_str());
+        outfile->Printf("\n  Transforming DF Integrals");
     }
     df->transform();
     if (print_ > 0) {
-        outfile->Printf("...Done.");
         print_timing("density-fitting transformation", timer.get());
         outfile->Printf("\n");
     }

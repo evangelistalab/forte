@@ -85,6 +85,13 @@ class ForteOptions {
              pybind11::list allowed_values, const std::string& description);
 
     /**
+     * @brief Check if an options is set to None
+     * @param label Option label
+     * @return is the option equal to None?
+     */
+    bool is_none(const std::string& label) const;
+
+    /**
      * @brief Get a python object option
      * @param label Option label
      * @return a py::object containing the result
@@ -104,7 +111,8 @@ class ForteOptions {
      * @param value Default value of the option
      * @param description Description of the option
      */
-    void add_bool(const std::string& label, bool value, const std::string& description = "");
+    void add_bool(const std::string& label, py::object default_value,
+                  const std::string& description = "");
 
     /**
      * @brief Add a integer option
@@ -112,7 +120,8 @@ class ForteOptions {
      * @param value Default value of the option
      * @param description Description of the option
      */
-    void add_int(const std::string& label, int value, const std::string& description = "");
+    void add_int(const std::string& label, py::object default_value,
+                 const std::string& description = "");
 
     /**
      * @brief Add a double option
@@ -120,7 +129,8 @@ class ForteOptions {
      * @param value Default value of the option
      * @param description Description of the option
      */
-    void add_double(const std::string& label, double value, const std::string& description = "");
+    void add_double(const std::string& label, py::object default_value,
+                    const std::string& description = "");
 
     /**
      * @brief Add a string option
@@ -128,7 +138,7 @@ class ForteOptions {
      * @param value Default value of the option
      * @param description Description of the option
      */
-    void add_str(const std::string& label, const std::string& value,
+    void add_str(const std::string& label, py::object default_value,
                  const std::string& description = "");
 
     /**
@@ -138,7 +148,7 @@ class ForteOptions {
      * @param description Description of the option
      * @param allowed_values An array of allowed option values
      */
-    void add_str(const std::string& label, const std::string& value,
+    void add_str(const std::string& label, py::object default_value,
                  const std::vector<std::string>& allowed_values,
                  const std::string& description = "");
 

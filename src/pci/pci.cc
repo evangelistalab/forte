@@ -36,6 +36,10 @@
 #include <unordered_map>
 #include <utility>
 
+#include "psi4/libpsi4util/PsiOutStream.h"
+#include "psi4/libpsi4util/process.h"
+#include "psi4/libmints/matrix.h"
+
 #include "helpers/timer.h"
 #include "sparse_ci/ci_reference.h"
 #include "sparse_ci/determinant_functions.hpp"
@@ -212,9 +216,10 @@ void ProjectorCI::sortHashVecByCoefficient(det_hashvec& dets_hashvec, std::vecto
 }
 
 ProjectorCI::ProjectorCI(StateInfo state, size_t nroot, std::shared_ptr<SCFInfo> scf_info,
+                         std::shared_ptr<ForteOptions> options,
                          std::shared_ptr<MOSpaceInfo> mo_space_info,
                          std::shared_ptr<ActiveSpaceIntegrals> as_ints)
-    : SelectedCIMethod(state, nroot, scf_info, mo_space_info, as_ints) {
+    : SelectedCIMethod(state, nroot, scf_info, options, mo_space_info, as_ints) {
     // Copy the wavefunction information
     startup();
 }
@@ -859,7 +864,7 @@ void ProjectorCI::post_iter_process() {
         DeterminantHashVec det_map(std::move(dets_hashvec_));
 
         // set SparseCISolver options
-        sparse_solver_.set_spin_project(true);
+        sparse_solver_.set_spin_project(options_->get_bool("SCI_PROJECT_OUT_SPIN_CONTAMINANTS"));
         sparse_solver_.manual_guess(false);
         sparse_solver_.set_force_diag(false);
 

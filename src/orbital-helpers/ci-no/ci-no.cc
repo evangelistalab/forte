@@ -28,6 +28,7 @@
  */
 
 #include "psi4/libpsi4util/PsiOutStream.h"
+#include "psi4/libmints/vector.h"
 
 #include "base_classes/mo_space_info.h"
 #include "sparse_ci/sigma_vector.h"

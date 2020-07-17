@@ -31,27 +31,23 @@
 
 #include "ambit/blocked_tensor.h"
 #include "base_classes/rdms.h"
-#include "base_classes/mo_space_info.h"
+//#include "base_classes/mo_space_info.h"
 #include "helpers/blockedtensorfactory.h"
 #include "psi4/libmints/matrix.h"
 #include "psi4/libfock/jk.h"
 
 using namespace psi;
 
-class ForteOptions;
-
 namespace forte {
-class SCFInfo;
+class MOSpaceInfo;
+class ForteOptions;
+class ForteIntegrals;
 
 /**
-* @brief OrbitalOptimizer does an orbital optimization given an RDM-1, RDM-2,
-and the integrals
-* Forms an orbital gradient:  g_{pq} =[ h_{pq} gamma_{pq} + Gamma_{pq}^{rs} <pq
-|| rs> - A(p->q)]
-* Right now, Only forms a diagonal hessian of orbitals:  Look at  Hohenstein
-J.Chem.Phys, 142, 224103.
-* Diagonal Hessian only requires (p u | x y) integrals (many are built in JK
-library)
+* @brief OrbitalOptimizer does an orbital optimization given an 1RDM, 2RDM, and the integrals
+* Forms an orbital gradient:  g_{pq} = [ h_{pq} gamma_{pq} + Gamma_{pq}^{rs} <pq||rs> - A(p->q)]
+* Here only form a diagonal hessian of orbitals: Look at Hohenstein J. Chem. Phys. 142, 224103.
+* Diagonal Hessian only requires (pu|xy) integrals (many are built in JK library)
 * Daniel Smith's CASSCF code in PSI4 was integral in debugging.
 *
 * Usage of this class:  Contructor will just set_up the basic values
@@ -84,18 +80,18 @@ class OrbitalOptimizer {
      * orbital optimization
      * OrbitalOptimizer returns a orbital rotation parameter that allows you to
      * update your orbitals
-     * @param Gamma1 The SYMMETRIZED 1-RDM:  gamma1_a + gamma2_b
+     * @param Gamma1 The SYMMETRIZED 1-RDM:  gamma1_a + gamma1_b
      * @param Gamma2 The SYMMETRIZED 2-RDM:  Look at code ( Gamma = rdm_2aa +
      * rdm_2ab) with prefactors
-     * @param two_body_ab (pu|xy) integrals(NOTE:  This is only valid if you are
+     * @param two_body_ab (pu|xy) integrals (NOTE:  This is only valid if you are
      * doing an orbital optimization at the level of CASSCF
      * @param options The options object
      * @param mo_space_info MOSpace object for handling active/rdocc/ruocc
      */
-
     OrbitalOptimizer(ambit::Tensor Gamma1, ambit::Tensor Gamma2, ambit::Tensor two_body_ab,
                      std::shared_ptr<ForteOptions> options,
-                     std::shared_ptr<MOSpaceInfo> mo_space_info);
+                     std::shared_ptr<MOSpaceInfo> mo_space_info,
+                     std::shared_ptr<ForteIntegrals> ints);
 
     /// You have to set these at the start of the computation
     /// The MO Coefficient you get from wfn_->Ca()
@@ -116,8 +112,7 @@ class OrbitalOptimizer {
     void one_body(psi::SharedMatrix H) { H_ = H; }
     /// Print a summary of timings
     void set_print_timings(bool timing) { timings_ = timing; }
-    /// Set SCF information object.
-    void set_scf_info(std::shared_ptr<SCFInfo> scf_info) { scf_info_ = scf_info; }
+    /// Set the JK object
     void set_jk(std::shared_ptr<JK>& JK) { JK_ = JK; }
 
   protected:
@@ -208,7 +203,7 @@ class OrbitalOptimizer {
     /// Diagonalize an augmented Hessian and take lowest eigenvector as solution
     psi::SharedMatrix AugmentedHessianSolve();
 
-    psi::SharedMatrix make_c_sym_aware(psi::SharedMatrix aotoso);
+    //    psi::SharedMatrix make_c_sym_aware(psi::SharedMatrix aotoso);
 
     void startup();
 
@@ -243,18 +238,21 @@ class OrbitalOptimizer {
     enum MATRIX_EXP { PSI4, TAYLOR };
     void zero_redunant(psi::SharedMatrix& matrix);
 };
+
 /// A Class for use in CASSCFOrbitalOptimizer (computes FockCore and FockActive
 /// using JK builders)
 class CASSCFOrbitalOptimizer : public OrbitalOptimizer {
   public:
     CASSCFOrbitalOptimizer(ambit::Tensor Gamma1, ambit::Tensor Gamma2, ambit::Tensor two_body_ab,
                            std::shared_ptr<ForteOptions> options,
-                           std::shared_ptr<MOSpaceInfo> mo_space_info);
+                           std::shared_ptr<MOSpaceInfo> mo_space_info,
+                           std::shared_ptr<ForteIntegrals> ints);
     virtual ~CASSCFOrbitalOptimizer();
 
   private:
     virtual void form_fock_intermediates();
 };
+
 /// A Class for OrbitalOptimization in PostCASSCF methods through use of
 /// renormalized integrals
 /// Pass (pq | ij) and (pj | iq) type integrals
@@ -262,7 +260,8 @@ class PostCASSCFOrbitalOptimizer : public OrbitalOptimizer {
   public:
     PostCASSCFOrbitalOptimizer(ambit::Tensor Gamma1, ambit::Tensor Gamma2,
                                ambit::Tensor two_body_ab, std::shared_ptr<ForteOptions> options,
-                               std::shared_ptr<MOSpaceInfo> mo_space_info);
+                               std::shared_ptr<MOSpaceInfo> mo_space_info,
+                               std::shared_ptr<ForteIntegrals> ints);
     virtual ~PostCASSCFOrbitalOptimizer();
 
     void set_fock_integrals_pq_mm(const ambit::Tensor& pq_mm) { pq_mm_ = pq_mm; }

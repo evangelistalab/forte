@@ -202,7 +202,7 @@ RDMs SemiCanonical::semicanonicalize(RDMs& rdms, const int& max_rdm_level, const
             ints_->rotate_orbitals(Ua_, Ua_);
             rdms = transform_rdms(Ua_t_, Ua_t_, rdms, max_rdm_level);
         }
-        outfile->Printf("\n  SemiCanonicalize takes %8.6f s.", SemiCanonicalize.get());
+        print_timing("semi-canonicalization", SemiCanonicalize.get());
     }
     return rdms;
 }

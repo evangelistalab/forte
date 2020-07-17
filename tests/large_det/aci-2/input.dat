@@ -1,11 +1,10 @@
-#! Generated using commit GITCOMMIT 
 # Basic ACI calculation with energy threshold selection
 
 import forte
 
 refscf = -14.84351701863007 
-refaci = -14.880501440898 #-14.880501440889
-refacipt2 = -14.880559933778 #-14.880559935217
+refaci = -14.880059522583 
+refacipt2 = -14.880548900509
 
 molecule li2{
   Li
@@ -15,26 +14,20 @@ molecule li2{
 
 set {
   basis cc-pcvtz
-  e_convergence 10
-  d_convergence 10
-  r_convergence 10
+  e_convergence 11
+  d_convergence  7
+  r_convergence  7
   scf_type pk
   reference rhf
   docc = [2,0,0,0,0,1,0,0]
-}
-
-set scf {
 }
 
 set forte {
   active_space_solver aci
   frozen_docc [1,0,0,0,0,1,0,0]
   diag_algorithm sparse
-  sigma 0.0015
-  gamma 0.0015
-  nroot 1
-  charge 0
-  aci_enforce_spin_complete true
+  sigma 0.0005
+  sci_enforce_spin_complete true
 }
 
 E, wfn = energy('scf', return_wfn=True)

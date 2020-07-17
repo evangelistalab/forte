@@ -30,16 +30,9 @@
 #ifndef _mo_space_info_h_
 #define _mo_space_info_h_
 
-#include <algorithm>
-#include <chrono>
-#include <map>
-#include <numeric>
-#include <string>
-#include <vector>
+#include "psi4/libmints/dimension.h"
 
-#include "ambit/blocked_tensor.h"
-#include "psi4/libmints/matrix.h"
-#include "psi4/libmints/vector.h"
+#include "helpers/symmetry.h"
 #include "base_classes/forte_options.h"
 
 namespace psi {
@@ -107,10 +100,16 @@ using SpaceInfo = std::pair<psi::Dimension, std::vector<MOInfo>>;
 class MOSpaceInfo {
   public:
     // ==> Class Constructor <==
-    MOSpaceInfo(psi::Dimension& nmopi);
+    MOSpaceInfo(const psi::Dimension& nmopi, const std::string& point_group);
 
     // ==> Class Interface <==
 
+    /// @return A vector of labels of each irrep (e.g. ["A1","A2"])
+    const std::vector<std::string>& irrep_labels() const { return symmetry_.irrep_labels(); }
+    /// @return The label of each irrep h (e.g. h = 0 -> "A1")
+    const std::string& irrep_label(size_t h) const { return symmetry_.irrep_label(h); }
+    /// @return The label of the molecular point groupo (e.g. "C2V")
+    std::string point_group_label() const { return symmetry_.point_group_label(); }
     /// @return The names of orbital spaces
     std::vector<std::string> space_names() const { return elementary_spaces_; }
     /// @return The number of orbitals in a space
@@ -146,7 +145,7 @@ class MOSpaceInfo {
 
   private:
     // ==> Class Data <==
-
+    Symmetry symmetry_;
     /// The number of irreducible representations
     size_t nirrep_;
     /// The number of molecular orbitals per irrep
@@ -190,13 +189,14 @@ class MOSpaceInfo {
                            std::map<std::string, std::vector<size_t>>& mo_space_map);
 };
 
-/// Make MOSpaceInfo from inputs(options)
-std::shared_ptr<MOSpaceInfo> make_mo_space_info(std::shared_ptr<psi::Wavefunction> ref_wfn,
+/// Make MOSpaceInfo from input (options)
+std::shared_ptr<MOSpaceInfo> make_mo_space_info(const psi::Dimension& nmopi,
+                                                const std::string& point_group,
                                                 std::shared_ptr<ForteOptions> options);
 
 /// Make MOSpaceInfo from a map of spacename-dimension_vector ("ACTIVE", [size_t, size_t, ...])
 std::shared_ptr<MOSpaceInfo>
-make_mo_space_info_from_map(std::shared_ptr<psi::Wavefunction> ref_wfn,
+make_mo_space_info_from_map(const psi::Dimension& nmopi, const std::string& point_group,
                             std::map<std::string, std::vector<size_t>>& mo_space_map,
                             std::vector<size_t> reorder);
 

@@ -35,11 +35,13 @@
 namespace forte {
 
 #ifdef HAVE_GA
-class DistDFIntegrals : public ForteIntegrals {
+class DistDFIntegrals : public Psi4Integrals {
   public:
-    DistDFIntegrals(std::shared_ptr<ForteOptions> options, std::shared_ptr<psi::Wavefunction> ref_wfn,
-                    IntegralSpinRestriction restricted, std::shared_ptr<MOSpaceInfo> mo_space_info);
+    DistDFIntegrals(std::shared_ptr<ForteOptions> options,
+                    std::shared_ptr<psi::Wavefunction> ref_wfn, IntegralSpinRestriction restricted,
+                    std::shared_ptr<MOSpaceInfo> mo_space_info);
 
+    void initialize() override;
     virtual void retransform_integrals();
     /// aptei_xy functions are slow.  try to use three_integral_block
 

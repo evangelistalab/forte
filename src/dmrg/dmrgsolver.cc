@@ -71,20 +71,18 @@
 // This allows us to be lazy in getting the spaces in DPD calls
 #define ID(x) ints->DPD_ID(x)
 
-
 using namespace psi;
 
 namespace forte {
 
-DMRGSolver::DMRGSolver(StateInfo state,
-                       std::shared_ptr<SCFInfo> scf_info,
-                       std::shared_ptr<ForteOptions> options,
-                       std::shared_ptr<ForteIntegrals> ints,
+DMRGSolver::DMRGSolver(StateInfo state, std::shared_ptr<SCFInfo> scf_info,
+                       std::shared_ptr<ForteOptions> options, std::shared_ptr<ForteIntegrals> ints,
                        std::shared_ptr<MOSpaceInfo> mo_space_info)
-    : state_(state), scf_info_(scf_info), options_(options), ints_(ints), mo_space_info_(mo_space_info) {
+    : state_(state), scf_info_(scf_info), options_(options), ints_(ints),
+      mo_space_info_(mo_space_info) {
     print_method_banner({"Density Matrix Renormalization Group SCF", "Sebastian Wouters"});
 }
-//DMRGSolver::DMRGSolver(psi::SharedWavefunction ref_wfn, psi::Options& options,
+// DMRGSolver::DMRGSolver(psi::SharedWavefunction ref_wfn, psi::Options& options,
 //                       std::shared_ptr<MOSpaceInfo> mo_space_info)
 //    : wfn_(ref_wfn), options_(options), mo_space_info_(mo_space_info) {
 //    print_method_banner({"Density Matrix Renormalization Group", "Sebastian Wouters"});
@@ -276,13 +274,13 @@ void DMRGSolver::compute_energy() {
     const int nmo = mo_space_info_->size("ALL");
     const int nirrep = mo_space_info_->nirrep();
     psi::Dimension orbspi = mo_space_info_->dimension("ALL");
-    
+
     if (wfn_irrep < 0) {
         throw psi::PSIEXCEPTION("Option ROOT_SYM (integer) may not be smaller than zero!");
     }
     if (wfn_multp < 1) {
         throw psi::PSIEXCEPTION("Option MULTIPLICTY (integer) should be larger or "
-                           "equal to one: WFN_MULTP = (2S+1) >= 1 !");
+                                "equal to one: WFN_MULTP = (2S+1) >= 1 !");
     }
     if (ndmrg_states == 0) {
         throw psi::PSIEXCEPTION("Option DMRG_STATES (integer array) should be set!");
@@ -298,24 +296,24 @@ void DMRGSolver::compute_energy() {
     }
     if (ndmrg_states != ndmrg_econv) {
         throw psi::PSIEXCEPTION("Options DMRG_STATES (integer array) and DMRG_ECONV "
-                           "(double array) should contain the same number of "
-                           "elements!");
+                                "(double array) should contain the same number of "
+                                "elements!");
     }
     if (ndmrg_states != ndmrg_maxsweeps) {
         throw psi::PSIEXCEPTION("Options DMRG_STATES (integer array) and "
-                           "DMRG_MAXSWEEPS (integer array) should contain the "
-                           "same number of elements!");
+                                "DMRG_MAXSWEEPS (integer array) should contain the "
+                                "same number of elements!");
     }
     if (ndmrg_states != ndmrg_noiseprefactors) {
         throw psi::PSIEXCEPTION("Options DMRG_STATES (integer array) and "
-                           "DMRG_NOISEPREFACTORS (double array) should contain "
-                           "the same number of elements!");
+                                "DMRG_NOISEPREFACTORS (double array) should contain "
+                                "the same number of elements!");
     }
 
     for (int cnt = 0; cnt < ndmrg_states; cnt++) {
         if (dmrg_states[cnt] < 2) {
             throw psi::PSIEXCEPTION("Entries in DMRG_STATES (integer array) should "
-                               "be larger than 1!");
+                                    "be larger than 1!");
         }
     }
     if (dmrgscf_convergence <= 0.0) {
@@ -354,7 +352,7 @@ void DMRGSolver::compute_energy() {
     for (int cnt = 0; cnt < nirrep; cnt++) {
         nDMRGelectrons -= 2 * frozen_docc[cnt];
     }
-    outfile->Printf("\n  El. active = %d",nDMRGelectrons);
+    outfile->Printf("\n  El. active = %d", nDMRGelectrons);
 
     // Create the CheMPS2::Hamiltonian --> fill later
     const size_t nOrbDMRG = mo_space_info_->size("ACTIVE");
@@ -377,7 +375,7 @@ void DMRGSolver::compute_energy() {
 
     if (!(Prob->checkConsistency())) {
         throw psi::PSIEXCEPTION("CheMPS2::Problem : No Hilbert state vector "
-                           "compatible with all symmetry sectors!");
+                                "compatible with all symmetry sectors!");
     }
     Prob->SetupReorderD2h();
 
@@ -395,14 +393,13 @@ void DMRGSolver::compute_energy() {
                             one_body_timer.get());
         } else {
             local_timer one_body_fci_ints;
-            std::shared_ptr<ActiveSpaceIntegrals> fci_ints =
-                std::make_shared<ActiveSpaceIntegrals>(ints_, mo_space_info_->corr_absolute_mo("ACTIVE"),
-                                               mo_space_info_->corr_absolute_mo("RESTRICTED_DOCC"));
+            std::shared_ptr<ActiveSpaceIntegrals> fci_ints = std::make_shared<ActiveSpaceIntegrals>(
+                ints_, mo_space_info_->corr_absolute_mo("ACTIVE"),
+                mo_space_info_->corr_absolute_mo("RESTRICTED_DOCC"));
             fci_ints->set_active_integrals_and_restricted_docc();
             one_body_integrals_ = fci_ints->oei_a_vector();
             scalar_energy_ = fci_ints->scalar_energy();
-            scalar_energy_ += ints_->nuclear_repulsion_energy() +
-                              ints_->frozen_core_energy();
+            scalar_energy_ += ints_->nuclear_repulsion_energy() + ints_->frozen_core_energy();
             outfile->Printf("\n OneBody integrals (fci_ints) takes %6.5f s",
                             one_body_fci_ints.get());
         }
@@ -533,9 +530,9 @@ int DMRGSolver::chemps2_groupnumber(const string SymmLabel) {
     outfile->Printf("\n  Psi4 symmetry group was found to be <%s>.", SymmLabel.c_str());
     if (SyGroup >= magic_number_max_groups_chemps2) {
         outfile->Printf("\n  CheMPS2 did not recognize this symmetry group name. "
-                      "CheMPS2 only knows:");
+                        "CheMPS2 only knows:");
         for (int cnt = 0; cnt < magic_number_max_groups_chemps2; cnt++) {
-            outfile->Printf("\n    <%s>",(CheMPS2::Irreps::getGroupName(cnt)).c_str());
+            outfile->Printf("\n    <%s>", (CheMPS2::Irreps::getGroupName(cnt)).c_str());
         }
         throw psi::PSIEXCEPTION("CheMPS2 did not recognize the symmetry group name!");
     }
@@ -563,7 +560,8 @@ std::vector<double> DMRGSolver::one_body_operator() {
     /// This section of code computes the fock matrix for the
     /// INACTIVE_DOCC("RESTRICTED_DOCC")
 
-    std::shared_ptr<psi::JK> JK_inactive = psi::JK::build_JK(ints_->basisset(), psi::BasisSet::zero_ao_basis_set(), ints_->wfn()->options());
+    std::shared_ptr<psi::JK> JK_inactive = psi::JK::build_JK(
+        ints_->basisset(), psi::BasisSet::zero_ao_basis_set(), ints_->wfn()->options());
 
     JK_inactive->set_memory(psi::Process::environment.get_memory() * 0.8);
     JK_inactive->initialize();
@@ -581,16 +579,17 @@ std::vector<double> DMRGSolver::one_body_operator() {
 
     /// Just create the OneInt integrals from scratch
     std::shared_ptr<psi::PSIO> psio_ = psi::PSIO::shared_object();
-    psi::SharedMatrix T = psi::SharedMatrix(ints_->wfn()->matrix_factory()->create_matrix(PSIF_SO_T));
-    psi::SharedMatrix V = psi::SharedMatrix(ints_->wfn()->matrix_factory()->create_matrix(PSIF_SO_V));
+    psi::SharedMatrix T =
+        psi::SharedMatrix(ints_->wfn()->matrix_factory()->create_matrix(PSIF_SO_T));
+    psi::SharedMatrix V =
+        psi::SharedMatrix(ints_->wfn()->matrix_factory()->create_matrix(PSIF_SO_V));
     psi::SharedMatrix OneInt = T;
     OneInt->zero();
 
-//    T->load(psio_, PSIF_OEI);
-//    V->load(psio_, PSIF_OEI);
-//    psi::SharedMatrix Hcore_ = ints_->wfn()->matrix_factory()->create_shared_matrix("Core Hamiltonian");
-//    Hcore_->add(T);
-//    Hcore_->add(V);
+    //    T->load(psio_, PSIF_OEI);
+    //    V->load(psio_, PSIF_OEI);
+    //    psi::SharedMatrix Hcore_ = ints_->wfn()->matrix_factory()->create_shared_matrix("Core
+    //    Hamiltonian"); Hcore_->add(T); Hcore_->add(V);
     Hcore_ = psi::SharedMatrix(ints_->wfn()->H()->clone());
 
     psi::SharedMatrix Hcore(Hcore_->clone());
@@ -673,20 +672,19 @@ void DMRGSolver::print_natural_orbitals(double* opdm) {
             vec_irrep_occupation.push_back(irrep_occ);
         }
     }
-    CharacterTable ct = ints_->wfn()->molecule()->point_group()->char_table();
     std::sort(vec_irrep_occupation.begin(), vec_irrep_occupation.end(),
               std::greater<std::pair<double, std::pair<int, int>>>());
 
     int count = 0;
     outfile->Printf("\n    ");
     for (auto vec : vec_irrep_occupation) {
-        outfile->Printf(" %4d%-4s%11.6f  ", vec.second.second, ct.gamma(vec.second.first).symbol(),
-                        vec.first);
+        outfile->Printf(" %4d%-4s%11.6f  ", vec.second.second,
+                        mo_space_info->irrep_label(vec.second.first).c_str(), vec.first);
         if (count++ % 3 == 2 && count != vec_irrep_occupation.size())
             outfile->Printf("\n    ");
     }
     outfile->Printf("\n\n");
 }
-} // End Namespaces
+} // namespace forte
 
 #endif // #ifdef HAVE_CHEMPS2

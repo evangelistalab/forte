@@ -40,11 +40,14 @@ namespace forte {
  *
  * This class assumes the Cholesky tensors can be stored in memory.
  */
-class CholeskyIntegrals : public ForteIntegrals {
+class CholeskyIntegrals : public Psi4Integrals {
   public:
-    CholeskyIntegrals(std::shared_ptr<ForteOptions> options, std::shared_ptr<psi::Wavefunction> ref_wfn,
+    CholeskyIntegrals(std::shared_ptr<ForteOptions> options,
+                      std::shared_ptr<psi::Wavefunction> ref_wfn,
                       std::shared_ptr<MOSpaceInfo> mo_space_info,
                       IntegralSpinRestriction restricted);
+
+    void initialize() override;
 
     /// aptei_x will grab antisymmetriced integrals and creates DF/CD integrals
     /// on the fly

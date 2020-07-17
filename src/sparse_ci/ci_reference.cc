@@ -28,6 +28,7 @@
 
 #include "psi4/psi4-dec.h"
 #include "psi4/libpsi4util/PsiOutStream.h"
+#include "psi4/libmints/vector.h"
 
 #include "ci_reference.h"
 #include "base_classes/forte_options.h"

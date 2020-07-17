@@ -42,7 +42,7 @@ set forte{
    casscf_ci_solver        FCI
    CASSCF_REFERENCE        TRUE
    int_type                conventional
-   CASSCF_ITERATIONS        25
+   CASSCF_MAXITER        25
    print                    0
    CASSCF_DO_DIIS           false
 }
