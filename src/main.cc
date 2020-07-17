@@ -75,7 +75,6 @@ void replace_free(void* ptr) { free(ptr); }
  * @return The pair (my_proc,n_nodes)
  */
 std::pair<int, int> startup() {
-    ambit::settings::timers = true;
     ambit::initialize();
 
 #ifdef HAVE_MPI
@@ -111,8 +110,6 @@ void cleanup() {
 #endif
 
     ambit::finalize();
-
-    outfile->Printf("\n Finalized AMBIT HERE");
 
 #ifdef HAVE_MPI
     MPI_Finalize();
