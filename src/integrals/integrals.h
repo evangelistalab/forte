@@ -134,8 +134,6 @@ class ForteIntegrals {
     std::shared_ptr<psi::Matrix> Ca() const;
     /// Return Cb
     std::shared_ptr<psi::Matrix> Cb() const;
-    /// Return the AO overlap matrix
-    std::shared_ptr<psi::Matrix> S_ao() const;
     /// Return nuclear repulsion energy
     double nuclear_repulsion_energy() const;
 
