@@ -62,15 +62,6 @@ using namespace ambit;
 
 namespace forte {
 
-// CASSCF_NEW::CASSCF_NEW(const std::map<StateInfo, std::vector<double>>& state_weights_map,
-//                       std::shared_ptr<SCFInfo> scf_info, std::shared_ptr<ForteOptions> options,
-//                       std::shared_ptr<MOSpaceInfo> mo_space_info,
-//                       std::shared_ptr<ForteIntegrals> ints)
-//    : state_weights_map_(state_weights_map), scf_info_(scf_info), options_(options),
-//      mo_space_info_(mo_space_info), ints_(ints) {
-//    startup();
-//}
-
 CASSCF_NEW::CASSCF_NEW(const std::map<StateInfo, std::vector<double>>& state_weights_map,
                        std::shared_ptr<ForteOptions> options,
                        std::shared_ptr<MOSpaceInfo> mo_space_info,
@@ -367,12 +358,12 @@ void CASSCF_NEW::setup_ambit() {
     BlockedTensor::reset_mo_spaces();
     BlockedTensor::set_expert_mode(true);
 
-    BlockedTensor::add_mo_space("c", "ij", core_mos_, NoSpin);
-    BlockedTensor::add_mo_space("a", "tuvwyxz", actv_mos_, NoSpin);
-    BlockedTensor::add_mo_space("v", "ab", virt_mos_, NoSpin);
+    BlockedTensor::add_mo_space("c", "i,j", core_mos_, NoSpin);
+    BlockedTensor::add_mo_space("a", "t,u,v,w,y,x,z", actv_mos_, NoSpin);
+    BlockedTensor::add_mo_space("v", "a,b", virt_mos_, NoSpin);
 
-    BlockedTensor::add_composite_mo_space("o", "kl", {"c", "a"});
-    BlockedTensor::add_composite_mo_space("g", "pqrs", {"c", "a", "v"});
+    BlockedTensor::add_composite_mo_space("o", "k,l", {"c", "a"});
+    BlockedTensor::add_composite_mo_space("g", "p,q,r,s", {"c", "a", "v"});
 }
 
 void CASSCF_NEW::init_tensors() {
@@ -386,6 +377,7 @@ void CASSCF_NEW::init_tensors() {
     H_mo_ = std::make_shared<psi::Matrix>("Hbare_MO", nmopi_, nmopi_);
 
     // Fock matrices
+    Fd_.resize(ncmo_);
     Fock_ = std::make_shared<psi::Matrix>("Fock_MO", nmopi_, nmopi_);
     F_closed_ = std::make_shared<psi::Matrix>("Fock_inactive", nmopi_, nmopi_);
     F_active_ = std::make_shared<psi::Matrix>("Fock_active", nmopi_, nmopi_);
@@ -397,10 +389,19 @@ void CASSCF_NEW::init_tensors() {
     // two-electron integrals
     V_ = ambit::BlockedTensor::build(tensor_type, "V", {"gaaa"});
 
-    // 1- and 2-RDMs
+    // 1-RDM and 2-RDM
     D1_ = ambit::BlockedTensor::build(tensor_type, "1RDM", {"aa"});
     D2_ = ambit::BlockedTensor::build(tensor_type, "2RDM", {"aaaa"});
     rdm1_ = std::make_shared<psi::Matrix>("1RDM", nactvpi_, nactvpi_);
+
+    // orbital gradients related
+    std::vector<std::string> g_blocks {"ac", "vo"};
+    if (internal_rot_) {
+        g_blocks.push_back("aa");
+    }
+    A_ = ambit::BlockedTensor::build(tensor_type, "A", {"ca", "ao", "vo"});
+    g_ = ambit::BlockedTensor::build(tensor_type, "g", g_blocks);
+    h_diag_ = ambit::BlockedTensor::build(tensor_type, "h_diag", g_blocks);
 }
 
 double CASSCF_NEW::compute_energy() {
@@ -408,6 +409,12 @@ double CASSCF_NEW::compute_energy() {
     build_mo_integrals();
 
     diagonalize_hamiltonian();
+
+    build_fock();
+
+    compute_orbital_grad();
+
+    compute_orbital_hess_diag();
 
     return 0.0;
 
@@ -737,6 +744,15 @@ void CASSCF_NEW::build_fock(bool rebuild_inactive) {
     Fock_->add(F_active_);
 
     format_fock(Fock_, F_);
+
+    // fill in diagonal Fock in Pitzer ordering
+    for (const std::string& space: {"c", "a", "v"}) {
+        std::string block = space + space;
+        auto mos = label_to_mos_[space];
+        for (size_t i = 0, size = mos.size(); i < size; ++i) {
+            Fd_[mos[i]] = F_.block(block).data()[i * size + i];
+        }
+    }
 }
 
 void CASSCF_NEW::build_fock_active() {
@@ -753,22 +769,8 @@ void CASSCF_NEW::build_fock_active() {
         }
     }
 
-    // put one-density to SharedMatrix form
-    auto Gamma1 = std::make_shared<psi::Matrix>("Gamma1", nactvpi_, nactvpi_);
-    const auto& gamma1_data = D1_.block("aaaa").data();
-
-    for (int h = 0, offset = 0; h < nirrep_; ++h) {
-        for (int u = 0; u < nactvpi_[h]; ++u) {
-            size_t nu = u + offset;
-            for (int v = 0; v < nactvpi_[h]; ++v) {
-                Gamma1->set(h, u, v, gamma1_data[nu * nactv_ + v + offset]);
-            }
-        }
-        offset += nactvpi_[h];
-    }
-
     // dress Cactv by one-density, which will the C_right for JK
-    auto Cactv_dressed = linalg::doublet(Cactv, Gamma1, false, false);
+    auto Cactv_dressed = linalg::doublet(Cactv, rdm1_, false, false);
 
     // JK build
     std::vector<std::shared_ptr<psi::Matrix>>& Cl = JK_->C_left();
@@ -816,6 +818,11 @@ void CASSCF_NEW::compute_reference_energy() {
     energy_ = e_nuc_ + e_closed_;
     energy_ += Fc_["uv"] * D1_["uv"];
     energy_ += 0.5 * V_["uvxy"] * D2_["uvxy"];
+
+    if (debug_print_) {
+        outfile->Printf("\n  Frozen-core energy   %20.15f", e_frozen_);
+        outfile->Printf("\n  Closed-shell energy  %20.15f", e_closed_);
+    }
 }
 
 void CASSCF_NEW::diagonalize_hamiltonian() {
@@ -850,13 +857,78 @@ void CASSCF_NEW::diagonalize_hamiltonian() {
 
     D1_.block("aa").copy(rdms.g1a());
     D1_.block("aa")("pq") += rdms.g1b()("pq");
+    format_1rdm();
 
+    // change to chemists' notation
     D2_.block("aaaa")("pqrs") = rdms.SFg2()("prqs");
     D2_.block("aaaa")("pqrs") += rdms.SFg2()("qrps");
     D2_.scale(0.5);
+}
 
-    compute_reference_energy();
-    outfile->Printf("\n  energy = %.15f", energy_);
+void CASSCF_NEW::format_1rdm() {
+    rdm1_->zero();
+    const auto& d1_data = D1_.block("aa").data();
+
+    for (int h = 0, offset = 0; h < nirrep_; ++h) {
+        for (int u = 0; u < nactvpi_[h]; ++u) {
+            size_t nu = u + offset;
+            for (int v = 0; v < nactvpi_[h]; ++v) {
+                rdm1_->set(h, u, v, d1_data[nu * nactv_ + v + offset]);
+            }
+        }
+        offset += nactvpi_[h];
+    }
+
+    if (debug_print_) {
+        rdm1_->print();
+    }
+}
+
+void CASSCF_NEW::compute_orbital_grad() {
+    // build orbital Lagrangian
+    A_["ri"] = 2.0 * F_["ri"];
+    A_["ru"] = Fc_["rt"] * D1_["tu"];
+    A_["ru"] += V_["rtvw"] * D2_["tuvw"];
+
+    // build orbital gradients
+    g_["pq"] = 2.0 * A_["pq"];
+    g_["pq"] -= 2.0 * A_["qp"];
+}
+
+void CASSCF_NEW::compute_orbital_hess_diag() {
+    // modified diagonal Hessian from Theor. Chem. Acc. 97, 88-95 (1997)
+
+    // virtual-core block
+    h_diag_.block("vc").iterate([&](const std::vector<size_t>& i, double& value) {
+        auto i0 = label_to_mos_["v"][i[0]];
+        auto i1 = label_to_mos_["c"][i[1]];
+        value = 4.0 * (Fd_[i0] - Fd_[i1]);
+    });
+
+    // virtual-active block
+    auto& d1_data = D1_.block("aa").data();
+    auto& a_data = A_.block("aa").data();
+    h_diag_.block("va").iterate([&](const std::vector<size_t>& i, double& value) {
+        auto i0 = label_to_mos_["v"][i[0]];
+        auto i1 = i[1] * nactv_ + i[1];
+        value = 2.0 * (Fd_[i0] * d1_data[i1] - a_data[i1]);
+    });
+
+    // active-core block
+    h_diag_.block("ac").iterate([&](const std::vector<size_t>& i, double& value) {
+        auto i0 = label_to_mos_["a"][i[0]];
+        auto i1 = label_to_mos_["c"][i[1]];
+        auto i1p = i[0] * nactv_ + i[0];
+        value = 4.0 * (Fd_[i0] - Fd_[i1]);
+        value += 2.0 * (Fd_[i1] * d1_data[i1p] - a_data[i1p]);
+    });
+
+    // active-active block [see SI of J. Chem. Phys. 152, 074102 (2020)]
+    if (internal_rot_) {
+
+    }
+
+    h_diag_.print();
 }
 
 // void CASSCF_NEW::diagonalize_hamiltonian() {

@@ -114,19 +114,10 @@ class CASSCF_NEW {
     /// The JK object of Psi4
     std::shared_ptr<psi::JK> JK_;
 
-    //    /// The active one RDM in the MO basis
-    //    ambit::Tensor gamma1_;
-    //    /// The active two RDM (may need to be symmetrized)
-    //    ambit::Tensor gamma2_;
-    //    /// The reference object generated from Francesco's Full CI
-    //    RDMs cas_ref_;
-    //    /// The energy computed in FCI with updates from CASSCF_NEW and CI
-    //    double E_casscf_;
+    // => MO spaces related <=
 
     /// The number of irreps
     int nirrep_;
-
-    // => MO spaces related <=
 
     /// The number of SO per irrep (AO for C matrices)
     psi::Dimension nsopi_;
@@ -226,11 +217,13 @@ class CASSCF_NEW {
     ambit::BlockedTensor Fc_;    // ncmo x ncmo
     /// The active Fock matrix in MO basis
     psi::SharedMatrix F_active_; // nmo x nmo
-    /// The generalized Fock matrix
+    /// The generalized Fock matrix in MO basis
     psi::SharedMatrix Fock_; // nmo x nmo
     ambit::BlockedTensor F_; // ncmo x ncmo
+    /// Diagonal elements of the generalized Fock matrix (Pitzer ordering)
+    std::vector<double> Fd_;
 
-    /// Two-electron integrals in chemists notation (pq|rs)
+    /// Two-electron integrals in chemists' notation (pq|rs)
     ambit::BlockedTensor V_;
 
     /// Spin-summed 1-RDM
@@ -238,6 +231,14 @@ class CASSCF_NEW {
     psi::SharedMatrix rdm1_;
     /// Spin-summed averaged 2-RDM in 1^+ 1 2^+ 2 ordering
     ambit::BlockedTensor D2_;
+
+    /// The orbital Lagrangian matrix
+    ambit::BlockedTensor A_;
+
+    /// The orbital gradients
+    ambit::BlockedTensor g_;
+    /// The orbital diagonal Hessian
+    ambit::BlockedTensor h_diag_;
 
     // => functions used in every iteration <=
 
@@ -269,14 +270,22 @@ class CASSCF_NEW {
     /// Solve CI coefficients for the current orbitals
     void diagonalize_hamiltonian();
 
+    /// Compute the orbital gradients
+    void compute_orbital_grad();
+
+    /// Compute the diagonal Hessian for orbital rotations
+    void compute_orbital_hess_diag();
+
     // => Some helper functions <=
 
     /// Format the Fock matrix from SharedMatrix to BlockedTensor
     void format_fock(psi::SharedMatrix Fock, ambit::BlockedTensor F);
 
+    /// Format the 1RDM from BlockedTensor to SharedMatrix
+    void format_1rdm();
+
     /// Semi-canonicalize orbital and return the rotation matrix
     std::shared_ptr<psi::Matrix> semicanonicalize();
-
 
     //    /// The number of active orbitals
     //    size_t nactv_;
@@ -354,8 +363,6 @@ class CASSCF_NEW {
 
     //    /// Compute the diagonal Hessian
     //    void compute_orbital_hessian_diag();
-
-
 
     //    /// The bare one-electron integrals in MO basis
     //    psi::SharedMatrix Hmo_;
