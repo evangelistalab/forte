@@ -203,7 +203,7 @@ def register_mo_space_info_options(options):
         "FROZEN_UOCC",
         "Number of frozen unoccupied orbitals per irrep (in Cotton order)")
 
-#    /*- Molecular orbitals to swap -
+    #    /*- Molecular orbitals to swap -
     #     *  Swap mo_1 with mo_2 in irrep symmetry
     #     *  Swap mo_3 with mo_4 in irrep symmetry
     #     *  Format: [irrep, mo_1, mo_2, irrep, mo_3, mo_4]
@@ -820,12 +820,10 @@ def register_casscf_options(options):
         "CASSCF_E_CONVERGENCE", 1e-6,
         "The convergence criterion of the energy for CASSCF")
     options.add_bool("CASSCF_DO_DIIS", True, "Use DIIS in CASSCF?")
-    options.add_bool("CASSCF_DEBUG_PRINTING", False,
-                           "Debug printing for CASSCF?")
+    options.add_bool("CASSCF_DEBUG_PRINTING", False, "Debug printing for CASSCF?")
     options.add_int(
         "CASSCF_MULTIPLICITY", 0,
-        """Multiplicity for the CASSCF solution (if different from
-    multiplicity)
+        """Multiplicity for the CASSCF solution (if different from multiplicity)
     You should not use this if you are interested in having a CASSCF
     solution with the same multiplicitity as the DSRG-MRPT2""")
     options.add_bool("CASSCF_SOSCF", False,
@@ -841,25 +839,27 @@ def register_casscf_options(options):
                           ["DIAGONAL", "AUGMENTED_HESSIAN"],
                           "Orbital rotation algorithm")
 
-    options.add_int(
-        "CASSCF_DIIS_MAX_VEC", 8,
-        "The number of rotation parameters to extrapolate with")
-    options.add_int(
-        "CASSCF_DIIS_START", 3,
-        "When to start the DIIS iterations (will make this automatic)")
-    options.add_int("CASSCF_DIIS_FREQ", 1,
-                          "How often to do DIIS extrapolation")
-    options.add_double(
-        "CASSCF_DIIS_NORM", 1e-3,
-        "When the norm of the orbital gradient is below this value, do diis")
-    options.add_bool("CASSCF_CI_STEP", False,
-                           "Do a CAS step for every CASSCF_CI_FREQ")
-    options.add_int("CASSCF_CI_FREQ", 1,
-                          "How often should you do the CI_FREQ")
-    options.add_int("CASSCF_CI_STEP_START", -1,
-                          "When to start skipping CI steps")
+    options.add_int("CASSCF_DIIS_MAX_VEC", 8,
+                    "The number of rotation parameters to extrapolate with")
+    options.add_int("CASSCF_DIIS_START", 3,
+                    "When to start the DIIS iterations (will make this automatic)")
+    options.add_int("CASSCF_DIIS_FREQ", 1, "How often to do DIIS extrapolation")
+    options.add_double("CASSCF_DIIS_NORM", 1e-3,
+                       "When the norm of the orbital gradient is below this value, do diis")
+    options.add_bool("CASSCF_CI_STEP", False, "Do a CAS step for every CASSCF_CI_FREQ")
+    options.add_int("CASSCF_CI_FREQ", 1, "How often should you do the CI_FREQ")
+    options.add_int("CASSCF_CI_STEP_START", -1, "When to start skipping CI steps")
     options.add_bool("MONITOR_SA_SOLUTION", False,
-                           "Monitor the CAS-CI solutions through iterations")
+                     "Monitor the CAS-CI solutions through iterations")
+
+    options.add_bool("CASSCF_INTERNAL_ROT", False, "Keep active-active orbital rotations if true")
+
+    # Zero mixing for orbital pairs
+    # Format: [[irrep1, mo1, mo2], [irrep1, mo3, mo4], ...]
+    # Irreps are 0-based, while MO indices are 1-based!
+    # MO indices are relative indices within the irrep, e.g., 3A1 and 2A1: [[0, 3, 2]]
+    options.add_array("CASSCF_ZERO_ROT",
+                      "An array of MOs [[irrep1, mo1, mo2], [irrep2, mo3, mo4], ...]")
 
 
 def register_old_options(options):
