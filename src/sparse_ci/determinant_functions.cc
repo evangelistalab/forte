@@ -29,8 +29,14 @@
 
 #include <algorithm>
 
+#include "psi4/psi4-dec.h"
+#include "psi4/libpsi4util/PsiOutStream.h"
+
 #include "sparse_ci/determinant.h"
 #include "integrals/active_space_integrals.h"
+#include "helpers/helpers.h"
+
+using namespace psi;
 
 namespace forte {
 
@@ -188,6 +194,44 @@ void enforce_spin_completeness(std::vector<Determinant>& det_space, int nmo) {
             }
         } while (std::next_permutation(open_bits.begin(), open_bits.begin() + naopen + nbopen));
     }
+}
+
+std::vector<Determinant> find_minimum_spin_complete(std::vector<Determinant>& det_space, int nmo) {
+    std::map<std::vector<int>, std::vector<Determinant>> occupation_map;
+    // populate the occupation map
+    int na = 0;
+    int nb = 0;
+    for (auto& I : det_space) {
+        std::vector<int> occ(nmo, 0);
+        for (int i = 0; i < nmo; i++) {
+            occ[i] = I.get_alfa_bit(i) + I.get_beta_bit(i);
+        }
+        occupation_map[occ].push_back(I);
+        na = I.count_alfa();
+        nb = I.count_beta();
+    }
+
+    int missing = 0;
+    // now check that each group is complete
+    std::vector<Determinant> new_det_space;
+    for (const auto& occupation_group : occupation_map) {
+        const auto& occ = occupation_group.first;
+        const auto& dets = occupation_group.second;
+        // count the number of singly occupied orbitals
+        int nopen = std::count_if(occ.begin(), occ.end(), [](int i) { return i == 1; });
+        int na_open = (nopen + na - nb) / 2;
+        size_t ncomplete = math::combinations(nopen, na_open);
+        if (dets.size() == ncomplete) {
+            new_det_space.insert(std::end(new_det_space), std::begin(dets), std::end(dets));
+        }
+        missing += ncomplete - dets.size();
+    }
+    if (missing > 0) {
+        outfile->Printf("\n  Initial guess determinants do not form a spin-complete set. %d "
+                        "determinants are missing\n",
+                        missing);
+    }
+    return new_det_space;
 }
 
 } // namespace forte

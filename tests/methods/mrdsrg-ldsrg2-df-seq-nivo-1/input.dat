@@ -2,9 +2,9 @@
 
 import forte
 
-refrohf   = -15.611546532146010
-refudsrg  = -15.545626672782701
-refprdsrg = -15.545638769660899
+refrohf   = -15.611546532146
+refudsrg  = -15.545622051580
+refprdsrg = -15.545634134941
 
 molecule {
   0 3

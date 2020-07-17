@@ -35,7 +35,6 @@
 
 #include "psi4/libpsi4util/process.h"
 #include "psi4/libmints/molecule.h"
-#include "psi4/libmints/pointgrp.h"
 #include "psi4/libmints/wavefunction.h"
 #include "psi4/libmints/writer.h"
 #include "psi4/libmints/writer_file_prefix.h"
@@ -239,5 +238,23 @@ std::pair<std::vector<size_t>, std::vector<size_t>> split_up_tasks(size_t size_o
 
     return my_lists;
 }
+
+namespace math {
+size_t combinations(size_t n, size_t k) {
+    if (k > n)
+        return 0;
+    if (k * 2 > n)
+        k = n - k;
+    if (k == 0)
+        return 1;
+
+    size_t result = n;
+    for (size_t i = 2; i <= k; ++i) {
+        result *= (n - i + 1);
+        result /= i;
+    }
+    return result;
+}
+} // namespace math
 
 } // namespace forte

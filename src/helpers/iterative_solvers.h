@@ -85,6 +85,10 @@ class DavidsonLiuSolver {
     void set_e_convergence(double value);
     /// Set the residual convergence
     void set_r_convergence(double value);
+    /// Get the energy convergence
+    double get_e_convergence() const;
+    /// Get the residual convergence
+    double get_r_convergence() const;
     /// Set the number of collapse vectors for each root
     void set_collapse_per_root(int value);
     /// Set the maximum subspace size for each root
@@ -127,15 +131,17 @@ class DavidsonLiuSolver {
     /// Check that the eigenvectors are orthogonal
     bool check_orthogonality();
     /// Check if the the iterative procedure has converged
-    bool check_convergence();
+    /// @return a pair of boolean (is_energy_converged,is_residual_converged)
+    std::pair<bool, bool> check_convergence();
     /// Build the correction vectors
     void form_correction_vectors();
     /// Compute the 2-norm of the residual
     void compute_residual_norm();
     /// Project out undesired roots
     void project_out_roots(psi::SharedMatrix v);
-    /// Normalize the correction vectors
-    void normalize_vectors(psi::SharedMatrix v, size_t n);
+    /// Normalize the correction vectors and return the norm of the vectors before they were
+    /// normalized
+    std::vector<double> normalize_vectors(psi::SharedMatrix v, size_t n);
     /// Perform subspace collapse
     bool subspace_collapse();
     /// Collapse the vectors
@@ -149,8 +155,8 @@ class DavidsonLiuSolver {
     double e_convergence_ = 1.0e-12;
     /// Residual convergence threshold
     double r_convergence_ = 1.0e-6;
-    /// The threshold used to discard vectors
-    double schmidt_threshold_ = 1.0e-3;
+    /// The threshold used to discard correction vectors
+    double schmidt_threshold_ = 1.0e-8;
     /// The dimension of the vectors
     size_t size_;
     /// The number of roots requested

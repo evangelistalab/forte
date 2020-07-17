@@ -55,7 +55,8 @@ In DF, the :math:`b` tensor is defined as
 .. math:: b_{pq}^{Q} = \sum_p (pq | P)[(P | Q)^{-1/2}]_{PQ}
 
 where the indices :math:`P` and :math:`Q` refer to the auxiliary basis set.
-The auxiliary basis is defined via the Psi4 option ``DF_BASIS_MP2``.
+
+.. important:: Two options control the type of density fitting basis used in forte. The auxiliary basis used in the correlated computations is defined via the Psi4 option ``DF_BASIS_MP2``. The auxiliary basis used in CASSCF is defined via the Psi4 option ``DF_BASIS_SCF``. These two options can be different, but this might lead to an unconsistent treatment of correlation effects.
 
 In the CD approach, the :math:`b` tensor is formed via Cholesky decomposition of the
 exact two-electron integrals in the atomic basis.
@@ -74,6 +75,26 @@ of density fitting grows as the cube of basis size.
 In this case, it is possible to switch to a disk-based implementation of DF, which assumes that
 the :math:`b` tensor can be fully stored on disk.
 
+Integrals from a FCIDUMP file
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Most of Forte computations can also be executed using integrals read from a FCIDUMP file.
+To read integrals in the FCIDUMP format just use the option ``INT_TYPE = FCIDUMP``.
+For example::
+
+    import forte
+    set forte {
+      active_space_solver fci
+      int_type            fcidump
+      frozen_docc         [2 ,0 ,0 ,0]
+      restricted_docc     [2 ,0 ,0 ,0]
+      active              [2 ,2 ,2 ,2]
+    }
+
+The default name of the FCIDUMP file is ``INTDUMP``, but it can be changed via the option ``FCIDUMP_FILE``.
+Forte will read the number of orbital, number of electrons, the multiplicity, and irrep from the FCIDUMP file.
+This information is then used to build a ``StateInfo`` object that contains all information regarding the electronic state that will be computed.
+The user can, however, select a different state by specifying the number of electrons (``NEL``), multiplicity (``MULTIPLICITY``), and irrep (``ROOT_SYM``) via the appropriate options.
 
 Integral Selection Keywords
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -88,7 +109,7 @@ The following keywords control the integral class and affect all computations th
 
 * Default: ``CONVENTIONAL``
 
-* Possible Values:  ``CONVENTIONAL``, ``DF``, ``CHOLESKY``, ``DISKDF``
+* Possible Values:  ``CONVENTIONAL``, ``DF``, ``CHOLESKY``, ``DISKDF``, ``FCIDUMP``
 
 **CHOLESKY_TOLERANCE**
 
@@ -102,10 +123,28 @@ The tolerance for the cholesky decomposition:
 
 **DF_BASIS_MP2**
 
-The basis set used for DF.  This keyword needs to be placed in the globals section of a Psi4 input.
+The basis set used for density fitting the integrals used in all correlated computations.  This keyword needs to be placed in the globals section of a Psi4 input.
 This basis should be one of the RI basis sets designed for a given primary basis, for example,
-when using ``BASIS = cc-pVDZ`` you should use ``BASIS = cc-pVDZ-RI``.
+when using ``BASIS = cc-pVDZ`` you should use ``DF_BASIS_MP2 = cc-pVDZ-RI``.
 
 * Type: string specifing basis set
 
 * Default: none
+
+**DF_BASIS_SCF**
+
+The basis set used for density fitting the integrals used in forte's CASSCF computations.  This keyword needs to be placed in the globals section of a Psi4 input.
+This basis should be one of the JK basis sets designed for a given primary basis, for example,
+when using ``BASIS = cc-pVDZ`` you should use ``DF_BASIS_SCF = cc-pVDZ-JKfit``.
+
+* Type: string specifing basis set
+
+* Default: none
+
+**FCIDUMP_FILE**
+
+``FCIDUMP_FILE`` selects the file from which to read the integrals in the FCIDUMP format
+
+* Type: string
+
+* Default: ``INTDUMP``

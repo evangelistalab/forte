@@ -63,7 +63,7 @@ enum class IntegralSpinRestriction { Restricted, Unrestricted };
  *
  * This decides the type of integral used in a Forte computation
  */
-enum IntegralType { Conventional, DF, Cholesky, DiskDF, DistDF, Own, Custom };
+enum IntegralType { Conventional, DF, Cholesky, DiskDF, DistDF, Custom };
 
 /**
  * @brief The ForteIntegrals class is a base class for transforming and storing MO integrals
@@ -107,12 +107,28 @@ class ForteIntegrals {
      */
     ForteIntegrals(std::shared_ptr<ForteOptions> options,
                    std::shared_ptr<psi::Wavefunction> ref_wfn,
-                   std::shared_ptr<MOSpaceInfo> mo_space_info, IntegralSpinRestriction restricted);
+                   std::shared_ptr<MOSpaceInfo> mo_space_info, IntegralType integral_type,
+                   IntegralSpinRestriction restricted);
+
+    /**
+     * @brief Class constructor
+     * @param options The main options object
+     * @param restricted Select a restricted or unrestricted transformation
+     * @param mo_space_info The MOSpaceInfo object
+     */
+    ForteIntegrals(std::shared_ptr<ForteOptions> options,
+                   std::shared_ptr<MOSpaceInfo> mo_space_info, IntegralType integral_type,
+                   IntegralSpinRestriction restricted);
 
     /// Virtual destructor to enable deletion of a Derived* through a Base*
     virtual ~ForteIntegrals() = default;
 
     // ==> Class Interface <==
+
+    /// Common initializer for all types of integrals
+    void common_initialize();
+
+    virtual void initialize() = 0;
 
     /// Return Ca
     std::shared_ptr<psi::Matrix> Ca() const;
@@ -125,14 +141,12 @@ class ForteIntegrals {
 
     /// temporary solution for not having a Wavefunction
     std::shared_ptr<psi::Wavefunction> wfn();
-    /// temporary solution for basisset
-    std::shared_ptr<psi::BasisSet> basisset();
-    /// temporary solution for get_basisset
-    std::shared_ptr<psi::BasisSet> get_basisset(std::string str);
-    /// temporary solution for aotoso
-    std::shared_ptr<psi::Matrix> aotoso();
-    /// temporary solution for Ca_subset
-    std::shared_ptr<psi::Matrix> Ca_subset(std::string str);
+
+    // The number of symmetry-adapted orbitals
+    // see https://github.com/psi4/psi4/wiki/OrbitalDimensions
+    size_t nso() const;
+    /// Return the number of symmetry-adapted orbitals per irrep
+    const psi::Dimension& nsopi() const;
 
     /// Return the total number of molecular orbitals (this number includes frozen MOs)
     size_t nmo() const;
@@ -141,12 +155,11 @@ class ForteIntegrals {
     int nirrep() const;
 
     /// Return the number of frozen core orbitals per irrep
-    psi::Dimension& frzcpi();
+    const psi::Dimension& frzcpi() const;
     /// Return the number of frozen virtual orbitals per irrep
-    psi::Dimension& frzvpi();
-
+    const psi::Dimension& frzvpi() const;
     /// The number of correlated MOs per irrep (non frozen).  This is nmopi - nfzcpi - nfzvpi.
-    psi::Dimension& ncmopi();
+    const psi::Dimension& ncmopi() const;
 
     /// Return the total number of correlated molecular orbitals (this number excludes frozen MOs)
     size_t ncmo() const;
@@ -155,7 +168,7 @@ class ForteIntegrals {
     void set_print(int print);
 
     /// Return the number of auxiliary functions
-    virtual size_t nthree() const = 0;
+    virtual size_t nthree() const;
 
     /// Return the frozen core energy
     double frozen_core_energy();
@@ -180,12 +193,6 @@ class ForteIntegrals {
 
     /// Get the beta fock matrix in std::vector format
     std::vector<double> get_fock_b() const;
-
-    /// Set the alpha fock matrix
-    void set_fock_a(const std::vector<double>& fock_stl);
-
-    /// Set the beta fock matrix
-    void set_fock_b(const std::vector<double>& fock_stl);
 
     /// The antisymmetrixed alpha-alpha two-electron integrals in physicist
     /// notation <pq||rs>
@@ -219,25 +226,39 @@ class ForteIntegrals {
                                          const std::vector<size_t>& r,
                                          const std::vector<size_t>& s) = 0;
 
-    virtual ambit::Tensor three_integral_block(const std::vector<size_t>& A,
-                                               const std::vector<size_t>& p,
-                                               const std::vector<size_t>& q) = 0;
+    // Three-index integral functions (DF, Cholesky)
+    virtual ambit::Tensor three_integral_block(const std::vector<size_t>&,
+                                               const std::vector<size_t>&,
+                                               const std::vector<size_t>&);
+
     /// This function is only used by DiskDF and it is used to go from a Apq->Aq tensor
     virtual ambit::Tensor three_integral_block_two_index(const std::vector<size_t>& A, size_t p,
-                                                         const std::vector<size_t>& q) = 0;
+                                                         const std::vector<size_t>&);
+
+    /// Expert Option: just try and use three_integral
+    virtual double** three_integral_pointer();
 
     /// Make a Fock matrix computed with respect to a given determinant
     virtual void make_fock_matrix(std::shared_ptr<psi::Matrix> gamma_a,
                                   std::shared_ptr<psi::Matrix> gamma_b) = 0;
 
+    void set_nuclear_repulsion(double value);
+
     /// Set the value of the scalar part of the Hamiltonian
     /// @param value the new value of the scalar part of the Hamiltonian
     void set_scalar(double value);
 
-    /// Set the value of the one-electron integrals
-    /// @param ints pointer to the integrals
-    /// @param alpha the spin type of the integrals
-    void set_oei(double** ints, bool alpha);
+    /// Set the value of the one-electron integrals (stored with no symmetry)
+    /// @param oei_a vector of alpha one-electron integrals
+    /// @param oei_b vector of beta one-electron integrals
+    void set_oei_all(const std::vector<double>& oei_a, const std::vector<double>& oei_b);
+
+    /// Set the value of the two-electron integrals (stored with no symmetry)
+    /// @param tei_aa vector of antisymmetrized alpha-alpha two-electron integrals
+    /// @param tei_ab vector of antisymmetrized alpha-alpha two-electron integrals
+    /// @param tei_bb vector of antisymmetrized alpha-alpha two-electron integrals
+    void set_tei_all(const std::vector<double>& tei_aa, const std::vector<double>& tei_ab,
+                     const std::vector<double>& tei_bb);
 
     /// Set the value of the one-electron integrals
     /// @param p the integral index
@@ -252,17 +273,14 @@ class ForteIntegrals {
 
     /// Rotate the MO coefficients, update psi::Wavefunction, and re-transform integrals
     /// @param Ua the alpha unitary transformation matrix
-    /// @param Ub the alpha unitary transformation matrix
+    /// @param Ub the beta unitary transformation matrix
     void rotate_orbitals(std::shared_ptr<psi::Matrix> Ua, std::shared_ptr<psi::Matrix> Ub);
 
     /// Copy these MO coeffs to class variables, update psi::Wavefunction, and re-transform
     /// integrals
     /// @param Ca the alpha MO coefficients
-    /// @param Cb the betaa MO coefficients
-    void update_orbitals(std::shared_ptr<psi::Matrix> Ca, std::shared_ptr<psi::Matrix> Cb);
-
-    /// Expert Option: just try and use three_integral
-    virtual double** three_integral_pointer() = 0;
+    /// @param Cb the beta MO coefficients
+    virtual void update_orbitals(std::shared_ptr<psi::Matrix> Ca, std::shared_ptr<psi::Matrix> Cb);
 
     /// Return the type of spin restriction enforced
     IntegralSpinRestriction spin_restriction() const;
@@ -282,7 +300,7 @@ class ForteIntegrals {
 
     /// Obtain AO dipole integrals [X, Y, Z]
     /// Each direction is a std::shared_ptr<psi::Matrix> of dimension nmo * nmo
-    std::vector<std::shared_ptr<psi::Matrix>> AOdipole_ints() const;
+    std::vector<std::shared_ptr<psi::Matrix>> ao_dipole_ints() const;
 
     /**
      * Compute MO dipole integrals
@@ -291,14 +309,17 @@ class ForteIntegrals {
      * @return a vector of MOdipole ints in X, Y, Z order,
      *         each of which is a nmo by nmo std::shared_ptr<psi::Matrix>
      */
-    std::vector<std::shared_ptr<psi::Matrix>> compute_MOdipole_ints(const bool& alpha = true,
-                                                                    const bool& resort = false);
+    virtual std::vector<std::shared_ptr<psi::Matrix>> mo_dipole_ints(const bool& alpha = true,
+                                                                     const bool& resort = false);
 
   protected:
     // ==> Class data <==
 
     /// The options object
     std::shared_ptr<ForteOptions> options_;
+
+    /// The MOSpaceInfo object
+    std::shared_ptr<MOSpaceInfo> mo_space_info_;
 
     /// The Wavefunction object
     std::shared_ptr<psi::Wavefunction> wfn_;
@@ -315,25 +336,20 @@ class ForteIntegrals {
     // Cb matrix from psi
     std::shared_ptr<psi::Matrix> Cb_;
 
-    // The S matrix from psi
-    std::shared_ptr<psi::Matrix> S_ao_;
-
-    // Nuclear repulsion energy
-    double nucrep_;
-
     /// Number of irreps
     int nirrep_;
 
+    /// The number of symmetry-adapted orbitals
+    size_t nso_;
     /// The number of MOs, including the ones that are frozen.
     size_t nmo_;
-
     /// The number of correlated MOs (excluding frozen).  This is nmo - nfzc - nfzv.
     size_t ncmo_;
 
     /// The mapping from correlated MO to full MO (frozen + correlated)
     std::vector<size_t> cmotomo_;
 
-    /// The number of symmetrized AOs per irrep.
+    /// The number of symmetry-adapted orbitals per irrep.
     psi::Dimension nsopi_;
     /// The number of MOs per irrep.
     psi::Dimension nmopi_;
@@ -345,11 +361,9 @@ class ForteIntegrals {
     /// nfzcpi - nfzvpi.
     psi::Dimension ncmopi_;
 
-    /// The number of orbitals used in indexing routines (nmo or ncmo if core orbitals are frozen)
-    /// The correct value is set by the integrals class
+    /// The number of orbitals used in indexing routines (nmo or ncmo if core orbitals are
+    /// frozen) The correct value is set by the integrals class
     size_t aptei_idx_;
-    /// The number of symmetry orbitals
-    size_t nso_;
 
     // OMP
     // Is OMP available?
@@ -368,14 +382,14 @@ class ForteIntegrals {
     /// notation <pq||rs>
     size_t num_aptei_;
 
+    // Nuclear repulsion energy
+    double nucrep_ = 0.0;
+
     /// Frozen-core energy
-    double frozen_core_energy_;
+    double frozen_core_energy_ = 0.0;
 
     /// Scalar energy term
-    double scalar_;
-
-    /// The MOSpaceInfo object
-    std::shared_ptr<MOSpaceInfo> mo_space_info_;
+    double scalar_energy_ = 0.0;
 
     /// Full one-electron integrals stored as a vector (includes frozen orbitals)
     std::vector<double> full_one_electron_integrals_a_;
@@ -389,58 +403,102 @@ class ForteIntegrals {
     std::vector<double> fock_matrix_a_;
     std::vector<double> fock_matrix_b_;
 
+    /// Two-electron integrals stored as a vector with redundant elements (no permutational
+    /// symmetry). These are addressed with the function aptei_index
+    std::vector<double> aphys_tei_aa_;
+    std::vector<double> aphys_tei_ab_;
+    std::vector<double> aphys_tei_bb_;
+
     /// The type of tensor that ambit uses -> CoreTensor
     ambit::TensorType tensor_type_ = ambit::CoreTensor;
+
     /// How much memory each integral takes up
     double int_mem_;
     /// Control printing of timings
-    int print_;
+    int print_ = 1;
+
     /// The One Electron Integrals (T + V) in SO Basis
     std::shared_ptr<psi::Matrix> OneBody_symm_;
-    std::shared_ptr<psi::Matrix> OneIntsAO_;
 
     /// AO dipole integrals
-    std::vector<std::shared_ptr<psi::Matrix>> AOdipole_ints_;
+    std::vector<std::shared_ptr<psi::Matrix>> dipole_ints_ao_;
     /// Compute AO dipole integrals
-    void build_AOdipole_ints();
+    virtual void build_dipole_ints_ao();
     /// Compute MO dipole integrals
-    std::vector<std::shared_ptr<psi::Matrix>>
-    MOdipole_ints_helper(std::shared_ptr<psi::Matrix> Cao, std::shared_ptr<psi::Vector> epsilon,
-                         const bool& resort);
+    virtual std::vector<std::shared_ptr<psi::Matrix>>
+    dipole_ints_mo_helper(std::shared_ptr<psi::Matrix> Cao, std::shared_ptr<psi::Vector> epsilon,
+                          const bool& resort);
 
     // ==> Class private functions <==
 
     /// Class initializer
     void startup();
 
-    /// Allocate the memory required to store the one-electron integrals and fock matrices
+    void read_information();
+
     void allocate();
-
-    /// Transform the one-electron integrals
-    void transform_one_electron_integrals();
-
-    /// This function manages freezing core and virtual orbitals
-    void freeze_core_orbitals();
-
-    /// Compute the one-body operator modified by the frozen core orbitals
-    void compute_frozen_one_body_operator();
-
-    /// Function used to rotate MOs during contructor
-    void rotate_mos();
 
     /// Test if two matrices are approximately identical
     bool test_orbital_spin_restriction(std::shared_ptr<psi::Matrix> A,
                                        std::shared_ptr<psi::Matrix> B) const;
 
+    /// An addressing function to for two-electron integrals
+    /// @return the address of the integral <pq|rs> or <pq||rs>
+    size_t aptei_index(size_t p, size_t q, size_t r, size_t s) {
+        return aptei_idx_ * aptei_idx_ * aptei_idx_ * p + aptei_idx_ * aptei_idx_ * q +
+               aptei_idx_ * r + s;
+    }
+
+    void _undefined_function(const std::string& method) const;
+
     // ==> Class private virtual functions <==
 
-    /// Computes/reads two-electron integrals (see CD/DF/Conventional classes for implementation)
+    /// This function manages freezing core and virtual orbitals
+    virtual void freeze_core_orbitals();
+
+    /// Compute the one-body operator modified by the frozen core orbitals
+    virtual void compute_frozen_one_body_operator();
+
+    /// Function used to rotate MOs during contructor
+    virtual void rotate_mos();
+
+    /// Computes/reads two-electron integrals (see CD/DF/Conventional classes for
+    /// implementation)
     virtual void gather_integrals() = 0;
 
     /// Remove the doubly occupied and virtual orbitals and resort the rest so
     /// that we are left only with ncmo = nmo - nfzc - nfzv
     virtual void resort_integrals_after_freezing() = 0;
 };
+
+/**
+ * @brief Interface to integrals read from psi4
+ */
+class Psi4Integrals : public ForteIntegrals {
+  public:
+    Psi4Integrals(std::shared_ptr<ForteOptions> options, std::shared_ptr<psi::Wavefunction> ref_wfn,
+                  std::shared_ptr<MOSpaceInfo> mo_space_info, IntegralType integral_type,
+                  IntegralSpinRestriction restricted);
+
+  private:
+    void base_initialize_psi4();
+    void setup_psi4_ints();
+    void transform_one_electron_integrals();
+    void build_dipole_ints_ao() override;
+    void compute_frozen_one_body_operator() override;
+    //    void rotate_orbitals(std::shared_ptr<psi::Matrix> Ua, std::shared_ptr<psi::Matrix> Ub)
+    //    override;
+    void update_orbitals(std::shared_ptr<psi::Matrix> Ca, std::shared_ptr<psi::Matrix> Cb) override;
+    void rotate_mos() override;
+    std::vector<std::shared_ptr<psi::Matrix>> mo_dipole_ints(const bool& alpha,
+                                                             const bool& resort) override;
+    std::vector<std::shared_ptr<psi::Matrix>>
+    dipole_ints_mo_helper(std::shared_ptr<psi::Matrix> Cao, std::shared_ptr<psi::Vector> epsilon,
+                          const bool& resort) override;
+
+  protected:
+    void freeze_core_orbitals() override;
+}; // namespace forte
 
 } // namespace forte
 

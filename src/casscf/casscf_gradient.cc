@@ -8,35 +8,30 @@
  * (4), Write 1RDMs and 2RDMs coefficients;
  * (5), Back-transform the TPDM.
  */
-#include "casscf/casscf.h"
-#include "gradient_tpdm/backtransform_tpdm.h"
-#include "psi4/libmints/matrix.h"
-#include "psi4/libmints/wavefunction.h"
-#include "psi4/psifiles.h"
-#include "helpers/printing.h"
-#include "sci/aci.h"
-#include "base_classes/active_space_solver.h"
+
+#include "psi4/libpsi4util/PsiOutStream.h"
 #include "psi4/libmints/factory.h"
 #include "psi4/libiwl/iwl.hpp"
 #include "psi4/libpsio/psio.hpp"
+#include "psi4/libmints/matrix.h"
+#include "psi4/libmints/wavefunction.h"
+#include "psi4/psifiles.h"
+
+#include "helpers/printing.h"
+#include "base_classes/active_space_solver.h"
+
+#include "gradient_tpdm/backtransform_tpdm.h"
+
+#include "casscf/casscf.h"
 
 using namespace ambit;
 using namespace psi;
 namespace forte {
+
 /**
  * Initialize global variables.
  */
 void CASSCF::set_all_variables() {
-    // Set MOs containers.
-    core_mos_ = mo_space_info_->corr_absolute_mo("RESTRICTED_DOCC");
-    actv_mos_ = mo_space_info_->corr_absolute_mo("ACTIVE");
-    virt_mos_ = mo_space_info_->corr_absolute_mo("RESTRICTED_UOCC");
-    core_all_ = mo_space_info_->absolute_mo("RESTRICTED_DOCC");
-    actv_all_ = mo_space_info_->absolute_mo("ACTIVE");
-    core_mos_relative = mo_space_info_->get_relative_mo("RESTRICTED_DOCC");
-    actv_mos_relative = mo_space_info_->get_relative_mo("ACTIVE");
-    irrep_vec = mo_space_info_->dimension("ALL");
-
     // Set MO spaces.
     set_ambit_space();
 
@@ -69,12 +64,12 @@ void CASSCF::set_ambit_space() {
     std::string bvirt_label_ = "V";
 
     // Add Ambit index labels.
-    BTF_->add_mo_space(acore_label_, "m, n", core_mos_, AlphaSpin);
-    BTF_->add_mo_space(bcore_label_, "M, N", core_mos_, BetaSpin);
+    BTF_->add_mo_space(acore_label_, "m, n", rdocc_mos_, AlphaSpin);
+    BTF_->add_mo_space(bcore_label_, "M, N", rdocc_mos_, BetaSpin);
     BTF_->add_mo_space(aactv_label_, "u, v, w, x, y, z", actv_mos_, AlphaSpin);
     BTF_->add_mo_space(bactv_label_, "U, V, W, X, Y, Z", actv_mos_, BetaSpin);
-    BTF_->add_mo_space(avirt_label_, "e, f", virt_mos_, AlphaSpin);
-    BTF_->add_mo_space(bvirt_label_, "E, F", virt_mos_, BetaSpin);
+    BTF_->add_mo_space(avirt_label_, "e, f", ruocc_mos_, AlphaSpin);
+    BTF_->add_mo_space(bvirt_label_, "E, F", ruocc_mos_, BetaSpin);
 
     // Define composite spaces.
     BTF_->add_composite_mo_space("h", "i, j, k, l", {acore_label_, aactv_label_});
@@ -149,13 +144,13 @@ void CASSCF::set_v() {
 void CASSCF::set_fock() {
     outfile->Printf("\n    Setting Fock matrix ............................. ");
 
-    psi::SharedMatrix D1a(new psi::Matrix("D1a", nmo_, nmo_));
-    psi::SharedMatrix D1b(new psi::Matrix("D1b", nmo_, nmo_));
+    psi::SharedMatrix D1a(new psi::Matrix("D1a", ncmo_, ncmo_));
+    psi::SharedMatrix D1b(new psi::Matrix("D1b", ncmo_, ncmo_));
 
     // Fill core-core blocks
-    for (size_t m = 0, ncore = core_mos_.size(); m < ncore; m++) {
-        D1a->set(core_mos_[m], core_mos_[m], 1.0);
-        D1b->set(core_mos_[m], core_mos_[m], 1.0);
+    for (size_t m = 0, ncore = rdocc_mos_.size(); m < ncore; m++) {
+        D1a->set(rdocc_mos_[m], rdocc_mos_[m], 1.0);
+        D1b->set(rdocc_mos_[m], rdocc_mos_[m], 1.0);
     }
 
     // Fill active-active blocks
@@ -229,8 +224,8 @@ void CASSCF::set_tensor() {
  */
 void CASSCF::tpdm_backtransform() {
     // This line of code is to deceive Psi4 and avoid computing scf gradient
-    // Remove once TravisCI is updated
-     ints_->wfn()->set_reference_wavefunction(ints_->wfn());
+    // TODO: Remove once TravisCI is updated
+    ints_->wfn()->set_reference_wavefunction(ints_->wfn());
 
     std::vector<std::shared_ptr<psi::MOSpace>> spaces;
     spaces.push_back(psi::MOSpace::all);
@@ -270,17 +265,17 @@ SharedMatrix CASSCF::compute_gradient() {
 void CASSCF::write_1rdm_spin_dependent() {
     outfile->Printf("\n    Writing 1RDM Coefficients ....................... ");
 
-    SharedMatrix D1(new Matrix("1rdm coefficients contribution", nirrep_, irrep_vec, irrep_vec));
+    SharedMatrix D1(new Matrix("1rdm coefficients contribution", nirrep_, nmo_dim_, nmo_dim_));
 
-    for (size_t i = 0, size_c = core_mos_relative.size(); i < size_c; ++i) {
-        D1->set(core_mos_relative[i].first, core_mos_relative[i].second,
-                core_mos_relative[i].second, 1.0);
+    for (size_t i = 0, size_c = core_mos_rel_.size(); i < size_c; ++i) {
+        D1->set(core_mos_rel_[i].first, core_mos_rel_[i].second,
+                core_mos_rel_[i].second, 1.0);
     }
 
     (Gamma1_.block("aa")).iterate([&](const std::vector<size_t>& i, double& value) {
-        if (actv_mos_relative[i[0]].first == actv_mos_relative[i[1]].first) {
-            D1->set(actv_mos_relative[i[0]].first, actv_mos_relative[i[0]].second,
-                    actv_mos_relative[i[1]].second, value);
+        if (actv_mos_rel_[i[0]].first == actv_mos_rel_[i[1]].first) {
+            D1->set(actv_mos_rel_[i[0]].first, actv_mos_rel_[i[0]].second,
+                    actv_mos_rel_[i[1]].second, value);
         }
     });
 
@@ -300,7 +295,7 @@ void CASSCF::write_lagrangian() {
     outfile->Printf("\n    Writing Lagrangian .............................. ");
 
     set_lagrangian();
-    SharedMatrix L(new Matrix("Lagrangian", nirrep_, irrep_vec, irrep_vec));
+    SharedMatrix L(new Matrix("Lagrangian", nirrep_, nmo_dim_, nmo_dim_));
 
     for (const std::string& block : {"cc", "CC", "aa", "AA", "ca", "ac", "CA", "AC"}) {
         std::vector<std::vector<std::pair<unsigned long, unsigned long>,
@@ -309,9 +304,9 @@ void CASSCF::write_lagrangian() {
         for (size_t idx : {0, 1}) {
             auto spin = std::tolower(block.at(idx));
             if (spin == 'c') {
-                spin_pair.push_back(core_mos_relative);
+                spin_pair.push_back(core_mos_rel_);
             } else if (spin == 'a') {
-                spin_pair.push_back(actv_mos_relative);
+                spin_pair.push_back(actv_mos_rel_);
             }
         }
 
@@ -346,10 +341,10 @@ void CASSCF::write_2rdm_spin_dependent() {
     IWL d2ab(psio_.get(), PSIF_MO_AB_TPDM, 1.0e-14, 0, 0);
     IWL d2bb(psio_.get(), PSIF_MO_BB_TPDM, 1.0e-14, 0, 0);
 
-    for (size_t i = 0, size_c = core_all_.size(); i < size_c; ++i) {
-        auto m = core_all_[i];
+    for (size_t i = 0, size_c = core_mos_abs_.size(); i < size_c; ++i) {
+        auto m = core_mos_abs_[i];
         for (size_t j = 0; j < size_c; ++j) {
-            auto n = core_all_[j];
+            auto n = core_mos_abs_[j];
             if (m != n) {
                 d2aa.write_value(m, m, n, n, 0.25, 0, "NULL", 0);
                 d2bb.write_value(m, m, n, n, 0.25, 0, "NULL", 0);
@@ -360,16 +355,16 @@ void CASSCF::write_2rdm_spin_dependent() {
         }
     }
 
-    for (size_t i = 0, size_c = core_all_.size(), size_a = actv_all_.size(); i < size_a; ++i) {
-        auto u = actv_all_[i];
+    for (size_t i = 0, size_c = core_mos_abs_.size(), size_a = actv_mos_abs_.size(); i < size_a; ++i) {
+        auto u = actv_mos_abs_[i];
         for (size_t j = 0; j < size_a; ++j) {
-            auto v = actv_all_[j];
-            auto idx = i * na_ + j;
+            auto v = actv_mos_abs_[j];
+            auto idx = i * nactv_ + j;
             auto gamma_a = Gamma1_.block("aa").data()[idx];
             auto gamma_b = Gamma1_.block("AA").data()[idx];
 
             for (size_t k = 0; k < size_c; ++k) {
-                auto m = core_all_[k];
+                auto m = core_mos_abs_[k];
                 d2aa.write_value(v, u, m, m, 0.5 * gamma_a, 0, "NULL", 0);
                 d2bb.write_value(v, u, m, m, 0.5 * gamma_b, 0, "NULL", 0);
                 d2aa.write_value(v, m, m, u, -0.5 * gamma_a, 0, "NULL", 0);
@@ -379,15 +374,15 @@ void CASSCF::write_2rdm_spin_dependent() {
         }
     }
 
-    for (size_t i = 0, size_a = actv_all_.size(); i < size_a; ++i) {
-        auto u = actv_all_[i];
+    for (size_t i = 0, size_a = actv_mos_abs_.size(); i < size_a; ++i) {
+        auto u = actv_mos_abs_[i];
         for (size_t j = 0; j < size_a; ++j) {
-            auto v = actv_all_[j];
+            auto v = actv_mos_abs_[j];
             for (size_t k = 0; k < size_a; ++k) {
-                auto x = actv_all_[k];
+                auto x = actv_mos_abs_[k];
                 for (size_t l = 0; l < size_a; ++l) {
-                    auto y = actv_all_[l];
-                    auto idx = i * na_ * na_ * na_ + j * na_ * na_ + k * na_ + l;
+                    auto y = actv_mos_abs_[l];
+                    auto idx = i * nactv_ * nactv_ * nactv_ + j * nactv_ * nactv_ + k * nactv_ + l;
                     auto gamma_aa = Gamma2_.block("aaaa").data()[idx];
                     auto gamma_bb = Gamma2_.block("AAAA").data()[idx];
                     auto gamma_ab = Gamma2_.block("aAaA").data()[idx];

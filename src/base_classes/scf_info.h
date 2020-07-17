@@ -32,12 +32,14 @@
 #include "psi4/libmints/dimension.h"
 #include "psi4/libmints/wavefunction.h"
 
-// class Vector;
-
 namespace forte {
 
 class SCFInfo {
   public:
+    /// Constructor
+    SCFInfo(const psi::Dimension& doccpi, const psi::Dimension& soccpi, double reference_energy,
+            std::shared_ptr<psi::Vector> epsilon_a, std::shared_ptr<psi::Vector> epsilon_b);
+
     /// Constructor based on Psi4 Wavefunction
     SCFInfo(psi::SharedWavefunction wfn);
 
@@ -46,12 +48,6 @@ class SCFInfo {
 
     /// return soccpi
     psi::Dimension soccpi();
-
-    /// return nsopi
-    psi::Dimension nsopi();
-
-    /// return nso
-    int nso();
 
     /// return energy
     double reference_energy();
@@ -68,9 +64,6 @@ class SCFInfo {
 
     // Singly occupied in RHF
     psi::Dimension soccpi_;
-
-    /// The number of SO (AO for C matrices)
-    psi::Dimension nsopi_;
 
     // SCF energy
     double energy_;

@@ -44,13 +44,16 @@ namespace forte {
  *
  * This class assumes the two-electron integrals can be stored in memory.
  */
-class ConventionalIntegrals : public ForteIntegrals {
+class ConventionalIntegrals : public Psi4Integrals {
   public:
     /// Contructor of the class.  Calls std::shared_ptr<ForteIntegrals> ints
     /// constructor
-    ConventionalIntegrals(std::shared_ptr<ForteOptions> options, std::shared_ptr<psi::Wavefunction> ref_wfn,
+    ConventionalIntegrals(std::shared_ptr<ForteOptions> options,
+                          std::shared_ptr<psi::Wavefunction> ref_wfn,
                           std::shared_ptr<MOSpaceInfo> mo_space_info,
                           IntegralSpinRestriction restricted);
+
+    void initialize() override;
 
     /// Grabs the antisymmetriced TEI - assumes storage in aphy_tei_*
     double aptei_aa(size_t p, size_t q, size_t r, size_t s) override;
@@ -68,16 +71,8 @@ class ConventionalIntegrals : public ForteIntegrals {
                                  const std::vector<size_t>& r,
                                  const std::vector<size_t>& s) override;
 
-    ambit::Tensor three_integral_block(const std::vector<size_t>&, const std::vector<size_t>&,
-                                       const std::vector<size_t>&) override;
-    ambit::Tensor three_integral_block_two_index(const std::vector<size_t>&, size_t,
-                                                 const std::vector<size_t>&) override;
-    double** three_integral_pointer() override;
-
     void make_fock_matrix(std::shared_ptr<psi::Matrix> gamma_a,
                           std::shared_ptr<psi::Matrix> gamma_b) override;
-
-    size_t nthree() const override;
 
     void set_tei(size_t p, size_t q, size_t r, size_t s, double value, bool alpha1,
                  bool alpha2) override;
@@ -85,26 +80,13 @@ class ConventionalIntegrals : public ForteIntegrals {
   private:
     // ==> Class data <==
 
-    /// Two-electron integrals stored as a vector
-    std::vector<double> aphys_tei_aa;
-    std::vector<double> aphys_tei_ab;
-    std::vector<double> aphys_tei_bb;
-
     // ==> Class private functions <==
 
     /// Transform the integrals
     std::shared_ptr<psi::IntegralTransform> transform_integrals();
     void resort_four(std::vector<double>& tei, std::vector<size_t>& map);
 
-    /// An addressing function to for two-electron integrals
-    /// @return the address of the integral <pq|rs> or <pq||rs>
-    size_t aptei_index(size_t p, size_t q, size_t r, size_t s) {
-        return aptei_idx_ * aptei_idx_ * aptei_idx_ * p + aptei_idx_ * aptei_idx_ * q +
-               aptei_idx_ * r + s;
-    }
-
     // ==> Class private virtual functions <==
-
     void gather_integrals() override;
     void resort_integrals_after_freezing() override;
 };

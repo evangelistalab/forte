@@ -29,7 +29,7 @@ set forte {
   nroot 2
   aci_nfrozen_core 1
   aci_roots_per_core 1
-  aci_preiterations 2
+  sci_preiterations 2
   charge 0                               
   aci_add_aimed_degenerate false
   aci_screen_alg core

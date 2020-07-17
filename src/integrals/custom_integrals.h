@@ -41,8 +41,13 @@ class CustomIntegrals : public ForteIntegrals {
   public:
     /// Contructor of the class.  Calls std::shared_ptr<ForteIntegrals> ints
     /// constructor
-    CustomIntegrals(std::shared_ptr<ForteOptions> options, std::shared_ptr<psi::Wavefunction> ref_wfn,
-                    std::shared_ptr<MOSpaceInfo> mo_space_info, IntegralSpinRestriction restricted);
+    CustomIntegrals(std::shared_ptr<ForteOptions> options,
+                    std::shared_ptr<MOSpaceInfo> mo_space_info, IntegralSpinRestriction restricted,
+                    double scalar, const std::vector<double>& oei_a,
+                    const std::vector<double>& oei_b, const std::vector<double>& tei_aa,
+                    const std::vector<double>& tei_ab, const std::vector<double>& tei_bb);
+
+    void initialize() override;
 
     /// Grabs the antisymmetriced TEI - assumes storage in aphy_tei_*
     double aptei_aa(size_t p, size_t q, size_t r, size_t s) override;
@@ -60,12 +65,6 @@ class CustomIntegrals : public ForteIntegrals {
                                  const std::vector<size_t>& r,
                                  const std::vector<size_t>& s) override;
 
-    ambit::Tensor three_integral_block(const std::vector<size_t>&, const std::vector<size_t>&,
-                                       const std::vector<size_t>&) override;
-    ambit::Tensor three_integral_block_two_index(const std::vector<size_t>&, size_t,
-                                                 const std::vector<size_t>&) override;
-    double** three_integral_pointer() override;
-
     void make_fock_matrix(std::shared_ptr<psi::Matrix> gamma_a,
                           std::shared_ptr<psi::Matrix> gamma_b) override;
 
@@ -75,13 +74,24 @@ class CustomIntegrals : public ForteIntegrals {
                  bool alpha2) override;
 
   private:
-    // ==> Class data <==
+    // ==> Class private data <==
 
-    /// Used to store the two-electron integrals (pq|rs) in chemist notation with 8-fold symmetry
-    /// and addressed with the function four(p,q,r,s)
-    std::vector<double> aphys_tei_aa;
-    std::vector<double> aphys_tei_ab;
-    std::vector<double> aphys_tei_bb;
+    /// Full two-electron integrals stored as a vector with redundant elements (no permutational
+    /// symmetry) (includes frozen orbitals)
+    std::vector<double> full_aphys_tei_aa_;
+    std::vector<double> full_aphys_tei_ab_;
+    std::vector<double> full_aphys_tei_bb_;
+
+    std::vector<double> original_full_one_electron_integrals_a_;
+    std::vector<double> original_full_one_electron_integrals_b_;
+
+    bool save_original_tei_ = false;
+    ambit::Tensor original_V_aa_;
+    ambit::Tensor original_V_ab_;
+    ambit::Tensor original_V_bb_;
+    std::vector<double> original_full_aphys_tei_aa_;
+    std::vector<double> original_full_aphys_tei_ab_;
+    std::vector<double> original_full_aphys_tei_bb_;
 
     // ==> Class private functions <==
 
@@ -92,13 +102,16 @@ class CustomIntegrals : public ForteIntegrals {
         return aptei_idx_ * aptei_idx_ * aptei_idx_ * p + aptei_idx_ * aptei_idx_ * q +
                aptei_idx_ * r + s;
     }
-    /// Set the number of orbitals and allocate the memory
-    void custom_integrals_allocate(int norb, const std::vector<int>& orbsym);
+
+    void update_orbitals(std::shared_ptr<psi::Matrix> Ca, std::shared_ptr<psi::Matrix> Cb) override;
 
     // ==> Class private virtual functions <==
-
     void gather_integrals() override;
     void resort_integrals_after_freezing() override;
+    void compute_frozen_one_body_operator() override;
+
+    void transform_one_electron_integrals();
+    void transform_two_electron_integrals();
 };
 
 } // namespace forte

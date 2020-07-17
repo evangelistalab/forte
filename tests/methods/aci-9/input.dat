@@ -26,7 +26,7 @@ set {
 set forte {
   active_space_solver aci
   aci_add_aimed_degenerate false
-  aci_enforce_spin_complete false
+  sci_enforce_spin_complete false
   frozen_docc [1,0,0,0,0,1,0,0]
   restricted_docc [1,0,0,0,0,0,1,0]
   active [1,0,1,1,0,2,0,1]

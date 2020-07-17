@@ -42,7 +42,7 @@ set forte {
     root_sym                   0
     nroot                      1
     root                       0
-    CASSCF_ITERATIONS          40
+    CASSCF_MAXITER          40
     print                      0
 }
 e_casscf_forte = energy('forte')

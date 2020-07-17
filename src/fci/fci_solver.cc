@@ -90,6 +90,7 @@ void FCISolver::startup() {
         size_t nbstr = lists_->beta_graph()->strpi(h ^ symmetry_);
         ndfci += nastr * nbstr;
     }
+
     if (print_) {
         // Print a summary of options
         std::vector<std::pair<std::string, int>> calculation_info{
@@ -200,6 +201,8 @@ double FCISolver::compute_energy() {
 
     if (print_) {
         outfile->Printf("\n\n  ==> Diagonalizing Hamiltonian <==\n");
+        outfile->Printf("\n  Energy   convergence: %.2e", dls.get_e_convergence());
+        outfile->Printf("\n  Residual convergence: %.2e", dls.get_r_convergence());
         outfile->Printf("\n  -----------------------------------------------------");
         outfile->Printf("\n    Iter.      Avg. Energy       Delta_E     Res. Norm");
         outfile->Printf("\n  -----------------------------------------------------");
@@ -254,7 +257,7 @@ double FCISolver::compute_energy() {
 
     if (converged == SolverStatus::NotConverged) {
         outfile->Printf("\n  FCI did not converge!");
-        throw psi::PSIEXCEPTION("FCI did not converge. Try increasing FCI_ITERATIONS.");
+        throw psi::PSIEXCEPTION("FCI did not converge. Try increasing FCI_MAXITER.");
     }
 
     // Compute final eigenvectors
@@ -338,7 +341,7 @@ double FCISolver::compute_energy() {
     return energy_;
 }
 
-void FCISolver::compute_rdms_root(int root1, int root2, int max_rdm_level) {
+void FCISolver::compute_rdms_root(size_t root1, size_t /*root2*/, int max_rdm_level) {
     // make sure a compute_energy is called before this
     if (C_) {
         if (root1 >= nroot_) {
@@ -628,8 +631,8 @@ std::vector<RDMs> FCISolver::rdms(const std::vector<std::pair<size_t, size_t>>& 
 }
 
 std::vector<RDMs>
-FCISolver::transition_rdms(const std::vector<std::pair<size_t, size_t>>& root_list,
-                           std::shared_ptr<ActiveSpaceMethod> method2, int max_rdm_level) {
+FCISolver::transition_rdms(const std::vector<std::pair<size_t, size_t>>& /*root_list*/,
+                           std::shared_ptr<ActiveSpaceMethod> /*method2*/, int /*max_rdm_level*/) {
     std::vector<RDMs> refs;
     throw std::runtime_error("FCISolver::transition_rdms is not implemented!");
     return refs;

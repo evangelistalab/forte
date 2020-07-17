@@ -29,7 +29,6 @@
 #ifndef _determinant_substitution_lists_h_
 #define _determinant_substitution_lists_h_
 
-#include "psi4/libpsi4util/process.h"
 #include "integrals/active_space_integrals.h"
 #include "sparse_ci/determinant_hashvector.h"
 #include "sparse_ci/determinant.h"

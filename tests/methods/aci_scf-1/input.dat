@@ -43,7 +43,7 @@ set forte{
    multiplicity            1
    ACTIVE_SPACE_SOLVER     ACI
    int_type                conventional
-   CASSCF_ITERATIONS        25
+   CASSCF_MAXITER        25
    print                    0
    CASSCF_DO_DIIS           false
    casscf_ci_solver         aci

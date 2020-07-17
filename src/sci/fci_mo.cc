@@ -34,27 +34,28 @@
 #include <sstream>
 #include <string>
 
-#include "psi4/libmints/basisset.h"
-#include "psi4/libmints/vector.h"
-#include "psi4/libmints/dipole.h"
-#include "psi4/libmints/oeprop.h"
-#include "psi4/libmints/integral.h"
-#include "psi4/libmints/petitelist.h"
+#include "boost/algorithm/string/predicate.hpp"
+
+#include "psi4/libpsi4util/PsiOutStream.h"
+#include "psi4/libpsi4util/process.h"
 #include "psi4/libmints/molecule.h"
+#include "psi4/libmints/integral.h"
+#include "psi4/libmints/basisset.h"
 #include "psi4/libpsio/psio.hpp"
 
-#include "sparse_ci/determinant_hashvector.h"
-#include "fci/fci_vector.h"
-#include "fci_mo.h"
 #include "base_classes/forte_options.h"
 #include "base_classes/scf_info.h"
-#include "boost/algorithm/string/predicate.hpp"
+#include "helpers/printing.h"
+#include "helpers/timer.h"
+
+#include "sparse_ci/determinant_hashvector.h"
 #include "sparse_ci/determinant_substitution_lists.h"
 #include "sparse_ci/sigma_vector.h"
 #include "orbital-helpers/semi_canonicalize.h"
 #include "orbital-helpers/iao_builder.h"
-#include "helpers/printing.h"
-#include "helpers/timer.h"
+#include "fci/fci_vector.h"
+
+#include "fci_mo.h"
 
 using namespace psi;
 using namespace ambit;
@@ -192,7 +193,7 @@ void FCI_MO::read_options() {
 
     // number of Irrep
     nirrep_ = mo_space_info_->nirrep();
-    irrep_symbols_ = psi::Process::environment.molecule()->irrep_labels();
+    irrep_symbols_ = mo_space_info_->irrep_labels();
 
     // obtain MOs
     nmo_ = mo_space_info_->size("ALL");
@@ -894,14 +895,13 @@ void FCI_MO::Diagonalize_H(const vecdet& p_space, const int& multi, const int& n
     if (!quiet_) {
         outfile->Printf("\n  %-35s ...", "Diagonalizing Hamiltonian");
     }
-    size_t det_size = p_space.size();
     eigen.clear();
 
     // DL solver
     SparseCISolver sparse_solver;
     sparse_solver.set_e_convergence(econv_);
     sparse_solver.set_r_convergence(rconv_);
-    sparse_solver.set_spin_project(true);
+    sparse_solver.set_spin_project(options_->get_bool("SCI_PROJECT_OUT_SPIN_CONTAMINANTS"));
     sparse_solver.set_maxiter_davidson(options_->get_int("DL_MAXITER"));
     sparse_solver.set_guess_dimension(options_->get_int("DL_GUESS_SIZE"));
     if (projected_roots_.size() != 0) {
@@ -1001,15 +1001,13 @@ void FCI_MO::print_CI(const int& nroot, const double& CI_threshold,
 }
 
 void FCI_MO::compute_permanent_dipole() {
-
-    CharacterTable ct = psi::Process::environment.molecule()->point_group()->char_table();
-    std::string irrep_symbol = ct.gamma(root_sym_).symbol();
+    std::string irrep_symbol = mo_space_info_->irrep_label(root_sym_);
     std::string title = "Permanent Dipole Moments (" + irrep_symbol + ")";
     print_h2(title);
     outfile->Printf("\n  Only print nonzero (> 1.0e-5) elements.");
 
     // obtain AO dipole from ForteIntegrals
-    std::vector<psi::SharedMatrix> aodipole_ints = integral_->AOdipole_ints();
+    std::vector<psi::SharedMatrix> aodipole_ints = integral_->ao_dipole_ints();
 
     // Nuclear dipole contribution
     Vector3 ndip =
@@ -1017,7 +1015,7 @@ void FCI_MO::compute_permanent_dipole() {
     //        DipoleInt::nuclear_contribution(psi::Process::environment.molecule(), );
 
     // SO to AO transformer
-    psi::SharedMatrix sotoao(integral_->aotoso()->transpose());
+    psi::SharedMatrix sotoao(integral_->wfn()->aotoso()->transpose());
 
     // prepare eigen vectors for ci_rdm
     int dim = (eigen_[0].first)->dim();
@@ -1101,18 +1099,17 @@ psi::SharedMatrix FCI_MO::reformat_1rdm(const std::string& name, const std::vect
 }
 
 void FCI_MO::compute_transition_dipole() {
-    CharacterTable ct = psi::Process::environment.molecule()->point_group()->char_table();
-    std::string irrep_symbol = ct.gamma(root_sym_).symbol();
+    std::string irrep_symbol = mo_space_info_->irrep_label(root_sym_);
     std::stringstream title;
     title << "Transition Dipole Moments (" << irrep_symbol << " -> " << irrep_symbol << ")";
     print_h2(title.str());
     outfile->Printf("\n  Only print nonzero (> 1.0e-5) elements.");
 
     // obtain AO dipole from libmints
-    std::vector<psi::SharedMatrix> aodipole_ints = integral_->AOdipole_ints();
+    std::vector<psi::SharedMatrix> aodipole_ints = integral_->ao_dipole_ints();
 
     // SO to AO transformer
-    psi::SharedMatrix sotoao(integral_->aotoso()->transpose());
+    psi::SharedMatrix sotoao(integral_->wfn()->aotoso()->transpose());
 
     //    // obtain SO dipole from libmints
     //    std::vector<psi::SharedMatrix> dipole_ints;
@@ -1206,9 +1203,7 @@ void FCI_MO::compute_transition_dipole() {
 }
 
 void FCI_MO::compute_oscillator_strength() {
-
-    CharacterTable ct = psi::Process::environment.molecule()->point_group()->char_table();
-    std::string irrep_symbol = ct.gamma(root_sym_).symbol();
+    std::string irrep_symbol = mo_space_info_->irrep_label(root_sym_);
     std::stringstream title;
     title << "Oscillator Strength (" << irrep_symbol << " -> " << irrep_symbol << ")";
     print_h2(title.str());
@@ -1253,7 +1248,8 @@ FCI_MO::compute_ref_relaxed_dm(const std::vector<double>& dm0, std::vector<Block
         do_dm.push_back(std::fabs(dm0[z]) > 1.0e-12 ? true : false);
     }
 
-    std::string pg = (psi::Process::environment.molecule()->point_group()->char_table()).symbol();
+    std::string pg = mo_space_info_->point_group_label();
+    to_lower_string(pg);
     int width = 2;
     if (pg == "cs" || pg == "d2h") {
         width = 3;
@@ -1350,7 +1346,8 @@ FCI_MO::compute_ref_relaxed_dm(const std::vector<double>& dm0, std::vector<Block
         do_dm.push_back(std::fabs(dm0[z]) > 1.0e-12 ? true : false);
     }
 
-    std::string pg = (psi::Process::environment.molecule()->point_group()->char_table()).symbol();
+    std::string pg = mo_space_info_->point_group_label();
+    to_lower_string(pg);
     int width = 2;
     if (pg == "cs" || pg == "d2h") {
         width = 3;
@@ -1443,7 +1440,8 @@ std::map<std::string, std::vector<double>>
 FCI_MO::compute_ref_relaxed_osc(std::vector<BlockedTensor>& dm1, std::vector<BlockedTensor>& dm2) {
     std::map<std::string, std::vector<double>> out;
 
-    std::string pg = (psi::Process::environment.molecule()->point_group()->char_table()).symbol();
+    std::string pg = mo_space_info_->point_group_label();
+    to_lower_string(pg);
     int width = 2;
     if (pg == "cs" || pg == "d2h") {
         width = 3;
@@ -1562,7 +1560,8 @@ FCI_MO::compute_ref_relaxed_osc(std::vector<BlockedTensor>& dm1, std::vector<Blo
                                 std::vector<BlockedTensor>& dm3) {
     std::map<std::string, std::vector<double>> out;
 
-    std::string pg = (psi::Process::environment.molecule()->point_group()->char_table()).symbol();
+    std::string pg = mo_space_info_->point_group_label();
+    to_lower_string(pg);
     int width = 2;
     if (pg == "cs" || pg == "d2h") {
         width = 3;
@@ -1803,7 +1802,7 @@ double FCI_MO::ref_relaxed_dm_helper(const double& dm0, BlockedTensor& dm1, Bloc
 d3 FCI_MO::compute_orbital_extents() {
 
     // compute AO quadrupole integrals
-    std::shared_ptr<psi::BasisSet> basisset = integral_->basisset();
+    std::shared_ptr<psi::BasisSet> basisset = integral_->wfn()->basisset();
     std::shared_ptr<IntegralFactory> ints = std::shared_ptr<IntegralFactory>(
         new IntegralFactory(basisset, basisset, basisset, basisset));
 
@@ -1816,7 +1815,7 @@ d3 FCI_MO::compute_orbital_extents() {
     aoqOBI->compute(ao_Qpole);
 
     // orbital coefficients arranged by orbital energies
-    psi::SharedMatrix Ca_ao = integral_->Ca_subset("AO");
+    psi::SharedMatrix Ca_ao = integral_->wfn()->Ca_subset("AO");
     int nao = Ca_ao->nrow();
     int nmo = Ca_ao->ncol();
 

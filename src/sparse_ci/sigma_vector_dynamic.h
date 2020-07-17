@@ -62,7 +62,8 @@ class SigmaVectorDynamic : public SigmaVector {
     /// The number of threads
     int num_threads_ = 1;
     size_t total_space_ = 0;
-    int nmo_ = 0;
+    /// The number of molecular orbitals
+    size_t nmo_ = 0;
     /// Number of sigma builds
     int num_builds_ = 0;
     double H_threshold_ = 1.0e-14;

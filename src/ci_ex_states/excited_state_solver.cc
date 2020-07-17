@@ -30,6 +30,7 @@
 #include <iomanip>
 #include <cmath>
 
+#include "psi4/libpsi4util/process.h"
 #include "psi4/libpsi4util/PsiOutStream.h"
 #include "psi4/physconst.h"
 
@@ -75,7 +76,7 @@ void ExcitedStateSolver::set_options(std::shared_ptr<ForteOptions> options) {
     }
 
     core_ex_ = options->get_bool("SCI_CORE_EX");
-    quiet_mode_ = options->get_bool("ACI_QUIET_MODE");
+    quiet_mode_ = options->get_bool("SCI_QUIET_MODE");
     direct_rdms_ = options->get_bool("SCI_DIRECT_RDMS");
     test_rdms_ = options->get_bool("SCI_TEST_RDMS");
     save_final_wfn_ = options->get_bool("SCI_SAVE_FINAL_WFN");
@@ -465,8 +466,9 @@ std::vector<RDMs> ExcitedStateSolver::rdms(const std::vector<std::pair<size_t, s
 }
 
 std::vector<RDMs>
-ExcitedStateSolver::transition_rdms(const std::vector<std::pair<size_t, size_t>>& root_list,
-                                    std::shared_ptr<ActiveSpaceMethod> method2, int max_rdm_level) {
+ExcitedStateSolver::transition_rdms(const std::vector<std::pair<size_t, size_t>>& /*root_list*/,
+                                    std::shared_ptr<ActiveSpaceMethod> /*method2*/,
+                                    int /*max_rdm_level*/) {
     std::vector<RDMs> refs;
     throw std::runtime_error("ExcitedStateSolver::transition_rdms is not implemented!");
     return refs;
