@@ -36,6 +36,10 @@
 #include <unordered_map>
 #include <utility>
 
+#include "psi4/libpsi4util/PsiOutStream.h"
+#include "psi4/libpsi4util/process.h"
+#include "psi4/libmints/matrix.h"
+
 #include "helpers/timer.h"
 #include "sparse_ci/ci_reference.h"
 #include "sparse_ci/determinant_functions.hpp"

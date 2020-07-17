@@ -1,6 +1,8 @@
 #include <tuple>
 #include <sstream>
 
+#include "psi4/libpsi4util/PsiOutStream.h"
+#include "psi4/libpsi4util/process.h"
 #include "psi4/libmints/molecule.h"
 #include "psi4/libmints/dimension.h"
 
@@ -37,12 +39,8 @@ void DWMS_DSRGPT2::startup() {
 
     Enuc_ = ints_->nuclear_repulsion_energy();
 
-    CharacterTable ct = psi::Process::environment.molecule()->point_group()->char_table();
     int nirrep = mo_space_info_->nirrep();
-    irrep_symbol_.resize(nirrep);
-    for (int h = 0; h < nirrep; ++h) {
-        irrep_symbol_[h] = std::string(ct.gamma(h).symbol());
-    }
+    irrep_symbol_ = mo_space_info_->irrep_labels();
 
     multi_symbol_ = std::vector<std::string>{"Singlet", "Doublet", "Triplet", "Quartet", "Quintet",
                                              "Sextet",  "Septet",  "Octet",   "Nonet",   "Decaet"};

@@ -160,7 +160,7 @@ PYBIND11_MODULE(forte, m) {
     m.def("make_mo_space_info", &make_mo_space_info, "Make a MOSpaceInfo object");
     //    m.def("make_mo_space_info_from_map", &make_mo_space_info_from_map,
     //          "Make a MOSpaceInfo object from a map of space name (string) to a vector");
-    m.def("make_mo_space_info_from_map", &make_mo_space_info_from_map, "ref_wfn"_a,
+    m.def("make_mo_space_info_from_map", &make_mo_space_info_from_map, "nmopi"_a, "point_group"_a,
           "mo_space_map"_a, "reorder"_a = std::vector<size_t>(),
           "Make a MOSpaceInfo object using a dictionary");
 

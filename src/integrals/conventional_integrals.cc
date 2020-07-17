@@ -32,6 +32,7 @@
 #include "psi4/psifiles.h"
 #include "psi4/libdpd/dpd.h"
 #include "psi4/libmints/mintshelper.h"
+#include "psi4/libmints/matrix.h"
 #include "psi4/libpsio/psio.hpp"
 #include "psi4/libtrans/integraltransform.h"
 

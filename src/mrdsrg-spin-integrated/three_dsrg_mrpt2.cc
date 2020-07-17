@@ -32,6 +32,7 @@
 #include <string>
 #include <sstream>
 #include <vector>
+
 #ifdef HAVE_MPI
 #include <mpi.h>
 #endif
@@ -43,6 +44,8 @@
 #define GA_Nodeid() 0
 #endif
 
+#include "psi4/libpsi4util/PsiOutStream.h"
+#include "psi4/libpsi4util/process.h"
 #include "psi4/lib3index/dftensor.h"
 #include "psi4/libmints/matrix.h"
 #include "psi4/libmints/molecule.h"
@@ -2675,10 +2678,9 @@ double THREE_DSRG_MRPT2::E_VT2_2_one_active() {
     double Eccva = 0;
     double Eacvv = 0;
     int nthread = 1;
-    int thread = 0;
 #ifdef _OPENMP
     nthread = omp_get_max_threads();
-    thread = omp_get_thread_num();
+//    thread = omp_get_thread_num();
 #endif
 
     /// This block of code assumes that ThreeIntegral are not stored as a member variable.
@@ -3065,9 +3067,8 @@ void THREE_DSRG_MRPT2::form_Hbar() {
     }
 }
 
-
 // TODO: This code is now implemented in Python, except for the printing (Francesco)
-//double THREE_DSRG_MRPT2::relax_reference_once() {
+// double THREE_DSRG_MRPT2::relax_reference_once() {
 
 //    outfile->Printf("\n Computing ints for Heff");
 //    auto fci_ints = compute_Heff_actv();
@@ -3082,7 +3083,8 @@ void THREE_DSRG_MRPT2::form_Hbar() {
 //        print_h2("CD/DF DSRG-MRPT2 Energy Summary");
 //        outfile->Printf("\n    %-37s = %22.15f", "CD/DF DSRG-MRPT2 Total Energy (fixed)  ",
 //                        Hbar0_ + Eref_);
-//        outfile->Printf("\n    %-37s = %22.15f", "CD/DF DSRG-MRPT2 Total Energy (relaxed)", Erelax);
+//        outfile->Printf("\n    %-37s = %22.15f", "CD/DF DSRG-MRPT2 Total Energy (relaxed)",
+//        Erelax);
 
 //        psi::Process::environment.globals["PARTIALLY RELAXED ENERGY"] = Erelax;
 //        psi::Process::environment.globals["CURRENT ENERGY"] = Erelax;
@@ -3386,8 +3388,8 @@ void THREE_DSRG_MRPT2::compute_Hbar1V_diskDF(ambit::BlockedTensor& Hbar1, bool s
     }
 }
 
-//std::vector<double>
-//THREE_DSRG_MRPT2::relaxed_energy(std::shared_ptr<ActiveSpaceIntegrals> fci_ints) {
+// std::vector<double>
+// THREE_DSRG_MRPT2::relaxed_energy(std::shared_ptr<ActiveSpaceIntegrals> fci_ints) {
 
 //    // reference relaxation
 //    std::vector<double> Erelax;
@@ -3410,9 +3412,8 @@ void THREE_DSRG_MRPT2::compute_Hbar1V_diskDF(ambit::BlockedTensor& Hbar1, bool s
 //        if (!multi_state_) {
 //            Erelax.push_back(Eci);
 //        } else {
-//            std::vector<std::vector<std::pair<psi::SharedVector, double>>> eigens = fci_mo.eigens();
-//            size_t nentry = eigens.size();
-//            for (size_t n = 0; n < nentry; ++n) {
+//            std::vector<std::vector<std::pair<psi::SharedVector, double>>> eigens =
+//            fci_mo.eigens(); size_t nentry = eigens.size(); for (size_t n = 0; n < nentry; ++n) {
 //                std::vector<std::pair<psi::SharedVector, double>> eigen = eigens[n];
 //                size_t ni = eigen.size();
 //                for (size_t i = 0; i < ni; ++i) {
@@ -3503,9 +3504,8 @@ void THREE_DSRG_MRPT2::compute_Hbar1V_diskDF(ambit::BlockedTensor& Hbar1, bool s
 //                // TODO: remove this code in
 //                int ms = (multi + 1) % 2;
 //                auto nelec_actv = nelec;
-//                //                - 2 * mo_space_info_->size("FROZEN_DOCC") - 2 * core_mos_.size();
-//                auto na = (nelec_actv + ms) / 2;
-//                auto nb = nelec_actv - na;
+//                //                - 2 * mo_space_info_->size("FROZEN_DOCC") - 2 *
+//                core_mos_.size(); auto na = (nelec_actv + ms) / 2; auto nb = nelec_actv - na;
 
 //                StateInfo state(na, nb, multi, multi - 1, irrep); // assumes highes Ms
 //                // TODO use base class info

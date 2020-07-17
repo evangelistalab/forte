@@ -388,8 +388,8 @@ void DavidsonLiuSolver::collapse_vectors() {
 std::pair<bool, bool> DavidsonLiuSolver::check_convergence() {
     compute_residual_norm();
     // check convergence on all roots
-    int num_converged_energy = 0;
-    int num_converged_residual = 0;
+    size_t num_converged_energy = 0;
+    size_t num_converged_residual = 0;
     converged_ = 0;
     if (print_level_ > 1) {
         outfile->Printf("\n  Root      Eigenvalue        Delta   Converged?\n");

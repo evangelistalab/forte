@@ -60,4 +60,11 @@ std::string upper_string(std::string s) {
     return s;
 }
 
+void to_lower_string(std::string& s) { std::transform(s.begin(), s.end(), s.begin(), ::tolower); }
+
+std::string lower_string(std::string s) {
+    std::transform(s.begin(), s.end(), s.begin(), ::tolower);
+    return s;
+}
+
 } // namespace forte

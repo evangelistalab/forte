@@ -37,10 +37,8 @@
 
 #include "psi4/libmints/wavefunction.h"
 #include "psi4/libmints/molecule.h"
-#include "psi4/libmints/pointgrp.h"
 #include "ambit/blocked_tensor.h"
 
-//#include "boost/assign.hpp"
 #include "sci/aci.h"
 #include "integrals/integrals.h"
 #include "base_classes/rdms.h"

@@ -26,12 +26,9 @@
  * @END LICENSE
  */
 
-//#include <algorithm>
-//#include <cmath>
-//#include <numeric>
-
 #include "psi4/psi4-dec.h"
 #include "psi4/libpsi4util/PsiOutStream.h"
+#include "psi4/libmints/vector.h"
 
 #include "psi4/libfock/jk.h"
 
