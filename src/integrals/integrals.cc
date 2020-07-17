@@ -141,8 +141,6 @@ std::shared_ptr<psi::Matrix> ForteIntegrals::Ca() const { return Ca_; }
 
 std::shared_ptr<psi::Matrix> ForteIntegrals::Cb() const { return Cb_; }
 
-std::shared_ptr<psi::Matrix> ForteIntegrals::S_ao() const { return S_ao_; }
-
 double ForteIntegrals::nuclear_repulsion_energy() const { return nucrep_; }
 
 std::shared_ptr<psi::Wavefunction> ForteIntegrals::wfn() { return wfn_; }
