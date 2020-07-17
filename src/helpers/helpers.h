@@ -54,21 +54,6 @@ class Options;
 namespace forte {
 
 /**
- * @brief Return the label of an irreducible representation of a given point group
- * @param point_group the point group
- * @param h the irrep index
- * @return the label of irrep h
- */
-std::string irrep_label(const std::string& point_group, int h);
-
-/**
- * @brief Return the labels of the irreducible representations of a given point group
- * @param point_group the point group
- * @return the label of irreps
- */
-const std::vector<std::string>& irrep_labels(const std::string& point_group);
-
-/**
  * @brief Convert an ambit tensor to a numpy ndarray.
  *        The returned tensor is stored according to the C storage convention.
  * @param t The input tensor
