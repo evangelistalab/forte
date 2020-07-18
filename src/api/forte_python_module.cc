@@ -34,7 +34,6 @@
 #include "psi4/libmints/wavefunction.h"
 
 #include "base_classes/active_space_solver.h"
-#include "base_classes/mo_space_info.h"
 #include "base_classes/orbital_transform.h"
 #include "integrals/make_integrals.h"
 
@@ -72,6 +71,7 @@ namespace forte {
 void export_ambit(py::module& m);
 void export_ForteIntegrals(py::module& m);
 void export_ForteOptions(py::module& m);
+void export_MOSpaceInfo(py::module& m);
 void export_RDMs(py::module& m);
 void export_StateInfo(py::module& m);
 void export_SigmaVector(py::module& m);
@@ -242,29 +242,7 @@ PYBIND11_MODULE(forte, m) {
 
     export_ForteCubeFile(m);
 
-    // export MOSpaceInfo
-    py::class_<MOSpaceInfo, std::shared_ptr<MOSpaceInfo>>(m, "MOSpaceInfo")
-        .def("dimension", &MOSpaceInfo::dimension,
-             "Return a psi::Dimension object for the given space")
-        .def("absolute_mo", &MOSpaceInfo::absolute_mo,
-             "Return the list of the absolute index of the molecular orbitals in a space "
-             "excluding "
-             "the frozen core/virtual orbitals")
-        .def("corr_absolute_mo", &MOSpaceInfo::corr_absolute_mo,
-             "Return the list of the absolute index of the molecular orbitals in a correlated "
-             "space")
-        .def("get_relative_mo", &MOSpaceInfo::get_relative_mo, "Return the relative MOs")
-        .def("read_options", &MOSpaceInfo::read_options, "Read options")
-        .def("read_from_map", &MOSpaceInfo::read_from_map,
-             "Read the space info from a map {spacename -> dimension vector}")
-        .def("set_reorder", &MOSpaceInfo::set_reorder,
-             "Reorder MOs according to the input indexing vector")
-        .def("compute_space_info", &MOSpaceInfo::compute_space_info,
-             "Processing current MOSpaceInfo: calculate frozen core, count and assign orbitals")
-        .def("size", &MOSpaceInfo::size, "Return the number of orbitals in a space")
-        .def("nirrep", &MOSpaceInfo::nirrep, "Return the number of irreps")
-        .def("symmetry", &MOSpaceInfo::symmetry, "Return the symmetry of each orbital")
-        .def("space_names", &MOSpaceInfo::space_names, "Return the names of orbital spaces");
+    export_MOSpaceInfo(m);
 
     // export SCFInfo
     py::class_<SCFInfo, std::shared_ptr<SCFInfo>>(m, "SCFInfo")

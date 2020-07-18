@@ -661,7 +661,7 @@ bool SigmaVectorDynamic::compute_abab_coupling_and_store(const String& detIa,
         int ndiff = detIJa_common.count();
         if (ndiff == 2) {
             int i, a;
-            for (int p = 0; p < nmo_; ++p) {
+            for (size_t p = 0; p < nmo_; ++p) {
                 const bool la_p = detIa.get_bit(p);
                 const bool ra_p = detJa.get_bit(p);
                 if (la_p ^ ra_p) {
@@ -731,7 +731,7 @@ void SigmaVectorDynamic::compute_abab_coupling(const String& detIa, const std::v
         int ndiff = detIJa_common.count();
         if (ndiff == 2) {
             int i, a;
-            for (int p = 0; p < nmo_; ++p) {
+            for (size_t p = 0; p < nmo_; ++p) {
                 const bool la_p = detIa.get_bit(p);
                 const bool ra_p = detJa.get_bit(p);
                 if (la_p ^ ra_p) {
