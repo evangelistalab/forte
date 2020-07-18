@@ -240,6 +240,14 @@ class CASSCF_NEW {
     /// The orbital diagonal Hessian
     ambit::BlockedTensor h_diag_;
 
+    /// G intermediates when forming internal diagonal Hessian
+    ambit::BlockedTensor Guu_;
+    ambit::BlockedTensor Guv_;
+    /// Intermediate (TEI) when forming internal diagonal Hessian
+    ambit::BlockedTensor jk_internal_;
+    /// Intermediate (2RDM) when forming internal diagonal Hessian
+    ambit::BlockedTensor d2_internal_;
+
     // => functions used in every iteration <=
 
     /// Build integrals for gradients and Hessian

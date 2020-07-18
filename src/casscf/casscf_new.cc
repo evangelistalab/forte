@@ -395,9 +395,13 @@ void CASSCF_NEW::init_tensors() {
     rdm1_ = std::make_shared<psi::Matrix>("1RDM", nactvpi_, nactvpi_);
 
     // orbital gradients related
-    std::vector<std::string> g_blocks {"ac", "vo"};
+    std::vector<std::string> g_blocks{"ac", "vo"};
     if (internal_rot_) {
         g_blocks.push_back("aa");
+        Guu_ = ambit::BlockedTensor::build(CoreTensor, "Guu", {"aa"});
+        Guv_ = ambit::BlockedTensor::build(CoreTensor, "Guv", {"aa"});
+        jk_internal_ = ambit::BlockedTensor::build(CoreTensor, "tei_internal", {"aaa"});
+        d2_internal_ = ambit::BlockedTensor::build(CoreTensor, "rdm_internal", {"aaa"});
     }
     A_ = ambit::BlockedTensor::build(tensor_type, "A", {"ca", "ao", "vo"});
     g_ = ambit::BlockedTensor::build(tensor_type, "g", g_blocks);
@@ -746,7 +750,7 @@ void CASSCF_NEW::build_fock(bool rebuild_inactive) {
     format_fock(Fock_, F_);
 
     // fill in diagonal Fock in Pitzer ordering
-    for (const std::string& space: {"c", "a", "v"}) {
+    for (const std::string& space : {"c", "a", "v"}) {
         std::string block = space + space;
         auto mos = label_to_mos_[space];
         for (size_t i = 0, size = mos.size(); i < size; ++i) {
@@ -908,6 +912,7 @@ void CASSCF_NEW::compute_orbital_hess_diag() {
     // virtual-active block
     auto& d1_data = D1_.block("aa").data();
     auto& a_data = A_.block("aa").data();
+
     h_diag_.block("va").iterate([&](const std::vector<size_t>& i, double& value) {
         auto i0 = label_to_mos_["v"][i[0]];
         auto i1 = i[1] * nactv_ + i[1];
@@ -925,7 +930,83 @@ void CASSCF_NEW::compute_orbital_hess_diag() {
 
     // active-active block [see SI of J. Chem. Phys. 152, 074102 (2020)]
     if (internal_rot_) {
+        size_t nactv2 = nactv_ * nactv_;
+        size_t nactv3 = nactv2 * nactv_;
 
+        auto& fc_data = Fc_.block("aa").data();
+        auto& v_data = V_.block("aaaa").data();
+        auto& d2_data = D2_.block("aaaa").data();
+
+        // two types of G: G^{uu}_{vv} and G^{uv}_{vu}
+
+        // (uu|xy)
+        jk_internal_.block("aaa").iterate([&](const std::vector<size_t>& i, double& value) {
+            auto idx = i[0] * nactv3 + i[0] * nactv2 + i[1] * nactv_ + i[2];
+            value = v_data[idx];
+        });
+
+        // D_{vv,xy}
+        d2_internal_.block("aaa").iterate([&](const std::vector<size_t>& i, double& value) {
+            auto idx = i[0] * nactv3 + i[0] * nactv2 + i[1] * nactv_ + i[2];
+            value = d2_data[idx];
+        });
+
+        Guu_["uv"] = jk_internal_["uxy"] * d2_internal_["vxy"];
+
+        // (ux|uy)
+        jk_internal_.block("aaa").iterate([&](const std::vector<size_t>& i, double& value) {
+            auto idx = i[0] * nactv3 + i[1] * nactv2 + i[0] * nactv_ + i[2];
+            value = v_data[idx];
+        });
+
+        // D_{vx,vy}
+        d2_internal_.block("aaa").iterate([&](const std::vector<size_t>& i, double& value) {
+            auto idx = i[0] * nactv3 + i[1] * nactv2 + i[0] * nactv_ + i[2];
+            value = d2_data[idx];
+        });
+
+        Guu_["uv"] += 2.0 * jk_internal_["uxy"] * d2_internal_["vxy"];
+
+        Guu_.block("aa").iterate([&](const std::vector<size_t>& i, double& value) {
+            auto i0 = i[0] * nactv_ + i[0];
+            auto i1 = i[1] * nactv_ + i[1];
+            value += fc_data[i0] * d1_data[i1];
+        });
+
+        Guv_["uv"] = Fc_["uv"] * D1_["vu"];
+        Guv_["uv"] += V_["uvxy"] * D2_["vuxy"];
+        Guv_["uv"] += 2.0 * V_["uxvy"] * D2_["vxuy"];
+
+        // build diagonal Hessian
+        h_diag_["uv"] = 2.0 * Guu_["uv"];
+        h_diag_["uv"] += 2.0 * Guu_["vu"];
+        h_diag_["uv"] -= 2.0 * Guv_["uv"];
+        h_diag_["uv"] -= 2.0 * Guv_["vu"];
+
+        h_diag_.block("aa").iterate([&](const std::vector<size_t>& i, double& value) {
+            auto i0 = i[0] * nactv_ + i[0];
+            auto i1 = i[1] * nactv_ + i[1];
+            value -= 2.0 * (a_data[i0] + a_data[i1]);
+        });
+
+//        auto G = ambit::BlockedTensor::build(CoreTensor, "G", {"aaaa"});
+//        G["tuxy"] += Fc_["xy"] * D1_["tu"];
+//        G["tuxy"] += V_["xyvw"] * D2_["tuvw"];
+//        G["tuxy"] += 2.0 * V_["xvyw"] * D2_["tvuw"];
+
+//        auto I = ambit::BlockedTensor::build(CoreTensor, "I", {"aa"});
+//        I.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>&, double& value) {
+//            if(i[0] == i[1])
+//                value = 1.0;
+//        });
+
+//        auto Guv = ambit::BlockedTensor::build(CoreTensor, "Guv_debug", {"aa"});
+//        Guv["uv"] = G["uvxy"] * I["uy"] * I["vx"];
+//        Guv.print();
+
+//        auto Guu = ambit::BlockedTensor::build(CoreTensor, "Guu_debug", {"aa"});
+//        Guu["uv"] = G["vxuy"] * I["uy"] * I["vx"];
+//        Guu.print();
     }
 
     h_diag_.print();
