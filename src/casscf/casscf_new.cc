@@ -988,28 +988,7 @@ void CASSCF_NEW::compute_orbital_hess_diag() {
             auto i1 = i[1] * nactv_ + i[1];
             value -= 2.0 * (a_data[i0] + a_data[i1]);
         });
-
-//        auto G = ambit::BlockedTensor::build(CoreTensor, "G", {"aaaa"});
-//        G["tuxy"] += Fc_["xy"] * D1_["tu"];
-//        G["tuxy"] += V_["xyvw"] * D2_["tuvw"];
-//        G["tuxy"] += 2.0 * V_["xvyw"] * D2_["tvuw"];
-
-//        auto I = ambit::BlockedTensor::build(CoreTensor, "I", {"aa"});
-//        I.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>&, double& value) {
-//            if(i[0] == i[1])
-//                value = 1.0;
-//        });
-
-//        auto Guv = ambit::BlockedTensor::build(CoreTensor, "Guv_debug", {"aa"});
-//        Guv["uv"] = G["uvxy"] * I["uy"] * I["vx"];
-//        Guv.print();
-
-//        auto Guu = ambit::BlockedTensor::build(CoreTensor, "Guu_debug", {"aa"});
-//        Guu["uv"] = G["vxuy"] * I["uy"] * I["vx"];
-//        Guu.print();
     }
-
-    h_diag_.print();
 }
 
 // void CASSCF_NEW::diagonalize_hamiltonian() {

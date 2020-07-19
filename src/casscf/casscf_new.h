@@ -30,19 +30,17 @@
 #define _casscf_new_h_
 
 #include <map>
+#include <vector>
+#include <string>
 
-#include "psi4/libmints/wavefunction.h"
 #include "psi4/libfock/jk.h"
+#include "psi4/libmints/matrix.h"
 
-#include "integrals/integrals.h"
 #include "ambit/blocked_tensor.h"
-#include "base_classes/rdms.h"
-#include "base_classes/mo_space_info.h"
-#include "helpers/blockedtensorfactory.h"
-#include "fci/fci_vector.h"
-#include "integrals/active_space_integrals.h"
-#include "orbital-helpers/semi_canonicalize.h"
+
 #include "base_classes/active_space_method.h"
+#include "base_classes/mo_space_info.h"
+#include "integrals/integrals.h"
 
 namespace forte {
 
@@ -52,11 +50,11 @@ class CASSCF_NEW {
   public:
     /**
      * @brief Constructor of the AO-based CASSCF class
-     * @param wfn: The Psi4 wave function pointer
      * @param state_weights_map: The state to weights map of Forte
      * @param options: The ForteOptions pointer
      * @param mo_space_info: The MOSpaceInfo pointer of Forte
      * @param scf_info: The SCF_INFO pointer of Forte
+     * @param ints: The ForteIntegral pointer
      *
      * Implementation notes:
      *   See J. Chem. Phys. 142, 224103 (2015) and Theor. Chem. Acc. 97, 88-95 (1997)
