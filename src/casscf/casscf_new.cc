@@ -413,6 +413,10 @@ void CASSCF_NEW::init_tensors() {
 
     // orbital gradients related
     R_ = std::make_shared<psi::Matrix>("Orbital Rotation", nmopi_, nmopi_);
+    dR_ = std::make_shared<psi::Matrix>("Orbital Rotation Update", nmopi_, nmopi_);
+
+    A_ = ambit::BlockedTensor::build(tensor_type, "A", {"ca", "ao", "vo"});
+
     std::vector<std::string> g_blocks{"ac", "vo"};
     if (internal_rot_) {
         g_blocks.push_back("aa");
@@ -421,9 +425,9 @@ void CASSCF_NEW::init_tensors() {
         jk_internal_ = ambit::BlockedTensor::build(CoreTensor, "tei_internal", {"aaa"});
         d2_internal_ = ambit::BlockedTensor::build(CoreTensor, "rdm_internal", {"aaa"});
     }
-    A_ = ambit::BlockedTensor::build(tensor_type, "A", {"ca", "ao", "vo"});
     g_ = ambit::BlockedTensor::build(tensor_type, "g", g_blocks);
     h_diag_ = ambit::BlockedTensor::build(tensor_type, "h_diag", g_blocks);
+
     grad_ = std::make_shared<psi::Vector>("Gradient Vector", nrot_);
     hess_diag_ = std::make_shared<psi::Vector>("Diagonal Hessian", nrot_);
 }
@@ -444,10 +448,19 @@ double CASSCF_NEW::compute_energy() {
     lbfgs.set_hess_diag(hess_diag_);
 
     auto x = std::make_shared<psi::Vector>("R", nrot_);
-    x = lbfgs.compute_correction(x, grad_);
-    x->print();
+    dR_v_ = lbfgs.compute_correction(x, grad_);
+    dR_v_->print();
 
-    return 0.0;
+    reshape_rot_update();
+    dR_->print();
+
+    R_->add(dR_);
+    auto U = std::make_shared<psi::Matrix>(R_);
+    U->set_name("Unitary Transformation");
+    U->expm(3);
+    U->print();
+
+    return energy_;
 
     // Provide a nice summary at the end for iterations
     std::vector<int> iter_con;
@@ -1055,17 +1068,13 @@ void CASSCF_NEW::reshape_rot_ambit(ambit::BlockedTensor bt, psi::SharedVector sv
     }
 }
 
-void CASSCF_NEW::reshape_rot_psi(psi::SharedVector sv, psi::SharedMatrix sm) {
-    size_t vec_size = sv->dimpi().sum();
-    if (vec_size != nrot_) {
-        std::runtime_error("Inconsistent size between SharedVector and number of rotaitons");
-    }
-
+void CASSCF_NEW::reshape_rot_update() {
     for (size_t n = 0; n < nrot_; ++n) {
         int h, i, j;
         std::tie(h, i, j) = rot_mos_irrep_[n];
 
-        sm->set(h, i, j, sv->get(n));
+        dR_->set(h, i, j, dR_v_->get(n));
+        dR_->set(h, j, i, -dR_v_->get(n));
     }
 }
 

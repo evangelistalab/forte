@@ -242,6 +242,9 @@ class CASSCF_NEW {
 
     /// The orbital rotation matrix [R in exp(R)]
     psi::SharedMatrix R_;
+    /// The orbital rotation update vector
+    psi::SharedMatrix dR_;
+    psi::SharedVector dR_v_; // in reshaped form
 
     /// The orbital gradients
     ambit::BlockedTensor g_;
@@ -306,8 +309,9 @@ class CASSCF_NEW {
 
     /// Reshape the orbital rotation related BlockedTensor to SharedVector
     void reshape_rot_ambit(ambit::BlockedTensor bt, psi::SharedVector sv);
-    /// Reshape the orbital rotation related SharedVector to SharedMatrix
-    void reshape_rot_psi(psi::SharedVector sv, psi::SharedMatrix sm);
+
+    /// Reshape the orbital rotation update from SharedVector to SharedMatrix
+    void reshape_rot_update();
 
     /// Semi-canonicalize orbital and return the rotation matrix
     std::shared_ptr<psi::Matrix> semicanonicalize();

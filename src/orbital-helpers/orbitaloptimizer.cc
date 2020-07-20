@@ -507,14 +507,14 @@ psi::SharedMatrix OrbitalOptimizer::rotate_orbitals(psi::SharedMatrix C, psi::Sh
     /// Clone the C matrix
     psi::SharedMatrix C_rot(C->clone());
     psi::SharedMatrix S_mat(S->clone());
-    psi::SharedMatrix S_sym(new psi::Matrix("Exp(K)", mo_space_info_->nirrep(),
+    psi::SharedMatrix S_sym(new psi::Matrix("K", mo_space_info_->nirrep(),
                                             mo_space_info_->dimension("ALL"),
                                             mo_space_info_->dimension("ALL")));
     int offset_hole = 0;
     int offset_part = 0;
     for (size_t h = 0; h < nirrep_; h++) {
         for (int i = 0; i < frozen_docc_dim_[h]; i++) {
-            S_sym->set(h, i, i, 1.0);
+            S_sym->set(h, i, i, 0.0);
         }
         for (int i = 0; i < nhole_dim[h]; i++) {
             for (int a = std::max(restricted_docc_dim_[h], i); a < nmopi_[h]; a++) {
@@ -536,10 +536,11 @@ psi::SharedMatrix OrbitalOptimizer::rotate_orbitals(psi::SharedMatrix C, psi::Sh
 
     C_rot = psi::linalg::doublet(C, S_exp);
     C_rot->set_name("ROTATED_ORBITAL");
-    S_sym->set_name("Orbital Rotation (S = exp(x))");
+    S_exp->set_name("Orbital Rotation exp(K)");
     if (casscf_debug_print_) {
-        C_rot->print();
+        S_sym->print();
         S_exp->print();
+        C_rot->print();
     }
     return C_rot;
 }
