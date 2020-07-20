@@ -292,18 +292,6 @@ void CASSCF_NEW::nonredundant_pairs() {
         }
     }
 
-//    for (auto t : rot_mos_block_) {
-//        int i, j;
-//        std::string block;
-//        std::tie(block, i, j) = t;
-//        outfile->Printf("\n  %s, %2d %2d", block.c_str(), i, j);
-//    }
-//    for (auto t : rot_mos_irrep_) {
-//        int h, i, j;
-//        std::tie(h, i, j) = t;
-//        outfile->Printf("\n  irrep:%d, %2d %2d", h, i, j);
-//    }
-
     // printing
     auto ct = psi::Process::environment.molecule()->point_group()->char_table();
     std::map<std::string, std::string> space_map{
@@ -328,56 +316,6 @@ void CASSCF_NEW::nonredundant_pairs() {
         }
     }
     outfile->Printf("\n    %s", std::string(33 + nirrep_ * 6, '-').c_str());
-
-//    // compute the number of nonredundant pairs
-//    auto cross_pairs = [&](const psi::Dimension& dim1, const psi::Dimension& dim2) {
-//        std::vector<size_t> out(nirrep_);
-//        for (int h = 0; h < nirrep_; ++h) {
-//            out[h] = dim1[h] * dim2[h];
-//        }
-//        return out;
-//    };
-
-//    std::vector<std::string> spaces{"RESTRICTED_DOCC", "ACTIVE", "RESTRICTED_UOCC"};
-//    std::map<std::pair<int, int>, std::vector<size_t>> npairs;
-
-//    for (int i = 0; i < 3; ++i) {
-//        auto dim1 = mo_space_info_->dimension(spaces[i]);
-//        for (int j = i + 1; j < 3; ++j) {
-//            auto dim2 = mo_space_info_->dimension(spaces[j]);
-//            npairs[std::make_pair(i, j)] = cross_pairs(dim1, dim2);
-//        }
-//    }
-
-//    if (internal_rot_) {
-//        auto actv_dim = mo_space_info_->dimension("ACTIVE");
-//        std::vector<size_t> active(nirrep_);
-//        for (int h = 0; h < nirrep_; ++h) {
-//            size_t n = actv_dim[h];
-//            active[h] = n * (n - 1) / 2;
-//        }
-//        npairs[std::make_pair(1, 1)] = active;
-//    }
-
-//    print_h2("Independent Orbital Rotations");
-//    outfile->Printf("\n    %-33s", "ORBITAL SPACES");
-//    for (int h = 0; h < nirrep_; ++h) {
-//        outfile->Printf("  %4s", ct.gamma(h).symbol());
-//    }
-//    outfile->Printf("\n    %s", std::string(33 + nirrep_ * 6, '-').c_str());
-
-//    for (const auto& key_value : npairs) {
-//        const auto& key = key_value.first;
-//        auto block1 = key.first;
-//        auto block2 = key.second;
-//        outfile->Printf("\n    %15s / %15s", spaces[block1].c_str(), spaces[block2].c_str());
-
-//        const auto& value = key_value.second;
-//        for (int h = 0; h < nirrep_; ++h) {
-//            outfile->Printf("  %4zu", value[h]);
-//        }
-//    }
-//    outfile->Printf("\n    %s\n", std::string(33 + nirrep_ * 6, '-').c_str());
 }
 
 void CASSCF_NEW::setup_JK() {
