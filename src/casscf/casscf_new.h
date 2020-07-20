@@ -154,6 +154,11 @@ class CASSCF_NEW {
     /// Relative indices within an MO space for correlated MOs
     std::vector<std::pair<std::string, size_t>> corr_mos_rel_space_;
 
+    /// List of rotation pairs in <irrep, index1, index2> format
+    std::vector<std::tuple<int, size_t, size_t>> rot_mos_irrep_;
+    /// List of rotation pairs in <block, index1, index2> format
+    std::vector<std::tuple<std::string, size_t, size_t>> rot_mos_block_;
+
     /// The symmetry of every active orbitals
     std::vector<int> actv_sym_;
 
@@ -289,6 +294,9 @@ class CASSCF_NEW {
 
     /// Format the 1RDM from BlockedTensor to SharedMatrix
     void format_1rdm();
+
+    /// Format the orbital gradients or diagonal Hessian to SharedVector form
+    psi::SharedVector format_grad();
 
     /// Semi-canonicalize orbital and return the rotation matrix
     std::shared_ptr<psi::Matrix> semicanonicalize();

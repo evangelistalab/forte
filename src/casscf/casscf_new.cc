@@ -41,6 +41,7 @@
 
 #include "helpers/printing.h"
 #include "helpers/helpers.h"
+#include "helpers/lbfgs.h"
 #include "helpers/timer.h"
 #include "sci/aci.h"
 #include "fci/fci_solver.h"
@@ -142,20 +143,6 @@ void CASSCF_NEW::setup_mos() {
             corr_mos_rel_space_[mos[p]] = std::make_pair(space, p);
         }
     }
-
-    //    core_mos_abs_ = mo_space_info_->absolute_mo("RESTRICTED_DOCC");
-    //    actv_mos_abs_ = mo_space_info_->absolute_mo("ACTIVE");
-    //    core_mos_rel_ = mo_space_info_->get_relative_mo("RESTRICTED_DOCC");
-    //    actv_mos_rel_ = mo_space_info_->get_relative_mo("ACTIVE");
-    //    virt_mos_rel_ = mo_space_info_->get_relative_mo("RESTRICTED_UOCC");
-
-    //    restricted_uocc_dim_ = mo_space_info_->dimension("RESTRICTED_UOCC");
-    //    inactive_docc_dim_ = mo_space_info_->dimension("INACTIVE_DOCC");
-
-    //    nmo_ = mo_space_info_->size("ALL");
-    //    nrdocc_ = rdocc_mos_.size();
-    //    nruocc_ = ruocc_mos_.size();
-    //    nfdocc_ = mo_space_info_->size("FROZEN_DOCC");
 }
 
 void CASSCF_NEW::read_options() {
@@ -255,36 +242,72 @@ void CASSCF_NEW::print_options() {
 }
 
 void CASSCF_NEW::nonredundant_pairs() {
-    // compute the number of nonredundant pairs
-    auto cross_pairs = [&](const psi::Dimension& dim1, const psi::Dimension& dim2) {
-        std::vector<size_t> out(nirrep_);
-        for (int h = 0; h < nirrep_; ++h) {
-            out[h] = dim1[h] * dim2[h];
-        }
-        return out;
-    };
+    // prepare indices for rotation pairs
+    rot_mos_irrep_.clear();
+    rot_mos_block_.clear();
 
-    auto ct = psi::Process::environment.molecule()->point_group()->char_table();
-    std::vector<std::string> spaces{"RESTRICTED_DOCC", "ACTIVE", "RESTRICTED_UOCC"};
-    std::map<std::pair<int, int>, std::vector<size_t>> npairs;
+    std::map<std::string, std::vector<int>> nrots{{"vc", std::vector<int>(nirrep_, 0)},
+                                                  {"va", std::vector<int>(nirrep_, 0)},
+                                                  {"ac", std::vector<int>(nirrep_, 0)}};
 
-    for (int i = 0; i < 3; ++i) {
-        auto dim1 = mo_space_info_->dimension(spaces[i]);
-        for (int j = i + 1; j < 3; ++j) {
-            auto dim2 = mo_space_info_->dimension(spaces[j]);
-            npairs[std::make_pair(i, j)] = cross_pairs(dim1, dim2);
+    for (const std::string& block : {"vc", "va", "ac"}) {
+        const auto& mos1 = label_to_mos_[block.substr(0, 1)];
+        const auto& mos2 = label_to_mos_[block.substr(1, 1)];
+
+        for (int i = 0, si = mos1.size(); i < si; ++i) {
+            int hi = corr_mos_rel_[mos1[i]].first;
+            auto ni = corr_mos_rel_[mos1[i]].second;
+
+            for (int j = 0, sj = mos2.size(); j < sj; ++j) {
+                int hj = corr_mos_rel_[mos2[j]].first;
+                auto nj = corr_mos_rel_[mos2[j]].second;
+
+                if (hi == hj) {
+                    rot_mos_irrep_.push_back(std::make_tuple(hi, ni, nj));
+                    rot_mos_block_.push_back(std::make_tuple(block, i, j));
+                    nrots[block][hi] += 1;
+                }
+            }
         }
     }
 
     if (internal_rot_) {
-        auto actv_dim = mo_space_info_->dimension("ACTIVE");
-        std::vector<size_t> active(nirrep_);
-        for (int h = 0; h < nirrep_; ++h) {
-            size_t n = actv_dim[h];
-            active[h] = n * (n - 1) / 2;
+        nrots["aa"] = std::vector<int>(nirrep_, 0);
+
+        const auto& mos = label_to_mos_["a"];
+        for (int i = 0, s = mos.size(); i < s; ++i) {
+            int hi = corr_mos_rel_[mos[i]].first;
+            auto ni = corr_mos_rel_[mos[i]].second;
+
+            for (int j = i + 1; j < s; ++j) {
+                int hj = corr_mos_rel_[mos[j]].first;
+                auto nj = corr_mos_rel_[mos[j]].second;
+
+                if (hi == hj) {
+                    rot_mos_irrep_.push_back(std::make_tuple(hi, nj, ni));
+                    rot_mos_block_.push_back(std::make_tuple("aa", j, i));
+                    nrots["aa"][hi] += 1;
+                }
+            }
         }
-        npairs[std::make_pair(1, 1)] = active;
     }
+
+//    for (auto t : rot_mos_block_) {
+//        int i, j;
+//        std::string block;
+//        std::tie(block, i, j) = t;
+//        outfile->Printf("\n  %s, %2d %2d", block.c_str(), i, j);
+//    }
+//    for (auto t : rot_mos_irrep_) {
+//        int h, i, j;
+//        std::tie(h, i, j) = t;
+//        outfile->Printf("\n  irrep:%d, %2d %2d", h, i, j);
+//    }
+
+    // printing
+    auto ct = psi::Process::environment.molecule()->point_group()->char_table();
+    std::map<std::string, std::string> space_map{
+        {"c", "RESTRICTED_DOCC"}, {"a", "ACTIVE"}, {"v", "RESTRICTED_UOCC"}};
 
     print_h2("Independent Orbital Rotations");
     outfile->Printf("\n    %-33s", "ORBITAL SPACES");
@@ -293,22 +316,73 @@ void CASSCF_NEW::nonredundant_pairs() {
     }
     outfile->Printf("\n    %s", std::string(33 + nirrep_ * 6, '-').c_str());
 
-    for (const auto& key_value : npairs) {
+    for (const auto& key_value : nrots) {
         const auto& key = key_value.first;
-        auto block1 = key.first;
-        auto block2 = key.second;
-        outfile->Printf("\n    %15s / %15s", spaces[block1].c_str(), spaces[block2].c_str());
+        auto block1 = space_map[key.substr(0, 1)];
+        auto block2 = space_map[key.substr(1, 1)];
+        outfile->Printf("\n    %15s / %15s", block1.c_str(), block2.c_str());
 
         const auto& value = key_value.second;
         for (int h = 0; h < nirrep_; ++h) {
             outfile->Printf("  %4zu", value[h]);
         }
     }
-    outfile->Printf("\n    %s\n", std::string(33 + nirrep_ * 6, '-').c_str());
+    outfile->Printf("\n    %s", std::string(33 + nirrep_ * 6, '-').c_str());
+
+//    // compute the number of nonredundant pairs
+//    auto cross_pairs = [&](const psi::Dimension& dim1, const psi::Dimension& dim2) {
+//        std::vector<size_t> out(nirrep_);
+//        for (int h = 0; h < nirrep_; ++h) {
+//            out[h] = dim1[h] * dim2[h];
+//        }
+//        return out;
+//    };
+
+//    std::vector<std::string> spaces{"RESTRICTED_DOCC", "ACTIVE", "RESTRICTED_UOCC"};
+//    std::map<std::pair<int, int>, std::vector<size_t>> npairs;
+
+//    for (int i = 0; i < 3; ++i) {
+//        auto dim1 = mo_space_info_->dimension(spaces[i]);
+//        for (int j = i + 1; j < 3; ++j) {
+//            auto dim2 = mo_space_info_->dimension(spaces[j]);
+//            npairs[std::make_pair(i, j)] = cross_pairs(dim1, dim2);
+//        }
+//    }
+
+//    if (internal_rot_) {
+//        auto actv_dim = mo_space_info_->dimension("ACTIVE");
+//        std::vector<size_t> active(nirrep_);
+//        for (int h = 0; h < nirrep_; ++h) {
+//            size_t n = actv_dim[h];
+//            active[h] = n * (n - 1) / 2;
+//        }
+//        npairs[std::make_pair(1, 1)] = active;
+//    }
+
+//    print_h2("Independent Orbital Rotations");
+//    outfile->Printf("\n    %-33s", "ORBITAL SPACES");
+//    for (int h = 0; h < nirrep_; ++h) {
+//        outfile->Printf("  %4s", ct.gamma(h).symbol());
+//    }
+//    outfile->Printf("\n    %s", std::string(33 + nirrep_ * 6, '-').c_str());
+
+//    for (const auto& key_value : npairs) {
+//        const auto& key = key_value.first;
+//        auto block1 = key.first;
+//        auto block2 = key.second;
+//        outfile->Printf("\n    %15s / %15s", spaces[block1].c_str(), spaces[block2].c_str());
+
+//        const auto& value = key_value.second;
+//        for (int h = 0; h < nirrep_; ++h) {
+//            outfile->Printf("  %4zu", value[h]);
+//        }
+//    }
+//    outfile->Printf("\n    %s\n", std::string(33 + nirrep_ * 6, '-').c_str());
 }
 
 void CASSCF_NEW::setup_JK() {
     local_timer jk_timer;
+    print_h2("Initialize JK Builder", "==>", "<==\n");
 
     auto basis_set = ints_->wfn()->basisset();
 
@@ -419,6 +493,8 @@ double CASSCF_NEW::compute_energy() {
     compute_orbital_grad();
 
     compute_orbital_hess_diag();
+
+    LBFGS lbfgs(10);
 
     return 0.0;
 
@@ -937,7 +1013,7 @@ void CASSCF_NEW::compute_orbital_hess_diag() {
         auto& v_data = V_.block("aaaa").data();
         auto& d2_data = D2_.block("aaaa").data();
 
-        // two types of G: G^{uu}_{vv} and G^{uv}_{vu}
+        // G^{uu}_{vv}
 
         // (uu|xy)
         jk_internal_.block("aaa").iterate([&](const std::vector<size_t>& i, double& value) {
@@ -973,6 +1049,7 @@ void CASSCF_NEW::compute_orbital_hess_diag() {
             value += fc_data[i0] * d1_data[i1];
         });
 
+        // G^{uv}_{vu}
         Guv_["uv"] = Fc_["uv"] * D1_["vu"];
         Guv_["uv"] += V_["uvxy"] * D2_["vuxy"];
         Guv_["uv"] += 2.0 * V_["uxvy"] * D2_["vxuy"];

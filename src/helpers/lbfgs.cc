@@ -170,6 +170,7 @@ void LBFGS::check_dim(psi::SharedVector a, psi::SharedVector b, const std::strin
 
 void LBFGS::reset() {
     resize(0);
+    counter_ = 0;
 }
 
 } // namespace forte
