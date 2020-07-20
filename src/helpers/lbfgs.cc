@@ -39,7 +39,10 @@ namespace forte {
 LBFGS::LBFGS(int dim, int m, bool descent) : dim_(dim), m_(m), descent_(descent), counter_(0) {
     resize(m);
 
-    h0_ = std::make_shared<psi::Vector>("Inverse diagonal Hessian", dim);
+    x_last_ = std::make_shared<psi::Vector>("Last Solution", dim);
+    g_last_ = std::make_shared<psi::Vector>("Last Gradient", dim);
+
+    h0_ = std::make_shared<psi::Vector>("Inverse Diagonal Hessian", dim);
     guess_h0();
 }
 
@@ -64,6 +67,7 @@ psi::SharedVector LBFGS::compute_correction(psi::SharedVector x, psi::SharedVect
     check_dim(h0_, g, "Invalid gradient vector. Check dimension!");
 
     auto z = std::make_shared<psi::Vector>(*g);
+    z->set_name("Direction Vector");
 
     if (counter_) {
         int m = std::min(counter_, m_);

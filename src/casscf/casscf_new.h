@@ -154,6 +154,8 @@ class CASSCF_NEW {
     /// Relative indices within an MO space for correlated MOs
     std::vector<std::pair<std::string, size_t>> corr_mos_rel_space_;
 
+    /// Number of orbital rotations considered
+    size_t nrot_;
     /// List of rotation pairs in <irrep, index1, index2> format
     std::vector<std::tuple<int, size_t, size_t>> rot_mos_irrep_;
     /// List of rotation pairs in <block, index1, index2> format
@@ -238,10 +240,15 @@ class CASSCF_NEW {
     /// The orbital Lagrangian matrix
     ambit::BlockedTensor A_;
 
+    /// The orbital rotation matrix [R in exp(R)]
+    psi::SharedMatrix R_;
+
     /// The orbital gradients
     ambit::BlockedTensor g_;
+    psi::SharedVector grad_;
     /// The orbital diagonal Hessian
     ambit::BlockedTensor h_diag_;
+    psi::SharedVector hess_diag_;
 
     /// G intermediates when forming internal diagonal Hessian
     ambit::BlockedTensor Guu_;
@@ -255,6 +262,9 @@ class CASSCF_NEW {
 
     /// Build integrals for gradients and Hessian
     void build_mo_integrals();
+
+    /// Build MO one-electron integrals
+    void build_oei_from_ao();
 
     /// Build two-electron integrals
     void build_tei_from_ao();
@@ -283,7 +293,6 @@ class CASSCF_NEW {
 
     /// Compute the orbital gradients
     void compute_orbital_grad();
-
     /// Compute the diagonal Hessian for orbital rotations
     void compute_orbital_hess_diag();
 
@@ -295,8 +304,10 @@ class CASSCF_NEW {
     /// Format the 1RDM from BlockedTensor to SharedMatrix
     void format_1rdm();
 
-    /// Format the orbital gradients or diagonal Hessian to SharedVector form
-    psi::SharedVector format_grad();
+    /// Reshape the orbital rotation related BlockedTensor to SharedVector
+    void reshape_rot_ambit(ambit::BlockedTensor bt, psi::SharedVector sv);
+    /// Reshape the orbital rotation related SharedVector to SharedMatrix
+    void reshape_rot_psi(psi::SharedVector sv, psi::SharedMatrix sm);
 
     /// Semi-canonicalize orbital and return the rotation matrix
     std::shared_ptr<psi::Matrix> semicanonicalize();

@@ -80,6 +80,9 @@ void CASSCF_NEW::startup() {
     // nuclear repulsion energy
     e_nuc_ = ints_->nuclear_repulsion_energy();
 
+    // frozen-core energy
+    e_frozen_ = ints_->frozen_core_energy();
+
     // setup MO spaces
     setup_mos();
 
@@ -292,6 +295,8 @@ void CASSCF_NEW::nonredundant_pairs() {
         }
     }
 
+    nrot_ = rot_mos_irrep_.size();
+
     // printing
     auto ct = psi::Process::environment.molecule()->point_group()->char_table();
     std::map<std::string, std::string> space_map{
@@ -407,6 +412,7 @@ void CASSCF_NEW::init_tensors() {
     rdm1_ = std::make_shared<psi::Matrix>("1RDM", nactvpi_, nactvpi_);
 
     // orbital gradients related
+    R_ = std::make_shared<psi::Matrix>("Orbital Rotation", nmopi_, nmopi_);
     std::vector<std::string> g_blocks{"ac", "vo"};
     if (internal_rot_) {
         g_blocks.push_back("aa");
@@ -418,6 +424,8 @@ void CASSCF_NEW::init_tensors() {
     A_ = ambit::BlockedTensor::build(tensor_type, "A", {"ca", "ao", "vo"});
     g_ = ambit::BlockedTensor::build(tensor_type, "g", g_blocks);
     h_diag_ = ambit::BlockedTensor::build(tensor_type, "h_diag", g_blocks);
+    grad_ = std::make_shared<psi::Vector>("Gradient Vector", nrot_);
+    hess_diag_ = std::make_shared<psi::Vector>("Diagonal Hessian", nrot_);
 }
 
 double CASSCF_NEW::compute_energy() {
@@ -432,7 +440,12 @@ double CASSCF_NEW::compute_energy() {
 
     compute_orbital_hess_diag();
 
-    LBFGS lbfgs(10);
+    LBFGS lbfgs(nrot_);
+    lbfgs.set_hess_diag(hess_diag_);
+
+    auto x = std::make_shared<psi::Vector>("R", nrot_);
+    x = lbfgs.compute_correction(x, grad_);
+    x->print();
 
     return 0.0;
 
@@ -597,9 +610,7 @@ void CASSCF_NEW::build_mo_integrals() {
     build_fock_inactive();
 
     // bare one-electron integrals
-    H_mo_ = H_ao_->clone();
-    H_mo_->transform(C_);
-    H_mo_->set_name("Hbare_MO");
+    build_oei_from_ao();
 
     // compute the closed-shell energy
     compute_energy_closed();
@@ -608,17 +619,27 @@ void CASSCF_NEW::build_mo_integrals() {
     build_tei_from_ao();
 }
 
-void CASSCF_NEW::compute_energy_closed() {
-    e_frozen_ = 0.0, e_closed_ = 0.0;
-    for (int h = 0; h < nirrep_; ++h) {
+void CASSCF_NEW::build_oei_from_ao() {
+    H_mo_ = H_ao_->clone();
+    H_mo_->transform(C_);
+    H_mo_->set_name("Hbare_MO");
 
+    if (debug_print_) {
+        H_mo_->print();
+    }
+}
+
+void CASSCF_NEW::compute_energy_closed() {
+    e_closed_ = 0.0;
+    for (int h = 0; h < nirrep_; ++h) {
         for (int i = 0; i < ndoccpi_[h]; ++i) {
             e_closed_ += F_closed_->get(h, i, i) + H_mo_->get(h, i, i);
         }
+    }
 
-        for (int i = 0; i < nfrzcpi_[h]; ++i) {
-            e_frozen_ += F_closed_->get(h, i, i) + H_mo_->get(h, i, i);
-        }
+    if (debug_print_) {
+        outfile->Printf("\n  Frozen-core energy   %20.15f", e_frozen_);
+        outfile->Printf("\n  Closed-shell energy  %20.15f", e_closed_);
     }
 }
 
@@ -781,8 +802,7 @@ void CASSCF_NEW::build_fock_active() {
     // grab part of Ca for active
     auto Cactv = std::make_shared<psi::Matrix>("C_ACTIVE", nirrep_, nsopi_, nactvpi_);
     for (int h = 0; h < nirrep_; h++) {
-        int offset = nfrzcpi_[h] + ndoccpi_[h];
-        for (int i = 0; i < nactvpi_[h]; i++) {
+        for (int i = 0, offset = ndoccpi_[h]; i < nactvpi_[h]; i++) {
             Cactv->set_column(h, i, C_->get_column(h, i + offset));
         }
     }
@@ -838,8 +858,7 @@ void CASSCF_NEW::compute_reference_energy() {
     energy_ += 0.5 * V_["uvxy"] * D2_["uvxy"];
 
     if (debug_print_) {
-        outfile->Printf("\n  Frozen-core energy   %20.15f", e_frozen_);
-        outfile->Printf("\n  Closed-shell energy  %20.15f", e_closed_);
+        outfile->Printf("\n  Reference energy     %20.15f", energy_);
     }
 }
 
@@ -884,7 +903,6 @@ void CASSCF_NEW::diagonalize_hamiltonian() {
 }
 
 void CASSCF_NEW::format_1rdm() {
-    rdm1_->zero();
     const auto& d1_data = D1_.block("aa").data();
 
     for (int h = 0, offset = 0; h < nirrep_; ++h) {
@@ -911,6 +929,13 @@ void CASSCF_NEW::compute_orbital_grad() {
     // build orbital gradients
     g_["pq"] = 2.0 * A_["pq"];
     g_["pq"] -= 2.0 * A_["qp"];
+
+    // reshape and format to SharedVector
+    reshape_rot_ambit(g_, grad_);
+
+    if (debug_print_) {
+        grad_->print();
+    }
 }
 
 void CASSCF_NEW::compute_orbital_hess_diag() {
@@ -1003,6 +1028,44 @@ void CASSCF_NEW::compute_orbital_hess_diag() {
             auto i1 = i[1] * nactv_ + i[1];
             value -= 2.0 * (a_data[i0] + a_data[i1]);
         });
+    }
+
+    // reshape and format to SharedVector
+    reshape_rot_ambit(h_diag_, hess_diag_);
+
+    if (debug_print_) {
+        hess_diag_->print();
+    }
+}
+
+void CASSCF_NEW::reshape_rot_ambit(ambit::BlockedTensor bt, psi::SharedVector sv) {
+    size_t vec_size = sv->dimpi().sum();
+    if (vec_size != nrot_) {
+        std::runtime_error("Inconsistent size between SharedVector and number of rotaitons");
+    }
+
+    for (size_t n = 0; n < nrot_; ++n) {
+        std::string block;
+        int i, j;
+        std::tie(block, i, j) = rot_mos_block_[n];
+        auto tensor = bt.block(block);
+        auto dim1 = tensor.dim(1);
+
+        sv->set(n, tensor.data()[i * dim1 + j]);
+    }
+}
+
+void CASSCF_NEW::reshape_rot_psi(psi::SharedVector sv, psi::SharedMatrix sm) {
+    size_t vec_size = sv->dimpi().sum();
+    if (vec_size != nrot_) {
+        std::runtime_error("Inconsistent size between SharedVector and number of rotaitons");
+    }
+
+    for (size_t n = 0; n < nrot_; ++n) {
+        int h, i, j;
+        std::tie(h, i, j) = rot_mos_irrep_[n];
+
+        sm->set(h, i, j, sv->get(n));
     }
 }
 
