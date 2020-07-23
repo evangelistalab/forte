@@ -3113,8 +3113,8 @@ void DSRG_MRPT2::solve_z() {
     ck_ci("KI") += 0.25 * cc2bb_("KIUVXY") * V.block("AAAA")("UVXY");
     ck_ci("KI") += 1.00 * cc2ab_("KIuVxY") * V.block("aAaA")("uVxY");
 
-    ck_ci("KI") += ints_->frozen_core_energy() * one_ci("KI");
-    ck_ci("KI") += ints_->nuclear_repulsion_energy() * one_ci("KI");
+    // ck_ci("KI") += ints_->frozen_core_energy() * one_ci("KI");
+    // ck_ci("KI") += ints_->nuclear_repulsion_energy() * I_ci("KI");
     ck_ci.print();
 
 
@@ -3140,13 +3140,16 @@ void DSRG_MRPT2::solve_z() {
     Et += cc1a_("KIuv") * V.block("aCaC")("uMvN") * ci("I") * ci("K") * I.block("CC")("MN");
     Et += cc1b_("KIUV") * V.block("cAcA")("mUnV") * ci("I") * ci("K") * I.block("cc")("mn");
 
-    Et += ints_->nuclear_repulsion_energy();
+    // Et += ints_->nuclear_repulsion_energy();
     std::cout<< "E test = " << std::setprecision(9) << Et << std::endl;
 
     std::cout<< "ndet = " << ndets << std::endl;
 
 
     ck_ci("KI") -= Et * I_ci("KI");
+
+    // Just for test, remember to delete
+    // ck_ci("KI") += 0.0001 * I_ci("KI");
 
     ck_ci.print();
 
@@ -3179,8 +3182,9 @@ void DSRG_MRPT2::solve_z() {
 
     outfile->Printf("Done");
     outfile->Printf("\n    Solving Off-diagonal Blocks of Z ................ ");
-
-    C_DGESV( n, nrhs, &A[0], lda, &ipiv[0], &b[0], ldb);
+    int info;
+    info = C_DGESV( n, nrhs, &A[0], lda, &ipiv[0], &b[0], ldb);
+    std::cout << "info = " << info << std::endl; 
 
     // Print the solution
     // outfile->Printf( "\nVC\n" );
@@ -3611,6 +3615,7 @@ void DSRG_MRPT2::write_1rdm_spin_dependent() {
         D1->add(core_mos_relative[i].first, core_mos_relative[i].second,
                 core_mos_relative[i].second, 1.0);
     }
+
 
     (Gamma1_.block("aa")).iterate([&](const std::vector<size_t>& i, double& value) {
         if (actv_mos_relative[i[0]].first == actv_mos_relative[i[1]].first) {
