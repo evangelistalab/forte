@@ -65,7 +65,7 @@ cd $srcdir
 set cmake_psi4 = `psi4 --plugin-compile`
 
 $cmake_psi4 \
--Dambit_DIR=$ambit_dir \
+-Dambit_DIR=$ambit_dir \ # remove this line if ambit is installed via conda
 -DCMAKE_BUILD_TYPE=$build_type \
 -DMAX_DET_ORB=128 \
 -DPYTHON_EXECUTABLE=/opt/anaconda3/bin/python \
