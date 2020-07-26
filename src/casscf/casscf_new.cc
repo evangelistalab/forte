@@ -159,10 +159,11 @@ void CASSCF_NEW::read_options() {
     g_conv_ = options_->get_double("CASSCF_G_CONVERGENCE");
 
     // DIIS options
-    do_diis_ = options_->get_bool("CASSCF_DO_DIIS");
     diis_freq_ = options_->get_int("CASSCF_DIIS_FREQ");
     diis_start_ = options_->get_int("CASSCF_DIIS_START");
     diis_max_vec_ = options_->get_int("CASSCF_DIIS_MAX_VEC");
+    diis_min_vec_ = options_->get_int("CASSCF_DIIS_MIN_VEC");
+    do_diis_ = (diis_start_ < 1) ? false : true;
 
     // CI update options
     ci_type_ = options_->get_str("CASSCF_CI_SOLVER");
@@ -235,6 +236,7 @@ void CASSCF_NEW::print_options() {
 
     if (do_diis_) {
         info_int.push_back({"DIIS start", diis_start_});
+        info_int.push_back({"Min DIIS vectors", diis_min_vec_});
         info_int.push_back({"Max DIIS vectors", diis_max_vec_});
         info_int.push_back({"Frequency of DIIS extrapolation", diis_freq_});
     }
@@ -412,9 +414,6 @@ void CASSCF_NEW::init_tensors() {
     rdm1_ = std::make_shared<psi::Matrix>("1RDM", nactvpi_, nactvpi_);
 
     // orbital gradients related
-    R_ = std::make_shared<psi::Matrix>("Orbital Rotation", nmopi_, nmopi_);
-    dR_ = std::make_shared<psi::Matrix>("Orbital Rotation Update", nmopi_, nmopi_);
-
     A_ = ambit::BlockedTensor::build(tensor_type, "A", {"ca", "ao", "vo"});
 
     std::vector<std::string> g_blocks{"ac", "vo"};
@@ -433,45 +432,30 @@ void CASSCF_NEW::init_tensors() {
 }
 
 double CASSCF_NEW::compute_energy() {
-    // save a copy of the orginal orbitals
+    // initial orbitals and rotations
     C_ = C0_->clone();
 
-    //    build_mo_integrals();
+    R_ = std::make_shared<psi::Matrix>("Orbital Rotation", nmopi_, nmopi_);
+    dR_ = std::make_shared<psi::Matrix>("Orbital Rotation Update", nmopi_, nmopi_);
 
-    //    diagonalize_hamiltonian();
+    R_v_ = std::make_shared<psi::Vector>("R", nrot_);
+    dR_v_ = std::make_shared<psi::Vector>("dR", nrot_);
 
-    //    build_fock();
+    auto U = std::make_shared<psi::Matrix>("Orthogonal Transformation", nmopi_, nmopi_);
 
-    //    compute_orbital_grad();
-
-    //    compute_orbital_hess_diag();
+    if (do_diis_) {
+        diis_manager_ = std::make_shared<DIISManager>(
+            diis_max_vec_, "CASSCF DIIS", DIISManager::OldestAdded, DIISManager::InCore);
+        diis_manager_->set_error_vector_size(1, DIISEntry::Matrix, dR_.get());
+        diis_manager_->set_vector_size(1, DIISEntry::Matrix, R_.get());
+    }
 
     LBFGS lbfgs(nrot_);
-    //    lbfgs.set_hess_diag(hess_diag_);
 
-    dR_v_ = std::make_shared<psi::Vector>("dR", nrot_);
-    R_v_ = std::make_shared<psi::Vector>("R", nrot_);
-    //    dR_v_ = lbfgs.compute_correction(dR_v_, grad_);
-    //    dR_v_->print();
+    std::vector<double> e_history;
+    std::vector<double> g_history;
 
-    //    reshape_rot_update();
-    //    dR_->print();
-
-    //    R_->add(dR_);
-    R_->zero();
-    auto U = std::make_shared<psi::Matrix>(R_);
-    U->set_name("Unitary Transformation");
-    //    U->expm(3);
-    //    U->print();
-
-    // Setup the DIIS manager
-    auto diis_manager = std::make_shared<DIISManager>(
-        diis_max_vec_, "MCSCF DIIS", DIISManager::OldestAdded, DIISManager::InCore);
-    diis_manager->set_error_vector_size(1, DIISEntry::Matrix, dR_.get());
-    diis_manager->set_vector_size(1, DIISEntry::Matrix, R_.get());
-
-    int diis_count = 0;
-
+    // start iteration
     for (int iter = 1; iter <= maxiter_; ++iter) {
         build_mo_integrals();
 
@@ -481,298 +465,202 @@ double CASSCF_NEW::compute_energy() {
 
         compute_orbital_grad();
 
-//        if (iter < 3){
-            compute_orbital_hess_diag();
-            lbfgs.set_hess_diag(hess_diag_);
-            lbfgs.reset();
-//        }
+        // now test convergence
+        double e_delta = (iter > 1) ? energy_ - e_history[iter - 2] : energy_;
+        double g_norm = grad_->norm();
+        outfile->Printf("\n    Iter.      Current Energy  Energy Diff.    Orb. Grad.");
+        outfile->Printf("\n    %4d   %18.12f  %12.4e  %12.4e", iter, energy_, e_delta, g_norm);
+        e_history.push_back(energy_);
+        g_history.push_back(g_norm);
+
+        if (std::fabs(e_delta) < e_conv_ and g_norm < g_conv_) {
+            outfile->Printf("\n\n  A miracle has come to pass: CASSCF iterations have converged.");
+            break;
+        }
+
+        // if not converged, update orbitals
+        compute_orbital_hess_diag();
+        lbfgs.set_hess_diag(hess_diag_);
+        lbfgs.reset();
+
         dR_v_ = lbfgs.compute_correction(R_v_, grad_);
         dR_v_->print();
 
-        reshape_rot_update();
+        // scale dR
+        double dr_max = 0.0;
+        for (size_t i = 0; i < nrot_; ++i) {
+            double v = std::fabs(dR_v_->get(i));
+            if (v > dr_max)
+                dr_max = v;
+        }
+        if (dr_max > max_rot_)
+            dR_v_->scale(max_rot_ / dr_max);
 
+        reshape_rot_update();
         dR_->print();
 
-        // determine step length
-        double step = 1.0;
-        double a_low = 0.1, a_high = 20.0;
-        double e_last = energy_, e_0 = energy_;
-        double dg0 = grad_->vector_dot(dR_v_);
-        double decrease = 1.0e-4 * dg0;
-        double curvature = -0.9 * dg0;
-
-//        for (int i = 0; i < 10; ++i) {
-//            auto dR = dR_->clone();
-//            dR->scale(step);
-//            auto R = R_->clone();
-//            R->add(dR);
-
-//            U->copy(R);
-//            U->expm(3);
-
-//            auto C = psi::linalg::doublet(C0_, U, false, false);
-//            C_->copy(C);
-
-//            build_mo_integrals();
-
-//            compute_reference_energy();
-
-//            compute_orbital_grad();
-
-//            double dg = grad_->vector_dot(dR_v_);
-
-//            if (energy_ > e_0 + step * decrease or (i > 1 and energy_ >= e_last)) {
-//                a_high = step;
-//                break;
-//            }
-
-//            e_last = energy_;
-
-//            if (std::fabs(dg) <= curvature)
-//                break;
-
-//            if (dg >= 0) {
-//                a_high = a_low;
-//                a_low = step;
-//                break;
-//            }
-
-//            step *= 1.5;
-//            outfile->Printf("\nCurrent step length at iter %2d: %10.8f; energy: %.15f", i, step, energy_);
-//        }
-//        outfile->Printf("\nBraketing stage: (%8.4f, %8.4f)", a_low, a_high);
-
-//        for (int j = 0; j < 10; ++j) {
-//            step = 0.5 * (a_low + a_high);
-
-//            auto dR = dR_->clone();
-//            dR->scale(step);
-//            auto R = R_->clone();
-//            R->add(dR);
-
-//            U->copy(R);
-//            U->expm(3);
-
-//            auto C = psi::linalg::doublet(C0_, U, false, false);
-//            C_->copy(C);
-
-//            build_mo_integrals();
-
-//            compute_reference_energy();
-
-//            if (energy_ > e_0 + step * decrease or energy_ >= e_last) {
-//                a_high = step;
-//            } else {
-//                compute_orbital_grad();
-
-//                double dg = grad_->vector_dot(dR_v_);
-
-//                if (std::fabs(dg) <= curvature) {
-//                    break;
-//                }
-
-//                if (dg * (a_high - a_low) >= 0) {
-//                    a_high = a_low;
-//                }
-
-//                a_low = step;
-//                e_last = energy_;
-//            }
-//        }
-//        outfile->Printf("\nZoom stage: (%8.4f, %8.4f)", a_low, a_high);
-//        outfile->Printf("\n Step length: %.8f, averaged: %.8f", step, (a_low + a_high) * 0.5);
-
-//        step = (a_low + a_high) * 0.5;
-        dR_->scale(step);
-        dR_v_->scale(step);
-
+        // add to R matrix for next iteration
         R_->add(dR_);
         R_v_->add(dR_v_);
 
         if (do_diis_ and iter >= diis_start_) {
-            diis_manager->add_entry(2, dR_.get(), R_.get());
-            diis_count++;
+            diis_manager_->add_entry(2, dR_.get(), R_.get());
+            outfile->Printf("  S");
+
+            if ((iter - diis_start_) % diis_freq_ == 0 and
+                diis_manager_->subspace_size() > diis_min_vec_) {
+                diis_manager_->extrapolate(1, R_.get());
+                outfile->Printf("/E");
+            }
         }
 
-        if (iter >= diis_start_ + 2 and (diis_count % diis_freq_ == 0)) {
-            diis_manager->extrapolate(1, R_.get());
-            outfile->Printf("DIIS");
-
-////            for (size_t n = 0; n < nrot_; ++n) {
-////                int h, i, j;
-////                std::tie(h, i, j) = rot_mos_irrep_[n];
-////                R_v_->set(n, R_->get(h, i, j));
-////            }
-////            lbfgs.set_x_last(R_v_);
-        }
-
-
+        // compute unitary matrix U = exp(R)
         U->copy(R_);
         U->expm(3);
         U->print();
 
-        auto C = psi::linalg::doublet(C0_, U, false, false);
-        C_->copy(C);
+        // update orbitals
+        C_ = psi::linalg::doublet(C0_, U, false, false);
+        C_->set_name(C0_->name());
 
-        outfile->Printf("\n  Iter %d energy: %.15f, grad_norm: %.15f", iter, energy_, grad_->rms());
+        //        // determine step length
+        //        double step = 1.0;
+        //        double a_low = 0.1, a_high = 20.0;
+        //        double e_last = energy_, e_0 = energy_;
+        //        double dg0 = grad_->vector_dot(dR_v_);
+        //        double decrease = 1.0e-4 * dg0;
+        //        double curvature = -0.9 * dg0;
+
+        ////        for (int i = 0; i < 10; ++i) {
+        ////            auto dR = dR_->clone();
+        ////            dR->scale(step);
+        ////            auto R = R_->clone();
+        ////            R->add(dR);
+
+        ////            U->copy(R);
+        ////            U->expm(3);
+
+        ////            auto C = psi::linalg::doublet(C0_, U, false, false);
+        ////            C_->copy(C);
+
+        ////            build_mo_integrals();
+
+        ////            compute_reference_energy();
+
+        ////            compute_orbital_grad();
+
+        ////            double dg = grad_->vector_dot(dR_v_);
+
+        ////            if (energy_ > e_0 + step * decrease or (i > 1 and energy_ >= e_last)) {
+        ////                a_high = step;
+        ////                break;
+        ////            }
+
+        ////            e_last = energy_;
+
+        ////            if (std::fabs(dg) <= curvature)
+        ////                break;
+
+        ////            if (dg >= 0) {
+        ////                a_high = a_low;
+        ////                a_low = step;
+        ////                break;
+        ////            }
+
+        ////            step *= 1.5;
+        ////            outfile->Printf("\nCurrent step length at iter %2d: %10.8f; energy: %.15f",
+        /// i, step, energy_); /        } /        outfile->Printf("\nBraketing stage: (%8.4f,
+        ///%8.4f)", a_low, a_high);
+
+        ////        for (int j = 0; j < 10; ++j) {
+        ////            step = 0.5 * (a_low + a_high);
+
+        ////            auto dR = dR_->clone();
+        ////            dR->scale(step);
+        ////            auto R = R_->clone();
+        ////            R->add(dR);
+
+        ////            U->copy(R);
+        ////            U->expm(3);
+
+        ////            auto C = psi::linalg::doublet(C0_, U, false, false);
+        ////            C_->copy(C);
+
+        ////            build_mo_integrals();
+
+        ////            compute_reference_energy();
+
+        ////            if (energy_ > e_0 + step * decrease or energy_ >= e_last) {
+        ////                a_high = step;
+        ////            } else {
+        ////                compute_orbital_grad();
+
+        ////                double dg = grad_->vector_dot(dR_v_);
+
+        ////                if (std::fabs(dg) <= curvature) {
+        ////                    break;
+        ////                }
+
+        ////                if (dg * (a_high - a_low) >= 0) {
+        ////                    a_high = a_low;
+        ////                }
+
+        ////                a_low = step;
+        ////                e_last = energy_;
+        ////            }
+        ////        }
+        ////        outfile->Printf("\nZoom stage: (%8.4f, %8.4f)", a_low, a_high);
+        ////        outfile->Printf("\n Step length: %.8f, averaged: %.8f", step, (a_low + a_high) *
+        /// 0.5);
+
+        ////        step = (a_low + a_high) * 0.5;
+        //        dR_->scale(step);
+        //        dR_v_->scale(step);
+
+        //        R_->add(dR_);
+        //        R_v_->add(dR_v_);
+
+        //        if (do_diis_ and iter >= diis_start_) {
+        //            diis_manager_->add_entry(2, dR_.get(), R_.get());
+        //            diis_count++;
+        //        }
+
+        //        if (iter >= diis_start_ + 2 and (diis_count % diis_freq_ == 0)) {
+        //            diis_manager_->extrapolate(1, R_.get());
+        //            outfile->Printf("DIIS");
+
+        //////            for (size_t n = 0; n < nrot_; ++n) {
+        //////                int h, i, j;
+        //////                std::tie(h, i, j) = rot_mos_irrep_[n];
+        //////                R_v_->set(n, R_->get(h, i, j));
+        //////            }
+        //////            lbfgs.set_x_last(R_v_);
+        //        }
+
+        //        U->copy(R_);
+        //        U->expm(3);
+        //        U->print();
+
+        //        auto C = psi::linalg::doublet(C0_, U, false, false);
+        //        C_->copy(C);
+
+        //        outfile->Printf("\n  Iter %d energy: %.15f, grad_norm: %.15f", iter, energy_,
+        //        grad_->rms());
     }
 
+    // print summary
+    print_h2("MCSCF Iteration Summary");
+    outfile->Printf("\n    Iter.      Current Energy  Energy Diff.    Orb. Grad.");
+    outfile->Printf("\n    -----------------------------------------------------");
+    for (int i = 0, size = e_history.size(); i < size; ++i) {
+        double e = e_history[i];
+        double e_delta = (i == 0) ? 0.0 : e_history[i] - e_history[i - 1];
+        double g = g_history[i];
+        outfile->Printf("\n    %4d   %18.12f  %12.4e  %12.4e", i + 1, e, e_delta, g);
+    }
+    outfile->Printf("\n    -----------------------------------------------------");
+
     return energy_;
-
-    // Provide a nice summary at the end for iterations
-    std::vector<int> iter_con;
-
-    //    // DIIS options
-    //    double diis_gradient_norm = options_->get_double("CASSCF_DIIS_NORM");
-
-    //    // CI update options
-    //    bool ci_step = options_->get_bool("CASSCF_CI_STEP");
-
-    //    psi::Dimension nhole_dim = mo_space_info_->dimension("GENERALIZED HOLE");
-    //    psi::Dimension npart_dim = mo_space_info_->dimension("GENERALIZED PARTICLE");
-    //    psi::SharedMatrix S(new psi::Matrix("Orbital Rotation", nirrep_, nhole_dim, npart_dim));
-    //    psi::SharedMatrix Sstep;
-
-    //    // Setup the DIIS manager
-    //    auto diis_manager = std::make_shared<DIISManager>(
-    //        diis_max_vec_, "MCSCF DIIS", DIISManager::OldestAdded, DIISManager::InCore);
-    //    diis_manager->set_error_vector_size(1, DIISEntry::Matrix, S.get());
-    //    diis_manager->set_vector_size(1, DIISEntry::Matrix, S.get());
-
-    //    int diis_count = 0;
-
-    //    E_casscf_ = 0.0;
-    //    double E_casscf_old = 0.0, Ediff = 0.0;
-
-    //    psi::SharedMatrix Ca = wfn_->Ca();
-
-    //    print_h2("CASSCF_NEW Iteration");
-    //    outfile->Printf("\n  iter    ||g||           Delta_E            E_CASSCF_NEW CONV_TYPE");
-
-    //    for (int iter = 1; iter <= maxiter_; iter++) {
-    //        local_timer casscf_total_iter;
-
-    //        local_timer trans_ints_timer;
-    //        build_tei_from_ao(Ca);
-    //        if (print_ > 1) {
-    //            outfile->Printf("\n\n  Transform Integrals takes %8.8f s.",
-    //            trans_ints_timer.get());
-    //        }
-    //        iter_con.push_back(iter);
-
-    //        // Perform a CASCI
-    //        E_casscf_old = E_casscf_;
-    //        if (print_ > 0) {
-    //            std::string ci_type = options_->get_str("CASSCF_CI_SOLVER");
-    //            outfile->Printf("\n\n  Performing a CAS with %s", ci_type.c_str());
-    //        }
-
-    //        local_timer cas_timer;
-
-    //        if (iter == 1 or iter % ci_freq_ == 0) {
-    //            diagonalize_hamiltonian();
-    //        } else {
-    //            compute_reference_energy();
-    //        }
-
-    //        if (print_ > 0) {
-    //            outfile->Printf("\n\n CAS took %8.6f seconds.", cas_timer.get());
-    //        }
-
-    //        CASSCFOrbitalOptimizer orbital_optimizer(gamma1_, gamma2_, tei_gaaa_, options_,
-    //                                                 mo_space_info_, ints_);
-
-    //        orbital_optimizer.set_frozen_one_body(F_frozen_core_);
-    //        orbital_optimizer.set_symmmetry_mo(Ca);
-    //        orbital_optimizer.one_body(Hcore_->clone());
-    //        if (print_ > 0) {
-    //            orbital_optimizer.set_print_timings(true);
-    //        }
-    //        orbital_optimizer.set_jk(JK_);
-    //        orbital_optimizer.update();
-    //        double g_norm = orbital_optimizer.orbital_gradient_norm();
-
-    //        Ediff = E_casscf_ - E_casscf_old;
-    //        if (iter > 1 && std::fabs(Ediff) < e_conv_ && g_norm < g_conv_) {
-
-    //            outfile->Printf("\n  %4d   %10.12f   %10.12f   %10.12f  %10.6f s", iter, g_norm,
-    //            Ediff,
-    //                            E_casscf_, casscf_total_iter.get());
-
-    //            outfile->Printf("\n\n  A miracle has come to pass: CASSCF iterations have
-    //            converged."); break;
-    //        }
-
-    //        Sstep = orbital_optimizer.approx_solve();
-
-    //        // Max rotation
-    //        double maxS = Sstep->absmax();
-    //        if (maxS > max_rot_) {
-    //            Sstep->scale(max_rot_ / maxS);
-    //        }
-
-    //        // Add step to overall rotation
-    //        S->add(Sstep);
-
-    //        // TODO:  Add options controlled.  Iteration and g_norm
-    //        if (do_diis_ and (iter >= diis_start_ or g_norm < diis_gradient_norm)) {
-    //            diis_manager->add_entry(2, Sstep.get(), S.get());
-    //            diis_count++;
-    //        }
-
-    //        if (do_diis_ and iter > diis_start_ and (diis_count % diis_freq_ == 0)) {
-    //            diis_manager->extrapolate(1, S.get());
-    //        }
-    //        psi::SharedMatrix Cp = orbital_optimizer.rotate_orbitals(C0_, S);
-
-    //        // update MO coefficients
-    //        Ca->copy(Cp);
-
-    //        std::string diis_start_label = "";
-    //        if (do_diis_ and (iter > diis_start_ or g_norm < diis_gradient_norm)) {
-    //            diis_start_label = "DIIS";
-    //        }
-    //        outfile->Printf("\n %4d %14.12f %18.12f %18.12f %6.1f s  %4s ~", iter, g_norm, Ediff,
-    //                        E_casscf_, casscf_total_iter.get(), diis_start_label.c_str());
-    //    }
-
-    //    diis_manager->delete_diis_file();
-    //    diis_manager.reset();
-
-    //    // if(casscf_debug_print_)
-    //    //{
-    //    //    overlap_orbitals(this->Ca(), C_start);
-    //    //}
-    //    //    if (options_->get_bool("MONITOR_SA_SOLUTION")) {
-    //    //        overlap_coefficients();
-    //    //    }
-
-    //    outfile->Printf("\n\n @ Final CASSCF_NEW Energy = %20.15f\n", E_casscf_);
-    //    if (iter_con.size() == size_t(maxiter_) && maxiter_ > 1) {
-    //        outfile->Printf("\n CASSCF_NEW did not converge");
-    //        throw psi::PSIEXCEPTION("CASSCF_NEW did not converge.");
-    //    }
-
-    //    // semicanonicalize orbitals
-    //    auto U = semicanonicalize(Ca);
-    //    auto Ca_semi = linalg::doublet(Ca, U, false, false);
-    //    Ca_semi->set_name(Ca->name());
-
-    //    // restransform integrals if derivatives are needed
-    //    if (options_->get_str("DERTYPE") == "FIRST") {
-    //        print_h2("Final Integral Transformation for CASSCF_NEW Gradients");
-    //        ints_->update_orbitals(Ca_semi, Ca_semi);
-
-    //        // diagonalize the Hamiltonian one last time
-    //        diagonalize_hamiltonian();
-    //    } else {
-    //        wfn_->Ca()->copy(Ca_semi);
-    //    }
-
-    //    psi::Process::environment.globals["CURRENT ENERGY"] = E_casscf_;
-    //    psi::Process::environment.globals["CASSCF_ENERGY"] = E_casscf_;
-
-    //    return E_casscf_;
 }
 
 void CASSCF_NEW::build_mo_integrals() {

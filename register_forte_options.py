@@ -743,7 +743,7 @@ def register_dsrg_options(options):
     options.add_bool("IGNORE_MEMORY_WARNINGS", False, "Force running the DSRG-MRPT3 code using the batched algorithm")
 
     options.add_int("DSRG_DIIS_START", 2,
-                          "Iteration cycle to start adding error vectors for DSRG DIIS (< 1 for not doing DIIS)")
+                    "Iteration cycle to start adding error vectors for DSRG DIIS (< 1 for not doing DIIS)")
 
     options.add_int("DSRG_DIIS_FREQ", 1, "Frequency of extrapolating error vectors for DSRG DIIS")
 
@@ -819,7 +819,7 @@ def register_casscf_options(options):
     options.add_double(
         "CASSCF_E_CONVERGENCE", 1e-6,
         "The convergence criterion of the energy for CASSCF")
-    options.add_bool("CASSCF_DO_DIIS", True, "Use DIIS in CASSCF?")
+
     options.add_bool("CASSCF_DEBUG_PRINTING", False, "Debug printing for CASSCF?")
     options.add_int(
         "CASSCF_MULTIPLICITY", 0,
@@ -845,13 +845,14 @@ def register_casscf_options(options):
                           ["DIAGONAL", "AUGMENTED_HESSIAN"],
                           "Orbital rotation algorithm")
 
-    options.add_int("CASSCF_DIIS_MAX_VEC", 8,
-                    "The number of rotation parameters to extrapolate with")
-    options.add_int("CASSCF_DIIS_START", 3,
-                    "When to start the DIIS iterations (will make this automatic)")
+    options.add_bool("CASSCF_DO_DIIS", True, "Use DIIS in CASSCF orbital optimization")
+    options.add_int("CASSCF_DIIS_MIN_VEC", 2, "Minimum size of DIIS vectors for orbital rotations")
+    options.add_int("CASSCF_DIIS_MAX_VEC", 8, "Maximum size of DIIS vectors for orbital rotations")
+    options.add_int("CASSCF_DIIS_START", 2, "Iteration number to start adding error vectors (< 1 will not do DIIS)")
     options.add_int("CASSCF_DIIS_FREQ", 1, "How often to do DIIS extrapolation")
     options.add_double("CASSCF_DIIS_NORM", 1e-3,
                        "When the norm of the orbital gradient is below this value, do diis")
+
     options.add_bool("CASSCF_CI_STEP", False, "Do a CAS step for every CASSCF_CI_FREQ")
     options.add_int("CASSCF_CI_FREQ", 1, "How often should you do the CI_FREQ")
     options.add_int("CASSCF_CI_STEP_START", -1, "When to start skipping CI steps")

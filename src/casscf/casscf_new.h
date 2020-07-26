@@ -33,6 +33,7 @@
 #include <vector>
 #include <string>
 
+#include "psi4/libdiis/diismanager.h"
 #include "psi4/libfock/jk.h"
 #include "psi4/libmints/matrix.h"
 
@@ -186,8 +187,12 @@ class CASSCF_NEW {
 
     /// Do DIIS extrapolation for orbitals and CI coefficients
     bool do_diis_;
+    /// Shared pointer of DIISManager object from Psi4
+    std::shared_ptr<psi::DIISManager> diis_manager_;
     /// Iteration number to start adding error vectors
     int diis_start_;
+    /// Min number of vectors in DIIS
+    int diis_min_vec_;
     /// Max number of vectors in DIIS
     int diis_max_vec_;
     /// DIIS extrapolation frequency
