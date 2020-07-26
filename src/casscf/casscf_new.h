@@ -70,8 +70,6 @@ class CASSCF_NEW {
     double compute_energy();
 
   private:
-    double compute_xxx(psi::SharedVector x, psi::SharedVector g);
-
     /// The list of states to computed. Passed to the ActiveSpaceSolver
     std::map<StateInfo, std::vector<double>> state_weights_map_;
 

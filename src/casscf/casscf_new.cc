@@ -460,7 +460,11 @@ double CASSCF_NEW::compute_energy() {
     for (int iter = 1; iter <= maxiter_; ++iter) {
         build_mo_integrals();
 
-        diagonalize_hamiltonian();
+        if (iter == 1 or (iter % ci_freq_ == 0)) {
+            diagonalize_hamiltonian();
+        } else {
+            compute_reference_energy();
+        }
 
         build_fock();
 
@@ -475,7 +479,7 @@ double CASSCF_NEW::compute_energy() {
         g_history.push_back(g_norm);
 
         if (std::fabs(e_delta) < e_conv_ and g_norm < g_conv_) {
-            outfile->Printf("\n\n  A miracle has come to pass: CASSCF iterations have converged.");
+            outfile->Printf("\n    A miracle has come to pass: MCSCF iterations have converged!");
             break;
         }
 
@@ -485,7 +489,6 @@ double CASSCF_NEW::compute_energy() {
         lbfgs.reset();
 
         dR_v_ = lbfgs.compute_correction(R_v_, grad_);
-        dR_v_->print();
 
         // scale dR
         double dr_max = 0.0;
@@ -498,7 +501,6 @@ double CASSCF_NEW::compute_energy() {
             dR_v_->scale(max_rot_ / dr_max);
 
         reshape_rot_update();
-        dR_->print();
 
         // add to R matrix for next iteration
         R_->add(dR_);
@@ -518,11 +520,16 @@ double CASSCF_NEW::compute_energy() {
         // compute unitary matrix U = exp(R)
         U->copy(R_);
         U->expm(3);
-        U->print();
 
         // update orbitals
         C_ = psi::linalg::doublet(C0_, U, false, false);
         C_->set_name(C0_->name());
+
+        if (debug_print_) {
+            dR_->print();
+            R_->print();
+            C_->print();
+        }
 
         //        // determine step length
         //        double step = 1.0;
