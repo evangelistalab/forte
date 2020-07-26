@@ -173,49 +173,42 @@ void CASSCF_NEW::read_options() {
     max_rot_ = options_->get_double("CASSCF_MAX_ROTATION");
     internal_rot_ = options_->get_bool("CASSCF_INTERNAL_ROT");
 
-    zero_rots_.clear();
+    zero_rots_.resize(nirrep_);
     auto zero_rots = options_->get_gen_list("CASSCF_ZERO_ROT");
 
-    //    if (zero_rots.size() != 0) {
-    //        size_t npairs = zero_rots.size();
-    //        for (size_t i = 0; i < npairs; ++i) {
-    //            py::list pair = zero_rots[i];
-    //            if (pair.size() != 3) {
-    //                psi::outfile->Printf("\n  Error: invalid input of CASSCF_ZERO_ROT.");
-    //                psi::outfile->Printf("\n  Each entry should take an array of three numbers.");
-    //                throw std::runtime_error("Invalid input of CASSCF_ZERO_ROT");
-    //            }
+    if (zero_rots.size() != 0) {
+        size_t npairs = zero_rots.size();
+        for (size_t i = 0; i < npairs; ++i) {
+            py::list pair = zero_rots[i];
+            if (pair.size() != 3) {
+                outfile->Printf("\n  Error: invalid input of CASSCF_ZERO_ROT.");
+                outfile->Printf("\n  Each entry should take an array of three numbers.");
+                throw std::runtime_error("Invalid input of CASSCF_ZERO_ROT");
+            }
 
-    //            size_t irrep = py::cast<size_t>(pair[0]);
-    //            if (irrep >= nirrep_ or irrep < 0) {
-    //                psi::outfile->Printf("\n  Error: invalid irrep in CASSCF_ZERO_ROT.");
-    //                psi::outfile->Printf("\n  Check the input irrep (start from 0) not to exceed
-    //                %d",
-    //                                     nirrep_ - 1);
-    //                throw std::runtime_error("Invalid irrep in CASSCF_ZERO_ROT");
-    //            }
+            int irrep = py::cast<int>(pair[0]);
+            if (irrep >= nirrep_ or irrep < 0) {
+                outfile->Printf("\n  Error: invalid irrep in CASSCF_ZERO_ROT.");
+                outfile->Printf("\n  Check the input irrep (start from 0) not to exceed %d",
+                                nirrep_ - 1);
+                throw std::runtime_error("Invalid irrep in CASSCF_ZERO_ROT");
+            }
 
-    //            size_t i1 = py::cast<size_t>(pair[1]) - 1;
-    //            size_t i2 = py::cast<size_t>(pair[2]) - 1;
-    //            size_t n = nmo_dim_[irrep];
-    //            if (i1 >= n or i1 < 0 or i2 >= n or i2 < 0) {
-    //                psi::outfile->Printf("\n  Error: invalid orbital indices in
-    //                CASSCF_ZERO_ROT."); psi::outfile->Printf("\n  The input orbital indices (start
-    //                from 1) should not to "
-    //                                     "exceed %d (number of orbitals in irrep %d)",
-    //                                     n, irrep);
-    //                throw std::runtime_error("Invalid orbital indices in CASSCF_ZERO_ROT");
-    //            }
+            size_t i1 = py::cast<size_t>(pair[1]) - 1;
+            size_t i2 = py::cast<size_t>(pair[2]) - 1;
+            size_t n = nmopi_[irrep];
+            if (i1 >= n or i1 < 0 or i2 >= n or i2 < 0) {
+                outfile->Printf("\n  Error: invalid orbital indices in CASSCF_ZERO_ROT.");
+                outfile->Printf("\n The input orbital indices (start from 1) should not exceed %d "
+                                "(number of orbitals in irrep %d)",
+                                n, irrep);
+                throw std::runtime_error("Invalid orbital indices in CASSCF_ZERO_ROT");
+            }
 
-    //            size_t offset = 0, h = 0;
-    //            while (h < irrep) {
-    //                offset += nmo_dim_[h];
-    //                h++;
-    //            }
-
-    //            zero_rots_.push_back(std::make_pair(i1 + offset, i2 + offset));
-    //        }
-    //    }
+            zero_rots_[irrep][i1].emplace(i2);
+            zero_rots_[irrep][i2].emplace(i1);
+        }
+    }
 }
 
 void CASSCF_NEW::print_options() {
@@ -268,6 +261,10 @@ void CASSCF_NEW::nonredundant_pairs() {
                 auto nj = corr_mos_rel_[mos2[j]].second;
 
                 if (hi == hj) {
+                    if (zero_rots_[hi].find(ni) != zero_rots_[hi].end()) {
+                        if (zero_rots_[hi][ni].find(nj) != zero_rots_[hi][ni].end())
+                            break;
+                    }
                     rot_mos_irrep_.push_back(std::make_tuple(hi, ni, nj));
                     rot_mos_block_.push_back(std::make_tuple(block, i, j));
                     nrots[block][hi] += 1;
@@ -289,6 +286,10 @@ void CASSCF_NEW::nonredundant_pairs() {
                 auto nj = corr_mos_rel_[mos[j]].second;
 
                 if (hi == hj) {
+                    if (zero_rots_[hi].find(ni) != zero_rots_[hi].end()) {
+                        if (zero_rots_[hi][ni].find(nj) != zero_rots_[hi][ni].end())
+                            break;
+                    }
                     rot_mos_irrep_.push_back(std::make_tuple(hi, nj, ni));
                     rot_mos_block_.push_back(std::make_tuple("aa", j, i));
                     nrots["aa"][hi] += 1;

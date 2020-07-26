@@ -30,6 +30,8 @@
 #define _casscf_new_h_
 
 #include <map>
+#include <unordered_map>
+#include <unordered_set>
 #include <vector>
 #include <string>
 
@@ -210,7 +212,8 @@ class CASSCF_NEW {
     bool internal_rot_;
 
     /// User specified zero rotations
-    std::vector<std::pair<size_t, size_t>> zero_rots_;
+    /// vector of irrep, map from index i to other indices uncoupled with index i
+    std::vector<std::unordered_map<size_t, std::unordered_set<size_t>>> zero_rots_;
 
     // => Tensors and matrices <=
 
