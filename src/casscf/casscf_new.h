@@ -213,6 +213,9 @@ class CASSCF_NEW {
     /// vector of irrep, map from index i to other indices uncoupled with index i
     std::vector<std::unordered_map<size_t, std::unordered_set<size_t>>> zero_rots_;
 
+    /// Orbital type for redundant pairs
+    std::string orb_type_redundant_;
+
     // => Tensors and matrices <=
 
     /// Initial orbital coefficients
@@ -322,94 +325,8 @@ class CASSCF_NEW {
     /// Reshape the orbital rotation update from SharedVector to SharedMatrix
     void reshape_rot_update();
 
-    /// Semi-canonicalize orbital and return the rotation matrix
-    std::shared_ptr<psi::Matrix> semicanonicalize();
-
-    //    /// The number of active orbitals
-    //    size_t nactv_;
-    //    /// the number of restricted_docc
-    //    size_t nrdocc_;
-    //    /// The number of frozen_docc
-    //    size_t nfdocc_;
-    //    /// The number of virtual orbitals
-    //    size_t nruocc_;
-    //    /// The number of correlated molecular orbitals (not frozen)
-    //    size_t ncmo_;
-    //    /// The number of NMO including frozen core
-    //    size_t nmo_;
-
-    //    /// List of core MOs (Absolute)
-    //    std::vector<size_t> core_mos_abs_;
-    //    /// List of active MOs (Absolute)
-    //    std::vector<size_t> actv_mos_abs_;
-
-    //    /// The psi::Dimensions for frozen docc
-    //    psi::Dimension frozen_docc_dim_;
-    //    /// The psi::Dimensions for restricted docc
-    //    psi::Dimension restricted_docc_dim_;
-    //    /// The psi::Dimensions for active
-    //    psi::Dimension active_dim_;
-    //    /// The psi::Dimensions for restricted uocc
-    //    psi::Dimension restricted_uocc_dim_;
-    //    /// The psi::Dimensions for frozen uocc
-    //    psi::Dimension inactive_docc_dim_;
-    //    /// The psi::Dimensions for all correlated orbitals
-    //    psi::Dimension corr_dim_;
-    //    /// The psi::Dimensions for all orbitals
-    //    psi::Dimension nmo_dim_;
-
-    //    /// List of relative MOs for restricted docc
-    //    std::vector<std::pair<size_t, size_t>> core_mos_rel_;
-    //    /// List of relative MOs for active
-    //    std::vector<std::pair<size_t, size_t>> actv_mos_rel_;
-    //    /// List of relative MOs for restricted docc
-    //    std::vector<std::pair<size_t, size_t>> virt_mos_rel_;
-
-    //    std::vector<size_t> frozen_docc_abs_;
-    //    std::vector<size_t> restricted_docc_abs_;
-    //    std::vector<size_t> active_abs_;
-    //    std::vector<size_t> restricted_uocc_abs_;
-    //    std::vector<size_t> inactive_docc_abs_;
-    //    std::vector<size_t> nmo_abs_;
-
-    //    /// The Fock matrix due to frozen core orbitals
-    //    psi::SharedMatrix F_frozen_core_;
-
-    //    /// Diagonalize the Hamiltonian using the updated MO coefficients (does FCI, sCI, DMRG,
-    //    etc.) void diagonalize_hamiltonian();
-
-    //    /// Compute overlap between old_c and new_c
-    //    void overlap_orbitals(const psi::SharedMatrix& C_old, const psi::SharedMatrix& C_new);
-    //    void overlap_coefficients();
-    //    //    void write_orbitals_molden();
-
-    //    /// Freeze the core and leave them unchanged
-    //    /// set frozen_core_orbitals
-    //    std::shared_ptr<psi::Matrix> set_frozen_core_orbitals();
-    //    /// Compute the restricted_one_body operator for FCI (done also in OrbitalOptimizer)
-
-    //    std::vector<double> compute_restricted_docc_operator();
-
-    //    double scalar_energy_ = 0.0;
-
-    //    /// The CISolutions per iteration
-    //    std::vector<std::vector<std::shared_ptr<FCIVector>>> CISolutions_;
-    //    std::shared_ptr<ActiveSpaceIntegrals> get_ci_integrals();
-
-    //    /// Compute orbital gradients
-    //    void compute_orbital_gradients();
-
-    //    /// Compute the diagonal Hessian
-    //    void compute_orbital_hessian_diag();
-
-    //    /// The bare one-electron integrals in MO basis
-    //    psi::SharedMatrix Hmo_;
-
-    //    /// The transform integrals computed from transform_integrals
-    //    ambit::Tensor tei_gaaa_;
-
-    //    /// Two-electron integrals labeled by all active indices
-    //    ambit::Tensor tei_aaaa_;
+    /// Fix redundant orbitals and return the rotation matrix
+    std::shared_ptr<psi::Matrix> canonicalize();
 };
 
 std::unique_ptr<CASSCF_NEW>

@@ -158,6 +158,8 @@ void CASSCF_NEW::read_options() {
     e_conv_ = options_->get_double("CASSCF_E_CONVERGENCE");
     g_conv_ = options_->get_double("CASSCF_G_CONVERGENCE");
 
+    orb_type_redundant_ = options_->get_str("CASSCF_ORB_TYPE");
+
     // DIIS options
     diis_freq_ = options_->get_int("CASSCF_DIIS_FREQ");
     diis_start_ = options_->get_int("CASSCF_DIIS_START");
@@ -221,11 +223,13 @@ void CASSCF_NEW::print_options() {
                                                             {"Gradient convergence", g_conv_},
                                                             {"Max value for rotation", max_rot_}};
 
-    std::vector<std::pair<std::string, std::string>> info_string{{"Integral type", int_type_},
-                                                                 {"CI solver type", ci_type_}};
+    std::vector<std::pair<std::string, std::string>> info_string{
+        {"Integral type", int_type_},
+        {"CI solver type", ci_type_},
+        {"Orbital type", orb_type_redundant_}};
 
     std::vector<std::pair<std::string, bool>> info_bool{
-        {"Debug printing", debug_print_}, {"Include internal rotations", internal_rot_}};
+        {"Include internal rotations", internal_rot_}, {"Debug printing", debug_print_}};
 
     if (do_diis_) {
         info_int.push_back({"DIIS start", diis_start_});
@@ -667,6 +671,19 @@ double CASSCF_NEW::compute_energy() {
         outfile->Printf("\n    %4d   %18.12f  %12.4e  %12.4e", i + 1, e, e_delta, g);
     }
     outfile->Printf("\n    -----------------------------------------------------");
+
+    // fix orbitals for redundant pairs
+    auto U_re = canonicalize();
+    C_ = psi::linalg::doublet(C_, U_re, false, false);
+    C_->set_name(C0_->name());
+
+    // rediagonalize Hamiltonian
+    build_mo_integrals();
+    diagonalize_hamiltonian();
+
+    // pass to wave function
+    ints_->wfn()->Ca()->copy(C_);
+    ints_->wfn()->Cb()->copy(C_);
 
     return energy_;
 }
@@ -1133,246 +1150,123 @@ void CASSCF_NEW::reshape_rot_update() {
     }
 }
 
-// void CASSCF_NEW::diagonalize_hamiltonian() {
-//    // perform a CAS-CI with the active given in the input
-//    std::shared_ptr<ActiveSpaceIntegrals> fci_ints = get_ci_integrals();
+std::shared_ptr<psi::Matrix> CASSCF_NEW::canonicalize() {
+    print_h2("Canonicalize Orbitals (" + orb_type_redundant_ + ")");
 
-//    std::string casscf_ci_type = options_->get_str("CASSCF_CI_SOLVER");
+    // unitary rotation matrix for output
+    auto U = std::make_shared<psi::Matrix>("U_redundant", nmopi_, nmopi_);
+    U->identity();
 
-//    auto state_map = to_state_nroots_map(state_weights_map_);
-//    auto active_space_solver = make_active_space_solver(casscf_ci_type, state_map, scf_info_,
-//                                                        mo_space_info_, fci_ints, options_);
-//    active_space_solver->set_print(print_);
-//    const auto state_energies_map = active_space_solver->compute_energy();
-//    cas_ref_ = active_space_solver->compute_average_rdms(state_weights_map_, 2);
-//    E_casscf_ = compute_average_state_energy(state_energies_map, state_weights_map_);
+    // diagonalize sub-blocks of Fock
+    auto ncorepi = mo_space_info_->dimension("RESTRICTED_DOCC");
+    auto nvirtpi = mo_space_info_->dimension("RESTRICTED_UOCC");
+    std::vector<psi::Dimension> mos_dim{ncorepi, nvirtpi};
+    std::vector<psi::Dimension> mos_offsets{nfrzcpi_, ndoccpi_ + nactvpi_};
+    std::vector<std::string> names{"RESTRICTED_DOCC", "RESTRICTED_UOCC"};
 
-//    // Compute 1-RDM
-//    gamma1_ = cas_ref_.g1a().clone();
-//    gamma1_("ij") += cas_ref_.g1b()("ij");
+    if (orb_type_redundant_ == "CANONICAL") {
+        mos_dim.push_back(nactvpi_);
+        mos_offsets.push_back(ndoccpi_);
+        names.push_back("ACTIVE");
+    }
 
-//    // Compute 2-RDM
-//    gamma2_ = cas_ref_.SFg2();
-//}
+    for (int i = 0, size = mos_dim.size(); i < size; ++i) {
+        std::string block_name = "Diagonalizing Fock block " + names[i] + " ...";
+        outfile->Printf("\n    %-44s", block_name.c_str());
 
-// std::shared_ptr<psi::Matrix> CASSCF_NEW::set_frozen_core_orbitals() {
-//    auto Ca = wfn_->Ca();
-//    auto C_core = std::make_shared<psi::Matrix>("C_core", nirrep_, nsopi_, frozen_docc_dim_);
+        auto dim = mos_dim[i];
+        auto offset_dim = mos_offsets[i];
 
-//    // Need to get the frozen block of the C matrix
-//    for (size_t h = 0; h < nirrep_; h++) {
-//        for (int i = 0; i < frozen_docc_dim_[h]; i++) {
-//            C_core->set_column(h, i, Ca->get_column(h, i));
-//        }
-//    }
+        auto Fsub = std::make_shared<psi::Matrix>("Fsub_" + names[i], dim, dim);
 
-//    JK_->set_do_K(true);
-//    std::vector<std::shared_ptr<psi::Matrix>>& Cl = JK_->C_left();
-//    std::vector<std::shared_ptr<psi::Matrix>>& Cr = JK_->C_right();
+        for (int h = 0; h < nirrep_; ++h) {
+            for (int p = 0; p < dim[h]; ++p) {
+                size_t np = p + offset_dim[h];
+                for (int q = 0; q < dim[h]; ++q) {
+                    size_t nq = q + offset_dim[h];
+                    Fsub->set(h, p, q, Fock_->get(h, np, nq));
+                }
+            }
+        }
 
-//    Cl.clear();
-//    Cr.clear();
-//    Cl.push_back(C_core); // Cr is the same as Cl
+        // test off-diagonal elements to decide if need to diagonalize this block
+        auto Fsub_od = Fsub->clone();
+        Fsub_od->zero_diagonal();
 
-//    JK_->compute();
+        double Fsub_max = Fsub_od->absmax();
+        double Fsub_norm = std::sqrt(Fsub_od->sum_of_squares());
 
-//    psi::SharedMatrix F_core = JK_->J()[0];
-//    psi::SharedMatrix K_core = JK_->K()[0];
+        double threshold_max = 0.1 * g_conv_;
+        if (int_type_ == "CHOLESKY") {
+            double cd_tlr = options_->get_double("CHOLESKY_TOLERANCE");
+            threshold_max = (threshold_max < 0.5 * cd_tlr) ? 0.5 * cd_tlr : threshold_max;
+        }
+        double threshold_rms = std::sqrt(dim.sum() * (dim.sum() - 1) / 2.0) * threshold_max;
 
-//    F_core->scale(2.0);
-//    F_core->subtract(K_core);
+        // diagonalize
+        if (Fsub_max > threshold_max or Fsub_norm > threshold_rms) {
+            auto Usub = std::make_shared<psi::Matrix>("Usub_" + names[i], dim, dim);
+            auto Esub = std::make_shared<psi::Vector>("Esub_" + names[i], dim);
+            Fsub->diagonalize(Usub, Esub);
 
-//    return F_core;
-//}
+            // fill in data
+            for (int h = 0; h < nirrep_; ++h) {
+                for (int p = 0; p < dim[h]; ++p) {
+                    size_t np = p + offset_dim[h];
+                    for (int q = 0; q < dim[h]; ++q) {
+                        size_t nq = q + offset_dim[h];
+                        U->set(h, np, nq, Usub->get(h, p, q));
+                    }
+                }
+            }
+        } // end if need to diagonalize
 
-// std::shared_ptr<ActiveSpaceIntegrals> CASSCF_NEW::get_ci_integrals() {
-//    std::vector<int> actv_sym = mo_space_info_->symmetry("ACTIVE");
-//    auto fci_ints = std::make_shared<ActiveSpaceIntegrals>(ints_, actv_mos_, actv_sym,
-//    rdocc_mos_);
+        outfile->Printf(" Done.");
+    } // end sub block
 
-//    if (!(options_->get_bool("RESTRICTED_DOCC_JK"))) {
-//        fci_ints->set_active_integrals_and_restricted_docc();
-//    } else {
-//        auto active_aa = ambit::Tensor::build(ambit::CoreTensor, "ActiveIntegralsAA",
-//                                              {nactv_, nactv_, nactv_, nactv_});
-//        auto active_ab = ambit::Tensor::build(ambit::CoreTensor, "ActiveIntegralsAB",
-//                                              {nactv_, nactv_, nactv_, nactv_});
-//        const std::vector<double>& tei_paaa_data = tei_gaaa_.data();
+    // natural orbitals
+    if (orb_type_redundant_ == "NATURAL") {
+        std::string block_name = "Diagonalizing 1-RDM ...";
+        outfile->Printf("\n    %-44s", block_name.c_str());
 
-//        size_t nactv2 = nactv_ * nactv_;
-//        size_t nactv3 = nactv2 * nactv_;
+        auto A = std::make_shared<psi::Matrix>("O_actv", nactvpi_, nactvpi_);
 
-//        active_ab.iterate([&](const std::vector<size_t>& i, double& value) {
-//            value = tei_paaa_data[actv_mos_[i[0]] * nactv3 + i[1] * nactv2 + i[2] * nactv_ +
-//            i[3]];
-//        });
+        D1_.citerate(
+            [&](const std::vector<size_t>& i, const std::vector<SpinType>&, const double& value) {
+                auto irrep_index_pair1 = corr_mos_rel_[i[0]];
+                auto irrep_index_pair2 = corr_mos_rel_[i[1]];
 
-//        active_aa.copy(active_ab);
-//        active_aa("u,v,x,y") -= active_ab("u, v, y, x");
+                int h1 = irrep_index_pair1.first;
+                int h2 = irrep_index_pair2.first;
 
-//        fci_ints->set_active_integrals(active_aa, active_ab, active_aa);
-//        if (debug_print_) {
-//            outfile->Printf("\n\n  tei_active_aa: %8.8f, tei_active_ab: %8.8f", active_aa.norm(2),
-//                            active_ab.norm(2));
-//        }
+                if (h1 == h2) {
+                    auto offset = ndoccpi_[h1];
+                    auto p = irrep_index_pair1.second - offset;
+                    auto q = irrep_index_pair2.second - offset;
+                    A->set(h1, p, q, value);
+                }
+            });
 
-//        auto oei = compute_restricted_docc_operator();
-//        fci_ints->set_restricted_one_body_operator(oei, oei);
-//        fci_ints->set_scalar_energy(scalar_energy_);
-//    }
+        auto Usub = std::make_shared<psi::Matrix>("Usub_ACTIVE", nactvpi_, nactvpi_);
+        auto Esub = std::make_shared<psi::Vector>("Esub_ACTIVE", nactvpi_);
+        A->diagonalize(Usub, Esub, descending);
 
-//    return fci_ints;
-//}
+        // fill in data
+        for (int h = 0; h < nirrep_; ++h) {
+            for (int p = 0; p < nactvpi_[h]; ++p) {
+                size_t np = p + ndoccpi_[h];
+                for (int q = 0; q < nactvpi_[h]; ++q) {
+                    size_t nq = q + ndoccpi_[h];
+                    U->set(h, np, nq, Usub->get(h, p, q));
+                }
+            }
+        }
 
-// std::vector<double> CASSCF_NEW::compute_restricted_docc_operator() {
-//    auto Ca = wfn_->Ca();
+        outfile->Printf(" Done.");
+    }
 
-//    double Edocc = 0.0;                         // energy from restricted docc
-//    double Efrzc = ints_->frozen_core_energy(); // energy from frozen docc
-//    scalar_energy_ = ints_->scalar();           // scalar energy from the Integral class
-
-//    // bare one-electron integrals
-//    std::shared_ptr<psi::Matrix> Hcore = Hcore_->clone();
-//    Hcore->transform(Ca);
-
-//    // one-electron integrals dressed by inactive orbitals
-//    std::vector<double> oei(nactv_ * nactv_, 0.0);
-//    // one-electron integrals in SharedMatrix format, set to MO Hcore by default
-//    std::shared_ptr<psi::Matrix> oei_shared_matrix = Hcore;
-
-//    // special case when there is no inactive docc
-//    if (nrdocc_ + nfdocc_ != 0) {
-//        // compute inactive Fock
-//        build_fock_inactive(Ca);
-//        oei_shared_matrix = Fclosed_;
-
-//        // compute energy from inactive docc
-//        for (size_t h = 0; h < nirrep_; h++) {
-//            for (int rd = 0; rd < inactive_docc_dim_[h]; rd++) {
-//                Edocc += Hcore->get(h, rd, rd) + Fclosed_->get(h, rd, rd);
-//            }
-//        }
-
-//        // Edocc includes frozen-core energy and should be subtracted
-//        scalar_energy_ += Edocc - Efrzc;
-//    }
-
-//    // fill in oei data
-//    for (size_t u = 0; u < nactv_; ++u) {
-//        size_t h = actv_mos_rel_[u].first;   // irrep
-//        size_t nu = actv_mos_rel_[u].second; // index
-
-//        for (size_t v = 0; v < nactv_; ++v) {
-//            if (actv_mos_rel_[v].first != h)
-//                continue;
-
-//            size_t nv = actv_mos_rel_[v].second;
-
-//            oei[u * nactv_ + v] = oei_shared_matrix->get(h, nu, nv);
-//        }
-//    }
-
-//    if (debug_print_) {
-//        for (size_t u = 0; u < nactv_; u++) {
-//            for (size_t v = 0; v < nactv_; v++) {
-//                outfile->Printf("\n  oei(%d, %d) = %8.8f", u, v, oei[u * nactv_ + v]);
-//            }
-//        }
-
-//        outfile->Printf("\n Frozen Core Energy = %8.8f", Efrzc);
-//        outfile->Printf("\n Restricted Energy = %8.8f", Edocc - Efrzc);
-//        outfile->Printf("\n Scalar Energy = %8.8f", scalar_energy_);
-//    }
-
-//    return oei;
-//}
-
-// std::shared_ptr<psi::Matrix> CASSCF_NEW::semicanonicalize(std::shared_ptr<psi::Matrix> Ca) {
-//    print_h2("Semi-canonicalize CASSCF_NEW Orbitals");
-
-//    // build generalized Fock matrix
-//    outfile->Printf("\n    Building Fock matrix  ...");
-//    build_fock(Ca);
-//    outfile->Printf(" Done.");
-
-//    // unitary rotation matrix for output
-//    auto U = std::make_shared<psi::Matrix>("U_CAS_SEMI", nmo_dim_, nmo_dim_);
-//    U->identity();
-
-//    // diagonalize three sub-blocks (restricted_docc, active, restricted_uocc)
-//    std::vector<psi::Dimension> mos_dim{restricted_docc_dim_, active_dim_, restricted_uocc_dim_};
-//    std::vector<psi::Dimension> mos_offsets{frozen_docc_dim_, inactive_docc_dim_,
-//                                            inactive_docc_dim_ + active_dim_};
-//    for (int i = 0; i < 3; ++i) {
-//        outfile->Printf("\n    Diagonalizing block " + std::to_string(i) + " ...");
-
-//        auto dim = mos_dim[i];
-//        auto offset_dim = mos_offsets[i];
-
-//        auto Fsub = std::make_shared<psi::Matrix>("Fsub_" + std::to_string(i), dim, dim);
-
-//        for (size_t h = 0; h < nirrep_; ++h) {
-//            for (int p = 0; p < dim[h]; ++p) {
-//                size_t np = p + offset_dim[h];
-//                for (int q = 0; q < dim[h]; ++q) {
-//                    size_t nq = q + offset_dim[h];
-//                    Fsub->set(h, p, q, Fock_->get(h, np, nq));
-//                }
-//            }
-//        }
-
-//        // test off-diagonal elements to decide if need to diagonalize this block
-//        auto Fsub_od = Fsub->clone();
-//        Fsub_od->zero_diagonal();
-
-//        double Fsub_max = Fsub_od->absmax();
-//        double Fsub_norm = std::sqrt(Fsub_od->sum_of_squares());
-
-//        double threshold_max = 0.1 * g_conv_;
-//        if (int_type_ == "CHOLESKY") {
-//            double cd_tlr = options_->get_double("CHOLESKY_TOLERANCE");
-//            threshold_max = (threshold_max < 0.5 * cd_tlr) ? 0.5 * cd_tlr : threshold_max;
-//        }
-//        double threshold_rms = std::sqrt(dim.sum() * (dim.sum() - 1) / 2.0) * threshold_max;
-
-//        // diagonalize
-//        if (Fsub_max > threshold_max or Fsub_norm > threshold_rms) {
-//            auto Usub = std::make_shared<psi::Matrix>("Usub_" + std::to_string(i), dim, dim);
-//            auto Esub = std::make_shared<psi::Vector>("Esub_" + std::to_string(i), dim);
-//            Fsub->diagonalize(Usub, Esub);
-
-//            // fill in data
-//            for (size_t h = 0; h < nirrep_; ++h) {
-//                for (int p = 0; p < dim[h]; ++p) {
-//                    size_t np = p + offset_dim[h];
-//                    for (int q = 0; q < dim[h]; ++q) {
-//                        size_t nq = q + offset_dim[h];
-//                        U->set(h, np, nq, Usub->get(h, p, q));
-//                    }
-//                }
-//            }
-//        } // end if need to diagonalize
-
-//        outfile->Printf(" Done.");
-//    } // end sub block
-
-//    return U;
-//}
-
-// void CASSCF_NEW::overlap_orbitals(const psi::SharedMatrix& C_old, const psi::SharedMatrix& C_new)
-// {
-//    psi::SharedMatrix S_orbitals(new psi::Matrix("Overlap", nsopi_, nsopi_));
-//    psi::SharedMatrix S_basis = wfn_->S();
-//    S_orbitals = psi::linalg::triplet(C_old, S_basis, C_new, true, false, false);
-//    S_orbitals->set_name("C^T S C (Overlap)");
-//    for (size_t h = 0; h < nirrep_; h++) {
-//        for (int i = 0; i < S_basis->rowspi(h); i++) {
-//            if (std::fabs(S_basis->get(h, i, i) - 1.0000000) > 1e-6) {
-//                //    S_basis->get_row(h, i)->print();
-//            }
-//        }
-//    }
-//}
+    return U;
+}
 
 std::unique_ptr<CASSCF_NEW>
 make_casscf_new(const std::map<StateInfo, std::vector<double>>& state_weight_map,

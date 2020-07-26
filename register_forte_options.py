@@ -868,6 +868,9 @@ def register_casscf_options(options):
     options.add_array("CASSCF_ZERO_ROT",
                       "An array of MOs [[irrep1, mo1, mo2], [irrep2, mo3, mo4], ...]")
 
+    options.add_str("CASSCF_ORB_TYPE", "CANONICAL", ["CANONICAL", "NATURAL"],
+                    "Constraints for redundant orbital pairs")
+
 
 def register_old_options(options):
     options.set_group("Old")
