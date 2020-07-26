@@ -8,6 +8,8 @@ from IPython.display import display
 from pythreejs import *
 from .atom_data import *
 
+from collections import defaultdict
+
 
 def rgb2hex(r, g, b):
     r = max(0, min(r, 255))
@@ -70,6 +72,8 @@ class Py3JSRenderer():
         Add a molecule specified in xyz format
     add_cubefile(cube,type='mo',levels=None,colors=None,colorscheme=None,opacity=1.0,scale=1.0,sumlevel=0.85,add_geom=True,shift_to_com=True)
         Add a cube file
+    add_cubefiles(cubes,type='mo',levels=None,colors=None,colorscheme=None,opacity=1.0,scale=1.0,sumlevel=0.85,add_geom=True,shift_to_com=True)
+        Add a cube file
     add_sphere(self, position, radius, color, opacity=1.0)
         Add a sphere (should not be used to draw molecules)
     add_cylinder(self, xyz1, xyz2, color, radius)
@@ -104,10 +108,20 @@ class Py3JSRenderer():
         self.atom_materials = {}
         self.bond_materials = {}
         self.bond_geometry = None
-
+        # cubefile meshes
+        self.cube_meshes = defaultdict(list)
+        # a list of active cubefile meshes
+        self.active_cube_meshes = []
         # set an initial scene size
         self.camera_width = 10.0
         self.camera_height = self.camera_width / self.aspect
+
+        self._color_schemes = {'national' : ['#e60000', '#0033a0'],
+    'bright':['#ffcc00', '#00bfff'],
+    'electron': ['#ff00bf', '#2eb82e'],
+    'wow':      ['#AC07F2', '#D7F205'],
+    'emory' : ['#f2a900', '#0033a0']}
+
         self.__initialize_pythreejs_renderer()
 
     def display(self):
@@ -122,11 +136,42 @@ class Py3JSRenderer():
         """
         return self.renderer
 
+    def cubes(self):
+        """
+        Return the list of cube
+        """
+        return list(self.cube_meshes.keys())
+
+    def set_active_cubes(self,active_cubes):
+        """
+        Set the active cubes
+        """
+        # let the user pass a string or a list of strings
+        if isinstance(active_cubes,str):
+            active_cubes = [active_cubes]
+
+        # find cubes that must be removed (those plotted not included in the new list)
+        to_remove = set(self.active_cube_meshes).difference(set(active_cubes))
+        to_add = set(active_cubes).difference(set(self.active_cube_meshes))
+        self.active_cube_meshes = active_cubes
+
+        for cube in to_add:
+            if cube in self.cube_meshes:
+                for mesh in self.cube_meshes[cube]:
+                    self.scene.add(mesh)
+        # remove/add
+        for cube in to_remove:
+            if cube in self.cube_meshes:
+                for mesh in self.cube_meshes[cube]: # each cube has multiple meshes
+                    self.scene.remove(mesh)
+
+
     def show_molecule(self,wfn, shift_to_com=True):
         mol = wfn.molecule()
         natom = mol.natom()
         atoms_list = [(mol.symbol(i),mol.x(i),mol.y(i),mol.z(i)) for i in range(natom)]
         self.add_molecule(atoms_list, bohr=True)
+
 
     def add_molecule(self, atoms_list, bohr=False, shift_to_com=True):
         """
@@ -288,6 +333,104 @@ class Py3JSRenderer():
                                               extent=extent,
                                               opacity=opacity)
                 self.scene.add(mesh)
+
+    def add_cubefiles(self,
+                     cubes,
+                     type='mo',
+                     levels=None,
+                     colors=None,
+                     colorscheme='emory',
+                     opacity=1.0,
+                     sumlevel=0.85,
+                     add_geom=True,
+                     shift_to_com=True,
+                     show_surfaces=False):
+        """
+        Add a cube file (and optionally the molecular geometry) to the scene. This function will automatically select the levels and colors
+        with which to plot the surfaces
+
+        Parameters
+        ----------
+        cubes : dict(str -> CubeFile)
+            The CubeFile objects to load
+        type : str
+            The type of cube files ('mo' or 'density')
+        levels : list(float)
+            The levels to plot (default = None). If not provided, levels will be automatically selected
+            using the compute_levels() function of the CubeFile class. The variable sumlevel is used to
+            select the levels
+        color : list(str)
+            The color of each surface passed as a list of hexadecimal color codes (default = None)
+        colorscheme : str
+            A predefined color scheme (default = 'emory'). Possible options are ['emory', 'national', 'bright', 'electron', 'wow']
+        opacity : float
+            Opacity of the surfaces (default = 1.0)
+        sumlevel : float
+            Cumulative electron density threshold used to find the isosurface levels
+        add_geom : bool
+            Show the molecular geometry (default = True)
+        shift_to_com : bool
+            Shift the molecule so that the center of mass is at the origin (default = True)
+        """
+        if len(cubes) == 0:
+            return
+
+        Xcm, Ycm, Zcm = (0.0, 0.0, 0.0)
+        cube = cubes[list(cubes)[0]]
+        atoms_list = []
+        for Z, xyz in zip(cube.atom_numbers(), cube.atom_coords()):
+            symbol = ATOM_DATA[Z]['symbol']
+            atoms_list.append((symbol, xyz[0], xyz[1], xyz[2]))
+
+        if add_geom:
+            # compute the center of mass
+            self.add_molecule(atoms_list,
+                              bohr=True,
+                              shift_to_com=shift_to_com)
+
+        if shift_to_com:
+            Xcm, Ycm, Zcm = self.__center_of_mass(atoms_list)
+
+        # grab the color scheme
+        if colors == None:
+            colors = self._color_schemes[colorscheme]
+
+        # process the cube files
+        for label, cube in cubes.items():
+            # check if we alredy have this cube file
+            if label in self.cube_meshes:
+                continue
+            # generate a mesh
+            self.cube_meshes[label] = self.__cube_mesh(cube,type,levels,sumlevel,colors,opacity,Xcm, Ycm, Zcm)
+
+        if show_surfaces:
+            self.scene.add(mesh)
+            self.active_cube_meshes.append(mesh)
+
+
+    def __cube_mesh(self,cube,type,levels,sumlevel,colors,opacity,Xcm, Ycm, Zcm):
+        meshes = []
+        # compute the isosurface levels
+        if not levels:
+            levels = cube.compute_levels(type, sumlevel)
+
+        # grab the data and extents, shift to the center of mass automatically
+        data = cube.data()
+        extent = [[cube.min()[0] - Xcm,
+                   cube.max()[0] - Xcm],
+                  [cube.min()[1] - Ycm,
+                   cube.max()[1] - Ycm],
+                  [cube.min()[2] - Zcm,
+                   cube.max()[2] - Zcm]]
+        for level, color in zip(levels, colors):
+            if abs(level) > 1.0e-4:
+                mesh = self.__isosurface_mesh(data,
+                                          level=level,
+                                          color=color,
+                                          extent=extent,
+                                          opacity=opacity)
+                meshes.append(mesh)
+        return meshes
 
     def add_sphere(self, position, radius, color, opacity=1.0):
         """

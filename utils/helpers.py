@@ -84,6 +84,31 @@ def load_cubes(path='.'):
     return cube_files
 
 
+def list_cubes(path='.'):
+    """
+    List all the cubefiles (suffix ".cube" ) in a given path
+
+    Parameters
+    ----------
+    path : str
+        The path of the directory that will contain the cube files
+    """
+
+    import os
+    cube_files = []
+    isdir = os.path.isdir(path)
+    if isdir:
+        for file in os.listdir(path):
+            if file.endswith('.cube'):
+                cube_files.append(os.path.join(path,file))
+        if len(cube_files) == 0:
+            print(f'load_cubes: no cube files found in directory {path}')
+    else:
+        print(f'load_cubes: directory {path} does not exist')
+
+    return cube_files
+
+
 def psi4_cubeprop(wfn,
                   path='.',
                   orbs=[],
