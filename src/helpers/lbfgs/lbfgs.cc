@@ -46,6 +46,43 @@ LBFGS::LBFGS(int dim, int m, bool descent) : dim_(dim), m_(m), descent_(descent)
     guess_h0();
 }
 
+//LBFGS::LBFGS(int dim, const LBFGS_PARAM& param) : dim_(dim), param_(param) {
+//    param_.check_param();
+
+//    resize(param_.m);
+
+//    x_last_ = std::make_shared<psi::Vector>("Last Solution", dim);
+//    g_last_ = std::make_shared<psi::Vector>("Last Gradient", dim);
+
+//    h0_ = std::make_shared<psi::Vector>("Inverse Diagonal Hessian", dim);
+//    guess_h0();
+//}
+
+// void LBFGS::minimize(const std::function<double(psi::SharedVector, psi::SharedVector)>& func,
+//                     psi::SharedVector x, psi::SharedVector g) {
+//    check_dim(x, g, "Inconsistent dimensions for x0 and g0.");
+
+//    auto dim = x->dimpi();
+//    if (dim.n() != 1) {
+//        throw std::runtime_error("Irrep is not supported for vectors in BFGS.");
+//    }
+
+//    dim_ = dim.sum();
+
+//    x_last_ = std::make_shared<psi::Vector>("Last Solution", dim_);
+//    g_last_ = std::make_shared<psi::Vector>("Last Gradient", dim_);
+
+//    h0_ = std::make_shared<psi::Vector>("Inverse Diagonal Hessian", dim_);
+//    guess_h0();
+
+//    resize(param_.m);
+
+//    // evaluate the function and gradient
+//    double fx = func(x, g);
+//    double xnorm = x->norm();
+//    double gnorm = g->norm();
+//}
+
 void LBFGS::guess_h0() {
     double v = gamma();
     for (int i = 0; i < dim_; ++i) {
@@ -73,14 +110,24 @@ psi::SharedVector LBFGS::compute_correction(psi::SharedVector x, psi::SharedVect
         int m = std::min(counter_, m_);
         int end = (counter_ - 1) % m;
 
+        outfile->Printf("\n  m: %d, end: %d", m, end);
+
         // update differences vectors
+        if (counter_ < m_) {
+            s_[end] = std::make_shared<psi::Vector>(dim_);
+            s_[end]->set_name("s_" + std::to_string(end));
+
+            y_[end] = std::make_shared<psi::Vector>(dim_);
+            y_[end]->set_name("y_" + std::to_string(end));
+        }
+
         s_[end]->copy(*x);
         s_[end]->subtract(x_last_);
-        s_[end]->set_name("s_" + std::to_string(end));
+        s_[end]->print();
 
         y_[end]->copy(*g);
         y_[end]->subtract(g_last_);
-        y_[end]->set_name("y_" + std::to_string(end));
+        y_[end]->print();
 
         rho_[end] = 1.0 / y_[end]->vector_dot(s_[end]);
 
@@ -88,7 +135,7 @@ psi::SharedVector LBFGS::compute_correction(psi::SharedVector x, psi::SharedVect
 
         // first loop
         for (int i = 0; i < m; ++i) {
-            int k = (end - i + m) % m;
+            const int k = (end - i + m) % m;
 
             alpha_[k] = rho_[k] * s_[k]->vector_dot(z);
 
@@ -98,9 +145,9 @@ psi::SharedVector LBFGS::compute_correction(psi::SharedVector x, psi::SharedVect
         }
 
         // Scale by initial Hessian
-        if (hess_auto_) {
-            guess_h0();
-        }
+//        if (param_.auto_hess) {
+//            guess_h0();
+//        }
         apply_h0(z);
 
         // second loop
@@ -125,6 +172,8 @@ psi::SharedVector LBFGS::compute_correction(psi::SharedVector x, psi::SharedVect
     g_last_->copy(*g);
     x_last_->copy(*x);
 
+    outfile->Printf("\n gradient projected on direction: %.15f", z->vector_dot(g));
+
     counter_ += 1;
 
     return z;
@@ -146,8 +195,9 @@ void LBFGS::set_size(int m) {
 }
 
 void LBFGS::resize(int m) {
-    y_.resize(m);
-    s_.resize(m);
+    y_ = std::vector<psi::SharedVector>(m, std::make_shared<psi::Vector>());
+    s_ = std::vector<psi::SharedVector>(m, std::make_shared<psi::Vector>());
+
     alpha_.resize(m);
     rho_.resize(m);
 }
@@ -173,7 +223,7 @@ void LBFGS::check_dim(psi::SharedVector a, psi::SharedVector b, const std::strin
 }
 
 void LBFGS::reset() {
-    resize(0);
+    resize(m_);
     counter_ = 0;
 }
 

@@ -41,7 +41,7 @@
 
 #include "helpers/printing.h"
 #include "helpers/helpers.h"
-#include "helpers/lbfgs.h"
+#include "helpers/lbfgs/lbfgs.h"
 #include "helpers/timer.h"
 #include "sci/aci.h"
 #include "fci/fci_solver.h"
@@ -433,32 +433,189 @@ void CASSCF_NEW::init_tensors() {
 }
 
 double CASSCF_NEW::compute_energy() {
+    // save a copy of the orginal orbitals
     C_ = C0_->clone();
-    build_mo_integrals();
 
-    diagonalize_hamiltonian();
+    //    build_mo_integrals();
 
-    build_fock();
+    //    diagonalize_hamiltonian();
 
-    compute_orbital_grad();
+    //    build_fock();
 
-    compute_orbital_hess_diag();
+    //    compute_orbital_grad();
+
+    //    compute_orbital_hess_diag();
 
     LBFGS lbfgs(nrot_);
-    lbfgs.set_hess_diag(hess_diag_);
+    //    lbfgs.set_hess_diag(hess_diag_);
 
-    auto x = std::make_shared<psi::Vector>("R", nrot_);
-    dR_v_ = lbfgs.compute_correction(x, grad_);
-    dR_v_->print();
+    dR_v_ = std::make_shared<psi::Vector>("dR", nrot_);
+    R_v_ = std::make_shared<psi::Vector>("R", nrot_);
+    //    dR_v_ = lbfgs.compute_correction(dR_v_, grad_);
+    //    dR_v_->print();
 
-    reshape_rot_update();
-    dR_->print();
+    //    reshape_rot_update();
+    //    dR_->print();
 
-    R_->add(dR_);
+    //    R_->add(dR_);
+    R_->zero();
     auto U = std::make_shared<psi::Matrix>(R_);
     U->set_name("Unitary Transformation");
-    U->expm(3);
-    U->print();
+    //    U->expm(3);
+    //    U->print();
+
+    // Setup the DIIS manager
+    auto diis_manager = std::make_shared<DIISManager>(
+        diis_max_vec_, "MCSCF DIIS", DIISManager::OldestAdded, DIISManager::InCore);
+    diis_manager->set_error_vector_size(1, DIISEntry::Matrix, dR_.get());
+    diis_manager->set_vector_size(1, DIISEntry::Matrix, R_.get());
+
+    int diis_count = 0;
+
+    for (int iter = 1; iter <= maxiter_; ++iter) {
+        build_mo_integrals();
+
+        diagonalize_hamiltonian();
+
+        build_fock();
+
+        compute_orbital_grad();
+
+//        if (iter < 3){
+            compute_orbital_hess_diag();
+            lbfgs.set_hess_diag(hess_diag_);
+            lbfgs.reset();
+//        }
+        dR_v_ = lbfgs.compute_correction(R_v_, grad_);
+        dR_v_->print();
+
+        reshape_rot_update();
+
+        dR_->print();
+
+        // determine step length
+        double step = 1.0;
+        double a_low = 0.1, a_high = 20.0;
+        double e_last = energy_, e_0 = energy_;
+        double dg0 = grad_->vector_dot(dR_v_);
+        double decrease = 1.0e-4 * dg0;
+        double curvature = -0.9 * dg0;
+
+//        for (int i = 0; i < 10; ++i) {
+//            auto dR = dR_->clone();
+//            dR->scale(step);
+//            auto R = R_->clone();
+//            R->add(dR);
+
+//            U->copy(R);
+//            U->expm(3);
+
+//            auto C = psi::linalg::doublet(C0_, U, false, false);
+//            C_->copy(C);
+
+//            build_mo_integrals();
+
+//            compute_reference_energy();
+
+//            compute_orbital_grad();
+
+//            double dg = grad_->vector_dot(dR_v_);
+
+//            if (energy_ > e_0 + step * decrease or (i > 1 and energy_ >= e_last)) {
+//                a_high = step;
+//                break;
+//            }
+
+//            e_last = energy_;
+
+//            if (std::fabs(dg) <= curvature)
+//                break;
+
+//            if (dg >= 0) {
+//                a_high = a_low;
+//                a_low = step;
+//                break;
+//            }
+
+//            step *= 1.5;
+//            outfile->Printf("\nCurrent step length at iter %2d: %10.8f; energy: %.15f", i, step, energy_);
+//        }
+//        outfile->Printf("\nBraketing stage: (%8.4f, %8.4f)", a_low, a_high);
+
+//        for (int j = 0; j < 10; ++j) {
+//            step = 0.5 * (a_low + a_high);
+
+//            auto dR = dR_->clone();
+//            dR->scale(step);
+//            auto R = R_->clone();
+//            R->add(dR);
+
+//            U->copy(R);
+//            U->expm(3);
+
+//            auto C = psi::linalg::doublet(C0_, U, false, false);
+//            C_->copy(C);
+
+//            build_mo_integrals();
+
+//            compute_reference_energy();
+
+//            if (energy_ > e_0 + step * decrease or energy_ >= e_last) {
+//                a_high = step;
+//            } else {
+//                compute_orbital_grad();
+
+//                double dg = grad_->vector_dot(dR_v_);
+
+//                if (std::fabs(dg) <= curvature) {
+//                    break;
+//                }
+
+//                if (dg * (a_high - a_low) >= 0) {
+//                    a_high = a_low;
+//                }
+
+//                a_low = step;
+//                e_last = energy_;
+//            }
+//        }
+//        outfile->Printf("\nZoom stage: (%8.4f, %8.4f)", a_low, a_high);
+//        outfile->Printf("\n Step length: %.8f, averaged: %.8f", step, (a_low + a_high) * 0.5);
+
+//        step = (a_low + a_high) * 0.5;
+        dR_->scale(step);
+        dR_v_->scale(step);
+
+        R_->add(dR_);
+        R_v_->add(dR_v_);
+
+        if (do_diis_ and iter >= diis_start_) {
+            diis_manager->add_entry(2, dR_.get(), R_.get());
+            diis_count++;
+        }
+
+        if (iter >= diis_start_ + 2 and (diis_count % diis_freq_ == 0)) {
+            diis_manager->extrapolate(1, R_.get());
+            outfile->Printf("DIIS");
+
+////            for (size_t n = 0; n < nrot_; ++n) {
+////                int h, i, j;
+////                std::tie(h, i, j) = rot_mos_irrep_[n];
+////                R_v_->set(n, R_->get(h, i, j));
+////            }
+////            lbfgs.set_x_last(R_v_);
+        }
+
+
+        U->copy(R_);
+        U->expm(3);
+        U->print();
+
+        auto C = psi::linalg::doublet(C0_, U, false, false);
+        C_->copy(C);
+
+        outfile->Printf("\n  Iter %d energy: %.15f, grad_norm: %.15f", iter, energy_, grad_->rms());
+    }
 
     return energy_;
 
@@ -742,6 +899,8 @@ void CASSCF_NEW::build_tei_from_ao() {
             }
         }
     }
+
+    timer_off("Build (pu|xy) integrals");
 }
 
 void CASSCF_NEW::build_fock_inactive() {

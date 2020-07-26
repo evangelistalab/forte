@@ -830,11 +830,17 @@ def register_casscf_options(options):
                            "Run a complete SOSCF (form full Hessian)?")
     options.add_bool("OPTIMIZE_FROZEN_CORE", False,
                            "Ignore frozen core option and optimize orbitals?")
-    options.add_double("CASSCF_MAX_ROTATION", 0.5,
-                             "CASSCF maximum Hessian")
-    options.add_bool("CASSCF_SCALE_ROTATION", True, "Scale the Hessian?")
+
     options.add_bool("RESTRICTED_DOCC_JK", True,
-                           "Use JK builder for restricted docc (EXPERT)?")
+                     "Use JK builder for restricted docc (EXPERT)?")
+
+#    options.add_str("CASSCF_ORB_STEP_LENGTH", "SCALE", ["LINE_SEARCH", "SCALE"],
+#                    "Algorithm to determine the step length (alpha) for orbital update x_new = x_old + alpha * dx")
+
+#    options.add_int("CASSCF_LINE_SEARCH_MAXITER", 10, "Number of ")
+
+    options.add_double("CASSCF_MAX_ROTATION", 0.5, "Max value in orbital update vector")
+
     options.add_str("ORB_ROTATION_ALGORITHM", "DIAGONAL",
                           ["DIAGONAL", "AUGMENTED_HESSIAN"],
                           "Orbital rotation algorithm")

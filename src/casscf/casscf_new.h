@@ -67,6 +67,8 @@ class CASSCF_NEW {
     double compute_energy();
 
   private:
+    double compute_xxx(psi::SharedVector x, psi::SharedVector g);
+
     /// The list of states to computed. Passed to the ActiveSpaceSolver
     std::map<StateInfo, std::vector<double>> state_weights_map_;
 
@@ -242,9 +244,10 @@ class CASSCF_NEW {
 
     /// The orbital rotation matrix [R in exp(R)]
     psi::SharedMatrix R_;
+    psi::SharedVector R_v_;
     /// The orbital rotation update vector
     psi::SharedMatrix dR_;
-    psi::SharedVector dR_v_; // in reshaped form
+    psi::SharedVector dR_v_;
 
     /// The orbital gradients
     ambit::BlockedTensor g_;

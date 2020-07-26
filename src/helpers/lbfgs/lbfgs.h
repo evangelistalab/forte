@@ -29,9 +29,12 @@
 #ifndef _lbfgs_h_
 #define _lbfgs_h_
 
+#include <functional>
 #include <vector>
 
 #include "psi4/libmints/vector.h"
+
+//#include "helpers/lbfgs/lbfgs_param.h"
 
 namespace forte {
 
@@ -45,9 +48,28 @@ class LBFGS {
      *
      * Implementation notes:
      *   See Wikipedia https://en.wikipedia.org/wiki/Limited-memory_BFGS
-     *
      */
     LBFGS(int dim, int m = 10, bool descent = true);
+
+//    /**
+//     * @brief Constructor of the Limited-BFGS class
+//     * @param dim: The dimension of the problem
+//     * @param param: The LBFGS_PARAM object for L-BFGS parameters
+//     *
+//     * Implementation notes:
+//     *   See Wikipedia https://en.wikipedia.org/wiki/Limited-memory_BFGS
+//     */
+//    LBFGS(int dim, const LBFGS_PARAM& param);
+
+    /**
+     * @brief The minimization for the target function
+     * @param func: Target function that takes func(x, g) and returns the function value.
+     *              Gradient g is modified by the function.
+     *              If user provides the diagonal Hessian, func should provide method hess_diag().
+     * @param x0: The initial value of x
+     */
+    template <class Foo>
+    void minimize(Foo& func, psi::SharedVector x0);
 
     /// Generate correction vector
     psi::SharedVector compute_correction(psi::SharedVector x, psi::SharedVector g);
@@ -58,15 +80,15 @@ class LBFGS {
     /// Set the diagonal Hessian
     void set_hess_diag(psi::SharedVector hess_diag);
 
-    /// Set if automatically update "initial" Hessian
-    void set_hess_auto(bool hess) { hess_auto_ = hess; }
-
-    /// Reset the L-BFGS
+    /// Reset the L-BFGS space
     void reset();
 
   private:
     /// The dimension of the problem
     int dim_;
+
+//    /// Parameters of L-BFGS
+//    LBFGS_PARAM param_;
 
     /// Max size of the vectors stored
     int m_;
@@ -92,8 +114,6 @@ class LBFGS {
     /// The last solution vector
     psi::SharedVector x_last_;
 
-    /// Automatically update the "initial" Hessian
-    bool hess_auto_ = false;
     /// Guess the inverse of diagonal Hessian
     void guess_h0();
     /// Compute gamma that can be used as inverse of diagonal Hessian
