@@ -24,6 +24,7 @@ correlated electrons.
    methods/dsrg
    methods/embedding
    methods/avas
+   utils/plotting
    programming/index
    aci
    pci
