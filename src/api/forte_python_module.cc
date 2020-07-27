@@ -58,7 +58,6 @@
 #include "mrdsrg-spin-adapted/sadsrg.h"
 
 #include "sparse_ci/determinant.h"
-#include "sparse_ci/general_operator.h"
 #include "post_process/spin_corr.h"
 #include "sparse_ci/determinant_hashvector.h"
 
@@ -150,13 +149,7 @@ void export_Determinant(py::module& m) {
         .def("size", &DeterminantHashVec::size, "Get the size of the vector")
         .def("get_det", &DeterminantHashVec::get_det, "Return a specific determinant by reference")
         .def("get_idx", &DeterminantHashVec::get_idx, " Return the index of a determinant");
-    py::class_<GeneralOperator>(m, "GeneralOperator")
-        .def(py::init<>())
-        .def("add_operator", &GeneralOperator::add_operator)
-        .def("set_amplitudes", &GeneralOperator::set_amplitudes)
-        .def("amplitudes", &GeneralOperator::amplitudes)
-        .def("op_indices", &GeneralOperator::op_indices)
-        .def("op_list", &GeneralOperator::op_list);
+
     m.def("spin2", &spin2<Determinant::nbits>);
     m.def("apply_general_operator", &apply_general_operator);
     m.def("apply_general_operator_spin", &apply_general_operator_spin);

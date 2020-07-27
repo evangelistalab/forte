@@ -70,3 +70,9 @@ We can tell the CubeViewer class to look for cube files in a specific path (via 
 Alternatively, we can pass a list of cube files to load (via the cubes options). Here we specify two files and we also change the color scheme::
     
     cv2 = forte.utils.CubeViewer(cubes=['cubes/Psi_a_13_13-A.cube','cubes/Psi_a_16_16-A.cube'],colorscheme='electron')
+
+Generating cube files 
+---------------------
+
+The ``forte.utils.psi4_cubeprop`` function offers a convenient way to generate cube files
+from the information stored in a psi4 ``Wavefunction`` object::

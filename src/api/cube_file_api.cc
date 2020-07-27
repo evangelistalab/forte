@@ -38,6 +38,16 @@ namespace forte {
 
 /// Export the CubeFile class
 void export_ForteCubeFile(py::module& m) {
+    m.doc() = R"pbdoc(
+        Pybind11 example plugin
+        -----------------------
+        .. currentmodule:: python_example
+        .. autosummary::
+           :toctree: _generate
+           add
+           subtract
+    )pbdoc";
+
     py::class_<CubeFile, std::shared_ptr<CubeFile>>(m, "CubeFile")
         .def(py::init<const std::string&>())
         .def(py::init<const CubeFile&>())

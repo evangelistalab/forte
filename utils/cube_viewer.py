@@ -119,7 +119,6 @@ class CubeViewer():
 
         if self.debug: print(f'Time to make objects: {make_objs_time-start_time}')
 
-
         make_meshes_time = time.perf_counter()
 
         print(f'Reading {len(sorted_labels)} cube file{"s" if len(sorted_labels) > 1 else ""}')
@@ -137,7 +136,7 @@ class CubeViewer():
         file_label = widgets.HTML()
 
         def update_renderer(label,objects):
-            """This function updates the rendeder once the user has selected a new label"""
+            """This function updates the rendeder once the user has selected a new cube file to plot"""
             start_update_time = time.perf_counter()
 
             renderer,style,labels_to_filename = objects

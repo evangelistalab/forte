@@ -32,6 +32,7 @@ correlated electrons.
    dsrg-mrpt
    mr-dsrg
    options
+   forte
 
 Indices and tables
 ==================
