@@ -3,6 +3,16 @@
 import plotly.graph_objects as go
 
 class MODiagram:
+    """
+    A class to make plots of MO levels
+
+    Methods
+    -------
+    MODiagram(wfn)
+        Make a MO plot from a psi4 Wavefunction object
+    save(filename)
+        Save the plot to a figure file
+    """
     def __init__(self,
                  wfn,
                  plot_range=None,
