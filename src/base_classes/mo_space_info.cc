@@ -167,26 +167,6 @@ void MOSpaceInfo::read_from_map(std::map<std::string, std::vector<size_t>>& mo_s
     }
 }
 
-//void MOSpaceInfo::read_from_indices(
-//    std::map<std::string, std::map<std::string, std::vector<size_t>>>& space_spec) {
-//    // count how many orbitals are assigned in each irrep
-//    std::vector<size_t> assigned(nirrep_, 0);
-//    for (const auto& space_map : space_spec){
-//        for (const auto& irrep_vec : space_map){
-//            int h = label_to_irrep(irrep_vec.first);
-//            const auto& vec
-//        }
-//    }
-
-//    // Read the elementary spaces
-//    for (std::string& space : elementary_spaces_) {
-//        std::pair<SpaceInfo, bool> result = read_mo_space_from_map(space, mo_space_map);
-//        if (result.second) {
-//            mo_spaces_[space] = result.first;
-//        }
-//    }
-//}
-
 void MOSpaceInfo::set_reorder(const std::vector<size_t>& reorder) { reorder_ = reorder; }
 
 void MOSpaceInfo::compute_space_info() {
@@ -366,14 +346,5 @@ make_mo_space_info_from_map(const psi::Dimension& nmopi, const std::string& poin
     mo_space_info->compute_space_info();
     return mo_space_info;
 }
-
-//std::shared_ptr<MOSpaceInfo> make_mo_space_info_from_indices(
-//    std::map<std::string, std::map<std::string, std::vector<size_t>>>& space_spec) {
-//    psi::Dimension nmopi = ref_wfn->nmopi();
-//    auto mo_space_info = std::make_shared<MOSpaceInfo>(nmopi);
-//    mo_space_info->read_from_indices(space_spec);
-//    mo_space_info->compute_space_info();
-//    return mo_space_info;
-//}
 
 } // namespace forte

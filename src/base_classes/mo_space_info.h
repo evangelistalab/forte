@@ -203,10 +203,6 @@ make_mo_space_info_from_map(const psi::Dimension& nmopi, const std::string& poin
                             std::map<std::string, std::vector<size_t>>& mo_space_map,
                             std::vector<size_t> reorder);
 
-/// Make MOSpaceInfo from a map "ACTIVE" : {"A1" : [0,1], "B1" : [3]}
-std::shared_ptr<MOSpaceInfo> make_mo_space_info_from_indices(
-    std::map<std::string, std::map<std::string, std::vector<size_t>>>& space_spec);
-
 } // namespace forte
 
 #endif // _mo_space_info_h_
