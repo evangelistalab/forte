@@ -34,7 +34,6 @@
 #include "psi4/libmints/wavefunction.h"
 
 #include "base_classes/active_space_solver.h"
-#include "base_classes/mo_space_info.h"
 #include "base_classes/orbital_transform.h"
 #include "integrals/make_integrals.h"
 
@@ -71,6 +70,7 @@ namespace forte {
 void export_ambit(py::module& m);
 void export_ForteIntegrals(py::module& m);
 void export_ForteOptions(py::module& m);
+void export_MOSpaceInfo(py::module& m);
 void export_RDMs(py::module& m);
 void export_StateInfo(py::module& m);
 void export_SigmaVector(py::module& m);
@@ -125,6 +125,8 @@ void export_Determinant(py::module& m) {
         .def("create_beta_bit", &Determinant::create_beta_bit, "n"_a, "Create a beta bit")
         .def("destroy_alfa_bit", &Determinant::destroy_alfa_bit, "n"_a, "Destroy an alpha bit")
         .def("destroy_beta_bit", &Determinant::destroy_beta_bit, "n"_a, "Destroy a beta bit")
+        .def("count_alfa", &Determinant::count_alfa, "Count the number of set alpha bits")
+        .def("count_beta", &Determinant::count_beta, "Count the number of set beta bits")
         .def(
             "gen_excitation",
             [](Determinant& d, const std::vector<int>& aann, const std::vector<int>& acre,
@@ -147,6 +149,8 @@ void export_Determinant(py::module& m) {
         .def("size", &DeterminantHashVec::size, "Get the size of the vector")
         .def("get_det", &DeterminantHashVec::get_det, "Return a specific determinant by reference")
         .def("get_idx", &DeterminantHashVec::get_idx, " Return the index of a determinant");
+
+    m.def("spin2", &spin2<Determinant::nbits>);
 }
 
 // TODO: export more classes using the function above
@@ -158,8 +162,6 @@ PYBIND11_MODULE(forte, m) {
     m.def("print_method_banner", &print_method_banner, "text"_a, "separator"_a = "-",
           "Print a method banner");
     m.def("make_mo_space_info", &make_mo_space_info, "Make a MOSpaceInfo object");
-    //    m.def("make_mo_space_info_from_map", &make_mo_space_info_from_map,
-    //          "Make a MOSpaceInfo object from a map of space name (string) to a vector");
     m.def("make_mo_space_info_from_map", &make_mo_space_info_from_map, "nmopi"_a, "point_group"_a,
           "mo_space_map"_a, "reorder"_a = std::vector<size_t>(),
           "Make a MOSpaceInfo object using a dictionary");
@@ -223,29 +225,7 @@ PYBIND11_MODULE(forte, m) {
 
     export_ForteCubeFile(m);
 
-    // export MOSpaceInfo
-    py::class_<MOSpaceInfo, std::shared_ptr<MOSpaceInfo>>(m, "MOSpaceInfo")
-        .def("dimension", &MOSpaceInfo::dimension,
-             "Return a psi::Dimension object for the given space")
-        .def("absolute_mo", &MOSpaceInfo::absolute_mo,
-             "Return the list of the absolute index of the molecular orbitals in a space "
-             "excluding "
-             "the frozen core/virtual orbitals")
-        .def("corr_absolute_mo", &MOSpaceInfo::corr_absolute_mo,
-             "Return the list of the absolute index of the molecular orbitals in a correlated "
-             "space")
-        .def("get_relative_mo", &MOSpaceInfo::get_relative_mo, "Return the relative MOs")
-        .def("read_options", &MOSpaceInfo::read_options, "Read options")
-        .def("read_from_map", &MOSpaceInfo::read_from_map,
-             "Read the space info from a map {spacename -> dimension vector}")
-        .def("set_reorder", &MOSpaceInfo::set_reorder,
-             "Reorder MOs according to the input indexing vector")
-        .def("compute_space_info", &MOSpaceInfo::compute_space_info,
-             "Processing current MOSpaceInfo: calculate frozen core, count and assign orbitals")
-        .def("size", &MOSpaceInfo::size, "Return the number of orbitals in a space")
-        .def("nirrep", &MOSpaceInfo::nirrep, "Return the number of irreps")
-        .def("symmetry", &MOSpaceInfo::symmetry, "Return the symmetry of each orbital")
-        .def("space_names", &MOSpaceInfo::space_names, "Return the names of orbital spaces");
+    export_MOSpaceInfo(m);
 
     // export SCFInfo
     py::class_<SCFInfo, std::shared_ptr<SCFInfo>>(m, "SCFInfo")

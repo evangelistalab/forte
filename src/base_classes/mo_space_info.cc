@@ -158,7 +158,6 @@ void MOSpaceInfo::read_options(std::shared_ptr<ForteOptions> options) {
 }
 
 void MOSpaceInfo::read_from_map(std::map<std::string, std::vector<size_t>>& mo_space_map) {
-
     // Read the elementary spaces
     for (std::string& space : elementary_spaces_) {
         std::pair<SpaceInfo, bool> result = read_mo_space_from_map(space, mo_space_map);

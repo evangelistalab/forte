@@ -110,16 +110,19 @@ class MOSpaceInfo {
     const std::string& irrep_label(size_t h) const { return symmetry_.irrep_label(h); }
     /// @return The label of the molecular point groupo (e.g. "C2V")
     std::string point_group_label() const { return symmetry_.point_group_label(); }
-    /// @return The names of orbital spaces
+    /// @return The names of the elementary orbital spaces
     std::vector<std::string> space_names() const { return elementary_spaces_; }
+    /// @return The names of the composite orbital spaces
+    std::map<std::string, std::vector<std::string>> composite_space_names() const {
+        return composite_spaces_;
+    }
     /// @return The number of orbitals in a space
     size_t size(const std::string& space);
     /// @return The psi::Dimension object for space
     psi::Dimension dimension(const std::string& space);
     /// @return The symmetry of each orbital
     std::vector<int> symmetry(const std::string& space);
-    /// @return The list of the absolute index of the molecular orbitals in a
-    /// space
+    /// @return The list of the absolute index of the molecular orbitals in a space
     std::vector<size_t> absolute_mo(const std::string& space);
     /// @return The list of the absolute index of the molecular orbitals in a
     /// space excluding the frozen core/virtual orbitals

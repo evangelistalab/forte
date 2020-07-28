@@ -762,7 +762,6 @@ def gradient_forte(name, **kwargs):
 
         ints.rotate_orbitals(Ua, Ub)
 
-    # Run gradient computation
     energy = forte.forte_old_methods(ref_wfn, options, ints, mo_space_info)
 
     casscf = forte.make_casscf(state_weights_map, scf_info, options,
