@@ -149,10 +149,17 @@ std::vector<std::pair<size_t, size_t>> MOSpaceInfo::get_relative_mo(const std::s
 
 void MOSpaceInfo::read_options(std::shared_ptr<ForteOptions> options) {
     // Read the elementary spaces
-    for (std::string& space : elementary_spaces_) {
+    for (const std::string& space : elementary_spaces_) {
         std::pair<SpaceInfo, bool> result = read_mo_space(space, options);
         if (result.second) {
             mo_spaces_[space] = result.first;
+        }
+    }
+    for (auto& space_list : composite_spaces_) {
+        const auto& space = space_list.first;
+        std::pair<SpaceInfo, bool> result = read_mo_space(space, options);
+        if (result.second) {
+            mo_spaces_[space_list.second[0]] = result.first;
         }
     }
 }
@@ -163,6 +170,13 @@ void MOSpaceInfo::read_from_map(std::map<std::string, std::vector<size_t>>& mo_s
         std::pair<SpaceInfo, bool> result = read_mo_space_from_map(space, mo_space_map);
         if (result.second) {
             mo_spaces_[space] = result.first;
+        }
+    }
+    for (auto& space_list : composite_spaces_) {
+        const auto& space = space_list.first;
+        std::pair<SpaceInfo, bool> result = read_mo_space_from_map(space, mo_space_map);
+        if (result.second) {
+            mo_spaces_[space_list.second[0]] = result.first;
         }
     }
 }
@@ -283,6 +297,10 @@ std::pair<SpaceInfo, bool> MOSpaceInfo::read_mo_space(const std::string& space,
     bool read = false;
     psi::Dimension space_dim(nirrep_);
     std::vector<MOInfo> vec_mo_info;
+    if (not options->exists(space)){
+        SpaceInfo space_info(space_dim, vec_mo_info);
+        return std::make_pair(space_info, false);
+    }
     size_t vec_size = options->get_int_vec(space).size();
     if (vec_size == nirrep_) {
         for (size_t h = 0; h < nirrep_; ++h) {

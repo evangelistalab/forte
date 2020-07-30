@@ -72,6 +72,10 @@ def register_driver_options(options):
 
     options.add_array("SUBSPACE", "A list of orbital subspaces")
 
+    options.add_int_array("GAS1", "GAS1")
+    options.add_int_array("GAS2", "GAS2")
+    options.add_int_array("GAS3", "GAS3")
+
     options.add_double("MS", None, "Projection of spin onto the z axis")
 
     options.add_str("ACTIVE_REF_TYPE", "CAS", "Initial guess for active space wave functions")
