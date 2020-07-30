@@ -31,7 +31,7 @@ def register_driver_options(options):
     ], 'Specify the job type')
 
     options.add_str("SCF_TYPE", None, "The integrals used in the SCF calculation")
-
+    options.add_str("REF_TYPE", 'SCF',['SCF','CASSCF'], "The type of reference used by forte if a psi4 wave function is missing")
     options.add_str('DERTYPE', 'NONE', ['NONE', 'FIRST'], 'Derivative order')
 
     options.add_double("E_CONVERGENCE", 1.0e-9, "The energy convergence criterion")

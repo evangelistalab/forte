@@ -616,7 +616,10 @@ def run_forte(name, **kwargs):
             psi4.core.print_out(
                 '\n  No reference wavefunction provided. Computing one with psi4\n'
             )
-            ref_wfn = psi4.driver.scf_helper(name, **kwargs)
+            if options.get_str('REF_TYPE') == 'SCF':
+                ref_wfn = psi4.driver.scf_helper(name, **kwargs)
+            elif options.get_str('REF_TYPE') == 'CASSCF':
+                ref_wfn = psi4.proc.run_detcas('casscf', **kwargs)
 
         state_weights_map, mo_space_info, scf_info = prepare_forte_objects_from_psi4_wfn(
             options, ref_wfn)
