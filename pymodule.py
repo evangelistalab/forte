@@ -613,10 +613,13 @@ def run_forte(name, **kwargs):
         # which holds the molecule used, orbitals, Fock matrices, and more
         ref_wfn = kwargs.get('ref_wfn', None)
         if ref_wfn is None:
+            ref_type = options.get_str('REF_TYPE')
             psi4.core.print_out(
-                '\n  No reference wavefunction provided. Computing one with psi4\n'
+                f'\n  No reference wavefunction provided. Computing {ref_type} orbitals with psi4\n'
             )
             if options.get_str('REF_TYPE') == 'SCF':
+                warnings.warn("\n  Forte is using orbitals from an SCF reference. This is not the best choice for multiference computations.\n",
+                        UserWarning)
                 ref_wfn = psi4.driver.scf_helper(name, **kwargs)
             elif options.get_str('REF_TYPE') == 'CASSCF':
                 ref_wfn = psi4.proc.run_detcas('casscf', **kwargs)
