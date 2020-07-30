@@ -155,25 +155,37 @@ class MOSpaceInfo {
     psi::Dimension nmopi_;
     /// Information about each elementary space stored in a map
     std::map<std::string, SpaceInfo> mo_spaces_;
-
+    /// The list of elementary spaces
     std::vector<std::string> elementary_spaces_{
-        "FROZEN_DOCC", "RESTRICTED_DOCC", "GAS1", "GAS2", "GAS3", "RESTRICTED_UOCC", "FROZEN_UOCC"};
-    std::vector<std::string> elementary_spaces_priority_{
-        "GAS1", "RESTRICTED_UOCC", "RESTRICTED_DOCC", "FROZEN_DOCC", "FROZEN_UOCC", "GAS2", "GAS3"};
+        "FROZEN_DOCC", "RESTRICTED_DOCC", "GAS1",       "GAS2", "GAS3", "GAS4", "GAS5",
+        "GAS6",        "RESTRICTED_UOCC", "FROZEN_UOCC"};
+    /// The priority used to assign orbitals to elementary spaces
+    std::vector<std::string> elementary_spaces_priority_{"GAS1",
+                                                         "RESTRICTED_UOCC",
+                                                         "RESTRICTED_DOCC",
+                                                         "FROZEN_DOCC",
+                                                         "FROZEN_UOCC",
+                                                         "GAS2",
+                                                         "GAS3",
+                                                         "GAS4",
+                                                         "GAS5",
+                                                         "GAS6"};
 
     /// Defines composite orbital spaces
     std::map<std::string, std::vector<std::string>> composite_spaces_{
         {"ALL",
-         {"FROZEN_DOCC", "RESTRICTED_DOCC", "GAS1", "GAS2", "GAS3", "RESTRICTED_UOCC",
-          "FROZEN_UOCC"}},
+         {"FROZEN_DOCC", "RESTRICTED_DOCC", "GAS1", "GAS2", "GAS3", "GAS4", "GAS5", "GAS6",
+          "RESTRICTED_UOCC", "FROZEN_UOCC"}},
         {"FROZEN", {"FROZEN_DOCC", "FROZEN_UOCC"}},
-        {"CORRELATED", {"RESTRICTED_DOCC", "GAS1", "GAS2", "GAS3", "RESTRICTED_UOCC"}},
-        {"ACTIVE", {"GAS1", "GAS2", "GAS3"}},
+        {"CORRELATED",
+         {"RESTRICTED_DOCC", "GAS1", "GAS2", "GAS3", "GAS4", "GAS5", "GAS6", "RESTRICTED_UOCC"}},
+        {"ACTIVE", {"GAS1", "GAS2", "GAS3", "GAS4", "GAS5", "GAS6"}},
         {"INACTIVE_DOCC", {"FROZEN_DOCC", "RESTRICTED_DOCC"}},
         {"INACTIVE_UOCC", {"RESTRICTED_UOCC", "FROZEN_UOCC"}},
         // Spaces for multireference calculations
-        {"GENERALIZED HOLE", {"RESTRICTED_DOCC", "GAS1", "GAS2", "GAS3"}},
-        {"GENERALIZED PARTICLE", {"GAS1", "GAS2", "GAS3", "RESTRICTED_UOCC"}},
+        {"GENERALIZED HOLE", {"RESTRICTED_DOCC", "GAS1", "GAS2", "GAS3", "GAS4", "GAS5", "GAS6"}},
+        {"GENERALIZED PARTICLE",
+         {"GAS1", "GAS2", "GAS3", "GAS4", "GAS5", "GAS6", "RESTRICTED_UOCC"}},
         {"CORE", {"RESTRICTED_DOCC"}},
         {"VIRTUAL", {"RESTRICTED_UOCC"}}};
 

@@ -66,7 +66,7 @@ size_t MOSpaceInfo::size(const std::string& space) {
 psi::Dimension MOSpaceInfo::dimension(const std::string& space) {
     psi::Dimension result(nirrep_);
     if (composite_spaces_.count(space) == 0) {
-        std::string msg = "\n  MOSpaceInfo::size - composite space " + space + " is not defined.";
+        std::string msg = "\n  MOSpaceInfo::dimension - composite space " + space + " is not defined.";
         throw psi::PSIEXCEPTION(msg.c_str());
     } else {
         for (const auto& el_space : composite_spaces_[space]) {
@@ -91,7 +91,7 @@ std::vector<int> MOSpaceInfo::symmetry(const std::string& space) {
 std::vector<size_t> MOSpaceInfo::absolute_mo(const std::string& space) {
     std::vector<size_t> result;
     if (composite_spaces_.count(space) == 0) {
-        std::string msg = "\n  MOSpaceInfo::size - composite space " + space + " is not defined.";
+        std::string msg = "\n  MOSpaceInfo::absolute_mo - composite space " + space + " is not defined.";
         throw psi::PSIEXCEPTION(msg.c_str());
     } else {
         for (const auto& el_space : composite_spaces_[space]) {
@@ -109,7 +109,7 @@ std::vector<size_t> MOSpaceInfo::absolute_mo(const std::string& space) {
 std::vector<size_t> MOSpaceInfo::corr_absolute_mo(const std::string& space) {
     std::vector<size_t> result;
     if (composite_spaces_.count(space) == 0) {
-        std::string msg = "\n  MOSpaceInfo::size - composite space " + space + " is not defined.";
+        std::string msg = "\n  MOSpaceInfo::corr_absolute_mo - composite space " + space + " is not defined.";
         throw psi::PSIEXCEPTION(msg.c_str());
     } else {
         for (const auto& el_space : composite_spaces_[space]) {
@@ -130,7 +130,7 @@ std::vector<size_t> MOSpaceInfo::corr_absolute_mo(const std::string& space) {
 std::vector<std::pair<size_t, size_t>> MOSpaceInfo::get_relative_mo(const std::string& space) {
     std::vector<std::pair<size_t, size_t>> result;
     if (composite_spaces_.count(space) == 0) {
-        std::string msg = "\n  MOSpaceInfo::size - composite space " + space + " is not defined.";
+        std::string msg = "\n  MOSpaceInfo::get_relative_mo - composite space " + space + " is not defined.";
         throw psi::PSIEXCEPTION(msg.c_str());
     } else {
         for (const auto& el_space : composite_spaces_[space]) {
@@ -297,7 +297,7 @@ std::pair<SpaceInfo, bool> MOSpaceInfo::read_mo_space(const std::string& space,
     bool read = false;
     psi::Dimension space_dim(nirrep_);
     std::vector<MOInfo> vec_mo_info;
-    if (not options->exists(space)){
+    if (not options->exists(space)) {
         SpaceInfo space_info(space_dim, vec_mo_info);
         return std::make_pair(space_info, false);
     }

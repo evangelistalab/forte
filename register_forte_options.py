@@ -75,6 +75,9 @@ def register_driver_options(options):
     options.add_int_array("GAS1", "GAS1")
     options.add_int_array("GAS2", "GAS2")
     options.add_int_array("GAS3", "GAS3")
+    options.add_int_array("GAS4", "GAS4")
+    options.add_int_array("GAS5", "GAS5")
+    options.add_int_array("GAS6", "GAS6")
 
     options.add_double("MS", None, "Projection of spin onto the z axis")
 
