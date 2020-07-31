@@ -90,6 +90,7 @@ void FCISolver::startup() {
         size_t nbstr = lists_->beta_graph()->strpi(h ^ symmetry_);
         ndfci += nastr * nbstr;
     }
+
     if (print_) {
         // Print a summary of options
         std::vector<std::pair<std::string, int>> calculation_info{
@@ -340,7 +341,7 @@ double FCISolver::compute_energy() {
     return energy_;
 }
 
-void FCISolver::compute_rdms_root(int root1, int root2, int max_rdm_level) {
+void FCISolver::compute_rdms_root(size_t root1, size_t /*root2*/, int max_rdm_level) {
     // make sure a compute_energy is called before this
     if (C_) {
         if (root1 >= nroot_) {
@@ -630,8 +631,8 @@ std::vector<RDMs> FCISolver::rdms(const std::vector<std::pair<size_t, size_t>>& 
 }
 
 std::vector<RDMs>
-FCISolver::transition_rdms(const std::vector<std::pair<size_t, size_t>>& root_list,
-                           std::shared_ptr<ActiveSpaceMethod> method2, int max_rdm_level) {
+FCISolver::transition_rdms(const std::vector<std::pair<size_t, size_t>>& /*root_list*/,
+                           std::shared_ptr<ActiveSpaceMethod> /*method2*/, int /*max_rdm_level*/) {
     std::vector<RDMs> refs;
     throw std::runtime_error("FCISolver::transition_rdms is not implemented!");
     return refs;

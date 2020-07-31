@@ -78,6 +78,7 @@ pybind11_add_module(forte
 src/api/ambit_api.cc
 src/api/cube_file_api.cc
 src/api/integrals_api.cc
+src/api/mospaceinfo_api.cc
 src/api/rdms_api.cc
 src/api/options_api.cc
 src/api/orbital_api.cc
@@ -130,8 +131,8 @@ src/integrals/df_integrals.cc
 src/integrals/diskdf_integrals.cc
 src/integrals/distribute_df_integrals.cc
 src/integrals/integrals.cc
+src/integrals/integrals_psi4_interface.cc
 src/integrals/make_integrals.cc
-src/integrals/own_integrals.cc
 src/integrals/parallel_ccvv_algorithms.cc
 src/integrals/paralleldfmo.cc
 src/main.cc

@@ -2,6 +2,7 @@
 
 #include "psi4/libpsi4util/process.h"
 #include "psi4/libmints/molecule.h"
+#include "psi4/libmints/matrix.h"
 #include "psi4/libmints/dipole.h"
 
 #include "helpers/printing.h"
@@ -338,9 +339,13 @@ double MASTER_DSRG::compute_reference_energy_from_ints(std::shared_ptr<ForteInte
         }
     });
 
-    // an temp tensor of shape 1 * 1
-    ambit::Tensor O = ambit::Tensor::build(tensor_type_, "ONE", std::vector<size_t>{1, 1});
-    O.data()[0] = 1.0;
+    std::vector<size_t> Idims2{nc, nc};
+    ambit::Tensor I2 = ambit::Tensor::build(tensor_type_, "I2", Idims2);
+    I2.iterate([&](const std::vector<size_t>& i, double& value) {
+        if (i[0] == i[1]) {
+            value = 1.0;
+        }
+    });
 
     ambit::Tensor Vtemp;
     for (size_t m = 0; m < nc; ++m) {
@@ -360,19 +365,19 @@ double MASTER_DSRG::compute_reference_energy_from_ints(std::shared_ptr<ForteInte
 
     Vtemp = ints->aptei_aa_block(core_mos_, actv_mos_, core_mos_, actv_mos_);
     F.block("cc")("pq") += Vtemp("prqs") * Gamma1_.block("aa")("rs");
-    F.block("aa")("pq") += Vtemp("rpsq") * I("irjs") * O("ij");
+    F.block("aa")("pq") += Vtemp("rpsq") * I2("rs");
 
     Vtemp = ints->aptei_ab_block(core_mos_, actv_mos_, core_mos_, actv_mos_);
     F.block("cc")("pq") += Vtemp("prqs") * Gamma1_.block("AA")("rs");
-    F.block("AA")("pq") += Vtemp("rpsq") * I("irjs") * O("ij");
+    F.block("AA")("pq") += Vtemp("rpsq") * I2("rs");
 
     Vtemp = ints->aptei_ab_block(actv_mos_, core_mos_, actv_mos_, core_mos_);
     F.block("CC")("pq") += Vtemp("rpsq") * Gamma1_.block("aa")("rs");
-    F.block("aa")("pq") += Vtemp("prqs") * I("irjs") * O("ij");
+    F.block("aa")("pq") += Vtemp("prqs") * I2("rs");
 
     Vtemp = ints->aptei_bb_block(core_mos_, actv_mos_, core_mos_, actv_mos_);
     F.block("CC")("pq") += Vtemp("prqs") * Gamma1_.block("AA")("rs");
-    F.block("AA")("pq") += Vtemp("rpsq") * I("irjs") * O("ij");
+    F.block("AA")("pq") += Vtemp("rpsq") * I2("rs");
 
     return compute_reference_energy(H, F, V);
 }
@@ -439,8 +444,8 @@ void MASTER_DSRG::init_dm_ints() {
         dm_[i] = BTF_->build(tensor_type_, "Dipole " + dm_dirs_[i], spin_cases({"gg"}));
     }
 
-    std::vector<psi::SharedMatrix> dm_a = ints_->compute_MOdipole_ints(true, true);
-    std::vector<psi::SharedMatrix> dm_b = ints_->compute_MOdipole_ints(false, true);
+    std::vector<psi::SharedMatrix> dm_a = ints_->mo_dipole_ints(true, true);
+    std::vector<psi::SharedMatrix> dm_b = ints_->mo_dipole_ints(false, true);
     fill_MOdm(dm_a, dm_b);
     compute_dm_ref();
 

@@ -46,9 +46,9 @@ class SigmaVectorSparseList : public SigmaVector {
     SigmaVectorSparseList(const DeterminantHashVec& space,
                           std::shared_ptr<ActiveSpaceIntegrals> fci_ints);
 
-    void compute_sigma(std::shared_ptr<psi::Vector> sigma, std::shared_ptr<psi::Vector> b);
-    void get_diagonal(psi::Vector& diag);
-    void add_bad_roots(std::vector<std::vector<std::pair<size_t, double>>>& bad_states_);
+    void compute_sigma(std::shared_ptr<psi::Vector> sigma, std::shared_ptr<psi::Vector> b) override;
+    void get_diagonal(psi::Vector& diag) override;
+    void add_bad_roots(std::vector<std::vector<std::pair<size_t, double>>>& bad_states_) override;
     double compute_spin(const std::vector<double>& c) override;
 
     std::vector<std::vector<std::pair<size_t, double>>> bad_states_;

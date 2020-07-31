@@ -213,7 +213,7 @@ double ACTIVE_DSRGPT2::compute_energy() {
 
     // compute MO dipole integrals assume equivalent alpha beta orbitals
     modipole_ints_.clear();
-    modipole_ints_ = ints_->compute_MOdipole_ints();
+    modipole_ints_ = ints_->mo_dipole_ints();
 
     // FCI_MO object
     fci_mo_ = std::make_shared<FCI_MO>(scf_info_, foptions_, ints_, mo_space_info_);

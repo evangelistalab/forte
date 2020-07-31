@@ -35,7 +35,6 @@
 
 #include "psi4/libpsi4util/process.h"
 #include "psi4/libmints/molecule.h"
-#include "psi4/libmints/pointgrp.h"
 #include "psi4/libmints/wavefunction.h"
 #include "psi4/libmints/writer.h"
 #include "psi4/libmints/writer_file_prefix.h"

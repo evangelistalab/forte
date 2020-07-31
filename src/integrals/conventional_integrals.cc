@@ -32,12 +32,15 @@
 #include "psi4/psifiles.h"
 #include "psi4/libdpd/dpd.h"
 #include "psi4/libmints/mintshelper.h"
+#include "psi4/libmints/matrix.h"
 #include "psi4/libpsio/psio.hpp"
 #include "psi4/libtrans/integraltransform.h"
 
-#include "helpers/blockedtensorfactory.h"
 #include "base_classes/mo_space_info.h"
+
+#include "helpers/blockedtensorfactory.h"
 #include "helpers/timer.h"
+#include "helpers/printing.h"
 
 #include "conventional_integrals.h"
 
@@ -57,17 +60,14 @@ ConventionalIntegrals::ConventionalIntegrals(std::shared_ptr<ForteOptions> optio
                                              std::shared_ptr<psi::Wavefunction> ref_wfn,
                                              std::shared_ptr<MOSpaceInfo> mo_space_info,
                                              IntegralSpinRestriction restricted)
-    : ForteIntegrals(options, ref_wfn, mo_space_info, restricted) {
+    : Psi4Integrals(options, ref_wfn, mo_space_info, Conventional, restricted) {
+    initialize();
+}
 
-    integral_type_ = Conventional;
+void ConventionalIntegrals::initialize() {
     print_info();
     outfile->Printf("\n  Overall Conventional Integrals timings\n\n");
     local_timer ConvTime;
-
-    // Allocate the memory required to store the two-electron integrals
-    aphys_tei_aa.assign(num_aptei_, 0.0);
-    aphys_tei_ab.assign(num_aptei_, 0.0);
-    aphys_tei_bb.assign(num_aptei_, 0.0);
 
     gather_integrals();
     freeze_core_orbitals();
@@ -113,15 +113,15 @@ std::shared_ptr<psi::IntegralTransform> ConventionalIntegrals::transform_integra
 }
 
 double ConventionalIntegrals::aptei_aa(size_t p, size_t q, size_t r, size_t s) {
-    return aphys_tei_aa[aptei_index(p, q, r, s)];
+    return aphys_tei_aa_[aptei_index(p, q, r, s)];
 }
 
 double ConventionalIntegrals::aptei_ab(size_t p, size_t q, size_t r, size_t s) {
-    return aphys_tei_ab[aptei_index(p, q, r, s)];
+    return aphys_tei_ab_[aptei_index(p, q, r, s)];
 }
 
 double ConventionalIntegrals::aptei_bb(size_t p, size_t q, size_t r, size_t s) {
-    return aphys_tei_bb[aptei_index(p, q, r, s)];
+    return aphys_tei_bb_[aptei_index(p, q, r, s)];
 }
 
 ambit::Tensor ConventionalIntegrals::aptei_aa_block(const std::vector<size_t>& p,
@@ -160,40 +160,22 @@ ambit::Tensor ConventionalIntegrals::aptei_bb_block(const std::vector<size_t>& p
     return ReturnTensor;
 }
 
-ambit::Tensor ConventionalIntegrals::three_integral_block(const std::vector<size_t>&,
-                                                          const std::vector<size_t>&,
-                                                          const std::vector<size_t>&) {
-    outfile->Printf("\n Oh no!, you tried to grab a ThreeIntegral but this "
-                    "is not there!!");
-    throw psi::PSIEXCEPTION("INT_TYPE=DF/CHOLESKY to use ThreeIntegral");
-}
-
-ambit::Tensor ConventionalIntegrals::three_integral_block_two_index(const std::vector<size_t>&,
-                                                                    size_t,
-                                                                    const std::vector<size_t>&) {
-    outfile->Printf("\n Oh no! this isn't here");
-    throw psi::PSIEXCEPTION("INT_TYPE=DISKDF");
-}
-
-double** ConventionalIntegrals::three_integral_pointer() {
-    outfile->Printf("\n Doh! There is no Three_integral here.  Use DF/CD");
-    throw psi::PSIEXCEPTION("INT_TYPE=DF/CHOLESKY to use ThreeIntegral!");
-}
-
-size_t ConventionalIntegrals::nthree() const { throw psi::PSIEXCEPTION("Wrong Int_Type"); }
-
 void ConventionalIntegrals::set_tei(size_t p, size_t q, size_t r, size_t s, double value,
                                     bool alpha1, bool alpha2) {
     size_t index = aptei_index(p, q, r, s);
     if (alpha1 == true and alpha2 == true)
-        aphys_tei_aa[index] = value;
+        aphys_tei_aa_[index] = value;
     if (alpha1 == true and alpha2 == false)
-        aphys_tei_ab[index] = value;
+        aphys_tei_ab_[index] = value;
     if (alpha1 == false and alpha2 == false)
-        aphys_tei_bb[index] = value;
+        aphys_tei_bb_[index] = value;
 }
 
 void ConventionalIntegrals::gather_integrals() {
+    if (print_) {
+        outfile->Printf("\n  Computing Conventional Integrals");
+    }
+    local_timer timer;
     MintsHelper mints = MintsHelper(wfn_->basisset());
     mints.integrals();
     auto integral_transform = transform_integrals();
@@ -204,12 +186,10 @@ void ConventionalIntegrals::gather_integrals() {
                         double(3 * 8 * num_aptei_) / 1073741824.0);
     }
     int_mem_ = sizeof(double) * 3 * 8 * num_aptei_ / 1073741824.0;
-    for (size_t pqrs = 0; pqrs < num_aptei_; ++pqrs)
-        aphys_tei_aa[pqrs] = 0.0;
-    for (size_t pqrs = 0; pqrs < num_aptei_; ++pqrs)
-        aphys_tei_ab[pqrs] = 0.0;
-    for (size_t pqrs = 0; pqrs < num_aptei_; ++pqrs)
-        aphys_tei_bb[pqrs] = 0.0;
+
+    std::fill(aphys_tei_aa_.begin(), aphys_tei_aa_.end(), 0.0);
+    std::fill(aphys_tei_ab_.begin(), aphys_tei_ab_.end(), 0.0);
+    std::fill(aphys_tei_bb_.begin(), aphys_tei_bb_.end(), 0.0);
 
     if (spin_restriction_ == IntegralSpinRestriction::Restricted) {
         std::vector<double> two_electron_integrals(num_tei_, 0.0);
@@ -248,9 +228,9 @@ void ConventionalIntegrals::gather_integrals() {
                         double direct = two_electron_integrals[INDEX4(p, r, q, s)];
                         double exchange = two_electron_integrals[INDEX4(p, s, q, r)];
                         size_t index = aptei_index(p, q, r, s);
-                        aphys_tei_aa[index] = direct - exchange;
-                        aphys_tei_ab[index] = direct;
-                        aphys_tei_bb[index] = direct - exchange;
+                        aphys_tei_aa_[index] = direct - exchange;
+                        aphys_tei_ab_[index] = direct;
+                        aphys_tei_bb_[index] = direct - exchange;
                     }
                 }
             }
@@ -260,6 +240,9 @@ void ConventionalIntegrals::gather_integrals() {
         throw psi::PSIEXCEPTION("Unrestricted orbitals are currently disabled in "
                                 "ConventionalIntegrals");
     }
+    if (print_) {
+        print_timing("conventional integral transformation", timer.get());
+    }
 }
 
 void ConventionalIntegrals::resort_integrals_after_freezing() {
@@ -267,9 +250,9 @@ void ConventionalIntegrals::resort_integrals_after_freezing() {
         outfile->Printf("\n  Resorting integrals after freezing core.");
     }
     // Resort the four-index integrals
-    resort_four(aphys_tei_aa, cmotomo_);
-    resort_four(aphys_tei_ab, cmotomo_);
-    resort_four(aphys_tei_bb, cmotomo_);
+    resort_four(aphys_tei_aa_, cmotomo_);
+    resort_four(aphys_tei_ab_, cmotomo_);
+    resort_four(aphys_tei_bb_, cmotomo_);
 }
 
 void ConventionalIntegrals::resort_four(std::vector<double>& tei, std::vector<size_t>& map) {

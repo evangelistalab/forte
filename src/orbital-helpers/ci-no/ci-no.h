@@ -31,7 +31,6 @@
 
 #include "psi4/psi4-dec.h"
 #include "psi4/libmints/molecule.h"
-#include "psi4/libmints/pointgrp.h"
 #include "helpers/timer.h"
 #include "ci_rdm/ci_rdms.h"
 #include "integrals/active_space_integrals.h"

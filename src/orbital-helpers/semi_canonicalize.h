@@ -65,8 +65,10 @@ class SemiCanonical {
     /// Transform all cumulants, rebuild 2-RDMs using 2-cumulants
     RDMs transform_rdms(ambit::Tensor& Ua, ambit::Tensor& Ub, RDMs& rdms, const int& max_rdm_level);
 
-    /// Set active hole and particle dimensions
-    void set_actv_dims(const psi::Dimension& actv_docc, const psi::Dimension& actv_virt);
+    //    /// Set active hole and particle dimensions
+    //    void set_actv_dims(const psi::Dimension& actv_docc, const psi::Dimension& actv_virt);
+    // TODO: this function was disabled when we introduced GAS spaces. It should probably be
+    // rewritten using the GAS1/GAS2 spaces
 
     /// Return the alpha rotation matrix
     psi::SharedMatrix Ua() { return Ua_; }
@@ -97,12 +99,6 @@ class SemiCanonical {
     psi::Dimension rdocc_;
     // Active MOs
     psi::Dimension actv_;
-    // Restricted virtuals
-    psi::Dimension ruocc_;
-    // Active holes
-    psi::Dimension actv_docc_;
-    // Active particles
-    psi::Dimension actv_virt_;
 
     // Blocks map
     std::map<std::string, psi::Dimension> mo_dims_;

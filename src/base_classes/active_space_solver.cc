@@ -33,8 +33,6 @@
 #include "psi4/psi4-dec.h"
 #include "psi4/libpsi4util/PsiOutStream.h"
 #include "psi4/libmints/molecule.h"
-#include "psi4/libmints/pointgrp.h"
-#include "psi4/libmints/wavefunction.h"
 #include "psi4/libpsi4util/process.h"
 
 #include "base_classes/forte_options.h"
@@ -83,12 +81,9 @@ const std::map<StateInfo, std::vector<double>>& ActiveSpaceSolver::compute_energ
                                  twice_ms);
             continue;
         }
-
         method->compute_energy();
-
         const auto& energies = method->energies();
         state_energies_map_[state] = energies;
-
         if (twice_ms > 0 and ms_avg_) {
             StateInfo state_spin(state.nb(), state.na(), state.multiplicity(), -twice_ms,
                                  state.irrep(), state.irrep_label());
@@ -104,7 +99,7 @@ void ActiveSpaceSolver::print_energies(std::map<StateInfo, std::vector<double>>&
     psi::outfile->Printf("\n    Multi.(2ms)  Irrep.  No.               Energy");
     std::string dash(45, '-');
     psi::outfile->Printf("\n    %s", dash.c_str());
-    std::vector<std::string> irrep_symbol = psi::Process::environment.molecule()->irrep_labels();
+    std::vector<std::string> irrep_symbol = mo_space_info_->irrep_labels();
 
     for (const auto& state_nroot : state_nroots_map_) {
         const auto& state = state_nroot.first;
@@ -158,7 +153,7 @@ std::vector<RDMs> ActiveSpaceSolver::rdms(
 void ActiveSpaceSolver::print_options() {
     print_h2("Summary of Active Space Solver Input");
 
-    std::vector<std::string> irrep_symbol = psi::Process::environment.molecule()->irrep_labels();
+    std::vector<std::string> irrep_symbol = mo_space_info_->irrep_labels();
     int nstates = 0;
     for (const auto& state_nroot : state_nroots_map_) {
         nstates += state_nroot.second;
@@ -203,9 +198,9 @@ to_state_nroots_map(const std::map<StateInfo, std::vector<double>>& state_weight
 
 std::map<StateInfo, std::vector<double>>
 make_state_weights_map(std::shared_ptr<ForteOptions> options,
-                       std::shared_ptr<psi::Wavefunction> wfn) {
+                       std::shared_ptr<MOSpaceInfo> mo_space_info) {
     std::map<StateInfo, std::vector<double>> state_weights_map;
-    auto state = make_state_info_from_psi_wfn(wfn); // assumes low-spin
+    auto state = make_state_info_from_psi(options); // assumes low-spin
 
     py::list avg_state = options->get_gen_list("AVG_STATE");
 
@@ -231,14 +226,14 @@ make_state_weights_map(std::shared_ptr<ForteOptions> options,
             // irreducible representation
             int irrep = py::cast<int>(avg_state_list[0]);
             // irreducible representation label
-            std::string irrep_label = psi::Process::environment.molecule()->irrep_labels()[irrep];
+            std::string irrep_label = mo_space_info->irrep_labels()[irrep];
             // multiplicity (2S + 1)
             int multi = py::cast<int>(avg_state_list[1]);
             // number of states with this irrep and multiplicity
             int nstates_this = py::cast<int>(avg_state_list[2]);
 
             // check for errors
-            int nirrep = wfn->nirrep();
+            int nirrep = mo_space_info->nirrep();
             if (irrep >= nirrep || irrep < 0) {
                 psi::outfile->Printf("\n  Error: invalid irrep in AVG_STATE.");
                 psi::outfile->Printf(

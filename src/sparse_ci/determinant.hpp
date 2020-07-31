@@ -433,17 +433,16 @@ template <size_t N> class DeterminantImpl : public BitArray<N> {
         return (spin_type == DetSpinType::Alpha ? get_alfa_bits() : get_beta_bits());
     }
 
-    /// Zero the alpha or beta part of a determinant
-    [[deprecated(
-        "The zero_spin function should be replaced with methods from the String class")]] void
-    zero_spin(DetSpinType spin_type) {
-        if (spin_type == DetSpinType::Alpha) {
-            for (size_t n = 0; n < nwords_half; n++)
-                words_[n] = u_int64_t(0);
-        } else {
-            for (size_t n = nwords_half; n < nwords_; n++)
-                words_[n] = u_int64_t(0);
-        }
+    /// Zero the alpha part of a determinant
+    void zero_alfa() {
+        for (size_t n = 0; n < nwords_half; n++)
+            words_[n] = u_int64_t(0);
+    }
+
+    /// Zero the alpha part of a determinant
+    void zero_beta() {
+        for (size_t n = nwords_half; n < nwords_; n++)
+            words_[n] = u_int64_t(0);
     }
 };
 
@@ -501,7 +500,8 @@ template <size_t N> void set_str(DeterminantImpl<N>& d, const std::string& str) 
 }
 
 template <size_t N>
-std::vector<std::vector<int>> get_asym_occ(const DeterminantImpl<N>& d, const std::vector<int>& act_mo) {
+std::vector<std::vector<int>> get_asym_occ(const DeterminantImpl<N>& d,
+                                           const std::vector<int>& act_mo) {
 
     size_t nirrep = act_mo.size();
     std::vector<std::vector<int>> occ(nirrep);
@@ -519,7 +519,8 @@ std::vector<std::vector<int>> get_asym_occ(const DeterminantImpl<N>& d, const st
 }
 
 template <size_t N>
-std::vector<std::vector<int>> get_bsym_occ(const DeterminantImpl<N>& d, const std::vector<int>& act_mo) {
+std::vector<std::vector<int>> get_bsym_occ(const DeterminantImpl<N>& d,
+                                           const std::vector<int>& act_mo) {
     size_t nirrep = act_mo.size();
     std::vector<std::vector<int>> occ(nirrep);
 
@@ -536,7 +537,8 @@ std::vector<std::vector<int>> get_bsym_occ(const DeterminantImpl<N>& d, const st
 }
 
 template <size_t N>
-std::vector<std::vector<int>> get_asym_vir(const DeterminantImpl<N>& d, const std::vector<int>& act_mo) {
+std::vector<std::vector<int>> get_asym_vir(const DeterminantImpl<N>& d,
+                                           const std::vector<int>& act_mo) {
     size_t nirrep = act_mo.size();
     std::vector<std::vector<int>> occ(nirrep);
 
@@ -553,7 +555,8 @@ std::vector<std::vector<int>> get_asym_vir(const DeterminantImpl<N>& d, const st
 }
 
 template <size_t N>
-std::vector<std::vector<int>> get_bsym_vir(const DeterminantImpl<N>& d, const std::vector<int>& act_mo) {
+std::vector<std::vector<int>> get_bsym_vir(const DeterminantImpl<N>& d,
+                                           const std::vector<int>& act_mo) {
     size_t nirrep = act_mo.size();
     std::vector<std::vector<int>> occ(nirrep);
 

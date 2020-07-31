@@ -28,6 +28,8 @@
 
 #include <iomanip>
 
+#include "psi4/libpsi4util/PsiOutStream.h"
+
 #include "helpers/timer.h"
 #include "helpers/printing.h"
 #include "ci_rdm/ci_rdms.h"
@@ -339,13 +341,8 @@ namespace forte {
 //}
 
 std::vector<std::vector<double>> DSRG_MRPT2::compute_energy_xms() {
-    // get character table
-    CharacterTable ct = psi::Process::environment.molecule()->point_group()->char_table();
-    std::vector<std::string> irrep_symbol;
-    for (int h = 0, nirrep = mo_space_info_->nirrep(); h < nirrep; ++h) {
-        irrep_symbol.push_back(std::string(ct.gamma(h).symbol()));
-    }
-
+    // get irrep symbols
+    std::vector<std::string> irrep_symbol = mo_space_info_->irrep_labels();
     // multiplicity table
     std::vector<std::string> multi_label{
         "Singlet", "Doublet", "Triplet", "Quartet", "Quintet", "Sextet", "Septet", "Octet",
