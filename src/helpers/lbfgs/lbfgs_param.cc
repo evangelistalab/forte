@@ -36,7 +36,7 @@ LBFGS_PARAM::LBFGS_PARAM() {
     m = 8;
     epsilon = 1.0e-4;
     maxiter = 30;
-    auto_hess = false; // diagonal Hessian expected from the user
+    h0_freq = 0; // only compute the diagonal Hessian for once
     maxiter_linesearch = 20;
     print = 1;
 

@@ -123,6 +123,7 @@ src/helpers/helpers.cc
 src/helpers/iterative_solvers.cc
 src/helpers/lbfgs/lbfgs.cc
 src/helpers/lbfgs/lbfgs_param.cc
+src/helpers/lbfgs/rosenbrock.cc
 src/helpers/printing.cc
 src/helpers/string_algorithms.cc
 src/integrals/active_space_integrals.cc

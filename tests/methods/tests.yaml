@@ -274,6 +274,9 @@ mrdsrg-spin-adapted-pt3:
   short:
    - mrdsrg-spin-adapted-pt3-1
    - mrdsrg-spin-adapted-pt3-2
+l-bfgs:
+  short:
+   - l-bfgs_rosenbrock
 pci:
   short:
    - pci-1

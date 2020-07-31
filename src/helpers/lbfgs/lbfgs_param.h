@@ -66,8 +66,10 @@ class LBFGS_PARAM {
     /// Parameter for Wolfe curvature condition
     double c2;
 
-    /// Automatically guess diagonal Hessian (true) or user provided (false)
-    bool auto_hess;
+    /// Frequency of updating diagonal Hessian if exact formula is preferred
+    /// = 0 for just compute it for the initial iteration
+    /// < 0 for using the adaptive inverse Hessian (gamma_k in L-BFGS Wikipedia)
+    int h0_freq;
 
     /// Printing level
     int print;

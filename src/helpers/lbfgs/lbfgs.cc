@@ -33,6 +33,7 @@
 #include "psi4/libpsi4util/PsiOutStream.h"
 
 #include "lbfgs.h"
+#include "rosenbrock.h"
 
 using namespace psi;
 
@@ -54,6 +55,7 @@ template <class Foo> double LBFGS::minimize(Foo& func, psi::SharedVector x) {
     nirrep_ = x->nirrep();
     dimpi_ = x->dimpi();
 
+    iter_ = 0;
     g_ = std::make_shared<psi::Vector>("g", dimpi_);
 
     // compute the initial value and gradient
@@ -70,27 +72,42 @@ template <class Foo> double LBFGS::minimize(Foo& func, psi::SharedVector x) {
     p_ = std::make_shared<psi::Vector>("p", dimpi_);
     x_last_ = std::make_shared<psi::Vector>(*x);
     g_last_ = std::make_shared<psi::Vector>(*g_);
-
-    // use user defined initial Hessian
-    if (not param_.auto_hess) {
+    if (param_.h0_freq >= 0) {
         h0_ = std::make_shared<psi::Vector>("h0", dimpi_);
-        func.hess_diag(h0_);
+        func.hess_diag(x, h0_);
+        if (param_.print > 2)
+            outfile->Printf("\n  Initial norm of diagonal Hessian: %.15f", h0_->norm());
     }
 
-    iter_ = 0;
-
+    // start iteration
     do {
+        // compute diagonal Hessian if needed
+        if (iter_ != 0 and param_.h0_freq > 0) {
+            if (iter_ % param_.h0_freq == 0) {
+                func.hess_diag(x, h0_);
+                if (param_.print > 2)
+                    outfile->Printf("\n  Norm of diagonal Hessian at iteration %2d: %.15f", iter_,
+                                    h0_->norm());
+            }
+        }
+
         // compute direction vector
         update();
         double step = iter_ ? 1.0 : 1.0 / p_->norm();
+        if (param_.print > 2)
+            p_->print();
 
         // line search to determine step length
         line_search(func, x, fx, step);
+        if (param_.print > 1)
+            outfile->Printf("\n  Iter: %2d; step = %15.10f; fx = %20.15f; g_norm = %20.15f",
+                            iter_ + 1, step, fx, g_->norm());
 
         // test convergence
         x_norm = x->norm();
         g_norm = g_->norm();
         if (g_norm <= param_.epsilon * std::max(1.0, x_norm)) {
+            iter_ += 1; // make number of iteration based on 1
             break;
         }
 
@@ -127,7 +144,7 @@ void LBFGS::update() {
     p_->copy(*g_);
 
     int m = std::min(iter_, param_.m);
-    int end = (iter_ - 1) % m;
+    int end = m ? (iter_ - 1) % m : 0; // skip for the very first iteration
 
     // first loop
     for (int k = 0; k < m; ++k) {
@@ -184,8 +201,12 @@ void LBFGS::line_search(Foo& func, psi::SharedVector x, double& fx, double& step
 
         double dg = g_->vector_dot(p_);
 
-        if (std::fabs(dg) <= w2)
+        if (std::fabs(dg) <= w2) {
+            if (param_.print > 2) {
+                outfile->Printf("\n  Optimal step length from bracketing stage: %.15f", step);
+            }
             return;
+        }
 
         fx_high = fx_low;
         step_high = step_low;
@@ -198,7 +219,7 @@ void LBFGS::line_search(Foo& func, psi::SharedVector x, double& fx, double& step
 
         step *= 2.0;
     }
-    if (param_.print > 1) {
+    if (param_.print > 2) {
         outfile->Printf("\n  Step lengths after bracketing stage: low = %.10f, high = %.10f",
                         step_low, step_high);
     }
@@ -217,8 +238,12 @@ void LBFGS::line_search(Foo& func, psi::SharedVector x, double& fx, double& step
         } else {
             double dg = g_->vector_dot(p_);
 
-            if (std::fabs(dg) <= w2)
+            if (std::fabs(dg) <= w2) {
+                if (param_.print > 2) {
+                    outfile->Printf("\n  Optimal step length from zooming stage: %.15f", step);
+                }
                 return;
+            }
 
             if (dg * (step_high - step_low) >= 0) {
                 step_high = step_low;
@@ -229,15 +254,18 @@ void LBFGS::line_search(Foo& func, psi::SharedVector x, double& fx, double& step
             fx_low = fx;
         }
     }
-    if (param_.print > 1) {
+    if (param_.print > 2) {
         outfile->Printf("\n  Step lengths after zooming stage: low = %.10f, high = %.10f", step_low,
                         step_high);
     }
 }
 
 void LBFGS::apply_h0_new(psi::SharedVector q) {
-    if (param_.auto_hess) {
+    if (param_.h0_freq < 0) {
         double gamma = gamma_new();
+        if (param_.print > 2)
+            outfile->Printf("\n  gamma for H0: %.15f", gamma);
+
         for (int h = 0; h < nirrep_; ++h) {
             for (int i = 0; i < dimpi_[h]; ++i) {
                 q->set(h, i, q->get(h, i) * gamma);
@@ -255,7 +283,7 @@ void LBFGS::apply_h0_new(psi::SharedVector q) {
 double LBFGS::gamma_new() {
     double value = 1.0;
     if (iter_) {
-        int end = (iter_ - 1) % (std::min(iter_, m_));
+        int end = (iter_ - 1) % (std::min(iter_, param_.m));
         value = s_[end]->vector_dot(y_[end]) / y_[end]->vector_dot(y_[end]);
     }
     return value;
@@ -411,6 +439,35 @@ void LBFGS::check_dim(psi::SharedVector a, psi::SharedVector b, const std::strin
 void LBFGS::reset() {
     resize(m_);
     counter_ = 0;
+}
+
+double test_lbfgs_rosenbrock(int n, int h0_freq) {
+    // L-BFGS parameters
+    LBFGS_PARAM param;
+    param.epsilon = 1.0e-6;
+    param.maxiter = 100;
+    param.h0_freq = h0_freq;
+    param.print = 2;
+
+    // L-BFGS solver
+    LBFGS lbfgs_solver(param);
+
+    // Rosenbrock function
+    ROSENBROCK rosenbrock(n);
+
+    // initial guess
+    auto x = std::make_shared<psi::Vector>("x", n);
+
+    double fx = lbfgs_solver.minimize(rosenbrock, x);
+
+    // print final results
+    outfile->Printf("\n");
+    outfile->Printf("\n  L-BFGS converged in %d iterations.", lbfgs_solver.iter());
+    outfile->Printf("\n  Final function value f(x) = %.15f", fx);
+    outfile->Printf("\n  Optimized vector x:\n");
+    x->print();
+
+    return fx;
 }
 
 } // namespace forte

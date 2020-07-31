@@ -67,7 +67,7 @@ class LBFGS {
      * @param foo: Target class that should have the following methods:
      *             fx = foo.evaluate(x, g) where gradient g is modified by the function,
      *             and fx is the function return value.
-     *             If user specifies diagonal Hessian, foo.hess_diag(h0) should be available.
+     *             If diagonal Hessian is specified, foo.hess_diag(x, h0) should be available.
      * @param x: The initial value of x as input, the final value of x as output.
      *
      * @return the function value of at optimized x
@@ -151,8 +151,7 @@ class LBFGS {
 
     void update();
 
-    template <class Foo>
-    void line_search(Foo& foo, psi::SharedVector x, double& fx, double& step);
+    template <class Foo> void line_search(Foo& foo, psi::SharedVector x, double& fx, double& step);
 
     /// Update direction
     bool descent_;
@@ -166,5 +165,8 @@ class LBFGS {
     /// Resize all vectors uisng m_
     void resize(int m);
 };
+
+/// Test L-BFGS on Rosenbrock function
+double test_lbfgs_rosenbrock(int n, int h0_freq = 0);
 } // namespace forte
 #endif // LBFGS_H

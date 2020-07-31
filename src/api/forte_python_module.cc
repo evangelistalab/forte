@@ -39,6 +39,7 @@
 #include "integrals/make_integrals.h"
 
 #include "helpers/printing.h"
+#include "helpers/lbfgs/lbfgs.h"
 
 #include "orbital-helpers/aosubspace.h"
 #include "orbital-helpers/localize.h"
@@ -205,6 +206,7 @@ PYBIND11_MODULE(forte, m) {
           "Make a DSRG pointer (spin-adapted implementation)");
     m.def("make_casscf", &make_casscf, "Make a CASSCF object");
     m.def("make_casscf_new", &make_casscf_new, "Make a CASSCF object");
+    m.def("test_lbfgs_rosenbrock", &test_lbfgs_rosenbrock, "Test L-BFGS on Rosenbrock function");
 
     export_ambit(m);
 

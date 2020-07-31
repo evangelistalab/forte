@@ -1,0 +1,9 @@
+import forte
+
+fx1 = forte.test_lbfgs_rosenbrock(10, 0)
+fx2 = forte.test_lbfgs_rosenbrock(10, 1)
+fx3 = forte.test_lbfgs_rosenbrock(10, -1)
+
+compare_values(0.0, fx1, 10, "Rosenbrock n = 10 with exact initial diagonal Hessian")
+compare_values(0.0, fx2, 10, "Rosenbrock n = 10 with updated exact diagonal Hessian")
+compare_values(0.0, fx3, 10, "Rosenbrock n = 10 with adaptive inverse Hessian scalar")
