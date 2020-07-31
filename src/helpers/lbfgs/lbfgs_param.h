@@ -34,69 +34,43 @@
 namespace forte {
 class LBFGS_PARAM {
   public:
-    /// Default constructor of the Limited-BFGS parameter class
+    /// Default constructor of the Limited-BFGS parameter class set defaut
     LBFGS_PARAM();
 
     /// Check if the parameters make sense
-    void check_param() {
-        if (m <= 0)
-            throw std::runtime_error("Size of L-BFGS history (m) must > 0");
-
-        if (epsilon <= 0)
-            throw std::runtime_error("Convergence threshold (epsilon) must > 0");
-
-        if (maxiter <= 0)
-            throw std::runtime_error("Max number of iterations (maxiter) must > 0");
-
-        if (maxiter_linesearch <= 0) {
-            auto msg = "Max iterations for line search (maxiter_linesearch) must > 0";
-            throw std::runtime_error(msg);
-        }
-
-        if (min_step < 0)
-            throw std::runtime_error("Minimum step length (min_step) must > 0");
-
-        if (max_step < min_step)
-            throw std::runtime_error("Maximum step length (max_step) must > min_step");
-
-        if (c1 <= 0 || c1 >= 0.5)
-            throw std::runtime_error("Parameter c1 must lie in (0, 0.5)");
-
-        if (c2 <= c1 || c2 >= 1)
-            throw std::runtime_error("Parameter c2 must lie in (c1, 1.0)");
-    }
+    void check_param();
 
     // => L-BFGS parameters <=
 
     /// The number of vectors kept
-    int m = 8;
+    int m;
 
     /// Convergence threshold to terminate the minimization: |g| < ε * max(1, |x|)
-    double epsilon = 1.0e-4;
+    double epsilon;
 
     /// Max number of iterations
-    int maxiter = 20;
+    int maxiter;
 
     /// Max number of trials for line search of optimal step length
-    int maxiter_linesearch = 10;
+    int maxiter_linesearch;
 
     /// Minimal step length allowed
-    double min_step = 1.0e-15;
+    double min_step;
 
     /// Maximal step length allowed
-    double max_step = 1.0e15;
+    double max_step;
 
     /// Parameter for Armijo condition
-    double c1 = 1.0e-4;
+    double c1;
 
     /// Parameter for Wolfe curvature condition
-    double c2 = 0.9;
+    double c2;
 
     /// Automatically guess diagonal Hessian (true) or user provided (false)
-    bool auto_hess = false;
+    bool auto_hess;
 
     /// Printing level
-    int print = 1;
+    int print;
 };
 } // namespace forte
 

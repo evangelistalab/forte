@@ -34,7 +34,7 @@
 
 #include "psi4/libmints/vector.h"
 
-//#include "helpers/lbfgs/lbfgs_param.h"
+#include "helpers/lbfgs/lbfgs_param.h"
 
 namespace forte {
 
@@ -51,25 +51,28 @@ class LBFGS {
      */
     LBFGS(int dim, int m = 10, bool descent = true);
 
-//    /**
-//     * @brief Constructor of the Limited-BFGS class
-//     * @param dim: The dimension of the problem
-//     * @param param: The LBFGS_PARAM object for L-BFGS parameters
-//     *
-//     * Implementation notes:
-//     *   See Wikipedia https://en.wikipedia.org/wiki/Limited-memory_BFGS
-//     */
-//    LBFGS(int dim, const LBFGS_PARAM& param);
+    /**
+     * @brief Constructor of the Limited-BFGS class
+     * @param dim: The dimension of the problem
+     * @param param: The LBFGS_PARAM object for L-BFGS parameters
+     *
+     * Implementation notes:
+     *   See Wikipedia https://en.wikipedia.org/wiki/Limited-memory_BFGS
+     *   and <Numerical Optimization> 2nd Ed. by Jorge Nocedal and Stephen J. Wright
+     */
+    LBFGS(const LBFGS_PARAM& param);
 
     /**
      * @brief The minimization for the target function
-     * @param func: Target function that takes func(x, g) and returns the function value.
-     *              Gradient g is modified by the function.
-     *              If user provides the diagonal Hessian, func should provide method hess_diag().
-     * @param x0: The initial value of x
+     * @param foo: Target class that should have the following methods:
+     *             fx = foo.evaluate(x, g) where gradient g is modified by the function,
+     *             and fx is the function return value.
+     *             If user specifies diagonal Hessian, foo.hess_diag(h0) should be available.
+     * @param x: The initial value of x as input, the final value of x as output.
+     *
+     * @return the function value of at optimized x
      */
-    template <class Foo>
-    void minimize(Foo& func, psi::SharedVector x0);
+    template <class Foo> double minimize(Foo& foo, psi::SharedVector x);
 
     /// Generate correction vector
     psi::SharedVector compute_correction(psi::SharedVector x, psi::SharedVector g);
@@ -83,17 +86,32 @@ class LBFGS {
     /// Reset the L-BFGS space
     void reset();
 
+    /// Return the final gradient norm
+    double g_norm() { return g_->norm(); }
+
+    /// Return the final number of iterations
+    int iter() { return iter_; }
+
   private:
+    /// The psi4 Dimension object
+    psi::Dimension dimpi_;
+
+    /// The number of irreps
+    int nirrep_;
+
+    /// The current iteration number
+    int iter_;
+
     /// The dimension of the problem
     int dim_;
 
-//    /// Parameters of L-BFGS
-//    LBFGS_PARAM param_;
+    /// Parameters of L-BFGS
+    LBFGS_PARAM param_;
 
     /// Max size of the vectors stored
     int m_;
 
-    /// Inverse of diagonal Hessian
+    /// Diagonal elements of Hessian
     psi::SharedVector h0_;
 
     /// Gradient difference vectors
@@ -108,6 +126,12 @@ class LBFGS {
     /// The alpha vector
     std::vector<double> alpha_;
 
+    /// Moving direction vector
+    psi::SharedVector p_;
+
+    /// The current gradient vector
+    psi::SharedVector g_;
+
     /// The last gradient vector
     psi::SharedVector g_last_;
 
@@ -120,6 +144,15 @@ class LBFGS {
     double gamma();
     /// Apply h0_ to some vector
     void apply_h0(psi::SharedVector q);
+
+    void guess_h0_new();
+    double gamma_new();
+    void apply_h0_new(psi::SharedVector q);
+
+    void update();
+
+    template <class Foo>
+    void line_search(Foo& foo, psi::SharedVector x, double& fx, double& step);
 
     /// Update direction
     bool descent_;

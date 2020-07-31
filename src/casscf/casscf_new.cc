@@ -659,6 +659,7 @@ double CASSCF_NEW::compute_energy() {
         //        outfile->Printf("\n  Iter %d energy: %.15f, grad_norm: %.15f", iter, energy_,
         //        grad_->rms());
     }
+    diis_manager_->reset_subspace();
 
     // print summary
     print_h2("MCSCF Iteration Summary");
