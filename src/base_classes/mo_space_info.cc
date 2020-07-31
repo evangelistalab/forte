@@ -66,7 +66,8 @@ size_t MOSpaceInfo::size(const std::string& space) {
 psi::Dimension MOSpaceInfo::dimension(const std::string& space) {
     psi::Dimension result(nirrep_);
     if (composite_spaces_.count(space) == 0) {
-        std::string msg = "\n  MOSpaceInfo::dimension - composite space " + space + " is not defined.";
+        std::string msg =
+            "\n  MOSpaceInfo::dimension - composite space " + space + " is not defined.";
         throw psi::PSIEXCEPTION(msg.c_str());
     } else {
         for (const auto& el_space : composite_spaces_[space]) {
@@ -91,7 +92,8 @@ std::vector<int> MOSpaceInfo::symmetry(const std::string& space) {
 std::vector<size_t> MOSpaceInfo::absolute_mo(const std::string& space) {
     std::vector<size_t> result;
     if (composite_spaces_.count(space) == 0) {
-        std::string msg = "\n  MOSpaceInfo::absolute_mo - composite space " + space + " is not defined.";
+        std::string msg =
+            "\n  MOSpaceInfo::absolute_mo - composite space " + space + " is not defined.";
         throw psi::PSIEXCEPTION(msg.c_str());
     } else {
         for (const auto& el_space : composite_spaces_[space]) {
@@ -109,7 +111,8 @@ std::vector<size_t> MOSpaceInfo::absolute_mo(const std::string& space) {
 std::vector<size_t> MOSpaceInfo::corr_absolute_mo(const std::string& space) {
     std::vector<size_t> result;
     if (composite_spaces_.count(space) == 0) {
-        std::string msg = "\n  MOSpaceInfo::corr_absolute_mo - composite space " + space + " is not defined.";
+        std::string msg =
+            "\n  MOSpaceInfo::corr_absolute_mo - composite space " + space + " is not defined.";
         throw psi::PSIEXCEPTION(msg.c_str());
     } else {
         for (const auto& el_space : composite_spaces_[space]) {
@@ -130,7 +133,8 @@ std::vector<size_t> MOSpaceInfo::corr_absolute_mo(const std::string& space) {
 std::vector<std::pair<size_t, size_t>> MOSpaceInfo::get_relative_mo(const std::string& space) {
     std::vector<std::pair<size_t, size_t>> result;
     if (composite_spaces_.count(space) == 0) {
-        std::string msg = "\n  MOSpaceInfo::get_relative_mo - composite space " + space + " is not defined.";
+        std::string msg =
+            "\n  MOSpaceInfo::get_relative_mo - composite space " + space + " is not defined.";
         throw psi::PSIEXCEPTION(msg.c_str());
     } else {
         for (const auto& el_space : composite_spaces_[space]) {
@@ -280,11 +284,11 @@ int MOSpaceInfo::compute_gas_info(psi::Dimension nactpi) {
     }
 
     int banner_width = label_size + 4 + 6 * (nirrep_ + 1);
-    CharacterTable ct = psi::Process::environment.molecule()->point_group()->char_table();
+    //    CharacterTable ct = psi::Process::environment.molecule()->point_group()->char_table();
     outfile->Printf("\n  %s", std::string(banner_width, '-').c_str());
     outfile->Printf("\n    %s", std::string(label_size, ' ').c_str());
     for (size_t h = 0; h < nirrep_; ++h)
-        outfile->Printf(" %5s", ct.gamma(h).symbol());
+        outfile->Printf(" %5s", irrep_label(h).c_str());
     outfile->Printf("   Sum");
     outfile->Printf("\n  %s", std::string(banner_width, '-').c_str());
 

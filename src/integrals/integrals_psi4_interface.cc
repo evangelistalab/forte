@@ -165,8 +165,8 @@ void Psi4Integrals::compute_frozen_one_body_operator() {
 
         if (options["INTS_TOLERANCE"].has_changed())
             jk->set_cutoff(options.get_double("INTS_TOLERANCE"));
-        if (options["SCREENING"].has_changed())
-            jk->set_csam(options.get_str("SCREENING") == "CSAM");
+        //        if (options["SCREENING"].has_changed())
+        //            jk->set_csam(options.get_str("SCREENING") == "CSAM");
         if (options["PRINT"].has_changed())
             jk->set_print(options.get_int("PRINT"));
         if (options["DEBUG"].has_changed())

@@ -168,19 +168,18 @@ class MOSpaceInfo {
     psi::Dimension nmopi_;
     /// Information about each elementary space stored in a map
     std::map<std::string, SpaceInfo> mo_spaces_;
-    //<<<<<<< HEAD
     //    /// Information about each GAS space stored in a map
-    //    std::map<std::string, SpaceInfo> general_active_spaces_;
+    std::map<std::string, SpaceInfo> general_active_spaces_;
     //
     //    std::vector<std::string> elementary_spaces_{"FROZEN_DOCC", "RESTRICTED_DOCC", "ACTIVE",
     //                                                "RESTRICTED_UOCC", "FROZEN_UOCC"};
     //    std::vector<std::string> elementary_spaces_priority_{
     //        "ACTIVE", "RESTRICTED_UOCC", "RESTRICTED_DOCC", "FROZEN_DOCC", "FROZEN_UOCC"};
     //    /// Names of GAS
-    //    std::vector<std::string> gas_subspaces_{"GAS1", "GAS2", "GAS3", "GAS4", "GAS5", "GAS6"};
-    //    /// The pair with the number of GAS and general_active_spaces_
-    //    std::pair<int, std::map<std::string, SpaceInfo>> gas_info_;
-    //=======
+    std::vector<std::string> gas_subspaces_{"GAS1", "GAS2", "GAS3", "GAS4", "GAS5", "GAS6"};
+
+    /// The pair with the number of GAS and general_active_spaces_
+    std::pair<int, std::map<std::string, SpaceInfo>> gas_info_;
     /// The list of elementary spaces
     std::vector<std::string> elementary_spaces_{
         "FROZEN_DOCC", "RESTRICTED_DOCC", "GAS1",       "GAS2", "GAS3", "GAS4", "GAS5",
