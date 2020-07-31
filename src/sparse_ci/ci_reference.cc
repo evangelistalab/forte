@@ -1223,7 +1223,6 @@ void CI_Reference::get_gas_occupation() {
             gas_mine.push_back(0);
         }
     }
-
     outfile->Printf("\n  ");
     outfile->Printf("\n  Possible electron occupations in the GAS \n  ");
     std::vector<std::string> gas_electron_name = {"GAS1_A", "GASI_B", "GAS2_A", "GAS2_B",
@@ -1289,6 +1288,131 @@ void CI_Reference::get_gas_occupation() {
             }
         }
     }
+}
+
+void CI_Reference::modify_gas_occupation(std::vector<int> maxe_input, std::vector<int> mine_input) {
+    // Calculate gas_info from mo_space_info_
+    std::pair<size_t, std::map<std::string, SpaceInfo>> gas_info =
+        mo_space_info_->make_gas_info(options_);
+    gas_num_ = gas_info.first;
+    general_active_spaces_ = gas_info.second;
+
+    // The vectors of maximum number of electrons, minimum number of electrons,
+    // and the number of orbitals
+    std::vector<int> gas_maxe;
+    std::vector<int> gas_mine;
+    std::vector<int> gas_orbital;
+
+    for (size_t gas_count = 0; gas_count < 6; gas_count++) {
+        std::string space = gas_subspaces_.at(gas_count);
+        int orbital_maximum = general_active_spaces_[space].first.sum();
+        gas_orbital.push_back(orbital_maximum);
+        if (gas_count < gas_num_) {
+            std::string maxe = gas_maxe_options_.at(gas_count);
+            int max_e_number = maxe_input[gas_count];
+            if (max_e_number == 0) {
+                max_e_number = 200;
+            }
+            // If the defined maximum number of electrons exceed number of orbitals,
+            // redefine maximum number of elctrons
+            if (max_e_number > std::min(orbital_maximum * 2, nalpha_ + nbeta_)) {
+                // outfile->Printf("\n  The maximum number of electrons in %s"
+                //                "\n  either exceeds the number of spin orbitals"
+                //                "\n  or total number of electrons or undefined!",
+                //               space.c_str());
+                gas_maxe.push_back(std::min(orbital_maximum * 2, nalpha_ + nbeta_));
+                outfile->Printf("\n  The maximum number of electrons in %s"
+                                " is %d ",
+                                space.c_str(), std::min(orbital_maximum * 2, nalpha_ + nbeta_));
+            } else {
+                outfile->Printf("\n  The maximum number of electrons in "
+                                "%s is %d",
+                                space.c_str(), max_e_number);
+                gas_maxe.push_back(max_e_number);
+            }
+            std::string mine = gas_mine_options_.at(gas_count);
+            int min_e_number = mine_input[gas_count];
+            gas_mine.push_back(min_e_number);
+            outfile->Printf("\n  The minimum number of electrons in "
+                            "%s is %d",
+                            space.c_str(), min_e_number);
+        } else {
+            gas_maxe.push_back(0);
+            gas_mine.push_back(0);
+        }
+    }
+    outfile->Printf("\n  ");
+    outfile->Printf("\n  Possible electron occupations in the GAS \n  ");
+    std::vector<std::string> gas_electron_name = {"GAS1_A", "GASI_B", "GAS2_A", "GAS2_B",
+                                                  "GAS3_A", "GAS3_B", "GAS4_A", "GAS4_B",
+                                                  "GAS5_A", "GAS5_B", "GAS6_A", "GAS6_B"};
+    for (size_t i = 0; i < 2 * gas_num_; i++) {
+        outfile->Printf("%s  ", gas_electron_name.at(i).c_str());
+    }
+
+    for (int gas6_na = std::max(0, gas_mine[5] - gas_orbital[5]);
+         gas6_na <= std::min(gas_maxe[5], gas_orbital[5]); gas6_na++) {
+        for (int gas6_nb = std::max(0, gas_mine[5] - gas6_na);
+             gas6_nb <= std::min(gas_maxe[5] - gas6_na, gas_orbital[5]); gas6_nb++) {
+            for (int gas5_na = std::max(0, gas_mine[4] - gas_orbital[4]);
+                 gas5_na <= std::min(gas_maxe[4], gas_orbital[4]); gas5_na++) {
+                for (int gas5_nb = std::max(0, gas_mine[4] - gas5_na);
+                     gas5_nb <= std::min(gas_maxe[4] - gas5_na, gas_orbital[4]); gas5_nb++) {
+                    for (int gas4_na = std::max(0, gas_mine[3] - gas_orbital[3]);
+                         gas4_na <= std::min(gas_maxe[3], gas_orbital[3]); gas4_na++) {
+                        for (int gas4_nb = std::max(0, gas_mine[3] - gas4_na);
+                             gas4_nb <= std::min(gas_maxe[3] - gas4_na, gas_orbital[3]);
+                             gas4_nb++) {
+                            for (int gas3_na = std::max(0, gas_mine[2] - gas_orbital[2]);
+                                 gas3_na <= std::min(gas_maxe[2], gas_orbital[2]); gas3_na++) {
+                                for (int gas3_nb = std::max(0, gas_mine[2] - gas3_na);
+                                     gas3_nb <= std::min(gas_maxe[2] - gas3_na, gas_orbital[2]);
+                                     gas3_nb++) {
+                                    for (int gas2_na = std::max(0, gas_mine[1] - gas_orbital[1]);
+                                         gas2_na <= std::min(gas_maxe[1], gas_orbital[1]);
+                                         gas2_na++) {
+                                        for (int gas2_nb = std::max(0, gas_mine[1] - gas2_na);
+                                             gas2_nb <=
+                                             std::min(gas_maxe[1] - gas2_na, gas_orbital[1]);
+                                             gas2_nb++) {
+                                            int gas1_na = nalpha_ - gas2_na - gas3_na - gas4_na -
+                                                          gas5_na - gas6_na;
+                                            int gas1_nb = nbeta_ - gas2_nb - gas3_nb - gas4_nb -
+                                                          gas5_nb - gas6_nb;
+                                            int gas1_max = std::max(gas1_na, gas1_nb);
+                                            int gas1_min = std::min(gas1_na, gas1_nb);
+                                            int gas1_total = gas1_na + gas1_nb;
+                                            if (gas1_total <= gas_maxe[0] and
+                                                gas1_max <= gas_orbital[0] and gas1_min >= 0 and
+                                                gas1_total >= gas_mine[0]) {
+                                                std::vector<int> gas_configuration = {
+                                                    gas1_na, gas1_nb, gas2_na, gas2_nb,
+                                                    gas3_na, gas3_nb, gas4_na, gas4_nb,
+                                                    gas5_na, gas5_nb, gas6_na, gas6_nb};
+                                                outfile->Printf("\n  ");
+                                                for (size_t i = 0; i < 2 * gas_num_; i++) {
+                                                    outfile->Printf("   %d    ",
+                                                                    gas_configuration.at(i));
+                                                }
+                                                gas_electrons_.push_back(gas_configuration);
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+void CI_Reference::modify_gas(std::vector<Determinant>& ref_space, std::vector<int> maxe,
+                              std::vector<int> mine) {
+
+    modify_gas_occupation(maxe, mine);
+    build_gas_single(ref_space);
 }
 
 std::vector<std::vector<int>> CI_Reference::gas_electrons() { return gas_electrons_; }

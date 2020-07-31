@@ -885,6 +885,9 @@ def register_casscf_options(options):
                            "Monitor the CAS-CI solutions through iterations")
     options.add_bool("CASSCF_SEMICANONICALIZE", True,
                            "Semicanonicalize the orbitals after CASSCF?")
+    options.add_int_array("CASSCF_FROZEN_ORBITAL", 
+            "The active orbital to be frozen in the casscf optimization")
+
 
 def register_old_options(options):
     options.set_group("Old")
@@ -955,8 +958,19 @@ def register_gas_options(options):
     options.add_int("GAS5MIN",0,"The minimum number of electrons in GAS5")
     options.add_int("GAS6MAX",200,"The maximum number of electrons in GAS6")
     options.add_int("GAS6MIN",0,"The minimum number of electrons in GAS6")
-
-
+    options.add_array("GAS1MAXALT","The maximum number of electrons in GAS1 for different root")
+    options.add_array("GAS2MAXALT","The maximum number of electrons in GAS2 for different root") 
+    options.add_array("GAS3MAXALT","The maximum number of electrons in GAS3 for different root")
+    options.add_array("GAS4MAXALT","The maximum number of electrons in GAS4 for different root")
+    options.add_array("GAS5MAXALT","The maximum number of electrons in GAS5 for different root")
+    options.add_array("GAS6MAXALT","The maximum number of electrons in GAS6 for different root")
+    options.add_array("GAS1MINALT","The minimum number of electrons in GAS1 for different root")
+    options.add_array("GAS2MINALT","The minimum number of electrons in GAS2 for different root")
+    options.add_array("GAS3MINALT","The minimum number of electrons in GAS3 for different root")
+    options.add_array("GAS4MINALT","The minimum number of electrons in GAS4 for different root")
+    options.add_array("GAS5MINALT","The minimum number of electrons in GAS5 for different root")
+    options.add_array("GAS6MINALT","The minimum number of electrons in GAS6 for different root")
+    options.add_array("ROOT_SYM_ALT","Symmetry for different root")
 
 
 

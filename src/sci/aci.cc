@@ -229,6 +229,11 @@ void AdaptiveCI::find_q_space() {
             //        get_excited_determinants_restrict(nroot_, P_evecs_, P_evals_, P_space_,
             //        F_space);
         }
+
+    } else if (screen_alg == "MULTI_GAS") {
+        // get_gas_excited_determinants_core(P_evecs_, P_evals_, P_space_, F_space);
+        get_gas_excited_determinants_sr(P_evecs_, P_evals_, P_space_, F_space);
+
     } else if (screen_alg == "CORE") {
         get_excited_determinants_core(P_evecs_, P_evals_, P_space_, F_space);
     } else if (screen_alg == "BATCH_HASH" or screen_alg == "BATCH_CORE") {
@@ -556,9 +561,57 @@ int AdaptiveCI::root_follow(DeterminantHashVec& P_ref, std::vector<double>& P_re
 
 void AdaptiveCI::pre_iter_preparation() {
     // Build the reference determinant and compute its energy
+
     CI_Reference ref(scf_info_, options_, mo_space_info_, as_ints_, multiplicity_, twice_ms_,
                      wavefunction_symmetry_);
-    ref.build_reference(initial_reference_);
+
+    if ((options_->get_str("ACI_SCREEN_ALG") == "MULTI_GAS")) {
+        initial_reference_.clear();
+        std::vector<std::string> maxe_alt_string = {"GAS1MAXALT", "GAS2MAXALT", "GAS3MAXALT",
+                                                    "GAS4MAXALT", "GAS5MAXALT", "GAS6MAXALT"};
+        std::vector<std::string> mine_alt_string = {"GAS1MINALT", "GAS2MINALT", "GAS3MINALT",
+                                                    "GAS4MINALT", "GAS5MINALT", "GAS6MINALT"};
+        std::vector<int> maxe;
+        std::vector<int> mine;
+        for (size_t gas_count = 0; gas_count < 6; gas_count++) {
+            py::list gasemax_alt_list = options_->get_gen_list(maxe_alt_string[gas_count]);
+            py::list gasemin_alt_list = options_->get_gen_list(mine_alt_string[gas_count]);
+            if (gasemax_alt_list.size() != gasemin_alt_list.size()) {
+                outfile->Printf("\n  Wrong definition of GASMAXALT/GASMINALT.");
+                exit(1);
+            }
+            size_t nentry = gasemax_alt_list.size();
+            if (nentry > 0) {
+                bool found_state = false;
+                for (size_t i = 0; i < nentry; i++) {
+                    py::list gasemax_alt = gasemax_alt_list[i];
+                    py::list gasemin_alt = gasemin_alt_list[i];
+                    int symmetry_read = py::cast<int>(gasemax_alt[0]);
+                    int multiplicity_read = py::cast<int>(gasemax_alt[1]);
+                    if ((multiplicity_read == multiplicity_) &&
+                        (symmetry_read == wavefunction_symmetry_)) {
+                        maxe.push_back(py::cast<int>(gasemax_alt[root_ + 2]));
+                        mine.push_back(py::cast<int>(gasemin_alt[root_ + 2]));
+                        bool found_state = true;
+                    }
+                }
+
+                if (!found_state) {
+                    outfile->Printf("\n  Wrong input of GASMAXALT/GASMINALT.");
+                }
+            } else {
+                maxe.push_back(0);
+                mine.push_back(0);
+            }
+            //            outfile->Printf("GAS %d %d \n", gasemax_alt[root_ - 1],
+            //            gasemin_alt[root_
+            //            - 1]);
+        }
+        //        int root_sym_alt = symmetry_alt[root_ - 1];
+        ref.modify_gas(initial_reference_, maxe, mine);
+    } else {
+        ref.build_reference(initial_reference_);
+    }
 
     if (single_calculation_) {
         PQ_space_ = initial_reference_;
@@ -572,7 +625,7 @@ void AdaptiveCI::pre_iter_preparation() {
     // If the ACI iteration is within the gas space, calculate
     // gas_info and the criterion for single and double excitations
 
-    if (gas_iteration_) {
+    if ((gas_iteration_)) {
         const auto gas_info = mo_space_info_->gas_info();
         auto act_mo = mo_space_info_->absolute_mo("ACTIVE");
         std::map<int, int> re_ab_mo;
@@ -784,7 +837,7 @@ void AdaptiveCI::diagonalize_PQ_space() {
         ref_root_ = root_follow(P_ref_, P_ref_evecs_, PQ_space_, PQ_evecs_, num_ref_roots_);
     }
 
-    if (gas_iteration_) {
+    if (gas_iteration_ && options_->get_str("ACI_SCREEN_ALG") != "MULTI_GAS") {
         print_gas_wfn(PQ_space_, PQ_evecs_);
     }
     if (occ_analysis_) {
@@ -820,7 +873,7 @@ void AdaptiveCI::prune_PQ_to_P() {
 
     // Print information about the wave function
     if (!quiet_mode_) {
-        print_wfn(PQ_space_, PQ_evecs_, num_ref_roots_);
+        (PQ_space_, PQ_evecs_, num_ref_roots_);
         outfile->Printf("\n  Cycle %d took: %1.6f s", cycle_, cycle_time_.get());
     }
 }
@@ -1131,8 +1184,8 @@ void AdaptiveCI::print_occ_number(DeterminantHashVec& space, psi::SharedMatrix e
                                        sqrt(alpha_occ[j] - alpha_occ[j] * alpha_occ[j]) /
                                        sqrt(alpha_occ[k] - alpha_occ[k] * alpha_occ[k]);
                     alpha_corr[k][j] = alpha_corr[j][k];
-                    //                    outfile->Printf("\n  The corr between %d and %d is %.9f",
-                    //                    j, k,
+                    //                    outfile->Printf("\n  The corr between %d and %d is
+                    //                    %.9f", j, k,
                     //                                    alpha_corr[j][k]);
                     beta_corr[j][k] = (beta_occ_square[j][k] - beta_occ[j] * beta_occ[k]) /
                                       sqrt(beta_occ[j] - beta_occ[j] * beta_occ[j]) /

@@ -89,7 +89,11 @@ class CI_Reference {
 
     Determinant get_occupation();
 
+    void modify_gas_occupation(std::vector<int> maxe_input, std::vector<int> mine_input);
+
     void get_gas_occupation();
+
+    std::pair<std::vector<int>, std::vector<int>> get_gas_max_min();
 
     std::shared_ptr<ActiveSpaceIntegrals> fci_ints_;
 
@@ -135,6 +139,11 @@ class CI_Reference {
 
     /// Build single lowest energy state
     void build_gas_single(std::vector<Determinant>& ref_space);
+
+    /// Modify gas electrons
+    void modify_gas(std::vector<Determinant>& ref_space, std::vector<int> gas_maxe,
+                    std::vector<int> gas_mine);
+
     /// Set the reference type
     void set_ref_type(const std::string& ref_type) { ref_type_ = ref_type; }
 

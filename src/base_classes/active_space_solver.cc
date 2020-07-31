@@ -212,7 +212,6 @@ make_state_weights_map(std::shared_ptr<ForteOptions> options,
     if (avg_state.size() == 0) {
         int nroot = options->get_int("NROOT");
         int root = options->get_int("ROOT");
-
         std::vector<double> weights(nroot, 0.0);
         weights[root] = 1.0;
         state_weights_map[state] = weights;

@@ -154,7 +154,6 @@ class AdaptiveCI : public SelectedCIMethod {
     /// Add missing degenerate determinants excluded from the aimed selection?
     bool add_aimed_degenerate_;
 
-
     /// The function of the q-space criteria per root
     std::string pq_function_;
     /// the q reference
@@ -284,6 +283,10 @@ class AdaptiveCI : public SelectedCIMethod {
     void get_gas_excited_determinants_avg(int nroot, psi::SharedMatrix evecs,
                                           psi::SharedVector evals, DeterminantHashVec& P_space,
                                           std::vector<std::pair<double, Determinant>>& F_space);
+
+    void get_gas_excited_determinants_core(psi::SharedMatrix evecs, psi::SharedVector evals,
+                                           DeterminantHashVec& P_space,
+                                           std::vector<std::pair<double, Determinant>>& F_space);
 
     /// (DEFAULT)  Builds excited determinants for a bin, uses all threads, hash-based
     det_hash<double> get_bin_F_space(int bin, int nbin, double E0, psi::SharedMatrix evecs,

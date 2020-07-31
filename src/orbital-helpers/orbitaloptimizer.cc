@@ -148,6 +148,8 @@ void OrbitalOptimizer::startup() {
         options_->get_str("ACTIVE_REF_TYPE") == "GAS_SINGLE") {
         cas_ = false;
         gas_ = true;
+        //        cas_ = true;
+        //        gas_ = false;
         gas_info_ = mo_space_info_->gas_info();
     }
 }
@@ -369,7 +371,46 @@ void OrbitalOptimizer::orbital_gradient() {
             // Zeroout diagonal and one-block of the off-diagonal matrix
             relative_gas_mo_.push_back(relative_mo);
         }
-        //        Orb_grad_Fock->set(0, 1, 0.0);
+        //        auto active_re_  mo = mo_space_info_->get_relative_mo("ACTIVE");
+        //        for (size_t i = 0; i < na_; i++) {
+        //            outfile->Printf("Active %d %d %d \n", active_abs_[i], active_re_mo[i].first,
+        //                            active_re_mo[i].second);
+        //        }
+        auto active_frozen = options_->get_int_vec("CASSCF_FROZEN_ORBITAL");
+        if (!active_frozen.empty()) {
+            outfile->Printf("\n  Active Orbitals Frozen:");
+        }
+        std::vector<int> active;
+        for (int i = 0; i < na_; i++) {
+            active.push_back(i);
+        }
+        std::vector<int> unfrozen;
+        std::set_difference(active.begin(), active.end(), active_frozen.begin(),
+                            active_frozen.end(), std::inserter(unfrozen, unfrozen.begin()));
+
+        for (int i : active_frozen) {
+            for (int j : unfrozen) {
+                size_t ii = active_abs_[i];
+                size_t jj = active_abs_[j];
+                Orb_grad_Fock->set(nhole_map_[ii], npart_map_[jj], 0.0);
+                Orb_grad_Fock->set(nhole_map_[jj], npart_map_[ii], 0.0);
+            }
+        }
+        for (int i : active_frozen) {
+            for (size_t j = 0; j < nrdocc_; j++) {
+                size_t ii = active_abs_[i];
+                size_t jj = restricted_docc_abs_[j];
+                Orb_grad_Fock->set(nhole_map_[jj], npart_map_[ii], 0.0);
+            }
+        }
+        for (int i : active_frozen) {
+            for (size_t j = 0; j < nvir_; j++) {
+                size_t ii = active_abs_[i];
+                size_t jj = restricted_uocc_abs_[j];
+                Orb_grad_Fock->set(nhole_map_[ii], npart_map_[jj], 0.0);
+            }
+        }
+        outfile->Printf("\n");
     }
 
     if (casscf_debug_print_) {
@@ -441,25 +482,6 @@ void OrbitalOptimizer::diagonal_hessian() {
         ambit::Tensor integral_a =
             ambit::Tensor::build(ambit::CoreTensor, "Tr", {na_, na_, na_, na_});
         integral_a("p,q,r,s") = Trans_na_nmo("p,w") * integral_("w,q,r,s");
-        //        std::vector<double>& ints_data = integral_.data();
-        //        std::vector<double>& ints_act_data = integral_a.data();
-        //        double nacubic = na_ * na_ * na_;
-        //        for (size_t i1 = 0; i1 < na_; i1++) {
-        //            for (size_t i2 = 0; i2 < nmo_; i2++) {
-        //                if (active_abs_[i1] == nmo_abs_[i2]) {
-        //                    for (size_t j = 0; j < nacubic; j++) {
-        //                        ints_act_data[i1 * nacubic + j] = ints_data[i2 * nacubic + j];
-        //                    }
-        //                }
-        //            }
-        //    }
-        //        ambit::Tensor Z_prime = ambit::Tensor::build(ambit::CoreTensor, "Z_prime", {na_,
-        //        na_}); Z_prime("u, v") = 2.0 * integral_a("u, p, u, q") * gamma2_("v, p, v, q");
-        //        Z_prime("u, v") += 2.0 * integral_a("v, p, v, q") * gamma2_("u, p, u, q");
-        //        Z_prime("u, v") += integral_a("v, v, p, q") * gamma2_("u, u, p, q");
-        //        Z_prime("u, v") += integral_a("u, u, p, q") * gamma2_("v, v, p, q");
-        //        Z_prime("u, v") -= 4.0 * integral_a("u, p, v, q") * gamma2_("u, q, v, p");
-        //        Z_prime("u, v") -= 2.0 * integral_a("u, v, p, q") * gamma2_("u, v, p, q");
         psi::SharedMatrix I_act(new psi::Matrix("I_act", na_ * na_, na_ * na_));
         integral_a.iterate([&](const std::vector<size_t>& i, double& value) {
             I_act->set(i[0] * na_ + i[1], i[2] * na_ + i[3], value);
@@ -508,37 +530,6 @@ void OrbitalOptimizer::diagonal_hessian() {
                                             (gamma2M_->get(uv, qp) + gamma2M_->get(up, qv));
                                 value_aa -= 2.0 * I_act->get(up, vq) *
                                             (gamma2M_->get(up, vq) + gamma2M_->get(uq, vp));
-
-                                //                                value_aa += 2.0 * I_act->get(up,
-                                //                                uq) *
-                                //                                            (gamma2M_->get(vp, vq)
-                                //                                            + gamma2M_->get(pv,
-                                //                                            vq));
-                                //                                value_aa += 2.0 * I_act->get(vp,
-                                //                                vq) *
-                                //                                            (gamma2M_->get(up, uq)
-                                //                                            + gamma2M_->get(pu,
-                                //                                            uq));
-                                //                                value_aa += 1.0 * I_act->get(vv,
-                                //                                pq) *
-                                //                                            (gamma2M_->get(uu, pq)
-                                //                                            + gamma2M_->get(uu,
-                                //                                            qp));
-                                //                                value_aa += 1.0 * I_act->get(uu,
-                                //                                pq) *
-                                //                                            (gamma2M_->get(vv, pq)
-                                //                                            + gamma2M_->get(vv,
-                                //                                            qp));
-                                //                                value_aa -= 4.0 * I_act->get(up,
-                                //                                vq) *
-                                //                                            (gamma2M_->get(uq, vp)
-                                //                                            + gamma2M_->get(uq,
-                                //                                            pv));
-                                //                                value_aa -= 2.0 * I_act->get(uv,
-                                //                                pq) *
-                                //                                            (gamma2M_->get(uv, pq)
-                                //                                            + gamma2M_->get(uv,
-                                //                                            qp));
                             }
                         }
                         //                        outfile->Printf("%d %d %f \n", u, v, value_aa);
