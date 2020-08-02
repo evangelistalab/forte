@@ -187,6 +187,9 @@ def register_embedding_options(forte_options):
         "embedding_disable_semi_check", True,
         "Skip semi-canonicalization check in DSRG code when computing ASET(2)")
     forte_options.add_bool(
+        "embedding_align_frozen", False,
+        "Do write shifts to fix restricted one-body operator")
+    forte_options.add_bool(
         "embedding_fock_build", True,
         "Build CASSCF AO Fock matrix for semi-canonicalization")
     forte_options.add_bool(
