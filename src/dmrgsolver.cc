@@ -696,7 +696,7 @@ void DMRGSolver::compute_energy() {
             SharedVector evals(new Vector("L eigenvalues", nact));
             L->diagonalize(evecs, evals);
 
-            evecs->print()
+            evecs->print();
 
             std::vector<int> input_order;
 
