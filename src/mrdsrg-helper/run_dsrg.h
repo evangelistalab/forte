@@ -13,6 +13,7 @@
 #include "mrdsrg-spin-integrated/mrdsrg.h"
 #include "mrdsrg-so/mrdsrg_so.h"
 #include "mrdsrg-so/so-mrdsrg.h"
+#include "mrdsrg-so/dsrg_mrpt2_so.h"
 #include "mrdsrg-spin-adapted/dsrg_mrpt.h"
 #include "mrdsrg-spin-adapted/sadsrg.h"
 
@@ -52,6 +53,11 @@ std::unique_ptr<MASTER_DSRG> make_dsrg_method(const std::string& method, RDMs rd
                                               std::shared_ptr<MOSpaceInfo> mo_space_info);
 
 std::unique_ptr<MRDSRG_SO> make_dsrg_so_y(RDMs rdms, std::shared_ptr<SCFInfo> scf_info,
+                                        std::shared_ptr<ForteOptions> options,
+                                        std::shared_ptr<ForteIntegrals> ints,
+                                        std::shared_ptr<MOSpaceInfo> mo_space_info);
+
+std::unique_ptr<DSRG_MRPT2_SO> make_dsrg_mrpt2_so(RDMs rdms, std::shared_ptr<SCFInfo> scf_info,
                                         std::shared_ptr<ForteOptions> options,
                                         std::shared_ptr<ForteIntegrals> ints,
                                         std::shared_ptr<MOSpaceInfo> mo_space_info);

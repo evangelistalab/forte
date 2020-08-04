@@ -197,6 +197,7 @@ PYBIND11_MODULE(forte, m) {
           "Make a DSRG method (spin-adapted implementation)");
     m.def("make_dsrg_so_y", &make_dsrg_so_y, "Make a DSRG pointer (spin-orbital implementation)");
     m.def("make_dsrg_so_f", &make_dsrg_so_f, "Make a DSRG pointer (spin-orbital implementation)");
+    m.def("make_dsrg_mrpt2_so", &make_dsrg_mrpt2_so, "Make a spin-orbital DSRG-MRPT2 pointer");
     m.def("make_dsrg_spin_adapted", &make_dsrg_spin_adapted,
           "Make a DSRG pointer (spin-adapted implementation)");
     m.def("make_casscf", &make_casscf, "Make a CASSCF object");
@@ -299,6 +300,12 @@ PYBIND11_MODULE(forte, m) {
     py::class_<SOMRDSRG>(m, "SOMRDSRG")
         .def("compute_energy", &SOMRDSRG::compute_energy, "Compute DSRG energy")
         .def("compute_Heff_actv", &SOMRDSRG::compute_Heff_actv,
+             "Return the DSRG dressed ActiveSpaceIntegrals");
+
+    // export DSRG-MRPT2-SO
+    py::class_<DSRG_MRPT2_SO>(m, "DSRG_MRPT2_SO")
+        .def("compute_energy", &DSRG_MRPT2_SO::compute_energy, "Compute DSRG energy")
+        .def("compute_Heff_actv", &DSRG_MRPT2_SO::compute_Heff_actv,
              "Return the DSRG dressed ActiveSpaceIntegrals");
 
     // export DSRG_MRPT spin-adapted code

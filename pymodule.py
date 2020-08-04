@@ -344,6 +344,8 @@ def compute_dsrg_unrelaxed_energy(correlation_solver_type, rdms, scf_info,
     elif correlation_solver_type == "SOMRDSRG":
         dsrg = forte.make_dsrg_so_f(rdms, scf_info, options, ints,
                                     mo_space_info)
+    elif correlation_solver_type == "DSRG-MRPT2-SO":
+        dsrg = forte.make_dsrg_mrpt2_so(rdms, scf_info, options, ints, mo_space_info)
     elif correlation_solver_type == "DSRG_MRPT":
         dsrg = forte.make_dsrg_spin_adapted(rdms, scf_info, options, ints,
                                             mo_space_info)
