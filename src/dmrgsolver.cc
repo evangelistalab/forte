@@ -699,7 +699,7 @@ void DMRGSolver::compute_energy() {
             evecs->print();
             std::vector<std::pair<double, int>> x;
             for(int k=0; k<nact; k++){
-                x.push_back(std::make_pair(evecs->get(1,k), k));
+                x.push_back(std::make_pair(evecs->get(k,1), k));
             }
 
             std::sort(x.begin(), x.end());
