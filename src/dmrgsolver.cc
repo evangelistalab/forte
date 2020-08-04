@@ -734,11 +734,10 @@ void DMRGSolver::compute_energy() {
             //     outfile->Printf(" %i", ham_order[k]);
             // }
 
-            // int ham_order_aray[nact];
-            // for(int i=0; i < nact; i++){ ham_order_aray[i] = ham_order[i]; }
-            // int* ham_order_ptr = ham_order_aray;
-            // Prob->setup_reorder_custom(ham_order_ptr);
-
+            int order_aray[nact];
+            for(int i=0; i < nact; i++){ order_aray[i] = input_order[i]; }
+            int* order_ptr = order_aray;
+            Prob->setup_reorder_custom(order_ptr);
         }
     }
 
