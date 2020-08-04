@@ -271,6 +271,7 @@ void DMRGSolver::compute_energy() {
     const bool reorder_orbs = options_.get_bool("REORDER_ORBS");
     int* dmrg_custom_orb_order = options_.get_int_array("DMRG_CUSTOM_ORB_ORDER");
     const bool auto_loc_orb_reorder = options_.get_bool("AUTO_REORDER_LOC_ORBS");
+    const bool fiedler_reorder = options_.get_bool("FIEDLER_REORDER");
     const int ndmrg_states = options_["DMRG_STATES"].size();
     double* dmrg_econv = options_.get_double_array("DMRG_ECONV");
     const int ndmrg_econv = options_["DMRG_ECONV"].size();
@@ -633,7 +634,6 @@ void DMRGSolver::compute_energy() {
             Prob->setup_reorder_custom(ham_order_ptr);
             //// END AUTO REORDERING ////
         }
-
     }
 
     /// If one does not provide integrals when they call solver, compute them
@@ -662,6 +662,44 @@ void DMRGSolver::compute_energy() {
                             one_body_fci_ints.get());
         }
     }
+
+    if(options_.get_bool("FULLY_LOCALIZE")){
+        if(fiedler_reorder){
+            // make fiedler_reorder a option []
+
+            SharedMatrix L(new Matrix("L matrix for Fiedler reordering", nact, nact));
+            L->zero();
+
+            for (int i=0; i < nact; i++){
+                for (int j=0; j < nact; j++){
+                    std::vector<int> idxs{i, j, j, i};
+                    if (i != j){
+                        // L[i,j] += -tei[i,j,j,i];
+                        L->add(i, j, -active_integrals_.at(idxs));
+                    }
+                }
+                for (int j=0; j < nact; j++){
+                    // L[i,i] += np.abs(tei[i,j,j,i])
+                    L->add(i, i, std::abs(active_integrals_.at(idxs)));
+                }
+            }
+
+            outfile->Printf("\n ==> L matrix for Feidler Reordering <== \n");
+            L->print();
+
+            // print(f'L = {L}')
+            // A,B = np.linalg.eigh(L)
+            // print(f'A = {A}')
+            // print(f'B = {B}')
+            // x = B[:,1]
+            // order = []
+            // for i in range(nmo):
+            //     order.append((x[i],i))
+            // order = sorted(order)
+            // print(order)
+        }
+    }
+
     active_integrals_.iterate([&](const std::vector<size_t>& i, double& value) {
         if (CheMPS2::Irreps::directProd(orbitalIrreps[i[0]], orbitalIrreps[i[1]]) ==
             CheMPS2::Irreps::directProd(orbitalIrreps[i[2]], orbitalIrreps[i[3]])) {

@@ -337,6 +337,9 @@ void forte_old_options(Options& options) {
     options.add_array("DMRG_CUSTOM_ORB_ORDER");
     /*- Automatic Orbital Ordering for DMRG in fully localized basis -*/
     options.add_bool("AUTO_REORDER_LOC_ORBS", false);
+    /*- Automatic Orbital Ordering for DMRG in fully localized basis
+        using Fiedler ordering -*/
+    options.add_bool("FIEDLER_REORDER", false);
 
 
     /*- The number of reduced renormalized basis states to be
