@@ -675,16 +675,20 @@ void DMRGSolver::compute_energy() {
                     std::vector<int> idxs{i, j, j, i};
                     if (i != j){
                         // L[i,j] += -tei[i,j,j,i]
-                        L->add(i, j, -active_integrals_.at(idxs));
+                        // L->add(i, j, -active_integrals_.at(idxs));
+                        L->add(i, j, -ints_->aptei_ab(i,j,j,i));
+
                     }
                 }
                 for (int j=0; j < nact; j++){
                     std::vector<int> idxs{i, j, j, i};
                     // L[i,i] += np.abs(tei[i,j,j,i])
-                    L->add(i, i, std::abs(active_integrals_.at(idxs)));
+                    // L->add(i, i, std::abs(active_integrals_.at(idxs)));
+                    L->add(i, i, std::abs(ints_->aptei_ab(i,j,j,i)));
                 }
             }
 
+            outfile->Printf("\n ==> Feidler ordering uses ints_ NOT active_space_ints_ <== \n");
             outfile->Printf("\n ==> L matrix for Feidler Reordering <== \n");
             L->print();
 
