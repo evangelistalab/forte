@@ -697,8 +697,20 @@ void DMRGSolver::compute_energy() {
             L->diagonalize(evecs, evals);
 
             evecs->print();
+            std::vector<std::pair<double, int>> x;
+            for(int k=0; k<nact; k++){
+                x.push_back(evecs->get(1,k), k);
+            }
+
+            std::sort(x.begin(), x.end());
 
             std::vector<int> input_order;
+
+            outfile->Printf("\n sorted values first evec");
+            for(int k=0; k<nact; k++){
+                outfile->Printf(" %8.12f", x[k].first);
+                input_order.push_back(x[k].second);
+            }
 
             // x = B[:,1]
             // order = []
@@ -706,12 +718,12 @@ void DMRGSolver::compute_energy() {
             //     order.append((x[i],i))
             // order = sorted(order)
 
-            // outfile->Printf("\nFeidler DMRG localized obrital order (input indexing):");
-            // for(int k = 0; k<nact; k++){
-            //     outfile->Printf(" %i", input_order[k]);
-            // }
-            //
-            // // And F#&%&ING finally, reorder with hamiltonian ordering
+            outfile->Printf("\nFeidler DMRG localized obrital order:");
+            for(int k = 0; k<nact; k++){
+                outfile->Printf(" %i", input_order[k]);
+            }
+
+            // And F#&%&ING finally, reorder with hamiltonian ordering
             // std::vector<int> ham_order;
             // for(int k = 0; k<nact; k++){
             //     ham_order.push_back(input2ham[input_order[k]]);
@@ -721,7 +733,7 @@ void DMRGSolver::compute_energy() {
             // for(int k = 0; k<nact; k++){
             //     outfile->Printf(" %i", ham_order[k]);
             // }
-            //
+
             // int ham_order_aray[nact];
             // for(int i=0; i < nact; i++){ ham_order_aray[i] = ham_order[i]; }
             // int* ham_order_ptr = ham_order_aray;
