@@ -688,20 +688,45 @@ void DMRGSolver::compute_energy() {
                 }
             }
 
-            outfile->Printf("\n ==> Feidler ordering uses ints_ NOT active_space_ints_ <== \n");
-            outfile->Printf("\n ==> L matrix for Feidler Reordering <== \n");
+            outfile->Printf("\n **NOTE** Feidler ordering uses ints_ NOT active_space_ints_ \n");
+            // outfile->Printf("\n ==> L matrix for Feidler Reordering <== \n");
             L->print();
 
-            // print(f'L = {L}')
-            // A,B = np.linalg.eigh(L)
-            // print(f'A = {A}')
-            // print(f'B = {B}')
+            SharedMatrix evecs(new Matrix("L eigenvectors", nact, nact));
+            SharedVector evals(new Vector("L eigenvalues", nact));
+            L->diagonalize(evecs, evals);
+
+            evecs->print()
+
+            std::vector<int> input_order;
+
             // x = B[:,1]
             // order = []
             // for i in range(nmo):
             //     order.append((x[i],i))
             // order = sorted(order)
-            // print(order)
+
+            // outfile->Printf("\nFeidler DMRG localized obrital order (input indexing):");
+            // for(int k = 0; k<nact; k++){
+            //     outfile->Printf(" %i", input_order[k]);
+            // }
+            //
+            // // And F#&%&ING finally, reorder with hamiltonian ordering
+            // std::vector<int> ham_order;
+            // for(int k = 0; k<nact; k++){
+            //     ham_order.push_back(input2ham[input_order[k]]);
+            // }
+            //
+            // outfile->Printf("\nFeidler DMRG localized obrital order (hamiltonian indexing):");
+            // for(int k = 0; k<nact; k++){
+            //     outfile->Printf(" %i", ham_order[k]);
+            // }
+            //
+            // int ham_order_aray[nact];
+            // for(int i=0; i < nact; i++){ ham_order_aray[i] = ham_order[i]; }
+            // int* ham_order_ptr = ham_order_aray;
+            // Prob->setup_reorder_custom(ham_order_ptr);
+
         }
     }
 
