@@ -108,8 +108,8 @@ class CI_Reference {
                                                   "GAS4MAX", "GAS5MAX", "GAS6MAX"};
 
     /// The options for minimum number of electrons in each GAS
-    std::vector<std::string> gas_mine_options_ = {"GAS1MIN",  "GAS2MIN", "GAS3MIN",
-                                                  "GASI4MIN", "GAS5MIN", "GAS6MIN"};
+    std::vector<std::string> gas_mine_options_ = {"GAS1MIN", "GAS2MIN", "GAS3MIN",
+                                                  "GAS4MIN", "GAS5MIN", "GAS6MIN"};
 
     /// Information about each GAS stored in a map
     std::map<std::string, SpaceInfo> general_active_spaces_;

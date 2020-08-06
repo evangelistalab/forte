@@ -105,6 +105,7 @@ std::vector<size_t> MOSpaceInfo::absolute_mo(const std::string& space) {
             }
         }
     }
+    std::sort(result.begin(),result.end());
     return result;
 }
 
@@ -127,6 +128,7 @@ std::vector<size_t> MOSpaceInfo::corr_absolute_mo(const std::string& space) {
             }
         }
     }
+    std::sort(result.begin(),result.end());
     return result;
 }
 
@@ -168,15 +170,15 @@ void MOSpaceInfo::read_options(std::shared_ptr<ForteOptions> options) {
     }
 }
 
-void MOSpaceInfo::read_gas_options(std::shared_ptr<ForteOptions> options) {
-    // Read the Generalized Active Space(GAS)
-    for (std::string& space : gas_subspaces_) {
-        std::pair<SpaceInfo, bool> result = read_mo_space(space, options);
-        if (result.second) {
-            general_active_spaces_[space] = result.first;
-        }
-    }
-}
+// void MOSpaceInfo::read_gas_options(std::shared_ptr<ForteOptions> options) {
+//    // Read the Generalized Active Space(GAS)
+//    for (std::string& space : gas_subspaces_) {
+//        std::pair<SpaceInfo, bool> result = read_mo_space(space, options);
+//        if (result.second) {
+//            general_active_spaces_[space] = result.first;
+//        }
+//    }
+//}
 
 void MOSpaceInfo::read_from_map(std::map<std::string, std::vector<size_t>>& mo_space_map) {
     // Read the elementary spaces
@@ -196,122 +198,6 @@ void MOSpaceInfo::read_from_map(std::map<std::string, std::vector<size_t>>& mo_s
 }
 
 void MOSpaceInfo::set_reorder(const std::vector<size_t>& reorder) { reorder_ = reorder; }
-
-int MOSpaceInfo::compute_gas_info(psi::Dimension nactpi) {
-    outfile->Printf("\n\n  ==> Generalized Active Space Information <==\n");
-
-    // Count the assigned orbitals in each GAS
-    size_t gas_num;
-    psi::Dimension unassigned = nactpi;
-    for (auto& str_si : general_active_spaces_) {
-        unassigned -= str_si.second.first;
-    }
-
-    for (size_t h = 0; h < nirrep_; ++h) {
-        if (unassigned[h] < 0) {
-            outfile->Printf("\n  There is an error in the definition of the "
-                            "orbital spaces.  Total unassigned MOs for irrep "
-                            "%d is %d.",
-                            h, unassigned[h]);
-            exit(1);
-        }
-    }
-
-    // Adjust size of undefined spaces
-    for (std::string space : gas_subspaces_) {
-        // Assign MOs to the undefined space
-        if (not general_active_spaces_.count(space)) {
-            std::vector<MOInfo> vec_mo_info;
-            general_active_spaces_[space] = std::make_pair(unassigned, vec_mo_info);
-            for (size_t h = 0; h < nirrep_; ++h) {
-                unassigned[h] = 0;
-            }
-        }
-    }
-    if (unassigned.sum() != 0) {
-        outfile->Printf("\n  There is an error in the definition of the "
-                        "orbital spaces.  There are %d unassigned MOs.",
-                        unassigned.sum());
-        exit(1);
-    }
-
-    // Check if all the GAS have some orbitals
-    bool gas_previous_empty = false;
-    bool gas_current_empty;
-    size_t gas_count = 0;
-    for (std::string space : gas_subspaces_) {
-        // Assign MOs to the undefined space
-        if (general_active_spaces_[space].first.sum() == 0) {
-            gas_current_empty = true;
-        } else {
-            gas_current_empty = false;
-        }
-        if (not gas_previous_empty and gas_current_empty) {
-            gas_num = gas_count;
-            outfile->Printf("\n  There are total %d GAS space.", gas_num);
-        }
-        if (gas_previous_empty and not gas_current_empty) {
-            outfile->Printf("\n  There is an error in the definition of the "
-                            "GAS space. One GAS space is without any orbitals.");
-            exit(1);
-        } else {
-            gas_previous_empty = gas_current_empty;
-            gas_count = gas_count + 1;
-        }
-    }
-
-    auto active_mo = absolute_mo("ACTIVE");
-    auto relative_mo = get_relative_mo("ACTIVE");
-    size_t totaln = 0;
-    // Compute orbital mappings
-    for (size_t h = 0; h < nirrep_; ++h) {
-        for (std::string space : gas_subspaces_) {
-            size_t n = general_active_spaces_[space].first[h];
-            for (size_t q = 0; q < n; ++q) {
-                size_t qp = q + totaln;
-                size_t p_order = active_mo[qp];
-                size_t p_rel = std::get<1>(relative_mo[qp]);
-                general_active_spaces_[space].second.push_back(std::make_tuple(p_order, h, p_rel));
-            }
-            totaln += n;
-        }
-    }
-
-    // Print the space information
-    size_t label_size = 1;
-    for (std::string space : gas_subspaces_) {
-        label_size = std::max(space.size(), label_size);
-    }
-
-    int banner_width = label_size + 4 + 6 * (nirrep_ + 1);
-    //    CharacterTable ct = psi::Process::environment.molecule()->point_group()->char_table();
-    outfile->Printf("\n  %s", std::string(banner_width, '-').c_str());
-    outfile->Printf("\n    %s", std::string(label_size, ' ').c_str());
-    for (size_t h = 0; h < nirrep_; ++h)
-        outfile->Printf(" %5s", irrep_label(h).c_str());
-    outfile->Printf("   Sum");
-    outfile->Printf("\n  %s", std::string(banner_width, '-').c_str());
-
-    gas_count = 0;
-    for (std::string space : gas_subspaces_) {
-        gas_count = gas_count + 1;
-        if (gas_count <= gas_num) {
-            psi::Dimension& dim = general_active_spaces_[space].first;
-            outfile->Printf("\n    %-*s", label_size, space.c_str());
-            for (size_t h = 0; h < nirrep_; ++h) {
-                outfile->Printf("%6d", dim[h]);
-            }
-            outfile->Printf("%6d", dim.sum());
-        }
-    }
-    outfile->Printf("\n   %-*s", label_size, "Total");
-    for (size_t h = 0; h < nirrep_; ++h) {
-        outfile->Printf("%6d", nactpi[h]);
-    }
-    outfile->Printf("%6d", nactpi.sum());
-    outfile->Printf("\n  %s", std::string(banner_width, '-').c_str());
-    return gas_num; // return the number of GAS spaces
-}
 
 void MOSpaceInfo::compute_space_info() {
     outfile->Printf("\n\n  ==> MO Space Information <==\n");
@@ -482,19 +368,19 @@ std::shared_ptr<MOSpaceInfo> make_mo_space_info(const psi::Dimension& nmopi,
     return mo_space_info;
 }
 
-std::pair<int, std::map<std::string, SpaceInfo>>
-MOSpaceInfo::make_gas_info(std::shared_ptr<ForteOptions> options) {
-    // calculate the GAS information from mo_space_info
-    psi::Dimension nactpi = mo_spaces_["ACTIVE"].first;
-    int num_gas;
-    general_active_spaces_.clear();
-    read_gas_options(options);
-    num_gas = compute_gas_info(nactpi);
-    gas_info_ = std::make_pair(num_gas, general_active_spaces_);
-    return gas_info_;
-}
+// std::pair<int, std::map<std::string, SpaceInfo>>
+// MOSpaceInfo::make_gas_info(std::shared_ptr<ForteOptions> options) {
+//    // calculate the GAS information from mo_space_info
+//    psi::Dimension nactpi = mo_spaces_["ACTIVE"].first;
+//    int num_gas;
+//    general_active_spaces_.clear();
+//    read_gas_options(options);
+//    num_gas = compute_gas_info(nactpi);
+//    gas_info_ = std::make_pair(num_gas, general_active_spaces_);
+//    return gas_info_;
+//}
 
-std::pair<int, std::map<std::string, SpaceInfo>> MOSpaceInfo::gas_info() { return gas_info_; }
+// std::pair<int, std::map<std::string, SpaceInfo>> MOSpaceInfo::gas_info() { return gas_info_; }
 
 std::shared_ptr<MOSpaceInfo>
 make_mo_space_info_from_map(const psi::Dimension& nmopi, const std::string& point_group,

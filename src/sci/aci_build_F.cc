@@ -359,7 +359,7 @@ void AdaptiveCI::get_gas_excited_determinants_sr(
             for (auto& gas_count : gas_single_criterion_.first[gas_configuration]) {
                 size_t gas_count_1 = gas_count.first;
                 size_t gas_count_2 = gas_count.second;
-                //                outfile->Printf("\n Allowed a %d %d", gas_count_1, gas_count_2);
+                outfile->Printf("\n Allowed a %d %d", gas_count_1, gas_count_2);
                 auto& occ = gas_occ_a[gas_count_1];
                 auto& vir = gas_vir_a[gas_count_2];
                 Determinant new_det(det);
@@ -371,10 +371,8 @@ void AdaptiveCI::get_gas_excited_determinants_sr(
                                 new_det = det;
                                 new_det.set_alfa_bit(ii, false);
                                 new_det.set_alfa_bit(aa, true);
-                                //                                outfile->Printf("\n a %d %d %f",
-                                //                                ii, aa,
-                                //                                                as_ints_->slater_rules_single_alpha(det,
-                                //                                                ii, aa));
+                                outfile->Printf("\n a %d %d %f", ii, aa,
+                                                as_ints_->slater_rules_single_alpha(det, ii, aa));
                                 V_hash_t[new_det] += HIJ;
                             }
                         }

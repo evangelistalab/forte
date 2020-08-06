@@ -624,9 +624,9 @@ void AdaptiveCI::pre_iter_preparation() {
 
     // If the ACI iteration is within the gas space, calculate
     // gas_info and the criterion for single and double excitations
-
+    gas_num_ = 0;
     if ((gas_iteration_)) {
-        const auto gas_info = mo_space_info_->gas_info();
+        //        const auto gas_info = mo_space_info_->gas_info();
         auto act_mo = mo_space_info_->absolute_mo("ACTIVE");
         std::map<int, int> re_ab_mo;
         for (size_t i = 0; i < act_mo.size(); i++) {
@@ -635,20 +635,25 @@ void AdaptiveCI::pre_iter_preparation() {
         gas_single_criterion_ = ref.gas_single_criterion();
         gas_double_criterion_ = ref.gas_double_criterion();
         gas_electrons_ = ref.gas_electrons();
-        gas_num_ = gas_info.first;
+        //        gas_num_ = gas_info.first;
         std::vector<std::string> gas_subspaces = {"GAS1", "GAS2", "GAS3", "GAS4", "GAS5", "GAS6"};
-        std::map<std::string, SpaceInfo> general_active_spaces = gas_info.second;
+        //        std::map<std::string, SpaceInfo> general_active_spaces = gas_info.second;
         for (size_t gas_count = 0; gas_count < 6; gas_count++) {
             std::string space = gas_subspaces.at(gas_count);
             std::vector<size_t> relative_mo;
-            auto vec_mo_info = general_active_spaces[space].second;
-            for (size_t i = 0; i < vec_mo_info.size(); ++i) {
-                relative_mo.push_back(re_ab_mo[std::get<0>(vec_mo_info[i])]);
+            auto gas_mo = mo_space_info_->absolute_mo(space);
+            for (size_t i = 0, imax = gas_mo.size(); i < imax; ++i) {
+                outfile->Printf("\n test GAS %d %d", gas_count, re_ab_mo[gas_mo[i]]);
+                relative_mo.push_back(re_ab_mo[gas_mo[i]]);
             }
+            if (!relative_mo.empty()) {
+                gas_num_ = gas_num_ + 1;
+            }
+
             relative_gas_mo_.push_back(relative_mo);
         }
     }
-
+    outfile->Printf("\n  GAS_NUM %d ", gas_num_);
     if ((options_->get_bool("SCI_CORE_EX")) and (root_ > 0)) {
 
         ref_root_ = root_ - 1;

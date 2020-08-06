@@ -506,12 +506,13 @@ void CI_Reference::build_gas_single(std::vector<Determinant>& ref_space) {
         re_ab_mo[act_mo[i]] = i;
     }
     for (size_t gas_count = 0; gas_count < 6; gas_count++) {
-        std::string space = gas_subspaces_.at(gas_count);
+        const std::string space = gas_subspaces_[gas_count];
         std::vector<size_t> relative_mo_sorted;
-        auto vec_mo_info = general_active_spaces_[space].second;
+        auto vec_mo_info = mo_space_info_->absolute_mo(space);
         std::vector<std::pair<double, int>> gas_orb_e;
         for (size_t i = 0; i < vec_mo_info.size(); ++i) {
-            auto orb = std::get<0>(vec_mo_info[i]);
+            auto orb = vec_mo_info[i];
+            outfile->Printf("\n %d", orb);
             gas_orb_e.push_back(std::make_pair(epsilon_a->get(orb), re_ab_mo[orb]));
         }
         total_act += gas_orb_e.size();
@@ -830,20 +831,20 @@ void CI_Reference::build_gas_reference(std::vector<Determinant>& ref_space) {
     outfile->Printf("\n  GAS   Energies    Orb ");
 
     std::vector<std::vector<size_t>> relative_gas_mo;
-    auto act_mo = mo_space_info_->absolute_mo("ACTIVE");
+    std::vector<size_t> act_mo = mo_space_info_->absolute_mo("ACTIVE");
+//    std::sort(act_mo.begin(), act_mo.end());
     std::map<int, int> re_ab_mo;
     for (size_t i = 0; i < act_mo.size(); i++) {
         re_ab_mo[act_mo[i]] = i;
     }
     for (size_t gas_count = 0; gas_count < 6; gas_count++) {
-        std::string space = gas_subspaces_.at(gas_count);
+        std::string space = gas_subspaces_[gas_count];
         std::vector<size_t> relative_mo;
-        auto vec_mo_info = general_active_spaces_[space].second;
+        auto vec_mo_info = mo_space_info_->absolute_mo(space);
         for (size_t i = 0, maxi = vec_mo_info.size(); i < maxi; ++i) {
-            size_t orb = std::get<0>(vec_mo_info[i]);
+            size_t orb = vec_mo_info[i];
             relative_mo.push_back(re_ab_mo[orb]);
-            outfile->Printf("\n  %d  %12.9f  %d ", gas_count + 1, epsilon_a->get(orb),
-                            re_ab_mo[orb]);
+            outfile->Printf("\n  %d  %12.9f  %d ", gas_count + 1, epsilon_a->get(orb), orb);
         }
         relative_gas_mo.push_back(relative_mo);
     }
@@ -1104,11 +1105,10 @@ void CI_Reference::build_gas_reference(std::vector<Determinant>& ref_space) {
                                                             nalpha_ + nbeta_ - 2 * det.npair();
                                                         // Check symmetry and multiplicity
                                                         if (sym == root_sym_) {
+                                                            outfile->Printf(
+                                                                "\n  Ref: %s",
+                                                                str(det, nact_).c_str());
                                                             ref_space.push_back(det);
-
-                                                            //                                                            outfile->Printf(
-                                                            //                                                                "\n Ref: %s",
-                                                            //                                                                str(det, nact_).c_str());
                                                         }
                                                     }
                                                 }
@@ -1177,10 +1177,10 @@ std::vector<std::tuple<double, int, int>> CI_Reference::sym_labeled_orbitals(std
 
 void CI_Reference::get_gas_occupation() {
     // Calculate gas_info from mo_space_info_
-    std::pair<size_t, std::map<std::string, SpaceInfo>> gas_info =
-        mo_space_info_->make_gas_info(options_);
-    gas_num_ = gas_info.first;
-    general_active_spaces_ = gas_info.second;
+    //    std::pair<size_t, std::map<std::string, SpaceInfo>> gas_info =
+    //        mo_space_info_->make_gas_info(options_);
+    //    gas_num_ = gas_info.first;
+    //    general_active_spaces_ = gas_info.second;
 
     // The vectors of maximum number of electrons, minimum number of electrons,
     // and the number of orbitals
@@ -1188,11 +1188,13 @@ void CI_Reference::get_gas_occupation() {
     std::vector<int> gas_mine;
     std::vector<int> gas_orbital;
 
+    gas_num_ = 0;
+
     for (size_t gas_count = 0; gas_count < 6; gas_count++) {
         std::string space = gas_subspaces_.at(gas_count);
-        int orbital_maximum = general_active_spaces_[space].first.sum();
+        int orbital_maximum = mo_space_info_->absolute_mo(space).size();
         gas_orbital.push_back(orbital_maximum);
-        if (gas_count < gas_num_) {
+        if (orbital_maximum) {
             std::string maxe = gas_maxe_options_.at(gas_count);
             int max_e_number = options_->get_int(maxe);
 
@@ -1219,6 +1221,7 @@ void CI_Reference::get_gas_occupation() {
             outfile->Printf("\n  The minimum number of electrons in "
                             "%s is %d",
                             space.c_str(), min_e_number);
+            gas_num_ = gas_num_ + 1;
         } else {
             gas_maxe.push_back(0);
             gas_mine.push_back(0);
@@ -1226,7 +1229,7 @@ void CI_Reference::get_gas_occupation() {
     }
     outfile->Printf("\n  ");
     outfile->Printf("\n  Possible electron occupations in the GAS \n  ");
-    std::vector<std::string> gas_electron_name = {"GAS1_A", "GASI_B", "GAS2_A", "GAS2_B",
+    std::vector<std::string> gas_electron_name = {"GAS1_A", "GAS1_B", "GAS2_A", "GAS2_B",
                                                   "GAS3_A", "GAS3_B", "GAS4_A", "GAS4_B",
                                                   "GAS5_A", "GAS5_B", "GAS6_A", "GAS6_B"};
     for (size_t i = 0; i < 2 * gas_num_; i++) {
@@ -1292,11 +1295,11 @@ void CI_Reference::get_gas_occupation() {
 }
 
 void CI_Reference::modify_gas_occupation(std::vector<int> maxe_input, std::vector<int> mine_input) {
-    // Calculate gas_info from mo_space_info_
-    std::pair<size_t, std::map<std::string, SpaceInfo>> gas_info =
-        mo_space_info_->make_gas_info(options_);
-    gas_num_ = gas_info.first;
-    general_active_spaces_ = gas_info.second;
+    //    // Calculate gas_info from mo_space_info_
+    //    std::pair<size_t, std::map<std::string, SpaceInfo>> gas_info =
+    //        mo_space_info_->make_gas_info(options_);
+    //    gas_num_ = gas_info.first;
+    //    general_active_spaces_ = gas_info.second;
 
     // The vectors of maximum number of electrons, minimum number of electrons,
     // and the number of orbitals
@@ -1306,9 +1309,9 @@ void CI_Reference::modify_gas_occupation(std::vector<int> maxe_input, std::vecto
 
     for (size_t gas_count = 0; gas_count < 6; gas_count++) {
         std::string space = gas_subspaces_.at(gas_count);
-        int orbital_maximum = general_active_spaces_[space].first.sum();
+        int orbital_maximum = mo_space_info_->absolute_mo(space).size();
         gas_orbital.push_back(orbital_maximum);
-        if (gas_count < gas_num_) {
+        if (orbital_maximum) {
             std::string maxe = gas_maxe_options_.at(gas_count);
             int max_e_number = maxe_input[gas_count];
             if (max_e_number == 0) {
@@ -1344,7 +1347,7 @@ void CI_Reference::modify_gas_occupation(std::vector<int> maxe_input, std::vecto
     }
     outfile->Printf("\n  ");
     outfile->Printf("\n  Possible electron occupations in the GAS \n  ");
-    std::vector<std::string> gas_electron_name = {"GAS1_A", "GASI_B", "GAS2_A", "GAS2_B",
+    std::vector<std::string> gas_electron_name = {"GAS1_A", "GAS1_B", "GAS2_A", "GAS2_B",
                                                   "GAS3_A", "GAS3_B", "GAS4_A", "GAS4_B",
                                                   "GAS5_A", "GAS5_B", "GAS6_A", "GAS6_B"};
     for (size_t i = 0; i < 2 * gas_num_; i++) {

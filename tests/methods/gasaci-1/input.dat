@@ -36,14 +36,15 @@ set forte {
   nroot 1
   root_sym 0
   charge 0
-  aci_enforce_spin_complete false
+  sci_enforce_spin_complete false
   r_convergence 0.1
   active_ref_type gas_single
+  GAS1 [6,0,2,2,0,6,0,2]
   GAS2 [0,0,0,0,0,0,2,0]
   GAS2MAX 2
   GAS2MIN 0 
   GAS1MIN 4
-  GAS2MAX 6
+  GAS1MAX 6
 }
 
 energy('scf')

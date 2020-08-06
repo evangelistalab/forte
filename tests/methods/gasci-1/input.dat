@@ -29,11 +29,11 @@ set forte {
   single_calculation True
   multiplicity 1
   ms 0.0
-  sigma 0.001
+  sigma 0.000
   nroot 1
   root_sym 0
   charge 0
-  aci_enforce_spin_complete false
+  sci_enforce_spin_complete false
   r_convergence 0.1
   active_ref_type gas
   restricted_docc [1,0,0,0]
