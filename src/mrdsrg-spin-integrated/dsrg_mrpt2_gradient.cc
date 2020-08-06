@@ -1154,46 +1154,92 @@ void DSRG_MRPT2::change_val3(BlockedTensor& temp1,
 
 void DSRG_MRPT2::set_z_aa_diag() {
     BlockedTensor val3 = BTF_->build(CoreTensor, "val3", {"a"});
+    BlockedTensor temp = BTF_->build(CoreTensor, "temporal tensor", spin_cases({"hhpp"}));
+    BlockedTensor temp_1 = BTF_->build(CoreTensor, "temporal tensor_1", spin_cases({"hhpp"}));
+
+
     BlockedTensor temp1 = BTF_->build(CoreTensor, "temporal tensor 1", spin_cases({"pphh"}));
     BlockedTensor temp2 = BTF_->build(CoreTensor, "temporal tensor 2", spin_cases({"pphh"}));
     // virtual-virtual diagonal entries
     if (PT2_TERM) {
-        // Alpha
-        temp1["abuj"] = -2.0 * s * V["abuj"] * Delta2["ujab"] * Eeps2["ujab"];
-        temp1["aBuJ"] = -2.0 * s * V["aBuJ"] * Delta2["uJaB"] * Eeps2["uJaB"];
-        temp2["cdkl"] = V["cdkl"] * Eeps2_m1["klcd"];
-        temp2["cDkL"] = V["cDkL"] * Eeps2_m1["kLcD"];
-        change_val3(temp1, temp2, val3, true);  
+        // // Alpha
+        // temp1["abuj"] = -2.0 * s * V["abuj"] * Delta2["ujab"] * Eeps2["ujab"];
+        // temp1["aBuJ"] = -2.0 * s * V["aBuJ"] * Delta2["uJaB"] * Eeps2["uJaB"];
+        // temp2["cdkl"] = V["cdkl"] * Eeps2_m1["klcd"];
+        // temp2["cDkL"] = V["cDkL"] * Eeps2_m1["kLcD"];
+        // change_val3(temp1, temp2, val3, true);  
 
-        temp1["abuj"] = 2.0 * s * V["abuj"] * Eeps2["ujab"];
-        temp1["aBuJ"] = 2.0 * s * V["aBuJ"] * Eeps2["uJaB"];
-        temp2["cdkl"] = V["cdkl"] * Eeps2_p["klcd"];
-        temp2["cDkL"] = V["cDkL"] * Eeps2_p["kLcD"];
-        change_val3(temp1, temp2, val3, true);
+        // temp1["abuj"] = 2.0 * s * V["abuj"] * Eeps2["ujab"];
+        // temp1["aBuJ"] = 2.0 * s * V["aBuJ"] * Eeps2["uJaB"];
+        // temp2["cdkl"] = V["cdkl"] * Eeps2_p["klcd"];
+        // temp2["cDkL"] = V["cDkL"] * Eeps2_p["kLcD"];
+        // change_val3(temp1, temp2, val3, true);
 
-        temp1["abuj"] = -1.0 * V["abuj"] * Eeps2_m2["ujab"];
-        temp1["aBuJ"] = -1.0 * V["aBuJ"] * Eeps2_m2["uJaB"];
-        temp2["cdkl"] = V["cdkl"] * Eeps2_p["klcd"];
-        temp2["cDkL"] = V["cDkL"] * Eeps2_p["kLcD"];
-        change_val3(temp1, temp2, val3, true);
+        // temp1["abuj"] = -1.0 * V["abuj"] * Eeps2_m2["ujab"];
+        // temp1["aBuJ"] = -1.0 * V["aBuJ"] * Eeps2_m2["uJaB"];
+        // temp2["cdkl"] = V["cdkl"] * Eeps2_p["klcd"];
+        // temp2["cDkL"] = V["cDkL"] * Eeps2_p["kLcD"];
+        // change_val3(temp1, temp2, val3, true);
 
-        temp1["ubij"] = 2.0 * s * V["ubij"] * Delta2["ijub"] * Eeps2["ijub"];
-        temp1["uBiJ"] = 2.0 * s * V["uBiJ"] * Delta2["iJuB"] * Eeps2["iJuB"];
-        temp2["cdkl"] = V["cdkl"] * Eeps2_m1["klcd"];
-        temp2["cDkL"] = V["cDkL"] * Eeps2_m1["kLcD"];
-        change_val3(temp1, temp2, val3, false);
+        // temp1["ubij"] = 2.0 * s * V["ubij"] * Delta2["ijub"] * Eeps2["ijub"];
+        // temp1["uBiJ"] = 2.0 * s * V["uBiJ"] * Delta2["iJuB"] * Eeps2["iJuB"];
+        // temp2["cdkl"] = V["cdkl"] * Eeps2_m1["klcd"];
+        // temp2["cDkL"] = V["cDkL"] * Eeps2_m1["kLcD"];
+        // change_val3(temp1, temp2, val3, false);
 
-        temp1["ubij"] = -2.0 * s * V["ubij"] * Eeps2["ijub"];
-        temp1["uBiJ"] = -2.0 * s * V["uBiJ"] * Eeps2["iJuB"];
-        temp2["cdkl"] = V["cdkl"] * Eeps2_p["klcd"];
-        temp2["cDkL"] = V["cDkL"] * Eeps2_p["kLcD"];
-        change_val3(temp1, temp2, val3, false);
+        // temp1["ubij"] = -2.0 * s * V["ubij"] * Eeps2["ijub"];
+        // temp1["uBiJ"] = -2.0 * s * V["uBiJ"] * Eeps2["iJuB"];
+        // temp2["cdkl"] = V["cdkl"] * Eeps2_p["klcd"];
+        // temp2["cDkL"] = V["cDkL"] * Eeps2_p["kLcD"];
+        // change_val3(temp1, temp2, val3, false);
 
-        temp1["ubij"] = V["ubij"] * Eeps2_m2["ijub"];
-        temp1["uBiJ"] = V["uBiJ"] * Eeps2_m2["iJuB"];
-        temp2["cdkl"] = V["cdkl"] * Eeps2_p["klcd"];
-        temp2["cDkL"] = V["cDkL"] * Eeps2_p["kLcD"];
-        change_val3(temp1, temp2, val3, false);
+        // temp1["ubij"] = V["ubij"] * Eeps2_m2["ijub"];
+        // temp1["uBiJ"] = V["uBiJ"] * Eeps2_m2["iJuB"];
+        // temp2["cdkl"] = V["cdkl"] * Eeps2_p["klcd"];
+        // temp2["cDkL"] = V["cDkL"] * Eeps2_p["kLcD"];
+        // change_val3(temp1, temp2, val3, false);
+
+        temp["ujab"] += V["ujab"] * Eeps2["ujab"];
+        temp["uJaB"] += V["uJaB"] * Eeps2["uJaB"];
+        val3["u"] += 4.0 * s * Tau2["ujab"] * temp["ujab"]; 
+        val3["u"] += 8.0 * s * Tau2["uJaB"] * temp["uJaB"]; 
+        temp.zero();
+
+        temp["ujab"] += V["ujab"] * Eeps2_m2["ujab"];
+        temp["uJaB"] += V["uJaB"] * Eeps2_m2["uJaB"];
+        val3["u"] -= 0.5 * temp["ujab"] * V_["cdkl"] * Gamma1["ku"] * Gamma1["lj"] * Eta1["ac"] * Eta1["bd"];
+        val3["u"] -= 1.0 * temp["uJaB"] * V_["cDkL"] * Gamma1["ku"] * Gamma1["LJ"] * Eta1["ac"] * Eta1["BD"];
+        temp.zero();
+
+        temp["ulcd"] += V["ulcd"] * Eeps2["ulcd"];
+        temp["uLcD"] += V["uLcD"] * Eeps2["uLcD"];
+        temp_1["ulcd"] += Kappa["ulcd"] * Delta2["ulcd"];
+        temp_1["uLcD"] += Kappa["uLcD"] * Delta2["uLcD"];
+        val3["u"] -= 4.0 * s * temp["ulcd"] * temp_1["ulcd"];
+        val3["u"] -= 8.0 * s * temp["uLcD"] * temp_1["uLcD"];
+        temp.zero();
+        temp_1.zero();
+
+        temp["ijub"] += V["ijub"] * Eeps2["ijub"];
+        temp["iJuB"] += V["iJuB"] * Eeps2["iJuB"];
+        val3["u"] -= 4.0 * s * Tau2["ijub"] * temp["ijub"]; 
+        val3["u"] -= 8.0 * s * Tau2["iJuB"] * temp["iJuB"]; 
+        temp.zero();
+
+        temp["ijub"] += V["ijub"] * Eeps2_m2["ijub"];
+        temp["iJuB"] += V["iJuB"] * Eeps2_m2["iJuB"];
+        val3["u"] += 0.5 * temp["ijub"] * V_["cdkl"] * Gamma1["ki"] * Gamma1["lj"] * Eta1["uc"] * Eta1["bd"];
+        val3["u"] += 1.0 * temp["iJuB"] * V_["cDkL"] * Gamma1["ki"] * Gamma1["LJ"] * Eta1["uc"] * Eta1["BD"];
+        temp.zero();
+
+        temp["klud"] += V["klud"] * Eeps2["klud"];
+        temp["kLuD"] += V["kLuD"] * Eeps2["kLuD"];
+        temp_1["klud"] += Kappa["klud"] * Delta2["klud"];
+        temp_1["kLuD"] += Kappa["kLuD"] * Delta2["kLuD"];
+        val3["u"] += 4.0 * s * temp["klud"] * temp_1["klud"];
+        val3["u"] += 8.0 * s * temp["kLuD"] * temp_1["kLuD"];
+        temp.zero();
+        temp_1.zero();
     }
   
     for (const std::string& block : {"aa", "AA"}) {
