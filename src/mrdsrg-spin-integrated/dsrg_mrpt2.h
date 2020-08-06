@@ -207,8 +207,6 @@ class DSRG_MRPT2 : public MASTER_DSRG {
 
     // NOTICE These are essential variables and functions for computing DSRG-MRPT2 gradient.
     // Some variables may be redundant thus need further elimination
-    ///NOTICE for test
-    void compute_test_energy();
     /// Set ambit tensor labels
     void set_ambit_space();
     /// Set tensors
@@ -247,21 +245,16 @@ class DSRG_MRPT2 : public MASTER_DSRG {
     void set_multiplier(); 
 
     void solve_z();
+    void set_tau();
+    void set_kappa();
     void set_z();
     void set_alpha();
     void set_CI();
     void set_b();
-    void iter_z();
     void set_z_cc();
     void set_z_vv();
     void set_z_aa_diag();
     void set_w();
-
-    void compute_z_cv();
-    void compute_z_av();
-    void compute_z_ca();
-    void compute_z_aa();
-
 
 
     void change_val1(ambit::BlockedTensor& temp1, 
@@ -289,6 +282,8 @@ class DSRG_MRPT2 : public MASTER_DSRG {
     double s;
     double scale_ci;
 
+
+    size_t ndets;
 
     /// List of core MOs (Correlated)
     std::vector<size_t> core_mos_;
@@ -352,6 +347,14 @@ class DSRG_MRPT2 : public MASTER_DSRG {
     // Lagrange multiplier
     ambit::BlockedTensor Z;
     ambit::BlockedTensor Z_b;
+    ambit::BlockedTensor Tau1;
+    ambit::BlockedTensor Tau2;
+    ambit::BlockedTensor Tau3;
+    ambit::BlockedTensor Kappa;
+
+
+
+
     double Alpha;
     ambit::Tensor x_ci;
 
