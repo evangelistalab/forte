@@ -783,7 +783,6 @@ void DSRG_MRPT2::set_z_cc() {
         // temp2["cDkL"] = V["cDkL"] * Eeps2_p["kLcD"];
         // change_val1(temp1, temp2, val1);
 
-
         temp["mjab"] += V["mjab"] * Eeps2["mjab"];
         temp["mJaB"] += V["mJaB"] * Eeps2["mJaB"];
         val1["m"] += 4.0 * s * Tau2["mjab"] * temp["mjab"]; 
@@ -884,7 +883,7 @@ void DSRG_MRPT2::set_z_cc() {
 
     for (const std::string& block : {"cc", "CC"}) {
         (Z.block(block)).iterate([&](const std::vector<size_t>& i, double& value) {
-            if (i[0] == i[1]) { value = 0.5 * val1.block("c").data()[i[0]];}
+            if (i[0] == i[1]) { value = val1.block("c").data()[i[0]];}
             else {
                 auto dmt = Delta1.block("cc").data()[i[1] * ncore_ + i[0]];
                 if (std::fabs(dmt) > 1e-12) { value = zmn.block("cc").data()[i[0] * ncore_ + i[1]] / dmt;}
@@ -1095,7 +1094,7 @@ void DSRG_MRPT2::set_z_vv() {
 
     for (const std::string& block : {"vv", "VV"}) {
         (Z.block(block)).iterate([&](const std::vector<size_t>& i, double& value) {
-            if (i[0] == i[1]) { value = 0.5 * val2.block("v").data()[i[0]];}
+            if (i[0] == i[1]) { value = val2.block("v").data()[i[0]];}
             else {
                 auto dmt = Delta1.block("vv").data()[i[1] * nvirt_ + i[0]];
                 if (std::fabs(dmt) > 1e-12) { value = zef.block("vv").data()[i[0] * nvirt_ + i[1]] / dmt;}
@@ -1162,7 +1161,7 @@ void DSRG_MRPT2::set_z_aa_diag() {
     BlockedTensor temp2 = BTF_->build(CoreTensor, "temporal tensor 2", spin_cases({"pphh"}));
     // virtual-virtual diagonal entries
     if (PT2_TERM) {
-        // // Alpha
+        // // // Alpha
         // temp1["abuj"] = -2.0 * s * V["abuj"] * Delta2["ujab"] * Eeps2["ujab"];
         // temp1["aBuJ"] = -2.0 * s * V["aBuJ"] * Delta2["uJaB"] * Eeps2["uJaB"];
         // temp2["cdkl"] = V["cdkl"] * Eeps2_m1["klcd"];
@@ -1244,7 +1243,7 @@ void DSRG_MRPT2::set_z_aa_diag() {
   
     for (const std::string& block : {"aa", "AA"}) {
         (Z.block(block)).iterate([&](const std::vector<size_t>& i, double& value) {
-            if (i[0] == i[1]) { value = 0.5 * val3.block("a").data()[i[0]];}
+            if (i[0] == i[1]) { value = val3.block("a").data()[i[0]];}
         });
     } 
 }
