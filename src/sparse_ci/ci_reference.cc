@@ -500,7 +500,8 @@ void CI_Reference::build_gas_single(std::vector<Determinant>& ref_space) {
     outfile->Printf("\n");
     outfile->Printf("\n  GAS Orbital Energies");
     outfile->Printf("\n  GAS   Energies    Orb ");
-    auto act_mo = mo_space_info_->absolute_mo("ACTIVE");
+    std::vector<size_t> act_mo = mo_space_info_->absolute_mo("ACTIVE");
+    //    std::sort(act_mo.begin(), act_mo.end());
     std::map<int, int> re_ab_mo;
     for (size_t i = 0; i < act_mo.size(); i++) {
         re_ab_mo[act_mo[i]] = i;
@@ -512,7 +513,6 @@ void CI_Reference::build_gas_single(std::vector<Determinant>& ref_space) {
         std::vector<std::pair<double, int>> gas_orb_e;
         for (size_t i = 0; i < vec_mo_info.size(); ++i) {
             auto orb = vec_mo_info[i];
-            outfile->Printf("\n %d", orb);
             gas_orb_e.push_back(std::make_pair(epsilon_a->get(orb), re_ab_mo[orb]));
         }
         total_act += gas_orb_e.size();
@@ -832,10 +832,12 @@ void CI_Reference::build_gas_reference(std::vector<Determinant>& ref_space) {
 
     std::vector<std::vector<size_t>> relative_gas_mo;
     std::vector<size_t> act_mo = mo_space_info_->absolute_mo("ACTIVE");
-//    std::sort(act_mo.begin(), act_mo.end());
+    //    std::sort(act_mo.begin(), act_mo.end());
     std::map<int, int> re_ab_mo;
+    outfile->Printf("\n  test_GAS");
     for (size_t i = 0; i < act_mo.size(); i++) {
         re_ab_mo[act_mo[i]] = i;
+        outfile->Printf("%d ", act_mo[i]);
     }
     for (size_t gas_count = 0; gas_count < 6; gas_count++) {
         std::string space = gas_subspaces_[gas_count];

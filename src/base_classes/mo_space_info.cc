@@ -105,7 +105,7 @@ std::vector<size_t> MOSpaceInfo::absolute_mo(const std::string& space) {
             }
         }
     }
-    std::sort(result.begin(),result.end());
+    std::sort(result.begin(), result.end());
     return result;
 }
 
@@ -128,7 +128,6 @@ std::vector<size_t> MOSpaceInfo::corr_absolute_mo(const std::string& space) {
             }
         }
     }
-    std::sort(result.begin(),result.end());
     return result;
 }
 

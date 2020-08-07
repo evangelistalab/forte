@@ -26,7 +26,6 @@ set scf {
 
 set forte {
   active_space_solver aci
-  single_calculation True
   multiplicity 1
   ms 0.0
   sigma 0.000
