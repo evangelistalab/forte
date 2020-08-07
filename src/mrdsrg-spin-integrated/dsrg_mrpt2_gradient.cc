@@ -1546,11 +1546,8 @@ void DSRG_MRPT2::solve_z() {
     temp["UV"] -= 0.25 * T2_["IJAV"] * V_["CUKL"] * Gamma1["KI"] * Gamma1["LJ"] * Eta1["AC"];
     temp["UV"] -= 0.50 * T2_["iJaV"] * V_["cUkL"] * Gamma1["ki"] * Gamma1["LJ"] * Eta1["ac"];
 
-
-
     b_ck("K") -= temp.block("aa")("uv") * cc1a_("KJuv") * ci("J"); 
     b_ck("K") -= temp.block("AA")("UV") * cc1b_("KJUV") * ci("J");
-
 
     // TODO: need to plug in alpha terms
     Alpha = 0.0;
@@ -1620,10 +1617,8 @@ void DSRG_MRPT2::solve_z() {
     Alpha += temp3["UV"] * V["U,V1,V,U1"] * Gamma1["U1,V1"];
     Alpha += temp3["UV"] * V["v1,U,u1,V"] * Gamma1["u1,v1"];
 
-
     b_ck("K") += 2 * Alpha * ci("K");
     std::cout<<"alpha = " << Alpha << std::endl;
-
 
     temp.zero();
     temp["uv"] += 2 * Z["mn"] * V["mvnu"];
@@ -2005,10 +2000,8 @@ void DSRG_MRPT2::solve_z() {
     //     });
     // } 
 
-
     scale_ci -= x_ci("K") * ci("K");
     std::cout<< "scale = " << scale_ci << std::endl;
-
 
     Z["me"] = Z["em"];
     Z["wm"] = Z["mw"];

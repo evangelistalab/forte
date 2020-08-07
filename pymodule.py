@@ -333,21 +333,28 @@ def orbital_projection(ref_wfn, options, mo_space_info):
 def run_forte(name, **kwargs):
     r"""Function encoding sequence of PSI module and plugin calls so that
     forte can be called via :py:func:`~driver.energy`. For post-scf plugins.
-
     >>> energy('forte')
-
     """
     lowername = name.lower()
     kwargs = p4util.kwargs_lower(kwargs)
-
+    # Get the option object
+    options = psi4.core.get_options()
+    options.set_current_module('FORTE')
+    forte.forte_options.update_psi_options(options)
     # Compute a SCF reference, a wavefunction is return which holds the molecule used, orbitals
     # Fock matrices, and more
     ref_wfn = kwargs.get('ref_wfn', None)
     if ref_wfn is None:
-        ref_wfn = psi4.driver.scf_helper(name, **kwargs)
-
-    # Get the option object
-    options = psi4.core.get_options()
+        ref_type = options.get_str('REF_TYPE')
+        psi4.core.print_out(
+            f'\n  No reference wavefunction provided. Computing {ref_type} orbitals with psi4\n'
+        )
+        if options.get_str('REF_TYPE') == 'SCF':
+            warnings.warn("\n  Forte is using orbitals from an SCF reference. This is not the best choice for multiference computations.\n",
+                    UserWarning)
+            ref_wfn = psi4.driver.scf_helper(name, **kwargs)
+        elif options.get_str('REF_TYPE') == 'CASSCF':
+            ref_wfn = psi4.proc.run_detcas('casscf', **kwargs)
     options.set_current_module('FORTE')
     forte.forte_options.update_psi_options(options)
 
