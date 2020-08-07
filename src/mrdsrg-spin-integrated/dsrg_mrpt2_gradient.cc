@@ -123,9 +123,7 @@ void DSRG_MRPT2::set_tensor() {
     set_dsrg_tensor();
 }
 
-
 void DSRG_MRPT2::set_density() {
-
     Gamma1.block("aa")("pq") = rdms_.g1a()("pq");
     Gamma1.block("AA")("pq") = rdms_.g1b()("pq");
 
@@ -150,8 +148,6 @@ void DSRG_MRPT2::set_density() {
     Gamma2.block("AAAA")("pqrs") = rdms_.g2bb()("pqrs");
 }
 
-
-
 void DSRG_MRPT2::set_h() {
     H.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>& spin, double& value) {
         if (spin[0] == AlphaSpin) {
@@ -161,7 +157,6 @@ void DSRG_MRPT2::set_h() {
         }
     });
 }
-
 
 void DSRG_MRPT2::set_v() {
     V.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>& spin, double& value) {
@@ -225,15 +220,12 @@ void DSRG_MRPT2::set_dsrg_tensor() {
             else { value = dsrg_source_->compute_renormalized(Fb_[i[0]] - Fb_[i[1]]);}
         }
     );
-
     Delta1.iterate(
         [&](const std::vector<size_t>& i, const std::vector<SpinType>& spin, double& value) {
             if (spin[0] == AlphaSpin) { value = Fa_[i[0]] - Fa_[i[1]];}
             else { value = Fb_[i[0]] - Fb_[i[1]];}
         }
     );
-
-
     Delta2.iterate(
         [&](const std::vector<size_t>& i, const std::vector<SpinType>& spin, double& value) {
             if (spin[0] == AlphaSpin&& spin[1] == AlphaSpin) 
@@ -243,8 +235,6 @@ void DSRG_MRPT2::set_dsrg_tensor() {
             else { value = Fa_[i[0]] + Fb_[i[1]] - Fa_[i[2]] - Fb_[i[3]];}
         }
     );
-
-
     Eeps2.iterate(
         [&](const std::vector<size_t>& i, const std::vector<SpinType>& spin, double& value) {
             if (spin[0] == AlphaSpin&& spin[1] == AlphaSpin) 
@@ -254,7 +244,6 @@ void DSRG_MRPT2::set_dsrg_tensor() {
             else { value = dsrg_source_->compute_renormalized(Fa_[i[0]] + Fb_[i[1]] - Fa_[i[2]] - Fb_[i[3]]);}
         }
     );
-
     Eeps2_p.iterate(
         [&](const std::vector<size_t>& i, const std::vector<SpinType>& spin, double& value) {
             if (spin[0] == AlphaSpin&& spin[1] == AlphaSpin) 
@@ -264,7 +253,6 @@ void DSRG_MRPT2::set_dsrg_tensor() {
             else { value = 1.0 + dsrg_source_->compute_renormalized(Fa_[i[0]] + Fb_[i[1]] - Fa_[i[2]] - Fb_[i[3]]);}
         }
     );
-
     Eeps2_m1.iterate(
         [&](const std::vector<size_t>& i, const std::vector<SpinType>& spin, double& value) {
             if (spin[0] == AlphaSpin&& spin[1] == AlphaSpin) 
@@ -274,7 +262,6 @@ void DSRG_MRPT2::set_dsrg_tensor() {
             else { value = dsrg_source_->compute_denominator(Fa_[i[0]] + Fb_[i[1]] - Fa_[i[2]] - Fb_[i[3]], 1);}
         }
     );
-
     Eeps2_m2.iterate(
         [&](const std::vector<size_t>& i, const std::vector<SpinType>& spin, double& value) {
             if (spin[0] == AlphaSpin&& spin[1] == AlphaSpin) 
@@ -283,12 +270,8 @@ void DSRG_MRPT2::set_dsrg_tensor() {
                 { value = dsrg_source_->compute_denominator(Fb_[i[0]] + Fb_[i[1]] - Fb_[i[2]] - Fb_[i[3]], 2);}
             else { value = dsrg_source_->compute_denominator(Fa_[i[0]] + Fb_[i[1]] - Fa_[i[2]] - Fb_[i[3]], 2);}
         }
-    );
-    
+    );   
 }
-
-
-
 
 void DSRG_MRPT2::set_multiplier() {
     set_tau();
@@ -296,8 +279,6 @@ void DSRG_MRPT2::set_multiplier() {
     set_z();
     set_w();   
 }
-
-
 
 void DSRG_MRPT2::set_tau() {
     outfile->Printf("\n    Initializing Diagonal Entries of Tau ............ ");  
@@ -308,6 +289,16 @@ void DSRG_MRPT2::set_tau() {
     Tau2["ijab"] += 0.25 * V_["cdkl"] * Gamma1["ki"] * Gamma1["lj"] * Eta1["ac"] * Eta1["bd"];
     Tau2["IJAB"] += 0.25 * V_["CDKL"] * Gamma1["KI"] * Gamma1["LJ"] * Eta1["AC"] * Eta1["BD"];
     Tau2["iJaB"] += 0.25 * V_["cDkL"] * Gamma1["ki"] * Gamma1["LJ"] * Eta1["ac"] * Eta1["BD"];
+
+    // NOTICE: remove the internal parts based on the DSRG theories
+    Tau1["xyuv"] -= 0.25 * Eeps2_m1["xyuv"] * V_["u1,v1,x1,y1"] * Gamma1["x,x1"] * Gamma1["y,y1"] * Eta1["u,u1"] * Eta1["v,v1"];
+    Tau1["XYUV"] -= 0.25 * Eeps2_m1["XYUV"] * V_["U1,V1,X1,Y1"] * Gamma1["X,X1"] * Gamma1["Y,Y1"] * Eta1["U,U1"] * Eta1["V,V1"];
+    Tau1["xYuV"] -= 0.25 * Eeps2_m1["xYuV"] * V_["u1,V1,x1,Y1"] * Gamma1["x,x1"] * Gamma1["Y,Y1"] * Eta1["u,u1"] * Eta1["V,V1"];
+
+    Tau2["xyuv"] -= 0.25 * V_["u1,v1,x1,y1"] * Gamma1["x,x1"] * Gamma1["y,y1"] * Eta1["u,u1"] * Eta1["v,v1"];
+    Tau2["XYUV"] -= 0.25 * V_["U1,V1,X1,Y1"] * Gamma1["X,X1"] * Gamma1["Y,Y1"] * Eta1["U,U1"] * Eta1["V,V1"];
+    Tau2["xYuV"] -= 0.25 * V_["u1,V1,x1,Y1"] * Gamma1["x,x1"] * Gamma1["Y,Y1"] * Eta1["u,u1"] * Eta1["V,V1"];
+
     outfile->Printf("Done");
 }
 
