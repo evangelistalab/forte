@@ -1000,36 +1000,6 @@ void DSRG_MRPT2::change_b(BlockedTensor& temp1,
     BlockedTensor temp3 = BTF_->build(CoreTensor, "temporal tensor 3", spin_cases({"gggg"}));
     BlockedTensor temp4 = BTF_->build(CoreTensor, "temporal tensor 4", spin_cases({"gggg"}));
 
-    if (block == "cv1") {
-        temp3["cdmj"] = temp1["cdml"] * Gamma1["lj"];
-        temp4["cbmj"] = temp3["cdmj"] * Eta1["bd"];
-        temp3.zero();
-        temp3["abmj"] = temp4["cbmj"] * Eta1["ac"];
-        Z_b["em"] += 0.25 * temp3["abmj"] * temp2["abemj"];
-        temp3.zero();
-        temp4.zero();
-
-        temp3["cDmJ"] = temp1["cDmL"] * Gamma1["LJ"];
-        temp4["cBmJ"] = temp3["cDmJ"] * Eta1["BD"];
-        temp3.zero();
-        temp3["aBmJ"] = temp4["cBmJ"] * Eta1["ac"];
-        Z_b["em"] += 0.50 * temp3["aBmJ"] * temp2["aBemJ"];
-    }
-    else if (block == "cv2") {
-        temp3["edkj"] = temp1["edkl"] * Gamma1["lj"];
-        temp4["edij"] = temp3["edkj"] * Gamma1["ki"];
-        temp3.zero();
-        temp3["ebij"] = temp4["edij"] * Eta1["bd"];
-        Z_b["em"] -= 0.25 * temp3["ebij"] * temp2["mebij"];
-        temp3.zero();
-        temp4.zero();
-
-        temp3["eDkJ"] = temp1["eDkL"] * Gamma1["LJ"];
-        temp4["eDiJ"] = temp3["eDkJ"] * Gamma1["ki"];
-        temp3.zero();
-        temp3["eBiJ"] = temp4["eDiJ"] * Eta1["BD"];
-        Z_b["em"] -= 0.50 * temp3["eBiJ"] * temp2["meBiJ"];
-    }
     else if (block == "aa1") { 
         temp3["cdkj"] = temp1["cdkl"] * Gamma1["lj"];
         temp4["cdij"] = temp3["cdkj"] * Gamma1["ki"];
@@ -1219,36 +1189,30 @@ void DSRG_MRPT2::change_b(BlockedTensor& temp1,
 void DSRG_MRPT2::set_b() {
     outfile->Printf("\n    Initializing b of the Linear System ............. ");
     //NOTICE: constant b for z{core-virtual}
+    BlockedTensor temp = BTF_->build(CoreTensor, "temporal tensor", spin_cases({"hhpp"}));
+    BlockedTensor temp_1 = BTF_->build(CoreTensor, "temporal tensor_1", spin_cases({"hhpp"}));
+
     BlockedTensor temp1 = BTF_->build(CoreTensor, "temporal tensor 1", {"ppch", "pPcH"});
     BlockedTensor temp2 = BTF_->build(CoreTensor, "temporal tensor 2", {"ppvch", "pPvcH"});
 
     if (PT2_TERM) {
-        temp1["cdml"] = V["cdml"] * Eeps2_p["mlcd"];
-        temp1["cDmL"] = V["cDmL"] * Eeps2_p["mLcD"];
-        temp2["abemj"] = V["abej"] * Eeps2_m1["mjab"];
-        temp2["aBemJ"] = V["aBeJ"] * Eeps2_m1["mJaB"];
-        change_b(temp1, temp2, Z_b, "cv1");
+        Z_b["em"] += Tau1["mjab"] * V["ejab"];
+        Z_b["em"] += 2.0 * Tau1["mJaB"] * V["eJaB"];
 
-        temp1["cdml"] = V["cdml"] * Eeps2_m1["mlcd"];
-        temp1["cDmL"] = V["cDmL"] * Eeps2_m1["mLcD"];
-        temp2["abemj"] = V["abej"] * Eeps2_p["mjab"];
-        temp2["aBemJ"] = V["aBeJ"] * Eeps2_p["mJaB"];
-        change_b(temp1, temp2, Z_b, "cv1");
+        temp["mlcd"] += Kappa["mlcd"] * Eeps2_p["mlcd"];
+        temp["mLcD"] += Kappa["mLcD"] * Eeps2_p["mLcD"];
+        Z_b["em"] += temp["mlcd"] * V["elcd"];
+        Z_b["em"] += 2.0 * temp["mLcD"] * V["eLcD"];
+        temp.zero();
 
-        temp1 = BTF_->build(CoreTensor, "temporal tensor 1", {"vphh", "vPhH"});
-        temp2 = BTF_->build(CoreTensor, "temporal tensor 2", {"cvphh", "cvPhH"});
+        Z_b["em"] -= Tau1["ijeb"] * V["ijmb"];
+        Z_b["em"] -= 2.0 * Tau1["iJeB"] * V["iJmB"];
 
-        temp1["edkl"] = V["edkl"] * Eeps2_p["kled"];
-        temp1["eDkL"] = V["eDkL"] * Eeps2_p["kLeD"];
-        temp2["mebij"] = V["mbij"] * Eeps2_m1["ijeb"];
-        temp2["meBiJ"] = V["mBiJ"] * Eeps2_m1["iJeB"];
-        change_b(temp1, temp2, Z_b, "cv2");
-
-        temp1["edkl"] = V["edkl"] * Eeps2_m1["kled"];
-        temp1["eDkL"] = V["eDkL"] * Eeps2_m1["kLeD"];
-        temp2["mebij"] = V["mbij"] * Eeps2_p["ijeb"];
-        temp2["meBiJ"] = V["mBiJ"] * Eeps2_p["iJeB"];
-        change_b(temp1, temp2, Z_b, "cv2");
+        temp["kled"] += Kappa["kled"] * Eeps2_p["kled"];
+        temp["kLeD"] += Kappa["kLeD"] * Eeps2_p["kLeD"];
+        Z_b["em"] -= temp["kled"] * V["klmd"];
+        Z_b["em"] -= 2.0 * temp["kLeD"] * V["kLmD"];
+        temp.zero();
     }
 
     Z_b["em"] += Z["m1,n1"] * V["n1,e,m1,m"];
@@ -1387,7 +1351,6 @@ void DSRG_MRPT2::set_b() {
     Z_b["ew"] += Z["E1,F1"] * V["v,F1,e,E1"] * Gamma1["wv"];
 
     //NOTICE: constant b for z{core-active}
-
     if (PT2_TERM) {
         temp1 = BTF_->build(CoreTensor, "temporal tensor 1", {"aphh", "aPhH"});
         temp2 = BTF_->build(CoreTensor, "temporal tensor 2", {"caphh", "caPhH"});
