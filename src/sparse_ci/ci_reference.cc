@@ -846,7 +846,8 @@ void CI_Reference::build_gas_reference(std::vector<Determinant>& ref_space) {
         for (size_t i = 0, maxi = vec_mo_info.size(); i < maxi; ++i) {
             size_t orb = vec_mo_info[i];
             relative_mo.push_back(re_ab_mo[orb]);
-            outfile->Printf("\n  %d  %12.9f  %d ", gas_count + 1, epsilon_a->get(orb), orb);
+            outfile->Printf("\n  %d  %12.9f  %d ", gas_count + 1, epsilon_a->get(orb),
+                            re_ab_mo[orb]);
         }
         relative_gas_mo.push_back(relative_mo);
     }

@@ -643,8 +643,7 @@ void AdaptiveCI::pre_iter_preparation() {
             std::vector<size_t> relative_mo;
             auto gas_mo = mo_space_info_->absolute_mo(space);
             for (size_t i = 0, imax = gas_mo.size(); i < imax; ++i) {
-                //                outfile->Printf("\n test GAS %d %d", gas_count,
-                //                re_ab_mo[gas_mo[i]]);
+                outfile->Printf("\n test GAS %d %d", gas_count, re_ab_mo[gas_mo[i]]);
                 relative_mo.push_back(re_ab_mo[gas_mo[i]]);
             }
             if (!relative_mo.empty()) {

@@ -309,7 +309,7 @@ void AdaptiveCI::get_gas_excited_determinants_sr(
             const Determinant& det(P_dets[P]);
             double Cp = evecs->get(P, ref_root_);
 
-            //            outfile->Printf("\n  %s", str(det, nact_).c_str());
+            outfile->Printf("\n  %s", str(det, nact_).c_str());
 
             // Generate the occupied/virtual alpha/beta orbitals for different GAS
             std::vector<std::vector<int>> gas_occ_a;
