@@ -261,8 +261,6 @@ class DSRG_MRPT2 : public MASTER_DSRG {
         ambit::BlockedTensor& temp2, ambit::BlockedTensor& zmn_d, double coeff);
     void change_zef_degenerate(ambit::BlockedTensor& temp1, 
         ambit::BlockedTensor& temp2, ambit::BlockedTensor& zef_d, double coeff);
-    void change_b(ambit::BlockedTensor& temp1, 
-        ambit::BlockedTensor& temp2, ambit::BlockedTensor& Z_b, const std::string block);
     void change_w(ambit::BlockedTensor& temp1, 
         ambit::BlockedTensor& temp2, ambit::BlockedTensor& W_, const std::string block);
     void change_2rdm(BlockedTensor& temp1,
