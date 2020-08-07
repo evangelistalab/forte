@@ -2402,42 +2402,6 @@ void DSRG_MRPT2::write_1rdm_spin_dependent() {
     outfile->Printf("Done");
 }
 
-void DSRG_MRPT2::change_2rdm(BlockedTensor& temp1,
-        BlockedTensor& temp2, BlockedTensor& temp) {
-    BlockedTensor temp3 = BTF_->build(CoreTensor, "temporal tensor 3", spin_cases({"gggg"}));
-    BlockedTensor temp4 = BTF_->build(CoreTensor, "temporal tensor 4", spin_cases({"gggg"}));
-
-    temp3["cdkj"] = temp1["cdkl"] * Gamma1["lj"];
-    temp4["cdij"] = temp3["cdkj"] * Gamma1["ki"];
-    temp3.zero();
-    temp3["cbij"] = temp4["cdij"] * Eta1["bd"];
-    temp4.zero();
-    temp4["abij"] = temp3["cbij"] * Eta1["ac"];
-    temp["abij"] += 0.25 * temp4["abij"] * temp2["ijab"];
-    temp3.zero();
-    temp4.zero();
-
-    temp3["CDKJ"] = temp1["CDKL"] * Gamma1["LJ"];
-    temp4["CDIJ"] = temp3["CDKJ"] * Gamma1["KI"];
-    temp3.zero();
-    temp3["CBIJ"] = temp4["CDIJ"] * Eta1["BD"];
-    temp4.zero();
-    temp4["ABIJ"] = temp3["CBIJ"] * Eta1["AC"];
-    temp["ABIJ"] += 0.25 * temp4["ABIJ"] * temp2["IJAB"];
-    temp3.zero();
-    temp4.zero();
-
-    temp3["cDkJ"] = temp1["cDkL"] * Gamma1["LJ"];
-    temp4["cDiJ"] = temp3["cDkJ"] * Gamma1["ki"];
-    temp3.zero();
-    temp3["cBiJ"] = temp4["cDiJ"] * Eta1["BD"];
-    temp4.zero();
-    temp4["aBiJ"] = temp3["cBiJ"] * Eta1["ac"];
-    temp["aBiJ"] += 0.25 * temp4["aBiJ"] * temp2["iJaB"];
-
-    temp1.zero();
-}
-
 /**
  * Write spin_dependent two-RDMs coefficients using IWL.
  *
@@ -2674,30 +2638,16 @@ void DSRG_MRPT2::write_2rdm_spin_dependent() {
 
     // terms with overlap
     temp = BTF_->build(CoreTensor, "temporal tensor", {"pphh", "PPHH", "pPhH"});
-    BlockedTensor temp1 = BTF_->build(CoreTensor, "temporal tensor 1", {"pphh", "PPHH", "pPhH"});
     BlockedTensor temp2 = BTF_->build(CoreTensor, "temporal tensor 2", {"phph","phPH"});
 
     if (PT2_TERM) {
-        temp1["cdkl"] += V["cdkl"] * Eeps2_p["klcd"];
-        temp1["CDKL"] += V["CDKL"] * Eeps2_p["KLCD"];
-        temp1["cDkL"] += V["cDkL"] * Eeps2_p["kLcD"];
-        change_2rdm(temp1, Eeps2_m1, temp);
+        temp["abij"] += Tau1["ijab"];
+        temp["ABIJ"] += Tau1["IJAB"];
+        temp["aBiJ"] += Tau1["iJaB"];
 
-        // temp["uvxy"] -= 0.25 * Eeps2_m1["uvxy"] * V_["cdkl"] * Gamma1["uk"] * Gamma1["vl"] * Eta1["xc"] * Eta1["yd"];
-        // temp["uVxY"] -= 0.25 * Eeps2_m1["uVxY"] * V_["cDkL"] * Gamma1["uk"] * Gamma1["VL"] * Eta1["xc"] * Eta1["YD"];
-        // temp["UVXY"] -= 0.25 * Eeps2_m1["UVXY"] * V_["CDKL"] * Gamma1["UK"] * Gamma1["VL"] * Eta1["XC"] * Eta1["YD"];
-
-
-
-        temp1["cdkl"] = V["cdkl"] * Eeps2_m1["klcd"];
-        temp1["CDKL"] = V["CDKL"] * Eeps2_m1["KLCD"];
-        temp1["cDkL"] = V["cDkL"] * Eeps2_m1["kLcD"];
-        // temp1["cdkl"] += T2_["klcd"];
-        // temp1["CDKL"] += T2_["KLCD"];
-        // temp1["cDkL"] += T2_["kLcD"];
-        change_2rdm(temp1, Eeps2_p, temp);
-
-
+        temp["cdkl"] += Kappa["klcd"] * Eeps2_p["klcd"];
+        temp["CDKL"] += Kappa["KLCD"] * Eeps2_p["KLCD"];
+        temp["cDkL"] += Kappa["kLcD"] * Eeps2_p["kLcD"];
     }
 
     temp["xynv"] -= Z["un"] * Gamma2["uvxy"]; 
@@ -2738,7 +2688,6 @@ void DSRG_MRPT2::write_2rdm_spin_dependent() {
     temp["V,V1,U,U1"] += Z["UV"] * Gamma1["U1,V1"];
     temp["v,V1,u,U1"] += Z["uv"] * Gamma1["U1,V1"];
 
-
     // all-alpha and all-beta
     temp2["ckdl"] += temp["cdkl"];
     temp2["cldk"] -= temp["cdkl"];
@@ -2772,7 +2721,6 @@ void DSRG_MRPT2::write_2rdm_spin_dependent() {
     outfile->Printf("Done");
 }
 
-
 SharedMatrix DSRG_MRPT2::compute_gradient() {
     // NOTICE: compute the DSRG_MRPT2 gradient 
     print_method_banner({"DSRG-MRPT2 Gradient", "Shuhe Wang"});
@@ -2788,6 +2736,4 @@ SharedMatrix DSRG_MRPT2::compute_gradient() {
     return std::make_shared<Matrix>("nullptr", 0, 0);
 }
 
-
 } 
-
