@@ -669,10 +669,13 @@ void DMRGSolver::compute_energy() {
 
             SharedMatrix L(new Matrix("L matrix for Fiedler reordering", nact, nact));
             L->zero();
+            SharedMatrix I(new Matrix("I matrix for Fiedler reordering", nact, nact));
+            I->zero();
 
             for (int i=0; i < nact; i++){
                 for (int j=0; j < nact; j++){
                     std::vector<int> idxs{i, j, j, i};
+                    I->set(i,j, aptei_ab(i,j,j,i))
                     if (i != j){
                         // L[i,j] += -tei[i,j,j,i]
                         // L->add(i, j, -active_integrals_.at(idxs));
@@ -689,6 +692,8 @@ void DMRGSolver::compute_energy() {
             }
 
             wfn_->Ca()->print();
+
+            I->print();
 
             outfile->Printf("\n **NOTE** Feidler ordering uses ints_ NOT active_space_ints_ \n");
             // outfile->Printf("\n ==> L matrix for Feidler Reordering <== \n");
