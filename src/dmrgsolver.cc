@@ -675,7 +675,7 @@ void DMRGSolver::compute_energy() {
             for (int i=0; i < nact; i++){
                 for (int j=0; j < nact; j++){
                     std::vector<int> idxs{i, j, j, i};
-                    I->set(i,j, aptei_ab(i,j,j,i))
+                    I->set(i,j, aptei_ab(i,j,j,i));
                     if (i != j){
                         // L[i,j] += -tei[i,j,j,i]
                         // L->add(i, j, -active_integrals_.at(idxs));
