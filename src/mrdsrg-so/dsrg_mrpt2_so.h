@@ -130,6 +130,7 @@ class DSRG_MRPT2_SO : public DynamicCorrelationSolver {
     ambit::BlockedTensor Mbar2_; // multiplier for M2
     ambit::BlockedTensor Mdbar2_; // M2 double bar intermediate
     ambit::BlockedTensor T2_; // T2AMP
+    ambit::BlockedTensor Tbar2_; // T2 bar * Delta
     ambit::BlockedTensor Tdbar2_; // T2 double bar intermediate
 
     ambit::BlockedTensor D1_; // 1-PDM
@@ -147,6 +148,8 @@ class DSRG_MRPT2_SO : public DynamicCorrelationSolver {
 
     /// Compute the t2 amplitudes
     void compute_t2();
+    /// Compute numerically stable t2 bar
+    void compute_t2_bar();
     /// Compute the t2 double bar
     void compute_t2_double_bar();
 
@@ -161,6 +164,18 @@ class DSRG_MRPT2_SO : public DynamicCorrelationSolver {
     double compute_reference_energy();
     /// Compute the correlation energy
     double compute_correlation_energy();
+
+    /// Compute energy gradients
+    void compute_gradients();
+
+    /// Compute the diagonal elements of z
+    void compute_z_diag();
+    /// Compute z
+    void compute_z();
+    /// Compute Z
+    void compute_Z();
+    /// Compute the orbital response
+    void compute_orb_grad();
 };
 } // namespace forte
 

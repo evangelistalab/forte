@@ -30,7 +30,7 @@
 #define _dsrg_source_h_
 
 #include <cmath>
-
+#include <stdexcept>
 
 namespace forte {
 
@@ -49,6 +49,9 @@ class DSRG_SOURCE {
     virtual double compute_renormalized(const double& D) = 0;
     /// Renormalize denominator
     virtual double compute_renormalized_denominator(const double& D) = 0;
+    virtual double compute_renormalized_denominator2(const double& D) {
+        throw std::runtime_error("Function undefined");
+    }
 
   protected:
     /// Flow parameter
@@ -66,15 +69,31 @@ class STD_SOURCE : public DSRG_SOURCE {
     virtual ~STD_SOURCE() {}
 
     /// Return exp(-s * D^2)
-    virtual double compute_renormalized(const double& D) { return std::exp(-s_ * D * D); }
+    virtual double compute_renormalized(const double& D) override { return std::exp(-s_ * D * D); }
 
     /// Return [1 - exp(-s * D^2)] / D
-    virtual double compute_renormalized_denominator(const double& D) {
+    virtual double compute_renormalized_denominator(const double& D) override {
         double Z = std::sqrt(s_) * D;
         if (std::fabs(Z) < small_) {
             return Taylor_Exp(Z, taylor_order_) * std::sqrt(s_);
         } else {
             return (1.0 - std::exp(-s_ * D * D)) / D;
+        }
+    }
+
+    /// Return [1 - exp(-s * D^2)] / D^2
+    virtual double compute_renormalized_denominator2(const double& D) override {
+        double Z = s_ * D * D;
+        if (std::fabs(Z) < small_) {
+            // expand to Z^5 term
+            double value = 1.0, tmp = 1.0;
+            for (int i = 0; i < 5; ++i) {
+                tmp *= -Z / (i + 2);
+                value += tmp;
+            }
+            return s_ * value;
+        } else {
+            return (1.0 - std::exp(-s_ * D * D)) / (D * D);
         }
     }
 
@@ -176,6 +195,6 @@ class MP2_SOURCE : public DSRG_SOURCE {
 
     virtual double compute_renormalized_denominator(const double& D) { return 1.0 / D; }
 };
-}
+} // namespace forte
 
 #endif // DSRG_SOURCE_H

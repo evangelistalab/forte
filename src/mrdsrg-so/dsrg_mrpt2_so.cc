@@ -328,9 +328,11 @@ double DSRG_MRPT2_SO::compute_reference_energy() {
     return Eout;
 }
 
-double DSRG_MRPT2_SO::compute_correlation_energy() {
-    return 0.25 * M2_["klcd"] * T2_["ijab"] * D1_["ik"] * D1_["jl"] * C1_["ac"] * C1_["bd"];
+void DSRG_MRPT2_SO::compute_m2_bar() {
+    Mbar2_["cdkl"] = T2_["ijab"] * D1_["ik"] * D1_["jl"] * C1_["ac"] * C1_["bd"];
 }
+
+double DSRG_MRPT2_SO::compute_correlation_energy() { return 0.25 * M2_["klcd"] * Mbar2_["cdkl"]; }
 
 double DSRG_MRPT2_SO::compute_energy() {
     T2_ = BTF_->build(tensor_type_, "T2", {"hhpv", "hhva", "hcaa", "caaa"});
@@ -338,6 +340,9 @@ double DSRG_MRPT2_SO::compute_energy() {
 
     M2_ = BTF_->build(tensor_type_, "M2", {"hhpv", "hhva", "hcaa", "caaa"});
     compute_m2();
+
+    Mbar2_ = BTF_->build(tensor_type_, "Mbar2", {"pvhh", "vahh", "aahc", "aaca"});
+    compute_m2_bar();
 
     // compute the reference energy
     double Eref = compute_reference_energy() + Enuc_ + Efrzc_;
@@ -355,6 +360,87 @@ double DSRG_MRPT2_SO::compute_energy() {
     outfile->Printf("\n    Correlation energy:       %20.15f", Ecorr);
     outfile->Printf("\n    Total energy:             %20.15f", Etotal);
 
+    compute_gradients();
+
     return Etotal;
 }
+
+void DSRG_MRPT2_SO::compute_m2_double_bar() {
+    Mdbar2_["abij"] = Mbar2_["abij"];
+
+    Mdbar2_.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>&, double& value) {
+        value *=
+            1.0 + dsrg_source_->compute_renormalized(Fd_[i[0]] + Fd_[i[1]] - Fd_[i[2]] - Fd_[i[3]]);
+    });
+}
+
+void DSRG_MRPT2_SO::compute_t2_bar() {
+    Tbar2_["ijab"] = M2_["klcd"] * D1_["ik"] * D1_["jl"] * C1_["ac"] * C1_["bd"];
+}
+
+void DSRG_MRPT2_SO::compute_t2_double_bar() {
+    Tdbar2_["ijab"] = Tbar2_["ijab"];
+
+    Tdbar2_.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>&, double& value) {
+        value *= dsrg_source_->compute_renormalized_denominator(Fd_[i[0]] + Fd_[i[1]] - Fd_[i[2]] -
+                                                                Fd_[i[3]]);
+    });
+}
+
+void DSRG_MRPT2_SO::compute_gradients() {
+    Tbar2_ = BTF_->build(tensor_type_, "Tbar2", {"hhpv", "hhva", "hcaa", "caaa"});
+    compute_t2_bar();
+
+    Tdbar2_ = BTF_->build(tensor_type_, "Tdbar2", {"hhpv", "hhva", "hcaa", "caaa"});
+    compute_t2_double_bar();
+
+    Mdbar2_ = BTF_->build(tensor_type_, "Mdbar2", {"pvhh", "vahh", "aahc", "aaca"});
+    compute_m2_double_bar();
+
+    compute_orb_grad();
+}
+
+void DSRG_MRPT2_SO::compute_orb_grad() {
+    z_ = BTF_->build(tensor_type_, "z", {"cc", "aa", "vv"});
+    Z_ = BTF_->build(tensor_type_, "z", {"ca", "ac", "av", "va", "cv", "vc"});
+
+    compute_z_diag();
+}
+
+void DSRG_MRPT2_SO::compute_z_diag() {
+    auto z = BTF_->build(tensor_type_, "z", {"g"}, true);
+
+    auto V = BTF_->build(tensor_type_, "V temp", {"pphh"}, true);
+
+    V["abij"] = V_["abij"];
+    V.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>&, double& value) {
+        double d = Fd_[i[0]] + Fd_[i[1]] - Fd_[i[2]] - Fd_[i[3]];
+        double scale = 2 * s_ * dsrg_source_->compute_renormalized(d);
+        scale -= dsrg_source_->compute_renormalized_denominator2(d);
+        value *= scale;
+    });
+
+    z["i"] += V["abij"] * Tbar2_["ijab"];
+    z["a"] -= V["abij"] * Tbar2_["ijab"];
+
+    V = BTF_->build(tensor_type_, "V temp", {"hhpp"}, true);
+    V["ijab"] = V_["ijab"];
+    V.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>&, double& value) {
+        double d = Fd_[i[0]] + Fd_[i[1]] - Fd_[i[2]] - Fd_[i[3]];
+        value *= d * dsrg_source_->compute_renormalized(d);
+    });
+
+    z["i"] -= 2 * s_ * Mbar2_["abij"] * V["ijab"];
+    z["a"] += 2 * s_ * Mbar2_["abij"] * V["ijab"];
+
+    for (std::string block: {"cc", "aa", "vv"}) {
+        z_.block(block).iterate([&](const std::vector<size_t>& i, double& value) {
+            if (i[0] == i[1]) {
+                value = z.block(block.substr(0, 1)).data()[i[0]];
+            }
+        });
+    }
+    z_.print();
+}
+
 } // namespace forte
