@@ -688,6 +688,8 @@ void DMRGSolver::compute_energy() {
                 }
             }
 
+            wfn_->Ca()->print();
+
             outfile->Printf("\n **NOTE** Feidler ordering uses ints_ NOT active_space_ints_ \n");
             // outfile->Printf("\n ==> L matrix for Feidler Reordering <== \n");
             L->print();
@@ -696,7 +698,9 @@ void DMRGSolver::compute_energy() {
             SharedVector evals(new Vector("L eigenvalues", nact));
             L->diagonalize(evecs, evals);
 
+            evals->print();
             evecs->print();
+
             std::vector<std::pair<double, int>> x;
             for(int k=0; k<nact; k++){
                 x.push_back(std::make_pair(evecs->get(k,1), k));
