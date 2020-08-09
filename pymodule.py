@@ -618,7 +618,7 @@ def run_forte(name, **kwargs):
                 f'\n  No reference wavefunction provided. Computing {ref_type} orbitals with psi4\n'
             )
             if options.get_str('REF_TYPE') == 'SCF':
-                warnings.warn("\n  Forte is using orbitals from an SCF reference. This is not the best choice for multiference computations.\n",
+                warnings.warn('\n  Forte is using orbitals from a psi4 SCF reference. This is not the best choice for multireference computations. To use CASSCF orbitals from psi4 set REF_TYPE to CASSCF.\n',
                         UserWarning)
                 ref_wfn = psi4.driver.scf_helper(name, **kwargs)
             elif options.get_str('REF_TYPE') == 'CASSCF':
