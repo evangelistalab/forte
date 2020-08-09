@@ -64,3 +64,19 @@ def test_mospaceinfo2():
     ref_relative_mo = [[(0, 0), (1, 0)],[(0, 1), (1, 1), (1, 2), (2, 0), (3, 0)],[(0, 2), (1, 3)],[(0, 3)],[],[],[],[],[(0, 4), (1, 4), (3, 1)],[(2, 1)],[(0, 2), (0, 3), (1, 3)]]
     for name, val in zip(ref_spaces,ref_relative_mo):
         assert mo_space_info.relative_mo(name) == val
+
+    assert mo_space_info.pos_in_space('GAS1','ACTIVE') == [0, 2]
+    assert mo_space_info.pos_in_space('GAS2','ACTIVE') == [1]
+    assert mo_space_info.pos_in_space('ACTIVE','ACTIVE') == [0,1,2]
+    assert mo_space_info.pos_in_space('ACTIVE','ALL') == [2, 3, 8]
+
+    for name, val in zip(ref_spaces,ref_absolute_mo):
+        assert mo_space_info.pos_in_space(name,'ALL') == val
+
+    ref_spaces_non_frozen = ['RESTRICTED_DOCC','GAS1','GAS2','GAS3','GAS4','GAS5','GAS6','RESTRICTED_UOCC','ACTIVE']
+    ref_corr_absolute_mo_non_frozen = [[0, 4, 5, 8, 9],[1, 6],[2],[],[],[],[],[3, 7, 10],[1, 2, 6]]
+
+    for name, val in zip(ref_spaces_non_frozen,ref_corr_absolute_mo_non_frozen):
+        assert mo_space_info.pos_in_space(name,'CORRELATED') == val
+
+test_mospaceinfo2()

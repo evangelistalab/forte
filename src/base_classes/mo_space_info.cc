@@ -185,13 +185,18 @@ std::vector<size_t> MOSpaceInfo::pos_in_space(const std::string& space,
                           " or composite space " + composite_space + " is not defined.";
         throw psi::PSIEXCEPTION(msg.c_str());
     }
-    auto it = find(composite_spaces_[composite_space].begin(),
-                   composite_spaces_[composite_space].end(), space);
-    if (it == composite_spaces_[composite_space].end()) {
-        std::string msg = "\n  MOSpaceInfo::pos_in_space - space " + space +
-                          " is not contained in composite space " + composite_space + " .";
-        throw psi::PSIEXCEPTION(msg.c_str());
+
+    // make sure that space is contained in composite_space
+    for (auto s : composite_spaces_[space]) {
+        auto it = find(composite_spaces_[composite_space].begin(),
+                       composite_spaces_[composite_space].end(), s);
+        if (it == composite_spaces_[composite_space].end()) {
+            std::string msg = "\n  MOSpaceInfo::pos_in_space - space " + s +
+                              " is not contained in composite space " + composite_space + " .";
+            throw psi::PSIEXCEPTION(msg.c_str());
+        }
     }
+
     auto abs_space = absolute_mo(space);
     auto abs_composite_space = absolute_mo(composite_space);
     std::unordered_map<size_t, size_t> composite_space_hash;
