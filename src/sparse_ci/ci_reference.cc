@@ -126,6 +126,7 @@ CI_Reference::gas_single_criterion() {
     size_t gas_config_number = gas_electrons_.size();
     gas_electrons_.push_back(zero_occ);
 
+    //    outfile->Printf("%d gas_num", gas_num_);
     // for each possible occupation (gas_config), when adding one electron
     // from gas_count_1 to gas_count_2, is the result new possble GAS occupation
     // still within gas_electrons?
@@ -501,7 +502,6 @@ void CI_Reference::build_gas_single(std::vector<Determinant>& ref_space) {
     outfile->Printf("\n  GAS Orbital Energies");
     outfile->Printf("\n  GAS   Energies    Orb ");
     std::vector<size_t> act_mo = mo_space_info_->absolute_mo("ACTIVE");
-    //    std::sort(act_mo.begin(), act_mo.end());
     std::map<int, int> re_ab_mo;
     for (size_t i = 0; i < act_mo.size(); i++) {
         re_ab_mo[act_mo[i]] = i;
@@ -799,10 +799,10 @@ void CI_Reference::build_gas_single(std::vector<Determinant>& ref_space) {
                                                         if (sym == root_sym_ &&
                                                             nunpair + 1 >= multiplicity_) {
                                                             ref_space.push_back(det);
-                                                            outfile->Printf("\n");
-                                                            outfile->Printf(
-                                                                "\n  Ref: %s",
-                                                                str(det, nact_).c_str());
+                                                            //                                                            outfile->Printf("\n");
+                                                            //                                                            outfile->Printf(
+                                                            //                                                                "\n  Ref: %s",
+                                                            //                                                                str(det, nact_).c_str());
                                                             return;
                                                         }
                                                     }
@@ -832,12 +832,9 @@ void CI_Reference::build_gas_reference(std::vector<Determinant>& ref_space) {
 
     std::vector<std::vector<size_t>> relative_gas_mo;
     std::vector<size_t> act_mo = mo_space_info_->absolute_mo("ACTIVE");
-    //    std::sort(act_mo.begin(), act_mo.end());
     std::map<int, int> re_ab_mo;
-    outfile->Printf("\n  test_GAS");
     for (size_t i = 0; i < act_mo.size(); i++) {
         re_ab_mo[act_mo[i]] = i;
-        outfile->Printf("%d ", act_mo[i]);
     }
     for (size_t gas_count = 0; gas_count < 6; gas_count++) {
         std::string space = gas_subspaces_[gas_count];
@@ -1108,9 +1105,9 @@ void CI_Reference::build_gas_reference(std::vector<Determinant>& ref_space) {
                                                             nalpha_ + nbeta_ - 2 * det.npair();
                                                         // Check symmetry and multiplicity
                                                         if (sym == root_sym_) {
-                                                            outfile->Printf(
-                                                                "\n  Ref: %s",
-                                                                str(det, nact_).c_str());
+                                                            //                                                            outfile->Printf(
+                                                            //                                                                "\n  Ref: %s",
+                                                            //                                                                str(det, nact_).c_str());
                                                             ref_space.push_back(det);
                                                         }
                                                     }
@@ -1281,7 +1278,7 @@ void CI_Reference::get_gas_occupation() {
                                                 outfile->Printf("\n  ");
                                                 for (size_t i = 0; i < 2 * gas_num_; i++) {
                                                     outfile->Printf("   %d    ",
-                                                                    gas_configuration.at(i));
+                                                                    gas_configuration[i]);
                                                 }
                                                 gas_electrons_.push_back(gas_configuration);
                                             }
@@ -1309,6 +1306,8 @@ void CI_Reference::modify_gas_occupation(std::vector<int> maxe_input, std::vecto
     std::vector<int> gas_maxe;
     std::vector<int> gas_mine;
     std::vector<int> gas_orbital;
+
+    gas_num_ = 0;
 
     for (size_t gas_count = 0; gas_count < 6; gas_count++) {
         std::string space = gas_subspaces_.at(gas_count);
@@ -1343,6 +1342,7 @@ void CI_Reference::modify_gas_occupation(std::vector<int> maxe_input, std::vecto
             outfile->Printf("\n  The minimum number of electrons in "
                             "%s is %d",
                             space.c_str(), min_e_number);
+            gas_num_ = gas_num_ + 1;
         } else {
             gas_maxe.push_back(0);
             gas_mine.push_back(0);
@@ -1399,8 +1399,9 @@ void CI_Reference::modify_gas_occupation(std::vector<int> maxe_input, std::vecto
                                                 outfile->Printf("\n  ");
                                                 for (size_t i = 0; i < 2 * gas_num_; i++) {
                                                     outfile->Printf("   %d    ",
-                                                                    gas_configuration.at(i));
+                                                                    gas_configuration[i]);
                                                 }
+
                                                 gas_electrons_.push_back(gas_configuration);
                                             }
                                         }
@@ -1417,9 +1418,15 @@ void CI_Reference::modify_gas_occupation(std::vector<int> maxe_input, std::vecto
 
 void CI_Reference::modify_gas(std::vector<Determinant>& ref_space, std::vector<int> maxe,
                               std::vector<int> mine) {
-
-    modify_gas_occupation(maxe, mine);
-    build_gas_single(ref_space);
+    if (ref_type_ == "GAS") {
+        // Complete GAS
+        modify_gas_occupation(maxe, mine);
+        build_gas_reference(ref_space);
+    } else if (ref_type_ == "GAS_SINGLE") {
+        // Low(est) energy one in GAS
+        modify_gas_occupation(maxe, mine);
+        build_gas_single(ref_space);
+    }
 }
 
 std::vector<std::vector<int>> CI_Reference::gas_electrons() { return gas_electrons_; }

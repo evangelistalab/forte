@@ -567,10 +567,12 @@ void AdaptiveCI::pre_iter_preparation() {
 
     if ((options_->get_str("ACI_SCREEN_ALG") == "MULTI_GAS")) {
         initial_reference_.clear();
-        std::vector<std::string> maxe_alt_string = {"GAS1MAXALT", "GAS2MAXALT", "GAS3MAXALT",
-                                                    "GAS4MAXALT", "GAS5MAXALT", "GAS6MAXALT"};
-        std::vector<std::string> mine_alt_string = {"GAS1MINALT", "GAS2MINALT", "GAS3MINALT",
-                                                    "GAS4MINALT", "GAS5MINALT", "GAS6MINALT"};
+        std::vector<std::string> maxe_alt_string = {"GAS1MAX_MULTI", "GAS2MAX_MULTI",
+                                                    "GAS3MAX_MULTI", "GAS4MAX_MULTI",
+                                                    "GAS5MAX_MULTI", "GAS6MAX_MULTI"};
+        std::vector<std::string> mine_alt_string = {"GAS1MIN_MULTI", "GAS2MIN_MULTI",
+                                                    "GAS3MIN_MULTI", "GAS4MIN_MULTI",
+                                                    "GAS5MIN_MULTI", "GAS6MIN_MULTI"};
         std::vector<int> maxe;
         std::vector<int> mine;
         for (size_t gas_count = 0; gas_count < 6; gas_count++) {
@@ -592,12 +594,11 @@ void AdaptiveCI::pre_iter_preparation() {
                         (symmetry_read == wavefunction_symmetry_)) {
                         maxe.push_back(py::cast<int>(gasemax_alt[root_ + 2]));
                         mine.push_back(py::cast<int>(gasemin_alt[root_ + 2]));
-                        bool found_state = true;
+                        found_state = true;
                     }
                 }
-
                 if (!found_state) {
-                    outfile->Printf("\n  Wrong input of GASMAXALT/GASMINALT.");
+                    outfile->Printf("\n  Wrong input of GASMAX_MULTI/GASMIN_MULTI.");
                 }
             } else {
                 maxe.push_back(0);
@@ -628,7 +629,6 @@ void AdaptiveCI::pre_iter_preparation() {
     if ((gas_iteration_)) {
         //        const auto gas_info = mo_space_info_->gas_info();
         std::vector<size_t> act_mo = mo_space_info_->absolute_mo("ACTIVE");
-        std::sort(act_mo.begin(), act_mo.end());
         std::map<int, int> re_ab_mo;
         for (size_t i = 0; i < act_mo.size(); i++) {
             re_ab_mo[act_mo[i]] = i;
@@ -643,7 +643,6 @@ void AdaptiveCI::pre_iter_preparation() {
             std::vector<size_t> relative_mo;
             auto gas_mo = mo_space_info_->absolute_mo(space);
             for (size_t i = 0, imax = gas_mo.size(); i < imax; ++i) {
-                outfile->Printf("\n test GAS %d %d", gas_count, re_ab_mo[gas_mo[i]]);
                 relative_mo.push_back(re_ab_mo[gas_mo[i]]);
             }
             if (!relative_mo.empty()) {
