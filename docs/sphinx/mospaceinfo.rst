@@ -112,7 +112,10 @@ The following table summarizes the properties of these orbital spaces:
   ``ACTIVE`` = ``GAS1 | GAS2 | GAS3 | GAS4 | GAS5 | GAS6``.
   When the user specifies the value of a composite space like ``ACTIVE``, then all the
   orbitals are by default assigned to the first space, which in the case of ``ACTIVE`` is ``GAS1``.
-
+  It is important also to note that when there is more than one irrep, the orbitals withing a
+  composite space are ordered **first** by irrep and then by elementary space.
+  This important to keep in mind when plotting orbitals or for developers writing code in forte.
+  
 
 Orbital space specification
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
