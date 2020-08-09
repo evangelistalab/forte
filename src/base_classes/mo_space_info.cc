@@ -66,7 +66,8 @@ size_t MOSpaceInfo::size(const std::string& space) {
 psi::Dimension MOSpaceInfo::dimension(const std::string& space) {
     psi::Dimension result(nirrep_);
     if (composite_spaces_.count(space) == 0) {
-        std::string msg = "\n  MOSpaceInfo::dimension - composite space " + space + " is not defined.";
+        std::string msg =
+            "\n  MOSpaceInfo::dimension - composite space " + space + " is not defined.";
         throw psi::PSIEXCEPTION(msg.c_str());
     } else {
         for (const auto& el_space : composite_spaces_[space]) {
@@ -91,15 +92,23 @@ std::vector<int> MOSpaceInfo::symmetry(const std::string& space) {
 std::vector<size_t> MOSpaceInfo::absolute_mo(const std::string& space) {
     std::vector<size_t> result;
     if (composite_spaces_.count(space) == 0) {
-        std::string msg = "\n  MOSpaceInfo::absolute_mo - composite space " + space + " is not defined.";
+        std::string msg =
+            "\n  MOSpaceInfo::absolute_mo - composite space " + space + " is not defined.";
         throw psi::PSIEXCEPTION(msg.c_str());
     } else {
+        std::vector<std::vector<size_t>> mo_list(nirrep_);
         for (const auto& el_space : composite_spaces_[space]) {
             if (mo_spaces_.count(el_space)) {
                 auto& vec_mo_info = mo_spaces_[el_space].second;
                 for (auto& mo_info : vec_mo_info) {
-                    result.push_back(std::get<0>(mo_info)); // <- grab the absolute index
+                    size_t h = std::get<1>(mo_info);            // <- the orbital irrep
+                    mo_list[h].push_back(std::get<0>(mo_info)); // <- grab the absolute index
                 }
+            }
+        }
+        for (const auto& irrep : mo_list) {
+            for (const auto& p : irrep) {
+                result.push_back(p);
             }
         }
     }
@@ -109,18 +118,55 @@ std::vector<size_t> MOSpaceInfo::absolute_mo(const std::string& space) {
 std::vector<size_t> MOSpaceInfo::corr_absolute_mo(const std::string& space) {
     std::vector<size_t> result;
     if (composite_spaces_.count(space) == 0) {
-        std::string msg = "\n  MOSpaceInfo::corr_absolute_mo - composite space " + space + " is not defined.";
+        std::string msg =
+            "\n  MOSpaceInfo::corr_absolute_mo - composite space " + space + " is not defined.";
         throw psi::PSIEXCEPTION(msg.c_str());
     } else {
+        std::vector<std::vector<size_t>> mo_list(nirrep_);
+        // Loop over all the spaces
         for (const auto& el_space : composite_spaces_[space]) {
             if (mo_spaces_.count(el_space)) {
                 auto& vec_mo_info = mo_spaces_[el_space].second;
                 for (auto& mo_info : vec_mo_info) {
-                    result.push_back(mo_to_cmo_[std::get<0>(mo_info)]); // <- grab the
-                                                                        // absolute index
-                                                                        // and convert to
-                                                                        // correlated MOs
+                    size_t h = std::get<1>(mo_info); // <- the orbital irrep
+                    mo_list[h].push_back(
+                        mo_to_cmo_[std::get<0>(mo_info)]); // <- grab the absolute index
+                                                           // and convert to correlated MOs
                 }
+            }
+        }
+        for (const auto& irrep : mo_list) {
+            for (const auto& p : irrep) {
+                result.push_back(p);
+            }
+        }
+    }
+    return result;
+}
+
+std::vector<std::pair<size_t, size_t>> MOSpaceInfo::relative_mo(const std::string& space) {
+    std::vector<std::pair<size_t, size_t>> result;
+    if (composite_spaces_.count(space) == 0) {
+        std::string msg =
+            "\n  MOSpaceInfo::get_relative_mo - composite space " + space + " is not defined.";
+        throw psi::PSIEXCEPTION(msg.c_str());
+    } else {
+        std::vector<std::vector<std::pair<size_t, size_t>>> mo_list(nirrep_);
+
+        for (const auto& el_space : composite_spaces_[space]) {
+            if (mo_spaces_.count(el_space)) {
+                auto& vec_mo_info = mo_spaces_[el_space].second;
+                for (auto& mo_info : vec_mo_info) {
+                    size_t h = std::get<1>(mo_info); // <- the orbital irrep
+                    mo_list[h].push_back(std::make_pair(
+                        std::get<1>(mo_info),
+                        std::get<2>(mo_info))); // <- grab the irrep and relative index
+                }
+            }
+        }
+        for (const auto& irrep : mo_list) {
+            for (const auto& p : irrep) {
+                result.push_back(p);
             }
         }
     }
@@ -128,21 +174,34 @@ std::vector<size_t> MOSpaceInfo::corr_absolute_mo(const std::string& space) {
 }
 
 std::vector<std::pair<size_t, size_t>> MOSpaceInfo::get_relative_mo(const std::string& space) {
-    std::vector<std::pair<size_t, size_t>> result;
-    if (composite_spaces_.count(space) == 0) {
-        std::string msg = "\n  MOSpaceInfo::get_relative_mo - composite space " + space + " is not defined.";
+    return relative_mo(space);
+}
+
+std::vector<size_t> MOSpaceInfo::pos_in_space(const std::string& space,
+                                              const std::string& composite_space) {
+    std::vector<size_t> result;
+    if (composite_spaces_.count(space) * composite_spaces_.count(composite_space) == 0) {
+        std::string msg = "\n  MOSpaceInfo::pos_in_space - space " + space +
+                          " or composite space " + composite_space + " is not defined.";
         throw psi::PSIEXCEPTION(msg.c_str());
-    } else {
-        for (const auto& el_space : composite_spaces_[space]) {
-            if (mo_spaces_.count(el_space)) {
-                auto& vec_mo_info = mo_spaces_[el_space].second;
-                for (auto& mo_info : vec_mo_info) {
-                    result.push_back(std::make_pair(
-                        std::get<1>(mo_info),
-                        std::get<2>(mo_info))); // <- grab the irrep and relative index
-                }
-            }
-        }
+    }
+    auto it = find(composite_spaces_[composite_space].begin(),
+                   composite_spaces_[composite_space].end(), space);
+    if (it == composite_spaces_[composite_space].end()) {
+        std::string msg = "\n  MOSpaceInfo::pos_in_space - space " + space +
+                          " is not contained in composite space " + composite_space + " .";
+        throw psi::PSIEXCEPTION(msg.c_str());
+    }
+    auto abs_space = absolute_mo(space);
+    auto abs_composite_space = absolute_mo(composite_space);
+    std::unordered_map<size_t, size_t> composite_space_hash;
+    size_t k = 0;
+    for (size_t p : abs_composite_space) {
+        composite_space_hash[p] = k;
+        k += 1;
+    }
+    for (size_t p : abs_space) {
+        result.push_back(composite_space_hash[p]);
     }
     return result;
 }

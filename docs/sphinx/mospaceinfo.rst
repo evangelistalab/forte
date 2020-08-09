@@ -61,7 +61,7 @@ Definition of orbital spaces
 
 Running a Forte computation requires specifying a partitioning of the molecular
 orbitals.
-Forte defines five orbital spaces:
+Forte defines five types of elementary orbital spaces:
 
 1. Frozen doubly occupied orbitals (``FROZEN_DOCC``). These orbitals are always
 doubly occupied.
@@ -71,8 +71,14 @@ treated as doubly occupied by method for static correlation.
 Restricted doubly occupied orbitals are allowed to be excited in
 in methods that add dynamic electron correlation.
 
-3. Active orbitals (``ACTIVE``). Used to define active spaces for static
-correlation methods. These orbitals are partially occupied.
+3. Active/generalized active orbitals (``ACTIVE``/``GASn``).
+Used to define active spaces or generalized active spaces for static correlation methods.
+These orbitals are partially occupied.
+Standard complete active spaces can be specified either via the
+``ACTIVE`` or the ``GAS1`` orbital space.
+For generalized active spaces, the user must provide the number of orbitals
+in each irrep for all the GAS spaces reuired.
+``GAS1`` through ``GAS6`` are currently supported.
 
 4. Restricted unoccupied orbitals (``RESTRICTED_UOCC``). Also called virtuals,
 these orbitals are ignored by methods for static correlation but considered by
@@ -80,6 +86,32 @@ dynamic correlation approaches.
 
 5. Frozen unoccupied orbitals (``FROZEN_UOCC``). These orbitals are always
 unoccupied.
+
+The following table summarizes the properties of these orbital spaces:
+
++-----------------+------------+---------------+--------------------------------------+
+| Space           | Occupation | Occupation    |  Description                         |
+|                 | in CAS/GAS | in correlated |                                      |
+|                 |            | methods       |                                      |
++=================+============+===============+======================================+
+| FROZEN_DOCC     |     2      |     2         |  Frozen doubly occupied orbitals     |
++-----------------+------------+---------------+--------------------------------------+
+| RESTRICTED_DOCC |     2      |    0-2        |  Restricted doubly occupied orbitals |
++-----------------+------------+---------------+--------------------------------------+
+| GAS1, GAS2, ... |    0-2     |    0-2        |  Generalized active spaces           |
++-----------------+------------+---------------+--------------------------------------+
+| RESTRICTED_UOCC |     0      |    0-2        |  Restricted unoccupied orbitals      |
++-----------------+------------+---------------+--------------------------------------+
+| FROZEN_UOCC     |     0      |     0         |  Frozen unoccupied orbitals          |
++-----------------+------------+---------------+--------------------------------------+
+
+.. Note::
+  Forte makes a distinction between `elementary` and `composite` orbital spaces.
+  The spaces defined above are all elementary, except for ``ACTIVE``, which is
+  defined as the composite space of all the GAS spaces, that is,
+  ``ACTIVE`` = ``GAS1 | GAS2 | GAS3 | GAS4 | GAS5 | GAS6``.
+  When the user specifies the value of a composite space like ``ACTIVE``, then all the
+  orbitals are by default assigned to the first space, which in the case of ``ACTIVE`` is ``GAS1``.
 
 
 Orbital space specification
@@ -120,7 +152,7 @@ specify by making certain assumptions.
 The class that controls orbital spaces (``MOSpaceInfo``) assumes that orbital
 spaces have the following priority::
 
-    ACTIVE > RESTRICTED_UOCC > RESTRICTED_DOCC > FROZEN_DOCC > FROZEN_UOCC
+    GAS1 (= ACTIVE) > RESTRICTED_UOCC > RESTRICTED_DOCC > FROZEN_DOCC > FROZEN_UOCC > GAS2 > ...
 
 When the input does not contain all five orbital spaces, Forte will infer the
 size of other orbital spaces. It first sums up all the orbitals specified by
@@ -131,14 +163,19 @@ In the case of the BeH\ :sub:`2` example, it is necessary to specify only the
 ``FROZEN_DOCC``, ``RESTRICTED_DOCC``, and ``ACTIVE`` orbital spaces::
 
     set forte{
-        frozen_docc      [1 ,0 ,0 ,0]
-        restricted_docc  [2 ,0 ,0 ,0]
-        active           [1 ,0 ,0 ,1]
+        frozen_docc        [1 ,0 ,0 ,0]
+        restricted_docc    [2 ,0 ,0 ,0]
+        active             [1 ,0 ,0 ,1]
 
         # Forte will automatically assign the following:
         # restricted_uocc  [4 ,0 ,2 ,3]
         # frozen_uocc      [0 ,0 ,0 ,0]
-    }
+        # gas2             [0 ,0 ,0 ,0]
+        # gas3             [0 ,0 ,0 ,0]
+        # gas4             [0 ,0 ,0 ,0]
+        # gas5             [0 ,0 ,0 ,0]
+        # gas6             [0 ,0 ,0 ,0]
+}
 
 the remaining 9 orbitals are automatically assigned to the ``RESTRICTED_UOCC``
 space. This space, together with ``FROZEN_UOCC``, was not specified in the input.
