@@ -297,11 +297,13 @@ pci:
 gasci:
   short:
    - gasci-1
+   - gasci-2
+   - gasci-3
    - gasaci-1
    - gasaci-2
-   - gasaci-4
-  long:
    - gasaci-3
+  medium:
+   - gasaci-4
                   
 
 #x2c:

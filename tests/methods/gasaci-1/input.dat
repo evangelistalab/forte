@@ -1,11 +1,12 @@
 #! Generated using commit GITCOMMIT 
 # GAS ACI calculation with energy threshold selection
+# Failed gas-aci will lead to correct aci energy but incorrect acipt2 energy
 
 import forte
 
 refscf = -14.839846512738 #TEST
-refaci = -14.889051449774 #TEST
-refacipt2 = -14.890048096626 #TEST
+refaci = -14.889166944306 #TEST
+refacipt2 = -14.890163810516 #TEST
 
 molecule li2{
 0 1
@@ -39,8 +40,8 @@ set forte {
   sci_enforce_spin_complete false
   r_convergence 0.1
   active_ref_type gas_single
-  GAS1 [6,0,2,2,0,6,0,2]
-  GAS2 [0,0,0,0,0,0,2,0]
+  GAS1 [6,0,2,2,0,6,0,0]
+  GAS2 [0,0,0,0,0,0,2,2]
   GAS2MAX 2
   GAS2MIN 0 
   GAS1MIN 4

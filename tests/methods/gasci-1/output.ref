@@ -23,9 +23,9 @@
     -----------------------------------------------------------------------
 
 
-    Psi4 started on: Saturday, 18 April 2020 01:20AM
+    Psi4 started on: Friday, 07 August 2020 04:42PM
 
-    Process ID: 14336
+    Process ID: 32209
     Host:       DESKTOP-SQPD2D3
     PSIDATADIR: /home/mhuang/psi4_install/share/psi4
     Memory:     500.0 MiB
@@ -69,7 +69,7 @@ set forte {
   nroot 1
   root_sym 0
   charge 0
-  aci_enforce_spin_complete false
+  sci_enforce_spin_complete false
   r_convergence 0.1
   active_ref_type gas
   restricted_docc [1,0,0,0]
@@ -87,7 +87,7 @@ compare_values(refgasci, variable("ACI ENERGY"),9, "ACI energy") #TEST
 --------------------------------------------------------------------------
 
 *** tstart() called on DESKTOP-SQPD2D3
-*** at Sat Apr 18 01:20:56 2020
+*** at Fri Aug  7 16:42:01 2020
 
    => Loading Basis Set <=
 
@@ -284,18 +284,18 @@ Properties computed using the SCF density matrix
      X:     0.0000      Y:     0.0000      Z:     2.2414     Total:     2.2414
 
 
-*** tstop() called on DESKTOP-SQPD2D3 at Sat Apr 18 01:20:56 2020
+*** tstop() called on DESKTOP-SQPD2D3 at Fri Aug  7 16:42:02 2020
 Module time:
-	user time   =       0.17 seconds =       0.00 minutes
-	system time =       0.05 seconds =       0.00 minutes
-	total time  =          0 seconds =       0.00 minutes
+	user time   =       0.19 seconds =       0.00 minutes
+	system time =       0.03 seconds =       0.00 minutes
+	total time  =          1 seconds =       0.02 minutes
 Total time:
-	user time   =       0.17 seconds =       0.00 minutes
-	system time =       0.05 seconds =       0.00 minutes
-	total time  =          0 seconds =       0.00 minutes
+	user time   =       0.19 seconds =       0.00 minutes
+	system time =       0.03 seconds =       0.00 minutes
+	total time  =          1 seconds =       0.02 minutes
 
 *** tstart() called on DESKTOP-SQPD2D3
-*** at Sat Apr 18 01:20:56 2020
+*** at Fri Aug  7 16:42:02 2020
 
    => Loading Basis Set <=
 
@@ -484,15 +484,15 @@ Properties computed using the SCF density matrix
      X:     0.0000      Y:     0.0000      Z:     2.2414     Total:     2.2414
 
 
-*** tstop() called on DESKTOP-SQPD2D3 at Sat Apr 18 01:20:56 2020
+*** tstop() called on DESKTOP-SQPD2D3 at Fri Aug  7 16:42:02 2020
 Module time:
-	user time   =       0.09 seconds =       0.00 minutes
+	user time   =       0.11 seconds =       0.00 minutes
 	system time =       0.03 seconds =       0.00 minutes
 	total time  =          0 seconds =       0.00 minutes
 Total time:
-	user time   =       0.26 seconds =       0.00 minutes
-	system time =       0.08 seconds =       0.00 minutes
-	total time  =          0 seconds =       0.00 minutes
+	user time   =       0.32 seconds =       0.01 minutes
+	system time =       0.06 seconds =       0.00 minutes
+	total time  =          1 seconds =       0.02 minutes
    => Loading Basis Set <=
 
     Name: STO-3G
@@ -506,7 +506,7 @@ Total time:
   ----------------------------------------------------------------------------
   A suite of quantum chemistry methods for strongly correlated electrons
 
-    git branch: gas-ci - git commit: d80cf577
+    git branch: HEAD - git commit: 98867ecc
 
   Developed by:
     Francesco A. Evangelista, Chenyang Li, Kevin P. Hannon,
@@ -542,17 +542,31 @@ Total time:
 
   Overall Conventional Integrals timings
 
+	Presorting SO-basis two-electron integrals.
+	Sorting File: SO Ints (nn|nn) nbuckets = 1
+	Transforming the one-electron integrals and constructing Fock matrices
+	Starting first half-transformation.
+	Sorting half-transformed integrals.
+	First half integral transformation complete.
+	Starting second half-transformation.
+	Two-electron integral transformation complete.
 
-  Conventional integrals take 0.11225660 s
+  Integral transformation done. 0.04764710 s
+  Reading the two-electron integrals from disk
+  Size of two-electron integrals:   0.008731 GB
+  Timing for freezing core and virtual orbitals:              0.000 s.
+  Conventional integrals take 0.12258200 s
 
   ==> Summary of Active Space Solver Input <==
 
-    Irrep.  Multi.  Nstates
-    -------------------------
-      A1       1        1
-    -------------------------
-    Total number of states: 1
-    -------------------------
+    Irrep.  Multi.(2ms)      N
+    --------------------------
+       A1      1  (  0)      1
+    --------------------------
+    N: number of roots
+    ms: spin z component
+    Total number of roots:   1
+    --------------------------
 
 
 -------------------------------------------------------------------------------
@@ -631,24 +645,50 @@ Total time:
      3       3       1       1    
      2       4       2       0    
 
+  GAS Orbital Energies
+  GAS   Energies    Orb 
+  1  -1.320609273  0 
+  1  -0.563930450  1 
+  1  -0.495003944  3 
+  1  -0.678724187  4 
+  2   0.202465902  2 
+  2   0.292719335  5 
+
   ==> Diagonalizing the Hamiltonian in the P + Q space <==
 
   Number of reference roots: 1
 
   ==> Computing Coupling Lists <==
   --------------------------------
-        α          0.000443 s
-        β          0.000525 s
-        αα         0.000467 s
-        ββ         0.000360 s
-        αβ         0.000846 s
+        α          0.000216 s
+        β          0.000200 s
+        αα         0.000345 s
+        ββ         0.000333 s
+        αβ         0.000926 s
   --------------------------------
 
   Davidson-Liu solver algorithm using SigmaVectorSparseList sigma algorithm
-  Total time spent diagonalizing H:   0.004944 s
 
-    PQ-space CI Energy Root   0        = -76.029683013021 Eh =   0.0000 eV, S^2 = 0.000000
+  Performing diagonalization of the H matrix
+  Total time spent diagonalizing H:   0.004391 s
+
+    PQ-space CI Energy Root   0        = -76.029683013021 Eh =   0.0000 eV, S^2 = -0.000000
     PQ-space CI Energy + EPT2 Root   0 = -76.029683013021 Eh =   0.0000 eV
+
+  
+  GAS Contribution Analysis  
+  GAS contributions root 0: 
+  GAS1_A    GASI_B    GAS2_A    GAS2_B        Cont  
+     4         4         0         0        0.991468934  
+     4         3         0         1        0.000332779  
+     4         2         0         2        0.000335243  
+     3         4         1         0        0.000332779  
+     3         3         1         1        0.007195022  
+     2         4         2         0        0.000335243  
+
+           6                  2            0.007865507  
+           7                  1            0.000665558  
+           8                  0            0.991468934  
 
 
   ==> ACI Natural Orbitals <==
@@ -656,8 +696,8 @@ Total time:
 
   ==> Computing Coupling Lists <==
   --------------------------------
-        α          0.000238 s
-        β          0.000233 s
+        α          0.000222 s
+        β          0.000294 s
         1B1     1.999783      1A1     1.999639      2A1     1.993312  
         1B2     1.991424      2B2     0.008564      3A1     0.007278  
 
@@ -674,29 +714,29 @@ Total time:
   Most important contributions to root   0:
     0  -0.995725 0.991468934           0 |220220>
     1   0.047200 0.002227798          27 |220202>
-    2  -0.028090 0.000789031          20 |2-+2+->
-    3  -0.028090 0.000789031          25 |2+-2-+>
+    2  -0.028090 0.000789031          25 |2+-2-+>
+    3  -0.028090 0.000789031          20 |2-+2+->
     4   0.026911 0.000724178          18 |202220>
     5  -0.018362 0.000337170          23 |+2-2-+>
     6  -0.018362 0.000337170          14 |-2+2+->
     7   0.018302 0.000334955          28 |222200>
-    8   0.016443 0.000270374          16 |+-2220>
-    9   0.016443 0.000270374          12 |-+2220>
+    8   0.016443 0.000270374          12 |-+2220>
+    9   0.016443 0.000270374          16 |+-2220>
 
   Saving information for root: 0
 
   ==> Energy Summary <==
 
-    Multi.  Irrep.  No.               Energy
-    -----------------------------------------
-       1      A1     0       -76.029683013021
-    -----------------------------------------
+    Multi.(2ms)  Irrep.  No.               Energy
+    ---------------------------------------------
+       1  (  0)    A1     0      -76.029683013021
+    ---------------------------------------------
 
-  Time to prepare integrals: 0.11482620239257812 seconds
-  Time to run job          : 0.010885238647460938 seconds
-  Total                    : 0.010885238647460938 seconds	ACI energy........................................................PASSED
+  Time to prepare integrals:        0.125 seconds
+  Time to run job          :        0.013 seconds
+  Total                    :        0.013 seconds	ACI energy........................................................PASSED
 
-    Psi4 stopped on: Saturday, 18 April 2020 01:20AM
-    Psi4 wall time for execution: 0:00:00.58
+    Psi4 stopped on: Friday, 07 August 2020 04:42PM
+    Psi4 wall time for execution: 0:00:00.63
 
 *** Psi4 exiting successfully. Buy a developer a beer!

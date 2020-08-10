@@ -340,80 +340,79 @@ void OrbitalOptimizer::orbital_gradient() {
         zero_redunant(Orb_grad_Fock);
     }
 
-    //    if (gas_) {
-    ////        gas_num_ = gas_info_.first;
-    //        std::map<int, int> re_ab_mo;
-    //        for (size_t i = 0; i < na_; i++) {
-    //            re_ab_mo[active_abs_[i]] = i;
-    //        }
-    //        std::vector<std::string> gas_subspaces = {"GAS1", "GAS2", "GAS3", "GAS4", "GAS5",
-    //        "GAS6"};
-    ////        std::map<std::string, SpaceInfo> general_active_spaces = gas_info_.second;
-    //        std::vector<size_t> absolute_mo_sum;
-    //        for (size_t gas_count = 0; gas_count < 6; gas_count++) {
-    //            std::string space = gas_subspaces.at(gas_count);
-    //            std::vector<size_t> relative_mo;
-    //            std::vector<size_t> absolute_mo;
-    //            auto vec_mo_info = general_active_spaces[space].second;
-    //            //            outfile->Printf("\n GAS %d, ", gas_count);
-    //            for (size_t i = 0; i < vec_mo_info.size(); ++i) {
-    //                relative_mo.push_back(re_ab_mo[std::get<0>(vec_mo_info[i])]);
-    //                absolute_mo.push_back(std::get<0>(vec_mo_info[i]));
-    //                absolute_mo_sum.push_back(std::get<0>(vec_mo_info[i]));
-    //                //                outfile->Printf("\n %d  %d  ", std::get<0>(vec_mo_info[i]),
-    //                //                                re_ab_mo[std::get<0>(vec_mo_info[i])]);
-    //            }
-    //            for (size_t ii : absolute_mo) {
-    //                for (size_t jj : absolute_mo_sum) {
-    //                    Orb_grad_Fock->set(nhole_map_[ii], npart_map_[jj], 0.0);
-    //                }
-    //            }
-    //
-    //            // Zeroout diagonal and one-block of the off-diagonal matrix
-    //            relative_gas_mo_.push_back(relative_mo);
-    //        }
-    //        //        auto active_re_  mo = mo_space_info_->get_relative_mo("ACTIVE");
-    //        //        for (size_t i = 0; i < na_; i++) {
-    //        //            outfile->Printf("Active %d %d %d \n", active_abs_[i],
-    //        active_re_mo[i].first,
-    //        //                            active_re_mo[i].second);
-    //        //        }
-    //        auto active_frozen = options_->get_int_vec("CASSCF_FROZEN_ORBITAL");
-    //        if (!active_frozen.empty()) {
-    //            outfile->Printf("\n  Active Orbitals Frozen:");
-    //        }
-    //        std::vector<int> active;
-    //        for (int i = 0; i < na_; i++) {
-    //            active.push_back(i);
-    //        }
-    //        std::vector<int> unfrozen;
-    //        std::set_difference(active.begin(), active.end(), active_frozen.begin(),
-    //                            active_frozen.end(), std::inserter(unfrozen, unfrozen.begin()));
-    //
-    //        for (int i : active_frozen) {
-    //            for (int j : unfrozen) {
-    //                size_t ii = active_abs_[i];
-    //                size_t jj = active_abs_[j];
-    //                Orb_grad_Fock->set(nhole_map_[ii], npart_map_[jj], 0.0);
-    //                Orb_grad_Fock->set(nhole_map_[jj], npart_map_[ii], 0.0);
-    //            }
-    //        }
-    //        for (int i : active_frozen) {
-    //            for (size_t j = 0; j < nrdocc_; j++) {
-    //                size_t ii = active_abs_[i];
-    //                size_t jj = restricted_docc_abs_[j];
-    //                Orb_grad_Fock->set(nhole_map_[jj], npart_map_[ii], 0.0);
-    //            }
-    //        }
-    //        for (int i : active_frozen) {
-    //            for (size_t j = 0; j < nvir_; j++) {
-    //                size_t ii = active_abs_[i];
-    //                size_t jj = restricted_uocc_abs_[j];
-    //                Orb_grad_Fock->set(nhole_map_[ii], npart_map_[jj], 0.0);
-    //            }
-    //        }
-    //        outfile->Printf("\n");
-    //    }
+    if (gas_) {
+        gas_num_ = 0;
+        auto active_abs = mo_space_info_->absolute_mo("ACTIVE");
+        std::map<int, int> re_ab_mo;
+        for (size_t i = 0; i < na_; i++) {
+            re_ab_mo[active_abs_[i]] = i;
+        }
+        std::vector<std::string> gas_subspaces = {"GAS1", "GAS2", "GAS3", "GAS4", "GAS5", "GAS6"};
+        std::vector<size_t> absolute_mo_total;
+        for (size_t gas_count = 0; gas_count < 6; gas_count++) {
+            std::string space = gas_subspaces[gas_count];
+            std::vector<size_t> relative_mo;
+            std::vector<size_t> absolute_mo;
+            auto gas_space = mo_space_info_->absolute_mo(space);
+            //            outfile->Printf("\n GAS %d, ", gas_count);
+            if (!gas_space.empty()) {
+                for (size_t i = 0, imax = gas_space.size(); i < imax; ++i) {
+                    relative_mo.push_back(re_ab_mo[gas_space[i]]);
+                    absolute_mo.push_back(gas_space[i]);
+                    absolute_mo_total.push_back(gas_space[i]);
+                }
+                gas_num_ = gas_num_ + 1;
+            }
+            for (size_t ii : absolute_mo) {
+                for (size_t jj : absolute_mo_total) {
+                    Orb_grad_Fock->set(nhole_map_[ii], npart_map_[jj], 0.0);
+                }
+            }
+
+            // Zeroout diagonal and one-block of the off-diagonal matrix
+            relative_gas_mo_.push_back(relative_mo);
+        }
+        //        auto active_re_  mo = mo_space_info_->get_relative_mo("ACTIVE");
+        //        for (size_t i = 0; i < na_; i++) {
+        //            outfile->Printf("Active %d %d %d \n", active_abs_[i],active_re_mo[i].first,
+        //                            active_re_mo[i].second);
+        //        }
+        auto active_frozen = options_->get_int_vec("CASSCF_FROZEN_ORBITAL");
+        if (!active_frozen.empty()) {
+            outfile->Printf("\n  Active Orbitals Frozen:");
+        }
+        std::vector<int> active;
+        for (int i = 0; i < na_; i++) {
+            active.push_back(i);
+        }
+        std::vector<int> unfrozen;
+        std::set_difference(active.begin(), active.end(), active_frozen.begin(),
+                            active_frozen.end(), std::inserter(unfrozen, unfrozen.begin()));
+
+        for (int i : active_frozen) {
+            for (int j : unfrozen) {
+                size_t ii = active_abs_[i];
+                size_t jj = active_abs_[j];
+                Orb_grad_Fock->set(nhole_map_[ii], npart_map_[jj], 0.0);
+                Orb_grad_Fock->set(nhole_map_[jj], npart_map_[ii], 0.0);
+            }
+        }
+        for (int i : active_frozen) {
+            for (size_t j = 0; j < nrdocc_; j++) {
+                size_t ii = active_abs_[i];
+                size_t jj = restricted_docc_abs_[j];
+                Orb_grad_Fock->set(nhole_map_[jj], npart_map_[ii], 0.0);
+            }
+        }
+        for (int i : active_frozen) {
+            for (size_t j = 0; j < nvir_; j++) {
+                size_t ii = active_abs_[i];
+                size_t jj = restricted_uocc_abs_[j];
+                Orb_grad_Fock->set(nhole_map_[ii], npart_map_[jj], 0.0);
+            }
+        }
+        outfile->Printf("\n");
+    }
 
     if (casscf_debug_print_) {
         Orb_grad_Fock->print();

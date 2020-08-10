@@ -232,7 +232,12 @@ void AdaptiveCI::find_q_space() {
 
     } else if (screen_alg == "MULTI_GAS") {
         // get_gas_excited_determinants_core(P_evecs_, P_evals_, P_space_, F_space);
+        // Inefficient algorithm but should be used when calculate multiple roots with
+        // the same GAS electrons and same symmetry
+
+        // The tricky way to avoid ref_root_ being non-zero for core-excited state
         get_gas_excited_determinants_sr(P_evecs_, P_evals_, P_space_, F_space);
+        ref_root_ = 0;
 
     } else if (screen_alg == "CORE") {
         get_excited_determinants_core(P_evecs_, P_evals_, P_space_, F_space);
