@@ -309,6 +309,12 @@ gasci:
 gasscf:
   medium:
    - gasscf-1
+   - gasscf-2
+   - gasscf-3
+  medium:
+   - sa-gasscf-1
+   - sa-gasscf-2
+   - sa-gasscf-3
 #x2c:
 #  medium:
 #   - x2c-1
