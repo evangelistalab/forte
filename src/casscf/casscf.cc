@@ -95,9 +95,9 @@ void CASSCF::startup() {
     // Set MOs containers
     core_mos_abs_ = mo_space_info_->absolute_mo("RESTRICTED_DOCC");
     actv_mos_abs_ = mo_space_info_->absolute_mo("ACTIVE");
-    core_mos_rel_ = mo_space_info_->get_relative_mo("RESTRICTED_DOCC");
-    actv_mos_rel_ = mo_space_info_->get_relative_mo("ACTIVE");
-    virt_mos_rel_ = mo_space_info_->get_relative_mo("RESTRICTED_UOCC");
+    core_mos_rel_ = mo_space_info_->relative_mo("RESTRICTED_DOCC");
+    actv_mos_rel_ = mo_space_info_->relative_mo("ACTIVE");
+    virt_mos_rel_ = mo_space_info_->relative_mo("RESTRICTED_UOCC");
 
     frozen_docc_dim_ = mo_space_info_->dimension("FROZEN_DOCC");
     restricted_docc_dim_ = mo_space_info_->dimension("RESTRICTED_DOCC");

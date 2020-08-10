@@ -53,14 +53,73 @@ using SpaceInfo = std::pair<psi::Dimension, std::vector<MOInfo>>;
  * @brief The MOSpaceInfo class
  *
  * This class reads and holds information about orbital spaces
+ * The class defines two type of orbital spaces: elementary and composite.
  *
- * Irrep:                A1(0)       A2(1)    B1(2)   B2(3)
- * ALL:             | 0 1 2 3 4 | 5 6 7 8 9 | 10 11 | 12 13 |
- * CORRELATED:      | - 0 1 2 3 | - 4 5 6 7 |  8  - |  9 10 |
- * RELATIVE:        | 0 1 2 3 4 | 0 1 2 3 4 |  0  1 |  0  1 |
+ * ==> ELEMENTARY SPACES <===
+ * Within each elementary space, the orbitals are grouped into irreps according to
+ * Pitzer ordering, e.g.,
+ *
+ * RESTRICTED_DOCC = [A1 A1 A2 B1 B2]
+ *
+ * By default the following elementary spaces are defined
+ *
+ * ================================================================================
+ * Type             Occupation  Occupation      Description
+ *                  in CAS/GAS  in correlated
+ * --------------------------------------------------------------------------------
+ * FROZEN_DOCC          2           2           Frozen doubly occupied orbitals
+ * RESTRICTED_DOCC      2          0-2          Restricted doubly occupied orbitals
+ * GAS1, GAS2, ...     0-2         0-2          Generalized active spaces
+ * RESTRICTED_UOCC      0          0-2          Restricted unoccupied orbitals
+ * FROZEN_UOCC          0           0           Frozen unoccupied orbitals
+ * ================================================================================
+ *
+ *
+ * ==> COMPOSITE SPACES <===
+ *
+ * Composite spaces are formed by combining elementary spaces. The following table
+ * defines the most important composite spaces used in the MOSpaceInfo class
+ *
+ * ========================================================================================
+ *                   ALL  FROZEN CORRELATED  ACTIVE  GENERALIZED GENERALIZED  CORE  VIRTUAL
+ *                                                      HOLE       PARTICLE
+ *
+ * FROZEN_DOCC        *      *
+ * RESTRICTED_DOCC    *              *                   *                      *
+ * GAS1 - GAS6        *              *          *        *             *
+ * RESTRICTED_UOCC    *              *                                 *               *
+ * FROZEN_UOCC        *      *
+ * ========================================================================================
+ *
+ * By convention, orbitals within a composite space are blocked first by symmetry and then
+ * by elementary space (Pitzer ordering). For example if the restricted docc and active orbitals are
+ *
+ * RESTRICTED_DOCC = [A1 A1 | A2 | B1 | B2]
+ * ACTIVE = [A1 | B2]
+ *
+ * then in the composite space HOLE = RESTRICTED_DOCC + ACTIVE the orbitals are arranged as
+ *
+ * HOLE = [A1 A1 A1 | A2 | B1 | B2 B2]
+ * SPACE   R  R  A    R    R    R  A    // R = RESTRICTED_DOCC, A = ACTIVE
+ *
+ *
+ * ==> EXAMPLE <===
+ *
+ * The following is an example of how the orbitals are assigned when the user specifies
+ * the orbitals spaces as below
+ *
+ * Irrep                 A1(0)       A2(1)    B1(2)   B2(3)
+ *
+ * Indexing:
+ * ALL              | 0 1 2 3 4 | 5 6 7 8 9 | 10 11 | 12 13 | <- absolute index in the full orbital
+ * space CORRELATED       | - 0 1 2 3 | - 4 5 6 7 |  8  - |  9 10 | <- absolute index in the space
+ * of non-frozen orbitals RELATIVE         | 0 1 2 3 4 | 0 1 2 3 4 |  0  1 |  0  1 | <- index
+ * relative to the irrep in the full orbital space
+ *
  * FROZEN_DOCC        *           *
  * RESTRICTED_DOCC      *           * *        *       *
- * ACTIVE                 * *           *
+ * GAS1                   *             *
+ * GAS2                     *
  * RESTRICED_UOCC             *           *               *
  * FROZEN_UOCC                                    *
  *
@@ -80,23 +139,29 @@ using SpaceInfo = std::pair<psi::Dimension, std::vector<MOInfo>>;
  *
  * absolute_mo("FROZEN_DOCC")     -> [0,5]
  * absolute_mo("RESTRICTED_DOCC") -> [1,6,7,10,12]
+ * absolute_mo("GAS1")            -> [2,8]
+ * absolute_mo("GAS2")            -> [3]
  * absolute_mo("ACTIVE")          -> [2,3,8]
  * absolute_mo("RESTRICTED_UOCC") -> [4,9]
  * absolute_mo("FROZEN_UOCC")     -> [11]
  *
  * corr_abs_mo("FROZEN_DOCC")     -> []
  * corr_abs_mo("RESTRICTED_DOCC") -> [0,4,5,8,9]
+ * corr_abs_mo("GAS1")            -> [1,6]
+ * corr_abs_mo("GAS2")            -> [2]
  * corr_abs_mo("ACTIVE")          -> [1,2,6]
  * corr_abs_mo("RESTRICTED_UOCC") -> [3,7,10]
  * corr_abs_mo("FROZEN_UOCC")     -> []
  *
- * get_relative_mo("FROZEN_DOCC")     -> [(0,0),(1,0)]
- * get_relative_mo("RESTRICTED_DOCC") -> [(0,1),(1,1),(1,2),(2,0),(3,0)]
- * get_relative_mo("ACTIVE")          -> [(0,2),(0,3),(1,3)]
- * get_relative_mo("RESTRICTED_UOCC") -> [(0,4),(1,4),(3,1)]
- * get_relative_mo("FROZEN_UOCC")     -> [(2,1)]
-
+ * relative_mo("FROZEN_DOCC")     -> [(0,0),(1,0)]
+ * relative_mo("RESTRICTED_DOCC") -> [(0,1),(1,1),(1,2),(2,0),(3,0)]
+ * relative_mo("GAS1")            -> [(0,2),(1,3)]
+ * relative_mo("GAS2")            -> [(0,3)]
+ * relative_mo("ACTIVE")          -> [(0,2),(0,3),(1,3)]
+ * relative_mo("RESTRICTED_UOCC") -> [(0,4),(1,4),(3,1)]
+ * relative_mo("FROZEN_UOCC")     -> [(2,1)]
  */
+
 class MOSpaceInfo {
   public:
     // ==> Class Constructor <==
@@ -129,7 +194,13 @@ class MOSpaceInfo {
     std::vector<size_t> corr_absolute_mo(const std::string& space);
     /// @return The list of the relative index (h,p_rel) of the molecular
     /// orbitals in space
-    std::vector<std::pair<size_t, size_t>> get_relative_mo(const std::string& space);
+    std::vector<std::pair<size_t, size_t>> relative_mo(const std::string& space);
+    /// @return The list of the relative index (h,p_rel) of the molecular
+    /// orbitals in space
+    [[deprecated("this function will soon be removed")]] std::vector<std::pair<size_t, size_t>>
+    get_relative_mo(const std::string& space);
+    /// @return The position of the orbitals in a space in a larger composite space
+    std::vector<size_t> pos_in_space(const std::string& space, const std::string& composite_space);
 
     /// Read the space info from forte options(inputs)
     void read_options(std::shared_ptr<ForteOptions> options);
@@ -168,18 +239,6 @@ class MOSpaceInfo {
     psi::Dimension nmopi_;
     /// Information about each elementary space stored in a map
     std::map<std::string, SpaceInfo> mo_spaces_;
-    //    /// Information about each GAS space stored in a map
-    std::map<std::string, SpaceInfo> general_active_spaces_;
-    //
-    //    std::vector<std::string> elementary_spaces_{"FROZEN_DOCC", "RESTRICTED_DOCC", "ACTIVE",
-    //                                                "RESTRICTED_UOCC", "FROZEN_UOCC"};
-    //    std::vector<std::string> elementary_spaces_priority_{
-    //        "ACTIVE", "RESTRICTED_UOCC", "RESTRICTED_DOCC", "FROZEN_DOCC", "FROZEN_UOCC"};
-    //    /// Names of GAS
-    std::vector<std::string> gas_subspaces_{"GAS1", "GAS2", "GAS3", "GAS4", "GAS5", "GAS6"};
-
-    /// The pair with the number of GAS and general_active_spaces_
-    //    std::pair<int, std::map<std::string, SpaceInfo>> gas_info_;
     /// The list of elementary spaces
     std::vector<std::string> elementary_spaces_{
         "FROZEN_DOCC", "RESTRICTED_DOCC", "GAS1",       "GAS2", "GAS3", "GAS4", "GAS5",

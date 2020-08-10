@@ -306,6 +306,9 @@ gasci:
    - gasaci-4
                   
 
+gasscf:
+  medium:
+   - gasscf-1
 #x2c:
 #  medium:
 #   - x2c-1

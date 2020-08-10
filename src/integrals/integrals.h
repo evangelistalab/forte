@@ -197,7 +197,7 @@ class ForteIntegrals {
     virtual double aptei_aa(size_t p, size_t q, size_t r, size_t s) = 0;
 
     /// The antisymmetrixed alpha-beta two-electron integrals in physicist
-    /// notation <pq||rs>
+    /// notation <pq|rs> = (pr|qs)
     virtual double aptei_ab(size_t p, size_t q, size_t r, size_t s) = 0;
     /// The antisymmetrixed beta-beta two-electron integrals in physicist
     /// notation <pq||rs>
