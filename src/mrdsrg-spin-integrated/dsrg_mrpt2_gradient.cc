@@ -277,6 +277,7 @@ void DSRG_MRPT2::set_multiplier() {
     set_tau();
     set_kappa();
     set_z();
+    Z.print();
     set_w();   
 }
 
@@ -795,6 +796,13 @@ void DSRG_MRPT2::set_z_aa_diag() {
         val3["u"] -= 1.0 * temp["uJaB"] * V_["cDkL"] * Gamma1["ku"] * Gamma1["LJ"] * Eta1["ac"] * Eta1["BD"];
         temp.zero();
 
+        // remove internal terms
+        temp["uvxy"] += V["uvxy"] * Eeps2_m2["uvxy"];
+        temp["uVxY"] += V["uVxY"] * Eeps2_m2["uVxY"];
+        val3["u"] += 0.5 * temp["uvxy"] * V_["cdkl"] * Gamma1["ku"] * Gamma1["lv"] * Eta1["xc"] * Eta1["yd"];
+        val3["u"] += 1.0 * temp["uVxY"] * V_["cDkL"] * Gamma1["ku"] * Gamma1["LV"] * Eta1["xc"] * Eta1["YD"];
+        temp.zero();
+
         temp["ulcd"] += V["ulcd"] * Eeps2["ulcd"];
         temp["uLcD"] += V["uLcD"] * Eeps2["uLcD"];
         temp_1["ulcd"] += Kappa["ulcd"] * Delta2["ulcd"];
@@ -814,6 +822,13 @@ void DSRG_MRPT2::set_z_aa_diag() {
         temp["iJuB"] += V["iJuB"] * Eeps2_m2["iJuB"];
         val3["u"] += 0.5 * temp["ijub"] * V_["cdkl"] * Gamma1["ki"] * Gamma1["lj"] * Eta1["uc"] * Eta1["bd"];
         val3["u"] += 1.0 * temp["iJuB"] * V_["cDkL"] * Gamma1["ki"] * Gamma1["LJ"] * Eta1["uc"] * Eta1["BD"];
+        temp.zero();
+
+        // remove internal terms
+        temp["xyuv"] += V["xyuv"] * Eeps2_m2["xyuv"];
+        temp["xYuV"] += V["xYuV"] * Eeps2_m2["xYuV"];
+        val3["u"] -= 0.5 * temp["xyuv"] * V_["cdkl"] * Gamma1["kx"] * Gamma1["ly"] * Eta1["uc"] * Eta1["vd"];
+        val3["u"] -= 1.0 * temp["xYuV"] * V_["cDkL"] * Gamma1["kx"] * Gamma1["LY"] * Eta1["uc"] * Eta1["VD"];
         temp.zero();
 
         temp["klud"] += V["klud"] * Eeps2["klud"];
@@ -1988,17 +2003,17 @@ void DSRG_MRPT2::solve_z() {
     } 
 
     // // test need to be deleted
-    // x_ci.zero();
-    // double mm = foptions_->get_double("SIGMA");
+    x_ci.zero();
+    double mm = foptions_->get_double("SIGMA");
 
-    // std::vector<double> ttt = {0.9269376610043215*mm,0.3752153683044413*mm};
+    std::vector<double> ttt = {0.9269376610043215*mm,0.3752153683044413*mm};
 
-    // for (const std::string& block : {"ci"}) {
-    //     (x_ci).iterate([&](const std::vector<size_t>& i, double& value) {
-    //         int index = i[0];
-    //         value = ttt.at(index);
-    //     });
-    // } 
+    for (const std::string& block : {"ci"}) {
+        (x_ci).iterate([&](const std::vector<size_t>& i, double& value) {
+            int index = i[0];
+            value = ttt.at(index);
+        });
+    } 
 
     scale_ci -= x_ci("K") * ci("K");
     std::cout<< "scale = " << scale_ci << std::endl;

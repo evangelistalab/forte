@@ -40,7 +40,7 @@ dsrg_s 1.0
    dsrgpt               true
    print_denom2         true
    multiplicity         1
-   sigma                0.1473
+   sigma                0.135495
 }
 
 
@@ -52,7 +52,7 @@ grad = gradient('forte', ref_wfn = ref)
 
 set findif{ 
   points 5
-  # DISP_SIZE 0.01
+  DISP_SIZE 0.001
 }
 # grad = gradient('forte', dertype="energy")
 
