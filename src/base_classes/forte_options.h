@@ -85,6 +85,13 @@ class ForteOptions {
              pybind11::list allowed_values, const std::string& description);
 
     /**
+     * @brief Check if an options exists
+     * @param label Option label
+     * @return does this option exist?
+     */
+    bool exists(const std::string& label) const;
+
+    /**
      * @brief Check if an options is set to None
      * @param label Option label
      * @return is the option equal to None?

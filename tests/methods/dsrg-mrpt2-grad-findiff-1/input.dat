@@ -2,8 +2,10 @@
 
 import forte
 
-refEdsrg = -100.2173774849334
-refRe    =    1.7342309621 # in Bohr
+ref_grad = psi4.Matrix.from_list([
+      [ 0.00000000000000, 0.00000000000000, -0.00033557977189],
+      [ 0.00000000000000, 0.00000000000000,  0.00033557977189]
+      ])
 
 molecule HF{
   0 1
@@ -15,16 +17,11 @@ molecule HF{
 set globals{
   basis                    cc-pvdz
   reference                rhf
-  d_convergence            8
-  e_convergence            13
+  d_convergence            12
+  e_convergence            15
   restricted_docc          [2,0,1,1]
   active                   [2,0,0,0]
   maxiter                  100
-  rms_disp_g_convergence   1.0e-6
-  max_disp_g_convergence   2.0e-6
-  rms_force_g_convergence  1.0e-8
-  max_force_g_convergence  2.0e-8
-  max_energy_g_convergence 1.0e-10
 }
 
 set forte{
@@ -40,8 +37,5 @@ set forte{
   active_space_solver      fci 
 }
 
-Eopt = optimize('forte',dertype=0)
-mol  = psi4.get_active_molecule()
-bond = abs(mol.z(0) - mol.z(1))
-compare_values(refEdsrg,Eopt,10,"DSRG-MRPT2 energy at Re")
-compare_values(bond,refRe,6,"Optimized bond length")
+grad = gradient('forte',dertype=0)
+compare_matrices(ref_grad, grad, 6, "CASSCF/DSRG-MRPT2 gradient")  #TEST
