@@ -1,11 +1,11 @@
 #! Generated using commit GITCOMMIT 
-# GAS ACI calculation with multi-gas algorithm
+# GASSCF for core-excited state with Core frozen
+# Without CASSCF_FROZEN_ORBITAL this will collapse to ground state and not converge
 
 import forte
 
 refscf = -76.0172965561 #TEST
-refaci = -55.0864584337 #TEST
-refacipt2 = -55.086458434 #TEST
+refgasscf = -65.902165653707 #TEST
 
 memory 6000mb
 molecule h2o{
@@ -29,24 +29,27 @@ set forte {
   active_space_solver aci
   ms 0.0
   multiplicity 1
-  sigma 0.00
-  single_calculation True
+  sigma 0.001
   root_sym 0
   charge 0
   sci_enforce_spin_complete true
-  aci_screen_alg multi_gas 
   e_convergence 6
   charge 0
-  active_ref_type gas
-  GAS2 [3,0,1,2]
+  aci_screen_alg multi_gas
+  active_ref_type gas_single
   GAS1 [1,0,0,0]
+  GAS2 [3,0,1,2]
   GAS1MAX_MULTI [[0,1,2],[2,1,1]]
   GAS1MIN_MULTI [[0,1,0],[2,1,0]]
-  avg_state [[0,1,1],[2,1,1]]
+  AVG_STATE [[0,1,1],[2,1,1]]
+  job_type casscf
+  casscf_ci_solver aci
+  casscf_maxiter 100
+  casscf_e_convergence 1e-10
+  casscf_frozen_orbital [0]
+  casscf_diis_start 15
 }
 
 escf ,wfn = energy('scf',return_wfn = True)
-compare_values(refscf, variable("CURRENT ENERGY"),9, "SCF energy") #TEST
-energy('forte')
-compare_values(refaci, variable("ACI ENERGY"),9, "ACI energy") #TEST
-compare_values(refacipt2, variable("ACI+PT2 ENERGY"),8, "ACI+PT2 energy") #TEST
+egasscf = energy('forte')
+compare_values(refgasscf, egasscf ,9, "GASSCF energy") #TEST
