@@ -1,17 +1,19 @@
-# GAS-ACI calculation for Na atom ground and core excited states
+#! Generated using commit GITCOMMIT 
+# GAS ACI calculation for core excited state of CO
 
 import forte
 
+memory 6000mb
 
-gsgasaci = -161.8428167085  #TEST
-gsgasacipt2 = -161.8438106035  #TEST
-exgasaci = -121.7510816479  #TEST
-exgasacipt2 = -121.7520814944  #TEST
+gsaci = -112.7959612732 #TEST
+gsacipt2 = -112.7969443124 #TEST
+exaci = -92.6905473526 #TEST
+exacipt2 = -92.6915309912 #TEST
 
-
-molecule na{
-0 2
-Na
+molecule CO{
+0 1
+   C
+   O 1 1.123708
 }
 
 set {
@@ -24,42 +26,36 @@ set {
   reference rohf
 }
 
-set forte {
-  active_space_solver aci
-  multiplicity 2
-  sigma 0.00100
-  nroot 1
-  root_sym 0
-  charge 0
-  sci_enforce_spin_complete true
-  active_ref_type gas_single
-  GAS1 [1,0,0,0,0,0,0,0]
-  GAS2 [6,1,1,1,0,3,3,3]
-  GAS1MAX 2
-  ACI_ADD_AIMED_DEGENERATE false
-}
-
-energy('scf')
-
-energy('forte')
-
-compare_values(gsgasaci, variable("ACI ENERGY"),9, "ACI core excited energy") #TEST
-compare_values(gsgasacipt2, variable("ACI+PT2 ENERGY"),9, "ACI core excited energy + PT2") #TEST
 
 set forte {
   active_space_solver aci
-  multiplicity 2
+  ms 0.0
+  multiplicity 1
   sigma 0.001
   nroot 1
   root_sym 0
   charge 0
   sci_enforce_spin_complete true
-  GAS1MAX 1
-  ACI_ADD_AIMED_DEGENERATE false
+  active_ref_type gas_single
+  charge 0
+  GAS1 [1,0,0,0]
+  GAS2 [5,0,2,2]
+  GAS1MAX 2
+  GAS1MIN 0
 }
 
-energy_2 = energy('forte')
+escf ,wfn = energy('scf',return_wfn = True)
 
-compare_values(exgasaci, variable("ACI ENERGY"),9, "ACI core excited energy") #TEST
-compare_values(exgasacipt2, variable("ACI+PT2 ENERGY"),9, "ACI core excited energy + PT2") #TEST
-#
+energy('forte')
+compare_values(gsaci, variable("ACI ENERGY"),9, "ACI energy") #TEST
+compare_values(gsacipt2, variable("ACI+PT2 ENERGY"),9, "ACI+PT2 energy") #TEST
+
+set forte {
+  GAS1MAX 1
+  GAS1MIN 1
+  root_sym 2
+}
+
+energy('forte')
+compare_values(exaci, variable("ACI ENERGY"),9, "ACI energy") #TEST     
+compare_values(exacipt2, variable("ACI+PT2 ENERGY"), 9, "ACI+PT2 energy") #TEST
