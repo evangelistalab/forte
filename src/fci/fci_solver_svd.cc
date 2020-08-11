@@ -1152,7 +1152,7 @@ void FCISolver::zero_tile(std::vector<SharedMatrix>& C,
 
 }
 
-add_to_tle_vect(C, b_r, e_r, b_c, e_c, dim, dim, dim, h, i, j, sorted_tiles);
+// add_to_tle_vect(C, b_r, e_r, b_c, e_c, dim, dim, dim, h, i, j, sorted_tiles);
 
 void FCISolver::add_to_tle_vect(std::vector<SharedMatrix>& C,
                                  std::vector<int> b_r,
