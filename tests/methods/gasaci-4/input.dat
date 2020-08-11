@@ -1,13 +1,18 @@
-# GAS-ACI calculation for Na atom ground and core excited states with multi-gas algorithm
+#! Generated using commit GITCOMMIT 
+# GAS ACI calculation for core excited state of CO using MULTI_GAS algorithm
 
 import forte
 
-gasaci = -121.7510816479  #TEST
-gasacipt2 = -121.7520814944  #TEST
+memory 6000mb
 
-molecule na{
-0 2
-Na
+exaci = -92.6912453842 #TEST
+exacipt2 = -92.6922386459 #TEST
+aveaci = -102.7436033287 #TEST
+
+molecule CO{
+0 1
+   C
+   O 1 1.123708
 }
 
 set {
@@ -20,28 +25,28 @@ set {
   reference rohf
 }
 
+
 set forte {
   active_space_solver aci
-  multiplicity 2
+  ms 0.0
+  multiplicity 1
   sigma 0.001
   nroot 1
   root_sym 0
   charge 0
-  aci_screen_alg multi_gas
   sci_enforce_spin_complete true
   active_ref_type gas_single
-  GAS1 [1,0,0,0,0,0,0,0]
-  GAS2 [6,1,1,1,0,3,3,3]
-  GAS1MAX_MULTI [[0,2,2,1]]
-  GAS1MIN_MULTI [[0,2,0,0]]
-  AVG_STATE [[0,2,2]]
+  aci_screen_alg MULTI_GAS
+  charge 0
+  GAS1 [1,0,0,0]
+  GAS2 [5,0,2,2]
+  AVG_STATE [[0,1,1],[2,1,1]]
+  GAS1MAX_MULTI [[0,1,2],[2,1,1]]
 }
 
-energy('scf')
+escf ,wfn = energy('scf',return_wfn = True)
 
-energy('forte')
-
-compare_values(gasaci, variable("ACI ENERGY"),9, "ACI core excited energy") #TEST
-compare_values(gasacipt2, variable("ACI+PT2 ENERGY"),9, "ACI core excited energy + PT2") #TEST
-
-#
+ave_e = energy('forte')
+compare_values(exaci, variable("ACI ENERGY"),9, "ACI energy") #TEST     
+compare_values(exacipt2, variable("ACI+PT2 ENERGY"), 9, "ACI+PT2 energy") #TEST
+compare_values(aveaci, ave_e, 9, "AVERAGE ACI ENERGY") #TEST
