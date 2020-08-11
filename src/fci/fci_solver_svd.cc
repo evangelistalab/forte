@@ -534,8 +534,17 @@ void FCISolver::tile_chopper(std::vector<SharedMatrix>& C, double ETA,
     //find and sort tiles by tile_factor
     for (int h=0; h<nirrep; h++) {
       // loop over irreps
+
       int ncol = C[h]->rowdim();
       int nrow = C[h]->coldim();
+      int ncol2 = C[h]->cols();
+      int nrow2 = C[h]->rows();
+
+      std::cout << "\nh:      "  << h << std::endl;
+      std::cout << "nrows:   "  << nrow <<std::endl;
+      std::cout << "ncols:   "  << ncol <<std::endl;
+      std::cout << "nrows2:  "  << nrow2 <<std::endl;
+      std::cout << "ncols2:  "  << ncol2 <<std::endl;
 
       int nt_cols = ncol/dim; //is actually 1 less than total # of colums UNLESS last_col_dim = 0
       int nt_rows = nrow/dim;
@@ -556,9 +565,6 @@ void FCISolver::tile_chopper(std::vector<SharedMatrix>& C, double ETA,
           }
         }
       } else { // if not a perfect fit...
-
-        std::cout << "nt_rows:  "  << nt_rows <<std::endl;
-        std::cout << "nt_cols:  "  << nt_cols <<std::endl;
 
         for(int i=0; i<nt_rows+1; i++){
           for(int j=0; j<nt_cols+1; j++){
@@ -1129,7 +1135,6 @@ void FCISolver::zero_tile(std::vector<SharedMatrix>& C,
   Dimension end_row(e_r);
   Dimension begin_col(b_c);
   Dimension end_col(e_c);
-
 
   // make slice objects
   Slice row_slice(begin_row, end_row);
