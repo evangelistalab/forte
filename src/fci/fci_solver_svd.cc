@@ -1136,7 +1136,7 @@ void FCISolver::zero_tile(std::vector<SharedMatrix>& C,
   Slice col_slice(begin_col, end_col);
 
   // get matrix block
-  auto M = C[h]->get_block(row_slice, col_slice);
+  // auto M = C[h]->get_block(row_slice, col_slice);
 
   double area_factor = ((double)n*(double)d) / ((double)dim*(double)dim);
   //double tile_factor = M->sum_of_squares() / area_factor;
@@ -1145,8 +1145,9 @@ void FCISolver::zero_tile(std::vector<SharedMatrix>& C,
 
 
   if(tile_factor < tile_norm_cut){
-    M->set(0.0);
-    C[h]->set_block(row_slice, col_slice, M);
+    // M->set(0.0);
+    // C[h]->set_block(row_slice, col_slice, M);
+    C[h]->set(i, j, 0.0);
     Npar -= n*d;
   }
 
