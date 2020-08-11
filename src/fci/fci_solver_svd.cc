@@ -545,14 +545,20 @@ void FCISolver::tile_chopper(std::vector<SharedMatrix>& C, double ETA,
 
       // in cases mat can be tiled perfectly (/w out remainder)
       if(last_col_dim == 0 || last_row_dim == 0){
-        for(int i=0; i<nt_rows; i++){
-          for(int j=0; j<nt_cols; j++){
+        // for(int i=0; i<nt_rows; i++){
+        //   for(int j=0; j<nt_cols; j++){
+        //     add_to_tle_vect(C, b_r, e_r, b_c, e_c, dim, dim, dim, h, i, j, sorted_tiles);
+        //   }
+        // }
+        for(int i=0; i<nrows; i++){
+          for(int j=0; j<ncols; j++){
             add_to_tle_vect(C, b_r, e_r, b_c, e_c, dim, dim, dim, h, i, j, sorted_tiles);
           }
         }
       } else { // if not a perfect fit...
 
-        //std::cout << "nt_cols:  "  << nt_cols <<std::endl;
+        std::cout << "nt_rows:  "  << nt_rows <<std::endl;
+        std::cout << "nt_cols:  "  << nt_cols <<std::endl;
 
         for(int i=0; i<nt_rows+1; i++){
           for(int j=0; j<nt_cols+1; j++){
