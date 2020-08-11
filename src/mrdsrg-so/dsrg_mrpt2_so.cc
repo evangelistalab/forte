@@ -114,9 +114,13 @@ void DSRG_MRPT2_SO::startup() {
     BlockedTensor::reset_mo_spaces();
     BlockedTensor::set_expert_mode(true);
 
-    BTF_->add_mo_space("c", "mn", core_sos_, NoSpin);
+    label_to_sos_["c"] = core_sos_;
+    label_to_sos_["a"] = actv_sos_;
+    label_to_sos_["v"] = virt_sos_;
+
+    BTF_->add_mo_space("c", "m,n,c0,c1,c2,c3", core_sos_, NoSpin);
     BTF_->add_mo_space("a", "uvwxyz", actv_sos_, NoSpin);
-    BTF_->add_mo_space("v", "ef", virt_sos_, NoSpin);
+    BTF_->add_mo_space("v", "e,f,v0,v1,v2,v3", virt_sos_, NoSpin);
 
     BTF_->add_composite_mo_space("h", "ijkl", {"c", "a"});
     BTF_->add_composite_mo_space("p", "abcd", {"a", "v"});
@@ -397,6 +401,10 @@ void DSRG_MRPT2_SO::compute_gradients() {
     Mdbar2_ = BTF_->build(tensor_type_, "Mdbar2", {"pvhh", "vahh", "aahc", "aaca"});
     compute_m2_double_bar();
 
+    V1_ = BTF_->build(tensor_type_, "V1", {"pvhh", "vahh", "aahc", "aaca"});
+    V2_ = BTF_->build(tensor_type_, "V2", {"pvhh", "vahh", "aahc", "aaca"});
+    compute_v_scaled();
+
     compute_orb_grad();
 }
 
@@ -405,42 +413,104 @@ void DSRG_MRPT2_SO::compute_orb_grad() {
     Z_ = BTF_->build(tensor_type_, "z", {"ca", "ac", "av", "va", "cv", "vc"});
 
     compute_z_diag();
+
+    compute_z_vv();
+    compute_z_cc();
 }
 
 void DSRG_MRPT2_SO::compute_z_diag() {
     auto z = BTF_->build(tensor_type_, "z", {"g"}, true);
 
-    auto V = BTF_->build(tensor_type_, "V temp", {"pphh"}, true);
+    z["i"] += V1_["abij"] * Tbar2_["ijab"];
+    z["a"] -= V1_["abij"] * Tbar2_["ijab"];
 
-    V["abij"] = V_["abij"];
-    V.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>&, double& value) {
-        double d = Fd_[i[0]] + Fd_[i[1]] - Fd_[i[2]] - Fd_[i[3]];
-        double scale = 2 * s_ * dsrg_source_->compute_renormalized(d);
-        scale -= dsrg_source_->compute_renormalized_denominator2(d);
-        value *= scale;
-    });
+    z["i"] -= 2 * s_ * Mbar2_["abij"] * V2_["abij"];
+    z["a"] += 2 * s_ * Mbar2_["abij"] * V2_["abij"];
 
-    z["i"] += V["abij"] * Tbar2_["ijab"];
-    z["a"] -= V["abij"] * Tbar2_["ijab"];
-
-    V = BTF_->build(tensor_type_, "V temp", {"hhpp"}, true);
-    V["ijab"] = V_["ijab"];
-    V.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>&, double& value) {
-        double d = Fd_[i[0]] + Fd_[i[1]] - Fd_[i[2]] - Fd_[i[3]];
-        value *= d * dsrg_source_->compute_renormalized(d);
-    });
-
-    z["i"] -= 2 * s_ * Mbar2_["abij"] * V["ijab"];
-    z["a"] += 2 * s_ * Mbar2_["abij"] * V["ijab"];
-
-    for (std::string block: {"cc", "aa", "vv"}) {
+    for (std::string block : {"cc", "aa", "vv"}) {
         z_.block(block).iterate([&](const std::vector<size_t>& i, double& value) {
             if (i[0] == i[1]) {
                 value = z.block(block.substr(0, 1)).data()[i[0]];
             }
         });
     }
+
     z_.print();
 }
 
+void DSRG_MRPT2_SO::compute_v_scaled() {
+    V1_["abij"] = V_["abij"];
+    V1_.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>&, double& value) {
+        double d = Fd_[i[0]] + Fd_[i[1]] - Fd_[i[2]] - Fd_[i[3]];
+        double scale = 2 * s_ * dsrg_source_->compute_renormalized(d);
+        scale -= dsrg_source_->compute_renormalized_denominator2(d);
+        value *= scale;
+    });
+
+    V2_["abij"] = V_["abij"];
+    V2_.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>&, double& value) {
+        double d = Fd_[i[2]] + Fd_[i[3]] - Fd_[i[0]] - Fd_[i[1]];
+        value *= d * dsrg_source_->compute_renormalized(d);
+    });
+}
+
+void DSRG_MRPT2_SO::compute_z_vv() {
+    auto rhs = BTF_->build(tensor_type_, "RHS vv", {"vv"}, true);
+
+    rhs["fe"] += 0.5 * V_["fbij"] * Tdbar2_["ijeb"];
+    rhs["fe"] += 0.5 * V_["fbij"] * Mdbar2_["ebij"];
+
+    rhs["fe"] -= 0.5 * V_["ebij"] * Tdbar2_["ijfb"];
+    rhs["fe"] -= 0.5 * V_["ebij"] * Mdbar2_["fbij"];
+
+    auto ef = BTF_->build(tensor_type_, "ef", {"vv"}, true);
+
+    ef["ef"] -= 0.5 * M2_["ijfb"] * V1_["edkl"] * D1_["ik"] * D1_["jl"] * C1_["db"];
+    ef["ef"] -= 0.5 * V1_["fbij"] * M2_["kled"] * D1_["ik"] * D1_["jl"] * C1_["db"];
+    ef["ef"] += s_ * V2_["fbij"] * T2_["kled"] * D1_["ik"] * D1_["jl"] * C1_["db"];
+    ef["ef"] += s_ * T2_["ijfb"] * V2_["edkl"] * D1_["ik"] * D1_["jl"] * C1_["db"];
+
+    ef.print();
+
+    rhs.block("vv").iterate([&](const std::vector<size_t>& i, double& value) {
+        double d = Fd_[virt_sos_[i[1]]] - Fd_[virt_sos_[i[0]]];
+        if (std::fabs(d) < 1.0e-8) {
+            value = ef.block("vv").data()[i[0] * nv_ + i[1]];
+        } else {
+            value /= d;
+        }
+    });
+
+    rhs.print();
+}
+
+void DSRG_MRPT2_SO::compute_z_cc() {
+    auto rhs = BTF_->build(tensor_type_, "RHS cc", {"cc"}, true);
+
+    rhs["nm"] += 0.5 * V_["abnj"] * Tdbar2_["mjab"];
+    rhs["nm"] += 0.5 * V_["abnj"] * Mdbar2_["abmj"];
+
+    rhs["nm"] -= 0.5 * V_["abmj"] * Tdbar2_["njab"];
+    rhs["nm"] -= 0.5 * V_["abmj"] * Mdbar2_["abnj"];
+
+    auto mn = BTF_->build(tensor_type_, "mn", {"cc"}, true);
+
+    mn["mn"] += 0.5 * M2_["mjab"] * V1_["cdnl"]* D1_["jl"] * C1_["db"] * C1_["ca"];
+    mn["mn"] += 0.5 * V1_["abmj"] * M2_["nlcd"]* D1_["jl"] * C1_["db"] * C1_["ca"];
+    mn["mn"] -= s_ * V2_["abmj"] * T2_["nlcd"] * D1_["jl"] * C1_["db"] * C1_["ca"];
+    mn["mn"] -= s_ * T2_["mjab"] * V2_["cdnl"] * D1_["jl"] * C1_["db"] * C1_["ca"];
+
+    mn.print();
+
+    rhs.block("cc").iterate([&](const std::vector<size_t>& i, double& value) {
+        double d = Fd_[core_sos_[i[1]]] - Fd_[core_sos_[i[0]]];
+        if (std::fabs(d) < 1.0e-8) {
+            value = mn.block("cc").data()[i[0] * nc_ + i[1]];
+        } else {
+            value /= d;
+        }
+    });
+
+    rhs.print();
+}
 } // namespace forte

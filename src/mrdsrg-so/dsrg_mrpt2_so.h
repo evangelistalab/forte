@@ -94,6 +94,9 @@ class DSRG_MRPT2_SO : public DynamicCorrelationSolver {
     /// List of virtual SOs
     std::vector<size_t> virt_sos_;
 
+    /// Map from label to orbital indices
+    std::map<std::string, std::vector<size_t>> label_to_sos_;
+
     /// Number of spin orbitals
     size_t nso_;
     /// Number of core spin orbitals
@@ -126,9 +129,14 @@ class DSRG_MRPT2_SO : public DynamicCorrelationSolver {
     ambit::BlockedTensor F_; // Fock
     ambit::BlockedTensor Fc_; // inactive Fock
     ambit::BlockedTensor V_; // APTEI
+
+    ambit::BlockedTensor V1_; // scaled by 2 * s * exp(-s * D) - (1 - exp(-s * D^2)) / D^2
+    ambit::BlockedTensor V2_; // scaled by D * exp(-s * D^2)
+
     ambit::BlockedTensor M2_; // renormalized APTEI
     ambit::BlockedTensor Mbar2_; // multiplier for M2
     ambit::BlockedTensor Mdbar2_; // M2 double bar intermediate
+
     ambit::BlockedTensor T2_; // T2AMP
     ambit::BlockedTensor Tbar2_; // T2 bar * Delta
     ambit::BlockedTensor Tdbar2_; // T2 double bar intermediate
@@ -145,6 +153,9 @@ class DSRG_MRPT2_SO : public DynamicCorrelationSolver {
 
     /// Print a summary of the options
     void print_summary();
+
+    /// Compute scaled two-electron integrals
+    void compute_v_scaled();
 
     /// Compute the t2 amplitudes
     void compute_t2();
@@ -170,6 +181,12 @@ class DSRG_MRPT2_SO : public DynamicCorrelationSolver {
 
     /// Compute the diagonal elements of z
     void compute_z_diag();
+    /// Compute the vv block of z
+    void compute_z_vv();
+    /// Compute the cc block of z
+    void compute_z_cc();
+    /// Compute the aa block of z
+    void compute_z_aa();
     /// Compute z
     void compute_z();
     /// Compute Z
