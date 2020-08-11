@@ -550,8 +550,8 @@ void FCISolver::tile_chopper(std::vector<SharedMatrix>& C, double ETA,
         //     add_to_tle_vect(C, b_r, e_r, b_c, e_c, dim, dim, dim, h, i, j, sorted_tiles);
         //   }
         // }
-        for(int i=0; i<nrows; i++){
-          for(int j=0; j<ncols; j++){
+        for(int i=0; i<nrow; i++){
+          for(int j=0; j<ncol; j++){
             add_to_tle_vect(C, b_r, e_r, b_c, e_c, dim, dim, dim, h, i, j, sorted_tiles);
           }
         }
