@@ -195,12 +195,6 @@ def register_embedding_options(forte_options):
     forte_options.add_bool(
         "embedding_use_debug_density", False,
         "Use a 2*2 standard CAS density of LiH in ASET(2) for debugging")
-    forte_options.add_str(
-        "EMBEDDING_DEBUG", "T1", ["T1", "T2", "T3"],
-        "Special test functions for PT2 embedding")
-    forte_options.add_bool(
-        "embedding_align_frozen", True,
-        "Align frozen-core energy for different layers")
     forte_options.add_int(
         "embedding_iterations", 1,
         "Number of iterations to relax H_bar, use higher number for stronger correlated environment")
