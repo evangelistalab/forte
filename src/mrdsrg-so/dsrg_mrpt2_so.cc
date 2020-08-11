@@ -405,17 +405,25 @@ void DSRG_MRPT2_SO::compute_gradients() {
     V2_ = BTF_->build(tensor_type_, "V2", {"pvhh", "vahh", "aahc", "aaca"});
     compute_v_scaled();
 
+    E1_ = BTF_->build(tensor_type_, "E1", {"aa"});
+    E2_ = BTF_->build(tensor_type_, "E2", {"aaaa"});
+
     compute_orb_grad();
 }
 
 void DSRG_MRPT2_SO::compute_orb_grad() {
     z_ = BTF_->build(tensor_type_, "z", {"cc", "aa", "vv"});
-    Z_ = BTF_->build(tensor_type_, "z", {"ca", "ac", "av", "va", "cv", "vc"});
+    Z_ = BTF_->build(tensor_type_, "z", {"ca", "va", "vc"});
+    W_ = BTF_->build(tensor_type_, "W", {"gg"});
 
     compute_z_diag();
 
     compute_z_vv();
     compute_z_cc();
+
+    // the remaining needs iterative procedure
+    auto Z = BTF_->build(tensor_type_, "z", {"ca", "va", "vc", "aa"});
+
 }
 
 void DSRG_MRPT2_SO::compute_z_diag() {
@@ -512,5 +520,83 @@ void DSRG_MRPT2_SO::compute_z_cc() {
     });
 
     rhs.print();
+}
+
+void DSRG_MRPT2_SO::compute_z_iter() {
+    W_.zero();
+
+    // reference energy
+    W_["pm"] += 2.0 * F_["pm"];
+    W_["pu"] += 2.0 * Fc_["pv"] * D1_["vu"];
+    W_["pu"] += V_["pvxy"] * D2_["xyuv"];
+
+    // CI constraints
+    W_["pm"] += 2.0 * V_["mvpu"] * E1_["uv"];
+    W_["pu"] += 2.0 * Fc_["pv"] * E1_["vu"];
+    W_["pu"] += V_["pvxy"] * E2_["xyuv"];
+
+    // CASSCF orbital constraints
+    W_["pm"] += Z_["em"] * F_["pe"];
+    W_["pm"] += Z_["en"] * V_["nmep"];
+    W_["pm"] += Z_["en"] * V_["npem"];
+
+    W_["pm"] += Z_["mu"] * F_["up"];
+    W_["pm"] += Z_["nu"] * V_["umnp"];
+    W_["pm"] += Z_["nu"] * V_["upnm"];
+
+    W_["pm"] -= Z_["mu"] * Fc_["vp"] * D1_["uv"];
+    W_["pm"] -= Z_["nu"] * V_["vpnm"] * D1_["uv"];
+    W_["pm"] -= Z_["nu"] * V_["vmnp"] * D1_["uv"];
+    W_["pm"] -= 0.5 * Z_["mu"] * V_["xypv"] * D2_["uvxy"];
+
+    W_["pm"] += Z_["eu"] * V_["vpem"] * D1_["uv"];
+    W_["pm"] += Z_["eu"] * V_["vmep"] * D1_["uv"];
+
+    W_["pu"] += Z_["em"] * V_["mpev"] * D1_["vu"];
+    W_["pu"] += Z_["em"] * V_["mvep"] * D1_["uv"];
+
+    W_["pu"] += Z_["nu"] * F_["pn"];
+    W_["pu"] += Z_["nx"] * V_["xvnp"] * D1_["uv"];
+    W_["pu"] += Z_["nx"] * V_["xpnv"] * D1_["vu"];
+
+    W_["pu"] -= Z_["nv"] * Fc_["pn"] * D1_["vu"];
+    W_["pu"] -= 0.5 * Z_["nv"] * V_["xynp"] * D2_["vuxy"];
+    W_["pu"] -= Z_["nv"] * V_["pynx"] * D2_["vxuy"];
+
+    W_["pu"] += Z_["ev"] * Fc_["pe"] * D1_["vu"];
+    W_["pu"] += 0.5 * Z_["ev"] * V_["xyep"] * D2_["vuxy"];
+    W_["pu"] += Z_["ev"] * V_["pyex"] * D2_["vxuy"];
+
+    W_["pe"] += Z_["em"] * F_["mp"];
+    W_["pe"] += Z_["eu"] * Fc_["vp"] * D1_["uv"];
+    W_["pe"] += 0.5 * Z_["eu"] * V_["xypv"] * D2_["uvxy"];
+
+    // PT2 energy
+    W_["pm"] += 0.5 * V_["abpj"] * Tdbar2_["mjab"];
+    W_["pm"] += 0.5 * V_["abpj"] * Mdbar2_["abmj"];
+
+    W_["pu"] += 0.5 * V_["abpj"] * Tdbar2_["ujab"];
+    W_["pu"] += 0.5 * V_["abpj"] * Mdbar2_["abuj"];
+    W_["pu"] += 0.5 * V_["pbij"] * Tdbar2_["ijub"];
+    W_["pu"] += 0.5 * V_["pbij"] * Mdbar2_["ubij"];
+
+    W_["pe"] += 0.5 * V_["pbij"] * Tdbar2_["ijeb"];
+    W_["pe"] += 0.5 * V_["pbij"] * Mdbar2_["ebij"];
+
+    // Semicanonical orbital constraints
+    W_["pm"] += z_["nm"] * F_["pn"];
+    W_["pm"] += z_["sr"] * V_["rpsm"];
+
+    W_["pu"] += z_["vu"] * F_["pv"];
+    W_["pu"] += z_["rs"] * V_["sprv"] * D1_["vu"];
+
+    W_["pe"] += z_["fe"] * F_["pf"];
+
+    // set to Z and z
+    z_["pq"] = W_["pq"];
+    z_["pq"] -= W_["qp"];
+
+    Z_["pq"] = W_["pq"];
+    Z_["pq"] -= W_["qp"];
 }
 } // namespace forte

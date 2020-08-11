@@ -145,8 +145,12 @@ class DSRG_MRPT2_SO : public DynamicCorrelationSolver {
     ambit::BlockedTensor C1_; // 1-HDM
     ambit::BlockedTensor D2_; // 2-PDM
 
+    ambit::BlockedTensor E1_; // 1-RDM like with CI multiplier
+    ambit::BlockedTensor E2_; // 2-RDM like with CI multiplier
+
     ambit::BlockedTensor z_; // z diagonal blocks
     ambit::BlockedTensor Z_; // z off-diagonal blocks
+    ambit::BlockedTensor W_; // orbital gradients
 
     /// Diagonal elements of Fock matrix
     std::vector<double> Fd_;
@@ -191,6 +195,8 @@ class DSRG_MRPT2_SO : public DynamicCorrelationSolver {
     void compute_z();
     /// Compute Z
     void compute_Z();
+    /// Compute parts of Z that needs iterative
+    void compute_z_iter();
     /// Compute the orbital response
     void compute_orb_grad();
 };
