@@ -1146,6 +1146,8 @@ void FCISolver::zero_tile(std::vector<SharedMatrix>& C,
 
 }
 
+add_to_tle_vect(C, b_r, e_r, b_c, e_c, dim, dim, dim, h, i, j, sorted_tiles);
+
 void FCISolver::add_to_tle_vect(std::vector<SharedMatrix>& C,
                                  std::vector<int> b_r,
                                  std::vector<int> e_r,
@@ -1171,7 +1173,7 @@ void FCISolver::add_to_tle_vect(std::vector<SharedMatrix>& C,
   Slice col_slice(begin_col, end_col);
 
   // get matrix block
-  auto M = C[h]->get_block(row_slice, col_slice);
+  // auto M = C[h]->get_block(row_slice, col_slice);
 
   //if(n == 0 || d == 0){std::cout << "\nrought ro! i:  " << i << "  j:  " << std::endl; }
 
