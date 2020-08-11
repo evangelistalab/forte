@@ -6,7 +6,7 @@ import forte
 
 refscf = -76.0172965561 #TEST
 refgasscf = -65.9028823564 #TEST
-refdsrg = -66.1227002029 #TEST
+refdsrg = -66.1343265955 #TEST
 
 memory 6000mb
 molecule h2o{
@@ -76,6 +76,7 @@ set forte {
   job_type newdriver
   correlation_solver dsrg-mrpt2
   dsrg_s 1.0
+  calc_type sa
 }
 
 edsrg = energy('forte', ref_wfn = wfn_gasscf)
