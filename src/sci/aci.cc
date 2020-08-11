@@ -78,6 +78,7 @@ void AdaptiveCI::startup() {
     single_calculation_ = options_->get_bool("SINGLE_CALCULATION");
     // Run only one calculation with initial ansatz;
     // Can be used for CIS/CISD/CAS/GAS-CI for test
+    gas_iteration_ = false;
     if (options_->get_str("ACTIVE_REF_TYPE") == "GAS_SINGLE" or
         options_->get_str("ACTIVE_REF_TYPE") == "GAS") {
         gas_iteration_ = true;
