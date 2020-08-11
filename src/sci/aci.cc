@@ -78,7 +78,6 @@ void AdaptiveCI::startup() {
     single_calculation_ = options_->get_bool("SINGLE_CALCULATION");
     // Run only one calculation with initial ansatz;
     // Can be used for CIS/CISD/CAS/GAS-CI for test
-    gas_iteration_ = options_->get_bool("GAS_ITERATION");
     if (options_->get_str("ACTIVE_REF_TYPE") == "GAS_SINGLE" or
         options_->get_str("ACTIVE_REF_TYPE") == "GAS") {
         gas_iteration_ = true;
@@ -583,37 +582,47 @@ void AdaptiveCI::pre_iter_preparation() {
         for (size_t gas_count = 0; gas_count < 6; gas_count++) {
             py::list gasemax_alt_list = options_->get_gen_list(maxe_alt_string[gas_count]);
             py::list gasemin_alt_list = options_->get_gen_list(mine_alt_string[gas_count]);
-            if (gasemax_alt_list.size() != gasemin_alt_list.size()) {
-                outfile->Printf("\n  Wrong definition of GASMAXALT/GASMINALT.");
-                exit(1);
-            }
             size_t nentry = gasemax_alt_list.size();
             if (nentry > 0) {
                 bool found_state = false;
                 for (size_t i = 0; i < nentry; i++) {
                     py::list gasemax_alt = gasemax_alt_list[i];
-                    py::list gasemin_alt = gasemin_alt_list[i];
                     int symmetry_read = py::cast<int>(gasemax_alt[0]);
                     int multiplicity_read = py::cast<int>(gasemax_alt[1]);
                     if ((multiplicity_read == multiplicity_) &&
                         (symmetry_read == wavefunction_symmetry_)) {
                         maxe.push_back(py::cast<int>(gasemax_alt[root_ + 2]));
+                        found_state = true;
+                    }
+                }
+                if (!found_state) {
+                    outfile->Printf("\n  Wrong input of GASMAX_MULTI.");
+                    exit(1);
+                }
+            } else {
+                maxe.push_back(0);
+            }
+            nentry = gasemin_alt_list.size();
+            if (nentry > 0) {
+                bool found_state = false;
+                for (size_t i = 0; i < nentry; i++) {
+                    py::list gasemin_alt = gasemin_alt_list[i];
+                    int symmetry_read = py::cast<int>(gasemin_alt[0]);
+                    int multiplicity_read = py::cast<int>(gasemin_alt[1]);
+                    if ((multiplicity_read == multiplicity_) &&
+                        (symmetry_read == wavefunction_symmetry_)) {
                         mine.push_back(py::cast<int>(gasemin_alt[root_ + 2]));
                         found_state = true;
                     }
                 }
                 if (!found_state) {
-                    outfile->Printf("\n  Wrong input of GASMAX_MULTI/GASMIN_MULTI.");
+                    outfile->Printf("\n  Wrong input of GASMIN_MULTI.");
+                    exit(1);
                 }
             } else {
-                maxe.push_back(0);
                 mine.push_back(0);
             }
-            //            outfile->Printf("GAS %d %d \n", gasemax_alt[root_ - 1],
-            //            gasemin_alt[root_
-            //            - 1]);
         }
-        //        int root_sym_alt = symmetry_alt[root_ - 1];
         ref.modify_gas(initial_reference_, maxe, mine);
     } else {
         ref.build_reference(initial_reference_);

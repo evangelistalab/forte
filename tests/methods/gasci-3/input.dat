@@ -1,5 +1,5 @@
 #! Generated using commit GITCOMMIT 
-# GAS ACI calculation with multi-gas algorithm
+# GAS CI calculation with multi-gas algorithm/different symmetry
 
 import forte
 

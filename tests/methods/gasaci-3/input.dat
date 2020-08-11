@@ -56,7 +56,6 @@ set forte {
   root_sym 0
   charge 0
   sci_enforce_spin_complete true
-  gas_iteration true
   GAS1MAX 1
 }
 

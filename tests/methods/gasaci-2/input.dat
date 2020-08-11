@@ -1,6 +1,4 @@
-#! This tests the EX-CI procedure using energy selection
 #! Generated using commit GITCOMMIT
-# This option tests the selection criteria
 # Failed GAS-ACI will result in correct ACI energy but incorrect ACI-PT2 energy
 
 import forte 

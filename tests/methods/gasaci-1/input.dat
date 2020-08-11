@@ -1,5 +1,5 @@
 #! Generated using commit GITCOMMIT 
-# GAS ACI calculation with energy threshold selection
+# GAS ACI calculation 
 # Failed gas-aci will lead to correct aci energy but incorrect acipt2 energy
 
 import forte
@@ -30,7 +30,6 @@ set scf {
 
 set forte {
   active_space_solver aci
-  gas_iteration true
   multiplicity 1
   ms 0.0
   sigma 0.001

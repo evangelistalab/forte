@@ -1,4 +1,4 @@
-# GAS-ACI calculation for Na atom ground and core excited states
+# GAS-ACI calculation for Na atom ground and core excited states with multi-gas algorithm
 
 import forte
 

@@ -217,18 +217,8 @@ class MOSpaceInfo {
     /// Process current MOSpaceInfo: calculate frozen core, count, and assign orbitals
     void compute_space_info();
 
-    //    /// Process current GAS Info: calculate General Active Space orbitals
-    //    int compute_gas_info(psi::Dimension nactpi);
-
-    /// Make GasInfo from inputs(options)
-    //    std::pair<int, std::map<std::string, SpaceInfo>>
-    //    make_gas_info(std::shared_ptr<ForteOptions> options);
-
     /// @return The number of irreps
     size_t nirrep() { return nirrep_; }
-
-    /// return gas_info_
-    //    std::pair<int, std::map<std::string, SpaceInfo>> gas_info();
 
   private:
     // ==> Class Data <==

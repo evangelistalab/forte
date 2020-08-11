@@ -230,16 +230,6 @@ void MOSpaceInfo::read_options(std::shared_ptr<ForteOptions> options) {
     }
 }
 
-// void MOSpaceInfo::read_gas_options(std::shared_ptr<ForteOptions> options) {
-//    // Read the Generalized Active Space(GAS)
-//    for (std::string& space : gas_subspaces_) {
-//        std::pair<SpaceInfo, bool> result = read_mo_space(space, options);
-//        if (result.second) {
-//            general_active_spaces_[space] = result.first;
-//        }
-//    }
-//}
-
 void MOSpaceInfo::read_from_map(std::map<std::string, std::vector<size_t>>& mo_space_map) {
     // Read the elementary spaces
     for (std::string& space : elementary_spaces_) {
@@ -427,20 +417,6 @@ std::shared_ptr<MOSpaceInfo> make_mo_space_info(const psi::Dimension& nmopi,
     mo_space_info->compute_space_info();
     return mo_space_info;
 }
-
-// std::pair<int, std::map<std::string, SpaceInfo>>
-// MOSpaceInfo::make_gas_info(std::shared_ptr<ForteOptions> options) {
-//    // calculate the GAS information from mo_space_info
-//    psi::Dimension nactpi = mo_spaces_["ACTIVE"].first;
-//    int num_gas;
-//    general_active_spaces_.clear();
-//    read_gas_options(options);
-//    num_gas = compute_gas_info(nactpi);
-//    gas_info_ = std::make_pair(num_gas, general_active_spaces_);
-//    return gas_info_;
-//}
-
-// std::pair<int, std::map<std::string, SpaceInfo>> MOSpaceInfo::gas_info() { return gas_info_; }
 
 std::shared_ptr<MOSpaceInfo>
 make_mo_space_info_from_map(const psi::Dimension& nmopi, const std::string& point_group,

@@ -578,9 +578,6 @@ def register_aci_options(options):
 
     options.add_bool("SINGLE_CALCULATION", False, 
             "Doing single calculation instead of ACI iterations?")
-
-    options.add_bool("GAS_ITERATION", False,
-            "Doing ACI iterations within GAS")
     
     options.add_bool("OCC_ANALYSIS", False,
             "Doing post calcualtion occupation analysis?")

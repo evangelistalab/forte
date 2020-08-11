@@ -302,19 +302,20 @@ gasci:
    - gasaci-1
    - gasaci-2
    - gasaci-3
-  medium:
    - gasaci-4
                   
 
 gasscf:
-  medium:
+  short:
    - gasscf-1
    - gasscf-2
    - gasscf-3
-  medium:
+   - gasscf-dsrg-mrpt2-1
    - sa-gasscf-1
    - sa-gasscf-2
    - sa-gasscf-3
+   - sa-gasscf-dsrg-mrpt2-1
+ 
 #x2c:
 #  medium:
 #   - x2c-1

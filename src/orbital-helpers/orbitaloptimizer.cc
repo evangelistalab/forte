@@ -369,7 +369,7 @@ void OrbitalOptimizer::orbital_gradient() {
                 }
             }
 
-            // Zeroout diagonal and one-block of the off-diagonal matrix
+            // Zero-out diagonal and one-block of the off-diagonal matrix
             relative_gas_mo_.push_back(relative_mo);
         }
         //        auto active_re_  mo = mo_space_info_->get_relative_mo("ACTIVE");
@@ -492,6 +492,7 @@ void OrbitalOptimizer::diagonal_hessian() {
             I_act->print();
         }
         // Loop over spaces, last space will have no rotations
+        // Hessian elements within GAS space
         for (size_t gas_count = 0; gas_count < gas_num_; gas_count++) {
             for (size_t gas_count_2 = 0; gas_count_2 < gas_count; gas_count_2++) {
                 // Loop over pairs
@@ -533,7 +534,6 @@ void OrbitalOptimizer::diagonal_hessian() {
                                             (gamma2M_->get(up, vq) + gamma2M_->get(uq, vp));
                             }
                         }
-                        //                        outfile->Printf("%d %d %f \n", u, v, value_aa);
                         D->set(nhole_map_[uo], npart_map_[vo], value_aa);
                     } // End i loop
                 }     // End a loop

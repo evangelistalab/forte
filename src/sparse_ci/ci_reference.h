@@ -111,9 +111,6 @@ class CI_Reference {
     std::vector<std::string> gas_mine_options_ = {"GAS1MIN", "GAS2MIN", "GAS3MIN",
                                                   "GAS4MIN", "GAS5MIN", "GAS6MIN"};
 
-    /// Information about each GAS stored in a map
-    std::map<std::string, SpaceInfo> general_active_spaces_;
-
     /// All the possible alpha and beta electron occupations of each GAS
     /// GAS1_A, GAS1_B, GAS2_A, .... GAS6_B (12 elements)
     std::vector<std::vector<int>> gas_electrons_;

@@ -1,5 +1,5 @@
 #! Generated using commit GITCOMMIT 
-# GASSCF calculation 
+# SA-GASSCF calculation 
 
 import forte
 

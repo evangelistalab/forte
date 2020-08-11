@@ -1,6 +1,6 @@
 #! Generated using commit GITCOMMIT 
-# GASSCF for core-excited state with Core frozen
-# Without CASSCF_FROZEN_ORBITAL this will collapse to ground state and not converge
+# SA-GASSCF for core-excited state with core orbital frozen
+# Without CASSCF_FROZEN_ORBITAL the state will collapse to ground state and not converge
 
 import forte
 
