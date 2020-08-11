@@ -20,9 +20,6 @@ set {
   d_convergence 10
   r_convergence 10
   guess gwh
-}
-
-set scf {
   scf_type pk
   reference rohf
 }
@@ -30,7 +27,7 @@ set scf {
 set forte {
   active_space_solver aci
   multiplicity 2
-  sigma 0.001
+  sigma 0.00100
   nroot 1
   root_sym 0
   charge 0
@@ -39,6 +36,7 @@ set forte {
   GAS1 [1,0,0,0,0,0,0,0]
   GAS2 [6,1,1,1,0,3,3,3]
   GAS1MAX 2
+  ACI_ADD_AIMED_DEGENERATE false
 }
 
 energy('scf')
@@ -57,6 +55,7 @@ set forte {
   charge 0
   sci_enforce_spin_complete true
   GAS1MAX 1
+  ACI_ADD_AIMED_DEGENERATE false
 }
 
 energy_2 = energy('forte')
