@@ -1626,9 +1626,15 @@ void FCISolver::fci_svd(FCIVector& HC, std::shared_ptr<FCIIntegrals> fci_ints, d
         auto s_p = std::make_shared<Vector>("s_p", std::min(ncol, nrow));
         auto v_p = std::make_shared<Matrix>("v_p", ncol, ncol);
 
-        auto svd_temps = C[h]->svd_temps();
+        // auto Csvd_temps = C[h]->svd_temps();
 
-        C[h]->svd(u_p, s_p, v_p);
+        // C[h]->svd(u_p, s_p, v_p);
+        C[h]->svd_a(u_p, s_p, v_p);
+        // C[h]->svd(std::get<0>(Csvd_temps), std::get<1>(Csvd_temps), std::get<2>(Csvd_temps));
+
+        // auto u_p = std::get<0>(Csvd_temps);
+        // auto s_p = std::get<1>(Csvd_temps);
+        // auto v_p = std::get<2>(Csvd_temps);
 
         std::string mat_file_U = "U_mat_ft_irrep_" + std::to_string(h);
         std::string mat_file_V = "V_mat_ft_irrep_" + std::to_string(h);
@@ -1694,7 +1700,7 @@ void FCISolver::fci_svd(FCIVector& HC, std::shared_ptr<FCIIntegrals> fci_ints, d
         auto s_p = std::make_shared<Vector>("s_p", std::min(ncol, nrow));
         auto v_p = std::make_shared<Matrix>("v_p", ncol, ncol);
 
-        C[h]->svd(u_p, s_p, v_p);
+        C[h]->svd_a(u_p, s_p, v_p);
 
         int rank_ef = std::min(ncol, nrow);
         if (options_.get_str("FCI_SVD_TYPE") == "THRESHOLD") {
