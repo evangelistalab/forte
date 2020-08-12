@@ -1617,14 +1617,16 @@ void FCISolver::fci_svd(FCIVector& HC, std::shared_ptr<FCIIntegrals> fci_ints, d
     std::vector<std::pair<double, int>> sorted_sigma; // [(sigma_i, irrep)]
 
     for (int h = 0; h < nirrep; h++) {
-        // int nrow = C[h]->rowdim();
-        // int ncol = C[h]->coldim();
-        int ncol = C[h]->rowdim();
-        int nrow = C[h]->coldim();
+        int nrow = C[h]->rowdim();
+        int ncol = C[h]->coldim();
+        // int ncol = C[h]->rowdim();
+        // int nrow = C[h]->coldim();
 
         auto u_p = std::make_shared<Matrix>("u_p", nrow, nrow);
         auto s_p = std::make_shared<Vector>("s_p", std::min(ncol, nrow));
         auto v_p = std::make_shared<Matrix>("v_p", ncol, ncol);
+
+        auto svd_temps = C[h]->svd_temps();
 
         C[h]->svd(u_p, s_p, v_p);
 
@@ -1683,10 +1685,10 @@ void FCISolver::fci_svd(FCIVector& HC, std::shared_ptr<FCIIntegrals> fci_ints, d
     int N_par = 0;
 
     for (int h = 0; h < nirrep; h++) {
-        // int nrow = C[h]->rowdim();
-        // int ncol = C[h]->coldim();
-        int ncol = C[h]->rowdim();
-        int nrow = C[h]->coldim();
+        int nrow = C[h]->rowdim();
+        int ncol = C[h]->coldim();
+        // int ncol = C[h]->rowdim();
+        // int nrow = C[h]->coldim();
 
         auto u_p = std::make_shared<Matrix>("u_p", nrow, nrow);
         auto s_p = std::make_shared<Vector>("s_p", std::min(ncol, nrow));
