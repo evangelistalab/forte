@@ -556,8 +556,8 @@ void FCISolver::tile_chopper(std::vector<SharedMatrix>& C, double ETA,
         //   }
         // }
         std::cout << "a perfect fit (good): making sort vec" << std::endl;
-        for(int i=0; i<nrow; i++){
-          for(int j=0; j<ncol; j++){
+        for(int i=0; i<ncol; i++){
+          for(int j=0; j<nrow; j++){
             add_to_tle_vect(C, b_r, e_r, b_c, e_c, dim, dim, dim, h, i, j, sorted_tiles);
           }
         }
