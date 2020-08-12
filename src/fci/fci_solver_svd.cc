@@ -537,14 +537,14 @@ void FCISolver::tile_chopper(std::vector<SharedMatrix>& C, double ETA,
 
       int ncol = C[h]->rowdim();
       int nrow = C[h]->coldim();
-      int ncol2 = C[h]->cols();
-      int nrow2 = C[h]->rows();
+      // int ncol2 = C[h]->cols();
+      // int nrow2 = C[h]->rows();
 
       std::cout << "\nh:      "  << h << std::endl;
       std::cout << "nrows:   "  << nrow <<std::endl;
       std::cout << "ncols:   "  << ncol <<std::endl;
-      std::cout << "nrows2:  "  << nrow2 <<std::endl;
-      std::cout << "ncols2:  "  << ncol2 <<std::endl;
+      // std::cout << "nrows2:  "  << nrow2 <<std::endl;
+      // std::cout << "ncols2:  "  << ncol2 <<std::endl;
 
       int nt_cols = ncol/dim; //is actually 1 less than total # of colums UNLESS last_col_dim = 0
       int nt_rows = nrow/dim;
