@@ -681,8 +681,10 @@ void FCISolver::tile_chopper(std::vector<SharedMatrix>& C, double ETA,
 
     for (int h=0; h<nirrep; h++) {
       // loop over irreps
-      int ncol = C[h]->rowdim();
-      int nrow = C[h]->coldim();
+      // int ncol = C[h]->rowdim();
+      // int nrow = C[h]->coldim();
+      int nrow = C[h]->rowdim();
+      int ncol = C[h]->coldim();
 
       int nt_cols = ncol/dim;
       int nt_rows = nrow/dim;
