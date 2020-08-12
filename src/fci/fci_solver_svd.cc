@@ -540,9 +540,9 @@ void FCISolver::tile_chopper(std::vector<SharedMatrix>& C, double ETA,
       int nrow = C[h]->rowdim();
       int ncol = C[h]->coldim();
 
-      std::cout << "\nh:      "  << h << std::endl;
-      std::cout << "nrows:   "  << nrow <<std::endl;
-      std::cout << "ncols:   "  << ncol <<std::endl;
+      // std::cout << "\nh:      "  << h << std::endl;
+      // std::cout << "nrows:   "  << nrow <<std::endl;
+      // std::cout << "ncols:   "  << ncol <<std::endl;
 
       int nt_cols = ncol/dim; //is actually 1 less than total # of colums UNLESS last_col_dim = 0
       int nt_rows = nrow/dim;
@@ -564,7 +564,7 @@ void FCISolver::tile_chopper(std::vector<SharedMatrix>& C, double ETA,
         //   }
         // }
       } else { // if not a perfect fit...
-        std::cout << "not a perfect fit (bad): making sort vec" << std::endl;
+        // std::cout << "not a perfect fit (bad): making sort vec" << std::endl;
         for(int i=0; i<nt_rows+1; i++){
           for(int j=0; j<nt_cols+1; j++){
             // make dimension objects
@@ -695,14 +695,14 @@ void FCISolver::tile_chopper(std::vector<SharedMatrix>& C, double ETA,
       //std::cout << "nt_cols:  "  << nt_cols <<std::endl;
       // in cases mat can be tiled perfectly (/w out remainder)
       if(last_col_dim == 0 || last_row_dim == 0){
-        std::cout << "a perfect fit (good): zeroing C" << std::endl;
+        // std::cout << "a perfect fit (good): zeroing C" << std::endl;
         for(int i=0; i<nt_rows; i++){
           for(int j=0; j<nt_cols; j++){
             zero_tile(C, b_r, e_r, b_c, e_c, tile_norm_cut, dim, dim, dim, h, i, j, Npar);
           }
         }
       } else {
-        std::cout << "not a perfect fit (bad): zeroing C" << std::endl;
+        // std::cout << "not a perfect fit (bad): zeroing C" << std::endl;
         for(int i=0; i<nt_rows+1; i++){
           for(int j=0; j<nt_cols+1; j++){
             // make dimension objects
