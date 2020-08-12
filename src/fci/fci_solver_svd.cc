@@ -535,8 +535,10 @@ void FCISolver::tile_chopper(std::vector<SharedMatrix>& C, double ETA,
     for (int h=0; h<nirrep; h++) {
       // loop over irreps
 
-      int ncol = C[h]->rowdim();
-      int nrow = C[h]->coldim();
+      // int ncol = C[h]->rowdim();
+      // int nrow = C[h]->coldim();
+      int nrow = C[h]->rowdim();
+      int ncol = C[h]->coldim();
 
       std::cout << "\nh:      "  << h << std::endl;
       std::cout << "nrows:   "  << nrow <<std::endl;
@@ -550,17 +552,17 @@ void FCISolver::tile_chopper(std::vector<SharedMatrix>& C, double ETA,
 
       // in cases mat can be tiled perfectly (/w out remainder)
       if(last_col_dim == 0 || last_row_dim == 0){
-        // for(int i=0; i<nt_rows; i++){
-        //   for(int j=0; j<nt_cols; j++){
-        //     add_to_tle_vect(C, b_r, e_r, b_c, e_c, dim, dim, dim, h, i, j, sorted_tiles);
-        //   }
-        // }
-        std::cout << "a perfect fit (good): making sort vec" << std::endl;
-        for(int i=0; i<ncol; i++){
-          for(int j=0; j<nrow; j++){
+        for(int i=0; i<nt_rows; i++){
+          for(int j=0; j<nt_cols; j++){
             add_to_tle_vect(C, b_r, e_r, b_c, e_c, dim, dim, dim, h, i, j, sorted_tiles);
           }
         }
+        // std::cout << "a perfect fit (good): making sort vec" << std::endl;
+        // for(int i=0; i<ncol; i++){
+        //   for(int j=0; j<nrow; j++){
+        //     add_to_tle_vect(C, b_r, e_r, b_c, e_c, dim, dim, dim, h, i, j, sorted_tiles);
+        //   }
+        // }
       } else { // if not a perfect fit...
         std::cout << "not a perfect fit (bad): making sort vec" << std::endl;
         for(int i=0; i<nt_rows+1; i++){
@@ -1139,7 +1141,7 @@ void FCISolver::zero_tile(std::vector<SharedMatrix>& C,
   Slice col_slice(begin_col, end_col);
 
   // get matrix block
-  // auto M = C[h]->get_block(row_slice, col_slice);
+  auto M = C[h]->get_block(row_slice, col_slice);
 
   double area_factor = ((double)n*(double)d) / ((double)dim*(double)dim);
   //double tile_factor = M->sum_of_squares() / area_factor;
@@ -1148,9 +1150,9 @@ void FCISolver::zero_tile(std::vector<SharedMatrix>& C,
 
 
   if(tile_factor < tile_norm_cut){
-    // M->set(0.0);
-    // C[h]->set_block(row_slice, col_slice, M);
-    C[h]->set(i, j, 0.0);
+    M->set(0.0);
+    C[h]->set_block(row_slice, col_slice, M);
+    // C[h]->set(i, j, 0.0);
     Npar -= n*d;
   }
 
@@ -1183,7 +1185,7 @@ void FCISolver::add_to_tle_vect(std::vector<SharedMatrix>& C,
   Slice col_slice(begin_col, end_col);
 
   // get matrix block
-  // auto M = C[h]->get_block(row_slice, col_slice);
+  auto M = C[h]->get_block(row_slice, col_slice);
 
   //if(n == 0 || d == 0){std::cout << "\nrought ro! i:  " << i << "  j:  " << std::endl; }
 
