@@ -205,9 +205,6 @@ class MOSpaceInfo {
     /// Read the space info from forte options(inputs)
     void read_options(std::shared_ptr<ForteOptions> options);
 
-    /// Read the gas space info from forte options(inputs);
-    void read_gas_options(std::shared_ptr<ForteOptions> options);
-
     /// Read the space info from a map of space name-dimension_vector
     void read_from_map(std::map<std::string, std::vector<size_t>>& mo_space_map);
 

@@ -576,8 +576,8 @@ def register_aci_options(options):
     options.add_bool("FORCE_DIAG_METHOD", False,
                            "Force the diagonalization procedure?")
 
-    options.add_bool("SINGLE_CALCULATION", False, 
-            "Doing single calculation instead of ACI iterations?")
+    options.add_bool("ONE_CYCLE", False, 
+            "Doing only one cycle of ACI (FCI) ACI iteration?")
     
     options.add_bool("OCC_ANALYSIS", False,
             "Doing post calcualtion occupation analysis?")

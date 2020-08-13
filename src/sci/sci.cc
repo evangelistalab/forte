@@ -111,7 +111,7 @@ double SelectedCIMethod::compute_energy() {
         prune_PQ_to_P();
     }
 
-    if (single_calculation_) {
+    if (one_cycle_) {
         diagonalize_PQ_space();
     }
     // Post-iter process

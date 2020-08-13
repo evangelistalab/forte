@@ -30,7 +30,7 @@ set forte {
   ms 0.0
   multiplicity 1
   sigma 0.00
-  single_calculation True
+  one_cycle True
   root_sym 0
   charge 0
   sci_enforce_spin_complete true

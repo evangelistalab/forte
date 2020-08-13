@@ -753,7 +753,7 @@ bool ProjectorCI::check_convergence() {
                                  approx_energy_gradient);
             break;
         default:
-            psi::outfile->Printf("\n%9d %8d %10zu %13zu %20.12f %10.3e", cycle_, cycle_, C_.size(),
+            psi::outfile->Printf("\n%9d %8d %10zu %13zu %20.12f %10.3e ", cycle_, cycle_, C_.size(),
                                  num_off_diag_elem_, proj_energy_, proj_energy_gradient);
             break;
         }

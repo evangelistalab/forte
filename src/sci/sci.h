@@ -199,7 +199,7 @@ class SelectedCIMethod {
     size_t nact_;
 
     /// Do single calculation instead of selective ci
-    bool single_calculation_;
+    bool one_cycle_ = false;
 
     /// Enforce spin completeness of the P and P + Q spaces?
     bool spin_complete_;

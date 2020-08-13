@@ -75,7 +75,7 @@ void AdaptiveCI::startup() {
     add_aimed_degenerate_ = options_->get_bool("ACI_ADD_AIMED_DEGENERATE");
     project_out_spin_contaminants_ = options_->get_bool("SCI_PROJECT_OUT_SPIN_CONTAMINANTS");
 
-    single_calculation_ = options_->get_bool("SINGLE_CALCULATION");
+    one_cycle_ = options_->get_bool("ONE_CYCLE");
     // Run only one calculation with initial ansatz;
     // Can be used for CIS/CISD/CAS/GAS-CI for test
     gas_iteration_ = false;
@@ -88,7 +88,7 @@ void AdaptiveCI::startup() {
     // Whether to do the occupation analysis after calculation
     occ_analysis_ = options_->get_bool("OCC_ANALYSIS");
 
-    if (single_calculation_) {
+    if (one_cycle_) {
         max_cycle_ = 0;
     } else {
         max_cycle_ = options_->get_int("SCI_MAX_CYCLE");
@@ -629,7 +629,7 @@ void AdaptiveCI::pre_iter_preparation() {
         ref.build_reference(initial_reference_);
     }
 
-    if (single_calculation_) {
+    if (one_cycle_) {
         PQ_space_ = initial_reference_;
         PQ_space_.make_spin_complete(nact_);
     } else {
@@ -800,7 +800,7 @@ void AdaptiveCI::diagonalize_PQ_space() {
 
     num_ref_roots_ = std::min(nroot_, PQ_space_.size());
 
-    if (single_calculation_) {
+    if (one_cycle_) {
         zero_multistate_pt2_energy_correction();
     }
 
