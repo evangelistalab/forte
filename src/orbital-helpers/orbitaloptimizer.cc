@@ -373,15 +373,7 @@ void OrbitalOptimizer::orbital_gradient() {
             // Zero-out diagonal and one-block of the off-diagonal matrix
             relative_gas_mo_.push_back(relative_mo);
         }
-        //        auto active_re_  mo = mo_space_info_->get_relative_mo("ACTIVE");
-        //        for (size_t i = 0; i < na_; i++) {
-        //            outfile->Printf("Active %d %d %d \n", active_abs_[i],active_re_mo[i].first,
-        //                            active_re_mo[i].second);
-        //        }
         auto active_frozen = options_->get_int_vec("CASSCF_ACTIVE_FROZEN_ORBITAL");
-        if (!active_frozen.empty()) {
-            outfile->Printf("\n  Active Orbitals Frozen:");
-        }
         std::vector<int> active;
         for (int i = 0; i < na_; i++) {
             active.push_back(i);
@@ -412,7 +404,6 @@ void OrbitalOptimizer::orbital_gradient() {
                 Orb_grad_Fock->set(nhole_map_[ii], npart_map_[jj], 0.0);
             }
         }
-        outfile->Printf("\n");
     }
 
     if (casscf_debug_print_) {
