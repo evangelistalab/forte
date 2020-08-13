@@ -58,6 +58,7 @@
 #include "mrdsrg-spin-adapted/sadsrg.h"
 
 #include "sparse_ci/determinant.h"
+#include "sparse_ci/general_operator.h"
 #include "post_process/spin_corr.h"
 #include "sparse_ci/determinant_hashvector.h"
 
@@ -141,6 +142,7 @@ void export_Determinant(py::module& m) {
         .def("__eq__", [](const Determinant& a, const Determinant& b) { return a == b; })
         .def("__lt__", [](const Determinant& a, const Determinant& b) { return a < b; })
         .def("__hash__", [](const Determinant& a) { return Determinant::Hash()(a); });
+
     py::class_<DeterminantHashVec>(m, "DeterminantHashVec")
         .def(py::init<>())
         .def(py::init<const std::vector<Determinant>&>())
@@ -149,6 +151,22 @@ void export_Determinant(py::module& m) {
         .def("size", &DeterminantHashVec::size, "Get the size of the vector")
         .def("get_det", &DeterminantHashVec::get_det, "Return a specific determinant by reference")
         .def("get_idx", &DeterminantHashVec::get_idx, " Return the index of a determinant");
+
+    py::class_<GeneralOperator>(m, "GeneralOperator")
+        .def(py::init<>())
+        .def("add_operator", &GeneralOperator::add_operator)
+        .def("set_amplitudes", &GeneralOperator::set_amplitudes)
+        .def("amplitudes", &GeneralOperator::amplitudes)
+        .def("op_indices", &GeneralOperator::op_indices)
+        .def("op_list", &GeneralOperator::op_list)
+        .def("str", &GeneralOperator::str);
+
+    m.def("apply_general_operator", &apply_general_operator);
+
+    py::class_<SingleOperator>(m, "SingleOperator")
+        .def_readwrite("sign", &SingleOperator::factor)
+        .def_readwrite("cre", &SingleOperator::cre)
+        .def_readwrite("ann", &SingleOperator::ann);
 
     m.def("spin2", &spin2<Determinant::nbits>);
 }

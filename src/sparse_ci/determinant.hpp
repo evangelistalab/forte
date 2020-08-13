@@ -32,6 +32,7 @@
 
 #include <string>
 #include <vector>
+#include <iostream>
 
 #include "bitarray.hpp"
 #include "bitwise_operations.hpp"
@@ -86,6 +87,8 @@ template <size_t N> class DeterminantImpl : public BitArray<N> {
 
     /// returns half the number of bits
     size_t get_nbits_half() const { return nbits_half; }
+
+    size_t norb() const { return nbits_half; }
 
     /// Default constructor
     DeterminantImpl() : BitArray<N>() {}
@@ -606,6 +609,86 @@ double gen_excitation(DeterminantImpl<N>& d, const std::vector<int>& aann,
     for (auto i : bcre) {
         sign *= d.slater_sign_b(i) * (1 - d.get_beta_bit(i));
         d.set_beta_bit(i, true);
+    }
+    return sign;
+}
+
+template <size_t N>
+double can_apply_op(DeterminantImpl<N>& d, const DeterminantImpl<N>& ann,
+                const DeterminantImpl<N>& cre) {
+    DeterminantImpl<N> temp(d);
+    // check if the orbitals annihilated are occupied
+    // d       = 1100
+    // ann     = 1000
+    // d & ann = 1000
+    temp &= ann;
+    if (temp != ann)
+        return 0.0;
+    // check if the orbitals created are empty
+    // d       = 1100
+    // cre     = 0010
+    // d & cre = 0000
+    temp = d;
+    temp &= cre;
+    if (temp.count() != 0)
+        return 0.0;
+}
+
+/**
+ * @brief Apply a general excitation operator to this determinant
+ *        Details:
+ *        (bc)_n ... (bc)_1 (ba)_n ... (ba)_1 (ac)_n ... (ac)_1 (aa)_n ... (aa)_1 |det>
+ *        where aa = alpha annihilation operator
+ *        where ac = alpha creation operator
+ *        where ba = alpha annihilation operator
+ *        where bc = alpha creation operator
+ * @param aann list of alpha orbitals to annihilate
+ * @param acre list of alpha orbitals to create
+ * @param bann list of beta orbitals to annihilate
+ * @param bcre list of beta orbitals to create
+ * @return the sign of the final determinant (+1, -1, or 0)
+ */
+template <size_t N>
+double apply_op(DeterminantImpl<N>& d, const DeterminantImpl<N>& ann,
+                const DeterminantImpl<N>& cre) {
+    DeterminantImpl<N> temp;
+    // check if the orbitals annihilated are occupied
+    // d       = 1100
+    // ann     = 1000
+    // d & ann = 1000
+    if ((d & ann) != ann)
+        return 0.0;
+    // check if the orbitals created are empty
+    // d       = 1100
+    // cre     = 0010
+    // d & cre = 0000
+    temp = d;
+    temp &= cre;
+    if (temp.count() != 0)
+        return 0.0;
+
+    // loop over the orbitals to annihilate
+    temp = ann;
+    size_t n = temp.count();
+    double sign = 1.0;
+    for (size_t i = 0; i < n; ++i) {
+//        std::cout << str(d,4) << std::endl;
+//        std::cout << orb << std::endl;
+//        std::cout << d.slater_sign(orb) << std::endl;
+//        std::cout << d.get_bit(orb) << std::endl;
+//        std::cout << "\n" << std::endl;
+        uint64_t orb = temp.find_and_clear_first_one();
+        sign *= d.slater_sign(orb) * d.get_bit(orb);
+        d.set_bit(orb, false);
+    }
+    temp = cre;
+    n = temp.count();
+    // the last bit accounts for the reverse ordering of the creation operators
+    sign *= 2.0 * (n == 0) - 1.0;
+    for (size_t i = 0; i < n; ++i) {
+        uint64_t orb = temp.find_and_clear_first_one();
+        sign *= -d.slater_sign(orb) * (1 - d.get_bit(orb));
+        d.set_bit(orb, true);
     }
     return sign;
 }

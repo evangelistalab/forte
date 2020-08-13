@@ -136,6 +136,9 @@ template <size_t N> class BitArray {
         //        return val;
     }
 
+    /// not equal operator
+    bool operator!=(const BitArray<N>& lhs) const { return not(*this == lhs); }
+
     /// Less than operator
     bool operator<(const BitArray<N>& lhs) const {
         if constexpr (N == 64) {
@@ -252,6 +255,21 @@ template <size_t N> class BitArray {
     /// @return the index of the the first bit, or if all bits are zero, returns ~0
     uint64_t find_and_clear_first_one() {
         for (size_t n = 0; n < nwords_; n++) {
+            // find a word that is not 0
+            if (words_[n] != word_t(0)) {
+                // get the lowest set bit
+                return ui64_find_and_clear_lowest_one_bit(words_[n]) + n * bits_per_word;
+            }
+        }
+        // if the BitArray object is zero then return ~0
+        return ~word_t(0);
+    }
+
+    /// Find the first bit set to one and clear it (starting from the lowest index)
+    /// @return the index of the the first bit, or if all bits are zero, returns ~0
+    uint64_t fast_find_and_clear_first_one(size_t n) {
+        n = whichword(n);
+        for (; n < nwords_; n++) {
             // find a word that is not 0
             if (words_[n] != word_t(0)) {
                 // get the lowest set bit
