@@ -24,7 +24,7 @@ set {
 
 set scf {
   scf_type pk
-  reference rohf
+  reference rhf
 }
 
 set forte {
