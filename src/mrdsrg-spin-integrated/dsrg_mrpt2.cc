@@ -1487,7 +1487,7 @@ void DSRG_MRPT2::compute_dm1d_pt2(BlockedTensor& M, double& Mbar0, BlockedTensor
     //    // transform D1 with a irrep psi::SharedMatrix
     //    psi::SharedMatrix SOdens(new psi::Matrix("SO density ", this->nmopi(), this->nmopi()));
 
-    //    for (const auto& pair: mo_space_info_->get_relative_mo("FROZEN_DOCC")) {
+    //    for (const auto& pair: mo_space_info_->relative_mo("FROZEN_DOCC")) {
     //        size_t h = pair.first;
     //        size_t i = pair.second;
     //        SOdens->set(h, i, i, 1.0);
@@ -1498,7 +1498,7 @@ void DSRG_MRPT2::compute_dm1d_pt2(BlockedTensor& M, double& Mbar0, BlockedTensor
     //        size_t size = mo_space_info_->size(block);
     //        for (size_t i = 0; i < size; ++i) {
     //            momap[mo_space_info_->corr_absolute_mo(block)[i]] =
-    //            mo_space_info_->get_relative_mo(block)[i];
+    //            mo_space_info_->relative_mo(block)[i];
     //        }
     //    }
 
@@ -2836,9 +2836,9 @@ void DSRG_MRPT2::rotate_amp(psi::SharedMatrix Ua, psi::SharedMatrix Ub, const bo
     ambit::BlockedTensor U = BTF_->build(tensor_type_, "Uorb", spin_cases({"gg"}));
 
     std::map<char, std::vector<std::pair<size_t, size_t>>> space_to_relmo;
-    space_to_relmo['c'] = mo_space_info_->get_relative_mo("RESTRICTED_DOCC");
-    space_to_relmo['a'] = mo_space_info_->get_relative_mo("ACTIVE");
-    space_to_relmo['v'] = mo_space_info_->get_relative_mo("RESTRICTED_UOCC");
+    space_to_relmo['c'] = mo_space_info_->relative_mo("RESTRICTED_DOCC");
+    space_to_relmo['a'] = mo_space_info_->relative_mo("ACTIVE");
+    space_to_relmo['v'] = mo_space_info_->relative_mo("RESTRICTED_UOCC");
 
     // alpha
     for (const std::string& block : {"cc", "aa", "vv"}) {

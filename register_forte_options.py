@@ -31,7 +31,7 @@ def register_driver_options(options):
     ], 'Specify the job type')
 
     options.add_str("SCF_TYPE", None, "The integrals used in the SCF calculation")
-
+    options.add_str("REF_TYPE", 'SCF',['SCF','CASSCF'], "The type of reference used by forte if a psi4 wave function is missing")
     options.add_str('DERTYPE', 'NONE', ['NONE', 'FIRST'], 'Derivative order')
 
     options.add_double("E_CONVERGENCE", 1.0e-9, "The energy convergence criterion")
@@ -71,6 +71,13 @@ def register_driver_options(options):
     options.add_str('MINAO_BASIS', 'STO-3G', "The basis used to define an orbital subspace")
 
     options.add_array("SUBSPACE", "A list of orbital subspaces")
+
+    options.add_int_array("GAS1", "GAS1")
+    options.add_int_array("GAS2", "GAS2")
+    options.add_int_array("GAS3", "GAS3")
+    options.add_int_array("GAS4", "GAS4")
+    options.add_int_array("GAS5", "GAS5")
+    options.add_int_array("GAS6", "GAS6")
 
     options.add_double("MS", None, "Projection of spin onto the z axis")
 

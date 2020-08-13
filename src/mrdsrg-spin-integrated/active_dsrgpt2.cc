@@ -502,9 +502,9 @@ void ACTIVE_DSRGPT2::rotate_amp(psi::SharedMatrix Ua, psi::SharedMatrix Ub,
         ambit::BlockedTensor::build(ambit::CoreTensor, "Uorb", spin_cases({"gg"}));
 
     std::map<char, std::vector<std::pair<size_t, size_t>>> space_to_relmo;
-    space_to_relmo['c'] = mo_space_info_->get_relative_mo("RESTRICTED_DOCC");
-    space_to_relmo['a'] = mo_space_info_->get_relative_mo("ACTIVE");
-    space_to_relmo['v'] = mo_space_info_->get_relative_mo("RESTRICTED_UOCC");
+    space_to_relmo['c'] = mo_space_info_->relative_mo("RESTRICTED_DOCC");
+    space_to_relmo['a'] = mo_space_info_->relative_mo("ACTIVE");
+    space_to_relmo['v'] = mo_space_info_->relative_mo("RESTRICTED_UOCC");
 
     for (const std::string& block : {"cc", "aa", "vv", "CC", "AA", "VV"}) {
         char space = tolower(block[0]);
@@ -755,9 +755,9 @@ void ACTIVE_DSRGPT2::compute_osc_pt2(const int& irrep, const int& root, const do
     // put TDeff into psi::SharedMatrix format
     // step 1: setup orbital maps
     std::map<char, std::vector<std::pair<size_t, size_t>>> space_rel_idx;
-    space_rel_idx['c'] = mo_space_info_->get_relative_mo("RESTRICTED_DOCC");
-    space_rel_idx['a'] = mo_space_info_->get_relative_mo("ACTIVE");
-    space_rel_idx['v'] = mo_space_info_->get_relative_mo("RESTRICTED_UOCC");
+    space_rel_idx['c'] = mo_space_info_->relative_mo("RESTRICTED_DOCC");
+    space_rel_idx['a'] = mo_space_info_->relative_mo("ACTIVE");
+    space_rel_idx['v'] = mo_space_info_->relative_mo("RESTRICTED_UOCC");
 
     std::map<char, std::vector<std::vector<size_t>>> space_C1_idx;
     space_C1_idx['c'] = coreIdxC1_;

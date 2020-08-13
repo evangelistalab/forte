@@ -4076,9 +4076,9 @@ void THREE_DSRG_MRPT2::rotate_amp(psi::SharedMatrix Ua, psi::SharedMatrix Ub, co
     ambit::BlockedTensor U = BTF_->build(tensor_type_, "Uorb", spin_cases({"gg"}));
 
     std::map<char, std::vector<std::pair<size_t, size_t>>> space_to_relmo;
-    space_to_relmo['c'] = mo_space_info_->get_relative_mo("RESTRICTED_DOCC");
-    space_to_relmo['a'] = mo_space_info_->get_relative_mo("ACTIVE");
-    space_to_relmo['v'] = mo_space_info_->get_relative_mo("RESTRICTED_UOCC");
+    space_to_relmo['c'] = mo_space_info_->relative_mo("RESTRICTED_DOCC");
+    space_to_relmo['a'] = mo_space_info_->relative_mo("ACTIVE");
+    space_to_relmo['v'] = mo_space_info_->relative_mo("RESTRICTED_UOCC");
 
     // alpha
     for (const std::string& block : {"cc", "aa", "vv"}) {

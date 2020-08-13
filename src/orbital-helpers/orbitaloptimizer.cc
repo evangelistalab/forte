@@ -215,8 +215,8 @@ void OrbitalOptimizer::orbital_gradient() {
     auto generalized_part_abs = mo_space_info_->corr_absolute_mo("GENERALIZED PARTICLE");
     psi::Dimension general_hole_dim = mo_space_info_->dimension("GENERALIZED HOLE");
     psi::Dimension general_part_dim = mo_space_info_->dimension("GENERALIZED PARTICLE");
-    auto generalized_hole_rel = mo_space_info_->get_relative_mo("GENERALIZED HOLE");
-    auto generalized_part_rel = mo_space_info_->get_relative_mo("GENERALIZED PARTICLE");
+    auto generalized_hole_rel = mo_space_info_->relative_mo("GENERALIZED HOLE");
+    auto generalized_part_rel = mo_space_info_->relative_mo("GENERALIZED PARTICLE");
     if (casscf_debug_print_) {
         outfile->Printf("Generalized_hole_abs\n");
         for (auto gha : generalized_hole_abs) {

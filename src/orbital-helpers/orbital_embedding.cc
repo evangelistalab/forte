@@ -376,6 +376,7 @@ std::shared_ptr<MOSpaceInfo> make_embedding(psi::SharedWavefunction ref_wfn,
     Dimension doc = ref_wfn->doccpi();
     int diff = doc[0] - frzopi[0] - nroccpi[0];
     int diff2 = actv_a[0] - diff;
+
     if (options->get_str("EMBEDDING_REFERENCE") == "HF") {
         nroccpi[0] += diff;
         nrvirpi[0] += diff2;

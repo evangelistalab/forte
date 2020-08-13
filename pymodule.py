@@ -613,10 +613,16 @@ def run_forte(name, **kwargs):
         # which holds the molecule used, orbitals, Fock matrices, and more
         ref_wfn = kwargs.get('ref_wfn', None)
         if ref_wfn is None:
+            ref_type = options.get_str('REF_TYPE')
             psi4.core.print_out(
-                '\n  No reference wavefunction provided. Computing one with psi4\n'
+                f'\n  No reference wavefunction provided. Computing {ref_type} orbitals with psi4\n'
             )
-            ref_wfn = psi4.driver.scf_helper(name, **kwargs)
+            if options.get_str('REF_TYPE') == 'SCF':
+                warnings.warn('\n  Forte is using orbitals from a psi4 SCF reference. This is not the best choice for multireference computations. To use CASSCF orbitals from psi4 set REF_TYPE to CASSCF.\n',
+                        UserWarning)
+                ref_wfn = psi4.driver.scf_helper(name, **kwargs)
+            elif options.get_str('REF_TYPE') == 'CASSCF':
+                ref_wfn = psi4.proc.run_detcas('casscf', **kwargs)
 
         state_weights_map, mo_space_info, scf_info = prepare_forte_objects_from_psi4_wfn(
             options, ref_wfn)
@@ -762,7 +768,6 @@ def gradient_forte(name, **kwargs):
 
         ints.rotate_orbitals(Ua, Ub)
 
-    # Run gradient computation
     energy = forte.forte_old_methods(ref_wfn, options, ints, mo_space_info)
 
     casscf = forte.make_casscf(state_weights_map, scf_info, options,
