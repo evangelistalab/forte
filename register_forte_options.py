@@ -73,12 +73,24 @@ def register_driver_options(options):
 
     options.add_array("SUBSPACE", "A list of orbital subspaces")
 
-    options.add_int_array("GAS1", "GAS1")
-    options.add_int_array("GAS2", "GAS2")
-    options.add_int_array("GAS3", "GAS3")
-    options.add_int_array("GAS4", "GAS4")
-    options.add_int_array("GAS5", "GAS5")
-    options.add_int_array("GAS6", "GAS6")
+    options.add_int_array("GAS1",
+            "Number of GAS1 orbitals per irrep (in Cotton order)"
+    )
+    options.add_int_array("GAS2",
+            "Number of GAS2 orbitals per irrep (in Cotton order)"
+    )
+    options.add_int_array("GAS3",
+            "Number of GAS3 orbitals per irrep (in Cotton order)"
+    )
+    options.add_int_array("GAS4",
+            "Number of GAS4 orbitals per irrep (in Cotton order)"
+    )
+    options.add_int_array("GAS5",
+            "Number of GAS5 orbitals per irrep (in Cotton order)"
+    )
+    options.add_int_array("GAS6",
+            "Number of GAS6 orbitals per irrep (in Cotton order)"
+    )
 
     options.add_double("MS", None, "Projection of spin onto the z axis")
 
@@ -233,26 +245,7 @@ def register_mo_space_info_options(options):
     )
     options.add_int_array("NROOTPI",
                             "Number of roots per irrep (in Cotton order)")
-#<<<<<<< HEAD
-#
-#    options.add_int_array("GAS1", 
-#            "NUmber of GAS1 orbitals per irrep (in Cotton order)"
-#    )
-#    options.add_int_array("GAS2",
-#            "Number of GAS2 orbitals per irrep (in Cotton order)"
-#    )
-#    options.add_int_array("GAS3",
-#            "Number of GAS3 orbitals per irrep (in Cotton order)"
-#    )
-#    options.add_int_array("GAS4",
-#            "Number of GAS4 orbitals per irrep (in Cotton order)"
-#    )
-#    options.add_int_array("GAS5",
-#            "Number of GAS5 orbitals per irrep (in Cotton order)"
-#    )
-#    options.add_int_array("GAS6",
-#            "Number of GAS6 orbitals per irrep (in Cotton order)"
-#=======
+
     # Options for state-averaged CASSCF
     options.add_array(
         "STATES",
@@ -906,8 +899,8 @@ def register_casscf_options(options):
                            "Monitor the CAS-CI solutions through iterations")
     options.add_bool("CASSCF_SEMICANONICALIZE", True,
                            "Semicanonicalize the orbitals after CASSCF?")
-    options.add_int_array("CASSCF_FROZEN_ORBITAL", 
-            "The active orbital to be frozen in the casscf optimization")
+    options.add_int_array("CASSCF_ACTIVE_FROZEN_ORBITAL",
+            "A list of active orbitals to be frozen in the casscf optimization (in Pitzer order, zero based). Useful when doing core-excited state computations.")
 
 
 def register_old_options(options):
@@ -990,21 +983,6 @@ def register_gas_options(options):
     options.add_array("GAS4MIN_MULTI","The minimum number of electrons in GAS4 for different root (input similar to AVG_STATE)")
     options.add_array("GAS5MIN_MULTI","The minimum number of electrons in GAS5 for different root (input similar to AVG_STATE)")
     options.add_array("GAS6MIN_MULTI","The minimum number of electrons in GAS6 for different root (input similar to AVG_STATE)")
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
     #    /*- The minimum excitation level (Default value: 0) -*/
     #    options.add_int("MIN_EXC_LEVEL", 0)

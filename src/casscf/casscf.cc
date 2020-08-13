@@ -388,12 +388,6 @@ void CASSCF::diagonalize_hamiltonian() {
                                                         mo_space_info_, fci_ints, options_);
     active_space_solver->set_print(print_);
     const auto state_energies_map = active_space_solver->compute_energy();
-
-    for (auto it : state_weights_map_) {
-        for (auto jt : it.second) {
-            outfile->Printf("\n Weight %f ", jt);
-        }
-    }
     cas_ref_ = active_space_solver->compute_average_rdms(state_weights_map_, 2);
     E_casscf_ = compute_average_state_energy(state_energies_map, state_weights_map_);
 

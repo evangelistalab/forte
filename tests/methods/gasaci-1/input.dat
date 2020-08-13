@@ -49,7 +49,7 @@ set forte {
 
 energy('scf')
 
-#compare_values(refscf, variable("CURRENT ENERGY"),9, "SCF energy") #TEST
+# compare_values(refscf, variable("CURRENT ENERGY"),9, "SCF energy") #TEST
 
 energy('forte')
 compare_values(refaci, variable("ACI ENERGY"),9, "ACI energy") #TEST

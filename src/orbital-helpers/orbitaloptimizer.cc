@@ -378,7 +378,7 @@ void OrbitalOptimizer::orbital_gradient() {
         //            outfile->Printf("Active %d %d %d \n", active_abs_[i],active_re_mo[i].first,
         //                            active_re_mo[i].second);
         //        }
-        auto active_frozen = options_->get_int_vec("CASSCF_FROZEN_ORBITAL");
+        auto active_frozen = options_->get_int_vec("CASSCF_ACTIVE_FROZEN_ORBITAL");
         if (!active_frozen.empty()) {
             outfile->Printf("\n  Active Orbitals Frozen:");
         }
