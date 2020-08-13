@@ -144,6 +144,7 @@ void OrbitalOptimizer::startup() {
         throw psi::PSIEXCEPTION("You did not specify your CASSCF_CI_SOLVER correctly.");
     }
     cas_ = true;
+    gas_ = false;
     if (options_->get_str("ACTIVE_REF_TYPE") == "GAS" or
         options_->get_str("ACTIVE_REF_TYPE") == "GAS_SINGLE") {
         cas_ = false;
