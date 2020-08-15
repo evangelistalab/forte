@@ -51,13 +51,14 @@ class ROSENBROCK {
     /// Compute the diagonal Hessian
     void hess_diag(psi::SharedVector x, psi::SharedVector h0);
 
-private:
+  private:
     /// Size of the problem
     int n_;
 
     /// Error message printing
     void check_dim(psi::SharedVector x);
 };
-
+/// Test L-BFGS on Rosenbrock function
+double test_lbfgs_rosenbrock(int n, int h0_freq = 0);
 } // namespace forte
 #endif // _rosenbrock_h_

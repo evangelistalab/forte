@@ -34,58 +34,35 @@
 #include "psi4/libqt/qt.h"
 #include "psi4/psifiles.h"
 #include "psi4/libmints/basisset.h"
+#include "psi4/psi4-dec.h"
+#include "psi4/libmints/vector.h"
+#include "psi4/libpsi4util/PsiOutStream.h"
+#include "psi4/libfock/jk.h"
+#include "psi4/libpsi4util/process.h"
 
 #include "helpers/printing.h"
 #include "helpers/helpers.h"
 #include "helpers/lbfgs/lbfgs.h"
 #include "helpers/timer.h"
-#include "sci/aci.h"
-#include "fci/fci_solver.h"
-#include "base_classes/active_space_solver.h"
+#include "integrals/integrals.h"
+#include "integrals/active_space_integrals.h"
 #include "base_classes/rdms.h"
 
-#include "sci/fci_mo.h"
-#include "orbital-helpers/mp2_nos.h"
-#include "orbital-helpers/orbitaloptimizer.h"
-#include "orbital-helpers/semi_canonicalize.h"
-
-#include "integrals/integrals.h"
 #include "casscf/casscf_orb.h"
-#include "casscf/casscf_new.h"
-#include "helpers/lbfgs/lbfgs_param.h"
-#include "helpers/lbfgs/rosenbrock.h"
 
-#ifdef HAVE_CHEMPS2
-#include "dmrg/dmrgsolver.h"
-#endif
-#include "psi4/libdiis/diisentry.h"
-#include "psi4/libdiis/diismanager.h"
-#include "psi4/libmints/factory.h"
-
+using namespace psi;
 using namespace ambit;
 
 namespace forte {
 
-CASSCF_NEW::CASSCF_NEW(const std::map<StateInfo, std::vector<double>>& state_weights_map,
-                       std::shared_ptr<ForteOptions> options,
-                       std::shared_ptr<MOSpaceInfo> mo_space_info,
-                       std::shared_ptr<forte::SCFInfo> scf_info,
-                       std::shared_ptr<ForteIntegrals> ints)
-    : state_weights_map_(state_weights_map), options_(options), mo_space_info_(mo_space_info),
-      scf_info_(scf_info), ints_(ints) {
+CASSCF_GRAD::CASSCF_GRAD(std::shared_ptr<ForteOptions> options,
+                         std::shared_ptr<MOSpaceInfo> mo_space_info,
+                         std::shared_ptr<ForteIntegrals> ints)
+    : options_(options), mo_space_info_(mo_space_info), ints_(ints) {
     startup();
 }
 
-void CASSCF_NEW::startup() {
-    print_method_banner({"Complete Active Space Self Consistent Field",
-                         "written by Kevin P. Hannon and Chenyang Li"});
-
-    // nuclear repulsion energy
-    e_nuc_ = ints_->nuclear_repulsion_energy();
-
-    // frozen-core energy
-    e_frozen_ = ints_->frozen_core_energy();
-
+void CASSCF_GRAD::startup() {
     // setup MO spaces
     setup_mos();
 
@@ -104,9 +81,12 @@ void CASSCF_NEW::startup() {
 
     // allocate memory for tensors and matrices
     init_tensors();
+
+    // compute the initial MO integrals
+    build_mo_integrals();
 }
 
-void CASSCF_NEW::setup_mos() {
+void CASSCF_GRAD::setup_mos() {
     nirrep_ = mo_space_info_->nirrep();
 
     nsopi_ = ints_->nsopi();
@@ -151,33 +131,17 @@ void CASSCF_NEW::setup_mos() {
     }
 }
 
-void CASSCF_NEW::read_options() {
+void CASSCF_GRAD::read_options() {
     print_ = options_->get_int("PRINT");
     debug_print_ = options_->get_bool("CASSCF_DEBUG_PRINTING");
 
     int_type_ = options_->get_str("INT_TYPE");
 
-    maxiter_ = options_->get_int("CASSCF_MAXITER");
-    e_conv_ = options_->get_double("CASSCF_E_CONVERGENCE");
     g_conv_ = options_->get_double("CASSCF_G_CONVERGENCE");
 
     orb_type_redundant_ = options_->get_str("CASSCF_ORB_TYPE");
 
-    // DIIS options
-    diis_freq_ = options_->get_int("CASSCF_DIIS_FREQ");
-    diis_start_ = options_->get_int("CASSCF_DIIS_START");
-    diis_max_vec_ = options_->get_int("CASSCF_DIIS_MAX_VEC");
-    diis_min_vec_ = options_->get_int("CASSCF_DIIS_MIN_VEC");
-    do_diis_ = (diis_start_ < 1) ? false : true;
-
-    // CI update options
-    ci_type_ = options_->get_str("CASSCF_CI_SOLVER");
-    ci_freq_ = options_->get_int("CASSCF_CI_FREQ");
-
-    // rotations
-    max_rot_ = options_->get_double("CASSCF_MAX_ROTATION");
-    internal_rot_ = options_->get_bool("CASSCF_INTERNAL_ROT");
-
+    // zero rotations
     zero_rots_.resize(nirrep_);
     auto zero_rots = options_->get_gen_list("CASSCF_ZERO_ROT");
 
@@ -216,37 +180,36 @@ void CASSCF_NEW::read_options() {
     }
 }
 
-void CASSCF_NEW::print_options() {
-    // fill in information
-    std::vector<std::pair<std::string, int>> info_int{{"Printing level", print_},
-                                                      {"Max number of iterations", maxiter_},
-                                                      {"Frequency of doing CI", ci_freq_}};
+void CASSCF_GRAD::print_options() {
+    //    // fill in information
+    //    std::vector<std::pair<std::string, int>> info_int{{"Printing level", print_},
+    //                                                      {"Max number of iterations", maxiter_}};
 
-    std::vector<std::pair<std::string, double>> info_double{{"Energy convergence", e_conv_},
-                                                            {"Gradient convergence", g_conv_},
-                                                            {"Max value for rotation", max_rot_}};
+    //    std::vector<std::pair<std::string, double>> info_double{{"Energy convergence", e_conv_},
+    //                                                            {"Gradient convergence", g_conv_},
+    //                                                            {"Max value for rotation",
+    //                                                            max_rot_}};
 
-    std::vector<std::pair<std::string, std::string>> info_string{
-        {"Integral type", int_type_},
-        {"CI solver type", ci_type_},
-        {"Orbital type", orb_type_redundant_}};
+    //    std::vector<std::pair<std::string, std::string>> info_string{
+    //        {"Integral type", int_type_},
+    //        {"Orbital type", orb_type_redundant_}};
 
-    std::vector<std::pair<std::string, bool>> info_bool{
-        {"Include internal rotations", internal_rot_}, {"Debug printing", debug_print_}};
+    //    std::vector<std::pair<std::string, bool>> info_bool{
+    //        {"Include internal rotations", internal_rot_}, {"Debug printing", debug_print_}};
 
-    if (do_diis_) {
-        info_int.push_back({"DIIS start", diis_start_});
-        info_int.push_back({"Min DIIS vectors", diis_min_vec_});
-        info_int.push_back({"Max DIIS vectors", diis_max_vec_});
-        info_int.push_back({"Frequency of DIIS extrapolation", diis_freq_});
-    }
+    //    if (do_diis_) {
+    //        info_int.push_back({"DIIS start", diis_start_});
+    //        info_int.push_back({"Min DIIS vectors", diis_min_vec_});
+    //        info_int.push_back({"Max DIIS vectors", diis_max_vec_});
+    //        info_int.push_back({"Frequency of DIIS extrapolation", diis_freq_});
+    //    }
 
-    // print some information
-    print_selected_options("Calculation Information", info_string, info_bool, info_double,
-                           info_int);
+    //    // print some information
+    //    print_selected_options("Calculation Information", info_string, info_bool, info_double,
+    //                           info_int);
 }
 
-void CASSCF_NEW::nonredundant_pairs() {
+void CASSCF_GRAD::nonredundant_pairs() {
     // prepare indices for rotation pairs
     rot_mos_irrep_.clear();
     rot_mos_block_.clear();
@@ -333,7 +296,7 @@ void CASSCF_NEW::nonredundant_pairs() {
     outfile->Printf("\n    %s", std::string(33 + nirrep_ * 6, '-').c_str());
 }
 
-void CASSCF_NEW::setup_JK() {
+void CASSCF_GRAD::setup_JK() {
     local_timer jk_timer;
     print_h2("Initialize JK Builder", "==>", "<==\n");
 
@@ -381,7 +344,7 @@ void CASSCF_NEW::setup_JK() {
         outfile->Printf("  Initializing JK took %.3f seconds.", jk_timer.get());
 }
 
-void CASSCF_NEW::setup_ambit() {
+void CASSCF_GRAD::setup_ambit() {
     BlockedTensor::reset_mo_spaces();
     BlockedTensor::set_expert_mode(true);
 
@@ -393,9 +356,10 @@ void CASSCF_NEW::setup_ambit() {
     BlockedTensor::add_composite_mo_space("g", "p,q,r,s", {"c", "a", "v"});
 }
 
-void CASSCF_NEW::init_tensors() {
+void CASSCF_GRAD::init_tensors() {
     // save a copy of initial MO
     C0_ = ints_->wfn()->Ca()->clone();
+    C_ = C0_->clone();
 
     // save a copy of AO OEI
     H_ao_ = ints_->wfn()->H()->clone();
@@ -437,189 +401,12 @@ void CASSCF_NEW::init_tensors() {
 
     grad_ = std::make_shared<psi::Vector>("Gradient Vector", nrot_);
     hess_diag_ = std::make_shared<psi::Vector>("Diagonal Hessian", nrot_);
+
+    // orthogonal orbital transformation
+    U_ = std::make_shared<psi::Matrix>("Orthogonal Transformation", nmopi_, nmopi_);
 }
 
-double CASSCF_NEW::compute_energy() {
-    // initial orbitals and rotations
-    C_ = C0_->clone();
-
-    R_ = std::make_shared<psi::Matrix>("Orbital Rotation", nmopi_, nmopi_);
-    dR_ = std::make_shared<psi::Matrix>("Orbital Rotation Update", nmopi_, nmopi_);
-
-    R_v_ = std::make_shared<psi::Vector>("R", nrot_);
-    dR_v_ = std::make_shared<psi::Vector>("dR", nrot_);
-
-    auto U = std::make_shared<psi::Matrix>("Orthogonal Transformation", nmopi_, nmopi_);
-
-    if (do_diis_) {
-        diis_manager_ = std::make_shared<DIISManager>(
-            diis_max_vec_, "CASSCF DIIS", DIISManager::OldestAdded, DIISManager::InCore);
-        diis_manager_->set_error_vector_size(1, DIISEntry::Matrix, dR_.get());
-        diis_manager_->set_vector_size(1, DIISEntry::Matrix, R_.get());
-    }
-
-//    LBFGS lbfgs(nrot_);
-
-    std::vector<double> e_history;
-    std::vector<double> g_history;
-
-    CASSCF_GRAD cas_grad(options_, mo_space_info_, ints_);
-
-    LBFGS_PARAM lbfgs_param;
-    lbfgs_param.epsilon = g_conv_;
-    lbfgs_param.maxiter = 30;
-    lbfgs_param.print = 3;
-    lbfgs_param.min_step = 0.01;
-    lbfgs_param.h0_freq = 1;
-
-    LBFGS lbfgs(lbfgs_param);
-
-//    ROSENBROCK rosenbrock(10);
-//    auto x = std::make_shared<psi::Vector>("x", 10);
-
-    for (int macro = 1; macro <= maxiter_; ++macro) {
-        auto fci_ints = cas_grad.active_space_ints();
-
-        auto state_map = to_state_nroots_map(state_weights_map_);
-        auto active_space_solver = make_active_space_solver(ci_type_, state_map, scf_info_,
-                                                            mo_space_info_, fci_ints, options_);
-        active_space_solver->set_print(print_);
-        const auto state_energies_map = active_space_solver->compute_energy();
-
-        auto rdms = active_space_solver->compute_average_rdms(state_weights_map_, 2);
-        energy_ = compute_average_state_energy(state_energies_map, state_weights_map_);
-
-        cas_grad.set_rdms(rdms);
-
-        lbfgs.minimize(cas_grad, R_v_);
-//        double fx = lbfgs.minimize(rosenbrock, x);
-//        outfile->Printf("\n Rosenbrock: %.15f", fx);
-
-        C_ = cas_grad.Ca()->clone();
-        double g_rms = cas_grad.grad_norm();
-        double e_delta = (macro > 1) ? energy_ - e_history[macro - 2] : energy_;
-        outfile->Printf("\n    Iter.      Current Energy  Energy Diff.    Orb. Grad.");
-        outfile->Printf("\n    %4d   %18.12f  %12.4e  %12.4e", macro, energy_, e_delta, g_rms);
-        e_history.push_back(energy_);
-        g_history.push_back(g_rms);
-
-        if (std::fabs(e_delta) < e_conv_ and g_rms < g_conv_) {
-            outfile->Printf("\n    A miracle has come to pass: MCSCF iterations have converged!");
-            break;
-        }
-
-        lbfgs.reset();
-    }
-
-//    // start iteration
-//    for (int iter = 1; iter <= maxiter_; ++iter) {
-//        build_mo_integrals();
-
-//        if (iter == 1 or (iter % ci_freq_ == 0)) {
-//            diagonalize_hamiltonian();
-//        } else {
-//            compute_reference_energy();
-//        }
-
-//        build_fock();
-
-//        compute_orbital_grad();
-
-//        // now test convergence
-//        double e_delta = (iter > 1) ? energy_ - e_history[iter - 2] : energy_;
-//        double g_norm = grad_->norm();
-//        outfile->Printf("\n    Iter.      Current Energy  Energy Diff.    Orb. Grad.");
-//        outfile->Printf("\n    %4d   %18.12f  %12.4e  %12.4e", iter, energy_, e_delta, g_norm);
-//        e_history.push_back(energy_);
-//        g_history.push_back(g_norm);
-
-//        if (std::fabs(e_delta) < e_conv_ and g_norm < g_conv_) {
-//            outfile->Printf("\n    A miracle has come to pass: MCSCF iterations have converged!");
-//            break;
-//        }
-
-//        // if not converged, update orbitals
-//        compute_orbital_hess_diag();
-//        lbfgs.set_hess_diag(hess_diag_);
-//        lbfgs.reset();
-
-//        dR_v_ = lbfgs.compute_correction(R_v_, grad_);
-
-//        // scale dR
-//        double dr_max = 0.0;
-//        for (size_t i = 0; i < nrot_; ++i) {
-//            double v = std::fabs(dR_v_->get(i));
-//            if (v > dr_max)
-//                dr_max = v;
-//        }
-//        if (dr_max > max_rot_)
-//            dR_v_->scale(max_rot_ / dr_max);
-
-//        reshape_rot_update();
-
-//        // add to R matrix for next iteration
-//        R_->add(dR_);
-//        R_v_->add(dR_v_);
-
-//        if (do_diis_ and iter >= diis_start_) {
-//            diis_manager_->add_entry(2, dR_.get(), R_.get());
-//            outfile->Printf("  S");
-
-//            if ((iter - diis_start_) % diis_freq_ == 0 and
-//                diis_manager_->subspace_size() > diis_min_vec_) {
-//                diis_manager_->extrapolate(1, R_.get());
-//                outfile->Printf("/E");
-//            }
-//        }
-
-//        // compute unitary matrix U = exp(R)
-//        U->copy(R_);
-//        U->expm(3);
-
-//        // update orbitals
-//        C_ = psi::linalg::doublet(C0_, U, false, false);
-//        C_->set_name(C0_->name());
-
-//        if (debug_print_) {
-//            dR_->print();
-//            R_->print();
-//            C_->print();
-//        }
-
-//        if (iter % ci_freq_ == 0)
-//            diis_manager_->reset_subspace();
-//    }
-//    diis_manager_->reset_subspace();
-
-    // print summary
-    print_h2("MCSCF Iteration Summary");
-    outfile->Printf("\n    Iter.      Current Energy  Energy Diff.    Orb. Grad.");
-    outfile->Printf("\n    -----------------------------------------------------");
-    for (int i = 0, size = e_history.size(); i < size; ++i) {
-        double e = e_history[i];
-        double e_delta = (i == 0) ? 0.0 : e_history[i] - e_history[i - 1];
-        double g = g_history[i];
-        outfile->Printf("\n    %4d   %18.12f  %12.4e  %12.4e", i + 1, e, e_delta, g);
-    }
-    outfile->Printf("\n    -----------------------------------------------------");
-
-    // fix orbitals for redundant pairs
-    auto U_re = canonicalize();
-    C_ = psi::linalg::doublet(C_, U_re, false, false);
-    C_->set_name(C0_->name());
-
-    // rediagonalize Hamiltonian
-    build_mo_integrals();
-    diagonalize_hamiltonian();
-
-    // pass to wave function
-    ints_->wfn()->Ca()->copy(C_);
-    ints_->wfn()->Cb()->copy(C_);
-
-    return energy_;
-}
-
-void CASSCF_NEW::build_mo_integrals() {
+void CASSCF_GRAD::build_mo_integrals() {
     // form closed-shell Fock matrix
     build_fock_inactive();
 
@@ -633,7 +420,7 @@ void CASSCF_NEW::build_mo_integrals() {
     build_tei_from_ao();
 }
 
-void CASSCF_NEW::build_oei_from_ao() {
+void CASSCF_GRAD::build_oei_from_ao() {
     H_mo_ = H_ao_->clone();
     H_mo_->transform(C_);
     H_mo_->set_name("Hbare_MO");
@@ -643,7 +430,7 @@ void CASSCF_NEW::build_oei_from_ao() {
     }
 }
 
-void CASSCF_NEW::compute_energy_closed() {
+void CASSCF_GRAD::compute_energy_closed() {
     e_closed_ = 0.0;
     for (int h = 0; h < nirrep_; ++h) {
         for (int i = 0; i < ndoccpi_[h]; ++i) {
@@ -652,12 +439,12 @@ void CASSCF_NEW::compute_energy_closed() {
     }
 
     if (debug_print_) {
-        outfile->Printf("\n  Frozen-core energy   %20.15f", e_frozen_);
+        outfile->Printf("\n  Frozen-core energy   %20.15f", ints_->frozen_core_energy());
         outfile->Printf("\n  Closed-shell energy  %20.15f", e_closed_);
     }
 }
 
-void CASSCF_NEW::build_tei_from_ao() {
+void CASSCF_GRAD::build_tei_from_ao() {
     // This function will do an integral transformation using the JK builder,
     // and return the integrals of type <px|uy> = (pu|xy).
     timer_on("Build (pu|xy) integrals");
@@ -747,7 +534,7 @@ void CASSCF_NEW::build_tei_from_ao() {
     timer_off("Build (pu|xy) integrals");
 }
 
-void CASSCF_NEW::build_fock_inactive() {
+void CASSCF_GRAD::build_fock_inactive() {
     // Implementation Notes (in AO basis)
     // F_frozen = D_{uv}^{frozen} * (2 * (uv|rs) - (us|rv))
     // F_restricted = D_{uv}^{restricted} * (2 * (uv|rs) - (us|rv))
@@ -788,7 +575,7 @@ void CASSCF_NEW::build_fock_inactive() {
     }
 }
 
-void CASSCF_NEW::build_fock(bool rebuild_inactive) {
+void CASSCF_GRAD::build_fock(bool rebuild_inactive) {
     if (rebuild_inactive) {
         build_fock_inactive();
     }
@@ -810,7 +597,7 @@ void CASSCF_NEW::build_fock(bool rebuild_inactive) {
     }
 }
 
-void CASSCF_NEW::build_fock_active() {
+void CASSCF_GRAD::build_fock_active() {
     // Implementation Notes (in AO basis)
     // F_active = D_{uv}^{active} * ( (uv|rs) - 0.5 * (us|rv) )
     // D_{uv}^{active} = \sum_{xy}^{active} C_{ux} * C_{vy} * Gamma1_{xy}
@@ -849,7 +636,7 @@ void CASSCF_NEW::build_fock_active() {
     }
 }
 
-void CASSCF_NEW::format_fock(psi::SharedMatrix Fock, ambit::BlockedTensor F) {
+void CASSCF_GRAD::format_fock(psi::SharedMatrix Fock, ambit::BlockedTensor F) {
     F.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>&, double& value) {
         auto irrep_index_pair1 = corr_mos_rel_[i[0]];
         auto irrep_index_pair2 = corr_mos_rel_[i[1]];
@@ -867,9 +654,45 @@ void CASSCF_NEW::format_fock(psi::SharedMatrix Fock, ambit::BlockedTensor F) {
     });
 }
 
-void CASSCF_NEW::compute_reference_energy() {
+double CASSCF_GRAD::evaluate(psi::SharedVector x, psi::SharedVector g) {
+    // compute U = exp(x)
+    U_->zero();
+    for (size_t n = 0; n < nrot_; ++n) {
+        int h, i, j;
+        std::tie(h, i, j) = rot_mos_irrep_[n];
+
+        U_->set(h, i, j, x->get(n));
+        U_->set(h, j, i, -x->get(n));
+    }
+    U_->expm(3);
+
+    // update orbitals
+    C_ = psi::linalg::doublet(C0_, U_, false, false);
+
+    // compute integrals
+    build_mo_integrals();
+
+    // compute energy
+    compute_reference_energy();
+
+    // compute averaged Fock matrix
+    build_fock();
+
+//    // canonicalize orbitals
+//    auto Ucan = canonicalize();
+//    C_ = psi::linalg::doublet(C_, Ucan, false, false);
+//    C_->set_name(C0_->name());
+
+    // compute orbital gradient
+    compute_orbital_grad();
+    g->copy(*grad_);
+
+    return energy_;
+}
+
+void CASSCF_GRAD::compute_reference_energy() {
     // compute energy given that all useful MO integrals are available
-    energy_ = e_nuc_ + e_closed_;
+    energy_ = e_closed_ + ints_->nuclear_repulsion_energy();
     energy_ += Fc_["uv"] * D1_["uv"];
     energy_ += 0.5 * V_["uvxy"] * D2_["uvxy"];
 
@@ -878,65 +701,7 @@ void CASSCF_NEW::compute_reference_energy() {
     }
 }
 
-void CASSCF_NEW::diagonalize_hamiltonian() {
-    // prepare integrals for active-space solver
-    auto fci_ints = std::make_shared<ActiveSpaceIntegrals>(ints_, actv_mos_, actv_sym_, core_mos_);
-
-    // change to antisymmetrized TEI in physists' notation
-    auto actv_ab = ambit::Tensor::build(CoreTensor, "tei_actv_aa", std::vector<size_t>(4, nactv_));
-    actv_ab("pqrs") = V_.block("aaaa")("prqs");
-
-    auto actv_aa = ambit::Tensor::build(CoreTensor, "tei_actv_aa", std::vector<size_t>(4, nactv_));
-    actv_aa.copy(actv_ab);
-    actv_aa("uvxy") -= actv_ab("uvyx");
-
-    fci_ints->set_active_integrals(actv_aa, actv_ab, actv_aa);
-
-    auto& oei = Fc_.block("aa").data();
-    fci_ints->set_restricted_one_body_operator(oei, oei);
-
-    fci_ints->set_scalar_energy(e_closed_ - e_frozen_);
-
-    // diagonalize Hamiltonian
-    auto state_map = to_state_nroots_map(state_weights_map_);
-    auto active_space_solver = make_active_space_solver(ci_type_, state_map, scf_info_,
-                                                        mo_space_info_, fci_ints, options_);
-    active_space_solver->set_print(print_);
-    const auto state_energies_map = active_space_solver->compute_energy();
-
-    // compute RDMs
-    auto rdms = active_space_solver->compute_average_rdms(state_weights_map_, 2);
-    energy_ = compute_average_state_energy(state_energies_map, state_weights_map_);
-
-    D1_.block("aa").copy(rdms.g1a());
-    D1_.block("aa")("pq") += rdms.g1b()("pq");
-    format_1rdm();
-
-    // change to chemists' notation
-    D2_.block("aaaa")("pqrs") = rdms.SFg2()("prqs");
-    D2_.block("aaaa")("pqrs") += rdms.SFg2()("qrps");
-    D2_.scale(0.5);
-}
-
-void CASSCF_NEW::format_1rdm() {
-    const auto& d1_data = D1_.block("aa").data();
-
-    for (int h = 0, offset = 0; h < nirrep_; ++h) {
-        for (int u = 0; u < nactvpi_[h]; ++u) {
-            size_t nu = u + offset;
-            for (int v = 0; v < nactvpi_[h]; ++v) {
-                rdm1_->set(h, u, v, d1_data[nu * nactv_ + v + offset]);
-            }
-        }
-        offset += nactvpi_[h];
-    }
-
-    if (debug_print_) {
-        rdm1_->print();
-    }
-}
-
-void CASSCF_NEW::compute_orbital_grad() {
+void CASSCF_GRAD::compute_orbital_grad() {
     // build orbital Lagrangian
     A_["ri"] = 2.0 * F_["ri"];
     A_["ru"] = Fc_["rt"] * D1_["tu"];
@@ -954,7 +719,12 @@ void CASSCF_NEW::compute_orbital_grad() {
     }
 }
 
-void CASSCF_NEW::compute_orbital_hess_diag() {
+void CASSCF_GRAD::hess_diag(psi::SharedVector, psi::SharedVector h0) {
+    compute_orbital_hess_diag();
+    h0->copy(*hess_diag_);
+}
+
+void CASSCF_GRAD::compute_orbital_hess_diag() {
     // modified diagonal Hessian from Theor. Chem. Acc. 97, 88-95 (1997)
 
     // virtual-core block
@@ -1054,7 +824,7 @@ void CASSCF_NEW::compute_orbital_hess_diag() {
     }
 }
 
-void CASSCF_NEW::reshape_rot_ambit(ambit::BlockedTensor bt, psi::SharedVector sv) {
+void CASSCF_GRAD::reshape_rot_ambit(ambit::BlockedTensor bt, psi::SharedVector sv) {
     size_t vec_size = sv->dimpi().sum();
     if (vec_size != nrot_) {
         std::runtime_error("Inconsistent size between SharedVector and number of rotaitons");
@@ -1071,17 +841,7 @@ void CASSCF_NEW::reshape_rot_ambit(ambit::BlockedTensor bt, psi::SharedVector sv
     }
 }
 
-void CASSCF_NEW::reshape_rot_update() {
-    for (size_t n = 0; n < nrot_; ++n) {
-        int h, i, j;
-        std::tie(h, i, j) = rot_mos_irrep_[n];
-
-        dR_->set(h, i, j, dR_v_->get(n));
-        dR_->set(h, j, i, -dR_v_->get(n));
-    }
-}
-
-std::shared_ptr<psi::Matrix> CASSCF_NEW::canonicalize() {
+std::shared_ptr<psi::Matrix> CASSCF_GRAD::canonicalize() {
     print_h2("Canonicalize Orbitals (" + orb_type_redundant_ + ")");
 
     // unitary rotation matrix for output
@@ -1199,11 +959,55 @@ std::shared_ptr<psi::Matrix> CASSCF_NEW::canonicalize() {
     return U;
 }
 
-std::unique_ptr<CASSCF_NEW>
-make_casscf_new(const std::map<StateInfo, std::vector<double>>& state_weight_map,
-                std::shared_ptr<SCFInfo> scf_info, std::shared_ptr<ForteOptions> options,
-                std::shared_ptr<MOSpaceInfo> mo_space_info, std::shared_ptr<ForteIntegrals> ints) {
-    return std::make_unique<CASSCF_NEW>(state_weight_map, options, mo_space_info, scf_info, ints);
+void CASSCF_GRAD::set_rdms(RDMs& rdms) {
+    // form spin-summed densities
+    D1_.block("aa").copy(rdms.g1a());
+    D1_.block("aa")("pq") += rdms.g1b()("pq");
+    format_1rdm();
+
+    // change to chemists' notation
+    D2_.block("aaaa")("pqrs") = rdms.SFg2()("prqs");
+    D2_.block("aaaa")("pqrs") += rdms.SFg2()("qrps");
+    D2_.scale(0.5);
+}
+
+void CASSCF_GRAD::format_1rdm() {
+    const auto& d1_data = D1_.block("aa").data();
+
+    for (int h = 0, offset = 0; h < nirrep_; ++h) {
+        for (int u = 0; u < nactvpi_[h]; ++u) {
+            size_t nu = u + offset;
+            for (int v = 0; v < nactvpi_[h]; ++v) {
+                rdm1_->set(h, u, v, d1_data[nu * nactv_ + v + offset]);
+            }
+        }
+        offset += nactvpi_[h];
+    }
+
+    if (debug_print_) {
+        rdm1_->print();
+    }
+}
+
+std::shared_ptr<ActiveSpaceIntegrals> CASSCF_GRAD::active_space_ints() {
+    auto fci_ints = std::make_shared<ActiveSpaceIntegrals>(ints_, actv_mos_, actv_sym_, core_mos_);
+
+    // build antisymmetrized TEI in physists' notation
+    auto actv_ab = ambit::Tensor::build(CoreTensor, "tei_actv_aa", std::vector<size_t>(4, nactv_));
+    actv_ab("pqrs") = V_.block("aaaa")("prqs");
+
+    auto actv_aa = ambit::Tensor::build(CoreTensor, "tei_actv_aa", std::vector<size_t>(4, nactv_));
+    actv_aa.copy(actv_ab);
+    actv_aa("uvxy") -= actv_ab("uvyx");
+
+    fci_ints->set_active_integrals(actv_aa, actv_ab, actv_aa);
+
+    auto& oei = Fc_.block("aa").data();
+    fci_ints->set_restricted_one_body_operator(oei, oei);
+
+    fci_ints->set_scalar_energy(e_closed_ - ints_->frozen_core_energy());
+
+    return fci_ints;
 }
 
 } // namespace forte

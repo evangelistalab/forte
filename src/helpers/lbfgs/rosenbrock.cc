@@ -26,6 +26,12 @@
  * @END LICENSE
  */
 
+#include "psi4/psi4-dec.h"
+#include "psi4/libmints/vector.h"
+#include "psi4/libpsi4util/PsiOutStream.h"
+#include "helpers/lbfgs/lbfgs_param.h"
+#include "helpers/lbfgs/lbfgs.h"
+
 #include "rosenbrock.h"
 
 namespace forte {
@@ -76,5 +82,34 @@ void ROSENBROCK::check_dim(psi::SharedVector x) {
                           std::to_string(n_) + " but get " + std::to_string(x->dim(0));
         std::runtime_error(msg.c_str());
     }
+}
+
+double test_lbfgs_rosenbrock(int n, int h0_freq) {
+    // L-BFGS parameters
+    LBFGS_PARAM param;
+    param.epsilon = 1.0e-6;
+    param.maxiter = 100;
+    param.h0_freq = h0_freq;
+    param.print = 2;
+
+    // L-BFGS solver
+    LBFGS lbfgs_solver(param);
+
+    // Rosenbrock function
+    ROSENBROCK rosenbrock(n);
+
+    // initial guess
+    auto x = std::make_shared<psi::Vector>("x", n);
+
+    double fx = lbfgs_solver.minimize(rosenbrock, x);
+
+    // print final results
+    psi::outfile->Printf("\n");
+    psi::outfile->Printf("\n  L-BFGS converged in %d iterations.", lbfgs_solver.iter());
+    psi::outfile->Printf("\n  Final function value f(x) = %.15f", fx);
+    psi::outfile->Printf("\n  Optimized vector x:\n");
+    x->print();
+
+    return fx;
 }
 } // namespace forte

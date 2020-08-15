@@ -39,7 +39,7 @@
 #include "integrals/make_integrals.h"
 
 #include "helpers/printing.h"
-#include "helpers/lbfgs/lbfgs.h"
+#include "helpers/lbfgs/rosenbrock.h"
 
 #include "orbital-helpers/aosubspace.h"
 #include "orbital-helpers/localize.h"

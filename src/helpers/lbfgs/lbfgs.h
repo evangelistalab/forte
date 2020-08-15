@@ -165,8 +165,5 @@ class LBFGS {
     /// Resize all vectors uisng m_
     void resize(int m);
 };
-
-/// Test L-BFGS on Rosenbrock function
-double test_lbfgs_rosenbrock(int n, int h0_freq = 0);
 } // namespace forte
 #endif // LBFGS_H

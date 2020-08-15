@@ -34,6 +34,7 @@
 
 #include "lbfgs.h"
 #include "rosenbrock.h"
+#include "casscf/casscf_orb.h"
 
 using namespace psi;
 
@@ -78,6 +79,7 @@ template <class Foo> double LBFGS::minimize(Foo& func, psi::SharedVector x) {
         if (param_.print > 2)
             outfile->Printf("\n  Initial norm of diagonal Hessian: %.15f", h0_->norm());
     }
+    double fx_old = fx;
 
     // start iteration
     do {
@@ -106,10 +108,12 @@ template <class Foo> double LBFGS::minimize(Foo& func, psi::SharedVector x) {
         // test convergence
         x_norm = x->norm();
         g_norm = g_->norm();
-        if (g_norm <= param_.epsilon * std::max(1.0, x_norm)) {
+        outfile->Printf("\n  Convergence test grad: %.15f", param_.epsilon * std::max(1.0, x_norm));
+        if (g_norm <= param_.epsilon * std::max(1.0, x_norm) or fx > fx_old) {
             iter_ += 1; // make number of iteration based on 1
             break;
         }
+        fx_old = fx;
 
         // save history
         int index = iter_ % param_.m;
@@ -184,6 +188,35 @@ void LBFGS::line_search(Foo& func, psi::SharedVector x, double& fx, double& step
     double w1 = param_.c1 * dg0;
     double w2 = -param_.c2 * dg0;
 
+    outfile->Printf("\n dg0 = %.15f, w1 = %.15f, w2 = %.15f", dg0, w1, w2);
+
+    // backtracking for optimal step
+    //    for (int i = 0; i < param_.maxiter_linesearch; ++i) {
+    //        x->copy(*x0);
+    //        x->axpy(step, p_);
+    //        fx = func.evaluate(x, g_);
+
+    //        if (fx - fx0 > w1 * step) {
+    //            step *= 0.51;
+    //        } else {
+    //            // Armijo condition is met here
+
+    //            double dg = g_->vector_dot(p_);
+    //            if (dg < -w2) {
+    //                step *= 2.0;
+    //            } else {
+    //                // Wolfe condition is met here
+
+    //                if (std::fabs(dg) > w2) {
+    //                    step *= 0.51;
+    //                } else {
+    //                    // strong Wolfe condition is met here
+    //                    break;
+    //                }
+    //            }
+    //        }
+    //    }
+
     double fx_low = fx0, fx_high = fx0;
     double step_low = 0.0, step_high = 0.0;
 
@@ -200,6 +233,8 @@ void LBFGS::line_search(Foo& func, psi::SharedVector x, double& fx, double& step
         }
 
         double dg = g_->vector_dot(p_);
+
+        outfile->Printf("\n  dg = %.15f", dg);
 
         if (std::fabs(dg) <= w2) {
             if (param_.print > 2) {
@@ -231,6 +266,9 @@ void LBFGS::line_search(Foo& func, psi::SharedVector x, double& fx, double& step
         x->copy(*x0);
         x->axpy(step, p_);
         fx = func.evaluate(x, g_);
+
+        outfile->Printf("\n  fx: %.15f, fx0: %.15f, fx_low: %.15f, step: %.15f", fx, fx0, fx_low,
+                        step);
 
         if (fx - fx0 > w1 * step or fx >= fx_low) {
             step_high = step;
@@ -437,37 +475,11 @@ void LBFGS::check_dim(psi::SharedVector a, psi::SharedVector b, const std::strin
 }
 
 void LBFGS::reset() {
-    resize(m_);
-    counter_ = 0;
+    resize(param_.m);
+    iter_ = 0;
 }
 
-double test_lbfgs_rosenbrock(int n, int h0_freq) {
-    // L-BFGS parameters
-    LBFGS_PARAM param;
-    param.epsilon = 1.0e-6;
-    param.maxiter = 100;
-    param.h0_freq = h0_freq;
-    param.print = 2;
-
-    // L-BFGS solver
-    LBFGS lbfgs_solver(param);
-
-    // Rosenbrock function
-    ROSENBROCK rosenbrock(n);
-
-    // initial guess
-    auto x = std::make_shared<psi::Vector>("x", n);
-
-    double fx = lbfgs_solver.minimize(rosenbrock, x);
-
-    // print final results
-    outfile->Printf("\n");
-    outfile->Printf("\n  L-BFGS converged in %d iterations.", lbfgs_solver.iter());
-    outfile->Printf("\n  Final function value f(x) = %.15f", fx);
-    outfile->Printf("\n  Optimized vector x:\n");
-    x->print();
-
-    return fx;
-}
+template double LBFGS::minimize(ROSENBROCK& func, psi::SharedVector x);
+template double LBFGS::minimize(CASSCF_GRAD& func, psi::SharedVector x);
 
 } // namespace forte
