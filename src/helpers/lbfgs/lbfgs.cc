@@ -93,9 +93,11 @@ template <class Foo> double LBFGS::minimize(Foo& func, psi::SharedVector x) {
         // determine step length
         double step = 1.0;
         next_step(func, x, fx, step);
+        if (param_.print > 2)
+            g_->print();
 
-        if (param_.print > 1)
-            outfile->Printf("\n  Iter: %2d; step = %15.10f; fx = %20.15f; g_norm = %20.15f",
+        if (param_.print > 0)
+            outfile->Printf("\n  Iter: %3d; step = %15.10f; fx = %20.15f; g_norm = %20.15f",
                             iter_ + 1, step, fx, g_->norm());
 
         // test convergence
@@ -235,14 +237,14 @@ void LBFGS::line_search_backtracking(Foo& func, psi::SharedVector x, double& fx,
         }
 
         if (step > param_.max_step) {
-            if (param_.print > 2)
+            if (param_.print > 1)
                 outfile->Printf("\n  Step length > max allowed value. Stopped line search.");
             step = param_.max_step;
             break;
         }
 
         if (step < param_.min_step) {
-            if (param_.print > 2)
+            if (param_.print > 1)
                 outfile->Printf("\n  Step length < min allowed value. Stopped line search.");
             step = param_.min_step;
             break;
@@ -342,13 +344,13 @@ void LBFGS::line_search_bracketing_zoom(Foo& func, psi::SharedVector x, double& 
     }
 
     if (step > param_.max_step) {
-        if (param_.print > 2)
+        if (param_.print > 1)
             outfile->Printf("\n  Step length > max allowed value. Use max allowed value.");
         step = param_.max_step;
     }
 
     if (step < param_.min_step) {
-        if (param_.print > 2)
+        if (param_.print > 1)
             outfile->Printf("\n  Step length < min allowed value. Use min allowed value.");
         step = param_.min_step;
     }

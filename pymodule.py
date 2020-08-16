@@ -657,8 +657,8 @@ def run_forte(name, **kwargs):
         casscf = forte.make_casscf(state_weights_map, scf_info, options, mo_space_info, ints)
         energy = casscf.compute_energy()
 
-    if (job_type == "CASSCF_NEW"):
-        casscf = forte.make_casscf_new(state_weights_map, scf_info, options, mo_space_info, ints)
+    if (job_type == "MCSCF_TWO_STEP"):
+        casscf = forte.make_mcscf_two_step(state_weights_map, scf_info, options, mo_space_info, ints)
         energy = casscf.compute_energy()
 
     if (job_type == 'NEWDRIVER'):

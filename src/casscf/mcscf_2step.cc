@@ -26,66 +26,46 @@
  * @END LICENSE
  */
 
-#include "psi4/libmints/molecule.h"
-#include "psi4/libmints/pointgrp.h"
-#include "psi4/libfock/jk.h"
-#include "psi4/libmints/matrix.h"
-#include "psi4/libmints/wavefunction.h"
+#include "psi4/psi4-dec.h"
+#include "psi4/libpsi4util/PsiOutStream.h"
 #include "psi4/libqt/qt.h"
-#include "psi4/psifiles.h"
-#include "psi4/libmints/basisset.h"
+#include "psi4/libmints/vector.h"
+#include "psi4/libmints/wavefunction.h"
 
-#include "helpers/printing.h"
-#include "helpers/helpers.h"
-#include "helpers/lbfgs/lbfgs.h"
-#include "helpers/timer.h"
-#include "sci/aci.h"
-#include "fci/fci_solver.h"
-#include "base_classes/active_space_solver.h"
 #include "base_classes/rdms.h"
-
-#include "sci/fci_mo.h"
-#include "orbital-helpers/mp2_nos.h"
-#include "orbital-helpers/orbitaloptimizer.h"
-#include "orbital-helpers/semi_canonicalize.h"
-
 #include "integrals/integrals.h"
-#include "casscf/casscf_orb_grad.h"
-#include "casscf/casscf_new.h"
+#include "helpers/printing.h"
+#include "helpers/lbfgs/lbfgs.h"
 #include "helpers/lbfgs/lbfgs_param.h"
-#include "helpers/lbfgs/rosenbrock.h"
 
-#ifdef HAVE_CHEMPS2
-#include "dmrg/dmrgsolver.h"
-#endif
-#include "psi4/libdiis/diisentry.h"
-#include "psi4/libdiis/diismanager.h"
-#include "psi4/libmints/factory.h"
+#include "casscf/casscf_orb_grad.h"
+#include "casscf/mcscf_2step.h"
 
 using namespace ambit;
 
 namespace forte {
 
-CASSCF_2STEP::CASSCF_2STEP(const std::map<StateInfo, std::vector<double>>& state_weights_map,
-                           std::shared_ptr<ForteOptions> options,
-                           std::shared_ptr<MOSpaceInfo> mo_space_info,
-                           std::shared_ptr<forte::SCFInfo> scf_info,
-                           std::shared_ptr<ForteIntegrals> ints)
+MCSCF_2STEP::MCSCF_2STEP(const std::map<StateInfo, std::vector<double>>& state_weights_map,
+                         std::shared_ptr<ForteOptions> options,
+                         std::shared_ptr<MOSpaceInfo> mo_space_info,
+                         std::shared_ptr<forte::SCFInfo> scf_info,
+                         std::shared_ptr<ForteIntegrals> ints)
     : state_weights_map_(state_weights_map), options_(options), mo_space_info_(mo_space_info),
       scf_info_(scf_info), ints_(ints) {
     startup();
 }
 
-void CASSCF_2STEP::startup() {
-    print_method_banner({"Complete Active Space Self Consistent Field",
-                         "written by Kevin P. Hannon and Chenyang Li"});
+void MCSCF_2STEP::startup() {
+    print_method_banner({"Multi-Configurational Self Consistent Field",
+                         "Two-Step Approx. Second-Order AO Algorithm",
+                         "written by Chenyang Li and Kevin P. Hannon"});
 
     // read and print options
     read_options();
     print_options();
 }
 
-void CASSCF_2STEP::read_options() {
+void MCSCF_2STEP::read_options() {
     print_ = options_->get_int("PRINT");
     debug_print_ = options_->get_bool("CASSCF_DEBUG_PRINTING");
 
@@ -105,7 +85,7 @@ void CASSCF_2STEP::read_options() {
     internal_rot_ = options_->get_bool("CASSCF_INTERNAL_ROT");
 }
 
-void CASSCF_2STEP::print_options() {
+void MCSCF_2STEP::print_options() {
     // fill in information
     std::vector<std::pair<std::string, int>> info_int{
         {"Printing level", print_},
@@ -129,7 +109,7 @@ void CASSCF_2STEP::print_options() {
                            info_int);
 }
 
-double CASSCF_2STEP::compute_energy() {
+double MCSCF_2STEP::compute_energy() {
     struct CASSCF_HISTORY {
         double e_c;   // energy from CI
         double e_o;   // energy after orbital optimization
@@ -190,16 +170,17 @@ double CASSCF_2STEP::compute_energy() {
 
         // print data of this iteration
         print_h2("MCSCF Macro Iter. " + std::to_string(macro));
-        outfile->Printf("\n             Energy CI (  Delta E  )         Energy Opt. (  Delta E  )  "
-                        "E_OPT - E_CI   Orbital RMS  Micro  Conv?");
-        outfile->Printf("\n    %18.12f (%11.4e)  %18.12f (%11.4e)  %12.4e  %12.4e  %5d    %c", e_c,
-                        de_c, e_o, de_o, de, g_rms, n_micro, o_conv);
+        psi::outfile->Printf("\n             Energy CI (  Delta E  )         Energy Opt. (  Delta "
+                             "E  )  E_OPT - E_CI   Orbital RMS  Micro  Conv?");
+        psi::outfile->Printf("\n    %18.12f (%11.4e)  %18.12f (%11.4e)  %12.4e  %12.4e  %5d    %c",
+                             e_c, de_c, e_o, de_o, de, g_rms, n_micro, o_conv);
 
         history.push_back(hist);
 
         if (std::fabs(de) < e_conv_ and std::fabs(de_c) < e_conv_ and std::fabs(de_o) < e_conv_ and
             hist.g_rms < g_conv_) {
-            outfile->Printf("\n    A miracle has come to pass: MCSCF iterations have converged!");
+            psi::outfile->Printf(
+                "\n    A miracle has come to pass: MCSCF iterations have converged!");
             energy_ = e_o;
             converged = true;
             break;
@@ -208,11 +189,13 @@ double CASSCF_2STEP::compute_energy() {
 
     // print summary
     print_h2("MCSCF Iteration Summary");
-    outfile->Printf("\n                      Energy CI                    Energy Orbital");
-    outfile->Printf("\n           ------------------------------  ------------------------------");
-    outfile->Printf("\n    Iter.        Total Energy       Delta        Total Energy       Delta  "
-                    "Orb. Grad.  Micro");
-    outfile->Printf("\n    %s", std::string(88, '-').c_str());
+    std::string dash1 = std::string(30, '-').c_str();
+    std::string dash2 = std::string(88, '-').c_str();
+    psi::outfile->Printf("\n                      Energy CI                    Energy Orbital");
+    psi::outfile->Printf("\n           %s  %s", dash1.c_str(), dash1.c_str());
+    psi::outfile->Printf("\n    Iter.        Total Energy       Delta        Total Energy       "
+                         "Delta  Orb. Grad.  Micro");
+    psi::outfile->Printf("\n    %s", dash2.c_str());
     for (int i = 0, size = history.size(); i < size; ++i) {
         double e_c = history[i].e_c;
         double e_o = history[i].e_o;
@@ -220,10 +203,10 @@ double CASSCF_2STEP::compute_energy() {
         double de_o = (i == 0) ? 0.0 : history[i].e_o - history[i - 1].e_o;
         double g = history[i].g_rms;
         int n = history[i].n_micro;
-        outfile->Printf("\n    %4d %20.12f %11.4e%20.12f %11.4e  %10.4e  %4d", i + 1, e_c, de_c,
-                        e_o, de_o, g, n);
+        psi::outfile->Printf("\n    %4d %20.12f %11.4e%20.12f %11.4e  %10.4e  %4d", i + 1, e_c,
+                             de_c, e_o, de_o, g, n);
     }
-    outfile->Printf("\n    %s", std::string(88, '-').c_str());
+    psi::outfile->Printf("\n    %s", dash2.c_str());
 
     // fix orbitals for redundant pairs
     cas_grad.canonicalize_final();
@@ -246,24 +229,27 @@ double CASSCF_2STEP::compute_energy() {
 }
 
 std::unique_ptr<ActiveSpaceSolver>
-CASSCF_2STEP::diagonalize_hamiltonian(std::shared_ptr<ActiveSpaceIntegrals> fci_ints,
-                                      const int print, double& e_c) {
+MCSCF_2STEP::diagonalize_hamiltonian(std::shared_ptr<ActiveSpaceIntegrals> fci_ints,
+                                     const int print, double& e_c) {
     auto state_map = to_state_nroots_map(state_weights_map_);
     auto active_space_solver = make_active_space_solver(ci_type_, state_map, scf_info_,
                                                         mo_space_info_, fci_ints, options_);
     active_space_solver->set_print(print);
     const auto state_energies_map = active_space_solver->compute_energy();
 
+    // TODO: need to save CI vectors and dump to file and let solver read them
+
     e_c = compute_average_state_energy(state_energies_map, state_weights_map_);
 
     return active_space_solver;
 }
 
-std::unique_ptr<CASSCF_2STEP>
-make_casscf_new(const std::map<StateInfo, std::vector<double>>& state_weight_map,
-                std::shared_ptr<SCFInfo> scf_info, std::shared_ptr<ForteOptions> options,
-                std::shared_ptr<MOSpaceInfo> mo_space_info, std::shared_ptr<ForteIntegrals> ints) {
-    return std::make_unique<CASSCF_2STEP>(state_weight_map, options, mo_space_info, scf_info, ints);
+std::unique_ptr<MCSCF_2STEP>
+make_mcscf_two_step(const std::map<StateInfo, std::vector<double>>& state_weight_map,
+                    std::shared_ptr<SCFInfo> scf_info, std::shared_ptr<ForteOptions> options,
+                    std::shared_ptr<MOSpaceInfo> mo_space_info,
+                    std::shared_ptr<ForteIntegrals> ints) {
+    return std::make_unique<MCSCF_2STEP>(state_weight_map, options, mo_space_info, scf_info, ints);
 }
 
 } // namespace forte
