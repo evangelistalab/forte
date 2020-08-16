@@ -43,17 +43,6 @@ class LBFGS {
     /**
      * @brief Constructor of the Limited-BFGS class
      * @param dim: The dimension of the problem
-     * @param m: The max number of vectors kept for L-BFGS
-     * @param descent: Minimize the function if true, otherwise maximize
-     *
-     * Implementation notes:
-     *   See Wikipedia https://en.wikipedia.org/wiki/Limited-memory_BFGS
-     */
-    LBFGS(int dim, int m = 10, bool descent = true);
-
-    /**
-     * @brief Constructor of the Limited-BFGS class
-     * @param dim: The dimension of the problem
      * @param param: The LBFGS_PARAM object for L-BFGS parameters
      *
      * Implementation notes:
@@ -74,15 +63,6 @@ class LBFGS {
      */
     template <class Foo> double minimize(Foo& foo, psi::SharedVector x);
 
-    /// Generate correction vector
-    psi::SharedVector compute_correction(psi::SharedVector x, psi::SharedVector g);
-
-    /// Set the max size of vectors
-    void set_size(int m);
-
-    /// Set the diagonal Hessian
-    void set_hess_diag(psi::SharedVector hess_diag);
-
     /// Reset the L-BFGS space
     void reset();
 
@@ -92,24 +72,24 @@ class LBFGS {
     /// Return the final number of iterations
     int iter() { return iter_; }
 
+    /// Return true if minimization converged
+    bool converged() { return converged_; }
+
   private:
-    /// The psi4 Dimension object
+    /// The dimension of x
     psi::Dimension dimpi_;
 
-    /// The number of irreps
+    /// The number of irreps of x
     int nirrep_;
 
     /// The current iteration number
     int iter_;
 
-    /// The dimension of the problem
-    int dim_;
-
     /// Parameters of L-BFGS
     LBFGS_PARAM param_;
 
-    /// Max size of the vectors stored
-    int m_;
+    /// Minimization procedure converged or not
+    bool converged_;
 
     /// Diagonal elements of Hessian
     psi::SharedVector h0_;
@@ -126,7 +106,7 @@ class LBFGS {
     /// The alpha vector
     std::vector<double> alpha_;
 
-    /// Moving direction vector
+    /// The correction (moving direction) vector
     psi::SharedVector p_;
 
     /// The current gradient vector
@@ -138,31 +118,30 @@ class LBFGS {
     /// The last solution vector
     psi::SharedVector x_last_;
 
-    /// Guess the inverse of diagonal Hessian
-    void guess_h0();
     /// Compute gamma that can be used as inverse of diagonal Hessian
-    double gamma();
+    double compute_gamma();
+
     /// Apply h0_ to some vector
     void apply_h0(psi::SharedVector q);
 
-    void guess_h0_new();
-    double gamma_new();
-    void apply_h0_new(psi::SharedVector q);
-
+    /// Generate correction (direction) vector
     void update();
 
-    template <class Foo> void line_search(Foo& foo, psi::SharedVector x, double& fx, double& step);
-    template <class Foo> void line_search_backtracking(Foo& foo, psi::SharedVector x, double& fx, double& step);
-    template <class Foo> void line_search_bracketing_zoom(Foo& foo, psi::SharedVector x, double& fx, double& step);
+    /// Determine step length
+    template <class Foo> void next_step(Foo& foo, psi::SharedVector x, double& fx, double& step);
 
-    /// Update direction
-    bool descent_;
+    /// Determine step length using max value of direction vector
+    template <class Foo>
+    void scale_direction_vector(Foo& foo, psi::SharedVector x, double& fx, double& step);
 
-    /// Counter
-    int counter_;
+    /// Line search using backtracking to determine step length
+    template <class Foo>
+    void line_search_backtracking(Foo& foo, psi::SharedVector x, double& fx, double& step);
 
-    /// Check dimension matches or not
-    void check_dim(psi::SharedVector a, psi::SharedVector b, const std::string error_msg);
+    /// Line search using bracketing and zoom  to determine step length
+    /// See (Algorithm 3.5) of <Numerical Optimization> 2nd Ed. by Nocedal and Wright
+    template <class Foo>
+    void line_search_bracketing_zoom(Foo& foo, psi::SharedVector x, double& fx, double& step);
 
     /// Resize all vectors uisng m_
     void resize(int m);

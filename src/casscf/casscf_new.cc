@@ -468,9 +468,10 @@ double CASSCF_NEW::compute_energy() {
 
     LBFGS_PARAM lbfgs_param;
     lbfgs_param.epsilon = g_conv_;
-    lbfgs_param.maxiter = 10;
+    lbfgs_param.maxiter = 20;
     lbfgs_param.print = 3;
-//    lbfgs_param.h0_freq = 1;
+    lbfgs_param.max_dir = max_rot_;
+    lbfgs_param.step_length_method = LBFGS_PARAM::STEP_LENGTH_METHOD::MAX_CORRECTION;
 
     LBFGS lbfgs(lbfgs_param);
 
@@ -489,21 +490,6 @@ double CASSCF_NEW::compute_energy() {
         cas_grad.set_rdms(rdms);
 
         lbfgs.minimize(cas_grad, R_v_);
-
-//        dR_v_->copy(*R_v_);
-//        dR_v_->subtract(R_v_old);
-//        R_v_old->copy(*R_v_);
-
-//        if (do_diis_ and macro >= diis_start_) {
-//            diis_manager_->add_entry(2, dR_v_.get(), R_v_.get());
-//            outfile->Printf("  S");
-
-//            if ((macro - diis_start_) % diis_freq_ == 0 and
-//                    diis_manager_->subspace_size() > diis_min_vec_) {
-//                diis_manager_->extrapolate(1, R_v_.get());
-//                outfile->Printf("/E");
-//            }
-//        }
 
         C_ = cas_grad.Ca()->clone();
         double g_norm = cas_grad.grad_norm();
