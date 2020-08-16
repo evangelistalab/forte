@@ -2,7 +2,7 @@
     A map from atom symbols to atomic number
 """
 ATOM_SYMBOL_TO_Z = {
-    'Xx': 0,
+    'X': 0,
     'H': 1,
     'He': 2,
     'Li': 3,
@@ -108,7 +108,7 @@ ATOM_SYMBOL_TO_Z = {
     A map from atom symbols to atomic data
 """
 ATOM_DATA = [{
-    'symbol': 'Xx',
+    'symbol': 'X',
     'name': 'Dummy',
     'mass': 0,
     'radius_covalent': 0.18,

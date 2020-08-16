@@ -26,6 +26,9 @@
  * @END LICENSE
  */
 
+#include <algorithm>
+#include <numeric>
+
 #include "integrals/active_space_integrals.h"
 
 #include "general_operator.h"
@@ -33,17 +36,78 @@
 
 namespace forte {
 
+std::tuple<bool, bool, int> flip_spin(const std::tuple<bool, bool, int>& t) {
+    return std::make_tuple(std::get<0>(t), not std::get<1>(t), std::get<2>(t));
+}
+
+// Enforce the order  a+ b+ b- a-
+bool compare_ops(const std::tuple<bool, bool, int>& lhs, const std::tuple<bool, bool, int>& rhs) {
+    const auto& l_cre = std::get<0>(lhs);
+    const auto& r_cre = std::get<0>(rhs);
+    if ((l_cre == true) and (r_cre == true)) {
+        return flip_spin(lhs) > flip_spin(rhs);
+    }
+    return flip_spin(lhs) < flip_spin(rhs);
+}
+
+// This functio returns the parity of a permutation (0 = even, 1 = odd)
+int permutation_parity(const std::vector<size_t>& p) {
+    int n = static_cast<int>(p.size());
+
+    // vector of elements visited
+    std::vector<bool> visited(n, false);
+
+    int total_parity = 0;
+    // loop over all the elements
+    for (int i = 0; i < n; i++) {
+        // if an element was not visited start following its cycle
+        if (visited[i] == false) {
+            int cycle_size = 0;
+            int next = i;
+            for (int j = 0; j < n; j++) {
+                next = p[next];
+                // mark the next element as visited
+                visited[next] = true;
+                // increase cycle size
+                cycle_size += 1;
+                // if the next element is the same, this is the end of the cycle
+                if (next == i)
+                    break;
+            }
+            total_parity += (cycle_size - 1) % 2;
+        }
+    }
+    return total_parity % 2;
+}
+
 void GeneralOperator::add_operator(const std::vector<op_t>& op_list, double value) {
     amplitudes_.push_back(value);
     size_t start = op_list_.size();
     size_t end = start + op_list.size();
     op_indices_.push_back(std::make_pair(start, end));
-    // transform the input into determinants
+    // transform each term in the input into a SingleOperator object
     for (const op_t& op : op_list) {
+        // Form a single operator object
         SingleOperator sop;
-        sop.factor = op.first;
-        const std::vector<std::tuple<bool, bool, int>>& creation_alpha_orb_vec = op.second;
-        for (const auto& creation_alpha_orb : creation_alpha_orb_vec) {
+
+        std::vector<std::tuple<bool, bool, int>> creation_alpha_orb_vec = op.second;
+
+        // We first sort the operators so that they are ordered in the following way
+        // (alpha cre. ascending) (beta cre. ascending) (beta ann. descending) (alpha ann.
+        // descending) and keep track of the sign. We sort the operators using a set of auxiliary
+        // indices so that we can keep track of the permutation of the operators and their sign
+        std::vector<size_t> idx(creation_alpha_orb_vec.size());
+        std::iota(idx.begin(), idx.end(), 0);
+        std::stable_sort(idx.begin(), idx.end(), [&creation_alpha_orb_vec](size_t i1, size_t i2) {
+            return compare_ops(creation_alpha_orb_vec[i1], creation_alpha_orb_vec[i2]);
+        });
+        auto parity = permutation_parity(idx);
+
+        // set the factor including the parity of the permutation
+        sop.factor = op.first * (1.0 - 2.0 * parity);
+
+        // set the bitarray part of the operator (the order does not matter)
+        for (auto creation_alpha_orb : creation_alpha_orb_vec) {
             bool creation = std::get<0>(creation_alpha_orb);
             bool alpha = std::get<1>(creation_alpha_orb);
             int orb = std::get<2>(creation_alpha_orb);
@@ -103,11 +167,7 @@ std::vector<std::string> GeneralOperator::str() {
     return result;
 }
 
-double apply_operator(Determinant& d, const SingleOperator& sop) {
-    return apply_op(d, sop.ann, sop.cre);
-}
-
-det_hash<double> apply_general_operator(GeneralOperator& gop, const det_hash<double>& state) {
+det_hash<double> apply_operator(GeneralOperator& gop, const det_hash<double>& state) {
     det_hash<double> new_state;
     const auto& amplitudes = gop.amplitudes();
     const auto& op_indices = gop.op_indices();
@@ -115,13 +175,13 @@ det_hash<double> apply_general_operator(GeneralOperator& gop, const det_hash<dou
     size_t nops = amplitudes.size();
     Determinant d;
     for (const auto& det_c : state) {
-        double c = det_c.second;
+        const double c = det_c.second;
         for (size_t n = 0; n < nops; n++) {
             size_t begin = op_indices[n].first;
             size_t end = op_indices[n].second;
             for (size_t j = begin; j < end; j++) {
                 d = det_c.first;
-                double sign = apply_operator(d, op_list[j]);
+                double sign = apply_op(d, op_list[j].cre, op_list[j].ann);
                 if (sign != 0.0) {
                     new_state[d] += amplitudes[n] * op_list[j].factor * sign * c;
                 }
@@ -131,30 +191,133 @@ det_hash<double> apply_general_operator(GeneralOperator& gop, const det_hash<dou
     return new_state;
 }
 
-det_hash<double> apply_general_operator_exp_factorized(GeneralOperator& gop,
-                                                       const det_hash<double>& state) {
+det_hash<double> apply_lin_op(det_hash<double> state, size_t n, const GeneralOperator& gop) {
     det_hash<double> new_state;
+
     const auto& amplitudes = gop.amplitudes();
     const auto& op_indices = gop.op_indices();
     const auto& op_list = gop.op_list();
-    size_t nops = amplitudes.size();
+    const size_t begin = op_indices[n].first;
+    const size_t end = op_indices[n].second;
     Determinant d;
-    for (const auto& det_c : state) {
-        double c = det_c.second;
-        for (size_t n = 0; n < nops; n++) {
-            size_t begin = op_indices[n].first;
-            size_t end = op_indices[n].second;
-            for (size_t j = begin; j < end; j++) {
-                d = det_c.first;
-                double factor = apply_operator(d, op_list[j]);
-                if (factor != 0.0) {
-                    new_state[d] += amplitudes[n] * op_list[j].factor * factor * c;
-                }
+    for (size_t j = begin; j < end; j++) {
+        for (const auto& det_c : state) {
+            const double c = det_c.second;
+            d = det_c.first;
+            const double sign = apply_op(d, op_list[j].cre, op_list[j].ann);
+            if (sign != 0.0) {
+                new_state[d] += amplitudes[n] * op_list[j].factor * sign * c;
             }
         }
     }
     return new_state;
 }
+
+det_hash<double> apply_exp_op(const Determinant& d, size_t n, const GeneralOperator& gop) {
+    det_hash<double> state;
+    state[d] = 1.0;
+    det_hash<double> exp_state = state;
+    double factor = 1.0;
+    int maxk = 16;
+    for (int k = 1; k <= maxk; k++) {
+        factor = factor / static_cast<double>(k);
+        det_hash<double> new_state = apply_lin_op(state, n, gop);
+        if (new_state.size() == 0)
+            break;
+        for (const auto& det_c : new_state) {
+            exp_state[det_c.first] += factor * det_c.second;
+        }
+        state = new_state;
+    }
+    return exp_state;
+}
+
+det_hash<double> apply_exp_ah_factorized(GeneralOperator& gop, const det_hash<double>& state0) {
+    det_hash<double> state(state0);
+    det_hash<double> new_state;
+    size_t nops = gop.nops();
+    Determinant d;
+    for (size_t n = 0; n < nops; n++) {
+        new_state.clear();
+        for (const auto& det_c : state) {
+            const double c = det_c.second;
+            d = det_c.first;
+            det_hash<double> terms = apply_exp_op(d, n, gop);
+            for (const auto& d_c : terms) {
+                new_state[d_c.first] += d_c.second * c;
+            }
+        }
+        state = new_state;
+    }
+    return new_state;
+}
+
+det_hash<double> apply_exp_op_fast(const Determinant& d, size_t n, const GeneralOperator& gop) {
+
+
+    det_hash<double> state;
+    state[d] = 1.0;
+    det_hash<double> exp_state = state;
+    double factor = 1.0;
+    int maxk = 16;
+    for (int k = 1; k <= maxk; k++) {
+        factor = factor / static_cast<double>(k);
+        det_hash<double> new_state = apply_lin_op(state, n, gop);
+        if (new_state.size() == 0)
+            break;
+        for (const auto& det_c : new_state) {
+            exp_state[det_c.first] += factor * det_c.second;
+        }
+        state = new_state;
+    }
+    return exp_state;
+}
+
+det_hash<double> apply_exp_ah_factorized_fast(GeneralOperator& gop,
+                                              const det_hash<double>& state0) {
+    det_hash<double> state(state0);
+    det_hash<double> new_state;
+    size_t nops = gop.nops();
+    Determinant d;
+    for (size_t n = 0; n < nops; n++) {
+        new_state.clear();
+        for (const auto& det_c : state) {
+            const double c = det_c.second;
+            d = det_c.first;
+            det_hash<double> terms = apply_exp_op(d, n, gop);
+            for (const auto& d_c : terms) {
+                new_state[d_c.first] += d_c.second * c;
+            }
+        }
+        state = new_state;
+    }
+    return new_state;
+}
+
+// det_hash<double> apply_general_operator_exp_factorized(GeneralOperator& gop,
+//                                                       const det_hash<double>& state) {
+//    det_hash<double> new_state;
+//    const auto& amplitudes = gop.amplitudes();
+//    const auto& op_indices = gop.op_indices();
+//    const auto& op_list = gop.op_list();
+//    size_t nops = amplitudes.size();
+//    Determinant d;
+//    for (const auto& det_c : state) {
+//        double c = det_c.second;
+//        for (size_t n = 0; n < nops; n++) {
+//            size_t begin = op_indices[n].first;
+//            size_t end = op_indices[n].second;
+//            for (size_t j = begin; j < end; j++) {
+//                d = det_c.first;
+//                double factor = apply_operator(d, op_list[j]);
+//                if (factor != 0.0) {
+//                    new_state[d] += amplitudes[n] * op_list[j].factor * factor * c;
+//                }
+//            }
+//        }
+//    }
+//    return new_state;
+//}
 
 // det_hash<double> apply_exp_general_operator(GeneralOperator& gop, det_hash<double> state,
 //                                            int maxn) {

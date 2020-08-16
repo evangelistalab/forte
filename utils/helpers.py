@@ -2,10 +2,7 @@ import psi4
 import forte
 
 
-def psi4_scf(geom,
-             basis,
-             reference,
-             functional='hf',
+def psi4_scf(geom, basis, reference, functional='hf',
              options={}) -> (float, psi4.core.Wavefunction):
     """
     Run a psi4 scf computation and return the energy and the Wavefunction object
@@ -56,57 +53,6 @@ def psi4_scf(geom,
     E_scf, wfn = psi4.energy(functional, return_wfn=True)
 
     return (E_scf, wfn)
-
-
-def load_cubes(path='.'):
-    """
-    Load all the cubefiles (suffix ".cube" ) in a given path
-
-    Parameters
-    ----------
-    path : str
-        The path of the directory that will contain the cube files
-    """
-
-    import os
-    cube_files = {}
-    isdir = os.path.isdir(path)
-    if isdir:
-        for file in os.listdir(path):
-            if file.endswith('.cube'):
-                cf = forte.CubeFile(os.path.join(path, file))
-                cube_files[file] = cf
-        if len(cube_files) == 0:
-            print(f'load_cubes: no cube files found in directory {path}')
-    else:
-        print(f'load_cubes: directory {path} does not exist')
-
-    return cube_files
-
-
-def list_cubes(path='.'):
-    """
-    List all the cubefiles (suffix ".cube" ) in a given path
-
-    Parameters
-    ----------
-    path : str
-        The path of the directory that will contain the cube files
-    """
-
-    import os
-    cube_files = []
-    isdir = os.path.isdir(path)
-    if isdir:
-        for file in os.listdir(path):
-            if file.endswith('.cube'):
-                cube_files.append(os.path.join(path,file))
-        if len(cube_files) == 0:
-            print(f'load_cubes: no cube files found in directory {path}')
-    else:
-        print(f'load_cubes: directory {path} does not exist')
-
-    return cube_files
 
 
 def psi4_cubeprop(wfn,

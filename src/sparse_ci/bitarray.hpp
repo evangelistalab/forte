@@ -88,9 +88,6 @@ template <size_t N> class BitArray {
     /// return the number of bits
     size_t get_nbits() const { return nbits; }
 
-    /// default constructor
-    BitArray() {}
-
     /// set all bits (including unused) to zero
     void zero() {
         if constexpr (N == 64) {
@@ -134,6 +131,13 @@ template <size_t N> class BitArray {
         //            val = val && (this->words_[n] != lhs.words_[n]);
         //        }
         //        return val;
+    }
+
+    /// not operator
+    BitArray<N> operator~() {
+        BitArray<N> res(*this);
+        res.flip();
+        return res;
     }
 
     /// not equal operator

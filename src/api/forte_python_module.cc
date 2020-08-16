@@ -161,7 +161,8 @@ void export_Determinant(py::module& m) {
         .def("op_list", &GeneralOperator::op_list)
         .def("str", &GeneralOperator::str);
 
-    m.def("apply_general_operator", &apply_general_operator);
+    m.def("apply_operator", &apply_operator);
+    m.def("apply_exp_ah_factorized", &apply_exp_ah_factorized);
 
     py::class_<SingleOperator>(m, "SingleOperator")
         .def_readwrite("sign", &SingleOperator::factor)

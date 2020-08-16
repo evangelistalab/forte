@@ -615,7 +615,7 @@ double gen_excitation(DeterminantImpl<N>& d, const std::vector<int>& aann,
 
 template <size_t N>
 double can_apply_op(DeterminantImpl<N>& d, const DeterminantImpl<N>& ann,
-                const DeterminantImpl<N>& cre) {
+                    const DeterminantImpl<N>& cre) {
     DeterminantImpl<N> temp(d);
     // check if the orbitals annihilated are occupied
     // d       = 1100
@@ -634,64 +634,95 @@ double can_apply_op(DeterminantImpl<N>& d, const DeterminantImpl<N>& ann,
         return 0.0;
 }
 
-/**
- * @brief Apply a general excitation operator to this determinant
- *        Details:
- *        (bc)_n ... (bc)_1 (ba)_n ... (ba)_1 (ac)_n ... (ac)_1 (aa)_n ... (aa)_1 |det>
- *        where aa = alpha annihilation operator
- *        where ac = alpha creation operator
- *        where ba = alpha annihilation operator
- *        where bc = alpha creation operator
- * @param aann list of alpha orbitals to annihilate
- * @param acre list of alpha orbitals to create
- * @param bann list of beta orbitals to annihilate
- * @param bcre list of beta orbitals to create
- * @return the sign of the final determinant (+1, -1, or 0)
- */
 template <size_t N>
-double apply_op(DeterminantImpl<N>& d, const DeterminantImpl<N>& ann,
-                const DeterminantImpl<N>& cre) {
-    DeterminantImpl<N> temp;
-    // check if the orbitals annihilated are occupied
-    // d       = 1100
-    // ann     = 1000
-    // d & ann = 1000
-    if ((d & ann) != ann)
-        return 0.0;
-    // check if the orbitals created are empty
-    // d       = 1100
-    // cre     = 0010
-    // d & cre = 0000
-    temp = d;
-    temp &= cre;
-    if (temp.count() != 0)
-        return 0.0;
-
-    // loop over the orbitals to annihilate
-    temp = ann;
+double apply_op(DeterminantImpl<N>& d, const DeterminantImpl<N>& cre,
+                const DeterminantImpl<N>& ann) {
+    // loop over the annihilation operators (in ascending order)
+    DeterminantImpl<N> temp(ann); // temp is for bookkeeping
     size_t n = temp.count();
     double sign = 1.0;
     for (size_t i = 0; i < n; ++i) {
+        // find the next annihilation operator
+        const uint64_t orb = temp.find_and_clear_first_one();
+        // if this bit is set
+        if (d.get_bit(orb) == 1) {
+            // compute the sign
+            sign *= d.slater_sign(orb);
+            // set the bit to zero
+            d.set_bit(orb, false);
+        } else {
+            return 0.0;
+        }
+    }
+    // loop over the creation operators (in ascending order)
+    temp = cre;
+    n = temp.count();
+    for (size_t i = 0; i < n; ++i) {
+        // find the next creation operator
+        const uint64_t orb = temp.find_and_clear_first_one();
+        // if this bit is unset
+        if (d.get_bit(orb) == 0) {
+            // compute the sign
+            sign *= d.slater_sign(orb);
+            // set the bit to zero
+            d.set_bit(orb, true);
+        } else {
+            return 0.0;
+        }
+    }
+    // the creation operators are applied in the opposite order of the way
+    // they are supposed to be applied (we should apply them in descending order).
+    // this factor keeps into account the permutation sign for
+    // reversing the order of the creation operators.
+    sign *= 1.0 - 2.0 * ((n / 2) % 2);
+    return sign;
+}
+
+//    temp = cre;
+//    n = temp.count();
+//    // make sure we can annihilate the orbitals
+//    DeterminantImpl<N> temp = ann;
+//    // check if the orbitals annihilated are occupied
+//    // d       = 1100
+//    // ann     = 1000
+//    // d & ann = 1000
+//    temp &= d;
+//    if (temp != ann) {
+//        std::cout << "apply_op: early exit!" << std::endl;
+//        return 0.0;
+//    }
+
+//    // consider only the creation operators that are not included in the annihilation part
+//    temp = cre & ~ann;
+
+//    if (temp != ann) {
+
+//    }
+
+//    // ann     = 1000
+//    // cre     = 0010
+
+//    // ann     = 1000
+//    // cre     = 1000
+//    // check if the orbitals annihilated are occupied
+//    // d       = 1100
+//    // ann     = 1000
+//    // d & ann = 1000
+//    if ((d & ann) != ann)
+//        return 0.0;
+//    // check if the orbitals created are empty
+//    // d       = 1100
+//    // cre     = 0010
+//    // d & cre = 0000
+//    temp = d;
+//    temp &= cre;
+//    if (temp.count() != 0)
+//        return 0.0;
 //        std::cout << str(d,4) << std::endl;
 //        std::cout << orb << std::endl;
 //        std::cout << d.slater_sign(orb) << std::endl;
 //        std::cout << d.get_bit(orb) << std::endl;
 //        std::cout << "\n" << std::endl;
-        uint64_t orb = temp.find_and_clear_first_one();
-        sign *= d.slater_sign(orb) * d.get_bit(orb);
-        d.set_bit(orb, false);
-    }
-    temp = cre;
-    n = temp.count();
-    // the last bit accounts for the reverse ordering of the creation operators
-    sign *= 2.0 * (n == 0) - 1.0;
-    for (size_t i = 0; i < n; ++i) {
-        uint64_t orb = temp.find_and_clear_first_one();
-        sign *= -d.slater_sign(orb) * (1 - d.get_bit(orb));
-        d.set_bit(orb, true);
-    }
-    return sign;
-}
 
 template <size_t N> double spin2(const DeterminantImpl<N>& lhs, const DeterminantImpl<N>& rhs) {
     int nmo = DeterminantImpl<N>::nbits_half;

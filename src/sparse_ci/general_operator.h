@@ -58,9 +58,11 @@ struct SingleOperator {
     Determinant cre;
 };
 
-// using op_t = std::pair<double, std::vector<SQOperator>>;
+// used to represent a combination of:
+//    creation  : bool (true = creation, false = annihilation)
+//    alpha     : bool (true = alpha, false = beta)
+//    orb       : int  (the index of the mo)
 using op_t = std::pair<double, std::vector<std::tuple<bool, bool, int>>>;
-// using py_op_t = std::pair<double, std::vector<std::tuple<bool, bool, int>>>;
 
 /**
  * @brief The GeneralOperator class
@@ -69,10 +71,11 @@ using op_t = std::pair<double, std::vector<std::tuple<bool, bool, int>>>;
 class GeneralOperator {
   public:
     void add_operator(const std::vector<op_t>& op_list, double value = 0.0);
-    std::vector<double>& amplitudes() { return amplitudes_; }
+    size_t nops() const { return amplitudes_.size(); }
+    const std::vector<double>& amplitudes() const { return amplitudes_; }
     void set_amplitudes(std::vector<double>& amplitudes) { amplitudes_ = amplitudes; }
-    std::vector<std::pair<size_t, size_t>>& op_indices() { return op_indices_; }
-    std::vector<SingleOperator>& op_list() { return op_list_; }
+    const std::vector<std::pair<size_t, size_t>>& op_indices() const { return op_indices_; }
+    const std::vector<SingleOperator>& op_list() const { return op_list_; }
     std::vector<std::string> str();
 
   private:
@@ -81,9 +84,8 @@ class GeneralOperator {
     std::vector<SingleOperator> op_list_;
 };
 
-det_hash<double> apply_general_operator(GeneralOperator& gop, const det_hash<double>& state);
-det_hash<double> apply_general_operator_exp_factorized(GeneralOperator& gop,
-                                                       const det_hash<double>& state);
+det_hash<double> apply_operator(GeneralOperator& gop, const det_hash<double>& state);
+det_hash<double> apply_exp_ah_factorized(GeneralOperator& gop, const det_hash<double>& state);
 
 // det_hash<double> apply_exp_general_operator(GeneralOperator& gop, det_hash<double> state, int
 // maxn);
