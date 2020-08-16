@@ -72,14 +72,17 @@ class CASSCF_ORB_GRAD {
     /// Set RDMs used for orbital optimization
     void set_rdms(RDMs& rdms);
 
-    /// Prepare active space integrals
+    /// Return active space integrals for CI
     std::shared_ptr<ActiveSpaceIntegrals> active_space_ints();
 
-    /// MO coefficients
+    /// Canonicalize the final orbitals
+    void canonicalize_final();
+
+    /// Return optimized MO coefficients
     psi::SharedMatrix Ca() { return C_; }
 
-    /// Orbital gradients
-    double grad_norm() { return grad_->norm(); }
+    /// Return the number of nonredundant orbital rotations
+    size_t nrot() { return nrot_; }
 
   private:
     /// The Forte options

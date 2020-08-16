@@ -66,8 +66,8 @@ class LBFGS {
     /// Reset the L-BFGS space
     void reset();
 
-    /// Return the final gradient norm
-    double g_norm() { return g_->norm(); }
+    /// Return the RMS of final gradient
+    double g_rms() { return g_->rms(); }
 
     /// Return the final number of iterations
     int iter() { return iter_; }

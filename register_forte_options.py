@@ -572,6 +572,7 @@ def register_asci_options(options):
 
     options.add_double("ASCI_PRESCREEN_THRESHOLD", 1e-12, "ASCI prescreening threshold")
 
+
 def register_fci_mo_options(options):
     options.set_group("FCIMO")
     options.add_str("FCIMO_ACTV_TYPE", "COMPLETE", ["COMPLETE", "CIS", "CISD", "DOCI"],
@@ -585,6 +586,7 @@ def register_fci_mo_options(options):
     options.add_double("FCIMO_PRINT_CIVEC", 0.05, "The printing threshold for CI vectors")
 
     # options.add_bool("FCIMO_IAO_ANALYSIS", False, "Intrinsic atomic orbital analysis")
+
 
 def register_integral_options(options):
     options.set_group("Integrals")
@@ -609,29 +611,30 @@ def register_integral_options(options):
     options.add_bool("PRINT_INTS", False,
                            "Print the one- and two-electron integrals?")
 
+
 def register_dsrg_options(options):
     options.set_group("DSRG")
     options.add_double("DSRG_S", 1.0e10,"The end value of the integration parameter s")
     options.add_double("DSRG_POWER", 2.0, "The power of the parameter s in the regularizer")
 
     options.add_str("CORR_LEVEL", "PT2",
-                     ["PT2", "PT3", "LDSRG2", "LDSRG2_QC", "LSRG2", "SRG_PT2", "QDSRG2",
-                      "LDSRG2_P3", "QDSRG2_P3"],
-                     "Correlation level of MR-DSRG (used in mrdsrg code, "
-                     "LDSRG2_P3 and QDSRG2_P3 not implemented)")
+                    ["PT2", "PT3", "LDSRG2", "LDSRG2_QC", "LSRG2", "SRG_PT2", "QDSRG2",
+                     "LDSRG2_P3", "QDSRG2_P3"],
+                    "Correlation level of MR-DSRG (used in mrdsrg code, LDSRG2_P3 and QDSRG2_P3 not implemented)")
 
     options.add_str("SOURCE", "STANDARD",
-                     ["STANDARD", "LABS", "DYSON", "AMP", "EMP2", "LAMP", "LEMP2"],
-                     "Source operator used in DSRG (AMP, EMP2, LAMP, LEMP2 "
-                     "only available in toy code mcsrgpt2)")
+                    ["STANDARD", "LABS", "DYSON", "AMP", "EMP2", "LAMP", "LEMP2"],
+                    "Source operator used in DSRG (AMP, EMP2, LAMP, LEMP2 only available in toy code mcsrgpt2)")
 
-    options.add_int("DSRG_RSC_NCOMM", 20, "The maximum number of commutators in the recursive single commutator approximation")
+    options.add_int("DSRG_RSC_NCOMM", 20,
+                    "The maximum number of commutators in the recursive single commutator approximation")
 
-    options.add_double("DSRG_RSC_THRESHOLD", 1.0e-12, "The treshold for terminating the recursive single commutator approximation")
+    options.add_double("DSRG_RSC_THRESHOLD", 1.0e-12,
+                       "The treshold for terminating the recursive single commutator approximation")
 
     options.add_str("T_ALGORITHM", "DSRG", ["DSRG", "DSRG_NOSEMI", "SELEC", "ISA"],
-                     "The way of forming T amplitudes (DSRG_NOSEMI, SELEC, ISA "
-                     "only available in toy code mcsrgpt2)")
+                    "The way of forming T amplitudes (DSRG_NOSEMI, SELEC, ISA "
+                    "only available in toy code mcsrgpt2)")
 
     options.add_str("DSRG_PT2_H0TH", "FDIAG", ["FDIAG", "FFULL", "FDIAG_VACTV", "FDIAG_VDIAG"],
                      "Different Zeroth-order Hamiltonian of DSRG-MRPT (used in mrdsrg code)")
@@ -652,13 +655,13 @@ def register_dsrg_options(options):
     options.add_int("NTAMP", 15, "Number of largest amplitudes printed in the summary")
 
     options.add_double("INTRUDER_TAMP", 0.10,
-                        "T threshold for amplitudes considered as intruders for warning")
+                       "T threshold for amplitudes considered as intruders for warning")
 
     options.add_str("DSRG_TRANS_TYPE", "UNITARY", ["UNITARY", "CC"], "DSRG transformation type")
 
     options.add_str("SMART_DSRG_S", "DSRG_S",
-                     ["DSRG_S", "MIN_DELTA1", "MAX_DELTA1", "DAVG_MIN_DELTA1", "DAVG_MAX_DELTA1"],
-                     "Automatically adjust the flow parameter according to denominators")
+                    ["DSRG_S", "MIN_DELTA1", "MAX_DELTA1", "DAVG_MIN_DELTA1", "DAVG_MAX_DELTA1"],
+                    "Automatically adjust the flow parameter according to denominators")
 
     options.add_bool("PRINT_TIME_PROFILE", False, "Print detailed timings in dsrg-mrpt3")
 
@@ -674,16 +677,16 @@ def register_dsrg_options(options):
                      )
 
     options.add_bool("FORM_HBAR3", False,
-                      "Form 3-body Hbar (only used in dsrg-mrpt2 with SA_SUB for testing)")
+                     "Form 3-body Hbar (only used in dsrg-mrpt2 with SA_SUB for testing)")
 
     options.add_bool("FORM_MBAR3", False,
-                      "Form 3-body mbar (only used in dsrg-mrpt2 for testing)")
+                     "Form 3-body mbar (only used in dsrg-mrpt2 for testing)")
 
     options.add_bool("DSRGPT", True,
-                      "Renormalize (if true) the integrals for purturbitive calculation (only used in toy code mcsrgpt2)")
+                     "Renormalize (if true) the integrals for purturbitive calculation (only used in toy code mcsrgpt2)")
 
     options.add_str("INTERNAL_AMP", "NONE", ["NONE", "SINGLES_DOUBLES", "SINGLES", "DOUBLES"],
-                     "Include internal amplitudes for VCIS/VCISD-DSRG acording to excitation level")
+                    "Include internal amplitudes for VCIS/VCISD-DSRG acording to excitation level")
 
 
     options.add_str("INTERNAL_AMP_SELECT", "AUTO", ["AUTO", "ALL", "OOVV"],
@@ -698,23 +701,20 @@ def register_dsrg_options(options):
                      """)
 
     options.add_str("T1_AMP", "DSRG", ["DSRG", "SRG", "ZERO"],
-                     "The way of forming T1 amplitudes (used in toy code mcsrgpt2)")
+                    "The way of forming T1 amplitudes (used in toy code mcsrgpt2)")
 
-    options.add_double("ISA_B", 0.02,
-                        "Intruder state avoidance parameter "
-                        "when use ISA to form amplitudes (only "
-                        "used in toy code mcsrgpt2)")
+    options.add_double("ISA_B", 0.02, "Intruder state avoidance parameter "
+                       "when use ISA to form amplitudes (only used in toy code mcsrgpt2)")
 
     options.add_str("CCVV_SOURCE", "NORMAL", ["ZERO", "NORMAL"],
-                     "Definition of source oporator: special treatment for the CCVV term in DSRG-MRPT2 (used "
-                     "in three-dsrg-mrpt2 code)")
+                    "Definition of source oporator: special treatment for the CCVV term in DSRG-MRPT2 (used "
+                    "in three-dsrg-mrpt2 code)")
 
     options.add_str("CCVV_ALGORITHM", "FLY_AMBIT",
-                     ["CORE", "FLY_AMBIT", "FLY_LOOP", "BATCH_CORE", "BATCH_VIRTUAL",
-                      "BATCH_CORE_GA", "BATCH_VIRTUAL_GA", "BATCH_VIRTUAL_MPI", "BATCH_CORE_MPI",
-                      "BATCH_CORE_REP", "BATCH_VIRTUAL_REP"],
-                     "Algorithm to compute the CCVV term in DSRG-MRPT2 (only "
-                     "used in three-dsrg-mrpt2 code)")
+                    ["CORE", "FLY_AMBIT", "FLY_LOOP", "BATCH_CORE", "BATCH_VIRTUAL",
+                     "BATCH_CORE_GA", "BATCH_VIRTUAL_GA", "BATCH_VIRTUAL_MPI", "BATCH_CORE_MPI",
+                     "BATCH_CORE_REP", "BATCH_VIRTUAL_REP"],
+                    "Algorithm to compute the CCVV term in DSRG-MRPT2 (only used in three-dsrg-mrpt2 code)")
 
     options.add_bool("AO_DSRG_MRPT2", False, "Do AO-DSRG-MRPT2 if true (not available)")
 
@@ -723,18 +723,18 @@ def register_dsrg_options(options):
     options.add_bool("DSRG_MRPT2_DEBUG", False, "Excssive printing for three-dsrg-mrpt2")
 
     options.add_str("THREEPDC_ALGORITHM", "CORE", ["CORE", "BATCH"],
-                     "Algorithm for evaluating 3-body cumulants in three-dsrg-mrpt2")
+                    "Algorithm for evaluating 3-body cumulants in three-dsrg-mrpt2")
 
     options.add_bool("THREE_MRPT2_TIMINGS", False,
-                      "Detailed printing (if true) in three-dsrg-mrpt2")
+                     "Detailed printing (if true) in three-dsrg-mrpt2")
 
     options.add_bool("PRINT_DENOM2", False,
-                      "Print (if true) (1 - exp(-2*s*D)) / D, renormalized denominators in DSRG-MRPT2")
+                     "Print (if true) (1 - exp(-2*s*D)) / D, renormalized denominators in DSRG-MRPT2")
 
     options.add_bool("DSRG_HBAR_SEQ", False, "Evaluate H_bar sequentially if true")
 
     options.add_bool("DSRG_NIVO", False,
-                      "NIVO approximation: Omit tensor blocks with >= 3 virtual indices if true")
+                     "NIVO approximation: Omit tensor blocks with >= 3 virtual indices if true")
 
     options.add_bool("PRINT_1BODY_EVALS", False, "Print eigenvalues of 1-body effective H")
 
@@ -750,6 +750,7 @@ def register_dsrg_options(options):
     options.add_int("DSRG_DIIS_MIN_VEC", 2, "Minimum size of DIIS vectors")
 
     options.add_int("DSRG_DIIS_MAX_VEC", 6, "Maximum size of DIIS vectors")
+
 
 def register_dwms_options(options):
     options.set_group("DWMS")
@@ -798,6 +799,7 @@ def register_dwms_options(options):
     options.add_double("DWMS_E_CONVERGENCE", 1.0e-7,
                         "Energy convergence criteria for DWMS iteration")
 
+
 def register_localize_options(options):
     options.set_group("Localize")
     options.add_str("LOCALIZE", "PIPEK_MEZEY", ["PIPEK_MEZEY", "BOYS"],
@@ -805,22 +807,42 @@ def register_localize_options(options):
     options.add_int_array("LOCALIZE_SPACE",
                             "Sets the orbital space for localization")
 
+
 def register_casscf_options(options):
     options.set_group("CASSCF")
-    options.add_str("CASSCF_CI_SOLVER", "CAS",
-                          "The active space solver to use in CASSCF")
-    options.add_int("CASSCF_MAXITER", 30,
-                          "The maximum number of CASSCF iterations")
-    options.add_bool("CASSCF_REFERENCE", False,
-                           "Run a FCI followed by CASSCF computation?")
-    options.add_double(
-        "CASSCF_G_CONVERGENCE", 1e-4,
-        "The convergence criterion for the gradient for casscf")
-    options.add_double(
-        "CASSCF_E_CONVERGENCE", 1e-6,
-        "The convergence criterion of the energy for CASSCF")
 
-    options.add_bool("CASSCF_DEBUG_PRINTING", False, "Debug printing for CASSCF?")
+    options.add_int("CASSCF_MAXITER", 50, "The maximum number of CASSCF macro iterations")
+
+    options.add_int("CASSCF_MICRO_MAXITER", 25, "The maximum number of CASSCF micro iterations")
+
+    options.add_double("CASSCF_E_CONVERGENCE", 1e-8, "The energy convergence criterion (two consecutive energies)")
+
+    options.add_double("CASSCF_G_CONVERGENCE", 5e-6,
+                       "The orbital gradient convergence criterion (RMS of gradient vector)")
+
+    options.add_bool("CASSCF_DEBUG_PRINTING", False, "Enable debug printing if True")
+
+    options.add_bool("CASSCF_INTERNAL_ROT", False, "Keep active-active orbital rotations if true")
+
+    # Zero mixing for orbital pairs
+    # Format: [[irrep1, mo1, mo2], [irrep1, mo3, mo4], ...]
+    # Irreps are 0-based, while MO indices are 1-based!
+    # MO indices are relative indices within the irrep, e.g., 3A1 and 2A1: [[0, 3, 2]]
+    options.add_array("CASSCF_ZERO_ROT",
+                      "An array of MOs [[irrep1, mo1, mo2], [irrep2, mo3, mo4], ...]")
+
+    options.add_str("CASSCF_FINAL_ORBITAL", "CANONICAL", ["CANONICAL", "NATURAL"],
+                    "Constraints for redundant orbital pairs at the end of macro iteration")
+
+    options.add_str("CASSCF_CI_SOLVER", "CAS", "The active space solver to use in CASSCF")
+
+    options.add_int("CASSCF_CI_FREQ", 1,
+                    "How often to solve CI?\n"
+                    "< 1: do CI in the first macro iteration ONLY\n"
+                    "= n: do CI every n macro iteration")
+
+    options.add_bool("CASSCF_REFERENCE", False, "Run a FCI followed by CASSCF computation?")
+
     options.add_int(
         "CASSCF_MULTIPLICITY", 0,
         """Multiplicity for the CASSCF solution (if different from multiplicity)
@@ -833,11 +855,6 @@ def register_casscf_options(options):
 
     options.add_bool("RESTRICTED_DOCC_JK", True,
                      "Use JK builder for restricted docc (EXPERT)?")
-
-#    options.add_str("CASSCF_ORB_STEP_LENGTH", "SCALE", ["LINE_SEARCH", "SCALE"],
-#                    "Algorithm to determine the step length (alpha) for orbital update x_new = x_old + alpha * dx")
-
-#    options.add_int("CASSCF_LINE_SEARCH_MAXITER", 10, "Number of ")
 
     options.add_double("CASSCF_MAX_ROTATION", 0.5, "Max value in orbital update vector")
 
@@ -854,22 +871,11 @@ def register_casscf_options(options):
                        "When the norm of the orbital gradient is below this value, do diis")
 
     options.add_bool("CASSCF_CI_STEP", False, "Do a CAS step for every CASSCF_CI_FREQ")
-    options.add_int("CASSCF_CI_FREQ", 1, "How often should you do the CI_FREQ")
+
     options.add_int("CASSCF_CI_STEP_START", -1, "When to start skipping CI steps")
+
     options.add_bool("MONITOR_SA_SOLUTION", False,
                      "Monitor the CAS-CI solutions through iterations")
-
-    options.add_bool("CASSCF_INTERNAL_ROT", False, "Keep active-active orbital rotations if true")
-
-    # Zero mixing for orbital pairs
-    # Format: [[irrep1, mo1, mo2], [irrep1, mo3, mo4], ...]
-    # Irreps are 0-based, while MO indices are 1-based!
-    # MO indices are relative indices within the irrep, e.g., 3A1 and 2A1: [[0, 3, 2]]
-    options.add_array("CASSCF_ZERO_ROT",
-                      "An array of MOs [[irrep1, mo1, mo2], [irrep2, mo3, mo4], ...]")
-
-    options.add_str("CASSCF_ORB_TYPE", "CANONICAL", ["CANONICAL", "NATURAL"],
-                    "Constraints for redundant orbital pairs")
 
 
 def register_old_options(options):
@@ -925,11 +931,6 @@ def register_psi_options(options):
     options.add_double("INTS_TOLERANCE", 1.0E-12, 'Schwarz screening threshold')
     options.add_str("DF_INTS_IO", "NONE", ['NONE','SAVE','LOAD'],'IO caching for CP corrections')
     options.add_str('DF_BASIS_MP2','','Auxiliary basis set for density fitting computations')
-
-
-
-
-
 
     #    /*- The minimum excitation level (Default value: 0) -*/
     #    options.add_int("MIN_EXC_LEVEL", 0)

@@ -48,8 +48,9 @@
 namespace forte {
 
 class SCFInfo;
+class ActiveSpaceSolver;
 
-class CASSCF_NEW {
+class CASSCF_2STEP {
   public:
     /**
      * @brief Constructor of the AO-based CASSCF class
@@ -62,9 +63,9 @@ class CASSCF_NEW {
      * Implementation notes:
      *   See J. Chem. Phys. 142, 224103 (2015) and Theor. Chem. Acc. 97, 88-95 (1997)
      */
-    CASSCF_NEW(const std::map<StateInfo, std::vector<double>>& state_weights_map,
-               std::shared_ptr<ForteOptions> options, std::shared_ptr<MOSpaceInfo> mo_space_info,
-               std::shared_ptr<forte::SCFInfo> scf_info, std::shared_ptr<ForteIntegrals> ints);
+    CASSCF_2STEP(const std::map<StateInfo, std::vector<double>>& state_weights_map,
+                 std::shared_ptr<ForteOptions> options, std::shared_ptr<MOSpaceInfo> mo_space_info,
+                 std::shared_ptr<forte::SCFInfo> scf_info, std::shared_ptr<ForteIntegrals> ints);
 
     /// Compute the CASSCF_NEW energy
     double compute_energy();
@@ -177,8 +178,10 @@ class CASSCF_NEW {
     /// Enable debug printing or not
     bool debug_print_;
 
-    /// Max number of iterations
+    /// Max number of macro iterations
     int maxiter_;
+    /// Max number of micro iterations
+    int micro_maxiter_;
 
     /// Energy convergence criteria
     double e_conv_;
@@ -304,7 +307,9 @@ class CASSCF_NEW {
     double energy_;
 
     /// Solve CI coefficients for the current orbitals
-    void diagonalize_hamiltonian();
+    std::unique_ptr<ActiveSpaceSolver>
+    diagonalize_hamiltonian(std::shared_ptr<ActiveSpaceIntegrals> fci_ints, const int print,
+                            double& e_c);
 
     /// Compute the orbital gradients
     void compute_orbital_grad();
@@ -329,7 +334,7 @@ class CASSCF_NEW {
     std::shared_ptr<psi::Matrix> canonicalize();
 };
 
-std::unique_ptr<CASSCF_NEW>
+std::unique_ptr<CASSCF_2STEP>
 make_casscf_new(const std::map<StateInfo, std::vector<double>>& state_weight_map,
                 std::shared_ptr<SCFInfo> ref_wfn, std::shared_ptr<ForteOptions> options,
                 std::shared_ptr<MOSpaceInfo> mo_space_info, std::shared_ptr<ForteIntegrals> ints);

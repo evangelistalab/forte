@@ -108,8 +108,8 @@ void export_CASSCF(py::module& m) {
 }
 
 void export_CASSCF_NEW(py::module& m) {
-    py::class_<CASSCF_NEW>(m, "CASSCF_NEW")
-        .def("compute_energy", &CASSCF_NEW::compute_energy, "Compute the CASSCF energy");
+    py::class_<CASSCF_2STEP>(m, "CASSCF_NEW")
+        .def("compute_energy", &CASSCF_2STEP::compute_energy, "Compute the CASSCF energy");
 }
 
 /// Export the Determinant class
