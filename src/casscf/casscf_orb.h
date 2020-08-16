@@ -82,7 +82,7 @@ class CASSCF_GRAD {
     psi::SharedMatrix Ca() { return C_; }
 
     /// Orbital gradients
-    double grad_norm() { return grad_->norm(); }
+    double grad_norm() { return grad_->rms(); }
 
   private:
     /// The list of states to computed. Passed to the ActiveSpaceSolver

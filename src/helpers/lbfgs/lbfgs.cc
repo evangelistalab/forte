@@ -31,6 +31,8 @@
 #include "psi4/psi4-dec.h"
 #include "psi4/libmints/vector.h"
 #include "psi4/libpsi4util/PsiOutStream.h"
+#include "psi4/libdiis/diisentry.h"
+#include "psi4/libdiis/diismanager.h"
 
 #include "lbfgs.h"
 #include "rosenbrock.h"
@@ -99,8 +101,12 @@ template <class Foo> double LBFGS::minimize(Foo& func, psi::SharedVector x) {
         if (param_.print > 2)
             p_->print();
 
-        // line search to determine step length
-        line_search(func, x, fx, step);
+        p_->scale(step);
+        x->add(p_);
+        fx = func.evaluate(x, g_);
+
+//        // line search to determine step length
+//        line_search_bracketing_zoom(func, x, fx, step);
         if (param_.print > 1)
             outfile->Printf("\n  Iter: %2d; step = %15.10f; fx = %20.15f; g_norm = %20.15f",
                             iter_ + 1, step, fx, g_->norm());
@@ -108,11 +114,15 @@ template <class Foo> double LBFGS::minimize(Foo& func, psi::SharedVector x) {
         // test convergence
         x_norm = x->norm();
         g_norm = g_->norm();
-        outfile->Printf("\n  Convergence test grad: %.15f", param_.epsilon * std::max(1.0, x_norm));
-        if (g_norm <= param_.epsilon * std::max(1.0, x_norm) or fx > fx_old) {
+        if (g_norm <= param_.epsilon * std::max(1.0, x_norm)) {
             iter_ += 1; // make number of iteration based on 1
             break;
         }
+//        if (fx > fx_old) {
+//            // something wrong is going on
+//            iter_ = param_.maxiter;
+//            break;
+//        }
         fx_old = fx;
 
         // save history
@@ -172,7 +182,7 @@ void LBFGS::update() {
 }
 
 template <class Foo>
-void LBFGS::line_search(Foo& func, psi::SharedVector x, double& fx, double& step) {
+void LBFGS::line_search_backtracking(Foo& func, psi::SharedVector x, double& fx, double& step) {
     double dg0 = g_->vector_dot(p_);
     double fx0 = fx;
     auto x0 = std::make_shared<psi::Vector>(*x);
@@ -188,34 +198,50 @@ void LBFGS::line_search(Foo& func, psi::SharedVector x, double& fx, double& step
     double w1 = param_.c1 * dg0;
     double w2 = -param_.c2 * dg0;
 
-    outfile->Printf("\n dg0 = %.15f, w1 = %.15f, w2 = %.15f", dg0, w1, w2);
-
     // backtracking for optimal step
-    //    for (int i = 0; i < param_.maxiter_linesearch; ++i) {
-    //        x->copy(*x0);
-    //        x->axpy(step, p_);
-    //        fx = func.evaluate(x, g_);
+    for (int i = 0; i < param_.maxiter_linesearch; ++i) {
+        x->copy(*x0);
+        x->axpy(step, p_);
+        fx = func.evaluate(x, g_);
 
-    //        if (fx - fx0 > w1 * step) {
-    //            step *= 0.51;
-    //        } else {
-    //            // Armijo condition is met here
+        if (fx - fx0 > w1 * step) {
+            step *= 0.51;
+        } else {
+            // Armijo condition is met here
 
-    //            double dg = g_->vector_dot(p_);
-    //            if (dg < -w2) {
-    //                step *= 2.0;
-    //            } else {
-    //                // Wolfe condition is met here
+            double dg = g_->vector_dot(p_);
+            if (dg < -w2) {
+                step *= 2.0;
+            } else {
+                // Wolfe condition is met here
 
-    //                if (std::fabs(dg) > w2) {
-    //                    step *= 0.51;
-    //                } else {
-    //                    // strong Wolfe condition is met here
-    //                    break;
-    //                }
-    //            }
-    //        }
-    //    }
+                if (std::fabs(dg) > w2) {
+                    step *= 0.51;
+                } else {
+                    // strong Wolfe condition is met here
+                    break;
+                }
+            }
+        }
+    }
+}
+
+template <class Foo>
+void LBFGS::line_search_bracketing_zoom(Foo& func, psi::SharedVector x, double& fx, double& step) {
+    double dg0 = g_->vector_dot(p_);
+    double fx0 = fx;
+    auto x0 = std::make_shared<psi::Vector>(*x);
+
+    // need to restart because this is not a good direction
+    if (dg0 >= 0) {
+        outfile->Printf("\n  Warning: Direction increases the energy. Reset L-BFGS.");
+        resize(param_.m);
+        iter_ = 0;
+    }
+
+    // parameters Wolfe conditions
+    double w1 = param_.c1 * dg0;
+    double w2 = -param_.c2 * dg0;
 
     double fx_low = fx0, fx_high = fx0;
     double step_low = 0.0, step_high = 0.0;
@@ -233,8 +259,6 @@ void LBFGS::line_search(Foo& func, psi::SharedVector x, double& fx, double& step
         }
 
         double dg = g_->vector_dot(p_);
-
-        outfile->Printf("\n  dg = %.15f", dg);
 
         if (std::fabs(dg) <= w2) {
             if (param_.print > 2) {
@@ -267,9 +291,6 @@ void LBFGS::line_search(Foo& func, psi::SharedVector x, double& fx, double& step
         x->axpy(step, p_);
         fx = func.evaluate(x, g_);
 
-        outfile->Printf("\n  fx: %.15f, fx0: %.15f, fx_low: %.15f, step: %.15f", fx, fx0, fx_low,
-                        step);
-
         if (fx - fx0 > w1 * step or fx >= fx_low) {
             step_high = step;
             fx_high = fx;
@@ -292,6 +313,7 @@ void LBFGS::line_search(Foo& func, psi::SharedVector x, double& fx, double& step
             fx_low = fx;
         }
     }
+    step = 0.5 * (step_low + step_high);
     if (param_.print > 2) {
         outfile->Printf("\n  Step lengths after zooming stage: low = %.10f, high = %.10f", step_low,
                         step_high);

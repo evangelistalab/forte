@@ -447,6 +447,7 @@ double CASSCF_NEW::compute_energy() {
     dR_ = std::make_shared<psi::Matrix>("Orbital Rotation Update", nmopi_, nmopi_);
 
     R_v_ = std::make_shared<psi::Vector>("R", nrot_);
+    auto R_v_old = std::make_shared<psi::Vector>("Rold", nrot_);
     dR_v_ = std::make_shared<psi::Vector>("dR", nrot_);
 
     auto U = std::make_shared<psi::Matrix>("Orthogonal Transformation", nmopi_, nmopi_);
@@ -454,8 +455,8 @@ double CASSCF_NEW::compute_energy() {
     if (do_diis_) {
         diis_manager_ = std::make_shared<DIISManager>(
             diis_max_vec_, "CASSCF DIIS", DIISManager::OldestAdded, DIISManager::InCore);
-        diis_manager_->set_error_vector_size(1, DIISEntry::Matrix, dR_.get());
-        diis_manager_->set_vector_size(1, DIISEntry::Matrix, R_.get());
+        diis_manager_->set_error_vector_size(1, DIISEntry::Vector, dR_v_.get());
+        diis_manager_->set_vector_size(1, DIISEntry::Vector, R_v_.get());
     }
 
 //    LBFGS lbfgs(nrot_);
@@ -467,15 +468,11 @@ double CASSCF_NEW::compute_energy() {
 
     LBFGS_PARAM lbfgs_param;
     lbfgs_param.epsilon = g_conv_;
-    lbfgs_param.maxiter = 30;
+    lbfgs_param.maxiter = 10;
     lbfgs_param.print = 3;
-    lbfgs_param.min_step = 0.01;
-    lbfgs_param.h0_freq = 1;
+//    lbfgs_param.h0_freq = 1;
 
     LBFGS lbfgs(lbfgs_param);
-
-//    ROSENBROCK rosenbrock(10);
-//    auto x = std::make_shared<psi::Vector>("x", 10);
 
     for (int macro = 1; macro <= maxiter_; ++macro) {
         auto fci_ints = cas_grad.active_space_ints();
@@ -492,18 +489,31 @@ double CASSCF_NEW::compute_energy() {
         cas_grad.set_rdms(rdms);
 
         lbfgs.minimize(cas_grad, R_v_);
-//        double fx = lbfgs.minimize(rosenbrock, x);
-//        outfile->Printf("\n Rosenbrock: %.15f", fx);
+
+//        dR_v_->copy(*R_v_);
+//        dR_v_->subtract(R_v_old);
+//        R_v_old->copy(*R_v_);
+
+//        if (do_diis_ and macro >= diis_start_) {
+//            diis_manager_->add_entry(2, dR_v_.get(), R_v_.get());
+//            outfile->Printf("  S");
+
+//            if ((macro - diis_start_) % diis_freq_ == 0 and
+//                    diis_manager_->subspace_size() > diis_min_vec_) {
+//                diis_manager_->extrapolate(1, R_v_.get());
+//                outfile->Printf("/E");
+//            }
+//        }
 
         C_ = cas_grad.Ca()->clone();
-        double g_rms = cas_grad.grad_norm();
+        double g_norm = cas_grad.grad_norm();
         double e_delta = (macro > 1) ? energy_ - e_history[macro - 2] : energy_;
         outfile->Printf("\n    Iter.      Current Energy  Energy Diff.    Orb. Grad.");
-        outfile->Printf("\n    %4d   %18.12f  %12.4e  %12.4e", macro, energy_, e_delta, g_rms);
+        outfile->Printf("\n    %4d   %18.12f  %12.4e  %12.4e", macro, energy_, e_delta, g_norm);
         e_history.push_back(energy_);
-        g_history.push_back(g_rms);
+        g_history.push_back(g_norm);
 
-        if (std::fabs(e_delta) < e_conv_ and g_rms < g_conv_) {
+        if (std::fabs(e_delta) < e_conv_ and g_norm < g_conv_) {
             outfile->Printf("\n    A miracle has come to pass: MCSCF iterations have converged!");
             break;
         }

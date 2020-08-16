@@ -33,14 +33,17 @@ namespace forte {
 
 LBFGS_PARAM::LBFGS_PARAM() {
     // set dedfault values
-    m = 8;
-    epsilon = 1.0e-4;
-    maxiter = 30;
-    h0_freq = 0; // only compute the diagonal Hessian for once
-    maxiter_linesearch = 10;
     print = 1;
+    m = 6;
+    epsilon = 1.0e-4;
+    maxiter = 20;
+    h0_freq = 0; // only compute the diagonal Hessian for once
+    maxiter_linesearch = 5;
+    max_dir = 1.0e15;
 
     // the following are for experts
+    line_search_condition = LINE_SEARCH_CONDITION::STRONG_WOLFE;
+    step_length_method = STEP_LENGTH_METHOD::LINE_BRACKETING_ZOOM;
     min_step = 1.0e-15;
     max_step = 1.0e15;
     c1 = 1.0e-4;
@@ -62,6 +65,9 @@ void LBFGS_PARAM::check_param() {
         throw std::runtime_error(msg);
     }
 
+    if (max_dir < 0)
+        throw std::runtime_error("Max absolute value in direction vector (max_dir) must > 0");
+
     if (min_step < 0)
         throw std::runtime_error("Minimum step length (min_step) must > 0");
 
@@ -74,4 +80,4 @@ void LBFGS_PARAM::check_param() {
     if (c2 <= c1 || c2 >= 1)
         throw std::runtime_error("Parameter c2 must lie in (c1, 1.0)");
 }
-}
+} // namespace forte

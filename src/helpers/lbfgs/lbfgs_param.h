@@ -40,6 +40,9 @@ class LBFGS_PARAM {
     /// Check if the parameters make sense
     void check_param();
 
+    /// Printing level
+    int print;
+
     // => L-BFGS parameters <=
 
     /// The number of vectors kept
@@ -51,6 +54,18 @@ class LBFGS_PARAM {
     /// Max number of iterations
     int maxiter;
 
+    /// Frequency of updating diagonal Hessian if exact formula is preferred
+    /// = 0 for just compute it for the initial iteration
+    /// < 0 for using the adaptive inverse Hessian (gamma_k in L-BFGS Wikipedia)
+    int h0_freq;
+
+    /// Schemes to determine step lengths
+    enum class STEP_LENGTH_METHOD { MAX_CORRECTION, LINE_BACKTRACKING, LINE_BRACKETING_ZOOM };
+    STEP_LENGTH_METHOD step_length_method;
+
+    /// Max absolute value allowed in direction vector
+    double max_dir;
+
     /// Max number of trials for line search of optimal step length
     int maxiter_linesearch;
 
@@ -60,19 +75,15 @@ class LBFGS_PARAM {
     /// Maximal step length allowed
     double max_step;
 
+    /// Condition to terminate line search backtracking
+    enum class LINE_SEARCH_CONDITION { ARMIJO, WOLFE, STRONG_WOLFE };
+    LINE_SEARCH_CONDITION line_search_condition;
+
     /// Parameter for Armijo condition
     double c1;
 
     /// Parameter for Wolfe curvature condition
     double c2;
-
-    /// Frequency of updating diagonal Hessian if exact formula is preferred
-    /// = 0 for just compute it for the initial iteration
-    /// < 0 for using the adaptive inverse Hessian (gamma_k in L-BFGS Wikipedia)
-    int h0_freq;
-
-    /// Printing level
-    int print;
 };
 } // namespace forte
 

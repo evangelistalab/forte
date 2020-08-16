@@ -139,6 +139,7 @@ void CASSCF_GRAD::read_options() {
 
     g_conv_ = options_->get_double("CASSCF_G_CONVERGENCE");
 
+    internal_rot_ = options_->get_bool("CASSCF_INTERNAL_ROT");
     orb_type_redundant_ = options_->get_str("CASSCF_ORB_TYPE");
 
     // zero rotations

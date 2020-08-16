@@ -152,6 +152,8 @@ class LBFGS {
     void update();
 
     template <class Foo> void line_search(Foo& foo, psi::SharedVector x, double& fx, double& step);
+    template <class Foo> void line_search_backtracking(Foo& foo, psi::SharedVector x, double& fx, double& step);
+    template <class Foo> void line_search_bracketing_zoom(Foo& foo, psi::SharedVector x, double& fx, double& step);
 
     /// Update direction
     bool descent_;
