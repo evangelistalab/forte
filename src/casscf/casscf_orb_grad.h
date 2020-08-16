@@ -26,8 +26,8 @@
  * @END LICENSE
  */
 
-#ifndef _casscf_orb_h_
-#define _casscf_orb_h_
+#ifndef _casscf_orb_grad_h_
+#define _casscf_orb_grad_h_
 
 #include <map>
 #include <unordered_map>
@@ -48,23 +48,20 @@
 
 namespace forte {
 
-class SCFInfo;
-
-class CASSCF_GRAD {
+class CASSCF_ORB_GRAD {
   public:
     /**
      * @brief Constructor of the AO-based CASSCF class
-     * @param state_weights_map: The state to weights map of Forte
      * @param options: The ForteOptions pointer
      * @param mo_space_info: The MOSpaceInfo pointer of Forte
-     * @param scf_info: The SCF_INFO pointer of Forte
      * @param ints: The ForteIntegral pointer
      *
      * Implementation notes:
      *   See J. Chem. Phys. 142, 224103 (2015) and Theor. Chem. Acc. 97, 88-95 (1997)
      */
-    CASSCF_GRAD(std::shared_ptr<ForteOptions> options, std::shared_ptr<MOSpaceInfo> mo_space_info,
-                std::shared_ptr<ForteIntegrals> ints);
+    CASSCF_ORB_GRAD(std::shared_ptr<ForteOptions> options,
+                    std::shared_ptr<MOSpaceInfo> mo_space_info,
+                    std::shared_ptr<ForteIntegrals> ints);
 
     /// Evaluate the energy and orbital gradient
     double evaluate(psi::SharedVector x, psi::SharedVector g);
@@ -82,20 +79,14 @@ class CASSCF_GRAD {
     psi::SharedMatrix Ca() { return C_; }
 
     /// Orbital gradients
-    double grad_norm() { return grad_->rms(); }
+    double grad_norm() { return grad_->norm(); }
 
   private:
-    /// The list of states to computed. Passed to the ActiveSpaceSolver
-    std::map<StateInfo, std::vector<double>> state_weights_map_;
-
     /// The Forte options
     std::shared_ptr<ForteOptions> options_;
 
     /// The MOSpaceInfo object
     std::shared_ptr<MOSpaceInfo> mo_space_info_;
-
-    /// SCF information
-    std::shared_ptr<SCFInfo> scf_info_;
 
     /// The Forte integral
     std::shared_ptr<ForteIntegrals> ints_;
@@ -105,9 +96,6 @@ class CASSCF_GRAD {
 
     /// Read options
     void read_options();
-
-    /// Print options
-    void print_options();
 
     /// Prepare MO spaces
     void setup_mos();
@@ -175,9 +163,6 @@ class CASSCF_GRAD {
     std::vector<std::tuple<int, size_t, size_t>> rot_mos_irrep_;
     /// List of rotation pairs in <block, index1, index2> format
     std::vector<std::tuple<std::string, size_t, size_t>> rot_mos_block_;
-
-    /// The symmetry of every active orbitals
-    std::vector<int> actv_sym_;
 
     // => Options <=
 
@@ -255,7 +240,7 @@ class CASSCF_GRAD {
     /// Intermediate (2RDM) when forming internal diagonal Hessian
     ambit::BlockedTensor d2_internal_;
 
-    // => functions used in every iteration <=
+    // => functions used in micro iteration <=
 
     /// Build integrals for gradients and Hessian
     void build_mo_integrals();
@@ -304,4 +289,4 @@ class CASSCF_GRAD {
 };
 } // namespace forte
 
-#endif // _casscf_orb_
+#endif // _casscf_orb_grad_h_

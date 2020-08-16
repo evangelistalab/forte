@@ -50,7 +50,7 @@
 #include "orbital-helpers/semi_canonicalize.h"
 
 #include "integrals/integrals.h"
-#include "casscf/casscf_orb.h"
+#include "casscf/casscf_orb_grad.h"
 #include "casscf/casscf_new.h"
 #include "helpers/lbfgs/lbfgs_param.h"
 #include "helpers/lbfgs/rosenbrock.h"
@@ -464,7 +464,7 @@ double CASSCF_NEW::compute_energy() {
     std::vector<double> e_history;
     std::vector<double> g_history;
 
-    CASSCF_GRAD cas_grad(options_, mo_space_info_, ints_);
+    CASSCF_ORB_GRAD cas_grad(options_, mo_space_info_, ints_);
 
     LBFGS_PARAM lbfgs_param;
     lbfgs_param.epsilon = g_conv_;

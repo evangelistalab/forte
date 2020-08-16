@@ -37,38 +37,35 @@
 #include "psi4/psi4-dec.h"
 #include "psi4/libmints/vector.h"
 #include "psi4/libpsi4util/PsiOutStream.h"
-#include "psi4/libfock/jk.h"
 #include "psi4/libpsi4util/process.h"
 
 #include "helpers/printing.h"
-#include "helpers/helpers.h"
 #include "helpers/lbfgs/lbfgs.h"
 #include "helpers/timer.h"
 #include "integrals/integrals.h"
 #include "integrals/active_space_integrals.h"
 #include "base_classes/rdms.h"
 
-#include "casscf/casscf_orb.h"
+#include "casscf/casscf_orb_grad.h"
 
 using namespace psi;
 using namespace ambit;
 
 namespace forte {
 
-CASSCF_GRAD::CASSCF_GRAD(std::shared_ptr<ForteOptions> options,
-                         std::shared_ptr<MOSpaceInfo> mo_space_info,
-                         std::shared_ptr<ForteIntegrals> ints)
+CASSCF_ORB_GRAD::CASSCF_ORB_GRAD(std::shared_ptr<ForteOptions> options,
+                                 std::shared_ptr<MOSpaceInfo> mo_space_info,
+                                 std::shared_ptr<ForteIntegrals> ints)
     : options_(options), mo_space_info_(mo_space_info), ints_(ints) {
     startup();
 }
 
-void CASSCF_GRAD::startup() {
+void CASSCF_ORB_GRAD::startup() {
     // setup MO spaces
     setup_mos();
 
     // read and print options
     read_options();
-    print_options();
 
     // nonredundant pairs
     nonredundant_pairs();
@@ -86,7 +83,7 @@ void CASSCF_GRAD::startup() {
     build_mo_integrals();
 }
 
-void CASSCF_GRAD::setup_mos() {
+void CASSCF_ORB_GRAD::setup_mos() {
     nirrep_ = mo_space_info_->nirrep();
 
     nsopi_ = ints_->nsopi();
@@ -100,8 +97,6 @@ void CASSCF_GRAD::setup_mos() {
     nmo_ = mo_space_info_->size("ALL");
     ncmo_ = mo_space_info_->size("CORRELATED");
     nactv_ = mo_space_info_->size("ACTIVE");
-
-    actv_sym_ = mo_space_info_->symmetry("ACTIVE");
 
     core_mos_ = mo_space_info_->corr_absolute_mo("RESTRICTED_DOCC");
     actv_mos_ = mo_space_info_->corr_absolute_mo("ACTIVE");
@@ -131,7 +126,7 @@ void CASSCF_GRAD::setup_mos() {
     }
 }
 
-void CASSCF_GRAD::read_options() {
+void CASSCF_ORB_GRAD::read_options() {
     print_ = options_->get_int("PRINT");
     debug_print_ = options_->get_bool("CASSCF_DEBUG_PRINTING");
 
@@ -181,36 +176,7 @@ void CASSCF_GRAD::read_options() {
     }
 }
 
-void CASSCF_GRAD::print_options() {
-    //    // fill in information
-    //    std::vector<std::pair<std::string, int>> info_int{{"Printing level", print_},
-    //                                                      {"Max number of iterations", maxiter_}};
-
-    //    std::vector<std::pair<std::string, double>> info_double{{"Energy convergence", e_conv_},
-    //                                                            {"Gradient convergence", g_conv_},
-    //                                                            {"Max value for rotation",
-    //                                                            max_rot_}};
-
-    //    std::vector<std::pair<std::string, std::string>> info_string{
-    //        {"Integral type", int_type_},
-    //        {"Orbital type", orb_type_redundant_}};
-
-    //    std::vector<std::pair<std::string, bool>> info_bool{
-    //        {"Include internal rotations", internal_rot_}, {"Debug printing", debug_print_}};
-
-    //    if (do_diis_) {
-    //        info_int.push_back({"DIIS start", diis_start_});
-    //        info_int.push_back({"Min DIIS vectors", diis_min_vec_});
-    //        info_int.push_back({"Max DIIS vectors", diis_max_vec_});
-    //        info_int.push_back({"Frequency of DIIS extrapolation", diis_freq_});
-    //    }
-
-    //    // print some information
-    //    print_selected_options("Calculation Information", info_string, info_bool, info_double,
-    //                           info_int);
-}
-
-void CASSCF_GRAD::nonredundant_pairs() {
+void CASSCF_ORB_GRAD::nonredundant_pairs() {
     // prepare indices for rotation pairs
     rot_mos_irrep_.clear();
     rot_mos_block_.clear();
@@ -297,7 +263,7 @@ void CASSCF_GRAD::nonredundant_pairs() {
     outfile->Printf("\n    %s", std::string(33 + nirrep_ * 6, '-').c_str());
 }
 
-void CASSCF_GRAD::setup_JK() {
+void CASSCF_ORB_GRAD::setup_JK() {
     local_timer jk_timer;
     print_h2("Initialize JK Builder", "==>", "<==\n");
 
@@ -345,7 +311,7 @@ void CASSCF_GRAD::setup_JK() {
         outfile->Printf("  Initializing JK took %.3f seconds.", jk_timer.get());
 }
 
-void CASSCF_GRAD::setup_ambit() {
+void CASSCF_ORB_GRAD::setup_ambit() {
     BlockedTensor::reset_mo_spaces();
     BlockedTensor::set_expert_mode(true);
 
@@ -357,7 +323,7 @@ void CASSCF_GRAD::setup_ambit() {
     BlockedTensor::add_composite_mo_space("g", "p,q,r,s", {"c", "a", "v"});
 }
 
-void CASSCF_GRAD::init_tensors() {
+void CASSCF_ORB_GRAD::init_tensors() {
     // save a copy of initial MO
     C0_ = ints_->wfn()->Ca()->clone();
     C_ = C0_->clone();
@@ -407,7 +373,7 @@ void CASSCF_GRAD::init_tensors() {
     U_ = std::make_shared<psi::Matrix>("Orthogonal Transformation", nmopi_, nmopi_);
 }
 
-void CASSCF_GRAD::build_mo_integrals() {
+void CASSCF_ORB_GRAD::build_mo_integrals() {
     // form closed-shell Fock matrix
     build_fock_inactive();
 
@@ -421,7 +387,7 @@ void CASSCF_GRAD::build_mo_integrals() {
     build_tei_from_ao();
 }
 
-void CASSCF_GRAD::build_oei_from_ao() {
+void CASSCF_ORB_GRAD::build_oei_from_ao() {
     H_mo_ = H_ao_->clone();
     H_mo_->transform(C_);
     H_mo_->set_name("Hbare_MO");
@@ -431,7 +397,7 @@ void CASSCF_GRAD::build_oei_from_ao() {
     }
 }
 
-void CASSCF_GRAD::compute_energy_closed() {
+void CASSCF_ORB_GRAD::compute_energy_closed() {
     e_closed_ = 0.0;
     for (int h = 0; h < nirrep_; ++h) {
         for (int i = 0; i < ndoccpi_[h]; ++i) {
@@ -445,7 +411,7 @@ void CASSCF_GRAD::compute_energy_closed() {
     }
 }
 
-void CASSCF_GRAD::build_tei_from_ao() {
+void CASSCF_ORB_GRAD::build_tei_from_ao() {
     // This function will do an integral transformation using the JK builder,
     // and return the integrals of type <px|uy> = (pu|xy).
     timer_on("Build (pu|xy) integrals");
@@ -535,7 +501,7 @@ void CASSCF_GRAD::build_tei_from_ao() {
     timer_off("Build (pu|xy) integrals");
 }
 
-void CASSCF_GRAD::build_fock_inactive() {
+void CASSCF_ORB_GRAD::build_fock_inactive() {
     // Implementation Notes (in AO basis)
     // F_frozen = D_{uv}^{frozen} * (2 * (uv|rs) - (us|rv))
     // F_restricted = D_{uv}^{restricted} * (2 * (uv|rs) - (us|rv))
@@ -576,7 +542,7 @@ void CASSCF_GRAD::build_fock_inactive() {
     }
 }
 
-void CASSCF_GRAD::build_fock(bool rebuild_inactive) {
+void CASSCF_ORB_GRAD::build_fock(bool rebuild_inactive) {
     if (rebuild_inactive) {
         build_fock_inactive();
     }
@@ -598,7 +564,7 @@ void CASSCF_GRAD::build_fock(bool rebuild_inactive) {
     }
 }
 
-void CASSCF_GRAD::build_fock_active() {
+void CASSCF_ORB_GRAD::build_fock_active() {
     // Implementation Notes (in AO basis)
     // F_active = D_{uv}^{active} * ( (uv|rs) - 0.5 * (us|rv) )
     // D_{uv}^{active} = \sum_{xy}^{active} C_{ux} * C_{vy} * Gamma1_{xy}
@@ -637,7 +603,7 @@ void CASSCF_GRAD::build_fock_active() {
     }
 }
 
-void CASSCF_GRAD::format_fock(psi::SharedMatrix Fock, ambit::BlockedTensor F) {
+void CASSCF_ORB_GRAD::format_fock(psi::SharedMatrix Fock, ambit::BlockedTensor F) {
     F.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>&, double& value) {
         auto irrep_index_pair1 = corr_mos_rel_[i[0]];
         auto irrep_index_pair2 = corr_mos_rel_[i[1]];
@@ -655,7 +621,7 @@ void CASSCF_GRAD::format_fock(psi::SharedMatrix Fock, ambit::BlockedTensor F) {
     });
 }
 
-double CASSCF_GRAD::evaluate(psi::SharedVector x, psi::SharedVector g) {
+double CASSCF_ORB_GRAD::evaluate(psi::SharedVector x, psi::SharedVector g) {
     // compute U = exp(x)
     U_->zero();
     for (size_t n = 0; n < nrot_; ++n) {
@@ -679,11 +645,6 @@ double CASSCF_GRAD::evaluate(psi::SharedVector x, psi::SharedVector g) {
     // compute averaged Fock matrix
     build_fock();
 
-//    // canonicalize orbitals
-//    auto Ucan = canonicalize();
-//    C_ = psi::linalg::doublet(C_, Ucan, false, false);
-//    C_->set_name(C0_->name());
-
     // compute orbital gradient
     compute_orbital_grad();
     g->copy(*grad_);
@@ -691,7 +652,7 @@ double CASSCF_GRAD::evaluate(psi::SharedVector x, psi::SharedVector g) {
     return energy_;
 }
 
-void CASSCF_GRAD::compute_reference_energy() {
+void CASSCF_ORB_GRAD::compute_reference_energy() {
     // compute energy given that all useful MO integrals are available
     energy_ = e_closed_ + ints_->nuclear_repulsion_energy();
     energy_ += Fc_["uv"] * D1_["uv"];
@@ -702,15 +663,15 @@ void CASSCF_GRAD::compute_reference_energy() {
     }
 }
 
-void CASSCF_GRAD::compute_orbital_grad() {
+void CASSCF_ORB_GRAD::compute_orbital_grad() {
     // build orbital Lagrangian
-    A_["ri"] = 2.0 * F_["ri"];
-    A_["ru"] = Fc_["rt"] * D1_["tu"];
-    A_["ru"] += V_["rtvw"] * D2_["tuvw"];
+    A_["ri"] = 4.0 * F_["ri"];
+    A_["ru"] = 2.0 * Fc_["rt"] * D1_["tu"];
+    A_["ru"] += 2.0 * V_["rtvw"] * D2_["tuvw"];
 
     // build orbital gradients
-    g_["pq"] = 2.0 * A_["pq"];
-    g_["pq"] -= 2.0 * A_["qp"];
+    g_["pq"] = A_["pq"];
+    g_["pq"] -= A_["qp"];
 
     // reshape and format to SharedVector
     reshape_rot_ambit(g_, grad_);
@@ -720,12 +681,12 @@ void CASSCF_GRAD::compute_orbital_grad() {
     }
 }
 
-void CASSCF_GRAD::hess_diag(psi::SharedVector, psi::SharedVector h0) {
+void CASSCF_ORB_GRAD::hess_diag(psi::SharedVector, psi::SharedVector h0) {
     compute_orbital_hess_diag();
     h0->copy(*hess_diag_);
 }
 
-void CASSCF_GRAD::compute_orbital_hess_diag() {
+void CASSCF_ORB_GRAD::compute_orbital_hess_diag() {
     // modified diagonal Hessian from Theor. Chem. Acc. 97, 88-95 (1997)
 
     // virtual-core block
@@ -742,7 +703,7 @@ void CASSCF_GRAD::compute_orbital_hess_diag() {
     h_diag_.block("va").iterate([&](const std::vector<size_t>& i, double& value) {
         auto i0 = label_to_mos_["v"][i[0]];
         auto i1 = i[1] * nactv_ + i[1];
-        value = 2.0 * (Fd_[i0] * d1_data[i1] - a_data[i1]);
+        value = 2.0 * (Fd_[i0] * d1_data[i1]) - a_data[i1];
     });
 
     // active-core block
@@ -751,7 +712,7 @@ void CASSCF_GRAD::compute_orbital_hess_diag() {
         auto i1 = label_to_mos_["c"][i[1]];
         auto i1p = i[0] * nactv_ + i[0];
         value = 4.0 * (Fd_[i0] - Fd_[i1]);
-        value += 2.0 * (Fd_[i1] * d1_data[i1p] - a_data[i1p]);
+        value += 2.0 * (Fd_[i1] * d1_data[i1p]) - a_data[i1p];
     });
 
     // active-active block [see SI of J. Chem. Phys. 152, 074102 (2020)]
@@ -813,7 +774,7 @@ void CASSCF_GRAD::compute_orbital_hess_diag() {
         h_diag_.block("aa").iterate([&](const std::vector<size_t>& i, double& value) {
             auto i0 = i[0] * nactv_ + i[0];
             auto i1 = i[1] * nactv_ + i[1];
-            value -= 2.0 * (a_data[i0] + a_data[i1]);
+            value -= a_data[i0] + a_data[i1];
         });
     }
 
@@ -825,7 +786,7 @@ void CASSCF_GRAD::compute_orbital_hess_diag() {
     }
 }
 
-void CASSCF_GRAD::reshape_rot_ambit(ambit::BlockedTensor bt, psi::SharedVector sv) {
+void CASSCF_ORB_GRAD::reshape_rot_ambit(ambit::BlockedTensor bt, psi::SharedVector sv) {
     size_t vec_size = sv->dimpi().sum();
     if (vec_size != nrot_) {
         std::runtime_error("Inconsistent size between SharedVector and number of rotaitons");
@@ -842,9 +803,7 @@ void CASSCF_GRAD::reshape_rot_ambit(ambit::BlockedTensor bt, psi::SharedVector s
     }
 }
 
-std::shared_ptr<psi::Matrix> CASSCF_GRAD::canonicalize() {
-    print_h2("Canonicalize Orbitals (" + orb_type_redundant_ + ")");
-
+std::shared_ptr<psi::Matrix> CASSCF_ORB_GRAD::canonicalize() {
     // unitary rotation matrix for output
     auto U = std::make_shared<psi::Matrix>("U_redundant", nmopi_, nmopi_);
     U->identity();
@@ -863,9 +822,6 @@ std::shared_ptr<psi::Matrix> CASSCF_GRAD::canonicalize() {
     }
 
     for (int i = 0, size = mos_dim.size(); i < size; ++i) {
-        std::string block_name = "Diagonalizing Fock block " + names[i] + " ...";
-        outfile->Printf("\n    %-44s", block_name.c_str());
-
         auto dim = mos_dim[i];
         auto offset_dim = mos_offsets[i];
 
@@ -912,36 +868,13 @@ std::shared_ptr<psi::Matrix> CASSCF_GRAD::canonicalize() {
                 }
             }
         } // end if need to diagonalize
-
-        outfile->Printf(" Done.");
-    } // end sub block
+    }     // end sub block
 
     // natural orbitals
     if (orb_type_redundant_ == "NATURAL") {
-        std::string block_name = "Diagonalizing 1-RDM ...";
-        outfile->Printf("\n    %-44s", block_name.c_str());
-
-        auto A = std::make_shared<psi::Matrix>("O_actv", nactvpi_, nactvpi_);
-
-        D1_.citerate(
-            [&](const std::vector<size_t>& i, const std::vector<SpinType>&, const double& value) {
-                auto irrep_index_pair1 = corr_mos_rel_[i[0]];
-                auto irrep_index_pair2 = corr_mos_rel_[i[1]];
-
-                int h1 = irrep_index_pair1.first;
-                int h2 = irrep_index_pair2.first;
-
-                if (h1 == h2) {
-                    auto offset = ndoccpi_[h1];
-                    auto p = irrep_index_pair1.second - offset;
-                    auto q = irrep_index_pair2.second - offset;
-                    A->set(h1, p, q, value);
-                }
-            });
-
         auto Usub = std::make_shared<psi::Matrix>("Usub_ACTIVE", nactvpi_, nactvpi_);
         auto Esub = std::make_shared<psi::Vector>("Esub_ACTIVE", nactvpi_);
-        A->diagonalize(Usub, Esub, descending);
+        rdm1_->diagonalize(Usub, Esub, descending);
 
         // fill in data
         for (int h = 0; h < nirrep_; ++h) {
@@ -953,14 +886,12 @@ std::shared_ptr<psi::Matrix> CASSCF_GRAD::canonicalize() {
                 }
             }
         }
-
-        outfile->Printf(" Done.");
     }
 
     return U;
 }
 
-void CASSCF_GRAD::set_rdms(RDMs& rdms) {
+void CASSCF_ORB_GRAD::set_rdms(RDMs& rdms) {
     // form spin-summed densities
     D1_.block("aa").copy(rdms.g1a());
     D1_.block("aa")("pq") += rdms.g1b()("pq");
@@ -972,7 +903,7 @@ void CASSCF_GRAD::set_rdms(RDMs& rdms) {
     D2_.scale(0.5);
 }
 
-void CASSCF_GRAD::format_1rdm() {
+void CASSCF_ORB_GRAD::format_1rdm() {
     const auto& d1_data = D1_.block("aa").data();
 
     for (int h = 0, offset = 0; h < nirrep_; ++h) {
@@ -990,8 +921,9 @@ void CASSCF_GRAD::format_1rdm() {
     }
 }
 
-std::shared_ptr<ActiveSpaceIntegrals> CASSCF_GRAD::active_space_ints() {
-    auto fci_ints = std::make_shared<ActiveSpaceIntegrals>(ints_, actv_mos_, actv_sym_, core_mos_);
+std::shared_ptr<ActiveSpaceIntegrals> CASSCF_ORB_GRAD::active_space_ints() {
+    auto actv_sym = mo_space_info_->symmetry("ACTIVE");
+    auto fci_ints = std::make_shared<ActiveSpaceIntegrals>(ints_, actv_mos_, actv_sym, core_mos_);
 
     // build antisymmetrized TEI in physists' notation
     auto actv_ab = ambit::Tensor::build(CoreTensor, "tei_actv_aa", std::vector<size_t>(4, nactv_));

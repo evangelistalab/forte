@@ -35,7 +35,7 @@
 
 #include "lbfgs.h"
 #include "rosenbrock.h"
-#include "casscf/casscf_orb.h"
+#include "casscf/casscf_orb_grad.h"
 
 using namespace psi;
 
@@ -61,7 +61,7 @@ template <class Foo> double LBFGS::minimize(Foo& func, psi::SharedVector x) {
     }
 
     // initialize some vectors
-    resize(param_.m);
+    reset();
     p_ = std::make_shared<psi::Vector>("p", dimpi_);
     x_last_ = std::make_shared<psi::Vector>(*x);
     g_last_ = std::make_shared<psi::Vector>(*g_);
@@ -396,6 +396,6 @@ void LBFGS::reset() {
 }
 
 template double LBFGS::minimize(ROSENBROCK& func, psi::SharedVector x);
-template double LBFGS::minimize(CASSCF_GRAD& func, psi::SharedVector x);
+template double LBFGS::minimize(CASSCF_ORB_GRAD& func, psi::SharedVector x);
 
 } // namespace forte
