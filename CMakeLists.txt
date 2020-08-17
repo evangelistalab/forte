@@ -192,6 +192,7 @@ src/pci/pci_sigma.cc
 src/post_process/spin_corr.cc
 src/sci/aci.cc
 src/sci/aci_build_F.cc
+src/sci/gasaci_build_F.cc
 src/sci/asci.cc
 src/sci/fci_mo.cc
 src/sci/mrpt2.cc

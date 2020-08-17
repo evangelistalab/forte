@@ -601,7 +601,7 @@ void AdaptiveCI::pre_iter_preparation() {
                     exit(1);
                 }
             } else {
-                maxe.push_back(0);
+                maxe.push_back(200);
             }
             nentry = gasemin_alt_list.size();
             if (nentry > 0) {
