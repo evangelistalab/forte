@@ -198,6 +198,9 @@ class SelectedCIMethod {
     /// The number of active orbitals
     size_t nact_;
 
+    /// Do single calculation instead of selective ci
+    bool one_cycle_ = false;
+
     /// Enforce spin completeness of the P and P + Q spaces?
     bool spin_complete_;
     /// Enforce spin completeness of the P space?

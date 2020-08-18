@@ -81,6 +81,7 @@ void AdaptiveCI::get_excited_determinants_sr(SharedMatrix evecs, SharedVector ev
 
         det_hash<double> V_hash_t;
         for (size_t P = start_idx; P < end_idx; ++P) {
+            local_timer single;
             const Determinant& det(P_dets[P]);
             double Cp = evecs->get(P, ref_root_);
 
@@ -94,6 +95,7 @@ void AdaptiveCI::get_excited_determinants_sr(SharedMatrix evecs, SharedVector ev
             size_t nvalpha = avir.size();
             size_t nvbeta = bvir.size();
             Determinant new_det(det);
+            //            outfile->Printf("\n  %s", str(det, nact_).c_str());
             // Generate alpha excitations
             for (size_t i = 0; i < noalpha; ++i) {
                 size_t ii = aocc[i];
@@ -170,7 +172,6 @@ void AdaptiveCI::get_excited_determinants_sr(SharedMatrix evecs, SharedVector ev
                     }
                 }
             }
-
             // Generate bb excitations
             for (size_t i = 0; i < nobeta; ++i) {
                 size_t ii = bocc[i];
@@ -289,7 +290,8 @@ void AdaptiveCI::get_excited_determinants_avg(
                     if ((mo_symmetry_[ii] ^ mo_symmetry_[aa]) == 0) {
                         double HIJ = as_ints_->slater_rules_single_alpha(det, ii, aa);
                         if ((std::fabs(HIJ) * evecs_P_row_norm >= screen_thresh_)) {
-                            //      if( std::abs(HIJ * evecs->get(0, P)) > screen_thresh_ ){
+                            //      if( std::abs(HIJ * evecs->get(0, P)) >
+                            //      screen_thresh_ ){
                             new_det = det;
                             new_det.set_alfa_bit(ii, false);
                             new_det.set_alfa_bit(aa, true);
@@ -348,7 +350,8 @@ void AdaptiveCI::get_excited_determinants_avg(
                                 if ((std::fabs(HIJ) * evecs_P_row_norm >= screen_thresh_)) {
                                     new_det = det;
                                     HIJ *= new_det.double_excitation_aa(ii, jj, aa, bb);
-                                    // if( std::abs(HIJ * evecs->get(0, P)) > screen_thresh_ ){
+                                    // if( std::abs(HIJ * evecs->get(0, P)) >
+                                    // screen_thresh_ ){
 
                                     if (!(P_space.has_det(new_det))) {
                                         std::vector<double> coupling(nroot, 0.0);
@@ -383,7 +386,8 @@ void AdaptiveCI::get_excited_determinants_avg(
                                 if ((std::fabs(HIJ) * evecs_P_row_norm >= screen_thresh_)) {
                                     new_det = det;
                                     HIJ *= new_det.double_excitation_ab(ii, jj, aa, bb);
-                                    // if( std::abs(HIJ * evecs->get(0, P)) > screen_thresh_ ){
+                                    // if( std::abs(HIJ * evecs->get(0, P)) >
+                                    // screen_thresh_ ){
 
                                     if (!(P_space.has_det(new_det))) {
                                         std::vector<double> coupling(nroot, 0.0);
@@ -415,7 +419,8 @@ void AdaptiveCI::get_excited_determinants_avg(
                                  (mo_symmetry_[jj] ^ (mo_symmetry_[aa] ^ mo_symmetry_[bb]))) == 0) {
                                 double HIJ = as_ints_->tei_bb(ii, jj, aa, bb);
                                 if ((std::fabs(HIJ) * evecs_P_row_norm >= screen_thresh_)) {
-                                    // if( std::abs(HIJ * evecs->get(0, P)) >= screen_thresh_ ){
+                                    // if( std::abs(HIJ * evecs->get(0, P)) >=
+                                    // screen_thresh_ ){
                                     new_det = det;
                                     HIJ *= new_det.double_excitation_bb(ii, jj, aa, bb);
 
@@ -534,7 +539,8 @@ void AdaptiveCI::get_excited_determinants_core(
                         ((aa != hole_) or (!det.get_beta_bit(aa)))) {
                         double HIJ = as_ints_->slater_rules_single_alpha(det, ii, aa);
                         if ((std::fabs(HIJ) * evecs_P_row_norm >= screen_thresh_)) {
-                            //      if( std::abs(HIJ * evecs->get(0, P)) > screen_thresh_ ){
+                            //      if( std::abs(HIJ * evecs->get(0, P)) >
+                            //      screen_thresh_ ){
                             new_det = det;
                             new_det.set_alfa_bit(ii, false);
                             new_det.set_alfa_bit(aa, true);
@@ -594,7 +600,8 @@ void AdaptiveCI::get_excited_determinants_core(
                                 if ((std::fabs(HIJ) * evecs_P_row_norm >= screen_thresh_)) {
                                     new_det = det;
                                     HIJ *= new_det.double_excitation_aa(ii, jj, aa, bb);
-                                    // if( std::abs(HIJ * evecs->get(0, P)) > screen_thresh_ ){
+                                    // if( std::abs(HIJ * evecs->get(0, P)) >
+                                    // screen_thresh_ ){
 
                                     if (!(P_space.has_det(new_det))) {
                                         std::vector<double> coupling(nroot, 0.0);
@@ -630,7 +637,8 @@ void AdaptiveCI::get_excited_determinants_core(
                                 if ((std::fabs(HIJ) * evecs_P_row_norm >= screen_thresh_)) {
                                     new_det = det;
                                     HIJ *= new_det.double_excitation_ab(ii, jj, aa, bb);
-                                    // if( std::abs(HIJ * evecs->get(0, P)) > screen_thresh_ ){
+                                    // if( std::abs(HIJ * evecs->get(0, P)) >
+                                    // screen_thresh_ ){
 
                                     if (!(P_space.has_det(new_det))) {
                                         std::vector<double> coupling(nroot, 0.0);
@@ -664,7 +672,8 @@ void AdaptiveCI::get_excited_determinants_core(
                                 (aa != hole_ and bb != hole_)) {
                                 double HIJ = as_ints_->tei_bb(ii, jj, aa, bb);
                                 if ((std::fabs(HIJ) * evecs_P_row_norm >= screen_thresh_)) {
-                                    // if( std::abs(HIJ * evecs->get(0, P)) >= screen_thresh_ ){
+                                    // if( std::abs(HIJ * evecs->get(0, P)) >=
+                                    // screen_thresh_ ){
                                     new_det = det;
                                     HIJ *= new_det.double_excitation_bb(ii, jj, aa, bb);
 
@@ -743,10 +752,12 @@ double AdaptiveCI::get_excited_determinants_batch_vecsort(
     // Guess the total memory needed to store all singles and doubles out of all dets
     //    size_t nsingle_a = nalpha_ * (ncmo_ - nalpha_);
     //    size_t nsingle_b = nbeta_ * (ncmo_ - nbeta_);
-    //    size_t ndouble_aa = nalpha_ * (nalpha_ - 1) * (ncmo_ - nalpha_) * (ncmo_ - nalpha_ - 1) /
-    //    4; size_t ndouble_bb = nbeta_ * (nbeta_ - 1) * (ncmo_ - nbeta_) * (ncmo_ - nbeta_ - 1) /
-    //    4; size_t ndouble_ab = nsingle_a * nsingle_b; size_t nexcitations = nsingle_a + nsingle_b
-    //    + ndouble_aa + ndouble_bb + ndouble_ab; size_t guess_size = n_dets * nexcitations;
+    //    size_t ndouble_aa = nalpha_ * (nalpha_ - 1) * (ncmo_ - nalpha_) * (ncmo_ -
+    //    nalpha_ - 1) / 4; size_t ndouble_bb = nbeta_ * (nbeta_ - 1) * (ncmo_ - nbeta_)
+    //    * (ncmo_ - nbeta_ - 1) / 4; size_t ndouble_ab = nsingle_a * nsingle_b; size_t
+    //    nexcitations = nsingle_a + nsingle_b
+    //    + ndouble_aa + ndouble_bb + ndouble_ab; size_t guess_size = n_dets *
+    //    nexcitations;
 
     size_t nocc2 = nalpha_ * nalpha_;
     size_t nvir2 = (nmo - nalpha_) * (nmo - nalpha_);
@@ -782,8 +793,8 @@ double AdaptiveCI::get_excited_determinants_batch_vecsort(
             auto& A_b = A_b_t.first[tid];
             //                        size_t idx = 0;
             double E0 = evals->get(0);
-            //            outfile->Printf("\n td %d, Ab: %zu, abt: %zu", tid ,A_b.size(),
-            //            A_b_t.second[tid]);
+            //            outfile->Printf("\n td %d, Ab: %zu, abt: %zu", tid
+            //            ,A_b.size(), A_b_t.second[tid]);
             for (size_t I = 0, max_I = A_b_t.second[tid]; I < max_I; I++) {
                 auto& pair = A_b[I];
                 double& V = pair.second;
@@ -801,7 +812,8 @@ double AdaptiveCI::get_excited_determinants_batch_vecsort(
         //  #pragma omp parallel
         //  {
         //      int tid = omp_get_thread_num();
-        //      std::sort(A_b_t.first[tid].begin(), A_b_t.first[tid].begin() + A_b_t.second[tid],
+        //      std::sort(A_b_t.first[tid].begin(), A_b_t.first[tid].begin() +
+        //      A_b_t.second[tid],
         //                [](const std::pair<Determinant, double>& a,
         //                   const std::pair<Determinant, double>& b) -> bool {
         //                    return a.second < b.second;
@@ -1003,8 +1015,8 @@ det_hash<double> AdaptiveCI::get_bin_F_space(int bin, int nbin, double E0, Share
         // size_t guess_bb = guess_b * guess_b / 4;
         // size_t guess_ab = guess_a * guess_b;
 
-        // size_t guess = (n_dets / nbin) * (guess_a + guess_b + guess_aa + guess_bb + guess_ab);
-        // outfile->Printf("\n Guessing %zu dets in bin %d", guess, bin);
+        // size_t guess = (n_dets / nbin) * (guess_a + guess_b + guess_aa + guess_bb +
+        // guess_ab); outfile->Printf("\n Guessing %zu dets in bin %d", guess, bin);
         //        A_b.reserve(guess);
         for (size_t I = start_idx; I < end_idx; ++I) {
             double c_I = evecs->get(I, 0);
@@ -1097,8 +1109,9 @@ det_hash<double> AdaptiveCI::get_bin_F_space(int bin, int nbin, double E0, Share
                                                 A_b[new_det] +=
                                                     (HIJ * det.slater_sign_aaaa(ii, jj, aa, bb));
                                                 //} else if (std::fabs(HIJ) >= 1e-12) {
-                                                //    E_b[new_det] += HIJ * det.slater_sign_aaaa(ii,
-                                                //    jj, aa, bb);
+                                                //    E_b[new_det] += HIJ *
+                                                //    det.slater_sign_aaaa(ii, jj, aa,
+                                                //    bb);
                                             }
                                         }
                                         new_det.set_alfa_bit(bb, false);
@@ -1140,8 +1153,9 @@ det_hash<double> AdaptiveCI::get_bin_F_space(int bin, int nbin, double E0, Share
                                                 A_b[new_det] +=
                                                     (HIJ * det.slater_sign_bbbb(ii, jj, aa, bb));
                                                 //} else if (std::fabs(HIJ) >= 1e-12) {
-                                                //    E_b[new_det] += HIJ * det.slater_sign_bbbb(ii,
-                                                //    jj, aa, bb);
+                                                //    E_b[new_det] += HIJ *
+                                                //    det.slater_sign_bbbb(ii, jj, aa,
+                                                //    bb);
                                             }
                                         }
                                         new_det.set_beta_bit(bb, false);
@@ -1279,11 +1293,12 @@ AdaptiveCI::get_bin_F_space_vecsort(int bin, int nbin, SharedMatrix evecs,
         // Loop over P space determinants
         // size_t guess_a = nalpha_ * (ncmo_ - nalpha_);
         // size_t guess_b = nbeta_ * (ncmo_ - nbeta_);
-        // size_t guess_aa = nalpha_ * (nalpha_ - 1) * (ncmo_ - nalpha_) * (ncmo_ - nalpha_ - 1) /
-        // 4; size_t guess_bb = nbeta_ * (nbeta_ - 1) * (ncmo_ - nbeta_) * (ncmo_ - nbeta_ - 1) / 4;
-        // size_t guess_ab = guess_a * guess_b;
+        // size_t guess_aa = nalpha_ * (nalpha_ - 1) * (ncmo_ - nalpha_) * (ncmo_ -
+        // nalpha_ - 1) / 4; size_t guess_bb = nbeta_ * (nbeta_ - 1) * (ncmo_ - nbeta_)
+        // * (ncmo_ - nbeta_ - 1) / 4; size_t guess_ab = guess_a * guess_b;
 
-        // size_t guess = (n_dets / nbin) * (guess_a + guess_b + guess_aa + guess_bb + guess_ab);
+        // size_t guess = (n_dets / nbin) * (guess_a + guess_b + guess_aa + guess_bb +
+        // guess_ab);
 
         size_t nocc2 = nalpha_ * nalpha_;
         size_t nvir2 = (nmo - nalpha_) * (nmo - nalpha_);
@@ -1477,9 +1492,9 @@ AdaptiveCI::get_bin_F_space_vecsort(int bin, int nbin, SharedMatrix evecs,
 
         //        outfile->Printf("\n  Added %zu dets", A_b.size());
         //        if( thread_id == 0 ){
-        //          outfile->Printf("\n  Time spent forming vec_A_b: %1.6f", build.get());
-        //          outfile->Printf("\n  Generated %zu determinants out of %zu guessed",
-        //          num_new_dets, guess);
+        //          outfile->Printf("\n  Time spent forming vec_A_b: %1.6f",
+        //          build.get()); outfile->Printf("\n  Generated %zu determinants out of
+        //          %zu guessed", num_new_dets, guess);
         //      }
 
         // Sort the determinant contributions
@@ -1519,7 +1534,8 @@ AdaptiveCI::get_bin_F_space_vecsort(int bin, int nbin, SharedMatrix evecs,
         pos += (pos == 0) ? 0 : 1;
 
         //   #pragma omp critical
-        //   outfile->Printf("\n  Time spent combining unique elements of vec_A_b: %1.6f",
+        //   outfile->Printf("\n  Time spent combining unique elements of vec_A_b:
+        //   %1.6f",
         //                   Combine.get());
 
         // store the number of unique determinants
@@ -1628,8 +1644,8 @@ std::vector<std::pair<int, Determinant>> AdaptiveCI::ras_masks() {
     size_t total_size = ras_spaces.size();
 
     if( (total_size % 3) != 0 ){
-        outfile->Printf("\n  RAS space has the wrong dimension!");
-        exit(0);
+        outfile->Printf("\n  RAS space has the outfile->Printf("\n  "); for (size_t i = 0; i < 2 *
+gas_num_; i++) { outfile->Printf("   %d    ", gas_configuration.at(i)); } dimension!"); exit(0);
     }
 
     std::vector<std::pair<int, Determinant>> ras_pairs;
@@ -1660,9 +1676,9 @@ std::vector<std::pair<int, Determinant>> AdaptiveCI::ras_masks() {
 void AdaptiveCI::get_excited_determinants_restrict(int nroot, SharedMatrix evecs,
                                           SharedVector evals,
                                           DeterminantHashVec& P_space,
-                                          std::vector<std::pair<double,Determinant>>& F_space) {
-    size_t max_P = P_space.size();
-    const det_hashvec& P_dets = P_space.wfn_hash();
+                                          std::vector<std::pair<double,Determinant>>&
+F_space) { size_t max_P = P_space.size(); const det_hashvec& P_dets =
+P_space.wfn_hash();
 
     auto mask_pairs = ras_masks();
 
@@ -1677,8 +1693,8 @@ void AdaptiveCI::get_excited_determinants_restrict(int nroot, SharedMatrix evecs
         size_t start_idx =
             (tid < (max_P % num_thread))
                 ? tid * bin_size
-                : (max_P % num_thread) * (bin_size + 1) + (tid - (max_P % num_thread)) * bin_size;
-        size_t end_idx = start_idx + bin_size;
+                : (max_P % num_thread) * (bin_size + 1) + (tid - (max_P % num_thread)) *
+bin_size; size_t end_idx = start_idx + bin_size;
 
         if (omp_get_thread_num() == 0 and !quiet_mode_) {
             outfile->Printf("\n  Using %d threads.", num_thread);
@@ -1710,9 +1726,8 @@ void AdaptiveCI::get_excited_determinants_restrict(int nroot, SharedMatrix evecs
                     if ((mo_symmetry_[ii] ^ mo_symmetry_[aa]) == 0) {
                         double HIJ = as_ints_->slater_rules_single_alpha(det, ii, aa);
                         if ((std::fabs(HIJ) * evecs_P_row_norm >= screen_thresh_)) {
-                            //      if( std::abs(HIJ * evecs->get(0, P)) > screen_thresh_ ){
-                            new_det = det;
-                            new_det.set_alfa_bit(ii, false);
+                            //      if( std::abs(HIJ * evecs->get(0, P)) >
+screen_thresh_ ){ new_det = det; new_det.set_alfa_bit(ii, false);
                             new_det.set_alfa_bit(aa, true);
                             if (!(P_space.has_det(new_det))) {
                                 std::vector<double> coupling(nroot, 0.0);
@@ -1721,7 +1736,8 @@ void AdaptiveCI::get_excited_determinants_restrict(int nroot, SharedMatrix evecs
                                 }
                                 // thread_ex_dets[i * noalpha + a] =
                                 // std::make_pair(new_det,coupling);
-                                thread_ex_dets.push_back(std::make_pair(new_det, coupling));
+                                thread_ex_dets.push_back(std::make_pair(new_det,
+coupling));
                             }
                         }
                     }
@@ -1747,7 +1763,8 @@ void AdaptiveCI::get_excited_determinants_restrict(int nroot, SharedMatrix evecs
                                 }
                                 // thread_ex_dets[i * nobeta + a] =
                                 // std::make_pair(new_det,coupling);
-                                thread_ex_dets.push_back(std::make_pair(new_det, coupling));
+                                thread_ex_dets.push_back(std::make_pair(new_det,
+coupling));
                             }
                         }
                     }
@@ -1763,20 +1780,20 @@ void AdaptiveCI::get_excited_determinants_restrict(int nroot, SharedMatrix evecs
                         size_t aa = avir[a];
                         for (size_t b = a + 1; b < nvalpha; ++b) {
                             size_t bb = avir[b];
-                            if ((mo_symmetry_[ii] ^ mo_symmetry_[jj] ^ mo_symmetry_[aa] ^
-                                 mo_symmetry_[bb]) == 0) {
-                                double HIJ = as_ints_->tei_aa(ii, jj, aa, bb);
-                                if ((std::fabs(HIJ) * evecs_P_row_norm >= screen_thresh_)) {
-                                    new_det = det;
-                                    HIJ *= new_det.double_excitation_aa(ii, jj, aa, bb);
-                                    // if( std::abs(HIJ * evecs->get(0, P)) > screen_thresh_ ){
+                            if ((mo_symmetry_[ii] ^ mo_symmetry_[jj] ^ mo_symmetry_[aa]
+^ mo_symmetry_[bb]) == 0) { double HIJ = as_ints_->tei_aa(ii, jj, aa, bb); if
+((std::fabs(HIJ) * evecs_P_row_norm >= screen_thresh_)) { new_det = det; HIJ *=
+new_det.double_excitation_aa(ii, jj, aa, bb);
+                                    // if( std::abs(HIJ * evecs->get(0, P)) >
+screen_thresh_ ){
 
                                     if (!(P_space.has_det(new_det))) {
                                         std::vector<double> coupling(nroot, 0.0);
                                         for (int n = 0; n < nroot; ++n) {
                                             coupling[n] += HIJ * evecs->get(P, n);
                                         }
-                                        thread_ex_dets.push_back(std::make_pair(new_det, coupling));
+                                        thread_ex_dets.push_back(std::make_pair(new_det,
+coupling));
                                     }
                                 }
                             }
@@ -1794,13 +1811,12 @@ void AdaptiveCI::get_excited_determinants_restrict(int nroot, SharedMatrix evecs
                         size_t aa = avir[a];
                         for (size_t b = 0; b < nvbeta; ++b) {
                             size_t bb = bvir[b];
-                            if ((mo_symmetry_[ii] ^ mo_symmetry_[jj] ^ mo_symmetry_[aa] ^
-                                 mo_symmetry_[bb]) == 0) {
-                                double HIJ = as_ints_->tei_ab(ii, jj, aa, bb);
-                                if ((std::fabs(HIJ) * evecs_P_row_norm >= screen_thresh_)) {
-                                    new_det = det;
-                                    HIJ *= new_det.double_excitation_ab(ii, jj, aa, bb);
-                                    // if( std::abs(HIJ * evecs->get(0, P)) > screen_thresh_ ){
+                            if ((mo_symmetry_[ii] ^ mo_symmetry_[jj] ^ mo_symmetry_[aa]
+^ mo_symmetry_[bb]) == 0) { double HIJ = as_ints_->tei_ab(ii, jj, aa, bb); if
+((std::fabs(HIJ) * evecs_P_row_norm >= screen_thresh_)) { new_det = det; HIJ *=
+new_det.double_excitation_ab(ii, jj, aa, bb);
+                                    // if( std::abs(HIJ * evecs->get(0, P)) >
+screen_thresh_ ){
 
                                     if (!(P_space.has_det(new_det))) {
                                         std::vector<double> coupling(nroot, 0.0);
@@ -1810,7 +1826,8 @@ void AdaptiveCI::get_excited_determinants_restrict(int nroot, SharedMatrix evecs
                                         // thread_ex_dets[i * nobeta * nvalpha
                                         // *nvbeta + j * bvalpha * nvbeta + a *
                                         // nvalpha]
-                                        thread_ex_dets.push_back(std::make_pair(new_det, coupling));
+                                        thread_ex_dets.push_back(std::make_pair(new_det,
+coupling));
                                     }
                                 }
                             }
@@ -1829,19 +1846,19 @@ void AdaptiveCI::get_excited_determinants_restrict(int nroot, SharedMatrix evecs
                         for (size_t b = a + 1; b < nvbeta; ++b) {
                             size_t bb = bvir[b];
                             if ((mo_symmetry_[ii] ^
-                                 (mo_symmetry_[jj] ^ (mo_symmetry_[aa] ^ mo_symmetry_[bb]))) == 0) {
-                                double HIJ = as_ints_->tei_bb(ii, jj, aa, bb);
-                                if ((std::fabs(HIJ) * evecs_P_row_norm >= screen_thresh_)) {
-                                    // if( std::abs(HIJ * evecs->get(0, P)) >= screen_thresh_ ){
-                                    new_det = det;
-                                    HIJ *= new_det.double_excitation_bb(ii, jj, aa, bb);
+                                 (mo_symmetry_[jj] ^ (mo_symmetry_[aa] ^
+mo_symmetry_[bb]))) == 0) { double HIJ = as_ints_->tei_bb(ii, jj, aa, bb); if
+((std::fabs(HIJ) * evecs_P_row_norm >= screen_thresh_)) {
+                                    // if( std::abs(HIJ * evecs->get(0, P)) >=
+screen_thresh_ ){ new_det = det; HIJ *= new_det.double_excitation_bb(ii, jj, aa, bb);
 
                                     if (!(P_space.has_det(new_det))) {
                                         std::vector<double> coupling(nroot, 0.0);
                                         for (int n = 0; n < nroot; ++n) {
                                             coupling[n] += HIJ * evecs->get(P, n);
                                         }
-                                        thread_ex_dets.push_back(std::make_pair(new_det, coupling));
+                                        thread_ex_dets.push_back(std::make_pair(new_det,
+coupling));
                                     }
                                 }
                             }

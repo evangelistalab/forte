@@ -249,7 +249,6 @@ void MOSpaceInfo::set_reorder(const std::vector<size_t>& reorder) { reorder_ = r
 
 void MOSpaceInfo::compute_space_info() {
     outfile->Printf("\n\n  ==> MO Space Information <==\n");
-
     // Handle frozen core
 
     // Count the assigned orbitals
