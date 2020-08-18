@@ -369,7 +369,8 @@ void CASSCF_ORB_GRAD::init_tensors() {
     grad_ = std::make_shared<psi::Vector>("Gradient Vector", nrot_);
     hess_diag_ = std::make_shared<psi::Vector>("Diagonal Hessian", nrot_);
 
-    // orthogonal orbital transformation
+    // orbital rotation related
+    R_ = std::make_shared<psi::Matrix>("Skew-Symmetric Orbital Rotation", nmopi_, nmopi_);
     U_ = std::make_shared<psi::Matrix>("Orthogonal Transformation", nmopi_, nmopi_);
 }
 
@@ -649,15 +650,14 @@ double CASSCF_ORB_GRAD::evaluate(psi::SharedVector x, psi::SharedVector g, bool 
 
 void CASSCF_ORB_GRAD::update_orbitals(psi::SharedVector x) {
     // compute U = exp(x)
-    U_->zero();
     for (size_t n = 0; n < nrot_; ++n) {
         int h, i, j;
         std::tie(h, i, j) = rot_mos_irrep_[n];
 
-        U_->set(h, i, j, x->get(n));
-        U_->set(h, j, i, -x->get(n));
+        R_->set(h, i, j, x->get(n));
+        R_->set(h, j, i, -x->get(n));
     }
-    U_->expm(1);
+    U_ = matrix_exponential(R_, 3);
 
     // update orbitals
     C_ = psi::linalg::doublet(C0_, U_, false, false);
@@ -668,6 +668,28 @@ void CASSCF_ORB_GRAD::update_orbitals(psi::SharedVector x) {
         U_->print();
         C_->print();
     }
+}
+
+psi::SharedMatrix CASSCF_ORB_GRAD::matrix_exponential(psi::SharedMatrix A, int n) {
+    A->print();
+    auto U = std::make_shared<psi::Matrix>("U", A->rowspi(), A->colspi());
+    U->identity();
+    U->add(A);
+
+    if (n > 1) {
+        auto M = A->clone();
+        M->set_name("M");
+
+        for (int i = 1; i < n; ++i) {
+            auto B = psi::linalg::doublet(M, A, false, false);
+            B->scale(1.0 / (i + 1));
+            U->add(B);
+            M->copy(B);
+        }
+    }
+
+    U->schmidt();
+    return U;
 }
 
 void CASSCF_ORB_GRAD::compute_reference_energy() {
@@ -982,5 +1004,15 @@ std::shared_ptr<psi::Matrix> CASSCF_ORB_GRAD::canonicalize() {
         U->print();
 
     return U;
+}
+
+psi::SharedVector CASSCF_ORB_GRAD::R_vector() {
+    auto Rv = std::make_shared<psi::Vector>("R Vector", nrot_);
+    for (size_t n = 0; n < nrot_; ++n) {
+        int h, i, j;
+        std::tie(h, i, j) = rot_mos_irrep_[n];
+        Rv->set(n, R_->get(h, i, j));
+    }
+    return Rv;
 }
 } // namespace forte

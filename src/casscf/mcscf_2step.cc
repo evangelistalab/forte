@@ -145,17 +145,21 @@ double MCSCF_2STEP::compute_energy() {
 
     // set up initial guess for rotation matrix (R = 0)
     auto R = std::make_shared<psi::Vector>("R", cas_grad.nrot());
-    auto dR = std::make_shared<psi::Vector>();
+//    auto dR = std::make_shared<psi::Vector>();
+    auto dR = std::make_shared<psi::Matrix>();
+    auto Rm = cas_grad.R();
 
     // DIIS extropolation for macro iteration
     auto diis_manager =
         std::make_shared<psi::DIISManager>(do_diis_ ? diis_max_vec_ : 0, "MCSCF DIIS",
                                            psi::DIISManager::OldestAdded, psi::DIISManager::InCore);
     if (do_diis_) {
-        dR = std::make_shared<psi::Vector>("dR", cas_grad.nrot());
+//        dR = std::make_shared<psi::Vector>("dR", cas_grad.nrot());
+        dR = Rm->clone();
+        dR->set_name("dR");
 
-        diis_manager->set_error_vector_size(1, psi::DIISEntry::Vector, dR.get());
-        diis_manager->set_vector_size(1, psi::DIISEntry::Vector, R.get());
+        diis_manager->set_error_vector_size(1, psi::DIISEntry::Matrix, dR.get());
+        diis_manager->set_vector_size(1, psi::DIISEntry::Matrix, Rm.get());
     }
 
     // set up L-BFGS solver and its parameters for micro iteration
@@ -231,21 +235,22 @@ double MCSCF_2STEP::compute_energy() {
 
         // DIIS for orbitals
         if (do_diis_) {
-            dR->subtract(R);
+            dR->subtract(Rm);
             dR->scale(-1.0);
 
             if (macro >= diis_start_) {
-                diis_manager->add_entry(2, dR.get(), R.get());
+                diis_manager->add_entry(2, dR.get(), Rm.get());
                 psi::outfile->Printf("   S");
             }
 
             if ((macro - diis_start_) % diis_freq_ == 0 and
-                diis_manager->subspace_size() > diis_min_vec_) {
-                diis_manager->extrapolate(1, R.get());
+                diis_manager->subspace_size() >= diis_min_vec_) {
+                diis_manager->extrapolate(1, Rm.get());
+                R = cas_grad.R_vector();
                 psi::outfile->Printf("/E");
             }
 
-            dR->copy(*R);
+            dR->copy(Rm);
         }
 
         // increase micro iterations if energy goes up

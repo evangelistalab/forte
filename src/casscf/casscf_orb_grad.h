@@ -81,6 +81,12 @@ class CASSCF_ORB_GRAD {
     /// Return optimized MO coefficients
     psi::SharedMatrix Ca() { return C_; }
 
+    /// Return the orbital rotation matrix
+    psi::SharedMatrix R() { return R_; }
+
+    /// Reshaped the R matrix to vector
+    psi::SharedVector R_vector();
+
     /// Return the number of nonredundant orbital rotations
     size_t nrot() { return nrot_; }
 
@@ -225,6 +231,8 @@ class CASSCF_ORB_GRAD {
     /// The orbital Lagrangian matrix
     ambit::BlockedTensor A_;
 
+    /// The orbital rotation matrix
+    psi::SharedMatrix R_;
     /// The orthogonal transformation matrix U = exp(R)
     psi::SharedMatrix U_;
 
@@ -292,6 +300,9 @@ class CASSCF_ORB_GRAD {
 
     /// Fix redundant orbitals and return the rotation matrix
     std::shared_ptr<psi::Matrix> canonicalize();
+
+    /// Compute the exponential of a skew-symmetric matrix
+    psi::SharedMatrix matrix_exponential(psi::SharedMatrix A, int n);
 };
 } // namespace forte
 
