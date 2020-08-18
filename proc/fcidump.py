@@ -32,7 +32,6 @@ from datetime import datetime
 import numpy as np
 
 from psi4.driver import psifiles as psif
-from psi4.driver.p4util.testing import compare_integers, compare_values, compare_recursive
 from psi4.driver.procrouting.proc_util import check_iwl_file_from_scf_type
 
 from psi4 import core
@@ -363,99 +362,3 @@ def fcidump_from_file(fname, convert_to_psi4=False):
     intdump['eri'] = eri
 
     return intdump
-
-
-def compare_fcidumps(expected, computed, label):
-    """Function to compare two FCIDUMP files. Prints :py:func:`util.success`
-    when value *computed* matches value *expected*.
-    Performs a system exit on failure. Used in input files in the test suite.
-
-    :returns: a dictionary of energies computed from the MO integrals.
-    The key-value pairs are:
-      - 'NUCLEAR REPULSION ENERGY' : nuclear repulsion plus frozen core energy
-      - 'ONE-ELECTRON ENERGY' : SCF one-electron energy
-      - 'TWO-ELECTRON ENERGY' : SCF two-electron energy
-      - 'SCF TOTAL ENERGY' : SCF total energy
-      - 'MP2 CORRELATION ENERGY' : MP2 correlation energy
-
-    :param expected: reference FCIDUMP file
-    :param computed: computed FCIDUMP file
-    :param label: string labelling the test
-    """
-
-    # Grab expected header and integrals
-    ref_intdump = fcidump_from_file(expected)
-    intdump = fcidump_from_file(computed)
-
-    # Compare headers
-    compare_recursive(
-        ref_intdump,
-        intdump,
-        'FCIDUMP header',
-        forgive=['enuc', 'hcore', 'eri', 'epsilon'])
-
-    ref_energies = energies_from_fcidump(ref_intdump)
-    energies = energies_from_fcidump(intdump)
-
-    pass_1el = compare_values(ref_energies['ONE-ELECTRON ENERGY'], energies['ONE-ELECTRON ENERGY'], 7,
-                              label + '. 1-electron energy')
-    pass_2el = compare_values(ref_energies['TWO-ELECTRON ENERGY'], energies['TWO-ELECTRON ENERGY'], 7,
-                              label + '. 2-electron energy')
-    pass_scf = compare_values(ref_energies['SCF TOTAL ENERGY'], energies['SCF TOTAL ENERGY'], 10,
-                              label + '. SCF total energy')
-    pass_mp2 = compare_values(ref_energies['MP2 CORRELATION ENERGY'], energies['MP2 CORRELATION ENERGY'], 10,
-                              label + '. MP2 correlation energy')
-
-    compare_integers(True, (pass_1el and pass_2el and pass_scf and pass_mp2), label)
-
-
-def energies_from_fcidump(intdump):
-    energies = {}
-    energies['NUCLEAR REPULSION ENERGY'] = intdump['enuc']
-    epsilon = intdump['epsilon']
-    Hcore = intdump['hcore']
-    eri = intdump['eri']
-
-    # Compute SCF energy
-    energies['ONE-ELECTRON ENERGY'], energies['TWO-ELECTRON ENERGY'] = _scf_energy(Hcore, eri,
-                                                                                   np.where(epsilon < 0)[0],
-                                                                                   intdump['uhf'])
-    # yapf: disable
-    energies['SCF TOTAL ENERGY'] = energies['ONE-ELECTRON ENERGY'] + energies['TWO-ELECTRON ENERGY'] + energies['NUCLEAR REPULSION ENERGY']
-    # yapf: enable
-
-    # Compute MP2 energy
-    energies['MP2 CORRELATION ENERGY'] = _mp2_energy(eri, epsilon, intdump['uhf'])
-
-    return energies
-
-
-def _scf_energy(Hcore, ERI, occ_sl, unrestricted):
-    scf_1el_e = np.einsum('ii->', Hcore[np.ix_(occ_sl, occ_sl)])
-    if not unrestricted:
-        scf_1el_e *= 2
-    coulomb = np.einsum('iijj->', ERI[np.ix_(occ_sl, occ_sl, occ_sl, occ_sl)])
-    exchange = np.einsum('ijij->', ERI[np.ix_(occ_sl, occ_sl, occ_sl, occ_sl)])
-    if unrestricted:
-        scf_2el_e = 0.5 * (coulomb - exchange)
-    else:
-        scf_2el_e = 2.0 * coulomb - exchange
-
-    return scf_1el_e, scf_2el_e
-
-
-def _mp2_energy(ERI, epsilon, unrestricted):
-    # Occupied and virtual slices
-    occ_sl = np.where(epsilon < 0)[0]
-    vir_sl = np.where(epsilon > 0)[0]
-    eocc = epsilon[occ_sl]
-    evir = epsilon[vir_sl]
-    denom = 1 / (eocc.reshape(-1, 1, 1, 1) - evir.reshape(-1, 1, 1) + eocc.reshape(-1, 1) - evir)
-    MO = ERI[np.ix_(occ_sl, vir_sl, occ_sl, vir_sl)]
-    if unrestricted:
-        mp2_e = 0.5 * np.einsum("abrs,abrs,abrs->", MO, MO - MO.swapaxes(1, 3), denom)
-    else:
-        mp2_e = np.einsum('iajb,iajb,iajb->', MO, MO, denom) + np.einsum('iajb,iajb,iajb->', MO - MO.swapaxes(1, 3),
-                                                                         MO, denom)
-    return mp2_e
-

@@ -114,6 +114,7 @@ void ActiveSpaceSolver::print_energies(std::map<StateInfo, std::vector<double>>&
         for (int i = 0; i < nstates; ++i) {
             auto label = "ENERGY ROOT " + std::to_string(i) + " " + std::to_string(multi) +
                          irrep_symbol[irrep];
+
             double energy = energies[state][i];
             psi::outfile->Printf("\n     %3d  (%3d)   %3s    %2d  %20.12f", multi, twice_ms,
                                  irrep_symbol[irrep].c_str(), i, energy);
@@ -207,7 +208,6 @@ make_state_weights_map(std::shared_ptr<ForteOptions> options,
     if (avg_state.size() == 0) {
         int nroot = options->get_int("NROOT");
         int root = options->get_int("ROOT");
-
         std::vector<double> weights(nroot, 0.0);
         weights[root] = 1.0;
         state_weights_map[state] = weights;
