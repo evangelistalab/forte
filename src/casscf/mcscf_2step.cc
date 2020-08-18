@@ -75,6 +75,9 @@ void MCSCF_2STEP::read_options() {
 
     maxiter_ = options_->get_int("CASSCF_MAXITER");
     micro_maxiter_ = options_->get_int("CASSCF_MICRO_MAXITER");
+    micro_miniter_ = options_->get_int("CASSCF_MICRO_MINITER");
+    if (micro_maxiter_ < micro_miniter_)
+        micro_miniter_ = micro_maxiter_;
 
     e_conv_ = options_->get_double("CASSCF_E_CONVERGENCE");
     g_conv_ = options_->get_double("CASSCF_G_CONVERGENCE");
@@ -99,7 +102,8 @@ void MCSCF_2STEP::print_options() {
     std::vector<std::pair<std::string, int>> info_int{
         {"Printing level", print_},
         {"Max number of macro iterations", maxiter_},
-        {"Max number of micro iterations", micro_maxiter_}};
+        {"Max number of micro iterations", micro_maxiter_},
+        {"Min number of micro iterations", micro_miniter_}};
 
     std::vector<std::pair<std::string, double>> info_double{{"Energy convergence", e_conv_},
                                                             {"Gradient convergence", g_conv_},
@@ -157,9 +161,7 @@ double MCSCF_2STEP::compute_energy() {
     // set up L-BFGS solver and its parameters for micro iteration
     auto lbfgs_param = std::make_shared<LBFGS_PARAM>();
     lbfgs_param->epsilon = g_conv_;
-    int micro_maxiter_0 = micro_maxiter_ > 5 ? 6 : micro_maxiter_;
-    lbfgs_param->maxiter = micro_maxiter_0;
-    lbfgs_param->m = micro_maxiter_0;
+    lbfgs_param->maxiter = micro_miniter_;
     lbfgs_param->print = debug_print_ ? 5 : print_;
     lbfgs_param->max_dir = max_rot_;
     lbfgs_param->step_length_method = LBFGS_PARAM::STEP_LENGTH_METHOD::MAX_CORRECTION;
@@ -212,8 +214,8 @@ double MCSCF_2STEP::compute_energy() {
         if (do_diis_)
             title += "  DIIS";
         psi::outfile->Printf("\n    %s", title.c_str());
-        psi::outfile->Printf("\n    %18.12f (%11.4e)  %18.12f (%11.4e)  %12.4e  %12.4e %4d/%c",
-                             e_c, de_c, e_o, de_o, de, g_rms, n_micro, o_conv);
+        psi::outfile->Printf("\n    %18.12f (%11.4e)  %18.12f (%11.4e)  %12.4e  %12.4e %4d/%c", e_c,
+                             de_c, e_o, de_o, de, g_rms, n_micro, o_conv);
 
         // test convergence
         bool is_e_conv =
@@ -247,25 +249,27 @@ double MCSCF_2STEP::compute_energy() {
         }
 
         // increase micro iterations if energy goes up
-        if (macro > 4) {
-            int inc = 0;
-            int& nit = lbfgs_param->maxiter;
+        int inc = 0;
+        int& nit = lbfgs_param->maxiter;
 
-            if (de > 0.0 and nit <= micro_maxiter_ - 2)
-                inc = 2;
+        if (de > 0.0 and nit <= micro_maxiter_ - 2)
+            inc = 2;
 
+        if (macro >= 4) {
             double de_o1 = history[macro - 2].e_o - history[macro - 3].e_o;
             double de_o2 = history[macro - 3].e_o - history[macro - 4].e_o;
             if (de_o > 0.0 and de_o1 > 0.0 and de_o2 > 0.0 and nit <= micro_maxiter_ - 5)
                 inc = 5;
 
-            if (de < 0.0 and de_o < 0.0 and de_o1 < 0.0 and nit > micro_maxiter_0)
+            if (de < 0.0 and de_o < 0.0 and de_o1 < 0.0 and nit > micro_miniter_ + 2)
                 inc -= 1;
+        }
 
-            if (inc > 0)
-                diis_manager->reset_subspace();
+        nit += inc;
 
-            nit += inc;
+        if (de > 0.0 and (de_c > 0.0 or de_o > 0.0)) {
+            psi::outfile->Printf("\n    Resetting DIIS due to suspicious orbital update.");
+            diis_manager->reset_subspace();
         }
     }
 

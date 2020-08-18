@@ -97,16 +97,18 @@ template <class Foo> double LBFGS::minimize(Foo& func, psi::SharedVector x) {
         double step = 1.0;
         next_step(func, x, fx, step);
 
+        // print current iteration
+        g_norm = g_->norm();
         if (param_->print > 0)
             outfile->Printf("\n  Iter: %3d; step = %15.10f; fx = %20.15f; g_norm = %20.15f",
-                            iter_ + 1, step, fx, g_->norm());
+                            iter_ + 1, step, fx, g_norm);
 
+        // skip the rest if terminate
         if (++iter_ == param_->maxiter)
             break;
 
         // test convergence
         x_norm = x->norm();
-        g_norm = g_->norm();
         if (g_norm <= param_->epsilon * std::max(1.0, x_norm)) {
             converged_ = true;
             break;
@@ -191,7 +193,7 @@ void LBFGS::scale_direction_vector(Foo& func, psi::SharedVector x, double& fx, d
     double p_max = 0.0;
     for (int h = 0; h < nirrep_; ++h) {
         for (int i = 0; i < dimpi_[h]; ++i) {
-            double v = std::fabs(x->get(h, i));
+            double v = std::fabs(p_->get(h, i));
             if (v > p_max)
                 p_max = v;
         }

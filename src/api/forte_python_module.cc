@@ -107,9 +107,9 @@ void export_CASSCF(py::module& m) {
         .def("compute_gradient", &CASSCF::compute_gradient, "Compute the CASSCF gradient");
 }
 
-void export_CASSCF_NEW(py::module& m) {
-    py::class_<MCSCF_2STEP>(m, "CASSCF_NEW")
-        .def("compute_energy", &MCSCF_2STEP::compute_energy, "Compute the CASSCF energy");
+void export_MCSCF_2STEP(py::module& m) {
+    py::class_<MCSCF_2STEP>(m, "MCSCF_2STEP")
+        .def("compute_energy", &MCSCF_2STEP::compute_energy, "Compute the MCSCF energy");
 }
 
 /// Export the Determinant class
@@ -205,7 +205,7 @@ PYBIND11_MODULE(forte, m) {
     m.def("make_dsrg_spin_adapted", &make_dsrg_spin_adapted,
           "Make a DSRG pointer (spin-adapted implementation)");
     m.def("make_casscf", &make_casscf, "Make a CASSCF object");
-    m.def("make_mcscf_two_step", &make_mcscf_two_step, "Make a CASSCF object");
+    m.def("make_mcscf_two_step", &make_mcscf_two_step, "Make a 2-step MCSCF object");
     m.def("test_lbfgs_rosenbrock", &test_lbfgs_rosenbrock, "Test L-BFGS on Rosenbrock function");
 
     export_ambit(m);
@@ -216,7 +216,7 @@ PYBIND11_MODULE(forte, m) {
     export_ActiveSpaceSolver(m);
 
     export_CASSCF(m);
-    export_CASSCF_NEW(m);
+    export_MCSCF_2STEP(m);
     export_ForteIntegrals(m);
 
     export_OrbitalTransform(m);

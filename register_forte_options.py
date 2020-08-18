@@ -815,6 +815,8 @@ def register_casscf_options(options):
 
     options.add_int("CASSCF_MICRO_MAXITER", 25, "The maximum number of CASSCF micro iterations")
 
+    options.add_int("CASSCF_MICRO_MINITER", 6, "The minimum number of CASSCF micro iterations")
+
     options.add_double("CASSCF_E_CONVERGENCE", 1e-8, "The energy convergence criterion (two consecutive energies)")
 
     options.add_double("CASSCF_G_CONVERGENCE", 5e-6,

@@ -58,7 +58,7 @@ class MCSCF_2STEP {
                 std::shared_ptr<ForteOptions> options, std::shared_ptr<MOSpaceInfo> mo_space_info,
                 std::shared_ptr<forte::SCFInfo> scf_info, std::shared_ptr<ForteIntegrals> ints);
 
-    /// Compute the CASSCF_NEW energy
+    /// Compute the MCSCF energy
     double compute_energy();
 
   private:
@@ -100,6 +100,8 @@ class MCSCF_2STEP {
     int maxiter_;
     /// Max number of micro iterations
     int micro_maxiter_;
+    /// Min number of micro iterations
+    int micro_miniter_;
 
     /// Max allowed value for orbital rotation
     double max_rot_;
