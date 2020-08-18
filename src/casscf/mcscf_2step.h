@@ -101,14 +101,6 @@ class MCSCF_2STEP {
     /// Max number of micro iterations
     int micro_maxiter_;
 
-    /// Energy convergence criteria
-    double e_conv_;
-    /// Orbital gradient convergence criteria
-    double g_conv_;
-
-    /// The name of CI solver
-    std::string ci_type_;
-
     /// Max allowed value for orbital rotation
     double max_rot_;
 
@@ -117,6 +109,25 @@ class MCSCF_2STEP {
 
     /// Orbital type for redundant pairs
     std::string orb_type_redundant_;
+
+    /// Do DIIS extrapolation for orbitals and CI coefficients
+    bool do_diis_;
+    /// Iteration number to start adding error vectors
+    int diis_start_;
+    /// Min number of vectors in DIIS
+    int diis_min_vec_;
+    /// Max number of vectors in DIIS
+    int diis_max_vec_;
+    /// DIIS extrapolation frequency
+    int diis_freq_;
+
+    /// Energy convergence criteria
+    double e_conv_;
+    /// Orbital gradient convergence criteria
+    double g_conv_;
+
+    /// The name of CI solver
+    std::string ci_type_;
 
     /// Final total energy
     double energy_;

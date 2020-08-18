@@ -42,7 +42,7 @@ ROSENBROCK::ROSENBROCK(int n) : n_(n) {
     }
 }
 
-double ROSENBROCK::evaluate(psi::SharedVector x, psi::SharedVector g) {
+double ROSENBROCK::evaluate(psi::SharedVector x, psi::SharedVector g, bool) {
     check_dim(x);
     check_dim(g);
 
@@ -86,11 +86,11 @@ void ROSENBROCK::check_dim(psi::SharedVector x) {
 
 double test_lbfgs_rosenbrock(int n, int h0_freq) {
     // L-BFGS parameters
-    LBFGS_PARAM param;
-    param.epsilon = 1.0e-6;
-    param.maxiter = 100;
-    param.h0_freq = h0_freq;
-    param.print = 2;
+    auto param = std::make_shared<LBFGS_PARAM>();
+    param->epsilon = 1.0e-6;
+    param->maxiter = 100;
+    param->h0_freq = h0_freq;
+    param->print = 2;
 
     // L-BFGS solver
     LBFGS lbfgs_solver(param);

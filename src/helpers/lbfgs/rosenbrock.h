@@ -46,7 +46,7 @@ class ROSENBROCK {
     ROSENBROCK(int n);
 
     /// Compute the function value and gradients
-    double evaluate(psi::SharedVector x, psi::SharedVector g);
+    double evaluate(psi::SharedVector x, psi::SharedVector g, bool do_g = true);
 
     /// Compute the diagonal Hessian
     void hess_diag(psi::SharedVector x, psi::SharedVector h0);

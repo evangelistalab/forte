@@ -31,6 +31,8 @@
 #include "psi4/libqt/qt.h"
 #include "psi4/libmints/vector.h"
 #include "psi4/libmints/wavefunction.h"
+#include "psi4/libdiis/diisentry.h"
+#include "psi4/libdiis/diismanager.h"
 
 #include "base_classes/rdms.h"
 #include "integrals/integrals.h"
@@ -83,6 +85,13 @@ void MCSCF_2STEP::read_options() {
 
     max_rot_ = options_->get_double("CASSCF_MAX_ROTATION");
     internal_rot_ = options_->get_bool("CASSCF_INTERNAL_ROT");
+
+    // DIIS options
+    diis_freq_ = options_->get_int("CASSCF_DIIS_FREQ");
+    diis_start_ = options_->get_int("CASSCF_DIIS_START");
+    diis_max_vec_ = options_->get_int("CASSCF_DIIS_MAX_VEC");
+    diis_min_vec_ = options_->get_int("CASSCF_DIIS_MIN_VEC");
+    do_diis_ = (diis_start_ < 1) ? false : true;
 }
 
 void MCSCF_2STEP::print_options() {
@@ -104,6 +113,13 @@ void MCSCF_2STEP::print_options() {
     std::vector<std::pair<std::string, bool>> info_bool{
         {"Include internal rotations", internal_rot_}, {"Debug printing", debug_print_}};
 
+    if (do_diis_) {
+        info_int.push_back({"DIIS start", diis_start_});
+        info_int.push_back({"Min DIIS vectors", diis_min_vec_});
+        info_int.push_back({"Max DIIS vectors", diis_max_vec_});
+        info_int.push_back({"Frequency of DIIS extrapolation", diis_freq_});
+    }
+
     // print some information
     print_selected_options("Calculation Information", info_string, info_bool, info_double,
                            info_int);
@@ -121,17 +137,32 @@ double MCSCF_2STEP::compute_energy() {
 
     // prepare for orbital gradients
     CASSCF_ORB_GRAD cas_grad(options_, mo_space_info_, ints_);
+    auto dG = std::make_shared<psi::Vector>("dG", cas_grad.nrot());
 
     // set up initial guess for rotation matrix (R = 0)
     auto R = std::make_shared<psi::Vector>("R", cas_grad.nrot());
+    auto dR = std::make_shared<psi::Vector>();
 
-    // set up L-BFGS solver and its parameters
-    LBFGS_PARAM lbfgs_param;
-    lbfgs_param.epsilon = g_conv_;
-    lbfgs_param.maxiter = micro_maxiter_;
-    lbfgs_param.print = debug_print_ ? 3 : print_;
-    lbfgs_param.max_dir = max_rot_;
-    lbfgs_param.step_length_method = LBFGS_PARAM::STEP_LENGTH_METHOD::MAX_CORRECTION;
+    // DIIS extropolation for macro iteration
+    auto diis_manager =
+        std::make_shared<psi::DIISManager>(do_diis_ ? diis_max_vec_ : 0, "MCSCF DIIS",
+                                           psi::DIISManager::OldestAdded, psi::DIISManager::InCore);
+    if (do_diis_) {
+        dR = std::make_shared<psi::Vector>("dR", cas_grad.nrot());
+
+        diis_manager->set_error_vector_size(1, psi::DIISEntry::Vector, dR.get());
+        diis_manager->set_vector_size(1, psi::DIISEntry::Vector, R.get());
+    }
+
+    // set up L-BFGS solver and its parameters for micro iteration
+    auto lbfgs_param = std::make_shared<LBFGS_PARAM>();
+    lbfgs_param->epsilon = g_conv_;
+    int micro_maxiter_0 = micro_maxiter_ > 5 ? 6 : micro_maxiter_;
+    lbfgs_param->maxiter = micro_maxiter_0;
+    lbfgs_param->m = micro_maxiter_0;
+    lbfgs_param->print = debug_print_ ? 5 : print_;
+    lbfgs_param->max_dir = max_rot_;
+    lbfgs_param->step_length_method = LBFGS_PARAM::STEP_LENGTH_METHOD::MAX_CORRECTION;
 
     LBFGS lbfgs(lbfgs_param);
 
@@ -139,6 +170,7 @@ double MCSCF_2STEP::compute_energy() {
     bool converged = false;
     bool sr = mo_space_info_->size("ACTIVE") == 0;
     double e_c;
+
     for (int macro = 1; macro <= maxiter_; ++macro) {
         // solve CI problem
         RDMs rdms;
@@ -153,7 +185,10 @@ double MCSCF_2STEP::compute_energy() {
         double e_o = lbfgs.minimize(cas_grad, R);
 
         // info for orbital optimization
-        double g_rms = lbfgs.g_rms();
+        dG->subtract(lbfgs.g());
+        double g_rms = dG->rms();
+        dG->copy(*lbfgs.g());
+
         int n_micro = lbfgs.iter();
         char o_conv = lbfgs.converged() ? 'Y' : 'N';
 
@@ -168,22 +203,69 @@ double MCSCF_2STEP::compute_energy() {
         double de_c = (macro > 1) ? e_c - history[macro - 2].e_c : e_c;
         double de_o = (macro > 1) ? e_o - history[macro - 2].e_o : e_o;
 
-        // print data of this iteration
-        print_h2("MCSCF Macro Iter. " + std::to_string(macro));
-        psi::outfile->Printf("\n             Energy CI (  Delta E  )         Energy Opt. (  Delta "
-                             "E  )  E_OPT - E_CI   Orbital RMS  Micro  Conv?");
-        psi::outfile->Printf("\n    %18.12f (%11.4e)  %18.12f (%11.4e)  %12.4e  %12.4e  %5d    %c",
-                             e_c, de_c, e_o, de_o, de, g_rms, n_micro, o_conv);
-
         history.push_back(hist);
 
-        if (std::fabs(de) < e_conv_ and std::fabs(de_c) < e_conv_ and std::fabs(de_o) < e_conv_ and
-            hist.g_rms < g_conv_) {
-            psi::outfile->Printf(
-                "\n    A miracle has come to pass: MCSCF iterations have converged!");
+        // print data of this iteration
+        print_h2("MCSCF Macro Iter. " + std::to_string(macro));
+        std::string title = "         Energy CI (  Delta E  )         Energy Opt. (  Delta E  )  "
+                            "E_OPT - E_CI   Orbital RMS  Micro";
+        if (do_diis_)
+            title += "  DIIS";
+        psi::outfile->Printf("\n    %s", title.c_str());
+        psi::outfile->Printf("\n    %18.12f (%11.4e)  %18.12f (%11.4e)  %12.4e  %12.4e %4d/%c",
+                             e_c, de_c, e_o, de_o, de, g_rms, n_micro, o_conv);
+
+        // test convergence
+        bool is_e_conv =
+            std::fabs(de) < e_conv_ and std::fabs(de_c) < e_conv_ and std::fabs(de_o) < e_conv_;
+        bool is_g_conv = g_rms < g_conv_ or lbfgs.converged();
+        if (is_e_conv and is_g_conv) {
+            std::string msg = "A miracle has come to pass: MCSCF iterations have converged!";
+            psi::outfile->Printf("\n\n  %s", msg.c_str());
             energy_ = e_o;
             converged = true;
             break;
+        }
+
+        // DIIS for orbitals
+        if (do_diis_) {
+            dR->subtract(R);
+            dR->scale(-1.0);
+
+            if (macro >= diis_start_) {
+                diis_manager->add_entry(2, dR.get(), R.get());
+                psi::outfile->Printf("   S");
+            }
+
+            if ((macro - diis_start_) % diis_freq_ == 0 and
+                diis_manager->subspace_size() > diis_min_vec_) {
+                diis_manager->extrapolate(1, R.get());
+                psi::outfile->Printf("/E");
+            }
+
+            dR->copy(*R);
+        }
+
+        // increase micro iterations if energy goes up
+        if (macro > 4) {
+            int inc = 0;
+            int& nit = lbfgs_param->maxiter;
+
+            if (de > 0.0 and nit <= micro_maxiter_ - 2)
+                inc = 2;
+
+            double de_o1 = history[macro - 2].e_o - history[macro - 3].e_o;
+            double de_o2 = history[macro - 3].e_o - history[macro - 4].e_o;
+            if (de_o > 0.0 and de_o1 > 0.0 and de_o2 > 0.0 and nit <= micro_maxiter_ - 5)
+                inc = 5;
+
+            if (de < 0.0 and de_o < 0.0 and de_o1 < 0.0 and nit > micro_maxiter_0)
+                inc -= 1;
+
+            if (inc > 0)
+                diis_manager->reset_subspace();
+
+            nit += inc;
         }
     }
 

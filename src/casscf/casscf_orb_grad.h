@@ -64,7 +64,7 @@ class CASSCF_ORB_GRAD {
                     std::shared_ptr<ForteIntegrals> ints);
 
     /// Evaluate the energy and orbital gradient
-    double evaluate(psi::SharedVector x, psi::SharedVector g);
+    double evaluate(psi::SharedVector x, psi::SharedVector g, bool do_g = true);
 
     /// Evaluate the diagonal orbital Hessian
     void hess_diag(psi::SharedVector x, psi::SharedVector h0);
@@ -275,6 +275,9 @@ class CASSCF_ORB_GRAD {
     void compute_orbital_grad();
     /// Compute the diagonal Hessian for orbital rotations
     void compute_orbital_hess_diag();
+
+    /// Update orbitals using the given rotation matrix in vector form
+    void update_orbitals(psi::SharedVector x);
 
     // => Some helper functions <=
 

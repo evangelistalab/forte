@@ -49,13 +49,13 @@ class LBFGS {
      *   See Wikipedia https://en.wikipedia.org/wiki/Limited-memory_BFGS
      *   and <Numerical Optimization> 2nd Ed. by Jorge Nocedal and Stephen J. Wright
      */
-    LBFGS(const LBFGS_PARAM& param);
+    LBFGS(std::shared_ptr<LBFGS_PARAM> param);
 
     /**
      * @brief The minimization for the target function
      * @param foo: Target class that should have the following methods:
-     *             fx = foo.evaluate(x, g) where gradient g is modified by the function,
-     *             and fx is the function return value.
+     *             fx = foo.evaluate(x, g, do_g=true) where gradient g is modified by the function,
+     *             fx is the function return value, and g is computed when do_g is true.
      *             If diagonal Hessian is specified, foo.hess_diag(x, h0) should be available.
      * @param x: The initial value of x as input, the final value of x as output.
      *
@@ -66,8 +66,8 @@ class LBFGS {
     /// Reset the L-BFGS space
     void reset();
 
-    /// Return the RMS of final gradient
-    double g_rms() { return g_->rms(); }
+    /// Return the current / final gradient vector
+    psi::SharedVector g() { return g_; }
 
     /// Return the final number of iterations
     int iter() { return iter_; }
@@ -86,7 +86,7 @@ class LBFGS {
     int iter_;
 
     /// Parameters of L-BFGS
-    LBFGS_PARAM param_;
+    std::shared_ptr<LBFGS_PARAM> param_;
 
     /// Minimization procedure converged or not
     bool converged_;

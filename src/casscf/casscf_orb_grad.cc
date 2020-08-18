@@ -625,7 +625,29 @@ void CASSCF_ORB_GRAD::format_fock(psi::SharedMatrix Fock, ambit::BlockedTensor F
     });
 }
 
-double CASSCF_ORB_GRAD::evaluate(psi::SharedVector x, psi::SharedVector g) {
+double CASSCF_ORB_GRAD::evaluate(psi::SharedVector x, psi::SharedVector g, bool do_g) {
+    // update orbitals
+    update_orbitals(x);
+
+    // compute integrals
+    build_mo_integrals();
+
+    // compute energy
+    compute_reference_energy();
+
+    if (do_g) {
+        // compute averaged Fock matrix
+        build_fock();
+
+        // compute orbital gradient
+        compute_orbital_grad();
+        g->copy(*grad_);
+    }
+
+    return energy_;
+}
+
+void CASSCF_ORB_GRAD::update_orbitals(psi::SharedVector x) {
     // compute U = exp(x)
     U_->zero();
     for (size_t n = 0; n < nrot_; ++n) {
@@ -635,26 +657,17 @@ double CASSCF_ORB_GRAD::evaluate(psi::SharedVector x, psi::SharedVector g) {
         U_->set(h, i, j, x->get(n));
         U_->set(h, j, i, -x->get(n));
     }
-    U_->expm(3);
+    U_->expm(1);
 
     // update orbitals
     C_ = psi::linalg::doublet(C0_, U_, false, false);
     C_->set_name(C0_->name());
 
-    // compute integrals
-    build_mo_integrals();
-
-    // compute energy
-    compute_reference_energy();
-
-    // compute averaged Fock matrix
-    build_fock();
-
-    // compute orbital gradient
-    compute_orbital_grad();
-    g->copy(*grad_);
-
-    return energy_;
+    // printing
+    if (debug_print_) {
+        U_->print();
+        C_->print();
+    }
 }
 
 void CASSCF_ORB_GRAD::compute_reference_energy() {
