@@ -665,13 +665,13 @@ void CASSCF_ORB_GRAD::update_orbitals(psi::SharedVector x) {
 
     // printing
     if (debug_print_) {
+        R_->print();
         U_->print();
         C_->print();
     }
 }
 
 psi::SharedMatrix CASSCF_ORB_GRAD::matrix_exponential(psi::SharedMatrix A, int n) {
-    A->print();
     auto U = std::make_shared<psi::Matrix>("U", A->rowspi(), A->colspi());
     U->identity();
     U->add(A);
