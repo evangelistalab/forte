@@ -326,6 +326,7 @@ void CASSCF_ORB_GRAD::setup_ambit() {
 void CASSCF_ORB_GRAD::init_tensors() {
     // save a copy of initial MO
     C0_ = ints_->wfn()->Ca()->clone();
+    C0_->set_name("MCSCF Orbital Coefficients");
     C_ = C0_->clone();
 
     // save a copy of AO OEI
@@ -372,6 +373,7 @@ void CASSCF_ORB_GRAD::init_tensors() {
     // orbital rotation related
     R_ = std::make_shared<psi::Matrix>("Skew-Symmetric Orbital Rotation", nmopi_, nmopi_);
     U_ = std::make_shared<psi::Matrix>("Orthogonal Transformation", nmopi_, nmopi_);
+    U_->identity();
 }
 
 void CASSCF_ORB_GRAD::build_mo_integrals() {
@@ -627,20 +629,15 @@ void CASSCF_ORB_GRAD::format_fock(psi::SharedMatrix Fock, ambit::BlockedTensor F
 }
 
 double CASSCF_ORB_GRAD::evaluate(psi::SharedVector x, psi::SharedVector g, bool do_g) {
-    // update orbitals
-    update_orbitals(x);
+    // if need to update orbitals and integrals
+    if (update_orbitals(x)) {
+        build_mo_integrals();
+        compute_reference_energy();
+    }
 
-    // compute integrals
-    build_mo_integrals();
-
-    // compute energy
-    compute_reference_energy();
-
+    // if need to compute gradient
     if (do_g) {
-        // compute averaged Fock matrix
         build_fock();
-
-        // compute orbital gradient
         compute_orbital_grad();
         g->copy(*grad_);
     }
@@ -648,16 +645,29 @@ double CASSCF_ORB_GRAD::evaluate(psi::SharedVector x, psi::SharedVector g, bool 
     return energy_;
 }
 
-void CASSCF_ORB_GRAD::update_orbitals(psi::SharedVector x) {
-    // compute U = exp(x)
+bool CASSCF_ORB_GRAD::update_orbitals(psi::SharedVector x) {
+    // test if need to update orbitals
+    auto dR = std::make_shared<psi::Matrix>("Delta Orbital Rotation", nmopi_, nmopi_);
+
     for (size_t n = 0; n < nrot_; ++n) {
         int h, i, j;
         std::tie(h, i, j) = rot_mos_irrep_[n];
 
-        R_->set(h, i, j, x->get(n));
-        R_->set(h, j, i, -x->get(n));
+        dR->set(h, i, j, x->get(n));
+        dR->set(h, j, i, -x->get(n));
     }
-    U_ = matrix_exponential(R_, 3);
+
+    dR->subtract(R_);
+
+    // incoming x consistent with R_, no need to update orbitals
+    if (dR->absmax() < 1.0e-13)
+        return false;
+
+    // officially save progress of dR
+    R_->add(dR);
+
+    // U_new = U_old * exp(dR)
+    U_ = psi::linalg::doublet(U_, matrix_exponential(dR, 3), false, false);
 
     // update orbitals
     C_ = psi::linalg::doublet(C0_, U_, false, false);
@@ -665,10 +675,13 @@ void CASSCF_ORB_GRAD::update_orbitals(psi::SharedVector x) {
 
     // printing
     if (debug_print_) {
+        dR->print();
         R_->print();
         U_->print();
         C_->print();
     }
+
+    return true;
 }
 
 psi::SharedMatrix CASSCF_ORB_GRAD::matrix_exponential(psi::SharedMatrix A, int n) {
@@ -1004,15 +1017,5 @@ std::shared_ptr<psi::Matrix> CASSCF_ORB_GRAD::canonicalize() {
         U->print();
 
     return U;
-}
-
-psi::SharedVector CASSCF_ORB_GRAD::R_vector() {
-    auto Rv = std::make_shared<psi::Vector>("R Vector", nrot_);
-    for (size_t n = 0; n < nrot_; ++n) {
-        int h, i, j;
-        std::tie(h, i, j) = rot_mos_irrep_[n];
-        Rv->set(n, R_->get(h, i, j));
-    }
-    return Rv;
 }
 } // namespace forte

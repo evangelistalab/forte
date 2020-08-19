@@ -81,11 +81,8 @@ class CASSCF_ORB_GRAD {
     /// Return optimized MO coefficients
     psi::SharedMatrix Ca() { return C_; }
 
-    /// Return the orbital rotation matrix
-    psi::SharedMatrix R() { return R_; }
-
-    /// Reshaped the R matrix to vector
-    psi::SharedVector R_vector();
+    /// Return the orbital Lagrangian matrix
+    psi::SharedMatrix Lagrangian();
 
     /// Return the number of nonredundant orbital rotations
     size_t nrot() { return nrot_; }
@@ -285,7 +282,7 @@ class CASSCF_ORB_GRAD {
     void compute_orbital_hess_diag();
 
     /// Update orbitals using the given rotation matrix in vector form
-    void update_orbitals(psi::SharedVector x);
+    bool update_orbitals(psi::SharedVector x);
 
     // => Some helper functions <=
 

@@ -811,11 +811,11 @@ def register_localize_options(options):
 def register_casscf_options(options):
     options.set_group("CASSCF")
 
-    options.add_int("CASSCF_MAXITER", 50, "The maximum number of CASSCF macro iterations")
+    options.add_int("CASSCF_MAXITER", 100, "The maximum number of CASSCF macro iterations")
 
-    options.add_int("CASSCF_MICRO_MAXITER", 25, "The maximum number of CASSCF micro iterations")
+    options.add_int("CASSCF_MICRO_MAXITER", 50, "The maximum number of CASSCF micro iterations")
 
-    options.add_int("CASSCF_MICRO_MINITER", 6, "The minimum number of CASSCF micro iterations")
+    options.add_int("CASSCF_MICRO_MINITER", 15, "The minimum number of CASSCF micro iterations")
 
     options.add_double("CASSCF_E_CONVERGENCE", 1e-8, "The energy convergence criterion (two consecutive energies)")
 

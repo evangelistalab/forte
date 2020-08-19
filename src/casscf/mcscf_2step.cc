@@ -160,7 +160,6 @@ double MCSCF_2STEP::compute_energy() {
 
     // set up L-BFGS solver and its parameters for micro iteration
     auto lbfgs_param = std::make_shared<LBFGS_PARAM>();
-    lbfgs_param->epsilon = g_conv_;
     lbfgs_param->maxiter = micro_miniter_;
     lbfgs_param->print = debug_print_ ? 5 : print_;
     lbfgs_param->max_dir = max_rot_;
@@ -181,9 +180,15 @@ double MCSCF_2STEP::compute_energy() {
             auto as_solver = diagonalize_hamiltonian(fci_ints, debug_print_ ? print_ : 0, e_c);
             rdms = as_solver->compute_average_rdms(state_weights_map_, 2);
         }
+        double de_c = (macro > 1) ? e_c - history[macro - 2].e_c : e_c;
 
         // optimize orbitals
         cas_grad.set_rdms(rdms);
+        if (macro > 1) {
+            double epsilon = std::fabs(de_c) * 0.1;
+            epsilon = epsilon > 1.0e-4 ? 1.0e-4 : epsilon;
+            lbfgs_param->epsilon = epsilon < g_conv_ ? g_conv_ : epsilon;
+        }
         double e_o = lbfgs.minimize(cas_grad, R);
 
         // info for orbital optimization
@@ -202,7 +207,6 @@ double MCSCF_2STEP::compute_energy() {
         hist.n_micro = n_micro;
 
         double de = e_o - e_c;
-        double de_c = (macro > 1) ? e_c - history[macro - 2].e_c : e_c;
         double de_o = (macro > 1) ? e_o - history[macro - 2].e_o : e_o;
 
         history.push_back(hist);
@@ -231,16 +235,24 @@ double MCSCF_2STEP::compute_energy() {
 
         // DIIS for orbitals
         if (do_diis_) {
-            dR->subtract(R);
-            dR->scale(-1.0);
-
             if (macro >= diis_start_) {
+                // reset DIIS if current orbital update unreasonable
+                if (de_c > 0.0 or (de > 0.0 and de_o > 0.0)) {
+                    psi::outfile->Printf("   R/");
+                    diis_manager->reset_subspace();
+                } else {
+                    psi::outfile->Printf("   ");
+                }
+
+                dR->subtract(R);
+                dR->scale(-1.0);
+
                 diis_manager->add_entry(2, dR.get(), R.get());
-                psi::outfile->Printf("   S");
+                psi::outfile->Printf("S");
             }
 
             if ((macro - diis_start_) % diis_freq_ == 0 and
-                diis_manager->subspace_size() >= diis_min_vec_) {
+                diis_manager->subspace_size() > diis_min_vec_) {
                 diis_manager->extrapolate(1, R.get());
                 psi::outfile->Printf("/E");
 
@@ -269,11 +281,6 @@ double MCSCF_2STEP::compute_energy() {
         }
 
         nit += inc;
-
-        if (de > 0.0 and (de_c > 0.0 or de_o > 0.0)) {
-            psi::outfile->Printf("\n    Resetting DIIS due to suspicious orbital update.");
-            diis_manager->reset_subspace();
-        }
     }
 
     // print summary
