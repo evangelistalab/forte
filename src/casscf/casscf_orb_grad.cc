@@ -332,9 +332,6 @@ void CASSCF_ORB_GRAD::init_tensors() {
     // save a copy of AO OEI
     H_ao_ = ints_->wfn()->H()->clone();
 
-    // MO OEI
-    H_mo_ = std::make_shared<psi::Matrix>("Hbare_MO", nmopi_, nmopi_);
-
     // Fock matrices
     Fd_.resize(ncmo_);
     Fock_ = std::make_shared<psi::Matrix>("Fock_MO", nmopi_, nmopi_);
@@ -380,38 +377,8 @@ void CASSCF_ORB_GRAD::build_mo_integrals() {
     // form closed-shell Fock matrix
     build_fock_inactive();
 
-    // bare one-electron integrals
-    build_oei_from_ao();
-
-    // compute the closed-shell energy
-    compute_energy_closed();
-
     // form the MO 2e-integrals
     build_tei_from_ao();
-}
-
-void CASSCF_ORB_GRAD::build_oei_from_ao() {
-    H_mo_ = H_ao_->clone();
-    H_mo_->transform(C_);
-    H_mo_->set_name("Hbare_MO");
-
-    if (debug_print_) {
-        H_mo_->print();
-    }
-}
-
-void CASSCF_ORB_GRAD::compute_energy_closed() {
-    e_closed_ = 0.0;
-    for (int h = 0; h < nirrep_; ++h) {
-        for (int i = 0; i < ndoccpi_[h]; ++i) {
-            e_closed_ += F_closed_->get(h, i, i) + H_mo_->get(h, i, i);
-        }
-    }
-
-    if (debug_print_) {
-        outfile->Printf("\n  Frozen-core energy   %20.15f", ints_->frozen_core_energy());
-        outfile->Printf("\n  Closed-shell energy  %20.15f", e_closed_);
-    }
 }
 
 void CASSCF_ORB_GRAD::build_tei_from_ao() {
@@ -530,18 +497,25 @@ void CASSCF_ORB_GRAD::build_fock_inactive() {
     Cl.push_back(Cdocc); // Cr is the same as Cl
     JK_->compute();
 
-    F_closed_->copy(JK_->J()[0]);
-    F_closed_->scale(2.0);
-    F_closed_->subtract(JK_->K()[0]);
+    auto J = JK_->J()[0];
+    J->scale(2.0);
+    J->subtract(JK_->K()[0]);
+    J->add(H_ao_);
 
-    F_closed_->add(H_ao_);
+    F_closed_->copy(J);
     F_closed_->transform(C_);
 
     // put it in Ambit BlockedTensor format
     format_fock(F_closed_, Fc_);
 
+    // compute closed-shell energy
+    J->add(H_ao_);
+    e_closed_ = J->vector_dot(psi::linalg::doublet(Cdocc, Cdocc, false, true));
+
     if (debug_print_) {
         F_closed_->print();
+        outfile->Printf("\n  Frozen-core energy   %20.15f", ints_->frozen_core_energy());
+        outfile->Printf("\n  Closed-shell energy  %20.15f", e_closed_);
     }
 }
 
@@ -1018,4 +992,6 @@ std::shared_ptr<psi::Matrix> CASSCF_ORB_GRAD::canonicalize() {
 
     return U;
 }
+
+psi::SharedMatrix CASSCF_ORB_GRAD::Lagrangian() {}
 } // namespace forte

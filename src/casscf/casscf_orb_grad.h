@@ -202,8 +202,6 @@ class CASSCF_ORB_GRAD {
 
     /// The bare AO one-electron integrals
     psi::SharedMatrix H_ao_;
-    /// The bare MO one-electron intergals (nmo x nmo)
-    psi::SharedMatrix H_mo_;
 
     /// The inactive Fock matrix in MO basis
     psi::SharedMatrix F_closed_; // nmo x nmo
@@ -253,9 +251,6 @@ class CASSCF_ORB_GRAD {
     /// Build integrals for gradients and Hessian
     void build_mo_integrals();
 
-    /// Build MO one-electron integrals
-    void build_oei_from_ao();
-
     /// Build two-electron integrals
     void build_tei_from_ao();
 
@@ -266,15 +261,12 @@ class CASSCF_ORB_GRAD {
     /// Build the active Fock (does depend on 1RDM)
     void build_fock_active();
 
-    /// Compute closed-shell energy (frozen_docc + restricted_docc)
-    void compute_energy_closed();
-    /// The closed-shell energy
-    double e_closed_;
-
     /// Compute the energy for given sets of orbitals and density
     void compute_reference_energy();
     /// The energy computed using the current orbitals and CI coefficients
     double energy_;
+    /// The closed-shell energy
+    double e_closed_;
 
     /// Compute the orbital gradients
     void compute_orbital_grad();
