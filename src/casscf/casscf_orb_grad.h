@@ -112,9 +112,6 @@ class CASSCF_ORB_GRAD {
     /// Prepare JK object
     void setup_JK();
 
-    /// Set up Ambit blocks
-    void setup_ambit();
-
     /// Initialize/Allocate tensors and matrices
     void init_tensors();
 
@@ -147,21 +144,21 @@ class CASSCF_ORB_GRAD {
     size_t ncmo_;
     /// The number of active orbitals
     size_t nactv_;
+    /// The number of frozen-core orbitals
+    size_t nfrzc_;
 
     /// List of core MOs (Correlated)
     std::vector<size_t> core_mos_;
     /// List of active MOs (Correlated)
     std::vector<size_t> actv_mos_;
-    /// List of virtual MOs (Correlated)
-    std::vector<size_t> virt_mos_;
     /// Map from MO space label to the MO indices
     std::map<std::string, std::vector<size_t>> label_to_mos_;
 
-    /// Relative indices within an irrep for correlated MOs
-    std::vector<std::pair<size_t, size_t>> corr_mos_rel_;
+    /// Relative indices within an irrep <irrep, relative indices>
+    std::vector<std::pair<int, size_t>> mos_rel_;
 
-    /// Relative indices within an MO space for correlated MOs
-    std::vector<std::pair<std::string, size_t>> corr_mos_rel_space_;
+    /// Relative indices within an MO space <space, relative indices>
+    std::vector<std::pair<std::string, size_t>> mos_rel_space_;
 
     /// Number of orbital rotations considered
     size_t nrot_;
@@ -206,15 +203,13 @@ class CASSCF_ORB_GRAD {
     /// The inactive Fock matrix in MO basis
     psi::SharedMatrix F_closed_; // nmo x nmo
     ambit::BlockedTensor Fc_;    // ncmo x ncmo
-    /// The active Fock matrix in MO basis
-    psi::SharedMatrix F_active_; // nmo x nmo
     /// The generalized Fock matrix in MO basis
     psi::SharedMatrix Fock_; // nmo x nmo
     ambit::BlockedTensor F_; // ncmo x ncmo
     /// Diagonal elements of the generalized Fock matrix (Pitzer ordering)
     std::vector<double> Fd_;
 
-    /// Two-electron integrals in chemists' notation (pq|rs)
+    /// Two-electron integrals in chemists' notation (pu|xy)
     ambit::BlockedTensor V_;
 
     /// Spin-summed 1-RDM

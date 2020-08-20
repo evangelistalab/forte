@@ -73,9 +73,6 @@ void CASSCF_ORB_GRAD::startup() {
     // setup JK
     setup_JK();
 
-    // setup ambit spaces
-    setup_ambit();
-
     // allocate memory for tensors and matrices
     init_tensors();
 
@@ -94,36 +91,50 @@ void CASSCF_ORB_GRAD::setup_mos() {
     nactvpi_ = mo_space_info_->dimension("ACTIVE");
 
     nso_ = nsopi_.sum();
-    nmo_ = mo_space_info_->size("ALL");
-    ncmo_ = mo_space_info_->size("CORRELATED");
-    nactv_ = mo_space_info_->size("ACTIVE");
+    nmo_ = nmopi_.sum();
+    ncmo_ = ncmopi_.sum();
+    nactv_ = nactvpi_.sum();
+    nfrzc_ = nfrzcpi_.sum();
 
-    core_mos_ = mo_space_info_->corr_absolute_mo("RESTRICTED_DOCC");
-    actv_mos_ = mo_space_info_->corr_absolute_mo("ACTIVE");
-    virt_mos_ = mo_space_info_->corr_absolute_mo("RESTRICTED_UOCC");
+    core_mos_ = mo_space_info_->absolute_mo("RESTRICTED_DOCC");
+    actv_mos_ = mo_space_info_->absolute_mo("ACTIVE");
 
     label_to_mos_.clear();
+    label_to_mos_["f"] = mo_space_info_->absolute_mo("FROZEN_DOCC");
     label_to_mos_["c"] = core_mos_;
     label_to_mos_["a"] = actv_mos_;
-    label_to_mos_["v"] = virt_mos_;
+    label_to_mos_["v"] = mo_space_info_->absolute_mo("RESTRICTED_UOCC");
 
     // in Pitzer ordering
-    corr_mos_rel_.clear();
-    corr_mos_rel_.reserve(ncmo_);
+    mos_rel_.clear();
+    mos_rel_.reserve(nmo_);
     for (int h = 0; h < nirrep_; ++h) {
-        for (int i = 0, offset = nfrzcpi_[h]; i < ncmopi_[h]; ++i) {
-            corr_mos_rel_.push_back(std::make_pair(h, i + offset));
+        for (int i = 0; i < nmopi_[h]; ++i) {
+            mos_rel_.push_back(std::make_pair(h, i));
         }
     }
 
     // in Pitzer ordering
-    corr_mos_rel_space_.resize(ncmo_);
-    for (std::string space : {"c", "a", "v"}) {
+    mos_rel_space_.resize(nmo_);
+    for (std::string space : {"f", "c", "a", "v"}) {
         const auto& mos = label_to_mos_[space];
         for (size_t p = 0, size = mos.size(); p < size; ++p) {
-            corr_mos_rel_space_[mos[p]] = std::make_pair(space, p);
+            mos_rel_space_[mos[p]] = std::make_pair(space, p);
         }
     }
+
+    // set up ambit spaces
+    BlockedTensor::reset_mo_spaces();
+    BlockedTensor::set_expert_mode(true);
+
+    BlockedTensor::add_mo_space("f", "I,J", label_to_mos_["f"], NoSpin);
+    BlockedTensor::add_mo_space("c", "i,j", core_mos_, NoSpin);
+    BlockedTensor::add_mo_space("a", "t,u,v,w,y,x,z", actv_mos_, NoSpin);
+    BlockedTensor::add_mo_space("v", "a,b", label_to_mos_["v"], NoSpin);
+
+    BlockedTensor::add_composite_mo_space("o", "k,l", {"c", "a"});
+    BlockedTensor::add_composite_mo_space("g", "p,q,r,s", {"c", "a", "v"});
+    BlockedTensor::add_composite_mo_space("G", "P,Q,R,S", {"f", "c", "a", "v"});
 }
 
 void CASSCF_ORB_GRAD::read_options() {
@@ -190,12 +201,12 @@ void CASSCF_ORB_GRAD::nonredundant_pairs() {
         const auto& mos2 = label_to_mos_[block.substr(1, 1)];
 
         for (int i = 0, si = mos1.size(); i < si; ++i) {
-            int hi = corr_mos_rel_[mos1[i]].first;
-            auto ni = corr_mos_rel_[mos1[i]].second;
+            int hi = mos_rel_[mos1[i]].first;
+            auto ni = mos_rel_[mos1[i]].second;
 
             for (int j = 0, sj = mos2.size(); j < sj; ++j) {
-                int hj = corr_mos_rel_[mos2[j]].first;
-                auto nj = corr_mos_rel_[mos2[j]].second;
+                int hj = mos_rel_[mos2[j]].first;
+                auto nj = mos_rel_[mos2[j]].second;
 
                 if (hi == hj) {
                     if (zero_rots_[hi].find(ni) != zero_rots_[hi].end()) {
@@ -215,12 +226,12 @@ void CASSCF_ORB_GRAD::nonredundant_pairs() {
 
         const auto& mos = label_to_mos_["a"];
         for (int i = 0, s = mos.size(); i < s; ++i) {
-            int hi = corr_mos_rel_[mos[i]].first;
-            auto ni = corr_mos_rel_[mos[i]].second;
+            int hi = mos_rel_[mos[i]].first;
+            auto ni = mos_rel_[mos[i]].second;
 
             for (int j = i + 1; j < s; ++j) {
-                int hj = corr_mos_rel_[mos[j]].first;
-                auto nj = corr_mos_rel_[mos[j]].second;
+                int hj = mos_rel_[mos[j]].first;
+                auto nj = mos_rel_[mos[j]].second;
 
                 if (hi == hj) {
                     if (zero_rots_[hi].find(ni) != zero_rots_[hi].end()) {
@@ -311,18 +322,6 @@ void CASSCF_ORB_GRAD::setup_JK() {
         outfile->Printf("  Initializing JK took %.3f seconds.", jk_timer.get());
 }
 
-void CASSCF_ORB_GRAD::setup_ambit() {
-    BlockedTensor::reset_mo_spaces();
-    BlockedTensor::set_expert_mode(true);
-
-    BlockedTensor::add_mo_space("c", "i,j", core_mos_, NoSpin);
-    BlockedTensor::add_mo_space("a", "t,u,v,w,y,x,z", actv_mos_, NoSpin);
-    BlockedTensor::add_mo_space("v", "a,b", virt_mos_, NoSpin);
-
-    BlockedTensor::add_composite_mo_space("o", "k,l", {"c", "a"});
-    BlockedTensor::add_composite_mo_space("g", "p,q,r,s", {"c", "a", "v"});
-}
-
 void CASSCF_ORB_GRAD::init_tensors() {
     // save a copy of initial MO
     C0_ = ints_->wfn()->Ca()->clone();
@@ -333,17 +332,16 @@ void CASSCF_ORB_GRAD::init_tensors() {
     H_ao_ = ints_->wfn()->H()->clone();
 
     // Fock matrices
-    Fd_.resize(ncmo_);
+    Fd_.resize(nmo_);
     Fock_ = std::make_shared<psi::Matrix>("Fock_MO", nmopi_, nmopi_);
     F_closed_ = std::make_shared<psi::Matrix>("Fock_inactive", nmopi_, nmopi_);
-    F_active_ = std::make_shared<psi::Matrix>("Fock_active", nmopi_, nmopi_);
 
     auto tensor_type = ambit::CoreTensor;
-    Fc_ = ambit::BlockedTensor::build(tensor_type, "Fc", {"gg"});
-    F_ = ambit::BlockedTensor::build(tensor_type, "F", {"gg"});
+    Fc_ = ambit::BlockedTensor::build(tensor_type, "Fc", {"GG"});
+    F_ = ambit::BlockedTensor::build(tensor_type, "F", {"GG"});
 
     // two-electron integrals
-    V_ = ambit::BlockedTensor::build(tensor_type, "V", {"gaaa"});
+    V_ = ambit::BlockedTensor::build(tensor_type, "V", {"Gaaa"});
 
     // 1-RDM and 2-RDM
     D1_ = ambit::BlockedTensor::build(tensor_type, "1RDM", {"aa"});
@@ -351,7 +349,7 @@ void CASSCF_ORB_GRAD::init_tensors() {
     rdm1_ = std::make_shared<psi::Matrix>("1RDM", nactvpi_, nactvpi_);
 
     // orbital gradients related
-    A_ = ambit::BlockedTensor::build(tensor_type, "A", {"ca", "ao", "vo"});
+    A_ = ambit::BlockedTensor::build(tensor_type, "A", {"ca", "ao", "vo", "fg"});
 
     std::vector<std::string> g_blocks{"ac", "vo"};
     if (internal_rot_) {
@@ -388,19 +386,19 @@ void CASSCF_ORB_GRAD::build_tei_from_ao() {
 
     // Transform C matrix to C1 symmetry (JK will do this anyway)
     psi::SharedMatrix aotoso = ints_->wfn()->aotoso();
-    auto C_nosym = std::make_shared<psi::Matrix>(nso_, ncmo_);
+    auto C_nosym = std::make_shared<psi::Matrix>(nso_, nmo_);
 
     // Transform from the SO to the AO basis for the C matrix
     // MO in Pitzer ordering and only keep the non-frozen MOs
     for (int h = 0, index = 0; h < nirrep_; ++h) {
-        for (int i = 0, offset = nfrzcpi_[h]; i < ncmopi_[h]; ++i) {
+        for (int i = 0; i < nmopi_[h]; ++i) {
             int nao = nso_, nso = nsopi_[h];
 
             if (!nso)
                 continue;
 
-            C_DGEMV('N', nao, nso, 1.0, aotoso->pointer(h)[0], nso, &C_->pointer(h)[0][i + offset],
-                    nmopi_[h], 0.0, &C_nosym->pointer()[0][index], ncmo_);
+            C_DGEMV('N', nao, nso, 1.0, aotoso->pointer(h)[0], nso, &C_->pointer(h)[0][i],
+                    nmopi_[h], 0.0, &C_nosym->pointer()[0][index], nmo_);
 
             index += 1;
         }
@@ -450,12 +448,12 @@ void CASSCF_ORB_GRAD::build_tei_from_ao() {
             std::shared_ptr<psi::Matrix> J = JK_->J()[x * nactv_ + y - offset];
             auto half_trans = psi::linalg::triplet(C_nosym, J, Cact, true, false, false);
 
-            for (size_t p = 0; p < ncmo_; ++p) {
+            for (size_t p = 0; p < nmo_; ++p) {
                 // grab the block data
-                std::string p_space = corr_mos_rel_space_[p].first;
+                std::string p_space = mos_rel_space_[p].first;
                 std::string block = p_space + "aaa";
 
-                size_t np = corr_mos_rel_space_[p].second;
+                size_t np = mos_rel_space_[p].second;
                 auto& data = V_.block(block).data();
 
                 for (size_t u = 0; u < nactv_; ++u) {
@@ -526,13 +524,13 @@ void CASSCF_ORB_GRAD::build_fock(bool rebuild_inactive) {
 
     build_fock_active();
 
-    Fock_->copy(F_closed_);
-    Fock_->add(F_active_);
+    Fock_->add(F_closed_);
+    Fock_->set_name("Fock_MO");
 
     format_fock(Fock_, F_);
 
     // fill in diagonal Fock in Pitzer ordering
-    for (const std::string& space : {"c", "a", "v"}) {
+    for (const std::string& space : {"f", "c", "a", "v"}) {
         std::string block = space + space;
         auto mos = label_to_mos_[space];
         for (size_t i = 0, size = mos.size(); i < size; ++i) {
@@ -572,22 +570,23 @@ void CASSCF_ORB_GRAD::build_fock_active() {
     Cr.push_back(Cactv_dressed);
     JK_->compute();
 
-    F_active_->copy(JK_->K()[0]);
-    F_active_->scale(-0.5);
-    F_active_->add(JK_->J()[0]);
+    Fock_->copy(JK_->K()[0]);
+    Fock_->scale(-0.5);
+    Fock_->add(JK_->J()[0]);
 
     // transform to MO
-    F_active_->transform(C_);
+    Fock_->transform(C_);
 
     if (debug_print_) {
-        F_active_->print();
+        Fock_->set_name("Fock_active");
+        Fock_->print();
     }
 }
 
 void CASSCF_ORB_GRAD::format_fock(psi::SharedMatrix Fock, ambit::BlockedTensor F) {
     F.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>&, double& value) {
-        auto irrep_index_pair1 = corr_mos_rel_[i[0]];
-        auto irrep_index_pair2 = corr_mos_rel_[i[1]];
+        auto irrep_index_pair1 = mos_rel_[i[0]];
+        auto irrep_index_pair2 = mos_rel_[i[1]];
 
         int h1 = irrep_index_pair1.first;
         int h2 = irrep_index_pair2.first;
@@ -692,9 +691,9 @@ void CASSCF_ORB_GRAD::compute_reference_energy() {
 
 void CASSCF_ORB_GRAD::compute_orbital_grad() {
     // build orbital Lagrangian
-    A_["ri"] = 4.0 * F_["ri"];
-    A_["ru"] = 2.0 * Fc_["rt"] * D1_["tu"];
-    A_["ru"] += 2.0 * V_["rtvw"] * D2_["tuvw"];
+    A_["Ri"] = 4.0 * F_["Ri"];
+    A_["Ru"] = 2.0 * Fc_["Rt"] * D1_["tu"];
+    A_["Ru"] += 2.0 * V_["Rtvw"] * D2_["tuvw"];
 
     // build orbital gradients
     g_["pq"] = A_["pq"];
@@ -993,5 +992,7 @@ std::shared_ptr<psi::Matrix> CASSCF_ORB_GRAD::canonicalize() {
     return U;
 }
 
-psi::SharedMatrix CASSCF_ORB_GRAD::Lagrangian() {}
+psi::SharedMatrix CASSCF_ORB_GRAD::Lagrangian() {
+
+}
 } // namespace forte
