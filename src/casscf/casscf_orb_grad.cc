@@ -589,9 +589,8 @@ void CASSCF_ORB_GRAD::format_fock(psi::SharedMatrix Fock, ambit::BlockedTensor F
         auto irrep_index_pair2 = mos_rel_[i[1]];
 
         int h1 = irrep_index_pair1.first;
-        int h2 = irrep_index_pair2.first;
 
-        if (h1 == h2) {
+        if (h1 == irrep_index_pair2.first) {
             auto p = irrep_index_pair1.second;
             auto q = irrep_index_pair2.second;
             value = Fock->get(h1, p, q);
@@ -605,8 +604,8 @@ double CASSCF_ORB_GRAD::evaluate(psi::SharedVector x, psi::SharedVector g, bool 
     // if need to update orbitals and integrals
     if (update_orbitals(x)) {
         build_mo_integrals();
-        compute_reference_energy();
     }
+    compute_reference_energy();
 
     // if need to compute gradient
     if (do_g) {
@@ -993,6 +992,22 @@ std::shared_ptr<psi::Matrix> CASSCF_ORB_GRAD::canonicalize() {
 }
 
 psi::SharedMatrix CASSCF_ORB_GRAD::Lagrangian() {
+    // format A matrix
+    auto L = std::make_shared<psi::Matrix>("Lagrangian AO Back-Transformed", nmopi_, nmopi_);
+    A_.citerate(
+        [&](const std::vector<size_t>& i, const std::vector<SpinType>&, const double& value) {
+            auto irrep_index_pair1 = mos_rel_[i[0]];
+            auto irrep_index_pair2 = mos_rel_[i[1]];
 
+            int h1 = irrep_index_pair1.first;
+
+            if (h1 == irrep_index_pair2.first) {
+                auto p = irrep_index_pair1.second;
+                auto q = irrep_index_pair2.second;
+                L->set(h1, p, q, value);
+            }
+        });
+    L->back_transform(C_);
+    return L;
 }
 } // namespace forte

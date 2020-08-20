@@ -317,7 +317,6 @@ double CASSCF::compute_energy() {
 
         if (do_diis and iter > diis_start and (diis_count % diis_freq == 0)) {
             diis_manager->extrapolate(1, S.get());
-            outfile->Printf("\n FFFFF");
         }
         psi::SharedMatrix Cp = orbital_optimizer.rotate_orbitals(C_start, S);
 

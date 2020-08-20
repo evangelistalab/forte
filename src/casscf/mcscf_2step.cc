@@ -321,6 +321,8 @@ double MCSCF_2STEP::compute_energy() {
                                  " iterations!");
     }
 
+    cas_grad.Lagrangian()->print();
+
     return energy_;
 }
 

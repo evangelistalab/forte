@@ -75,17 +75,23 @@ class CASSCF_ORB_GRAD {
     /// Return active space integrals for CI
     std::shared_ptr<ActiveSpaceIntegrals> active_space_ints();
 
-    /// Canonicalize the final orbitals
-    void canonicalize_final();
+    /// Return the number of nonredundant orbital rotations
+    size_t nrot() { return nrot_; }
 
     /// Return optimized MO coefficients
     psi::SharedMatrix Ca() { return C_; }
 
-    /// Return the orbital Lagrangian matrix
+    /// Canonicalize the final orbitals
+    void canonicalize_final();
+
+    /// Return the AO orbital Lagrangian matrix (backtransformed)
     psi::SharedMatrix Lagrangian();
 
-    /// Return the number of nonredundant orbital rotations
-    size_t nrot() { return nrot_; }
+    /// Return the AO 1-RDM (backtransformed)
+    psi::SharedMatrix D1();
+
+    /// Dump the MO 2-RDM to file using IWL
+    void dump_tpdm_iwl();
 
   private:
     /// The Forte options

@@ -514,7 +514,7 @@ def prepare_forte_objects_from_fcidump(options):
         nirrep = irrep_size[fcidump['pntgrp'].lower()]
         nmopi_list = [fcidump['orbsym'].count(x) for x in range(nirrep)]
     else:
-        fcidump['isym'] = 0 # shift by -1 
+        fcidump['isym'] = 0  # shift by -1
         nirrep = 1
         nmopi_list = [nmo]
 
@@ -690,7 +690,7 @@ def gradient_forte(name, **kwargs):
     r"""Function encoding sequence of PSI module and plugin calls so that
     forte can be called via :py:func:`~driver.energy`. For post-scf plugins.
 
-    >>> gradient('forte') 
+    >>> gradient('forte')
         available for : CASSCF
 
     """
@@ -769,7 +769,7 @@ def gradient_forte(name, **kwargs):
     derivobj = psi4.core.Deriv(ref_wfn)
     derivobj.set_deriv_density_backtransformed(True)
     derivobj.set_ignore_reference(True)
-    grad = derivobj.compute()  #psi4.core.DerivCalcType.Correlated
+    grad = derivobj.compute(psi4.core.DerivCalcType.Correlated)
     ref_wfn.set_gradient(grad)
     optstash.restore()
 
