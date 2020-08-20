@@ -1010,4 +1010,33 @@ psi::SharedMatrix CASSCF_ORB_GRAD::Lagrangian() {
     L->back_transform(C_);
     return L;
 }
+
+psi::SharedMatrix CASSCF_ORB_GRAD::opdm() {
+    auto D1 = std::make_shared<psi::Matrix>("OPDM AO Back-Transformed", nmopi_, nmopi_);
+
+    // inactive docc part
+    for (int h = 0; h < nirrep_; ++h) {
+        for (int i = 0; i < ndoccpi_[h]; ++i) {
+            D1->set(h, i, i, 2.0);
+        }
+    }
+
+    // active part
+    for (int h = 0; h < nirrep_; ++h) {
+        auto offset = ndoccpi_[h];
+        for (int u = 0; u < nactvpi_[h]; ++u) {
+            auto nu = u + offset;
+            for (int v = u; v < nactvpi_[h]; ++v) {
+                auto nv = v + offset;
+                D1->set(h, nu, nv, rdm1_->get(h, u, v));
+                D1->set(h, nv, nu, rdm1_->get(h, v, u));
+            }
+        }
+    }
+
+    // back-transform to AO
+    D1->back_transform(C_);
+
+    return D1;
+}
 } // namespace forte

@@ -88,7 +88,7 @@ class CASSCF_ORB_GRAD {
     psi::SharedMatrix Lagrangian();
 
     /// Return the AO 1-RDM (backtransformed)
-    psi::SharedMatrix D1();
+    psi::SharedMatrix opdm();
 
     /// Dump the MO 2-RDM to file using IWL
     void dump_tpdm_iwl();
