@@ -30,6 +30,7 @@
 #include <numeric>
 
 #include "integrals/active_space_integrals.h"
+#include "helpers/combinatorial.h"
 
 #include "general_operator.h"
 #include "determinant_hashvector.h"
@@ -48,36 +49,6 @@ bool compare_ops(const std::tuple<bool, bool, int>& lhs, const std::tuple<bool, 
         return flip_spin(lhs) > flip_spin(rhs);
     }
     return flip_spin(lhs) < flip_spin(rhs);
-}
-
-// This functio returns the parity of a permutation (0 = even, 1 = odd)
-int permutation_parity(const std::vector<size_t>& p) {
-    int n = static_cast<int>(p.size());
-
-    // vector of elements visited
-    std::vector<bool> visited(n, false);
-
-    int total_parity = 0;
-    // loop over all the elements
-    for (int i = 0; i < n; i++) {
-        // if an element was not visited start following its cycle
-        if (visited[i] == false) {
-            int cycle_size = 0;
-            int next = i;
-            for (int j = 0; j < n; j++) {
-                next = p[next];
-                // mark the next element as visited
-                visited[next] = true;
-                // increase cycle size
-                cycle_size += 1;
-                // if the next element is the same, this is the end of the cycle
-                if (next == i)
-                    break;
-            }
-            total_parity += (cycle_size - 1) % 2;
-        }
-    }
-    return total_parity % 2;
 }
 
 void GeneralOperator::add_operator(const std::vector<op_t>& op_list, double value) {
@@ -252,47 +223,26 @@ det_hash<double> apply_exp_ah_factorized(GeneralOperator& gop, const det_hash<do
     return new_state;
 }
 
-det_hash<double> apply_exp_op_fast(const Determinant& d, size_t n, const GeneralOperator& gop) {
-
-
-    det_hash<double> state;
-    state[d] = 1.0;
-    det_hash<double> exp_state = state;
-    double factor = 1.0;
-    int maxk = 16;
-    for (int k = 1; k <= maxk; k++) {
-        factor = factor / static_cast<double>(k);
-        det_hash<double> new_state = apply_lin_op(state, n, gop);
-        if (new_state.size() == 0)
-            break;
-        for (const auto& det_c : new_state) {
-            exp_state[det_c.first] += factor * det_c.second;
-        }
-        state = new_state;
-    }
-    return exp_state;
-}
-
-det_hash<double> apply_exp_ah_factorized_fast(GeneralOperator& gop,
-                                              const det_hash<double>& state0) {
-    det_hash<double> state(state0);
-    det_hash<double> new_state;
-    size_t nops = gop.nops();
-    Determinant d;
-    for (size_t n = 0; n < nops; n++) {
-        new_state.clear();
-        for (const auto& det_c : state) {
-            const double c = det_c.second;
-            d = det_c.first;
-            det_hash<double> terms = apply_exp_op(d, n, gop);
-            for (const auto& d_c : terms) {
-                new_state[d_c.first] += d_c.second * c;
-            }
-        }
-        state = new_state;
-    }
-    return new_state;
-}
+//det_hash<double> apply_exp_ah_factorized_fast(GeneralOperator& gop,
+//                                              const det_hash<double>& state0) {
+//    det_hash<double> state(state0);
+//    det_hash<double> new_state;
+//    size_t nops = gop.nops();
+//    Determinant d;
+//    for (size_t n = 0; n < nops; n++) {
+//        new_state.clear();
+//        for (const auto& det_c : state) {
+//            const double c = det_c.second;
+//            d = det_c.first;
+//            det_hash<double> terms = apply_exp_op(d, n, gop);
+//            for (const auto& d_c : terms) {
+//                new_state[d_c.first] += d_c.second * c;
+//            }
+//        }
+//        state = new_state;
+//    }
+//    return new_state;
+//}
 
 // det_hash<double> apply_general_operator_exp_factorized(GeneralOperator& gop,
 //                                                       const det_hash<double>& state) {

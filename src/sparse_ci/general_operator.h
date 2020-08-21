@@ -31,16 +31,8 @@
 
 #include <vector>
 #include <unordered_map>
-#include "sparse_ci/determinant.h"
 
-//    m.def("apply_general_operator", &apply_general_operator);
-//    m.def("apply_general_operator_spin", &apply_general_operator_spin);
-//    m.def("apply_exp_general_operator", &apply_exp_general_operator);
-//    m.def("apply_exp_general_operator_spin", &apply_exp_general_operator_spin);
-//    m.def("apply_exp_general_operator_matrix", &apply_exp_general_operator_matrix);
-//    m.def("apply_number_projector", &apply_number_projector);
-//    m.def("energy_expectation_value", &energy_expectation_value);
-//    m.def("overlap", &overlap);
+#include "sparse_ci/determinant.h"
 
 namespace forte {
 
