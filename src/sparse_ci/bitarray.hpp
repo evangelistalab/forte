@@ -223,6 +223,23 @@ template <size_t N> class BitArray {
         return *this;
     }
 
+    /// Bitwise difference operator (-)
+    BitArray<N> operator-(const BitArray<N>& lhs) const {
+        BitArray<N> result;
+        for (size_t n = 0; n < nwords_; n++) {
+            result.words_[n] = words_[n] & (~lhs.words_[n]);
+        }
+        return result;
+    }
+
+    /// Bitwise difference operator (-=)
+    BitArray<N> operator-=(const BitArray<N>& lhs) const {
+        for (size_t n = 0; n < nwords_; n++) {
+            words_[n] &= ~lhs.words_[n];
+        }
+        return *this;
+    }
+
     /// Count the number of bits set to true in the words included in the range [begin,end)
     int count(size_t begin = 0, size_t end = nwords_) const {
         int c = 0;
@@ -282,6 +299,49 @@ template <size_t N> class BitArray {
         }
         // if the BitArray object is zero then return ~0
         return ~word_t(0);
+    }
+
+    // implements (a & b) == b
+    bool fast_a_and_b_equal_b(const BitArray<N>& b) const {
+        bool result = false;
+        for (size_t n = 0; n < nwords_; n++) {
+            result += ((words_[n] & b.words_[n]) != b.words_[n]);
+        }
+        return not result;
+    }
+
+    // implements a - b == 0
+    bool fast_a_minus_b_eq_zero(const BitArray<N>& b) const {
+        bool result = false;
+        for (size_t n = 0; n < nwords_; n++) {
+            result += words_[n] & (~b.words_[n]);
+        }
+        return not result;
+    }
+
+    // implements count(a ^ b)
+    int fast_a_xor_b_count(const BitArray<N>& b) const {
+//        if constexpr (N == 64) {
+//            return ui64_bit_count(words_[0] ^ b.words_[0]);
+//        } else if constexpr (N == 128) {
+//            return ui64_bit_count(words_[0] ^ b.words_[0]) +
+//                   ui64_bit_count(words_[1] ^ b.words_[1]);
+//        } else if constexpr (N == 192) {
+//            return ui64_bit_count(words_[0] ^ b.words_[0]) +
+//                   ui64_bit_count(words_[1] ^ b.words_[1]) +
+//                   ui64_bit_count(words_[2] ^ b.words_[2]);
+//        } else if constexpr (N == 256) {
+//            return ui64_bit_count(words_[0] ^ b.words_[0]) +
+//                   ui64_bit_count(words_[1] ^ b.words_[1]) +
+//                   ui64_bit_count(words_[2] ^ b.words_[2]) +
+//                   ui64_bit_count(words_[3] ^ b.words_[3]);
+//        } else {
+//        }
+            int c = 0;
+            for (size_t n = 0; n < nwords_; n++) {
+                c += ui64_bit_count(words_[n] ^ b.words_[n]);
+            }
+            return c;
     }
 
     /// Return the sign of a_n applied to this determinant
