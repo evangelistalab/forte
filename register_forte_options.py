@@ -959,6 +959,10 @@ def register_psi_options(options):
 
 def register_gas_options(options):
     options.set_group("GAS")
+    options.add_int_array("MAXGAS1","The maximum number of electrons in GAS1")
+    options.add_int_array("MINGAS1","The minimum number of electrons in GAS1")
+    options.add_int_array("MAXGAS2","The maximum number of electrons in GAS2")
+    options.add_int_array("MINGAS2","The minimum number of electrons in GAS2")
     options.add_int("GAS1MAX",200,"The maximum number of electrons in GAS1")
     options.add_int("GAS1MIN",0,"The minimum number of electrons in GAS1")
     options.add_int("GAS2MAX",200,"The maximum number of electrons in GAS2")

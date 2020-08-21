@@ -201,11 +201,16 @@ std::map<StateInfo, std::vector<double>>
 make_state_weights_map(std::shared_ptr<ForteOptions> options,
                        std::shared_ptr<MOSpaceInfo> mo_space_info) {
     std::map<StateInfo, std::vector<double>> state_weights_map;
+
+    // make a StateInfo object using the information from psi4
     auto state = make_state_info_from_psi(options); // assumes low-spin
 
+    // check if the user provided a AVG_STATE list
     py::list avg_state = options->get_gen_list("AVG_STATE");
 
+    // if AVG_STATE is not defined, do a state-specific computation
     if (avg_state.size() == 0) {
+        // assign the weights (0,0,1_root,...) to do a state-specific computation
         int nroot = options->get_int("NROOT");
         int root = options->get_int("ROOT");
         std::vector<double> weights(nroot, 0.0);
@@ -287,8 +292,35 @@ make_state_weights_map(std::shared_ptr<ForteOptions> options,
             }
             sum_of_weights += std::accumulate(std::begin(weights), std::end(weights), 0.0);
 
+            std::vector<size_t> gas_min(6, 0);
+            std::vector<size_t> gas_max(6, 1000000);
+            for (int gasn = 0; gasn < 2; gasn++) { // TODOMeng change 2 -> 6
+                auto gasmin = options->get_int_vec(
+                    "MINGAS" + std::to_string(gasn + 1)); // TODOMeng update names to MINnGAS
+                auto gasmax = options->get_int_vec(
+                    "MAXGAS" + std::to_string(gasn + 1)); // TODOMeng update names to MINnGAS
+                if (gasmin.size() > 0) {
+                    if (i >= gasmin.size()) {
+                        std::string msg = "\n  Error: MINGAS" + std::to_string(gasn + 1) +
+                                          " has an incorrect size";
+                        psi::outfile->Printf(msg.c_str());
+                        throw std::runtime_error(msg);
+                    }
+                    gas_min[gasn] = gasmin[i];
+                }
+                if (gasmax.size() > 0) {
+                    if (i >= gasmax.size()) {
+                        std::string msg = "\n  Error: MAXGAS" + std::to_string(gasn + 1) +
+                                          " has an incorrect size";
+                        psi::outfile->Printf(msg.c_str());
+                        throw std::runtime_error(msg);
+                    }
+                    gas_max[gasn] = gasmax[i];
+                }
+            }
+
             StateInfo state_this(state.na(), state.nb(), multi, state.twice_ms(), irrep,
-                                 irrep_label);
+                                 irrep_label, gas_min, gas_max);
             state_weights_map[state_this] = weights;
             nstates += nstates_this;
         }

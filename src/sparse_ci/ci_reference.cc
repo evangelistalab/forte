@@ -42,8 +42,9 @@ namespace forte {
 CI_Reference::CI_Reference(std::shared_ptr<SCFInfo> scf_info, std::shared_ptr<ForteOptions> options,
                            std::shared_ptr<MOSpaceInfo> mo_space_info,
                            std::shared_ptr<ActiveSpaceIntegrals> fci_ints, int multiplicity,
-                           double twice_ms, int symmetry)
-    : scf_info_(scf_info), mo_space_info_(mo_space_info), fci_ints_(fci_ints) {
+                           double twice_ms, int symmetry, StateInfo state_info)
+    : scf_info_(scf_info), state_info_(state_info), mo_space_info_(mo_space_info),
+      fci_ints_(fci_ints) {
     // Get the mutlilicity and twice M_s
     multiplicity_ = multiplicity;
     twice_ms_ = twice_ms;
@@ -1195,8 +1196,7 @@ void CI_Reference::get_gas_occupation() {
         int orbital_maximum = mo_space_info_->absolute_mo(space).size();
         gas_orbital.push_back(orbital_maximum);
         if (orbital_maximum) {
-            std::string maxe = gas_maxe_options_.at(gas_count);
-            int max_e_number = options_->get_int(maxe);
+            int max_e_number = state_info_.gas_max()[gas_count];
 
             // If the defined maximum number of electrons exceed number of orbitals,
             // redefine maximum number of elctrons
@@ -1215,8 +1215,7 @@ void CI_Reference::get_gas_occupation() {
                                 space.c_str(), max_e_number);
                 gas_maxe.push_back(max_e_number);
             }
-            std::string mine = gas_mine_options_.at(gas_count);
-            int min_e_number = options_->get_int(mine);
+            int min_e_number = state_info_.gas_min()[gas_count];
             gas_mine.push_back(min_e_number);
             outfile->Printf("\n  The minimum number of electrons in "
                             "%s is %d",

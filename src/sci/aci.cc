@@ -568,7 +568,7 @@ void AdaptiveCI::pre_iter_preparation() {
     // Build the reference determinant and compute its energy
 
     CI_Reference ref(scf_info_, options_, mo_space_info_, as_ints_, multiplicity_, twice_ms_,
-                     wavefunction_symmetry_);
+                     wavefunction_symmetry_, state_);
 
     if ((options_->get_str("ACI_SCREEN_ALG") == "MULTI_GAS")) {
         initial_reference_.clear();

@@ -33,6 +33,7 @@
 #include "sparse_ci/determinant.h"
 #include "base_classes/mo_space_info.h"
 #include "base_classes/scf_info.h"
+#include "base_classes/state_info.h"
 
 namespace forte {
 
@@ -40,6 +41,9 @@ class CI_Reference {
   protected:
     // The wavefunction object
     std::shared_ptr<SCFInfo> scf_info_;
+
+    // Pointer to the state info object
+    StateInfo state_info_;
 
     // Multiplicity of the reference
     int multiplicity_;
@@ -120,7 +124,7 @@ class CI_Reference {
     CI_Reference(std::shared_ptr<SCFInfo> scf_info, std::shared_ptr<ForteOptions> options,
                  std::shared_ptr<MOSpaceInfo> mo_space_info,
                  std::shared_ptr<ActiveSpaceIntegrals> fci_ints, int multiplicity, double ms,
-                 int symmetry);
+                 int symmetry, StateInfo state_info);
 
     /// Destructor
     ~CI_Reference();
