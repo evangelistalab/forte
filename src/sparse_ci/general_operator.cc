@@ -223,16 +223,23 @@ det_hash<double> apply_exp_ah_factorized(GeneralOperator& gop, const det_hash<do
     return new_state;
 }
 
-#define DEBUG_EXP_ALGORITHM 1
+#define DEBUG_EXP_ALGORITHM 0
 
-void apply_exp_op_fast(const Determinant& d, const Determinant& ann, const Determinant& cre,
-                       double amp, det_hash<double>& new_terms) {
+void apply_exp_op_fast(const Determinant& d, Determinant& new_d, const Determinant& cre,
+                       const Determinant& ann, double amp, double c, det_hash<double>& new_terms) {
 #if DEBUG_EXP_ALGORITHM
     std::cout << "\Applying: " << amp << "\n"
               << str(cre, 16) << "+\n"
               << str(ann, 16) << "-\n"
               << str(d, 16) << std::endl;
 #endif
+    new_d = d;
+    double f = apply_op(new_d, cre, ann) * amp;
+    // this is to deal with number operators (should be removed)
+    if (d != new_d) {
+        new_terms[d] += c * (std::cos(f) - 1.0);
+        new_terms[new_d] += c * std::sin(f);
+    }
 }
 
 det_hash<double> apply_exp_ah_factorized_fast(GeneralOperator& gop,
@@ -253,7 +260,7 @@ det_hash<double> apply_exp_ah_factorized_fast(GeneralOperator& gop,
         const Determinant ucre = op.cre - op.ann;
         const Determinant uann = op.ann - op.cre;
         const double amp = amplitudes[n];
-
+        Determinant new_d;
         // loop over all determinants
         for (const auto& det_c : state) {
             const Determinant& d = det_c.first;
@@ -277,13 +284,18 @@ det_hash<double> apply_exp_ah_factorized_fast(GeneralOperator& gop,
 #if DEBUG_EXP_ALGORITHM
                 std::cout << "Applying the (cre)(ann) sequence!" << std::endl;
 #endif
-                apply_exp_op_fast(d, op.ann, op.cre, amp, new_terms);
+                const double c = det_c.second;
+                apply_exp_op_fast(d, new_d, op.cre, op.ann, amp, c, new_terms);
             } else if (d.fast_a_and_b_equal_b(op.cre) and d.fast_a_and_b_eq_zero(uann)) {
 #if DEBUG_EXP_ALGORITHM
                 std::cout << "Applying the (ann)(cre) sequence!" << std::endl;
 #endif
-                apply_exp_op_fast(d, op.cre, op.ann, -amp, new_terms);
+                const double c = det_c.second;
+                apply_exp_op_fast(d, new_d, op.ann, op.cre, -amp, c, new_terms);
             }
+        }
+        for (const auto& d_c : new_terms) {
+            state[d_c.first] += d_c.second;
         }
     }
 

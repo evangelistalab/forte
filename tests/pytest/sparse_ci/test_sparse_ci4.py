@@ -69,26 +69,30 @@ def test_sparse_ci4():
     ### Operator ordering tests ###
     # test ordering: 0a+ 0b+ 0b- 0a- |2> = +|2>
     gop = forte.GeneralOperator()
-#    gop.add_operator(to_ops('[1a+ 0a-] - [0a+ 1a-]'),0.1)
-#    gop.add_operator(to_ops('[1a+ 1b+ 0b- 0a-] - [0a+ 0b+ 1b- 1a-]'),0.1)
+    gop.add_operator(to_ops('[1a+ 0a-] - [0a+ 1a-]'),0.1)
+    gop.add_operator(to_ops('[1a+ 1b+ 0b- 0a-] - [0a+ 0b+ 1b- 1a-]'),0.3)
 
 
-    gop.add_operator(to_ops('[0a+ 0a-]'),0.1)
-    gop.add_operator(to_ops('[0a+ 1a-]'),0.1)
-    gop.add_operator(to_ops('[1a+ 0a-]'),0.1)
-    gop.add_operator(to_ops('[1a+ 1a-]'),0.1)
-    gop.add_operator(to_ops('[2a+ 2a-]'),0.1)
-    gop.add_operator(to_ops('[2a+ 1a-]'),0.1)
-    gop.add_operator(to_ops('[1a+ 2a-]'),0.1)
+    gop_fast = forte.GeneralOperator()
+    gop_fast.add_operator(to_ops('[1a+ 0a-]'),0.1)
+    gop_fast.add_operator(to_ops('[1a+ 1b+ 0b- 0a-]'),0.3)
+#    gop.add_operator(to_ops('[0a+ 1a-]'),0.1)
+#    gop.add_operator(to_ops('[1a+ 0a-]'),0.1)
+#    gop.add_operator(to_ops('[1a+ 1a-]'),0.1)
+#    gop.add_operator(to_ops('[2a+ 2a-]'),0.1)
+#    gop.add_operator(to_ops('[2a+ 1a-]'),0.1)
+#    gop.add_operator(to_ops('[1a+ 2a-]'),0.1)
 
-    dtest = det("+0")
-    ref = { dtest: 1.0}
-    wfn = forte.apply_exp_ah_factorized_fast(gop,ref)
-    norm = 0.0
-    for d, c in wfn.items():
-        norm += c**2
-    print(norm)
+    dtest = det("20")
+#    ref = { dtest: 1.0}
+    wfn = forte.apply_exp_ah_factorized(gop,{ dtest: 1.0})
+    wfn_fast = forte.apply_exp_ah_factorized_fast(gop,{ dtest: 1.0})
+#    norm = 0.0
+#    for d, c in wfn.items():
+#        norm += c**2
+#    print(norm)
     print_wfn(wfn,2)
+    print_wfn(wfn_fast,2)
 #    assert norm == pytest.approx(1.0, abs=1e-9)
 
 test_sparse_ci4()
