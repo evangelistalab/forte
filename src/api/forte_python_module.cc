@@ -186,7 +186,8 @@ void export_Determinant(py::module& m) {
 
     m.def("apply_operator", &apply_operator);
     m.def("apply_operator_fast", &apply_operator_fast);
-    m.def("apply_exp_operator_fast", &apply_exp_operator_fast);
+    m.def("apply_exp_operator_fast", &apply_exp_operator_fast, "gop"_a, "state0"_a,
+          "scaling_factor"_a = 1.0);
     m.def("apply_exp_ah_factorized", &apply_exp_ah_factorized);
     m.def("apply_exp_ah_factorized_fast", &apply_exp_ah_factorized_fast);
     m.def("energy_expectation_value", &energy_expectation_value);

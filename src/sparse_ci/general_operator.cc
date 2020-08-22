@@ -329,14 +329,15 @@ det_hash<double> apply_operator_fast(GeneralOperator& gop, const det_hash<double
     return new_terms;
 }
 
-det_hash<double> apply_exp_operator_fast(GeneralOperator& gop, const det_hash<double>& state0) {
+det_hash<double> apply_exp_operator_fast(GeneralOperator& gop, const det_hash<double>& state0,
+                                         double scaling_factor) {
     local_timer t;
     det_hash<double> exp_state(state0);
     det_hash<double> state(state0);
     double factor = 1.0;
     int maxk = 20;
     for (int k = 1; k <= maxk; k++) {
-        factor /= static_cast<double>(k);
+        factor *= scaling_factor / static_cast<double>(k);
         det_hash<double> new_terms = apply_operator_fast(gop, state);
         double norm = 0.0;
         for (const auto& det_c : new_terms) {

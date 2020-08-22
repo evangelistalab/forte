@@ -78,7 +78,7 @@ det_hash<double> apply_operator(GeneralOperator& gop, const det_hash<double>& st
 det_hash<double> apply_exp_ah_factorized(GeneralOperator& gop, const det_hash<double>& state);
 
 det_hash<double> apply_operator_fast(GeneralOperator& gop, const det_hash<double>& state0);
-det_hash<double> apply_exp_operator_fast(GeneralOperator& gop, const det_hash<double>& state0);
+det_hash<double> apply_exp_operator_fast(GeneralOperator& gop, const det_hash<double>& state0, double scaling_factor = 1.0);
 det_hash<double> apply_exp_ah_factorized_fast(GeneralOperator& gop, const det_hash<double>& state0);
 double energy_expectation_value(det_hash<double>& left_state, det_hash<double>& right_state,
                                 std::shared_ptr<ActiveSpaceIntegrals> as_ints);
