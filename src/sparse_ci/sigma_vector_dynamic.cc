@@ -52,7 +52,7 @@ using namespace psi;
 
 namespace forte {
 
-#define SIGMA_VEC_DEBUG 0
+#define SIGMA_VEC_DEBUG 1
 
 #if SIGMA_VEC_DEBUG
 size_t count_aa_total = 0;

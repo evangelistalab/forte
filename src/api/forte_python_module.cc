@@ -143,6 +143,26 @@ void export_Determinant(py::module& m) {
         .def("__lt__", [](const Determinant& a, const Determinant& b) { return a < b; })
         .def("__hash__", [](const Determinant& a) { return Determinant::Hash()(a); });
 
+    m.def(
+        "det",
+        [](const std::string& s) {
+            Determinant d;
+            int k = 0;
+            for (const char c : s) {
+                if (c == '+') {
+                    d.create_alfa_bit(k);
+                } else if (c == '-') {
+                    d.create_beta_bit(k);
+                } else if (c == '2') {
+                    d.create_alfa_bit(k);
+                    d.create_beta_bit(k);
+                }
+                ++k;
+            }
+            return d;
+        },
+        "Make a determinant from a string (e.g., \'2+-0\')");
+
     py::class_<DeterminantHashVec>(m, "DeterminantHashVec")
         .def(py::init<>())
         .def(py::init<const std::vector<Determinant>&>())
@@ -155,15 +175,23 @@ void export_Determinant(py::module& m) {
     py::class_<GeneralOperator>(m, "GeneralOperator")
         .def(py::init<>())
         .def("add_operator", &GeneralOperator::add_operator)
+        .def("pop_operator", &GeneralOperator::pop_operator)
         .def("set_amplitudes", &GeneralOperator::set_amplitudes)
+        .def("set_amplitude", &GeneralOperator::set_amplitude)
         .def("amplitudes", &GeneralOperator::amplitudes)
         .def("op_indices", &GeneralOperator::op_indices)
         .def("op_list", &GeneralOperator::op_list)
-        .def("str", &GeneralOperator::str);
+        .def("str", &GeneralOperator::str)
+        .def("timing", &GeneralOperator::timing);
 
     m.def("apply_operator", &apply_operator);
+    m.def("apply_operator_fast", &apply_operator_fast);
+    m.def("apply_exp_operator_fast", &apply_exp_operator_fast);
     m.def("apply_exp_ah_factorized", &apply_exp_ah_factorized);
     m.def("apply_exp_ah_factorized_fast", &apply_exp_ah_factorized_fast);
+    m.def("energy_expectation_value", &energy_expectation_value);
+    m.def("apply_number_projector", &apply_number_projector);
+    m.def("overlap", &overlap);
 
     py::class_<SingleOperator>(m, "SingleOperator")
         .def_readwrite("sign", &SingleOperator::factor)

@@ -38,12 +38,6 @@ namespace forte {
 
 class ActiveSpaceIntegrals;
 
-struct SQOperator {
-    int orb;
-    bool creation;
-    bool alpha;
-};
-
 struct SingleOperator {
     double factor;
     Determinant ann;
@@ -63,12 +57,16 @@ using op_t = std::pair<double, std::vector<std::tuple<bool, bool, int>>>;
 class GeneralOperator {
   public:
     void add_operator(const std::vector<op_t>& op_list, double value = 0.0);
+    void add_operator2(const std::vector<SingleOperator>& ops, double value = 0.0);
+    void pop_operator();
     size_t nops() const { return amplitudes_.size(); }
     const std::vector<double>& amplitudes() const { return amplitudes_; }
     void set_amplitudes(std::vector<double>& amplitudes) { amplitudes_ = amplitudes; }
+    void set_amplitude(double value, size_t n) { amplitudes_[n] = value; }
     const std::vector<std::pair<size_t, size_t>>& op_indices() const { return op_indices_; }
     const std::vector<SingleOperator>& op_list() const { return op_list_; }
     std::vector<std::string> str();
+    static std::vector<std::pair<std::string, double>> timing();
 
   private:
     std::vector<double> amplitudes_;
@@ -78,26 +76,14 @@ class GeneralOperator {
 
 det_hash<double> apply_operator(GeneralOperator& gop, const det_hash<double>& state);
 det_hash<double> apply_exp_ah_factorized(GeneralOperator& gop, const det_hash<double>& state);
-det_hash<double> apply_exp_ah_factorized_fast(GeneralOperator& gop, const det_hash<double>& state);
 
-
-// det_hash<double> apply_exp_general_operator(GeneralOperator& gop, det_hash<double> state, int
-// maxn);
-// det_hash<double> apply_general_operator(GeneralOperator& gop, det_hash<double>& state);
-// det_hash<double> apply_general_operator_spin(GeneralOperator& gop, det_hash<double>& state);
-// det_hash<double> apply_exp_general_operator(GeneralOperator& gop, det_hash<double> state, int
-// maxn);
-// det_hash<double> apply_exp_general_operator_matrix(GeneralOperator& gop, det_hash<double>
-// state,
-//                                                   int norbs, int maxn);
-// det_hash<double> apply_exp_general_operator_spin(GeneralOperator& gop, det_hash<double> state,
-
-//                                                 int maxn);
-// det_hash<double> apply_number_projector(int na, int nb, det_hash<double>& state);
-// double overlap(det_hash<double>& left_state, det_hash<double>& right_state);
-
-// double energy_expectation_value(det_hash<double>& left_state, det_hash<double>& right_state,
-//                                std::shared_ptr<ActiveSpaceIntegrals> as_ints);
+det_hash<double> apply_operator_fast(GeneralOperator& gop, const det_hash<double>& state0);
+det_hash<double> apply_exp_operator_fast(GeneralOperator& gop, const det_hash<double>& state0);
+det_hash<double> apply_exp_ah_factorized_fast(GeneralOperator& gop, const det_hash<double>& state0);
+double energy_expectation_value(det_hash<double>& left_state, det_hash<double>& right_state,
+                                std::shared_ptr<ActiveSpaceIntegrals> as_ints);
+det_hash<double> apply_number_projector(int na, int nb, det_hash<double>& state);
+double overlap(det_hash<double>& left_state, det_hash<double>& right_state);
 
 } // namespace forte
 
