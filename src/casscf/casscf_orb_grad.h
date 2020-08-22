@@ -84,10 +84,10 @@ class CASSCF_ORB_GRAD {
     /// Canonicalize the final orbitals
     void canonicalize_final();
 
-    /// Return the AO orbital Lagrangian matrix (backtransformed)
+    /// Return the MO orbital Lagrangian matrix
     psi::SharedMatrix Lagrangian();
 
-    /// Return the AO 1-RDM (backtransformed)
+    /// Return the MO 1-RDM
     psi::SharedMatrix opdm();
 
     /// Dump the MO 2-RDM to file using IWL
@@ -153,9 +153,9 @@ class CASSCF_ORB_GRAD {
     /// The number of frozen-core orbitals
     size_t nfrzc_;
 
-    /// List of core MOs (Correlated)
+    /// List of core MOs (Absolute)
     std::vector<size_t> core_mos_;
-    /// List of active MOs (Correlated)
+    /// List of active MOs (Absolute)
     std::vector<size_t> actv_mos_;
     /// Map from MO space label to the MO indices
     std::map<std::string, std::vector<size_t>> label_to_mos_;

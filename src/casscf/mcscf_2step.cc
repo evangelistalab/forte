@@ -40,6 +40,7 @@
 #include "helpers/lbfgs/lbfgs.h"
 #include "helpers/lbfgs/lbfgs_param.h"
 
+#include "gradient_tpdm/backtransform_tpdm.h"
 #include "casscf/casscf_orb_grad.h"
 #include "casscf/mcscf_2step.h"
 
@@ -130,15 +131,6 @@ void MCSCF_2STEP::print_options() {
 }
 
 double MCSCF_2STEP::compute_energy() {
-    struct CASSCF_HISTORY {
-        double e_c;   // energy from CI
-        double e_o;   // energy after orbital optimization
-        double g_rms; // RMS of gradient vector
-        int n_micro;  // number of micro iteration
-    };
-
-    std::vector<CASSCF_HISTORY> history;
-
     // prepare for orbital gradients
     CASSCF_ORB_GRAD cas_grad(options_, mo_space_info_, ints_);
     auto dG = std::make_shared<psi::Vector>("dG", cas_grad.nrot());
@@ -150,7 +142,7 @@ double MCSCF_2STEP::compute_energy() {
     // DIIS extropolation for macro iteration
     auto diis_manager =
         std::make_shared<psi::DIISManager>(do_diis_ ? diis_max_vec_ : 0, "MCSCF DIIS",
-                                           psi::DIISManager::OldestAdded, psi::DIISManager::InCore);
+                                           psi::DIISManager::OldestAdded, psi::DIISManager::OnDisk);
     if (do_diis_) {
         dR = std::make_shared<psi::Vector>("dR", cas_grad.nrot());
 
@@ -171,10 +163,11 @@ double MCSCF_2STEP::compute_energy() {
     bool converged = false;
     bool sr = mo_space_info_->size("ACTIVE") == 0;
     double e_c;
+    RDMs rdms;
+    std::vector<CASSCF_HISTORY> history;
 
     for (int macro = 1; macro <= maxiter_; ++macro) {
         // solve CI problem
-        RDMs rdms;
         if (macro == 1 or (not sr)) {
             auto fci_ints = cas_grad.active_space_ints();
             auto as_solver = diagonalize_hamiltonian(fci_ints, debug_print_ ? print_ : 0, e_c);
@@ -186,7 +179,7 @@ double MCSCF_2STEP::compute_energy() {
         cas_grad.set_rdms(rdms);
         if (macro > 1) {
             double epsilon = std::fabs(de_c) * 0.1;
-            epsilon = epsilon > 1.0e-4 ? 1.0e-4 : epsilon;
+            epsilon = epsilon > 1.0e-5 ? 1.0e-5 : epsilon;
             lbfgs_param->epsilon = epsilon < g_conv_ ? g_conv_ : epsilon;
         }
         double e_o = lbfgs.minimize(cas_grad, R);
@@ -200,11 +193,7 @@ double MCSCF_2STEP::compute_energy() {
         char o_conv = lbfgs.converged() ? 'Y' : 'N';
 
         // save data for this macro iteration
-        CASSCF_HISTORY hist;
-        hist.e_c = e_c;
-        hist.e_o = e_o;
-        hist.g_rms = g_rms;
-        hist.n_micro = n_micro;
+        CASSCF_HISTORY hist(e_c, e_o, g_rms, n_micro);
 
         double de = e_o - e_c;
         double de_o = (macro > 1) ? e_o - history[macro - 2].e_o : e_o;
@@ -256,8 +245,8 @@ double MCSCF_2STEP::compute_energy() {
                 diis_manager->extrapolate(1, R.get());
                 psi::outfile->Printf("/E");
 
-                // update the actual integrals for CI
-                cas_grad.evaluate(R, R, false);
+                // update the actual integrals for CI, skip gradient computation
+                cas_grad.evaluate(R, dG, false);
             }
 
             dR->copy(*R);
@@ -283,7 +272,61 @@ double MCSCF_2STEP::compute_energy() {
         nit += inc;
     }
 
+    diis_manager->reset_subspace();
+    diis_manager->delete_diis_file();
+
     // print summary
+    print_macro_iteration(history);
+
+    // fix orbitals for redundant pairs
+    cas_grad.canonicalize_final();
+
+    // rediagonalize Hamiltonian
+    auto fci_ints = cas_grad.active_space_ints();
+    auto as_solver = diagonalize_hamiltonian(fci_ints, print_, energy_);
+
+    // pass to wave function
+    auto Ca = cas_grad.Ca();
+    ints_->wfn()->Ca()->copy(Ca);
+    ints_->wfn()->Cb()->copy(Ca);
+
+    // throw error if not converged
+    if (not converged) {
+        auto m = std::to_string(maxiter_);
+        throw std::runtime_error("MCSCF did not converge in " + m + " iterations!");
+    }
+
+    // for nuclear gradient
+    if (options_->get_str("DERTYPE") == "FIRST") {
+        // recompute gradient due to canonicalization
+        rdms = as_solver->compute_average_rdms(state_weights_map_, 2);
+        cas_grad.set_rdms(rdms);
+        cas_grad.evaluate(R, dG);
+
+        // back-transform MO density to AO
+        backtransform_densities(cas_grad);
+    }
+
+    return energy_;
+}
+
+std::unique_ptr<ActiveSpaceSolver>
+MCSCF_2STEP::diagonalize_hamiltonian(std::shared_ptr<ActiveSpaceIntegrals> fci_ints,
+                                     const int print, double& e_c) {
+    auto state_map = to_state_nroots_map(state_weights_map_);
+    auto active_space_solver = make_active_space_solver(ci_type_, state_map, scf_info_,
+                                                        mo_space_info_, fci_ints, options_);
+    active_space_solver->set_print(print);
+    const auto state_energies_map = active_space_solver->compute_energy();
+
+    // TODO: need to save CI vectors and dump to file and let solver read them
+
+    e_c = compute_average_state_energy(state_energies_map, state_weights_map_);
+
+    return active_space_solver;
+}
+
+void MCSCF_2STEP::print_macro_iteration(std::vector<CASSCF_HISTORY>& history) {
     print_h2("MCSCF Iteration Summary");
     std::string dash1 = std::string(30, '-').c_str();
     std::string dash2 = std::string(88, '-').c_str();
@@ -303,44 +346,35 @@ double MCSCF_2STEP::compute_energy() {
                              de_c, e_o, de_o, g, n);
     }
     psi::outfile->Printf("\n    %s", dash2.c_str());
-
-    // fix orbitals for redundant pairs
-    cas_grad.canonicalize_final();
-
-    // rediagonalize Hamiltonian
-    auto fci_ints = cas_grad.active_space_ints();
-    auto as_solver = diagonalize_hamiltonian(fci_ints, print_, energy_);
-
-    // pass to wave function
-    ints_->wfn()->Ca()->copy(cas_grad.Ca());
-    ints_->wfn()->Cb()->copy(cas_grad.Ca());
-
-    // throw error if not converged
-    if (not converged) {
-        throw std::runtime_error("MCSCF did not converge in " + std::to_string(maxiter_) +
-                                 " iterations!");
-    }
-
-    cas_grad.Lagrangian()->print();
-    cas_grad.opdm()->print();
-
-    return energy_;
 }
 
-std::unique_ptr<ActiveSpaceSolver>
-MCSCF_2STEP::diagonalize_hamiltonian(std::shared_ptr<ActiveSpaceIntegrals> fci_ints,
-                                     const int print, double& e_c) {
-    auto state_map = to_state_nroots_map(state_weights_map_);
-    auto active_space_solver = make_active_space_solver(ci_type_, state_map, scf_info_,
-                                                        mo_space_info_, fci_ints, options_);
-    active_space_solver->set_print(print);
-    const auto state_energies_map = active_space_solver->compute_energy();
+void MCSCF_2STEP::backtransform_densities(CASSCF_ORB_GRAD& cas_grad) {
+    auto Ca = cas_grad.Ca();
 
-    // TODO: need to save CI vectors and dump to file and let solver read them
+    // Lagrangian
+    auto L = cas_grad.Lagrangian();
+    L->back_transform(Ca);
+    ints_->wfn()->Lagrangian()->copy(L);
 
-    e_c = compute_average_state_energy(state_energies_map, state_weights_map_);
+    // 1-RDM
+    auto D1 = cas_grad.opdm();
+    D1->scale(0.5);
+    D1->back_transform(Ca);
+    ints_->wfn()->Da()->copy(D1);
+    ints_->wfn()->Db()->copy(D1);
 
-    return active_space_solver;
+    // 2-RDM
+    cas_grad.dump_tpdm_iwl();
+
+    std::vector<std::shared_ptr<psi::MOSpace>> spaces{psi::MOSpace::all};
+    auto transform = std::make_shared<psi::TPDMBackTransform>(
+        ints_->wfn(), spaces,
+        psi::IntegralTransform::TransformationType::Restricted, // Transformation type
+        psi::IntegralTransform::OutputType::DPDOnly,            // Output buffer
+        psi::IntegralTransform::MOOrdering::PitzerOrder,        // MO ordering (does not matter)
+        psi::IntegralTransform::FrozenOrbitals::None);          // Frozen orbitals
+    transform->set_print(print_);
+    transform->backtransform_density();
 }
 
 std::unique_ptr<MCSCF_2STEP>

@@ -740,7 +740,7 @@ def gradient_forte(name, **kwargs):
 
     energy = 0.0
 
-    if not job_type == 'CASSCF':
+    if job_type != 'CASSCF' and job_type != "MCSCF_TWO_STEP":
         raise Exception('analytic gradient is only implemented for CASSCF')
 
     start = time.time()
@@ -760,11 +760,16 @@ def gradient_forte(name, **kwargs):
         ints.rotate_orbitals(Ua, Ub)
 
     # Run gradient computation
-    energy = forte.forte_old_methods(ref_wfn, options, ints, mo_space_info)
+#    energy = forte.forte_old_methods(ref_wfn, options, ints, mo_space_info)
 
-    casscf = forte.make_casscf(state_weights_map, scf_info, options, mo_space_info, ints)
-    energy = casscf.compute_energy()
-    casscf.compute_gradient();
+    if job_type == "CASSCF":
+        casscf = forte.make_casscf(state_weights_map, scf_info, options, mo_space_info, ints)
+        energy = casscf.compute_energy()
+        casscf.compute_gradient();
+
+    if job_type == "MCSCF_TWO_STEP":
+        casscf = forte.make_mcscf_two_step(state_weights_map, scf_info, options, mo_space_info, ints)
+        energy = casscf.compute_energy()
 
     derivobj = psi4.core.Deriv(ref_wfn)
     derivobj.set_deriv_density_backtransformed(True)

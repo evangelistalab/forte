@@ -38,6 +38,7 @@
 #include "base_classes/scf_info.h"
 #include "base_classes/state_info.h"
 #include "integrals/integrals.h"
+#include "casscf/casscf_orb_grad.h"
 
 namespace forte {
 
@@ -138,6 +139,22 @@ class MCSCF_2STEP {
     std::unique_ptr<ActiveSpaceSolver>
     diagonalize_hamiltonian(std::shared_ptr<ActiveSpaceIntegrals> fci_ints, const int print,
                             double& e_c);
+
+    /// Class to store iteration data
+    struct CASSCF_HISTORY {
+        CASSCF_HISTORY(double ec, double eo, double g, int n)
+            : e_c(ec), e_o(eo), g_rms(g), n_micro(n) {}
+        double e_c;   // energy from CI
+        double e_o;   // energy after orbital optimization
+        double g_rms; // RMS of gradient vector
+        int n_micro;  // number of micro iteration
+    };
+
+    /// Print iteration information
+    void print_macro_iteration(std::vector<CASSCF_HISTORY>& history);
+
+    /// Set up for MCSCF nuclear gradient
+    void backtransform_densities(CASSCF_ORB_GRAD& cas_grad);
 };
 
 std::unique_ptr<MCSCF_2STEP>

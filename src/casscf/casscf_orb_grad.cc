@@ -26,18 +26,20 @@
  * @END LICENSE
  */
 
+#include "psi4/psi4-dec.h"
+#include "psi4/psifiles.h"
+#include "psi4/libfock/jk.h"
+#include "psi4/libqt/qt.h"
 #include "psi4/libmints/molecule.h"
 #include "psi4/libmints/pointgrp.h"
-#include "psi4/libfock/jk.h"
 #include "psi4/libmints/matrix.h"
 #include "psi4/libmints/wavefunction.h"
-#include "psi4/libqt/qt.h"
-#include "psi4/psifiles.h"
 #include "psi4/libmints/basisset.h"
-#include "psi4/psi4-dec.h"
 #include "psi4/libmints/vector.h"
 #include "psi4/libpsi4util/PsiOutStream.h"
 #include "psi4/libpsi4util/process.h"
+#include "psi4/libiwl/iwl.hpp"
+#include "psi4/libpsio/psio.hpp"
 
 #include "helpers/printing.h"
 #include "helpers/lbfgs/lbfgs.h"
@@ -349,7 +351,7 @@ void CASSCF_ORB_GRAD::init_tensors() {
     rdm1_ = std::make_shared<psi::Matrix>("1RDM", nactvpi_, nactvpi_);
 
     // orbital gradients related
-    A_ = ambit::BlockedTensor::build(tensor_type, "A", {"ca", "ao", "vo", "fg"});
+    A_ = ambit::BlockedTensor::build(tensor_type, "A", {"GG"});
 
     std::vector<std::string> g_blocks{"ac", "vo"};
     if (internal_rot_) {
@@ -605,6 +607,7 @@ double CASSCF_ORB_GRAD::evaluate(psi::SharedVector x, psi::SharedVector g, bool 
     if (update_orbitals(x)) {
         build_mo_integrals();
     }
+
     compute_reference_energy();
 
     // if need to compute gradient
@@ -690,13 +693,13 @@ void CASSCF_ORB_GRAD::compute_reference_energy() {
 
 void CASSCF_ORB_GRAD::compute_orbital_grad() {
     // build orbital Lagrangian
-    A_["Ri"] = 4.0 * F_["Ri"];
-    A_["Ru"] = 2.0 * Fc_["Rt"] * D1_["tu"];
-    A_["Ru"] += 2.0 * V_["Rtvw"] * D2_["tuvw"];
+    A_["Ri"] = 2.0 * F_["Ri"];
+    A_["Ru"] = Fc_["Rt"] * D1_["tu"];
+    A_["Ru"] += V_["Rtvw"] * D2_["tuvw"];
 
     // build orbital gradients
-    g_["pq"] = A_["pq"];
-    g_["pq"] -= A_["qp"];
+    g_["pq"] = 2.0 * A_["pq"];
+    g_["pq"] -= 2.0 * A_["qp"];
 
     // reshape and format to SharedVector
     reshape_rot_ambit(g_, grad_);
@@ -728,7 +731,7 @@ void CASSCF_ORB_GRAD::compute_orbital_hess_diag() {
     h_diag_.block("va").iterate([&](const std::vector<size_t>& i, double& value) {
         auto i0 = label_to_mos_["v"][i[0]];
         auto i1 = i[1] * nactv_ + i[1];
-        value = 2.0 * (Fd_[i0] * d1_data[i1]) - a_data[i1];
+        value = 2.0 * (Fd_[i0] * d1_data[i1] - a_data[i1]);
     });
 
     // active-core block
@@ -737,7 +740,7 @@ void CASSCF_ORB_GRAD::compute_orbital_hess_diag() {
         auto i1 = label_to_mos_["c"][i[1]];
         auto i1p = i[0] * nactv_ + i[0];
         value = 4.0 * (Fd_[i0] - Fd_[i1]);
-        value += 2.0 * (Fd_[i1] * d1_data[i1p]) - a_data[i1p];
+        value += 2.0 * (Fd_[i1] * d1_data[i1p] - a_data[i1p]);
     });
 
     // active-active block [see SI of J. Chem. Phys. 152, 074102 (2020)]
@@ -799,7 +802,7 @@ void CASSCF_ORB_GRAD::compute_orbital_hess_diag() {
         h_diag_.block("aa").iterate([&](const std::vector<size_t>& i, double& value) {
             auto i0 = i[0] * nactv_ + i[0];
             auto i1 = i[1] * nactv_ + i[1];
-            value -= a_data[i0] + a_data[i1];
+            value -= 2.0 * (a_data[i0] + a_data[i1]);
         });
     }
 
@@ -994,6 +997,7 @@ std::shared_ptr<psi::Matrix> CASSCF_ORB_GRAD::canonicalize() {
 psi::SharedMatrix CASSCF_ORB_GRAD::Lagrangian() {
     // format A matrix
     auto L = std::make_shared<psi::Matrix>("Lagrangian AO Back-Transformed", nmopi_, nmopi_);
+
     A_.citerate(
         [&](const std::vector<size_t>& i, const std::vector<SpinType>&, const double& value) {
             auto irrep_index_pair1 = mos_rel_[i[0]];
@@ -1007,7 +1011,7 @@ psi::SharedMatrix CASSCF_ORB_GRAD::Lagrangian() {
                 L->set(h1, p, q, value);
             }
         });
-    L->back_transform(C_);
+
     return L;
 }
 
@@ -1034,9 +1038,78 @@ psi::SharedMatrix CASSCF_ORB_GRAD::opdm() {
         }
     }
 
-    // back-transform to AO
-    D1->back_transform(C_);
-
     return D1;
+}
+
+void CASSCF_ORB_GRAD::dump_tpdm_iwl() {
+    auto psio = _default_psio_lib_;
+    IWL d2(psio.get(), PSIF_MO_TPDM, 1.0e-15, 0, 0);
+    std::string name = "outfile";
+    int print = debug_print_ ? 1 : 0;
+
+    // inactive docc part
+    auto docc_mos = mo_space_info_->absolute_mo("INACTIVE_DOCC");
+    for (int i = 0, ndocc = docc_mos.size(); i < ndocc; ++i) {
+        auto ni = docc_mos[i];
+        d2.write_value(ni, ni, ni, ni, 1.0, print, name, 0);
+        for (int j = 0; j < i; ++j) {
+            auto nj = docc_mos[j];
+            d2.write_value(ni, ni, nj, nj, 2.0, print, name, 0);
+            d2.write_value(nj, nj, ni, ni, 2.0, print, name, 0);
+            d2.write_value(ni, nj, nj, ni, -1.0, print, name, 0);
+            d2.write_value(nj, ni, ni, nj, -1.0, print, name, 0);
+        }
+    }
+
+    // 1-rdm part
+    for (int h = 0, offset = 0; h < nirrep_; ++h) {
+        for (int u = 0; u < nactvpi_[h]; ++u) {
+            auto nu = u + offset + ndoccpi_[h];
+            for (int v = u; v < nactvpi_[h]; ++v) {
+                auto nv = v + offset + ndoccpi_[h];
+
+                double d_uv = rdm1_->get(h, u, v);
+                double d_vu = rdm1_->get(h, v, u);
+
+                for (int i = 0, ndocc = docc_mos.size(); i < ndocc; ++i) {
+                    auto ni = docc_mos[i];
+
+                    d2.write_value(nu, nv, ni, ni, 2.0 * d_uv, print, name, 0);
+                    d2.write_value(nu, ni, ni, nv, -d_uv, print, name, 0);
+
+                    if (u != v) {
+                        d2.write_value(nv, nu, ni, ni, 2.0 * d_vu, print, name, 0);
+                        d2.write_value(nv, ni, ni, nu, -d_vu, print, name, 0);
+                    }
+                }
+            }
+        }
+        offset += nmopi_[h];
+    }
+
+    // 2-rdm part
+    auto& d2_data = D2_.block("aaaa").data();
+    auto na2 = nactv_ * nactv_;
+    auto na3 = nactv_ * na2;
+
+    for (size_t u = 0; u < nactv_; ++u) {
+        auto nu = actv_mos_[u];
+        for (size_t v = 0; v < nactv_; ++v) {
+            auto nv = actv_mos_[v];
+            for (size_t x = 0; x < nactv_; ++x) {
+                auto nx = actv_mos_[x];
+                for (size_t y = 0; y < nactv_; ++y) {
+                    auto ny = actv_mos_[y];
+
+                    double value = d2_data[u * na3 + v * na2 + x * nactv_ + y];
+                    d2.write_value(nu, nv, nx, ny, 0.5 * value, print, name, 0);
+                }
+            }
+        }
+    }
+
+    d2.flush(1);
+    d2.set_keep_flag(1);
+    d2.close();
 }
 } // namespace forte
