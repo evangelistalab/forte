@@ -163,6 +163,7 @@ void export_Determinant(py::module& m) {
 
     m.def("apply_operator", &apply_operator);
     m.def("apply_exp_ah_factorized", &apply_exp_ah_factorized);
+    m.def("apply_exp_ah_factorized_fast", &apply_exp_ah_factorized_fast);
 
     py::class_<SingleOperator>(m, "SingleOperator")
         .def_readwrite("sign", &SingleOperator::factor)

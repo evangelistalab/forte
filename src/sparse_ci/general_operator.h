@@ -78,6 +78,8 @@ class GeneralOperator {
 
 det_hash<double> apply_operator(GeneralOperator& gop, const det_hash<double>& state);
 det_hash<double> apply_exp_ah_factorized(GeneralOperator& gop, const det_hash<double>& state);
+det_hash<double> apply_exp_ah_factorized_fast(GeneralOperator& gop, const det_hash<double>& state);
+
 
 // det_hash<double> apply_exp_general_operator(GeneralOperator& gop, det_hash<double> state, int
 // maxn);

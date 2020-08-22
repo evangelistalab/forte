@@ -73,6 +73,7 @@ template <size_t N> class DeterminantImpl : public BitArray<N> {
     using BitArray<N>::operator^;
     using BitArray<N>::operator&;
     using BitArray<N>::fast_a_xor_b_count;
+    using BitArray<N>::fast_a_and_b_eq_zero;
 
     /// the number of bits divided by two
     static constexpr size_t nbits_half = N / 2;

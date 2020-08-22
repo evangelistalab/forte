@@ -223,7 +223,92 @@ det_hash<double> apply_exp_ah_factorized(GeneralOperator& gop, const det_hash<do
     return new_state;
 }
 
-//det_hash<double> apply_exp_ah_factorized_fast(GeneralOperator& gop,
+#define DEBUG_EXP_ALGORITHM 1
+
+void apply_exp_op_fast(const Determinant& d, const Determinant& ann, const Determinant& cre,
+                       double amp, det_hash<double>& new_terms) {
+#if DEBUG_EXP_ALGORITHM
+    std::cout << "\Applying: " << amp << "\n"
+              << str(cre, 16) << "+\n"
+              << str(ann, 16) << "-\n"
+              << str(d, 16) << std::endl;
+#endif
+}
+
+det_hash<double> apply_exp_ah_factorized_fast(GeneralOperator& gop,
+                                              const det_hash<double>& state0) {
+    const auto& amplitudes = gop.amplitudes();
+    const auto& op_indices = gop.op_indices();
+    const auto& op_list = gop.op_list();
+
+    // initialize a state object
+    det_hash<double> state(state0);
+    det_hash<double> new_terms;
+    for (size_t n = 0, nops = gop.nops(); n < nops; n++) {
+        // zero the new terms
+        new_terms.clear();
+
+        const size_t begin = op_indices[n].first;
+        const SingleOperator& op = op_list[begin];
+        const Determinant ucre = op.cre - op.ann;
+        const Determinant uann = op.ann - op.cre;
+        const double amp = amplitudes[n];
+
+        // loop over all determinants
+        for (const auto& det_c : state) {
+            const Determinant& d = det_c.first;
+
+            // test if we can apply this operator to this determinant
+#if DEBUG_EXP_ALGORITHM
+            std::cout << "\nOperation\n"
+                      << str(op.cre, 16) << "+\n"
+                      << str(op.ann, 16) << "-\n"
+                      << str(d, 16) << std::endl;
+#endif
+
+#if DEBUG_EXP_ALGORITHM
+            std::cout << "Testing (cre)(ann) sequence" << std::endl;
+            std::cout << "Can annihilate: " << (d.fast_a_and_b_equal_b(op.ann) ? "True" : "False")
+                      << std::endl;
+            std::cout << "Can create:     " << (ucre.fast_a_and_b_eq_zero(d) ? "True" : "False")
+                      << std::endl;
+#endif
+            if (d.fast_a_and_b_equal_b(op.ann) and d.fast_a_and_b_eq_zero(ucre)) {
+#if DEBUG_EXP_ALGORITHM
+                std::cout << "Applying the (cre)(ann) sequence!" << std::endl;
+#endif
+                apply_exp_op_fast(d, op.ann, op.cre, amp, new_terms);
+            } else if (d.fast_a_and_b_equal_b(op.cre) and d.fast_a_and_b_eq_zero(uann)) {
+#if DEBUG_EXP_ALGORITHM
+                std::cout << "Applying the (ann)(cre) sequence!" << std::endl;
+#endif
+                apply_exp_op_fast(d, op.cre, op.ann, -amp, new_terms);
+            }
+        }
+    }
+
+    //            const double c = det_c.second;
+    //            det_hash<double> terms = apply_exp_op(d, n, gop);
+    //            for (const auto& d_c : terms) {
+    //                new_state[d_c.first] += d_c.second * c;
+    //            }
+    //    det_hash<double> new_state;
+    //    Determinant d;
+    //        new_state.clear();
+    //        for (const auto& det_c : state) {
+    //            const double c = det_c.second;
+    //            d = det_c.first;
+    //            det_hash<double> terms = apply_exp_op(d, n, gop);
+    //            for (const auto& d_c : terms) {
+    //                new_state[d_c.first] += d_c.second * c;
+    //            }
+    //        }
+    //        state = new_state;
+    //    }
+    return state;
+}
+
+// det_hash<double> apply_exp_ah_factorized_fast(GeneralOperator& gop,
 //                                              const det_hash<double>& state0) {
 //    det_hash<double> state(state0);
 //    det_hash<double> new_state;
@@ -285,7 +370,8 @@ det_hash<double> apply_exp_ah_factorized(GeneralOperator& gop, const det_hash<do
 //}
 
 // std::vector<std::tuple<size_t, size_t, double>> compute_matrix_repr(GeneralOperator& gop,
-//                                                                    DeterminantHashVec& det_idx) {
+//                                                                    DeterminantHashVec&
+//                                                                    det_idx) {
 //    std::vector<std::tuple<size_t, size_t, double>> m;
 //    size_t dim = det_idx.size();
 
@@ -304,7 +390,8 @@ det_hash<double> apply_exp_ah_factorized(GeneralOperator& gop, const det_hash<do
 //                double factor = apply_operator(d, op_list[j].second);
 //                if (factor != 0.0) {
 //                    size_t J = det_idx.get_idx(d);
-//                    m.push_back(std::make_tuple(I, J, factor * amplitudes[n] * op_list[j].first));
+//                    m.push_back(std::make_tuple(I, J, factor * amplitudes[n] *
+//                    op_list[j].first));
 //                }
 //            }
 //        }
@@ -323,7 +410,8 @@ det_hash<double> apply_exp_ah_factorized(GeneralOperator& gop, const det_hash<do
 //    }
 //}
 
-// det_hash<double> apply_exp_general_operator_matrix(GeneralOperator& gop, det_hash<double> state,
+// det_hash<double> apply_exp_general_operator_matrix(GeneralOperator& gop, det_hash<double>
+// state,
 //                                                   int norbs, int maxn) {
 //    size_t dim = std::pow(2, 2 * norbs);
 //    std::vector<double> C(dim);
@@ -382,7 +470,8 @@ det_hash<double> apply_exp_ah_factorized(GeneralOperator& gop, const det_hash<do
 //            t_d = d_l ^ d_r;
 //            int ndiff = t_d.count();
 //            if (ndiff == 0) {
-//                E += (E_0 + as_ints->slater_rules(d_l, d_r)) * det_c_l.second * det_c_r.second;
+//                E += (E_0 + as_ints->slater_rules(d_l, d_r)) * det_c_l.second *
+//                det_c_r.second;
 //            } else if (ndiff <= 4) {
 //                E += as_ints->slater_rules(d_l, d_r) * det_c_l.second * det_c_r.second;
 //            }
