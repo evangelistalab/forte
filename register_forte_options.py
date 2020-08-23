@@ -476,7 +476,7 @@ def register_aci_options(options):
         "Add degenerate determinants not included in the aimed selection")
 
 
-    options.add_int("ACI_N_AVERAGE", 1, "Number of roots to averag")
+    options.add_int("ACI_N_AVERAGE", 0, "Number of roots to average")
 
     options.add_int("ACI_AVERAGE_OFFSET", 0,
                           "Offset for state averaging")

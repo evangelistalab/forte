@@ -106,8 +106,16 @@ void AdaptiveCI::startup() {
     }
 
     // get options for algorithm
-    pq_function_ = options_->get_str("ACI_PQ_FUNCTION");
+    if (options_->get_str("ACI_PQ_FUNCTION") == "MAX") {
+        average_function_ = AverageFunction::MaxF;
+    } else {
+        average_function_ = AverageFunction::AvgF;
+    }
+
     print_weights_ = options_->get_bool("ACI_PRINT_WEIGHTS");
+
+    naverage_ = options_->get_int("ACI_N_AVERAGE");
+    average_offset_ = options_->get_int("ACI_AVERAGE_OFFSET");
 
     hole_ = 0;
 
@@ -128,10 +136,12 @@ void AdaptiveCI::print_info() {
     outfile->Printf("\n  There are %zu active orbitals.\n", nact_);
 
     // Print a summary
-    std::vector<std::pair<std::string, int>> calculation_info{{"Multiplicity", multiplicity_},
-                                                              {"Symmetry", wavefunction_symmetry_},
-                                                              {"Number of roots", nroot_},
-                                                              {"Root used for properties", root_}};
+    std::vector<std::pair<std::string, int>> calculation_info{
+        {"Multiplicity", multiplicity_},
+        {"Symmetry", wavefunction_symmetry_},
+        {"Number of roots", nroot_},
+        {"Root used for properties", root_},
+        {"Root used for averaging", naverage_}};
 
     std::vector<std::pair<std::string, double>> calculation_info_double{
         {"Sigma (Eh)", sigma_},
@@ -146,7 +156,8 @@ void AdaptiveCI::print_info() {
         //        "True" : "False"},
         {"Project out spin contaminants", project_out_spin_contaminants_ ? "True" : "False"},
         {"Enforce spin completeness of basis", spin_complete_ ? "True" : "False"},
-        {"Enforce complete aimed selection", add_aimed_degenerate_ ? "True" : "False"}};
+        {"Enforce complete aimed selection", add_aimed_degenerate_ ? "True" : "False"},
+        {"Multiroot averaging ", average_function_ == AverageFunction::MaxF ? "Max" : "Average"}};
 
     // Print some information
     outfile->Printf("\n  ==> Calculation Information <==\n");
@@ -321,29 +332,26 @@ double AdaptiveCI::average_q_values(std::vector<double>& E2) {
 
     size_t nroot = E2.size();
 
-    int nav = options_->get_int("ACI_N_AVERAGE");
-    int off = options_->get_int("ACI_AVERAGE_OFFSET");
-    if (nav == 0)
-        nav = nroot;
-    if ((off + nav) > nroot)
-        off = nroot - nav; // throw psi::PSIEXCEPTION("\n  Your desired number of
-                           // roots and the offset exceeds the maximum number of
-                           // roots!");
+    if (naverage_ == 0)
+        naverage_ = nroot;
+    if ((average_offset_ + naverage_) > nroot)
+        average_offset_ = nroot - naverage_; // throw psi::PSIEXCEPTION("\n  Your desired number of
+                                             // roots and the offset exceeds the maximum number of
+                                             // roots!");
 
     double f_E2 = 0.0;
 
     // Choose the function of the couplings for each root
     // If nroot = 1, choose the max
 
-    if (pq_function_ == "MAX" or nroot == 1) {
+    if ((average_function_ == AverageFunction::MaxF) or (nroot == 1)) {
         f_E2 = *std::max_element(E2.begin(), E2.end());
-    } else if (pq_function_ == "AVERAGE") {
+    } else if (average_function_ == AverageFunction::AvgF) {
         double E2_average = 0.0;
-        double dim_inv = 1.0 / nav;
-        for (int n = 0; n < nav; ++n) {
-            E2_average += E2[n + off] * dim_inv;
+        double dim_inv = 1.0 / static_cast<double>(naverage_);
+        for (int n = 0; n < naverage_; ++n) {
+            E2_average += E2[n + average_offset_] * dim_inv;
         }
-
         f_E2 = E2_average;
     }
     return f_E2;
@@ -397,20 +405,13 @@ void AdaptiveCI::prune_q_space(DeterminantHashVec& PQ_space, DeterminantHashVec&
 
     double tau_p = sigma_ * gamma_;
 
-    int nav = options_->get_int("ACI_N_AVERAGE");
-    int off = options_->get_int("ACI_AVERAGE_OFFSET");
-    if (nav == 0)
-        nav = nroot;
+    if (naverage_ == 0)
+        naverage_ = nroot;
 
-    //  if( options_->get_str("EXCITED_ALGORITHM") == "ROOT_COMBINE" and (nav ==
-    //  1) and (nroot > 1)){
-    //      off = ref_root_;
-    //  }
-
-    if ((off + nav) > nroot)
-        off = nroot - nav; // throw psi::PSIEXCEPTION("\n  Your desired number of
-                           // roots and the offset exceeds the maximum number of
-                           // roots!");
+    if ((average_offset_ + naverage_) > nroot)
+        average_offset_ = nroot - naverage_; // throw psi::PSIEXCEPTION("\n  Your desired number of
+                                             // roots and the offset exceeds the maximum number of
+                                             // roots!");
 
     // Create a vector that stores the absolute value of the CI coefficients
     std::vector<std::pair<double, Determinant>> dm_det_list;
@@ -419,14 +420,14 @@ void AdaptiveCI::prune_q_space(DeterminantHashVec& PQ_space, DeterminantHashVec&
     for (size_t i = 0, max_i = detmap.size(); i < max_i; ++i) {
         double criteria = 0.0;
         if ((nroot_ > 1) and (ex_alg_ == "AVERAGE" or cycle_ < pre_iter_)) {
-            for (int n = 0; n < nav; ++n) {
-                if (pq_function_ == "MAX") {
+            for (int n = 0; n < naverage_; ++n) {
+                if (average_function_ == AverageFunction::MaxF) {
                     criteria = std::max(criteria, std::fabs(evecs->get(i, n)));
-                } else if (pq_function_ == "AVERAGE") {
-                    criteria += std::fabs(evecs->get(i, n + off));
+                } else if (average_function_ == AverageFunction::AvgF) {
+                    criteria += std::fabs(evecs->get(i, n + average_offset_));
                 }
             }
-            criteria /= static_cast<double>(nav);
+            criteria /= static_cast<double>(naverage_);
         } else {
             criteria = std::fabs(evecs->get(i, ref_root_));
         }

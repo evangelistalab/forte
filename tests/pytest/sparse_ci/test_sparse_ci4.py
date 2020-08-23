@@ -141,12 +141,19 @@ def test_sparse_ci4():
     ### Test the factorized exponential operator ###
     print('Test the factorized exponential operator')
     gop = forte.GeneralOperator()
-    ref = { det("22"): 1.0 } #0.5, det("02"): 0.8660254038}
     gop.add_operator(to_ops('[2a+ 0a-] - [0b+ 2b-]'),0.1)
     gop.add_operator(to_ops('[2b+ 0b-] - [0b+ 2b-]'),0.1)
     gop.add_operator(to_ops('0.5 [2a+ 2b+ 0b- 0a-] - 0.5 [0a+ 0b+ 2b- 2a-]'),0.3)
+    ref = { det("22"): 1.0 } #0.5, det("02"): 0.8660254038}
     wfn = forte.apply_exp_ah_factorized(gop,ref)
     print_wfn(wfn,4)
+    gop = forte.GeneralOperator()
+    gop.add_operator(to_ops('0.5 [2a+ 2b+ 0b- 0a-] - 0.5 [0a+ 0b+ 2b- 2a-]'),-0.3)
+    gop.add_operator(to_ops('[2b+ 0b-] - [0b+ 2b-]'),-0.1)
+    gop.add_operator(to_ops('[2a+ 0a-] - [0b+ 2b-]'),-0.1)
+    wfn2 = forte.apply_exp_ah_factorized(gop,wfn)
+    print_wfn(wfn2,4)
+
 
 test_sparse_ci4()
 
