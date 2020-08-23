@@ -354,12 +354,14 @@ void MCSCF_2STEP::backtransform_densities(CASSCF_ORB_GRAD& cas_grad) {
     // Lagrangian
     auto L = cas_grad.Lagrangian();
     L->back_transform(Ca);
+    L->set_name("Lagrangian AO Back-Transformed");
     ints_->wfn()->Lagrangian()->copy(L);
 
     // 1-RDM
     auto D1 = cas_grad.opdm();
     D1->scale(0.5);
     D1->back_transform(Ca);
+    D1->set_name("D1a AO Back-Transformed");
     ints_->wfn()->Da()->copy(D1);
     ints_->wfn()->Db()->copy(D1);
 
@@ -373,7 +375,7 @@ void MCSCF_2STEP::backtransform_densities(CASSCF_ORB_GRAD& cas_grad) {
         psi::IntegralTransform::OutputType::DPDOnly,            // Output buffer
         psi::IntegralTransform::MOOrdering::PitzerOrder,        // MO ordering (does not matter)
         psi::IntegralTransform::FrozenOrbitals::None);          // Frozen orbitals
-    transform->set_print(print_);
+    transform->set_print(debug_print_ ? 5 : print_);
     transform->backtransform_density();
 }
 

@@ -134,7 +134,7 @@ void CASSCF_ORB_GRAD::setup_mos() {
     BlockedTensor::add_mo_space("a", "t,u,v,w,y,x,z", actv_mos_, NoSpin);
     BlockedTensor::add_mo_space("v", "a,b", label_to_mos_["v"], NoSpin);
 
-    BlockedTensor::add_composite_mo_space("o", "k,l", {"c", "a"});
+    BlockedTensor::add_composite_mo_space("I", "K,L", {"f", "c"});
     BlockedTensor::add_composite_mo_space("g", "p,q,r,s", {"c", "a", "v"});
     BlockedTensor::add_composite_mo_space("G", "P,Q,R,S", {"f", "c", "a", "v"});
 }
@@ -327,8 +327,9 @@ void CASSCF_ORB_GRAD::setup_JK() {
 void CASSCF_ORB_GRAD::init_tensors() {
     // save a copy of initial MO
     C0_ = ints_->wfn()->Ca()->clone();
-    C0_->set_name("MCSCF Orbital Coefficients");
+    C0_->set_name("MCSCF Initial Orbital Coefficients");
     C_ = C0_->clone();
+    C_->set_name("MCSCF Orbital Coefficients");
 
     // save a copy of AO OEI
     H_ao_ = ints_->wfn()->H()->clone();
@@ -353,7 +354,7 @@ void CASSCF_ORB_GRAD::init_tensors() {
     // orbital gradients related
     A_ = ambit::BlockedTensor::build(tensor_type, "A", {"GG"});
 
-    std::vector<std::string> g_blocks{"ac", "vo"};
+    std::vector<std::string> g_blocks{"ac", "vc", "va"};
     if (internal_rot_) {
         g_blocks.push_back("aa");
         Guu_ = ambit::BlockedTensor::build(CoreTensor, "Guu", {"aa"});
@@ -642,11 +643,10 @@ bool CASSCF_ORB_GRAD::update_orbitals(psi::SharedVector x) {
     R_->add(dR);
 
     // U_new = U_old * exp(dR)
-    U_ = psi::linalg::doublet(U_, matrix_exponential(dR, 3), false, false);
+    U_->gemm(false, false, 1.0, U_, matrix_exponential(dR, 3), 0.0);
 
     // update orbitals
-    C_ = psi::linalg::doublet(C0_, U_, false, false);
-    C_->set_name(C0_->name());
+    C_->gemm(false, false, 1.0, C0_, U_, 0.0);
 
     // printing
     if (debug_print_) {
@@ -660,7 +660,7 @@ bool CASSCF_ORB_GRAD::update_orbitals(psi::SharedVector x) {
 }
 
 psi::SharedMatrix CASSCF_ORB_GRAD::matrix_exponential(psi::SharedMatrix A, int n) {
-    auto U = std::make_shared<psi::Matrix>("U", A->rowspi(), A->colspi());
+    auto U = std::make_shared<psi::Matrix>("U = exp(A)", A->rowspi(), A->colspi());
     U->identity();
     U->add(A);
 
@@ -693,7 +693,7 @@ void CASSCF_ORB_GRAD::compute_reference_energy() {
 
 void CASSCF_ORB_GRAD::compute_orbital_grad() {
     // build orbital Lagrangian
-    A_["Ri"] = 2.0 * F_["Ri"];
+    A_["RK"] = 2.0 * F_["RK"];
     A_["Ru"] = Fc_["Rt"] * D1_["tu"];
     A_["Ru"] += V_["Rtvw"] * D2_["tuvw"];
 
@@ -885,10 +885,7 @@ std::shared_ptr<ActiveSpaceIntegrals> CASSCF_ORB_GRAD::active_space_ints() {
 
 void CASSCF_ORB_GRAD::canonicalize_final() {
     auto U = canonicalize();
-
-    C_ = psi::linalg::doublet(C_, U, false, false);
-    C_->set_name(C0_->name());
-
+    C_->gemm(false, false, 1.0, C_, U, 0.0);
     build_mo_integrals();
 }
 
@@ -996,7 +993,7 @@ std::shared_ptr<psi::Matrix> CASSCF_ORB_GRAD::canonicalize() {
 
 psi::SharedMatrix CASSCF_ORB_GRAD::Lagrangian() {
     // format A matrix
-    auto L = std::make_shared<psi::Matrix>("Lagrangian AO Back-Transformed", nmopi_, nmopi_);
+    auto L = std::make_shared<psi::Matrix>("Lagrangian (MO)", nmopi_, nmopi_);
 
     A_.citerate(
         [&](const std::vector<size_t>& i, const std::vector<SpinType>&, const double& value) {
@@ -1016,7 +1013,7 @@ psi::SharedMatrix CASSCF_ORB_GRAD::Lagrangian() {
 }
 
 psi::SharedMatrix CASSCF_ORB_GRAD::opdm() {
-    auto D1 = std::make_shared<psi::Matrix>("OPDM AO Back-Transformed", nmopi_, nmopi_);
+    auto D1 = std::make_shared<psi::Matrix>("OPDM (MO)", nmopi_, nmopi_);
 
     // inactive docc part
     for (int h = 0; h < nirrep_; ++h) {
