@@ -75,14 +75,13 @@ SemiCanonical::SemiCanonical(std::shared_ptr<MOSpaceInfo> mo_space_info,
 void SemiCanonical::startup() {
     // some basics
     nirrep_ = mo_space_info_->nirrep();
+    nmopi_ = mo_space_info_->dimension("ALL");
     ncmo_ = mo_space_info_->size("CORRELATED");
     nact_ = mo_space_info_->size("ACTIVE");
-    nmopi_ = mo_space_info_->dimension("ALL");
     ncmopi_ = mo_space_info_->dimension("CORRELATED");
     fdocc_ = mo_space_info_->dimension("FROZEN_DOCC");
     rdocc_ = mo_space_info_->dimension("RESTRICTED_DOCC");
     actv_ = mo_space_info_->dimension("ACTIVE");
-    ruocc_ = mo_space_info_->dimension("RESTRICTED_UOCC");
 
     // Preapare orbital rotation matrix, which transforms all MOs
     Ua_ = std::make_shared<psi::Matrix>("Ua", nmopi_, nmopi_);
@@ -98,27 +97,43 @@ void SemiCanonical::startup() {
     // Initialize U to identity
     set_U_to_identity();
 
+    // Get the list of elementary spaces
+    std::vector<std::string> space_names = mo_space_info_->space_names();
+
+    // Remove the frozen orbitals
+    space_names.erase(std::remove(space_names.begin(), space_names.end(), "FROZEN_DOCC"),
+                      space_names.end());
+    space_names.erase(std::remove(space_names.begin(), space_names.end(), "FROZEN_UOCC"),
+                      space_names.end());
+
     // dimension map
-    mo_dims_["core"] = rdocc_;
-    mo_dims_["actv"] = actv_;
-    mo_dims_["virt"] = ruocc_;
-
-    // index map
-    cmo_idx_["core"] = idx_space(rdocc_, psi::Dimension(std::vector<int>(nirrep_, 0)), ncmopi_);
-    cmo_idx_["actv"] = idx_space(actv_, rdocc_, ncmopi_);
-    cmo_idx_["virt"] = idx_space(ruocc_, rdocc_ + actv_, ncmopi_);
-
-    // offsets map
-    offsets_["core"] = fdocc_;
-    offsets_["virt"] = fdocc_ + rdocc_ + actv_;
-    offsets_["actv"] = fdocc_ + rdocc_;
-
-    std::vector<int> actv_off;
-    for (size_t h = 0, offset = 0; h < nirrep_; ++h) {
-        actv_off.emplace_back(offset);
-        offset += actv_[h];
+    for (std::string& space : space_names) {
+        mo_dims_[space] = mo_space_info_->dimension(space);
     }
-    actv_offsets_["actv"] = actv_off;
+
+    // index map and offsets map
+    auto offset_dim = psi::Dimension(nirrep_);
+    for (std::string& space : space_names) {
+        auto dim = mo_dims_[space];
+        cmo_idx_[space] = idx_space(dim, offset_dim, ncmopi_);
+        offsets_[space] = fdocc_ + offset_dim;
+        offset_dim += dim;
+    }
+
+    // Compute the offset within the GAS spaces
+    for (std::string& space : space_names) {
+        if (space.find("GAS") != std::string::npos) {
+            actv_offsets_[space] = std::vector<int>(nirrep_, 0);
+        }
+    }
+    for (size_t h = 0, offset = 0; h < nirrep_; ++h) {
+        for (std::string& space : space_names) {
+            if (space.find("GAS") != std::string::npos) {
+                actv_offsets_[space][h] = offset;
+                offset += mo_dims_[space][h];
+            }
+        }
+    }
 }
 
 std::vector<std::vector<size_t>> SemiCanonical::idx_space(const psi::Dimension& npi,
@@ -137,46 +152,46 @@ std::vector<std::vector<size_t>> SemiCanonical::idx_space(const psi::Dimension& 
     return out;
 }
 
-void SemiCanonical::set_actv_dims(const psi::Dimension& actv_docc,
-                                  const psi::Dimension& actv_virt) {
-    // test actv_docc and actv_virt
-    psi::Dimension actv = actv_docc + actv_virt;
-    if (actv != actv_) {
-        throw psi::PSIEXCEPTION("ACTIVE_DOCC and ACTIVE_VIRT do not add up to ACTIVE!");
-    }
+// void SemiCanonical::set_actv_dims(const psi::Dimension& actv_docc,
+//                                  const psi::Dimension& actv_virt) {
+//    // test actv_docc and actv_virt
+//    psi::Dimension actv = actv_docc + actv_virt;
+//    if (actv != actv_) {
+//        throw psi::PSIEXCEPTION("ACTIVE_DOCC and ACTIVE_VIRT do not add up to ACTIVE!");
+//    }
 
-    // delete original active maps
-    mo_dims_.erase("actv");
-    cmo_idx_.erase("actv");
-    offsets_.erase("actv");
-    actv_offsets_.erase("actv");
+//    // delete original active maps
+//    mo_dims_.erase("actv");
+//    cmo_idx_.erase("actv");
+//    offsets_.erase("actv");
+//    actv_offsets_.erase("actv");
 
-    // save to class variables
-    actv_docc_ = actv_docc;
-    actv_virt_ = actv_virt;
+//    // save to class variables
+//    actv_docc_ = actv_docc;
+//    actv_virt_ = actv_virt;
 
-    // active dimension map
-    mo_dims_["actv_docc"] = actv_docc_;
-    mo_dims_["actv_virt"] = actv_virt_;
+//    // active dimension map
+//    mo_dims_["actv_docc"] = actv_docc_;
+//    mo_dims_["actv_virt"] = actv_virt_;
 
-    // active index map
-    cmo_idx_["actv_docc"] = idx_space(actv_docc_, rdocc_, ncmopi_);
-    cmo_idx_["actv_virt"] = idx_space(actv_virt_, rdocc_ + actv_docc, ncmopi_);
+//    // active index map
+//    cmo_idx_["actv_docc"] = idx_space(actv_docc_, rdocc_, ncmopi_);
+//    cmo_idx_["actv_virt"] = idx_space(actv_virt_, rdocc_ + actv_docc, ncmopi_);
 
-    // active offsets map
-    offsets_["actv_docc"] = fdocc_ + rdocc_;
-    offsets_["actv_virt"] = fdocc_ + rdocc_ + actv_docc_;
+//    // active offsets map
+//    offsets_["actv_docc"] = fdocc_ + rdocc_;
+//    offsets_["actv_virt"] = fdocc_ + rdocc_ + actv_docc_;
 
-    std::vector<int> actvh_off, actvp_off;
-    for (size_t h = 0, offset = 0; h < nirrep_; ++h) {
-        actvh_off.emplace_back(offset);
-        offset += actv_docc[h];
-        actvp_off.emplace_back(offset);
-        offset += actv_virt[h];
-    }
-    actv_offsets_["actv_docc"] = actvh_off;
-    actv_offsets_["actv_virt"] = actvp_off;
-}
+//    std::vector<int> actvh_off, actvp_off;
+//    for (size_t h = 0, offset = 0; h < nirrep_; ++h) {
+//        actvh_off.emplace_back(offset);
+//        offset += actv_docc[h];
+//        actvp_off.emplace_back(offset);
+//        offset += actv_virt[h];
+//    }
+//    actv_offsets_["actv_docc"] = actvh_off;
+//    actv_offsets_["actv_virt"] = actvp_off;
+//}
 
 RDMs SemiCanonical::semicanonicalize(RDMs& rdms, const int& max_rdm_level, const bool& build_fock,
                                      const bool& transform) {
@@ -330,9 +345,9 @@ void SemiCanonical::build_transformation_matrices(psi::SharedMatrix& Ua, psi::Sh
 
     // loop over orbital spaces
     for (const auto& name_dim_pair : mo_dims_) {
-        std::string name = name_dim_pair.first;
-        std::string name_a = "Fock " + name + " alpha";
-        std::string name_b = "Fock " + name + " beta";
+        const std::string& name = name_dim_pair.first;
+        const std::string name_a = "Fock " + name + " alpha";
+        const std::string name_b = "Fock " + name + " beta";
         psi::Dimension npi = name_dim_pair.second;
         bool FockDo = checked_results_[name];
 
@@ -374,7 +389,7 @@ void SemiCanonical::build_transformation_matrices(psi::SharedMatrix& Ua, psi::Sh
             }
 
             // fill in UaData and UbData if this block is active
-            if (name.find("actv") != std::string::npos) {
+            if (name.find("GAS") != std::string::npos) {
                 for (size_t h = 0; h < nirrep_; ++h) {
                     int actv_off = actv_offsets_[name][h];
                     for (int u = 0; u < npi[h]; ++u) {

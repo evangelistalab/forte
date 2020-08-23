@@ -40,6 +40,11 @@ std::vector<std::string> split_string(const std::string& str, const std::string&
 void to_upper_string(std::string& s);
 std::string upper_string(std::string s);
 
+/// Convert all lower case letters in a string to the upper case
+void to_lower_string(std::string& s);
+std::string lower_string(std::string s);
+
+
 } // namespace forte
 
 #endif // _string_algorithms_h_

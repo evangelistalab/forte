@@ -49,7 +49,7 @@ void SA_DSRGPT::read_options() {
     form_Hbar_ = (relax_ref_ != "NONE" || multi_state_);
 
     if (internal_amp_ != "NONE") {
-        throw PSIEXCEPTION("INTERNAL_AMP is currently disabled.");
+        throw std::runtime_error("INTERNAL_AMP is currently disabled.");
     }
 }
 

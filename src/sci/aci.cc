@@ -29,8 +29,8 @@
 
 #include <algorithm>
 
+#include "psi4/libpsi4util/PsiOutStream.h"
 #include "psi4/libmints/molecule.h"
-#include "psi4/libmints/pointgrp.h"
 #include "psi4/physconst.h"
 
 #include "base_classes/forte_options.h"
@@ -73,6 +73,28 @@ void AdaptiveCI::startup() {
     gamma_ = options_->get_double("GAMMA");
     screen_thresh_ = options_->get_double("ACI_PRESCREEN_THRESHOLD");
     add_aimed_degenerate_ = options_->get_bool("ACI_ADD_AIMED_DEGENERATE");
+    project_out_spin_contaminants_ = options_->get_bool("SCI_PROJECT_OUT_SPIN_CONTAMINANTS");
+
+    one_cycle_ = options_->get_bool("ONE_CYCLE");
+    // Run only one calculation with initial ansatz;
+    // Can be used for CIS/CISD/CAS/GAS-CI for test
+    gas_iteration_ = false;
+    if (options_->get_str("ACTIVE_REF_TYPE") == "GAS_SINGLE" or
+        options_->get_str("ACTIVE_REF_TYPE") == "GAS") {
+        gas_iteration_ = true;
+    }
+    // Iterations are within in GAS
+
+    // Whether to do the occupation analysis after calculation
+    occ_analysis_ = options_->get_bool("OCC_ANALYSIS");
+
+    if (one_cycle_) {
+        max_cycle_ = 0;
+    } else {
+        max_cycle_ = options_->get_int("SCI_MAX_CYCLE");
+    }
+
+    // max_cycle_ = options_->get_int("SCI_MAX_CYCLE");
 
     spin_tol_ = options_->get_double("ACI_SPIN_TOL");
 
@@ -187,15 +209,36 @@ void AdaptiveCI::find_q_space() {
 
     // Get the excited determiants
     double remainder = 0.0;
+
     if (screen_alg == "AVERAGE") {
+        if (gas_iteration_) {
+            get_gas_excited_determinants_avg(nroot_, P_evecs_, P_evals_, P_space_, F_space);
+        }
         // multiroot
-        get_excited_determinants_avg(nroot_, P_evecs_, P_evals_, P_space_, F_space);
+        else {
+            get_excited_determinants_avg(nroot_, P_evecs_, P_evals_, P_space_, F_space);
+        }
     } else if (screen_alg == "SR") {
-        // single-root optimized
-        get_excited_determinants_sr(P_evecs_, P_evals_, P_space_, F_space);
-        //    } else if ( (screen_alg == "RESTRICTED")){
-        //        // restricted
-        //        get_excited_determinants_restrict(nroot_, P_evecs_, P_evals_, P_space_, F_space);
+        if (gas_iteration_) {
+            get_gas_excited_determinants_sr(P_evecs_, P_evals_, P_space_, F_space);
+        } else {
+            // single-root optimized
+            get_excited_determinants_sr(P_evecs_, P_evals_, P_space_, F_space);
+            //    } else if ( (screen_alg == "RESTRICTED")){
+            //        // restricted
+            //        get_excited_determinants_restrict(nroot_, P_evecs_, P_evals_, P_space_,
+            //        F_space);
+        }
+
+    } else if (screen_alg == "MULTI_GAS") {
+        // get_gas_excited_determinants_core(P_evecs_, P_evals_, P_space_, F_space);
+        // Inefficient algorithm but should be used when calculate multiple roots with
+        // the same GAS electrons and same symmetry
+
+        // The tricky way to avoid ref_root_ being non-zero for core-excited state
+        get_gas_excited_determinants_sr(P_evecs_, P_evals_, P_space_, F_space);
+        ref_root_ = 0;
+
     } else if (screen_alg == "CORE") {
         get_excited_determinants_core(P_evecs_, P_evals_, P_space_, F_space);
     } else if (screen_alg == "BATCH_HASH" or screen_alg == "BATCH_CORE") {
@@ -493,7 +536,7 @@ int AdaptiveCI::root_follow(DeterminantHashVec& P_ref, std::vector<double>& P_re
 
         new_overlap = std::fabs(new_overlap);
         if (!quiet_mode_) {
-            outfile->Printf("\n  Root %d has overlap %f", n, new_overlap);
+            outfile->Printf("\n Root %d has overlap %f", n, new_overlap);
         }
         // If the overlap is larger, set it as the new root and reference, for
         // now
@@ -523,11 +566,107 @@ int AdaptiveCI::root_follow(DeterminantHashVec& P_ref, std::vector<double>& P_re
 
 void AdaptiveCI::pre_iter_preparation() {
     // Build the reference determinant and compute its energy
+
     CI_Reference ref(scf_info_, options_, mo_space_info_, as_ints_, multiplicity_, twice_ms_,
                      wavefunction_symmetry_);
-    ref.build_reference(initial_reference_);
-    P_space_ = initial_reference_;
 
+    if ((options_->get_str("ACI_SCREEN_ALG") == "MULTI_GAS")) {
+        initial_reference_.clear();
+        std::vector<std::string> maxe_alt_string = {"GAS1MAX_MULTI", "GAS2MAX_MULTI",
+                                                    "GAS3MAX_MULTI", "GAS4MAX_MULTI",
+                                                    "GAS5MAX_MULTI", "GAS6MAX_MULTI"};
+        std::vector<std::string> mine_alt_string = {"GAS1MIN_MULTI", "GAS2MIN_MULTI",
+                                                    "GAS3MIN_MULTI", "GAS4MIN_MULTI",
+                                                    "GAS5MIN_MULTI", "GAS6MIN_MULTI"};
+        std::vector<int> maxe;
+        std::vector<int> mine;
+        for (size_t gas_count = 0; gas_count < 6; gas_count++) {
+            py::list gasemax_alt_list = options_->get_gen_list(maxe_alt_string[gas_count]);
+            py::list gasemin_alt_list = options_->get_gen_list(mine_alt_string[gas_count]);
+            size_t nentry = gasemax_alt_list.size();
+            if (nentry > 0) {
+                bool found_state = false;
+                for (size_t i = 0; i < nentry; i++) {
+                    py::list gasemax_alt = gasemax_alt_list[i];
+                    int symmetry_read = py::cast<int>(gasemax_alt[0]);
+                    int multiplicity_read = py::cast<int>(gasemax_alt[1]);
+                    if ((multiplicity_read == multiplicity_) &&
+                        (symmetry_read == wavefunction_symmetry_)) {
+                        maxe.push_back(py::cast<int>(gasemax_alt[root_ + 2]));
+                        found_state = true;
+                    }
+                }
+                if (!found_state) {
+                    outfile->Printf("\n  Wrong input of GASMAX_MULTI.");
+                    exit(1);
+                }
+            } else {
+                maxe.push_back(200);
+            }
+            nentry = gasemin_alt_list.size();
+            if (nentry > 0) {
+                bool found_state = false;
+                for (size_t i = 0; i < nentry; i++) {
+                    py::list gasemin_alt = gasemin_alt_list[i];
+                    int symmetry_read = py::cast<int>(gasemin_alt[0]);
+                    int multiplicity_read = py::cast<int>(gasemin_alt[1]);
+                    if ((multiplicity_read == multiplicity_) &&
+                        (symmetry_read == wavefunction_symmetry_)) {
+                        mine.push_back(py::cast<int>(gasemin_alt[root_ + 2]));
+                        found_state = true;
+                    }
+                }
+                if (!found_state) {
+                    outfile->Printf("\n  Wrong input of GASMIN_MULTI.");
+                    exit(1);
+                }
+            } else {
+                mine.push_back(0);
+            }
+        }
+        ref.modify_gas(initial_reference_, maxe, mine);
+    } else {
+        ref.build_reference(initial_reference_);
+    }
+
+    if (one_cycle_) {
+        PQ_space_ = initial_reference_;
+        PQ_space_.make_spin_complete(nact_);
+    } else {
+        P_space_ = initial_reference_;
+    }
+
+    // P_space_ = initial_reference_;
+
+    // If the ACI iteration is within the gas space, calculate
+    // gas_info and the criterion for single and double excitations
+    gas_num_ = 0;
+    if ((gas_iteration_)) {
+        //        const auto gas_info = mo_space_info_->gas_info();
+        std::vector<size_t> act_mo = mo_space_info_->absolute_mo("ACTIVE");
+        std::map<int, int> re_ab_mo;
+        for (size_t i = 0; i < act_mo.size(); i++) {
+            re_ab_mo[act_mo[i]] = i;
+        }
+
+        gas_single_criterion_ = ref.gas_single_criterion();
+        gas_double_criterion_ = ref.gas_double_criterion();
+        gas_electrons_ = ref.gas_electrons();
+        std::vector<std::string> gas_subspaces = {"GAS1", "GAS2", "GAS3", "GAS4", "GAS5", "GAS6"};
+        for (size_t gas_count = 0; gas_count < 6; gas_count++) {
+            std::string space = gas_subspaces.at(gas_count);
+            std::vector<size_t> relative_mo;
+            auto gas_mo = mo_space_info_->absolute_mo(space);
+            for (size_t i = 0, imax = gas_mo.size(); i < imax; ++i) {
+                relative_mo.push_back(re_ab_mo[gas_mo[i]]);
+            }
+            if (!relative_mo.empty()) {
+                gas_num_ = gas_num_ + 1;
+            }
+
+            relative_gas_mo_.push_back(relative_mo);
+        }
+    }
     if ((options_->get_bool("SCI_CORE_EX")) and (root_ > 0)) {
 
         ref_root_ = root_ - 1;
@@ -661,6 +800,10 @@ void AdaptiveCI::diagonalize_PQ_space() {
 
     num_ref_roots_ = std::min(nroot_, PQ_space_.size());
 
+    if (one_cycle_) {
+        zero_multistate_pt2_energy_correction();
+    }
+
     // Step 3. Diagonalize the Hamiltonian in the P + Q space
     local_timer diag_pq;
 
@@ -711,6 +854,13 @@ void AdaptiveCI::diagonalize_PQ_space() {
     if (follow_ and (num_ref_roots_ > 1) and (cycle_ >= pre_iter_)) {
         ref_root_ = root_follow(P_ref_, P_ref_evecs_, PQ_space_, PQ_evecs_, num_ref_roots_);
     }
+
+    if (gas_iteration_ && options_->get_str("ACI_SCREEN_ALG") != "MULTI_GAS") {
+        print_gas_wfn(PQ_space_, PQ_evecs_);
+    }
+    if (occ_analysis_) {
+        print_occ_number(PQ_space_, PQ_evecs_);
+    }
 }
 
 bool AdaptiveCI::check_convergence() {
@@ -741,7 +891,7 @@ void AdaptiveCI::prune_PQ_to_P() {
 
     // Print information about the wave function
     if (!quiet_mode_) {
-        print_wfn(PQ_space_, PQ_evecs_, num_ref_roots_);
+        (PQ_space_, PQ_evecs_, num_ref_roots_);
         outfile->Printf("\n  Cycle %d took: %1.6f s", cycle_, cycle_time_.get());
     }
 }
@@ -821,15 +971,14 @@ void AdaptiveCI::print_nos() {
         }
     }
 
-    CharacterTable ct = psi::Process::environment.molecule()->point_group()->char_table();
     std::sort(vec_irrep_occupation.begin(), vec_irrep_occupation.end(),
               std::greater<std::pair<double, std::pair<int, int>>>());
 
     size_t count = 0;
     outfile->Printf("\n    ");
     for (auto vec : vec_irrep_occupation) {
-        outfile->Printf(" %4d%-4s%11.6f  ", vec.second.second, ct.gamma(vec.second.first).symbol(),
-                        vec.first);
+        outfile->Printf(" %4d%-4s%11.6f  ", vec.second.second,
+                        mo_space_info_->irrep_label(vec.second.first).c_str(), vec.first);
         if (count++ % 3 == 2 && count != vec_irrep_occupation.size())
             outfile->Printf("\n    ");
     }
@@ -856,7 +1005,305 @@ size_t AdaptiveCI::get_ref_root() { return ref_root_; }
 std::vector<double> AdaptiveCI::get_multistate_pt2_energy_correction() {
     return multistate_pt2_energy_correction_;
 }
+
+void AdaptiveCI::zero_multistate_pt2_energy_correction() {
+    multistate_pt2_energy_correction_.resize(nroot_);
+    for (int n = 0; n < nroot_; ++n) {
+        multistate_pt2_energy_correction_[n] = 0.0;
+    }
+}
+
+void AdaptiveCI::print_gas_wfn(DeterminantHashVec& space, psi::SharedMatrix evecs) {
+    std::vector<std::string> gas_electron_name = {"GAS1_A", "GASI_B", "GAS2_A", "GAS2_B",
+                                                  "GAS3_A", "GAS3_B", "GAS4_A", "GAS4_B",
+                                                  "GAS5_A", "GAS5_B", "GAS6_A", "GAS6_B"};
+
+    psi::outfile->Printf("\n  ");
+    psi::outfile->Printf("\n  GAS Contribution Analysis  ");
+
+    for (int n = 0; n < nroot_; ++n) {
+        DeterminantHashVec tmp;
+        std::vector<double> tmp_evecs;
+
+        psi::outfile->Printf("\n  GAS contributions root %d: \n", n);
+
+        size_t max_dets = static_cast<size_t>(evecs->nrow());
+        tmp.subspace(space, evecs, tmp_evecs, max_dets, n);
+
+        const size_t gas_config_num = gas_electrons_.size();
+        std::vector<double> gas_amp(gas_config_num, 0.0);
+        for (size_t I = 0; I < max_dets; ++I) {
+            const Determinant& det = tmp.get_det(I);
+            std::vector<std::vector<int>> gas_occ_a;
+            std::vector<std::vector<int>> gas_vir_a;
+            std::vector<std::vector<int>> gas_occ_b;
+            std::vector<std::vector<int>> gas_vir_b;
+            for (size_t gas_count = 0; gas_count < gas_num_; gas_count++) {
+                std::vector<int> occ_a;
+                std::vector<int> occ_b;
+                std::vector<int> vir_a;
+                std::vector<int> vir_b;
+                for (const auto& p : relative_gas_mo_[gas_count]) {
+                    if (det.get_alfa_bit(p)) {
+                        occ_a.push_back(p);
+                    } else {
+                        vir_a.push_back(p);
+                    }
+                    if (det.get_beta_bit(p)) {
+                        occ_b.push_back(p);
+                    } else {
+                        vir_b.push_back(p);
+                    }
+                }
+                gas_occ_a.push_back(occ_a);
+                gas_vir_a.push_back(vir_a);
+                gas_occ_b.push_back(occ_b);
+                gas_vir_b.push_back(vir_b);
+            }
+
+            // Generate the number of electrons in each GAS
+            std::vector<int> gas_configuration;
+            for (size_t gas_count = 0; gas_count < 6; gas_count++) {
+                if (gas_count < gas_num_) {
+                    gas_configuration.push_back(gas_occ_a[gas_count].size());
+                    gas_configuration.push_back(gas_occ_b[gas_count].size());
+                } else {
+                    gas_configuration.push_back(0);
+                    gas_configuration.push_back(0);
+                }
+            }
+
+            auto gas_found =
+                std::find(gas_electrons_.begin(), gas_electrons_.end(), gas_configuration);
+            if (gas_found != gas_electrons_.end()) {
+                size_t gas_config = std::distance(gas_electrons_.begin(), gas_found);
+                gas_amp[gas_config] += tmp_evecs[I] * tmp_evecs[I];
+            } else {
+                outfile->Printf("\n  Not found! There is a problem with the wavefunction!");
+                exit(1);
+            }
+        }
+        for (size_t j = 0; j < 2 * gas_num_; j++) {
+            outfile->Printf("  %s  ", gas_electron_name[j].c_str());
+        }
+        outfile->Printf("      Cont  \n");
+        std::map<std::vector<size_t>, double> gas_total_amp;
+        for (size_t i = 0; i < gas_config_num; i++) {
+            for (size_t j = 0; j < 2 * gas_num_; j++) {
+                outfile->Printf("     %d    ", gas_electrons_[i][j]);
+            }
+            std::vector<size_t> sum_gas;
+            for (size_t j = 0; j < 2 * gas_num_; j += 2) {
+                sum_gas.push_back(gas_electrons_[i][j] + gas_electrons_[i][j + 1]);
+            }
+            auto map_found = gas_total_amp.find(sum_gas);
+            if (map_found == gas_total_amp.end()) {
+                gas_total_amp[sum_gas] = gas_amp[i];
+            } else {
+                gas_total_amp[sum_gas] += gas_amp[i];
+            }
+            psi::outfile->Printf("    %.9f  \n", gas_amp[i]);
+        }
+        outfile->Printf("\n");
+        for (auto element : gas_total_amp) {
+            for (size_t j = 0; j < gas_num_; j++) {
+                outfile->Printf("           %d       ", element.first[j]);
+            }
+            outfile->Printf("     %.9f  \n", element.second);
+        }
+    }
+}
+
+void AdaptiveCI::print_occ_number(DeterminantHashVec& space, psi::SharedMatrix evecs) {
+    std::vector<size_t> act_orb;
+    for (size_t i = 0; i < nact_; i++) {
+        act_orb.push_back(i);
+    }
+    double occ_limit = options_->get_double("OCC_LIMIT");
+    double corr_limit = options_->get_double("CORR_LIMIT");
+
+    if (corr_limit > 0) {
+        corr_limit = -1.0 * corr_limit;
+    }
+
+    psi::outfile->Printf("\n  ");
+    psi::outfile->Printf("\n  Occupation Number Analysis ");
+    for (int n = 0; n < nroot_; ++n) {
+        DeterminantHashVec tmp;
+        std::vector<double> tmp_evecs;
+
+        psi::outfile->Printf("\n  Occupation number of orbitals root %d: ", n);
+
+        size_t max_dets = static_cast<size_t>(evecs->nrow());
+        tmp.subspace(space, evecs, tmp_evecs, max_dets, n);
+
+        std::vector<double> alpha_occ(nact_, 0.0);
+        std::vector<double> beta_occ(nact_, 0.0);
+        std::vector<std::vector<double>> alpha_occ_square(nact_, std::vector<double>(nact_, 0.0));
+        std::vector<std::vector<double>> beta_occ_square(nact_, std::vector<double>(nact_, 0.0));
+        std::vector<std::vector<double>> alpha_corr(nact_, std::vector<double>(nact_, 0.0));
+        std::vector<std::vector<double>> beta_corr(nact_, std::vector<double>(nact_, 0.0));
+
+        for (size_t I = 0; I < max_dets; ++I) {
+            const Determinant& det = tmp.get_det(I);
+            for (size_t j = 0; j < nact_; ++j) {
+                if (det.get_alfa_bit(j)) {
+                    alpha_occ[j] += tmp_evecs[I] * tmp_evecs[I];
+                    for (size_t k = j + 1; k < nact_; k++) {
+                        if (tmp.get_det(I).get_alfa_bit(k)) {
+                            alpha_occ_square[j][k] += tmp_evecs[I] * tmp_evecs[I];
+                        }
+                    }
+                }
+                if (det.get_beta_bit(j)) {
+                    beta_occ[j] += tmp_evecs[I] * tmp_evecs[I];
+                    for (size_t k = j + 1; k < nact_; k++) {
+                        if (tmp.get_det(I).get_beta_bit(k)) {
+                            beta_occ_square[j][k] += tmp_evecs[I] * tmp_evecs[I];
+                        }
+                    }
+                }
+            }
+        }
+
+        std::vector<size_t> fixed_orb;
+
+        outfile->Printf("\n  Orb    alpha    beta     ");
+        for (size_t j = 0; j < nact_; ++j) {
+            outfile->Printf("\n  %3zu  %.5f ", j, alpha_occ[j]);
+            outfile->Printf(" %.5f ", j, beta_occ[j]);
+        }
+
+        outfile->Printf("\n ");
+        outfile->Printf("\n  These orbitals can be treated as uocc:");
+        for (size_t j = 0; j < nact_; ++j) {
+            if (alpha_occ[j] < occ_limit && beta_occ[j] < occ_limit) {
+                outfile->Printf(" %d", j);
+                fixed_orb.push_back(j);
+            }
+        }
+        outfile->Printf("\n  These orbitals can be treated as docc:");
+        for (size_t j = 0; j < nact_; ++j) {
+            if (alpha_occ[j] > 1 - occ_limit && beta_occ[j] > 1 - occ_limit) {
+                outfile->Printf(" %d", j);
+                fixed_orb.push_back(j);
+            }
+        }
+
+        std::sort(fixed_orb.begin(), fixed_orb.end());
+        std::vector<size_t> corr_orb;
+        std::set_difference(act_orb.begin(), act_orb.end(), fixed_orb.begin(), fixed_orb.end(),
+                            std::inserter(corr_orb, corr_orb.begin()));
+        for (size_t j : corr_orb) {
+            for (size_t k : corr_orb) {
+                if (k > j) {
+                    alpha_corr[j][k] = (alpha_occ_square[j][k] - alpha_occ[j] * alpha_occ[k]) /
+                                       sqrt(alpha_occ[j] - alpha_occ[j] * alpha_occ[j]) /
+                                       sqrt(alpha_occ[k] - alpha_occ[k] * alpha_occ[k]);
+                    alpha_corr[k][j] = alpha_corr[j][k];
+                    //                    outfile->Printf("\n  The corr between %d and %d is
+                    //                    %.9f", j, k,
+                    //                                    alpha_corr[j][k]);
+                    beta_corr[j][k] = (beta_occ_square[j][k] - beta_occ[j] * beta_occ[k]) /
+                                      sqrt(beta_occ[j] - beta_occ[j] * beta_occ[j]) /
+                                      sqrt(beta_occ[k] - beta_occ[k] * beta_occ[k]);
+                    beta_corr[k][j] = beta_corr[j][k];
+                }
+            }
+        }
+
+        std::vector<std::vector<size_t>> corr_orb_list;
+        std::vector<size_t> residue_orb = corr_orb;
+        while (!residue_orb.empty()) {
+            std::vector<size_t> tmp_gas;
+            std::vector<size_t> tmp_residue;
+            tmp_gas.push_back(residue_orb[0]);
+            bool well_sep = false;
+            for (size_t i = 1, i_max = residue_orb.size(); i < i_max; i++) {
+                tmp_residue.push_back(residue_orb[i]);
+            }
+            while (!well_sep && !tmp_residue.empty()) {
+                std::vector<size_t> tmp_change;
+                for (size_t j : tmp_gas) {
+                    for (size_t k : tmp_residue) {
+                        if (alpha_corr[j][k] < corr_limit && beta_corr[j][k] < corr_limit &&
+                            std::find(tmp_change.begin(), tmp_change.end(), k) ==
+                                tmp_change.end()) {
+                            tmp_change.push_back(k);
+                        }
+                    }
+                }
+                if (tmp_change.empty()) {
+                    well_sep = true;
+                } else {
+                    std::vector<size_t> tmp_residue_p;
+                    std::sort(tmp_change.begin(), tmp_change.end());
+                    tmp_gas.insert(std::end(tmp_gas), std::begin(tmp_change), std::end(tmp_change));
+                    std::set_difference(tmp_residue.begin(), tmp_residue.end(), tmp_change.begin(),
+                                        tmp_change.end(),
+                                        std::inserter(tmp_residue_p, tmp_residue_p.begin()));
+                    tmp_residue = tmp_residue_p;
+                }
+            }
+            residue_orb.clear();
+            residue_orb = tmp_residue;
+            std::sort(tmp_gas.begin(), tmp_gas.end());
+            corr_orb_list.push_back(tmp_gas);
+            tmp_gas.clear();
+        }
+
+        outfile->Printf("\n  ");
+        outfile->Printf("\n  Possible GAS occupation:");
+
+        for (auto const corr_orb : corr_orb_list) {
+            size_t max_occ = corr_orb.size();
+            std::vector<double> gas_occ_alpha(max_occ + 1, 0.0);
+            std::vector<double> gas_occ_beta(max_occ + 1, 0.0);
+            std::vector<double> gas_occ_total(max_occ * 2 + 1, 0.0);
+            for (size_t I = 0; I < max_dets; ++I) {
+                const Determinant& det = tmp.get_det(I);
+                size_t tmp_alpha_occ = 0;
+                size_t tmp_beta_occ = 0;
+                for (size_t j : corr_orb) {
+                    if (det.get_alfa_bit(j)) {
+                        tmp_alpha_occ += 1;
+                    }
+                    if (det.get_beta_bit(j)) {
+                        tmp_beta_occ += 1;
+                    }
+                }
+                gas_occ_alpha[tmp_alpha_occ] += tmp_evecs[I] * tmp_evecs[I];
+                gas_occ_beta[tmp_beta_occ] += tmp_evecs[I] * tmp_evecs[I];
+                gas_occ_total[tmp_alpha_occ + tmp_beta_occ] += tmp_evecs[I] * tmp_evecs[I];
+            }
+            outfile->Printf("\n  Orbitals:");
+            for (size_t j : corr_orb) {
+                outfile->Printf(" %d", j);
+            }
+            //            outfile->Printf("\n  Number of Alpha electrons:");
+            //            for (size_t k = 0; k <= max_occ; k++) {
+            //                outfile->Printf("\n  %d  %.5f", k, gas_occ_alpha[k]);
+            //            }
+            //            outfile->Printf("\n  Number of Beta electrons:");
+            //            for (size_t k = 0; k <= max_occ; k++) {
+            //                outfile->Printf("\n  %d  %.5f", k, gas_occ_beta[k]);
+            //            }
+            outfile->Printf("\n  Number of Total electrons:");
+            for (size_t k = 0; k <= max_occ * 2; k++) {
+                outfile->Printf("\n  %d  %.5f", k, gas_occ_total[k]);
+            }
+            outfile->Printf("\n  ");
+        }
+    }
+} // namespace forte
+
 void AdaptiveCI::post_iter_process() {
+    //    if (gas_iteration_) {
+    //        print_gas_wfn(PQ_space_, PQ_evecs_);
+    //    }
+    //    if (occ_analysis_) {
+    //        print_occ_number(PQ_space_, PQ_evecs_);
+    //    }
     print_nos();
     full_mrpt2();
 }

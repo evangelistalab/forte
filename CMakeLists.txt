@@ -78,6 +78,7 @@ pybind11_add_module(forte
 src/api/ambit_api.cc
 src/api/cube_file_api.cc
 src/api/integrals_api.cc
+src/api/mospaceinfo_api.cc
 src/api/rdms_api.cc
 src/api/options_api.cc
 src/api/orbital_api.cc
@@ -196,6 +197,7 @@ src/pci/pci_sigma.cc
 src/post_process/spin_corr.cc
 src/sci/aci.cc
 src/sci/aci_build_F.cc
+src/sci/gasaci_build_F.cc
 src/sci/asci.cc
 src/sci/fci_mo.cc
 src/sci/mrpt2.cc

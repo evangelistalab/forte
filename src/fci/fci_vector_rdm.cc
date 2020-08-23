@@ -31,6 +31,7 @@
 #include "psi4/psi4-dec.h"
 #include "psi4/libpsi4util/process.h"
 #include "psi4/libmints/molecule.h"
+#include "psi4/libmints/matrix.h"
 #include "psi4/libqt/qt.h"
 
 #include "base_classes/mo_space_info.h"
@@ -933,4 +934,3 @@ void FCIVector::rdm_test() {
     delete[] Ib;
 }
 } // namespace forte
-

@@ -186,6 +186,11 @@ void throw_options_get_error(const std::string& correct_type, const std::string&
     throw std::runtime_error(msg);
 }
 
+bool ForteOptions::exists(const std::string& label) const {
+    std::string label_uc = upper_string(label);
+    return dict_.contains(label_uc.c_str());
+}
+
 bool ForteOptions::is_none(const std::string& label) const {
     auto value_type = get(label);
     return value_type.first.is_none();
@@ -407,8 +412,7 @@ void ForteOptions::push_options_to_psi4(psi::Options& options) {
     }
 }
 
-void ForteOptions::get_options_from_psi4(psi::Options& options1) {
-    psi::Options& options = psi::Process::environment.options;
+void ForteOptions::get_options_from_psi4(psi::Options& options) {
     for (auto item : dict_) {
         auto label = py::cast<std::string>(item.first);
         // only change the values if an option was set

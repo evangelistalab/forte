@@ -2,6 +2,7 @@
 
 #include "psi4/libpsi4util/process.h"
 #include "psi4/libmints/molecule.h"
+#include "psi4/libmints/matrix.h"
 #include "psi4/libmints/dipole.h"
 
 #include "helpers/printing.h"

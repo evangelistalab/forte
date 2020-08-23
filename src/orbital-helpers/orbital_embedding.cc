@@ -33,6 +33,8 @@
 #include "psi4/libpsi4util/PsiOutStream.h"
 #include "psi4/libmints/vector.h"
 #include "psi4/libmints/matrix.h"
+#include "psi4/libmints/molecule.h"
+#include "psi4/libmints/pointgrp.h"
 #include "psi4/libmints/wavefunction.h"
 
 #include "psi4/libpsi4util/process.h"
@@ -374,6 +376,7 @@ std::shared_ptr<MOSpaceInfo> make_embedding(psi::SharedWavefunction ref_wfn,
     Dimension doc = ref_wfn->doccpi();
     int diff = doc[0] - frzopi[0] - nroccpi[0];
     int diff2 = actv_a[0] - diff;
+
     if (options->get_str("EMBEDDING_REFERENCE") == "HF") {
         nroccpi[0] += diff;
         nrvirpi[0] += diff2;
@@ -735,8 +738,9 @@ std::shared_ptr<MOSpaceInfo> make_embedding(psi::SharedWavefunction ref_wfn,
     // Write new MOSpaceInfo
     outfile->Printf("\n  Updating MOSpaceInfo");
     std::vector<size_t> reorder;
+    std::string point_group = ref_wfn->molecule()->point_group()->symbol();
     std::shared_ptr<MOSpaceInfo> mo_space_info_emb =
-        make_mo_space_info_from_map(nmopi, mo_space_map, reorder);
+        make_mo_space_info_from_map(nmopi, point_group, mo_space_map, reorder);
 
     // Return the new embedding MOSpaceInfo to pymodule
     outfile->Printf("\n\n  --------------- End of Frozen-orbital Embedding --------------- ");

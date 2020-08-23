@@ -32,6 +32,7 @@
 
 #include "psi4/libpsi4util/PsiOutStream.h"
 #include "psi4/libmints/wavefunction.h"
+#include "psi4/libmints/matrix.h"
 
 #include "helpers/blockedtensorfactory.h"
 #include "base_classes/forte_options.h"
@@ -90,7 +91,6 @@ void ForteIntegrals::read_information() {
     print_ = options_->get_int("PRINT");
 
     nirrep_ = mo_space_info_->nirrep();
-
     nmopi_ = mo_space_info_->dimension("ALL");
     frzcpi_ = mo_space_info_->dimension("FROZEN_DOCC");
     frzvpi_ = mo_space_info_->dimension("FROZEN_UOCC");
@@ -224,10 +224,6 @@ void ForteIntegrals::set_tei_all(const std::vector<double>& tei_aa,
 IntegralSpinRestriction ForteIntegrals::spin_restriction() const { return spin_restriction_; }
 
 IntegralType ForteIntegrals::integral_type() const { return integral_type_; }
-
-// std::shared_ptr<psi::Matrix> ForteIntegrals::OneBody_symm() const { return OneBody_symm_; }
-
-// std::shared_ptr<psi::Matrix> ForteIntegrals::OneBodyAO() const { return OneIntsAO_; }
 
 int ForteIntegrals::ga_handle() { return 0; }
 
@@ -372,20 +368,28 @@ void ForteIntegrals::compute_frozen_one_body_operator() {
     _undefined_function("compute_frozen_one_body_operator");
 }
 
-size_t ForteIntegrals::nthree() const { _undefined_function("nthree"); }
+size_t ForteIntegrals::nthree() const {
+    _undefined_function("nthree");
+    return 0;
+}
 
 ambit::Tensor ForteIntegrals::three_integral_block(const std::vector<size_t>&,
                                                    const std::vector<size_t>&,
                                                    const std::vector<size_t>&) {
     _undefined_function("three_integral_block");
+    return ambit::Tensor();
 }
 
 ambit::Tensor ForteIntegrals::three_integral_block_two_index(const std::vector<size_t>&, size_t,
                                                              const std::vector<size_t>&) {
     _undefined_function("three_integral_block_two_index");
+    return ambit::Tensor();
 }
 
-double** ForteIntegrals::three_integral_pointer() { _undefined_function("three_integral_pointer"); }
+double** ForteIntegrals::three_integral_pointer() {
+    _undefined_function("three_integral_pointer");
+    return nullptr;
+}
 
 void ForteIntegrals::rotate_mos() { _undefined_function("rotate_mos"); }
 

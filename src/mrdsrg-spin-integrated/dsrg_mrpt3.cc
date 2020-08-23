@@ -27,7 +27,8 @@
  */
 
 #include <algorithm>
-#include <math.h>
+#include <chrono>
+#include <cmath>
 #include <numeric>
 #include <tuple>
 #include <iomanip>

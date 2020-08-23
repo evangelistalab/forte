@@ -36,6 +36,10 @@
 #include <unordered_map>
 #include <utility>
 
+#include "psi4/libpsi4util/PsiOutStream.h"
+#include "psi4/libpsi4util/process.h"
+#include "psi4/libmints/matrix.h"
+
 #include "helpers/timer.h"
 #include "sparse_ci/ci_reference.h"
 #include "sparse_ci/determinant_functions.hpp"
@@ -749,8 +753,8 @@ bool ProjectorCI::check_convergence() {
                                  approx_energy_gradient);
             break;
         default:
-            psi::outfile->Printf("\n%9d %8.2f %10zu %13zu %20.12f %10.3e", cycle_, cycle_,
-                                 C_.size(), num_off_diag_elem_, proj_energy_, proj_energy_gradient);
+            psi::outfile->Printf("\n%9d %8d %10zu %13zu %20.12f %10.3e ", cycle_, cycle_, C_.size(),
+                                 num_off_diag_elem_, proj_energy_, proj_energy_gradient);
             break;
         }
 

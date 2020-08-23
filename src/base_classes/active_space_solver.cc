@@ -33,7 +33,6 @@
 #include "psi4/psi4-dec.h"
 #include "psi4/libpsi4util/PsiOutStream.h"
 #include "psi4/libmints/molecule.h"
-#include "psi4/libmints/pointgrp.h"
 #include "psi4/libpsi4util/process.h"
 
 #include "base_classes/forte_options.h"
@@ -100,7 +99,7 @@ void ActiveSpaceSolver::print_energies(std::map<StateInfo, std::vector<double>>&
     psi::outfile->Printf("\n    Multi.(2ms)  Irrep.  No.               Energy");
     std::string dash(45, '-');
     psi::outfile->Printf("\n    %s", dash.c_str());
-    std::vector<std::string> irrep_symbol = psi::Process::environment.molecule()->irrep_labels();
+    std::vector<std::string> irrep_symbol = mo_space_info_->irrep_labels();
 
     for (const auto& state_nroot : state_nroots_map_) {
         const auto& state = state_nroot.first;
@@ -115,6 +114,7 @@ void ActiveSpaceSolver::print_energies(std::map<StateInfo, std::vector<double>>&
         for (int i = 0; i < nstates; ++i) {
             auto label = "ENERGY ROOT " + std::to_string(i) + " " + std::to_string(multi) +
                          irrep_symbol[irrep];
+
             double energy = energies[state][i];
             psi::outfile->Printf("\n     %3d  (%3d)   %3s    %2d  %20.12f", multi, twice_ms,
                                  irrep_symbol[irrep].c_str(), i, energy);
@@ -154,7 +154,7 @@ std::vector<RDMs> ActiveSpaceSolver::rdms(
 void ActiveSpaceSolver::print_options() {
     print_h2("Summary of Active Space Solver Input");
 
-    std::vector<std::string> irrep_symbol = psi::Process::environment.molecule()->irrep_labels();
+    std::vector<std::string> irrep_symbol = mo_space_info_->irrep_labels();
     int nstates = 0;
     for (const auto& state_nroot : state_nroots_map_) {
         nstates += state_nroot.second;
@@ -208,7 +208,6 @@ make_state_weights_map(std::shared_ptr<ForteOptions> options,
     if (avg_state.size() == 0) {
         int nroot = options->get_int("NROOT");
         int root = options->get_int("ROOT");
-
         std::vector<double> weights(nroot, 0.0);
         weights[root] = 1.0;
         state_weights_map[state] = weights;
@@ -228,7 +227,7 @@ make_state_weights_map(std::shared_ptr<ForteOptions> options,
             // irreducible representation
             int irrep = py::cast<int>(avg_state_list[0]);
             // irreducible representation label
-            std::string irrep_label = psi::Process::environment.molecule()->irrep_labels()[irrep];
+            std::string irrep_label = mo_space_info->irrep_labels()[irrep];
             // multiplicity (2S + 1)
             int multi = py::cast<int>(avg_state_list[1]);
             // number of states with this irrep and multiplicity

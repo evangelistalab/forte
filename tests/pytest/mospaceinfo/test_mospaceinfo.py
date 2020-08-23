@@ -34,7 +34,8 @@ def test_mospaceinfo():
                   'FROZEN_UOCC' :     [1,0,0,0,0,0,0,0]}
 
     nmopi = wfn.nmopi()
-    mo_space_info = forte.make_mo_space_info_from_map(nmopi,mos_spaces,[])
+    point_group = wfn.molecule().point_group().symbol()
+    mo_space_info = forte.make_mo_space_info_from_map(nmopi,point_group,mos_spaces,[])
 
     assert mo_space_info.nirrep() == 8
 
@@ -50,4 +51,4 @@ def test_mospaceinfo():
     assert mo_space_info.dimension('RESTRICTED_UOCC').to_tuple() == (0,0,0,0,0,0,0,0)
     assert mo_space_info.dimension('FROZEN_UOCC').to_tuple() == (1,0,0,0,0,0,0,0)
 
-    assert mo_space_info.space_names() == ['FROZEN_DOCC','RESTRICTED_DOCC','ACTIVE','RESTRICTED_UOCC','FROZEN_UOCC']
+    assert mo_space_info.space_names() == ['FROZEN_DOCC','RESTRICTED_DOCC','GAS1','GAS2','GAS3','GAS4','GAS5','GAS6','RESTRICTED_UOCC','FROZEN_UOCC']

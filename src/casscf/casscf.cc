@@ -30,6 +30,9 @@
 #include "integrals/integrals.h"
 #include "base_classes/rdms.h"
 
+#include "psi4/libpsi4util/PsiOutStream.h"
+#include "psi4/libpsi4util/process.h"
+
 #include "psi4/libfock/jk.h"
 #include "psi4/libmints/matrix.h"
 #include "psi4/libmints/wavefunction.h"
@@ -92,9 +95,9 @@ void CASSCF::startup() {
     // Set MOs containers
     core_mos_abs_ = mo_space_info_->absolute_mo("RESTRICTED_DOCC");
     actv_mos_abs_ = mo_space_info_->absolute_mo("ACTIVE");
-    core_mos_rel_ = mo_space_info_->get_relative_mo("RESTRICTED_DOCC");
-    actv_mos_rel_ = mo_space_info_->get_relative_mo("ACTIVE");
-    virt_mos_rel_ = mo_space_info_->get_relative_mo("RESTRICTED_UOCC");
+    core_mos_rel_ = mo_space_info_->relative_mo("RESTRICTED_DOCC");
+    actv_mos_rel_ = mo_space_info_->relative_mo("ACTIVE");
+    virt_mos_rel_ = mo_space_info_->relative_mo("RESTRICTED_UOCC");
 
     frozen_docc_dim_ = mo_space_info_->dimension("FROZEN_DOCC");
     restricted_docc_dim_ = mo_space_info_->dimension("RESTRICTED_DOCC");
@@ -150,9 +153,9 @@ void CASSCF::startup() {
         if (options["INTS_TOLERANCE"].has_changed())
             jk->set_cutoff(options.get_double("INTS_TOLERANCE"));
         if (options["SCREENING"].has_changed())
-            jk->set_csam(options.get_str("SCREENING") == "CSAM");
-        if (options["PRINT"].has_changed())
-            jk->set_print(options.get_int("PRINT"));
+            //            jk->set_csam(options.get_str("SCREENING") == "CSAM");
+            if (options["PRINT"].has_changed())
+                jk->set_print(options.get_int("PRINT"));
         if (options["DEBUG"].has_changed())
             jk->set_debug(options.get_int("DEBUG"));
         if (options["BENCH"].has_changed())
@@ -361,7 +364,11 @@ double CASSCF::compute_energy() {
         // diagonalize the Hamiltonian one last time
         diagonalize_hamiltonian();
     } else {
-        ints_->wfn()->Ca()->copy(Ca_semi);
+        if (options_->get_bool("CASSCF_SEMICANONICALIZE")) {
+            ints_->wfn()->Ca()->copy(Ca_semi);
+        } else {
+            ints_->wfn()->Ca()->copy(Ca);
+        }
     }
 
     psi::Process::environment.globals["CURRENT ENERGY"] = E_casscf_;

@@ -144,6 +144,15 @@ void OrbitalOptimizer::startup() {
         throw psi::PSIEXCEPTION("You did not specify your CASSCF_CI_SOLVER correctly.");
     }
     cas_ = true;
+    gas_ = false;
+    if (options_->get_str("ACTIVE_REF_TYPE") == "GAS" or
+        options_->get_str("ACTIVE_REF_TYPE") == "GAS_SINGLE") {
+        cas_ = false;
+        gas_ = true;
+        //        cas_ = true;
+        //        gas_ = false;
+        //        gas_info_ = mo_space_info_->gas_info();
+    }
 }
 void OrbitalOptimizer::orbital_gradient() {
     /// From Y_{pt} = F_{pu}^{core} * Gamma_{tu}
@@ -202,7 +211,7 @@ void OrbitalOptimizer::orbital_gradient() {
     // GOTCHA:  Z and T are of size nmo by na
     // The absolute MO should not be used to access elements of Z, Y, or Gamma
     // since these are of 0....na_ arrays
-    // auto occ_array = mo_space_info_->corr_absolute_mo("RESTRICTED_DOCC");
+    // auto occ_array = mo_spac/e_info_->corr_absolute_mo("RESTRICTED_DOCC");
     // auto virt_array = mo_space_info_->corr_absolute_mo("RESTRICTED_UOCC");
     // auto active_array = mo_space_info_->corr_absolute_mo("ACTIVE");
 
@@ -215,8 +224,8 @@ void OrbitalOptimizer::orbital_gradient() {
     auto generalized_part_abs = mo_space_info_->corr_absolute_mo("GENERALIZED PARTICLE");
     psi::Dimension general_hole_dim = mo_space_info_->dimension("GENERALIZED HOLE");
     psi::Dimension general_part_dim = mo_space_info_->dimension("GENERALIZED PARTICLE");
-    auto generalized_hole_rel = mo_space_info_->get_relative_mo("GENERALIZED HOLE");
-    auto generalized_part_rel = mo_space_info_->get_relative_mo("GENERALIZED PARTICLE");
+    auto generalized_hole_rel = mo_space_info_->relative_mo("GENERALIZED HOLE");
+    auto generalized_part_rel = mo_space_info_->relative_mo("GENERALIZED PARTICLE");
     if (casscf_debug_print_) {
         outfile->Printf("Generalized_hole_abs\n");
         for (auto gha : generalized_hole_abs) {
@@ -332,6 +341,79 @@ void OrbitalOptimizer::orbital_gradient() {
         zero_redunant(Orb_grad_Fock);
     }
 
+    if (gas_) {
+        gas_num_ = 0;
+        auto active_abs = mo_space_info_->absolute_mo("ACTIVE");
+        std::map<int, int> re_ab_mo;
+        for (size_t i = 0; i < na_; i++) {
+            re_ab_mo[active_abs_[i]] = i;
+        }
+        std::vector<std::string> gas_subspaces = {"GAS1", "GAS2", "GAS3", "GAS4", "GAS5", "GAS6"};
+        std::vector<size_t> absolute_mo_total;
+        for (size_t gas_count = 0; gas_count < 6; gas_count++) {
+            std::string space = gas_subspaces[gas_count];
+            std::vector<size_t> relative_mo;
+            std::vector<size_t> absolute_mo;
+            auto gas_space = mo_space_info_->absolute_mo(space);
+            //            outfile->Printf("\n GAS %d, ", gas_count);
+            if (!gas_space.empty()) {
+                for (size_t i = 0, imax = gas_space.size(); i < imax; ++i) {
+                    relative_mo.push_back(re_ab_mo[gas_space[i]]);
+                    absolute_mo.push_back(gas_space[i]);
+                    absolute_mo_total.push_back(gas_space[i]);
+                }
+                gas_num_ = gas_num_ + 1;
+            }
+            for (size_t ii : absolute_mo) {
+                for (size_t jj : absolute_mo_total) {
+                    Orb_grad_Fock->set(nhole_map_[ii], npart_map_[jj], 0.0);
+                }
+            }
+
+            // Zero-out diagonal and one-block of the off-diagonal matrix
+            relative_gas_mo_.push_back(relative_mo);
+        }
+        auto active_frozen = options_->get_int_vec("CASSCF_ACTIVE_FROZEN_ORBITAL");
+        std::vector<int> active;
+        for (int i = 0; i < na_; i++) {
+            active.push_back(i);
+        }
+        std::vector<int> unfrozen;
+        std::set_difference(active.begin(), active.end(), active_frozen.begin(),
+                            active_frozen.end(), std::inserter(unfrozen, unfrozen.begin()));
+
+        for (int i : active_frozen) {
+            for (int j : active_frozen) {
+                size_t ii = active_abs_[i];
+                size_t jj = active_abs_[j];
+                Orb_grad_Fock->set(nhole_map_[ii], npart_map_[jj], 0.0);
+                Orb_grad_Fock->set(nhole_map_[jj], npart_map_[ii], 0.0);
+            }
+        }
+        for (int i : active_frozen) {
+            for (int j : unfrozen) {
+                size_t ii = active_abs_[i];
+                size_t jj = active_abs_[j];
+                Orb_grad_Fock->set(nhole_map_[ii], npart_map_[jj], 0.0);
+                Orb_grad_Fock->set(nhole_map_[jj], npart_map_[ii], 0.0);
+            }
+        }
+        for (int i : active_frozen) {
+            for (size_t j = 0; j < nrdocc_; j++) {
+                size_t ii = active_abs_[i];
+                size_t jj = restricted_docc_abs_[j];
+                Orb_grad_Fock->set(nhole_map_[jj], npart_map_[ii], 0.0);
+            }
+        }
+        for (int i : active_frozen) {
+            for (size_t j = 0; j < nvir_; j++) {
+                size_t ii = active_abs_[i];
+                size_t jj = restricted_uocc_abs_[j];
+                Orb_grad_Fock->set(nhole_map_[ii], npart_map_[jj], 0.0);
+            }
+        }
+    }
+
     if (casscf_debug_print_) {
         Orb_grad_Fock->print();
     }
@@ -339,6 +421,7 @@ void OrbitalOptimizer::orbital_gradient() {
     g_ = Orb_grad_Fock;
     g_->set_name("CASSCF_GRADIENT");
 }
+
 void OrbitalOptimizer::diagonal_hessian() {
     size_t nhole = nrdocc_ + na_;
     size_t npart = na_ + nvir_;
@@ -390,11 +473,79 @@ void OrbitalOptimizer::diagonal_hessian() {
             D->set(nhole_map_[uo], npart_map_[vo], 1.0);
         }
     }
+    // aa block for GASSCF
+    if (gas_) {
+        ambit::Tensor Trans_na_nmo = ambit::Tensor::build(ambit::CoreTensor, "Tr", {na_, nmo_});
+        Trans_na_nmo.iterate([&](const std::vector<size_t>& i, double& value) {
+            value = (active_abs_[i[0]] == i[1]) ? 1.0 : 0.0;
+        });
+
+        ambit::Tensor integral_a =
+            ambit::Tensor::build(ambit::CoreTensor, "Tr", {na_, na_, na_, na_});
+        integral_a("p,q,r,s") = Trans_na_nmo("p,w") * integral_("w,q,r,s");
+        psi::SharedMatrix I_act(new psi::Matrix("I_act", na_ * na_, na_ * na_));
+        integral_a.iterate([&](const std::vector<size_t>& i, double& value) {
+            I_act->set(i[0] * na_ + i[1], i[2] * na_ + i[3], value);
+        });
+
+        if (casscf_debug_print_) {
+            I_act->print();
+        }
+        // Loop over spaces, last space will have no rotations
+        // Hessian elements within GAS space
+        for (size_t gas_count = 0; gas_count < gas_num_; gas_count++) {
+            for (size_t gas_count_2 = 0; gas_count_2 < gas_count; gas_count_2++) {
+                // Loop over pairs
+                for (size_t u : relative_gas_mo_[gas_count_2]) {
+                    for (size_t v : relative_gas_mo_[gas_count]) {
+                        size_t uo = active_abs_[u];
+                        size_t vo = active_abs_[v];
+                        double value_aa = 0.0;
+                        value_aa += 2.0 * gamma1M_->get(v, v) * F_core_->get(uo, uo);
+                        value_aa += 2.0 * gamma1M_->get(u, u) * F_core_->get(vo, vo);
+                        value_aa -= 4.0 * gamma1M_->get(u, v) * F_core_->get(uo, vo);
+                        value_aa -= 2.0 * Y_->get(uo, u) + 2.0 * Z_->get(uo, u);
+                        value_aa -= 2.0 * Y_->get(vo, v) + 2.0 * Z_->get(vo, v);
+                        size_t uu = u * na_ + u;
+                        size_t vv = v * na_ + v;
+                        size_t uv = u * na_ + v;
+                        for (size_t p = 0; p < na_; p++) {
+                            for (size_t q = 0; q < na_; q++) {
+                                size_t up = u * na_ + p;
+                                size_t uq = u * na_ + q;
+                                size_t vp = v * na_ + p;
+                                size_t vq = v * na_ + q;
+                                size_t pq = p * na_ + q;
+                                size_t qp = q * na_ + p;
+                                size_t pv = p * na_ + v;
+                                size_t qv = q * na_ + v;
+                                size_t pu = p * na_ + u;
+                                value_aa += 2.0 * I_act->get(uu, pq) *
+                                            (gamma2M_->get(vv, pq) + gamma2M_->get(pv, vq));
+                                value_aa += 2.0 * I_act->get(vv, pq) *
+                                            (gamma2M_->get(uu, pq) + gamma2M_->get(pu, uq));
+                                value_aa += 1.0 * I_act->get(vp, vq) *
+                                            (gamma2M_->get(up, uq) + gamma2M_->get(uq, up));
+                                value_aa += 1.0 * I_act->get(up, uq) *
+                                            (gamma2M_->get(vp, vq) + gamma2M_->get(vq, vp));
+                                value_aa -= 4.0 * I_act->get(uv, pq) *
+                                            (gamma2M_->get(uv, qp) + gamma2M_->get(up, qv));
+                                value_aa -= 2.0 * I_act->get(up, vq) *
+                                            (gamma2M_->get(up, vq) + gamma2M_->get(uq, vp));
+                            }
+                        }
+                        D->set(nhole_map_[uo], npart_map_[vo], value_aa);
+                    } // End i loop
+                }     // End a loop
+            }
+        }
+    } // End Gas_
+
     d_ = D;
     if (casscf_debug_print_) {
         d_->print();
     }
-}
+} // namespace forte
 psi::SharedMatrix OrbitalOptimizer::approx_solve() {
     psi::Dimension nhole_dim = restricted_docc_dim_ + active_dim_;
     psi::Dimension nvirt_dim = restricted_uocc_dim_ + active_dim_;
@@ -437,7 +588,8 @@ psi::SharedMatrix OrbitalOptimizer::approx_solve() {
     for (size_t h = 0; h < nirrep_; h++) {
         for (int u = 0; u < active_dim_[h]; u++) {
             for (int v = 0; v < active_dim_[h]; v++) {
-                S_tmp->set(h, restricted_docc_dim_[h] + u, v, 0.0);
+                int uu = restricted_docc_dim_[h] + u;
+                S_tmp->set(h, uu, v, G_grad->get(h, uu, v) / D_grad->get(h, uu, v));
             }
         }
     }

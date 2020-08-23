@@ -443,7 +443,8 @@ def prepare_forte_objects_from_psi4_wfn(options, wfn):
 
     # Create the MOSpaceInfo object
     nmopi = wfn.nmopi()
-    mo_space_info = forte.make_mo_space_info(nmopi, options)
+    point_group = wfn.molecule().point_group().symbol()
+    mo_space_info = forte.make_mo_space_info(nmopi, point_group, options)
 
     # Call methods that project the orbitals (AVAS, embedding)
     mo_space_info = orbital_projection(wfn, options, mo_space_info)
@@ -480,7 +481,9 @@ def make_state_info_from_fcidump(fcidump, options):
         twice_ms = int(round(2.0 * options.get_double("MS")))
 
     if (((nel - twice_ms) % 2) != 0):
-        raise Exception(f'Forte: the value of MS ({twice_ms}/2) is incompatible with the number of electrons ({nel})')
+        raise Exception(
+            f'Forte: the value of MS ({twice_ms}/2) is incompatible with the number of electrons ({nel})'
+        )
 
     na = (nel + twice_ms) // 2
     nb = nel - na
@@ -514,6 +517,7 @@ def prepare_forte_objects_from_fcidump(options):
         nirrep = irrep_size[fcidump['pntgrp'].lower()]
         nmopi_list = [fcidump['orbsym'].count(x) for x in range(nirrep)]
     else:
+        fcidump['pntgrp'] = 'C1'  # set the point group to C1
         fcidump['isym'] = 0  # shift by -1
         nirrep = 1
         nmopi_list = [nmo]
@@ -521,7 +525,7 @@ def prepare_forte_objects_from_fcidump(options):
     nmopi = psi4.core.Dimension(nmopi_list)
 
     # Create the MOSpaceInfo object
-    mo_space_info = forte.make_mo_space_info(nmopi, options)
+    mo_space_info = forte.make_mo_space_info(nmopi, fcidump['pntgrp'], options)
 
     # Call methods that project the orbitals (AVAS, embedding)
     # skipped due to lack of functionality
@@ -609,10 +613,16 @@ def run_forte(name, **kwargs):
         # which holds the molecule used, orbitals, Fock matrices, and more
         ref_wfn = kwargs.get('ref_wfn', None)
         if ref_wfn is None:
+            ref_type = options.get_str('REF_TYPE')
             psi4.core.print_out(
-                '\n  No reference wavefunction provided. Computing one with psi4\n'
+                f'\n  No reference wavefunction provided. Computing {ref_type} orbitals with psi4\n'
             )
-            ref_wfn = psi4.driver.scf_helper(name, **kwargs)
+            if options.get_str('REF_TYPE') == 'SCF':
+                warnings.warn('\n  Forte is using orbitals from a psi4 SCF reference. This is not the best choice for multireference computations. To use CASSCF orbitals from psi4 set REF_TYPE to CASSCF.\n',
+                        UserWarning)
+                ref_wfn = psi4.driver.scf_helper(name, **kwargs)
+            elif options.get_str('REF_TYPE') == 'CASSCF':
+                ref_wfn = psi4.proc.run_detcas('casscf', **kwargs)
 
         state_weights_map, mo_space_info, scf_info = prepare_forte_objects_from_psi4_wfn(
             options, ref_wfn)
@@ -652,9 +662,12 @@ def run_forte(name, **kwargs):
 
     if (options.get_bool("CASSCF_REFERENCE") == True or job_type == "CASSCF"):
         if options.get_str('INT_TYPE') == 'FCIDUMP':
-            raise Exception('Forte: the CASSCF code cannot use integrals read from a FCIDUMP file')
+            raise Exception(
+                'Forte: the CASSCF code cannot use integrals read from a FCIDUMP file'
+            )
 
-        casscf = forte.make_casscf(state_weights_map, scf_info, options, mo_space_info, ints)
+        casscf = forte.make_casscf(state_weights_map, scf_info, options,
+                                   mo_space_info, ints)
         energy = casscf.compute_energy()
 
     if (job_type == "MCSCF_TWO_STEP"):
@@ -760,7 +773,7 @@ def gradient_forte(name, **kwargs):
         ints.rotate_orbitals(Ua, Ub)
 
     # Run gradient computation
-#    energy = forte.forte_old_methods(ref_wfn, options, ints, mo_space_info)
+    energy = forte.forte_old_methods(ref_wfn, options, ints, mo_space_info)
 
     if job_type == "CASSCF":
         casscf = forte.make_casscf(state_weights_map, scf_info, options, mo_space_info, ints)

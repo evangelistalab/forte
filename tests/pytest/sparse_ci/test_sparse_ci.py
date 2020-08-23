@@ -35,7 +35,8 @@ def test_sparse_ci():
 
     # Setup forte and prepare the active space integral class
     nmopi = wfn.nmopi()
-    mo_space_info = forte.make_mo_space_info(nmopi, forte_options)
+    point_group = wfn.molecule().point_group().symbol()
+    mo_space_info = forte.make_mo_space_info(nmopi, point_group, forte_options)
     ints = forte.make_ints_from_psi4(wfn, forte_options, mo_space_info)
     as_ints = forte.make_active_space_ints(mo_space_info, ints, 'ACTIVE', ['RESTRICTED_DOCC'])
     as_ints.print()

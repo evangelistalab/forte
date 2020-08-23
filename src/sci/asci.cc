@@ -27,9 +27,9 @@
  * @END LICENSE
  */
 
-#include "psi4/libmints/molecule.h"
-#include "psi4/libmints/pointgrp.h"
 #include "psi4/physconst.h"
+#include "psi4/libpsi4util/PsiOutStream.h"
+#include "psi4/libmints/molecule.h"
 
 #include "base_classes/forte_options.h"
 #include "base_classes/scf_info.h"
@@ -381,15 +381,14 @@ void ASCI::print_nos() {
     // file << endl;
     // file.close();
 
-    CharacterTable ct = psi::Process::environment.molecule()->point_group()->char_table();
     std::sort(vec_irrep_occupation.begin(), vec_irrep_occupation.end(),
               std::greater<std::pair<double, std::pair<int, int>>>());
 
     size_t count = 0;
     outfile->Printf("\n    ");
     for (auto vec : vec_irrep_occupation) {
-        outfile->Printf(" %4d%-4s%11.6f  ", vec.second.second, ct.gamma(vec.second.first).symbol(),
-                        vec.first);
+        outfile->Printf(" %4d%-4s%11.6f  ", vec.second.second,
+                        mo_space_info_->irrep_label(vec.second.first).c_str(), vec.first);
         if (count++ % 3 == 2 && count != vec_irrep_occupation.size())
             outfile->Printf("\n    ");
     }
