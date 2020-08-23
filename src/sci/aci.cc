@@ -311,12 +311,12 @@ void AdaptiveCI::find_q_space() {
         }
     }
 
-    outfile->Printf("\n  Time spent building the model space: %1.6f", build_space.get());
+    outfile->Printf("\n  Dimension of the PQ space:                  %zu", PQ_space_.size());
     // Check if P+Q space is spin complete
     if (spin_complete_) {
         PQ_space_.make_spin_complete(nact_); // <- xsize
         if (!quiet_mode_)
-            outfile->Printf("\n  Spin-complete dimension of the PQ space: %zu", PQ_space_.size());
+            outfile->Printf("\n  Dimension of the PQ space (spin-complete) : %zu", PQ_space_.size());
     }
 
     if ((ex_alg_ == "ROOT_ORTHOGONALIZE") and (root_ > 0) and cycle_ >= pre_iter_) {
@@ -324,6 +324,7 @@ void AdaptiveCI::find_q_space() {
         add_bad_roots(PQ_space_);
         sparse_solver_->add_bad_states(bad_roots_);
     }
+    outfile->Printf("\n  Time spent building the model space: %1.6f", build_space.get());
 }
 
 double AdaptiveCI::average_q_values(std::vector<double>& E2) {
