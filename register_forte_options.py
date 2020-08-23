@@ -854,6 +854,8 @@ def register_casscf_options(options):
 
     options.add_int("CASSCF_MICRO_MINITER", 15, "The minimum number of CASSCF micro iterations")
 
+    options.add_int("CPMCSCF_MAXITER", 50, "Max iteration of solving coupled perturbed MCSCF equations")
+
     options.add_double("CASSCF_E_CONVERGENCE", 1e-8, "The energy convergence criterion (two consecutive energies)")
 
     options.add_double("CASSCF_G_CONVERGENCE", 5e-6,
@@ -915,9 +917,9 @@ def register_casscf_options(options):
 
     options.add_bool("MONITOR_SA_SOLUTION", False,
                      "Monitor the CAS-CI solutions through iterations")
-    
+
     options.add_bool("CASSCF_SEMICANONICALIZE", True, "Semicanonicalize the orbitals after CASSCF?")
-    
+
     options.add_int_array("CASSCF_ACTIVE_FROZEN_ORBITAL",
                           "A list of active orbitals to be frozen in the casscf optimization (in Pitzer order,"
                           " zero based). Useful when doing core-excited state computations.")

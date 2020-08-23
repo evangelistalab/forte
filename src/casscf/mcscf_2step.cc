@@ -60,8 +60,8 @@ MCSCF_2STEP::MCSCF_2STEP(const std::map<StateInfo, std::vector<double>>& state_w
 
 void MCSCF_2STEP::startup() {
     print_method_banner({"Multi-Configurational Self Consistent Field",
-                         "Two-Step Approx. Second-Order AO Algorithm",
-                         "written by Chenyang Li and Kevin P. Hannon"});
+                         "Two-Step Approximate Second-Order AO Algorithm",
+                         "written by Chenyang Li, Kevin P. Hannon, and Shuhe Wang"});
 
     // read and print options
     read_options();
@@ -350,15 +350,19 @@ void MCSCF_2STEP::print_macro_iteration(std::vector<CASSCF_HISTORY>& history) {
 
 void MCSCF_2STEP::backtransform_densities(CASSCF_ORB_GRAD& cas_grad) {
     auto Ca = cas_grad.Ca();
+    cas_grad.Ca_initial()->print();
+    Ca->print();
 
     // Lagrangian
     auto L = cas_grad.Lagrangian();
+    L->print();
     L->back_transform(Ca);
     L->set_name("Lagrangian AO Back-Transformed");
     ints_->wfn()->Lagrangian()->copy(L);
 
     // 1-RDM
     auto D1 = cas_grad.opdm();
+    D1->print();
     D1->scale(0.5);
     D1->back_transform(Ca);
     D1->set_name("D1a AO Back-Transformed");

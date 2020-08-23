@@ -78,11 +78,17 @@ class CASSCF_ORB_GRAD {
     /// Return the number of nonredundant orbital rotations
     size_t nrot() { return nrot_; }
 
-    /// Return optimized MO coefficients
+    /// Return the initial (not optimized) MO coefficients
+    psi::SharedMatrix Ca_initial() { return C0_; }
+
+    /// Return the optimized MO coefficients
     psi::SharedMatrix Ca() { return C_; }
 
     /// Canonicalize the final orbitals
     void canonicalize_final();
+
+    /// Compute nuclear gradient
+    void compute_nuclear_gradient();
 
     /// Return the MO orbital Lagrangian matrix
     psi::SharedMatrix Lagrangian();
@@ -276,6 +282,22 @@ class CASSCF_ORB_GRAD {
 
     /// Update orbitals using the given rotation matrix in vector form
     bool update_orbitals(psi::SharedVector x);
+
+    // => Nuclear gradient related functions <=
+
+    /// Z matrix (1-RDM relaxed part), nfrzc by nuocc of HF
+    psi::SharedMatrix Zfc_;
+
+    /// W matrix (Lagrangian, relaxed part), nfrzc by nuocc of HF
+    psi::SharedMatrix Wfc_;
+
+    /// Solve Z vector equation if there are frozen-core orbitals
+    void solve_Zfc();
+    /// Build L matrix for every iteration
+    psi::SharedMatrix build_Lfc();
+
+    /// Build W matrix after Zfc is solved
+    void build_Wfc();
 
     // => Some helper functions <=
 
