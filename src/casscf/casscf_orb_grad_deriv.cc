@@ -62,19 +62,42 @@ void CASSCF_ORB_GRAD::compute_nuclear_gradient() {
         throw std::runtime_error("Frozen-virtual not implemented in MCSCF gradient!");
 
     if (nfrzc_) {
+        // TODO: throw warning for high spin?
+
         outfile->Printf("\n  Warning: MCSCF gradient detected frozen-core orbitals.");
         outfile->Printf(" They are ASSUMED from Hartree-Fock!");
+        print_h2("Solving CP-MCSCF Equations for Frozen-Core Approximation");
 
-        auto nuoccpi = nmopi_ - ints_->wfn()->doccpi();
-        Zfc_ = std::make_shared<psi::Matrix>("Z_fc", nfrzcpi_, nuoccpi);
-        Wfc_ = std::make_shared<psi::Matrix>("W_fc", nfrzcpi_, nuoccpi);
+        hf_ndoccpi_ = ints_->wfn()->doccpi();
+        hf_nuoccpi_ = nmopi_ - ints_->wfn()->doccpi();
+
+        hf_docc_mos_.clear();
+        hf_uocc_mos_.clear();
+        for (int h = 0, offset = 0; h < nirrep_; ++h) {
+            for (int i = 0; i < hf_ndoccpi_[h]; ++i) {
+                hf_docc_mos_.push_back(i + offset);
+            }
+            for (int a = 0; a < hf_nuoccpi_[h]; ++a) {
+                hf_uocc_mos_.push_back(a + hf_ndoccpi_[h] + offset);
+            }
+            offset += nmopi_[h];
+        }
+
+        epsilon_ = ints_->wfn()->epsilon_a();
+
+        Zfc_ = std::make_shared<psi::Matrix>("Z_fc", nfrzcpi_, hf_nuoccpi_);
+        Wfc_ = std::make_shared<psi::Matrix>("W_fc", nfrzcpi_, hf_nuoccpi_);
 
         solve_Zfc();
+        Zfc_->print();
+
         build_Wfc();
+        Wfc_->print();
     }
 
     // back-transform densities
     auto L = Lagrangian();
+    L->print();
     L->back_transform(C_);
     L->set_name("Lagrangian AO Back-Transformed");
     ints_->wfn()->Lagrangian()->copy(L);
@@ -82,6 +105,7 @@ void CASSCF_ORB_GRAD::compute_nuclear_gradient() {
     // 1-RDM
     auto D1 = opdm();
     D1->scale(0.5);
+    D1->print();
     D1->back_transform(C_);
     D1->set_name("D1a AO Back-Transformed");
     ints_->wfn()->Da()->copy(D1);
@@ -103,6 +127,7 @@ void CASSCF_ORB_GRAD::compute_nuclear_gradient() {
 
 void CASSCF_ORB_GRAD::solve_Zfc() {
     // build Z independent part
+    auto Zfc_fixed = build_Zfc_fixed();
 
     // start iteration
     bool converged = false;
@@ -110,20 +135,28 @@ void CASSCF_ORB_GRAD::solve_Zfc() {
     int maxiter = options_->get_int("CPMCSCF_MAXITER");
     SharedMatrix Zold = Zfc_->clone();
 
-    outfile->Printf("\n\n  ==> Solving MCSCF Z Vector <==\n");
     outfile->Printf("\n    *======================*");
-    outfile->Printf("\n    * Iter    Delta Z norm *");
+    outfile->Printf("\n    * Iter     Delta Z rms *");
     outfile->Printf("\n    *----------------------*");
 
     while (iter <= maxiter) {
-        // Zfc_ = build_Lfc();
-
-        // add independent part
-        // Zfc_->add(...);
+        // compute r.h.s. of CP-MCSCF equation
+        Zfc_ = build_Lfc();
+        Zfc_->add(Zfc_fixed);
 
         // divide by HF orbital energies
+        for (int h = 0; h < nirrep_; ++h) {
+            for (int I = 0; I < nfrzcpi_[h]; ++I) {
+                double e_I = epsilon_->get(h, I);
+                for (int a = 0, offset = hf_ndoccpi_[h]; a < hf_nuoccpi_[h]; ++a) {
+                    double e_a = epsilon_->get(h, a + offset);
+                    double v = Zfc_->get(h, I, a) / (e_I - e_a);
+                    Zfc_->set(h, I, a, v);
+                }
+            }
+        }
 
-
+        // test convergence
         Zold->subtract(Zfc_);
         double Zrms = Zold->rms();
         outfile->Printf("\n    * %4d    %12.4e *", iter, Zrms);
@@ -138,24 +171,132 @@ void CASSCF_ORB_GRAD::solve_Zfc() {
 
     if (!converged) {
         auto msg = "CP-MCSCF did not converge in " + std::to_string(maxiter) + " iterations.";
+        outfile->Printf("\n  Error: %s", msg.c_str());
+        outfile->Printf("\n  Please check if the specified frozen-core orbitals make sense.");
         throw std::runtime_error(msg);
     }
 }
 
+SharedMatrix CASSCF_ORB_GRAD::build_Zfc_fixed() {
+    auto rhs = std::make_shared<psi::Matrix>("Z_fc Fixed", nfrzcpi_, hf_nuoccpi_);
+
+    // fill in data
+    for (int h = 0, offset_I = 0, offset_a = 0; h < nirrep_; ++h) {
+        offset_a += hf_ndoccpi_[h];
+
+        for (int I = 0; I < nfrzcpi_[h]; ++I) {
+            // space label and index of I in ambit Tensor
+            std::string space_I = mos_rel_space_[I + offset_I].first;
+            size_t n_I = mos_rel_space_[I + offset_I].second;
+            size_t size_I = label_to_mos_[space_I].size();
+
+            for (int a = 0; a < hf_nuoccpi_[h]; ++a) {
+                // space label and index of a in ambit Tensor
+                std::string space_a = mos_rel_space_[a + offset_a].first;
+                size_t n_a = mos_rel_space_[a + offset_a].second;
+                size_t size_a = label_to_mos_[space_a].size();
+
+                // A_{aI}
+                double value = A_.block(space_a + space_I).data()[n_a * size_I + n_I];
+
+                // A_{Ia}
+                value -= A_.block(space_I + space_a).data()[n_I * size_a + n_a];
+
+                // set value
+                rhs->set(h, I, a, 2.0 * value);
+            }
+        }
+
+        offset_I += nmopi_[h];
+        offset_a += hf_nuoccpi_[h];
+    }
+
+    return rhs;
+}
+
 SharedMatrix CASSCF_ORB_GRAD::build_Lfc() {
     // L_{Ic} = C_RJ C_Sd Z_Jd [4 * (RS|MN) - (RN|MS) - (RM|NS)] C_MI C_Nc
-    // AO: M,N,R,S; frozen-core: I,J; unoccupied in HF: c,d
+    // AO: M,N,R,S; frozen-core: I,J; HF UOCC: c,d
     auto Lfc_so = std::make_shared<psi::Matrix>("L_fc SO", nsopi_, nsopi_);
 
-    // return psi::linalg::triplet(Cfc, Lfc_so, Cu, true, false, false);
-    return Lfc_so;
+    // grab the frozen core part of Ca
+    auto Cfrzc = std::make_shared<psi::Matrix>("C_FRZC", nirrep_, nsopi_, nfrzcpi_);
+    for (int h = 0; h < nirrep_; ++h) {
+        for (int i = 0; i < nfrzcpi_[h]; ++i) {
+            Cfrzc->set_column(h, i, C_->get_column(h, i));
+        }
+    }
+
+    // grab the unoccupied part of Ca
+    auto Cuocc = std::make_shared<psi::Matrix>("C_UOCC", nirrep_, nsopi_, hf_nuoccpi_);
+    for (int h = 0; h < nirrep_; ++h) {
+        for (int i = 0, offset = hf_ndoccpi_[h]; i < hf_nuoccpi_[h]; ++i) {
+            Cuocc->set_column(h, i, C_->get_column(h, i + offset));
+        }
+    }
+
+    // dress Cuocc by Z_Jd
+    auto Cuocc_dressed = psi::linalg::doublet(Cuocc, Zfc_, false, true);
+
+    // JK build
+    std::vector<std::shared_ptr<psi::Matrix>>& Cl = JK_->C_left();
+    std::vector<std::shared_ptr<psi::Matrix>>& Cr = JK_->C_right();
+    Cl.clear();
+    Cr.clear();
+    JK_->set_do_K(true);
+
+    Cl.push_back(Cfrzc);
+    Cr.push_back(Cuocc_dressed);
+    JK_->compute();
+
+    // copy data
+    Lfc_so->copy(JK_->J()[0]);
+    Lfc_so->scale(4.0);
+    Lfc_so->subtract(JK_->K()[0]);
+
+    // transform (4J - K) to MO
+    auto Lfc = psi::linalg::triplet(Cfrzc, Lfc_so, Cuocc, true, false, false);
+
+    // subtract the other K like term
+    auto K2 = psi::linalg::triplet(Cuocc, JK_->K()[0], Cfrzc, true, false, false);
+    Lfc->subtract(K2->transpose());
+
+    return Lfc;
+}
+
+void CASSCF_ORB_GRAD::build_Wfc() {
+    for (int h = 0, offset_I = 0, offset_a = 0; h < nirrep_; ++h) {
+        offset_a += hf_ndoccpi_[h];
+
+        for (int I = 0; I < nfrzcpi_[h]; ++I) {
+            double epsilon_I = epsilon_->get(h, I);
+
+            // space label and index of I in ambit Tensor
+            std::string space_I = mos_rel_space_[I + offset_I].first;
+            size_t n_I = mos_rel_space_[I + offset_I].second;
+
+            for (int a = 0; a < hf_nuoccpi_[h]; ++a) {
+                // space label and index of a in ambit Tensor
+                std::string space_a = mos_rel_space_[a + offset_a].first;
+                size_t n_a = mos_rel_space_[a + offset_a].second;
+                size_t size_a = label_to_mos_[space_a].size();
+
+                double value = 0.5 * epsilon_I * Zfc_->get(h, I, a);
+
+                // add A_{Ia} part if a is active index
+                if (space_a == "a")
+                    value += A_.block(space_I + space_a).data()[n_I * size_a + n_a];
+
+                Wfc_->set(h, I, a, value);
+            }
+        }
+
+        offset_I += nmopi_[h];
+        offset_a += hf_nuoccpi_[h];
+    }
 }
 
 psi::SharedMatrix CASSCF_ORB_GRAD::Lagrangian() {
-    auto S = ints_->wfn()->S();
-    auto I = linalg::triplet(C_, S, C_, true, false, false);
-    I->print();
-
     // format A matrix
     auto L = std::make_shared<psi::Matrix>("Lagrangian (MO)", nmopi_, nmopi_);
 
@@ -172,6 +313,19 @@ psi::SharedMatrix CASSCF_ORB_GRAD::Lagrangian() {
                 L->set(h1, p, q, value);
             }
         });
+
+    // add frozen-core response part
+    if (nfrzc_) {
+        for (int h = 0; h < nirrep_; ++h) {
+            for (int I = 0; I < nfrzcpi_[h]; ++I) {
+                for (int a = 0, offset_a = hf_ndoccpi_[h]; a < hf_nuoccpi_[h]; ++a) {
+                    double w = Wfc_->get(h, I, a);
+                    L->add(h, I, a + offset_a, w);
+                    L->add(h, a + offset_a, I, w);
+                }
+            }
+        }
+    }
 
     return L;
 }
@@ -195,6 +349,19 @@ psi::SharedMatrix CASSCF_ORB_GRAD::opdm() {
                 auto nv = v + offset;
                 D1->set(h, nu, nv, rdm1_->get(h, u, v));
                 D1->set(h, nv, nu, rdm1_->get(h, v, u));
+            }
+        }
+    }
+
+    // frozen-core response part
+    if (nfrzc_) {
+        for (int h = 0; h < nirrep_; ++h) {
+            for (int I = 0; I < nfrzcpi_[h]; ++I) {
+                for (int a = 0, offset_a = hf_ndoccpi_[h]; a < hf_nuoccpi_[h]; ++a) {
+                    double w = 0.5 * Zfc_->get(h, I, a);
+                    D1->set(h, I, a + offset_a, w);
+                    D1->add(h, a + offset_a, I, w);
+                }
             }
         }
     }
@@ -246,6 +413,28 @@ void CASSCF_ORB_GRAD::dump_tpdm_iwl() {
             }
         }
         offset += nmopi_[h];
+    }
+
+    // 1-rdm part from frozen-core response
+    if (nfrzc_) {
+        for (int h = 0, offset = 0; h < nirrep_; ++h) {
+            for (int I = 0; I < nfrzcpi_[h]; ++I) {
+                auto nI = I + offset;
+                for (int a = 0; a < hf_nuoccpi_[h]; ++a) {
+                    auto na = a + offset + hf_ndoccpi_[h];
+
+                    double z_Ia = Zfc_->get(h, I, a);
+
+                    for (const int ni: hf_docc_mos_) {
+                        d2.write_value(nI, na, ni, ni, z_Ia, print, name, 0);
+                        d2.write_value(nI, ni, ni, na, -0.5 * z_Ia, print, name, 0);
+                        d2.write_value(na, nI, ni, ni, z_Ia, print, name, 0);
+                        d2.write_value(na, ni, ni, nI, -0.5 * z_Ia, print, name, 0);
+                    }
+                }
+            }
+            offset += nmopi_[h];
+        }
     }
 
     // 2-rdm part

@@ -152,9 +152,6 @@ class MCSCF_2STEP {
 
     /// Print iteration information
     void print_macro_iteration(std::vector<CASSCF_HISTORY>& history);
-
-    /// Set up for MCSCF nuclear gradient
-    void backtransform_densities(CASSCF_ORB_GRAD& cas_grad);
 };
 
 std::unique_ptr<MCSCF_2STEP>

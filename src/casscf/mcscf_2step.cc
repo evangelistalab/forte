@@ -303,8 +303,8 @@ double MCSCF_2STEP::compute_energy() {
         cas_grad.set_rdms(rdms);
         cas_grad.evaluate(R, dG);
 
-        // back-transform MO density to AO
-        backtransform_densities(cas_grad);
+        // compute densities used for nuclear gradient
+        cas_grad.compute_nuclear_gradient();
     }
 
     return energy_;
@@ -346,41 +346,6 @@ void MCSCF_2STEP::print_macro_iteration(std::vector<CASSCF_HISTORY>& history) {
                              de_c, e_o, de_o, g, n);
     }
     psi::outfile->Printf("\n    %s", dash2.c_str());
-}
-
-void MCSCF_2STEP::backtransform_densities(CASSCF_ORB_GRAD& cas_grad) {
-    auto Ca = cas_grad.Ca();
-    cas_grad.Ca_initial()->print();
-    Ca->print();
-
-    // Lagrangian
-    auto L = cas_grad.Lagrangian();
-    L->print();
-    L->back_transform(Ca);
-    L->set_name("Lagrangian AO Back-Transformed");
-    ints_->wfn()->Lagrangian()->copy(L);
-
-    // 1-RDM
-    auto D1 = cas_grad.opdm();
-    D1->print();
-    D1->scale(0.5);
-    D1->back_transform(Ca);
-    D1->set_name("D1a AO Back-Transformed");
-    ints_->wfn()->Da()->copy(D1);
-    ints_->wfn()->Db()->copy(D1);
-
-    // 2-RDM
-    cas_grad.dump_tpdm_iwl();
-
-    std::vector<std::shared_ptr<psi::MOSpace>> spaces{psi::MOSpace::all};
-    auto transform = std::make_shared<psi::TPDMBackTransform>(
-        ints_->wfn(), spaces,
-        psi::IntegralTransform::TransformationType::Restricted, // Transformation type
-        psi::IntegralTransform::OutputType::DPDOnly,            // Output buffer
-        psi::IntegralTransform::MOOrdering::PitzerOrder,        // MO ordering (does not matter)
-        psi::IntegralTransform::FrozenOrbitals::None);          // Frozen orbitals
-    transform->set_print(debug_print_ ? 5 : print_);
-    transform->backtransform_density();
 }
 
 std::unique_ptr<MCSCF_2STEP>

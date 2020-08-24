@@ -90,15 +90,6 @@ class CASSCF_ORB_GRAD {
     /// Compute nuclear gradient
     void compute_nuclear_gradient();
 
-    /// Return the MO orbital Lagrangian matrix
-    psi::SharedMatrix Lagrangian();
-
-    /// Return the MO 1-RDM
-    psi::SharedMatrix opdm();
-
-    /// Dump the MO 2-RDM to file using IWL
-    void dump_tpdm_iwl();
-
   private:
     /// The Forte options
     std::shared_ptr<ForteOptions> options_;
@@ -285,6 +276,24 @@ class CASSCF_ORB_GRAD {
 
     // => Nuclear gradient related functions <=
 
+    /// Return the MO orbital Lagrangian matrix
+    psi::SharedMatrix Lagrangian();
+
+    /// Return the MO 1-RDM
+    psi::SharedMatrix opdm();
+
+    /// Dump the MO 2-RDM to file using IWL
+    void dump_tpdm_iwl();
+
+    /// Doubly occupied MOs from Hartree-Fock
+    psi::Dimension hf_ndoccpi_;
+    /// Unoccupied MOs from Hartree-Fock
+    psi::Dimension hf_nuoccpi_;
+    /// List of occupied MOs from Hartree-Fock
+    std::vector<size_t> hf_docc_mos_;
+    /// List of unoccupied MOs from Hartree-Fock
+    std::vector<size_t> hf_uocc_mos_;
+
     /// Z matrix (1-RDM relaxed part), nfrzc by nuocc of HF
     psi::SharedMatrix Zfc_;
 
@@ -293,8 +302,12 @@ class CASSCF_ORB_GRAD {
 
     /// Solve Z vector equation if there are frozen-core orbitals
     void solve_Zfc();
+    /// Build Z independent part of the CP-MCSCF equation
+    psi::SharedMatrix build_Zfc_fixed();
     /// Build L matrix for every iteration
     psi::SharedMatrix build_Lfc();
+    /// Hartree-Fock orbital energies from Psi4
+    psi::SharedVector epsilon_;
 
     /// Build W matrix after Zfc is solved
     void build_Wfc();

@@ -553,14 +553,14 @@ void CASSCF_ORB_GRAD::build_fock_active() {
 
     // grab part of Ca for active
     auto Cactv = std::make_shared<psi::Matrix>("C_ACTIVE", nirrep_, nsopi_, nactvpi_);
-    for (int h = 0; h < nirrep_; h++) {
+    for (int h = 0; h < nirrep_; ++h) {
         for (int i = 0, offset = ndoccpi_[h]; i < nactvpi_[h]; i++) {
             Cactv->set_column(h, i, C_->get_column(h, i + offset));
         }
     }
 
     // dress Cactv by one-density, which will the C_right for JK
-    auto Cactv_dressed = linalg::doublet(Cactv, rdm1_, false, false);
+    auto Cactv_dressed = psi::linalg::doublet(Cactv, rdm1_, false, false);
 
     // JK build
     std::vector<std::shared_ptr<psi::Matrix>>& Cl = JK_->C_left();
