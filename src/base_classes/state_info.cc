@@ -141,14 +141,14 @@ std::string StateInfo::str() const {
     if (gas_min_.size() > 0) {
         gas_restrictions += " GAS min: ";
         for (size_t i : gas_min_)
-            gas_restrictions += std::to_string(i);
+            gas_restrictions += std::to_string(i) + " ";
         gas_restrictions += ";";
     }
 
     if (gas_max_.size() > 0) {
         gas_restrictions += " GAS max: ";
         for (size_t i : gas_max_)
-            gas_restrictions += std::to_string(i);
+            gas_restrictions += std::to_string(i) + " ";
         gas_restrictions += ";";
     }
     return multiplicity_label() + " " + irrep_label_out + " (Ms = " + get_ms_string(twice_ms()) +

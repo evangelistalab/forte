@@ -230,15 +230,6 @@ void AdaptiveCI::find_q_space() {
             //        F_space);
         }
 
-    } else if (screen_alg == "MULTI_GAS") {
-        // get_gas_excited_determinants_core(P_evecs_, P_evals_, P_space_, F_space);
-        // Inefficient algorithm but should be used when calculate multiple roots with
-        // the same GAS electrons and same symmetry
-
-        // The tricky way to avoid ref_root_ being non-zero for core-excited state
-        get_gas_excited_determinants_sr(P_evecs_, P_evals_, P_space_, F_space);
-        ref_root_ = 0;
-
     } else if (screen_alg == "CORE") {
         get_excited_determinants_core(P_evecs_, P_evals_, P_space_, F_space);
     } else if (screen_alg == "BATCH_HASH" or screen_alg == "BATCH_CORE") {
@@ -570,64 +561,7 @@ void AdaptiveCI::pre_iter_preparation() {
     CI_Reference ref(scf_info_, options_, mo_space_info_, as_ints_, multiplicity_, twice_ms_,
                      wavefunction_symmetry_, state_);
 
-    if ((options_->get_str("ACI_SCREEN_ALG") == "MULTI_GAS")) {
-        initial_reference_.clear();
-        std::vector<std::string> maxe_alt_string = {"GAS1MAX_MULTI", "GAS2MAX_MULTI",
-                                                    "GAS3MAX_MULTI", "GAS4MAX_MULTI",
-                                                    "GAS5MAX_MULTI", "GAS6MAX_MULTI"};
-        std::vector<std::string> mine_alt_string = {"GAS1MIN_MULTI", "GAS2MIN_MULTI",
-                                                    "GAS3MIN_MULTI", "GAS4MIN_MULTI",
-                                                    "GAS5MIN_MULTI", "GAS6MIN_MULTI"};
-        std::vector<int> maxe;
-        std::vector<int> mine;
-        for (size_t gas_count = 0; gas_count < 6; gas_count++) {
-            py::list gasemax_alt_list = options_->get_gen_list(maxe_alt_string[gas_count]);
-            py::list gasemin_alt_list = options_->get_gen_list(mine_alt_string[gas_count]);
-            size_t nentry = gasemax_alt_list.size();
-            if (nentry > 0) {
-                bool found_state = false;
-                for (size_t i = 0; i < nentry; i++) {
-                    py::list gasemax_alt = gasemax_alt_list[i];
-                    int symmetry_read = py::cast<int>(gasemax_alt[0]);
-                    int multiplicity_read = py::cast<int>(gasemax_alt[1]);
-                    if ((multiplicity_read == multiplicity_) &&
-                        (symmetry_read == wavefunction_symmetry_)) {
-                        maxe.push_back(py::cast<int>(gasemax_alt[root_ + 2]));
-                        found_state = true;
-                    }
-                }
-                if (!found_state) {
-                    outfile->Printf("\n  Wrong input of GASMAX_MULTI.");
-                    exit(1);
-                }
-            } else {
-                maxe.push_back(200);
-            }
-            nentry = gasemin_alt_list.size();
-            if (nentry > 0) {
-                bool found_state = false;
-                for (size_t i = 0; i < nentry; i++) {
-                    py::list gasemin_alt = gasemin_alt_list[i];
-                    int symmetry_read = py::cast<int>(gasemin_alt[0]);
-                    int multiplicity_read = py::cast<int>(gasemin_alt[1]);
-                    if ((multiplicity_read == multiplicity_) &&
-                        (symmetry_read == wavefunction_symmetry_)) {
-                        mine.push_back(py::cast<int>(gasemin_alt[root_ + 2]));
-                        found_state = true;
-                    }
-                }
-                if (!found_state) {
-                    outfile->Printf("\n  Wrong input of GASMIN_MULTI.");
-                    exit(1);
-                }
-            } else {
-                mine.push_back(0);
-            }
-        }
-        ref.modify_gas(initial_reference_, maxe, mine);
-    } else {
-        ref.build_reference(initial_reference_);
-    }
+    ref.build_reference(initial_reference_);
 
     if (one_cycle_) {
         PQ_space_ = initial_reference_;
@@ -652,9 +586,8 @@ void AdaptiveCI::pre_iter_preparation() {
         gas_single_criterion_ = ref.gas_single_criterion();
         gas_double_criterion_ = ref.gas_double_criterion();
         gas_electrons_ = ref.gas_electrons();
-        std::vector<std::string> gas_subspaces = {"GAS1", "GAS2", "GAS3", "GAS4", "GAS5", "GAS6"};
         for (size_t gas_count = 0; gas_count < 6; gas_count++) {
-            std::string space = gas_subspaces.at(gas_count);
+            std::string space = "GAS" + std::to_string(gas_count + 1);
             std::vector<size_t> relative_mo;
             auto gas_mo = mo_space_info_->absolute_mo(space);
             for (size_t i = 0, imax = gas_mo.size(); i < imax; ++i) {
@@ -855,7 +788,7 @@ void AdaptiveCI::diagonalize_PQ_space() {
         ref_root_ = root_follow(P_ref_, P_ref_evecs_, PQ_space_, PQ_evecs_, num_ref_roots_);
     }
 
-    if (gas_iteration_ && options_->get_str("ACI_SCREEN_ALG") != "MULTI_GAS") {
+    if (gas_iteration_) {
         print_gas_wfn(PQ_space_, PQ_evecs_);
     }
     if (occ_analysis_) {

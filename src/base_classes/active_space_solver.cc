@@ -208,6 +208,9 @@ make_state_weights_map(std::shared_ptr<ForteOptions> options,
     // check if the user provided a AVG_STATE list
     py::list avg_state = options->get_gen_list("AVG_STATE");
 
+    std::vector<size_t> gas_min(6, 0);
+    std::vector<size_t> gas_max(6, 1000);
+
     // if AVG_STATE is not defined, do a state-specific computation
     if (avg_state.size() == 0) {
         // assign the weights (0,0,1_root,...) to do a state-specific computation
@@ -215,7 +218,31 @@ make_state_weights_map(std::shared_ptr<ForteOptions> options,
         int root = options->get_int("ROOT");
         std::vector<double> weights(nroot, 0.0);
         weights[root] = 1.0;
-        state_weights_map[state] = weights;
+        for (int gasn = 0; gasn < 6; gasn++) {
+            auto gas_space_min = options->get_int_vec("GAS" + std::to_string(gasn + 1) + "MIN");
+            auto gas_space_max = options->get_int_vec("GAS" + std::to_string(gasn + 1) + "MAX");
+            if (gas_space_min.size() > 0) {
+                if (gas_space_min.size() > 1) {
+                    std::string msg =
+                        "\n  Error: GAS" + std::to_string(gasn + 1) + "MIN has an incorrect size";
+                    psi::outfile->Printf(msg.c_str());
+                    throw std::runtime_error(msg);
+                }
+                gas_min[gasn] = gas_space_min[0];
+            }
+            if (gas_space_max.size() > 0) {
+                if (gas_space_max.size() > 1) {
+                    std::string msg =
+                        "\n  Error: GAS" + std::to_string(gasn + 1) + "MAX has an incorrect size";
+                    psi::outfile->Printf(msg.c_str());
+                    throw std::runtime_error(msg);
+                }
+                gas_max[gasn] = gas_space_max[0];
+            }
+        }
+        StateInfo state_this(state.na(), state.nb(), state.multiplicity(), state.twice_ms(),
+                             state.irrep(), state.irrep_label(), gas_min, gas_max);
+        state_weights_map[state_this] = weights;
     } else {
         double sum_of_weights = 0.0;
         size_t nstates = 0;
@@ -292,30 +319,26 @@ make_state_weights_map(std::shared_ptr<ForteOptions> options,
             }
             sum_of_weights += std::accumulate(std::begin(weights), std::end(weights), 0.0);
 
-            std::vector<size_t> gas_min(6, 0);
-            std::vector<size_t> gas_max(6, 1000000);
-            for (int gasn = 0; gasn < 2; gasn++) { // TODOMeng change 2 -> 6
-                auto gasmin = options->get_int_vec(
-                    "MINGAS" + std::to_string(gasn + 1)); // TODOMeng update names to MINnGAS
-                auto gasmax = options->get_int_vec(
-                    "MAXGAS" + std::to_string(gasn + 1)); // TODOMeng update names to MINnGAS
-                if (gasmin.size() > 0) {
-                    if (i >= gasmin.size()) {
-                        std::string msg = "\n  Error: MINGAS" + std::to_string(gasn + 1) +
-                                          " has an incorrect size";
+            for (int gasn = 0; gasn < 6; gasn++) {
+                auto gas_space_min = options->get_int_vec("GAS" + std::to_string(gasn + 1) + "MIN");
+                auto gas_space_max = options->get_int_vec("GAS" + std::to_string(gasn + 1) + "MAX");
+                if (gas_space_min.size() > 0) {
+                    if (i >= gas_space_min.size()) {
+                        std::string msg = "\n  Error: GAS" + std::to_string(gasn + 1) +
+                                          "MIN has an incorrect size";
                         psi::outfile->Printf(msg.c_str());
                         throw std::runtime_error(msg);
                     }
-                    gas_min[gasn] = gasmin[i];
+                    gas_min[gasn] = gas_space_min[i];
                 }
-                if (gasmax.size() > 0) {
-                    if (i >= gasmax.size()) {
-                        std::string msg = "\n  Error: MAXGAS" + std::to_string(gasn + 1) +
-                                          " has an incorrect size";
+                if (gas_space_max.size() > 0) {
+                    if (i >= gas_space_max.size()) {
+                        std::string msg = "\n  Error: GAS" + std::to_string(gasn + 1) +
+                                          "MAX has an incorrect size";
                         psi::outfile->Printf(msg.c_str());
                         throw std::runtime_error(msg);
                     }
-                    gas_max[gasn] = gasmax[i];
+                    gas_max[gasn] = gas_space_max[i];
                 }
             }
 
@@ -387,7 +410,7 @@ make_state_weights_map(std::shared_ptr<ForteOptions> options,
     }
 
     return state_weights_map_ms_avg;
-}
+} // namespace forte
 
 RDMs ActiveSpaceSolver::compute_average_rdms(
     const std::map<StateInfo, std::vector<double>>& state_weights_map, int max_rdm_level) {

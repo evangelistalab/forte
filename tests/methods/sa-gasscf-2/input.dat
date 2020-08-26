@@ -5,7 +5,7 @@
 import forte
 
 refscf = -76.0172965561 #TEST
-refgasscf = -66.0951162814 #TEST
+refgasscf = -66.1436887464 #TEST
 
 memory 6000mb
 molecule h2o{
@@ -35,13 +35,13 @@ set forte {
   sci_enforce_spin_complete true
   e_convergence 6
   charge 0
-  aci_screen_alg multi_gas
   active_ref_type gas
+  one_cycle true
   GAS1 [1,0,0,0]
-  GAS2 [3,0,1,2]
-  GAS1MAX_MULTI [[0,1,2,1]]
-  GAS1MIN_MULTI [[0,1,0,0]]
-  AVG_STATE [[0,1,2]]
+  GAS2 [3,0,1,2] 
+  GAS1MAX [2,1]
+  GAS1MIN [0,1]
+  AVG_STATE [[0,1,1],[0,1,1]]
   job_type casscf
   casscf_ci_solver aci
   casscf_maxiter 100

@@ -93,27 +93,14 @@ class CI_Reference {
 
     Determinant get_occupation();
 
-    void modify_gas_occupation(std::vector<int> maxe_input, std::vector<int> mine_input);
-
     void get_gas_occupation();
 
     std::pair<std::vector<int>, std::vector<int>> get_gas_max_min();
 
     std::shared_ptr<ActiveSpaceIntegrals> fci_ints_;
 
-    /// The number of GAS
+    /// The number of used GAS
     size_t gas_num_;
-
-    /// The names of GAS
-    std::vector<std::string> gas_subspaces_ = {"GAS1", "GAS2", "GAS3", "GAS4", "GAS5", "GAS6"};
-
-    /// The options for maximum number of electrons in each GAS
-    std::vector<std::string> gas_maxe_options_ = {"GAS1MAX", "GAS2MAX", "GAS3MAX",
-                                                  "GAS4MAX", "GAS5MAX", "GAS6MAX"};
-
-    /// The options for minimum number of electrons in each GAS
-    std::vector<std::string> gas_mine_options_ = {"GAS1MIN", "GAS2MIN", "GAS3MIN",
-                                                  "GAS4MIN", "GAS5MIN", "GAS6MIN"};
 
     /// All the possible alpha and beta electron occupations of each GAS
     /// GAS1_A, GAS1_B, GAS2_A, .... GAS6_B (12 elements)
@@ -140,10 +127,6 @@ class CI_Reference {
 
     /// Build single lowest energy state
     void build_gas_single(std::vector<Determinant>& ref_space);
-
-    /// Modify gas electrons
-    void modify_gas(std::vector<Determinant>& ref_space, std::vector<int> gas_maxe,
-                    std::vector<int> gas_mine);
 
     /// Set the reference type
     void set_ref_type(const std::string& ref_type) { ref_type_ = ref_type; }
