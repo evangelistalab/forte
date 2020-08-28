@@ -1456,17 +1456,34 @@ void DSRG_MRPT2::solve_z() {
     ci_ca("Imw") += H.block("ac")("wm") * ci("I");
     ci_ca("Imw") += V_N_Alpha.block("ca")("mw") * ci("I");
     ci_ca("Imw") += V_N_Beta.block("ca")("mw") * ci("I");
-    ci_ca("Imw") += V.block("acaa")("umvw") * cc1a_("IJuv") * ci("J");
-    ci_ca("Imw") += V.block("cAaA")("mUwV") * cc1b_("IJUV") * ci("J");
+
+    // ci_ca("Imw") += V.block("acaa")("umvw") * cc1a_("IJuv") * ci("J");
+    // ci_ca("Imw") += V.block("cAaA")("mUwV") * cc1b_("IJUV") * ci("J");
+    ci_ca("Imw") += 0.5 * V.block("acaa")("umvw") * cc1a_("IJuv") * ci("J");
+    ci_ca("Imw") += 0.5 * V.block("cAaA")("mUwV") * cc1b_("IJUV") * ci("J");
+    ci_ca("Imw") += 0.5 * V.block("acaa")("umvw") * cc1a_("JIuv") * ci("J");
+    ci_ca("Imw") += 0.5 * V.block("cAaA")("mUwV") * cc1b_("JIUV") * ci("J");
 
     // CI contribution to Z{VA}
-    ci_va("Iew") -= 0.5 * H.block("av")("ve") * cc1a_("IJwv") * ci("J");
-    ci_va("Iew") -= 0.5 * H.block("va")("eu") * cc1a_("IJuw") * ci("J");
+    // ci_va("Iew") -= 0.5 * H.block("av")("ve") * cc1a_("IJwv") * ci("J");
+    // ci_va("Iew") -= 0.5 * H.block("va")("eu") * cc1a_("IJuw") * ci("J");
+    ci_va("Iew") -= 0.25 * H.block("av")("ve") * cc1a_("IJwv") * ci("J");
+    ci_va("Iew") -= 0.25 * H.block("va")("eu") * cc1a_("IJuw") * ci("J");
+    ci_va("Iew") -= 0.25 * H.block("av")("ve") * cc1a_("JIwv") * ci("J");
+    ci_va("Iew") -= 0.25 * H.block("va")("eu") * cc1a_("JIuw") * ci("J");
 
-    ci_va("Iew") -= 0.5 * V_N_Alpha.block("av")("ue") * cc1a_("IJuw") * ci("J");
-    ci_va("Iew") -= 0.5 * V_N_Beta.block("av")("ue") * cc1a_("IJuw") * ci("J");
-    ci_va("Iew") -= 0.5 * V_N_Alpha.block("va")("ev") * cc1a_("IJwv") * ci("J");
-    ci_va("Iew") -= 0.5 * V_N_Beta.block("va")("ev") * cc1a_("IJwv") * ci("J");
+    // ci_va("Iew") -= 0.5 * V_N_Alpha.block("av")("ue") * cc1a_("IJuw") * ci("J");
+    // ci_va("Iew") -= 0.5 * V_N_Beta.block("av")("ue") * cc1a_("IJuw") * ci("J");
+    // ci_va("Iew") -= 0.5 * V_N_Alpha.block("va")("ev") * cc1a_("IJwv") * ci("J");
+    // ci_va("Iew") -= 0.5 * V_N_Beta.block("va")("ev") * cc1a_("IJwv") * ci("J");
+    ci_va("Iew") -= 0.25 * V_N_Alpha.block("av")("ue") * cc1a_("IJuw") * ci("J");
+    ci_va("Iew") -= 0.25 * V_N_Beta.block("av")("ue") * cc1a_("IJuw") * ci("J");
+    ci_va("Iew") -= 0.25 * V_N_Alpha.block("va")("ev") * cc1a_("IJwv") * ci("J");
+    ci_va("Iew") -= 0.25 * V_N_Beta.block("va")("ev") * cc1a_("IJwv") * ci("J");
+    ci_va("Iew") -= 0.25 * V_N_Alpha.block("av")("ue") * cc1a_("JIuw") * ci("J");
+    ci_va("Iew") -= 0.25 * V_N_Beta.block("av")("ue") * cc1a_("JIuw") * ci("J");
+    ci_va("Iew") -= 0.25 * V_N_Alpha.block("va")("ev") * cc1a_("JIwv") * ci("J");
+    ci_va("Iew") -= 0.25 * V_N_Beta.block("va")("ev") * cc1a_("JIwv") * ci("J");
 
     ci_va("Iew") -= 0.125 * V.block("vaaa")("evxy") * cc2aa_("IJwvxy") * ci("J");
     ci_va("Iew") -= 0.250 * V.block("vAaA")("eVxY") * cc2ab_("IJwVxY") * ci("J");
@@ -1481,20 +1498,44 @@ void DSRG_MRPT2::solve_z() {
     ci_va("Iew") -= 0.250 * V.block("aAvA")("uVeX") * cc2ab_("IJuVwX") * ci("J");
 
     // CI contribution to Z{AA}
-    ci_aa("Iwz") -= 0.5 * H.block("aa")("vw") * cc1a_("IJzv") * ci("J");
-    ci_aa("Iwz") -= 0.5 * H.block("aa")("wu") * cc1a_("IJuz") * ci("J");
-    ci_aa("Iwz") += 0.5 * H.block("aa")("vz") * cc1a_("IJwv") * ci("J");
-    ci_aa("Iwz") += 0.5 * H.block("aa")("zu") * cc1a_("IJuw") * ci("J");
+    // ci_aa("Iwz") -= 0.5 * H.block("aa")("vw") * cc1a_("IJzv") * ci("J");
+    // ci_aa("Iwz") -= 0.5 * H.block("aa")("wu") * cc1a_("IJuz") * ci("J");
+    // ci_aa("Iwz") += 0.5 * H.block("aa")("vz") * cc1a_("IJwv") * ci("J");
+    // ci_aa("Iwz") += 0.5 * H.block("aa")("zu") * cc1a_("IJuw") * ci("J");
+    ci_aa("Iwz") -= 0.25 * H.block("aa")("vw") * cc1a_("IJzv") * ci("J");
+    ci_aa("Iwz") -= 0.25 * H.block("aa")("wu") * cc1a_("IJuz") * ci("J");
+    ci_aa("Iwz") += 0.25 * H.block("aa")("vz") * cc1a_("IJwv") * ci("J");
+    ci_aa("Iwz") += 0.25 * H.block("aa")("zu") * cc1a_("IJuw") * ci("J");
+    ci_aa("Iwz") -= 0.25 * H.block("aa")("vw") * cc1a_("JIzv") * ci("J");
+    ci_aa("Iwz") -= 0.25 * H.block("aa")("wu") * cc1a_("JIuz") * ci("J");
+    ci_aa("Iwz") += 0.25 * H.block("aa")("vz") * cc1a_("JIwv") * ci("J");
+    ci_aa("Iwz") += 0.25 * H.block("aa")("zu") * cc1a_("JIuw") * ci("J");
 
-    ci_aa("Iwz") -= 0.5 * V_N_Alpha.block("aa")("uw") * cc1a_("IJuz") * ci("J");
-    ci_aa("Iwz") -= 0.5 * V_N_Beta.block("aa")("uw") * cc1a_("IJuz") * ci("J");
-    ci_aa("Iwz") -= 0.5 * V_N_Alpha.block("aa")("wv") * cc1a_("IJzv") * ci("J");
-    ci_aa("Iwz") -= 0.5 * V_N_Beta.block("aa")("wv") * cc1a_("IJzv") * ci("J");
+    // ci_aa("Iwz") -= 0.5 * V_N_Alpha.block("aa")("uw") * cc1a_("IJuz") * ci("J");
+    // ci_aa("Iwz") -= 0.5 * V_N_Beta.block("aa")("uw") * cc1a_("IJuz") * ci("J");
+    // ci_aa("Iwz") -= 0.5 * V_N_Alpha.block("aa")("wv") * cc1a_("IJzv") * ci("J");
+    // ci_aa("Iwz") -= 0.5 * V_N_Beta.block("aa")("wv") * cc1a_("IJzv") * ci("J");
+    ci_aa("Iwz") -= 0.25 * V_N_Alpha.block("aa")("uw") * cc1a_("IJuz") * ci("J");
+    ci_aa("Iwz") -= 0.25 * V_N_Beta.block("aa")("uw") * cc1a_("IJuz") * ci("J");
+    ci_aa("Iwz") -= 0.25 * V_N_Alpha.block("aa")("wv") * cc1a_("IJzv") * ci("J");
+    ci_aa("Iwz") -= 0.25 * V_N_Beta.block("aa")("wv") * cc1a_("IJzv") * ci("J");
+    ci_aa("Iwz") -= 0.25 * V_N_Alpha.block("aa")("uw") * cc1a_("JIuz") * ci("J");
+    ci_aa("Iwz") -= 0.25 * V_N_Beta.block("aa")("uw") * cc1a_("JIuz") * ci("J");
+    ci_aa("Iwz") -= 0.25 * V_N_Alpha.block("aa")("wv") * cc1a_("JIzv") * ci("J");
+    ci_aa("Iwz") -= 0.25 * V_N_Beta.block("aa")("wv") * cc1a_("JIzv") * ci("J");
 
-    ci_aa("Iwz") += 0.5 * V_N_Alpha.block("aa")("uz") * cc1a_("IJuw") * ci("J");
-    ci_aa("Iwz") += 0.5 * V_N_Beta.block("aa")("uz") * cc1a_("IJuw") * ci("J");
-    ci_aa("Iwz") += 0.5 * V_N_Alpha.block("aa")("zv") * cc1a_("IJwv") * ci("J");
-    ci_aa("Iwz") += 0.5 * V_N_Beta.block("aa")("zv") * cc1a_("IJwv") * ci("J");
+    // ci_aa("Iwz") += 0.5 * V_N_Alpha.block("aa")("uz") * cc1a_("IJuw") * ci("J");
+    // ci_aa("Iwz") += 0.5 * V_N_Beta.block("aa")("uz") * cc1a_("IJuw") * ci("J");
+    // ci_aa("Iwz") += 0.5 * V_N_Alpha.block("aa")("zv") * cc1a_("IJwv") * ci("J");
+    // ci_aa("Iwz") += 0.5 * V_N_Beta.block("aa")("zv") * cc1a_("IJwv") * ci("J");
+    ci_aa("Iwz") += 0.25 * V_N_Alpha.block("aa")("uz") * cc1a_("IJuw") * ci("J");
+    ci_aa("Iwz") += 0.25 * V_N_Beta.block("aa")("uz") * cc1a_("IJuw") * ci("J");
+    ci_aa("Iwz") += 0.25 * V_N_Alpha.block("aa")("zv") * cc1a_("IJwv") * ci("J");
+    ci_aa("Iwz") += 0.25 * V_N_Beta.block("aa")("zv") * cc1a_("IJwv") * ci("J");
+    ci_aa("Iwz") += 0.25 * V_N_Alpha.block("aa")("uz") * cc1a_("JIuw") * ci("J");
+    ci_aa("Iwz") += 0.25 * V_N_Beta.block("aa")("uz") * cc1a_("JIuw") * ci("J");
+    ci_aa("Iwz") += 0.25 * V_N_Alpha.block("aa")("zv") * cc1a_("JIwv") * ci("J");
+    ci_aa("Iwz") += 0.25 * V_N_Beta.block("aa")("zv") * cc1a_("JIwv") * ci("J");
 
     ci_aa("Iwz") -= 0.125 * V.block("aaaa")("wvxy") * cc2aa_("IJzvxy") * ci("J");
     ci_aa("Iwz") -= 0.250 * V.block("aAaA")("wVxY") * cc2ab_("IJzVxY") * ci("J");
@@ -1555,14 +1596,27 @@ void DSRG_MRPT2::solve_z() {
 
     auto b_ck  = ambit::Tensor::build(ambit::CoreTensor, "ci equations b part", {ndets});
 
-    b_ck("K") -= 2.0 * H.block("aa")("vu") * cc1a_("KJuv") * ci("J");
-    b_ck("K") -= 2.0 * H.block("AA")("VU") * cc1b_("KJUV") * ci("J");
+    // b_ck("K") -= 2.0 * H.block("aa")("vu") * cc1a_("KJuv") * ci("J");
+    // b_ck("K") -= 2.0 * H.block("AA")("VU") * cc1b_("KJUV") * ci("J");
+    b_ck("K") -= H.block("aa")("vu") * cc1a_("KJuv") * ci("J");
+    b_ck("K") -= H.block("AA")("VU") * cc1b_("KJUV") * ci("J");
+    b_ck("K") -= H.block("aa")("vu") * cc1a_("JKuv") * ci("J");
+    b_ck("K") -= H.block("AA")("VU") * cc1b_("JKUV") * ci("J");
 
-    b_ck("K") -= 2.0 * V_N_Alpha.block("aa")("vu") * cc1a_("KJuv") * ci("J");
-    b_ck("K") -= 2.0 * V_N_Beta.block("aa")("vu") * cc1a_("KJuv") * ci("J");
 
-    b_ck("K") -= 2.0 * V_all_Beta.block("AA")("VU") * cc1b_("KJUV") * ci("J");
-    b_ck("K") -= 2.0 * V_R_Beta.block("AA")("VU") * cc1b_("KJUV") * ci("J");
+    // b_ck("K") -= 2.0 * V_N_Alpha.block("aa")("vu") * cc1a_("KJuv") * ci("J");
+    // b_ck("K") -= 2.0 * V_N_Beta.block("aa")("vu") * cc1a_("KJuv") * ci("J");
+    b_ck("K") -= V_N_Alpha.block("aa")("vu") * cc1a_("KJuv") * ci("J");
+    b_ck("K") -= V_N_Beta.block("aa")("vu") * cc1a_("KJuv") * ci("J");
+    b_ck("K") -= V_N_Alpha.block("aa")("vu") * cc1a_("JKuv") * ci("J");
+    b_ck("K") -= V_N_Beta.block("aa")("vu") * cc1a_("JKuv") * ci("J");
+
+    // b_ck("K") -= 2.0 * V_all_Beta.block("AA")("VU") * cc1b_("KJUV") * ci("J");
+    // b_ck("K") -= 2.0 * V_R_Beta.block("AA")("VU") * cc1b_("KJUV") * ci("J");
+    b_ck("K") -= V_all_Beta.block("AA")("VU") * cc1b_("KJUV") * ci("J");
+    b_ck("K") -= V_R_Beta.block("AA")("VU") * cc1b_("KJUV") * ci("J");
+    b_ck("K") -= V_all_Beta.block("AA")("VU") * cc1b_("JKUV") * ci("J");
+    b_ck("K") -= V_R_Beta.block("AA")("VU") * cc1b_("JKUV") * ci("J");
 
     b_ck("K") -= 0.5 * V.block("aaaa")("xyuv") * cc2aa_("KJuvxy") * ci("J");
     b_ck("K") -= 0.5 * V.block("AAAA")("XYUV") * cc2bb_("KJUVXY") * ci("J");
@@ -1618,8 +1672,12 @@ void DSRG_MRPT2::solve_z() {
     temp["UV"] -= 0.25 * T2_["IJAV"] * V_["CUKL"] * Gamma1["KI"] * Gamma1["LJ"] * Eta1["AC"];
     temp["UV"] -= 0.50 * T2_["iJaV"] * V_["cUkL"] * Gamma1["ki"] * Gamma1["LJ"] * Eta1["ac"];
 
-    b_ck("K") -= temp.block("aa")("uv") * cc1a_("KJuv") * ci("J"); 
-    b_ck("K") -= temp.block("AA")("UV") * cc1b_("KJUV") * ci("J");
+    // b_ck("K") -= temp.block("aa")("uv") * cc1a_("KJuv") * ci("J"); 
+    // b_ck("K") -= temp.block("AA")("UV") * cc1b_("KJUV") * ci("J");
+    b_ck("K") -= 0.5 * temp.block("aa")("uv") * cc1a_("KJuv") * ci("J"); 
+    b_ck("K") -= 0.5 * temp.block("AA")("UV") * cc1b_("KJUV") * ci("J");
+    b_ck("K") -= 0.5 * temp.block("aa")("uv") * cc1a_("JKuv") * ci("J"); 
+    b_ck("K") -= 0.5 * temp.block("AA")("UV") * cc1b_("JKUV") * ci("J");
 
     // TODO: need to plug in alpha terms
     Alpha = 0.0;
@@ -1758,11 +1816,19 @@ void DSRG_MRPT2::solve_z() {
     auto ck_aa_b = ambit::Tensor::build(ambit::CoreTensor, "ci equations z{aa} beta part", {ndets, na_, na_});
 
     // virtual-core
-    ck_vc_a("Kem") += 4 * V.block("cava")("mveu") * cc1a_("KJuv") * ci("J");
-    ck_vc_a("Kem") += 4 * V.block("cAvA")("mVeU") * cc1b_("KJUV") * ci("J");
+    // ck_vc_a("Kem") += 4 * V.block("cava")("mveu") * cc1a_("KJuv") * ci("J");
+    // ck_vc_a("Kem") += 4 * V.block("cAvA")("mVeU") * cc1b_("KJUV") * ci("J");
+    ck_vc_a("Kem") += 2 * V.block("cava")("mveu") * cc1a_("KJuv") * ci("J");
+    ck_vc_a("Kem") += 2 * V.block("cAvA")("mVeU") * cc1b_("KJUV") * ci("J");
+    ck_vc_a("Kem") += 2 * V.block("cava")("mveu") * cc1a_("JKuv") * ci("J");
+    ck_vc_a("Kem") += 2 * V.block("cAvA")("mVeU") * cc1b_("JKUV") * ci("J");
 
-    ck_vc_b("KEM") += 4 * V.block("CAVA")("MVEU") * cc1b_("KJUV") * ci("J");
-    ck_vc_b("KEM") += 4 * V.block("aCaV")("vMuE") * cc1a_("KJuv") * ci("J");
+    // ck_vc_b("KEM") += 4 * V.block("CAVA")("MVEU") * cc1b_("KJUV") * ci("J");
+    // ck_vc_b("KEM") += 4 * V.block("aCaV")("vMuE") * cc1a_("KJuv") * ci("J");
+    ck_vc_b("KEM") += 2 * V.block("CAVA")("MVEU") * cc1b_("KJUV") * ci("J");
+    ck_vc_b("KEM") += 2 * V.block("aCaV")("vMuE") * cc1a_("KJuv") * ci("J");
+    ck_vc_b("KEM") += 2 * V.block("CAVA")("MVEU") * cc1b_("JKUV") * ci("J");
+    ck_vc_b("KEM") += 2 * V.block("aCaV")("vMuE") * cc1a_("JKuv") * ci("J");
 
 
     /// contribution from Alpha
@@ -1773,22 +1839,53 @@ void DSRG_MRPT2::solve_z() {
     ck_vc_b("KEM") += -4 * ci("K") * V.block("aCaV")("yMxE") * Gamma1.block("aa")("xy");
 
     // core-active
-    ck_ca_a("Knu") += 4 * V.block("aaca")("uynx") * cc1a_("KJxy") * ci("J");
-    ck_ca_a("Knu") += 4 * V.block("aAcA")("uYnX") * cc1b_("KJXY") * ci("J");
-    ck_ca_a("Knu") -= 4 * H.block("ac")("vn") * cc1a_("KJuv") * ci("J");
-    ck_ca_a("Knu") -= 4 * V_N_Alpha.block("ac")("vn") * cc1a_("KJuv") * ci("J");
-    ck_ca_a("Knu") -= 4 * V_N_Beta.block("ac")("vn") * cc1a_("KJuv") * ci("J");
-    ck_ca_a("Knu") -= 2 * V.block("aaca")("xynv") * cc2aa_("KJuvxy") * ci("J");
-    ck_ca_a("Knu") -= 4 * V.block("aAcA")("xYnV") * cc2ab_("KJuVxY") * ci("J");
+    // ck_ca_a("Knu") += 4 * V.block("aaca")("uynx") * cc1a_("KJxy") * ci("J");
+    // ck_ca_a("Knu") += 4 * V.block("aAcA")("uYnX") * cc1b_("KJXY") * ci("J");
+    // ck_ca_a("Knu") -= 4 * H.block("ac")("vn") * cc1a_("KJuv") * ci("J");
+    // ck_ca_a("Knu") -= 4 * V_N_Alpha.block("ac")("vn") * cc1a_("KJuv") * ci("J");
+    // ck_ca_a("Knu") -= 4 * V_N_Beta.block("ac")("vn") * cc1a_("KJuv") * ci("J");
+    // ck_ca_a("Knu") -= 2 * V.block("aaca")("xynv") * cc2aa_("KJuvxy") * ci("J");
+    // ck_ca_a("Knu") -= 4 * V.block("aAcA")("xYnV") * cc2ab_("KJuVxY") * ci("J");
+
+    ck_ca_a("Knu") += 2 * V.block("aaca")("uynx") * cc1a_("KJxy") * ci("J");
+    ck_ca_a("Knu") += 2 * V.block("aAcA")("uYnX") * cc1b_("KJXY") * ci("J");
+    ck_ca_a("Knu") -= 2 * H.block("ac")("vn") * cc1a_("KJuv") * ci("J");
+    ck_ca_a("Knu") -= 2 * V_N_Alpha.block("ac")("vn") * cc1a_("KJuv") * ci("J");
+    ck_ca_a("Knu") -= 2 * V_N_Beta.block("ac")("vn") * cc1a_("KJuv") * ci("J");
+    ck_ca_a("Knu") -= V.block("aaca")("xynv") * cc2aa_("KJuvxy") * ci("J");
+    ck_ca_a("Knu") -= 2 * V.block("aAcA")("xYnV") * cc2ab_("KJuVxY") * ci("J");
+    ck_ca_a("Knu") += 2 * V.block("aaca")("uynx") * cc1a_("JKxy") * ci("J");
+    ck_ca_a("Knu") += 2 * V.block("aAcA")("uYnX") * cc1b_("JKXY") * ci("J");
+    ck_ca_a("Knu") -= 2 * H.block("ac")("vn") * cc1a_("JKuv") * ci("J");
+    ck_ca_a("Knu") -= 2 * V_N_Alpha.block("ac")("vn") * cc1a_("JKuv") * ci("J");
+    ck_ca_a("Knu") -= 2 * V_N_Beta.block("ac")("vn") * cc1a_("JKuv") * ci("J");
+    ck_ca_a("Knu") -= V.block("aaca")("xynv") * cc2aa_("JKuvxy") * ci("J");
+    ck_ca_a("Knu") -= 2 * V.block("aAcA")("xYnV") * cc2ab_("JKuVxY") * ci("J");
 
     // NOTICE beta
-    ck_ca_b("KNU") += 4 * V.block("AACA")("UYNX") * cc1b_("KJXY") * ci("J");
-    ck_ca_b("KNU") += 4 * V.block("aAaC")("yUxN") * cc1a_("KJxy") * ci("J");
-    ck_ca_b("KNU") -= 4 * H.block("AC")("VN") * cc1b_("KJUV") * ci("J");
-    ck_ca_b("KNU") -= 4 * V_all_Beta.block("AC")("VN") * cc1b_("KJUV") * ci("J");
-    ck_ca_b("KNU") -= 4 * V_R_Beta.block("AC")("VN") * cc1b_("KJUV") * ci("J");
-    ck_ca_b("KNU") -= 2 * V.block("AACA")("XYNV") * cc2bb_("KJUVXY") * ci("J");
-    ck_ca_b("KNU") -= 4 * V.block("aAaC")("xYvN") * cc2ab_("KJvUxY") * ci("J");
+    // ck_ca_b("KNU") += 4 * V.block("AACA")("UYNX") * cc1b_("KJXY") * ci("J");
+    // ck_ca_b("KNU") += 4 * V.block("aAaC")("yUxN") * cc1a_("KJxy") * ci("J");
+    // ck_ca_b("KNU") -= 4 * H.block("AC")("VN") * cc1b_("KJUV") * ci("J");
+    // ck_ca_b("KNU") -= 4 * V_all_Beta.block("AC")("VN") * cc1b_("KJUV") * ci("J");
+    // ck_ca_b("KNU") -= 4 * V_R_Beta.block("AC")("VN") * cc1b_("KJUV") * ci("J");
+    // ck_ca_b("KNU") -= 2 * V.block("AACA")("XYNV") * cc2bb_("KJUVXY") * ci("J");
+    // ck_ca_b("KNU") -= 4 * V.block("aAaC")("xYvN") * cc2ab_("KJvUxY") * ci("J");
+
+    ck_ca_b("KNU") += 2 * V.block("AACA")("UYNX") * cc1b_("KJXY") * ci("J");
+    ck_ca_b("KNU") += 2 * V.block("aAaC")("yUxN") * cc1a_("KJxy") * ci("J");
+    ck_ca_b("KNU") -= 2 * H.block("AC")("VN") * cc1b_("KJUV") * ci("J");
+    ck_ca_b("KNU") -= 2 * V_all_Beta.block("AC")("VN") * cc1b_("KJUV") * ci("J");
+    ck_ca_b("KNU") -= 2 * V_R_Beta.block("AC")("VN") * cc1b_("KJUV") * ci("J");
+    ck_ca_b("KNU") -= V.block("AACA")("XYNV") * cc2bb_("KJUVXY") * ci("J");
+    ck_ca_b("KNU") -= 2 * V.block("aAaC")("xYvN") * cc2ab_("KJvUxY") * ci("J");
+    ck_ca_b("KNU") += 2 * V.block("AACA")("UYNX") * cc1b_("JKXY") * ci("J");
+    ck_ca_b("KNU") += 2 * V.block("aAaC")("yUxN") * cc1a_("JKxy") * ci("J");
+    ck_ca_b("KNU") -= 2 * H.block("AC")("VN") * cc1b_("JKUV") * ci("J");
+    ck_ca_b("KNU") -= 2 * V_all_Beta.block("AC")("VN") * cc1b_("JKUV") * ci("J");
+    ck_ca_b("KNU") -= 2 * V_R_Beta.block("AC")("VN") * cc1b_("JKUV") * ci("J");
+    ck_ca_b("KNU") -= V.block("AACA")("XYNV") * cc2bb_("JKUVXY") * ci("J");
+    ck_ca_b("KNU") -= 2 * V.block("aAaC")("xYvN") * cc2ab_("JKvUxY") * ci("J");
+
 
     /// contribution from Alpha
     ck_ca_a("Knu") += -4 * ci("K") * V.block("aaca")("uynx") * Gamma1.block("aa")("xy");
@@ -1809,18 +1906,41 @@ void DSRG_MRPT2::solve_z() {
     ck_ca_b("KNU") +=  4 * ci("K") * V.block("aAaC")("xYvN") * Gamma2.block("aAaA")("vUxY");
 
     // virtual-active
-    ck_va_a("Keu") += 4 * H.block("av")("ve") * cc1a_("KJuv") * ci("J");
-    ck_va_a("Keu") += 4 * V_N_Alpha.block("av")("ve") * cc1a_("KJuv") * ci("J");
-    ck_va_a("Keu") += 4 * V_N_Beta.block("av")("ve") * cc1a_("KJuv") * ci("J");
-    ck_va_a("Keu") += 2 * V.block("aava")("xyev") * cc2aa_("KJuvxy") * ci("J");
-    ck_va_a("Keu") += 4 * V.block("aAvA")("xYeV") * cc2ab_("KJuVxY") * ci("J");
+    // ck_va_a("Keu") += 4 * H.block("av")("ve") * cc1a_("KJuv") * ci("J");
+    // ck_va_a("Keu") += 4 * V_N_Alpha.block("av")("ve") * cc1a_("KJuv") * ci("J");
+    // ck_va_a("Keu") += 4 * V_N_Beta.block("av")("ve") * cc1a_("KJuv") * ci("J");
+    // ck_va_a("Keu") += 2 * V.block("aava")("xyev") * cc2aa_("KJuvxy") * ci("J");
+    // ck_va_a("Keu") += 4 * V.block("aAvA")("xYeV") * cc2ab_("KJuVxY") * ci("J");
+
+    ck_va_a("Keu") += 2 * H.block("av")("ve") * cc1a_("KJuv") * ci("J");
+    ck_va_a("Keu") += 2 * V_N_Alpha.block("av")("ve") * cc1a_("KJuv") * ci("J");
+    ck_va_a("Keu") += 2 * V_N_Beta.block("av")("ve") * cc1a_("KJuv") * ci("J");
+    ck_va_a("Keu") += V.block("aava")("xyev") * cc2aa_("KJuvxy") * ci("J");
+    ck_va_a("Keu") += 2 * V.block("aAvA")("xYeV") * cc2ab_("KJuVxY") * ci("J");
+    ck_va_a("Keu") += 2 * H.block("av")("ve") * cc1a_("JKuv") * ci("J");
+    ck_va_a("Keu") += 2 * V_N_Alpha.block("av")("ve") * cc1a_("JKuv") * ci("J");
+    ck_va_a("Keu") += 2 * V_N_Beta.block("av")("ve") * cc1a_("JKuv") * ci("J");
+    ck_va_a("Keu") += V.block("aava")("xyev") * cc2aa_("JKuvxy") * ci("J");
+    ck_va_a("Keu") += 2 * V.block("aAvA")("xYeV") * cc2ab_("JKuVxY") * ci("J");
 
     // NOTICE beta
-    ck_va_b("KEU") += 4 * H.block("AV")("VE") * cc1b_("KJUV") * ci("J");
-    ck_va_b("KEU") += 4 * V_all_Beta.block("AV")("VE") * cc1b_("KJUV") * ci("J");
-    ck_va_b("KEU") += 4 * V_R_Beta.block("AV")("VE") * cc1b_("KJUV") * ci("J");
-    ck_va_b("KEU") += 2 * V.block("AAVA")("XYEV") * cc2bb_("KJUVXY") * ci("J");
-    ck_va_b("KEU") += 4 * V.block("aAaV")("xYvE") * cc2ab_("KJvUxY") * ci("J");
+    // ck_va_b("KEU") += 4 * H.block("AV")("VE") * cc1b_("KJUV") * ci("J");
+    // ck_va_b("KEU") += 4 * V_all_Beta.block("AV")("VE") * cc1b_("KJUV") * ci("J");
+    // ck_va_b("KEU") += 4 * V_R_Beta.block("AV")("VE") * cc1b_("KJUV") * ci("J");
+    // ck_va_b("KEU") += 2 * V.block("AAVA")("XYEV") * cc2bb_("KJUVXY") * ci("J");
+    // ck_va_b("KEU") += 4 * V.block("aAaV")("xYvE") * cc2ab_("KJvUxY") * ci("J");
+
+    ck_va_b("KEU") += 2 * H.block("AV")("VE") * cc1b_("KJUV") * ci("J");
+    ck_va_b("KEU") += 2 * V_all_Beta.block("AV")("VE") * cc1b_("KJUV") * ci("J");
+    ck_va_b("KEU") += 2 * V_R_Beta.block("AV")("VE") * cc1b_("KJUV") * ci("J");
+    ck_va_b("KEU") += V.block("AAVA")("XYEV") * cc2bb_("KJUVXY") * ci("J");
+    ck_va_b("KEU") += 2 * V.block("aAaV")("xYvE") * cc2ab_("KJvUxY") * ci("J");
+    ck_va_b("KEU") += 2 * H.block("AV")("VE") * cc1b_("JKUV") * ci("J");
+    ck_va_b("KEU") += 2 * V_all_Beta.block("AV")("VE") * cc1b_("JKUV") * ci("J");
+    ck_va_b("KEU") += 2 * V_R_Beta.block("AV")("VE") * cc1b_("JKUV") * ci("J");
+    ck_va_b("KEU") += V.block("AAVA")("XYEV") * cc2bb_("JKUVXY") * ci("J");
+    ck_va_b("KEU") += 2 * V.block("aAaV")("xYvE") * cc2ab_("JKvUxY") * ci("J");
+
 
     /// contribution from Alpha
     ck_va_a("Keu") += -4 * ci("K") * H.block("av")("ve") * Gamma1.block("aa")("uv");
@@ -1837,12 +1957,22 @@ void DSRG_MRPT2::solve_z() {
     ck_va_b("KEU") += -4 * ci("K") * V.block("aAaV")("xYvE") * Gamma2.block("aAaA")("vUxY");
 
     // active-active
-    ck_aa_a("Kuv") += 2 * V.block("aaaa")("uyvx") * cc1a_("KJxy") * ci("J");
-    ck_aa_a("Kuv") += 2 * V.block("aAaA")("uYvX") * cc1b_("KJXY") * ci("J");
+    // ck_aa_a("Kuv") += 2 * V.block("aaaa")("uyvx") * cc1a_("KJxy") * ci("J");
+    // ck_aa_a("Kuv") += 2 * V.block("aAaA")("uYvX") * cc1b_("KJXY") * ci("J");
+
+    ck_aa_a("Kuv") += V.block("aaaa")("uyvx") * cc1a_("KJxy") * ci("J");
+    ck_aa_a("Kuv") += V.block("aAaA")("uYvX") * cc1b_("KJXY") * ci("J");
+    ck_aa_a("Kuv") += V.block("aaaa")("uyvx") * cc1a_("JKxy") * ci("J");
+    ck_aa_a("Kuv") += V.block("aAaA")("uYvX") * cc1b_("JKXY") * ci("J");
 
     // NOTICE beta
-    ck_aa_b("KUV") += 2 * V.block("AAAA")("UYVX") * cc1b_("KJXY") * ci("J");
-    ck_aa_b("KUV") += 2 * V.block("aAaA")("yUxV") * cc1a_("KJxy") * ci("J");
+    // ck_aa_b("KUV") += 2 * V.block("AAAA")("UYVX") * cc1b_("KJXY") * ci("J");
+    // ck_aa_b("KUV") += 2 * V.block("aAaA")("yUxV") * cc1a_("KJxy") * ci("J");
+
+    ck_aa_b("KUV") += V.block("AAAA")("UYVX") * cc1b_("KJXY") * ci("J");
+    ck_aa_b("KUV") += V.block("aAaA")("yUxV") * cc1a_("KJxy") * ci("J");
+    ck_aa_b("KUV") += V.block("AAAA")("UYVX") * cc1b_("JKXY") * ci("J");
+    ck_aa_b("KUV") += V.block("aAaA")("yUxV") * cc1a_("JKxy") * ci("J");
 
     /// contribution from Alpha
     ck_aa_a("Kuv") += -2 * ci("K") * V.block("aaaa")("uyvx") * Gamma1.block("aa")("xy");
