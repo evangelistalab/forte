@@ -693,6 +693,43 @@ double apply_op(DeterminantImpl<N>& d, const DeterminantImpl<N>& cre,
     return sign;
 }
 
+/// this function assumes we can apply this operator to the determinant
+template <size_t N>
+double apply_op_safe(DeterminantImpl<N>& d, const DeterminantImpl<N>& cre,
+                     const DeterminantImpl<N>& ann) {
+    // loop over the annihilation operators (in ascending order)
+    DeterminantImpl<N> temp(ann); // temp is for bookkeeping
+    size_t n = temp.count();
+    double sign = 1.0;
+    for (size_t i = 0; i < n; ++i) {
+        // find the next annihilation operator
+        const uint64_t orb = temp.find_and_clear_first_one();
+        // we assume this bit is set
+        // compute the sign
+        sign *= d.slater_sign(orb);
+        // set the bit to zero
+        d.set_bit(orb, false);
+    }
+    // loop over the creation operators (in ascending order)
+    temp = cre;
+    n = temp.count();
+    for (size_t i = 0; i < n; ++i) {
+        // find the next creation operator
+        const uint64_t orb = temp.find_and_clear_first_one();
+        // we assume this bit is unset
+        // compute the sign
+        sign *= d.slater_sign(orb);
+        // set the bit to zero
+        d.set_bit(orb, true);
+    }
+    // the creation operators are applied in the opposite order of the way
+    // they are supposed to be applied (we should apply them in descending order).
+    // this factor keeps into account the permutation sign for
+    // reversing the order of the creation operators.
+    sign *= 1.0 - 2.0 * ((n / 2) % 2);
+    return sign;
+}
+
 //    temp = cre;
 //    n = temp.count();
 //    // make sure we can annihilate the orbitals

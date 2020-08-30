@@ -116,19 +116,20 @@ def psi4_cubeprop(wfn,
         return load_cubes(path)
 
 
-def prepare_forte_objects(wfn):
+def prepare_forte_objects(wfn,mo_spaces = None):
     """
     Take a psi4 wavefunction object and prepare the ForteIntegrals, SCFInfo, and MOSpaceInfo objects
 
     Parameters
     ----------
-    wfn : psi4Wavefunction
+    wfn : psi4 Wavefunction
         A psi4 Wavefunction object
-
+    mo_spaces : dict
+        A dictionary with the size of each space (e.g., {'ACTIVE' : [3]})
     Returns
     -------
-    tuple(ForteIntegrals, SCFInfo, MOSpaceInfo)
-        a tuple containing the ForteIntegrals, SCFInfo, and MOSpaceInfo objects
+    tuple(ForteIntegrals, ActiveSpaceIntegrals, SCFInfo, MOSpaceInfo, map(StateInfo : list)
+        a tuple containing the ForteIntegrals, SCFInfo, and MOSpaceInfo objects and a map of states and weights
     """
     # fill in the options object
     psi4_options = psi4.core.get_options()
@@ -150,7 +151,24 @@ def prepare_forte_objects(wfn):
 
     # Prepare base objects
     scf_info = forte.SCFInfo(wfn)
-    mo_space_info = forte.make_mo_space_info(wfn, options)
-    ints = forte.make_forte_integrals(wfn, options, mo_space_info)
 
-    return (ints, scf_info, mo_space_info)
+    nmopi = wfn.nmopi()
+    point_group = wfn.molecule().point_group().symbol()
+    if mo_spaces == None:
+        mo_space_info = forte.make_mo_space_info(nmopi, point_group, options)
+    else:
+        mo_space_info = forte.make_mo_space_info_from_map(nmopi,point_group,mo_spaces,[])
+
+    state_weights_map = forte.make_state_weights_map(options, mo_space_info)
+
+    ints = forte.make_ints_from_psi4(wfn, options, mo_space_info)
+
+
+    # the space that defines the active orbitals. We select only the 'ACTIVE' part
+    active_space = 'ACTIVE'
+    # the space(s) with non-active doubly occupied orbitals
+    core_spaces = ['RESTRICTED_DOCC']
+
+    as_ints = forte.make_active_space_ints(mo_space_info, ints, active_space, core_spaces)
+
+    return (ints, as_ints, scf_info, mo_space_info, state_weights_map)

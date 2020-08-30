@@ -80,6 +80,9 @@ void export_ForteCubeFile(py::module& m);
 void export_OrbitalTransform(py::module& m);
 void export_Localize(py::module& m);
 
+void set_master_screen_threshold(double value);
+double get_master_screen_threshold();
+
 /// Export the ActiveSpaceMethod class
 void export_ActiveSpaceMethod(py::module& m) {
     py::class_<ActiveSpaceMethod>(m, "ActiveSpaceMethod")
@@ -176,6 +179,7 @@ void export_Determinant(py::module& m) {
         .def(py::init<>())
         .def("add_operator", &GeneralOperator::add_operator)
         .def("pop_operator", &GeneralOperator::pop_operator)
+        .def("nops", &GeneralOperator::nops)
         .def("set_amplitudes", &GeneralOperator::set_amplitudes)
         .def("set_amplitude", &GeneralOperator::set_amplitude)
         .def("amplitudes", &GeneralOperator::amplitudes)
@@ -185,19 +189,31 @@ void export_Determinant(py::module& m) {
         .def("timing", &GeneralOperator::timing);
 
     m.def("apply_operator", &apply_operator);
-    m.def("apply_operator_fast", &apply_operator_fast);
-    m.def("apply_exp_operator_fast", &apply_exp_operator_fast, "gop"_a, "state0"_a,
-          "scaling_factor"_a = 1.0);
     m.def("apply_exp_ah_factorized", &apply_exp_ah_factorized);
-    m.def("apply_exp_ah_factorized_fast", &apply_exp_ah_factorized_fast);
+
+    m.def("apply_operator_fast", &apply_operator_fast, "gop"_a, "state0"_a,
+          "screen_thresh"_a = 1.0e-12);
+    m.def("apply_exp_operator_fast", &apply_exp_operator_fast, "gop"_a, "state0"_a,
+          "scaling_factor"_a = 1.0, "maxk"_a = 20, "screen_thresh"_a = 1.0e-12);
+
+    m.def("apply_operator_fast2", &apply_operator_fast2, "gop"_a, "state0"_a,
+          "screen_thresh"_a = 1.0e-12);
+    m.def("apply_exp_operator_fast2", &apply_exp_operator_fast2, "gop"_a, "state0"_a,
+          "scaling_factor"_a = 1.0, "maxk"_a = 20, "screen_thresh"_a = 1.0e-12);
+
+    m.def("apply_exp_ah_factorized_fast", &apply_exp_ah_factorized_fast, "gop"_a, "state0"_a,
+          "inverse"_a = false);
     m.def("energy_expectation_value", &energy_expectation_value);
     m.def("apply_number_projector", &apply_number_projector);
+    m.def("apply_hamiltonian", &apply_hamiltonian, "as_ints"_a, "state0"_a,
+          "screen_thresh"_a = 1.0e-12);
+    m.def("get_projection", &get_projection);
     m.def("overlap", &overlap);
 
     py::class_<SingleOperator>(m, "SingleOperator")
-        .def_readwrite("sign", &SingleOperator::factor)
-        .def_readwrite("cre", &SingleOperator::cre)
-        .def_readwrite("ann", &SingleOperator::ann);
+        .def("factor", &SingleOperator::factor)
+        .def("cre", &SingleOperator::cre)
+        .def("ann", &SingleOperator::ann);
 
     m.def("spin2", &spin2<Determinant::nbits>);
 }
@@ -298,6 +314,7 @@ PYBIND11_MODULE(forte, m) {
              "Get the frozen core energy (contribution from FROZEN_DOCC)")
         .def("scalar_energy", &ActiveSpaceIntegrals::scalar_energy,
              "Get the scalar_energy energy (contribution from RESTRICTED_DOCC)")
+        .def("nmo", &ActiveSpaceIntegrals::nmo, "Get the number of active orbitals")
         .def("oei_a", &ActiveSpaceIntegrals::oei_a, "Get the alpha effective one-electron integral")
         .def("oei_b", &ActiveSpaceIntegrals::oei_b, "Get the beta effective one-electron integral")
         .def("tei_aa", &ActiveSpaceIntegrals::tei_aa, "alpha-alpha two-electron integral <pq||rs>")

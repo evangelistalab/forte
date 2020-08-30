@@ -40,8 +40,20 @@ double time_apply_exp_ah_factorized_fast = 0.0;
 double time_energy_expectation_value = 0.0;
 double time_apply_operator_fast = 0.0;
 double time_apply_exp_operator_fast = 0.0;
+double time_apply_operator_fast2 = 0.0;
+double time_apply_exp_operator_fast2 = 0.0;
+double time_apply_hamiltonian = 0.0;
+double time_get_projection = 0.0;
+size_t ops_apply_hamiltonian = 0;
 
 namespace forte {
+
+SingleOperator::SingleOperator(double factor, const Determinant& cre, const Determinant& ann)
+    : factor_(factor), cre_(cre), ann_(ann) {}
+
+double SingleOperator::factor() const { return factor_; }
+const Determinant& SingleOperator::cre() const { return cre_; }
+const Determinant& SingleOperator::ann() const { return ann_; }
 
 std::tuple<bool, bool, int> flip_spin(const std::tuple<bool, bool, int>& t) {
     return std::make_tuple(std::get<0>(t), not std::get<1>(t), std::get<2>(t));
@@ -59,21 +71,23 @@ bool compare_ops(const std::tuple<bool, bool, int>& lhs, const std::tuple<bool, 
 
 SingleOperator op_t_to_SingleOperator(const op_t& op) {
     // Form a single operator object
-    SingleOperator sop;
+    //    SingleOperator sop;
 
     const std::vector<std::tuple<bool, bool, int>>& creation_alpha_orb_vec = op.second;
 
+    Determinant cre, ann;
     // set the factor including the parity of the permutation
-    sop.factor = op.first;
+    double factor = op.first;
 
     bool is_sorted =
         std::is_sorted(creation_alpha_orb_vec.begin(), creation_alpha_orb_vec.end(), compare_ops);
 
     if (not is_sorted) {
         // We first sort the operators so that they are ordered in the following way
-        // (alpha cre. ascending) (beta cre. ascending) (beta ann. descending) (alpha ann.
-        // descending) and keep track of the sign. We sort the operators using a set of auxiliary
-        // indices so that we can keep track of the permutation of the operators and their sign
+        // [last](alpha cre. ascending) (beta cre. ascending) (beta ann. descending) (alpha ann.
+        // descending)[first] and keep track of the sign. We sort the operators using a set of
+        // auxiliary indices so that we can keep track of the permutation of the operators and their
+        // sign
         std::vector<size_t> idx(creation_alpha_orb_vec.size());
         std::iota(idx.begin(), idx.end(), 0);
         std::stable_sort(idx.begin(), idx.end(), [&creation_alpha_orb_vec](size_t i1, size_t i2) {
@@ -81,7 +95,7 @@ SingleOperator op_t_to_SingleOperator(const op_t& op) {
         });
         auto parity = permutation_parity(idx);
         // set the factor including the parity of the permutation
-        sop.factor *= 1.0 - 2.0 * parity;
+        factor *= 1.0 - 2.0 * parity;
     }
 
     // set the bitarray part of the operator (the order does not matter)
@@ -91,19 +105,19 @@ SingleOperator op_t_to_SingleOperator(const op_t& op) {
         int orb = std::get<2>(creation_alpha_orb);
         if (creation) {
             if (alpha) {
-                sop.cre.set_alfa_bit(orb, true);
+                cre.set_alfa_bit(orb, true);
             } else {
-                sop.cre.set_beta_bit(orb, true);
+                cre.set_beta_bit(orb, true);
             }
         } else {
             if (alpha) {
-                sop.ann.set_alfa_bit(orb, true);
+                ann.set_alfa_bit(orb, true);
             } else {
-                sop.ann.set_beta_bit(orb, true);
+                ann.set_beta_bit(orb, true);
             }
         }
     }
-    return sop;
+    return SingleOperator(factor, cre, ann);
 }
 
 void GeneralOperator::add_operator(const std::vector<op_t>& op_list, double value) {
@@ -150,9 +164,9 @@ std::vector<std::string> GeneralOperator::str() {
         size_t begin = op_indices_[n].first;
         size_t end = op_indices_[n].second;
         for (size_t j = begin; j < end; j++) {
-            const double factor = op_list_[j].factor;
-            const auto& ann = op_list_[j].ann;
-            const auto& cre = op_list_[j].cre;
+            const double factor = op_list_[j].factor();
+            const auto& ann = op_list_[j].ann();
+            const auto& cre = op_list_[j].cre();
             s += (j == begin ? "" : " + ") + std::to_string(factor) + " * [ ";
             auto acre = cre.get_alfa_occ(cre.norb());
             auto bcre = cre.get_beta_occ(cre.norb());
@@ -187,6 +201,13 @@ std::vector<std::pair<std::string, double>> GeneralOperator::timing() {
     t.push_back(std::make_pair("time_energy_expectation_value", time_energy_expectation_value));
     t.push_back(std::make_pair("time_apply_operator_fast", time_apply_operator_fast));
     t.push_back(std::make_pair("time_apply_exp_operator_fast", time_apply_exp_operator_fast));
+    t.push_back(std::make_pair("time_apply_hamiltonian", time_apply_hamiltonian));
+    t.push_back(
+        std::make_pair("ops_apply_hamiltonian", static_cast<double>(ops_apply_hamiltonian)));
+    t.push_back({"time_get_projection", static_cast<double>(time_get_projection)});
+    t.push_back({"time_apply_operator_fast2", time_apply_operator_fast2});
+    t.push_back({"time_apply_exp_operator_fast2", time_apply_exp_operator_fast2});
+
     return t;
 }
 
@@ -204,9 +225,9 @@ det_hash<double> apply_operator(GeneralOperator& gop, const det_hash<double>& st
             size_t end = op_indices[n].second;
             for (size_t j = begin; j < end; j++) {
                 d = det_c.first;
-                double sign = apply_op(d, op_list[j].cre, op_list[j].ann);
+                double sign = apply_op(d, op_list[j].cre(), op_list[j].ann());
                 if (sign != 0.0) {
-                    new_state[d] += amplitudes[n] * op_list[j].factor * sign * c;
+                    new_state[d] += amplitudes[n] * op_list[j].factor() * sign * c;
                 }
             }
         }
@@ -227,9 +248,9 @@ det_hash<double> apply_lin_op(det_hash<double> state, size_t n, const GeneralOpe
         for (const auto& det_c : state) {
             const double c = det_c.second;
             d = det_c.first;
-            const double sign = apply_op(d, op_list[j].cre, op_list[j].ann);
+            const double sign = apply_op(d, op_list[j].cre(), op_list[j].ann());
             if (sign != 0.0) {
-                new_state[d] += amplitudes[n] * op_list[j].factor * sign * c;
+                new_state[d] += amplitudes[n] * op_list[j].factor() * sign * c;
             }
         }
     }
@@ -275,7 +296,8 @@ det_hash<double> apply_exp_ah_factorized(GeneralOperator& gop, const det_hash<do
     return new_state;
 }
 
-det_hash<double> apply_operator_fast(GeneralOperator& gop, const det_hash<double>& state0) {
+det_hash<double> apply_operator_fast(GeneralOperator& gop, const det_hash<double>& state0,
+                                     double screen_thresh) {
     local_timer t;
     const auto& amplitudes = gop.amplitudes();
     const auto& op_indices = gop.op_indices();
@@ -283,42 +305,45 @@ det_hash<double> apply_operator_fast(GeneralOperator& gop, const det_hash<double
 
     det_hash<double> new_terms;
 
+    // loop over all the operators
     for (size_t n = 0, nops = gop.nops(); n < nops; n++) {
         const size_t begin = op_indices[n].first;
         const size_t end = op_indices[n].second;
-
+        if (amplitudes[n] == 0.0)
+            continue;
         for (size_t j = begin; j < end; j++) {
             const SingleOperator& op = op_list[j];
-            const Determinant ucre = op.cre - op.ann;
-            const double tau = amplitudes[n] * op.factor;
+            // create a mask for screening determinants according to the creation operators
+            // this mask looks only at creation operators that are not preceeded by annihilation
+            // operators
+            const Determinant ucre = op.cre() - op.ann();
+            const double tau = amplitudes[n] * op.factor();
             Determinant new_d;
             // loop over all determinants
             for (const auto& det_c : state0) {
                 const Determinant& d = det_c.first;
-
+                const double c = det_c.second;
                 // test if we can apply this operator to this determinant
 #if DEBUG_EXP_ALGORITHM
                 std::cout << "\nOperation\n"
                           << str(op.cre, 16) << "+\n"
                           << str(op.ann, 16) << "-\n"
                           << str(d, 16) << std::endl;
-#endif
-
-#if DEBUG_EXP_ALGORITHM
                 std::cout << "Testing (cre)(ann) sequence" << std::endl;
                 std::cout << "Can annihilate: "
                           << (d.fast_a_and_b_equal_b(op.ann) ? "True" : "False") << std::endl;
                 std::cout << "Can create:     " << (ucre.fast_a_and_b_eq_zero(d) ? "True" : "False")
                           << std::endl;
 #endif
-                if (d.fast_a_and_b_equal_b(op.ann) and d.fast_a_and_b_eq_zero(ucre)) {
 #if DEBUG_EXP_ALGORITHM
-                    std::cout << "Applying the (cre)(ann) sequence!" << std::endl;
+                std::cout << "Applying the (cre)(ann) sequence!" << std::endl;
 #endif
-                    const double c = det_c.second;
-                    new_d = d;
-                    double value = apply_op(new_d, op.cre, op.ann) * tau * c;
-                    if (std::fabs(value) > 1.0e-12) {
+                // screen according to the product tau * c
+                if (std::fabs(tau * c) > screen_thresh) {
+                    // check if this operator can be applied
+                    if (d.fast_a_and_b_equal_b(op.ann()) and d.fast_a_and_b_eq_zero(ucre)) {
+                        new_d = d;
+                        double value = apply_op_safe(new_d, op.cre(), op.ann()) * tau * c;
                         new_terms[new_d] += value;
                     }
                 }
@@ -329,26 +354,112 @@ det_hash<double> apply_operator_fast(GeneralOperator& gop, const det_hash<double
     return new_terms;
 }
 
+det_hash<double> apply_operator_fast2(GeneralOperator& gop, const det_hash<double>& state0,
+                                      double screen_thresh) {
+    // make a copy of the state
+    std::vector<std::tuple<double, double, Determinant>> state_sorted(state0.size());
+    size_t k = 0;
+    for (const auto& det_c : state0) {
+        const Determinant& d = det_c.first;
+        const double c = det_c.second;
+        state_sorted[k] = std::make_tuple(std::fabs(c), c, d);
+        ++k;
+    }
+    std::sort(state_sorted.rbegin(), state_sorted.rend());
+
+    local_timer t;
+    const auto& amplitudes = gop.amplitudes();
+    const auto& op_indices = gop.op_indices();
+    const auto& op_list = gop.op_list();
+
+    det_hash<double> new_terms;
+
+    Determinant d;
+    double c;
+    double absc;
+
+    // loop over all the operators
+    for (size_t n = 0, nops = gop.nops(); n < nops; n++) {
+        const size_t begin = op_indices[n].first;
+        const size_t end = op_indices[n].second;
+        if (amplitudes[n] == 0.0)
+            continue;
+        for (size_t j = begin; j < end; j++) {
+            const SingleOperator& op = op_list[j];
+            // create a mask for screening determinants according to the creation operators
+            // this mask looks only at creation operators that are not preceeded by annihilation
+            // operators
+            const Determinant ucre = op.cre() - op.ann();
+            const double tau = amplitudes[n] * op.factor();
+            // loop over all determinants
+            for (const auto& absc_c_det : state_sorted) {
+                std::tie(absc, c, d) = absc_c_det;
+                // screen according to the product tau * c
+                if (std::fabs(tau * c) > screen_thresh) {
+                    // check if this operator can be applied
+                    if (d.fast_a_and_b_equal_b(op.ann()) and d.fast_a_and_b_eq_zero(ucre)) {
+                        double value = apply_op_safe(d, op.cre(), op.ann()) * tau * c;
+                        new_terms[d] += value;
+                    }
+                } else {
+                    break;
+                }
+            }
+        }
+    }
+    time_apply_operator_fast2 += t.get();
+    return new_terms;
+}
+
 det_hash<double> apply_exp_operator_fast(GeneralOperator& gop, const det_hash<double>& state0,
-                                         double scaling_factor) {
+                                         double scaling_factor, int maxk, double screen_thresh) {
+    double convergence_threshold_ = screen_thresh;
+
     local_timer t;
     det_hash<double> exp_state(state0);
     det_hash<double> state(state0);
     double factor = 1.0;
-    int maxk = 20;
     for (int k = 1; k <= maxk; k++) {
         factor *= scaling_factor / static_cast<double>(k);
-        det_hash<double> new_terms = apply_operator_fast(gop, state);
+        det_hash<double> new_terms = apply_operator_fast(gop, state, screen_thresh);
         double norm = 0.0;
+        double inf_norm = 0.0;
         for (const auto& det_c : new_terms) {
             exp_state[det_c.first] += factor * det_c.second;
             norm += std::pow(factor * det_c.second, 2.0);
+            inf_norm = std::max(inf_norm, std::fabs(factor * det_c.second));
         }
-        if (std::sqrt(norm) < 1.0e-12)
+        if (inf_norm < convergence_threshold_)
             break;
         state = new_terms;
     }
-    time_apply_exp_operator_fast + t.get();
+    time_apply_exp_operator_fast += t.get();
+    return exp_state;
+}
+
+det_hash<double> apply_exp_operator_fast2(GeneralOperator& gop, const det_hash<double>& state0,
+                                          double scaling_factor, int maxk, double screen_thresh) {
+    double convergence_threshold_ = screen_thresh;
+
+    local_timer t;
+    det_hash<double> exp_state(state0);
+    det_hash<double> state(state0);
+    double factor = 1.0;
+    for (int k = 1; k <= maxk; k++) {
+        factor *= scaling_factor / static_cast<double>(k);
+        det_hash<double> new_terms = apply_operator_fast2(gop, state, screen_thresh);
+        double norm = 0.0;
+        double inf_norm = 0.0;
+        for (const auto& det_c : new_terms) {
+            exp_state[det_c.first] += factor * det_c.second;
+            norm += std::pow(factor * det_c.second, 2.0);
+            inf_norm = std::max(inf_norm, std::fabs(factor * det_c.second));
+        }
+        if (inf_norm < convergence_threshold_)
+            break;
+        state = new_terms;
+    }
+    time_apply_exp_operator_fast2 += t.get();
     return exp_state;
 }
 
@@ -373,8 +484,8 @@ void apply_exp_op_fast(const Determinant& d, Determinant& new_d, const Determina
     }
 }
 
-det_hash<double> apply_exp_ah_factorized_fast(GeneralOperator& gop,
-                                              const det_hash<double>& state0) {
+det_hash<double> apply_exp_ah_factorized_fast(GeneralOperator& gop, const det_hash<double>& state0,
+                                              bool inverse) {
     local_timer t;
     const auto& amplitudes = gop.amplitudes();
     const auto& op_indices = gop.op_indices();
@@ -390,15 +501,17 @@ det_hash<double> apply_exp_ah_factorized_fast(GeneralOperator& gop,
     //        dets.push_back(det_c.first);
     //    }
 
-    for (size_t n = 0, nops = gop.nops(); n < nops; n++) {
+    for (size_t m = 0, nops = gop.nops(); m < nops; m++) {
+        size_t n = inverse ? nops - m - 1 : m;
+
         // zero the new terms
         new_terms.clear();
 
         const size_t begin = op_indices[n].first;
         const SingleOperator& op = op_list[begin];
-        const Determinant ucre = op.cre - op.ann;
-        const Determinant uann = op.ann - op.cre;
-        const double tau = amplitudes[n] * op.factor;
+        const Determinant ucre = op.cre() - op.ann();
+        const Determinant uann = op.ann() - op.cre();
+        const double tau = (inverse ? -1.0 : 1.0) * amplitudes[n] * op.factor();
         Determinant new_d;
         // loop over all determinants
         for (const auto& det_c : state) {
@@ -419,18 +532,18 @@ det_hash<double> apply_exp_ah_factorized_fast(GeneralOperator& gop,
             std::cout << "Can create:     " << (ucre.fast_a_and_b_eq_zero(d) ? "True" : "False")
                       << std::endl;
 #endif
-            if (d.fast_a_and_b_equal_b(op.ann) and d.fast_a_and_b_eq_zero(ucre)) {
+            if (d.fast_a_and_b_equal_b(op.ann()) and d.fast_a_and_b_eq_zero(ucre)) {
 #if DEBUG_EXP_ALGORITHM
                 std::cout << "Applying the (cre)(ann) sequence!" << std::endl;
 #endif
                 const double c = det_c.second;
-                apply_exp_op_fast(d, new_d, op.cre, op.ann, tau, c, new_terms);
-            } else if (d.fast_a_and_b_equal_b(op.cre) and d.fast_a_and_b_eq_zero(uann)) {
+                apply_exp_op_fast(d, new_d, op.cre(), op.ann(), tau, c, new_terms);
+            } else if (d.fast_a_and_b_equal_b(op.cre()) and d.fast_a_and_b_eq_zero(uann)) {
 #if DEBUG_EXP_ALGORITHM
                 std::cout << "Applying the (ann)(cre) sequence!" << std::endl;
 #endif
                 const double c = det_c.second;
-                apply_exp_op_fast(d, new_d, op.ann, op.cre, -tau, c, new_terms);
+                apply_exp_op_fast(d, new_d, op.ann(), op.cre(), -tau, c, new_terms);
             }
         }
         for (const auto& d_c : new_terms) {
@@ -441,6 +554,173 @@ det_hash<double> apply_exp_ah_factorized_fast(GeneralOperator& gop,
     }
     time_apply_exp_ah_factorized_fast += t.get();
     return state;
+}
+
+det_hash<double> apply_hamiltonian(std::shared_ptr<ActiveSpaceIntegrals> as_ints,
+                                   const det_hash<double>& state0, double screen_thresh) {
+    local_timer t;
+
+    // initialize a state object
+    det_hash<double> state;
+
+    size_t nmo = as_ints->nmo();
+
+    auto mo_symmetry = as_ints->active_mo_symmetry();
+
+    Determinant new_det;
+
+    for (const auto& det_c : state0) {
+        const Determinant& det = det_c.first;
+        const double c = det_c.second;
+
+        std::vector<int> aocc = det.get_alfa_occ(nmo);
+        std::vector<int> bocc = det.get_beta_occ(nmo);
+        std::vector<int> avir = det.get_alfa_vir(nmo);
+        std::vector<int> bvir = det.get_beta_vir(nmo);
+
+        size_t noalpha = aocc.size();
+        size_t nobeta = bocc.size();
+        size_t nvalpha = avir.size();
+        size_t nvbeta = bvir.size();
+
+        double E_0 = as_ints->nuclear_repulsion_energy() + as_ints->scalar_energy();
+
+        state[det] += (E_0 + as_ints->slater_rules(det, det)) * c;
+        // aa singles
+        for (size_t i : aocc) {
+            for (size_t a : avir) {
+                if ((mo_symmetry[i] ^ mo_symmetry[a]) == 0) {
+                    double DHIJ = as_ints->slater_rules_single_alpha(det, i, a) * c;
+                    if (std::abs(DHIJ) >= screen_thresh) {
+                        new_det = det;
+                        new_det.set_alfa_bit(i, false);
+                        new_det.set_alfa_bit(a, true);
+                        state[new_det] += DHIJ;
+                        ops_apply_hamiltonian++;
+                    }
+                }
+            }
+        }
+        // bb singles
+        for (size_t i : bocc) {
+            for (size_t a : bvir) {
+                if ((mo_symmetry[i] ^ mo_symmetry[a]) == 0) {
+                    double DHIJ = as_ints->slater_rules_single_beta(det, i, a) * c;
+                    if (std::abs(DHIJ) >= screen_thresh) {
+                        new_det = det;
+                        new_det.set_beta_bit(i, false);
+                        new_det.set_beta_bit(a, true);
+                        state[new_det] += DHIJ;
+                        ops_apply_hamiltonian++;
+                    }
+                }
+            }
+        }
+        // Generate aa excitations
+        for (size_t ii = 0; ii < noalpha; ++ii) {
+            size_t i = aocc[ii];
+            for (size_t jj = ii + 1; jj < noalpha; ++jj) {
+                size_t j = aocc[jj];
+                for (size_t aa = 0; aa < nvalpha; ++aa) {
+                    size_t a = avir[aa];
+                    for (size_t bb = aa + 1; bb < nvalpha; ++bb) {
+                        size_t b = avir[bb];
+                        if ((mo_symmetry[i] ^ mo_symmetry[j] ^ mo_symmetry[a] ^ mo_symmetry[b]) ==
+                            0) {
+                            double DHIJ = as_ints->tei_aa(i, j, a, b) * c;
+                            if (std::abs(DHIJ) >= screen_thresh) {
+                                new_det = det;
+                                DHIJ *= new_det.double_excitation_aa(i, j, a, b);
+                                state[new_det] += DHIJ;
+                                ops_apply_hamiltonian++;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        // Generate ab excitations
+        for (size_t i : aocc) {
+            for (size_t j : bocc) {
+                for (size_t a : avir) {
+                    for (size_t b : bvir) {
+                        if ((mo_symmetry[i] ^ mo_symmetry[j] ^ mo_symmetry[a] ^ mo_symmetry[b]) ==
+                            0) {
+                            double DHIJ = as_ints->tei_ab(i, j, a, b) * c;
+                            if (std::abs(DHIJ) >= screen_thresh) {
+                                new_det = det;
+                                DHIJ *= new_det.double_excitation_ab(i, j, a, b);
+                                state[new_det] += DHIJ;
+                                ops_apply_hamiltonian++;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        // Generate bb excitations
+        for (size_t ii = 0; ii < nobeta; ++ii) {
+            size_t i = bocc[ii];
+            for (size_t jj = ii + 1; jj < nobeta; ++jj) {
+                size_t j = bocc[jj];
+                for (size_t aa = 0; aa < nvbeta; ++aa) {
+                    size_t a = bvir[aa];
+                    for (size_t bb = aa + 1; bb < nvbeta; ++bb) {
+                        size_t b = bvir[bb];
+                        if ((mo_symmetry[i] ^ mo_symmetry[j] ^ mo_symmetry[a] ^ mo_symmetry[b]) ==
+                            0) {
+                            double DHIJ = as_ints->tei_bb(i, j, a, b) * c;
+                            if (std::abs(DHIJ) >= screen_thresh) {
+                                new_det = det;
+                                DHIJ *= new_det.double_excitation_bb(i, j, a, b);
+                                state[new_det] += DHIJ;
+                                ops_apply_hamiltonian++;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+    time_apply_hamiltonian += t.get();
+    return state;
+}
+
+std::vector<double> get_projection(GeneralOperator& gop, const det_hash<double>& ref,
+                                   const det_hash<double>& state0) {
+    local_timer t;
+    std::vector<double> proj(gop.nops(), 0.0);
+
+    const auto& op_indices = gop.op_indices();
+    const auto& op_list = gop.op_list();
+
+    Determinant d;
+
+    // loop over all the operators
+    for (size_t n = 0, nops = gop.nops(); n < nops; n++) {
+        double value = 0.0;
+
+        // apply the operator op_n
+        const size_t begin = op_indices[n].first;
+        const size_t end = op_indices[n].second;
+        for (size_t j = begin; j < end; j++) {
+            for (const auto& det_c : ref) {
+                const double c = det_c.second;
+                d = det_c.first;
+                const double sign = apply_op(d, op_list[j].cre(), op_list[j].ann());
+                if (sign != 0.0) {
+                    auto search = state0.find(d);
+                    if (search != state0.end()) {
+                        value += op_list[j].factor() * sign * c * search->second;
+                    }
+                }
+            }
+        }
+        proj[n] = value;
+    }
+    time_get_projection += t.get();
+
+    return proj;
 }
 
 double energy_expectation_value(det_hash<double>& left_state, det_hash<double>& right_state,

@@ -38,10 +38,27 @@ namespace forte {
 
 class ActiveSpaceIntegrals;
 
-struct SingleOperator {
-    double factor;
-    Determinant ann;
-    Determinant cre;
+/**
+ * @brief A class to represent a second quantized operator in normal ordered
+ * form with respect to the true vacuum
+ *
+ *   a+_p1 a+_p2  ... a+_P1 a+_P2   ... a-_Q2 a-_Q1   ... a-_q2 a-_q1
+ *   alpha creation  beta creation   alpha annihilation  beta annihilation
+ *
+ * The creation and annihilation operators are stored separately as bit arrays
+ * using the Determinant class
+ */
+class SingleOperator {
+  public:
+    SingleOperator(double factor, const Determinant& cre, const Determinant& ann);
+    double factor() const;
+    const Determinant& cre() const;
+    const Determinant& ann() const;
+
+  private:
+    double factor_;
+    Determinant cre_;
+    Determinant ann_;
 };
 
 // used to represent a combination of:
@@ -77,12 +94,32 @@ class GeneralOperator {
 det_hash<double> apply_operator(GeneralOperator& gop, const det_hash<double>& state);
 det_hash<double> apply_exp_ah_factorized(GeneralOperator& gop, const det_hash<double>& state);
 
-det_hash<double> apply_operator_fast(GeneralOperator& gop, const det_hash<double>& state0);
-det_hash<double> apply_exp_operator_fast(GeneralOperator& gop, const det_hash<double>& state0, double scaling_factor = 1.0);
-det_hash<double> apply_exp_ah_factorized_fast(GeneralOperator& gop, const det_hash<double>& state0);
+det_hash<double> apply_operator_fast(GeneralOperator& gop, const det_hash<double>& state0,
+                                     double screen_thresh = 1.0e-12);
+det_hash<double> apply_exp_operator_fast(GeneralOperator& gop, const det_hash<double>& state0,
+                                         double scaling_factor = 1.0, int maxk = 20,
+                                         double screen_thresh = 1.0e-12);
+
+
+det_hash<double> apply_operator_fast2(GeneralOperator& gop, const det_hash<double>& state0,
+                                     double screen_thresh = 1.0e-12);
+det_hash<double> apply_exp_operator_fast2(GeneralOperator& gop, const det_hash<double>& state0,
+                                         double scaling_factor = 1.0, int maxk = 20,
+                                         double screen_thresh = 1.0e-12);
+
+det_hash<double> apply_exp_ah_factorized_fast(GeneralOperator& gop, const det_hash<double>& state0,
+                                              bool inverse = false);
 double energy_expectation_value(det_hash<double>& left_state, det_hash<double>& right_state,
                                 std::shared_ptr<ActiveSpaceIntegrals> as_ints);
 det_hash<double> apply_number_projector(int na, int nb, det_hash<double>& state);
+
+det_hash<double> apply_hamiltonian(std::shared_ptr<ActiveSpaceIntegrals> as_ints,
+                                   const det_hash<double>& state0, double screen_thresh = 1.0e-12);
+
+/// Compute the projection  <state0 | op | ref>, for each operator op in gop
+std::vector<double> get_projection(GeneralOperator& gop, const det_hash<double>& ref,
+                                   const det_hash<double>& state0);
+
 double overlap(det_hash<double>& left_state, det_hash<double>& right_state);
 
 } // namespace forte
