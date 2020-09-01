@@ -306,6 +306,16 @@ class CASSCF_ORB_GRAD {
     /// Z vector for CPSCF equations
     psi::SharedMatrix Z_;
 
+    /// Solve Z vector equation if there are frozen-core orbitals
+    void solve_cpscf();
+    /// Build Z independent part of the CP-MCSCF equation
+    psi::SharedMatrix build_Zfc_fixed();
+    /// Build L matrix for every iteration
+    psi::SharedMatrix contract_Z_Lsuper();
+
+    /// Hartree-Fock orbital energies from Psi4
+    psi::SharedVector epsilon_;
+
     /// Mixed Fock matrix
     psi::SharedMatrix Fock_mixed_;
     /// Build mixed Fock matrix using HF and MCSCF orbitals
@@ -325,15 +335,6 @@ class CASSCF_ORB_GRAD {
 
     /// W matrix (Lagrangian, relaxed part), nfrzc by nuocc of HF
     psi::SharedMatrix Wfc_;
-
-    /// Solve Z vector equation if there are frozen-core orbitals
-    void solve_Zfc();
-    /// Build Z independent part of the CP-MCSCF equation
-    psi::SharedMatrix build_Zfc_fixed();
-    /// Build L matrix for every iteration
-    psi::SharedMatrix contract_Z_Lsuper();
-    /// Hartree-Fock orbital energies from Psi4
-    psi::SharedVector epsilon_;
 
     /// Build W matrix after Zfc is solved
     void build_Wfc();

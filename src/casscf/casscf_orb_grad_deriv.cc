@@ -95,8 +95,7 @@ void CASSCF_ORB_GRAD::compute_nuclear_gradient() {
         epsilon_ = ints_->wfn()->epsilon_a();
 
         // solve CPSCF equations
-
-        solve_Zfc();
+        solve_cpscf();
         Zfc_->print();
         Wfc_->print();
     }
@@ -107,9 +106,10 @@ void CASSCF_ORB_GRAD::compute_nuclear_gradient() {
     // back-transform 1-RDM
     compute_opdm_ao();
 
-    // 2-RDM
+    // dump 2-RDM to disk
     dump_tpdm_iwl();
 
+    // back-transform 2-RDM
     std::vector<std::shared_ptr<psi::MOSpace>> spaces{psi::MOSpace::all};
     auto transform = std::make_shared<psi::TPDMBackTransform>(
         ints_->wfn(), spaces,
@@ -119,12 +119,6 @@ void CASSCF_ORB_GRAD::compute_nuclear_gradient() {
         psi::IntegralTransform::FrozenOrbitals::None);          // Frozen orbitals
     transform->set_print(debug_print_ ? 5 : print_);
     transform->backtransform_density();
-
-    // 2-RDM from CPSCF
-    dump_tpdm_iwl_hf();
-
-    ints_->wfn()->Ca()->copy(C0_);
-    transform->backtransform_density(true);
 }
 
 void CASSCF_ORB_GRAD::format_A_matrix() {
@@ -181,165 +175,80 @@ void CASSCF_ORB_GRAD::build_mixed_fock() {
     Fock_mixed_->print();
 }
 
-void CASSCF_ORB_GRAD::solve_Zfc() {
-    // transform A matrix to HF basis
-    auto A = std::make_shared<psi::Matrix>("A (MCSCF)", nmopi_, nmopi_);
+void CASSCF_ORB_GRAD::solve_cpscf() {
+    // compute orbital gradient in Hartree-Fock basis
+    auto G = Am_->clone();
+    G->subtract(Am_->transpose());
+    G->set_name("A - A^T");
 
-    A_.citerate(
-        [&](const std::vector<size_t>& i, const std::vector<SpinType>&, const double& value) {
-            auto irrep_index_pair1 = mos_rel_[i[0]];
-            auto irrep_index_pair2 = mos_rel_[i[1]];
-
-            int h1 = irrep_index_pair1.first;
-
-            if (h1 == irrep_index_pair2.first) {
-                auto p = irrep_index_pair1.second;
-                auto q = irrep_index_pair2.second;
-                A->set(h1, p, q, value);
-            }
-        });
-
-    auto Atilde = psi::linalg::triplet(U_, A, U_, false, false, true);
-    Atilde->subtract(Atilde->transpose());
-    Atilde->print();
-
-    Zfc_ = std::make_shared<psi::Matrix>("Z_fc", nmopi_, nmopi_);
+    Z_ = std::make_shared<psi::Matrix>("Z", nmopi_, nmopi_);
 
     // occupied-occupied part
     for (int h = 0; h < nirrep_; ++h) {
         for (int i = 0; i < hf_ndoccpi_[h]; ++i) {
             for (int j = i + 1; j < hf_ndoccpi_[h]; ++j) {
-                double value = Atilde->get(h, i, j) / (epsilon_->get(h, j) - epsilon_->get(h, i));
-                Zfc_->set(h, i, j, value);
-                Zfc_->set(h, j, i, value);
+                double value = G->get(h, i, j) / (epsilon_->get(h, j) - epsilon_->get(h, i));
+                Z_->set(h, i, j, value);
+                Z_->set(h, j, i, value);
             }
         }
     }
 
     // virtual-virtual part
     for (int h = 0; h < nirrep_; ++h) {
-        for (int a = 0, offset = hf_ndoccpi_[h]; a < hf_nuoccpi_[h]; ++a) {
-            for (int b = a + 1; b < hf_nuoccpi_[h]; ++b) {
-                double value = Atilde->get(h, a + offset, b + offset) /
-                               (epsilon_->get(h, b + offset) - epsilon_->get(h, a + offset));
-                Zfc_->set(h, a + offset, b + offset, value);
-                Zfc_->set(h, b + offset, a + offset, value);
+        for (int a = hf_ndoccpi_[h]; a < nmopi_[h]; ++a) {
+            for (int b = a + 1; b < nmopi_[h]; ++b) {
+                double value = G->get(h, a, b) / (epsilon_->get(h, b) - epsilon_->get(h, a));
+                Z_->set(h, a, b, value);
+                Z_->set(h, b, a, value);
             }
         }
     }
 
-    Zfc_->print();
-
-    //    // build Z independent part
-    //    auto Zfc_fixed = build_Zfc_fixed();
+    // TODO: solve this linear system using L-BFGS
 
     // start iteration
     bool converged = false;
     int iter = 1;
     int maxiter = options_->get_int("CPMCSCF_MAXITER");
-    SharedMatrix Zold = Zfc_->clone();
+    SharedMatrix Zold = Z_->clone();
 
     outfile->Printf("\n    *======================*");
     outfile->Printf("\n    * Iter     Delta Z rms *");
     outfile->Printf("\n    *----------------------*");
 
     while (iter <= maxiter) {
-        // occupied-virtual part
         auto L = contract_Z_Lsuper();
 
         for (int h = 0; h < nirrep_; ++h) {
             for (int i = 0; i < hf_ndoccpi_[h]; ++i) {
-                for (int a = 0, offset = hf_ndoccpi_[h]; a < hf_nuoccpi_[h]; ++a) {
-                    double numerator =
-                        Atilde->get(h, i, a + offset) - 0.5 * L->get(h, a + offset, i);
-                    double denominator = epsilon_->get(h, a + offset) - epsilon_->get(h, i);
-                    Zfc_->set(h, i, a + offset, numerator / denominator);
-                    Zfc_->set(h, a + offset, i, numerator / denominator);
+                for (int a = hf_ndoccpi_[h]; a < nmopi_[h]; ++a) {
+                    double value = (G->get(h, i, a) - 0.5 * L->get(h, a, i)) /
+                                   (epsilon_->get(h, a) - epsilon_->get(h, i));
+                    Z_->set(h, i, a, value);
+                    Z_->set(h, a, i, value);
                 }
             }
         }
 
-        //        Zfc_->print();
-
-        //        // compute r.h.s. of CP-MCSCF equation
-        //        Zfc_ = build_Zfc_rhs();
-        //        Zfc_->add(Zfc_fixed);
-
-        //        // divide by HF orbital energies
-        //        for (int h = 0; h < nirrep_; ++h) {
-        //            for (int I = 0; I < nfrzcpi_[h]; ++I) {
-        //                double e_I = Fock_mixed_->get(h, I, I);
-        //                for (int p = 0; p < nmopi_[h]; ++p) {
-        //                    // skip part when p = I
-        //                    if (p == I)
-        //                        continue;
-
-        //                    double e_p = Fock_mixed_->get(h, p, p);
-        //                    double v = Zfc_->get(h, I, p) / (e_I - e_p);
-        //                    Zfc_->set(h, I, p, v);
-        //                }
-        //            }
-        //        }
-
         // test convergence
-        Zold->subtract(Zfc_);
+        Zold->subtract(Z_);
         double Zrms = Zold->rms();
         outfile->Printf("\n    * %4d    %12.4e *", iter, Zrms);
         if (Zrms < g_conv_) {
             converged = true;
             break;
         }
-        Zold->copy(Zfc_);
+        Zold->copy(Z_);
         iter++;
     }
     outfile->Printf("\n    *======================*");
 
     if (!converged) {
-        auto msg = "CP-MCSCF did not converge in " + std::to_string(maxiter) + " iterations.";
+        auto msg = "CP-SCF did not converge in " + std::to_string(maxiter) + " iterations.";
         outfile->Printf("\n  Error: %s", msg.c_str());
-        outfile->Printf("\n  Please check if the specified frozen-core orbitals make sense.");
+        outfile->Printf("\n  Please check if the specified frozen orbitals make sense.");
         throw std::runtime_error(msg);
-    }
-
-    Wfc_ = std::make_shared<psi::Matrix>("W_fc", nmopi_, nmopi_);
-
-    Atilde = psi::linalg::triplet(U_, A, U_, false, false, true);
-    auto L = contract_Z_Lsuper();
-
-    // occupied-occupied part
-    for (int h = 0; h < nirrep_; ++h) {
-        for (int i = 0; i < hf_ndoccpi_[h]; ++i) {
-            for (int j = i; j < hf_ndoccpi_[h]; ++j) {
-                double value = Atilde->get(h, i, j) + Zfc_->get(h, i, j) * epsilon_->get(h, i) +
-                               0.5 * L->get(h, i, j);
-                Wfc_->set(h, i, j, value);
-                Wfc_->set(h, j, i, value);
-            }
-        }
-    }
-
-    // virtual-virtual part
-    for (int h = 0; h < nirrep_; ++h) {
-        for (int a = 0, offset = hf_ndoccpi_[h]; a < hf_nuoccpi_[h]; ++a) {
-            for (int b = a; b < hf_nuoccpi_[h]; ++b) {
-                double value = Atilde->get(h, a + offset, b + offset) +
-                               Zfc_->get(h, a + offset, b + offset) * epsilon_->get(h, a + offset);
-                Wfc_->set(h, a + offset, b + offset, value);
-                Wfc_->set(h, b + offset, a + offset, value);
-            }
-        }
-    }
-
-    // occupied-virtual part
-    for (int h = 0; h < nirrep_; ++h) {
-        for (int i = 0; i < hf_ndoccpi_[h]; ++i) {
-            for (int a = 0, offset = hf_ndoccpi_[h]; a < hf_nuoccpi_[h]; ++a) {
-                double value = Atilde->get(h, i, a + offset) +
-                               Zfc_->get(h, i, a + offset) * epsilon_->get(h, i);
-                Wfc_->set(h, i, a, value);
-                Wfc_->set(h, a, i, value);
-            }
-        }
     }
 }
 
@@ -584,28 +493,6 @@ void CASSCF_ORB_GRAD::dump_tpdm_iwl() {
         offset += nmopi_[h];
     }
 
-    //    // 1-rdm part from frozen-core response
-    //    if (nfrzc_) {
-    //        for (int h = 0, offset = 0; h < nirrep_; ++h) {
-    //            for (int I = 0; I < nfrzcpi_[h]; ++I) {
-    //                auto nI = I + offset;
-    //                for (int a = 0; a < hf_nuoccpi_[h]; ++a) {
-    //                    auto na = a + offset + hf_ndoccpi_[h];
-
-    //                    double z_Ia = Zfc_->get(h, I, a);
-
-    //                    for (const int ni: hf_docc_mos_) {
-    //                        d2.write_value(nI, na, ni, ni, z_Ia, print, name, 0);
-    //                        d2.write_value(nI, ni, ni, na, -0.5 * z_Ia, print, name, 0);
-    //                        d2.write_value(na, nI, ni, ni, z_Ia, print, name, 0);
-    //                        d2.write_value(na, ni, ni, nI, -0.5 * z_Ia, print, name, 0);
-    //                    }
-    //                }
-    //            }
-    //            offset += nmopi_[h];
-    //        }
-    //    }
-
     // 2-rdm part
     auto& d2_data = D2_.block("aaaa").data();
     auto na2 = nactv_ * nactv_;
@@ -630,60 +517,74 @@ void CASSCF_ORB_GRAD::dump_tpdm_iwl() {
     d2.flush(1);
     d2.set_keep_flag(1);
     d2.close();
+
+    // if we solve response for frozen orbitals
+    if (is_frozen_orbs_) {
+        dump_tpdm_iwl_hf();
+    }
 }
 
 void CASSCF_ORB_GRAD::dump_tpdm_iwl_hf() {
     auto psio = _default_psio_lib_;
-    IWL d2(psio.get(), PSIF_MO_TPDM, 1.0e-15, 0, 0);
+    IWL d2(psio.get(), PSIF_MO_BB_TPDM, 1.0e-15, 0, 0); // use PSIF_MO_BB_TPDM
     std::string name = "outfile";
     int print = debug_print_ ? 1 : 0;
 
-    // 1-rdm part
+    auto frzv_start_pi = nmopi_ - mo_space_info_->dimension("FROZEN_UOCC");
+
     for (int h = 0, offset = 0; h < nirrep_; ++h) {
-        // frozen-core/non-frozen-occupied
-        for (int I = 0; I < nfrzcpi_[h]; ++I) {
-            int nI = I + offset;
-            for (int i = nfrzcpi_[h]; i < hf_ndoccpi_[h]; ++i) {
-                int ni = i + offset;
+        for (int j = 0, ndocc = hf_docc_mos_.size(); j < ndocc; ++j) {
+            int nj = hf_docc_mos_[j];
 
-                double z = Zfc_->get(h, i, I);
+            // frozen-core/active-docc
+            for (int I = 0; I < nfrzcpi_[h]; ++I) {
+                int nI = I + offset;
+                for (int i = nfrzcpi_[h]; i < hf_ndoccpi_[h]; ++i) {
+                    int ni = i + offset;
 
-                for (int j = 0, ndocc = hf_docc_mos_.size(); j < ndocc; ++j) {
-                    int nj = hf_docc_mos_[j];
+                    double z = Z_->get(h, I, i);
 
-                    if (nj != nI and nj != ni) {
+                    if (nj == ni) {
+                        d2.write_value(nI, ni, ni, ni, z, print, name, 0);
+                        d2.write_value(ni, nI, ni, ni, 2.0 * z, print, name, 0);
+                        d2.write_value(ni, ni, ni, nI, -z, print, name, 0);
+                    } else if (nj == nI) {
+                        d2.write_value(ni, nI, nI, nI, z, print, name, 0);
+                        d2.write_value(nI, ni, nI, nI, 2.0 * z, print, name, 0);
+                        d2.write_value(nI, nI, nI, ni, -z, print, name, 0);
+                    } else {
                         d2.write_value(nI, ni, nj, nj, 2.0 * z, print, name, 0);
                         d2.write_value(nI, nj, nj, ni, -z, print, name, 0);
 
                         d2.write_value(ni, nI, nj, nj, 2.0 * z, print, name, 0);
                         d2.write_value(ni, nj, nj, nI, -z, print, name, 0);
                     }
-
-                    if (nj == nI) {
-                        d2.write_value(ni, nI, nI, nI, z, print, name, 0);
-                        d2.write_value(nI, ni, nI, nI, 2.0 * z, print, name, 0);
-                        d2.write_value(nI, nI, nI, ni, -z, print, name, 0);
-                    }
-
-                    if (nj == ni) {
-                        d2.write_value(nI, ni, ni, ni, z, print, name, 0);
-                        d2.write_value(ni, nI, ni, ni, 2.0 * z, print, name, 0);
-                        d2.write_value(ni, ni, ni, nI, -z, print, name, 0);
-                    }
                 }
             }
-        }
 
-        // occupied/virtual
-        for (int i = nfrzcpi_[h]; i < hf_ndoccpi_[h]; ++i) {
-            int ni = i + offset;
-            for (int a = hf_ndoccpi_[h]; a < nmopi_[h]; ++a) {
-                int na = a + offset;
+            // frozen-virtual/active-virtual
+            for (int A = frzv_start_pi[h]; A < nmopi_[h]; ++A) {
+                int nA = A + offset;
+                for (int a = hf_ndoccpi_[h]; a < frzv_start_pi[h]; ++a) {
+                    int na = a + offset;
 
-                double z = Zfc_->get(h, i, a);
+                    double z = Z_->get(h, A, a);
 
-                for (int j = 0, ndocc = hf_docc_mos_.size(); j < ndocc; ++j) {
-                    int nj = hf_docc_mos_[j];
+                    d2.write_value(nA, na, nj, nj, 2.0 * z, print, name, 0);
+                    d2.write_value(nA, nj, nj, na, -z, print, name, 0);
+
+                    d2.write_value(na, nA, nj, nj, 2.0 * z, print, name, 0);
+                    d2.write_value(na, nj, nj, nA, -z, print, name, 0);
+                }
+            }
+
+            // docc/virtual
+            for (int i = 0; i < hf_ndoccpi_[h]; ++i) {
+                int ni = i + offset;
+                for (int a = hf_ndoccpi_[h]; a < nmopi_[h]; ++a) {
+                    int na = a + offset;
+
+                    double z = Z_->get(h, i, a);
 
                     if (nj == ni) {
                         d2.write_value(na, ni, ni, ni, z, print, name, 0);
@@ -699,7 +600,6 @@ void CASSCF_ORB_GRAD::dump_tpdm_iwl_hf() {
                 }
             }
         }
-
         offset += nmopi_[h];
     }
 
