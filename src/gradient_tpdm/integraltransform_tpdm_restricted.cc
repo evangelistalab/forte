@@ -47,7 +47,7 @@
 
 using namespace psi;
 
-void TPDMBackTransform::backtransform_tpdm_restricted() {
+void TPDMBackTransform::backtransform_tpdm_restricted(bool test) {
     check_initialized();
 
     // This can be safely called - it returns immediately if the MO TPDM is already sorted
@@ -166,7 +166,6 @@ void TPDMBackTransform::backtransform_tpdm_restricted() {
     global_dpd_->buf4_init(&K, PSIF_TPDM_HALFTRANS, 0, DPD_ID("[A>=A]+"), DPD_ID("[n>=n]+"),
                            DPD_ID("[A>=A]+"), DPD_ID("[n>=n]+"), 0,
                            "Half-Transformed TPDM (AA|nn)");
-    //    global_dpd_->buf4_print(&K, "outfile", 1);
     global_dpd_->buf4_sort(&K, PSIF_TPDM_HALFTRANS, rspq, DPD_ID("[n>=n]+"), DPD_ID("[A>=A]+"),
                            "Half-Transformed TPDM (nn|AA)");
     global_dpd_->buf4_close(&K);
@@ -176,7 +175,7 @@ void TPDMBackTransform::backtransform_tpdm_restricted() {
         outfile->Printf("\n    Starting second half-transformation.");
     }
 
-    psio_->open(PSIF_AO_TPDM, PSIO_OPEN_NEW);
+    psio_->open(PSIF_AO_TPDM, test ? PSIO_OPEN_OLD : PSIO_OPEN_NEW);
 
     /*** (nn|AA) -> (nn|nn) ***/
 
@@ -241,7 +240,7 @@ void TPDMBackTransform::backtransform_tpdm_restricted() {
                     pca = ca->pointer(Gr);
                     if (nrows && ncols && nlinks)
                         C_DGEMM('n', 'n', nrows, ncols, nlinks, 1.0, pca[0], nrows, TMP[0], nso_,
-                                0.0, &K.matrix[h][pq][rs], ncols);
+                                test ? 1.0 : 0.0, &K.matrix[h][pq][rs], ncols);
                 } /* Gr */
             }     /* pq */
             global_dpd_->buf4_mat_irrep_close_block(&J, h, rowsPerBucket);

@@ -221,8 +221,9 @@ class CASSCF_ORB_GRAD {
     /// Spin-summed averaged 2-RDM in 1^+ 1 2^+ 2 ordering
     ambit::BlockedTensor D2_;
 
-    /// The orbital Lagrangian matrix
+    /// The orbital response of MCSCF energy
     ambit::BlockedTensor A_;
+    psi::SharedMatrix Am_;
 
     /// The orbital rotation matrix
     psi::SharedMatrix R_;
@@ -252,6 +253,9 @@ class CASSCF_ORB_GRAD {
     /// Build two-electron integrals
     void build_tei_from_ao();
 
+    /// JK build for Fock-like terms
+    void build_JK_fock(psi::SharedMatrix Cl, psi::SharedMatrix Cr);
+
     /// Build Fock matrix
     void build_fock(bool rebuild_inactive = false);
     /// Build the inactive Fock (does not depend on 1RDM), includes frozen docc
@@ -276,8 +280,10 @@ class CASSCF_ORB_GRAD {
 
     // => Nuclear gradient related functions <=
 
-    /// Return the MO orbital Lagrangian matrix
-    psi::SharedMatrix Lagrangian();
+    /// The orbital Lagrangian matrix in AO basis
+    psi::SharedMatrix W_;
+    /// compute Lagrangian matrix and push to Psi4
+    void compute_Lagrangian();
 
     /// Return the MO 1-RDM
     psi::SharedMatrix opdm();
@@ -294,6 +300,26 @@ class CASSCF_ORB_GRAD {
     /// List of unoccupied MOs from Hartree-Fock
     std::vector<size_t> hf_uocc_mos_;
 
+    /// Are there any frozen orbitals?
+    bool is_frozen_orbs_;
+
+    /// Z vector for CPSCF equations
+    psi::SharedMatrix Z_;
+
+    /// Mixed Fock matrix
+    psi::SharedMatrix Fock_mixed_;
+    /// Build mixed Fock matrix using HF and MCSCF orbitals
+    void build_mixed_fock();
+
+    /// T matrix, T_pq = U_{ip} U_{iq} where U transforms from HF orbitals to MCSCF orbitals
+    psi::SharedMatrix T_;
+    /// Frozen core part of T (nfrzc x nmo)
+    psi::SharedMatrix Tfc_;
+
+    /// Orbital response for the mixed Fock constraint
+    psi::SharedMatrix X_sI_;
+    psi::SharedMatrix X_Is_;
+
     /// Z matrix (1-RDM relaxed part), nfrzc by nuocc of HF
     psi::SharedMatrix Zfc_;
 
@@ -305,12 +331,15 @@ class CASSCF_ORB_GRAD {
     /// Build Z independent part of the CP-MCSCF equation
     psi::SharedMatrix build_Zfc_fixed();
     /// Build L matrix for every iteration
-    psi::SharedMatrix build_Lfc();
+    psi::SharedMatrix contract_Z_Lsuper();
     /// Hartree-Fock orbital energies from Psi4
     psi::SharedVector epsilon_;
 
     /// Build W matrix after Zfc is solved
     void build_Wfc();
+
+    /// Dump the HF MO 2-RDM to file using IWL
+    void dump_tpdm_iwl_hf();
 
     // => Some helper functions <=
 
@@ -319,6 +348,9 @@ class CASSCF_ORB_GRAD {
 
     /// Format the 1RDM from BlockedTensor to SharedMatrix
     void format_1rdm();
+
+    /// Format the A matrix from BlockedTensor to SharedMatrix
+    void format_A_matrix();
 
     /// Reshape the orbital rotation related BlockedTensor to SharedVector
     void reshape_rot_ambit(ambit::BlockedTensor bt, psi::SharedVector sv);

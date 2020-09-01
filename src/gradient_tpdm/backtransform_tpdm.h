@@ -77,7 +77,7 @@ class TPDMBackTransform : public IntegralTransform {
 
     /// Back-transform the MO 2-RDM to AO
     /// This is a modified version of backtransform_density() of Psi4 libtrans.
-    void backtransform_density();
+    void backtransform_density(bool test = false);
 
   protected:
     /// Presort MO 2-RDM using unrestricted formalism (indexing change of Psi4)
@@ -88,7 +88,7 @@ class TPDMBackTransform : public IntegralTransform {
     /// Presort MO 2-RDM using restricted formalism (indexing change of Psi4)
     void presort_mo_tpdm_restricted();
     /// Back-transform MO 2-RDM using restricted formalism (a copy of Psi4 libtrans)
-    void backtransform_tpdm_restricted();
+    void backtransform_tpdm_restricted(bool test = false);
 
     //    void sort_so_tpdm(const dpdbuf4* B, int irrep, size_t first_row, size_t num_rows,
     //                      bool first_run);

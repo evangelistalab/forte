@@ -472,54 +472,6 @@ void CASSCF_ORB_GRAD::build_tei_from_ao() {
     timer_off("Build (pu|xy) integrals");
 }
 
-void CASSCF_ORB_GRAD::build_fock_inactive() {
-    // Implementation Notes (in AO basis)
-    // F_frozen = D_{uv}^{frozen} * (2 * (uv|rs) - (us|rv))
-    // F_restricted = D_{uv}^{restricted} * (2 * (uv|rs) - (us|rv))
-    // F_inactive = Hcore + F_frozen + F_restricted
-    // D_{uv}^{frozen} = \sum_{i}^{frozen} C_{ui} * C_{vi}
-    // D_{uv}^{restricted} = \sum_{i}^{restricted} C_{ui} * C_{vi}
-
-    // grab part of Ca for inactive docc
-    auto Cdocc = std::make_shared<psi::Matrix>("C_INACTIVE", nirrep_, nsopi_, ndoccpi_);
-    for (int h = 0; h < nirrep_; h++) {
-        for (int i = 0; i < ndoccpi_[h]; i++) {
-            Cdocc->set_column(h, i, C_->get_column(h, i));
-        }
-    }
-
-    // JK build
-    std::vector<std::shared_ptr<psi::Matrix>>& Cl = JK_->C_left();
-    std::vector<std::shared_ptr<psi::Matrix>>& Cr = JK_->C_right();
-
-    JK_->set_do_K(true);
-    Cl.clear();
-    Cr.clear();
-    Cl.push_back(Cdocc); // Cr is the same as Cl
-    JK_->compute();
-
-    auto J = JK_->J()[0];
-    J->scale(2.0);
-    J->subtract(JK_->K()[0]);
-    J->add(H_ao_);
-
-    F_closed_->copy(J);
-    F_closed_->transform(C_);
-
-    // put it in Ambit BlockedTensor format
-    format_fock(F_closed_, Fc_);
-
-    // compute closed-shell energy
-    J->add(H_ao_);
-    e_closed_ = J->vector_dot(psi::linalg::doublet(Cdocc, Cdocc, false, true));
-
-    if (debug_print_) {
-        F_closed_->print();
-        outfile->Printf("\n  Frozen-core energy   %20.15f", ints_->frozen_core_energy());
-        outfile->Printf("\n  Closed-shell energy  %20.15f", e_closed_);
-    }
-}
-
 void CASSCF_ORB_GRAD::build_fock(bool rebuild_inactive) {
     if (rebuild_inactive) {
         build_fock_inactive();
@@ -546,6 +498,51 @@ void CASSCF_ORB_GRAD::build_fock(bool rebuild_inactive) {
     }
 }
 
+void CASSCF_ORB_GRAD::build_fock_inactive() {
+    /* F_inactive = Hcore + F_frozen + F_restricted
+     *
+     * F_frozen = D_{uv}^{frozen} * (2 * (uv|rs) - (us|rv))
+     * D_{uv}^{frozen} = \sum_{i}^{frozen} C_{ui} * C_{vi}
+     *
+     * F_restricted = D_{uv}^{restricted} * (2 * (uv|rs) - (us|rv))
+     * D_{uv}^{restricted} = \sum_{i}^{restricted} C_{ui} * C_{vi}
+     *
+     * u,v,r,s: AO indices; i: MO indices
+     */
+
+    // grab part of Ca for inactive docc
+    auto Cdocc = std::make_shared<psi::Matrix>("C_INACTIVE", nirrep_, nsopi_, ndoccpi_);
+    for (int h = 0; h < nirrep_; h++) {
+        for (int i = 0; i < ndoccpi_[h]; i++) {
+            Cdocc->set_column(h, i, C_->get_column(h, i));
+        }
+    }
+
+    // JK build
+    build_JK_fock(Cdocc, Cdocc);
+
+    auto J = JK_->J()[0];
+    J->scale(2.0);
+    J->subtract(JK_->K()[0]);
+    J->add(H_ao_);
+
+    F_closed_->copy(J);
+    F_closed_->transform(C_);
+
+    // put it in Ambit BlockedTensor format
+    format_fock(F_closed_, Fc_);
+
+    // compute closed-shell energy
+    J->add(H_ao_);
+    e_closed_ = J->vector_dot(psi::linalg::doublet(Cdocc, Cdocc, false, true));
+
+    if (debug_print_) {
+        F_closed_->print();
+        outfile->Printf("\n  Frozen-core energy   %20.15f", ints_->frozen_core_energy());
+        outfile->Printf("\n  Closed-shell energy  %20.15f", e_closed_);
+    }
+}
+
 void CASSCF_ORB_GRAD::build_fock_active() {
     // Implementation Notes (in AO basis)
     // F_active = D_{uv}^{active} * ( (uv|rs) - 0.5 * (us|rv) )
@@ -563,15 +560,7 @@ void CASSCF_ORB_GRAD::build_fock_active() {
     auto Cactv_dressed = psi::linalg::doublet(Cactv, rdm1_, false, false);
 
     // JK build
-    std::vector<std::shared_ptr<psi::Matrix>>& Cl = JK_->C_left();
-    std::vector<std::shared_ptr<psi::Matrix>>& Cr = JK_->C_right();
-
-    JK_->set_do_K(true);
-    Cl.clear();
-    Cr.clear();
-    Cl.push_back(Cactv);
-    Cr.push_back(Cactv_dressed);
-    JK_->compute();
+    build_JK_fock(Cactv, Cactv_dressed);
 
     Fock_->copy(JK_->K()[0]);
     Fock_->scale(-0.5);
@@ -601,6 +590,26 @@ void CASSCF_ORB_GRAD::format_fock(psi::SharedMatrix Fock, ambit::BlockedTensor F
             value = 0.0;
         }
     });
+}
+
+void CASSCF_ORB_GRAD::build_JK_fock(psi::SharedMatrix Cl, psi::SharedMatrix Cr) {
+    /* JK build for Fock-like term
+     * J: sum_{rs} D_{rs} (rs|PQ) = sum_{rsRS} D_{rs} C_{Rr} C_{Ss} (RS|PQ)
+     * K: sum_{rs} D_{rs} (rQ|Ps) = sum_{rsRS} D_{rs} C_{Rr} C_{Ss} (RQ|PS)
+     *
+     * Cl_{Rs} = sum_{r} D_{rs} C_{Rr}
+     * Cr_{Ss} = C_{Ss}
+     *
+     * r,s: MO indices; P,Q,R,S: AO indices; C: MO coefficients; D: any matrix
+     */
+    JK_->set_do_K(true);
+    std::vector<std::shared_ptr<psi::Matrix>>& Cls = JK_->C_left();
+    std::vector<std::shared_ptr<psi::Matrix>>& Crs = JK_->C_right();
+    Cls.clear();
+    Crs.clear();
+    Cls.push_back(Cl);
+    Crs.push_back(Cr);
+    JK_->compute();
 }
 
 double CASSCF_ORB_GRAD::evaluate(psi::SharedVector x, psi::SharedVector g, bool do_g) {
@@ -885,7 +894,8 @@ std::shared_ptr<ActiveSpaceIntegrals> CASSCF_ORB_GRAD::active_space_ints() {
 
 void CASSCF_ORB_GRAD::canonicalize_final() {
     auto U = canonicalize();
-    C_->gemm(false, false, 1.0, C_, U, 0.0);
+    U_->gemm(false, false, 1.0, U_, U, 0.0);
+    C_->gemm(false, false, 1.0, C0_, U_, 0.0);
     build_mo_integrals();
 }
 

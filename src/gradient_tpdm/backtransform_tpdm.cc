@@ -45,7 +45,7 @@ TPDMBackTransform::TPDMBackTransform(SharedWavefunction wfn, SpaceVec spaces,
     : IntegralTransform(wfn, spaces, transformationType, outputType, moOrdering, frozenOrbitals,
                         init) {}
 
-void TPDMBackTransform::backtransform_density() {
+void TPDMBackTransform::backtransform_density(bool test) {
     outfile->Printf("\n\n  ==> Back-transforming MO-basis TPDMs <==\n");
 
     check_initialized();
@@ -67,7 +67,7 @@ void TPDMBackTransform::backtransform_density() {
             "MOSpace::all must be amongst the spaces passed to the integral object's constructor");
 
     if (transformationType_ == TransformationType::Restricted) {
-        backtransform_tpdm_restricted();
+        backtransform_tpdm_restricted(test);
     } else {
         backtransform_tpdm_unrestricted();
     }
