@@ -282,11 +282,11 @@ class CASSCF_ORB_GRAD {
 
     /// The orbital Lagrangian matrix in AO basis
     psi::SharedMatrix W_;
-    /// compute Lagrangian matrix and push to Psi4
+    /// compute AO Lagrangian matrix and push to Psi4
     void compute_Lagrangian();
 
-    /// Return the MO 1-RDM
-    psi::SharedMatrix opdm();
+    /// compute AO 1-RDM and push to Psi4
+    void compute_opdm_ao();
 
     /// Dump the MO 2-RDM to file using IWL
     void dump_tpdm_iwl();

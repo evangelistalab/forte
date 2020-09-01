@@ -52,8 +52,6 @@
 #include "gradient_tpdm/backtransform_tpdm.h"
 #include "casscf/casscf_orb_grad.h"
 
-#define PSIF_FORTE_AO_TPDM_TEMP 410
-
 using namespace psi;
 using namespace ambit;
 
@@ -101,30 +99,13 @@ void CASSCF_ORB_GRAD::compute_nuclear_gradient() {
         solve_Zfc();
         Zfc_->print();
         Wfc_->print();
-
-        //        build_Wfc();
-        //        Wfc_->print();
     }
 
     // back-transform Lagrangian
-    auto L = compute_Lagrangian();
-    //    L->print();
-    //    L->back_transform(C_);
-    //    L->set_name("Lagrangian AO Back-Transformed");
-    //    ints_->wfn()->Lagrangian()->copy(L);
+    compute_Lagrangian();
 
-    auto W = Wfc_->clone();
-    W->back_transform(C0_);
-    ints_->wfn()->Lagrangian()->copy(W);
-
-    // 1-RDM
-    auto D1 = opdm();
-    D1->scale(0.5);
-    D1->print();
-    D1->back_transform(C_);
-    D1->set_name("D1a AO Back-Transformed");
-    ints_->wfn()->Da()->copy(D1);
-    ints_->wfn()->Db()->copy(D1);
+    // back-transform 1-RDM
+    compute_opdm_ao();
 
     // 2-RDM
     dump_tpdm_iwl();
@@ -139,39 +120,11 @@ void CASSCF_ORB_GRAD::compute_nuclear_gradient() {
     transform->set_print(debug_print_ ? 5 : print_);
     transform->backtransform_density();
 
-    // rename file
-    transform->get_psio()->rename_file(PSIF_AO_TPDM, PSIF_MO_AA_TPDM);
-
     // 2-RDM from CPSCF
     dump_tpdm_iwl_hf();
 
     ints_->wfn()->Ca()->copy(C0_);
     transform->backtransform_density(true);
-
-    //    // add together
-    //    psi::dpdbuf4 d2_mcscf, d2_scf;
-    //    transform->get_psio()->open(PSIF_AO_TPDM, PSIO_OPEN_OLD);
-    //    transform->get_psio()->open(PSIF_MO_AA_TPDM, PSIO_OPEN_OLD);
-    //    global_dpd_->buf4_init(&d2_scf, PSIF_AO_TPDM, 0, transform->DPD_ID("[n>=n]+"),
-    //    transform->DPD_ID("[n,n]"),
-    //                           transform->DPD_ID("[n>=n]+"), transform->DPD_ID("[n>=n]+"), 0, "SO
-    //                           Basis TPDM (nn|nn)");
-    //    global_dpd_->buf4_init(&d2_mcscf, PSIF_MO_AA_TPDM, 0, transform->DPD_ID("[n>=n]+"),
-    //    transform->DPD_ID("[n,n]"),
-    //                           transform->DPD_ID("[n>=n]+"), transform->DPD_ID("[n>=n]+"), 0, "SO
-    //                           Basis TPDM (nn|nn)");
-    ////    global_dpd_->buf4_print(&d2_mcscf, "outfile", 1);
-    ////    global_dpd_->buf4_print(&d2_scf, "outfile", 1);
-
-    //    outfile->Printf("\nHERE!!!");
-    //    global_dpd_->buf4_axpy(&d2_mcscf, &d2_scf, 1.0);
-    //    outfile->Printf("\nHERE!!!");
-
-    //    global_dpd_->buf4_close(&d2_mcscf);
-    //    global_dpd_->buf4_close(&d2_scf);
-
-    //    transform->get_psio()->close(PSIF_AO_TPDM, 1);
-    //    transform->get_psio()->close(PSIF_MO_AA_TPDM, 0);
 }
 
 void CASSCF_ORB_GRAD::format_A_matrix() {
@@ -510,7 +463,7 @@ void CASSCF_ORB_GRAD::compute_Lagrangian() {
         for (int h = 0; h < nirrep_; ++h) {
             for (int i = 0; i < hf_ndoccpi_[h]; ++i) {
                 for (int j = i; j < hf_ndoccpi_[h]; ++j) {
-                    double value = Am_->get(h, i, j) + Zfc_->get(h, i, j) * epsilon_->get(h, i) +
+                    double value = Am_->get(h, i, j) + Z_->get(h, i, j) * epsilon_->get(h, i) +
                                    0.5 * L->get(h, i, j);
                     W_->set(h, i, j, value);
                     W_->set(h, j, i, value);
@@ -522,7 +475,7 @@ void CASSCF_ORB_GRAD::compute_Lagrangian() {
         for (int h = 0; h < nirrep_; ++h) {
             for (int a = hf_ndoccpi_[h]; a < nmopi_[h]; ++a) {
                 for (int b = a; b < nmopi_[h]; ++b) {
-                    double value = Am_->get(h, a, b) + Zfc_->get(h, a, b) * epsilon_->get(h, a);
+                    double value = Am_->get(h, a, b) + Z_->get(h, a, b) * epsilon_->get(h, a);
                     W_->set(h, a, b, value);
                     W_->set(h, b, a, value);
                 }
@@ -533,7 +486,7 @@ void CASSCF_ORB_GRAD::compute_Lagrangian() {
         for (int h = 0; h < nirrep_; ++h) {
             for (int i = 0; i < hf_ndoccpi_[h]; ++i) {
                 for (int a = hf_ndoccpi_[h]; a < nmopi_[h]; ++a) {
-                    double value = Am_->get(h, i, a) + Zfc_->get(h, i, a) * epsilon_->get(h, i);
+                    double value = Am_->get(h, i, a) + Z_->get(h, i, a) * epsilon_->get(h, i);
                     W_->set(h, i, a, value);
                     W_->set(h, a, i, value);
                 }
@@ -546,15 +499,16 @@ void CASSCF_ORB_GRAD::compute_Lagrangian() {
 
     // transform to AO and push to Psi4 Wavefunction
     ints_->wfn()->Lagrangian()->copy(W_);
+    ints_->wfn()->Lagrangian()->set_name("Lagrangian AO Back-Transformed");
 }
 
-psi::SharedMatrix CASSCF_ORB_GRAD::opdm() {
-    auto D1 = std::make_shared<psi::Matrix>("OPDM (MO)", nmopi_, nmopi_);
+void CASSCF_ORB_GRAD::compute_opdm_ao() {
+    auto D1 = std::make_shared<psi::Matrix>("OPDM", nmopi_, nmopi_);
 
     // inactive docc part
     for (int h = 0; h < nirrep_; ++h) {
         for (int i = 0; i < ndoccpi_[h]; ++i) {
-            D1->set(h, i, i, 2.0);
+            D1->set(h, i, i, 1.0);
         }
     }
 
@@ -565,32 +519,23 @@ psi::SharedMatrix CASSCF_ORB_GRAD::opdm() {
             auto nu = u + offset;
             for (int v = u; v < nactvpi_[h]; ++v) {
                 auto nv = v + offset;
-                D1->set(h, nu, nv, rdm1_->get(h, u, v));
-                D1->set(h, nv, nu, rdm1_->get(h, v, u));
+                D1->set(h, nu, nv, 0.5 * rdm1_->get(h, u, v));
+                D1->set(h, nv, nu, 0.5 * rdm1_->get(h, v, u));
             }
         }
     }
 
-    auto Z = psi::linalg::triplet(U_, Zfc_, U_, true, false, false);
-    Z->set_name("Zfc (MCSCF Basis)");
-    Z->print();
+    D1 = psi::linalg::triplet(C_, D1, C_, false, false, true);
+    D1->set_name("D1a AO Back-Transformed");
 
-    D1->add(Z);
+    // add Z vector due to frozen-core response
+    if (is_frozen_orbs_) {
+        D1->add(psi::linalg::triplet(C0_, Z_, C0_, false, false, true));
+    }
 
-    //    // frozen-core response part
-    //    if (nfrzc_) {
-    //        for (int h = 0; h < nirrep_; ++h) {
-    //            for (int I = 0; I < nfrzcpi_[h]; ++I) {
-    //                for (int a = 0, offset_a = hf_ndoccpi_[h]; a < hf_nuoccpi_[h]; ++a) {
-    //                    double w = 0.5 * Zfc_->get(h, I, a);
-    //                    D1->set(h, I, a + offset_a, w);
-    //                    D1->add(h, a + offset_a, I, w);
-    //                }
-    //            }
-    //        }
-    //    }
-
-    return D1;
+    // push to Psi4
+    ints_->wfn()->Da()->copy(D1);
+    ints_->wfn()->Db()->copy(D1);
 }
 
 void CASSCF_ORB_GRAD::dump_tpdm_iwl() {
