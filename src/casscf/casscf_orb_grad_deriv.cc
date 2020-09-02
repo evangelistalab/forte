@@ -96,8 +96,6 @@ void CASSCF_ORB_GRAD::compute_nuclear_gradient() {
 
         // solve CPSCF equations
         solve_cpscf();
-        Zfc_->print();
-        Wfc_->print();
     }
 
     // back-transform Lagrangian
@@ -113,10 +111,13 @@ void CASSCF_ORB_GRAD::compute_nuclear_gradient() {
     std::vector<std::shared_ptr<psi::MOSpace>> spaces{psi::MOSpace::all};
     auto transform = std::make_shared<psi::TPDMBackTransform>(
         ints_->wfn(), spaces,
-        psi::IntegralTransform::TransformationType::Restricted, // Transformation type
+        psi::IntegralTransform::TransformationType::Unrestricted, // Transformation type
         psi::IntegralTransform::OutputType::DPDOnly,            // Output buffer
         psi::IntegralTransform::MOOrdering::PitzerOrder,        // MO ordering (does not matter)
         psi::IntegralTransform::FrozenOrbitals::None);          // Frozen orbitals
+    if (is_frozen_orbs_) {
+        transform->set_Ca_additional(C0_);
+    }
     transform->set_print(debug_print_ ? 5 : print_);
     transform->backtransform_density();
 }
@@ -310,7 +311,7 @@ SharedMatrix CASSCF_ORB_GRAD::contract_Z_Lsuper() {
     // super matrix L_{pq,rs} = 4 * (pq|rs) - (pr|sq) - (ps|rq)
 
     // C dressed by Z_pq
-    auto Cdressed = psi::linalg::doublet(C0_, Zfc_, false, false);
+    auto Cdressed = psi::linalg::doublet(C0_, Z_, false, false);
 
     // JK build
     build_JK_fock(C0_, Cdressed);

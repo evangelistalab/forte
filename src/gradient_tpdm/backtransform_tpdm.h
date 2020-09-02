@@ -77,7 +77,10 @@ class TPDMBackTransform : public IntegralTransform {
 
     /// Back-transform the MO 2-RDM to AO
     /// This is a modified version of backtransform_density() of Psi4 libtrans.
-    void backtransform_density(bool test = false);
+    void backtransform_density();
+
+    /// Set additional orbital coefficients
+    void set_Ca_additional(SharedMatrix Ca) { Ca_forte_ = Ca; }
 
   protected:
     /// Presort MO 2-RDM using unrestricted formalism (indexing change of Psi4)
@@ -88,11 +91,15 @@ class TPDMBackTransform : public IntegralTransform {
     /// Presort MO 2-RDM using restricted formalism (indexing change of Psi4)
     void presort_mo_tpdm_restricted();
     /// Back-transform MO 2-RDM using restricted formalism (a copy of Psi4 libtrans)
-    void backtransform_tpdm_restricted(bool test = false);
+    void backtransform_tpdm_restricted();
 
     //    void sort_so_tpdm(const dpdbuf4* B, int irrep, size_t first_row, size_t num_rows,
     //                      bool first_run);
     //    void setup_tpdm_buffer(const dpdbuf4* D);
+
+    /// Additional orbital coefficients, different from wavefunction
+    /// e.g., MCSCF with frozen HF orbitals
+    SharedMatrix Ca_forte_;
 };
 
 } // namespace psi
