@@ -73,6 +73,7 @@ using op_t = std::pair<double, std::vector<std::tuple<bool, bool, int>>>;
  */
 class GeneralOperator {
   public:
+    std::pair<std::vector<SingleOperator>, double> get_operator(size_t n);
     void add_operator(const std::vector<op_t>& op_list, double value = 0.0);
     void add_operator2(const std::vector<SingleOperator>& ops, double value = 0.0);
     void pop_operator();
@@ -84,6 +85,7 @@ class GeneralOperator {
     const std::vector<SingleOperator>& op_list() const { return op_list_; }
     std::vector<std::string> str();
     static std::vector<std::pair<std::string, double>> timing();
+    static void reset_timing();
 
   private:
     std::vector<double> amplitudes_;
@@ -100,12 +102,11 @@ det_hash<double> apply_exp_operator_fast(GeneralOperator& gop, const det_hash<do
                                          double scaling_factor = 1.0, int maxk = 20,
                                          double screen_thresh = 1.0e-12);
 
-
 det_hash<double> apply_operator_fast2(GeneralOperator& gop, const det_hash<double>& state0,
-                                     double screen_thresh = 1.0e-12);
+                                      double screen_thresh = 1.0e-12);
 det_hash<double> apply_exp_operator_fast2(GeneralOperator& gop, const det_hash<double>& state0,
-                                         double scaling_factor = 1.0, int maxk = 20,
-                                         double screen_thresh = 1.0e-12);
+                                          double scaling_factor = 1.0, int maxk = 20,
+                                          double screen_thresh = 1.0e-12);
 
 det_hash<double> apply_exp_ah_factorized_fast(GeneralOperator& gop, const det_hash<double>& state0,
                                               bool inverse = false);

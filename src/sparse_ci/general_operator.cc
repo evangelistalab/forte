@@ -45,6 +45,9 @@ double time_apply_exp_operator_fast2 = 0.0;
 double time_apply_hamiltonian = 0.0;
 double time_get_projection = 0.0;
 size_t ops_apply_hamiltonian = 0;
+size_t ops_hash_push = 0;
+size_t ops_screen = 0;
+size_t ops_det_visit = 0;
 
 namespace forte {
 
@@ -143,6 +146,13 @@ void GeneralOperator::add_operator2(const std::vector<SingleOperator>& ops, doub
     }
 }
 
+std::pair<std::vector<SingleOperator>, double> GeneralOperator::get_operator(size_t n) {
+    size_t begin = op_indices_[n].first;
+    size_t end = op_indices_[n].second;
+    std::vector<SingleOperator> ops(op_list_.begin() + begin, op_list_.begin() + end);
+    return std::make_pair(ops, amplitudes_[n]);
+}
+
 void GeneralOperator::pop_operator() {
     if (nops() > 0) {
         amplitudes_.pop_back();
@@ -204,11 +214,29 @@ std::vector<std::pair<std::string, double>> GeneralOperator::timing() {
     t.push_back(std::make_pair("time_apply_hamiltonian", time_apply_hamiltonian));
     t.push_back(
         std::make_pair("ops_apply_hamiltonian", static_cast<double>(ops_apply_hamiltonian)));
+    t.push_back({"ops_hash_push", static_cast<double>(ops_hash_push)});
+    t.push_back({"ops_screen", static_cast<double>(ops_screen)});
+    t.push_back({"ops_det_visit", static_cast<double>(ops_det_visit)});
     t.push_back({"time_get_projection", static_cast<double>(time_get_projection)});
     t.push_back({"time_apply_operator_fast2", time_apply_operator_fast2});
     t.push_back({"time_apply_exp_operator_fast2", time_apply_exp_operator_fast2});
 
     return t;
+}
+
+void GeneralOperator::reset_timing() {
+    time_apply_exp_ah_factorized_fast = 0.0;
+    time_energy_expectation_value = 0.0;
+    time_apply_operator_fast = 0.0;
+    time_apply_exp_operator_fast = 0.0;
+    time_apply_operator_fast2 = 0.0;
+    time_apply_exp_operator_fast2 = 0.0;
+    time_apply_hamiltonian = 0.0;
+    time_get_projection = 0.0;
+    ops_apply_hamiltonian = 0;
+    ops_hash_push = 0;
+    ops_screen = 0;
+    ops_det_visit = 0;
 }
 
 det_hash<double> apply_operator(GeneralOperator& gop, const det_hash<double>& state) {
@@ -400,10 +428,13 @@ det_hash<double> apply_operator_fast2(GeneralOperator& gop, const det_hash<doubl
                     if (d.fast_a_and_b_equal_b(op.ann()) and d.fast_a_and_b_eq_zero(ucre)) {
                         double value = apply_op_safe(d, op.cre(), op.ann()) * tau * c;
                         new_terms[d] += value;
+                        ++ops_hash_push;
                     }
+                    ++ops_screen;
                 } else {
                     break;
                 }
+                ++ops_det_visit;
             }
         }
     }
@@ -569,9 +600,19 @@ det_hash<double> apply_hamiltonian(std::shared_ptr<ActiveSpaceIntegrals> as_ints
 
     Determinant new_det;
 
+    //    std::vector<int> aocc(nmo);
+    //    std::vector<int> bocc(nmo);
+    //    std::vector<int> avir(nmo);
+    //    std::vector<int> bvir(nmo);
+
     for (const auto& det_c : state0) {
         const Determinant& det = det_c.first;
         const double c = det_c.second;
+
+        //        det.get_alfa_occ(aocc, nmo);
+        //        det.get_beta_occ(bocc, nmo);
+        //        det.get_alfa_vir(avir, nmo);
+        //        det.get_beta_vir(bvir, nmo);
 
         std::vector<int> aocc = det.get_alfa_occ(nmo);
         std::vector<int> bocc = det.get_beta_occ(nmo);

@@ -162,6 +162,11 @@ def test_sparse_ci4():
     assert wfn2[det("2200")] == pytest.approx(1.0, abs=1e-9)
     print_wfn(wfn2,4)
 
+    ops, l = gop.get_operator(0)
+    gop2 = forte.GeneralOperator()
+    gop2.add_operator2(ops,l)
+    print(gop2.str())
+
 test_sparse_ci4()
 
 

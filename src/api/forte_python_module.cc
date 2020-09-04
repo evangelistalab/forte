@@ -177,7 +177,9 @@ void export_Determinant(py::module& m) {
 
     py::class_<GeneralOperator>(m, "GeneralOperator")
         .def(py::init<>())
+        .def("get_operator", &GeneralOperator::get_operator)
         .def("add_operator", &GeneralOperator::add_operator)
+        .def("add_operator2", &GeneralOperator::add_operator2)
         .def("pop_operator", &GeneralOperator::pop_operator)
         .def("nops", &GeneralOperator::nops)
         .def("set_amplitudes", &GeneralOperator::set_amplitudes)
@@ -186,7 +188,8 @@ void export_Determinant(py::module& m) {
         .def("op_indices", &GeneralOperator::op_indices)
         .def("op_list", &GeneralOperator::op_list)
         .def("str", &GeneralOperator::str)
-        .def("timing", &GeneralOperator::timing);
+        .def("timing", &GeneralOperator::timing)
+        .def("reset_timing", &GeneralOperator::reset_timing);
 
     m.def("apply_operator", &apply_operator);
     m.def("apply_exp_ah_factorized", &apply_exp_ah_factorized);
@@ -209,6 +212,9 @@ void export_Determinant(py::module& m) {
           "screen_thresh"_a = 1.0e-12);
     m.def("get_projection", &get_projection);
     m.def("overlap", &overlap);
+
+
+
 
     py::class_<SingleOperator>(m, "SingleOperator")
         .def("factor", &SingleOperator::factor)
