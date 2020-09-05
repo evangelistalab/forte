@@ -306,12 +306,11 @@ class CASSCF_ORB_GRAD {
     /// Z vector for CPSCF equations
     psi::SharedMatrix Z_;
 
-    /// Solve Z vector equation if there are frozen-core orbitals
+    /// Solve Z vector equation if there are frozen orbitals
     void solve_cpscf();
-    /// Build Z independent part of the CP-MCSCF equation
-    psi::SharedMatrix build_Zfc_fixed();
-    /// Build L matrix for every iteration
-    psi::SharedMatrix contract_Z_Lsuper();
+
+    /// Contract Roothaan-Bagus supermatrix with Z
+    psi::SharedMatrix contract_RB_Z();
 
     /// Solve Z vector as in JCP, 94, 6708-6715 (1991)
     void solve_cpscf_jcp();
@@ -323,24 +322,6 @@ class CASSCF_ORB_GRAD {
     psi::SharedMatrix Fock_mixed_;
     /// Build mixed Fock matrix using HF and MCSCF orbitals
     void build_mixed_fock();
-
-    /// T matrix, T_pq = U_{ip} U_{iq} where U transforms from HF orbitals to MCSCF orbitals
-    psi::SharedMatrix T_;
-    /// Frozen core part of T (nfrzc x nmo)
-    psi::SharedMatrix Tfc_;
-
-    /// Orbital response for the mixed Fock constraint
-    psi::SharedMatrix X_sI_;
-    psi::SharedMatrix X_Is_;
-
-    /// Z matrix (1-RDM relaxed part), nfrzc by nuocc of HF
-    psi::SharedMatrix Zfc_;
-
-    /// W matrix (Lagrangian, relaxed part), nfrzc by nuocc of HF
-    psi::SharedMatrix Wfc_;
-
-    /// Build W matrix after Zfc is solved
-    void build_Wfc();
 
     /// Dump the HF MO 2-RDM to file using IWL
     void dump_tpdm_iwl_hf();

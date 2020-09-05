@@ -71,6 +71,9 @@ void CASSCF_ORB_GRAD::compute_nuclear_gradient() {
 
         print_h2("Solving CPSCF Equations for MCSCF Gradient with Frozen Orbitals");
 
+        // grab Hartree-Fock orbital energies from Psi4
+        epsilon_ = ints_->wfn()->epsilon_a();
+
         // set up HF orbitals
         hf_ndoccpi_ = ints_->wfn()->doccpi();
         hf_nuoccpi_ = nmopi_ - ints_->wfn()->doccpi();
@@ -91,9 +94,6 @@ void CASSCF_ORB_GRAD::compute_nuclear_gradient() {
         Am_ = psi::linalg::triplet(U_, Am_, U_, false, false, true);
         Am_->set_name("A (SCF)");
         Am_->print();
-
-        // grab Hartree-Fock orbital energies from Psi4
-        epsilon_ = ints_->wfn()->epsilon_a();
 
         // solve CPSCF equations
         solve_cpscf();
@@ -221,7 +221,7 @@ void CASSCF_ORB_GRAD::solve_cpscf() {
     outfile->Printf("\n    *----------------------*");
 
     while (iter <= maxiter) {
-        auto L = contract_Z_Lsuper();
+        auto L = contract_RB_Z();
 
         for (int h = 0; h < nirrep_; ++h) {
             for (int i = 0; i < hf_ndoccpi_[h]; ++i) {
@@ -478,62 +478,9 @@ void CASSCF_ORB_GRAD::solve_cpscf_jcp() {
     Xao->print();
 }
 
-SharedMatrix CASSCF_ORB_GRAD::build_Zfc_fixed() {
-    auto rhs = std::make_shared<psi::Matrix>("Z_fc Fixed", nfrzcpi_, nmopi_);
-
-    // fill in data
-    for (int h = 0, offset = 0, offset_a = 0; h < nirrep_; ++h) {
-        offset_a += hf_ndoccpi_[h];
-
-        for (int I = 0; I < nfrzcpi_[h]; ++I) {
-            // space label and index of I in ambit Tensor
-            std::string space_I = mos_rel_space_[I + offset].first;
-            size_t n_I = mos_rel_space_[I + offset].second;
-            size_t size_I = label_to_mos_[space_I].size();
-
-            for (int p = 0; p < nmopi_[h]; ++p) {
-                // space label and index of p in ambit Tensor
-                std::string space_p = mos_rel_space_[p + offset].first;
-                size_t n_p = mos_rel_space_[p + offset].second;
-                size_t size_p = label_to_mos_[space_p].size();
-
-                // A_{pI}
-                double value = A_.block(space_p + space_I).data()[n_p * size_I + n_I];
-
-                // A_{Ip}
-                value -= A_.block(space_I + space_p).data()[n_I * size_p + n_p];
-
-                // set value
-                rhs->set(h, I, p, 2.0 * value);
-            }
-
-            //            for (int a = 0; a < hf_nuoccpi_[h]; ++a) {
-            //                // space label and index of a in ambit Tensor
-            //                std::string space_a = mos_rel_space_[a + offset_a].first;
-            //                size_t n_a = mos_rel_space_[a + offset_a].second;
-            //                size_t size_a = label_to_mos_[space_a].size();
-
-            //                // A_{aI}
-            //                double value = A_.block(space_a + space_I).data()[n_a * size_I + n_I];
-
-            //                // A_{Ia}
-            //                value -= A_.block(space_I + space_a).data()[n_I * size_a + n_a];
-
-            //                // set value
-            //                rhs->set(h, I, a, 2.0 * value);
-            //            }
-        }
-
-        offset += nmopi_[h];
-        //        offset_a += hf_nuoccpi_[h];
-    }
-
-    return rhs;
-}
-
-SharedMatrix CASSCF_ORB_GRAD::contract_Z_Lsuper() {
+SharedMatrix CASSCF_ORB_GRAD::contract_RB_Z() {
     // compute sum_{pq} Z_{pq} L_{pq,rs} using Hartree-Fock orbitals
-    // super matrix L_{pq,rs} = 4 * (pq|rs) - (pr|sq) - (ps|rq)
+    // Roothaan-Bagus supermatrix L_{pq,rs} = 4 * (pq|rs) - (pr|sq) - (ps|rq)
 
     // C dressed by Z_pq
     auto Cdressed = psi::linalg::doublet(C0_, Z_, false, false);
@@ -550,64 +497,27 @@ SharedMatrix CASSCF_ORB_GRAD::contract_Z_Lsuper() {
     return psi::linalg::triplet(C0_, J, C0_, true, false, false);
 }
 
-void CASSCF_ORB_GRAD::build_Wfc() {
-    for (int h = 0, offset_I = 0, offset_a = 0; h < nirrep_; ++h) {
-        offset_a += hf_ndoccpi_[h];
-
-        for (int I = 0; I < nfrzcpi_[h]; ++I) {
-            double epsilon_I = epsilon_->get(h, I);
-
-            // space label and index of I in ambit Tensor
-            std::string space_I = mos_rel_space_[I + offset_I].first;
-            size_t n_I = mos_rel_space_[I + offset_I].second;
-
-            for (int a = 0; a < hf_nuoccpi_[h]; ++a) {
-                // space label and index of a in ambit Tensor
-                std::string space_a = mos_rel_space_[a + offset_a].first;
-                size_t n_a = mos_rel_space_[a + offset_a].second;
-                size_t size_a = label_to_mos_[space_a].size();
-
-                double value = 0.5 * epsilon_I * Zfc_->get(h, I, a);
-
-                // add A_{Ia} part if a is active index
-                if (space_a == "a")
-                    value += A_.block(space_I + space_a).data()[n_I * size_a + n_a];
-
-                Wfc_->set(h, I, a, value);
-            }
-        }
-
-        offset_I += nmopi_[h];
-        offset_a += hf_nuoccpi_[h];
-    }
-}
-
 void CASSCF_ORB_GRAD::compute_Lagrangian() {
+    auto W = std::make_shared<psi::Matrix>();
+
     if (not is_frozen_orbs_) {
-        // A matrix is equivalent to W when there is no frozen orbitals
-        W_ = Am_->clone();
-
-        W_->print();
-        // transform to AO
-        W_->back_transform(C_);
-        W_->print();
+        // The A matrix is equivalent to W when there are no frozen orbitals
+        // We can directly back transform the A matrix
+        W = psi::linalg::triplet(C_, Am_, C_, false, false, true);
     } else {
-        Z_->print();
-        W_ = std::make_shared<psi::Matrix>("Lagrangian", nmopi_, nmopi_);
-
-        auto L = contract_Z_Lsuper();
-        L->set_name("Z * Lsuper");
-        L->print();
+        // If there are frozen orbitals, we have solved the CP-SCF equation in HF basis
+        auto Wmo = std::make_shared<psi::Matrix>("Lagrangian MO (SCF)", nmopi_, nmopi_);
 
         // occupied-occupied part
+        auto L = contract_RB_Z();
         for (int h = 0; h < nirrep_; ++h) {
             for (int i = 0; i < hf_ndoccpi_[h]; ++i) {
                 for (int j = i; j < hf_ndoccpi_[h]; ++j) {
                     double value = Am_->get(h, i, j) + Am_->get(h, j, i);
                     value += Z_->get(h, i, j) * (epsilon_->get(h, i) + epsilon_->get(h, j));
                     value += 0.5 * (L->get(h, i, j) + L->get(h, j, i));
-                    W_->set(h, i, j, 0.5 * value);
-                    W_->set(h, j, i, 0.5 * value);
+                    Wmo->set(h, i, j, 0.5 * value);
+                    Wmo->set(h, j, i, 0.5 * value);
                 }
             }
         }
@@ -618,8 +528,8 @@ void CASSCF_ORB_GRAD::compute_Lagrangian() {
                 for (int b = a; b < nmopi_[h]; ++b) {
                     double value = Am_->get(h, a, b) + Am_->get(h, b, a);
                     value += Z_->get(h, a, b) * (epsilon_->get(h, a) + epsilon_->get(h, b));
-                    W_->set(h, a, b, 0.5 * value);
-                    W_->set(h, b, a, 0.5 * value);
+                    Wmo->set(h, a, b, 0.5 * value);
+                    Wmo->set(h, b, a, 0.5 * value);
                 }
             }
         }
@@ -630,60 +540,34 @@ void CASSCF_ORB_GRAD::compute_Lagrangian() {
                 for (int a = hf_ndoccpi_[h]; a < nmopi_[h]; ++a) {
                     double value = Am_->get(h, i, a);
                     value += Z_->get(h, i, a) * epsilon_->get(h, i);
-                    W_->set(h, i, a, value);
-                    W_->set(h, a, i, value);
-
-//                    double v = Am_->get(h, i, a) + Am_->get(h, a, i);
-                    double v = 0.0;
-                    v += Z_->get(h, i, a) * (epsilon_->get(h, i) + epsilon_->get(h, a));
-                    v += 0.5 * L->get(h, a, i);
-                    v *= 0.5;
-                    outfile->Printf("\n  h = %d, i = %2d, a = %2d, value = %20.15f, v = %20.15f, diff = %.15f",
-                                    h, i, a, value, v, value-v);
+                    Wmo->set(h, i, a, value);
+                    Wmo->set(h, a, i, value);
                 }
             }
         }
-        W_->print();
+
+        if (debug_print_)
+            Wmo->print();
 
         // transform to AO
-        W_->back_transform(C0_);
-        W_->print();
-
-        auto W = psi::linalg::triplet(C_, Am_, C_, false, false, true);
-        W->set_name("Lagrangian PAPER");
-
-        auto T = std::make_shared<psi::Matrix>("X SCF", hf_ndoccpi_, nmopi_);
-        for (int h = 0; h < nirrep_; ++h) {
-            for (int p = 0; p < hf_ndoccpi_[h]; ++p) {
-                for (int r = 0; r < nmopi_[h]; ++r) {
-                    double v = (epsilon_->get(h, p) + epsilon_->get(h, r)) * Z_->get(h, r, p);
-                    T->set(h, p, r, v);
-                }
-            }
-        }
-        T->print();
-        auto Csub = std::make_shared<psi::Matrix>("C0 docc", nsopi_, hf_ndoccpi_);
-        for (int h = 0; h < nirrep_; ++h) {
-            for (int i = 0; i < hf_ndoccpi_[h]; ++i) {
-                Csub->set_column(h, i, C0_->get_column(h, i));
-            }
-        }
-        W->add(psi::linalg::triplet(Csub, T, C0_, false, false, true));
-        W->print();
+        W = psi::linalg::triplet(C0_, Wmo, C0_, false, false, true);
     }
 
+    W->set_name("Lagrangian AO Back-Transformed");
+    if (debug_print_)
+        W->print();
+
     // transform to AO and push to Psi4 Wavefunction
-    ints_->wfn()->Lagrangian()->copy(W_);
-    ints_->wfn()->Lagrangian()->set_name("Lagrangian AO Back-Transformed");
+    ints_->wfn()->Lagrangian()->copy(W);
 }
 
 void CASSCF_ORB_GRAD::compute_opdm_ao() {
-    auto D1 = std::make_shared<psi::Matrix>("OPDM", nmopi_, nmopi_);
+    auto D1a = std::make_shared<psi::Matrix>("D1a", nmopi_, nmopi_);
 
     // inactive docc part
     for (int h = 0; h < nirrep_; ++h) {
         for (int i = 0; i < ndoccpi_[h]; ++i) {
-            D1->set(h, i, i, 1.0);
+            D1a->set(h, i, i, 1.0);
         }
     }
 
@@ -694,26 +578,25 @@ void CASSCF_ORB_GRAD::compute_opdm_ao() {
             auto nu = u + offset;
             for (int v = u; v < nactvpi_[h]; ++v) {
                 auto nv = v + offset;
-                D1->set(h, nu, nv, 0.5 * rdm1_->get(h, u, v));
-                D1->set(h, nv, nu, 0.5 * rdm1_->get(h, v, u));
+                D1a->set(h, nu, nv, 0.5 * rdm1_->get(h, u, v));
+                D1a->set(h, nv, nu, 0.5 * rdm1_->get(h, v, u));
             }
         }
     }
 
-    D1 = psi::linalg::triplet(C_, D1, C_, false, false, true);
-    D1->set_name("D1a AO Back-Transformed");
+    D1a = psi::linalg::triplet(C_, D1a, C_, false, false, true);
+    D1a->set_name("D1a AO Back-Transformed");
 
-    // add Z vector due to frozen-core response
+    // add Z vector due to response of frozen orbitals
     if (is_frozen_orbs_) {
         auto T = psi::linalg::triplet(C0_, Z_, C0_, false, false, true);
         T->scale(0.5);
-        T->print();
-        D1->add(T);
+        D1a->add(T);
     }
 
     // push to Psi4
-    ints_->wfn()->Da()->copy(D1);
-    ints_->wfn()->Db()->copy(D1);
+    ints_->wfn()->Da()->copy(D1a);
+    ints_->wfn()->Db()->copy(D1a);
 }
 
 void CASSCF_ORB_GRAD::dump_tpdm_iwl() {
