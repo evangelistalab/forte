@@ -66,10 +66,9 @@ void TPDMBackTransform::backtransform_density() {
         throw PSIEXCEPTION(
             "MOSpace::all must be amongst the spaces passed to the integral object's constructor");
 
-    backtransform_tpdm_restricted();
-//    if (transformationType_ == TransformationType::Restricted) {
-//        backtransform_tpdm_restricted();
-//    } else {
-//        backtransform_tpdm_unrestricted();
-//    }
+    if (transformationType_ == TransformationType::Restricted) {
+        backtransform_tpdm_restricted();
+    } else {
+        backtransform_tpdm_unrestricted();
+    }
 }

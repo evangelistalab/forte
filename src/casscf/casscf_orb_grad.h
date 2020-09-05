@@ -313,6 +313,9 @@ class CASSCF_ORB_GRAD {
     /// Build L matrix for every iteration
     psi::SharedMatrix contract_Z_Lsuper();
 
+    /// Solve Z vector as in JCP, 94, 6708-6715 (1991)
+    void solve_cpscf_jcp();
+
     /// Hartree-Fock orbital energies from Psi4
     psi::SharedVector epsilon_;
 
