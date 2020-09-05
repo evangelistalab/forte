@@ -106,6 +106,7 @@ void CASSCF_ORB_GRAD::setup_mos() {
     label_to_mos_["c"] = core_mos_;
     label_to_mos_["a"] = actv_mos_;
     label_to_mos_["v"] = mo_space_info_->absolute_mo("RESTRICTED_UOCC");
+    label_to_mos_["u"] = mo_space_info_->absolute_mo("FROZEN_UOCC");
 
     // in Pitzer ordering
     mos_rel_.clear();
@@ -118,7 +119,7 @@ void CASSCF_ORB_GRAD::setup_mos() {
 
     // in Pitzer ordering
     mos_rel_space_.resize(nmo_);
-    for (std::string space : {"f", "c", "a", "v"}) {
+    for (std::string space : {"f", "c", "a", "v", "u"}) {
         const auto& mos = label_to_mos_[space];
         for (size_t p = 0, size = mos.size(); p < size; ++p) {
             mos_rel_space_[mos[p]] = std::make_pair(space, p);
@@ -133,10 +134,11 @@ void CASSCF_ORB_GRAD::setup_mos() {
     BlockedTensor::add_mo_space("c", "i,j", core_mos_, NoSpin);
     BlockedTensor::add_mo_space("a", "t,u,v,w,y,x,z", actv_mos_, NoSpin);
     BlockedTensor::add_mo_space("v", "a,b", label_to_mos_["v"], NoSpin);
+    BlockedTensor::add_mo_space("u", "A,B", label_to_mos_["u"], NoSpin);
 
     BlockedTensor::add_composite_mo_space("I", "K,L", {"f", "c"});
     BlockedTensor::add_composite_mo_space("g", "p,q,r,s", {"c", "a", "v"});
-    BlockedTensor::add_composite_mo_space("G", "P,Q,R,S", {"f", "c", "a", "v"});
+    BlockedTensor::add_composite_mo_space("G", "P,Q,R,S", {"f", "c", "a", "v", "u"});
 }
 
 void CASSCF_ORB_GRAD::read_options() {
@@ -645,14 +647,15 @@ bool CASSCF_ORB_GRAD::update_orbitals(psi::SharedVector x) {
     dR->subtract(R_);
 
     // incoming x consistent with R_, no need to update orbitals
-    if (dR->absmax() < 1.0e-13)
+    if (dR->rms() < 1.0e-15)
         return false;
 
     // officially save progress of dR
     R_->add(dR);
 
     // U_new = U_old * exp(dR)
-    U_->gemm(false, false, 1.0, U_, matrix_exponential(dR, 3), 0.0);
+    U_ = psi::linalg::doublet(U_, matrix_exponential(dR, 1), false, false);
+    U_->set_name("Orthogonal Transformation");
 
     // update orbitals
     C_->gemm(false, false, 1.0, C0_, U_, 0.0);
@@ -893,8 +896,9 @@ std::shared_ptr<ActiveSpaceIntegrals> CASSCF_ORB_GRAD::active_space_ints() {
 }
 
 void CASSCF_ORB_GRAD::canonicalize_final() {
-    auto U = canonicalize();
-    U_->gemm(false, false, 1.0, U_, U, 0.0);
+    U_ = psi::linalg::doublet(U_, canonicalize(), false, false);
+    U_->set_name("Orthogonal Transformation");
+
     C_->gemm(false, false, 1.0, C0_, U_, 0.0);
     build_mo_integrals();
 }

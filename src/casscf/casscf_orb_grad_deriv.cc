@@ -93,11 +93,9 @@ void CASSCF_ORB_GRAD::compute_nuclear_gradient() {
         // transform A matrix to HF basis
         Am_ = psi::linalg::triplet(U_, Am_, U_, false, false, true);
         Am_->set_name("A (SCF)");
-        Am_->print();
 
         // solve CPSCF equations
         solve_cpscf();
-        solve_cpscf_jcp();
     }
 
     // back-transform Lagrangian
@@ -254,7 +252,7 @@ void CASSCF_ORB_GRAD::solve_cpscf() {
         throw std::runtime_error(msg);
     }
 
-    Z_->print();
+//    Z_->print();
 }
 
 void CASSCF_ORB_GRAD::solve_cpscf_jcp() {
@@ -498,6 +496,7 @@ SharedMatrix CASSCF_ORB_GRAD::contract_RB_Z() {
 }
 
 void CASSCF_ORB_GRAD::compute_Lagrangian() {
+    psi::outfile->Printf("\n    Computing AO Lagrangian ...");
     auto W = std::make_shared<psi::Matrix>();
 
     if (not is_frozen_orbs_) {
@@ -559,9 +558,11 @@ void CASSCF_ORB_GRAD::compute_Lagrangian() {
 
     // transform to AO and push to Psi4 Wavefunction
     ints_->wfn()->Lagrangian()->copy(W);
+    psi::outfile->Printf(" Done.");
 }
 
 void CASSCF_ORB_GRAD::compute_opdm_ao() {
+    psi::outfile->Printf("\n    Computing AO OPDM .........");
     auto D1a = std::make_shared<psi::Matrix>("D1a", nmopi_, nmopi_);
 
     // inactive docc part
@@ -597,9 +598,11 @@ void CASSCF_ORB_GRAD::compute_opdm_ao() {
     // push to Psi4
     ints_->wfn()->Da()->copy(D1a);
     ints_->wfn()->Db()->copy(D1a);
+    psi::outfile->Printf(" Done.");
 }
 
 void CASSCF_ORB_GRAD::dump_tpdm_iwl() {
+    psi::outfile->Printf("\n    Dumping MO TPDM to disk ...");
     auto psio = _default_psio_lib_;
     IWL d2(psio.get(), PSIF_MO_TPDM, 1.0e-15, 0, 0);
     std::string name = "outfile";
@@ -672,6 +675,7 @@ void CASSCF_ORB_GRAD::dump_tpdm_iwl() {
 
     if (is_frozen_orbs_)
         dump_tpdm_iwl_hf();
+    psi::outfile->Printf(" Done.");
 }
 
 void CASSCF_ORB_GRAD::dump_tpdm_iwl_hf() {
