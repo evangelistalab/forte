@@ -1008,16 +1008,16 @@ class Py3JSRenderer():
         -------
         a tuple of vertices and faces
         """
-        values = skimage.measure.marching_cubes_lewiner(data, level)
+        values = skimage.measure.marching_cubes_lewiner(data, level * 0.995)
         sk_verts, sk_faces, normals, values = values
         x, y, z = sk_verts.T
 
         # Rescale coordinates to given limits
         if extent:
             xlim, ylim, zlim = extent
-            x = x * np.diff(xlim) / (data.shape[0] - 1) + xlim[0]
-            y = y * np.diff(ylim) / (data.shape[1] - 1) + ylim[0]
-            z = z * np.diff(zlim) / (data.shape[2] - 1) + zlim[0]
+            x = x * np.diff(xlim) / (data.shape[0]) + xlim[0]
+            y = y * np.diff(ylim) / (data.shape[1]) + ylim[0]
+            z = z * np.diff(zlim) / (data.shape[2]) + zlim[0]
 
         # Assemble the list of vertices
         vertices = []
