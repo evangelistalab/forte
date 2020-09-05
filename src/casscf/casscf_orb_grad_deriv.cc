@@ -600,165 +600,158 @@ void CASSCF_ORB_GRAD::compute_opdm_ao() {
 }
 
 void CASSCF_ORB_GRAD::dump_tpdm_iwl() {
-    // if we solve response for frozen orbitals
-    if (is_frozen_orbs_) {
-        dump_tpdm_iwl_hf();
-    } else {
-        auto psio = _default_psio_lib_;
-        IWL d2(psio.get(), PSIF_MO_TPDM, 1.0e-15, 0, 0);
-        std::string name = "outfile";
-        int print = debug_print_ ? 1 : 0;
-
-        // inactive docc part
-        auto docc_mos = mo_space_info_->absolute_mo("INACTIVE_DOCC");
-        for (int i = 0, ndocc = docc_mos.size(); i < ndocc; ++i) {
-            auto ni = docc_mos[i];
-            d2.write_value(ni, ni, ni, ni, 1.0, print, name, 0);
-            for (int j = 0; j < i; ++j) {
-                auto nj = docc_mos[j];
-                d2.write_value(ni, ni, nj, nj, 2.0, print, name, 0);
-                d2.write_value(nj, nj, ni, ni, 2.0, print, name, 0);
-                d2.write_value(ni, nj, nj, ni, -1.0, print, name, 0);
-                d2.write_value(nj, ni, ni, nj, -1.0, print, name, 0);
-            }
-        }
-
-        // 1-rdm part
-        for (int h = 0, offset = 0; h < nirrep_; ++h) {
-            for (int u = 0; u < nactvpi_[h]; ++u) {
-                auto nu = u + offset + ndoccpi_[h];
-                for (int v = u; v < nactvpi_[h]; ++v) {
-                    auto nv = v + offset + ndoccpi_[h];
-
-                    double d_uv = rdm1_->get(h, u, v);
-                    double d_vu = rdm1_->get(h, v, u);
-
-                    for (int i = 0, ndocc = docc_mos.size(); i < ndocc; ++i) {
-                        auto ni = docc_mos[i];
-
-                        d2.write_value(nu, nv, ni, ni, 2.0 * d_uv, print, name, 0);
-                        d2.write_value(nu, ni, ni, nv, -d_uv, print, name, 0);
-
-                        if (u != v) {
-                            d2.write_value(nv, nu, ni, ni, 2.0 * d_vu, print, name, 0);
-                            d2.write_value(nv, ni, ni, nu, -d_vu, print, name, 0);
-                        }
-                    }
-                }
-            }
-            offset += nmopi_[h];
-        }
-
-        // 2-rdm part
-        auto& d2_data = D2_.block("aaaa").data();
-        auto na2 = nactv_ * nactv_;
-        auto na3 = nactv_ * na2;
-
-        for (size_t u = 0; u < nactv_; ++u) {
-            auto nu = actv_mos_[u];
-            for (size_t v = 0; v < nactv_; ++v) {
-                auto nv = actv_mos_[v];
-                for (size_t x = 0; x < nactv_; ++x) {
-                    auto nx = actv_mos_[x];
-                    for (size_t y = 0; y < nactv_; ++y) {
-                        auto ny = actv_mos_[y];
-
-                        double value = d2_data[u * na3 + v * na2 + x * nactv_ + y];
-                        d2.write_value(nu, nv, nx, ny, 0.5 * value, print, name, 0);
-                    }
-                }
-            }
-        }
-
-        d2.flush(1);
-        d2.set_keep_flag(1);
-        d2.close();
-    }
-}
-
-void CASSCF_ORB_GRAD::dump_tpdm_iwl_hf() {
     auto psio = _default_psio_lib_;
     IWL d2(psio.get(), PSIF_MO_TPDM, 1.0e-15, 0, 0);
     std::string name = "outfile";
     int print = debug_print_ ? 1 : 0;
 
-    //    auto psio = _default_psio_lib_;
-    //    IWL d2(psio.get(), PSIF_MO_BB_TPDM, 1.0e-15, 0, 0); // use PSIF_MO_BB_TPDM
-    //    std::string name = "outfile";
-    //    int print = debug_print_ ? 1 : 0;
+    // inactive docc part
+    auto docc_mos = mo_space_info_->absolute_mo("INACTIVE_DOCC");
+    for (int i = 0, ndocc = docc_mos.size(); i < ndocc; ++i) {
+        auto ni = docc_mos[i];
+        d2.write_value(ni, ni, ni, ni, 1.0, print, name, 0);
+        for (int j = 0; j < i; ++j) {
+            auto nj = docc_mos[j];
+            d2.write_value(ni, ni, nj, nj, 2.0, print, name, 0);
+            d2.write_value(nj, nj, ni, ni, 2.0, print, name, 0);
+            d2.write_value(ni, nj, nj, ni, -1.0, print, name, 0);
+            d2.write_value(nj, ni, ni, nj, -1.0, print, name, 0);
+        }
+    }
 
-    //    auto frzv_start_pi = nmopi_ - mo_space_info_->dimension("FROZEN_UOCC");
+    // 1-rdm part
+    for (int h = 0, offset = 0; h < nirrep_; ++h) {
+        for (int u = 0; u < nactvpi_[h]; ++u) {
+            auto nu = u + offset + ndoccpi_[h];
+            for (int v = u; v < nactvpi_[h]; ++v) {
+                auto nv = v + offset + ndoccpi_[h];
 
-    //    for (int h = 0, offset = 0; h < nirrep_; ++h) {
-    //        for (int j = 0, ndocc = hf_docc_mos_.size(); j < ndocc; ++j) {
-    //            int nj = hf_docc_mos_[j];
+                double d_uv = rdm1_->get(h, u, v);
+                double d_vu = rdm1_->get(h, v, u);
 
-    //            // frozen-core/active-docc
-    //            for (int I = 0; I < nfrzcpi_[h]; ++I) {
-    //                int nI = I + offset;
-    //                for (int i = nfrzcpi_[h]; i < hf_ndoccpi_[h]; ++i) {
-    //                    int ni = i + offset;
+                for (int i = 0, ndocc = docc_mos.size(); i < ndocc; ++i) {
+                    auto ni = docc_mos[i];
 
-    //                    double z = Z_->get(h, I, i);
+                    d2.write_value(nu, nv, ni, ni, 2.0 * d_uv, print, name, 0);
+                    d2.write_value(nu, ni, ni, nv, -d_uv, print, name, 0);
 
-    //                    if (nj == ni) {
-    //                        d2.write_value(nI, ni, ni, ni, z, print, name, 0);
-    //                        d2.write_value(ni, nI, ni, ni, 2.0 * z, print, name, 0);
-    //                        d2.write_value(ni, ni, ni, nI, -z, print, name, 0);
-    //                    } else if (nj == nI) {
-    //                        d2.write_value(ni, nI, nI, nI, z, print, name, 0);
-    //                        d2.write_value(nI, ni, nI, nI, 2.0 * z, print, name, 0);
-    //                        d2.write_value(nI, nI, nI, ni, -z, print, name, 0);
-    //                    } else {
-    //                        d2.write_value(nI, ni, nj, nj, 2.0 * z, print, name, 0);
-    //                        d2.write_value(nI, nj, nj, ni, -z, print, name, 0);
+                    if (u != v) {
+                        d2.write_value(nv, nu, ni, ni, 2.0 * d_vu, print, name, 0);
+                        d2.write_value(nv, ni, ni, nu, -d_vu, print, name, 0);
+                    }
+                }
+            }
+        }
+        offset += nmopi_[h];
+    }
 
-    //                        d2.write_value(ni, nI, nj, nj, 2.0 * z, print, name, 0);
-    //                        d2.write_value(ni, nj, nj, nI, -z, print, name, 0);
-    //                    }
-    //                }
-    //            }
+    // 2-rdm part
+    auto& d2_data = D2_.block("aaaa").data();
+    auto na2 = nactv_ * nactv_;
+    auto na3 = nactv_ * na2;
 
-    //            // frozen-virtual/active-virtual
-    //            for (int A = frzv_start_pi[h]; A < nmopi_[h]; ++A) {
-    //                int nA = A + offset;
-    //                for (int a = hf_ndoccpi_[h]; a < frzv_start_pi[h]; ++a) {
-    //                    int na = a + offset;
+    for (size_t u = 0; u < nactv_; ++u) {
+        auto nu = actv_mos_[u];
+        for (size_t v = 0; v < nactv_; ++v) {
+            auto nv = actv_mos_[v];
+            for (size_t x = 0; x < nactv_; ++x) {
+                auto nx = actv_mos_[x];
+                for (size_t y = 0; y < nactv_; ++y) {
+                    auto ny = actv_mos_[y];
 
-    //                    double z = Z_->get(h, A, a);
+                    double value = d2_data[u * na3 + v * na2 + x * nactv_ + y];
+                    d2.write_value(nu, nv, nx, ny, 0.5 * value, print, name, 0);
+                }
+            }
+        }
+    }
 
-    //                    d2.write_value(nA, na, nj, nj, 2.0 * z, print, name, 0);
-    //                    d2.write_value(nA, nj, nj, na, -z, print, name, 0);
+    d2.flush(1);
+    d2.set_keep_flag(1);
+    d2.close();
 
-    //                    d2.write_value(na, nA, nj, nj, 2.0 * z, print, name, 0);
-    //                    d2.write_value(na, nj, nj, nA, -z, print, name, 0);
-    //                }
-    //            }
+    if (is_frozen_orbs_)
+        dump_tpdm_iwl_hf();
+}
 
-    //            // docc/virtual
-    //            for (int i = 0; i < hf_ndoccpi_[h]; ++i) {
-    //                int ni = i + offset;
-    //                for (int a = hf_ndoccpi_[h]; a < nmopi_[h]; ++a) {
-    //                    int na = a + offset;
+void CASSCF_ORB_GRAD::dump_tpdm_iwl_hf() {
+    auto psio = _default_psio_lib_;
+    IWL d2(psio.get(), PSIF_MO_AA_TPDM, 1.0e-15, 0, 0); // use PSIF_MO_AA_TPDM
+    std::string name = "outfile";
+    int print = debug_print_ ? 1 : 0;
 
-    //                    double z = Z_->get(h, i, a);
+    auto frzv_start_pi = nmopi_ - mo_space_info_->dimension("FROZEN_UOCC");
 
-    //                    if (nj == ni) {
-    //                        d2.write_value(na, ni, ni, ni, z, print, name, 0);
-    //                        d2.write_value(ni, na, ni, ni, 2.0 * z, print, name, 0);
-    //                        d2.write_value(ni, ni, ni, na, -z, print, name, 0);
-    //                    } else {
-    //                        d2.write_value(ni, na, nj, nj, 2.0 * z, print, name, 0);
-    //                        d2.write_value(ni, nj, nj, na, -z, print, name, 0);
+    for (int h = 0, offset = 0; h < nirrep_; ++h) {
+        for (int j = 0, ndocc = hf_docc_mos_.size(); j < ndocc; ++j) {
+            int nj = hf_docc_mos_[j];
 
-    //                        d2.write_value(na, ni, nj, nj, 2.0 * z, print, name, 0);
-    //                        d2.write_value(na, nj, nj, ni, -z, print, name, 0);
-    //                    }
-    //                }
-    //            }
-    //        }
-    //        offset += nmopi_[h];
-    //    }
+            // frozen-core/active-docc
+            for (int I = 0; I < nfrzcpi_[h]; ++I) {
+                int nI = I + offset;
+                for (int i = nfrzcpi_[h]; i < hf_ndoccpi_[h]; ++i) {
+                    int ni = i + offset;
+
+                    double z = Z_->get(h, I, i);
+
+                    if (nj == ni) {
+                        d2.write_value(nI, ni, ni, ni, z, print, name, 0);
+                        d2.write_value(ni, nI, ni, ni, 2.0 * z, print, name, 0);
+                        d2.write_value(ni, ni, ni, nI, -z, print, name, 0);
+                    } else if (nj == nI) {
+                        d2.write_value(ni, nI, nI, nI, z, print, name, 0);
+                        d2.write_value(nI, ni, nI, nI, 2.0 * z, print, name, 0);
+                        d2.write_value(nI, nI, nI, ni, -z, print, name, 0);
+                    } else {
+                        d2.write_value(nI, ni, nj, nj, 2.0 * z, print, name, 0);
+                        d2.write_value(nI, nj, nj, ni, -z, print, name, 0);
+
+                        d2.write_value(ni, nI, nj, nj, 2.0 * z, print, name, 0);
+                        d2.write_value(ni, nj, nj, nI, -z, print, name, 0);
+                    }
+                }
+            }
+
+            // frozen-virtual/active-virtual
+            for (int A = frzv_start_pi[h]; A < nmopi_[h]; ++A) {
+                int nA = A + offset;
+                for (int a = hf_ndoccpi_[h]; a < frzv_start_pi[h]; ++a) {
+                    int na = a + offset;
+
+                    double z = Z_->get(h, A, a);
+
+                    d2.write_value(nA, na, nj, nj, 2.0 * z, print, name, 0);
+                    d2.write_value(nA, nj, nj, na, -z, print, name, 0);
+
+                    d2.write_value(na, nA, nj, nj, 2.0 * z, print, name, 0);
+                    d2.write_value(na, nj, nj, nA, -z, print, name, 0);
+                }
+            }
+
+            // docc/virtual
+            for (int i = 0; i < hf_ndoccpi_[h]; ++i) {
+                int ni = i + offset;
+                for (int a = hf_ndoccpi_[h]; a < nmopi_[h]; ++a) {
+                    int na = a + offset;
+
+                    double z = Z_->get(h, i, a);
+
+                    if (nj == ni) {
+                        d2.write_value(na, ni, ni, ni, z, print, name, 0);
+                        d2.write_value(ni, na, ni, ni, 2.0 * z, print, name, 0);
+                        d2.write_value(ni, ni, ni, na, -z, print, name, 0);
+                    } else {
+                        d2.write_value(ni, na, nj, nj, 2.0 * z, print, name, 0);
+                        d2.write_value(ni, nj, nj, na, -z, print, name, 0);
+
+                        d2.write_value(na, ni, nj, nj, 2.0 * z, print, name, 0);
+                        d2.write_value(na, nj, nj, ni, -z, print, name, 0);
+                    }
+                }
+            }
+        }
+        offset += nmopi_[h];
+    }
 
     d2.flush(1);
     d2.set_keep_flag(1);
