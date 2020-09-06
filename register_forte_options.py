@@ -193,6 +193,9 @@ def register_embedding_options(forte_options):
         "embedding_fock_build", True,
         "Build CASSCF AO Fock matrix for semi-canonicalization")
     forte_options.add_bool(
+        "CASSCF_ignore_conv", False,
+        "Ignore CASSCF convergence fail and continue")
+    forte_options.add_bool(
         "embedding_use_debug_density", False,
         "Use a 2*2 standard CAS density of LiH in ASET(2) for debugging")
     forte_options.add_int(

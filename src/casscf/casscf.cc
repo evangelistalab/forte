@@ -237,7 +237,8 @@ double CASSCF::compute_energy() {
 
     if (iter_con.size() == size_t(maxiter) && maxiter > 1) {
         outfile->Printf("\n CASSCF did not converge");
-        throw psi::PSIEXCEPTION("CASSCF did not converge.");
+        if (options_->get_bool("CASSCF_ignore_conv") == false)
+            throw psi::PSIEXCEPTION("CASSCF did not converge.");
     }
 
     // INSERT HERE
