@@ -291,6 +291,9 @@ class CASSCF_ORB_GRAD {
     /// Dump the Hartree-Fock MO 2-RDM to file using IWL
     void dump_tpdm_iwl_hf();
 
+    /// Are there any frozen orbitals?
+    bool is_frozen_orbs_;
+
     /// Start up for doing gradient with frozen orbitals
     void setup_grad_frozen();
 
@@ -303,8 +306,8 @@ class CASSCF_ORB_GRAD {
     /// List of unoccupied MOs from Hartree-Fock
     std::vector<size_t> hf_uocc_mos_;
 
-    /// Are there any frozen orbitals?
-    bool is_frozen_orbs_;
+    /// Hartree-Fock orbital energies
+    psi::SharedVector epsilon_;
 
     /// Z vector for CPSCF equations
     psi::SharedMatrix Z_;
@@ -312,17 +315,6 @@ class CASSCF_ORB_GRAD {
     void solve_cpscf();
     /// Contract Roothaan-Bagus supermatrix with Z
     psi::SharedMatrix contract_RB_Z();
-
-    /// Solve Z vector as in JCP, 94, 6708-6715 (1991)
-    void solve_cpscf_jcp();
-
-    /// Hartree-Fock orbital energies from Psi4
-    psi::SharedVector epsilon_;
-
-    /// Mixed Fock matrix
-    psi::SharedMatrix Fock_mixed_;
-    /// Build mixed Fock matrix using HF and MCSCF orbitals
-    void build_mixed_fock();
 
     // => Some helper functions <=
 
