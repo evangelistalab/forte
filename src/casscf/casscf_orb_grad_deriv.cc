@@ -64,31 +64,11 @@ void CASSCF_ORB_GRAD::compute_nuclear_gradient() {
     is_frozen_orbs_ = nfrzc_ or mo_space_info_->size("FROZEN_UOCC");
 
     if (is_frozen_orbs_) {
-        // TODO: terminate for high spin?
+        // see J. Chem. Phys. 94, 6708-6715 (1991)
+        print_h2("Solving CP-SCF Equation for MCSCF Gradient with Frozen Orbitals");
 
-        outfile->Printf("\n  Warning: MCSCF gradient code detected frozen orbitals.");
-        outfile->Printf("\n  They are ASSUMED from well-converged Hartree-Fock of Psi4!");
-
-        print_h2("Solving CPSCF Equations for MCSCF Gradient with Frozen Orbitals");
-
-        // grab Hartree-Fock orbital energies from Psi4
-        epsilon_ = ints_->wfn()->epsilon_a();
-
-        // set up HF orbitals
-        hf_ndoccpi_ = ints_->wfn()->doccpi();
-        hf_nuoccpi_ = nmopi_ - ints_->wfn()->doccpi();
-
-        hf_docc_mos_.clear();
-        hf_uocc_mos_.clear();
-        for (int h = 0, offset = 0; h < nirrep_; ++h) {
-            for (int i = 0; i < hf_ndoccpi_[h]; ++i) {
-                hf_docc_mos_.push_back(i + offset);
-            }
-            for (int a = 0; a < hf_nuoccpi_[h]; ++a) {
-                hf_uocc_mos_.push_back(a + hf_ndoccpi_[h] + offset);
-            }
-            offset += nmopi_[h];
-        }
+        // setup MOs and sanity check
+        setup_grad_frozen();
 
         // transform A matrix to HF basis
         Am_ = psi::linalg::triplet(U_, Am_, U_, false, false, true);
@@ -97,6 +77,8 @@ void CASSCF_ORB_GRAD::compute_nuclear_gradient() {
         // solve CPSCF equations
         solve_cpscf();
     }
+
+    print_h2("Prepare AO Densities");
 
     // back-transform Lagrangian
     compute_Lagrangian();
@@ -138,6 +120,63 @@ void CASSCF_ORB_GRAD::format_A_matrix() {
                 Am_->set(h1, p, q, value);
             }
         });
+}
+
+void CASSCF_ORB_GRAD::setup_grad_frozen() {
+    // terminate for high spin
+    if (ints_->wfn()->soccpi().sum())
+        throw std::runtime_error("MCSCF gradient with frozen orbitals only works for singlet!");
+
+    // set up HF orbitals
+    hf_ndoccpi_ = ints_->wfn()->doccpi();
+    hf_nuoccpi_ = nmopi_ - ints_->wfn()->doccpi();
+
+    hf_docc_mos_.clear();
+    hf_uocc_mos_.clear();
+    for (int h = 0, offset = 0; h < nirrep_; ++h) {
+        for (int i = 0; i < hf_ndoccpi_[h]; ++i) {
+            hf_docc_mos_.push_back(i + offset);
+        }
+        for (int a = 0; a < hf_nuoccpi_[h]; ++a) {
+            hf_uocc_mos_.push_back(a + hf_ndoccpi_[h] + offset);
+        }
+        offset += nmopi_[h];
+    }
+
+    // build HF Fock matrix, assuming MCSCF initial orbitals are from HF
+    auto Cdocc = std::make_shared<psi::Matrix>("C_INACTIVE", nirrep_, nsopi_, hf_ndoccpi_);
+    for (int h = 0; h < nirrep_; h++) {
+        for (int i = 0; i < hf_ndoccpi_[h]; i++) {
+            Cdocc->set_column(h, i, C0_->get_column(h, i));
+        }
+    }
+
+    build_JK_fock(Cdocc, Cdocc);
+    auto J = JK_->J()[0];
+    J->scale(2.0);
+    J->subtract(JK_->K()[0]);
+    J->add(H_ao_);
+
+    auto F = psi::linalg::triplet(C0_, J, C0_, true, false, false);
+    F->set_name("Fock MO (SCF)");
+
+    // grab HF orbital energy
+    epsilon_ = std::make_shared<psi::Vector>("Orbital Energies (SCF)", nmopi_);
+
+    for (int h = 0; h < nirrep_; ++h) {
+        for (int p = 0; p < nmopi_[h]; ++p) {
+            double value = F->get(h, p, p);
+            epsilon_->set(h, p, value);
+            F->set(h, p, p, 0.0);
+        }
+    }
+
+    // test off-diagonal elements of Fock matrix
+    if (F->rms() > 5.0 * options_->get_double("D_CONVERGENCE")) {
+        outfile->Printf("\n  Error: MCSCF initial orbitals are not from Hartree-Fock!");
+        outfile->Printf("\n  MCSCF gradient with frozen orbitals will not work.");
+        throw std::runtime_error("MCSCF grad error: initial orbitals NOT from Hartree-Fock!");
+    }
 }
 
 void CASSCF_ORB_GRAD::build_mixed_fock() {
@@ -251,8 +290,6 @@ void CASSCF_ORB_GRAD::solve_cpscf() {
         outfile->Printf("\n  Please check if the specified frozen orbitals make sense.");
         throw std::runtime_error(msg);
     }
-
-//    Z_->print();
 }
 
 void CASSCF_ORB_GRAD::solve_cpscf_jcp() {

@@ -280,16 +280,19 @@ class CASSCF_ORB_GRAD {
 
     // => Nuclear gradient related functions <=
 
-    /// The orbital Lagrangian matrix in AO basis
-    psi::SharedMatrix W_;
     /// compute AO Lagrangian matrix and push to Psi4
     void compute_Lagrangian();
 
     /// compute AO 1-RDM and push to Psi4
     void compute_opdm_ao();
 
-    /// Dump the MO 2-RDM to file using IWL
+    /// Dump the MCSCF MO 2-RDM to file using IWL
     void dump_tpdm_iwl();
+    /// Dump the Hartree-Fock MO 2-RDM to file using IWL
+    void dump_tpdm_iwl_hf();
+
+    /// Start up for doing gradient with frozen orbitals
+    void setup_grad_frozen();
 
     /// Doubly occupied MOs from Hartree-Fock
     psi::Dimension hf_ndoccpi_;
@@ -305,10 +308,8 @@ class CASSCF_ORB_GRAD {
 
     /// Z vector for CPSCF equations
     psi::SharedMatrix Z_;
-
     /// Solve Z vector equation if there are frozen orbitals
     void solve_cpscf();
-
     /// Contract Roothaan-Bagus supermatrix with Z
     psi::SharedMatrix contract_RB_Z();
 
@@ -322,9 +323,6 @@ class CASSCF_ORB_GRAD {
     psi::SharedMatrix Fock_mixed_;
     /// Build mixed Fock matrix using HF and MCSCF orbitals
     void build_mixed_fock();
-
-    /// Dump the HF MO 2-RDM to file using IWL
-    void dump_tpdm_iwl_hf();
 
     // => Some helper functions <=
 
