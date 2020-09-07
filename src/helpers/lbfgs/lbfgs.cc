@@ -37,6 +37,7 @@
 #include "lbfgs.h"
 #include "rosenbrock.h"
 #include "casscf/casscf_orb_grad.h"
+#include "casscf/cpscf.h"
 
 using namespace psi;
 
@@ -100,8 +101,8 @@ template <class Foo> double LBFGS::minimize(Foo& func, psi::SharedVector x) {
         // print current iteration
         g_norm = g_->norm();
         if (param_->print > 0)
-            outfile->Printf("\n  Iter: %3d; step = %15.10f; fx = %20.15f; g_norm = %20.15f",
-                            iter_ + 1, step, fx, g_norm);
+            outfile->Printf("\n  L-BFGS Iter:%3d; fx = %20.15f; g_norm = %12.6e; step = %9.3e",
+                            iter_ + 1, fx, g_norm, step);
 
         // skip the rest if terminate
         if (++iter_ == param_->maxiter)
@@ -417,5 +418,6 @@ void LBFGS::reset() {
 
 template double LBFGS::minimize(ROSENBROCK& func, psi::SharedVector x);
 template double LBFGS::minimize(CASSCF_ORB_GRAD& func, psi::SharedVector x);
+template double LBFGS::minimize(CPSCF& func, psi::SharedVector x);
 
 } // namespace forte

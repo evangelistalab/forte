@@ -51,6 +51,7 @@
 
 #include "gradient_tpdm/backtransform_tpdm.h"
 #include "casscf/casscf_orb_grad.h"
+#include "casscf/cpscf.h"
 
 using namespace psi;
 using namespace ambit;
@@ -210,11 +211,12 @@ void CASSCF_ORB_GRAD::solve_cpscf() {
     }
 
     // TODO: solve this linear system using L-BFGS
+    auto L0 = contract_RB_Z();
 
     // start iteration
     bool converged = false;
     int iter = 1;
-    int maxiter = options_->get_int("CPMCSCF_MAXITER");
+    int maxiter = options_->get_int("CPSCF_MAXITER");
     SharedMatrix Zold = Z_->clone();
 
     outfile->Printf("\n    *======================*");
@@ -254,6 +256,35 @@ void CASSCF_ORB_GRAD::solve_cpscf() {
         outfile->Printf("\n  Please check if the specified frozen orbitals make sense.");
         throw std::runtime_error(msg);
     }
+
+    // prepare r.h.s. of CPSCF equation
+    auto b = std::make_shared<psi::Matrix>("CPSCF b", hf_nuoccpi_, hf_ndoccpi_);
+    for (int h = 0; h < nirrep_; ++h) {
+        for (int a = 0, offset = hf_ndoccpi_[h]; a < hf_nuoccpi_[h]; ++a) {
+            for (int i = 0; i < hf_ndoccpi_[h]; ++i) {
+                double value = G->get(h, i, a + offset) - 0.5 * L0->get(h, a + offset, i);
+                b->set(h, a, i, value);
+            }
+        }
+    }
+
+    // grab occupied and virtual part of orbital energies
+    auto edocc = std::make_shared<psi::Vector>("epsilon DOCC", hf_ndoccpi_);
+    auto euocc = std::make_shared<psi::Vector>("epsilon UOCC", hf_nuoccpi_);
+    for (int h = 0; h < nirrep_; ++h) {
+        for (int i = 0; i < hf_ndoccpi_[h]; ++i) {
+            edocc->set(h, i, epsilon_->get(h, i));
+        }
+        for (int a = 0, offset = hf_ndoccpi_[h]; a < hf_nuoccpi_[h]; ++a) {
+            euocc->set(h, a, epsilon_->get(h, a + offset));
+        }
+    }
+
+    // solve CPSCF equation
+    CPSCF_SOLVER cpscf_solver(options_, JK_, C0_, b, edocc, euocc);
+    cpscf_solver.solve();
+    cpscf_solver.x()->print();
+    Z_->print();
 }
 
 SharedMatrix CASSCF_ORB_GRAD::contract_RB_Z() {

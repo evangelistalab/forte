@@ -98,6 +98,7 @@ src/casscf/casscf.cc
 src/casscf/casscf_gradient.cc
 src/casscf/casscf_orb_grad.cc
 src/casscf/casscf_orb_grad_deriv.cc
+src/casscf/cpscf.cc
 src/casscf/mcscf_2step.cc
 src/ci_ex_states/excited_state_solver.cc
 src/ci_rdm/ci_rdms.cc

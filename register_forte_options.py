@@ -854,7 +854,9 @@ def register_casscf_options(options):
 
     options.add_int("CASSCF_MICRO_MINITER", 15, "The minimum number of CASSCF micro iterations")
 
-    options.add_int("CPMCSCF_MAXITER", 50, "Max iteration of solving coupled perturbed MCSCF equations")
+    options.add_int("CPSCF_MAXITER", 50, "Max iteration of solving coupled perturbed SCF equation")
+
+    options.add_double("CPSCF_CONVERGENCE", 1e-8, "Convergence criterion for CP-SCF equation")
 
     options.add_double("CASSCF_E_CONVERGENCE", 1e-8, "The energy convergence criterion (two consecutive energies)")
 
