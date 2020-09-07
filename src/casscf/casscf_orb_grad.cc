@@ -90,6 +90,7 @@ void CASSCF_ORB_GRAD::setup_mos() {
     ncmopi_ = mo_space_info_->dimension("CORRELATED");
     ndoccpi_ = mo_space_info_->dimension("INACTIVE_DOCC");
     nfrzcpi_ = mo_space_info_->dimension("FROZEN_DOCC");
+    nfrzvpi_ = mo_space_info_->dimension("FROZEN_UOCC");
     nactvpi_ = mo_space_info_->dimension("ACTIVE");
 
     nso_ = nsopi_.sum();
@@ -513,12 +514,7 @@ void CASSCF_ORB_GRAD::build_fock_inactive() {
      */
 
     // grab part of Ca for inactive docc
-    auto Cdocc = std::make_shared<psi::Matrix>("C_INACTIVE", nirrep_, nsopi_, ndoccpi_);
-    for (int h = 0; h < nirrep_; h++) {
-        for (int i = 0; i < ndoccpi_[h]; i++) {
-            Cdocc->set_column(h, i, C_->get_column(h, i));
-        }
-    }
+    auto Cdocc = C_subset("C_INACTIVE", C_, psi::Dimension(nirrep_), ndoccpi_);
 
     // JK build
     build_JK_fock(Cdocc, Cdocc);
@@ -551,12 +547,7 @@ void CASSCF_ORB_GRAD::build_fock_active() {
     // D_{uv}^{active} = \sum_{xy}^{active} C_{ux} * C_{vy} * Gamma1_{xy}
 
     // grab part of Ca for active
-    auto Cactv = std::make_shared<psi::Matrix>("C_ACTIVE", nirrep_, nsopi_, nactvpi_);
-    for (int h = 0; h < nirrep_; ++h) {
-        for (int i = 0, offset = ndoccpi_[h]; i < nactvpi_[h]; i++) {
-            Cactv->set_column(h, i, C_->get_column(h, i + offset));
-        }
-    }
+    auto Cactv = C_subset("C_ACTIVE", C_, ndoccpi_, ndoccpi_ + nactvpi_);
 
     // dress Cactv by one-density, which will the C_right for JK
     auto Cactv_dressed = psi::linalg::doublet(Cactv, rdm1_, false, false);
@@ -1003,5 +994,19 @@ std::shared_ptr<psi::Matrix> CASSCF_ORB_GRAD::canonicalize() {
         U->print();
 
     return U;
+}
+
+psi::SharedMatrix CASSCF_ORB_GRAD::C_subset(const std::string& name, psi::SharedMatrix C,
+                                            psi::Dimension dim_start, psi::Dimension dim_end) {
+    auto dim = dim_end - dim_start;
+    auto Csub = std::make_shared<psi::Matrix>(name, nsopi_, dim);
+
+    for (int h = 0; h < nirrep_; ++h) {
+        for (int p = 0, offset = dim_start[h]; p < dim[h]; ++p) {
+            Csub->set_column(h, p, C->get_column(h, p + offset));
+        }
+    }
+
+    return Csub;
 }
 } // namespace forte

@@ -145,12 +145,7 @@ void CASSCF_ORB_GRAD::setup_grad_frozen() {
     }
 
     // build HF Fock matrix, assuming MCSCF initial orbitals are from HF
-    auto Cdocc = std::make_shared<psi::Matrix>("C_INACTIVE", nirrep_, nsopi_, hf_ndoccpi_);
-    for (int h = 0; h < nirrep_; h++) {
-        for (int i = 0; i < hf_ndoccpi_[h]; i++) {
-            Cdocc->set_column(h, i, C0_->get_column(h, i));
-        }
-    }
+    auto Cdocc = C_subset("C_DOCC", C0_, psi::Dimension(nirrep_), hf_ndoccpi_);
 
     build_JK_fock(Cdocc, Cdocc);
     auto J = JK_->J()[0];
@@ -188,10 +183,11 @@ void CASSCF_ORB_GRAD::solve_cpscf() {
 
     Z_ = std::make_shared<psi::Matrix>("Z", nmopi_, nmopi_);
 
-    // occupied-occupied part
+    // occupied-occupied part of Z
+    // only set frozen-docc/active-docc part, the rest is treated as zero due to MCSCF
     for (int h = 0; h < nirrep_; ++h) {
-        for (int i = 0; i < hf_ndoccpi_[h]; ++i) {
-            for (int j = i + 1; j < hf_ndoccpi_[h]; ++j) {
+        for (int i = 0; i < nfrzcpi_[h]; ++i) {
+            for (int j = nfrzcpi_[h]; j < hf_ndoccpi_[h]; ++j) {
                 double value = G->get(h, i, j) / (epsilon_->get(h, j) - epsilon_->get(h, i));
                 Z_->set(h, i, j, value);
                 Z_->set(h, j, i, value);
@@ -199,103 +195,89 @@ void CASSCF_ORB_GRAD::solve_cpscf() {
         }
     }
 
-    // virtual-virtual part
+    // virtual-virtual part of Z
+    // only set frozen-uocc/active-uocc part, the rest is treated as zero due to MCSCF
     for (int h = 0; h < nirrep_; ++h) {
-        for (int a = hf_ndoccpi_[h]; a < nmopi_[h]; ++a) {
-            for (int b = a + 1; b < nmopi_[h]; ++b) {
-                double value = G->get(h, a, b) / (epsilon_->get(h, b) - epsilon_->get(h, a));
+        int frzv_start = nmopi_[h] - nfrzvpi_[h];
+        for (int a = frzv_start; a < nmopi_[h]; ++a) {
+            for (int b = hf_ndoccpi_[h]; b < frzv_start; ++b) {
+                double value = G->get(h, b, a) / (epsilon_->get(h, a) - epsilon_->get(h, b));
                 Z_->set(h, a, b, value);
                 Z_->set(h, b, a, value);
             }
         }
     }
 
-    // TODO: solve this linear system using L-BFGS
-    auto L0 = contract_RB_Z();
+    // prepare r.h.s. of CPSCF equation (Z_{ai} independent part)
+    // b_{ai} = G_{ia} - sum_{Ik} Z_{Ik} L_{Ik,ia} - sum_{Ac} Z_{Ac} L_{Ac,ia}
+    // i: DOCC; I: frozen core; k: active docc; a: UOCC; A: frozen virutal; c: active virtual
+    auto b = std::make_shared<psi::Matrix>("CPSCF b", hf_nuoccpi_, hf_ndoccpi_);
 
-    // start iteration
-    bool converged = false;
-    int iter = 1;
-    int maxiter = options_->get_int("CPSCF_MAXITER");
-    SharedMatrix Zold = Z_->clone();
+    // grab G_{ia}
+    Slice Sdocc(psi::Dimension(nirrep_), hf_ndoccpi_);
+    Slice Suocc(hf_ndoccpi_, nmopi_);
+    b->copy(G->get_block(Sdocc, Suocc)->transpose());
 
-    outfile->Printf("\n    *======================*");
-    outfile->Printf("\n    * Iter     Delta Z rms *");
-    outfile->Printf("\n    *----------------------*");
+    // grab part of orbital coefficients
+    auto dim0 = psi::Dimension(nirrep_);
+    auto dim1 = nmopi_ - nfrzvpi_;
+    auto Cdocc = C_subset("C_DOCC", C0_, dim0, hf_ndoccpi_);
+    auto Cfrzc = C_subset("C_FRZC", C0_, dim0, nfrzcpi_);
+    auto Cactc = C_subset("C_ACTC", C0_, nfrzcpi_, hf_ndoccpi_);
+    auto Cuocc = C_subset("C_UOCC", C0_, hf_ndoccpi_, nmopi_);
+    auto Cactv = C_subset("C_ACTV", C0_, hf_ndoccpi_, dim1);
+    auto Cfrzv = C_subset("C_FRZV", C0_, dim1, nmopi_);
 
-    while (iter <= maxiter) {
-        auto L = contract_RB_Z();
+    // contract Z_{Ik} with supermatrix L_{Ik,ia}
+    auto Z_Ik = Z_->get_block(Slice(dim0, nfrzcpi_), Slice(nfrzcpi_, hf_ndoccpi_));
+    b->subtract(contract_RB_Z(Z_Ik, Cfrzc, Cactc, Cuocc, Cdocc));
 
-        for (int h = 0; h < nirrep_; ++h) {
-            for (int i = 0; i < hf_ndoccpi_[h]; ++i) {
-                for (int a = hf_ndoccpi_[h]; a < nmopi_[h]; ++a) {
-                    double value = (G->get(h, i, a) - 0.5 * L->get(h, a, i)) /
-                                   (epsilon_->get(h, a) - epsilon_->get(h, i));
-                    Z_->set(h, i, a, value);
-                    Z_->set(h, a, i, value);
-                }
-            }
-        }
+    // contract Z_{Ac} with supermatrix L_{Ac,ia}
+    auto Z_Ac = Z_->get_block(Slice(dim1, nmopi_), Slice(hf_ndoccpi_, dim1));
+    b->subtract(contract_RB_Z(Z_Ac, Cfrzv, Cactv, Cuocc, Cdocc));
 
-        // test convergence
-        Zold->subtract(Z_);
-        double Zrms = Zold->rms();
-        outfile->Printf("\n    * %4d    %12.4e *", iter, Zrms);
-        if (Zrms < g_conv_) {
-            converged = true;
-            break;
-        }
-        Zold->copy(Z_);
-        iter++;
+    if (debug_print_) {
+        G->print();
+        b->print();
     }
-    outfile->Printf("\n    *======================*");
 
-    if (!converged) {
-        auto msg = "CP-SCF did not converge in " + std::to_string(maxiter) + " iterations.";
-        outfile->Printf("\n  Error: %s", msg.c_str());
+    // grab occupied and virtual part of orbital energies
+    auto edocc = epsilon_->get_block(Sdocc);
+    auto euocc = epsilon_->get_block(Suocc);
+
+    // solve CPSCF equation
+    CPSCF_SOLVER cpscf_solver(options_, JK_, C0_, b, edocc, euocc);
+    bool converged = cpscf_solver.solve();
+    auto Z_ai = cpscf_solver.x();
+
+    // copy results to Z
+    Z_->set_block(Suocc, Sdocc, Z_ai);
+    Z_->set_block(Sdocc, Suocc, Z_ai->transpose());
+
+    if (not converged) {
+        auto msg = "CP-SCF did not converge!";
+        outfile->Printf("\n  Error: %s", msg);
         outfile->Printf("\n  Please check if the specified frozen orbitals make sense.");
         throw std::runtime_error(msg);
     }
 
-    // prepare r.h.s. of CPSCF equation
-    auto b = std::make_shared<psi::Matrix>("CPSCF b", hf_nuoccpi_, hf_ndoccpi_);
-    for (int h = 0; h < nirrep_; ++h) {
-        for (int a = 0, offset = hf_ndoccpi_[h]; a < hf_nuoccpi_[h]; ++a) {
-            for (int i = 0; i < hf_ndoccpi_[h]; ++i) {
-                double value = G->get(h, i, a + offset) - 0.5 * L0->get(h, a + offset, i);
-                b->set(h, a, i, value);
-            }
-        }
-    }
-
-    // grab occupied and virtual part of orbital energies
-    auto edocc = std::make_shared<psi::Vector>("epsilon DOCC", hf_ndoccpi_);
-    auto euocc = std::make_shared<psi::Vector>("epsilon UOCC", hf_nuoccpi_);
-    for (int h = 0; h < nirrep_; ++h) {
-        for (int i = 0; i < hf_ndoccpi_[h]; ++i) {
-            edocc->set(h, i, epsilon_->get(h, i));
-        }
-        for (int a = 0, offset = hf_ndoccpi_[h]; a < hf_nuoccpi_[h]; ++a) {
-            euocc->set(h, a, epsilon_->get(h, a + offset));
-        }
-    }
-
-    // solve CPSCF equation
-    CPSCF_SOLVER cpscf_solver(options_, JK_, C0_, b, edocc, euocc);
-    cpscf_solver.solve();
-    cpscf_solver.x()->print();
-    Z_->print();
+    if (debug_print_)
+        Z_->print();
 }
 
-SharedMatrix CASSCF_ORB_GRAD::contract_RB_Z() {
+SharedMatrix CASSCF_ORB_GRAD::contract_RB_Z(psi::SharedMatrix Z, psi::SharedMatrix C_Zrow,
+                                            psi::SharedMatrix C_Zcol, psi::SharedMatrix C_row,
+                                            psi::SharedMatrix C_col) {
     // compute sum_{pq} Z_{pq} L_{pq,rs} using Hartree-Fock orbitals
     // Roothaan-Bagus supermatrix L_{pq,rs} = 4 * (pq|rs) - (pr|sq) - (ps|rq)
+    // Express contraction in AO basis:
+    // sum_{pq} sum_{PQRS} CZrow_{Pp} Z_{pq} CZcol_{Qq} L_{PQ,RS} Crow_{Rr} Ccol_{Ss}
 
     // C dressed by Z_pq
-    auto Cdressed = psi::linalg::doublet(C0_, Z_, false, false);
+    auto Cdressed = psi::linalg::doublet(C_Zrow, Z, false, false);
 
     // JK build
-    build_JK_fock(C0_, Cdressed);
+    build_JK_fock(Cdressed, C_Zcol);
 
     auto J = JK_->J()[0];
     J->scale(4.0);
@@ -303,7 +285,7 @@ SharedMatrix CASSCF_ORB_GRAD::contract_RB_Z() {
     J->subtract((JK_->K()[0])->transpose());
 
     // transform to MO and return
-    return psi::linalg::triplet(C0_, J, C0_, true, false, false);
+    return psi::linalg::triplet(C_row, J, C_col, true, false, false);
 }
 
 void CASSCF_ORB_GRAD::compute_Lagrangian() {
@@ -319,7 +301,8 @@ void CASSCF_ORB_GRAD::compute_Lagrangian() {
         auto Wmo = std::make_shared<psi::Matrix>("Lagrangian MO (SCF)", nmopi_, nmopi_);
 
         // occupied-occupied part
-        auto L = contract_RB_Z();
+        auto Cdocc = C_subset("C_DOCC", C0_, psi::Dimension(nirrep_), hf_ndoccpi_);
+        auto L = contract_RB_Z(Z_, C0_, C0_, Cdocc, Cdocc);
         for (int h = 0; h < nirrep_; ++h) {
             for (int i = 0; i < hf_ndoccpi_[h]; ++i) {
                 for (int j = i; j < hf_ndoccpi_[h]; ++j) {

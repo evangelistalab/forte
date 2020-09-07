@@ -136,6 +136,8 @@ class CASSCF_ORB_GRAD {
     psi::Dimension ndoccpi_;
     /// The number of frozen DOCC per irrep
     psi::Dimension nfrzcpi_;
+    /// The number of frozen UOCC per irrep
+    psi::Dimension nfrzvpi_;
     /// The number of active per irrep
     psi::Dimension nactvpi_;
 
@@ -313,8 +315,17 @@ class CASSCF_ORB_GRAD {
     psi::SharedMatrix Z_;
     /// Solve Z vector equation if there are frozen orbitals
     void solve_cpscf();
-    /// Contract Roothaan-Bagus supermatrix with Z
-    psi::SharedMatrix contract_RB_Z();
+
+    /**
+     * Contract Roothaan-Bagus supermatrix with Z: sum_{pq} Z_{pq} L_{pq,rs}
+     * Roothaan-Bagus supermatrix L_{pq,rs} = 4 * (pq|rs) - (pr|sq) - (ps|rq)
+     *
+     * Express contraction in AO basis:
+     * sum_{pq} sum_{PQRS} CZrow_{Pp} Z_{pq} CZcol_{Qq} L_{PQ,RS} Crow_{Rr} Ccol_{Ss}
+     */
+    psi::SharedMatrix contract_RB_Z(psi::SharedMatrix Z, psi::SharedMatrix C_Zrow,
+                                    psi::SharedMatrix C_Zcol, psi::SharedMatrix C_row,
+                                    psi::SharedMatrix C_col);
 
     // => Some helper functions <=
 
@@ -335,6 +346,10 @@ class CASSCF_ORB_GRAD {
 
     /// Compute the exponential of a skew-symmetric matrix
     psi::SharedMatrix matrix_exponential(psi::SharedMatrix A, int n);
+
+    /// Grab part of the orbital coefficients
+    psi::SharedMatrix C_subset(const std::string& name, psi::SharedMatrix C,
+                               psi::Dimension dim_start, psi::Dimension dim_end);
 };
 } // namespace forte
 
