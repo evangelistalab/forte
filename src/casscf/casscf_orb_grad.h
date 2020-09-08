@@ -256,7 +256,7 @@ class CASSCF_ORB_GRAD {
     void build_tei_from_ao();
 
     /// JK build for Fock-like terms
-    void build_JK_fock(psi::SharedMatrix Cl, psi::SharedMatrix Cr);
+    void JK_fock_build(psi::SharedMatrix Cl, psi::SharedMatrix Cr);
 
     /// Build Fock matrix
     void build_fock(bool rebuild_inactive = false);
@@ -311,6 +311,9 @@ class CASSCF_ORB_GRAD {
     /// Hartree-Fock orbital energies
     psi::SharedVector epsilon_;
 
+    /// Compute the frozen part of the A matrix
+    void build_Am_frozen();
+
     /// Z vector for CPSCF equations
     psi::SharedMatrix Z_;
     /// Solve Z vector equation if there are frozen orbitals
@@ -335,8 +338,8 @@ class CASSCF_ORB_GRAD {
     /// Format the 1RDM from BlockedTensor to SharedMatrix
     void format_1rdm();
 
-    /// Format the A matrix from BlockedTensor to SharedMatrix
-    void format_A_matrix();
+    /// Fill Am_ matrix from BlockedTensor A
+    void fill_A_matrix_data(ambit::BlockedTensor A);
 
     /// Reshape the orbital rotation related BlockedTensor to SharedVector
     void reshape_rot_ambit(ambit::BlockedTensor bt, psi::SharedVector sv);

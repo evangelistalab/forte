@@ -60,7 +60,8 @@ namespace forte {
 
 void CASSCF_ORB_GRAD::compute_nuclear_gradient() {
     // format A to SharedMatrix
-    format_A_matrix();
+    Am_ = std::make_shared<psi::Matrix>("A (MCSCF)", nmopi_, nmopi_);
+    fill_A_matrix_data(A_);
 
     is_frozen_orbs_ = nfrzc_ or mo_space_info_->size("FROZEN_UOCC");
 
@@ -70,6 +71,9 @@ void CASSCF_ORB_GRAD::compute_nuclear_gradient() {
 
         // setup MOs and sanity check
         setup_grad_frozen();
+
+        // compute frozen part of the A matrix
+        build_Am_frozen();
 
         // transform A matrix to HF basis
         Am_ = psi::linalg::triplet(U_, Am_, U_, false, false, true);
@@ -105,10 +109,8 @@ void CASSCF_ORB_GRAD::compute_nuclear_gradient() {
     transform->backtransform_density();
 }
 
-void CASSCF_ORB_GRAD::format_A_matrix() {
-    Am_ = std::make_shared<psi::Matrix>("A (MCSCF)", nmopi_, nmopi_);
-
-    A_.citerate(
+void CASSCF_ORB_GRAD::fill_A_matrix_data(ambit::BlockedTensor A) {
+    A.citerate(
         [&](const std::vector<size_t>& i, const std::vector<SpinType>&, const double& value) {
             auto irrep_index_pair1 = mos_rel_[i[0]];
             auto irrep_index_pair2 = mos_rel_[i[1]];
@@ -147,7 +149,7 @@ void CASSCF_ORB_GRAD::setup_grad_frozen() {
     // build HF Fock matrix, assuming MCSCF initial orbitals are from HF
     auto Cdocc = C_subset("C_DOCC", C0_, psi::Dimension(nirrep_), hf_ndoccpi_);
 
-    build_JK_fock(Cdocc, Cdocc);
+    JK_fock_build(Cdocc, Cdocc);
     auto J = JK_->J()[0];
     J->scale(2.0);
     J->subtract(JK_->K()[0]);
@@ -173,6 +175,32 @@ void CASSCF_ORB_GRAD::setup_grad_frozen() {
         outfile->Printf("\n  MCSCF gradient with frozen orbitals will not work.");
         throw std::runtime_error("MCSCF grad error: initial orbitals NOT from Hartree-Fock!");
     }
+}
+
+void CASSCF_ORB_GRAD::build_Am_frozen() {
+    // fill in A_{ri}
+    for (int h = 0; h < nirrep_; ++h) {
+        for (int I = 0; I < nfrzcpi_[h]; ++I) {
+            for (int p = 0; p < nmopi_[h]; ++p) {
+                Am_->set(h, p, I, 2.0 * Fock_->get(h, p, I));
+            }
+        }
+        for (int k = nfrzcpi_[h]; k < ndoccpi_[h]; ++k) {
+            for (int I = 0; I < nfrzcpi_[h]; ++I) {
+                Am_->set(h, I, k, 2.0 * Fock_->get(h, I, k));
+            }
+            for (int B = nmopi_[h] - nfrzvpi_[h]; B < nmopi_[h]; ++B) {
+                Am_->set(h, B, k, 2.0 * Fock_->get(h, B, k));
+            }
+        }
+    }
+
+    // compute A_{ru}
+    auto At = ambit::BlockedTensor::build(CoreTensor, "A", {"Fa"});
+    At["Mu"] = Fc_["Mt"] * D1_["tu"];
+    At["Mu"] += V_["Mtvw"] * D2_["tuvw"];
+
+    fill_A_matrix_data(At);
 }
 
 void CASSCF_ORB_GRAD::solve_cpscf() {
@@ -277,7 +305,7 @@ SharedMatrix CASSCF_ORB_GRAD::contract_RB_Z(psi::SharedMatrix Z, psi::SharedMatr
     auto Cdressed = psi::linalg::doublet(C_Zrow, Z, false, false);
 
     // JK build
-    build_JK_fock(Cdressed, C_Zcol);
+    JK_fock_build(Cdressed, C_Zcol);
 
     auto J = JK_->J()[0];
     J->scale(4.0);
