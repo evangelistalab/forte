@@ -397,13 +397,13 @@ double DSRG_MRPT2::compute_energy() {
     // EVT2 += Etemp;
     // energy.push_back({"<[V, T2]> (C_2)^4", Etemp});
 
-    // Etemp = E_VT2_4HH();
-    // EVT2 += Etemp;
-    // energy.push_back({"<[V, T2]> C_4 (C_2)^2 HH", Etemp});
-
-    Etemp = E_VT2_4PP();
+    Etemp = E_VT2_4HH();
     EVT2 += Etemp;
-    energy.push_back({"<[V, T2]> C_4 (C_2)^2 PP", Etemp});
+    energy.push_back({"<[V, T2]> C_4 (C_2)^2 HH", Etemp});
+
+    // Etemp = E_VT2_4PP();
+    // EVT2 += Etemp;
+    // energy.push_back({"<[V, T2]> C_4 (C_2)^2 PP", Etemp});
 
     // Etemp = E_VT2_4PH();
     // EVT2 += Etemp;

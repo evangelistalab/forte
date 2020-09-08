@@ -48,11 +48,11 @@ set forte {
 Ecas, ref = energy('casscf', return_wfn=True)
 
 
-grad = gradient('forte', ref_wfn = ref)
+# grad = gradient('forte', ref_wfn = ref)
 
 set findif{ 
   points 5
-  DISP_SIZE 0.003
+  DISP_SIZE 0.001
 }
-# grad = gradient('forte',dertype="energy")
+grad = gradient('forte',dertype="energy")
 

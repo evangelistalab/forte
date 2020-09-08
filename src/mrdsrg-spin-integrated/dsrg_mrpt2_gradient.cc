@@ -47,7 +47,8 @@ namespace forte {
 
 
 const bool PT2_TERM = false;
-const bool X1_TERM = true;
+const bool X1_TERM = false;
+const bool X2_TERM = true;
 const bool CORRELATION_TERM = true;
 
 void DSRG_MRPT2::set_all_variables() {
@@ -302,7 +303,13 @@ void DSRG_MRPT2::set_tau() {
     if (X1_TERM) {
         Tau1["uvab"] += 0.125 * Eeps2_m1["uvab"] * V_["cdxy"] * Eta1["ac"] * Eta1["bd"] * Lambda2_["xyuv"];
         Tau1["UVAB"] += 0.125 * Eeps2_m1["UVAB"] * V_["CDXY"] * Eta1["AC"] * Eta1["BD"] * Lambda2_["XYUV"];
-        Tau1["uVaB"] += 0.25 * Eeps2_m1["uVaB"] * V_["cDxY"] * Eta1["ac"] * Eta1["BD"] * Lambda2_["xYuV"];  
+        Tau1["uVaB"] += 0.250 * Eeps2_m1["uVaB"] * V_["cDxY"] * Eta1["ac"] * Eta1["BD"] * Lambda2_["xYuV"];  
+    }
+    // <[V, T2]> C_4 (C_2)^2 HH
+    if (X2_TERM) {
+        Tau1["ijxy"] += 0.125 * Eeps2_m1["ijxy"] * V_["uvkl"] * Gamma1["ki"] * Gamma1["lj"] * Lambda2_["xyuv"];
+        Tau1["IJXY"] += 0.125 * Eeps2_m1["IJXY"] * V_["UVKL"] * Gamma1["KI"] * Gamma1["LJ"] * Lambda2_["XYUV"];
+        Tau1["iJxY"] += 0.250 * Eeps2_m1["iJxY"] * V_["uVkL"] * Gamma1["ki"] * Gamma1["LJ"] * Lambda2_["xYuV"];
     }
 
     // Tau * Delta
@@ -316,7 +323,13 @@ void DSRG_MRPT2::set_tau() {
     if (X1_TERM) {
         Tau2["uvab"] += 0.125 * V_["cdxy"] * Eta1["ac"] * Eta1["bd"] * Lambda2_["xyuv"];
         Tau2["UVAB"] += 0.125 * V_["CDXY"] * Eta1["AC"] * Eta1["BD"] * Lambda2_["XYUV"];
-        Tau2["uVaB"] += 0.25 * V_["cDxY"] * Eta1["ac"] * Eta1["BD"] * Lambda2_["xYuV"];
+        Tau2["uVaB"] += 0.250 * V_["cDxY"] * Eta1["ac"] * Eta1["BD"] * Lambda2_["xYuV"];
+    }
+    // <[V, T2]> C_4 (C_2)^2 HH
+    if (X2_TERM) {
+        Tau2["ijxy"] += 0.125 * V_["uvkl"] * Gamma1["ki"] * Gamma1["lj"] * Lambda2_["xyuv"];
+        Tau2["IJXY"] += 0.125 * V_["UVKL"] * Gamma1["KI"] * Gamma1["LJ"] * Lambda2_["XYUV"];
+        Tau2["iJxY"] += 0.250 * V_["uVkL"] * Gamma1["ki"] * Gamma1["LJ"] * Lambda2_["xYuV"];
     }
 
     // NOTICE: remove the internal parts based on the DSRG theories
@@ -342,17 +355,15 @@ void DSRG_MRPT2::set_kappa() {
     if (X1_TERM) {
         Kappa["xycd"] += 0.125 * T2_["uvab"] * Eta1["ac"] * Eta1["bd"] * Lambda2_["xyuv"];
         Kappa["XYCD"] += 0.125 * T2_["UVAB"] * Eta1["AC"] * Eta1["BD"] * Lambda2_["XYUV"];
-        Kappa["xYcD"] += 0.25 * T2_["uVaB"] * Eta1["ac"] * Eta1["BD"] * Lambda2_["xYuV"];
+        Kappa["xYcD"] += 0.250 * T2_["uVaB"] * Eta1["ac"] * Eta1["BD"] * Lambda2_["xYuV"];
+    }
+    // <[V, T2]> C_4 (C_2)^2 HH
+    if (X2_TERM) {
+        Kappa["kluv"] += 0.125 * T2_["ijxy"] * Gamma1["ki"] * Gamma1["lj"] * Lambda2_["xyuv"];
+        Kappa["KLUV"] += 0.125 * T2_["IJXY"] * Gamma1["KI"] * Gamma1["LJ"] * Lambda2_["XYUV"];
+        Kappa["kLuV"] += 0.250 * T2_["iJxY"] * Gamma1["ki"] * Gamma1["LJ"] * Lambda2_["xYuV"];
     }
     outfile->Printf("Done");
-
-    double eee = 0.0;
-    eee += 0.125 * V_["cdxy"] * T2_["uvab"] * Eta1["ac"] * Eta1["bd"] * Lambda2_["xyuv"];
-    eee += 0.125 * V_["CDXY"] * T2_["UVAB"] * Eta1["AC"] * Eta1["BD"] * Lambda2_["XYUV"];
-    eee += V_["cDxY"] * T2_["uVaB"] * Eta1["ac"] * Eta1["BD"] * Lambda2_["xYuV"];
-
-    std::cout<< "eee = " << std::fixed << std::setprecision(12) << eee << std::endl;
-
 }
 
 void DSRG_MRPT2::set_z() {
@@ -1700,8 +1711,7 @@ void DSRG_MRPT2::solve_z() {
         b_ck("K") -= 0.5 * temp.block("AA")("UV") * cc1b_("JKUV") * ci("J");
         temp.zero();
     }
-
-    BlockedTensor temp4 = BTF_->build(CoreTensor, "temporal tensor 4 indices", {"aaaa","AAAA","aAaA"});
+ 
     if (X1_TERM) {
         temp["zw"] -= 0.125 * T2_["uvwb"] * V_["zdxy"] * Eta1["bd"] * Lambda2_["xyuv"];
         temp["zw"] -= 0.500 * T2_["uVwB"] * V_["zDxY"] * Eta1["BD"] * Lambda2_["xYuV"];
@@ -1727,8 +1737,38 @@ void DSRG_MRPT2::solve_z() {
         b_ck("K") -= 0.5 * temp.block("AA")("ZW") * cc1b_("KJZW") * ci("J");
         b_ck("K") -= 0.5 * temp.block("aa")("zw") * cc1a_("JKzw") * ci("J"); 
         b_ck("K") -= 0.5 * temp.block("AA")("ZW") * cc1b_("JKZW") * ci("J");
+        temp.zero();
     }
 
+    if (X2_TERM) {
+        temp["zw"] += 0.125 * T2_["wjxy"] * V_["uvzl"] * Gamma1["lj"] * Lambda2_["xyuv"];
+        temp["zw"] += 0.500 * T2_["wJxY"] * V_["uVzL"] * Gamma1["LJ"] * Lambda2_["xYuV"];
+        temp["ZW"] += 0.125 * T2_["WJXY"] * V_["UVZL"] * Gamma1["LJ"] * Lambda2_["XYUV"];
+        temp["ZW"] += 0.500 * T2_["jWxY"] * V_["uVlZ"] * Gamma1["lj"] * Lambda2_["xYuV"];
+
+        temp["zw"] += 0.125 * T2_["zjxy"] * V_["uvwl"] * Gamma1["lj"] * Lambda2_["xyuv"];
+        temp["zw"] += 0.500 * T2_["zJxY"] * V_["uVwL"] * Gamma1["LJ"] * Lambda2_["xYuV"];
+        temp["ZW"] += 0.125 * T2_["ZJXY"] * V_["UVWL"] * Gamma1["LJ"] * Lambda2_["XYUV"];
+        temp["ZW"] += 0.500 * T2_["jZxY"] * V_["uVlW"] * Gamma1["lj"] * Lambda2_["xYuV"];
+
+        temp["zw"] += 0.125 * T2_["iwxy"] * V_["uvkz"] * Gamma1["ki"] * Lambda2_["xyuv"];
+        temp["zw"] += 0.500 * T2_["wIxY"] * V_["uVzK"] * Gamma1["KI"] * Lambda2_["xYuV"];
+        temp["ZW"] += 0.125 * T2_["IWXY"] * V_["UVKZ"] * Gamma1["KI"] * Lambda2_["XYUV"];
+        temp["ZW"] += 0.500 * T2_["iWxY"] * V_["uVkZ"] * Gamma1["ki"] * Lambda2_["xYuV"];
+
+        temp["zw"] += 0.125 * T2_["izxy"] * V_["uvkw"] * Gamma1["ki"] * Lambda2_["xyuv"];
+        temp["zw"] += 0.500 * T2_["zIxY"] * V_["uVwK"] * Gamma1["KI"] * Lambda2_["xYuV"];
+        temp["ZW"] += 0.125 * T2_["IZXY"] * V_["UVKW"] * Gamma1["KI"] * Lambda2_["XYUV"];
+        temp["ZW"] += 0.500 * T2_["iZxY"] * V_["uVkW"] * Gamma1["ki"] * Lambda2_["xYuV"];
+
+        b_ck("K") -= 0.5 * temp.block("aa")("zw") * cc1a_("KJzw") * ci("J"); 
+        b_ck("K") -= 0.5 * temp.block("AA")("ZW") * cc1b_("KJZW") * ci("J");
+        b_ck("K") -= 0.5 * temp.block("aa")("zw") * cc1a_("JKzw") * ci("J"); 
+        b_ck("K") -= 0.5 * temp.block("AA")("ZW") * cc1b_("JKZW") * ci("J");
+        temp.zero();   
+    }
+
+    BlockedTensor temp4 = BTF_->build(CoreTensor, "temporal tensor 4 indices", {"aaaa","AAAA","aAaA"});
     auto dlamb_aa = ambit::Tensor::build(ambit::CoreTensor, "derivatives of Lambda2_ w.r.t. C_K alpha-alpha", {ndets, na_, na_, na_, na_});
     auto dlamb_bb = ambit::Tensor::build(ambit::CoreTensor, "derivatives of Lambda2_ w.r.t. C_K beta-beta", {ndets, na_, na_, na_, na_});
     auto dlamb_ab = ambit::Tensor::build(ambit::CoreTensor, "derivatives of Lambda2_ w.r.t. C_K alpha-beta", {ndets, na_, na_, na_, na_});
@@ -1762,14 +1802,27 @@ void DSRG_MRPT2::solve_z() {
     dlamb_ab("KxYuV") -= cc1b_("KJYV") * ci("J") * Gamma1.block("aa")("xu");
     dlamb_ab("KxYuV") -= cc1b_("KJVY") * ci("J") * Gamma1.block("aa")("xu");
 
-    temp4["uvxy"] += 0.125 * V_["cdxy"] * T2_["uvab"] * Eta1["ac"] * Eta1["bd"];
-    temp4["UVXY"] += 0.125 * V_["CDXY"] * T2_["UVAB"] * Eta1["AC"] * Eta1["BD"];
-    temp4["uVxY"] += V_["cDxY"] * T2_["uVaB"] * Eta1["ac"] * Eta1["BD"];
+    if (X1_TERM) {
+        temp4["uvxy"] += 0.125 * V_["cdxy"] * T2_["uvab"] * Eta1["ac"] * Eta1["bd"];
+        temp4["UVXY"] += 0.125 * V_["CDXY"] * T2_["UVAB"] * Eta1["AC"] * Eta1["BD"];
+        temp4["uVxY"] += V_["cDxY"] * T2_["uVaB"] * Eta1["ac"] * Eta1["BD"];
 
+        b_ck("K") -= temp4.block("aaaa")("uvxy") * dlamb_aa("Kxyuv");
+        b_ck("K") -= temp4.block("AAAA")("UVXY") * dlamb_bb("KXYUV");
+        b_ck("K") -= temp4.block("aAaA")("uVxY") * dlamb_ab("KxYuV");
+        temp4.zero();
+    }
 
-    b_ck("K") -= temp4.block("aaaa")("uvxy") * dlamb_aa("Kxyuv");
-    b_ck("K") -= temp4.block("AAAA")("UVXY") * dlamb_bb("KXYUV");
-    b_ck("K") -= temp4.block("aAaA")("uVxY") * dlamb_ab("KxYuV");
+    if (X2_TERM) {
+        temp4["uvxy"] += 0.125 * V_["uvkl"] * T2_["ijxy"] * Gamma1["ki"] * Gamma1["lj"];
+        temp4["UVXY"] += 0.125 * V_["UVKL"] * T2_["IJXY"] * Gamma1["KI"] * Gamma1["LJ"];
+        temp4["uVxY"] += V_["uVkL"] * T2_["iJxY"] * Gamma1["ki"] * Gamma1["LJ"];
+
+        b_ck("K") -= temp4.block("aaaa")("uvxy") * dlamb_aa("Kxyuv");
+        b_ck("K") -= temp4.block("AAAA")("UVXY") * dlamb_bb("KXYUV");
+        b_ck("K") -= temp4.block("aAaA")("uVxY") * dlamb_ab("KxYuV");
+        temp4.zero();
+    }
 
 
     // TODO: need to plug in alpha terms
@@ -1841,11 +1894,37 @@ void DSRG_MRPT2::solve_z() {
 
         Alpha += 0.25 * V_["cdxy"] * T2_["uvab"] * Eta1["ac"] * Eta1["bd"] * Lambda2_["xyuv"];
         Alpha += 0.25 * V_["CDXY"] * T2_["UVAB"] * Eta1["AC"] * Eta1["BD"] * Lambda2_["XYUV"];
-        Alpha += 2.0 * V_["cDxY"] * T2_["uVaB"] * Eta1["ac"] * Eta1["BD"] * Lambda2_["xYuV"];
+        Alpha += 2.00 * V_["cDxY"] * T2_["uVaB"] * Eta1["ac"] * Eta1["BD"] * Lambda2_["xYuV"];
 
         Alpha -= 0.125 * V_["cdxy"] * T2_["uvab"] * Eta1["ac"] * Eta1["bd"] * Gamma2["xyuv"];
         Alpha -= 0.125 * V_["CDXY"] * T2_["UVAB"] * Eta1["AC"] * Eta1["BD"] * Gamma2["XYUV"];
         Alpha -= V_["cDxY"] * T2_["uVaB"] * Eta1["ac"] * Eta1["BD"] * Gamma2["xYuV"];
+    }
+
+    if (X2_TERM) {
+        Alpha += 1/16.0 * T2_["wjxy"] * V_["uvzl"] * Gamma1["zw"] * Gamma1["lj"] * Lambda2_["xyuv"];
+        Alpha += 1/16.0 * T2_["WJXY"] * V_["UVZL"] * Gamma1["ZW"] * Gamma1["LJ"] * Lambda2_["XYUV"];
+        Alpha += 0.5 * T2_["wJxY"] * V_["uVzL"] * Gamma1["zw"] * Gamma1["LJ"] * Lambda2_["xYuV"];
+
+        Alpha += 1/16.0 * T2_["zjxy"] * V_["uvwl"] * Gamma1["zw"] * Gamma1["lj"] * Lambda2_["xyuv"];
+        Alpha += 1/16.0 * T2_["ZJXY"] * V_["UVWL"] * Gamma1["ZW"] * Gamma1["LJ"] * Lambda2_["XYUV"];
+        Alpha += 0.5 * T2_["zJxY"] * V_["uVwL"] * Gamma1["zw"] * Gamma1["LJ"] * Lambda2_["xYuV"];
+
+        Alpha += 1/16.0 * T2_["iwxy"] * V_["uvkz"] * Gamma1["zw"] * Gamma1["ki"] * Lambda2_["xyuv"];
+        Alpha += 1/16.0 * T2_["IWXY"] * V_["UVKZ"] * Gamma1["ZW"] * Gamma1["KI"] * Lambda2_["XYUV"];
+        Alpha += 0.5 * T2_["iWxY"] * V_["uVkZ"] * Gamma1["ZW"] * Gamma1["ki"] * Lambda2_["xYuV"];
+
+        Alpha += 1/16.0 * T2_["izxy"] * V_["uvkw"] * Gamma1["zw"] * Gamma1["ki"] * Lambda2_["xyuv"];
+        Alpha += 1/16.0 * T2_["IZXY"] * V_["UVKW"] * Gamma1["ZW"] * Gamma1["KI"] * Lambda2_["XYUV"];
+        Alpha += 0.5 * T2_["iZxY"] * V_["uVkW"] * Gamma1["ZW"] * Gamma1["ki"] * Lambda2_["xYuV"];
+
+        Alpha += 0.25 * V_["uvkl"] * T2_["ijxy"] * Gamma1["ki"] * Gamma1["lj"] * Lambda2_["xyuv"];
+        Alpha += 0.25 * V_["UVKL"] * T2_["IJXY"] * Gamma1["KI"] * Gamma1["LJ"] * Lambda2_["XYUV"];
+        Alpha += 2.00 * V_["uVkL"] * T2_["iJxY"] * Gamma1["ki"] * Gamma1["LJ"] * Lambda2_["xYuV"];
+
+        Alpha -= 0.125 * V_["uvkl"] * T2_["ijxy"] * Gamma1["ki"] * Gamma1["lj"] * Gamma2["xyuv"];
+        Alpha -= 0.125 * V_["UVKL"] * T2_["IJXY"] * Gamma1["KI"] * Gamma1["LJ"] * Gamma2["XYUV"];
+        Alpha -= V_["uVkL"] * T2_["iJxY"] * Gamma1["ki"] * Gamma1["LJ"] * Gamma2["xYuV"];
     }
 
     Alpha += Z["mn"] * V["m,v1,n,u1"] * Gamma1["u1,v1"];
