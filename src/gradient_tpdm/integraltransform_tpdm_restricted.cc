@@ -76,18 +76,18 @@ void TPDMBackTransform::backtransform_tpdm_restricted() {
         outfile->Printf("\n    Starting first half-transformation (MCSCF).");
     }
 
-    psio_->open(PSIF_TPDM_PRESORT, PSIO_OPEN_OLD);
-    psio_->open(PSIF_TPDM_HALFTRANS, PSIO_OPEN_NEW);
+    psio_->open(PSIF_FORTE_TPDM_PRESORT, PSIO_OPEN_OLD);
+    psio_->open(PSIF_FORTE_TPDM_HALFTRANS, PSIO_OPEN_NEW);
 
     /*** (AA|aa) -> (AA|nn) ***/
 
-    global_dpd_->buf4_init(&J, PSIF_TPDM_PRESORT, 0, DPD_ID("[A>=A]+"), DPD_ID("[A,A]"),
+    global_dpd_->buf4_init(&J, PSIF_FORTE_TPDM_PRESORT, 0, DPD_ID("[A>=A]+"), DPD_ID("[A,A]"),
                            DPD_ID("[A>=A]+"), DPD_ID("[A>=A]+"), 0, "MO TPDM (AA|AA)");
     if (print_ > 2) {
         global_dpd_->buf4_print(&J, "outfile", 1);
     }
 
-    global_dpd_->buf4_init(&K, PSIF_TPDM_HALFTRANS, 0, DPD_ID("[A>=A]+"), DPD_ID("[n,n]"),
+    global_dpd_->buf4_init(&K, PSIF_FORTE_TPDM_HALFTRANS, 0, DPD_ID("[A>=A]+"), DPD_ID("[n,n]"),
                            DPD_ID("[A>=A]+"), DPD_ID("[n>=n]+"), 0,
                            "Half-Transformed TPDM (AA|nn)");
 
@@ -157,21 +157,21 @@ void TPDMBackTransform::backtransform_tpdm_restricted() {
     global_dpd_->buf4_close(&K);
     global_dpd_->buf4_close(&J);
 
-    psio_->close(PSIF_TPDM_PRESORT, keepDpdMoTpdm_);
+    psio_->close(PSIF_FORTE_TPDM_PRESORT, keepDpdMoTpdm_);
 
     // if there is additional set of orbitals
     if (Ca_forte_ != nullptr) {
-        psio_->open(PSIF_AA_PRESORT, PSIO_OPEN_OLD);
-        psio_->open(PSIF_AB_PRESORT, PSIO_OPEN_NEW);
+        psio_->open(PSIF_FORTE_TPDM_PRESORT2, PSIO_OPEN_OLD);
+        psio_->open(PSIF_FORTE_TPDM_HALFTRANS2, PSIO_OPEN_NEW);
 
         if (print_) {
             outfile->Printf("\n    Starting first half-transformation (SCF).");
         }
 
-        global_dpd_->buf4_init(&J, PSIF_AA_PRESORT, 0, DPD_ID("[A>=A]+"), DPD_ID("[A,A]"),
+        global_dpd_->buf4_init(&J, PSIF_FORTE_TPDM_PRESORT2, 0, DPD_ID("[A>=A]+"), DPD_ID("[A,A]"),
                                DPD_ID("[A>=A]+"), DPD_ID("[A>=A]+"), 0, "MO TPDM (AA|AA)");
-        global_dpd_->buf4_init(&K, PSIF_AB_PRESORT, 0, DPD_ID("[A>=A]+"), DPD_ID("[n,n]"),
-                               DPD_ID("[A>=A]+"), DPD_ID("[n>=n]+"), 0,
+        global_dpd_->buf4_init(&K, PSIF_FORTE_TPDM_HALFTRANS2, 0, DPD_ID("[A>=A]+"),
+                               DPD_ID("[n,n]"), DPD_ID("[A>=A]+"), DPD_ID("[n>=n]+"), 0,
                                "Half-Transformed TPDM (AA|nn)");
 
         for (int h = 0; h < nirreps_; h++) {
@@ -183,7 +183,7 @@ void TPDMBackTransform::backtransform_tpdm_restricted() {
                 rowsPerBucket = memFree / (2 * Jcol);
                 rowsPerBucket = rowsPerBucket > Jrow ? Jrow : rowsPerBucket;
                 nBuckets = static_cast<int>(
-                            ceil(static_cast<double>(Jrow) / static_cast<double>(rowsPerBucket)));
+                    ceil(static_cast<double>(Jrow) / static_cast<double>(rowsPerBucket)));
                 rowsLeft = static_cast<size_t>(Jrow % rowsPerBucket);
             } else {
                 nBuckets = 0;
@@ -240,26 +240,26 @@ void TPDMBackTransform::backtransform_tpdm_restricted() {
         global_dpd_->buf4_close(&K);
         global_dpd_->buf4_close(&J);
 
-        psio_->close(PSIF_AA_PRESORT, keepDpdMoTpdm_);
+        psio_->close(PSIF_FORTE_TPDM_PRESORT2, keepDpdMoTpdm_);
     }
 
     if (print_) {
         outfile->Printf("\n    Sorting half-transformed TPDMs.");
     }
 
-    global_dpd_->buf4_init(&K, PSIF_TPDM_HALFTRANS, 0, DPD_ID("[A>=A]+"), DPD_ID("[n>=n]+"),
+    global_dpd_->buf4_init(&K, PSIF_FORTE_TPDM_HALFTRANS, 0, DPD_ID("[A>=A]+"), DPD_ID("[n>=n]+"),
                            DPD_ID("[A>=A]+"), DPD_ID("[n>=n]+"), 0,
                            "Half-Transformed TPDM (AA|nn)");
-    global_dpd_->buf4_sort(&K, PSIF_TPDM_HALFTRANS, rspq, DPD_ID("[n>=n]+"), DPD_ID("[A>=A]+"),
-                           "Half-Transformed TPDM (nn|AA)");
+    global_dpd_->buf4_sort(&K, PSIF_FORTE_TPDM_HALFTRANS, rspq, DPD_ID("[n>=n]+"),
+                           DPD_ID("[A>=A]+"), "Half-Transformed TPDM (nn|AA)");
     global_dpd_->buf4_close(&K);
 
     if (Ca_forte_ != nullptr) {
-        global_dpd_->buf4_init(&K, PSIF_AB_PRESORT, 0, DPD_ID("[A>=A]+"), DPD_ID("[n>=n]+"),
-                               DPD_ID("[A>=A]+"), DPD_ID("[n>=n]+"), 0,
+        global_dpd_->buf4_init(&K, PSIF_FORTE_TPDM_HALFTRANS2, 0, DPD_ID("[A>=A]+"),
+                               DPD_ID("[n>=n]+"), DPD_ID("[A>=A]+"), DPD_ID("[n>=n]+"), 0,
                                "Half-Transformed TPDM (AA|nn)");
-        global_dpd_->buf4_sort(&K, PSIF_AB_PRESORT, rspq, DPD_ID("[n>=n]+"), DPD_ID("[A>=A]+"),
-                               "Half-Transformed TPDM (nn|AA)");
+        global_dpd_->buf4_sort(&K, PSIF_FORTE_TPDM_HALFTRANS2, rspq, DPD_ID("[n>=n]+"),
+                               DPD_ID("[A>=A]+"), "Half-Transformed TPDM (nn|AA)");
         global_dpd_->buf4_close(&K);
     }
 
@@ -272,15 +272,15 @@ void TPDMBackTransform::backtransform_tpdm_restricted() {
 
     /*** (nn|AA) -> (nn|nn) ***/
 
-    global_dpd_->buf4_init(&J, PSIF_TPDM_HALFTRANS, 0, DPD_ID("[n>=n]+"), DPD_ID("[A,A]"),
+    global_dpd_->buf4_init(&J, PSIF_FORTE_TPDM_HALFTRANS, 0, DPD_ID("[n>=n]+"), DPD_ID("[A,A]"),
                            DPD_ID("[n>=n]+"), DPD_ID("[A>=A]+"), 0,
                            "Half-Transformed TPDM (nn|AA)");
     global_dpd_->buf4_init(&K, PSIF_AO_TPDM, 0, DPD_ID("[n>=n]+"), DPD_ID("[n,n]"),
                            DPD_ID("[n>=n]+"), DPD_ID("[n>=n]+"), 0, "SO Basis TPDM (nn|nn)");
 
     if (Ca_forte_ != nullptr) {
-        global_dpd_->buf4_init(&J2, PSIF_AB_PRESORT, 0, DPD_ID("[n>=n]+"), DPD_ID("[A,A]"),
-                               DPD_ID("[n>=n]+"), DPD_ID("[A>=A]+"), 0,
+        global_dpd_->buf4_init(&J2, PSIF_FORTE_TPDM_HALFTRANS2, 0, DPD_ID("[n>=n]+"),
+                               DPD_ID("[A,A]"), DPD_ID("[n>=n]+"), DPD_ID("[A>=A]+"), 0,
                                "Half-Transformed TPDM (nn|AA)");
     }
 
@@ -389,12 +389,12 @@ void TPDMBackTransform::backtransform_tpdm_restricted() {
     global_dpd_->buf4_close(&J);
     if (Ca_forte_ != nullptr) {
         global_dpd_->buf4_close(&J2);
-        psio_->close(PSIF_AB_PRESORT, keepHtTpdm_);
+        psio_->close(PSIF_FORTE_TPDM_HALFTRANS2, keepHtTpdm_);
     }
 
     free_block(TMP);
 
-    psio_->close(PSIF_TPDM_HALFTRANS, keepHtTpdm_);
+    psio_->close(PSIF_FORTE_TPDM_HALFTRANS, keepHtTpdm_);
     psio_->close(PSIF_AO_TPDM, 1);
 
     // Hand DPD control back to the user
@@ -412,8 +412,8 @@ void TPDMBackTransform::presort_mo_tpdm_restricted() {
     }
 
     dpdfile4 I;
-    psio_->open(PSIF_TPDM_PRESORT, PSIO_OPEN_NEW);
-    global_dpd_->file4_init(&I, PSIF_TPDM_PRESORT, 0, DPD_ID("[A>=A]+"), DPD_ID("[A>=A]+"),
+    psio_->open(PSIF_FORTE_TPDM_PRESORT, PSIO_OPEN_NEW);
+    global_dpd_->file4_init(&I, PSIF_FORTE_TPDM_PRESORT, 0, DPD_ID("[A>=A]+"), DPD_ID("[A>=A]+"),
                             "MO TPDM (AA|AA)");
 
     size_t memoryd = memory_ / sizeof(double);
@@ -477,7 +477,7 @@ void TPDMBackTransform::presort_mo_tpdm_restricted() {
         for (int h = 0; h < nirreps_; h++) {
             I.matrix[h] = block_matrix(bucketRowDim[n][h], I.params->coltot[h]);
         }
-        IWL* iwl = new IWL(psio_.get(), PSIF_MO_TPDM, tolerance_, 1, 0);
+        IWL* iwl = new IWL(psio_.get(), PSIF_FORTE_MO_TPDM, tolerance_, 1, 0);
 
         // symmetrize (1st Boolean): scale by 0.5 when p != q and by another 0.5 when r != s
         // bra-ket (2nd Boolean): add value when p != r or q != s
@@ -515,14 +515,14 @@ void TPDMBackTransform::presort_mo_tpdm_restricted() {
     } /* end loop over buckets/passes */
 
     /* Get rid of the input integral file */
-    psio_->open(PSIF_MO_TPDM, PSIO_OPEN_OLD);
-    psio_->close(PSIF_MO_TPDM, keepIwlMoTpdm_);
+    psio_->open(PSIF_FORTE_MO_TPDM, PSIO_OPEN_OLD);
+    psio_->close(PSIF_FORTE_MO_TPDM, keepIwlMoTpdm_);
 
     // if there are additional set of orbitals
     if (Ca_forte_ != nullptr) {
-        psio_->open(PSIF_AA_PRESORT, PSIO_OPEN_NEW);
-        global_dpd_->file4_init(&I, PSIF_AA_PRESORT, 0, DPD_ID("[A>=A]+"), DPD_ID("[A>=A]+"),
-                                "MO TPDM (AA|AA)");
+        psio_->open(PSIF_FORTE_TPDM_PRESORT2, PSIO_OPEN_NEW);
+        global_dpd_->file4_init(&I, PSIF_FORTE_TPDM_PRESORT2, 0, DPD_ID("[A>=A]+"),
+                                DPD_ID("[A>=A]+"), "MO TPDM (AA|AA)");
 
         if (print_) {
             outfile->Printf("\n    Sorting File: %s nbuckets = %d", I.label, nBuckets);
@@ -534,7 +534,7 @@ void TPDMBackTransform::presort_mo_tpdm_restricted() {
             for (int h = 0; h < nirreps_; h++) {
                 I.matrix[h] = block_matrix(bucketRowDim[n][h], I.params->coltot[h]);
             }
-            IWL* iwl = new IWL(psio_.get(), PSIF_MO_AA_TPDM, tolerance_, 1, 0);
+            IWL* iwl = new IWL(psio_.get(), PSIF_FORTE_MO_TPDM2, tolerance_, 1, 0);
 
             // symmetrize (1st Boolean): scale by 0.5 when p != q and by another 0.5 when r != s
             // bra-ket (2nd Boolean): add value when p != r or q != s
@@ -572,10 +572,10 @@ void TPDMBackTransform::presort_mo_tpdm_restricted() {
         } /* end loop over buckets/passes */
 
         /* Get rid of the input integral file */
-        psio_->open(PSIF_MO_AA_TPDM, PSIO_OPEN_OLD);
-        psio_->close(PSIF_MO_AA_TPDM, keepIwlMoTpdm_);
+        psio_->open(PSIF_FORTE_MO_TPDM2, PSIO_OPEN_OLD);
+        psio_->close(PSIF_FORTE_MO_TPDM2, keepIwlMoTpdm_);
 
-        psio_->close(PSIF_AA_PRESORT, 1);
+        psio_->close(PSIF_FORTE_TPDM_PRESORT2, 1);
     }
 
     // finalize and clean up
@@ -595,5 +595,5 @@ void TPDMBackTransform::presort_mo_tpdm_restricted() {
     tpdmAlreadyPresorted_ = true;
 
     global_dpd_->file4_close(&I);
-    psio_->close(PSIF_TPDM_PRESORT, 1);
+    psio_->close(PSIF_FORTE_TPDM_PRESORT, 1);
 }

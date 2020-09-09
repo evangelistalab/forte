@@ -26,28 +26,13 @@
  * @END LICENSE
  */
 
-#include "psi4/psi4-dec.h"
-#include "psi4/psifiles.h"
-#include "psi4/libfock/jk.h"
-#include "psi4/libqt/qt.h"
-#include "psi4/libmints/molecule.h"
-#include "psi4/libmints/pointgrp.h"
-#include "psi4/libmints/matrix.h"
-#include "psi4/libmints/wavefunction.h"
-#include "psi4/libmints/basisset.h"
-#include "psi4/libmints/vector.h"
-#include "psi4/libpsi4util/PsiOutStream.h"
-#include "psi4/libpsi4util/process.h"
 #include "psi4/libiwl/iwl.hpp"
-#include "psi4/libpsio/psio.hpp"
-#include "psi4/libdpd/dpd.h"
+#include "psi4/libmints/wavefunction.h"
+#include "psi4/libpsi4util/PsiOutStream.h"
+#include "psi4/psifiles.h"
 
 #include "helpers/printing.h"
 #include "helpers/lbfgs/lbfgs.h"
-#include "helpers/timer.h"
-#include "integrals/integrals.h"
-#include "integrals/active_space_integrals.h"
-#include "base_classes/rdms.h"
 
 #include "gradient_tpdm/backtransform_tpdm.h"
 #include "casscf/casscf_orb_grad.h"
@@ -59,6 +44,8 @@ using namespace ambit;
 namespace forte {
 
 void CASSCF_ORB_GRAD::compute_nuclear_gradient() {
+    print_h2("MCSCF Gradient");
+
     // format A to SharedMatrix
     Am_ = std::make_shared<psi::Matrix>("A (MCSCF)", nmopi_, nmopi_);
     fill_A_matrix_data(A_);
@@ -67,7 +54,6 @@ void CASSCF_ORB_GRAD::compute_nuclear_gradient() {
 
     if (is_frozen_orbs_) {
         // see J. Chem. Phys. 94, 6708-6715 (1991)
-        print_h2("Solving CP-SCF Equation for MCSCF Gradient with Frozen Orbitals");
 
         // setup MOs and sanity check
         setup_grad_frozen();
@@ -426,7 +412,7 @@ void CASSCF_ORB_GRAD::compute_opdm_ao() {
 void CASSCF_ORB_GRAD::dump_tpdm_iwl() {
     psi::outfile->Printf("\n    Dumping MO TPDM to disk ...");
     auto psio = _default_psio_lib_;
-    IWL d2(psio.get(), PSIF_MO_TPDM, 1.0e-15, 0, 0);
+    IWL d2(psio.get(), PSIF_FORTE_MO_TPDM, 1.0e-15, 0, 0);
     std::string name = "outfile";
     int print = debug_print_ ? 1 : 0;
 
@@ -502,7 +488,7 @@ void CASSCF_ORB_GRAD::dump_tpdm_iwl() {
 
 void CASSCF_ORB_GRAD::dump_tpdm_iwl_hf() {
     auto psio = _default_psio_lib_;
-    IWL d2(psio.get(), PSIF_MO_AA_TPDM, 1.0e-15, 0, 0); // use PSIF_MO_AA_TPDM
+    IWL d2(psio.get(), PSIF_FORTE_MO_TPDM2, 1.0e-15, 0, 0);
     std::string name = "outfile";
     int print = debug_print_ ? 1 : 0;
 

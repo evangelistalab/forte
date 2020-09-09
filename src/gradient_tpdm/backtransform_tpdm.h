@@ -28,14 +28,14 @@
 #ifndef _backtransform_tpdm_h_
 #define _backtransform_tpdm_h_
 
-//#include <map>
-//#include <vector>
-//#include <string>
-//#include <psi4/libmints/dimension.h>
-//#include <psi4/libmints/typedefs.h>
-//#include <psi4/libtrans/mospace.h>
-
 #include <psi4/libtrans/integraltransform.h>
+
+#define PSIF_FORTE_MO_TPDM          310
+#define PSIF_FORTE_TPDM_PRESORT     311
+#define PSIF_FORTE_TPDM_HALFTRANS   312
+#define PSIF_FORTE_MO_TPDM2         320
+#define PSIF_FORTE_TPDM_PRESORT2    321
+#define PSIF_FORTE_TPDM_HALFTRANS2  322
 
 namespace psi {
 

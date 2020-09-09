@@ -50,6 +50,13 @@
 
 #include "casscf/casscf_orb_grad.h"
 
+#ifdef _OPENMP
+#include <omp.h>
+#else
+#define omp_get_max_threads() 1
+#define omp_get_thread_num() 0
+#endif
+
 using namespace psi;
 using namespace ambit;
 
@@ -439,7 +446,7 @@ void CASSCF_ORB_GRAD::build_tei_from_ao() {
     // figure out memeory bottleneck
     size_t mem_sys = psi::Process::environment.get_memory() * 0.85;
     size_t max_elements = nactv_ * nactv_ * nso_ * nso_ * sizeof(double);
-    size_t n_buckets = max_elements / mem_sys + (max_elements % mem_sys ? 1: 0);
+    size_t n_buckets = max_elements / mem_sys + (max_elements % mem_sys ? 1 : 0);
 
     size_t n_pairs = nactv_ * (nactv_ + 1) / 2;
     size_t n_pairspb = n_pairs / n_buckets;
@@ -480,6 +487,7 @@ void CASSCF_ORB_GRAD::build_tei_from_ao() {
 
             auto half_trans = psi::linalg::triplet(C_nosym, JK_->J()[i], Cact, true, false, false);
 
+#pragma omp parallel for
             for (size_t p = 0; p < nmo_; ++p) {
                 size_t np = mos_rel_space_[p].second;
 

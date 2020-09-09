@@ -182,6 +182,8 @@ double MCSCF_2STEP::compute_energy() {
             epsilon = epsilon > 1.0e-5 ? 1.0e-5 : epsilon;
             lbfgs_param->epsilon = epsilon < g_conv_ ? g_conv_ : epsilon;
         }
+
+        print_h2("Optimizing Orbitals for Current RDMs");
         double e_o = lbfgs.minimize(cas_grad, R);
 
         // info for orbital optimization
