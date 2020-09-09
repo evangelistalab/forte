@@ -390,7 +390,8 @@ void CASSCF_ORB_GRAD::build_tei_from_ao() {
     // and return the integrals of type <px|uy> = (pu|xy).
     timer_on("Build (pu|xy) integrals");
 
-    // Transform C matrix to C1 symmetry (due to product of symmetries for 4 indices)
+    // Transform C matrix to C1 symmetry
+    // JK does not support mixed symmetry needed for 4-index integrals (York 09/09/2020)
     psi::SharedMatrix aotoso = ints_->wfn()->aotoso();
     auto C_nosym = std::make_shared<psi::Matrix>(nso_, nmo_);
 
@@ -435,41 +436,65 @@ void CASSCF_ORB_GRAD::build_tei_from_ao() {
     Cl.clear();
     Cr.clear();
 
+    // figure out memeory bottleneck
+    size_t mem_sys = psi::Process::environment.get_memory() * 0.85;
+    size_t max_elements = nactv_ * nactv_ * nso_ * nso_ * sizeof(double);
+    size_t n_buckets = max_elements / mem_sys + (max_elements % mem_sys ? 1: 0);
+
+    size_t n_pairs = nactv_ * (nactv_ + 1) / 2;
+    size_t n_pairspb = n_pairs / n_buckets;
+    size_t n_mod = n_pairs - n_buckets * n_pairspb;
+
+    // throw for JK's strange "same" test in compute_D() of jk.cc (York 09/09/2020)
+    if (n_pairspb == 1 and nirrep_ != 1)
+        throw std::runtime_error("JK does not work in this case.");
+
+    // put all (x,y) pairs to a vector for easy splittig to buckets
+    std::vector<std::tuple<int, int>> pairs;
+    pairs.reserve(nactv_ * (nactv_ + 1) / 2);
     for (size_t x = 0; x < nactv_; ++x) {
         for (size_t y = x; y < nactv_; ++y) {
-            Cl.push_back(Cact_vec[x]);
-            Cr.push_back(Cact_vec[y]);
+            pairs.push_back(std::make_tuple(x, y));
         }
     }
 
-    JK_->compute();
-
-    // second-half transformation and fill in to BlockedTensor
+    // JK compute
     size_t nactv2 = nactv_ * nactv_;
     size_t nactv3 = nactv2 * nactv_;
+    for (size_t N = 0, offset = 0; N < n_buckets; ++N) {
+        size_t n_pairs = N < n_mod ? n_pairspb + 1 : n_pairspb;
 
-    for (size_t x = 0, offset = 0; x < nactv_; ++x) {
-        offset += x;
-        for (size_t y = x; y < nactv_; ++y) {
-            std::shared_ptr<psi::Matrix> J = JK_->J()[x * nactv_ + y - offset];
-            auto half_trans = psi::linalg::triplet(C_nosym, J, Cact, true, false, false);
+        Cl.clear();
+        Cr.clear();
+
+        for (size_t i = 0; i < n_pairs; ++i) {
+            Cl.push_back(Cact_vec[std::get<0>(pairs[i + offset])]);
+            Cr.push_back(Cact_vec[std::get<1>(pairs[i + offset])]);
+        }
+        JK_->compute();
+
+        // transform to MO and fill V_
+        for (size_t i = 0; i < n_pairs; ++i) {
+            auto x = std::get<0>(pairs[i + offset]);
+            auto y = std::get<1>(pairs[i + offset]);
+
+            auto half_trans = psi::linalg::triplet(C_nosym, JK_->J()[i], Cact, true, false, false);
 
             for (size_t p = 0; p < nmo_; ++p) {
-                // grab the block data
-                std::string p_space = mos_rel_space_[p].first;
-                std::string block = p_space + "aaa";
-
                 size_t np = mos_rel_space_[p].second;
+
+                std::string block = mos_rel_space_[p].first + "aaa";
                 auto& data = V_.block(block).data();
 
                 for (size_t u = 0; u < nactv_; ++u) {
                     double value = half_trans->get(p, u);
-
                     data[np * nactv3 + u * nactv2 + x * nactv_ + y] = value;
                     data[np * nactv3 + u * nactv2 + y * nactv_ + x] = value;
                 }
             }
         }
+
+        offset += n_pairs;
     }
 
     timer_off("Build (pu|xy) integrals");
@@ -561,9 +586,9 @@ void CASSCF_ORB_GRAD::build_fock_active() {
 
     // transform to MO
     Fock_->transform(C_);
+    Fock_->set_name("Fock_active");
 
     if (debug_print_) {
-        Fock_->set_name("Fock_active");
         Fock_->print();
     }
 }
