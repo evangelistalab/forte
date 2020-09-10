@@ -16,9 +16,8 @@ install:
   - hash -r
   - conda config --set always_yes yes --set changeps1 no
   - conda update -q conda
-  - conda create -q -n tenv python=$PYTHON_VER gcc_linux-64 gxx_linux-64 gfortran_linux-64 psi4=1.4a2.dev612 psi4-dev cmake hdf5 pybind11 ci-psi4 -c psi4/label/dev -c psi4
+  - conda create -q -n tenv python=$PYTHON_VER gcc_linux-64 gxx_linux-64 gfortran_linux-64 psi4=1.4a2.dev612 psi4-dev cmake hdf5 pybind11 ci-psi4 boost pytest-xdist ambit=0.5.1 -c psi4/label/dev -c psi4
   - source activate tenv
-  - conda install boost pytest-xdist ambit=0.5.1 -c psi4/label/dev -c psi4
   - conda install blas=*=mkl mkl-include -c conda-forge
   - conda install pytest pytest-cov codecov lcov -c conda-forge
   - pip install pytest-shutil
