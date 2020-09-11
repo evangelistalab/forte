@@ -207,7 +207,7 @@ class CubeFile():
         pos_level = 0.0
         sum = functools.reduce(lambda i, j: i + j**power,
                                [sorted_data[0]**power] + sorted_data[1:])
-        partial_sum = 0
+        partial_sum = 0.0
         for n in range(len(sorted_data)):
             partial_sum += sorted_data[n]**power
             if partial_sum / sum < fraction:

@@ -101,10 +101,10 @@ class Py3JSRenderer():
         self.height = height
         # aspect ratio
         self.aspect = float(self.width) / float(self.height)
-        self.bond_radius = 0.2  # a.u.
+        self.bond_radius = 0.15 #0.2  # a.u.
         self.bond_color = '#777777'
         self.angtobohr = 1.88973  # TODO: use Psi4's value
-        self.atom_size = 0.65  # scaling factor for atom geometry
+        self.atom_size = 0.5  # scaling factor for atom geometry
         self.atom_geometries = {}
         self.atom_materials = {}
         self.bond_materials = {}
@@ -113,6 +113,11 @@ class Py3JSRenderer():
         self.cube_meshes = defaultdict(list)
         # a list of active cubefile meshes
         self.active_cube_meshes = []
+        # normal mode meshes
+        self.normal_modes_meshes = []
+        # the active normal mode
+        self.active_normal_mode = None
+
         # set an initial scene size
         self.camera_width = 10.0
         self.camera_height = self.camera_width / self.aspect
@@ -168,6 +173,25 @@ class Py3JSRenderer():
                 for mesh in self.cube_meshes[
                         cube]:  # each cube has multiple meshes
                     self.scene.remove(mesh)
+
+    def set_active_mode(self, active_mode):
+        """
+        Set the active cubes
+        """
+        # let the user pass a string or a list of strings
+#        if isinstance(active_mode, int):
+#            active_cubes = [active_cubes]
+
+        # find cubes that must be removed (those plotted not included in the new list)
+#        to_remove = set(self.active_cube_meshes).difference(set(active_cubes))
+#        to_add = set(active_cubes).difference(set(self.active_cube_meshes))
+#        self.active_cube_meshes = active_cubes
+
+        self.scene.add(self.normal_modes_meshes[active_mode])
+        if self.active_normal_mode != None:
+            self.scene.remove(self.normal_modes_meshes[self.active_normal_mode])
+
+        self.active_normal_mode = active_mode
 
     def show_molecule(self, wfn, shift_to_com=True):
         mol = wfn.molecule()
@@ -410,6 +434,13 @@ class Py3JSRenderer():
             self.scene.add(mesh)
             self.active_cube_meshes.append(mesh)
 
+    def add_normal_modes(self,
+                         coordinates,
+                         frequencies,
+                         modes):
+        for freq, mode in zip(frequencies,modes):
+            self.normal_modes_meshes.append(self.__normal_mode_mesh(coordinates,mode))
+
     def __cube_mesh(self, cube, type, levels, sumlevel, colors, opacity, Xcm,
                     Ycm, Zcm):
         meshes = []
@@ -433,6 +464,20 @@ class Py3JSRenderer():
                                               extent=extent,
                                               opacity=opacity)
                 meshes.append(mesh)
+        return meshes
+
+    def __normal_mode_mesh(self, coordinates, mode):
+        meshes = []
+        for xyz,disp in zip(coordinates,mode):
+            norm = 0.0
+            for d in disp:
+                norm += d**2
+            if norm != 0.0:
+                xyz1 = [xyz[i + 1] for i in range(3)]
+                xyz2 = [xyz1[i] + 2.5 * disp[i] for i in range(3)]
+                arrow_meshes = self.__get_arrow_mesh(xyz1,xyz2,'#e60000',radius_small=0.25,radius_large=0.5)
+                for mesh in arrow_meshes:
+                    meshes.append(mesh)
         return meshes
 
     def add_sphere(self, position, radius, color, opacity=1.0):
@@ -863,6 +908,46 @@ class Py3JSRenderer():
 
         R = self.__cylinder_rotation_matrix(xyz1, xyz2)
         mesh.setRotationFromMatrix(R)
+        return mesh
+
+    def __get_arrow_mesh(self,
+                  xyz1,
+                  xyz2,
+                  color,
+                  radius_small=0.1,
+                  radius_large=0.3,
+                  arrow_height=0.6):
+        """
+        This function returns a mesh for an arrow  between two points
+
+        Parameters
+        ----------
+        xyz1 : tuple(float, float, float)
+            The (x1, y1, z1) coordinates of the beginning of the arrow
+        xyz2 : tuple(float, float, float)
+            The (x2, y2, z2) coordinates of the end of the arrow
+        color : str
+            Hexadecimal color code
+        radius_small : float
+            The radius of the arrow tail
+        radius_large : float
+            The radius of the base of the arrow cone
+        arrow_height : float
+            The height of the arrow cone
+        """
+        x1, y1, z1 = xyz1
+        x2, y2, z2 = xyz2
+        d = sqrt((x1 - x2)**2 + (y1 - y2)**2 + (z1 - z2)**2)
+        fraction = (d - arrow_height) / d
+        xyz_base = [
+            x1 + (x2 - x1) * fraction, y1 + (y2 - y1) * fraction,
+            z1 + (z2 - z1) * fraction
+        ]
+        mesh = []
+        mesh.append(self.__get_cylinder_mesh(xyz1, xyz_base, radius_small,
+                                        radius_small, color))
+        mesh.append(self.__get_cylinder_mesh(xyz_base, xyz2, radius_large, 0.0,
+                                        color))
         return mesh
 
     def __plane_rotation_matrix(self, normal):
