@@ -59,6 +59,9 @@ def forte_driver(state_weights_map, scf_info, options, ints, mo_space_info):
 
     state_energies_list = active_space_solver.compute_energy()
 
+#    if active_space_solver_type == 'EXTERNAL':
+#        read_external_active_space_file(as_ints, state_map)
+
     if options.get_bool('SPIN_ANALYSIS'):
         rdms = active_space_solver.compute_average_rdms(state_weights_map, 2)
         forte.perform_spin_analysis(rdms, options, mo_space_info, as_ints)
