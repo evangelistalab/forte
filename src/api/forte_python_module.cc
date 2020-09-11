@@ -249,6 +249,8 @@ PYBIND11_MODULE(forte, m) {
              "Get the frozen core energy (contribution from FROZEN_DOCC)")
         .def("scalar_energy", &ActiveSpaceIntegrals::scalar_energy,
              "Get the scalar_energy energy (contribution from RESTRICTED_DOCC)")
+        .def("nmo", &ActiveSpaceIntegrals::nmo, "Get the number of active orbitals")
+        .def("mo_symmetry", &ActiveSpaceIntegrals::active_mo_symmetry, "Return the symmetry of the active MOs")
         .def("oei_a", &ActiveSpaceIntegrals::oei_a, "Get the alpha effective one-electron integral")
         .def("oei_b", &ActiveSpaceIntegrals::oei_b, "Get the beta effective one-electron integral")
         .def("tei_aa", &ActiveSpaceIntegrals::tei_aa, "alpha-alpha two-electron integral <pq||rs>")

@@ -36,6 +36,7 @@
 #include "sci/asci.h"
 #include "sci/fci_mo.h"
 #include "pci/pci.h"
+#include "external/external_active_space_method.h"
 #include "ci_ex_states/excited_state_solver.h"
 
 #include "base_classes/active_space_method.h"
@@ -75,9 +76,6 @@ std::unique_ptr<ActiveSpaceMethod> make_active_space_method(
     if (type == "FCI") {
         solver = std::make_unique<FCISolver>(state, nroot, mo_space_info, as_ints);
     } else if (type == "ACI") {
-        //        solver =
-        //            std::make_unique<AdaptiveCI>(state, nroot, scf_info, options, mo_space_info,
-        //            as_ints);
         solver = std::make_unique<ExcitedStateSolver>(
             state, nroot, mo_space_info, as_ints,
             std::make_unique<AdaptiveCI>(state, nroot, scf_info, options, mo_space_info, as_ints));
@@ -91,6 +89,8 @@ std::unique_ptr<ActiveSpaceMethod> make_active_space_method(
         solver = std::make_unique<ExcitedStateSolver>(
             state, nroot, mo_space_info, as_ints,
             std::make_unique<ProjectorCI>(state, nroot, scf_info, options, mo_space_info, as_ints));
+    } else if (type == "EXTERNAL") {
+        solver = std::make_unique<ExternalActiveSpaceMethod>(state, nroot, mo_space_info, as_ints);
     } else {
         throw psi::PSIEXCEPTION("make_active_space_method: type = " + type + " was not recognized");
     }

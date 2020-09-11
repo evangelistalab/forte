@@ -37,7 +37,7 @@ import forte
 import psi4.driver.p4util as p4util
 from psi4.driver.procrouting import proc_util
 import forte.proc.fcidump
-
+from forte.proc.external_active_space_solver import write_external_active_space_file
 
 def forte_driver(state_weights_map, scf_info, options, ints, mo_space_info):
     max_rdm_level = 3 if options.get_str("THREEPDC") != "ZERO" else 2
@@ -49,9 +49,13 @@ def forte_driver(state_weights_map, scf_info, options, ints, mo_space_info):
     active_space_solver_type = options.get_str('ACTIVE_SPACE_SOLVER')
     as_ints = forte.make_active_space_ints(mo_space_info, ints, "ACTIVE",
                                            ["RESTRICTED_DOCC"])
+
     active_space_solver = forte.make_active_space_solver(
         active_space_solver_type, state_map, scf_info, mo_space_info, as_ints,
         options)
+
+    if active_space_solver_type == 'EXTERNAL':
+        write_external_active_space_file(as_ints, state_map)
 
     state_energies_list = active_space_solver.compute_energy()
 
