@@ -1,13 +1,18 @@
 language: cpp
-sudo: false
-matrix:
+jobs:
   include:
     - env:
-      - PYTHON_VER='3.7'
+      - PYTHON_VER=3.7
       - MAX_DET_ORB=64
     - env:
-      - PYTHON_VER='3.7'
+      - PYTHON_VER=3.7
       - MAX_DET_ORB=128
+
+before_install:
+  - sudo apt-get update && sudo apt-get dist-upgrade
+  - sudo apt install build-essential
+  - echo "CXX Version"
+  - gcc --version
 
 install:
   - wget https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh;
@@ -16,10 +21,11 @@ install:
   - hash -r
   - conda config --set always_yes yes --set changeps1 no
   - conda update -q conda
-  - conda create -q -n tenv python=$PYTHON_VER gcc_linux-64 gxx_linux-64 gfortran_linux-64 cmake mkl-devel hdf5 psi4 ambit=0.5.1 psi4-dev ci-psi4 boost -c psi4/label/dev
+  - conda create -q -n tenv python=$PYTHON_VER psi4 ambit=0.5.1 psi4-dev ci-psi4 pybind11-headers hdf5 h5py -c psi4/label/dev
   - source activate tenv
-  - conda install pytest pytest-cov codecov lcov -c conda-forge
-  - pip install pytest-shutil
+  - conda install boost pybind11 pymdi pytest pytest-xdist pytest-shutil pytest-cov codecov lcov -c conda-forge
+  - export PATH="$HOME/miniconda/envs/tenv/bin:$PATH"
+  - export MKLROOT=${HOME}/miniconda/envs/tenv
 
 before_script:
   - python -V
@@ -42,19 +48,18 @@ before_script:
   - >
       cmake -H. -B.
       -C${HOME}/miniconda/envs/tenv/share/cmake/psi4/psi4PluginCache.cmake
-      -Dambit_DIR=/home/travis/build/ambit-bin/share/cmake/ambit/
-      -DCMAKE_BUILD_TYPE=Debug 
-      -DCMAKE_CXX_FLAGS="-I${HOME}/miniconda/envs/tenv/include ${PYBIND_INCLUDE}"
       -DPYTHON_EXECUTABLE=${HOME}/miniconda/envs/tenv/bin/python
+      -Dambit_DIR=${HOME}/miniconda/envs/tenv/share/cmake/ambit
+      -DCMAKE_BUILD_TYPE=Debug
       -DENABLE_CODECOV=ON
       -DMAX_DET_ORB=${MAX_DET_ORB}
-  - make -j2
+  - make -j2 VERBOSE=1
   - export PYTHONPATH="${HOME}/build/evangelistalab:$PYTHONPATH"
 
 script:
   - cd ${TRAVIS_BUILD_DIR}
   - bash tools/forte_codecov
-  # Run tests for 128-bit determinants 
+  # Run tests for 128-bit determinants
   - if [ "$MAX_DET_ORB" -ge "128" ]; then
      cd ${HOME}/build/evangelistalab/forte/tests/large_det;
      python run_forte_tests.py --bw --failed_dump;
