@@ -28,6 +28,7 @@
 
 #include <numeric>
 
+#include "psi4/libmints/matrix.h"
 #include "psi4/libmints/molecule.h"
 #include "psi4/libpsi4util/process.h"
 #include "psi4/libpsi4util/PsiOutStream.h"
@@ -484,7 +485,7 @@ void SADSRG::deGNO_ints(const std::string& name, double& H0, BlockedTensor& H1, 
 }
 
 void SADSRG::deGNO_ints(const std::string& name, double& H0, BlockedTensor& H1, BlockedTensor& H2,
-                        BlockedTensor& H3) {
+                        BlockedTensor& /*H3*/) {
     throw psi::PSIEXCEPTION("Not yet implemented when forming Hbar3.");
 
     print_h2("De-Normal-Order DSRG Transformed " + name);

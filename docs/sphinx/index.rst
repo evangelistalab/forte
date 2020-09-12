@@ -21,9 +21,11 @@ correlated electrons.
    mospaceinfo
    integrals
    methods/fci
+   methods/aci
    methods/dsrg
    methods/embedding
    methods/avas
+   utils/plotting
    programming/index
    aci
    pci
@@ -31,6 +33,7 @@ correlated electrons.
    dsrg-mrpt
    mr-dsrg
    options
+   forte
 
 Indices and tables
 ==================

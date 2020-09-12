@@ -8,17 +8,21 @@
  * (4), Write 1RDMs and 2RDMs coefficients;
  * (5), Back-transform the TPDM.
  */
-#include "casscf/casscf.h"
-#include "gradient_tpdm/backtransform_tpdm.h"
-#include "psi4/libmints/matrix.h"
-#include "psi4/libmints/wavefunction.h"
-#include "psi4/psifiles.h"
-#include "helpers/printing.h"
-#include "sci/aci.h"
-#include "base_classes/active_space_solver.h"
+
+#include "psi4/libpsi4util/PsiOutStream.h"
 #include "psi4/libmints/factory.h"
 #include "psi4/libiwl/iwl.hpp"
 #include "psi4/libpsio/psio.hpp"
+#include "psi4/libmints/matrix.h"
+#include "psi4/libmints/wavefunction.h"
+#include "psi4/psifiles.h"
+
+#include "helpers/printing.h"
+#include "base_classes/active_space_solver.h"
+
+#include "gradient_tpdm/backtransform_tpdm.h"
+
+#include "casscf/casscf.h"
 
 using namespace ambit;
 using namespace psi;

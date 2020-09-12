@@ -30,6 +30,7 @@
 #include <iomanip>
 #include <cmath>
 
+#include "psi4/libpsi4util/process.h"
 #include "psi4/libpsi4util/PsiOutStream.h"
 #include "psi4/physconst.h"
 
@@ -465,8 +466,9 @@ std::vector<RDMs> ExcitedStateSolver::rdms(const std::vector<std::pair<size_t, s
 }
 
 std::vector<RDMs>
-ExcitedStateSolver::transition_rdms(const std::vector<std::pair<size_t, size_t>>& root_list,
-                                    std::shared_ptr<ActiveSpaceMethod> method2, int max_rdm_level) {
+ExcitedStateSolver::transition_rdms(const std::vector<std::pair<size_t, size_t>>& /*root_list*/,
+                                    std::shared_ptr<ActiveSpaceMethod> /*method2*/,
+                                    int /*max_rdm_level*/) {
     std::vector<RDMs> refs;
     throw std::runtime_error("ExcitedStateSolver::transition_rdms is not implemented!");
     return refs;

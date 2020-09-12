@@ -71,9 +71,9 @@ SigmaVectorFull::SigmaVectorFull(const DeterminantHashVec& space,
                                  std::shared_ptr<ActiveSpaceIntegrals> fci_ints)
     : SigmaVector(space, fci_ints, SigmaVectorType::Full, "SigmaVectorFull") {}
 
-void SigmaVectorFull::add_bad_roots(std::vector<std::vector<std::pair<size_t, double>>>& roots) {}
+void SigmaVectorFull::add_bad_roots(std::vector<std::vector<std::pair<size_t, double>>>& /*roots*/) {}
 
-void SigmaVectorFull::get_diagonal(psi::Vector& diag) {}
+void SigmaVectorFull::get_diagonal(psi::Vector& /*diag*/) {}
 
 void SigmaVectorFull::compute_sigma(std::shared_ptr<psi::Vector>, std::shared_ptr<psi::Vector>) {}
 

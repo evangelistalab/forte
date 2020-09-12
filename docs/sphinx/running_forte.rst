@@ -41,7 +41,7 @@ Psi4 will generate a CMake command for building Forte that looks like::
 
 3. Run make::
 
-    make
+    make  
 
 
 Setting up the ``PYTHONPATH``
@@ -50,6 +50,14 @@ Setting up the ``PYTHONPATH``
 If Forte in installed in the folder ``/<path>/forte``, then ``PYTHONPATH`` should
 contain ``/path/``. Note that if you include ``/<path>/forte`` in ``PYTHONPATH``
 you will get an error (see Frequently asked questions).
+
+Running the test cases
+----------------------
+
+After compiling and setting up ``PYTHONPATH``, you can run the test cases::
+
+    cd tests/methods
+    python run_forte_tests.py
 
 Frequently asked questions
 --------------------------

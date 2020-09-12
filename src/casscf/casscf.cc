@@ -30,6 +30,9 @@
 #include "integrals/integrals.h"
 #include "base_classes/rdms.h"
 
+#include "psi4/libpsi4util/PsiOutStream.h"
+#include "psi4/libpsi4util/process.h"
+
 #include "psi4/libfock/jk.h"
 #include "psi4/libmints/matrix.h"
 #include "psi4/libmints/wavefunction.h"
@@ -75,24 +78,26 @@ void CASSCF::startup() {
         throw psi::PSIEXCEPTION("CASSCF only supports restricted reference (RHF or ROHF).");
     }
 
-    auto scf_type = options_->get_str("SCF_TYPE");
-    if (scf_type == "PK" or scf_type == "OUT_OF_CORE") {
-        outfile->Printf("\n\n  Please change SCF_TYPE to DIRECT for conventional integrals.");
-        throw psi::PSIEXCEPTION("Please change SCF_TYPE to DIRECT.");
+    if (not options_->is_none("SCF_TYPE")) {
+        auto scf_type = options_->get_str("SCF_TYPE");
+        if (scf_type == "PK" or scf_type == "OUT_OF_CORE") {
+            outfile->Printf("\n\n  Please change SCF_TYPE to DIRECT for conventional integrals.");
+            throw psi::PSIEXCEPTION("Please change SCF_TYPE to DIRECT.");
+        }
     }
 
     print_ = options_->get_int("PRINT");
     casscf_debug_print_ = options_->get_bool("CASSCF_DEBUG_PRINTING");
 
-    nsopi_ = scf_info_->nsopi();
+    nsopi_ = ints_->nsopi();
     nirrep_ = mo_space_info_->nirrep();
 
     // Set MOs containers
     core_mos_abs_ = mo_space_info_->absolute_mo("RESTRICTED_DOCC");
     actv_mos_abs_ = mo_space_info_->absolute_mo("ACTIVE");
-    core_mos_rel_ = mo_space_info_->get_relative_mo("RESTRICTED_DOCC");
-    actv_mos_rel_ = mo_space_info_->get_relative_mo("ACTIVE");
-    virt_mos_rel_ = mo_space_info_->get_relative_mo("RESTRICTED_UOCC");
+    core_mos_rel_ = mo_space_info_->relative_mo("RESTRICTED_DOCC");
+    actv_mos_rel_ = mo_space_info_->relative_mo("ACTIVE");
+    virt_mos_rel_ = mo_space_info_->relative_mo("RESTRICTED_UOCC");
 
     frozen_docc_dim_ = mo_space_info_->dimension("FROZEN_DOCC");
     restricted_docc_dim_ = mo_space_info_->dimension("RESTRICTED_DOCC");
@@ -134,20 +139,45 @@ void CASSCF::startup() {
     Hcore_ = SharedMatrix(ints_->wfn()->H()->clone());
 
     local_timer JK_initialize;
-    if (options_->get_str("SCF_TYPE") == "GTFOCK") {
-#ifdef HAVE_JK_FACTORY
-        psi::Process::environment.set_legacy_molecule(ints_->wfn()->molecule());
-        JK_ = std::shared_ptr<JK>(new GTFockJK(ints_->basisset()));
-#else
-        throw psi::PSIEXCEPTION("GTFock was not compiled in this version");
-#endif
-    } else {
+    auto integral_type = ints_->integral_type();
+    auto basis_set = ints_->wfn()->basisset();
+    if (integral_type == Conventional) {
+        JK_ = JK::build_JK(basis_set, psi::BasisSet::zero_ao_basis_set(),
+                           psi::Process::environment.options, "PK");
+    } else if (integral_type == Cholesky) {
+        //        JK_ = JK::build_JK(basis_set, psi::BasisSet::zero_ao_basis_set(),
+        //                           psi::Process::environment.options, "CD");
+        psi::Options& options = psi::Process::environment.options;
+        CDJK* jk = new CDJK(basis_set, options_->get_double("CHOLESKY_TOLERANCE"));
+
+        if (options["INTS_TOLERANCE"].has_changed())
+            jk->set_cutoff(options.get_double("INTS_TOLERANCE"));
+        if (options["SCREENING"].has_changed())
+            //            jk->set_csam(options.get_str("SCREENING") == "CSAM");
+            if (options["PRINT"].has_changed())
+                jk->set_print(options.get_int("PRINT"));
+        if (options["DEBUG"].has_changed())
+            jk->set_debug(options.get_int("DEBUG"));
+        if (options["BENCH"].has_changed())
+            jk->set_bench(options.get_int("BENCH"));
+        if (options["DF_INTS_IO"].has_changed())
+            jk->set_df_ints_io(options.get_str("DF_INTS_IO"));
+        jk->set_condition(options.get_double("DF_FITTING_CONDITION"));
+        if (options["DF_INTS_NUM_THREADS"].has_changed())
+            jk->set_df_ints_num_threads(options.get_int("DF_INTS_NUM_THREADS"));
+
+        JK_ = std::shared_ptr<JK>(jk);
+
+    } else if ((integral_type == DF) or (integral_type == DiskDF) or (integral_type == DistDF)) {
         if (options_->get_str("SCF_TYPE") == "DF") {
-            auto df_basis = ints_->get_basisset("DF_BASIS_SCF");
-            JK_ = std::make_shared<DiskDFJK>(ints_->basisset(), df_basis);
+            JK_ = JK::build_JK(basis_set, ints_->wfn()->get_basisset("DF_BASIS_SCF"),
+                               psi::Process::environment.options, "MEM_DF");
+            //            auto df_basis = ints_->wfn()->get_basisset("DF_BASIS_SCF");
+            //            JK_ = std::make_shared<DiskDFJK>(basis_set, df_basis);
         } else {
-            JK_ = JK::build_JK(ints_->basisset(), psi::BasisSet::zero_ao_basis_set(),
-                               psi::Process::environment.options);
+            throw psi::PSIEXCEPTION(
+                "Trying to compute the frozen one-body operator with MEM_DF but "
+                "using a non-DF integral type");
         }
     }
 
@@ -157,8 +187,7 @@ void CASSCF::startup() {
     JK_->C_right().clear();
 
     if (print_ > 0)
-        outfile->Printf("\n    JK takes %5.5f s to initialize while using %s", JK_initialize.get(),
-                        scf_type.c_str());
+        outfile->Printf("\n    JK takes %5.5f s", JK_initialize.get());
 }
 
 double CASSCF::compute_energy() {
@@ -250,9 +279,8 @@ double CASSCF::compute_energy() {
         }
 
         CASSCFOrbitalOptimizer orbital_optimizer(gamma1_, gamma2_, tei_gaaa_, options_,
-                                                 mo_space_info_);
+                                                 mo_space_info_, ints_);
 
-        orbital_optimizer.set_scf_info(scf_info_);
         orbital_optimizer.set_frozen_one_body(F_frozen_core_);
         orbital_optimizer.set_symmmetry_mo(Ca);
         orbital_optimizer.one_body(Hcore_->clone());
@@ -336,7 +364,11 @@ double CASSCF::compute_energy() {
         // diagonalize the Hamiltonian one last time
         diagonalize_hamiltonian();
     } else {
-        ints_->wfn()->Ca()->copy(Ca_semi);
+        if (options_->get_bool("CASSCF_SEMICANONICALIZE")) {
+            ints_->wfn()->Ca()->copy(Ca_semi);
+        } else {
+            ints_->wfn()->Ca()->copy(Ca);
+        }
     }
 
     psi::Process::environment.globals["CURRENT ENERGY"] = E_casscf_;
@@ -403,8 +435,8 @@ ambit::Tensor CASSCF::transform_integrals(std::shared_ptr<psi::Matrix> Ca) {
     // This was borrowed from Kevin Hannon's IntegralTransform Plugin.
 
     // Transform C matrix to C1 symmetry
-    size_t nso = scf_info_->nso();
-    psi::SharedMatrix aotoso = ints_->aotoso();
+    size_t nso = ints_->nso();
+    psi::SharedMatrix aotoso = ints_->wfn()->aotoso();
     auto Ca_nosym = std::make_shared<psi::Matrix>(nso, nmo_);
 
     // Transform from the SO to the AO basis for the C matrix.
@@ -772,8 +804,7 @@ std::shared_ptr<psi::Matrix> CASSCF::build_fock_active(std::shared_ptr<psi::Matr
 }
 
 void CASSCF::overlap_orbitals(const psi::SharedMatrix& C_old, const psi::SharedMatrix& C_new) {
-    psi::SharedMatrix S_orbitals(
-        new psi::Matrix("Overlap", scf_info_->nsopi(), scf_info_->nsopi()));
+    psi::SharedMatrix S_orbitals(new psi::Matrix("Overlap", nsopi_, nsopi_));
     psi::SharedMatrix S_basis = ints_->wfn()->S();
     S_orbitals = psi::linalg::triplet(C_old, S_basis, C_new, true, false, false);
     S_orbitals->set_name("C^T S C (Overlap)");
@@ -786,10 +817,17 @@ void CASSCF::overlap_orbitals(const psi::SharedMatrix& C_old, const psi::SharedM
     }
 }
 
-void CASSCF::write_orbitals_molden() {
-    psi::SharedVector occ_vector(new psi::Vector(nirrep_, corr_dim_));
-    view_modified_orbitals(ints_->wfn(), ints_->Ca(), scf_info_->epsilon_a(), occ_vector);
+std::unique_ptr<CASSCF>
+make_casscf(const std::map<StateInfo, std::vector<double>>& state_weight_map,
+            std::shared_ptr<SCFInfo> scf_info, std::shared_ptr<ForteOptions> options,
+            std::shared_ptr<MOSpaceInfo> mo_space_info, std::shared_ptr<ForteIntegrals> ints) {
+    return std::make_unique<CASSCF>(state_weight_map, scf_info, options, mo_space_info, ints);
 }
+
+// void CASSCF::write_orbitals_molden() {
+//    psi::SharedVector occ_vector(new psi::Vector(nirrep_, corr_dim_));
+//    view_modified_orbitals(ints_->wfn(), ints_->Ca(), scf_info_->epsilon_a(), occ_vector);
+//}
 
 // void CASSCF::overlap_coefficients() {
 //    outfile->Printf("\n iter  Overlap_{i-1} Overlap_{i}");

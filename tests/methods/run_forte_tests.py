@@ -14,8 +14,14 @@ MAINDIR = os.getcwd()
 
 TIMING_RE = re.compile(r'Psi4 exiting successfully. Buy a developer a beer!')
 
-TEST_LEVELS = {'short': ['short'], 'long': ['short', 'long'], 'ultralong': ['ultralong'],
-               'all': ['short', 'long', 'ultralong']}
+TEST_LEVELS = {
+    'short': ['short'],
+    'medium': ['medium'],
+    'long': ['long'],
+    'standard': ['short', 'medium'],
+    'all': ['short', 'medium', 'long']
+}
+
 
 class bcolors:
     HEADER = '\033[95m'
@@ -80,33 +86,27 @@ def prepare_summary(jobdir, test_results, test_time, summary, color):
 def setup_argument_parser():
     """Setup an ArgumentParser object to deal with user input."""
     parser = argparse.ArgumentParser(description='Run Forte tests.')
-    parser.add_argument(
-        '--psi4_exec', help='the location of the psi4 executable')
-    parser.add_argument(
-        '--file',
-        help='the yaml file containing the list of tests (default: tests.yaml)',
-        default='tests.yaml')
-    parser.add_argument(
-        '--failed',
-        help='run only failed tests (listed in the file failed_tests)',
-        action='store_true')
-    parser.add_argument(
-        '--bw',
-        help='print the summary in black and white? (default: color)',
-        action='store_true')
-    parser.add_argument(
-        '--failed_dump',
-        help='dump the output of the failed tests to stdout?',
-        action='store_true')
-    parser.add_argument(
-        '--type',
-        help='which type of test to run? (default: short)',
-        choices={'short', 'long', 'ultralong', 'all'},
-        default='short')
-    parser.add_argument(
-        '--group',
-        help='which group of tests to run? (default: all)',
-        default=None)
+    parser.add_argument('--psi4_exec',
+                        help='the location of the psi4 executable')
+    parser.add_argument('--file',
+                        help='the yaml file containing the list of tests (default: tests.yaml)',
+                        default='tests.yaml')
+    parser.add_argument('--failed',
+                        help='run only failed tests (listed in the file failed_tests)',
+                        action='store_true')
+    parser.add_argument('--bw',
+                        help='print the summary in black and white? (default: color)',
+                        action='store_true')
+    parser.add_argument('--failed_dump',
+                        help='dump the output of the failed tests to stdout?',
+                        action='store_true')
+    parser.add_argument('--type',
+                        help='which type of test to run? (default: standard)',
+                        choices={'short', 'medium','long','standard', 'all'},
+                        default='standard')
+    parser.add_argument('--group',
+                        help='which group of tests to run? (default: None)',
+                        default=None)
     return parser.parse_args()
 
 
@@ -163,7 +163,7 @@ def main():
     for test_group, test_levels in test_dict.items():
         if test_group in tested_groups:
             print('Test group {}'.format(test_group.upper()))
-            group_failed_tests = {} # test that failed in this group
+            group_failed_tests = {}  # test that failed in this group
             for test_level, tests in test_levels.items():
                 local_failed_tests = []
                 if test_level in TEST_LEVELS[args.type]:
@@ -184,7 +184,7 @@ def main():
                 failed_tests[test_group] = group_failed_tests
 
     # print a summary of the tests
-    summary_str  = 'Summary:\n'
+    summary_str = 'Summary:\n'
     summary_str += ' ' * 4 + '=' * 76 + '\n'
     summary_str += '    TEST' + ' ' * 57 + 'RESULT TIME (s)\n'
     summary_str += ' ' * 4 + '-' * 76 + '\n'
@@ -196,7 +196,7 @@ def main():
 
     import datetime
     now = datetime.datetime.now()
-    file_name = f'test_results_{now.strftime("%Y-%m-%d-%H%M")}.txt'
+    file_name = 'test_results_%s.txt' % now.strftime("%Y-%m-%d-%H%M")
 
     with open(file_name, 'w') as outfile:
         outfile.write(summary_str)
@@ -209,7 +209,8 @@ def main():
     if nfailed == 0:
         print('Tests: All passed ({} tests)\n'.format(ntests))
     else:
-        print('Tests: {} passed and {} failed\n'.format(ntests - nfailed, nfailed))
+        print('Tests: {} passed and {} failed\n'.format(
+            ntests - nfailed, nfailed))
         # Get the current date and time
         dt = datetime.datetime.now()
         now = dt.strftime('%Y-%m-%d-%H:%M')

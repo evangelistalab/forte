@@ -23,6 +23,7 @@ def register_forte_options(options):
     register_casscf_options(options)
     register_old_options(options)
     register_psi_options(options)
+    register_gas_options(options)
 
 def register_driver_options(options):
     options.set_group("")
@@ -30,6 +31,8 @@ def register_driver_options(options):
         'NONE','NEWDRIVER','MR-DSRG-PT2', 'CASSCF'
     ], 'Specify the job type')
 
+    options.add_str("SCF_TYPE", None, "The integrals used in the SCF calculation")
+    options.add_str("REF_TYPE", 'SCF',['SCF','CASSCF'], "The type of reference used by forte if a psi4 wave function is missing")
     options.add_str('DERTYPE', 'NONE', ['NONE', 'FIRST'], 'Derivative order')
 
     options.add_double("E_CONVERGENCE", 1.0e-9, "The energy convergence criterion")
@@ -47,17 +50,21 @@ def register_driver_options(options):
                           'The type of computation')
 
     options.add_int(
-        "CHARGE", 0,
+        "NEL", None,
+        """The number of electrons. Used when reading from FCIDUMP files."""
+    )
+    options.add_int(
+        "CHARGE", None,
         """The charge of the molecule. If a value is provided it overrides the charge of the SCF solution."""
     )
     options.add_int(
-        "MULTIPLICITY", 0,
+        "MULTIPLICITY", None,
         """The multiplicity = (2S + 1) of the electronic state.
     For example, 1 = singlet, 2 = doublet, 3 = triplet, ...
     If a value is provided it overrides the multiplicity of the SCF solution"""
     )
     options.add_int(
-        "ROOT_SYM", 0, 'The symmetry of the electronic state. (zero based)')
+        "ROOT_SYM", None, 'The symmetry of the electronic state. (zero based)')
     options.add_str("ORBITAL_TYPE", "CANONICAL",
                           ['CANONICAL', 'LOCAL', 'MP2_NO'],
                           'Type of orbitals to use')
@@ -66,7 +73,26 @@ def register_driver_options(options):
 
     options.add_array("SUBSPACE", "A list of orbital subspaces")
 
-    options.add_double("MS", 0.0, "Projection of spin onto the z axis")
+    options.add_int_array("GAS1",
+            "Number of GAS1 orbitals per irrep (in Cotton order)"
+    )
+    options.add_int_array("GAS2",
+            "Number of GAS2 orbitals per irrep (in Cotton order)"
+    )
+    options.add_int_array("GAS3",
+            "Number of GAS3 orbitals per irrep (in Cotton order)"
+    )
+    options.add_int_array("GAS4",
+            "Number of GAS4 orbitals per irrep (in Cotton order)"
+    )
+    options.add_int_array("GAS5",
+            "Number of GAS5 orbitals per irrep (in Cotton order)"
+    )
+    options.add_int_array("GAS6",
+            "Number of GAS6 orbitals per irrep (in Cotton order)"
+    )
+
+    options.add_double("MS", None, "Projection of spin onto the z axis")
 
     options.add_str("ACTIVE_REF_TYPE", "CAS", "Initial guess for active space wave functions")
 
@@ -220,6 +246,11 @@ def register_mo_space_info_options(options):
     options.add_int_array("NROOTPI",
                             "Number of roots per irrep (in Cotton order)")
 
+    # Options for state-averaged CASSCF
+    options.add_array(
+        "STATES",
+        "An array of states [[irrep1, multi1, nstates1], [irrep2, multi2, nstates2], ...]"
+    )
 
 def register_active_space_solver_options(options):
     options.set_group("Active Space Solver")
@@ -262,7 +293,7 @@ def register_pci_options(options):
 
     options.add_double("PCI_TAU", 1.0,
                              "The time step in imaginary time (a.u.)")
-
+    
     options.add_double("PCI_E_CONVERGENCE", 1.0e-8,
                              "The energy convergence criterion")
     options.add_double("PCI_R_CONVERGENCE", 1.0,
@@ -538,6 +569,22 @@ def register_aci_options(options):
     options.add_bool("FORCE_DIAG_METHOD", False,
                            "Force the diagonalization procedure?")
 
+    options.add_bool("ONE_CYCLE", False, 
+            "Doing only one cycle of ACI (FCI) ACI iteration?")
+    
+    options.add_bool("OCC_ANALYSIS", False,
+            "Doing post calcualtion occupation analysis?")
+
+    options.add_double("OCC_LIMIT",0.0001,
+            "Occupation limit for considering if an orbital is occupied/unoccupied "
+            "in the post calculation analysis.")
+
+    options.add_double("CORR_LIMIT", -0.01,
+            "Correlation limit for considering if two orbitals are correlated"
+            "in the post calculation analysis.")
+
+
+
 
 def register_davidson_liu_options(options):
     options.set_group("Davidson-Liu")
@@ -580,17 +627,22 @@ def register_integral_options(options):
     options.set_group("Integrals")
     options.add_str(
         "INT_TYPE", "CONVENTIONAL",
-        ["CONVENTIONAL", "DF", "CHOLESKY", "DISKDF", "DISTDF", "OWNINTEGRALS"],
-        "The algorithm used to screen the determinant"
-        "- CONVENTIONAL Conventional two-electron integrals"
+        ["CONVENTIONAL","CHOLESKY", "DF", "DISKDF", "FCIDUMP"],
+        "The type of molecular integrals used in a computation"
+        "- CONVENTIONAL Conventional four-index two-electron integrals"
         "- DF Density fitted two-electron integrals"
-        "- CHOLESKY Cholesky decomposed two-electron integrals")
+        "- CHOLESKY Cholesky decomposed two-electron integrals"
+        "- FCIDUMP Read integrals from a file in the FCIDUMP format")
+
+    options.add_str('FCIDUMP_FILE','INTDUMP','The file that stores the FCIDUMP integrals')
+
     options.add_double(
         "INTEGRAL_SCREENING", 1.0e-12,
         "The screening threshold for JK builds and DF libraries")
     options.add_double("CHOLESKY_TOLERANCE", 1.0e-6,
                              "The tolerance for cholesky integrals")
-
+    options.add_double("INTS_TOLERANCE", 1.0e-12,
+                             "The tolerance for cholesky integrals")
     options.add_bool("PRINT_INTS", False,
                            "Print the one- and two-electron integrals?")
 
@@ -839,6 +891,10 @@ def register_casscf_options(options):
                           "When to start skipping CI steps")
     options.add_bool("MONITOR_SA_SOLUTION", False,
                            "Monitor the CAS-CI solutions through iterations")
+    options.add_bool("CASSCF_SEMICANONICALIZE", True,
+                           "Semicanonicalize the orbitals after CASSCF?")
+    options.add_int_array("CASSCF_ACTIVE_FROZEN_ORBITAL",
+            "A list of active orbitals to be frozen in the casscf optimization (in Pitzer order, zero based). Useful when doing core-excited state computations.")
 
 
 def register_old_options(options):
@@ -852,7 +908,6 @@ def register_old_options(options):
 
     options.add_bool("MEMORY_SUMMARY", False, "Print summary of memory")
 
-    options.add_str("SCF_TYPE", "PK", "The integrals used in the SCF calculation")
     options.add_str("REFERENCE", "", "The SCF refernce type")
 
     options.add_int("DIIS_MAX_VECS",5,"The maximum number of DIIS vectors");
@@ -896,10 +951,32 @@ def register_psi_options(options):
     options.add_str("DF_INTS_IO", "NONE", ['NONE','SAVE','LOAD'],'IO caching for CP corrections')
     options.add_str('DF_BASIS_MP2','','Auxiliary basis set for density fitting computations')
 
-
-
-
-
+def register_gas_options(options):
+    options.set_group("GAS")
+    options.add_int("GAS1MAX",200,"The maximum number of electrons in GAS1")
+    options.add_int("GAS1MIN",0,"The minimum number of electrons in GAS1")
+    options.add_int("GAS2MAX",200,"The maximum number of electrons in GAS2")
+    options.add_int("GAS2MIN",0,"The minimum number of electrons in GAS2")
+    options.add_int("GAS3MAX",200,"The maximum number of electrons in GAS3")
+    options.add_int("GAS3MIN",0,"The minimum number of electrons in GAS3")
+    options.add_int("GAS4MAX",200,"The maximum number of electrons in GAS4")
+    options.add_int("GAS4MIN",0,"The minimum number of electrons in GAS4")
+    options.add_int("GAS5MAX",200,"The maximum number of electrons in GAS5")
+    options.add_int("GAS5MIN",0,"The minimum number of electrons in GAS5")
+    options.add_int("GAS6MAX",200,"The maximum number of electrons in GAS6")
+    options.add_int("GAS6MIN",0,"The minimum number of electrons in GAS6")
+    options.add_array("GAS1MAX_MULTI","The maximum number of electrons in GAS1 for different root (input similar to AVG_STATE)")
+    options.add_array("GAS2MAX_MULTI","The maximum number of electrons in GAS2 for different root (input similar to AVG_STATE)") 
+    options.add_array("GAS3MAX_MULTI","The maximum number of electrons in GAS3 for different root (input similar to AVG_STATE)")
+    options.add_array("GAS4MAX_MULTI","The maximum number of electrons in GAS4 for different root (input similar to AVG_STATE)")
+    options.add_array("GAS5MAX_MULTI","The maximum number of electrons in GAS5 for different root (input similar to AVG_STATE)")
+    options.add_array("GAS6MAX_MULTI","The maximum number of electrons in GAS6 for different root (input similar to AVG_STATE)")
+    options.add_array("GAS1MIN_MULTI","The minimum number of electrons in GAS1 for different root (input similar to AVG_STATE)")
+    options.add_array("GAS2MIN_MULTI","The minimum number of electrons in GAS2 for different root (input similar to AVG_STATE)")
+    options.add_array("GAS3MIN_MULTI","The minimum number of electrons in GAS3 for different root (input similar to AVG_STATE)")
+    options.add_array("GAS4MIN_MULTI","The minimum number of electrons in GAS4 for different root (input similar to AVG_STATE)")
+    options.add_array("GAS5MIN_MULTI","The minimum number of electrons in GAS5 for different root (input similar to AVG_STATE)")
+    options.add_array("GAS6MIN_MULTI","The minimum number of electrons in GAS6 for different root (input similar to AVG_STATE)")
 
     #    /*- The minimum excitation level (Default value: 0) -*/
     #    options.add_int("MIN_EXC_LEVEL", 0)

@@ -1,7 +1,6 @@
 import numpy as np
 import re
 
-
 class CubeFile():
     """
     A class to read, write, and manipulate cube files
@@ -41,16 +40,40 @@ class CubeFile():
         self.title = None
         self.comment = None
         self.levels = []
-        self.num = [None, None, None]
-        self.min = [None, None, None]
-        self.max = [None, None, None]
-        self.inc = [None, None, None]
-        self.natoms = None
-        self.atom_numbers = None
-        self.atom_coords = None
-        self.data = None
+        self.__num = [None, None, None]
+        self.__min = [None, None, None]
+        self.__max = [None, None, None]
+        self.__inc = [None, None, None]
+        self.__natoms = None
+        self.__atom_numbers = None
+        self.__atom_coords = None
+        self.__data = None
         if self.filename:
             self.load(self.filename)
+
+    def natoms(self):
+        return self.__natoms
+
+    def atom_numbers(self):
+        return self.__atom_numbers
+
+    def atom_coords(self):
+        return self.__atom_coords
+
+    def num(self):
+        return self.__num
+
+    def min(self):
+        return self.__min
+
+    def max(self):
+        return self.__max
+
+    def inc(self):
+        return self.__inc
+
+    def data(self):
+        return self.__data
 
     def load(self, filename):
         with open(filename) as fp:
@@ -63,8 +86,8 @@ class CubeFile():
                 self.levels = [float(s) for s in m.groups()]
 
             origin = fp.readline().split()
-            self.natoms = int(origin[0])
-            self.min = tuple(float(entry) for entry in origin[1:])
+            self.__natoms = int(origin[0])
+            self.__min = tuple(float(entry) for entry in origin[1:])
 
             infox = fp.readline().split()
             numx = int(infox[0])
@@ -78,20 +101,20 @@ class CubeFile():
             numz = int(infoz[0])
             incz = float(infoz[3])
 
-            self.num = (numx, numy, numz)
-            self.inc = (incx, incy, incz)
-            self.max = tuple(self.min[i] + self.inc[i] * self.num[i]
+            self.__num = (numx, numy, numz)
+            self.__inc = (incx, incy, incz)
+            self.__max = tuple(self.__min[i] + self.__inc[i] * self.__num[i]
                              for i in range(3))
 
             atnums = []
             coords = []
-            for atom in range(self.natoms):
+            for atom in range(self.__natoms):
                 coordinfo = fp.readline().split()
                 atnums.append(int(coordinfo[0]))
                 coords.append(list(map(float, coordinfo[2:])))
 
-            self.atom_numbers = np.array(atnums)
-            self.atom_coords = np.array(coords)
+            self.__atom_numbers = np.array(atnums)
+            self.__atom_coords = np.array(coords)
 
             data = np.array(
                 [float(entry) for line in fp for entry in line.split()])
@@ -100,22 +123,22 @@ class CubeFile():
                 raise Exception(
                     "Number of data points is inconsistent with header in Cube file!"
                 )
-            self.data = data.reshape((numx, numy, numz))
+            self.__data = data.reshape((numx, numy, numz))
 
     def save(self, filename):
         with open(filename, 'w+') as fp:
             fp.write('{}\n{}\n'.format(self.title, self.comment))
             fp.write('{0:6d} {1[0]:10.6f} {1[1]:10.6f} {1[2]:10.6f}\n'.format(
-                self.natoms, self.min))
+                self.__natoms, self.__min))
             fp.write('{:6d} {:10.6f} {:10.6f} {:10.6f}\n'.format(
-                self.num[0], self.inc[0], 0.0, 0.0))
+                self.__num[0], self.__inc[0], 0.0, 0.0))
             fp.write('{:6d} {:10.6f} {:10.6f} {:10.6f}\n'.format(
-                self.num[1], 0.0, self.inc[1], 0.0))
+                self.__num[1], 0.0, self.__inc[1], 0.0))
             fp.write('{:6d} {:10.6f} {:10.6f} {:10.6f}\n'.format(
-                self.num[2], 0.0, 0.0, self.inc[2]))
-            for atom in range(self.natoms):
-                Z = self.atom_numbers[atom]
-                xyz = self.atom_coords[atom]
+                self.__num[2], 0.0, 0.0, self.__inc[2]))
+            for atom in range(self.__natoms):
+                Z = self.__atom_numbers[atom]
+                xyz = self.__atom_coords[atom]
                 fp.write(
                     '{0:3d} {1[0]:10.6f} {1[1]:10.6f} {1[2]:10.6f}\n'.format(
                         Z, xyz))
@@ -134,13 +157,13 @@ class CubeFile():
         np.savez_compressed(file=filename,
                             title=self.title,
                             comment=self.comment,
-                            num=self.num,
-                            min=self.min,
-                            max=self.max,
-                            inc=self.inc,
-                            natoms=self.natoms,
-                            atom_numbers=self.atom_numbers,
-                            atom_coords=self.atom_coords,
+                            num=self.__num,
+                            __min=self.__min,
+                            max=self.__max,
+                            inc=self.__inc,
+                            natoms=self.__natoms,
+                            __atom_numbers=self.__atom_numbers,
+                            __atom_coords=self.__atom_coords,
                             levels=self.levels,
                             data=self.data)
 
@@ -148,13 +171,13 @@ class CubeFile():
         file = np.load(filename)
         self.title = file['title']
         self.comment = file['comment']
-        self.num = file['num']
-        self.min = file['min']
-        self.max = file['max']
-        self.inc = file['inc']
-        self.natoms = file['natoms']
-        self.atom_numbers = file['atom_numbers']
-        self.atom_coords = file['atom_coords']
+        self.__num = file['num']
+        self.__min = file['min']
+        self.__max = file['max']
+        self.__inc = file['inc']
+        self.__natoms = file['natoms']
+        self.__atom_numbers = file['__atom_numbers']
+        self.__atom_coords = file['__atom_coords']
         self.levels = file['levels']
         self.data = file['data']
 
@@ -172,13 +195,34 @@ class CubeFile():
         self.data *= other.data
         self.levels = []
 
+    def compute_levels(self,mo_type, fraction):
+        sorted_data = sorted(self.__data.flatten(),key=abs,reverse=True)
+        power = 2
+        if mo_type == "density":
+            power = 1
+
+        neg_level = 0.0
+        pos_level = 0.0
+        sum = functools.reduce(lambda i, j: i + j ** power, [sorted_data[0]**power]+sorted_data[1:])
+        partial_sum = 0
+        for n in range(len(sorted_data)):
+            partial_sum += sorted_data[n] ** power;
+            if partial_sum / sum < fraction:
+                if sorted_data[n] < 0.0:
+                    neg_level = sorted_data[n]
+                else:
+                    pos_level = sorted_data[n]
+            else:
+                break
+        return (pos_level, neg_level)
+
     def __str__(self):
         s = 'title: {}\ncomment: {}'.format(self.title, self.comment)
-        s += '\ntotal grid points = {}'.format(self.num[0] * self.num[1] *
-                                               self.num[2])
-        s += '\ngrid points = [{0[0]},{0[1]},{0[2]}]'.format(self.num)
-        s += '\nmin = [{0[0]:9.3f},{0[1]:9.3f},{0[2]:9.3f}]'.format(self.min)
-        s += '\nmax = [{0[0]:9.3f},{0[1]:9.3f},{0[2]:9.3f}]'.format(self.max)
-        s += '\ninc = [{0[0]:9.3f},{0[1]:9.3f},{0[2]:9.3f}]'.format(self.inc)
-        s += '\ndata = {}'.format(self.data)
+        s += '\ntotal grid points = {}'.format(self.__num[0] * self.__num[1] *
+                                               self.__num[2])
+        s += '\ngrid points = [{0[0]},{0[1]},{0[2]}]'.format(self.__num)
+        s += '\nmin = [{0[0]:9.3f},{0[1]:9.3f},{0[2]:9.3f}]'.format(self.__min)
+        s += '\nmax = [{0[0]:9.3f},{0[1]:9.3f},{0[2]:9.3f}]'.format(self.__max)
+        s += '\ninc = [{0[0]:9.3f},{0[1]:9.3f},{0[2]:9.3f}]'.format(self.__inc)
+        s += '\ndata = {}'.format(self.__data)
         return s

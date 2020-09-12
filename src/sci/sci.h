@@ -38,6 +38,11 @@
 #include "sparse_ci/determinant_substitution_lists.h"
 #include "sparse_ci/sigma_vector.h"
 
+namespace psi {
+class Vector;
+class Matrix;
+} // namespace psi
+
 namespace forte {
 
 class ActiveSpaceIntegrals;
@@ -92,15 +97,15 @@ class SelectedCIMethod {
         const std::vector<std::vector<std::pair<Determinant, double>>>& old_roots) = 0;
     /// Getters
     virtual DeterminantHashVec get_PQ_space() = 0;
-    virtual psi::SharedMatrix get_PQ_evecs() = 0;
-    virtual psi::SharedVector get_PQ_evals() = 0;
+    virtual std::shared_ptr<psi::Matrix> get_PQ_evecs() = 0;
+    virtual std::shared_ptr<psi::Vector> get_PQ_evals() = 0;
     //    virtual std::shared_ptr<WFNOperator> get_op() = 0;
     virtual size_t get_ref_root() = 0;
     virtual std::vector<double> get_multistate_pt2_energy_correction() = 0;
     virtual size_t get_cycle();
 
     void base_startup();
-    void print_wfn(DeterminantHashVec& space, psi::SharedMatrix evecs, int nroot,
+    void print_wfn(DeterminantHashVec& space, std::shared_ptr<psi::Matrix> evecs, int nroot,
                    size_t max_dets_to_print = 20);
 
     SigmaVectorType sigma_vector_type() const;
@@ -192,6 +197,9 @@ class SelectedCIMethod {
 
     /// The number of active orbitals
     size_t nact_;
+
+    /// Do single calculation instead of selective ci
+    bool one_cycle_ = false;
 
     /// Enforce spin completeness of the P and P + Q spaces?
     bool spin_complete_;
