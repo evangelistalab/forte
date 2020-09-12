@@ -246,6 +246,12 @@ void ForteIntegrals::set_oei(size_t p, size_t q, double value, bool alpha) {
 }
 
 void ForteIntegrals::fix_orbital_phases(std::shared_ptr<psi::Matrix> U, bool is_alpha, bool debug) {
+    if (integral_type_ == Custom) {
+        outfile->Printf("\n  Warning: Cannot fix orbital phases (%s) for CustomIntegrals.",
+                        is_alpha ? "Ca" : "Cb");
+        return;
+    }
+
     // grab the old orbitals
     std::shared_ptr<psi::Matrix> Cold = is_alpha ? Ca_ : Cb_;
 
@@ -308,7 +314,7 @@ void ForteIntegrals::fix_orbital_phases(std::shared_ptr<psi::Matrix> U, bool is_
         auto Unew = psi::linalg::doublet(U, T, false, false);
         U->copy(Unew);
     } else {
-        psi::outfile->Printf("\n  Failed to fix orbital phase and order.");
+        psi::outfile->Printf("\n  Warning: Failed to fix orbital phase and order.");
         if (debug) {
             psi::outfile->Printf("\n  Printing the MO overlap and transformation matrix.\n");
             Smo->print();
