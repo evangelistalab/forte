@@ -16,11 +16,11 @@ install:
   - hash -r
   - conda config --set always_yes yes --set changeps1 no
   - conda update -q conda
-  - conda create -q -n tenv python=$PYTHON_VER gcc_linux-64 gxx_linux-64 gfortran_linux-64 cmake mkl-devel hdf5 psi4=1.4a2.dev208 ambit=0.5.1 psi4-dev ci-psi4 boost -c psi4/label/dev 
+  - conda create -q -n tenv python=$PYTHON_VER gcc_linux-64 gxx_linux-64 gfortran_linux-64 cmake mkl-devel hdf5 psi4 ambit=0.5.1 psi4-dev ci-psi4 boost -c psi4/label/dev
   - source activate tenv
   - conda install pytest pytest-cov codecov lcov -c conda-forge
   - pip install pytest-shutil
-  
+
 before_script:
   - python -V
   - psi4 --version
