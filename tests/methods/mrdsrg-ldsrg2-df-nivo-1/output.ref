@@ -1,31 +1,38 @@
 
     -----------------------------------------------------------------------
           Psi4: An Open-Source Ab Initio Electronic Structure Package
-                               Psi4 1.4a2.dev546 
+                               Psi4 1.4a2.dev1023 
 
-                         Git: Rev {HEAD} 9701d60 
-
-
-    R. M. Parrish, L. A. Burns, D. G. A. Smith, A. C. Simmonett,
-    A. E. DePrince III, E. G. Hohenstein, U. Bozkaya, A. Yu. Sokolov,
-    R. Di Remigio, R. M. Richard, J. F. Gonthier, A. M. James,
-    H. R. McAlexander, A. Kumar, M. Saitow, X. Wang, B. P. Pritchard,
-    P. Verma, H. F. Schaefer III, K. Patkowski, R. A. King, E. F. Valeev,
-    F. A. Evangelista, J. M. Turney, T. D. Crawford, and C. D. Sherrill,
-    J. Chem. Theory Comput. 13(7) pp 3185--3197 (2017).
-    (doi: 10.1021/acs.jctc.7b00174)
+                         Git: Rev {master} 7d35d14 
 
 
-                         Additional Contributions by
-    P. Kraus, H. Kruse, M. H. Lechner, M. C. Schieber, R. A. Shaw,
-    A. Alenaizan, R. Galvelis, Z. L. Glick, S. Lehtola, and J. P. Misiewicz
+    D. G. A. Smith, L. A. Burns, A. C. Simmonett, R. M. Parrish,
+    M. C. Schieber, R. Galvelis, P. Kraus, H. Kruse, R. Di Remigio,
+    A. Alenaizan, A. M. James, S. Lehtola, J. P. Misiewicz, M. Scheurer,
+    R. A. Shaw, J. B. Schriber, Y. Xie, Z. L. Glick, D. A. Sirianni,
+    J. S. O'Brien, J. M. Waldrop, A. Kumar, E. G. Hohenstein,
+    B. P. Pritchard, B. R. Brooks, H. F. Schaefer III, A. Yu. Sokolov,
+    K. Patkowski, A. E. DePrince III, U. Bozkaya, R. A. King,
+    F. A. Evangelista, J. M. Turney, T. D. Crawford, C. D. Sherrill,
+    J. Chem. Phys. 152(18) 184108 (2020). https://doi.org/10.1063/5.0006002
+
+                            Additional Code Authors
+    E. T. Seidl, C. L. Janssen, E. F. Valeev, M. L. Leininger,
+    J. F. Gonthier, R. M. Richard, H. R. McAlexander, M. Saitow, X. Wang,
+    P. Verma, and M. H. Lechner
+
+             Previous Authors, Complete List of Code Contributors,
+                       and Citations for Specific Modules
+    https://github.com/psi4/psi4/blob/master/codemeta.json
+    https://github.com/psi4/psi4/graphs/contributors
+    http://psicode.org/psi4manual/master/introduction.html#citing-psifour
 
     -----------------------------------------------------------------------
 
 
-    Psi4 started on: Tuesday, 30 June 2020 07:10PM
+    Psi4 started on: Saturday, 12 September 2020 08:24PM
 
-    Process ID: 34334
+    Process ID: 42525
     Host:       Yorks-Mac.local
     PSIDATADIR: /Users/york/src/psi4new/psi4/share/psi4
     Memory:     500.0 MiB
@@ -39,9 +46,9 @@
 import forte
 
 refrohf    = -15.611546532146
-refudsrg   = -15.545427111263837 # unrelaxed
-refprdsrg  = -15.545445272160 # partially relaxed
-refrdsrg   = -15.545413272167 # relaxed
+refudsrg   = -15.545422485743 # unrelaxed
+refprdsrg  = -15.545440629861 # partially relaxed
+refrdsrg   = -15.545408668012 # relaxed
 
 molecule {
   0 3
@@ -117,26 +124,26 @@ set forte {
 }
 
 Escf, wfn = energy('scf', return_wfn=True)
-compare_values(refrohf,variable("CURRENT ENERGY"),8,"ROHF energy")
+compare_values(refrohf, variable("CURRENT ENERGY"), 8, "ROHF energy")
 
 energy('forte', ref_wfn=wfn)
-compare_values(refudsrg,variable("UNRELAXED ENERGY"),8,"MRDSRG unrelaxed energy")
-compare_values(refprdsrg,variable("PARTIALLY RELAXED ENERGY"),8,"MRDSRG partially relaxed energy")
-compare_values(refrdsrg,variable("RELAXED ENERGY"),8,"MRDSRG relaxed energy")
+compare_values(refudsrg, variable("UNRELAXED ENERGY"), 8, "MRDSRG unrelaxed energy")
+compare_values(refprdsrg, variable("PARTIALLY RELAXED ENERGY"), 8, "MRDSRG partially relaxed energy")
+compare_values(refrdsrg, variable("RELAXED ENERGY"), 8, "MRDSRG relaxed energy")
 --------------------------------------------------------------------------
 
 Scratch directory: /Users/york/scratch/psi4/
 
 *** tstart() called on Yorks-Mac.local
-*** at Tue Jun 30 19:10:07 2020
+*** at Sat Sep 12 20:24:53 2020
 
    => Loading Basis Set <=
 
-    Name: ANONYMOUSB01D3907
+    Name: ANONYMOUS162C0872
     Role: ORBITAL
     Keyword: BASIS
-    atoms 1   entry BE         line     5 inputblock anonymousb01d3907 
-    atoms 2-3 entry H          line    25 inputblock anonymousb01d3907 
+    atoms 1   entry BE         line     5 inputblock anonymous162c0872 
+    atoms 2-3 entry H          line    25 inputblock anonymous162c0872 
 
 
          ---------------------------------------------------------
@@ -185,8 +192,8 @@ Scratch directory: /Users/york/scratch/psi4/
 
   ==> Primary Basis <==
 
-  Basis Set: ANONYMOUSB01D3907
-    Blend: ANONYMOUSB01D3907
+  Basis Set: ANONYMOUS162C0872
+    Blend: ANONYMOUS162C0872
     Number of shells: 9
     Number of basis function: 13
     Number of Cartesian functions: 13
@@ -312,32 +319,24 @@ Properties computed using the SCF density matrix
      X:     0.0000      Y:     0.0000      Z:    -0.2548     Total:     0.2548
 
 
-*** tstop() called on Yorks-Mac.local at Tue Jun 30 19:10:08 2020
+*** tstop() called on Yorks-Mac.local at Sat Sep 12 20:24:53 2020
 Module time:
-	user time   =       0.15 seconds =       0.00 minutes
-	system time =       0.01 seconds =       0.00 minutes
-	total time  =          1 seconds =       0.02 minutes
+	user time   =       0.17 seconds =       0.00 minutes
+	system time =       0.00 seconds =       0.00 minutes
+	total time  =          0 seconds =       0.00 minutes
 Total time:
-	user time   =       0.15 seconds =       0.00 minutes
-	system time =       0.01 seconds =       0.00 minutes
-	total time  =          1 seconds =       0.02 minutes
-    ROHF energy.......................................................PASSED
+	user time   =       0.17 seconds =       0.00 minutes
+	system time =       0.00 seconds =       0.00 minutes
+	total time  =          0 seconds =       0.00 minutes
+    ROHF energy...........................................................................PASSED
 
 Scratch directory: /Users/york/scratch/psi4/
-   => Loading Basis Set <=
-
-    Name: STO-3G
-    Role: ORBITAL
-    Keyword: MINAO_BASIS
-    atoms 1   entry BE         line    41 file /Users/york/src/psi4new/psi4/share/psi4/basis/sto-3g.gbs 
-    atoms 2-3 entry H          line    19 file /Users/york/src/psi4new/psi4/share/psi4/basis/sto-3g.gbs 
-
 
   Forte
   ----------------------------------------------------------------------------
   A suite of quantum chemistry methods for strongly correlated electrons
 
-    git branch: dsrg_file_io - git commit: 89583bc6
+    git branch: dsrg_file_io - git commit: 13444575
 
   Developed by:
     Francesco A. Evangelista, Chenyang Li, Kevin P. Hannon,
@@ -346,9 +345,20 @@ Scratch directory: /Users/york/scratch/psi4/
   ----------------------------------------------------------------------------
 
   Size of Determinant class: 128 bits
+  Preparing forte objects from a psi4 Wavefunction object   => Loading Basis Set <=
+
+    Name: STO-3G
+    Role: ORBITAL
+    Keyword: MINAO_BASIS
+    atoms 1   entry BE         line    41 file /Users/york/src/psi4new/psi4/share/psi4/basis/sto-3g.gbs 
+    atoms 2-3 entry H          line    19 file /Users/york/src/psi4new/psi4/share/psi4/basis/sto-3g.gbs 
+
+
   Read options for space FROZEN_DOCC
   Read options for space RESTRICTED_DOCC
   Read options for space ACTIVE
+  Read options for space FROZEN_DOCC
+  Read options for space RESTRICTED_DOCC
 
   ==> MO Space Information <==
 
@@ -357,11 +367,17 @@ Scratch directory: /Users/york/scratch/psi4/
   -------------------------------------------------
     FROZEN_DOCC         1     0     0     0     1
     RESTRICTED_DOCC     1     0     0     0     1
-    ACTIVE              1     0     0     1     2
+    GAS1                1     0     0     1     2
+    GAS2                0     0     0     0     0
+    GAS3                0     0     0     0     0
+    GAS4                0     0     0     0     0
+    GAS5                0     0     0     0     0
+    GAS6                0     0     0     0     0
     RESTRICTED_UOCC     4     0     2     3     9
     FROZEN_UOCC         0     0     0     0     0
     Total               7     0     2     4    13
   -------------------------------------------------
+  Forte will use psi4 integrals
 
   ==> Integral Transformation <==
 
@@ -374,33 +390,19 @@ Scratch directory: /Users/york/scratch/psi4/
 
   Computing the Cholesky Vectors 
 
-  Computing CD Integrals               ......Done.
-  Timing for cholesky transformation:                         0.006 s.
+  Computing CD Integrals
+  Timing for cholesky transformation:                         0.007 s.
   Need 74.36 KB to store CD integrals in core
 
   Number of Cholesky vectors required for 1.000e-04 tolerance: 55
-  Using in-core PK algorithm.
-   Calculation information:
-      Number of atoms:                   3
-      Number of AO shells:               9
-      Number of primitives:             21
-      Number of atomic orbitals:        13
-      Number of basis functions:        13
 
-      Integral cutoff                 1.00e-12
-      Number of threads:                 1
+  Building frozen-core operator using Cholesky integrals
 
-  Performing in-core PK
-  Using 8372 doubles for integral storage.
-  We computed 1035 shell quartets total.
-  Whereas there are 1035 unique shell quartets.
-
-
-  Frozen-core energy            -14.929378863416 a.u.
-  Timing for frozen one-body operator:                        0.009 s.
+  Frozen-core energy            -14.929378863559 a.u.
+  Timing for frozen one-body operator:                        0.014 s.
   Resorting integrals after freezing core.
-  Timing for freezing core and virtual orbitals:              0.009 s.
-  Timing for computing Cholesky integrals:                    0.017 s.
+  Timing for freezing core and virtual orbitals:              0.014 s.
+  Timing for computing Cholesky integrals:                    0.023 s.
 
   ==> Summary of Active Space Solver Input <==
 
@@ -447,8 +449,8 @@ Scratch directory: /Users/york/scratch/psi4/
   ---------------------------------------------
     Root            Energy     <S^2>   Spin
   ---------------------------------------------
-      0      -15.483411479500  0.000  singlet
-      1      -15.440217680793  0.000  singlet
+      0      -15.483406416384  0.000  singlet
+      1      -15.440214743852  0.000  singlet
   ---------------------------------------------
   Timing for initial guess  =      0.000 s
 
@@ -460,23 +462,23 @@ Scratch directory: /Users/york/scratch/psi4/
   -----------------------------------------------------
     Iter.      Avg. Energy       Delta_E     Res. Norm
   -----------------------------------------------------
-      1      -15.483411479500  -1.548e+01  +8.882e-16
-      2      -15.483411479500  -1.776e-15  +1.986e-15
+      1      -15.483406416384  -1.548e+01  +3.097e+01
+      2      -15.483406416384  +0.000e+00  +8.882e-16
   -----------------------------------------------------
   The Davidson-Liu algorithm converged in 3 iterations.
 
   ==> Root No. 0 <==
 
-    0 2     -0.91017273
-    2 0      0.41422892
+    0 2      0.91016103
+    2 0     -0.41425464
 
-    Total Energy:       -15.483411479500210
+    Total Energy:       -15.483406416384152
 
   ==> Energy Summary <==
 
     Multi.(2ms)  Irrep.  No.               Energy
     ---------------------------------------------
-       1  (  0)    A1     0      -15.483411479500
+       1  (  0)    A1     0      -15.483406416384
     ---------------------------------------------
 
   ==> Computing RDMs for Root No. 0 <==
@@ -487,7 +489,7 @@ Scratch directory: /Users/york/scratch/psi4/
 
   ==> NATURAL ORBITALS <==
 
-        1B2     1.656829      1A1     0.343171  
+        1B2     1.656786      1A1     0.343214  
 
 
        -----------------------------------------------------------------
@@ -495,58 +497,59 @@ Scratch directory: /Users/york/scratch/psi4/
          Chenyang Li, Jeffrey B. Schriber and Francesco A. Evangelista
        -----------------------------------------------------------------
 
-  Took 0.000470 s to build Fock matrix
+  Took 0.000569 s to build Fock matrix
 
   ==> Checking Fock Matrix Diagonal Blocks <==
 
     Off-Diag. Elements       Max           2-Norm
     ------------------------------------------------
-    Fa actv              0.0000000000   0.0000000000
-    Fb actv              0.0000000000   0.0000000000
+    Fa GAS1              0.0000000000   0.0000000000
+    Fb GAS1              0.0000000000   0.0000000000
     ------------------------------------------------
-    Fa core              0.0000000000   0.0000000000
-    Fb core              0.0000000000   0.0000000000
+    Fa GAS2              0.0000000000   0.0000000000
+    Fb GAS2              0.0000000000   0.0000000000
     ------------------------------------------------
-    Fa virt              0.0179823487   0.0459297459
-    Fb virt              0.0179823487   0.0459297459
+    Fa GAS3              0.0000000000   0.0000000000
+    Fb GAS3              0.0000000000   0.0000000000
     ------------------------------------------------
- Integrals are about to be computed.
+    Fa GAS4              0.0000000000   0.0000000000
+    Fb GAS4              0.0000000000   0.0000000000
+    ------------------------------------------------
+    Fa GAS5              0.0000000000   0.0000000000
+    Fb GAS5              0.0000000000   0.0000000000
+    ------------------------------------------------
+    Fa GAS6              0.0000000000   0.0000000000
+    Fb GAS6              0.0000000000   0.0000000000
+    ------------------------------------------------
+    Fa RESTRICTED_DOCC   0.0000000000   0.0000000000
+    Fb RESTRICTED_DOCC   0.0000000000   0.0000000000
+    ------------------------------------------------
+    Fa RESTRICTED_UOCC   0.0179817598   0.0459265748
+    Fb RESTRICTED_UOCC   0.0179817598   0.0459265748
+    ------------------------------------------------
+  Integrals are about to be computed.
   Computing the Cholesky Vectors 
 
-  Computing CD Integrals               ......Done.
-  Timing for cholesky transformation:                         0.006 s.
+  Computing CD Integrals
+  Timing for cholesky transformation:                         0.007 s.
   Need 74.36 KB to store CD integrals in core
 
   Number of Cholesky vectors required for 1.000e-04 tolerance: 55
 
- Integrals are about to be updated.  Using in-core PK algorithm.
-   Calculation information:
-      Number of atoms:                   3
-      Number of AO shells:               9
-      Number of primitives:             21
-      Number of atomic orbitals:        13
-      Number of basis functions:        13
+  Integrals are about to be updated.
+  Building frozen-core operator using Cholesky integrals
 
-      Integral cutoff                 1.00e-12
-      Number of threads:                 1
-
-  Performing in-core PK
-  Using 8372 doubles for integral storage.
-  We computed 1035 shell quartets total.
-  Whereas there are 1035 unique shell quartets.
-
-
-  Frozen-core energy            -14.929378863416 a.u.
-  Timing for frozen one-body operator:                        0.009 s.
+  Frozen-core energy            -14.929378863559 a.u.
+  Timing for frozen one-body operator:                        0.014 s.
   Resorting integrals after freezing core.
-  Timing for freezing core and virtual orbitals:              0.009 s.
+  Timing for freezing core and virtual orbitals:              0.014 s.
 
   ==> RDMs Transformation to Semicanonical Basis <==
 
     Transformed 1 RDMs.
     Transformed 2 RDMs.
     Transformed 3 RDMs.
-  SemiCanonicalize takes 0.281643 s.
+  Timing for semi-canonicalization:                           0.291 s.
 
   ==> Multireference Driven Similarity Renormalization Group <==
 
@@ -565,13 +568,13 @@ Scratch directory: /Users/york/scratch/psi4/
 
     2-body             AA           AB           BB
     -----------------------------------------------
-    max          0.142144     0.377020     0.142144
-    norm         0.284288     0.604241     0.284288
+    max          0.142158     0.377038     0.142158
+    norm         0.284316     0.604278     0.284316
     -----------------------------------------------
     3-body            AAA          AAB          ABB          BBB
     ------------------------------------------------------------
-    max          0.000000     0.093364     0.093364     0.000000
-    norm         0.000000     0.264074     0.264074     0.000000
+    max          0.000000     0.093367     0.093367     0.000000
+    norm         0.000000     0.264083     0.264083     0.000000
     ------------------------------------------------------------
 
   ==> Checking Semicanonical Orbitals <==
@@ -579,15 +582,15 @@ Scratch directory: /Users/york/scratch/psi4/
     Abs. max of Fock core, active, virtual blocks (Fij, i != j)
                   core          active         virtual
     --------------------------------------------------
-    Fα    0.0000000000    0.0000027020    0.0000348566
-    Fβ    0.0000000000    0.0000027020    0.0000348566
+    Fα    0.0000000000    0.0000027020    0.0000348573
+    Fβ    0.0000000000    0.0000027020    0.0000348573
     --------------------------------------------------
 
     1-Norm of Fock core, active, virtual blocks (Fij, i != j)
                   core          active         virtual
     --------------------------------------------------
-    Fα    0.0000000000    0.0000054040    0.0002098329
-    Fβ    0.0000000000    0.0000054040    0.0002098329
+    Fα    0.0000000000    0.0000054041    0.0002098374
+    Fβ    0.0000000000    0.0000054041    0.0002098374
     --------------------------------------------------
 
     Orbitals are semi-canonicalized.
@@ -700,15 +703,16 @@ Scratch directory: /Users/york/scratch/psi4/
            ---------------------------  ---------------------  ---------------------  -----------------
     Iter.        Corr.         Delta       Hbar1      Hbar2        T1         T2        Hbar     Amp.    DIIS
     ---------------------------------------------------------------------------------------------------------
-       1    -0.062015633537 -6.202e-02   1.302e-01  3.863e-01   2.544e-08  1.301e-07     5.654    0.005
-       2    -0.062015632171  1.366e-09   1.302e-01  3.863e-01   8.372e-09  4.258e-08     5.606    0.005  S
+       1    -0.062016136845 -6.202e-02   1.302e-01  3.863e-01   2.696e-06  2.741e-06     5.856    0.005
+       2    -0.062016067426  6.942e-08   1.302e-01  3.863e-01   2.694e-07  4.976e-07     6.275    0.005  S
+       3    -0.062016069359 -1.933e-09   1.302e-01  3.863e-01   6.423e-08  1.238e-07     6.426    0.005  S/E
     ---------------------------------------------------------------------------------------------------------
 
   ==> MR-LDSRG(2) Energy Summary <==
 
-    E0 (reference)                 =     -15.483411479500212
-    MR-LDSRG(2) correlation energy =      -0.062015632171306
-    MR-LDSRG(2) total energy       =     -15.545427111671518
+    E0 (reference)                 =     -15.483406416384149
+    MR-LDSRG(2) correlation energy =      -0.062016069358791
+    MR-LDSRG(2) total energy       =     -15.545422485742940
 
   ==> Final Excitation Amplitudes Summary <==
 
@@ -716,48 +720,48 @@ Scratch directory: /Users/york/scratch/psi4/
     Largest T1 amplitudes for spin case A:
        i       a                  i       a                  i       a               
     --------------------------------------------------------------------------------
-    [  8      10    ] 0.026187 [  8       9    ]-0.020881 [  0       3    ] 0.015501 
+    [  8      10    ] 0.026186 [  8       9    ]-0.020880 [  0       3    ] 0.015501 
     [  1       4    ]-0.013109 [  0       1    ] 0.012346 [  1       2    ]-0.010483 
-    [  0       4    ] 0.006443 [  1       3    ]-0.005489 [  0       2    ]-0.001343 
+    [  0       4    ] 0.006442 [  1       3    ]-0.005488 [  0       2    ]-0.001343 
     [  8      11    ] 0.000652 [  0       5    ]-0.000621 [  1       5    ]-0.000532 
     [  8       3    ] 0.000012 [  8       4    ]-0.000005 [  1      10    ]-0.000005 
     --------------------------------------------------------------------------------
-    Norm of T1A vector: (nonzero elements: 23)                    0.043252370659876.
+    Norm of T1A vector: (nonzero elements: 23)                    0.043250886872095.
     --------------------------------------------------------------------------------
     Largest T1 amplitudes for spin case B:
        _       _                  _       _                  _       _               
        i       a                  i       a                  i       a               
     --------------------------------------------------------------------------------
-    [  8      10    ] 0.026187 [  8       9    ]-0.020881 [  0       3    ] 0.015501 
+    [  8      10    ] 0.026186 [  8       9    ]-0.020880 [  0       3    ] 0.015501 
     [  1       4    ]-0.013109 [  0       1    ] 0.012346 [  1       2    ]-0.010483 
-    [  0       4    ] 0.006443 [  1       3    ]-0.005489 [  0       2    ]-0.001343 
+    [  0       4    ] 0.006442 [  1       3    ]-0.005488 [  0       2    ]-0.001343 
     [  8      11    ] 0.000652 [  0       5    ]-0.000621 [  1       5    ]-0.000532 
     [  8       3    ] 0.000012 [  8       4    ]-0.000005 [  1      10    ]-0.000005 
     --------------------------------------------------------------------------------
-    Norm of T1B vector: (nonzero elements: 23)                    0.043252370659876.
+    Norm of T1B vector: (nonzero elements: 23)                    0.043250886872095.
     --------------------------------------------------------------------------------
     Largest T2 amplitudes for spin case AA:
        i   j   a   b              i   j   a   b              i   j   a   b           
     --------------------------------------------------------------------------------
     [  0   1   1   3] 0.030589 [  0   8   3   9] 0.016190 [  0   1   8   9] 0.013581 
     [  1   8   3   9]-0.013216 [  0   8   3   8]-0.013106 [  1   8   1   9] 0.012888 
-    [  0   8   2   8]-0.012826 [  1   8   4   8]-0.012644 [  1   8   1  10] 0.010702 
-    [  1   8   2   9] 0.010481 [  0   8   4   8] 0.010232 [  0   1   2   3] 0.008943 
+    [  0   8   2   8]-0.012827 [  1   8   4   8]-0.012644 [  1   8   1  10] 0.010702 
+    [  1   8   2   9] 0.010481 [  0   8   4   8] 0.010233 [  0   1   2   3] 0.008943 
     [  0   8   1   9] 0.008917 [  1   8   2   8]-0.008497 [  1   8   3   8]-0.007394 
     --------------------------------------------------------------------------------
-    Norm of T2AA vector: (nonzero elements: 440)                  0.110313304141065.
+    Norm of T2AA vector: (nonzero elements: 440)                  0.110313751410999.
     --------------------------------------------------------------------------------
     Largest T2 amplitudes for spin case AB:
            _       _                  _       _                  _       _           
        i   j   a   b              i   j   a   b              i   j   a   b           
     --------------------------------------------------------------------------------
-    [  0   0   8   8]-0.058854 [  8   8   9   9]-0.050449 [  0   0   3   3]-0.047161 
+    [  0   0   8   8]-0.058855 [  8   8   9   9]-0.050449 [  0   0   3   3]-0.047161 
     [  8   8   8  10] 0.043166 [  0   8   3   9] 0.039988 [  0   8   4   8] 0.038691 
-    [  0   0   8  10] 0.034068 [  1   1   9   9]-0.029302 [  0   0   8   9]-0.029152 
+    [  0   0   8  10] 0.034068 [  1   1   9   9]-0.029303 [  0   0   8   9]-0.029153 
     [  8   8  10  10]-0.025311 [  0   0   9   9]-0.024247 [  0   1   8   9] 0.024034 
     [  1   1   1   2]-0.023621 [  0   0  10  10]-0.023341 [  0   8   1   9] 0.022930 
     --------------------------------------------------------------------------------
-    Norm of T2AB vector: (nonzero elements: 749)                  0.230128530593116.
+    Norm of T2AB vector: (nonzero elements: 749)                  0.230129252551977.
     --------------------------------------------------------------------------------
     Largest T2 amplitudes for spin case BB:
        _   _   _   _              _   _   _   _              _   _   _   _           
@@ -765,11 +769,11 @@ Scratch directory: /Users/york/scratch/psi4/
     --------------------------------------------------------------------------------
     [  0   1   1   3] 0.030589 [  0   8   3   9] 0.016190 [  0   1   8   9] 0.013581 
     [  1   8   3   9]-0.013216 [  0   8   3   8]-0.013106 [  1   8   1   9] 0.012888 
-    [  0   8   2   8]-0.012826 [  1   8   4   8]-0.012644 [  1   8   1  10] 0.010702 
-    [  1   8   2   9] 0.010481 [  0   8   4   8] 0.010232 [  0   1   2   3] 0.008943 
+    [  0   8   2   8]-0.012827 [  1   8   4   8]-0.012644 [  1   8   1  10] 0.010702 
+    [  1   8   2   9] 0.010481 [  0   8   4   8] 0.010233 [  0   1   2   3] 0.008943 
     [  0   8   1   9] 0.008917 [  1   8   2   8]-0.008497 [  1   8   3   8]-0.007394 
     --------------------------------------------------------------------------------
-    Norm of T2BB vector: (nonzero elements: 440)                  0.110313304141065.
+    Norm of T2BB vector: (nonzero elements: 440)                  0.110313751410999.
     --------------------------------------------------------------------------------
 
   ==> Possible Intruders <==
@@ -824,8 +828,8 @@ Scratch directory: /Users/york/scratch/psi4/
   ---------------------------------------------
     Root            Energy     <S^2>   Spin
   ---------------------------------------------
-      0      -15.545445272609  0.000  singlet
-      1      -15.499155886855  0.000  singlet
+      0      -15.545440629861  0.000  singlet
+      1      -15.499152426683  0.000  singlet
   ---------------------------------------------
   Timing for initial guess  =      0.000 s
 
@@ -837,23 +841,23 @@ Scratch directory: /Users/york/scratch/psi4/
   -----------------------------------------------------
     Iter.      Avg. Energy       Delta_E     Res. Norm
   -----------------------------------------------------
-      1      -15.545445272609  -1.555e+01  +8.882e-16
-      2      -15.545445272609  +0.000e+00  +8.882e-16
+      1      -15.545440629861  -1.555e+01  +3.109e+01
+      2      -15.545440629861  -3.553e-15  +1.776e-15
   -----------------------------------------------------
   The Davidson-Liu algorithm converged in 3 iterations.
 
   ==> Root No. 0 <==
 
-    0 2     -0.90178935
-    2 0      0.43217585
+    0 2      0.90178100
+    2 0     -0.43219328
 
-    Total Energy:       -15.545445272608619
+    Total Energy:       -15.545440629860675
 
   ==> Energy Summary <==
 
     Multi.(2ms)  Irrep.  No.               Energy
     ---------------------------------------------
-       1  (  0)    A1     0      -15.545445272609
+       1  (  0)    A1     0      -15.545440629861
     ---------------------------------------------
 
   ==> Computing RDMs for Root No. 0 <==
@@ -864,7 +868,7 @@ Scratch directory: /Users/york/scratch/psi4/
 
   ==> NATURAL ORBITALS <==
 
-        1B2     1.626448      1A1     0.373552  
+        1B2     1.626418      1A1     0.373582  
 
 
   ==> RDMs Transformation to Semicanonical Basis <==
@@ -872,58 +876,59 @@ Scratch directory: /Users/york/scratch/psi4/
     Transformed 1 RDMs.
     Transformed 2 RDMs.
     Transformed 3 RDMs.
-  Took 0.000454 s to build Fock matrix
+  Took 0.000468 s to build Fock matrix
 
   ==> Checking Fock Matrix Diagonal Blocks <==
 
     Off-Diag. Elements       Max           2-Norm
     ------------------------------------------------
-    Fa actv              0.0000000000   0.0000000000
-    Fb actv              0.0000000000   0.0000000000
+    Fa GAS1              0.0000000000   0.0000000000
+    Fb GAS1              0.0000000000   0.0000000000
     ------------------------------------------------
-    Fa core              0.0000000000   0.0000000000
-    Fb core              0.0000000000   0.0000000000
+    Fa GAS2              0.0000000000   0.0000000000
+    Fb GAS2              0.0000000000   0.0000000000
     ------------------------------------------------
-    Fa virt              0.0007223698   0.0018160457
-    Fb virt              0.0007223698   0.0018160457
+    Fa GAS3              0.0000000000   0.0000000000
+    Fb GAS3              0.0000000000   0.0000000000
     ------------------------------------------------
- Integrals are about to be computed.
+    Fa GAS4              0.0000000000   0.0000000000
+    Fb GAS4              0.0000000000   0.0000000000
+    ------------------------------------------------
+    Fa GAS5              0.0000000000   0.0000000000
+    Fb GAS5              0.0000000000   0.0000000000
+    ------------------------------------------------
+    Fa GAS6              0.0000000000   0.0000000000
+    Fb GAS6              0.0000000000   0.0000000000
+    ------------------------------------------------
+    Fa RESTRICTED_DOCC   0.0000000000   0.0000000000
+    Fb RESTRICTED_DOCC   0.0000000000   0.0000000000
+    ------------------------------------------------
+    Fa RESTRICTED_UOCC   0.0007220771   0.0018153159
+    Fb RESTRICTED_UOCC   0.0007220771   0.0018153159
+    ------------------------------------------------
+  Integrals are about to be computed.
   Computing the Cholesky Vectors 
 
-  Computing CD Integrals               ......Done.
+  Computing CD Integrals
   Timing for cholesky transformation:                         0.006 s.
   Need 74.36 KB to store CD integrals in core
 
   Number of Cholesky vectors required for 1.000e-04 tolerance: 55
 
- Integrals are about to be updated.  Using in-core PK algorithm.
-   Calculation information:
-      Number of atoms:                   3
-      Number of AO shells:               9
-      Number of primitives:             21
-      Number of atomic orbitals:        13
-      Number of basis functions:        13
+  Integrals are about to be updated.
+  Building frozen-core operator using Cholesky integrals
 
-      Integral cutoff                 1.00e-12
-      Number of threads:                 1
-
-  Performing in-core PK
-  Using 8372 doubles for integral storage.
-  We computed 1035 shell quartets total.
-  Whereas there are 1035 unique shell quartets.
-
-
-  Frozen-core energy            -14.929378863416 a.u.
-  Timing for frozen one-body operator:                        0.009 s.
+  Frozen-core energy            -14.929378863559 a.u.
+  Timing for frozen one-body operator:                        0.015 s.
   Resorting integrals after freezing core.
-  Timing for freezing core and virtual orbitals:              0.009 s.
+  Timing for freezing core and virtual orbitals:              0.015 s.
 
   ==> RDMs Transformation to Semicanonical Basis <==
 
     Transformed 1 RDMs.
     Transformed 2 RDMs.
     Transformed 3 RDMs.
-  SemiCanonicalize takes 0.271155 s.
+  Timing for semi-canonicalization:                           0.281 s.
 
   ==> Multireference Driven Similarity Renormalization Group <==
 
@@ -942,13 +947,13 @@ Scratch directory: /Users/york/scratch/psi4/
 
     2-body             AA           AB           BB
     -----------------------------------------------
-    max          0.151891     0.389732     0.151891
-    norm         0.303781     0.629337     0.303781
+    max          0.151900     0.389744     0.151900
+    norm         0.303800     0.629361     0.303800
     -----------------------------------------------
     3-body            AAA          AAB          ABB          BBB
     ------------------------------------------------------------
-    max          0.000000     0.095152     0.095152     0.000000
-    norm         0.000000     0.269129     0.269129     0.000000
+    max          0.000000     0.095153     0.095153     0.000000
+    norm         0.000000     0.269133     0.269133     0.000000
     ------------------------------------------------------------
 
   ==> Checking Semicanonical Orbitals <==
@@ -956,15 +961,15 @@ Scratch directory: /Users/york/scratch/psi4/
     Abs. max of Fock core, active, virtual blocks (Fij, i != j)
                   core          active         virtual
     --------------------------------------------------
-    Fα    0.0000000000    0.0000027225    0.0000353601
-    Fβ    0.0000000000    0.0000027225    0.0000353601
+    Fα    0.0000000000    0.0000027225    0.0000353606
+    Fβ    0.0000000000    0.0000027225    0.0000353606
     --------------------------------------------------
 
     1-Norm of Fock core, active, virtual blocks (Fij, i != j)
                   core          active         virtual
     --------------------------------------------------
-    Fα    0.0000000000    0.0000054450    0.0002128671
-    Fβ    0.0000000000    0.0000054450    0.0002128671
+    Fα    0.0000000000    0.0000054450    0.0002128704
+    Fβ    0.0000000000    0.0000054450    0.0002128704
     --------------------------------------------------
 
     Orbitals are semi-canonicalized.
@@ -997,9 +1002,9 @@ Scratch directory: /Users/york/scratch/psi4/
 
              [H1, T1]    [H1, T2]    [H2, T1]    [H2, T2]
     -----------------------------------------------------
-    -> C0       0.010       0.030       0.092       1.225
-    -> C1       0.026       0.134       0.232       3.316
-    -> C2                   0.401       0.898       4.728
+    -> C0       0.015       0.048       0.150       2.027
+    -> C1       0.042       0.219       0.376       5.508
+    -> C2                   0.684       1.536       7.687
     -----------------------------------------------------
 
 
@@ -1014,48 +1019,48 @@ Scratch directory: /Users/york/scratch/psi4/
     Largest T1 amplitudes for spin case A:
        i       a                  i       a                  i       a               
     --------------------------------------------------------------------------------
-    [  8      10    ] 0.026187 [  8       9    ]-0.020881 [  0       3    ] 0.015501 
+    [  8      10    ] 0.026186 [  8       9    ]-0.020880 [  0       3    ] 0.015501 
     [  1       4    ]-0.013109 [  0       1    ] 0.012346 [  1       2    ]-0.010483 
-    [  0       4    ] 0.006443 [  1       3    ]-0.005489 [  0       2    ]-0.001343 
+    [  0       4    ] 0.006442 [  1       3    ]-0.005488 [  0       2    ]-0.001343 
     [  8      11    ] 0.000652 [  0       5    ]-0.000621 [  1       5    ]-0.000532 
     [  8       3    ] 0.000012 [  8       4    ]-0.000005 [  1      10    ]-0.000005 
     --------------------------------------------------------------------------------
-    Norm of T1A vector: (nonzero elements: 23)                    0.043252370659876.
+    Norm of T1A vector: (nonzero elements: 23)                    0.043250886872095.
     --------------------------------------------------------------------------------
     Largest T1 amplitudes for spin case B:
        _       _                  _       _                  _       _               
        i       a                  i       a                  i       a               
     --------------------------------------------------------------------------------
-    [  8      10    ] 0.026187 [  8       9    ]-0.020881 [  0       3    ] 0.015501 
+    [  8      10    ] 0.026186 [  8       9    ]-0.020880 [  0       3    ] 0.015501 
     [  1       4    ]-0.013109 [  0       1    ] 0.012346 [  1       2    ]-0.010483 
-    [  0       4    ] 0.006443 [  1       3    ]-0.005489 [  0       2    ]-0.001343 
+    [  0       4    ] 0.006442 [  1       3    ]-0.005488 [  0       2    ]-0.001343 
     [  8      11    ] 0.000652 [  0       5    ]-0.000621 [  1       5    ]-0.000532 
     [  8       3    ] 0.000012 [  8       4    ]-0.000005 [  1      10    ]-0.000005 
     --------------------------------------------------------------------------------
-    Norm of T1B vector: (nonzero elements: 23)                    0.043252370659876.
+    Norm of T1B vector: (nonzero elements: 23)                    0.043250886872095.
     --------------------------------------------------------------------------------
     Largest T2 amplitudes for spin case AA:
        i   j   a   b              i   j   a   b              i   j   a   b           
     --------------------------------------------------------------------------------
     [  0   1   1   3] 0.030589 [  0   8   3   9] 0.016190 [  0   1   8   9] 0.013581 
     [  1   8   3   9]-0.013216 [  0   8   3   8]-0.013106 [  1   8   1   9] 0.012888 
-    [  0   8   2   8]-0.012826 [  1   8   4   8]-0.012644 [  1   8   1  10] 0.010702 
-    [  1   8   2   9] 0.010481 [  0   8   4   8] 0.010232 [  0   1   2   3] 0.008943 
+    [  0   8   2   8]-0.012827 [  1   8   4   8]-0.012644 [  1   8   1  10] 0.010702 
+    [  1   8   2   9] 0.010481 [  0   8   4   8] 0.010233 [  0   1   2   3] 0.008943 
     [  0   8   1   9] 0.008917 [  1   8   2   8]-0.008497 [  1   8   3   8]-0.007394 
     --------------------------------------------------------------------------------
-    Norm of T2AA vector: (nonzero elements: 440)                  0.110313304141065.
+    Norm of T2AA vector: (nonzero elements: 440)                  0.110313751410999.
     --------------------------------------------------------------------------------
     Largest T2 amplitudes for spin case AB:
            _       _                  _       _                  _       _           
        i   j   a   b              i   j   a   b              i   j   a   b           
     --------------------------------------------------------------------------------
-    [  0   0   8   8]-0.058854 [  8   8   9   9]-0.050449 [  0   0   3   3]-0.047161 
+    [  0   0   8   8]-0.058855 [  8   8   9   9]-0.050449 [  0   0   3   3]-0.047161 
     [  8   8   8  10] 0.043166 [  0   8   3   9] 0.039988 [  0   8   4   8] 0.038691 
-    [  0   0   8  10] 0.034068 [  1   1   9   9]-0.029302 [  0   0   8   9]-0.029152 
+    [  0   0   8  10] 0.034068 [  1   1   9   9]-0.029303 [  0   0   8   9]-0.029153 
     [  8   8  10  10]-0.025311 [  0   0   9   9]-0.024247 [  0   1   8   9] 0.024034 
     [  1   1   1   2]-0.023621 [  0   0  10  10]-0.023341 [  0   8   1   9] 0.022930 
     --------------------------------------------------------------------------------
-    Norm of T2AB vector: (nonzero elements: 749)                  0.230128530593116.
+    Norm of T2AB vector: (nonzero elements: 749)                  0.230129252551977.
     --------------------------------------------------------------------------------
     Largest T2 amplitudes for spin case BB:
        _   _   _   _              _   _   _   _              _   _   _   _           
@@ -1063,11 +1068,11 @@ Scratch directory: /Users/york/scratch/psi4/
     --------------------------------------------------------------------------------
     [  0   1   1   3] 0.030589 [  0   8   3   9] 0.016190 [  0   1   8   9] 0.013581 
     [  1   8   3   9]-0.013216 [  0   8   3   8]-0.013106 [  1   8   1   9] 0.012888 
-    [  0   8   2   8]-0.012826 [  1   8   4   8]-0.012644 [  1   8   1  10] 0.010702 
-    [  1   8   2   9] 0.010481 [  0   8   4   8] 0.010232 [  0   1   2   3] 0.008943 
+    [  0   8   2   8]-0.012827 [  1   8   4   8]-0.012644 [  1   8   1  10] 0.010702 
+    [  1   8   2   9] 0.010481 [  0   8   4   8] 0.010233 [  0   1   2   3] 0.008943 
     [  0   8   1   9] 0.008917 [  1   8   2   8]-0.008497 [  1   8   3   8]-0.007394 
     --------------------------------------------------------------------------------
-    Norm of T2BB vector: (nonzero elements: 440)                  0.110313304141065.
+    Norm of T2BB vector: (nonzero elements: 440)                  0.110313751410999.
     --------------------------------------------------------------------------------
 
   ==> Possible Intruders <==
@@ -1087,20 +1092,20 @@ Scratch directory: /Users/york/scratch/psi4/
            ---------------------------  ---------------------  ---------------------  -----------------
     Iter.        Corr.         Delta       Hbar1      Hbar2        T1         T2        Hbar     Amp.    DIIS
     ---------------------------------------------------------------------------------------------------------
-       1    -0.062237976000 -6.224e-02   1.257e-01  3.862e-01   2.230e-03  1.570e-03     5.681    0.006
-       2    -0.062026221318  2.118e-04   1.267e-01  3.856e-01   1.716e-04  4.135e-04     5.699    0.005  S
-       3    -0.062021004878  5.216e-06   1.267e-01  3.857e-01   4.689e-05  1.106e-04     5.670    0.005  S/E
-       4    -0.062018944599  2.060e-06   1.267e-01  3.857e-01   6.468e-06  2.430e-05     5.817    0.005  S/E
-       5    -0.062018683250  2.613e-07   1.267e-01  3.857e-01   1.141e-06  4.905e-06     5.714    0.005  S/E
-       6    -0.062018733555 -5.031e-08   1.267e-01  3.857e-01   2.437e-07  1.035e-06     5.775    0.005  S/E
-       7    -0.062018737398 -3.843e-09   1.267e-01  3.857e-01   2.011e-08  2.048e-07     5.794    0.005  S/E
+       1    -0.062238323137 -6.224e-02   1.257e-01  3.862e-01   2.229e-03  1.569e-03     5.721    0.005
+       2    -0.062026660427  2.117e-04   1.267e-01  3.856e-01   1.715e-04  4.134e-04     6.162    0.005  S
+       3    -0.062021447903  5.213e-06   1.267e-01  3.857e-01   4.688e-05  1.106e-04     6.173    0.005  S/E
+       4    -0.062019388953  2.059e-06   1.267e-01  3.857e-01   6.466e-06  2.429e-05     6.198    0.005  S/E
+       5    -0.062019127826  2.611e-07   1.267e-01  3.857e-01   1.141e-06  4.903e-06     5.853    0.005  S/E
+       6    -0.062019178120 -5.029e-08   1.267e-01  3.857e-01   2.436e-07  1.034e-06     5.738    0.005  S/E
+       7    -0.062019181962 -3.843e-09   1.267e-01  3.857e-01   2.010e-08  2.047e-07     6.020    0.006  S/E
     ---------------------------------------------------------------------------------------------------------
 
   ==> MR-LDSRG(2) Energy Summary <==
 
-    E0 (reference)                 =     -15.483394533069653
-    MR-LDSRG(2) correlation energy =      -0.062018737397578
-    MR-LDSRG(2) total energy       =     -15.545413270467231
+    E0 (reference)                 =     -15.483389486049042
+    MR-LDSRG(2) correlation energy =      -0.062019181962465
+    MR-LDSRG(2) total energy       =     -15.545408668011508
 
   ==> Final Excitation Amplitudes Summary <==
 
@@ -1108,60 +1113,60 @@ Scratch directory: /Users/york/scratch/psi4/
     Largest T1 amplitudes for spin case A:
        i       a                  i       a                  i       a               
     --------------------------------------------------------------------------------
-    [  8      10    ] 0.025816 [  8       9    ]-0.020105 [  0       3    ] 0.014773 
-    [  1       4    ]-0.012541 [  0       1    ] 0.011993 [  1       2    ]-0.010692 
-    [  0       4    ] 0.005695 [  1       3    ]-0.004853 [  0       2    ]-0.001166 
+    [  8      10    ] 0.025815 [  8       9    ]-0.020105 [  0       3    ] 0.014774 
+    [  1       4    ]-0.012540 [  0       1    ] 0.011992 [  1       2    ]-0.010692 
+    [  0       4    ] 0.005694 [  1       3    ]-0.004853 [  0       2    ]-0.001166 
     [  8      11    ] 0.000635 [  0       5    ]-0.000602 [  1       5    ]-0.000490 
     [  8       3    ] 0.000012 [  8       4    ]-0.000005 [  1      10    ]-0.000005 
     --------------------------------------------------------------------------------
-    Norm of T1A vector: (nonzero elements: 23)                    0.041984119847692.
+    Norm of T1A vector: (nonzero elements: 23)                    0.041983172438872.
     --------------------------------------------------------------------------------
     Largest T1 amplitudes for spin case B:
        _       _                  _       _                  _       _               
        i       a                  i       a                  i       a               
     --------------------------------------------------------------------------------
-    [  8      10    ] 0.025816 [  8       9    ]-0.020105 [  0       3    ] 0.014773 
-    [  1       4    ]-0.012541 [  0       1    ] 0.011993 [  1       2    ]-0.010692 
-    [  0       4    ] 0.005695 [  1       3    ]-0.004853 [  0       2    ]-0.001166 
+    [  8      10    ] 0.025815 [  8       9    ]-0.020105 [  0       3    ] 0.014774 
+    [  1       4    ]-0.012540 [  0       1    ] 0.011992 [  1       2    ]-0.010692 
+    [  0       4    ] 0.005694 [  1       3    ]-0.004853 [  0       2    ]-0.001166 
     [  8      11    ] 0.000635 [  0       5    ]-0.000602 [  1       5    ]-0.000490 
     [  8       3    ] 0.000012 [  8       4    ]-0.000005 [  1      10    ]-0.000005 
     --------------------------------------------------------------------------------
-    Norm of T1B vector: (nonzero elements: 23)                    0.041984119847692.
+    Norm of T1B vector: (nonzero elements: 23)                    0.041983172438872.
     --------------------------------------------------------------------------------
     Largest T2 amplitudes for spin case AA:
        i   j   a   b              i   j   a   b              i   j   a   b           
     --------------------------------------------------------------------------------
     [  0   1   1   3] 0.030632 [  0   8   3   9] 0.016152 [  0   1   8   9] 0.013674 
-    [  1   8   3   9]-0.013263 [  0   8   3   8]-0.012952 [  0   8   2   8]-0.012949 
-    [  1   8   1   9] 0.012836 [  1   8   4   8]-0.012711 [  1   8   1  10] 0.010677 
-    [  1   8   2   9] 0.010449 [  0   8   4   8] 0.010341 [  0   8   1   9] 0.008961 
+    [  1   8   3   9]-0.013263 [  0   8   3   8]-0.012952 [  0   8   2   8]-0.012950 
+    [  1   8   1   9] 0.012835 [  1   8   4   8]-0.012711 [  1   8   1  10] 0.010677 
+    [  1   8   2   9] 0.010449 [  0   8   4   8] 0.010341 [  0   8   1   9] 0.008962 
     [  0   1   2   3] 0.008947 [  1   8   2   8]-0.008583 [  1   8   3   8]-0.007399 
     --------------------------------------------------------------------------------
-    Norm of T2AA vector: (nonzero elements: 440)                  0.110516130923820.
+    Norm of T2AA vector: (nonzero elements: 440)                  0.110516500685202.
     --------------------------------------------------------------------------------
     Largest T2 amplitudes for spin case AB:
            _       _                  _       _                  _       _           
        i   j   a   b              i   j   a   b              i   j   a   b           
     --------------------------------------------------------------------------------
-    [  0   0   8   8]-0.059851 [  8   8   9   9]-0.050057 [  0   0   3   3]-0.046936 
+    [  0   0   8   8]-0.059852 [  8   8   9   9]-0.050057 [  0   0   3   3]-0.046935 
     [  8   8   8  10] 0.043044 [  0   8   3   9] 0.039844 [  0   8   4   8] 0.038810 
-    [  0   0   8  10] 0.034236 [  1   1   9   9]-0.029533 [  0   0   8   9]-0.029399 
-    [  8   8  10  10]-0.025292 [  0   0   9   9]-0.024324 [  0   1   8   9] 0.024263 
-    [  1   1   1   2]-0.023780 [  0   0  10  10]-0.023382 [  1   8   4   8]-0.022962 
+    [  0   0   8  10] 0.034236 [  1   1   9   9]-0.029533 [  0   0   8   9]-0.029400 
+    [  8   8  10  10]-0.025292 [  0   0   9   9]-0.024324 [  0   1   8   9] 0.024264 
+    [  1   1   1   2]-0.023781 [  0   0  10  10]-0.023382 [  1   8   4   8]-0.022962 
     --------------------------------------------------------------------------------
-    Norm of T2AB vector: (nonzero elements: 749)                  0.230525056623359.
+    Norm of T2AB vector: (nonzero elements: 749)                  0.230525633362701.
     --------------------------------------------------------------------------------
     Largest T2 amplitudes for spin case BB:
        _   _   _   _              _   _   _   _              _   _   _   _           
        i   j   a   b              i   j   a   b              i   j   a   b           
     --------------------------------------------------------------------------------
     [  0   1   1   3] 0.030632 [  0   8   3   9] 0.016152 [  0   1   8   9] 0.013674 
-    [  1   8   3   9]-0.013263 [  0   8   3   8]-0.012952 [  0   8   2   8]-0.012949 
-    [  1   8   1   9] 0.012836 [  1   8   4   8]-0.012711 [  1   8   1  10] 0.010677 
-    [  1   8   2   9] 0.010449 [  0   8   4   8] 0.010341 [  0   8   1   9] 0.008961 
+    [  1   8   3   9]-0.013263 [  0   8   3   8]-0.012952 [  0   8   2   8]-0.012950 
+    [  1   8   1   9] 0.012835 [  1   8   4   8]-0.012711 [  1   8   1  10] 0.010677 
+    [  1   8   2   9] 0.010449 [  0   8   4   8] 0.010341 [  0   8   1   9] 0.008962 
     [  0   1   2   3] 0.008947 [  1   8   2   8]-0.008583 [  1   8   3   8]-0.007399 
     --------------------------------------------------------------------------------
-    Norm of T2BB vector: (nonzero elements: 440)                  0.110516130923820.
+    Norm of T2BB vector: (nonzero elements: 440)                  0.110516500685202.
     --------------------------------------------------------------------------------
 
   ==> Possible Intruders <==
@@ -1216,8 +1221,8 @@ Scratch directory: /Users/york/scratch/psi4/
   ---------------------------------------------
     Root            Energy     <S^2>   Spin
   ---------------------------------------------
-      0      -15.545413289977  0.000  singlet
-      1      -15.499000754536  0.000  singlet
+      0      -15.545408687477  0.000  singlet
+      1      -15.498997419681  0.000  singlet
   ---------------------------------------------
   Timing for initial guess  =      0.000 s
 
@@ -1229,23 +1234,23 @@ Scratch directory: /Users/york/scratch/psi4/
   -----------------------------------------------------
     Iter.      Avg. Energy       Delta_E     Res. Norm
   -----------------------------------------------------
-      1      -15.545413289977  -1.555e+01  +3.109e+01
-      2      -15.545413289977  -5.329e-15  +1.986e-15
+      1      -15.545408687477  -1.555e+01  +3.109e+01
+      2      -15.545408687477  +3.553e-15  +5.924e-16
   -----------------------------------------------------
   The Davidson-Liu algorithm converged in 3 iterations.
 
   ==> Root No. 0 <==
 
-    0 2      0.90206937
-    2 0     -0.43159108
+    0 2     -0.90206071
+    2 0      0.43160918
 
-    Total Energy:       -15.545413289977441
+    Total Energy:       -15.545408687477423
 
   ==> Energy Summary <==
 
     Multi.(2ms)  Irrep.  No.               Energy
     ---------------------------------------------
-       1  (  0)    A1     0      -15.545413289977
+       1  (  0)    A1     0      -15.545408687477
     ---------------------------------------------
 
   => MRDSRG Reference Relaxation Energy Summary <=
@@ -1254,27 +1259,27 @@ Scratch directory: /Users/york/scratch/psi4/
            -------------------------------  -------------------------------
     Iter.          Total Energy      Delta          Total Energy      Delta
     -----------------------------------------------------------------------
-        1      -15.545427111672 -1.555e+01      -15.545445272609 -1.555e+01
-        2      -15.545413270467  1.384e-05      -15.545413289977  3.198e-05
+        1      -15.545422485743 -1.555e+01      -15.545440629861 -1.555e+01
+        2      -15.545408668012  1.382e-05      -15.545408687477  3.194e-05
     -----------------------------------------------------------------------
 
   ==> Total Timings (s) for Computing Commutators <==
 
              [H1, T1]    [H1, T2]    [H2, T1]    [H2, T2]
     -----------------------------------------------------
-    -> C0       0.034       0.105       0.328       4.300
-    -> C1       0.090       0.467       0.811      11.863
-    -> C2                   1.442       3.227      16.877
+    -> C0       0.036       0.111       0.349       4.554
+    -> C1       0.094       0.490       0.848      12.201
+    -> C2                   1.494       3.333      17.731
     -----------------------------------------------------
 
 
-  Time to prepare integrals:        0.018 seconds
-  Time to run job          :       52.302 seconds
-  Total                    :       52.302 seconds    MRDSRG unrelaxed energy...........................................PASSED
-    MRDSRG partially relaxed energy...................................PASSED
-    MRDSRG relaxed energy.............................................PASSED
+  Time to prepare integrals:        0.025 seconds
+  Time to run job          :       61.355 seconds
+  Total                    :       61.355 seconds    MRDSRG unrelaxed energy...............................................................PASSED
+    MRDSRG partially relaxed energy.......................................................PASSED
+    MRDSRG relaxed energy.................................................................PASSED
 
-    Psi4 stopped on: Tuesday, 30 June 2020 07:11PM
-    Psi4 wall time for execution: 0:00:52.51
+    Psi4 stopped on: Saturday, 12 September 2020 08:25PM
+    Psi4 wall time for execution: 0:01:01.59
 
 *** Psi4 exiting successfully. Buy a developer a beer!
