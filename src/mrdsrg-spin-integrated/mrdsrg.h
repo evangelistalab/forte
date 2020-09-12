@@ -70,20 +70,20 @@ class MRDSRG : public MASTER_DSRG {
     virtual ~MRDSRG();
 
     /// Compute the corr_level energy with fixed reference
-    virtual double compute_energy();
+    virtual double compute_energy() override;
 
     /// Compute state-average MR-DSRG energy
     double compute_energy_sa();
 
-    /// Set CASCI eigen values and eigen vectors for state averaging
-    void set_eigens(std::vector<std::vector<std::pair<psi::SharedVector, double>>> eigens) {
-        eigens_ = eigens;
-    }
+    //    /// Set CASCI eigen values and eigen vectors for state averaging
+    //    void set_eigens(std::vector<std::vector<std::pair<psi::SharedVector, double>>> eigens) {
+    //        eigens_ = eigens;
+    //    }
 
-    /// Set determinants in the model space
-    void set_p_spaces(std::vector<std::vector<forte::Determinant>> p_spaces) {
-        p_spaces_ = p_spaces;
-    }
+    //    /// Set determinants in the model space
+    //    void set_p_spaces(std::vector<std::vector<forte::Determinant>> p_spaces) {
+    //        p_spaces_ = p_spaces;
+    //    }
 
   protected:
     // => Class initialization and termination <= //
@@ -117,10 +117,10 @@ class MRDSRG : public MASTER_DSRG {
     /// Dump the converged amplitudes to disk
     void dump_amps_to_disk() override;
 
-    /// CASCI eigen values and eigen vectors for state averaging
-    std::vector<std::vector<std::pair<psi::SharedVector, double>>> eigens_;
-    /// Determinants in the model space
-    std::vector<std::vector<forte::Determinant>> p_spaces_;
+    //    /// CASCI eigen values and eigen vectors for state averaging
+    //    std::vector<std::vector<std::pair<psi::SharedVector, double>>> eigens_;
+    //    /// Determinants in the model space
+    //    std::vector<std::vector<forte::Determinant>> p_spaces_;
 
     /// Fill up integrals
     void build_ints();

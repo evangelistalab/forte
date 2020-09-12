@@ -140,7 +140,8 @@ void MRDSRG::startup() {
                            psi::Process::environment.molecule()->name();
     t1_file_chk_.clear();
     t2_file_chk_.clear();
-    if (restart_amps_ and (relax_ref_ != "NONE")) {
+    if (restart_amps_ and (relax_ref_ != "NONE") and
+        corrlv_string_.find("DSRG") != std::string::npos) {
         t1_file_chk_ = restart_file_prefix_ + ".mrdsrg.spin.t1.bin";
         t2_file_chk_ = restart_file_prefix_ + ".mrdsrg.spin.t2.bin";
     }
@@ -183,8 +184,7 @@ void MRDSRG::print_options() {
             return std::string("FALSE");
         }
     };
-    calculation_info_string.push_back(
-        {"Restart amplitudes", true_false_string(restart_amps_)});
+    calculation_info_string.push_back({"Restart amplitudes", true_false_string(restart_amps_)});
     calculation_info_string.push_back(
         {"Sequential DSRG transformation", true_false_string(sequential_Hbar_)});
     calculation_info_string.push_back(
