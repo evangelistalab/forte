@@ -57,7 +57,8 @@ before_script:
   - echo $PYBIND_INCLUDE
   - >
       cmake -H. -B.
-      -C${HOME}/miniconda/envs/tenv/share/cmake/psi4/psi4PluginCache.cmake
+      -C${HOME}/build/psi4-bin/share/cmake/psi4/psi4PluginCache.cmake
+      -DCMAKE_PREFIX_PATH=${HOME}/build/psi4-bin
       -DPYTHON_EXECUTABLE=${HOME}/miniconda/envs/tenv/bin/python
       -Dambit_DIR=${HOME}/miniconda/envs/tenv/share/cmake/ambit
       -DCMAKE_BUILD_TYPE=Debug
