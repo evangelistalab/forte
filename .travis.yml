@@ -1,4 +1,6 @@
+os: linux
 language: cpp
+dist: bionic
 jobs:
   include:
     - env:
@@ -41,8 +43,8 @@ before_script:
 # - make -j2
 # - make install >& psi4_install.log
 # - export PATH="$HOME/build/psi4-bin/bin:$PATH"
-# - psi4 --version
-# - psi4 --plugin-compile
+  - psi4 --version
+  - psi4 --plugin-compile
   # Compile ambit
 #  - cd ${HOME}/build
 #  - pwd
