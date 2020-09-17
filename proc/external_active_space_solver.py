@@ -30,7 +30,7 @@ def write_external_active_space_file(as_ints, state_map):
         oei_b = [(i * 2 + 1,j * 2 + 1,as_ints.oei_b(i,j)) for i in range(nmo) for j in range(nmo)]
 
         file['oei'] = {"data" : oei_a + oei_b,
-                        "description" : "one-electron integrals as a list of tuples (i,j,h_ij)"},
+                        "description" : "one-electron integrals as a list of tuples (i,j,h_ij)"}
 
         tei = []
         for i in range(nmo):
