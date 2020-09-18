@@ -4,7 +4,7 @@
 import json
 import forte
 
-def write_external_active_space_file(as_ints, state_map):
+def write_external_active_space_file(as_ints, state_map, json_file="file.json"):
     for state,nroots in state_map.items():
         file = {}
 
@@ -48,8 +48,8 @@ def write_external_active_space_file(as_ints, state_map):
         file['tei'] = {"data" : tei,
                         "description" : "antisymmetrized two-electron integrals as a list of tuples (i,j,k,l,<ij||kl>)"}
 
-        with open('file.json','w+') as f:
-            json.dump(file,f, sort_keys=True, indent=2)
+        with open(json_file, 'w+') as f:
+            json.dump(file, f, sort_keys=True, indent=2)
 
         make_hamiltonian(as_ints,state)
 
