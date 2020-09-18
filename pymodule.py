@@ -30,14 +30,14 @@
 import time
 import math
 import warnings
-
+import os
 import numpy as np
 import psi4
 import forte
 import psi4.driver.p4util as p4util
 from psi4.driver.procrouting import proc_util
 import forte.proc.fcidump
-from forte.proc.external_active_space_solver import write_external_active_space_file
+from forte.proc.external_active_space_solver import write_external_active_space_file, write_external_rdm_file
 
 def forte_driver(state_weights_map, scf_info, options, ints, mo_space_info):
     max_rdm_level = 3 if options.get_str("THREEPDC") != "ZERO" else 2
@@ -56,8 +56,14 @@ def forte_driver(state_weights_map, scf_info, options, ints, mo_space_info):
 
     if active_space_solver_type == 'EXTERNAL':
         write_external_active_space_file(as_ints, state_map)
+        if not os.path.isfile('rdms.json'):
+            print('External solver wrote integrals to disk')
+            psi4.core.print_out('External solver wrote integrals to disk')
+            exit()
 
     state_energies_list = active_space_solver.compute_energy()
+
+#    write_external_rdm_file(active_space_solver, state_weights_map)
 
 #    if active_space_solver_type == 'EXTERNAL':
 #        read_external_active_space_file(as_ints, state_map)

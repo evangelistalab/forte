@@ -26,10 +26,11 @@
  * @END LICENSE
  */
 
-#include "psi4/libpsi4util/process.h"
-//#include "psi4/libmints/molecule.h"
+#include <fstream>
 
-//#include "boost/format.hpp"
+#include "psi4/libpsi4util/process.h"
+
+#include "external/json/json.hpp"
 
 #include "base_classes/rdms.h"
 #include "base_classes/forte_options.h"
@@ -53,12 +54,20 @@
 //#include "psi4/psi4-dec.h"
 
 // using namespace psi;
+using namespace nlohmann;
 
 // int fci_debug_level = 4;
 
 namespace forte {
 
 class MOSpaceInfo;
+
+auto read_json_file() {
+    std::ifstream i("rdms.json");
+    json j;
+    i >> j;
+    return j;
+}
 
 ExternalActiveSpaceMethod::ExternalActiveSpaceMethod(StateInfo state, size_t nroot,
                                                      std::shared_ptr<MOSpaceInfo> mo_space_info,
@@ -80,9 +89,14 @@ double ExternalActiveSpaceMethod::compute_energy() {
     print_method_banner({"External Active Space Solver"});
 
     // call python
+    auto j = read_json_file();
+    std::cout << j << std::endl;
 
-    double energy = 0.0;
-    energies_.push_back(0.0);
+    double energy = j["energy"]["data"];
+
+    // TODO (Nan) store the RDMs in ambit Tensors (like in the RDMs class)
+
+    energies_.push_back(energy);
 
     psi::Process::environment.globals["CURRENT ENERGY"] = energy;
     psi::Process::environment.globals["FCI ENERGY"] = energy;

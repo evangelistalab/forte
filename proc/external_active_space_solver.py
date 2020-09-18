@@ -3,6 +3,7 @@
 
 import json
 import forte
+
 def write_external_active_space_file(as_ints, state_map):
     for state,nroots in state_map.items():
         file = {}
@@ -30,7 +31,7 @@ def write_external_active_space_file(as_ints, state_map):
         oei_b = [(i * 2 + 1,j * 2 + 1,as_ints.oei_b(i,j)) for i in range(nmo) for j in range(nmo)]
 
         file['oei'] = {"data" : oei_a + oei_b,
-                        "description" : "one-electron integrals as a list of tuples (i,j,h_ij)"}
+                        "description" : "one-electron integrals as a list of tuples (i,j,<i|h|j>)"}
 
         tei = []
         for i in range(nmo):
@@ -45,11 +46,10 @@ def write_external_active_space_file(as_ints, state_map):
                         tei.append((i * 2 + 1,j * 2 + 1,k * 2+ 1,l * 2 + 1,as_ints.tei_bb(i,j,k,l))) # bbbb
 
         file['tei'] = {"data" : tei,
-                        "description" : "one-electron integrals as a list of tuples (i,j,h_ij)"}
+                        "description" : "antisymmetrized two-electron integrals as a list of tuples (i,j,k,l,<ij||kl>)"}
 
         with open('file.json','w+') as f:
             json.dump(file,f, sort_keys=True, indent=2)
-
 
         make_hamiltonian(as_ints,state)
 
@@ -89,6 +89,49 @@ def make_hamiltonian(as_ints,state):
 
 
     print(f'FCI Energy = {evals[0] + as_ints.scalar_energy() + as_ints.nuclear_repulsion_energy()}')
+
+
+def write_external_rdm_file(active_space_solver, state_weights_map):
+    rdm = active_space_solver.compute_average_rdms(state_weights_map,2)
+
+    g1a = rdm.g1a()
+    g1b = rdm.g1b()
+
+    g2aa = rdm.g2aa()
+    g2ab = rdm.g2ab()
+    g2bb = rdm.g2bb()
+
+    nact = g1a.shape[0]
+
+    gamma1_a = [(i * 2,j * 2,g1a[i][j]) for i in range(nact) for j in range(nact)]
+    gamma1_b = [(i * 2 + 1,j * 2 + 1,g1b[i][j]) for i in range(nact) for j in range(nact)]
+
+    file = {}
+
+    state_energies_map = active_space_solver.state_energies_map()
+    for state,energies in state_energies_map.items():
+        file['energy'] = {"data" : energies[0], "description" : "energy"}
+
+    file['gamma1'] = {"data" : gamma1_a + gamma1_b,
+                      "description" : "one-body density matrix as a list of tuples (i,j,<i^ j>)"}
+
+    gamma2 = []
+    for i in range(nact):
+        for j in range(nact):
+            for k in range(nact):
+                for l in range(nact):
+                    gamma2.append((i * 2,j * 2,k * 2,l * 2,g2aa[i,j,k,l])) # aaaa
+                    gamma2.append((i * 2,j * 2 + 1,k * 2,l * 2 + 1,+g2ab[i,j,k,l])) # abab
+                    gamma2.append((i * 2,j * 2 + 1,l * 2 + 1,k * 2,-g2ab[i,j,k,l])) # abba
+                    gamma2.append((j * 2 + 1,i * 2,k * 2,l * 2 + 1,-g2ab[i,j,k,l])) # baab
+                    gamma2.append((j * 2 + 1,i * 2,l * 2 + 1,k * 2,+g2ab[i,j,k,l])) # baba
+                    gamma2.append((i * 2 + 1,j * 2 + 1,k * 2+ 1,l * 2 + 1,g2bb[i,j,k,l])) # bbbb
+
+    file['gamma2'] = {"data" : gamma2,
+                   "description" : "two-body density matrix as a list of tuples (i,j,k,l,<i^ j^ l k>)"}
+
+    with open('rdms.json','w+') as f:
+        json.dump(file,f, sort_keys=True, indent=2)
 
 #import functools
 

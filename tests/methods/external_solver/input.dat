@@ -14,6 +14,7 @@ set {
 
 set forte {
   active_space_solver external 
+#  active_space_solver fci 
 }
 
 energy('scf')

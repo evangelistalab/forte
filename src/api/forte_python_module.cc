@@ -93,7 +93,9 @@ void export_ActiveSpaceSolver(py::module& m) {
              "as_ints"_a, "max_body"_a,
              "Solve the contracted CI eigenvalue problem using given integrals")
         .def("compute_average_rdms", &ActiveSpaceSolver::compute_average_rdms,
-             "Compute the weighted average reference");
+             "Compute the weighted average reference")
+        .def("state_energies_map", &ActiveSpaceSolver::state_energies_map,
+             "Return a map of StateInfo to the computed nroots of energies");
 
     m.def("compute_average_state_energy", &compute_average_state_energy,
           "Compute the average energy given the energies and weights of each state");
@@ -250,7 +252,8 @@ PYBIND11_MODULE(forte, m) {
         .def("scalar_energy", &ActiveSpaceIntegrals::scalar_energy,
              "Get the scalar_energy energy (contribution from RESTRICTED_DOCC)")
         .def("nmo", &ActiveSpaceIntegrals::nmo, "Get the number of active orbitals")
-        .def("mo_symmetry", &ActiveSpaceIntegrals::active_mo_symmetry, "Return the symmetry of the active MOs")
+        .def("mo_symmetry", &ActiveSpaceIntegrals::active_mo_symmetry,
+             "Return the symmetry of the active MOs")
         .def("oei_a", &ActiveSpaceIntegrals::oei_a, "Get the alpha effective one-electron integral")
         .def("oei_b", &ActiveSpaceIntegrals::oei_b, "Get the beta effective one-electron integral")
         .def("tei_aa", &ActiveSpaceIntegrals::tei_aa, "alpha-alpha two-electron integral <pq||rs>")
