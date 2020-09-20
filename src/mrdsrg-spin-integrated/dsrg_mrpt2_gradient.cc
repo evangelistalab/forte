@@ -48,8 +48,10 @@ namespace forte {
 
 const bool PT2_TERM = false;
 const bool X1_TERM = false;
-const bool X2_TERM = true;
+const bool X2_TERM = false;
+// NOTICE: HF fails on X3
 const bool X3_TERM = false;
+const bool X4_TERM = true;
 const bool CORRELATION_TERM = true;
 
 void DSRG_MRPT2::set_all_variables() {
@@ -343,6 +345,25 @@ void DSRG_MRPT2::set_tau() {
         Tau1["iUaY"] -= 0.25 * Eeps2_m1["iUaY"] * V_["bVjX"] * Gamma1["ij"] * Eta1["ab"] * Lambda2_["XYUV"];
         Tau1["iUaY"] += 0.25 * Eeps2_m1["iUaY"] * V_["bvjx"] * Gamma1["ij"] * Eta1["ab"] * Lambda2_["xYvU"];
     }
+    // <[V, T2]> C_6 C_2
+    if (X4_TERM) {
+        Tau1.block("caaa")("mwxy") += 0.125 * Eeps2_m1.block("caaa")("mwxy") * V_.block("aaca")("uvmz") * rdms_.L3aaa()("xyzuvw");
+        Tau1.block("caaa")("mwxy") -= 0.250 * Eeps2_m1.block("caaa")("mwxy") * V_.block("aAcA")("uVmZ") * rdms_.L3aab()("xyZuwV");
+        Tau1.block("CAAA")("MWXY") += 0.125 * Eeps2_m1.block("CAAA")("MWXY") * V_.block("AACA")("UVMZ") * rdms_.L3bbb()("XYZUVW");
+        Tau1.block("CAAA")("MWXY") -= 0.250 * Eeps2_m1.block("CAAA")("MWXY") * V_.block("aAaC")("uVzM") * rdms_.L3abb()("zXYuVW");
+        Tau1.block("cAaA")("mWxY") -= 0.125 * Eeps2_m1.block("cAaA")("mWxY") * V_.block("aaca")("uvmz") * rdms_.L3aab()("xzYuvW");
+        Tau1.block("cAaA")("mWxY") += 0.250 * Eeps2_m1.block("cAaA")("mWxY") * V_.block("aAcA")("uVmZ") * rdms_.L3abb()("xYZuVW");
+
+        Tau1.block("acaa")("wmxy") += 0.125 * Eeps2_m1.block("acaa")("wmxy") * V_.block("aaac")("uvzm") * rdms_.L3aaa()("xyzuvw");
+        Tau1.block("acaa")("wmxy") += 0.250 * Eeps2_m1.block("acaa")("wmxy") * V_.block("aAcA")("uVmZ") * rdms_.L3aab()("xyZuwV");
+        Tau1.block("ACAA")("WMXY") += 0.125 * Eeps2_m1.block("ACAA")("WMXY") * V_.block("AAAC")("UVZM") * rdms_.L3bbb()("XYZUVW");
+        Tau1.block("ACAA")("WMXY") += 0.250 * Eeps2_m1.block("ACAA")("WMXY") * V_.block("aAaC")("uVzM") * rdms_.L3abb()("zXYuVW");
+        Tau1.block("aCaA")("wMxY") += 0.125 * Eeps2_m1.block("aCaA")("wMxY") * V_.block("AAAC")("UVZM") * rdms_.L3abb()("xYZwUV");
+        Tau1.block("aCaA")("wMxY") += 0.250 * Eeps2_m1.block("aCaA")("wMxY") * V_.block("aAaC")("uVzM") * rdms_.L3aab()("xzYuwV");
+
+    }
+
+
 
     // Tau * Delta
     // <[V, T2]> (C_2)^4
@@ -390,6 +411,25 @@ void DSRG_MRPT2::set_tau() {
         Tau2["IUAY"] += 0.25 * V_["vBxJ"] * Gamma1["IJ"] * Eta1["AB"] * Lambda2_["xYvU"];
         Tau2["iUaY"] -= 0.25 * V_["bVjX"] * Gamma1["ij"] * Eta1["ab"] * Lambda2_["XYUV"];
         Tau2["iUaY"] += 0.25 * V_["bvjx"] * Gamma1["ij"] * Eta1["ab"] * Lambda2_["xYvU"];
+    }
+    // <[V, T2]> C_6 C_2
+    if (X4_TERM) {
+
+        Tau2.block("caaa")("mwxy") += 0.125 * V_.block("aaca")("uvmz") * rdms_.L3aaa()("xyzuvw");
+        Tau2.block("caaa")("mwxy") -= 0.250 * V_.block("aAcA")("uVmZ") * rdms_.L3aab()("xyZuwV");
+        Tau2.block("CAAA")("MWXY") += 0.125 * V_.block("AACA")("UVMZ") * rdms_.L3bbb()("XYZUVW");
+        Tau2.block("CAAA")("MWXY") -= 0.250 * V_.block("aAaC")("uVzM") * rdms_.L3abb()("zXYuVW");
+        Tau2.block("cAaA")("mWxY") -= 0.125 * V_.block("aaca")("uvmz") * rdms_.L3aab()("xzYuvW");
+        Tau2.block("cAaA")("mWxY") += 0.250 * V_.block("aAcA")("uVmZ") * rdms_.L3abb()("xYZuVW");
+
+
+        Tau2.block("acaa")("wmxy") += 0.125 * V_.block("aaac")("uvzm") * rdms_.L3aaa()("xyzuvw");
+        Tau2.block("acaa")("wmxy") += 0.250 * V_.block("aAcA")("uVmZ") * rdms_.L3aab()("xyZuwV");
+        Tau2.block("ACAA")("WMXY") += 0.125 * V_.block("AAAC")("UVZM") * rdms_.L3bbb()("XYZUVW");
+        Tau2.block("ACAA")("WMXY") += 0.250 * V_.block("aAaC")("uVzM") * rdms_.L3abb()("zXYuVW");
+        Tau2.block("aCaA")("wMxY") += 0.125 * V_.block("AAAC")("UVZM") * rdms_.L3abb()("xYZwUV");
+        Tau2.block("aCaA")("wMxY") += 0.250 * V_.block("aAaC")("uVzM") * rdms_.L3aab()("xzYuwV");
+
     }
 
     // NOTICE: remove the internal parts based on the DSRG theories
@@ -452,6 +492,23 @@ void DSRG_MRPT2::set_kappa() {
         Kappa["JXBV"] += 0.25 * T2_["uIyA"] * Gamma1["IJ"] * Eta1["AB"] * Lambda2_["yXuV"];
         Kappa["jXbV"] -= 0.25 * T2_["iUaY"] * Gamma1["ij"] * Eta1["ab"] * Lambda2_["XYUV"];
         Kappa["jXbV"] += 0.25 * T2_["iuay"] * Gamma1["ij"] * Eta1["ab"] * Lambda2_["yXuV"];
+    }
+    // <[V, T2]> C_6 C_2
+    if (X4_TERM) {
+        Kappa.block("caaa")("mzuv") += 0.125 * T2_.block("caaa")("mwxy") * rdms_.L3aaa()("xyzuvw");
+        Kappa.block("caaa")("mzuv") -= 0.250 * T2_.block("cAaA")("mWxY") * rdms_.L3aab()("xzYuvW");
+        Kappa.block("CAAA")("MZUV") += 0.125 * T2_.block("CAAA")("MWXY") * rdms_.L3bbb()("XYZUVW");
+        Kappa.block("CAAA")("MZUV") -= 0.250 * T2_.block("aCaA")("wMxY") * rdms_.L3abb()("xYZwUV");
+        Kappa.block("cAaA")("mZuV") -= 0.125 * T2_.block("caaa")("mwxy") * rdms_.L3aab()("xyZuwV");
+        Kappa.block("cAaA")("mZuV") += 0.250 * T2_.block("cAaA")("mWxY") * rdms_.L3abb()("xYZuVW");
+
+
+        Kappa.block("acaa")("zmuv") += 0.125 * T2_.block("acaa")("wmxy") * rdms_.L3aaa()("xyzuvw");
+        Kappa.block("acaa")("zmuv") += 0.250 * T2_.block("cAaA")("mWxY") * rdms_.L3aab()("xzYuvW");
+        Kappa.block("ACAA")("ZMUV") += 0.125 * T2_.block("ACAA")("WMXY") * rdms_.L3bbb()("XYZUVW");
+        Kappa.block("ACAA")("ZMUV") += 0.250 * T2_.block("aCaA")("wMxY") * rdms_.L3abb()("xYZwUV");
+        Kappa.block("aCaA")("zMuV") += 0.125 * T2_.block("ACAA")("WMXY") * rdms_.L3abb()("zXYuVW");
+        Kappa.block("aCaA")("zMuV") += 0.250 * T2_.block("aCaA")("wMxY") * rdms_.L3aab()("xzYuwV");
     }
 
     outfile->Printf("Done");
@@ -1058,113 +1115,113 @@ void DSRG_MRPT2::set_z_aa_diag() {
 
     // active-active diagonal entries
     if (CORRELATION_TERM) {
-        temp["ujab"] += V["ujab"] * Eeps2["ujab"];
-        temp["uJaB"] += V["uJaB"] * Eeps2["uJaB"];
-        val3["u"] += 4.0 * s * Tau2["ujab"] * temp["ujab"]; 
-        val3["u"] += 8.0 * s * Tau2["uJaB"] * temp["uJaB"]; 
-        temp.zero();
-
-        val3["u"] -= 2.0 * T2OverDelta["ujab"] * Tau2["ujab"];
-        val3["u"] -= 4.0 * T2OverDelta["uJaB"] * Tau2["uJaB"];
-
-        temp["ulcd"] += V["ulcd"] * Eeps2["ulcd"];
-        temp["uLcD"] += V["uLcD"] * Eeps2["uLcD"];
-        temp_1["ulcd"] += Kappa["ulcd"] * Delta2["ulcd"];
-        temp_1["uLcD"] += Kappa["uLcD"] * Delta2["uLcD"];
-        val3["u"] -= 4.0 * s * temp["ulcd"] * temp_1["ulcd"];
-        val3["u"] -= 8.0 * s * temp["uLcD"] * temp_1["uLcD"];
-        temp.zero();
-        temp_1.zero();
-
-        temp["ijub"] += V["ijub"] * Eeps2["ijub"];
-        temp["iJuB"] += V["iJuB"] * Eeps2["iJuB"];
-        val3["u"] -= 4.0 * s * Tau2["ijub"] * temp["ijub"]; 
-        val3["u"] -= 8.0 * s * Tau2["iJuB"] * temp["iJuB"]; 
-        temp.zero();
-
-        val3["u"] += 2.0 * T2OverDelta["ijub"] * Tau2["ijub"];
-        val3["u"] += 4.0 * T2OverDelta["iJuB"] * Tau2["iJuB"];
-
-        temp["klud"] += V["klud"] * Eeps2["klud"];
-        temp["kLuD"] += V["kLuD"] * Eeps2["kLuD"];
-        temp_1["klud"] += Kappa["klud"] * Delta2["klud"];
-        temp_1["kLuD"] += Kappa["kLuD"] * Delta2["kLuD"];
-        val3["u"] += 4.0 * s * temp["klud"] * temp_1["klud"];
-        val3["u"] += 8.0 * s * temp["kLuD"] * temp_1["kLuD"];
-        temp.zero();
-        temp_1.zero();
-
         // temp["ujab"] += V["ujab"] * Eeps2["ujab"];
         // temp["uJaB"] += V["uJaB"] * Eeps2["uJaB"];
-        // val3["u"] += 2.0 * s * Tau2["ujab"] * temp["ujab"]; 
-        // val3["u"] += 4.0 * s * Tau2["uJaB"] * temp["uJaB"]; 
+        // val3["u"] += 4.0 * s * Tau2["ujab"] * temp["ujab"]; 
+        // val3["u"] += 8.0 * s * Tau2["uJaB"] * temp["uJaB"]; 
         // temp.zero();
 
-        // temp["iuab"] += V["iuab"] * Eeps2["iuab"];
-        // temp["uJaB"] += V["uJaB"] * Eeps2["uJaB"];
-        // val3["u"] += 2.0 * s * Tau2["iuab"] * temp["iuab"]; 
-        // val3["u"] += 4.0 * s * Tau2["uJaB"] * temp["uJaB"]; 
-        // temp.zero();
-
-        // val3["u"] -= 1.0 * T2OverDelta["ujab"] * Tau2["ujab"];
-        // val3["u"] -= 2.0 * T2OverDelta["uJaB"] * Tau2["uJaB"];
-
-        // val3["u"] -= 1.0 * T2OverDelta["iuab"] * Tau2["iuab"];
-        // val3["u"] -= 2.0 * T2OverDelta["uJaB"] * Tau2["uJaB"];
+        // val3["u"] -= 2.0 * T2OverDelta["ujab"] * Tau2["ujab"];
+        // val3["u"] -= 4.0 * T2OverDelta["uJaB"] * Tau2["uJaB"];
 
         // temp["ulcd"] += V["ulcd"] * Eeps2["ulcd"];
         // temp["uLcD"] += V["uLcD"] * Eeps2["uLcD"];
         // temp_1["ulcd"] += Kappa["ulcd"] * Delta2["ulcd"];
         // temp_1["uLcD"] += Kappa["uLcD"] * Delta2["uLcD"];
-        // val3["u"] -= 2.0 * s * temp["ulcd"] * temp_1["ulcd"];
-        // val3["u"] -= 4.0 * s * temp["uLcD"] * temp_1["uLcD"];
-        // temp.zero();
-        // temp_1.zero();
-
-        // temp["kucd"] += V["kucd"] * Eeps2["kucd"];
-        // temp["uLcD"] += V["uLcD"] * Eeps2["uLcD"];
-        // temp_1["kucd"] += Kappa["kucd"] * Delta2["kucd"];
-        // temp_1["uLcD"] += Kappa["uLcD"] * Delta2["uLcD"];
-        // val3["u"] -= 2.0 * s * temp["kucd"] * temp_1["kucd"];
-        // val3["u"] -= 4.0 * s * temp["uLcD"] * temp_1["uLcD"];
+        // val3["u"] -= 4.0 * s * temp["ulcd"] * temp_1["ulcd"];
+        // val3["u"] -= 8.0 * s * temp["uLcD"] * temp_1["uLcD"];
         // temp.zero();
         // temp_1.zero();
 
         // temp["ijub"] += V["ijub"] * Eeps2["ijub"];
         // temp["iJuB"] += V["iJuB"] * Eeps2["iJuB"];
-        // val3["u"] -= 2.0 * s * Tau2["ijub"] * temp["ijub"]; 
-        // val3["u"] -= 4.0 * s * Tau2["iJuB"] * temp["iJuB"]; 
+        // val3["u"] -= 4.0 * s * Tau2["ijub"] * temp["ijub"]; 
+        // val3["u"] -= 8.0 * s * Tau2["iJuB"] * temp["iJuB"]; 
         // temp.zero();
 
-        // temp["ijau"] += V["ijau"] * Eeps2["ijau"];
-        // temp["iJuB"] += V["iJuB"] * Eeps2["iJuB"];
-        // val3["u"] -= 2.0 * s * Tau2["ijau"] * temp["ijau"]; 
-        // val3["u"] -= 4.0 * s * Tau2["iJuB"] * temp["iJuB"]; 
-        // temp.zero();
-
-        // val3["u"] += 1.0 * T2OverDelta["ijub"] * Tau2["ijub"];
-        // val3["u"] += 2.0 * T2OverDelta["iJuB"] * Tau2["iJuB"];
-
-        // val3["u"] += 1.0 * T2OverDelta["ijau"] * Tau2["ijau"];
-        // val3["u"] += 2.0 * T2OverDelta["iJuB"] * Tau2["iJuB"];
+        // val3["u"] += 2.0 * T2OverDelta["ijub"] * Tau2["ijub"];
+        // val3["u"] += 4.0 * T2OverDelta["iJuB"] * Tau2["iJuB"];
 
         // temp["klud"] += V["klud"] * Eeps2["klud"];
         // temp["kLuD"] += V["kLuD"] * Eeps2["kLuD"];
         // temp_1["klud"] += Kappa["klud"] * Delta2["klud"];
         // temp_1["kLuD"] += Kappa["kLuD"] * Delta2["kLuD"];
-        // val3["u"] += 2.0 * s * temp["klud"] * temp_1["klud"];
-        // val3["u"] += 4.0 * s * temp["kLuD"] * temp_1["kLuD"];
+        // val3["u"] += 4.0 * s * temp["klud"] * temp_1["klud"];
+        // val3["u"] += 8.0 * s * temp["kLuD"] * temp_1["kLuD"];
         // temp.zero();
         // temp_1.zero();
 
-        // temp["klcu"] += V["klcu"] * Eeps2["klcu"];
-        // temp["kLuD"] += V["kLuD"] * Eeps2["kLuD"];
-        // temp_1["klcu"] += Kappa["klcu"] * Delta2["klcu"];
-        // temp_1["kLuD"] += Kappa["kLuD"] * Delta2["kLuD"];
-        // val3["u"] += 2.0 * s * temp["klcu"] * temp_1["klcu"];
-        // val3["u"] += 4.0 * s * temp["kLuD"] * temp_1["kLuD"];
-        // temp.zero();
-        // temp_1.zero();
+        temp["ujab"] += V["ujab"] * Eeps2["ujab"];
+        temp["uJaB"] += V["uJaB"] * Eeps2["uJaB"];
+        val3["u"] += 2.0 * s * Tau2["ujab"] * temp["ujab"]; 
+        val3["u"] += 4.0 * s * Tau2["uJaB"] * temp["uJaB"]; 
+        temp.zero();
+
+        temp["iuab"] += V["iuab"] * Eeps2["iuab"];
+        temp["uJaB"] += V["uJaB"] * Eeps2["uJaB"];
+        val3["u"] += 2.0 * s * Tau2["iuab"] * temp["iuab"]; 
+        val3["u"] += 4.0 * s * Tau2["uJaB"] * temp["uJaB"]; 
+        temp.zero();
+
+        val3["u"] -= 1.0 * T2OverDelta["ujab"] * Tau2["ujab"];
+        val3["u"] -= 2.0 * T2OverDelta["uJaB"] * Tau2["uJaB"];
+
+        val3["u"] -= 1.0 * T2OverDelta["iuab"] * Tau2["iuab"];
+        val3["u"] -= 2.0 * T2OverDelta["uJaB"] * Tau2["uJaB"];
+
+        temp["ulcd"] += V["ulcd"] * Eeps2["ulcd"];
+        temp["uLcD"] += V["uLcD"] * Eeps2["uLcD"];
+        temp_1["ulcd"] += Kappa["ulcd"] * Delta2["ulcd"];
+        temp_1["uLcD"] += Kappa["uLcD"] * Delta2["uLcD"];
+        val3["u"] -= 2.0 * s * temp["ulcd"] * temp_1["ulcd"];
+        val3["u"] -= 4.0 * s * temp["uLcD"] * temp_1["uLcD"];
+        temp.zero();
+        temp_1.zero();
+
+        temp["kucd"] += V["kucd"] * Eeps2["kucd"];
+        temp["uLcD"] += V["uLcD"] * Eeps2["uLcD"];
+        temp_1["kucd"] += Kappa["kucd"] * Delta2["kucd"];
+        temp_1["uLcD"] += Kappa["uLcD"] * Delta2["uLcD"];
+        val3["u"] -= 2.0 * s * temp["kucd"] * temp_1["kucd"];
+        val3["u"] -= 4.0 * s * temp["uLcD"] * temp_1["uLcD"];
+        temp.zero();
+        temp_1.zero();
+
+        temp["ijub"] += V["ijub"] * Eeps2["ijub"];
+        temp["iJuB"] += V["iJuB"] * Eeps2["iJuB"];
+        val3["u"] -= 2.0 * s * Tau2["ijub"] * temp["ijub"]; 
+        val3["u"] -= 4.0 * s * Tau2["iJuB"] * temp["iJuB"]; 
+        temp.zero();
+
+        temp["ijau"] += V["ijau"] * Eeps2["ijau"];
+        temp["iJuB"] += V["iJuB"] * Eeps2["iJuB"];
+        val3["u"] -= 2.0 * s * Tau2["ijau"] * temp["ijau"]; 
+        val3["u"] -= 4.0 * s * Tau2["iJuB"] * temp["iJuB"]; 
+        temp.zero();
+
+        val3["u"] += 1.0 * T2OverDelta["ijub"] * Tau2["ijub"];
+        val3["u"] += 2.0 * T2OverDelta["iJuB"] * Tau2["iJuB"];
+
+        val3["u"] += 1.0 * T2OverDelta["ijau"] * Tau2["ijau"];
+        val3["u"] += 2.0 * T2OverDelta["iJuB"] * Tau2["iJuB"];
+
+        temp["klud"] += V["klud"] * Eeps2["klud"];
+        temp["kLuD"] += V["kLuD"] * Eeps2["kLuD"];
+        temp_1["klud"] += Kappa["klud"] * Delta2["klud"];
+        temp_1["kLuD"] += Kappa["kLuD"] * Delta2["kLuD"];
+        val3["u"] += 2.0 * s * temp["klud"] * temp_1["klud"];
+        val3["u"] += 4.0 * s * temp["kLuD"] * temp_1["kLuD"];
+        temp.zero();
+        temp_1.zero();
+
+        temp["klcu"] += V["klcu"] * Eeps2["klcu"];
+        temp["kLuD"] += V["kLuD"] * Eeps2["kLuD"];
+        temp_1["klcu"] += Kappa["klcu"] * Delta2["klcu"];
+        temp_1["kLuD"] += Kappa["kLuD"] * Delta2["kLuD"];
+        val3["u"] += 2.0 * s * temp["klcu"] * temp_1["klcu"];
+        val3["u"] += 4.0 * s * temp["kLuD"] * temp_1["kLuD"];
+        temp.zero();
+        temp_1.zero();
     }
   
     for (const std::string& block : {"aa", "AA"}) {
@@ -1732,17 +1789,23 @@ void DSRG_MRPT2::solve_z() {
     ci_ca("Imw") -= 0.25 * V_N_Alpha.block("ca")("mv") * cc1a_("JIwv") * ci("J"); 
     ci_ca("Imw") -= 0.25 * V_N_Beta.block("ca")("mv") * cc1a_("JIwv") * ci("J"); 
 
-    ci_ca("Imw") -= 0.125 * V.block("caaa")("mvxy") * cc2aa_("IJwvxy") * ci("J");
-    ci_ca("Imw") -= 0.250 * V.block("cAaA")("mVxY") * cc2ab_("IJwVxY") * ci("J");
+    ci_ca("Imw") -= 0.5 * 0.125 * V.block("caaa")("mvxy") * cc2aa_("IJwvxy") * ci("J");
+    ci_ca("Imw") -= 0.5 * 0.250 * V.block("cAaA")("mVxY") * cc2ab_("IJwVxY") * ci("J");
+    ci_ca("Imw") -= 0.5 * 0.125 * V.block("acaa")("umxy") * cc2aa_("IJuwxy") * ci("J");
+    ci_ca("Imw") -= 0.5 * 0.250 * V.block("cAaA")("mUxY") * cc2ab_("IJwUxY") * ci("J");
+    ci_ca("Imw") -= 0.5 * 0.125 * V.block("aaca")("uvmy") * cc2aa_("IJuvwy") * ci("J");
+    ci_ca("Imw") -= 0.5 * 0.250 * V.block("aAcA")("uVmY") * cc2ab_("IJuVwY") * ci("J");
+    ci_ca("Imw") -= 0.5 * 0.125 * V.block("aaac")("uvxm") * cc2aa_("IJuvxw") * ci("J");
+    ci_ca("Imw") -= 0.5 * 0.250 * V.block("aAcA")("uVmX") * cc2ab_("IJuVwX") * ci("J");
 
-    ci_ca("Imw") -= 0.125 * V.block("acaa")("umxy") * cc2aa_("IJuwxy") * ci("J");
-    ci_ca("Imw") -= 0.250 * V.block("cAaA")("mUxY") * cc2ab_("IJwUxY") * ci("J");
-
-    ci_ca("Imw") -= 0.125 * V.block("aaca")("uvmy") * cc2aa_("IJuvwy") * ci("J");
-    ci_ca("Imw") -= 0.250 * V.block("aAcA")("uVmY") * cc2ab_("IJuVwY") * ci("J");
-
-    ci_ca("Imw") -= 0.125 * V.block("aaac")("uvxm") * cc2aa_("IJuvxw") * ci("J");
-    ci_ca("Imw") -= 0.250 * V.block("aAcA")("uVmX") * cc2ab_("IJuVwX") * ci("J");
+    ci_ca("Jmw") -= 0.5 * 0.125 * V.block("caaa")("mvxy") * cc2aa_("IJwvxy") * ci("I");
+    ci_ca("Jmw") -= 0.5 * 0.250 * V.block("cAaA")("mVxY") * cc2ab_("IJwVxY") * ci("I");
+    ci_ca("Jmw") -= 0.5 * 0.125 * V.block("acaa")("umxy") * cc2aa_("IJuwxy") * ci("I");
+    ci_ca("Jmw") -= 0.5 * 0.250 * V.block("cAaA")("mUxY") * cc2ab_("IJwUxY") * ci("I");
+    ci_ca("Jmw") -= 0.5 * 0.125 * V.block("aaca")("uvmy") * cc2aa_("IJuvwy") * ci("I");
+    ci_ca("Jmw") -= 0.5 * 0.250 * V.block("aAcA")("uVmY") * cc2ab_("IJuVwY") * ci("I");
+    ci_ca("Jmw") -= 0.5 * 0.125 * V.block("aaac")("uvxm") * cc2aa_("IJuvxw") * ci("I");
+    ci_ca("Jmw") -= 0.5 * 0.250 * V.block("aAcA")("uVmX") * cc2ab_("IJuVwX") * ci("I");
 
     ci_ca("Imw") += H.block("ac")("wm") * ci("I");
     ci_ca("Imw") += V_N_Alpha.block("ca")("mw") * ci("I");
@@ -1776,17 +1839,23 @@ void DSRG_MRPT2::solve_z() {
     ci_va("Iew") -= 0.25 * V_N_Alpha.block("va")("ev") * cc1a_("JIwv") * ci("J");
     ci_va("Iew") -= 0.25 * V_N_Beta.block("va")("ev") * cc1a_("JIwv") * ci("J");
 
-    ci_va("Iew") -= 0.125 * V.block("vaaa")("evxy") * cc2aa_("IJwvxy") * ci("J");
-    ci_va("Iew") -= 0.250 * V.block("vAaA")("eVxY") * cc2ab_("IJwVxY") * ci("J");
+    ci_va("Iew") -= 0.5 * 0.125 * V.block("vaaa")("evxy") * cc2aa_("IJwvxy") * ci("J");
+    ci_va("Iew") -= 0.5 * 0.250 * V.block("vAaA")("eVxY") * cc2ab_("IJwVxY") * ci("J");
+    ci_va("Iew") -= 0.5 * 0.125 * V.block("avaa")("uexy") * cc2aa_("IJuwxy") * ci("J");
+    ci_va("Iew") -= 0.5 * 0.250 * V.block("vAaA")("eUxY") * cc2ab_("IJwUxY") * ci("J");
+    ci_va("Iew") -= 0.5 * 0.125 * V.block("aava")("uvey") * cc2aa_("IJuvwy") * ci("J");
+    ci_va("Iew") -= 0.5 * 0.250 * V.block("aAvA")("uVeY") * cc2ab_("IJuVwY") * ci("J");
+    ci_va("Iew") -= 0.5 * 0.125 * V.block("aaav")("uvxe") * cc2aa_("IJuvxw") * ci("J");
+    ci_va("Iew") -= 0.5 * 0.250 * V.block("aAvA")("uVeX") * cc2ab_("IJuVwX") * ci("J");
 
-    ci_va("Iew") -= 0.125 * V.block("avaa")("uexy") * cc2aa_("IJuwxy") * ci("J");
-    ci_va("Iew") -= 0.250 * V.block("vAaA")("eUxY") * cc2ab_("IJwUxY") * ci("J");
-
-    ci_va("Iew") -= 0.125 * V.block("aava")("uvey") * cc2aa_("IJuvwy") * ci("J");
-    ci_va("Iew") -= 0.250 * V.block("aAvA")("uVeY") * cc2ab_("IJuVwY") * ci("J");
-
-    ci_va("Iew") -= 0.125 * V.block("aaav")("uvxe") * cc2aa_("IJuvxw") * ci("J");
-    ci_va("Iew") -= 0.250 * V.block("aAvA")("uVeX") * cc2ab_("IJuVwX") * ci("J");
+    ci_va("Jew") -= 0.5 * 0.125 * V.block("vaaa")("evxy") * cc2aa_("IJwvxy") * ci("I");
+    ci_va("Jew") -= 0.5 * 0.250 * V.block("vAaA")("eVxY") * cc2ab_("IJwVxY") * ci("I");
+    ci_va("Jew") -= 0.5 * 0.125 * V.block("avaa")("uexy") * cc2aa_("IJuwxy") * ci("I");
+    ci_va("Jew") -= 0.5 * 0.250 * V.block("vAaA")("eUxY") * cc2ab_("IJwUxY") * ci("I");
+    ci_va("Jew") -= 0.5 * 0.125 * V.block("aava")("uvey") * cc2aa_("IJuvwy") * ci("I");
+    ci_va("Jew") -= 0.5 * 0.250 * V.block("aAvA")("uVeY") * cc2ab_("IJuVwY") * ci("I");
+    ci_va("Jew") -= 0.5 * 0.125 * V.block("aaav")("uvxe") * cc2aa_("IJuvxw") * ci("I");
+    ci_va("Jew") -= 0.5 * 0.250 * V.block("aAvA")("uVeX") * cc2ab_("IJuVwX") * ci("I");
 
     // CI contribution to Z{AA}
     // ci_aa("Iwz") -= 0.5 * H.block("aa")("vw") * cc1a_("IJzv") * ci("J");
@@ -1828,29 +1897,39 @@ void DSRG_MRPT2::solve_z() {
     ci_aa("Iwz") += 0.25 * V_N_Alpha.block("aa")("zv") * cc1a_("JIwv") * ci("J");
     ci_aa("Iwz") += 0.25 * V_N_Beta.block("aa")("zv") * cc1a_("JIwv") * ci("J");
 
-    ci_aa("Iwz") -= 0.125 * V.block("aaaa")("wvxy") * cc2aa_("IJzvxy") * ci("J");
-    ci_aa("Iwz") -= 0.250 * V.block("aAaA")("wVxY") * cc2ab_("IJzVxY") * ci("J");
+    ci_aa("Iwz") -= 0.5 * 0.125 * V.block("aaaa")("wvxy") * cc2aa_("IJzvxy") * ci("J");
+    ci_aa("Iwz") -= 0.5 * 0.250 * V.block("aAaA")("wVxY") * cc2ab_("IJzVxY") * ci("J");
+    ci_aa("Iwz") -= 0.5 * 0.125 * V.block("aaaa")("uwxy") * cc2aa_("IJuzxy") * ci("J");
+    ci_aa("Iwz") -= 0.5 * 0.250 * V.block("aAaA")("wUxY") * cc2ab_("IJzUxY") * ci("J");
+    ci_aa("Iwz") -= 0.5 * 0.125 * V.block("aaaa")("uvwy") * cc2aa_("IJuvzy") * ci("J");
+    ci_aa("Iwz") -= 0.5 * 0.250 * V.block("aAaA")("uVwY") * cc2ab_("IJuVzY") * ci("J");
+    ci_aa("Iwz") -= 0.5 * 0.125 * V.block("aaaa")("uvxw") * cc2aa_("IJuvxz") * ci("J");
+    ci_aa("Iwz") -= 0.5 * 0.250 * V.block("aAaA")("uVwX") * cc2ab_("IJuVzX") * ci("J");
+    ci_aa("Iwz") += 0.5 * 0.125 * V.block("aaaa")("zvxy") * cc2aa_("IJwvxy") * ci("J");
+    ci_aa("Iwz") += 0.5 * 0.250 * V.block("aAaA")("zVxY") * cc2ab_("IJwVxY") * ci("J");
+    ci_aa("Iwz") += 0.5 * 0.125 * V.block("aaaa")("uzxy") * cc2aa_("IJuwxy") * ci("J");
+    ci_aa("Iwz") += 0.5 * 0.250 * V.block("aAaA")("zUxY") * cc2ab_("IJwUxY") * ci("J");
+    ci_aa("Iwz") += 0.5 * 0.125 * V.block("aaaa")("uvzy") * cc2aa_("IJuvwy") * ci("J");
+    ci_aa("Iwz") += 0.5 * 0.250 * V.block("aAaA")("uVzY") * cc2ab_("IJuVwY") * ci("J");
+    ci_aa("Iwz") += 0.5 * 0.125 * V.block("aaaa")("uvxz") * cc2aa_("IJuvxw") * ci("J");
+    ci_aa("Iwz") += 0.5 * 0.250 * V.block("aAaA")("uVzX") * cc2ab_("IJuVwX") * ci("J");
 
-    ci_aa("Iwz") -= 0.125 * V.block("aaaa")("uwxy") * cc2aa_("IJuzxy") * ci("J");
-    ci_aa("Iwz") -= 0.250 * V.block("aAaA")("wUxY") * cc2ab_("IJzUxY") * ci("J");
-
-    ci_aa("Iwz") -= 0.125 * V.block("aaaa")("uvwy") * cc2aa_("IJuvzy") * ci("J");
-    ci_aa("Iwz") -= 0.250 * V.block("aAaA")("uVwY") * cc2ab_("IJuVzY") * ci("J");
-
-    ci_aa("Iwz") -= 0.125 * V.block("aaaa")("uvxw") * cc2aa_("IJuvxz") * ci("J");
-    ci_aa("Iwz") -= 0.250 * V.block("aAaA")("uVwX") * cc2ab_("IJuVzX") * ci("J");
-
-    ci_aa("Iwz") += 0.125 * V.block("aaaa")("zvxy") * cc2aa_("IJwvxy") * ci("J");
-    ci_aa("Iwz") += 0.250 * V.block("aAaA")("zVxY") * cc2ab_("IJwVxY") * ci("J");
-
-    ci_aa("Iwz") += 0.125 * V.block("aaaa")("uzxy") * cc2aa_("IJuwxy") * ci("J");
-    ci_aa("Iwz") += 0.250 * V.block("aAaA")("zUxY") * cc2ab_("IJwUxY") * ci("J");
-
-    ci_aa("Iwz") += 0.125 * V.block("aaaa")("uvzy") * cc2aa_("IJuvwy") * ci("J");
-    ci_aa("Iwz") += 0.250 * V.block("aAaA")("uVzY") * cc2ab_("IJuVwY") * ci("J");
-
-    ci_aa("Iwz") += 0.125 * V.block("aaaa")("uvxz") * cc2aa_("IJuvxw") * ci("J");
-    ci_aa("Iwz") += 0.250 * V.block("aAaA")("uVzX") * cc2ab_("IJuVwX") * ci("J");
+    ci_aa("Jwz") -= 0.5 * 0.125 * V.block("aaaa")("wvxy") * cc2aa_("IJzvxy") * ci("I");
+    ci_aa("Jwz") -= 0.5 * 0.250 * V.block("aAaA")("wVxY") * cc2ab_("IJzVxY") * ci("I");
+    ci_aa("Jwz") -= 0.5 * 0.125 * V.block("aaaa")("uwxy") * cc2aa_("IJuzxy") * ci("I");
+    ci_aa("Jwz") -= 0.5 * 0.250 * V.block("aAaA")("wUxY") * cc2ab_("IJzUxY") * ci("I");
+    ci_aa("Jwz") -= 0.5 * 0.125 * V.block("aaaa")("uvwy") * cc2aa_("IJuvzy") * ci("I");
+    ci_aa("Jwz") -= 0.5 * 0.250 * V.block("aAaA")("uVwY") * cc2ab_("IJuVzY") * ci("I");
+    ci_aa("Jwz") -= 0.5 * 0.125 * V.block("aaaa")("uvxw") * cc2aa_("IJuvxz") * ci("I");
+    ci_aa("Jwz") -= 0.5 * 0.250 * V.block("aAaA")("uVwX") * cc2ab_("IJuVzX") * ci("I");
+    ci_aa("Jwz") += 0.5 * 0.125 * V.block("aaaa")("zvxy") * cc2aa_("IJwvxy") * ci("I");
+    ci_aa("Jwz") += 0.5 * 0.250 * V.block("aAaA")("zVxY") * cc2ab_("IJwVxY") * ci("I");
+    ci_aa("Jwz") += 0.5 * 0.125 * V.block("aaaa")("uzxy") * cc2aa_("IJuwxy") * ci("I");
+    ci_aa("Jwz") += 0.5 * 0.250 * V.block("aAaA")("zUxY") * cc2ab_("IJwUxY") * ci("I");
+    ci_aa("Jwz") += 0.5 * 0.125 * V.block("aaaa")("uvzy") * cc2aa_("IJuvwy") * ci("I");
+    ci_aa("Jwz") += 0.5 * 0.250 * V.block("aAaA")("uVzY") * cc2ab_("IJuVwY") * ci("I");
+    ci_aa("Jwz") += 0.5 * 0.125 * V.block("aaaa")("uvxz") * cc2aa_("IJuvxw") * ci("I");
+    ci_aa("Jwz") += 0.5 * 0.250 * V.block("aAaA")("uVzX") * cc2ab_("IJuVwX") * ci("I");
 
 
     for (const std::string& row : {"vc","ca","va","aa"}) {
@@ -1911,7 +1990,8 @@ void DSRG_MRPT2::solve_z() {
 
     b_ck("K") -= 0.5 * V.block("aaaa")("xyuv") * cc2aa_("KJuvxy") * ci("J");
     b_ck("K") -= 0.5 * V.block("AAAA")("XYUV") * cc2bb_("KJUVXY") * ci("J");
-    b_ck("K") -= 2.0 * V.block("aAaA")("xYuV") * cc2ab_("KJuVxY") * ci("J");
+    b_ck("K") -= V.block("aAaA")("xYuV") * cc2ab_("KJuVxY") * ci("J");
+    b_ck("J") -= V.block("aAaA")("xYuV") * cc2ab_("KJuVxY") * ci("K");
 
 
     BlockedTensor temp = BTF_->build(CoreTensor, "temporal tensor", {"aa","AA"});
@@ -2481,14 +2561,16 @@ void DSRG_MRPT2::solve_z() {
     ck_ca_a("Knu") -= 2 * V_N_Alpha.block("ac")("vn") * cc1a_("KJuv") * ci("J");
     ck_ca_a("Knu") -= 2 * V_N_Beta.block("ac")("vn") * cc1a_("KJuv") * ci("J");
     ck_ca_a("Knu") -= V.block("aaca")("xynv") * cc2aa_("KJuvxy") * ci("J");
-    ck_ca_a("Knu") -= 2 * V.block("aAcA")("xYnV") * cc2ab_("KJuVxY") * ci("J");
+    ck_ca_a("Knu") -= V.block("aAcA")("xYnV") * cc2ab_("KJuVxY") * ci("J");
+    ck_ca_a("Knu") -= V.block("aAcA")("xYnV") * cc2ab_("KJuVxY") * ci("J");
     ck_ca_a("Knu") += 2 * V.block("aaca")("uynx") * cc1a_("JKxy") * ci("J");
     ck_ca_a("Knu") += 2 * V.block("aAcA")("uYnX") * cc1b_("JKXY") * ci("J");
     ck_ca_a("Knu") -= 2 * H.block("ac")("vn") * cc1a_("JKuv") * ci("J");
     ck_ca_a("Knu") -= 2 * V_N_Alpha.block("ac")("vn") * cc1a_("JKuv") * ci("J");
     ck_ca_a("Knu") -= 2 * V_N_Beta.block("ac")("vn") * cc1a_("JKuv") * ci("J");
     ck_ca_a("Knu") -= V.block("aaca")("xynv") * cc2aa_("JKuvxy") * ci("J");
-    ck_ca_a("Knu") -= 2 * V.block("aAcA")("xYnV") * cc2ab_("JKuVxY") * ci("J");
+    ck_ca_a("Knu") -= V.block("aAcA")("xYnV") * cc2ab_("JKuVxY") * ci("J");
+    ck_ca_a("Knu") -= V.block("aAcA")("xYnV") * cc2ab_("JKuVxY") * ci("J");
 
     // NOTICE beta
     // ck_ca_b("KNU") += 4 * V.block("AACA")("UYNX") * cc1b_("KJXY") * ci("J");
@@ -2708,7 +2790,8 @@ void DSRG_MRPT2::solve_z() {
 
     ck_ci("KI") += 0.25 * cc2aa_("KIuvxy") * V.block("aaaa")("uvxy");
     ck_ci("KI") += 0.25 * cc2bb_("KIUVXY") * V.block("AAAA")("UVXY");
-    ck_ci("KI") += 1.00 * cc2ab_("KIuVxY") * V.block("aAaA")("uVxY");
+    ck_ci("KI") += 0.5 * cc2ab_("KIuVxY") * V.block("aAaA")("uVxY");
+    ck_ci("KI") += 0.5 * cc2ab_("IKuVxY") * V.block("aAaA")("uVxY");
 
 
     double Et = 0.0;
@@ -3335,10 +3418,49 @@ void DSRG_MRPT2::write_2rdm_spin_dependent() {
         temp["ABIJ"] += Tau1["IJAB"];
         temp["aBiJ"] += Tau1["iJaB"];
 
+
         temp["cdkl"] += Kappa["klcd"] * Eeps2_p["klcd"];
         temp["CDKL"] += Kappa["KLCD"] * Eeps2_p["KLCD"];
         temp["cDkL"] += Kappa["kLcD"] * Eeps2_p["kLcD"];
 
+
+        //NOTICE for test
+        // temp2["vjbx"] -= Eeps2_p["jxvb"] * T2_["iuya"] * Gamma1["ij"] * Eta1["ab"] * Lambda2_["xyuv"];
+        // temp2["vjbx"] -= Eeps2_p["jxvb"] * T2_["iUaY"] * Gamma1["ij"] * Eta1["ab"] * Lambda2_["xYvU"];
+        // temp2["vxbj"] += Eeps2_p["jxvb"] * T2_["iuya"] * Gamma1["ij"] * Eta1["ab"] * Lambda2_["xyuv"];
+        // temp2["vxbj"] += Eeps2_p["jxvb"] * T2_["iUaY"] * Gamma1["ij"] * Eta1["ab"] * Lambda2_["xYvU"];
+
+        // temp2["VJBX"] -= Eeps2_p["JXVB"] * T2_["IUYA"] * Gamma1["IJ"] * Eta1["AB"] * Lambda2_["XYUV"];
+        // temp2["VJBX"] -= Eeps2_p["JXVB"] * T2_["uIyA"] * Gamma1["IJ"] * Eta1["AB"] * Lambda2_["yXuV"];
+        // temp2["VXBJ"] += Eeps2_p["JXVB"] * T2_["IUYA"] * Gamma1["IJ"] * Eta1["AB"] * Lambda2_["XYUV"];
+        // temp2["VXBJ"] += Eeps2_p["JXVB"] * T2_["uIyA"] * Gamma1["IJ"] * Eta1["AB"] * Lambda2_["yXuV"];
+
+        // temp2["vjBX"] -= Eeps2_p["jXvB"] * T2_["iUyA"] * Gamma1["ij"] * Eta1["AB"] * Lambda2_["yXvU"];
+        // temp2["bxVJ"] -= Eeps2_p["xJbV"] * T2_["uIaY"] * Gamma1["IJ"] * Eta1["ab"] * Lambda2_["xYuV"];
+        // temp2["vxBJ"] -= Eeps2_p["xJvB"] * T2_["uIyA"] * Gamma1["IJ"] * Eta1["AB"] * Lambda2_["xyuv"];
+        // temp2["vxBJ"] -= Eeps2_p["xJvB"] * T2_["IUYA"] * Gamma1["IJ"] * Eta1["AB"] * Lambda2_["xYvU"];
+        // temp2["bjVX"] -= Eeps2_p["jXbV"] * T2_["iUaY"] * Gamma1["ij"] * Eta1["ab"] * Lambda2_["XYUV"];
+        // temp2["bjVX"] -= Eeps2_p["jXbV"] * T2_["iuya"] * Gamma1["ij"] * Eta1["ab"] * Lambda2_["yXuV"];
+
+
+
+        // temp2["yiau"] -= Eeps2_m1["iuya"] * V_["vbjx"] * Gamma1["ij"] * Eta1["ab"] * Lambda2_["xyuv"];
+        // temp2["yiau"] -= Eeps2_m1["iuya"] * V_["bVjX"] * Gamma1["ij"] * Eta1["ab"] * Lambda2_["yXuV"];
+        // temp2["yuai"] += Eeps2_m1["iuya"] * V_["vbjx"] * Gamma1["ij"] * Eta1["ab"] * Lambda2_["xyuv"];
+        // temp2["yuai"] += Eeps2_m1["iuya"] * V_["bVjX"] * Gamma1["ij"] * Eta1["ab"] * Lambda2_["yXuV"];
+
+        // temp2["YIAU"] -= Eeps2_m1["IUYA"] * V_["VBJX"] * Gamma1["IJ"] * Eta1["AB"] * Lambda2_["XYUV"];
+        // temp2["YIAU"] -= Eeps2_m1["IUYA"] * V_["vBxJ"] * Gamma1["IJ"] * Eta1["AB"] * Lambda2_["xYvU"];
+        // temp2["YUAI"] += Eeps2_m1["IUYA"] * V_["VBJX"] * Gamma1["IJ"] * Eta1["AB"] * Lambda2_["XYUV"];
+        // temp2["YUAI"] += Eeps2_m1["IUYA"] * V_["vBxJ"] * Gamma1["IJ"] * Eta1["AB"] * Lambda2_["xYvU"];
+
+        // temp2["yiAU"] -= Eeps2_m1["iUyA"] * V_["vBjX"] * Gamma1["ij"] * Eta1["AB"] * Lambda2_["yXvU"];
+        // temp2["auYI"] -= Eeps2_m1["uIaY"] * V_["bVxJ"] * Gamma1["IJ"] * Eta1["ab"] * Lambda2_["xYuV"];
+        // temp2["aiYU"] -= Eeps2_m1["iUaY"] * V_["vbjx"] * Gamma1["ij"] * Eta1["ab"] * Lambda2_["xYvU"];
+        // temp2["aiYU"] -= Eeps2_m1["iUaY"] * V_["bVjX"] * Gamma1["ij"] * Eta1["ab"] * Lambda2_["XYUV"];
+
+        // temp2["yuAI"] -= Eeps2_m1["uIyA"] * V_["VBJX"] * Gamma1["IJ"] * Eta1["AB"] * Lambda2_["yXuV"];
+        // temp2["yuAI"] -= Eeps2_m1["uIyA"] * V_["vBxJ"] * Gamma1["IJ"] * Eta1["AB"] * Lambda2_["xyuv"];
     }
 
     temp["xynv"] -= Z["un"] * Gamma2["uvxy"]; 
@@ -3399,7 +3521,7 @@ void DSRG_MRPT2::write_2rdm_spin_dependent() {
                 d2ab.write_value(i[0], i[1], i[2], i[3], value, 0, "NULL", 0); 
             }
         }
-    });
+    }); 
 
     d2aa.flush(1);
     d2bb.flush(1);
