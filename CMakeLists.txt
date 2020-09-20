@@ -101,6 +101,7 @@ src/ci_rdm/ci_rdms.cc
 src/ci_rdm/ci_rdms_dynamic.cc
 src/dmrg/dmrgscf.cc
 src/dmrg/dmrgsolver.cc
+src/external/external_active_space_method.cc
 src/fci/binary_graph.cc
 src/fci/fci_solver.cc
 src/fci/fci_vector.cc

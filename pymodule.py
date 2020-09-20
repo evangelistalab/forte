@@ -30,14 +30,14 @@
 import time
 import math
 import warnings
-
+import os
 import numpy as np
 import psi4
 import forte
 import psi4.driver.p4util as p4util
 from psi4.driver.procrouting import proc_util
 import forte.proc.fcidump
-
+from forte.proc.external_active_space_solver import write_external_active_space_file, write_external_rdm_file
 
 def forte_driver(state_weights_map, scf_info, options, ints, mo_space_info):
     max_rdm_level = 3 if options.get_str("THREEPDC") != "ZERO" else 2
@@ -49,11 +49,24 @@ def forte_driver(state_weights_map, scf_info, options, ints, mo_space_info):
     active_space_solver_type = options.get_str('ACTIVE_SPACE_SOLVER')
     as_ints = forte.make_active_space_ints(mo_space_info, ints, "ACTIVE",
                                            ["RESTRICTED_DOCC"])
+
     active_space_solver = forte.make_active_space_solver(
         active_space_solver_type, state_map, scf_info, mo_space_info, as_ints,
         options)
 
+    if active_space_solver_type == 'EXTERNAL':
+        write_external_active_space_file(as_ints, state_map)
+        if not os.path.isfile('rdms.json'):
+            print('External solver wrote integrals to disk')
+            psi4.core.print_out('External solver wrote integrals to disk')
+            exit()
+
     state_energies_list = active_space_solver.compute_energy()
+
+#    write_external_rdm_file(active_space_solver, state_weights_map)
+
+#    if active_space_solver_type == 'EXTERNAL':
+#        read_external_active_space_file(as_ints, state_map)
 
     if options.get_bool('SPIN_ANALYSIS'):
         rdms = active_space_solver.compute_average_rdms(state_weights_map, 2)
@@ -68,8 +81,7 @@ def forte_driver(state_weights_map, scf_info, options, ints, mo_space_info):
     correlation_solver_type = options.get_str('CORRELATION_SOLVER')
     if correlation_solver_type != 'NONE':
         # Grab the reference
-        rdms = active_space_solver.compute_average_rdms(
-            state_weights_map, max_rdm_level)
+        rdms = active_space_solver.compute_average_rdms(state_weights_map, max_rdm_level)
 
         # Compute unitary matrices Ua and Ub that rotate the orbitals to the semicanonical basis
         semi = forte.SemiCanonical(mo_space_info, ints, options)
@@ -146,6 +158,12 @@ def forte_driver(state_weights_map, scf_info, options, ints, mo_space_info):
         for N in range(maxiter):
             # Grab the effective Hamiltonian in the actice space
             ints_dressed = dsrg.compute_Heff_actv()
+
+            if active_space_solver_type == 'EXTERNAL':
+                write_external_active_space_file(ints_dressed, state_map, "file_dsrg.json")
+                print('External solver wrote DSRG dressed integrals to disk')
+                psi4.core.print_out('External solver wrote DSRG dressed integrals to disk')
+                exit()
 
             # Compute the energy
             if is_multi_state and ms_dsrg_algorithm == "SA_SUB":
