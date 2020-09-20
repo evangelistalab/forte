@@ -90,7 +90,7 @@ void ForteIntegrals::read_information() {
     // Extract information from options
     print_ = options_->get_int("PRINT");
 
-    nirrep_ = mo_space_info_->nirrep();    
+    nirrep_ = mo_space_info_->nirrep();
     nmopi_ = mo_space_info_->dimension("ALL");
     frzcpi_ = mo_space_info_->dimension("FROZEN_DOCC");
     frzvpi_ = mo_space_info_->dimension("FROZEN_UOCC");

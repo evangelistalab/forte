@@ -50,5 +50,5 @@ set forte{
 }
 casscf = energy('forte')
 
-#compare_values(refscf, scf, 8, "SCF ENERGY")
+compare_values(refscf, scf, 8, "SCF ENERGY")
 compare_values(refcasscf, casscf, 6, "CASSCF ENERGY")
