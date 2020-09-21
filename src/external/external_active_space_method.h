@@ -75,6 +75,32 @@ class ExternalActiveSpaceMethod : public ActiveSpaceMethod {
 
     size_t na_;
     size_t nb_;
+    size_t nactv_;
+
+  private:
+    ///  Whether gamma2 are stored
+    bool twopdc_;
+
+    ///  Whether gamma3 are stored
+    bool threepdc_;
+    /// The alpha 1-RDM
+    ambit::Tensor g1a_;
+    /// The beta 1-RDM
+    ambit::Tensor g1b_;
+    /// The alpha-alpha 2-RDM
+    ambit::Tensor g2aa_;
+    /// The alpha-beta 2-RDM
+    ambit::Tensor g2ab_;
+    /// The beta-beta 2-RDM
+    ambit::Tensor g2bb_;
+    /// The alpha-alpha-alpha 3-RDM
+    ambit::Tensor g3aaa_;
+    /// The alpha-alpha-beta 3-RDM
+    ambit::Tensor g3aab_;
+    /// The alpha-beta-beta 3-RDM
+    ambit::Tensor g3abb_;
+    /// The beta-beta-beta 3-RDM
+    ambit::Tensor g3bbb_;
 };
 
 } // namespace forte
