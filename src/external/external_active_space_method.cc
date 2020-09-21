@@ -99,20 +99,20 @@ double ExternalActiveSpaceMethod::compute_energy() {
     std::cout << j << std::endl;
 
     double energy = j["energy"]["data"];
-    
+
     std::vector<std::tuple<int, int, double>> gamma1 = j["gamma1"]["data"];
-    
+
     g1a_ = ambit::Tensor::build(ambit::CoreTensor, "g1a", std::vector<size_t>(2, nactv_));
     g1b_ = ambit::Tensor::build(ambit::CoreTensor, "g1b", std::vector<size_t>(2, nactv_));
 
-    for(auto it1 = std::begin(gamma1); it1 != std::end(gamma1); ++it1) {
+    for (auto it1 = std::begin(gamma1); it1 != std::end(gamma1); ++it1) {
         size_t spin_case = std::get<0>(*it1) % 2;
-        if(spin_case == 0) {
+        if (spin_case == 0) {
             size_t e1 = std::get<0>(*it1) / 2;
             size_t e2 = std::get<1>(*it1) / 2;
-            g1a_.data()[e1 * nactv_+ e2] = std::get<2>(*it1);
+            g1a_.data()[e1 * nactv_ + e2] = std::get<2>(*it1);
         }
-        if(spin_case == 1) {
+        if (spin_case == 1) {
             size_t e1 = (std::get<0>(*it1) - 1) / 2;
             size_t e2 = (std::get<1>(*it1) - 1) / 2;
             g1b_.data()[e1 * nactv_ + e2] = std::get<2>(*it1);
@@ -122,14 +122,14 @@ double ExternalActiveSpaceMethod::compute_energy() {
     g1a_.print();
     g1b_.print();
 
-    if(twopdc_) {
+    if (twopdc_) {
         std::vector<std::tuple<int, int, int, int, double>> gamma2 = j["gamma2"]["data"];
 
         g2aa_ = ambit::Tensor::build(ambit::CoreTensor, "g2aa", std::vector<size_t>(4, nactv_));
         g2ab_ = ambit::Tensor::build(ambit::CoreTensor, "g2ab", std::vector<size_t>(4, nactv_));
         g2bb_ = ambit::Tensor::build(ambit::CoreTensor, "g2bb", std::vector<size_t>(4, nactv_));
 
-        for(auto it2 = std::begin(gamma2); it2 != std::end(gamma2); ++it2) {
+        for (auto it2 = std::begin(gamma2); it2 != std::end(gamma2); ++it2) {
             size_t e1 = std::get<0>(*it2) / 2;
             size_t e2 = std::get<1>(*it2) / 2;
             size_t e3 = std::get<2>(*it2) / 2;
@@ -139,19 +139,20 @@ double ExternalActiveSpaceMethod::compute_energy() {
             bool spin2 = (std::get<1>(*it2) % 2 == 0);
             bool spin3 = (std::get<2>(*it2) % 2 == 0);
             bool spin4 = (std::get<3>(*it2) % 2 == 0);
-     
-            if(spin1 && spin2 && spin3 && spin4) {
+
+            if (spin1 && spin2 && spin3 && spin4) {
                 // aaaa
-                g2aa_.data()[e1 * nactv_ * nactv_ * nactv_ + e2 * nactv_ * nactv_ + e3 * nactv_ + e4] = std::get<4>(*it2);
-            }
-            else if(!spin1 && !spin2 && !spin3 && !spin4) {
+                g2aa_.data()[e1 * nactv_ * nactv_ * nactv_ + e2 * nactv_ * nactv_ + e3 * nactv_ +
+                             e4] = std::get<4>(*it2);
+            } else if (!spin1 && !spin2 && !spin3 && !spin4) {
                 // bbbb
-                    g2bb_.data()[e1 * nactv_ * nactv_ * nactv_ + e2 * nactv_ * nactv_ + e3 * nactv_ + e4] = std::get<4>(*it2);
-                }
-                else {
-                    // abab abba 
-                    g2ab_.data()[e1 * nactv_ * nactv_ * nactv_ + e2 * nactv_ * nactv_ + e3 * nactv_ + e4] = std::get<4>(*it2);
-                }
+                g2bb_.data()[e1 * nactv_ * nactv_ * nactv_ + e2 * nactv_ * nactv_ + e3 * nactv_ +
+                             e4] = std::get<4>(*it2);
+            } else {
+                // abab abba
+                g2ab_.data()[e1 * nactv_ * nactv_ * nactv_ + e2 * nactv_ * nactv_ + e3 * nactv_ +
+                             e4] = std::get<4>(*it2);
+            }
         }
     }
 
@@ -161,15 +162,15 @@ double ExternalActiveSpaceMethod::compute_energy() {
 
     // TODO (Nan) store the RDMs in ambit Tensors (like in the RDMs class)
 
-    if(threepdc_) {
+    if (threepdc_) {
         std::vector<std::tuple<int, int, int, int, int, int, double>> gamma3 = j["gamma2"]["data"];
 
         g3aaa_ = ambit::Tensor::build(ambit::CoreTensor, "g3aaa", std::vector<size_t>(6, nactv_));
         g3aab_ = ambit::Tensor::build(ambit::CoreTensor, "g3aab", std::vector<size_t>(6, nactv_));
         g3abb_ = ambit::Tensor::build(ambit::CoreTensor, "g3abb", std::vector<size_t>(6, nactv_));
         g3bbb_ = ambit::Tensor::build(ambit::CoreTensor, "g3bbb", std::vector<size_t>(6, nactv_));
-       
-        for(auto it3 = std::begin(gamma3); it3 != std::end(gamma3); ++it3) {
+
+        for (auto it3 = std::begin(gamma3); it3 != std::end(gamma3); ++it3) {
             size_t e1 = std::get<0>(*it3) / 2;
             size_t e2 = std::get<1>(*it3) / 2;
             size_t e3 = std::get<2>(*it3) / 2;
@@ -184,23 +185,29 @@ double ExternalActiveSpaceMethod::compute_energy() {
             bool spin5 = (std::get<4>(*it3) % 2 == 0);
             bool spin6 = (std::get<5>(*it3) % 2 == 0);
 
-            int spin_case = int(spin1) + int(spin2) + int(spin3) + int(spin4) + int(spin5) + int(spin6);
+            int spin_case =
+                int(spin1) + int(spin2) + int(spin3) + int(spin4) + int(spin5) + int(spin6);
 
-            if(spin_case == 6) {
-                g3aaa_.data()[e1*nactv_*nactv_*nactv_*nactv_*nactv_ + e2*nactv_*nactv_*nactv_*nactv_ + 
-                e3*nactv_*nactv_*nactv_ + e4*nactv_*nactv_ + e5*nactv_ + e6] = std::get<6>(*it3);
-            }
-            else if(spin_case == 4) {
-                g3aab_.data()[e1*nactv_*nactv_*nactv_*nactv_*nactv_ + e2*nactv_*nactv_*nactv_*nactv_ + 
-                e3*nactv_*nactv_*nactv_ + e4*nactv_*nactv_ + e5*nactv_ + e6] = std::get<6>(*it3);
-            }
-            else if(spin_case == 2) {
-                g3abb_.data()[e1*nactv_*nactv_*nactv_*nactv_*nactv_ + e2*nactv_*nactv_*nactv_*nactv_ + 
-                e3*nactv_*nactv_*nactv_ + e4*nactv_*nactv_ + e5*nactv_ + e6] = std::get<6>(*it3);
-            }
-            else {
-                g3bbb_.data()[e1*nactv_*nactv_*nactv_*nactv_*nactv_ + e2*nactv_*nactv_*nactv_*nactv_ + 
-                e3*nactv_*nactv_*nactv_ + e4*nactv_*nactv_ + e5*nactv_ + e6] = std::get<6>(*it3);
+            if (spin_case == 6) {
+                g3aaa_
+                    .data()[e1 * nactv_ * nactv_ * nactv_ * nactv_ * nactv_ +
+                            e2 * nactv_ * nactv_ * nactv_ * nactv_ + e3 * nactv_ * nactv_ * nactv_ +
+                            e4 * nactv_ * nactv_ + e5 * nactv_ + e6] = std::get<6>(*it3);
+            } else if (spin_case == 4) {
+                g3aab_
+                    .data()[e1 * nactv_ * nactv_ * nactv_ * nactv_ * nactv_ +
+                            e2 * nactv_ * nactv_ * nactv_ * nactv_ + e3 * nactv_ * nactv_ * nactv_ +
+                            e4 * nactv_ * nactv_ + e5 * nactv_ + e6] = std::get<6>(*it3);
+            } else if (spin_case == 2) {
+                g3abb_
+                    .data()[e1 * nactv_ * nactv_ * nactv_ * nactv_ * nactv_ +
+                            e2 * nactv_ * nactv_ * nactv_ * nactv_ + e3 * nactv_ * nactv_ * nactv_ +
+                            e4 * nactv_ * nactv_ + e5 * nactv_ + e6] = std::get<6>(*it3);
+            } else {
+                g3bbb_
+                    .data()[e1 * nactv_ * nactv_ * nactv_ * nactv_ * nactv_ +
+                            e2 * nactv_ * nactv_ * nactv_ * nactv_ + e3 * nactv_ * nactv_ * nactv_ +
+                            e4 * nactv_ * nactv_ + e5 * nactv_ + e6] = std::get<6>(*it3);
             }
         }
     }
@@ -216,19 +223,19 @@ double ExternalActiveSpaceMethod::compute_energy() {
 std::vector<RDMs>
 ExternalActiveSpaceMethod::rdms(const std::vector<std::pair<size_t, size_t>>& root_list,
                                 int max_rdm_level) {
-    //throw std::runtime_error("ExternalActiveSpaceMethod::rdms is not implemented!");
+    // throw std::runtime_error("ExternalActiveSpaceMethod::rdms is not implemented!");
     std::vector<RDMs> refs;
 
     if (max_rdm_level <= 0)
         return refs;
 
-    if(max_rdm_level == 1) {
+    if (max_rdm_level == 1) {
         refs.push_back(RDMs(g1a_, g1b_));
     }
-    if(max_rdm_level == 2) {
+    if (max_rdm_level == 2) {
         refs.push_back(RDMs(g1a_, g1b_, g2aa_, g2ab_, g2bb_));
     }
-    if(max_rdm_level == 3) {
+    if (max_rdm_level == 3) {
         refs.push_back(RDMs(g1a_, g1b_, g2aa_, g2ab_, g2bb_, g3aaa_, g3aab_, g3abb_, g3bbb_));
     }
 

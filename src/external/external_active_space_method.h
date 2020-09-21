@@ -101,7 +101,6 @@ class ExternalActiveSpaceMethod : public ActiveSpaceMethod {
     ambit::Tensor g3abb_;
     /// The beta-beta-beta 3-RDM
     ambit::Tensor g3bbb_;
-
 };
 
 } // namespace forte
