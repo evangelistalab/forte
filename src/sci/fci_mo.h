@@ -277,6 +277,14 @@ class FCI_MO : public ActiveSpaceMethod {
     ambit::Tensor coupling_coeffcients_2ab();
     /// Return the 2-beta-beta coupling coefficients
     ambit::Tensor coupling_coeffcients_2bb();
+    /// Return the 3-alpha-alpha-alpha coupling coefficients
+    ambit::Tensor coupling_coeffcients_3aaa();
+    /// Return the 3-alpha-alpha-beta coupling coefficients
+    ambit::Tensor coupling_coeffcients_3aab();
+    /// Return the 3-alpha-beta-beta coupling coefficients
+    ambit::Tensor coupling_coeffcients_3abb();
+    /// Return the 3-beta-beta-beta coupling coefficients
+    ambit::Tensor coupling_coeffcients_3bbb();
 
     /// Return the eigen vector in ambit Tensor format
     std::vector<ambit::Tensor> eigen_vectors() override;

@@ -3024,6 +3024,800 @@ ambit::Tensor FCI_MO::coupling_coeffcients_2bb() {
     return out;
 }
 
+ambit::Tensor FCI_MO::coupling_coeffcients_3aaa() {
+    size_t ndets = determinant_.size();
+
+    size_t na1 = nactv_;
+    size_t na2 = na1 * na1;
+    size_t na3 = na2 * na1;
+    size_t na4 = na3 * na1;
+    size_t na5 = na4 * na1;
+    size_t na6 = na5 * na1;
+    size_t na7 = na6 * ndets;
+
+    // stored <I| p^+ q^+ r^+ u t s |J> as I->0, J->1, p->2, q->3, r->4, s->5, t->6, u->7
+    auto out = ambit::Tensor::build(ambit::CoreTensor, "CC3aaa",
+                                    {ndets, ndets, nactv_, nactv_, nactv_, nactv_, nactv_, nactv_});
+
+    const auto& dets = det_hash_vec_.wfn_hash();
+    std::vector<std::vector<std::tuple<size_t, short, short, short>>>& aaa_list = wfn_op_.aaa_list_;
+
+    for (size_t I = 0; I < ndets; ++I) {
+        std::vector<int> aocc = dets[I].get_alfa_occ(nactv_);
+
+        int naocc = aocc.size();
+
+        size_t idx_I = I * na7 + I * na6;
+
+        for (int p = 0; p < naocc; ++p) {
+            int pp = aocc[p];
+            for (int q = p + 1; q < naocc; ++q) {
+                int qq = aocc[q];
+                for (int r = q + 1; r < naocc; ++r) {
+                    int rr = aocc[r];
+
+                    out.data()[idx_I + pp * na5 + qq * na4 + rr * na3 + pp * na2 + qq * na1 + rr] =
+                        1.0;
+                    out.data()[idx_I + pp * na5 + qq * na4 + rr * na3 + pp * na2 + rr * na1 + qq] =
+                        -1.0;
+                    out.data()[idx_I + pp * na5 + qq * na4 + rr * na3 + rr * na2 + pp * na1 + qq] =
+                        1.0;
+                    out.data()[idx_I + pp * na5 + qq * na4 + rr * na3 + rr * na2 + qq * na1 + pp] =
+                        -1.0;
+                    out.data()[idx_I + pp * na5 + qq * na4 + rr * na3 + qq * na2 + rr * na1 + pp] =
+                        1.0;
+                    out.data()[idx_I + pp * na5 + qq * na4 + rr * na3 + qq * na2 + pp * na1 + rr] =
+                        -1.0;
+
+                    out.data()[idx_I + pp * na5 + rr * na4 + qq * na3 + pp * na2 + qq * na1 + rr] =
+                        -1.0;
+                    out.data()[idx_I + pp * na5 + rr * na4 + qq * na3 + pp * na2 + rr * na1 + qq] =
+                        1.0;
+                    out.data()[idx_I + pp * na5 + rr * na4 + qq * na3 + rr * na2 + pp * na1 + qq] =
+                        -1.0;
+                    out.data()[idx_I + pp * na5 + rr * na4 + qq * na3 + rr * na2 + qq * na1 + pp] =
+                        1.0;
+                    out.data()[idx_I + pp * na5 + rr * na4 + qq * na3 + qq * na2 + rr * na1 + pp] =
+                        -1.0;
+                    out.data()[idx_I + pp * na5 + rr * na4 + qq * na3 + qq * na2 + pp * na1 + rr] =
+                        1.0;
+
+                    out.data()[idx_I + rr * na5 + pp * na4 + qq * na3 + pp * na2 + qq * na1 + rr] =
+                        1.0;
+                    out.data()[idx_I + rr * na5 + pp * na4 + qq * na3 + pp * na2 + rr * na1 + qq] =
+                        -1.0;
+                    out.data()[idx_I + rr * na5 + pp * na4 + qq * na3 + rr * na2 + pp * na1 + qq] =
+                        1.0;
+                    out.data()[idx_I + rr * na5 + pp * na4 + qq * na3 + rr * na2 + qq * na1 + pp] =
+                        -1.0;
+                    out.data()[idx_I + rr * na5 + pp * na4 + qq * na3 + qq * na2 + rr * na1 + pp] =
+                        1.0;
+                    out.data()[idx_I + rr * na5 + pp * na4 + qq * na3 + qq * na2 + pp * na1 + rr] =
+                        -1.0;
+
+                    out.data()[idx_I + rr * na5 + qq * na4 + pp * na3 + pp * na2 + qq * na1 + rr] =
+                        -1.0;
+                    out.data()[idx_I + rr * na5 + qq * na4 + pp * na3 + pp * na2 + rr * na1 + qq] =
+                        1.0;
+                    out.data()[idx_I + rr * na5 + qq * na4 + pp * na3 + rr * na2 + pp * na1 + qq] =
+                        -1.0;
+                    out.data()[idx_I + rr * na5 + qq * na4 + pp * na3 + rr * na2 + qq * na1 + pp] =
+                        1.0;
+                    out.data()[idx_I + rr * na5 + qq * na4 + pp * na3 + qq * na2 + rr * na1 + pp] =
+                        -1.0;
+                    out.data()[idx_I + rr * na5 + qq * na4 + pp * na3 + qq * na2 + pp * na1 + rr] =
+                        1.0;
+
+                    out.data()[idx_I + qq * na5 + rr * na4 + pp * na3 + pp * na2 + qq * na1 + rr] =
+                        1.0;
+                    out.data()[idx_I + qq * na5 + rr * na4 + pp * na3 + pp * na2 + rr * na1 + qq] =
+                        -1.0;
+                    out.data()[idx_I + qq * na5 + rr * na4 + pp * na3 + rr * na2 + pp * na1 + qq] =
+                        1.0;
+                    out.data()[idx_I + qq * na5 + rr * na4 + pp * na3 + rr * na2 + qq * na1 + pp] =
+                        -1.0;
+                    out.data()[idx_I + qq * na5 + rr * na4 + pp * na3 + qq * na2 + rr * na1 + pp] =
+                        1.0;
+                    out.data()[idx_I + qq * na5 + rr * na4 + pp * na3 + qq * na2 + pp * na1 + rr] =
+                        -1.0;
+
+                    out.data()[idx_I + qq * na5 + pp * na4 + rr * na3 + pp * na2 + qq * na1 + rr] =
+                        -1.0;
+                    out.data()[idx_I + qq * na5 + pp * na4 + rr * na3 + pp * na2 + rr * na1 + qq] =
+                        1.0;
+                    out.data()[idx_I + qq * na5 + pp * na4 + rr * na3 + rr * na2 + pp * na1 + qq] =
+                        -1.0;
+                    out.data()[idx_I + qq * na5 + pp * na4 + rr * na3 + rr * na2 + qq * na1 + pp] =
+                        1.0;
+                    out.data()[idx_I + qq * na5 + pp * na4 + rr * na3 + qq * na2 + rr * na1 + pp] =
+                        -1.0;
+                    out.data()[idx_I + qq * na5 + pp * na4 + rr * na3 + qq * na2 + pp * na1 + rr] =
+                        1.0;
+                }
+            }
+        }
+    }
+
+    for (size_t K = 0, max_K = aaa_list.size(); K < max_K; ++K) {
+        std::vector<std::tuple<size_t, short, short, short>>& coupled_dets = aaa_list[K];
+
+        for (size_t a = 0, max_a = coupled_dets.size(); a < max_a; ++a) {
+
+            auto& detJ = coupled_dets[a];
+
+            const size_t& J = std::get<0>(detJ);
+            const size_t& p = std::abs(std::get<1>(detJ)) - 1;
+            const size_t& q = std::get<2>(detJ);
+            const size_t& r = std::get<3>(detJ);
+            const double& sign_pqr = std::get<1>(detJ) > 0.0 ? 1.0 : -1.0;
+
+            for (size_t b = a + 1, max_b = coupled_dets.size(); b < max_b; ++b) {
+
+                auto& detI = coupled_dets[b];
+
+                const size_t& s = std::abs(std::get<1>(detI)) - 1;
+                const size_t& t = std::get<2>(detI);
+                const size_t& u = std::get<3>(detI);
+                const double& sign_stu = std::get<1>(detI) > 0.0 ? 1.0 : -1.0;
+                const size_t& I = std::get<0>(detI);
+
+                double sign = sign_pqr * sign_stu;
+
+                out.data()[J * na7 + I * na6 + p * na5 + q * na4 + r * na3 + s * na2 + t * na1 +
+                           u] = sign;
+                out.data()[J * na7 + I * na6 + p * na5 + q * na4 + r * na3 + s * na2 + u * na1 +
+                           t] = -sign;
+                out.data()[J * na7 + I * na6 + p * na5 + q * na4 + r * na3 + u * na2 + t * na1 +
+                           s] = -sign;
+                out.data()[J * na7 + I * na6 + p * na5 + q * na4 + r * na3 + u * na2 + s * na1 +
+                           t] = sign;
+                out.data()[J * na7 + I * na6 + p * na5 + q * na4 + r * na3 + t * na2 + s * na1 +
+                           u] = -sign;
+                out.data()[J * na7 + I * na6 + p * na5 + q * na4 + r * na3 + t * na2 + u * na1 +
+                           s] = sign;
+
+                out.data()[J * na7 + I * na6 + p * na5 + r * na4 + q * na3 + s * na2 + t * na1 +
+                           u] = -sign;
+                out.data()[J * na7 + I * na6 + p * na5 + r * na4 + q * na3 + s * na2 + u * na1 +
+                           t] = sign;
+                out.data()[J * na7 + I * na6 + p * na5 + r * na4 + q * na3 + u * na2 + t * na1 +
+                           s] = sign;
+                out.data()[J * na7 + I * na6 + p * na5 + r * na4 + q * na3 + u * na2 + s * na1 +
+                           t] = -sign;
+                out.data()[J * na7 + I * na6 + p * na5 + r * na4 + q * na3 + t * na2 + s * na1 +
+                           u] = sign;
+                out.data()[J * na7 + I * na6 + p * na5 + r * na4 + q * na3 + t * na2 + u * na1 +
+                           s] = -sign;
+
+                out.data()[J * na7 + I * na6 + q * na5 + p * na4 + r * na3 + s * na2 + t * na1 +
+                           u] = -sign;
+                out.data()[J * na7 + I * na6 + q * na5 + p * na4 + r * na3 + s * na2 + u * na1 +
+                           t] = sign;
+                out.data()[J * na7 + I * na6 + q * na5 + p * na4 + r * na3 + u * na2 + t * na1 +
+                           s] = sign;
+                out.data()[J * na7 + I * na6 + q * na5 + p * na4 + r * na3 + u * na2 + s * na1 +
+                           t] = -sign;
+                out.data()[J * na7 + I * na6 + q * na5 + p * na4 + r * na3 + t * na2 + s * na1 +
+                           u] = sign;
+                out.data()[J * na7 + I * na6 + q * na5 + p * na4 + r * na3 + t * na2 + u * na1 +
+                           s] = -sign;
+
+                out.data()[J * na7 + I * na6 + q * na5 + r * na4 + p * na3 + s * na2 + t * na1 +
+                           u] = sign;
+                out.data()[J * na7 + I * na6 + q * na5 + r * na4 + p * na3 + s * na2 + u * na1 +
+                           t] = -sign;
+                out.data()[J * na7 + I * na6 + q * na5 + r * na4 + p * na3 + u * na2 + t * na1 +
+                           s] = -sign;
+                out.data()[J * na7 + I * na6 + q * na5 + r * na4 + p * na3 + u * na2 + s * na1 +
+                           t] = sign;
+                out.data()[J * na7 + I * na6 + q * na5 + r * na4 + p * na3 + t * na2 + s * na1 +
+                           u] = -sign;
+                out.data()[J * na7 + I * na6 + q * na5 + r * na4 + p * na3 + t * na2 + u * na1 +
+                           s] = sign;
+
+                out.data()[J * na7 + I * na6 + r * na5 + p * na4 + q * na3 + s * na2 + t * na1 +
+                           u] = sign;
+                out.data()[J * na7 + I * na6 + r * na5 + p * na4 + q * na3 + s * na2 + u * na1 +
+                           t] = -sign;
+                out.data()[J * na7 + I * na6 + r * na5 + p * na4 + q * na3 + u * na2 + t * na1 +
+                           s] = -sign;
+                out.data()[J * na7 + I * na6 + r * na5 + p * na4 + q * na3 + u * na2 + s * na1 +
+                           t] = sign;
+                out.data()[J * na7 + I * na6 + r * na5 + p * na4 + q * na3 + t * na2 + s * na1 +
+                           u] = -sign;
+                out.data()[J * na7 + I * na6 + r * na5 + p * na4 + q * na3 + t * na2 + u * na1 +
+                           s] = sign;
+
+                out.data()[J * na7 + I * na6 + r * na5 + q * na4 + p * na3 + s * na2 + t * na1 +
+                           u] = -sign;
+                out.data()[J * na7 + I * na6 + r * na5 + q * na4 + p * na3 + s * na2 + u * na1 +
+                           t] = sign;
+                out.data()[J * na7 + I * na6 + r * na5 + q * na4 + p * na3 + u * na2 + t * na1 +
+                           s] = sign;
+                out.data()[J * na7 + I * na6 + r * na5 + q * na4 + p * na3 + u * na2 + s * na1 +
+                           t] = -sign;
+                out.data()[J * na7 + I * na6 + r * na5 + q * na4 + p * na3 + t * na2 + s * na1 +
+                           u] = sign;
+                out.data()[J * na7 + I * na6 + r * na5 + q * na4 + p * na3 + t * na2 + u * na1 +
+                           s] = -sign;
+
+                out.data()[I * na7 + J * na6 + s * na5 + t * na4 + u * na3 + p * na2 + q * na1 +
+                           r] = sign;
+                out.data()[I * na7 + J * na6 + s * na5 + u * na4 + t * na3 + p * na2 + q * na1 +
+                           r] = -sign;
+                out.data()[I * na7 + J * na6 + u * na5 + t * na4 + s * na3 + p * na2 + q * na1 +
+                           r] = -sign;
+                out.data()[I * na7 + J * na6 + u * na5 + s * na4 + t * na3 + p * na2 + q * na1 +
+                           r] = sign;
+                out.data()[I * na7 + J * na6 + t * na5 + s * na4 + u * na3 + p * na2 + q * na1 +
+                           r] = -sign;
+                out.data()[I * na7 + J * na6 + t * na5 + u * na4 + s * na3 + p * na2 + q * na1 +
+                           r] = sign;
+
+                out.data()[I * na7 + J * na6 + s * na5 + t * na4 + u * na3 + p * na2 + r * na1 +
+                           q] = -sign;
+                out.data()[I * na7 + J * na6 + s * na5 + u * na4 + t * na3 + p * na2 + r * na1 +
+                           q] = sign;
+                out.data()[I * na7 + J * na6 + u * na5 + t * na4 + s * na3 + p * na2 + r * na1 +
+                           q] = sign;
+                out.data()[I * na7 + J * na6 + u * na5 + s * na4 + t * na3 + p * na2 + r * na1 +
+                           q] = -sign;
+                out.data()[I * na7 + J * na6 + t * na5 + s * na4 + u * na3 + p * na2 + r * na1 +
+                           q] = sign;
+                out.data()[I * na7 + J * na6 + t * na5 + u * na4 + s * na3 + p * na2 + r * na1 +
+                           q] = -sign;
+
+                out.data()[I * na7 + J * na6 + s * na5 + t * na4 + u * na3 + q * na2 + p * na1 +
+                           r] = -sign;
+                out.data()[I * na7 + J * na6 + s * na5 + u * na4 + t * na3 + q * na2 + p * na1 +
+                           r] = sign;
+                out.data()[I * na7 + J * na6 + u * na5 + t * na4 + s * na3 + q * na2 + p * na1 +
+                           r] = sign;
+                out.data()[I * na7 + J * na6 + u * na5 + s * na4 + t * na3 + q * na2 + p * na1 +
+                           r] = -sign;
+                out.data()[I * na7 + J * na6 + t * na5 + s * na4 + u * na3 + q * na2 + p * na1 +
+                           r] = sign;
+                out.data()[I * na7 + J * na6 + t * na5 + u * na4 + s * na3 + q * na2 + p * na1 +
+                           r] = -sign;
+
+                out.data()[I * na7 + J * na6 + s * na5 + t * na4 + u * na3 + q * na2 + r * na1 +
+                           p] = sign;
+                out.data()[I * na7 + J * na6 + s * na5 + u * na4 + t * na3 + q * na2 + r * na1 +
+                           p] = -sign;
+                out.data()[I * na7 + J * na6 + u * na5 + t * na4 + s * na3 + q * na2 + r * na1 +
+                           p] = -sign;
+                out.data()[I * na7 + J * na6 + u * na5 + s * na4 + t * na3 + q * na2 + r * na1 +
+                           p] = sign;
+                out.data()[I * na7 + J * na6 + t * na5 + s * na4 + u * na3 + q * na2 + r * na1 +
+                           p] = -sign;
+                out.data()[I * na7 + J * na6 + t * na5 + u * na4 + s * na3 + q * na2 + r * na1 +
+                           p] = sign;
+
+                out.data()[I * na7 + J * na6 + s * na5 + t * na4 + u * na3 + r * na2 + p * na1 +
+                           q] = sign;
+                out.data()[I * na7 + J * na6 + s * na5 + u * na4 + t * na3 + r * na2 + p * na1 +
+                           q] = -sign;
+                out.data()[I * na7 + J * na6 + u * na5 + t * na4 + s * na3 + r * na2 + p * na1 +
+                           q] = -sign;
+                out.data()[I * na7 + J * na6 + u * na5 + s * na4 + t * na3 + r * na2 + p * na1 +
+                           q] = sign;
+                out.data()[I * na7 + J * na6 + t * na5 + s * na4 + u * na3 + r * na2 + p * na1 +
+                           q] = -sign;
+                out.data()[I * na7 + J * na6 + t * na5 + u * na4 + s * na3 + r * na2 + p * na1 +
+                           q] = sign;
+
+                out.data()[I * na7 + J * na6 + s * na5 + t * na4 + u * na3 + r * na2 + q * na1 +
+                           p] = -sign;
+                out.data()[I * na7 + J * na6 + s * na5 + u * na4 + t * na3 + r * na2 + q * na1 +
+                           p] = sign;
+                out.data()[I * na7 + J * na6 + u * na5 + t * na4 + s * na3 + r * na2 + q * na1 +
+                           p] = sign;
+                out.data()[I * na7 + J * na6 + u * na5 + s * na4 + t * na3 + r * na2 + q * na1 +
+                           p] = -sign;
+                out.data()[I * na7 + J * na6 + t * na5 + s * na4 + u * na3 + r * na2 + q * na1 +
+                           p] = sign;
+                out.data()[I * na7 + J * na6 + t * na5 + u * na4 + s * na3 + r * na2 + q * na1 +
+                           p] = -sign;
+            }
+        }
+    }
+
+    return out;
+}
+
+ambit::Tensor FCI_MO::coupling_coeffcients_3aab() {
+    size_t ndets = determinant_.size();
+
+    size_t na1 = nactv_;
+    size_t na2 = na1 * na1;
+    size_t na3 = na2 * na1;
+    size_t na4 = na3 * na1;
+    size_t na5 = na4 * na1;
+    size_t na6 = na5 * na1;
+    size_t na7 = na6 * ndets;
+
+    // stored <I| p^+ q^+ r^+ u t s |J> as I->0, J->1, p->2, q->3, r->4, s->5, t->6, u->7
+    auto out = ambit::Tensor::build(ambit::CoreTensor, "CC3aab",
+                                    {ndets, ndets, nactv_, nactv_, nactv_, nactv_, nactv_, nactv_});
+
+    const auto& dets = det_hash_vec_.wfn_hash();
+    std::vector<std::vector<std::tuple<size_t, short, short, short>>>& aab_list = wfn_op_.aab_list_;
+
+    for (size_t I = 0; I < ndets; ++I) {
+        std::vector<int> aocc = dets[I].get_alfa_occ(nactv_);
+        std::vector<int> bocc = dets[I].get_beta_occ(nactv_);
+
+        int naocc = aocc.size();
+        int nbocc = bocc.size();
+
+        size_t idx_I = I * na7 + I * na6;
+
+        for (int p = 0; p < naocc; ++p) {
+            int pp = aocc[p];
+            for (int q = p + 1; q < naocc; ++q) {
+                int qq = aocc[q];
+                for (int r = 0; r < nbocc; ++r) {
+                    int rr = bocc[r];
+
+                    out.data()[idx_I + pp * na5 + qq * na4 + rr * na3 + pp * na2 + qq * na1 + rr] =
+                        1.0;
+                    out.data()[idx_I + pp * na5 + qq * na4 + rr * na3 + qq * na2 + pp * na1 + rr] =
+                        -1.0;
+                    out.data()[idx_I + qq * na5 + pp * na4 + rr * na3 + pp * na2 + qq * na1 + rr] =
+                        -1.0;
+                    out.data()[idx_I + qq * na5 + pp * na4 + rr * na3 + qq * na2 + pp * na1 + rr] =
+                        1.0;
+                }
+            }
+        }
+    }
+
+    for (size_t K = 0, max_K = aab_list.size(); K < max_K; ++K) {
+        std::vector<std::tuple<size_t, short, short, short>>& coupled_dets = aab_list[K];
+
+        for (size_t a = 0, max_a = coupled_dets.size(); a < max_a; ++a) {
+
+            auto& detJ = coupled_dets[a];
+
+            const size_t& J = std::get<0>(detJ);
+            const size_t& p = std::abs(std::get<1>(detJ)) - 1;
+            const size_t& q = std::get<2>(detJ);
+            const size_t& r = std::get<3>(detJ);
+            const double& sign_pqr = std::get<1>(detJ) > 0.0 ? 1.0 : -1.0;
+
+            for (size_t b = a + 1, max_b = coupled_dets.size(); b < max_b; ++b) {
+
+                auto& detI = coupled_dets[b];
+
+                const size_t& s = std::abs(std::get<1>(detI)) - 1;
+                const size_t& t = std::get<2>(detI);
+                const size_t& u = std::get<3>(detI);
+                const double& sign_stu = std::get<1>(detI) > 0.0 ? 1.0 : -1.0;
+                const size_t& I = std::get<0>(detI);
+
+                double sign = sign_pqr * sign_stu;
+
+                out.data()[J * na7 + I * na6 + p * na5 + q * na4 + r * na3 + s * na2 + t * na1 +
+                           u] = sign;
+                out.data()[J * na7 + I * na6 + p * na5 + q * na4 + r * na3 + t * na2 + s * na1 +
+                           u] = -sign;
+                out.data()[J * na7 + I * na6 + q * na5 + p * na4 + r * na3 + s * na2 + t * na1 +
+                           u] = -sign;
+                out.data()[J * na7 + I * na6 + q * na5 + p * na4 + r * na3 + t * na2 + s * na1 +
+                           u] = sign;
+
+                out.data()[I * na7 + J * na6 + s * na5 + t * na4 + u * na3 + p * na2 + q * na1 +
+                           r] = sign;
+                out.data()[I * na7 + J * na6 + t * na5 + s * na4 + u * na3 + p * na2 + q * na1 +
+                           r] = -sign;
+                out.data()[I * na7 + J * na6 + s * na5 + t * na4 + u * na3 + q * na2 + p * na1 +
+                           r] = -sign;
+                out.data()[I * na7 + J * na6 + t * na5 + s * na4 + u * na3 + q * na2 + p * na1 +
+                           r] = sign;
+            }
+        }
+    }
+
+    return out;
+}
+
+ambit::Tensor FCI_MO::coupling_coeffcients_3abb() {
+    size_t ndets = determinant_.size();
+
+    size_t na1 = nactv_;
+    size_t na2 = na1 * na1;
+    size_t na3 = na2 * na1;
+    size_t na4 = na3 * na1;
+    size_t na5 = na4 * na1;
+    size_t na6 = na5 * na1;
+    size_t na7 = na6 * ndets;
+
+    // stored <I| p^+ q^+ r^+ u t s |J> as I->0, J->1, p->2, q->3, r->4, s->5, t->6, u->7
+    auto out = ambit::Tensor::build(ambit::CoreTensor, "CC3abb",
+                                    {ndets, ndets, nactv_, nactv_, nactv_, nactv_, nactv_, nactv_});
+
+    const auto& dets = det_hash_vec_.wfn_hash();
+    std::vector<std::vector<std::tuple<size_t, short, short, short>>>& abb_list = wfn_op_.abb_list_;
+
+    for (size_t I = 0; I < ndets; ++I) {
+        std::vector<int> aocc = dets[I].get_alfa_occ(nactv_);
+        std::vector<int> bocc = dets[I].get_beta_occ(nactv_);
+
+        int naocc = aocc.size();
+        int nbocc = bocc.size();
+
+        size_t idx_I = I * na7 + I * na6;
+
+        for (int p = 0; p < naocc; ++p) {
+            int pp = aocc[p];
+            for (int q = 0; q < nbocc; ++q) {
+                int qq = bocc[q];
+                for (int r = q + 1; r < nbocc; ++r) {
+                    int rr = bocc[r];
+
+                    out.data()[idx_I + pp * na5 + qq * na4 + rr * na3 + pp * na2 + qq * na1 + rr] =
+                        1.0;
+                    out.data()[idx_I + pp * na5 + qq * na4 + rr * na3 + pp * na2 + rr * na1 + qq] =
+                        -1.0;
+                    out.data()[idx_I + pp * na5 + rr * na4 + qq * na3 + pp * na2 + qq * na1 + rr] =
+                        -1.0;
+                    out.data()[idx_I + pp * na5 + rr * na4 + qq * na3 + pp * na2 + rr * na1 + qq] =
+                        1.0;
+                }
+            }
+        }
+    }
+
+    for (size_t K = 0, max_K = abb_list.size(); K < max_K; ++K) {
+        std::vector<std::tuple<size_t, short, short, short>>& coupled_dets = abb_list[K];
+
+        for (size_t a = 0, max_a = coupled_dets.size(); a < max_a; ++a) {
+
+            auto& detJ = coupled_dets[a];
+
+            const size_t& J = std::get<0>(detJ);
+            const size_t& p = std::abs(std::get<1>(detJ)) - 1;
+            const size_t& q = std::get<2>(detJ);
+            const size_t& r = std::get<3>(detJ);
+            const double& sign_pqr = std::get<1>(detJ) > 0.0 ? 1.0 : -1.0;
+
+            for (size_t b = a + 1, max_b = coupled_dets.size(); b < max_b; ++b) {
+
+                auto& detI = coupled_dets[b];
+
+                const size_t& s = std::abs(std::get<1>(detI)) - 1;
+                const size_t& t = std::get<2>(detI);
+                const size_t& u = std::get<3>(detI);
+                const double& sign_stu = std::get<1>(detI) > 0.0 ? 1.0 : -1.0;
+                const size_t& I = std::get<0>(detI);
+
+                double sign = sign_pqr * sign_stu;
+
+                out.data()[J * na7 + I * na6 + p * na5 + q * na4 + r * na3 + s * na2 + t * na1 +
+                           u] = sign;
+                out.data()[J * na7 + I * na6 + p * na5 + q * na4 + r * na3 + s * na2 + u * na1 +
+                           t] = -sign;
+                out.data()[J * na7 + I * na6 + p * na5 + r * na4 + q * na3 + s * na2 + t * na1 +
+                           u] = -sign;
+                out.data()[J * na7 + I * na6 + p * na5 + r * na4 + q * na3 + s * na2 + u * na1 +
+                           t] = sign;
+
+                out.data()[I * na7 + J * na6 + s * na5 + t * na4 + u * na3 + p * na2 + q * na1 +
+                           r] = sign;
+                out.data()[I * na7 + J * na6 + s * na5 + u * na4 + t * na3 + p * na2 + q * na1 +
+                           r] = -sign;
+                out.data()[I * na7 + J * na6 + s * na5 + t * na4 + u * na3 + p * na2 + r * na1 +
+                           q] = -sign;
+                out.data()[I * na7 + J * na6 + s * na5 + u * na4 + t * na3 + p * na2 + r * na1 +
+                           q] = sign;
+            }
+        }
+    }
+
+    return out;
+}
+
+ambit::Tensor FCI_MO::coupling_coeffcients_3bbb() {
+    size_t ndets = determinant_.size();
+
+    size_t na1 = nactv_;
+    size_t na2 = na1 * na1;
+    size_t na3 = na2 * na1;
+    size_t na4 = na3 * na1;
+    size_t na5 = na4 * na1;
+    size_t na6 = na5 * na1;
+    size_t na7 = na6 * ndets;
+
+    // stored <I| p^+ q^+ r^+ u t s |J> as I->0, J->1, p->2, q->3, r->4, s->5, t->6, u->7
+    auto out = ambit::Tensor::build(ambit::CoreTensor, "CC3bbb",
+                                    {ndets, ndets, nactv_, nactv_, nactv_, nactv_, nactv_, nactv_});
+
+    const auto& dets = det_hash_vec_.wfn_hash();
+    std::vector<std::vector<std::tuple<size_t, short, short, short>>>& bbb_list = wfn_op_.bbb_list_;
+
+    for (size_t I = 0; I < ndets; ++I) {
+        std::vector<int> bocc = dets[I].get_beta_occ(nactv_);
+
+        int nbocc = bocc.size();
+
+        size_t idx_I = I * na7 + I * na6;
+
+        for (int p = 0; p < nbocc; ++p) {
+            int pp = bocc[p];
+            for (int q = p + 1; q < nbocc; ++q) {
+                int qq = bocc[q];
+                for (int r = q + 1; r < nbocc; ++r) {
+                    int rr = bocc[r];
+
+                    out.data()[idx_I + pp * na5 + qq * na4 + rr * na3 + pp * na2 + qq * na1 + rr] =
+                        1.0;
+                    out.data()[idx_I + pp * na5 + qq * na4 + rr * na3 + pp * na2 + rr * na1 + qq] =
+                        -1.0;
+                    out.data()[idx_I + pp * na5 + qq * na4 + rr * na3 + rr * na2 + pp * na1 + qq] =
+                        1.0;
+                    out.data()[idx_I + pp * na5 + qq * na4 + rr * na3 + rr * na2 + qq * na1 + pp] =
+                        -1.0;
+                    out.data()[idx_I + pp * na5 + qq * na4 + rr * na3 + qq * na2 + rr * na1 + pp] =
+                        1.0;
+                    out.data()[idx_I + pp * na5 + qq * na4 + rr * na3 + qq * na2 + pp * na1 + rr] =
+                        -1.0;
+
+                    out.data()[idx_I + pp * na5 + rr * na4 + qq * na3 + pp * na2 + qq * na1 + rr] =
+                        -1.0;
+                    out.data()[idx_I + pp * na5 + rr * na4 + qq * na3 + pp * na2 + rr * na1 + qq] =
+                        1.0;
+                    out.data()[idx_I + pp * na5 + rr * na4 + qq * na3 + rr * na2 + pp * na1 + qq] =
+                        -1.0;
+                    out.data()[idx_I + pp * na5 + rr * na4 + qq * na3 + rr * na2 + qq * na1 + pp] =
+                        1.0;
+                    out.data()[idx_I + pp * na5 + rr * na4 + qq * na3 + qq * na2 + rr * na1 + pp] =
+                        -1.0;
+                    out.data()[idx_I + pp * na5 + rr * na4 + qq * na3 + qq * na2 + pp * na1 + rr] =
+                        1.0;
+
+                    out.data()[idx_I + rr * na5 + pp * na4 + qq * na3 + pp * na2 + qq * na1 + rr] =
+                        1.0;
+                    out.data()[idx_I + rr * na5 + pp * na4 + qq * na3 + pp * na2 + rr * na1 + qq] =
+                        -1.0;
+                    out.data()[idx_I + rr * na5 + pp * na4 + qq * na3 + rr * na2 + pp * na1 + qq] =
+                        1.0;
+                    out.data()[idx_I + rr * na5 + pp * na4 + qq * na3 + rr * na2 + qq * na1 + pp] =
+                        -1.0;
+                    out.data()[idx_I + rr * na5 + pp * na4 + qq * na3 + qq * na2 + rr * na1 + pp] =
+                        1.0;
+                    out.data()[idx_I + rr * na5 + pp * na4 + qq * na3 + qq * na2 + pp * na1 + rr] =
+                        -1.0;
+
+                    out.data()[idx_I + rr * na5 + qq * na4 + pp * na3 + pp * na2 + qq * na1 + rr] =
+                        -1.0;
+                    out.data()[idx_I + rr * na5 + qq * na4 + pp * na3 + pp * na2 + rr * na1 + qq] =
+                        1.0;
+                    out.data()[idx_I + rr * na5 + qq * na4 + pp * na3 + rr * na2 + pp * na1 + qq] =
+                        -1.0;
+                    out.data()[idx_I + rr * na5 + qq * na4 + pp * na3 + rr * na2 + qq * na1 + pp] =
+                        1.0;
+                    out.data()[idx_I + rr * na5 + qq * na4 + pp * na3 + qq * na2 + rr * na1 + pp] =
+                        -1.0;
+                    out.data()[idx_I + rr * na5 + qq * na4 + pp * na3 + qq * na2 + pp * na1 + rr] =
+                        1.0;
+
+                    out.data()[idx_I + qq * na5 + rr * na4 + pp * na3 + pp * na2 + qq * na1 + rr] =
+                        1.0;
+                    out.data()[idx_I + qq * na5 + rr * na4 + pp * na3 + pp * na2 + rr * na1 + qq] =
+                        -1.0;
+                    out.data()[idx_I + qq * na5 + rr * na4 + pp * na3 + rr * na2 + pp * na1 + qq] =
+                        1.0;
+                    out.data()[idx_I + qq * na5 + rr * na4 + pp * na3 + rr * na2 + qq * na1 + pp] =
+                        -1.0;
+                    out.data()[idx_I + qq * na5 + rr * na4 + pp * na3 + qq * na2 + rr * na1 + pp] =
+                        1.0;
+                    out.data()[idx_I + qq * na5 + rr * na4 + pp * na3 + qq * na2 + pp * na1 + rr] =
+                        -1.0;
+
+                    out.data()[idx_I + qq * na5 + pp * na4 + rr * na3 + pp * na2 + qq * na1 + rr] =
+                        -1.0;
+                    out.data()[idx_I + qq * na5 + pp * na4 + rr * na3 + pp * na2 + rr * na1 + qq] =
+                        1.0;
+                    out.data()[idx_I + qq * na5 + pp * na4 + rr * na3 + rr * na2 + pp * na1 + qq] =
+                        -1.0;
+                    out.data()[idx_I + qq * na5 + pp * na4 + rr * na3 + rr * na2 + qq * na1 + pp] =
+                        1.0;
+                    out.data()[idx_I + qq * na5 + pp * na4 + rr * na3 + qq * na2 + rr * na1 + pp] =
+                        -1.0;
+                    out.data()[idx_I + qq * na5 + pp * na4 + rr * na3 + qq * na2 + pp * na1 + rr] =
+                        1.0;
+                }
+            }
+        }
+    }
+
+    for (size_t K = 0, max_K = bbb_list.size(); K < max_K; ++K) {
+        std::vector<std::tuple<size_t, short, short, short>>& coupled_dets = bbb_list[K];
+
+        for (size_t a = 0, max_a = coupled_dets.size(); a < max_a; ++a) {
+
+            auto& detJ = coupled_dets[a];
+
+            const size_t& J = std::get<0>(detJ);
+            const size_t& p = std::abs(std::get<1>(detJ)) - 1;
+            const size_t& q = std::get<2>(detJ);
+            const size_t& r = std::get<3>(detJ);
+            const double& sign_pqr = std::get<1>(detJ) > 0.0 ? 1.0 : -1.0;
+
+            for (size_t b = a + 1, max_b = coupled_dets.size(); b < max_b; ++b) {
+
+                auto& detI = coupled_dets[b];
+
+                const size_t& s = std::abs(std::get<1>(detI)) - 1;
+                const size_t& t = std::get<2>(detI);
+                const size_t& u = std::get<3>(detI);
+                const double& sign_stu = std::get<1>(detI) > 0.0 ? 1.0 : -1.0;
+                const size_t& I = std::get<0>(detI);
+
+                double sign = sign_pqr * sign_stu;
+
+                out.data()[J * na7 + I * na6 + p * na5 + q * na4 + r * na3 + s * na2 + t * na1 +
+                           u] = sign;
+                out.data()[J * na7 + I * na6 + p * na5 + q * na4 + r * na3 + s * na2 + u * na1 +
+                           t] = -sign;
+                out.data()[J * na7 + I * na6 + p * na5 + q * na4 + r * na3 + u * na2 + t * na1 +
+                           s] = -sign;
+                out.data()[J * na7 + I * na6 + p * na5 + q * na4 + r * na3 + u * na2 + s * na1 +
+                           t] = sign;
+                out.data()[J * na7 + I * na6 + p * na5 + q * na4 + r * na3 + t * na2 + s * na1 +
+                           u] = -sign;
+                out.data()[J * na7 + I * na6 + p * na5 + q * na4 + r * na3 + t * na2 + u * na1 +
+                           s] = sign;
+
+                out.data()[J * na7 + I * na6 + p * na5 + r * na4 + q * na3 + s * na2 + t * na1 +
+                           u] = -sign;
+                out.data()[J * na7 + I * na6 + p * na5 + r * na4 + q * na3 + s * na2 + u * na1 +
+                           t] = sign;
+                out.data()[J * na7 + I * na6 + p * na5 + r * na4 + q * na3 + u * na2 + t * na1 +
+                           s] = sign;
+                out.data()[J * na7 + I * na6 + p * na5 + r * na4 + q * na3 + u * na2 + s * na1 +
+                           t] = -sign;
+                out.data()[J * na7 + I * na6 + p * na5 + r * na4 + q * na3 + t * na2 + s * na1 +
+                           u] = sign;
+                out.data()[J * na7 + I * na6 + p * na5 + r * na4 + q * na3 + t * na2 + u * na1 +
+                           s] = -sign;
+
+                out.data()[J * na7 + I * na6 + q * na5 + p * na4 + r * na3 + s * na2 + t * na1 +
+                           u] = -sign;
+                out.data()[J * na7 + I * na6 + q * na5 + p * na4 + r * na3 + s * na2 + u * na1 +
+                           t] = sign;
+                out.data()[J * na7 + I * na6 + q * na5 + p * na4 + r * na3 + u * na2 + t * na1 +
+                           s] = sign;
+                out.data()[J * na7 + I * na6 + q * na5 + p * na4 + r * na3 + u * na2 + s * na1 +
+                           t] = -sign;
+                out.data()[J * na7 + I * na6 + q * na5 + p * na4 + r * na3 + t * na2 + s * na1 +
+                           u] = sign;
+                out.data()[J * na7 + I * na6 + q * na5 + p * na4 + r * na3 + t * na2 + u * na1 +
+                           s] = -sign;
+
+                out.data()[J * na7 + I * na6 + q * na5 + r * na4 + p * na3 + s * na2 + t * na1 +
+                           u] = sign;
+                out.data()[J * na7 + I * na6 + q * na5 + r * na4 + p * na3 + s * na2 + u * na1 +
+                           t] = -sign;
+                out.data()[J * na7 + I * na6 + q * na5 + r * na4 + p * na3 + u * na2 + t * na1 +
+                           s] = -sign;
+                out.data()[J * na7 + I * na6 + q * na5 + r * na4 + p * na3 + u * na2 + s * na1 +
+                           t] = sign;
+                out.data()[J * na7 + I * na6 + q * na5 + r * na4 + p * na3 + t * na2 + s * na1 +
+                           u] = -sign;
+                out.data()[J * na7 + I * na6 + q * na5 + r * na4 + p * na3 + t * na2 + u * na1 +
+                           s] = sign;
+
+                out.data()[J * na7 + I * na6 + r * na5 + p * na4 + q * na3 + s * na2 + t * na1 +
+                           u] = sign;
+                out.data()[J * na7 + I * na6 + r * na5 + p * na4 + q * na3 + s * na2 + u * na1 +
+                           t] = -sign;
+                out.data()[J * na7 + I * na6 + r * na5 + p * na4 + q * na3 + u * na2 + t * na1 +
+                           s] = -sign;
+                out.data()[J * na7 + I * na6 + r * na5 + p * na4 + q * na3 + u * na2 + s * na1 +
+                           t] = sign;
+                out.data()[J * na7 + I * na6 + r * na5 + p * na4 + q * na3 + t * na2 + s * na1 +
+                           u] = -sign;
+                out.data()[J * na7 + I * na6 + r * na5 + p * na4 + q * na3 + t * na2 + u * na1 +
+                           s] = sign;
+
+                out.data()[J * na7 + I * na6 + r * na5 + q * na4 + p * na3 + s * na2 + t * na1 +
+                           u] = -sign;
+                out.data()[J * na7 + I * na6 + r * na5 + q * na4 + p * na3 + s * na2 + u * na1 +
+                           t] = sign;
+                out.data()[J * na7 + I * na6 + r * na5 + q * na4 + p * na3 + u * na2 + t * na1 +
+                           s] = sign;
+                out.data()[J * na7 + I * na6 + r * na5 + q * na4 + p * na3 + u * na2 + s * na1 +
+                           t] = -sign;
+                out.data()[J * na7 + I * na6 + r * na5 + q * na4 + p * na3 + t * na2 + s * na1 +
+                           u] = sign;
+                out.data()[J * na7 + I * na6 + r * na5 + q * na4 + p * na3 + t * na2 + u * na1 +
+                           s] = -sign;
+
+                out.data()[I * na7 + J * na6 + s * na5 + t * na4 + u * na3 + p * na2 + q * na1 +
+                           r] = sign;
+                out.data()[I * na7 + J * na6 + s * na5 + u * na4 + t * na3 + p * na2 + q * na1 +
+                           r] = -sign;
+                out.data()[I * na7 + J * na6 + u * na5 + t * na4 + s * na3 + p * na2 + q * na1 +
+                           r] = -sign;
+                out.data()[I * na7 + J * na6 + u * na5 + s * na4 + t * na3 + p * na2 + q * na1 +
+                           r] = sign;
+                out.data()[I * na7 + J * na6 + t * na5 + s * na4 + u * na3 + p * na2 + q * na1 +
+                           r] = -sign;
+                out.data()[I * na7 + J * na6 + t * na5 + u * na4 + s * na3 + p * na2 + q * na1 +
+                           r] = sign;
+
+                out.data()[I * na7 + J * na6 + s * na5 + t * na4 + u * na3 + p * na2 + r * na1 +
+                           q] = -sign;
+                out.data()[I * na7 + J * na6 + s * na5 + u * na4 + t * na3 + p * na2 + r * na1 +
+                           q] = sign;
+                out.data()[I * na7 + J * na6 + u * na5 + t * na4 + s * na3 + p * na2 + r * na1 +
+                           q] = sign;
+                out.data()[I * na7 + J * na6 + u * na5 + s * na4 + t * na3 + p * na2 + r * na1 +
+                           q] = -sign;
+                out.data()[I * na7 + J * na6 + t * na5 + s * na4 + u * na3 + p * na2 + r * na1 +
+                           q] = sign;
+                out.data()[I * na7 + J * na6 + t * na5 + u * na4 + s * na3 + p * na2 + r * na1 +
+                           q] = -sign;
+
+                out.data()[I * na7 + J * na6 + s * na5 + t * na4 + u * na3 + q * na2 + p * na1 +
+                           r] = -sign;
+                out.data()[I * na7 + J * na6 + s * na5 + u * na4 + t * na3 + q * na2 + p * na1 +
+                           r] = sign;
+                out.data()[I * na7 + J * na6 + u * na5 + t * na4 + s * na3 + q * na2 + p * na1 +
+                           r] = sign;
+                out.data()[I * na7 + J * na6 + u * na5 + s * na4 + t * na3 + q * na2 + p * na1 +
+                           r] = -sign;
+                out.data()[I * na7 + J * na6 + t * na5 + s * na4 + u * na3 + q * na2 + p * na1 +
+                           r] = sign;
+                out.data()[I * na7 + J * na6 + t * na5 + u * na4 + s * na3 + q * na2 + p * na1 +
+                           r] = -sign;
+
+                out.data()[I * na7 + J * na6 + s * na5 + t * na4 + u * na3 + q * na2 + r * na1 +
+                           p] = sign;
+                out.data()[I * na7 + J * na6 + s * na5 + u * na4 + t * na3 + q * na2 + r * na1 +
+                           p] = -sign;
+                out.data()[I * na7 + J * na6 + u * na5 + t * na4 + s * na3 + q * na2 + r * na1 +
+                           p] = -sign;
+                out.data()[I * na7 + J * na6 + u * na5 + s * na4 + t * na3 + q * na2 + r * na1 +
+                           p] = sign;
+                out.data()[I * na7 + J * na6 + t * na5 + s * na4 + u * na3 + q * na2 + r * na1 +
+                           p] = -sign;
+                out.data()[I * na7 + J * na6 + t * na5 + u * na4 + s * na3 + q * na2 + r * na1 +
+                           p] = sign;
+
+                out.data()[I * na7 + J * na6 + s * na5 + t * na4 + u * na3 + r * na2 + p * na1 +
+                           q] = sign;
+                out.data()[I * na7 + J * na6 + s * na5 + u * na4 + t * na3 + r * na2 + p * na1 +
+                           q] = -sign;
+                out.data()[I * na7 + J * na6 + u * na5 + t * na4 + s * na3 + r * na2 + p * na1 +
+                           q] = -sign;
+                out.data()[I * na7 + J * na6 + u * na5 + s * na4 + t * na3 + r * na2 + p * na1 +
+                           q] = sign;
+                out.data()[I * na7 + J * na6 + t * na5 + s * na4 + u * na3 + r * na2 + p * na1 +
+                           q] = -sign;
+                out.data()[I * na7 + J * na6 + t * na5 + u * na4 + s * na3 + r * na2 + p * na1 +
+                           q] = sign;
+
+                out.data()[I * na7 + J * na6 + s * na5 + t * na4 + u * na3 + r * na2 + q * na1 +
+                           p] = -sign;
+                out.data()[I * na7 + J * na6 + s * na5 + u * na4 + t * na3 + r * na2 + q * na1 +
+                           p] = sign;
+                out.data()[I * na7 + J * na6 + u * na5 + t * na4 + s * na3 + r * na2 + q * na1 +
+                           p] = sign;
+                out.data()[I * na7 + J * na6 + u * na5 + s * na4 + t * na3 + r * na2 + q * na1 +
+                           p] = -sign;
+                out.data()[I * na7 + J * na6 + t * na5 + s * na4 + u * na3 + r * na2 + q * na1 +
+                           p] = sign;
+                out.data()[I * na7 + J * na6 + t * na5 + u * na4 + s * na3 + r * na2 + q * na1 +
+                           p] = -sign;
+            }
+        }
+    }
+
+    return out;
+}
+
 std::vector<ambit::Tensor> FCI_MO::eigen_vectors() {
     size_t ndets = determinant_.size();
 
@@ -3043,21 +3837,29 @@ std::vector<ambit::Tensor> FCI_MO::eigen_vectors() {
     return out;
 }
 
-size_t FCI_MO::det_size() {
-    return determinant_.size();
-}
+size_t FCI_MO::det_size() { return determinant_.size(); }
 
 CouplingCoefficients FCI_MO::coupling_coefficients(int level) {
-    if (level != 2) {
-        throw PSIEXCEPTION("Not implemented other than level 2");
+    if (level <= 3) {
+        auto cc1a = coupling_coeffcients_1a();
+        auto cc1b = coupling_coeffcients_1b();
+        auto cc2aa = coupling_coeffcients_2aa();
+        auto cc2ab = coupling_coeffcients_2ab();
+        auto cc2bb = coupling_coeffcients_2bb();
+
+        if (level < 3) {
+            return CouplingCoefficients(cc1a, cc1b, cc2aa, cc2ab, cc2bb);
+        } else {
+            auto cc3aaa = coupling_coeffcients_3aaa();
+            auto cc3aab = coupling_coeffcients_3aab();
+            auto cc3abb = coupling_coeffcients_3abb();
+            auto cc3bbb = coupling_coeffcients_3bbb();
+
+            return CouplingCoefficients(cc1a, cc1b, cc2aa, cc2ab, cc2bb, cc3aaa, cc3aab, cc3abb,
+                                        cc3bbb);
+        }
+    } else {
+        throw PSIEXCEPTION("Not implemented other than level 2 or 3");
     }
-
-    auto cc1a = coupling_coeffcients_1a();
-    auto cc1b = coupling_coeffcients_1b();
-    auto cc2aa = coupling_coeffcients_2aa();
-    auto cc2ab = coupling_coeffcients_2ab();
-    auto cc2bb = coupling_coeffcients_2bb();
-
-    return CouplingCoefficients(cc1a, cc1b, cc2aa, cc2ab, cc2bb);
 }
 } // namespace forte
