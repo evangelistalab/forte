@@ -65,7 +65,7 @@ def forte_driver(state_weights_map, scf_info, options, ints, mo_space_info):
             # This is OK only when running state-specific calculations
             state = list(state_map.keys())[0]
 
-            coupling_coefficients = active_space_solver.coupling_coefficients(state, 2)
+            coupling_coefficients = active_space_solver.coupling_coefficients(state, 3)
             ci_vectors = active_space_solver.eigen_vectors(state)
 
         # Grab the reference

@@ -3850,11 +3850,11 @@ CouplingCoefficients FCI_MO::coupling_coefficients(int level) {
         if (level < 3) {
             return CouplingCoefficients(cc1a, cc1b, cc2aa, cc2ab, cc2bb);
         } else {
+            wfn_op_.three_s_lists(det_hash_vec_);
             auto cc3aaa = coupling_coeffcients_3aaa();
             auto cc3aab = coupling_coeffcients_3aab();
             auto cc3abb = coupling_coeffcients_3abb();
             auto cc3bbb = coupling_coeffcients_3bbb();
-
             return CouplingCoefficients(cc1a, cc1b, cc2aa, cc2ab, cc2bb, cc3aaa, cc3aab, cc3abb,
                                         cc3bbb);
         }
