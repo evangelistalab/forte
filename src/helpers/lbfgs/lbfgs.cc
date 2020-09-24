@@ -389,7 +389,14 @@ void LBFGS::apply_h0(psi::SharedVector q) {
     } else {
         for (int h = 0; h < nirrep_; ++h) {
             for (int i = 0; i < dimpi_[h]; ++i) {
-                q->set(h, i, q->get(h, i) / h0_->get(h, i));
+                double vh = h0_->get(h, i);
+                if (std::fabs(vh) > 1.0e-12) {
+                    q->set(h, i, q->get(h, i) / vh);
+                } else {
+                    if (param_->print > 1) {
+                        outfile->Printf("\n  Zero diagonal Hessian element (irrep: %d, i: %d)", h, i);
+                    }
+                }
             }
         }
     }
