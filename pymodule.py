@@ -315,7 +315,7 @@ def orbital_projection(ref_wfn, options, mo_space_info):
     else:
         return mo_space_info
 
-def adv_embedding_driver(state, state_weights_map, scf_info, ref_wfn, mo_space_info, options, ints):
+def adv_embedding_driver(state, state_weights_map, scf_info, ref_wfn, mo_space_info, options):
     # options.set_bool('FORTE', 'EMBEDDING', True)
     # options.set_str('FORTE', 'EMBEDDING_CUTOFF_METHOD', 'CORRELATED_BATH')
     # options.set_str('FORTE', 'EMBEDDING_SPECIAL', 'INNER_LAYER')
@@ -331,13 +331,25 @@ def adv_embedding_driver(state, state_weights_map, scf_info, ref_wfn, mo_space_i
     ints_f = forte.make_forte_integrals(ref_wfn, options, mo_space_info_active)
     #ints_f_1 = ints_f # TODO: How the hell can I deep copy this!!!!?>??>?
     psi4.core.print_out("\n Integral test (f original): oei_a(0, 2) = {:10.8f}".format(ints_f.oei_a(0, 2)))
+
+    if ('DF' in options.get_str('INT_TYPE_ENV')):
+        aux_basis_env = psi4.core.BasisSet.build(ref_wfn.molecule(), 'DF_BASIS_MP2',
+                                         psi4.core.get_global_option('DF_BASIS_MP2'),
+                                         'RIFIT', psi4.core.get_global_option('BASIS'))
+        ref_wfn.set_basisset('DF_BASIS_MP2', aux_basis_env)
+        options.set_str('FORTE', 'INT_TYPE', 'DF')
+        forte.forte_options.update_psi_options(options)
+
     ints_e = forte.make_forte_integrals(ref_wfn, options, mo_space_info)
+    
     #psi4.core.print_out("\n Integral test (e original): oei_a(4, 6) = {:10.8f}".format(ints_e.oei_a(4, 6)))
     #ints_f.build_from_another_ints(ints_e, -4) # Make sure this function works! make ints_f elements same with ints_e for corresponding blocks
     #psi4.core.print_out("\n Integral test (f original): oei_a(0, 2) = {:10.8f}".format(ints_e.oei_a(4, 6)))
     psi4.core.print_out("\n Integral test (f original): int_f ncmo: {:d}".format(ints_f.ncmo()))
     psi4.core.print_out("\n Integral test (e original): int_e ncmo: {:d}".format(ints_e.ncmo()))
     # compute higher-level with mo_space_info_active(inner) and methods in options, -> E_high(origin)
+
+    options.set_str('FORTE', 'INT_TYPE', 'CONVENTIONAL')
     options.set_str('FORTE', 'CORR_LEVEL', frag_corr_level)
     fold = options.get_bool('DSRG_FOLD')
     relax = options.get_str('RELAX_REF')
@@ -377,6 +389,14 @@ def adv_embedding_driver(state, state_weights_map, scf_info, ref_wfn, mo_space_i
     # Semi-Canonicalize A+B
     # semi = forte.SemiCanonical(mo_space_info, ints_e, forte.forte_options)
     # semi.semicanonicalize(rdms, 2) # TODO: should automatically determine max_rdm_level
+    if ('DF' in options.get_str('INT_TYPE_ENV')):
+        aux_basis_env = psi4.core.BasisSet.build(ref_wfn.molecule(), 'DF_BASIS_MP2',
+                                         psi4.core.get_global_option('DF_BASIS_MP2'),
+                                         'RIFIT', psi4.core.get_global_option('BASIS'))
+        ref_wfn.set_basisset('DF_BASIS_MP2', aux_basis_env)
+        options.set_str('FORTE', 'INT_TYPE', 'DF')
+        forte.forte_options.update_psi_options(options)
+
     dsrg = forte.make_dsrg_method(options.get_str('ENV_CORRELATION_SOLVER'), # TODO: ensure here always run canonical mr-dsrg
                                   rdms, scf_info, forte.forte_options, ints_e, mo_space_info)
 
@@ -415,6 +435,7 @@ def adv_embedding_driver(state, state_weights_map, scf_info, ref_wfn, mo_space_i
     options.set_str('FORTE', 'RELAX_REF', relax)
     options.set_bool('FORTE', 'EMBEDDING_DISABLE_SEMI_CHECK', False)
     options.set_bool('FORTE', 'EMBEDDING_ALIGN_FROZEN', False)
+    options.set_str('FORTE', 'INT_TYPE', 'CONVENTIONAL')
     forte.forte_options.update_psi_options(options)
 
     # Compute Ec1 dressed
@@ -474,6 +495,10 @@ def adv_embedding_driver(state, state_weights_map, scf_info, ref_wfn, mo_space_i
  #   energy_high_fold = dsrg_high_fold.compute_energy()
     # Compute MRDSRG-in-PT2 energy (folded)
     # E_emb = E(MRDSRG_folded) + E(Corr)
+
+def df_embedding_driver(state, state_weights_map, scf_info, ref_wfn, mo_space_info, options):
+    E = 0.0
+    return E
 
 def forte_sr_downfolding(state_weights_map, scf_info, options, ints, mo_space_info):
 
@@ -562,7 +587,8 @@ def run_forte(name, **kwargs):
     start = timeit.timeit()
 
     # Make an integral object
-    ints = forte.make_forte_integrals(ref_wfn, options, mo_space_info)
+    if job_type != 'ADV_EMBEDDING' and job_type != 'DF_EMBEDDING':
+        ints = forte.make_forte_integrals(ref_wfn, options, mo_space_info)
 
     # Rotate orbitals before computation
     orb_type = options.get_str("ORBITAL_TYPE")
@@ -583,7 +609,9 @@ def run_forte(name, **kwargs):
         forte.forte_options.update_psi_options(options)
         energy = forte_sr_downfolding(state_weights_map, scf_info, forte.forte_options, ints, mo_space_info)
     elif (job_type == 'ADV_EMBEDDING'):
-        energy_df = adv_embedding_driver(state, state_weights_map, scf_info, ref_wfn, mo_space_info, options, ints)
+        energy_df = adv_embedding_driver(state, state_weights_map, scf_info, ref_wfn, mo_space_info, options)
+    elif (job_type == 'DF_EMBEDDING'):
+        energy_dfdf = df_embedding_driver(state, state_weights_map, scf_info, ref_wfn, mo_space_info, options)
     else:
         energy = forte.forte_old_methods(ref_wfn, options, ints, mo_space_info)
 

@@ -616,6 +616,13 @@ def register_integral_options(forte_options):
         "- CONVENTIONAL Conventional two-electron integrals"
         "- DF Density fitted two-electron integrals"
         "- CHOLESKY Cholesky decomposed two-electron integrals")
+    forte_options.add_str(
+        "INT_TYPE_ENV", "CONVENTIONAL",
+        ["CONVENTIONAL", "DF", "CHOLESKY", "DISKDF", "DISTDF", "OWNINTEGRALS"],
+        "The integral used for ASET environment"
+        "- CONVENTIONAL Conventional two-electron integrals"
+        "- DF Density fitted two-electron integrals"
+        "- CHOLESKY Cholesky decomposed two-electron integrals")
     forte_options.add_double(
         "INTEGRAL_SCREENING", 1.0e-12,
         "The screening threshold for JK builds and DF libraries")

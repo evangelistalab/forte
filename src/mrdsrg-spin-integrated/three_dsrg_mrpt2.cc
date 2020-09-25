@@ -115,7 +115,7 @@ THREE_DSRG_MRPT2::THREE_DSRG_MRPT2(RDMs rdms, std::shared_ptr<SCFInfo> scf_info,
         BTF_->print_memory_info();
     }
 
-    // printf("\n P%d about to enter startup", my_proc);
+    printf("\n P%d about to enter startup", my_proc);
     // GA_Sync();
     startup();
     if (my_proc == 0)
@@ -134,7 +134,7 @@ void THREE_DSRG_MRPT2::startup() {
 
     integral_type_ = ints_->integral_type();
     // GA_Sync();
-    // printf("\n P%d integral_type", my_proc);
+    printf("\n P%d integral_type", my_proc);
 
     ref_type_ = foptions_->get_str("REFERENCE");
     detail_time_ = foptions_->get_bool("THREE_MRPT2_TIMINGS");
@@ -174,18 +174,24 @@ void THREE_DSRG_MRPT2::startup() {
                                             "Change options in input.dat"));
     }
 
+    printf("\n debug flag #1");
+
     // These two blocks of functions create a Blocked tensor
     // The block labels can be found in master_dsrg.cc
     std::vector<std::string> hhpp_no_cv = BTF_->generate_indices("cav", "hhpp");
     no_hhpp_ = hhpp_no_cv;
 
+    printf("\n debug flag #2");
+
     if (my_proc == 0)
         nthree_ = ints_->nthree();
+
+    printf("\n debug flag #3");
 
 //    local_timer naux_bcast;
 #ifdef HAVE_MPI
     MPI_Bcast(&nthree_, 1, MPI_INT, 0, MPI_COMM_WORLD);
-// printf("\n P%d took %8.8f s to broadcast %d size", my_proc, naux_bcast.get(),
+//  printf("\n P%d took %8.8f s to broadcast %d size", my_proc, naux_bcast.get(),
 // nthree_);
 #endif
 
@@ -207,6 +213,8 @@ void THREE_DSRG_MRPT2::startup() {
         F_["PQ"] = Fock_["PQ"];
         Fa_ = Fdiag_a_;
         Fb_ = Fdiag_b_;
+
+        printf("\n debug flag #4.1");
 
         if (print_ > 1) {
             Gamma1_.print(stdout);
@@ -256,6 +264,8 @@ void THREE_DSRG_MRPT2::startup() {
             V_ = BTF_->build(tensor_type_, "V_", BTF_->spin_cases_avoid(list_of_pphh_V, 1));
             T2_ = BTF_->build(tensor_type_, "T2 Amplitudes", BTF_->spin_cases_avoid(no_hhpp_, 1));
             ThreeIntegral_ = BTF_->build(tensor_type_, "ThreeInt", {"Lph", "LPH"});
+
+            printf("\n debug flag #4.2");
 
             std::vector<std::string> ThreeInt_block = ThreeIntegral_.block_labels();
 
