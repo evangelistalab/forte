@@ -160,7 +160,7 @@ def forte_driver(state_weights_map, scf_info, options, ints, mo_space_info):
             ints_dressed = dsrg.compute_Heff_actv()
 
             if active_space_solver_type == 'EXTERNAL':
-                write_external_active_space_file(ints_dressed, state_map, "file_dsrg.json")
+                write_external_active_space_file(ints_dressed, state_map, "dsrg_ints.json")
                 print('External solver wrote DSRG dressed integrals to disk')
                 psi4.core.print_out('External solver wrote DSRG dressed integrals to disk')
                 exit()
