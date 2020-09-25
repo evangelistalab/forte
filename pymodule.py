@@ -593,6 +593,30 @@ def make_ints_from_fcidump(fcidump, options, mo_space_info):
                                   fcidump['hcore'].flatten(), eri_aa.flatten(),
                                   eri_ab.flatten(), eri_bb.flatten())
 
+def write_fcidump(options, state_info, mo_space_info, ints):
+    ### THIS FUNCTION IS INCOMPLETE!!! ###
+    filename = options.get_str('FCIDUMP_FILE')
+    psi4.core.print_out(
+        f'\n  Writing FCIDUMP information to file {filename}')
+
+    # Generate FCIDUMP header
+    header = '&FCI\n'
+    header += 'NORB={:d},\n'.format(ints.ncmo())
+    header += 'NELEC={:d},\n'.format(state_info.na() + state_info.nb())
+    header += 'MS2={:d},\n'.format(state_info.twice_ms())
+    header += 'UHF=.FALSE.,\n'
+    orbsym = ''
+    mo_space_info.symmetry("ALL")
+    for h in range(mo_space_info.n()):
+        for n in range(frzcpi[h], frzcpi[h] + active_mopi[h]):
+            orbsym += '{:d},'.format(irrep_map[h])
+    header += 'ORBSYM={}\n'.format(orbsym)
+    header += 'ISYM={:d},\n'.format(irrep_map[wfn_irrep])
+    if write_pntgrp:
+        header += 'PNTGRP={},\n'.format(symm.upper())
+    header += '&END\n'
+    with open(fname, 'w') as intdump:
+        intdump.write(header)
 
 def run_forte(name, **kwargs):
     r"""Function encoding sequence of PSI module and plugin calls so that
