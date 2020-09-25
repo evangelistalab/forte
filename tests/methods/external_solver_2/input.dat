@@ -17,8 +17,8 @@ set forte {
 # active_space_solver fci
 # correlation_solver dsrg-mrpt2
 # relax_ref once
-# active [1,0,0,0,0,1,0,0]
-# restricted_docc [0,0,0,0,0,0,0,0]
+  active [1,0,0,0,0,1,0,0]
+  restricted_docc [0,0,0,0,0,0,0,0]
 }
 
 #energy('scf')
