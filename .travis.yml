@@ -23,9 +23,7 @@ install:
   - export PATH="$HOME/miniconda/envs/tenv/bin:$PATH"
   - export LD_LIBRARY_PATH="$HOME/miniconda/envs/tenv/lib:$LD_LIBRARY_PATH"
   - export MKLROOT=${HOME}/miniconda/envs/tenv
-  - ls ${HOME}/miniconda/envs/tenv/lib
-  - which cmake
-  - cmake --version
+  - conda uninstall ambit
 
 before_script:
   - python --version
