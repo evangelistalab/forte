@@ -509,6 +509,76 @@ void DSRG_MRPT2::set_kappa() {
         Kappa.block("ACAA")("ZMUV") += 0.250 * T2_.block("aCaA")("wMxY") * rdms_.L3abb()("xYZwUV");
         Kappa.block("aCaA")("zMuV") += 0.125 * T2_.block("ACAA")("WMXY") * rdms_.L3abb()("zXYuVW");
         Kappa.block("aCaA")("zMuV") += 0.250 * T2_.block("aCaA")("wMxY") * rdms_.L3aab()("xzYuwV");
+
+
+
+        // for test
+        double eee = 0.0;
+        eee += 0.25 * V_.block("aaca")("uvmz") * T2_.block("caaa")("mwxy") * rdms_.g3aaa()("xyzuvw");
+        eee += 0.25 * V_.block("AACA")("UVMZ") * T2_.block("CAAA")("MWXY") * rdms_.g3bbb()("XYZUVW");
+        eee -= 0.50 * V_.block("aaca")("uvmy") * T2_.block("cAaA")("mWxZ") * rdms_.g3aab()("xyZuvW"); 
+        eee -= 0.50 * V_.block("aAcA")("uWmZ") * T2_.block("caaa")("mvxy") * rdms_.g3aab()("xyZuvW"); 
+        eee += 1.00 * V_.block("aAaC")("uWyM") * T2_.block("aCaA")("vMxZ") * rdms_.g3aab()("xyZuvW"); 
+        eee -= 0.50 * V_.block("AACA")("VWMZ") * T2_.block("aCaA")("uMxY") * rdms_.g3abb()("xYZuVW");
+        eee -= 0.50 * V_.block("aAaC")("uVxM") * T2_.block("CAAA")("MWYZ") * rdms_.g3abb()("xYZuVW");
+        eee += 1.00 * V_.block("aAcA")("uVmZ") * T2_.block("cAaA")("mWxY") * rdms_.g3abb()("xYZuVW");
+
+        eee -= 0.5 * V_["uvmz"] * T2_["mwxy"] * Gamma1["uz"] * Gamma2["xyvw"];
+        eee -= 1.0 * V_["uvmz"] * T2_["mWxY"] * Gamma1["uz"] * Gamma2["xYvW"];
+        eee += 0.5 * V_["uVzM"] * T2_["MWXY"] * Gamma1["uz"] * Gamma2["XYVW"];
+        eee += 1.0 * V_["uVzM"] * T2_["wMxY"] * Gamma1["uz"] * Gamma2["xYwV"];
+        eee -= 0.5 * V_["UVMZ"] * T2_["MWXY"] * Gamma1["UZ"] * Gamma2["XYVW"];
+        eee -= 1.0 * V_["UVMZ"] * T2_["wMxY"] * Gamma1["UZ"] * Gamma2["xYwV"];  
+        eee += 0.5 * V_["vUmZ"] * T2_["mwxy"] * Gamma1["UZ"] * Gamma2["xyvw"];
+        eee += 1.0 * V_["vUmZ"] * T2_["mWxY"] * Gamma1["UZ"] * Gamma2["xYvW"];
+
+        eee -= 0.25 * V_["uvmz"] * T2_["mwxy"] * Gamma1["wz"] * Gamma2["xyuv"];
+        eee -= 1.00 * V_["uVzM"] * T2_["wMxY"] * Gamma1["wz"] * Gamma2["xYuV"];
+        eee -= 0.25 * V_["UVMZ"] * T2_["MWXY"] * Gamma1["WZ"] * Gamma2["XYUV"];
+        eee -= 1.00 * V_["uVmZ"] * T2_["mWxY"] * Gamma1["WZ"] * Gamma2["xYuV"];
+
+        eee += V_["uvmz"] * T2_["mwxy"] * Gamma1["xu"] * Gamma2["vwzy"];
+        eee += V_["uVmZ"] * T2_["mwxy"] * Gamma1["xu"] * Gamma2["wVyZ"];
+        eee += V_["uvmz"] * T2_["mWxY"] * Gamma1["xu"] * Gamma2["vWzY"];
+        eee += V_["uVmZ"] * T2_["mWxY"] * Gamma1["xu"] * Gamma2["VWZY"];
+        eee -= V_["uVzM"] * T2_["wMxY"] * Gamma1["xu"] * Gamma2["wVzY"];
+
+        eee += V_["UVMZ"] * T2_["MWXY"] * Gamma1["XU"] * Gamma2["VWZY"];
+        eee += V_["vUzM"] * T2_["MWXY"] * Gamma1["XU"] * Gamma2["vWzY"];
+        eee += V_["UVMZ"] * T2_["wMyX"] * Gamma1["XU"] * Gamma2["wVyZ"];
+        eee += V_["vUzM"] * T2_["wMyX"] * Gamma1["XU"] * Gamma2["vwzy"];
+        eee -= V_["vUmZ"] * T2_["mWyX"] * Gamma1["XU"] * Gamma2["vWyZ"];
+
+
+        eee += 0.5 * V_["uvmz"] * T2_["mwxy"] * Gamma1["xw"] * Gamma2["uvzy"];
+        eee -= 1.0 * V_["uVmZ"] * T2_["mwxy"] * Gamma1["xw"] * Gamma2["uVyZ"];
+        eee -= 0.5 * V_["UVMZ"] * T2_["wMxY"] * Gamma1["xw"] * Gamma2["UVZY"];
+        eee += 1.0 * V_["uVzM"] * T2_["wMxY"] * Gamma1["xw"] * Gamma2["uVzY"];
+
+        eee -= 0.5 * V_["uvmz"] * T2_["mWyX"] * Gamma1["XW"] * Gamma2["uvzy"];
+        eee += 1.0 * V_["uVmZ"] * T2_["mWyX"] * Gamma1["XW"] * Gamma2["uVyZ"];
+        eee += 0.5 * V_["UVMZ"] * T2_["MWXY"] * Gamma1["XW"] * Gamma2["UVZY"];
+        eee -= 1.0 * V_["uVzM"] * T2_["MWXY"] * Gamma1["XW"] * Gamma2["uVzY"];
+
+
+        eee += 2 * V_["uvmz"] * T2_["mwxy"] * Gamma1["uz"] * Gamma1["xv"] * Gamma1["yw"];
+        eee += 2 * V_["uvmz"] * T2_["mWxY"] * Gamma1["uz"] * Gamma1["xv"] * Gamma1["YW"];
+        eee -= 2 * V_["vUmZ"] * T2_["mwxy"] * Gamma1["UZ"] * Gamma1["xv"] * Gamma1["yw"];
+        eee -= 2 * V_["vUmZ"] * T2_["mWxY"] * Gamma1["UZ"] * Gamma1["xv"] * Gamma1["YW"];
+
+        eee += 2 * V_["UVMZ"] * T2_["MWXY"] * Gamma1["UZ"] * Gamma1["XV"] * Gamma1["YW"];
+        eee += 2 * V_["UVMZ"] * T2_["wMyX"] * Gamma1["UZ"] * Gamma1["XV"] * Gamma1["yw"];
+        eee -= 2 * V_["uVzM"] * T2_["MWXY"] * Gamma1["uz"] * Gamma1["XV"] * Gamma1["YW"];
+        eee -= 2 * V_["uVzM"] * T2_["wMyX"] * Gamma1["uz"] * Gamma1["XV"] * Gamma1["yw"];
+
+        eee += V_["uvmz"] * T2_["mwxy"] * Gamma1["wz"] * Gamma1["xu"] * Gamma1["yv"];
+        eee += 2.0 * V_["uVmZ"] * T2_["mWxY"] * Gamma1["WZ"] * Gamma1["xu"] * Gamma1["YV"];
+        eee += V_["UVMZ"] * T2_["MWXY"] * Gamma1["WZ"] * Gamma1["XU"] * Gamma1["YV"];
+        eee += 2.0 * V_["uVzM"] * T2_["wMxY"] * Gamma1["wz"] * Gamma1["xu"] * Gamma1["YV"];
+       
+
+        std::cout << "tested energy (EEE) = " << std::setprecision(12) << eee << std::endl;
+
     }
 
     outfile->Printf("Done");
@@ -522,7 +592,7 @@ void DSRG_MRPT2::set_z() {
     outfile->Printf("Done");
     // LAPACK solver
     solve_z();
-    Z.print();
+    // Z.print();
 }
 
 void DSRG_MRPT2::set_w() {
@@ -1743,6 +1813,10 @@ void DSRG_MRPT2::solve_z() {
     auto cc2aa_ = cc.cc2aa();
     auto cc2bb_ = cc.cc2bb();
     auto cc2ab_ = cc.cc2ab();
+    auto cc3aaa_ = cc.cc3aaa();
+    auto cc3bbb_ = cc.cc3bbb();
+    auto cc3aab_ = cc.cc3aab();
+    auto cc3abb_ = cc.cc3abb();
 
 
     auto ci_vc = ambit::Tensor::build(ambit::CoreTensor, "ci contribution to z{vc}", {ndets, nvirt_, ncore_});
@@ -2150,6 +2224,7 @@ void DSRG_MRPT2::solve_z() {
     auto dlamb_bb = ambit::Tensor::build(ambit::CoreTensor, "derivatives of Lambda2_ w.r.t. C_K beta-beta", {ndets, na_, na_, na_, na_});
     auto dlamb_ab = ambit::Tensor::build(ambit::CoreTensor, "derivatives of Lambda2_ w.r.t. C_K alpha-beta", {ndets, na_, na_, na_, na_});
 
+    // alpha-alpha
     dlamb_aa("Kxyuv") += cc2aa_("KJxyuv") * ci("J");
     dlamb_aa("Kxyuv") += cc2aa_("JKxyuv") * ci("J");
     dlamb_aa("Kxyuv") -= cc1a_("KJxu") * ci("J") * Gamma1.block("aa")("yv");
@@ -2161,6 +2236,7 @@ void DSRG_MRPT2::solve_z() {
     dlamb_aa("Kxyuv") += cc1a_("KJyu") * ci("J") * Gamma1.block("aa")("xv");
     dlamb_aa("Kxyuv") += cc1a_("KJuy") * ci("J") * Gamma1.block("aa")("xv");
 
+    // beta-beta
     dlamb_bb("KXYUV") += cc2bb_("KJXYUV") * ci("J");
     dlamb_bb("KXYUV") += cc2bb_("JKXYUV") * ci("J");
     dlamb_bb("KXYUV") -= cc1b_("KJXU") * ci("J") * Gamma1.block("AA")("YV");
@@ -2172,12 +2248,144 @@ void DSRG_MRPT2::solve_z() {
     dlamb_bb("KXYUV") += cc1b_("KJYU") * ci("J") * Gamma1.block("AA")("XV");
     dlamb_bb("KXYUV") += cc1b_("KJUY") * ci("J") * Gamma1.block("AA")("XV");
 
+    // alpha-beta
     dlamb_ab("KxYuV") += cc2ab_("KJxYuV") * ci("J");
     dlamb_ab("KxYuV") += cc2ab_("JKxYuV") * ci("J");
     dlamb_ab("KxYuV") -= cc1a_("KJxu") * ci("J") * Gamma1.block("AA")("YV");
     dlamb_ab("KxYuV") -= cc1a_("KJux") * ci("J") * Gamma1.block("AA")("YV");
     dlamb_ab("KxYuV") -= cc1b_("KJYV") * ci("J") * Gamma1.block("aa")("xu");
     dlamb_ab("KxYuV") -= cc1b_("KJVY") * ci("J") * Gamma1.block("aa")("xu");
+
+    auto dlamb3_aaa = ambit::Tensor::build(ambit::CoreTensor, "derivatives of Lambda3_ w.r.t. C_K alpha-alpha-alpha", {ndets, na_, na_, na_, na_, na_, na_});
+    auto dlamb3_bbb = ambit::Tensor::build(ambit::CoreTensor, "derivatives of Lambda3_ w.r.t. C_K beta-beta-beta", {ndets, na_, na_, na_, na_, na_, na_});
+    auto dlamb3_aab = ambit::Tensor::build(ambit::CoreTensor, "derivatives of Lambda3_ w.r.t. C_K alpha-alpha-beta", {ndets, na_, na_, na_, na_, na_, na_});
+    auto dlamb3_abb = ambit::Tensor::build(ambit::CoreTensor, "derivatives of Lambda3_ w.r.t. C_K alpha-beta-beta", {ndets, na_, na_, na_, na_, na_, na_});
+
+    // alpha-alpha-alpha
+    dlamb3_aaa("Kxyzuvw") += cc3aaa_("KJxyzuvw") * ci("J");
+    dlamb3_aaa("Kxyzuvw") += cc3aaa_("JKxyzuvw") * ci("J");
+    dlamb3_aaa("Kxyzuvw") -= 2.0 * cc1a_("KJuz") * Gamma2.block("aaaa")("xyvw") * ci("J");
+    dlamb3_aaa("Kxyzuvw") -= 2.0 * cc1a_("JKuz") * Gamma2.block("aaaa")("xyvw") * ci("J");
+    dlamb3_aaa("Kxyzuvw") -= 2.0 * cc2aa_("KJxyvw") * Gamma1.block("aa")("uz") * ci("J");
+    dlamb3_aaa("Kxyzuvw") -= 2.0 * cc2aa_("JKxyvw") * Gamma1.block("aa")("uz") * ci("J");
+    dlamb3_aaa("Kxyzuvw") -= cc1a_("KJwz") * Gamma2.block("aaaa")("xyuv") * ci("J");
+    dlamb3_aaa("Kxyzuvw") -= cc1a_("JKwz") * Gamma2.block("aaaa")("xyuv") * ci("J");
+    dlamb3_aaa("Kxyzuvw") -= cc2aa_("KJxyuv") * Gamma1.block("aa")("wz") * ci("J");
+    dlamb3_aaa("Kxyzuvw") -= cc2aa_("JKxyuv") * Gamma1.block("aa")("wz") * ci("J");
+    dlamb3_aaa("Kxyzuvw") += 4.0 * cc1a_("KJxu") * Gamma2.block("aaaa")("vwzy") * ci("J");
+    dlamb3_aaa("Kxyzuvw") += 4.0 * cc1a_("JKxu") * Gamma2.block("aaaa")("vwzy") * ci("J");
+    dlamb3_aaa("Kxyzuvw") += 4.0 * cc2aa_("KJvwzy") * Gamma1.block("aa")("xu") * ci("J");
+    dlamb3_aaa("Kxyzuvw") += 4.0 * cc2aa_("JKvwzy") * Gamma1.block("aa")("xu") * ci("J");
+    dlamb3_aaa("Kxyzuvw") += 2.0 * cc1a_("KJxw") * Gamma2.block("aaaa")("uvzy") * ci("J");
+    dlamb3_aaa("Kxyzuvw") += 2.0 * cc1a_("JKxw") * Gamma2.block("aaaa")("uvzy") * ci("J");
+    dlamb3_aaa("Kxyzuvw") += 2.0 * cc2aa_("KJuvzy") * Gamma1.block("aa")("xw") * ci("J");
+    dlamb3_aaa("Kxyzuvw") += 2.0 * cc2aa_("JKuvzy") * Gamma1.block("aa")("xw") * ci("J");
+    dlamb3_aaa("Kxyzuvw") += 8.0 * cc1a_("KJuz") * Gamma1.block("aa")("xv")* Gamma1.block("aa")("yw") * ci("J");
+    dlamb3_aaa("Kxyzuvw") += 8.0 * cc1a_("JKuz") * Gamma1.block("aa")("xv")* Gamma1.block("aa")("yw") * ci("J");
+    dlamb3_aaa("Kxyzuvw") += 8.0 * cc1a_("KJxv") * Gamma1.block("aa")("uz")* Gamma1.block("aa")("yw") * ci("J");
+    dlamb3_aaa("Kxyzuvw") += 8.0 * cc1a_("JKxv") * Gamma1.block("aa")("uz")* Gamma1.block("aa")("yw") * ci("J");
+    dlamb3_aaa("Kxyzuvw") += 8.0 * cc1a_("KJyw") * Gamma1.block("aa")("uz")* Gamma1.block("aa")("xv") * ci("J");
+    dlamb3_aaa("Kxyzuvw") += 8.0 * cc1a_("JKyw") * Gamma1.block("aa")("uz")* Gamma1.block("aa")("xv") * ci("J");
+    dlamb3_aaa("Kxyzuvw") += 4.0 * cc1a_("KJwz") * Gamma1.block("aa")("xu")* Gamma1.block("aa")("yv") * ci("J");
+    dlamb3_aaa("Kxyzuvw") += 4.0 * cc1a_("JKwz") * Gamma1.block("aa")("xu")* Gamma1.block("aa")("yv") * ci("J");
+    dlamb3_aaa("Kxyzuvw") += 4.0 * cc1a_("KJxu") * Gamma1.block("aa")("wz")* Gamma1.block("aa")("yv") * ci("J");
+    dlamb3_aaa("Kxyzuvw") += 4.0 * cc1a_("JKxu") * Gamma1.block("aa")("wz")* Gamma1.block("aa")("yv") * ci("J");
+    dlamb3_aaa("Kxyzuvw") += 4.0 * cc1a_("KJyv") * Gamma1.block("aa")("wz")* Gamma1.block("aa")("xu") * ci("J");
+    dlamb3_aaa("Kxyzuvw") += 4.0 * cc1a_("JKyv") * Gamma1.block("aa")("wz")* Gamma1.block("aa")("xu") * ci("J");
+
+    // beta-beta-beta
+    dlamb3_bbb("KXYZUVW") += cc3bbb_("KJXYZUVW") * ci("J");
+    dlamb3_bbb("KXYZUVW") += cc3bbb_("JKXYZUVW") * ci("J");
+    dlamb3_bbb("KXYZUVW") -= 2.0 * cc1b_("KJUZ") * Gamma2.block("AAAA")("XYVW") * ci("J");
+    dlamb3_bbb("KXYZUVW") -= 2.0 * cc1b_("JKUZ") * Gamma2.block("AAAA")("XYVW") * ci("J");
+    dlamb3_bbb("KXYZUVW") -= 2.0 * cc2bb_("KJXYVW") * Gamma1.block("AA")("UZ") * ci("J");
+    dlamb3_bbb("KXYZUVW") -= 2.0 * cc2bb_("JKXYVW") * Gamma1.block("AA")("UZ") * ci("J");
+    dlamb3_bbb("KXYZUVW") -= cc1b_("KJWZ") * Gamma2.block("AAAA")("XYUV") * ci("J");
+    dlamb3_bbb("KXYZUVW") -= cc1b_("JKWZ") * Gamma2.block("AAAA")("XYUV") * ci("J");
+    dlamb3_bbb("KXYZUVW") -= cc2bb_("KJXYUV") * Gamma1.block("AA")("WZ") * ci("J");
+    dlamb3_bbb("KXYZUVW") -= cc2bb_("JKXYUV") * Gamma1.block("AA")("WZ") * ci("J");
+    dlamb3_bbb("KXYZUVW") += 4.0 * cc1b_("KJXU") * Gamma2.block("AAAA")("VWZY") * ci("J");
+    dlamb3_bbb("KXYZUVW") += 4.0 * cc1b_("JKXU") * Gamma2.block("AAAA")("VWZY") * ci("J");
+    dlamb3_bbb("KXYZUVW") += 4.0 * cc2bb_("KJVWZY") * Gamma1.block("AA")("XU") * ci("J");
+    dlamb3_bbb("KXYZUVW") += 4.0 * cc2bb_("JKVWZY") * Gamma1.block("AA")("XU") * ci("J");
+    dlamb3_bbb("KXYZUVW") += 2.0 * cc1b_("KJXW") * Gamma2.block("AAAA")("UVZY") * ci("J");
+    dlamb3_bbb("KXYZUVW") += 2.0 * cc1b_("JKXW") * Gamma2.block("AAAA")("UVZY") * ci("J");
+    dlamb3_bbb("KXYZUVW") += 2.0 * cc2bb_("KJUVZY") * Gamma1.block("AA")("XW") * ci("J");
+    dlamb3_bbb("KXYZUVW") += 2.0 * cc2bb_("JKUVZY") * Gamma1.block("AA")("XW") * ci("J");
+    dlamb3_bbb("KXYZUVW") += 8.0 * cc1b_("KJUZ") * Gamma1.block("AA")("XV")* Gamma1.block("AA")("YW") * ci("J");
+    dlamb3_bbb("KXYZUVW") += 8.0 * cc1b_("JKUZ") * Gamma1.block("AA")("XV")* Gamma1.block("AA")("YW") * ci("J");
+    dlamb3_bbb("KXYZUVW") += 8.0 * cc1b_("KJXV") * Gamma1.block("AA")("UZ")* Gamma1.block("AA")("YW") * ci("J");
+    dlamb3_bbb("KXYZUVW") += 8.0 * cc1b_("JKXV") * Gamma1.block("AA")("UZ")* Gamma1.block("AA")("YW") * ci("J");
+    dlamb3_bbb("KXYZUVW") += 8.0 * cc1b_("KJYW") * Gamma1.block("AA")("UZ")* Gamma1.block("AA")("XV") * ci("J");
+    dlamb3_bbb("KXYZUVW") += 8.0 * cc1b_("JKYW") * Gamma1.block("AA")("UZ")* Gamma1.block("AA")("XV") * ci("J");
+    dlamb3_bbb("KXYZUVW") += 4.0 * cc1b_("KJWZ") * Gamma1.block("AA")("XU")* Gamma1.block("AA")("YV") * ci("J");
+    dlamb3_bbb("KXYZUVW") += 4.0 * cc1b_("JKWZ") * Gamma1.block("AA")("XU")* Gamma1.block("AA")("YV") * ci("J");
+    dlamb3_bbb("KXYZUVW") += 4.0 * cc1b_("KJXU") * Gamma1.block("AA")("WZ")* Gamma1.block("AA")("YV") * ci("J");
+    dlamb3_bbb("KXYZUVW") += 4.0 * cc1b_("JKXU") * Gamma1.block("AA")("WZ")* Gamma1.block("AA")("YV") * ci("J");
+    dlamb3_bbb("KXYZUVW") += 4.0 * cc1b_("KJYV") * Gamma1.block("AA")("WZ")* Gamma1.block("AA")("XU") * ci("J");
+    dlamb3_bbb("KXYZUVW") += 4.0 * cc1b_("JKYV") * Gamma1.block("AA")("WZ")* Gamma1.block("AA")("XU") * ci("J");
+
+    // alpha-alpha-beta
+    dlamb3_aab("KxyZuvW") += cc3aab_("KJxyZuvW") * ci("J");
+    dlamb3_aab("KxyZuvW") += cc3aab_("JKxyZuvW") * ci("J");
+    dlamb3_aab("KxyZuvW") -= cc1a_("KJxu") * Lambda2_.block("aAaA")("yZvW") * ci("J");
+    dlamb3_aab("KxyZuvW") -= cc1a_("JKxu") * Lambda2_.block("aAaA")("yZvW") * ci("J");
+    dlamb3_aab("KxyZuvW") -= Gamma1.block("aa")("xu") * dlamb_ab("KyZvW");
+    dlamb3_aab("KxyZuvW") += cc1a_("KJxv") * Lambda2_.block("aAaA")("yZuW") * ci("J");
+    dlamb3_aab("KxyZuvW") += cc1a_("JKxv") * Lambda2_.block("aAaA")("yZuW") * ci("J");
+    dlamb3_aab("KxyZuvW") += Gamma1.block("aa")("xv") * dlamb_ab("KyZuW");
+    dlamb3_aab("KxyZuvW") += cc1a_("KJyu") * Lambda2_.block("aAaA")("xZvW") * ci("J");
+    dlamb3_aab("KxyZuvW") += cc1a_("JKyu") * Lambda2_.block("aAaA")("xZvW") * ci("J");
+    dlamb3_aab("KxyZuvW") += Gamma1.block("aa")("yu") * dlamb_ab("KxZvW");
+    dlamb3_aab("KxyZuvW") -= cc1a_("KJyv") * Lambda2_.block("aAaA")("xZuW") * ci("J");
+    dlamb3_aab("KxyZuvW") -= cc1a_("JKyv") * Lambda2_.block("aAaA")("xZuW") * ci("J");
+    dlamb3_aab("KxyZuvW") -= Gamma1.block("aa")("yv") * dlamb_ab("KxZuW");
+    dlamb3_aab("KxyZuvW") -= cc1b_("KJZW") * Lambda2_.block("aaaa")("xyuv") * ci("J");
+    dlamb3_aab("KxyZuvW") -= cc1b_("JKZW") * Lambda2_.block("aaaa")("xyuv") * ci("J");
+    dlamb3_aab("KxyZuvW") -= Gamma1.block("AA")("ZW") * dlamb_aa("Kxyuv");
+    dlamb3_aab("KxyZuvW") -= cc1a_("KJxu") * Gamma1.block("aa")("yv") * Gamma1.block("AA")("ZW") * ci("J");
+    dlamb3_aab("KxyZuvW") -= cc1a_("JKxu") * Gamma1.block("aa")("yv") * Gamma1.block("AA")("ZW") * ci("J");
+    dlamb3_aab("KxyZuvW") -= cc1a_("KJyv") * Gamma1.block("aa")("xu") * Gamma1.block("AA")("ZW") * ci("J");
+    dlamb3_aab("KxyZuvW") -= cc1a_("JKyv") * Gamma1.block("aa")("xu") * Gamma1.block("AA")("ZW") * ci("J");
+    dlamb3_aab("KxyZuvW") -= cc1b_("KJZW") * Gamma1.block("aa")("yv") * Gamma1.block("aa")("xu") * ci("J");
+    dlamb3_aab("KxyZuvW") -= cc1b_("JKZW") * Gamma1.block("aa")("yv") * Gamma1.block("aa")("xu") * ci("J");
+    dlamb3_aab("KxyZuvW") += cc1a_("KJxv") * Gamma1.block("aa")("yu") * Gamma1.block("AA")("ZW") * ci("J");
+    dlamb3_aab("KxyZuvW") += cc1a_("JKxv") * Gamma1.block("aa")("yu") * Gamma1.block("AA")("ZW") * ci("J");
+    dlamb3_aab("KxyZuvW") += cc1a_("KJyu") * Gamma1.block("aa")("xv") * Gamma1.block("AA")("ZW") * ci("J");
+    dlamb3_aab("KxyZuvW") += cc1a_("JKyu") * Gamma1.block("aa")("xv") * Gamma1.block("AA")("ZW") * ci("J");
+    dlamb3_aab("KxyZuvW") += cc1b_("KJZW") * Gamma1.block("aa")("yu") * Gamma1.block("aa")("xv") * ci("J");
+    dlamb3_aab("KxyZuvW") += cc1b_("JKZW") * Gamma1.block("aa")("yu") * Gamma1.block("aa")("xv") * ci("J");
+
+    // alpha-beta-beta
+    dlamb3_abb("KxYZuVW") += cc3abb_("KJxYZuVW") * ci("J");
+    dlamb3_abb("KxYZuVW") += cc3abb_("JKxYZuVW") * ci("J");
+    dlamb3_abb("KxYZuVW") -= cc1a_("KJxu") * Lambda2_.block("AAAA")("YZVW") * ci("J");
+    dlamb3_abb("KxYZuVW") -= cc1a_("JKxu") * Lambda2_.block("AAAA")("YZVW") * ci("J");
+    dlamb3_abb("KxYZuVW") -= Gamma1.block("aa")("xu") * dlamb_bb("KYZVW");
+    dlamb3_abb("KxYZuVW") -= cc1b_("KJYV") * Lambda2_.block("aAaA")("xZuW") * ci("J");
+    dlamb3_abb("KxYZuVW") -= cc1b_("JKYV") * Lambda2_.block("aAaA")("xZuW") * ci("J");
+    dlamb3_abb("KxYZuVW") -= Gamma1.block("AA")("YV") * dlamb_ab("KxZuW");
+    dlamb3_abb("KxYZuVW") += cc1b_("KJYW") * Lambda2_.block("aAaA")("xZuV") * ci("J");
+    dlamb3_abb("KxYZuVW") += cc1b_("JKYW") * Lambda2_.block("aAaA")("xZuV") * ci("J");
+    dlamb3_abb("KxYZuVW") += Gamma1.block("AA")("YW") * dlamb_ab("KxZuV");
+    dlamb3_abb("KxYZuVW") += cc1b_("KJZV") * Lambda2_.block("aAaA")("xYuW") * ci("J");
+    dlamb3_abb("KxYZuVW") += cc1b_("JKZV") * Lambda2_.block("aAaA")("xYuW") * ci("J");
+    dlamb3_abb("KxYZuVW") += Gamma1.block("AA")("ZV") * dlamb_ab("KxYuW");
+    dlamb3_abb("KxYZuVW") -= cc1b_("KJZW") * Lambda2_.block("aAaA")("xYuV") * ci("J");
+    dlamb3_abb("KxYZuVW") -= cc1b_("JKZW") * Lambda2_.block("aAaA")("xYuV") * ci("J");
+    dlamb3_abb("KxYZuVW") -= Gamma1.block("AA")("ZW") * dlamb_ab("KxYuV");
+    dlamb3_abb("KxYZuVW") -= cc1a_("KJxu") * Gamma1.block("AA")("YV") * Gamma1.block("AA")("ZW") * ci("J");
+    dlamb3_abb("KxYZuVW") -= cc1a_("JKxu") * Gamma1.block("AA")("YV") * Gamma1.block("AA")("ZW") * ci("J");
+    dlamb3_abb("KxYZuVW") -= cc1b_("KJYV") * Gamma1.block("aa")("xu") * Gamma1.block("AA")("ZW") * ci("J");
+    dlamb3_abb("KxYZuVW") -= cc1b_("JKYV") * Gamma1.block("aa")("xu") * Gamma1.block("AA")("ZW") * ci("J");
+    dlamb3_abb("KxYZuVW") -= cc1b_("KJZW") * Gamma1.block("AA")("YV") * Gamma1.block("aa")("xu") * ci("J");
+    dlamb3_abb("KxYZuVW") -= cc1b_("JKZW") * Gamma1.block("AA")("YV") * Gamma1.block("aa")("xu") * ci("J");
+    dlamb3_abb("KxYZuVW") += cc1a_("KJxu") * Gamma1.block("AA")("ZV") * Gamma1.block("AA")("YW") * ci("J");
+    dlamb3_abb("KxYZuVW") += cc1a_("JKxu") * Gamma1.block("AA")("ZV") * Gamma1.block("AA")("YW") * ci("J");
+    dlamb3_abb("KxYZuVW") += cc1b_("KJZV") * Gamma1.block("aa")("xu") * Gamma1.block("AA")("YW") * ci("J");
+    dlamb3_abb("KxYZuVW") += cc1b_("JKZV") * Gamma1.block("aa")("xu") * Gamma1.block("AA")("YW") * ci("J");
+    dlamb3_abb("KxYZuVW") += cc1b_("KJYW") * Gamma1.block("AA")("ZV") * Gamma1.block("aa")("xu") * ci("J");
+    dlamb3_abb("KxYZuVW") += cc1b_("JKYW") * Gamma1.block("AA")("ZV") * Gamma1.block("aa")("xu") * ci("J");
 
     if (X1_TERM) {
         temp4["uvxy"] += 0.125 * V_["cdxy"] * T2_["uvab"] * Eta1["ac"] * Eta1["bd"];
@@ -2231,6 +2439,16 @@ void DSRG_MRPT2::solve_z() {
         temp4.zero();
     }
 
+    if (X4_TERM) {
+        b_ck("K") -= 0.25 * V_.block("aaca")("uvmz") * T2_.block("caaa")("mwxy") * dlamb3_aaa("Kxyzuvw");
+        b_ck("K") -= 0.25 * V_.block("AACA")("UVMZ") * T2_.block("CAAA")("MWXY") * dlamb3_bbb("KXYZUVW");
+        b_ck("K") += 0.50 * V_.block("aaca")("uvmy") * T2_.block("cAaA")("mWxZ") * dlamb3_aab("KxyZuvW"); 
+        b_ck("K") += 0.50 * V_.block("aAcA")("uWmZ") * T2_.block("caaa")("mvxy") * dlamb3_aab("KxyZuvW"); 
+        b_ck("K") -= 1.00 * V_.block("aAaC")("uWyM") * T2_.block("aCaA")("vMxZ") * dlamb3_aab("KxyZuvW"); 
+        b_ck("K") += 0.50 * V_.block("AACA")("VWMZ") * T2_.block("aCaA")("uMxY") * dlamb3_abb("KxYZuVW");
+        b_ck("K") += 0.50 * V_.block("aAaC")("uVxM") * T2_.block("CAAA")("MWYZ") * dlamb3_abb("KxYZuVW");
+        b_ck("K") -= 1.00 * V_.block("aAcA")("uVmZ") * T2_.block("cAaA")("mWxY") * dlamb3_abb("KxYZuVW");  
+    }
 
     // TODO: need to plug in alpha terms
     Alpha = 0.0;
@@ -2435,6 +2653,68 @@ void DSRG_MRPT2::solve_z() {
         Alpha += V_["VBJX"] * T2_["uIyA"] * Gamma1["JI"] * Eta1["AB"] * Gamma2["yXuV"];
     }
 
+    if (X4_TERM) {
+        Alpha += 0.25 * V_.block("aaca")("uvmz") * T2_.block("caaa")("mwxy") * rdms_.g3aaa()("xyzuvw");
+        Alpha += 0.25 * V_.block("AACA")("UVMZ") * T2_.block("CAAA")("MWXY") * rdms_.g3bbb()("XYZUVW");
+        Alpha -= 0.50 * V_.block("aaca")("uvmy") * T2_.block("cAaA")("mWxZ") * rdms_.g3aab()("xyZuvW"); 
+        Alpha -= 0.50 * V_.block("aAcA")("uWmZ") * T2_.block("caaa")("mvxy") * rdms_.g3aab()("xyZuvW"); 
+        Alpha += 1.00 * V_.block("aAaC")("uWyM") * T2_.block("aCaA")("vMxZ") * rdms_.g3aab()("xyZuvW"); 
+        Alpha -= 0.50 * V_.block("AACA")("VWMZ") * T2_.block("aCaA")("uMxY") * rdms_.g3abb()("xYZuVW");
+        Alpha -= 0.50 * V_.block("aAaC")("uVxM") * T2_.block("CAAA")("MWYZ") * rdms_.g3abb()("xYZuVW");
+        Alpha += 1.00 * V_.block("aAcA")("uVmZ") * T2_.block("cAaA")("mWxY") * rdms_.g3abb()("xYZuVW");
+
+        Alpha -= 1.0 * V_["uvmz"] * T2_["mwxy"] * Gamma1["uz"] * Gamma2["xyvw"];
+        Alpha -= 2.0 * V_["uvmz"] * T2_["mWxY"] * Gamma1["uz"] * Gamma2["xYvW"];
+        Alpha += 1.0 * V_["uVzM"] * T2_["MWXY"] * Gamma1["uz"] * Gamma2["XYVW"];
+        Alpha += 2.0 * V_["uVzM"] * T2_["wMxY"] * Gamma1["uz"] * Gamma2["xYwV"];
+        Alpha -= 1.0 * V_["UVMZ"] * T2_["MWXY"] * Gamma1["UZ"] * Gamma2["XYVW"];
+        Alpha -= 2.0 * V_["UVMZ"] * T2_["wMxY"] * Gamma1["UZ"] * Gamma2["xYwV"];  
+        Alpha += 1.0 * V_["vUmZ"] * T2_["mwxy"] * Gamma1["UZ"] * Gamma2["xyvw"];
+        Alpha += 2.0 * V_["vUmZ"] * T2_["mWxY"] * Gamma1["UZ"] * Gamma2["xYvW"];
+
+        Alpha -= 0.5 * V_["uvmz"] * T2_["mwxy"] * Gamma1["wz"] * Gamma2["xyuv"];
+        Alpha -= 2.0 * V_["uVzM"] * T2_["wMxY"] * Gamma1["wz"] * Gamma2["xYuV"];
+        Alpha -= 0.5 * V_["UVMZ"] * T2_["MWXY"] * Gamma1["WZ"] * Gamma2["XYUV"];
+        Alpha -= 2.0 * V_["uVmZ"] * T2_["mWxY"] * Gamma1["WZ"] * Gamma2["xYuV"];
+
+        Alpha += 2.0 * V_["uvmz"] * T2_["mwxy"] * Gamma1["xu"] * Gamma2["vwzy"];
+        Alpha += 2.0 * V_["uVmZ"] * T2_["mwxy"] * Gamma1["xu"] * Gamma2["wVyZ"];
+        Alpha += 2.0 * V_["uvmz"] * T2_["mWxY"] * Gamma1["xu"] * Gamma2["vWzY"];
+        Alpha += 2.0 * V_["uVmZ"] * T2_["mWxY"] * Gamma1["xu"] * Gamma2["VWZY"];
+        Alpha -= 2.0 * V_["uVzM"] * T2_["wMxY"] * Gamma1["xu"] * Gamma2["wVzY"];
+
+        Alpha += 2.0 * V_["UVMZ"] * T2_["MWXY"] * Gamma1["XU"] * Gamma2["VWZY"];
+        Alpha += 2.0 * V_["vUzM"] * T2_["MWXY"] * Gamma1["XU"] * Gamma2["vWzY"];
+        Alpha += 2.0 * V_["UVMZ"] * T2_["wMyX"] * Gamma1["XU"] * Gamma2["wVyZ"];
+        Alpha += 2.0 * V_["vUzM"] * T2_["wMyX"] * Gamma1["XU"] * Gamma2["vwzy"];
+        Alpha -= 2.0 * V_["vUmZ"] * T2_["mWyX"] * Gamma1["XU"] * Gamma2["vWyZ"];
+
+        Alpha += 1.0 * V_["uvmz"] * T2_["mwxy"] * Gamma1["xw"] * Gamma2["uvzy"];
+        Alpha -= 2.0 * V_["uVmZ"] * T2_["mwxy"] * Gamma1["xw"] * Gamma2["uVyZ"];
+        Alpha -= 1.0 * V_["UVMZ"] * T2_["wMxY"] * Gamma1["xw"] * Gamma2["UVZY"];
+        Alpha += 2.0 * V_["uVzM"] * T2_["wMxY"] * Gamma1["xw"] * Gamma2["uVzY"];
+
+        Alpha -= 1.0 * V_["uvmz"] * T2_["mWyX"] * Gamma1["XW"] * Gamma2["uvzy"];
+        Alpha += 2.0 * V_["uVmZ"] * T2_["mWyX"] * Gamma1["XW"] * Gamma2["uVyZ"];
+        Alpha += 1.0 * V_["UVMZ"] * T2_["MWXY"] * Gamma1["XW"] * Gamma2["UVZY"];
+        Alpha -= 2.0 * V_["uVzM"] * T2_["MWXY"] * Gamma1["XW"] * Gamma2["uVzY"];
+
+        Alpha += 6 * V_["uvmz"] * T2_["mwxy"] * Gamma1["uz"] * Gamma1["xv"] * Gamma1["yw"];
+        Alpha += 6 * V_["uvmz"] * T2_["mWxY"] * Gamma1["uz"] * Gamma1["xv"] * Gamma1["YW"];
+        Alpha -= 6 * V_["vUmZ"] * T2_["mwxy"] * Gamma1["UZ"] * Gamma1["xv"] * Gamma1["yw"];
+        Alpha -= 6 * V_["vUmZ"] * T2_["mWxY"] * Gamma1["UZ"] * Gamma1["xv"] * Gamma1["YW"];
+
+        Alpha += 6 * V_["UVMZ"] * T2_["MWXY"] * Gamma1["UZ"] * Gamma1["XV"] * Gamma1["YW"];
+        Alpha += 6 * V_["UVMZ"] * T2_["wMyX"] * Gamma1["UZ"] * Gamma1["XV"] * Gamma1["yw"];
+        Alpha -= 6 * V_["uVzM"] * T2_["MWXY"] * Gamma1["uz"] * Gamma1["XV"] * Gamma1["YW"];
+        Alpha -= 6 * V_["uVzM"] * T2_["wMyX"] * Gamma1["uz"] * Gamma1["XV"] * Gamma1["yw"];
+
+        Alpha += 3.0 * V_["uvmz"] * T2_["mwxy"] * Gamma1["wz"] * Gamma1["xu"] * Gamma1["yv"];
+        Alpha += 6.0 * V_["uVmZ"] * T2_["mWxY"] * Gamma1["WZ"] * Gamma1["xu"] * Gamma1["YV"];
+        Alpha += 3.0 * V_["UVMZ"] * T2_["MWXY"] * Gamma1["WZ"] * Gamma1["XU"] * Gamma1["YV"];
+        Alpha += 6.0 * V_["uVzM"] * T2_["wMxY"] * Gamma1["wz"] * Gamma1["xu"] * Gamma1["YV"];
+    }
+
     Alpha += Z["mn"] * V["m,v1,n,u1"] * Gamma1["u1,v1"];
     Alpha += Z["mn"] * V["m,V1,n,U1"] * Gamma1["U1,V1"];
     Alpha += Z["MN"] * V["M,V1,N,U1"] * Gamma1["U1,V1"];
@@ -2501,13 +2781,13 @@ void DSRG_MRPT2::solve_z() {
 
 
     // Print for Test
-    (b_ck).iterate([&](const std::vector<size_t>& i, double& value) {
-        std::cout << std::setprecision(16) << value << std::endl;
-    });
-    double ratio = b.at(preidx["ci"]) / b.at(preidx["ci"] + 1);
-    const double RATIO_REF = 1.0 / 0.4047902939857916;
-    std::cout << "\nratio = " << std::setw(19) << std::setprecision(16) << ratio << std::endl;
-    std::cout << "RATIO = " << std::setw(19) << std::setprecision(16) << RATIO_REF << std::endl;
+    // (b_ck).iterate([&](const std::vector<size_t>& i, double& value) {
+    //     std::cout << std::setprecision(16) << value << std::endl;
+    // });
+    // double ratio = b.at(preidx["ci"]) / b.at(preidx["ci"] + 1);
+    // const double RATIO_REF = 1.0 / 0.4047902939857916;
+    // std::cout << "\nratio = " << std::setw(19) << std::setprecision(16) << ratio << std::endl;
+    // std::cout << "RATIO = " << std::setw(19) << std::setprecision(16) << RATIO_REF << std::endl;
 
 
 
@@ -2875,32 +3155,19 @@ void DSRG_MRPT2::solve_z() {
         }
     } 
 
-    ck_ci.print();
+    // ck_ci.print();
 
-    ci.print();
+    // ci.print();
 
-    // for (const std::string& row : {"ci"}) {
-    //     int pre1 = preidx[row];
 
-    //     for (const std::string& col : {"ci"}) {
-    //         int pre2 = preidx[col];
+    // for (int pre1 = preidx["ci"], i = preidx["ci"]; i < pre1 + ndets; i++) {
+    //     for (int pre2 = preidx["ci"], j = 0; j < pre2 + ndets; j++) {
+    //         int index = i + dim * j;
+    //         std::cout << std::setprecision(9) << std::fixed << A.at(index) << " , ";
 
-    //         (ck_ci).iterate([&](const std::vector<size_t>& i, double& value) {
-    //             int index = (pre1 + i[0]) + dim * (pre2 + i[1]);
-    //             A.at(index) += value;
-
-    //         });
     //     }
-    // } 
-
-    for (int pre1 = preidx["ci"], i = preidx["ci"]; i < pre1 + ndets; i++) {
-        for (int pre2 = preidx["ci"], j = 0; j < pre2 + ndets; j++) {
-            int index = i + dim * j;
-            std::cout << std::setprecision(9) << std::fixed << A.at(index) << " , ";
-
-        }
-        std::cout << std::endl;
-    }
+    //     std::cout << std::endl;
+    // }
 
 
 
@@ -3418,11 +3685,9 @@ void DSRG_MRPT2::write_2rdm_spin_dependent() {
         temp["ABIJ"] += Tau1["IJAB"];
         temp["aBiJ"] += Tau1["iJaB"];
 
-
         temp["cdkl"] += Kappa["klcd"] * Eeps2_p["klcd"];
         temp["CDKL"] += Kappa["KLCD"] * Eeps2_p["KLCD"];
         temp["cDkL"] += Kappa["kLcD"] * Eeps2_p["kLcD"];
-
 
         //NOTICE for test
         // temp2["vjbx"] -= Eeps2_p["jxvb"] * T2_["iuya"] * Gamma1["ij"] * Eta1["ab"] * Lambda2_["xyuv"];
@@ -3441,8 +3706,6 @@ void DSRG_MRPT2::write_2rdm_spin_dependent() {
         // temp2["vxBJ"] -= Eeps2_p["xJvB"] * T2_["IUYA"] * Gamma1["IJ"] * Eta1["AB"] * Lambda2_["xYvU"];
         // temp2["bjVX"] -= Eeps2_p["jXbV"] * T2_["iUaY"] * Gamma1["ij"] * Eta1["ab"] * Lambda2_["XYUV"];
         // temp2["bjVX"] -= Eeps2_p["jXbV"] * T2_["iuya"] * Gamma1["ij"] * Eta1["ab"] * Lambda2_["yXuV"];
-
-
 
         // temp2["yiau"] -= Eeps2_m1["iuya"] * V_["vbjx"] * Gamma1["ij"] * Eta1["ab"] * Lambda2_["xyuv"];
         // temp2["yiau"] -= Eeps2_m1["iuya"] * V_["bVjX"] * Gamma1["ij"] * Eta1["ab"] * Lambda2_["yXuV"];
@@ -3492,6 +3755,9 @@ void DSRG_MRPT2::write_2rdm_spin_dependent() {
     temp2["ckDL"] += 2.0 * temp["cDkL"];
     temp2["clDK"] += 2.0 * temp["cDlK"];
     temp.zero();
+
+
+
 
     temp["eumv"] += 2.0 * Z["em"] * Gamma1["uv"];
     temp["EUMV"] += 2.0 * Z["EM"] * Gamma1["UV"];
