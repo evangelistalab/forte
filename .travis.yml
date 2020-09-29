@@ -1,6 +1,6 @@
-os: linux
+os: osx
 language: cpp
-dist: bionic
+osx_image: xcode12
 jobs:
   include:
     - env:
