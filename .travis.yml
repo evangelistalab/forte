@@ -21,7 +21,9 @@ install:
   - source activate tenv
   - conda install boost pybind11 pymdi pytest pytest-xdist pytest-shutil pytest-cov codecov lcov -c conda-forge
   - export PATH="$HOME/miniconda/envs/tenv/bin:$PATH"
+  - export LD_LIBRARY_PATH="$HOME/miniconda/envs/tenv/lib:$LD_LIBRARY_PATH"
   - export MKLROOT=${HOME}/miniconda/envs/tenv
+  - ls ${HOME}/miniconda/envs/tenv/lib
 
 before_script:
   - python --version
