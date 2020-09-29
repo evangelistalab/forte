@@ -1,6 +1,6 @@
 os: osx
 language: cpp
-osx_image: xcode11.6
+osx_image: xcode12
 jobs:
   include:
     - env:
@@ -52,8 +52,11 @@ before_script:
   - cd ambit
   - >
       cmake -H. -Bobjdir
-      -DCMAKE_C_COMPILER=${C_COMPILER}
-      -DCMAKE_CXX_COMPILER=${CXX_COMPILER}
+      -DCMAKE_C_COMPILER=${HOME}/miniconda/envs/tenv/bin/clang
+      -DCMAKE_CXX_COMPILER=${HOME}/miniconda/envs/tenv/bin/clang++
+      -DOpenMP_LIBRARY_DIRS=${HOME}/miniconda/envs/tenv/lib
+      -DCMAKE_CXX_FLAGS="-stdlib=libc++"
+      -DOpenMP_CXX_FLAG="-fopennmp=libiomp5"
       -DCMAKE_BUILD_TYPE=Debug
       -DCMAKE_INSTALL_PREFIX=${HOME}/build/ambit-bin
       -DPYTHON_EXECUTABLE=${HOME}/miniconda/envs/tenv/bin/python
@@ -69,6 +72,11 @@ before_script:
       -C${HOME}/miniconda/envs/tenv/share/cmake/psi4/psi4PluginCache.cmake
       -DCMAKE_PREFIX_PATH=${HOME}/miniconda/envs/tenv
       -DPYTHON_EXECUTABLE=${HOME}/miniconda/envs/tenv/bin/python
+      -DCMAKE_C_COMPILER=${HOME}/miniconda/envs/tenv/bin/clang
+      -DCMAKE_CXX_COMPILER=${HOME}/miniconda/envs/tenv/bin/clang++
+      -DOpenMP_LIBRARY_DIRS=${HOME}/miniconda/envs/tenv/lib
+      -DCMAKE_CXX_FLAGS="-stdlib=libc++"
+      -DOpenMP_CXX_FLAG="-fopennmp=libiomp5"
       -Dambit_DIR=${HOME}/build/ambit-bin/share/cmake/ambit
       -DCMAKE_BUILD_TYPE=Debug
       -DENABLE_CODECOV=ON
