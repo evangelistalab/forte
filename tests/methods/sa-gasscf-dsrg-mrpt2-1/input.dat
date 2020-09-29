@@ -36,12 +36,11 @@ set forte {
   sci_enforce_spin_complete true
   e_convergence 6
   charge 0
-  aci_screen_alg multi_gas
   active_ref_type gas
   GAS1 [1,0,0,0]
   GAS2 [3,0,1,2]
-  GAS1MAX_MULTI [[0,1,2],[2,1,1]]
-  GAS1MIN_MULTI [[0,1,0],[2,1,0]]
+  GAS1MAX [2,1]
+  GAS1MIN [0,0]
   AVG_STATE [[0,1,1],[2,1,1]]
   job_type casscf
   casscf_ci_solver aci
@@ -66,13 +65,9 @@ set forte {
   sci_enforce_spin_complete true
   e_convergence 6
   charge 0
-  aci_screen_alg multi_gas
   active_ref_type gas
   GAS1 [1,0,0,0]
   GAS2 [3,0,1,2]
-  GAS1MAX_MULTI [[0,1,2],[2,1,1]]  
-  GAS1MIN_MULTI [[0,1,0],[2,1,0]]     
-  AVG_STATE [[0,1,1],[2,1,1]]
   job_type newdriver
   correlation_solver dsrg-mrpt2
   dsrg_s 1.0

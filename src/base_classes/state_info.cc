@@ -38,9 +38,10 @@
 namespace forte {
 
 StateInfo::StateInfo(int na, int nb, int multiplicity, int twice_ms, int irrep,
-                     const std::string& irrep_label)
+                     const std::string& irrep_label, const std::vector<size_t> gas_min,
+                     const std::vector<size_t> gas_max)
     : na_(na), nb_(nb), multiplicity_(multiplicity), twice_ms_(twice_ms), irrep_(irrep),
-      irrep_label_(irrep_label) {}
+      irrep_label_(irrep_label), gas_min_(gas_min), gas_max_(gas_max) {}
 
 const std::vector<std::string> StateInfo::multiplicity_labels{
     "Singlet", "Doublet", "Triplet", "Quartet", "Quintet", "Sextet", "Septet", "Octet",
@@ -63,19 +64,26 @@ const std::string& StateInfo::multiplicity_label() const {
     return multiplicity_labels[multiplicity_ - 1];
 }
 
+const std::vector<size_t>& StateInfo::gas_min() const { return gas_min_; }
+
+const std::vector<size_t>& StateInfo::gas_max() const { return gas_max_; }
+
 bool StateInfo::operator<(const StateInfo& rhs) const {
-    return std::tie(na_, nb_, multiplicity_, twice_ms_, irrep_) <
-           std::tie(rhs.na_, rhs.nb_, rhs.multiplicity_, rhs.twice_ms_, rhs.irrep_);
+    return std::tie(na_, nb_, multiplicity_, twice_ms_, irrep_, gas_min_, gas_max_) <
+           std::tie(rhs.na_, rhs.nb_, rhs.multiplicity_, rhs.twice_ms_, rhs.irrep_, rhs.gas_min_,
+                    rhs.gas_max_);
 }
 
 bool StateInfo::operator!=(const StateInfo& rhs) const {
-    return std::tie(na_, nb_, multiplicity_, twice_ms_, irrep_) !=
-           std::tie(rhs.na_, rhs.nb_, rhs.multiplicity_, rhs.twice_ms_, rhs.irrep_);
+    return std::tie(na_, nb_, multiplicity_, twice_ms_, irrep_, gas_min_, gas_max_) !=
+           std::tie(rhs.na_, rhs.nb_, rhs.multiplicity_, rhs.twice_ms_, rhs.irrep_, rhs.gas_min_,
+                    rhs.gas_max_);
 }
 
 bool StateInfo::operator==(const StateInfo& rhs) const {
-    return std::tie(na_, nb_, multiplicity_, twice_ms_, irrep_) ==
-           std::tie(rhs.na_, rhs.nb_, rhs.multiplicity_, rhs.twice_ms_, rhs.irrep_);
+    return std::tie(na_, nb_, multiplicity_, twice_ms_, irrep_, gas_min_, gas_max_) ==
+           std::tie(rhs.na_, rhs.nb_, rhs.multiplicity_, rhs.twice_ms_, rhs.irrep_, rhs.gas_min_,
+                    rhs.gas_max_);
 }
 
 StateInfo make_state_info_from_psi(std::shared_ptr<ForteOptions> options) {
@@ -128,8 +136,23 @@ StateInfo make_state_info_from_psi(std::shared_ptr<ForteOptions> options) {
 std::string StateInfo::str() const {
     std::string irrep_label_out =
         irrep_label_.empty() ? "Irrep" + std::to_string(irrep_) : irrep_label();
+
+    std::string gas_restrictions;
+    if (gas_min_.size() > 0) {
+        gas_restrictions += " GAS min: ";
+        for (size_t i : gas_min_)
+            gas_restrictions += std::to_string(i) + " ";
+        gas_restrictions += ";";
+    }
+
+    if (gas_max_.size() > 0) {
+        gas_restrictions += " GAS max: ";
+        for (size_t i : gas_max_)
+            gas_restrictions += std::to_string(i) + " ";
+        gas_restrictions += ";";
+    }
     return multiplicity_label() + " " + irrep_label_out + " (Ms = " + get_ms_string(twice_ms()) +
-           ")";
+           ")" + gas_restrictions;
 }
 
 } // namespace forte

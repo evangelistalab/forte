@@ -36,10 +36,11 @@ set forte {
   e_convergence 6
   charge 0
   active_ref_type gas
+  one_cycle True
   GAS1 [1,0,0,0]
   GAS2 [3,0,1,2]
-  GAS1MAX 1
-  GAS1MIN 0
+  GAS1MAX [1]
+  GAS1MIN [0]
   job_type casscf
   casscf_ci_solver aci
   casscf_maxiter 100
