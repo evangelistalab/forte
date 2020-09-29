@@ -1112,7 +1112,7 @@ RDMs build_casscf_density(StateInfo state, size_t nroot, std::shared_ptr<SCFInfo
         }
     }
 
-    D1a.print();
+    // D1a.print();
 
     // 2-RDM
     auto D2aa = ambit::Tensor::build(ambit::CoreTensor, "D2aa", std::vector<size_t>(4, na));
@@ -1143,7 +1143,7 @@ RDMs build_casscf_density(StateInfo state, size_t nroot, std::shared_ptr<SCFInfo
         }
     }
 
-    D2aa.print();
+    // D2aa.print();
 
     // 3-RDM # Leave at RHF level !
     if (options->get_str("THREEPDC") != "ZERO") {

@@ -111,11 +111,15 @@ THREE_DSRG_MRPT2::THREE_DSRG_MRPT2(RDMs rdms, std::shared_ptr<SCFInfo> scf_info,
     outfile->Printf("\n      (pr-)DSRG-MRPT2:   J. Chem. Phys. 2017, 146, 124132.");
     outfile->Printf("\n");
 
+    outfile->Printf("\n debug #1");
+
     if (foptions_->get_bool("MEMORY_SUMMARY")) {
         BTF_->print_memory_info();
     }
 
-    printf("\n P%d about to enter startup", my_proc);
+    outfile->Printf("\n debug #2");
+
+    // printf("\n P%d about to enter startup", my_proc);
     // GA_Sync();
     startup();
     if (my_proc == 0)
@@ -126,6 +130,7 @@ THREE_DSRG_MRPT2::~THREE_DSRG_MRPT2() { cleanup(); }
 
 void THREE_DSRG_MRPT2::startup() {
     //    int nproc = 1;
+    outfile->Printf("\n debug #3");
     int my_proc = 0;
 #ifdef HAVE_MPI
     nproc = MPI::COMM_WORLD.Get_size();
@@ -174,19 +179,19 @@ void THREE_DSRG_MRPT2::startup() {
                                             "Change options in input.dat"));
     }
 
-    printf("\n debug flag #1");
+    outfile->Printf("\n debug #4");
 
     // These two blocks of functions create a Blocked tensor
     // The block labels can be found in master_dsrg.cc
     std::vector<std::string> hhpp_no_cv = BTF_->generate_indices("cav", "hhpp");
     no_hhpp_ = hhpp_no_cv;
 
-    printf("\n debug flag #2");
+    outfile->Printf("\n debug #5");
 
     if (my_proc == 0)
         nthree_ = ints_->nthree();
 
-    printf("\n debug flag #3");
+    outfile->Printf("\n debug #6");
 
 //    local_timer naux_bcast;
 #ifdef HAVE_MPI
@@ -214,7 +219,7 @@ void THREE_DSRG_MRPT2::startup() {
         Fa_ = Fdiag_a_;
         Fb_ = Fdiag_b_;
 
-        printf("\n debug flag #4.1");
+        outfile->Printf("\n debug #7");
 
         if (print_ > 1) {
             Gamma1_.print(stdout);
@@ -265,7 +270,7 @@ void THREE_DSRG_MRPT2::startup() {
             T2_ = BTF_->build(tensor_type_, "T2 Amplitudes", BTF_->spin_cases_avoid(no_hhpp_, 1));
             ThreeIntegral_ = BTF_->build(tensor_type_, "ThreeInt", {"Lph", "LPH"});
 
-            printf("\n debug flag #4.2");
+            outfile->Printf("\n debug #8");
 
             std::vector<std::string> ThreeInt_block = ThreeIntegral_.block_labels();
 
@@ -279,6 +284,8 @@ void THREE_DSRG_MRPT2::startup() {
                 ThreeIntegral_.block(string_block).copy(ThreeIntegral_block);
             }
 
+            outfile->Printf("\n debug #9");
+
             V_["abij"] = ThreeIntegral_["gai"] * ThreeIntegral_["gbj"];
             V_["abij"] -= ThreeIntegral_["gaj"] * ThreeIntegral_["gbi"];
 
@@ -286,6 +293,7 @@ void THREE_DSRG_MRPT2::startup() {
 
             V_["ABIJ"] = ThreeIntegral_["gAI"] * ThreeIntegral_["gBJ"];
             V_["ABIJ"] -= ThreeIntegral_["gAJ"] * ThreeIntegral_["gBI"];
+            outfile->Printf("\n debug #10");
         }
 
         // Prepare Hbar
@@ -295,9 +303,12 @@ void THREE_DSRG_MRPT2::startup() {
             Hbar1_["uv"] = F_["uv"];
             Hbar1_["UV"] = F_["UV"];
 
+            outfile->Printf("\n debug #11.1");
+
             if (foptions_->get_bool("FORM_HBAR3")) {
                 Hbar3_ = BTF_->build(tensor_type_, "3-body Hbar", spin_cases({"aaaaaa"}));
             }
+            outfile->Printf("\n debug #11.2");
         }
     }
 }
