@@ -17,7 +17,7 @@ install:
   - hash -r
   - conda config --set always_yes yes --set changeps1 no
   - conda update -q conda
-  - conda create -q -n tenv python=$PYTHON_VER ambit=0.5.1 psi4 psi4-dev -c psi4/label/dev
+  - conda create -q -n tenv python=$PYTHON_VER ambit=0.5.1 psi4 -c psi4/label/dev
   - source activate tenv
   - conda install boost pybind11 pymdi pytest pytest-xdist pytest-shutil pytest-cov codecov lcov -c conda-forge
   - export PATH="$HOME/miniconda/envs/tenv/bin:$PATH"
