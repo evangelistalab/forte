@@ -24,11 +24,13 @@ install:
   - export LD_LIBRARY_PATH="$HOME/miniconda/envs/tenv/lib:$LD_LIBRARY_PATH"
   - export MKLROOT=${HOME}/miniconda/envs/tenv
   - ls ${HOME}/miniconda/envs/tenv/lib
+  - which cmake
+  - cmake --version
 
 before_script:
   - python --version
 # - cp ${TRAVIS_BUILD_DIR}/travis/TargetHDF5Targets.cmake ${HOME}/miniconda/envs/tenv/share/cmake/TargetHDF5/TargetHDF5Targets.cmake
-  - cp ${TRAVIS_BUILD_DIR}/travis/TargetLAPACKTargets.cmake ${HOME}/miniconda/envs/tenv/share/cmake/TargetLAPACK/TargetLAPACKTargets.cmake
+# - cp ${TRAVIS_BUILD_DIR}/travis/TargetLAPACKTargets.cmake ${HOME}/miniconda/envs/tenv/share/cmake/TargetLAPACK/TargetLAPACKTargets.cmake
   # Compile psi4
 # - cd ${HOME}/build
 # - git clone https://github.com/psi4/psi4.git psi4
