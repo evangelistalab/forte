@@ -24,6 +24,7 @@ install:
   - export LD_LIBRARY_PATH="$HOME/miniconda/envs/tenv/lib:$LD_LIBRARY_PATH"
   - export MKLROOT=${HOME}/miniconda/envs/tenv
   - ls ${HOME}/miniconda/envs/tenv/bin
+  - ls ${HOME}/miniconda/envs/tenv/lib
 
 before_script:
   - python --version
@@ -54,8 +55,8 @@ before_script:
   - cd ambit
   - >
       cmake -H. -Bobjdir
-      -DCMAKE_C_COMPILER=${HOME}/miniconda/envs/tenv/bin/gcc
-      -DCMAKE_CXX_COMPILER=${HOME}/miniconda/envs/tenv/bin/g++
+      -DCMAKE_C_COMPILER=${HOME}/miniconda/envs/tenv/bin/x86_64-conda_cos6-linux-gnu-gcc
+      -DCMAKE_CXX_COMPILER=${HOME}/miniconda/envs/tenv/bin/x86_64-conda_cos6-linux-gnu-g++
       -DOpenMP_LIBRARY_DIRS=${HOME}/miniconda/envs/tenv/lib
       -DCMAKE_CXX_FLAGS="-stdlib=libc++"
       -DOpenMP_CXX_FLAG="-fopennmp=libiomp5"
@@ -74,8 +75,8 @@ before_script:
       -C${HOME}/miniconda/envs/tenv/share/cmake/psi4/psi4PluginCache.cmake
       -DCMAKE_PREFIX_PATH=${HOME}/miniconda/envs/tenv
       -DPYTHON_EXECUTABLE=${HOME}/miniconda/envs/tenv/bin/python
-      -DCMAKE_C_COMPILER=${HOME}/miniconda/envs/tenv/bin/gcc
-      -DCMAKE_CXX_COMPILER=${HOME}/miniconda/envs/tenv/bin/g++
+      -DCMAKE_C_COMPILER=${HOME}/miniconda/envs/tenv/bin/x86_64-conda_cos6-linux-gnu-gcc
+      -DCMAKE_CXX_COMPILER=${HOME}/miniconda/envs/tenv/bin/x86_64-conda_cos6-linux-gnu-g++
       -DOpenMP_LIBRARY_DIRS=${HOME}/miniconda/envs/tenv/lib
       -DCMAKE_CXX_FLAGS="-stdlib=libc++"
       -DOpenMP_CXX_FLAG="-fopennmp=libiomp5"
