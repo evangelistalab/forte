@@ -51,7 +51,7 @@ before_script:
   - pwd
   - git clone https://github.com/jturney/ambit.git ambit
   - cd ambit
-  - head -n 10 CMakeLists.txt
+  - head -n 25 CMakeLists.txt
   - >
       cmake -H. -Bobjdir
       -DCMAKE_C_COMPILER=${HOME}/miniconda/envs/tenv/bin/clang
@@ -60,7 +60,7 @@ before_script:
       -DCMAKE_CXX_FLAGS="-stdlib=libc++"
       -DOpenMP_CXX_FLAG="-fopennmp=libiomp5"
       -DCMAKE_BUILD_TYPE=Debug
-      -DCMAKE_INSTALL_PREFIX=${HOME}/build/ambit-bin
+      -DCMAKE_INSTALL_PREFIX=${HOME}/miniconda/envs/tenv
       -DPYTHON_EXECUTABLE=${HOME}/miniconda/envs/tenv/bin/python
   - cd objdir
   - make -j2
@@ -79,7 +79,7 @@ before_script:
       -DOpenMP_LIBRARY_DIRS=${HOME}/miniconda/envs/tenv/lib
       -DCMAKE_CXX_FLAGS="-stdlib=libc++"
       -DOpenMP_CXX_FLAG="-fopennmp=libiomp5"
-      -Dambit_DIR=${HOME}/build/ambit-bin/share/cmake/ambit
+      -Dambit_DIR=${HOME}/miniconda/envs/tenv/share/cmake/ambit
       -DCMAKE_BUILD_TYPE=Debug
       -DENABLE_CODECOV=ON
       -DMAX_DET_ORB=${MAX_DET_ORB}
