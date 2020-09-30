@@ -11,13 +11,17 @@ jobs:
       - MAX_DET_ORB=128
 
 install:
+  - which gcc
+  - gcc --version
+  - which g++
+  - g++ --version
   - wget https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh;
   - bash miniconda.sh -b -p $HOME/miniconda
   - export PATH="$HOME/miniconda/bin:$PATH"
   - hash -r
   - conda config --set always_yes yes --set changeps1 no
   - conda update -q conda
-  - conda create -q -n tenv python=$PYTHON_VER psi4=1.4a2.dev208 psi4-dev -c psi4/label/dev
+  - conda create -q -n tenv python=$PYTHON_VER psi4=1.4a2.dev208 psi4-dev ci-psi4 -c psi4/label/dev
   - source activate tenv
   - conda install boost pybind11 pymdi pytest pytest-xdist pytest-shutil pytest-cov codecov lcov -c conda-forge
   - export PATH="$HOME/miniconda/envs/tenv/bin:$PATH"
@@ -25,6 +29,10 @@ install:
   - export MKLROOT=${HOME}/miniconda/envs/tenv
   - ls ${HOME}/miniconda/envs/tenv/bin
   - ls ${HOME}/miniconda/envs/tenv/lib
+  - which gcc
+  - gcc --version
+  - which g++
+  - g++ --version
 
 before_script:
   - python --version
