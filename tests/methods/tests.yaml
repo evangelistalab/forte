@@ -15,7 +15,6 @@ aci:
    - aci-12
    - aci-14
    - aci-18
-   - aci-local-20
    - aci_scf-1
    - aci-full-pt2-1
   medium:
@@ -28,6 +27,7 @@ aci:
    - aci-16
    - aci-17
    - aci-19
+   - aci-local-20
   long:
    - aci-6
    - cis-aci-1
