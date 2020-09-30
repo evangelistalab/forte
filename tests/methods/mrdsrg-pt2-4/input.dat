@@ -38,12 +38,12 @@ set forte{
    frozen_docc            [1,0,0,0]
    restricted_docc        [1,0,1,1]
    active                 [2,0,0,0]
-   root_sym                0
-   nroot                   1
-   dsrg_s                  1.0
-   relax_ref               iterate
-   maxiter                 100
-   e_convergence           8
+   root_sym               0
+   nroot                  1
+   dsrg_s                 1.0
+   relax_ref              iterate
+   maxiter                100
+   e_convergence          8
 }
 
 Emcscf, wfn = energy('mcscf', return_wfn=True)
