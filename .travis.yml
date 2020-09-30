@@ -51,7 +51,7 @@ before_script:
   - pwd
   - git clone https://github.com/jturney/ambit.git ambit
   - cd ambit
-  - cat CMakeList.txt
+  - head -n 10 CMakeLists.txt
   - >
       cmake -H. -Bobjdir
       -DCMAKE_C_COMPILER=${HOME}/miniconda/envs/tenv/bin/clang
