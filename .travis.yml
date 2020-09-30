@@ -63,8 +63,9 @@ before_script:
   - cd ambit
   - >
       cmake -H. -Bobjdir
+      -DCMAKE_C_COMPILER=/usr/bin/gcc
+      -DCMAKE_CXX_COMPILER=/usr/bin/g++
       -DOpenMP_LIBRARY_DIRS=${HOME}/miniconda/envs/tenv/lib
-      -DCMAKE_CXX_FLAGS="-stdlib=libc++"
       -DOpenMP_CXX_FLAG="-fopennmp=libiomp5"
       -DCMAKE_BUILD_TYPE=Debug
       -DCMAKE_INSTALL_PREFIX=${HOME}/miniconda/envs/tenv
@@ -80,9 +81,10 @@ before_script:
       cmake -H. -B.
       -C${HOME}/miniconda/envs/tenv/share/cmake/psi4/psi4PluginCache.cmake
       -DCMAKE_PREFIX_PATH=${HOME}/miniconda/envs/tenv
+      -DCMAKE_C_COMPILER=/usr/bin/gcc
+      -DCMAKE_CXX_COMPILER=/usr/bin/g++
       -DPYTHON_EXECUTABLE=${HOME}/miniconda/envs/tenv/bin/python
       -DOpenMP_LIBRARY_DIRS=${HOME}/miniconda/envs/tenv/lib
-      -DCMAKE_CXX_FLAGS="-stdlib=libc++"
       -DOpenMP_CXX_FLAG="-fopennmp=libiomp5"
       -Dambit_DIR=${HOME}/miniconda/envs/tenv/share/cmake/ambit
       -DCMAKE_BUILD_TYPE=Debug
