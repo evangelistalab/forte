@@ -94,7 +94,7 @@ script:
   # Run tests for 128-bit determinants
   - if [ "$MAX_DET_ORB" -ge "128" ]; then
      cd ${HOME}/build/evangelistalab/forte/tests/large_det;
-     python run_forte_tests.py --type short --bw --failed_dump;
+     python run_forte_tests.py --bw --failed_dump;
     fi
   - cd ${TRAVIS_BUILD_DIR}
 #  - ./forte_tests
