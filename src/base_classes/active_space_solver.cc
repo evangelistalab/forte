@@ -86,7 +86,8 @@ const std::map<StateInfo, std::vector<double>>& ActiveSpaceSolver::compute_energ
         state_energies_map_[state] = energies;
         if (twice_ms > 0 and ms_avg_) {
             StateInfo state_spin(state.nb(), state.na(), state.multiplicity(), -twice_ms,
-                                 state.irrep(), state.irrep_label());
+                                 state.irrep(), state.irrep_label(), state.gas_min(),
+                                 state.gas_max());
             state_energies_map_[state_spin] = energies;
         }
     }
@@ -395,7 +396,8 @@ make_state_weights_map(std::shared_ptr<ForteOptions> options,
         int max_twice_ms = multiplicity - 1;
         for (int i = max_twice_ms; i >= -max_twice_ms; i -= 2) {
             int na = (nele + i) / 2;
-            StateInfo state_ms(na, nele - na, multiplicity, i, irrep, irrep_label);
+            StateInfo state_ms(na, nele - na, multiplicity, i, irrep, irrep_label, gas_min,
+                               gas_max);
 
             std::vector<double> weights_ms(weights);
             std::transform(weights_ms.begin(), weights_ms.end(), weights_ms.begin(),
