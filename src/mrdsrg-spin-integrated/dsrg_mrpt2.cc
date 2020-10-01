@@ -1359,40 +1359,40 @@ double DSRG_MRPT2::E_VT2_6() {
 
     // aaa
     BlockedTensor temp = ambit::BlockedTensor::build(tensor_type_, "temp", {"aaaaaa"});
-    // temp["uvwxyz"] += V_["uvmz"] * T2_["mwxy"];
+    temp["uvwxyz"] += V_["uvmz"] * T2_["mwxy"];
     temp["uvwxyz"] += V_["wexy"] * T2_["uvez"];
 
     if (internal_amp_) {
-        // temp["uvwxyz"] += V_["uv1z"] * T2_["1wxy"];
+        temp["uvwxyz"] += V_["uv1z"] * T2_["1wxy"];
         temp["uvwxyz"] += V_["w1xy"] * T2_["uv1z"];
     }
     E += 0.25 * temp.block("aaaaaa")("uvwxyz") * rdms_.L3aaa()("xyzuvw");
 
     // bbb
     temp = ambit::BlockedTensor::build(tensor_type_, "temp", {"AAAAAA"});
-    // temp["UVWXYZ"] += V_["UVMZ"] * T2_["MWXY"];
+    temp["UVWXYZ"] += V_["UVMZ"] * T2_["MWXY"];
     temp["UVWXYZ"] += V_["WEXY"] * T2_["UVEZ"];
 
     if (internal_amp_) {
-        // temp["UVWXYZ"] += V_["UV!Z"] * T2_["!WXY"];
+        temp["UVWXYZ"] += V_["UV!Z"] * T2_["!WXY"];
         temp["UVWXYZ"] += V_["W!XY"] * T2_["UV!Z"];
     }
     E += 0.25 * temp.block("AAAAAA")("UVWXYZ") * rdms_.L3bbb()("XYZUVW");
 
     // aab
     temp = ambit::BlockedTensor::build(tensor_type_, "temp", {"aaAaaA"});
-    // temp["uvWxyZ"] -= V_["uvmy"] * T2_["mWxZ"];
-    // temp["uvWxyZ"] -= V_["uWmZ"] * T2_["mvxy"];
-    // temp["uvWxyZ"] += 2.0 * V_["uWyM"] * T2_["vMxZ"];
+    temp["uvWxyZ"] -= V_["uvmy"] * T2_["mWxZ"];
+    temp["uvWxyZ"] -= V_["uWmZ"] * T2_["mvxy"];
+    temp["uvWxyZ"] += 2.0 * V_["uWyM"] * T2_["vMxZ"];
 
     temp["uvWxyZ"] += V_["eWxZ"] * T2_["uvey"];
     temp["uvWxyZ"] -= V_["vexy"] * T2_["uWeZ"];
     temp["uvWxyZ"] -= 2.0 * V_["vExZ"] * T2_["uWyE"];
 
     if (internal_amp_) {
-        // temp["uvWxyZ"] -= V_["uv1y"] * T2_["1WxZ"];
-        // temp["uvWxyZ"] -= V_["uW1Z"] * T2_["1vxy"];
-        // temp["uvWxyZ"] += 2.0 * V_["uWy!"] * T2_["v!xZ"];
+        temp["uvWxyZ"] -= V_["uv1y"] * T2_["1WxZ"];
+        temp["uvWxyZ"] -= V_["uW1Z"] * T2_["1vxy"];
+        temp["uvWxyZ"] += 2.0 * V_["uWy!"] * T2_["v!xZ"];
 
         temp["uvWxyZ"] += V_["1WxZ"] * T2_["uv1y"];
         temp["uvWxyZ"] -= V_["v1xy"] * T2_["uW1Z"];
@@ -1402,18 +1402,18 @@ double DSRG_MRPT2::E_VT2_6() {
 
     // abb
     temp = ambit::BlockedTensor::build(tensor_type_, "temp", {"aAAaAA"});
-    // temp["uVWxYZ"] -= V_["VWMZ"] * T2_["uMxY"];
-    // temp["uVWxYZ"] -= V_["uVxM"] * T2_["MWYZ"];
-    // temp["uVWxYZ"] += 2.0 * V_["uVmZ"] * T2_["mWxY"];
+    temp["uVWxYZ"] -= V_["VWMZ"] * T2_["uMxY"];
+    temp["uVWxYZ"] -= V_["uVxM"] * T2_["MWYZ"];
+    temp["uVWxYZ"] += 2.0 * V_["uVmZ"] * T2_["mWxY"];
 
     temp["uVWxYZ"] += V_["uExY"] * T2_["VWEZ"];
     temp["uVWxYZ"] -= V_["WEYZ"] * T2_["uVxE"];
     temp["uVWxYZ"] -= 2.0 * V_["eWxY"] * T2_["uVeZ"];
 
     if (internal_amp_) {
-        // temp["uVWxYZ"] -= V_["VW!Z"] * T2_["u!xY"];
-        // temp["uVWxYZ"] -= V_["uVx!"] * T2_["!WYZ"];
-        // temp["uVWxYZ"] += 2.0 * V_["uV1Z"] * T2_["1WxY"];
+        temp["uVWxYZ"] -= V_["VW!Z"] * T2_["u!xY"];
+        temp["uVWxYZ"] -= V_["uVx!"] * T2_["!WYZ"];
+        temp["uVWxYZ"] += 2.0 * V_["uV1Z"] * T2_["1WxY"];
 
         temp["uVWxYZ"] += V_["u!xY"] * T2_["VW!Z"];
         temp["uVWxYZ"] -= V_["W!YZ"] * T2_["uVx!"];
