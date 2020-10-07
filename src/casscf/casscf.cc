@@ -66,6 +66,7 @@ CASSCF::CASSCF(StateInfo state, size_t nroot, std::shared_ptr<SCFInfo> scf_info,
 }
 
 double CASSCF::compute_energy() {
+    outfile->Printf("Debug #7");
     if (na_ == 0) {
         outfile->Printf("\n\n\n Please set the active space");
         throw psi::PSIEXCEPTION(" The active space is zero.  Set the active space");
@@ -84,7 +85,7 @@ double CASSCF::compute_energy() {
     if (nfrozen_ > 0) {
         F_froze_ = set_frozen_core_orbitals();
     }
-
+    outfile->Printf("Debug #8");
     /// Setup the DIIS manager
     int diis_freq = options_->get_int("CASSCF_DIIS_FREQ");
     int diis_start = options_->get_int("CASSCF_DIIS_START");
@@ -99,6 +100,8 @@ double CASSCF::compute_energy() {
     psi::Dimension npart_dim = mo_space_info_->get_dimension("GENERALIZED PARTICLE");
     psi::SharedMatrix S(new psi::Matrix("Orbital Rotation", nirrep_, nhole_dim, npart_dim));
     psi::SharedMatrix Sstep;
+    
+    outfile->Printf("Debug #9");
 
     std::shared_ptr<DIISManager> diis_manager(
         new DIISManager(diis_max_vec, "MCSCF DIIS", DIISManager::OldestAdded, DIISManager::InCore));
@@ -112,6 +115,8 @@ double CASSCF::compute_energy() {
     psi::SharedMatrix C_start(ints_->Ca()->clone());
     double econv = options_->get_double("CASSCF_E_CONVERGENCE");
     double gconv = options_->get_double("CASSCF_G_CONVERGENCE");
+
+    outfile->Printf("Debug #10");
 
     psi::SharedMatrix Ca = ints_->Ca();
     psi::SharedMatrix Cb = ints_->Cb();
@@ -255,6 +260,7 @@ double CASSCF::compute_energy() {
 }
 void CASSCF::startup() {
     print_method_banner({"Complete Active Space Self Consistent Field", "Kevin Hannon"});
+    outfile->Printf("Debug #1");
     na_ = mo_space_info_->size("ACTIVE");
     print_ = options_->get_int("PRINT");
     nsopi_ = scf_info_->nsopi();
@@ -265,7 +271,7 @@ void CASSCF::startup() {
     }
 
     casscf_debug_print_ = options_->get_bool("CASSCF_DEBUG_PRINTING");
-
+    outfile->Printf("Debug #2");
     frozen_docc_dim_ = mo_space_info_->get_dimension("FROZEN_DOCC");
     restricted_docc_dim_ = mo_space_info_->get_dimension("RESTRICTED_DOCC");
     active_dim_ = mo_space_info_->get_dimension("ACTIVE");
@@ -283,6 +289,7 @@ void CASSCF::startup() {
     nmopi_ = mo_space_info_->get_dimension("CORRELATED");
     nrdocc_ = restricted_docc_abs_.size();
     nvir_ = restricted_uocc_abs_.size();
+    outfile->Printf("Debug #3");
 
     nfrozen_ = frozen_docc_abs_.size();
     /// If the user wants to freeze core after casscf, this section of code sets
@@ -302,6 +309,9 @@ void CASSCF::startup() {
             outfile->Printf(" %d", virtual_index);
         }
     }
+    outfile->Printf("Debug #4");
+
+    /*
     std::shared_ptr<PSIO> psio_ = PSIO::shared_object();
     psi::SharedMatrix T =
         psi::SharedMatrix(ints_->wfn()->matrix_factory()->create_matrix(PSIF_SO_T));
@@ -315,6 +325,11 @@ void CASSCF::startup() {
     Hcore_ = ints_->wfn()->matrix_factory()->create_shared_matrix("Core Hamiltonian");
     Hcore_->add(T);
     Hcore_->add(V);
+    */
+
+    Hcore_ = SharedMatrix(ints_->wfn()->H()->clone());
+
+    outfile->Printf("Debug #5");
 
     local_timer JK_initialize;
     if (options_->get_str("SCF_TYPE") == "GTFOCK") {
@@ -338,6 +353,9 @@ void CASSCF::startup() {
     JK_->initialize();
     JK_->C_left().clear();
     JK_->C_right().clear();
+
+    outfile->Printf("Debug #6");
+
     if (print_ > 0)
         outfile->Printf("\n     JK takes %5.5f s to initialize while using %s", JK_initialize.get(),
                         options_->get_str("SCF_TYPE").c_str());
