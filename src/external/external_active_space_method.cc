@@ -195,14 +195,14 @@ double ExternalActiveSpaceMethod::compute_energy() {
                     .data()[e1 * nactv_ * nactv_ * nactv_ * nactv_ * nactv_ +
                             e2 * nactv_ * nactv_ * nactv_ * nactv_ + e3 * nactv_ * nactv_ * nactv_ +
                             e4 * nactv_ * nactv_ + e5 * nactv_ + e6] = std::get<6>(*it3);
-            } else if (spin1 && spin2 && spin3 && !spin4 && spin5 && !spin6) {
-                // Read from aaabab
+            } else if (spin1 && spin2 && !spin3 && spin4 && spin5 && !spin6) {
+                // Read from aabaab
                 g3aab_
                     .data()[e1 * nactv_ * nactv_ * nactv_ * nactv_ * nactv_ +
                             e2 * nactv_ * nactv_ * nactv_ * nactv_ + e3 * nactv_ * nactv_ * nactv_ +
                             e4 * nactv_ * nactv_ + e5 * nactv_ + e6] = std::get<6>(*it3);
-            } else if (spin1 && !spin2 && spin3 && !spin4 && !spin5 && !spin6) {
-                // Read from ababbb
+            } else if (spin1 && !spin2 && !spin3 && spin4 && !spin5 && !spin6) {
+                // Read from abbabb
                 g3abb_
                     .data()[e1 * nactv_ * nactv_ * nactv_ * nactv_ * nactv_ +
                             e2 * nactv_ * nactv_ * nactv_ * nactv_ + e3 * nactv_ * nactv_ * nactv_ +
