@@ -100,6 +100,7 @@ double ExternalActiveSpaceMethod::compute_energy() {
 
     double energy = j["energy"]["data"];
 
+    // Read 1-DM
     std::vector<std::tuple<int, int, double>> gamma1 = j["gamma1"]["data"];
 
     g1a_ = ambit::Tensor::build(ambit::CoreTensor, "g1a", std::vector<size_t>(2, nactv_));
@@ -119,9 +120,10 @@ double ExternalActiveSpaceMethod::compute_energy() {
         }
     }
 
-    g1a_.print();
-    g1b_.print();
+    //g1a_.print();
+    //g1b_.print();
 
+    // Read 2-DM
     if (twopdc_) {
         std::vector<std::tuple<int, int, int, int, double>> gamma2 = j["gamma2"]["data"];
 
@@ -141,29 +143,28 @@ double ExternalActiveSpaceMethod::compute_energy() {
             bool spin4 = (std::get<3>(*it2) % 2 == 0);
 
             if (spin1 && spin2 && spin3 && spin4) {
-                // aaaa
+                // Read form aaaa
                 g2aa_.data()[e1 * nactv_ * nactv_ * nactv_ + e2 * nactv_ * nactv_ + e3 * nactv_ +
                              e4] = std::get<4>(*it2);
             } else if (!spin1 && !spin2 && !spin3 && !spin4) {
-                // bbbb
+                // Read from bbbb
                 g2bb_.data()[e1 * nactv_ * nactv_ * nactv_ + e2 * nactv_ * nactv_ + e3 * nactv_ +
                              e4] = std::get<4>(*it2);
-            } else {
-                // abab abba
+            } else if (spin1 && !spin2 && spin3 && !spin4) {
+                // Read from abab (should be enough)
                 g2ab_.data()[e1 * nactv_ * nactv_ * nactv_ + e2 * nactv_ * nactv_ + e3 * nactv_ +
                              e4] = std::get<4>(*it2);
             }
         }
     }
 
-    g2aa_.print();
-    g2ab_.print();
-    g2bb_.print();
+    //g2aa_.print();
+    //g2ab_.print();
+    //g2bb_.print();
 
-    // TODO (Nan) store the RDMs in ambit Tensors (like in the RDMs class)
-
+    // Read 3-DM
     if (threepdc_) {
-        std::vector<std::tuple<int, int, int, int, int, int, double>> gamma3 = j["gamma2"]["data"];
+        std::vector<std::tuple<int, int, int, int, int, int, double>> gamma3 = j["gamma3"]["data"];
 
         g3aaa_ = ambit::Tensor::build(ambit::CoreTensor, "g3aaa", std::vector<size_t>(6, nactv_));
         g3aab_ = ambit::Tensor::build(ambit::CoreTensor, "g3aab", std::vector<size_t>(6, nactv_));
@@ -185,25 +186,29 @@ double ExternalActiveSpaceMethod::compute_energy() {
             bool spin5 = (std::get<4>(*it3) % 2 == 0);
             bool spin6 = (std::get<5>(*it3) % 2 == 0);
 
-            int spin_case =
-                int(spin1) + int(spin2) + int(spin3) + int(spin4) + int(spin5) + int(spin6);
+            //int spin_case =
+            //    int(spin1) + int(spin2) + int(spin3) + int(spin4) + int(spin5) + int(spin6);
 
-            if (spin_case == 6) {
+            if (spin1 && spin2 && spin3 && spin4 && spin5 && spin6) {
+                // Read from aaaaaa
                 g3aaa_
                     .data()[e1 * nactv_ * nactv_ * nactv_ * nactv_ * nactv_ +
                             e2 * nactv_ * nactv_ * nactv_ * nactv_ + e3 * nactv_ * nactv_ * nactv_ +
                             e4 * nactv_ * nactv_ + e5 * nactv_ + e6] = std::get<6>(*it3);
-            } else if (spin_case == 4) {
+            } else if (spin1 && spin2 && spin3 && !spin4 && spin5 && !spin6) {
+                // Read from aaabab
                 g3aab_
                     .data()[e1 * nactv_ * nactv_ * nactv_ * nactv_ * nactv_ +
                             e2 * nactv_ * nactv_ * nactv_ * nactv_ + e3 * nactv_ * nactv_ * nactv_ +
                             e4 * nactv_ * nactv_ + e5 * nactv_ + e6] = std::get<6>(*it3);
-            } else if (spin_case == 2) {
+            } else if (spin1 && !spin2 && spin3 && !spin4 && !spin5 && !spin6) {
+                // Read from ababbb
                 g3abb_
                     .data()[e1 * nactv_ * nactv_ * nactv_ * nactv_ * nactv_ +
                             e2 * nactv_ * nactv_ * nactv_ * nactv_ + e3 * nactv_ * nactv_ * nactv_ +
                             e4 * nactv_ * nactv_ + e5 * nactv_ + e6] = std::get<6>(*it3);
-            } else {
+            } else if (!spin1 && !spin2 && !spin3 && !spin4 && !spin5 && !spin6) {
+                // Read from bbbbbb
                 g3bbb_
                     .data()[e1 * nactv_ * nactv_ * nactv_ * nactv_ * nactv_ +
                             e2 * nactv_ * nactv_ * nactv_ * nactv_ + e3 * nactv_ * nactv_ * nactv_ +
@@ -212,6 +217,7 @@ double ExternalActiveSpaceMethod::compute_energy() {
         }
     }
 
+    // Read reference energy
     energies_.push_back(energy);
 
     psi::Process::environment.globals["CURRENT ENERGY"] = energy;

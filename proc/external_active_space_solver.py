@@ -91,8 +91,8 @@ def make_hamiltonian(as_ints,state):
     print(f'FCI Energy = {evals[0] + as_ints.scalar_energy() + as_ints.nuclear_repulsion_energy()}')
 
 
-def write_external_rdm_file(active_space_solver, state_weights_map):
-    rdm = active_space_solver.compute_average_rdms(state_weights_map,2)
+def write_external_rdm_file(active_space_solver, state_weights_map, max_rdm_level):
+    rdm = active_space_solver.compute_average_rdms(state_weights_map, max_rdm_level)
 
     g1a = rdm.g1a()
     g1b = rdm.g1b()
@@ -100,6 +100,11 @@ def write_external_rdm_file(active_space_solver, state_weights_map):
     g2aa = rdm.g2aa()
     g2ab = rdm.g2ab()
     g2bb = rdm.g2bb()
+
+    g3aaa = rdm.g3aaa()
+    g3aab = rdm.g3aab()
+    g3abb = rdm.g3abb()
+    g3bbb = rdm.g3bbb()
 
     nact = g1a.shape[0]
 
@@ -130,6 +135,48 @@ def write_external_rdm_file(active_space_solver, state_weights_map):
     file['gamma2'] = {"data" : gamma2,
                    "description" : "two-body density matrix as a list of tuples (i,j,k,l,<i^ j^ l k>)"}
 
+    if max_rdm_level == 3:
+        gamma3 = []
+        for i in range(nact):
+            for j in range(nact):
+                for k in range(nact):
+                    for l in range(nact):
+                        for m in range(nact):
+                            for n in range(nact):
+                                # aaa case
+                                gamma3.append((i*2, j*2, k*2, l*2, m*2, n*2, g3aaa[i,j,k,l,m,n])) #aaaaaa
+                                # aab case
+                                gamma3.append((i*2, j*2, k*2, l*2 + 1, m*2, n*2 + 1, g3aab[i,j,k,l,m,n])) #aaabab
+                                gamma3.append((i*2, j*2 + 1, k*2, l*2, m*2, n*2 + 1, g3aab[i,j,k,l,m,n])) #abaaab
+                                gamma3.append((i*2, j*2 + 1, k*2, l*2 + 1, m*2, n*2, g3aab[i,j,k,l,m,n])) #ababaa
+                                gamma3.append((i*2, j*2, k*2, l*2 + 1, n*2 + 1, m*2, -g3aab[i,j,k,l,m,n])) #aaabba
+                                gamma3.append((i*2, j*2 + 1, k*2, l*2, n*2 + 1, m*2, -g3aab[i,j,k,l,m,n])) #abaaba
+                                gamma3.append((i*2, j*2 + 1, l*2 + 1, k*2, m*2, n*2, -g3aab[i,j,k,l,m,n])) #abbaaa
+                                gamma3.append((i*2, j*2, l*2 + 1, k*2, m*2, n*2 + 1, -g3aab[i,j,k,l,m,n])) #aabaab
+                                gamma3.append((j*2 + 1, i*2, k*2, l*2, m*2, n*2 + 1, -g3aab[i,j,k,l,m,n])) #baaaab
+                                gamma3.append((j*2 + 1, i*2, k*2, l*2 + 1, m*2, n*2, -g3aab[i,j,k,l,m,n])) #baabaa
+                                gamma3.append((i*2, j*2, l*2 + 1, k*2, n*2 + 1, m*2, g3aab[i,j,k,l,m,n])) #aababa
+                                gamma3.append((j*2 + 1, i*2, k*2, l*2, n*2 + 1, m*2, g3aab[i,j,k,l,m,n])) #baaaba
+                                gamma3.append((j*2 + 1, i*2, l*2 + 1, k*2, m*2, n*2, g3aab[i,j,k,l,m,n])) #babaaa
+                                # abb case
+                                gamma3.append((i*2 + 1, j*2 + 1, k*2, l*2 + 1, m*2, n*2 + 1, g3abb[i,j,k,l,m,n])) #bbabab
+                                gamma3.append((i*2, j*2 + 1, k*2 + 1, l*2 + 1, m*2, n*2 + 1, g3abb[i,j,k,l,m,n])) #abbbab
+                                gamma3.append((i*2, j*2 + 1, k*2, l*2 + 1, m*2 + 1, n*2 + 1, g3abb[i,j,k,l,m,n])) #ababbb
+                                gamma3.append((i*2 + 1, j*2 + 1, k*2, l*2 + 1, n*2 + 1, m*2, -g3abb[i,j,k,l,m,n])) #bbabba
+                                gamma3.append((i*2, j*2 + 1, k*2 + 1, l*2 + 1, n*2 + 1, m*2, -g3abb[i,j,k,l,m,n])) #abbbba
+                                gamma3.append((i*2, j*2 + 1, l*2 + 1, k*2, m*2 + 1, n*2 + 1, -g3abb[i,j,k,l,m,n])) #abbabb
+                                gamma3.append((i*2 + 1, j*2 + 1, l*2 + 1, k*2, m*2, n*2 + 1, -g3abb[i,j,k,l,m,n])) #bbbaab
+                                gamma3.append((j*2 + 1, i*2, k*2 + 1, l*2 + 1, m*2, n*2 + 1, -g3abb[i,j,k,l,m,n])) #babbab
+                                gamma3.append((j*2 + 1, i*2, k*2, l*2 + 1, m*2 + 1, n*2 + 1, -g3abb[i,j,k,l,m,n])) #baabbb
+                                gamma3.append((i*2 + 1, j*2 + 1, l*2 + 1, k*2, n*2 + 1, m*2, g3abb[i,j,k,l,m,n])) #bbbaba
+                                gamma3.append((j*2 + 1, i*2, k*2 + 1, l*2 + 1, n*2 + 1, m*2, g3abb[i,j,k,l,m,n])) #babbba
+                                gamma3.append((j*2 + 1, i*2, l*2 + 1, k*2, m*2 + 1, n*2 + 1, g3abb[i,j,k,l,m,n])) #bababb
+                                # bbb case
+                                gamma3.append((i*2 + 1, j*2 + 1, k*2 + 1, l*2 + 1, m*2 + 1, n*2 + 1, g3bbb[i,j,k,l,m,n])) #bbbbbb
+    
+        file['gamma3'] = {"data" : gamma3,
+                       "description" : "three-body density matrix as a list of tuples (i,j,k,l,m,n <i^ j^ k^ n m l>)"}
+    
     with open('rdms.json','w+') as f:
         json.dump(file,f, sort_keys=True, indent=2)
 

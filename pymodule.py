@@ -63,7 +63,7 @@ def forte_driver(state_weights_map, scf_info, options, ints, mo_space_info):
 
     state_energies_list = active_space_solver.compute_energy()
 
-#    write_external_rdm_file(active_space_solver, state_weights_map)
+#    write_external_rdm_file(active_space_solver, state_weights_map, max_rdm_level)
 
 #    if active_space_solver_type == 'EXTERNAL':
 #        read_external_active_space_file(as_ints, state_map)
