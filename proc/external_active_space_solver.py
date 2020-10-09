@@ -101,11 +101,6 @@ def write_external_rdm_file(active_space_solver, state_weights_map, max_rdm_leve
     g2ab = rdm.g2ab()
     g2bb = rdm.g2bb()
 
-    g3aaa = rdm.g3aaa()
-    g3aab = rdm.g3aab()
-    g3abb = rdm.g3abb()
-    g3bbb = rdm.g3bbb()
-
     nact = g1a.shape[0]
 
     gamma1_a = [(i * 2,j * 2,g1a[i][j]) for i in range(nact) for j in range(nact)]
@@ -136,6 +131,10 @@ def write_external_rdm_file(active_space_solver, state_weights_map, max_rdm_leve
                       "description" : "two-body density matrix as a list of tuples (i,j,k,l,<i^ j^ l k>)"}
 
     if max_rdm_level == 3:
+        g3aaa = rdm.g3aaa()
+        g3aab = rdm.g3aab()
+        g3abb = rdm.g3abb()
+        g3bbb = rdm.g3bbb()
         gamma3 = []
         for i in range(nact):
             for j in range(nact):
