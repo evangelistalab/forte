@@ -49,24 +49,24 @@ before_script:
   - psi4 --version
   - psi4 --plugin-compile
   # Compile ambit
-  - cd ${HOME}/build
-  - pwd
-  - git clone https://github.com/jturney/ambit.git ambit
-  - cd ambit
-  - head -n 25 CMakeLists.txt
-  - >
-      cmake -H. -Bobjdir
-      -DCMAKE_C_COMPILER=${HOME}/miniconda/envs/tenv/bin/clang
-      -DCMAKE_CXX_COMPILER=${HOME}/miniconda/envs/tenv/bin/clang++
-      -DOpenMP_LIBRARY_DIRS=${HOME}/miniconda/envs/tenv/lib
-      -DCMAKE_CXX_FLAGS="-stdlib=libc++"
-      -DOpenMP_CXX_FLAG="-fopennmp=libiomp5"
-      -DCMAKE_BUILD_TYPE=Debug
-      -DCMAKE_INSTALL_PREFIX=${HOME}/miniconda/envs/tenv
-      -DPYTHON_EXECUTABLE=${HOME}/miniconda/envs/tenv/bin/python
-  - cd objdir
-  - make -j2
-  - make install
+# - cd ${HOME}/build
+# - pwd
+# - git clone https://github.com/jturney/ambit.git ambit
+# - cd ambit
+# - head -n 25 CMakeLists.txt
+# - >
+#     cmake -H. -Bobjdir
+#     -DCMAKE_C_COMPILER=${HOME}/miniconda/envs/tenv/bin/clang
+#     -DCMAKE_CXX_COMPILER=${HOME}/miniconda/envs/tenv/bin/clang++
+#     -DOpenMP_LIBRARY_DIRS=${HOME}/miniconda/envs/tenv/lib
+#     -DCMAKE_CXX_FLAGS="-stdlib=libc++"
+#     -DOpenMP_CXX_FLAG="-fopennmp=libiomp5"
+#     -DCMAKE_BUILD_TYPE=Debug
+#     -DCMAKE_INSTALL_PREFIX=${HOME}/miniconda/envs/tenv
+#     -DPYTHON_EXECUTABLE=${HOME}/miniconda/envs/tenv/bin/python
+# - cd objdir
+# - make -j2
+# - make install
   # Compile Forte
   - cd ${TRAVIS_BUILD_DIR}
   - PYBIND_INCLUDE=$(python -m pybind11 --includes)
