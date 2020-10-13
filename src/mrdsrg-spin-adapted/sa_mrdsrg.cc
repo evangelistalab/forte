@@ -168,12 +168,11 @@ void SA_MRDSRG::check_memory() {
         dsrg_mem_.add_entry("1- and 2-body Hbar", {"hhpp", "hp"});
         dsrg_mem_.add_entry("1- and 2-body intermediates", {"gg", "gggg", "hhpp"});
     } else {
-        dsrg_mem_.add_entry("1- and 2-body Hbar", {"gggg", "gg"});
-        dsrg_mem_.add_entry("1-body intermediates", {"gg"}, 2);
+        dsrg_mem_.add_entry("1-body Hbar and intermediates", {"gg"}, 3);
         if (nivo_) {
-            dsrg_mem_.add_entry("2-body intermediates", nivo_labels(), 2);
+            dsrg_mem_.add_entry("2-body Hbar and intermediates", nivo_labels(), 3);
         } else {
-            dsrg_mem_.add_entry("2-body intermediates", {"gggg"}, 2);
+            dsrg_mem_.add_entry("2-body Hbar and intermediates", {"gggg"}, 3);
         }
 
         if (sequential_Hbar_) {
