@@ -478,7 +478,8 @@ ambit::Tensor CASSCF::transform_integrals(std::shared_ptr<psi::Matrix> Ca) {
     //         = C_{Mp}^T C_{Nu} J_{MN}^{xy}
     //         = C_{Mp}^T J_{MN}^{xy} C_{Nu}
 
-    JK_->set_memory(psi::Process::environment.get_memory() * 0.85);
+    // set memory in number of doubles
+    JK_->set_memory(psi::Process::environment.get_memory() * 0.85 / 8L);
     JK_->set_do_K(false);
     std::vector<psi::SharedMatrix>& Cl = JK_->C_left();
     std::vector<psi::SharedMatrix>& Cr = JK_->C_right();
