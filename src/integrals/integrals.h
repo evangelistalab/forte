@@ -32,6 +32,7 @@
 
 #include <vector>
 
+#include "psi4/libfock/jk.h"
 #include "psi4/libmints/dimension.h"
 #include "ambit/blocked_tensor.h"
 
@@ -134,11 +135,15 @@ class ForteIntegrals {
     std::shared_ptr<psi::Matrix> Ca() const;
     /// Return Cb
     std::shared_ptr<psi::Matrix> Cb() const;
+
     /// Return nuclear repulsion energy
     double nuclear_repulsion_energy() const;
 
     /// temporary solution for not having a Wavefunction
     std::shared_ptr<psi::Wavefunction> wfn();
+
+    /// Return the Pis4 JK object
+    std::shared_ptr<psi::JK> jk();
 
     // The number of symmetry-adapted orbitals
     // see https://github.com/psi4/psi4/wiki/OrbitalDimensions
@@ -240,6 +245,9 @@ class ForteIntegrals {
     virtual void make_fock_matrix(std::shared_ptr<psi::Matrix> gamma_a,
                                   std::shared_ptr<psi::Matrix> gamma_b) = 0;
 
+    //    virtual void make_fock_matrix_JK(ambit::Tensor gamma_a, ambit::Tensor gamma_b) = 0;
+
+    /// Set nuclear repulstion energy
     void set_nuclear_repulsion(double value);
 
     /// Set the value of the scalar part of the Hamiltonian
@@ -397,6 +405,9 @@ class ForteIntegrals {
     std::vector<double> one_electron_integrals_a_;
     std::vector<double> one_electron_integrals_b_;
 
+    /// JK object from Psi4
+    std::shared_ptr<psi::JK> JK_;
+
     /// Fock matrix stored as a vector
     std::vector<double> fock_matrix_a_;
     std::vector<double> fock_matrix_b_;
@@ -478,6 +489,9 @@ class Psi4Integrals : public ForteIntegrals {
                   std::shared_ptr<MOSpaceInfo> mo_space_info, IntegralType integral_type,
                   IntegralSpinRestriction restricted);
 
+    //    /// Compute Fock matrix using Psi4 JK builder
+    //    void make_fock_matrix_JK(ambit::Tensor gamma_a, ambit::Tensor gamma_b) override;
+
   private:
     void base_initialize_psi4();
     void setup_psi4_ints();
@@ -493,6 +507,9 @@ class Psi4Integrals : public ForteIntegrals {
     std::vector<std::shared_ptr<psi::Matrix>>
     dipole_ints_mo_helper(std::shared_ptr<psi::Matrix> Cao, std::shared_ptr<psi::Vector> epsilon,
                           const bool& resort) override;
+
+    /// Make a shared pointer to a Psi4 JK object
+    void make_psi4_JK();
 
   protected:
     void freeze_core_orbitals() override;

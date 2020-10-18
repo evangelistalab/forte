@@ -95,6 +95,8 @@ void Psi4Integrals::setup_psi4_ints() {
     if (rotate_mos_list.size() > 0) {
         rotate_mos();
     }
+
+    make_psi4_JK();
 }
 
 void Psi4Integrals::transform_one_electron_integrals() {
@@ -134,6 +136,69 @@ void Psi4Integrals::transform_one_electron_integrals() {
     }
 }
 
+void Psi4Integrals::make_psi4_JK() {
+    if (integral_type_ == Conventional) {
+        outfile->Printf("\n  JK created using conventional PK integrals\n");
+        JK_ = JK::build_JK(wfn_->basisset(), psi::BasisSet::zero_ao_basis_set(),
+                           psi::Process::environment.options, "PK");
+    } else if (integral_type_ == Cholesky) {
+        outfile->Printf("\n  JK created using Cholesky integrals\n");
+        JK_ = JK::build_JK(wfn_->basisset(), psi::BasisSet::zero_ao_basis_set(),
+                           psi::Process::environment.options, "CD");
+        //        psi::Options& options = psi::Process::environment.options;
+        //        CDJK* jk = new CDJK(wfn_->basisset(), options_->get_double("CHOLESKY_TOLERANCE"));
+
+        //        if (options["INTS_TOLERANCE"].has_changed())
+        //            jk->set_cutoff(options.get_double("INTS_TOLERANCE"));
+        //        //        if (options["SCREENING"].has_changed())
+        //        //            jk->set_csam(options.get_str("SCREENING") == "CSAM");
+        //        if (options["PRINT"].has_changed())
+        //            jk->set_print(options.get_int("PRINT"));
+        //        if (options["DEBUG"].has_changed())
+        //            jk->set_debug(options.get_int("DEBUG"));
+        //        if (options["BENCH"].has_changed())
+        //            jk->set_bench(options.get_int("BENCH"));
+        //        if (options["DF_INTS_IO"].has_changed())
+        //            jk->set_df_ints_io(options.get_str("DF_INTS_IO"));
+        //        jk->set_condition(options.get_double("DF_FITTING_CONDITION"));
+        //        if (options["DF_INTS_NUM_THREADS"].has_changed())
+        //            jk->set_df_ints_num_threads(options.get_int("DF_INTS_NUM_THREADS"));
+
+        //        JK_ = std::shared_ptr<JK>(jk);
+    } else if ((integral_type_ == DF) or (integral_type_ == DiskDF) or (integral_type_ == DistDF)) {
+        if (options_->get_str("SCF_TYPE") != "DF") {
+            outfile->Printf("\n  Warning: inconsistent integrals used in Psi4 and Forte!");
+            outfile->Printf("\n  This can be fixed by setting SCF_TYPE to DF.");
+        }
+
+        if (integral_type_ == DiskDF) {
+            outfile->Printf("\n  JK created using DiskDF integrals\n");
+            JK_ = JK::build_JK(wfn_->basisset(), wfn_->get_basisset("DF_BASIS_MP2"),
+                               psi::Process::environment.options, "DISK_DF");
+        } else {
+            outfile->Printf("\n  JK created using MemDF integrals\n");
+            JK_ = JK::build_JK(wfn_->basisset(), wfn_->get_basisset("DF_BASIS_MP2"),
+                               psi::Process::environment.options, "MEM_DF");
+        }
+        //        if (options_->get_str("SCF_TYPE") == "DF") {
+        //            outfile->Printf("\n  Building frozen-core operator using DF integrals\n");
+        //            JK_ = JK::build_JK(wfn_->basisset(), wfn_->get_basisset("DF_BASIS_MP2"),
+        //                               psi::Process::environment.options, "MEM_DF");
+        //        } else {
+        //            throw psi::PSIEXCEPTION(
+        //                "Trying to compute the frozen one-body operator with MEM_DF but "
+        //                "using a non-DF integral type for the SCF procedure");
+        //        }
+    } else {
+        throw psi::PSIEXCEPTION("Unknown Pis4 integral type to initialize JK in Forte");
+    }
+
+    // set JK memory to 85% of total memory in number of doubles
+    JK_->set_memory(psi::Process::environment.get_memory() / sizeof(double) * 0.85);
+
+    JK_->set_cutoff(options_->get_double("INTEGRAL_SCREENING"));
+}
+
 void Psi4Integrals::compute_frozen_one_body_operator() {
     local_timer timer_frozen_one_body;
 
@@ -151,72 +216,73 @@ void Psi4Integrals::compute_frozen_one_body_operator() {
         }
     }
 
-    std::shared_ptr<JK> JK_core;
-    if (integral_type_ == Conventional) {
-        outfile->Printf("\n  Building frozen-core operator using PK integrals\n");
-        JK_core = JK::build_JK(wfn_->basisset(), psi::BasisSet::zero_ao_basis_set(),
-                               psi::Process::environment.options, "PK");
-    } else if (integral_type_ == Cholesky) {
-        outfile->Printf("\n  Building frozen-core operator using Cholesky integrals\n");
-        //        JK_core = JK::build_JK(wfn_->basisset(), psi::BasisSet::zero_ao_basis_set(),
-        //                               psi::Process::environment.options, "CD");
-        psi::Options& options = psi::Process::environment.options;
-        CDJK* jk = new CDJK(wfn_->basisset(), options_->get_double("CHOLESKY_TOLERANCE"));
+    //    std::shared_ptr<JK> JK_;
+    //    if (integral_type_ == Conventional) {
+    //        outfile->Printf("\n  Building frozen-core operator using PK integrals\n");
+    //        JK_ = JK::build_JK(wfn_->basisset(), psi::BasisSet::zero_ao_basis_set(),
+    //                               psi::Process::environment.options, "PK");
+    //    } else if (integral_type_ == Cholesky) {
+    //        outfile->Printf("\n  Building frozen-core operator using Cholesky integrals\n");
+    //        //        JK_core = JK::build_JK(wfn_->basisset(), psi::BasisSet::zero_ao_basis_set(),
+    //        //                               psi::Process::environment.options, "CD");
+    //        psi::Options& options = psi::Process::environment.options;
+    //        CDJK* jk = new CDJK(wfn_->basisset(), options_->get_double("CHOLESKY_TOLERANCE"));
 
-        if (options["INTS_TOLERANCE"].has_changed())
-            jk->set_cutoff(options.get_double("INTS_TOLERANCE"));
-        //        if (options["SCREENING"].has_changed())
-        //            jk->set_csam(options.get_str("SCREENING") == "CSAM");
-        if (options["PRINT"].has_changed())
-            jk->set_print(options.get_int("PRINT"));
-        if (options["DEBUG"].has_changed())
-            jk->set_debug(options.get_int("DEBUG"));
-        if (options["BENCH"].has_changed())
-            jk->set_bench(options.get_int("BENCH"));
-        if (options["DF_INTS_IO"].has_changed())
-            jk->set_df_ints_io(options.get_str("DF_INTS_IO"));
-        jk->set_condition(options.get_double("DF_FITTING_CONDITION"));
-        if (options["DF_INTS_NUM_THREADS"].has_changed())
-            jk->set_df_ints_num_threads(options.get_int("DF_INTS_NUM_THREADS"));
+    //        if (options["INTS_TOLERANCE"].has_changed())
+    //            jk->set_cutoff(options.get_double("INTS_TOLERANCE"));
+    //        //        if (options["SCREENING"].has_changed())
+    //        //            jk->set_csam(options.get_str("SCREENING") == "CSAM");
+    //        if (options["PRINT"].has_changed())
+    //            jk->set_print(options.get_int("PRINT"));
+    //        if (options["DEBUG"].has_changed())
+    //            jk->set_debug(options.get_int("DEBUG"));
+    //        if (options["BENCH"].has_changed())
+    //            jk->set_bench(options.get_int("BENCH"));
+    //        if (options["DF_INTS_IO"].has_changed())
+    //            jk->set_df_ints_io(options.get_str("DF_INTS_IO"));
+    //        jk->set_condition(options.get_double("DF_FITTING_CONDITION"));
+    //        if (options["DF_INTS_NUM_THREADS"].has_changed())
+    //            jk->set_df_ints_num_threads(options.get_int("DF_INTS_NUM_THREADS"));
 
-        JK_core = std::shared_ptr<JK>(jk);
-    } else if ((integral_type_ == DF) or (integral_type_ == DiskDF) or (integral_type_ == DistDF)) {
-        if (options_->get_str("SCF_TYPE") == "DF") {
-            outfile->Printf("\n  Building frozen-core operator using DF integrals\n");
-            JK_core = JK::build_JK(wfn_->basisset(), wfn_->get_basisset("DF_BASIS_MP2"),
-                                   psi::Process::environment.options, "MEM_DF");
-        } else {
-            throw psi::PSIEXCEPTION(
-                "Trying to compute the frozen one-body operator with MEM_DF but "
-                "using a non-DF integral type for the SCF procedure");
-        }
-    } else {
-        throw psi::PSIEXCEPTION(
-            "Trying to compute the frozen one-body operator with unknown integral type");
-    }
+    //        JK_ = std::shared_ptr<JK>(jk);
+    //    } else if ((integral_type_ == DF) or (integral_type_ == DiskDF) or (integral_type_ ==
+    //    DistDF)) {
+    //        if (options_->get_str("SCF_TYPE") == "DF") {
+    //            outfile->Printf("\n  Building frozen-core operator using DF integrals\n");
+    //            JK_ = JK::build_JK(wfn_->basisset(), wfn_->get_basisset("DF_BASIS_MP2"),
+    //                                   psi::Process::environment.options, "MEM_DF");
+    //        } else {
+    //            throw psi::PSIEXCEPTION(
+    //                "Trying to compute the frozen one-body operator with MEM_DF but "
+    //                "using a non-DF integral type for the SCF procedure");
+    //        }
+    //    } else {
+    //        throw psi::PSIEXCEPTION(
+    //            "Trying to compute the frozen one-body operator with unknown integral type");
+    //    }
 
-    JK_core->set_memory(psi::Process::environment.get_memory() * 0.8);
-    /// Already transform everything to C1 so make sure JK does not do this.
+    //    JK_->set_memory(psi::Process::environment.get_memory() * 0.8);
+    //    /// Already transform everything to C1 so make sure JK does not do this.
 
-    // JK_core->set_cutoff(options_->get_double("INTEGRAL_SCREENING"));
-    JK_core->set_cutoff(options_->get_double("INTEGRAL_SCREENING"));
-    JK_core->initialize();
-    JK_core->set_do_J(true);
+    //    // JK_core->set_cutoff(options_->get_double("INTEGRAL_SCREENING"));
+    //    JK_->set_cutoff(options_->get_double("INTEGRAL_SCREENING"));
+    JK_->initialize();
+    JK_->set_do_J(true);
     // JK_core->set_allow_desymmetrization(true);
-    JK_core->set_do_K(true);
+    JK_->set_do_K(true);
 
-    std::vector<std::shared_ptr<psi::Matrix>>& Cl = JK_core->C_left();
-    std::vector<std::shared_ptr<psi::Matrix>>& Cr = JK_core->C_right();
+    std::vector<std::shared_ptr<psi::Matrix>>& Cl = JK_->C_left();
+    //    std::vector<std::shared_ptr<psi::Matrix>>& Cr = JK_->C_right();
 
     Cl.clear();
-    Cr.clear();
+    //    Cr.clear();
     Cl.push_back(C_core);
-    Cr.push_back(C_core);
+    //    Cr.push_back(C_core);
 
-    JK_core->compute();
+    JK_->compute();
 
-    std::shared_ptr<psi::Matrix> F_core = JK_core->J()[0];
-    std::shared_ptr<psi::Matrix> K_core = JK_core->K()[0];
+    std::shared_ptr<psi::Matrix> F_core = JK_->J()[0];
+    std::shared_ptr<psi::Matrix> K_core = JK_->K()[0];
 
     F_core->scale(2.0);
     F_core->subtract(K_core);
@@ -250,6 +316,8 @@ void Psi4Integrals::compute_frozen_one_body_operator() {
             frozen_core_energy_ += OneBody_symm_->get(h, fr, fr) + F_core->get(h, fr, fr);
         }
     }
+
+    JK_->finalize();
 
     if (print_ > 0) {
         outfile->Printf("\n  Frozen-core energy        %20.12f a.u.", frozen_core_energy_);
@@ -334,7 +402,7 @@ void Psi4Integrals::rotate_mos() {
         outfile->Printf("   %d   %d   %d\n", rotate_mo_group[0], rotate_mo_group[1],
                         rotate_mo_group[2]);
     }
-      // std::shared_ptr<psi::Matrix> C_old = wfn_->Ca();
+    // std::shared_ptr<psi::Matrix> C_old = wfn_->Ca();
     std::shared_ptr<psi::Matrix> C_old = Ca_;
     std::shared_ptr<psi::Matrix> C_new(C_old->clone());
 
@@ -368,7 +436,6 @@ void Psi4Integrals::rotate_mos() {
     wfn_->epsilon_a()->copy(eps_a);
     wfn_->epsilon_b()->copy(eps_b);
 }
-
 
 void Psi4Integrals::build_dipole_ints_ao() {
     std::shared_ptr<psi::BasisSet> basisset = wfn_->basisset();
@@ -444,4 +511,35 @@ Psi4Integrals::dipole_ints_mo_helper(std::shared_ptr<psi::Matrix> Cao, psi::Shar
 
     return MOdipole_ints;
 }
+
+//void Psi4Integrals::make_fock_matrix_JK(ambit::Tensor gamma_a, ambit::Tensor gamma_b) {
+//    if (gamma_a.dims() != gamma_b.dims()) {
+//        throw std::runtime_error("Different dimensions of alpha and beta 1RDM!");
+//    }
+//    if (mo_space_info_->size("ACTIVE") != gamma_a.dim(0)) {
+//        throw std::runtime_error("Inconsistent number of active orbitals");
+//    }
+//    bool restricted = (spin_restriction_ == IntegralSpinRestriction::Restricted);
+//    if (restricted) {
+//        auto gamma = gamma_a.clone();
+//        gamma("pq") -= gamma_b("pq");
+//        double diff_max = gamma.norm(0);
+//        if (diff_max > options_->get_double("R_CONVERGENCE")) {
+//            outfile->Printf("\n  Warning: spin symmetry broken in 1RDM for restricted orbitals.");
+//            outfile->Printf("\n  Largest difference: %.15f", diff_max);
+//            outfile->Printf("\n  Use unrestricted formalism Fock build!\n");
+//            restricted = false;
+//        }
+//    }
+
+//    if (restricted) {
+//        // transform RDM to SharedMatrix
+
+//        // make restricted Fock matrix using JK
+//    } else {
+//        // transform RDM to SharedMatrix
+
+//        // make unrestricted Fock matrix using JK
+//    }
+//}
 } // namespace forte
