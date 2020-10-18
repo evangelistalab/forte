@@ -1936,6 +1936,11 @@ bool MASTER_DSRG::check_semi_orbs() {
         outfile->Printf("\n    Abort checking semicanonical orbitals.");
         return true;
     }
+    if (mo_space_info_->dimension("ACTIVE") != mo_space_info_->dimension("GAS1")) {
+        outfile->Printf("\n  Warning: Incomplete active space is detected.");
+        outfile->Printf("\n  Abort checking semicanonical orbitals in DSRG.");
+        return true;
+    }
 
     BlockedTensor Fd = BTF_->build(tensor_type_, "Fd", spin_cases({"cc", "aa", "vv"}));
     Fd["pq"] = Fock_["pq"];
