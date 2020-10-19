@@ -325,7 +325,7 @@ void CASSCF_ORB_GRAD::setup_JK() {
                            psi::Process::environment.options, "PK");
     }
 
-    JK_->set_memory(psi::Process::environment.get_memory() * 0.85);
+    JK_->set_memory(psi::Process::environment.get_memory() / sizeof(double) * 0.85);
     JK_->initialize();
     JK_->C_left().clear();
     JK_->C_right().clear();
@@ -453,8 +453,12 @@ void CASSCF_ORB_GRAD::build_tei_from_ao() {
     size_t n_mod = n_pairs - n_buckets * n_pairspb;
 
     // throw for JK's strange "same" test in compute_D() of jk.cc (York 09/09/2020)
-    if (n_pairspb == 1 and nirrep_ != 1)
-        throw std::runtime_error("JK does not work in this case.");
+    if (n_pairspb == 1 and nirrep_ != 1) {
+        outfile->Printf("\n  Error: Problem for JK in compute_D() in this case");
+        outfile->Printf("\n  If there is 1 active orbitals, try RHF/ROHF of Psi4.");
+        outfile->Printf("\n  If not, try to increase the memory or compute in C1 symmetry.");
+        throw std::runtime_error("JK does not work in this case. Try C1 symmetry.");
+    }
 
     // put all (x,y) pairs to a vector for easy splittig to buckets
     std::vector<std::tuple<int, int>> pairs;
