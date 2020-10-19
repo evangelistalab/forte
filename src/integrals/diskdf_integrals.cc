@@ -419,6 +419,7 @@ void DISKDFIntegrals::gather_integrals() {
     // I used this version of build as this doesn't build all the apces and
     // assume a RHF/UHF reference
     df_ = std::make_shared<psi::DFHelper>(primary, auxiliary);
+    df_->set_memory(psi::Process::environment.get_memory() / sizeof(double));
     df_->initialize();
     df_->set_MO_core(false);
     // set_C clears all the orbital spaces, so this creates the space
@@ -427,7 +428,6 @@ void DISKDFIntegrals::gather_integrals() {
     df_->add_space("ALL", Ca_ao);
     // Does not add the pair_space, but says which one is should use
     df_->add_transformation("B", "ALL", "ALL", "Qpq");
-    df_->set_memory(psi::Process::environment.get_memory() / 8L);
 
     // Finally computes the df integrals
     // Does the timings also
