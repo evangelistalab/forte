@@ -385,9 +385,9 @@ double DSRG_MRPT2::compute_energy() {
     // Ecorr += Etemp;
     // energy.push_back({"<[F, T1]>", Etemp});
 
-    // Etemp = E_FT2();
-    // Ecorr += Etemp;
-    // energy.push_back({"<[F, T2]>", Etemp});
+    Etemp = E_FT2();
+    Ecorr += Etemp;
+    energy.push_back({"<[F, T2]>", Etemp});
 
     // Etemp = E_VT1();
     // Ecorr += Etemp;
@@ -414,8 +414,8 @@ double DSRG_MRPT2::compute_energy() {
     } else {
         Etemp = 0.0;
     }
-    EVT2 += Etemp;
-    energy.push_back({"<[V, T2]> C_6 C_2", Etemp});
+    // EVT2 += Etemp;
+    // energy.push_back({"<[V, T2]> C_6 C_2", Etemp});
 
     Ecorr += EVT2;
     Etotal = Ecorr + Eref_;
@@ -920,14 +920,37 @@ void DSRG_MRPT2::renormalize_F() {
         temp["UV"] = tempG["UV"];
     }
 
-    BlockedTensor sum = ambit::BlockedTensor::build(tensor_type_, "Temp sum", spin_cases({"ph"}));
-    sum["ai"] = F_["ai"];
-    sum["ai"] += temp["xu"] * T2_["iuax"];
-    sum["ai"] += temp["XU"] * T2_["iUaX"];
 
-    sum["AI"] = F_["AI"];
-    sum["AI"] += temp["xu"] * T2_["uIxA"];
-    sum["AI"] += temp["XU"] * T2_["IUAX"];
+
+
+    // NOTICE
+    H = BTF_->build(CoreTensor, "One-Electron Integral", spin_cases({"gg"}));
+    H.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>& spin, double& value) {
+        if (spin[0] == AlphaSpin) {
+            value = ints_->oei_a(i[0], i[1]);
+        } else {
+            value = ints_->oei_b(i[0], i[1]);
+        }
+    });
+
+
+
+
+
+
+
+    BlockedTensor sum = ambit::BlockedTensor::build(tensor_type_, "Temp sum", spin_cases({"ph"}));
+    // sum["ai"] = F_["ai"];
+    sum["ai"] = H["ai"];
+    // NOTICE
+    // sum["ai"] += temp["xu"] * T2_["iuax"];
+    // sum["ai"] += temp["XU"] * T2_["iUaX"];
+
+    // sum["AI"] = F_["AI"];
+    sum["AI"] = H["AI"];
+    // NOTICE
+    // sum["AI"] += temp["xu"] * T2_["uIxA"];
+    // sum["AI"] += temp["XU"] * T2_["IUAX"];
 
     // transform to semi-canonical basis
     if (!semi_canonical_) {
@@ -939,18 +962,19 @@ void DSRG_MRPT2::renormalize_F() {
         sum["AI"] = tempF["AI"];
     }
 
-    sum.iterate(
-        [&](const std::vector<size_t>& i, const std::vector<SpinType>& spin, double& value) {
-            if (std::fabs(value) > 1.0e-15) {
-                if (spin[0] == AlphaSpin) {
-                    value *= dsrg_source_->compute_renormalized(Fa_[i[0]] - Fa_[i[1]]);
-                } else {
-                    value *= dsrg_source_->compute_renormalized(Fb_[i[0]] - Fb_[i[1]]);
-                }
-            } else {
-                value = 0.0;
-            }
-        });
+    // NOTICE
+    // sum.iterate(
+    //     [&](const std::vector<size_t>& i, const std::vector<SpinType>& spin, double& value) {
+    //         if (std::fabs(value) > 1.0e-15) {
+    //             if (spin[0] == AlphaSpin) {
+    //                 value *= dsrg_source_->compute_renormalized(Fa_[i[0]] - Fa_[i[1]]);
+    //             } else {
+    //                 value *= dsrg_source_->compute_renormalized(Fb_[i[0]] - Fb_[i[1]]);
+    //             }
+    //         } else {
+    //             value = 0.0;
+    //         }
+    //     });
 
     // transform back to non-canonical basis
     if (!semi_canonical_) {
@@ -963,8 +987,11 @@ void DSRG_MRPT2::renormalize_F() {
     }
 
     // add to original Fock
-    F_["ai"] += sum["ai"];
-    F_["AI"] += sum["AI"];
+    // NOTICE
+    // F_["ai"] += sum["ai"];
+    // F_["AI"] += sum["AI"];
+    F_["ai"] = H["ai"];
+    F_["AI"] = H["AI"];
 
     outfile->Printf("  Done. Timing %15.6f s", timer.get());
 }
@@ -1052,15 +1079,15 @@ double DSRG_MRPT2::E_FT2() {
     BlockedTensor temp = BTF_->build(tensor_type_, "temp", spin_cases({"aaaa"}), true);
 
     temp["uvxy"] += F_["ex"] * T2_["uvey"];
-    temp["uvxy"] -= F_["vm"] * T2_["umxy"];
+    // temp["uvxy"] -= F_["vm"] * T2_["umxy"];
 
     temp["UVXY"] += F_["EX"] * T2_["UVEY"];
-    temp["UVXY"] -= F_["VM"] * T2_["UMXY"];
+    // temp["UVXY"] -= F_["VM"] * T2_["UMXY"];
 
     temp["uVxY"] += F_["ex"] * T2_["uVeY"];
     temp["uVxY"] += F_["EY"] * T2_["uVxE"];
-    temp["uVxY"] -= F_["VM"] * T2_["uMxY"];
-    temp["uVxY"] -= F_["um"] * T2_["mVxY"];
+    // temp["uVxY"] -= F_["VM"] * T2_["uMxY"];
+    // temp["uVxY"] -= F_["um"] * T2_["mVxY"];
 
     E += 0.5 * temp["uvxy"] * Lambda2_["xyuv"];
     E += 0.5 * temp["UVXY"] * Lambda2_["XYUV"];
@@ -1070,15 +1097,15 @@ double DSRG_MRPT2::E_FT2() {
         temp.zero();
 
         temp["uvxy"] += F_["wx"] * T2_["uvwy"];
-        temp["uvxy"] -= F_["vw"] * T2_["uwxy"];
+        // temp["uvxy"] -= F_["vw"] * T2_["uwxy"];
 
         temp["UVXY"] += F_["WX"] * T2_["UVWY"];
-        temp["UVXY"] -= F_["VW"] * T2_["UWXY"];
+        // temp["UVXY"] -= F_["VW"] * T2_["UWXY"];
 
         temp["uVxY"] += F_["wx"] * T2_["uVwY"];
         temp["uVxY"] += F_["WY"] * T2_["uVxW"];
-        temp["uVxY"] -= F_["VW"] * T2_["uWxY"];
-        temp["uVxY"] -= F_["uw"] * T2_["wVxY"];
+        // temp["uVxY"] -= F_["VW"] * T2_["uWxY"];
+        // temp["uVxY"] -= F_["uw"] * T2_["wVxY"];
 
         E += 0.5 * temp["uvxy"] * Lambda2_["xyuv"];
         E += 0.5 * temp["UVXY"] * Lambda2_["XYUV"];

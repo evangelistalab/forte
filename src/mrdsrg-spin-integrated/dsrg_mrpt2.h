@@ -247,6 +247,7 @@ class DSRG_MRPT2 : public MASTER_DSRG {
     void solve_z();
     void set_tau();
     void set_kappa();
+    void set_sigma();
     void set_z();
     void set_alpha();
     void set_CI();
@@ -321,8 +322,12 @@ class DSRG_MRPT2 : public MASTER_DSRG {
     ambit::BlockedTensor Eeps2_m1;
     ambit::BlockedTensor Eeps2_m2;
 
+
     ambit::BlockedTensor Delta1;
     ambit::BlockedTensor Delta2;
+    ambit::BlockedTensor DelGam1;
+    ambit::BlockedTensor DelEeps1;
+
 
 
     ambit::BlockedTensor I;
@@ -334,7 +339,10 @@ class DSRG_MRPT2 : public MASTER_DSRG {
     ambit::BlockedTensor Tau2;
     ambit::BlockedTensor T2OverDelta;
     ambit::BlockedTensor Kappa;
-
+    ambit::BlockedTensor Sigma;
+    ambit::BlockedTensor Sigma1;
+    ambit::BlockedTensor Sigma2;
+    ambit::BlockedTensor Sigma3;
 
 
 
