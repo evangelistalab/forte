@@ -39,8 +39,7 @@ namespace forte {
  */
 class CustomIntegrals : public ForteIntegrals {
   public:
-    /// Contructor of the class.  Calls std::shared_ptr<ForteIntegrals> ints
-    /// constructor
+    /// Contructor of the class. Calls std::shared_ptr<ForteIntegrals> ints constructor
     CustomIntegrals(std::shared_ptr<ForteOptions> options,
                     std::shared_ptr<MOSpaceInfo> mo_space_info, IntegralSpinRestriction restricted,
                     double scalar, const std::vector<double>& oei_a,
@@ -69,13 +68,13 @@ class CustomIntegrals : public ForteIntegrals {
                           std::shared_ptr<psi::Matrix> gamma_b) override;
 
     /// Compute Fock matrix using Psi4 JK builder
-    void make_fock_matrix_JK(ambit::Tensor Da, ambit::Tensor Db) override{};
+    void make_fock_matrix_JK(ambit::Tensor Da, ambit::Tensor Db) override;
 
     std::tuple<psi::SharedMatrix, psi::SharedMatrix, double>
-    make_fock_inactive(psi::Dimension dim_start, psi::Dimension dim_end) override{};
+    make_fock_inactive(psi::Dimension dim_start, psi::Dimension dim_end) override;
 
     std::tuple<psi::SharedMatrix, psi::SharedMatrix> make_fock_active(ambit::Tensor Da,
-                                                                      ambit::Tensor Db) override{};
+                                                                      ambit::Tensor Db) override;
 
     size_t nthree() const override { throw std::runtime_error("Wrong Integral type"); }
 
