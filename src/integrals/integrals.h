@@ -250,8 +250,8 @@ class ForteIntegrals {
     virtual std::tuple<psi::SharedMatrix, psi::SharedMatrix, double>
     make_fock_inactive(psi::Dimension dim_start, psi::Dimension dim_end) = 0;
 
-    virtual std::tuple<psi::SharedMatrix, psi::SharedMatrix>
-    make_fock_active(ambit::Tensor Da, ambit::Tensor Db, bool restricted) = 0;
+    virtual std::tuple<psi::SharedMatrix, psi::SharedMatrix> make_fock_active(ambit::Tensor Da,
+                                                                              ambit::Tensor Db) = 0;
 
     /// Set nuclear repulstion energy
     void set_nuclear_repulsion(double value);
@@ -504,8 +504,8 @@ class Psi4Integrals : public ForteIntegrals {
     std::tuple<psi::SharedMatrix, psi::SharedMatrix, double>
     make_fock_inactive(psi::Dimension dim_start, psi::Dimension dim_end) override;
 
-    std::tuple<psi::SharedMatrix, psi::SharedMatrix>
-    make_fock_active(ambit::Tensor Da, ambit::Tensor Db, bool restricted) override;
+    std::tuple<psi::SharedMatrix, psi::SharedMatrix> make_fock_active(ambit::Tensor Da,
+                                                                      ambit::Tensor Db) override;
 
   private:
     void base_initialize_psi4();

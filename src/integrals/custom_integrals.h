@@ -74,8 +74,8 @@ class CustomIntegrals : public ForteIntegrals {
     std::tuple<psi::SharedMatrix, psi::SharedMatrix, double>
     make_fock_inactive(psi::Dimension dim_start, psi::Dimension dim_end) override{};
 
-    std::tuple<psi::SharedMatrix, psi::SharedMatrix>
-    make_fock_active(ambit::Tensor Da, ambit::Tensor Db, bool restricted) override{};
+    std::tuple<psi::SharedMatrix, psi::SharedMatrix> make_fock_active(ambit::Tensor Da,
+                                                                      ambit::Tensor Db) override{};
 
     size_t nthree() const override { throw std::runtime_error("Wrong Integral type"); }
 

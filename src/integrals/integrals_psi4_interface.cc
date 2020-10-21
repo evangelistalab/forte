@@ -145,29 +145,10 @@ void Psi4Integrals::make_psi4_JK() {
         outfile->Printf("\n  JK created using Cholesky integrals\n");
         JK_ = JK::build_JK(wfn_->basisset(), psi::BasisSet::zero_ao_basis_set(),
                            psi::Process::environment.options, "CD");
-        //        psi::Options& options = psi::Process::environment.options;
-        //        CDJK* jk = new CDJK(wfn_->basisset(), options_->get_double("CHOLESKY_TOLERANCE"));
-
-        //        if (options["INTS_TOLERANCE"].has_changed())
-        //            jk->set_cutoff(options.get_double("INTS_TOLERANCE"));
-        //        //        if (options["SCREENING"].has_changed())
-        //        //            jk->set_csam(options.get_str("SCREENING") == "CSAM");
-        //        if (options["PRINT"].has_changed())
-        //            jk->set_print(options.get_int("PRINT"));
-        //        if (options["DEBUG"].has_changed())
-        //            jk->set_debug(options.get_int("DEBUG"));
-        //        if (options["BENCH"].has_changed())
-        //            jk->set_bench(options.get_int("BENCH"));
-        //        if (options["DF_INTS_IO"].has_changed())
-        //            jk->set_df_ints_io(options.get_str("DF_INTS_IO"));
-        //        jk->set_condition(options.get_double("DF_FITTING_CONDITION"));
-        //        if (options["DF_INTS_NUM_THREADS"].has_changed())
-        //            jk->set_df_ints_num_threads(options.get_int("DF_INTS_NUM_THREADS"));
-
-        //        JK_ = std::shared_ptr<JK>(jk);
     } else if ((integral_type_ == DF) or (integral_type_ == DiskDF) or (integral_type_ == DistDF)) {
         if (options_->get_str("SCF_TYPE") != "DF") {
-            outfile->Printf("\n  Warning: inconsistent integrals used in Psi4 and Forte!");
+            print_h1("Vital Warning from Forte JK Builder");
+            outfile->Printf("\n  Inconsistent integrals used in Psi4 and Forte!");
             outfile->Printf("\n  This can be fixed by setting SCF_TYPE to DF.");
         }
 
@@ -180,15 +161,6 @@ void Psi4Integrals::make_psi4_JK() {
             JK_ = JK::build_JK(wfn_->basisset(), wfn_->get_basisset("DF_BASIS_MP2"),
                                psi::Process::environment.options, "MEM_DF");
         }
-        //        if (options_->get_str("SCF_TYPE") == "DF") {
-        //            outfile->Printf("\n  Building frozen-core operator using DF integrals\n");
-        //            JK_ = JK::build_JK(wfn_->basisset(), wfn_->get_basisset("DF_BASIS_MP2"),
-        //                               psi::Process::environment.options, "MEM_DF");
-        //        } else {
-        //            throw psi::PSIEXCEPTION(
-        //                "Trying to compute the frozen one-body operator with MEM_DF but "
-        //                "using a non-DF integral type for the SCF procedure");
-        //        }
     } else {
         throw psi::PSIEXCEPTION("Unknown Pis4 integral type to initialize JK in Forte");
     }
@@ -204,130 +176,48 @@ void Psi4Integrals::make_psi4_JK() {
 void Psi4Integrals::compute_frozen_one_body_operator() {
     local_timer timer_frozen_one_body;
 
-    psi::Dimension frozen_dim = mo_space_info_->dimension("FROZEN_DOCC");
-    psi::Dimension nmopi = mo_space_info_->dimension("ALL");
-    // Need to get the inactive block of the C matrix
-    psi::Dimension nsopi = wfn_->nsopi();
-    std::shared_ptr<psi::Matrix> C_core(new psi::Matrix("C_core", nirrep_, nsopi, frozen_dim));
-
-    for (int h = 0; h < nirrep_; h++) {
-        for (int mu = 0; mu < nsopi[h]; mu++) {
-            for (int i = 0; i < frozen_dim[h]; i++) {
-                C_core->set(h, mu, i, Ca_->get(h, mu, i));
-            }
-        }
-    }
-
-    //    std::shared_ptr<JK> JK_;
-    //    if (integral_type_ == Conventional) {
-    //        outfile->Printf("\n  Building frozen-core operator using PK integrals\n");
-    //        JK_ = JK::build_JK(wfn_->basisset(), psi::BasisSet::zero_ao_basis_set(),
-    //                               psi::Process::environment.options, "PK");
-    //    } else if (integral_type_ == Cholesky) {
-    //        outfile->Printf("\n  Building frozen-core operator using Cholesky integrals\n");
-    //        //        JK_core = JK::build_JK(wfn_->basisset(), psi::BasisSet::zero_ao_basis_set(),
-    //        //                               psi::Process::environment.options, "CD");
-    //        psi::Options& options = psi::Process::environment.options;
-    //        CDJK* jk = new CDJK(wfn_->basisset(), options_->get_double("CHOLESKY_TOLERANCE"));
-
-    //        if (options["INTS_TOLERANCE"].has_changed())
-    //            jk->set_cutoff(options.get_double("INTS_TOLERANCE"));
-    //        //        if (options["SCREENING"].has_changed())
-    //        //            jk->set_csam(options.get_str("SCREENING") == "CSAM");
-    //        if (options["PRINT"].has_changed())
-    //            jk->set_print(options.get_int("PRINT"));
-    //        if (options["DEBUG"].has_changed())
-    //            jk->set_debug(options.get_int("DEBUG"));
-    //        if (options["BENCH"].has_changed())
-    //            jk->set_bench(options.get_int("BENCH"));
-    //        if (options["DF_INTS_IO"].has_changed())
-    //            jk->set_df_ints_io(options.get_str("DF_INTS_IO"));
-    //        jk->set_condition(options.get_double("DF_FITTING_CONDITION"));
-    //        if (options["DF_INTS_NUM_THREADS"].has_changed())
-    //            jk->set_df_ints_num_threads(options.get_int("DF_INTS_NUM_THREADS"));
-
-    //        JK_ = std::shared_ptr<JK>(jk);
-    //    } else if ((integral_type_ == DF) or (integral_type_ == DiskDF) or (integral_type_ ==
-    //    DistDF)) {
-    //        if (options_->get_str("SCF_TYPE") == "DF") {
-    //            outfile->Printf("\n  Building frozen-core operator using DF integrals\n");
-    //            JK_ = JK::build_JK(wfn_->basisset(), wfn_->get_basisset("DF_BASIS_MP2"),
-    //                                   psi::Process::environment.options, "MEM_DF");
-    //        } else {
-    //            throw psi::PSIEXCEPTION(
-    //                "Trying to compute the frozen one-body operator with MEM_DF but "
-    //                "using a non-DF integral type for the SCF procedure");
-    //        }
-    //    } else {
-    //        throw psi::PSIEXCEPTION(
-    //            "Trying to compute the frozen one-body operator with unknown integral type");
-    //    }
-
-    //    JK_->set_memory(psi::Process::environment.get_memory() * 0.8);
-    //    /// Already transform everything to C1 so make sure JK does not do this.
-
-    //    // JK_core->set_cutoff(options_->get_double("INTEGRAL_SCREENING"));
-    //    JK_->set_cutoff(options_->get_double("INTEGRAL_SCREENING"));
-    //    JK_->initialize();
-    JK_->set_do_J(true);
-    // JK_core->set_allow_desymmetrization(true);
-    JK_->set_do_K(true);
-
-    std::vector<std::shared_ptr<psi::Matrix>>& Cl = JK_->C_left();
-    //    std::vector<std::shared_ptr<psi::Matrix>>& Cr = JK_->C_right();
-
-    Cl.clear();
-    //    Cr.clear();
-    Cl.push_back(C_core);
-    //    Cr.push_back(C_core);
-
-    JK_->compute();
-
-    std::shared_ptr<psi::Matrix> F_core = JK_->J()[0];
-    std::shared_ptr<psi::Matrix> K_core = JK_->K()[0];
-
-    F_core->scale(2.0);
-    F_core->subtract(K_core);
-    F_core->transform(Ca_);
+    // compute frozen-core contribution using closed-shell Fock build
+    auto nfrzcpi = mo_space_info_->dimension("FROZEN_DOCC");
+    auto f = make_fock_inactive(psi::Dimension(nirrep_), nfrzcpi);
+    auto Fock_a = std::get<0>(f);
+    auto Fock_b = std::get<1>(f);
+    frozen_core_energy_ = std::get<2>(f);
 
     // This loop grabs only the correlated part of the correction
-    int full_offset = 0;
-    int corr_offset = 0;
-    //    int full_offset = 0;
-    for (int h = 0; h < nirrep_; h++) {
+    for (int h = 0, corr_offset = 0, full_offset = 0; h < nirrep_; h++) {
         for (int p = 0; p < ncmopi_[h]; ++p) {
+            auto p_corr = p + corr_offset;
+            auto p_full = cmotomo_[p + corr_offset] - full_offset;
+
             for (int q = 0; q < ncmopi_[h]; ++q) {
-                // the index of p and q in the full block of irrep h
-                size_t p_full = cmotomo_[p + corr_offset] - full_offset;
-                size_t q_full = cmotomo_[q + corr_offset] - full_offset;
-                one_electron_integrals_a_[(p + corr_offset) * ncmo_ + (q + corr_offset)] +=
-                    F_core->get(h, p_full, q_full);
-                one_electron_integrals_b_[(p + corr_offset) * ncmo_ + (q + corr_offset)] +=
-                    F_core->get(h, p_full, q_full);
+                auto q_corr = q + corr_offset;
+                auto q_full = cmotomo_[q + corr_offset] - full_offset;
+
+                one_electron_integrals_a_[p_corr * ncmo_ + q_corr] = Fock_a->get(h, p_full, q_full);
+                one_electron_integrals_b_[p_corr * ncmo_ + q_corr] = Fock_b->get(h, p_full, q_full);
             }
         }
+
         full_offset += nmopi_[h];
         corr_offset += ncmopi_[h];
     }
 
-    F_core->add(OneBody_symm_);
-
-    frozen_core_energy_ = 0.0;
-    for (int h = 0; h < nirrep_; h++) {
-        for (int fr = 0; fr < frozen_dim[h]; fr++) {
-            frozen_core_energy_ += OneBody_symm_->get(h, fr, fr) + F_core->get(h, fr, fr);
-        }
-    }
-
     if (print_ > 0) {
-        outfile->Printf("\n  Frozen-core energy        %20.12f a.u.", frozen_core_energy_);
+        outfile->Printf("\n  Frozen-core energy        %20.15f a.u.", frozen_core_energy_);
         print_timing("frozen one-body operator", timer_frozen_one_body.get());
     }
-
-    auto f = make_fock_inactive(psi::Dimension(nirrep_), mo_space_info_->dimension("FROZEN_DOCC"));
-    std::get<0>(f)->print();
-    std::get<1>(f)->print();
-    outfile->Printf("\n  Frozen-core energy from new Fock build %20.15f a.u.", std::get<2>(f));
+    if (print_ > 2) {
+        print_h1("One-body Hamiltonian elements dressed by frozen-core orbitals");
+        if (Fock_a == Fock_b) {
+            Fock_a->set_name("Frozen One Body");
+            Fock_a->print();
+        } else {
+            Fock_a->set_name("Frozen One Body (alpha)");
+            Fock_a->print();
+            Fock_b->set_name("Frozen One Body (beta)");
+            Fock_b->print();
+        }
+    }
 }
 
 void Psi4Integrals::update_orbitals(std::shared_ptr<psi::Matrix> Ca,
@@ -529,27 +419,17 @@ void Psi4Integrals::make_fock_matrix_JK(ambit::Tensor gamma_a, ambit::Tensor gam
     auto rdoccpi = mo_space_info_->dimension("INACTIVE_DOCC");
     auto fock_closed = make_fock_inactive(psi::Dimension(nirrep_), rdoccpi);
 
-    bool restricted = true;
-    if (spin_restriction_ == IntegralSpinRestriction::Restricted) {
-        auto gamma = gamma_a.clone();
-        gamma("pq") -= gamma_b("pq");
-        double diff_max = gamma.norm(0);
-        if (diff_max > options_->get_double("R_CONVERGENCE")) {
-            outfile->Printf("\n  Warning: spin symmetry broken in 1RDM for restricted orbitals.");
-            outfile->Printf("\n  Largest difference: %.15f", diff_max);
-            outfile->Printf("\n  Use unrestricted formalism Fock build!\n");
-            restricted = false;
-        }
-    }
+    // build active Fock
+    auto fock_active = make_fock_active(gamma_a, gamma_b);
 
-    auto fock_active = make_fock_active(gamma_a, gamma_b, restricted);
-
-    if (restricted) {
+    if (std::get<0>(fock_active) == std::get<1>(fock_active)) {
+        // restricted orbitals and ms-averaged RDMs
         fock_a_ = std::get<0>(fock_closed)->clone();
         fock_a_->add(std::get<0>(fock_active));
         fock_a_->set_name("Fock");
         fock_b_ = fock_a_;
     } else {
+        // unrestricted orbitals or non-singlet RDMs
         fock_a_ = std::get<0>(fock_closed)->clone();
         fock_a_->add(std::get<0>(fock_active));
         fock_a_->set_name("Fock alpha");
@@ -558,8 +438,6 @@ void Psi4Integrals::make_fock_matrix_JK(ambit::Tensor gamma_a, ambit::Tensor gam
         fock_b_->add(std::get<1>(fock_active));
         fock_b_->set_name("Fock beta");
     }
-
-    outfile->Printf("\n  Fock spin equivalence: %s", fock_a_ == fock_b_ ? "true" : "false");
 }
 
 std::tuple<psi::SharedMatrix, psi::SharedMatrix, double>
@@ -657,8 +535,21 @@ Psi4Integrals::make_fock_inactive(psi::Dimension dim_start, psi::Dimension dim_e
     }
 }
 
-std::tuple<psi::SharedMatrix, psi::SharedMatrix>
-Psi4Integrals::make_fock_active(ambit::Tensor Da, ambit::Tensor Db, bool restricted) {
+std::tuple<psi::SharedMatrix, psi::SharedMatrix> Psi4Integrals::make_fock_active(ambit::Tensor Da,
+                                                                                 ambit::Tensor Db) {
+    // test if spin equivalence between 1RDM
+    bool rdm_eq_spin = true;
+    auto gamma = Da.clone();
+    gamma("pq") -= Db("pq");
+    double diff_max = gamma.norm(0);
+    if (diff_max > options_->get_double("R_CONVERGENCE")) {
+        outfile->Printf("\n  Warning: unequivalent alpha and beta 1RDMs.");
+        outfile->Printf("\n  Largest difference between alpha and beta: %.15f", diff_max);
+        outfile->Printf("\n  Use unrestricted formalism to build Fock martix!\n");
+        rdm_eq_spin = false;
+    }
+
+    // general setup
     auto nactvpi = mo_space_info_->dimension("ACTIVE");
     auto nactv = mo_space_info_->size("ACTIVE");
     auto& Da_data = Da.data();
@@ -667,7 +558,7 @@ Psi4Integrals::make_fock_active(ambit::Tensor Da, ambit::Tensor Db, bool restric
     auto ndoccpi = mo_space_info_->dimension("INACTIVE_DOCC");
     auto nholepi = ndoccpi + nactvpi;
 
-    if (restricted) {
+    if (rdm_eq_spin and spin_restriction_ == IntegralSpinRestriction::Restricted) {
         // fill in density (spin-summed)
         auto g1 = std::make_shared<psi::Matrix>("1RDM", nactvpi, nactvpi);
         for (int h = 0, offset = 0; h < nirrep_; ++h) {
