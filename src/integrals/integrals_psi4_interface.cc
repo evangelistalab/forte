@@ -197,6 +197,8 @@ void Psi4Integrals::make_psi4_JK() {
     JK_->set_memory(psi::Process::environment.get_memory() / sizeof(double) * 0.85);
 
     JK_->set_cutoff(options_->get_double("INTEGRAL_SCREENING"));
+
+    JK_->initialize();
 }
 
 void Psi4Integrals::compute_frozen_one_body_operator() {
@@ -266,7 +268,7 @@ void Psi4Integrals::compute_frozen_one_body_operator() {
 
     //    // JK_core->set_cutoff(options_->get_double("INTEGRAL_SCREENING"));
     //    JK_->set_cutoff(options_->get_double("INTEGRAL_SCREENING"));
-    JK_->initialize();
+    //    JK_->initialize();
     JK_->set_do_J(true);
     // JK_core->set_allow_desymmetrization(true);
     JK_->set_do_K(true);
@@ -316,8 +318,6 @@ void Psi4Integrals::compute_frozen_one_body_operator() {
             frozen_core_energy_ += OneBody_symm_->get(h, fr, fr) + F_core->get(h, fr, fr);
         }
     }
-
-    JK_->finalize();
 
     if (print_ > 0) {
         outfile->Printf("\n  Frozen-core energy        %20.12f a.u.", frozen_core_energy_);
@@ -512,34 +512,135 @@ Psi4Integrals::dipole_ints_mo_helper(std::shared_ptr<psi::Matrix> Cao, psi::Shar
     return MOdipole_ints;
 }
 
-//void Psi4Integrals::make_fock_matrix_JK(ambit::Tensor gamma_a, ambit::Tensor gamma_b) {
-//    if (gamma_a.dims() != gamma_b.dims()) {
-//        throw std::runtime_error("Different dimensions of alpha and beta 1RDM!");
-//    }
-//    if (mo_space_info_->size("ACTIVE") != gamma_a.dim(0)) {
-//        throw std::runtime_error("Inconsistent number of active orbitals");
-//    }
-//    bool restricted = (spin_restriction_ == IntegralSpinRestriction::Restricted);
-//    if (restricted) {
-//        auto gamma = gamma_a.clone();
-//        gamma("pq") -= gamma_b("pq");
-//        double diff_max = gamma.norm(0);
-//        if (diff_max > options_->get_double("R_CONVERGENCE")) {
-//            outfile->Printf("\n  Warning: spin symmetry broken in 1RDM for restricted orbitals.");
-//            outfile->Printf("\n  Largest difference: %.15f", diff_max);
-//            outfile->Printf("\n  Use unrestricted formalism Fock build!\n");
-//            restricted = false;
-//        }
-//    }
+void Psi4Integrals::make_fock_matrix_JK(ambit::Tensor gamma_a, ambit::Tensor gamma_b,
+                                        bool rebuild_inactive) {
+    if (gamma_a.dims() != gamma_b.dims()) {
+        throw std::runtime_error("Different dimensions of alpha and beta 1RDM!");
+    }
+    if (mo_space_info_->size("ACTIVE") != gamma_a.dim(0)) {
+        throw std::runtime_error("Inconsistent number of active orbitals");
+    }
 
-//    if (restricted) {
-//        // transform RDM to SharedMatrix
+    // compute inactive Fock matrix
+    make_fock_inactive(psi::Dimension(nirrep_), mo_space_info_->dimension("INACTIVE_DOCC"));
+}
 
-//        // make restricted Fock matrix using JK
-//    } else {
-//        // transform RDM to SharedMatrix
+std::tuple<psi::SharedMatrix, psi::SharedMatrix, double>
+Psi4Integrals::make_fock_inactive(psi::Dimension dim_start, psi::Dimension dim_end) {
+    auto dim = dim_end - dim_start;
 
-//        // make unrestricted Fock matrix using JK
-//    }
-//}
+    if (spin_restriction_ == IntegralSpinRestriction::Restricted) {
+        auto Csub = std::make_shared<psi::Matrix>("Ca_sub", nsopi_, dim);
+
+        for (int h = 0; h < nirrep_; ++h) {
+            for (int p = 0, offset = dim_start[h]; p < dim[h]; ++p) {
+                Csub->set_column(h, p, Ca_->get_column(h, p + offset));
+            }
+        }
+
+        // JK build
+        JK_->set_do_K(true);
+        std::vector<std::shared_ptr<psi::Matrix>>& Cls = JK_->C_left();
+        std::vector<std::shared_ptr<psi::Matrix>>& Crs = JK_->C_right();
+        Cls.clear();
+        Crs.clear();
+
+        Cls.push_back(Csub);
+
+        JK_->compute();
+
+        auto J = JK_->J()[0];
+        J->scale(2.0);
+        J->subtract(JK_->K()[0]);
+        J->add(wfn_->H());
+
+        // transform to MO
+        auto F_closed = psi::linalg::triplet(Ca_, J, Ca_, true, false, false);
+        F_closed->set_name("Fock_closed");
+
+        // compute closed-shell energy
+        J->add(wfn_->H());
+        double e_closed = J->vector_dot(psi::linalg::doublet(Csub, Csub, false, true));
+
+        return std::make_tuple(F_closed, F_closed, e_closed);
+    } else {
+        auto Ca_sub = std::make_shared<psi::Matrix>("Ca_sub", nsopi_, dim);
+        auto Cb_sub = std::make_shared<psi::Matrix>("Cb_sub", nsopi_, dim);
+
+        for (int h = 0; h < nirrep_; ++h) {
+            for (int p = 0, offset = dim_start[h]; p < dim[h]; ++p) {
+                Ca_sub->set_column(h, p, Ca_->get_column(h, p + offset));
+                Cb_sub->set_column(h, p, Cb_->get_column(h, p + offset));
+            }
+        }
+
+        auto Fa_closed = wfn_->H()->clone();
+        auto Fb_closed = wfn_->H()->clone();
+
+        // JK build on alpha
+        JK_->set_do_K(true);
+        std::vector<std::shared_ptr<psi::Matrix>>& Cls = JK_->C_left();
+        std::vector<std::shared_ptr<psi::Matrix>>& Crs = JK_->C_right();
+        Crs.clear();
+
+        Cls.clear();
+        Cls.push_back(Ca_sub);
+        JK_->compute();
+
+        Fa_closed->add(JK_->J()[0]);
+        Fa_closed->subtract(JK_->K()[0]);
+
+        Fb_closed->add(JK_->J()[0]);
+
+        // JK build on beta
+        Cls.clear();
+        Cls.push_back(Cb_sub);
+        JK_->compute();
+
+        Fa_closed->add(JK_->J()[0]);
+
+        Fb_closed->add(JK_->J()[0]);
+        Fb_closed->subtract(JK_->K()[0]);
+
+        // save a copy of AO Fock
+        auto J = JK_->J()[0];
+        auto K = JK_->K()[0];
+        J->copy(Fa_closed);
+        K->copy(Fb_closed);
+
+        // transform to MO basis
+        Fa_closed = psi::linalg::triplet(Ca_, Fa_closed, Ca_, true, false, false);
+        Fa_closed->set_name("Fock_closed alpha");
+        Fb_closed = psi::linalg::triplet(Cb_, Fb_closed, Cb_, true, false, false);
+        Fb_closed->set_name("Fock_closed beta");
+
+        // compute closed-shell energy using unrestricted equation
+        J->add(wfn_->H());
+        K->add(wfn_->H());
+        double e_closed = 0.5 * J->vector_dot(psi::linalg::doublet(Ca_sub, Ca_sub, false, true));
+        e_closed += 0.5 * K->vector_dot(psi::linalg::doublet(Cb_sub, Cb_sub, false, true));
+
+        return std::make_tuple(Fa_closed, Fb_closed, e_closed);
+    }
+}
+
+void Psi4Integrals::make_fock_active(ambit::Tensor Da, ambit::Tensor Db) {
+    bool restricted = true;
+    if (spin_restriction_ == IntegralSpinRestriction::Restricted) {
+        auto gamma = Da.clone();
+        gamma("pq") -= Db("pq");
+        double diff_max = gamma.norm(0);
+        if (diff_max > options_->get_double("R_CONVERGENCE")) {
+            outfile->Printf("\n  Warning: spin symmetry broken in 1RDM for restricted orbitals.");
+            outfile->Printf("\n  Largest difference: %.15f", diff_max);
+            outfile->Printf("\n  Use unrestricted formalism Fock build!\n");
+            restricted = false;
+        }
+    }
+
+    if (restricted) {
+
+    } else {
+    }
+}
 } // namespace forte

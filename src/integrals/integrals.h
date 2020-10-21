@@ -245,7 +245,13 @@ class ForteIntegrals {
     virtual void make_fock_matrix(std::shared_ptr<psi::Matrix> gamma_a,
                                   std::shared_ptr<psi::Matrix> gamma_b) = 0;
 
-    //    virtual void make_fock_matrix_JK(ambit::Tensor gamma_a, ambit::Tensor gamma_b) = 0;
+    virtual void make_fock_matrix_JK(ambit::Tensor Da, ambit::Tensor Db,
+                                     bool rebuild_inactive = true) = 0;
+
+    virtual std::tuple<psi::SharedMatrix, psi::SharedMatrix, double>
+    make_fock_inactive(psi::Dimension dim_start, psi::Dimension dim_end) = 0;
+
+    virtual void make_fock_active(ambit::Tensor Da, ambit::Tensor Db) = 0;
 
     /// Set nuclear repulstion energy
     void set_nuclear_repulsion(double value);
@@ -489,8 +495,14 @@ class Psi4Integrals : public ForteIntegrals {
                   std::shared_ptr<MOSpaceInfo> mo_space_info, IntegralType integral_type,
                   IntegralSpinRestriction restricted);
 
-    //    /// Compute Fock matrix using Psi4 JK builder
-    //    void make_fock_matrix_JK(ambit::Tensor gamma_a, ambit::Tensor gamma_b) override;
+    /// Compute Fock matrix using Psi4 JK builder
+    void make_fock_matrix_JK(ambit::Tensor Da, ambit::Tensor Db,
+                             bool rebuild_inactive = true) override;
+
+    std::tuple<psi::SharedMatrix, psi::SharedMatrix, double>
+    make_fock_inactive(psi::Dimension dim_start, psi::Dimension dim_end) override;
+
+    void make_fock_active(ambit::Tensor Da, ambit::Tensor Db) override;
 
   private:
     void base_initialize_psi4();

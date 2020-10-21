@@ -68,6 +68,15 @@ class CustomIntegrals : public ForteIntegrals {
     void make_fock_matrix(std::shared_ptr<psi::Matrix> gamma_a,
                           std::shared_ptr<psi::Matrix> gamma_b) override;
 
+    /// Compute Fock matrix using Psi4 JK builder
+    void make_fock_matrix_JK(ambit::Tensor Da, ambit::Tensor Db,
+                             bool rebuild_inactive = true) override {};
+
+    std::tuple<psi::SharedMatrix, psi::SharedMatrix, double>
+    make_fock_inactive(psi::Dimension dim_start, psi::Dimension dim_end) override {};
+
+    void make_fock_active(ambit::Tensor Da, ambit::Tensor Db) override {};
+
     size_t nthree() const override { throw std::runtime_error("Wrong Integral type"); }
 
     void set_tei(size_t p, size_t q, size_t r, size_t s, double value, bool alpha1,
