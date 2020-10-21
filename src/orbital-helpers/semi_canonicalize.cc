@@ -231,6 +231,8 @@ void SemiCanonical::build_fock_matrix(RDMs& rdms) {
     auto L1a = tensor_to_matrix(rdms.g1a(), actv_);
     auto L1b = tensor_to_matrix(rdms.g1b(), actv_);
 
+    ints_->make_fock_matrix_JK(rdms.g1a(), rdms.g1b());
+
     for (size_t h = 0, offset = 0; h < nirrep_; ++h) {
         // core block (diagonal)
         for (int i = 0; i < rdocc_[h]; ++i) {

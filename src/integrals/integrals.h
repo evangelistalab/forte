@@ -245,13 +245,13 @@ class ForteIntegrals {
     virtual void make_fock_matrix(std::shared_ptr<psi::Matrix> gamma_a,
                                   std::shared_ptr<psi::Matrix> gamma_b) = 0;
 
-    virtual void make_fock_matrix_JK(ambit::Tensor Da, ambit::Tensor Db,
-                                     bool rebuild_inactive = true) = 0;
+    virtual void make_fock_matrix_JK(ambit::Tensor Da, ambit::Tensor Db) = 0;
 
     virtual std::tuple<psi::SharedMatrix, psi::SharedMatrix, double>
     make_fock_inactive(psi::Dimension dim_start, psi::Dimension dim_end) = 0;
 
-    virtual void make_fock_active(ambit::Tensor Da, ambit::Tensor Db) = 0;
+    virtual std::tuple<psi::SharedMatrix, psi::SharedMatrix>
+    make_fock_active(ambit::Tensor Da, ambit::Tensor Db, bool restricted) = 0;
 
     /// Set nuclear repulstion energy
     void set_nuclear_repulsion(double value);
@@ -418,6 +418,9 @@ class ForteIntegrals {
     std::vector<double> fock_matrix_a_;
     std::vector<double> fock_matrix_b_;
 
+    psi::SharedMatrix fock_a_;
+    psi::SharedMatrix fock_b_;
+
     /// Two-electron integrals stored as a vector with redundant elements (no permutational
     /// symmetry). These are addressed with the function aptei_index
     std::vector<double> aphys_tei_aa_;
@@ -496,13 +499,13 @@ class Psi4Integrals : public ForteIntegrals {
                   IntegralSpinRestriction restricted);
 
     /// Compute Fock matrix using Psi4 JK builder
-    void make_fock_matrix_JK(ambit::Tensor Da, ambit::Tensor Db,
-                             bool rebuild_inactive = true) override;
+    void make_fock_matrix_JK(ambit::Tensor Da, ambit::Tensor Db) override;
 
     std::tuple<psi::SharedMatrix, psi::SharedMatrix, double>
     make_fock_inactive(psi::Dimension dim_start, psi::Dimension dim_end) override;
 
-    void make_fock_active(ambit::Tensor Da, ambit::Tensor Db) override;
+    std::tuple<psi::SharedMatrix, psi::SharedMatrix>
+    make_fock_active(ambit::Tensor Da, ambit::Tensor Db, bool restricted) override;
 
   private:
     void base_initialize_psi4();
