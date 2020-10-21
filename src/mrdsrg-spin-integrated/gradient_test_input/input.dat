@@ -35,11 +35,11 @@ dsrg_s 1.0
    multiplicity         3 
 }
 
-grad = gradient('forte')
+# grad = gradient('forte')
 
 set findif{ 
   points 5
   DISP_SIZE 0.001
 }
-# grad = gradient('forte',dertype="energy")
+grad = gradient('forte',dertype="energy")
 

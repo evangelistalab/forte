@@ -921,33 +921,13 @@ void DSRG_MRPT2::renormalize_F() {
     }
 
 
-
-
-    // NOTICE
-    H = BTF_->build(CoreTensor, "One-Electron Integral", spin_cases({"gg"}));
-    H.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>& spin, double& value) {
-        if (spin[0] == AlphaSpin) {
-            value = ints_->oei_a(i[0], i[1]);
-        } else {
-            value = ints_->oei_b(i[0], i[1]);
-        }
-    });
-
-
-
-
-
-
-
     BlockedTensor sum = ambit::BlockedTensor::build(tensor_type_, "Temp sum", spin_cases({"ph"}));
-    // sum["ai"] = F_["ai"];
-    sum["ai"] = H["ai"];
+    sum["ai"] = F_["ai"];
     // NOTICE
     // sum["ai"] += temp["xu"] * T2_["iuax"];
     // sum["ai"] += temp["XU"] * T2_["iUaX"];
 
-    // sum["AI"] = F_["AI"];
-    sum["AI"] = H["AI"];
+    sum["AI"] = F_["AI"];
     // NOTICE
     // sum["AI"] += temp["xu"] * T2_["uIxA"];
     // sum["AI"] += temp["XU"] * T2_["IUAX"];
@@ -963,18 +943,18 @@ void DSRG_MRPT2::renormalize_F() {
     }
 
     // NOTICE
-    // sum.iterate(
-    //     [&](const std::vector<size_t>& i, const std::vector<SpinType>& spin, double& value) {
-    //         if (std::fabs(value) > 1.0e-15) {
-    //             if (spin[0] == AlphaSpin) {
-    //                 value *= dsrg_source_->compute_renormalized(Fa_[i[0]] - Fa_[i[1]]);
-    //             } else {
-    //                 value *= dsrg_source_->compute_renormalized(Fb_[i[0]] - Fb_[i[1]]);
-    //             }
-    //         } else {
-    //             value = 0.0;
-    //         }
-    //     });
+    sum.iterate(
+        [&](const std::vector<size_t>& i, const std::vector<SpinType>& spin, double& value) {
+            if (std::fabs(value) > 1.0e-15) {
+                if (spin[0] == AlphaSpin) {
+                    value *= dsrg_source_->compute_renormalized(Fa_[i[0]] - Fa_[i[1]]);
+                } else {
+                    value *= dsrg_source_->compute_renormalized(Fb_[i[0]] - Fb_[i[1]]);
+                }
+            } else {
+                value = 0.0;
+            }
+        });
 
     // transform back to non-canonical basis
     if (!semi_canonical_) {
@@ -988,10 +968,8 @@ void DSRG_MRPT2::renormalize_F() {
 
     // add to original Fock
     // NOTICE
-    // F_["ai"] += sum["ai"];
-    // F_["AI"] += sum["AI"];
-    F_["ai"] = H["ai"];
-    F_["AI"] = H["AI"];
+    F_["ai"] += sum["ai"];
+    F_["AI"] += sum["AI"];
 
     outfile->Printf("  Done. Timing %15.6f s", timer.get());
 }
