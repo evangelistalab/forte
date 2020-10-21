@@ -96,7 +96,7 @@ double ExternalActiveSpaceMethod::compute_energy() {
 
     // call python
     auto j = read_json_file();
-    std::cout << j << std::endl;
+    // std::cout << j << std::endl;
 
     double energy = j["energy"]["data"];
 

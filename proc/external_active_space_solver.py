@@ -21,9 +21,7 @@ def write_wavefunction(ref_wfn):
 def read_wavefunction(ref_wfn):
     with open('coeff.json') as f:
         data = json.load(f)
-        #print(C_list)
         C_read = data["Ca"]
-#        C_list = np.asarray(C_read)
 
         C_list = []
         for i in range(len(C_read)):
@@ -32,9 +30,7 @@ def read_wavefunction(ref_wfn):
             else:
                 C_list.append(np.asarray(C_read[i]))
         
-        print(C_list)
         C_mat = psi4.core.Matrix.from_array(C_list)
-        C_mat.print_out()
         ref_wfn.Ca().copy(C_mat)
         ref_wfn.Cb().copy(C_mat)
 
