@@ -37,7 +37,7 @@ import forte
 import psi4.driver.p4util as p4util
 from psi4.driver.procrouting import proc_util
 import forte.proc.fcidump
-from forte.proc.external_active_space_solver import write_external_active_space_file, write_external_rdm_file
+from forte.proc.external_active_space_solver import write_external_active_space_file, write_external_rdm_file, write_wavefunction, read_wavefunction
 
 def forte_driver(state_weights_map, scf_info, options, ints, mo_space_info):
     max_rdm_level = 3 if options.get_str("THREEPDC") != "ZERO" else 2
@@ -63,7 +63,8 @@ def forte_driver(state_weights_map, scf_info, options, ints, mo_space_info):
 
     state_energies_list = active_space_solver.compute_energy()
 
-#    write_external_rdm_file(active_space_solver, state_weights_map, max_rdm_level)
+    if options.get_bool("WRITE_RDM"):
+        write_external_rdm_file(active_space_solver, state_weights_map, max_rdm_level)
 
 #    if active_space_solver_type == 'EXTERNAL':
 #        read_external_active_space_file(as_ints, state_map)
@@ -675,6 +676,15 @@ def run_forte(name, **kwargs):
     if job_type == 'NONE':
         forte.cleanup()
         return ref_wfn
+
+    if options.get_bool('WRITE_WFN'):
+        write_wavefunction(ref_wfn)
+
+    if options.get_bool('READ_WFN'):
+        if not os.path.isfile('coeff.json'):
+            print('No coefficient files in input folder, run a SCF first!')
+            exit()
+        read_wavefunction(ref_wfn)
 
     start_pre_ints = time.time()
 

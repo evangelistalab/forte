@@ -2,7 +2,41 @@
 # -*- coding: utf-8 -*-
 
 import json
+import psi4
 import forte
+import numpy as np
+
+class NumpyEncoder(json.JSONEncoder):
+    def default(self, obj):
+        if isinstance(obj, np.ndarray):
+            return obj.tolist()
+        return json.JSONEncoder.default(self, obj)
+
+def write_wavefunction(ref_wfn):
+    Ca = ref_wfn.Ca().to_array()
+
+    with open('coeff.json', 'w+') as f:
+        json.dump({'Ca': Ca}, f, cls=NumpyEncoder)
+
+def read_wavefunction(ref_wfn):
+    with open('coeff.json') as f:
+        data = json.load(f)
+        #print(C_list)
+        C_read = data["Ca"]
+#        C_list = np.asarray(C_read)
+
+        C_list = []
+        for i in range(len(C_read)):
+            if not C_read[i]:
+                C_list.append(None)
+            else:
+                C_list.append(np.asarray(C_read[i]))
+        
+        print(C_list)
+        C_mat = psi4.core.Matrix.from_array(C_list)
+        C_mat.print_out()
+        ref_wfn.Ca().copy(C_mat)
+        ref_wfn.Cb().copy(C_mat)
 
 def write_external_active_space_file(as_ints, state_map, json_file="forte_ints.json"):
     for state,nroots in state_map.items():
