@@ -923,14 +923,12 @@ void DSRG_MRPT2::renormalize_F() {
 
     BlockedTensor sum = ambit::BlockedTensor::build(tensor_type_, "Temp sum", spin_cases({"ph"}));
     sum["ai"] = F_["ai"];
-    // NOTICE
-    // sum["ai"] += temp["xu"] * T2_["iuax"];
-    // sum["ai"] += temp["XU"] * T2_["iUaX"];
+    sum["ai"] += temp["xu"] * T2_["iuax"];
+    sum["ai"] += temp["XU"] * T2_["iUaX"];
 
     sum["AI"] = F_["AI"];
-    // NOTICE
-    // sum["AI"] += temp["xu"] * T2_["uIxA"];
-    // sum["AI"] += temp["XU"] * T2_["IUAX"];
+    sum["AI"] += temp["xu"] * T2_["uIxA"];
+    sum["AI"] += temp["XU"] * T2_["IUAX"];
 
     // transform to semi-canonical basis
     if (!semi_canonical_) {
@@ -942,7 +940,6 @@ void DSRG_MRPT2::renormalize_F() {
         sum["AI"] = tempF["AI"];
     }
 
-    // NOTICE
     sum.iterate(
         [&](const std::vector<size_t>& i, const std::vector<SpinType>& spin, double& value) {
             if (std::fabs(value) > 1.0e-15) {
@@ -967,7 +964,6 @@ void DSRG_MRPT2::renormalize_F() {
     }
 
     // add to original Fock
-    // NOTICE
     F_["ai"] += sum["ai"];
     F_["AI"] += sum["AI"];
 
