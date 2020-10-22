@@ -245,11 +245,27 @@ class ForteIntegrals {
     virtual void make_fock_matrix(std::shared_ptr<psi::Matrix> gamma_a,
                                   std::shared_ptr<psi::Matrix> gamma_b) = 0;
 
+    /// Make the generalized Fock matrix (closed-shell + active)
+    /// @param Da The alpha 1RDM (nactv x nactv, no symmetry) from RDMs class
+    /// @param Db The beta 1RDM (nactv x nactv, no symmetry) from RDMs class
     virtual void make_fock_matrix_JK(ambit::Tensor Da, ambit::Tensor Db) = 0;
 
+    /// Make the closed-shell Fock matrix in MO basis (include frozen orbitals)
+    /// @param dim_start Dimension for the starting index (per irrep) of closed-shell orbitals
+    /// @param dim_end Dimension for the ending index (per irrep) of closed-shell orbitals
+    /// @return alpha Fock, beta Fock, and closed-shell energy
+    /// spin orbital equation:
+    /// F_{pq} = h_{pq} + \sum_{i}^{closed} <pi||qi>
+    /// e_closed = \sum_{i}^{closed} h_{ii} + 0.5 * \sum_{ij}^{closed} <ij||ij>
     virtual std::tuple<psi::SharedMatrix, psi::SharedMatrix, double>
     make_fock_inactive(psi::Dimension dim_start, psi::Dimension dim_end) = 0;
 
+    /// Make the active Fock matrix in MO basis (include frozen orbitals)
+    /// @param Da The alpha 1RDM (nactv x nactv, no symmetry) from RDMs class
+    /// @param Db The beta 1RDM (nactv x nactv, no symmetry) from RDMs class
+    /// @return alpha Fock, beta Fock
+    /// spin orbital equation:
+    /// F_{pq} = \sum_{uv}^{active} <pu||qv> * gamma_{uv}
     virtual std::tuple<psi::SharedMatrix, psi::SharedMatrix> make_fock_active(ambit::Tensor Da,
                                                                               ambit::Tensor Db) = 0;
 
@@ -418,6 +434,7 @@ class ForteIntegrals {
     std::vector<double> fock_matrix_a_;
     std::vector<double> fock_matrix_b_;
 
+    /// Fock matrix (including frozen orbitals)
     psi::SharedMatrix fock_a_;
     psi::SharedMatrix fock_b_;
 
@@ -498,12 +515,14 @@ class Psi4Integrals : public ForteIntegrals {
                   std::shared_ptr<MOSpaceInfo> mo_space_info, IntegralType integral_type,
                   IntegralSpinRestriction restricted);
 
-    /// Compute Fock matrix using Psi4 JK builder
+    /// Make the generalized Fock matrix using Psi4 JK object
     void make_fock_matrix_JK(ambit::Tensor Da, ambit::Tensor Db) override;
 
+    /// Make the closed-shell Fock matrix using Psi4 JK object
     std::tuple<psi::SharedMatrix, psi::SharedMatrix, double>
     make_fock_inactive(psi::Dimension dim_start, psi::Dimension dim_end) override;
 
+    /// Make the active Fock matrix using Psi4 JK object
     std::tuple<psi::SharedMatrix, psi::SharedMatrix> make_fock_active(ambit::Tensor Da,
                                                                       ambit::Tensor Db) override;
 
