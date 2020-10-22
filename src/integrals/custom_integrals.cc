@@ -290,6 +290,10 @@ void CustomIntegrals::make_fock_matrix_JK(ambit::Tensor Da, ambit::Tensor Db) {
 
 std::tuple<psi::SharedMatrix, psi::SharedMatrix, double>
 CustomIntegrals::make_fock_inactive(psi::Dimension dim_start, psi::Dimension dim_end) {
+    // Implementation Notes (spin-orbital)
+    // F_{pq} = h_{pq} + \sum_{i}^{closed} <pi||qi>
+    // e_closed = \sum_{i}^{closed} h_{ii} + 0.5 * \sum_{ij}^{closed} <ij||ij>
+
     auto dim = dim_end - dim_start;
 
     // we will use unrestricted formalism
@@ -359,6 +363,9 @@ CustomIntegrals::make_fock_inactive(psi::Dimension dim_start, psi::Dimension dim
 
 std::tuple<psi::SharedMatrix, psi::SharedMatrix>
 CustomIntegrals::make_fock_active(ambit::Tensor Da, ambit::Tensor Db) {
+    // Implementation Notes (spin-orbital)
+    // F_{pq} = \sum_{uv}^{active} <pu||qv> * gamma_{uv}
+
     auto nactv = mo_space_info_->size("ACTIVE");
 
     if (Da.dims() != Db.dims()) {

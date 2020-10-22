@@ -447,6 +447,14 @@ void Psi4Integrals::make_fock_matrix_JK(ambit::Tensor gamma_a, ambit::Tensor gam
 
 std::tuple<psi::SharedMatrix, psi::SharedMatrix, double>
 Psi4Integrals::make_fock_inactive(psi::Dimension dim_start, psi::Dimension dim_end) {
+    /* F_closed = Hcore + Vclosed in AO basis
+     *
+     * Vclosed = D_{uv}^{inactive docc} * (2 * (uv|rs) - (us|rv))
+     * D_{uv}^{inactive docc} = \sum_{i}^{inactive docc} C_{ui} * C_{vi}
+     *
+     * u,v,r,s: AO indices; i: MO indices
+     */
+
     auto dim = dim_end - dim_start;
 
     if (spin_restriction_ == IntegralSpinRestriction::Restricted) {
@@ -542,6 +550,10 @@ Psi4Integrals::make_fock_inactive(psi::Dimension dim_start, psi::Dimension dim_e
 
 std::tuple<psi::SharedMatrix, psi::SharedMatrix> Psi4Integrals::make_fock_active(ambit::Tensor Da,
                                                                                  ambit::Tensor Db) {
+    // Implementation Notes (in AO basis)
+    // F_active = D_{uv}^{active} * ( (uv|rs) - 0.5 * (us|rv) )
+    // D_{uv}^{active} = \sum_{xy}^{active} C_{ux} * C_{vy} * Gamma1_{xy}
+
     if (Da.dims() != Db.dims()) {
         throw std::runtime_error("Different dimensions of alpha and beta 1RDM!");
     }
