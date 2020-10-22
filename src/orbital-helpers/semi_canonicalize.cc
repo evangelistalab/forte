@@ -173,6 +173,7 @@ RDMs SemiCanonical::semicanonicalize(RDMs& rdms, const int& max_rdm_level, const
         }
         print_timing("semi-canonicalization", SemiCanonicalize.get());
     }
+
     return rdms;
 }
 

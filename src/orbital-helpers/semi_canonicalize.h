@@ -144,4 +144,4 @@ class SemiCanonical {
 };
 } // namespace forte
 
-#endif // _mp2_nos_h_
+#endif // _semi_canonicalize_h_
