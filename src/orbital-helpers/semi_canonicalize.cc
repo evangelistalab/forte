@@ -225,36 +225,35 @@ RDMs SemiCanonical::semicanonicalize(RDMs& rdms, const int& max_rdm_level, const
 void SemiCanonical::build_fock_matrix(RDMs& rdms) {
     // 1. Build the Fock matrix
 
-    psi::SharedMatrix Da(new psi::Matrix("Da", ncmo_, ncmo_));
-    psi::SharedMatrix Db(new psi::Matrix("Db", ncmo_, ncmo_));
+//    psi::SharedMatrix Da(new psi::Matrix("Da", ncmo_, ncmo_));
+//    psi::SharedMatrix Db(new psi::Matrix("Db", ncmo_, ncmo_));
 
-    auto L1a = tensor_to_matrix(rdms.g1a(), actv_);
-    auto L1b = tensor_to_matrix(rdms.g1b(), actv_);
+//    auto L1a = tensor_to_matrix(rdms.g1a(), actv_);
+//    auto L1b = tensor_to_matrix(rdms.g1b(), actv_);
 
-    ints_->make_fock_matrix_JK(rdms.g1a(), rdms.g1b());
+//    for (size_t h = 0, offset = 0; h < nirrep_; ++h) {
+//        // core block (diagonal)
+//        for (int i = 0; i < rdocc_[h]; ++i) {
+//            Da->set(offset + i, offset + i, 1.0);
+//            Db->set(offset + i, offset + i, 1.0);
+//        }
 
-    for (size_t h = 0, offset = 0; h < nirrep_; ++h) {
-        // core block (diagonal)
-        for (int i = 0; i < rdocc_[h]; ++i) {
-            Da->set(offset + i, offset + i, 1.0);
-            Db->set(offset + i, offset + i, 1.0);
-        }
+//        offset += rdocc_[h];
 
-        offset += rdocc_[h];
+//        // active block
+//        for (int u = 0; u < actv_[h]; ++u) {
+//            for (int v = 0; v < actv_[h]; ++v) {
+//                Da->set(offset + u, offset + v, L1a->get(h, u, v));
+//                Db->set(offset + u, offset + v, L1b->get(h, u, v));
+//            }
+//        }
 
-        // active block
-        for (int u = 0; u < actv_[h]; ++u) {
-            for (int v = 0; v < actv_[h]; ++v) {
-                Da->set(offset + u, offset + v, L1a->get(h, u, v));
-                Db->set(offset + u, offset + v, L1b->get(h, u, v));
-            }
-        }
-
-        offset += ncmopi_[h] - rdocc_[h];
-    }
+//        offset += ncmopi_[h] - rdocc_[h];
+//    }
 
     local_timer FockTime;
-    ints_->make_fock_matrix(Da, Db);
+//    ints_->make_fock_matrix(Da, Db);
+    ints_->make_fock_matrix_JK(rdms.g1a(), rdms.g1b());
     outfile->Printf("\n  Took %8.6f s to build Fock matrix", FockTime.get());
 }
 
@@ -283,8 +282,8 @@ bool SemiCanonical::check_fock_matrix() {
             // TODO: try omp here
             for (int i = 0; i < npi[h]; ++i) {
                 for (int j = 0; j < npi[h]; ++j) {
-                    Fa->set(h, i, j, ints_->get_fock_a(cmo_idx_[name][h][i], cmo_idx_[name][h][j]));
-                    Fb->set(h, i, j, ints_->get_fock_b(cmo_idx_[name][h][i], cmo_idx_[name][h][j]));
+                    Fa->set(h, i, j, ints_->get_fock_a(cmo_idx_[name][h][i], cmo_idx_[name][h][j], true));
+                    Fb->set(h, i, j, ints_->get_fock_b(cmo_idx_[name][h][i], cmo_idx_[name][h][j], true));
                 }
             }
         }
@@ -363,9 +362,9 @@ void SemiCanonical::build_transformation_matrices(psi::SharedMatrix& Ua, psi::Sh
                 for (int i = 0; i < npi[h]; ++i) {
                     for (int j = 0; j < npi[h]; ++j) {
                         Fa->set(h, i, j,
-                                ints_->get_fock_a(cmo_idx_[name][h][i], cmo_idx_[name][h][j]));
+                                ints_->get_fock_a(cmo_idx_[name][h][i], cmo_idx_[name][h][j], true));
                         Fb->set(h, i, j,
-                                ints_->get_fock_b(cmo_idx_[name][h][i], cmo_idx_[name][h][j]));
+                                ints_->get_fock_b(cmo_idx_[name][h][i], cmo_idx_[name][h][j], true));
                     }
                 }
             }

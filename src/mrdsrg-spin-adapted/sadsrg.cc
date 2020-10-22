@@ -305,19 +305,21 @@ void SADSRG::build_fock_from_ints(std::shared_ptr<ForteIntegrals> ints, BlockedT
     F = BTF_->build(tensor_type_, "Fock", {"gg"});
 
     // for convenience, directly call make_fock_matrix in ForteIntegral
-    psi::SharedMatrix D1a(new psi::Matrix("D1a", ncmo, ncmo));
-    for (size_t m = 0, ncore = core_mos_.size(); m < ncore; m++) {
-        D1a->set(core_mos_[m], core_mos_[m], 1.0);
-    }
+//    psi::SharedMatrix D1a(new psi::Matrix("D1a", ncmo, ncmo));
+//    for (size_t m = 0, ncore = core_mos_.size(); m < ncore; m++) {
+//        D1a->set(core_mos_[m], core_mos_[m], 1.0);
+//    }
 
-    L1_.block("aa").citerate([&](const std::vector<size_t>& i, const double& value) {
-        D1a->set(actv_mos_[i[0]], actv_mos_[i[1]], 0.5 * value);
-    });
+//    L1_.block("aa").citerate([&](const std::vector<size_t>& i, const double& value) {
+//        D1a->set(actv_mos_[i[0]], actv_mos_[i[1]], 0.5 * value);
+//    });
 
-    ints->make_fock_matrix(D1a, D1a);
+    auto g1a = L1_.block("aa").clone();
+    g1a.scale(0.5);
+    ints->make_fock_matrix_JK(g1a, g1a);
 
     F.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>&, double& value) {
-        value = ints->get_fock_a(i[0], i[1]);
+        value = ints->get_fock_a(i[0], i[1], true);
     });
 }
 

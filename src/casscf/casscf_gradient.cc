@@ -144,30 +144,31 @@ void CASSCF::set_v() {
 void CASSCF::set_fock() {
     outfile->Printf("\n    Setting Fock matrix ............................. ");
 
-    psi::SharedMatrix D1a(new psi::Matrix("D1a", ncmo_, ncmo_));
-    psi::SharedMatrix D1b(new psi::Matrix("D1b", ncmo_, ncmo_));
+//    psi::SharedMatrix D1a(new psi::Matrix("D1a", ncmo_, ncmo_));
+//    psi::SharedMatrix D1b(new psi::Matrix("D1b", ncmo_, ncmo_));
 
-    // Fill core-core blocks
-    for (size_t m = 0, ncore = rdocc_mos_.size(); m < ncore; m++) {
-        D1a->set(rdocc_mos_[m], rdocc_mos_[m], 1.0);
-        D1b->set(rdocc_mos_[m], rdocc_mos_[m], 1.0);
-    }
+//    // Fill core-core blocks
+//    for (size_t m = 0, ncore = rdocc_mos_.size(); m < ncore; m++) {
+//        D1a->set(rdocc_mos_[m], rdocc_mos_[m], 1.0);
+//        D1b->set(rdocc_mos_[m], rdocc_mos_[m], 1.0);
+//    }
 
-    // Fill active-active blocks
-    Gamma1_.block("aa").citerate([&](const std::vector<size_t>& i, const double& value) {
-        D1a->set(actv_mos_[i[0]], actv_mos_[i[1]], value);
-    });
-    Gamma1_.block("AA").citerate([&](const std::vector<size_t>& i, const double& value) {
-        D1b->set(actv_mos_[i[0]], actv_mos_[i[1]], value);
-    });
+//    // Fill active-active blocks
+//    Gamma1_.block("aa").citerate([&](const std::vector<size_t>& i, const double& value) {
+//        D1a->set(actv_mos_[i[0]], actv_mos_[i[1]], value);
+//    });
+//    Gamma1_.block("AA").citerate([&](const std::vector<size_t>& i, const double& value) {
+//        D1b->set(actv_mos_[i[0]], actv_mos_[i[1]], value);
+//    });
 
     // Make Fock matrices
-    ints_->make_fock_matrix(D1a, D1b);
+//    ints_->make_fock_matrix(D1a, D1b);
+    ints_->make_fock_matrix_JK(Gamma1_.block("aa"), Gamma1_.block("AA"));
     F_.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>& spin, double& value) {
         if (spin[0] == AlphaSpin) {
-            value = ints_->get_fock_a(i[0], i[1]);
+            value = ints_->get_fock_a(i[0], i[1], true);
         } else {
-            value = ints_->get_fock_b(i[0], i[1]);
+            value = ints_->get_fock_b(i[0], i[1], true);
         }
     });
 
