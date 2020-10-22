@@ -143,11 +143,22 @@ void Psi4Integrals::make_psi4_JK() {
                            psi::Process::environment.options, "PK");
     } else if (integral_type_ == Cholesky) {
         outfile->Printf("\n  JK created using Cholesky integrals\n");
+        // push Forte option "CHOLESKY_TOLERANCE" to Psi4 environment
+        auto& psi4_options = psi::Process::environment.options;
+        auto psi4_cd = psi4_options.get_double("CHOLESKY_TOLERANCE");
+        auto forte_cd = options_->get_double("CHOLESKY_TOLERANCE");
+        if (psi4_cd != forte_cd) {
+            print_h1("Warning from Forte JK Builder (CD)");
+            outfile->Printf("\n  Inconsistent Cholesky tolerance between Psi4 and Forte");
+            outfile->Printf("\n  Psi4: %.3E, Forte: %3E", psi4_cd, forte_cd);
+            outfile->Printf("\n  Forte threshold pushed to Psi4 global options!");
+            psi4_options.set_global_double("CHOLESKY_TOLERANCE", forte_cd);
+        }
         JK_ = JK::build_JK(wfn_->basisset(), psi::BasisSet::zero_ao_basis_set(),
                            psi::Process::environment.options, "CD");
     } else if ((integral_type_ == DF) or (integral_type_ == DiskDF) or (integral_type_ == DistDF)) {
         if (options_->get_str("SCF_TYPE") != "DF") {
-            print_h1("Vital Warning from Forte JK Builder");
+            print_h1("Vital Warning from Forte JK Builder (DF)");
             outfile->Printf("\n  Inconsistent integrals used in Psi4 and Forte!");
             outfile->Printf("\n  This can be fixed by setting SCF_TYPE to DF.");
         }
