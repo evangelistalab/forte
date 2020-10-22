@@ -137,12 +137,21 @@ void Psi4Integrals::transform_one_electron_integrals() {
 }
 
 void Psi4Integrals::make_psi4_JK() {
+    if (integral_type_ != Conventional and
+        spin_restriction_ == IntegralSpinRestriction::Unrestricted) {
+    }
+
     if (integral_type_ == Conventional) {
         outfile->Printf("\n  JK created using conventional PK integrals\n");
         JK_ = JK::build_JK(wfn_->basisset(), psi::BasisSet::zero_ao_basis_set(),
                            psi::Process::environment.options, "PK");
     } else if (integral_type_ == Cholesky) {
+        if (spin_restriction_ == IntegralSpinRestriction::Unrestricted) {
+            throw psi::PSIEXCEPTION("Unrestricted orbitals not supported for CD integrals");
+        }
+
         outfile->Printf("\n  JK created using Cholesky integrals\n");
+
         // push Forte option "CHOLESKY_TOLERANCE" to Psi4 environment
         auto& psi4_options = psi::Process::environment.options;
         auto psi4_cd = psi4_options.get_double("CHOLESKY_TOLERANCE");
@@ -154,9 +163,14 @@ void Psi4Integrals::make_psi4_JK() {
             outfile->Printf("\n  Forte threshold pushed to Psi4 global options!");
             psi4_options.set_global_double("CHOLESKY_TOLERANCE", forte_cd);
         }
+
         JK_ = JK::build_JK(wfn_->basisset(), psi::BasisSet::zero_ao_basis_set(),
                            psi::Process::environment.options, "CD");
     } else if ((integral_type_ == DF) or (integral_type_ == DiskDF) or (integral_type_ == DistDF)) {
+        if (spin_restriction_ == IntegralSpinRestriction::Unrestricted) {
+            throw psi::PSIEXCEPTION("Unrestricted orbitals not supported for DF integrals");
+        }
+
         if (options_->get_str("SCF_TYPE") != "DF") {
             print_h1("Vital Warning from Forte JK Builder (DF)");
             outfile->Printf("\n  Inconsistent integrals used in Psi4 and Forte!");

@@ -100,12 +100,6 @@ void SemiCanonical::startup() {
     // Get the list of elementary spaces
     std::vector<std::string> space_names = mo_space_info_->space_names();
 
-    // Remove the frozen orbitals
-    space_names.erase(std::remove(space_names.begin(), space_names.end(), "FROZEN_DOCC"),
-                      space_names.end());
-    space_names.erase(std::remove(space_names.begin(), space_names.end(), "FROZEN_UOCC"),
-                      space_names.end());
-
     // dimension map
     for (std::string& space : space_names) {
         mo_dims_[space] = mo_space_info_->dimension(space);
@@ -115,8 +109,8 @@ void SemiCanonical::startup() {
     auto offset_dim = psi::Dimension(nirrep_);
     for (std::string& space : space_names) {
         auto dim = mo_dims_[space];
-        cmo_idx_[space] = idx_space(dim, offset_dim, ncmopi_);
-        offsets_[space] = fdocc_ + offset_dim;
+        mo_idx_[space] = idx_space(dim, offset_dim);
+        offsets_[space] = offset_dim;
         offset_dim += dim;
     }
 
@@ -137,8 +131,7 @@ void SemiCanonical::startup() {
 }
 
 std::vector<std::vector<size_t>> SemiCanonical::idx_space(const psi::Dimension& npi,
-                                                          const psi::Dimension& bpi,
-                                                          const psi::Dimension& tpi) {
+                                                          const psi::Dimension& bpi) {
     std::vector<std::vector<size_t>> out(nirrep_, std::vector<size_t>());
 
     for (size_t h = 0, offset = 0; h < nirrep_; ++h) {
@@ -146,52 +139,11 @@ std::vector<std::vector<size_t>> SemiCanonical::idx_space(const psi::Dimension& 
         for (int i = 0; i < npi[h]; ++i) {
             out[h].emplace_back(offset + i);
         }
-        offset += tpi[h] - bpi[h];
+        offset += nmopi_[h] - bpi[h];
     }
 
     return out;
 }
-
-// void SemiCanonical::set_actv_dims(const psi::Dimension& actv_docc,
-//                                  const psi::Dimension& actv_virt) {
-//    // test actv_docc and actv_virt
-//    psi::Dimension actv = actv_docc + actv_virt;
-//    if (actv != actv_) {
-//        throw psi::PSIEXCEPTION("ACTIVE_DOCC and ACTIVE_VIRT do not add up to ACTIVE!");
-//    }
-
-//    // delete original active maps
-//    mo_dims_.erase("actv");
-//    cmo_idx_.erase("actv");
-//    offsets_.erase("actv");
-//    actv_offsets_.erase("actv");
-
-//    // save to class variables
-//    actv_docc_ = actv_docc;
-//    actv_virt_ = actv_virt;
-
-//    // active dimension map
-//    mo_dims_["actv_docc"] = actv_docc_;
-//    mo_dims_["actv_virt"] = actv_virt_;
-
-//    // active index map
-//    cmo_idx_["actv_docc"] = idx_space(actv_docc_, rdocc_, ncmopi_);
-//    cmo_idx_["actv_virt"] = idx_space(actv_virt_, rdocc_ + actv_docc, ncmopi_);
-
-//    // active offsets map
-//    offsets_["actv_docc"] = fdocc_ + rdocc_;
-//    offsets_["actv_virt"] = fdocc_ + rdocc_ + actv_docc_;
-
-//    std::vector<int> actvh_off, actvp_off;
-//    for (size_t h = 0, offset = 0; h < nirrep_; ++h) {
-//        actvh_off.emplace_back(offset);
-//        offset += actv_docc[h];
-//        actvp_off.emplace_back(offset);
-//        offset += actv_virt[h];
-//    }
-//    actv_offsets_["actv_docc"] = actvh_off;
-//    actv_offsets_["actv_virt"] = actvp_off;
-//}
 
 RDMs SemiCanonical::semicanonicalize(RDMs& rdms, const int& max_rdm_level, const bool& build_fock,
                                      const bool& transform) {
@@ -199,7 +151,9 @@ RDMs SemiCanonical::semicanonicalize(RDMs& rdms, const int& max_rdm_level, const
 
     // 1. Build the Fock matrix from ForteIntegral
     if (build_fock) {
-        build_fock_matrix(rdms);
+        local_timer FockTime;
+        ints_->make_fock_matrix(rdms.g1a(), rdms.g1b());
+        outfile->Printf("\n  Took %8.6f s to build Fock matrix", FockTime.get());
     }
 
     // Check Fock matrix
@@ -210,7 +164,7 @@ RDMs SemiCanonical::semicanonicalize(RDMs& rdms, const int& max_rdm_level, const
         set_U_to_identity();
     } else {
         // 2. Build transformation matrices from diagononalizing blocks in F
-        build_transformation_matrices(Ua_, Ub_, Ua_t_, Ub_t_);
+        build_transformation_matrices();
 
         // 3. Retransform integrals and cumulants/RDMs
         if (transform) {
@@ -222,18 +176,15 @@ RDMs SemiCanonical::semicanonicalize(RDMs& rdms, const int& max_rdm_level, const
     return rdms;
 }
 
-void SemiCanonical::build_fock_matrix(RDMs& rdms) {
-    // 1. Build the Fock matrix
-
-    local_timer FockTime;
-
-    ints_->make_fock_matrix(rdms.g1a(), rdms.g1b());
-    outfile->Printf("\n  Took %8.6f s to build Fock matrix", FockTime.get());
-}
-
 bool SemiCanonical::check_fock_matrix() {
     print_h2("Checking Fock Matrix Diagonal Blocks");
     bool semi = true;
+
+    auto fock_a = ints_->get_fock_a(false);
+    auto fock_b = ints_->get_fock_b(false);
+    std::vector<std::string> spin_cases{"alpha"};
+    if (fock_a != fock_b)
+        spin_cases.push_back("beta");
 
     int width = 18 + 2 + 13 + 2 + 13;
     std::string dash(width, '-');
@@ -241,53 +192,34 @@ bool SemiCanonical::check_fock_matrix() {
                     "2-Norm");
     outfile->Printf("\n    %s", dash.c_str());
 
-    // loop over orbital spaces
-    for (const auto& name_dim_pair : mo_dims_) {
-        std::string name = name_dim_pair.first;
-        std::string name_a = "Fa " + name;
-        std::string name_b = "Fb " + name;
-        psi::Dimension npi = name_dim_pair.second;
+    for (const std::string& spin : spin_cases) {
+        auto& fock = (spin == "alpha") ? fock_a : fock_b;
 
-        // build Fock matrix of this diagonal block
-        psi::SharedMatrix Fa(new psi::Matrix(name_a, npi, npi));
-        psi::SharedMatrix Fb(new psi::Matrix(name_b, npi, npi));
+        // loop over orbital spaces
+        for (const auto& name_dim_pair : mo_dims_) {
+            std::string name = name_dim_pair.first;
+            psi::Dimension npi = name_dim_pair.second;
 
-        for (size_t h = 0; h < nirrep_; ++h) {
-            // TODO: try omp here
-            for (int i = 0; i < npi[h]; ++i) {
-                for (int j = 0; j < npi[h]; ++j) {
-                    Fa->set(h, i, j, ints_->get_fock_a(cmo_idx_[name][h][i], cmo_idx_[name][h][j]));
-                    Fb->set(h, i, j, ints_->get_fock_b(cmo_idx_[name][h][i], cmo_idx_[name][h][j]));
-                }
+            // grab Fock matrix of this diagonal block
+            psi::Slice slice(offsets_[name], offsets_[name] + npi);
+            auto Fsub = fock->get_block(slice, slice);
+            Fsub->set_name("Fock " + name + " " + spin);
+
+            Fsub->zero_diagonal();
+            double Fmax = Fsub->absmax();
+            double Fnorm = std::sqrt(Fsub->sum_of_squares());
+
+            outfile->Printf("\n    %-18s  %13.10f  %13.10f", name.c_str(), Fmax, Fnorm);
+
+            // check threshold
+            double threshold_norm = npi.sum() * (npi.sum() - 1) * threshold_tight_;
+            bool Fdo = (Fmax <= threshold_loose_ && Fnorm <= threshold_norm) ? false : true;
+            checked_results_[name + spin] = Fdo;
+            if (Fdo) {
+                semi = false;
             }
         }
-
-        // zero diagonal elements
-        Fa->zero_diagonal();
-        Fb->zero_diagonal();
-
-        // max value
-        double Famax = Fa->absmax();
-        double Fbmax = Fb->absmax();
-
-        // 2-norm
-        double Fanorm = std::sqrt(Fa->sum_of_squares());
-        double Fbnorm = std::sqrt(Fb->sum_of_squares());
-
-        // printing
-        outfile->Printf("\n    %-18s  %13.10f  %13.10f", name_a.c_str(), Famax, Fanorm);
-        outfile->Printf("\n    %-18s  %13.10f  %13.10f", name_b.c_str(), Fbmax, Fbnorm);
         outfile->Printf("\n    %s", dash.c_str());
-
-        // check threshold
-        double threshold_norm = npi.sum() * (npi.sum() - 1) * threshold_tight_;
-        bool FaDo = (Famax <= threshold_loose_ && Fanorm <= threshold_norm) ? false : true;
-        bool FbDo = (Fbmax <= threshold_loose_ && Fbnorm <= threshold_norm) ? false : true;
-        bool FDo = FaDo && FbDo;
-        checked_results_[name] = FDo;
-        if (FDo) {
-            semi = false;
-        }
     }
 
     return semi;
@@ -304,92 +236,65 @@ void SemiCanonical::set_U_to_identity() {
         [&](const std::vector<size_t>& i, double& value) { value = (i[0] == i[1]) ? 1.0 : 0.0; });
 }
 
-void SemiCanonical::build_transformation_matrices(psi::SharedMatrix& Ua, psi::SharedMatrix& Ub,
-                                                  ambit::Tensor& Ua_t, ambit::Tensor& Ub_t) {
+void SemiCanonical::build_transformation_matrices() {
     // 2. Diagonalize the diagonal blocks of the Fock matrix
 
     // set Ua and Ub to identity by default
-    Ua->identity();
-    Ub->identity();
-    std::vector<double> UaData(nact_ * nact_, 0.0);
-    std::vector<double> UbData(nact_ * nact_, 0.0);
-    for (size_t i = 0; i < nact_; ++i) {
-        UaData[i * nact_ + i] = 1.0;
-        UbData[i * nact_ + i] = 1.0;
-    }
+    set_U_to_identity();
 
-    // loop over orbital spaces
-    for (const auto& name_dim_pair : mo_dims_) {
-        const std::string& name = name_dim_pair.first;
-        const std::string name_a = "Fock " + name + " alpha";
-        const std::string name_b = "Fock " + name + " beta";
-        psi::Dimension npi = name_dim_pair.second;
-        bool FockDo = checked_results_[name];
+    auto fock_a = ints_->get_fock_a(false);
+    auto fock_b = ints_->get_fock_b(false);
 
-        if (FockDo) {
-            // build Fock matrix of this diagonal block
-            psi::SharedMatrix Fa(new psi::Matrix(name_a, npi, npi));
-            psi::SharedMatrix Fb(new psi::Matrix(name_b, npi, npi));
+    std::vector<std::string> spin_cases{"alpha"};
+    if (fock_a != fock_b)
+        spin_cases.push_back("beta");
 
-            for (size_t h = 0; h < nirrep_; ++h) {
-                // TODO: try omp here
-                for (int i = 0; i < npi[h]; ++i) {
-                    for (int j = 0; j < npi[h]; ++j) {
-                        Fa->set(h, i, j,
-                                ints_->get_fock_a(cmo_idx_[name][h][i], cmo_idx_[name][h][j]));
-                        Fb->set(h, i, j,
-                                ints_->get_fock_b(cmo_idx_[name][h][i], cmo_idx_[name][h][j]));
-                    }
-                }
-            }
+    for (const std::string& spin : spin_cases) {
+        auto& fock = (spin == "alpha") ? fock_a : fock_b;
+        auto& U = (spin == "alpha") ? Ua_ : Ub_;
+        auto& UData = (spin == "alpha") ? Ua_t_.data() : Ub_t_.data();
 
-            // diagonalize this Fock block
-            psi::SharedMatrix UsubA(new psi::Matrix("Ua " + name, npi, npi));
-            psi::SharedMatrix UsubB(new psi::Matrix("Ub " + name, npi, npi));
-            psi::SharedVector evalsA(new Vector("evals a " + name, npi));
-            psi::SharedVector evalsB(new Vector("evals b " + name, npi));
-            Fa->diagonalize(UsubA, evalsA);
-            Fb->diagonalize(UsubB, evalsB);
+        // loop over orbital spaces
+        for (const auto& name_dim_pair : mo_dims_) {
+            const std::string& name = name_dim_pair.first;
+            psi::Dimension npi = name_dim_pair.second;
 
-            // fill in Ua and Ub
-            for (size_t h = 0; h < nirrep_; ++h) {
-                int offset = offsets_[name][h];
-                // TODO: try omp here
-                for (int i = 0; i < npi[h]; ++i) {
-                    for (int j = 0; j < npi[h]; ++j) {
-                        Ua->set(h, offset + i, offset + j, UsubA->get(h, i, j));
-                        Ub->set(h, offset + i, offset + j, UsubB->get(h, i, j));
-                    }
-                }
-            }
+            if (checked_results_[name + spin]) {
+                // build Fock matrix of this diagonal block
+                psi::Slice slice(offsets_[name], offsets_[name] + npi);
+                auto Fsub = fock->get_block(slice, slice);
+                Fsub->set_name("Fock " + name + " " + spin);
 
-            // fill in UaData and UbData if this block is active
-            if (name.find("GAS") != std::string::npos) {
+                // diagonalize this Fock block
+                auto Usub = std::make_shared<psi::Matrix>("U " + name + " " + spin, npi, npi);
+                auto evals = std::make_shared<psi::Vector>("evals" + name + " " + spin, npi);
+                Fsub->diagonalize(Usub, evals);
+
+                // fill in Ua or Ub
                 for (size_t h = 0; h < nirrep_; ++h) {
-                    int actv_off = actv_offsets_[name][h];
-                    for (int u = 0; u < npi[h]; ++u) {
-                        for (int v = 0; v < npi[h]; ++v) {
+                    int offset = offsets_[name][h];
+                    for (int i = 0; i < npi[h]; ++i) {
+                        for (int j = 0; j < npi[h]; ++j) {
+                            U->set(h, offset + i, offset + j, Usub->get(h, i, j));
+                        }
+                    }
+                }
+
+                // fill in UaData or UbData if this block is active
+                if (name.find("GAS") != std::string::npos) {
+                    for (size_t h = 0; h < nirrep_; ++h) {
+                        int actv_off = actv_offsets_[name][h];
+                        for (int u = 0; u < npi[h]; ++u) {
                             int nu = actv_off + u;
-                            int nv = actv_off + v;
-                            UaData[nu * nact_ + nv] = UsubA->get(h, u, v);
-                            UbData[nu * nact_ + nv] = UsubB->get(h, u, v);
+                            for (int v = 0; v < npi[h]; ++v) {
+                                int nv = actv_off + v;
+                                UData[nu * nact_ + nv] = Usub->get(h, u, v);
+                            }
                         }
                     }
                 }
             }
         }
-    }
-
-    // copy active data to ambit tensors
-    // temporary fix of DF integrals until both Ca and Cb are considered in DF integrals.
-    auto type = ints_->integral_type();
-    if (type == DF || type == DiskDF || type == Cholesky) {
-        Ub->copy(Ua);
-        Ua_t.data() = UaData;
-        Ub_t.data() = UaData;
-    } else {
-        Ua_t.data() = UaData;
-        Ub_t.data() = UbData;
     }
 }
 
