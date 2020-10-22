@@ -126,8 +126,6 @@ void ForteIntegrals::allocate() {
     // these will hold only the correlated part
     one_electron_integrals_a_.assign(ncmo_ * ncmo_, 0.0);
     one_electron_integrals_b_.assign(ncmo_ * ncmo_, 0.0);
-    fock_matrix_a_.assign(ncmo_ * ncmo_, 0.0);
-    fock_matrix_b_.assign(ncmo_ * ncmo_, 0.0);
 
     if ((integral_type_ == Conventional) or (integral_type_ == Custom)) {
         // Allocate the memory required to store the two-electron integrals
@@ -193,14 +191,6 @@ ambit::Tensor ForteIntegrals::oei_b_block(const std::vector<size_t>& p,
     return t;
 }
 
-double ForteIntegrals::get_fock_a(size_t p, size_t q) const {
-    return fock_matrix_a_[p * aptei_idx_ + q];
-}
-
-double ForteIntegrals::get_fock_b(size_t p, size_t q) const {
-    return fock_matrix_b_[p * aptei_idx_ + q];
-}
-
 double ForteIntegrals::get_fock_a(size_t p, size_t q, bool corr) const {
     auto p_full = p, q_full = q;
     if (corr) {
@@ -227,9 +217,27 @@ double ForteIntegrals::get_fock_b(size_t p, size_t q, bool corr) const {
     }
 }
 
-// std::vector<double> ForteIntegrals::get_fock_a() const { return fock_matrix_a_; }
+std::shared_ptr<psi::Matrix> ForteIntegrals::get_fock_a(bool corr) const {
+    if (corr) {
+        auto dim_frzc = mo_space_info_->dimension("FROZEN_DOCC");
+        auto dim_corr = mo_space_info_->dimension("CORRELATED");
+        psi::Slice slice_corr(dim_frzc, dim_frzc + dim_corr);
+        return fock_a_->get_block(slice_corr, slice_corr);
+    } else {
+        return fock_a_;
+    }
+}
 
-// std::vector<double> ForteIntegrals::get_fock_b() const { return fock_matrix_b_; }
+std::shared_ptr<psi::Matrix> ForteIntegrals::get_fock_b(bool corr) const {
+    if (corr) {
+        auto dim_frzc = mo_space_info_->dimension("FROZEN_DOCC");
+        auto dim_corr = mo_space_info_->dimension("CORRELATED");
+        psi::Slice slice_corr(dim_frzc, dim_frzc + dim_corr);
+        return fock_b_->get_block(slice_corr, slice_corr);
+    } else {
+        return fock_b_;
+    }
+}
 
 void ForteIntegrals::set_nuclear_repulsion(double value) { nucrep_ = value; }
 

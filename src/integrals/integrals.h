@@ -186,22 +186,16 @@ class ForteIntegrals {
     double oei_b(size_t p, size_t q) const;
 
     /// Get the alpha fock matrix elements
-    double get_fock_a(size_t p, size_t q) const;
+    double get_fock_a(size_t p, size_t q, bool corr = true) const;
 
     /// Get the beta fock matrix elements
-    double get_fock_b(size_t p, size_t q) const;
+    double get_fock_b(size_t p, size_t q, bool corr = true) const;
 
-    /// Get the alpha fock matrix elements
-    double get_fock_a(size_t p, size_t q, bool corr) const;
+    /// Get the alpha fock matrix in Psi4 matrix
+    std::shared_ptr<psi::Matrix> get_fock_a(bool corr = true) const;
 
-    /// Get the beta fock matrix elements
-    double get_fock_b(size_t p, size_t q, bool corr) const;
-
-//    /// Get the alpha fock matrix in std::vector format
-//    std::vector<double> get_fock_a() const;
-
-//    /// Get the beta fock matrix in std::vector format
-//    std::vector<double> get_fock_b() const;
+    /// Get the beta fock matrix in Psi4 matrix
+    std::shared_ptr<psi::Matrix> get_fock_b(bool corr = true) const;
 
     /// The antisymmetrixed alpha-alpha two-electron integrals in physicist
     /// notation <pq||rs>
@@ -247,14 +241,14 @@ class ForteIntegrals {
     /// Expert Option: just try and use three_integral
     virtual double** three_integral_pointer();
 
-    /// Make a Fock matrix computed with respect to a given determinant
-    virtual void make_fock_matrix(std::shared_ptr<psi::Matrix> gamma_a,
-                                  std::shared_ptr<psi::Matrix> gamma_b) = 0;
+//    /// Make a Fock matrix computed with respect to a given determinant
+//    virtual void make_fock_matrix(std::shared_ptr<psi::Matrix> gamma_a,
+//                                  std::shared_ptr<psi::Matrix> gamma_b) = 0;
 
     /// Make the generalized Fock matrix (closed-shell + active)
     /// @param Da The alpha 1RDM (nactv x nactv, no symmetry) from RDMs class
     /// @param Db The beta 1RDM (nactv x nactv, no symmetry) from RDMs class
-    virtual void make_fock_matrix_JK(ambit::Tensor Da, ambit::Tensor Db) = 0;
+    virtual void make_fock_matrix(ambit::Tensor Da, ambit::Tensor Db) = 0;
 
     /// Make the closed-shell Fock matrix in MO basis (include frozen orbitals)
     /// @param dim_start Dimension for the starting index (per irrep) of closed-shell orbitals
@@ -438,10 +432,6 @@ class ForteIntegrals {
     /// JK object from Psi4
     std::shared_ptr<psi::JK> JK_;
 
-    /// Fock matrix stored as a vector
-    std::vector<double> fock_matrix_a_;
-    std::vector<double> fock_matrix_b_;
-
     /// Fock matrix (including frozen orbitals)
     psi::SharedMatrix fock_a_;
     psi::SharedMatrix fock_b_;
@@ -524,7 +514,7 @@ class Psi4Integrals : public ForteIntegrals {
                   IntegralSpinRestriction restricted);
 
     /// Make the generalized Fock matrix using Psi4 JK object
-    void make_fock_matrix_JK(ambit::Tensor Da, ambit::Tensor Db) override;
+    void make_fock_matrix(ambit::Tensor Da, ambit::Tensor Db) override;
 
     /// Make the closed-shell Fock matrix using Psi4 JK object
     std::tuple<psi::SharedMatrix, psi::SharedMatrix, double>

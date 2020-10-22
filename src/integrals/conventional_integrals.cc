@@ -273,42 +273,4 @@ void ConventionalIntegrals::resort_four(std::vector<double>& tei, std::vector<si
     }
     temp_ints.swap(tei);
 }
-
-void ConventionalIntegrals::make_fock_matrix(std::shared_ptr<psi::Matrix> gamma_a,
-                                             std::shared_ptr<psi::Matrix> gamma_b) {
-    for (size_t p = 0; p < ncmo_; ++p) {
-        for (size_t q = 0; q < ncmo_; ++q) {
-            fock_matrix_a_[p * ncmo_ + q] = oei_a(p, q);
-            fock_matrix_b_[p * ncmo_ + q] = oei_b(p, q);
-        }
-    }
-    double zero = 1e-12;
-    /// TODO: Either use ambit or use structure of gamma.
-    for (size_t r = 0; r < ncmo_; ++r) {
-        for (size_t s = 0; s < ncmo_; ++s) {
-            double gamma_a_rs = gamma_a->get(r, s);
-            if (std::fabs(gamma_a_rs) > zero) {
-                for (size_t p = 0; p < ncmo_; ++p) {
-                    for (size_t q = 0; q < ncmo_; ++q) {
-                        fock_matrix_a_[p * ncmo_ + q] += aptei_aa(p, r, q, s) * gamma_a_rs;
-                        fock_matrix_b_[p * ncmo_ + q] += aptei_ab(r, p, s, q) * gamma_a_rs;
-                    }
-                }
-            }
-        }
-    }
-    for (size_t r = 0; r < ncmo_; ++r) {
-        for (size_t s = 0; s < ncmo_; ++s) {
-            double gamma_b_rs = gamma_b->get(r, s);
-            if (std::fabs(gamma_b_rs) > zero) {
-                for (size_t p = 0; p < ncmo_; ++p) {
-                    for (size_t q = 0; q < ncmo_; ++q) {
-                        fock_matrix_a_[p * ncmo_ + q] += aptei_ab(p, r, q, s) * gamma_b_rs;
-                        fock_matrix_b_[p * ncmo_ + q] += aptei_bb(p, r, q, s) * gamma_b_rs;
-                    }
-                }
-            }
-        }
-    }
-}
 } // namespace forte

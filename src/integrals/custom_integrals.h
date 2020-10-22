@@ -64,11 +64,8 @@ class CustomIntegrals : public ForteIntegrals {
                                  const std::vector<size_t>& r,
                                  const std::vector<size_t>& s) override;
 
-    void make_fock_matrix(std::shared_ptr<psi::Matrix> gamma_a,
-                          std::shared_ptr<psi::Matrix> gamma_b) override;
-
     /// Make the generalized Fock matrix using Psi4 JK object
-    void make_fock_matrix_JK(ambit::Tensor Da, ambit::Tensor Db) override;
+    void make_fock_matrix(ambit::Tensor Da, ambit::Tensor Db) override;
 
     /// Make the closed-shell Fock matrix using Psi4 JK object
     std::tuple<psi::SharedMatrix, psi::SharedMatrix, double>

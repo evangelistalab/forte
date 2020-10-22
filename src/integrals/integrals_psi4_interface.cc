@@ -419,7 +419,7 @@ Psi4Integrals::dipole_ints_mo_helper(std::shared_ptr<psi::Matrix> Cao, psi::Shar
     return MOdipole_ints;
 }
 
-void Psi4Integrals::make_fock_matrix_JK(ambit::Tensor gamma_a, ambit::Tensor gamma_b) {
+void Psi4Integrals::make_fock_matrix(ambit::Tensor gamma_a, ambit::Tensor gamma_b) {
     // build inactive Fock
     auto rdoccpi = mo_space_info_->dimension("INACTIVE_DOCC");
     auto fock_closed = make_fock_inactive(psi::Dimension(nirrep_), rdoccpi);

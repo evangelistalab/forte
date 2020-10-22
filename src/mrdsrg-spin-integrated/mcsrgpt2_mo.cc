@@ -3374,8 +3374,8 @@ void MCSRGPT2_MO::Form_Fock(d2& A, d2& B) {
 
     for (size_t p = 0; p < ncmo_; ++p) {
         for (size_t q = 0; q < ncmo_; ++q) {
-            A[p][q] = integral_->get_fock_a(p, q, true);
-            B[p][q] = integral_->get_fock_b(p, q, true);
+            A[p][q] = integral_->get_fock_a(p, q);
+            B[p][q] = integral_->get_fock_b(p, q);
         }
     }
     timer_off("Form Fock");
@@ -3390,27 +3390,7 @@ void MCSRGPT2_MO::compute_Fock_ints() {
     local_timer tfock;
     outfile->Printf("\n  %-35s ...", "Forming generalized Fock matrix");
 
-//    psi::SharedMatrix DaM(new psi::Matrix("DaM", ncmo_, ncmo_));
-//    psi::SharedMatrix DbM(new psi::Matrix("DbM", ncmo_, ncmo_));
-//    for (size_t m = 0; m < ncore_; m++) {
-//        size_t nm = core_mos_[m];
-//        for (size_t n = 0; n < ncore_; n++) {
-//            size_t nn = core_mos_[n];
-//            DaM->set(nm, nn, Da_[nm][nn]);
-//            DbM->set(nm, nn, Db_[nm][nn]);
-//        }
-//    }
-//    for (size_t u = 0; u < nactv_; u++) {
-//        size_t nu = actv_mos_[u];
-//        for (size_t v = 0; v < nactv_; v++) {
-//            size_t nv = actv_mos_[v];
-//            DaM->set(nu, nv, Da_[nu][nv]);
-//            DbM->set(nu, nv, Db_[nu][nv]);
-//        }
-//    }
-//    integral_->make_fock_matrix(DaM, DbM);
-
-    integral_->make_fock_matrix_JK(reference_.g1a(), reference_.g1b());
+    integral_->make_fock_matrix(reference_.g1a(), reference_.g1b());
 
     outfile->Printf("  Done. Timing %15.6f s", tfock.get());
 }
