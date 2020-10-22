@@ -109,6 +109,8 @@ void ForteIntegrals::read_information() {
         q += frzvpi_[h]; // skip the frozen virtual
     }
 
+    mo_to_relmo_ = mo_space_info_->relative_mo("ALL");
+
     // Set the indexing to work using the number of molecular integrals
     aptei_idx_ = nmo_;
     num_tei_ = INDEX4(nmo_ - 1, nmo_ - 1, nmo_ - 1, nmo_ - 1) + 1;
@@ -199,9 +201,35 @@ double ForteIntegrals::get_fock_b(size_t p, size_t q) const {
     return fock_matrix_b_[p * aptei_idx_ + q];
 }
 
-std::vector<double> ForteIntegrals::get_fock_a() const { return fock_matrix_a_; }
+double ForteIntegrals::get_fock_a(size_t p, size_t q, bool corr) const {
+    auto p_full = p, q_full = q;
+    if (corr) {
+        p_full = cmotomo_[p], q_full = cmotomo_[q];
+    }
+    auto p_pair = mo_to_relmo_[p_full], q_pair = mo_to_relmo_[q_full];
+    if (p_pair.first == q_pair.first) {
+        return fock_a_->get(p_pair.first, p_pair.second, q_pair.second);
+    } else {
+        return 0.0;
+    }
+}
 
-std::vector<double> ForteIntegrals::get_fock_b() const { return fock_matrix_b_; }
+double ForteIntegrals::get_fock_b(size_t p, size_t q, bool corr) const {
+    auto p_full = p, q_full = q;
+    if (corr) {
+        p_full = cmotomo_[p], q_full = cmotomo_[q];
+    }
+    auto p_pair = mo_to_relmo_[p_full], q_pair = mo_to_relmo_[q_full];
+    if (p_pair.first == q_pair.first) {
+        return fock_b_->get(p_pair.first, p_pair.second, q_pair.second);
+    } else {
+        return 0.0;
+    }
+}
+
+// std::vector<double> ForteIntegrals::get_fock_a() const { return fock_matrix_a_; }
+
+// std::vector<double> ForteIntegrals::get_fock_b() const { return fock_matrix_b_; }
 
 void ForteIntegrals::set_nuclear_repulsion(double value) { nucrep_ = value; }
 

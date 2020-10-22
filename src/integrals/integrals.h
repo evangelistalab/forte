@@ -191,11 +191,17 @@ class ForteIntegrals {
     /// Get the beta fock matrix elements
     double get_fock_b(size_t p, size_t q) const;
 
-    /// Get the alpha fock matrix in std::vector format
-    std::vector<double> get_fock_a() const;
+    /// Get the alpha fock matrix elements
+    double get_fock_a(size_t p, size_t q, bool corr) const;
 
-    /// Get the beta fock matrix in std::vector format
-    std::vector<double> get_fock_b() const;
+    /// Get the beta fock matrix elements
+    double get_fock_b(size_t p, size_t q, bool corr) const;
+
+//    /// Get the alpha fock matrix in std::vector format
+//    std::vector<double> get_fock_a() const;
+
+//    /// Get the beta fock matrix in std::vector format
+//    std::vector<double> get_fock_b() const;
 
     /// The antisymmetrixed alpha-alpha two-electron integrals in physicist
     /// notation <pq||rs>
@@ -376,6 +382,8 @@ class ForteIntegrals {
 
     /// The mapping from correlated MO to full MO (frozen + correlated)
     std::vector<size_t> cmotomo_;
+    /// The mapping from full MO to irrep and relative indices
+    std::vector<std::pair<size_t, size_t>> mo_to_relmo_;
 
     /// The number of symmetry-adapted orbitals per irrep.
     psi::Dimension nsopi_;
