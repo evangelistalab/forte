@@ -923,12 +923,12 @@ void DSRG_MRPT2::renormalize_F() {
 
     BlockedTensor sum = ambit::BlockedTensor::build(tensor_type_, "Temp sum", spin_cases({"ph"}));
     sum["ai"] = F_["ai"];
-    // sum["ai"] += temp["xu"] * T2_["iuax"];
-    // sum["ai"] += temp["XU"] * T2_["iUaX"];
+    sum["ai"] += temp["xu"] * T2_["iuax"];
+    sum["ai"] += temp["XU"] * T2_["iUaX"];
 
     sum["AI"] = F_["AI"];
-    // sum["AI"] += temp["xu"] * T2_["uIxA"];
-    // sum["AI"] += temp["XU"] * T2_["IUAX"];
+    sum["AI"] += temp["xu"] * T2_["uIxA"];
+    sum["AI"] += temp["XU"] * T2_["IUAX"];
 
     // transform to semi-canonical basis
     if (!semi_canonical_) {
