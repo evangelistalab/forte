@@ -270,16 +270,44 @@ void CustomIntegrals::compute_frozen_one_body_operator() {
     }
 }
 
-void CustomIntegrals::make_fock_matrix_JK(ambit::Tensor Da, ambit::Tensor Db) {}
+void CustomIntegrals::make_fock_matrix_JK(ambit::Tensor Da, ambit::Tensor Db) {
+    // build inactive Fock
+    auto rdoccpi = mo_space_info_->dimension("INACTIVE_DOCC");
+    auto fock_closed = make_fock_inactive(psi::Dimension(nirrep_), rdoccpi);
+
+    // build active Fock
+    auto fock_active = make_fock_active(Da, Db);
+
+    // add them together
+    fock_a_ = std::get<0>(fock_closed)->clone();
+    fock_a_->add(std::get<0>(fock_active));
+    fock_a_->set_name("Fock alpha");
+
+    fock_b_ = std::get<1>(fock_closed)->clone();
+    fock_b_->add(std::get<1>(fock_active));
+    fock_b_->set_name("Fock beta");
+}
 
 std::tuple<psi::SharedMatrix, psi::SharedMatrix, double>
 CustomIntegrals::make_fock_inactive(psi::Dimension dim_start, psi::Dimension dim_end) {
-    // we will use unrestricted formalism
     auto dim = dim_end - dim_start;
 
+    // we will use unrestricted formalism
     auto Fock_a = std::make_shared<psi::Matrix>("Fock_closed alpha", nmopi_, nmopi_);
     auto Fock_b = std::make_shared<psi::Matrix>("Fock_closed beta", nmopi_, nmopi_);
 
+    // figure out closed-shell indices
+    std::vector<int> closed_indices;
+    for (int h2 = 0, offset2 = 0; h2 < nirrep_; ++h2) {
+        for (int i = 0; i < dim[h2]; ++i) {
+            auto ni = i + dim_start[h2] + offset2;
+            closed_indices.push_back(ni);
+        }
+        offset2 += nmopi_[h2];
+    }
+    auto nclosed = closed_indices.size();
+
+    // compute inactive Fock
     for (int h = 0, offset = 0; h < nirrep_; ++h) {
         for (int p = 0; p < nmopi_[h]; ++p) {
             auto np = p + offset;
@@ -289,18 +317,15 @@ CustomIntegrals::make_fock_inactive(psi::Dimension dim_start, psi::Dimension dim
                 double va = full_one_electron_integrals_a_[np * nmo_ + nq];
                 double vb = full_one_electron_integrals_b_[np * nmo_ + nq];
 
-                for (int h2 = 0, offset2 = 0; h2 < nirrep_; ++h2) {
 #pragma omp parallel for reduction(+ : va, vb)
-                    for (int i = 0; i < dim[h2]; ++i) {
-                        auto ni = i + dim_start[h2] + offset2;
+                for (size_t i = 0; i < nclosed; ++i) {
+                    auto ni = closed_indices[i];
 
-                        // Fock alpha: F_{pq} = h_{pq} + \sum_{i} <pi||qi> + \sum_{I} <pI||qI>
-                        va += aptei_aa(np, ni, nq, ni) + aptei_ab(np, ni, nq, ni);
+                    // Fock alpha: F_{pq} = h_{pq} + \sum_{i} <pi||qi> + \sum_{I} <pI||qI>
+                    va += aptei_aa(np, ni, nq, ni) + aptei_ab(np, ni, nq, ni);
 
-                        // Fock beta: F_{PQ} = h_{PQ} + \sum_{i} <Pi||Qi> + \sum_{I} <PI||QI>
-                        vb += aptei_bb(np, ni, nq, ni) + aptei_ab(ni, np, ni, nq);
-                    }
-                    offset2 += nmopi_[h2];
+                    // Fock beta: F_{PQ} = h_{PQ} + \sum_{i} <Pi||Qi> + \sum_{I} <PI||QI>
+                    vb += aptei_bb(np, ni, nq, ni) + aptei_ab(ni, np, ni, nq);
                 }
 
                 Fock_a->set(h, p, q, va);
@@ -318,15 +343,12 @@ CustomIntegrals::make_fock_inactive(psi::Dimension dim_start, psi::Dimension dim
             e_closed += full_one_electron_integrals_a_[ni * nmo_ + ni];
             e_closed += full_one_electron_integrals_b_[ni * nmo_ + ni];
 
-            for (int h2 = 0, offset2 = 0; h2 < nirrep_; ++h2) {
 #pragma omp parallel for reduction(+ : e_closed)
-                for (int j = 0; j < dim[h2]; ++j) {
-                    auto nj = j + dim_start[h2] + offset2;
+            for (size_t j = 0; j < nclosed; ++j) {
+                auto nj = closed_indices[j];
 
-                    e_closed += 0.5 * (aptei_aa(ni, nj, ni, nj) + aptei_bb(ni, nj, ni, nj));
-                    e_closed += aptei_ab(ni, nj, ni, nj);
-                }
-                offset2 += nmopi_[h2];
+                e_closed += 0.5 * (aptei_aa(ni, nj, ni, nj) + aptei_bb(ni, nj, ni, nj));
+                e_closed += aptei_ab(ni, nj, ni, nj);
             }
         }
         offset1 += nmopi_[h1];
@@ -336,8 +358,71 @@ CustomIntegrals::make_fock_inactive(psi::Dimension dim_start, psi::Dimension dim
 };
 
 std::tuple<psi::SharedMatrix, psi::SharedMatrix>
-CustomIntegrals::make_fock_active(ambit::Tensor Da, ambit::Tensor Db){
+CustomIntegrals::make_fock_active(ambit::Tensor Da, ambit::Tensor Db) {
+    auto nactv = mo_space_info_->size("ACTIVE");
 
+    if (Da.dims() != Db.dims()) {
+        throw std::runtime_error("Different dimensions of alpha and beta 1RDM!");
+    }
+    if (nactv != Da.dim(0)) {
+        throw std::runtime_error("Inconsistent number of active orbitals");
+    }
+
+    auto Fock_a = std::make_shared<psi::Matrix>("Fock_active alpha", nmopi_, nmopi_);
+    auto Fock_b = std::make_shared<psi::Matrix>("Fock_active beta", nmopi_, nmopi_);
+
+    auto abs_mo_actv = mo_space_info_->absolute_mo("ACTIVE");
+    auto rel_mo_actv = mo_space_info_->relative_mo("ACTIVE");
+
+    // figure out symmetry allowed absolute index for active orbitals
+    std::vector<std::tuple<size_t, size_t, size_t, size_t>> actv_indices_sym;
+    for (size_t u = 0; u < nactv; ++u) {
+        auto hu = rel_mo_actv[u].first;
+        auto nu = abs_mo_actv[u];
+
+        for (size_t v = 0; v < nactv; ++v) {
+            if (rel_mo_actv[v].first != hu)
+                continue;
+            auto nv = abs_mo_actv[v];
+
+            actv_indices_sym.push_back(std::make_tuple(u, v, nu, nv));
+        }
+    }
+    auto actv_sym_size = actv_indices_sym.size();
+
+    // compute active Fock
+    auto& Da_data = Da.data();
+    auto& Db_data = Db.data();
+
+    for (int h = 0, offset = 0; h < nirrep_; ++h) {
+        for (int p = 0; p < nmopi_[h]; ++p) {
+            auto np = p + offset;
+            for (int q = 0; q < nmopi_[h]; ++q) {
+                auto nq = q + offset;
+
+                double va = 0.0;
+                double vb = 0.0;
+
+#pragma omp parallel for reduction(+ : va, vb)
+                for (size_t i_sym = 0; i_sym < actv_sym_size; ++i_sym) {
+                    size_t u, v, nu, nv;
+                    std::tie(u, v, nu, nv) = actv_indices_sym[i_sym];
+
+                    va += aptei_aa(np, nu, nq, nv) * Da_data[u * nactv + v];
+                    va += aptei_ab(np, nu, nq, nv) * Db_data[u * nactv + v];
+
+                    vb += aptei_bb(np, nu, nq, nv) * Db_data[u * nactv + v];
+                    vb += aptei_ab(nu, np, nv, nq) * Da_data[u * nactv + v];
+                }
+
+                Fock_a->set(h, p, q, va);
+                Fock_b->set(h, p, q, vb);
+            }
+        }
+        offset += nmopi_[h];
+    }
+
+    return {Fock_a, Fock_b};
 };
 
 void CustomIntegrals::transform_one_electron_integrals() {

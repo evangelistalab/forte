@@ -420,13 +420,6 @@ Psi4Integrals::dipole_ints_mo_helper(std::shared_ptr<psi::Matrix> Cao, psi::Shar
 }
 
 void Psi4Integrals::make_fock_matrix_JK(ambit::Tensor gamma_a, ambit::Tensor gamma_b) {
-    if (gamma_a.dims() != gamma_b.dims()) {
-        throw std::runtime_error("Different dimensions of alpha and beta 1RDM!");
-    }
-    if (mo_space_info_->size("ACTIVE") != gamma_a.dim(0)) {
-        throw std::runtime_error("Inconsistent number of active orbitals");
-    }
-
     // build inactive Fock
     auto rdoccpi = mo_space_info_->dimension("INACTIVE_DOCC");
     auto fock_closed = make_fock_inactive(psi::Dimension(nirrep_), rdoccpi);
@@ -549,13 +542,22 @@ Psi4Integrals::make_fock_inactive(psi::Dimension dim_start, psi::Dimension dim_e
 
 std::tuple<psi::SharedMatrix, psi::SharedMatrix> Psi4Integrals::make_fock_active(ambit::Tensor Da,
                                                                                  ambit::Tensor Db) {
+    if (Da.dims() != Db.dims()) {
+        throw std::runtime_error("Different dimensions of alpha and beta 1RDM!");
+    }
+    if (mo_space_info_->size("ACTIVE") != Da.dim(0)) {
+        throw std::runtime_error("Inconsistent number of active orbitals");
+    }
+
     // test if spin equivalence between 1RDM
     bool rdm_eq_spin = true;
     auto gamma = Da.clone();
     gamma("pq") -= Db("pq");
     double diff_max = gamma.norm(0);
-    if (diff_max > options_->get_double("R_CONVERGENCE")) {
-        outfile->Printf("\n  Warning: unequivalent alpha and beta 1RDMs.");
+    if (diff_max > options_->get_double("R_CONVERGENCE") or
+        diff_max > options_->get_double("D_CONVERGENCE")) {
+        print_h1("Warning from Forte Fock build (active)");
+        outfile->Printf("\n  Unequivalent alpha and beta 1RDMs.");
         outfile->Printf("\n  Largest difference between alpha and beta: %.15f", diff_max);
         outfile->Printf("\n  Use unrestricted formalism to build Fock martix!\n");
         rdm_eq_spin = false;
