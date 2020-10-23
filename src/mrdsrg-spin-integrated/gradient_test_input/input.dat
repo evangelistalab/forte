@@ -3,56 +3,43 @@
 import forte
 
 
-molecule {
-0 1
-N
-N 1 1.1
+molecule HF {
+0 3
+H
+F 1 1.3
 }
 
 set {
-  basis 3-21g
-  reference rohf
-  scf_type pk
-  e_convergence 10
-  d_convergence 10
-  # docc [3,0,1,1]
-  restricted_docc [ 2,  0,  0,  0, 0, 2,  0, 0]
-  active          [ 1,  0,  1,  1, 0, 1,  1, 1]
+basis 3-21g
+reference rohf
+scf_type pk
+e_convergence 10
+d_convergence 10
+docc [2,0,1,1]
+socc [2,0,0,0]
    mcscf_type           conv
    mcscf_maxiter        100
    mcscf_diis_start     20
    MCSCF_E_CONVERGENCE  12
    MCSCF_R_CONVERGENCE  10
 }
-
 set scf_type direct
-
 set forte {
-  REF_TYPE  CASSCF
-  CASSCF_G_CONVERGENCE   1e-10
-  CASSCF_E_CONVERGENCE   1e-10
-  #                Ag B1g B2g B3g Au B1u B2u B3u
-  restricted_docc [ 2,  0,  0,  0, 0, 2,  0, 0]
-  active          [ 1,  0,  1,  1, 0, 1,  1, 1]
-  active_space_solver  cas
-  correlation_solver   dsrg-mrpt2
-  dsrg_s               1.0
+active_space_solver cas
+correlation_solver dsrg-mrpt2
+restricted_docc [2,0,1,1]
+active [2,0,0,0]
+dsrg_s 1.0
    dsrgpt               true
    print_denom2         true
-   multiplicity         1 
+   multiplicity         3 
 }
 
-
-
-
-Ecas, ref = energy('casscf', return_wfn=True)
-
-
-grad = gradient('forte', ref_wfn = ref)
+grad = gradient('forte')
 
 set findif{ 
   points 5
-  DISP_SIZE 0.003
+  # DISP_SIZE 0.01
 }
 # grad = gradient('forte',dertype="energy")
 

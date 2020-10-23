@@ -1053,15 +1053,15 @@ double DSRG_MRPT2::E_FT2() {
     BlockedTensor temp = BTF_->build(tensor_type_, "temp", spin_cases({"aaaa"}), true);
 
     temp["uvxy"] += F_["ex"] * T2_["uvey"];
-    // temp["uvxy"] -= F_["vm"] * T2_["umxy"];
+    temp["uvxy"] -= F_["vm"] * T2_["umxy"];
 
     temp["UVXY"] += F_["EX"] * T2_["UVEY"];
-    // temp["UVXY"] -= F_["VM"] * T2_["UMXY"];
+    temp["UVXY"] -= F_["VM"] * T2_["UMXY"];
 
     temp["uVxY"] += F_["ex"] * T2_["uVeY"];
     temp["uVxY"] += F_["EY"] * T2_["uVxE"];
-    // temp["uVxY"] -= F_["VM"] * T2_["uMxY"];
-    // temp["uVxY"] -= F_["um"] * T2_["mVxY"];
+    temp["uVxY"] -= F_["VM"] * T2_["uMxY"];
+    temp["uVxY"] -= F_["um"] * T2_["mVxY"];
 
     E += 0.5 * temp["uvxy"] * Lambda2_["xyuv"];
     E += 0.5 * temp["UVXY"] * Lambda2_["XYUV"];
@@ -1071,15 +1071,15 @@ double DSRG_MRPT2::E_FT2() {
         temp.zero();
 
         temp["uvxy"] += F_["wx"] * T2_["uvwy"];
-        // temp["uvxy"] -= F_["vw"] * T2_["uwxy"];
+        temp["uvxy"] -= F_["vw"] * T2_["uwxy"];
 
         temp["UVXY"] += F_["WX"] * T2_["UVWY"];
-        // temp["UVXY"] -= F_["VW"] * T2_["UWXY"];
+        temp["UVXY"] -= F_["VW"] * T2_["UWXY"];
 
         temp["uVxY"] += F_["wx"] * T2_["uVwY"];
         temp["uVxY"] += F_["WY"] * T2_["uVxW"];
-        // temp["uVxY"] -= F_["VW"] * T2_["uWxY"];
-        // temp["uVxY"] -= F_["uw"] * T2_["wVxY"];
+        temp["uVxY"] -= F_["VW"] * T2_["uWxY"];
+        temp["uVxY"] -= F_["uw"] * T2_["wVxY"];
 
         E += 0.5 * temp["uvxy"] * Lambda2_["xyuv"];
         E += 0.5 * temp["UVXY"] * Lambda2_["XYUV"];
