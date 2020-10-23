@@ -297,6 +297,11 @@ void SemiCanonical::build_transformation_matrices() {
             }
         }
     }
+
+    if (fock_a == fock_b) {
+        Ub_->copy(Ua_);
+        Ub_t_.copy(Ua_t_);
+    }
 }
 
 RDMs SemiCanonical::transform_rdms(ambit::Tensor& Ua, ambit::Tensor& Ub, RDMs& rdms,

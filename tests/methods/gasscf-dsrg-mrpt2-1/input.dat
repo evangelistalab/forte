@@ -7,14 +7,14 @@ import forte
 
 refscf = -76.0172965561 #TEST
 refgasscf = -56.3135281623 #TEST
-refdsrg = -56.4887062416 #TEST
+refdsrg = -56.488707997932615 #TEST
 
 memory 6000mb
 molecule h2o{
    O
    H  1 1.00
    H  1 1.00 2 103.1
-      }
+}
 
 set global {
   basis 6-31g**
@@ -75,5 +75,3 @@ set forte {
 
 edsrg = energy('forte', ref_wfn = wfn_gasscf)
 compare_values(refdsrg, edsrg ,9, "GASSCF-DSRG-MRPT2 energy") #TEST
-
-

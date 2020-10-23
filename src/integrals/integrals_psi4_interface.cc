@@ -137,10 +137,6 @@ void Psi4Integrals::transform_one_electron_integrals() {
 }
 
 void Psi4Integrals::make_psi4_JK() {
-    if (integral_type_ != Conventional and
-        spin_restriction_ == IntegralSpinRestriction::Unrestricted) {
-    }
-
     if (integral_type_ == Conventional) {
         outfile->Printf("\n  JK created using conventional PK integrals\n");
         JK_ = JK::build_JK(wfn_->basisset(), psi::BasisSet::zero_ao_basis_set(),
