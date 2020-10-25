@@ -624,27 +624,6 @@ void SADSRG::rotate_ints_semi_to_origin(const std::string& name, BlockedTensor& 
 bool SADSRG::check_semi_orbs() {
     print_h2("Checking Semicanonical Orbitals");
 
-    std::string actv_type = foptions_->get_str("FCIMO_ACTV_TYPE");
-    if (actv_type == "CIS" || actv_type == "CISD") {
-        std::string job_type = foptions_->get_str("CORRELATION_SOLVER");
-        bool fci_mo = foptions_->get_str("ACTIVE_SPACE_SOLVER") == "CAS";
-        if ((job_type == "MRDSRG" || job_type == "DSRG-MRPT3") && fci_mo) {
-            std::stringstream ss;
-            ss << "Unsupported FCIMO_ACTV_TYPE for " << job_type << " code.";
-            throw psi::PSIEXCEPTION(ss.str());
-        }
-
-        outfile->Printf("\n    Incomplete active space %s is detected.", actv_type.c_str());
-        outfile->Printf("\n    Please make sure Semicanonical class has been called.");
-        outfile->Printf("\n    Abort checking semicanonical orbitals.");
-        return true;
-    }
-    if (mo_space_info_->dimension("ACTIVE") != mo_space_info_->dimension("GAS1")) {
-        outfile->Printf("\n  Warning: Incomplete active space is detected.");
-        outfile->Printf("\n  Abort checking semicanonical orbitals in DSRG.");
-        return true;
-    }
-
     BlockedTensor Fd = BTF_->build(tensor_type_, "Fd", {"cc", "aa", "vv"});
     Fd["pq"] = Fock_["pq"];
 
@@ -654,34 +633,68 @@ bool SADSRG::check_semi_orbs() {
         }
     });
 
-    bool semi = true;
     std::vector<double> Fmax, Fnorm;
+    std::vector<std::string> spaces{"CORE", "VIRTUAL"};
+    for (const auto& block : {"cc", "vv"}) {
+        double fmax = Fd.block(block).norm(0);
+        double fnorm = Fd.block(block).norm(1);
+        Fmax.push_back(fmax);
+        if (Fd.block(block).numel() > 2) {
+            Fnorm.push_back(fnorm / (Fd.block(block).numel() - 2));
+        } else {
+            Fnorm.push_back(0.0);
+        }
+    }
+
+    auto nactv = actv_mos_.size();
+    for (const std::string& space : mo_space_info_->space_names()) {
+        if (space.find("GAS") == std::string::npos or mo_space_info_->size(space) == 0)
+            continue;
+
+        auto rel_indices = mo_space_info_->pos_in_space(space, "ACTIVE");
+        auto size = rel_indices.size();
+        double fmax = 0.0, fnorm = 0.0;
+
+        for (size_t p = 0; p < size; ++p) {
+            auto np = rel_indices[p];
+            for (size_t q = p + 1; q < size; ++q) {
+                auto nq = rel_indices[q];
+                double v = std::fabs(Fd.block("aa").data()[np * nactv + nq]);
+                if (v > fmax)
+                    fmax = v;
+                fnorm += v;
+            }
+        }
+        if (size > 2) {
+            fnorm /= 0.5 * (size - 1) * (size - 2);
+        }
+
+        Fmax.push_back(fmax);
+        Fnorm.push_back(fnorm);
+        spaces.push_back(space);
+    }
+
+    std::string dash(8 + 32, '-');
+    outfile->Printf("\n    %-8s %15s %15s", "Block", "Max", "1-Norm");
+    outfile->Printf("\n    %s", dash.c_str());
+    for (int i = 0, size = spaces.size(); i < size; ++i) {
+        outfile->Printf("\n    %-8s %15.10f %15.10f", spaces[i].c_str(), Fmax[i], Fnorm[i]);
+    }
+    outfile->Printf("\n    %s", dash.c_str());
+
+    bool semi = true;
     double e_conv = foptions_->get_double("E_CONVERGENCE");
     double cd = foptions_->get_double("CHOLESKY_TOLERANCE");
     e_conv = cd < e_conv ? e_conv : cd * 0.1;
     e_conv = e_conv < 1.0e-12 ? 1.0e-12 : e_conv;
     double threshold_max = 10.0 * e_conv;
-    for (const auto& block : {"cc", "aa", "vv"}) {
-        double fmax = Fd.block(block).norm(0);
-        double fnorm = Fd.block(block).norm(1);
-        Fmax.emplace_back(fmax);
-        Fnorm.emplace_back(fnorm);
 
-        if (fmax > threshold_max) {
-            semi = false;
-        }
-        if (fnorm > Fd.block(block).numel() * e_conv) {
-            semi = false;
-        }
+    if (*std::max_element(Fmax.begin(), Fmax.end()) > threshold_max) {
+        semi = false;
     }
-
-    std::string dash(7 + 47, '-');
-    outfile->Printf("\n    Fock core, active, virtual blocks (Fij, i != j)");
-    outfile->Printf("\n    %6s %15s %15s %15s", "", "core", "active", "virtual");
-    outfile->Printf("\n    %s", dash.c_str());
-    outfile->Printf("\n    %6s %15.10f %15.10f %15.10f", "max", Fmax[0], Fmax[1], Fmax[2]);
-    outfile->Printf("\n    %6s %15.10f %15.10f %15.10f", "1-norm", Fnorm[0], Fnorm[1], Fnorm[2]);
-    outfile->Printf("\n    %s\n", dash.c_str());
+    if (*std::max_element(Fnorm.begin(), Fnorm.end()) > e_conv) {
+        semi = false;
+    }
 
     if (semi) {
         outfile->Printf("\n    Orbitals are semi-canonicalized.");
@@ -712,7 +725,7 @@ void SADSRG::print_cumulant_summary() {
     outfile->Printf("\n    %-6s %12s %12s", "", "2-cumulant", "3-cumulant");
     outfile->Printf("\n    %s", dash.c_str());
     outfile->Printf("\n    %-6s %12.6f %12.6f", "max", maxes[0], maxes[1]);
-    outfile->Printf("\n    %-6s %12.6f %12.6f", "norm", norms[0], norms[1]);
+    outfile->Printf("\n    %-6s %12.6f %12.6f", "2-norm", norms[0], norms[1]);
     outfile->Printf("\n    %s", dash.c_str());
 }
 
