@@ -261,13 +261,13 @@ class THREE_DSRG_MRPT2 : public MASTER_DSRG {
     bool semi_canonical_;
     /// Unitary matrix to block diagonal Fock
     ambit::BlockedTensor U_;
-    /// Diagonalize the diagonal blocks of the Fock matrix
-    std::vector<std::vector<double>> diagonalize_Fock_diagblocks(ambit::BlockedTensor& U);
-    /// Separate an 2D ambit::Tensor according to its irrep
-    ambit::Tensor separate_tensor(ambit::Tensor& tens, const psi::Dimension& irrep, const int& h);
-    /// Combine a separated 2D ambit::Tensor
-    void combine_tensor(ambit::Tensor& tens, ambit::Tensor& tens_h, const psi::Dimension& irrep,
-                        const int& h);
+//    /// Diagonalize the diagonal blocks of the Fock matrix
+//    std::vector<std::vector<double>> diagonalize_Fock_diagblocks(ambit::BlockedTensor& U);
+//    /// Separate an 2D ambit::Tensor according to its irrep
+//    ambit::Tensor separate_tensor(ambit::Tensor& tens, const psi::Dimension& irrep, const int& h);
+//    /// Combine a separated 2D ambit::Tensor
+//    void combine_tensor(ambit::Tensor& tens, ambit::Tensor& tens_h, const psi::Dimension& irrep,
+//                        const int& h);
 
     // => Dipole related <= //
 

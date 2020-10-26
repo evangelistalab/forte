@@ -5205,160 +5205,160 @@ void DSRG_MRPT3::V_T2_C2_DF_VA_EX(BlockedTensor& B, BlockedTensor& T2, const dou
 //    }
 //}
 
-std::vector<std::vector<double>> DSRG_MRPT3::diagonalize_Fock_diagblocks(BlockedTensor& U) {
-    // diagonal blocks identifiers (C-A-V ordering)
-    std::vector<std::string> blocks{"cc", "aa", "vv", "CC", "AA", "VV"};
+//std::vector<std::vector<double>> DSRG_MRPT3::diagonalize_Fock_diagblocks(BlockedTensor& U) {
+//    // diagonal blocks identifiers (C-A-V ordering)
+//    std::vector<std::string> blocks{"cc", "aa", "vv", "CC", "AA", "VV"};
 
-    // map MO space label to its psi::Dimension
-    std::map<std::string, psi::Dimension> MOlabel_to_dimension;
-    MOlabel_to_dimension[acore_label_] = mo_space_info_->dimension("RESTRICTED_DOCC");
-    MOlabel_to_dimension[aactv_label_] = mo_space_info_->dimension("ACTIVE");
-    MOlabel_to_dimension[avirt_label_] = mo_space_info_->dimension("RESTRICTED_UOCC");
+//    // map MO space label to its psi::Dimension
+//    std::map<std::string, psi::Dimension> MOlabel_to_dimension;
+//    MOlabel_to_dimension[acore_label_] = mo_space_info_->dimension("RESTRICTED_DOCC");
+//    MOlabel_to_dimension[aactv_label_] = mo_space_info_->dimension("ACTIVE");
+//    MOlabel_to_dimension[avirt_label_] = mo_space_info_->dimension("RESTRICTED_UOCC");
 
-    // eigen values to be returned
-    size_t ncmo = mo_space_info_->size("CORRELATED");
-    psi::Dimension corr = mo_space_info_->dimension("CORRELATED");
-    std::vector<double> eigenvalues_a(ncmo, 0.0);
-    std::vector<double> eigenvalues_b(ncmo, 0.0);
+//    // eigen values to be returned
+//    size_t ncmo = mo_space_info_->size("CORRELATED");
+//    psi::Dimension corr = mo_space_info_->dimension("CORRELATED");
+//    std::vector<double> eigenvalues_a(ncmo, 0.0);
+//    std::vector<double> eigenvalues_b(ncmo, 0.0);
 
-    // map MO space label to its offset psi::Dimension
-    std::map<std::string, psi::Dimension> MOlabel_to_offset_dimension;
-    int nirrep = corr.n();
-    MOlabel_to_offset_dimension["c"] = psi::Dimension(std::vector<int>(nirrep, 0));
-    MOlabel_to_offset_dimension["a"] = mo_space_info_->dimension("RESTRICTED_DOCC");
-    MOlabel_to_offset_dimension["v"] =
-        mo_space_info_->dimension("RESTRICTED_DOCC") + mo_space_info_->dimension("ACTIVE");
+//    // map MO space label to its offset psi::Dimension
+//    std::map<std::string, psi::Dimension> MOlabel_to_offset_dimension;
+//    int nirrep = corr.n();
+//    MOlabel_to_offset_dimension["c"] = psi::Dimension(std::vector<int>(nirrep, 0));
+//    MOlabel_to_offset_dimension["a"] = mo_space_info_->dimension("RESTRICTED_DOCC");
+//    MOlabel_to_offset_dimension["v"] =
+//        mo_space_info_->dimension("RESTRICTED_DOCC") + mo_space_info_->dimension("ACTIVE");
 
-    // figure out index
-    auto fill_eigen = [&](std::string block_label, int irrep, std::vector<double> values) {
-        int h = irrep;
-        size_t idx_begin = 0;
-        while ((--h) >= 0)
-            idx_begin += corr[h];
+//    // figure out index
+//    auto fill_eigen = [&](std::string block_label, int irrep, std::vector<double> values) {
+//        int h = irrep;
+//        size_t idx_begin = 0;
+//        while ((--h) >= 0)
+//            idx_begin += corr[h];
 
-        std::string label(1, tolower(block_label[0]));
-        idx_begin += MOlabel_to_offset_dimension[label][irrep];
+//        std::string label(1, tolower(block_label[0]));
+//        idx_begin += MOlabel_to_offset_dimension[label][irrep];
 
-        bool spin_alpha = islower(block_label[0]);
-        size_t nvalues = values.size();
-        if (spin_alpha) {
-            for (size_t i = 0; i < nvalues; ++i) {
-                eigenvalues_a[i + idx_begin] = values[i];
-            }
-        } else {
-            for (size_t i = 0; i < nvalues; ++i) {
-                eigenvalues_b[i + idx_begin] = values[i];
-            }
-        }
-    };
+//        bool spin_alpha = islower(block_label[0]);
+//        size_t nvalues = values.size();
+//        if (spin_alpha) {
+//            for (size_t i = 0; i < nvalues; ++i) {
+//                eigenvalues_a[i + idx_begin] = values[i];
+//            }
+//        } else {
+//            for (size_t i = 0; i < nvalues; ++i) {
+//                eigenvalues_b[i + idx_begin] = values[i];
+//            }
+//        }
+//    };
 
-    // diagonalize diagonal blocks
-    for (const auto& block : blocks) {
-        size_t dim = F_.block(block).dim(0);
-        if (dim == 0) {
-            continue;
-        } else {
-            std::string label(1, tolower(block[0]));
-            psi::Dimension space = MOlabel_to_dimension[label];
-            int nirrep = space.n();
+//    // diagonalize diagonal blocks
+//    for (const auto& block : blocks) {
+//        size_t dim = F_.block(block).dim(0);
+//        if (dim == 0) {
+//            continue;
+//        } else {
+//            std::string label(1, tolower(block[0]));
+//            psi::Dimension space = MOlabel_to_dimension[label];
+//            int nirrep = space.n();
 
-            // separate Fock with irrep
-            for (int h = 0; h < nirrep; ++h) {
-                size_t h_dim = space[h];
-                ambit::Tensor U_h;
-                if (h_dim == 0) {
-                    continue;
-                } else if (h_dim == 1) {
-                    U_h = ambit::Tensor::build(tensor_type_, "U_h", std::vector<size_t>(2, h_dim));
-                    U_h.data()[0] = 1.0;
-                    ambit::Tensor F_block =
-                        ambit::Tensor::build(tensor_type_, "F_block", F_.block(block).dims());
-                    F_block.data() = F_.block(block).data();
-                    ambit::Tensor T_h = separate_tensor(F_block, space, h);
-                    fill_eigen(block, h, T_h.data());
-                } else {
-                    ambit::Tensor F_block =
-                        ambit::Tensor::build(tensor_type_, "F_block", F_.block(block).dims());
-                    F_block.data() = F_.block(block).data();
-                    ambit::Tensor T_h = separate_tensor(F_block, space, h);
-                    auto Feigen = T_h.syev(AscendingEigenvalue);
-                    U_h = ambit::Tensor::build(tensor_type_, "U_h", std::vector<size_t>(2, h_dim));
-                    U_h("pq") = Feigen["eigenvectors"]("pq");
-                    fill_eigen(block, h, Feigen["eigenvalues"].data());
-                }
-                ambit::Tensor U_out = U.block(block);
-                combine_tensor(U_out, U_h, space, h);
-            }
-        }
-    }
-    return {eigenvalues_a, eigenvalues_b};
-}
+//            // separate Fock with irrep
+//            for (int h = 0; h < nirrep; ++h) {
+//                size_t h_dim = space[h];
+//                ambit::Tensor U_h;
+//                if (h_dim == 0) {
+//                    continue;
+//                } else if (h_dim == 1) {
+//                    U_h = ambit::Tensor::build(tensor_type_, "U_h", std::vector<size_t>(2, h_dim));
+//                    U_h.data()[0] = 1.0;
+//                    ambit::Tensor F_block =
+//                        ambit::Tensor::build(tensor_type_, "F_block", F_.block(block).dims());
+//                    F_block.data() = F_.block(block).data();
+//                    ambit::Tensor T_h = separate_tensor(F_block, space, h);
+//                    fill_eigen(block, h, T_h.data());
+//                } else {
+//                    ambit::Tensor F_block =
+//                        ambit::Tensor::build(tensor_type_, "F_block", F_.block(block).dims());
+//                    F_block.data() = F_.block(block).data();
+//                    ambit::Tensor T_h = separate_tensor(F_block, space, h);
+//                    auto Feigen = T_h.syev(AscendingEigenvalue);
+//                    U_h = ambit::Tensor::build(tensor_type_, "U_h", std::vector<size_t>(2, h_dim));
+//                    U_h("pq") = Feigen["eigenvectors"]("pq");
+//                    fill_eigen(block, h, Feigen["eigenvalues"].data());
+//                }
+//                ambit::Tensor U_out = U.block(block);
+//                combine_tensor(U_out, U_h, space, h);
+//            }
+//        }
+//    }
+//    return {eigenvalues_a, eigenvalues_b};
+//}
 
-ambit::Tensor DSRG_MRPT3::separate_tensor(ambit::Tensor& tens, const psi::Dimension& irrep,
-                                          const int& h) {
-    // test tens and irrep
-    size_t tens_dim = tens.dim(0);
-    if (tens_dim != static_cast<size_t>(irrep.sum()) || tens_dim != tens.dim(1)) {
-        throw psi::PSIEXCEPTION("Wrong dimension for the to-be-separated ambit Tensor.");
-    }
-    if (h >= irrep.n()) {
-        throw psi::PSIEXCEPTION("Ask for wrong irrep.");
-    }
+//ambit::Tensor DSRG_MRPT3::separate_tensor(ambit::Tensor& tens, const psi::Dimension& irrep,
+//                                          const int& h) {
+//    // test tens and irrep
+//    size_t tens_dim = tens.dim(0);
+//    if (tens_dim != static_cast<size_t>(irrep.sum()) || tens_dim != tens.dim(1)) {
+//        throw psi::PSIEXCEPTION("Wrong dimension for the to-be-separated ambit Tensor.");
+//    }
+//    if (h >= irrep.n()) {
+//        throw psi::PSIEXCEPTION("Ask for wrong irrep.");
+//    }
 
-    // from relative (blocks) to absolute (big tensor) index
-    auto rel_to_abs = [&](size_t i, size_t j, size_t offset) {
-        return (i + offset) * tens_dim + (j + offset);
-    };
+//    // from relative (blocks) to absolute (big tensor) index
+//    auto rel_to_abs = [&](size_t i, size_t j, size_t offset) {
+//        return (i + offset) * tens_dim + (j + offset);
+//    };
 
-    // compute offset
-    size_t offset = 0, h_dim = irrep[h];
-    int h_local = h;
-    while ((--h_local) >= 0)
-        offset += irrep[h_local];
+//    // compute offset
+//    size_t offset = 0, h_dim = irrep[h];
+//    int h_local = h;
+//    while ((--h_local) >= 0)
+//        offset += irrep[h_local];
 
-    // fill in values
-    ambit::Tensor T_h = ambit::Tensor::build(tensor_type_, "T_h", std::vector<size_t>(2, h_dim));
-    for (size_t i = 0; i < h_dim; ++i) {
-        for (size_t j = 0; j < h_dim; ++j) {
-            size_t abs_idx = rel_to_abs(i, j, offset);
-            T_h.data()[i * h_dim + j] = tens.data()[abs_idx];
-        }
-    }
+//    // fill in values
+//    ambit::Tensor T_h = ambit::Tensor::build(tensor_type_, "T_h", std::vector<size_t>(2, h_dim));
+//    for (size_t i = 0; i < h_dim; ++i) {
+//        for (size_t j = 0; j < h_dim; ++j) {
+//            size_t abs_idx = rel_to_abs(i, j, offset);
+//            T_h.data()[i * h_dim + j] = tens.data()[abs_idx];
+//        }
+//    }
 
-    return T_h;
-}
+//    return T_h;
+//}
 
-void DSRG_MRPT3::combine_tensor(ambit::Tensor& tens, ambit::Tensor& tens_h,
-                                const psi::Dimension& irrep, const int& h) {
-    // test tens and irrep
-    if (h >= irrep.n()) {
-        throw psi::PSIEXCEPTION("Ask for wrong irrep.");
-    }
-    size_t tens_h_dim = tens_h.dim(0), h_dim = irrep[h];
-    if (tens_h_dim != h_dim || tens_h_dim != tens_h.dim(1)) {
-        throw psi::PSIEXCEPTION("Wrong dimension for the to-be-combined ambit Tensor.");
-    }
+//void DSRG_MRPT3::combine_tensor(ambit::Tensor& tens, ambit::Tensor& tens_h,
+//                                const psi::Dimension& irrep, const int& h) {
+//    // test tens and irrep
+//    if (h >= irrep.n()) {
+//        throw psi::PSIEXCEPTION("Ask for wrong irrep.");
+//    }
+//    size_t tens_h_dim = tens_h.dim(0), h_dim = irrep[h];
+//    if (tens_h_dim != h_dim || tens_h_dim != tens_h.dim(1)) {
+//        throw psi::PSIEXCEPTION("Wrong dimension for the to-be-combined ambit Tensor.");
+//    }
 
-    // from relative (blocks) to absolute (big tensor) index
-    size_t tens_dim = tens.dim(0);
-    auto rel_to_abs = [&](size_t i, size_t j, size_t offset) {
-        return (i + offset) * tens_dim + (j + offset);
-    };
+//    // from relative (blocks) to absolute (big tensor) index
+//    size_t tens_dim = tens.dim(0);
+//    auto rel_to_abs = [&](size_t i, size_t j, size_t offset) {
+//        return (i + offset) * tens_dim + (j + offset);
+//    };
 
-    // compute offset
-    size_t offset = 0;
-    int h_local = h;
-    while ((--h_local) >= 0)
-        offset += irrep[h_local];
+//    // compute offset
+//    size_t offset = 0;
+//    int h_local = h;
+//    while ((--h_local) >= 0)
+//        offset += irrep[h_local];
 
-    // fill in values
-    for (size_t i = 0; i < h_dim; ++i) {
-        for (size_t j = 0; j < h_dim; ++j) {
-            size_t abs_idx = rel_to_abs(i, j, offset);
-            tens.data()[abs_idx] = tens_h.data()[i * h_dim + j];
-        }
-    }
-}
+//    // fill in values
+//    for (size_t i = 0; i < h_dim; ++i) {
+//        for (size_t j = 0; j < h_dim; ++j) {
+//            size_t abs_idx = rel_to_abs(i, j, offset);
+//            tens.data()[abs_idx] = tens_h.data()[i * h_dim + j];
+//        }
+//    }
+//}
 
 // Binary function to achieve sorting a vector of pair<vector, double>
 // according to the double value in decending order

@@ -258,13 +258,13 @@ class DSRG_MRPT3 : public MASTER_DSRG {
 
     /// Transfer integrals for FCI
     //    void transfer_integrals();
-    /// Diagonalize the diagonal blocks of the Fock matrix
-    std::vector<std::vector<double>> diagonalize_Fock_diagblocks(BlockedTensor& U);
-    /// Separate an 2D ambit::Tensor according to its irrep
-    ambit::Tensor separate_tensor(ambit::Tensor& tens, const psi::Dimension& irrep, const int& h);
-    /// Combine a separated 2D ambit::Tensor
-    void combine_tensor(ambit::Tensor& tens, ambit::Tensor& tens_h, const psi::Dimension& irrep,
-                        const int& h);
+//    /// Diagonalize the diagonal blocks of the Fock matrix
+//    std::vector<std::vector<double>> diagonalize_Fock_diagblocks(BlockedTensor& U);
+//    /// Separate an 2D ambit::Tensor according to its irrep
+//    ambit::Tensor separate_tensor(ambit::Tensor& tens, const psi::Dimension& irrep, const int& h);
+//    /// Combine a separated 2D ambit::Tensor
+//    void combine_tensor(ambit::Tensor& tens, ambit::Tensor& tens_h, const psi::Dimension& irrep,
+//                        const int& h);
 
     /**
      * Get a sub block of tensor T

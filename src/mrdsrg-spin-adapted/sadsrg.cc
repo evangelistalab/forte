@@ -642,18 +642,17 @@ bool SADSRG::check_semi_orbs() {
     e_conv = e_conv < 1.0e-12 ? 1.0e-12 : e_conv;
     double threshold_max = 10.0 * e_conv;
 
-    std::vector<double> Fmax, Fnorm;
-    std::vector<std::string> spaces{"CORE", "VIRTUAL"};
+    std::vector<std::tuple<std::string, double, double>> Fcheck;
     for (const auto& block : {"cc", "vv"}) {
         double fmax = Fd.block(block).norm(0);
         double fmean = Fd.block(block).norm(1);
         fmean /= Fd.block(block).numel() > 2 ? Fd.block(block).numel() : 1.0;
 
-        Fmax.push_back(fmax);
-        Fnorm.push_back(fmean);
-
-        std::string space = (block == std::string("cc")) ? "RESTRICTED_DOCC" : "RESTRICTED_UOCC";
+        std::string space = (block[0] == 'c') ? "RESTRICTED_DOCC" : "RESTRICTED_UOCC";
         semi_checked_results_[space] = fmax <= threshold_max and fmean <= e_conv;
+
+        space = (block[0] == 'c') ? "CORE" : "VIRTUAL";
+        Fcheck.emplace_back(space, fmax, fmean);
     }
 
     auto nactv = actv_mos_.size();
@@ -677,18 +676,19 @@ bool SADSRG::check_semi_orbs() {
         }
         fmean /= size * size * 0.5; // roughly correct
 
-        Fmax.push_back(fmax);
-        Fnorm.push_back(fmean);
-        spaces.push_back(space);
-
         semi_checked_results_[space] = fmax <= threshold_max and fmean <= e_conv;
+
+        Fcheck.emplace_back(space, fmax, fmean);
     }
 
     std::string dash(8 + 32, '-');
-    outfile->Printf("\n    %-8s %15s %15s", "Block", "Max", "1-Norm");
+    outfile->Printf("\n    %-8s %15s %15s", "Block", "Max", "Mean");
     outfile->Printf("\n    %s", dash.c_str());
-    for (int i = 0, size = spaces.size(); i < size; ++i) {
-        outfile->Printf("\n    %-8s %15.10f %15.10f", spaces[i].c_str(), Fmax[i], Fnorm[i]);
+    for (const auto& Ftuple: Fcheck) {
+        std::string space;
+        double fmax, fmean;
+        std::tie(space, fmax, fmean) = Ftuple;
+        outfile->Printf("\n    %-8s %15.10f %15.10f", space.c_str(), fmax, fmean);
     }
     outfile->Printf("\n    %s", dash.c_str());
 
