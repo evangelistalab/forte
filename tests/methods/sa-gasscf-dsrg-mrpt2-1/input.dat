@@ -5,8 +5,8 @@
 import forte
 
 refscf = -76.0172965561
-refgasscf = -65.9028823564
-refdsrg = -66.13432084716 # old value: -66.1343265955
+refgasscf = -65.866749078651708
+refdsrg = -66.085753612282389
 
 memory 1000 mb
 molecule h2o{
@@ -34,6 +34,7 @@ set forte {
   root_sym 0
   charge 0
   sci_enforce_spin_complete true
+  spin_project_full true
   e_convergence 6
   charge 0
   active_ref_type gas
@@ -75,4 +76,4 @@ set forte {
 }
 
 edsrg = energy('forte', ref_wfn = wfn_gasscf)
-compare_values(refdsrg, edsrg ,9, "GASSCF-DSRG-MRPT2 energy") #TEST
+compare_values(refdsrg, edsrg, 9, "GASSCF-DSRG-MRPT2 energy") #TEST
