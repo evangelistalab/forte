@@ -219,7 +219,6 @@ SparseCISolver::diagonalize_hamiltonian_full(const std::vector<Determinant>& spa
     } else {
         // Find all the eigenvalues and eigenvectors of the Hamiltonian
         psi::SharedMatrix H = build_full_hamiltonian(space, as_ints);
-
         evecs.reset(new psi::Matrix("U", dim_space, dim_space));
         evals.reset(new Vector("e", dim_space));
 
