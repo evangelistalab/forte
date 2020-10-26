@@ -385,13 +385,13 @@ double DSRG_MRPT2::compute_energy() {
     // Ecorr += Etemp;
     // energy.push_back({"<[F, T1]>", Etemp});
 
-    Etemp = E_FT2();
-    Ecorr += Etemp;
-    energy.push_back({"<[F, T2]>", Etemp});
-
-    // Etemp = E_VT1();
+    // Etemp = E_FT2();
     // Ecorr += Etemp;
-    // energy.push_back({"<[V, T1]>", Etemp});
+    // energy.push_back({"<[F, T2]>", Etemp});
+
+    Etemp = E_VT1();
+    Ecorr += Etemp;
+    energy.push_back({"<[V, T1]>", Etemp});
 
     // Etemp = E_VT2_2();
     // EVT2 += Etemp;
@@ -1006,15 +1006,15 @@ double DSRG_MRPT2::E_VT1() {
     BlockedTensor temp = BTF_->build(tensor_type_, "temp", spin_cases({"aaaa"}), true);
 
     temp["uvxy"] += V_["evxy"] * T1_["ue"];
-    temp["uvxy"] -= V_["uvmy"] * T1_["mx"];
+    // temp["uvxy"] -= V_["uvmy"] * T1_["mx"];
 
     temp["UVXY"] += V_["EVXY"] * T1_["UE"];
-    temp["UVXY"] -= V_["UVMY"] * T1_["MX"];
+    // temp["UVXY"] -= V_["UVMY"] * T1_["MX"];
 
     temp["uVxY"] += V_["eVxY"] * T1_["ue"];
     temp["uVxY"] += V_["uExY"] * T1_["VE"];
-    temp["uVxY"] -= V_["uVmY"] * T1_["mx"];
-    temp["uVxY"] -= V_["uVxM"] * T1_["MY"];
+    // temp["uVxY"] -= V_["uVmY"] * T1_["mx"];
+    // temp["uVxY"] -= V_["uVxM"] * T1_["MY"];
 
     E += 0.5 * temp["uvxy"] * Lambda2_["xyuv"];
     E += 0.5 * temp["UVXY"] * Lambda2_["XYUV"];
@@ -1024,15 +1024,15 @@ double DSRG_MRPT2::E_VT1() {
         temp.zero();
 
         temp["uvxy"] += V_["wvxy"] * T1_["uw"];
-        temp["uvxy"] -= V_["uvwy"] * T1_["wx"];
+        // temp["uvxy"] -= V_["uvwy"] * T1_["wx"];
 
         temp["UVXY"] += V_["WVXY"] * T1_["UW"];
-        temp["UVXY"] -= V_["UVWY"] * T1_["WX"];
+        // temp["UVXY"] -= V_["UVWY"] * T1_["WX"];
 
         temp["uVxY"] += V_["wVxY"] * T1_["uw"];
         temp["uVxY"] += V_["uWxY"] * T1_["VW"];
-        temp["uVxY"] -= V_["uVwY"] * T1_["wx"];
-        temp["uVxY"] -= V_["uVxW"] * T1_["WY"];
+        // temp["uVxY"] -= V_["uVwY"] * T1_["wx"];
+        // temp["uVxY"] -= V_["uVxW"] * T1_["WY"];
 
         E += 0.5 * temp["uvxy"] * Lambda2_["xyuv"];
         E += 0.5 * temp["UVXY"] * Lambda2_["XYUV"];

@@ -53,7 +53,8 @@ const bool X2_TERM = false;
 const bool X3_TERM = false;
 
 const bool X4_TERM = false;
-const bool X5_TERM = true;
+const bool X5_TERM = false;
+const bool X6_TERM = true;
 
 const bool CORRELATION_TERM = true;
 
@@ -90,6 +91,8 @@ void DSRG_MRPT2::set_all_variables() {
     F = BTF_->build(CoreTensor, "Fock Matrix", spin_cases({"gg"}));
     W_ = BTF_->build(CoreTensor, "Lagrangian", spin_cases({"gg"}));
     Eeps1 = BTF_->build(CoreTensor, "e^[-s*(Delta1)^2]", spin_cases({"hp"}));
+    Eeps1_m1 = BTF_->build(CoreTensor, "{1-e^[-s*(Delta1)^2]}/(Delta1)", spin_cases({"hp"}));
+    Eeps1_m2 = BTF_->build(CoreTensor, "{1-e^[-s*(Delta1)^2]}/(Delta1)^2", spin_cases({"hp"}));
     Eeps2 = BTF_->build(CoreTensor, "e^[-s*(Delta2)^2]", spin_cases({"hhpp"}));
     Eeps2_p = BTF_->build(CoreTensor, "1+e^[-s*(Delta2)^2]", spin_cases({"hhpp"}));
     Eeps2_m1 = BTF_->build(CoreTensor, "{1-e^[-s*(Delta2)^2]}/(Delta2)", spin_cases({"hhpp"}));
@@ -110,7 +113,11 @@ void DSRG_MRPT2::set_all_variables() {
     Sigma = BTF_->build(CoreTensor, "Sigma", spin_cases({"hp"}));    
     Sigma1 = BTF_->build(CoreTensor, "Sigma * DelEeps1", spin_cases({"hp"}));    
     Sigma2 = BTF_->build(CoreTensor, "Sigma * Eeps1", spin_cases({"hp"}));    
-    Sigma3 = BTF_->build(CoreTensor, "Sigma * (1 + Eeps1)", spin_cases({"hp"}));    
+    Sigma3 = BTF_->build(CoreTensor, "Sigma * (1 + Eeps1)", spin_cases({"hp"}));
+    Xi = BTF_->build(CoreTensor, "Xi", spin_cases({"hp"}));    
+    Xi1 = BTF_->build(CoreTensor, "Xi * Eeps1_m2", spin_cases({"hp"}));  
+    Xi2 = BTF_->build(CoreTensor, "Xi * Eeps1", spin_cases({"hp"}));    
+    Xi3 = BTF_->build(CoreTensor, "Xi * Eeps1_m1", spin_cases({"hp"}));     
     Alpha = 0.0;
     I = BTF_->build(CoreTensor, "identity matrix", spin_cases({"gg"}));
     I.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>&, double& value) {
@@ -288,6 +295,20 @@ void DSRG_MRPT2::set_dsrg_tensor() {
         }
     ); 
 
+    Eeps1_m1.iterate(
+        [&](const std::vector<size_t>& i, const std::vector<SpinType>& spin, double& value) {
+            if (spin[0] == AlphaSpin) { value = dsrg_source_->compute_denominator(Fa_[i[0]] - Fa_[i[1]], 1);}
+            else { value = dsrg_source_->compute_denominator(Fb_[i[0]] - Fb_[i[1]], 1);}
+        }
+    );
+
+    Eeps1_m2.iterate(
+        [&](const std::vector<size_t>& i, const std::vector<SpinType>& spin, double& value) {
+            if (spin[0] == AlphaSpin) { value = dsrg_source_->compute_denominator(Fa_[i[0]] - Fa_[i[1]], 2);}
+            else { value = dsrg_source_->compute_denominator(Fb_[i[0]] - Fb_[i[1]], 2);}
+        }
+    );
+    
     // An intermediate tensor : T2 / Delta
     T2OverDelta["ijab"] += V["ijab"] * Eeps2_m2["ijab"];
     T2OverDelta["iJaB"] += V["iJaB"] * Eeps2_m2["iJaB"];   
@@ -303,6 +324,7 @@ void DSRG_MRPT2::set_dsrg_tensor() {
 
 void DSRG_MRPT2::set_multiplier() {
     set_sigma();
+    set_xi();
     set_tau();
     set_kappa();
     set_z();
@@ -439,6 +461,23 @@ void DSRG_MRPT2::set_tau() {
         Tau1["MUXY"] -= 0.125 * Eeps2_m1["MUXY"] * F_["VM"] * Lambda2_["XYVU"];
         Tau1["mUxY"] -= 0.125 * Eeps2_m1["mUxY"] * F_["vm"] * Lambda2_["xYvU"];
     }
+    if (CORRELATION_TERM) {
+        Tau1["iuax"] += 0.25 * Eeps2_m1["iuax"] * DelGam1["xu"] * Xi3["ia"];
+        Tau1["IUAX"] += 0.25 * Eeps2_m1["IUAX"] * DelGam1["XU"] * Xi3["IA"];
+        Tau1["iUaX"] += 0.25 * Eeps2_m1["iUaX"] * DelGam1["XU"] * Xi3["ia"];
+
+        Tau1["iuxa"] -= 0.25 * Eeps2_m1["iuxa"] * DelGam1["xu"] * Xi3["ia"];
+        Tau1["IUXA"] -= 0.25 * Eeps2_m1["IUXA"] * DelGam1["XU"] * Xi3["IA"];
+
+        Tau1["uixa"] += 0.25 * Eeps2_m1["uixa"] * DelGam1["xu"] * Xi3["ia"];
+        Tau1["UIXA"] += 0.25 * Eeps2_m1["UIXA"] * DelGam1["XU"] * Xi3["IA"];
+        Tau1["uIxA"] += 0.25 * Eeps2_m1["uIxA"] * DelGam1["xu"] * Xi3["IA"];
+
+        Tau1["uiax"] -= 0.25 * Eeps2_m1["uiax"] * DelGam1["xu"] * Xi3["ia"];
+        Tau1["UIAX"] -= 0.25 * Eeps2_m1["UIAX"] * DelGam1["XU"] * Xi3["IA"];
+    }
+
+
     // Tau * Delta
     // <[V, T2]> (C_2)^4
     if (PT2_TERM) {
@@ -566,6 +605,22 @@ void DSRG_MRPT2::set_tau() {
         Tau2["mUxY"] -= 0.125 * F_["vm"] * Lambda2_["xYvU"];
     }
 
+    if (CORRELATION_TERM) {
+        Tau2["iuax"] += 0.25 * DelGam1["xu"] * Xi3["ia"];
+        Tau2["IUAX"] += 0.25 * DelGam1["XU"] * Xi3["IA"];
+        Tau2["iUaX"] += 0.25 * DelGam1["XU"] * Xi3["ia"];
+
+        Tau2["iuxa"] -= 0.25 * DelGam1["xu"] * Xi3["ia"];
+        Tau2["IUXA"] -= 0.25 * DelGam1["XU"] * Xi3["IA"];
+
+        Tau2["uixa"] += 0.25 * DelGam1["xu"] * Xi3["ia"];
+        Tau2["UIXA"] += 0.25 * DelGam1["XU"] * Xi3["IA"];
+        Tau2["uIxA"] += 0.25 * DelGam1["xu"] * Xi3["IA"];
+
+        Tau2["uiax"] -= 0.25 * DelGam1["xu"] * Xi3["ia"];
+        Tau2["UIAX"] -= 0.25 * DelGam1["XU"] * Xi3["IA"];
+    }
+
     // NOTICE: remove the internal parts based on the DSRG theories
     Tau1.block("aaaa").zero();
     Tau1.block("aAaA").zero();
@@ -601,6 +656,33 @@ void DSRG_MRPT2::set_sigma() {
     Sigma3["ia"] += Sigma2["ia"];
     Sigma3["IA"] = Sigma["IA"];
     Sigma3["IA"] += Sigma2["IA"];
+}
+
+void DSRG_MRPT2::set_xi() {
+    // <[V, T1]>
+    if (X6_TERM) {
+        Xi["ue"] += 0.5 * V_["evxy"] * Lambda2_["xyuv"];
+        Xi["ue"] += V_["eVxY"] * Lambda2_["xYuV"];
+        Xi["UE"] += 0.5 * V_["EVXY"] * Lambda2_["XYUV"];
+        Xi["UE"] += V_["vExY"] * Lambda2_["xYvU"];
+    }
+
+    Xi1["ia"] = Xi["ia"] * Eeps1_m2["ia"];
+    Xi1["IA"] = Xi["IA"] * Eeps1_m2["IA"];
+
+    Xi2["ia"] = Xi["ia"] * Eeps1["ia"];
+    Xi2["IA"] = Xi["IA"] * Eeps1["IA"];
+
+    Xi3["ia"] = Xi["ia"] * Eeps1_m1["ia"];
+    Xi3["IA"] = Xi["IA"] * Eeps1_m1["IA"];
+
+    double eee;
+    eee += 0.5 * V_["evxy"] * T1_["ue"] * Lambda2_["xyuv"];
+    eee += V_["eVxY"] * T1_["ue"] * Lambda2_["xYuV"];
+    eee += 0.5 * V_["EVXY"] * T1_["UE"] * Lambda2_["XYUV"];
+    eee += V_["vExY"] * T1_["UE"] * Lambda2_["xYvU"];
+
+    std::cout << "tested energy(xi) = " << std::setprecision(12) << eee << std::endl;
 }
 
 void DSRG_MRPT2::set_kappa() {
@@ -682,6 +764,17 @@ void DSRG_MRPT2::set_kappa() {
         Kappa.block("aAaV")("uVzE") -= 0.250 * T2_.block("aAaV")("xYwE") * rdms_.L3aab()("xzYuwV");
     }
 
+    // <[V, T1]>
+    if (X6_TERM) {
+        Kappa["xyev"] += 0.25 * T1_["ue"] * Lambda2_["xyuv"];
+        Kappa["XYEV"] += 0.25 * T1_["UE"] * Lambda2_["XYUV"];
+        Kappa["xYeV"] += 0.25 * T1_["ue"] * Lambda2_["xYuV"];
+
+        Kappa["yxve"] += 0.25 * T1_["ue"] * Lambda2_["yxvu"]; 
+        Kappa["YXVE"] += 0.25 * T1_["UE"] * Lambda2_["YXVU"]; 
+        Kappa["yXvE"] += 0.25 * T1_["UE"] * Lambda2_["yXvU"]; 
+    }
+
     outfile->Printf("Done");
 }
 
@@ -711,6 +804,12 @@ void DSRG_MRPT2::set_w() {
     if (CORRELATION_TERM) {
         W_["pe"] += 0.5 * Sigma3["ie"] * F["ip"];
     }
+
+    if (CORRELATION_TERM) {
+        W_["pe"] += 0.5 * Xi3["ie"] * F["ip"];
+    }
+
+
     if (CORRELATION_TERM) {
         W_["pe"] += Tau1["ijeb"] * V["ijpb"];
         W_["pe"] += 2.0 * Tau1["iJeB"] * V["iJpB"];
@@ -739,6 +838,15 @@ void DSRG_MRPT2::set_w() {
         W_["jm"] += 0.5 * Sigma3["ia"] * V["imaj"];
         W_["jm"] += 0.5 * Sigma3["IA"] * V["mIjA"];
     }
+
+    if (CORRELATION_TERM) {
+        W_["jm"] += 0.5 * Xi3["ma"] * F["ja"];
+        W_["jm"] += 0.5 * Xi3["ia"] * V["ijam"];
+        W_["jm"] += 0.5 * Xi3["IA"] * V["jImA"];
+        W_["jm"] += 0.5 * Xi3["ia"] * V["imaj"];
+        W_["jm"] += 0.5 * Xi3["IA"] * V["mIjA"];
+    }
+
     if (CORRELATION_TERM) {
         W_["im"] += Tau1["mjab"] * V["ijab"];
         W_["im"] += 2.0 * Tau1["mJaB"] * V["iJaB"];
@@ -808,6 +916,16 @@ void DSRG_MRPT2::set_w() {
         W_["zw"] += 0.5 * Sigma3["ia"] * V["izau"] * Gamma1["uw"];
         W_["zw"] += 0.5 * Sigma3["IA"] * V["zIuA"] * Gamma1["uw"];
     }
+
+    if (CORRELATION_TERM) {
+        W_["zw"] += 0.5 * Xi3["wa"] * F["za"];
+        W_["zw"] += 0.5 * Xi3["iw"] * F["iz"];
+        W_["zw"] += 0.5 * Xi3["ia"] * V["ivaz"] * Gamma1["wv"];
+        W_["zw"] += 0.5 * Xi3["IA"] * V["vIzA"] * Gamma1["wv"];
+        W_["zw"] += 0.5 * Xi3["ia"] * V["izau"] * Gamma1["uw"];
+        W_["zw"] += 0.5 * Xi3["IA"] * V["zIuA"] * Gamma1["uw"];
+    }
+
     if (CORRELATION_TERM) {
         W_["zw"] += Tau1["ijwb"] * V["ijzb"];
         W_["zw"] += 2.0 * Tau1["iJwB"] * V["iJzB"];
@@ -985,6 +1103,15 @@ void DSRG_MRPT2::set_z_cc() {
     }
 
     if (CORRELATION_TERM) {
+        val1["m"] -= Xi1["ma"] * F["ma"];
+        val1["m"] += 2 * s * Xi2["ma"] * F["ma"];
+        val1["m"] -= Xi1["ma"] * T2_["muax"] * DelGam1["xu"];
+        val1["m"] -= Xi1["ma"] * T2_["mUaX"] * DelGam1["XU"];
+        val1["m"] += 2 * s * Xi2["ma"] * T2_["muax"] * DelGam1["xu"];
+        val1["m"] += 2 * s * Xi2["ma"] * T2_["mUaX"] * DelGam1["XU"];
+    }
+
+    if (CORRELATION_TERM) {
         temp["mjab"] += V["mjab"] * Eeps2["mjab"];
         temp["mJaB"] += V["mJaB"] * Eeps2["mJaB"];
         val1["m"] += 4.0 * s * Tau2["mjab"] * temp["mjab"]; 
@@ -1047,6 +1174,12 @@ void DSRG_MRPT2::set_z_cc() {
         zmn["mn"] += 0.5 * Sigma3["na"] * F["ma"];
         zmn["mn"] -= 0.5 * Sigma3["ma"] * F["na"];
     }
+
+    if (CORRELATION_TERM) {
+        zmn["mn"] += 0.5 * Xi3["na"] * F["ma"];
+        zmn["mn"] -= 0.5 * Xi3["ma"] * F["na"];
+    }
+
     if (CORRELATION_TERM) {
         // zmn["mn"] += Tau1["njab"] * V["mjab"];
         // zmn["mn"] += 2.0 * Tau1["nJaB"] * V["mJaB"];
@@ -1182,6 +1315,15 @@ void DSRG_MRPT2::set_z_vv() {
     }
 
     if (CORRELATION_TERM) {
+        val2["e"] += Xi1["ie"] * F["ie"];
+        val2["e"] -= 2 * s * Xi2["ie"] * F["ie"];
+        val2["e"] += Xi1["ie"] * T2_["iuex"] * DelGam1["xu"];
+        val2["e"] += Xi1["ie"] * T2_["iUeX"] * DelGam1["XU"];
+        val2["e"] -= 2 * s * Xi2["ie"] * T2_["iuex"] * DelGam1["xu"];
+        val2["e"] -= 2 * s * Xi2["ie"] * T2_["iUeX"] * DelGam1["XU"];
+    }
+
+    if (CORRELATION_TERM) {
         // temp["ijeb"] += V["ijeb"] * Eeps2["ijeb"];
         // temp["iJeB"] += V["iJeB"] * Eeps2["iJeB"];
         // val2["e"] -= 4.0 * s * Tau2["ijeb"] * temp["ijeb"]; 
@@ -1243,6 +1385,12 @@ void DSRG_MRPT2::set_z_vv() {
         zef["ef"] += 0.5 * Sigma3["if"] * F["ie"];
         zef["ef"] -= 0.5 * Sigma3["ie"] * F["if"];
     }
+
+    if (CORRELATION_TERM) {
+        zef["ef"] += 0.5 * Xi3["if"] * F["ie"];
+        zef["ef"] -= 0.5 * Xi3["ie"] * F["if"];
+    }
+
     if (CORRELATION_TERM) {
         zef["ef"] += Tau1["ijfb"] * V["ijeb"];
         zef["ef"] += 2.0 * Tau1["iJfB"] * V["iJeB"];
@@ -1335,6 +1483,27 @@ void DSRG_MRPT2::set_z_aa_diag() {
         val3["w"] += Sigma2["IA"] * T2_["uIwA"] * Gamma1["wu"];
         val3["w"] -= Sigma2["ia"] * T2_["iwax"] * Gamma1["xw"];
         val3["w"] -= Sigma2["IA"] * T2_["wIxA"] * Gamma1["xw"];
+    }
+
+    if (CORRELATION_TERM) {
+        val3["w"] -= Xi1["wa"] * F["wa"];
+        val3["w"] += 2 * s * Xi2["wa"] * F["wa"];
+        val3["w"] -= Xi1["wa"] * T2_["wuax"] * DelGam1["xu"];
+        val3["w"] -= Xi1["wa"] * T2_["wUaX"] * DelGam1["XU"];
+        val3["w"] += 2 * s * Xi2["wa"] * T2_["wuax"] * DelGam1["xu"];
+        val3["w"] += 2 * s * Xi2["wa"] * T2_["wUaX"] * DelGam1["XU"];
+
+        val3["w"] += Xi1["iw"] * F["iw"];
+        val3["w"] -= 2 * s * Xi2["iw"] * F["iw"];
+        val3["w"] += Xi1["iw"] * T2_["iuwx"] * DelGam1["xu"];
+        val3["w"] += Xi1["iw"] * T2_["iUwX"] * DelGam1["XU"];
+        val3["w"] -= 2 * s * Xi2["iw"] * T2_["iuwx"] * DelGam1["xu"];
+        val3["w"] -= 2 * s * Xi2["iw"] * T2_["iUwX"] * DelGam1["XU"];
+
+        val3["w"] += Xi3["ia"] * T2_["iuaw"] * Gamma1["wu"];
+        val3["w"] += Xi3["IA"] * T2_["uIwA"] * Gamma1["wu"];
+        val3["w"] -= Xi3["ia"] * T2_["iwax"] * Gamma1["xw"];
+        val3["w"] -= Xi3["IA"] * T2_["wIxA"] * Gamma1["xw"];
     }
 
     if (CORRELATION_TERM) {
@@ -1468,6 +1637,17 @@ void DSRG_MRPT2::set_b() {
 
         Z_b["em"] -= 0.5 * Sigma3["ie"] * F["im"];
     }
+
+    if (CORRELATION_TERM) {
+        Z_b["em"] += 0.5 * Xi3["ma"] * F["ea"];
+        Z_b["em"] += 0.5 * Xi3["ia"] * V["ieam"];
+        Z_b["em"] += 0.5 * Xi3["IA"] * V["eImA"];
+        Z_b["em"] += 0.5 * Xi3["ia"] * V["imae"];
+        Z_b["em"] += 0.5 * Xi3["IA"] * V["mIeA"];
+
+        Z_b["em"] -= 0.5 * Xi3["ie"] * F["im"];
+    }
+
     if (CORRELATION_TERM) {
         Z_b["em"] += Tau1["mjab"] * V["ejab"];
         Z_b["em"] += 2.0 * Tau1["mJaB"] * V["eJaB"];
@@ -1509,6 +1689,23 @@ void DSRG_MRPT2::set_b() {
         Z_b["wz"] -= 0.5 * Sigma3["ia"] * V["izau"] * Gamma1["uw"];
         Z_b["wz"] -= 0.5 * Sigma3["IA"] * V["zIuA"] * Gamma1["uw"];
     }
+
+    if (CORRELATION_TERM) {
+        Z_b["wz"] += 0.5 * Xi3["za"] * F["wa"];
+        Z_b["wz"] += 0.5 * Xi3["iz"] * F["iw"];
+        Z_b["wz"] += 0.5 * Xi3["ia"] * V["ivaw"] * Gamma1["zv"];
+        Z_b["wz"] += 0.5 * Xi3["IA"] * V["vIwA"] * Gamma1["zv"];
+        Z_b["wz"] += 0.5 * Xi3["ia"] * V["iwau"] * Gamma1["uz"];
+        Z_b["wz"] += 0.5 * Xi3["IA"] * V["wIuA"] * Gamma1["uz"];
+
+        Z_b["wz"] -= 0.5 * Xi3["wa"] * F["za"];
+        Z_b["wz"] -= 0.5 * Xi3["iw"] * F["iz"];
+        Z_b["wz"] -= 0.5 * Xi3["ia"] * V["ivaz"] * Gamma1["wv"];
+        Z_b["wz"] -= 0.5 * Xi3["IA"] * V["vIzA"] * Gamma1["wv"];
+        Z_b["wz"] -= 0.5 * Xi3["ia"] * V["izau"] * Gamma1["uw"];
+        Z_b["wz"] -= 0.5 * Xi3["IA"] * V["zIuA"] * Gamma1["uw"];
+    }
+
     if (CORRELATION_TERM) {
         Z_b["wz"] += Tau1["ijzb"] * V["ijwb"];
         Z_b["wz"] += 2.0 * Tau1["iJzB"] * V["iJwB"];
@@ -1569,6 +1766,18 @@ void DSRG_MRPT2::set_b() {
 
         Z_b["ew"] -= 0.5 * Sigma3["ie"] * F["iw"];
     }
+
+    if (CORRELATION_TERM) {
+        Z_b["ew"] += 0.5 * Xi3["wa"] * F["ea"];
+        Z_b["ew"] += 0.5 * Xi3["iw"] * F["ie"];
+        Z_b["ew"] += 0.5 * Xi3["ia"] * V["ivae"] * Gamma1["wv"];
+        Z_b["ew"] += 0.5 * Xi3["IA"] * V["vIeA"] * Gamma1["wv"];
+        Z_b["ew"] += 0.5 * Xi3["ia"] * V["ieau"] * Gamma1["uw"];
+        Z_b["ew"] += 0.5 * Xi3["IA"] * V["eIuA"] * Gamma1["uw"];
+
+        Z_b["ew"] -= 0.5 * Xi3["ie"] * F["iw"];
+    }
+
     if (CORRELATION_TERM) {
         Z_b["ew"] += Tau1["ijwb"] * V["ijeb"];
         Z_b["ew"] += 2.0 * Tau1["iJwB"] * V["iJeB"];
@@ -1618,6 +1827,22 @@ void DSRG_MRPT2::set_b() {
         Z_b["mw"] -= 0.5 * Sigma3["ia"] * V["imaw"];
         Z_b["mw"] -= 0.5 * Sigma3["IA"] * V["mIwA"];
     }
+
+    if (CORRELATION_TERM) {
+        Z_b["mw"] += 0.5 * Xi3["wa"] * F["ma"];
+        Z_b["mw"] += 0.5 * Xi3["iw"] * F["im"];
+        Z_b["mw"] += 0.5 * Xi3["ia"] * V["ivam"] * Gamma1["wv"];
+        Z_b["mw"] += 0.5 * Xi3["IA"] * V["vImA"] * Gamma1["wv"];
+        Z_b["mw"] += 0.5 * Xi3["ia"] * V["imau"] * Gamma1["uw"];
+        Z_b["mw"] += 0.5 * Xi3["IA"] * V["mIuA"] * Gamma1["uw"];
+
+        Z_b["mw"] -= 0.5 * Xi3["ma"] * F["wa"];
+        Z_b["mw"] -= 0.5 * Xi3["ia"] * V["iwam"];
+        Z_b["mw"] -= 0.5 * Xi3["IA"] * V["wImA"];
+        Z_b["mw"] -= 0.5 * Xi3["ia"] * V["imaw"];
+        Z_b["mw"] -= 0.5 * Xi3["IA"] * V["mIwA"];
+    }
+
     if (CORRELATION_TERM) {
         Z_b["mw"] += Tau1["ijwb"] * V["ijmb"];
         Z_b["mw"] += 2.0 * Tau1["iJwB"] * V["iJmB"];
@@ -2448,6 +2673,34 @@ void DSRG_MRPT2::solve_z() {
         temp.zero();  
     }
 
+    if (CORRELATION_TERM) {
+        temp["vu"] += Xi3["ia"] * V["ivau"];
+        temp["vu"] += Xi3["IA"] * V["vIuA"];
+        temp["VU"] += Xi3["IA"] * V["IVAU"];
+        temp["VU"] += Xi3["ia"] * V["iVaU"];
+
+        temp["vu"] += Xi3["ia"] * V["iuav"];
+        temp["vu"] += Xi3["IA"] * V["uIvA"];
+        temp["VU"] += Xi3["IA"] * V["IUAV"];
+        temp["VU"] += Xi3["ia"] * V["iUaV"];
+
+        temp["xu"] += Xi3["ia"] * Delta1["xu"] * T2_["iuax"];
+        temp["xu"] += Xi3["IA"] * Delta1["xu"] * T2_["uIxA"];
+        temp["XU"] += Xi3["IA"] * Delta1["XU"] * T2_["IUAX"];
+        temp["XU"] += Xi3["ia"] * Delta1["XU"] * T2_["iUaX"];
+
+        temp["xu"] += Xi3["ia"] * Delta1["ux"] * T2_["ixau"];
+        temp["xu"] += Xi3["IA"] * Delta1["ux"] * T2_["xIuA"];
+        temp["XU"] += Xi3["IA"] * Delta1["UX"] * T2_["IXAU"];
+        temp["XU"] += Xi3["ia"] * Delta1["UX"] * T2_["iXaU"];
+
+        b_ck("K") -= 0.5 * temp.block("aa")("zw") * cc1a_("KJzw") * ci("J"); 
+        b_ck("K") -= 0.5 * temp.block("AA")("ZW") * cc1b_("KJZW") * ci("J");
+        b_ck("K") -= 0.5 * temp.block("aa")("zw") * cc1a_("JKzw") * ci("J"); 
+        b_ck("K") -= 0.5 * temp.block("AA")("ZW") * cc1b_("JKZW") * ci("J");
+        temp.zero();  
+    }
+
     BlockedTensor temp4 = BTF_->build(CoreTensor, "temporal tensor 4 indices", {"aaaa","AAAA","aAaA"});
     auto dlamb_aa = ambit::Tensor::build(ambit::CoreTensor, "derivatives of Lambda2_ w.r.t. C_K alpha-alpha", {ndets, na_, na_, na_, na_});
     auto dlamb_bb = ambit::Tensor::build(ambit::CoreTensor, "derivatives of Lambda2_ w.r.t. C_K beta-beta", {ndets, na_, na_, na_, na_});
@@ -2708,6 +2961,18 @@ void DSRG_MRPT2::solve_z() {
 
         b_ck("K") += F_.block("ac")("vm") * T2_.block("cAaA")("mUxY") * dlamb_ab("KxYvU");
         b_ck("K") += F_.block("AC")("VM") * T2_.block("aCaA")("uMxY") * dlamb_ab("KxYuV");
+    }
+
+    if (X6_TERM) {
+        temp4["uvxy"] += 0.5 * T1_["ue"] * V_["evxy"];
+        temp4["UVXY"] += 0.5 * T1_["UE"] * V_["EVXY"];
+
+        b_ck("K") -= temp4.block("aaaa")("uvxy") * dlamb_aa("Kxyuv");
+        b_ck("K") -= temp4.block("AAAA")("UVXY") * dlamb_bb("KXYUV");
+        temp4.zero();
+
+        b_ck("K") -= T1_.block("av")("ue") * V_.block("vAaA")("eVxY") * dlamb_ab("KxYuV");
+        b_ck("K") -= T1_.block("AV")("UE") * V_.block("aVaA")("vExY") * dlamb_ab("KxYvU");
     }
 
     // TODO: need to plug in alpha terms
@@ -3064,6 +3329,30 @@ void DSRG_MRPT2::solve_z() {
         Alpha += F_["vm"] * T2_["mUxY"] * Gamma2["xYvU"];
         Alpha += 0.5 * F_["VM"] * T2_["UMXY"] * Gamma2["XYUV"];
         Alpha += F_["VM"] * T2_["uMxY"] * Gamma2["xYuV"];
+    }
+
+    if (CORRELATION_TERM) {   
+        Alpha += Xi3["ia"] * V["ivau"] * Gamma1["vu"];
+        Alpha += Xi3["IA"] * V["vIuA"] * Gamma1["vu"];
+        Alpha += Xi3["IA"] * V["IVAU"] * Gamma1["VU"];
+        Alpha += Xi3["ia"] * V["iVaU"] * Gamma1["VU"];
+
+        Alpha += Xi3["ia"] * T2_["iuax"] * DelGam1["xu"];
+        Alpha += Xi3["IA"] * T2_["uIxA"] * DelGam1["xu"];
+        Alpha += Xi3["IA"] * T2_["IUAX"] * DelGam1["XU"];
+        Alpha += Xi3["ia"] * T2_["iUaX"] * DelGam1["XU"];
+    }
+
+    if (X6_TERM) {
+        Alpha += V_["evxy"] * T1_["ue"] * Lambda2_["xyuv"];
+        Alpha += 2.0 * V_["eVxY"] * T1_["ue"] * Lambda2_["xYuV"];
+        Alpha += V_["EVXY"] * T1_["UE"] * Lambda2_["XYUV"];
+        Alpha += 2.0 * V_["vExY"] * T1_["UE"] * Lambda2_["xYvU"];
+
+        Alpha -= 0.5 * V_["evxy"] * T1_["ue"] * Gamma2["xyuv"];
+        Alpha -= V_["eVxY"] * T1_["ue"] * Gamma2["xYuV"];
+        Alpha -= 0.5 * V_["EVXY"] * T1_["UE"] * Gamma2["XYUV"];
+        Alpha -= V_["vExY"] * T1_["UE"] * Gamma2["xYvU"];
     }
 
     Alpha += Z["mn"] * V["m,v1,n,u1"] * Gamma1["u1,v1"];
@@ -3764,6 +4053,41 @@ void DSRG_MRPT2::write_1rdm_spin_dependent() {
         }
     });
 
+    // <[V, T1]>
+    (Xi3.block("ca")).iterate([&](const std::vector<size_t>& i, double& value) {
+        if (core_mos_relative[i[0]].first == actv_mos_relative[i[1]].first) {
+            D1->add(core_mos_relative[i[0]].first, core_mos_relative[i[0]].second,
+                actv_mos_relative[i[1]].second, 0.5 * value);
+            D1->add(core_mos_relative[i[0]].first, actv_mos_relative[i[1]].second,
+                core_mos_relative[i[0]].second, 0.5 * value);
+        }
+    });
+
+    (Xi3.block("cv")).iterate([&](const std::vector<size_t>& i, double& value) {
+        if (core_mos_relative[i[0]].first == virt_mos_relative[i[1]].first) {
+            D1->add(core_mos_relative[i[0]].first, core_mos_relative[i[0]].second,
+                virt_mos_relative[i[1]].second, 0.5 * value);
+            D1->add(core_mos_relative[i[0]].first, virt_mos_relative[i[1]].second,
+                core_mos_relative[i[0]].second, 0.5 * value);
+        }
+    });
+
+    (Xi3.block("av")).iterate([&](const std::vector<size_t>& i, double& value) {
+        if (actv_mos_relative[i[0]].first == virt_mos_relative[i[1]].first) {
+            D1->add(actv_mos_relative[i[0]].first, actv_mos_relative[i[0]].second,
+                virt_mos_relative[i[1]].second, 0.5 * value);
+            D1->add(actv_mos_relative[i[0]].first, virt_mos_relative[i[1]].second,
+                actv_mos_relative[i[0]].second, 0.5 * value);
+        }
+    });
+
+    (Xi3.block("aa")).iterate([&](const std::vector<size_t>& i, double& value) {
+        if (actv_mos_relative[i[0]].first == actv_mos_relative[i[1]].first) {
+            D1->add(actv_mos_relative[i[0]].first, actv_mos_relative[i[0]].second,
+                actv_mos_relative[i[1]].second, value);
+        }
+    });
+
     // CASSCF reference
     for (size_t i = 0, size_c = core_mos_relative.size(); i < size_c; ++i) {
         D1->add(core_mos_relative[i].first, core_mos_relative[i].second,
@@ -3864,6 +4188,9 @@ void DSRG_MRPT2::write_2rdm_spin_dependent() {
     // <[F, T2]>
     temp["un"] += 0.5 * Sigma3["nu"];
     temp["UN"] += 0.5 * Sigma3["NU"];
+    // <[V, T1]>
+    temp["un"] += 0.5 * Xi3["nu"];
+    temp["UN"] += 0.5 * Xi3["NU"];
 
     for (size_t i = 0, size_c = core_all_.size(); i < size_c; ++i) {
         auto n = core_all_[i];
@@ -3894,6 +4221,9 @@ void DSRG_MRPT2::write_2rdm_spin_dependent() {
     // <[F, T2]>
     temp["ev"] += 0.5 * Sigma3["ve"];
     temp["EV"] += 0.5 * Sigma3["VE"];
+    // <[V, T1]>
+    temp["ev"] += 0.5 * Xi3["ve"];
+    temp["EV"] += 0.5 * Xi3["VE"];
 
     for (size_t i = 0, size_a = actv_all_.size(); i < size_a; ++i) {
         auto v = actv_all_[i];
@@ -4153,6 +4483,14 @@ void DSRG_MRPT2::write_2rdm_spin_dependent() {
         temp["AVIU"] += Sigma3["IA"] * Gamma1["UV"];
         temp["aViU"] += Sigma3["ia"] * Gamma1["UV"];
     }
+    // <[V, T1]>
+    if (X6_TERM) {
+        temp["aviu"] += Xi3["ia"] * Gamma1["uv"];
+        temp["AVIU"] += Xi3["IA"] * Gamma1["UV"];
+        temp["aViU"] += Xi3["ia"] * Gamma1["UV"];
+    }
+
+
 
     // all-alpha and all-beta
     temp2["ckdl"] += temp["cdkl"];
