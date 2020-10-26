@@ -4,9 +4,9 @@
 
 import forte
 
-refscf = -76.0172965561 #TEST
-refgasscf = -65.9028823564 #TEST
-refdsrg = -66.1343265955 #TEST
+refscf = -76.0172965561
+refgasscf = -65.9028823564
+refdsrg = -66.13432084716 # old value: -66.1343265955
 
 memory 1000 mb
 molecule h2o{
