@@ -264,6 +264,8 @@ class SADSRG : public DynamicCorrelationSolver {
     bool check_semi_orbs();
     /// Are orbitals semi-canonicalized?
     bool semi_canonical_;
+    /// Checked results of each block of Fock matrix
+    std::map<std::string, bool> semi_checked_results_;
     /// Unitary matrix to block diagonal Fock
     ambit::BlockedTensor U_;
 
@@ -386,11 +388,6 @@ class SADSRG : public DynamicCorrelationSolver {
 
     /// Diagonalize the diagonal blocks of the Fock matrix
     std::vector<double> diagonalize_Fock_diagblocks(BlockedTensor& U);
-    /// Separate an 2D ambit::Tensor according to its irrep
-    ambit::Tensor separate_tensor(ambit::Tensor& tens, const psi::Dimension& irrep, const int& h);
-    /// Combine a separated 2D ambit::Tensor
-    void combine_tensor(ambit::Tensor& tens, ambit::Tensor& tens_h, const psi::Dimension& irrep,
-                        const int& h);
 
     /// Print the summary of 2- and 3-body density cumulant
     void print_cumulant_summary();
