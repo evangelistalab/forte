@@ -34,7 +34,6 @@
 #include <sstream>
 #include <tuple>
 
-
 #include "psi4/libmints/wavefunction.h"
 #include "psi4/libmints/molecule.h"
 #include "ambit/blocked_tensor.h"
@@ -64,9 +63,8 @@ class DSRG_MRPT2 : public MASTER_DSRG {
      * @param ints A pointer to an allocated integral object
      * @param mo_space_info A pointer to the MOSpaceInfo object
      */
-    DSRG_MRPT2(RDMs rdms, std::shared_ptr<SCFInfo> scf_info,
-               std::shared_ptr<ForteOptions> options, std::shared_ptr<ForteIntegrals> ints,
-               std::shared_ptr<MOSpaceInfo> mo_space_info);
+    DSRG_MRPT2(RDMs rdms, std::shared_ptr<SCFInfo> scf_info, std::shared_ptr<ForteOptions> options,
+               std::shared_ptr<ForteIntegrals> ints, std::shared_ptr<MOSpaceInfo> mo_space_info);
 
     /// Destructor
     virtual ~DSRG_MRPT2();
@@ -283,15 +281,16 @@ class DSRG_MRPT2 : public MASTER_DSRG {
     void H2_T2_C3aaaaaa(BlockedTensor& H2, BlockedTensor& T2, const double& alpha,
                         BlockedTensor& C3);
 
-//    /// Transfer integrals for FCI
-//    void transfer_integrals();
-//    /// Diagonalize the diagonal blocks of the Fock matrix
-//    std::vector<std::vector<double>> diagonalize_Fock_diagblocks(BlockedTensor& U);
-//    /// Separate an 2D ambit::Tensor according to its irrep
-//    ambit::Tensor separate_tensor(ambit::Tensor& tens, const psi::Dimension& irrep, const int& h);
-//    /// Combine a separated 2D ambit::Tensor
-//    void combine_tensor(ambit::Tensor& tens, ambit::Tensor& tens_h, const psi::Dimension& irrep,
-//                        const int& h);
+    //    /// Transfer integrals for FCI
+    //    void transfer_integrals();
+    //    /// Diagonalize the diagonal blocks of the Fock matrix
+    //    std::vector<std::vector<double>> diagonalize_Fock_diagblocks(BlockedTensor& U);
+    //    /// Separate an 2D ambit::Tensor according to its irrep
+    //    ambit::Tensor separate_tensor(ambit::Tensor& tens, const psi::Dimension& irrep,
+    //    const int& h);
+    //    /// Combine a separated 2D ambit::Tensor
+    //    void combine_tensor(ambit::Tensor& tens, ambit::Tensor& tens_h,
+    //    const psi::Dimension& irrep, const int& h);
 
     // => Multi-state energy <= //
 
@@ -312,8 +311,8 @@ class DSRG_MRPT2 : public MASTER_DSRG {
                            const int& root1, const int& root2);
     /// Compute denisty matrices and puts in Gamma1_, Lambda2_, and Lambda3_
     void compute_rdms(std::shared_ptr<ActiveSpaceIntegrals> fci_ints,
-                           std::vector<Determinant>& p_space, psi::SharedMatrix evecs,
-                           const int& root1, const int& root2);
+                      std::vector<Determinant>& p_space, psi::SharedMatrix evecs, const int& root1,
+                      const int& root2);
 
     /// Compute MS coupling <M|H|N>
     double compute_ms_1st_coupling(const std::string& name);

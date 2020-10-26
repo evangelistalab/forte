@@ -388,33 +388,33 @@ double MASTER_DSRG::compute_reference_energy(BlockedTensor H, BlockedTensor F, B
     E += 0.25 * V["UVXY"] * Lambda2_["XYUV"];
     E += V["uVxY"] * Lambda2_["xYuV"];
 
-    auto SF_g2_ = rdms_.g2ab().clone();
-    SF_g2_.scale(2.0);
-    //    SF_g2_.scale(4.0);
-    //    SF_g2_("pqrs") -= 2.0 * rdms_.g2ab()("pqsr");
-    rdms_.g2ab().print();
+//    auto SF_g2_ = rdms_.g2ab().clone();
+//    SF_g2_.scale(2.0);
+//    //    SF_g2_.scale(4.0);
+//    //    SF_g2_("pqrs") -= 2.0 * rdms_.g2ab()("pqsr");
+//    rdms_.g2ab().print();
 
-    auto g2sum = rdms_.g2ab().clone();
-    g2sum("pqrs") += rdms_.g2ab()("qpsr");
-    g2sum("pqrs") -= SF_g2_("pqrs");
-    outfile->Printf("\n  ab diff: %.15f", g2sum.norm());
+//    auto g2sum = rdms_.g2ab().clone();
+//    g2sum("pqrs") += rdms_.g2ab()("qpsr");
+//    g2sum("pqrs") -= SF_g2_("pqrs");
+//    outfile->Printf("\n  ab diff: %.15f", g2sum.norm());
 
-    //    auto vaa = V.block("aaaa").clone();
-    //    auto vab = V.block("aAaA").clone();
-    //    vaa("pqrs") -= vab("pqrs");
-    //    vaa("pqrs") += vab("pqsr");
-    //    outfile->Printf("\n  Vaa(pqrs) - (Vab(pqrs) - Vab(pqsr)): %.15f", vaa.norm());
+//    //    auto vaa = V.block("aaaa").clone();
+//    //    auto vab = V.block("aAaA").clone();
+//    //    vaa("pqrs") -= vab("pqrs");
+//    //    vaa("pqrs") += vab("pqsr");
+//    //    outfile->Printf("\n  Vaa(pqrs) - (Vab(pqrs) - Vab(pqsr)): %.15f", vaa.norm());
 
-    auto L2aa = rdms_.g2aa().clone();
-    auto L2bb = rdms_.g2bb().clone();
-    L2aa("pqrs") -= L2bb("pqrs");
-    outfile->Printf("\n  L2aa - L2bb: %.15f", L2aa.norm());
+//    auto L2aa = rdms_.g2aa().clone();
+//    auto L2bb = rdms_.g2bb().clone();
+//    L2aa("pqrs") -= L2bb("pqrs");
+//    outfile->Printf("\n  L2aa - L2bb: %.15f", L2aa.norm());
 
-    auto L2ab = rdms_.g2ab().clone();
-    L2aa("pqrs") = L2ab("pqrs");
-    L2aa("pqrs") -= L2ab("qprs");
-    L2bb("pqrs") -= L2aa("pqrs");
-    outfile->Printf("\n  L2bb(pqrs) - (L2ab(pqrs) - L2ab(pqsr)): %.15f", L2bb.norm());
+//    auto L2ab = rdms_.g2ab().clone();
+//    L2aa("pqrs") = L2ab("pqrs");
+//    L2aa("pqrs") -= L2ab("qprs");
+//    L2bb("pqrs") -= L2aa("pqrs");
+//    outfile->Printf("\n  L2bb(pqrs) - (L2ab(pqrs) - L2ab(pqsr)): %.15f", L2bb.norm());
 
     return E;
 }

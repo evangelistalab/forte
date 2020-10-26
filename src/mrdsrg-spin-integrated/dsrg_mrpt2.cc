@@ -1776,8 +1776,8 @@ void DSRG_MRPT2::compute_dm1d_pt2(BlockedTensor& M, double& Mbar0, BlockedTensor
 //                t = std::sqrt(x * x + y * y + z * z);
 //            }
 //            outfile->Printf("\n    DSRG-MRPT2 partially relaxed dipole moment:");
-//            outfile->Printf("\n      X: %10.6f  Y: %10.6f  Z: %10.6f  Total: %10.6f\n", x, y, z, t);
-//            psi::Process::environment.globals["PARTIALLY RELAXED DIPOLE"] = t;
+//            outfile->Printf("\n      X: %10.6f  Y: %10.6f  Z: %10.6f  Total: %10.6f\n", x, y, z,
+//            t); psi::Process::environment.globals["PARTIALLY RELAXED DIPOLE"] = t;
 //        }
 //    }
 
@@ -1951,7 +1951,7 @@ void DSRG_MRPT2::compute_dm1d_pt2(BlockedTensor& M, double& Mbar0, BlockedTensor
 //    return O;
 //}
 
-//void DSRG_MRPT2::transfer_integrals() {
+// void DSRG_MRPT2::transfer_integrals() {
 //    // printing
 //    print_h2("De-Normal-Order the DSRG Transformed Hamiltonian");
 
@@ -2091,7 +2091,8 @@ void DSRG_MRPT2::compute_dm1d_pt2(BlockedTensor& M, double& Mbar0, BlockedTensor
 //    //            }
 //    //        });
 //    temp1.citerate(
-//        [&](const std::vector<size_t>& i, const std::vector<SpinType>& spin, const double& value) {
+//        [&](const std::vector<size_t>& i, const std::vector<SpinType>& spin, const double& value)
+//        {
 //            if (spin[0] == AlphaSpin) {
 //                ints_->set_oei(i[0], i[1], value, true);
 //            } else {
@@ -2628,7 +2629,7 @@ void DSRG_MRPT2::H2_T2_C3aaaaaa(BlockedTensor& H2, BlockedTensor& T2, const doub
     dsrg_time_.add("223", timer.get());
 }
 
-//std::vector<std::vector<double>> DSRG_MRPT2::diagonalize_Fock_diagblocks(BlockedTensor& U) {
+// std::vector<std::vector<double>> DSRG_MRPT2::diagonalize_Fock_diagblocks(BlockedTensor& U) {
 //    // diagonal blocks identifiers (C-A-V ordering)
 //    std::vector<std::string> blocks{"cc", "aa", "vv", "CC", "AA", "VV"};
 
@@ -2692,9 +2693,8 @@ void DSRG_MRPT2::H2_T2_C3aaaaaa(BlockedTensor& H2, BlockedTensor& T2, const doub
 //                if (h_dim == 0) {
 //                    continue;
 //                } else if (h_dim == 1) {
-//                    U_h = ambit::Tensor::build(tensor_type_, "U_h", std::vector<size_t>(2, h_dim));
-//                    U_h.data()[0] = 1.0;
-//                    ambit::Tensor F_block =
+//                    U_h = ambit::Tensor::build(tensor_type_, "U_h", std::vector<size_t>(2,
+//                    h_dim)); U_h.data()[0] = 1.0; ambit::Tensor F_block =
 //                        ambit::Tensor::build(tensor_type_, "F_block", F_.block(block).dims());
 //                    F_block.data() = F_.block(block).data();
 //                    ambit::Tensor T_h = separate_tensor(F_block, space, h);
@@ -2705,9 +2705,9 @@ void DSRG_MRPT2::H2_T2_C3aaaaaa(BlockedTensor& H2, BlockedTensor& T2, const doub
 //                    F_block.data() = F_.block(block).data();
 //                    ambit::Tensor T_h = separate_tensor(F_block, space, h);
 //                    auto Feigen = T_h.syev(AscendingEigenvalue);
-//                    U_h = ambit::Tensor::build(tensor_type_, "U_h", std::vector<size_t>(2, h_dim));
-//                    U_h("pq") = Feigen["eigenvectors"]("pq");
-//                    fill_eigen(block, h, Feigen["eigenvalues"].data());
+//                    U_h = ambit::Tensor::build(tensor_type_, "U_h", std::vector<size_t>(2,
+//                    h_dim)); U_h("pq") = Feigen["eigenvectors"]("pq"); fill_eigen(block, h,
+//                    Feigen["eigenvalues"].data());
 //                }
 //                ambit::Tensor U_out = U.block(block);
 //                combine_tensor(U_out, U_h, space, h);
@@ -2717,7 +2717,7 @@ void DSRG_MRPT2::H2_T2_C3aaaaaa(BlockedTensor& H2, BlockedTensor& T2, const doub
 //    return {eigenvalues_a, eigenvalues_b};
 //}
 
-//ambit::Tensor DSRG_MRPT2::separate_tensor(ambit::Tensor& tens, const psi::Dimension& irrep,
+// ambit::Tensor DSRG_MRPT2::separate_tensor(ambit::Tensor& tens, const psi::Dimension& irrep,
 //                                          const int& h) {
 //    // test tens and irrep
 //    size_t tens_dim = tens.dim(0);
@@ -2751,7 +2751,7 @@ void DSRG_MRPT2::H2_T2_C3aaaaaa(BlockedTensor& H2, BlockedTensor& T2, const doub
 //    return T_h;
 //}
 
-//void DSRG_MRPT2::combine_tensor(ambit::Tensor& tens, ambit::Tensor& tens_h,
+// void DSRG_MRPT2::combine_tensor(ambit::Tensor& tens, ambit::Tensor& tens_h,
 //                                const psi::Dimension& irrep, const int& h) {
 //    // test tens and irrep
 //    if (h >= irrep.n()) {

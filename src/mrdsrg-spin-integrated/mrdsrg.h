@@ -399,20 +399,6 @@ class MRDSRG : public MASTER_DSRG {
     /// Compute two-body term of commutator [H2, G2]
     void H2_G2_C2(BlockedTensor& H2, BlockedTensor& G2, const double& alpha, BlockedTensor& C2);
 
-    // => Reference relaxation <= //
-
-//    /// Transfer integrals for FCI
-//    void transfer_integrals();
-//    /// Reset integrals to bare Hamiltonian
-//    void reset_ints(BlockedTensor& H, BlockedTensor& V);
-//    /// Diagonalize the diagonal blocks of the Fock matrix
-//    std::vector<std::vector<double>> diagonalize_Fock_diagblocks(BlockedTensor& U);
-//    /// Separate an 2D ambit::Tensor according to its irrep
-//    ambit::Tensor separate_tensor(ambit::Tensor& tens, const psi::Dimension& irrep, const int& h);
-//    /// Combine a separated 2D ambit::Tensor
-//    void combine_tensor(ambit::Tensor& tens, ambit::Tensor& tens_h, const psi::Dimension& irrep,
-//                        const int& h);
-
     // => Useful printings <= //
 
     /// Print a summary of the options
