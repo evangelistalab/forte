@@ -79,15 +79,15 @@ class SADSRG : public DynamicCorrelationSolver {
     /// Set unitary matrix (in active space) from original to semicanonical
     void set_Uactv(ambit::Tensor& U);
 
-    /// Set active active occupied MOs (relative to active)
-    void set_actv_occ(std::vector<size_t> actv_occ) {
-        actv_occ_mos_ = std::vector<size_t>(actv_occ);
-    }
+//    /// Set active active occupied MOs (relative to active)
+//    void set_actv_occ(std::vector<size_t> actv_occ) {
+//        actv_occ_mos_ = std::vector<size_t>(actv_occ);
+//    }
 
-    /// Set active active unoccupied MOs (relative to active)
-    void set_actv_uocc(std::vector<size_t> actv_uocc) {
-        actv_uocc_mos_ = std::vector<size_t>(actv_uocc);
-    }
+//    /// Set active active unoccupied MOs (relative to active)
+//    void set_actv_uocc(std::vector<size_t> actv_uocc) {
+//        actv_uocc_mos_ = std::vector<size_t>(actv_uocc);
+//    }
 
   protected:
     /// Startup function called in constructor
@@ -131,6 +131,11 @@ class SADSRG : public DynamicCorrelationSolver {
     size_t ntamp_;
     /// Threshold for amplitudes considered as intruders
     double intruder_tamp_;
+
+    /// How to consider internal amplitudes
+    std::string internal_amp_;
+    /// Include which part of internal amplitudes?
+    std::string internal_amp_select_;
 
     /// Relaxation type
     std::string relax_ref_;
@@ -271,7 +276,7 @@ class SADSRG : public DynamicCorrelationSolver {
 
     // ==> integrals <==
 
-    /// Fill the tensor T with three-index DF or CD integrals
+    /// Fill the tensor B with three-index DF or CD integrals
     void fill_three_index_ints(ambit::BlockedTensor B);
 
     /// Scalar of the DSRG transformed Hamiltonian
@@ -393,6 +398,11 @@ class SADSRG : public DynamicCorrelationSolver {
     void print_cumulant_summary();
 
     // ==> common aplitudes analysis and printing <==
+
+    /// Prune internal amplitudes for T1
+    void internal_amps_T1(BlockedTensor& T1);
+    /// Prune internal amplitudes for T2
+    void internal_amps_T2(BlockedTensor& T2);
 
     /// Check T1 and return the largest amplitudes
     std::vector<std::pair<std::vector<size_t>, double>> check_t1(BlockedTensor& T1);

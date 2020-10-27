@@ -159,6 +159,9 @@ void SADSRG::read_options() {
     ntamp_ = foptions_->get_int("NTAMP");
     intruder_tamp_ = foptions_->get_double("INTRUDER_TAMP");
 
+    internal_amp_ = foptions_->get_str("INTERNAL_AMP");
+    internal_amp_select_ = foptions_->get_str("INTERNAL_AMP_SELECT");
+
     relax_ref_ = foptions_->get_str("RELAX_REF");
 
     multi_state_ = foptions_->get_gen_list("AVG_STATE").size() != 0;
