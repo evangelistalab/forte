@@ -54,8 +54,7 @@ const bool X3_TERM = false;
 
 const bool X4_TERM = false;
 const bool X5_TERM = false;
-const bool X6_TERM = false;
-const bool X7_TERM = true;
+const bool X6_TERM = true;
 
 const bool CORRELATION_TERM = true;
 
@@ -666,9 +665,7 @@ void DSRG_MRPT2::set_xi() {
         Xi["ue"] += V_["eVxY"] * Lambda2_["xYuV"];
         Xi["UE"] += 0.5 * V_["EVXY"] * Lambda2_["XYUV"];
         Xi["UE"] += V_["vExY"] * Lambda2_["xYvU"];
-    }
-
-    if (X7_TERM) {
+    
         Xi["mx"] -= 0.5 * V_["uvmy"] * Lambda2_["xyuv"];
         Xi["mx"] -= V_["uVmY"] * Lambda2_["xYuV"];
         Xi["MX"] -= 0.5 * V_["UVMY"] * Lambda2_["XYUV"];
@@ -683,7 +680,6 @@ void DSRG_MRPT2::set_xi() {
 
     Xi3["ia"] = Xi["ia"] * Eeps1_m1["ia"];
     Xi3["IA"] = Xi["IA"] * Eeps1_m1["IA"];
-
 }
 
 void DSRG_MRPT2::set_kappa() {
@@ -764,7 +760,6 @@ void DSRG_MRPT2::set_kappa() {
         Kappa.block("aAaV")("uVzE") -= 0.125 * T2_.block("AAAV")("XYWE") * rdms_.L3abb()("zXYuVW");
         Kappa.block("aAaV")("uVzE") -= 0.250 * T2_.block("aAaV")("xYwE") * rdms_.L3aab()("xzYuwV");
     }
-
     // <[V, T1]>
     if (X6_TERM) {
         Kappa["xyev"] += 0.25 * T1_["ue"] * Lambda2_["xyuv"];
@@ -774,9 +769,7 @@ void DSRG_MRPT2::set_kappa() {
         Kappa["yxve"] += 0.25 * T1_["ue"] * Lambda2_["yxvu"]; 
         Kappa["YXVE"] += 0.25 * T1_["UE"] * Lambda2_["YXVU"]; 
         Kappa["yXvE"] += 0.25 * T1_["UE"] * Lambda2_["yXvU"]; 
-    }
-
-    if (X7_TERM) {
+    
         Kappa["myuv"] -= 0.25 * T1_["mx"] * Lambda2_["xyuv"];
         Kappa["MYUV"] -= 0.25 * T1_["MX"] * Lambda2_["XYUV"];
         Kappa["mYuV"] -= 0.25 * T1_["mx"] * Lambda2_["xYuV"];
@@ -785,7 +778,6 @@ void DSRG_MRPT2::set_kappa() {
         Kappa["YMVU"] -= 0.25 * T1_["MX"] * Lambda2_["YXVU"];
         Kappa["yMvU"] -= 0.25 * T1_["MX"] * Lambda2_["yXvU"];
     }
-
     outfile->Printf("Done");
 }
 
@@ -2984,9 +2976,7 @@ void DSRG_MRPT2::solve_z() {
 
         b_ck("K") -= T1_.block("av")("ue") * V_.block("vAaA")("eVxY") * dlamb_ab("KxYuV");
         b_ck("K") -= T1_.block("AV")("UE") * V_.block("aVaA")("vExY") * dlamb_ab("KxYvU");
-    }
-
-    if (X7_TERM) {
+    
         temp4["uvxy"] -= 0.5 * T1_["mx"] * V_["uvmy"];
         temp4["UVXY"] -= 0.5 * T1_["MX"] * V_["UVMY"];
 
@@ -3376,9 +3366,7 @@ void DSRG_MRPT2::solve_z() {
         Alpha -= V_["eVxY"] * T1_["ue"] * Gamma2["xYuV"];
         Alpha -= 0.5 * V_["EVXY"] * T1_["UE"] * Gamma2["XYUV"];
         Alpha -= V_["vExY"] * T1_["UE"] * Gamma2["xYvU"];
-    }
-
-    if (X7_TERM) {
+    
         Alpha -= V_["uvmy"] * T1_["mx"] * Lambda2_["xyuv"];
         Alpha -= 2.0 * V_["uVmY"] * T1_["mx"] * Lambda2_["xYuV"];
         Alpha -= V_["UVMY"] * T1_["MX"] * Lambda2_["XYUV"];
@@ -4519,7 +4507,7 @@ void DSRG_MRPT2::write_2rdm_spin_dependent() {
         temp["aViU"] += Sigma3["ia"] * Gamma1["UV"];
     }
     // <[V, T1]>
-    if (X6_TERM||X7_TERM) {
+    if (X6_TERM) {
         temp["aviu"] += Xi3["ia"] * Gamma1["uv"];
         temp["AVIU"] += Xi3["IA"] * Gamma1["UV"];
         temp["aViU"] += Xi3["ia"] * Gamma1["UV"];
