@@ -78,6 +78,7 @@ before_script:
       -DPYTHON_EXECUTABLE=${HOME}/miniconda/envs/tenv/bin/python
       -DCMAKE_C_COMPILER=${HOME}/miniconda/envs/tenv/bin/clang
       -DCMAKE_CXX_COMPILER=${HOME}/miniconda/envs/tenv/bin/clang++
+      -DTargetHDF5_DIR=${HOME}/miniconda/envs/tenv/lib
       -DOpenMP_LIBRARY_DIRS=${HOME}/miniconda/envs/tenv/lib
       -DCMAKE_CXX_FLAGS="-stdlib=libc++"
       -DOpenMP_CXX_FLAG="-fopennmp=libiomp5"
@@ -85,7 +86,7 @@ before_script:
       -DCMAKE_BUILD_TYPE=Debug
       -DENABLE_CODECOV=ON
       -DMAX_DET_ORB=${MAX_DET_ORB}
-  - make -j2 VERBOSE=1
+  - make -j4 VERBOSE=1
   - export PYTHONPATH="${HOME}/build/evangelistalab:$PYTHONPATH"
 
 script:
