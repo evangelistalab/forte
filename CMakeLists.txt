@@ -34,7 +34,7 @@ include(autocmake_mpi)  # MPI option A
 
 #find_package(psi4 1.1 REQUIRED COMPONENTS ambit chemps2)
 find_package(pybind11 REQUIRED)
-find_package(psi4 1.4a923 REQUIRED)
+find_package(psi4 1.3 REQUIRED)
 find_package(Threads REQUIRED)
 link_libraries("${CMAKE_THREAD_LIBS_INIT}")
 find_package(TargetLAPACK REQUIRED)
