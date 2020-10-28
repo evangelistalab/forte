@@ -1,6 +1,6 @@
 os: osx
 language: cpp
-osx_image: xcode12
+osx_image: xcode11.6
 jobs:
   include:
     - env:
