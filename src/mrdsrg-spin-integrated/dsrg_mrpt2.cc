@@ -381,17 +381,17 @@ double DSRG_MRPT2::compute_energy() {
     std::vector<std::pair<std::string, double>> energy;
     energy.push_back({"E0 (reference)", Eref_});
 
-    // Etemp = E_FT1();
-    // Ecorr += Etemp;
-    // energy.push_back({"<[F, T1]>", Etemp});
+    Etemp = E_FT1();
+    Ecorr += Etemp;
+    energy.push_back({"<[F, T1]>", Etemp});
 
     // Etemp = E_FT2();
     // Ecorr += Etemp;
     // energy.push_back({"<[F, T2]>", Etemp});
 
-    Etemp = E_VT1();
-    Ecorr += Etemp;
-    energy.push_back({"<[V, T1]>", Etemp});
+    // Etemp = E_VT1();
+    // Ecorr += Etemp;
+    // energy.push_back({"<[V, T1]>", Etemp});
 
     // Etemp = E_VT2_2();
     // EVT2 += Etemp;
