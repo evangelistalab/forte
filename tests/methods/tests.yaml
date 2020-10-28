@@ -137,6 +137,7 @@ dsrg-mrpt2:
    - dsrg-mrpt2-13
    - dsrg-mrpt2-fcidump-1
    - dsrg-mrpt2-grad-findiff-1
+   - aci-dsrg-mrpt2-3
   medium:
    - dsrg-mrpt2-1
    - dsrg-mrpt2-2
@@ -147,7 +148,6 @@ dsrg-mrpt2:
    - dsrg-mrpt2-11-sa-C2H4
    - aci-dsrg-mrpt2-1
    - aci-dsrg-mrpt2-2
-   - aci-dsrg-mrpt2-3
    - aci-dsrg-mrpt2-4
    - dsrg-mrpt2-10-CO-fcidump
    - dsrg-mrpt2-opt-findiff-1
@@ -155,7 +155,6 @@ dsrg-mrpt2:
    - dsrg-mrpt2-3
    - dsrg-mrpt2-4
    - dsrg-mrpt2-12-localized-actv
-   - aci-dsrg-mrpt2-4
    - aci-dsrg-mrpt2-5
   unused:
    - dsrg-mrpt2-opt-findiff-2
