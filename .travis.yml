@@ -11,6 +11,7 @@ jobs:
       - MAX_DET_ORB=128
 
 install:
+  - ls /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/
   - cd /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/
   - ln -s MacOSX.sdk/ MacOSX10.11.sdk
   - cd $HOME
@@ -88,7 +89,7 @@ before_script:
       -DCMAKE_BUILD_TYPE=Debug
       -DENABLE_CODECOV=ON
       -DMAX_DET_ORB=${MAX_DET_ORB}
-  - make -j4 VERBOSE=1
+  - make -j2 VERBOSE=1
   - export PYTHONPATH="${HOME}/build/evangelistalab:$PYTHONPATH"
 
 script:
