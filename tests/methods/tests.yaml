@@ -19,7 +19,7 @@ aci:
    - aci-full-pt2-1
   medium:
    - aci-2
-   - aci-7
+   - aci-6
    - aci-10
    - aci-11
    - aci-13
@@ -29,9 +29,9 @@ aci:
    - aci-19
    - aci-local-20
   long:
-   - aci-6
-   - cis-aci-1
+   - aci-7
    - aci-full-pt2-2
+   - cis-aci-1
   unused:
    - aci-mrcisd-1
    - aci-mrcisd-2

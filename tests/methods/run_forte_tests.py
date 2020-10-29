@@ -39,7 +39,7 @@ def run_job(jobdir, psi4command, test_results, test_time):
     successful = True
     # Run Psi4
     try:
-        out = subprocess.check_output([psi4command, "-n2"])
+        out = subprocess.check_output([psi4command, "-n4"])
     except:
         # something went wrong
         successful = False

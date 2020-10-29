@@ -28,6 +28,7 @@
  */
 
 #include <algorithm>
+#include <numeric>
 
 #include "psi4/libpsi4util/PsiOutStream.h"
 #include "psi4/libmints/molecule.h"
@@ -117,6 +118,10 @@ void AdaptiveCI::startup() {
     if (sigma_vector_type_ == SigmaVectorType::Dynamic) {
         build_lists_ = false;
     }
+
+    // state averaging
+    n_avg_ = options_->get_int("ACI_N_AVERAGE");
+    avg_offset_ = options_->get_int("ACI_AVERAGE_OFFSET");
 }
 
 void AdaptiveCI::print_info() {
@@ -315,16 +320,18 @@ void AdaptiveCI::find_q_space() {
     }
 }
 
-double AdaptiveCI::average_q_values(std::vector<double>& E2) {
+double AdaptiveCI::average_q_values(const std::vector<double>& E2) {
     // f_E2 and f_C1 will store the selected function of the chosen q criteria
     // This functions should only be called when nroot_ > 1
 
     size_t nroot = E2.size();
 
-    int nav = options_->get_int("ACI_N_AVERAGE");
-    int off = options_->get_int("ACI_AVERAGE_OFFSET");
+    size_t nav = n_avg_;
+    size_t off = avg_offset_;
+
     if (nav == 0)
         nav = nroot;
+
     if ((off + nav) > nroot)
         off = nroot - nav; // throw psi::PSIEXCEPTION("\n  Your desired number of
                            // roots and the offset exceeds the maximum number of
@@ -338,13 +345,8 @@ double AdaptiveCI::average_q_values(std::vector<double>& E2) {
     if (pq_function_ == "MAX" or nroot == 1) {
         f_E2 = *std::max_element(E2.begin(), E2.end());
     } else if (pq_function_ == "AVERAGE") {
-        double E2_average = 0.0;
-        double dim_inv = 1.0 / nav;
-        for (int n = 0; n < nav; ++n) {
-            E2_average += E2[n + off] * dim_inv;
-        }
-
-        f_E2 = E2_average;
+        auto begin = E2.begin() + off;
+        f_E2 = std::accumulate(begin, begin + nav, 0.0) / nav;
     }
     return f_E2;
 }
@@ -397,8 +399,9 @@ void AdaptiveCI::prune_q_space(DeterminantHashVec& PQ_space, DeterminantHashVec&
 
     double tau_p = sigma_ * gamma_;
 
-    int nav = options_->get_int("ACI_N_AVERAGE");
-    int off = options_->get_int("ACI_AVERAGE_OFFSET");
+    int nav = n_avg_;
+    int off = avg_offset_;
+
     if (nav == 0)
         nav = nroot;
 

@@ -440,57 +440,42 @@ def register_sci_options(options):
 
 def register_aci_options(options):
     options.set_group("ACI")
-    options.add_double("ACI_CONVERGENCE", 1e-9,
-                             "ACI Convergence threshold")
-    
+    options.add_double("ACI_CONVERGENCE", 1e-9, "ACI Convergence threshold")
+
     options.add_str("ACI_SCREEN_ALG", "AVERAGE",
-                        ['AVERAGE', 'SR', 'RESTRICTED', 'CORE', 'BATCH_HASH', 'BATCH_VEC'],
-                        "The screening algorithm to use")
+                    ['AVERAGE', 'SR', 'RESTRICTED', 'CORE', 'BATCH_HASH', 'BATCH_VEC'],
+                    "The screening algorithm to use")
 
-    options.add_double("SIGMA", 0.01,
-                             "The energy selection threshold for the P space")
+    options.add_double("SIGMA", 0.01, "The energy selection threshold for the P space")
 
-    options.add_double("GAMMA", 1.0,
-                             "The threshold for the selection of the Q space")
+    options.add_double("GAMMA", 1.0, "The threshold for the selection of the Q space")
 
-    options.add_double("ACI_PRESCREEN_THRESHOLD", 1e-12,
-                             "The SD space prescreening threshold")
+    options.add_double("ACI_PRESCREEN_THRESHOLD", 1e-12, "The SD space prescreening threshold")
 
     options.add_str("ACI_PQ_FUNCTION", "AVERAGE", ['AVERAGE', 'MAX'],
-                          "Function of q-space criteria, per root for SA-ACI")
+                    "Function of q-space criteria, per root for SA-ACI")
 
-
-    options.add_int(
-        "ACI_SPIN_PROJECTION", 0, """Type of spin projection
+    options.add_int("ACI_SPIN_PROJECTION", 0, """Type of spin projection
      0 - None
      1 - Project initial P spaces at each iteration
      2 - Project only after converged PQ space
      3 - Do 1 and 2""")
 
-    options.add_bool(
-        "SPIN_PROJECT_FULL", False,
-        "Project solution in full diagonalization algorithm?")
+    options.add_bool("SPIN_PROJECT_FULL", False,
+                     "Project solution in full diagonalization algorithm?")
 
-    options.add_bool(
-        "ACI_ADD_AIMED_DEGENERATE", True,
-        "Add degenerate determinants not included in the aimed selection")
+    options.add_bool("ACI_ADD_AIMED_DEGENERATE", True,
+                     "Add degenerate determinants not included in the aimed selection")
 
+    options.add_int("ACI_N_AVERAGE", 1, "Number of roots to average")
 
-    options.add_int("ACI_N_AVERAGE", 1, "Number of roots to averag")
-
-    options.add_int("ACI_AVERAGE_OFFSET", 0,
-                          "Offset for state averaging")
+    options.add_int("ACI_AVERAGE_OFFSET", 0, "Offset for state averaging")
 
     options.add_bool("ACI_PRINT_REFS", False, "Print the P space?")
 
-    options.add_int("DL_GUESS_SIZE",50,
-                          "Set the number of determinants in the initial guess space for the DL solver")
+    options.add_int("N_GUESS_VEC", 10, "Number of guess vectors for Sparse CI solver")
 
-    options.add_int("N_GUESS_VEC", 10,
-                          "Number of guess vectors for Sparse CI solver")
-
-    options.add_double("ACI_NO_THRESHOLD", 0.02,
-                             "Threshold for active space prediction")
+    options.add_double("ACI_NO_THRESHOLD", 0.02, "Threshold for active space prediction")
 
     options.add_double("ACI_SPIN_TOL", 0.02, "Tolerance for S^2 value")
 
@@ -498,105 +483,88 @@ def register_aci_options(options):
 
     options.add_bool("ACI_PRINT_WEIGHTS", False, "Print weights for active space prediction?")
 
-
     options.add_bool("ACI_PRINT_NO", True, "Print the natural orbitals?")
 
     options.add_bool("ACI_NO", False, "Computes ACI natural orbitals?")
 
     options.add_bool("FULL_MRPT2", False, "Compute full PT2 energy?")
 
-    options.add_bool("UNPAIRED_DENSITY", False,
-                           "Compute unpaired electron density?")
+    options.add_bool("UNPAIRED_DENSITY", False, "Compute unpaired electron density?")
 
-    options.add_bool("ACI_LOW_MEM_SCREENING", False,
-                           "Use low-memory screening algorithm?")
+    options.add_bool("ACI_LOW_MEM_SCREENING", False, "Use low-memory screening algorithm?")
 
-    options.add_bool("ACI_REF_RELAX", False,
-                           "Do reference relaxation in ACI?")
+    options.add_bool("ACI_REF_RELAX", False, "Do reference relaxation in ACI?")
 
-    options.add_int("ACI_NFROZEN_CORE", 0,
-                          "Number of orbitals to freeze for core excitations")
+    options.add_int("ACI_NFROZEN_CORE", 0, "Number of orbitals to freeze for core excitations")
 
-    options.add_int("ACI_ROOTS_PER_CORE", 1,
-                          "Number of roots to compute per frozen orbital")
+    options.add_int("ACI_ROOTS_PER_CORE", 1, "Number of roots to compute per frozen orbital")
 
     options.add_bool("SPIN_ANALYSIS", False, "Do spin correlation analysis?")
 
     options.add_bool("SPIN_TEST", False, "Do test validity of correlation analysis")
 
     options.add_bool("ACI_RELAXED_SPIN", False,
-                      "Do spin correlation analysis for relaxed wave function?")
+                     "Do spin correlation analysis for relaxed wave function?")
 
     options.add_bool("PRINT_IAOS", True, "Print IAOs?")
 
     options.add_bool("PI_ACTIVE_SPACE", False, "Active space type?")
 
-    options.add_bool("SPIN_MAT_TO_FILE", False,
-                           "Save spin correlation matrix to file?")
+    options.add_bool("SPIN_MAT_TO_FILE", False, "Save spin correlation matrix to file?")
 
-    options.add_bool(
-        "ACI_RELAXED_SPIN", False,
-        "Do spin correlation analysis for relaxed wave function?")
+    options.add_bool("ACI_RELAXED_SPIN", False,
+                     "Do spin correlation analysis for relaxed wave function?")
 
     options.add_bool("PRINT_IAOS", True, "Print IAOs?")
 
     options.add_bool("PI_ACTIVE_SPACE", False, "Active space type?")
 
-    options.add_bool("SPIN_MAT_TO_FILE", False,
-                           "Save spin correlation matrix to file?")
+    options.add_bool("SPIN_MAT_TO_FILE", False, "Save spin correlation matrix to file?")
 
-    options.add_str("SPIN_BASIS", "LOCAL",
-                          ['LOCAL', 'IAO', 'NO', 'CANONICAL'],
-                          "Basis for spin analysis")
+    options.add_str("SPIN_BASIS", "LOCAL", ['LOCAL', 'IAO', 'NO', 'CANONICAL'],
+                    "Basis for spin analysis")
 
-    options.add_double("ACI_RELAX_SIGMA", 0.01,
-                             "Sigma for reference relaxation")
+    options.add_double("ACI_RELAX_SIGMA", 0.01, "Sigma for reference relaxation")
 
     options.add_int("ACI_NBATCH", 0, "Number of batches in screening")
 
-    options.add_int("ACI_MAX_MEM", 1000,
-                          "Sets max memory for batching algorithm (MB)")
+    options.add_int("ACI_MAX_MEM", 1000, "Sets max memory for batching algorithm (MB)")
 
-    options.add_double("ACI_SCALE_SIGMA", 0.5,
-                             "Scales sigma in batched algorithm")
+    options.add_double("ACI_SCALE_SIGMA", 0.5, "Scales sigma in batched algorithm")
 
-    options.add_int("ACTIVE_GUESS_SIZE", 1000,
-                          "Number of determinants for CI guess")
+    options.add_int("ACTIVE_GUESS_SIZE", 1000, "Number of determinants for CI guess")
 
-    options.add_str("DIAG_ALGORITHM", "SPARSE",["DYNAMIC","FULL","SPARSE"],
-        "The diagonalization method")
+    options.add_str("DIAG_ALGORITHM", "SPARSE", ["DYNAMIC", "FULL", "SPARSE"],
+                    "The diagonalization method")
 
-    options.add_bool("FORCE_DIAG_METHOD", False,
-                           "Force the diagonalization procedure?")
+    options.add_bool("FORCE_DIAG_METHOD", False, "Force the diagonalization procedure?")
 
-    options.add_bool("ONE_CYCLE", False, 
-            "Doing only one cycle of ACI (FCI) ACI iteration?")
-    
-    options.add_bool("OCC_ANALYSIS", False,
-            "Doing post calcualtion occupation analysis?")
+    options.add_bool("ONE_CYCLE", False, "Doing only one cycle of ACI (FCI) ACI iteration?")
 
-    options.add_double("OCC_LIMIT",0.0001,
-            "Occupation limit for considering if an orbital is occupied/unoccupied "
-            "in the post calculation analysis.")
+    options.add_bool("OCC_ANALYSIS", False, "Doing post calcualtion occupation analysis?")
 
-    options.add_double("CORR_LIMIT", -0.01,
-            "Correlation limit for considering if two orbitals are correlated"
-            "in the post calculation analysis.")
+    options.add_double("OCC_LIMIT", 0.0001, "Occupation limit for considering "
+                       "if an orbital is occupied/unoccupied in the post calculation analysis.")
 
-
+    options.add_double("CORR_LIMIT", -0.01, "Correlation limit for considering "
+                       "if two orbitals are correlated in the post calculation analysis.")
 
 
 def register_davidson_liu_options(options):
     options.set_group("Davidson-Liu")
-    options.add_int("DL_MAXITER", 100,
-                          "The maximum number of Davidson-Liu iterations")
-    options.add_int(
-        "DL_COLLAPSE_PER_ROOT", 2,
-        "The number of trial vector to retain after collapsing")
-    options.add_int("DL_SUBSPACE_PER_ROOT", 10,
-                          "The maxim number of trial vectors")
+
+    options.add_int("DL_MAXITER", 100, "The maximum number of Davidson-Liu iterations")
+
+    options.add_int("DL_GUESS_SIZE", 50,
+                    "Set the number of determinants in the initial guess space for the DL solver")
+
+    options.add_int("DL_COLLAPSE_PER_ROOT", 2,
+                    "The number of trial vector to retain after collapsing")
+
+    options.add_int("DL_SUBSPACE_PER_ROOT", 10, "The maxim number of trial vectors")
+
     options.add_int("SIGMA_VECTOR_MAX_MEMORY", 67108864,
-                          "The maximum number of doubles stored in memory in the sigma vector algorithm")
+                    "The maximum number of doubles stored in memory in the sigma vector algorithm")
 
 
 def register_asci_options(options):
