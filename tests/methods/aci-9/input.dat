@@ -37,8 +37,8 @@ set forte {
   aci_nbatch 2
 }
 
-energy('scf')
+Escf, wfn = energy('scf', return_wfn=True)
 compare_values(refscf, variable("SCF total energy"),10, "SCF energy") #TEST
-energy('forte')
+energy('forte', ref_wfn=wfn)
 compare_values(refaci, variable("ACI ENERGY"),10, "ACI energy") #TEST
 compare_values(refacipt2, variable("ACI+PT2 ENERGY"),10, "ACI+PT2 energy") #TEST

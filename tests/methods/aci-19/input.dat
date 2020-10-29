@@ -53,10 +53,10 @@ set forte {
 }
 set_num_threads(4)
 
-scf = energy('scf')
+scf, wfn = energy('scf', return_wfn=True)
 compare_values(refscf, scf,10,"SCF Energy")
 
-energy('forte')
+energy('forte', ref_wfn=wfn)
 compare_values(refaci, variable("ACI ENERGY"),10,"ACI energy")
 compare_values(refacipt2, variable("ACI+PT2 ENERGY"),8,"ACI+PT2 energy")
 
