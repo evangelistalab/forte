@@ -36,6 +36,7 @@
 #include "base_classes/mo_space_info.h"
 #include "integrals/integrals.h"
 
+#include "forte-def.h"
 #include "orbital-helpers/localize.h"
 
 namespace py = pybind11;

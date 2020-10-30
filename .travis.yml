@@ -21,6 +21,7 @@ install:
   - conda install blas=*=mkl mkl-include -c conda-forge
   - conda install pybind11=2.6 pytest pytest-cov codecov lcov -c conda-forge
   - pip install pytest-shutil
+  - cat ${HOME}/miniconda/envs/tenv/include/pybind11/detail/internals.h
 
 before_script:
   - python -V

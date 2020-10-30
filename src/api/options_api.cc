@@ -31,6 +31,7 @@
 
 #include "psi4/liboptions/liboptions.h"
 
+#include "forte-def.h"
 #include "base_classes/forte_options.h"
 
 namespace py = pybind11;

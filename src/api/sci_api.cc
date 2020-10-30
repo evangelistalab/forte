@@ -31,6 +31,8 @@
 
 #include "psi4/libmints/vector.h"
 #include "psi4/libmints/matrix.h"
+
+#include "forte-def.h"
 #include "sparse_ci/sigma_vector.h"
 #include "sparse_ci/sparse_ci_solver.h"
 #include "integrals/active_space_integrals.h"

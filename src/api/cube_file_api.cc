@@ -29,6 +29,7 @@
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 
+#include "forte-def.h"
 #include "helpers/helpers.h"
 #include "helpers/cube_file.h"
 

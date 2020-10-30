@@ -30,6 +30,7 @@
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 
+#include "forte-def.h"
 #include "base_classes/mo_space_info.h"
 
 namespace py = pybind11;

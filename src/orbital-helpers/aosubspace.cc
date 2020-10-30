@@ -33,6 +33,8 @@
 
 #include <pybind11/pybind11.h>
 
+#include "forte-def.h"
+
 namespace py = pybind11;
 
 #include "psi4/libpsi4util/PsiOutStream.h"

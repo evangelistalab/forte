@@ -30,10 +30,6 @@
 #include <pybind11/numpy.h>
 #include <pybind11/stl.h>
 
-#define PYBIND11_COMPILER_TYPE ""
-#define PYBIND11_STDLIB ""
-#define PYBIND11_BUILD_ABI ""
-
 #include "psi4/libpsi4util/process.h"
 #include "psi4/libmints/wavefunction.h"
 
@@ -52,6 +48,7 @@
 #include "orbital-helpers/fragment_projector.h"
 
 #include "forte.h"
+#include "forte-def.h"
 
 #include "casscf/casscf.h"
 #include "casscf/mcscf_2step.h"
