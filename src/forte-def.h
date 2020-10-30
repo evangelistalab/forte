@@ -37,4 +37,10 @@
 #define omp_get_thread_num() 0
 #endif
 
+// restore pybind11 2.3 behavior
+// https://github.com/pybind/pybind11/pull/2602
+#define PYBIND11_COMPILER_TYPE ""
+#define PYBIND11_STDLIB ""
+#define PYBIND11_BUILD_ABI ""
+
 #endif // _forte_def_h_
