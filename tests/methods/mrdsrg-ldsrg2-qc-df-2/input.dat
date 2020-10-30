@@ -45,9 +45,11 @@ set forte{
   nroot                  1
   dsrg_s                 1.0
   maxiter                100
-  e_convergence          4.0e-9
+  e_convergence          8
+  r_convergence          6
   semi_canonical         false
   dsrg_read_amps         true
+  dsrg_diis_start        1
 }
 
 Emcscf, wfn = energy('mcscf', return_wfn=True)
