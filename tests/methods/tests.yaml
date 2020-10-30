@@ -135,7 +135,7 @@ dsrg-mrpt2:
    - dsrg-mrpt2-8-sa
    - dsrg-mrpt2-10-CO
    - dsrg-mrpt2-13
-   - aci-dsrg-mrpt2-4
+   - aci-dsrg-mrpt2-3
    - dsrg-mrpt2-fcidump-1
    - dsrg-mrpt2-grad-findiff-1
   medium:
@@ -148,7 +148,7 @@ dsrg-mrpt2:
    - dsrg-mrpt2-11-sa-C2H4
    - aci-dsrg-mrpt2-1
    - aci-dsrg-mrpt2-2
-   - aci-dsrg-mrpt2-3
+   - aci-dsrg-mrpt2-4
    - dsrg-mrpt2-10-CO-fcidump
    - dsrg-mrpt2-opt-findiff-1
   long:
@@ -163,10 +163,10 @@ dsrg-mrpt3:
   short:
    - dsrg-mrpt3-1
    - dsrg-mrpt3-7-CO
+   - dsrg-mrpt3-9
   medium:
    - dsrg-mrpt3-2
    - dsrg-mrpt3-5
-   - dsrg-mrpt3-9
    - aci-dsrg-mrpt3-1
   long:
    - dsrg-mrpt3-3
@@ -226,9 +226,9 @@ integrals:
    - integrals-6
 mr-dsrg-pt2:
   short:
+   - mr-dsrg-pt2-1
    - mr-dsrg-pt2-3
   medium:
-   - mr-dsrg-pt2-1
    - mr-dsrg-pt2-2
 #   - mr-dsrg-pt2-4
 mrdsrg_so:
