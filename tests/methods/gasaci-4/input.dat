@@ -36,12 +36,12 @@ set forte {
   charge 0
   sci_enforce_spin_complete true
   active_ref_type gas_single
-  aci_screen_alg MULTI_GAS
   charge 0
   GAS1 [1,0,0,0]
   GAS2 [5,0,2,2]
   AVG_STATE [[0,1,1],[2,1,1]]
-  GAS1MAX_MULTI [[0,1,2],[2,1,1]]
+  GAS1MAX [2,1]
+  aci_n_average 2
 }
 
 escf ,wfn = energy('scf',return_wfn = True)

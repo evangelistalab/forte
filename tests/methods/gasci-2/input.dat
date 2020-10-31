@@ -4,8 +4,8 @@
 import forte
 
 refscf = -76.0172965561 #TEST
-refaci = -55.8539596475 #TEST
-refacipt2 = -55.853959647 #TEST
+refaci = -65.9419527206 #TEST
+refacipt2 = -76.029945794 #TEST
 
 memory 6000mb
 molecule h2o{
@@ -40,15 +40,14 @@ set forte {
   active_ref_type gas
   GAS2 [3,0,1,2]
   GAS1 [1,0,0,0]
-  GAS1MAX 2
-  GAS1MIN 0
-  GAS1MAX_MULTI [[0,1,2,1]]
-  GAS1MIN_MULTI [[0,1,0,0]]
-  avg_state [[0,1,2]]
+  GAS1MAX [2,1]
+  GAS1MIN [0,0]
+  avg_state [[0,1,1],[0,1,1]] #For same symmetry and different GAS
+  aci_n_average 2
 }
 
 escf ,wfn = energy('scf',return_wfn = True)
 compare_values(refscf, variable("CURRENT ENERGY"),9, "SCF energy") #TEST
-energy('forte')
-compare_values(refaci, variable("ACI ENERGY"),9, "ACI energy") #TEST
+eaci = energy('forte')
+compare_values(refaci, eaci,9, "ACI energy") #TEST
 compare_values(refacipt2, variable("ACI+PT2 ENERGY"),8, "ACI+PT2 energy") #TEST

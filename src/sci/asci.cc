@@ -77,7 +77,7 @@ void ASCI::pre_iter_preparation() {
     outfile->Printf("\n  Using %d threads", omp_get_max_threads());
 
     CI_Reference ref(scf_info_, options_, mo_space_info_, as_ints_, multiplicity_, twice_ms_,
-                     wavefunction_symmetry_);
+                     wavefunction_symmetry_, state_);
     ref.build_reference(initial_reference_);
     P_space_ = initial_reference_;
 
@@ -99,7 +99,7 @@ void ASCI::pre_iter_preparation() {
 void ASCI::startup() {
     // Build the reference determinant and compute its energy
     CI_Reference ref(scf_info_, options_, mo_space_info_, as_ints_, multiplicity_, twice_ms_,
-                     wavefunction_symmetry_);
+                     wavefunction_symmetry_, state_);
     ref.build_reference(initial_reference_);
 
     // Read options

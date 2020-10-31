@@ -40,8 +40,8 @@ set forte {
   active_ref_type gas
   GAS1 [1,0,0,0]
   GAS2 [3,0,1,2]
-  GAS1MAX 1
-  GAS1MIN 0
+  GAS1MAX [1]
+  GAS1MIN [0]
   job_type casscf
   casscf_ci_solver aci
   casscf_maxiter 100
@@ -68,8 +68,6 @@ set forte {
   active_ref_type gas
   GAS1 [1,0,0,0]
   GAS2 [3,0,1,2]
-  GAS1MAX 1
-  GAS1MIN 0
   job_type newdriver
   correlation_solver dsrg-mrpt2
   dsrg_s 1.0

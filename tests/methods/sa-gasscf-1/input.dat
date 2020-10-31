@@ -41,8 +41,8 @@ set forte {
   GAS2 [1,0,0,1]
   restricted_docc [1,0,0,0]
   restricted_uocc [8,2,3,5]
-  GAS1MIN 6
-  GAS2MAX 2
+  GAS1MIN [6]
+  GAS2MAX [2]
   avg_state [[0,1,2]]
   job_type casscf
   casscf_ci_solver aci
