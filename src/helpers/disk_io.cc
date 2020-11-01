@@ -92,103 +92,103 @@ void read_disk_vector_double(const std::string& filename, std::vector<double>& d
     in.close();
 }
 
-std::string write_disk_BT(ambit::BlockedTensor& BT, const std::string& name,
-                          const std::string& file_prefix) {
-    auto block_labels = BT.block_labels();
-    std::vector<std::string> block_file_names;
-    block_file_names.reserve(block_labels.size());
+//std::string write_disk_BT(ambit::BlockedTensor& BT, const std::string& name,
+//                          const std::string& file_prefix) {
+//    auto block_labels = BT.block_labels();
+//    std::vector<std::string> block_file_names;
+//    block_file_names.reserve(block_labels.size());
 
-    for (const std::string& block : block_labels) {
-        size_t nele = BT.block(block).numel();
+//    for (const std::string& block : block_labels) {
+//        size_t nele = BT.block(block).numel();
 
-        // need to deal with case insensitivity
-        std::string block_lowercase, spin;
-        for (const char& i : block) {
-            if (isupper(i)) {
-                block_lowercase += tolower(i);
-                spin += 'b';
-            } else {
-                block_lowercase += i;
-                spin += 'a';
-            }
-        }
+//        // need to deal with case insensitivity
+//        std::string block_lowercase, spin;
+//        for (const char& i : block) {
+//            if (isupper(i)) {
+//                block_lowercase += tolower(i);
+//                spin += 'b';
+//            } else {
+//                block_lowercase += i;
+//                spin += 'a';
+//            }
+//        }
 
-        std::string filename = file_prefix;
-        for (const std::string& s : {name, block_lowercase, spin, std::string("bin")}) {
-            filename += "." + s;
-        }
-        block_file_names.push_back(block + " " + filename + " " + std::to_string(nele));
+//        std::string filename = file_prefix;
+//        for (const std::string& s : {name, block_lowercase, spin, std::string("bin")}) {
+//            filename += "." + s;
+//        }
+//        block_file_names.push_back(block + " " + filename + " " + std::to_string(nele));
 
-        write_disk_vector_double(filename, BT.block(block).data(), true);
-    }
+//        write_disk_vector_double(filename, BT.block(block).data(), true);
+//    }
 
-    // write master file
-    std::ofstream of;
-    std::string file_path = file_prefix + "." + name + ".master.txt";
-    of.open(file_path, std::ios::trunc);
-    for (const std::string& str : block_file_names) {
-        of << str << std::endl;
-    }
-    of.close();
-    return file_path;
-}
+//    // write master file
+//    std::ofstream of;
+//    std::string file_path = file_prefix + "." + name + ".master.txt";
+//    of.open(file_path, std::ios::trunc);
+//    for (const std::string& str : block_file_names) {
+//        of << str << std::endl;
+//    }
+//    of.close();
+//    return file_path;
+//}
 
-void read_disk_BT(ambit::BlockedTensor& BT, const std::string& filename) {
-    // read master file info for each block
-    std::ifstream infile(filename);
-    if (!infile.good()) {
-        std::string error = "File " + filename + " does not exist.";
-        throw psi::PSIEXCEPTION(error.c_str());
-    }
+//void read_disk_BT(ambit::BlockedTensor& BT, const std::string& filename) {
+//    // read master file info for each block
+//    std::ifstream infile(filename);
+//    if (!infile.good()) {
+//        std::string error = "File " + filename + " does not exist.";
+//        throw psi::PSIEXCEPTION(error.c_str());
+//    }
 
-    std::string line;
-    while (std::getline(infile, line)) {
-        std::istringstream iss(line);
-        std::string block, filename;
-        size_t nele;
-        iss >> block >> filename >> nele;
+//    std::string line;
+//    while (std::getline(infile, line)) {
+//        std::istringstream iss(line);
+//        std::string block, filename;
+//        size_t nele;
+//        iss >> block >> filename >> nele;
 
-        // test if sizes match
-        if (nele != BT.block(block).numel()) {
-            std::string msg = "Number of elements do NOT match: ";
-            msg += BT.name() + "(" + std::to_string(BT.block(block).numel()) + "); ";
-            msg += filename + "(" + std::to_string(nele) + ")";
-            throw PSIEXCEPTION(msg);
-        }
+//        // test if sizes match
+//        if (nele != BT.block(block).numel()) {
+//            std::string msg = "Number of elements do NOT match: ";
+//            msg += BT.name() + "(" + std::to_string(BT.block(block).numel()) + "); ";
+//            msg += filename + "(" + std::to_string(nele) + ")";
+//            throw PSIEXCEPTION(msg);
+//        }
 
-        // read data
-        read_disk_vector_double(filename, BT.block(block).data());
-    }
+//        // read data
+//        read_disk_vector_double(filename, BT.block(block).data());
+//    }
 
-    infile.close();
-}
+//    infile.close();
+//}
 
-void delete_disk_BT(const std::string& filename) {
-    std::ifstream infile(filename);
-    if (!infile.good()) {
-        std::string error = "File " + filename + " does not exist.";
-        throw psi::PSIEXCEPTION(error.c_str());
-    }
+//void delete_disk_BT(const std::string& filename) {
+//    std::ifstream infile(filename);
+//    if (!infile.good()) {
+//        std::string error = "File " + filename + " does not exist.";
+//        throw psi::PSIEXCEPTION(error.c_str());
+//    }
 
-    // delete every block
-    std::string line;
-    while (std::getline(infile, line)) {
-        std::istringstream iss(line);
-        std::string block, filename_block;
-        size_t nele;
-        iss >> block >> filename_block >> nele;
+//    // delete every block
+//    std::string line;
+//    while (std::getline(infile, line)) {
+//        std::istringstream iss(line);
+//        std::string block, filename_block;
+//        size_t nele;
+//        iss >> block >> filename_block >> nele;
 
-        if (remove(filename_block.c_str()) != 0) {
-            std::string msg = "Error when deleting " + filename_block;
-            perror(msg.c_str());
-        }
-    }
-    infile.close();
+//        if (remove(filename_block.c_str()) != 0) {
+//            std::string msg = "Error when deleting " + filename_block;
+//            perror(msg.c_str());
+//        }
+//    }
+//    infile.close();
 
-    // delete the master file
-    if (remove(filename.c_str()) != 0) {
-        std::string msg = "Error when deleting " + filename;
-        perror(msg.c_str());
-    }
-}
+//    // delete the master file
+//    if (remove(filename.c_str()) != 0) {
+//        std::string msg = "Error when deleting " + filename;
+//        perror(msg.c_str());
+//    }
+//}
 } // namespace forte

@@ -67,27 +67,27 @@ void write_disk_vector_double(const std::string& filename, const std::vector<dou
  */
 void read_disk_vector_double(const std::string& filename, std::vector<double>& data);
 
-/**
- * @brief Save a BlockedTensor to file
- * @param BT The BlockedTensor to be dumped to files
- * @param name The abbreviated name of the BlockedTensor BT
- * @return The master file name (with absolute path) that handles all blocks
- */
-std::string write_disk_BT(ambit::BlockedTensor& BT, const std::string& name,
-                          const std::string& file_prefix);
+///**
+// * @brief Save a BlockedTensor to file
+// * @param BT The BlockedTensor to be dumped to files
+// * @param name The abbreviated name of the BlockedTensor BT
+// * @return The master file name (with absolute path) that handles all blocks
+// */
+//std::string write_disk_BT(ambit::BlockedTensor& BT, const std::string& name,
+//                          const std::string& file_prefix);
 
-/**
- * @brief Read a BlockedTensor from file
- * @param BT The BlockedTensor to be filled
- * @param filename The master file name (with absolute path) that stores file names for all blocks
- */
-void read_disk_BT(ambit::BlockedTensor& BT, const std::string& filename);
+///**
+// * @brief Read a BlockedTensor from file
+// * @param BT The BlockedTensor to be filled
+// * @param filename The master file name (with absolute path) that stores file names for all blocks
+// */
+//void read_disk_BT(ambit::BlockedTensor& BT, const std::string& filename);
 
-/**
- * @brief Delete all files written by write_disk_BT
- * @param filename The master file name (with absolute path) that stores file names for all blocks
- */
-void delete_disk_BT(const std::string& filename);
+///**
+// * @brief Delete all files written by write_disk_BT
+// * @param filename The master file name (with absolute path) that stores file names for all blocks
+// */
+//void delete_disk_BT(const std::string& filename);
 
 } // namespace forte
 
