@@ -189,6 +189,7 @@ ambit::Tensor RDMs::SF_L1() {
     if (not have_SF_L1_) {
         SF_L1_ = g1a_.clone();
         SF_L1_.scale(2.0);
+        have_SF_L1_ = true;
     }
     return SF_L1_;
 }
@@ -201,6 +202,7 @@ ambit::Tensor RDMs::SF_L2() {
         SF_L2_ = L2ab().clone();
         SF_L2_.scale(4.0);
         SF_L2_("pqrs") -= 2.0 * L2ab()("pqsr");
+        have_SF_L2_ = true;
     }
     return SF_L2_;
 }
@@ -215,6 +217,7 @@ ambit::Tensor RDMs::SF_L3() {
         SF_L3_("pqrstu") += L3aab()("prqsut");
         SF_L3_("pqrstu") += L3aab()("qrptus");
         SF_L3_.scale(2.0);
+        have_SF_L3_ = true;
     }
     return SF_L3_;
 }
@@ -229,6 +232,7 @@ ambit::Tensor make_g3_high_spin_case(const ambit::Tensor& g3aab) {
     auto g3hs = g3aab.clone();
     g3hs("pqrstu") -= g3aab("pqrsut");
     g3hs("pqrstu") += g3aab("pqrtus");
+
     return g3hs;
 }
 

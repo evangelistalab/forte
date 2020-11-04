@@ -61,7 +61,13 @@ void SADSRG::analyze_amplitudes(std::string name, BlockedTensor& T1, BlockedTens
 
 std::vector<std::pair<std::vector<size_t>, double>> SADSRG::check_t2(BlockedTensor& T2) {
     size_t nonzero = 0;
-    std::vector<std::pair<std::vector<size_t>, double>> t2;
+    T2.citerate([&](const std::vector<size_t>&, const std::vector<SpinType>&, const double& value) {
+        if (std::fabs(value) > 1.0e-15) {
+            nonzero += 1;
+        }
+    });
+
+    std::vector<std::pair<std::vector<size_t>, double>> t2(ntamp_ < nonzero ? ntamp_ : nonzero);
     std::vector<std::pair<std::vector<size_t>, double>> lt2;
 
     // check blocks
@@ -88,28 +94,30 @@ std::vector<std::pair<std::vector<size_t>, double>> SADSRG::check_t2(BlockedTens
                 size_t idx2 = label_to_spacemo_[block[2]][i[2]];
                 size_t idx3 = label_to_spacemo_[block[3]][i[3]];
 
-                ++nonzero;
-
                 // for blocks like ccvv, only test c0 < c1 or (c0 = c1 and v0 <= v1)
                 if ((!sym) or (sym && (i[0] <= i[1]) && (i[0] != i[1] or i[2] <= i[3]))) {
                     std::vector<size_t> indices{idx0, idx1, idx2, idx3};
                     std::pair<std::vector<size_t>, double> idx_value =
                         std::make_pair(indices, value);
 
-                    t2.push_back(idx_value);
-                    std::sort(t2.begin(), t2.end(), sort_pair_second_descend);
-                    if (t2.size() == ntamp_ + 1) {
+                    if (std::fabs(value) >= std::fabs(t2[0].second)) {
+                        std::pop_heap(t2.begin(), t2.end(), sort_pair_second_descend);
                         t2.pop_back();
+
+                        t2.push_back(idx_value);
+                        std::push_heap(t2.begin(), t2.end(), sort_pair_second_descend);
                     }
 
                     if (std::fabs(value) > std::fabs(intruder_tamp_)) {
                         lt2.push_back(idx_value);
                     }
-                    std::sort(lt2.begin(), lt2.end(), sort_pair_second_descend);
                 }
             }
         });
     }
+
+    std::sort(t2.begin(), t2.end(), sort_pair_second_descend);
+    std::sort(lt2.begin(), lt2.end(), sort_pair_second_descend);
 
     // print summary
     if (t2.size())
@@ -120,7 +128,13 @@ std::vector<std::pair<std::vector<size_t>, double>> SADSRG::check_t2(BlockedTens
 
 std::vector<std::pair<std::vector<size_t>, double>> SADSRG::check_t1(BlockedTensor& T1) {
     size_t nonzero = 0;
-    std::vector<std::pair<std::vector<size_t>, double>> t1;
+    T1.citerate([&](const std::vector<size_t>&, const std::vector<SpinType>&, const double& value) {
+        if (std::fabs(value) > 1.0e-15) {
+            nonzero += 1;
+        }
+    });
+
+    std::vector<std::pair<std::vector<size_t>, double>> t1(ntamp_ < nonzero ? ntamp_ : nonzero);
     std::vector<std::pair<std::vector<size_t>, double>> lt1;
 
     for (const std::string& block : T1.block_labels()) {
@@ -132,21 +146,23 @@ std::vector<std::pair<std::vector<size_t>, double>> SADSRG::check_t1(BlockedTens
                 std::vector<size_t> indices{idx0, idx1};
                 std::pair<std::vector<size_t>, double> idx_value = std::make_pair(indices, value);
 
-                ++nonzero;
-
-                t1.push_back(idx_value);
-                std::sort(t1.begin(), t1.end(), sort_pair_second_descend);
-                if (t1.size() == ntamp_ + 1) {
+                if (std::fabs(value) >= std::fabs(t1[0].second)) {
+                    std::pop_heap(t1.begin(), t1.end(), sort_pair_second_descend);
                     t1.pop_back();
+
+                    t1.push_back(idx_value);
+                    std::push_heap(t1.begin(), t1.end(), sort_pair_second_descend);
                 }
 
                 if (std::fabs(value) > std::fabs(intruder_tamp_)) {
                     lt1.push_back(idx_value);
                 }
-                std::sort(lt1.begin(), lt1.end(), sort_pair_second_descend);
             }
         });
     }
+
+    std::sort(t1.begin(), t1.end(), sort_pair_second_descend);
+    std::sort(lt1.begin(), lt1.end(), sort_pair_second_descend);
 
     // print summary
     if (t1.size())

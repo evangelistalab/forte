@@ -86,12 +86,6 @@ psi::SharedMatrix tensor_to_matrix(ambit::Tensor t);
  */
 psi::SharedMatrix tensor_to_matrix(ambit::Tensor t, psi::Dimension dims);
 
-/// Save a vector of double to file
-void write_disk_vector_double(const std::string& filename, const std::vector<double>& data);
-
-/// Read a vector of double from file
-void read_disk_vector_double(const std::string& filename, std::vector<double>& data);
-
 /**
  * @brief view_modified_orbitals Write orbitals using molden
  * @param Ca  The Ca matrix to be viewed with MOLDEN

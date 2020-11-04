@@ -33,6 +33,8 @@
 
 #include "boost/format.hpp"
 
+#include "psi4/libmints/molecule.h"
+#include "psi4/libpsi4util/process.h"
 #include "psi4/libpsi4util/PsiOutStream.h"
 #include "psi4/libmints/molecule.h"
 
@@ -92,6 +94,8 @@ void MRDSRG::read_options() {
     if (pt2_h0th_ != "FFULL" and pt2_h0th_ != "FDIAG_VACTV" and pt2_h0th_ != "FDIAG_VDIAG") {
         pt2_h0th_ = "FDIAG";
     }
+
+    restart_amps_ = foptions_->get_bool("DSRG_RESTART_AMPS");
 }
 
 void MRDSRG::startup() {
@@ -129,6 +133,21 @@ void MRDSRG::startup() {
         Fa_ = eigens[0];
         Fb_ = eigens[1];
     }
+
+    // set up file name prefix
+    restart_file_prefix_ = psi::PSIOManager::shared_object()->get_default_path() + "forte." +
+                           std::to_string(getpid()) + "." +
+                           psi::Process::environment.molecule()->name();
+    t1_file_chk_.clear();
+    t2_file_chk_.clear();
+    if (restart_amps_ and (relax_ref_ != "NONE") and
+        corrlv_string_.find("DSRG") != std::string::npos) {
+        t1_file_chk_ = restart_file_prefix_ + ".mrdsrg.spin.t1.bin";
+        t2_file_chk_ = restart_file_prefix_ + ".mrdsrg.spin.t2.bin";
+    }
+
+    t1_file_cwd_ = "forte.mrdsrg.spin.t1.bin";
+    t2_file_cwd_ = "forte.mrdsrg.spin.t2.bin";
 }
 
 void MRDSRG::print_options() {
@@ -165,10 +184,15 @@ void MRDSRG::print_options() {
             return std::string("FALSE");
         }
     };
+    calculation_info_string.push_back({"Restart amplitudes", true_false_string(restart_amps_)});
     calculation_info_string.push_back(
         {"Sequential DSRG transformation", true_false_string(sequential_Hbar_)});
     calculation_info_string.push_back(
         {"Omit blocks of >= 3 virtual indices", true_false_string(nivo_)});
+    calculation_info_string.push_back(
+        {"Read amplitudes from current dir", true_false_string(read_amps_cwd_)});
+    calculation_info_string.push_back(
+        {"Write amplitudes to current dir", true_false_string(dump_amps_cwd_)});
 
     // print some information
     print_h2("Calculation Information");
@@ -312,8 +336,6 @@ double MRDSRG::compute_energy() {
     }
 
     if (initialize_T) {
-        // build initial amplitudes
-        print_h2("Build Initial Amplitude from DSRG-MRPT2");
         T1_ = BTF_->build(tensor_type_, "T1 Amplitudes", spin_cases({"hp"}));
         T2_ = BTF_->build(tensor_type_, "T2 Amplitudes", spin_cases({"hhpp"}));
         if (eri_df_) {
@@ -321,9 +343,6 @@ double MRDSRG::compute_energy() {
         } else {
             guess_t(V_, T2_, F_, T1_);
         }
-
-        // check initial amplitudes
-        analyze_amplitudes("First-Order", T1_, T2_);
     }
 
     // get reference energy
@@ -360,7 +379,9 @@ double MRDSRG::compute_energy() {
         Etotal += compute_energy_pt3();
         break;
     }
-    default: { Etotal += compute_energy_pt2(); }
+    default: {
+        Etotal += compute_energy_pt2();
+    }
     }
 
     return Etotal;

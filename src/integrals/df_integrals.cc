@@ -221,6 +221,7 @@ void DFIntegrals::gather_integrals() {
     // Constructs the DF function
     // assume a RHF/UHF reference
     std::shared_ptr<psi::DFHelper> df(new DFHelper(primary, auxiliary));
+    df->set_memory(psi::Process::environment.get_memory() / sizeof(double));
     df->initialize();
     // Pushes a C matrix that is ordered in pitzer ordering
     // into the C_matrix object
@@ -232,7 +233,6 @@ void DFIntegrals::gather_integrals() {
     // This assumes that everything is correlated.
     // Does not add the pair_space, but says which one is should use
     df->add_transformation("B", "ALL", "ALL", "Qpq");
-    df->set_memory(psi::Process::environment.get_memory() / 8L);
 
     // Finally computes the df integrals
     // Does the timings also

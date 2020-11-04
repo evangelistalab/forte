@@ -87,9 +87,6 @@ void SemiCanonical::startup() {
     Ua_ = std::make_shared<psi::Matrix>("Ua", nmopi_, nmopi_);
     Ub_ = std::make_shared<psi::Matrix>("Ub", nmopi_, nmopi_);
 
-    Ua_->identity();
-    Ub_->identity();
-
     // Preapare orbital rotation matrix, which transforms only active MOs
     Ua_t_ = ambit::Tensor::build(ambit::CoreTensor, "Ua", {nact_, nact_});
     Ub_t_ = ambit::Tensor::build(ambit::CoreTensor, "Ub", {nact_, nact_});
@@ -278,7 +275,6 @@ bool SemiCanonical::check_fock_matrix() {
         psi::SharedMatrix Fb(new psi::Matrix(name_b, npi, npi));
 
         for (size_t h = 0; h < nirrep_; ++h) {
-            // TODO: try omp here
             for (int i = 0; i < npi[h]; ++i) {
                 for (int j = 0; j < npi[h]; ++j) {
                     Fa->set(h, i, j, ints_->get_fock_a(cmo_idx_[name][h][i], cmo_idx_[name][h][j]));
@@ -357,7 +353,6 @@ void SemiCanonical::build_transformation_matrices(psi::SharedMatrix& Ua, psi::Sh
             psi::SharedMatrix Fb(new psi::Matrix(name_b, npi, npi));
 
             for (size_t h = 0; h < nirrep_; ++h) {
-                // TODO: try omp here
                 for (int i = 0; i < npi[h]; ++i) {
                     for (int j = 0; j < npi[h]; ++j) {
                         Fa->set(h, i, j,
@@ -379,7 +374,6 @@ void SemiCanonical::build_transformation_matrices(psi::SharedMatrix& Ua, psi::Sh
             // fill in Ua and Ub
             for (size_t h = 0; h < nirrep_; ++h) {
                 int offset = offsets_[name][h];
-                // TODO: try omp here
                 for (int i = 0; i < npi[h]; ++i) {
                     for (int j = 0; j < npi[h]; ++j) {
                         Ua->set(h, offset + i, offset + j, UsubA->get(h, i, j));
@@ -387,18 +381,30 @@ void SemiCanonical::build_transformation_matrices(psi::SharedMatrix& Ua, psi::Sh
                     }
                 }
             }
+        }
+    }
 
-            // fill in UaData and UbData if this block is active
-            if (name.find("GAS") != std::string::npos) {
-                for (size_t h = 0; h < nirrep_; ++h) {
-                    int actv_off = actv_offsets_[name][h];
-                    for (int u = 0; u < npi[h]; ++u) {
-                        for (int v = 0; v < npi[h]; ++v) {
-                            int nu = actv_off + u;
-                            int nv = actv_off + v;
-                            UaData[nu * nact_ + nv] = UsubA->get(h, u, v);
-                            UbData[nu * nact_ + nv] = UsubB->get(h, u, v);
-                        }
+    // keep phase and order unchanged
+    ints_->fix_orbital_phases(Ua, true);
+    ints_->fix_orbital_phases(Ub, false);
+
+    // fill in UaData and UbData
+    for (const auto& name_dim_pair : mo_dims_) {
+        std::string name = name_dim_pair.first;
+        psi::Dimension npi = name_dim_pair.second;
+
+        if (name.find("GAS") != std::string::npos) {
+            for (size_t h = 0; h < nirrep_; ++h) {
+                int actv_off = actv_offsets_[name][h];
+                int offset = offsets_[name][h];
+                for (int u = 0; u < npi[h]; ++u) {
+                    int nu = actv_off + u;
+                    int mu = offset + u;
+                    for (int v = 0; v < npi[h]; ++v) {
+                        int nv = actv_off + v;
+                        int mv = offset + v;
+                        UaData[nu * nact_ + nv] = Ua->get(h, mu, mv);
+                        UbData[nu * nact_ + nv] = Ub->get(h, mu, mv);
                     }
                 }
             }

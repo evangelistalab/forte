@@ -7,7 +7,7 @@ lcov --directory . --zerocounters
 
 # Run tests
 cd tests/methods
-python run_forte_tests.py --failed_dump --bw
+python run_forte_tests.py --type short --failed_dump --bw
 test1=$?
 
 cd ../..

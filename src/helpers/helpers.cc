@@ -111,45 +111,6 @@ psi::SharedMatrix tensor_to_matrix(ambit::Tensor t, psi::Dimension dims) {
     return M_sym;
 }
 
-void write_disk_vector_double(const std::string& filename, const std::vector<double>& data) {
-    // check if file exists or not
-    struct stat buf;
-    bool exist = stat(filename.c_str(), &buf) == 0;
-    if (exist) {
-        std::stringstream error;
-        error << "File " << filename << " already exists.";
-        throw psi::PSIEXCEPTION(error.str().c_str());
-    }
-
-    // write data to file
-    // for convenience, write the size to file as well
-    // note that &vector<T>[0] is a pointer to type T.
-    std::ofstream out(filename.c_str(), std::ios_base::binary);
-    size_t data_size = data.size();
-    out.write(reinterpret_cast<char*>(&data_size), sizeof(size_t));
-    out.write(reinterpret_cast<const char*>(&data[0]), data_size * sizeof(double));
-
-    out.close();
-}
-
-void read_disk_vector_double(const std::string& filename, std::vector<double>& data) {
-    // check if file exists or not
-    std::ifstream in(filename.c_str(), std::ios_base::binary);
-    if (!in.good()) {
-        std::stringstream error;
-        error << "File " << filename << " does not exist.";
-        throw psi::PSIEXCEPTION(error.str().c_str());
-    }
-
-    // read file to data
-    size_t data_size;
-    in.read(reinterpret_cast<char*>(&data_size), sizeof(size_t));
-    data.resize(data_size);
-    in.read(reinterpret_cast<char*>(&data[0]), data_size * sizeof(double));
-
-    in.close();
-}
-
 std::pair<double, std::string> to_xb(size_t nele, size_t type_size) {
     // map the size
     std::map<std::string, double> to_XB;

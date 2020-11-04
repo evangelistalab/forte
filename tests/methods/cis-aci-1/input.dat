@@ -5,9 +5,9 @@ import forte
 
 refscf = -108.71420304902
 refaci = -108.874166965644
-refacipt2 = -108.895740462661 
+refacipt2 = -108.895740462661
 
-molecule hf{
+molecule N2{
    N
    N 1 1.732878731527
 units bohr
@@ -34,7 +34,7 @@ set forte {
   sci_excited_algorithm average
 }
 
-energy('scf')
+Escf, wfn = energy('scf', return_wfn=True)
 compare_values(refscf, variable("SCF total energy"),10, "SCF energy") #TEST
-energy('forte')
+energy('forte', ref_wfn=wfn)
 compare_values(refaci, variable("ACI ENERGY"),10, "ACI energy") #TEST
