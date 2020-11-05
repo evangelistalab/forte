@@ -195,7 +195,8 @@ void Psi4Integrals::compute_frozen_one_body_operator() {
             "Trying to compute the frozen one-body operator with unknown integral type");
     }
 
-    JK_core->set_memory(psi::Process::environment.get_memory() * 0.8);
+    // to number of doubles
+    JK_core->set_memory(psi::Process::environment.get_memory() * 0.85 / sizeof(double));
     /// Already transform everything to C1 so make sure JK does not do this.
 
     // JK_core->set_cutoff(options_->get_double("INTEGRAL_SCREENING"));

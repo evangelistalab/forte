@@ -235,6 +235,7 @@ ambit::Tensor make_g3_high_spin_case(const ambit::Tensor& g3aab) {
     auto g3hs = g3aab.clone();
     g3hs("pqrstu") -= g3aab("pqrsut");
     g3hs("pqrstu") += g3aab("pqrtus");
+
     return g3hs;
 }
 

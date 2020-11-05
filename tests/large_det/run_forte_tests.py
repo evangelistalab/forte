@@ -24,7 +24,7 @@ class bcolors:
     FAIL = '\033[91m'
     ENDC = '\033[0m'
 
-    
+
 def run_job(jobdir, psi4command, test_results, test_time):
     """Run a test in jobdir using the psi4command"""
     start = time.time()
@@ -32,7 +32,7 @@ def run_job(jobdir, psi4command, test_results, test_time):
     successful = True
     # Run Psi4
     try:
-        out = subprocess.check_output([psi4command])
+        out = subprocess.check_output([psi4command, "-n2"])
     except:
         # something went wrong
         successful = False
@@ -180,8 +180,8 @@ def main():
                     if len(local_failed_tests) > 0:
                         group_failed_tests[test_level] = local_failed_tests
             if len(group_failed_tests) > 0:
-                failed_tests[test_group] = group_failed_tests 
- 
+                failed_tests[test_group] = group_failed_tests
+
     # print a summary of the tests
     print('Summary:')
     print(' ' * 4 + '=' * 76)

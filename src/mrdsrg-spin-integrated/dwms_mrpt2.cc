@@ -13,6 +13,7 @@
 #include "three_dsrg_mrpt2.h"
 #include "sci/fci_mo.h"
 #include "orbital-helpers/semi_canonicalize.h"
+#include "helpers/disk_io.h"
 #include "helpers/printing.h"
 
 using namespace psi;

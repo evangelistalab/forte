@@ -37,11 +37,11 @@ set forte {
   diag_algorithm full 
 }
 
-energy('mcscf')
+Escf, wfn = energy('mcscf', return_wfn=True)
 
 compare_values(refscf, variable("CURRENT ENERGY"),9, "SCF energy") #TEST
 
-energy('forte')
+energy('forte', ref_wfn=wfn)
 compare_values(refaci, variable("ACI ENERGY"),9, "ACI energy") #TEST
 #compare_values(refaci_spin, variable("ACI SPIN"),9, "ACI spin") #TEST
 compare_values(refacipt2, variable("ACI+PT2 ENERGY"),8, "ACI+PT2 energy") #TEST
