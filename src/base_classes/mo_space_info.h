@@ -111,10 +111,15 @@ using SpaceInfo = std::pair<psi::Dimension, std::vector<MOInfo>>;
  * Irrep                 A1(0)       A2(1)    B1(2)   B2(3)
  *
  * Indexing:
- * ALL              | 0 1 2 3 4 | 5 6 7 8 9 | 10 11 | 12 13 | <- absolute index in the full orbital
- * space CORRELATED       | - 0 1 2 3 | - 4 5 6 7 |  8  - |  9 10 | <- absolute index in the space
- * of non-frozen orbitals RELATIVE         | 0 1 2 3 4 | 0 1 2 3 4 |  0  1 |  0  1 | <- index
- * relative to the irrep in the full orbital space
+ *
+ * Absolute index in the full orbital space
+ * ALL              | 0 1 2 3 4 | 5 6 7 8 9 | 10 11 | 12 13 |
+ *
+ * Absolute index in the space of non-frozen orbitals
+ * CORRELATED       | - 0 1 2 3 | - 4 5 6 7 |  8  - |  9 10 |
+ *
+ * Index relative to the irrep in the full orbital space
+ * RELATIVE         | 0 1 2 3 4 | 0 1 2 3 4 |  0  1 |  0  1 |
  *
  * FROZEN_DOCC        *           *
  * RESTRICTED_DOCC      *           * *        *       *

@@ -112,6 +112,11 @@ void SA_MRDSRG::print_options() {
         {"Reference relaxation", relax_ref_},
         {"Core-Virtual source type", ccvv_source_}};
 
+    if (internal_amp_ != "NONE") {
+        calculation_info_string.push_back({"Internal amplitudes levels", internal_amp_});
+        calculation_info_string.push_back({"Internal amplitudes selection", internal_amp_select_});
+    }
+
     auto true_false_string = [](bool x) {
         if (x) {
             return std::string("TRUE");

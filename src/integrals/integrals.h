@@ -32,6 +32,7 @@
 
 #include <vector>
 
+#include "psi4/libfock/jk.h"
 #include "psi4/libmints/dimension.h"
 #include "ambit/blocked_tensor.h"
 
@@ -134,11 +135,15 @@ class ForteIntegrals {
     std::shared_ptr<psi::Matrix> Ca() const;
     /// Return Cb
     std::shared_ptr<psi::Matrix> Cb() const;
+
     /// Return nuclear repulsion energy
     double nuclear_repulsion_energy() const;
 
     /// temporary solution for not having a Wavefunction
     std::shared_ptr<psi::Wavefunction> wfn();
+
+    /// Return the Pis4 JK object
+    std::shared_ptr<psi::JK> jk();
 
     // The number of symmetry-adapted orbitals
     // see https://github.com/psi4/psi4/wiki/OrbitalDimensions
@@ -181,16 +186,16 @@ class ForteIntegrals {
     double oei_b(size_t p, size_t q) const;
 
     /// Get the alpha fock matrix elements
-    double get_fock_a(size_t p, size_t q) const;
+    double get_fock_a(size_t p, size_t q, bool corr = true) const;
 
     /// Get the beta fock matrix elements
-    double get_fock_b(size_t p, size_t q) const;
+    double get_fock_b(size_t p, size_t q, bool corr = true) const;
 
-    /// Get the alpha fock matrix in std::vector format
-    std::vector<double> get_fock_a() const;
+    /// Get the alpha fock matrix in Psi4 matrix
+    std::shared_ptr<psi::Matrix> get_fock_a(bool corr = true) const;
 
-    /// Get the beta fock matrix in std::vector format
-    std::vector<double> get_fock_b() const;
+    /// Get the beta fock matrix in Psi4 matrix
+    std::shared_ptr<psi::Matrix> get_fock_b(bool corr = true) const;
 
     /// The antisymmetrixed alpha-alpha two-electron integrals in physicist
     /// notation <pq||rs>
@@ -236,10 +241,35 @@ class ForteIntegrals {
     /// Expert Option: just try and use three_integral
     virtual double** three_integral_pointer();
 
-    /// Make a Fock matrix computed with respect to a given determinant
-    virtual void make_fock_matrix(std::shared_ptr<psi::Matrix> gamma_a,
-                                  std::shared_ptr<psi::Matrix> gamma_b) = 0;
+//    /// Make a Fock matrix computed with respect to a given determinant
+//    virtual void make_fock_matrix(std::shared_ptr<psi::Matrix> gamma_a,
+//                                  std::shared_ptr<psi::Matrix> gamma_b) = 0;
 
+    /// Make the generalized Fock matrix (closed-shell + active)
+    /// @param Da The alpha 1RDM (nactv x nactv, no symmetry) from RDMs class
+    /// @param Db The beta 1RDM (nactv x nactv, no symmetry) from RDMs class
+    virtual void make_fock_matrix(ambit::Tensor Da, ambit::Tensor Db) = 0;
+
+    /// Make the closed-shell Fock matrix in MO basis (include frozen orbitals)
+    /// @param dim_start Dimension for the starting index (per irrep) of closed-shell orbitals
+    /// @param dim_end Dimension for the ending index (per irrep) of closed-shell orbitals
+    /// @return alpha Fock, beta Fock, and closed-shell energy
+    /// spin orbital equation:
+    /// F_{pq} = h_{pq} + \sum_{i}^{closed} <pi||qi>
+    /// e_closed = \sum_{i}^{closed} h_{ii} + 0.5 * \sum_{ij}^{closed} <ij||ij>
+    virtual std::tuple<psi::SharedMatrix, psi::SharedMatrix, double>
+    make_fock_inactive(psi::Dimension dim_start, psi::Dimension dim_end) = 0;
+
+    /// Make the active Fock matrix in MO basis (include frozen orbitals)
+    /// @param Da The alpha 1RDM (nactv x nactv, no symmetry) from RDMs class
+    /// @param Db The beta 1RDM (nactv x nactv, no symmetry) from RDMs class
+    /// @return alpha Fock, beta Fock
+    /// spin orbital equation:
+    /// F_{pq} = \sum_{uv}^{active} <pu||qv> * gamma_{uv}
+    virtual std::tuple<psi::SharedMatrix, psi::SharedMatrix> make_fock_active(ambit::Tensor Da,
+                                                                              ambit::Tensor Db) = 0;
+
+    /// Set nuclear repulstion energy
     void set_nuclear_repulsion(double value);
 
     /// Set the value of the scalar part of the Hamiltonian
@@ -346,6 +376,8 @@ class ForteIntegrals {
 
     /// The mapping from correlated MO to full MO (frozen + correlated)
     std::vector<size_t> cmotomo_;
+    /// The mapping from full MO to irrep and relative indices
+    std::vector<std::pair<size_t, size_t>> mo_to_relmo_;
 
     /// The number of symmetry-adapted orbitals per irrep.
     psi::Dimension nsopi_;
@@ -397,9 +429,12 @@ class ForteIntegrals {
     std::vector<double> one_electron_integrals_a_;
     std::vector<double> one_electron_integrals_b_;
 
-    /// Fock matrix stored as a vector
-    std::vector<double> fock_matrix_a_;
-    std::vector<double> fock_matrix_b_;
+    /// JK object from Psi4
+    std::shared_ptr<psi::JK> JK_;
+
+    /// Fock matrix (including frozen orbitals)
+    psi::SharedMatrix fock_a_;
+    psi::SharedMatrix fock_b_;
 
     /// Two-electron integrals stored as a vector with redundant elements (no permutational
     /// symmetry). These are addressed with the function aptei_index
@@ -478,6 +513,17 @@ class Psi4Integrals : public ForteIntegrals {
                   std::shared_ptr<MOSpaceInfo> mo_space_info, IntegralType integral_type,
                   IntegralSpinRestriction restricted);
 
+    /// Make the generalized Fock matrix using Psi4 JK object
+    void make_fock_matrix(ambit::Tensor Da, ambit::Tensor Db) override;
+
+    /// Make the closed-shell Fock matrix using Psi4 JK object
+    std::tuple<psi::SharedMatrix, psi::SharedMatrix, double>
+    make_fock_inactive(psi::Dimension dim_start, psi::Dimension dim_end) override;
+
+    /// Make the active Fock matrix using Psi4 JK object
+    std::tuple<psi::SharedMatrix, psi::SharedMatrix> make_fock_active(ambit::Tensor Da,
+                                                                      ambit::Tensor Db) override;
+
   private:
     void base_initialize_psi4();
     void setup_psi4_ints();
@@ -493,6 +539,9 @@ class Psi4Integrals : public ForteIntegrals {
     std::vector<std::shared_ptr<psi::Matrix>>
     dipole_ints_mo_helper(std::shared_ptr<psi::Matrix> Cao, std::shared_ptr<psi::Vector> epsilon,
                           const bool& resort) override;
+
+    /// Make a shared pointer to a Psi4 JK object
+    void make_psi4_JK();
 
   protected:
     void freeze_core_orbitals() override;

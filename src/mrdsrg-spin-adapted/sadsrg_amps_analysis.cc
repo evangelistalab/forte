@@ -36,6 +36,22 @@ using namespace psi;
 
 namespace forte {
 
+void SADSRG::internal_amps_T1(BlockedTensor& T1) {
+    if (internal_amp_.find("SINGLES") != std::string::npos) {
+        // TODO: to be filled
+    } else {
+        T1.block("aa").zero();
+    }
+}
+
+void SADSRG::internal_amps_T2(BlockedTensor& T2) {
+    if (internal_amp_.find("DOUBLES") != std::string::npos) {
+        // TODO: to be filled
+    } else {
+        T2.block("aaaa").zero();
+    }
+}
+
 void SADSRG::analyze_amplitudes(std::string name, BlockedTensor& T1, BlockedTensor& T2) {
     if (!name.empty())
         name += " ";

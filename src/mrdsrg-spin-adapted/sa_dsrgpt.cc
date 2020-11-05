@@ -44,13 +44,13 @@ SA_DSRGPT::SA_DSRGPT(RDMs rdms, std::shared_ptr<SCFInfo> scf_info,
 }
 
 void SA_DSRGPT::read_options() {
-    internal_amp_ = foptions_->get_str("INTERNAL_AMP");
-    internal_amp_select_ = foptions_->get_str("INTERNAL_AMP_SELECT");
+//    internal_amp_ = foptions_->get_str("INTERNAL_AMP");
+//    internal_amp_select_ = foptions_->get_str("INTERNAL_AMP_SELECT");
     form_Hbar_ = (relax_ref_ != "NONE" || multi_state_);
 
-    if (internal_amp_ != "NONE") {
-        throw std::runtime_error("INTERNAL_AMP is currently disabled.");
-    }
+//    if (internal_amp_ != "NONE") {
+//        throw std::runtime_error("INTERNAL_AMP is currently disabled.");
+//    }
 }
 
 void SA_DSRGPT::print_options() {
@@ -149,11 +149,7 @@ void SA_DSRGPT::compute_t2_full() {
     }
 
     // internal amplitudes
-    if (internal_amp_.find("DOUBLES") != std::string::npos) {
-        // TODO: to be filled
-    } else {
-        T2_.block("aaaa").zero();
-    }
+    internal_amps_T2(T2_);
 
     // form 2 * J - K
     S2_["ijab"] = 2.0 * T2_["ijab"] - T2_["ijba"];
@@ -210,11 +206,7 @@ void SA_DSRGPT::compute_t1() {
     }
 
     // internal amplitudes
-    if (internal_amp_.find("SINGLES") != std::string::npos) {
-        // TODO: to be filled
-    } else {
-        T1_.block("aa").zero();
-    }
+    internal_amps_T1(T1_);
 
     t1.stop();
 }

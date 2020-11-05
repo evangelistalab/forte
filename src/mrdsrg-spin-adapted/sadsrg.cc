@@ -31,6 +31,7 @@
 #include "psi4/libpsi4util/process.h"
 #include "psi4/libpsi4util/PsiOutStream.h"
 #include "psi4/libmints/matrix.h"
+#include "psi4/libmints/vector.h"
 
 #include "forte-def.h"
 #include "helpers/printing.h"
@@ -157,6 +158,9 @@ void SADSRG::read_options() {
 
     ntamp_ = foptions_->get_int("NTAMP");
     intruder_tamp_ = foptions_->get_double("INTRUDER_TAMP");
+
+    internal_amp_ = foptions_->get_str("INTERNAL_AMP");
+    internal_amp_select_ = foptions_->get_str("INTERNAL_AMP_SELECT");
 
     relax_ref_ = foptions_->get_str("RELAX_REF");
 
@@ -301,21 +305,11 @@ void SADSRG::init_fock() {
 }
 
 void SADSRG::build_fock_from_ints(std::shared_ptr<ForteIntegrals> ints, BlockedTensor& F) {
-    size_t ncmo = mo_space_info_->size("CORRELATED");
+    auto g1a = L1_.block("aa").clone();
+    g1a.scale(0.5);
+    ints->make_fock_matrix(g1a, g1a);
+
     F = BTF_->build(tensor_type_, "Fock", {"gg"});
-
-    // for convenience, directly call make_fock_matrix in ForteIntegral
-    psi::SharedMatrix D1a(new psi::Matrix("D1a", ncmo, ncmo));
-    for (size_t m = 0, ncore = core_mos_.size(); m < ncore; m++) {
-        D1a->set(core_mos_[m], core_mos_[m], 1.0);
-    }
-
-    L1_.block("aa").citerate([&](const std::vector<size_t>& i, const double& value) {
-        D1a->set(actv_mos_[i[0]], actv_mos_[i[1]], 0.5 * value);
-    });
-
-    ints->make_fock_matrix(D1a, D1a);
-
     F.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>&, double& value) {
         value = ints->get_fock_a(i[0], i[1]);
     });
@@ -633,27 +627,7 @@ void SADSRG::rotate_ints_semi_to_origin(const std::string& name, BlockedTensor& 
 
 bool SADSRG::check_semi_orbs() {
     print_h2("Checking Semicanonical Orbitals");
-
-    std::string actv_type = foptions_->get_str("FCIMO_ACTV_TYPE");
-    if (actv_type == "CIS" || actv_type == "CISD") {
-        std::string job_type = foptions_->get_str("CORRELATION_SOLVER");
-        bool fci_mo = foptions_->get_str("ACTIVE_SPACE_SOLVER") == "CAS";
-        if ((job_type == "MRDSRG" || job_type == "DSRG-MRPT3") && fci_mo) {
-            std::stringstream ss;
-            ss << "Unsupported FCIMO_ACTV_TYPE for " << job_type << " code.";
-            throw psi::PSIEXCEPTION(ss.str());
-        }
-
-        outfile->Printf("\n    Incomplete active space %s is detected.", actv_type.c_str());
-        outfile->Printf("\n    Please make sure Semicanonical class has been called.");
-        outfile->Printf("\n    Abort checking semicanonical orbitals.");
-        return true;
-    }
-    if (mo_space_info_->dimension("ACTIVE") != mo_space_info_->dimension("GAS1")) {
-        outfile->Printf("\n  Warning: Incomplete active space is detected.");
-        outfile->Printf("\n  Abort checking semicanonical orbitals in DSRG.");
-        return true;
-    }
+    semi_checked_results_.clear();
 
     BlockedTensor Fd = BTF_->build(tensor_type_, "Fd", {"cc", "aa", "vv"});
     Fd["pq"] = Fock_["pq"];
@@ -665,33 +639,68 @@ bool SADSRG::check_semi_orbs() {
     });
 
     bool semi = true;
-    std::vector<double> Fmax, Fnorm;
     double e_conv = foptions_->get_double("E_CONVERGENCE");
     double cd = foptions_->get_double("CHOLESKY_TOLERANCE");
     e_conv = cd < e_conv ? e_conv : cd * 0.1;
     e_conv = e_conv < 1.0e-12 ? 1.0e-12 : e_conv;
     double threshold_max = 10.0 * e_conv;
-    for (const auto& block : {"cc", "aa", "vv"}) {
-        double fmax = Fd.block(block).norm(0);
-        double fnorm = Fd.block(block).norm(1);
-        Fmax.emplace_back(fmax);
-        Fnorm.emplace_back(fnorm);
 
-        if (fmax > threshold_max) {
-            semi = false;
-        }
-        if (fnorm > Fd.block(block).numel() * e_conv) {
-            semi = false;
-        }
+    std::vector<std::tuple<std::string, double, double>> Fcheck;
+    for (const auto& block : {"cc", "vv"}) {
+        double fmax = Fd.block(block).norm(0);
+        double fmean = Fd.block(block).norm(1);
+        fmean /= Fd.block(block).numel() > 2 ? Fd.block(block).numel() : 1.0;
+
+        std::string space = (block[0] == 'c') ? "RESTRICTED_DOCC" : "RESTRICTED_UOCC";
+        semi_checked_results_[space] = fmax <= threshold_max and fmean <= e_conv;
+
+        space = (block[0] == 'c') ? "CORE" : "VIRTUAL";
+        Fcheck.emplace_back(space, fmax, fmean);
     }
 
-    std::string dash(7 + 47, '-');
-    outfile->Printf("\n    Fock core, active, virtual blocks (Fij, i != j)");
-    outfile->Printf("\n    %6s %15s %15s %15s", "", "core", "active", "virtual");
+    auto nactv = actv_mos_.size();
+    for (const std::string& space : mo_space_info_->space_names()) {
+        if (space.find("GAS") == std::string::npos or mo_space_info_->size(space) == 0)
+            continue;
+
+        auto rel_indices = mo_space_info_->pos_in_space(space, "ACTIVE");
+        auto size = rel_indices.size();
+        double fmax = 0.0, fmean = 0.0;
+
+        for (size_t p = 0; p < size; ++p) {
+            auto np = rel_indices[p];
+            for (size_t q = p + 1; q < size; ++q) {
+                auto nq = rel_indices[q];
+                double v = std::fabs(Fd.block("aa").data()[np * nactv + nq]);
+                if (v > fmax)
+                    fmax = v;
+                fmean += v;
+            }
+        }
+        fmean /= size * size * 0.5; // roughly correct
+
+        semi_checked_results_[space] = fmax <= threshold_max and fmean <= e_conv;
+
+        Fcheck.emplace_back(space, fmax, fmean);
+    }
+
+    std::string dash(8 + 32, '-');
+    outfile->Printf("\n    %-8s %15s %15s", "Block", "Max", "Mean");
     outfile->Printf("\n    %s", dash.c_str());
-    outfile->Printf("\n    %6s %15.10f %15.10f %15.10f", "max", Fmax[0], Fmax[1], Fmax[2]);
-    outfile->Printf("\n    %6s %15.10f %15.10f %15.10f", "1-norm", Fnorm[0], Fnorm[1], Fnorm[2]);
-    outfile->Printf("\n    %s\n", dash.c_str());
+    for (const auto& Ftuple: Fcheck) {
+        std::string space;
+        double fmax, fmean;
+        std::tie(space, fmax, fmean) = Ftuple;
+        outfile->Printf("\n    %-8s %15.10f %15.10f", space.c_str(), fmax, fmean);
+    }
+    outfile->Printf("\n    %s", dash.c_str());
+
+    for (const auto& pair : semi_checked_results_) {
+        if (pair.second == false) {
+            semi = false;
+            break;
+        }
+    }
 
     if (semi) {
         outfile->Printf("\n    Orbitals are semi-canonicalized.");
@@ -722,150 +731,79 @@ void SADSRG::print_cumulant_summary() {
     outfile->Printf("\n    %-6s %12s %12s", "", "2-cumulant", "3-cumulant");
     outfile->Printf("\n    %s", dash.c_str());
     outfile->Printf("\n    %-6s %12.6f %12.6f", "max", maxes[0], maxes[1]);
-    outfile->Printf("\n    %-6s %12.6f %12.6f", "norm", norms[0], norms[1]);
+    outfile->Printf("\n    %-6s %12.6f %12.6f", "2-norm", norms[0], norms[1]);
     outfile->Printf("\n    %s", dash.c_str());
 }
 
 std::vector<double> SADSRG::diagonalize_Fock_diagblocks(BlockedTensor& U) {
-    // map MO space label to its psi::Dimension
-    std::map<std::string, psi::Dimension> MOlabel_to_dimension;
-    MOlabel_to_dimension[core_label_] = mo_space_info_->dimension("RESTRICTED_DOCC");
-    MOlabel_to_dimension[actv_label_] = mo_space_info_->dimension("ACTIVE");
-    MOlabel_to_dimension[virt_label_] = mo_space_info_->dimension("RESTRICTED_UOCC");
-
-    // eigen values to be returned
-    size_t ncmo = mo_space_info_->size("CORRELATED");
-    psi::Dimension corr = mo_space_info_->dimension("CORRELATED");
-    std::vector<double> eigenvalues(ncmo, 0.0);
-
-    // map MO space label to its offset psi::Dimension
-    std::map<std::string, psi::Dimension> MOlabel_to_offset_dimension;
-    int nirrep = corr.n();
-    MOlabel_to_offset_dimension[core_label_] = psi::Dimension(std::vector<int>(nirrep, 0));
-    MOlabel_to_offset_dimension[actv_label_] = mo_space_info_->dimension("RESTRICTED_DOCC");
-    MOlabel_to_offset_dimension[virt_label_] =
-        mo_space_info_->dimension("RESTRICTED_DOCC") + mo_space_info_->dimension("ACTIVE");
-
-    // figure out index
-    auto fill_eigen = [&](std::string block_label, int irrep, std::vector<double> values) {
-        int h = irrep;
-        size_t idx_begin = 0;
-        while ((--h) >= 0)
-            idx_begin += corr[h];
-
-        std::string label(1, tolower(block_label[0]));
-        idx_begin += MOlabel_to_offset_dimension[label][irrep];
-
-        size_t nvalues = values.size();
-        for (size_t i = 0; i < nvalues; ++i) {
-            eigenvalues[i + idx_begin] = values[i];
+    // set U to identity and output diagonal Fock
+    U.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>&, double& value) {
+        if (i[0] == i[1]) {
+            value = 1.0;
         }
-    };
+    });
+    std::vector<double> Fdiag(Fdiag_);
 
-    // diagonalize diagonal blocks (C-A-V ordering)
-    for (const auto& block : diag_one_labels()) {
-        auto dims = Fock_.block(block).dims();
-        size_t dim = dims[0];
+    // loop each correlated elementary space
+    int nirrep = mo_space_info_->nirrep();
 
-        if (dim == 0) {
+    auto elementary_spaces = mo_space_info_->composite_space_names()["CORRELATED"];
+    for (const std::string& space : elementary_spaces) {
+        if (mo_space_info_->size(space) == 0 or semi_checked_results_[space])
             continue;
+
+        std::string block, composite_space;
+        if (space.find("DOCC") != std::string::npos) {
+            block = core_label_ + core_label_;
+            composite_space = space;
+        } else if (space.find("UOCC") != std::string::npos) {
+            block = virt_label_ + virt_label_;
+            composite_space = space;
         } else {
-            std::string label(1, tolower(block[0]));
-            psi::Dimension space = MOlabel_to_dimension[label];
-            int nirrep = space.n();
+            block = actv_label_ + actv_label_;
+            composite_space = "ACTIVE";
+        }
 
-            // separate Fock with irrep
-            for (int h = 0; h < nirrep; ++h) {
-                size_t h_dim = space[h];
-                ambit::Tensor U_h;
-                if (h_dim == 0) {
-                    continue;
-                } else {
-                    auto F_block = Fock_.block(block).clone();
-                    auto F_h = separate_tensor(F_block, space, h);
-                    U_h = ambit::Tensor::build(tensor_type_, "U_h", std::vector<size_t>(2, h_dim));
-                    if (h_dim == 1) {
-                        U_h.data()[0] = 1.0;
-                        fill_eigen(block, h, F_h.data());
-                    } else {
-                        auto Feigen = F_h.syev(AscendingEigenvalue);
-                        U_h("pq") = Feigen["eigenvectors"]("pq");
-                        fill_eigen(block, h, Feigen["eigenvalues"].data());
-                    }
+        auto& Fdata = Fock_.block(block).data();
+        auto indices = mo_space_info_->pos_in_space(space, composite_space);
+        auto composite_size = mo_space_info_->size(composite_space);
+
+        auto dim = mo_space_info_->dimension(space);
+        auto Fd = std::make_shared<psi::Matrix>("F " + space, dim, dim);
+
+        for (int h = 0, offset = 0; h < nirrep; ++h) {
+            for (int p = 0; p < dim[h]; ++p) {
+                auto np = indices[p + offset];
+                for (int q = p; q < dim[h]; ++q) {
+                    auto nq = indices[q + offset];
+                    double v = Fdata[np * composite_size + nq];
+                    Fd->set(h, p, q, v);
+                    Fd->set(h, q, p, v);
                 }
-
-                ambit::Tensor U_out = U.block(block);
-                combine_tensor(U_out, U_h, space, h);
             }
+            offset += dim[h];
         }
-    }
-    return eigenvalues;
-}
 
-ambit::Tensor SADSRG::separate_tensor(ambit::Tensor& tens, const psi::Dimension& irrep,
-                                      const int& h) {
-    // test tens and irrep
-    int tens_dim = static_cast<int>(tens.dim(0));
-    if (tens_dim != irrep.sum() || tens_dim != static_cast<int>(tens.dim(1))) {
-        throw psi::PSIEXCEPTION("Wrong dimension for the to-be-separated ambit Tensor.");
-    }
-    if (h >= irrep.n()) {
-        throw psi::PSIEXCEPTION("Ask for wrong irrep.");
-    }
+        auto Usub = std::make_shared<psi::Matrix>("U " + space, dim, dim);
+        auto evals = std::make_shared<psi::Vector>("evals " + space, dim);
+        Fd->diagonalize(Usub, evals);
 
-    // from relative (blocks) to absolute (big tensor) index
-    auto rel_to_abs = [&](size_t i, size_t j, size_t offset) {
-        return (i + offset) * tens_dim + (j + offset);
-    };
-
-    // compute offset
-    size_t offset = 0, h_dim = irrep[h];
-    int h_local = h;
-    while ((--h_local) >= 0)
-        offset += irrep[h_local];
-
-    // fill in values
-    auto T_h = ambit::Tensor::build(tensor_type_, "T_h", std::vector<size_t>(2, h_dim));
-    for (size_t i = 0; i < h_dim; ++i) {
-        for (size_t j = 0; j < h_dim; ++j) {
-            size_t abs_idx = rel_to_abs(i, j, offset);
-            T_h.data()[i * h_dim + j] = tens.data()[abs_idx];
+        auto& Udata = U.block(block).data();
+        auto corr_abs_indices = mo_space_info_->corr_absolute_mo(space);
+        for (int h = 0, offset = 0; h < nirrep; ++h) {
+            for (int p = 0; p < dim[h]; ++p) {
+                auto np = indices[p + offset];
+                for (int q = 0; q < dim[h]; ++q) {
+                    auto nq = indices[q + offset];
+                    Udata[nq * composite_size + np] = Usub->get(h, p, q); // stored as row in ambit
+                }
+                Fdiag[corr_abs_indices[p + offset]] = evals->get(h, p);
+            }
+            offset += dim[h];
         }
     }
 
-    return T_h;
-}
-
-void SADSRG::combine_tensor(ambit::Tensor& tens, ambit::Tensor& tens_h, const psi::Dimension& irrep,
-                            const int& h) {
-    // test tens and irrep
-    if (h >= irrep.n()) {
-        throw psi::PSIEXCEPTION("Ask for wrong irrep.");
-    }
-    size_t tens_h_dim = tens_h.dim(0), h_dim = irrep[h];
-    if (tens_h_dim != h_dim || tens_h_dim != tens_h.dim(1)) {
-        throw psi::PSIEXCEPTION("Wrong dimension for the to-be-combined ambit Tensor.");
-    }
-
-    // from relative (blocks) to absolute (big tensor) index
-    size_t tens_dim = tens.dim(0);
-    auto rel_to_abs = [&](size_t i, size_t j, size_t offset) {
-        return (i + offset) * tens_dim + (j + offset);
-    };
-
-    // compute offset
-    size_t offset = 0;
-    int h_local = h;
-    while ((--h_local) >= 0)
-        offset += irrep[h_local];
-
-    // fill in values
-    for (size_t i = 0; i < h_dim; ++i) {
-        for (size_t j = 0; j < h_dim; ++j) {
-            size_t abs_idx = rel_to_abs(i, j, offset);
-            tens.data()[abs_idx] = tens_h.data()[i * h_dim + j];
-        }
-    }
+    return Fdiag;
 }
 
 void SADSRG::print_options_info(
