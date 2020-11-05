@@ -78,45 +78,41 @@ class SemiCanonical {
     ambit::Tensor Ub_t() { return Ub_t_; }
 
   private:
+    void read_options(std::shared_ptr<ForteOptions> foptions);
+
     void startup();
 
     std::shared_ptr<MOSpaceInfo> mo_space_info_;
 
     std::shared_ptr<ForteIntegrals> ints_;
 
-    // All orbitals
-    psi::Dimension nmopi_;
-    // Correlated MOs
-    psi::Dimension ncmopi_;
-    // Frozen core
-    psi::Dimension fdocc_;
-    // Restricted DOCC
-    psi::Dimension rdocc_;
-    // Active MOs
-    psi::Dimension actv_;
+    /// Mix the frozen and restricted orbitals together
+    bool inactive_mix_;
 
-    // Blocks map
+    /// Total active MOs
+    size_t nact_;
+    /// Number of irreps
+    size_t nirrep_;
+
+    /// Number of all orbitals per irrep
+    psi::Dimension nmopi_;
+
+    /// Map from orbital space label to its dimension
     std::map<std::string, psi::Dimension> mo_dims_;
 
-    // Indices (including frozen) map
+    /// Indices (including frozen) map
     std::map<std::string, std::vector<std::vector<size_t>>> mo_idx_;
 
-    // Figure out indices [[(A1)...], [(A2)...], [(B1)...], [(B2)...]]
-    // npi: this mo space; bpi: mo space before npi
-    std::vector<std::vector<size_t>> idx_space(const psi::Dimension& npi, const psi::Dimension& bpi);
+    /// Figure out indices [[(A1)...], [(A2)...], [(B1)...], [(B2)...]]
+    /// npi: this mo space; bpi: mo space before npi
+    std::vector<std::vector<size_t>> idx_space(const psi::Dimension& npi,
+                                               const psi::Dimension& bpi);
 
-    // Offset of active orbitals
+    /// Offset of active orbitals
     std::map<std::string, std::vector<int>> actv_offsets_;
 
-    // Offsets
+    /// Offsets
     std::map<std::string, psi::Dimension> offsets_;
-
-    // Total active MOs
-    size_t nact_;
-    // Total correlated MOs
-    size_t ncmo_;
-    // Number of irreps
-    size_t nirrep_;
 
     /// Unitary matrix for alpha orbital rotation
     psi::SharedMatrix Ua_;

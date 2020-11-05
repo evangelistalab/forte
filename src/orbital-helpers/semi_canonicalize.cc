@@ -60,7 +60,12 @@ SemiCanonical::SemiCanonical(std::shared_ptr<MOSpaceInfo> mo_space_info,
     }
 
     // 0. initialize the dimension objects
+    read_options(foptions);
     startup();
+}
+
+void SemiCanonical::read_options(std::shared_ptr<ForteOptions> foptions) {
+    inactive_mix_ = foptions->get_bool("SEMI_CANONICAL_INACTIVE");
 
     // compute thresholds from options
     double econv = foptions->get_double("E_CONVERGENCE");
@@ -76,12 +81,7 @@ void SemiCanonical::startup() {
     // some basics
     nirrep_ = mo_space_info_->nirrep();
     nmopi_ = mo_space_info_->dimension("ALL");
-    ncmo_ = mo_space_info_->size("CORRELATED");
     nact_ = mo_space_info_->size("ACTIVE");
-    ncmopi_ = mo_space_info_->dimension("CORRELATED");
-    fdocc_ = mo_space_info_->dimension("FROZEN_DOCC");
-    rdocc_ = mo_space_info_->dimension("RESTRICTED_DOCC");
-    actv_ = mo_space_info_->dimension("ACTIVE");
 
     // Preapare orbital rotation matrix, which transforms all MOs
     Ua_ = std::make_shared<psi::Matrix>("Ua", nmopi_, nmopi_);
@@ -98,7 +98,15 @@ void SemiCanonical::startup() {
     set_U_to_identity();
 
     // Get the list of elementary spaces
-    std::vector<std::string> space_names = mo_space_info_->space_names();
+    std::vector<std::string> space_names;
+    if (inactive_mix_) {
+        auto active_names = mo_space_info_->composite_space_names()["ACTIVE"];
+        space_names.push_back("INACTIVE_DOCC");
+        space_names.insert(space_names.end(), active_names.begin(), active_names.end());
+        space_names.push_back("INACTIVE_UOCC");
+    } else {
+        space_names = mo_space_info_->space_names();
+    }
 
     // dimension map
     for (std::string& space : space_names) {

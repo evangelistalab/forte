@@ -910,24 +910,27 @@ def register_old_options(options):
         "View the natural orbitals with their symmetry information")
 
     options.add_bool("NAT_ACT", False,
-                           "Use Natural Orbitals to suggest active space?")
+                     "Use Natural Orbitals to suggest active space?")
 
     options.add_bool("MEMORY_SUMMARY", False, "Print summary of memory")
 
     options.add_str("REFERENCE", "", "The SCF refernce type")
 
-    options.add_int("DIIS_MAX_VECS",5,"The maximum number of DIIS vectors");
-    options.add_int("DIIS_MIN_VECS",2,"The minimum number of DIIS vectors");
+    options.add_int("DIIS_MAX_VECS", 5, "The maximum number of DIIS vectors")
+    options.add_int("DIIS_MIN_VECS", 2, "The minimum number of DIIS vectors")
     options.add_int("MAXITER", 100, "The maximum number of iterations")
 
     options.add_double("RELAX_E_CONVERGENCE", 1.0e-8, "The energy relaxation convergence criterion")
 
-
     options.add_bool("USE_DMRGSCF", False,
-                           "Use the older DMRGSCF algorithm?")
+                     "Use the older DMRGSCF algorithm?")
 
     #    /*- Semicanonicalize orbitals -*/
-    options.add_bool("SEMI_CANONICAL", True, "Semicanonicalize orbitals")
+    options.add_bool("SEMI_CANONICAL", True,
+                     "Semicanonicalize orbitals for each elementary orbital space")
+    options.add_bool("SEMI_CANONICAL_INACTIVE", False,
+                     "Treat frozen and restricted orbitals together when canonicalizing orbitals")
+
     #    /*- Two-particle density cumulant -*/
     options.add_str("TWOPDC", "MK", ["MK", "ZERO"],
                           "The form of the two-particle density cumulant")
