@@ -29,12 +29,14 @@ def read_wavefunction(ref_wfn):
                 C_list.append(None)
             else:
                 C_list.append(np.asarray(C_read[i]))
-        
+
         C_mat = psi4.core.Matrix.from_array(C_list)
         ref_wfn.Ca().copy(C_mat)
         ref_wfn.Cb().copy(C_mat)
 
-def write_external_active_space_file(as_ints, state_map, json_file="forte_ints.json"):
+def write_external_active_space_file(as_ints, state_map, mo_space_info, json_file="forte_ints.json"):
+    ndocc = mo_space_info.size("INACTIVE_DOCC")
+
     for state,nroots in state_map.items():
         file = {}
 
@@ -42,26 +44,29 @@ def write_external_active_space_file(as_ints, state_map, json_file="forte_ints.j
 
         file['state_symmetry'] = {"data" : state.irrep(), "description" : "Symmetry of the state"}
 
-        file['na'] = {"data" : state.na(), "description" : "number of alpha electrons"}
+        file['na'] = {"data" : state.na() - ndocc,
+                      "description" : "number of alpha electrons in the active space"}
 
-        file['nb'] = {"data" : state.nb(), "description" : "number of beta electrons"}
+        file['nb'] = {"data" : state.nb() - ndocc,
+                      "description" : "number of beta electrons in the active space"}
 
-        file['nso'] = {"data" : 2 * nmo, "description" : "number of spin orbitals"}
+        file['nso'] = {"data" : 2 * nmo, "description" : "number of active spin orbitals"}
 
         file['symmetry'] = {"data" : [i for i in as_ints.mo_symmetry() for j in range(2)],
                             "description" :"symmetry of each spin orbital (Cotton ordering)"}
 
         file['spin'] = {"data" : [j for i in range(nmo) for j in range(2)],
-                            "description" :"spin of each spin orbital (0 = alpha, 1 = beta)"}
+                        "description" :"spin of each spin orbital (0 = alpha, 1 = beta)"}
 
         scalar_energy = as_ints.frozen_core_energy() + as_ints.scalar_energy() + as_ints.nuclear_repulsion_energy()
-        file['scalar_energy'] = {"data" : scalar_energy, "description" :"scalar energy (sum of nuclear repulsion, frozen core, and scalar contributions"}
+        file['scalar_energy'] = {"data" : scalar_energy,
+                                 "description": "scalar energy (sum of nuclear repulsion, frozen core, and scalar contributions"}
 
         oei_a = [(i * 2,j * 2,as_ints.oei_a(i,j)) for i in range(nmo) for j in range(nmo)]
         oei_b = [(i * 2 + 1,j * 2 + 1,as_ints.oei_b(i,j)) for i in range(nmo) for j in range(nmo)]
 
         file['oei'] = {"data" : oei_a + oei_b,
-                        "description" : "one-electron integrals as a list of tuples (i,j,<i|h|j>)"}
+                       "description" : "one-electron integrals as a list of tuples (i,j,<i|h|j>)"}
 
         tei = []
         for i in range(nmo):
@@ -76,7 +81,7 @@ def write_external_active_space_file(as_ints, state_map, json_file="forte_ints.j
                         tei.append((i * 2 + 1,j * 2 + 1,k * 2+ 1,l * 2 + 1,as_ints.tei_bb(i,j,k,l))) # bbbb
 
         file['tei'] = {"data" : tei,
-                        "description" : "antisymmetrized two-electron integrals as a list of tuples (i,j,k,l,<ij||kl>)"}
+                       "description" : "antisymmetrized two-electron integrals as a list of tuples (i,j,k,l,<ij||kl>)"}
 
         with open(json_file, 'w+') as f:
             json.dump(file, f, sort_keys=True, indent=2)

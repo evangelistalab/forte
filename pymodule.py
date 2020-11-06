@@ -55,7 +55,7 @@ def forte_driver(state_weights_map, scf_info, options, ints, mo_space_info):
         options)
 
     if active_space_solver_type == 'EXTERNAL':
-        write_external_active_space_file(as_ints, state_map)
+        write_external_active_space_file(as_ints, state_map, mo_space_info)
         if not os.path.isfile('rdms.json'):
             print('External solver wrote integrals to disk')
             psi4.core.print_out('External solver wrote integrals to disk')
@@ -161,7 +161,7 @@ def forte_driver(state_weights_map, scf_info, options, ints, mo_space_info):
             ints_dressed = dsrg.compute_Heff_actv()
 
             if active_space_solver_type == 'EXTERNAL':
-                write_external_active_space_file(ints_dressed, state_map, "dsrg_ints.json")
+                write_external_active_space_file(ints_dressed, state_map, mo_space_info, "dsrg_ints.json")
                 print('External solver wrote DSRG dressed integrals to disk')
                 psi4.core.print_out('External solver wrote DSRG dressed integrals to disk')
                 exit()
@@ -751,7 +751,7 @@ def gradient_forte(name, **kwargs):
     r"""Function encoding sequence of PSI module and plugin calls so that
     forte can be called via :py:func:`~driver.energy`. For post-scf plugins.
 
-    >>> gradient('forte') 
+    >>> gradient('forte')
         available for : CASSCF
 
     """
