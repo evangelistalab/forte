@@ -99,10 +99,6 @@ void SA_MRDSRG::guess_t2_impl(BlockedTensor& T2) {
             size_t i3 = virt_mos_[i[3]];
 
             value /= Fdiag_[i0] + Fdiag_[i1] - Fdiag_[i2] - Fdiag_[i3];
-
-//            T2norm_ += value * value;
-//            if (std::fabs(value) > std::fabs(T2max_))
-//                T2max_ = value;
         });
     }
 
@@ -114,10 +110,6 @@ void SA_MRDSRG::guess_t2_impl(BlockedTensor& T2) {
             size_t i3 = label_to_spacemo_[block[3]][i[3]];
             double denom = Fdiag_[i0] + Fdiag_[i1] - Fdiag_[i2] - Fdiag_[i3];
             value *= dsrg_source_->compute_renormalized_denominator(denom);
-
-//            T2norm_ += value * value;
-//            if (std::fabs(value) > std::fabs(T2max_))
-//                T2max_ = value;
         });
     }
 
@@ -129,15 +121,10 @@ void SA_MRDSRG::guess_t2_impl(BlockedTensor& T2) {
 
     // zero internal amplitudes
     internal_amps_T2(T2);
-//    T2.block("aaaa").iterate([&](const std::vector<size_t>&, double& value) {
-//        T2norm_ -= value * value;
-//        value = 0.0;
-//    });
 
     // max and norm
-    T2norm_ = T2.norm(2);
+    T2norm_ = T2.norm();
     T2max_ = T2.norm(0);
-//    T2norm_ = std::sqrt(T2norm_);
 }
 
 void SA_MRDSRG::guess_t1(BlockedTensor& F, BlockedTensor& T2, BlockedTensor& T1) {
@@ -169,10 +156,6 @@ void SA_MRDSRG::guess_t1(BlockedTensor& F, BlockedTensor& T2, BlockedTensor& T1)
             size_t i1 = virt_mos_[i[1]];
 
             value /= Fdiag_[i0] - Fdiag_[i1];
-
-//            T1norm_ += value * value;
-//            if (std::fabs(value) > std::fabs(T1max_))
-//                T1max_ = value;
         });
     }
 
@@ -181,10 +164,6 @@ void SA_MRDSRG::guess_t1(BlockedTensor& F, BlockedTensor& T2, BlockedTensor& T1)
             size_t i0 = label_to_spacemo_[block[0]][i[0]];
             size_t i1 = label_to_spacemo_[block[1]][i[1]];
             value *= dsrg_source_->compute_renormalized_denominator(Fdiag_[i0] - Fdiag_[i1]);
-
-//            T1norm_ += value * value;
-//            if (std::fabs(value) > std::fabs(T1max_))
-//                T1max_ = value;
         });
     }
 
@@ -196,13 +175,8 @@ void SA_MRDSRG::guess_t1(BlockedTensor& F, BlockedTensor& T2, BlockedTensor& T1)
 
     // zero internal amplitudes
     internal_amps_T1(T1);
-//    T1.block("aa").iterate([&](const std::vector<size_t>&, double& value) {
-//        T1norm_ -= value * value;
-//        value = 0.0;
-//    });
 
     // norms
-//    T1norm_ = std::sqrt(T1norm_);
     T1norm_ = T1.norm(2);
     T1max_ = T1.norm(0);
 
@@ -304,7 +278,6 @@ void SA_MRDSRG::update_t2() {
     timer t8("zero internal amplitudes");
     // zero internal amplitudes
     internal_amps_T2(DT2_);
-//    DT2_.block("aaaa").zero();
     t8.stop();
 
     // compute RMS
@@ -324,15 +297,8 @@ void SA_MRDSRG::update_t2() {
     T2_["ijab"] += DT2_["ijab"];
 
     // compute norm and find maximum
-    T2norm_ = T2_.norm(2);
+    T2norm_ = T2_.norm();
     T2max_ = T2_.norm(0);
-//    T2norm_ = 0.0, T2max_ = 0.0;
-//    T2_.iterate([&](const std::vector<size_t>&, const std::vector<SpinType>&, double& value) {
-//        T2norm_ += value * value;
-//        if (std::fabs(value) > std::fabs(T2max_))
-//            T2max_ = value;
-//    });
-//    T2norm_ = std::sqrt(T2norm_);
     t10.stop();
 
     // reset the active part of Hbar2
@@ -415,7 +381,6 @@ void SA_MRDSRG::update_t1() {
     DT1_["ia"] -= T1_["ia"];
 
     // zero internal amplitudes
-//    DT1_.block("aa").zero();
     internal_amps_T1(DT1_);
 
     // compute RMS
@@ -433,14 +398,7 @@ void SA_MRDSRG::update_t1() {
 
     // compute norm and find maximum
     T1max_ = T1_.norm(0);
-    T1norm_ = T1_.norm(2);
-//    T1max_ = 0.0, T1norm_ = 0.0;
-//    T1_.iterate([&](const std::vector<size_t>&, const std::vector<SpinType>&, double& value) {
-//        T1norm_ += value * value;
-//        if (std::fabs(value) > std::fabs(T1max_))
-//            T1max_ = value;
-//    });
-//    T1norm_ = std::sqrt(T1norm_);
+    T1norm_ = T1_.norm();
 
     // reset the active part of Hbar2
     Hbar1_["uv"] = Hbar1copy["uv"];
