@@ -170,11 +170,13 @@ void SADSRG::read_options() {
                 break;
             }
         }
-        if (single_gas) {
-            outfile->Printf("\n  Warning: INTERNAL_AMP option is only valid for multiple GASs.");
-            outfile->Printf("\n  Changed INTERNAL_AMP option to NONE");
-            internal_amp_ = "NONE";
-            warnings_.push_back(std::make_tuple("Unsupported INTERNAL_AMP", "Change to NONE",
+        if (single_gas and internal_amp_select_ != "ALL") {
+            outfile->Printf(
+                "\n  Warning: INTERNAL_AMP_SELECT option %s is not defined for a single GAS space.",
+                internal_amp_select_.c_str());
+            outfile->Printf("\n  Changed INTERNAL_AMP_SELECT option to ALL");
+            internal_amp_select_ = "ALL";
+            warnings_.push_back(std::make_tuple("Unsupported INTERNAL_AMP_SELECT", "Change to ALL",
                                                 "Change options in input.dat"));
         }
     }

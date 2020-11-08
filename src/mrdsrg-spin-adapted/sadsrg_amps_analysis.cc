@@ -38,7 +38,47 @@ namespace forte {
 
 void SADSRG::internal_amps_T1(BlockedTensor& T1) {
     if (internal_amp_.find("SINGLES") != std::string::npos) {
-        // TODO: to be filled
+        auto gas_spaces = mo_space_info_->composite_space_names()["ACTIVE"];
+        int n_gas = gas_spaces.size();
+
+        auto& T1data = T1.block("aa").data();
+        std::vector<double> T1copy(T1data.size());
+        int nactv = actv_mos_.size();
+
+        // excitation O-V
+        for (int o = 0; o < n_gas; ++o) {
+            auto o_mos = gas_actv_rel_mos_[gas_spaces[o]];
+            int no = o_mos.size();
+
+            for (int v = o + 1; v < n_gas; ++v) {
+                auto v_mos = gas_actv_rel_mos_[gas_spaces[v]];
+                int nv = v_mos.size();
+
+#pragma omp for collapse(2)
+                for (int i = 0; i < no; ++i) {
+                    for (int a = 0; a < nv; ++a) {
+                        T1copy[i * nactv + a] = T1data[i * nactv + a];
+                    }
+                }
+            }
+        }
+
+        // same space O-O or V-V
+        if (internal_amp_select_ == "ALL") {
+            for (int s = 0; s < n_gas; ++s) {
+                auto mos = gas_actv_rel_mos_[gas_spaces[s]];
+                int nmos = mos.size();
+
+#pragma omp for collapse(2)
+                for (int p = 0; p < nmos; ++p) {
+                    for (int q = p + 1; q < nmos; ++q) {
+                        T1copy[p * nactv + q] = T1data[p * nactv + q];
+                    }
+                }
+            }
+        }
+
+        T1data = T1copy;
     } else {
         T1.block("aa").zero();
     }
@@ -46,7 +86,7 @@ void SADSRG::internal_amps_T1(BlockedTensor& T1) {
 
 void SADSRG::internal_amps_T2(BlockedTensor& T2) {
     if (internal_amp_.find("DOUBLES") != std::string::npos) {
-        // TODO: to be filled
+
     } else {
         T2.block("aaaa").zero();
     }
