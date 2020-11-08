@@ -141,7 +141,6 @@ void SADSRG::read_options() {
         outfile->Printf("\n  Warning: SOURCE option %s is not implemented.", source_.c_str());
         outfile->Printf("\n  Changed SOURCE option to STANDARD");
         source_ = "STANDARD";
-
         warnings_.push_back(std::make_tuple("Unsupported SOURCE", "Change to STANDARD",
                                             "Change options in input.dat"));
     }
@@ -161,6 +160,24 @@ void SADSRG::read_options() {
 
     internal_amp_ = foptions_->get_str("INTERNAL_AMP");
     internal_amp_select_ = foptions_->get_str("INTERNAL_AMP_SELECT");
+    if (internal_amp_ != "NONE") {
+        auto actv_dim = mo_space_info_->dimension("ACTIVE");
+        auto gas_spaces = mo_space_info_->composite_space_names()["ACTIVE"];
+        auto single_gas = false;
+        for (const std::string& gas_name : gas_spaces) {
+            if (mo_space_info_->dimension(gas_name) == actv_dim) {
+                single_gas = true;
+                break;
+            }
+        }
+        if (single_gas) {
+            outfile->Printf("\n  Warning: INTERNAL_AMP option is only valid for multiple GASs.");
+            outfile->Printf("\n  Changed INTERNAL_AMP option to NONE");
+            internal_amp_ = "NONE";
+            warnings_.push_back(std::make_tuple("Unsupported INTERNAL_AMP", "Change to NONE",
+                                                "Change options in input.dat"));
+        }
+    }
 
     relax_ref_ = foptions_->get_str("RELAX_REF");
 
@@ -179,6 +196,13 @@ void SADSRG::read_MOSpaceInfo() {
     if (eri_df_) {
         aux_mos_ = std::vector<size_t>(ints_->nthree());
         std::iota(aux_mos_.begin(), aux_mos_.end(), 0);
+    }
+
+    if (internal_amp_ != "NONE") {
+        auto gas_spaces = mo_space_info_->composite_space_names()["ACTIVE"];
+        for (const std::string& gas_name : gas_spaces) {
+            gas_actv_rel_mos_[gas_name] = mo_space_info_->pos_in_space(gas_name, "ACTIVE");
+        }
     }
 }
 
@@ -687,7 +711,7 @@ bool SADSRG::check_semi_orbs() {
     std::string dash(8 + 32, '-');
     outfile->Printf("\n    %-8s %15s %15s", "Block", "Max", "Mean");
     outfile->Printf("\n    %s", dash.c_str());
-    for (const auto& Ftuple: Fcheck) {
+    for (const auto& Ftuple : Fcheck) {
         std::string space;
         double fmax, fmean;
         std::tie(space, fmax, fmean) = Ftuple;
