@@ -304,6 +304,15 @@ class SADSRG : public DynamicCorrelationSolver {
     /// Relative indices of GASn within the active
     std::map<std::string, std::vector<size_t>> gas_actv_rel_mos_;
 
+    /// T1 internal types (e.g., [(GAS1,GAS1,1), (GAS1,GAS2,0), ...])
+    /// Boolean is true if it is pure internal
+    std::vector<std::tuple<std::string, std::string, bool>> t1_internals_;
+    /// T2 internal types (e.g., [(GAS1,GAS1,GAS1,GAS1,1), (GAS1,GAS1,GAS2,GAS2,0), ...])
+    std::vector<std::tuple<std::string, std::string, std::string, std::string, bool>> t2_internals_;
+
+    /// Figure out allowed internal amplitudes types
+    void build_internal_amps_types();
+
     // ==> commutators <==
 
     /**

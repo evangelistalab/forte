@@ -37,58 +37,105 @@ using namespace psi;
 namespace forte {
 
 void SADSRG::internal_amps_T1(BlockedTensor& T1) {
-    if (internal_amp_.find("SINGLES") != std::string::npos) {
-        auto gas_spaces = mo_space_info_->composite_space_names()["ACTIVE"];
-        int n_gas = gas_spaces.size();
-
+    if (t1_internals_.size() == 0) {
+        T1.block("aa").zero();
+    } else {
+        int nactv = actv_mos_.size();
         auto& T1data = T1.block("aa").data();
         std::vector<double> T1copy(T1data.size());
-        int nactv = actv_mos_.size();
 
-        // excitation O-V
-        for (int o = 0; o < n_gas; ++o) {
-            auto o_mos = gas_actv_rel_mos_[gas_spaces[o]];
-            int no = o_mos.size();
+        for (const auto& t : t1_internals_) {
+            std::string gas1, gas2;
+            bool pure;
+            std::tie(gas1, gas2, pure) = t;
 
-            for (int v = o + 1; v < n_gas; ++v) {
-                auto v_mos = gas_actv_rel_mos_[gas_spaces[v]];
-                int nv = v_mos.size();
+            auto mos_o = gas_actv_rel_mos_[gas1];
+            auto mos_v = gas_actv_rel_mos_[gas2];
+            int no = mos_o.size();
+            int nv = mos_v.size();
 
+            if (pure) {
+                for (int p = 0; p < no; ++p) {
+                    for (int q = p + 1; q < no; ++q) {
+                        int id = mos_o[p] * nactv + mos_o[q];
+                        T1copy[id] = T1data[id];
+                    }
+                }
+            } else {
 #pragma omp for collapse(2)
                 for (int i = 0; i < no; ++i) {
                     for (int a = 0; a < nv; ++a) {
-                        T1copy[i * nactv + a] = T1data[i * nactv + a];
-                    }
-                }
-            }
-        }
-
-        // same space O-O or V-V
-        if (internal_amp_select_ == "ALL") {
-            for (int s = 0; s < n_gas; ++s) {
-                auto mos = gas_actv_rel_mos_[gas_spaces[s]];
-                int nmos = mos.size();
-
-#pragma omp for collapse(2)
-                for (int p = 0; p < nmos; ++p) {
-                    for (int q = p + 1; q < nmos; ++q) {
-                        T1copy[p * nactv + q] = T1data[p * nactv + q];
+                        int id = mos_o[i] * nactv + mos_v[a];
+                        T1copy[id] = T1data[id];
                     }
                 }
             }
         }
 
         T1data = T1copy;
-    } else {
-        T1.block("aa").zero();
     }
 }
 
 void SADSRG::internal_amps_T2(BlockedTensor& T2) {
-    if (internal_amp_.find("DOUBLES") != std::string::npos) {
-
-    } else {
+    if (t2_internals_.size() == 0) {
         T2.block("aaaa").zero();
+    } else {
+        auto& T2data = T2.block("aaaa").data();
+        std::vector<double> T2copy(T2data.size());
+        int na1 = actv_mos_.size();
+        int na2 = na1 * na1;
+        int na3 = na2 * na1;
+
+        for (const auto& t : t2_internals_) {
+            std::string gas1, gas2, gas3, gas4;
+            bool pure;
+            std::tie(gas1, gas2, gas3, gas4, pure) = t;
+
+            auto mos_o1 = gas_actv_rel_mos_[gas1];
+            auto mos_o2 = gas_actv_rel_mos_[gas2];
+            auto mos_v1 = gas_actv_rel_mos_[gas3];
+            auto mos_v2 = gas_actv_rel_mos_[gas4];
+
+            int no1 = mos_o1.size();
+            int no2 = mos_o2.size();
+            int nv1 = mos_v1.size();
+            int nv2 = mos_v2.size();
+
+            if (pure) {
+                for (int i = 0; i < no1; ++i) {
+                    for (int j = 0; j < no2; ++j) {
+                        int o = i * na1 + j;
+
+                        for (int a = 0; a < nv1; ++a) {
+                            for (int b = 0; b < nv2; ++b) {
+                                int v = a * na1 + b;
+
+                                if (o < v) {
+                                    auto id = mos_o1[i] * na3 + mos_o2[j] * na2 + mos_v1[a] * na1 +
+                                              mos_v2[b];
+                                    T2copy[id] = T2data[id];
+                                }
+                            }
+                        }
+                    }
+                }
+            } else {
+#pragma omp for collapse(4)
+                for (int i = 0; i < no1; ++i) {
+                    for (int j = 0; j < no2; ++j) {
+                        for (int a = 0; a < nv1; ++a) {
+                            for (int b = 0; b < nv2; ++b) {
+                                auto id =
+                                    mos_o1[i] * na3 + mos_o2[j] * na2 + mos_v1[a] * na1 + mos_v2[b];
+                                T2copy[id] = T2data[id];
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        T2data = T2copy;
     }
 }
 

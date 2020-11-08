@@ -117,6 +117,9 @@ void SADSRG::startup() {
 
     // check if using semicanonical orbitals
     semi_canonical_ = check_semi_orbs();
+
+    // find allowed internal amplitudes types
+    build_internal_amps_types();
 }
 
 void SADSRG::read_options() {
@@ -737,30 +740,6 @@ bool SADSRG::check_semi_orbs() {
     return semi;
 }
 
-void SADSRG::print_cumulant_summary() {
-    print_h2("Density Cumulant Summary");
-
-    std::vector<double> maxes(2), norms(2);
-
-    maxes[0] = L2_.norm(0);
-    norms[0] = L2_.norm(2);
-
-    if (do_cu3_) {
-        maxes[1] = rdms_.SF_L3().norm(0);
-        norms[1] = rdms_.SF_L3().norm(2);
-    } else {
-        maxes[1] = 0.0;
-        norms[1] = 0.0;
-    }
-
-    std::string dash(6 + 13 * 2, '-');
-    outfile->Printf("\n    %-6s %12s %12s", "", "2-cumulant", "3-cumulant");
-    outfile->Printf("\n    %s", dash.c_str());
-    outfile->Printf("\n    %-6s %12.6f %12.6f", "max", maxes[0], maxes[1]);
-    outfile->Printf("\n    %-6s %12.6f %12.6f", "2-norm", norms[0], norms[1]);
-    outfile->Printf("\n    %s", dash.c_str());
-}
-
 std::vector<double> SADSRG::diagonalize_Fock_diagblocks(BlockedTensor& U) {
     // set U to identity and output diagonal Fock
     U.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>&, double& value) {
@@ -832,6 +811,30 @@ std::vector<double> SADSRG::diagonalize_Fock_diagblocks(BlockedTensor& U) {
     return Fdiag;
 }
 
+void SADSRG::print_cumulant_summary() {
+    print_h2("Density Cumulant Summary");
+
+    std::vector<double> maxes(2), norms(2);
+
+    maxes[0] = L2_.norm(0);
+    norms[0] = L2_.norm(2);
+
+    if (do_cu3_) {
+        maxes[1] = rdms_.SF_L3().norm(0);
+        norms[1] = rdms_.SF_L3().norm(2);
+    } else {
+        maxes[1] = 0.0;
+        norms[1] = 0.0;
+    }
+
+    std::string dash(6 + 13 * 2, '-');
+    outfile->Printf("\n    %-6s %12s %12s", "", "2-cumulant", "3-cumulant");
+    outfile->Printf("\n    %s", dash.c_str());
+    outfile->Printf("\n    %-6s %12.6f %12.6f", "max", maxes[0], maxes[1]);
+    outfile->Printf("\n    %-6s %12.6f %12.6f", "2-norm", norms[0], norms[1]);
+    outfile->Printf("\n    %s", dash.c_str());
+}
+
 void SADSRG::print_options_info(
     const std::string& title,
     const std::vector<std::pair<std::string, std::string>>& calculation_info_string,
@@ -848,5 +851,147 @@ void SADSRG::print_options_info(
         outfile->Printf("\n    %-40s %15d", str_dim.first.c_str(), str_dim.second);
     }
     outfile->Printf("\n");
+}
+
+void SADSRG::build_internal_amps_types() {
+    auto gas_spaces = mo_space_info_->composite_space_names()["ACTIVE"];
+    int n_gas = gas_spaces.size();
+
+    // T1 internals
+    t1_internals_.clear();
+    if (internal_amp_.find("SINGLES") != std::string::npos) {
+        // excitation O-V
+        for (int o = 0; o < n_gas; ++o) {
+            if (gas_actv_rel_mos_[gas_spaces[o]].size() == 0)
+                continue;
+
+            for (int v = o + 1; v < n_gas; ++v) {
+                if (gas_actv_rel_mos_[gas_spaces[v]].size() == 0)
+                    continue;
+
+                t1_internals_.push_back({gas_spaces[o], gas_spaces[v], false});
+            }
+        }
+        // pure internal
+        if (internal_amp_select_ == "ALL") {
+            for (int x = 0; x < n_gas; ++x) {
+                if (gas_actv_rel_mos_[gas_spaces[x]].size() == 0)
+                    continue;
+                t1_internals_.push_back({gas_spaces[x], gas_spaces[x], true});
+            }
+        }
+    }
+
+    // T2 internals
+    t2_internals_.clear();
+    if (internal_amp_.find("DOUBLES") != std::string::npos) {
+        // pure excitation
+        for (int o1 = 0; o1 < n_gas; ++o1) {
+            if (gas_actv_rel_mos_[gas_spaces[o1]].size() == 0)
+                continue;
+
+            for (int o2 = 0; o2 < n_gas; ++o2) {
+                if (gas_actv_rel_mos_[gas_spaces[o2]].size() == 0)
+                    continue;
+
+                int o_max = o1 < o2 ? o2 : o1;
+
+                for (int v1 = o_max + 1; v1 < n_gas; ++v1) {
+                    if (gas_actv_rel_mos_[gas_spaces[v1]].size() == 0)
+                        continue;
+
+                    for (int v2 = o_max + 1; v2 < n_gas; ++v2) {
+                        if (gas_actv_rel_mos_[gas_spaces[v2]].size() == 0)
+                            continue;
+
+                        t2_internals_.push_back({gas_spaces[o1], gas_spaces[o2], gas_spaces[v1],
+                                                 gas_spaces[v2], false});
+                    }
+                }
+            }
+        }
+        // semi-internals
+        if (internal_amp_select_ != "OOVV") {
+            for (int x = 0; x < n_gas; ++x) {
+                if (gas_actv_rel_mos_[gas_spaces[x]].size() == 0)
+                    continue;
+
+                for (int o = 0; o < n_gas; ++o) {
+                    if (gas_actv_rel_mos_[gas_spaces[o]].size() == 0)
+                        continue;
+
+                    for (int v = o + 1; v < n_gas; ++v) {
+                        if (gas_actv_rel_mos_[gas_spaces[v]].size() == 0)
+                            continue;
+
+                        if (x == o) {
+                            t2_internals_.push_back({gas_spaces[o], gas_spaces[o], gas_spaces[o],
+                                                     gas_spaces[v], false});
+                            t2_internals_.push_back({gas_spaces[o], gas_spaces[o], gas_spaces[v],
+                                                     gas_spaces[o], false});
+                        } else if (x == v) {
+                            t2_internals_.push_back({gas_spaces[o], gas_spaces[v], gas_spaces[v],
+                                                     gas_spaces[v], false});
+                            t2_internals_.push_back({gas_spaces[v], gas_spaces[o], gas_spaces[v],
+                                                     gas_spaces[v], false});
+                        } else {
+                            t2_internals_.push_back({gas_spaces[x], gas_spaces[o], gas_spaces[x],
+                                                     gas_spaces[v], false});
+                            t2_internals_.push_back({gas_spaces[x], gas_spaces[o], gas_spaces[v],
+                                                     gas_spaces[x], false});
+                            t2_internals_.push_back({gas_spaces[o], gas_spaces[x], gas_spaces[v],
+                                                     gas_spaces[x], false});
+                            t2_internals_.push_back({gas_spaces[o], gas_spaces[x], gas_spaces[x],
+                                                     gas_spaces[v], false});
+                        }
+                    }
+                }
+            }
+        }
+        // pure internal
+        if (internal_amp_select_ == "ALL") {
+            for (int x1 = 0; x1 < n_gas; ++x1) {
+                if (gas_actv_rel_mos_[gas_spaces[x1]].size() == 0)
+                    continue;
+
+                t2_internals_.push_back(
+                    {gas_spaces[x1], gas_spaces[x1], gas_spaces[x1], gas_spaces[x1], true});
+
+                for (int x2 = x1 + 1; x2 < n_gas; ++x2) {
+                    if (gas_actv_rel_mos_[gas_spaces[x2]].size() == 0)
+                        continue;
+
+                    t2_internals_.push_back(
+                        {gas_spaces[x1], gas_spaces[x2], gas_spaces[x1], gas_spaces[x2], true});
+                    t2_internals_.push_back(
+                        {gas_spaces[x1], gas_spaces[x2], gas_spaces[x2], gas_spaces[x1], true});
+                    t2_internals_.push_back(
+                        {gas_spaces[x2], gas_spaces[x1], gas_spaces[x2], gas_spaces[x1], true});
+                    t2_internals_.push_back(
+                        {gas_spaces[x2], gas_spaces[x1], gas_spaces[x1], gas_spaces[x2], true});
+                }
+            }
+        }
+    }
+
+    // debug printing
+    if (print_ > 2) {
+        print_h2("T1 Internal Amplitudes Types");
+        for (const auto& t : t1_internals_) {
+            std::string gas1, gas2;
+            bool pure;
+            std::tie(gas1, gas2, pure) = t;
+            outfile->Printf("\n  %s -> %s; pure internal: %d", gas1.c_str(), gas2.c_str(), pure);
+        }
+
+        print_h2("T2 Internal Amplitudes Types");
+        for (const auto& t : t2_internals_) {
+            std::string gas1, gas2, gas3, gas4;
+            bool pure;
+            std::tie(gas1, gas2, gas3, gas4, pure) = t;
+            outfile->Printf("\n  %s,%s -> %s,%s; pure internal: %d", gas1.c_str(), gas2.c_str(),
+                            gas3.c_str(), gas4.c_str(), pure);
+        }
+    }
 }
 } // namespace forte
