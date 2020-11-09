@@ -286,11 +286,26 @@ void SADSRG::H2_T1_C1(BlockedTensor& H2, BlockedTensor& T1, const double& alpha,
     C1["qp"] += 2.0 * alpha * T1["ma"] * H2["qapm"];
     C1["qp"] -= alpha * T1["ma"] * H2["aqpm"];
 
-    C1["qp"] += alpha * T1["xe"] * L1_["yx"] * H2["qepy"];
-    C1["qp"] -= 0.5 * alpha * T1["xe"] * L1_["yx"] * H2["eqpy"];
+    auto temp = ambit::BlockedTensor::build(tensor_type_, "temp_av", {"av"});
+    temp["ye"] = T1["xe"] * L1_["yx"];
+    C1["qp"] += alpha * temp["ye"] * H2["qepy"];
+    C1["qp"] -= 0.5 * alpha * temp["ye"] * H2["eqpy"];
 
-    C1["qp"] -= alpha * T1["mu"] * L1_["uv"] * H2["qvpm"];
-    C1["qp"] += 0.5 * alpha * T1["mu"] * L1_["uv"] * H2["vqpm"];
+    temp = ambit::BlockedTensor::build(tensor_type_, "temp_ca", {"ca"});
+    temp["mv"] = T1["mu"] * L1_["uv"];
+    C1["qp"] -= alpha * temp["mv"] * H2["qvpm"];
+    C1["qp"] += 0.5 * alpha * temp["mv"] * H2["vqpm"];
+
+    if (t1_internals_.size()) {
+        temp = ambit::BlockedTensor::build(tensor_type_, "temp_aa", {"aa"});
+        temp["yw"] = T1["xw"] * L1_["yx"];
+        C1["qp"] += alpha * temp["yw"] * H2["qwpy"];
+        C1["qp"] -= 0.5 * alpha * temp["yw"] * H2["wqpy"];
+
+        temp["wv"] = T1["wu"] * L1_["uv"];
+        C1["qp"] -= alpha * temp["wv"] * H2["qvpw"];
+        C1["qp"] += 0.5 * alpha * temp["wv"] * H2["vqpw"];
+    }
 
     if (print_ > 2) {
         outfile->Printf("\n    Time for [H2, T1] -> C1 : %12.3f", timer.get());
@@ -352,6 +367,14 @@ void SADSRG::H2_T2_C1(BlockedTensor& H2, BlockedTensor& T2, BlockedTensor& S2, c
 
     C1["qs"] -= alpha * H2["uqms"] * T2["mvxy"] * L2_["xyuv"];
     C1["qs"] += 0.5 * alpha * H2["uqsm"] * T2["mvxy"] * L2_["xyuv"];
+
+    if (t2_internals_.size()) {
+        C1["qs"] += alpha * H2["zqxs"] * T2["uvzy"] * L2_["xyuv"];
+        C1["qs"] -= 0.5 * alpha * H2["zqsx"] * T2["uvzy"] * L2_["xyuv"];
+
+        C1["qs"] -= alpha * H2["uqzs"] * T2["zvxy"] * L2_["xyuv"];
+        C1["qs"] += 0.5 * alpha * H2["uqsz"] * T2["zvxy"] * L2_["xyuv"];
+    }
 
     if (print_ > 2) {
         outfile->Printf("\n    Time for [H2, T2] -> C1 : %12.3f", timer.get());
