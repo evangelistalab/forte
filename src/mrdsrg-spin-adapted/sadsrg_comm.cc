@@ -45,6 +45,10 @@ double SADSRG::H1_T1_C0(BlockedTensor& H1, BlockedTensor& T1, const double& alph
     temp["uv"] += H1["ev"] * T1["ue"];
     temp["uv"] -= H1["um"] * T1["mv"];
 
+    if (t1_internals_.size()) {
+        temp["uv"] += 0.5 * H1["xv"] * T1["uy"] * Eta1_["yx"];
+    }
+
     E += L1_["vu"] * temp["uv"];
 
     E *= alpha;
@@ -64,6 +68,11 @@ double SADSRG::H1_T2_C0(BlockedTensor& H1, BlockedTensor& T2, const double& alph
     auto temp = ambit::BlockedTensor::build(tensor_type_, "Temp120", {"aaaa"});
     temp["uvxy"] += H1["ex"] * T2["uvey"];
     temp["uvxy"] -= H1["vm"] * T2["muyx"];
+
+    if (t2_internals_.size()) {
+        temp["uvxy"] += H1["zx"] * T2["uvzy"];
+        temp["uvxy"] -= H1["vz"] * T2["zuyx"];
+    }
 
     E += L2_["xyuv"] * temp["uvxy"];
 
@@ -85,6 +94,11 @@ double SADSRG::H2_T1_C0(BlockedTensor& H2, BlockedTensor& T1, const double& alph
     auto temp = ambit::BlockedTensor::build(tensor_type_, "Temp120", {"aaaa"});
     temp["uvxy"] += H2["evxy"] * T1["ue"];
     temp["uvxy"] -= H2["uvmy"] * T1["mx"];
+
+    if (t1_internals_.size()) {
+        temp["uvxy"] += H2["zvxy"] * T1["uz"];
+        temp["uvxy"] -= H2["uvzy"] * T1["zx"];
+    }
 
     E += L2_["xyuv"] * temp["uvxy"];
 
