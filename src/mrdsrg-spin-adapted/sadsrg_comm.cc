@@ -215,6 +215,35 @@ std::vector<double> SADSRG::H2_T2_C0_T2small(BlockedTensor& H2, BlockedTensor& T
         E3 -= H2.block("aaca")("uvmz") * T2.block("caaa")("mwxy") * rdms_.SF_L3()("xyzuwv");
     }
 
+    if (t2_internals_.size()) {
+        // [H2, T2] L1 from aaaa
+        temp.zero();
+        temp.set_name("temp_aaaa");
+        temp["wzxy"] += 0.25 * S2["uvxy"] * L1_["wu"] * L1_["zv"];
+        E1 += 0.25 * H2["uvxy"] * temp["xywz"] * Eta1_["wu"] * Eta1_["zv"];
+
+        // <[Hbar2, T2]> C_4 (C_2)^2
+
+        // HH
+        temp["uvxy"] += 0.5 * H2["u,v,a1,a2"] * T2["a3,a4,x,y"] * L1_["a1,a3"] * L1_["a2,a4"];
+
+        // PP
+        temp["uvxy"] += 0.5 * H2["a1,a2,x,y"] * T2["u,v,a3,a4"] * Eta1_["a3,a1"] * Eta1_["a4,a2"];
+
+        // HP
+        temp["uvxy"] += 0.25 * H2["u,a1,x,a2"] * S2["v,a3,y,a4"] * L1_["a2,a3"] * Eta1_["a4,a1"];
+        temp["uvxy"] -= 0.25 * H2["u,a1,a2,x"] * T2["v,a3,y,a4"] * L1_["a2,a3"] * Eta1_["a4,a1"];
+        temp["uvxy"] -= 0.25 * H2["v,a1,a2,x"] * T2["a3,u,y,a4"] * L1_["a2,a3"] * Eta1_["a4,a1"];
+
+        E2 += temp["uvxy"] * L2_["uvxy"];
+
+        // <[Hbar2, T2]> C_6 C_2
+        if (do_cu3_) {
+            E3 += H2.block("aaaa")("ewxy") * T2.block("aaaa")("uvez") * rdms_.SF_L3()("xyzuwv");
+            E3 -= H2.block("aaaa")("uvmz") * T2.block("aaaa")("mwxy") * rdms_.SF_L3()("xyzuwv");
+        }
+    }
+
     return {E1, E2, E3};
 }
 
