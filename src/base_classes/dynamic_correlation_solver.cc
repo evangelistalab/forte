@@ -38,6 +38,19 @@ void DynamicCorrelationSolver::startup() {
     }
 }
 
+void DynamicCorrelationSolver::clean_checkpoints() {
+    if (not t1_file_chk_.empty()) {
+        if (remove(t1_file_chk_.c_str()) != 0) {
+            perror("Error when deleting T1 checkpoint.");
+        }
+    }
+    if (not t2_file_chk_.empty()) {
+        if (remove(t2_file_chk_.c_str()) != 0) {
+            perror("Error when deleting T2 checkpoint.");
+        }
+    }
+}
+
 std::shared_ptr<DynamicCorrelationSolver>
 make_dynamic_correlation_solver(const std::string& /*type*/, std::shared_ptr<ForteOptions> /*options*/,
                                 std::shared_ptr<ForteIntegrals> /*ints*/,

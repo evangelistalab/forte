@@ -45,6 +45,7 @@
 
 #include "base_classes/forte_options.h"
 #include "base_classes/scf_info.h"
+#include "helpers/disk_io.h"
 #include "helpers/printing.h"
 #include "helpers/timer.h"
 

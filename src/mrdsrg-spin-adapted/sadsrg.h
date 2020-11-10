@@ -79,16 +79,6 @@ class SADSRG : public DynamicCorrelationSolver {
     /// Set unitary matrix (in active space) from original to semicanonical
     void set_Uactv(ambit::Tensor& U);
 
-//    /// Set active active occupied MOs (relative to active)
-//    void set_actv_occ(std::vector<size_t> actv_occ) {
-//        actv_occ_mos_ = std::vector<size_t>(actv_occ);
-//    }
-
-//    /// Set active active unoccupied MOs (relative to active)
-//    void set_actv_uocc(std::vector<size_t> actv_uocc) {
-//        actv_uocc_mos_ = std::vector<size_t>(actv_uocc);
-//    }
-
   protected:
     /// Startup function called in constructor
     void startup();

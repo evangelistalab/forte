@@ -1,11 +1,13 @@
 #include <numeric>
 
-#include "psi4/libpsi4util/process.h"
 #include "psi4/libmints/molecule.h"
 #include "psi4/libmints/matrix.h"
 #include "psi4/libmints/vector.h"
 #include "psi4/libmints/dipole.h"
+#include "psi4/libpsi4util/process.h"
+#include "psi4/libpsio/psio.hpp"
 
+#include "helpers/disk_io.h"
 #include "helpers/printing.h"
 #include "helpers/timer.h"
 
@@ -118,6 +120,9 @@ void MASTER_DSRG::read_options() {
 
     ntamp_ = foptions_->get_int("NTAMP");
     intruder_tamp_ = foptions_->get_double("INTRUDER_TAMP");
+
+    dump_amps_cwd_ = foptions_->get_bool("DSRG_DUMP_AMPS");
+    read_amps_cwd_ = foptions_->get_bool("DSRG_READ_AMPS");
 
     relax_ref_ = foptions_->get_str("RELAX_REF");
 

@@ -51,7 +51,7 @@ class SA_MRDSRG : public SADSRG {
               std::shared_ptr<ForteIntegrals> ints, std::shared_ptr<MOSpaceInfo> mo_space_info);
 
     /// Compute the corr_level energy with fixed reference
-    virtual double compute_energy();
+    double compute_energy() override;
 
   protected:
     /// Start-up function called in the constructor
@@ -81,6 +81,15 @@ class SA_MRDSRG : public SADSRG {
 
     /// Omitting blocks with >= 3 virtual indices?
     bool nivo_;
+
+    /// Read amplitudes from previous reference relaxation step
+    bool restart_amps_;
+
+    /// Prefix for file name for restart
+    std::string restart_file_prefix_;
+
+    /// Dump the converged amplitudes to disk
+    void dump_amps_to_disk() override;
 
     /// Correlation level option
     std::string corrlv_string_;
@@ -113,9 +122,8 @@ class SA_MRDSRG : public SADSRG {
     ambit::BlockedTensor DT2_;
 
     /// Initial guess of T amplitudes
-    void guess_t(BlockedTensor& V, BlockedTensor& T2, BlockedTensor& F, BlockedTensor& T1);
-    /// Initial guess of T amplitudes with density fitted B tensor.
-    void guess_t_df(BlockedTensor& B, BlockedTensor& T2, BlockedTensor& F, BlockedTensor& T1);
+    void guess_t(BlockedTensor& V, BlockedTensor& T2, BlockedTensor& F, BlockedTensor& T1,
+                 BlockedTensor& B);
     /// Update T amplitude in every iteration
     void update_t();
 
@@ -126,8 +134,7 @@ class SA_MRDSRG : public SADSRG {
     /// Signed max of T2
     double T2max_;
     /// Initial guess of T2
-    void guess_t2(BlockedTensor& V, BlockedTensor& T2);
-    void guess_t2_df(BlockedTensor& B, BlockedTensor& T2);
+    void guess_t2(BlockedTensor& V, BlockedTensor& T2, BlockedTensor& B);
     /// Initial guess of T2 where T2 has been initialized with H2
     void guess_t2_impl(BlockedTensor& T2);
     /// Update T2 in every iteration

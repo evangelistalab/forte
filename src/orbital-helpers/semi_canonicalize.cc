@@ -87,9 +87,6 @@ void SemiCanonical::startup() {
     Ua_ = std::make_shared<psi::Matrix>("Ua", nmopi_, nmopi_);
     Ub_ = std::make_shared<psi::Matrix>("Ub", nmopi_, nmopi_);
 
-    Ua_->identity();
-    Ub_->identity();
-
     // Preapare orbital rotation matrix, which transforms only active MOs
     Ua_t_ = ambit::Tensor::build(ambit::CoreTensor, "Ua", {nact_, nact_});
     Ub_t_ = ambit::Tensor::build(ambit::CoreTensor, "Ub", {nact_, nact_});
@@ -253,7 +250,6 @@ void SemiCanonical::build_transformation_matrices() {
     for (const std::string& spin : spin_cases) {
         auto& fock = (spin == "alpha") ? fock_a : fock_b;
         auto& U = (spin == "alpha") ? Ua_ : Ub_;
-        auto& UData = (spin == "alpha") ? Ua_t_.data() : Ub_t_.data();
 
         // loop over orbital spaces
         for (const auto& name_dim_pair : mo_dims_) {
@@ -280,18 +276,36 @@ void SemiCanonical::build_transformation_matrices() {
                         }
                     }
                 }
+            }
+        }
+    }
 
-                // fill in UaData or UbData if this block is active
-                if (name.find("GAS") != std::string::npos) {
-                    for (size_t h = 0; h < nirrep_; ++h) {
-                        int actv_off = actv_offsets_[name][h];
-                        for (int u = 0; u < npi[h]; ++u) {
-                            int nu = actv_off + u;
-                            for (int v = 0; v < npi[h]; ++v) {
-                                int nv = actv_off + v;
-                                UData[nu * nact_ + nv] = Usub->get(h, u, v);
-                            }
-                        }
+    // keep phase and order unchanged
+    ints_->fix_orbital_phases(Ua_, true);
+    ints_->fix_orbital_phases(Ub_, false);
+
+    // fill in UaData and UbData
+    for (const std::string& spin : spin_cases) {
+        auto& U = (spin == "alpha") ? Ua_ : Ub_;
+        auto& UData = (spin == "alpha") ? Ua_t_.data() : Ub_t_.data();
+
+        for (const auto& name_dim_pair : mo_dims_) {
+            const std::string& name = name_dim_pair.first;
+            psi::Dimension npi = name_dim_pair.second;
+
+            if (name.find("GAS") == std::string::npos)
+                continue;
+
+            for (size_t h = 0; h < nirrep_; ++h) {
+                int actv_off = actv_offsets_[name][h];
+                int offset = offsets_[name][h];
+
+                for (int u = 0; u < npi[h]; ++u) {
+                    int nu = actv_off + u;
+                    int mu = offset + u;
+
+                    for (int v = 0; v < npi[h]; ++v) {
+                        UData[nu * nact_ + actv_off + v] = U->get(h, mu, offset + v);
                     }
                 }
             }

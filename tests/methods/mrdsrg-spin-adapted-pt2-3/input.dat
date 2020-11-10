@@ -1,5 +1,3 @@
-#! Generated using commit GITCOMMIT
-
 import forte
 
 memory 500 mb
@@ -42,7 +40,6 @@ set globals{
   active                 [1,0,1,2,1,2,1,0]
 }
 Escf, wfn = energy('scf', return_wfn=True)
-#compare_values(Ecas_psi4_jk, Ecas, 9, "CASSCF(8,8)/cc-pVDZ-JKFIT (PSI4) energy")
 
 set forte{
   job_type               casscf

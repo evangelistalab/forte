@@ -187,7 +187,7 @@ void Psi4Integrals::make_psi4_JK() {
     }
 
     // set JK memory to 85% of total memory in number of doubles
-    JK_->set_memory(psi::Process::environment.get_memory() / sizeof(double) * 0.85);
+    JK_->set_memory(psi::Process::environment.get_memory() * 0.85 / sizeof(double));
 
     JK_->set_cutoff(options_->get_double("INTEGRAL_SCREENING"));
 

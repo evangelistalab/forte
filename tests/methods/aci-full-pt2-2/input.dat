@@ -42,10 +42,10 @@ set forte {
 }
 set_num_threads(2)
 
-energy('scf')
+Escf, wfn = energy('scf', return_wfn=True)
 
-compare_values(refscf, variable("CURRENT ENERGY"),9, "SCF energy") #TEST
+compare_values(refscf, variable("CURRENT ENERGY"), 9, "SCF energy") #TEST
 
-energy('forte')
-compare_values(refaci, variable("ACI ENERGY"),9, "ACI energy") #TEST
-compare_values(refacipt2, variable("ACI+PT2 ENERGY"),8, "ACI+PT2 energy") #TEST
+energy('forte', ref_wfn=wfn)
+compare_values(refaci, variable("ACI ENERGY"), 9, "ACI energy") #TEST
+compare_values(refacipt2, variable("ACI+PT2 ENERGY"), 8, "ACI+PT2 energy") #TEST

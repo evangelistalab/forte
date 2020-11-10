@@ -47,9 +47,6 @@ class SA_DSRGPT : public SADSRG {
     SA_DSRGPT(RDMs rdms, std::shared_ptr<SCFInfo> scf_info, std::shared_ptr<ForteOptions> options,
               std::shared_ptr<ForteIntegrals> ints, std::shared_ptr<MOSpaceInfo> mo_space_info);
 
-    /// Compute the corr_level energy with fixed reference
-    virtual double compute_energy() = 0;
-
   protected:
     /// Read options
     void read_options();

@@ -9,10 +9,10 @@ refacipt2 = -76.029945794 #TEST
 
 memory 6000mb
 molecule h2o{
-   O
-   H  1 1.00
-   H  1 1.00 2 103.1
-      }
+O
+H 1 1.00
+H 1 1.00 2 103.1
+}
 
 set global {
   basis 6-31g**
@@ -34,6 +34,7 @@ set forte {
   root_sym 0
   charge 0
   sci_enforce_spin_complete true
+  aci_screen_alg multi_gas
   e_convergence 6
   charge 0
   active_ref_type gas
