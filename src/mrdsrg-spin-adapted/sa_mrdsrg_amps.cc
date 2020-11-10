@@ -391,7 +391,7 @@ void SA_MRDSRG::update_t1() {
     // zero internal amplitudes
     internal_amps_T1(DT1_);
 
-    // compute RMS
+    // compute consecutive T1 difference
     T1rms_ = DT1_.norm();
 
     // transform DT1 back to original basis

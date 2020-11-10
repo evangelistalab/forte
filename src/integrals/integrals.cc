@@ -145,6 +145,8 @@ double ForteIntegrals::nuclear_repulsion_energy() const { return nucrep_; }
 
 std::shared_ptr<psi::Wavefunction> ForteIntegrals::wfn() { return wfn_; }
 
+std::shared_ptr<psi::JK> ForteIntegrals::jk() { return JK_; }
+
 size_t ForteIntegrals::nso() const { return nso_; }
 
 size_t ForteIntegrals::nmo() const { return nmo_; }
