@@ -139,7 +139,6 @@ void CASSCF::set_v() {
             value = ints_->aptei_bb(i[0], i[1], i[2], i[3]);
         }
     });
-
     outfile->Printf("Done");
 }
 

@@ -367,11 +367,6 @@ class DSRG_MRPT2 : public MASTER_DSRG {
     CouplingCoefficients cc;
     ambit::Tensor ci;
 
-    ambit::Tensor cc3aaa_;
-    ambit::Tensor cc3bbb_;
-    ambit::Tensor cc3aab_;
-    ambit::Tensor cc3abb_;
-
     ambit::Tensor cc1a_n;
     ambit::Tensor cc1a_r;
     ambit::Tensor cc1b_n;
@@ -383,6 +378,15 @@ class DSRG_MRPT2 : public MASTER_DSRG {
     ambit::Tensor cc2bb_r;
     ambit::Tensor cc2ab_n;
     ambit::Tensor cc2ab_r;
+
+    ambit::Tensor cc3aaa_n;
+    ambit::Tensor cc3aaa_r;
+    ambit::Tensor cc3bbb_n;
+    ambit::Tensor cc3bbb_r;
+    ambit::Tensor cc3aab_n;
+    ambit::Tensor cc3aab_r;
+    ambit::Tensor cc3abb_n;
+    ambit::Tensor cc3abb_r;
 
 
 

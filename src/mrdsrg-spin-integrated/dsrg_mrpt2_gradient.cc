@@ -130,11 +130,6 @@ void DSRG_MRPT2::set_all_variables() {
     cc = coupling_coefficients_;
     ci = ci_vectors_[0];
 
-    cc3aaa_ = cc.cc3aaa();
-    cc3bbb_ = cc.cc3bbb();
-    cc3aab_ = cc.cc3aab();
-    cc3abb_ = cc.cc3abb();
-
     cc1a_n = ambit::Tensor::build(ambit::CoreTensor, "cc1a_n", {ndets, na_, na_});
     cc1a_r = ambit::Tensor::build(ambit::CoreTensor, "cc1a_r", {ndets, na_, na_});
     cc1b_n = ambit::Tensor::build(ambit::CoreTensor, "cc1b_n", {ndets, na_, na_});
@@ -147,7 +142,14 @@ void DSRG_MRPT2::set_all_variables() {
     cc2ab_n = ambit::Tensor::build(ambit::CoreTensor, "cc2ab_n", {ndets, na_, na_, na_, na_});
     cc2ab_r = ambit::Tensor::build(ambit::CoreTensor, "cc2ab_r", {ndets, na_, na_, na_, na_});
 
-
+    cc3aaa_n = ambit::Tensor::build(ambit::CoreTensor, "cc3aaa_n", {ndets, na_, na_, na_, na_, na_, na_});
+    cc3aaa_r = ambit::Tensor::build(ambit::CoreTensor, "cc3aaa_r", {ndets, na_, na_, na_, na_, na_, na_});
+    cc3bbb_n = ambit::Tensor::build(ambit::CoreTensor, "cc3bbb_n", {ndets, na_, na_, na_, na_, na_, na_});
+    cc3bbb_r = ambit::Tensor::build(ambit::CoreTensor, "cc3bbb_r", {ndets, na_, na_, na_, na_, na_, na_});
+    cc3aab_n = ambit::Tensor::build(ambit::CoreTensor, "cc3aab_n", {ndets, na_, na_, na_, na_, na_, na_});
+    cc3aab_r = ambit::Tensor::build(ambit::CoreTensor, "cc3aab_r", {ndets, na_, na_, na_, na_, na_, na_});
+    cc3abb_n = ambit::Tensor::build(ambit::CoreTensor, "cc3abb_n", {ndets, na_, na_, na_, na_, na_, na_});
+    cc3abb_r = ambit::Tensor::build(ambit::CoreTensor, "cc3abb_r", {ndets, na_, na_, na_, na_, na_, na_});
 
     cc1a_n("Kzw") = cc.cc1a()("KJzw") * ci("J");
     cc1a_r("Kzw") = cc.cc1a()("JKzw") * ci("J");
@@ -156,11 +158,19 @@ void DSRG_MRPT2::set_all_variables() {
 
     cc2aa_n("Kuvxy") = cc.cc2aa()("KJuvxy") * ci("J");
     cc2aa_r("Kuvxy") = cc.cc2aa()("JKuvxy") * ci("J");
-    cc2bb_n("Kuvxy") = cc.cc2bb()("KJuvxy") * ci("J");
-    cc2bb_r("Kuvxy") = cc.cc2bb()("JKuvxy") * ci("J");
-    cc2ab_n("Kuvxy") = cc.cc2ab()("KJuvxy") * ci("J");
-    cc2ab_r("Kuvxy") = cc.cc2ab()("JKuvxy") * ci("J");
+    cc2bb_n("KUVXY") = cc.cc2bb()("KJUVXY") * ci("J");
+    cc2bb_r("KUVXY") = cc.cc2bb()("JKUVXY") * ci("J");
+    cc2ab_n("KuVxY") = cc.cc2ab()("KJuVxY") * ci("J");
+    cc2ab_r("KuVxY") = cc.cc2ab()("JKuVxY") * ci("J");
 
+    cc3aaa_n("Kuvwxyz") = cc.cc3aaa()("KJuvwxyz") * ci("J");
+    cc3aaa_r("Kuvwxyz") = cc.cc3aaa()("JKuvwxyz") * ci("J");
+    cc3bbb_n("KUVWXYZ") = cc.cc3bbb()("KJUVWXYZ") * ci("J");
+    cc3bbb_r("KUVWXYZ") = cc.cc3bbb()("JKUVWXYZ") * ci("J");
+    cc3aab_n("KuvWxyZ") = cc.cc3aab()("KJuvWxyZ") * ci("J");
+    cc3aab_r("KuvWxyZ") = cc.cc3aab()("JKuvWxyZ") * ci("J");
+    cc3abb_n("KuVWxYZ") = cc.cc3abb()("KJuVWxYZ") * ci("J");
+    cc3abb_r("KuVWxYZ") = cc.cc3abb()("JKuVWxYZ") * ci("J");
 
     set_tensor();
 
@@ -2394,8 +2404,8 @@ void DSRG_MRPT2::solve_z() {
     auto dlamb3_abb = ambit::Tensor::build(ambit::CoreTensor, "derivatives of Lambda3_ w.r.t. C_K alpha-beta-beta", {ndets, na_, na_, na_, na_, na_, na_});
 
     // alpha-alpha-alpha
-    dlamb3_aaa("Kxyzuvw") += cc3aaa_("KJxyzuvw") * ci("J");
-    dlamb3_aaa("Kxyzuvw") += cc3aaa_("JKxyzuvw") * ci("J");
+    dlamb3_aaa("Kxyzuvw") += cc3aaa_n("Kxyzuvw");
+    dlamb3_aaa("Kxyzuvw") += cc3aaa_r("Kxyzuvw");
     dlamb3_aaa("Kxyzuvw") -= 2.0 * cc1a_n("Kuz") * Gamma2.block("aaaa")("xyvw");
     dlamb3_aaa("Kxyzuvw") -= 2.0 * cc1a_r("Kuz") * Gamma2.block("aaaa")("xyvw");
     dlamb3_aaa("Kxyzuvw") -= 2.0 * cc2aa_n("Kxyvw") * Gamma1.block("aa")("uz");
@@ -2426,8 +2436,8 @@ void DSRG_MRPT2::solve_z() {
     dlamb3_aaa("Kxyzuvw") += 4.0 * cc1a_r("Kyv") * Gamma1.block("aa")("wz")* Gamma1.block("aa")("xu");
 
     // beta-beta-beta
-    dlamb3_bbb("KXYZUVW") += cc3bbb_("KJXYZUVW") * ci("J");
-    dlamb3_bbb("KXYZUVW") += cc3bbb_("JKXYZUVW") * ci("J");
+    dlamb3_bbb("KXYZUVW") += cc3bbb_n("KXYZUVW");
+    dlamb3_bbb("KXYZUVW") += cc3bbb_r("KXYZUVW");
     dlamb3_bbb("KXYZUVW") -= 2.0 * cc1b_n("KUZ") * Gamma2.block("AAAA")("XYVW");
     dlamb3_bbb("KXYZUVW") -= 2.0 * cc1b_r("KUZ") * Gamma2.block("AAAA")("XYVW");
     dlamb3_bbb("KXYZUVW") -= 2.0 * cc2bb_n("KXYVW") * Gamma1.block("AA")("UZ");
@@ -2458,8 +2468,8 @@ void DSRG_MRPT2::solve_z() {
     dlamb3_bbb("KXYZUVW") += 4.0 * cc1b_r("KYV") * Gamma1.block("AA")("WZ")* Gamma1.block("AA")("XU");
 
     // alpha-alpha-beta
-    dlamb3_aab("KxyZuvW") += cc3aab_("KJxyZuvW") * ci("J");
-    dlamb3_aab("KxyZuvW") += cc3aab_("JKxyZuvW") * ci("J");
+    dlamb3_aab("KxyZuvW") += cc3aab_n("KxyZuvW");
+    dlamb3_aab("KxyZuvW") += cc3aab_r("KxyZuvW");
     dlamb3_aab("KxyZuvW") -= cc1a_n("Kxu") * Lambda2_.block("aAaA")("yZvW");
     dlamb3_aab("KxyZuvW") -= cc1a_r("Kxu") * Lambda2_.block("aAaA")("yZvW");
     dlamb3_aab("KxyZuvW") -= Gamma1.block("aa")("xu") * dlamb_ab("KyZvW");
@@ -2489,8 +2499,8 @@ void DSRG_MRPT2::solve_z() {
     dlamb3_aab("KxyZuvW") += cc1b_r("KZW") * Gamma1.block("aa")("yu") * Gamma1.block("aa")("xv");
 
     // alpha-beta-beta
-    dlamb3_abb("KxYZuVW") += cc3abb_("KJxYZuVW") * ci("J");
-    dlamb3_abb("KxYZuVW") += cc3abb_("JKxYZuVW") * ci("J");
+    dlamb3_abb("KxYZuVW") += cc3abb_n("KxYZuVW");
+    dlamb3_abb("KxYZuVW") += cc3abb_r("KxYZuVW");
     dlamb3_abb("KxYZuVW") -= cc1a_n("Kxu") * Lambda2_.block("AAAA")("YZVW");
     dlamb3_abb("KxYZuVW") -= cc1a_r("Kxu") * Lambda2_.block("AAAA")("YZVW");
     dlamb3_abb("KxYZuVW") -= Gamma1.block("aa")("xu") * dlamb_bb("KYZVW");
