@@ -40,7 +40,6 @@ from psi4.driver.procrouting import proc_util
 import forte.proc.fcidump
 
 
-
 def forte_driver(state_weights_map, scf_info, options, ints, mo_space_info):
     # map state to number of roots
     state_map = forte.to_state_nroots_map(state_weights_map)
