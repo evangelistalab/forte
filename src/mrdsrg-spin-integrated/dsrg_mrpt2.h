@@ -265,8 +265,6 @@ class DSRG_MRPT2 : public MASTER_DSRG {
         ambit::BlockedTensor& temp2, ambit::BlockedTensor& zef_d, double coeff);
 
     double s;
-    double scale_ci;
-
 
     size_t ndets;
 
@@ -366,14 +364,22 @@ class DSRG_MRPT2 : public MASTER_DSRG {
     ambit::BlockedTensor V_R_Beta;
     ambit::BlockedTensor V_all_Beta;
 
+    CouplingCoefficients cc;
+    ambit::Tensor ci;
+    ambit::Tensor cc1a_;
+    ambit::Tensor cc1b_;
+    ambit::Tensor cc2aa_;
+    ambit::Tensor cc2bb_;
+    ambit::Tensor cc2ab_;
+    ambit::Tensor cc3aaa_;
+    ambit::Tensor cc3bbb_;
+    ambit::Tensor cc3aab_;
+    ambit::Tensor cc3abb_;
 
-
-
-
-
-
-
-
+    ambit::Tensor cc1a_n;
+    ambit::Tensor cc1a_r;
+    ambit::Tensor cc1b_n;
+    ambit::Tensor cc1b_r;
 
 
 
