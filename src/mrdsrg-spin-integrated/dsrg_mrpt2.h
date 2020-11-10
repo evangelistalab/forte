@@ -219,9 +219,11 @@ class DSRG_MRPT2 : public MASTER_DSRG {
     void set_h();
     /// Set two-electron integrals
     void set_v();
+    /// Set CI-relevant integrals
+    void set_ci_ints();
 
     /// Set MO space environment and global variables
-    void set_all_variables();
+    void set_global_variables();
     size_t nmo_;
     size_t ncore_;
     size_t nvirt_;
@@ -388,11 +390,14 @@ class DSRG_MRPT2 : public MASTER_DSRG {
     ambit::Tensor cc3abb_n;
     ambit::Tensor cc3abb_r;
 
+    ambit::Tensor dlamb_aa;
+    ambit::Tensor dlamb_bb;
+    ambit::Tensor dlamb_ab;
 
-
-
-
-
+    ambit::Tensor dlamb3_aaa;
+    ambit::Tensor dlamb3_bbb;
+    ambit::Tensor dlamb3_aab;
+    ambit::Tensor dlamb3_abb;
 
 
     // => Amplitude <= //
