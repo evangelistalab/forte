@@ -205,7 +205,6 @@ void CustomIntegrals::compute_frozen_one_body_operator() {
             auto p_corr = p + corr_offset;
             auto p_full = cmotomo_[p + corr_offset] - full_offset;
 
-#pragma omp parallel for
             for (int q = 0; q < ncmopi_[h]; ++q) {
                 auto q_corr = q + corr_offset;
                 auto q_full = cmotomo_[q + corr_offset] - full_offset;
