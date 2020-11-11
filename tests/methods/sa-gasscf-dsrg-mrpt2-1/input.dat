@@ -1,6 +1,7 @@
-#! Generated using commit GITCOMMIT 
-# SA-GASSCF-MRPT2 for CORE EXCITED states with core orbital frozen
-# Without CASSCF_FROZEN_ORBITAL this will collapse to ground state and not converge
+#! Generated using commit GITCOMMIT
+# SA-GASSCF-DSRG-MRPT2 test on H2O
+# averaging over the ground state and core-excited singlet B1 state
+# at most one electron occupies the core orbital for B1 state
 
 import forte
 
@@ -52,9 +53,9 @@ set forte {
   casscf_semicanonicalize False
 }
 
-escf ,wfn = energy('scf',return_wfn = True)
-egasscf,wfn_gasscf = energy('forte',ref_wfn = wfn, return_wfn = True)
-compare_values(refgasscf, egasscf ,9, "GASSCF energy") #TEST
+escf, wfn = energy('scf', return_wfn=True)
+egasscf, wfn_gasscf = energy('forte', ref_wfn=wfn, return_wfn=True)
+compare_values(refgasscf, egasscf, 9, "GASSCF energy")
 
 set forte {
   active_space_solver aci
@@ -75,5 +76,5 @@ set forte {
   calc_type sa
 }
 
-edsrg = energy('forte', ref_wfn = wfn_gasscf)
-compare_values(refdsrg, edsrg, 9, "GASSCF-DSRG-MRPT2 energy") #TEST
+edsrg = energy('forte', ref_wfn=wfn_gasscf)
+compare_values(refdsrg, edsrg, 9, "GASSCF-DSRG-MRPT2 energy")
