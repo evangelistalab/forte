@@ -101,9 +101,9 @@ before_script:
 script:
   - cd ${TRAVIS_BUILD_DIR}
   - if [ "$RUN_TESTS" -eq "1" ]; then
-     bash tools/forte_codecov
-     cd ${TRAVIS_BUILD_DIR}/tests/pytest
-     pytest
+     bash tools/forte_codecov;
+     cd ${TRAVIS_BUILD_DIR}/tests/pytest;
+     pytest;
     fi
   # Run tests for 128-bit determinants
   - if [ "$RUN_TESTS" -eq "0" ]; then
