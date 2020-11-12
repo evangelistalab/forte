@@ -6,9 +6,15 @@ jobs:
     - env:
       - PYTHON_VER=3.7
       - MAX_DET_ORB=64
+      - RUN_TESTS=1
     - env:
       - PYTHON_VER=3.7
       - MAX_DET_ORB=128
+      - RUN_TESTS=1
+    - env:
+      - PYTHON_VER=3.7
+      - MAX_DET_ORB=128
+      - RUN_TESTS=0
 
 install:
   - ls /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/
@@ -94,14 +100,16 @@ before_script:
 
 script:
   - cd ${TRAVIS_BUILD_DIR}
-  - bash tools/forte_codecov
+  - if [ "$RUN_TESTS" -eq "1" ]; then
+     bash tools/forte_codecov
+     cd ${TRAVIS_BUILD_DIR}/tests/pytest
+     pytest
+    fi
   # Run tests for 128-bit determinants
-  - if [ "$MAX_DET_ORB" -ge "128" ]; then
+  - if [ "$RUN_TESTS" -eq "0" ]; then
      cd ${HOME}/build/evangelistalab/forte/tests/large_det;
      python run_forte_tests.py --bw --failed_dump;
     fi
-  - cd ${TRAVIS_BUILD_DIR}
-#  - ./forte_tests
-#  - ./forte_benchmarks
-  - cd ${TRAVIS_BUILD_DIR}/tests/pytest
-  - pytest
+#  - cd ${TRAVIS_BUILD_DIR}
+#  - cd ${TRAVIS_BUILD_DIR}/tests/pytest
+#  - pytest
