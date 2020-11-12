@@ -29,15 +29,10 @@ set global {
 set scf_type direct
 set forte {
   active_space_solver aci
-  ms 0.0
-  multiplicity 1
   sigma 0.00
-  root_sym 0
   charge 0
   sci_enforce_spin_complete true
-  spin_project_full true
   e_convergence 6
-  charge 0
   active_ref_type gas
   GAS1 [1,0,0,0]
   GAS2 [3,0,1,2]
@@ -58,18 +53,6 @@ egasscf, wfn_gasscf = energy('forte', ref_wfn=wfn, return_wfn=True)
 compare_values(refgasscf, egasscf, 9, "GASSCF energy")
 
 set forte {
-  active_space_solver aci
-  ms 0.0
-  multiplicity 1
-  sigma 0.00
-  root_sym 0
-  charge 0
-  sci_enforce_spin_complete true
-  e_convergence 6
-  charge 0
-  active_ref_type gas
-  GAS1 [1,0,0,0]
-  GAS2 [3,0,1,2]
   job_type newdriver
   correlation_solver dsrg-mrpt2
   dsrg_s 1.0

@@ -34,6 +34,8 @@ set forte {
   root_sym 0
   charge 0
   sci_enforce_spin_complete true
+  # for non-selective GAS, we always treat spin_project_full as true
+  # such that the following line is only optional
   spin_project_full true
   e_convergence 6
   charge 0
@@ -62,7 +64,6 @@ set forte {
   sigma 0.00
   root_sym 0
   charge 0
-  sci_enforce_spin_complete true
   e_convergence 6
   charge 0
   active_ref_type gas
