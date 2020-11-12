@@ -298,13 +298,9 @@ class DSRG_MRPT2 : public MASTER_DSRG {
 
     /// Dimension of different irreps
     psi::Dimension irrep_vec;
-    /// One-particle density matrix This has been predefined
-    // ambit::BlockedTensor Gamma1_;
 
-    /// One-body denisty tensor
-    ambit::BlockedTensor Gamma1;  
     /// Two-body denisty tensor
-    ambit::BlockedTensor Gamma2;
+    ambit::BlockedTensor Gamma2_;
     /// Lagrangian tensor
     ambit::BlockedTensor W_;
 
