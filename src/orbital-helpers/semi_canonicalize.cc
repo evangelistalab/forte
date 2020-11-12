@@ -76,12 +76,7 @@ void SemiCanonical::startup() {
     // some basics
     nirrep_ = mo_space_info_->nirrep();
     nmopi_ = mo_space_info_->dimension("ALL");
-    ncmo_ = mo_space_info_->size("CORRELATED");
     nact_ = mo_space_info_->size("ACTIVE");
-    ncmopi_ = mo_space_info_->dimension("CORRELATED");
-    fdocc_ = mo_space_info_->dimension("FROZEN_DOCC");
-    rdocc_ = mo_space_info_->dimension("RESTRICTED_DOCC");
-    actv_ = mo_space_info_->dimension("ACTIVE");
 
     // Preapare orbital rotation matrix, which transforms all MOs
     Ua_ = std::make_shared<psi::Matrix>("Ua", nmopi_, nmopi_);
@@ -94,52 +89,24 @@ void SemiCanonical::startup() {
     // Initialize U to identity
     set_U_to_identity();
 
-    // Get the list of elementary spaces
+    // Form dimension map
     std::vector<std::string> space_names = mo_space_info_->space_names();
-
-    // dimension map
-    for (std::string& space : space_names) {
+    for (const std::string& space : space_names) {
         mo_dims_[space] = mo_space_info_->dimension(space);
     }
 
-    // index map and offsets map
-    auto offset_dim = psi::Dimension(nirrep_);
-    for (std::string& space : space_names) {
-        auto dim = mo_dims_[space];
-        mo_idx_[space] = idx_space(dim, offset_dim);
-        offsets_[space] = offset_dim;
-        offset_dim += dim;
-    }
+    // Compute the offset of GAS spaces within the ACTIVE
+    auto active_space_names = mo_space_info_->composite_space_names()["ACTIVE"];
 
-    // Compute the offset within the GAS spaces
-    for (std::string& space : space_names) {
-        if (space.find("GAS") != std::string::npos) {
-            actv_offsets_[space] = std::vector<int>(nirrep_, 0);
-        }
+    for (const std::string& space : active_space_names) {
+        actv_offsets_[space] = psi::Dimension(nirrep_);
     }
     for (size_t h = 0, offset = 0; h < nirrep_; ++h) {
-        for (std::string& space : space_names) {
-            if (space.find("GAS") != std::string::npos) {
-                actv_offsets_[space][h] = offset;
-                offset += mo_dims_[space][h];
-            }
+        for (const std::string& space : active_space_names) {
+            actv_offsets_[space][h] = offset;
+            offset += mo_dims_[space][h];
         }
     }
-}
-
-std::vector<std::vector<size_t>> SemiCanonical::idx_space(const psi::Dimension& npi,
-                                                          const psi::Dimension& bpi) {
-    std::vector<std::vector<size_t>> out(nirrep_, std::vector<size_t>());
-
-    for (size_t h = 0, offset = 0; h < nirrep_; ++h) {
-        offset += bpi[h];
-        for (int i = 0; i < npi[h]; ++i) {
-            out[h].emplace_back(offset + i);
-        }
-        offset += nmopi_[h] - bpi[h];
-    }
-
-    return out;
 }
 
 RDMs SemiCanonical::semicanonicalize(RDMs& rdms, const int& max_rdm_level, const bool& build_fock,
@@ -199,7 +166,7 @@ bool SemiCanonical::check_fock_matrix() {
             psi::Dimension npi = name_dim_pair.second;
 
             // grab Fock matrix of this diagonal block
-            psi::Slice slice(offsets_[name], offsets_[name] + npi);
+            auto slice = mo_space_info_->range(name);
             auto Fsub = fock->get_block(slice, slice);
             Fsub->set_name("Fock " + name + " " + spin);
 
@@ -248,8 +215,10 @@ void SemiCanonical::build_transformation_matrices() {
         spin_cases.push_back("beta");
 
     for (const std::string& spin : spin_cases) {
-        auto& fock = (spin == "alpha") ? fock_a : fock_b;
-        auto& U = (spin == "alpha") ? Ua_ : Ub_;
+        bool is_alpha = (spin == "alpha");
+
+        auto& fock = is_alpha ? fock_a : fock_b;
+        auto& U = is_alpha ? Ua_ : Ub_;
 
         // loop over orbital spaces
         for (const auto& name_dim_pair : mo_dims_) {
@@ -258,7 +227,7 @@ void SemiCanonical::build_transformation_matrices() {
 
             if (checked_results_[name + spin]) {
                 // build Fock matrix of this diagonal block
-                psi::Slice slice(offsets_[name], offsets_[name] + npi);
+                auto slice = mo_space_info_->range(name);
                 auto Fsub = fock->get_block(slice, slice);
                 Fsub->set_name("Fock " + name + " " + spin);
 
@@ -268,44 +237,30 @@ void SemiCanonical::build_transformation_matrices() {
                 Fsub->diagonalize(Usub, evals);
 
                 // fill in Ua or Ub
-                for (size_t h = 0; h < nirrep_; ++h) {
-                    int offset = offsets_[name][h];
-                    for (int i = 0; i < npi[h]; ++i) {
-                        for (int j = 0; j < npi[h]; ++j) {
-                            U->set(h, offset + i, offset + j, Usub->get(h, i, j));
-                        }
-                    }
-                }
+                U->set_block(slice, slice, Usub);
             }
         }
-    }
 
-    // keep phase and order unchanged
-    ints_->fix_orbital_phases(Ua_, true);
-    ints_->fix_orbital_phases(Ub_, false);
+        // keep phase and order unchanged
+        ints_->fix_orbital_phases(U, is_alpha);
 
-    // fill in UaData and UbData
-    for (const std::string& spin : spin_cases) {
-        auto& U = (spin == "alpha") ? Ua_ : Ub_;
-        auto& UData = (spin == "alpha") ? Ua_t_.data() : Ub_t_.data();
+        // fill in UData
+        auto& UData = is_alpha ? Ua_t_.data() : Ub_t_.data();
 
-        for (const auto& name_dim_pair : mo_dims_) {
-            const std::string& name = name_dim_pair.first;
-            psi::Dimension npi = name_dim_pair.second;
-
-            if (name.find("GAS") == std::string::npos)
-                continue;
+        auto active_space_names = mo_space_info_->composite_space_names()["ACTIVE"];
+        for (const std::string& name : active_space_names) {
+            auto dim = mo_space_info_->dimension(name);
+            auto slice = mo_space_info_->range(name);
+            auto Usub = U->get_block(slice, slice);
 
             for (size_t h = 0; h < nirrep_; ++h) {
                 int actv_off = actv_offsets_[name][h];
-                int offset = offsets_[name][h];
 
-                for (int u = 0; u < npi[h]; ++u) {
-                    int nu = actv_off + u;
-                    int mu = offset + u;
+                for (int u = 0; u < dim[h]; ++u) {
+                    int nu = u + actv_off;
 
-                    for (int v = 0; v < npi[h]; ++v) {
-                        UData[nu * nact_ + actv_off + v] = U->get(h, mu, offset + v);
+                    for (int v = 0; v < dim[h]; ++v) {
+                        UData[nu * nact_ + v + actv_off] = Usub->get(h, u, v);
                     }
                 }
             }

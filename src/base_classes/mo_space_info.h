@@ -206,6 +206,8 @@ class MOSpaceInfo {
     get_relative_mo(const std::string& space);
     /// @return The position of the orbitals in a space in a larger composite space
     std::vector<size_t> pos_in_space(const std::string& space, const std::string& composite_space);
+    /// @return The psi::Slice for a space counting started at absolute zero
+    psi::Slice range(const std::string& space);
 
     /// Read the space info from forte options(inputs)
     void read_options(std::shared_ptr<ForteOptions> options);
