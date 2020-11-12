@@ -1,31 +1,38 @@
 
     -----------------------------------------------------------------------
           Psi4: An Open-Source Ab Initio Electronic Structure Package
-                               Psi4 1.4a2.dev546 
+                               Psi4 1.4a2.dev1024 
 
-                         Git: Rev {master} 9701d60 
-
-
-    R. M. Parrish, L. A. Burns, D. G. A. Smith, A. C. Simmonett,
-    A. E. DePrince III, E. G. Hohenstein, U. Bozkaya, A. Yu. Sokolov,
-    R. Di Remigio, R. M. Richard, J. F. Gonthier, A. M. James,
-    H. R. McAlexander, A. Kumar, M. Saitow, X. Wang, B. P. Pritchard,
-    P. Verma, H. F. Schaefer III, K. Patkowski, R. A. King, E. F. Valeev,
-    F. A. Evangelista, J. M. Turney, T. D. Crawford, and C. D. Sherrill,
-    J. Chem. Theory Comput. 13(7) pp 3185--3197 (2017).
-    (doi: 10.1021/acs.jctc.7b00174)
+                         Git: Rev {master} b603cfc dirty
 
 
-                         Additional Contributions by
-    P. Kraus, H. Kruse, M. H. Lechner, M. C. Schieber, R. A. Shaw,
-    A. Alenaizan, R. Galvelis, Z. L. Glick, S. Lehtola, and J. P. Misiewicz
+    D. G. A. Smith, L. A. Burns, A. C. Simmonett, R. M. Parrish,
+    M. C. Schieber, R. Galvelis, P. Kraus, H. Kruse, R. Di Remigio,
+    A. Alenaizan, A. M. James, S. Lehtola, J. P. Misiewicz, M. Scheurer,
+    R. A. Shaw, J. B. Schriber, Y. Xie, Z. L. Glick, D. A. Sirianni,
+    J. S. O'Brien, J. M. Waldrop, A. Kumar, E. G. Hohenstein,
+    B. P. Pritchard, B. R. Brooks, H. F. Schaefer III, A. Yu. Sokolov,
+    K. Patkowski, A. E. DePrince III, U. Bozkaya, R. A. King,
+    F. A. Evangelista, J. M. Turney, T. D. Crawford, C. D. Sherrill,
+    J. Chem. Phys. 152(18) 184108 (2020). https://doi.org/10.1063/5.0006002
+
+                            Additional Code Authors
+    E. T. Seidl, C. L. Janssen, E. F. Valeev, M. L. Leininger,
+    J. F. Gonthier, R. M. Richard, H. R. McAlexander, M. Saitow, X. Wang,
+    P. Verma, and M. H. Lechner
+
+             Previous Authors, Complete List of Code Contributors,
+                       and Citations for Specific Modules
+    https://github.com/psi4/psi4/blob/master/codemeta.json
+    https://github.com/psi4/psi4/graphs/contributors
+    http://psicode.org/psi4manual/master/introduction.html#citing-psifour
 
     -----------------------------------------------------------------------
 
 
-    Psi4 started on: Monday, 25 May 2020 09:14PM
+    Psi4 started on: Thursday, 12 November 2020 10:40PM
 
-    Process ID: 29762
+    Process ID: 90541
     Host:       Yorks-Mac.local
     PSIDATADIR: /Users/york/src/psi4new/psi4/share/psi4
     Memory:     500.0 MiB
@@ -39,9 +46,9 @@
 import forte
 
 refmcscf   = -99.406065223640
-refudsrg   = -99.498877581701
-refprdsrg  = -99.500379478002
-refrdsrg   = -99.500197313857
+refudsrg   = -99.498870943028
+refprdsrg  = -99.500372786457
+refrdsrg   = -99.500190629197
 
 memory 500 mb
 
@@ -84,6 +91,7 @@ set forte{
    dsrg_hbar_seq          true
    dsrg_nivo              true
    relax_ref              twice
+   dsrg_read_amps         true
 }
 
 Emcscf, wfn = energy('mcscf', return_wfn=True)
@@ -108,7 +116,7 @@ Scratch directory: /Users/york/scratch/psi4/
 
 
 *** tstart() called on Yorks-Mac.local
-*** at Mon May 25 21:14:58 2020
+*** at Thu Nov 12 22:40:44 2020
 
 
          ------------------------------------------
@@ -164,7 +172,7 @@ Scratch directory: /Users/york/scratch/psi4/
     ci      = [ 0.00000000, 0.00000000]
     ci_grad = [ 0.00000000, 0.00000000]
   Setting level shift to 0.500 S
-  @SCF    6      -99.186908015658       0.001566379537       0.001957181741
+  @SCF    6      -99.186908015658       0.001566379536       0.001957181741
     ci      = [ 0.00000000, 0.00000000]
     ci_grad = [ 0.00000000, 0.00000000]
   Setting level shift to 0.500 S/E
@@ -192,227 +200,227 @@ Scratch directory: /Users/york/scratch/psi4/
     ci      = [-0.93934223, 0.34298130]
     ci_grad = [-0.00000029,-0.00000001]
   Setting level shift to 0.500 S/E
-  @SCF   13      -99.188257584029      -0.000002515179       0.000000557828
+  @SCF   13      -99.188257583911      -0.000002515061       0.000000557801
     ci      = [-0.93934249, 0.34298060]
     ci_grad = [ 0.00000250,-0.00000048]
   Setting level shift to 0.500 S/E
-  @SCF   14      -99.188256442213       0.000001141816       0.000000350226
+  @SCF   14      -99.188256442182       0.000001141729       0.000000350195
     ci      = [-0.93934242, 0.34298079]
     ci_grad = [-0.00000111, 0.00000029]
   Setting level shift to 0.500 S/E
-  @SCF   15      -99.188256651080      -0.000000208867       0.000000029039
+  @SCF   15      -99.188256647119      -0.000000204937       0.000000028585
     ci      = [-0.93934243, 0.34298075]
     ci_grad = [ 0.00000020,-0.00000005]
   Setting level shift to 0.500 S/E
-  @SCF   16      -99.188272176940      -0.000015525860       0.000001965376
+  @SCF   16      -99.188272234447      -0.000015587328       0.000001972883
     ci      = [-0.93934243, 0.34298075]
-    ci_grad = [ 0.00001556,-0.00000265]
+    ci_grad = [ 0.00001562,-0.00000267]
   Setting level shift to 0.500 S/E
-  @SCF   17      -99.188250574325       0.000021602615       0.000002911338
+  @SCF   17      -99.188250686283       0.000021548164       0.000002906771
     ci      = [-0.93934243, 0.34298075]
-    ci_grad = [-0.00002009, 0.00000796]
+    ci_grad = [-0.00002004, 0.00000793]
   Setting level shift to 0.500 S/E
-  @SCF   18      -99.338107004706      -0.149856430381       0.036379291665
+  @SCF   18      -99.338030656615      -0.149779970332       0.036369946818
     ci      = [-0.93934243, 0.34298075]
-    ci_grad = [ 0.16014332, 0.02828725]
+    ci_grad = [ 0.16012415, 0.02872672]
   Setting level shift to 0.500 S/E
-  @SCF   19      -99.382504779722      -0.044397775016       0.017257887672
+  @SCF   19      -99.382509999923      -0.044479343308       0.017292100215
     ci      = [-0.93934243, 0.34298075]
-    ci_grad = [ 0.05078474, 0.01320294]
+    ci_grad = [ 0.05092585, 0.01341143]
   Setting level shift to 0.500 S/E
-  @SCF   20      -99.390935344485      -0.008430564762       0.006427664455
+  @SCF   20      -99.390919818889      -0.008409818966       0.006381753648
     ci      = [-0.93934243, 0.34298075]
-    ci_grad = [ 0.01839655, 0.03058465]
+    ci_grad = [ 0.01840795, 0.03071599]
   Setting level shift to 0.500 S/E
-  @SCF   21      -99.396510548290      -0.005575203806       0.005248960957
+  @SCF   21      -99.396508375311      -0.005588556422       0.005308779268
     ci      = [-0.93934243, 0.34298075]
-    ci_grad = [ 0.01353710, 0.02362722]
+    ci_grad = [ 0.01350883, 0.02348505]
   Setting level shift to 0.500 S/E
-  @SCF   22      -99.402021424099      -0.005510875809       0.006508223204
+  @SCF   22      -99.401981426907      -0.005473051596       0.006459426488
     ci      = [-0.93934243, 0.34298075]
-    ci_grad = [ 0.01329384, 0.02294880]
+    ci_grad = [ 0.01321381, 0.02281285]
   Setting level shift to 0.500 S/E
-  @SCF   23      -99.404411394261      -0.002389970162       0.004401036368
+  @SCF   23      -99.404415539918      -0.002434113011       0.004481572208
     ci      = [-0.93934243, 0.34298075]
-    ci_grad = [ 0.00881051, 0.01879228]
+    ci_grad = [ 0.00881674, 0.01866287]
   Setting level shift to 0.500 S/E
-  @SCF   24      -99.405875519771      -0.001464125510       0.005179206175
+  @SCF   24      -99.405880673107      -0.001465133189       0.005206973669
     ci      = [-0.93934243, 0.34298075]
-    ci_grad = [ 0.00789134, 0.01891417]
+    ci_grad = [ 0.00791111, 0.01897481]
   Setting level shift to 0.500 S/E
-  @SCF   25      -99.405930598370      -0.000055078598       0.000673366888
+  @SCF   25      -99.405931561485      -0.000050888378       0.000652753343
     ci      = [-0.93934243, 0.34298075]
-    ci_grad = [ 0.00658032, 0.01943481]
+    ci_grad = [ 0.00658432, 0.01946196]
   Setting level shift to 0.500 S/E
-  @SCF   26      -99.405963598854      -0.000033000485       0.000471284709
+  @SCF   26      -99.405963892737      -0.000032331252       0.000481792215
     ci      = [-0.93934243, 0.34298075]
-    ci_grad = [ 0.00660868, 0.01959969]
+    ci_grad = [ 0.00660682, 0.01959598]
   Setting level shift to 0.500 S/E
-  @SCF   27      -99.405975268876      -0.000011670021       0.000407392977
+  @SCF   27      -99.405975025319      -0.000011132582       0.000409697274
     ci      = [-0.93934243, 0.34298075]
-    ci_grad = [ 0.00657521, 0.01956360]
+    ci_grad = [ 0.00657209, 0.01955542]
   Setting level shift to 0.500 S/E
-  @SCF   28      -99.405964155615       0.000011113260       0.000217935477
+  @SCF   28      -99.405963371012       0.000011654307       0.000205274484
     ci      = [-0.93934243, 0.34298075]
-    ci_grad = [ 0.00647899, 0.01932786]
+    ci_grad = [ 0.00647492, 0.01931656]
   Setting level shift to 0.500 S/E
-  @SCF   29      -99.405971607698      -0.000007452083       0.000140914589
-    ci      = [-0.94801773, 0.31821752]
-    ci_grad = [ 0.00652916, 0.01942794]
+  @SCF   29      -99.405970855419      -0.000007484407       0.000147280193
+    ci      = [-0.94801244, 0.31823328]
+    ci_grad = [ 0.00652489, 0.01941405]
   Setting level shift to 0.500 S/E
-  @SCF   30      -99.405971350226       0.000000257473       0.000038813345
-    ci      = [-0.94801472, 0.31822649]
-    ci_grad = [-0.00000260,-0.00000693]
+  @SCF   30      -99.405971098085      -0.000000242666       0.000040528405
+    ci      = [-0.94801308, 0.31823138]
+    ci_grad = [ 0.00000073, 0.00000141]
   Setting level shift to 0.500 S/E
-  @SCF   31      -99.405968893598       0.000002456628       0.000016780360
-    ci      = [-0.94799623, 0.31828155]
-    ci_grad = [-0.00001677,-0.00004223]
+  @SCF   31      -99.405968406005       0.000002692080       0.000017759175
+    ci      = [-0.94799281, 0.31829174]
+    ci_grad = [-0.00001838,-0.00004629]
   Setting level shift to 0.500 S/E
-  @SCF   32      -99.405964688117       0.000004205481       0.000024590124
-    ci      = [-0.94796529, 0.31837368]
-    ci_grad = [-0.00002815,-0.00007062]
+  @SCF   32      -99.405963309820       0.000005096185       0.000030107893
+    ci      = [-0.94795552, 0.31840278]
+    ci_grad = [-0.00003396,-0.00008510]
   Setting level shift to 0.500 S/E
-  @SCF   33      -99.405960110133       0.000004577984       0.000030157473
-    ci      = [-0.94793269, 0.31847075]
-    ci_grad = [-0.00002980,-0.00007433]
+  @SCF   33      -99.405958121615       0.000005188204       0.000034180798
+    ci      = [-0.94791891, 0.31851176]
+    ci_grad = [-0.00003351,-0.00008343]
   Setting level shift to 0.500 S/E
-  @SCF   34      -99.405972725048      -0.000012614915       0.000095489188
-    ci      = [-0.94793269, 0.31847075]
-    ci_grad = [ 0.00008347, 0.00020904]
+  @SCF   34      -99.405973136119      -0.000015014504       0.000114155821
+    ci      = [-0.94791891, 0.31851176]
+    ci_grad = [ 0.00009889, 0.00024745]
   Setting level shift to 0.500 S/E
-  @SCF   35      -99.405999402599      -0.000026677551       0.000241965556
-    ci      = [-0.94793269, 0.31847075]
-    ci_grad = [ 0.00026747, 0.00071470]
+  @SCF   35      -99.406010885158      -0.000037749039       0.000354499727
+    ci      = [-0.94791891, 0.31851176]
+    ci_grad = [ 0.00037271, 0.00099523]
   Setting level shift to 0.500 S/E
-  @SCF   36      -99.405990837120       0.000008565479       0.000088092290
-    ci      = [-0.94816807, 0.31776928]
-    ci_grad = [ 0.00017583, 0.00055159]
+  @SCF   36      -99.406021917131      -0.000011031973       0.000126694879
+    ci      = [-0.94791891, 0.31851176]
+    ci_grad = [ 0.00043785, 0.00127572]
   Setting level shift to 0.500 S/E
-  @SCF   37      -99.406060926005      -0.000070088885       0.001070087706
-    ci      = [-0.94816807, 0.31776928]
-    ci_grad = [ 0.00083632, 0.00229872]
+  @SCF   37      -99.406061979894      -0.000040062764       0.000785237240
+    ci      = [-0.94791891, 0.31851176]
+    ci_grad = [ 0.00102577, 0.00296616]
   Setting level shift to 0.500 S/E
-  @SCF   38      -99.406064059609      -0.000003133604       0.000196380477
-    ci      = [-0.94928150, 0.31442746]
-    ci_grad = [ 0.00087841, 0.00264203]
+  @SCF   38      -99.406062795227      -0.000000815332       0.000044386782
+    ci      = [-0.94921067, 0.31464123]
+    ci_grad = [ 0.00101490, 0.00305915]
   Setting level shift to 0.500 S/E
-  @SCF   39      -99.406064073177      -0.000000013568       0.000034687787
-    ci      = [-0.94927734, 0.31444004]
-    ci_grad = [-0.00000328,-0.00000995]
+  @SCF   39      -99.406063048410      -0.000000253184       0.000061742925
+    ci      = [-0.94921671, 0.31462300]
+    ci_grad = [ 0.00000501, 0.00001432]
   Setting level shift to 0.500 S/E
-  @SCF   40      -99.406064842259      -0.000000769082       0.000287011470
-    ci      = [-0.94952919, 0.31367869]
-    ci_grad = [ 0.00020007, 0.00060318]
+  @SCF   40      -99.406064751956      -0.000001703545       0.000134230379
+    ci      = [-0.94933451, 0.31426740]
+    ci_grad = [ 0.00009473, 0.00028074]
   Setting level shift to 0.500 S/E
-  @SCF   41      -99.406065201838      -0.000000359579       0.000078324336
-    ci      = [-0.94945756, 0.31389544]
-    ci_grad = [-0.00005641,-0.00017176]
+  @SCF   41      -99.406065162971      -0.000000411015       0.000077894086
+    ci      = [-0.94940076, 0.31406719]
+    ci_grad = [ 0.00005281, 0.00015833]
   Setting level shift to 0.500 S/E
-  @SCF   42      -99.406065218748      -0.000000016910       0.000015523578
-    ci      = [-0.94944596, 0.31393053]
-    ci_grad = [-0.00000917,-0.00002779]
+  @SCF   42      -99.406065209561      -0.000000046590       0.000024679790
+    ci      = [-0.94942038, 0.31400787]
+    ci_grad = [ 0.00001558, 0.00004695]
   Setting level shift to 0.500 S/E
-  @SCF   43      -99.406065218217       0.000000000531       0.000004010103
-    ci      = [-0.94944732, 0.31392642]
-    ci_grad = [ 0.00000108, 0.00000326]
+  @SCF   43      -99.406065222908      -0.000000013346       0.000022798063
+    ci      = [-0.94943863, 0.31395269]
+    ci_grad = [ 0.00001446, 0.00004369]
   Setting level shift to 0.500 S/E
-  @SCF   44      -99.406065222634      -0.000000004417       0.000018516345
-    ci      = [-0.94943300, 0.31396972]
-    ci_grad = [-0.00001133,-0.00003429]
+  @SCF   44      -99.406065223427      -0.000000000519       0.000002255331
+    ci      = [-0.94943757, 0.31395587]
+    ci_grad = [-0.00000083,-0.00000253]
   Setting level shift to 0.500 S/E
-  @SCF   45      -99.406065223472      -0.000000000838       0.000004121601
-    ci      = [-0.94943735, 0.31395656]
-    ci_grad = [ 0.00000345, 0.00001042]
+  @SCF   45      -99.406065222562       0.000000000864       0.000005377056
+    ci      = [-0.94944178, 0.31394315]
+    ci_grad = [ 0.00000333, 0.00001008]
   Setting level shift to 0.500 S/E
-  @SCF   46      -99.406065222450       0.000000001021       0.000005220629
-    ci      = [-0.94944205, 0.31394234]
-    ci_grad = [ 0.00000372, 0.00001126]
+  @SCF   46      -99.406065223618      -0.000000001056       0.000005231594
+    ci      = [-0.94943735, 0.31395655]
+    ci_grad = [-0.00000351,-0.00001061]
   Setting level shift to 0.500 S/E
-  @SCF   47      -99.406065223561      -0.000000001111       0.000004519131
-    ci      = [-0.94943805, 0.31395443]
-    ci_grad = [-0.00000316,-0.00000957]
+  @SCF   47      -99.406065223602       0.000000000016       0.000000784340
+    ci      = [-0.94943782, 0.31395514]
+    ci_grad = [ 0.00000037, 0.00000112]
   Setting level shift to 0.500 S/E
-  @SCF   48      -99.406065223543       0.000000000018       0.000000407596
-    ci      = [-0.94943835, 0.31395354]
-    ci_grad = [ 0.00000023, 0.00000070]
+  @SCF   48      -99.406065223637      -0.000000000035       0.000000777578
+    ci      = [-0.94943710, 0.31395732]
+    ci_grad = [-0.00000057,-0.00000172]
   Setting level shift to 0.500 S/E
-  @SCF   49      -99.406065223618      -0.000000000075       0.000000953749
-    ci      = [-0.94943756, 0.31395591]
-    ci_grad = [-0.00000062,-0.00000188]
+  @SCF   49      -99.406065223639      -0.000000000002       0.000000182716
+    ci      = [-0.94943703, 0.31395753]
+    ci_grad = [-0.00000006,-0.00000017]
   Setting level shift to 0.500 S/E
-  @SCF   50      -99.406065223626      -0.000000000008       0.000001348507
-    ci      = [-0.94943643, 0.31395935]
-    ci_grad = [-0.00000090,-0.00000272]
+  @SCF   50      -99.406065223639      -0.000000000000       0.000000119786
+    ci      = [-0.94943692, 0.31395787]
+    ci_grad = [-0.00000009,-0.00000027]
   Setting level shift to 0.500 S/E
-  @SCF   51      -99.406065223639      -0.000000000013       0.000000480913
-    ci      = [-0.94943687, 0.31395800]
-    ci_grad = [ 0.00000035, 0.00000106]
+  @SCF   51      -99.406065223640      -0.000000000000       0.000000085160
+    ci      = [-0.94943699, 0.31395766]
+    ci_grad = [ 0.00000006, 0.00000017]
   Setting level shift to 0.500 S/E
-  @SCF   52      -99.406065223640      -0.000000000001       0.000000089196
-    ci      = [-0.94943696, 0.31395773]
-    ci_grad = [ 0.00000007, 0.00000021]
+  @SCF   52      -99.406065223640      -0.000000000000       0.000000028892
+    ci      = [-0.94943696, 0.31395772]
+    ci_grad = [-0.00000002,-0.00000005]
   Setting level shift to 0.500 S/E
-  @SCF   53      -99.406065223639       0.000000000000       0.000000017476
-    ci      = [-0.94943695, 0.31395777]
-    ci_grad = [-0.00000001,-0.00000003]
-  Setting level shift to 0.500 S/E
-  @SCF   54      -99.406065223639       0.000000000000       0.000000062236
-    ci      = [-0.94943701, 0.31395759]
-    ci_grad = [ 0.00000005, 0.00000015]
-  Setting level shift to 0.500 S/E
-  @SCF   55      -99.406065223640      -0.000000000000       0.000000038405
-    ci      = [-0.94943698, 0.31395769]
-    ci_grad = [-0.00000003,-0.00000008]
-  Setting level shift to 0.500 S/E
-  @SCF   56      -99.406065223640      -0.000000000000       0.000000001835
+  @SCF   53      -99.406065223640      -0.000000000000       0.000000014113
     ci      = [-0.94943697, 0.31395769]
-    ci_grad = [-0.00000000,-0.00000000]
+    ci_grad = [ 0.00000001, 0.00000002]
   Setting level shift to 0.500 S/E
-  @SCF   57      -99.406065223640       0.000000000000       0.000000004987
-    ci      = [-0.94943697, 0.31395770]
+  @SCF   54      -99.406065223640       0.000000000000       0.000000010209
+    ci      = [-0.94943697, 0.31395771]
     ci_grad = [-0.00000000,-0.00000001]
   Setting level shift to 0.500 S/E
-  @SCF   58      -99.406065223640       0.000000000000       0.000000001317
-    ci      = [-0.94943697, 0.31395771]
-    ci_grad = [-0.00000000,-0.00000000]
+  @SCF   55      -99.406065223640      -0.000000000000       0.000000003212
+    ci      = [-0.94943697, 0.31395772]
+    ci_grad = [-0.00000000,-0.00000001]
   Setting level shift to 0.500 S/E
-  @SCF   59      -99.406065223640       0.000000000000       0.000000001448
-    ci      = [-0.94943697, 0.31395771]
-    ci_grad = [-0.00000000,-0.00000000]
-  Setting level shift to 0.500 S/E
-  @SCF   60      -99.406065223640       0.000000000000       0.000000001079
+  @SCF   56      -99.406065223640       0.000000000000       0.000000002088
     ci      = [-0.94943697, 0.31395771]
     ci_grad = [ 0.00000000, 0.00000000]
   Setting level shift to 0.500 S/E
-  @SCF   61      -99.406065223640       0.000000000000       0.000000000291
-    ci      = [-0.94943697, 0.31395771]
-    ci_grad = [-0.00000000,-0.00000000]
-  Setting level shift to 0.500 S/E
-  @SCF   62      -99.406065223639       0.000000000000       0.000000000145
-    ci      = [-0.94943697, 0.31395771]
-    ci_grad = [-0.00000000,-0.00000000]
-  Setting level shift to 0.500 S/E
-  @SCF   63      -99.406065223640      -0.000000000000       0.000000000129
+  @SCF   57      -99.406065223640       0.000000000000       0.000000002482
     ci      = [-0.94943697, 0.31395771]
     ci_grad = [ 0.00000000, 0.00000000]
   Setting level shift to 0.500 S/E
-  @SCF   64      -99.406065223640       0.000000000000       0.000000000275
-    ci      = [-0.94943697, 0.31395771]
-    ci_grad = [-0.00000000,-0.00000000]
-  Setting level shift to 0.500 S/E
-  @SCF   65      -99.406065223639       0.000000000000       0.000000000158
+  @SCF   58      -99.406065223640      -0.000000000000       0.000000001178
     ci      = [-0.94943697, 0.31395771]
     ci_grad = [ 0.00000000, 0.00000000]
   Setting level shift to 0.500 S/E
-  @SCF   66      -99.406065223640      -0.000000000000       0.000000000034
+  @SCF   59      -99.406065223640      -0.000000000000       0.000000000385
     ci      = [-0.94943697, 0.31395771]
     ci_grad = [-0.00000000,-0.00000000]
+  Setting level shift to 0.500 S/E
+  @SCF   60      -99.406065223640       0.000000000000       0.000000000773
+    ci      = [-0.94943697, 0.31395771]
+    ci_grad = [ 0.00000000, 0.00000000]
+  Setting level shift to 0.500 S/E
+  @SCF   61      -99.406065223640       0.000000000000       0.000000000541
+    ci      = [-0.94943697, 0.31395771]
+    ci_grad = [-0.00000000,-0.00000000]
+  Setting level shift to 0.500 S/E
+  @SCF   62      -99.406065223640      -0.000000000000       0.000000000477
+    ci      = [-0.94943697, 0.31395771]
+    ci_grad = [ 0.00000000, 0.00000000]
+  Setting level shift to 0.500 S/E
+  @SCF   63      -99.406065223640       0.000000000000       0.000000000154
+    ci      = [-0.94943697, 0.31395771]
+    ci_grad = [-0.00000000,-0.00000000]
+  Setting level shift to 0.500 S/E
+  @SCF   64      -99.406065223640      -0.000000000000       0.000000000100
+    ci      = [-0.94943697, 0.31395771]
+    ci_grad = [ 0.00000000, 0.00000000]
+  Setting level shift to 0.500 S/E
+  @SCF   65      -99.406065223639       0.000000000000       0.000000000066
+    ci      = [-0.94943697, 0.31395771]
+    ci_grad = [-0.00000000,-0.00000000]
+  Setting level shift to 0.500 S/E
+  @SCF   66      -99.406065223640      -0.000000000000       0.000000000021
+    ci      = [-0.94943697, 0.31395771]
+    ci_grad = [ 0.00000000, 0.00000000]
   =========================================================================================
 
       * SCF total energy   =     -99.406065223640
 
 
-      CI coefficients  = [-0.949436969, 0.313957709]
+      CI coefficients  = [-0.949436969, 0.313957708]
 
   End of SCF
   MOs orthonormality check passed.
@@ -425,8 +433,8 @@ Scratch directory: /Users/york/scratch/psi4/
   Eigenvalues (Eh)
   -------------------------------------------------------------------------
   Doubly occupied orbitals
-      1    -26.175209  A1      2     -1.495695  A1      3     -0.623385  B2
-      4     -0.623385  B1
+      1    -26.175209  A1      2     -1.495695  A1      3     -0.623385  B1
+      4     -0.623385  B2
   Active orbitals
       5     -0.510102  A1      6      0.074682  A1
   Unoccupied orbitals
@@ -438,19 +446,33 @@ Scratch directory: /Users/york/scratch/psi4/
   MCSCF Execution Completed.
 
 
-*** tstop() called on Yorks-Mac.local at Mon May 25 21:14:59 2020
+*** tstop() called on Yorks-Mac.local at Thu Nov 12 22:40:44 2020
 Module time:
 	user time   =       0.03 seconds =       0.00 minutes
 	system time =       0.02 seconds =       0.00 minutes
-	total time  =          1 seconds =       0.02 minutes
+	total time  =          0 seconds =       0.00 minutes
 Total time:
 	user time   =       0.03 seconds =       0.00 minutes
 	system time =       0.02 seconds =       0.00 minutes
-	total time  =          1 seconds =       0.02 minutes
-    MCSCF energy......................................................PASSED
+	total time  =          0 seconds =       0.00 minutes
+    MCSCF energy..........................................................................PASSED
 
 Scratch directory: /Users/york/scratch/psi4/
-   => Loading Basis Set <=
+
+  Forte
+  ----------------------------------------------------------------------------
+  A suite of quantum chemistry methods for strongly correlated electrons
+
+    git branch: gasci-msaverage - git commit: 6561a55f
+
+  Developed by:
+    Francesco A. Evangelista, Chenyang Li, Kevin P. Hannon,
+    Jeffrey B. Schriber, Tianyuan Zhang, Chenxi Cai,
+    Nan He, Nicholas Stair, Shuhe Wang, Renke Huang
+  ----------------------------------------------------------------------------
+
+  Size of Determinant class: 256 bits
+  Preparing forte objects from a psi4 Wavefunction object   => Loading Basis Set <=
 
     Name: STO-3G
     Role: ORBITAL
@@ -459,22 +481,11 @@ Scratch directory: /Users/york/scratch/psi4/
     atoms 2 entry H          line    19 file /Users/york/src/psi4new/psi4/share/psi4/basis/sto-3g.gbs 
 
 
-  Forte
-  ----------------------------------------------------------------------------
-  A suite of quantum chemistry methods for strongly correlated electrons
-
-    git branch: dsrg_file_io - git commit: 152a3ab7
-
-  Developed by:
-    Francesco A. Evangelista, Chenyang Li, Kevin P. Hannon,
-    Jeffrey B. Schriber, Tianyuan Zhang, Chenxi Cai,
-    Nan He, Nicholas Stair, Shuhe Wang, Renke Huang
-  ----------------------------------------------------------------------------
-
-  Size of Determinant class: 128 bits
   Read options for space FROZEN_DOCC
   Read options for space RESTRICTED_DOCC
   Read options for space ACTIVE
+  Read options for space FROZEN_DOCC
+  Read options for space RESTRICTED_DOCC
 
   ==> MO Space Information <==
 
@@ -483,11 +494,19 @@ Scratch directory: /Users/york/scratch/psi4/
   -------------------------------------------------
     FROZEN_DOCC         1     0     0     0     1
     RESTRICTED_DOCC     1     0     1     1     3
-    ACTIVE              2     0     0     0     2
+    GAS1                2     0     0     0     2
+    GAS2                0     0     0     0     0
+    GAS3                0     0     0     0     0
+    GAS4                0     0     0     0     0
+    GAS5                0     0     0     0     0
+    GAS6                0     0     0     0     0
     RESTRICTED_UOCC     3     0     1     1     5
     FROZEN_UOCC         0     0     0     0     0
     Total               7     0     2     2    11
   -------------------------------------------------
+  Forte will use psi4 integrals
+  JK created using Cholesky integrals
+
 
   ==> Integral Transformation <==
 
@@ -500,33 +519,17 @@ Scratch directory: /Users/york/scratch/psi4/
 
   Computing the Cholesky Vectors 
 
-  Computing CD Integrals               ......Done.
+  Computing CD Integrals
   Timing for cholesky transformation:                         0.004 s.
   Need 41.62 KB to store CD integrals in core
 
   Number of Cholesky vectors required for 1.000e-04 tolerance: 43
-  Using in-core PK algorithm.
-   Calculation information:
-      Number of atoms:                   2
-      Number of AO shells:               7
-      Number of primitives:             12
-      Number of atomic orbitals:        11
-      Number of basis functions:        11
 
-      Integral cutoff                 1.00e-12
-      Number of threads:                 1
-
-  Performing in-core PK
-  Using 4422 doubles for integral storage.
-  We computed 406 shell quartets total.
-  Whereas there are 406 unique shell quartets.
-
-
-  Frozen-core energy            -75.818535539738 a.u.
-  Timing for frozen one-body operator:                        0.012 s.
+  Frozen-core energy         -75.818535539853713 a.u.
+  Timing for frozen one-body operator:                        0.000 s.
   Resorting integrals after freezing core.
-  Timing for freezing core and virtual orbitals:              0.012 s.
-  Timing for computing Cholesky integrals:                    0.018 s.
+  Timing for freezing core and virtual orbitals:              0.000 s.
+  Timing for computing Cholesky integrals:                    0.006 s.
 
   ==> Summary of Active Space Solver Input <==
 
@@ -573,10 +576,10 @@ Scratch directory: /Users/york/scratch/psi4/
   ---------------------------------------------
     Root            Energy     <S^2>   Spin
   ---------------------------------------------
-      0      -99.406062695553  0.000  singlet
-      1      -99.266207742800  2.000  triplet
-      2      -98.863145406961  0.000  singlet
-      3      -98.545353132402  0.000  singlet
+      0      -99.406056114176  0.000  singlet
+      1      -99.266201506119  2.000  triplet
+      2      -98.863138507840  0.000  singlet
+      3      -98.545347902760  0.000  singlet
   ---------------------------------------------
   Timing for initial guess  =      0.000 s
 
@@ -584,26 +587,28 @@ Scratch directory: /Users/york/scratch/psi4/
 
   ==> Diagonalizing Hamiltonian <==
 
+  Energy   convergence: 1.00e-08
+  Residual convergence: 1.00e-06
   -----------------------------------------------------
     Iter.      Avg. Energy       Delta_E     Res. Norm
   -----------------------------------------------------
-      1      -99.406062695553  -9.941e+01  +1.966e-14
-      2      -99.406062695553  +1.421e-14  +5.562e-14
+      1      -99.406056114176  -9.941e+01  +2.951e-14
+      2      -99.406056114176  +0.000e+00  +2.951e-14
   -----------------------------------------------------
   The Davidson-Liu algorithm converged in 3 iterations.
 
   ==> Root No. 0 <==
 
-    20     -0.94943631
-    02      0.31395970
+    20      0.94943616
+    02     -0.31396014
 
-    Total Energy:       -99.406062695553047
+    Total Energy:       -99.406056114175811
 
   ==> Energy Summary <==
 
     Multi.(2ms)  Irrep.  No.               Energy
     ---------------------------------------------
-       1  (  0)    A1     0      -99.406062695553
+       1  (  0)    A1     0      -99.406056114176
     ---------------------------------------------
 
   ==> Computing RDMs for Root No. 0 <==
@@ -614,7 +619,7 @@ Scratch directory: /Users/york/scratch/psi4/
 
   ==> NATURAL ORBITALS <==
 
-        1A1     1.802859      2A1     0.197141  
+        1A1     1.802858      2A1     0.197142  
 
 
        -----------------------------------------------------------------
@@ -622,58 +627,44 @@ Scratch directory: /Users/york/scratch/psi4/
          Chenyang Li, Jeffrey B. Schriber and Francesco A. Evangelista
        -----------------------------------------------------------------
 
-  Took 0.000454 s to build Fock matrix
+  Took 0.000347 s to build Fock matrix
 
   ==> Checking Fock Matrix Diagonal Blocks <==
 
     Off-Diag. Elements       Max           2-Norm
     ------------------------------------------------
-    Fa actv              0.0348824641   0.0493312538
-    Fb actv              0.0348824641   0.0493312538
+    FROZEN_DOCC          0.0000000000   0.0000000000
+    FROZEN_UOCC          0.0000000000   0.0000000000
+    GAS1                 0.0348820245   0.0493306321
+    GAS2                 0.0000000000   0.0000000000
+    GAS3                 0.0000000000   0.0000000000
+    GAS4                 0.0000000000   0.0000000000
+    GAS5                 0.0000000000   0.0000000000
+    GAS6                 0.0000000000   0.0000000000
+    RESTRICTED_DOCC      0.0000000000   0.0000000000
+    RESTRICTED_UOCC      0.0000149791   0.0000234993
     ------------------------------------------------
-    Fa core              0.0000000000   0.0000000000
-    Fb core              0.0000000000   0.0000000000
-    ------------------------------------------------
-    Fa virt              0.0000150723   0.0000239151
-    Fb virt              0.0000150723   0.0000239151
-    ------------------------------------------------
- Integrals are about to be computed.
+  Integrals are about to be computed.
   Computing the Cholesky Vectors 
 
-  Computing CD Integrals               ......Done.
+  Computing CD Integrals
   Timing for cholesky transformation:                         0.004 s.
   Need 41.62 KB to store CD integrals in core
 
   Number of Cholesky vectors required for 1.000e-04 tolerance: 43
 
- Integrals are about to be updated.  Using in-core PK algorithm.
-   Calculation information:
-      Number of atoms:                   2
-      Number of AO shells:               7
-      Number of primitives:             12
-      Number of atomic orbitals:        11
-      Number of basis functions:        11
-
-      Integral cutoff                 1.00e-12
-      Number of threads:                 1
-
-  Performing in-core PK
-  Using 4422 doubles for integral storage.
-  We computed 406 shell quartets total.
-  Whereas there are 406 unique shell quartets.
-
-
-  Frozen-core energy            -75.818535539738 a.u.
-  Timing for frozen one-body operator:                        0.010 s.
+  Integrals are about to be updated.
+  Frozen-core energy         -75.818535539853713 a.u.
+  Timing for frozen one-body operator:                        0.000 s.
   Resorting integrals after freezing core.
-  Timing for freezing core and virtual orbitals:              0.010 s.
+  Timing for freezing core and virtual orbitals:              0.000 s.
 
   ==> RDMs Transformation to Semicanonical Basis <==
 
     Transformed 1 RDM.
     Transformed 2 RDM.
     Transformed 3 RDM.
-  SemiCanonicalize takes 0.079690 s.
+  Timing for semi-canonicalization:                           0.070 s.
 
     -----------------------------------------------------------------------
       Spin-Adapted Multireference Driven Similarity Renormalization Group
@@ -696,19 +687,18 @@ Scratch directory: /Users/york/scratch/psi4/
 
              2-cumulant   3-cumulant
     --------------------------------
-    max        0.589493     0.283341
-    norm       1.043936     0.856051
+    max        0.589494     0.283342
+    2-norm     1.043938     0.856053
     --------------------------------
 
   ==> Checking Semicanonical Orbitals <==
 
-    Fock core, active, virtual blocks (Fij, i != j)
-                      core          active         virtual
-    ------------------------------------------------------
-       max    0.0000000000    0.0000000000    0.0000150723
-    1-norm    0.0000000000    0.0000000000    0.0000465924
-    ------------------------------------------------------
-
+    Block                Max            Mean
+    ----------------------------------------
+    CORE        0.0000000000    0.0000000000
+    VIRTUAL     0.0000149791    0.0000018463
+    GAS1        0.0000000000    0.0000000000
+    ----------------------------------------
     Orbitals are semi-canonicalized.
 
   ==> Computation Information <==
@@ -721,7 +711,7 @@ Scratch directory: /Users/york/scratch/psi4/
     Restart amplitudes                                  TRUE
     Sequential DSRG transformation                      TRUE
     Omit blocks of >= 3 virtual indices                 TRUE
-    Read amplitudes from current dir                   FALSE
+    Read amplitudes from current dir                    TRUE
     Write amplitudes to current dir                    FALSE
     Flow parameter                                 1.000e+00
     Energy convergence threshold                   1.000e-08
@@ -747,19 +737,18 @@ Scratch directory: /Users/york/scratch/psi4/
     1-electron and 3-index integrals                35.20 KB
     T1 cluster amplitudes and residuals            560.00  B
     T2 cluster amplitudes and residuals             29.40 KB
-    1- and 2-body Hbar                              80.80 KB
-    1-body intermediates                             1.60 KB
-    2-body intermediates                           110.00 KB
+    1-body Hbar and intermediates                    2.40 KB
+    2-body Hbar and intermediates                  165.00 KB
     Local intermediates for sequential Hbar         34.40 KB
     Local intermediates for commutators             41.44 KB
     Max memory for local intermediates              41.44 KB
-    Memory currently available                     489.71 MB
+    Memory currently available                     489.73 MB
 
 
   ==> Build Initial Amplitudes Guesses <==
 
-    Computing T2 amplitudes from PT2 ...  Done. Timing      0.001 s
-    Computing T1 amplitudes from PT2 ...  Done. Timing      0.001 s
+    Reading T2 amplitudes from current directory ...  Done. Timing      0.000 s
+    Reading T1 amplitudes from current directory ...  Done. Timing      0.000 s
 
   ==> Initial Excitation Amplitudes Summary <==
 
@@ -767,35 +756,31 @@ Scratch directory: /Users/york/scratch/psi4/
     Largest T1 amplitudes (absolute values):
         i    a                i    a                i    a
     -----------------------------------------------------------------
-    [   2    4] 0.1024821 [   2    3] 0.0962293 [   0    1] 0.0396422
-    [   1    4] 0.0204874 [   1    3] 0.0075674 [   0    2] 0.0067701
-    [   2    5] 0.0048955 [   1    5] 0.0030799 [   8    9] 0.0003139
-    [   6    7] 0.0003139 [   0    3] 0.0000983 [   0    5] 0.0000316
-    [   0    4] 0.0000238
+    [   2    4] 0.0906383 [   2    3] 0.0887236 [   0    1] 0.0488400
+    [   1    4] 0.0142270 [   0    2] 0.0107355 [   1    3] 0.0054529
+    [   2    5] 0.0025646 [   1    5] 0.0020289 [   6    7] 0.0009426
+    [   8    9] 0.0009426 [   0    5] 0.0009146 [   0    4] 0.0006995
+    [   0    3] 0.0005096
     -----------------------------------------------------------------
-    2-Norm of T1 vector:                            0.147954929322236
+    2-Norm of T1 vector:                            0.137236949016466
     Number of nonzero elements:                                    13
     -----------------------------------------------------------------
     Largest T2 amplitudes (absolute values):
         i    j    a    b                i    j    a    b                i    j    a    b
     -----------------------------------------------------------------------------------------------
-    [   2    2    2    3] 0.0758651 [   2    2    1    4] 0.0743882 [   0    0    1    1] 0.0601565
-    [   2    2    3    3] 0.0517165 [   1    2    1    3] 0.0507802 [   1    2    1    4] 0.0502781
-    [   2    8    1    9] 0.0500089 [   2    6    1    7] 0.0500089 [   1    8    1    9] 0.0487695
-    [   1    6    1    7] 0.0487695 [   1    2    2    4] 0.0464245 [   2    1    2    3] 0.0440719
-    [   2    8    2    9] 0.0398939 [   2    6    2    7] 0.0398939 [   8    8    9    9] 0.0363272
+    [   0    0    1    1] 0.0672644 [   2    2    2    3] 0.0591047 [   1    2    1    3] 0.0479228
+    [   2    1    2    3] 0.0452714 [   8    8    9    9] 0.0414926 [   6    6    7    7] 0.0414926
+    [   1    6    1    7] 0.0412185 [   1    8    1    9] 0.0412185 [   0    0    1    2] 0.0390504
+    [   2    2    3    3] 0.0387551 [   2    8    1    9] 0.0348935 [   2    6    1    7] 0.0348935
+    [   2    2    1    4] 0.0344744 [   6    8    7    9] 0.0299083 [   2    8    2    9] 0.0294833
     -----------------------------------------------------------------------------------------------
-    2-Norm of T2 vector:                                                          0.349804465656501
-    Number of nonzero elements:                                                                 261
+    2-Norm of T2 vector:                                                          0.297694406838587
+    Number of nonzero elements:                                                                 405
     -----------------------------------------------------------------------------------------------
 
   ==> Possible Intruders <==
 
-    T1 amplitudes larger than 0.1000:
-     Amplitudes      Value                   Denominator
-    ----------------------------------------------------------------
-    [   2    4]   0.102482120 (  0.076767 -   2.296426 =  -2.219658)
-    ----------------------------------------------------------------
+    T1 amplitudes larger than 0.1000: NULL
     T2 amplitudes larger than 0.1000: NULL
 
   ==> Computing MR-LDSRG(2) Energy <==
@@ -807,23 +792,15 @@ Scratch directory: /Users/york/scratch/psi4/
            ---------------------------  ---------------------  ---------------------  -----------------
     Iter.        Corr.         Delta       Hbar1      Hbar2        T1         T2        Hbar     Amp.    DIIS
     ---------------------------------------------------------------------------------------------------------
-       1    -0.089444203128 -8.944e-02   9.137e-02  4.203e-01   2.321e-02  1.231e-01     1.203    0.001
-       2    -0.092338495740 -2.894e-03   9.403e-02  1.962e-01   1.005e-02  3.891e-02     1.310    0.001  S
-       3    -0.092710577259 -3.721e-04   8.088e-02  1.437e-01   2.285e-03  1.298e-02     1.206    0.001  S/E
-       4    -0.092830387572 -1.198e-04   8.191e-02  1.434e-01   4.902e-04  1.676e-03     1.192    0.001  S/E
-       5    -0.092817440168  1.295e-05   8.173e-02  1.430e-01   1.206e-04  3.567e-04     1.221    0.001  S/E
-       6    -0.092814876338  2.564e-06   8.166e-02  1.429e-01   1.325e-05  6.039e-05     1.222    0.001  S/E
-       7    -0.092815034745 -1.584e-07   8.166e-02  1.429e-01   3.419e-06  1.542e-05     1.223    0.001  S/E
-       8    -0.092814859847  1.749e-07   8.166e-02  1.429e-01   7.588e-07  2.229e-06     1.230    0.001  S/E
-       9    -0.092814882891 -2.304e-08   8.166e-02  1.429e-01   1.650e-07  6.420e-07     1.229    0.001  S/E
-      10    -0.092814888429 -5.538e-09   8.166e-02  1.429e-01   2.718e-08  1.467e-07     1.243    0.001  S/E
+       1    -0.092814829129 -9.281e-02   8.166e-02  1.429e-01   6.948e-09  5.123e-08     1.222    0.001
+       2    -0.092814829318 -1.897e-10   8.166e-02  1.429e-01   2.991e-09  2.218e-08     1.181    0.001  S
     ---------------------------------------------------------------------------------------------------------
 
   ==> MR-LDSRG(2) Energy Summary <==
 
-    E0 (reference)                 =     -99.406062695553075
-    MR-LDSRG(2) correlation energy =      -0.092814888428794
-    MR-LDSRG(2) total energy       =     -99.498877583981866
+    E0 (reference)                 =     -99.406056114175911
+    MR-LDSRG(2) correlation energy =      -0.092814829318296
+    MR-LDSRG(2) total energy       =     -99.498870943494211
 
   ==> Final Excitation Amplitudes Summary <==
 
@@ -831,26 +808,26 @@ Scratch directory: /Users/york/scratch/psi4/
     Largest T1 amplitudes (absolute values):
         i    a                i    a                i    a
     -----------------------------------------------------------------
-    [   2    4] 0.0906387 [   2    3] 0.0887236 [   0    1] 0.0488400
-    [   1    4] 0.0142275 [   0    2] 0.0107355 [   1    3] 0.0054527
-    [   2    5] 0.0025647 [   1    5] 0.0020289 [   8    9] 0.0009419
-    [   6    7] 0.0009419 [   0    5] 0.0009147 [   0    4] 0.0006995
+    [   2    4] 0.0906383 [   2    3] 0.0887236 [   0    1] 0.0488400
+    [   1    4] 0.0142270 [   0    2] 0.0107355 [   1    3] 0.0054529
+    [   2    5] 0.0025646 [   1    5] 0.0020289 [   6    7] 0.0009426
+    [   8    9] 0.0009426 [   0    5] 0.0009146 [   0    4] 0.0006995
     [   0    3] 0.0005096
     -----------------------------------------------------------------
-    2-Norm of T1 vector:                            0.137237261236952
+    2-Norm of T1 vector:                            0.137236944086880
     Number of nonzero elements:                                    13
     -----------------------------------------------------------------
     Largest T2 amplitudes (absolute values):
         i    j    a    b                i    j    a    b                i    j    a    b
     -----------------------------------------------------------------------------------------------
-    [   0    0    1    1] 0.0672645 [   2    2    2    3] 0.0591048 [   1    2    1    3] 0.0479228
+    [   0    0    1    1] 0.0672644 [   2    2    2    3] 0.0591047 [   1    2    1    3] 0.0479228
     [   2    1    2    3] 0.0452714 [   8    8    9    9] 0.0414926 [   6    6    7    7] 0.0414926
     [   1    8    1    9] 0.0412185 [   1    6    1    7] 0.0412185 [   0    0    1    2] 0.0390504
     [   2    2    3    3] 0.0387551 [   2    8    1    9] 0.0348935 [   2    6    1    7] 0.0348935
-    [   2    2    1    4] 0.0344743 [   6    8    7    9] 0.0299083 [   2    8    2    9] 0.0294833
+    [   2    2    1    4] 0.0344744 [   6    8    7    9] 0.0299083 [   2    8    2    9] 0.0294833
     -----------------------------------------------------------------------------------------------
-    2-Norm of T2 vector:                                                          0.297694385775413
-    Number of nonzero elements:                                                                 261
+    2-Norm of T2 vector:                                                          0.297694413954221
+    Number of nonzero elements:                                                                 405
     -----------------------------------------------------------------------------------------------
 
   ==> Possible Intruders <==
@@ -902,10 +879,10 @@ Scratch directory: /Users/york/scratch/psi4/
   ---------------------------------------------
     Root            Energy     <S^2>   Spin
   ---------------------------------------------
-      0      -99.500379480226  0.000  singlet
-      1      -99.367410163616  2.000  triplet
-      2      -99.095462873075  0.000  singlet
-      3      -98.770924119103  0.000  singlet
+      0      -99.500372786881  0.000  singlet
+      1      -99.367403863906  2.000  triplet
+      2      -99.095454765727  0.000  singlet
+      3      -98.770919549506  0.000  singlet
   ---------------------------------------------
   Timing for initial guess  =      0.000 s
 
@@ -913,26 +890,28 @@ Scratch directory: /Users/york/scratch/psi4/
 
   ==> Diagonalizing Hamiltonian <==
 
+  Energy   convergence: 1.00e-08
+  Residual convergence: 1.00e-06
   -----------------------------------------------------
     Iter.      Avg. Energy       Delta_E     Res. Norm
   -----------------------------------------------------
-      1      -99.500379480226  -9.950e+01  +3.322e-14
-      2      -99.500379480226  -2.842e-14  +7.167e-14
+      1      -99.500372786881  -9.950e+01  +3.306e-14
+      2      -99.500372786881  +0.000e+00  +3.306e-14
   -----------------------------------------------------
   The Davidson-Liu algorithm converged in 3 iterations.
 
   ==> Root No. 0 <==
 
-    20      0.96300019
-    02     -0.26815160
+    20     -0.96299997
+    02      0.26815264
 
-    Total Energy:       -99.500379480226115
+    Total Energy:       -99.500372786881030
 
   ==> Energy Summary <==
 
     Multi.(2ms)  Irrep.  No.               Energy
     ---------------------------------------------
-       1  (  0)    A1     0      -99.500379480226
+       1  (  0)    A1     0      -99.500372786881
     ---------------------------------------------
 
   ==> Computing RDMs for Root No. 0 <==
@@ -943,7 +922,7 @@ Scratch directory: /Users/york/scratch/psi4/
 
   ==> NATURAL ORBITALS <==
 
-        1A1     1.855873      2A1     0.144127  
+        1A1     1.855872      2A1     0.144128  
 
 
   ==> RDMs Transformation to Semicanonical Basis <==
@@ -951,58 +930,44 @@ Scratch directory: /Users/york/scratch/psi4/
     Transformed 1 RDM.
     Transformed 2 RDM.
     Transformed 3 RDM.
-  Took 0.000415 s to build Fock matrix
+  Took 0.000379 s to build Fock matrix
 
   ==> Checking Fock Matrix Diagonal Blocks <==
 
     Off-Diag. Elements       Max           2-Norm
     ------------------------------------------------
-    Fa actv              0.0040511990   0.0057292606
-    Fb actv              0.0040511990   0.0057292606
+    FROZEN_DOCC          0.0000000000   0.0000000000
+    FROZEN_UOCC          0.0000000000   0.0000000000
+    GAS1                 0.0040510601   0.0057290642
+    GAS2                 0.0000000000   0.0000000000
+    GAS3                 0.0000000000   0.0000000000
+    GAS4                 0.0000000000   0.0000000000
+    GAS5                 0.0000000000   0.0000000000
+    GAS6                 0.0000000000   0.0000000000
+    RESTRICTED_DOCC      0.0000000000   0.0000000000
+    RESTRICTED_UOCC      0.0020300091   0.0047436362
     ------------------------------------------------
-    Fa core              0.0000000000   0.0000000000
-    Fb core              0.0000000000   0.0000000000
-    ------------------------------------------------
-    Fa virt              0.0020297352   0.0047440922
-    Fb virt              0.0020297352   0.0047440922
-    ------------------------------------------------
- Integrals are about to be computed.
+  Integrals are about to be computed.
   Computing the Cholesky Vectors 
 
-  Computing CD Integrals               ......Done.
+  Computing CD Integrals
   Timing for cholesky transformation:                         0.004 s.
   Need 41.62 KB to store CD integrals in core
 
   Number of Cholesky vectors required for 1.000e-04 tolerance: 43
 
- Integrals are about to be updated.  Using in-core PK algorithm.
-   Calculation information:
-      Number of atoms:                   2
-      Number of AO shells:               7
-      Number of primitives:             12
-      Number of atomic orbitals:        11
-      Number of basis functions:        11
-
-      Integral cutoff                 1.00e-12
-      Number of threads:                 1
-
-  Performing in-core PK
-  Using 4422 doubles for integral storage.
-  We computed 406 shell quartets total.
-  Whereas there are 406 unique shell quartets.
-
-
-  Frozen-core energy            -75.818535539738 a.u.
-  Timing for frozen one-body operator:                        0.010 s.
+  Integrals are about to be updated.
+  Frozen-core energy         -75.818535539853713 a.u.
+  Timing for frozen one-body operator:                        0.000 s.
   Resorting integrals after freezing core.
-  Timing for freezing core and virtual orbitals:              0.010 s.
+  Timing for freezing core and virtual orbitals:              0.000 s.
 
   ==> RDMs Transformation to Semicanonical Basis <==
 
     Transformed 1 RDM.
     Transformed 2 RDM.
     Transformed 3 RDM.
-  SemiCanonicalize takes 0.084019 s.
+  Timing for semi-canonicalization:                           0.070 s.
 
     -----------------------------------------------------------------------
       Spin-Adapted Multireference Driven Similarity Renormalization Group
@@ -1025,19 +990,18 @@ Scratch directory: /Users/york/scratch/psi4/
 
              2-cumulant   3-cumulant
     --------------------------------
-    max        0.515018     0.228296
-    norm       0.865794     0.686789
+    max        0.515020     0.228298
+    2-norm     0.865798     0.686793
     --------------------------------
 
   ==> Checking Semicanonical Orbitals <==
 
-    Fock core, active, virtual blocks (Fij, i != j)
-                      core          active         virtual
-    ------------------------------------------------------
-       max    0.0000000000    0.0000000000    0.0000000000
-    1-norm    0.0000000000    0.0000000000    0.0000000000
-    ------------------------------------------------------
-
+    Block                Max            Mean
+    ----------------------------------------
+    CORE        0.0000000000    0.0000000000
+    VIRTUAL     0.0000000000    0.0000000000
+    GAS1        0.0000000000    0.0000000000
+    ----------------------------------------
     Orbitals are semi-canonicalized.
 
   ==> Computation Information <==
@@ -1050,7 +1014,7 @@ Scratch directory: /Users/york/scratch/psi4/
     Restart amplitudes                                  TRUE
     Sequential DSRG transformation                      TRUE
     Omit blocks of >= 3 virtual indices                 TRUE
-    Read amplitudes from current dir                   FALSE
+    Read amplitudes from current dir                    TRUE
     Write amplitudes to current dir                    FALSE
     Flow parameter                                 1.000e+00
     Energy convergence threshold                   1.000e-08
@@ -1076,29 +1040,28 @@ Scratch directory: /Users/york/scratch/psi4/
     1-electron and 3-index integrals                35.20 KB
     T1 cluster amplitudes and residuals            560.00  B
     T2 cluster amplitudes and residuals             29.40 KB
-    1- and 2-body Hbar                              80.80 KB
-    1-body intermediates                             1.60 KB
-    2-body intermediates                           110.00 KB
+    1-body Hbar and intermediates                    2.40 KB
+    2-body Hbar and intermediates                  165.00 KB
     Local intermediates for sequential Hbar         34.40 KB
     Local intermediates for commutators             41.44 KB
     Max memory for local intermediates              41.44 KB
-    Memory currently available                     489.71 MB
+    Memory currently available                     489.73 MB
 
 
   ==> Total Timings (s) for Computing Commutators <==
 
              [H1, T1]    [H1, T2]    [H2, T1]    [H2, T2]
     -----------------------------------------------------
-    -> C0       0.000       0.028       0.000       0.827
-    -> C1       0.000       0.291       0.000       3.868
-    -> C2                   0.587       0.000       6.408
+    -> C0       0.000       0.005       0.000       0.159
+    -> C1       0.000       0.056       0.000       0.747
+    -> C2                   0.116       0.000       1.267
     -----------------------------------------------------
 
 
   ==> Build Initial Amplitudes Guesses <==
 
-    Reading previous T2 amplitudes from disk ...  Done. Timing      0.000 s
-    Reading previous T1 amplitudes from disk ...  Done. Timing      0.000 s
+    Reading previous T2 amplitudes from scratch directory ...  Done. Timing      0.000 s
+    Reading previous T1 amplitudes from scratch directory ...  Done. Timing      0.000 s
 
   ==> Initial Excitation Amplitudes Summary <==
 
@@ -1106,26 +1069,26 @@ Scratch directory: /Users/york/scratch/psi4/
     Largest T1 amplitudes (absolute values):
         i    a                i    a                i    a
     -----------------------------------------------------------------
-    [   2    4] 0.0906387 [   2    3] 0.0887236 [   0    1] 0.0488400
-    [   1    4] 0.0142275 [   0    2] 0.0107355 [   1    3] 0.0054527
-    [   2    5] 0.0025647 [   1    5] 0.0020289 [   8    9] 0.0009419
-    [   6    7] 0.0009419 [   0    5] 0.0009147 [   0    4] 0.0006995
+    [   2    4] 0.0906383 [   2    3] 0.0887236 [   0    1] 0.0488400
+    [   1    4] 0.0142270 [   0    2] 0.0107355 [   1    3] 0.0054529
+    [   2    5] 0.0025646 [   1    5] 0.0020289 [   6    7] 0.0009426
+    [   8    9] 0.0009426 [   0    5] 0.0009146 [   0    4] 0.0006995
     [   0    3] 0.0005096
     -----------------------------------------------------------------
-    2-Norm of T1 vector:                            0.137237261236952
+    2-Norm of T1 vector:                            0.137236944086880
     Number of nonzero elements:                                    13
     -----------------------------------------------------------------
     Largest T2 amplitudes (absolute values):
         i    j    a    b                i    j    a    b                i    j    a    b
     -----------------------------------------------------------------------------------------------
-    [   0    0    1    1] 0.0672645 [   2    2    2    3] 0.0591048 [   1    2    1    3] 0.0479228
+    [   0    0    1    1] 0.0672644 [   2    2    2    3] 0.0591047 [   1    2    1    3] 0.0479228
     [   2    1    2    3] 0.0452714 [   8    8    9    9] 0.0414926 [   6    6    7    7] 0.0414926
     [   1    8    1    9] 0.0412185 [   1    6    1    7] 0.0412185 [   0    0    1    2] 0.0390504
     [   2    2    3    3] 0.0387551 [   2    8    1    9] 0.0348935 [   2    6    1    7] 0.0348935
-    [   2    2    1    4] 0.0344743 [   6    8    7    9] 0.0299083 [   2    8    2    9] 0.0294833
+    [   2    2    1    4] 0.0344744 [   6    8    7    9] 0.0299083 [   2    8    2    9] 0.0294833
     -----------------------------------------------------------------------------------------------
-    2-Norm of T2 vector:                                                          0.297694385775413
-    Number of nonzero elements:                                                                 261
+    2-Norm of T2 vector:                                                          0.297694413954221
+    Number of nonzero elements:                                                                 405
     -----------------------------------------------------------------------------------------------
 
   ==> Possible Intruders <==
@@ -1142,22 +1105,22 @@ Scratch directory: /Users/york/scratch/psi4/
            ---------------------------  ---------------------  ---------------------  -----------------
     Iter.        Corr.         Delta       Hbar1      Hbar2        T1         T2        Hbar     Amp.    DIIS
     ---------------------------------------------------------------------------------------------------------
-       1    -0.095977257845 -9.598e-02   8.537e-02  1.420e-01   4.093e-03  5.188e-03     1.206    0.001
-       2    -0.096016243975 -3.899e-05   8.467e-02  1.478e-01   8.571e-04  2.017e-03     1.215    0.001  S
-       3    -0.096051555210 -3.531e-05   8.469e-02  1.461e-01   1.770e-04  6.410e-04     1.215    0.001  S/E
-       4    -0.096045258178  6.297e-06   8.470e-02  1.464e-01   2.573e-05  1.090e-04     1.195    0.001  S/E
-       5    -0.096046470473 -1.212e-06   8.469e-02  1.464e-01   7.721e-06  3.704e-05     1.216    0.001  S/E
-       6    -0.096046686149 -2.157e-07   8.469e-02  1.463e-01   1.680e-06  1.038e-05     1.206    0.001  S/E
-       7    -0.096046783537 -9.739e-08   8.469e-02  1.463e-01   5.186e-07  2.795e-06     1.240    0.001  S/E
-       8    -0.096046803846 -2.031e-08   8.469e-02  1.463e-01   1.330e-07  7.258e-07     1.222    0.001  S/E
-       9    -0.096046806367 -2.521e-09   8.469e-02  1.463e-01   4.151e-08  1.890e-07     1.192    0.001  S/E
+       1    -0.095977086141 -9.598e-02   8.537e-02  1.420e-01   4.092e-03  5.188e-03     1.190    0.001
+       2    -0.096016063895 -3.898e-05   8.467e-02  1.478e-01   8.570e-04  2.017e-03     1.186    0.001  S
+       3    -0.096051373907 -3.531e-05   8.469e-02  1.461e-01   1.770e-04  6.410e-04     1.175    0.001  S/E
+       4    -0.096045077050  6.297e-06   8.470e-02  1.464e-01   2.573e-05  1.090e-04     1.192    0.001  S/E
+       5    -0.096046289289 -1.212e-06   8.469e-02  1.464e-01   7.721e-06  3.704e-05     1.200    0.001  S/E
+       6    -0.096046504957 -2.157e-07   8.469e-02  1.463e-01   1.680e-06  1.038e-05     1.218    0.001  S/E
+       7    -0.096046602338 -9.738e-08   8.469e-02  1.463e-01   5.186e-07  2.795e-06     1.175    0.001  S/E
+       8    -0.096046622647 -2.031e-08   8.469e-02  1.463e-01   1.330e-07  7.257e-07     1.196    0.001  S/E
+       9    -0.096046625168 -2.521e-09   8.469e-02  1.463e-01   4.151e-08  1.890e-07     1.198    0.001  S/E
     ---------------------------------------------------------------------------------------------------------
 
   ==> MR-LDSRG(2) Energy Summary <==
 
-    E0 (reference)                 =     -99.404150505656219
-    MR-LDSRG(2) correlation energy =      -0.096046806367013
-    MR-LDSRG(2) total energy       =     -99.500197312023232
+    E0 (reference)                 =     -99.404144002311597
+    MR-LDSRG(2) correlation energy =      -0.096046625167527
+    MR-LDSRG(2) total energy       =     -99.500190627479128
 
   ==> Final Excitation Amplitudes Summary <==
 
@@ -1165,26 +1128,26 @@ Scratch directory: /Users/york/scratch/psi4/
     Largest T1 amplitudes (absolute values):
         i    a                i    a                i    a
     -----------------------------------------------------------------
-    [   2    4] 0.0923867 [   2    3] 0.0872361 [   0    1] 0.0503826
-    [   1    4] 0.0142465 [   0    2] 0.0109131 [   1    3] 0.0050851
-    [   2    5] 0.0029183 [   1    5] 0.0020985 [   6    7] 0.0005829
-    [   8    9] 0.0005829 [   0    4] 0.0005669 [   0    3] 0.0004782
-    [   0    5] 0.0001318
+    [   2    4] 0.0923862 [   2    3] 0.0872362 [   0    1] 0.0503826
+    [   1    4] 0.0142459 [   0    2] 0.0109131 [   1    3] 0.0050853
+    [   2    5] 0.0029183 [   1    5] 0.0020984 [   8    9] 0.0005822
+    [   6    7] 0.0005822 [   0    4] 0.0005669 [   0    3] 0.0004783
+    [   0    5] 0.0001317
     -----------------------------------------------------------------
-    2-Norm of T1 vector:                            0.138007018196236
+    2-Norm of T1 vector:                            0.138006669424354
     Number of nonzero elements:                                    13
     -----------------------------------------------------------------
     Largest T2 amplitudes (absolute values):
         i    j    a    b                i    j    a    b                i    j    a    b
     -----------------------------------------------------------------------------------------------
-    [   0    0    1    1] 0.0665291 [   2    2    2    3] 0.0576953 [   1    2    1    3] 0.0474793
-    [   2    1    2    3] 0.0455820 [   8    8    9    9] 0.0414841 [   6    6    7    7] 0.0414841
-    [   1    6    1    7] 0.0407582 [   1    8    1    9] 0.0407582 [   0    0    1    2] 0.0391724
-    [   2    2    3    3] 0.0384925 [   2    6    1    7] 0.0348380 [   2    8    1    9] 0.0348380
-    [   2    2    1    4] 0.0344644 [   6    8    7    9] 0.0298934 [   2    8    2    9] 0.0298011
+    [   0    0    1    1] 0.0665291 [   2    2    2    3] 0.0576953 [   1    2    1    3] 0.0474794
+    [   2    1    2    3] 0.0455820 [   6    6    7    7] 0.0414841 [   8    8    9    9] 0.0414841
+    [   1    8    1    9] 0.0407582 [   1    6    1    7] 0.0407582 [   0    0    1    2] 0.0391724
+    [   2    2    3    3] 0.0384925 [   2    6    1    7] 0.0348381 [   2    8    1    9] 0.0348381
+    [   2    2    1    4] 0.0344644 [   6    8    7    9] 0.0298933 [   2    8    2    9] 0.0298011
     -----------------------------------------------------------------------------------------------
-    2-Norm of T2 vector:                                                          0.296612088874363
-    Number of nonzero elements:                                                                 261
+    2-Norm of T2 vector:                                                          0.296612156222352
+    Number of nonzero elements:                                                                 405
     -----------------------------------------------------------------------------------------------
 
   ==> Possible Intruders <==
@@ -1236,10 +1199,10 @@ Scratch directory: /Users/york/scratch/psi4/
   ---------------------------------------------
     Root            Energy     <S^2>   Spin
   ---------------------------------------------
-      0      -99.500197647600  0.000  singlet
-      1      -99.366873493673  2.000  triplet
-      2      -99.094278751229  0.000  singlet
-      3      -98.769931007490  0.000  singlet
+      0      -99.500190963049  0.000  singlet
+      1      -99.366867210794  2.000  triplet
+      2      -99.094270663761  0.000  singlet
+      3      -98.769926459062  0.000  singlet
   ---------------------------------------------
   Timing for initial guess  =      0.000 s
 
@@ -1247,26 +1210,28 @@ Scratch directory: /Users/york/scratch/psi4/
 
   ==> Diagonalizing Hamiltonian <==
 
+  Energy   convergence: 1.00e-08
+  Residual convergence: 1.00e-06
   -----------------------------------------------------
     Iter.      Avg. Energy       Delta_E     Res. Norm
   -----------------------------------------------------
-      1      -99.500197647600  -9.950e+01  +1.752e-14
-      2      -99.500197647600  +0.000e+00  +1.965e-14
+      1      -99.500190963049  -9.950e+01  +4.236e-14
+      2      -99.500190963049  +0.000e+00  +4.236e-14
   -----------------------------------------------------
   The Davidson-Liu algorithm converged in 3 iterations.
 
   ==> Root No. 0 <==
 
-    20     -0.96113777
-    02      0.26541943
+    20     -0.96113740
+    02      0.26542032
 
-    Total Energy:       -99.500197647600118
+    Total Energy:       -99.500190963048766
 
   ==> Energy Summary <==
 
     Multi.(2ms)  Irrep.  No.               Energy
     ---------------------------------------------
-       1  (  0)    A1     0      -99.500197647600
+       1  (  0)    A1     0      -99.500190963049
     ---------------------------------------------
 
   => SA-MRDSRG Reference Relaxation Energy Summary <=
@@ -1275,27 +1240,27 @@ Scratch directory: /Users/york/scratch/psi4/
            -------------------------------  -------------------------------
     Iter.          Total Energy      Delta          Total Energy      Delta
     -----------------------------------------------------------------------
-        1      -99.498877583982 -9.950e+01      -99.500379480226 -9.950e+01
-        2      -99.500197312023 -1.320e-03      -99.500197647600  1.818e-04
+        1      -99.498870943494 -9.950e+01      -99.500372786881 -9.950e+01
+        2      -99.500190627479 -1.320e-03      -99.500190963049  1.818e-04
     -----------------------------------------------------------------------
 
   ==> Total Timings (s) for Computing Commutators <==
 
              [H1, T1]    [H1, T2]    [H2, T1]    [H2, T2]
     -----------------------------------------------------
-    -> C0       0.000       0.025       0.000       0.737
-    -> C1       0.000       0.258       0.000       3.438
-    -> C2                   0.524       0.000       5.686
+    -> C0       0.000       0.024       0.000       0.724
+    -> C1       0.000       0.252       0.000       3.379
+    -> C2                   0.517       0.000       5.600
     -----------------------------------------------------
 
 
-  Time to prepare integrals:        0.021 seconds
-  Time to run job          :       23.469 seconds
-  Total                    :       23.469 seconds    MRDSRG unrelaxed energy...........................................PASSED
-    MRDSRG partially relaxed energy...................................PASSED
-    MRDSRG relaxed energy.............................................PASSED
+  Time to prepare integrals:        0.020 seconds
+  Time to run job          :       13.372 seconds
+  Total                    :       13.372 seconds    MRDSRG unrelaxed energy...............................................................PASSED
+    MRDSRG partially relaxed energy.......................................................PASSED
+    MRDSRG relaxed energy.................................................................PASSED
 
-    Psi4 stopped on: Monday, 25 May 2020 09:15PM
-    Psi4 wall time for execution: 0:00:23.60
+    Psi4 stopped on: Thursday, 12 November 2020 10:40PM
+    Psi4 wall time for execution: 0:00:13.49
 
 *** Psi4 exiting successfully. Buy a developer a beer!

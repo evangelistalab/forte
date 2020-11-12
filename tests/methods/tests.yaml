@@ -105,12 +105,12 @@ diag-alg:
 df-dsrg-mrpt2:
   short:
    - df-dsrg-mrpt2-1
-   - df-dsrg-mrpt2-threading2
    - diskdf-dsrg-mrpt2-4
    - df-aci-dsrg-mrpt2-2
   medium:
    - df-dsrg-mrpt2-2
    - df-dsrg-mrpt2-6
+   - df-dsrg-mrpt2-threading2
    - diskdf-dsrg-mrpt2-1
    - diskdf-dsrg-mrpt2-3
    - diskdf-dsrg-mrpt2-threading4
@@ -161,10 +161,10 @@ dsrg-mrpt2:
    - dsrg-mrpt2-uno
 dsrg-mrpt3:
   short:
-   - dsrg-mrpt3-1
    - dsrg-mrpt3-7-CO
    - dsrg-mrpt3-9
   medium:
+   - dsrg-mrpt3-1
    - dsrg-mrpt3-2
    - dsrg-mrpt3-5
    - aci-dsrg-mrpt3-1
