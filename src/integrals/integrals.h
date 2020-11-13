@@ -185,27 +185,33 @@ class ForteIntegrals {
     /// The beta one-electron integrals
     double oei_b(size_t p, size_t q) const;
 
-    /// Get the alpha fock matrix elements
+    /// Get the alpha Fock matrix element
+    /// @param p The bra index
+    /// @param q The ket index
+    /// @param corr Whether indices p, q start counting from correlated orbitals
+    /// @return the alpha Fock matrix element F_{pq}
     double get_fock_a(size_t p, size_t q, bool corr = true) const;
-
-    /// Get the beta fock matrix elements
+    /// Get the beta Fock matrix element
+    /// @param p The bra index
+    /// @param q The ket index
+    /// @param corr Whether indices p, q start counting from correlated orbitals
+    /// @return the beta Fock matrix element F_{pq}
     double get_fock_b(size_t p, size_t q, bool corr = true) const;
 
-    /// Get the alpha fock matrix in Psi4 matrix
+    /// Get the alpha Fock matrix in Psi4 matrix
+    /// @param corr Whether to return only the part of correlated orbitals
+    /// @return the alpha Fock matrix
     std::shared_ptr<psi::Matrix> get_fock_a(bool corr = true) const;
-
     /// Get the beta fock matrix in Psi4 matrix
+    /// @param corr Whether to return only the part of correlated orbitals
+    /// @return the beta Fock matrix
     std::shared_ptr<psi::Matrix> get_fock_b(bool corr = true) const;
 
-    /// The antisymmetrixed alpha-alpha two-electron integrals in physicist
-    /// notation <pq||rs>
+    /// The antisymmetrixed alpha-alpha two-electron integrals in physicist notation <pq||rs>
     virtual double aptei_aa(size_t p, size_t q, size_t r, size_t s) = 0;
-
-    /// The antisymmetrixed alpha-beta two-electron integrals in physicist
-    /// notation <pq|rs> = (pr|qs)
+    /// The antisymmetrixed alpha-beta two-electron integrals in physicist notation <pq|rs>
     virtual double aptei_ab(size_t p, size_t q, size_t r, size_t s) = 0;
-    /// The antisymmetrixed beta-beta two-electron integrals in physicist
-    /// notation <pq||rs>
+    /// The antisymmetrixed beta-beta two-electron integrals in physicist notation <pq||rs>
     virtual double aptei_bb(size_t p, size_t q, size_t r, size_t s) = 0;
 
     /// @return a tensor with a block of the alpha one-electron integrals
@@ -240,10 +246,6 @@ class ForteIntegrals {
 
     /// Expert Option: just try and use three_integral
     virtual double** three_integral_pointer();
-
-//    /// Make a Fock matrix computed with respect to a given determinant
-//    virtual void make_fock_matrix(std::shared_ptr<psi::Matrix> gamma_a,
-//                                  std::shared_ptr<psi::Matrix> gamma_b) = 0;
 
     /// Make the generalized Fock matrix (closed-shell + active)
     /// @param Da The alpha 1RDM (nactv x nactv, no symmetry) from RDMs class
@@ -309,6 +311,12 @@ class ForteIntegrals {
     /// @param Ca the alpha MO coefficients
     /// @param Cb the beta MO coefficients
     virtual void update_orbitals(std::shared_ptr<psi::Matrix> Ca, std::shared_ptr<psi::Matrix> Cb);
+
+    /// Make the orbital phase consistent when updating orbitals
+    /// @param U the unitary transformation matrix so that C_new = C_old * U
+    /// @param is_alpha target Ca if true else Cb
+    /// @param debug print MO overlap and transformation matrix if true
+    void fix_orbital_phases(std::shared_ptr<psi::Matrix> U, bool is_alpha, bool debug = false);
 
     /// Return the type of spin restriction enforced
     IntegralSpinRestriction spin_restriction() const;

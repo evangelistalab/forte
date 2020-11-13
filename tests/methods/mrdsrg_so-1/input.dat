@@ -33,14 +33,15 @@ set forte {
   active                 [1,0,0,0,0,1,0,0]
   dsrg_s                 0.5
   maxiter                100
-  e_convergence          8
+  e_convergence          5
+  r_convergence          4  # will not affect CI because Ndet = 2
 }
 
 Ecas, wfn = energy('casscf', return_wfn=True)
-compare_values(Ecas0, variable("CURRENT ENERGY"), 7, "CASSCF energy")
+compare_values(Ecas0, variable("CURRENT ENERGY"), 4, "CASSCF energy")
 
 E_spin_orbital = energy('forte', ref_wfn=wfn)
-compare_values(Edsrg0, E_spin_orbital, 7, "MR-LDSRG(2) energy spin-orbital York")
+compare_values(Edsrg0, E_spin_orbital, 4, "MR-LDSRG(2) energy spin-orbital York")
 
 #set forte {
 #correlation_solver     somrdsrg

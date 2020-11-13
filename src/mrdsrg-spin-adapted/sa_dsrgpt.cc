@@ -29,6 +29,7 @@
 
 #include "psi4/libpsi4util/PsiOutStream.h"
 
+#include "helpers/disk_io.h"
 #include "helpers/timer.h"
 #include "sa_dsrgpt.h"
 

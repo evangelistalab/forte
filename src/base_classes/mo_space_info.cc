@@ -148,7 +148,7 @@ std::vector<std::pair<size_t, size_t>> MOSpaceInfo::relative_mo(const std::strin
     std::vector<std::pair<size_t, size_t>> result;
     if (composite_spaces_.count(space) == 0) {
         std::string msg =
-            "\n  MOSpaceInfo::get_relative_mo - composite space " + space + " is not defined.";
+            "\n  MOSpaceInfo::relative_mo - composite space " + space + " is not defined.";
         throw psi::PSIEXCEPTION(msg.c_str());
     } else {
         std::vector<std::vector<std::pair<size_t, size_t>>> mo_list(nirrep_);
@@ -209,6 +209,40 @@ std::vector<size_t> MOSpaceInfo::pos_in_space(const std::string& space,
         result.push_back(composite_space_hash[p]);
     }
     return result;
+}
+
+psi::Slice MOSpaceInfo::range(const std::string& space) {
+    if (composite_spaces_.count(space) == 0) {
+        std::string msg = "\n  MOSpaceInfo::range - composite space " + space + " is not defined.";
+        throw psi::PSIEXCEPTION(msg.c_str());
+    }
+
+    // make sure the elmentary spaces in composite space are consecutive
+    int start = std::find(elementary_spaces_.begin(), elementary_spaces_.end(),
+                          composite_spaces_[space][0]) -
+                elementary_spaces_.begin();
+
+    for (int i = 1, size = composite_spaces_[space].size(); i < size; ++i) {
+        if (composite_spaces_[space][i] != elementary_spaces_[start + i]) {
+            std::string msg = "\n  MOSpaceInfo::range - elementary spaces in composite space " +
+                              space + " are not consecutive.";
+            throw psi::PSIEXCEPTION(msg.c_str());
+        }
+    }
+
+    // prepare start and end psi::Dimension
+    psi::Dimension dim_start(nirrep_, space + " begin");
+    for (int i = 0; i < start; ++i) {
+        dim_start += mo_spaces_[elementary_spaces_[i]].first;
+    }
+
+    psi::Dimension dim_end(nirrep_, space + " end");
+    dim_end += dim_start;
+    for (int i = start, end = start + composite_spaces_[space].size(); i < end; ++i) {
+        dim_end += mo_spaces_[elementary_spaces_[i]].first;
+    }
+
+    return psi::Slice(dim_start, dim_end);
 }
 
 void MOSpaceInfo::read_options(std::shared_ptr<ForteOptions> options) {

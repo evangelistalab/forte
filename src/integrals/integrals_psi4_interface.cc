@@ -187,7 +187,7 @@ void Psi4Integrals::make_psi4_JK() {
     }
 
     // set JK memory to 85% of total memory in number of doubles
-    JK_->set_memory(psi::Process::environment.get_memory() / sizeof(double) * 0.85);
+    JK_->set_memory(psi::Process::environment.get_memory() * 0.85 / sizeof(double));
 
     JK_->set_cutoff(options_->get_double("INTEGRAL_SCREENING"));
 
@@ -210,7 +210,6 @@ void Psi4Integrals::compute_frozen_one_body_operator() {
             auto p_corr = p + corr_offset;
             auto p_full = cmotomo_[p + corr_offset] - full_offset;
 
-#pragma omp parallel for
             for (int q = 0; q < ncmopi_[h]; ++q) {
                 auto q_corr = q + corr_offset;
                 auto q_full = cmotomo_[q + corr_offset] - full_offset;

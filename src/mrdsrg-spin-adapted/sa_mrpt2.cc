@@ -30,6 +30,7 @@
 #include "psi4/libpsi4util/PsiOutStream.h"
 
 #include "forte-def.h"
+#include "helpers/disk_io.h"
 #include "helpers/timer.h"
 #include "helpers/printing.h"
 #include "sa_mrpt2.h"
@@ -725,5 +726,4 @@ void SA_MRPT2::compute_hbar() {
         Hbar1_.block("aa")("vu") -= 0.5 * temp("uv");
     }
 }
-
 } // namespace forte

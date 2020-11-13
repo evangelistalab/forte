@@ -36,7 +36,7 @@ include(autocmake_mpi)  # MPI option A
 find_package(pybind11 REQUIRED)
 find_package(psi4 1.3 REQUIRED)
 find_package(TargetLAPACK REQUIRED)
-find_package(ambit 0.3 REQUIRED)
+find_package(ambit 0.4 REQUIRED)
 if(ENABLE_CheMPS2)
     find_package(CheMPS2 1.8.3 CONFIG REQUIRED)
 endif()
@@ -119,6 +119,7 @@ src/gradient_tpdm/integraltransform_sort_so_tpdm.cc
 src/gradient_tpdm/integraltransform_tpdm_unrestricted.cc
 src/helpers/blockedtensorfactory.cc
 src/helpers/cube_file.cc
+src/helpers/disk_io.cc
 src/helpers/helpers.cc
 src/helpers/iterative_solvers.cc
 src/helpers/printing.cc

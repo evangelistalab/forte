@@ -89,30 +89,20 @@ class SemiCanonical {
     /// Mix the frozen and restricted orbitals together
     bool inactive_mix_;
 
-    /// Total active MOs
-    size_t nact_;
-    /// Number of irreps
-    size_t nirrep_;
-
-    /// Number of all orbitals per irrep
+    // Dimension for all orbitals (number of MOs per irrep)
     psi::Dimension nmopi_;
 
-    /// Map from orbital space label to its dimension
+    // Blocks map
     std::map<std::string, psi::Dimension> mo_dims_;
 
-    /// Indices (including frozen) map
-    std::map<std::string, std::vector<std::vector<size_t>>> mo_idx_;
+    // Offset of GAS orbitals within ACTIVE
+    std::map<std::string, psi::Dimension> actv_offsets_;
 
-    /// Figure out indices [[(A1)...], [(A2)...], [(B1)...], [(B2)...]]
-    /// npi: this mo space; bpi: mo space before npi
-    std::vector<std::vector<size_t>> idx_space(const psi::Dimension& npi,
-                                               const psi::Dimension& bpi);
+    // Number of active MOs
+    size_t nact_;
 
-    /// Offset of active orbitals
-    std::map<std::string, std::vector<int>> actv_offsets_;
-
-    /// Offsets
-    std::map<std::string, psi::Dimension> offsets_;
+    // Number of irreps
+    size_t nirrep_;
 
     /// Unitary matrix for alpha orbital rotation
     psi::SharedMatrix Ua_;

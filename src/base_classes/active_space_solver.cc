@@ -84,6 +84,8 @@ const std::map<StateInfo, std::vector<double>>& ActiveSpaceSolver::compute_energ
         method->compute_energy();
         const auto& energies = method->energies();
         state_energies_map_[state] = energies;
+
+        // save energies for ms < 0 states (same in energy as ms > 0) to ensure correct averaging
         if (twice_ms > 0 and ms_avg_) {
             StateInfo state_spin(state.nb(), state.na(), state.multiplicity(), -twice_ms,
                                  state.irrep(), state.irrep_label(), state.gas_min(),

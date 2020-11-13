@@ -144,8 +144,8 @@ double SA_MRDSRG::compute_energy_ldsrg2() {
         }
 
         if (cycle == maxiter_) {
-            outfile->Printf(
-                "\n\n    The computation does not converge in %d iterations! Quitting.\n", maxiter_);
+            outfile->Printf("\n\n    The computation does not converge in %d iterations!\n",
+                            maxiter_);
         }
         if (cycle > 5 and std::fabs(rms) > 10.0) {
             outfile->Printf("\n\n    Large RMS for amplitudes. Likely no convergence. Quitting.\n");
@@ -172,8 +172,12 @@ double SA_MRDSRG::compute_energy_ldsrg2() {
     // analyze converged amplitudes
     analyze_amplitudes("Final", T1_, T2_);
 
+    // dump amplitudes to disk
+    dump_amps_to_disk();
+
     // fail to converge
     if (!converged) {
+        clean_checkpoints(); // clean amplitudes in scratch directory
         throw psi::PSIEXCEPTION("The MR-LDSRG(2) computation does not converge.");
     }
     final.stop();
@@ -287,7 +291,8 @@ void SA_MRDSRG::compute_hbar() {
         }
     }
     if (!converged) {
-        outfile->Printf("\n    Warning! Hbar is not converged in %3d-nested commutators!", rsc_ncomm_);
+        outfile->Printf("\n    Warning! Hbar is not converged in %3d-nested commutators!",
+                        rsc_ncomm_);
         outfile->Printf("\n    Please increase DSRG_RSC_NCOMM.");
     }
 }
@@ -470,7 +475,8 @@ void SA_MRDSRG::compute_hbar_sequential() {
         }
     }
     if (!converged) {
-        outfile->Printf("\n    Warning! Hbar is not converged in %3d-nested commutators!", rsc_ncomm_);
+        outfile->Printf("\n    Warning! Hbar is not converged in %3d-nested commutators!",
+                        rsc_ncomm_);
         outfile->Printf("\n    Please increase DSRG_RSC_NCOMM.");
     }
 }

@@ -32,9 +32,9 @@ symmetry c1
 }
 
 set {
-  basis sto-3g 
-  df_basis_mp2 cc-pvdz-ri 
-  df_basis_scf cc-pvdz-jkfit 
+  basis sto-3g
+  df_basis_mp2 cc-pvdz-ri
+  df_basis_scf cc-pvdz-jkfit
   scf_type df
   guess sad
   maxiter 500
@@ -66,10 +66,7 @@ set_num_threads(8)
 
 e, scf_wfn = energy('scf', return_wfn=True)
 
-compare_values(escf,variable("CURRENT ENERGY"), 9, "SCF energy") 
+compare_values(escf,variable("CURRENT ENERGY"), 9, "SCF energy")
 
 energy('forte', ref_wfn=scf_wfn)
-compare_values(eaci,variable("CURRENT ENERGY"), 9, "ACI-DSRG-MRPT2 energy") 
-
-
-
+compare_values(eaci,variable("CURRENT ENERGY"), 9, "ACI-DSRG-MRPT2 energy")

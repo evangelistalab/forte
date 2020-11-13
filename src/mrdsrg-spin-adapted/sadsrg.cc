@@ -28,10 +28,12 @@
 
 #include <numeric>
 
+#include "psi4/libmints/matrix.h"
+#include "psi4/libmints/molecule.h"
 #include "psi4/libpsi4util/process.h"
 #include "psi4/libpsi4util/PsiOutStream.h"
-#include "psi4/libmints/matrix.h"
 #include "psi4/libmints/vector.h"
+#include "psi4/libpsio/psio.hpp"
 
 #include "forte-def.h"
 #include "helpers/printing.h"
@@ -183,6 +185,9 @@ void SADSRG::read_options() {
                                                 "Change options in input.dat"));
         }
     }
+
+    dump_amps_cwd_ = foptions_->get_bool("DSRG_DUMP_AMPS");
+    read_amps_cwd_ = foptions_->get_bool("DSRG_READ_AMPS");
 
     relax_ref_ = foptions_->get_str("RELAX_REF");
 

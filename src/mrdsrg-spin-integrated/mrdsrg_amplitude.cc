@@ -29,11 +29,14 @@
 #include <algorithm>
 #include <map>
 #include <vector>
+#include <sys/stat.h>
 
 #include "psi4/psi4-dec.h"
 #include "psi4/libpsi4util/PsiOutStream.h"
 
 #include "base_classes/mo_space_info.h"
+#include "helpers/disk_io.h"
+#include "helpers/printing.h"
 #include "helpers/timer.h"
 #include "boost/format.hpp"
 #include "mrdsrg.h"
@@ -43,29 +46,87 @@ using namespace psi;
 namespace forte {
 
 void MRDSRG::guess_t(BlockedTensor& V, BlockedTensor& T2, BlockedTensor& F, BlockedTensor& T1) {
+    print_h2("Build Initial Amplitudes Guesses");
+
     // if fully decouple core-core-virtual-virtual block
     std::string ccvv_source = foptions_->get_str("CCVV_SOURCE");
 
-    if (ccvv_source == "ZERO") {
-        guess_t2_noccvv(V, T2);
-        guess_t1_nocv(F, T2, T1);
-    } else if (ccvv_source == "NORMAL") {
-        guess_t2_std(V, T2);
-        guess_t1_std(F, T2, T1);
+    struct stat buf;
+    if (read_amps_cwd_ and (stat(t2_file_cwd_.c_str(), &buf) == 0)) {
+        outfile->Printf("\n    Reading T2 amplitudes from current directory ...");
+        ambit::load(T2, t2_file_cwd_);
+        outfile->Printf(" Done.");
+    } else if (restart_amps_ and (stat(t2_file_chk_.c_str(), &buf) == 0)) {
+        outfile->Printf("\n    Reading previous T2 amplitudes from scratch directory ...");
+        ambit::load(T2, t2_file_chk_);
+        outfile->Printf(" Done.");
+    } else {
+        if (ccvv_source == "ZERO") {
+            guess_t2_noccvv(V, T2);
+        } else if (ccvv_source == "NORMAL") {
+            guess_t2_std(V, T2);
+        }
     }
+
+    if (read_amps_cwd_ and (stat(t1_file_cwd_.c_str(), &buf) == 0)) {
+        outfile->Printf("\n    Reading T1 amplitudes from current directory ...");
+        ambit::load(T1, t1_file_cwd_);
+        outfile->Printf(" Done.");
+    } else if (restart_amps_ and (stat(t1_file_chk_.c_str(), &buf) == 0)) {
+        outfile->Printf("\n    Reading previous T1 amplitudes from scratch directory ...");
+        ambit::load(T1, t1_file_chk_);
+        outfile->Printf(" Done.");
+    } else {
+        if (ccvv_source == "ZERO") {
+            guess_t1_nocv(F, T2, T1);
+        } else if (ccvv_source == "NORMAL") {
+            guess_t1_std(F, T2, T1);
+        }
+    }
+
+    analyze_amplitudes("Initial", T1_, T2_);
 }
 
 void MRDSRG::guess_t_df(BlockedTensor& B, BlockedTensor& T2, BlockedTensor& F, BlockedTensor& T1) {
+    print_h2("Build Initial Amplitudes Guesses");
+
     // if fully decouple core-core-virtual-virtual block
     std::string ccvv_source = foptions_->get_str("CCVV_SOURCE");
 
-    if (ccvv_source == "ZERO") {
-        guess_t2_noccvv_df(B, T2);
-        guess_t1_nocv(F, T2, T1);
-    } else if (ccvv_source == "NORMAL") {
-        guess_t2_std_df(B, T2);
-        guess_t1_std(F, T2, T1);
+    struct stat buf;
+    if (read_amps_cwd_ and (stat(t2_file_cwd_.c_str(), &buf) == 0)) {
+        outfile->Printf("\n    Reading T2 amplitudes from current directory ...");
+        ambit::load(T2, t2_file_cwd_);
+        outfile->Printf(" Done.");
+    } else if (restart_amps_ and (stat(t2_file_chk_.c_str(), &buf) == 0)) {
+        outfile->Printf("\n    Reading previous T2 amplitudes from scratch directory ...");
+        ambit::load(T2, t2_file_chk_);
+        outfile->Printf(" Done.");
+    } else {
+        if (ccvv_source == "ZERO") {
+            guess_t2_noccvv_df(B, T2);
+        } else if (ccvv_source == "NORMAL") {
+            guess_t2_std_df(B, T2);
+        }
     }
+
+    if (read_amps_cwd_ and (stat(t1_file_cwd_.c_str(), &buf) == 0)) {
+        outfile->Printf("\n    Reading T1 amplitudes from current directory ...");
+        ambit::load(T1, t1_file_cwd_);
+        outfile->Printf(" Done.");
+    } else if (restart_amps_ and (stat(t1_file_chk_.c_str(), &buf) == 0)) {
+        outfile->Printf("\n    Reading previous T1 amplitudes from scratch directory ...");
+        ambit::load(T1, t1_file_chk_);
+        outfile->Printf(" Done.");
+    } else {
+        if (ccvv_source == "ZERO") {
+            guess_t1_nocv(F, T2, T1);
+        } else if (ccvv_source == "NORMAL") {
+            guess_t1_std(F, T2, T1);
+        }
+    }
+
+    analyze_amplitudes("Initial", T1_, T2_);
 }
 
 void MRDSRG::update_t() {
@@ -84,7 +145,6 @@ void MRDSRG::guess_t2_std(BlockedTensor& V, BlockedTensor& T2) {
     local_timer timer;
     std::string str = "Computing T2 amplitudes ...";
     outfile->Printf("\n    %-35s", str.c_str());
-    T2max_ = 0.0, t2aa_norm_ = 0.0, t2ab_norm_ = 0.0, t2bb_norm_ = 0.0;
 
     T2["ijab"] = V["ijab"];
     T2["iJaB"] = V["iJaB"];
@@ -107,18 +167,13 @@ void MRDSRG::guess_t2_std(BlockedTensor& V, BlockedTensor& T2) {
             if ((spin[0] == AlphaSpin) && (spin[1] == AlphaSpin)) {
                 value *= dsrg_source_->compute_renormalized_denominator(Fa_[i[0]] + Fa_[i[1]] -
                                                                         Fa_[i[2]] - Fa_[i[3]]);
-                t2aa_norm_ += value * value;
             } else if ((spin[0] == AlphaSpin) && (spin[1] == BetaSpin)) {
                 value *= dsrg_source_->compute_renormalized_denominator(Fa_[i[0]] + Fb_[i[1]] -
                                                                         Fa_[i[2]] - Fb_[i[3]]);
-                t2ab_norm_ += value * value;
             } else if ((spin[0] == BetaSpin) && (spin[1] == BetaSpin)) {
                 value *= dsrg_source_->compute_renormalized_denominator(Fb_[i[0]] + Fb_[i[1]] -
                                                                         Fb_[i[2]] - Fb_[i[3]]);
-                t2bb_norm_ += value * value;
             }
-            if (std::fabs(value) > std::fabs(T2max_))
-                T2max_ = value;
         }
     });
 
@@ -135,25 +190,9 @@ void MRDSRG::guess_t2_std(BlockedTensor& V, BlockedTensor& T2) {
     }
 
     // zero internal amplitudes
-    T2.block("aaaa").iterate([&](const std::vector<size_t>&, double& value) {
-        t2aa_norm_ -= value * value;
-        value = 0.0;
-    });
-    T2.block("aAaA").iterate([&](const std::vector<size_t>&, double& value) {
-        t2ab_norm_ -= value * value;
-        value = 0.0;
-    });
-    T2.block("AAAA").iterate([&](const std::vector<size_t>&, double& value) {
-        t2bb_norm_ -= value * value;
-        value = 0.0;
-    });
-
-    // norms
-    T2norm_ = std::sqrt(t2aa_norm_ + t2bb_norm_ + 4 * t2ab_norm_);
-    t2aa_norm_ = std::sqrt(t2aa_norm_);
-    t2ab_norm_ = std::sqrt(t2ab_norm_);
-    t2bb_norm_ = std::sqrt(t2bb_norm_);
-    T2rms_ = 0.0;
+    for (const std::string& block : {"aaaa", "aAaA", "AAAA"}) {
+        T2.block(block).zero();
+    }
 
     outfile->Printf("  Done. Timing %10.3f s", timer.get());
 }
@@ -162,7 +201,6 @@ void MRDSRG::guess_t2_std_df(BlockedTensor& B, BlockedTensor& T2) {
     local_timer timer;
     std::string str = "Computing T2 amplitudes ...";
     outfile->Printf("\n    %-35s", str.c_str());
-    T2max_ = 0.0, t2aa_norm_ = 0.0, t2ab_norm_ = 0.0, t2bb_norm_ = 0.0;
 
     T2["ijab"] = B["gia"] * B["gjb"];
     T2["ijab"] -= B["gib"] * B["gja"];
@@ -187,18 +225,13 @@ void MRDSRG::guess_t2_std_df(BlockedTensor& B, BlockedTensor& T2) {
             if ((spin[0] == AlphaSpin) && (spin[1] == AlphaSpin)) {
                 value *= dsrg_source_->compute_renormalized_denominator(Fa_[i[0]] + Fa_[i[1]] -
                                                                         Fa_[i[2]] - Fa_[i[3]]);
-                t2aa_norm_ += value * value;
             } else if ((spin[0] == AlphaSpin) && (spin[1] == BetaSpin)) {
                 value *= dsrg_source_->compute_renormalized_denominator(Fa_[i[0]] + Fb_[i[1]] -
                                                                         Fa_[i[2]] - Fb_[i[3]]);
-                t2ab_norm_ += value * value;
             } else if ((spin[0] == BetaSpin) && (spin[1] == BetaSpin)) {
                 value *= dsrg_source_->compute_renormalized_denominator(Fb_[i[0]] + Fb_[i[1]] -
                                                                         Fb_[i[2]] - Fb_[i[3]]);
-                t2bb_norm_ += value * value;
             }
-            if (std::fabs(value) > std::fabs(T2max_))
-                T2max_ = value;
         }
     });
 
@@ -215,25 +248,9 @@ void MRDSRG::guess_t2_std_df(BlockedTensor& B, BlockedTensor& T2) {
     }
 
     // zero internal amplitudes
-    T2.block("aaaa").iterate([&](const std::vector<size_t>&, double& value) {
-        t2aa_norm_ -= value * value;
-        value = 0.0;
-    });
-    T2.block("aAaA").iterate([&](const std::vector<size_t>&, double& value) {
-        t2ab_norm_ -= value * value;
-        value = 0.0;
-    });
-    T2.block("AAAA").iterate([&](const std::vector<size_t>&, double& value) {
-        t2bb_norm_ -= value * value;
-        value = 0.0;
-    });
-
-    // norms
-    T2norm_ = std::sqrt(t2aa_norm_ + t2bb_norm_ + 4 * t2ab_norm_);
-    t2aa_norm_ = std::sqrt(t2aa_norm_);
-    t2ab_norm_ = std::sqrt(t2ab_norm_);
-    t2bb_norm_ = std::sqrt(t2bb_norm_);
-    T2rms_ = 0.0;
+    for (const std::string& block : {"aaaa", "aAaA", "AAAA"}) {
+        T2.block(block).zero();
+    }
 
     outfile->Printf("  Done. Timing %10.3f s", timer.get());
 }
@@ -242,7 +259,6 @@ void MRDSRG::guess_t1_std(BlockedTensor& F, BlockedTensor& T2, BlockedTensor& T1
     local_timer timer;
     std::string str = "Computing T1 amplitudes ...";
     outfile->Printf("\n    %-35s", str.c_str());
-    T1max_ = 0.0, t1a_norm_ = 0.0, t1b_norm_ = 0.0;
 
     BlockedTensor temp = BTF_->build(tensor_type_, "temp", spin_cases({"aa"}));
     temp["xu"] = Gamma1_["xu"];
@@ -297,13 +313,9 @@ void MRDSRG::guess_t1_std(BlockedTensor& F, BlockedTensor& T2, BlockedTensor& T1
         if (std::fabs(value) > 1.0e-15) {
             if (spin[0] == AlphaSpin) {
                 value *= dsrg_source_->compute_renormalized_denominator(Fa_[i[0]] - Fa_[i[1]]);
-                t1a_norm_ += value * value;
             } else {
                 value *= dsrg_source_->compute_renormalized_denominator(Fb_[i[0]] - Fb_[i[1]]);
-                t1b_norm_ += value * value;
             }
-            if (std::fabs(value) > std::fabs(T1max_))
-                T1max_ = value;
         }
     });
 
@@ -318,20 +330,9 @@ void MRDSRG::guess_t1_std(BlockedTensor& F, BlockedTensor& T2, BlockedTensor& T1
     }
 
     // zero internal amplitudes
-    T1.block("aa").iterate([&](const std::vector<size_t>&, double& value) {
-        t1a_norm_ -= value * value;
-        value = 0.0;
-    });
-    T1.block("AA").iterate([&](const std::vector<size_t>&, double& value) {
-        t1b_norm_ -= value * value;
-        value = 0.0;
-    });
-
-    // norms
-    T1norm_ = std::sqrt(t1a_norm_ + t1b_norm_);
-    t1a_norm_ = std::sqrt(t1a_norm_);
-    t1b_norm_ = std::sqrt(t1b_norm_);
-    T1rms_ = 0.0;
+    for (const std::string& block : {"aa", "AA"}) {
+        T1.block(block).zero();
+    }
 
     outfile->Printf("  Done. Timing %10.3f s", timer.get());
 }
@@ -340,7 +341,6 @@ void MRDSRG::guess_t2_noccvv(BlockedTensor& V, BlockedTensor& T2) {
     local_timer timer;
     std::string str = "Computing T2 amplitudes ...";
     outfile->Printf("\n    %-35s", str.c_str());
-    T2max_ = 0.0, t2aa_norm_ = 0.0, t2ab_norm_ = 0.0, t2bb_norm_ = 0.0;
 
     T2["ijab"] = V["ijab"];
     T2["iJaB"] = V["iJaB"];
@@ -389,15 +389,6 @@ void MRDSRG::guess_t2_noccvv(BlockedTensor& V, BlockedTensor& T2) {
             size_t i2 = label_to_spacemo_[block[2]][i[2]];
             size_t i3 = label_to_spacemo_[block[3]][i[3]];
             value /= F0[i0] + F1[i1] - F0[i2] - F0[i3];
-            if (spin0 && spin1) {
-                t2aa_norm_ += value * value;
-            } else if (spin0 && !spin1) {
-                t2ab_norm_ += value * value;
-            } else if (!spin0 && !spin1) {
-                t2bb_norm_ += value * value;
-            }
-            if (std::fabs(value) > std::fabs(T2max_))
-                T2max_ = value;
         });
     }
 
@@ -418,16 +409,6 @@ void MRDSRG::guess_t2_noccvv(BlockedTensor& V, BlockedTensor& T2) {
             size_t i3 = label_to_spacemo_[block[3]][i[3]];
             value *=
                 dsrg_source_->compute_renormalized_denominator(F0[i0] + F1[i1] - F0[i2] - F0[i3]);
-
-            if (spin0 && spin1) {
-                t2aa_norm_ += value * value;
-            } else if (spin0 && !spin1) {
-                t2ab_norm_ += value * value;
-            } else if (!spin0 && !spin1) {
-                t2bb_norm_ += value * value;
-            }
-            if (std::fabs(value) > std::fabs(T2max_))
-                T2max_ = value;
         });
     }
 
@@ -444,25 +425,9 @@ void MRDSRG::guess_t2_noccvv(BlockedTensor& V, BlockedTensor& T2) {
     }
 
     // zero internal amplitudes
-    T2.block("aaaa").iterate([&](const std::vector<size_t>&, double& value) {
-        t2aa_norm_ -= value * value;
-        value = 0.0;
-    });
-    T2.block("aAaA").iterate([&](const std::vector<size_t>&, double& value) {
-        t2ab_norm_ -= value * value;
-        value = 0.0;
-    });
-    T2.block("AAAA").iterate([&](const std::vector<size_t>&, double& value) {
-        t2bb_norm_ -= value * value;
-        value = 0.0;
-    });
-
-    // norms
-    T2norm_ = std::sqrt(t2aa_norm_ + t2bb_norm_ + 4 * t2ab_norm_);
-    t2aa_norm_ = std::sqrt(t2aa_norm_);
-    t2ab_norm_ = std::sqrt(t2ab_norm_);
-    t2bb_norm_ = std::sqrt(t2bb_norm_);
-    T2rms_ = 0.0;
+    for (const std::string& block : {"aaaa", "aAaA", "AAAA"}) {
+        T2.block(block).zero();
+    }
 
     outfile->Printf("  Done. Timing %10.3f s", timer.get());
 }
@@ -471,7 +436,6 @@ void MRDSRG::guess_t2_noccvv_df(BlockedTensor& B, BlockedTensor& T2) {
     local_timer timer;
     std::string str = "Computing T2 amplitudes ...";
     outfile->Printf("\n    %-35s", str.c_str());
-    T2max_ = 0.0, t2aa_norm_ = 0.0, t2ab_norm_ = 0.0, t2bb_norm_ = 0.0;
 
     T2["ijab"] = B["gia"] * B["gjb"];
     T2["ijab"] -= B["gib"] * B["gja"];
@@ -522,15 +486,6 @@ void MRDSRG::guess_t2_noccvv_df(BlockedTensor& B, BlockedTensor& T2) {
             size_t i2 = label_to_spacemo_[block[2]][i[2]];
             size_t i3 = label_to_spacemo_[block[3]][i[3]];
             value /= F0[i0] + F1[i1] - F0[i2] - F0[i3];
-            if (spin0 && spin1) {
-                t2aa_norm_ += value * value;
-            } else if (spin0 && !spin1) {
-                t2ab_norm_ += value * value;
-            } else if (!spin0 && !spin1) {
-                t2bb_norm_ += value * value;
-            }
-            if (std::fabs(value) > std::fabs(T2max_))
-                T2max_ = value;
         });
     }
 
@@ -551,16 +506,6 @@ void MRDSRG::guess_t2_noccvv_df(BlockedTensor& B, BlockedTensor& T2) {
             size_t i3 = label_to_spacemo_[block[3]][i[3]];
             value *=
                 dsrg_source_->compute_renormalized_denominator(F0[i0] + F1[i1] - F0[i2] - F0[i3]);
-
-            if (spin0 && spin1) {
-                t2aa_norm_ += value * value;
-            } else if (spin0 && !spin1) {
-                t2ab_norm_ += value * value;
-            } else if (!spin0 && !spin1) {
-                t2bb_norm_ += value * value;
-            }
-            if (std::fabs(value) > std::fabs(T2max_))
-                T2max_ = value;
         });
     }
 
@@ -577,25 +522,9 @@ void MRDSRG::guess_t2_noccvv_df(BlockedTensor& B, BlockedTensor& T2) {
     }
 
     // zero internal amplitudes
-    T2.block("aaaa").iterate([&](const std::vector<size_t>&, double& value) {
-        t2aa_norm_ -= value * value;
-        value = 0.0;
-    });
-    T2.block("aAaA").iterate([&](const std::vector<size_t>&, double& value) {
-        t2ab_norm_ -= value * value;
-        value = 0.0;
-    });
-    T2.block("AAAA").iterate([&](const std::vector<size_t>&, double& value) {
-        t2bb_norm_ -= value * value;
-        value = 0.0;
-    });
-
-    // norms
-    T2norm_ = std::sqrt(t2aa_norm_ + t2bb_norm_ + 4 * t2ab_norm_);
-    t2aa_norm_ = std::sqrt(t2aa_norm_);
-    t2ab_norm_ = std::sqrt(t2ab_norm_);
-    t2bb_norm_ = std::sqrt(t2bb_norm_);
-    T2rms_ = 0.0;
+    for (const std::string& block : {"aaaa", "aAaA", "AAAA"}) {
+        T2.block(block).zero();
+    }
 
     outfile->Printf("  Done. Timing %10.3f s", timer.get());
 }
@@ -604,7 +533,6 @@ void MRDSRG::guess_t1_nocv(BlockedTensor& F, BlockedTensor& T2, BlockedTensor& T
     local_timer timer;
     std::string str = "Computing T1 amplitudes ...";
     outfile->Printf("\n    %-35s", str.c_str());
-    T1max_ = 0.0, t1a_norm_ = 0.0, t1b_norm_ = 0.0;
 
     BlockedTensor temp = BTF_->build(tensor_type_, "temp", spin_cases({"aa"}));
     temp["xu"] = Gamma1_["xu"];
@@ -674,13 +602,6 @@ void MRDSRG::guess_t1_nocv(BlockedTensor& F, BlockedTensor& T2, BlockedTensor& T
             size_t i0 = label_to_spacemo_[block[0]][i[0]];
             size_t i1 = label_to_spacemo_[block[1]][i[1]];
             value /= F0[i0] - F0[i1];
-            if (spin0) {
-                t1a_norm_ += value * value;
-            } else if (!spin0) {
-                t1b_norm_ += value * value;
-            }
-            if (std::fabs(value) > std::fabs(T1max_))
-                T1max_ = value;
         });
     }
 
@@ -693,14 +614,6 @@ void MRDSRG::guess_t1_nocv(BlockedTensor& F, BlockedTensor& T2, BlockedTensor& T
             size_t i0 = label_to_spacemo_[block[0]][i[0]];
             size_t i1 = label_to_spacemo_[block[1]][i[1]];
             value *= dsrg_source_->compute_renormalized_denominator(F0[i0] - F0[i1]);
-
-            if (spin0) {
-                t1a_norm_ += value * value;
-            } else if (!spin0) {
-                t1b_norm_ += value * value;
-            }
-            if (std::fabs(value) > std::fabs(T1max_))
-                T1max_ = value;
         });
     }
 
@@ -715,20 +628,9 @@ void MRDSRG::guess_t1_nocv(BlockedTensor& F, BlockedTensor& T2, BlockedTensor& T
     }
 
     // zero internal amplitudes
-    T1.block("aa").iterate([&](const std::vector<size_t>&, double& value) {
-        t1a_norm_ -= value * value;
-        value = 0.0;
-    });
-    T1.block("AA").iterate([&](const std::vector<size_t>&, double& value) {
-        t1b_norm_ -= value * value;
-        value = 0.0;
-    });
-
-    // norms
-    T1norm_ = std::sqrt(t1a_norm_ + t1b_norm_);
-    t1a_norm_ = std::sqrt(t1a_norm_);
-    t1b_norm_ = std::sqrt(t1b_norm_);
-    T1rms_ = 0.0;
+    for (const std::string& block : {"aa", "AA"}) {
+        T1.block(block).zero();
+    }
 
     outfile->Printf("  Done. Timing %10.3f s", timer.get());
 }
@@ -1276,7 +1178,49 @@ void MRDSRG::update_t1_nocv() {
     t1b_norm_ = std::sqrt(t1b_norm_);
 }
 
+void MRDSRG::compute_t1_norm() {
+    T1max_ = 0.0, t1a_norm_ = 0.0, t1b_norm_ = 0.0;
+
+    T1_.iterate([&](const std::vector<size_t>&, const std::vector<SpinType>& spin, double& value) {
+        if (spin[0] == AlphaSpin) {
+            t1a_norm_ += value * value;
+        } else {
+            t1b_norm_ += value * value;
+        }
+        if (std::fabs(value) > std::fabs(T1max_))
+            T1max_ = value;
+    });
+
+    T1norm_ = std::sqrt(t1a_norm_ + t1b_norm_);
+    t1a_norm_ = std::sqrt(t1a_norm_);
+    t1b_norm_ = std::sqrt(t1b_norm_);
+}
+
+void MRDSRG::compute_t2_norm() {
+    T2max_ = 0.0, t2aa_norm_ = 0.0, t2ab_norm_ = 0.0, t2bb_norm_ = 0.0;
+
+    T2_.iterate([&](const std::vector<size_t>&, const std::vector<SpinType>& spin, double& value) {
+        if ((spin[0] == AlphaSpin) && (spin[1] == AlphaSpin)) {
+            t2aa_norm_ += value * value;
+        } else if ((spin[0] == AlphaSpin) && (spin[1] == BetaSpin)) {
+            t2ab_norm_ += value * value;
+        } else if ((spin[0] == BetaSpin) && (spin[1] == BetaSpin)) {
+            t2bb_norm_ += value * value;
+        }
+        if (std::fabs(value) > std::fabs(T2max_))
+            T2max_ = value;
+    });
+
+    T2norm_ = std::sqrt(t2aa_norm_ + t2bb_norm_ + 4 * t2ab_norm_);
+    t2aa_norm_ = std::sqrt(t2aa_norm_);
+    t2ab_norm_ = std::sqrt(t2ab_norm_);
+    t2bb_norm_ = std::sqrt(t2bb_norm_);
+}
+
 void MRDSRG::analyze_amplitudes(std::string name, BlockedTensor& T1, BlockedTensor& T2) {
+    compute_t1_norm();
+    compute_t2_norm();
+
     if (!name.empty())
         name += " ";
     outfile->Printf("\n\n  ==> %sExcitation Amplitudes Summary <==\n", name.c_str());
@@ -1576,5 +1520,23 @@ void MRDSRG::print_intruder(const std::string& name,
         output = title + " NULL";
     }
     outfile->Printf("\n%s", output.c_str());
+}
+
+void MRDSRG::dump_amps_to_disk() {
+    // dump to psi4 scratch directory for reference relaxation
+    if (restart_amps_ and (relax_ref_ != "NONE")) {
+        outfile->Printf("\n    Dumping amplitudes to scratch directory ...");
+        ambit::save(T1_, t1_file_chk_);
+        ambit::save(T2_, t2_file_chk_);
+        outfile->Printf(" Done.");
+    }
+
+    // dump amplitudes to the current directory
+    if (dump_amps_cwd_) {
+        outfile->Printf("\n    Dumping amplitudes to current directory ...");
+        ambit::save(T1_, t1_file_cwd_);
+        ambit::save(T2_, t2_file_cwd_);
+        outfile->Printf(" Done.");
+    }
 }
 } // namespace forte

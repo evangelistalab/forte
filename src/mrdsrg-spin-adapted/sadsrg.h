@@ -122,6 +122,11 @@ class SADSRG : public DynamicCorrelationSolver {
     /// Threshold for amplitudes considered as intruders
     double intruder_tamp_;
 
+    /// How to consider internal amplitudes
+    std::string internal_amp_;
+    /// Include which part of internal amplitudes?
+    std::string internal_amp_select_;
+
     /// Relaxation type
     std::string relax_ref_;
 
@@ -402,6 +407,11 @@ class SADSRG : public DynamicCorrelationSolver {
     void print_cumulant_summary();
 
     // ==> common aplitudes analysis and printing <==
+
+    /// Prune internal amplitudes for T1
+    void internal_amps_T1(BlockedTensor& T1);
+    /// Prune internal amplitudes for T2
+    void internal_amps_T2(BlockedTensor& T2);
 
     /// Check T1 and return the largest amplitudes
     std::vector<std::pair<std::vector<size_t>, double>> check_t1(BlockedTensor& T1);
