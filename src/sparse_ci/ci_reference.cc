@@ -1189,7 +1189,6 @@ void CI_Reference::get_gas_occupation() {
     std::vector<int> gas_maxe;
     std::vector<int> gas_mine;
     std::vector<int> gas_orbital;
-
     gas_num_ = 0;
     for (size_t gas_count = 0; gas_count < 6; gas_count++) {
         std::string space = "GAS" + std::to_string(gas_count + 1);

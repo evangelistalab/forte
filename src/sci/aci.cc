@@ -578,7 +578,7 @@ void AdaptiveCI::pre_iter_preparation() {
     // If the ACI iteration is within the gas space, calculate
     // gas_info and the criterion for single and double excitations
     gas_num_ = 0;
-    if ((gas_iteration_)) {
+    if (gas_iteration_) {
         //        const auto gas_info = mo_space_info_->gas_info();
         std::vector<size_t> act_mo = mo_space_info_->absolute_mo("ACTIVE");
         std::map<int, int> re_ab_mo;
@@ -648,9 +648,10 @@ void AdaptiveCI::pre_iter_preparation() {
     sparse_solver_->set_spin_project(project_out_spin_contaminants_);
     sparse_solver_->set_guess_dimension(options_->get_int("DL_GUESS_SIZE"));
     sparse_solver_->set_num_vecs(options_->get_int("N_GUESS_VEC"));
-    sparse_solver_->set_spin_project_full(false);
     sparse_solver_->set_ncollapse_per_root(options_->get_int("DL_COLLAPSE_PER_ROOT"));
     sparse_solver_->set_nsubspace_per_root(options_->get_int("DL_SUBSPACE_PER_ROOT"));
+    sparse_solver_->set_spin_project_full(
+        (gas_iteration_ and sigma_ == 0.0) ? true : options_->get_bool("SPIN_PROJECT_FULL"));
 }
 
 void AdaptiveCI::diagonalize_P_space() {

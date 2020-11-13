@@ -274,6 +274,10 @@ class MASTER_DSRG : public DynamicCorrelationSolver {
     void fill_Fdiag(BlockedTensor& F, std::vector<double>& Fa, std::vector<double>& Fb);
     /// Check orbitals if semicanonical
     bool check_semi_orbs();
+    /// Checked results of each block of Fock matrix
+    std::map<std::tuple<std::string, std::string>, bool> semi_results_;
+    /// Diagonalize the diagonal blocks of the Fock matrix
+    std::vector<std::vector<double>> diagonalize_Fock_diagblocks(BlockedTensor& U);
 
     // ==> integrals <==
 

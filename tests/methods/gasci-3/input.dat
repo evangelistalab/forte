@@ -3,16 +3,16 @@
 
 import forte
 
-refscf = -76.0172965561 #TEST
-refaci = -65.5582021137 #TEST
-refacipt2 = -55.086458434 #TEST
+refscf = -76.0172965561
+refaci = -65.52803723267440716
+refacipt2 = -55.02612867161270316
 
 memory 6000mb
 molecule h2o{
    O
    H  1 1.00
    H  1 1.00 2 103.1
-      }
+}
 
 set global {
   basis 6-31g**
@@ -34,7 +34,7 @@ set forte {
   root_sym 0
   charge 0
   sci_enforce_spin_complete true
-  e_convergence 6
+  e_convergence 10
   charge 0
   active_ref_type gas
   GAS2 [3,0,1,2]
@@ -45,8 +45,9 @@ set forte {
   aci_n_average 2
 }
 
-escf ,wfn = energy('scf',return_wfn = True)
-compare_values(refscf, variable("CURRENT ENERGY"),9, "SCF energy") #TEST
-eaci = energy('forte')
-compare_values(refaci, eaci,9, "ACI energy") #TEST
-compare_values(refacipt2, variable("ACI+PT2 ENERGY"),8, "ACI+PT2 energy") #TEST
+escf, wfn = energy('scf', return_wfn=True)
+compare_values(refscf, variable("CURRENT ENERGY"), 9, "SCF energy")
+
+eaci = energy('forte', ref_wfn=wfn)
+compare_values(refaci, eaci, 8, "Averaged ACI energy")
+compare_values(refacipt2, variable("ACI+PT2 ENERGY"), 6, "ACI+PT2 energy")

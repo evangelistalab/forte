@@ -65,11 +65,6 @@ class SemiCanonical {
     /// Transform all cumulants, rebuild 2-RDMs using 2-cumulants
     RDMs transform_rdms(ambit::Tensor& Ua, ambit::Tensor& Ub, RDMs& rdms, const int& max_rdm_level);
 
-    //    /// Set active hole and particle dimensions
-    //    void set_actv_dims(const psi::Dimension& actv_docc, const psi::Dimension& actv_virt);
-    // TODO: this function was disabled when we introduced GAS spaces. It should probably be
-    // rewritten using the GAS1/GAS2 spaces
-
     /// Return the alpha rotation matrix
     psi::SharedMatrix Ua() { return Ua_; }
 
@@ -89,38 +84,18 @@ class SemiCanonical {
 
     std::shared_ptr<ForteIntegrals> ints_;
 
-    // All orbitals
+    // Dimension for all orbitals (number of MOs per irrep)
     psi::Dimension nmopi_;
-    // Correlated MOs
-    psi::Dimension ncmopi_;
-    // Frozen core
-    psi::Dimension fdocc_;
-    // Restricted DOCC
-    psi::Dimension rdocc_;
-    // Active MOs
-    psi::Dimension actv_;
 
     // Blocks map
     std::map<std::string, psi::Dimension> mo_dims_;
 
-    // Indices (no frozen) map
-    std::map<std::string, std::vector<std::vector<size_t>>> cmo_idx_;
+    // Offset of GAS orbitals within ACTIVE
+    std::map<std::string, psi::Dimension> actv_offsets_;
 
-    // Figure out indices [[(A1)...], [(A2)...], [(B1)...], [(B2)...]]
-    // npi: this mo space; bpi: mo space before npi; tpi: total mo space
-    std::vector<std::vector<size_t>> idx_space(const psi::Dimension& npi, const psi::Dimension& bpi,
-                                               const psi::Dimension& tpi);
-
-    // Offset of active orbitals
-    std::map<std::string, std::vector<int>> actv_offsets_;
-
-    // Offsets
-    std::map<std::string, psi::Dimension> offsets_;
-
-    // Total active MOs
+    // Number of active MOs
     size_t nact_;
-    // Total correlated MOs
-    size_t ncmo_;
+
     // Number of irreps
     size_t nirrep_;
 
@@ -136,9 +111,6 @@ class SemiCanonical {
     /// Set Ua_, Ub_, Ua_t_, and Ub_t_ to identity
     void set_U_to_identity();
 
-    /// Build the generalized fock matrix
-    void build_fock_matrix(RDMs& rdms);
-
     /// Check Fock matrix, return true if semicanonicalized
     bool check_fock_matrix();
     /// Thresholds for Fock matrix testing
@@ -148,14 +120,9 @@ class SemiCanonical {
     /// If certain Fock blocks need to be diagonalized
     std::map<std::string, bool> checked_results_;
 
-    /**
-     * Builds unitary matrices used to diagonalize diagonal blocks of F
-     * Ua, Ub span all MOs
-     * Ua_t, Ub_t span active MOs
-     */
-    void build_transformation_matrices(psi::SharedMatrix& Ua, psi::SharedMatrix& Ub,
-                                       ambit::Tensor& Ua_t, ambit::Tensor& Ub_t);
+    /// Builds unitary matrices used to diagonalize diagonal blocks of Fock
+    void build_transformation_matrices();
 };
 } // namespace forte
 
-#endif // _mp2_nos_h_
+#endif // _semi_canonicalize_h_

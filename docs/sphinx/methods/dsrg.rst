@@ -378,7 +378,7 @@ There are several things to notice.
   by alternating the solution of the DSRG amplitude equations and the diagonalization of the DSRG Hamiltonian.
   This procedure may not monotonically converge and is potentially numerically unstable.
   We therefore suggest using a moderate energy threshold (:math:`\geq 10^{-8}` a.u.) for the iterative reference relaxation,
-  which is controlled by the option :code:`RELAX_E_CONVERGENCE` .
+  which is controlled by the option :code:`RELAX_E_CONVERGENCE`.
 
 For a given reference wave function, the output prints out a summary of:
 
@@ -678,6 +678,29 @@ We have implemented the following choices for the zeroth-order Hamiltonian.
   For example, these additional blocks include: cccc, aaaa, vvvv, caca, caac, acac, acca,
   cvcv, cvvc, vcvc, vccv, avav, avva, vava, and vaav.
   The computation procedure is similar to that of Dyall Hamiltonian.
+
+To use different types of zeroth-order Hamiltonian, the following options are needed
+::
+
+    correlation_solver      mrdsrg
+    corr_level              pt2
+    dsrg_pt2_h0th           Ffull
+
+.. warning::
+  The implementation of DSRG-MRPT2 in ``correlation_solver mrdsrg`` is different from the one in ``correlation_solver dsrg-mrpt2``.
+  For the latter, the :math:`\hat{H}^{(0)}` is **assumed** being Fdiag and diagonal such that
+  :math:`[\hat{H}^{(0)}, \hat{A}^{(1)}]` can be written in a compact form using semicanonical orbital energies.
+  For ``mrdsrg``, :math:`[\hat{H}^{(0)}, \hat{A}^{(1)}]` is evaluated without any assumption to the form of :math:`\hat{H}^{(0)}`.
+  These two approaches are equivalent for DSRG based on a CASCI reference.
+
+  However, they will give different energies when there are multiple GAS spaces
+  (In DSRG, all GAS orbitals are treated as ACTIVE).
+  In this case, semicanonical orbitals are defined as those that make the diagonal blocks of the Fock matrix diagonal: core-core, virtual-virtual, GAS1-GAS1, GAS2-GAS2, ..., GAS6-GAS6.
+  Then it is equivalent to say that ``dsrg-mrpt2`` uses all the diagonal blocks of the Fock matrix as zeroth-order Hamiltonian.
+  In order to correctly treat the GAS :math:`m` - GAS :math:`n` (:math:`m \neq n`) part of Fock matrix as first-order Hamiltonian, one need to invoke internal excitations (i.e., active-active excitations).
+  Contrarily, ``mrdsrg`` takes the entire active-active block of Fock matrix as zeroth-order Hamiltonian, that is all blocks of GAS :math:`m` - GAS :math:`n` (:math:`m, n \in \{1,2,\cdots,6\}`).
+
+  The spin-adapted code ``correlation_solver sa-mrdsrg`` with ``corr_level pt2`` has the same behavior to the ``dsrg-mrpt2`` implementaion.
 
 6. Restart iterative MRDSRG from a previous computation
 +++++++++++++++++++++++++++++++++++++++++++++++++++++++

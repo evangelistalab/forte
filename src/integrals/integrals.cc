@@ -109,6 +109,8 @@ void ForteIntegrals::read_information() {
         q += frzvpi_[h]; // skip the frozen virtual
     }
 
+    mo_to_relmo_ = mo_space_info_->relative_mo("ALL");
+
     // Set the indexing to work using the number of molecular integrals
     aptei_idx_ = nmo_;
     num_tei_ = INDEX4(nmo_ - 1, nmo_ - 1, nmo_ - 1, nmo_ - 1) + 1;
@@ -124,8 +126,6 @@ void ForteIntegrals::allocate() {
     // these will hold only the correlated part
     one_electron_integrals_a_.assign(ncmo_ * ncmo_, 0.0);
     one_electron_integrals_b_.assign(ncmo_ * ncmo_, 0.0);
-    fock_matrix_a_.assign(ncmo_ * ncmo_, 0.0);
-    fock_matrix_b_.assign(ncmo_ * ncmo_, 0.0);
 
     if ((integral_type_ == Conventional) or (integral_type_ == Custom)) {
         // Allocate the memory required to store the two-electron integrals
@@ -144,6 +144,8 @@ std::shared_ptr<psi::Matrix> ForteIntegrals::Cb() const { return Cb_; }
 double ForteIntegrals::nuclear_repulsion_energy() const { return nucrep_; }
 
 std::shared_ptr<psi::Wavefunction> ForteIntegrals::wfn() { return wfn_; }
+
+std::shared_ptr<psi::JK> ForteIntegrals::jk() { return JK_; }
 
 size_t ForteIntegrals::nso() const { return nso_; }
 
@@ -191,17 +193,53 @@ ambit::Tensor ForteIntegrals::oei_b_block(const std::vector<size_t>& p,
     return t;
 }
 
-double ForteIntegrals::get_fock_a(size_t p, size_t q) const {
-    return fock_matrix_a_[p * aptei_idx_ + q];
+double ForteIntegrals::get_fock_a(size_t p, size_t q, bool corr) const {
+    auto p_full = p, q_full = q;
+    if (corr) {
+        p_full = cmotomo_[p], q_full = cmotomo_[q];
+    }
+    auto p_pair = mo_to_relmo_[p_full], q_pair = mo_to_relmo_[q_full];
+    if (p_pair.first == q_pair.first) {
+        return fock_a_->get(p_pair.first, p_pair.second, q_pair.second);
+    } else {
+        return 0.0;
+    }
 }
 
-double ForteIntegrals::get_fock_b(size_t p, size_t q) const {
-    return fock_matrix_b_[p * aptei_idx_ + q];
+double ForteIntegrals::get_fock_b(size_t p, size_t q, bool corr) const {
+    auto p_full = p, q_full = q;
+    if (corr) {
+        p_full = cmotomo_[p], q_full = cmotomo_[q];
+    }
+    auto p_pair = mo_to_relmo_[p_full], q_pair = mo_to_relmo_[q_full];
+    if (p_pair.first == q_pair.first) {
+        return fock_b_->get(p_pair.first, p_pair.second, q_pair.second);
+    } else {
+        return 0.0;
+    }
 }
 
-std::vector<double> ForteIntegrals::get_fock_a() const { return fock_matrix_a_; }
+std::shared_ptr<psi::Matrix> ForteIntegrals::get_fock_a(bool corr) const {
+    if (corr) {
+        auto dim_frzc = mo_space_info_->dimension("FROZEN_DOCC");
+        auto dim_corr = mo_space_info_->dimension("CORRELATED");
+        psi::Slice slice_corr(dim_frzc, dim_frzc + dim_corr);
+        return fock_a_->get_block(slice_corr, slice_corr);
+    } else {
+        return fock_a_;
+    }
+}
 
-std::vector<double> ForteIntegrals::get_fock_b() const { return fock_matrix_b_; }
+std::shared_ptr<psi::Matrix> ForteIntegrals::get_fock_b(bool corr) const {
+    if (corr) {
+        auto dim_frzc = mo_space_info_->dimension("FROZEN_DOCC");
+        auto dim_corr = mo_space_info_->dimension("CORRELATED");
+        psi::Slice slice_corr(dim_frzc, dim_frzc + dim_corr);
+        return fock_b_->get_block(slice_corr, slice_corr);
+    } else {
+        return fock_b_;
+    }
+}
 
 void ForteIntegrals::set_nuclear_repulsion(double value) { nucrep_ = value; }
 

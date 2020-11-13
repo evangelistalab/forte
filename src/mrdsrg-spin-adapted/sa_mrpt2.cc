@@ -313,11 +313,7 @@ void SA_MRPT2::compute_t2_df_minimal() {
     }
 
     // internal amplitudes
-    if (internal_amp_.find("DOUBLES") != std::string::npos) {
-        // TODO: to be filled
-    } else {
-        T2_.block("aaaa").zero();
-    }
+    internal_amps_T2(T2_);
 
     // form S2 = 2 * J - K
     // aavv, ccaa, caav, acav, aava, caaa, aaaa

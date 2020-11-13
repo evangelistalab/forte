@@ -1988,7 +1988,6 @@ std::vector<RDMs> FCI_MO::transition_rdms(const std::vector<std::pair<size_t, si
 
 [[deprecated]] std::vector<RDMs>
 FCI_MO::reference(const std::vector<std::pair<size_t, size_t>>& root_list, int max_rdm_level) {
-
     std::vector<RDMs> refs;
     // if ((options_->psi_options())["AVG_STATE"].size() != 0) {
     //     Reference ref;
