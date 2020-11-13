@@ -112,9 +112,6 @@ class CASSCF_ORB_GRAD {
     /// Number of non-redundant pairs for orbital optimization
     void nonredundant_pairs();
 
-    /// Prepare JK object
-    void setup_JK();
-
     /// Initialize/Allocate tensors and matrices
     void init_tensors();
 

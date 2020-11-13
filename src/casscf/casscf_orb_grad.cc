@@ -80,7 +80,7 @@ void CASSCF_ORB_GRAD::startup() {
     nonredundant_pairs();
 
     // setup JK
-    setup_JK();
+    JK_ = ints_->jk();
 
     // allocate memory for tensors and matrices
     init_tensors();
@@ -284,54 +284,6 @@ void CASSCF_ORB_GRAD::nonredundant_pairs() {
         }
     }
     outfile->Printf("\n    %s", std::string(33 + nirrep_ * 6, '-').c_str());
-}
-
-void CASSCF_ORB_GRAD::setup_JK() {
-    local_timer jk_timer;
-    print_h2("Initialize JK Builder", "==>", "<==\n");
-
-    auto basis_set = ints_->wfn()->basisset();
-
-    if (int_type_.find("DF") != std::string::npos) {
-        if (options_->get_str("SCF_TYPE") == "DF") {
-            JK_ = JK::build_JK(basis_set, ints_->wfn()->get_basisset("DF_BASIS_SCF"),
-                               psi::Process::environment.options, "MEM_DF");
-        } else {
-            throw psi::PSIEXCEPTION("Inconsistent DF type between Psi4 and Forte");
-        }
-    } else if (int_type_ == "CHOLESKY") {
-        psi::Options& options = psi::Process::environment.options;
-        CDJK* jk = new CDJK(basis_set, options_->get_double("CHOLESKY_TOLERANCE"));
-
-        if (options["INTS_TOLERANCE"].has_changed())
-            jk->set_cutoff(options.get_double("INTS_TOLERANCE"));
-        if (options["SCREENING"].has_changed())
-            jk->set_csam(options.get_str("SCREENING") == "CSAM");
-        if (options["PRINT"].has_changed())
-            jk->set_print(options.get_int("PRINT"));
-        if (options["DEBUG"].has_changed())
-            jk->set_debug(options.get_int("DEBUG"));
-        if (options["BENCH"].has_changed())
-            jk->set_bench(options.get_int("BENCH"));
-        if (options["DF_INTS_IO"].has_changed())
-            jk->set_df_ints_io(options.get_str("DF_INTS_IO"));
-        jk->set_condition(options.get_double("DF_FITTING_CONDITION"));
-        if (options["DF_INTS_NUM_THREADS"].has_changed())
-            jk->set_df_ints_num_threads(options.get_int("DF_INTS_NUM_THREADS"));
-
-        JK_ = std::shared_ptr<JK>(jk);
-    } else if (int_type_ == "CONVENTIONAL") {
-        JK_ = JK::build_JK(basis_set, psi::BasisSet::zero_ao_basis_set(),
-                           psi::Process::environment.options, "PK");
-    }
-
-    JK_->set_memory(psi::Process::environment.get_memory() / sizeof(double) * 0.85);
-    JK_->initialize();
-    JK_->C_left().clear();
-    JK_->C_right().clear();
-
-    if (print_ > 1)
-        outfile->Printf("  Initializing JK took %.3f seconds.", jk_timer.get());
 }
 
 void CASSCF_ORB_GRAD::init_tensors() {
