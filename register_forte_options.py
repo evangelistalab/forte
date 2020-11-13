@@ -28,7 +28,7 @@ def register_forte_options(options):
 def register_driver_options(options):
     options.set_group("")
     options.add_str('JOB_TYPE', 'NEWDRIVER', [
-        'NONE','NEWDRIVER','MR-DSRG-PT2', 'CASSCF'
+        'NONE', 'NEWDRIVER', 'MR-DSRG-PT2', 'CASSCF', 'MCSCF_TWO_STEP'
     ], 'Specify the job type')
 
     options.add_str("SCF_TYPE", None, "The integrals used in the SCF calculation")

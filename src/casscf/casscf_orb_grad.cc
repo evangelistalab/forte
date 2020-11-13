@@ -28,7 +28,6 @@
 
 #include "psi4/psi4-dec.h"
 #include "psi4/psifiles.h"
-#include "psi4/libfock/jk.h"
 #include "psi4/libqt/qt.h"
 #include "psi4/libmints/molecule.h"
 #include "psi4/libmints/pointgrp.h"
@@ -288,18 +287,13 @@ void CASSCF_ORB_GRAD::nonredundant_pairs() {
 
 void CASSCF_ORB_GRAD::init_tensors() {
     // save a copy of initial MO
-    C0_ = ints_->wfn()->Ca()->clone();
+    C0_ = ints_->Ca()->clone();
     C0_->set_name("MCSCF Initial Orbital Coefficients");
-    C_ = C0_->clone();
+    C_ = ints_->Ca();
     C_->set_name("MCSCF Orbital Coefficients");
-
-    // save a copy of AO OEI
-    H_ao_ = ints_->wfn()->H()->clone();
 
     // Fock matrices
     Fd_.resize(nmo_);
-    Fock_ = std::make_shared<psi::Matrix>("Fock_MO", nmopi_, nmopi_);
-    F_closed_ = std::make_shared<psi::Matrix>("Fock_inactive", nmopi_, nmopi_);
 
     auto tensor_type = ambit::CoreTensor;
     Fc_ = ambit::BlockedTensor::build(tensor_type, "Fc", {"GG"});
@@ -443,7 +437,6 @@ void CASSCF_ORB_GRAD::build_tei_from_ao() {
 
             auto half_trans = psi::linalg::triplet(C_nosym, JK_->J()[i], Cact, true, false, false);
 
-#pragma omp parallel for
             for (size_t p = 0; p < nmo_; ++p) {
                 size_t np = mos_rel_space_[p].second;
 
@@ -502,26 +495,12 @@ void CASSCF_ORB_GRAD::build_fock_inactive() {
      * u,v,r,s: AO indices; i: MO indices
      */
 
-    // grab part of Ca for inactive docc
-    auto Cdocc = C_subset("C_INACTIVE", C_, psi::Dimension(nirrep_), ndoccpi_);
+    auto Ftuple = ints_->make_fock_inactive(psi::Dimension(nirrep_), ndoccpi_);
+    std::tie(F_closed_, std::ignore, e_closed_) = Ftuple;
+    F_closed_->set_name("Fock_inactive");
 
-    // JK build
-    JK_fock_build(Cdocc, Cdocc);
-
-    auto J = JK_->J()[0];
-    J->scale(2.0);
-    J->subtract(JK_->K()[0]);
-    J->add(H_ao_);
-
-    F_closed_->copy(J);
-    F_closed_->transform(C_);
-
-    // put it in Ambit BlockedTensor format
+    // put into Ambit BlockedTensor format
     format_fock(F_closed_, Fc_);
-
-    // compute closed-shell energy
-    J->add(H_ao_);
-    e_closed_ = J->vector_dot(psi::linalg::doublet(Cdocc, Cdocc, false, true));
 
     if (debug_print_) {
         F_closed_->print();
@@ -535,21 +514,7 @@ void CASSCF_ORB_GRAD::build_fock_active() {
     // F_active = D_{uv}^{active} * ( (uv|rs) - 0.5 * (us|rv) )
     // D_{uv}^{active} = \sum_{xy}^{active} C_{ux} * C_{vy} * Gamma1_{xy}
 
-    // grab part of Ca for active
-    auto Cactv = C_subset("C_ACTIVE", C_, ndoccpi_, ndoccpi_ + nactvpi_);
-
-    // dress Cactv by one-density, which will the C_right for JK
-    auto Cactv_dressed = psi::linalg::doublet(Cactv, rdm1_, false, false);
-
-    // JK build
-    JK_fock_build(Cactv, Cactv_dressed);
-
-    Fock_->copy(JK_->K()[0]);
-    Fock_->scale(-0.5);
-    Fock_->add(JK_->J()[0]);
-
-    // transform to MO
-    Fock_->transform(C_);
+    Fock_ = ints_->make_fock_active_restricted(rdm1_);
     Fock_->set_name("Fock_active");
 
     if (debug_print_) {

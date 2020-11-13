@@ -84,7 +84,10 @@ ForteIntegrals::ForteIntegrals(std::shared_ptr<ForteOptions> options,
 
 void ForteIntegrals::common_initialize() {
     read_information();
-    allocate();
+
+    if (not skip_build_) {
+        allocate();
+    }
 }
 void ForteIntegrals::read_information() {
     // Extract information from options
@@ -116,6 +119,11 @@ void ForteIntegrals::read_information() {
     num_tei_ = INDEX4(nmo_ - 1, nmo_ - 1, nmo_ - 1, nmo_ - 1) + 1;
     num_aptei_ = nmo_ * nmo_ * nmo_ * nmo_;
     num_threads_ = omp_get_max_threads();
+
+    // skip integral allocation and transformation if doing CASSCF
+    auto job_type = options_->get_str("JOB_TYPE");
+    skip_build_ =
+        (job_type == "CASSCF" or job_type == "MCSCF_TWO_STEP") and integral_type_ != Custom;
 }
 
 void ForteIntegrals::allocate() {
@@ -382,12 +390,15 @@ void ForteIntegrals::freeze_core_orbitals() {
 
 void ForteIntegrals::print_info() {
     outfile->Printf("\n\n  ==> Integral Transformation <==\n");
-    outfile->Printf("\n  Number of molecular orbitals:            %10d", nmopi_.sum());
-    outfile->Printf("\n  Number of correlated molecular orbitals: %10zu", ncmo_);
-    outfile->Printf("\n  Number of frozen occupied orbitals:      %10d", frzcpi_.sum());
-    outfile->Printf("\n  Number of frozen unoccupied orbitals:    %10d", frzvpi_.sum());
-    outfile->Printf("\n  Two-electron integral type:              %10s\n\n",
+    outfile->Printf("\n  Number of molecular orbitals:            %15d", nmopi_.sum());
+    outfile->Printf("\n  Number of correlated molecular orbitals: %15zu", ncmo_);
+    outfile->Printf("\n  Number of frozen occupied orbitals:      %15d", frzcpi_.sum());
+    outfile->Printf("\n  Number of frozen unoccupied orbitals:    %15d", frzvpi_.sum());
+    outfile->Printf("\n  Two-electron integral type:              %15s\n\n",
                     int_type_label[integral_type()].c_str());
+    if (skip_build_) {
+        outfile->Printf("\n  Skip integral allocation and transformation for AO-driven CASSCF.");
+    }
 }
 
 void ForteIntegrals::print_ints() {

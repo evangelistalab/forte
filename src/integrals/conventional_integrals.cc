@@ -66,13 +66,13 @@ ConventionalIntegrals::ConventionalIntegrals(std::shared_ptr<ForteOptions> optio
 
 void ConventionalIntegrals::initialize() {
     print_info();
-    outfile->Printf("\n  Overall Conventional Integrals timings\n\n");
-    local_timer ConvTime;
 
-    gather_integrals();
-    freeze_core_orbitals();
-
-    outfile->Printf("\n  Conventional integrals take %8.8f s", ConvTime.get());
+    if (not skip_build_) {
+        local_timer ConvTime;
+        gather_integrals();
+        freeze_core_orbitals();
+        print_timing("computing conventional integrals", ConvTime.get());
+    }
 }
 
 std::shared_ptr<psi::IntegralTransform> ConventionalIntegrals::transform_integrals() {

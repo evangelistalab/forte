@@ -131,6 +131,9 @@ class ForteIntegrals {
 
     virtual void initialize() = 0;
 
+    /// Skip integral transformation
+    bool skip_build_;
+
     /// Return Ca
     std::shared_ptr<psi::Matrix> Ca() const;
     /// Return Cb
@@ -270,6 +273,18 @@ class ForteIntegrals {
     /// F_{pq} = \sum_{uv}^{active} <pu||qv> * gamma_{uv}
     virtual std::tuple<psi::SharedMatrix, psi::SharedMatrix> make_fock_active(ambit::Tensor Da,
                                                                               ambit::Tensor Db) = 0;
+
+    /// Make the active Fock matrix in MO basis (include frozen orbitals)
+    /// @param D The spin-summed 1RDM in psi::SharedMatrix form
+    /// @return Fock matrix
+    virtual psi::SharedMatrix make_fock_active_restricted(psi::SharedMatrix D) = 0;
+
+    /// Make the active Fock matrix in MO basis (include frozen orbitals)
+    /// @param Da The alpha 1RDM in psi::SharedMatrix form
+    /// @param Db The beta 1RDM in psi::SharedMatrix form
+    /// @return alpha Fock matrix, beta Fock matrix
+    virtual std::tuple<psi::SharedMatrix, psi::SharedMatrix>
+    make_fock_active_unrestricted(psi::SharedMatrix Da, psi::SharedMatrix Db) = 0;
 
     /// Set nuclear repulstion energy
     void set_nuclear_repulsion(double value);
@@ -531,6 +546,13 @@ class Psi4Integrals : public ForteIntegrals {
     /// Make the active Fock matrix using Psi4 JK object
     std::tuple<psi::SharedMatrix, psi::SharedMatrix> make_fock_active(ambit::Tensor Da,
                                                                       ambit::Tensor Db) override;
+
+    /// Make the active Fock matrix using restricted equation
+    psi::SharedMatrix make_fock_active_restricted(psi::SharedMatrix D) override;
+
+    /// Make the active Fock matrix using unrestricted equation
+    std::tuple<psi::SharedMatrix, psi::SharedMatrix>
+    make_fock_active_unrestricted(psi::SharedMatrix Da, psi::SharedMatrix Db) override;
 
   private:
     void base_initialize_psi4();

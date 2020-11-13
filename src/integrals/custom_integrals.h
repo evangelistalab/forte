@@ -75,6 +75,13 @@ class CustomIntegrals : public ForteIntegrals {
     std::tuple<psi::SharedMatrix, psi::SharedMatrix> make_fock_active(ambit::Tensor Da,
                                                                       ambit::Tensor Db) override;
 
+    /// Make the active Fock matrix using restricted equation
+    psi::SharedMatrix make_fock_active_restricted(psi::SharedMatrix D) override;
+
+    /// Make the active Fock matrix using unrestricted equation
+    std::tuple<psi::SharedMatrix, psi::SharedMatrix>
+    make_fock_active_unrestricted(psi::SharedMatrix Da, psi::SharedMatrix Db) override;
+
     size_t nthree() const override { throw std::runtime_error("Wrong Integral type"); }
 
     void set_tei(size_t p, size_t q, size_t r, size_t s, double value, bool alpha1,

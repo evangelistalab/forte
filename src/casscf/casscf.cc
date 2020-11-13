@@ -139,53 +139,9 @@ void CASSCF::startup() {
     Hcore_ = SharedMatrix(ints_->wfn()->H()->clone());
 
     local_timer JK_initialize;
-    auto integral_type = ints_->integral_type();
-    auto basis_set = ints_->wfn()->basisset();
-    if (integral_type == Conventional) {
-        JK_ = JK::build_JK(basis_set, psi::BasisSet::zero_ao_basis_set(),
-                           psi::Process::environment.options, "PK");
-    } else if (integral_type == Cholesky) {
-        //        JK_ = JK::build_JK(basis_set, psi::BasisSet::zero_ao_basis_set(),
-        //                           psi::Process::environment.options, "CD");
-        psi::Options& options = psi::Process::environment.options;
-        CDJK* jk = new CDJK(basis_set, options_->get_double("CHOLESKY_TOLERANCE"));
-
-        if (options["INTS_TOLERANCE"].has_changed())
-            jk->set_cutoff(options.get_double("INTS_TOLERANCE"));
-        if (options["SCREENING"].has_changed())
-            //            jk->set_csam(options.get_str("SCREENING") == "CSAM");
-            if (options["PRINT"].has_changed())
-                jk->set_print(options.get_int("PRINT"));
-        if (options["DEBUG"].has_changed())
-            jk->set_debug(options.get_int("DEBUG"));
-        if (options["BENCH"].has_changed())
-            jk->set_bench(options.get_int("BENCH"));
-        if (options["DF_INTS_IO"].has_changed())
-            jk->set_df_ints_io(options.get_str("DF_INTS_IO"));
-        jk->set_condition(options.get_double("DF_FITTING_CONDITION"));
-        if (options["DF_INTS_NUM_THREADS"].has_changed())
-            jk->set_df_ints_num_threads(options.get_int("DF_INTS_NUM_THREADS"));
-
-        JK_ = std::shared_ptr<JK>(jk);
-
-    } else if ((integral_type == DF) or (integral_type == DiskDF) or (integral_type == DistDF)) {
-        if (options_->get_str("SCF_TYPE") == "DF") {
-            JK_ = JK::build_JK(basis_set, ints_->wfn()->get_basisset("DF_BASIS_SCF"),
-                               psi::Process::environment.options, "MEM_DF");
-            //            auto df_basis = ints_->wfn()->get_basisset("DF_BASIS_SCF");
-            //            JK_ = std::make_shared<DiskDFJK>(basis_set, df_basis);
-        } else {
-            throw psi::PSIEXCEPTION(
-                "Trying to compute the frozen one-body operator with MEM_DF but "
-                "using a non-DF integral type");
-        }
-    }
-
-    JK_->set_memory(psi::Process::environment.get_memory() * 0.85);
-    JK_->initialize();
+    JK_ = ints_->jk();
     JK_->C_left().clear();
     JK_->C_right().clear();
-
     if (print_ > 0)
         outfile->Printf("\n    JK takes %5.5f s", JK_initialize.get());
 }

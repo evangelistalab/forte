@@ -63,13 +63,13 @@ DISKDFIntegrals::DISKDFIntegrals(std::shared_ptr<ForteOptions> options,
 
 void DISKDFIntegrals::initialize() {
     print_info();
-    local_timer int_timer;
 
     int my_proc = 0;
 #ifdef HAVE_GA
     my_proc = GA_Nodeid();
 #endif
-    if (my_proc == 0) {
+    if (my_proc == 0 and (not skip_build_)) {
+        local_timer int_timer;
         gather_integrals();
         freeze_core_orbitals();
         print_timing("disk-based density-fitted integrals", int_timer.get());

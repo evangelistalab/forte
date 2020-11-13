@@ -70,8 +70,11 @@ Psi4Integrals::Psi4Integrals(std::shared_ptr<ForteOptions> options,
 
 void Psi4Integrals::base_initialize_psi4() {
     setup_psi4_ints();
-    transform_one_electron_integrals();
     build_dipole_ints_ao();
+
+    if (not skip_build_) {
+        transform_one_electron_integrals();
+    }
 }
 
 void Psi4Integrals::setup_psi4_ints() {
@@ -590,9 +593,6 @@ std::tuple<psi::SharedMatrix, psi::SharedMatrix> Psi4Integrals::make_fock_active
     auto& Da_data = Da.data();
     auto& Db_data = Db.data();
 
-    auto ndoccpi = mo_space_info_->dimension("INACTIVE_DOCC");
-    auto nholepi = ndoccpi + nactvpi;
-
     if (rdm_eq_spin and spin_restriction_ == IntegralSpinRestriction::Restricted) {
         // fill in density (spin-summed)
         auto g1 = std::make_shared<psi::Matrix>("1RDM", nactvpi, nactvpi);
@@ -608,37 +608,7 @@ std::tuple<psi::SharedMatrix, psi::SharedMatrix> Psi4Integrals::make_fock_active
             offset += nactvpi[h];
         }
 
-        // grab sub-block of Ca
-        auto Cactv = std::make_shared<psi::Matrix>("Ca_sub", nsopi_, nactvpi);
-
-        for (int h = 0; h < nirrep_; ++h) {
-            for (int p = 0, offset = ndoccpi[h]; p < nactvpi[h]; ++p) {
-                Cactv->set_column(h, p, Ca_->get_column(h, p + offset));
-            }
-        }
-
-        // dress Cactv by one-density, which will the C_right for JK
-        auto Cactv_dressed = psi::linalg::doublet(Cactv, g1, false, false);
-
-        // JK build
-        JK_->set_do_K(true);
-        std::vector<std::shared_ptr<psi::Matrix>>& Cls = JK_->C_left();
-        std::vector<std::shared_ptr<psi::Matrix>>& Crs = JK_->C_right();
-        Cls.clear();
-        Crs.clear();
-
-        Cls.push_back(Cactv);
-        Crs.push_back(Cactv_dressed);
-
-        JK_->compute();
-
-        auto K = JK_->K()[0];
-        K->scale(-0.5);
-        K->add(JK_->J()[0]);
-
-        // transform to MO
-        auto F_active = psi::linalg::triplet(Ca_, K, Ca_, true, false, false);
-        F_active->set_name("Fock_active");
+        auto F_active = make_fock_active_restricted(g1);
 
         return {F_active, F_active};
     } else {
@@ -657,53 +627,100 @@ std::tuple<psi::SharedMatrix, psi::SharedMatrix> Psi4Integrals::make_fock_active
             offset += nactvpi[h];
         }
 
-        // grab sub-block of Ca and Cb
-        auto Ca_actv = std::make_shared<psi::Matrix>("Ca active", nsopi_, nactvpi);
-        auto Cb_actv = std::make_shared<psi::Matrix>("Cb active", nsopi_, nactvpi);
-
-        for (int h = 0; h < nirrep_; ++h) {
-            for (int p = 0, offset = ndoccpi[h]; p < nactvpi[h]; ++p) {
-                Ca_actv->set_column(h, p, Ca_->get_column(h, p + offset));
-                Cb_actv->set_column(h, p, Cb_->get_column(h, p + offset));
-            }
-        }
-
-        // dress Cactv by one-density, which will the C_right for JK
-        auto Ca_actv_dressed = psi::linalg::doublet(Ca_actv, g1a, false, false);
-        auto Cb_actv_dressed = psi::linalg::doublet(Cb_actv, g1b, false, false);
-
-        // JK build
-        JK_->set_do_K(true);
-        std::vector<std::shared_ptr<psi::Matrix>>& Cls = JK_->C_left();
-        std::vector<std::shared_ptr<psi::Matrix>>& Crs = JK_->C_right();
-        Cls.clear();
-        Crs.clear();
-
-        Cls.push_back(Ca_actv);
-        Crs.push_back(Ca_actv_dressed);
-        Cls.push_back(Cb_actv);
-        Crs.push_back(Cb_actv_dressed);
-
-        JK_->compute();
-
-        // some algebra
-        auto Ka = JK_->K()[0];
-        Ka->scale(-1.0);
-        Ka->add(JK_->J()[0]);
-        Ka->add(JK_->J()[1]);
-
-        auto Kb = JK_->K()[1];
-        Kb->scale(-1.0);
-        Kb->add(JK_->J()[0]);
-        Kb->add(JK_->J()[1]);
-
-        // transform to MO
-        auto Fa_active = psi::linalg::triplet(Ca_, Ka, Ca_, true, false, false);
-        Fa_active->set_name("Fock_active alpha");
-        auto Fb_active = psi::linalg::triplet(Cb_, Kb, Cb_, true, false, false);
-        Fb_active->set_name("Fock_active beta");
-
-        return {Fa_active, Fb_active};
+        return make_fock_active_unrestricted(g1a, g1b);
     }
+}
+
+psi::SharedMatrix Psi4Integrals::make_fock_active_restricted(psi::SharedMatrix g1) {
+    auto nactvpi = mo_space_info_->dimension("ACTIVE");
+    auto ndoccpi = mo_space_info_->dimension("INACTIVE_DOCC");
+
+    // grab sub-block of Ca
+    auto Cactv = std::make_shared<psi::Matrix>("Ca_sub", nsopi_, nactvpi);
+
+    for (int h = 0; h < nirrep_; ++h) {
+        for (int p = 0, offset = ndoccpi[h]; p < nactvpi[h]; ++p) {
+            Cactv->set_column(h, p, Ca_->get_column(h, p + offset));
+        }
+    }
+
+    // dress Cactv by one-density, which will the C_right for JK
+    auto Cactv_dressed = psi::linalg::doublet(Cactv, g1, false, false);
+
+    // JK build
+    JK_->set_do_K(true);
+    std::vector<std::shared_ptr<psi::Matrix>>& Cls = JK_->C_left();
+    std::vector<std::shared_ptr<psi::Matrix>>& Crs = JK_->C_right();
+    Cls.clear();
+    Crs.clear();
+
+    Cls.push_back(Cactv);
+    Crs.push_back(Cactv_dressed);
+
+    JK_->compute();
+
+    auto K = JK_->K()[0];
+    K->scale(-0.5);
+    K->add(JK_->J()[0]);
+
+    // transform to MO
+    auto F_active = psi::linalg::triplet(Ca_, K, Ca_, true, false, false);
+    F_active->set_name("Fock_active");
+
+    return F_active;
+}
+
+std::tuple<psi::SharedMatrix, psi::SharedMatrix>
+Psi4Integrals::make_fock_active_unrestricted(psi::SharedMatrix g1a, psi::SharedMatrix g1b) {
+    auto nactvpi = mo_space_info_->dimension("ACTIVE");
+    auto ndoccpi = mo_space_info_->dimension("INACTIVE_DOCC");
+
+    // grab sub-block of Ca and Cb
+    auto Ca_actv = std::make_shared<psi::Matrix>("Ca active", nsopi_, nactvpi);
+    auto Cb_actv = std::make_shared<psi::Matrix>("Cb active", nsopi_, nactvpi);
+
+    for (int h = 0; h < nirrep_; ++h) {
+        for (int p = 0, offset = ndoccpi[h]; p < nactvpi[h]; ++p) {
+            Ca_actv->set_column(h, p, Ca_->get_column(h, p + offset));
+            Cb_actv->set_column(h, p, Cb_->get_column(h, p + offset));
+        }
+    }
+
+    // dress Cactv by one-density, which will the C_right for JK
+    auto Ca_actv_dressed = psi::linalg::doublet(Ca_actv, g1a, false, false);
+    auto Cb_actv_dressed = psi::linalg::doublet(Cb_actv, g1b, false, false);
+
+    // JK build
+    JK_->set_do_K(true);
+    std::vector<std::shared_ptr<psi::Matrix>>& Cls = JK_->C_left();
+    std::vector<std::shared_ptr<psi::Matrix>>& Crs = JK_->C_right();
+    Cls.clear();
+    Crs.clear();
+
+    Cls.push_back(Ca_actv);
+    Crs.push_back(Ca_actv_dressed);
+    Cls.push_back(Cb_actv);
+    Crs.push_back(Cb_actv_dressed);
+
+    JK_->compute();
+
+    // some algebra
+    auto Ka = JK_->K()[0];
+    Ka->scale(-1.0);
+    Ka->add(JK_->J()[0]);
+    Ka->add(JK_->J()[1]);
+
+    auto Kb = JK_->K()[1];
+    Kb->scale(-1.0);
+    Kb->add(JK_->J()[0]);
+    Kb->add(JK_->J()[1]);
+
+    // transform to MO
+    auto Fa_active = psi::linalg::triplet(Ca_, Ka, Ca_, true, false, false);
+    Fa_active->set_name("Fock_active alpha");
+    auto Fb_active = psi::linalg::triplet(Cb_, Kb, Cb_, true, false, false);
+    Fb_active->set_name("Fock_active beta");
+
+    return {Fa_active, Fb_active};
 }
 } // namespace forte

@@ -199,9 +199,6 @@ class CASSCF_ORB_GRAD {
     /// Current orbital coefficients
     std::shared_ptr<psi::Matrix> C_;
 
-    /// The bare AO one-electron integrals
-    psi::SharedMatrix H_ao_;
-
     /// The inactive Fock matrix in MO basis
     psi::SharedMatrix F_closed_; // nmo x nmo
     ambit::BlockedTensor Fc_;    // ncmo x ncmo

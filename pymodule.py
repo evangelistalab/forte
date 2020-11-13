@@ -214,9 +214,7 @@ def prepare_forte_objects_from_fcidump(options):
 
     # Averaging spin multiplets if doing spin-adapted computation
     if options.get_str('CORRELATION_SOLVER') == 'SA-MRDSRG':
-        options_dict = options.dict()
-        options_dict['SPIN_AVG_DENSITY']['value'] = True
-        options.set_dict(options_dict)
+        options.set_bool('SPIN_AVG_DENSITY', True)
 
     # manufacture a SCFInfo object from the FCIDUMP file (this assumes C1 symmetry)
     nel = fcidump['nelec']

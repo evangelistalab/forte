@@ -68,17 +68,17 @@ void DFIntegrals::initialize() {
     // If code calls constructor print things
     // But if someone calls retransform integrals do not print it
     print_info();
-    local_timer int_timer;
 
     int my_proc = 0;
 #ifdef HAVE_GA
     my_proc = GA_Nodeid();
 #endif
-    if (my_proc == 0) {
+    if (my_proc == 0 and (not skip_build_)) {
+        local_timer int_timer;
         gather_integrals();
         freeze_core_orbitals();
+        print_timing("computing density-fitted integrals", int_timer.get());
     }
-    print_timing("computing density-fitted integrals", int_timer.get());
 }
 
 double DFIntegrals::aptei_aa(size_t p, size_t q, size_t r, size_t s) {

@@ -139,7 +139,7 @@ void CASSCF_ORB_GRAD::setup_grad_frozen() {
     auto J = JK_->J()[0];
     J->scale(2.0);
     J->subtract(JK_->K()[0]);
-    J->add(H_ao_);
+    J->add(ints_->wfn()->H());
 
     auto F = psi::linalg::triplet(C0_, J, C0_, true, false, false);
     F->set_name("Fock MO (SCF)");

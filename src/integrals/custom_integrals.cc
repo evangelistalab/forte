@@ -393,6 +393,72 @@ CustomIntegrals::make_fock_active(ambit::Tensor Da, ambit::Tensor Db) {
     return {Fock_a, Fock_b};
 };
 
+psi::SharedMatrix CustomIntegrals::make_fock_active_restricted(psi::SharedMatrix D) {
+    auto g1a = D->clone();
+    g1a->scale(0.5);
+    auto Ftuple = make_fock_active_unrestricted(g1a, g1a);
+    return std::get<0>(Ftuple);
+}
+
+std::tuple<psi::SharedMatrix, psi::SharedMatrix>
+CustomIntegrals::make_fock_active_unrestricted(psi::SharedMatrix g1a, psi::SharedMatrix g1b) {
+    auto nactv = mo_space_info_->size("ACTIVE");
+    auto Fock_a = std::make_shared<psi::Matrix>("Fock_active alpha", nmopi_, nmopi_);
+    auto Fock_b = std::make_shared<psi::Matrix>("Fock_active beta", nmopi_, nmopi_);
+
+    auto abs_mo_actv = mo_space_info_->absolute_mo("ACTIVE");
+    auto rel_mo_actv = mo_space_info_->relative_mo("ACTIVE");
+
+    // figure out symmetry allowed absolute index for active orbitals
+    std::vector<std::tuple<size_t, size_t, size_t, size_t, size_t>> actv_indices_sym;
+    for (size_t u = 0; u < nactv; ++u) {
+        auto hu = rel_mo_actv[u].first;
+        auto ru = rel_mo_actv[u].second;
+        auto nu = abs_mo_actv[u];
+
+        for (size_t v = 0; v < nactv; ++v) {
+            if (rel_mo_actv[v].first != hu)
+                continue;
+            auto rv = rel_mo_actv[v].second;
+            auto nv = abs_mo_actv[v];
+
+            actv_indices_sym.push_back({hu, ru, rv, nu, nv});
+        }
+    }
+    auto actv_sym_size = actv_indices_sym.size();
+
+    // compute active Fock
+    for (int h = 0, offset = 0; h < nirrep_; ++h) {
+        for (int p = 0; p < nmopi_[h]; ++p) {
+            auto np = p + offset;
+            for (int q = 0; q < nmopi_[h]; ++q) {
+                auto nq = q + offset;
+
+                double va = 0.0;
+                double vb = 0.0;
+
+#pragma omp parallel for reduction(+ : va, vb)
+                for (size_t i_sym = 0; i_sym < actv_sym_size; ++i_sym) {
+                    size_t hactv, u, v, nu, nv;
+                    std::tie(hactv, u, v, nu, nv) = actv_indices_sym[i_sym];
+
+                    va += aptei_aa(np, nu, nq, nv) * g1a->get(hactv, u, v);
+                    va += aptei_ab(np, nu, nq, nv) * g1b->get(hactv, u, v);
+
+                    vb += aptei_bb(np, nu, nq, nv) * g1b->get(hactv, u, v);
+                    vb += aptei_ab(nu, np, nv, nq) * g1a->get(hactv, u, v);
+                }
+
+                Fock_a->set(h, p, q, va);
+                Fock_b->set(h, p, q, vb);
+            }
+        }
+        offset += nmopi_[h];
+    }
+
+    return {Fock_a, Fock_b};
+}
+
 void CustomIntegrals::transform_one_electron_integrals() {
     // the first time we transform, we keep a copy of the original integrals
     if (original_full_one_electron_integrals_a_.size() == 0) {
