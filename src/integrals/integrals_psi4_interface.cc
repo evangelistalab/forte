@@ -95,6 +95,8 @@ void Psi4Integrals::setup_psi4_ints() {
     if (rotate_mos_list.size() > 0) {
         rotate_mos();
     }
+
+    make_psi4_JK();
 }
 
 void Psi4Integrals::transform_one_electron_integrals() {
@@ -134,126 +136,108 @@ void Psi4Integrals::transform_one_electron_integrals() {
     }
 }
 
+void Psi4Integrals::make_psi4_JK() {
+    if (integral_type_ == Conventional) {
+        outfile->Printf("\n  JK created using conventional PK integrals\n");
+        JK_ = JK::build_JK(wfn_->basisset(), psi::BasisSet::zero_ao_basis_set(),
+                           psi::Process::environment.options, "PK");
+    } else if (integral_type_ == Cholesky) {
+        if (spin_restriction_ == IntegralSpinRestriction::Unrestricted) {
+            throw psi::PSIEXCEPTION("Unrestricted orbitals not supported for CD integrals");
+        }
+
+        outfile->Printf("\n  JK created using Cholesky integrals\n");
+
+        // push Forte option "CHOLESKY_TOLERANCE" to Psi4 environment
+        auto& psi4_options = psi::Process::environment.options;
+        auto psi4_cd = psi4_options.get_double("CHOLESKY_TOLERANCE");
+        auto forte_cd = options_->get_double("CHOLESKY_TOLERANCE");
+        if (psi4_cd != forte_cd) {
+            print_h1("Warning from Forte JK Builder (CD)");
+            outfile->Printf("\n  Inconsistent Cholesky tolerance between Psi4 and Forte");
+            outfile->Printf("\n  Psi4: %.3E, Forte: %3E", psi4_cd, forte_cd);
+            outfile->Printf("\n  Forte threshold pushed to Psi4 global options!");
+            psi4_options.set_global_double("CHOLESKY_TOLERANCE", forte_cd);
+        }
+
+        JK_ = JK::build_JK(wfn_->basisset(), psi::BasisSet::zero_ao_basis_set(),
+                           psi::Process::environment.options, "CD");
+    } else if ((integral_type_ == DF) or (integral_type_ == DiskDF) or (integral_type_ == DistDF)) {
+        if (spin_restriction_ == IntegralSpinRestriction::Unrestricted) {
+            throw psi::PSIEXCEPTION("Unrestricted orbitals not supported for DF integrals");
+        }
+
+        if (options_->get_str("SCF_TYPE") != "DF") {
+            print_h1("Vital Warning from Forte JK Builder (DF)");
+            outfile->Printf("\n  Inconsistent integrals used in Psi4 and Forte!");
+            outfile->Printf("\n  This can be fixed by setting SCF_TYPE to DF.");
+        }
+
+        if (integral_type_ == DiskDF) {
+            outfile->Printf("\n  JK created using DiskDF integrals\n");
+            JK_ = JK::build_JK(wfn_->basisset(), wfn_->get_basisset("DF_BASIS_MP2"),
+                               psi::Process::environment.options, "DISK_DF");
+        } else {
+            outfile->Printf("\n  JK created using MemDF integrals\n");
+            JK_ = JK::build_JK(wfn_->basisset(), wfn_->get_basisset("DF_BASIS_MP2"),
+                               psi::Process::environment.options, "MEM_DF");
+        }
+    } else {
+        throw psi::PSIEXCEPTION("Unknown Pis4 integral type to initialize JK in Forte");
+    }
+
+    // set JK memory to 85% of total memory in number of doubles
+    JK_->set_memory(psi::Process::environment.get_memory() * 0.85 / sizeof(double));
+
+    JK_->set_cutoff(options_->get_double("INTEGRAL_SCREENING"));
+
+    JK_->initialize();
+}
+
 void Psi4Integrals::compute_frozen_one_body_operator() {
     local_timer timer_frozen_one_body;
 
-    psi::Dimension frozen_dim = mo_space_info_->dimension("FROZEN_DOCC");
-    psi::Dimension nmopi = mo_space_info_->dimension("ALL");
-    // Need to get the inactive block of the C matrix
-    psi::Dimension nsopi = wfn_->nsopi();
-    std::shared_ptr<psi::Matrix> C_core(new psi::Matrix("C_core", nirrep_, nsopi, frozen_dim));
-
-    for (int h = 0; h < nirrep_; h++) {
-        for (int mu = 0; mu < nsopi[h]; mu++) {
-            for (int i = 0; i < frozen_dim[h]; i++) {
-                C_core->set(h, mu, i, Ca_->get(h, mu, i));
-            }
-        }
-    }
-
-    std::shared_ptr<JK> JK_core;
-    if (integral_type_ == Conventional) {
-        outfile->Printf("\n  Building frozen-core operator using PK integrals\n");
-        JK_core = JK::build_JK(wfn_->basisset(), psi::BasisSet::zero_ao_basis_set(),
-                               psi::Process::environment.options, "PK");
-    } else if (integral_type_ == Cholesky) {
-        outfile->Printf("\n  Building frozen-core operator using Cholesky integrals\n");
-        //        JK_core = JK::build_JK(wfn_->basisset(), psi::BasisSet::zero_ao_basis_set(),
-        //                               psi::Process::environment.options, "CD");
-        psi::Options& options = psi::Process::environment.options;
-        CDJK* jk = new CDJK(wfn_->basisset(), options_->get_double("CHOLESKY_TOLERANCE"));
-
-        if (options["INTS_TOLERANCE"].has_changed())
-            jk->set_cutoff(options.get_double("INTS_TOLERANCE"));
-        //        if (options["SCREENING"].has_changed())
-        //            jk->set_csam(options.get_str("SCREENING") == "CSAM");
-        if (options["PRINT"].has_changed())
-            jk->set_print(options.get_int("PRINT"));
-        if (options["DEBUG"].has_changed())
-            jk->set_debug(options.get_int("DEBUG"));
-        if (options["BENCH"].has_changed())
-            jk->set_bench(options.get_int("BENCH"));
-        if (options["DF_INTS_IO"].has_changed())
-            jk->set_df_ints_io(options.get_str("DF_INTS_IO"));
-        jk->set_condition(options.get_double("DF_FITTING_CONDITION"));
-        if (options["DF_INTS_NUM_THREADS"].has_changed())
-            jk->set_df_ints_num_threads(options.get_int("DF_INTS_NUM_THREADS"));
-
-        JK_core = std::shared_ptr<JK>(jk);
-    } else if ((integral_type_ == DF) or (integral_type_ == DiskDF) or (integral_type_ == DistDF)) {
-        if (options_->get_str("SCF_TYPE") == "DF") {
-            outfile->Printf("\n  Building frozen-core operator using DF integrals\n");
-            JK_core = JK::build_JK(wfn_->basisset(), wfn_->get_basisset("DF_BASIS_MP2"),
-                                   psi::Process::environment.options, "MEM_DF");
-        } else {
-            throw psi::PSIEXCEPTION(
-                "Trying to compute the frozen one-body operator with MEM_DF but "
-                "using a non-DF integral type for the SCF procedure");
-        }
-    } else {
-        throw psi::PSIEXCEPTION(
-            "Trying to compute the frozen one-body operator with unknown integral type");
-    }
-
-    JK_core->set_memory(psi::Process::environment.get_memory() * 0.8);
-    /// Already transform everything to C1 so make sure JK does not do this.
-
-    // JK_core->set_cutoff(options_->get_double("INTEGRAL_SCREENING"));
-    JK_core->set_cutoff(options_->get_double("INTEGRAL_SCREENING"));
-    JK_core->initialize();
-    JK_core->set_do_J(true);
-    // JK_core->set_allow_desymmetrization(true);
-    JK_core->set_do_K(true);
-
-    std::vector<std::shared_ptr<psi::Matrix>>& Cl = JK_core->C_left();
-    std::vector<std::shared_ptr<psi::Matrix>>& Cr = JK_core->C_right();
-
-    Cl.clear();
-    Cr.clear();
-    Cl.push_back(C_core);
-    Cr.push_back(C_core);
-
-    JK_core->compute();
-
-    std::shared_ptr<psi::Matrix> F_core = JK_core->J()[0];
-    std::shared_ptr<psi::Matrix> K_core = JK_core->K()[0];
-
-    F_core->scale(2.0);
-    F_core->subtract(K_core);
-    F_core->transform(Ca_);
+    // compute frozen-core contribution using closed-shell Fock build
+    auto nfrzcpi = mo_space_info_->dimension("FROZEN_DOCC");
+    auto f = make_fock_inactive(psi::Dimension(nirrep_), nfrzcpi);
+    auto Fock_a = std::get<0>(f);
+    auto Fock_b = std::get<1>(f);
+    frozen_core_energy_ = std::get<2>(f);
 
     // This loop grabs only the correlated part of the correction
-    int full_offset = 0;
-    int corr_offset = 0;
-    //    int full_offset = 0;
-    for (int h = 0; h < nirrep_; h++) {
+    for (int h = 0, corr_offset = 0, full_offset = 0; h < nirrep_; h++) {
         for (int p = 0; p < ncmopi_[h]; ++p) {
+            auto p_corr = p + corr_offset;
+            auto p_full = cmotomo_[p + corr_offset] - full_offset;
+
             for (int q = 0; q < ncmopi_[h]; ++q) {
-                // the index of p and q in the full block of irrep h
-                size_t p_full = cmotomo_[p + corr_offset] - full_offset;
-                size_t q_full = cmotomo_[q + corr_offset] - full_offset;
-                one_electron_integrals_a_[(p + corr_offset) * ncmo_ + (q + corr_offset)] +=
-                    F_core->get(h, p_full, q_full);
-                one_electron_integrals_b_[(p + corr_offset) * ncmo_ + (q + corr_offset)] +=
-                    F_core->get(h, p_full, q_full);
+                auto q_corr = q + corr_offset;
+                auto q_full = cmotomo_[q + corr_offset] - full_offset;
+
+                one_electron_integrals_a_[p_corr * ncmo_ + q_corr] = Fock_a->get(h, p_full, q_full);
+                one_electron_integrals_b_[p_corr * ncmo_ + q_corr] = Fock_b->get(h, p_full, q_full);
             }
         }
+
         full_offset += nmopi_[h];
         corr_offset += ncmopi_[h];
     }
 
-    F_core->add(OneBody_symm_);
-
-    frozen_core_energy_ = 0.0;
-    for (int h = 0; h < nirrep_; h++) {
-        for (int fr = 0; fr < frozen_dim[h]; fr++) {
-            frozen_core_energy_ += OneBody_symm_->get(h, fr, fr) + F_core->get(h, fr, fr);
-        }
-    }
-
     if (print_ > 0) {
-        outfile->Printf("\n  Frozen-core energy        %20.12f a.u.", frozen_core_energy_);
+        outfile->Printf("\n  Frozen-core energy        %20.15f a.u.", frozen_core_energy_);
         print_timing("frozen one-body operator", timer_frozen_one_body.get());
+    }
+    if (print_ > 2) {
+        print_h1("One-body Hamiltonian elements dressed by frozen-core orbitals");
+        if (Fock_a == Fock_b) {
+            Fock_a->set_name("Frozen One Body");
+            Fock_a->print();
+        } else {
+            Fock_a->set_name("Frozen One Body (alpha)");
+            Fock_a->print();
+            Fock_b->set_name("Frozen One Body (beta)");
+            Fock_b->print();
+        }
     }
 }
 
@@ -334,7 +318,7 @@ void Psi4Integrals::rotate_mos() {
         outfile->Printf("   %d   %d   %d\n", rotate_mo_group[0], rotate_mo_group[1],
                         rotate_mo_group[2]);
     }
-      // std::shared_ptr<psi::Matrix> C_old = wfn_->Ca();
+    // std::shared_ptr<psi::Matrix> C_old = wfn_->Ca();
     std::shared_ptr<psi::Matrix> C_old = Ca_;
     std::shared_ptr<psi::Matrix> C_new(C_old->clone());
 
@@ -368,7 +352,6 @@ void Psi4Integrals::rotate_mos() {
     wfn_->epsilon_a()->copy(eps_a);
     wfn_->epsilon_b()->copy(eps_b);
 }
-
 
 void Psi4Integrals::build_dipole_ints_ao() {
     std::shared_ptr<psi::BasisSet> basisset = wfn_->basisset();
@@ -443,5 +426,284 @@ Psi4Integrals::dipole_ints_mo_helper(std::shared_ptr<psi::Matrix> Cao, psi::Shar
     }
 
     return MOdipole_ints;
+}
+
+void Psi4Integrals::make_fock_matrix(ambit::Tensor gamma_a, ambit::Tensor gamma_b) {
+    // build inactive Fock
+    auto rdoccpi = mo_space_info_->dimension("INACTIVE_DOCC");
+    auto fock_closed = make_fock_inactive(psi::Dimension(nirrep_), rdoccpi);
+
+    // build active Fock
+    auto fock_active = make_fock_active(gamma_a, gamma_b);
+
+    if (std::get<0>(fock_active) == std::get<1>(fock_active)) {
+        // restricted orbitals and ms-averaged RDMs
+        fock_a_ = std::get<0>(fock_closed)->clone();
+        fock_a_->add(std::get<0>(fock_active));
+        fock_a_->set_name("Fock");
+        fock_b_ = fock_a_;
+    } else {
+        // unrestricted orbitals or non-singlet RDMs
+        fock_a_ = std::get<0>(fock_closed)->clone();
+        fock_a_->add(std::get<0>(fock_active));
+        fock_a_->set_name("Fock alpha");
+
+        fock_b_ = std::get<1>(fock_closed)->clone();
+        fock_b_->add(std::get<1>(fock_active));
+        fock_b_->set_name("Fock beta");
+    }
+}
+
+std::tuple<psi::SharedMatrix, psi::SharedMatrix, double>
+Psi4Integrals::make_fock_inactive(psi::Dimension dim_start, psi::Dimension dim_end) {
+    /* F_closed = Hcore + Vclosed in AO basis
+     *
+     * Vclosed = D_{uv}^{inactive docc} * (2 * (uv|rs) - (us|rv))
+     * D_{uv}^{inactive docc} = \sum_{i}^{inactive docc} C_{ui} * C_{vi}
+     *
+     * u,v,r,s: AO indices; i: MO indices
+     */
+
+    auto dim = dim_end - dim_start;
+
+    if (spin_restriction_ == IntegralSpinRestriction::Restricted) {
+        auto Csub = std::make_shared<psi::Matrix>("Ca_sub", nsopi_, dim);
+
+        for (int h = 0; h < nirrep_; ++h) {
+            for (int p = 0, offset = dim_start[h]; p < dim[h]; ++p) {
+                Csub->set_column(h, p, Ca_->get_column(h, p + offset));
+            }
+        }
+
+        // JK build
+        JK_->set_do_K(true);
+        std::vector<std::shared_ptr<psi::Matrix>>& Cls = JK_->C_left();
+        std::vector<std::shared_ptr<psi::Matrix>>& Crs = JK_->C_right();
+        Cls.clear();
+        Crs.clear();
+
+        Cls.push_back(Csub);
+
+        JK_->compute();
+
+        auto J = JK_->J()[0];
+        J->scale(2.0);
+        J->subtract(JK_->K()[0]);
+        J->add(wfn_->H());
+
+        // transform to MO
+        auto F_closed = psi::linalg::triplet(Ca_, J, Ca_, true, false, false);
+        F_closed->set_name("Fock_closed");
+
+        // compute closed-shell energy
+        J->add(wfn_->H());
+        double e_closed = J->vector_dot(psi::linalg::doublet(Csub, Csub, false, true));
+
+        return std::make_tuple(F_closed, F_closed, e_closed);
+    } else {
+        auto Ca_sub = std::make_shared<psi::Matrix>("Ca_sub", nsopi_, dim);
+        auto Cb_sub = std::make_shared<psi::Matrix>("Cb_sub", nsopi_, dim);
+
+        for (int h = 0; h < nirrep_; ++h) {
+            for (int p = 0, offset = dim_start[h]; p < dim[h]; ++p) {
+                Ca_sub->set_column(h, p, Ca_->get_column(h, p + offset));
+                Cb_sub->set_column(h, p, Cb_->get_column(h, p + offset));
+            }
+        }
+
+        auto Fa_closed = wfn_->H()->clone();
+        auto Fb_closed = wfn_->H()->clone();
+
+        // JK build
+        JK_->set_do_K(true);
+        std::vector<std::shared_ptr<psi::Matrix>>& Cls = JK_->C_left();
+        std::vector<std::shared_ptr<psi::Matrix>>& Crs = JK_->C_right();
+        Crs.clear();
+
+        Cls.clear();
+        Cls.push_back(Ca_sub);
+        Cls.push_back(Cb_sub);
+
+        JK_->compute();
+
+        // some algebra
+        Fa_closed->add(JK_->J()[0]);
+        Fa_closed->subtract(JK_->K()[0]);
+        Fa_closed->add(JK_->J()[1]);
+
+        Fb_closed->add(JK_->J()[0]);
+        Fb_closed->add(JK_->J()[1]);
+        Fb_closed->subtract(JK_->K()[1]);
+
+        // save a copy of AO Fock
+        auto J = JK_->J()[0];
+        auto K = JK_->K()[0];
+        J->copy(Fa_closed);
+        K->copy(Fb_closed);
+
+        // transform to MO basis
+        Fa_closed = psi::linalg::triplet(Ca_, Fa_closed, Ca_, true, false, false);
+        Fa_closed->set_name("Fock_closed alpha");
+        Fb_closed = psi::linalg::triplet(Cb_, Fb_closed, Cb_, true, false, false);
+        Fb_closed->set_name("Fock_closed beta");
+
+        // compute closed-shell energy using unrestricted equation
+        J->add(wfn_->H());
+        K->add(wfn_->H());
+        double e_closed = 0.5 * J->vector_dot(psi::linalg::doublet(Ca_sub, Ca_sub, false, true));
+        e_closed += 0.5 * K->vector_dot(psi::linalg::doublet(Cb_sub, Cb_sub, false, true));
+
+        return std::make_tuple(Fa_closed, Fb_closed, e_closed);
+    }
+}
+
+std::tuple<psi::SharedMatrix, psi::SharedMatrix> Psi4Integrals::make_fock_active(ambit::Tensor Da,
+                                                                                 ambit::Tensor Db) {
+    // Implementation Notes (in AO basis)
+    // F_active = D_{uv}^{active} * ( (uv|rs) - 0.5 * (us|rv) )
+    // D_{uv}^{active} = \sum_{xy}^{active} C_{ux} * C_{vy} * Gamma1_{xy}
+
+    if (Da.dims() != Db.dims()) {
+        throw std::runtime_error("Different dimensions of alpha and beta 1RDM!");
+    }
+    if (mo_space_info_->size("ACTIVE") != Da.dim(0)) {
+        throw std::runtime_error("Inconsistent number of active orbitals");
+    }
+
+    // test if spin equivalence between 1RDM
+    bool rdm_eq_spin = true;
+    auto gamma = Da.clone();
+    gamma("pq") -= Db("pq");
+    double diff_max = gamma.norm(0);
+    if (diff_max > options_->get_double("R_CONVERGENCE") or
+        diff_max > options_->get_double("D_CONVERGENCE")) {
+        print_h1("Warning from Forte Fock build (active)");
+        outfile->Printf("\n  Unequivalent alpha and beta 1RDMs.");
+        outfile->Printf("\n  Largest difference between alpha and beta: %.15f", diff_max);
+        outfile->Printf("\n  Use unrestricted formalism to build Fock martix!\n");
+        rdm_eq_spin = false;
+    }
+
+    // general setup
+    auto nactvpi = mo_space_info_->dimension("ACTIVE");
+    auto nactv = mo_space_info_->size("ACTIVE");
+    auto& Da_data = Da.data();
+    auto& Db_data = Db.data();
+
+    auto ndoccpi = mo_space_info_->dimension("INACTIVE_DOCC");
+    auto nholepi = ndoccpi + nactvpi;
+
+    if (rdm_eq_spin and spin_restriction_ == IntegralSpinRestriction::Restricted) {
+        // fill in density (spin-summed)
+        auto g1 = std::make_shared<psi::Matrix>("1RDM", nactvpi, nactvpi);
+        for (int h = 0, offset = 0; h < nirrep_; ++h) {
+            for (int i = 0; i < nactvpi[h]; ++i) {
+                auto ni = i + offset;
+                for (int j = 0; j < nactvpi[h]; ++j) {
+                    auto nj = j + offset;
+                    double v = Da_data[ni * nactv + nj] + Db_data[ni * nactv + nj];
+                    g1->set(h, i, j, v);
+                }
+            }
+            offset += nactvpi[h];
+        }
+
+        // grab sub-block of Ca
+        auto Cactv = std::make_shared<psi::Matrix>("Ca_sub", nsopi_, nactvpi);
+
+        for (int h = 0; h < nirrep_; ++h) {
+            for (int p = 0, offset = ndoccpi[h]; p < nactvpi[h]; ++p) {
+                Cactv->set_column(h, p, Ca_->get_column(h, p + offset));
+            }
+        }
+
+        // dress Cactv by one-density, which will the C_right for JK
+        auto Cactv_dressed = psi::linalg::doublet(Cactv, g1, false, false);
+
+        // JK build
+        JK_->set_do_K(true);
+        std::vector<std::shared_ptr<psi::Matrix>>& Cls = JK_->C_left();
+        std::vector<std::shared_ptr<psi::Matrix>>& Crs = JK_->C_right();
+        Cls.clear();
+        Crs.clear();
+
+        Cls.push_back(Cactv);
+        Crs.push_back(Cactv_dressed);
+
+        JK_->compute();
+
+        auto K = JK_->K()[0];
+        K->scale(-0.5);
+        K->add(JK_->J()[0]);
+
+        // transform to MO
+        auto F_active = psi::linalg::triplet(Ca_, K, Ca_, true, false, false);
+        F_active->set_name("Fock_active");
+
+        return {F_active, F_active};
+    } else {
+        // fill in density
+        auto g1a = std::make_shared<psi::Matrix>("1RDMa", nactvpi, nactvpi);
+        auto g1b = std::make_shared<psi::Matrix>("1RDMb", nactvpi, nactvpi);
+        for (int h = 0, offset = 0; h < nirrep_; ++h) {
+            for (int i = 0; i < nactvpi[h]; ++i) {
+                auto ni = i + offset;
+                for (int j = 0; j < nactvpi[h]; ++j) {
+                    auto nj = j + offset;
+                    g1a->set(h, i, j, Da_data[ni * nactv + nj]);
+                    g1b->set(h, i, j, Db_data[ni * nactv + nj]);
+                }
+            }
+            offset += nactvpi[h];
+        }
+
+        // grab sub-block of Ca and Cb
+        auto Ca_actv = std::make_shared<psi::Matrix>("Ca active", nsopi_, nactvpi);
+        auto Cb_actv = std::make_shared<psi::Matrix>("Cb active", nsopi_, nactvpi);
+
+        for (int h = 0; h < nirrep_; ++h) {
+            for (int p = 0, offset = ndoccpi[h]; p < nactvpi[h]; ++p) {
+                Ca_actv->set_column(h, p, Ca_->get_column(h, p + offset));
+                Cb_actv->set_column(h, p, Cb_->get_column(h, p + offset));
+            }
+        }
+
+        // dress Cactv by one-density, which will the C_right for JK
+        auto Ca_actv_dressed = psi::linalg::doublet(Ca_actv, g1a, false, false);
+        auto Cb_actv_dressed = psi::linalg::doublet(Cb_actv, g1b, false, false);
+
+        // JK build
+        JK_->set_do_K(true);
+        std::vector<std::shared_ptr<psi::Matrix>>& Cls = JK_->C_left();
+        std::vector<std::shared_ptr<psi::Matrix>>& Crs = JK_->C_right();
+        Cls.clear();
+        Crs.clear();
+
+        Cls.push_back(Ca_actv);
+        Crs.push_back(Ca_actv_dressed);
+        Cls.push_back(Cb_actv);
+        Crs.push_back(Cb_actv_dressed);
+
+        JK_->compute();
+
+        // some algebra
+        auto Ka = JK_->K()[0];
+        Ka->scale(-1.0);
+        Ka->add(JK_->J()[0]);
+        Ka->add(JK_->J()[1]);
+
+        auto Kb = JK_->K()[1];
+        Kb->scale(-1.0);
+        Kb->add(JK_->J()[0]);
+        Kb->add(JK_->J()[1]);
+
+        // transform to MO
+        auto Fa_active = psi::linalg::triplet(Ca_, Ka, Ca_, true, false, false);
+        Fa_active->set_name("Fock_active alpha");
+        auto Fb_active = psi::linalg::triplet(Cb_, Kb, Cb_, true, false, false);
+        Fb_active->set_name("Fock_active beta");
+
+        return {Fa_active, Fb_active};
+    }
 }
 } // namespace forte

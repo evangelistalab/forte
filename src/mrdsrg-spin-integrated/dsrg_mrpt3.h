@@ -34,7 +34,6 @@
 #include <fstream>
 #include <utility>
 
-
 #include "psi4/libmints/wavefunction.h"
 #include "ambit/blocked_tensor.h"
 
@@ -254,18 +253,6 @@ class DSRG_MRPT3 : public MASTER_DSRG {
     //                          const std::vector<std::vector<std::string>>& jb);
     // TODO: commented this out because it's never called
 
-    // => Reference relaxation <= //
-
-    /// Transfer integrals for FCI
-    //    void transfer_integrals();
-    /// Diagonalize the diagonal blocks of the Fock matrix
-    std::vector<std::vector<double>> diagonalize_Fock_diagblocks(BlockedTensor& U);
-    /// Separate an 2D ambit::Tensor according to its irrep
-    ambit::Tensor separate_tensor(ambit::Tensor& tens, const psi::Dimension& irrep, const int& h);
-    /// Combine a separated 2D ambit::Tensor
-    void combine_tensor(ambit::Tensor& tens, ambit::Tensor& tens_h, const psi::Dimension& irrep,
-                        const int& h);
-
     /**
      * Get a sub block of tensor T
      * @param T The big tensor
@@ -278,8 +265,8 @@ class DSRG_MRPT3 : public MASTER_DSRG {
 
     /// Rotate RDMs computed by eigens_ (in original basis) to semicanonical basis
     /// so that they are in the same basis as amplitudes (in semicanonical basis)
-    void rotate_1rdm(ambit::Tensor& L1a, ambit::Tensor& L1b);
-    void rotate_2rdm(ambit::Tensor& L2aa, ambit::Tensor& L2ab, ambit::Tensor& L2bb);
+    //    void rotate_1rdm(ambit::Tensor& L1a, ambit::Tensor& L1b);
+    //    void rotate_2rdm(ambit::Tensor& L2aa, ambit::Tensor& L2ab, ambit::Tensor& L2bb);
 
     // => Dipole related <= //
 

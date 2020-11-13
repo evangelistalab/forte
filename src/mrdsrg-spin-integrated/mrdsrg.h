@@ -63,31 +63,27 @@ class MRDSRG : public MASTER_DSRG {
      * @param ints A pointer to an allocated integral object
      * @param mo_space_info The MOSpaceInfo object
      */
-    MRDSRG(RDMs rdms, std::shared_ptr<SCFInfo> scf_info,
-           std::shared_ptr<ForteOptions> options, std::shared_ptr<ForteIntegrals> ints,
-           std::shared_ptr<MOSpaceInfo> mo_space_info);
+    MRDSRG(RDMs rdms, std::shared_ptr<SCFInfo> scf_info, std::shared_ptr<ForteOptions> options,
+           std::shared_ptr<ForteIntegrals> ints, std::shared_ptr<MOSpaceInfo> mo_space_info);
 
     /// Destructor
     virtual ~MRDSRG();
 
     /// Compute the corr_level energy with fixed reference
-    virtual double compute_energy();
-
-//    /// Compute the corr_level energy with relaxed reference
-//    double compute_energy_relaxed();
+    virtual double compute_energy() override;
 
     /// Compute state-average MR-DSRG energy
     double compute_energy_sa();
 
-    /// Set CASCI eigen values and eigen vectors for state averaging
-    void set_eigens(std::vector<std::vector<std::pair<psi::SharedVector, double>>> eigens) {
-        eigens_ = eigens;
-    }
+    //    /// Set CASCI eigen values and eigen vectors for state averaging
+    //    void set_eigens(std::vector<std::vector<std::pair<psi::SharedVector, double>>> eigens) {
+    //        eigens_ = eigens;
+    //    }
 
-    /// Set determinants in the model space
-    void set_p_spaces(std::vector<std::vector<forte::Determinant>> p_spaces) {
-        p_spaces_ = p_spaces;
-    }
+    //    /// Set determinants in the model space
+    //    void set_p_spaces(std::vector<std::vector<forte::Determinant>> p_spaces) {
+    //        p_spaces_ = p_spaces;
+    //    }
 
   protected:
     // => Class initialization and termination <= //
@@ -112,10 +108,19 @@ class MRDSRG : public MASTER_DSRG {
     /// Omitting blocks with >= 3 virtual indices?
     bool nivo_;
 
-    /// CASCI eigen values and eigen vectors for state averaging
-    std::vector<std::vector<std::pair<psi::SharedVector, double>>> eigens_;
-    /// Determinants in the model space
-    std::vector<std::vector<forte::Determinant>> p_spaces_;
+    /// Read amplitudes from previous computations
+    bool restart_amps_;
+
+    /// Prefix for file name
+    std::string restart_file_prefix_;
+
+    /// Dump the converged amplitudes to disk
+    void dump_amps_to_disk() override;
+
+    //    /// CASCI eigen values and eigen vectors for state averaging
+    //    std::vector<std::vector<std::pair<psi::SharedVector, double>>> eigens_;
+    //    /// Determinants in the model space
+    //    std::vector<std::vector<forte::Determinant>> p_spaces_;
 
     /// Fill up integrals
     void build_ints();
@@ -197,7 +202,7 @@ class MRDSRG : public MASTER_DSRG {
     void analyze_amplitudes(std::string name, BlockedTensor& T1, BlockedTensor& T2);
 
     /// RMS of T2
-    double T2rms_;
+    double T2rms_ = 0.0;
     /// Norm of T2
     double T2norm_;
     double t2aa_norm_;
@@ -217,9 +222,11 @@ class MRDSRG : public MASTER_DSRG {
     void update_t2_std();
     void update_t2_noccvv();
     void update_t2_pt();
+    /// Compute T2 amplitudes norms
+    void compute_t2_norm();
 
     /// RMS of T1
-    double T1rms_;
+    double T1rms_ = 0.0;
     /// Norm of T1
     double T1norm_;
     double t1a_norm_;
@@ -234,15 +241,8 @@ class MRDSRG : public MASTER_DSRG {
     /// Update T1 in every iteration
     void update_t1_std();
     void update_t1_nocv();
-
-    /// Write T2 to files MRDSRG_T2_XX.dat, XX = AA, AB, BB
-    void write_t2_file(BlockedTensor& T2, const std::string& spin);
-    /// Read T2 from files MRDSRG_T2_XX.dat, XX = AA, AB, BB
-    void read_t2_file(BlockedTensor& T2, const std::string& spin);
-    /// Write T1 to files MRDSRG_T1_X.dat, X = A, B
-    void write_t1_file(BlockedTensor& T1, const std::string& spin);
-    /// Read T1 from files MRDSRG_T1_X.dat, X = A, B
-    void read_t1_file(BlockedTensor& T1, const std::string& spin);
+    /// Compute T1 amplitudes norms
+    void compute_t1_norm();
 
     /// List of large amplitudes
     std::vector<std::pair<std::vector<size_t>, double>> lt1a_;
@@ -398,20 +398,6 @@ class MRDSRG : public MASTER_DSRG {
     void H1_G2_C2(BlockedTensor& H1, BlockedTensor& G2, const double& alpha, BlockedTensor& C2);
     /// Compute two-body term of commutator [H2, G2]
     void H2_G2_C2(BlockedTensor& H2, BlockedTensor& G2, const double& alpha, BlockedTensor& C2);
-
-    // => Reference relaxation <= //
-
-    /// Transfer integrals for FCI
-    void transfer_integrals();
-    /// Reset integrals to bare Hamiltonian
-    void reset_ints(BlockedTensor& H, BlockedTensor& V);
-    /// Diagonalize the diagonal blocks of the Fock matrix
-    std::vector<std::vector<double>> diagonalize_Fock_diagblocks(BlockedTensor& U);
-    /// Separate an 2D ambit::Tensor according to its irrep
-    ambit::Tensor separate_tensor(ambit::Tensor& tens, const psi::Dimension& irrep, const int& h);
-    /// Combine a separated 2D ambit::Tensor
-    void combine_tensor(ambit::Tensor& tens, ambit::Tensor& tens_h, const psi::Dimension& irrep,
-                        const int& h);
 
     // => Useful printings <= //
 

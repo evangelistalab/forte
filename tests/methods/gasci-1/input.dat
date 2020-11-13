@@ -39,7 +39,7 @@ set forte {
   restricted_uocc [8,2,3,5]
   GAS1 [2,0,1,1]
   GAS2 [1,0,0,1]
-  GAS1MIN 6
+  GAS1MIN [6]
 }
 
 energy('scf')

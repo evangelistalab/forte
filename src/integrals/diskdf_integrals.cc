@@ -419,6 +419,7 @@ void DISKDFIntegrals::gather_integrals() {
     // I used this version of build as this doesn't build all the apces and
     // assume a RHF/UHF reference
     df_ = std::make_shared<psi::DFHelper>(primary, auxiliary);
+    df_->set_memory(psi::Process::environment.get_memory() / sizeof(double));
     df_->initialize();
     df_->set_MO_core(false);
     // set_C clears all the orbital spaces, so this creates the space
@@ -427,7 +428,6 @@ void DISKDFIntegrals::gather_integrals() {
     df_->add_space("ALL", Ca_ao);
     // Does not add the pair_space, but says which one is should use
     df_->add_transformation("B", "ALL", "ALL", "Qpq");
-    df_->set_memory(psi::Process::environment.get_memory() / 8L);
 
     // Finally computes the df integrals
     // Does the timings also
@@ -435,155 +435,6 @@ void DISKDFIntegrals::gather_integrals() {
     outfile->Printf("\n  Computing DF Integrals");
     df_->transform();
     print_timing("computing density-fitted integrals", timer.get());
-}
-
-void DISKDFIntegrals::make_fock_matrix(std::shared_ptr<psi::Matrix> gamma_aM,
-                                       std::shared_ptr<psi::Matrix> gamma_bM) {
-    // Efficient calculation of fock matrix from disk
-    // Since gamma_aM is very sparse (diagonal elements of core and active
-    // block)
-    // Only nonzero contributions are on diagonal elements
-    // Grab the nonzero elements and put to a vector
-
-    TensorType tensor_type = ambit::CoreTensor;
-    outfile->Printf("\n Making a fock matrix \n");
-
-    // Create the fock_a and fock_b globally
-    // Choose to block over naux rather than ncmo_
-    ambit::Tensor fock_a = ambit::Tensor::build(tensor_type, "Fock_a", {aptei_idx_, aptei_idx_});
-    ambit::Tensor fock_b = ambit::Tensor::build(tensor_type, "Fock_b", {aptei_idx_, aptei_idx_});
-
-    ////Figure out exactly what I need to contract the Coloumb term
-    /// Only h + a is nonzero for RDM
-    std::vector<size_t> generalized_hole = mo_space_info_->corr_absolute_mo("GENERALIZED HOLE");
-
-    fock_a.iterate([&](const std::vector<size_t>& i, double& value) {
-        value = one_electron_integrals_a_[i[0] * aptei_idx_ + i[1]];
-    });
-
-    fock_b.iterate([&](const std::vector<size_t>& i, double& value) {
-        value = one_electron_integrals_b_[i[0] * aptei_idx_ + i[1]];
-    });
-
-    std::vector<size_t> A(nthree_);
-    std::iota(A.begin(), A.end(), 0);
-
-    std::vector<size_t> P(aptei_idx_);
-    std::iota(P.begin(), P.end(), 0);
-
-    // Create a gamma that contains only nonzero terms
-    ambit::Tensor gamma_a = ambit::Tensor::build(
-        tensor_type, "Gamma_a", {generalized_hole.size(), generalized_hole.size()});
-    ambit::Tensor gamma_b = ambit::Tensor::build(
-        tensor_type, "Gamma_b", {generalized_hole.size(), generalized_hole.size()});
-    // Create the full gamma (K is not nearly as sparse as J)
-
-    gamma_a.iterate([&](const std::vector<size_t>& i, double& value) {
-        value = gamma_aM->get(generalized_hole[i[0]], generalized_hole[i[1]]);
-    });
-    gamma_b.iterate([&](const std::vector<size_t>& i, double& value) {
-        value = gamma_bM->get(generalized_hole[i[0]], generalized_hole[i[1]]);
-    });
-    ambit::Tensor ThreeIntC2 = ambit::Tensor::build(
-        tensor_type, "ThreeInkC", {nthree_, generalized_hole.size(), generalized_hole.size()});
-    ThreeIntC2 = three_integral_block(A, generalized_hole, generalized_hole);
-
-    ambit::Tensor BQA = ambit::Tensor::build(tensor_type, "BQ", {nthree_});
-    ambit::Tensor BQB = ambit::Tensor::build(tensor_type, "BQ", {nthree_});
-    // Do a contraction over Naux * n_h^2 * n_h^2 -> naux * n_h^2
-    BQA("B") = ThreeIntC2("B,r,s") * gamma_a("r,s");
-    BQB("B") = ThreeIntC2("B,r,s") * gamma_b("r,s");
-
-    // Grab the data from this for the block iteration
-    std::vector<double>& BQAv = BQA.data();
-    std::vector<double>& BQBv = BQB.data();
-
-    //====Blocking information==========
-    size_t int_mem_int = (nthree_ * ncmo_ * ncmo_) * sizeof(double);
-    size_t memory_input = psi::Process::environment.get_memory() * 0.75;
-    size_t num_block = int_mem_int / memory_input < 1 ? 1 : int_mem_int / memory_input;
-
-    int block_size = nthree_ / num_block;
-    if (block_size < 1) {
-        outfile->Printf("\n\n Block size is FUBAR.");
-        outfile->Printf("\n Block size is %d", block_size);
-        throw psi::PSIEXCEPTION("Block size is either 0 or negative.  Fix this problem");
-    }
-    if (num_block >= 1) {
-        outfile->Printf("\n---------Blocking Information-------\n");
-        outfile->Printf("\n  %lu / %lu = %lu", int_mem_int, memory_input,
-                        int_mem_int / memory_input);
-        outfile->Printf("\n  Block_size = %lu num_block = %lu", block_size, num_block);
-    }
-    ambit::Tensor ThreeIntegralTensorK;
-    ambit::Tensor ThreeIntegralTensorJ;
-
-    local_timer block_read;
-    for (size_t i = 0; i < num_block; i++) {
-        std::vector<size_t> A_block;
-        if (nthree_ % num_block == 0) {
-            A_block.resize(block_size);
-            std::iota(A_block.begin(), A_block.end(), i * block_size);
-        } else {
-            block_size = i == (num_block - 1) ? block_size + nthree_ % num_block : block_size;
-            A_block.resize(block_size);
-            std::iota(A_block.begin(), A_block.end(), i * (nthree_ / num_block));
-        }
-
-        // Create a tensor of TI("Q,r,p")
-        ambit::Tensor BQA_small = ambit::Tensor::build(tensor_type, "BQ", {A_block.size()});
-        ambit::Tensor BQB_small = ambit::Tensor::build(tensor_type, "BQ", {A_block.size()});
-
-        // Calculate the smaller block of A from the global block of prior Brs *
-        // gamma_rs
-        BQA_small.iterate(
-            [&](const std::vector<size_t>& i, double& value) { value = BQAv[A_block[i[0]]]; });
-        BQB_small.iterate(
-            [&](const std::vector<size_t>& i, double& value) { value = BQBv[A_block[i[0]]]; });
-
-        ThreeIntegralTensorK = ambit::Tensor::build(
-            tensor_type, "ThreeIndex", {A_block.size(), aptei_idx_, generalized_hole.size()});
-        ThreeIntegralTensorJ = ambit::Tensor::build(tensor_type, "ThreeIndex",
-                                                    {A_block.size(), aptei_idx_, aptei_idx_});
-
-        ThreeIntegralTensorJ = three_integral_block(A_block, P, P);
-        std::vector<double>& dataJ = ThreeIntegralTensorJ.data();
-        ThreeIntegralTensorK.iterate([&](const std::vector<size_t>& i, double& value) {
-            value =
-                dataJ[i[0] * aptei_idx_ * aptei_idx_ + i[1] * aptei_idx_ + generalized_hole[i[2]]];
-        });
-
-        ambit::Tensor KGA = ambit::Tensor::build(
-            tensor_type, "K * G", {A_block.size(), aptei_idx_, generalized_hole.size()});
-        ambit::Tensor KGB = ambit::Tensor::build(
-            tensor_type, "K * G b", {A_block.size(), aptei_idx_, generalized_hole.size()});
-
-        KGA("Q,q,r") = ThreeIntegralTensorK("Q, q, s") * gamma_a("s, r");
-        KGB("Q,q,r") = ThreeIntegralTensorK("Q, q, s") * gamma_b("s, r");
-
-        // Need to rewrite this to at least read in chunks of nthree_
-        // ThreeIntegralTensor = three_integral_block(A_block, P,P );
-
-        fock_a("p,q") += ThreeIntegralTensorJ("Q,p,q") * BQA_small("Q");
-        fock_a("p,q") -= ThreeIntegralTensorK("Q,p,r") * KGA("Q, q, r ");
-        fock_a("p,q") += ThreeIntegralTensorJ("Q,p,q") * BQB_small("Q");
-
-        fock_b("p,q") += ThreeIntegralTensorJ("Q,p,q") * BQB_small("Q");
-        fock_b("p,q") -= ThreeIntegralTensorK("Q,p,r") * KGB("Q, q, r");
-        fock_b("p,q") += ThreeIntegralTensorJ("Q,p,q") * BQA_small("Q");
-
-        A_block.clear();
-    }
-    fock_a.iterate([&](const std::vector<size_t>& i, double& value) {
-        fock_matrix_a_[i[0] * aptei_idx_ + i[1]] = value;
-    });
-    fock_b.iterate([&](const std::vector<size_t>& i, double& value) {
-        fock_matrix_b_[i[0] * aptei_idx_ + i[1]] = value;
-    });
-
-    if (num_block != 1) {
-        outfile->Printf("\n  Created Fock matrix %8.8f s", block_read.get());
-    }
 }
 
 void DISKDFIntegrals::resort_integrals_after_freezing() {
@@ -595,6 +446,7 @@ void DISKDFIntegrals::resort_integrals_after_freezing() {
 
     print_timing("resorting integrals", resort_integrals.get());
 }
+
 ambit::Tensor DISKDFIntegrals::three_integral_block_two_index(const std::vector<size_t>& A,
                                                               size_t p,
                                                               const std::vector<size_t>& q) {

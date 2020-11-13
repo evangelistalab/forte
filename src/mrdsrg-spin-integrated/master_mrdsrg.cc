@@ -1,10 +1,13 @@
 #include <numeric>
 
-#include "psi4/libpsi4util/process.h"
 #include "psi4/libmints/molecule.h"
 #include "psi4/libmints/matrix.h"
+#include "psi4/libmints/vector.h"
 #include "psi4/libmints/dipole.h"
+#include "psi4/libpsi4util/process.h"
+#include "psi4/libpsio/psio.hpp"
 
+#include "helpers/disk_io.h"
 #include "helpers/printing.h"
 #include "helpers/timer.h"
 
@@ -117,6 +120,9 @@ void MASTER_DSRG::read_options() {
 
     ntamp_ = foptions_->get_int("NTAMP");
     intruder_tamp_ = foptions_->get_double("INTRUDER_TAMP");
+
+    dump_amps_cwd_ = foptions_->get_bool("DSRG_DUMP_AMPS");
+    read_amps_cwd_ = foptions_->get_bool("DSRG_READ_AMPS");
 
     relax_ref_ = foptions_->get_str("RELAX_REF");
 
@@ -237,26 +243,9 @@ void MASTER_DSRG::init_fock() {
 }
 
 void MASTER_DSRG::build_fock_from_ints(std::shared_ptr<ForteIntegrals> ints, BlockedTensor& F) {
-    size_t ncmo = mo_space_info_->size("CORRELATED");
+    ints->make_fock_matrix(Gamma1_.block("aa"), Gamma1_.block("AA"));
+
     F = BTF_->build(tensor_type_, "Fock", spin_cases({"gg"}));
-
-    // for convenience, directly call make_fock_matrix in ForteIntegral
-    psi::SharedMatrix D1a(new psi::Matrix("D1a", ncmo, ncmo));
-    psi::SharedMatrix D1b(new psi::Matrix("D1b", ncmo, ncmo));
-    for (size_t m = 0, ncore = core_mos_.size(); m < ncore; m++) {
-        D1a->set(core_mos_[m], core_mos_[m], 1.0);
-        D1b->set(core_mos_[m], core_mos_[m], 1.0);
-    }
-
-    Gamma1_.block("aa").citerate([&](const std::vector<size_t>& i, const double& value) {
-        D1a->set(actv_mos_[i[0]], actv_mos_[i[1]], value);
-    });
-    Gamma1_.block("AA").citerate([&](const std::vector<size_t>& i, const double& value) {
-        D1b->set(actv_mos_[i[0]], actv_mos_[i[1]], value);
-    });
-
-    ints->make_fock_matrix(D1a, D1b);
-
     F.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>& spin, double& value) {
         if (spin[0] == AlphaSpin) {
             value = ints->get_fock_a(i[0], i[1]);
@@ -1920,22 +1909,7 @@ dsrgHeff MASTER_DSRG::commutator_HT_noGNO(ambit::BlockedTensor H1, ambit::Blocke
 
 bool MASTER_DSRG::check_semi_orbs() {
     print_h2("Checking Semicanonical Orbitals");
-
-    std::string actv_type = foptions_->get_str("FCIMO_ACTV_TYPE");
-    if (actv_type == "CIS" || actv_type == "CISD") {
-        std::string job_type = foptions_->get_str("CORRELATION_SOLVER");
-        bool fci_mo = foptions_->get_str("ACTIVE_SPACE_SOLVER") == "CAS";
-        if ((job_type == "MRDSRG" || job_type == "DSRG-MRPT3") && fci_mo) {
-            std::stringstream ss;
-            ss << "Unsupported FCIMO_ACTV_TYPE for " << job_type << " code.";
-            throw psi::PSIEXCEPTION(ss.str());
-        }
-
-        outfile->Printf("\n    Incomplete active space %s is detected.", actv_type.c_str());
-        outfile->Printf("\n    Please make sure Semicanonical class has been called.");
-        outfile->Printf("\n    Abort checking semicanonical orbitals.");
-        return true;
-    }
+    semi_results_.clear();
 
     BlockedTensor Fd = BTF_->build(tensor_type_, "Fd", spin_cases({"cc", "aa", "vv"}));
     Fd["pq"] = Fock_["pq"];
@@ -1948,40 +1922,80 @@ bool MASTER_DSRG::check_semi_orbs() {
     });
 
     bool semi = true;
-    std::vector<double> Fmax, Fnorm;
     double e_conv = foptions_->get_double("E_CONVERGENCE");
     double cd = foptions_->get_double("CHOLESKY_TOLERANCE");
     e_conv = cd < e_conv ? e_conv : cd * 0.1;
     e_conv = e_conv < 1.0e-12 ? 1.0e-12 : e_conv;
     double threshold_max = 10.0 * e_conv;
-    for (const auto& block : {"cc", "aa", "vv", "CC", "AA", "VV"}) {
-        double fmax = Fd.block(block).norm(0);
-        double fnorm = Fd.block(block).norm(1);
-        Fmax.emplace_back(fmax);
-        Fnorm.emplace_back(fnorm);
 
-        if (fmax > threshold_max) {
-            semi = false;
-        }
-        if (fnorm > Fd.block(block).numel() * e_conv) {
-            semi = false;
-        }
+    // space, spin, Fmax, Fmean
+    std::vector<std::tuple<std::string, std::string, double, double>> Fcheck;
+    for (const auto& block : {"cc", "CC", "vv", "VV"}) {
+        double fmax = Fd.block(block).norm(0);
+        double fmean = Fd.block(block).norm(1);
+        fmean /= Fd.block(block).numel() > 2 ? Fd.block(block).numel() : 1.0;
+
+        std::string spin = islower(block[0]) ? "a" : "b";
+        std::string space = tolower(block[0]) == 'c' ? "CORE" : "VIRTUAL";
+
+        Fcheck.emplace_back(space, spin, fmax, fmean);
+
+        space = tolower(block[0]) == 'c' ? "RESTRICTED_DOCC" : "RESTRICTED_UOCC";
+        semi_results_[std::make_tuple(space, spin)] = fmax <= threshold_max and fmean <= e_conv;
     }
 
-    std::string dash(2 + 16 * 3, '-');
-    outfile->Printf("\n    Abs. max of Fock core, active, virtual blocks (Fij, i != j)");
-    outfile->Printf("\n       %15s %15s %15s", "core", "active", "virtual");
-    outfile->Printf("\n    %s", dash.c_str());
-    outfile->Printf("\n    Fα %15.10f %15.10f %15.10f", Fmax[0], Fmax[1], Fmax[2]);
-    outfile->Printf("\n    Fβ %15.10f %15.10f %15.10f", Fmax[3], Fmax[4], Fmax[5]);
-    outfile->Printf("\n    %s\n", dash.c_str());
+    auto nactv = actv_mos_.size();
+    for (const std::string& space : mo_space_info_->space_names()) {
+        if (space.find("GAS") == std::string::npos or mo_space_info_->size(space) == 0)
+            continue;
 
-    outfile->Printf("\n    1-Norm of Fock core, active, virtual blocks (Fij, i != j)");
-    outfile->Printf("\n       %15s %15s %15s", "core", "active", "virtual");
+        auto rel_indices = mo_space_info_->pos_in_space(space, "ACTIVE");
+        auto size = rel_indices.size();
+
+        double fmax_a = 0.0, fmean_a = 0.0, fmax_b = 0.0, fmean_b = 0.0;
+
+        for (size_t p = 0; p < size; ++p) {
+            auto np = rel_indices[p];
+            for (size_t q = p + 1; q < size; ++q) {
+                auto nq = rel_indices[q];
+                double va = std::fabs(Fd.block("aa").data()[np * nactv + nq]);
+                double vb = std::fabs(Fd.block("AA").data()[np * nactv + nq]);
+                fmax_a = va > fmax_a ? va : fmax_a;
+                fmax_b = vb > fmax_b ? vb : fmax_b;
+                fmean_a += va;
+                fmean_b += vb;
+            }
+        }
+        fmean_a /= size * size * 0.5; // roughly correct
+        fmean_b /= size * size * 0.5;
+
+        Fcheck.emplace_back(space, "a", fmax_a, fmean_a);
+        Fcheck.emplace_back(space, "b", fmax_b, fmean_b);
+
+        semi_results_[std::make_tuple(space, "a")] = fmax_a <= threshold_max and fmean_a <= e_conv;
+        semi_results_[std::make_tuple(space, "b")] = fmax_b <= threshold_max and fmean_b <= e_conv;
+    }
+
+    std::string dash(8 + 65, '-');
+    outfile->Printf("\n    %-8s %15s %15s  %15s %15s", "Block", "Fa Max", "Fa Mean", "Fb Max",
+                    "Fb Mean");
     outfile->Printf("\n    %s", dash.c_str());
-    outfile->Printf("\n    Fα %15.10f %15.10f %15.10f", Fnorm[0], Fnorm[1], Fnorm[2]);
-    outfile->Printf("\n    Fβ %15.10f %15.10f %15.10f", Fnorm[3], Fnorm[4], Fnorm[5]);
-    outfile->Printf("\n    %s\n", dash.c_str());
+    for (int i = 0, size = Fcheck.size() / 2; i < size; ++i) {
+        std::string space, spin;
+        double fmax, fmean;
+        std::tie(space, spin, fmax, fmean) = Fcheck[2 * i]; // alpha
+        outfile->Printf("\n    %-8s %15.10f %15.10f", space.c_str(), fmax, fmean);
+        std::tie(space, spin, fmax, fmean) = Fcheck[2 * i + 1]; // beta
+        outfile->Printf("  %15.10f %15.10f", fmax, fmean);
+    }
+    outfile->Printf("\n    %s", dash.c_str());
+
+    for (const auto& pair : semi_results_) {
+        if (pair.second == false) {
+            semi = false;
+            break;
+        }
+    }
 
     if (semi) {
         outfile->Printf("\n    Orbitals are semi-canonicalized.");
@@ -1990,6 +2004,87 @@ bool MASTER_DSRG::check_semi_orbs() {
     }
 
     return semi;
+}
+
+std::vector<std::vector<double>> MASTER_DSRG::diagonalize_Fock_diagblocks(BlockedTensor& U) {
+    // set U to identity and output diagonal Fock
+    U.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>&, double& value) {
+        if (i[0] == i[1]) {
+            value = 1.0;
+        }
+    });
+
+    std::vector<double> Fdiag_a(Fdiag_a_);
+    std::vector<double> Fdiag_b(Fdiag_b_);
+
+    // loop each correlated elementary space
+    int nirrep = mo_space_info_->nirrep();
+
+    auto elementary_spaces = mo_space_info_->composite_space_names()["CORRELATED"];
+    for (const std::string& space : elementary_spaces) {
+        if (mo_space_info_->size(space) == 0)
+            continue;
+
+        std::string composite_space = (space.find("GAS") == std::string::npos) ? space : "ACTIVE";
+        auto dim = mo_space_info_->dimension(space);
+        auto indices = mo_space_info_->pos_in_space(space, composite_space);
+        auto composite_size = indices.size();
+        auto corr_abs_indices = mo_space_info_->corr_absolute_mo(space);
+
+        // loop over spin cases
+        for (const std::string& spin : {"a", "b"}) {
+            if (semi_results_[std::make_tuple(space, spin)])
+                continue;
+
+            std::string block;
+            if (space.find("DOCC") != std::string::npos) {
+                block = (spin == "a") ? acore_label_ + acore_label_ : bcore_label_ + bcore_label_;
+            } else if (space.find("UOCC") != std::string::npos) {
+                block = (spin == "a") ? avirt_label_ + avirt_label_ : bvirt_label_ + bvirt_label_;
+            } else {
+                block = (spin == "a") ? aactv_label_ + aactv_label_ : bactv_label_ + bactv_label_;
+            }
+
+            auto& Fdata = Fock_.block(block).data();
+
+            auto Fd = std::make_shared<psi::Matrix>("F " + space + spin, dim, dim);
+
+            for (int h = 0, offset = 0; h < nirrep; ++h) {
+                for (int p = 0; p < dim[h]; ++p) {
+                    auto np = indices[p + offset];
+                    for (int q = p; q < dim[h]; ++q) {
+                        auto nq = indices[q + offset];
+                        double v = Fdata[np * composite_size + nq];
+                        Fd->set(h, p, q, v);
+                        Fd->set(h, q, p, v);
+                    }
+                }
+                offset += dim[h];
+            }
+
+            auto Usub = std::make_shared<psi::Matrix>("U " + space + spin, dim, dim);
+            auto evals = std::make_shared<psi::Vector>("evals " + space + spin, dim);
+            Fd->diagonalize(Usub, evals);
+
+            auto& Udata = U.block(block).data();
+            auto& Fdiag = (spin == "a") ? Fdiag_a : Fdiag_b;
+
+            for (int h = 0, offset = 0; h < nirrep; ++h) {
+                for (int p = 0; p < dim[h]; ++p) {
+                    auto np = indices[p + offset];
+                    for (int q = 0; q < dim[h]; ++q) {
+                        auto nq = indices[q + offset];
+                        // stored as row in ambit
+                        Udata[nq * composite_size + np] = Usub->get(h, p, q);
+                    }
+                    Fdiag[corr_abs_indices[p + offset]] = evals->get(h, p);
+                }
+                offset += dim[h];
+            }
+        }
+    }
+
+    return {Fdiag_a, Fdiag_b};
 }
 
 std::vector<std::string> MASTER_DSRG::diag_one_labels() {

@@ -47,9 +47,6 @@ class SA_DSRGPT : public SADSRG {
     SA_DSRGPT(RDMs rdms, std::shared_ptr<SCFInfo> scf_info, std::shared_ptr<ForteOptions> options,
               std::shared_ptr<ForteIntegrals> ints, std::shared_ptr<MOSpaceInfo> mo_space_info);
 
-    /// Compute the corr_level energy with fixed reference
-    virtual double compute_energy() = 0;
-
   protected:
     /// Read options
     void read_options();
@@ -59,11 +56,6 @@ class SA_DSRGPT : public SADSRG {
 
     /// Form Hbar or not?
     bool form_Hbar_;
-
-    /// How to consider internal amplitudes
-    std::string internal_amp_;
-    /// Include which part of internal amplitudes?
-    std::string internal_amp_select_;
 
     /// Two-electron integral
     ambit::BlockedTensor V_;

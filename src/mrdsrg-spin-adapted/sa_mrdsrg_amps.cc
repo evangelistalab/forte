@@ -27,25 +27,27 @@
  */
 
 #include <algorithm>
+#include <cstdio>
+#include <sys/stat.h>
 
 #include "psi4/libpsi4util/PsiOutStream.h"
 
 #include "helpers/timer.h"
+#include "helpers/printing.h"
 #include "sa_mrdsrg.h"
 
 using namespace psi;
 
 namespace forte {
 
-void SA_MRDSRG::guess_t(BlockedTensor& V, BlockedTensor& T2, BlockedTensor& F, BlockedTensor& T1) {
-    guess_t2(V, T2);
-    guess_t1(F, T2, T1);
-}
+void SA_MRDSRG::guess_t(BlockedTensor& V, BlockedTensor& T2, BlockedTensor& F, BlockedTensor& T1,
+                        BlockedTensor& B) {
+    print_h2("Build Initial Amplitudes Guesses");
 
-void SA_MRDSRG::guess_t_df(BlockedTensor& B, BlockedTensor& T2, BlockedTensor& F,
-                           BlockedTensor& T1) {
-    guess_t2_df(B, T2);
+    guess_t2(V, T2, B);
     guess_t1(F, T2, T1);
+
+    analyze_amplitudes("Initial", T1_, T2_);
 }
 
 void SA_MRDSRG::update_t() {
@@ -53,28 +55,29 @@ void SA_MRDSRG::update_t() {
     update_t1();
 }
 
-void SA_MRDSRG::guess_t2(BlockedTensor& V, BlockedTensor& T2) {
+void SA_MRDSRG::guess_t2(BlockedTensor& V, BlockedTensor& T2, BlockedTensor& B) {
     local_timer timer;
-    std::string str = "Computing T2 amplitudes ...";
-    outfile->Printf("\n    %-35s", str.c_str());
-    T2max_ = 0.0, T2norm_ = 0.0, T2rms_ = 0.0;
 
-    T2["ijab"] = V["ijab"];
+    struct stat buf;
+    if (read_amps_cwd_ and (stat(t2_file_cwd_.c_str(), &buf) == 0)) {
+        outfile->Printf("\n    Reading T2 amplitudes from current directory ...");
+        ambit::load(T2, t2_file_cwd_);
+    } else if (restart_amps_ and (stat(t2_file_chk_.c_str(), &buf) == 0)) {
+        outfile->Printf("\n    Reading previous T2 amplitudes from scratch directory ...");
+        ambit::load(T2, t2_file_chk_);
+    } else {
+        outfile->Printf("\n    Computing T2 amplitudes from PT2 ...");
+        if (eri_df_) {
+            T2["ijab"] = B["gia"] * B["gjb"];
+        } else {
+            T2["ijab"] = V["ijab"];
+        }
+        guess_t2_impl(T2);
+    }
 
-    guess_t2_impl(T2);
-
-    outfile->Printf("  Done. Timing %10.3f s", timer.get());
-}
-
-void SA_MRDSRG::guess_t2_df(BlockedTensor& B, BlockedTensor& T2) {
-    local_timer timer;
-    std::string str = "Computing T2 amplitudes ...";
-    outfile->Printf("\n    %-35s", str.c_str());
-    T2max_ = 0.0, T2norm_ = 0.0, T2rms_ = 0.0;
-
-    T2["ijab"] = B["gia"] * B["gjb"];
-
-    guess_t2_impl(T2);
+    T2max_ = T2.norm(0);
+    T2norm_ = T2.norm();
+    T2rms_ = 0.0;
 
     outfile->Printf("  Done. Timing %10.3f s", timer.get());
 }
@@ -99,10 +102,6 @@ void SA_MRDSRG::guess_t2_impl(BlockedTensor& T2) {
             size_t i3 = virt_mos_[i[3]];
 
             value /= Fdiag_[i0] + Fdiag_[i1] - Fdiag_[i2] - Fdiag_[i3];
-
-            T2norm_ += value * value;
-            if (std::fabs(value) > std::fabs(T2max_))
-                T2max_ = value;
         });
     }
 
@@ -114,10 +113,6 @@ void SA_MRDSRG::guess_t2_impl(BlockedTensor& T2) {
             size_t i3 = label_to_spacemo_[block[3]][i[3]];
             double denom = Fdiag_[i0] + Fdiag_[i1] - Fdiag_[i2] - Fdiag_[i3];
             value *= dsrg_source_->compute_renormalized_denominator(denom);
-
-            T2norm_ += value * value;
-            if (std::fabs(value) > std::fabs(T2max_))
-                T2max_ = value;
         });
     }
 
@@ -128,77 +123,70 @@ void SA_MRDSRG::guess_t2_impl(BlockedTensor& T2) {
     }
 
     // zero internal amplitudes
-    T2.block("aaaa").iterate([&](const std::vector<size_t>&, double& value) {
-        T2norm_ -= value * value;
-        value = 0.0;
-    });
-
-    // 2-norm
-    T2norm_ = std::sqrt(T2norm_);
+    internal_amps_T2(T2);
 }
 
 void SA_MRDSRG::guess_t1(BlockedTensor& F, BlockedTensor& T2, BlockedTensor& T1) {
     local_timer timer;
-    std::string str = "Computing T1 amplitudes ...";
-    outfile->Printf("\n    %-35s", str.c_str());
-    T1max_ = 0.0, T1norm_ = 0.0, T1rms_ = 0.0;
 
-    T1["ia"] = F["ia"];
-    T1["ia"] += T2["ivaw"] * F["wu"] * L1_["uv"];
-    T1["ia"] -= 0.5 * T2["ivwa"] * F["wu"] * L1_["uv"];
-    T1["ia"] -= T2["iwau"] * F["vw"] * L1_["uv"];
-    T1["ia"] += 0.5 * T2["iwua"] * F["vw"] * L1_["uv"];
+    struct stat buf;
+    if (read_amps_cwd_ and (stat(t1_file_cwd_.c_str(), &buf) == 0)) {
+        outfile->Printf("\n    Reading T1 amplitudes from current directory ...");
+        ambit::load(T1, t1_file_cwd_);
+    } else if (restart_amps_ and (stat(t1_file_chk_.c_str(), &buf) == 0)) {
+        outfile->Printf("\n    Reading previous T1 amplitudes from scratch directory ...");
+        ambit::load(T1, t1_file_chk_);
+    } else {
+        outfile->Printf("\n    Computing T1 amplitudes from PT2 ...");
 
-    // transform to semi-canonical basis
-    BlockedTensor tempX;
-    if (!semi_canonical_) {
-        tempX = ambit::BlockedTensor::build(tensor_type_, "Temp T1", T1.block_labels());
-        tempX["jb"] = U_["ji"] * T1["ia"] * U_["ba"];
-        T1["ia"] = tempX["ia"];
+        T1["ia"] = F["ia"];
+        T1["ia"] += T2["ivaw"] * F["wu"] * L1_["uv"];
+        T1["ia"] -= 0.5 * T2["ivwa"] * F["wu"] * L1_["uv"];
+        T1["ia"] -= T2["iwau"] * F["vw"] * L1_["uv"];
+        T1["ia"] += 0.5 * T2["iwua"] * F["vw"] * L1_["uv"];
+
+        // transform to semi-canonical basis
+        BlockedTensor tempX;
+        if (!semi_canonical_) {
+            tempX = ambit::BlockedTensor::build(tensor_type_, "Temp T1", T1.block_labels());
+            tempX["jb"] = U_["ji"] * T1["ia"] * U_["ba"];
+            T1["ia"] = tempX["ia"];
+        }
+
+        // special case for CV block
+        std::vector<std::string> T1blocks(T1.block_labels());
+        if (ccvv_source_ == "ZERO") {
+            T1blocks.erase(std::remove(T1blocks.begin(), T1blocks.end(), "cv"), T1blocks.end());
+            T1.block("cv").iterate([&](const std::vector<size_t>& i, double& value) {
+                size_t i0 = core_mos_[i[0]];
+                size_t i1 = virt_mos_[i[1]];
+
+                value /= Fdiag_[i0] - Fdiag_[i1];
+            });
+        }
+
+        for (const std::string& block : T1blocks) {
+            T1.block(block).iterate([&](const std::vector<size_t>& i, double& value) {
+                size_t i0 = label_to_spacemo_[block[0]][i[0]];
+                size_t i1 = label_to_spacemo_[block[1]][i[1]];
+                value *= dsrg_source_->compute_renormalized_denominator(Fdiag_[i0] - Fdiag_[i1]);
+            });
+        }
+
+        // transform back to non-canonical basis
+        if (!semi_canonical_) {
+            tempX["jb"] = U_["ij"] * T1["ia"] * U_["ab"];
+            T1["ia"] = tempX["ia"];
+        }
+
+        // zero internal amplitudes
+        internal_amps_T1(T1);
     }
-
-    // special case for CV block
-    std::vector<std::string> T1blocks(T1.block_labels());
-    if (ccvv_source_ == "ZERO") {
-        T1blocks.erase(std::remove(T1blocks.begin(), T1blocks.end(), "cv"), T1blocks.end());
-        T1.block("cv").iterate([&](const std::vector<size_t>& i, double& value) {
-            size_t i0 = core_mos_[i[0]];
-            size_t i1 = virt_mos_[i[1]];
-
-            value /= Fdiag_[i0] - Fdiag_[i1];
-
-            T1norm_ += value * value;
-            if (std::fabs(value) > std::fabs(T1max_))
-                T1max_ = value;
-        });
-    }
-
-    for (const std::string& block : T1blocks) {
-        T1.block(block).iterate([&](const std::vector<size_t>& i, double& value) {
-            size_t i0 = label_to_spacemo_[block[0]][i[0]];
-            size_t i1 = label_to_spacemo_[block[1]][i[1]];
-            value *= dsrg_source_->compute_renormalized_denominator(Fdiag_[i0] - Fdiag_[i1]);
-
-            T1norm_ += value * value;
-            if (std::fabs(value) > std::fabs(T1max_))
-                T1max_ = value;
-        });
-    }
-
-    // transform back to non-canonical basis
-    if (!semi_canonical_) {
-        tempX["jb"] = U_["ij"] * T1["ia"] * U_["ab"];
-        T1["ia"] = tempX["ia"];
-    }
-
-    // zero internal amplitudes
-    T1.block("aa").iterate([&](const std::vector<size_t>&, double& value) {
-        T1norm_ -= value * value;
-        value = 0.0;
-    });
 
     // norms
-    T1norm_ = std::sqrt(T1norm_);
+    T1max_ = T1.norm(0);
+    T1norm_ = T1.norm();
+    T1rms_ = 0.0;
 
     outfile->Printf("  Done. Timing %10.3f s", timer.get());
 }
@@ -297,10 +285,10 @@ void SA_MRDSRG::update_t2() {
 
     timer t8("zero internal amplitudes");
     // zero internal amplitudes
-    DT2_.block("aaaa").zero();
+    internal_amps_T2(DT2_);
     t8.stop();
 
-    // compute RMS
+    // compute consecutive T2 difference
     T2rms_ = DT2_.norm();
 
     timer t9("transform DT2 back to original basis");
@@ -317,13 +305,8 @@ void SA_MRDSRG::update_t2() {
     T2_["ijab"] += DT2_["ijab"];
 
     // compute norm and find maximum
-    T2norm_ = 0.0, T2max_ = 0.0;
-    T2_.iterate([&](const std::vector<size_t>&, const std::vector<SpinType>&, double& value) {
-        T2norm_ += value * value;
-        if (std::fabs(value) > std::fabs(T2max_))
-            T2max_ = value;
-    });
-    T2norm_ = std::sqrt(T2norm_);
+    T2norm_ = T2_.norm(2);
+    T2max_ = T2_.norm(0);
     t10.stop();
 
     // reset the active part of Hbar2
@@ -406,9 +389,9 @@ void SA_MRDSRG::update_t1() {
     DT1_["ia"] -= T1_["ia"];
 
     // zero internal amplitudes
-    DT1_.block("aa").zero();
+    internal_amps_T1(DT1_);
 
-    // compute RMS
+    // compute consecutive T1 difference
     T1rms_ = DT1_.norm();
 
     // transform DT1 back to original basis
@@ -422,15 +405,29 @@ void SA_MRDSRG::update_t1() {
     T1_["ia"] += DT1_["ia"];
 
     // compute norm and find maximum
-    T1max_ = 0.0, T1norm_ = 0.0;
-    T1_.iterate([&](const std::vector<size_t>&, const std::vector<SpinType>&, double& value) {
-        T1norm_ += value * value;
-        if (std::fabs(value) > std::fabs(T1max_))
-            T1max_ = value;
-    });
-    T1norm_ = std::sqrt(T1norm_);
+    T1max_ = T1_.norm(0);
+    T1norm_ = T1_.norm(2);
 
     // reset the active part of Hbar2
     Hbar1_["uv"] = Hbar1copy["uv"];
 }
+
+void SA_MRDSRG::dump_amps_to_disk() {
+    // dump to psi4 scratch directory for reference relaxation
+    if (restart_amps_ and (relax_ref_ != "NONE")) {
+        outfile->Printf("\n    Dumping amplitudes to scratch directory ...");
+        ambit::save(T1_, t1_file_chk_);
+        ambit::save(T2_, t2_file_chk_);
+        outfile->Printf(" Done.");
+    }
+
+    // dump amplitudes to the current directory
+    if (dump_amps_cwd_) {
+        outfile->Printf("\n    Dumping amplitudes to current directory ...");
+        ambit::save(T1_, t1_file_cwd_);
+        ambit::save(T2_, t2_file_cwd_);
+        outfile->Printf(" Done.");
+    }
+}
+
 } // namespace forte

@@ -97,7 +97,9 @@ void export_ActiveSpaceSolver(py::module& m) {
              "as_ints"_a, "max_body"_a,
              "Solve the contracted CI eigenvalue problem using given integrals")
         .def("compute_average_rdms", &ActiveSpaceSolver::compute_average_rdms,
-             "Compute the weighted average reference");
+             "Compute the weighted average reference")
+        .def("set_active_space_integrals", &ActiveSpaceSolver::set_active_space_integrals,
+             "Set the active space integrals manually");
 
     m.def("compute_average_state_energy", &compute_average_state_energy,
           "Compute the average energy given the energies and weights of each state");
@@ -351,7 +353,11 @@ PYBIND11_MODULE(forte, m) {
         .def("nuclear_dipole", &MASTER_DSRG::nuclear_dipole,
              "Return nuclear components of dipole moments")
         .def("set_Uactv", &MASTER_DSRG::set_Uactv, "Ua"_a, "Ub"_a,
-             "Set active part orbital rotation matrix (from original to semicanonical)");
+             "Set active part orbital rotation matrix (from original to semicanonical)")
+        .def("set_read_cwd_amps", &MASTER_DSRG::set_read_amps_cwd,
+             "Set if reading amplitudes in the current directory or not")
+        .def("clean_checkpoints", &MASTER_DSRG::clean_checkpoints,
+             "Delete amplitudes checkpoint files");
 
     // export SADSRG
     py::class_<SADSRG>(m, "SADSRG")
@@ -359,7 +365,10 @@ PYBIND11_MODULE(forte, m) {
         .def("compute_Heff_actv", &SADSRG::compute_Heff_actv,
              "Return the DSRG dressed ActiveSpaceIntegrals")
         .def("set_Uactv", &SADSRG::set_Uactv, "Ua"_a,
-             "Set active part orbital rotation matrix (from original to semicanonical)");
+             "Set active part orbital rotation matrix (from original to semicanonical)")
+        .def("set_read_cwd_amps", &SADSRG::set_read_amps_cwd,
+             "Set if reading amplitudes in the current directory or not")
+        .def("clean_checkpoints", &SADSRG::clean_checkpoints, "Delete amplitudes checkpoint files");
 
     // export MRDSRG_SO
     py::class_<MRDSRG_SO>(m, "MRDSRG_SO")

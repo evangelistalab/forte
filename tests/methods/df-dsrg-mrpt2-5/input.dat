@@ -44,7 +44,7 @@ set forte {
    nroot                   1
    multiplicity            1
    dsrg_s                  0.5
-   int_type                DF
+   int_type                df
    correlation_solver      three-dsrg-mrpt2
    active_space_solver     fci
 }

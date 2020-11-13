@@ -41,7 +41,7 @@ set forte {
   sci_enforce_spin_complete True
   GAS1 [6,0,2,2,0,6,0,0]
   GAS2 [0,0,0,0,0,0,2,2]
-  GAS2MAX 2
+  GAS2MAX [2]
 }
 
 

@@ -35,10 +35,9 @@ set forte{
    root_sym             0
    nroot                1
    dsrg_s               1.0e10
-   dsrgpt               true
    int_type             cholesky
    cholesky_tolerance   1e-14
-   PRINT_DENOM2          true
+   print_denom2         true
 }
 
 basis {

@@ -4,15 +4,15 @@
 
 import forte
 
-refscf = -76.0172965561 #TEST
-refgasscf = -56.313528161904 #TEST
+refscf = -76.0172965561
+refgasscf = -56.29198840256376712
 
-memory 6000mb
+memory 1000mb
 molecule h2o{
    O
    H  1 1.00
    H  1 1.00 2 103.1
-      }
+}
 
 set global {
   basis 6-31g**
@@ -33,13 +33,14 @@ set forte {
   root_sym 0
   charge 0
   sci_enforce_spin_complete true
-  e_convergence 6
+  e_convergence 10
   charge 0
   active_ref_type gas
+  one_cycle True
   GAS1 [1,0,0,0]
   GAS2 [3,0,1,2]
-  GAS1MAX 1
-  GAS1MIN 0
+  GAS1MAX [1]
+  GAS1MIN [0]
   job_type casscf
   casscf_ci_solver aci
   casscf_maxiter 100
@@ -48,6 +49,6 @@ set forte {
   casscf_diis_start 15
 }
 
-escf ,wfn = energy('scf',return_wfn = True)
-egasscf = energy('forte')
-compare_values(refgasscf, egasscf ,9, "GASSCF energy") #TEST
+escf, wfn = energy('scf', return_wfn=True)
+egasscf = energy('forte', ref_wfn=wfn)
+compare_values(refgasscf, egasscf, 8, "GASSCF energy")

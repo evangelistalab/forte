@@ -30,6 +30,7 @@
 #include "psi4/libpsi4util/PsiOutStream.h"
 
 #include "forte-def.h"
+#include "helpers/disk_io.h"
 #include "helpers/timer.h"
 #include "helpers/printing.h"
 #include "sa_mrpt2.h"
@@ -312,11 +313,7 @@ void SA_MRPT2::compute_t2_df_minimal() {
     }
 
     // internal amplitudes
-    if (internal_amp_.find("DOUBLES") != std::string::npos) {
-        // TODO: to be filled
-    } else {
-        T2_.block("aaaa").zero();
-    }
+    internal_amps_T2(T2_);
 
     // form S2 = 2 * J - K
     // aavv, ccaa, caav, acav, aava, caaa, aaaa
@@ -729,5 +726,4 @@ void SA_MRPT2::compute_hbar() {
         Hbar1_.block("aa")("vu") -= 0.5 * temp("uv");
     }
 }
-
 } // namespace forte

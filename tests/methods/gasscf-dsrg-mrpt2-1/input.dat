@@ -1,20 +1,19 @@
-#! Generated using commit GITCOMMIT 
-# GASSCF-DSRG-MRPT2 for core-excited state with Core orbital frozen
-# Without CASSCF_FROZEN_ORBITAL this will collapse to ground state and not converge
-#
+#! Generated using commit GITCOMMIT
+# GASSCF-DSRG-MRPT2 for core-excited singlet A1 state of H2O
+# at most one electron occupies the core orbital
 
 import forte
 
-refscf = -76.0172965561 #TEST
-refgasscf = -56.3135281623 #TEST
-refdsrg = -56.4887062416 #TEST
+refscf = -76.0172965561
+refgasscf = -56.291988402563831
+refdsrg = -56.462802953564697
 
-memory 6000mb
+memory 1000mb
 molecule h2o{
    O
    H  1 1.00
    H  1 1.00 2 103.1
-      }
+}
 
 set global {
   basis 6-31g**
@@ -35,13 +34,16 @@ set forte {
   root_sym 0
   charge 0
   sci_enforce_spin_complete true
+  # for non-selective GAS, we always treat spin_project_full as true
+  # such that the following line is only optional
+  spin_project_full true
   e_convergence 6
   charge 0
   active_ref_type gas
   GAS1 [1,0,0,0]
   GAS2 [3,0,1,2]
-  GAS1MAX 1
-  GAS1MIN 0
+  GAS1MAX [1]
+  GAS1MIN [0]
   job_type casscf
   casscf_ci_solver aci
   casscf_maxiter 100
@@ -51,9 +53,9 @@ set forte {
   casscf_semicanonicalize false
 }
 
-escf ,wfn = energy('scf',return_wfn = True)
-egasscf,wfn_gasscf = energy('forte',ref_wfn = wfn, return_wfn = True)
-compare_values(refgasscf, egasscf ,9, "GASSCF energy") #TEST
+escf, wfn = energy('scf', return_wfn=True)
+egasscf, wfn_gasscf = energy('forte', ref_wfn=wfn, return_wfn=True)
+compare_values(refgasscf, egasscf, 9, "GASSCF energy")
 
 set forte {
   active_space_solver aci
@@ -62,20 +64,15 @@ set forte {
   sigma 0.00
   root_sym 0
   charge 0
-  sci_enforce_spin_complete true
   e_convergence 6
   charge 0
   active_ref_type gas
   GAS1 [1,0,0,0]
   GAS2 [3,0,1,2]
-  GAS1MAX 1
-  GAS1MIN 0
   job_type newdriver
   correlation_solver dsrg-mrpt2
   dsrg_s 1.0
 }
 
-edsrg = energy('forte', ref_wfn = wfn_gasscf)
-compare_values(refdsrg, edsrg ,9, "GASSCF-DSRG-MRPT2 energy") #TEST
-
-
+edsrg = energy('forte', ref_wfn=wfn_gasscf)
+compare_values(refdsrg, edsrg, 9, "GASSCF-DSRG-MRPT2 energy")

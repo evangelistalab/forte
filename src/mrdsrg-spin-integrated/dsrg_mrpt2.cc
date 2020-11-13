@@ -1776,8 +1776,8 @@ void DSRG_MRPT2::compute_dm1d_pt2(BlockedTensor& M, double& Mbar0, BlockedTensor
 //                t = std::sqrt(x * x + y * y + z * z);
 //            }
 //            outfile->Printf("\n    DSRG-MRPT2 partially relaxed dipole moment:");
-//            outfile->Printf("\n      X: %10.6f  Y: %10.6f  Z: %10.6f  Total: %10.6f\n", x, y, z, t);
-//            psi::Process::environment.globals["PARTIALLY RELAXED DIPOLE"] = t;
+//            outfile->Printf("\n      X: %10.6f  Y: %10.6f  Z: %10.6f  Total: %10.6f\n", x, y, z,
+//            t); psi::Process::environment.globals["PARTIALLY RELAXED DIPOLE"] = t;
 //        }
 //    }
 
@@ -1951,247 +1951,248 @@ void DSRG_MRPT2::compute_dm1d_pt2(BlockedTensor& M, double& Mbar0, BlockedTensor
 //    return O;
 //}
 
-void DSRG_MRPT2::transfer_integrals() {
-    // printing
-    print_h2("De-Normal-Order the DSRG Transformed Hamiltonian");
+// void DSRG_MRPT2::transfer_integrals() {
+//    // printing
+//    print_h2("De-Normal-Order the DSRG Transformed Hamiltonian");
 
-    // compute scalar term (all active only)
-    local_timer t_scalar;
-    std::string str = "Computing the scalar term   ...";
-    outfile->Printf("\n    %-35s", str.c_str());
-    double scalar0 = Eref_ + Hbar0_ - Enuc_ - Efrzc_;
+//    // compute scalar term (all active only)
+//    local_timer t_scalar;
+//    std::string str = "Computing the scalar term   ...";
+//    outfile->Printf("\n    %-35s", str.c_str());
+//    double scalar0 = Eref_ + Hbar0_ - Enuc_ - Efrzc_;
 
-    // scalar from Hbar1
-    double scalar1 = 0.0;
-    scalar1 -= Hbar1_["vu"] * Gamma1_["uv"];
-    scalar1 -= Hbar1_["VU"] * Gamma1_["UV"];
+//    // scalar from Hbar1
+//    double scalar1 = 0.0;
+//    scalar1 -= Hbar1_["vu"] * Gamma1_["uv"];
+//    scalar1 -= Hbar1_["VU"] * Gamma1_["UV"];
 
-    // scalar from Hbar2
-    double scalar2 = 0.0;
-    scalar2 += 0.5 * Gamma1_["uv"] * Hbar2_["vyux"] * Gamma1_["xy"];
-    scalar2 += 0.5 * Gamma1_["UV"] * Hbar2_["VYUX"] * Gamma1_["XY"];
-    scalar2 += Gamma1_["uv"] * Hbar2_["vYuX"] * Gamma1_["XY"];
+//    // scalar from Hbar2
+//    double scalar2 = 0.0;
+//    scalar2 += 0.5 * Gamma1_["uv"] * Hbar2_["vyux"] * Gamma1_["xy"];
+//    scalar2 += 0.5 * Gamma1_["UV"] * Hbar2_["VYUX"] * Gamma1_["XY"];
+//    scalar2 += Gamma1_["uv"] * Hbar2_["vYuX"] * Gamma1_["XY"];
 
-    scalar2 -= 0.25 * Hbar2_["xyuv"] * Lambda2_["uvxy"];
-    scalar2 -= 0.25 * Hbar2_["XYUV"] * Lambda2_["UVXY"];
-    scalar2 -= Hbar2_["xYuV"] * Lambda2_["uVxY"];
+//    scalar2 -= 0.25 * Hbar2_["xyuv"] * Lambda2_["uvxy"];
+//    scalar2 -= 0.25 * Hbar2_["XYUV"] * Lambda2_["UVXY"];
+//    scalar2 -= Hbar2_["xYuV"] * Lambda2_["uVxY"];
 
-    double scalar = scalar0 + scalar1 + scalar2;
+//    double scalar = scalar0 + scalar1 + scalar2;
 
-    bool form_hbar3 = foptions_->get_bool("FORM_HBAR3");
-    double scalar3 = 0.0;
-    if (form_hbar3) {
-        scalar3 -= (1.0 / 36) * Hbar3_.block("aaaaaa")("xyzuvw") * rdms_.L3aaa()("xyzuvw");
-        scalar3 -= (1.0 / 36) * Hbar3_.block("AAAAAA")("XYZUVW") * rdms_.L3bbb()("XYZUVW");
-        scalar3 -= 0.25 * Hbar3_.block("aaAaaA")("xyZuvW") * rdms_.L3aab()("xyZuvW");
-        scalar3 -= 0.25 * Hbar3_.block("aAAaAA")("xYZuVW") * rdms_.L3abb()("xYZuVW");
+//    bool form_hbar3 = foptions_->get_bool("FORM_HBAR3");
+//    double scalar3 = 0.0;
+//    if (form_hbar3) {
+//        scalar3 -= (1.0 / 36) * Hbar3_.block("aaaaaa")("xyzuvw") * rdms_.L3aaa()("xyzuvw");
+//        scalar3 -= (1.0 / 36) * Hbar3_.block("AAAAAA")("XYZUVW") * rdms_.L3bbb()("XYZUVW");
+//        scalar3 -= 0.25 * Hbar3_.block("aaAaaA")("xyZuvW") * rdms_.L3aab()("xyZuvW");
+//        scalar3 -= 0.25 * Hbar3_.block("aAAaAA")("xYZuVW") * rdms_.L3abb()("xYZuVW");
 
-        scalar3 += 0.25 * Hbar3_["xyzuvw"] * Gamma1_["wz"] * Lambda2_["uvxy"];
-        scalar3 += 0.25 * Hbar3_["XYZUVW"] * Gamma1_["WZ"] * Lambda2_["UVXY"];
-        scalar3 += 0.25 * Hbar3_["xyZuvW"] * Gamma1_["WZ"] * Lambda2_["uvxy"];
-        scalar3 += Hbar3_["xzYuwV"] * Gamma1_["wz"] * Lambda2_["uVxY"];
-        scalar3 += 0.25 * Hbar3_["zXYwUV"] * Gamma1_["wz"] * Lambda2_["UVXY"];
-        scalar3 += Hbar3_["xZYuWV"] * Gamma1_["WZ"] * Lambda2_["uVxY"];
+//        scalar3 += 0.25 * Hbar3_["xyzuvw"] * Gamma1_["wz"] * Lambda2_["uvxy"];
+//        scalar3 += 0.25 * Hbar3_["XYZUVW"] * Gamma1_["WZ"] * Lambda2_["UVXY"];
+//        scalar3 += 0.25 * Hbar3_["xyZuvW"] * Gamma1_["WZ"] * Lambda2_["uvxy"];
+//        scalar3 += Hbar3_["xzYuwV"] * Gamma1_["wz"] * Lambda2_["uVxY"];
+//        scalar3 += 0.25 * Hbar3_["zXYwUV"] * Gamma1_["wz"] * Lambda2_["UVXY"];
+//        scalar3 += Hbar3_["xZYuWV"] * Gamma1_["WZ"] * Lambda2_["uVxY"];
 
-        scalar3 -= (1.0 / 6) * Hbar3_["xyzuvw"] * Gamma1_["ux"] * Gamma1_["vy"] * Gamma1_["wz"];
-        scalar3 -= (1.0 / 6) * Hbar3_["XYZUVW"] * Gamma1_["UX"] * Gamma1_["VY"] * Gamma1_["WZ"];
-        scalar3 -= 0.5 * Hbar3_["xyZuvW"] * Gamma1_["ux"] * Gamma1_["vy"] * Gamma1_["WZ"];
-        scalar3 -= 0.5 * Hbar3_["xYZuVW"] * Gamma1_["ux"] * Gamma1_["VY"] * Gamma1_["WZ"];
+//        scalar3 -= (1.0 / 6) * Hbar3_["xyzuvw"] * Gamma1_["ux"] * Gamma1_["vy"] * Gamma1_["wz"];
+//        scalar3 -= (1.0 / 6) * Hbar3_["XYZUVW"] * Gamma1_["UX"] * Gamma1_["VY"] * Gamma1_["WZ"];
+//        scalar3 -= 0.5 * Hbar3_["xyZuvW"] * Gamma1_["ux"] * Gamma1_["vy"] * Gamma1_["WZ"];
+//        scalar3 -= 0.5 * Hbar3_["xYZuVW"] * Gamma1_["ux"] * Gamma1_["VY"] * Gamma1_["WZ"];
 
-        scalar += scalar3;
-    }
+//        scalar += scalar3;
+//    }
 
-    outfile->Printf("  Done. Timing %10.3f s", t_scalar.get());
+//    outfile->Printf("  Done. Timing %10.3f s", t_scalar.get());
 
-    // compute one-body term
-    local_timer t_one;
-    str = "Computing the one-body term ...";
-    outfile->Printf("\n    %-35s", str.c_str());
-    BlockedTensor temp1 = BTF_->build(tensor_type_, "temp1", spin_cases({"aa"}));
-    temp1["uv"] = Hbar1_["uv"];
-    temp1["UV"] = Hbar1_["UV"];
-    temp1["uv"] -= Hbar2_["uxvy"] * Gamma1_["yx"];
-    temp1["uv"] -= Hbar2_["uXvY"] * Gamma1_["YX"];
-    temp1["UV"] -= Hbar2_["xUyV"] * Gamma1_["yx"];
-    temp1["UV"] -= Hbar2_["UXVY"] * Gamma1_["YX"];
+//    // compute one-body term
+//    local_timer t_one;
+//    str = "Computing the one-body term ...";
+//    outfile->Printf("\n    %-35s", str.c_str());
+//    BlockedTensor temp1 = BTF_->build(tensor_type_, "temp1", spin_cases({"aa"}));
+//    temp1["uv"] = Hbar1_["uv"];
+//    temp1["UV"] = Hbar1_["UV"];
+//    temp1["uv"] -= Hbar2_["uxvy"] * Gamma1_["yx"];
+//    temp1["uv"] -= Hbar2_["uXvY"] * Gamma1_["YX"];
+//    temp1["UV"] -= Hbar2_["xUyV"] * Gamma1_["yx"];
+//    temp1["UV"] -= Hbar2_["UXVY"] * Gamma1_["YX"];
 
-    if (form_hbar3) {
-        temp1["uv"] += 0.5 * Hbar3_["uyzvxw"] * Gamma1_["xy"] * Gamma1_["wz"];
-        temp1["uv"] += 0.5 * Hbar3_["uYZvXW"] * Gamma1_["XY"] * Gamma1_["WZ"];
-        temp1["uv"] += Hbar3_["uyZvxW"] * Gamma1_["xy"] * Gamma1_["WZ"];
+//    if (form_hbar3) {
+//        temp1["uv"] += 0.5 * Hbar3_["uyzvxw"] * Gamma1_["xy"] * Gamma1_["wz"];
+//        temp1["uv"] += 0.5 * Hbar3_["uYZvXW"] * Gamma1_["XY"] * Gamma1_["WZ"];
+//        temp1["uv"] += Hbar3_["uyZvxW"] * Gamma1_["xy"] * Gamma1_["WZ"];
 
-        temp1["UV"] += 0.5 * Hbar3_["UYZVXW"] * Gamma1_["XY"] * Gamma1_["WZ"];
-        temp1["UV"] += 0.5 * Hbar3_["yzUxwV"] * Gamma1_["xy"] * Gamma1_["wz"];
-        temp1["UV"] += Hbar3_["yUZxVW"] * Gamma1_["xy"] * Gamma1_["WZ"];
+//        temp1["UV"] += 0.5 * Hbar3_["UYZVXW"] * Gamma1_["XY"] * Gamma1_["WZ"];
+//        temp1["UV"] += 0.5 * Hbar3_["yzUxwV"] * Gamma1_["xy"] * Gamma1_["wz"];
+//        temp1["UV"] += Hbar3_["yUZxVW"] * Gamma1_["xy"] * Gamma1_["WZ"];
 
-        temp1["uv"] -= 0.25 * Hbar3_["uxyvwz"] * Lambda2_["wzxy"];
-        temp1["uv"] -= 0.25 * Hbar3_["uXYvWZ"] * Lambda2_["WZXY"];
-        temp1["uv"] -= Hbar3_["uxYvwZ"] * Lambda2_["wZxY"];
+//        temp1["uv"] -= 0.25 * Hbar3_["uxyvwz"] * Lambda2_["wzxy"];
+//        temp1["uv"] -= 0.25 * Hbar3_["uXYvWZ"] * Lambda2_["WZXY"];
+//        temp1["uv"] -= Hbar3_["uxYvwZ"] * Lambda2_["wZxY"];
 
-        temp1["UV"] -= 0.25 * Hbar3_["UXYVWZ"] * Lambda2_["WZXY"];
-        temp1["UV"] -= 0.25 * Hbar3_["xyUwzV"] * Lambda2_["wzxy"];
-        temp1["UV"] -= Hbar3_["xUYwVZ"] * Lambda2_["wZxY"];
-    }
+//        temp1["UV"] -= 0.25 * Hbar3_["UXYVWZ"] * Lambda2_["WZXY"];
+//        temp1["UV"] -= 0.25 * Hbar3_["xyUwzV"] * Lambda2_["wzxy"];
+//        temp1["UV"] -= Hbar3_["xUYwVZ"] * Lambda2_["wZxY"];
+//    }
 
-    outfile->Printf("  Done. Timing %10.3f s", t_one.get());
+//    outfile->Printf("  Done. Timing %10.3f s", t_one.get());
 
-    // compute two-body term
-    BlockedTensor temp2;
-    if (form_hbar3) {
-        temp2 = BTF_->build(tensor_type_, "temp2", spin_cases({"aaaa"}));
-        str = "Computing the two-body term ...";
-        outfile->Printf("\n    %-35s", str.c_str());
+//    // compute two-body term
+//    BlockedTensor temp2;
+//    if (form_hbar3) {
+//        temp2 = BTF_->build(tensor_type_, "temp2", spin_cases({"aaaa"}));
+//        str = "Computing the two-body term ...";
+//        outfile->Printf("\n    %-35s", str.c_str());
 
-        temp2["uvxy"] = Hbar2_["uvxy"];
-        temp2["uVxY"] = Hbar2_["uVxY"];
-        temp2["UVXY"] = Hbar2_["UVXY"];
+//        temp2["uvxy"] = Hbar2_["uvxy"];
+//        temp2["uVxY"] = Hbar2_["uVxY"];
+//        temp2["UVXY"] = Hbar2_["UVXY"];
 
-        temp2["xyuv"] -= Hbar3_["xyzuvw"] * Gamma1_["wz"];
-        temp2["xyuv"] -= Hbar3_["xyZuvW"] * Gamma1_["WZ"];
-        temp2["xYuV"] -= Hbar3_["xYZuVW"] * Gamma1_["WZ"];
-        temp2["xYuV"] -= Hbar3_["xzYuwV"] * Gamma1_["wz"];
-        temp2["XYUV"] -= Hbar3_["XYZUVW"] * Gamma1_["WZ"];
-        temp2["XYUV"] -= Hbar3_["zXYwUV"] * Gamma1_["wz"];
+//        temp2["xyuv"] -= Hbar3_["xyzuvw"] * Gamma1_["wz"];
+//        temp2["xyuv"] -= Hbar3_["xyZuvW"] * Gamma1_["WZ"];
+//        temp2["xYuV"] -= Hbar3_["xYZuVW"] * Gamma1_["WZ"];
+//        temp2["xYuV"] -= Hbar3_["xzYuwV"] * Gamma1_["wz"];
+//        temp2["XYUV"] -= Hbar3_["XYZUVW"] * Gamma1_["WZ"];
+//        temp2["XYUV"] -= Hbar3_["zXYwUV"] * Gamma1_["wz"];
 
-        outfile->Printf("  Done. Timing %10.3f s", t_one.get());
-    }
+//        outfile->Printf("  Done. Timing %10.3f s", t_one.get());
+//    }
 
-    // update integrals
-    local_timer t_int;
-    str = "Updating integrals          ...";
-    outfile->Printf("\n    %-35s", str.c_str());
-    //    ints_->set_scalar(Edsrg - Enuc_ - Efrzc_);
-    ints_->set_scalar(scalar);
+//    // update integrals
+//    local_timer t_int;
+//    str = "Updating integrals          ...";
+//    outfile->Printf("\n    %-35s", str.c_str());
+//    //    ints_->set_scalar(Edsrg - Enuc_ - Efrzc_);
+//    ints_->set_scalar(scalar);
 
-    //   a) zero hole integrals
-    std::vector<size_t> hole_mos = core_mos_;
-    hole_mos.insert(hole_mos.end(), actv_mos_.begin(), actv_mos_.end());
-    for (const size_t& i : hole_mos) {
-        for (const size_t& j : hole_mos) {
-            ints_->set_oei(i, j, 0.0, true);
-            ints_->set_oei(i, j, 0.0, false);
-            for (const size_t& k : hole_mos) {
-                for (const size_t& l : hole_mos) {
-                    ints_->set_tei(i, j, k, l, 0.0, true, true);
-                    ints_->set_tei(i, j, k, l, 0.0, true, false);
-                    ints_->set_tei(i, j, k, l, 0.0, false, false);
-                }
-            }
-        }
-    }
+//    //   a) zero hole integrals
+//    std::vector<size_t> hole_mos = core_mos_;
+//    hole_mos.insert(hole_mos.end(), actv_mos_.begin(), actv_mos_.end());
+//    for (const size_t& i : hole_mos) {
+//        for (const size_t& j : hole_mos) {
+//            ints_->set_oei(i, j, 0.0, true);
+//            ints_->set_oei(i, j, 0.0, false);
+//            for (const size_t& k : hole_mos) {
+//                for (const size_t& l : hole_mos) {
+//                    ints_->set_tei(i, j, k, l, 0.0, true, true);
+//                    ints_->set_tei(i, j, k, l, 0.0, true, false);
+//                    ints_->set_tei(i, j, k, l, 0.0, false, false);
+//                }
+//            }
+//        }
+//    }
 
-    //   b) copy all active part
-    //    Hbar1_.citerate(
-    //        [&](const std::vector<size_t>& i, const std::vector<SpinType>& spin, const double&
-    //        value) {
-    //            if (spin[0] == AlphaSpin) {
-    //                ints_->set_oei(i[0], i[1], value, true);
-    //            } else {
-    //                ints_->set_oei(i[0], i[1], value, false);
-    //            }
-    //        });
-    temp1.citerate(
-        [&](const std::vector<size_t>& i, const std::vector<SpinType>& spin, const double& value) {
-            if (spin[0] == AlphaSpin) {
-                ints_->set_oei(i[0], i[1], value, true);
-            } else {
-                ints_->set_oei(i[0], i[1], value, false);
-            }
-        });
+//    //   b) copy all active part
+//    //    Hbar1_.citerate(
+//    //        [&](const std::vector<size_t>& i, const std::vector<SpinType>& spin, const double&
+//    //        value) {
+//    //            if (spin[0] == AlphaSpin) {
+//    //                ints_->set_oei(i[0], i[1], value, true);
+//    //            } else {
+//    //                ints_->set_oei(i[0], i[1], value, false);
+//    //            }
+//    //        });
+//    temp1.citerate(
+//        [&](const std::vector<size_t>& i, const std::vector<SpinType>& spin, const double& value)
+//        {
+//            if (spin[0] == AlphaSpin) {
+//                ints_->set_oei(i[0], i[1], value, true);
+//            } else {
+//                ints_->set_oei(i[0], i[1], value, false);
+//            }
+//        });
 
-    if (!form_hbar3) {
-        Hbar2_.citerate([&](const std::vector<size_t>& i, const std::vector<SpinType>& spin,
-                            const double& value) {
-            if ((spin[0] == AlphaSpin) && (spin[1] == AlphaSpin)) {
-                ints_->set_tei(i[0], i[1], i[2], i[3], value, true, true);
-            } else if ((spin[0] == AlphaSpin) && (spin[1] == BetaSpin)) {
-                ints_->set_tei(i[0], i[1], i[2], i[3], value, true, false);
-            } else if ((spin[0] == BetaSpin) && (spin[1] == BetaSpin)) {
-                ints_->set_tei(i[0], i[1], i[2], i[3], value, false, false);
-            }
-        });
-    } else {
-        temp2.citerate([&](const std::vector<size_t>& i, const std::vector<SpinType>& spin,
-                           const double& value) {
-            if ((spin[0] == AlphaSpin) && (spin[1] == AlphaSpin)) {
-                ints_->set_tei(i[0], i[1], i[2], i[3], value, true, true);
-            } else if ((spin[0] == AlphaSpin) && (spin[1] == BetaSpin)) {
-                ints_->set_tei(i[0], i[1], i[2], i[3], value, true, false);
-            } else if ((spin[0] == BetaSpin) && (spin[1] == BetaSpin)) {
-                ints_->set_tei(i[0], i[1], i[2], i[3], value, false, false);
-            }
-        });
-    }
+//    if (!form_hbar3) {
+//        Hbar2_.citerate([&](const std::vector<size_t>& i, const std::vector<SpinType>& spin,
+//                            const double& value) {
+//            if ((spin[0] == AlphaSpin) && (spin[1] == AlphaSpin)) {
+//                ints_->set_tei(i[0], i[1], i[2], i[3], value, true, true);
+//            } else if ((spin[0] == AlphaSpin) && (spin[1] == BetaSpin)) {
+//                ints_->set_tei(i[0], i[1], i[2], i[3], value, true, false);
+//            } else if ((spin[0] == BetaSpin) && (spin[1] == BetaSpin)) {
+//                ints_->set_tei(i[0], i[1], i[2], i[3], value, false, false);
+//            }
+//        });
+//    } else {
+//        temp2.citerate([&](const std::vector<size_t>& i, const std::vector<SpinType>& spin,
+//                           const double& value) {
+//            if ((spin[0] == AlphaSpin) && (spin[1] == AlphaSpin)) {
+//                ints_->set_tei(i[0], i[1], i[2], i[3], value, true, true);
+//            } else if ((spin[0] == AlphaSpin) && (spin[1] == BetaSpin)) {
+//                ints_->set_tei(i[0], i[1], i[2], i[3], value, true, false);
+//            } else if ((spin[0] == BetaSpin) && (spin[1] == BetaSpin)) {
+//                ints_->set_tei(i[0], i[1], i[2], i[3], value, false, false);
+//            }
+//        });
+//    }
 
-    outfile->Printf("  Done. Timing %10.3f s", t_int.get());
+//    outfile->Printf("  Done. Timing %10.3f s", t_int.get());
 
-    // print scalar
-    double scalar_include_fc = scalar + ints_->frozen_core_energy();
-    print_h2("Scalar of the DSRG Hamiltonian (WRT True Vacuum)");
-    outfile->Printf("\n    %-30s = %22.15f", "Scalar0", scalar0);
-    outfile->Printf("\n    %-30s = %22.15f", "Scalar1", scalar1);
-    outfile->Printf("\n    %-30s = %22.15f", "Scalar2", scalar2);
-    if (form_hbar3) {
-        outfile->Printf("\n    %-30s = %22.15f", "Scalar3", scalar3);
-    }
-    outfile->Printf("\n    %-30s = %22.15f", "Total Scalar W/O Frozen-Core", scalar);
-    outfile->Printf("\n    %-30s = %22.15f", "Total Scalar W/  Frozen-Core", scalar_include_fc);
+//    // print scalar
+//    double scalar_include_fc = scalar + ints_->frozen_core_energy();
+//    print_h2("Scalar of the DSRG Hamiltonian (WRT True Vacuum)");
+//    outfile->Printf("\n    %-30s = %22.15f", "Scalar0", scalar0);
+//    outfile->Printf("\n    %-30s = %22.15f", "Scalar1", scalar1);
+//    outfile->Printf("\n    %-30s = %22.15f", "Scalar2", scalar2);
+//    if (form_hbar3) {
+//        outfile->Printf("\n    %-30s = %22.15f", "Scalar3", scalar3);
+//    }
+//    outfile->Printf("\n    %-30s = %22.15f", "Total Scalar W/O Frozen-Core", scalar);
+//    outfile->Printf("\n    %-30s = %22.15f", "Total Scalar W/  Frozen-Core", scalar_include_fc);
 
-    // test if de-normal-ordering is correct
-    print_h2("Test De-Normal-Ordered Hamiltonian");
-    double Etest = scalar_include_fc + Enuc_;
+//    // test if de-normal-ordering is correct
+//    print_h2("Test De-Normal-Ordered Hamiltonian");
+//    double Etest = scalar_include_fc + Enuc_;
 
-    double Etest1 = 0.0;
-    if (!form_hbar3) {
-        Etest1 += temp1["uv"] * Gamma1_["vu"];
-        Etest1 += temp1["UV"] * Gamma1_["VU"];
+//    double Etest1 = 0.0;
+//    if (!form_hbar3) {
+//        Etest1 += temp1["uv"] * Gamma1_["vu"];
+//        Etest1 += temp1["UV"] * Gamma1_["VU"];
 
-        Etest1 += Hbar1_["uv"] * Gamma1_["vu"];
-        Etest1 += Hbar1_["UV"] * Gamma1_["VU"];
-        Etest1 *= 0.5;
-    } else {
-        Etest1 += temp1["uv"] * Gamma1_["vu"];
-        Etest1 += temp1["UV"] * Gamma1_["VU"];
-    }
+//        Etest1 += Hbar1_["uv"] * Gamma1_["vu"];
+//        Etest1 += Hbar1_["UV"] * Gamma1_["VU"];
+//        Etest1 *= 0.5;
+//    } else {
+//        Etest1 += temp1["uv"] * Gamma1_["vu"];
+//        Etest1 += temp1["UV"] * Gamma1_["VU"];
+//    }
 
-    double Etest2 = 0.0;
-    Etest2 += 0.25 * Hbar2_["uvxy"] * Lambda2_["xyuv"];
-    Etest2 += 0.25 * Hbar2_["UVXY"] * Lambda2_["XYUV"];
-    Etest2 += Hbar2_["uVxY"] * Lambda2_["xYuV"];
+//    double Etest2 = 0.0;
+//    Etest2 += 0.25 * Hbar2_["uvxy"] * Lambda2_["xyuv"];
+//    Etest2 += 0.25 * Hbar2_["UVXY"] * Lambda2_["XYUV"];
+//    Etest2 += Hbar2_["uVxY"] * Lambda2_["xYuV"];
 
-    if (form_hbar3) {
-        Etest2 += 0.5 * temp2["xyuv"] * Gamma1_["ux"] * Gamma1_["vy"];
-        Etest2 += 0.5 * temp2["XYUV"] * Gamma1_["UX"] * Gamma1_["VY"];
-        Etest2 += temp2["xYuV"] * Gamma1_["ux"] * Gamma1_["VY"];
-    }
+//    if (form_hbar3) {
+//        Etest2 += 0.5 * temp2["xyuv"] * Gamma1_["ux"] * Gamma1_["vy"];
+//        Etest2 += 0.5 * temp2["XYUV"] * Gamma1_["UX"] * Gamma1_["VY"];
+//        Etest2 += temp2["xYuV"] * Gamma1_["ux"] * Gamma1_["VY"];
+//    }
 
-    Etest += Etest1 + Etest2;
-    outfile->Printf("\n    %-30s = %22.15f", "One-Body Energy (after)", Etest1);
-    outfile->Printf("\n    %-30s = %22.15f", "Two-Body Energy (after)", Etest2);
+//    Etest += Etest1 + Etest2;
+//    outfile->Printf("\n    %-30s = %22.15f", "One-Body Energy (after)", Etest1);
+//    outfile->Printf("\n    %-30s = %22.15f", "Two-Body Energy (after)", Etest2);
 
-    if (form_hbar3) {
-        double Etest3 = 0.0;
-        Etest3 += (1.0 / 6) * Hbar3_["xyzuvw"] * Gamma1_["ux"] * Gamma1_["vy"] * Gamma1_["wz"];
-        Etest3 += (1.0 / 6) * Hbar3_["XYZUVW"] * Gamma1_["UX"] * Gamma1_["VY"] * Gamma1_["WZ"];
-        Etest3 += 0.5 * Hbar3_["xyZuvW"] * Gamma1_["ux"] * Gamma1_["vy"] * Gamma1_["WZ"];
-        Etest3 += 0.5 * Hbar3_["xYZuVW"] * Gamma1_["ux"] * Gamma1_["VY"] * Gamma1_["WZ"];
+//    if (form_hbar3) {
+//        double Etest3 = 0.0;
+//        Etest3 += (1.0 / 6) * Hbar3_["xyzuvw"] * Gamma1_["ux"] * Gamma1_["vy"] * Gamma1_["wz"];
+//        Etest3 += (1.0 / 6) * Hbar3_["XYZUVW"] * Gamma1_["UX"] * Gamma1_["VY"] * Gamma1_["WZ"];
+//        Etest3 += 0.5 * Hbar3_["xyZuvW"] * Gamma1_["ux"] * Gamma1_["vy"] * Gamma1_["WZ"];
+//        Etest3 += 0.5 * Hbar3_["xYZuVW"] * Gamma1_["ux"] * Gamma1_["VY"] * Gamma1_["WZ"];
 
-        Etest3 += (1.0 / 36) * Hbar3_.block("aaaaaa")("xyzuvw") * rdms_.L3aaa()("xyzuvw");
-        Etest3 += (1.0 / 36) * Hbar3_.block("AAAAAA")("XYZUVW") * rdms_.L3bbb()("XYZUVW");
-        Etest3 += 0.25 * Hbar3_.block("aaAaaA")("xyZuvW") * rdms_.L3aab()("xyZuvW");
-        Etest3 += 0.25 * Hbar3_.block("aAAaAA")("xYZuVW") * rdms_.L3abb()("xYZuVW");
+//        Etest3 += (1.0 / 36) * Hbar3_.block("aaaaaa")("xyzuvw") * rdms_.L3aaa()("xyzuvw");
+//        Etest3 += (1.0 / 36) * Hbar3_.block("AAAAAA")("XYZUVW") * rdms_.L3bbb()("XYZUVW");
+//        Etest3 += 0.25 * Hbar3_.block("aaAaaA")("xyZuvW") * rdms_.L3aab()("xyZuvW");
+//        Etest3 += 0.25 * Hbar3_.block("aAAaAA")("xYZuVW") * rdms_.L3abb()("xYZuVW");
 
-        outfile->Printf("\n    %-30s = %22.15f", "Three-Body Energy (after)", Etest3);
-        Etest += Etest3;
-    }
+//        outfile->Printf("\n    %-30s = %22.15f", "Three-Body Energy (after)", Etest3);
+//        Etest += Etest3;
+//    }
 
-    outfile->Printf("\n    %-30s = %22.15f", "Total Energy (after)", Etest);
-    outfile->Printf("\n    %-30s = %22.15f", "Total Energy (before)", Eref_ + Hbar0_);
+//    outfile->Printf("\n    %-30s = %22.15f", "Total Energy (after)", Etest);
+//    outfile->Printf("\n    %-30s = %22.15f", "Total Energy (before)", Eref_ + Hbar0_);
 
-    if (std::fabs(Etest - Eref_ - Hbar0_) > 100.0 * foptions_->get_double("E_CONVERGENCE")) {
-        throw psi::PSIEXCEPTION("De-normal-odering failed.");
-    }
-}
+//    if (std::fabs(Etest - Eref_ - Hbar0_) > 100.0 * foptions_->get_double("E_CONVERGENCE")) {
+//        throw psi::PSIEXCEPTION("De-normal-odering failed.");
+//    }
+//}
 
 void DSRG_MRPT2::H1_T1_C1aa(BlockedTensor& H1, BlockedTensor& T1, const double& alpha,
                             BlockedTensor& C1) {
@@ -2628,160 +2629,159 @@ void DSRG_MRPT2::H2_T2_C3aaaaaa(BlockedTensor& H2, BlockedTensor& T2, const doub
     dsrg_time_.add("223", timer.get());
 }
 
-std::vector<std::vector<double>> DSRG_MRPT2::diagonalize_Fock_diagblocks(BlockedTensor& U) {
-    // diagonal blocks identifiers (C-A-V ordering)
-    std::vector<std::string> blocks{"cc", "aa", "vv", "CC", "AA", "VV"};
+// std::vector<std::vector<double>> DSRG_MRPT2::diagonalize_Fock_diagblocks(BlockedTensor& U) {
+//    // diagonal blocks identifiers (C-A-V ordering)
+//    std::vector<std::string> blocks{"cc", "aa", "vv", "CC", "AA", "VV"};
 
-    // map MO space label to its psi::Dimension
-    std::map<std::string, psi::Dimension> MOlabel_to_dimension;
-    MOlabel_to_dimension[acore_label_] = mo_space_info_->dimension("RESTRICTED_DOCC");
-    MOlabel_to_dimension[aactv_label_] = mo_space_info_->dimension("ACTIVE");
-    MOlabel_to_dimension[avirt_label_] = mo_space_info_->dimension("RESTRICTED_UOCC");
+//    // map MO space label to its psi::Dimension
+//    std::map<std::string, psi::Dimension> MOlabel_to_dimension;
+//    MOlabel_to_dimension[acore_label_] = mo_space_info_->dimension("RESTRICTED_DOCC");
+//    MOlabel_to_dimension[aactv_label_] = mo_space_info_->dimension("ACTIVE");
+//    MOlabel_to_dimension[avirt_label_] = mo_space_info_->dimension("RESTRICTED_UOCC");
 
-    // eigen values to be returned
-    size_t ncmo = mo_space_info_->size("CORRELATED");
-    psi::Dimension corr = mo_space_info_->dimension("CORRELATED");
-    std::vector<double> eigenvalues_a(ncmo, 0.0);
-    std::vector<double> eigenvalues_b(ncmo, 0.0);
+//    // eigen values to be returned
+//    size_t ncmo = mo_space_info_->size("CORRELATED");
+//    psi::Dimension corr = mo_space_info_->dimension("CORRELATED");
+//    std::vector<double> eigenvalues_a(ncmo, 0.0);
+//    std::vector<double> eigenvalues_b(ncmo, 0.0);
 
-    // map MO space label to its offset psi::Dimension
-    std::map<std::string, psi::Dimension> MOlabel_to_offset_dimension;
-    int nirrep = corr.n();
-    MOlabel_to_offset_dimension["c"] = psi::Dimension(std::vector<int>(nirrep, 0));
-    MOlabel_to_offset_dimension["a"] = mo_space_info_->dimension("RESTRICTED_DOCC");
-    MOlabel_to_offset_dimension["v"] =
-        mo_space_info_->dimension("RESTRICTED_DOCC") + mo_space_info_->dimension("ACTIVE");
+//    // map MO space label to its offset psi::Dimension
+//    std::map<std::string, psi::Dimension> MOlabel_to_offset_dimension;
+//    int nirrep = corr.n();
+//    MOlabel_to_offset_dimension["c"] = psi::Dimension(std::vector<int>(nirrep, 0));
+//    MOlabel_to_offset_dimension["a"] = mo_space_info_->dimension("RESTRICTED_DOCC");
+//    MOlabel_to_offset_dimension["v"] =
+//        mo_space_info_->dimension("RESTRICTED_DOCC") + mo_space_info_->dimension("ACTIVE");
 
-    // figure out index
-    auto fill_eigen = [&](std::string block_label, int irrep, std::vector<double> values) {
-        int h = irrep;
-        size_t idx_begin = 0;
-        while ((--h) >= 0)
-            idx_begin += corr[h];
+//    // figure out index
+//    auto fill_eigen = [&](std::string block_label, int irrep, std::vector<double> values) {
+//        int h = irrep;
+//        size_t idx_begin = 0;
+//        while ((--h) >= 0)
+//            idx_begin += corr[h];
 
-        std::string label(1, tolower(block_label[0]));
-        idx_begin += MOlabel_to_offset_dimension[label][irrep];
+//        std::string label(1, tolower(block_label[0]));
+//        idx_begin += MOlabel_to_offset_dimension[label][irrep];
 
-        bool spin_alpha = islower(block_label[0]);
-        size_t nvalues = values.size();
-        if (spin_alpha) {
-            for (size_t i = 0; i < nvalues; ++i) {
-                eigenvalues_a[i + idx_begin] = values[i];
-            }
-        } else {
-            for (size_t i = 0; i < nvalues; ++i) {
-                eigenvalues_b[i + idx_begin] = values[i];
-            }
-        }
-    };
+//        bool spin_alpha = islower(block_label[0]);
+//        size_t nvalues = values.size();
+//        if (spin_alpha) {
+//            for (size_t i = 0; i < nvalues; ++i) {
+//                eigenvalues_a[i + idx_begin] = values[i];
+//            }
+//        } else {
+//            for (size_t i = 0; i < nvalues; ++i) {
+//                eigenvalues_b[i + idx_begin] = values[i];
+//            }
+//        }
+//    };
 
-    // diagonalize diagonal blocks
-    for (const auto& block : blocks) {
-        size_t dim = F_.block(block).dim(0);
-        if (dim == 0) {
-            continue;
-        } else {
-            std::string label(1, tolower(block[0]));
-            psi::Dimension space = MOlabel_to_dimension[label];
-            int nirrep = space.n();
+//    // diagonalize diagonal blocks
+//    for (const auto& block : blocks) {
+//        size_t dim = F_.block(block).dim(0);
+//        if (dim == 0) {
+//            continue;
+//        } else {
+//            std::string label(1, tolower(block[0]));
+//            psi::Dimension space = MOlabel_to_dimension[label];
+//            int nirrep = space.n();
 
-            // separate Fock with irrep
-            for (int h = 0; h < nirrep; ++h) {
-                size_t h_dim = space[h];
-                ambit::Tensor U_h;
-                if (h_dim == 0) {
-                    continue;
-                } else if (h_dim == 1) {
-                    U_h = ambit::Tensor::build(tensor_type_, "U_h", std::vector<size_t>(2, h_dim));
-                    U_h.data()[0] = 1.0;
-                    ambit::Tensor F_block =
-                        ambit::Tensor::build(tensor_type_, "F_block", F_.block(block).dims());
-                    F_block.data() = F_.block(block).data();
-                    ambit::Tensor T_h = separate_tensor(F_block, space, h);
-                    fill_eigen(block, h, T_h.data());
-                } else {
-                    ambit::Tensor F_block =
-                        ambit::Tensor::build(tensor_type_, "F_block", F_.block(block).dims());
-                    F_block.data() = F_.block(block).data();
-                    ambit::Tensor T_h = separate_tensor(F_block, space, h);
-                    auto Feigen = T_h.syev(AscendingEigenvalue);
-                    U_h = ambit::Tensor::build(tensor_type_, "U_h", std::vector<size_t>(2, h_dim));
-                    U_h("pq") = Feigen["eigenvectors"]("pq");
-                    fill_eigen(block, h, Feigen["eigenvalues"].data());
-                }
-                ambit::Tensor U_out = U.block(block);
-                combine_tensor(U_out, U_h, space, h);
-            }
-        }
-    }
-    return {eigenvalues_a, eigenvalues_b};
-}
+//            // separate Fock with irrep
+//            for (int h = 0; h < nirrep; ++h) {
+//                size_t h_dim = space[h];
+//                ambit::Tensor U_h;
+//                if (h_dim == 0) {
+//                    continue;
+//                } else if (h_dim == 1) {
+//                    U_h = ambit::Tensor::build(tensor_type_, "U_h", std::vector<size_t>(2,
+//                    h_dim)); U_h.data()[0] = 1.0; ambit::Tensor F_block =
+//                        ambit::Tensor::build(tensor_type_, "F_block", F_.block(block).dims());
+//                    F_block.data() = F_.block(block).data();
+//                    ambit::Tensor T_h = separate_tensor(F_block, space, h);
+//                    fill_eigen(block, h, T_h.data());
+//                } else {
+//                    ambit::Tensor F_block =
+//                        ambit::Tensor::build(tensor_type_, "F_block", F_.block(block).dims());
+//                    F_block.data() = F_.block(block).data();
+//                    ambit::Tensor T_h = separate_tensor(F_block, space, h);
+//                    auto Feigen = T_h.syev(AscendingEigenvalue);
+//                    U_h = ambit::Tensor::build(tensor_type_, "U_h", std::vector<size_t>(2,
+//                    h_dim)); U_h("pq") = Feigen["eigenvectors"]("pq"); fill_eigen(block, h,
+//                    Feigen["eigenvalues"].data());
+//                }
+//                ambit::Tensor U_out = U.block(block);
+//                combine_tensor(U_out, U_h, space, h);
+//            }
+//        }
+//    }
+//    return {eigenvalues_a, eigenvalues_b};
+//}
 
-ambit::Tensor DSRG_MRPT2::separate_tensor(ambit::Tensor& tens, const psi::Dimension& irrep,
-                                          const int& h) {
-    // test tens and irrep
-    size_t tens_dim = tens.dim(0);
-    if (tens_dim != static_cast<size_t>(irrep.sum()) || tens_dim != tens.dim(1)) {
-        throw psi::PSIEXCEPTION("Wrong dimension for the to-be-separated ambit Tensor.");
-    }
-    if (h >= irrep.n()) {
-        throw psi::PSIEXCEPTION("Ask for wrong irrep.");
-    }
+// ambit::Tensor DSRG_MRPT2::separate_tensor(ambit::Tensor& tens, const psi::Dimension& irrep,
+//                                          const int& h) {
+//    // test tens and irrep
+//    size_t tens_dim = tens.dim(0);
+//    if (tens_dim != static_cast<size_t>(irrep.sum()) || tens_dim != tens.dim(1)) {
+//        throw psi::PSIEXCEPTION("Wrong dimension for the to-be-separated ambit Tensor.");
+//    }
+//    if (h >= irrep.n()) {
+//        throw psi::PSIEXCEPTION("Ask for wrong irrep.");
+//    }
 
-    // from relative (blocks) to absolute (big tensor) index
-    auto rel_to_abs = [&](size_t i, size_t j, size_t offset) {
-        return (i + offset) * tens_dim + (j + offset);
-    };
+//    // from relative (blocks) to absolute (big tensor) index
+//    auto rel_to_abs = [&](size_t i, size_t j, size_t offset) {
+//        return (i + offset) * tens_dim + (j + offset);
+//    };
 
-    // compute offset
-    size_t offset = 0, h_dim = irrep[h];
-    int h_local = h;
-    while ((--h_local) >= 0)
-        offset += irrep[h_local];
+//    // compute offset
+//    size_t offset = 0, h_dim = irrep[h];
+//    int h_local = h;
+//    while ((--h_local) >= 0)
+//        offset += irrep[h_local];
 
-    // fill in values
-    ambit::Tensor T_h = ambit::Tensor::build(tensor_type_, "T_h", std::vector<size_t>(2, h_dim));
-    for (size_t i = 0; i < h_dim; ++i) {
-        for (size_t j = 0; j < h_dim; ++j) {
-            size_t abs_idx = rel_to_abs(i, j, offset);
-            T_h.data()[i * h_dim + j] = tens.data()[abs_idx];
-        }
-    }
+//    // fill in values
+//    ambit::Tensor T_h = ambit::Tensor::build(tensor_type_, "T_h", std::vector<size_t>(2, h_dim));
+//    for (size_t i = 0; i < h_dim; ++i) {
+//        for (size_t j = 0; j < h_dim; ++j) {
+//            size_t abs_idx = rel_to_abs(i, j, offset);
+//            T_h.data()[i * h_dim + j] = tens.data()[abs_idx];
+//        }
+//    }
 
-    return T_h;
-}
+//    return T_h;
+//}
 
-void DSRG_MRPT2::combine_tensor(ambit::Tensor& tens, ambit::Tensor& tens_h,
-                                const psi::Dimension& irrep, const int& h) {
-    // test tens and irrep
-    if (h >= irrep.n()) {
-        throw psi::PSIEXCEPTION("Ask for wrong irrep.");
-    }
-    size_t tens_h_dim = tens_h.dim(0), h_dim = irrep[h];
-    if (tens_h_dim != h_dim || tens_h_dim != tens_h.dim(1)) {
-        throw psi::PSIEXCEPTION("Wrong dimension for the to-be-combined ambit Tensor.");
-    }
+// void DSRG_MRPT2::combine_tensor(ambit::Tensor& tens, ambit::Tensor& tens_h,
+//                                const psi::Dimension& irrep, const int& h) {
+//    // test tens and irrep
+//    if (h >= irrep.n()) {
+//        throw psi::PSIEXCEPTION("Ask for wrong irrep.");
+//    }
+//    size_t tens_h_dim = tens_h.dim(0), h_dim = irrep[h];
+//    if (tens_h_dim != h_dim || tens_h_dim != tens_h.dim(1)) {
+//        throw psi::PSIEXCEPTION("Wrong dimension for the to-be-combined ambit Tensor.");
+//    }
 
-    // from relative (blocks) to absolute (big tensor) index
-    size_t tens_dim = tens.dim(0);
-    auto rel_to_abs = [&](size_t i, size_t j, size_t offset) {
-        return (i + offset) * tens_dim + (j + offset);
-    };
+//    // from relative (blocks) to absolute (big tensor) index
+//    size_t tens_dim = tens.dim(0);
+//    auto rel_to_abs = [&](size_t i, size_t j, size_t offset) {
+//        return (i + offset) * tens_dim + (j + offset);
+//    };
 
-    // compute offset
-    size_t offset = 0;
-    int h_local = h;
-    while ((--h_local) >= 0)
-        offset += irrep[h_local];
+//    // compute offset
+//    size_t offset = 0;
+//    int h_local = h;
+//    while ((--h_local) >= 0)
+//        offset += irrep[h_local];
 
-    // fill in values
-    for (size_t i = 0; i < h_dim; ++i) {
-        for (size_t j = 0; j < h_dim; ++j) {
-            size_t abs_idx = rel_to_abs(i, j, offset);
-            tens.data()[abs_idx] = tens_h.data()[i * h_dim + j];
-        }
-    }
-}
+//    // fill in values
+//    for (size_t i = 0; i < h_dim; ++i) {
+//        for (size_t j = 0; j < h_dim; ++j) {
+//            size_t abs_idx = rel_to_abs(i, j, offset);
+//            tens.data()[abs_idx] = tens_h.data()[i * h_dim + j];
+//        }
+//    }
+//}
 
 ambit::BlockedTensor DSRG_MRPT2::get_T1deGNO(double& T0deGNO) {
     ambit::BlockedTensor T1eff = deGNO_Tamp(T1_, T2_, Gamma1_);

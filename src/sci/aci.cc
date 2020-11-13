@@ -28,6 +28,7 @@
  */
 
 #include <algorithm>
+#include <numeric>
 
 #include "psi4/libpsi4util/PsiOutStream.h"
 #include "psi4/libmints/molecule.h"
@@ -125,6 +126,10 @@ void AdaptiveCI::startup() {
     if (sigma_vector_type_ == SigmaVectorType::Dynamic) {
         build_lists_ = false;
     }
+
+    // state averaging
+    n_avg_ = options_->get_int("ACI_N_AVERAGE");
+    avg_offset_ = options_->get_int("ACI_AVERAGE_OFFSET");
 }
 
 void AdaptiveCI::print_info() {
@@ -241,15 +246,6 @@ void AdaptiveCI::find_q_space() {
             //        F_space);
         }
 
-    } else if (screen_alg == "MULTI_GAS") {
-        // get_gas_excited_determinants_core(P_evecs_, P_evals_, P_space_, F_space);
-        // Inefficient algorithm but should be used when calculate multiple roots with
-        // the same GAS electrons and same symmetry
-
-        // The tricky way to avoid ref_root_ being non-zero for core-excited state
-        get_gas_excited_determinants_sr(P_evecs_, P_evals_, P_space_, F_space);
-        ref_root_ = 0;
-
     } else if (screen_alg == "CORE") {
         get_excited_determinants_core(P_evecs_, P_evals_, P_space_, F_space);
     } else if (screen_alg == "BATCH_HASH" or screen_alg == "BATCH_CORE") {
@@ -327,11 +323,12 @@ void AdaptiveCI::find_q_space() {
     outfile->Printf("\n  Time spent building the model space: %1.6f", build_space.get());
 }
 
-double AdaptiveCI::average_q_values(std::vector<double>& E2) {
+double AdaptiveCI::average_q_values(const std::vector<double>& E2) {
     // f_E2 and f_C1 will store the selected function of the chosen q criteria
     // This functions should only be called when nroot_ > 1
 
     size_t nroot = E2.size();
+
 
     if (naverage_ == 0)
         naverage_ = nroot;
@@ -339,6 +336,16 @@ double AdaptiveCI::average_q_values(std::vector<double>& E2) {
         average_offset_ = nroot - naverage_; // throw psi::PSIEXCEPTION("\n  Your desired number of
                                              // roots and the offset exceeds the maximum number of
                                              // roots!");
+//     size_t nav = n_avg_;
+//     size_t off = avg_offset_;
+
+//     if (nav == 0)
+//         nav = nroot;
+
+//     if ((off + nav) > nroot)
+//         off = nroot - nav; // throw psi::PSIEXCEPTION("\n  Your desired number of
+//                            // roots and the offset exceeds the maximum number of
+//                            // roots!");
 
     double f_E2 = 0.0;
 
@@ -354,6 +361,9 @@ double AdaptiveCI::average_q_values(std::vector<double>& E2) {
             E2_average += E2[n + average_offset_] * dim_inv;
         }
         f_E2 = E2_average;
+//     } else if (pq_function_ == "AVERAGE") {
+//         auto begin = E2.begin() + off;
+//         f_E2 = std::accumulate(begin, begin + nav, 0.0) / nav;
     }
     return f_E2;
 }
@@ -408,6 +418,18 @@ void AdaptiveCI::prune_q_space(DeterminantHashVec& PQ_space, DeterminantHashVec&
 
     if (naverage_ == 0)
         naverage_ = nroot;
+// =======
+//     int nav = n_avg_;
+//     int off = avg_offset_;
+
+//     if (nav == 0)
+//         nav = nroot;
+
+//     //  if( options_->get_str("EXCITED_ALGORITHM") == "ROOT_COMBINE" and (nav ==
+//     //  1) and (nroot > 1)){
+//     //      off = ref_root_;
+//     //  }
+// >>>>>>> master
 
     if ((average_offset_ + naverage_) > nroot)
         average_offset_ = nroot - naverage_; // throw psi::PSIEXCEPTION("\n  Your desired number of
@@ -570,66 +592,9 @@ void AdaptiveCI::pre_iter_preparation() {
     // Build the reference determinant and compute its energy
 
     CI_Reference ref(scf_info_, options_, mo_space_info_, as_ints_, multiplicity_, twice_ms_,
-                     wavefunction_symmetry_);
+                     wavefunction_symmetry_, state_);
 
-    if ((options_->get_str("ACI_SCREEN_ALG") == "MULTI_GAS")) {
-        initial_reference_.clear();
-        std::vector<std::string> maxe_alt_string = {"GAS1MAX_MULTI", "GAS2MAX_MULTI",
-                                                    "GAS3MAX_MULTI", "GAS4MAX_MULTI",
-                                                    "GAS5MAX_MULTI", "GAS6MAX_MULTI"};
-        std::vector<std::string> mine_alt_string = {"GAS1MIN_MULTI", "GAS2MIN_MULTI",
-                                                    "GAS3MIN_MULTI", "GAS4MIN_MULTI",
-                                                    "GAS5MIN_MULTI", "GAS6MIN_MULTI"};
-        std::vector<int> maxe;
-        std::vector<int> mine;
-        for (size_t gas_count = 0; gas_count < 6; gas_count++) {
-            py::list gasemax_alt_list = options_->get_gen_list(maxe_alt_string[gas_count]);
-            py::list gasemin_alt_list = options_->get_gen_list(mine_alt_string[gas_count]);
-            size_t nentry = gasemax_alt_list.size();
-            if (nentry > 0) {
-                bool found_state = false;
-                for (size_t i = 0; i < nentry; i++) {
-                    py::list gasemax_alt = gasemax_alt_list[i];
-                    int symmetry_read = py::cast<int>(gasemax_alt[0]);
-                    int multiplicity_read = py::cast<int>(gasemax_alt[1]);
-                    if ((multiplicity_read == multiplicity_) &&
-                        (symmetry_read == wavefunction_symmetry_)) {
-                        maxe.push_back(py::cast<int>(gasemax_alt[root_ + 2]));
-                        found_state = true;
-                    }
-                }
-                if (!found_state) {
-                    outfile->Printf("\n  Wrong input of GASMAX_MULTI.");
-                    exit(1);
-                }
-            } else {
-                maxe.push_back(200);
-            }
-            nentry = gasemin_alt_list.size();
-            if (nentry > 0) {
-                bool found_state = false;
-                for (size_t i = 0; i < nentry; i++) {
-                    py::list gasemin_alt = gasemin_alt_list[i];
-                    int symmetry_read = py::cast<int>(gasemin_alt[0]);
-                    int multiplicity_read = py::cast<int>(gasemin_alt[1]);
-                    if ((multiplicity_read == multiplicity_) &&
-                        (symmetry_read == wavefunction_symmetry_)) {
-                        mine.push_back(py::cast<int>(gasemin_alt[root_ + 2]));
-                        found_state = true;
-                    }
-                }
-                if (!found_state) {
-                    outfile->Printf("\n  Wrong input of GASMIN_MULTI.");
-                    exit(1);
-                }
-            } else {
-                mine.push_back(0);
-            }
-        }
-        ref.modify_gas(initial_reference_, maxe, mine);
-    } else {
-        ref.build_reference(initial_reference_);
-    }
+    ref.build_reference(initial_reference_);
 
     if (one_cycle_) {
         PQ_space_ = initial_reference_;
@@ -643,7 +608,7 @@ void AdaptiveCI::pre_iter_preparation() {
     // If the ACI iteration is within the gas space, calculate
     // gas_info and the criterion for single and double excitations
     gas_num_ = 0;
-    if ((gas_iteration_)) {
+    if (gas_iteration_) {
         //        const auto gas_info = mo_space_info_->gas_info();
         std::vector<size_t> act_mo = mo_space_info_->absolute_mo("ACTIVE");
         std::map<int, int> re_ab_mo;
@@ -654,9 +619,8 @@ void AdaptiveCI::pre_iter_preparation() {
         gas_single_criterion_ = ref.gas_single_criterion();
         gas_double_criterion_ = ref.gas_double_criterion();
         gas_electrons_ = ref.gas_electrons();
-        std::vector<std::string> gas_subspaces = {"GAS1", "GAS2", "GAS3", "GAS4", "GAS5", "GAS6"};
         for (size_t gas_count = 0; gas_count < 6; gas_count++) {
-            std::string space = gas_subspaces.at(gas_count);
+            std::string space = "GAS" + std::to_string(gas_count + 1);
             std::vector<size_t> relative_mo;
             auto gas_mo = mo_space_info_->absolute_mo(space);
             for (size_t i = 0, imax = gas_mo.size(); i < imax; ++i) {
@@ -714,9 +678,10 @@ void AdaptiveCI::pre_iter_preparation() {
     sparse_solver_->set_spin_project(project_out_spin_contaminants_);
     sparse_solver_->set_guess_dimension(options_->get_int("DL_GUESS_SIZE"));
     sparse_solver_->set_num_vecs(options_->get_int("N_GUESS_VEC"));
-    sparse_solver_->set_spin_project_full(false);
     sparse_solver_->set_ncollapse_per_root(options_->get_int("DL_COLLAPSE_PER_ROOT"));
     sparse_solver_->set_nsubspace_per_root(options_->get_int("DL_SUBSPACE_PER_ROOT"));
+    sparse_solver_->set_spin_project_full(
+        (gas_iteration_ and sigma_ == 0.0) ? true : options_->get_bool("SPIN_PROJECT_FULL"));
 }
 
 void AdaptiveCI::diagonalize_P_space() {
@@ -857,7 +822,7 @@ void AdaptiveCI::diagonalize_PQ_space() {
         ref_root_ = root_follow(P_ref_, P_ref_evecs_, PQ_space_, PQ_evecs_, num_ref_roots_);
     }
 
-    if (gas_iteration_ && options_->get_str("ACI_SCREEN_ALG") != "MULTI_GAS") {
+    if (gas_iteration_) {
         print_gas_wfn(PQ_space_, PQ_evecs_);
     }
     if (occ_analysis_) {

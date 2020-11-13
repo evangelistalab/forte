@@ -6,30 +6,29 @@ import forte
 #
 #   In this test we use a smaller basis (6-31G) and compute two states using an average algorithm
 
-refscf = -75.34896498316222 
+refscf = -75.34896498316222
 refasci = -75.550740036607
-                                         
-molecule CH2{                            
+
+molecule C2{
 0 1
 C
 C 1 1.27273
+}
 
-}                                        
-                                         
-set {                                    
-  scf_type pk                            
-  basis 6-31g                      
+set {
+  scf_type pk
+  basis 6-31g
   e_convergence 10
-}                                        
-                                         
-set forte {                              
+}
+
+set forte {
   multiplicity 1
-  active_space_solver asci                          
+  active_space_solver asci
   frozen_docc [0,0,0,0,0,0,0,0]
   restricted_docc [0,0,0,0,0,0,0,0]
   active [3,0,1,1,0,3,2,2]
   multiplicity 1
-  charge 0                               
+  charge 0
   root_sym 0
   nroot 2
   sci_excited_algorithm average
@@ -37,12 +36,12 @@ set forte {
   dl_maxiter 500
   asci_cdet 50
   asci_tdet 334
-  sci_max_cycle 8   
+  sci_max_cycle 8
   sci_project_out_spin_contaminants false
   spin_project_full false
   e_convergence 12
-}                                        
-                                         
+}
+
 Escf, scf_wfn = energy('scf', return_wfn=True)
 compare_values(refscf, variable("CURRENT ENERGY"),6, "SCF energy")
 energy('forte', ref_wfn = scf_wfn) 

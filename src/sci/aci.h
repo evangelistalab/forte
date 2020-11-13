@@ -189,6 +189,11 @@ class AdaptiveCI : public SelectedCIMethod {
     /// An offset for averaging states
     int average_offset_;
 
+    /// Number of roots to average
+    int n_avg_;
+    /// Offset for state averaging
+    int avg_offset_;
+
     /// Control streamlining
     bool streamline_qspace_;
     /// The CI coeffiecients
@@ -243,7 +248,7 @@ class AdaptiveCI : public SelectedCIMethod {
     void startup();
 
     /// Generate set of state-averaged q-criteria and determinants
-    double average_q_values(std::vector<double>& E2);
+    double average_q_values(const std::vector<double>& E2);
 
     /// Get criteria for a specific root
     double root_select(int nroot, std::vector<double>& C1, std::vector<double>& E2);

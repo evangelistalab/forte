@@ -48,6 +48,7 @@ set forte{
    dsrg_hbar_seq          true
    dsrg_nivo              true
    relax_ref              twice
+   dsrg_read_amps         true
 }
 
 Emcscf, wfn = energy('mcscf', return_wfn=True)

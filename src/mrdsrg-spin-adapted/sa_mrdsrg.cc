@@ -26,9 +26,13 @@
  * @END LICENSE
  */
 
+#include <unistd.h>
 #include <algorithm>
 
+#include "psi4/libmints/molecule.h"
+#include "psi4/libpsi4util/process.h"
 #include "psi4/libpsi4util/PsiOutStream.h"
+#include "psi4/libpsio/psio.hpp"
 
 #include "helpers/printing.h"
 #include "sa_mrdsrg.h"
@@ -69,6 +73,8 @@ void SA_MRDSRG::read_options() {
     maxiter_ = foptions_->get_int("MAXITER");
     e_conv_ = foptions_->get_double("E_CONVERGENCE");
     r_conv_ = foptions_->get_double("R_CONVERGENCE");
+
+    restart_amps_ = foptions_->get_bool("DSRG_RESTART_AMPS");
 }
 
 void SA_MRDSRG::startup() {
@@ -84,6 +90,20 @@ void SA_MRDSRG::startup() {
         U_ = ambit::BlockedTensor::build(tensor_type_, "U", {"gg"});
         Fdiag_ = diagonalize_Fock_diagblocks(U_);
     }
+
+    // determine file names
+    restart_file_prefix_ = psi::PSIOManager::shared_object()->get_default_path() + "forte." +
+                           std::to_string(getpid()) + "." +
+                           psi::Process::environment.molecule()->name();
+    t1_file_chk_.clear();
+    t2_file_chk_.clear();
+    if (restart_amps_ and (relax_ref_ != "NONE")) {
+        t1_file_chk_ = restart_file_prefix_ + ".mrdsrg.adapted.t1.bin";
+        t2_file_chk_ = restart_file_prefix_ + ".mrdsrg.adapted.t2.bin";
+    }
+
+    t1_file_cwd_ = "forte.mrdsrg.adapted.t1.bin";
+    t2_file_cwd_ = "forte.mrdsrg.adapted.t2.bin";
 }
 
 void SA_MRDSRG::print_options() {
@@ -112,6 +132,11 @@ void SA_MRDSRG::print_options() {
         {"Reference relaxation", relax_ref_},
         {"Core-Virtual source type", ccvv_source_}};
 
+    if (internal_amp_ != "NONE") {
+        calculation_info_string.push_back({"Internal amplitudes levels", internal_amp_});
+        calculation_info_string.push_back({"Internal amplitudes selection", internal_amp_select_});
+    }
+
     auto true_false_string = [](bool x) {
         if (x) {
             return std::string("TRUE");
@@ -119,10 +144,15 @@ void SA_MRDSRG::print_options() {
             return std::string("FALSE");
         }
     };
+    calculation_info_string.push_back({"Restart amplitudes", true_false_string(restart_amps_)});
     calculation_info_string.push_back(
         {"Sequential DSRG transformation", true_false_string(sequential_Hbar_)});
     calculation_info_string.push_back(
         {"Omit blocks of >= 3 virtual indices", true_false_string(nivo_)});
+    calculation_info_string.push_back(
+        {"Read amplitudes from current dir", true_false_string(read_amps_cwd_)});
+    calculation_info_string.push_back(
+        {"Write amplitudes to current dir", true_false_string(dump_amps_cwd_)});
 
     // print some information
     print_options_info("Computation Information", calculation_info_string, calculation_info_double,
@@ -143,12 +173,11 @@ void SA_MRDSRG::check_memory() {
         dsrg_mem_.add_entry("1- and 2-body Hbar", {"hhpp", "hp"});
         dsrg_mem_.add_entry("1- and 2-body intermediates", {"gg", "gggg", "hhpp"});
     } else {
-        dsrg_mem_.add_entry("1- and 2-body Hbar", {"gggg", "gg"});
-        dsrg_mem_.add_entry("1-body intermediates", {"gg"}, 2);
+        dsrg_mem_.add_entry("1-body Hbar and intermediates", {"gg"}, 3);
         if (nivo_) {
-            dsrg_mem_.add_entry("2-body intermediates", nivo_labels(), 2);
+            dsrg_mem_.add_entry("2-body Hbar and intermediates", nivo_labels(), 3);
         } else {
-            dsrg_mem_.add_entry("2-body intermediates", {"gggg"}, 2);
+            dsrg_mem_.add_entry("2-body Hbar and intermediates", {"gggg"}, 3);
         }
 
         if (sequential_Hbar_) {
@@ -198,18 +227,9 @@ void SA_MRDSRG::build_ints() {
 
 double SA_MRDSRG::compute_energy() {
     // build initial amplitudes
-    print_h2("Build Initial Amplitude from DSRG-MRPT2");
     T1_ = BTF_->build(tensor_type_, "T1 Amplitudes", {"hp"});
     T2_ = BTF_->build(tensor_type_, "T2 Amplitudes", {"hhpp"});
-
-    if (eri_df_) {
-        guess_t_df(B_, T2_, F_, T1_);
-    } else {
-        guess_t(V_, T2_, F_, T1_);
-    }
-
-    // check initial amplitudes
-    analyze_amplitudes("First-Order", T1_, T2_);
+    guess_t(V_, T2_, F_, T1_, B_);
 
     // get reference energy
     double Etotal = Eref_;
@@ -240,5 +260,4 @@ double SA_MRDSRG::Hbar_od_norm(const int& n, const std::vector<std::string>& blo
 
     return norm;
 }
-
 } // namespace forte

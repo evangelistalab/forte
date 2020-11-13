@@ -40,10 +40,10 @@ set forte {
   active_ref_type gas_single
   GAS1 [6,0,2,2,0,6,0,0]
   GAS2 [0,0,0,0,0,0,2,2]
-  GAS2MAX 2
-  GAS2MIN 0 
-  GAS1MIN 4
-  GAS1MAX 6
+  GAS2MAX [2]
+  GAS2MIN [0]
+  GAS1MIN [4]
+  GAS1MAX [6]
 }
 
 energy('scf')

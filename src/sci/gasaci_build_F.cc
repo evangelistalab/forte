@@ -35,19 +35,12 @@
 #include "base_classes/forte_options.h"
 #include "base_classes/mo_space_info.h"
 
+#include "forte-def.h"
 #include "sci/aci.h"
-
-#ifdef _OPENMP
-#include <omp.h>
-#else
-#define omp_get_max_threads() 1
-#define omp_get_thread_num() 0
-#define omp_get_num_threads() 1
-#endif
 
 using namespace psi;
 
-namespace forte{
+namespace forte {
 
 void AdaptiveCI::get_gas_excited_determinants_sr(
     SharedMatrix evecs, SharedVector evals, DeterminantHashVec& P_space,
@@ -301,28 +294,24 @@ void AdaptiveCI::get_gas_excited_determinants_sr(
     }
 
     // Loop through hash, compute criteria
+    size_t max = V_hash.size();
+    F_space.resize(max);
+    outfile->Printf("\n  Size of F space: %zu", max);
+
     local_timer convert;
 
-    size_t max = V_hash.size();
-    outfile->Printf("\n  size of hash: %zu", max);
-    F_space.resize(max);
-#pragma omp parallel
-    {
-        int num_thread = omp_get_num_threads();
-        int tid = omp_get_thread_num();
-        size_t N = 0;
-        for (const auto& I : V_hash) {
-            if ((N % num_thread) == tid) {
-                double delta = as_ints_->energy(I.first) - evals->get(ref_root_);
-                double V = I.second;
-                double criteria = 0.5 * (delta - sqrt(delta * delta + V * V * 4.0));
-                F_space[N] = std::make_pair(std::fabs(criteria), I.first);
-            }
-            N++;
-        }
+#pragma omp parallel for
+    for (size_t i = 0; i < max; ++i) {
+        auto iter = V_hash.begin();
+        std::advance(iter, i);
+
+        double delta = as_ints_->energy((*iter).first) - evals->get(ref_root_);
+        double V = (*iter).second;
+        double criteria = 0.5 * (delta - sqrt(delta * delta + V * V * 4.0));
+        F_space[i] = std::make_pair(std::fabs(criteria), (*iter).first);
     }
+
     outfile->Printf("\n  Time spent building sorting list: %1.6f", convert.get());
-    outfile->Printf("\n  Size of F space: %zu", F_space.size());
 }
 
 void AdaptiveCI::get_gas_excited_determinants_avg(
@@ -590,37 +579,31 @@ void AdaptiveCI::get_gas_excited_determinants_avg(
         }
     } // Close threads
 
+    size_t max = V_hash.size();
+    F_space.resize(max);
+    outfile->Printf("\n  Size of F space: %zu", max);
+
     local_timer convert;
 
-    size_t max = V_hash.size();
+#pragma omp parallel for
+    for (size_t i = 0; i < max; ++i) {
+        auto iter = V_hash.begin();
+        std::advance(iter, i);
 
-    F_space.resize(max);
-
-#pragma omp parallel
-    {
-        int tid = omp_get_thread_num();
-        int ntd = omp_get_num_threads();
-
-        size_t N = 0;
-        for (const auto& detpair : V_hash) {
-            if ((N % ntd) == tid) {
-                double EI = as_ints_->energy(detpair.first);
-                std::vector<double> criteria(nroot, 0.0);
-                for (int n = 0; n < nroot; ++n) {
-                    double V = detpair.second[n];
-                    double delta = EI - evals->get(n);
-                    double criterion = 0.5 * (delta - sqrt(delta * delta + V * V * 4.0));
-                    criteria[n] = std::fabs(criterion);
-                }
-                double value = average_q_values(criteria);
-
-                F_space[N] = std::make_pair(value, detpair.first);
-            }
-            N++;
+        double EI = as_ints_->energy((*iter).first);
+        std::vector<double> criteria(nroot, 0.0);
+        for (int n = 0; n < nroot; ++n) {
+            double V = (*iter).second[n];
+            double delta = EI - evals->get(n);
+            double criterion = 0.5 * (delta - sqrt(delta * delta + V * V * 4.0));
+            criteria[n] = std::fabs(criterion);
         }
+        double value = average_q_values(criteria);
+
+        F_space[i] = std::make_pair(value, (*iter).first);
     }
+
     outfile->Printf("\n  Time spent building sorting list: %1.6f", convert.get());
-    outfile->Printf("\n  Size of F space: %zu", F_space.size());
 }
 
 void AdaptiveCI::get_gas_excited_determinants_core(
@@ -888,38 +871,30 @@ void AdaptiveCI::get_gas_excited_determinants_core(
         }
     } // Close threads
 
+    size_t max = V_hash.size();
+    F_space.resize(max);
+    outfile->Printf("\n  Size of F space: %zu", max);
+
     local_timer convert;
 
-    size_t max = V_hash.size();
+#pragma omp parallel for
+    for (size_t i = 0; i < max; ++i) {
+        auto iter = V_hash.begin();
+        std::advance(iter, i);
 
-    F_space.resize(max);
-
-#pragma omp parallel
-    {
-        int tid = omp_get_thread_num();
-        int ntd = omp_get_num_threads();
-
-        size_t N = 0;
-        for (const auto& detpair : V_hash) {
-            if ((N % ntd) == tid) {
-                double EI = as_ints_->energy(detpair.first);
-                std::vector<double> criteria(nroot, 0.0);
-                for (int n = 0; n < nroot; ++n) {
-                    double V = detpair.second[n];
-                    double delta = EI - evals->get(n);
-                    double criterion = 0.5 * (delta - sqrt(delta * delta + V * V * 4.0));
-                    criteria[n] = std::fabs(criterion);
-                }
-                double value = average_q_values(criteria);
-
-                F_space[N] = std::make_pair(value, detpair.first);
-            }
-            N++;
+        double EI = as_ints_->energy((*iter).first);
+        std::vector<double> criteria(nroot, 0.0);
+        for (int n = 0; n < nroot; ++n) {
+            double V = (*iter).second[n];
+            double delta = EI - evals->get(n);
+            double criterion = 0.5 * (delta - sqrt(delta * delta + V * V * 4.0));
+            criteria[n] = std::fabs(criterion);
         }
+        double value = average_q_values(criteria);
+
+        F_space[i] = std::make_pair(value, (*iter).first);
     }
+
     outfile->Printf("\n  Time spent building sorting list: %1.6f", convert.get());
-    outfile->Printf("\n  Size of F space: %zu", F_space.size());
 }
-
-
-}
+} // namespace forte

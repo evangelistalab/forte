@@ -43,7 +43,9 @@ class StateInfo {
   public:
     /// Constructor
     StateInfo(int na, int nb, int multiplicity, int twice_ms, int irrep,
-              const std::string& irrep_label = "");
+              const std::string& irrep_label = "",
+              const std::vector<size_t> gas_min = std::vector<size_t>(),
+              const std::vector<size_t> gas_max = std::vector<size_t>());
 
     StateInfo() = default;
 
@@ -64,6 +66,10 @@ class StateInfo {
     const std::string& multiplicity_label() const;
     /// return the irrep symbol
     const std::string& irrep_label() const;
+    /// return the minimum occupation of each gas state
+    const std::vector<size_t>& gas_min() const;
+    /// return the maximum occupation of each gas state
+    const std::vector<size_t>& gas_max() const;
     /// Comparison operator for StateInfo objects
     bool operator<(const StateInfo& rhs) const;
     /// Comparison operator for StateInfo objects
@@ -87,6 +93,10 @@ class StateInfo {
     int irrep_;
     // Irrep label
     std::string irrep_label_;
+    // minimum number of electrons in each gas space
+    std::vector<size_t> gas_min_;
+    // maximum number of electrons in each gas space
+    std::vector<size_t> gas_max_;
 };
 
 /**

@@ -221,6 +221,7 @@ void DFIntegrals::gather_integrals() {
     // Constructs the DF function
     // assume a RHF/UHF reference
     std::shared_ptr<psi::DFHelper> df(new DFHelper(primary, auxiliary));
+    df->set_memory(psi::Process::environment.get_memory() / sizeof(double));
     df->initialize();
     // Pushes a C matrix that is ordered in pitzer ordering
     // into the C_matrix object
@@ -232,7 +233,6 @@ void DFIntegrals::gather_integrals() {
     // This assumes that everything is correlated.
     // Does not add the pair_space, but says which one is should use
     df->add_transformation("B", "ALL", "ALL", "Qpq");
-    df->set_memory(psi::Process::environment.get_memory() / 8L);
 
     // Finally computes the df integrals
     // Does the timings also
@@ -252,65 +252,6 @@ void DFIntegrals::gather_integrals() {
 
     // Store as transpose for now
     ThreeIntegral_ = Bpq->transpose()->clone();
-}
-
-void DFIntegrals::make_fock_matrix(std::shared_ptr<psi::Matrix> gamma_aM,
-                                   std::shared_ptr<psi::Matrix> gamma_bM) {
-    TensorType tensor_type = ambit::CoreTensor;
-    ambit::Tensor ThreeIntegralTensor =
-        // ambit::Tensor::build(tensor_type, "ThreeIndex", {ncmo_, ncmo_, nthree_});
-        ambit::Tensor::build(tensor_type, "ThreeIndex", {nthree_, ncmo_, ncmo_});
-    ambit::Tensor gamma_a = ambit::Tensor::build(tensor_type, "Gamma_a", {ncmo_, ncmo_});
-    ambit::Tensor gamma_b = ambit::Tensor::build(tensor_type, "Gamma_b", {ncmo_, ncmo_});
-    ambit::Tensor fock_a = ambit::Tensor::build(tensor_type, "Fock_a", {ncmo_, ncmo_});
-    ambit::Tensor fock_b = ambit::Tensor::build(tensor_type, "Fock_b", {ncmo_, ncmo_});
-
-    // ThreeIntegralTensor.iterate([&](const std::vector<size_t>& i,double&
-    // value){
-    //    value = ThreeIntegral_->get(i[0],i[1]*aptei_idx_ + i[2]);
-    //});
-    std::vector<size_t> vQ(nthree_);
-    std::iota(vQ.begin(), vQ.end(), 0);
-    std::vector<size_t> vP(ncmo_);
-    std::iota(vP.begin(), vP.end(), 0);
-
-    ThreeIntegralTensor = three_integral_block(vQ, vP, vP);
-
-    gamma_a.iterate(
-        [&](const std::vector<size_t>& i, double& value) { value = gamma_aM->get(i[0], i[1]); });
-    gamma_b.iterate(
-        [&](const std::vector<size_t>& i, double& value) { value = gamma_bM->get(i[0], i[1]); });
-
-    fock_a.iterate([&](const std::vector<size_t>& i, double& value) {
-        value = one_electron_integrals_a_[i[0] * aptei_idx_ + i[1]];
-    });
-
-    fock_b.iterate([&](const std::vector<size_t>& i, double& value) {
-        value = one_electron_integrals_b_[i[0] * aptei_idx_ + i[1]];
-    });
-
-    /// Changing the Q_pr * Q_qs  to Q_rp * Q_sq for convience for reading
-
-    // ambit::Tensor test = ambit::Tensor::build(tensor_type,
-    // "Fock_b",{nthree_});
-    // test("Q") = ThreeIntegralTensor("Q,r,s") * gamma_a("r,s");
-    // fock_a("p,q") += ThreeIntegralTensor("Q,p,q")*test("Q");
-    fock_a("p,q") += ThreeIntegralTensor("Q,p,q") * ThreeIntegralTensor("Q,r,s") * gamma_a("r,s");
-    fock_a("p,q") -= ThreeIntegralTensor("Q,r,p") * ThreeIntegralTensor("Q,s,q") * gamma_a("r,s");
-    fock_a("p,q") += ThreeIntegralTensor("Q,p,q") * ThreeIntegralTensor("Q,r,s") * gamma_b("r,s");
-
-    fock_b("p,q") += ThreeIntegralTensor("Q,p,q") * ThreeIntegralTensor("Q,r,s") * gamma_b("r,s");
-    fock_b("p,q") -= ThreeIntegralTensor("Q,r,p") * ThreeIntegralTensor("Q,s,q") * gamma_b("r,s");
-    fock_b("p,q") += ThreeIntegralTensor("Q,p,q") * ThreeIntegralTensor("Q,r,s") * gamma_a("r,s");
-
-    fock_a.iterate([&](const std::vector<size_t>& i, double& value) {
-        fock_matrix_a_[i[0] * aptei_idx_ + i[1]] = value;
-    });
-    fock_b.iterate([&](const std::vector<size_t>& i, double& value) {
-        fock_matrix_b_[i[0] * aptei_idx_ + i[1]] = value;
-    });
-
-    /// Form with JK builders
 }
 
 void DFIntegrals::resort_three(std::shared_ptr<psi::Matrix>& threeint, std::vector<size_t>& map) {
