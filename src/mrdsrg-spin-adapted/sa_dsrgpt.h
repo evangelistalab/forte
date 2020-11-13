@@ -57,11 +57,6 @@ class SA_DSRGPT : public SADSRG {
     /// Form Hbar or not?
     bool form_Hbar_;
 
-    /// How to consider internal amplitudes
-    std::string internal_amp_;
-    /// Include which part of internal amplitudes?
-    std::string internal_amp_select_;
-
     /// Two-electron integral
     ambit::BlockedTensor V_;
     /// Generalized Fock matrix

@@ -1,19 +1,20 @@
-#! Generated using commit GITCOMMIT 
-# SA-GASSCF-MRPT2 for CORE EXCITED states with core orbital frozen
-# Without CASSCF_FROZEN_ORBITAL this will collapse to ground state and not converge
+#! Generated using commit GITCOMMIT
+# SA-GASSCF-DSRG-MRPT2 test on H2O
+# averaging over the ground state and core-excited singlet B1 state
+# at most one electron occupies the core orbital for B1 state
 
 import forte
 
-refscf = -76.0172965561 #TEST
-refgasscf = -65.9028823564 #TEST
-refdsrg = -66.1343265955 #TEST
+refscf = -76.0172965561
+refgasscf = -65.866749078651708
+refdsrg = -66.085753612282389
 
-memory 6000mb
+memory 1000 mb
 molecule h2o{
    O
    H  1 1.00
    H  1 1.00 2 103.1
-      }
+}
 
 set global {
   basis 6-31g**
@@ -28,14 +29,10 @@ set global {
 set scf_type direct
 set forte {
   active_space_solver aci
-  ms 0.0
-  multiplicity 1
   sigma 0.00
-  root_sym 0
   charge 0
   sci_enforce_spin_complete true
   e_convergence 6
-  charge 0
   active_ref_type gas
   GAS1 [1,0,0,0]
   GAS2 [3,0,1,2]
@@ -51,31 +48,16 @@ set forte {
   casscf_semicanonicalize False
 }
 
-escf ,wfn = energy('scf',return_wfn = True)
-egasscf,wfn_gasscf = energy('forte',ref_wfn = wfn, return_wfn = True)
-compare_values(refgasscf, egasscf ,9, "GASSCF energy") #TEST
+escf, wfn = energy('scf', return_wfn=True)
+egasscf, wfn_gasscf = energy('forte', ref_wfn=wfn, return_wfn=True)
+compare_values(refgasscf, egasscf, 9, "GASSCF energy")
 
 set forte {
-  active_space_solver aci
-  ms 0.0
-  multiplicity 1
-  sigma 0.00
-  root_sym 0
-  charge 0
-  sci_enforce_spin_complete true
-  e_convergence 6
-  charge 0
-  active_ref_type gas
-  GAS1 [1,0,0,0]
-  GAS2 [3,0,1,2]
   job_type newdriver
   correlation_solver dsrg-mrpt2
   dsrg_s 1.0
   calc_type sa
 }
 
-edsrg = energy('forte', ref_wfn = wfn_gasscf)
-compare_values(refdsrg, edsrg ,9, "GASSCF-DSRG-MRPT2 energy") #TEST
-
-
-
+edsrg = energy('forte', ref_wfn=wfn_gasscf)
+compare_values(refdsrg, edsrg, 9, "GASSCF-DSRG-MRPT2 energy")

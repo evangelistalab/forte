@@ -71,9 +71,6 @@ class ConventionalIntegrals : public Psi4Integrals {
                                  const std::vector<size_t>& r,
                                  const std::vector<size_t>& s) override;
 
-    void make_fock_matrix(std::shared_ptr<psi::Matrix> gamma_a,
-                          std::shared_ptr<psi::Matrix> gamma_b) override;
-
     void set_tei(size_t p, size_t q, size_t r, size_t s, double value, bool alpha1,
                  bool alpha2) override;
 

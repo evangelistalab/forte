@@ -73,9 +73,6 @@ class DFIntegrals : public Psi4Integrals {
     void set_tei(size_t p, size_t q, size_t r, size_t s, double value, bool alpha1,
                  bool alpha2) override;
 
-    void make_fock_matrix(std::shared_ptr<psi::Matrix> gamma_a,
-                          std::shared_ptr<psi::Matrix> gamma_b) override;
-
     size_t nthree() const override;
 
   private:

@@ -32,7 +32,6 @@
 
 #include "psi4/libpsi4util/PsiOutStream.h"
 
-#include "helpers/disk_io.h"
 #include "helpers/timer.h"
 #include "helpers/printing.h"
 #include "sa_mrdsrg.h"
@@ -124,7 +123,7 @@ void SA_MRDSRG::guess_t2_impl(BlockedTensor& T2) {
     }
 
     // zero internal amplitudes
-    T2.block("aaaa").zero();
+    internal_amps_T2(T2);
 }
 
 void SA_MRDSRG::guess_t1(BlockedTensor& F, BlockedTensor& T2, BlockedTensor& T1) {
@@ -181,9 +180,10 @@ void SA_MRDSRG::guess_t1(BlockedTensor& F, BlockedTensor& T2, BlockedTensor& T1)
         }
 
         // zero internal amplitudes
-        T1.block("aa").zero();
+        internal_amps_T1(T1);
     }
 
+    // norms
     T1max_ = T1.norm(0);
     T1norm_ = T1.norm();
     T1rms_ = 0.0;
@@ -285,10 +285,10 @@ void SA_MRDSRG::update_t2() {
 
     timer t8("zero internal amplitudes");
     // zero internal amplitudes
-    DT2_.block("aaaa").zero();
+    internal_amps_T2(DT2_);
     t8.stop();
 
-    // compute RMS
+    // compute consecutive T2 difference
     T2rms_ = DT2_.norm();
 
     timer t9("transform DT2 back to original basis");
@@ -305,13 +305,8 @@ void SA_MRDSRG::update_t2() {
     T2_["ijab"] += DT2_["ijab"];
 
     // compute norm and find maximum
-    T2norm_ = 0.0, T2max_ = 0.0;
-    T2_.iterate([&](const std::vector<size_t>&, const std::vector<SpinType>&, double& value) {
-        T2norm_ += value * value;
-        if (std::fabs(value) > std::fabs(T2max_))
-            T2max_ = value;
-    });
-    T2norm_ = std::sqrt(T2norm_);
+    T2norm_ = T2_.norm(2);
+    T2max_ = T2_.norm(0);
     t10.stop();
 
     // reset the active part of Hbar2
@@ -394,9 +389,9 @@ void SA_MRDSRG::update_t1() {
     DT1_["ia"] -= T1_["ia"];
 
     // zero internal amplitudes
-    DT1_.block("aa").zero();
+    internal_amps_T1(DT1_);
 
-    // compute RMS
+    // compute consecutive T1 difference
     T1rms_ = DT1_.norm();
 
     // transform DT1 back to original basis
@@ -410,13 +405,8 @@ void SA_MRDSRG::update_t1() {
     T1_["ia"] += DT1_["ia"];
 
     // compute norm and find maximum
-    T1max_ = 0.0, T1norm_ = 0.0;
-    T1_.iterate([&](const std::vector<size_t>&, const std::vector<SpinType>&, double& value) {
-        T1norm_ += value * value;
-        if (std::fabs(value) > std::fabs(T1max_))
-            T1max_ = value;
-    });
-    T1norm_ = std::sqrt(T1norm_);
+    T1max_ = T1_.norm(0);
+    T1norm_ = T1_.norm(2);
 
     // reset the active part of Hbar2
     Hbar1_["uv"] = Hbar1copy["uv"];
