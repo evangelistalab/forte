@@ -122,8 +122,7 @@ void ForteIntegrals::read_information() {
 
     // skip integral allocation and transformation if doing CASSCF
     auto job_type = options_->get_str("JOB_TYPE");
-    skip_build_ =
-        (job_type == "CASSCF" or job_type == "MCSCF_TWO_STEP") and integral_type_ != Custom;
+    skip_build_ = (job_type == "MCSCF_TWO_STEP") and (integral_type_ != Custom);
 }
 
 void ForteIntegrals::allocate() {

@@ -28,6 +28,7 @@
 
 #include "psi4/psi4-dec.h"
 #include "psi4/libpsi4util/PsiOutStream.h"
+#include "psi4/libpsi4util/process.h"
 #include "psi4/libqt/qt.h"
 #include "psi4/libmints/vector.h"
 #include "psi4/libmints/wavefunction.h"
@@ -362,6 +363,8 @@ void MCSCF_2STEP::print_macro_iteration(std::vector<CASSCF_HISTORY>& history) {
                              de_c, e_o, de_o, g, n);
     }
     psi::outfile->Printf("\n    %s", dash2.c_str());
+    psi::Process::environment.globals["CURRENT ENERGY"] = history.back().e_o;
+    psi::Process::environment.globals["MCSCF ENERGY"] = history.back().e_o;
 }
 
 std::unique_ptr<MCSCF_2STEP>

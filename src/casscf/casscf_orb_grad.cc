@@ -115,6 +115,11 @@ void CASSCF_ORB_GRAD::setup_mos() {
     label_to_mos_["v"] = mo_space_info_->absolute_mo("RESTRICTED_UOCC");
     label_to_mos_["u"] = mo_space_info_->absolute_mo("FROZEN_UOCC");
 
+    label_to_cmos_.clear();
+    label_to_cmos_["c"] = mo_space_info_->corr_absolute_mo("RESTRICTED_DOCC");
+    label_to_cmos_["a"] = mo_space_info_->corr_absolute_mo("ACTIVE");
+    label_to_cmos_["v"] = mo_space_info_->corr_absolute_mo("RESTRICTED_UOCC");
+
     // in Pitzer ordering
     mos_rel_.resize(nmo_);
     for (int h = 0, offset = 0; h < nirrep_; ++h) {
@@ -334,11 +339,24 @@ void CASSCF_ORB_GRAD::build_mo_integrals() {
 
     // form the MO 2e-integrals
     if (ints_->integral_type() == Custom) {
-        V_.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>&, double& value) {
-            value = ints_->aptei_ab(i[0], i[2], i[1], i[3]);
-        });
+        fill_tei_custom(V_);
     } else {
         build_tei_from_ao();
+    }
+}
+
+void CASSCF_ORB_GRAD::fill_tei_custom(ambit::BlockedTensor V) {
+    std::vector<std::string> blocks {"caaa", "aaaa", "vaaa"};
+    for (const std::string& block: blocks) {
+        if (not V.is_block(block))
+            throw std::runtime_error(block + " not found in TEI!");
+
+        const auto& mo_0 = label_to_cmos_[block.substr(0, 1)];
+        const auto& mo_a = label_to_cmos_["a"];
+
+        V.block(block).iterate([&](const std::vector<size_t>& i, double& value) {
+            value = ints_->aptei_ab(mo_0[i[0]], mo_a[i[2]], mo_a[i[1]], mo_a[i[3]]);
+        });
     }
 }
 

@@ -138,12 +138,9 @@ void CASSCF::startup() {
 
     Hcore_ = SharedMatrix(ints_->wfn()->H()->clone());
 
-    local_timer JK_initialize;
     JK_ = ints_->jk();
     JK_->C_left().clear();
     JK_->C_right().clear();
-    if (print_ > 0)
-        outfile->Printf("\n    JK takes %5.5f s", JK_initialize.get());
 }
 
 double CASSCF::compute_energy() {

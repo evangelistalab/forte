@@ -153,8 +153,10 @@ class CASSCF_ORB_GRAD {
     std::vector<size_t> core_mos_;
     /// List of active MOs (Absolute)
     std::vector<size_t> actv_mos_;
-    /// Map from MO space label to the MO indices
+    /// Map from MO space label to the absolute MO indices
     std::map<std::string, std::vector<size_t>> label_to_mos_;
+    /// Map from MO space label to the correlated MO indices
+    std::map<std::string, std::vector<size_t>> label_to_cmos_;
 
     /// Relative indices within an irrep <irrep, relative indices>
     std::vector<std::pair<int, size_t>> mos_rel_;
@@ -245,6 +247,9 @@ class CASSCF_ORB_GRAD {
 
     /// Build two-electron integrals
     void build_tei_from_ao();
+
+    /// Fill two-electron integrals for custom integrals
+    void fill_tei_custom(ambit::BlockedTensor V);
 
     /// JK build for Fock-like terms
     void JK_build(psi::SharedMatrix Cl, psi::SharedMatrix Cr);

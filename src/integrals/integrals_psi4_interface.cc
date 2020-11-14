@@ -264,19 +264,22 @@ void Psi4Integrals::update_orbitals(std::shared_ptr<psi::Matrix> Ca,
     // 2. Send a copy to psi::Wavefunction
     wfn_->Ca()->copy(Ca_);
     wfn_->Cb()->copy(Cb_);
+    outfile->Printf("\n XXX");
 
     // 3. Re-transform the integrals
     aptei_idx_ = nmo_;
     transform_one_electron_integrals();
+    outfile->Printf("\n XXX");
     int my_proc = 0;
 #ifdef HAVE_GA
     my_proc = GA_Nodeid();
 #endif
     if (my_proc == 0) {
-        outfile->Printf("\n  Integrals are about to be computed.");
-        gather_integrals();
+        local_timer int_timer;
         outfile->Printf("\n  Integrals are about to be updated.");
+        gather_integrals();
         freeze_core_orbitals();
+        outfile->Printf("\n  Integrals update took %9.3f s.", int_timer.get());
     }
 }
 
