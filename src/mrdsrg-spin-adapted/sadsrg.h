@@ -91,13 +91,6 @@ class SADSRG : public DynamicCorrelationSolver {
     /// Read options
     void read_options();
 
-    /// Print a summary of the options
-    void print_options_info(
-        const std::string& title,
-        const std::vector<std::pair<std::string, std::string>>& calculation_info_string,
-        const std::vector<std::pair<std::string, double>>& calculation_info_double,
-        const std::vector<std::pair<std::string, int>>& calculation_info_int);
-
     /// The flow parameter
     double s_;
     /// Source operator
