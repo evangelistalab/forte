@@ -50,12 +50,6 @@ using namespace psi;
 
 namespace forte {
 
-/**
- * @brief ConventionalIntegrals::ConventionalIntegrals
- * @param options - psi options class
- * @param restricted - type of integral transformation
- * @param resort_frozen_core -
- */
 ConventionalIntegrals::ConventionalIntegrals(std::shared_ptr<ForteOptions> options,
                                              std::shared_ptr<psi::Wavefunction> ref_wfn,
                                              std::shared_ptr<MOSpaceInfo> mo_space_info,

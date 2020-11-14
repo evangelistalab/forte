@@ -42,6 +42,7 @@ namespace forte {
  */
 class CholeskyIntegrals : public Psi4Integrals {
   public:
+    /// Contructor of CholeskyIntegrals
     CholeskyIntegrals(std::shared_ptr<ForteOptions> options,
                       std::shared_ptr<psi::Wavefunction> ref_wfn,
                       std::shared_ptr<MOSpaceInfo> mo_space_info,
@@ -55,13 +56,15 @@ class CholeskyIntegrals : public Psi4Integrals {
     double aptei_ab(size_t p, size_t q, size_t r, size_t s) override;
     double aptei_bb(size_t p, size_t q, size_t r, size_t s) override;
 
-    /// Grabs the antisymmetrized TEI - assumes storage of ambit tensor
+    /// Return the antisymmetrized alpha-alpha chunck as an ambit::Tensor
     ambit::Tensor aptei_aa_block(const std::vector<size_t>& p, const std::vector<size_t>& q,
                                  const std::vector<size_t>& r,
                                  const std::vector<size_t>& s) override;
+    /// Return the antisymmetrized alpha-beta chunck as an ambit::Tensor
     ambit::Tensor aptei_ab_block(const std::vector<size_t>& p, const std::vector<size_t>& q,
                                  const std::vector<size_t>& r,
                                  const std::vector<size_t>& s) override;
+    /// Return the antisymmetrized beta-beta chunck as an ambit::Tensor
     ambit::Tensor aptei_bb_block(const std::vector<size_t>& p, const std::vector<size_t>& q,
                                  const std::vector<size_t>& r,
                                  const std::vector<size_t>& s) override;

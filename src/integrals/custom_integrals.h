@@ -39,7 +39,16 @@ namespace forte {
  */
 class CustomIntegrals : public ForteIntegrals {
   public:
-    /// Contructor of the class. Calls std::shared_ptr<ForteIntegrals> ints constructor
+    /// Contructor of CustomIntegrals
+    /// @param options a pointer to ForteOptions
+    /// @param mo_space_info a pointer to Forte MOSpaceInfo
+    /// @param restricted the type of integral transformation
+    /// @param scalar the nuclear repulsion energy
+    /// @param oei_a the alpha one-electron integrals in MO basis
+    /// @param oei_b the beta one-electron integrals in MO basis
+    /// @param tei_aa the alpha-alpha two-electron integrals in MO basis
+    /// @param tei_ab the alpha-beta two-electron integrals in MO basis
+    /// @param tei_bb the beta-beta two-electron integrals in MO basis
     CustomIntegrals(std::shared_ptr<ForteOptions> options,
                     std::shared_ptr<MOSpaceInfo> mo_space_info, IntegralSpinRestriction restricted,
                     double scalar, const std::vector<double>& oei_a,

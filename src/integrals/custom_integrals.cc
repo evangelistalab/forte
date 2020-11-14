@@ -52,12 +52,6 @@ using namespace psi;
 
 namespace forte {
 
-/**
- * @brief CustomIntegrals::CustomIntegrals
- * @param options - psi options class
- * @param restricted - type of integral transformation
- * @param resort_frozen_core -
- */
 CustomIntegrals::CustomIntegrals(std::shared_ptr<ForteOptions> options,
                                  std::shared_ptr<MOSpaceInfo> mo_space_info,
                                  IntegralSpinRestriction restricted, double scalar,
