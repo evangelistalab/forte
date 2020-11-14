@@ -200,6 +200,11 @@ ambit::Tensor ForteIntegrals::oei_b_block(const std::vector<size_t>& p,
     return t;
 }
 
+void ForteIntegrals::set_fock_matrix(psi::SharedMatrix fa, psi::SharedMatrix fb) {
+    fock_a_ = fa;
+    fock_b_ = fb;
+}
+
 double ForteIntegrals::get_fock_a(size_t p, size_t q, bool corr) const {
     auto p_full = p, q_full = q;
     if (corr) {

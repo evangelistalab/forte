@@ -844,8 +844,16 @@ std::shared_ptr<ActiveSpaceIntegrals> CASSCF_ORB_GRAD::active_space_ints() {
     return fci_ints;
 }
 
-void CASSCF_ORB_GRAD::canonicalize_final() {
-    U_ = psi::linalg::doublet(U_, canonicalize(), false, false);
+//void CASSCF_ORB_GRAD::canonicalize_final() {
+//    U_ = psi::linalg::doublet(U_, canonicalize(), false, false);
+//    U_->set_name("Orthogonal Transformation");
+
+//    C_->gemm(false, false, 1.0, C0_, U_, 0.0);
+//    build_mo_integrals();
+//}
+
+void CASSCF_ORB_GRAD::canonicalize_final(psi::SharedMatrix U) {
+    U_ = psi::linalg::doublet(U_, U, false, false);
     U_->set_name("Orthogonal Transformation");
 
     C_->gemm(false, false, 1.0, C0_, U_, 0.0);

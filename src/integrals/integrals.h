@@ -286,6 +286,9 @@ class ForteIntegrals {
     virtual std::tuple<psi::SharedMatrix, psi::SharedMatrix>
     make_fock_active_unrestricted(psi::SharedMatrix Da, psi::SharedMatrix Db) = 0;
 
+    /// Set Fock matrix
+    void set_fock_matrix(psi::SharedMatrix fa, psi::SharedMatrix fb);
+
     /// Set nuclear repulstion energy
     void set_nuclear_repulsion(double value);
 

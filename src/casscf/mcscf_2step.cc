@@ -40,6 +40,7 @@
 #include "helpers/printing.h"
 #include "helpers/lbfgs/lbfgs.h"
 #include "helpers/lbfgs/lbfgs_param.h"
+#include "orbital-helpers/semi_canonicalize.h"
 
 #include "gradient_tpdm/backtransform_tpdm.h"
 #include "casscf/casscf_orb_grad.h"
@@ -291,7 +292,13 @@ double MCSCF_2STEP::compute_energy() {
 
     if (ints_->integral_type() != Custom) {
         // fix orbitals for redundant pairs
-        cas_grad.canonicalize_final();
+        auto F = cas_grad.fock();
+        ints_->set_fock_matrix(F, F);
+
+        SemiCanonical semi(mo_space_info_, ints_, options_);
+        semi.semicanonicalize(rdms, 1, false, false);
+
+        cas_grad.canonicalize_final(semi.Ua());
 
         // rediagonalize Hamiltonian
         auto fci_ints = cas_grad.active_space_ints();

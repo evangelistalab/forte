@@ -84,8 +84,11 @@ class CASSCF_ORB_GRAD {
     /// Return the optimized MO coefficients
     psi::SharedMatrix Ca() { return C_; }
 
+    /// Return the generalized Fock matrix
+    psi::SharedMatrix fock() { return Fock_; }
+
     /// Canonicalize the final orbitals
-    void canonicalize_final();
+    void canonicalize_final(psi::SharedMatrix U);
 
     /// Compute nuclear gradient
     void compute_nuclear_gradient();
