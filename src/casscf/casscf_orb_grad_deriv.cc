@@ -95,6 +95,40 @@ void CASSCF_ORB_GRAD::compute_nuclear_gradient() {
     transform->backtransform_density();
 }
 
+void CASSCF_ORB_GRAD::JK_build(psi::SharedMatrix Cl, psi::SharedMatrix Cr) {
+    /* JK build for Fock-like term
+     * J: sum_{rs} D_{rs} (rs|PQ) = sum_{rsRS} D_{rs} C_{Rr} C_{Ss} (RS|PQ)
+     * K: sum_{rs} D_{rs} (rQ|Ps) = sum_{rsRS} D_{rs} C_{Rr} C_{Ss} (RQ|PS)
+     *
+     * Cl_{Rs} = sum_{r} D_{rs} C_{Rr}
+     * Cr_{Ss} = C_{Ss}
+     *
+     * r,s: MO indices; P,Q,R,S: AO indices; C: MO coefficients; D: any matrix
+     */
+    JK_->set_do_K(true);
+    std::vector<std::shared_ptr<psi::Matrix>>& Cls = JK_->C_left();
+    std::vector<std::shared_ptr<psi::Matrix>>& Crs = JK_->C_right();
+    Cls.clear();
+    Crs.clear();
+    Cls.push_back(Cl);
+    Crs.push_back(Cr);
+    JK_->compute();
+}
+
+psi::SharedMatrix CASSCF_ORB_GRAD::C_subset(const std::string& name, psi::SharedMatrix C,
+                                            psi::Dimension dim_start, psi::Dimension dim_end) {
+    auto dim = dim_end - dim_start;
+    auto Csub = std::make_shared<psi::Matrix>(name, nsopi_, dim);
+
+    for (int h = 0; h < nirrep_; ++h) {
+        for (int p = 0, offset = dim_start[h]; p < dim[h]; ++p) {
+            Csub->set_column(h, p, C->get_column(h, p + offset));
+        }
+    }
+
+    return Csub;
+}
+
 void CASSCF_ORB_GRAD::fill_A_matrix_data(ambit::BlockedTensor A) {
     A.citerate(
         [&](const std::vector<size_t>& i, const std::vector<SpinType>&, const double& value) {
@@ -135,7 +169,7 @@ void CASSCF_ORB_GRAD::setup_grad_frozen() {
     // build HF Fock matrix, assuming MCSCF initial orbitals are from HF
     auto Cdocc = C_subset("C_DOCC", C0_, psi::Dimension(nirrep_), hf_ndoccpi_);
 
-    JK_fock_build(Cdocc, Cdocc);
+    JK_build(Cdocc, Cdocc);
     auto J = JK_->J()[0];
     J->scale(2.0);
     J->subtract(JK_->K()[0]);
@@ -291,7 +325,7 @@ SharedMatrix CASSCF_ORB_GRAD::contract_RB_Z(psi::SharedMatrix Z, psi::SharedMatr
     auto Cdressed = psi::linalg::doublet(C_Zrow, Z, false, false);
 
     // JK build
-    JK_fock_build(Cdressed, C_Zcol);
+    JK_build(Cdressed, C_Zcol);
 
     auto J = JK_->J()[0];
     J->scale(4.0);

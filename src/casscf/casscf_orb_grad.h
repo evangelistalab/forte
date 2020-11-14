@@ -171,9 +171,6 @@ class CASSCF_ORB_GRAD {
 
     // => Options <=
 
-    /// Integral type
-    std::string int_type_;
-
     /// The printing level
     int print_;
     /// Enable debug printing or not
@@ -250,7 +247,7 @@ class CASSCF_ORB_GRAD {
     void build_tei_from_ao();
 
     /// JK build for Fock-like terms
-    void JK_fock_build(psi::SharedMatrix Cl, psi::SharedMatrix Cr);
+    void JK_build(psi::SharedMatrix Cl, psi::SharedMatrix Cr);
 
     /// Build Fock matrix
     void build_fock(bool rebuild_inactive = false);

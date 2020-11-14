@@ -152,8 +152,6 @@ void CASSCF_ORB_GRAD::read_options() {
     print_ = options_->get_int("PRINT");
     debug_print_ = options_->get_bool("CASSCF_DEBUG_PRINTING");
 
-    int_type_ = options_->get_str("INT_TYPE");
-
     g_conv_ = options_->get_double("CASSCF_G_CONVERGENCE");
 
     internal_rot_ = options_->get_bool("CASSCF_INTERNAL_ROT");
@@ -545,26 +543,6 @@ void CASSCF_ORB_GRAD::format_fock(psi::SharedMatrix Fock, ambit::BlockedTensor F
     });
 }
 
-void CASSCF_ORB_GRAD::JK_fock_build(psi::SharedMatrix Cl, psi::SharedMatrix Cr) {
-    /* JK build for Fock-like term
-     * J: sum_{rs} D_{rs} (rs|PQ) = sum_{rsRS} D_{rs} C_{Rr} C_{Ss} (RS|PQ)
-     * K: sum_{rs} D_{rs} (rQ|Ps) = sum_{rsRS} D_{rs} C_{Rr} C_{Ss} (RQ|PS)
-     *
-     * Cl_{Rs} = sum_{r} D_{rs} C_{Rr}
-     * Cr_{Ss} = C_{Ss}
-     *
-     * r,s: MO indices; P,Q,R,S: AO indices; C: MO coefficients; D: any matrix
-     */
-    JK_->set_do_K(true);
-    std::vector<std::shared_ptr<psi::Matrix>>& Cls = JK_->C_left();
-    std::vector<std::shared_ptr<psi::Matrix>>& Crs = JK_->C_right();
-    Cls.clear();
-    Crs.clear();
-    Cls.push_back(Cl);
-    Crs.push_back(Cr);
-    JK_->compute();
-}
-
 double CASSCF_ORB_GRAD::evaluate(psi::SharedVector x, psi::SharedVector g, bool do_g) {
     // if need to update orbitals and integrals
     if (update_orbitals(x)) {
@@ -903,7 +881,7 @@ std::shared_ptr<psi::Matrix> CASSCF_ORB_GRAD::canonicalize() {
         double Fsub_norm = std::sqrt(Fsub_od->sum_of_squares());
 
         double threshold_max = 0.1 * g_conv_;
-        if (int_type_ == "CHOLESKY") {
+        if (ints_->integral_type() == Cholesky) {
             double cd_tlr = options_->get_double("CHOLESKY_TOLERANCE");
             threshold_max = (threshold_max < 0.5 * cd_tlr) ? 0.5 * cd_tlr : threshold_max;
         }
@@ -956,19 +934,5 @@ std::shared_ptr<psi::Matrix> CASSCF_ORB_GRAD::canonicalize() {
         U->print();
 
     return U;
-}
-
-psi::SharedMatrix CASSCF_ORB_GRAD::C_subset(const std::string& name, psi::SharedMatrix C,
-                                            psi::Dimension dim_start, psi::Dimension dim_end) {
-    auto dim = dim_end - dim_start;
-    auto Csub = std::make_shared<psi::Matrix>(name, nsopi_, dim);
-
-    for (int h = 0; h < nirrep_; ++h) {
-        for (int p = 0, offset = dim_start[h]; p < dim[h]; ++p) {
-            Csub->set_column(h, p, C->get_column(h, p + offset));
-        }
-    }
-
-    return Csub;
 }
 } // namespace forte
