@@ -81,10 +81,10 @@ void CustomIntegrals::initialize() {
     nso_ = nmo_;
 
     print_info();
-    outfile->Printf("\n  Using Custom integrals\n\n");
+    local_timer int_timer;
     gather_integrals();
-
     freeze_core_orbitals();
+    print_timing("preparing custom (FCIDUMP) integrals", int_timer.get());
 }
 
 double CustomIntegrals::aptei_aa(size_t p, size_t q, size_t r, size_t s) {
@@ -402,28 +402,25 @@ psi::SharedMatrix CustomIntegrals::make_fock_active_restricted(psi::SharedMatrix
 
 std::tuple<psi::SharedMatrix, psi::SharedMatrix>
 CustomIntegrals::make_fock_active_unrestricted(psi::SharedMatrix g1a, psi::SharedMatrix g1b) {
-    auto nactv = mo_space_info_->size("ACTIVE");
     auto Fock_a = std::make_shared<psi::Matrix>("Fock_active alpha", nmopi_, nmopi_);
     auto Fock_b = std::make_shared<psi::Matrix>("Fock_active beta", nmopi_, nmopi_);
 
     auto abs_mo_actv = mo_space_info_->absolute_mo("ACTIVE");
     auto rel_mo_actv = mo_space_info_->relative_mo("ACTIVE");
 
+    auto actv_dim = mo_space_info_->dimension("ACTIVE");
+
     // figure out symmetry allowed absolute index for active orbitals
     std::vector<std::tuple<size_t, size_t, size_t, size_t, size_t>> actv_indices_sym;
-    for (size_t u = 0; u < nactv; ++u) {
-        auto hu = rel_mo_actv[u].first;
-        auto ru = rel_mo_actv[u].second;
-        auto nu = abs_mo_actv[u];
-
-        for (size_t v = 0; v < nactv; ++v) {
-            if (rel_mo_actv[v].first != hu)
-                continue;
-            auto rv = rel_mo_actv[v].second;
-            auto nv = abs_mo_actv[v];
-
-            actv_indices_sym.push_back({hu, ru, rv, nu, nv});
+    for (int h = 0, offset = 0; h < nirrep_; ++h) {
+        for (int u = 0; u < actv_dim[h]; ++u) {
+            int nu = abs_mo_actv[u + offset];
+            for (int v = 0; v < actv_dim[h]; ++v) {
+                int nv = abs_mo_actv[v + offset];
+                actv_indices_sym.push_back({h, u, v, nu, nv});
+            }
         }
+        offset += actv_dim[h];
     }
     auto actv_sym_size = actv_indices_sym.size();
 

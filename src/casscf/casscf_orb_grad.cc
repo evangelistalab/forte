@@ -335,7 +335,13 @@ void CASSCF_ORB_GRAD::build_mo_integrals() {
     build_fock_inactive();
 
     // form the MO 2e-integrals
-    build_tei_from_ao();
+    if (ints_->integral_type() == Custom) {
+        V_.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>&, double& value) {
+            value = ints_->aptei_ab(i[0], i[2], i[1], i[3]);
+        });
+    } else {
+        build_tei_from_ao();
+    }
 }
 
 void CASSCF_ORB_GRAD::build_tei_from_ao() {
@@ -604,6 +610,8 @@ bool CASSCF_ORB_GRAD::update_orbitals(psi::SharedVector x) {
 
     // update orbitals
     C_->gemm(false, false, 1.0, C0_, U_, 0.0);
+    if (ints_->integral_type() == Custom)
+        ints_->update_orbitals(C_, C_);
 
     // printing
     if (debug_print_) {

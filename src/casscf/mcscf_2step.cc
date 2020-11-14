@@ -280,33 +280,47 @@ double MCSCF_2STEP::compute_energy() {
     // print summary
     print_macro_iteration(history);
 
-    // fix orbitals for redundant pairs
-    cas_grad.canonicalize_final();
+    // function to throw not converging error
+    auto throw_converence_error = [&]() {
+        if (not converged) {
+            auto m = std::to_string(maxiter_);
+            throw std::runtime_error("MCSCF did not converge in " + m + " iterations!");
+        }
+    };
 
-    // rediagonalize Hamiltonian
-    auto fci_ints = cas_grad.active_space_ints();
-    auto as_solver = diagonalize_hamiltonian(fci_ints, print_, energy_);
+    if (ints_->integral_type() != Custom) {
+        // fix orbitals for redundant pairs
+        cas_grad.canonicalize_final();
 
-    // pass to wave function
-    auto Ca = cas_grad.Ca();
-    ints_->wfn()->Ca()->copy(Ca);
-    ints_->wfn()->Cb()->copy(Ca);
+        // rediagonalize Hamiltonian
+        auto fci_ints = cas_grad.active_space_ints();
+        auto as_solver = diagonalize_hamiltonian(fci_ints, print_, energy_);
 
-    // throw error if not converged
-    if (not converged) {
-        auto m = std::to_string(maxiter_);
-        throw std::runtime_error("MCSCF did not converge in " + m + " iterations!");
-    }
+        // pass to wave function
+        auto Ca = cas_grad.Ca();
+        ints_->wfn()->Ca()->copy(Ca);
+        ints_->wfn()->Cb()->copy(Ca);
 
-    // for nuclear gradient
-    if (options_->get_str("DERTYPE") == "FIRST") {
-        // recompute gradient due to canonicalization
-        rdms = as_solver->compute_average_rdms(state_weights_map_, 2);
-        cas_grad.set_rdms(rdms);
-        cas_grad.evaluate(R, dG);
+        // throw error if not converged
+        throw_converence_error();
 
-        // compute densities used for nuclear gradient
-        cas_grad.compute_nuclear_gradient();
+        // for nuclear gradient
+        if (options_->get_str("DERTYPE") == "FIRST") {
+            // recompute gradient due to canonicalization
+            rdms = as_solver->compute_average_rdms(state_weights_map_, 2);
+            cas_grad.set_rdms(rdms);
+            cas_grad.evaluate(R, dG);
+
+            // compute densities used for nuclear gradient
+            cas_grad.compute_nuclear_gradient();
+        }
+    } else {
+        // throw error if not converged
+        throw_converence_error();
+
+        // throw for nuclear gradient
+        if (options_->get_str("DERTYPE") == "FIRST")
+            throw std::runtime_error("MCSCF energy gradient not available for CUSTOM integrals!");
     }
 
     return energy_;
