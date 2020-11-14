@@ -40,8 +40,6 @@
 #include <pybind11/pybind11.h>
 #include <pybind11/numpy.h>
 
-#include "forte-def.h"
-
 #include "ambit/tensor.h"
 #include "ambit/blocked_tensor.h"
 

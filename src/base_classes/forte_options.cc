@@ -30,7 +30,6 @@
 #include "psi4/libpsi4util/process.h"
 #include "psi4/liboptions/liboptions.h"
 
-#include "forte-def.h"
 #include "base_classes/forte_options.h"
 #include "base_classes/mo_space_info.h"
 #include "helpers/helpers.h"

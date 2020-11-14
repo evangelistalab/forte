@@ -149,7 +149,6 @@ using SpaceInfo = std::pair<psi::Dimension, std::vector<MOInfo>>;
  * absolute_mo("ACTIVE")          -> [2,3,8]
  * absolute_mo("RESTRICTED_UOCC") -> [4,9,13]
  * absolute_mo("FROZEN_UOCC")     -> [11]
- * absolute_mo("CORRELATED")      -> [1,6,7,10,12,2,3,8,4,9,13]
  *
  * corr_abs_mo("FROZEN_DOCC")     -> []
  * corr_abs_mo("RESTRICTED_DOCC") -> [0,4,5,8,9]
@@ -158,7 +157,6 @@ using SpaceInfo = std::pair<psi::Dimension, std::vector<MOInfo>>;
  * corr_abs_mo("ACTIVE")          -> [1,2,6]
  * corr_abs_mo("RESTRICTED_UOCC") -> [3,7,10]
  * corr_abs_mo("FROZEN_UOCC")     -> []
- * corr_abs_mo("CORRELATED")      -> [0,4,5,8,9,1,2,6,3,7,10]
  *
  * relative_mo("FROZEN_DOCC")     -> [(0,0),(1,0)]
  * relative_mo("RESTRICTED_DOCC") -> [(0,1),(1,1),(1,2),(2,0),(3,0)]

@@ -30,7 +30,6 @@
 #define _forte_options_h_
 
 #include <pybind11/pybind11.h>
-#include "forte-def.h"
 
 #include <string>
 #include <vector>

@@ -28,7 +28,6 @@
 
 #include <pybind11/pybind11.h>
 
-#include "forte-def.h"
 #include "helpers/helpers.h"
 
 namespace py = pybind11;

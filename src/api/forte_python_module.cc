@@ -48,7 +48,6 @@
 #include "orbital-helpers/fragment_projector.h"
 
 #include "forte.h"
-#include "forte-def.h"
 
 #include "casscf/casscf.h"
 #include "casscf/mcscf_2step.h"
