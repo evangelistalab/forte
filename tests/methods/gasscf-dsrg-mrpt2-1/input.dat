@@ -50,7 +50,6 @@ set forte {
   casscf_e_convergence 1e-10
   casscf_active_frozen_orbital [0]
   casscf_diis_start 15
-  casscf_semicanonicalize false
 }
 
 escf, wfn = energy('scf', return_wfn=True)

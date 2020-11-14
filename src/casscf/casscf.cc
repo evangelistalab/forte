@@ -304,23 +304,30 @@ double CASSCF::compute_energy() {
         throw psi::PSIEXCEPTION("CASSCF did not converge.");
     }
 
-    // semicanonicalize orbitals
-    auto U = semicanonicalize(Ca);
-    auto Ca_semi = linalg::doublet(Ca, U, false, false);
-    Ca_semi->set_name(Ca->name());
+    // pass Ca to ForteIntegrals and Psi4
+    ints_->Ca()->copy(Ca);
+    ints_->wfn()->Ca()->copy(Ca);
 
-    // restransform integrals if derivatives are needed
-    if (options_->get_str("DERTYPE") == "FIRST") {
-        print_h2("Final Integral Transformation for CASSCF Gradients");
-        ints_->update_orbitals(Ca_semi, Ca_semi);
+    // semicanonicalize
+    if (options_->get_str("CASSCF_FINAL_ORBITAL") != "UNSPECIFIED" or
+        options_->get_str("DERTYPE") == "FIRST") {
 
-        // diagonalize the Hamiltonian one last time
-        diagonalize_hamiltonian();
-    } else {
-        if (options_->get_bool("CASSCF_SEMICANONICALIZE")) {
-            ints_->wfn()->Ca()->copy(Ca_semi);
-        } else {
-            ints_->wfn()->Ca()->copy(Ca);
+        SemiCanonical semi(mo_space_info_, ints_, options_);
+        semi.semicanonicalize(cas_ref_, 1, true, false);
+
+        auto U = semi.Ua();
+
+        auto Ca_name = Ca->name();
+        Ca = linalg::doublet(Ca, U, false, false);
+        Ca->set_name(Ca_name);
+
+        ints_->Ca()->copy(Ca);
+        ints_->wfn()->Ca()->copy(Ca);
+
+        if (options_->get_str("DERTYPE") == "FIRST") {
+            ints_->update_orbitals(Ca, Ca);
+            tei_gaaa_ = transform_integrals(Ca);
+            diagonalize_hamiltonian();
         }
     }
 

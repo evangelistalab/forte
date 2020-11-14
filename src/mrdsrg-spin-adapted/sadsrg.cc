@@ -800,7 +800,7 @@ std::vector<double> SADSRG::diagonalize_Fock_diagblocks(BlockedTensor& U) {
                 auto np = indices[p + offset];
                 for (int q = 0; q < dim[h]; ++q) {
                     auto nq = indices[q + offset];
-                    Udata[nq * composite_size + np] = Usub->get(h, p, q); // stored as row in ambit
+                    Udata[nq * composite_size + np] = Usub->get(h, p, q); // row: new, column: old
                 }
                 Fdiag[corr_abs_indices[p + offset]] = evals->get(h, p);
             }

@@ -837,7 +837,7 @@ def register_casscf_options(options):
     options.add_array("CASSCF_ZERO_ROT",
                       "An array of MOs [[irrep1, mo1, mo2], [irrep2, mo3, mo4], ...]")
 
-    options.add_str("CASSCF_FINAL_ORBITAL", "CANONICAL", ["CANONICAL", "NATURAL"],
+    options.add_str("CASSCF_FINAL_ORBITAL", "CANONICAL", ["CANONICAL", "NATURAL", "UNSPECIFIED"],
                     "Constraints for redundant orbital pairs at the end of macro iteration")
 
     options.add_str("CASSCF_CI_SOLVER", "CAS", "The active space solver to use in CASSCF")
@@ -882,8 +882,6 @@ def register_casscf_options(options):
 
     options.add_bool("MONITOR_SA_SOLUTION", False,
                      "Monitor the CAS-CI solutions through iterations")
-
-    options.add_bool("CASSCF_SEMICANONICALIZE", True, "Semicanonicalize the orbitals after CASSCF?")
 
     options.add_int_array("CASSCF_ACTIVE_FROZEN_ORBITAL",
                           "A list of active orbitals to be frozen in the casscf optimization (in Pitzer order,"
