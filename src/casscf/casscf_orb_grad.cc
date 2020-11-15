@@ -167,8 +167,7 @@ void CASSCF_ORB_GRAD::read_options() {
     auto zero_rots = options_->get_gen_list("CASSCF_ZERO_ROT");
 
     if (zero_rots.size() != 0) {
-        size_t npairs = zero_rots.size();
-        for (size_t i = 0; i < npairs; ++i) {
+        for (size_t i = 0, npairs = zero_rots.size(); i < npairs; ++i) {
             py::list pair = zero_rots[i];
             if (pair.size() != 3) {
                 outfile->Printf("\n  Error: invalid input of CASSCF_ZERO_ROT.");
@@ -189,14 +188,52 @@ void CASSCF_ORB_GRAD::read_options() {
             size_t n = nmopi_[irrep];
             if (i1 >= n or i1 < 0 or i2 >= n or i2 < 0) {
                 outfile->Printf("\n  Error: invalid orbital indices in CASSCF_ZERO_ROT.");
-                outfile->Printf("\n The input orbital indices (start from 1) should not exceed %d "
-                                "(number of orbitals in irrep %d)",
+                outfile->Printf("\n  The input orbital indices (start from 1) should not exceed "
+                                "%zu (number of orbitals in irrep %d)",
                                 n, irrep);
                 throw std::runtime_error("Invalid orbital indices in CASSCF_ZERO_ROT");
             }
 
             zero_rots_[irrep][i1].emplace(i2);
             zero_rots_[irrep][i2].emplace(i1);
+        }
+    }
+
+    auto frza_rot = options_->get_int_vec("CASSCF_ACTIVE_FROZEN_ORBITAL");
+    auto actv_rel_mos = mo_space_info_->relative_mo("ACTIVE");
+    if (frza_rot.size() != 0) {
+        for (size_t i = 0, size = frza_rot.size(); i < size; ++i) {
+            size_t u = frza_rot[i];
+            if (u >= nactv_) {
+                outfile->Printf("\n  Error: invalid indices in CASSCF_ACTIVE_FROZEN_ORBITAL.");
+                outfile->Printf("\n  Active orbitals include all of those in GAS1-GAS6");
+                outfile->Printf("\n  Input indices (0 based wrt active) should not exceed %zu.",
+                                nactv_ - 1);
+                throw std::runtime_error("Invalid indices in CASSCF_ACTIVE_FROZEN_ORBITAL");
+            }
+
+            // zero between orbital u and all others
+            int irrep = actv_rel_mos[u].first;
+            auto nu = actv_rel_mos[u].second;
+            for (int p = 0; p < nmopi_[irrep]; ++p) {
+                zero_rots_[irrep][nu].emplace(p);
+                zero_rots_[irrep][p].emplace(nu);
+            }
+        }
+    }
+
+    if (debug_print_) {
+        print_h2("Orbital Rotations Ignored");
+        outfile->Printf("\n  Both irrep and indices are zero-based.\n");
+        for (int h = 0; h < nirrep_; ++h) {
+            for (const auto& index_map : zero_rots_[h]) {
+                auto p = index_map.first;
+                for (const auto& q : index_map.second) {
+                    if (p <= q) {
+                        outfile->Printf("\n  irrep: %d, pair: (%4zu,%4zu)", h, p, q);
+                    }
+                }
+            }
         }
     }
 }
@@ -219,18 +256,19 @@ void CASSCF_ORB_GRAD::nonredundant_pairs() {
             auto ni = mos_rel_[mos1[i]].second;
 
             for (int j = 0, sj = mos2.size(); j < sj; ++j) {
-                int hj = mos_rel_[mos2[j]].first;
+                if (hi != mos_rel_[mos2[j]].first) // skip if i, j in different irreps
+                    continue;
+
                 auto nj = mos_rel_[mos2[j]].second;
 
-                if (hi == hj) {
-                    if (zero_rots_[hi].find(ni) != zero_rots_[hi].end()) {
-                        if (zero_rots_[hi][ni].find(nj) != zero_rots_[hi][ni].end())
-                            break;
-                    }
-                    rot_mos_irrep_.push_back(std::make_tuple(hi, ni, nj));
-                    rot_mos_block_.push_back(std::make_tuple(block, i, j));
-                    nrots[block][hi] += 1;
+                if (zero_rots_[hi].find(ni) != zero_rots_[hi].end()) {
+                    if (zero_rots_[hi][ni].find(nj) != zero_rots_[hi][ni].end())
+                        continue;
                 }
+
+                rot_mos_irrep_.push_back(std::make_tuple(hi, ni, nj));
+                rot_mos_block_.push_back(std::make_tuple(block, i, j));
+                nrots[block][hi] += 1;
             }
         }
     }
@@ -244,18 +282,19 @@ void CASSCF_ORB_GRAD::nonredundant_pairs() {
             auto ni = mos_rel_[mos[i]].second;
 
             for (int j = i + 1; j < s; ++j) {
-                int hj = mos_rel_[mos[j]].first;
+                if (hi != mos_rel_[mos[j]].first)
+                    continue;
+
                 auto nj = mos_rel_[mos[j]].second;
 
-                if (hi == hj) {
-                    if (zero_rots_[hi].find(ni) != zero_rots_[hi].end()) {
-                        if (zero_rots_[hi][ni].find(nj) != zero_rots_[hi][ni].end())
-                            break;
-                    }
-                    rot_mos_irrep_.push_back(std::make_tuple(hi, nj, ni));
-                    rot_mos_block_.push_back(std::make_tuple("aa", j, i));
-                    nrots["aa"][hi] += 1;
+                if (zero_rots_[hi].find(ni) != zero_rots_[hi].end()) {
+                    if (zero_rots_[hi][ni].find(nj) != zero_rots_[hi][ni].end())
+                        continue;
                 }
+
+                rot_mos_irrep_.push_back(std::make_tuple(hi, nj, ni));
+                rot_mos_block_.push_back(std::make_tuple("aa", j, i));
+                nrots["aa"][hi] += 1;
             }
         }
     }
@@ -346,16 +385,16 @@ void CASSCF_ORB_GRAD::build_mo_integrals() {
 }
 
 void CASSCF_ORB_GRAD::fill_tei_custom(ambit::BlockedTensor V) {
-    std::vector<std::string> blocks {"caaa", "aaaa", "vaaa"};
-    for (const std::string& block: blocks) {
+    std::vector<std::string> blocks{"caaa", "aaaa", "vaaa"};
+    for (const std::string& block : blocks) {
         if (not V.is_block(block))
             throw std::runtime_error(block + " not found in TEI!");
 
-        const auto& mo_0 = label_to_cmos_[block.substr(0, 1)];
+        const auto& mo_g = label_to_cmos_[block.substr(0, 1)];
         const auto& mo_a = label_to_cmos_["a"];
 
         V.block(block).iterate([&](const std::vector<size_t>& i, double& value) {
-            value = ints_->aptei_ab(mo_0[i[0]], mo_a[i[2]], mo_a[i[1]], mo_a[i[3]]);
+            value = ints_->aptei_ab(mo_g[i[0]], mo_a[i[2]], mo_a[i[1]], mo_a[i[3]]);
         });
     }
 }
