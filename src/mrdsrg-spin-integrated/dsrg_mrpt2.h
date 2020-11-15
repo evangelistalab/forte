@@ -304,8 +304,6 @@ class DSRG_MRPT2 : public MASTER_DSRG {
     /// Lagrangian tensor
     ambit::BlockedTensor W_;
 
-    ambit::BlockedTensor Eta1;  
-
     // core Hamiltonian
     ambit::BlockedTensor H;
     // two-electron integrals
