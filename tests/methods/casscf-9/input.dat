@@ -15,6 +15,7 @@ molecule HF{
 set {
   basis                  cc-pvdz
   df_basis_scf           cc-pvdz-jkfit
+  df_basis_mp2           cc-pvdz-jkfit
   reference              rhf
   scf_type               df
   maxiter                300
