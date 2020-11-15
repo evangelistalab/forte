@@ -531,7 +531,7 @@ void CustomIntegrals::update_orbitals(std::shared_ptr<psi::Matrix> Ca,
         if (not test_orbital_spin_restriction(Ca, Cb)) {
             Ca->print();
             Cb->print();
-            auto msg = "ForteIntegrals::update_orbitals was passed two different sets of orbitals"
+            auto msg = "CustomIntegrals::update_orbitals was passed two different sets of orbitals"
                        "\n  but the integral object assumes restricted orbitals";
             throw std::runtime_error(msg);
         }

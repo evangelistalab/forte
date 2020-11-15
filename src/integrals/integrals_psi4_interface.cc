@@ -140,10 +140,12 @@ void Psi4Integrals::transform_one_electron_integrals() {
 }
 
 void Psi4Integrals::make_psi4_JK() {
+    auto& psi4_options = psi::Process::environment.options;
+
     if (integral_type_ == Conventional) {
         outfile->Printf("\n  JK created using conventional PK integrals\n");
-        JK_ = JK::build_JK(wfn_->basisset(), psi::BasisSet::zero_ao_basis_set(),
-                           psi::Process::environment.options, "PK");
+        JK_ =
+            JK::build_JK(wfn_->basisset(), psi::BasisSet::zero_ao_basis_set(), psi4_options, "PK");
     } else if (integral_type_ == Cholesky) {
         if (spin_restriction_ == IntegralSpinRestriction::Unrestricted) {
             throw psi::PSIEXCEPTION("Unrestricted orbitals not supported for CD integrals");
@@ -152,7 +154,6 @@ void Psi4Integrals::make_psi4_JK() {
         outfile->Printf("\n  JK created using Cholesky integrals\n");
 
         // push Forte option "CHOLESKY_TOLERANCE" to Psi4 environment
-        auto& psi4_options = psi::Process::environment.options;
         auto psi4_cd = psi4_options.get_double("CHOLESKY_TOLERANCE");
         auto forte_cd = options_->get_double("CHOLESKY_TOLERANCE");
         if (psi4_cd != forte_cd) {
@@ -163,8 +164,8 @@ void Psi4Integrals::make_psi4_JK() {
             psi4_options.set_global_double("CHOLESKY_TOLERANCE", forte_cd);
         }
 
-        JK_ = JK::build_JK(wfn_->basisset(), psi::BasisSet::zero_ao_basis_set(),
-                           psi::Process::environment.options, "CD");
+        JK_ =
+            JK::build_JK(wfn_->basisset(), psi::BasisSet::zero_ao_basis_set(), psi4_options, "CD");
     } else if ((integral_type_ == DF) or (integral_type_ == DiskDF) or (integral_type_ == DistDF)) {
         if (spin_restriction_ == IntegralSpinRestriction::Unrestricted) {
             throw psi::PSIEXCEPTION("Unrestricted orbitals not supported for DF integrals");
@@ -176,14 +177,17 @@ void Psi4Integrals::make_psi4_JK() {
             outfile->Printf("\n  This can be fixed by setting SCF_TYPE to DF.");
         }
 
+        auto basis = wfn_->get_basisset("DF_BASIS_MP2");
+        auto job_type = options_->get_str("JOB_TYPE");
+        if (job_type == "CASSCF" or job_type == "MCSCF_TWO_STEP")
+            basis = wfn_->get_basisset("DF_BASIS_SCF");
+
         if (integral_type_ == DiskDF) {
             outfile->Printf("\n  JK created using DiskDF integrals\n");
-            JK_ = JK::build_JK(wfn_->basisset(), wfn_->get_basisset("DF_BASIS_MP2"),
-                               psi::Process::environment.options, "DISK_DF");
+            JK_ = JK::build_JK(wfn_->basisset(), basis, psi4_options, "DISK_DF");
         } else {
             outfile->Printf("\n  JK created using MemDF integrals\n");
-            JK_ = JK::build_JK(wfn_->basisset(), wfn_->get_basisset("DF_BASIS_MP2"),
-                               psi::Process::environment.options, "MEM_DF");
+            JK_ = JK::build_JK(wfn_->basisset(), basis, psi4_options, "MEM_DF");
         }
     } else {
         throw psi::PSIEXCEPTION("Unknown Pis4 integral type to initialize JK in Forte");
@@ -255,7 +259,7 @@ void Psi4Integrals::update_orbitals(std::shared_ptr<psi::Matrix> Ca,
         if (not test_orbital_spin_restriction(Ca, Cb)) {
             Ca->print();
             Cb->print();
-            auto msg = "ForteIntegrals::update_orbitals was passed two different sets of orbitals"
+            auto msg = "Psi4Integrals::update_orbitals was passed two different sets of orbitals"
                        "\n  but the integral object assumes restricted orbitals";
             throw std::runtime_error(msg);
         }
