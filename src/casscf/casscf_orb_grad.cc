@@ -151,6 +151,16 @@ void CASSCF_ORB_GRAD::setup_mos() {
     BlockedTensor::add_composite_mo_space("F", "M,N", {"f", "u"});
     BlockedTensor::add_composite_mo_space("g", "p,q,r,s", {"c", "a", "v"});
     BlockedTensor::add_composite_mo_space("G", "P,Q,R,S", {"f", "c", "a", "v", "u"});
+
+    // test if we are doing GAS
+    gas_ref_ = true;
+    auto gas_spaces = mo_space_info_->composite_space_names()["ACTIVE"];
+    for (const std::string& gas_name : gas_spaces) {
+        if (mo_space_info_->dimension(gas_name) == nactvpi_) {
+            gas_ref_ = false;
+            break;
+        }
+    }
 }
 
 void CASSCF_ORB_GRAD::read_options() {
@@ -160,6 +170,7 @@ void CASSCF_ORB_GRAD::read_options() {
     g_conv_ = options_->get_double("CASSCF_G_CONVERGENCE");
 
     internal_rot_ = options_->get_bool("CASSCF_INTERNAL_ROT");
+
     orb_type_redundant_ = options_->get_str("CASSCF_FINAL_ORBITAL");
 
     // zero rotations
@@ -222,15 +233,15 @@ void CASSCF_ORB_GRAD::read_options() {
         }
     }
 
-    if (debug_print_) {
-        print_h2("Orbital Rotations Ignored");
-        outfile->Printf("\n  Both irrep and indices are zero-based.\n");
+    if (debug_print_ and zero_rots_.size()) {
+        print_h2("Orbital Rotations Ignored (User Defined)");
+        outfile->Printf("\n    Both irrep and indices are zero-based.\n");
         for (int h = 0; h < nirrep_; ++h) {
             for (const auto& index_map : zero_rots_[h]) {
                 auto p = index_map.first;
                 for (const auto& q : index_map.second) {
                     if (p <= q) {
-                        outfile->Printf("\n  irrep: %d, pair: (%4zu,%4zu)", h, p, q);
+                        outfile->Printf("\n    irrep: %d, pair: (%4zu,%4zu)", h, p, q);
                     }
                 }
             }
@@ -245,7 +256,17 @@ void CASSCF_ORB_GRAD::nonredundant_pairs() {
 
     std::map<std::string, std::vector<int>> nrots{{"vc", std::vector<int>(nirrep_, 0)},
                                                   {"va", std::vector<int>(nirrep_, 0)},
-                                                  {"ac", std::vector<int>(nirrep_, 0)}};
+                                                  {"ac", std::vector<int>(nirrep_, 0)},
+                                                  {"aa", std::vector<int>(nirrep_, 0)}};
+
+    // if we want to zero an orbital pair
+    auto in_zero_rots = [&](int h, size_t i, size_t j) {
+        if (zero_rots_[h].find(i) != zero_rots_[h].end()) {
+            if (zero_rots_[h][i].find(j) != zero_rots_[h][i].end())
+                return true;
+        }
+        return false;
+    };
 
     for (const std::string& block : {"vc", "va", "ac"}) {
         const auto& mos1 = label_to_mos_[block.substr(0, 1)];
@@ -261,10 +282,8 @@ void CASSCF_ORB_GRAD::nonredundant_pairs() {
 
                 auto nj = mos_rel_[mos2[j]].second;
 
-                if (zero_rots_[hi].find(ni) != zero_rots_[hi].end()) {
-                    if (zero_rots_[hi][ni].find(nj) != zero_rots_[hi][ni].end())
-                        continue;
-                }
+                if (in_zero_rots(hi, ni, nj))
+                    continue;
 
                 rot_mos_irrep_.push_back(std::make_tuple(hi, ni, nj));
                 rot_mos_block_.push_back(std::make_tuple(block, i, j));
@@ -273,28 +292,73 @@ void CASSCF_ORB_GRAD::nonredundant_pairs() {
         }
     }
 
-    if (internal_rot_) {
-        nrots["aa"] = std::vector<int>(nirrep_, 0);
-
+    // GASm-GASn with m != n rotations
+    auto gas_spaces = mo_space_info_->composite_space_names()["ACTIVE"];
+    if (gas_ref_) {
         const auto& mos = label_to_mos_["a"];
-        for (int i = 0, s = mos.size(); i < s; ++i) {
-            int hi = mos_rel_[mos[i]].first;
-            auto ni = mos_rel_[mos[i]].second;
 
-            for (int j = i + 1; j < s; ++j) {
-                if (hi != mos_rel_[mos[j]].first)
+        // loop over GASm spaces
+        for (int g0 = 0, space_size = gas_spaces.size(); g0 < space_size; ++g0) {
+            if (mo_space_info_->size(gas_spaces[g0]) == 0)
+                continue;
+            auto g0_in_actv = mo_space_info_->pos_in_space(gas_spaces[g0], "ACTIVE");
+
+            // loop over GASn spaces
+            for (int g1 = g0 + 1; g1 < space_size; ++g1) {
+                if (mo_space_info_->size(gas_spaces[g1]) == 0)
                     continue;
+                auto g1_in_actv = mo_space_info_->pos_in_space(gas_spaces[g1], "ACTIVE");
 
-                auto nj = mos_rel_[mos[j]].second;
+                // loop over indices in GASm
+                for (int u = 0, u_size = g0_in_actv.size(); u < u_size; ++u) {
+                    int hu = mos_rel_[mos[g0_in_actv[u]]].first;
+                    auto nu = mos_rel_[mos[g0_in_actv[u]]].second;
 
-                if (zero_rots_[hi].find(ni) != zero_rots_[hi].end()) {
-                    if (zero_rots_[hi][ni].find(nj) != zero_rots_[hi][ni].end())
-                        continue;
+                    // loop over indices in GASn
+                    for (int v = 0, v_size = g1_in_actv.size(); v < v_size; ++v) {
+                        if (hu != mos_rel_[mos[g1_in_actv[v]]].first)
+                            continue;
+
+                        auto nv = mos_rel_[mos[g1_in_actv[v]]].second;
+
+                        if (in_zero_rots(hu, nu, nv))
+                            continue;
+
+                        rot_mos_irrep_.push_back({hu, nv, nu});
+                        rot_mos_block_.push_back({"aa", g1_in_actv[v], g0_in_actv[u]});
+                        nrots["aa"][hu] += 1;
+                    }
                 }
+            }
+        }
+    }
 
-                rot_mos_irrep_.push_back(std::make_tuple(hi, nj, ni));
-                rot_mos_block_.push_back(std::make_tuple("aa", j, i));
-                nrots["aa"][hi] += 1;
+    // GASn-GASn rotations
+    if (internal_rot_) {
+        const auto& mos = label_to_mos_["a"];
+
+        for (int g = 0, space_size = gas_spaces.size(); g < space_size; ++g) {
+            if (mo_space_info_->size(gas_spaces[g]) == 0)
+                continue;
+            auto g_in_actv = mo_space_info_->pos_in_space(gas_spaces[g], "ACTIVE");
+
+            for (int u = 0, size = g_in_actv.size(); u < size; ++u) {
+                int hu = mos_rel_[mos[g_in_actv[u]]].first;
+                auto nu = mos_rel_[mos[g_in_actv[u]]].second;
+
+                for (int v = u + 1; v < size; ++v) {
+                    if (hu != mos_rel_[mos[g_in_actv[v]]].first)
+                        continue;
+
+                    auto nv = mos_rel_[mos[g_in_actv[v]]].second;
+
+                    if (in_zero_rots(hu, nu, nv))
+                        continue;
+
+                    rot_mos_irrep_.push_back({hu, nv, nu});
+                    rot_mos_block_.push_back({"aa", g_in_actv[v], g_in_actv[u]});
+                    nrots["aa"][hu] += 1;
+                }
             }
         }
     }
@@ -302,14 +366,13 @@ void CASSCF_ORB_GRAD::nonredundant_pairs() {
     nrot_ = rot_mos_irrep_.size();
 
     // printing
-    auto ct = psi::Process::environment.molecule()->point_group()->char_table();
     std::map<std::string, std::string> space_map{
         {"c", "RESTRICTED_DOCC"}, {"a", "ACTIVE"}, {"v", "RESTRICTED_UOCC"}};
 
     print_h2("Independent Orbital Rotations");
     outfile->Printf("\n    %-33s", "ORBITAL SPACES");
     for (int h = 0; h < nirrep_; ++h) {
-        outfile->Printf("  %4s", ct.gamma(h).symbol());
+        outfile->Printf("  %4s", mo_space_info_->irrep_label(h).c_str());
     }
     outfile->Printf("\n    %s", std::string(33 + nirrep_ * 6, '-').c_str());
 
@@ -353,7 +416,7 @@ void CASSCF_ORB_GRAD::init_tensors() {
     A_ = ambit::BlockedTensor::build(tensor_type, "A", {"gg"});
 
     std::vector<std::string> g_blocks{"ac", "vc", "va"};
-    if (internal_rot_) {
+    if (internal_rot_ or gas_ref_) {
         g_blocks.push_back("aa");
         Guu_ = ambit::BlockedTensor::build(CoreTensor, "Guu", {"aa"});
         Guv_ = ambit::BlockedTensor::build(CoreTensor, "Guv", {"aa"});
@@ -744,7 +807,7 @@ void CASSCF_ORB_GRAD::compute_orbital_hess_diag() {
     });
 
     // active-active block [see SI of J. Chem. Phys. 152, 074102 (2020)]
-    if (internal_rot_) {
+    if (internal_rot_ or gas_ref_) {
         size_t nactv2 = nactv_ * nactv_;
         size_t nactv3 = nactv2 * nactv_;
 

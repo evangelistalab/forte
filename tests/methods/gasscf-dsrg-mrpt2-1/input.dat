@@ -6,7 +6,7 @@ import forte
 
 refscf = -76.0172965561
 refgasscf = -56.291988402563831
-refdsrg = -56.462802953564697
+refdsrg = -56.462802951195542
 
 memory 1000mb
 molecule h2o{
@@ -30,26 +30,24 @@ set forte {
   active_space_solver aci
   ms 0.0
   multiplicity 1
-  sigma 0.00
   root_sym 0
   charge 0
+  sigma 0.00
   sci_enforce_spin_complete true
   # for non-selective GAS, we always treat spin_project_full as true
   # such that the following line is only optional
   spin_project_full true
-  e_convergence 6
-  charge 0
   active_ref_type gas
   GAS1 [1,0,0,0]
   GAS2 [3,0,1,2]
   GAS1MAX [1]
   GAS1MIN [0]
-  job_type casscf
+  job_type mcscf_two_step
   casscf_ci_solver aci
   casscf_maxiter 100
-  casscf_e_convergence 1e-10
+  casscf_e_convergence 10
+  casscf_g_convergence 10
   casscf_active_frozen_orbital [0]
-  casscf_diis_start 15
 }
 
 escf, wfn = energy('scf', return_wfn=True)
@@ -57,17 +55,6 @@ egasscf, wfn_gasscf = energy('forte', ref_wfn=wfn, return_wfn=True)
 compare_values(refgasscf, egasscf, 9, "GASSCF energy")
 
 set forte {
-  active_space_solver aci
-  ms 0.0
-  multiplicity 1
-  sigma 0.00
-  root_sym 0
-  charge 0
-  e_convergence 6
-  charge 0
-  active_ref_type gas
-  GAS1 [1,0,0,0]
-  GAS2 [3,0,1,2]
   job_type newdriver
   correlation_solver dsrg-mrpt2
   dsrg_s 1.0

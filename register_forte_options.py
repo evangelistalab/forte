@@ -828,7 +828,7 @@ def register_casscf_options(options):
 
     options.add_bool("CASSCF_DEBUG_PRINTING", False, "Enable debug printing if True")
 
-    options.add_bool("CASSCF_INTERNAL_ROT", False, "Keep active-active orbital rotations if true")
+    options.add_bool("CASSCF_INTERNAL_ROT", False, "Keep GASn-GASn orbital rotations if true")
 
     # Zero mixing for orbital pairs
     # Format: [[irrep1, mo1, mo2], [irrep1, mo3, mo4], ...]

@@ -320,18 +320,30 @@ Expert Options
 
 **CASSCF_INTERNAL_ROT**
 
-Whether to enable active-active orbital rotations.
-This is used to optimize orbitals for RAS or GAS.
+Whether to enable pure internal (GASn-GASn) orbital rotations.
 
 * Type: boolean
 * Default: False
 
 **CASSCF_ZERO_ROT**
 
-Zero the mixing between orbital pairs.
+Zero the optimization between orbital pairs.
 Format: [[irrep1, mo1, mo2], [irrep1, mo3, mo4], ...] where
 irreps are 0-based, while MO indices are 1-based and relative within the irrep.
 For example, zeroing the mixing of 3A1 and 2A1 translates to [[0, 3, 2]].
+
+* Type: array
+* Default: No Default
+
+**CASSCF_ACTIVE_FROZEN_ORBITAL**
+
+A list of active orbitals to be frozen in the casscf optimization.
+Active orbitals contain all GAS1, GAS2, ..., GAS6 orbitals.
+Orbital indices are zero-based and in Pitzer ordering.
+For example, GAS1 [1,0,0,1]; GAS2 [1,2,2,1];
+CASSCF_ACTIVE_FROZEN_ORBITAL [2,6]
+means we freeze the first A2 orbital in GAS2 and the B2 orbital in GAS1.
+This option is useful when doing core-excited state computations.
 
 * Type: array
 * Default: No Default

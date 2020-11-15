@@ -184,8 +184,10 @@ class CASSCF_ORB_GRAD {
     /// Orbital gradient convergence criteria
     double g_conv_;
 
-    /// Keep internal (active-active) rotations
+    /// Keep internal (GASn-GASn) rotations
     bool internal_rot_;
+    /// If the active space is from GAS
+    bool gas_ref_;
 
     /// User specified zero rotations
     /// vector of irrep, map from index i to other indices uncoupled with index i
