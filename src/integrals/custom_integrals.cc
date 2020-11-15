@@ -241,6 +241,13 @@ void CustomIntegrals::make_fock_matrix(ambit::Tensor Da, ambit::Tensor Db) {
     fock_b_ = std::get<1>(fock_closed)->clone();
     fock_b_->add(std::get<1>(fock_active));
     fock_b_->set_name("Fock beta");
+
+    fock_b_->subtract(fock_a_);
+    if (fock_b_->absmax() < 1.0e-7) { // threshold consistent with test_orbital_spin_restriction
+        fock_b_ = fock_a_;
+    } else {
+        fock_b_->add(fock_a_);
+    }
 }
 
 std::tuple<psi::SharedMatrix, psi::SharedMatrix, double>
