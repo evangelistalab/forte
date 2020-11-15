@@ -1362,8 +1362,8 @@ void DSRG_MRPT2::set_w() {
 
 void DSRG_MRPT2::change_zmn_degenerate(BlockedTensor& temp1, 
         BlockedTensor& temp2, BlockedTensor& zmn_d, double coeff) {
-    BlockedTensor temp3 = BTF_->build(CoreTensor, "temporal tensor 3", spin_cases({"gggg"}));
-    BlockedTensor temp4 = BTF_->build(CoreTensor, "temporal tensor 4", spin_cases({"gggg"}));
+    BlockedTensor temp3 = BTF_->build(CoreTensor, "temporal tensor 3", spin_cases({"pphh"}));
+    BlockedTensor temp4 = BTF_->build(CoreTensor, "temporal tensor 4", spin_cases({"pphh"}));
 
     temp3["abmn"] = temp1["abmn"];
     temp3["abmu"] = temp1["abmv"] * Gamma1_["uv"];
@@ -1519,8 +1519,8 @@ void DSRG_MRPT2::set_z_cc() {
 
 void DSRG_MRPT2::change_zef_degenerate(BlockedTensor& temp1, 
         BlockedTensor& temp2, BlockedTensor& zef_d, double coeff) {
-    BlockedTensor temp3 = BTF_->build(CoreTensor, "temporal tensor 3", spin_cases({"gggg"}));
-    BlockedTensor temp4 = BTF_->build(CoreTensor, "temporal tensor 4", spin_cases({"gggg"}));
+    BlockedTensor temp3 = BTF_->build(CoreTensor, "temporal tensor 3", spin_cases({"pphh"}));
+    BlockedTensor temp4 = BTF_->build(CoreTensor, "temporal tensor 4", spin_cases({"pphh"}));
 
     temp3["fdkm"] = temp1["fdkm"];
     temp3["fdkv"] = temp1["fdku"] * Gamma1_["uv"];
@@ -2098,8 +2098,16 @@ void DSRG_MRPT2::solve_z() {
     outfile->Printf("Done");
     outfile->Printf("\n    Initializing A of the Linear System ............. ");
 
-    //NOTICE:A
-    BlockedTensor temp1 = BTF_->build(CoreTensor, "temporal tensor 1", {"gggg","ggGG"});
+    //NOTICE: Linear system A
+    BlockedTensor temp1 = BTF_->build(CoreTensor, "temporal tensor 1", 
+        {"vcvc","vcca", "vcva", "vcaa", 
+         "cavc","caca", "cava", "caaa",
+         "vavc","vaca", "vava", "vaaa",
+         "aavc","aaca", "aava", "aaaa",
+         "vcVC","vcCA", "vcVA", "vcAA", 
+         "caVC","caCA", "caVA", "caAA",
+         "vaVC","vaCA", "vaVA", "vaAA",
+         "aaVC","aaCA", "aaVA", "aaAA",});
 
     // VIRTUAL-CORE
     temp1["e,m,e1,m1"] += Delta1["m1,e1"] * I["e1,e"] * I["m1,m"];
@@ -2568,8 +2576,6 @@ void DSRG_MRPT2::solve_z() {
 
     BlockedTensor temp = BTF_->build(CoreTensor, "temporal tensor", {"aa","AA"});
 
-    BlockedTensor tp1 = BTF_->build(CoreTensor, "tp 1", spin_cases({"gggg"}));
-    BlockedTensor tp2 = BTF_->build(CoreTensor, "tp 2", spin_cases({"gggg"}));
     if (PT2_TERM) {
         temp["uv"] += 0.25 * T2_["vmef"] * V_["efum"];
         temp["uv"] += 0.25 * T2_["vmez"] * V_["ewum"] * Eta1_["zw"];
