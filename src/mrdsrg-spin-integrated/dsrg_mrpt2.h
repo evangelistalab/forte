@@ -356,7 +356,6 @@ class DSRG_MRPT2 : public MASTER_DSRG {
 
     ambit::BlockedTensor V_N_Alpha;
     ambit::BlockedTensor V_N_Beta;
-    ambit::BlockedTensor V_R_Alpha;
     ambit::BlockedTensor V_R_Beta;
     ambit::BlockedTensor V_all_Beta;
 
