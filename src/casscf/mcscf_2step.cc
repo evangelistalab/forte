@@ -218,7 +218,9 @@ double MCSCF_2STEP::compute_energy() {
         bool is_e_conv =
             std::fabs(de) < e_conv_ and std::fabs(de_c) < e_conv_ and std::fabs(de_o) < e_conv_;
         bool is_g_conv = g_rms < g_conv_ or lbfgs.converged();
-        if (is_e_conv and is_g_conv) {
+        // at convergence, DIIS should be at extrapolation stage
+        bool is_diis_conv = do_diis_ ? (diis_manager->subspace_size() > diis_min_vec_) : true;
+        if (is_e_conv and is_g_conv and is_diis_conv) {
             std::string msg = "A miracle has come to pass: MCSCF iterations have converged!";
             psi::outfile->Printf("\n\n  %s", msg.c_str());
             energy_ = e_o;
