@@ -181,7 +181,7 @@ double MCSCF_2STEP::compute_energy() {
         cas_grad.set_rdms(rdms);
         if (macro > 1) {
             double epsilon = std::fabs(de_c) * 0.1;
-            epsilon = epsilon > 1.0e-5 ? 1.0e-5 : epsilon;
+            epsilon = epsilon > 1.0e-6 ? 1.0e-6 : epsilon;
             lbfgs_param->epsilon = epsilon < g_conv_ ? g_conv_ : epsilon;
         }
 

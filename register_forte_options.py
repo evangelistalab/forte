@@ -823,7 +823,7 @@ def register_casscf_options(options):
 
     options.add_double("CASSCF_E_CONVERGENCE", 1e-8, "The energy convergence criterion (two consecutive energies)")
 
-    options.add_double("CASSCF_G_CONVERGENCE", 5e-6,
+    options.add_double("CASSCF_G_CONVERGENCE", 1e-7,
                        "The orbital gradient convergence criterion (RMS of gradient vector)")
 
     options.add_bool("CASSCF_DEBUG_PRINTING", False, "Enable debug printing if True")

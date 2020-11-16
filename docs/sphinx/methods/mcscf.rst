@@ -249,9 +249,12 @@ The convergence criterion for the energy (two consecutive energies).
 **CASSCF_G_CONVERGENCE**
 
 The convergence criterion for the orbital gradient (RMS of gradient vector).
+This value should be roughly in the same order of magnitude as CASSCF_E_CONVERGENCE.
+For example, given the default energy convergence (1.0e-8),
+set CASSCF_G_CONVERGENCE to 1.0e-7 -- 1.0e-8 for a better convergence behavior.
 
 * Type: double
-* Default: 5.0e-6
+* Default: 1.0e-7
 
 **CASSCF_MAX_ROTATION**
 
