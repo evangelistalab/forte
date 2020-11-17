@@ -48,7 +48,6 @@
 
 using namespace nlohmann;
 
-
 namespace forte {
 
 class MOSpaceInfo;
@@ -103,13 +102,14 @@ double ExternalActiveSpaceMethod::compute_energy() {
         }
     }
 
+    // These must be allocated otherwise the code crashes
+    g2aa_ = ambit::Tensor::build(ambit::CoreTensor, "g2aa", std::vector<size_t>(4, nactv_));
+    g2ab_ = ambit::Tensor::build(ambit::CoreTensor, "g2ab", std::vector<size_t>(4, nactv_));
+    g2bb_ = ambit::Tensor::build(ambit::CoreTensor, "g2bb", std::vector<size_t>(4, nactv_));
+
     // Read 2-DM
     if (j.contains("gamma2")) {
         std::vector<std::tuple<int, int, int, int, double>> gamma2 = j["gamma2"]["data"];
-
-        g2aa_ = ambit::Tensor::build(ambit::CoreTensor, "g2aa", std::vector<size_t>(4, nactv_));
-        g2ab_ = ambit::Tensor::build(ambit::CoreTensor, "g2ab", std::vector<size_t>(4, nactv_));
-        g2bb_ = ambit::Tensor::build(ambit::CoreTensor, "g2bb", std::vector<size_t>(4, nactv_));
 
         for (auto it2 = std::begin(gamma2); it2 != std::end(gamma2); ++it2) {
             size_t e1 = std::get<0>(*it2) / 2;
@@ -140,14 +140,15 @@ double ExternalActiveSpaceMethod::compute_energy() {
         psi::outfile->Printf("\nThe json file does not contain data for the 2-RDM");
     }
 
+    // These must be allocated otherwise the code crashes
+    g3aaa_ = ambit::Tensor::build(ambit::CoreTensor, "g3aaa", std::vector<size_t>(6, nactv_));
+    g3aab_ = ambit::Tensor::build(ambit::CoreTensor, "g3aab", std::vector<size_t>(6, nactv_));
+    g3abb_ = ambit::Tensor::build(ambit::CoreTensor, "g3abb", std::vector<size_t>(6, nactv_));
+    g3bbb_ = ambit::Tensor::build(ambit::CoreTensor, "g3bbb", std::vector<size_t>(6, nactv_));
+
     // Read 3-DM
     if (j.contains("gamma3")) {
         std::vector<std::tuple<int, int, int, int, int, int, double>> gamma3 = j["gamma3"]["data"];
-
-        g3aaa_ = ambit::Tensor::build(ambit::CoreTensor, "g3aaa", std::vector<size_t>(6, nactv_));
-        g3aab_ = ambit::Tensor::build(ambit::CoreTensor, "g3aab", std::vector<size_t>(6, nactv_));
-        g3abb_ = ambit::Tensor::build(ambit::CoreTensor, "g3abb", std::vector<size_t>(6, nactv_));
-        g3bbb_ = ambit::Tensor::build(ambit::CoreTensor, "g3bbb", std::vector<size_t>(6, nactv_));
 
         for (auto it3 = std::begin(gamma3); it3 != std::end(gamma3); ++it3) {
             size_t e1 = std::get<0>(*it3) / 2;
@@ -163,9 +164,6 @@ double ExternalActiveSpaceMethod::compute_energy() {
             bool spin4 = (std::get<3>(*it3) % 2 == 0);
             bool spin5 = (std::get<4>(*it3) % 2 == 0);
             bool spin6 = (std::get<5>(*it3) % 2 == 0);
-
-            // int spin_case =
-            //    int(spin1) + int(spin2) + int(spin3) + int(spin4) + int(spin5) + int(spin6);
 
             if (spin1 && spin2 && spin3 && spin4 && spin5 && spin6) {
                 // Read from aaaaaa
