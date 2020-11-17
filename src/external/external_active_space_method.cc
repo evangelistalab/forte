@@ -30,6 +30,8 @@
 
 #include "ambit/tensor.h"
 
+#include "psi4/psi4-dec.h"
+#include "psi4/libpsi4util/PsiOutStream.h"
 #include "psi4/libpsi4util/process.h"
 
 #include "external/json/json.hpp"
@@ -39,26 +41,13 @@
 #include "base_classes/mo_space_info.h"
 
 #include "integrals/active_space_integrals.h"
-//#include "sparse_ci/determinant.h"
-//#include "sparse_ci/determinant_functions.hpp"
-//#include "helpers/iterative_solvers.h"
 
-//#include "helpers/helpers.h"
 #include "helpers/printing.h"
 
 #include "external_active_space_method.h"
 
-//#ifdef HAVE_GA
-//#include <ga.h>
-//#include <macdecls.h>
-//#endif
-
-//#include "psi4/psi4-dec.h"
-
-// using namespace psi;
 using namespace nlohmann;
 
-// int fci_debug_level = 4;
 
 namespace forte {
 
@@ -82,11 +71,6 @@ ExternalActiveSpaceMethod::ExternalActiveSpaceMethod(StateInfo state, size_t nro
 }
 
 void ExternalActiveSpaceMethod::set_options(std::shared_ptr<ForteOptions> options) {
-    //    set_e_convergence(options->get_double("E_CONVERGENCE"));
-    //    set_r_convergence(options->get_double("R_CONVERGENCE"));
-    //    set_print(options->get_int("PRINT"));
-    //    set_root(options->get_int("ROOT"));
-
     twopdc_ = (options->get_str("TWOPDC") != "ZERO");
     threepdc_ = (options->get_str("THREEPDC") != "ZERO");
 }
@@ -96,7 +80,6 @@ double ExternalActiveSpaceMethod::compute_energy() {
 
     // call python
     auto j = read_json_file();
-    // std::cout << j << std::endl;
 
     double energy = j["energy"]["data"];
 
@@ -120,11 +103,8 @@ double ExternalActiveSpaceMethod::compute_energy() {
         }
     }
 
-    //g1a_.print();
-    //g1b_.print();
-
     // Read 2-DM
-    if (twopdc_) {
+    if (j.contains("gamma2")) {
         std::vector<std::tuple<int, int, int, int, double>> gamma2 = j["gamma2"]["data"];
 
         g2aa_ = ambit::Tensor::build(ambit::CoreTensor, "g2aa", std::vector<size_t>(4, nactv_));
@@ -156,14 +136,12 @@ double ExternalActiveSpaceMethod::compute_energy() {
                              e4] = std::get<4>(*it2);
             }
         }
+    } else {
+        psi::outfile->Printf("\nThe json file does not contain data for the 2-RDM");
     }
 
-    //g2aa_.print();
-    //g2ab_.print();
-    //g2bb_.print();
-
     // Read 3-DM
-    if (threepdc_) {
+    if (j.contains("gamma3")) {
         std::vector<std::tuple<int, int, int, int, int, int, double>> gamma3 = j["gamma3"]["data"];
 
         g3aaa_ = ambit::Tensor::build(ambit::CoreTensor, "g3aaa", std::vector<size_t>(6, nactv_));
@@ -186,7 +164,7 @@ double ExternalActiveSpaceMethod::compute_energy() {
             bool spin5 = (std::get<4>(*it3) % 2 == 0);
             bool spin6 = (std::get<5>(*it3) % 2 == 0);
 
-            //int spin_case =
+            // int spin_case =
             //    int(spin1) + int(spin2) + int(spin3) + int(spin4) + int(spin5) + int(spin6);
 
             if (spin1 && spin2 && spin3 && spin4 && spin5 && spin6) {
@@ -215,6 +193,8 @@ double ExternalActiveSpaceMethod::compute_energy() {
                             e4 * nactv_ * nactv_ + e5 * nactv_ + e6] = std::get<6>(*it3);
             }
         }
+    } else {
+        psi::outfile->Printf("\nThe json file does not contain data for the 3-RDM");
     }
 
     // Read reference energy
