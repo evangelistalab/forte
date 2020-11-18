@@ -11,7 +11,7 @@ Theory
 ^^^^^^
 
 The Multi-Configuration Self-Consistent Field (MCSCF) tries to optimize the orbitals
-for a multi-configuration wave function:
+and the CI coefficients for a multi-configuration wave function:
 
 .. math:: |\Psi \rangle = \sum_{I}^{N_{\rm det}} c_{I} | \Phi_I \rangle,
 
@@ -22,12 +22,12 @@ active (:math:`\mathbf{A}`),
 and virtual (:math:`\mathbf{V}`, unoccuied).
 The set of determinants are formed by arranging the number of active electrons
 (i.e., the total number of electrons minus twice the number of core orbitals)
-to occupy the active orbitals.
-There are many ways to do this, including complete active space (CAS),
+in the active orbitals.
+There are many ways to pick the determinant basis, including complete active space (CAS),
 restricted active space (RAS), generalized active space (GAS),
 and other selective configuration interaction schemes (such as ACI).
 
-For convenience, we first introduce the convention for orbital indices:
+For convenience, we first introduce the following convention for orbital indices:
 :math:`i, j` for core orbitals,
 :math:`t, u, v, w` for active orbitals,
 and :math:`a, b` for virtual orbitals.
@@ -82,7 +82,7 @@ The optimization procedure is shown in the following figure:
 All types of integrals available in Forte are supported for energy computations.
 
 .. note::
-  The FCIDUMP (:code:`CUSTOM`) integrals are supported,
+  External integrals read from a FCIDUMP file (:code:`CUSTOM`) are supported,
   but their use in the current code is very inefficient,
   which requires further optimization.
 
@@ -130,11 +130,11 @@ Specifically, this is a CASSCF(6,6)/cc-pCVDZ calculation with 2 frozen-core orbi
       frozen_uocc           [0,0,0,0]
       restricted_docc       [2,0,0,0]
       active                [2,0,2,2]
-      e_convergence         8
-      r_convergence         8
-      casscf_e_convergence  8
-      casscf_g_convergence  6
-      casscf_micro_maxiter  4
+      e_convergence         8  # energy convergence of the FCI iterations
+      r_convergence         8  # residual convergence of the FCI iterations
+      casscf_e_convergence  8  # energy convergence of the MCSCF iterations
+      casscf_g_convergence  6  # gradient convergence of the MCSCF iterations
+      casscf_micro_maxiter  4  # do at least 4 micro iterations per macro iteration
     }
 
     Eforte = energy('forte')
