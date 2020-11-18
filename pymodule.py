@@ -34,10 +34,10 @@ import warnings
 import numpy as np
 import psi4
 import forte
-from forte.proc.dsrg import ProcedureDSRG
 import psi4.driver.p4util as p4util
 from psi4.driver.procrouting import proc_util
 import forte.proc.fcidump
+from forte.proc.dsrg import ProcedureDSRG
 
 
 def forte_driver(state_weights_map, scf_info, options, ints, mo_space_info):
@@ -284,28 +284,26 @@ def run_forte(name, **kwargs):
 
     if 'FCIDUMP' in options.get_str('INT_TYPE'):
         psi4.core.print_out('\n  Preparing forte objects from a custom source')
-        state_weights_map, mo_space_info, scf_info, fcidump = prepare_forte_objects_from_fcidump(
-            options)
+        state_weights_map, mo_space_info, scf_info, fcidump = prepare_forte_objects_from_fcidump(options)
     else:
-        psi4.core.print_out(
-            '\n  Preparing forte objects from a psi4 Wavefunction object')
+        psi4.core.print_out('\n  Preparing forte objects from a psi4 Wavefunction object')
         # Compute a SCF reference using psi4 and obtain a wavefunction object
         # which holds the molecule used, orbitals, Fock matrices, and more
         ref_wfn = kwargs.get('ref_wfn', None)
         if ref_wfn is None:
             ref_type = options.get_str('REF_TYPE')
-            psi4.core.print_out(
-                f'\n  No reference wavefunction provided. Computing {ref_type} orbitals with psi4\n'
-            )
+            psi4.core.print_out('\n  No reference wavefunction provided. '
+                                f'Computing {ref_type} orbitals with psi4\n')
             if options.get_str('REF_TYPE') == 'SCF':
-                warnings.warn('\n  Forte is using orbitals from a psi4 SCF reference. This is not the best choice for multireference computations. To use CASSCF orbitals from psi4 set REF_TYPE to CASSCF.\n',
-                        UserWarning)
+                warnings.warn('\n  Forte is using orbitals from a psi4 SCF reference. '
+                              'This is not the best choice for multireference computations.'
+                              '\n  To use CASSCF orbitals from psi4 set REF_TYPE to CASSCF.\n',
+                              UserWarning)
                 ref_wfn = psi4.driver.scf_helper(name, **kwargs)
             elif options.get_str('REF_TYPE') == 'CASSCF':
                 ref_wfn = psi4.proc.run_detcas('casscf', **kwargs)
 
-        state_weights_map, mo_space_info, scf_info = prepare_forte_objects_from_psi4_wfn(
-            options, ref_wfn)
+        state_weights_map, mo_space_info, scf_info = prepare_forte_objects_from_psi4_wfn(options, ref_wfn)
 
     # Run a method
     job_type = options.get_str('JOB_TYPE')

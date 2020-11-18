@@ -25,7 +25,6 @@ set globals{
   restricted_docc         [1,0,1,1]
   active                  [2,0,0,0]
   scf_type                df
-  df_basis_mp2            cc-pvdz-jkfit
   df_basis_scf            cc-pvdz-jkfit
   mcscf_type              df
 }
