@@ -260,7 +260,7 @@ set CASSCF_G_CONVERGENCE to 1.0e-7 -- 1.0e-8 for a better convergence behavior.
 
 The max value allowed in orbital update vector.
 If a value in the orbital update vector is greater than this number,
-the update vector will be scaled by 0.5 / max value.
+the update vector will be scaled by this number / max value.
 
 * Type: double
 * Default: 0.5
