@@ -220,12 +220,12 @@ void DFIntegrals::gather_integrals() {
 
     // Constructs the DF function
     // assume a RHF/UHF reference
-    std::shared_ptr<psi::DFHelper> df(new DFHelper(primary, auxiliary));
-    df->set_memory(psi::Process::environment.get_memory() / sizeof(double));
+    auto df = std::make_shared<psi::DFHelper>(primary, auxiliary);
+    df->set_memory(psi::Process::environment.get_memory() * 0.9 / sizeof(double));
     df->initialize();
+    df->print_header();
     // Pushes a C matrix that is ordered in pitzer ordering
     // into the C_matrix object
-
     df->add_space("ALL", Ca_ao);
 
     // set_C clears all the orbital spaces, so this creates the space

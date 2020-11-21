@@ -419,9 +419,11 @@ void DISKDFIntegrals::gather_integrals() {
     // I used this version of build as this doesn't build all the apces and
     // assume a RHF/UHF reference
     df_ = std::make_shared<psi::DFHelper>(primary, auxiliary);
-    df_->set_memory(psi::Process::environment.get_memory() / sizeof(double));
-    df_->initialize();
+    df_->set_memory(psi::Process::environment.get_memory() * 0.8 / sizeof(double));
     df_->set_MO_core(false);
+    df_->set_method("DIRECT");
+    df_->initialize();
+    df_->print_header();
     // set_C clears all the orbital spaces, so this creates the space
     // This space creates the total nmo_.
     // This assumes that everything is correlated.

@@ -172,10 +172,10 @@ void Psi4Integrals::make_psi4_JK() {
             throw psi::PSIEXCEPTION("Unrestricted orbitals not supported for DF integrals");
         }
 
-        if (options_->get_str("SCF_TYPE") != "DF") {
+        if (options_->get_str("SCF_TYPE").find("DF") == std::string::npos) {
             print_h1("Vital Warning from Forte JK Builder (DF)");
             outfile->Printf("\n  Inconsistent integrals used in Psi4 and Forte!");
-            outfile->Printf("\n  This can be fixed by setting SCF_TYPE to DF.");
+            outfile->Printf("\n  This can be fixed by setting SCF_TYPE to DF or DISK_DF.");
         }
 
         auto basis_aux = wfn_->get_basisset("DF_BASIS_MP2");
