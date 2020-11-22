@@ -115,6 +115,15 @@ def prepare_forte_objects_from_psi4_wfn(options, wfn):
         a tuple containing the ForteIntegrals, SCFInfo, and MOSpaceInfo objects
     """
 
+    # Create the MOSpaceInfo object
+    nmopi = wfn.nmopi()
+    point_group = wfn.molecule().point_group().symbol()
+    mo_space_info = forte.make_mo_space_info(nmopi, point_group, options)
+
+    # Orthonormalize / Read orbitals
+    ortho_normalize_orbitals(wfn, mo_space_info, options)
+
+    # Set DF / MINAO integrals
     if 'DF' in options.get_str('INT_TYPE'):
         aux_basis = psi4.core.BasisSet.build(wfn.molecule(), 'DF_BASIS_MP2',
                                              options.get_str('DF_BASIS_MP2'),
@@ -125,14 +134,6 @@ def prepare_forte_objects_from_psi4_wfn(options, wfn):
         minao_basis = psi4.core.BasisSet.build(wfn.molecule(), 'MINAO_BASIS',
                                                options.get_str('MINAO_BASIS'))
         wfn.set_basisset('MINAO_BASIS', minao_basis)
-
-    # Create the MOSpaceInfo object
-    nmopi = wfn.nmopi()
-    point_group = wfn.molecule().point_group().symbol()
-    mo_space_info = forte.make_mo_space_info(nmopi, point_group, options)
-
-    # Orthonormalize orbitals
-    ortho_normalize_orbitals(wfn, mo_space_info)
 
     # Call methods that project the orbitals (AVAS, embedding)
     mo_space_info = orbital_projection(wfn, options, mo_space_info)
@@ -147,14 +148,59 @@ def prepare_forte_objects_from_psi4_wfn(options, wfn):
     return (state_weights_map, mo_space_info, scf_info)
 
 
-def ortho_normalize_orbitals(wfn, mo_space_info):
-    mints = psi4.core.MintsHelper(wfn.basisset())
+def ortho_normalize_orbitals(wfn, mo_space_info, options):
+    """ Test orbital orthonormality and do it if not. """
+
+    # empty wave function (just need SO overlap)
+    wfn0 = psi4.core.Wavefunction.build(wfn.molecule(),
+                                        psi4.core.get_global_option('BASIS'))
+    mints = psi4.core.MintsHelper(wfn0.basisset())
     S = mints.so_overlap()
     Ca = wfn.Ca()
     mo_overlap = psi4.core.triplet(Ca, S, Ca, True, False, False)
     mo_overlap.zero_diagonal()
-    if (mo_overlap.absmax() > 1.0e-12):
-        ortho_orbs_forte(wfn, mo_space_info, Ca)  # TODO: Ca need to be changed
+    absmax = mo_overlap.absmax()
+
+    p4print = psi4.core.print_out
+    if absmax > 1.0e-12:
+        p4print("\n\n  Forte Warning: ")
+        p4print("Orbitals of ref_wfn NOT from current geometry!!!")
+        p4print(f"\n  Max value of MO overlap: {absmax:.15f}")
+        p4print("\n  Perform new SCF at current geometry ...\n")
+
+        wfnSCF = psi4.driver.scf_helper('forte')
+
+        # orthonormalize orbitals
+        wfnSCF.Ca().copy(ortho_orbs_forte(wfnSCF, mo_space_info, Ca))
+        wfn.shallow_copy(wfnSCF)
+    else:
+        if options.get_bool('READ_ORBITALS'):
+            Cold = read_orbitals()
+            if Cold is not False:
+                p4print("\n\n  Forte: Read orbitals from file!\n\n")
+                wfn.Ca().copy(Cold)
+
+
+def read_orbitals():
+    """ Read orbitals from file. """
+    try:
+        with open('forte_Ca.npy', 'rb') as f:
+            Ca_array = np.load(f, allow_pickle=True)
+        Ca_list = [Ca_array[i] for i in range(len(Ca_array))]  # to list
+        Ca_mat = psi4.core.Matrix.from_array(Ca_list)
+        return Ca_mat
+    except FileNotFoundError:
+        return False
+
+
+def dump_orbitals(wfn):
+    """ Dump orbitals to file. """
+    Ca = wfn.Ca()
+    with open('forte_Ca.npy', 'wb') as f:
+        if wfn.nirrep() == 1:
+            np.save(f, [Ca.to_array()])
+        else:
+            np.save(f, Ca.to_array())
 
 
 def make_state_info_from_fcidump(fcidump, options):
@@ -388,7 +434,10 @@ def run_forte(name, **kwargs):
         f'\n  Total                    : {end - start:12.3f} seconds')
 
     if 'FCIDUMP' not in options.get_str('INT_TYPE'):
+        if options.get_bool('DUMP_ORBITALS'):
+            dump_orbitals(ref_wfn)
         return ref_wfn
+
 
 def gradient_forte(name, **kwargs):
     r"""Function encoding sequence of PSI module and plugin calls so that

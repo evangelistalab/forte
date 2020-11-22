@@ -512,8 +512,11 @@ Psi4Integrals::make_fock_inactive(psi::Dimension dim_start, psi::Dimension dim_e
         double e_closed = J->vector_dot(psi::linalg::doublet(Csub, Csub, false, true));
 
         // pass AO fock to psi4 Wavefunction
-        wfn_->Fa()->copy(J->clone());
-        fock_ao_level_ = 1;
+        if (wfn_->Fa() != nullptr) {
+            wfn_->Fa()->copy(J);
+            wfn_->Fb() = wfn_->Fa();
+            fock_ao_level_ = 1;
+        }
 
         return std::make_tuple(F_closed, F_closed, e_closed);
     } else {
@@ -570,9 +573,11 @@ Psi4Integrals::make_fock_inactive(psi::Dimension dim_start, psi::Dimension dim_e
         e_closed += 0.5 * K->vector_dot(psi::linalg::doublet(Cb_sub, Cb_sub, false, true));
 
         // pass AO fock to psi4 Wavefunction
-        wfn_->Fa()->copy(J->clone());
-        wfn_->Fb()->copy(K->clone());
-        fock_ao_level_ = 1;
+        if (wfn_->Fa() != nullptr) {
+            wfn_->Fa()->copy(J);
+            wfn_->Fb()->copy(K);
+            fock_ao_level_ = 1;
+        }
 
         return std::make_tuple(Fa_closed, Fb_closed, e_closed);
     }

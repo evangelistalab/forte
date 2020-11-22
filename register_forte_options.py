@@ -82,11 +82,16 @@ def register_driver_options(options):
 
     options.add_double("MS", None, "Projection of spin onto the z axis")
 
-    options.add_str("ACTIVE_REF_TYPE", "CAS", "Initial guess for active space wave functions")
+    options.add_str("ACTIVE_REF_TYPE", "CAS",
+                    "Initial guess for active space wave functions")
 
-    options.add_bool("SPIN_AVG_DENSITY", False, "Form spin-averaged density if true")
+    options.add_bool("SPIN_AVG_DENSITY", False,
+                     "Form spin-averaged density if true")
 
     options.add_int("PRINT", 1, "Set the print level.")
+
+    options.add_bool("READ_ORBITALS", True, "Read orbitals from file if true")
+    options.add_bool("DUMP_ORBITALS", False, "Save orbitals to file if true")
 
 
 def register_avas_options(options):

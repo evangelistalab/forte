@@ -1,7 +1,7 @@
 import psi4
 
 
-def ortho_orbs_forte(wfn, mo_space_info, Cold, semi=True):
+def ortho_orbs_forte(wfn, mo_space_info, Cold):
     """
     Read the set of orbitals from file and
     pass it to the current wave function as initial guess
@@ -9,7 +9,6 @@ def ortho_orbs_forte(wfn, mo_space_info, Cold, semi=True):
     :param wfn: current Psi4 Wavefunction
     :param mo_space_info: the Forte MOSpaceInfo object
     :param Cold: MO coefficients from previous calculations
-    :param semi: whether semicanonicalize final orbitals
     :return: orthonormalized orbital coefficients
     """
     orbital_spaces = ["FROZEN_DOCC", "RESTRICTED_DOCC",
@@ -28,7 +27,9 @@ def ortho_orbs_forte(wfn, mo_space_info, Cold, semi=True):
         occ_end.append(temp)
     occ_end.append(wfn.nmopi())
 
-    slices = [psi4.core.Slice(start, end) for start, end in zip(occ_start, occ_end)]
+    slices = [psi4.core.Slice(b, e) for b, e in zip(occ_start, occ_end)]
+
+    semi = True if wfn.Fa() else False  # Forte make_fock passes to wfn.Fa()
 
     return ortho_orbs_impl(Cold, wfn, slices, semi)
 
@@ -56,7 +57,7 @@ def ortho_orbs_impl(C1, wfn, slices, semi):
     perm = [0, nspaces - 1] + list(range(1, nspaces - 1))
     slices = [slices[i] for i in perm]
 
-    # create subspace orbitals: frozen core, frozen virtual, core, active, virtual
+    # create subspaces: frozen core, frozen virtual, core, active, virtual
     psi4.core.print_out("    Preparing orbitals of subspaces ......... ")
 
     nirrep = wfn.nirrep()
@@ -94,9 +95,10 @@ def ortho_orbs_impl(C1, wfn, slices, semi):
 
 def ortho_orbs_psi4(wfn1, wfn2, semi=True):
     """
-    Make orbitals of geometry 1 (old) orthonormal with the basis from geometry 2 (current):
-    (C1)^T S2 C1 = 1, where C1 is the CASSCF orbitals at geometry 1 and
-    S2 is the SO overlap matrix at geometry 2.
+    Make orbitals of geometry 1 (old) orthonormal with the basis
+    from geometry 2 (current):
+    (C1)^T S2 C1 = 1, where C1 is the CASSCF orbitals at geometry 1
+    and S2 is the SO overlap matrix at geometry 2.
 
     :param wfn1: Psi4 Wavefunction from geometry 1
     :param wfn2: Psi4 Wavefunction from geometry 2
