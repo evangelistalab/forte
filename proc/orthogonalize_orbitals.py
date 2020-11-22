@@ -1,8 +1,100 @@
 import psi4
 
-def ortho_orbs(wfn1, wfn2, semi=True):
+
+def ortho_orbs_forte(wfn, mo_space_info, Cold, semi=True):
     """
-    Make orbitals of geometry 1 orthonormal with the basis from geometry 2:
+    Read the set of orbitals from file and
+    pass it to the current wave function as initial guess
+
+    :param wfn: current Psi4 Wavefunction
+    :param mo_space_info: the Forte MOSpaceInfo object
+    :param Cold: MO coefficients from previous calculations
+    :param semi: whether semicanonicalize final orbitals
+    :return: orthonormalized orbital coefficients
+    """
+    orbital_spaces = ["FROZEN_DOCC", "RESTRICTED_DOCC",
+                      "GAS1", "GAS2", "GAS3", "GAS4", "GAS5", "GAS6",
+                      "RESTRICTED_UOCC", "FROZEN_UOCC"]
+
+    # slices in the order of frozen core, core, active, virtual, frozen virtual
+    occ_start = [psi4.core.Dimension([0] * mo_space_info.nirrep())]
+    occ_end = []
+    for space in orbital_spaces[:-1]:
+        occpi = mo_space_info.dimension(space)
+        occpi.name = space
+
+        temp = occ_start[-1] + occpi
+        occ_start.append(temp)
+        occ_end.append(temp)
+    occ_end.append(wfn.nmopi())
+
+    slices = [psi4.core.Slice(start, end) for start, end in zip(occ_start, occ_end)]
+
+    return ortho_orbs_impl(Cold, wfn, slices, semi)
+
+
+def ortho_orbs_impl(C1, wfn, slices, semi):
+    """
+    Orthonormalize orbitals C1 with overlap S2: (C1)^T S2 C1 = 1.
+
+    :param C1: orbitals for an old geometry
+    :param wfn: current Psi4 Wavefunction
+    :param slices: a list of Psi4 Slice objects:
+        [frozen core, frozen virtual, core, active, virtual]
+    :param semi: whether semicanonicalize final orbitals
+    :return: orthonormalized orbitals
+    """
+    title = "  ==> Orthogonalize Orbitals Between Different Geometries <=="
+    psi4.core.print_out(f"\n\n{title}\n\n")
+
+    # grab current orbitals and overlap
+    C2 = wfn.Ca()
+    S2 = wfn.S()
+
+    # rearrange slices to: frozen core, frozen virtual, core, active, virtual
+    nspaces = len(slices)
+    perm = [0, nspaces - 1] + list(range(1, nspaces - 1))
+    slices = [slices[i] for i in perm]
+
+    # create subspace orbitals: frozen core, frozen virtual, core, active, virtual
+    psi4.core.print_out("    Preparing orbitals of subspaces ......... ")
+
+    nirrep = wfn.nirrep()
+    row = psi4.core.Slice(psi4.core.Dimension(nirrep), C2.rowdim())
+    Csubs = [C1.get_block(row, col) for col in slices[2:]]
+    Csubs = [C2.get_block(row, col) for col in slices[:2]] + Csubs
+
+    psi4.core.print_out("Done\n")
+
+    # orthogonalize subspaces
+    psi4.core.print_out("    Orthogonalizing orbitals of subspaces ... ")
+    for i, Csub in enumerate(Csubs[2:], 2):
+        for j in range(i):
+            Csub = projectout(Csub, Csubs[j], S2)
+        Csubs[i] = ortho_subspace(Csub, S2)
+
+    psi4.core.print_out("Done\n")
+
+    # fill in data to the new combined orbitals
+    psi4.core.print_out("    Combining orbitals of subspaces ......... ")
+    Cnew = psi4.core.Matrix("new C", C1.rowdim(), C1.coldim())
+    for Csub, col in zip(Csubs, slices):
+        Cnew.set_block(row, col, Csub)
+    psi4.core.print_out("Done\n")
+
+    # semicanonicalize orbitals
+    if semi:
+        psi4.core.print_out("    Semicanonicalizing orbitals ............. ")
+        U = semicanonicalize(wfn.Fa(), Cnew, slices[2:])
+        Cnew = psi4.core.doublet(Cnew, U, False, False)
+        psi4.core.print_out("Done\n\n")
+
+    return Cnew
+
+
+def ortho_orbs_psi4(wfn1, wfn2, semi=True):
+    """
+    Make orbitals of geometry 1 (old) orthonormal with the basis from geometry 2 (current):
     (C1)^T S2 C1 = 1, where C1 is the CASSCF orbitals at geometry 1 and
     S2 is the SO overlap matrix at geometry 2.
 
@@ -10,91 +102,72 @@ def ortho_orbs(wfn1, wfn2, semi=True):
     :param wfn2: Psi4 Wavefunction from geometry 2
     :param semi: Semicanonicalize resulting orbitals
     :return: orthogonal orbital coefficients
+
+    Example:
+        molecule HF {
+        F
+        H 1 R
+        }
+
+        set {
+          basis cc-pvdz
+          reference rhf
+          restricted_docc [2,0,1,1]
+          active [2,0,0,0]
+        }
+
+        HF.R = 1.0
+        Ecas, wfn = energy('casscf', return_wfn=True)
+
+        HF.R = 1.1
+        Escf, wfnSCF = energy('scf', return_wfn=True)
+        wfnSCF.Ca().copy(ortho_orbs_psi4(wfn, wfnSCF))
+        Ecas = energy('casscf', ref_wfn=wfnSCF)
     """
-
-    # get C1, C2, and S2
-    C1 = wfn1.Ca()
-    C2 = wfn2.Ca()
-    S2 = wfn2.S()
-
-    # directly return if two wave functions correspond to the same geometry
-    if wfn1 is wfn2:
-        return C2
-    else:
-        overlap = psi4.core.triplet(C1, S2, C1, True, False, False)
-        overlap.zero_diagonal()
-        if overlap.absmax() < 1.0e-10:
-            return C2
-
-    title = "\n  ==> Orthogonalize Orbitals Between Different Geometries <==\n"
-    psi4.core.print_out(title)
 
     nirrep = wfn2.nirrep()
 
     orbital_spaces = ["FROZEN_DOCC", "RESTRICTED_DOCC",
                       "ACTIVE",
                       "RESTRICTED_UOCC", "FROZEN_UOCC"]
+    dims = {space: None for space in orbital_spaces}
+    dims["RESTRICTED_UOCC"] = wfn2.nmopi()
 
-    # slices in the order of frozen core, core, active, virtual, frozen virtual
-    occ_start = [psi4.core.Dimension([0] * nirrep)]
-    occ_end = []
-    for space in orbital_spaces[:-1]:
+    # dimensions for orbital spaces
+    for space in orbital_spaces:
+        if space == "RESTRICTED_UOCC":
+            continue
+
         occpi = psi4.core.Dimension.from_list(psi4.core.get_option("DETCI", space))
         if occpi.n() == 0:
             occpi.init(nirrep, space)
         else:
             occpi.name = space
-        temp = occ_start[-1] + occpi
+
+        dims[space] = occpi
+        dims["RESTRICTED_UOCC"] -= occpi
+
+    # slices in the order of frozen core, core, active, virtual, frozen virtual
+    occ_start = [psi4.core.Dimension(nirrep)]
+    occ_end = []
+
+    for space in orbital_spaces[:-1]:
+        temp = occ_start[-1] + dims[space]
         occ_start.append(temp)
         occ_end.append(temp)
     occ_end.append(wfn2.nmopi())
 
-    slices = [psi4.core.Slice(start, end) for start, end in zip(occ_start, occ_end)]
+    slices = [psi4.core.Slice(b, e) for b, e in zip(occ_start, occ_end)]
 
-    # rearrange slices to: frozen core, frozen virtual, core, active, virtual
-    nspaces = len(orbital_spaces)
-    perm = [0, nspaces - 1] + list(range(1, nspaces - 1))
-    slices = [slices[i] for i in perm]
+    # call the actual implementation
+    return ortho_orbs_impl(wfn1.Ca(), wfn2, slices, semi)
 
-    # create subspace orbitals: frozen core, frozen virtual, core, active, virtual
-    psi4.core.print_out("\n    Preparing orbitals of subspaces ......... ")
-
-    row = psi4.core.Slice(occ_start[0], C2.rowdim())
-    Csubs = [C1.get_block(row, col) for col in slices[2:]]
-    Csubs = [C2.get_block(row, col) for col in slices[:2]] + Csubs
-
-    psi4.core.print_out("Done")
-
-    # orthogonalize subspaces
-    psi4.core.print_out("\n    Orthogonalizing orbitals of subspaces ... ")
-    for i, Csub in enumerate(Csubs[2:], 2):
-        for j in range(i):
-            Csub = projectout(Csub, Csubs[j], S2)
-        Csubs[i] = ortho_subspace(Csub, S2)
-
-    psi4.core.print_out("Done")
-
-    # fill in data to the new combined orbitals
-    psi4.core.print_out("\n    Combining orbitals of subspaces ......... ")
-    Cnew = psi4.core.Matrix("new C", C1.rowdim(), C1.coldim())
-    for Csub, col in zip(Csubs, slices):
-        Cnew.set_block(row, col, Csub)
-    psi4.core.print_out("Done")
-
-    if semi:
-        psi4.core.print_out("\n    Semicanonicalizing orbitals ............. ")
-        U = semicanonicalize(wfn2.Fa(), Cnew, slices[2:])
-        Cnew = psi4.core.doublet(Cnew, U, False, False)
-        psi4.core.print_out("Done")
-
-    psi4.core.print_out("\n\n")
-    return Cnew
 
 def projectout(C, CP, S):
     """
     Project out CP contributions from C (Schmidt orthogonalization):
     Cp = (1 - P) C = C - CP (CP^T S C),
-    where P = \sum_{q} |q><q| with q being the new MO of geometry 2
+    where P = \sum_{q} |q><q| with q being the new MO of geometry 2.
 
     :param C: orbitals to be projected by P
     :param CP: orbitals of the projector
@@ -107,6 +180,7 @@ def projectout(C, CP, S):
     Cp = C.clone()
     Cp.subtract(P)
     return Cp
+
 
 def ortho_subspace(C, S):
     """
@@ -121,6 +195,7 @@ def ortho_subspace(C, S):
 
     Cnew = psi4.core.doublet(C, X, False, False)
     return Cnew
+
 
 def canonicalX(S):
     """
@@ -142,6 +217,7 @@ def canonicalX(S):
 
     X = psi4.core.doublet(evecs, shalf_inv, False, False)
     return X
+
 
 def semicanonicalize(Fso, C, block_slices):
     """

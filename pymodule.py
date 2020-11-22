@@ -38,6 +38,7 @@ import psi4.driver.p4util as p4util
 from psi4.driver.procrouting import proc_util
 import forte.proc.fcidump
 from forte.proc.dsrg import ProcedureDSRG
+from forte.proc.orthogonalize_orbitals import ortho_orbs_forte
 
 
 def forte_driver(state_weights_map, scf_info, options, ints, mo_space_info):
@@ -130,6 +131,9 @@ def prepare_forte_objects_from_psi4_wfn(options, wfn):
     point_group = wfn.molecule().point_group().symbol()
     mo_space_info = forte.make_mo_space_info(nmopi, point_group, options)
 
+    # Orthonormalize orbitals
+    ortho_normalize_orbitals(wfn, mo_space_info)
+
     # Call methods that project the orbitals (AVAS, embedding)
     mo_space_info = orbital_projection(wfn, options, mo_space_info)
 
@@ -141,6 +145,16 @@ def prepare_forte_objects_from_psi4_wfn(options, wfn):
     state_weights_map = forte.make_state_weights_map(options, mo_space_info)
 
     return (state_weights_map, mo_space_info, scf_info)
+
+
+def ortho_normalize_orbitals(wfn, mo_space_info):
+    mints = psi4.core.MintsHelper(wfn.basisset())
+    S = mints.so_overlap()
+    Ca = wfn.Ca()
+    mo_overlap = psi4.core.triplet(Ca, S, Ca, True, False, False)
+    mo_overlap.zero_diagonal()
+    if (mo_overlap.absmax() > 1.0e-12):
+        ortho_orbs_forte(wfn, mo_space_info, Ca)  # TODO: Ca need to be changed
 
 
 def make_state_info_from_fcidump(fcidump, options):
