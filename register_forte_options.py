@@ -73,25 +73,6 @@ def register_driver_options(options):
 
     options.add_array("SUBSPACE", "A list of orbital subspaces")
 
-    options.add_int_array("GAS1",
-            "Number of GAS1 orbitals per irrep (in Cotton order)"
-    )
-    options.add_int_array("GAS2",
-            "Number of GAS2 orbitals per irrep (in Cotton order)"
-    )
-    options.add_int_array("GAS3",
-            "Number of GAS3 orbitals per irrep (in Cotton order)"
-    )
-    options.add_int_array("GAS4",
-            "Number of GAS4 orbitals per irrep (in Cotton order)"
-    )
-    options.add_int_array("GAS5",
-            "Number of GAS5 orbitals per irrep (in Cotton order)"
-    )
-    options.add_int_array("GAS6",
-            "Number of GAS6 orbitals per irrep (in Cotton order)"
-    )
-
     options.add_double("MS", None, "Projection of spin onto the z axis")
 
     options.add_str("ACTIVE_REF_TYPE", "CAS", "Initial guess for active space wave functions")
@@ -205,23 +186,33 @@ def register_embedding_options(options):
         "PAO_FIX_VIRTUAL_NUMBER", False, 
         "Enable this option will generate PAOs equivlent to ASET virtuals, instead of using threshold")
 
+
 def register_mo_space_info_options(options):
     options.set_group("MO Space Info")
-    options.add_int_array(
-        "FROZEN_DOCC",
-        "Number of frozen occupied orbitals per irrep (in Cotton order)")
-    options.add_int_array(
-        "RESTRICTED_DOCC",
-        "Number of restricted doubly occupied orbitals per irrep (in Cotton order)"
-    )
-    options.add_int_array(
-        "ACTIVE", " Number of active orbitals per irrep (in Cotton order)")
-    options.add_int_array(
-        "RESTRICTED_UOCC",
-        "Number of restricted unoccupied orbitals per irrep (in Cotton order)")
-    options.add_int_array(
-        "FROZEN_UOCC",
-        "Number of frozen unoccupied orbitals per irrep (in Cotton order)")
+
+    options.add_int_array("FROZEN_DOCC", "Number of frozen occupied orbitals"
+                          " per irrep (in Cotton order)")
+    options.add_int_array("RESTRICTED_DOCC", "Number of restricted doubly"
+                          " occupied orbitals per irrep (in Cotton order)")
+    options.add_int_array("ACTIVE", " Number of active orbitals per irrep"
+                          " (in Cotton order)")
+    options.add_int_array("RESTRICTED_UOCC", "Number of restricted unoccupied"
+                          " orbitals per irrep (in Cotton order)")
+    options.add_int_array("FROZEN_UOCC", "Number of frozen unoccupied orbitals"
+                          " per irrep (in Cotton order)")
+
+    options.add_int_array("GAS1", "Number of GAS1 orbitals per irrep"
+                          " (in Cotton order)")
+    options.add_int_array("GAS2", "Number of GAS2 orbitals per irrep"
+                          " (in Cotton order)")
+    options.add_int_array("GAS3", "Number of GAS3 orbitals per irrep"
+                          " (in Cotton order)")
+    options.add_int_array("GAS4", "Number of GAS4 orbitals per irrep"
+                          " (in Cotton order)")
+    options.add_int_array("GAS5", "Number of GAS5 orbitals per irrep"
+                          " (in Cotton order)")
+    options.add_int_array("GAS6", "Number of GAS6 orbitals per irrep"
+                          " (in Cotton order)")
 
     #    /*- Molecular orbitals to swap -
     #     *  Swap mo_1 with mo_2 in irrep symmetry
@@ -229,28 +220,27 @@ def register_mo_space_info_options(options):
     #     *  Format: [irrep, mo_1, mo_2, irrep, mo_3, mo_4]
     #     *          Irrep and MO indices are 1-based (NOT 0-based)!
     #    -*/
-    options.add_int_array(
-        "ROTATE_MOS",
-        "An array of MOs to swap in the format [irrep, mo_1, mo_2, irrep, mo_3, mo_4]. Irrep and MO indices are 1-based (NOT 0-based)!"
-    )
+    options.add_int_array("ROTATE_MOS", "An array of MOs to swap in the format"
+                          " [irrep, mo_1, mo_2, irrep, mo_3, mo_4]."
+                          " Irrep and MOs are all 1-based (NOT 0-based)!")
 
-    # Options for state-averaged CASSCF
-    options.add_array(
-        "AVG_STATE",
-        "An array of states [[irrep1, multi1, nstates1], [irrep2, multi2, nstates2], ...]"
-    )
-    options.add_array(
-        "AVG_WEIGHT",
-        "An array of weights [[w1_1, w1_2, ..., w1_n], [w2_1, w2_2, ..., w2_n], ...]"
-    )
+    # Options for state-averaged MCSCF/DSRG
+    options.add_array("AVG_STATE", "An array of states "
+                      "[[irrep1, multi1, nstates1],"
+                      " [irrep2, multi2, nstates2], ...]")
+
+    options.add_array("AVG_WEIGHT", "An array of weights "
+                      "[[w1_1, w1_2, ..., w1_n],"
+                      " [w2_1, w2_2, ..., w2_n], ...]")
+
     options.add_int_array("NROOTPI",
-                            "Number of roots per irrep (in Cotton order)")
+                          "Number of roots per irrep (in Cotton order)")
 
-    # Options for state-averaged CASSCF
-    options.add_array(
-        "STATES",
-        "An array of states [[irrep1, multi1, nstates1], [irrep2, multi2, nstates2], ...]"
-    )
+    # Options for state-averaged CASSCF (This is not used. York 11/22/2020)
+    options.add_array("STATES", "An array of states "
+                      "[[irrep1, multi1, nstates1],"
+                      " [irrep2, multi2, nstates2], ...]")
+
 
 def register_active_space_solver_options(options):
     options.set_group("Active Space Solver")
