@@ -954,6 +954,7 @@ void CASSCF_ORB_GRAD::canonicalize_final(psi::SharedMatrix U) {
     build_mo_integrals();
 }
 
+// to be removed once SemiCanonical class has natural orbitals
 std::shared_ptr<psi::Matrix> CASSCF_ORB_GRAD::canonicalize() {
     print_h2("Canonicalize Orbitals (" + orb_type_redundant_ + ")");
 

@@ -511,6 +511,10 @@ Psi4Integrals::make_fock_inactive(psi::Dimension dim_start, psi::Dimension dim_e
         J->add(wfn_->H());
         double e_closed = J->vector_dot(psi::linalg::doublet(Csub, Csub, false, true));
 
+        // pass AO fock to psi4 Wavefunction
+        wfn_->Fa()->copy(J->clone());
+        fock_ao_level_ = 1;
+
         return std::make_tuple(F_closed, F_closed, e_closed);
     } else {
         auto Ca_sub = std::make_shared<psi::Matrix>("Ca_sub", nsopi_, dim);
@@ -564,6 +568,11 @@ Psi4Integrals::make_fock_inactive(psi::Dimension dim_start, psi::Dimension dim_e
         K->add(wfn_->H());
         double e_closed = 0.5 * J->vector_dot(psi::linalg::doublet(Ca_sub, Ca_sub, false, true));
         e_closed += 0.5 * K->vector_dot(psi::linalg::doublet(Cb_sub, Cb_sub, false, true));
+
+        // pass AO fock to psi4 Wavefunction
+        wfn_->Fa()->copy(J->clone());
+        wfn_->Fb()->copy(K->clone());
+        fock_ao_level_ = 1;
 
         return std::make_tuple(Fa_closed, Fb_closed, e_closed);
     }
@@ -676,6 +685,12 @@ psi::SharedMatrix Psi4Integrals::make_fock_active_restricted(psi::SharedMatrix g
     auto F_active = psi::linalg::triplet(Ca_, K, Ca_, true, false, false);
     F_active->set_name("Fock_active");
 
+    // pass AO fock to psi4 Wavefunction
+    if (fock_ao_level_ == 1) {
+        wfn_->Fa()->add(K);
+        fock_ao_level_ = 2;
+    }
+
     return F_active;
 }
 
@@ -729,6 +744,19 @@ Psi4Integrals::make_fock_active_unrestricted(psi::SharedMatrix g1a, psi::SharedM
     Fa_active->set_name("Fock_active alpha");
     auto Fb_active = psi::linalg::triplet(Cb_, Kb, Cb_, true, false, false);
     Fb_active->set_name("Fock_active beta");
+
+    // pass AO fock to psi4 Wavefunction
+    if (fock_ao_level_ == 1) {
+        if (wfn_->Fa() == wfn_->Fb()) {
+            Ka->add(Kb);
+            Ka->scale(0.5);
+            wfn_->Fa()->add(Ka);
+        } else {
+            wfn_->Fa()->add(Ka);
+            wfn_->Fb()->add(Kb);
+        }
+        fock_ao_level_ = 2;
+    }
 
     return {Fa_active, Fb_active};
 }

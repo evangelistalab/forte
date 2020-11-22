@@ -576,6 +576,9 @@ class Psi4Integrals : public ForteIntegrals {
     /// Make a shared pointer to a Psi4 JK object
     void make_psi4_JK();
 
+    /// AO Fock control (0: none, 1: inactive, 2: generalized)
+    int fock_ao_level_ = 0;
+
   protected:
     void freeze_core_orbitals() override;
 }; // namespace forte
