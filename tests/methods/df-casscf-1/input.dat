@@ -2,10 +2,8 @@
 
 import forte
 
-#refmcscf     =  -99.972055826365903 # cc-pVTZ
-#refdsrgpt2   = -100.200752137944022 # cc-pVTZ
-psi4_casscf     = -99.9393092418
-forte_casscf    = -99.9393092425
+psi4_casscf_1 = -99.939309243520498  # @1.5
+psi4_casscf_2 = -99.924064730911269  # @1.6
 
 memory 500 mb
 
@@ -13,14 +11,13 @@ molecule HF{
   0 1
   F
   H  1 R
-  R = 1.50
 }
 
 set globals{
   basis                   cc-pvdz
   reference               rhf
-  d_convergence           10
-  e_convergence           12
+  d_convergence           8
+  e_convergence           9
   frozen_docc             [1,0,0,0]
   restricted_docc         [1,0,1,1]
   active                  [2,0,0,0]
@@ -28,8 +25,10 @@ set globals{
   df_basis_scf            cc-pvdz-jkfit
   mcscf_type              df
 }
-psi4_casscf_computed = energy('casscf')
-compare_values(psi4_casscf_computed,psi4_casscf,6,"PSI4 CASSCF energy")
+
+HF.R = 1.5
+Ecas, wfn = energy('casscf', return_wfn=True)
+compare_values(Ecas, psi4_casscf_1, 8, "PSI4 CASSCF energy @ 1.5")
 
 set forte{
   job_type                casscf
@@ -43,12 +42,13 @@ set forte{
   casscf_g_convergence    7
   print                   0
 }
-casscf = energy('forte')
-compare_values(forte_casscf,casscf,6,"FORTE CASSCF energy")
+Ecas_1 = energy('forte')
+compare_values(Ecas_1, psi4_casscf_1, 6, "FORTE CASSCF energy @ 1.5")
 
+HF.R = 1.6
 set forte {
   job_type              mcscf_two_step
-  casscf_micro_maxiter  4
+  casscf_micro_maxiter  3
 }
-casscf = energy('forte')
-compare_values(forte_casscf,casscf,6,"FORTE 2-step MCSCF energy")
+Ecas_2 = energy('forte', ref_wfn=wfn)
+compare_values(Ecas_2, psi4_casscf_2, 6, "FORTE 2-step MCSCF energy @ 1.6")
