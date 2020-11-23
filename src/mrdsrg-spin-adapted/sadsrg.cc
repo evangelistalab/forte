@@ -227,7 +227,7 @@ void SADSRG::set_ambit_MOSpace() {
 
 void SADSRG::check_init_memory() {
     mem_sys_ = psi::Process::environment.get_memory();
-    auto mem_left = static_cast<int64_t>(0.98 * mem_sys_);
+    int64_t mem_left = mem_sys_ - ints_->jk()->memory_estimate() * sizeof(double);
 
     // integrals already stored by the ForteIntegrals
     size_t n_ele = 0;
@@ -692,7 +692,7 @@ bool SADSRG::check_semi_orbs() {
     std::string dash(8 + 32, '-');
     outfile->Printf("\n    %-8s %15s %15s", "Block", "Max", "Mean");
     outfile->Printf("\n    %s", dash.c_str());
-    for (const auto& Ftuple: Fcheck) {
+    for (const auto& Ftuple : Fcheck) {
         std::string space;
         double fmax, fmean;
         std::tie(space, fmax, fmean) = Ftuple;
