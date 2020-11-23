@@ -57,29 +57,35 @@ class local_timer {
 };
 
 /**
-  * @brief A timer class that prints timing to a file (timer.dat)
-  */
+ * @brief A timer class that prints timing to a file (timer.dat)
+ */
 class timer {
   public:
-    timer(const std::string& name) : name_(name) { psi::timer_on(name_); }
+    timer(const std::string& name) : name_(name) {
+        psi::timer_on(name_);
+        t_ = local_timer();
+    }
     ~timer() { stop(); }
 
     /// Return the elapsed time in seconds
-    void stop() {
+    double stop() {
         if (running_) {
             running_ = false;
             psi::timer_off(name_);
+            return t_.get();
         }
+        return 0.0;
     }
 
   private:
     std::string name_;
     bool running_ = true;
+    local_timer t_;
 };
 
 /**
-  * @brief A timer class
-  */
+ * @brief A timer class
+ */
 class parallel_timer {
   public:
     parallel_timer(const std::string& name, int rank) : name_(name), rank_(rank) {
@@ -100,6 +106,6 @@ class parallel_timer {
     int rank_;
     bool running_ = true;
 };
-}
+} // namespace forte
 
 #endif // _helpers_timer_h_
