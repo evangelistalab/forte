@@ -87,6 +87,11 @@ class SA_MRPT2 : public SA_DSRGPT {
     /// Compute Hbar1 from virtual contraction, renormalize V if Vr is true
     void compute_Hbar1V_diskDF(ambit::Tensor& Hbar1, bool Vr = true);
 
+    /// C1 = [Vr, T2] CAVV from compute_Hbar1V_diskDF
+    ambit::Tensor C1_VT2_CAVV_;
+    /// C1 = [Vr, T2] CCAV from compute_Hbar1C_diskDF
+    ambit::Tensor C1_VT2_CCAV_;
+
     /// Return a vector of empty ambit Tensor objects
     std::vector<ambit::Tensor> init_tensor_vecs(int number_of_tensors);
 };

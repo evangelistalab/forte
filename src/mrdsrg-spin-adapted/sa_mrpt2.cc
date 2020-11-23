@@ -68,6 +68,7 @@ void SA_MRPT2::startup() {
 
 void SA_MRPT2::build_ints() {
     timer t("Initialize integrals");
+    print_contents("Initializing integrals");
 
     // prepare two-electron integrals or three-index B
     if (eri_df_) {
@@ -102,7 +103,7 @@ void SA_MRPT2::build_ints() {
         Hbar2_["uvxy"] = V_["uvxy"];
     }
 
-    t.stop();
+    print_done(t.stop());
 }
 
 void SA_MRPT2::build_minimal_V() {
@@ -142,6 +143,7 @@ void SA_MRPT2::build_minimal_V() {
 
 void SA_MRPT2::init_amps() {
     timer t("Initialize T1 and T2");
+    print_contents("Allocating amplitudes");
 
     T1_ = BTF_->build(tensor_type_, "T1 Amplitudes", {"hp"});
 
@@ -154,7 +156,7 @@ void SA_MRPT2::init_amps() {
         S2_ = BTF_->build(tensor_type_, "S2 Amplitudes", {"hhpp"});
     }
 
-    t.stop();
+    print_done(t.stop());
 }
 
 void SA_MRPT2::check_memory() {
@@ -230,16 +232,32 @@ double SA_MRPT2::compute_energy() {
     // compute energy
     double Ecorr = 0.0;
 
+    local_timer lt;
+    print_contents("Computing <0|[Fr, T1]|0>");
     double E_FT1 = H1_T1_C0(F_, T1_, 1.0, Ecorr);
-    double E_FT2 = H1_T2_C0(F_, T2_, 1.0, Ecorr);
+    print_done(lt.get());
 
+    lt.reset();
+    print_contents("Computing <0|[Fr, T2]|0>");
+    double E_FT2 = H1_T2_C0(F_, T2_, 1.0, Ecorr);
+    print_done(lt.get());
+
+    lt.reset();
+    print_contents("Computing <0|[Vr, T1]|0>");
     double E_VT1 = H2_T1_C0(V_, T1_, 1.0, Ecorr);
+    print_done(lt.get());
 
     std::vector<double> E_VT2_comp;
     if (!eri_df_) {
+        lt.reset();
+        print_contents("Computing <0|[Vr, T2]|0>");
         E_VT2_comp = H2_T2_C0(V_, T2_, S2_, 1.0, Ecorr);
+        print_done(lt.get());
     } else {
+        lt.reset();
+        print_contents("Computing <0|[Vr, T2]|0> minimal");
         E_VT2_comp = H2_T2_C0_T2small(V_, T2_, S2_);
+        print_done(lt.get());
 
         auto Eccvv = E_V_T2_CCVV();
         auto Ecavv = E_V_T2_CAVV();
@@ -286,8 +304,9 @@ double SA_MRPT2::compute_energy() {
 }
 
 void SA_MRPT2::compute_t2_df_minimal() {
-    timer t2min("Compute minimal T2");
     // ONLY these T2 blocks are stored: aavv, ccaa, caav, acav, aava, caaa, aaaa
+    timer t2min("Compute minimal T2");
+    print_contents("Computing T2 amplitudes minimal");
 
     // initialize T2 with V
     T2_["ijab"] = V_["abij"];
@@ -322,7 +341,7 @@ void SA_MRPT2::compute_t2_df_minimal() {
     S2_["umve"] -= T2_["muve"];
     S2_["uvex"] -= T2_["vuex"];
 
-    t2min.stop();
+    print_done(t2min.stop());
 }
 
 void SA_MRPT2::compute_t2() {
@@ -350,8 +369,9 @@ double SA_MRPT2::E_V_T2_CCVV() {
      *
      * Batching: for a given m and n, form B(ef) = Bm(L|e) * Bn(L|f)
      */
-
     timer t_ccvv("Compute CCVV energy term");
+    print_contents("Computing <0|[Vr, T2]|0> CCVV");
+
     auto nQ = aux_mos_.size();
     auto nv = virt_mos_.size();
     auto nc = core_mos_.size();
@@ -439,7 +459,7 @@ double SA_MRPT2::E_V_T2_CCVV() {
         }
     }
 
-    t_ccvv.stop();
+    print_done(t_ccvv.stop());
     return E;
 }
 
@@ -450,6 +470,8 @@ double SA_MRPT2::E_V_T2_CAVV() {
     auto C1 = ambit::Tensor::build(tensor_type_, "C1 VT2 CAVV", {na, na});
 
     compute_Hbar1V_diskDF(C1, true);
+    if (form_Hbar_)
+        C1_VT2_CAVV_ = C1;
 
     double E = C1("vu") * L1_.block("aa")("uv");
 
@@ -471,8 +493,9 @@ void SA_MRPT2::compute_Hbar1V_diskDF(ambit::Tensor& Hbar1, bool Vr) {
      *
      * Batching: for a given m, form V(efu) and S(efv)
      */
-
     timer t("Compute C1 virtual contraction");
+    print_contents("Computing DiskDF Hbar1 CAVV");
+
     auto nQ = aux_mos_.size();
     auto nv = virt_mos_.size();
     auto nc = core_mos_.size();
@@ -569,7 +592,7 @@ void SA_MRPT2::compute_Hbar1V_diskDF(ambit::Tensor& Hbar1, bool Vr) {
 
     Hbar1("uv") += C("uv");
 
-    t.stop();
+    print_done(t.stop());
 }
 
 double SA_MRPT2::E_V_T2_CCAV() {
@@ -579,6 +602,8 @@ double SA_MRPT2::E_V_T2_CCAV() {
     auto C1 = ambit::Tensor::build(tensor_type_, "C1 VT2 CCAV", {na, na});
 
     compute_Hbar1C_diskDF(C1, true);
+    if (form_Hbar_)
+        C1_VT2_CCAV_ = C1;
 
     double E = C1("vu") * Eta1_.block("aa")("uv");
 
@@ -600,8 +625,9 @@ void SA_MRPT2::compute_Hbar1C_diskDF(ambit::Tensor& Hbar1, bool Vr) {
      *
      * Batching: for a given e, form V(vmn) and S(umn)
      */
-
     timer t("Compute C1 core contraction");
+    print_contents("Computing DiskDF Hbar1 CCAV");
+
     auto nQ = aux_mos_.size();
     auto nv = virt_mos_.size();
     auto nc = core_mos_.size();
@@ -698,13 +724,16 @@ void SA_MRPT2::compute_Hbar1C_diskDF(ambit::Tensor& Hbar1, bool Vr) {
 
     Hbar1("uv") += C("uv");
 
-    t.stop();
+    print_done(t.stop());
 }
 
 void SA_MRPT2::compute_hbar() {
     // Note F_ and V_ are renormalized integrals
     if (!eri_df_) {
+        local_timer lt;
+        print_contents("Computing MRPT2 Hbar AAAA");
         H_A_Ca(F_, V_, T1_, T2_, S2_, 0.5, Hbar1_, Hbar2_);
+        print_done(lt.get());
     } else {
         // set up G2["pqrs"] = 2 * H2["pqrs"] - H2["pqsr"]
         auto G2 = ambit::BlockedTensor::build(tensor_type_, "G2H", {"avac", "aaac", "avaa"});
@@ -712,18 +741,16 @@ void SA_MRPT2::compute_hbar() {
         G2["uvwm"] += 2.0 * V_["vumw"] - V_["uvmw"];
         G2["uexy"] += 2.0 * V_["euyx"] - V_["euxy"];
 
+        local_timer lt;
+        print_contents("Computing MRPT2 Hbar AAAA minimal");
         H_A_Ca_small(F_, V_, G2, T1_, T2_, S2_, 0.5, Hbar1_, Hbar2_);
+        print_done(lt.get());
 
-        auto na = actv_mos_.size();
-        auto temp = ambit::Tensor::build(ambit::CoreTensor, "PT2Hbar1temp", {na, na});
-        compute_Hbar1V_diskDF(temp);
-        Hbar1_.block("aa")("uv") += 0.5 * temp("uv");
-        Hbar1_.block("aa")("vu") += 0.5 * temp("uv");
+        Hbar1_.block("aa")("uv") += 0.5 * C1_VT2_CAVV_("uv");
+        Hbar1_.block("aa")("vu") += 0.5 * C1_VT2_CAVV_("uv");
 
-        temp.zero();
-        compute_Hbar1C_diskDF(temp);
-        Hbar1_.block("aa")("uv") -= 0.5 * temp("uv");
-        Hbar1_.block("aa")("vu") -= 0.5 * temp("uv");
+        Hbar1_.block("aa")("uv") -= 0.5 * C1_VT2_CCAV_("uv");
+        Hbar1_.block("aa")("vu") -= 0.5 * C1_VT2_CCAV_("uv");
     }
 }
 } // namespace forte

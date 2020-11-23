@@ -380,6 +380,11 @@ class SADSRG : public DynamicCorrelationSolver {
     /// Print the summary of 2- and 3-body density cumulant
     void print_cumulant_summary();
 
+    /// Print the contents with padding: <text> <padding with dots>
+    void print_contents(const std::string& str, size_t size = 45);
+    /// Print done and timing
+    void print_done(double t);
+
     // ==> common aplitudes analysis and printing <==
 
     /// Prune internal amplitudes for T1

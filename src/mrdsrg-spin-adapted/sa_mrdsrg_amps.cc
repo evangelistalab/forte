@@ -60,13 +60,13 @@ void SA_MRDSRG::guess_t2(BlockedTensor& V, BlockedTensor& T2, BlockedTensor& B) 
 
     struct stat buf;
     if (read_amps_cwd_ and (stat(t2_file_cwd_.c_str(), &buf) == 0)) {
-        outfile->Printf("\n    Reading T2 amplitudes from current directory ...");
+        print_contents("Reading T2 from current dir");
         ambit::load(T2, t2_file_cwd_);
     } else if (restart_amps_ and (stat(t2_file_chk_.c_str(), &buf) == 0)) {
-        outfile->Printf("\n    Reading previous T2 amplitudes from scratch directory ...");
+        print_contents("Reading previous T2 from scratch dir");
         ambit::load(T2, t2_file_chk_);
     } else {
-        outfile->Printf("\n    Computing T2 amplitudes from PT2 ...");
+        print_contents("Computing T2 amplitudes from PT2");
         if (eri_df_) {
             T2["ijab"] = B["gia"] * B["gjb"];
         } else {
@@ -79,7 +79,7 @@ void SA_MRDSRG::guess_t2(BlockedTensor& V, BlockedTensor& T2, BlockedTensor& B) 
     T2norm_ = T2.norm();
     T2rms_ = 0.0;
 
-    outfile->Printf("  Done. Timing %10.3f s", timer.get());
+    print_done(timer.get());
 }
 
 void SA_MRDSRG::guess_t2_impl(BlockedTensor& T2) {
@@ -131,13 +131,13 @@ void SA_MRDSRG::guess_t1(BlockedTensor& F, BlockedTensor& T2, BlockedTensor& T1)
 
     struct stat buf;
     if (read_amps_cwd_ and (stat(t1_file_cwd_.c_str(), &buf) == 0)) {
-        outfile->Printf("\n    Reading T1 amplitudes from current directory ...");
+        print_contents("Reading T1 from current dir");
         ambit::load(T1, t1_file_cwd_);
     } else if (restart_amps_ and (stat(t1_file_chk_.c_str(), &buf) == 0)) {
-        outfile->Printf("\n    Reading previous T1 amplitudes from scratch directory ...");
+        print_contents("Reading previous T1 from scratch dir");
         ambit::load(T1, t1_file_chk_);
     } else {
-        outfile->Printf("\n    Computing T1 amplitudes from PT2 ...");
+        print_contents("Computing T1 amplitudes from PT2");
 
         T1["ia"] = F["ia"];
         T1["ia"] += T2["ivaw"] * F["wu"] * L1_["uv"];
@@ -188,7 +188,7 @@ void SA_MRDSRG::guess_t1(BlockedTensor& F, BlockedTensor& T2, BlockedTensor& T1)
     T1norm_ = T1.norm();
     T1rms_ = 0.0;
 
-    outfile->Printf("  Done. Timing %10.3f s", timer.get());
+    print_done(timer.get());
 }
 
 void SA_MRDSRG::update_t2() {
@@ -415,18 +415,20 @@ void SA_MRDSRG::update_t1() {
 void SA_MRDSRG::dump_amps_to_disk() {
     // dump to psi4 scratch directory for reference relaxation
     if (restart_amps_ and (relax_ref_ != "NONE")) {
-        outfile->Printf("\n    Dumping amplitudes to scratch directory ...");
+        local_timer lt;
+        print_contents("Dumping amplitudes to scratch dir");
         ambit::save(T1_, t1_file_chk_);
         ambit::save(T2_, t2_file_chk_);
-        outfile->Printf(" Done.");
+        print_done(lt.get());
     }
 
     // dump amplitudes to the current directory
     if (dump_amps_cwd_) {
-        outfile->Printf("\n    Dumping amplitudes to current directory ...");
+        local_timer lt;
+        print_contents("Dumping amplitudes to current dir");
         ambit::save(T1_, t1_file_cwd_);
         ambit::save(T2_, t2_file_cwd_);
-        outfile->Printf(" Done.");
+        print_done(lt.get());
     }
 }
 
