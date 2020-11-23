@@ -162,7 +162,7 @@ def ortho_normalize_orbitals(wfn, mo_space_info, options):
     absmax = mo_overlap.absmax()
 
     p4print = psi4.core.print_out
-    if absmax > 1.0e-12:
+    if absmax > 1.0e-7:
         p4print("\n\n  Forte Warning: ")
         p4print("Orbitals of ref_wfn NOT from current geometry!!!")
         p4print(f"\n  Max value of MO overlap: {absmax:.15f}")
