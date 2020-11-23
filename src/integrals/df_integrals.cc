@@ -44,6 +44,7 @@
 #include <mpi.h>
 #endif
 
+#include "forte-def.h"
 #include "helpers/blockedtensorfactory.h"
 #include "helpers/printing.h"
 #include "helpers/timer.h"
@@ -221,7 +222,10 @@ void DFIntegrals::gather_integrals() {
     // Constructs the DF function
     // assume a RHF/UHF reference
     auto df = std::make_shared<psi::DFHelper>(primary, auxiliary);
-    df->set_memory(psi::Process::environment.get_memory() * 0.9 / sizeof(double));
+    df->set_memory(psi::Process::environment.get_memory() / sizeof(double) -
+                   JK_->memory_estimate());
+    df->set_nthreads(omp_get_max_threads());
+    df->set_print_lvl(1);
     df->initialize();
     df->print_header();
     // Pushes a C matrix that is ordered in pitzer ordering

@@ -183,9 +183,6 @@ void Psi4Integrals::make_psi4_JK() {
         if (job_type == "CASSCF" or job_type == "MCSCF_TWO_STEP")
             basis_aux = wfn_->get_basisset("DF_BASIS_SCF");
 
-        outfile->Printf("\n  ==> Auxiliary Basis Set Summary <==\n\n");
-        basis_aux->print();
-
         if (integral_type_ == DiskDF) {
             outfile->Printf("\n  JK created using DiskDF integrals\n");
             JK_ = JK::build_JK(basis, basis_aux, psi4_options, "DISK_DF");
@@ -197,12 +194,15 @@ void Psi4Integrals::make_psi4_JK() {
         throw psi::PSIEXCEPTION("Unknown Pis4 integral type to initialize JK in Forte");
     }
 
-    // set JK memory to 85% of total memory in number of doubles
-    JK_->set_memory(psi::Process::environment.get_memory() * 0.85 / sizeof(double));
-
+    JK_->set_print(1);
     JK_->set_cutoff(options_->get_double("INTEGRAL_SCREENING"));
 
+    // set JK memory to 80% of total memory in number of doubles
+    JK_->set_memory(psi::Process::environment.get_memory() * 0.8 / sizeof(double));
+
     JK_->initialize();
+
+    JK_->print_header();
 }
 
 void Psi4Integrals::compute_frozen_one_body_operator() {

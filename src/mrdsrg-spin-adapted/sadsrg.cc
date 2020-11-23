@@ -229,7 +229,7 @@ void SADSRG::set_ambit_MOSpace() {
 
 void SADSRG::check_init_memory() {
     mem_sys_ = psi::Process::environment.get_memory();
-    auto mem_left = static_cast<int64_t>(0.98 * mem_sys_);
+    int64_t mem_left = mem_sys_ - ints_->jk()->memory_estimate() * sizeof(double);
 
     // integrals already stored by the ForteIntegrals
     size_t n_ele = 0;
