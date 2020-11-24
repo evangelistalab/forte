@@ -138,6 +138,9 @@ void CASSCF::startup() {
 
     Hcore_ = SharedMatrix(ints_->wfn()->H()->clone());
 
+    if (ints_->jk_status() != ForteIntegrals::JKStatus::initialized) {
+        throw PSIEXCEPTION("CASSCF only supports Psi4 integrals. JK not initialized.");
+    }
     JK_ = ints_->jk();
     JK_->C_left().clear();
     JK_->C_right().clear();
@@ -146,7 +149,7 @@ void CASSCF::startup() {
 double CASSCF::compute_energy() {
     if (nactv_ == 0) {
         outfile->Printf("\n\n\n Please set the active space");
-        throw psi::PSIEXCEPTION(" The active space is zero.  Set the active space");
+        throw psi::PSIEXCEPTION("The active space is zero. Set the active space");
     } else if (nactv_ == ncmo_) {
         outfile->Printf("\n Your about to do an all active CASSCF");
         throw psi::PSIEXCEPTION("The active space is all the MOs.  Orbitals don't "

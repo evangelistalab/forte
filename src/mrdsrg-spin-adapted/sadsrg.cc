@@ -81,6 +81,9 @@ SADSRG::~SADSRG() {
 void SADSRG::startup() {
     print_h2("Multireference Driven Similarity Renormalization Group");
 
+    // build Fock and cleanup JK in ForteIntegrals
+    build_fock_from_ints(ints_);
+
     // read options
     read_options();
 
@@ -119,6 +122,14 @@ void SADSRG::startup() {
 
     // check if using semicanonical orbitals
     semi_canonical_ = check_semi_orbs();
+}
+
+void SADSRG::build_fock_from_ints(std::shared_ptr<ForteIntegrals> ints) {
+    local_timer lt;
+    print_contents("Computing Fock matrix and cleaning JK");
+    ints->make_fock_matrix(rdms_.g1a(), rdms_.g1b());
+    ints->jk_finalize();
+    print_done(lt.get());
 }
 
 void SADSRG::read_options() {
@@ -229,7 +240,7 @@ void SADSRG::set_ambit_MOSpace() {
 
 void SADSRG::check_init_memory() {
     mem_sys_ = psi::Process::environment.get_memory();
-    int64_t mem_left = mem_sys_ - ints_->jk()->memory_estimate() * sizeof(double);
+    int64_t mem_left = mem_sys_ * 0.9 - ints_->jk()->memory_estimate() * sizeof(double);
 
     // integrals already stored by the ForteIntegrals
     size_t n_ele = 0;
@@ -306,22 +317,14 @@ void SADSRG::fill_density() {
 }
 
 void SADSRG::init_fock() {
-    local_timer t;
-    print_contents("Building Fock matrix");
-    build_fock_from_ints(ints_, Fock_);
-    fill_Fdiag(Fock_, Fdiag_);
-    print_done(t.get());
-}
-
-void SADSRG::build_fock_from_ints(std::shared_ptr<ForteIntegrals> ints, BlockedTensor& F) {
-    auto g1a = L1_.block("aa").clone();
-    g1a.scale(0.5);
-    ints->make_fock_matrix(g1a, g1a);
-
-    F = BTF_->build(tensor_type_, "Fock", {"gg"});
-    F.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>&, double& value) {
-        value = ints->get_fock_a(i[0], i[1]);
+    local_timer lt;
+    print_contents("Filling Fock matrix from ForteIntegrals");
+    Fock_ = BTF_->build(tensor_type_, "Fock", {"gg"});
+    Fock_.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>&, double& value) {
+        value = ints_->get_fock_a(i[0], i[1]);
     });
+    fill_Fdiag(Fock_, Fdiag_);
+    print_done(lt.get());
 }
 
 void SADSRG::fill_Fdiag(BlockedTensor& F, std::vector<double>& Fa) {

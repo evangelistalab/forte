@@ -222,8 +222,9 @@ void DFIntegrals::gather_integrals() {
     // Constructs the DF function
     // assume a RHF/UHF reference
     auto df = std::make_shared<psi::DFHelper>(primary, auxiliary);
-    df->set_memory(psi::Process::environment.get_memory() / sizeof(double) -
-                   JK_->memory_estimate());
+    size_t mem_sys = psi::Process::environment.get_memory() * 0.9 / sizeof(double);
+    size_t mem = (JK_status_ == JKStatus::initialized) ? mem_sys - JK_->memory_estimate() : mem_sys;
+    df->set_memory(mem);
     df->set_nthreads(omp_get_max_threads());
     df->set_print_lvl(1);
     df->initialize();

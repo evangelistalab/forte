@@ -154,6 +154,17 @@ std::shared_ptr<psi::Wavefunction> ForteIntegrals::wfn() { return wfn_; }
 
 std::shared_ptr<psi::JK> ForteIntegrals::jk() { return JK_; }
 
+ForteIntegrals::JKStatus ForteIntegrals::jk_status() { return JK_status_; }
+
+void ForteIntegrals::jk_finalize() {
+    if (JK_status_ == JKStatus::initialized) {
+        JK_->finalize();
+        // nothing done in finalize() for PKJK and MemDFJK
+        if (integral_type_ == DiskDF or integral_type_ == Cholesky)
+            JK_status_ = JKStatus::finalized;
+    }
+}
+
 size_t ForteIntegrals::nso() const { return nso_; }
 
 size_t ForteIntegrals::nmo() const { return nmo_; }
