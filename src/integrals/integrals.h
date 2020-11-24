@@ -148,6 +148,13 @@ class ForteIntegrals {
     /// Return the Pis4 JK object
     std::shared_ptr<psi::JK> jk();
 
+    /// Enum class for the status of Pis4 JK
+    enum class JKStatus { empty, initialized, finalized };
+    /// Return the status of Psi4 JK object
+    JKStatus jk_status();
+    /// Finalize Psi4 JK object
+    void jk_finalize();
+
     // The number of symmetry-adapted orbitals
     // see https://github.com/psi4/psi4/wiki/OrbitalDimensions
     size_t nso() const;
@@ -458,6 +465,9 @@ class ForteIntegrals {
     /// JK object from Psi4
     std::shared_ptr<psi::JK> JK_;
 
+    /// Status of the JK object
+    JKStatus JK_status_ = JKStatus::empty;
+
     /// Fock matrix (including frozen orbitals)
     psi::SharedMatrix fock_a_;
     psi::SharedMatrix fock_b_;
@@ -575,9 +585,12 @@ class Psi4Integrals : public ForteIntegrals {
 
     /// Make a shared pointer to a Psi4 JK object
     void make_psi4_JK();
+    /// Call JK intialize
+    void jk_initialize(double mem_percentage = 0.8, int print_level = 1);
 
-    /// AO Fock control (0: none, 1: inactive, 2: generalized)
-    int fock_ao_level_ = 0;
+    /// AO Fock control
+    enum class FockAOStatus { none, inactive, generalized };
+    FockAOStatus fock_ao_level_ = FockAOStatus::none;
 
   protected:
     void freeze_core_orbitals() override;

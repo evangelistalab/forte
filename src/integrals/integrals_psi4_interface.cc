@@ -194,15 +194,19 @@ void Psi4Integrals::make_psi4_JK() {
         throw psi::PSIEXCEPTION("Unknown Pis4 integral type to initialize JK in Forte");
     }
 
-    JK_->set_print(1);
     JK_->set_cutoff(options_->get_double("INTEGRAL_SCREENING"));
-
-    // set JK memory to 80% of total memory in number of doubles
-    JK_->set_memory(psi::Process::environment.get_memory() * 0.8 / sizeof(double));
-
-    JK_->initialize();
-
+    jk_initialize();
     JK_->print_header();
+}
+
+void Psi4Integrals::jk_initialize(double mem_percentage, int print_level) {
+    if (mem_percentage > 1.0 or mem_percentage <= 0.0) {
+        throw std::runtime_error("Invalid mem_percentage: must be 0 < value < 1.");
+    }
+    JK_->set_print(print_level);
+    JK_->set_memory(psi::Process::environment.get_memory() * mem_percentage / sizeof(double));
+    JK_->initialize();
+    JK_status_ = JKStatus::initialized;
 }
 
 void Psi4Integrals::compute_frozen_one_body_operator() {
@@ -475,6 +479,10 @@ Psi4Integrals::make_fock_inactive(psi::Dimension dim_start, psi::Dimension dim_e
      *
      * u,v,r,s: AO indices; i: MO indices
      */
+    if (JK_status_ == JKStatus::finalized) {
+        outfile->Printf("\n  JK object had beed finalized. JK is about to be initialized.\n");
+        jk_initialize(0.7);
+    }
 
     auto dim = dim_end - dim_start;
 
@@ -515,7 +523,7 @@ Psi4Integrals::make_fock_inactive(psi::Dimension dim_start, psi::Dimension dim_e
         if (wfn_->Fa() != nullptr) {
             wfn_->Fa()->copy(J);
             wfn_->Fb() = wfn_->Fa();
-            fock_ao_level_ = 1;
+            fock_ao_level_ = FockAOStatus::inactive;
         }
 
         return std::make_tuple(F_closed, F_closed, e_closed);
@@ -576,7 +584,7 @@ Psi4Integrals::make_fock_inactive(psi::Dimension dim_start, psi::Dimension dim_e
         if (wfn_->Fa() != nullptr) {
             wfn_->Fa()->copy(J);
             wfn_->Fb()->copy(K);
-            fock_ao_level_ = 1;
+            fock_ao_level_ = FockAOStatus::inactive;
         }
 
         return std::make_tuple(Fa_closed, Fb_closed, e_closed);
@@ -655,6 +663,11 @@ std::tuple<psi::SharedMatrix, psi::SharedMatrix> Psi4Integrals::make_fock_active
 }
 
 psi::SharedMatrix Psi4Integrals::make_fock_active_restricted(psi::SharedMatrix g1) {
+    if (JK_status_ == JKStatus::finalized) {
+        outfile->Printf("\n  JK object had beed finalized. JK is about to be initialized.\n");
+        jk_initialize(0.7);
+    }
+
     auto nactvpi = mo_space_info_->dimension("ACTIVE");
     auto ndoccpi = mo_space_info_->dimension("INACTIVE_DOCC");
 
@@ -691,9 +704,9 @@ psi::SharedMatrix Psi4Integrals::make_fock_active_restricted(psi::SharedMatrix g
     F_active->set_name("Fock_active");
 
     // pass AO fock to psi4 Wavefunction
-    if (fock_ao_level_ == 1) {
+    if (fock_ao_level_ == FockAOStatus::inactive) {
         wfn_->Fa()->add(K);
-        fock_ao_level_ = 2;
+        fock_ao_level_ = FockAOStatus::generalized;
     }
 
     return F_active;
@@ -701,6 +714,11 @@ psi::SharedMatrix Psi4Integrals::make_fock_active_restricted(psi::SharedMatrix g
 
 std::tuple<psi::SharedMatrix, psi::SharedMatrix>
 Psi4Integrals::make_fock_active_unrestricted(psi::SharedMatrix g1a, psi::SharedMatrix g1b) {
+    if (JK_status_ == JKStatus::finalized) {
+        outfile->Printf("\n  JK object had beed finalized. JK is about to be initialized.\n");
+        jk_initialize(0.7);
+    }
+
     auto nactvpi = mo_space_info_->dimension("ACTIVE");
     auto ndoccpi = mo_space_info_->dimension("INACTIVE_DOCC");
 
@@ -751,7 +769,7 @@ Psi4Integrals::make_fock_active_unrestricted(psi::SharedMatrix g1a, psi::SharedM
     Fb_active->set_name("Fock_active beta");
 
     // pass AO fock to psi4 Wavefunction
-    if (fock_ao_level_ == 1) {
+    if (fock_ao_level_ == FockAOStatus::inactive) {
         if (wfn_->Fa() == wfn_->Fb()) {
             Ka->add(Kb);
             Ka->scale(0.5);
@@ -760,7 +778,7 @@ Psi4Integrals::make_fock_active_unrestricted(psi::SharedMatrix g1a, psi::SharedM
             wfn_->Fa()->add(Ka);
             wfn_->Fb()->add(Kb);
         }
-        fock_ao_level_ = 2;
+        fock_ao_level_ = FockAOStatus::generalized;
     }
 
     return {Fa_active, Fb_active};

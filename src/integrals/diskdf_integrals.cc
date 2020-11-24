@@ -420,8 +420,9 @@ void DISKDFIntegrals::gather_integrals() {
     // I used this version of build as this doesn't build all the apces and
     // assume a RHF/UHF reference
     df_ = std::make_shared<psi::DFHelper>(primary, auxiliary);
-    df_->set_memory(psi::Process::environment.get_memory() / sizeof(double) -
-                    JK_->memory_estimate());
+    size_t mem_sys = psi::Process::environment.get_memory() * 0.9 / sizeof(double);
+    size_t mem = (JK_status_ == JKStatus::initialized) ? mem_sys - JK_->memory_estimate() : mem_sys;
+    df_->set_memory(mem);
     df_->set_method("DIRECT");
     df_->set_MO_core(false);
     df_->set_nthreads(omp_get_max_threads());
