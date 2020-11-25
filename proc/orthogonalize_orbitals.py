@@ -11,9 +11,7 @@ def ortho_orbs_forte(wfn, mo_space_info, Cold):
     :param Cold: MO coefficients from previous calculations
     :return: orthonormalized orbital coefficients
     """
-    orbital_spaces = ["FROZEN_DOCC", "RESTRICTED_DOCC",
-                      "GAS1", "GAS2", "GAS3", "GAS4", "GAS5", "GAS6",
-                      "RESTRICTED_UOCC", "FROZEN_UOCC"]
+    orbital_spaces = mo_space_info.space_names()
 
     # slices in the order of frozen core, core, active, virtual, frozen virtual
     occ_start = [psi4.core.Dimension([0] * mo_space_info.nirrep())]
