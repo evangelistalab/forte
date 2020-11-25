@@ -62,7 +62,6 @@ void SADSRG::internal_amps_T1(BlockedTensor& T1) {
                     }
                 }
             } else {
-#pragma omp for collapse(2)
                 for (int i = 0; i < no; ++i) {
                     for (int a = 0; a < nv; ++a) {
                         int id = mos_o[i] * nactv + mos_v[a];
@@ -120,7 +119,6 @@ void SADSRG::internal_amps_T2(BlockedTensor& T2) {
                     }
                 }
             } else {
-#pragma omp for collapse(4)
                 for (int i = 0; i < no1; ++i) {
                     for (int j = 0; j < no2; ++j) {
                         for (int a = 0; a < nv1; ++a) {

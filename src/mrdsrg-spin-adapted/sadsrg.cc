@@ -915,44 +915,51 @@ void SADSRG::build_internal_amps_types() {
                 }
             }
         }
+
         // semi-internals
         if (internal_amp_select_ != "OOVV") {
-            for (int x = 0; x < n_gas; ++x) {
-                if (gas_actv_rel_mos_[gas_spaces[x]].size() == 0)
+
+            for (int o = 0; o < n_gas; ++o) {
+                if (gas_actv_rel_mos_[gas_spaces[o]].size() == 0)
                     continue;
 
-                for (int o = 0; o < n_gas; ++o) {
-                    if (gas_actv_rel_mos_[gas_spaces[o]].size() == 0)
+                for (int v = o + 1; v < n_gas; ++v) {
+                    if (gas_actv_rel_mos_[gas_spaces[v]].size() == 0)
                         continue;
 
-                    for (int v = o + 1; v < n_gas; ++v) {
-                        if (gas_actv_rel_mos_[gas_spaces[v]].size() == 0)
+                    // oo->ov
+                    t2_internals_.push_back(
+                        {gas_spaces[o], gas_spaces[o], gas_spaces[o], gas_spaces[v], false});
+                    t2_internals_.push_back(
+                        {gas_spaces[o], gas_spaces[o], gas_spaces[v], gas_spaces[o], false});
+
+                    // ov->vv
+                    t2_internals_.push_back(
+                        {gas_spaces[o], gas_spaces[v], gas_spaces[v], gas_spaces[v], false});
+                    t2_internals_.push_back(
+                        {gas_spaces[v], gas_spaces[o], gas_spaces[v], gas_spaces[v], false});
+
+                    // ox->vx
+                    for (int x = 0; x < n_gas; ++x) {
+                        if (gas_actv_rel_mos_[gas_spaces[x]].size() == 0)
                             continue;
 
-                        if (x == o) {
-                            t2_internals_.push_back({gas_spaces[o], gas_spaces[o], gas_spaces[o],
-                                                     gas_spaces[v], false});
-                            t2_internals_.push_back({gas_spaces[o], gas_spaces[o], gas_spaces[v],
-                                                     gas_spaces[o], false});
-                        } else if (x == v) {
-                            t2_internals_.push_back({gas_spaces[o], gas_spaces[v], gas_spaces[v],
-                                                     gas_spaces[v], false});
-                            t2_internals_.push_back({gas_spaces[v], gas_spaces[o], gas_spaces[v],
-                                                     gas_spaces[v], false});
-                        } else {
-                            t2_internals_.push_back({gas_spaces[x], gas_spaces[o], gas_spaces[x],
-                                                     gas_spaces[v], false});
-                            t2_internals_.push_back({gas_spaces[x], gas_spaces[o], gas_spaces[v],
-                                                     gas_spaces[x], false});
-                            t2_internals_.push_back({gas_spaces[o], gas_spaces[x], gas_spaces[v],
-                                                     gas_spaces[x], false});
-                            t2_internals_.push_back({gas_spaces[o], gas_spaces[x], gas_spaces[x],
-                                                     gas_spaces[v], false});
-                        }
+                        if (x == o or x == v)
+                            continue;
+
+                        t2_internals_.push_back(
+                            {gas_spaces[x], gas_spaces[o], gas_spaces[x], gas_spaces[v], false});
+                        t2_internals_.push_back(
+                            {gas_spaces[x], gas_spaces[o], gas_spaces[v], gas_spaces[x], false});
+                        t2_internals_.push_back(
+                            {gas_spaces[o], gas_spaces[x], gas_spaces[v], gas_spaces[x], false});
+                        t2_internals_.push_back(
+                            {gas_spaces[o], gas_spaces[x], gas_spaces[x], gas_spaces[v], false});
                     }
                 }
             }
         }
+
         // pure internal
         if (internal_amp_select_ == "ALL") {
             for (int x1 = 0; x1 < n_gas; ++x1) {
