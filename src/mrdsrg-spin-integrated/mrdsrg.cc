@@ -152,7 +152,7 @@ void MRDSRG::startup() {
 
 void MRDSRG::print_options() {
     // fill in information
-    std::vector<std::pair<std::string, int>> calculation_info{
+    std::vector<std::pair<std::string, int>> calculation_info_int{
         {"Number of T amplitudes", ntamp_},
         {"DIIS start", diis_start_},
         {"Min DIIS vectors", diis_min_vec_},
@@ -177,35 +177,16 @@ void MRDSRG::print_options() {
         calculation_info_string.push_back({"PT2 0-order Hamiltonian", pt2_h0th_});
     }
 
-    auto true_false_string = [](bool x) {
-        if (x) {
-            return std::string("TRUE");
-        } else {
-            return std::string("FALSE");
-        }
-    };
-    calculation_info_string.push_back({"Restart amplitudes", true_false_string(restart_amps_)});
-    calculation_info_string.push_back(
-        {"Sequential DSRG transformation", true_false_string(sequential_Hbar_)});
-    calculation_info_string.push_back(
-        {"Omit blocks of >= 3 virtual indices", true_false_string(nivo_)});
-    calculation_info_string.push_back(
-        {"Read amplitudes from current dir", true_false_string(read_amps_cwd_)});
-    calculation_info_string.push_back(
-        {"Write amplitudes to current dir", true_false_string(dump_amps_cwd_)});
+    std::vector<std::pair<std::string, bool>> calculation_info_bool{
+        {"Restart amplitudes", restart_amps_},
+        {"Sequential DSRG transformation", sequential_Hbar_},
+        {"Omit blocks of >= 3 virtual indices", nivo_},
+        {"Read amplitudes from current dir", read_amps_cwd_},
+        {"Write amplitudes to current dir", dump_amps_cwd_}};
 
-    // print some information
-    print_h2("Calculation Information");
-    for (auto& str_dim : calculation_info) {
-        outfile->Printf("\n    %-40s %15d", str_dim.first.c_str(), str_dim.second);
-    }
-    for (auto& str_dim : calculation_info_double) {
-        outfile->Printf("\n    %-40s %15.3e", str_dim.first.c_str(), str_dim.second);
-    }
-    for (auto& str_dim : calculation_info_string) {
-        outfile->Printf("\n    %-40s %15s", str_dim.first.c_str(), str_dim.second.c_str());
-    }
-    outfile->Printf("\n");
+    // print information
+    print_selected_options("Calculation Information", calculation_info_string,
+                           calculation_info_bool, calculation_info_double, calculation_info_int);
 }
 
 void MRDSRG::build_ints() {

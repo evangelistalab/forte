@@ -242,6 +242,9 @@ class RDMs {
     bool have_SF_L2_ = false;
     /// Was SF_L3_ built?
     bool have_SF_L3_ = false;
+
+    /// Was SF_g2_ built?
+    bool have_SF_g2_ = false;
 };
 
 /**

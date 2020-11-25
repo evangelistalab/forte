@@ -34,10 +34,11 @@ import warnings
 import numpy as np
 import psi4
 import forte
-from forte.proc.dsrg import ProcedureDSRG
 import psi4.driver.p4util as p4util
 from psi4.driver.procrouting import proc_util
 import forte.proc.fcidump
+from forte.proc.dsrg import ProcedureDSRG
+from forte.proc.orthogonalize_orbitals import ortho_orbs_forte
 
 
 def forte_driver(state_weights_map, scf_info, options, ints, mo_space_info):
@@ -114,6 +115,15 @@ def prepare_forte_objects_from_psi4_wfn(options, wfn):
         a tuple containing the ForteIntegrals, SCFInfo, and MOSpaceInfo objects
     """
 
+    # Create the MOSpaceInfo object
+    nmopi = wfn.nmopi()
+    point_group = wfn.molecule().point_group().symbol()
+    mo_space_info = forte.make_mo_space_info(nmopi, point_group, options)
+
+    # Orthonormalize / Read orbitals
+    ortho_normalize_orbitals(wfn, mo_space_info, options)
+
+    # Set DF / MINAO integrals
     if 'DF' in options.get_str('INT_TYPE'):
         aux_basis = psi4.core.BasisSet.build(wfn.molecule(), 'DF_BASIS_MP2',
                                              options.get_str('DF_BASIS_MP2'),
@@ -124,11 +134,6 @@ def prepare_forte_objects_from_psi4_wfn(options, wfn):
         minao_basis = psi4.core.BasisSet.build(wfn.molecule(), 'MINAO_BASIS',
                                                options.get_str('MINAO_BASIS'))
         wfn.set_basisset('MINAO_BASIS', minao_basis)
-
-    # Create the MOSpaceInfo object
-    nmopi = wfn.nmopi()
-    point_group = wfn.molecule().point_group().symbol()
-    mo_space_info = forte.make_mo_space_info(nmopi, point_group, options)
 
     # Call methods that project the orbitals (AVAS, embedding)
     mo_space_info = orbital_projection(wfn, options, mo_space_info)
@@ -141,6 +146,61 @@ def prepare_forte_objects_from_psi4_wfn(options, wfn):
     state_weights_map = forte.make_state_weights_map(options, mo_space_info)
 
     return (state_weights_map, mo_space_info, scf_info)
+
+
+def ortho_normalize_orbitals(wfn, mo_space_info, options):
+    """ Test orbital orthonormality and do it if not. """
+
+    # empty wave function (just need SO overlap)
+    wfn0 = psi4.core.Wavefunction.build(wfn.molecule(),
+                                        psi4.core.get_global_option('BASIS'))
+    mints = psi4.core.MintsHelper(wfn0.basisset())
+    S = mints.so_overlap()
+    Ca = wfn.Ca()
+    mo_overlap = psi4.core.triplet(Ca, S, Ca, True, False, False)
+    mo_overlap.zero_diagonal()
+    absmax = mo_overlap.absmax()
+
+    p4print = psi4.core.print_out
+    if absmax > 1.0e-7:
+        p4print("\n\n  Forte Warning: ")
+        p4print("Orbitals of ref_wfn NOT from current geometry!!!")
+        p4print(f"\n  Max value of MO overlap: {absmax:.15f}")
+        p4print("\n  Perform new SCF at current geometry ...\n")
+
+        wfnSCF = psi4.driver.scf_helper('forte')
+
+        # orthonormalize orbitals
+        wfnSCF.Ca().copy(ortho_orbs_forte(wfnSCF, mo_space_info, Ca))
+        wfn.shallow_copy(wfnSCF)
+    else:
+        if options.get_bool('READ_ORBITALS'):
+            Cold = read_orbitals()
+            if Cold is not False:
+                p4print("\n\n  Forte: Read orbitals from file!\n\n")
+                wfn.Ca().copy(Cold)
+
+
+def read_orbitals():
+    """ Read orbitals from file. """
+    try:
+        with open('forte_Ca.npy', 'rb') as f:
+            Ca_array = np.load(f, allow_pickle=True)
+        Ca_list = [Ca_array[i] for i in range(len(Ca_array))]  # to list
+        Ca_mat = psi4.core.Matrix.from_array(Ca_list)
+        return Ca_mat
+    except FileNotFoundError:
+        return False
+
+
+def dump_orbitals(wfn):
+    """ Dump orbitals to file. """
+    Ca = wfn.Ca()
+    with open('forte_Ca.npy', 'wb') as f:
+        if wfn.nirrep() == 1:
+            np.save(f, [Ca.to_array()])
+        else:
+            np.save(f, Ca.to_array())
 
 
 def make_state_info_from_fcidump(fcidump, options):
@@ -214,9 +274,7 @@ def prepare_forte_objects_from_fcidump(options):
 
     # Averaging spin multiplets if doing spin-adapted computation
     if options.get_str('CORRELATION_SOLVER') == 'SA-MRDSRG':
-        options_dict = options.dict()
-        options_dict['SPIN_AVG_DENSITY']['value'] = True
-        options.set_dict(options_dict)
+        options.set_bool('SPIN_AVG_DENSITY', True)
 
     # manufacture a SCFInfo object from the FCIDUMP file (this assumes C1 symmetry)
     nel = fcidump['nelec']
@@ -286,28 +344,26 @@ def run_forte(name, **kwargs):
 
     if 'FCIDUMP' in options.get_str('INT_TYPE'):
         psi4.core.print_out('\n  Preparing forte objects from a custom source')
-        state_weights_map, mo_space_info, scf_info, fcidump = prepare_forte_objects_from_fcidump(
-            options)
+        state_weights_map, mo_space_info, scf_info, fcidump = prepare_forte_objects_from_fcidump(options)
     else:
-        psi4.core.print_out(
-            '\n  Preparing forte objects from a psi4 Wavefunction object')
+        psi4.core.print_out('\n  Preparing forte objects from a psi4 Wavefunction object')
         # Compute a SCF reference using psi4 and obtain a wavefunction object
         # which holds the molecule used, orbitals, Fock matrices, and more
         ref_wfn = kwargs.get('ref_wfn', None)
         if ref_wfn is None:
             ref_type = options.get_str('REF_TYPE')
-            psi4.core.print_out(
-                f'\n  No reference wavefunction provided. Computing {ref_type} orbitals with psi4\n'
-            )
+            psi4.core.print_out('\n  No reference wavefunction provided. '
+                                f'Computing {ref_type} orbitals with psi4\n')
             if options.get_str('REF_TYPE') == 'SCF':
-                warnings.warn('\n  Forte is using orbitals from a psi4 SCF reference. This is not the best choice for multireference computations. To use CASSCF orbitals from psi4 set REF_TYPE to CASSCF.\n',
-                        UserWarning)
+                warnings.warn('\n  Forte is using orbitals from a psi4 SCF reference. '
+                              'This is not the best choice for multireference computations.'
+                              '\n  To use CASSCF orbitals from psi4 set REF_TYPE to CASSCF.\n',
+                              UserWarning)
                 ref_wfn = psi4.driver.scf_helper(name, **kwargs)
             elif options.get_str('REF_TYPE') == 'CASSCF':
                 ref_wfn = psi4.proc.run_detcas('casscf', **kwargs)
 
-        state_weights_map, mo_space_info, scf_info = prepare_forte_objects_from_psi4_wfn(
-            options, ref_wfn)
+        state_weights_map, mo_space_info, scf_info = prepare_forte_objects_from_psi4_wfn(options, ref_wfn)
 
     # Run a method
     job_type = options.get_str('JOB_TYPE')
@@ -352,6 +408,10 @@ def run_forte(name, **kwargs):
                                    mo_space_info, ints)
         energy = casscf.compute_energy()
 
+    if (job_type == "MCSCF_TWO_STEP"):
+        casscf = forte.make_mcscf_two_step(state_weights_map, scf_info, options, mo_space_info, ints)
+        energy = casscf.compute_energy()
+
     if (job_type == 'NEWDRIVER'):
         energy = forte_driver(state_weights_map, scf_info, options, ints,
                               mo_space_info)
@@ -374,7 +434,10 @@ def run_forte(name, **kwargs):
         f'\n  Total                    : {end - start:12.3f} seconds')
 
     if 'FCIDUMP' not in options.get_str('INT_TYPE'):
+        if options.get_bool('DUMP_ORBITALS'):
+            dump_orbitals(ref_wfn)
         return ref_wfn
+
 
 def gradient_forte(name, **kwargs):
     r"""Function encoding sequence of PSI module and plugin calls so that
@@ -428,7 +491,9 @@ def gradient_forte(name, **kwargs):
     # Run a method
     job_type = options.get_str('JOB_TYPE')
 
-    if not job_type == 'CASSCF':
+    energy = 0.0
+
+    if job_type != 'CASSCF' and job_type != "MCSCF_TWO_STEP":
         raise Exception('analytic gradient is only implemented for CASSCF')
 
     start = time.time()
@@ -449,15 +514,19 @@ def gradient_forte(name, **kwargs):
     # Run gradient computation
     energy = forte.forte_old_methods(ref_wfn, options, ints, mo_space_info)
 
-    casscf = forte.make_casscf(state_weights_map, scf_info, options,
-                               mo_space_info, ints)
-    energy = casscf.compute_energy()
-    casscf.compute_gradient()
+    if job_type == "CASSCF":
+        casscf = forte.make_casscf(state_weights_map, scf_info, options, mo_space_info, ints)
+        energy = casscf.compute_energy()
+        casscf.compute_gradient();
+
+    if job_type == "MCSCF_TWO_STEP":
+        casscf = forte.make_mcscf_two_step(state_weights_map, scf_info, options, mo_space_info, ints)
+        energy = casscf.compute_energy()
 
     derivobj = psi4.core.Deriv(ref_wfn)
     derivobj.set_deriv_density_backtransformed(True)
     derivobj.set_ignore_reference(True)
-    grad = derivobj.compute()  #psi4.core.DerivCalcType.Correlated
+    grad = derivobj.compute(psi4.core.DerivCalcType.Correlated)
     ref_wfn.set_gradient(grad)
     optstash.restore()
 

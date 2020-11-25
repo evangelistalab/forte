@@ -81,6 +81,9 @@ SADSRG::~SADSRG() {
 void SADSRG::startup() {
     print_h2("Multireference Driven Similarity Renormalization Group");
 
+    // build Fock and cleanup JK in ForteIntegrals
+    build_fock_from_ints(ints_);
+
     // read options
     read_options();
 
@@ -119,6 +122,13 @@ void SADSRG::startup() {
 
     // check if using semicanonical orbitals
     semi_canonical_ = check_semi_orbs();
+}
+
+void SADSRG::build_fock_from_ints(std::shared_ptr<ForteIntegrals> ints) {
+    outfile->Printf("\n    Computing Fock matrix and cleaning JK ........... ");
+    ints->make_fock_matrix(rdms_.g1a(), rdms_.g1b());
+    ints->jk_finalize();
+    outfile->Printf("Done");
 }
 
 void SADSRG::read_options() {
@@ -227,7 +237,7 @@ void SADSRG::set_ambit_MOSpace() {
 
 void SADSRG::check_init_memory() {
     mem_sys_ = psi::Process::environment.get_memory();
-    auto mem_left = static_cast<int64_t>(0.98 * mem_sys_);
+    int64_t mem_left = mem_sys_ * 0.9 - ints_->jk()->memory_estimate() * sizeof(double);
 
     // integrals already stored by the ForteIntegrals
     size_t n_ele = 0;
@@ -303,21 +313,13 @@ void SADSRG::fill_density() {
 }
 
 void SADSRG::init_fock() {
-    outfile->Printf("\n    Building Fock matrix ............................ ");
-    build_fock_from_ints(ints_, Fock_);
+    outfile->Printf("\n    Filling Fock from ForteIntegrals ................ ");
+    Fock_ = BTF_->build(tensor_type_, "Fock", {"gg"});
+    Fock_.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>&, double& value) {
+        value = ints_->get_fock_a(i[0], i[1]);
+    });
     fill_Fdiag(Fock_, Fdiag_);
     outfile->Printf("Done");
-}
-
-void SADSRG::build_fock_from_ints(std::shared_ptr<ForteIntegrals> ints, BlockedTensor& F) {
-    auto g1a = L1_.block("aa").clone();
-    g1a.scale(0.5);
-    ints->make_fock_matrix(g1a, g1a);
-
-    F = BTF_->build(tensor_type_, "Fock", {"gg"});
-    F.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>&, double& value) {
-        value = ints->get_fock_a(i[0], i[1]);
-    });
 }
 
 void SADSRG::fill_Fdiag(BlockedTensor& F, std::vector<double>& Fa) {
@@ -692,7 +694,7 @@ bool SADSRG::check_semi_orbs() {
     std::string dash(8 + 32, '-');
     outfile->Printf("\n    %-8s %15s %15s", "Block", "Max", "Mean");
     outfile->Printf("\n    %s", dash.c_str());
-    for (const auto& Ftuple: Fcheck) {
+    for (const auto& Ftuple : Fcheck) {
         std::string space;
         double fmax, fmean;
         std::tie(space, fmax, fmean) = Ftuple;
@@ -800,7 +802,7 @@ std::vector<double> SADSRG::diagonalize_Fock_diagblocks(BlockedTensor& U) {
                 auto np = indices[p + offset];
                 for (int q = 0; q < dim[h]; ++q) {
                     auto nq = indices[q + offset];
-                    Udata[nq * composite_size + np] = Usub->get(h, p, q); // stored as row in ambit
+                    Udata[nq * composite_size + np] = Usub->get(h, p, q); // row: new, column: old
                 }
                 Fdiag[corr_abs_indices[p + offset]] = evals->get(h, p);
             }
@@ -809,23 +811,5 @@ std::vector<double> SADSRG::diagonalize_Fock_diagblocks(BlockedTensor& U) {
     }
 
     return Fdiag;
-}
-
-void SADSRG::print_options_info(
-    const std::string& title,
-    const std::vector<std::pair<std::string, std::string>>& calculation_info_string,
-    const std::vector<std::pair<std::string, double>>& calculation_info_double,
-    const std::vector<std::pair<std::string, int>>& calculation_info_int) {
-    print_h2(title);
-    for (auto& str_dim : calculation_info_string) {
-        outfile->Printf("\n    %-40s %15s", str_dim.first.c_str(), str_dim.second.c_str());
-    }
-    for (auto& str_dim : calculation_info_double) {
-        outfile->Printf("\n    %-40s %15.3e", str_dim.first.c_str(), str_dim.second);
-    }
-    for (auto& str_dim : calculation_info_int) {
-        outfile->Printf("\n    %-40s %15d", str_dim.first.c_str(), str_dim.second);
-    }
-    outfile->Printf("\n");
 }
 } // namespace forte

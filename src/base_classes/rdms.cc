@@ -171,13 +171,16 @@ ambit::Tensor RDMs::L3bbb() {
 }
 
 ambit::Tensor RDMs::SFg2() {
-    SF_g2_ = g2ab_.clone();
-    if (ms_avg_) {
-        SF_g2_.scale(4.0);
-        SF_g2_("pqrs") -= 2.0 * g2ab_("pqsr");
-    } else {
-        SF_g2_("pqrs") += g2ab_("qpsr");
-        SF_g2_("pqrs") += g2aa()("pqrs") + g2bb()("pqrs");
+    if (not have_SF_g2_) {
+        SF_g2_ = g2ab_.clone();
+        if (ms_avg_) {
+            SF_g2_.scale(4.0);
+            SF_g2_("pqrs") -= 2.0 * g2ab_("pqsr");
+        } else {
+            SF_g2_("pqrs") += g2ab_("qpsr");
+            SF_g2_("pqrs") += g2aa()("pqrs") + g2bb()("pqrs");
+        }
+        have_SF_g2_ = true;
     }
     return SF_g2_;
 }

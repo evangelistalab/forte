@@ -43,6 +43,7 @@
 #include <macdecls.h>
 #endif
 
+#include "forte-def.h"
 #include "helpers/blockedtensorfactory.h"
 #include "helpers/printing.h"
 #include "helpers/timer.h"
@@ -63,13 +64,13 @@ DISKDFIntegrals::DISKDFIntegrals(std::shared_ptr<ForteOptions> options,
 
 void DISKDFIntegrals::initialize() {
     print_info();
-    local_timer int_timer;
 
     int my_proc = 0;
 #ifdef HAVE_GA
     my_proc = GA_Nodeid();
 #endif
-    if (my_proc == 0) {
+    if (my_proc == 0 and (not skip_build_)) {
+        local_timer int_timer;
         gather_integrals();
         freeze_core_orbitals();
         print_timing("disk-based density-fitted integrals", int_timer.get());
@@ -379,7 +380,7 @@ void DISKDFIntegrals::set_tei(size_t, size_t, size_t, size_t, double, bool, bool
 }
 
 void DISKDFIntegrals::gather_integrals() {
-    outfile->Printf("\n Computing Density fitted integrals \n");
+    outfile->Printf("\n Computing density fitted integrals\n");
 
     std::shared_ptr<psi::BasisSet> primary = wfn_->basisset();
     std::shared_ptr<psi::BasisSet> auxiliary = wfn_->get_basisset("DF_BASIS_MP2");
@@ -419,9 +420,15 @@ void DISKDFIntegrals::gather_integrals() {
     // I used this version of build as this doesn't build all the apces and
     // assume a RHF/UHF reference
     df_ = std::make_shared<psi::DFHelper>(primary, auxiliary);
-    df_->set_memory(psi::Process::environment.get_memory() / sizeof(double));
-    df_->initialize();
+    size_t mem_sys = psi::Process::environment.get_memory() * 0.9 / sizeof(double);
+    size_t mem = (JK_status_ == JKStatus::initialized) ? mem_sys - JK_->memory_estimate() : mem_sys;
+    df_->set_memory(mem);
+    df_->set_method("DIRECT");
     df_->set_MO_core(false);
+    df_->set_nthreads(omp_get_max_threads());
+    df_->set_print_lvl(1);
+    df_->initialize();
+    df_->print_header();
     // set_C clears all the orbital spaces, so this creates the space
     // This space creates the total nmo_.
     // This assumes that everything is correlated.

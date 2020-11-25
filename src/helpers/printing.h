@@ -68,6 +68,19 @@ void print_method_banner(const std::vector<std::string>& text, const std::string
  */
 void print_timing(const std::string& text, double seconds);
 
+/**
+ * @brief print_selected_options Print options summary
+ * @param title The header of this printing block
+ * @param info_string The options of string type
+ * @param info_bool The options of Boolean type
+ * @param info_double The options of double type
+ * @param info_int The options of integer type
+ */
+void print_selected_options(const std::string& title,
+                            const std::vector<std::pair<std::string, std::string>>& info_string,
+                            const std::vector<std::pair<std::string, bool>>& info_bool,
+                            const std::vector<std::pair<std::string, double>>& info_double,
+                            const std::vector<std::pair<std::string, int>>& info_int);
 } // namespace forte
 
 #endif // _helpers_h_

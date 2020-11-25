@@ -84,7 +84,10 @@ ForteIntegrals::ForteIntegrals(std::shared_ptr<ForteOptions> options,
 
 void ForteIntegrals::common_initialize() {
     read_information();
-    allocate();
+
+    if (not skip_build_) {
+        allocate();
+    }
 }
 void ForteIntegrals::read_information() {
     // Extract information from options
@@ -116,6 +119,10 @@ void ForteIntegrals::read_information() {
     num_tei_ = INDEX4(nmo_ - 1, nmo_ - 1, nmo_ - 1, nmo_ - 1) + 1;
     num_aptei_ = nmo_ * nmo_ * nmo_ * nmo_;
     num_threads_ = omp_get_max_threads();
+
+    // skip integral allocation and transformation if doing CASSCF
+    auto job_type = options_->get_str("JOB_TYPE");
+    skip_build_ = (job_type == "MCSCF_TWO_STEP") and (integral_type_ != Custom);
 }
 
 void ForteIntegrals::allocate() {
@@ -146,6 +153,17 @@ double ForteIntegrals::nuclear_repulsion_energy() const { return nucrep_; }
 std::shared_ptr<psi::Wavefunction> ForteIntegrals::wfn() { return wfn_; }
 
 std::shared_ptr<psi::JK> ForteIntegrals::jk() { return JK_; }
+
+ForteIntegrals::JKStatus ForteIntegrals::jk_status() { return JK_status_; }
+
+void ForteIntegrals::jk_finalize() {
+    if (JK_status_ == JKStatus::initialized) {
+        JK_->finalize();
+        // nothing done in finalize() for PKJK and MemDFJK
+        if (integral_type_ == DiskDF or integral_type_ == Cholesky)
+            JK_status_ = JKStatus::finalized;
+    }
+}
 
 size_t ForteIntegrals::nso() const { return nso_; }
 
@@ -191,6 +209,11 @@ ambit::Tensor ForteIntegrals::oei_b_block(const std::vector<size_t>& p,
     t.iterate(
         [&](const std::vector<size_t>& i, double& value) { value = oei_b(p[i[0]], q[i[1]]); });
     return t;
+}
+
+void ForteIntegrals::set_fock_matrix(psi::SharedMatrix fa, psi::SharedMatrix fb) {
+    fock_a_ = fa;
+    fock_b_ = fb;
 }
 
 double ForteIntegrals::get_fock_a(size_t p, size_t q, bool corr) const {
@@ -382,12 +405,15 @@ void ForteIntegrals::freeze_core_orbitals() {
 
 void ForteIntegrals::print_info() {
     outfile->Printf("\n\n  ==> Integral Transformation <==\n");
-    outfile->Printf("\n  Number of molecular orbitals:            %10d", nmopi_.sum());
-    outfile->Printf("\n  Number of correlated molecular orbitals: %10zu", ncmo_);
-    outfile->Printf("\n  Number of frozen occupied orbitals:      %10d", frzcpi_.sum());
-    outfile->Printf("\n  Number of frozen unoccupied orbitals:    %10d", frzvpi_.sum());
-    outfile->Printf("\n  Two-electron integral type:              %10s\n\n",
+    outfile->Printf("\n  Number of molecular orbitals:            %15d", nmopi_.sum());
+    outfile->Printf("\n  Number of correlated molecular orbitals: %15zu", ncmo_);
+    outfile->Printf("\n  Number of frozen occupied orbitals:      %15d", frzcpi_.sum());
+    outfile->Printf("\n  Number of frozen unoccupied orbitals:    %15d", frzvpi_.sum());
+    outfile->Printf("\n  Two-electron integral type:              %15s\n\n",
                     int_type_label[integral_type()].c_str());
+    if (skip_build_) {
+        outfile->Printf("\n  Skip integral allocation and transformation for AO-driven CASSCF.");
+    }
 }
 
 void ForteIntegrals::print_ints() {

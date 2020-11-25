@@ -269,7 +269,7 @@ class MASTER_DSRG : public DynamicCorrelationSolver {
     /// Initialize Fock matrix
     void init_fock();
     /// Build Fock matrix from ForteIntegrals
-    void build_fock_from_ints(std::shared_ptr<ForteIntegrals> ints, BlockedTensor& F);
+    void build_fock_from_ints(std::shared_ptr<ForteIntegrals> ints);
     /// Fill in diagonal elements of Fock matrix to Fdiag
     void fill_Fdiag(BlockedTensor& F, std::vector<double>& Fa, std::vector<double>& Fb);
     /// Check orbitals if semicanonical

@@ -52,12 +52,6 @@ using namespace psi;
 
 namespace forte {
 
-/**
- * @brief CustomIntegrals::CustomIntegrals
- * @param options - psi options class
- * @param restricted - type of integral transformation
- * @param resort_frozen_core -
- */
 CustomIntegrals::CustomIntegrals(std::shared_ptr<ForteOptions> options,
                                  std::shared_ptr<MOSpaceInfo> mo_space_info,
                                  IntegralSpinRestriction restricted, double scalar,
@@ -81,10 +75,10 @@ void CustomIntegrals::initialize() {
     nso_ = nmo_;
 
     print_info();
-    outfile->Printf("\n  Using Custom integrals\n\n");
+    local_timer int_timer;
     gather_integrals();
-
     freeze_core_orbitals();
+    print_timing("preparing custom (FCIDUMP) integrals", int_timer.get());
 }
 
 double CustomIntegrals::aptei_aa(size_t p, size_t q, size_t r, size_t s) {
@@ -247,6 +241,13 @@ void CustomIntegrals::make_fock_matrix(ambit::Tensor Da, ambit::Tensor Db) {
     fock_b_ = std::get<1>(fock_closed)->clone();
     fock_b_->add(std::get<1>(fock_active));
     fock_b_->set_name("Fock beta");
+
+    fock_b_->subtract(fock_a_);
+    if (fock_b_->absmax() < 1.0e-7) { // threshold consistent with test_orbital_spin_restriction
+        fock_b_ = fock_a_;
+    } else {
+        fock_b_->add(fock_a_);
+    }
 }
 
 std::tuple<psi::SharedMatrix, psi::SharedMatrix, double>
@@ -272,6 +273,10 @@ CustomIntegrals::make_fock_inactive(psi::Dimension dim_start, psi::Dimension dim
     }
     auto nclosed = closed_indices.size();
 
+    auto nmo1 = nmo_;
+    auto nmo2 = nmo1 * nmo1;
+    auto nmo3 = nmo1 * nmo2;
+
     // compute inactive Fock
     for (int h = 0, offset = 0; h < nirrep_; ++h) {
         for (int p = 0; p < nmopi_[h]; ++p) {
@@ -287,10 +292,12 @@ CustomIntegrals::make_fock_inactive(psi::Dimension dim_start, psi::Dimension dim
                     auto ni = closed_indices[i];
 
                     // Fock alpha: F_{pq} = h_{pq} + \sum_{i} <pi||qi> + \sum_{I} <pI||qI>
-                    va += aptei_aa(np, ni, nq, ni) + aptei_ab(np, ni, nq, ni);
+                    auto id_a = np * nmo3 + ni * nmo2 + nq * nmo1 + ni;
+                    va += full_aphys_tei_aa_[id_a] + full_aphys_tei_ab_[id_a];
 
                     // Fock beta: F_{PQ} = h_{PQ} + \sum_{i} <Pi||Qi> + \sum_{I} <PI||QI>
-                    vb += aptei_bb(np, ni, nq, ni) + aptei_ab(ni, np, ni, nq);
+                    auto id_b = ni * nmo3 + np * nmo2 + ni * nmo1 + nq;
+                    vb += full_aphys_tei_bb_[id_b] + full_aphys_tei_ab_[id_b];
                 }
 
                 Fock_a->set(h, p, q, va);
@@ -312,8 +319,9 @@ CustomIntegrals::make_fock_inactive(psi::Dimension dim_start, psi::Dimension dim
             for (size_t j = 0; j < nclosed; ++j) {
                 auto nj = closed_indices[j];
 
-                e_closed += 0.5 * (aptei_aa(ni, nj, ni, nj) + aptei_bb(ni, nj, ni, nj));
-                e_closed += aptei_ab(ni, nj, ni, nj);
+                auto idx = ni * nmo3 + nj * nmo2 + ni * nmo1 + nj;
+                e_closed += 0.5 * (full_aphys_tei_aa_[idx] + full_aphys_tei_bb_[idx]);
+                e_closed += full_aphys_tei_ab_[idx];
             }
         }
         offset1 += nmopi_[h1];
@@ -328,6 +336,7 @@ CustomIntegrals::make_fock_active(ambit::Tensor Da, ambit::Tensor Db) {
     // F_{pq} = \sum_{uv}^{active} <pu||qv> * gamma_{uv}
 
     auto nactv = mo_space_info_->size("ACTIVE");
+    auto dim_actv = mo_space_info_->dimension("ACTIVE");
 
     if (Da.dims() != Db.dims()) {
         throw std::runtime_error("Different dimensions of alpha and beta 1RDM!");
@@ -336,32 +345,64 @@ CustomIntegrals::make_fock_active(ambit::Tensor Da, ambit::Tensor Db) {
         throw std::runtime_error("Inconsistent number of active orbitals");
     }
 
+    // to have a single maintained code, we translate densities to psi::SharedMatrix
+    auto g1a = std::make_shared<psi::Matrix>("1RDM alpha", dim_actv, dim_actv);
+    auto g1b = std::make_shared<psi::Matrix>("1RDM beta", dim_actv, dim_actv);
+
+    auto& Da_data = Da.data();
+    auto& Db_data = Db.data();
+
+    for (int h = 0, offset = 0; h < nirrep_; ++h) {
+        for (int u = 0; u < dim_actv[h]; ++u) {
+            int nu = u + offset;
+            for (int v = 0; v < dim_actv[h]; ++v) {
+                int nv = v + offset;
+                g1a->set(h, u, v, Da_data[nu * nactv + nv]);
+                g1b->set(h, u, v, Db_data[nu * nactv + nv]);
+            }
+        }
+        offset += dim_actv[h];
+    }
+
+    return make_fock_active_unrestricted(g1a, g1b);
+};
+
+psi::SharedMatrix CustomIntegrals::make_fock_active_restricted(psi::SharedMatrix D) {
+    auto g1a = D->clone();
+    g1a->scale(0.5);
+    auto Ftuple = make_fock_active_unrestricted(g1a, g1a);
+    return std::get<0>(Ftuple);
+}
+
+std::tuple<psi::SharedMatrix, psi::SharedMatrix>
+CustomIntegrals::make_fock_active_unrestricted(psi::SharedMatrix g1a, psi::SharedMatrix g1b) {
     auto Fock_a = std::make_shared<psi::Matrix>("Fock_active alpha", nmopi_, nmopi_);
     auto Fock_b = std::make_shared<psi::Matrix>("Fock_active beta", nmopi_, nmopi_);
 
     auto abs_mo_actv = mo_space_info_->absolute_mo("ACTIVE");
     auto rel_mo_actv = mo_space_info_->relative_mo("ACTIVE");
 
+    auto actv_dim = mo_space_info_->dimension("ACTIVE");
+
     // figure out symmetry allowed absolute index for active orbitals
-    std::vector<std::tuple<size_t, size_t, size_t, size_t>> actv_indices_sym;
-    for (size_t u = 0; u < nactv; ++u) {
-        auto hu = rel_mo_actv[u].first;
-        auto nu = abs_mo_actv[u];
-
-        for (size_t v = 0; v < nactv; ++v) {
-            if (rel_mo_actv[v].first != hu)
-                continue;
-            auto nv = abs_mo_actv[v];
-
-            actv_indices_sym.push_back(std::make_tuple(u, v, nu, nv));
+    std::vector<std::tuple<size_t, size_t, size_t, size_t, size_t>> actv_indices_sym;
+    for (int h = 0, offset = 0; h < nirrep_; ++h) {
+        for (int u = 0; u < actv_dim[h]; ++u) {
+            int nu = abs_mo_actv[u + offset];
+            for (int v = 0; v < actv_dim[h]; ++v) {
+                int nv = abs_mo_actv[v + offset];
+                actv_indices_sym.push_back({h, u, v, nu, nv});
+            }
         }
+        offset += actv_dim[h];
     }
     auto actv_sym_size = actv_indices_sym.size();
 
-    // compute active Fock
-    auto& Da_data = Da.data();
-    auto& Db_data = Db.data();
+    auto nmo1 = nmo_;
+    auto nmo2 = nmo1 * nmo1;
+    auto nmo3 = nmo1 * nmo2;
 
+    // compute active Fock
     for (int h = 0, offset = 0; h < nirrep_; ++h) {
         for (int p = 0; p < nmopi_[h]; ++p) {
             auto np = p + offset;
@@ -373,14 +414,16 @@ CustomIntegrals::make_fock_active(ambit::Tensor Da, ambit::Tensor Db) {
 
 #pragma omp parallel for reduction(+ : va, vb)
                 for (size_t i_sym = 0; i_sym < actv_sym_size; ++i_sym) {
-                    size_t u, v, nu, nv;
-                    std::tie(u, v, nu, nv) = actv_indices_sym[i_sym];
+                    size_t hactv, u, v, nu, nv;
+                    std::tie(hactv, u, v, nu, nv) = actv_indices_sym[i_sym];
 
-                    va += aptei_aa(np, nu, nq, nv) * Da_data[u * nactv + v];
-                    va += aptei_ab(np, nu, nq, nv) * Db_data[u * nactv + v];
+                    auto id_a = np * nmo3 + nu * nmo2 + nq * nmo1 + nv;
+                    va += full_aphys_tei_aa_[id_a] * g1a->get(hactv, u, v);
+                    va += full_aphys_tei_ab_[id_a] * g1b->get(hactv, u, v);
 
-                    vb += aptei_bb(np, nu, nq, nv) * Db_data[u * nactv + v];
-                    vb += aptei_ab(nu, np, nv, nq) * Da_data[u * nactv + v];
+                    auto id_b = nu * nmo3 + np * nmo2 + nv * nmo1 + nq;
+                    vb += full_aphys_tei_bb_[id_b] * g1b->get(hactv, u, v);
+                    vb += full_aphys_tei_ab_[id_b] * g1a->get(hactv, u, v);
                 }
 
                 Fock_a->set(h, p, q, va);
@@ -391,7 +434,7 @@ CustomIntegrals::make_fock_active(ambit::Tensor Da, ambit::Tensor Db) {
     }
 
     return {Fock_a, Fock_b};
-};
+}
 
 void CustomIntegrals::transform_one_electron_integrals() {
     // the first time we transform, we keep a copy of the original integrals
@@ -495,7 +538,7 @@ void CustomIntegrals::update_orbitals(std::shared_ptr<psi::Matrix> Ca,
         if (not test_orbital_spin_restriction(Ca, Cb)) {
             Ca->print();
             Cb->print();
-            auto msg = "ForteIntegrals::update_orbitals was passed two different sets of orbitals"
+            auto msg = "CustomIntegrals::update_orbitals was passed two different sets of orbitals"
                        "\n  but the integral object assumes restricted orbitals";
             throw std::runtime_error(msg);
         }
@@ -503,11 +546,13 @@ void CustomIntegrals::update_orbitals(std::shared_ptr<psi::Matrix> Ca,
 
     // 2. Re-transform the integrals
     aptei_idx_ = nmo_;
+    local_timer int_timer;
+    outfile->Printf("\n  Integrals are about to be updated.");
     transform_one_electron_integrals();
     transform_two_electron_integrals();
     gather_integrals();
-    outfile->Printf("\n  Integrals are about to be updated.");
     freeze_core_orbitals();
+    outfile->Printf("\n  Integrals update took %9.3f s.", int_timer.get());
 }
 
 // void CustomIntegrals::resort_integrals_after_freezing() {}

@@ -111,7 +111,7 @@ void DSRG_MRPT::read_options() {
 
 void DSRG_MRPT::print_options() {
     // fill in information
-    std::vector<std::pair<std::string, size_t>> calculation_info{{"ntamp", ntamp_}};
+    std::vector<std::pair<std::string, int>> calculation_info_int{{"ntamp", ntamp_}};
 
     std::vector<std::pair<std::string, double>> calculation_info_double{
         {"flow parameter", s_},
@@ -125,18 +125,9 @@ void DSRG_MRPT::print_options() {
         {"reference relaxation", ref_relax_},
         {"core virtual source type", ccvv_source_}};
 
-    // print some information
-    print_h2("Calculation Information");
-    for (auto& str_dim : calculation_info) {
-        outfile->Printf("\n    %-35s %15zu", str_dim.first.c_str(), str_dim.second);
-    }
-    for (auto& str_dim : calculation_info_double) {
-        outfile->Printf("\n    %-35s %15.3e", str_dim.first.c_str(), str_dim.second);
-    }
-    for (auto& str_dim : calculation_info_string) {
-        outfile->Printf("\n    %-35s %15s", str_dim.first.c_str(), str_dim.second.c_str());
-    }
-    outfile->Printf("\n");
+    // print information
+    print_selected_options("Calculation Information", calculation_info_string, {},
+                           calculation_info_double, calculation_info_int);
 }
 
 void DSRG_MRPT::startup() {
@@ -250,18 +241,18 @@ void DSRG_MRPT::build_ints() {
 }
 
 void DSRG_MRPT::build_density() {
-//    // test OPDC
-//    ambit::Tensor diff = ambit::Tensor::build(tensor_type_, "diff_L1", rdms_.g1a().dims());
-//    diff("pq") = rdms_.g1a()("pq") - rdms_.g1b()("pq");
-//    if (diff.norm() > 1.0e-8) {
-//        outfile->Printf("\n  Error: one-particle density cumulant cannot be spin-adapted!");
-//        outfile->Printf("\n  |L1a - L1b| = %20.15f  <== This should be 0.0.", diff.norm());
-//        throw psi::PSIEXCEPTION("One-particle density cumulant cannot be spin-adapted!");
-//    }
+    //    // test OPDC
+    //    ambit::Tensor diff = ambit::Tensor::build(tensor_type_, "diff_L1", rdms_.g1a().dims());
+    //    diff("pq") = rdms_.g1a()("pq") - rdms_.g1b()("pq");
+    //    if (diff.norm() > 1.0e-8) {
+    //        outfile->Printf("\n  Error: one-particle density cumulant cannot be spin-adapted!");
+    //        outfile->Printf("\n  |L1a - L1b| = %20.15f  <== This should be 0.0.", diff.norm());
+    //        throw psi::PSIEXCEPTION("One-particle density cumulant cannot be spin-adapted!");
+    //    }
 
     // fill spin-summed OPDC
     ambit::Tensor L1aa = L1_.block("aa");
-//    L1aa("pq") = rdms_.g1a()("pq") + rdms_.g1b()("pq");
+    //    L1aa("pq") = rdms_.g1a()("pq") + rdms_.g1b()("pq");
     L1aa("pq") = rdms_.SF_L1()("pq");
 
     ambit::Tensor E1aa = Eta1_.block("aa");
@@ -269,51 +260,52 @@ void DSRG_MRPT::build_density() {
         [&](const std::vector<size_t>& i, double& value) { value = i[0] == i[1] ? 2.0 : 0.0; });
     E1aa("pq") -= L1aa("pq");
 
-//    // test T2PDC
-//    diff = ambit::Tensor::build(tensor_type_, "diff_L2", rdms_.L2aa().dims());
-//    diff("pqrs") = rdms_.L2aa()("pqrs") - rdms_.L2ab()("pqrs") + rdms_.L2ab()("pqsr");
-//    if (diff.norm() > 1.0e-8) {
-//        outfile->Printf("\n  Error: two-particle density cumulant cannot be spin-adapted!");
-//        outfile->Printf("\n  |L2[pqrs] - (L2[pQrS] - L2[pQsR])| = %20.15f  <== "
-//                        "This should be 0.0.",
-//                        diff.norm());
-//        throw psi::PSIEXCEPTION("Two-particle density cumulant cannot be spin-adapted!");
-//    }
+    //    // test T2PDC
+    //    diff = ambit::Tensor::build(tensor_type_, "diff_L2", rdms_.L2aa().dims());
+    //    diff("pqrs") = rdms_.L2aa()("pqrs") - rdms_.L2ab()("pqrs") + rdms_.L2ab()("pqsr");
+    //    if (diff.norm() > 1.0e-8) {
+    //        outfile->Printf("\n  Error: two-particle density cumulant cannot be spin-adapted!");
+    //        outfile->Printf("\n  |L2[pqrs] - (L2[pQrS] - L2[pQsR])| = %20.15f  <== "
+    //                        "This should be 0.0.",
+    //                        diff.norm());
+    //        throw psi::PSIEXCEPTION("Two-particle density cumulant cannot be spin-adapted!");
+    //    }
 
     // fill spin-summed T2PDC
     ambit::Tensor L2aa = L2_.block("aaaa");
-//    L2aa("pqrs") += 4.0 * rdms_.L2ab()("pqrs");
-//    L2aa("pqrs") -= 2.0 * rdms_.L2ab()("pqsr");
+    //    L2aa("pqrs") += 4.0 * rdms_.L2ab()("pqrs");
+    //    L2aa("pqrs") -= 2.0 * rdms_.L2ab()("pqsr");
     L2aa("pqrs") = rdms_.SF_L2()("pqrs");
 
     // T3PDC
     if (foptions_->get_str("THREEPDC") != "ZERO") {
-//        // test spin adaptation
-//        diff = ambit::Tensor::build(tensor_type_, "diff_L3", rdms_.L3aaa().dims());
-//        diff("pqrstu") +=
-//            rdms_.L3aab()("pqrstu") - rdms_.L3aab()("pqrsut") + rdms_.L3aab()("pqrtus");
-//        diff("pqrstu") -=
-//            rdms_.L3aab()("prqstu") - rdms_.L3aab()("prqsut") + rdms_.L3aab()("prqtus");
-//        diff("pqrstu") +=
-//            rdms_.L3aab()("qrpstu") - rdms_.L3aab()("qrpsut") + rdms_.L3aab()("qrptus");
-//        diff.scale(1.0 / 3.0);
-//        diff("pqrstu") -= rdms_.L3aaa()("pqrstu");
-//        if (diff.norm() > 1.0e-8) {
-//            outfile->Printf("\n  Error: three-particle density cumulant cannot "
-//                            "be spin-adapted!");
-//            outfile->Printf("\n  |L3aaa - 1/3 * P(L3aab)| = %20.15f  <== This "
-//                            "should be 0.0.",
-//                            diff.norm());
-//            throw psi::PSIEXCEPTION("Three-particle density cumulant cannot be spin-adapted!");
-//        }
+        //        // test spin adaptation
+        //        diff = ambit::Tensor::build(tensor_type_, "diff_L3", rdms_.L3aaa().dims());
+        //        diff("pqrstu") +=
+        //            rdms_.L3aab()("pqrstu") - rdms_.L3aab()("pqrsut") + rdms_.L3aab()("pqrtus");
+        //        diff("pqrstu") -=
+        //            rdms_.L3aab()("prqstu") - rdms_.L3aab()("prqsut") + rdms_.L3aab()("prqtus");
+        //        diff("pqrstu") +=
+        //            rdms_.L3aab()("qrpstu") - rdms_.L3aab()("qrpsut") + rdms_.L3aab()("qrptus");
+        //        diff.scale(1.0 / 3.0);
+        //        diff("pqrstu") -= rdms_.L3aaa()("pqrstu");
+        //        if (diff.norm() > 1.0e-8) {
+        //            outfile->Printf("\n  Error: three-particle density cumulant cannot "
+        //                            "be spin-adapted!");
+        //            outfile->Printf("\n  |L3aaa - 1/3 * P(L3aab)| = %20.15f  <== This "
+        //                            "should be 0.0.",
+        //                            diff.norm());
+        //            throw psi::PSIEXCEPTION("Three-particle density cumulant cannot be
+        //            spin-adapted!");
+        //        }
 
         // fill spin-summed T3PDC
         ambit::Tensor L3aaa = L3_.block("aaaaaa");
-//        L3aaa("pqrstu") += rdms_.L3aaa()("pqrstu");
-//        L3aaa("pqrstu") += rdms_.L3aab()("pqrstu");
-//        L3aaa("pqrstu") += rdms_.L3aab()("prqsut");
-//        L3aaa("pqrstu") += rdms_.L3aab()("qrptus");
-//        L3aaa.scale(2.0);
+        //        L3aaa("pqrstu") += rdms_.L3aaa()("pqrstu");
+        //        L3aaa("pqrstu") += rdms_.L3aab()("pqrstu");
+        //        L3aaa("pqrstu") += rdms_.L3aab()("prqsut");
+        //        L3aaa("pqrstu") += rdms_.L3aab()("qrptus");
+        //        L3aaa.scale(2.0);
         L3aaa("pqrstu") = rdms_.SF_L3()("pqrstu");
     }
 }

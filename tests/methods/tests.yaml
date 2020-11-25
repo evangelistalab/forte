@@ -70,17 +70,20 @@ embedding:
    - embedding-2
 casscf:
   short:
-   - casscf-2
    - casscf-7
    - df-casscf-1
+   - casscf-fcidump-1
+   - casscf-gradient-1
+   - casscf-gradient-3
   medium:
    - casscf-1
+   - casscf-2
    - casscf-3
    - casscf-4
    - casscf-5
    - casscf-6
    - casscf-9
-   - casscf-gradient-1
+   - casscf-gradient-2
   long:
    - casscf-8
 cd-dsrg-mrpt2:
@@ -294,6 +297,9 @@ mrdsrg-spin-adapted-pt3:
    - mrdsrg-spin-adapted-pt3-1
   medium:
    - mrdsrg-spin-adapted-pt3-2
+l-bfgs:
+  short:
+   - l-bfgs_rosenbrock
 pci:
   short:
    - pci-1

@@ -30,6 +30,7 @@
 #include "psi4/libpsi4util/PsiOutStream.h"
 
 #include "helpers/disk_io.h"
+#include "helpers/printing.h"
 #include "helpers/timer.h"
 #include "sa_dsrgpt.h"
 
@@ -44,9 +45,7 @@ SA_DSRGPT::SA_DSRGPT(RDMs rdms, std::shared_ptr<SCFInfo> scf_info,
     init_fock();
 }
 
-void SA_DSRGPT::read_options() {
-    form_Hbar_ = (relax_ref_ != "NONE" || multi_state_);
-}
+void SA_DSRGPT::read_options() { form_Hbar_ = (relax_ref_ != "NONE" || multi_state_); }
 
 void SA_DSRGPT::print_options() {
     // Print a summary
@@ -83,8 +82,8 @@ void SA_DSRGPT::print_options() {
     }
 
     // Print some information
-    print_options_info("Computation Information", calculation_info_string, calculation_info_double,
-                       calculation_info_int);
+    print_selected_options("Computation Information", calculation_info_string, {},
+                           calculation_info_double, calculation_info_int);
 }
 
 void SA_DSRGPT::init_fock() {
