@@ -284,94 +284,144 @@ ambit::Tensor DISKDFIntegrals::aptei_bb_block(const std::vector<size_t>& p,
 
 double** DISKDFIntegrals::three_integral_pointer() { return (ThreeIntegral_->pointer()); }
 
-ambit::Tensor DISKDFIntegrals::three_integral_block(const std::vector<size_t>& A,
-                                                    const std::vector<size_t>& p,
-                                                    const std::vector<size_t>& q) {
-    ambit::Tensor ReturnTensor =
-        ambit::Tensor::build(tensor_type_, "Return", {A.size(), p.size(), q.size()});
-    std::vector<double>& ReturnTensorV = ReturnTensor.data();
-
-    bool frozen_core = false;
-
+ambit::Tensor DISKDFIntegrals::three_integral_block(const std::vector<size_t>& A_vec,
+                                                    const std::vector<size_t>& p_vec,
+                                                    const std::vector<size_t>& q_vec) {
     // Take care of frozen orbitals
+    std::vector<size_t> cmotomo; // from correlated MO to full MO
     if (frzcpi_.sum() && aptei_idx_ == ncmo_) {
-        frozen_core = true;
+        // there are frozen orbitals
+        cmotomo = cmotomo_;
+    } else {
+        cmotomo.resize(nmo_);
+        std::iota(cmotomo.begin(), cmotomo.end(), 0);
     }
 
-    size_t pn, qn;
-    if (nthree_ == A.size()) {
-        std::vector<std::shared_ptr<psi::Matrix>> p_by_Aq;
-        for (auto p_block : p) {
-            if (frozen_core) {
-                pn = cmotomo_[p_block];
-            } else {
-                pn = p_block;
-            }
+    auto Asize = A_vec.size();
+    auto psize = p_vec.size();
+    auto qsize = q_vec.size();
+    auto pqsize = psize * qsize;
 
-            std::shared_ptr<psi::Matrix> Aq(new psi::Matrix("Aq", nthree_, nmo_));
-
-            std::vector<size_t> A_range = {A[0], A.back() + 1};
-            std::vector<size_t> p_range = {pn, pn + 1};
-            std::vector<size_t> q_range = {0, nmo_};
-
-            df_->fill_tensor("B", Aq, A_range, p_range, q_range);
-            p_by_Aq.push_back(Aq);
+    // make sure indices are contiguous
+    for (size_t a = 1; a < Asize; ++a) {
+        if (A_vec[a] != A_vec[0] + a) {
+            throw std::runtime_error("DISKDFIntegrals::three_integral_block: A_vec not contiguos");
         }
-        if (frozen_core) {
-            ReturnTensor.iterate([&](const std::vector<size_t>& i, double& value) {
-                value = p_by_Aq[i[1]]->get(A[i[0]], cmotomo_[q[i[2]]]);
+    }
+    std::vector<size_t> A_range{A_vec[0], A_vec[0] + Asize};
+
+    bool p_contiguous = true;
+    for (size_t p = 1, p0 = cmotomo[p_vec[0]]; p < psize; ++p) {
+        if (cmotomo[p_vec[p]] != p0 + p) {
+            p_contiguous = false;
+            break;
+        }
+    }
+
+    bool q_contiguous = true;
+    for (size_t q = 1, q0 = cmotomo[q_vec[0]]; q < qsize; ++q) {
+        if (cmotomo[q_vec[q]] != q0 + q) {
+            q_contiguous = false;
+            break;
+        }
+    }
+
+    auto out = ambit::Tensor::build(tensor_type_, "Return", {Asize, psize, qsize});
+    auto& out_data = out.data();
+
+    outfile->Printf("\n  p_contiguous: %d, q_contiguous: %d", p_contiguous, q_contiguous);
+
+    if (p_contiguous and q_contiguous) {
+        std::vector<size_t> p_range{cmotomo[p_vec[0]], cmotomo[p_vec[0]] + psize};
+        std::vector<size_t> q_range{cmotomo[q_vec[0]], cmotomo[q_vec[0]] + qsize};
+
+        df_->fill_tensor("B", out_data.data(), A_range, p_range, q_range);
+
+    } else if ((not p_contiguous) and q_contiguous) {
+
+        std::vector<size_t> q_range{cmotomo[q_vec[0]], cmotomo[q_vec[0]] + qsize};
+
+        for (size_t ip = 0; ip < psize; ++ip) {
+            auto pn = cmotomo[p_vec[ip]];
+
+            auto Aq = std::make_shared<psi::Matrix>("Aq", Asize, qsize);
+
+            df_->fill_tensor("B", Aq, A_range, {pn, pn + 1}, q_range);
+
+            for (size_t ia = 0; ia < Asize; ++ia) {
+                for (size_t iq = 0; iq < qsize; ++iq) {
+                    out_data[ia * pqsize + ip * qsize + iq] = Aq->get(ia, iq);
+                }
+            }
+        }
+
+    } else if (p_contiguous and (not q_contiguous)) {
+
+        std::vector<size_t> p_range{cmotomo[p_vec[0]], cmotomo[p_vec[0]] + psize};
+
+        for (size_t iq = 0; iq < qsize; ++iq) {
+            auto qn = cmotomo[q_vec[iq]];
+
+            auto Ap = std::make_shared<psi::Matrix>("Aq", Asize, psize);
+
+            df_->fill_tensor("B", Ap, A_range, {qn, qn + 1}, p_range);
+
+            for (size_t ia = 0; ia < Asize; ++ia) {
+                for (size_t ip = 0; ip < psize; ++ip) {
+                    out_data[ia * pqsize + ip * qsize + iq] = Ap->get(ia, ip);
+                }
+            }
+        }
+
+    } else {
+        std::vector<size_t> all_range{0, nmo_};
+        std::vector<psi::SharedMatrix> Am_vec;
+
+        if (psize < qsize) {
+            for (size_t ip = 0; ip < psize; ++ip) {
+                auto pn = cmotomo[p_vec[ip]];
+                auto Am = std::make_shared<psi::Matrix>("Am", nthree_, nmo_);
+                df_->fill_tensor("B", Am, A_range, {pn, pn + 1}, all_range);
+                Am_vec.push_back(Am);
+            }
+            out.iterate([&](const std::vector<size_t>& i, double& value) {
+                value = Am_vec[i[1]]->get(A_vec[i[0]], cmotomo[q_vec[i[2]]]);
             });
         } else {
-            ReturnTensor.iterate([&](const std::vector<size_t>& i, double& value) {
-                value = p_by_Aq[i[1]]->get(A[i[0]], q[i[2]]);
+            for (size_t iq = 0; iq < qsize; ++iq) {
+                auto qn = cmotomo[q_vec[iq]];
+                auto Am = std::make_shared<psi::Matrix>("Am", nthree_, nmo_);
+                df_->fill_tensor("B", Am, A_range, {qn, qn + 1}, all_range);
+                Am_vec.push_back(Am);
+            }
+            out.iterate([&](const std::vector<size_t>& i, double& value) {
+                value = Am_vec[i[2]]->get(A_vec[i[0]], cmotomo[p_vec[i[1]]]);
             });
         }
-    } else {
-        // If user wants blocking in A
-        pn = 0;
-        qn = 0;
-        // If p and q are not just nmo_, this map corrects that.
-        // If orbital 0, 5, 10, 15 is frozen, this corresponds to 0, 1, 2, 3.
-        // This map says p_map[5] = 1.
-        // Used in correct ordering for the tensor.
-        std::map<size_t, size_t> p_map;
-        std::map<size_t, size_t> q_map;
 
-        int p_idx = 0;
-        int q_idx = 0;
-        for (size_t p_block : p) {
-            p_map[p_block] = p_idx;
-            p_idx++;
-        }
-        for (size_t q_block : q) {
-            q_map[q_block] = q_idx;
-            q_idx++;
-        }
-        for (size_t p_block : p) {
-            pn = frozen_core ? cmotomo_[p_block] : p_block;
+        //        // The following loops every index for debugging
+        //        for (size_t ip = 0; ip < psize; ++ip) {
+        //            auto pn = cmotomo[p_vec[ip]];
+        //            std::vector<size_t> p_range = {pn, pn + 1};
 
-            for (size_t q_block : q) {
-                qn = frozen_core ? cmotomo_[q_block] : q_block;
+        //            for (size_t iq = 0; iq < qsize; ++iq) {
+        //                auto qn = cmotomo[q_vec[iq]];
+        //                std::vector<size_t> q_range = {qn, qn + 1};
 
-                std::vector<size_t> A_range = {A[0], A.size()};
-                std::vector<size_t> p_range = {pn, pn};
-                std::vector<size_t> q_range = {qn, qn};
+        //                double* A_chunk = new double[Asize];
 
-                double* A_chunk = nullptr;
+        //                df_->fill_tensor("B", A_chunk, A_range, p_range, q_range);
 
-                df_->fill_tensor("B", A_chunk, A_range, p_range, q_range);
+        //                for (size_t a = 0; a < A_vec.size(); a++) {
+        //                    out_data[a * pqsize + ip * qsize + iq] = A_chunk[a];
+        //                }
 
-                for (size_t a = 0; a < A.size(); a++) {
-                    // Weird way the tensor is formatted
-                    // Fill the tensor for every chunk of A
-                    ReturnTensorV[a * p.size() * q.size() + p_map[p_block] * q.size() +
-                                  q_map[q_block]] = A_chunk[a];
-                }
-                delete[] A_chunk;
-            }
-        }
+        //                delete[] A_chunk;
+        //            }
+        //        }
     }
-    return ReturnTensor;
+
+    return out;
 }
 
 void DISKDFIntegrals::set_tei(size_t, size_t, size_t, size_t, double, bool, bool) {
