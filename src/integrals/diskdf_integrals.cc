@@ -284,7 +284,7 @@ ambit::Tensor DISKDFIntegrals::aptei_bb_block(const std::vector<size_t>& p,
 
 double** DISKDFIntegrals::three_integral_pointer() { return (ThreeIntegral_->pointer()); }
 
-ambit::Tensor DISKDFIntegrals::three_integral_block(const std::vector<size_t>& A_vec,
+ambit::Tensor DISKDFIntegrals::three_integral_block(const std::vector<size_t>& Q_vec,
                                                     const std::vector<size_t>& p_vec,
                                                     const std::vector<size_t>& q_vec) {
     // Take care of frozen orbitals
@@ -297,18 +297,18 @@ ambit::Tensor DISKDFIntegrals::three_integral_block(const std::vector<size_t>& A
         std::iota(cmotomo.begin(), cmotomo.end(), 0);
     }
 
-    auto Asize = A_vec.size();
+    auto Qsize = Q_vec.size();
     auto psize = p_vec.size();
     auto qsize = q_vec.size();
     auto pqsize = psize * qsize;
 
     // make sure indices are contiguous
-    for (size_t a = 1; a < Asize; ++a) {
-        if (A_vec[a] != A_vec[0] + a) {
+    for (size_t a = 1; a < Qsize; ++a) {
+        if (Q_vec[a] != Q_vec[0] + a) {
             throw std::runtime_error("DISKDFIntegrals::three_integral_block: A_vec not contiguos");
         }
     }
-    std::vector<size_t> A_range{A_vec[0], A_vec[0] + Asize};
+    std::vector<size_t> Q_range{Q_vec[0], Q_vec[0] + Qsize};
 
     bool p_contiguous = true;
     for (size_t p = 1, p0 = cmotomo[p_vec[0]]; p < psize; ++p) {
@@ -326,77 +326,81 @@ ambit::Tensor DISKDFIntegrals::three_integral_block(const std::vector<size_t>& A
         }
     }
 
-    auto out = ambit::Tensor::build(tensor_type_, "Return", {Asize, psize, qsize});
+    auto out = ambit::Tensor::build(tensor_type_, "Return", {Qsize, psize, qsize});
     auto& out_data = out.data();
-
-    outfile->Printf("\n  p_contiguous: %d, q_contiguous: %d", p_contiguous, q_contiguous);
 
     if (p_contiguous and q_contiguous) {
         std::vector<size_t> p_range{cmotomo[p_vec[0]], cmotomo[p_vec[0]] + psize};
         std::vector<size_t> q_range{cmotomo[q_vec[0]], cmotomo[q_vec[0]] + qsize};
 
-        df_->fill_tensor("B", out_data.data(), A_range, p_range, q_range);
-
+        df_->fill_tensor("B", out_data.data(), Q_range, p_range, q_range);
     } else if ((not p_contiguous) and q_contiguous) {
-
         std::vector<size_t> q_range{cmotomo[q_vec[0]], cmotomo[q_vec[0]] + qsize};
 
-        for (size_t ip = 0; ip < psize; ++ip) {
-            auto pn = cmotomo[p_vec[ip]];
+        for (size_t p = 0; p < psize; ++p) {
+            auto np = cmotomo[p_vec[p]];
+            auto Aq = std::make_shared<psi::Matrix>("Aq", Qsize, qsize);
+            df_->fill_tensor("B", Aq, Q_range, {np, np + 1}, q_range);
 
-            auto Aq = std::make_shared<psi::Matrix>("Aq", Asize, qsize);
-
-            df_->fill_tensor("B", Aq, A_range, {pn, pn + 1}, q_range);
-
-            for (size_t ia = 0; ia < Asize; ++ia) {
-                for (size_t iq = 0; iq < qsize; ++iq) {
-                    out_data[ia * pqsize + ip * qsize + iq] = Aq->get(ia, iq);
+            for (size_t a = 0; a < Qsize; ++a) {
+                for (size_t q = 0; q < qsize; ++q) {
+                    out_data[a * pqsize + p * qsize + q] = Aq->get(a, q);
                 }
             }
         }
-
     } else if (p_contiguous and (not q_contiguous)) {
-
         std::vector<size_t> p_range{cmotomo[p_vec[0]], cmotomo[p_vec[0]] + psize};
 
-        for (size_t iq = 0; iq < qsize; ++iq) {
-            auto qn = cmotomo[q_vec[iq]];
+        for (size_t q = 0; q < qsize; ++q) {
+            auto nq = cmotomo[q_vec[q]];
+            auto Ap = std::make_shared<psi::Matrix>("Aq", Qsize, psize);
+            df_->fill_tensor("B", Ap, Q_range, {nq, nq + 1}, p_range);
 
-            auto Ap = std::make_shared<psi::Matrix>("Aq", Asize, psize);
-
-            df_->fill_tensor("B", Ap, A_range, {qn, qn + 1}, p_range);
-
-            for (size_t ia = 0; ia < Asize; ++ia) {
-                for (size_t ip = 0; ip < psize; ++ip) {
-                    out_data[ia * pqsize + ip * qsize + iq] = Ap->get(ia, ip);
+            for (size_t a = 0; a < Qsize; ++a) {
+                for (size_t p = 0; p < psize; ++p) {
+                    out_data[a * pqsize + p * qsize + q] = Ap->get(a, p);
                 }
             }
         }
-
     } else {
-        std::vector<size_t> all_range{0, nmo_};
-        std::vector<psi::SharedMatrix> Am_vec;
+        size_t memory = df_->get_memory() - Qsize * pqsize;
+        std::vector<size_t> vec_small = psize < qsize ? p_vec : q_vec;
 
-        if (psize < qsize) {
-            for (size_t ip = 0; ip < psize; ++ip) {
-                auto pn = cmotomo[p_vec[ip]];
-                auto Am = std::make_shared<psi::Matrix>("Am", nthree_, nmo_);
-                df_->fill_tensor("B", Am, A_range, {pn, pn + 1}, all_range);
+        size_t max_nslice = memory / (Qsize * nmo_);
+        std::vector<size_t> batches(vec_small.size() / max_nslice, max_nslice);
+        batches.push_back(vec_small.size() % max_nslice);
+
+        for (size_t n = 0, offset = 0, nbatch = batches.size(); n < nbatch; ++n) {
+            std::vector<psi::SharedMatrix> Am_vec;
+
+            for (size_t i = 0; i < batches[n]; ++i) {
+                auto ni = cmotomo[vec_small[i + offset]];
+                auto Am = std::make_shared<psi::Matrix>("Am", Qsize, nmo_);
+                df_->fill_tensor("B", Am, Q_range, {ni, ni + 1}, {0, nmo_});
                 Am_vec.push_back(Am);
             }
-            out.iterate([&](const std::vector<size_t>& i, double& value) {
-                value = Am_vec[i[1]]->get(A_vec[i[0]], cmotomo[q_vec[i[2]]]);
-            });
-        } else {
-            for (size_t iq = 0; iq < qsize; ++iq) {
-                auto qn = cmotomo[q_vec[iq]];
-                auto Am = std::make_shared<psi::Matrix>("Am", nthree_, nmo_);
-                df_->fill_tensor("B", Am, A_range, {qn, qn + 1}, all_range);
-                Am_vec.push_back(Am);
+
+            if (psize < qsize) {
+                for (size_t i = 0; i < batches[n]; ++i) {
+                    for (size_t a = 0; a < Qsize; ++a) {
+                        for (size_t q = 0; q < qsize; ++q) {
+                            auto idx = a * pqsize + (i + offset) * qsize + q;
+                            out_data[idx] = Am_vec[i]->get(a, cmotomo[q_vec[q]]);
+                        }
+                    }
+                }
+            } else {
+                for (size_t i = 0; i < batches[n]; ++i) {
+                    for (size_t a = 0; a < Qsize; ++a) {
+                        for (size_t p = 0; p < psize; ++p) {
+                            auto idx = a * pqsize + p * qsize + (i + offset);
+                            out_data[idx] = Am_vec[i]->get(a, cmotomo[p_vec[p]]);
+                        }
+                    }
+                }
             }
-            out.iterate([&](const std::vector<size_t>& i, double& value) {
-                value = Am_vec[i[2]]->get(A_vec[i[0]], cmotomo[p_vec[i[1]]]);
-            });
+
+            offset += batches[n];
         }
 
         //        // The following loops every index for debugging
