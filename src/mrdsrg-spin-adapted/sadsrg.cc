@@ -239,7 +239,10 @@ void SADSRG::set_ambit_MOSpace() {
 
 void SADSRG::check_init_memory() {
     mem_sys_ = psi::Process::environment.get_memory();
-    int64_t mem_left = mem_sys_ * 0.9 - ints_->jk()->memory_estimate() * sizeof(double);
+    int64_t mem_left = mem_sys_ * 0.9;
+    if (ints_->integral_type() != DiskDF or ints_->integral_type() != Cholesky) {
+        mem_left -= ints_->jk()->memory_estimate() * sizeof(double);
+    }
 
     // integrals already stored by the ForteIntegrals
     size_t n_ele = 0;
@@ -262,7 +265,8 @@ void SADSRG::check_init_memory() {
 
     mem_left -= n_ele * sizeof(double);
     if (mem_left < 0) {
-        throw psi::PSIEXCEPTION("Not enough memory to run FORTE.");
+        std::string msg = "Not enough memory to run spin-adapted DSRG. Try DiskDF integrals?";
+        throw psi::PSIEXCEPTION(msg);
     }
 
     // prepare DSRG_MEM

@@ -305,6 +305,10 @@ ambit::Tensor DISKDFIntegrals::three_integral_block(const std::vector<size_t>& Q
     auto qsize = q_vec.size();
     auto pqsize = psize * qsize;
 
+    if (Qsize == 0 or psize == 0 or qsize == 0) {
+        throw std::runtime_error("DISKDFIntegrals::three_integral_block: indices cannot be empty");
+    }
+
     // make sure indices are contiguous
     for (size_t a = 1; a < Qsize; ++a) {
         if (Q_vec[a] != Q_vec[0] + a) {
@@ -371,7 +375,8 @@ ambit::Tensor DISKDFIntegrals::three_integral_block(const std::vector<size_t>& Q
 
         size_t max_nslice = memory / (Qsize * nmo_);
         std::vector<size_t> batches(vec_small.size() / max_nslice, max_nslice);
-        batches.push_back(vec_small.size() % max_nslice);
+        if (vec_small.size() % max_nslice)
+            batches.push_back(vec_small.size() % max_nslice);
 
         for (size_t n = 0, offset = 0, nbatch = batches.size(); n < nbatch; ++n) {
             std::vector<psi::SharedMatrix> Am_vec;
