@@ -104,6 +104,10 @@ class SA_MRPT2 : public SA_DSRGPT {
 
     /// Return a vector of empty ambit Tensor objects
     std::vector<ambit::Tensor> init_tensor_vecs(int number_of_tensors);
+
+    /// Separate indices into batches of indices
+    std::vector<std::vector<size_t>> split_indices_to_batches(const std::vector<size_t>& indices,
+                                                              size_t max_size);
 };
 } // namespace forte
 

@@ -116,6 +116,7 @@ void SA_MRPT2::build_minimal_V() {
     V_["abij"] = B["gai"] * B["gbj"];
 
     // the only block left is avac of V
+    auto nQ = aux_mos_.size();
     auto nc = core_mos_.size();
     auto na = actv_mos_.size();
     auto nv = virt_mos_.size();
@@ -124,20 +125,58 @@ void SA_MRPT2::build_minimal_V() {
     auto dim2 = na * nc;
     auto dim1 = nv * dim2;
 
-    auto Vsub = ambit::Tensor::build(tensor_type_, "Vsub PT2", {na, na, nv, 1});
     auto Baa = B.block("Laa");
 
-    for (size_t c = 0; c < nc; ++c) {
-        auto Bsub = ints_->three_integral_block(aux_mos_, virt_mos_, {core_mos_[c]});
+    // to minimize the number of calls of ints_->three_integral_block,
+    // we store as many (Q|em) as possible in memory.
+    size_t max_num = dsrg_mem_.available() * 0.8 / (sizeof(double) * (nQ * nv + na * na * nv));
 
+    // separate core indices into batches
+    auto core_batches = split_indices_to_batches(core_mos_, max_num);
+    size_t nbatch = core_batches.size();
+
+    for (size_t batch = 0, offset = 0; batch < nbatch; ++batch) {
+        auto size = core_batches[batch].size();
+        auto Bsub = ints_->three_integral_block(aux_mos_, virt_mos_, core_batches[batch]);
+
+        auto Vsub = ambit::Tensor::build(tensor_type_, "Vsub PT2", {na, na, nv, size});
         Vsub("uvem") = Baa("guv") * Bsub("gem");
 
         Vsub.citerate([&](const std::vector<size_t>& i, const double& value) {
-            Vavac[i[0] * dim1 + i[2] * dim2 + i[1] * nc + c] = value;
+            Vavac[i[0] * dim1 + i[2] * dim2 + i[1] * nc + i[3] + offset] = value;
         });
+
+        offset += size;
     }
 
     t.stop();
+}
+
+std::vector<std::vector<size_t>>
+SA_MRPT2::split_indices_to_batches(const std::vector<size_t>& indices, size_t max_size) {
+    auto n_indices = indices.size();
+
+    std::vector<std::vector<size_t>> batches;
+    size_t quotient = n_indices / max_size;
+    for (size_t batch = 0, offset = 0; batch < quotient; ++batch) {
+        std::vector<size_t> batch_mos(max_size);
+        for (size_t p = 0; p < max_size; ++p) {
+            batch_mos[p] = indices[p + offset];
+        }
+        batches.push_back(batch_mos);
+        offset += max_size;
+    }
+
+    size_t remainder = n_indices - quotient * max_size;
+    if (remainder != 0) {
+        std::vector<size_t> batch_mos(remainder);
+        for (size_t p = 0; p < remainder; ++p) {
+            batch_mos[p] = indices[p + quotient * max_size];
+        }
+        batches.push_back(batch_mos);
+    }
+
+    return batches;
 }
 
 void SA_MRPT2::init_amps() {
