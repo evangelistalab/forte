@@ -82,7 +82,7 @@ void SADSRG::startup() {
     print_h2("Multireference Driven Similarity Renormalization Group");
 
     // build Fock and cleanup JK in ForteIntegrals
-    build_fock_from_ints(ints_);
+    build_fock_from_ints();
 
     // read options
     read_options();
@@ -124,11 +124,11 @@ void SADSRG::startup() {
     semi_canonical_ = check_semi_orbs();
 }
 
-void SADSRG::build_fock_from_ints(std::shared_ptr<ForteIntegrals> ints) {
+void SADSRG::build_fock_from_ints() {
     local_timer lt;
     print_contents("Computing Fock matrix and cleaning JK");
-    ints->make_fock_matrix(rdms_.g1a(), rdms_.g1b());
-    ints->jk_finalize();
+    ints_->make_fock_matrix(rdms_.g1a(), rdms_.g1b());
+    ints_->jk_finalize();
     print_done(lt.get());
 }
 
@@ -398,11 +398,13 @@ double SADSRG::compute_reference_energy(BlockedTensor H, BlockedTensor F, Blocke
     /// E = 0.5 * ( H["ij"] + F["ij"] ) * L1["ji"] + 0.5 * V["xyuv"] * L2["uvxy"]
     /// Note that L1_mn = 2.0 * δ_mn now
 
+    size_t ncore = core_mos_.size();
     double E = Efrzc_ + Enuc_;
 
-    for (size_t m = 0, nc = core_mos_.size(); m < nc; ++m) {
-        E += H.block("cc").data()[m * nc + m];
-        E += F.block("cc").data()[m * nc + m];
+#pragma omp parallel for reduction(+ : E)
+    for (size_t m = 0; m < ncore; ++m) {
+        E += H.block("cc").data()[m * ncore + m];
+        E += F.block("cc").data()[m * ncore + m];
     }
 
     E += 0.5 * H["uv"] * L1_["vu"];

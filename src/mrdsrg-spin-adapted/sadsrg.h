@@ -244,7 +244,7 @@ class SADSRG : public DynamicCorrelationSolver {
     /// Initialize Fock matrix
     void init_fock();
     /// Build Fock matrix from ForteIntegrals
-    void build_fock_from_ints(std::shared_ptr<ForteIntegrals> ints);
+    void build_fock_from_ints();
     /// Fill in diagonal elements of Fock matrix to Fdiag
     void fill_Fdiag(BlockedTensor& F, std::vector<double>& Fdiag);
 
