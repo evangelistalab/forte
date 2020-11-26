@@ -193,93 +193,96 @@ double DISKDFIntegrals::aptei_bb(size_t p, size_t q, size_t r, size_t s) {
     return (vpqrsalphaC - vpqrsalphaE);
 }
 
-ambit::Tensor
-DISKDFIntegrals::aptei_aa_block(const std::vector<size_t>& p, const std::vector<size_t>& q,
-                                const std::vector<size_t>& r, const std::vector<size_t>& s)
+ambit::Tensor DISKDFIntegrals::aptei_aa_block(const std::vector<size_t>& p,
+                                              const std::vector<size_t>& q,
+                                              const std::vector<size_t>& r,
+                                              const std::vector<size_t>& s) {
+    auto p_size = p.size();
+    auto q_size = q.size();
+    auto r_size = r.size();
+    auto s_size = s.size();
 
-{
-    ambit::Tensor ThreeIntpr =
-        ambit::Tensor::build(tensor_type_, "ThreeInt", {nthree_, p.size(), r.size()});
-    ambit::Tensor ThreeIntqs =
-        ambit::Tensor::build(tensor_type_, "ThreeInt", {nthree_, q.size(), s.size()});
     std::vector<size_t> Avec(nthree_);
     std::iota(Avec.begin(), Avec.end(), 0);
 
-    ThreeIntpr = three_integral_block(Avec, p, r);
-    ThreeIntqs = three_integral_block(Avec, q, s);
+    auto Qpr = three_integral_block(Avec, p, r);
+    auto Qqs = three_integral_block(Avec, q, s);
 
-    ambit::Tensor ReturnTensor =
-        ambit::Tensor::build(tensor_type_, "Return", {p.size(), q.size(), r.size(), s.size()});
-    ReturnTensor("p,q,r,s") = ThreeIntpr("A,p,r") * ThreeIntqs("A,q,s");
+    auto out = ambit::Tensor::build(tensor_type_, "out_aa", {p_size, q_size, r_size, s_size});
+    out("p,q,r,s") = Qpr("A,p,r") * Qqs("A,q,s");
 
     /// If p != q != r !=s need to form the Exchange part separately
     if (r != s) {
-        ambit::Tensor ThreeIntpsK =
-            ambit::Tensor::build(tensor_type_, "ThreeIntK", {nthree_, p.size(), s.size()});
-        ambit::Tensor ThreeIntqrK =
-            ambit::Tensor::build(tensor_type_, "ThreeIntK", {nthree_, q.size(), r.size()});
-        ThreeIntpsK = three_integral_block(Avec, p, s);
-        ThreeIntqrK = three_integral_block(Avec, q, r);
-        ReturnTensor("p, q, r, s") -= ThreeIntpsK("A, p, s") * ThreeIntqrK("A, q, r");
+        auto Qps_K = ambit::Tensor::build(tensor_type_, "Qps_K", {nthree_, p_size, s_size});
+        auto Qqr_K = ambit::Tensor::build(tensor_type_, "Qqr_K", {nthree_, q_size, r_size});
+        Qps_K = three_integral_block(Avec, p, s);
+        Qqr_K = three_integral_block(Avec, q, r);
+        out("p,q,r,s") -= Qps_K("A,p,s") * Qqr_K("A,q,r");
     } else {
-        ReturnTensor("p,q,r,s") -= ThreeIntpr("A,p,s") * ThreeIntqs("A,q,r");
+        out("p,q,r,s") -= Qpr("A,p,s") * Qqs("A,q,r");
     }
 
-    return ReturnTensor;
+    return out;
 }
 
 ambit::Tensor DISKDFIntegrals::aptei_ab_block(const std::vector<size_t>& p,
                                               const std::vector<size_t>& q,
                                               const std::vector<size_t>& r,
                                               const std::vector<size_t>& s) {
-    ambit::Tensor ThreeIntpr =
-        ambit::Tensor::build(tensor_type_, "ThreeInt", {nthree_, p.size(), r.size()});
-    ambit::Tensor ThreeIntqs =
-        ambit::Tensor::build(tensor_type_, "ThreeInt", {nthree_, q.size(), s.size()});
+    auto p_size = p.size();
+    auto q_size = q.size();
+    auto r_size = r.size();
+    auto s_size = s.size();
+
     std::vector<size_t> Avec(nthree_);
     std::iota(Avec.begin(), Avec.end(), 0);
 
-    ThreeIntpr = three_integral_block(Avec, p, r);
-    ThreeIntqs = three_integral_block(Avec, q, s);
+    auto out = ambit::Tensor::build(tensor_type_, "out_ab", {p_size, q_size, r_size, s_size});
 
-    ambit::Tensor ReturnTensor =
-        ambit::Tensor::build(tensor_type_, "Return", {p.size(), q.size(), r.size(), s.size()});
-    ReturnTensor("p,q,r,s") = ThreeIntpr("A,p,r") * ThreeIntqs("A,q,s");
+    if (p == q and r == s) {
+        auto Q = three_integral_block(Avec, p, r);
+        out("p,q,r,s") = Q("A,p,r") * Q("A,q,s");
+        return out;
+    }
 
-    return ReturnTensor;
+    auto Qpr = three_integral_block(Avec, p, r);
+    auto Qqs = three_integral_block(Avec, q, s);
+
+    out("p,q,r,s") = Qpr("A,p,r") * Qqs("A,q,s");
+
+    return out;
 }
 
 ambit::Tensor DISKDFIntegrals::aptei_bb_block(const std::vector<size_t>& p,
                                               const std::vector<size_t>& q,
                                               const std::vector<size_t>& r,
                                               const std::vector<size_t>& s) {
-    ambit::Tensor ThreeIntpr =
-        ambit::Tensor::build(tensor_type_, "ThreeInt", {nthree_, p.size(), r.size()});
-    ambit::Tensor ThreeIntqs =
-        ambit::Tensor::build(tensor_type_, "ThreeInt", {nthree_, q.size(), s.size()});
+    auto p_size = p.size();
+    auto q_size = q.size();
+    auto r_size = r.size();
+    auto s_size = s.size();
+
     std::vector<size_t> Avec(nthree_);
     std::iota(Avec.begin(), Avec.end(), 0);
 
-    ThreeIntpr = three_integral_block(Avec, p, r);
-    ThreeIntqs = three_integral_block(Avec, q, s);
+    auto Qpr = three_integral_block(Avec, p, r);
+    auto Qqs = three_integral_block(Avec, q, s);
 
-    ambit::Tensor ReturnTensor =
-        ambit::Tensor::build(tensor_type_, "Return", {p.size(), q.size(), r.size(), s.size()});
-    ReturnTensor("p,q,r,s") = ThreeIntpr("A,p,r") * ThreeIntqs("A,q,s");
+    auto out = ambit::Tensor::build(tensor_type_, "out_bb", {p_size, q_size, r_size, s_size});
+    out("p,q,r,s") = Qpr("A,p,r") * Qqs("A,q,s");
 
     /// If p != q != r !=s need to form the Exchane part separately
     if (r != s) {
-        ambit::Tensor ThreeIntpsK =
-            ambit::Tensor::build(tensor_type_, "ThreeIntK", {nthree_, p.size(), s.size()});
-        ambit::Tensor ThreeIntqrK =
-            ambit::Tensor::build(tensor_type_, "ThreeIntK", {nthree_, q.size(), r.size()});
-        ThreeIntpsK = three_integral_block(Avec, p, s);
-        ThreeIntqrK = three_integral_block(Avec, q, r);
-        ReturnTensor("p, q, r, s") -= ThreeIntpsK("A, p, s") * ThreeIntqrK("A, q, r");
+        auto Qps_K = ambit::Tensor::build(tensor_type_, "Qps_K", {nthree_, p_size, s_size});
+        auto Qqr_K = ambit::Tensor::build(tensor_type_, "Qqr_K", {nthree_, q_size, r_size});
+        Qps_K = three_integral_block(Avec, p, s);
+        Qqr_K = three_integral_block(Avec, q, r);
+        out("p,q,r,s") -= Qps_K("A,p,s") * Qqr_K("A,q,r");
     } else {
-        ReturnTensor("p,q,r,s") -= ThreeIntpr("A,p,s") * ThreeIntqs("A,q,r");
+        out("p,q,r,s") -= Qpr("A,p,s") * Qqs("A,q,r");
     }
-    return ReturnTensor;
+
+    return out;
 }
 
 double** DISKDFIntegrals::three_integral_pointer() { return (ThreeIntegral_->pointer()); }

@@ -116,7 +116,6 @@ void SA_MRPT2::build_minimal_V() {
     V_["abij"] = B["gai"] * B["gbj"];
 
     // the only block left is avac of V
-    auto nQ = aux_mos_.size();
     auto nc = core_mos_.size();
     auto na = actv_mos_.size();
     auto nv = virt_mos_.size();
@@ -125,16 +124,16 @@ void SA_MRPT2::build_minimal_V() {
     auto dim2 = na * nc;
     auto dim1 = nv * dim2;
 
-    auto Bsub = ambit::Tensor::build(tensor_type_, "Bsub PT2", {nQ, nv});
-    auto Vsub = ambit::Tensor::build(tensor_type_, "Vsub PT2", {na, nv, na});
+    auto Vsub = ambit::Tensor::build(tensor_type_, "Vsub PT2", {na, na, nv, 1});
+    auto Baa = B.block("Laa");
 
     for (size_t c = 0; c < nc; ++c) {
-        Bsub.data() = ints_->three_integral_block(aux_mos_, virt_mos_, {core_mos_[c]}).data();
+        auto Bsub = ints_->three_integral_block(aux_mos_, virt_mos_, {core_mos_[c]});
 
-        Vsub("uev") = B.block("Laa")("guv") * Bsub("ge");
+        Vsub("uvem") = Baa("guv") * Bsub("gem");
 
         Vsub.citerate([&](const std::vector<size_t>& i, const double& value) {
-            Vavac[i[0] * dim1 + i[1] * dim2 + i[2] * nc + c] = value;
+            Vavac[i[0] * dim1 + i[2] * dim2 + i[1] * nc + c] = value;
         });
     }
 
