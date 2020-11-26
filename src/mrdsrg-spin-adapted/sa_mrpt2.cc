@@ -723,7 +723,6 @@ void SA_MRPT2::compute_Hbar1V_DF(ambit::Tensor& Hbar1, bool Vr) {
     std::vector<ambit::Tensor> C_vec = init_tensor_vecs(n_threads);
     std::vector<ambit::Tensor> X_vec = init_tensor_vecs(n_threads);
 
-    // TODO: test indices permutations for speed
     for (int i = 0; i < n_threads; i++) {
         std::string t = std::to_string(i);
         Bm_vec.push_back(ambit::Tensor::build(tensor_type_, "Bm_thread" + t, {nQ, nv}));
@@ -818,9 +817,6 @@ void SA_MRPT2::compute_Hbar1V_diskDF(ambit::Tensor& Hbar1, bool Vr) {
      * we store as many B(L|em) as possible in memory.
      * Modified from function compute_Hbar1V_DF.
      */
-    timer t("Compute C1 virtual contraction DiskDF");
-    print_contents("Computing DiskDF Hbar1 CAVV");
-
     auto nQ = aux_mos_.size();
     auto nv = virt_mos_.size();
     auto nc = core_mos_.size();
@@ -834,6 +830,39 @@ void SA_MRPT2::compute_Hbar1V_diskDF(ambit::Tensor& Hbar1, bool Vr) {
                         n_threads);
     }
 
+    size_t max_num_Qv = (dsrg_mem_.available() - n_threads * mem_batched_["cavv"]) * 0.8 /
+                        (sizeof(double) * nQ * nv);
+    if (max_num_Qv < 2) { // no point to do this batching anymore
+        compute_Hbar1V_DF(Hbar1, Vr);
+        return;
+    }
+
+    timer t("Compute C1 virtual contraction DiskDF");
+    print_contents("Computing DiskDF Hbar1 CAVV");
+
+    // separate core indices into batches
+    std::vector<std::vector<size_t>> core_batches;
+    size_t quotient = nc / max_num_Qv;
+    for (size_t batch = 0, offset = 0; batch < quotient; ++batch) {
+        std::vector<size_t> batch_mos(max_num_Qv);
+        for (size_t m = 0; m < max_num_Qv; ++m) {
+            batch_mos[m] = core_mos_[m + offset];
+        }
+        core_batches.push_back(batch_mos);
+        offset += max_num_Qv;
+    }
+
+    size_t remainder = nc - quotient * max_num_Qv;
+    if (remainder != 0) {
+        std::vector<size_t> batch_mos(remainder);
+        for (size_t m = 0; m < remainder; ++m) {
+            batch_mos[m] = core_mos_[m + quotient * max_num_Qv];
+        }
+        core_batches.push_back(batch_mos);
+    }
+
+    size_t nbatch = core_batches.size();
+
     // some tensors used for threading
     std::vector<ambit::Tensor> Bm_vec = init_tensor_vecs(n_threads);
     std::vector<ambit::Tensor> V_vec = init_tensor_vecs(n_threads);
@@ -841,7 +870,6 @@ void SA_MRPT2::compute_Hbar1V_diskDF(ambit::Tensor& Hbar1, bool Vr) {
     std::vector<ambit::Tensor> C_vec = init_tensor_vecs(n_threads);
     std::vector<ambit::Tensor> X_vec = init_tensor_vecs(n_threads);
 
-    // TODO: test indices permutations for speed
     for (int i = 0; i < n_threads; i++) {
         std::string t = std::to_string(i);
         Bm_vec.push_back(ambit::Tensor::build(tensor_type_, "Bm_thread" + t, {nQ, nv}));
@@ -863,41 +891,49 @@ void SA_MRPT2::compute_Hbar1V_diskDF(ambit::Tensor& Hbar1, bool Vr) {
         Bva("gfv") = X("gev") * U_.block("vv")("fe");
     }
 
+    for (size_t Mbatch = 0; Mbatch < nbatch; ++Mbatch) {
+        auto Mbatch_size = core_batches[Mbatch].size();
+        auto BM = ints_->three_integral_block(aux_mos_, virt_mos_, core_batches[Mbatch]);
+        auto& BM_data = BM.data();
+
 #pragma omp parallel for num_threads(n_threads)
-    for (size_t m = 0; m < nc; ++m) {
-        auto im = core_mos_[m];
-        double Fm = Fdiag_[im];
+        for (size_t m = 0; m < Mbatch_size; ++m) {
+            auto im = core_batches[Mbatch][m];
+            double Fm = Fdiag_[im];
 
-        int thread = omp_get_thread_num();
+            int thread = omp_get_thread_num();
 #pragma omp critical
-        {
-            Bm_vec[thread].data() = ints_->three_integral_block(aux_mos_, virt_mos_, {im}).data();
-            if (!semi_canonical_) {
-                X_vec[thread]("gf") = Bm_vec[thread]("ge") * U_.block("vv")("fe");
-                Bm_vec[thread]("gf") = X_vec[thread]("gf");
+            {
+                Bm_vec[thread].iterate([&](const std::vector<size_t>& i, double& value) {
+                    value = BM_data[i[0] * Mbatch_size * nv + i[1] * Mbatch_size + m];
+                });
+                if (!semi_canonical_) {
+                    X_vec[thread]("gf") = Bm_vec[thread]("ge") * U_.block("vv")("fe");
+                    Bm_vec[thread]("gf") = X_vec[thread]("gf");
+                }
             }
-        }
 
-        V_vec[thread]("efu") = Bm_vec[thread]("ge") * Bva("gfu");
-        S_vec[thread]("efu") = 2.0 * V_vec[thread]("efu") - V_vec[thread]("feu");
+            V_vec[thread]("efu") = Bm_vec[thread]("ge") * Bva("gfu");
+            S_vec[thread]("efu") = 2.0 * V_vec[thread]("efu") - V_vec[thread]("feu");
 
-        // scale V by 1 + exp(-s * D^2)
-        if (Vr) {
-            V_vec[thread].iterate([&](const std::vector<size_t>& i, double& value) {
+            // scale V by 1 + exp(-s * D^2)
+            if (Vr) {
+                V_vec[thread].iterate([&](const std::vector<size_t>& i, double& value) {
+                    double denom = Fm + Fdiag_[actv_mos_[i[2]]] - Fdiag_[virt_mos_[i[0]]] -
+                                   Fdiag_[virt_mos_[i[1]]];
+                    value *= 1.0 + dsrg_source_->compute_renormalized(denom);
+                });
+            }
+
+            // scale T by [1 - exp(-s * D^2)] / D
+            S_vec[thread].iterate([&](const std::vector<size_t>& i, double& value) {
                 double denom = Fm + Fdiag_[actv_mos_[i[2]]] - Fdiag_[virt_mos_[i[0]]] -
                                Fdiag_[virt_mos_[i[1]]];
-                value *= 1.0 + dsrg_source_->compute_renormalized(denom);
+                value *= dsrg_source_->compute_renormalized_denominator(denom);
             });
+
+            C_vec[thread]("vu") += S_vec[thread]("efv") * V_vec[thread]("efu");
         }
-
-        // scale T by [1 - exp(-s * D^2)] / D
-        S_vec[thread].iterate([&](const std::vector<size_t>& i, double& value) {
-            double denom =
-                Fm + Fdiag_[actv_mos_[i[2]]] - Fdiag_[virt_mos_[i[0]]] - Fdiag_[virt_mos_[i[1]]];
-            value *= dsrg_source_->compute_renormalized_denominator(denom);
-        });
-
-        C_vec[thread]("vu") += S_vec[thread]("efv") * V_vec[thread]("efu");
     }
 
     // finalize results
@@ -975,7 +1011,6 @@ void SA_MRPT2::compute_Hbar1C_DF(ambit::Tensor& Hbar1, bool Vr) {
     std::vector<ambit::Tensor> C_vec = init_tensor_vecs(n_threads);
     std::vector<ambit::Tensor> X_vec = init_tensor_vecs(n_threads);
 
-    // TODO: test indices permutations for speed
     for (int i = 0; i < n_threads; i++) {
         std::string t = std::to_string(i);
         Be_vec.push_back(ambit::Tensor::build(tensor_type_, "Bm_thread" + t, {nQ, nc}));
@@ -1070,9 +1105,6 @@ void SA_MRPT2::compute_Hbar1C_diskDF(ambit::Tensor& Hbar1, bool Vr) {
      * we store as many B(L|en) as possible in memory.
      * Modified from function compute_Hbar1C_DF.
      */
-    timer t("Compute C1 core contraction DiskDF");
-    print_contents("Computing DiskDF Hbar1 CCAV");
-
     auto nQ = aux_mos_.size();
     auto nv = virt_mos_.size();
     auto nc = core_mos_.size();
@@ -1086,6 +1118,39 @@ void SA_MRPT2::compute_Hbar1C_diskDF(ambit::Tensor& Hbar1, bool Vr) {
                         n_threads);
     }
 
+    size_t max_num_Qc = (dsrg_mem_.available() - n_threads * mem_batched_["ccav"]) * 0.8 /
+                        (sizeof(double) * nQ * nc);
+    if (max_num_Qc < 2) { // no point to do this batching anymore
+        compute_Hbar1C_DF(Hbar1, Vr);
+        return;
+    }
+
+    timer t("Compute C1 core contraction DiskDF");
+    print_contents("Computing DiskDF Hbar1 CCAV");
+
+    // separate virtual indices into batches
+    std::vector<std::vector<size_t>> virt_batches;
+    size_t quotient = nv / max_num_Qc;
+    for (size_t batch = 0, offset = 0; batch < quotient; ++batch) {
+        std::vector<size_t> batch_mos(max_num_Qc);
+        for (size_t e = 0; e < max_num_Qc; ++e) {
+            batch_mos[e] = virt_mos_[e + offset];
+        }
+        virt_batches.push_back(batch_mos);
+        offset += max_num_Qc;
+    }
+
+    size_t remainder = nv - quotient * max_num_Qc;
+    if (remainder != 0) {
+        std::vector<size_t> batch_mos(remainder);
+        for (size_t e = 0; e < remainder; ++e) {
+            batch_mos[e] = virt_mos_[e + quotient * max_num_Qc];
+        }
+        virt_batches.push_back(batch_mos);
+    }
+
+    size_t nbatch = virt_batches.size();
+
     // some tensors used for threading
     std::vector<ambit::Tensor> Be_vec = init_tensor_vecs(n_threads);
     std::vector<ambit::Tensor> V_vec = init_tensor_vecs(n_threads);
@@ -1093,7 +1158,6 @@ void SA_MRPT2::compute_Hbar1C_diskDF(ambit::Tensor& Hbar1, bool Vr) {
     std::vector<ambit::Tensor> C_vec = init_tensor_vecs(n_threads);
     std::vector<ambit::Tensor> X_vec = init_tensor_vecs(n_threads);
 
-    // TODO: test indices permutations for speed
     for (int i = 0; i < n_threads; i++) {
         std::string t = std::to_string(i);
         Be_vec.push_back(ambit::Tensor::build(tensor_type_, "Bm_thread" + t, {nQ, nc}));
@@ -1115,41 +1179,49 @@ void SA_MRPT2::compute_Hbar1C_diskDF(ambit::Tensor& Hbar1, bool Vr) {
         Bac("gvn") = X("gun") * U_.block("aa")("vu");
     }
 
+    for (size_t Ebatch = 0; Ebatch < nbatch; ++Ebatch) {
+        auto Ebatch_size = virt_batches[Ebatch].size();
+        auto BE = ints_->three_integral_block(aux_mos_, core_mos_, virt_batches[Ebatch]);
+        auto& BE_data = BE.data();
+
 #pragma omp parallel for num_threads(n_threads_)
-    for (size_t e = 0; e < nv; ++e) {
-        auto ie = virt_mos_[e];
-        double Fe = Fdiag_[ie];
+        for (size_t e = 0; e < Ebatch_size; ++e) {
+            auto ie = virt_batches[Ebatch][e];
+            double Fe = Fdiag_[ie];
 
-        int thread = omp_get_thread_num();
+            int thread = omp_get_thread_num();
 #pragma omp critical
-        {
-            Be_vec[thread].data() = ints_->three_integral_block(aux_mos_, core_mos_, {ie}).data();
-            if (!semi_canonical_) {
-                X_vec[thread]("gn") = Be_vec[thread]("gm") * U_.block("cc")("nm");
-                Be_vec[thread]("gn") = X_vec[thread]("gn");
+            {
+                Be_vec[thread].iterate([&](const std::vector<size_t>& i, double& value) {
+                    value = BE_data[i[0] * Ebatch_size * nc + i[1] * Ebatch_size + e];
+                });
+                if (!semi_canonical_) {
+                    X_vec[thread]("gn") = Be_vec[thread]("gm") * U_.block("cc")("nm");
+                    Be_vec[thread]("gn") = X_vec[thread]("gn");
+                }
             }
-        }
 
-        V_vec[thread]("vmn") = Bac("gvm") * Be_vec[thread]("gn");
-        S_vec[thread]("vmn") = 2.0 * V_vec[thread]("vmn") - V_vec[thread]("vnm");
+            V_vec[thread]("vmn") = Bac("gvm") * Be_vec[thread]("gn");
+            S_vec[thread]("vmn") = 2.0 * V_vec[thread]("vmn") - V_vec[thread]("vnm");
 
-        // scale V by 1 + exp(-s * D^2)
-        if (Vr) {
-            V_vec[thread].iterate([&](const std::vector<size_t>& i, double& value) {
+            // scale V by 1 + exp(-s * D^2)
+            if (Vr) {
+                V_vec[thread].iterate([&](const std::vector<size_t>& i, double& value) {
+                    double denom = Fdiag_[core_mos_[i[1]]] + Fdiag_[core_mos_[i[2]]] - Fe -
+                                   Fdiag_[actv_mos_[i[0]]];
+                    value *= 1.0 + dsrg_source_->compute_renormalized(denom);
+                });
+            }
+
+            // scale T by [1 - exp(-s * D^2)] / D
+            S_vec[thread].iterate([&](const std::vector<size_t>& i, double& value) {
                 double denom = Fdiag_[core_mos_[i[1]]] + Fdiag_[core_mos_[i[2]]] - Fe -
                                Fdiag_[actv_mos_[i[0]]];
-                value *= 1.0 + dsrg_source_->compute_renormalized(denom);
+                value *= dsrg_source_->compute_renormalized_denominator(denom);
             });
+
+            C_vec[thread]("vu") += V_vec[thread]("vmn") * S_vec[thread]("umn");
         }
-
-        // scale T by [1 - exp(-s * D^2)] / D
-        S_vec[thread].iterate([&](const std::vector<size_t>& i, double& value) {
-            double denom =
-                Fdiag_[core_mos_[i[1]]] + Fdiag_[core_mos_[i[2]]] - Fe - Fdiag_[actv_mos_[i[0]]];
-            value *= dsrg_source_->compute_renormalized_denominator(denom);
-        });
-
-        C_vec[thread]("vu") += V_vec[thread]("vmn") * S_vec[thread]("umn");
     }
 
     // finalize results
