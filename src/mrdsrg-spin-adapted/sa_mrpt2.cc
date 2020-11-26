@@ -74,7 +74,7 @@ void SA_MRPT2::build_ints() {
     if (eri_df_) {
         std::vector<std::string> blocks{"vvaa", "aacc", "avca", "avac", "vaaa", "aaca", "aaaa"};
         V_ = BTF_->build(tensor_type_, "V", blocks);
-        if (ints_type_ != "DISKDF") {
+        if (ints_->integral_type() != DiskDF) {
             auto B = BTF_->build(tensor_type_, "B 3-idx", {"Lph"});
             fill_three_index_ints(B);
             V_["abij"] = B["gai"] * B["gbj"];
@@ -166,7 +166,7 @@ void SA_MRPT2::check_memory() {
         auto mem_blocks = dsrg_mem_.compute_memory(blocks);
         dsrg_mem_.add_entry("2-electron (4-index) integrals", mem_blocks);
         dsrg_mem_.add_entry("T2 cluster amplitudes", 2 * mem_blocks);
-        if (ints_type_ != "DISKDF") {
+        if (ints_->integral_type() != DiskDF) {
             dsrg_mem_.add_entry("3-index auxiliary integrals", {"Lph"});
         }
     } else {
@@ -180,7 +180,7 @@ void SA_MRPT2::check_memory() {
     }
 
     // local memory for computing minimal V
-    if (ints_type_ == "DISKDF") {
+    if (ints_->integral_type() != DiskDF) {
         dsrg_mem_.add_entry("Local 3-index integrals", {"Lca", "Laa", "Lav"}, 1, false);
     }
 
