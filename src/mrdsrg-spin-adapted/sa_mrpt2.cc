@@ -520,7 +520,6 @@ double SA_MRPT2::compute_Hbar0_CCVV_diskDF() {
      */
     auto nQ = aux_mos_.size();
     auto nv = virt_mos_.size();
-    auto nc = core_mos_.size();
 
     // check memory
     size_t max_n_threads = dsrg_mem_.available() / mem_batched_["ccvv"];
@@ -540,26 +539,7 @@ double SA_MRPT2::compute_Hbar0_CCVV_diskDF() {
     print_contents("Computing DiskDF <0|[Vr, T2]|0> CCVV");
 
     // separate core indices into batches
-    std::vector<std::vector<size_t>> core_batches;
-    size_t quotient = nc / max_num_Qv;
-    for (size_t batch = 0, offset = 0; batch < quotient; ++batch) {
-        std::vector<size_t> batch_mos(max_num_Qv);
-        for (size_t m = 0; m < max_num_Qv; ++m) {
-            batch_mos[m] = core_mos_[m + offset];
-        }
-        core_batches.push_back(batch_mos);
-        offset += max_num_Qv;
-    }
-
-    size_t remainder = nc - quotient * max_num_Qv;
-    if (remainder != 0) {
-        std::vector<size_t> batch_mos(remainder);
-        for (size_t m = 0; m < remainder; ++m) {
-            batch_mos[m] = core_mos_[m + quotient * max_num_Qv];
-        }
-        core_batches.push_back(batch_mos);
-    }
-
+    auto core_batches = split_indices_to_batches(core_mos_, max_num_Qv);
     size_t nbatch = core_batches.size();
 
     // some tensors used for threading
@@ -858,7 +838,6 @@ void SA_MRPT2::compute_Hbar1V_diskDF(ambit::Tensor& Hbar1, bool Vr) {
      */
     auto nQ = aux_mos_.size();
     auto nv = virt_mos_.size();
-    auto nc = core_mos_.size();
     auto na = actv_mos_.size();
 
     // check memory
@@ -880,26 +859,7 @@ void SA_MRPT2::compute_Hbar1V_diskDF(ambit::Tensor& Hbar1, bool Vr) {
     print_contents("Computing DiskDF Hbar1 CAVV");
 
     // separate core indices into batches
-    std::vector<std::vector<size_t>> core_batches;
-    size_t quotient = nc / max_num_Qv;
-    for (size_t batch = 0, offset = 0; batch < quotient; ++batch) {
-        std::vector<size_t> batch_mos(max_num_Qv);
-        for (size_t m = 0; m < max_num_Qv; ++m) {
-            batch_mos[m] = core_mos_[m + offset];
-        }
-        core_batches.push_back(batch_mos);
-        offset += max_num_Qv;
-    }
-
-    size_t remainder = nc - quotient * max_num_Qv;
-    if (remainder != 0) {
-        std::vector<size_t> batch_mos(remainder);
-        for (size_t m = 0; m < remainder; ++m) {
-            batch_mos[m] = core_mos_[m + quotient * max_num_Qv];
-        }
-        core_batches.push_back(batch_mos);
-    }
-
+    auto core_batches = split_indices_to_batches(core_mos_, max_num_Qv);
     size_t nbatch = core_batches.size();
 
     // some tensors used for threading
@@ -1145,7 +1105,6 @@ void SA_MRPT2::compute_Hbar1C_diskDF(ambit::Tensor& Hbar1, bool Vr) {
      * Modified from function compute_Hbar1C_DF.
      */
     auto nQ = aux_mos_.size();
-    auto nv = virt_mos_.size();
     auto nc = core_mos_.size();
     auto na = actv_mos_.size();
 
@@ -1168,26 +1127,7 @@ void SA_MRPT2::compute_Hbar1C_diskDF(ambit::Tensor& Hbar1, bool Vr) {
     print_contents("Computing DiskDF Hbar1 CCAV");
 
     // separate virtual indices into batches
-    std::vector<std::vector<size_t>> virt_batches;
-    size_t quotient = nv / max_num_Qc;
-    for (size_t batch = 0, offset = 0; batch < quotient; ++batch) {
-        std::vector<size_t> batch_mos(max_num_Qc);
-        for (size_t e = 0; e < max_num_Qc; ++e) {
-            batch_mos[e] = virt_mos_[e + offset];
-        }
-        virt_batches.push_back(batch_mos);
-        offset += max_num_Qc;
-    }
-
-    size_t remainder = nv - quotient * max_num_Qc;
-    if (remainder != 0) {
-        std::vector<size_t> batch_mos(remainder);
-        for (size_t e = 0; e < remainder; ++e) {
-            batch_mos[e] = virt_mos_[e + quotient * max_num_Qc];
-        }
-        virt_batches.push_back(batch_mos);
-    }
-
+    auto virt_batches = split_indices_to_batches(virt_mos_, max_num_Qc);
     size_t nbatch = virt_batches.size();
 
     // some tensors used for threading
