@@ -153,7 +153,7 @@ class SADSRG : public DynamicCorrelationSolver {
     double Eref_;
 
     /// Compute reference (MK vacuum) energy from ForteIntegral and Fock_
-    double compute_reference_energy_from_ints(std::shared_ptr<ForteIntegrals> ints);
+    double compute_reference_energy_from_ints();
 
     /// Compute reference (MK vacuum) energy
     double compute_reference_energy(BlockedTensor H, BlockedTensor F, BlockedTensor V);

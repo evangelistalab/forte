@@ -106,8 +106,10 @@ void SADSRG::startup() {
     init_fock();
 
     // recompute reference energy from ForteIntegral
-    Eref_ = compute_reference_energy_from_ints(ints_);
-    psi::Process::environment.globals["DSRG REFERENCE ENERGY"] = Eref_;
+    compute_reference_energy_from_ints();
+
+    // general printing for all derived classes
+    print_cumulant_summary();
 
     // initialize Uactv_ to identity
     Uactv_ = BTF_->build(tensor_type_, "Uactv", {"aa"});
@@ -116,9 +118,6 @@ void SADSRG::startup() {
             value = 1.0;
         }
     });
-
-    // general printing for all derived classes
-    print_cumulant_summary();
 
     // check if using semicanonical orbitals
     semi_canonical_ = check_semi_orbs();
@@ -292,7 +291,7 @@ void SADSRG::check_init_memory() {
 
 void SADSRG::init_density() {
     local_timer lt;
-    print_contents("Preparing density cumulants tensors");
+    print_contents("Initializing density cumulants");
     Eta1_ = BTF_->build(tensor_type_, "Eta1", {"aa"});
     L1_ = BTF_->build(tensor_type_, "L1", {"aa"});
     L2_ = BTF_->build(tensor_type_, "L2", {"aaaa"});
@@ -338,56 +337,19 @@ void SADSRG::fill_Fdiag(BlockedTensor& F, std::vector<double>& Fa) {
     });
 }
 
-double SADSRG::compute_reference_energy_from_ints(std::shared_ptr<ForteIntegrals> ints) {
+double SADSRG::compute_reference_energy_from_ints() {
     BlockedTensor H = BTF_->build(tensor_type_, "OEI", {"cc", "aa"}, true);
     H.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>&, double& value) {
-        value = ints->oei_a(i[0], i[1]);
+        value = ints_->oei_a(i[0], i[1]);
     });
 
     BlockedTensor V = BTF_->build(tensor_type_, "APEI", {"aaaa"}, true);
     V.block("aaaa")("prqs") =
-        ints->aptei_ab_block(actv_mos_, actv_mos_, actv_mos_, actv_mos_)("prqs");
+        ints_->aptei_ab_block(actv_mos_, actv_mos_, actv_mos_, actv_mos_)("prqs");
 
-    // form Fock in batches
-    // in cc block, only the diagonal elements are useful
-    BlockedTensor F = BTF_->build(tensor_type_, "Fock pruned", {"cc", "aa"}, true);
-    F["ij"] = H["ij"];
-    F["uv"] += V["uyvx"] * L1_["xy"];
-    F["uv"] -= 0.5 * V["uyxv"] * L1_["xy"];
-
-    // an identity tensor of shape 1 * nc * 1 * nc for F["mm"] <- sum_{n} V["mnmn"]
-    size_t nc = core_mos_.size();
-    std::vector<size_t> Idims{1, nc, 1, nc};
-    ambit::Tensor I = ambit::Tensor::build(tensor_type_, "I", Idims);
-    I.iterate([&](const std::vector<size_t>& i, double& value) {
-        if (i[1] == i[3]) {
-            value = 1.0;
-        }
-    });
-
-    // an temp tensor of shape 1 * 1
-    ambit::Tensor O = ambit::Tensor::build(tensor_type_, "ONE", std::vector<size_t>{1, 1});
-    O.data()[0] = 1.0;
-
-    ambit::Tensor Vtemp;
-    for (size_t m = 0; m < nc; ++m) {
-        size_t nm = core_mos_[m];
-        Vtemp = ints->aptei_ab_block({nm}, core_mos_, {nm}, core_mos_);
-        F.block("cc").data()[m * nc + m] += 2.0 * Vtemp("pqrs") * I("pqrs");
-
-        Vtemp = ints->aptei_ab_block({nm}, core_mos_, core_mos_, {nm});
-        F.block("cc").data()[m * nc + m] -= Vtemp("pqrs") * I("pqsr");
-    }
-
-    Vtemp = ints->aptei_ab_block(core_mos_, actv_mos_, core_mos_, actv_mos_);
-    F.block("cc")("pq") += Vtemp("prqs") * L1_.block("aa")("sr");
-    F.block("aa")("pq") += 2.0 * Vtemp("rpsq") * I("isjr") * O("ij");
-
-    Vtemp = ints->aptei_ab_block(core_mos_, actv_mos_, actv_mos_, core_mos_);
-    F.block("cc")("pq") -= 0.5 * Vtemp("prsq") * L1_.block("aa")("sr");
-    F.block("aa")("pq") -= Vtemp("rpqs") * I("isjr") * O("ij");
-
-    return compute_reference_energy(H, F, V);
+    Eref_ = compute_reference_energy(H, Fock_, V);
+    psi::Process::environment.globals["DSRG REFERENCE ENERGY"] = Eref_;
+    return Eref_;
 }
 
 double SADSRG::compute_reference_energy(BlockedTensor H, BlockedTensor F, BlockedTensor V) {
