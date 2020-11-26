@@ -290,29 +290,44 @@ double** DISKDFIntegrals::three_integral_pointer() { return (ThreeIntegral_->poi
 ambit::Tensor DISKDFIntegrals::three_integral_block(const std::vector<size_t>& Q_vec,
                                                     const std::vector<size_t>& p_vec,
                                                     const std::vector<size_t>& q_vec) {
-    // Take care of frozen orbitals
-    std::vector<size_t> cmotomo; // from correlated MO to full MO
-    if (frzcpi_.sum() && aptei_idx_ == ncmo_) {
-        // there are frozen orbitals
-        cmotomo = cmotomo_;
-    } else {
-        cmotomo.resize(nmo_);
-        std::iota(cmotomo.begin(), cmotomo.end(), 0);
-    }
+    std::string func_name = "DISKDFIntegrals::three_integral_block: ";
 
     auto Qsize = Q_vec.size();
     auto psize = p_vec.size();
     auto qsize = q_vec.size();
     auto pqsize = psize * qsize;
 
+    auto out = ambit::Tensor::build(tensor_type_, "Return", {Qsize, psize, qsize});
+
+    // directly return if any of the dimension is zero
     if (Qsize == 0 or psize == 0 or qsize == 0) {
-        throw std::runtime_error("DISKDFIntegrals::three_integral_block: indices cannot be empty");
+        return out;
+    }
+
+    // test if indices out of range
+    if (*std::max_element(Q_vec.begin(), Q_vec.end()) >= nthree_) {
+        throw std::runtime_error(func_name + "auxiliary indices out of range");
+    }
+    if (*std::max_element(p_vec.begin(), p_vec.end()) >= aptei_idx_) {
+        throw std::runtime_error(func_name + "MO indices p_vec out of range");
+    }
+    if (*std::max_element(q_vec.begin(), q_vec.end()) >= aptei_idx_) {
+        throw std::runtime_error(func_name + "MO indices q_vec out of range");
+    }
+
+    // take care of frozen orbitals
+    std::vector<size_t> cmotomo; // from correlated MO to full MO
+    if (frzcpi_.sum() && aptei_idx_ == ncmo_) { // there are frozen orbitals
+        cmotomo = cmotomo_;
+    } else {
+        cmotomo.resize(nmo_);
+        std::iota(cmotomo.begin(), cmotomo.end(), 0);
     }
 
     // make sure indices are contiguous
     for (size_t a = 1; a < Qsize; ++a) {
         if (Q_vec[a] != Q_vec[0] + a) {
-            throw std::runtime_error("DISKDFIntegrals::three_integral_block: A_vec not contiguos");
+            throw std::runtime_error(func_name + "auxiliary indices not contiguous");
         }
     }
     std::vector<size_t> Q_range{Q_vec[0], Q_vec[0] + Qsize};
@@ -333,7 +348,6 @@ ambit::Tensor DISKDFIntegrals::three_integral_block(const std::vector<size_t>& Q
         }
     }
 
-    auto out = ambit::Tensor::build(tensor_type_, "Return", {Qsize, psize, qsize});
     auto& out_data = out.data();
 
     if (p_contiguous and q_contiguous) {

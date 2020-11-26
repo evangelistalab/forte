@@ -218,7 +218,7 @@ void SA_MRPT2::check_memory() {
     }
 
     // local memory for computing minimal V
-    if (ints_->integral_type() != DiskDF) {
+    if (ints_->integral_type() == DiskDF) {
         dsrg_mem_.add_entry("Local 3-index integrals", {"Lca", "Laa", "Lav"}, 1, false);
     }
 
