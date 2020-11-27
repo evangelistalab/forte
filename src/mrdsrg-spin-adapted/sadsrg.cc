@@ -240,7 +240,7 @@ void SADSRG::set_ambit_MOSpace() {
 void SADSRG::check_init_memory() {
     mem_sys_ = psi::Process::environment.get_memory();
     int64_t mem_left = mem_sys_ * 0.9;
-    if (ints_->integral_type() != DiskDF or ints_->integral_type() != Cholesky) {
+    if (ints_->integral_type() != DiskDF and ints_->integral_type() != Cholesky) {
         mem_left -= ints_->jk()->memory_estimate() * sizeof(double);
     }
 
@@ -248,7 +248,7 @@ void SADSRG::check_init_memory() {
     size_t n_ele = 0;
     auto ng = mo_space_info_->size("CORRELATED");
     if (eri_df_) {
-        if (ints_type_ != "DISKDF") {
+        if (ints_->integral_type() != DiskDF) {
             auto nQ = aux_mos_.size();
             n_ele = nQ * ng * ng;
         }
