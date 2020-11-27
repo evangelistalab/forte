@@ -33,6 +33,7 @@
 #include <unordered_set>
 
 #include "base_classes/state_info.h"
+#include "psi4/libmints/matrix.h"
 #include "psi4/libmints/vector.h"
 
 namespace forte {
@@ -140,6 +141,9 @@ class ActiveSpaceMethod {
     /// Return the eigenvalues
     psi::SharedVector evals();
 
+    /// Return the eigen vectors
+    psi::SharedMatrix evecs();
+
     /// Return a vector with the energies of all the states
     const std::vector<double>& energies() const;
 
@@ -205,6 +209,9 @@ class ActiveSpaceMethod {
 
     /// Eigenvalues
     psi::SharedVector evals_;
+
+    /// Eigenvectors
+    psi::SharedMatrix evecs_;
 
     /// The energies (including nuclear repulsion) of all the states
     std::vector<double> energies_;

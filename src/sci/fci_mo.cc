@@ -66,34 +66,17 @@ namespace forte {
 FCI_MO::FCI_MO(StateInfo state, size_t nroot, std::shared_ptr<SCFInfo> scf_info,
                std::shared_ptr<ForteOptions> options, std::shared_ptr<MOSpaceInfo> mo_space_info,
                std::shared_ptr<ActiveSpaceIntegrals> as_ints)
-    : ActiveSpaceMethod(state, nroot, mo_space_info, as_ints), integral_(as_ints->ints()),
-      mo_space_info_(mo_space_info), scf_info_(scf_info), options_(options) {
+    : ActiveSpaceMethod(state, nroot, mo_space_info, as_ints), as_ints_(as_ints),
+      ints_(as_ints->ints()), mo_space_info_(mo_space_info), scf_info_(scf_info),
+      options_(options) {
 
-    print_method_banner({"Complete Active Space Configuration Interaction", "Chenyang Li"});
+    print_method_banner({"Determinant Configuration Interaction", "Chenyang Li"});
     startup();
-
-    // setup integrals
-    if (as_ints != nullptr) {
-        fci_ints_ = as_ints;
-    } else {
-        fci_ints_ = std::make_shared<ActiveSpaceIntegrals>(
-            integral_, mo_space_info_->corr_absolute_mo("ACTIVE"),
-            mo_space_info_->symmetry("ACTIVE"),
-            mo_space_info_->corr_absolute_mo("RESTRICTED_DOCC"));
-        ambit::Tensor tei_active_aa =
-            integral_->aptei_aa_block(actv_mos_, actv_mos_, actv_mos_, actv_mos_);
-        ambit::Tensor tei_active_ab =
-            integral_->aptei_ab_block(actv_mos_, actv_mos_, actv_mos_, actv_mos_);
-        ambit::Tensor tei_active_bb =
-            integral_->aptei_bb_block(actv_mos_, actv_mos_, actv_mos_, actv_mos_);
-        fci_ints_->set_active_integrals(tei_active_aa, tei_active_ab, tei_active_bb);
-        fci_ints_->compute_restricted_one_body_operator();
-    }
 }
 
 FCI_MO::FCI_MO(std::shared_ptr<SCFInfo> scf_info, std::shared_ptr<ForteOptions> options,
                std::shared_ptr<ForteIntegrals> ints, std::shared_ptr<MOSpaceInfo> mo_space_info)
-    : ActiveSpaceMethod(), integral_(ints), mo_space_info_(mo_space_info), scf_info_(scf_info),
+    : ActiveSpaceMethod(), ints_(ints), mo_space_info_(mo_space_info), scf_info_(scf_info),
       options_(options) {
 
     throw std::runtime_error("This FCI_MO constructor is now disabled!");
@@ -102,46 +85,13 @@ FCI_MO::FCI_MO(std::shared_ptr<SCFInfo> scf_info, std::shared_ptr<ForteOptions> 
     startup();
 
     // setup integrals
-    fci_ints_ = std::make_shared<ActiveSpaceIntegrals>(
-        integral_, mo_space_info_->corr_absolute_mo("ACTIVE"), mo_space_info_->symmetry("ACTIVE"),
-        mo_space_info_->corr_absolute_mo("RESTRICTED_DOCC"));
-    ambit::Tensor tei_active_aa =
-        integral_->aptei_aa_block(actv_mos_, actv_mos_, actv_mos_, actv_mos_);
-    ambit::Tensor tei_active_ab =
-        integral_->aptei_ab_block(actv_mos_, actv_mos_, actv_mos_, actv_mos_);
-    ambit::Tensor tei_active_bb =
-        integral_->aptei_bb_block(actv_mos_, actv_mos_, actv_mos_, actv_mos_);
-    fci_ints_->set_active_integrals(tei_active_aa, tei_active_ab, tei_active_bb);
-    fci_ints_->compute_restricted_one_body_operator();
-}
-
-FCI_MO::FCI_MO(std::shared_ptr<SCFInfo> scf_info, std::shared_ptr<ForteOptions> options,
-               std::shared_ptr<ForteIntegrals> ints, std::shared_ptr<MOSpaceInfo> mo_space_info,
-               std::shared_ptr<ActiveSpaceIntegrals> fci_ints)
-    : integral_(ints), mo_space_info_(mo_space_info), scf_info_(scf_info), options_(options) {
-
-    throw std::runtime_error("This FCI_MO constructor is now disabled!");
-
-    print_method_banner({"Complete Active Space Configuration Interaction", "Chenyang Li"});
-    startup();
-
-    // setup integrals
-    if (fci_ints != nullptr) {
-        fci_ints_ = fci_ints;
-    } else {
-        fci_ints_ = std::make_shared<ActiveSpaceIntegrals>(
-            integral_, mo_space_info_->corr_absolute_mo("ACTIVE"),
-            mo_space_info_->symmetry("ACTIVE"),
-            mo_space_info_->corr_absolute_mo("RESTRICTED_DOCC"));
-        ambit::Tensor tei_active_aa =
-            integral_->aptei_aa_block(actv_mos_, actv_mos_, actv_mos_, actv_mos_);
-        ambit::Tensor tei_active_ab =
-            integral_->aptei_ab_block(actv_mos_, actv_mos_, actv_mos_, actv_mos_);
-        ambit::Tensor tei_active_bb =
-            integral_->aptei_bb_block(actv_mos_, actv_mos_, actv_mos_, actv_mos_);
-        fci_ints_->set_active_integrals(tei_active_aa, tei_active_ab, tei_active_bb);
-        fci_ints_->compute_restricted_one_body_operator();
-    }
+    as_ints_ = std::make_shared<ActiveSpaceIntegrals>(
+        ints_, actv_mos_, mo_space_info_->symmetry("ACTIVE"), core_mos_);
+    auto tei_active_aa = ints_->aptei_aa_block(actv_mos_, actv_mos_, actv_mos_, actv_mos_);
+    auto tei_active_ab = ints_->aptei_ab_block(actv_mos_, actv_mos_, actv_mos_, actv_mos_);
+    auto tei_active_bb = ints_->aptei_bb_block(actv_mos_, actv_mos_, actv_mos_, actv_mos_);
+    as_ints_->set_active_integrals(tei_active_aa, tei_active_ab, tei_active_bb);
+    as_ints_->compute_restricted_one_body_operator();
 }
 
 FCI_MO::~FCI_MO() { cleanup(); }
@@ -187,7 +137,7 @@ void FCI_MO::read_options() {
     rconv_ = options_->get_double("R_CONVERGENCE");
 
     // nuclear repulsion
-    e_nuc_ = integral_->nuclear_repulsion_energy();
+    e_nuc_ = ints_->nuclear_repulsion_energy();
 
     // digonalization algorithm
     diag_algorithm_ = options_->get_str("DIAG_ALGORITHM");
@@ -337,7 +287,7 @@ std::vector<double> FCI_MO::compute_ss_energies() {
     }
     print_CI(nroot_, options_->get_double("FCIMO_PRINT_CIVEC"), eigen_, determinant_);
 
-    if (integral_->integral_type() != Custom) {
+    if (ints_->integral_type() != Custom) {
         // compute dipole moments
         compute_permanent_dipole();
 
@@ -853,7 +803,7 @@ void FCI_MO::Diagonalize_H_noHF(const vecdet& p_space, const int& multi, const i
         // compute RHF energy
         outfile->Printf("\n  Isolate RHF determinant to the rest determinants.");
         outfile->Printf("\n  Recompute RHF energy ... ");
-        double Erhf = fci_ints_->energy(rhf) + fci_ints_->scalar_energy() + e_nuc_;
+        double Erhf = as_ints_->energy(rhf) + as_ints_->scalar_energy() + e_nuc_;
         psi::SharedVector rhf_vec(new psi::Vector("RHF Eigen Vector", det_size));
         rhf_vec->set(det_size - 1, 1.0);
         eigen.push_back(std::make_pair(rhf_vec, Erhf));
@@ -920,23 +870,19 @@ void FCI_MO::Diagonalize_H(const vecdet& p_space, const int& multi, const int& n
         sparse_solver.set_print_details(true);
     }
 
-    // setup eigen values and vectors
-    psi::SharedMatrix evecs;
-    psi::SharedVector evals;
-
     // use determinant map
     DeterminantHashVec detmap(p_space);
 
     // Here we use the SparseList algorithm to diagonalize the Hamiltonian
     auto sigma_vector = make_sigma_vector(detmap, as_ints_, 0, SigmaVectorType::SparseList);
-    std::tie(evals, evecs) =
+    std::tie(evals_, evecs_) =
         sparse_solver.diagonalize_hamiltonian(detmap, sigma_vector, nroot, multi);
 
     // fill in eigen (spin is purified in DL solver)
-    double energy_offset = fci_ints_->scalar_energy() + e_nuc_;
+    double energy_offset = as_ints_->scalar_energy() + e_nuc_;
     for (int i = 0; i != nroot; ++i) {
-        double value = evals->get(i);
-        eigen.push_back(std::make_pair(evecs->get_column(0, i), value + energy_offset));
+        double value = evals_->get(i);
+        eigen.push_back(std::make_pair(evecs_->get_column(0, i), value + energy_offset));
     }
 
     if (!quiet_) {
@@ -1010,7 +956,7 @@ void FCI_MO::compute_permanent_dipole() {
     outfile->Printf("\n  Only print nonzero (> 1.0e-5) elements.");
 
     // obtain AO dipole from ForteIntegrals
-    std::vector<psi::SharedMatrix> aodipole_ints = integral_->ao_dipole_ints();
+    std::vector<psi::SharedMatrix> aodipole_ints = ints_->ao_dipole_ints();
 
     // Nuclear dipole contribution
     Vector3 ndip =
@@ -1018,7 +964,7 @@ void FCI_MO::compute_permanent_dipole() {
     //        DipoleInt::nuclear_contribution(psi::Process::environment.molecule(), );
 
     // SO to AO transformer
-    psi::SharedMatrix sotoao(integral_->wfn()->aotoso()->transpose());
+    psi::SharedMatrix sotoao(ints_->wfn()->aotoso()->transpose());
 
     // prepare eigen vectors for ci_rdm
     int dim = (eigen_[0].first)->dim();
@@ -1032,12 +978,12 @@ void FCI_MO::compute_permanent_dipole() {
     for (size_t A = 0; A < nroot_; ++A) {
         std::string trans_name = std::to_string(A) + " -> " + std::to_string(A);
 
-        CI_RDMS ci_rdms(fci_ints_, determinant_, evecs, A, A);
+        CI_RDMS ci_rdms(as_ints_, determinant_, evecs, A, A);
         std::vector<double> opdm_a, opdm_b;
         ci_rdms.compute_1rdm(opdm_a, opdm_b);
 
         psi::SharedMatrix SOdens = reformat_1rdm("SO density " + trans_name, opdm_a, false);
-        SOdens->back_transform(integral_->Ca());
+        SOdens->back_transform(ints_->Ca());
 
         size_t nao = sotoao->coldim(0);
         psi::SharedMatrix AOdens(new psi::Matrix("AO density " + trans_name, nao, nao));
@@ -1109,10 +1055,10 @@ void FCI_MO::compute_transition_dipole() {
     outfile->Printf("\n  Only print nonzero (> 1.0e-5) elements.");
 
     // obtain AO dipole from libmints
-    std::vector<psi::SharedMatrix> aodipole_ints = integral_->ao_dipole_ints();
+    std::vector<psi::SharedMatrix> aodipole_ints = ints_->ao_dipole_ints();
 
     // SO to AO transformer
-    psi::SharedMatrix sotoao(integral_->wfn()->aotoso()->transpose());
+    psi::SharedMatrix sotoao(ints_->wfn()->aotoso()->transpose());
 
     //    // obtain SO dipole from libmints
     //    std::vector<psi::SharedMatrix> dipole_ints;
@@ -1151,13 +1097,13 @@ void FCI_MO::compute_transition_dipole() {
         for (size_t B = A + 1; B < nroot_; ++B) {
             std::string trans_name = std::to_string(A) + " -> " + std::to_string(B);
 
-            CI_RDMS ci_rdms(fci_ints_, determinant_, evecs, A, B);
+            CI_RDMS ci_rdms(as_ints_, determinant_, evecs, A, B);
             std::vector<double> opdm_a, opdm_b;
             ci_rdms.compute_1rdm(opdm_a, opdm_b);
 
             psi::SharedMatrix SOtransD =
                 reformat_1rdm("SO transition density " + trans_name, opdm_a, true);
-            SOtransD->back_transform(integral_->Ca());
+            SOtransD->back_transform(ints_->Ca());
 
             size_t nao = sotoao->coldim(0);
             psi::SharedMatrix AOtransD(
@@ -1199,8 +1145,7 @@ void FCI_MO::compute_transition_dipole() {
     //        oe->set_title("CAS TRANSITION");
     //        oe->add("TRANSITION_DIPOLE");
     //        oe->set_Da_so(transD);
-    //        outfile->Printf( "  ==> Transition dipole moment computed with CAS
-    //        <==\n\n");
+    //        print_h2("Transition dipole moment computed with CAS");
     //        oe->compute();
     //    }
 }
@@ -1280,7 +1225,7 @@ FCI_MO::compute_ref_relaxed_dm(const std::vector<double>& dm0, std::vector<Block
         }
 
         // CI_RDMS for the targeted root
-        CI_RDMS ci_rdms(fci_ints_, determinant_, evecs, root_, root_);
+        CI_RDMS ci_rdms(as_ints_, determinant_, evecs, root_, root_);
 
         if (dm0_sum > 1.0e-12) {
             // compute RDMS and put into BlockedTensor format
@@ -1317,7 +1262,7 @@ FCI_MO::compute_ref_relaxed_dm(const std::vector<double>& dm0, std::vector<Block
                 std::string name = generate_name(multi, i, irrep);
                 std::vector<double> dm(3, 0.0);
 
-                CI_RDMS ci_rdms(fci_ints_, p_spaces_[n], evecs, i, i);
+                CI_RDMS ci_rdms(as_ints_, p_spaces_[n], evecs, i, i);
 
                 if (dm0_sum > 1.0e-12) {
                     // compute RDMS and put into BlockedTensor format
@@ -1378,7 +1323,7 @@ FCI_MO::compute_ref_relaxed_dm(const std::vector<double>& dm0, std::vector<Block
         }
 
         // CI_RDMS for the targeted root
-        CI_RDMS ci_rdms(fci_ints_, determinant_, evecs, root_, root_);
+        CI_RDMS ci_rdms(as_ints_, determinant_, evecs, root_, root_);
 
         if (dm0_sum > 1.0e-12) {
             // compute RDMS and put into BlockedTensor format
@@ -1416,7 +1361,7 @@ FCI_MO::compute_ref_relaxed_dm(const std::vector<double>& dm0, std::vector<Block
                 std::string name = generate_name(multi, i, irrep);
                 std::vector<double> dm(3, 0.0);
 
-                CI_RDMS ci_rdms(fci_ints_, p_spaces_[n], evecs, i, i);
+                CI_RDMS ci_rdms(as_ints_, p_spaces_[n], evecs, i, i);
 
                 if (dm0_sum > 1.0e-12) {
                     // compute RDMS and put into BlockedTensor format
@@ -1481,7 +1426,7 @@ FCI_MO::compute_ref_relaxed_osc(std::vector<BlockedTensor>& dm1, std::vector<Blo
                 double Eex = eigens_[A][j].second - eigens_[A][i].second;
                 std::vector<double> osc(3, 0.0);
 
-                CI_RDMS ci_rdms(fci_ints_, p_spaces_[A], evecs0, i, j);
+                CI_RDMS ci_rdms(as_ints_, p_spaces_[A], evecs0, i, j);
 
                 ambit::BlockedTensor D1 = compute_n_rdm(ci_rdms, 1);
                 ambit::BlockedTensor D2 = compute_n_rdm(ci_rdms, 2);
@@ -1539,7 +1484,7 @@ FCI_MO::compute_ref_relaxed_osc(std::vector<BlockedTensor>& dm1, std::vector<Blo
                     double Eex = eigens_[B][j].second - eigens_[A][i].second;
                     std::vector<double> osc(3, 0.0);
 
-                    CI_RDMS ci_rdms(fci_ints_, p_space, evecs, i, j + nroots0);
+                    CI_RDMS ci_rdms(as_ints_, p_space, evecs, i, j + nroots0);
 
                     ambit::BlockedTensor D1 = compute_n_rdm(ci_rdms, 1);
                     ambit::BlockedTensor D2 = compute_n_rdm(ci_rdms, 2);
@@ -1601,7 +1546,7 @@ FCI_MO::compute_ref_relaxed_osc(std::vector<BlockedTensor>& dm1, std::vector<Blo
                 double Eex = eigens_[A][j].second - eigens_[A][i].second;
                 std::vector<double> osc(3, 0.0);
 
-                CI_RDMS ci_rdms(fci_ints_, p_spaces_[A], evecs0, i, j);
+                CI_RDMS ci_rdms(as_ints_, p_spaces_[A], evecs0, i, j);
 
                 ambit::BlockedTensor D1 = compute_n_rdm(ci_rdms, 1);
                 ambit::BlockedTensor D2 = compute_n_rdm(ci_rdms, 2);
@@ -1660,7 +1605,7 @@ FCI_MO::compute_ref_relaxed_osc(std::vector<BlockedTensor>& dm1, std::vector<Blo
                     double Eex = eigens_[B][j].second - eigens_[A][i].second;
                     std::vector<double> osc(3, 0.0);
 
-                    CI_RDMS ci_rdms(fci_ints_, p_space, evecs, i, j + nroots0);
+                    CI_RDMS ci_rdms(as_ints_, p_space, evecs, i, j + nroots0);
 
                     ambit::BlockedTensor D1 = compute_n_rdm(ci_rdms, 1);
                     ambit::BlockedTensor D2 = compute_n_rdm(ci_rdms, 2);
@@ -1805,7 +1750,7 @@ double FCI_MO::ref_relaxed_dm_helper(const double& dm0, BlockedTensor& dm1, Bloc
 d3 FCI_MO::compute_orbital_extents() {
 
     // compute AO quadrupole integrals
-    std::shared_ptr<psi::BasisSet> basisset = integral_->wfn()->basisset();
+    std::shared_ptr<psi::BasisSet> basisset = ints_->wfn()->basisset();
     std::shared_ptr<IntegralFactory> ints = std::shared_ptr<IntegralFactory>(
         new IntegralFactory(basisset, basisset, basisset, basisset));
 
@@ -1818,7 +1763,7 @@ d3 FCI_MO::compute_orbital_extents() {
     aoqOBI->compute(ao_Qpole);
 
     // orbital coefficients arranged by orbital energies
-    psi::SharedMatrix Ca_ao = integral_->wfn()->Ca_subset("AO");
+    psi::SharedMatrix Ca_ao = ints_->wfn()->Ca_subset("AO");
     int nao = Ca_ao->nrow();
     int nmo = Ca_ao->ncol();
 
@@ -2216,13 +2161,13 @@ void FCI_MO::xms_rotate_civecs() {
     Fa.iterate([&](const std::vector<size_t>& i, double& value) {
         size_t nu = actv_mos_[i[0]];
         size_t nv = actv_mos_[i[1]];
-        value = integral_->oei_a(nu, nv);
+        value = ints_->oei_a(nu, nv);
     });
 
     Fb.iterate([&](const std::vector<size_t>& i, double& value) {
         size_t nu = actv_mos_[i[0]];
         size_t nv = actv_mos_[i[1]];
-        value = integral_->oei_b(nu, nv);
+        value = ints_->oei_b(nu, nv);
     });
 
     ambit::Tensor I = ambit::Tensor::build(CoreTensor, "Identity", {ncore_, ncore_});
@@ -2231,26 +2176,26 @@ void FCI_MO::xms_rotate_civecs() {
     }
 
     ambit::Tensor V;
-    V = integral_->aptei_aa_block(actv_mos_, core_mos_, actv_mos_, core_mos_);
+    V = ints_->aptei_aa_block(actv_mos_, core_mos_, actv_mos_, core_mos_);
     Fa("uv") += V("umvn") * I("mn");
 
-    V = integral_->aptei_ab_block(actv_mos_, core_mos_, actv_mos_, core_mos_);
+    V = ints_->aptei_ab_block(actv_mos_, core_mos_, actv_mos_, core_mos_);
     Fa("uv") += V("umvn") * I("mn");
 
-    V = integral_->aptei_ab_block(core_mos_, actv_mos_, core_mos_, actv_mos_);
+    V = ints_->aptei_ab_block(core_mos_, actv_mos_, core_mos_, actv_mos_);
     Fb("uv") += V("munv") * I("mn");
 
-    V = integral_->aptei_bb_block(actv_mos_, core_mos_, actv_mos_, core_mos_);
+    V = ints_->aptei_bb_block(actv_mos_, core_mos_, actv_mos_, core_mos_);
     Fb("uv") += V("umvn") * I("mn");
 
-    V = integral_->aptei_aa_block(actv_mos_, actv_mos_, actv_mos_, actv_mos_);
+    V = ints_->aptei_aa_block(actv_mos_, actv_mos_, actv_mos_, actv_mos_);
     Fa("uv") += V("uxvy") * L1a_("xy");
 
-    V = integral_->aptei_ab_block(actv_mos_, actv_mos_, actv_mos_, actv_mos_);
+    V = ints_->aptei_ab_block(actv_mos_, actv_mos_, actv_mos_, actv_mos_);
     Fa("uv") += V("uxvy") * L1b_("xy");
     Fb("uv") += V("xuyv") * L1a_("xy");
 
-    V = integral_->aptei_bb_block(actv_mos_, actv_mos_, actv_mos_, actv_mos_);
+    V = ints_->aptei_bb_block(actv_mos_, actv_mos_, actv_mos_, actv_mos_);
     Fb("uv") += V("uxvy") * L1b_("xy");
 
     // XMS rotation for all symmetries
@@ -2292,7 +2237,7 @@ psi::SharedMatrix FCI_MO::xms_rotate_this_civecs(const det_vec& p_space, psi::Sh
             // compute transition density
             ambit::Tensor Da = ambit::Tensor::build(CoreTensor, "Da", {nactv_, nactv_});
             ambit::Tensor Db = ambit::Tensor::build(CoreTensor, "Da", {nactv_, nactv_});
-            CI_RDMS ci_rdms(fci_ints_, p_space, civecs, M, N);
+            CI_RDMS ci_rdms(as_ints_, p_space, civecs, M, N);
             ci_rdms.compute_1rdm(Da.data(), Db.data());
 
             // compute Fock elements
@@ -2525,7 +2470,7 @@ std::vector<ambit::Tensor> FCI_MO::compute_n_rdm(const vecdet& p_space, psi::Sha
         // Important! need to shift root2 when two states are different
         int root2_shifted = (state2 == state_) ? root2 : nroot_ + root2;
 
-        CI_RDMS ci_rdms(fci_ints_, p_space, evecs, root1, root2_shifted);
+        CI_RDMS ci_rdms(as_ints_, p_space, evecs, root1, root2_shifted);
 
         if (rdm_level == 1) {
             ci_rdms.compute_1rdm(out[0].data(), out[1].data());
@@ -2594,7 +2539,7 @@ std::vector<ambit::Tensor> FCI_MO::compute_n_rdm(const vecdet& p_space, psi::Sha
             read_disk_vector_double(filenames[i], out[i].data());
         }
     } else {
-        CI_RDMS ci_rdms(fci_ints_, p_space, evecs, root1, root2);
+        CI_RDMS ci_rdms(as_ints_, p_space, evecs, root1, root2);
 
         if (rdm_level == 1) {
             ci_rdms.compute_1rdm(out[0].data(), out[1].data());

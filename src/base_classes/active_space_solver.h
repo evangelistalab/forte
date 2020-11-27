@@ -29,8 +29,9 @@
 #ifndef _active_space_solver_h_
 #define _active_space_solver_h_
 
-#include <vector>
+#include <map>
 #include <string>
+#include <vector>
 
 #include "psi4/libmints/matrix.h"
 
@@ -111,6 +112,14 @@ class ActiveSpaceSolver {
         as_ints_ = as_ints;
     }
 
+    /// Set the boolean if the eigen vectors are stored or not
+    void set_keep_evecs(bool keep) { keep_evecs_ = keep; }
+
+    /// Return the map of StateInfo to the computed nroots of eigen vectors
+    const std::map<StateInfo, psi::SharedMatrix>& state_evecs_map() const {
+        return state_evecs_map_;
+    }
+
   protected:
     /// a string that specifies the method used (e.g. "FCI", "ACI", ...)
     std::string method_;
@@ -127,8 +136,7 @@ class ActiveSpaceSolver {
     std::shared_ptr<MOSpaceInfo> mo_space_info_;
 
     /// The molecular integrals for the active space
-    /// This object holds only the integrals for the orbital contained in the
-    /// active_mo_vector.
+    /// This object holds only the integrals for the orbital contained in the active_mo_vector.
     /// The one-electron integrals and scalar energy contains contributions from the
     /// doubly occupied orbitals specified by the core_mo_ vector.
     std::shared_ptr<ActiveSpaceIntegrals> as_ints_;
@@ -160,6 +168,11 @@ class ActiveSpaceSolver {
 
     /// A variable to control printing information
     int print_ = 1;
+
+    /// Whether to store the eigen vectors or not
+    bool keep_evecs_ = false;
+    /// A map of state symmetries to the eigen vectors under given state symmetry
+    std::map<StateInfo, psi::SharedMatrix> state_evecs_map_;
 
     /// Pairs of state info and the contracted CI eigen vectors
     std::map<StateInfo, std::shared_ptr<psi::Matrix>>

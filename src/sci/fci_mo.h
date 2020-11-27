@@ -90,19 +90,6 @@ class FCI_MO : public ActiveSpaceMethod {
         std::shared_ptr<SCFInfo> scf_info, std::shared_ptr<ForteOptions> options,
         std::shared_ptr<ForteIntegrals> ints, std::shared_ptr<MOSpaceInfo> mo_space_info);
 
-    /**
-     * @brief FCI_MO Constructor
-     * @param ref_wfn The reference wavefunction object
-     * @param options PSI4 and FORTE options
-     * @param ints ForteInegrals
-     * @param mo_space_info MOSpaceInfo
-     * @param fci_ints FCIInegrals
-     */
-    [[deprecated("Using a deprecated constructor that does not take state and nroot")]] FCI_MO(
-        std::shared_ptr<SCFInfo> scf_info, std::shared_ptr<ForteOptions> options,
-        std::shared_ptr<ForteIntegrals> ints, std::shared_ptr<MOSpaceInfo> mo_space_info,
-        std::shared_ptr<ActiveSpaceIntegrals> fci_ints);
-
     /// Destructor
     ~FCI_MO();
 
@@ -187,8 +174,8 @@ class FCI_MO : public ActiveSpaceMethod {
     /// Set if safe to read densities from files
     void set_safe_to_read_density_files(bool safe) { safe_to_read_density_files_ = safe; }
 
-    /// Set fci_int_ pointer
-    void set_fci_int(std::shared_ptr<ActiveSpaceIntegrals> fci_ints) { fci_ints_ = fci_ints; }
+    /// Set ActiveSpaceIntegral pointer
+    void set_as_int(std::shared_ptr<ActiveSpaceIntegrals> as_ints) { as_ints_ = as_ints; }
 
     /// Set multiplicity
     void set_multiplicity(int multiplicity) { multi_ = multiplicity; }
@@ -221,8 +208,8 @@ class FCI_MO : public ActiveSpaceMethod {
     /// Set state-averaged eigen values and vectors
     void set_eigens(const std::vector<std::vector<std::pair<psi::SharedVector, double>>>& eigens);
 
-    /// Return fci_int_ pointer
-    std::shared_ptr<ActiveSpaceIntegrals> fci_ints() { return fci_ints_; }
+    /// Return ActiveSpaceIntegral pointer
+    std::shared_ptr<ActiveSpaceIntegrals> as_ints() { return as_ints_; }
 
     /// Return the vector of determinants
     const vecdet& p_space() const { return determinant_; }
@@ -272,9 +259,9 @@ class FCI_MO : public ActiveSpaceMethod {
     void cleanup();
 
     /// Integrals
-    std::shared_ptr<ForteIntegrals> integral_;
+    std::shared_ptr<ActiveSpaceIntegrals> as_ints_;
+    std::shared_ptr<ForteIntegrals> ints_;
     std::string int_type_;
-    std::shared_ptr<ActiveSpaceIntegrals> fci_ints_;
 
     /// Reference Type
     std::string ref_type_;

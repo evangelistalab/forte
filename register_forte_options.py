@@ -919,6 +919,10 @@ def register_casscf_options(options):
     options.add_str("CASSCF_CI_SOLVER", "CAS",
                     "The active space solver to use in CASSCF")
 
+    options.add_bool("MCSCF_ROOT_FOLLOW", False,
+                     "Follow the initial CI roots along the orbital optimizations"
+                     " (only for CASSCF_CI_SOLVER = CAS)")
+
     options.add_int("CASSCF_CI_FREQ", 1,
                     "How often to solve CI?\n"
                     "< 1: do CI in the first macro iteration ONLY\n"

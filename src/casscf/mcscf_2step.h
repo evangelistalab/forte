@@ -131,6 +131,8 @@ class MCSCF_2STEP {
 
     /// The name of CI solver
     std::string ci_type_;
+    /// Do CI root following
+    bool ci_follow_;
 
     /// Final total energy
     double energy_;

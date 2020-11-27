@@ -150,7 +150,7 @@ class DWMS_DSRGPT2 {
     bool eri_df_;
 
     /// a shared_ptr of ActiveSpaceIntegrals (mostly used in CI_RDMS)
-    std::shared_ptr<ActiveSpaceIntegrals> fci_ints_;
+    std::shared_ptr<ActiveSpaceIntegrals> as_ints_;
 
     /// energy of original CASCI
     std::vector<std::vector<double>> Eref_0_;

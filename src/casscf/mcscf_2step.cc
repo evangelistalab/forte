@@ -88,6 +88,7 @@ void MCSCF_2STEP::read_options() {
     orb_type_redundant_ = options_->get_str("CASSCF_FINAL_ORBITAL");
 
     ci_type_ = options_->get_str("CASSCF_CI_SOLVER");
+    ci_follow_ = options_->get_bool("MCSCF_ROOT_FOLLOW") and (ci_type_ == "CAS");
 
     max_rot_ = options_->get_double("CASSCF_MAX_ROTATION");
     internal_rot_ = options_->get_bool("CASSCF_INTERNAL_ROT");
@@ -118,7 +119,9 @@ void MCSCF_2STEP::print_options() {
         {"Final orbital type", orb_type_redundant_}};
 
     std::vector<std::pair<std::string, bool>> info_bool{
-        {"Include internal rotations", internal_rot_}, {"Debug printing", debug_print_}};
+        {"Include internal rotations", internal_rot_},
+        {"CI root following", ci_follow_},
+        {"Debug printing", debug_print_}};
 
     if (do_diis_) {
         info_int.push_back({"DIIS start", diis_start_});
@@ -343,7 +346,10 @@ MCSCF_2STEP::diagonalize_hamiltonian(std::shared_ptr<ActiveSpaceIntegrals> fci_i
     auto active_space_solver = make_active_space_solver(ci_type_, state_map, scf_info_,
                                                         mo_space_info_, fci_ints, options_);
     active_space_solver->set_print(print);
+    active_space_solver->set_keep_evecs(ci_follow_);
     const auto state_energies_map = active_space_solver->compute_energy();
+
+    // TODO: compute roots overlap and determine new state_weights_map
 
     // TODO: need to save CI vectors and dump to file and let solver read them
 

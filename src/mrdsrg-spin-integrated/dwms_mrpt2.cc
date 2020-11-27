@@ -256,10 +256,11 @@ double DWMS_DSRGPT2::compute_energy() {
 
 std::shared_ptr<FCI_MO> DWMS_DSRGPT2::precompute_energy() {
     // perform CASCI using user-defined weights
+    //    auto state_info = make_state_info_from_psi(foptions_);
     auto fci_mo = std::make_shared<FCI_MO>(scf_info_, foptions_, ints_, mo_space_info_);
     fci_mo->compute_energy();
     auto eigens = fci_mo->eigens();
-    fci_ints_ = fci_mo->fci_ints();
+    as_ints_ = fci_mo->as_ints();
 
     auto sa_info = fci_mo->sa_info();
     int nentry = sa_info.size();
@@ -284,21 +285,21 @@ std::shared_ptr<FCI_MO> DWMS_DSRGPT2::precompute_energy() {
         RDMs rdms = fci_mo->reference(max_rdm_level_); // TODO: bug here? (Francesco)
 
         std::shared_ptr<MASTER_DSRG> dsrg_pt;
-        fci_ints_ = compute_dsrg_pt(dsrg_pt, rdms, dwms_ref_);
+        as_ints_ = compute_dsrg_pt(dsrg_pt, rdms, dwms_ref_);
 
         Ept_0_.resize(nentry);
 
         if (dwms_ref_ == "PT2D") {
             BlockedTensor oei =
                 ambit::BlockedTensor::build(ambit::CoreTensor, "oei", spin_cases({"aa"}));
-            oei.block("aa").data() = fci_ints_->oei_a_vector();
-            oei.block("AA").data() = fci_ints_->oei_b_vector();
+            oei.block("aa").data() = as_ints_->oei_a_vector();
+            oei.block("AA").data() = as_ints_->oei_b_vector();
 
             BlockedTensor tei =
                 ambit::BlockedTensor::build(ambit::CoreTensor, "tei", spin_cases({"aaaa"}));
-            tei.block("aaaa").data() = fci_ints_->tei_aa_vector();
-            tei.block("aAaA").data() = fci_ints_->tei_ab_vector();
-            tei.block("AAAA").data() = fci_ints_->tei_bb_vector();
+            tei.block("aaaa").data() = as_ints_->tei_aa_vector();
+            tei.block("aAaA").data() = as_ints_->tei_ab_vector();
+            tei.block("AAAA").data() = as_ints_->tei_bb_vector();
 
             BlockedTensor D1 =
                 ambit::BlockedTensor::build(ambit::CoreTensor, "D1", spin_cases({"aa"}));
@@ -340,7 +341,7 @@ std::shared_ptr<FCI_MO> DWMS_DSRGPT2::precompute_energy() {
             std::stringstream title;
             title << "Diagonalize SA-DSRG-" << dwms_ref_ << " Active Hamiltonian";
             print_h2(title.str());
-            fci_mo->set_fci_int(fci_ints_);
+            fci_mo->set_as_int(as_ints_);
             fci_mo->set_localize_actv(false);
             fci_mo->compute_energy();
             eigens = fci_mo->eigens();
@@ -1013,7 +1014,7 @@ void DWMS_DSRGPT2::compute_dwms_energy_separated_H(std::shared_ptr<FCI_MO>& fci_
 
             // diagonalize the DSRG active Hamiltonian for each root
             print_h2("Diagonalize DWMS(sH)-DSRG Active Hamiltonian");
-            fci_mo->set_fci_int(fci_ints);
+            fci_mo->set_as_int(fci_ints);
             fci_mo->set_root_sym(irrep);
 
             if (algorithm_ == "SH-1") {

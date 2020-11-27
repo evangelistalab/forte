@@ -56,6 +56,8 @@ void ActiveSpaceMethod::set_active_space_integrals(std::shared_ptr<ActiveSpaceIn
 
 psi::SharedVector ActiveSpaceMethod::evals() { return evals_; }
 
+psi::SharedMatrix ActiveSpaceMethod::evecs() { return evecs_; }
+
 const std::vector<double>& ActiveSpaceMethod::energies() const { return energies_; }
 
 void ActiveSpaceMethod::set_e_convergence(double value) { e_convergence_ = value; }
