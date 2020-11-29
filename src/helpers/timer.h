@@ -37,12 +37,19 @@
 namespace forte {
 
 /**
- * @brief A timer class that returns the elapsed time
+ * @brief A timer class to track the elapsed time
+ *
+ * This class is based on std::chrono::high_resolution_clock and should be used
+ * to time functions. The timer is set at creation and the time difference can be
+ * obtained with the get() function. The reset() function can be used to reset the
+ * timer.
  */
 class local_timer {
   public:
+    /// constructor. Creates and starts the timer object
     local_timer() : start_(std::chrono::high_resolution_clock::now()) {}
 
+    /// reset the timer
     void reset() { start_ = std::chrono::high_resolution_clock::now(); }
 
     /// return the elapsed time in seconds
@@ -58,9 +65,14 @@ class local_timer {
 
 /**
  * @brief A timer class that prints timing to a file (timer.dat)
+ *
+ * This class uses the psi4 functions timer_on/timer_off and a local_timer object
+ * to track time. The function stop() will return the elapsed time and stop the psi4
+ * timer.
  */
 class timer {
   public:
+    /// constructor. Create a timer with label name
     timer(const std::string& name) : name_(name) {
         psi::timer_on(name_);
         t_ = local_timer();
@@ -84,7 +96,10 @@ class timer {
 };
 
 /**
- * @brief A timer class
+ * @brief A timer class for parallel functions that prints timing to a file (timer.dat)
+ *
+ * This class uses the psi4 functions parallel_timer_on/parallel_timer_off to track time.
+ * The function stop() will return the elapsed time and stop the psi4 timer.
  */
 class parallel_timer {
   public:
