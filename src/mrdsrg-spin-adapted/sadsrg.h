@@ -153,7 +153,7 @@ class SADSRG : public DynamicCorrelationSolver {
     double Eref_;
 
     /// Compute reference (MK vacuum) energy from ForteIntegral and Fock_
-    double compute_reference_energy_from_ints(std::shared_ptr<ForteIntegrals> ints);
+    double compute_reference_energy_from_ints();
 
     /// Compute reference (MK vacuum) energy
     double compute_reference_energy(BlockedTensor H, BlockedTensor F, BlockedTensor V);
@@ -244,7 +244,7 @@ class SADSRG : public DynamicCorrelationSolver {
     /// Initialize Fock matrix
     void init_fock();
     /// Build Fock matrix from ForteIntegrals
-    void build_fock_from_ints(std::shared_ptr<ForteIntegrals> ints);
+    void build_fock_from_ints();
     /// Fill in diagonal elements of Fock matrix to Fdiag
     void fill_Fdiag(BlockedTensor& F, std::vector<double>& Fdiag);
 
@@ -379,6 +379,11 @@ class SADSRG : public DynamicCorrelationSolver {
 
     /// Print the summary of 2- and 3-body density cumulant
     void print_cumulant_summary();
+
+    /// Print the contents with padding: <text> <padding with dots>
+    void print_contents(const std::string& str, size_t size = 45);
+    /// Print done and timing
+    void print_done(double t);
 
     // ==> common aplitudes analysis and printing <==
 

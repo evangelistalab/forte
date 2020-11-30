@@ -57,7 +57,7 @@ void SA_DSRGPT::print_options() {
         {"Taylor expansion threshold", std::pow(10.0, -double(taylor_threshold_))},
         {"Intruder amplitudes threshold", intruder_tamp_}};
 
-    if (ints_type_ == "CHOLESKY") {
+    if (ints_->integral_type() == Cholesky) {
         auto cholesky_threshold = foptions_->get_double("CHOLESKY_TOLERANCE");
         calculation_info_double.push_back({"Cholesky tolerance", cholesky_threshold});
     }
@@ -99,6 +99,7 @@ void SA_DSRGPT::init_fock() {
 
 void SA_DSRGPT::compute_t2_full() {
     timer t2("Compute complete T2");
+    print_contents("Computing T2 amplitudes");
 
     // initialize T2 with V
     T2_["ijab"] = V_["abij"];
@@ -148,11 +149,12 @@ void SA_DSRGPT::compute_t2_full() {
     // form 2 * J - K
     S2_["ijab"] = 2.0 * T2_["ijab"] - T2_["ijba"];
 
-    t2.stop();
+    print_done(t2.stop());
 }
 
 void SA_DSRGPT::compute_t1() {
     timer t1("Compute T1");
+    print_contents("Computing T1 amplitudes");
 
     // initialize T1 with F + [H0, A]
     T1_["ia"] = F_["ai"];
@@ -202,13 +204,13 @@ void SA_DSRGPT::compute_t1() {
     // internal amplitudes
     internal_amps_T1(T1_);
 
-    t1.stop();
+    print_done(t1.stop());
 }
 
 void SA_DSRGPT::renormalize_integrals(bool add) {
     // add R = H + [F, A] contributions to H
-
     timer rV("Renormalize V");
+    print_contents("Renormalizing 2-body integrals");
 
     // to semicanonical orbitals
     BlockedTensor tempX;
@@ -253,9 +255,10 @@ void SA_DSRGPT::renormalize_integrals(bool add) {
         V_["cdij"] = tempX["abij"] * U_["bd"] * U_["ac"];
     }
 
-    rV.stop();
+    print_done(rV.stop());
 
     timer rF("Renormalize F");
+    print_contents("Renormalizing 1-body integrals");
 
     auto temp = ambit::BlockedTensor::build(tensor_type_, "temp", {"ph"});
     temp["ai"] = F_["ai"];
@@ -293,6 +296,6 @@ void SA_DSRGPT::renormalize_integrals(bool add) {
         F_["ai"] = temp["ai"];
     }
 
-    rF.stop();
+    print_done(rF.stop());
 }
 } // namespace forte

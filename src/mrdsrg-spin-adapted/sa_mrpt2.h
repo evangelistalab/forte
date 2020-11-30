@@ -80,15 +80,34 @@ class SA_MRPT2 : public SA_DSRGPT {
     /// Energy contribution from CCAV block
     double E_V_T2_CCAV();
 
+    /// Energy contribution from CCVV block using DF integrals
+    double compute_Hbar0_CCVV_DF();
+    /// Energy contribution from CCVV block using DiskDF integrals
+    double compute_Hbar0_CCVV_diskDF();
+
     /// Compute DSRG-transformed Hamiltonian
     void compute_hbar();
+
+    /// Compute Hbar1 from core contraction, renormalize V if Vr is true
+    void compute_Hbar1C_DF(ambit::Tensor& Hbar1, bool Vr = true);
+    /// Compute Hbar1 from virtual contraction, renormalize V if Vr is true
+    void compute_Hbar1V_DF(ambit::Tensor& Hbar1, bool Vr = true);
     /// Compute Hbar1 from core contraction, renormalize V if Vr is true
     void compute_Hbar1C_diskDF(ambit::Tensor& Hbar1, bool Vr = true);
     /// Compute Hbar1 from virtual contraction, renormalize V if Vr is true
     void compute_Hbar1V_diskDF(ambit::Tensor& Hbar1, bool Vr = true);
 
+    /// C1 = [Vr, T2] CAVV from compute_Hbar1V_diskDF
+    ambit::Tensor C1_VT2_CAVV_;
+    /// C1 = [Vr, T2] CCAV from compute_Hbar1C_diskDF
+    ambit::Tensor C1_VT2_CCAV_;
+
     /// Return a vector of empty ambit Tensor objects
     std::vector<ambit::Tensor> init_tensor_vecs(int number_of_tensors);
+
+    /// Separate indices into batches of indices
+    std::vector<std::vector<size_t>> split_indices_to_batches(const std::vector<size_t>& indices,
+                                                              size_t max_size);
 };
 } // namespace forte
 
