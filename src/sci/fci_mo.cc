@@ -41,6 +41,7 @@
 #include "psi4/libmints/molecule.h"
 #include "psi4/libmints/integral.h"
 #include "psi4/libmints/basisset.h"
+#include "psi4/libmints/mintshelper.h"
 #include "psi4/libpsio/psio.hpp"
 
 #include "base_classes/forte_options.h"
@@ -974,6 +975,43 @@ void FCI_MO::compute_permanent_dipole() {
         evecs->set_column(0, i, (eigen_[i]).first);
     }
 
+    // MintsHelper
+    MintsHelper mints(ints_->wfn());
+    auto so_angular_momentum = mints.so_angular_momentum();
+    std::vector<SharedMatrix> mo_angular_momentum;
+    std::vector<SharedMatrix> mo_L_squared;
+    for (int i = 0; i < 3; ++i) {
+        auto T = linalg::triplet(ints_->Ca(), so_angular_momentum[i], ints_->Ca(), true, false, false);
+        T->set_name("MO Angular Momentum " + std::to_string(i));
+        T->print();
+        mo_angular_momentum.push_back(T);
+        auto X = linalg::doublet(T, T, false, true);
+        X->set_name("MO L^2 " + std::to_string(i));
+        X->print();
+        mo_L_squared.push_back(X);
+    }
+
+    auto so_dipole = mints.so_dipole();
+    auto so_quadruple = mints.so_quadrupole();
+    auto T = linalg::triplet(so_dipole[0], ints_->wfn()->S(), so_dipole[0], false, false, false);
+    auto X = linalg::triplet(ints_->Ca(), T, ints_->Ca(), true, false, false);
+    X->print();
+    T = linalg::triplet(ints_->Ca(), so_quadruple[0], ints_->Ca(), true, false, false);
+    T->print();
+
+    // compute AO quadrupole integrals
+    std::shared_ptr<psi::BasisSet> basisset = ints_->wfn()->basisset();
+    std::shared_ptr<IntegralFactory> ints = std::shared_ptr<IntegralFactory>(
+        new IntegralFactory(basisset, basisset, basisset, basisset));
+
+    std::vector<psi::SharedMatrix> ao_Qpole;
+    for (const std::string& direction : {"XX", "XY", "XZ", "YY", "YZ", "ZZ"}) {
+        std::string name = "AO Quadrupole" + direction;
+        ao_Qpole.push_back(std::make_shared<psi::Matrix>(name, basisset->nbf(), basisset->nbf()));
+    }
+    std::shared_ptr<OneBodyAOInt> aoqOBI(ints->ao_quadrupole());
+    aoqOBI->compute(ao_Qpole);
+
     // loop over states
     for (size_t A = 0; A < nroot_; ++A) {
         std::string trans_name = std::to_string(A) + " -> " + std::to_string(A);
@@ -983,6 +1021,8 @@ void FCI_MO::compute_permanent_dipole() {
         ci_rdms.compute_1rdm(opdm_a, opdm_b);
 
         psi::SharedMatrix SOdens = reformat_1rdm("SO density " + trans_name, opdm_a, false);
+        auto SOdens_copy = SOdens->clone();
+        SOdens_copy->print();
         SOdens->back_transform(ints_->Ca());
 
         size_t nao = sotoao->coldim(0);
@@ -1001,6 +1041,17 @@ void FCI_MO::compute_permanent_dipole() {
             outfile->Printf("\n  Permanent dipole moments (a.u.) %s:  X: %7.4f  Y: "
                             "%7.4f  Z: %7.4f  Total: %7.4f",
                             trans_name.c_str(), de[0], de[1], de[2], de[3]);
+        }
+
+        outfile->Printf("\n  Root %d", A);
+        for (int i: {0, 3, 5}) {
+            auto temp = 2.0 * AOdens->vector_dot(ao_Qpole[i]);
+            outfile->Printf("\n  Qpole %d: %20.15f", i, temp);
+        }
+
+        for (int i = 0; i < 3; ++i) {
+            auto temp = 2.0 * SOdens_copy->vector_dot(mo_L_squared[i]);
+            outfile->Printf("\n  L^2 %d: %20.15f", i, temp);
         }
     }
     outfile->Printf("\n");

@@ -349,13 +349,84 @@ MCSCF_2STEP::diagonalize_hamiltonian(std::shared_ptr<ActiveSpaceIntegrals> fci_i
     active_space_solver->set_keep_evecs(ci_follow_);
     const auto state_energies_map = active_space_solver->compute_energy();
 
-    // TODO: compute roots overlap and determine new state_weights_map
+    // compute roots overlap and determine new state_weights_map
+    if (ci_follow_) {
+        if (state_evecs_map_.size())
+            ci_root_following(active_space_solver);
+        state_evecs_map_ = active_space_solver->state_evecs_map();
+    }
 
     // TODO: need to save CI vectors and dump to file and let solver read them
 
     e_c = compute_average_state_energy(state_energies_map, state_weights_map_);
 
     return active_space_solver;
+}
+
+void MCSCF_2STEP::ci_root_following(const std::unique_ptr<ActiveSpaceSolver>& active_space_solver) {
+    auto state_evecs_map_new = active_space_solver->state_evecs_map();
+    std::map<StateInfo, std::vector<double>> state_weights_map_new;
+    std::map<StateInfo, std::vector<int>> state_permutation_map;
+
+    for (const auto& pair : state_evecs_map_) {
+        const auto& state = pair.first;
+        auto evecs_old = pair.second;
+        auto evecs_new = state_evecs_map_new[state];
+        auto overlap = psi::linalg::doublet(evecs_new, evecs_old, true, false);
+        overlap->set_name("Overlap (new x old) for " + state.str());
+
+        // find permutations
+        int nroots = state_weights_map_[state].size();
+        std::vector<int> perm(nroots);
+        for (int inew = 0; inew < nroots; ++inew) {
+            std::vector<double> s(nroots);
+            for (int iold = 0; iold < nroots; ++iold) {
+                s[iold] = std::fabs(overlap->get(inew, iold));
+                psi::outfile->Printf("\n  inew = %d, iold = %d, v = %.15f", inew, iold, s[iold]);
+            }
+            int imax = std::max_element(s.begin(), s.end()) - s.begin();
+            perm[inew] = imax;
+            psi::outfile->Printf("\n  inew = %d, imax = %d", inew, imax);
+        }
+
+        // create new state weight map
+//        std::set<int> perm_set(perm.begin(), perm.end());
+//        if (perm_set.size() == perm.size()) {
+//            std::vector<double> weights(nroots);
+//            for (int i = 0; i < nroots; ++i) {
+//                weights[i] = state_weights_map_[state][perm[i]];
+//            }
+//            state_weights_map_new[state] = weights;
+//            state_permutation_map[state] = perm;
+//        } else {
+//            psi::outfile->Printf("\n  Warning: MCSCF cannot follow root for %s",
+//                                 state.str().c_str());
+//            psi::outfile->Printf("\n  MCSCF root following turned off.\n");
+//            overlap->print();
+//            ci_follow_ = false;
+//            break;
+//        }
+        std::vector<double> weights(nroots);
+        for (int i = 0; i < nroots; ++i) {
+            weights[i] = state_weights_map_[state][perm[i]];
+        }
+        state_weights_map_new[state] = weights;
+        state_permutation_map[state] = perm;
+    }
+
+    // printing permutations
+    if (ci_follow_) {
+        for (const auto& pair : state_permutation_map) {
+            const auto& state = pair.first;
+            psi::outfile->Printf("\n    %s permutations (old -> new):", state.str().c_str());
+
+            const auto& perm = pair.second;
+            for (int i = 0, size = perm.size(); i < size; ++i) {
+                psi::outfile->Printf(" (%d -> %d)", perm[i], i);
+            }
+        }
+        state_weights_map_ = state_weights_map_new;
+    }
 }
 
 void MCSCF_2STEP::print_macro_iteration(std::vector<CASSCF_HISTORY>& history) {

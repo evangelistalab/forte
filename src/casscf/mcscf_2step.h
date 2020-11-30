@@ -134,6 +134,11 @@ class MCSCF_2STEP {
     /// Do CI root following
     bool ci_follow_;
 
+    /// The state to eigen vector map
+    std::map<StateInfo, psi::SharedMatrix> state_evecs_map_;
+    /// CI root following procedure
+    void ci_root_following(const std::unique_ptr<ActiveSpaceSolver> &active_space_solver);
+
     /// Final total energy
     double energy_;
 
