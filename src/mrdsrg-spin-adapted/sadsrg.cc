@@ -36,6 +36,7 @@
 #include "psi4/libpsio/psio.hpp"
 
 #include "forte-def.h"
+#include "helpers/helpers.h"
 #include "helpers/printing.h"
 #include "helpers/timer.h"
 
@@ -265,8 +266,15 @@ void SADSRG::check_init_memory() {
 
     mem_left -= n_ele * sizeof(double);
     if (mem_left < 0) {
-        std::string msg = "Not enough memory to run spin-adapted DSRG. Try DiskDF integrals?";
-        throw psi::PSIEXCEPTION(msg);
+        std::stringstream ss;
+        ss.precision(2);
+        ss << "Not enough memory to run spin-adapted DSRG." << std::endl;
+        auto pair = to_xb(-1.2 * mem_left, sizeof(double));
+        ss << "Need at least " << std::fixed << pair.first << " " << pair.second
+           << " more to pass the pre-DSRG memory check." << std::endl;
+        ss << "Try DiskDF integrals?" << std::endl;
+        outfile->Printf("\n%s", ss.str().c_str());
+        throw psi::PSIEXCEPTION(ss.str());
     }
 
     // prepare DSRG_MEM
@@ -367,10 +375,11 @@ double SADSRG::compute_reference_energy(BlockedTensor H, BlockedTensor F, Blocke
     size_t ncore = core_mos_.size();
     double E = Efrzc_ + Enuc_;
 
-#pragma omp parallel for reduction(+ : E)
+    auto& H_cc = H.block("cc").data();
+    auto& F_cc = F.block("cc").data();
     for (size_t m = 0; m < ncore; ++m) {
-        E += H.block("cc").data()[m * ncore + m];
-        E += F.block("cc").data()[m * ncore + m];
+        E += H_cc[m * ncore + m];
+        E += F_cc[m * ncore + m];
     }
 
     E += 0.5 * H["uv"] * L1_["vu"];
