@@ -333,7 +333,7 @@ gasscf:
    - gasscf-2
    - gasscf-dsrg-mrpt2-1
    - sa-gasscf-3
-#x2c:
-#  medium:
-#   - x2c-1
+x2c:
+  short:
+   - x2c-1
 
