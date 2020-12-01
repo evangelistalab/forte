@@ -363,6 +363,10 @@ class ForteIntegrals {
     /// Each direction is a std::shared_ptr<psi::Matrix> of dimension nmo * nmo
     std::vector<std::shared_ptr<psi::Matrix>> ao_dipole_ints() const;
 
+    /// Obtain AO dipole integrals [XX, XY, XZ, YY, YZ, ZZ]
+    /// Each direction is a std::shared_ptr<psi::Matrix> of dimension nmo * nmo
+    std::vector<std::shared_ptr<psi::Matrix>> ao_quadrupole_ints() const;
+
     /**
      * Compute MO dipole integrals
      * @param alpha if true, compute MO dipole using Ca, else Cb
@@ -498,6 +502,11 @@ class ForteIntegrals {
     dipole_ints_mo_helper(std::shared_ptr<psi::Matrix> Cao, std::shared_ptr<psi::Vector> epsilon,
                           const bool& resort);
 
+    /// AO quadrupole integrals
+    std::vector<std::shared_ptr<psi::Matrix>> quadrupole_ints_ao_;
+    /// Compute AO quadrupole integrals
+    virtual void build_quadrupole_ints_ao();
+
     // ==> Class private functions <==
 
     /// Class initializer
@@ -582,6 +591,8 @@ class Psi4Integrals : public ForteIntegrals {
     std::vector<std::shared_ptr<psi::Matrix>>
     dipole_ints_mo_helper(std::shared_ptr<psi::Matrix> Cao, std::shared_ptr<psi::Vector> epsilon,
                           const bool& resort) override;
+
+    void build_quadrupole_ints_ao() override;
 
     /// Make a shared pointer to a Psi4 JK object
     void make_psi4_JK();

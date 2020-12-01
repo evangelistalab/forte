@@ -71,6 +71,7 @@ Psi4Integrals::Psi4Integrals(std::shared_ptr<ForteOptions> options,
 void Psi4Integrals::base_initialize_psi4() {
     setup_psi4_ints();
     build_dipole_ints_ao();
+    build_quadrupole_ints_ao();
 
     if (not skip_build_) {
         transform_one_electron_integrals();
@@ -390,6 +391,20 @@ std::vector<std::shared_ptr<psi::Matrix>> Psi4Integrals::mo_dipole_ints(const bo
     } else {
         return dipole_ints_mo_helper(wfn_->Cb_subset("AO"), wfn_->epsilon_b(), resort);
     }
+}
+
+void Psi4Integrals::build_quadrupole_ints_ao() {
+    std::shared_ptr<psi::BasisSet> basisset = wfn_->basisset();
+    std::shared_ptr<IntegralFactory> ints_fac = std::make_shared<IntegralFactory>(basisset);
+    int nbf = basisset->nbf();
+
+    quadrupole_ints_ao_.clear();
+    for (const std::string& direction : {"XX", "XY", "XZ", "YY", "YZ", "ZZ"}) {
+        std::string name = "AO Quadrupole " + direction;
+        quadrupole_ints_ao_.push_back(std::make_shared<psi::Matrix>(name, nbf, nbf));
+    }
+    std::shared_ptr<OneBodyAOInt> aoqOBI(ints_fac->ao_quadrupole());
+    aoqOBI->compute(quadrupole_ints_ao_);
 }
 
 std::vector<std::shared_ptr<psi::Matrix>>

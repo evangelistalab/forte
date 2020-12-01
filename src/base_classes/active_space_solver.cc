@@ -84,8 +84,10 @@ const std::map<StateInfo, std::vector<double>>& ActiveSpaceSolver::compute_energ
         method->compute_energy();
         const auto& energies = method->energies();
         state_energies_map_[state] = energies;
-        if (keep_evecs_)
+        if (keep_evecs_) {
             state_evecs_map_[state] = method->evecs();
+            state_Qpole_map_[state] = method->quadrupole_moments();
+        }
 
         // save energies for ms < 0 states (same in energy as ms > 0) to ensure correct averaging
         if (twice_ms > 0 and ms_avg_) {

@@ -144,6 +144,9 @@ class ActiveSpaceMethod {
     /// Return the eigen vectors
     psi::SharedMatrix evecs();
 
+    /// Return the quadrupole moments
+    std::vector<std::vector<double> > quadrupole_moments();
+
     /// Return a vector with the energies of all the states
     const std::vector<double>& energies() const;
 
@@ -212,6 +215,9 @@ class ActiveSpaceMethod {
 
     /// Eigenvectors
     psi::SharedMatrix evecs_;
+
+    /// Quadrupole moments
+    std::vector<std::vector<double>> quadruple_moments_;
 
     /// The energies (including nuclear repulsion) of all the states
     std::vector<double> energies_;

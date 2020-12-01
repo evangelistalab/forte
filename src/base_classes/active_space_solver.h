@@ -116,8 +116,13 @@ class ActiveSpaceSolver {
     void set_keep_evecs(bool keep) { keep_evecs_ = keep; }
 
     /// Return the map of StateInfo to the computed nroots of eigen vectors
-    const std::map<StateInfo, psi::SharedMatrix>& state_evecs_map() const {
+    std::map<StateInfo, psi::SharedMatrix> state_evecs_map() const {
         return state_evecs_map_;
+    }
+
+    /// Return the map of StateInfo to the computed nroots of quadrupole moments
+    std::map<StateInfo, std::vector<std::vector<double>>> state_Qpole_map() const {
+        return state_Qpole_map_;
     }
 
   protected:
@@ -173,6 +178,8 @@ class ActiveSpaceSolver {
     bool keep_evecs_ = false;
     /// A map of state symmetries to the eigen vectors under given state symmetry
     std::map<StateInfo, psi::SharedMatrix> state_evecs_map_;
+    /// A map of state symmetries to state quadrupole moments
+    std::map<StateInfo, std::vector<std::vector<double>>> state_Qpole_map_;
 
     /// Pairs of state info and the contracted CI eigen vectors
     std::map<StateInfo, std::shared_ptr<psi::Matrix>>

@@ -387,31 +387,40 @@ void MCSCF_2STEP::ci_root_following(const std::unique_ptr<ActiveSpaceSolver>& ac
             int imax = std::max_element(s.begin(), s.end()) - s.begin();
             perm[inew] = imax;
             psi::outfile->Printf("\n  inew = %d, imax = %d", inew, imax);
+            if (std::fabs(s[imax]) <= 0.5) {
+                psi::outfile->Printf("\n  Warning: Overlap <%d|%d> = %.8f too small", inew, imax,
+                                     s[imax]);
+                psi::outfile->Printf("\n  MCSCF root following turned off. Try more roots?\n");
+            }
         }
 
         // create new state weight map
-//        std::set<int> perm_set(perm.begin(), perm.end());
-//        if (perm_set.size() == perm.size()) {
-//            std::vector<double> weights(nroots);
-//            for (int i = 0; i < nroots; ++i) {
-//                weights[i] = state_weights_map_[state][perm[i]];
-//            }
-//            state_weights_map_new[state] = weights;
-//            state_permutation_map[state] = perm;
-//        } else {
-//            psi::outfile->Printf("\n  Warning: MCSCF cannot follow root for %s",
-//                                 state.str().c_str());
-//            psi::outfile->Printf("\n  MCSCF root following turned off.\n");
-//            overlap->print();
-//            ci_follow_ = false;
-//            break;
-//        }
-        std::vector<double> weights(nroots);
+        std::set<int> perm_set;
         for (int i = 0; i < nroots; ++i) {
-            weights[i] = state_weights_map_[state][perm[i]];
+            int iold = perm[i];
+            if (perm_set.find(iold) == perm_set.end()) {
+                perm_set.insert(iold);
+            } else { // multiple new roots map to one old root
+                // give a pass if the old weight is zero
+                if (state_weights_map_[state][iold] > 1.0e-12) {
+                    psi::outfile->Printf("\n  Warning: MCSCF cannot follow root for %s",
+                                         state.str().c_str());
+                    psi::outfile->Printf("\n  MCSCF root following turned off.\n");
+                    overlap->print();
+                    ci_follow_ = false;
+                    break;
+                }
+            }
         }
-        state_weights_map_new[state] = weights;
-        state_permutation_map[state] = perm;
+
+        if (ci_follow_) {
+            std::vector<double> weights(nroots);
+            for (int i = 0; i < nroots; ++i) {
+                weights[i] = state_weights_map_[state][perm[i]];
+            }
+            state_weights_map_new[state] = weights;
+            state_permutation_map[state] = perm;
+        }
     }
 
     // printing permutations
@@ -422,7 +431,7 @@ void MCSCF_2STEP::ci_root_following(const std::unique_ptr<ActiveSpaceSolver>& ac
 
             const auto& perm = pair.second;
             for (int i = 0, size = perm.size(); i < size; ++i) {
-                psi::outfile->Printf(" (%d -> %d)", perm[i], i);
+                psi::outfile->Printf("\n    (%d -> %d)", perm[i], i);
             }
         }
         state_weights_map_ = state_weights_map_new;

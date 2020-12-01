@@ -292,6 +292,10 @@ std::vector<std::shared_ptr<psi::Matrix>> ForteIntegrals::ao_dipole_ints() const
     return dipole_ints_ao_;
 }
 
+std::vector<std::shared_ptr<psi::Matrix>> ForteIntegrals::ao_quadrupole_ints() const {
+    return quadrupole_ints_ao_;
+}
+
 // void ForteIntegrals::set_oei(double** ints, bool alpha) {
 //    std::vector<double>& p_oei = alpha ? one_electron_integrals_a_ : one_electron_integrals_b_;
 //    for (size_t p = 0; p < aptei_idx_; ++p) {
@@ -490,6 +494,8 @@ ForteIntegrals::dipole_ints_mo_helper(std::shared_ptr<psi::Matrix>, psi::SharedV
 
     return MOdipole_ints;
 }
+
+void ForteIntegrals::build_quadrupole_ints_ao() { _undefined_function("build_quadrupole_ints_ao"); }
 
 void ForteIntegrals::rotate_orbitals(std::shared_ptr<psi::Matrix> Ua,
                                      std::shared_ptr<psi::Matrix> Ub) {
