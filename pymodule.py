@@ -151,19 +151,27 @@ def prepare_forte_objects_from_psi4_wfn(options, wfn):
 def ortho_normalize_orbitals(wfn, mo_space_info, options):
     """ Test orbital orthonormality and do it if not. """
 
+    p4print = psi4.core.print_out
+    p4print("\n\n  Forte Testing Orbital Orthonormality ...")
+
     # empty wave function (just need SO overlap)
-    wfn0 = psi4.core.Wavefunction.build(wfn.molecule(),
-                                        psi4.core.get_global_option('BASIS'))
-    mints = psi4.core.MintsHelper(wfn0.basisset())
+    basis = psi4.core.get_global_option('BASIS')
+    wfn0 = psi4.core.Wavefunction.build(wfn.molecule(), basis)
+    if psi4.core.get_global_option("RELATIVISTIC") in ["X2C", "DKH"]:
+        rel_bas = psi4.core.BasisSet.build(wfn.molecule(), "BASIS_RELATIVISTIC",
+                                           options.get_str("BASIS_RELATIVISTIC"),
+                                           "DECON", basis,
+                                           puream=wfn0.basisset().has_puream())
+        wfn0.set_basisset('BASIS_RELATIVISTIC', rel_bas)
+    mints = wfn0.mintshelper()
     S = mints.so_overlap()
     Ca = wfn.Ca()
     mo_overlap = psi4.core.triplet(Ca, S, Ca, True, False, False)
     mo_overlap.zero_diagonal()
     absmax = mo_overlap.absmax()
 
-    p4print = psi4.core.print_out
     if absmax > 1.0e-7:
-        p4print("\n\n  Forte Warning: ")
+        p4print("\n  Forte Warning: ")
         p4print("Orbitals of ref_wfn NOT from current geometry!!!")
         p4print(f"\n  Max value of MO overlap: {absmax:.15f}")
         p4print("\n  Perform new SCF at current geometry ...\n")
@@ -174,6 +182,7 @@ def ortho_normalize_orbitals(wfn, mo_space_info, options):
         wfnSCF.Ca().copy(ortho_orbs_forte(wfnSCF, mo_space_info, Ca))
         wfn.shallow_copy(wfnSCF)
     else:
+        p4print("\n  Done checking orbital orthonormality (OK).")
         if options.get_bool('READ_ORBITALS'):
             Cold = read_orbitals()
             if Cold is not False:
