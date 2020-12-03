@@ -63,10 +63,13 @@ CholeskyIntegrals::CholeskyIntegrals(std::shared_ptr<ForteOptions> options,
 
 void CholeskyIntegrals::initialize() {
     print_info();
-    local_timer int_timer;
-    gather_integrals();
-    freeze_core_orbitals();
-    print_timing("computing Cholesky integrals", int_timer.get());
+
+    if (not skip_build_) {
+        local_timer int_timer;
+        gather_integrals();
+        freeze_core_orbitals();
+        print_timing("computing Cholesky integrals", int_timer.get());
+    }
 }
 
 double CholeskyIntegrals::aptei_aa(size_t p, size_t q, size_t r, size_t s) {

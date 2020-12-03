@@ -49,67 +49,117 @@ ActiveSpaceIntegrals::ActiveSpaceIntegrals(std::shared_ptr<ForteIntegrals> ints,
 
 void ActiveSpaceIntegrals::RestrictedOneBodyOperator(std::vector<double>& oei_a,
                                                      std::vector<double>& oei_b) {
-
-    std::vector<double> tei_rdocc_aa;
-    std::vector<double> tei_rdocc_ab;
-    std::vector<double> tei_rdocc_bb;
-
-    std::vector<double> tei_gh_aa;
-    std::vector<double> tei_gh_ab;
-    std::vector<double> tei_gh_bb;
-    std::vector<double> tei_gh2_ab;
-
     std::vector<size_t> fomo_to_mo(restricted_docc_mo_);
     std::vector<size_t> cmo_to_mo(active_mo_);
-    size_t nfomo = fomo_to_mo.size();
+    size_t nfomo1 = fomo_to_mo.size();
+    size_t nfomo2 = nfomo1 * nfomo1;
+    size_t nfomo3 = nfomo2 * nfomo1;
+    size_t ndim2 = nmo_ * nfomo1;
+    size_t ndim3 = nmo_ * nfomo2;
 
-    ambit::Tensor rdocc_aa = ints_->aptei_aa_block(fomo_to_mo, fomo_to_mo, fomo_to_mo, fomo_to_mo);
-    ambit::Tensor rdocc_ab = ints_->aptei_ab_block(fomo_to_mo, fomo_to_mo, fomo_to_mo, fomo_to_mo);
-    ambit::Tensor rdocc_bb = ints_->aptei_bb_block(fomo_to_mo, fomo_to_mo, fomo_to_mo, fomo_to_mo);
-    tei_rdocc_aa = rdocc_aa.data();
-    tei_rdocc_ab = rdocc_ab.data();
-    tei_rdocc_bb = rdocc_bb.data();
+    if (ints_->spin_restriction() == IntegralSpinRestriction::Restricted) {
+        // Compute the scalar contribution that comes from the restricted occupied orbitals
+        scalar_energy_ = ints_->scalar();
 
-    ambit::Tensor gh_aa = ints_->aptei_aa_block(cmo_to_mo, fomo_to_mo, cmo_to_mo, fomo_to_mo);
-    ambit::Tensor gh_ab = ints_->aptei_ab_block(cmo_to_mo, fomo_to_mo, cmo_to_mo, fomo_to_mo);
-    ambit::Tensor gh_bb = ints_->aptei_bb_block(cmo_to_mo, fomo_to_mo, cmo_to_mo, fomo_to_mo);
-    ambit::Tensor gh2_ab = ints_->aptei_ab_block(fomo_to_mo, cmo_to_mo, fomo_to_mo, cmo_to_mo);
+        // TODO: this is problematic for large systems (> 600 electrons)
+        auto rdocc_ab = ints_->aptei_ab_block(fomo_to_mo, fomo_to_mo, fomo_to_mo, fomo_to_mo);
+        auto& tei_rdocc_ab = rdocc_ab.data();
 
-    tei_gh_aa = gh_aa.data();
-    tei_gh_ab = gh_ab.data();
-    tei_gh_bb = gh_bb.data();
-    tei_gh2_ab = gh2_ab.data();
-
-    // Compute the scalar contribution to the energy that comes from
-    // the restricted occupied orbitals
-    scalar_energy_ = ints_->scalar();
-    for (size_t i = 0; i < nfomo; ++i) {
-        size_t ii = fomo_to_mo[i];
-        scalar_energy_ += ints_->oei_a(ii, ii);
-        scalar_energy_ += ints_->oei_b(ii, ii);
-        for (size_t j = 0; j < nfomo; ++j) {
-            size_t index = nfomo * nfomo * nfomo * i + nfomo * nfomo * j + nfomo * i + j;
-            scalar_energy_ += 0.5 * tei_rdocc_aa[index];
-            scalar_energy_ += 1.0 * tei_rdocc_ab[index];
-            scalar_energy_ += 0.5 * tei_rdocc_bb[index];
+        for (size_t i = 0; i < nfomo1; ++i) {
+            size_t ii = fomo_to_mo[i];
+            scalar_energy_ += 2.0 * ints_->oei_a(ii, ii);
+            double value = 0.0;
+#pragma omp parallel for reduction(+ : value)
+            for (size_t j = 0; j < nfomo1; ++j) {
+                value += 2.0 * tei_rdocc_ab[nfomo3 * i + nfomo2 * j + nfomo1 * i + j];
+                value -= tei_rdocc_ab[nfomo3 * i + nfomo2 * j + nfomo1 * j + i];
+            }
+            scalar_energy_ += value;
         }
-    }
 
-    for (size_t p = 0; p < nmo_; ++p) {
-        size_t pp = cmo_to_mo[p];
-        for (size_t q = 0; q < nmo_; ++q) {
-            size_t qq = cmo_to_mo[q];
-            size_t idx = nmo_ * p + q;
-            oei_a[idx] = ints_->oei_a(pp, qq);
-            oei_b[idx] = ints_->oei_b(pp, qq);
-            // Compute the one-body contribution to the energy that comes from
-            // the restricted occupied orbitals
-            for (size_t f = 0; f < nfomo; ++f) {
-                size_t index = nfomo * nmo_ * nfomo * p + nmo_ * nfomo * f + nfomo * q + f;
-                oei_a[idx] += tei_gh_aa[index];
-                oei_a[idx] += tei_gh_ab[index];
-                oei_b[idx] += tei_gh_bb[index];
-                oei_b[idx] += tei_gh_ab[index]; // TODO check these factors 0.5
+        rdocc_ab.reset();
+
+        // Compute the one-body contribution that comes from the restricted occupied orbitals
+        auto J = ints_->aptei_ab_block(cmo_to_mo, fomo_to_mo, cmo_to_mo, fomo_to_mo);
+        auto K = ints_->aptei_ab_block(cmo_to_mo, fomo_to_mo, fomo_to_mo, cmo_to_mo);
+        auto& Jdata = J.data();
+        auto& Kdata = K.data();
+
+        for (size_t p = 0; p < nmo_; ++p) {
+            size_t pp = cmo_to_mo[p];
+            for (size_t q = 0; q < nmo_; ++q) {
+                size_t qq = cmo_to_mo[q];
+                size_t idx = nmo_ * p + q;
+                oei_a[idx] = ints_->oei_a(pp, qq);
+
+                double value = 0.0;
+#pragma omp parallel for reduction(+ : value)
+                for (size_t f = 0; f < nfomo1; ++f) {
+                    value += 2.0 * Jdata[ndim3 * p + ndim2 * f + nfomo1 * q + f];
+                    value -= Kdata[ndim3 * p + ndim2 * f + nmo_ * f + q];
+                }
+                oei_a[idx] += value;
+            }
+        }
+
+        oei_b = oei_a;
+    } else {
+        // TODO: this is problematic for large systems (> 500 electrons)
+        auto rdocc_aa = ints_->aptei_aa_block(fomo_to_mo, fomo_to_mo, fomo_to_mo, fomo_to_mo);
+        auto rdocc_ab = ints_->aptei_ab_block(fomo_to_mo, fomo_to_mo, fomo_to_mo, fomo_to_mo);
+        auto rdocc_bb = ints_->aptei_bb_block(fomo_to_mo, fomo_to_mo, fomo_to_mo, fomo_to_mo);
+        auto& tei_rdocc_aa = rdocc_aa.data();
+        auto& tei_rdocc_ab = rdocc_ab.data();
+        auto& tei_rdocc_bb = rdocc_bb.data();
+
+        // Compute the scalar contribution due to restricted occupied orbitals
+        scalar_energy_ = ints_->scalar();
+        for (size_t i = 0; i < nfomo1; ++i) {
+            size_t ii = fomo_to_mo[i];
+            scalar_energy_ += ints_->oei_a(ii, ii);
+            scalar_energy_ += ints_->oei_b(ii, ii);
+            double value = 0.0;
+#pragma omp parallel for reduction(+ : value)
+            for (size_t j = 0; j < nfomo1; ++j) {
+                size_t index = nfomo1 * nfomo1 * nfomo1 * i + nfomo1 * nfomo1 * j + nfomo1 * i + j;
+                value += 0.5 * tei_rdocc_aa[index];
+                value += 1.0 * tei_rdocc_ab[index];
+                value += 0.5 * tei_rdocc_bb[index];
+            }
+            scalar_energy_ += value;
+        }
+
+        rdocc_aa.reset();
+        rdocc_ab.reset();
+        rdocc_bb.reset();
+
+        // Compute the one-body contribution due to restricted occupied orbitals
+        ambit::Tensor gh_aa = ints_->aptei_aa_block(cmo_to_mo, fomo_to_mo, cmo_to_mo, fomo_to_mo);
+        ambit::Tensor gh_ab = ints_->aptei_ab_block(cmo_to_mo, fomo_to_mo, cmo_to_mo, fomo_to_mo);
+        ambit::Tensor gh_bb = ints_->aptei_bb_block(cmo_to_mo, fomo_to_mo, cmo_to_mo, fomo_to_mo);
+        auto& tei_gh_aa = gh_aa.data();
+        auto& tei_gh_ab = gh_ab.data();
+        auto& tei_gh_bb = gh_bb.data();
+
+        for (size_t p = 0; p < nmo_; ++p) {
+            size_t pp = cmo_to_mo[p];
+            for (size_t q = 0; q < nmo_; ++q) {
+                size_t qq = cmo_to_mo[q];
+                size_t idx = nmo_ * p + q;
+                oei_a[idx] = ints_->oei_a(pp, qq);
+                oei_b[idx] = ints_->oei_b(pp, qq);
+
+                double va = 0.0, vb = 0.0;
+#pragma omp parallel for reduction(+ : va, vb)
+                for (size_t f = 0; f < nfomo1; ++f) {
+                    size_t index = ndim3 * p + ndim2 * f + nfomo1 * q + f;
+                    va += tei_gh_aa[index];
+                    va += tei_gh_ab[index];
+                    vb += tei_gh_bb[index];
+                    vb += tei_gh_ab[index];
+                }
+                oei_a[idx] += va;
+                oei_b[idx] += vb;
             }
         }
     }
@@ -514,10 +564,18 @@ make_active_space_ints(std::shared_ptr<MOSpaceInfo> mo_space_info,
         std::make_shared<ActiveSpaceIntegrals>(ints, active_mo, active_mo_symmetry, core_mo);
 
     // grab the integrals from the ForteIntegrals object
-    ambit::Tensor tei_active_aa = ints->aptei_aa_block(active_mo, active_mo, active_mo, active_mo);
-    ambit::Tensor tei_active_ab = ints->aptei_ab_block(active_mo, active_mo, active_mo, active_mo);
-    ambit::Tensor tei_active_bb = ints->aptei_bb_block(active_mo, active_mo, active_mo, active_mo);
-    as_ints->set_active_integrals(tei_active_aa, tei_active_ab, tei_active_bb);
+    if (ints->spin_restriction() == IntegralSpinRestriction::Restricted) {
+        auto tei_active_ab = ints->aptei_ab_block(active_mo, active_mo, active_mo, active_mo);
+        auto tei_active_aa = tei_active_ab.clone();
+        tei_active_aa("pqrs") = tei_active_ab("pqrs") - tei_active_ab("pqsr");
+        tei_active_aa.set_name("tei_active_aa");
+        as_ints->set_active_integrals(tei_active_aa, tei_active_ab, tei_active_aa);
+    } else {
+        auto tei_active_aa = ints->aptei_aa_block(active_mo, active_mo, active_mo, active_mo);
+        auto tei_active_ab = ints->aptei_ab_block(active_mo, active_mo, active_mo, active_mo);
+        auto tei_active_bb = ints->aptei_bb_block(active_mo, active_mo, active_mo, active_mo);
+        as_ints->set_active_integrals(tei_active_aa, tei_active_ab, tei_active_bb);
+    }
     as_ints->compute_restricted_one_body_operator();
     return as_ints;
 }

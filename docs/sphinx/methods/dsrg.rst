@@ -4,6 +4,7 @@ Driven Similarity Renormalization Group
 =======================================
 
 .. codeauthor:: Chenyang Li, Kevin P. Hannon, Tianyuan Zhang, Francesco A. Evangelista
+
 .. sectionauthor:: Chenyang Li, Francesco A. Evangelista, Tianyuan Zhang, Kevin P. Hannon
 
 .. important::

@@ -131,6 +131,9 @@ class ForteIntegrals {
 
     virtual void initialize() = 0;
 
+    /// Skip integral transformation
+    bool skip_build_;
+
     /// Return Ca
     std::shared_ptr<psi::Matrix> Ca() const;
     /// Return Cb
@@ -144,6 +147,13 @@ class ForteIntegrals {
 
     /// Return the Pis4 JK object
     std::shared_ptr<psi::JK> jk();
+
+    /// Enum class for the status of Pis4 JK
+    enum class JKStatus { empty, initialized, finalized };
+    /// Return the status of Psi4 JK object
+    JKStatus jk_status();
+    /// Finalize Psi4 JK object
+    void jk_finalize();
 
     // The number of symmetry-adapted orbitals
     // see https://github.com/psi4/psi4/wiki/OrbitalDimensions
@@ -270,6 +280,21 @@ class ForteIntegrals {
     /// F_{pq} = \sum_{uv}^{active} <pu||qv> * gamma_{uv}
     virtual std::tuple<psi::SharedMatrix, psi::SharedMatrix> make_fock_active(ambit::Tensor Da,
                                                                               ambit::Tensor Db) = 0;
+
+    /// Make the active Fock matrix in MO basis (include frozen orbitals)
+    /// @param D The spin-summed 1RDM in psi::SharedMatrix form
+    /// @return Fock matrix
+    virtual psi::SharedMatrix make_fock_active_restricted(psi::SharedMatrix D) = 0;
+
+    /// Make the active Fock matrix in MO basis (include frozen orbitals)
+    /// @param Da The alpha 1RDM in psi::SharedMatrix form
+    /// @param Db The beta 1RDM in psi::SharedMatrix form
+    /// @return alpha Fock matrix, beta Fock matrix
+    virtual std::tuple<psi::SharedMatrix, psi::SharedMatrix>
+    make_fock_active_unrestricted(psi::SharedMatrix Da, psi::SharedMatrix Db) = 0;
+
+    /// Set Fock matrix
+    void set_fock_matrix(psi::SharedMatrix fa, psi::SharedMatrix fb);
 
     /// Set nuclear repulstion energy
     void set_nuclear_repulsion(double value);
@@ -440,6 +465,9 @@ class ForteIntegrals {
     /// JK object from Psi4
     std::shared_ptr<psi::JK> JK_;
 
+    /// Status of the JK object
+    JKStatus JK_status_ = JKStatus::empty;
+
     /// Fock matrix (including frozen orbitals)
     psi::SharedMatrix fock_a_;
     psi::SharedMatrix fock_b_;
@@ -532,6 +560,13 @@ class Psi4Integrals : public ForteIntegrals {
     std::tuple<psi::SharedMatrix, psi::SharedMatrix> make_fock_active(ambit::Tensor Da,
                                                                       ambit::Tensor Db) override;
 
+    /// Make the active Fock matrix using restricted equation
+    psi::SharedMatrix make_fock_active_restricted(psi::SharedMatrix D) override;
+
+    /// Make the active Fock matrix using unrestricted equation
+    std::tuple<psi::SharedMatrix, psi::SharedMatrix>
+    make_fock_active_unrestricted(psi::SharedMatrix Da, psi::SharedMatrix Db) override;
+
   private:
     void base_initialize_psi4();
     void setup_psi4_ints();
@@ -550,6 +585,12 @@ class Psi4Integrals : public ForteIntegrals {
 
     /// Make a shared pointer to a Psi4 JK object
     void make_psi4_JK();
+    /// Call JK intialize
+    void jk_initialize(double mem_percentage = 0.8, int print_level = 1);
+
+    /// AO Fock control
+    enum class FockAOStatus { none, inactive, generalized };
+    FockAOStatus fock_ao_level_ = FockAOStatus::none;
 
   protected:
     void freeze_core_orbitals() override;

@@ -70,8 +70,11 @@ Psi4Integrals::Psi4Integrals(std::shared_ptr<ForteOptions> options,
 
 void Psi4Integrals::base_initialize_psi4() {
     setup_psi4_ints();
-    transform_one_electron_integrals();
     build_dipole_ints_ao();
+
+    if (not skip_build_) {
+        transform_one_electron_integrals();
+    }
 }
 
 void Psi4Integrals::setup_psi4_ints() {
@@ -137,19 +140,22 @@ void Psi4Integrals::transform_one_electron_integrals() {
 }
 
 void Psi4Integrals::make_psi4_JK() {
+    auto& psi4_options = psi::Process::environment.options;
+    auto basis = wfn_->basisset();
+
+    outfile->Printf("\n\n  ==> Primary Basis Set Summary <==\n\n");
+    basis->print();
+
     if (integral_type_ == Conventional) {
         outfile->Printf("\n  JK created using conventional PK integrals\n");
-        JK_ = JK::build_JK(wfn_->basisset(), psi::BasisSet::zero_ao_basis_set(),
-                           psi::Process::environment.options, "PK");
+        JK_ = JK::build_JK(basis, psi::BasisSet::zero_ao_basis_set(), psi4_options, "PK");
     } else if (integral_type_ == Cholesky) {
         if (spin_restriction_ == IntegralSpinRestriction::Unrestricted) {
             throw psi::PSIEXCEPTION("Unrestricted orbitals not supported for CD integrals");
         }
-
         outfile->Printf("\n  JK created using Cholesky integrals\n");
 
         // push Forte option "CHOLESKY_TOLERANCE" to Psi4 environment
-        auto& psi4_options = psi::Process::environment.options;
         auto psi4_cd = psi4_options.get_double("CHOLESKY_TOLERANCE");
         auto forte_cd = options_->get_double("CHOLESKY_TOLERANCE");
         if (psi4_cd != forte_cd) {
@@ -160,38 +166,47 @@ void Psi4Integrals::make_psi4_JK() {
             psi4_options.set_global_double("CHOLESKY_TOLERANCE", forte_cd);
         }
 
-        JK_ = JK::build_JK(wfn_->basisset(), psi::BasisSet::zero_ao_basis_set(),
-                           psi::Process::environment.options, "CD");
+        JK_ = JK::build_JK(basis, psi::BasisSet::zero_ao_basis_set(), psi4_options, "CD");
     } else if ((integral_type_ == DF) or (integral_type_ == DiskDF) or (integral_type_ == DistDF)) {
         if (spin_restriction_ == IntegralSpinRestriction::Unrestricted) {
             throw psi::PSIEXCEPTION("Unrestricted orbitals not supported for DF integrals");
         }
 
-        if (options_->get_str("SCF_TYPE") != "DF") {
+        if (options_->get_str("SCF_TYPE").find("DF") == std::string::npos) {
             print_h1("Vital Warning from Forte JK Builder (DF)");
             outfile->Printf("\n  Inconsistent integrals used in Psi4 and Forte!");
-            outfile->Printf("\n  This can be fixed by setting SCF_TYPE to DF.");
+            outfile->Printf("\n  This can be fixed by setting SCF_TYPE to DF or DISK_DF.");
         }
+
+        auto basis_aux = wfn_->get_basisset("DF_BASIS_MP2");
+        auto job_type = options_->get_str("JOB_TYPE");
+        if (job_type == "CASSCF" or job_type == "MCSCF_TWO_STEP")
+            basis_aux = wfn_->get_basisset("DF_BASIS_SCF");
 
         if (integral_type_ == DiskDF) {
             outfile->Printf("\n  JK created using DiskDF integrals\n");
-            JK_ = JK::build_JK(wfn_->basisset(), wfn_->get_basisset("DF_BASIS_MP2"),
-                               psi::Process::environment.options, "DISK_DF");
+            JK_ = JK::build_JK(basis, basis_aux, psi4_options, "DISK_DF");
         } else {
             outfile->Printf("\n  JK created using MemDF integrals\n");
-            JK_ = JK::build_JK(wfn_->basisset(), wfn_->get_basisset("DF_BASIS_MP2"),
-                               psi::Process::environment.options, "MEM_DF");
+            JK_ = JK::build_JK(basis, basis_aux, psi4_options, "MEM_DF");
         }
     } else {
         throw psi::PSIEXCEPTION("Unknown Pis4 integral type to initialize JK in Forte");
     }
 
-    // set JK memory to 85% of total memory in number of doubles
-    JK_->set_memory(psi::Process::environment.get_memory() * 0.85 / sizeof(double));
-
     JK_->set_cutoff(options_->get_double("INTEGRAL_SCREENING"));
+    jk_initialize();
+    JK_->print_header();
+}
 
+void Psi4Integrals::jk_initialize(double mem_percentage, int print_level) {
+    if (mem_percentage > 1.0 or mem_percentage <= 0.0) {
+        throw std::runtime_error("Invalid mem_percentage: must be 0 < value < 1.");
+    }
+    JK_->set_print(print_level);
+    JK_->set_memory(psi::Process::environment.get_memory() * mem_percentage / sizeof(double));
     JK_->initialize();
+    JK_status_ = JKStatus::initialized;
 }
 
 void Psi4Integrals::compute_frozen_one_body_operator() {
@@ -252,7 +267,7 @@ void Psi4Integrals::update_orbitals(std::shared_ptr<psi::Matrix> Ca,
         if (not test_orbital_spin_restriction(Ca, Cb)) {
             Ca->print();
             Cb->print();
-            auto msg = "ForteIntegrals::update_orbitals was passed two different sets of orbitals"
+            auto msg = "Psi4Integrals::update_orbitals was passed two different sets of orbitals"
                        "\n  but the integral object assumes restricted orbitals";
             throw std::runtime_error(msg);
         }
@@ -270,10 +285,11 @@ void Psi4Integrals::update_orbitals(std::shared_ptr<psi::Matrix> Ca,
     my_proc = GA_Nodeid();
 #endif
     if (my_proc == 0) {
-        outfile->Printf("\n  Integrals are about to be computed.");
-        gather_integrals();
+        local_timer int_timer;
         outfile->Printf("\n  Integrals are about to be updated.");
+        gather_integrals();
         freeze_core_orbitals();
+        outfile->Printf("\n  Integrals update took %9.3f s.", int_timer.get());
     }
 }
 
@@ -463,6 +479,10 @@ Psi4Integrals::make_fock_inactive(psi::Dimension dim_start, psi::Dimension dim_e
      *
      * u,v,r,s: AO indices; i: MO indices
      */
+    if (JK_status_ == JKStatus::finalized) {
+        outfile->Printf("\n  JK object had beed finalized. JK is about to be initialized.\n");
+        jk_initialize(0.7);
+    }
 
     auto dim = dim_end - dim_start;
 
@@ -498,6 +518,13 @@ Psi4Integrals::make_fock_inactive(psi::Dimension dim_start, psi::Dimension dim_e
         // compute closed-shell energy
         J->add(wfn_->H());
         double e_closed = J->vector_dot(psi::linalg::doublet(Csub, Csub, false, true));
+
+        // pass AO fock to psi4 Wavefunction
+        if (wfn_->Fa() != nullptr) {
+            wfn_->Fa()->copy(J);
+            wfn_->Fb() = wfn_->Fa();
+            fock_ao_level_ = FockAOStatus::inactive;
+        }
 
         return std::make_tuple(F_closed, F_closed, e_closed);
     } else {
@@ -553,6 +580,13 @@ Psi4Integrals::make_fock_inactive(psi::Dimension dim_start, psi::Dimension dim_e
         double e_closed = 0.5 * J->vector_dot(psi::linalg::doublet(Ca_sub, Ca_sub, false, true));
         e_closed += 0.5 * K->vector_dot(psi::linalg::doublet(Cb_sub, Cb_sub, false, true));
 
+        // pass AO fock to psi4 Wavefunction
+        if (wfn_->Fa() != nullptr) {
+            wfn_->Fa()->copy(J);
+            wfn_->Fb()->copy(K);
+            fock_ao_level_ = FockAOStatus::inactive;
+        }
+
         return std::make_tuple(Fa_closed, Fb_closed, e_closed);
     }
 }
@@ -590,9 +624,6 @@ std::tuple<psi::SharedMatrix, psi::SharedMatrix> Psi4Integrals::make_fock_active
     auto& Da_data = Da.data();
     auto& Db_data = Db.data();
 
-    auto ndoccpi = mo_space_info_->dimension("INACTIVE_DOCC");
-    auto nholepi = ndoccpi + nactvpi;
-
     if (rdm_eq_spin and spin_restriction_ == IntegralSpinRestriction::Restricted) {
         // fill in density (spin-summed)
         auto g1 = std::make_shared<psi::Matrix>("1RDM", nactvpi, nactvpi);
@@ -608,37 +639,7 @@ std::tuple<psi::SharedMatrix, psi::SharedMatrix> Psi4Integrals::make_fock_active
             offset += nactvpi[h];
         }
 
-        // grab sub-block of Ca
-        auto Cactv = std::make_shared<psi::Matrix>("Ca_sub", nsopi_, nactvpi);
-
-        for (int h = 0; h < nirrep_; ++h) {
-            for (int p = 0, offset = ndoccpi[h]; p < nactvpi[h]; ++p) {
-                Cactv->set_column(h, p, Ca_->get_column(h, p + offset));
-            }
-        }
-
-        // dress Cactv by one-density, which will the C_right for JK
-        auto Cactv_dressed = psi::linalg::doublet(Cactv, g1, false, false);
-
-        // JK build
-        JK_->set_do_K(true);
-        std::vector<std::shared_ptr<psi::Matrix>>& Cls = JK_->C_left();
-        std::vector<std::shared_ptr<psi::Matrix>>& Crs = JK_->C_right();
-        Cls.clear();
-        Crs.clear();
-
-        Cls.push_back(Cactv);
-        Crs.push_back(Cactv_dressed);
-
-        JK_->compute();
-
-        auto K = JK_->K()[0];
-        K->scale(-0.5);
-        K->add(JK_->J()[0]);
-
-        // transform to MO
-        auto F_active = psi::linalg::triplet(Ca_, K, Ca_, true, false, false);
-        F_active->set_name("Fock_active");
+        auto F_active = make_fock_active_restricted(g1);
 
         return {F_active, F_active};
     } else {
@@ -657,53 +658,129 @@ std::tuple<psi::SharedMatrix, psi::SharedMatrix> Psi4Integrals::make_fock_active
             offset += nactvpi[h];
         }
 
-        // grab sub-block of Ca and Cb
-        auto Ca_actv = std::make_shared<psi::Matrix>("Ca active", nsopi_, nactvpi);
-        auto Cb_actv = std::make_shared<psi::Matrix>("Cb active", nsopi_, nactvpi);
-
-        for (int h = 0; h < nirrep_; ++h) {
-            for (int p = 0, offset = ndoccpi[h]; p < nactvpi[h]; ++p) {
-                Ca_actv->set_column(h, p, Ca_->get_column(h, p + offset));
-                Cb_actv->set_column(h, p, Cb_->get_column(h, p + offset));
-            }
-        }
-
-        // dress Cactv by one-density, which will the C_right for JK
-        auto Ca_actv_dressed = psi::linalg::doublet(Ca_actv, g1a, false, false);
-        auto Cb_actv_dressed = psi::linalg::doublet(Cb_actv, g1b, false, false);
-
-        // JK build
-        JK_->set_do_K(true);
-        std::vector<std::shared_ptr<psi::Matrix>>& Cls = JK_->C_left();
-        std::vector<std::shared_ptr<psi::Matrix>>& Crs = JK_->C_right();
-        Cls.clear();
-        Crs.clear();
-
-        Cls.push_back(Ca_actv);
-        Crs.push_back(Ca_actv_dressed);
-        Cls.push_back(Cb_actv);
-        Crs.push_back(Cb_actv_dressed);
-
-        JK_->compute();
-
-        // some algebra
-        auto Ka = JK_->K()[0];
-        Ka->scale(-1.0);
-        Ka->add(JK_->J()[0]);
-        Ka->add(JK_->J()[1]);
-
-        auto Kb = JK_->K()[1];
-        Kb->scale(-1.0);
-        Kb->add(JK_->J()[0]);
-        Kb->add(JK_->J()[1]);
-
-        // transform to MO
-        auto Fa_active = psi::linalg::triplet(Ca_, Ka, Ca_, true, false, false);
-        Fa_active->set_name("Fock_active alpha");
-        auto Fb_active = psi::linalg::triplet(Cb_, Kb, Cb_, true, false, false);
-        Fb_active->set_name("Fock_active beta");
-
-        return {Fa_active, Fb_active};
+        return make_fock_active_unrestricted(g1a, g1b);
     }
+}
+
+psi::SharedMatrix Psi4Integrals::make_fock_active_restricted(psi::SharedMatrix g1) {
+    if (JK_status_ == JKStatus::finalized) {
+        outfile->Printf("\n  JK object had beed finalized. JK is about to be initialized.\n");
+        jk_initialize(0.7);
+    }
+
+    auto nactvpi = mo_space_info_->dimension("ACTIVE");
+    auto ndoccpi = mo_space_info_->dimension("INACTIVE_DOCC");
+
+    // grab sub-block of Ca
+    auto Cactv = std::make_shared<psi::Matrix>("Ca_sub", nsopi_, nactvpi);
+
+    for (int h = 0; h < nirrep_; ++h) {
+        for (int p = 0, offset = ndoccpi[h]; p < nactvpi[h]; ++p) {
+            Cactv->set_column(h, p, Ca_->get_column(h, p + offset));
+        }
+    }
+
+    // dress Cactv by one-density, which will the C_right for JK
+    auto Cactv_dressed = psi::linalg::doublet(Cactv, g1, false, false);
+
+    // JK build
+    JK_->set_do_K(true);
+    std::vector<std::shared_ptr<psi::Matrix>>& Cls = JK_->C_left();
+    std::vector<std::shared_ptr<psi::Matrix>>& Crs = JK_->C_right();
+    Cls.clear();
+    Crs.clear();
+
+    Cls.push_back(Cactv);
+    Crs.push_back(Cactv_dressed);
+
+    JK_->compute();
+
+    auto K = JK_->K()[0];
+    K->scale(-0.5);
+    K->add(JK_->J()[0]);
+
+    // transform to MO
+    auto F_active = psi::linalg::triplet(Ca_, K, Ca_, true, false, false);
+    F_active->set_name("Fock_active");
+
+    // pass AO fock to psi4 Wavefunction
+    if (fock_ao_level_ == FockAOStatus::inactive) {
+        wfn_->Fa()->add(K);
+        fock_ao_level_ = FockAOStatus::generalized;
+    }
+
+    return F_active;
+}
+
+std::tuple<psi::SharedMatrix, psi::SharedMatrix>
+Psi4Integrals::make_fock_active_unrestricted(psi::SharedMatrix g1a, psi::SharedMatrix g1b) {
+    if (JK_status_ == JKStatus::finalized) {
+        outfile->Printf("\n  JK object had beed finalized. JK is about to be initialized.\n");
+        jk_initialize(0.7);
+    }
+
+    auto nactvpi = mo_space_info_->dimension("ACTIVE");
+    auto ndoccpi = mo_space_info_->dimension("INACTIVE_DOCC");
+
+    // grab sub-block of Ca and Cb
+    auto Ca_actv = std::make_shared<psi::Matrix>("Ca active", nsopi_, nactvpi);
+    auto Cb_actv = std::make_shared<psi::Matrix>("Cb active", nsopi_, nactvpi);
+
+    for (int h = 0; h < nirrep_; ++h) {
+        for (int p = 0, offset = ndoccpi[h]; p < nactvpi[h]; ++p) {
+            Ca_actv->set_column(h, p, Ca_->get_column(h, p + offset));
+            Cb_actv->set_column(h, p, Cb_->get_column(h, p + offset));
+        }
+    }
+
+    // dress Cactv by one-density, which will the C_right for JK
+    auto Ca_actv_dressed = psi::linalg::doublet(Ca_actv, g1a, false, false);
+    auto Cb_actv_dressed = psi::linalg::doublet(Cb_actv, g1b, false, false);
+
+    // JK build
+    JK_->set_do_K(true);
+    std::vector<std::shared_ptr<psi::Matrix>>& Cls = JK_->C_left();
+    std::vector<std::shared_ptr<psi::Matrix>>& Crs = JK_->C_right();
+    Cls.clear();
+    Crs.clear();
+
+    Cls.push_back(Ca_actv);
+    Crs.push_back(Ca_actv_dressed);
+    Cls.push_back(Cb_actv);
+    Crs.push_back(Cb_actv_dressed);
+
+    JK_->compute();
+
+    // some algebra
+    auto Ka = JK_->K()[0];
+    Ka->scale(-1.0);
+    Ka->add(JK_->J()[0]);
+    Ka->add(JK_->J()[1]);
+
+    auto Kb = JK_->K()[1];
+    Kb->scale(-1.0);
+    Kb->add(JK_->J()[0]);
+    Kb->add(JK_->J()[1]);
+
+    // transform to MO
+    auto Fa_active = psi::linalg::triplet(Ca_, Ka, Ca_, true, false, false);
+    Fa_active->set_name("Fock_active alpha");
+    auto Fb_active = psi::linalg::triplet(Cb_, Kb, Cb_, true, false, false);
+    Fb_active->set_name("Fock_active beta");
+
+    // pass AO fock to psi4 Wavefunction
+    if (fock_ao_level_ == FockAOStatus::inactive) {
+        if (wfn_->Fa() == wfn_->Fb()) {
+            Ka->add(Kb);
+            Ka->scale(0.5);
+            wfn_->Fa()->add(Ka);
+        } else {
+            wfn_->Fa()->add(Ka);
+            wfn_->Fb()->add(Kb);
+        }
+        fock_ao_level_ = FockAOStatus::generalized;
+    }
+
+    return {Fa_active, Fb_active};
 }
 } // namespace forte

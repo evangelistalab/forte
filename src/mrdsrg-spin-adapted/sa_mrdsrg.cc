@@ -137,26 +137,16 @@ void SA_MRDSRG::print_options() {
         calculation_info_string.push_back({"Internal amplitudes selection", internal_amp_select_});
     }
 
-    auto true_false_string = [](bool x) {
-        if (x) {
-            return std::string("TRUE");
-        } else {
-            return std::string("FALSE");
-        }
-    };
-    calculation_info_string.push_back({"Restart amplitudes", true_false_string(restart_amps_)});
-    calculation_info_string.push_back(
-        {"Sequential DSRG transformation", true_false_string(sequential_Hbar_)});
-    calculation_info_string.push_back(
-        {"Omit blocks of >= 3 virtual indices", true_false_string(nivo_)});
-    calculation_info_string.push_back(
-        {"Read amplitudes from current dir", true_false_string(read_amps_cwd_)});
-    calculation_info_string.push_back(
-        {"Write amplitudes to current dir", true_false_string(dump_amps_cwd_)});
+    std::vector<std::pair<std::string, bool>> calculation_info_bool{
+        {"Restart amplitudes", restart_amps_},
+        {"Sequential DSRG transformation", sequential_Hbar_},
+        {"Omit blocks of >= 3 virtual indices", nivo_},
+        {"Read amplitudes from current dir", read_amps_cwd_},
+        {"Write amplitudes to current dir", dump_amps_cwd_}};
 
-    // print some information
-    print_options_info("Computation Information", calculation_info_string, calculation_info_double,
-                       calculation_info_int);
+    // print information
+    print_selected_options("Computation Information", calculation_info_string,
+                           calculation_info_bool, calculation_info_double, calculation_info_int);
 }
 
 void SA_MRDSRG::check_memory() {

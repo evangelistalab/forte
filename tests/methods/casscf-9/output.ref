@@ -1,31 +1,38 @@
 
     -----------------------------------------------------------------------
           Psi4: An Open-Source Ab Initio Electronic Structure Package
-                               Psi4 1.4a2.dev546 
+                               Psi4 1.4a2.dev1024 
 
-                         Git: Rev {master} 9701d60 dirty
-
-
-    R. M. Parrish, L. A. Burns, D. G. A. Smith, A. C. Simmonett,
-    A. E. DePrince III, E. G. Hohenstein, U. Bozkaya, A. Yu. Sokolov,
-    R. Di Remigio, R. M. Richard, J. F. Gonthier, A. M. James,
-    H. R. McAlexander, A. Kumar, M. Saitow, X. Wang, B. P. Pritchard,
-    P. Verma, H. F. Schaefer III, K. Patkowski, R. A. King, E. F. Valeev,
-    F. A. Evangelista, J. M. Turney, T. D. Crawford, and C. D. Sherrill,
-    J. Chem. Theory Comput. 13(7) pp 3185--3197 (2017).
-    (doi: 10.1021/acs.jctc.7b00174)
+                         Git: Rev {master} b603cfc dirty
 
 
-                         Additional Contributions by
-    P. Kraus, H. Kruse, M. H. Lechner, M. C. Schieber, R. A. Shaw,
-    A. Alenaizan, R. Galvelis, Z. L. Glick, S. Lehtola, and J. P. Misiewicz
+    D. G. A. Smith, L. A. Burns, A. C. Simmonett, R. M. Parrish,
+    M. C. Schieber, R. Galvelis, P. Kraus, H. Kruse, R. Di Remigio,
+    A. Alenaizan, A. M. James, S. Lehtola, J. P. Misiewicz, M. Scheurer,
+    R. A. Shaw, J. B. Schriber, Y. Xie, Z. L. Glick, D. A. Sirianni,
+    J. S. O'Brien, J. M. Waldrop, A. Kumar, E. G. Hohenstein,
+    B. P. Pritchard, B. R. Brooks, H. F. Schaefer III, A. Yu. Sokolov,
+    K. Patkowski, A. E. DePrince III, U. Bozkaya, R. A. King,
+    F. A. Evangelista, J. M. Turney, T. D. Crawford, C. D. Sherrill,
+    J. Chem. Phys. 152(18) 184108 (2020). https://doi.org/10.1063/5.0006002
+
+                            Additional Code Authors
+    E. T. Seidl, C. L. Janssen, E. F. Valeev, M. L. Leininger,
+    J. F. Gonthier, R. M. Richard, H. R. McAlexander, M. Saitow, X. Wang,
+    P. Verma, and M. H. Lechner
+
+             Previous Authors, Complete List of Code Contributors,
+                       and Citations for Specific Modules
+    https://github.com/psi4/psi4/blob/master/codemeta.json
+    https://github.com/psi4/psi4/graphs/contributors
+    http://psicode.org/psi4manual/master/introduction.html#citing-psifour
 
     -----------------------------------------------------------------------
 
 
-    Psi4 started on: Tuesday, 23 June 2020 10:00PM
+    Psi4 started on: Monday, 16 November 2020 02:02AM
 
-    Process ID: 93840
+    Process ID: 54177
     Host:       Yorks-Mac.local
     PSIDATADIR: /Users/york/src/psi4new/psi4/share/psi4
     Memory:     500.0 MiB
@@ -51,6 +58,7 @@ molecule HF{
 set {
   basis                  cc-pvdz
   df_basis_scf           cc-pvdz-jkfit
+  df_basis_mp2           cc-pvdz-jkfit
   reference              rhf
   scf_type               df
   maxiter                300
@@ -91,7 +99,7 @@ compare_values(Eforte, Ecasscf, 8, "CASSCF Forte vs Psi4")
 Scratch directory: /Users/york/scratch/psi4/
 
 *** tstart() called on Yorks-Mac.local
-*** at Tue Jun 23 22:00:48 2020
+*** at Mon Nov 16 02:02:28 2020
 
    => Loading Basis Set <=
 
@@ -212,16 +220,16 @@ Scratch directory: /Users/york/scratch/psi4/
 
                            Total Energy        Delta E     RMS |[F,P]|
 
-   @DF-RHF iter SAD:   -99.55449880393060   -9.95545e+01   0.00000e+00 
-   @DF-RHF iter   1:   -99.96742688081321   -4.12928e-01   2.77543e-02 DIIS
-   @DF-RHF iter   2:   -99.99943871733478   -3.20118e-02   1.63855e-02 DIIS
-   @DF-RHF iter   3:  -100.00948555480961   -1.00468e-02   1.75255e-03 DIIS
-   @DF-RHF iter   4:  -100.00982481576514   -3.39261e-04   5.50848e-04 DIIS
-   @DF-RHF iter   5:  -100.00985863189857   -3.38161e-05   9.45245e-05 DIIS
-   @DF-RHF iter   6:  -100.00985993996115   -1.30806e-06   9.55470e-06 DIIS
-   @DF-RHF iter   7:  -100.00985995181897   -1.18578e-08   6.53409e-07 DIIS
-   @DF-RHF iter   8:  -100.00985995185690   -3.79288e-11   7.53469e-08 DIIS
-   @DF-RHF iter   9:  -100.00985995185718   -2.84217e-13   7.84193e-09 DIIS
+   @DF-RHF iter SAD:   -99.55449880393029   -9.95545e+01   0.00000e+00 
+   @DF-RHF iter   1:   -99.96742688081277   -4.12928e-01   2.77543e-02 DIIS
+   @DF-RHF iter   2:   -99.99943871733441   -3.20118e-02   1.63855e-02 DIIS
+   @DF-RHF iter   3:  -100.00948555480926   -1.00468e-02   1.75255e-03 DIIS
+   @DF-RHF iter   4:  -100.00982481576489   -3.39261e-04   5.50848e-04 DIIS
+   @DF-RHF iter   5:  -100.00985863189813   -3.38161e-05   9.45245e-05 DIIS
+   @DF-RHF iter   6:  -100.00985993996080   -1.30806e-06   9.55470e-06 DIIS
+   @DF-RHF iter   7:  -100.00985995181863   -1.18578e-08   6.53409e-07 DIIS
+   @DF-RHF iter   8:  -100.00985995185640   -3.77725e-11   7.53469e-08 DIIS
+   @DF-RHF iter   9:  -100.00985995185691   -5.11591e-13   7.84193e-09 DIIS
   Energy and wave function converged.
 
 
@@ -233,28 +241,28 @@ Scratch directory: /Users/york/scratch/psi4/
     Doubly Occupied:                                                      
 
        1A1   -26.279281     2A1    -1.557455     3A1    -0.714910  
-       1B1    -0.621195     1B2    -0.621195  
+       1B2    -0.621195     1B1    -0.621195  
 
     Virtual:                                                              
 
        4A1     0.164493     5A1     0.737655     2B1     1.383290  
-       2B2     1.383290     6A1     1.446837     3B1     1.616511  
-       3B2     1.616511     7A1     2.133659     8A1     2.302124  
-       1A2     4.012625     9A1     4.012625     4B1     4.208020  
-       4B2     4.208020    10A1     4.935950  
+       2B2     1.383290     6A1     1.446837     3B2     1.616511  
+       3B1     1.616511     7A1     2.133659     8A1     2.302124  
+       9A1     4.012625     1A2     4.012625     4B2     4.208020  
+       4B1     4.208020    10A1     4.935950  
 
     Final Occupation by Irrep:
              A1    A2    B1    B2 
     DOCC [     3,    0,    1,    1 ]
 
-  @DF-RHF Final Energy:  -100.00985995185718
+  @DF-RHF Final Energy:  -100.00985995185691
 
    => Energetics <=
 
     Nuclear Repulsion Energy =              4.7625948960300004
-    One-Electron Energy =                -149.9568385101669321
-    Two-Electron Energy =                  45.1843836622797426
-    Total Energy =                       -100.0098599518571802
+    One-Electron Energy =                -149.9568385101665058
+    Two-Electron Energy =                  45.1843836622795934
+    Total Energy =                       -100.0098599518568960
 
 Computation Completed
 
@@ -276,13 +284,13 @@ Properties computed using the SCF density matrix
      X:     0.0000      Y:     0.0000      Z:    -2.1152     Total:     2.1152
 
 
-*** tstop() called on Yorks-Mac.local at Tue Jun 23 22:00:48 2020
+*** tstop() called on Yorks-Mac.local at Mon Nov 16 02:02:28 2020
 Module time:
-	user time   =       0.24 seconds =       0.00 minutes
+	user time   =       0.23 seconds =       0.00 minutes
 	system time =       0.01 seconds =       0.00 minutes
 	total time  =          0 seconds =       0.00 minutes
 Total time:
-	user time   =       0.24 seconds =       0.00 minutes
+	user time   =       0.23 seconds =       0.00 minutes
 	system time =       0.01 seconds =       0.00 minutes
 	total time  =          0 seconds =       0.00 minutes
   Constructing Basis Sets for MCSCF...
@@ -383,63 +391,63 @@ Total time:
    ==> Starting DF-MCSCF iterations <==
 
            Iter         Total Energy       Delta E   Orb RMS    CI RMS  NCI NORB
-   @DF-MCSCF  1:   -100.013387957181   -3.5280e-03  4.37e-03  8.01e-13    1    1  Initial CI
+   @DF-MCSCF  1:   -100.013387957181   -3.5280e-03  4.37e-03  1.96e-12    1    1  Initial CI
       Warning! Maxstep = 0.70, scaling to 0.50
    @DF-MCSCF  2:   -100.033342897307   -1.9955e-02  1.32e-02  1.75e-06    5    1  TS
    @DF-MCSCF  3:   -100.037911802251   -4.5689e-03  5.00e-03  5.63e-06    4    1  TS
-   @DF-MCSCF  4:   -100.038499817204   -5.8801e-04  1.78e-03  2.64e-06    4    1  TS
+   @DF-MCSCF  4:   -100.038499817203   -5.8801e-04  1.78e-03  2.64e-06    4    1  TS
    @DF-MCSCF  5:   -100.038598924410   -9.9107e-05  8.10e-04  6.90e-08    5    1  TS
    @DF-MCSCF  6:   -100.038618958939   -2.0035e-05  4.31e-04  3.24e-08    5    1  TS
-   @DF-MCSCF  7:   -100.038623594872   -4.6359e-06  2.37e-04  1.72e-08    5    1  TS, DIIS
-   @DF-MCSCF  8:   -100.038624770074   -1.1752e-06  1.30e-04  8.74e-09    5    1  TS, DIIS
+   @DF-MCSCF  7:   -100.038623594871   -4.6359e-06  2.37e-04  1.72e-08    5    1  TS, DIIS
+   @DF-MCSCF  8:   -100.038624770073   -1.1752e-06  1.30e-04  8.74e-09    5    1  TS, DIIS
    @DF-MCSCF  9:   -100.038625081171   -3.1110e-07  6.27e-05  1.48e-08    5    1  TS, DIIS
    @DF-MCSCF 10:   -100.038625208137   -1.2697e-07  1.65e-06  5.07e-09    5    1  TS, DIIS
-   @DF-MCSCF 11:   -100.038625206574    1.5633e-09  7.14e-06  5.56e-10    5    1  TS, DIIS
-   @DF-MCSCF 12:   -100.038625208200   -1.6259e-09  5.87e-07  6.70e-10    5    1  TS, DIIS
-   @DF-MCSCF 13:   -100.038625208209   -9.0949e-12  1.46e-07  4.74e-11    5    1  TS, DIIS
-   @DF-MCSCF 14:   -100.038625208209    8.5265e-14  1.60e-07  2.41e-11    5    1  TS, DIIS
-   @DF-MCSCF 15:   -100.038625208209   -6.9633e-13  1.04e-09  1.33e-11    5    1  TS, DIIS
+   @DF-MCSCF 11:   -100.038625206573    1.5633e-09  7.14e-06  5.56e-10    5    1  TS, DIIS
+   @DF-MCSCF 12:   -100.038625208199   -1.6259e-09  5.87e-07  6.70e-10    5    1  TS, DIIS
+   @DF-MCSCF 13:   -100.038625208208   -9.0239e-12  1.46e-07  4.72e-11    5    1  TS, DIIS
+   @DF-MCSCF 14:   -100.038625208208    9.9476e-14  1.60e-07  2.43e-11    5    1  TS, DIIS
+   @DF-MCSCF 15:   -100.038625208209   -6.8212e-13  1.04e-09  1.37e-12    6    1  TS, DIIS
 
           @DF-MCSCF has converged!
 
-   @DF-MCSCF Final Energy: -100.038625208209481
+   @DF-MCSCF Final Energy: -100.038625208208842
 
    Computing CI Semicanonical Orbitals
 
    ==> Energetics <==
 
-    SCF energy =         -100.009859951857180
-    Total MCSCF energy = -100.038625208209481
+    SCF energy =         -100.009859951856896
+    Total MCSCF energy = -100.038625208208842
 
    ==> MCSCF root 0 information <==
 
-    MCSCF Root 0 energy =  -100.038625208209524
+    MCSCF Root 0 energy =  -100.038625208208998
 
    Active Space Natural occupation numbers:
 
-        A1   1.999999        B1   1.999715        B2   1.999715
+        A1   1.999999        B2   1.999715        B1   1.999715
         A1   1.999702        A1   1.971480        A1   0.029390
 
    The 18 most important determinants:
 
-    *   1    0.992559  (    0,    0)  1A1X 2A1X 3A1X 1B1X 1B2X 
-    *   2   -0.108521  (    1,    1)  1A1X 2A1X 4A1X 1B1X 1B2X 
-    *   3    0.032306  (    1,    2)  1A1X 2A1A 3A1B 4A1X 1B1X 1B2X 
-    *   4    0.032306  (    2,    1)  1A1X 2A1B 3A1A 4A1X 1B1X 1B2X 
-    *   5   -0.022995  (    2,    2)  1A1X 3A1X 4A1X 1B1X 1B2X 
-    *   6   -0.011947  (    4,    4)  1A1X 2A1X 3A1X 4A1X 1B1X 
-    *   7   -0.011947  (    5,    5)  1A1X 2A1X 3A1X 4A1X 1B2X 
-    *   8   -0.008530  (    0,    1)  1A1X 2A1X 3A1A 4A1B 1B1X 1B2X 
-    *   9   -0.008530  (    1,    0)  1A1X 2A1X 3A1B 4A1A 1B1X 1B2X 
-    *  10    0.000900  (    0,    2)  1A1X 2A1A 3A1X 4A1B 1B1X 1B2X 
-    *  11    0.000900  (    2,    0)  1A1X 2A1B 3A1X 4A1A 1B1X 1B2X 
-    *  12   -0.000749  (    3,    3)  2A1X 3A1X 4A1X 1B1X 1B2X 
-    *  13   -0.000724  (    2,    3)  1A1A 2A1B 3A1X 4A1X 1B1X 1B2X 
-    *  14   -0.000724  (    3,    2)  1A1B 2A1A 3A1X 4A1X 1B1X 1B2X 
-    *  15   -0.000098  (    1,    3)  1A1A 2A1X 3A1B 4A1X 1B1X 1B2X 
-    *  16   -0.000098  (    3,    1)  1A1B 2A1X 3A1A 4A1X 1B1X 1B2X 
-    *  17    0.000018  (    0,    3)  1A1A 2A1X 3A1X 4A1B 1B1X 1B2X 
-    *  18    0.000018  (    3,    0)  1A1B 2A1X 3A1X 4A1A 1B1X 1B2X 
+    *   1   -0.992559  (    0,    0)  1A1X 2A1X 3A1X 1B1X 1B2X 
+    *   2    0.108521  (    1,    1)  1A1X 2A1X 4A1X 1B1X 1B2X 
+    *   3   -0.032306  (    1,    2)  1A1X 2A1A 3A1B 4A1X 1B1X 1B2X 
+    *   4   -0.032306  (    2,    1)  1A1X 2A1B 3A1A 4A1X 1B1X 1B2X 
+    *   5    0.022995  (    2,    2)  1A1X 3A1X 4A1X 1B1X 1B2X 
+    *   6    0.011947  (    5,    5)  1A1X 2A1X 3A1X 4A1X 1B2X 
+    *   7    0.011947  (    4,    4)  1A1X 2A1X 3A1X 4A1X 1B1X 
+    *   8    0.008530  (    0,    1)  1A1X 2A1X 3A1A 4A1B 1B1X 1B2X 
+    *   9    0.008530  (    1,    0)  1A1X 2A1X 3A1B 4A1A 1B1X 1B2X 
+    *  10   -0.000900  (    0,    2)  1A1X 2A1A 3A1X 4A1B 1B1X 1B2X 
+    *  11   -0.000900  (    2,    0)  1A1X 2A1B 3A1X 4A1A 1B1X 1B2X 
+    *  12    0.000749  (    3,    3)  2A1X 3A1X 4A1X 1B1X 1B2X 
+    *  13    0.000724  (    2,    3)  1A1A 2A1B 3A1X 4A1X 1B1X 1B2X 
+    *  14    0.000724  (    3,    2)  1A1B 2A1A 3A1X 4A1X 1B1X 1B2X 
+    *  15    0.000098  (    1,    3)  1A1A 2A1X 3A1B 4A1X 1B1X 1B2X 
+    *  16    0.000098  (    3,    1)  1A1B 2A1X 3A1A 4A1X 1B1X 1B2X 
+    *  17   -0.000018  (    0,    3)  1A1A 2A1X 3A1X 4A1B 1B1X 1B2X 
+    *  18   -0.000018  (    3,    0)  1A1B 2A1X 3A1X 4A1A 1B1X 1B2X 
 
 
 
@@ -459,12 +467,28 @@ Properties computed using the CASSCF density matrix
   Dipole Moment: [D]
      X:     0.0000      Y:     0.0000      Z:    -1.9159     Total:     1.9159
 
-    CASSCF energy.....................................................PASSED
+    CASSCF energy.........................................................................PASSED
 
 Scratch directory: /Users/york/scratch/psi4/
 
+  Forte
+  ----------------------------------------------------------------------------
+  A suite of quantum chemistry methods for strongly correlated electrons
+
+    git branch: cas_hessian - git commit: 26e4d734
+
+  Developed by:
+    Francesco A. Evangelista, Chenyang Li, Kevin P. Hannon,
+    Jeffrey B. Schriber, Tianyuan Zhang, Chenxi Cai,
+    Nan He, Nicholas Stair, Shuhe Wang, Renke Huang
+  ----------------------------------------------------------------------------
+
+  Size of Determinant class: 256 bits
+  Preparing forte objects from a psi4 Wavefunction object
+  No reference wavefunction provided. Computing SCF orbitals with psi4
+
 *** tstart() called on Yorks-Mac.local
-*** at Tue Jun 23 22:00:48 2020
+*** at Mon Nov 16 02:02:28 2020
 
    => Loading Basis Set <=
 
@@ -585,16 +609,16 @@ Scratch directory: /Users/york/scratch/psi4/
 
                            Total Energy        Delta E     RMS |[F,P]|
 
-   @DF-RHF iter SAD:   -99.55449880393060   -9.95545e+01   0.00000e+00 
-   @DF-RHF iter   1:   -99.96742688081321   -4.12928e-01   2.77543e-02 DIIS
-   @DF-RHF iter   2:   -99.99943871733478   -3.20118e-02   1.63855e-02 DIIS
-   @DF-RHF iter   3:  -100.00948555480961   -1.00468e-02   1.75255e-03 DIIS
-   @DF-RHF iter   4:  -100.00982481576514   -3.39261e-04   5.50848e-04 DIIS
-   @DF-RHF iter   5:  -100.00985863189857   -3.38161e-05   9.45245e-05 DIIS
-   @DF-RHF iter   6:  -100.00985993996115   -1.30806e-06   9.55470e-06 DIIS
-   @DF-RHF iter   7:  -100.00985995181897   -1.18578e-08   6.53409e-07 DIIS
-   @DF-RHF iter   8:  -100.00985995185690   -3.79288e-11   7.53469e-08 DIIS
-   @DF-RHF iter   9:  -100.00985995185718   -2.84217e-13   7.84193e-09 DIIS
+   @DF-RHF iter SAD:   -99.55449880393029   -9.95545e+01   0.00000e+00 
+   @DF-RHF iter   1:   -99.96742688081277   -4.12928e-01   2.77543e-02 DIIS
+   @DF-RHF iter   2:   -99.99943871733441   -3.20118e-02   1.63855e-02 DIIS
+   @DF-RHF iter   3:  -100.00948555480926   -1.00468e-02   1.75255e-03 DIIS
+   @DF-RHF iter   4:  -100.00982481576489   -3.39261e-04   5.50848e-04 DIIS
+   @DF-RHF iter   5:  -100.00985863189813   -3.38161e-05   9.45245e-05 DIIS
+   @DF-RHF iter   6:  -100.00985993996080   -1.30806e-06   9.55470e-06 DIIS
+   @DF-RHF iter   7:  -100.00985995181863   -1.18578e-08   6.53409e-07 DIIS
+   @DF-RHF iter   8:  -100.00985995185640   -3.77725e-11   7.53469e-08 DIIS
+   @DF-RHF iter   9:  -100.00985995185691   -5.11591e-13   7.84193e-09 DIIS
   Energy and wave function converged.
 
 
@@ -606,28 +630,28 @@ Scratch directory: /Users/york/scratch/psi4/
     Doubly Occupied:                                                      
 
        1A1   -26.279281     2A1    -1.557455     3A1    -0.714910  
-       1B1    -0.621195     1B2    -0.621195  
+       1B2    -0.621195     1B1    -0.621195  
 
     Virtual:                                                              
 
        4A1     0.164493     5A1     0.737655     2B1     1.383290  
-       2B2     1.383290     6A1     1.446837     3B1     1.616511  
-       3B2     1.616511     7A1     2.133659     8A1     2.302124  
-       1A2     4.012625     9A1     4.012625     4B1     4.208020  
-       4B2     4.208020    10A1     4.935950  
+       2B2     1.383290     6A1     1.446837     3B2     1.616511  
+       3B1     1.616511     7A1     2.133659     8A1     2.302124  
+       9A1     4.012625     1A2     4.012625     4B2     4.208020  
+       4B1     4.208020    10A1     4.935950  
 
     Final Occupation by Irrep:
              A1    A2    B1    B2 
     DOCC [     3,    0,    1,    1 ]
 
-  @DF-RHF Final Energy:  -100.00985995185718
+  @DF-RHF Final Energy:  -100.00985995185691
 
    => Energetics <=
 
     Nuclear Repulsion Energy =              4.7625948960300004
-    One-Electron Energy =                -149.9568385101669321
-    Two-Electron Energy =                  45.1843836622797426
-    Total Energy =                       -100.0098599518571802
+    One-Electron Energy =                -149.9568385101665058
+    Two-Electron Energy =                  45.1843836622795934
+    Total Energy =                       -100.0098599518568960
 
 Computation Completed
 
@@ -649,22 +673,22 @@ Properties computed using the SCF density matrix
      X:     0.0000      Y:     0.0000      Z:    -2.1152     Total:     2.1152
 
 
-*** tstop() called on Yorks-Mac.local at Tue Jun 23 22:00:49 2020
+*** tstop() called on Yorks-Mac.local at Mon Nov 16 02:02:28 2020
 Module time:
-	user time   =       0.21 seconds =       0.00 minutes
+	user time   =       0.22 seconds =       0.00 minutes
 	system time =       0.01 seconds =       0.00 minutes
-	total time  =          1 seconds =       0.02 minutes
+	total time  =          0 seconds =       0.00 minutes
 Total time:
-	user time   =       0.66 seconds =       0.01 minutes
-	system time =       0.08 seconds =       0.00 minutes
-	total time  =          1 seconds =       0.02 minutes
+	user time   =       0.67 seconds =       0.01 minutes
+	system time =       0.09 seconds =       0.00 minutes
+	total time  =          0 seconds =       0.00 minutes
    => Loading Basis Set <=
 
-    Name: (CC-PVDZ AUX)
+    Name: CC-PVDZ-JKFIT
     Role: RIFIT
     Keyword: DF_BASIS_MP2
-    atoms 1 entry H          line    19 file /Users/york/src/psi4new/psi4/share/psi4/basis/cc-pvdz-ri.gbs 
-    atoms 2 entry F          line   273 file /Users/york/src/psi4new/psi4/share/psi4/basis/cc-pvdz-ri.gbs 
+    atoms 1 entry H          line    51 file /Users/york/src/psi4new/psi4/share/psi4/basis/cc-pvdz-jkfit.gbs 
+    atoms 2 entry F          line   271 file /Users/york/src/psi4new/psi4/share/psi4/basis/cc-pvdz-jkfit.gbs 
 
    => Loading Basis Set <=
 
@@ -675,21 +699,9 @@ Total time:
     atoms 2 entry F          line    91 file /Users/york/src/psi4new/psi4/share/psi4/basis/sto-3g.gbs 
 
 
-  Forte
-  ----------------------------------------------------------------------------
-  A suite of quantum chemistry methods for strongly correlated electrons
-
-    git branch: master - git commit: 5e031236
-
-  Developed by:
-    Francesco A. Evangelista, Chenyang Li, Kevin P. Hannon,
-    Jeffrey B. Schriber, Tianyuan Zhang, Chenxi Cai,
-    Nan He, Nicholas Stair, Shuhe Wang, Renke Huang
-  ----------------------------------------------------------------------------
-
-  Size of Determinant class: 128 bits
   Read options for space RESTRICTED_DOCC
   Read options for space ACTIVE
+  Read options for space RESTRICTED_DOCC
 
   ==> MO Space Information <==
 
@@ -698,46 +710,55 @@ Total time:
   -------------------------------------------------
     FROZEN_DOCC         0     0     0     0     0
     RESTRICTED_DOCC     0     0     0     0     0
-    ACTIVE              4     0     1     1     6
+    GAS1                4     0     1     1     6
+    GAS2                0     0     0     0     0
+    GAS3                0     0     0     0     0
+    GAS4                0     0     0     0     0
+    GAS5                0     0     0     0     0
+    GAS6                0     0     0     0     0
     RESTRICTED_UOCC     6     1     3     3    13
     FROZEN_UOCC         0     0     0     0     0
     Total              10     1     4     4    19
   -------------------------------------------------
+  Forte will use psi4 integrals
+  JK created using MemDF integrals
+  DFHelper Memory: AOs need 0.000 GiB; user supplied 0.415 GiB. Using in-core AOs.
+
+
 
   ==> Integral Transformation <==
 
-  Number of molecular orbitals:                    19
-  Number of correlated molecular orbitals:         19
-  Number of frozen occupied orbitals:               0
-  Number of frozen unoccupied orbitals:             0
+  Number of molecular orbitals:                         19
+  Number of correlated molecular orbitals:              19
+  Number of frozen occupied orbitals:                    0
+  Number of frozen unoccupied orbitals:                  0
   Two-electron integral type:              Density fitting
 
 
-  Computing Density fitted integrals 
+  Computing density fitted integrals 
 
-  Number of auxiliary basis functions:  70
-  Need 202.16 KB to store DF integrals
-  DFHelper Memory: AOs need 0.000 GiB; user supplied 1.907 GiB. Using in-core AOs.
+  Number of auxiliary basis functions:  93
+  Need 268.58 KB to store DF integrals
+  DFHelper Memory: AOs need 0.000 GiB; user supplied 0.488 GiB. Using in-core AOs.
 
 
-  Transforming DF Integrals            ......Done.
-  Timing for density-fitting transformation:                  0.009 s.
+  Transforming DF Integrals
+  Timing for density-fitting transformation:                  0.006 s.
 
   Timing for freezing core and virtual orbitals:              0.000 s.
-  Timing for computing density-fitted integrals:              0.033 s.
+  Timing for computing density-fitted integrals:              0.030 s.
 
                 -----------------------------------------------
                   Complete Active Space Self Consistent Field
                                  Kevin Hannon
                 -----------------------------------------------
 
-    JK takes 0.02757 s to initialize while using DF
 
   ==> CASSCF Iteration <==
 
   iter    ||g||           Delta_E            E_CASSCF       CONV_TYPE
 
-  Transform Integrals takes 0.00059367 s.
+  Transform Integrals takes 0.00072841 s.
 
   Performing a CAS with CAS
 
@@ -776,7 +797,7 @@ Total time:
     ACTIVE                        [    4     0     1     1 ]
     VIRTUAL                       [    6     1     3     3 ]
   Forming alpha and beta strings      ...  Done. Timing        0.000016 s
-  Forming determinants                ...  Done. Timing        0.000004 s
+  Forming determinants                ...  Done. Timing        0.000005 s
 
   ==> Determinants Summary <==
 
@@ -789,18 +810,18 @@ Total time:
 
   ==> Computing Coupling Lists <==
   --------------------------------
-        α          0.000046 s
-        β          0.000043 s
-        αα         0.000066 s
-        ββ         0.000064 s
-        αβ         0.000159 s
+        α          0.000048 s
+        β          0.000045 s
+        αα         0.000069 s
+        ββ         0.000067 s
+        αβ         0.000165 s
   --------------------------------
 
   Davidson-Liu solver algorithm using SigmaVectorSparseList sigma algorithm
 
   Performing diagonalization of the H matrix
   Found 12 roots with 2S+1 = 1 *
-  Found 6 roots with 2S+1 = 3  Done. Timing        0.000674 s
+  Found 6 roots with 2S+1 = 3  Done. Timing        0.000726 s
 
   * * * * * * * * * * * * * * * * *
   *  CI Vectors & Configurations  *
@@ -810,7 +831,7 @@ Total time:
 
     2220 2 2          0.9988138546
 
-    Total Energy:   -100.013387957181337
+    Total Energy:   -100.013387957180953
 
 
 
@@ -826,21 +847,21 @@ Total time:
     ---------------------------------------------
        1  (  0)    A1     0     -100.013387957181
     ---------------------------------------------
- Computing  1RDMs (0 Singlet A1 - 0 Singlet A1) ... Done. Timing        0.000097 s
- Computing  2RDMs (0 Singlet A1 - 0 Singlet A1) ... Done. Timing        0.000265 s
+ Computing  1RDMs (0 Singlet A1 - 0 Singlet A1) ... Done. Timing        0.000102 s
+ Computing  2RDMs (0 Singlet A1 - 0 Singlet A1) ... Done. Timing        0.000283 s
 
- CAS took 0.001883 seconds.
+ CAS took 0.001967 seconds.
 
- FormFockIntermediates took 0.00042161 s.
+ FormFockIntermediates took 0.00033200 s.
 
- FormOrbitalGradient took 0.00012757 s.
+ FormOrbitalGradient took 0.00013988 s.
 
- FormDiagHessian took 0.00000521 s.
+ FormDiagHessian took 0.00000742 s.
 
- Update function takes 0.00057190 s
+ Update function takes 0.00049858 s
     1 0.002833941241  -100.013387957181  -100.013387957181    0.0 s       ~
 
-  Transform Integrals takes 0.00046230 s.
+  Transform Integrals takes 0.00056052 s.
 
   Performing a CAS with CAS
 
@@ -878,8 +899,8 @@ Total time:
     CORE                          [    0     0     0     0 ]
     ACTIVE                        [    4     0     1     1 ]
     VIRTUAL                       [    6     1     3     3 ]
-  Forming alpha and beta strings      ...  Done. Timing        0.000013 s
-  Forming determinants                ...  Done. Timing        0.000004 s
+  Forming alpha and beta strings      ...  Done. Timing        0.000015 s
+  Forming determinants                ...  Done. Timing        0.000005 s
 
   ==> Determinants Summary <==
 
@@ -892,18 +913,18 @@ Total time:
 
   ==> Computing Coupling Lists <==
   --------------------------------
-        α          0.000043 s
-        β          0.000041 s
+        α          0.000046 s
+        β          0.000045 s
         αα         0.000069 s
-        ββ         0.000062 s
-        αβ         0.000159 s
+        ββ         0.000067 s
+        αβ         0.000165 s
   --------------------------------
 
   Davidson-Liu solver algorithm using SigmaVectorSparseList sigma algorithm
 
   Performing diagonalization of the H matrix
   Found 12 roots with 2S+1 = 1 *
-  Found 6 roots with 2S+1 = 3  Done. Timing        0.000631 s
+  Found 6 roots with 2S+1 = 3  Done. Timing        0.000669 s
 
   * * * * * * * * * * * * * * * * *
   *  CI Vectors & Configurations  *
@@ -914,7 +935,7 @@ Total time:
     2220 2 2         -0.9926318290
     2202 2 2          0.1043427684
 
-    Total Energy:   -100.033403056322683
+    Total Energy:   -100.033403056322470
 
 
 
@@ -928,23 +949,23 @@ Total time:
 
     Multi.(2ms)  Irrep.  No.               Energy
     ---------------------------------------------
-       1  (  0)    A1     0     -100.033403056323
+       1  (  0)    A1     0     -100.033403056322
     ---------------------------------------------
- Computing  1RDMs (0 Singlet A1 - 0 Singlet A1) ... Done. Timing        0.000091 s
- Computing  2RDMs (0 Singlet A1 - 0 Singlet A1) ... Done. Timing        0.000266 s
+ Computing  1RDMs (0 Singlet A1 - 0 Singlet A1) ... Done. Timing        0.000097 s
+ Computing  2RDMs (0 Singlet A1 - 0 Singlet A1) ... Done. Timing        0.000278 s
 
- CAS took 0.001690 seconds.
+ CAS took 0.001771 seconds.
 
- FormFockIntermediates took 0.00040831 s.
+ FormFockIntermediates took 0.00031295 s.
 
- FormOrbitalGradient took 0.00008880 s.
+ FormOrbitalGradient took 0.00009877 s.
 
- FormDiagHessian took 0.00000470 s.
+ FormDiagHessian took 0.00000449 s.
 
- Update function takes 0.00051971 s
-    2 0.008539860764    -0.020015099141  -100.033403056323    0.0 s       ~
+ Update function takes 0.00043282 s
+    2 0.008539860764    -0.020015099142  -100.033403056322    0.0 s       ~
 
-  Transform Integrals takes 0.00045096 s.
+  Transform Integrals takes 0.00056396 s.
 
   Performing a CAS with CAS
 
@@ -982,8 +1003,8 @@ Total time:
     CORE                          [    0     0     0     0 ]
     ACTIVE                        [    4     0     1     1 ]
     VIRTUAL                       [    6     1     3     3 ]
-  Forming alpha and beta strings      ...  Done. Timing        0.000013 s
-  Forming determinants                ...  Done. Timing        0.000004 s
+  Forming alpha and beta strings      ...  Done. Timing        0.000015 s
+  Forming determinants                ...  Done. Timing        0.000005 s
 
   ==> Determinants Summary <==
 
@@ -996,18 +1017,18 @@ Total time:
 
   ==> Computing Coupling Lists <==
   --------------------------------
-        α          0.000043 s
-        β          0.000041 s
-        αα         0.000064 s
-        ββ         0.000062 s
-        αβ         0.000160 s
+        α          0.000046 s
+        β          0.000043 s
+        αα         0.000070 s
+        ββ         0.000069 s
+        αβ         0.000163 s
   --------------------------------
 
   Davidson-Liu solver algorithm using SigmaVectorSparseList sigma algorithm
 
   Performing diagonalization of the H matrix
   Found 12 roots with 2S+1 = 1 *
-  Found 6 roots with 2S+1 = 3  Done. Timing        0.000626 s
+  Found 6 roots with 2S+1 = 3  Done. Timing        0.000769 s
 
   * * * * * * * * * * * * * * * * *
   *  CI Vectors & Configurations  *
@@ -1018,7 +1039,7 @@ Total time:
     2220 2 2         -0.9921160860
     2202 2 2          0.1076030613
 
-    Total Energy:   -100.037938312549358
+    Total Energy:   -100.037938312549244
 
 
 
@@ -1034,21 +1055,21 @@ Total time:
     ---------------------------------------------
        1  (  0)    A1     0     -100.037938312549
     ---------------------------------------------
- Computing  1RDMs (0 Singlet A1 - 0 Singlet A1) ... Done. Timing        0.000090 s
- Computing  2RDMs (0 Singlet A1 - 0 Singlet A1) ... Done. Timing        0.000250 s
+ Computing  1RDMs (0 Singlet A1 - 0 Singlet A1) ... Done. Timing        0.000095 s
+ Computing  2RDMs (0 Singlet A1 - 0 Singlet A1) ... Done. Timing        0.000269 s
 
- CAS took 0.001661 seconds.
+ CAS took 0.001849 seconds.
 
- FormFockIntermediates took 0.00040409 s.
+ FormFockIntermediates took 0.00032125 s.
 
- FormOrbitalGradient took 0.00008814 s.
+ FormOrbitalGradient took 0.00009775 s.
 
- FormDiagHessian took 0.00000485 s.
+ FormDiagHessian took 0.00000456 s.
 
- Update function takes 0.00051405 s
-    3 0.003301585913    -0.004535256227  -100.037938312549    0.0 s       ~
+ Update function takes 0.00045452 s
+    3 0.003301585913    -0.004535256227  -100.037938312549    0.0 s  DIIS ~
 
-  Transform Integrals takes 0.00045140 s.
+  Transform Integrals takes 0.00055908 s.
 
   Performing a CAS with CAS
 
@@ -1086,8 +1107,8 @@ Total time:
     CORE                          [    0     0     0     0 ]
     ACTIVE                        [    4     0     1     1 ]
     VIRTUAL                       [    6     1     3     3 ]
-  Forming alpha and beta strings      ...  Done. Timing        0.000014 s
-  Forming determinants                ...  Done. Timing        0.000004 s
+  Forming alpha and beta strings      ...  Done. Timing        0.000015 s
+  Forming determinants                ...  Done. Timing        0.000005 s
 
   ==> Determinants Summary <==
 
@@ -1100,18 +1121,18 @@ Total time:
 
   ==> Computing Coupling Lists <==
   --------------------------------
-        α          0.000044 s
-        β          0.000042 s
-        αα         0.000064 s
-        ββ         0.000062 s
-        αβ         0.000162 s
+        α          0.000046 s
+        β          0.000043 s
+        αα         0.000107 s
+        ββ         0.000105 s
+        αβ         0.000254 s
   --------------------------------
 
   Davidson-Liu solver algorithm using SigmaVectorSparseList sigma algorithm
 
   Performing diagonalization of the H matrix
   Found 12 roots with 2S+1 = 1 *
-  Found 6 roots with 2S+1 = 3  Done. Timing        0.000631 s
+  Found 6 roots with 2S+1 = 3  Done. Timing        0.000929 s
 
   * * * * * * * * * * * * * * * * *
   *  CI Vectors & Configurations  *
@@ -1119,10 +1140,10 @@ Total time:
 
   ==> Root No. 0 <==
 
-    2220 2 2         -0.9922310655
-    2202 2 2          0.1073806641
+    2220 2 2         -0.9923161635
+    2202 2 2          0.1069929673
 
-    Total Energy:   -100.038499310940693
+    Total Energy:   -100.038584186924979
 
 
 
@@ -1136,23 +1157,23 @@ Total time:
 
     Multi.(2ms)  Irrep.  No.               Energy
     ---------------------------------------------
-       1  (  0)    A1     0     -100.038499310941
+       1  (  0)    A1     0     -100.038584186925
     ---------------------------------------------
- Computing  1RDMs (0 Singlet A1 - 0 Singlet A1) ... Done. Timing        0.000092 s
- Computing  2RDMs (0 Singlet A1 - 0 Singlet A1) ... Done. Timing        0.000258 s
+ Computing  1RDMs (0 Singlet A1 - 0 Singlet A1) ... Done. Timing        0.000100 s
+ Computing  2RDMs (0 Singlet A1 - 0 Singlet A1) ... Done. Timing        0.000265 s
 
- CAS took 0.001700 seconds.
+ CAS took 0.002003 seconds.
 
- FormFockIntermediates took 0.00040915 s.
+ FormFockIntermediates took 0.00031810 s.
 
- FormOrbitalGradient took 0.00008776 s.
+ FormOrbitalGradient took 0.00010145 s.
 
- FormDiagHessian took 0.00000470 s.
+ FormDiagHessian took 0.00000450 s.
 
- Update function takes 0.00051860 s
-    4 0.001182248823    -0.000560998391  -100.038499310941    0.0 s  DIIS ~
+ Update function takes 0.00044367 s
+    4 0.000958944125    -0.000645874376  -100.038584186925    0.0 s  DIIS ~
 
-  Transform Integrals takes 0.00045379 s.
+  Transform Integrals takes 0.00063465 s.
 
   Performing a CAS with CAS
 
@@ -1190,8 +1211,8 @@ Total time:
     CORE                          [    0     0     0     0 ]
     ACTIVE                        [    4     0     1     1 ]
     VIRTUAL                       [    6     1     3     3 ]
-  Forming alpha and beta strings      ...  Done. Timing        0.000013 s
-  Forming determinants                ...  Done. Timing        0.000004 s
+  Forming alpha and beta strings      ...  Done. Timing        0.000015 s
+  Forming determinants                ...  Done. Timing        0.000005 s
 
   ==> Determinants Summary <==
 
@@ -1204,18 +1225,18 @@ Total time:
 
   ==> Computing Coupling Lists <==
   --------------------------------
-        α          0.000044 s
-        β          0.000041 s
-        αα         0.000064 s
-        ββ         0.000063 s
-        αβ         0.000160 s
+        α          0.000047 s
+        β          0.000046 s
+        αα         0.000072 s
+        ββ         0.000069 s
+        αβ         0.000167 s
   --------------------------------
 
   Davidson-Liu solver algorithm using SigmaVectorSparseList sigma algorithm
 
   Performing diagonalization of the H matrix
   Found 12 roots with 2S+1 = 1 *
-  Found 6 roots with 2S+1 = 3  Done. Timing        0.000640 s
+  Found 6 roots with 2S+1 = 3  Done. Timing        0.000677 s
 
   * * * * * * * * * * * * * * * * *
   *  CI Vectors & Configurations  *
@@ -1223,248 +1244,40 @@ Total time:
 
   ==> Root No. 0 <==
 
-    2220 2 2         -0.9923289773
-    2202 2 2          0.1072243765
+    2220 2 2         -0.9923336515
+    2202 2 2          0.1072975753
 
-    Total Energy:   -100.038617308576590
-
-
-
-  ==> Permanent Dipole Moments (A1) <==
-
-  Only print nonzero (> 1.0e-5) elements.
-  Permanent dipole moments (a.u.) 0 -> 0:  X:  0.0000  Y:  0.0000  Z: -0.7539  Total:  0.7539
-
-
-  ==> Energy Summary <==
-
-    Multi.(2ms)  Irrep.  No.               Energy
-    ---------------------------------------------
-       1  (  0)    A1     0     -100.038617308577
-    ---------------------------------------------
- Computing  1RDMs (0 Singlet A1 - 0 Singlet A1) ... Done. Timing        0.000091 s
- Computing  2RDMs (0 Singlet A1 - 0 Singlet A1) ... Done. Timing        0.000252 s
-
- CAS took 0.001682 seconds.
-
- FormFockIntermediates took 0.00041015 s.
-
- FormOrbitalGradient took 0.00008857 s.
-
- FormDiagHessian took 0.00000484 s.
-
- Update function takes 0.00052022 s
-    5 0.000409686744    -0.000117997636  -100.038617308577    0.0 s  DIIS ~
-
-  Transform Integrals takes 0.00045565 s.
-
-  Performing a CAS with CAS
-
-  ==> Summary of Active Space Solver Input <==
-
-    Irrep.  Multi.(2ms)      N
-    --------------------------
-       A1      1  (  0)      1
-    --------------------------
-    N: number of roots
-    ms: spin z component
-    Total number of roots:   1
-    --------------------------
-
-
-              ---------------------------------------------------
-                Complete Active Space Configuration Interaction
-                                  Chenyang Li
-              ---------------------------------------------------
-
-
-  ==> Input Summary <==
-
-    No. a electrons in active      =     5
-    No. b electrons in active      =     5
-    multiplicity                   =     1
-    spin ms (2 * Sz)               =     0
-
-  ==> Orbital Spaces <==
-
-    TOTAL MO                      [   10     1     4     4 ]
-    FROZEN CORE                   [    0     0     0     0 ]
-    FROZEN VIRTUAL                [    0     0     0     0 ]
-    CORRELATED MO                 [   10     1     4     4 ]
-    CORE                          [    0     0     0     0 ]
-    ACTIVE                        [    4     0     1     1 ]
-    VIRTUAL                       [    6     1     3     3 ]
-  Forming alpha and beta strings      ...  Done. Timing        0.000013 s
-  Forming determinants                ...  Done. Timing        0.000004 s
-
-  ==> Determinants Summary <==
-
-    number of alpha active electrons         =     5
-    number of beta active electrons          =     5
-    root symmetry (zero based)               =     0
-    number of determinants                   =    18
-
-  Diagonalizing Hamiltonian           ...
-
-  ==> Computing Coupling Lists <==
-  --------------------------------
-        α          0.000043 s
-        β          0.000042 s
-        αα         0.000066 s
-        ββ         0.000064 s
-        αβ         0.000159 s
-  --------------------------------
-
-  Davidson-Liu solver algorithm using SigmaVectorSparseList sigma algorithm
-
-  Performing diagonalization of the H matrix
-  Found 12 roots with 2S+1 = 1 *
-  Found 6 roots with 2S+1 = 3  Done. Timing        0.000629 s
-
-  * * * * * * * * * * * * * * * * *
-  *  CI Vectors & Configurations  *
-  * * * * * * * * * * * * * * * * *
-
-  ==> Root No. 0 <==
-
-    2220 2 2         -0.9923261338
-    2202 2 2          0.1075656179
-
-    Total Energy:   -100.038624638064604
+    Total Energy:   -100.038621361516022
 
 
 
   ==> Permanent Dipole Moments (A1) <==
 
   Only print nonzero (> 1.0e-5) elements.
-  Permanent dipole moments (a.u.) 0 -> 0:  X:  0.0000  Y:  0.0000  Z: -0.7542  Total:  0.7542
+  Permanent dipole moments (a.u.) 0 -> 0:  X:  0.0000  Y:  0.0000  Z: -0.7537  Total:  0.7537
 
 
   ==> Energy Summary <==
 
     Multi.(2ms)  Irrep.  No.               Energy
     ---------------------------------------------
-       1  (  0)    A1     0     -100.038624638065
+       1  (  0)    A1     0     -100.038621361516
     ---------------------------------------------
- Computing  1RDMs (0 Singlet A1 - 0 Singlet A1) ... Done. Timing        0.000092 s
- Computing  2RDMs (0 Singlet A1 - 0 Singlet A1) ... Done. Timing        0.000251 s
+ Computing  1RDMs (0 Singlet A1 - 0 Singlet A1) ... Done. Timing        0.000098 s
+ Computing  2RDMs (0 Singlet A1 - 0 Singlet A1) ... Done. Timing        0.000262 s
 
- CAS took 0.001681 seconds.
+ CAS took 0.001802 seconds.
 
- FormFockIntermediates took 0.00040906 s.
+ FormFockIntermediates took 0.00043886 s.
 
- FormOrbitalGradient took 0.00008878 s.
+ FormOrbitalGradient took 0.00014206 s.
 
- FormDiagHessian took 0.00000465 s.
+ FormDiagHessian took 0.00000456 s.
 
- Update function takes 0.00052028 s
-    6 0.000125096484    -0.000007329488  -100.038624638065    0.0 s  DIIS ~
+ Update function takes 0.00061901 s
+    5 0.000353325499    -0.000037174591  -100.038621361516    0.0 s  DIIS ~
 
-  Transform Integrals takes 0.00045477 s.
-
-  Performing a CAS with CAS
-
-  ==> Summary of Active Space Solver Input <==
-
-    Irrep.  Multi.(2ms)      N
-    --------------------------
-       A1      1  (  0)      1
-    --------------------------
-    N: number of roots
-    ms: spin z component
-    Total number of roots:   1
-    --------------------------
-
-
-              ---------------------------------------------------
-                Complete Active Space Configuration Interaction
-                                  Chenyang Li
-              ---------------------------------------------------
-
-
-  ==> Input Summary <==
-
-    No. a electrons in active      =     5
-    No. b electrons in active      =     5
-    multiplicity                   =     1
-    spin ms (2 * Sz)               =     0
-
-  ==> Orbital Spaces <==
-
-    TOTAL MO                      [   10     1     4     4 ]
-    FROZEN CORE                   [    0     0     0     0 ]
-    FROZEN VIRTUAL                [    0     0     0     0 ]
-    CORRELATED MO                 [   10     1     4     4 ]
-    CORE                          [    0     0     0     0 ]
-    ACTIVE                        [    4     0     1     1 ]
-    VIRTUAL                       [    6     1     3     3 ]
-  Forming alpha and beta strings      ...  Done. Timing        0.000013 s
-  Forming determinants                ...  Done. Timing        0.000004 s
-
-  ==> Determinants Summary <==
-
-    number of alpha active electrons         =     5
-    number of beta active electrons          =     5
-    root symmetry (zero based)               =     0
-    number of determinants                   =    18
-
-  Diagonalizing Hamiltonian           ...
-
-  ==> Computing Coupling Lists <==
-  --------------------------------
-        α          0.000043 s
-        β          0.000041 s
-        αα         0.000065 s
-        ββ         0.000063 s
-        αβ         0.000158 s
-  --------------------------------
-
-  Davidson-Liu solver algorithm using SigmaVectorSparseList sigma algorithm
-
-  Performing diagonalization of the H matrix
-  Found 12 roots with 2S+1 = 1 *
-  Found 6 roots with 2S+1 = 3  Done. Timing        0.000625 s
-
-  * * * * * * * * * * * * * * * * *
-  *  CI Vectors & Configurations  *
-  * * * * * * * * * * * * * * * * *
-
-  ==> Root No. 0 <==
-
-    2220 2 2         -0.9923113937
-    2202 2 2          0.1077622880
-
-    Total Energy:   -100.038625191057562
-
-
-
-  ==> Permanent Dipole Moments (A1) <==
-
-  Only print nonzero (> 1.0e-5) elements.
-  Permanent dipole moments (a.u.) 0 -> 0:  X:  0.0000  Y:  0.0000  Z: -0.7538  Total:  0.7538
-
-
-  ==> Energy Summary <==
-
-    Multi.(2ms)  Irrep.  No.               Energy
-    ---------------------------------------------
-       1  (  0)    A1     0     -100.038625191058
-    ---------------------------------------------
- Computing  1RDMs (0 Singlet A1 - 0 Singlet A1) ... Done. Timing        0.000091 s
- Computing  2RDMs (0 Singlet A1 - 0 Singlet A1) ... Done. Timing        0.000250 s
-
- CAS took 0.001665 seconds.
-
- FormFockIntermediates took 0.00040931 s.
-
- FormOrbitalGradient took 0.00008877 s.
-
- FormDiagHessian took 0.00000472 s.
-
- Update function takes 0.00051930 s
-    7 0.000045793127    -0.000000552993  -100.038625191058    0.0 s  DIIS ~
-
-  Transform Integrals takes 0.00046067 s.
+  Transform Integrals takes 0.00055143 s.
 
   Performing a CAS with CAS
 
@@ -1503,7 +1316,7 @@ Total time:
     ACTIVE                        [    4     0     1     1 ]
     VIRTUAL                       [    6     1     3     3 ]
   Forming alpha and beta strings      ...  Done. Timing        0.000014 s
-  Forming determinants                ...  Done. Timing        0.000004 s
+  Forming determinants                ...  Done. Timing        0.000005 s
 
   ==> Determinants Summary <==
 
@@ -1516,115 +1329,11 @@ Total time:
 
   ==> Computing Coupling Lists <==
   --------------------------------
-        α          0.000043 s
-        β          0.000040 s
-        αα         0.000063 s
-        ββ         0.000063 s
-        αβ         0.000158 s
-  --------------------------------
-
-  Davidson-Liu solver algorithm using SigmaVectorSparseList sigma algorithm
-
-  Performing diagonalization of the H matrix
-  Found 12 roots with 2S+1 = 1 *
-  Found 6 roots with 2S+1 = 3  Done. Timing        0.000622 s
-
-  * * * * * * * * * * * * * * * * *
-  *  CI Vectors & Configurations  *
-  * * * * * * * * * * * * * * * * *
-
-  ==> Root No. 0 <==
-
-    2220 2 2         -0.9923096387
-    2202 2 2          0.1077854575
-
-    Total Energy:   -100.038625206793768
-
-
-
-  ==> Permanent Dipole Moments (A1) <==
-
-  Only print nonzero (> 1.0e-5) elements.
-  Permanent dipole moments (a.u.) 0 -> 0:  X:  0.0000  Y:  0.0000  Z: -0.7538  Total:  0.7538
-
-
-  ==> Energy Summary <==
-
-    Multi.(2ms)  Irrep.  No.               Energy
-    ---------------------------------------------
-       1  (  0)    A1     0     -100.038625206794
-    ---------------------------------------------
- Computing  1RDMs (0 Singlet A1 - 0 Singlet A1) ... Done. Timing        0.000092 s
- Computing  2RDMs (0 Singlet A1 - 0 Singlet A1) ... Done. Timing        0.000251 s
-
- CAS took 0.001675 seconds.
-
- FormFockIntermediates took 0.00041163 s.
-
- FormOrbitalGradient took 0.00008946 s.
-
- FormDiagHessian took 0.00000471 s.
-
- Update function takes 0.00052287 s
-    8 0.000011836113    -0.000000015736  -100.038625206794    0.0 s  DIIS ~
-
-  Transform Integrals takes 0.00046101 s.
-
-  Performing a CAS with CAS
-
-  ==> Summary of Active Space Solver Input <==
-
-    Irrep.  Multi.(2ms)      N
-    --------------------------
-       A1      1  (  0)      1
-    --------------------------
-    N: number of roots
-    ms: spin z component
-    Total number of roots:   1
-    --------------------------
-
-
-              ---------------------------------------------------
-                Complete Active Space Configuration Interaction
-                                  Chenyang Li
-              ---------------------------------------------------
-
-
-  ==> Input Summary <==
-
-    No. a electrons in active      =     5
-    No. b electrons in active      =     5
-    multiplicity                   =     1
-    spin ms (2 * Sz)               =     0
-
-  ==> Orbital Spaces <==
-
-    TOTAL MO                      [   10     1     4     4 ]
-    FROZEN CORE                   [    0     0     0     0 ]
-    FROZEN VIRTUAL                [    0     0     0     0 ]
-    CORRELATED MO                 [   10     1     4     4 ]
-    CORE                          [    0     0     0     0 ]
-    ACTIVE                        [    4     0     1     1 ]
-    VIRTUAL                       [    6     1     3     3 ]
-  Forming alpha and beta strings      ...  Done. Timing        0.000013 s
-  Forming determinants                ...  Done. Timing        0.000004 s
-
-  ==> Determinants Summary <==
-
-    number of alpha active electrons         =     5
-    number of beta active electrons          =     5
-    root symmetry (zero based)               =     0
-    number of determinants                   =    18
-
-  Diagonalizing Hamiltonian           ...
-
-  ==> Computing Coupling Lists <==
-  --------------------------------
-        α          0.000043 s
-        β          0.000041 s
-        αα         0.000065 s
-        ββ         0.000063 s
-        αβ         0.000184 s
+        α          0.000049 s
+        β          0.000043 s
+        αα         0.000070 s
+        ββ         0.000070 s
+        αβ         0.000167 s
   --------------------------------
 
   Davidson-Liu solver algorithm using SigmaVectorSparseList sigma algorithm
@@ -1639,40 +1348,40 @@ Total time:
 
   ==> Root No. 0 <==
 
-    2220 2 2         -0.9923091543
-    2202 2 2          0.1077839802
+    2220 2 2         -0.9923286020
+    2202 2 2          0.1075039169
 
-    Total Energy:   -100.038625207988034
+    Total Energy:   -100.038624262953647
 
 
 
   ==> Permanent Dipole Moments (A1) <==
 
   Only print nonzero (> 1.0e-5) elements.
-  Permanent dipole moments (a.u.) 0 -> 0:  X:  0.0000  Y:  0.0000  Z: -0.7538  Total:  0.7538
+  Permanent dipole moments (a.u.) 0 -> 0:  X:  0.0000  Y:  0.0000  Z: -0.7541  Total:  0.7541
 
 
   ==> Energy Summary <==
 
     Multi.(2ms)  Irrep.  No.               Energy
     ---------------------------------------------
-       1  (  0)    A1     0     -100.038625207988
+       1  (  0)    A1     0     -100.038624262954
     ---------------------------------------------
- Computing  1RDMs (0 Singlet A1 - 0 Singlet A1) ... Done. Timing        0.000089 s
- Computing  2RDMs (0 Singlet A1 - 0 Singlet A1) ... Done. Timing        0.000250 s
+ Computing  1RDMs (0 Singlet A1 - 0 Singlet A1) ... Done. Timing        0.000096 s
+ Computing  2RDMs (0 Singlet A1 - 0 Singlet A1) ... Done. Timing        0.000266 s
 
- CAS took 0.001730 seconds.
+ CAS took 0.001758 seconds.
 
- FormFockIntermediates took 0.00040256 s.
+ FormFockIntermediates took 0.00031768 s.
 
- FormOrbitalGradient took 0.00009144 s.
+ FormOrbitalGradient took 0.00010144 s.
 
- FormDiagHessian took 0.00000497 s.
+ FormDiagHessian took 0.00000457 s.
 
- Update function takes 0.00051649 s
-    9 0.000003970261    -0.000000001194  -100.038625207988    0.0 s  DIIS ~
+ Update function takes 0.00044082 s
+    6 0.000121917377    -0.000002901438  -100.038624262954    0.0 s  DIIS ~
 
-  Transform Integrals takes 0.00053072 s.
+  Transform Integrals takes 0.00056396 s.
 
   Performing a CAS with CAS
 
@@ -1711,7 +1420,7 @@ Total time:
     ACTIVE                        [    4     0     1     1 ]
     VIRTUAL                       [    6     1     3     3 ]
   Forming alpha and beta strings      ...  Done. Timing        0.000014 s
-  Forming determinants                ...  Done. Timing        0.000004 s
+  Forming determinants                ...  Done. Timing        0.000005 s
 
   ==> Determinants Summary <==
 
@@ -1724,18 +1433,18 @@ Total time:
 
   ==> Computing Coupling Lists <==
   --------------------------------
-        α          0.000045 s
-        β          0.000041 s
-        αα         0.000066 s
-        ββ         0.000064 s
-        αβ         0.000159 s
+        α          0.000048 s
+        β          0.000043 s
+        αα         0.000069 s
+        ββ         0.000068 s
+        αβ         0.000166 s
   --------------------------------
 
   Davidson-Liu solver algorithm using SigmaVectorSparseList sigma algorithm
 
   Performing diagonalization of the H matrix
   Found 12 roots with 2S+1 = 1 *
-  Found 6 roots with 2S+1 = 3  Done. Timing        0.000647 s
+  Found 6 roots with 2S+1 = 3  Done. Timing        0.000726 s
 
   * * * * * * * * * * * * * * * * *
   *  CI Vectors & Configurations  *
@@ -1743,10 +1452,10 @@ Total time:
 
   ==> Root No. 0 <==
 
-    2220 2 2         -0.9923087471
-    2202 2 2          0.1077851376
+    2220 2 2         -0.9923112056
+    2202 2 2          0.1077627179
 
-    Total Energy:   -100.038625208199633
+    Total Energy:   -100.038625191413757
 
 
 
@@ -1760,23 +1469,23 @@ Total time:
 
     Multi.(2ms)  Irrep.  No.               Energy
     ---------------------------------------------
-       1  (  0)    A1     0     -100.038625208200
+       1  (  0)    A1     0     -100.038625191414
     ---------------------------------------------
- Computing  1RDMs (0 Singlet A1 - 0 Singlet A1) ... Done. Timing        0.000090 s
- Computing  2RDMs (0 Singlet A1 - 0 Singlet A1) ... Done. Timing        0.000272 s
+ Computing  1RDMs (0 Singlet A1 - 0 Singlet A1) ... Done. Timing        0.000099 s
+ Computing  2RDMs (0 Singlet A1 - 0 Singlet A1) ... Done. Timing        0.000266 s
 
- CAS took 0.001719 seconds.
+ CAS took 0.001888 seconds.
 
- FormFockIntermediates took 0.00037176 s.
+ FormFockIntermediates took 0.00031899 s.
 
- FormOrbitalGradient took 0.00008788 s.
+ FormOrbitalGradient took 0.00010352 s.
 
- FormDiagHessian took 0.00000483 s.
+ FormDiagHessian took 0.00000492 s.
 
- Update function takes 0.00048069 s
-   10 0.000000797856    -0.000000000212  -100.038625208200    0.0 s  DIIS ~
+ Update function takes 0.00044503 s
+    7 0.000045585446    -0.000000928460  -100.038625191414    0.0 s  DIIS ~
 
-  Transform Integrals takes 0.00044534 s.
+  Transform Integrals takes 0.00056147 s.
 
   Performing a CAS with CAS
 
@@ -1814,8 +1523,8 @@ Total time:
     CORE                          [    0     0     0     0 ]
     ACTIVE                        [    4     0     1     1 ]
     VIRTUAL                       [    6     1     3     3 ]
-  Forming alpha and beta strings      ...  Done. Timing        0.000013 s
-  Forming determinants                ...  Done. Timing        0.000004 s
+  Forming alpha and beta strings      ...  Done. Timing        0.000014 s
+  Forming determinants                ...  Done. Timing        0.000005 s
 
   ==> Determinants Summary <==
 
@@ -1828,18 +1537,18 @@ Total time:
 
   ==> Computing Coupling Lists <==
   --------------------------------
-        α          0.000043 s
-        β          0.000042 s
-        αα         0.000064 s
-        ββ         0.000062 s
-        αβ         0.000157 s
+        α          0.000046 s
+        β          0.000045 s
+        αα         0.000070 s
+        ββ         0.000068 s
+        αβ         0.000201 s
   --------------------------------
 
   Davidson-Liu solver algorithm using SigmaVectorSparseList sigma algorithm
 
   Performing diagonalization of the H matrix
   Found 12 roots with 2S+1 = 1 *
-  Found 6 roots with 2S+1 = 3  Done. Timing        0.000621 s
+  Found 6 roots with 2S+1 = 3  Done. Timing        0.000705 s
 
   * * * * * * * * * * * * * * * * *
   *  CI Vectors & Configurations  *
@@ -1847,10 +1556,10 @@ Total time:
 
   ==> Root No. 0 <==
 
-    2220 2 2         -0.9923086657
-    2202 2 2          0.1077854706
+    2220 2 2         -0.9923098799
+    2202 2 2          0.1077801435
 
-    Total Energy:   -100.038625208209169
+    Total Energy:   -100.038625207188829
 
 
 
@@ -1864,23 +1573,23 @@ Total time:
 
     Multi.(2ms)  Irrep.  No.               Energy
     ---------------------------------------------
-       1  (  0)    A1     0     -100.038625208209
+       1  (  0)    A1     0     -100.038625207189
     ---------------------------------------------
- Computing  1RDMs (0 Singlet A1 - 0 Singlet A1) ... Done. Timing        0.000091 s
- Computing  2RDMs (0 Singlet A1 - 0 Singlet A1) ... Done. Timing        0.000252 s
+ Computing  1RDMs (0 Singlet A1 - 0 Singlet A1) ... Done. Timing        0.000098 s
+ Computing  2RDMs (0 Singlet A1 - 0 Singlet A1) ... Done. Timing        0.000265 s
 
- CAS took 0.001669 seconds.
+ CAS took 0.001767 seconds.
 
- FormFockIntermediates took 0.00037228 s.
+ FormFockIntermediates took 0.00031748 s.
 
- FormOrbitalGradient took 0.00008582 s.
+ FormOrbitalGradient took 0.00009986 s.
 
- FormDiagHessian took 0.00000471 s.
+ FormDiagHessian took 0.00000456 s.
 
- Update function takes 0.00047909 s
-   11 0.000000130827    -0.000000000010  -100.038625208209    0.0 s  DIIS ~
+ Update function takes 0.00043995 s
+    8 0.000008976176    -0.000000015775  -100.038625207189    0.0 s  DIIS ~
 
-  Transform Integrals takes 0.00044605 s.
+  Transform Integrals takes 0.00058674 s.
 
   Performing a CAS with CAS
 
@@ -1918,8 +1627,8 @@ Total time:
     CORE                          [    0     0     0     0 ]
     ACTIVE                        [    4     0     1     1 ]
     VIRTUAL                       [    6     1     3     3 ]
-  Forming alpha and beta strings      ...  Done. Timing        0.000013 s
-  Forming determinants                ...  Done. Timing        0.000004 s
+  Forming alpha and beta strings      ...  Done. Timing        0.000015 s
+  Forming determinants                ...  Done. Timing        0.000005 s
 
   ==> Determinants Summary <==
 
@@ -1932,18 +1641,18 @@ Total time:
 
   ==> Computing Coupling Lists <==
   --------------------------------
-        α          0.000042 s
-        β          0.000040 s
-        αα         0.000064 s
-        ββ         0.000063 s
-        αβ         0.000160 s
+        α          0.000048 s
+        β          0.000046 s
+        αα         0.000075 s
+        ββ         0.000071 s
+        αβ         0.000175 s
   --------------------------------
 
   Davidson-Liu solver algorithm using SigmaVectorSparseList sigma algorithm
 
   Performing diagonalization of the H matrix
   Found 12 roots with 2S+1 = 1 *
-  Found 6 roots with 2S+1 = 3  Done. Timing        0.000623 s
+  Found 6 roots with 2S+1 = 3  Done. Timing        0.000697 s
 
   * * * * * * * * * * * * * * * * *
   *  CI Vectors & Configurations  *
@@ -1951,10 +1660,10 @@ Total time:
 
   ==> Root No. 0 <==
 
-    2220 2 2         -0.9923086552
-    2202 2 2          0.1077854462
+    2220 2 2         -0.9923089314
+    2202 2 2          0.1077857823
 
-    Total Energy:   -100.038625208209453
+    Total Energy:   -100.038625208060722
 
 
 
@@ -1968,23 +1677,23 @@ Total time:
 
     Multi.(2ms)  Irrep.  No.               Energy
     ---------------------------------------------
-       1  (  0)    A1     0     -100.038625208209
+       1  (  0)    A1     0     -100.038625208061
     ---------------------------------------------
- Computing  1RDMs (0 Singlet A1 - 0 Singlet A1) ... Done. Timing        0.000092 s
- Computing  2RDMs (0 Singlet A1 - 0 Singlet A1) ... Done. Timing        0.000252 s
+ Computing  1RDMs (0 Singlet A1 - 0 Singlet A1) ... Done. Timing        0.000099 s
+ Computing  2RDMs (0 Singlet A1 - 0 Singlet A1) ... Done. Timing        0.000267 s
 
- CAS took 0.001658 seconds.
+ CAS took 0.001788 seconds.
 
- FormFockIntermediates took 0.00037459 s.
+ FormFockIntermediates took 0.00032106 s.
 
- FormOrbitalGradient took 0.00008573 s.
+ FormOrbitalGradient took 0.00009888 s.
 
- FormDiagHessian took 0.00000481 s.
+ FormDiagHessian took 0.00000448 s.
 
- Update function takes 0.00048140 s
-   12 0.000000024341    -0.000000000000  -100.038625208209    0.0 s  DIIS ~
+ Update function takes 0.00044272 s
+    9 0.000003050749    -0.000000000872  -100.038625208061    0.0 s  DIIS ~
 
-  Transform Integrals takes 0.00044540 s.
+  Transform Integrals takes 0.00067290 s.
 
   Performing a CAS with CAS
 
@@ -2022,8 +1731,8 @@ Total time:
     CORE                          [    0     0     0     0 ]
     ACTIVE                        [    4     0     1     1 ]
     VIRTUAL                       [    6     1     3     3 ]
-  Forming alpha and beta strings      ...  Done. Timing        0.000013 s
-  Forming determinants                ...  Done. Timing        0.000004 s
+  Forming alpha and beta strings      ...  Done. Timing        0.000015 s
+  Forming determinants                ...  Done. Timing        0.000005 s
 
   ==> Determinants Summary <==
 
@@ -2036,18 +1745,18 @@ Total time:
 
   ==> Computing Coupling Lists <==
   --------------------------------
-        α          0.000042 s
-        β          0.000040 s
-        αα         0.000064 s
-        ββ         0.000062 s
-        αβ         0.000156 s
+        α          0.000050 s
+        β          0.000047 s
+        αα         0.000074 s
+        ββ         0.000070 s
+        αβ         0.000172 s
   --------------------------------
 
   Davidson-Liu solver algorithm using SigmaVectorSparseList sigma algorithm
 
   Performing diagonalization of the H matrix
   Found 12 roots with 2S+1 = 1 *
-  Found 6 roots with 2S+1 = 3  Done. Timing        0.000616 s
+  Found 6 roots with 2S+1 = 3  Done. Timing        0.000696 s
 
   * * * * * * * * * * * * * * * * *
   *  CI Vectors & Configurations  *
@@ -2055,10 +1764,114 @@ Total time:
 
   ==> Root No. 0 <==
 
-    2220 2 2         -0.9923086543
-    2202 2 2          0.1077854531
+    2220 2 2         -0.9923087145
+    2202 2 2          0.1077853446
 
-    Total Energy:   -100.038625208209481
+    Total Energy:   -100.038625208202717
+
+
+
+  ==> Permanent Dipole Moments (A1) <==
+
+  Only print nonzero (> 1.0e-5) elements.
+  Permanent dipole moments (a.u.) 0 -> 0:  X:  0.0000  Y:  0.0000  Z: -0.7538  Total:  0.7538
+
+
+  ==> Energy Summary <==
+
+    Multi.(2ms)  Irrep.  No.               Energy
+    ---------------------------------------------
+       1  (  0)    A1     0     -100.038625208203
+    ---------------------------------------------
+ Computing  1RDMs (0 Singlet A1 - 0 Singlet A1) ... Done. Timing        0.000101 s
+ Computing  2RDMs (0 Singlet A1 - 0 Singlet A1) ... Done. Timing        0.000276 s
+
+ CAS took 0.001826 seconds.
+
+ FormFockIntermediates took 0.00039307 s.
+
+ FormOrbitalGradient took 0.00010609 s.
+
+ FormDiagHessian took 0.00000480 s.
+
+ Update function takes 0.00052518 s
+   10 0.000000667776    -0.000000000142  -100.038625208203    0.0 s  DIIS ~
+
+  Transform Integrals takes 0.00059679 s.
+
+  Performing a CAS with CAS
+
+  ==> Summary of Active Space Solver Input <==
+
+    Irrep.  Multi.(2ms)      N
+    --------------------------
+       A1      1  (  0)      1
+    --------------------------
+    N: number of roots
+    ms: spin z component
+    Total number of roots:   1
+    --------------------------
+
+
+              ---------------------------------------------------
+                Complete Active Space Configuration Interaction
+                                  Chenyang Li
+              ---------------------------------------------------
+
+
+  ==> Input Summary <==
+
+    No. a electrons in active      =     5
+    No. b electrons in active      =     5
+    multiplicity                   =     1
+    spin ms (2 * Sz)               =     0
+
+  ==> Orbital Spaces <==
+
+    TOTAL MO                      [   10     1     4     4 ]
+    FROZEN CORE                   [    0     0     0     0 ]
+    FROZEN VIRTUAL                [    0     0     0     0 ]
+    CORRELATED MO                 [   10     1     4     4 ]
+    CORE                          [    0     0     0     0 ]
+    ACTIVE                        [    4     0     1     1 ]
+    VIRTUAL                       [    6     1     3     3 ]
+  Forming alpha and beta strings      ...  Done. Timing        0.000015 s
+  Forming determinants                ...  Done. Timing        0.000005 s
+
+  ==> Determinants Summary <==
+
+    number of alpha active electrons         =     5
+    number of beta active electrons          =     5
+    root symmetry (zero based)               =     0
+    number of determinants                   =    18
+
+  Diagonalizing Hamiltonian           ...
+
+  ==> Computing Coupling Lists <==
+  --------------------------------
+        α          0.000048 s
+        β          0.000045 s
+        αα         0.000071 s
+        ββ         0.000069 s
+        αβ         0.000170 s
+  --------------------------------
+
+  Davidson-Liu solver algorithm using SigmaVectorSparseList sigma algorithm
+
+  Performing diagonalization of the H matrix
+  Found 12 roots with 2S+1 = 1 *
+  Found 6 roots with 2S+1 = 3  Done. Timing        0.000731 s
+
+  * * * * * * * * * * * * * * * * *
+  *  CI Vectors & Configurations  *
+  * * * * * * * * * * * * * * * * *
+
+  ==> Root No. 0 <==
+
+    2220 2 2         -0.9923086639
+    2202 2 2          0.1077854332
+
+    Total Energy:   -100.038625208209069
 
 
 
@@ -2074,37 +1887,262 @@ Total time:
     ---------------------------------------------
        1  (  0)    A1     0     -100.038625208209
     ---------------------------------------------
- Computing  1RDMs (0 Singlet A1 - 0 Singlet A1) ... Done. Timing        0.000091 s
- Computing  2RDMs (0 Singlet A1 - 0 Singlet A1) ... Done. Timing        0.000249 s
+ Computing  1RDMs (0 Singlet A1 - 0 Singlet A1) ... Done. Timing        0.000099 s
+ Computing  2RDMs (0 Singlet A1 - 0 Singlet A1) ... Done. Timing        0.000264 s
 
- CAS took 0.001658 seconds.
+ CAS took 0.001875 seconds.
 
- FormFockIntermediates took 0.00037409 s.
+ FormFockIntermediates took 0.00032413 s.
 
- FormOrbitalGradient took 0.00008562 s.
+ FormOrbitalGradient took 0.00010445 s.
 
- FormDiagHessian took 0.00000477 s.
+ FormDiagHessian took 0.00000516 s.
 
- Update function takes 0.00048067 s
-    13   0.000000008263   -0.000000000000   -100.038625208209    0.002686 s
+ Update function takes 0.00045201 s
+   11 0.000000110482    -0.000000000006  -100.038625208209    0.0 s  DIIS ~
+
+  Transform Integrals takes 0.00057680 s.
+
+  Performing a CAS with CAS
+
+  ==> Summary of Active Space Solver Input <==
+
+    Irrep.  Multi.(2ms)      N
+    --------------------------
+       A1      1  (  0)      1
+    --------------------------
+    N: number of roots
+    ms: spin z component
+    Total number of roots:   1
+    --------------------------
+
+
+              ---------------------------------------------------
+                Complete Active Space Configuration Interaction
+                                  Chenyang Li
+              ---------------------------------------------------
+
+
+  ==> Input Summary <==
+
+    No. a electrons in active      =     5
+    No. b electrons in active      =     5
+    multiplicity                   =     1
+    spin ms (2 * Sz)               =     0
+
+  ==> Orbital Spaces <==
+
+    TOTAL MO                      [   10     1     4     4 ]
+    FROZEN CORE                   [    0     0     0     0 ]
+    FROZEN VIRTUAL                [    0     0     0     0 ]
+    CORRELATED MO                 [   10     1     4     4 ]
+    CORE                          [    0     0     0     0 ]
+    ACTIVE                        [    4     0     1     1 ]
+    VIRTUAL                       [    6     1     3     3 ]
+  Forming alpha and beta strings      ...  Done. Timing        0.000015 s
+  Forming determinants                ...  Done. Timing        0.000005 s
+
+  ==> Determinants Summary <==
+
+    number of alpha active electrons         =     5
+    number of beta active electrons          =     5
+    root symmetry (zero based)               =     0
+    number of determinants                   =    18
+
+  Diagonalizing Hamiltonian           ...
+
+  ==> Computing Coupling Lists <==
+  --------------------------------
+        α          0.000049 s
+        β          0.000047 s
+        αα         0.000071 s
+        ββ         0.000072 s
+        αβ         0.000166 s
+  --------------------------------
+
+  Davidson-Liu solver algorithm using SigmaVectorSparseList sigma algorithm
+
+  Performing diagonalization of the H matrix
+  Found 12 roots with 2S+1 = 1 *
+  Found 6 roots with 2S+1 = 3  Done. Timing        0.000689 s
+
+  * * * * * * * * * * * * * * * * *
+  *  CI Vectors & Configurations  *
+  * * * * * * * * * * * * * * * * *
+
+  ==> Root No. 0 <==
+
+    2220 2 2         -0.9923086574
+    2202 2 2          0.1077854418
+
+    Total Energy:   -100.038625208209098
+
+
+
+  ==> Permanent Dipole Moments (A1) <==
+
+  Only print nonzero (> 1.0e-5) elements.
+  Permanent dipole moments (a.u.) 0 -> 0:  X:  0.0000  Y:  0.0000  Z: -0.7538  Total:  0.7538
+
+
+  ==> Energy Summary <==
+
+    Multi.(2ms)  Irrep.  No.               Energy
+    ---------------------------------------------
+       1  (  0)    A1     0     -100.038625208209
+    ---------------------------------------------
+ Computing  1RDMs (0 Singlet A1 - 0 Singlet A1) ... Done. Timing        0.000099 s
+ Computing  2RDMs (0 Singlet A1 - 0 Singlet A1) ... Done. Timing        0.000270 s
+
+ CAS took 0.001794 seconds.
+
+ FormFockIntermediates took 0.00034749 s.
+
+ FormOrbitalGradient took 0.00010841 s.
+
+ FormDiagHessian took 0.00000497 s.
+
+ Update function takes 0.00048010 s
+   12 0.000000031412    -0.000000000000  -100.038625208209    0.0 s  DIIS ~
+
+  Transform Integrals takes 0.00061536 s.
+
+  Performing a CAS with CAS
+
+  ==> Summary of Active Space Solver Input <==
+
+    Irrep.  Multi.(2ms)      N
+    --------------------------
+       A1      1  (  0)      1
+    --------------------------
+    N: number of roots
+    ms: spin z component
+    Total number of roots:   1
+    --------------------------
+
+
+              ---------------------------------------------------
+                Complete Active Space Configuration Interaction
+                                  Chenyang Li
+              ---------------------------------------------------
+
+
+  ==> Input Summary <==
+
+    No. a electrons in active      =     5
+    No. b electrons in active      =     5
+    multiplicity                   =     1
+    spin ms (2 * Sz)               =     0
+
+  ==> Orbital Spaces <==
+
+    TOTAL MO                      [   10     1     4     4 ]
+    FROZEN CORE                   [    0     0     0     0 ]
+    FROZEN VIRTUAL                [    0     0     0     0 ]
+    CORRELATED MO                 [   10     1     4     4 ]
+    CORE                          [    0     0     0     0 ]
+    ACTIVE                        [    4     0     1     1 ]
+    VIRTUAL                       [    6     1     3     3 ]
+  Forming alpha and beta strings      ...  Done. Timing        0.000015 s
+  Forming determinants                ...  Done. Timing        0.000005 s
+
+  ==> Determinants Summary <==
+
+    number of alpha active electrons         =     5
+    number of beta active electrons          =     5
+    root symmetry (zero based)               =     0
+    number of determinants                   =    18
+
+  Diagonalizing Hamiltonian           ...
+
+  ==> Computing Coupling Lists <==
+  --------------------------------
+        α          0.000048 s
+        β          0.000047 s
+        αα         0.000072 s
+        ββ         0.000072 s
+        αβ         0.000179 s
+  --------------------------------
+
+  Davidson-Liu solver algorithm using SigmaVectorSparseList sigma algorithm
+
+  Performing diagonalization of the H matrix
+  Found 12 roots with 2S+1 = 1 *
+  Found 6 roots with 2S+1 = 3  Done. Timing        0.000709 s
+
+  * * * * * * * * * * * * * * * * *
+  *  CI Vectors & Configurations  *
+  * * * * * * * * * * * * * * * * *
+
+  ==> Root No. 0 <==
+
+    2220 2 2         -0.9923086537
+    2202 2 2          0.1077854538
+
+    Total Energy:   -100.038625208209297
+
+
+
+  ==> Permanent Dipole Moments (A1) <==
+
+  Only print nonzero (> 1.0e-5) elements.
+  Permanent dipole moments (a.u.) 0 -> 0:  X:  0.0000  Y:  0.0000  Z: -0.7538  Total:  0.7538
+
+
+  ==> Energy Summary <==
+
+    Multi.(2ms)  Irrep.  No.               Energy
+    ---------------------------------------------
+       1  (  0)    A1     0     -100.038625208209
+    ---------------------------------------------
+ Computing  1RDMs (0 Singlet A1 - 0 Singlet A1) ... Done. Timing        0.000101 s
+ Computing  2RDMs (0 Singlet A1 - 0 Singlet A1) ... Done. Timing        0.000278 s
+
+ CAS took 0.001830 seconds.
+
+ FormFockIntermediates took 0.00033298 s.
+
+ FormOrbitalGradient took 0.00010383 s.
+
+ FormDiagHessian took 0.00000499 s.
+
+ Update function takes 0.00046008 s
+    13   0.000000003345   -0.000000000000   -100.038625208209    0.003027 s
 
   A miracle has come to pass: CASSCF iterations have converged.
 
- @ Final CASSCF Energy = -100.038625208209481
+ @ Final CASSCF Energy = -100.038625208209297
 
 
-  ==> Semi-canonicalize CASSCF Orbitals <==
+       -----------------------------------------------------------------
+                            Semi-Canonical Orbitals
+         Chenyang Li, Jeffrey B. Schriber and Francesco A. Evangelista
+       -----------------------------------------------------------------
 
-    Building Fock matrix  ... Done.
-    Diagonalizing block 0 ... Done.
-    Diagonalizing block 1 ... Done.
-    Diagonalizing block 2 ... Done.
+  Took 0.000286 s to build Fock matrix
 
-  Time to prepare integrals:        0.034 seconds
-  Time to run job          :        0.067 seconds
-  Total                    :        0.067 seconds    CASSCF Forte vs Psi4..............................................PASSED
+  ==> Checking Fock Matrix Diagonal Blocks <==
 
-    Psi4 stopped on: Tuesday, 23 June 2020 10:00PM
-    Psi4 wall time for execution: 0:00:00.89
+    Off-Diag. Elements       Max           2-Norm
+    ------------------------------------------------
+    FROZEN_DOCC          0.0000000000   0.0000000000
+    FROZEN_UOCC          0.0000000000   0.0000000000
+    GAS1                 0.0124297784   0.0197407710
+    GAS2                 0.0000000000   0.0000000000
+    GAS3                 0.0000000000   0.0000000000
+    GAS4                 0.0000000000   0.0000000000
+    GAS5                 0.0000000000   0.0000000000
+    GAS6                 0.0000000000   0.0000000000
+    RESTRICTED_DOCC      0.0000000000   0.0000000000
+    RESTRICTED_UOCC      0.2158294916   0.4727729784
+    ------------------------------------------------
+  Timing for semi-canonicalization:                           0.000 s.
+
+  Time to prepare integrals:        0.057 seconds
+  Time to run job          :        0.042 seconds
+  Total                    :        0.042 seconds    CASSCF Forte vs Psi4..................................................................PASSED
+
+    Psi4 stopped on: Monday, 16 November 2020 02:02AM
+    Psi4 wall time for execution: 0:00:00.90
 
 *** Psi4 exiting successfully. Buy a developer a beer!

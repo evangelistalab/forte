@@ -147,7 +147,7 @@ using SpaceInfo = std::pair<psi::Dimension, std::vector<MOInfo>>;
  * absolute_mo("GAS1")            -> [2,8]
  * absolute_mo("GAS2")            -> [3]
  * absolute_mo("ACTIVE")          -> [2,3,8]
- * absolute_mo("RESTRICTED_UOCC") -> [4,9]
+ * absolute_mo("RESTRICTED_UOCC") -> [4,9,13]
  * absolute_mo("FROZEN_UOCC")     -> [11]
  *
  * corr_abs_mo("FROZEN_DOCC")     -> []
