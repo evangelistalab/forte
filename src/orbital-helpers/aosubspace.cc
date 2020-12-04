@@ -187,12 +187,12 @@ psi::SharedMatrix AOSubspace::build_projector(const std::vector<int>& subspace,
                                               std::shared_ptr<psi::BasisSet> min_basis,
                                               std::shared_ptr<psi::BasisSet> large_basis) {
 
-    std::shared_ptr<IntegralFactory> integral_mm(
-        new IntegralFactory(min_basis, min_basis, min_basis, min_basis));
-    std::shared_ptr<IntegralFactory> integral_ml(
-        new IntegralFactory(min_basis, large_basis, large_basis, large_basis));
-    std::shared_ptr<IntegralFactory> integral_ll(
-        new IntegralFactory(large_basis, large_basis, large_basis, large_basis));
+    auto integral_mm =
+        std::make_shared<IntegralFactory>(min_basis, min_basis, min_basis, min_basis);
+    auto integral_ml =
+        std::make_shared<IntegralFactory>(min_basis, large_basis, large_basis, large_basis);
+    auto integral_ll =
+        std::make_shared<IntegralFactory>(large_basis, large_basis, large_basis, large_basis);
 
     int nbf_s = static_cast<int>(subspace.size());
     int nbf_m = min_basis->nbf();
@@ -268,8 +268,8 @@ psi::SharedMatrix AOSubspace::build_projector(const std::vector<int>& subspace,
     std::shared_ptr<PetiteList> plist(new PetiteList(large_basis, integral_ll));
     psi::SharedMatrix AO2SO_ = plist->aotoso();
     psi::Dimension large_basis_so_dim = plist->SO_basisdim();
-    psi::SharedMatrix SXXS_ll_so(
-        new psi::Matrix("SXXS_ll_so", large_basis_so_dim, large_basis_so_dim));
+    auto SXXS_ll_so =
+        std::make_shared<psi::Matrix>("SXXS_ll_so", large_basis_so_dim, large_basis_so_dim);
     SXXS_ll_so->apply_symmetry(SXXS_ll, AO2SO_);
 #if _DEBUG_AOSUBSPACE_
     SXXS_ll_so->print();
