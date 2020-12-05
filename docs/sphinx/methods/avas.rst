@@ -159,7 +159,8 @@ We then use this guess of active orbitals to compute the CASCI energy:::
     Then put :code:`RESTRICTED_DOCC` and :code:`ACTIVE` in the input for
     another round of Forte computation.
 
-For more examples, see :code:`avas-1` to :code:`avas-5` in the :code:`tests/methods` folder.
+For more examples, see :code:`avas-1` to :code:`avas-6` in the :code:`tests/methods` folder.
+In particular, :code:`avas-6` is a practical example on ferrocene.
 
 Options
 ^^^^^^^
