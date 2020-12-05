@@ -114,13 +114,13 @@ psi::SharedMatrix make_aosubspace_projector(psi::SharedWavefunction wfn,
         psi::SharedMatrix CPsC = Ps->clone();
         CPsC->transform(wfn->Ca());
         double print_threshold = 1.0e-4;
-        outfile->Printf("\n  Orbital overlap with ao subspace (> %e):\n", print_threshold);
+        outfile->Printf("\n  Orbital overlap with AO subspace (> %.2e):\n", print_threshold);
         outfile->Printf("    ========================\n");
         outfile->Printf("    Irrep   MO   <phi|P|phi>\n");
         outfile->Printf("    ------------------------\n");
         for (int h = 0; h < CPsC->nirrep(); h++) {
             for (int i = 0; i < CPsC->rowspi(h); i++) {
-                if (std::fabs(CPsC->get(h, i, i)) > print_threshold) {
+                if (CPsC->get(h, i, i) > print_threshold) {
                     outfile->Printf("      %1d   %4d    %.6f\n", h, i + 1, CPsC->get(h, i, i));
                 }
             }
