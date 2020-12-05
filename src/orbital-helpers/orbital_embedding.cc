@@ -156,9 +156,6 @@ void make_avas(psi::SharedWavefunction ref_wfn, std::shared_ptr<ForteOptions> op
         U->identity();
     }
 
-    sdocc->print();
-    suocc->print();
-
     // sort MOs according to eigen values of projected overlaps
     // tuple of <sigma, is_occ, irrep, relative_index>
     std::vector<std::tuple<double, bool, int, int>> sorted_mos;
