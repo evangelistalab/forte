@@ -307,7 +307,7 @@ Which active space solver to be used.
 
 Whether to enable debug printing.
 
-* Type: boolean
+* Type: Boolean
 * Default: False
 
 **CASSCF_FINAL_ORBITAL**
@@ -325,7 +325,7 @@ Expert Options
 
 Whether to enable pure internal (GASn-GASn) orbital rotations.
 
-* Type: boolean
+* Type: Boolean
 * Default: False
 
 **CASSCF_ZERO_ROT**
