@@ -56,6 +56,8 @@ psi::SharedMatrix semicanonicalize_block(psi::SharedWavefunction ref_wfn, psi::S
 
 void make_avas(psi::SharedWavefunction ref_wfn, std::shared_ptr<ForteOptions> options,
                psi::SharedMatrix Ps) {
+    print_method_banner({"Atomic Valence Active Space (AVAS)", "Chenxi Cai and Chenyang Li"});
+
     if (Ps == nullptr) {
         outfile->Printf("Warning: AVAS projector not available!!! Skip AVAS.");
         return;
@@ -174,7 +176,7 @@ void make_avas(psi::SharedWavefunction ref_wfn, std::shared_ptr<ForteOptions> op
             sorted_mos.push_back({suocc->get(h, a), false, h, a + a_offset});
         }
     }
-    outfile->Printf("\n  Sum of eigenvalues: %.8f\n", s_sum);
+    outfile->Printf("\n  Sum of eigenvalues: %.8f", s_sum);
 
     std::sort(sorted_mos.rbegin(), sorted_mos.rend()); // in descending order
 
@@ -323,7 +325,7 @@ void make_avas(psi::SharedWavefunction ref_wfn, std::shared_ptr<ForteOptions> op
         auto offset = doccpi[h] + soccpi[h];
         for (int a = 0, size = Amos_uocc[h].size(); a < size; ++a) {
             auto na = Amos_uocc[h][a];
-            outfile->Printf("\n    %5s %5d  %4d %12.6f", label, na, 2, suocc->get(h, na - offset));
+            outfile->Printf("\n    %5s %5d  %4d %12.6f", label, na, 0, suocc->get(h, na - offset));
         }
     }
     outfile->Printf("\n    ==============================");
@@ -366,6 +368,8 @@ void make_avas(psi::SharedWavefunction ref_wfn, std::shared_ptr<ForteOptions> op
         Ca->set_block(so_slice, slice, Csub_r);
         outfile->Printf(" Done");
     };
+
+    print_h2("Semicanonicalize Subsets of Orbitals");
 
     psi::Slice slice_Idocc(dim_zero, avas_dims["DOCC INACTIVE"]);
     canonicalize_block("INACTIVE DOCC", Imos_docc, slice_Idocc);

@@ -108,7 +108,7 @@ def register_avas_options(options):
                        " (sum of active e.values) / (sum of total e.values)")
 
     options.add_double("AVAS_EVALS_THRESHOLD", 1.0e-6,
-                       "Threshold for an eigenvalue considered as nonzero.")
+                       "Threshold smaller than which is considered as zero for an eigenvalue.")
 
     options.add_int("AVAS_NUM_ACTIVE", 0,
                     "The total number of active orbitals. If not equal to 0,"
@@ -120,7 +120,7 @@ def register_avas_options(options):
                     " threshold based selection.")
 
     options.add_int("AVAS_NUM_ACTIVE_VIR", 0,
-                    "The number of active occupied orbitals."
+                    "The number of active virtual orbitals."
                     " If not equal to 0, it takes priority over"
                     " threshold based selection.")
 
