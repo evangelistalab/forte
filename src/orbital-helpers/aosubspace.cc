@@ -316,7 +316,7 @@ void AOSubspace::parse_subspace() {
 void AOSubspace::parse_subspace_entry(const std::string& s) {
     // The regex to parse the entries
     std::regex re("([a-zA-Z]{1,2})([1-9]+)?-?([1-9]+)?\\(?((?:\\/"
-                  "?[1-9]{1}[SPDF]{1}[a-zA-Z]*)*)\\)?");
+                  "?[1-9]{1}[SPDF]{1}[a-zA-Z1-9]*)*)\\)?");
     std::smatch match;
 
     Element_to_Z etoZ;
