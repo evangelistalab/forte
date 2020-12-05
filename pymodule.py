@@ -378,6 +378,7 @@ def run_forte(name, **kwargs):
     job_type = options.get_str('JOB_TYPE')
 
     if job_type == 'NONE':
+        psi4.core.set_scalar_variable('CURRENT ENERGY', 0.0)
         forte.cleanup()
         return ref_wfn
 
