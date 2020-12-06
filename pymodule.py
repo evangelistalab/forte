@@ -85,8 +85,6 @@ def orbital_projection(ref_wfn, options, mo_space_info):
 
     # Apply the projector to rotate orbitals
     if options.get_bool("AVAS"):
-        forte.print_method_banner(["Atomic Valence Active Space (AVAS)",
-                                   "Chenxi Cai"])
         forte.make_avas(ref_wfn, options, ps)
 
     # Create the fragment(embedding) projector and apply to rotate orbitals
@@ -378,6 +376,7 @@ def run_forte(name, **kwargs):
     job_type = options.get_str('JOB_TYPE')
 
     if job_type == 'NONE':
+        psi4.core.set_scalar_variable('CURRENT ENERGY', 0.0)
         forte.cleanup()
         return ref_wfn
 
