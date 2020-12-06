@@ -163,7 +163,7 @@ void AOSubspace::startup() {
 
     lm_labels_sperical_ = {{"S"},
                            {"PZ", "PX", "PY"},
-                           {"DZ2", "DXZ", "DYZ", "DX2Y2", "DXY"},
+                           {"DZ2", "DXZ", "DYZ", "DX2-Y2", "DXY"},
                            {"FZ3", "FXZ2", "FYZ2", "FZX2-ZY2", "FXYZ", "FX3-3XY2", "F3X2Y-Y3"},
                            {"G1", "G2", "G3", "G4", "G5", "G6", "G7", "G8", "G9"},
                            {"H1", "H2", "H3", "H4", "H5", "H6", "H7", "H8", "H9", "H10", "H11"}};
@@ -316,7 +316,7 @@ void AOSubspace::parse_subspace() {
 void AOSubspace::parse_subspace_entry(const std::string& s) {
     // The regex to parse the entries
     std::regex re("([a-zA-Z]{1,2})([1-9]+)?-?([1-9]+)?\\(?((?:\\/"
-                  "?[1-9]{1}[SPDF]{1}[a-zA-Z1-9]*)*)\\)?");
+                  "?[1-9]{1}[SPDF]{1}[a-zA-Z1-9-]*)*)\\)?");
     std::smatch match;
 
     Element_to_Z etoZ;
