@@ -10,7 +10,7 @@ N 1 1.1
 }
 
 set {
-  basis 3-21g
+  basis cc-pvdz
   reference rohf
   scf_type pk
   e_convergence 10

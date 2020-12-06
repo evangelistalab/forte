@@ -58,7 +58,6 @@ const bool X6_TERM          = true;
 const bool X7_TERM          = true;
 const bool CORRELATION_TERM = true;
 
-
 SharedMatrix DSRG_MRPT2::compute_gradient() {
     // NOTICE: compute the DSRG_MRPT2 gradient 
     print_method_banner({"DSRG-MRPT2 Gradient", "Shuhe Wang"});
