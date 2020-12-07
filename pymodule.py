@@ -98,14 +98,18 @@ def orbital_projection(ref_wfn, options, mo_space_info):
         return mo_space_info
 
 
-def prepare_forte_objects_from_psi4_wfn(options, wfn):
+def prepare_forte_objects_from_psi4_wfn(options, wfn, molecule):
     """
     Take a psi4 wavefunction object and prepare the ForteIntegrals, SCFInfo, and MOSpaceInfo objects
 
     Parameters
     ----------
-    wfn : psi4Wavefunction
+    options : ForteOptions
+        A forte ForteOptions object
+    wfn : psi4 Wavefunction
         A psi4 Wavefunction object
+    molecule : the current active psi4 Molecule
+        A psi4 Molecule object
 
     Returns
     -------
@@ -115,21 +119,21 @@ def prepare_forte_objects_from_psi4_wfn(options, wfn):
 
     # Create the MOSpaceInfo object
     nmopi = wfn.nmopi()
-    point_group = wfn.molecule().point_group().symbol()
+    point_group = molecule.point_group().symbol()
     mo_space_info = forte.make_mo_space_info(nmopi, point_group, options)
 
     # Orthonormalize / Read orbitals
-    ortho_normalize_orbitals(wfn, mo_space_info, options)
+    ortho_normalize_orbitals(wfn, molecule, mo_space_info, options)
 
     # Set DF / MINAO integrals
     if 'DF' in options.get_str('INT_TYPE'):
-        aux_basis = psi4.core.BasisSet.build(wfn.molecule(), 'DF_BASIS_MP2',
+        aux_basis = psi4.core.BasisSet.build(molecule, 'DF_BASIS_MP2',
                                              options.get_str('DF_BASIS_MP2'),
                                              'RIFIT', options.get_str('BASIS'))
         wfn.set_basisset('DF_BASIS_MP2', aux_basis)
 
     if options.get_str('MINAO_BASIS'):
-        minao_basis = psi4.core.BasisSet.build(wfn.molecule(), 'MINAO_BASIS',
+        minao_basis = psi4.core.BasisSet.build(molecule, 'MINAO_BASIS',
                                                options.get_str('MINAO_BASIS'))
         wfn.set_basisset('MINAO_BASIS', minao_basis)
 
@@ -146,7 +150,7 @@ def prepare_forte_objects_from_psi4_wfn(options, wfn):
     return (state_weights_map, mo_space_info, scf_info)
 
 
-def ortho_normalize_orbitals(wfn, mo_space_info, options):
+def ortho_normalize_orbitals(wfn, molecule, mo_space_info, options):
     """ Test orbital orthonormality and do it if not. """
 
     p4print = psi4.core.print_out
@@ -154,9 +158,9 @@ def ortho_normalize_orbitals(wfn, mo_space_info, options):
 
     # empty wave function (just need SO overlap)
     basis = psi4.core.get_global_option('BASIS')
-    wfn0 = psi4.core.Wavefunction.build(wfn.molecule(), basis)
+    wfn0 = psi4.core.Wavefunction.build(molecule, basis)
     if psi4.core.get_global_option("RELATIVISTIC") in ["X2C", "DKH"]:
-        rel_bas = psi4.core.BasisSet.build(wfn.molecule(), "BASIS_RELATIVISTIC",
+        rel_bas = psi4.core.BasisSet.build(molecule, "BASIS_RELATIVISTIC",
                                            options.get_str("BASIS_RELATIVISTIC"),
                                            "DECON", basis,
                                            puream=wfn0.basisset().has_puream())
@@ -370,7 +374,9 @@ def run_forte(name, **kwargs):
             elif options.get_str('REF_TYPE') == 'CASSCF':
                 ref_wfn = psi4.proc.run_detcas('casscf', **kwargs)
 
-        state_weights_map, mo_space_info, scf_info = prepare_forte_objects_from_psi4_wfn(options, ref_wfn)
+        molecule = psi4.core.get_active_molecule()
+        forte_tuple = prepare_forte_objects_from_psi4_wfn(options, ref_wfn, molecule)
+        state_weights_map, mo_space_info, scf_info = forte_tuple
 
     # Run a method
     job_type = options.get_str('JOB_TYPE')
@@ -493,8 +499,9 @@ def gradient_forte(name, **kwargs):
             )
             ref_wfn = psi4.driver.scf_helper(name, **kwargs)
 
-        state_weights_map, mo_space_info, scf_info = prepare_forte_objects_from_psi4_wfn(
-            options, ref_wfn)
+        molecule = ref_wfn.molecule()
+        forte_tuple = prepare_forte_objects_from_psi4_wfn(options, ref_wfn, molecule)
+        state_weights_map, mo_space_info, scf_info = forte_tuple
 
     # Run a method
     job_type = options.get_str('JOB_TYPE')

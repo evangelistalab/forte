@@ -146,7 +146,7 @@ void CASSCF_ORB_GRAD::fill_A_matrix_data(ambit::BlockedTensor A) {
 }
 
 void CASSCF_ORB_GRAD::setup_grad_frozen() {
-    // terminate for high spin
+    // terminate for high spin because ROHF CP-SCF is not implemented
     if (ints_->wfn()->soccpi().sum())
         throw std::runtime_error("MCSCF gradient with frozen orbitals only works for singlet!");
 
