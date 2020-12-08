@@ -31,24 +31,13 @@
 __version__ = '1.0'
 __author__ = 'Forte Developers'
 
-import sys
-
 # Load Python modules
 from .pymodule import *
-
-from .register_forte_options import *
 
 # Load C++ plugin
 from .forte import *
 
-# Create a ForteOptions object (stores all options)
-forte_options = forte.ForteOptions()
+from .options_helpers import reset_forte_options
 
-# Register options defined in Forte in the forte_options object
-register_forte_options(forte_options)
-
-# If we are running psi4, push the options defined in forte_options to psi
-if 'psi4' in sys.modules:
-    psi_options = psi4.core.get_options()
-    psi_options.set_current_module('FORTE')
-    forte_options.push_options_to_psi4(psi_options)
+# Create a fresh ForteOptions object (stores all options)
+forte_options = reset_forte_options()
