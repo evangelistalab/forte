@@ -4,6 +4,9 @@ from .pymodule import *
 from .register_forte_options import *
 
 def reset_forte_options():
+    """
+    Create a new ForteOptions object, set default values, push to Psi4, and return.
+    """
     # Create a freash ForteOptions object
     forte_options = forte.ForteOptions()
 
