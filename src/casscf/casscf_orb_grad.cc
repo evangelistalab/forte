@@ -26,6 +26,8 @@
  * @END LICENSE
  */
 
+#include <ctype.h>
+
 #include "psi4/psi4-dec.h"
 #include "psi4/psifiles.h"
 #include "psi4/libqt/qt.h"
@@ -254,10 +256,10 @@ void CASSCF_ORB_GRAD::nonredundant_pairs() {
     rot_mos_irrep_.clear();
     rot_mos_block_.clear();
 
+    // for printing
     std::map<std::string, std::vector<int>> nrots{{"vc", std::vector<int>(nirrep_, 0)},
                                                   {"va", std::vector<int>(nirrep_, 0)},
-                                                  {"ac", std::vector<int>(nirrep_, 0)},
-                                                  {"aa", std::vector<int>(nirrep_, 0)}};
+                                                  {"ac", std::vector<int>(nirrep_, 0)}};
 
     // if we want to zero an orbital pair
     auto in_zero_rots = [&](int h, size_t i, size_t j) {
@@ -309,6 +311,10 @@ void CASSCF_ORB_GRAD::nonredundant_pairs() {
                     continue;
                 auto g1_in_actv = mo_space_info_->pos_in_space(gas_spaces[g1], "ACTIVE");
 
+                // space name for printing, convert to 1-based GAS
+                std::string space_name = std::to_string(g0 + 1) + std::to_string(g1 + 1);
+                nrots[space_name] = std::vector<int>(nirrep_, 0);
+
                 // loop over indices in GASm
                 for (int u = 0, u_size = g0_in_actv.size(); u < u_size; ++u) {
                     int hu = mos_rel_[mos[g0_in_actv[u]]].first;
@@ -326,7 +332,7 @@ void CASSCF_ORB_GRAD::nonredundant_pairs() {
 
                         rot_mos_irrep_.push_back({hu, nv, nu});
                         rot_mos_block_.push_back({"aa", g1_in_actv[v], g0_in_actv[u]});
-                        nrots["aa"][hu] += 1;
+                        nrots[space_name][hu] += 1;
                     }
                 }
             }
@@ -341,6 +347,10 @@ void CASSCF_ORB_GRAD::nonredundant_pairs() {
             if (mo_space_info_->size(gas_spaces[g]) == 0)
                 continue;
             auto g_in_actv = mo_space_info_->pos_in_space(gas_spaces[g], "ACTIVE");
+
+            // space name for printing, convert to 1-based GAS
+            std::string space_name = std::to_string(g + 1) + std::to_string(g + 1);
+            nrots[space_name] = std::vector<int>(nirrep_, 0);
 
             for (int u = 0, size = g_in_actv.size(); u < size; ++u) {
                 int hu = mos_rel_[mos[g_in_actv[u]]].first;
@@ -357,7 +367,7 @@ void CASSCF_ORB_GRAD::nonredundant_pairs() {
 
                     rot_mos_irrep_.push_back({hu, nv, nu});
                     rot_mos_block_.push_back({"aa", g_in_actv[v], g_in_actv[u]});
-                    nrots["aa"][hu] += 1;
+                    nrots[space_name][hu] += 1;
                 }
             }
         }
@@ -378,8 +388,8 @@ void CASSCF_ORB_GRAD::nonredundant_pairs() {
 
     for (const auto& key_value : nrots) {
         const auto& key = key_value.first;
-        auto block1 = space_map[key.substr(0, 1)];
-        auto block2 = space_map[key.substr(1, 1)];
+        auto block1 = isdigit(key[0]) ? "GAS" + key.substr(0, 1) : space_map[key.substr(0, 1)];
+        auto block2 = isdigit(key[1]) ? "GAS" + key.substr(1, 1) : space_map[key.substr(1, 1)];
         outfile->Printf("\n    %15s / %15s", block1.c_str(), block2.c_str());
 
         const auto& value = key_value.second;
