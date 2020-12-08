@@ -113,14 +113,14 @@ psi::SharedMatrix make_aosubspace_projector(psi::SharedWavefunction wfn,
         // print the overlap of the projector
         psi::SharedMatrix CPsC = Ps->clone();
         CPsC->transform(wfn->Ca());
-        double print_threshold = 1.0e-6;
-        outfile->Printf("\n  Orbital overlap with ao subspace (> %e):\n", print_threshold);
+        double print_threshold = 1.0e-4;
+        outfile->Printf("\n  Orbital overlap with AO subspace (> %.2e):\n", print_threshold);
         outfile->Printf("    ========================\n");
         outfile->Printf("    Irrep   MO   <phi|P|phi>\n");
         outfile->Printf("    ------------------------\n");
         for (int h = 0; h < CPsC->nirrep(); h++) {
             for (int i = 0; i < CPsC->rowspi(h); i++) {
-                if (std::fabs(CPsC->get(h, i, i)) > print_threshold) {
+                if (CPsC->get(h, i, i) > print_threshold) {
                     outfile->Printf("      %1d   %4d    %.6f\n", h, i + 1, CPsC->get(h, i, i));
                 }
             }
@@ -163,7 +163,7 @@ void AOSubspace::startup() {
 
     lm_labels_sperical_ = {{"S"},
                            {"PZ", "PX", "PY"},
-                           {"DZ2", "DXZ", "DYZ", "DX2Y2", "DXY"},
+                           {"DZ2", "DXZ", "DYZ", "DX2-Y2", "DXY"},
                            {"FZ3", "FXZ2", "FYZ2", "FZX2-ZY2", "FXYZ", "FX3-3XY2", "F3X2Y-Y3"},
                            {"G1", "G2", "G3", "G4", "G5", "G6", "G7", "G8", "G9"},
                            {"H1", "H2", "H3", "H4", "H5", "H6", "H7", "H8", "H9", "H10", "H11"}};
@@ -187,12 +187,12 @@ psi::SharedMatrix AOSubspace::build_projector(const std::vector<int>& subspace,
                                               std::shared_ptr<psi::BasisSet> min_basis,
                                               std::shared_ptr<psi::BasisSet> large_basis) {
 
-    std::shared_ptr<IntegralFactory> integral_mm(
-        new IntegralFactory(min_basis, min_basis, min_basis, min_basis));
-    std::shared_ptr<IntegralFactory> integral_ml(
-        new IntegralFactory(min_basis, large_basis, large_basis, large_basis));
-    std::shared_ptr<IntegralFactory> integral_ll(
-        new IntegralFactory(large_basis, large_basis, large_basis, large_basis));
+    auto integral_mm =
+        std::make_shared<IntegralFactory>(min_basis, min_basis, min_basis, min_basis);
+    auto integral_ml =
+        std::make_shared<IntegralFactory>(min_basis, large_basis, large_basis, large_basis);
+    auto integral_ll =
+        std::make_shared<IntegralFactory>(large_basis, large_basis, large_basis, large_basis);
 
     int nbf_s = static_cast<int>(subspace.size());
     int nbf_m = min_basis->nbf();
@@ -268,8 +268,8 @@ psi::SharedMatrix AOSubspace::build_projector(const std::vector<int>& subspace,
     std::shared_ptr<PetiteList> plist(new PetiteList(large_basis, integral_ll));
     psi::SharedMatrix AO2SO_ = plist->aotoso();
     psi::Dimension large_basis_so_dim = plist->SO_basisdim();
-    psi::SharedMatrix SXXS_ll_so(
-        new psi::Matrix("SXXS_ll_so", large_basis_so_dim, large_basis_so_dim));
+    auto SXXS_ll_so =
+        std::make_shared<psi::Matrix>("SXXS_ll_so", large_basis_so_dim, large_basis_so_dim);
     SXXS_ll_so->apply_symmetry(SXXS_ll, AO2SO_);
 #if _DEBUG_AOSUBSPACE_
     SXXS_ll_so->print();
@@ -316,7 +316,7 @@ void AOSubspace::parse_subspace() {
 void AOSubspace::parse_subspace_entry(const std::string& s) {
     // The regex to parse the entries
     std::regex re("([a-zA-Z]{1,2})([1-9]+)?-?([1-9]+)?\\(?((?:\\/"
-                  "?[1-9]{1}[SPDF]{1}[a-zA-Z]*)*)\\)?");
+                  "?[1-9]{1}[SPDF]{1}[a-zA-Z1-9-]*)*)\\)?");
     std::smatch match;
 
     Element_to_Z etoZ;

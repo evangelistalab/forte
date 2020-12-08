@@ -96,26 +96,33 @@ def register_driver_options(options):
 
 def register_avas_options(options):
     options.set_group("AVAS")
+
     options.add_bool("AVAS", False, "Form AVAS orbitals?")
-    options.add_double(
-        "AVAS_SIGMA", 0.98,
-        "Threshold that controls the size of the active space")
-    options.add_int(
-        "AVAS_NUM_ACTIVE", 0, "The total number of active orbitals. "
-        "If not equal to 0, it takes priority over "
-        "threshold based selection.")
-    options.add_int(
-        "AVAS_NUM_ACTIVE_OCC", 0, "The number of active occupied orbitals. "
-        "If not equal to 0, it takes priority over "
-        "threshold based selection.")
-    options.add_int(
-        "AVAS_NUM_ACTIVE_VIR", 0, "The number of active occupied orbitals. "
-        "If not equal to 0, it takes priority over "
-        "threshold based selection.")
-    options.add_bool(
-        "AVAS_DIAGONALIZE", True, "Diagonalize Socc and Svir?"
-        "This option takes priority over "
-        "threshold based selection.")
+
+    options.add_bool("AVAS_DIAGONALIZE", True, "Diagonalize Socc and Svir?")
+
+    options.add_double("AVAS_SIGMA", 0.98,
+                       "Cumulative cutoff to the eigenvalues of the overlap,"
+                       " which controls the size of the active space."
+                       " This value is tested against"
+                       " (sum of active e.values) / (sum of total e.values)")
+
+    options.add_double("AVAS_EVALS_THRESHOLD", 1.0e-6,
+                       "Threshold smaller than which is considered as zero for an eigenvalue.")
+
+    options.add_int("AVAS_NUM_ACTIVE", 0,
+                    "The total number of active orbitals. If not equal to 0,"
+                    " it takes priority over threshold based selection.")
+
+    options.add_int("AVAS_NUM_ACTIVE_OCC", 0,
+                    "The number of active occupied orbitals."
+                    " If not equal to 0, it takes priority over"
+                    " threshold based selection.")
+
+    options.add_int("AVAS_NUM_ACTIVE_VIR", 0,
+                    "The number of active virtual orbitals."
+                    " If not equal to 0, it takes priority over"
+                    " threshold based selection.")
 
 
 def register_cino_options(options):

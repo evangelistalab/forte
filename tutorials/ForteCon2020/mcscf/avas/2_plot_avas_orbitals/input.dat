@@ -1,0 +1,25 @@
+import forte
+memory 2 gb
+
+molecule CuH {
+Cu
+H 1 1.46
+}
+
+set {
+basis               cc-pwcvtz
+scf_type            df
+reference           rhf
+cubeprop_orbitals   [13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31]
+}
+Escf, wfn = energy('scf', return_wfn=True)
+
+set forte {
+job_type            none
+avas                true
+avas_diagonalize    true
+avas_sigma          0.98
+subspace            ["Cu(3dxy)","Cu(3dxz)","Cu(3dyz)","Cu(3dz2)","Cu(3dx2-y2)"]
+}
+Eforte, wfn = energy('forte', ref_wfn=wfn, return_wfn=True)
+cubeprop(wfn)

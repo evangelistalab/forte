@@ -795,14 +795,14 @@ Max macro iterations for MR-DSRG reference relaxation.
 
 Use converged amplitudes from the previous step as initial guesses of the current amplitudes.
 
-* Type: boolean
+* Type: Boolean
 * Default: True
 
 **SEMI_CANONICAL**
 
 Semicanonicalize orbitals after solving the active-space eigenvalue problem.
 
-* Type: boolean
+* Type: Boolean
 * Default: True
 
 **DSRG_HBAR_SEQ**
@@ -811,14 +811,14 @@ Apply the sequential transformation algorithm in evaluating the transformed Hami
 
 .. math:: \bar{H}(s) = e^{-\hat{A}_n(s)} \cdots e^{-\hat{A}_2(s)} e^{-\hat{A}_1(s)} \hat{H} e^{\hat{A}_1(s)} e^{\hat{A}_2(s)} \cdots e^{\hat{A}_n(s)}.
 
-* Type: boolean
+* Type: Boolean
 * Default: False
 
 **DSRG_NIVO**
 
 Apply non-interacting virtual orbital (NIVO) approximation in evaluating the transformed Hamiltonian.
 
-* Type: boolean
+* Type: Boolean
 * Default: False
 
 **DSRG_PT2_H0TH**
@@ -837,7 +837,7 @@ and ``forte.mrdsrg.CODE.t2.bin``, respectively.
 Here, ``CODE`` will be ``adapted`` if using the spin-adapted implementation,
 while ``spin`` if using the spin-integrated code.
 
-* Type: boolean
+* Type: Boolean
 * Default: False
 
 **DSRG_READ_AMPS**
@@ -845,7 +845,7 @@ while ``spin`` if using the spin-integrated code.
 Read amplitudes from the current directory for iterative MRDSRG methods.
 File format and content should match those with ``DSRG_DUMP_AMPS``.
 
-* Type: boolean
+* Type: Boolean
 * Default: False
 
 
