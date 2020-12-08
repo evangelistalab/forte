@@ -155,4 +155,18 @@ std::string StateInfo::str() const {
            ")" + gas_restrictions;
 }
 
+std::size_t StateInfo::hash() const {
+    // here we form a string representation and then call std::hash<std::string> on it.
+    std::string repr = std::to_string(na_);
+    repr += "_" + std::to_string(nb_);
+    repr += "_" + std::to_string(multiplicity_);
+    repr += "_" + std::to_string(twice_ms_);
+    repr += "_" + std::to_string(irrep_);
+    for (size_t i : gas_min_)
+        repr += "_" + std::to_string(i);
+    for (size_t i : gas_max_)
+        repr += "_" + std::to_string(i);
+    return std::hash<std::string>{}(repr);
+}
+
 } // namespace forte
