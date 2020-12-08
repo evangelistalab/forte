@@ -79,6 +79,8 @@ class StateInfo {
 
     /// string representation of this object
     std::string str() const;
+    /// hash for this object
+    std::size_t hash() const;
 
   private:
     // number of alpha electrons (including core, excludes ecp)
