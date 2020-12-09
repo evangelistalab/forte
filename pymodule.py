@@ -374,7 +374,7 @@ def run_forte(name, **kwargs):
             elif options.get_str('REF_TYPE') == 'CASSCF':
                 ref_wfn = psi4.proc.run_detcas('casscf', **kwargs)
 
-        molecule = psi4.core.get_active_molecule()
+        molecule = kwargs.get('molecule', psi4.core.get_active_molecule())
         forte_tuple = prepare_forte_objects_from_psi4_wfn(options, ref_wfn, molecule)
         state_weights_map, mo_space_info, scf_info = forte_tuple
 
