@@ -45,6 +45,7 @@
 
 #include "forte-def.h"
 #include "helpers/blockedtensorfactory.h"
+#include "helpers/helpers.h"
 #include "helpers/printing.h"
 #include "helpers/timer.h"
 #include "diskdf_integrals.h"
@@ -316,7 +317,7 @@ ambit::Tensor DISKDFIntegrals::three_integral_block(const std::vector<size_t>& Q
     }
 
     // take care of frozen orbitals
-    std::vector<size_t> cmotomo; // from correlated MO to full MO
+    std::vector<size_t> cmotomo;                // from correlated MO to full MO
     if (frzcpi_.sum() && aptei_idx_ == ncmo_) { // there are frozen orbitals
         cmotomo = cmotomo_;
     } else {
@@ -497,8 +498,18 @@ void DISKDFIntegrals::gather_integrals() {
     // assume a RHF/UHF reference
     df_ = std::make_shared<psi::DFHelper>(primary, auxiliary);
     size_t mem_sys = psi::Process::environment.get_memory() * 0.9 / sizeof(double);
-    size_t mem = (JK_status_ == JKStatus::initialized) ? mem_sys - JK_->memory_estimate() : mem_sys;
-    df_->set_memory(mem);
+    int64_t mem = mem_sys;
+    if (JK_status_ == JKStatus::initialized) {
+        mem = mem_sys - JK_->memory_estimate();
+        if (mem < 0) {
+            auto xb = to_xb(static_cast<size_t>(-mem), sizeof(double));
+            std::string msg = "Not enough memory! Need at least ";
+            msg += std::to_string(xb.first) + " " + xb.second.c_str() + " more.";
+            outfile->Printf("\n  %s", msg.c_str());
+            throw psi::PSIEXCEPTION(msg);
+        }
+    }
+    df_->set_memory(static_cast<size_t>(mem));
     df_->set_method("DIRECT");
     df_->set_MO_core(false);
     df_->set_nthreads(omp_get_max_threads());
