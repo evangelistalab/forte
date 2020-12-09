@@ -2,8 +2,10 @@ import forte
 
 memory 2 gb
 
-escf = -304.9057795504939463
-eaci = -305.39002965581
+#escf = -304.9057795504939463
+escf = -304.9057795492869332  # psi4@4dde4d8 after PR #1721
+#eaci = -305.39002965581
+eacidsrg = -305.390029654643570  # psi4@4dde4d8 after PR #1721
 
 molecule ene2{
 0 1
@@ -65,8 +67,7 @@ set forte {
 set_num_threads(8)
 
 e, scf_wfn = energy('scf', return_wfn=True)
-
-compare_values(escf,variable("CURRENT ENERGY"), 9, "SCF energy")
+compare_values(escf, variable("CURRENT ENERGY"), 9, "SCF energy")
 
 energy('forte', ref_wfn=scf_wfn)
-compare_values(eaci,variable("CURRENT ENERGY"), 9, "ACI-DSRG-MRPT2 energy")
+compare_values(eacidsrg, variable("CURRENT ENERGY"), 9, "ACI-DSRG-MRPT2 energy")
