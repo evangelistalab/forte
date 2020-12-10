@@ -2,7 +2,7 @@ import forte
 
 refEcas = -108.578990567074172
 refEopt = -108.581904286642313
-refRe    =   2.143040291018850 # in Bohr
+refRe   =    2.143209840738143 # in Bohr
 
 molecule N2p{
 1 2
@@ -16,6 +16,7 @@ reference     rohf
 maxiter       100
 d_convergence 6
 e_convergence 8
+g_convergence gau_verytight
 docc          [2,0,0,0,0,2,1,1]
 socc          [1,0,0,0,0,0,0,0]
 }
@@ -42,5 +43,5 @@ compare_values(refEopt, Eopt, 7, "CASSCF(9e,8o)/cc-pVDZ on N2+ @ Re")
 
 mol = psi4.core.get_active_molecule()
 bond = abs(mol.z(0) - mol.z(1))
-print(wfn.molecule().to_string(dtype='psi4', units='angstrom'))
+print(mol.to_string(dtype='psi4', units='angstrom'))
 compare_values(bond, refRe, 6, "CASSCF(9e,8o)/cc-pVDZ optimized bond length")
