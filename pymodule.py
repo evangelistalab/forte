@@ -138,7 +138,7 @@ def prepare_psi4_ref_wfn(name, options, **kwargs):
     :return: (the processed Psi4 Wavefunction, a Forte MOSpaceInfo object)
 
     Notes:
-        We will always create a new Psi4 Wavefunction (wfn_new).
+        We will create a new Psi4 Wavefunction (wfn_new) if necessary.
 
         1. For an empty ref_wfn, wfn_new will come from Psi4 SCF or MCSCF.
 
