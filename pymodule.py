@@ -178,7 +178,7 @@ def ortho_normalize_orbitals(wfn, molecule, mo_space_info, options):
         p4print(f"\n  Max value of MO overlap: {absmax:.15f}")
         p4print("\n  Perform new SCF at current geometry ...\n")
 
-        wfnSCF = psi4.driver.scf_helper('forte')
+        wfnSCF = psi4.driver.scf_helper('forte', molecule=molecule)
 
         # orthonormalize orbitals
         wfnSCF.Ca().copy(ortho_orbs_forte(wfnSCF, mo_space_info, Ca))
@@ -499,7 +499,7 @@ def gradient_forte(name, **kwargs):
             )
             ref_wfn = psi4.driver.scf_helper(name, **kwargs)
 
-        molecule = ref_wfn.molecule()
+        molecule = kwargs.get('molecule', psi4.core.get_active_molecule())
         forte_tuple = prepare_forte_objects_from_psi4_wfn(options, ref_wfn, molecule)
         state_weights_map, mo_space_info, scf_info = forte_tuple
 
