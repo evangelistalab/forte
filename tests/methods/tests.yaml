@@ -85,6 +85,7 @@ casscf:
    - casscf-6
    - casscf-9
    - casscf-gradient-2
+   - casscf-opt-1
   long:
    - casscf-8
 cd-dsrg-mrpt2:
