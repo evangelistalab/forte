@@ -2,10 +2,8 @@ import forte
 
 memory 2 gb
 
-#escf = -304.9057795504939463
-escf = -304.9057795492869332  # psi4@4dde4d8 after PR #1721
-#eaci = -305.39002965581
-eacidsrg = -305.390029654643570  # psi4@4dde4d8 after PR #1721
+escf = -304.9057795504939463
+eacidsrg = -305.39002965581
 
 molecule ene2{
 0 1
@@ -44,6 +42,7 @@ set {
   d_convergence 10
   r_convergence 10
   reference rhf
+  ints_tolerance 0.0
 }
 
 set forte {
