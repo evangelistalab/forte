@@ -85,6 +85,8 @@ casscf:
    - casscf-6
    - casscf-9
    - casscf-gradient-2
+   - casscf-opt-1
+   - casscf-opt-2
   long:
    - casscf-8
 cd-dsrg-mrpt2:
@@ -160,8 +162,8 @@ dsrg-mrpt2:
    - dsrg-mrpt2-4
    - dsrg-mrpt2-12-localized-actv
    - aci-dsrg-mrpt2-5
-  unused:
    - dsrg-mrpt2-opt-findiff-2
+  unused:
    - dsrg-mrpt2-uno
 dsrg-mrpt3:
   short:

@@ -46,6 +46,7 @@
 
 #include "forte-def.h"
 #include "helpers/blockedtensorfactory.h"
+#include "helpers/helpers.h"
 #include "helpers/printing.h"
 #include "helpers/timer.h"
 #include "helpers/memory.h"
@@ -223,8 +224,18 @@ void DFIntegrals::gather_integrals() {
     // assume a RHF/UHF reference
     auto df = std::make_shared<psi::DFHelper>(primary, auxiliary);
     size_t mem_sys = psi::Process::environment.get_memory() * 0.9 / sizeof(double);
-    size_t mem = (JK_status_ == JKStatus::initialized) ? mem_sys - JK_->memory_estimate() : mem_sys;
-    df->set_memory(mem);
+    int64_t mem = mem_sys;
+    if (JK_status_ == JKStatus::initialized) {
+        mem = mem_sys - JK_->memory_estimate();
+        if (mem < 0) {
+            auto xb = to_xb(static_cast<size_t>(-mem), sizeof(double));
+            std::string msg = "Not enough memory! Need at least ";
+            msg += std::to_string(xb.first) + " " + xb.second.c_str() + " more.";
+            outfile->Printf("\n  %s", msg.c_str());
+            throw psi::PSIEXCEPTION(msg);
+        }
+    }
+    df->set_memory(static_cast<size_t>(mem));
     df->set_nthreads(omp_get_max_threads());
     df->set_print_lvl(1);
     df->initialize();
