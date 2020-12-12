@@ -146,9 +146,19 @@ class RDMs {
 
     // class variables
 
+    /// @return the max RDM level
     size_t max_rdm_level() { return max_rdm_; }
 
+    /// @return true if averaging over spin multiplets
     bool ms_avg() { return ms_avg_; }
+
+    // class functions
+
+    /// @brief Compute max difference between alpha and beta 1-RDM
+    double g1_spin_diff();
+
+    /// @return A new RDMs rotated by the input unitary matrices
+    RDMs rotate(const ambit::Tensor& Ua, const ambit::Tensor& Ub);
 
   protected:
     // ==> Class Data <==
@@ -245,6 +255,11 @@ class RDMs {
 
     /// Was SF_g2_ built?
     bool have_SF_g2_ = false;
+
+    /// Rotate RDMs using the input unitary matrices and unrestricted formalism
+    RDMs rotate_unrestricted(const ambit::Tensor& Ua, const ambit::Tensor& Ub);
+    /// Rotate RDMs using the input unitary matrix assuming average over spin multiplets
+    RDMs rotate_ms_avg(const ambit::Tensor& Ua);
 };
 
 /**

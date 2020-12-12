@@ -26,6 +26,10 @@
  * @END LICENSE
  */
 
+#include "psi4/libpsio/psio.h"
+#include "psi4/libpsio/psio.hpp"
+#include "psi4/libpsi4util/PsiOutStream.h"
+
 #include "helpers/timer.h"
 #include "base_classes/rdms.h"
 #include "integrals/integrals.h"
@@ -57,6 +61,15 @@ RDMs::RDMs(bool ms_avg, ambit::Tensor g1a, ambit::Tensor g2ab)
 
 RDMs::RDMs(bool ms_avg, ambit::Tensor g1a, ambit::Tensor g2ab, ambit::Tensor g3aab)
     : ms_avg_(ms_avg), max_rdm_(3), g1a_(g1a), g2ab_(g2ab), g3aab_(g3aab) {}
+
+double RDMs::g1_spin_diff() {
+    if (max_rdm_ == 0) {
+        throw std::runtime_error("Cannot compute g1a - g1b: RDM level is 0!");
+    }
+    auto gamma = g1a().clone();
+    gamma("pq") -= g1b()("pq");
+    return gamma.norm(0);
+}
 
 ambit::Tensor RDMs::g1b() {
     if (ms_avg_ and (not have_g1b_)) {
@@ -186,12 +199,14 @@ ambit::Tensor RDMs::SFg2() {
 }
 
 ambit::Tensor RDMs::SF_L1() {
-    if (not ms_avg_) {
-        throw std::runtime_error("Must turn on spin averaging.");
-    }
     if (not have_SF_L1_) {
-        SF_L1_ = g1a_.clone();
-        SF_L1_.scale(2.0);
+        if (ms_avg_) {
+            SF_L1_ = g1a_.clone();
+            SF_L1_.scale(2.0);
+        } else {
+            SF_L1_ = g1a_.clone();
+            SF_L1_("pq") += g1b()("pq");
+        }
         have_SF_L1_ = true;
     }
     return SF_L1_;
@@ -342,6 +357,92 @@ void make_cumulant_L3bbb_in_place(const ambit::Tensor& g1b, const ambit::Tensor&
     L3bbb("pqrstu") += g1b("ps") * g1b("qu") * g1b("rt");
     L3bbb("pqrstu") += g1b("pu") * g1b("qt") * g1b("rs");
     L3bbb("pqrstu") += g1b("pt") * g1b("qs") * g1b("ru");
+}
+
+RDMs RDMs::rotate(const ambit::Tensor& Ua, const ambit::Tensor& Ub) {
+    if (ms_avg_) {
+        return rotate_ms_avg(Ua);
+    } else {
+        return rotate_unrestricted(Ua, Ub);
+    }
+}
+
+RDMs RDMs::rotate_ms_avg(const ambit::Tensor& Ua) {
+    psi::outfile->Printf("\n  Rotating RDMs assuming average over spin multiplets ...");
+
+    if (max_rdm_ < 1)
+        return RDMs();
+
+    auto g1T = ambit::Tensor::build(ambit::CoreTensor, "g1aT", g1a_.dims());
+    g1T("pq") = Ua("ap") * g1a_("ab") * Ua("bq");
+    psi::outfile->Printf("\n    Transformed 1 RDM.");
+    if (max_rdm_ == 1) {
+        return RDMs(true, g1T);
+    }
+
+    auto g2T = ambit::Tensor::build(ambit::CoreTensor, "g2abT", g2ab_.dims());
+    g2T("pQrS") = Ua("ap") * Ua("BQ") * g2ab_("aBcD") * Ua("cr") * Ua("DS");
+    psi::outfile->Printf("\n    Transformed 2 RDM.");
+    if (max_rdm_ == 2)
+        return RDMs(true, g1T, g2T);
+
+    auto g3T = ambit::Tensor::build(ambit::CoreTensor, "g3aabT", g3aab_.dims());
+    g3T("pqRstU") =
+        Ua("ap") * Ua("bq") * Ua("CR") * g3aab_("abCijK") * Ua("is") * Ua("jt") * Ua("KU");
+    psi::outfile->Printf("\n    Transformed 3 RDM.");
+    return RDMs(true, g1T, g2T, g3T);
+}
+
+RDMs RDMs::rotate_unrestricted(const ambit::Tensor& Ua, const ambit::Tensor& Ub) {
+    psi::outfile->Printf("\n  Rotating RDMs using spin unrestricted formalism ...");
+
+    if (max_rdm_ < 1)
+        return RDMs();
+
+    // Transform the 1-rdms
+    ambit::Tensor g1aT = ambit::Tensor::build(ambit::CoreTensor, "g1aT", g1a_.dims());
+    ambit::Tensor g1bT = ambit::Tensor::build(ambit::CoreTensor, "g1bT", g1b_.dims());
+
+    g1aT("pq") = Ua("ap") * g1a_("ab") * Ua("bq");
+    g1bT("PQ") = Ub("AP") * g1b_("AB") * Ub("BQ");
+
+    psi::outfile->Printf("\n    Transformed 1 RDMs.");
+    if (max_rdm_ == 1)
+        return RDMs(g1aT, g1bT);
+
+    // Transform the 2-rdms
+    auto g2Taa = ambit::Tensor::build(ambit::CoreTensor, "g2aaT", g2aa_.dims());
+    auto g2Tab = ambit::Tensor::build(ambit::CoreTensor, "g2abT", g2ab_.dims());
+    auto g2Tbb = ambit::Tensor::build(ambit::CoreTensor, "g2bbT", g2bb_.dims());
+
+    g2Taa("pqrs") = Ua("ap") * Ua("bq") * g2aa_("abcd") * Ua("cr") * Ua("ds");
+    g2Tab("pQrS") = Ua("ap") * Ub("BQ") * g2ab_("aBcD") * Ua("cr") * Ub("DS");
+    g2Tbb("PQRS") = Ub("AP") * Ub("BQ") * g2bb_("ABCD") * Ub("CR") * Ub("DS");
+
+    psi::outfile->Printf("\n    Transformed 2 RDMs.");
+    if (max_rdm_ == 2)
+        return RDMs(g1aT, g1bT, g2Taa, g2Tab, g2Tbb);
+
+    // Transform the 3-rdms
+    auto g3Taaa = ambit::Tensor::build(ambit::CoreTensor, "g3aaaT", g3aaa_.dims());
+    auto g3Taab = ambit::Tensor::build(ambit::CoreTensor, "g3aabT", g3aab_.dims());
+    auto g3Tabb = ambit::Tensor::build(ambit::CoreTensor, "g3abbT", g3abb_.dims());
+    auto g3Tbbb = ambit::Tensor::build(ambit::CoreTensor, "g3bbbT", g3bbb_.dims());
+
+    g3Taaa("pqrstu") =
+        Ua("ap") * Ua("bq") * Ua("cr") * g3aaa_("abcijk") * Ua("is") * Ua("jt") * Ua("ku");
+
+    g3Taab("pqRstU") =
+        Ua("ap") * Ua("bq") * Ub("CR") * g3aab_("abCijK") * Ua("is") * Ua("jt") * Ub("KU");
+
+    g3Tabb("pQRsTU") =
+        Ua("ap") * Ub("BQ") * Ub("CR") * g3abb_("aBCiJK") * Ua("is") * Ub("JT") * Ub("KU");
+
+    g3Tbbb("PQRSTU") =
+        Ub("AP") * Ub("BQ") * Ub("CR") * g3bbb_("ABCIJK") * Ub("IS") * Ub("JT") * Ub("KU");
+
+    psi::outfile->Printf("\n    Transformed 3 RDMs.");
+    return RDMs(g1aT, g1bT, g2Taa, g2Tab, g2Tbb, g3Taaa, g3Taab, g3Tabb, g3Tbbb);
 }
 
 double compute_Eref_from_rdms(RDMs& ref, std::shared_ptr<ForteIntegrals> ints,
