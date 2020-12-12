@@ -150,6 +150,7 @@ void export_Determinant(py::module& m) {
         .def("__eq__", [](const Determinant& a, const Determinant& b) { return a == b; })
         .def("__lt__", [](const Determinant& a, const Determinant& b) { return a < b; })
         .def("__hash__", [](const Determinant& a) { return Determinant::Hash()(a); });
+
     py::class_<DeterminantHashVec>(m, "DeterminantHashVec")
         .def(py::init<>())
         .def(py::init<const std::vector<Determinant>&>())

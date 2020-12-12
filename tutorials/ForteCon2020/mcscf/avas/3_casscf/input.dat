@@ -19,13 +19,14 @@ job_type            none
 avas                true
 avas_diagonalize    true
 avas_sigma          0.98
-subspace            ["Cu(3dxy)","Cu(3dxz)","Cu(3dyz)","Cu(3dz2)","Cu(3dx2-y2)"]
+subspace            ["Cu(3d)"]
 }
 Eforte, wfn = energy('forte', ref_wfn=wfn, return_wfn=True)
 
 set forte {
 job_type             mcscf_two_step  # option overwrite!
 avas                 false           # option overwrite!
+subspace             []              # option overwrite!
 int_type             df
 frozen_docc          [0,0,0,0]
 restricted_docc      [6,0,2,2]

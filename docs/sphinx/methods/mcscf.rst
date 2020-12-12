@@ -212,6 +212,33 @@ Here the difference between finite difference and analytic formalism is 4.8E-8,
 which is reasonable as our energy only converges to 1.0E-8.
 Note that only the `total` gradient is available for finite-difference calculations.
 
+The geometry optimization is invoked by ::
+
+    optimize('forte')                                     # Psi4 optimization procedure
+
+    mol = psi4.core.get_active_molecule()                 # grab the optimized geoemtry
+    print(mol.to_string(dtype='psi4', units='angstrom'))  # print geometry to screen
+
+Assuming the initial geometry is close to the equilibrium, we can also pass the MCSCF
+converged orbitals of the initial geometry as an initial orbital guess for subsequent
+geometries along the optimization steps ::
+
+    Ecas, ref_wfn = energy('forte', return_wfn=True)      # energy at initial geometry
+    Eopt = optimize('forte', ref_wfn=ref_wfn)             # Psi4 optimization procedure
+
+    mol = psi4.core.get_active_molecule()                 # grab optimized geometry
+    print(mol.to_string(dtype='psi4', units='angstrom'))  # print geometry to screen
+
+Similarly, we can also optimize geometries using finite difference technique: ::
+
+    Ecas, ref_wfn = energy('forte', return_wfn=True)      # energy at initial geometry
+    Eopt = optimize('forte', ref_wfn=ref_wfn, dertype=0)  # Psi4 optimization procedure
+
+.. warning::
+    After optimization, the input :code:`ref_wfn` no longer holds the data of the
+    initial geometry!
+
+
 Options
 ^^^^^^^
 
