@@ -87,7 +87,7 @@ double forte_old_methods(psi::SharedWavefunction ref_wfn, std::shared_ptr<ForteO
 
         RDMs rdms = ci->compute_average_rdms(state_weights_map, max_rdm_level);
         SemiCanonical semi(mo_space_info, ints, options);
-        semi.semicanonicalize(rdms, max_rdm_level);
+        semi.semicanonicalize(rdms);
 
         MCSRGPT2_MO mcsrgpt2_mo(rdms, options, ints, mo_space_info);
         final_energy = mcsrgpt2_mo.compute_energy();

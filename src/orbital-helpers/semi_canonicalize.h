@@ -59,11 +59,8 @@ class SemiCanonical {
                   std::shared_ptr<ForteOptions> options, bool quiet_banner = false);
 
     /// Transforms integrals and RDMs
-    RDMs semicanonicalize(RDMs& rdms, const int& max_rdm_level = 3, const bool& build_fock = true,
+    RDMs semicanonicalize(RDMs& rdms, const bool& build_fock = true,
                           const bool& transform = true);
-
-    /// Transform all cumulants, rebuild 2-RDMs using 2-cumulants
-    RDMs transform_rdms(ambit::Tensor& Ua, ambit::Tensor& Ub, RDMs& rdms, const int& max_rdm_level);
 
     /// Return the alpha rotation matrix
     psi::SharedMatrix Ua() { return Ua_; }
@@ -77,6 +74,9 @@ class SemiCanonical {
     /// Return the beta rotation matrix in the active space
     ambit::Tensor Ub_t() { return Ub_t_; }
 
+    /// Set if rotating orbitals to natural orbital basis
+    void set_natural_orbital(bool nat_orb) { natural_orb_ = nat_orb; }
+
   private:
     void read_options(std::shared_ptr<ForteOptions> foptions);
 
@@ -86,23 +86,35 @@ class SemiCanonical {
 
     std::shared_ptr<ForteIntegrals> ints_;
 
+    /// Do natural orbitals for active orbitals
+    bool natural_orb_ = false;
+
     /// Mix the frozen and restricted orbitals together
     bool inactive_mix_;
+    /// Mix all GAS orbitals together
+    bool active_mix_;
 
-    // Dimension for all orbitals (number of MOs per irrep)
+    /// Dimension for all orbitals (number of MOs per irrep)
     psi::Dimension nmopi_;
 
-    // Blocks map
+    /// Blocks map
     std::map<std::string, psi::Dimension> mo_dims_;
 
-    // Offset of GAS orbitals within ACTIVE
+    /// Offset of GAS orbitals within ACTIVE
     std::map<std::string, psi::Dimension> actv_offsets_;
 
-    // Number of active MOs
+    /// Number of active MOs
     size_t nact_;
 
-    // Number of irreps
+    /// Number of irreps
     size_t nirrep_;
+
+    /// A copy of the alpha Fock matrix
+    psi::SharedMatrix Fa_;
+    /// A copy of the beta Fock matrix
+    psi::SharedMatrix Fb_;
+    /// Prepare the Fock matrices for diagonalization
+    void prepare_fock(RDMs &rdms);
 
     /// Unitary matrix for alpha orbital rotation
     psi::SharedMatrix Ua_;
@@ -116,14 +128,17 @@ class SemiCanonical {
     /// Set Ua_, Ub_, Ua_t_, and Ub_t_ to identity
     void set_U_to_identity();
 
-    /// Check Fock matrix, return true if semicanonicalized
-    bool check_fock_matrix();
     /// Thresholds for Fock matrix testing
     double threshold_tight_;
     double threshold_loose_;
+    /// Thresholds for 1-RDM spin differences
+    double threshold_1rdm_;
 
     /// If certain Fock blocks need to be diagonalized
     std::map<std::string, bool> checked_results_;
+
+    /// Check Fock matrix, return true if semicanonicalized
+    bool check_fock_matrix();
 
     /// Builds unitary matrices used to diagonalize diagonal blocks of Fock
     void build_transformation_matrices();

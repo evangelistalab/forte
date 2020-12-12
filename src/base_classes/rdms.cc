@@ -62,12 +62,16 @@ RDMs::RDMs(bool ms_avg, ambit::Tensor g1a, ambit::Tensor g2ab)
 RDMs::RDMs(bool ms_avg, ambit::Tensor g1a, ambit::Tensor g2ab, ambit::Tensor g3aab)
     : ms_avg_(ms_avg), max_rdm_(3), g1a_(g1a), g2ab_(g2ab), g3aab_(g3aab) {}
 
-double RDMs::g1_spin_diff() {
+double RDMs::g1_spin_diff() const {
     if (max_rdm_ == 0) {
         throw std::runtime_error("Cannot compute g1a - g1b: RDM level is 0!");
     }
-    auto gamma = g1a().clone();
-    gamma("pq") -= g1b()("pq");
+
+    if (ms_avg_)
+        return 0.0;
+
+    auto gamma = g1a_.clone();
+    gamma("pq") -= g1b_("pq");
     return gamma.norm(0);
 }
 
@@ -362,9 +366,8 @@ void make_cumulant_L3bbb_in_place(const ambit::Tensor& g1b, const ambit::Tensor&
 RDMs RDMs::rotate(const ambit::Tensor& Ua, const ambit::Tensor& Ub) {
     if (ms_avg_) {
         return rotate_ms_avg(Ua);
-    } else {
-        return rotate_unrestricted(Ua, Ub);
     }
+    return rotate_unrestricted(Ua, Ub);
 }
 
 RDMs RDMs::rotate_ms_avg(const ambit::Tensor& Ua) {

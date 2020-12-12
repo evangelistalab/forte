@@ -298,7 +298,7 @@ double MCSCF_2STEP::compute_energy() {
         ints_->set_fock_matrix(F, F);
 
         SemiCanonical semi(mo_space_info_, ints_, options_);
-        semi.semicanonicalize(rdms, 1, false, false);
+        semi.semicanonicalize(rdms, false, false);
 
         cas_grad.canonicalize_final(semi.Ua());
 

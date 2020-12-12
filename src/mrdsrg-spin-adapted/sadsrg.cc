@@ -677,8 +677,9 @@ bool SADSRG::check_semi_orbs() {
     }
 
     auto nactv = actv_mos_.size();
-    for (const std::string& space : mo_space_info_->space_names()) {
-        if (space.find("GAS") == std::string::npos or mo_space_info_->size(space) == 0)
+    auto active_space_names = mo_space_info_->composite_space_names()["ACTIVE"];
+    for (const std::string& space : active_space_names) {
+        if (mo_space_info_->size(space) == 0)
             continue;
 
         auto rel_indices = mo_space_info_->pos_in_space(space, "ACTIVE");

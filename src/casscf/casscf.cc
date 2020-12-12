@@ -316,7 +316,7 @@ double CASSCF::compute_energy() {
         options_->get_str("DERTYPE") == "FIRST") {
 
         SemiCanonical semi(mo_space_info_, ints_, options_);
-        semi.semicanonicalize(cas_ref_, 1, true, false);
+        semi.semicanonicalize(cas_ref_, true, false);
 
         auto U = semi.Ua();
 

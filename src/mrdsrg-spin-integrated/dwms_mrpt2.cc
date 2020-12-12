@@ -378,7 +378,7 @@ DWMS_DSRGPT2::compute_dsrg_pt(std::shared_ptr<MASTER_DSRG>& dsrg_pt, RDMs& rdms,
     // compute dsrg-pt2/3 energy
     if (do_semi_) {
         SemiCanonical semi(mo_space_info_, ints_, foptions_);
-        semi.semicanonicalize(rdms, max_rdm_level_);
+        semi.semicanonicalize(rdms);
         Ua_ = semi.Ua_t();
         Ub_ = semi.Ub_t();
 

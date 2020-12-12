@@ -155,7 +155,7 @@ class RDMs {
     // class functions
 
     /// @brief Compute max difference between alpha and beta 1-RDM
-    double g1_spin_diff();
+    double g1_spin_diff() const;
 
     /// @return A new RDMs rotated by the input unitary matrices
     RDMs rotate(const ambit::Tensor& Ua, const ambit::Tensor& Ub);

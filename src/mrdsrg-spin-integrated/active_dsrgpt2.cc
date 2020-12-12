@@ -390,7 +390,7 @@ double ACTIVE_DSRGPT2::compute_energy() {
             RDMs rdms = fci_mo_->rdms(rootvec, max_cu_level)[0];
 
             // manually rotate the RDMs and integrals
-            semi->transform_rdms(Uas_t[i], Ubs_t[i], rdms, max_cu_level);
+            rdms = rdms.rotate(Uas_t[i], Ubs_t[i]);
             print_h2("Integral Transformation to Semicanonical Basis");
             psi::SharedMatrix Ca = ints_->Ca();
             psi::SharedMatrix Cb = ints_->Cb();

@@ -1005,8 +1005,10 @@ def register_old_options(options):
     #    /*- Semicanonicalize orbitals -*/
     options.add_bool("SEMI_CANONICAL", True,
                      "Semicanonicalize orbitals for each elementary orbital space")
-    options.add_bool("SEMI_CANONICAL_INACTIVE", False,
-                     "Treat frozen and restricted orbitals together when canonicalizing orbitals")
+    options.add_bool("SEMI_CANONICAL_MIX_INACTIVE", False,
+                     "Treat frozen and restricted orbitals together for semi-canonicalization")
+    options.add_bool("SEMI_CANONICAL_MIX_ACTIVE", False,
+                     "Treat all GAS orbitals together for semi-canonicalization")
 
     #    /*- Two-particle density cumulant -*/
     options.add_str("TWOPDC", "MK", ["MK", "ZERO"],
