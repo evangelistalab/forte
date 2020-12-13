@@ -382,9 +382,9 @@ void CASSCF_ORB_GRAD::nonredundant_pairs() {
     print_h2("Independent Orbital Rotations");
     outfile->Printf("\n    %-33s", "ORBITAL SPACES");
     for (int h = 0; h < nirrep_; ++h) {
-        outfile->Printf("  %4s", mo_space_info_->irrep_label(h).c_str());
+        outfile->Printf(" %6s", mo_space_info_->irrep_label(h).c_str());
     }
-    outfile->Printf("\n    %s", std::string(33 + nirrep_ * 6, '-').c_str());
+    outfile->Printf("\n    %s", std::string(33 + nirrep_ * 7, '-').c_str());
 
     for (const auto& key_value : nrots) {
         const auto& key = key_value.first;
@@ -394,10 +394,10 @@ void CASSCF_ORB_GRAD::nonredundant_pairs() {
 
         const auto& value = key_value.second;
         for (int h = 0; h < nirrep_; ++h) {
-            outfile->Printf("  %4zu", value[h]);
+            outfile->Printf(" %6zu", value[h]);
         }
     }
-    outfile->Printf("\n    %s", std::string(33 + nirrep_ * 6, '-').c_str());
+    outfile->Printf("\n    %s", std::string(33 + nirrep_ * 7, '-').c_str());
 }
 
 void CASSCF_ORB_GRAD::init_tensors() {
