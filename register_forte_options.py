@@ -663,7 +663,7 @@ def register_integral_options(options):
 def register_dsrg_options(options):
     options.set_group("DSRG")
 
-    options.add_double("DSRG_S", 1.0e10,
+    options.add_double("DSRG_S", 0.5,
                        "The end value of the integration parameter s")
 
     options.add_double("DSRG_POWER", 2.0,
@@ -710,6 +710,9 @@ def register_dsrg_options(options):
 
     options.add_double("RELAX_E_CONVERGENCE", 1.0e-8,
                        "The energy relaxation convergence criterion")
+
+    options.add_bool("DSRG_DUMP_RELAXED_ENERGIES", False,
+                     "Save energies to a json file for all reference relaxation steps")
 
     options.add_int("TAYLOR_THRESHOLD", 3,
                     "DSRG Taylor expansion threshold for small denominator")

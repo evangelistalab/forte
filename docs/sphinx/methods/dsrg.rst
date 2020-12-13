@@ -216,8 +216,9 @@ To perform a DSRG computation, the user is expected to specify the following key
   Most of our computations in :ref:`dsrg_ref` are performed using 0.5 or 1.0 a.u.
 
   .. caution::
-    By default, :code:`DSRG_S` is set to :math:`10^{10}` a.u.
+    By default, :code:`DSRG_S` is set to :math:`0.5` a.u.
     The user should always set this keyword by hand!
+    Non-perturbative methods may not converge for large values of flow parameter.
 
 * Orbital spaces:
   Here we also specify frozen core orbitals besides core and active orbitals.
@@ -465,7 +466,7 @@ Correlation level of MR-DSRG.
 The value of the flow parameter :math:`s`.
 
 * Type: double
-* Default: 1.0e10
+* Default: 0.5
 
 **DSRG_MAXITER**
 
@@ -790,6 +791,13 @@ Max macro iterations for MR-DSRG reference relaxation.
 
 * Type: integer
 * Default: 15
+
+**DSRG_DUMP_RELAXED_ENERGIES**
+
+Save energies that have been pushed to Psi4 environment for all reference relaxation steps.
+
+* Type: Boolean
+* Default: False
 
 **DSRG_RESTART_AMPS**
 
