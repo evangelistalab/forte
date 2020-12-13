@@ -181,7 +181,7 @@ void SemiCanonical::prepare_fock(RDMs& rdms) {
         auto relative_mos = mo_space_info_->relative_mo("ACTIVE");
 
         auto fill_data = [&](ambit::Tensor t, psi::SharedMatrix m) {
-            t.iterate([&](const std::vector<size_t>& i, double& value) {
+            t.citerate([&](const std::vector<size_t>& i, const double& value) {
                 size_t h0, p0, h1, p1;
                 std::tie(h0, p0) = relative_mos[i[0]];
                 std::tie(h1, p1) = relative_mos[i[1]];
@@ -265,8 +265,6 @@ bool SemiCanonical::check_fock_matrix() {
 void SemiCanonical::build_transformation_matrices() {
     // Diagonalize the diagonal blocks of the Fock matrix
 
-    auto active_space_names = mo_space_info_->composite_space_names()["ACTIVE"];
-
     // set Ua and Ub to identity by default
     set_U_to_identity();
 
@@ -296,7 +294,11 @@ void SemiCanonical::build_transformation_matrices() {
                 // diagonalize this Fock block
                 auto Usub = std::make_shared<psi::Matrix>("U " + name + " " + spin, npi, npi);
                 auto evals = std::make_shared<psi::Vector>("evals" + name + " " + spin, npi);
-                Fsub->diagonalize(Usub, evals);
+                if (natural_orb_ and mo_space_info_->contained_in_space(name, "ACTIVE")) {
+                    Fsub->diagonalize(Usub, evals, descending);
+                } else {
+                    Fsub->diagonalize(Usub, evals, ascending);
+                }
 
                 // fill in Ua or Ub
                 U->set_block(slice, slice, Usub);
@@ -307,33 +309,42 @@ void SemiCanonical::build_transformation_matrices() {
         ints_->fix_orbital_phases(U, is_alpha);
 
         // fill in UData
-        auto& UData = is_alpha ? Ua_t_.data() : Ub_t_.data();
-
-        for (const std::string& name : active_space_names) {
-            auto dim = mo_space_info_->dimension(name);
-            if (dim.sum() == 0)
-                continue;
-
-            auto slice = mo_space_info_->range(name);
-            auto Usub = U->get_block(slice, slice);
-
-            for (size_t h = 0; h < nirrep_; ++h) {
-                int actv_off = actv_offsets_[name][h];
-
-                for (int u = 0; u < dim[h]; ++u) {
-                    int nu = u + actv_off;
-
-                    for (int v = 0; v < dim[h]; ++v) {
-                        UData[nu * nact_ + v + actv_off] = Usub->get(h, u, v);
-                    }
-                }
-            }
-        }
+        auto& Ut = is_alpha ? Ua_t_ : Ub_t_;
+        fill_Uactv(U, Ut);
     }
 
     if (Fa_ == Fb_) {
         Ub_->copy(Ua_);
         Ub_t_.copy(Ua_t_);
+    }
+}
+
+void SemiCanonical::fill_Uactv(psi::SharedMatrix U, ambit::Tensor Ut) {
+    auto actv_names = active_mix_ ? std::vector<std::string>{"ACTIVE"}
+                                  : mo_space_info_->composite_space_names()["ACTIVE"];
+    auto& Ut_data = Ut.data();
+
+    for (const std::string& name : actv_names) {
+        auto size = mo_space_info_->size(name);
+        if (size == 0)
+            continue;
+
+        auto pos = mo_space_info_->pos_in_space(name, "ACTIVE");
+        auto relative_mos = mo_space_info_->relative_mo(name);
+
+        for (size_t p = 0; p < size; ++p) {
+            size_t hp, np;
+            std::tie(hp, np) = relative_mos[p];
+
+            for (size_t q = 0; q < size; ++q) {
+                size_t hq, nq;
+                std::tie(hq, nq) = relative_mos[q];
+                if (hp != hq)
+                    continue;
+
+                Ut_data[pos[p] * nact_ + pos[q]] = U->get(hp, np, nq);
+            }
+        }
     }
 }
 } // namespace forte

@@ -142,6 +142,9 @@ class SemiCanonical {
 
     /// Builds unitary matrices used to diagonalize diagonal blocks of Fock
     void build_transformation_matrices();
+
+    /// Fill ambit::Tensor Ua_t_ (Ub_t_) using psi::SharedMatrix Ua_ (Ub_)
+    void fill_Uactv(psi::SharedMatrix U, ambit::Tensor Ut);
 };
 } // namespace forte
 

@@ -312,10 +312,12 @@ double CASSCF::compute_energy() {
     ints_->wfn()->Ca()->copy(Ca);
 
     // semicanonicalize
-    if (options_->get_str("CASSCF_FINAL_ORBITAL") != "UNSPECIFIED" or
+    auto final_orbital_type = options_->get_str("CASSCF_FINAL_ORBITAL");
+    if (final_orbital_type != "UNSPECIFIED" or
         options_->get_str("DERTYPE") == "FIRST") {
 
         SemiCanonical semi(mo_space_info_, ints_, options_);
+        semi.set_natural_orbital(final_orbital_type == "NATURAL");
         semi.semicanonicalize(cas_ref_, true, false);
 
         auto U = semi.Ua();

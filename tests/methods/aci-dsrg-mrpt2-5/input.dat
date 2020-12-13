@@ -43,6 +43,7 @@ set {
   d_convergence 10
   r_convergence 10
   reference rhf
+  ints_tolerance 0.0
 }
 
 set forte {

@@ -180,7 +180,7 @@ class ProcedureDSRG:
                 self.rdms = self.active_space_solver.compute_average_rdms(self.state_weights_map, self.max_rdm_level)
 
             # - Transform RDMs to the semi-canonical orbitals of last step
-            self.rdms = self.rotate(self.Ua, self.Ub)
+            self.rdms = self.rdms.rotate(self.Ua, self.Ub)
 
             # - Semi-canonicalize RDMs and orbitals
             if self.do_semicanonical:
