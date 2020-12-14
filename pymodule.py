@@ -53,9 +53,9 @@ def run_psi4_ref(ref_type, molecule, print_warning=False, **kwargs):
 
     :return: a Psi4 Wavefunction object from the fresh Psi4 run
     """
-    ref_type = ref_type.upper().strip()
+    ref_type = ref_type.lower().strip()
 
-    if ref_type in ['SCF', 'HF']:
+    if ref_type in ['scf', 'hf', 'rhf', 'rohf', 'uhf']:
         if print_warning:
             msg = ['Forte is using orbitals from a Psi4 SCF reference.',
                    'This is not the best for multireference computations.',
@@ -63,11 +63,11 @@ def run_psi4_ref(ref_type, molecule, print_warning=False, **kwargs):
             msg = '\n  '.join(msg)
             warnings.warn(f"\n  {msg}\n", UserWarning)
 
-        wfn = psi4.driver.scf_helper('SCF', molecule=molecule, **kwargs)
-    elif ref_type in ['CASSCF', 'MCSCF', 'RASSCF']:
+        wfn = psi4.driver.scf_helper('forte', molecule=molecule, **kwargs)
+    elif ref_type in ['casscf', 'rasscf']:
         wfn = psi4.proc.run_detcas(ref_type, molecule=molecule, **kwargs)
     else:
-        raise ValueError(f"Given REF_TYPE {ref_type} not available!")
+        raise ValueError(f"Invalid REF_TYPE: {ref_type.upper()} not available!")
 
     return wfn
 
@@ -95,7 +95,7 @@ def check_MO_overlap(options, molecule, Ca):
 
     if psi4.core.get_global_option("RELATIVISTIC") in ["X2C", "DKH"]:
         basis_rel = options.get_str("BASIS_RELATIVISTIC")
-        puream = wfn_new.basisset().has_puream()
+        puream = wfn.basisset().has_puream()
         rel_bas = psi4.core.BasisSet.build(molecule, "BASIS_RELATIVISTIC",
                                            basis_rel, "DECON", basis,
                                            puream=puream)
