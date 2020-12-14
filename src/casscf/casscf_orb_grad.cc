@@ -196,10 +196,10 @@ void CASSCF_ORB_GRAD::read_options() {
                 throw std::runtime_error("Invalid irrep in CASSCF_ZERO_ROT");
             }
 
-            size_t i1 = py::cast<size_t>(pair[1]) - 1;
-            size_t i2 = py::cast<size_t>(pair[2]) - 1;
+            int i1 = py::cast<int>(pair[1]) - 1;
+            int i2 = py::cast<int>(pair[2]) - 1;
             size_t n = nmopi_[irrep];
-            if (i1 >= n or i1 < 0 or i2 >= n or i2 < 0) {
+            if (static_cast<size_t>(i1) >= n or i1 < 0 or static_cast<size_t>(i2) >= n or i2 < 0) {
                 outfile->Printf("\n  Error: invalid orbital indices in CASSCF_ZERO_ROT.");
                 outfile->Printf("\n  The input orbital indices (start from 1) should not exceed "
                                 "%zu (number of orbitals in irrep %d)",

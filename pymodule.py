@@ -38,7 +38,8 @@ import psi4.driver.p4util as p4util
 from psi4.driver.procrouting import proc_util
 import forte.proc.fcidump
 from forte.proc.dsrg import ProcedureDSRG
-from forte.proc.orthogonalize_orbitals import ortho_orbs_forte
+from forte.proc.orbital_helpers import ortho_orbs_forte, orbital_projection
+from forte.proc.orbital_helpers import read_orbitals, dump_orbitals
 
 
 def forte_driver(state_weights_map, scf_info, options, ints, mo_space_info):
@@ -68,34 +69,6 @@ def forte_driver(state_weights_map, scf_info, options, ints, mo_space_info):
         return_en = average_energy
 
     return return_en
-
-
-def orbital_projection(ref_wfn, options, mo_space_info):
-    r"""Functions that pre-rotate orbitals before calculations;
-    Requires a set of reference orbitals and mo_space_info.
-
-    AVAS: an automatic active space selection and projection;
-    Embedding: simple frozen-orbital embedding with the overlap projector.
-
-    Return a mo_space_info (forte::MOSpaceInfo)
-    """
-
-    # Create the AO subspace projector
-    ps = forte.make_aosubspace_projector(ref_wfn, options)
-
-    # Apply the projector to rotate orbitals
-    if options.get_bool("AVAS"):
-        forte.make_avas(ref_wfn, options, ps)
-
-    # Create the fragment(embedding) projector and apply to rotate orbitals
-    if options.get_bool("EMBEDDING"):
-        forte.print_method_banner(["Frozen-orbital Embedding", "Nan He"])
-        fragment_projector, fragment_nbf = forte.make_fragment_projector(
-            ref_wfn, options)
-        return forte.make_embedding(ref_wfn, options, fragment_projector,
-                                    fragment_nbf, mo_space_info)
-    else:
-        return mo_space_info
 
 
 def prepare_forte_objects_from_psi4_wfn(options, wfn, mo_space_info):
@@ -252,28 +225,6 @@ def prepare_psi4_ref_wfn(name, options, **kwargs):
         wfn_new.set_basisset('MINAO_BASIS', minao_basis)
 
     return wfn_new, mo_space_info
-
-
-def read_orbitals():
-    """ Read orbitals from file. """
-    try:
-        with open('forte_Ca.npy', 'rb') as f:
-            Ca_array = np.load(f, allow_pickle=True)
-        Ca_list = [Ca_array[i] for i in range(len(Ca_array))]  # to list
-        Ca_mat = psi4.core.Matrix.from_array(Ca_list)
-        return Ca_mat
-    except FileNotFoundError:
-        return False
-
-
-def dump_orbitals(wfn):
-    """ Dump orbitals to file. """
-    Ca = wfn.Ca()
-    with open('forte_Ca.npy', 'wb') as f:
-        if wfn.nirrep() == 1:
-            np.save(f, [Ca.to_array()])
-        else:
-            np.save(f, Ca.to_array())
 
 
 def make_state_info_from_fcidump(fcidump, options):

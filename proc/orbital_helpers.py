@@ -1,4 +1,84 @@
+#
+# @BEGIN LICENSE
+#
+# Psi4: an open-source quantum chemistry software package
+#
+# Copyright (c) 2007-2019 The Psi4 Developers.
+#
+# The copyrights for code used from other parties are included in
+# the corresponding files.
+#
+# This file is part of Psi4.
+#
+# Psi4 is free software; you can redistribute it and/or modify
+# it under the terms of the GNU Lesser General Public License as published by
+# the Free Software Foundation, version 3.
+#
+# Psi4 is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Lesser General Public License for more details.
+#
+# You should have received a copy of the GNU Lesser General Public License along
+# with Psi4; if not, write to the Free Software Foundation, Inc.,
+# 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+#
+# @END LICENSE
+#
+
 import psi4
+import forte
+import numpy as np
+
+
+def read_orbitals():
+    """ Read orbitals from file. """
+    try:
+        with open('forte_Ca.npy', 'rb') as f:
+            Ca_array = np.load(f, allow_pickle=True)
+        Ca_list = [Ca_array[i] for i in range(len(Ca_array))]  # to list
+        Ca_mat = psi4.core.Matrix.from_array(Ca_list)
+        return Ca_mat
+    except FileNotFoundError:
+        return False
+
+
+def dump_orbitals(wfn):
+    """ Dump orbitals to file. """
+    Ca = wfn.Ca()
+    with open('forte_Ca.npy', 'wb') as f:
+        if wfn.nirrep() == 1:
+            np.save(f, [Ca.to_array()])
+        else:
+            np.save(f, Ca.to_array())
+
+
+def orbital_projection(ref_wfn, options, mo_space_info):
+    """Functions that pre-rotate orbitals before calculations;
+    Requires a set of reference orbitals and mo_space_info.
+
+    AVAS: an automatic active space selection and projection;
+    Embedding: simple frozen-orbital embedding with the overlap projector.
+
+    Return a Forte MOSpaceInfo object
+    """
+
+    # Create the AO subspace projector
+    ps = forte.make_aosubspace_projector(ref_wfn, options)
+
+    # Apply the projector to rotate orbitals
+    if options.get_bool("AVAS"):
+        forte.make_avas(ref_wfn, options, ps)
+
+    # Create the fragment(embedding) projector and apply to rotate orbitals
+    if options.get_bool("EMBEDDING"):
+        forte.print_method_banner(["Frozen-orbital Embedding", "Nan He"])
+        fragment_projector, fragment_nbf = forte.make_fragment_projector(
+            ref_wfn, options)
+        return forte.make_embedding(ref_wfn, options, fragment_projector,
+                                    fragment_nbf, mo_space_info)
+    else:
+        return mo_space_info
 
 
 def ortho_orbs_forte(wfn, mo_space_info, Cold):
