@@ -33,24 +33,29 @@ import numpy as np
 
 def read_orbitals():
     """ Read orbitals from file. """
+    psi4.core.print_out("\n\n  Forte: Read orbitals from file ...")
     try:
         with open('forte_Ca.npy', 'rb') as f:
             Ca_array = np.load(f, allow_pickle=True)
         Ca_list = [Ca_array[i] for i in range(len(Ca_array))]  # to list
         Ca_mat = psi4.core.Matrix.from_array(Ca_list)
+        psi4.core.print_out(" Done\n")
         return Ca_mat
     except FileNotFoundError:
+        psi4.core.print_out(f" File NOT found!\n")
         return None
 
 
 def dump_orbitals(wfn):
     """ Dump orbitals to file. """
+    psi4.core.print_out("\n\n  Forte: Dump orbitals to file forte_Ca.npy ...")
     Ca = wfn.Ca()
     with open('forte_Ca.npy', 'wb') as f:
         if wfn.nirrep() == 1:
             np.save(f, [Ca.to_array()])
         else:
             np.save(f, Ca.to_array())
+    psi4.core.print_out(" Done\n")
 
 
 def orbital_projection(ref_wfn, options, mo_space_info):

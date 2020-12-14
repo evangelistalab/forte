@@ -101,15 +101,9 @@ def check_MO_overlap(options, molecule, Ca):
                                            puream=puream)
         wfn.set_basisset('BASIS_RELATIVISTIC', rel_bas)
 
-    # test if input Ca has the correct dimension
-    nmopi = ref_wfn.nmopi()
-    if Ca.rowdim() != nmopi or Ca.coldim() != nmopi:
-        raise ValueError("Input orbitals come from a different basis set / molecule!")
-
     # build MO overlap
     mints = wfn.mintshelper()
     S = mints.so_overlap()
-    Ca = ref_wfn.Ca()
     mo_overlap = psi4.core.triplet(Ca, S, Ca, True, False, False)
 
     # test orbital orthonormality
@@ -124,6 +118,190 @@ def check_MO_overlap(options, molecule, Ca):
     else:
         p4print(" Done (OK)")
         return True, wfn
+
+
+def prepare_psi4_ref_wfn(name, options, **kwargs):
+    """
+    Prepare a Psi4 Wavefunction as reference for Forte.
+    :param name: the name of the module associated with Psi4
+    :param options: a ForteOptions object for options
+    :param kwargs: named arguments associated with Psi4
+    :return: (the processed Psi4 Wavefunction, a Forte MOSpaceInfo object)
+
+    Notes:
+        We will create a new Psi4 Wavefunction (wfn_new) if necessary.
+
+        1. For an empty ref_wfn, wfn_new will come from Psi4 SCF or MCSCF.
+
+        2. For a valid ref_wfn, we will test the orbital orthonormality against molecule.
+           If the orbitals from ref_wfn are consistent with the active geometry,
+           wfn_new will simply be a link to ref_wfn.
+           If not, we will rerun a Psi4 SCF and orthogonalize orbitals, where
+           wfn_new comes from this new Psi4 SCF computation.
+    """
+    p4print = psi4.core.print_out
+
+    # grab reference Wavefunction and Molecule from kwargs
+    kwargs = p4util.kwargs_lower(kwargs)
+
+    ref_wfn = kwargs.get('ref_wfn', None)
+
+    molecule = kwargs.pop('molecule', psi4.core.get_active_molecule())
+    point_group = molecule.point_group().symbol()
+
+    # try to read orbitals from file
+    Ca = read_orbitals() if options.get_bool('READ_ORBITALS') else None
+
+    need_orbital_check = True
+
+    if ref_wfn is None:
+        ref_type = options.get_str('REF_TYPE')
+        p4print('\n  No reference wave function provided for Forte.'
+                f' Computing {ref_type} orbitals with Psi4 ...\n')
+
+        # no warning printing for MCSCF
+        job_type = options.get_str('JOB_TYPE')
+        do_mcscf = (job_type in ["CASSCF", "MCSCF_TWO_STEP"] or
+                    options.get_bool("CASSCF_REFERENCE"))
+
+        # run Psi4 SCF or MCSCF
+        ref_wfn = run_psi4_ref(ref_type, molecule, not do_mcscf, **kwargs)
+
+        need_orbital_check = False if Ca is None else True
+    else:
+        Ca = ref_wfn.Ca().clone() if Ca is None else Ca
+
+    # build Forte MOSpaceInfo
+    nmopi = ref_wfn.nmopi()
+    mo_space_info = forte.make_mo_space_info(nmopi, point_group, options)
+
+    # do we need to check orbital orthonormality?
+    if not need_orbital_check:
+        wfn_new = ref_wfn
+    else:
+        # test if input Ca has the correct dimension
+        if Ca.rowdim() != nmopi or Ca.coldim() != nmopi:
+            raise ValueError("Invalid orbitals: different basis set / molecule")
+
+        # check orbital orthonormality
+        ortho, wfn_new = check_MO_overlap(options, molecule, Ca)
+
+        if ortho:
+            wfn_new = ref_wfn
+        else:
+            p4print("\n  Perform new SCF at current geometry ...\n")
+
+            kwargs_copy = {k: v for k, v in kwargs.items() if k != 'ref_wfn'}
+            wfn_new = run_psi4_ref('scf', molecule, False, **kwargs_copy)
+
+            # orthonormalize orbitals
+            wfn_new.Ca().copy(ortho_orbs_forte(wfn_new, mo_space_info, Ca))
+
+            # copy wfn_new to ref_wfn
+            ref_wfn.shallow_copy(wfn_new)
+
+
+
+
+
+
+
+
+
+#    if ref_wfn is None:
+#        ref_type = options.get_str('REF_TYPE')
+
+#        p4print('\n  No reference wave function provided for Forte.'
+#                f' Computing {ref_type} orbitals with Psi4 ...\n')
+
+#        if ref_type == 'SCF':
+#            # no warning printing for MCSCF
+#            job_type = options.get_str('JOB_TYPE')
+#            do_mcscf = (job_type in ["CASSCF", "MCSCF_TWO_STEP"] or
+#                        options.get_bool("CASSCF_REFERENCE"))
+
+#            if not do_mcscf:
+#                msg = ['Forte is using orbitals from a Psi4 SCF reference.',
+#                       'This is not the best for multireference computations.',
+#                       'To use Psi4 CASSCF orbitals, set REF_TYPE to CASSCF.']
+#                msg = '\n  '.join(msg)
+#                warnings.warn(f"\n  {msg}\n", UserWarning)
+
+#            wfn_new = psi4.driver.scf_helper(name, molecule=molecule, **kwargs)
+#        elif ref_type == 'CASSCF':
+#            wfn_new = psi4.proc.run_detcas('casscf', molecule=molecule, **kwargs)
+#        else:
+#            raise ValueError(f"Given REF_TYPE ({ref_type}) not available!")
+
+#        # build Forte MOSpaceInfo
+#        nmopi = wfn_new.nmopi()
+#        mo_space_info = forte.make_mo_space_info(nmopi, point_group, options)
+#    else:
+#        basis = options.get_str('BASIS')
+#        wfn_new = psi4.core.Wavefunction.build(molecule, basis)
+
+#        if psi4.core.get_global_option("RELATIVISTIC") in ["X2C", "DKH"]:
+#            basis_rel = options.get_str("BASIS_RELATIVISTIC")
+#            puream = wfn_new.basisset().has_puream()
+#            rel_bas = psi4.core.BasisSet.build(molecule, "BASIS_RELATIVISTIC",
+#                                               basis_rel, "DECON", basis,
+#                                               puream=puream)
+#            wfn_new.set_basisset('BASIS_RELATIVISTIC', rel_bas)
+
+#        # build Forte MOSpaceInfo
+#        nmopi = ref_wfn.nmopi()
+#        mo_space_info = forte.make_mo_space_info(nmopi, point_group, options)
+
+#        p4print("\n\n  Forte testing orbital orthonormality ...")
+
+#        # build MO overlap
+#        mints = wfn_new.mintshelper()
+#        S = mints.so_overlap()
+#        Ca = ref_wfn.Ca()
+#        mo_overlap = psi4.core.triplet(Ca, S, Ca, True, False, False)
+#        mo_overlap.zero_diagonal()
+#        absmax = mo_overlap.absmax()
+
+#        # test orbital orthonormality
+#        if absmax > 1.0e-8:
+#            p4print("\n\n  Forte Warning: ")
+#            p4print("Orbitals of ref_wfn NOT from current geometry!!!")
+#            p4print(f"\n  Max value of MO overlap: {absmax:.15f}")
+#            p4print("\n  Perform new SCF at current geometry ...\n")
+
+#            kwargs_copy = {k: v for k, v in kwargs.items() if k != 'ref_wfn'}
+#            wfn_new = psi4.driver.scf_helper(name, molecule=molecule, **kwargs_copy)
+
+#            # orthonormalize orbitals
+#            wfn_new.Ca().copy(ortho_orbs_forte(wfn_new, mo_space_info, Ca))
+
+#            # copy wfn_new to ref_wfn
+#            ref_wfn.shallow_copy(wfn_new)
+#        else:
+#            p4print(" Done (OK)\n\n")
+
+#            wfn_new = ref_wfn
+
+#            # read orbitals from file
+#            if options.get_bool('READ_ORBITALS'):
+#                Cold = read_orbitals()
+#                if Cold is not None:
+#                    p4print("\n\n  Forte: Read orbitals from file!\n\n")
+#                    wfn_new.Ca().copy(Cold)
+
+    # set DF and MINAO basis
+    if 'DF' in options.get_str('INT_TYPE'):
+        aux_basis = psi4.core.BasisSet.build(molecule, 'DF_BASIS_MP2',
+                                             options.get_str('DF_BASIS_MP2'),
+                                             'RIFIT', options.get_str('BASIS'))
+        wfn_new.set_basisset('DF_BASIS_MP2', aux_basis)
+
+    if options.get_str('MINAO_BASIS'):
+        minao_basis = psi4.core.BasisSet.build(molecule, 'MINAO_BASIS',
+                                               options.get_str('MINAO_BASIS'))
+        wfn_new.set_basisset('MINAO_BASIS', minao_basis)
+
+    return wfn_new, mo_space_info
 
 
 def forte_driver(state_weights_map, scf_info, options, ints, mo_space_info):
@@ -184,131 +362,6 @@ def prepare_forte_objects_from_psi4_wfn(options, wfn, mo_space_info):
     state_weights_map = forte.make_state_weights_map(options, mo_space_info)
 
     return (state_weights_map, mo_space_info, scf_info)
-
-
-def prepare_psi4_ref_wfn(name, options, **kwargs):
-    """
-    Prepare a Psi4 Wavefunction as reference for Forte.
-    :param name: the name of the module associated with Psi4
-    :param options: a ForteOptions object for options
-    :param kwargs: named arguments associated with Psi4
-    :return: (the processed Psi4 Wavefunction, a Forte MOSpaceInfo object)
-
-    Notes:
-        We will create a new Psi4 Wavefunction (wfn_new) if necessary.
-
-        1. For an empty ref_wfn, wfn_new will come from Psi4 SCF or MCSCF.
-
-        2. For a valid ref_wfn, we will test the orbital orthonormality against molecule.
-           If the orbitals from ref_wfn are consistent with the active geometry,
-           wfn_new will simply be a link to ref_wfn.
-           If not, we will rerun a Psi4 SCF and orthogonalize orbitals, where
-           wfn_new comes from this new Psi4 SCF computation.
-    """
-    p4print = psi4.core.print_out
-
-    # grab reference Wavefunction and Molecule from kwargs
-    kwargs = p4util.kwargs_lower(kwargs)
-
-    ref_wfn = kwargs.get('ref_wfn', None)
-
-    molecule = kwargs.pop('molecule', psi4.core.get_active_molecule())
-    point_group = molecule.point_group().symbol()
-
-    if ref_wfn is None:
-        ref_type = options.get_str('REF_TYPE')
-
-        p4print('\n  No reference wave function provided for Forte.'
-                f' Computing {ref_type} orbitals with Psi4 ...\n')
-
-        if ref_type == 'SCF':
-            # no warning printing for MCSCF
-            job_type = options.get_str('JOB_TYPE')
-            do_mcscf = (job_type in ["CASSCF", "MCSCF_TWO_STEP"] or
-                        options.get_bool("CASSCF_REFERENCE"))
-
-            if not do_mcscf:
-                msg = ['Forte is using orbitals from a Psi4 SCF reference.',
-                       'This is not the best for multireference computations.',
-                       'To use Psi4 CASSCF orbitals, set REF_TYPE to CASSCF.']
-                msg = '\n  '.join(msg)
-                warnings.warn(f"\n  {msg}\n", UserWarning)
-
-            wfn_new = psi4.driver.scf_helper(name, molecule=molecule, **kwargs)
-        elif ref_type == 'CASSCF':
-            wfn_new = psi4.proc.run_detcas('casscf', molecule=molecule, **kwargs)
-        else:
-            raise ValueError(f"Given REF_TYPE ({ref_type}) not available!")
-
-        # build Forte MOSpaceInfo
-        nmopi = wfn_new.nmopi()
-        mo_space_info = forte.make_mo_space_info(nmopi, point_group, options)
-    else:
-        basis = options.get_str('BASIS')
-        wfn_new = psi4.core.Wavefunction.build(molecule, basis)
-
-        if psi4.core.get_global_option("RELATIVISTIC") in ["X2C", "DKH"]:
-            basis_rel = options.get_str("BASIS_RELATIVISTIC")
-            puream = wfn_new.basisset().has_puream()
-            rel_bas = psi4.core.BasisSet.build(molecule, "BASIS_RELATIVISTIC",
-                                               basis_rel, "DECON", basis,
-                                               puream=puream)
-            wfn_new.set_basisset('BASIS_RELATIVISTIC', rel_bas)
-
-        # build Forte MOSpaceInfo
-        nmopi = ref_wfn.nmopi()
-        mo_space_info = forte.make_mo_space_info(nmopi, point_group, options)
-
-        p4print("\n\n  Forte testing orbital orthonormality ...")
-
-        # build MO overlap
-        mints = wfn_new.mintshelper()
-        S = mints.so_overlap()
-        Ca = ref_wfn.Ca()
-        mo_overlap = psi4.core.triplet(Ca, S, Ca, True, False, False)
-        mo_overlap.zero_diagonal()
-        absmax = mo_overlap.absmax()
-
-        # test orbital orthonormality
-        if absmax > 1.0e-8:
-            p4print("\n\n  Forte Warning: ")
-            p4print("Orbitals of ref_wfn NOT from current geometry!!!")
-            p4print(f"\n  Max value of MO overlap: {absmax:.15f}")
-            p4print("\n  Perform new SCF at current geometry ...\n")
-
-            kwargs_copy = {k: v for k, v in kwargs.items() if k != 'ref_wfn'}
-            wfn_new = psi4.driver.scf_helper(name, molecule=molecule, **kwargs_copy)
-
-            # orthonormalize orbitals
-            wfn_new.Ca().copy(ortho_orbs_forte(wfn_new, mo_space_info, Ca))
-
-            # copy wfn_new to ref_wfn
-            ref_wfn.shallow_copy(wfn_new)
-        else:
-            p4print(" Done (OK)\n\n")
-
-            wfn_new = ref_wfn
-
-            # read orbitals from file
-            if options.get_bool('READ_ORBITALS'):
-                Cold = read_orbitals()
-                if Cold is not None:
-                    p4print("\n\n  Forte: Read orbitals from file!\n\n")
-                    wfn_new.Ca().copy(Cold)
-
-    # set DF and MINAO basis
-    if 'DF' in options.get_str('INT_TYPE'):
-        aux_basis = psi4.core.BasisSet.build(molecule, 'DF_BASIS_MP2',
-                                             options.get_str('DF_BASIS_MP2'),
-                                             'RIFIT', options.get_str('BASIS'))
-        wfn_new.set_basisset('DF_BASIS_MP2', aux_basis)
-
-    if options.get_str('MINAO_BASIS'):
-        minao_basis = psi4.core.BasisSet.build(molecule, 'MINAO_BASIS',
-                                               options.get_str('MINAO_BASIS'))
-        wfn_new.set_basisset('MINAO_BASIS', minao_basis)
-
-    return wfn_new, mo_space_info
 
 
 def make_state_info_from_fcidump(fcidump, options):
@@ -462,20 +515,8 @@ def prepare_forte_objects(options, name, **kwargs):
         state_weights_map, mo_space_info, scf_info, fcidump = forte_objects
         ref_wfn = None
     else:
-        psi4.core.print_out('\n  Preparing forte objects from a Psi4 Wavefunction object\n')
-
-        # need a set of orbital coefficients to test orbital orthonormality
-        ref_wfn = kwargs.get('ref_wfn', None)
-        Ca = None if ref_wfn is None else ref_wfn.Ca().clone()
-
-        # try to read orbitals from file
-        if options.get_bool('READ_ORBITALS'):
-            psi4.core.print_out("\n\n  Forte: Read orbitals from file ...")
-            Ca = read_orbitals()
-            msg = "File NOT found!" if Ca is None else " Done"
-            psi4.core.print_out(f" {msg}\n\n")
-
-#        ref_wfn, mo_space_info = prepare_psi4_ref_wfn(lowername, options, **kwargs)
+        psi4.core.print_out('\n\n  Preparing forte objects from a Psi4 Wavefunction object')
+        ref_wfn, mo_space_info = prepare_psi4_ref_wfn(lowername, options, **kwargs)
         forte_objects = prepare_forte_objects_from_psi4_wfn(options, ref_wfn, mo_space_info)
         state_weights_map, mo_space_info, scf_info = forte_objects
         fcidump = None
