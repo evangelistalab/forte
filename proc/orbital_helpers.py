@@ -40,7 +40,7 @@ def read_orbitals():
         Ca_mat = psi4.core.Matrix.from_array(Ca_list)
         return Ca_mat
     except FileNotFoundError:
-        return False
+        return None
 
 
 def dump_orbitals(wfn):
@@ -54,7 +54,8 @@ def dump_orbitals(wfn):
 
 
 def orbital_projection(ref_wfn, options, mo_space_info):
-    """Functions that pre-rotate orbitals before calculations;
+    """
+    Functions that pre-rotate orbitals before calculations;
     Requires a set of reference orbitals and mo_space_info.
 
     AVAS: an automatic active space selection and projection;
