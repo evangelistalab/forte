@@ -152,6 +152,7 @@ def prepare_psi4_ref_wfn(options, **kwargs):
     Ca = read_orbitals() if options.get_bool('READ_ORBITALS') else None
 
     need_orbital_check = True
+    fresh_ref_wfn = True if ref_wfn is None else False
 
     if ref_wfn is None:
         ref_type = options.get_str('REF_TYPE')
@@ -168,6 +169,7 @@ def prepare_psi4_ref_wfn(options, **kwargs):
 
         need_orbital_check = False if Ca is None else True
     else:
+        # Ca from file has higher priority than that of ref_wfn
         Ca = ref_wfn.Ca().clone() if Ca is None else Ca
 
     # build Forte MOSpaceInfo
@@ -188,16 +190,20 @@ def prepare_psi4_ref_wfn(options, **kwargs):
         if ortho:
             wfn_new = ref_wfn
         else:
-            p4print("\n  Perform new SCF at current geometry ...\n")
+            if fresh_ref_wfn:
+                wfn_new = ref_wfn
+                wfn_new.Ca().copy(ortho_orbs_forte(wfn_new, mo_space_info, Ca))
+            else:
+                p4print("\n  Perform new SCF at current geometry ...\n")
 
-            kwargs_copy = {k: v for k, v in kwargs.items() if k != 'ref_wfn'}
-            wfn_new = run_psi4_ref('scf', molecule, False, **kwargs_copy)
+                kwargs_copy = {k: v for k, v in kwargs.items() if k != 'ref_wfn'}
+                wfn_new = run_psi4_ref('scf', molecule, False, **kwargs_copy)
 
-            # orthonormalize orbitals
-            wfn_new.Ca().copy(ortho_orbs_forte(wfn_new, mo_space_info, Ca))
+                # orthonormalize orbitals
+                wfn_new.Ca().copy(ortho_orbs_forte(wfn_new, mo_space_info, Ca))
 
-            # copy wfn_new to ref_wfn
-            ref_wfn.shallow_copy(wfn_new)
+                # copy wfn_new to ref_wfn
+                ref_wfn.shallow_copy(wfn_new)
 
     # set DF and MINAO basis
     if 'DF' in options.get_str('INT_TYPE'):
