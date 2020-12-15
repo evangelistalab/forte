@@ -557,8 +557,8 @@ def gradient_forte(name, **kwargs):
     # Run a method
     job_type = options.get_str('JOB_TYPE')
 
-    if job_type != 'CASSCF' and job_type != "MCSCF_TWO_STEP":
-        raise Exception('Analytic energy gradient ONLY implemented for MCSCF')
+    if job_type not in {"CASSCF", "MCSCF_TWO_STEP"}:
+        raise Exception('Analytic energy gradients are only implemented for job_types CASSCF and MCSCF_TWO_STEP.')
 
     # Prepare Forte objects: state_weights_map, mo_space_info, scf_info
     forte_objects = prepare_forte_objects(options, name, **kwargs)
