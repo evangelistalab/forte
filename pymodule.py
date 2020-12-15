@@ -86,9 +86,7 @@ def check_MO_overlap(options, molecule, Ca):
     :return: a tuple of (S_MO == I, a new Psi4 Wavefunction object)
     """
     p4print = psi4.core.print_out
-
-    p4print("\n\n  ")
-    p4print("Checking orbital orthonormality against current geometry ...")
+    p4print("\n\n")
 
     basis = options.get_str('BASIS')
     wfn = psi4.core.Wavefunction.build(molecule, basis)
@@ -100,6 +98,8 @@ def check_MO_overlap(options, molecule, Ca):
                                            basis_rel, "DECON", basis,
                                            puream=puream)
         wfn.set_basisset('BASIS_RELATIVISTIC', rel_bas)
+
+    p4print("\n  Checking orbital orthonormality against current geometry ...")
 
     # build MO overlap
     mints = wfn.mintshelper()
@@ -113,10 +113,10 @@ def check_MO_overlap(options, molecule, Ca):
     if absmax > 1.0e-8:
         p4print("\n\n  Forte Warning: ")
         p4print("Input orbitals are NOT from the current geometry!")
-        p4print(f"\n  Max value of MO overlap: {absmax:.15f}")
+        p4print(f"\n  Max value of MO overlap: {absmax:.15f}\n")
         return False, wfn
     else:
-        p4print(" Done (OK)")
+        p4print(" Done (OK)\n\n")
         return True, wfn
 
 
@@ -157,7 +157,7 @@ def prepare_psi4_ref_wfn(options, **kwargs):
     if ref_wfn is None:
         ref_type = options.get_str('REF_TYPE')
         p4print('\n  No reference wave function provided for Forte.'
-                f' Computing {ref_type} orbitals with Psi4 ...\n')
+                f' Computing {ref_type} orbitals using Psi4 ...\n')
 
         # no warning printing for MCSCF
         job_type = options.get_str('JOB_TYPE')
@@ -189,6 +189,7 @@ def prepare_psi4_ref_wfn(options, **kwargs):
 
         if ortho:
             wfn_new = ref_wfn
+            wfn_new.Ca().copy(Ca)
         else:
             if fresh_ref_wfn:
                 wfn_new = ref_wfn

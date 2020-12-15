@@ -239,8 +239,9 @@ class ProcedureDSRG:
         psi4.core.set_scalar_variable("CURRENT ENERGY", e_dsrg)
 
         # dump reference relaxation energies to json file
-        with open('dsrg_relaxed_energies.json', 'w') as w:
-            json.dump(self.energies_environment, w, sort_keys=True, indent=4)
+        if self.save_relax_energies:
+            with open('dsrg_relaxed_energies.json', 'w') as w:
+                json.dump(self.energies_environment, w, sort_keys=True, indent=4)
 
         return e_dsrg if len(self.energies) == 0 else e_relax
 
