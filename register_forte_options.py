@@ -91,6 +91,7 @@ def register_driver_options(options):
     options.add_int("PRINT", 1, "Set the print level.")
 
     options.add_bool("READ_ORBITALS", False, "Read orbitals from file if true")
+
     options.add_bool("DUMP_ORBITALS", False, "Save orbitals to file if true")
 
 
