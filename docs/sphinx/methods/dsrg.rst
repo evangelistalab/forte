@@ -794,7 +794,9 @@ Max macro iterations for MR-DSRG reference relaxation.
 
 **DSRG_DUMP_RELAXED_ENERGIES**
 
-Save energies that have been pushed to Psi4 environment for all reference relaxation steps.
+Dump the energies after each reference relaxation step to JSON.
+The energies include all computed states and the averaged DSRG "Fixed"
+and "Relaxed" energies for every reference relaxation step.
 
 * Type: Boolean
 * Default: False
@@ -1332,6 +1334,26 @@ At the end, we print the energy summary of the states of interest. ::
        1      A1     0      -106.990992362637
        1      A1     1      -106.981903302649
     -----------------------------------------
+
+.. tip::
+  It is sometimes cumbersome to grab the energies of all the computed states from
+  the output file, especially when multiple reference relaxation steps are performed.
+  Here, one could use the keyword **DSRG_DUMP_RELAXED_ENERGIES** where a JSON file
+  :code:`dsrg_relaxed_energies.json` is created.
+  In the above example, the file will read ::
+
+      {
+          "0": {
+              "ENERGY ROOT 0 1A1": -106.7725738559195,
+              "ENERGY ROOT 1 1A1": -106.7357981445238
+          },
+          "1": {
+              "DSRG FIXED": -106.98580610782275,
+              "DSRG RELAXED": -106.98644783264328,
+              "ENERGY ROOT 0 1A1": -106.99099236263731,
+              "ENERGY ROOT 1 1A1": -106.98190330264923
+          }
+      }
 
 The printing for SA-DSRG-PT2c (set :code:`DSRG_MULTI_STATE` to :code:`SA_SUB`) is slightly different from above.
 After the DSRG-PT2 computation, we build the effective Hamiltonian using the original CASCI states. ::
