@@ -510,8 +510,6 @@ void DISKDFIntegrals::gather_integrals() {
         }
     }
     df_->set_memory(static_cast<size_t>(mem));
-    //    df_->set_method("DIRECT");
-    //    df_->set_AO_core(false);
     df_->set_MO_core(false);
     df_->set_nthreads(omp_get_max_threads());
     df_->set_print_lvl(1);
