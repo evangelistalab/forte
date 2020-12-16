@@ -712,7 +712,7 @@ def register_dsrg_options(options):
                        "The energy relaxation convergence criterion")
 
     options.add_bool("DSRG_DUMP_RELAXED_ENERGIES", False,
-                     "Save energies to a json file for all reference relaxation steps")
+                     "Dump the energies after each reference relaxation step to JSON.")
 
     options.add_int("TAYLOR_THRESHOLD", 3,
                     "DSRG Taylor expansion threshold for small denominator")
