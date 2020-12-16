@@ -664,8 +664,7 @@ def register_integral_options(options):
 def register_dsrg_options(options):
     options.set_group("DSRG")
 
-    options.add_double("DSRG_S", 0.5,
-                       "The end value of the integration parameter s")
+    options.add_double("DSRG_S", 0.5, "The value of the DSRG flow parameter s")
 
     options.add_double("DSRG_POWER", 2.0,
                        "The power of the parameter s in the regularizer")
