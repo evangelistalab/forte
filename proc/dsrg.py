@@ -109,7 +109,7 @@ class ProcedureDSRG:
         self.Heff_implemented = False
         self.converged = False
         self.energies = []  # energies along the relaxation steps
-        self.energies_environment = {}  # energies pushed to Psi4 environment
+        self.energies_environment = {}  # energies pushed to Psi4 environment globals
 
         # Compute RDMs from initial ActiveSpaceSolver
         self.rdms = active_space_solver.compute_average_rdms(state_weights_map, self.max_rdm_level)
