@@ -1,4 +1,5 @@
-#! Generated using commit GITCOMMIT
+# Test read_orbitals keyword without a ref_wfn and
+# the orbitals on disk were generated at a different geometry.
 
 import forte
 

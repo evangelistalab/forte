@@ -1,4 +1,4 @@
-#! Generated using commit GITCOMMIT
+# Test read_orbitals keyword in C1 symmetry with user provided ref_wfn
 
 import forte
 
