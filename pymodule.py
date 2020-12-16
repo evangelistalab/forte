@@ -74,7 +74,7 @@ def run_psi4_ref(ref_type, molecule, print_warning=False, **kwargs):
 
 def check_MO_overlap(options, molecule, Ca):
     """
-    Test the MO overlp matrix is identity or not.
+    Test the MO overlap matrix is identity or not.
     We will recompute the SO overlap from molecule and test against Ca,
     S_MO = Ca^T S_SO Ca.
     If the molecule and Ca are consistent, S_MO should be identity matrix.
@@ -83,7 +83,7 @@ def check_MO_overlap(options, molecule, Ca):
     :param molecule: a Psi4 Molecule object
     :param Ca: a Psi4 Matrix that holds orbital coefficients
 
-    :return: a tuple of (S_MO == I, a new Psi4 Wavefunction object)
+    :return: S_MO == I
     """
     p4print = psi4.core.print_out
     p4print("\n\n")
@@ -104,20 +104,22 @@ def check_MO_overlap(options, molecule, Ca):
     # build MO overlap
     mints = wfn.mintshelper()
     S = mints.so_overlap()
-    mo_overlap = psi4.core.triplet(Ca, S, Ca, True, False, False)
+    S.transform(Ca)  # S = Ca^T S Ca
 
     # test orbital orthonormality
-    mo_overlap.zero_diagonal()
-    absmax = mo_overlap.absmax()
+    identity = S.clone()
+    identity.identity()
+    S.subtract(identity)
+    absmax = S.absmax()
 
     if absmax > 1.0e-8:
         p4print("\n\n  Forte Warning: ")
         p4print("Input orbitals are NOT from the current geometry!")
         p4print(f"\n  Max value of MO overlap: {absmax:.15f}\n")
-        return False, wfn
+        return False
     else:
         p4print(" Done (OK)\n\n")
-        return True, wfn
+        return True
 
 
 def prepare_psi4_ref_wfn(options, **kwargs):
@@ -176,7 +178,7 @@ def prepare_psi4_ref_wfn(options, **kwargs):
     nmopi = ref_wfn.nmopi()
     mo_space_info = forte.make_mo_space_info(nmopi, point_group, options)
 
-    # do we need to check orbital orthonormality?
+    # do we need to check MO overlap?
     if not need_orbital_check:
         wfn_new = ref_wfn
     else:
@@ -185,9 +187,7 @@ def prepare_psi4_ref_wfn(options, **kwargs):
             raise ValueError("Invalid orbitals: different basis set / molecule")
 
         # check orbital orthonormality
-        ortho, wfn_new = check_MO_overlap(options, molecule, Ca)
-
-        if ortho:
+        if check_MO_overlap(options, molecule, Ca):
             wfn_new = ref_wfn
             wfn_new.Ca().copy(Ca)
         else:
