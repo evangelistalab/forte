@@ -241,12 +241,9 @@ void make_avas(psi::SharedWavefunction ref_wfn, std::shared_ptr<ForteOptions> op
             int h, idx;
             std::tie(sigma, is_occ, h, idx) = mo_tuple;
 
-            s_act_sum += sigma;
-            double fraction = s_act_sum / s_sum;
-
             // decide if this orbital is active depending on the ratio of the
             // partial sum of singular values and the total sum of singular values
-            if ((fraction - avas_sigma <= 1.0e-10) and (sigma >= nonzero_threshold)) {
+            if ((s_act_sum / s_sum - avas_sigma <= 1.0e-10) and (sigma >= nonzero_threshold)) {
                 if (is_occ) {
                     Amos_docc[h].push_back(idx);
                 } else {
@@ -259,6 +256,8 @@ void make_avas(psi::SharedWavefunction ref_wfn, std::shared_ptr<ForteOptions> op
                     Imos_uocc[h].push_back(idx);
                 }
             }
+
+            s_act_sum += sigma;
         }
     }
 
