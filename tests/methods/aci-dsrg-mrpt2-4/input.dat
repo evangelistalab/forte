@@ -61,6 +61,7 @@ set forte {
   nroot 1
   root_sym 0
   charge 0
+  dsrg_s 1.0e10
 }
 
 set_num_threads(8)

@@ -305,7 +305,7 @@ void SA_MRDSRG::compute_hbar_sequential() {
     timer rotation("Hbar T1 rotation");
 
     ambit::BlockedTensor A1;
-    A1 = BTF_->build(tensor_type_, "A1 Amplitudes", {"gg"});
+    A1 = BTF_->build(tensor_type_, "A1 Amplitudes", {"gg"}, true);
     A1["ia"] = T1_["ia"];
     A1["ai"] -= T1_["ia"];
 
@@ -320,7 +320,7 @@ void SA_MRDSRG::compute_hbar_sequential() {
     A1_m->expm(3);
 
     ambit::BlockedTensor U1;
-    U1 = BTF_->build(tensor_type_, "Transformer", {"gg"});
+    U1 = BTF_->build(tensor_type_, "Transformer", {"gg"}, true);
     U1.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>&, double& value) {
         value = A1_m->get(i[0], i[1]);
     });
@@ -347,10 +347,10 @@ void SA_MRDSRG::compute_hbar_sequential() {
     // Hbar1 becomes "Fock"
     ambit::BlockedTensor B;
     if (eri_df_) {
-        B = BTF_->build(tensor_type_, "B 3-idx", {"Lgg"});
+        B = BTF_->build(tensor_type_, "B 3-idx", {"Lgg"}, true);
         B["grs"] = U1["rp"] * B_["gpq"] * U1["sq"];
 
-        BlockedTensor temp = BTF_->build(tensor_type_, "B temp", {"L"});
+        BlockedTensor temp = BTF_->build(tensor_type_, "B temp", {"L"}, true);
         temp["g"] = B["gmn"] * D1c["mn"];
         temp["g"] += B["guv"] * L1_["uv"];
         Hbar1_["pq"] += temp["g"] * B["gpq"];

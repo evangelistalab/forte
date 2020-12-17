@@ -399,7 +399,7 @@ void CASSCF_ORB_GRAD::compute_Lagrangian() {
         W->print();
 
     // transform to AO and push to Psi4 Wavefunction
-    ints_->wfn()->Lagrangian()->copy(W);
+    ints_->wfn()->X()->copy(W);
     psi::outfile->Printf(" Done.");
 }
 
