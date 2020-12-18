@@ -90,21 +90,6 @@ psi::SharedMatrix make_aosubspace_projector(psi::SharedWavefunction wfn,
         // Compute the subspaces (right now this is required before any other call)
         aosub.find_subspace();
 
-        // Show minimal basis using custom formatting
-        outfile->Printf("\n  Minimal basis:\n");
-        outfile->Printf("    ================================\n");
-        outfile->Printf("       AO    Atom  Label  AO type   \n");
-        outfile->Printf("    --------------------------------\n");
-        {
-            std::vector<std::string> aolabels = aosub.aolabels("%1$4d%2$-2s%3$6d     %4$d%5$s");
-            int nbf = 0;
-            for (const auto& s : aolabels) {
-                outfile->Printf("    %5d  %s\n", nbf + 1, s.c_str());
-                nbf++;
-            }
-        }
-        outfile->Printf("    ================================\n");
-
         const std::vector<int>& subspace = aosub.subspace();
 
         // build the projector
@@ -294,32 +279,58 @@ std::vector<std::string> AOSubspace::aolabels(std::string str_format) const {
 const std::vector<AOInfo>& AOSubspace::aoinfo() const { return aoinfo_vec_; }
 
 void AOSubspace::parse_subspace() {
-    outfile->Printf("\n\n  List of subspaces:");
-    for (const std::string& s : subspace_str_) {
-        outfile->Printf(" %s", s.c_str());
+    outfile->Printf("\n\n  List of subspace orbitals requested:\n  ");
+    for (int i = 0, size = subspace_str_.size(); i < size; ++i) {
+        outfile->Printf(" %13s", subspace_str_[i].c_str());
+        if ((i + 1) % 5 == 0 and i + 1 != size)
+            outfile->Printf("\n  ");
     }
     outfile->Printf("\n");
 
+    // parse subspace orbitals
+    bool all_found = true;
     for (const std::string& s : subspace_str_) {
-        parse_subspace_entry(s);
+        all_found &= parse_subspace_entry(s);
     }
 
-    outfile->Printf("\n  Subspace contains AOs:\n");
-    for (size_t i = 0; i < subspace_.size(); ++i) {
-        outfile->Printf("  %6d", subspace_[i] + 1);
-        if ((i + 1) % 8 == 0)
+    // print basis and mark those are selected into the subspace
+    std::unordered_set<int> subspace_idx(subspace_.begin(), subspace_.end());
+
+    outfile->Printf("\n  The AO basis set (The subspace contains %d AOs marked by *):\n",
+                    subspace_.size());
+    outfile->Printf("    ==================================\n");
+    outfile->Printf("       AO      Atom  Label  AO type\n");
+    outfile->Printf("    ----------------------------------\n");
+    std::vector<std::string> labels = aolabels("%1$4d%2$-2s%3$6d     %4$d%5$s");
+    for (int i = 0, size = labels.size(); i < size; ++i) {
+        outfile->Printf("    %5d %c  %s\n", i + 1, subspace_idx.count(i) ? '*' : ' ',
+                        labels[i].c_str());
+    }
+    outfile->Printf("    ==================================\n");
+
+    // throw if input is wrong
+    if (not all_found) {
+        outfile->Printf("\n  Some subspace orbitals are not found. Please check the input.");
+        outfile->Printf("\n  Orbital labels available:");
+        for (const auto& am_labels : lm_labels_sperical_) {
             outfile->Printf("\n");
+            for (const auto& label : am_labels) {
+                outfile->Printf("  %8s", label.c_str());
+            }
+        }
+        throw psi::PSIEXCEPTION("Some subspace orbitals are not found. Please check the input.");
     }
-    outfile->Printf("\n");
 }
 
-void AOSubspace::parse_subspace_entry(const std::string& s) {
+bool AOSubspace::parse_subspace_entry(const std::string& s) {
     // The regex to parse the entries
-    std::regex re("([a-zA-Z]{1,2})([1-9]+)?-?([1-9]+)?\\(?((?:\\/"
-                  "?[1-9]{1}[SPDF]{1}[a-zA-Z1-9-]*)*)\\)?");
+    std::regex re("([a-zA-Z]{1,2})([0-9]+)?-?([0-9]+)?\\(?((?:\\/"
+                  "?[1-9]{1}[SPDFGH]{1}[a-zA-Z0-9-]*)*)\\)?");
     std::smatch match;
 
     Element_to_Z etoZ;
+
+    bool found = true;
 
     std::regex_match(s, match, re);
     if (debug_) {
@@ -377,6 +388,7 @@ void AOSubspace::parse_subspace_entry(const std::string& s) {
                     }
                 } else {
                     outfile->Printf("  AO label '%s' is not valid.\n", str.c_str());
+                    found = false;
                 }
             }
         } else {
@@ -390,6 +402,7 @@ void AOSubspace::parse_subspace_entry(const std::string& s) {
             }
         }
     }
+    return found;
 }
 
 void AOSubspace::parse_basis_set() {

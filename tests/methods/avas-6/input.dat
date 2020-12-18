@@ -1,7 +1,7 @@
 #! Test AO Subspace regular expression on 3d orbitals
 
 refscf = -1646.626167484472944
-reffci = -1646.647217416001240
+reffci = -1646.647075290021348
 
 import forte
 memory 2 gb
@@ -47,13 +47,18 @@ set forte {
 avas                true
 avas_diagonalize    true
 avas_sigma          0.8
+# the hard way
 subspace            ["Fe(3dxy)","Fe(3dxz)","Fe(3dyz)","Fe(3dz2)","Fe(3dx2-y2)",
                      "C1(2pz)","C2(2pz)","C3(2pz)","C4(2pz)","C5(2pz)",
                      "C6(2pz)","C7(2pz)","C8(2pz)","C9(2pz)","C10(2pz)"]
+# the easier way
+#subspace            ["Fe(3d)","C1-10(2pz)"]
+# the easiest way
+#subspace            ["Fe(3d)","C(2pz)"]
 int_type            df
 active_space_solver fci
-restricted_docc     [13,5,8,10]
-active              [5,3,2,4]
+restricted_docc     [13,5,7,10]
+active              [5,3,3,4]
 }
 Ecasci, wfn = energy('forte', ref_wfn=wfn, return_wfn=True)
 compare_values(reffci, Ecasci, 8, "CASCI energy")
