@@ -90,7 +90,8 @@ def register_driver_options(options):
 
     options.add_int("PRINT", 1, "Set the print level.")
 
-    options.add_bool("READ_ORBITALS", True, "Read orbitals from file if true")
+    options.add_bool("READ_ORBITALS", False, "Read orbitals from file if true")
+
     options.add_bool("DUMP_ORBITALS", False, "Save orbitals to file if true")
 
 
@@ -663,8 +664,7 @@ def register_integral_options(options):
 def register_dsrg_options(options):
     options.set_group("DSRG")
 
-    options.add_double("DSRG_S", 1.0e10,
-                       "The end value of the integration parameter s")
+    options.add_double("DSRG_S", 0.5, "The value of the DSRG flow parameter s")
 
     options.add_double("DSRG_POWER", 2.0,
                        "The power of the parameter s in the regularizer")
@@ -710,6 +710,9 @@ def register_dsrg_options(options):
 
     options.add_double("RELAX_E_CONVERGENCE", 1.0e-8,
                        "The energy relaxation convergence criterion")
+
+    options.add_bool("DSRG_DUMP_RELAXED_ENERGIES", False,
+                     "Dump the energies after each reference relaxation step to JSON.")
 
     options.add_int("TAYLOR_THRESHOLD", 3,
                     "DSRG Taylor expansion threshold for small denominator")

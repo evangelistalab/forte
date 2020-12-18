@@ -1,5 +1,34 @@
+#
+# @BEGIN LICENSE
+#
+# Psi4: an open-source quantum chemistry software package
+#
+# Copyright (c) 2007-2019 The Psi4 Developers.
+#
+# The copyrights for code used from other parties are included in
+# the corresponding files.
+#
+# This file is part of Psi4.
+#
+# Psi4 is free software; you can redistribute it and/or modify
+# it under the terms of the GNU Lesser General Public License as published by
+# the Free Software Foundation, version 3.
+#
+# Psi4 is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Lesser General Public License for more details.
+#
+# You should have received a copy of the GNU Lesser General Public License along
+# with Psi4; if not, write to the Free Software Foundation, Inc.,
+# 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+#
+# @END LICENSE
+#
+
 import psi4
 import forte
+import json
 import warnings
 import math
 
@@ -44,6 +73,8 @@ class ProcedureDSRG:
             self.relax_maxiter = options.get_int('MAXITER_RELAX_REF')
             self.relax_convergence = options.get_double("RELAX_E_CONVERGENCE")
 
+        self.save_relax_energies = options.get_bool("DSRG_DUMP_RELAXED_ENERGIES")
+
         # Filter out some ms-dsrg algorithms
         ms_dsrg_algorithm = options.get_str("DSRG_MULTI_STATE")
         if self.do_multi_state and ("SA" not in ms_dsrg_algorithm):
@@ -78,6 +109,7 @@ class ProcedureDSRG:
         self.Heff_implemented = False
         self.converged = False
         self.energies = []  # energies along the relaxation steps
+        self.energies_environment = {}  # energies pushed to Psi4 environment globals
 
         # Compute RDMs from initial ActiveSpaceSolver
         self.rdms = active_space_solver.compute_average_rdms(state_weights_map, self.max_rdm_level)
@@ -137,6 +169,9 @@ class ProcedureDSRG:
         e_dsrg = self.dsrg_solver.compute_energy()
         psi4.core.set_scalar_variable("UNRELAXED ENERGY", e_dsrg)
 
+        self.energies_environment[0] = {k: v for k, v in psi4.core.variables().items()
+                                        if 'ROOT' in k}
+
         # Spit out energy if reference relaxation not implemented
         if not self.Heff_implemented:
             self.relax_maxiter = 0
@@ -169,6 +204,12 @@ class ProcedureDSRG:
                 dm_r = self.compute_dipole_relaxed()
                 self.dipoles.append((dm_u, dm_r))
 
+            # Save energies that have been pushed to Psi4 environment
+            self.energies_environment[n + 1] = {k: v for k, v in psi4.core.variables().items()
+                                                if 'ROOT' in k}
+            self.energies_environment[n + 1]["DSRG FIXED"] = e_dsrg
+            self.energies_environment[n + 1]["DSRG RELAXED"] = e_relax
+
             # Test convergence and break loop
             if self.test_relaxation_convergence(n):
                 break
@@ -196,6 +237,11 @@ class ProcedureDSRG:
         self.dsrg_cleanup()
 
         psi4.core.set_scalar_variable("CURRENT ENERGY", e_dsrg)
+
+        # dump reference relaxation energies to json file
+        if self.save_relax_energies:
+            with open('dsrg_relaxed_energies.json', 'w') as w:
+                json.dump(self.energies_environment, w, sort_keys=True, indent=4)
 
         return e_dsrg if len(self.energies) == 0 else e_relax
 

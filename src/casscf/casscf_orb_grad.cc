@@ -196,10 +196,10 @@ void CASSCF_ORB_GRAD::read_options() {
                 throw std::runtime_error("Invalid irrep in CASSCF_ZERO_ROT");
             }
 
-            size_t i1 = py::cast<size_t>(pair[1]) - 1;
-            size_t i2 = py::cast<size_t>(pair[2]) - 1;
+            int i1 = py::cast<int>(pair[1]) - 1;
+            int i2 = py::cast<int>(pair[2]) - 1;
             size_t n = nmopi_[irrep];
-            if (i1 >= n or i1 < 0 or i2 >= n or i2 < 0) {
+            if (static_cast<size_t>(i1) >= n or i1 < 0 or static_cast<size_t>(i2) >= n or i2 < 0) {
                 outfile->Printf("\n  Error: invalid orbital indices in CASSCF_ZERO_ROT.");
                 outfile->Printf("\n  The input orbital indices (start from 1) should not exceed "
                                 "%zu (number of orbitals in irrep %d)",
@@ -382,9 +382,9 @@ void CASSCF_ORB_GRAD::nonredundant_pairs() {
     print_h2("Independent Orbital Rotations");
     outfile->Printf("\n    %-33s", "ORBITAL SPACES");
     for (int h = 0; h < nirrep_; ++h) {
-        outfile->Printf("  %4s", mo_space_info_->irrep_label(h).c_str());
+        outfile->Printf(" %6s", mo_space_info_->irrep_label(h).c_str());
     }
-    outfile->Printf("\n    %s", std::string(33 + nirrep_ * 6, '-').c_str());
+    outfile->Printf("\n    %s", std::string(33 + nirrep_ * 7, '-').c_str());
 
     for (const auto& key_value : nrots) {
         const auto& key = key_value.first;
@@ -394,10 +394,10 @@ void CASSCF_ORB_GRAD::nonredundant_pairs() {
 
         const auto& value = key_value.second;
         for (int h = 0; h < nirrep_; ++h) {
-            outfile->Printf("  %4zu", value[h]);
+            outfile->Printf(" %6zu", value[h]);
         }
     }
-    outfile->Printf("\n    %s", std::string(33 + nirrep_ * 6, '-').c_str());
+    outfile->Printf("\n    %s", std::string(33 + nirrep_ * 7, '-').c_str());
 }
 
 void CASSCF_ORB_GRAD::init_tensors() {
