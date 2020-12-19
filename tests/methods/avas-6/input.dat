@@ -1,6 +1,11 @@
 #! Test AO Subspace regular expression on 3d orbitals
 
 refscf = -1646.626167484472944
+ref_occ = {
+    'RESTRICTED_DOCC': np.array([14, 6, 8, 11]),
+    'ACTIVE': np.array([7, 3, 4, 4]),
+    'RESTRICTED_UOCC': np.array([33, 19, 23, 27])
+}
 reffci = -1646.647075290021348
 
 import forte
@@ -28,6 +33,7 @@ H -2.180615  0.708525  1.638208
 H  0.000000  2.292835  1.638208
 H  2.180615  0.708525  1.638208
 H  1.347694 -1.854942  1.638208
+noreorient  # very important for subspace orbitals orientations
 }
 
 basis {
@@ -39,6 +45,7 @@ set {
 scf_type            df
 reference           rhf
 docc                [18,7,10,13]
+cubeprop_orbitals   [38,41,43,45,49,48,55,58,44,46,51,42,47,52,56]
 }
 Escf, wfn = energy('scf', return_wfn=True)
 compare_values(refscf, Escf, 8, "SCF energy")
@@ -46,7 +53,6 @@ compare_values(refscf, Escf, 8, "SCF energy")
 set forte {
 avas                true
 avas_diagonalize    true
-avas_sigma          0.8
 # the hard way
 subspace            ["Fe(3dxy)","Fe(3dxz)","Fe(3dyz)","Fe(3dz2)","Fe(3dx2-y2)",
                      "C1(2pz)","C2(2pz)","C3(2pz)","C4(2pz)","C5(2pz)",
@@ -57,8 +63,13 @@ subspace            ["Fe(3dxy)","Fe(3dxz)","Fe(3dyz)","Fe(3dz2)","Fe(3dx2-y2)",
 #subspace            ["Fe(3d)","C(2pz)"]
 int_type            df
 active_space_solver fci
-restricted_docc     [13,5,7,10]
+restricted_docc     [14,6,8,11]
 active              [5,3,3,4]
+job_type            none
 }
 Ecasci, wfn = energy('forte', ref_wfn=wfn, return_wfn=True)
+for space_name, occ_array in ref_occ.items():
+    array = variable('AVAS ' + space_name).np.reshape((4,))
+    compare_values(occ_array, array, 6, 'AVAS ' + space_name)
+#cubeprop(wfn)
 compare_values(reffci, Ecasci, 8, "CASCI energy")
