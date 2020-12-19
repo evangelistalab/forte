@@ -309,25 +309,36 @@ void make_avas(psi::SharedWavefunction ref_wfn, std::shared_ptr<ForteOptions> op
     }
     outfile->Printf("\n    %s", dash.c_str());
 
-    print_h2("Atomic Valence MOs");
-    outfile->Printf("\n    ==============================");
-    outfile->Printf("\n    Irrep    MO  Occ.  <phi|P|phi>");
-    outfile->Printf("\n    ------------------------------");
+    // print all MOs with nonzero overlap
+    print_h2("Atomic Valence MOs (Active Marked by *)");
+
+    outfile->Printf("\n    ===============================");
+    outfile->Printf("\n     Irrep    MO  Occ.  <phi|P|phi>");
     for (int h = 0; h < nirrep; ++h) {
+        outfile->Printf("\n    -------------------------------");
         auto label = irrep_labels[h].c_str();
 
-        for (int i = 0, size = Amos_docc[h].size(); i < size; ++i) {
-            auto ni = Amos_docc[h][i];
-            outfile->Printf("\n    %5s %5d  %4d %12.6f", label, ni, 2, sdocc->get(h, ni));
+        std::unordered_set<int> Adocc(Amos_docc[h].begin(), Amos_docc[h].end());
+        for (int i = 0; i < doccpi[h]; ++i) {
+            double s_value = sdocc->get(h, i);
+            if (s_value < nonzero_threshold)
+                continue;
+            char chosen = Adocc.count(i) ? '*' : ' ';
+            outfile->Printf("\n    %c%4s  %5d  %3d  %12.6f", chosen, label, i, 2, s_value);
         }
 
         auto offset = doccpi[h] + soccpi[h];
-        for (int a = 0, size = Amos_uocc[h].size(); a < size; ++a) {
-            auto na = Amos_uocc[h][a];
-            outfile->Printf("\n    %5s %5d  %4d %12.6f", label, na, 0, suocc->get(h, na - offset));
+        std::unordered_set<int> Auocc(Amos_uocc[h].begin(), Amos_uocc[h].end());
+        for (int a = 0; a < uoccpi[h]; ++a) {
+            double s_value = suocc->get(h, a);
+            if (s_value < nonzero_threshold)
+                continue;
+            auto na = a + offset;
+            char chosen = Auocc.count(na) ? '*' : ' ';
+            outfile->Printf("\n    %c%4s  %5d  %3d  %12.6f", chosen, label, na, 0, s_value);
         }
     }
-    outfile->Printf("\n    ==============================");
+    outfile->Printf("\n    ===============================");
 
     // rotate orbitals
     auto Ca_tilde = psi::linalg::doublet(Ca, U);
