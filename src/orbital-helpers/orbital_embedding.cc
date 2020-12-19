@@ -189,18 +189,22 @@ void make_avas(psi::SharedWavefunction ref_wfn, std::shared_ptr<ForteOptions> op
     std::vector<std::vector<int>> Amos_docc(nirrep), Imos_docc(nirrep);
     std::vector<std::vector<int>> Amos_uocc(nirrep), Imos_uocc(nirrep);
 
+    double s_act_sum = 0.0;
+
     if (avas_selection == AVAS_SELECTION::ACTV_SEPARATE) {
         int counter_Adocc = 0, counter_Auocc = 0;
 
         for (const auto& mo_tuple : sorted_mos) {
+            double sigma;
             bool is_occ;
             int h, idx;
-            std::tie(std::ignore, is_occ, h, idx) = mo_tuple;
+            std::tie(sigma, is_occ, h, idx) = mo_tuple;
 
             if (is_occ) {
                 if (counter_Adocc < avas_num_active_occ) {
                     Amos_docc[h].push_back(idx);
                     counter_Adocc += 1;
+                    s_act_sum += sigma;
                 } else {
                     Imos_docc[h].push_back(idx);
                 }
@@ -208,6 +212,7 @@ void make_avas(psi::SharedWavefunction ref_wfn, std::shared_ptr<ForteOptions> op
                 if (counter_Auocc < avas_num_active_vir) {
                     Amos_uocc[h].push_back(idx);
                     counter_Auocc += 1;
+                    s_act_sum += sigma;
                 } else {
                     Imos_uocc[h].push_back(idx);
                 }
@@ -215,15 +220,18 @@ void make_avas(psi::SharedWavefunction ref_wfn, std::shared_ptr<ForteOptions> op
         }
     } else if (avas_selection == AVAS_SELECTION::ACTV_TOTAL) {
         for (int n = 0; n < avas_num_active; ++n) {
+            double sigma;
             bool is_occ;
             int h, idx;
-            std::tie(std::ignore, is_occ, h, idx) = sorted_mos[n];
+            std::tie(sigma, is_occ, h, idx) = sorted_mos[n];
 
             if (is_occ) {
                 Amos_docc[h].push_back(idx);
             } else {
                 Amos_uocc[h].push_back(idx);
             }
+
+            s_act_sum += sigma;
         }
 
         for (int n = avas_num_active, size = sorted_mos.size(); n < size; ++n) {
@@ -238,8 +246,6 @@ void make_avas(psi::SharedWavefunction ref_wfn, std::shared_ptr<ForteOptions> op
             }
         }
     } else if (avas_selection == AVAS_SELECTION::CUTOFF) {
-        double s_act_sum = 0.0;
-
         for (const auto& mo_tuple : sorted_mos) {
             double sigma;
             bool is_occ;
@@ -261,12 +267,7 @@ void make_avas(psi::SharedWavefunction ref_wfn, std::shared_ptr<ForteOptions> op
                 }
             }
         }
-
-        outfile->Printf("\n  Direct cutoff (%.3e) selection covers %.2f%% of the subspace.",
-                        avas_cutoff, 100.0 * s_act_sum / s_sum);
     } else {
-        double s_act_sum = 0.0;
-
         for (const auto& mo_tuple : sorted_mos) {
             double sigma;
             bool is_occ;
@@ -290,10 +291,8 @@ void make_avas(psi::SharedWavefunction ref_wfn, std::shared_ptr<ForteOptions> op
                 }
             }
         }
-
-        outfile->Printf("\n  Cumulative sigma selection covers %.2f%% of the subspace.",
-                        100.0 * s_act_sum / s_sum);
     }
+    outfile->Printf("\n  AVAS covers %.2f%% of the subspace.", 100.0 * s_act_sum / s_sum);
 
     // dimensions of subsets of orbitals
     std::map<std::string, psi::Dimension> avas_dims;
