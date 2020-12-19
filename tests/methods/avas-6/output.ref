@@ -30,9 +30,9 @@
     -----------------------------------------------------------------------
 
 
-    Psi4 started on: Saturday, 19 December 2020 09:56PM
+    Psi4 started on: Saturday, 19 December 2020 11:49PM
 
-    Process ID: 82478
+    Process ID: 87377
     Host:       Yorks-Mac.local
     PSIDATADIR: /Users/york/src/psi4new/psi4/share/psi4
     Memory:     500.0 MiB
@@ -90,7 +90,6 @@ reference           rhf
 docc                [18,7,10,13]
 e_convergence       8
 d_convergence       8
-cubeprop_orbitals   [38,41,43,45,49,48,55,58,44,46,51,42,47,52,56]
 }
 Escf, wfn = energy('scf', return_wfn=True)
 compare_values(refscf, Escf, 8, "SCF energy")
@@ -110,7 +109,7 @@ subspace            ["Fe(3dxy)","Fe(3dxz)","Fe(3dyz)","Fe(3dz2)","Fe(3dx2-y2)",
 }
 Ezero, wfn = energy('forte', ref_wfn=wfn, return_wfn=True)
 
-# check AVAS occupancy dimension
+# check AVAS suggested orbital dimensions
 for space_name, occ_array in ref_occ.items():
     array = variable('AVAS ' + space_name).np.reshape((4,))
     compare_values(occ_array, array, 6, 'AVAS ' + space_name)
@@ -141,11 +140,11 @@ compare_values(reffci, Ecasci, 8, "CASCI(10e,7o) energy")
 Scratch directory: /Users/york/scratch/psi4/
 
 *** tstart() called on Yorks-Mac.local
-*** at Sat Dec 19 21:56:29 2020
+*** at Sat Dec 19 23:49:30 2020
 
    => Loading Basis Set <=
 
-    Name: ANONYMOUSD825AD5A
+    Name: ANONYMOUS5746AB24
     Role: ORBITAL
     Keyword: BASIS
     atoms 1           entry FE         line  1835 file /Users/york/src/psi4new/psi4/share/psi4/basis/cc-pvdz.gbs 
@@ -217,7 +216,7 @@ Scratch directory: /Users/york/scratch/psi4/
 
   ==> Primary Basis <==
 
-  Basis Set: ANONYMOUSD825AD5A
+  Basis Set: ANONYMOUS5746AB24
     Blend: 6-31G + CC-PVDZ
     Number of shells: 85
     Number of basis function: 159
@@ -227,7 +226,7 @@ Scratch directory: /Users/york/scratch/psi4/
 
    => Loading Basis Set <=
 
-    Name: (ANONYMOUSD825AD5A AUX)
+    Name: (ANONYMOUS5746AB24 AUX)
     Role: JKFIT
     Keyword: DF_BASIS_SCF
     atoms 1           entry FE         line  1978 file /Users/york/src/psi4new/psi4/share/psi4/basis/def2-universal-jkfit.gbs 
@@ -252,7 +251,7 @@ Scratch directory: /Users/york/scratch/psi4/
 
    => Auxiliary Basis Set <=
 
-  Basis Set: (ANONYMOUSD825AD5A AUX)
+  Basis Set: (ANONYMOUS5746AB24 AUX)
     Blend: CC-PVDZ-JKFIT + DEF2-UNIVERSAL-JKFIT
     Number of shells: 388
     Number of basis function: 1437
@@ -283,21 +282,21 @@ Scratch directory: /Users/york/scratch/psi4/
 
                            Total Energy        Delta E     RMS |[F,P]|
 
-   @DF-RHF iter SAD: -1647.26164834985525   -1.64726e+03   0.00000e+00 
-   @DF-RHF iter   1: -1640.83009601306844    6.43155e+00   5.54634e-02 DIIS
-   @DF-RHF iter   2: -1621.93433767440820    1.88958e+01   9.60292e-02 DIIS
-   @DF-RHF iter   3: -1646.32335570464079   -2.43890e+01   7.64612e-03 DIIS
-   @DF-RHF iter   4: -1646.32720892425095   -3.85322e-03   1.16998e-02 DIIS
-   @DF-RHF iter   5: -1646.55194230951383   -2.24733e-01   5.23457e-03 DIIS
-   @DF-RHF iter   6: -1646.62165788592119   -6.97156e-02   8.47105e-04 DIIS
-   @DF-RHF iter   7: -1646.62487591542958   -3.21803e-03   5.13578e-04 DIIS
-   @DF-RHF iter   8: -1646.62613121198319   -1.25530e-03   8.27896e-05 DIIS
-   @DF-RHF iter   9: -1646.62616372407683   -3.25121e-05   3.67551e-05 DIIS
-   @DF-RHF iter  10: -1646.62616733932532   -3.61525e-06   7.61444e-06 DIIS
-   @DF-RHF iter  11: -1646.62616748403661   -1.44711e-07   8.29962e-07 DIIS
-   @DF-RHF iter  12: -1646.62616749133826   -7.30165e-09   5.02816e-07 DIIS
-   @DF-RHF iter  13: -1646.62616749216045   -8.22183e-10   4.95986e-08 DIIS
-   @DF-RHF iter  14: -1646.62616749217318   -1.27329e-11   8.76036e-09 DIIS
+   @DF-RHF iter SAD: -1647.26164837098486   -1.64726e+03   0.00000e+00 
+   @DF-RHF iter   1: -1640.83009600165519    6.43155e+00   5.54634e-02 DIIS
+   @DF-RHF iter   2: -1621.93433760132939    1.88958e+01   9.60292e-02 DIIS
+   @DF-RHF iter   3: -1646.32335571389694   -2.43890e+01   7.64612e-03 DIIS
+   @DF-RHF iter   4: -1646.32720891935378   -3.85321e-03   1.16998e-02 DIIS
+   @DF-RHF iter   5: -1646.55194230760003   -2.24733e-01   5.23457e-03 DIIS
+   @DF-RHF iter   6: -1646.62165788583297   -6.97156e-02   8.47105e-04 DIIS
+   @DF-RHF iter   7: -1646.62487591543504   -3.21803e-03   5.13578e-04 DIIS
+   @DF-RHF iter   8: -1646.62613121198387   -1.25530e-03   8.27896e-05 DIIS
+   @DF-RHF iter   9: -1646.62616372407751   -3.25121e-05   3.67551e-05 DIIS
+   @DF-RHF iter  10: -1646.62616733932464   -3.61525e-06   7.61444e-06 DIIS
+   @DF-RHF iter  11: -1646.62616748403661   -1.44712e-07   8.29963e-07 DIIS
+   @DF-RHF iter  12: -1646.62616749133872   -7.30211e-09   5.02816e-07 DIIS
+   @DF-RHF iter  13: -1646.62616749215840   -8.19682e-10   4.95985e-08 DIIS
+   @DF-RHF iter  14: -1646.62616749217159   -1.31877e-11   8.76074e-09 DIIS
   Energy and wave function converged.
 
 
@@ -369,14 +368,14 @@ Scratch directory: /Users/york/scratch/psi4/
              A1    A2    B1    B2 
     DOCC [    18,    7,   10,   13 ]
 
-  @DF-RHF Final Energy: -1646.62616749217318
+  @DF-RHF Final Energy: -1646.62616749217159
 
    => Energetics <=
 
     Nuclear Repulsion Energy =            919.0508334365242717
-    One-Electron Energy =               -4094.3034263366744199
-    Two-Electron Energy =                1528.6264254079771945
-    Total Energy =                      -1646.6261674921731810
+    One-Electron Energy =               -4094.3034263366789673
+    Two-Electron Energy =                1528.6264254079833336
+    Total Energy =                      -1646.6261674921715894
 
 Computation Completed
 
@@ -398,14 +397,14 @@ Properties computed using the SCF density matrix
      X:     0.0000      Y:    -0.0000      Z:     0.0000     Total:     0.0000
 
 
-*** tstop() called on Yorks-Mac.local at Sat Dec 19 21:56:39 2020
+*** tstop() called on Yorks-Mac.local at Sat Dec 19 23:49:40 2020
 Module time:
-	user time   =      32.36 seconds =       0.54 minutes
-	system time =       1.53 seconds =       0.03 minutes
+	user time   =      33.30 seconds =       0.56 minutes
+	system time =       1.58 seconds =       0.03 minutes
 	total time  =         10 seconds =       0.17 minutes
 Total time:
-	user time   =      32.36 seconds =       0.54 minutes
-	system time =       1.53 seconds =       0.03 minutes
+	user time   =      33.30 seconds =       0.56 minutes
+	system time =       1.58 seconds =       0.03 minutes
 	total time  =         10 seconds =       0.17 minutes
     SCF energy............................................................................PASSED
 
@@ -447,7 +446,7 @@ Scratch directory: /Users/york/scratch/psi4/
 
    => Loading Basis Set <=
 
-    Name: ANONYMOUSD825AD5A
+    Name: ANONYMOUS5746AB24
     Role: ORBITAL
     Keyword: BASIS
     atoms 1           entry FE         line  1835 file /Users/york/src/psi4new/psi4/share/psi4/basis/cc-pvdz.gbs 
@@ -558,109 +557,109 @@ Scratch directory: /Users/york/scratch/psi4/
     ==================================
 
   Orbital overlap with AO subspace (> 1.00e-03):
-    ========================
-    Irrep   MO   <phi|P|phi>
-    ------------------------
-      0      7    0.016252
-      0      8    0.009359
-      0      9    0.020559
-      0     10    0.003561
-      0     11    0.024168
-      0     12    0.096838
-      0     13    0.928613
-      0     15    0.045238
-      0     16    0.815811
-      0     17    0.843504
-      0     18    0.913389
-      0     20    0.003018
-      0     21    0.785452
-      0     22    0.028456
-      0     23    0.025545
-      0     24    0.013960
-      0     25    0.002223
-      0     26    0.031448
-      0     27    0.023864
-      0     28    0.003452
-      0     29    0.006202
-      0     30    0.073028
-      0     31    0.029241
-      0     32    0.021033
-      0     33    0.081229
-      0     36    0.024153
-      0     37    0.012050
-      0     38    0.011365
-      0     39    0.008172
-      0     41    0.003655
-      0     42    0.002337
-      0     44    0.018929
-      0     47    0.006745
-      0     48    0.004376
-      1      3    0.016961
-      1      5    0.034397
-      1      7    0.931424
-      1      8    0.858349
-      1      9    0.755681
-      1     10    0.031656
-      1     11    0.029807
-      1     12    0.057113
-      1     13    0.003223
-      1     14    0.079080
-      1     16    0.018536
-      1     17    0.021632
-      1     18    0.082222
-      1     19    0.001348
-      1     20    0.002044
-      1     23    0.002696
-      1     24    0.001768
-      1     26    0.030447
-      1     27    0.008694
-      2      4    0.009359
-      2      5    0.003561
-      2      6    0.024168
-      2      8    0.045237
-      2      9    0.843504
-      2     10    0.913389
-      2     11    0.003018
-      2     12    0.785452
-      2     13    0.028456
-      2     14    0.002223
-      2     15    0.031448
-      2     16    0.023864
-      2     17    0.006202
-      2     18    0.073028
-      2     20    0.021033
-      2     21    0.081229
-      2     23    0.024153
-      2     24    0.012050
-      2     25    0.008172
-      2     28    0.002337
-      2     30    0.018929
-      2     32    0.004376
-      3      5    0.014196
-      3      7    0.016961
-      3      9    0.001371
-      3     10    0.034397
-      3     12    0.963418
-      3     13    0.931424
-      3     14    0.004239
-      3     15    0.858349
-      3     16    0.755681
-      3     17    0.001040
-      3     18    0.031656
-      3     19    0.029807
-      3     20    0.057113
-      3     21    0.003223
-      3     23    0.079080
-      3     24    0.018536
-      3     26    0.021631
-      3     27    0.082222
-      3     28    0.001348
-      3     29    0.002044
-      3     31    0.012996
-      3     34    0.002696
-      3     35    0.001768
-      3     37    0.030447
-      3     39    0.008694
+    =======================
+    Irrep   MO  <phi|P|phi>
+    -----------------------
+      A1     7    0.016252
+      A1     8    0.009359
+      A1     9    0.020559
+      A1    10    0.003561
+      A1    11    0.024168
+      A1    12    0.096838
+      A1    13    0.928613
+      A1    15    0.045238
+      A1    16    0.815811
+      A1    17    0.843504
+      A1    18    0.913389
+      A1    20    0.003018
+      A1    21    0.785452
+      A1    22    0.028456
+      A1    23    0.025545
+      A1    24    0.013960
+      A1    25    0.002223
+      A1    26    0.031448
+      A1    27    0.023864
+      A1    28    0.003452
+      A1    29    0.006202
+      A1    30    0.073028
+      A1    31    0.029241
+      A1    32    0.021033
+      A1    33    0.081229
+      A1    36    0.024153
+      A1    37    0.012050
+      A1    38    0.011365
+      A1    39    0.008172
+      A1    41    0.003655
+      A1    42    0.002337
+      A1    44    0.018929
+      A1    47    0.006745
+      A1    48    0.004376
+      A2     3    0.016961
+      A2     5    0.034397
+      A2     7    0.931424
+      A2     8    0.858349
+      A2     9    0.755681
+      A2    10    0.031656
+      A2    11    0.029807
+      A2    12    0.057113
+      A2    13    0.003223
+      A2    14    0.079080
+      A2    16    0.018536
+      A2    17    0.021632
+      A2    18    0.082222
+      A2    19    0.001348
+      A2    20    0.002044
+      A2    23    0.002696
+      A2    24    0.001768
+      A2    26    0.030447
+      A2    27    0.008694
+      B1     4    0.009359
+      B1     5    0.003561
+      B1     6    0.024168
+      B1     8    0.045237
+      B1     9    0.843504
+      B1    10    0.913389
+      B1    11    0.003018
+      B1    12    0.785452
+      B1    13    0.028456
+      B1    14    0.002223
+      B1    15    0.031448
+      B1    16    0.023864
+      B1    17    0.006202
+      B1    18    0.073028
+      B1    20    0.021033
+      B1    21    0.081229
+      B1    23    0.024153
+      B1    24    0.012050
+      B1    25    0.008172
+      B1    28    0.002337
+      B1    30    0.018929
+      B1    32    0.004376
+      B2     5    0.014196
+      B2     7    0.016961
+      B2     9    0.001371
+      B2    10    0.034397
+      B2    12    0.963418
+      B2    13    0.931424
+      B2    14    0.004239
+      B2    15    0.858349
+      B2    16    0.755681
+      B2    17    0.001040
+      B2    18    0.031656
+      B2    19    0.029807
+      B2    20    0.057113
+      B2    21    0.003223
+      B2    23    0.079080
+      B2    24    0.018536
+      B2    26    0.021631
+      B2    27    0.082222
+      B2    28    0.001348
+      B2    29    0.002044
+      B2    31    0.012996
+      B2    34    0.002696
+      B2    35    0.001768
+      B2    37    0.030447
+      B2    39    0.008694
     ========================
 
 
@@ -703,30 +702,45 @@ Scratch directory: /Users/york/scratch/psi4/
     RESTRICTED_UOCC    33    19    23    27
     ---------------------------------------
 
-  ==> Atomic Valence MOs <==
+  ==> Atomic Valence MOs (Active Marked by *) <==
 
-    ==============================
-    Irrep    MO  Occ.  <phi|P|phi>
-    ------------------------------
-       A1     0     2     0.972178
-       A1     1     2     0.926867
-       A1     2     2     0.912258
-       A1     3     2     0.906335
-       A1    18     0     0.994272
-       A1    19     0     0.074451
-       A1    20     0     0.070744
-       A2     0     2     0.962510
-       A2     7     0     0.996802
-       A2     8     0     0.956244
-       B1     0     2     0.926867
-       B1     1     2     0.912257
-       B1    10     0     0.994272
-       B1    11     0     0.070744
-       B2     0     2     0.979239
-       B2     1     2     0.962510
-       B2    13     0     0.996802
-       B2    14     0     0.956244
-    ==============================
+    ===============================
+     Irrep    MO  Occ.  <phi|P|phi>
+    -------------------------------
+    *  A1      0    2      0.972178
+    *  A1      1    2      0.926867
+    *  A1      2    2      0.912258
+    *  A1      3    2      0.906335
+       A1      4    2      0.000652
+    *  A1     18    0      0.994272
+    *  A1     19    0      0.074451
+    *  A1     20    0      0.070744
+       A1     21    0      0.063348
+       A1     22    0      0.020600
+    -------------------------------
+    *  A2      0    2      0.962510
+       A2      1    2      0.020273
+       A2      2    2      0.000091
+    *  A2      7    0      0.996802
+    *  A2      8    0      0.956244
+       A2      9    0      0.032992
+    -------------------------------
+    *  B1      0    2      0.926867
+    *  B1      1    2      0.912257
+       B1      2    2      0.000652
+    *  B1     10    0      0.994272
+    *  B1     11    0      0.070744
+       B1     12    0      0.063348
+    -------------------------------
+    *  B2      0    2      0.979239
+    *  B2      1    2      0.962510
+       B2      2    2      0.020273
+       B2      3    2      0.000091
+    *  B2     13    0      0.996802
+    *  B2     14    0      0.956244
+       B2     15    0      0.032992
+       B2     16    0      0.019197
+    ===============================
 
   ==> Semicanonicalize Subsets of Orbitals <==
 
@@ -785,7 +799,7 @@ Scratch directory: /Users/york/scratch/psi4/
 
    => Loading Basis Set <=
 
-    Name: ANONYMOUSD825AD5A
+    Name: ANONYMOUS5746AB24
     Role: ORBITAL
     Keyword: BASIS
     atoms 1           entry FE         line  1835 file /Users/york/src/psi4new/psi4/share/psi4/basis/cc-pvdz.gbs 
@@ -797,7 +811,7 @@ Scratch directory: /Users/york/scratch/psi4/
 
    => Loading Basis Set <=
 
-    Name: (ANONYMOUSD825AD5A AUX)
+    Name: (ANONYMOUS5746AB24 AUX)
     Role: RIFIT
     Keyword: DF_BASIS_MP2
     atoms 1           entry FE         line  2102 file /Users/york/src/psi4new/psi4/share/psi4/basis/def2-qzvpp-ri.gbs 
@@ -903,40 +917,40 @@ Scratch directory: /Users/york/scratch/psi4/
     ==================================
 
   Orbital overlap with AO subspace (> 1.00e-03):
-    ========================
-    Irrep   MO   <phi|P|phi>
-    ------------------------
-      0     15    0.077772
-      0     16    0.840882
-      0     17    0.860920
-      0     19    0.052704
-      0     20    0.049423
-      0     27    0.007039
-      0     31    0.027539
-      0     38    0.003765
-      0     42    0.001890
-      0     44    0.017906
-      0     46    0.001061
-      0     48    0.004069
-      1      3    0.008456
-      1      5    0.008641
-      1      7    0.150741
-      1      9    0.801531
-      1     18    0.002797
-      1     26    0.001172
-      2      9    0.860919
-      2     11    0.052704
-      2     16    0.007039
-      2     18    0.027539
-      2     28    0.001890
-      2     30    0.017906
-      2     32    0.004069
-      3      7    0.008456
-      3     10    0.008641
-      3     13    0.150741
-      3     15    0.801531
-      3     27    0.002797
-      3     37    0.001172
+    =======================
+    Irrep   MO  <phi|P|phi>
+    -----------------------
+      A1    15    0.077772
+      A1    16    0.840882
+      A1    17    0.860920
+      A1    19    0.052704
+      A1    20    0.049423
+      A1    27    0.007039
+      A1    31    0.027539
+      A1    38    0.003765
+      A1    42    0.001890
+      A1    44    0.017906
+      A1    46    0.001061
+      A1    48    0.004069
+      A2     3    0.008456
+      A2     5    0.008641
+      A2     7    0.150741
+      A2     9    0.801531
+      A2    18    0.002797
+      A2    26    0.001172
+      B1     9    0.860919
+      B1    11    0.052704
+      B1    16    0.007039
+      B1    18    0.027539
+      B1    28    0.001890
+      B1    30    0.017906
+      B1    32    0.004069
+      B2     7    0.008456
+      B2    10    0.008641
+      B2    13    0.150741
+      B2    15    0.801531
+      B2    27    0.002797
+      B2    37    0.001172
     ========================
 
 
@@ -979,19 +993,25 @@ Scratch directory: /Users/york/scratch/psi4/
     RESTRICTED_UOCC    36    20    25    28
     ---------------------------------------
 
-  ==> Atomic Valence MOs <==
+  ==> Atomic Valence MOs (Active Marked by *) <==
 
-    ==============================
-    Irrep    MO  Occ.  <phi|P|phi>
-    ------------------------------
-       A1     0     2     0.918653
-       A1     1     2     0.860956
-       A2     0     2     0.167839
-       A2     7     0     0.806869
-       B1     0     2     0.860956
-       B2     0     2     0.167838
-       B2    13     0     0.806869
-    ==============================
+    ===============================
+     Irrep    MO  Occ.  <phi|P|phi>
+    -------------------------------
+    *  A1      0    2      0.918653
+    *  A1      1    2      0.860956
+       A1     18    0      0.112694
+       A1     19    0      0.056348
+    -------------------------------
+    *  A2      0    2      0.167839
+    *  A2      7    0      0.806869
+    -------------------------------
+    *  B1      0    2      0.860956
+       B1     10    0      0.112694
+    -------------------------------
+    *  B2      0    2      0.167838
+    *  B2     13    0      0.806869
+    ===============================
 
   ==> Semicanonicalize Subsets of Orbitals <==
 
@@ -1003,7 +1023,7 @@ Scratch directory: /Users/york/scratch/psi4/
 
   ==> Primary Basis Set Summary <==
 
-  Basis Set: ANONYMOUSD825AD5A
+  Basis Set: ANONYMOUS5746AB24
     Blend: 6-31G + CC-PVDZ
     Number of shells: 85
     Number of basis function: 159
@@ -1029,7 +1049,7 @@ Scratch directory: /Users/york/scratch/psi4/
 
    => Auxiliary Basis Set <=
 
-  Basis Set: (ANONYMOUSD825AD5A AUX)
+  Basis Set: (ANONYMOUS5746AB24 AUX)
     Blend: CC-PVDZ-RI + DEF2-QZVPP-RI
     Number of shells: 301
     Number of basis function: 1009
@@ -1072,10 +1092,10 @@ Scratch directory: /Users/york/scratch/psi4/
 
 
   Transforming DF Integrals
-  Timing for density-fitting transformation:                  2.260 s.
+  Timing for density-fitting transformation:                  2.350 s.
 
   Timing for freezing core and virtual orbitals:              0.000 s.
-  Timing for computing density-fitted integrals:              8.213 s.
+  Timing for computing density-fitted integrals:              8.749 s.
 
   ==> Summary of Active Space Solver Input <==
 
@@ -1124,25 +1144,25 @@ Scratch directory: /Users/york/scratch/psi4/
   ---------------------------------------------
     Root            Energy     <S^2>   Spin
   ---------------------------------------------
-      0    -1646.644084973495  0.000  singlet
+      0    -1646.644084973497  0.000  singlet
       1    -1646.545241082837  6.000  quintet
-      2    -1646.518176751937  6.000  quintet
-      3    -1646.445778848437  2.000  triplet
-      4    -1646.442406598848  2.000  triplet
-      5    -1646.428829107812  2.000  triplet
-      6    -1646.420244150432  2.000  triplet
+      2    -1646.518176751939  6.000  quintet
+      3    -1646.445778848438  2.000  triplet
+      4    -1646.442406598849  2.000  triplet
+      5    -1646.428829107811  2.000  triplet
+      6    -1646.420244150431  2.000  triplet
       7    -1646.417794382135  2.000  triplet
       8    -1646.402122890399  2.000  triplet
-      9    -1646.396783637646  0.000  singlet
-     10    -1646.390326358353  0.000  singlet
-     11    -1646.386231043523  2.000  triplet
+      9    -1646.396783637644  0.000  singlet
+     10    -1646.390326358355  0.000  singlet
+     11    -1646.386231043526  2.000  triplet
      12    -1646.377419481676  0.000  singlet
-     13    -1646.372613452047  0.000  singlet
+     13    -1646.372613452048  0.000  singlet
      14    -1646.356575749079  0.000  singlet
-     15    -1646.350430364833  0.000  singlet
+     15    -1646.350430364834  0.000  singlet
      16    -1646.319057022488  2.000  triplet
      17    -1646.274639504453  0.000  singlet
-     18    -1646.222677485893  0.000  singlet
+     18    -1646.222677485891  0.000  singlet
      19    -1646.208525658845  0.000  singlet
   ---------------------------------------------
   Timing for initial guess  =      0.001 s
@@ -1165,24 +1185,24 @@ Scratch directory: /Users/york/scratch/psi4/
   -----------------------------------------------------
     Iter.      Avg. Energy       Delta_E     Res. Norm
   -----------------------------------------------------
-      1    -1646.644084973492  -1.647e+03  +1.663e-01
-      2    -1646.661098520367  -1.701e-02  +8.082e-02
-      3    -1646.664867656563  -3.769e-03  +1.974e-02
-      4    -1646.665063147423  -1.955e-04  +4.996e-03
-      5    -1646.665078152078  -1.500e-05  +8.107e-04
-      6    -1646.665078702026  -5.499e-07  +2.084e-04
-      7    -1646.665078748477  -4.645e-08  +4.988e-05
-      8    -1646.665078750437  -1.961e-09  +7.308e-06
-      9    -1646.665078750491  -5.343e-11  +1.424e-06
+      1    -1646.644084973498  -1.647e+03  +1.663e-01
+      2    -1646.661098520371  -1.701e-02  +8.082e-02
+      3    -1646.664867656568  -3.769e-03  +1.974e-02
+      4    -1646.665063147427  -1.955e-04  +4.996e-03
+      5    -1646.665078152083  -1.500e-05  +8.107e-04
+      6    -1646.665078702031  -5.499e-07  +2.084e-04
+      7    -1646.665078748482  -4.645e-08  +4.988e-05
+      8    -1646.665078750442  -1.960e-09  +7.308e-06
+      9    -1646.665078750491  -4.866e-11  +1.424e-06
      10    -1646.665078750492  -1.137e-12  +3.068e-07
   -----------------------------------------------------
   The Davidson-Liu algorithm converged in 11 iterations.
 
   ==> Root No. 0 <==
 
-    22 20 2 20     -0.97638778
+    22 20 2 20      0.97638778
 
-    Total Energy:     -1646.665078750492057
+    Total Energy:     -1646.665078750491830
 
   ==> Energy Summary <==
 
@@ -1191,11 +1211,11 @@ Scratch directory: /Users/york/scratch/psi4/
        1  (  0)    A1     0    -1646.665078750492
     ---------------------------------------------
 
-  Time to prepare integrals:       13.086 seconds
-  Time to run job          :        0.901 seconds
-  Total                    :       13.987 seconds    CASCI(10e,7o) energy..................................................................PASSED
+  Time to prepare integrals:       14.029 seconds
+  Time to run job          :        0.884 seconds
+  Total                    :       14.913 seconds    CASCI(10e,7o) energy..................................................................PASSED
 
-    Psi4 stopped on: Saturday, 19 December 2020 09:56PM
-    Psi4 wall time for execution: 0:00:24.48
+    Psi4 stopped on: Saturday, 19 December 2020 11:49PM
+    Psi4 wall time for execution: 0:00:25.94
 
 *** Psi4 exiting successfully. Buy a developer a beer!
