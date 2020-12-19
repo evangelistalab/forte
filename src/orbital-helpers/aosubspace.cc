@@ -83,6 +83,7 @@ psi::SharedMatrix make_aosubspace_projector(psi::SharedWavefunction wfn,
         // Create a basis set parser object and read the minimal basis
         std::shared_ptr<psi::Molecule> molecule = wfn->molecule();
         std::shared_ptr<psi::BasisSet> min_basis = wfn->get_basisset("MINAO_BASIS");
+        auto irrep_labels = molecule->irrep_labels();
 
         // Create an AOSubspace object
         AOSubspace aosub(subspace_str, molecule, min_basis);
@@ -100,13 +101,14 @@ psi::SharedMatrix make_aosubspace_projector(psi::SharedWavefunction wfn,
         CPsC->transform(wfn->Ca());
         double print_threshold = 1.0e-3;
         outfile->Printf("\n  Orbital overlap with AO subspace (> %.2e):\n", print_threshold);
-        outfile->Printf("    ========================\n");
-        outfile->Printf("    Irrep   MO   <phi|P|phi>\n");
-        outfile->Printf("    ------------------------\n");
+        outfile->Printf("    =======================\n");
+        outfile->Printf("    Irrep   MO  <phi|P|phi>\n");
+        outfile->Printf("    -----------------------\n");
         for (int h = 0; h < CPsC->nirrep(); h++) {
             for (int i = 0; i < CPsC->rowspi(h); i++) {
                 if (CPsC->get(h, i, i) > print_threshold) {
-                    outfile->Printf("      %1d   %4d    %.6f\n", h, i + 1, CPsC->get(h, i, i));
+                    outfile->Printf("    %4s  %4d  %10.6f\n", irrep_labels[h].c_str(), i + 1,
+                                    CPsC->get(h, i, i));
                 }
             }
         }
