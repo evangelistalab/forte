@@ -324,9 +324,9 @@ void ForteIntegrals::fix_orbital_phases(std::shared_ptr<psi::Matrix> U, bool is_
     Smo->set_name("MO overlap (old by new)");
 
     // transformation matrix
-    auto T = U->clone();
-    T->set_name("Reordering matrix");
-    T->zero();
+    auto T = std::make_shared<psi::Matrix>("Reordering matrix", U->rowdim(), U->coldim());
+//    T->set_name("Reordering matrix");
+//    T->zero();
 
     for (int h = 0; h < nirrep_; ++h) {
         auto ncol = T->coldim(h);
