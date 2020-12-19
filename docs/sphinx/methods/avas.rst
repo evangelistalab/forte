@@ -103,6 +103,11 @@ followed by a CASCI computation.::
     }
     Ecasci = energy('forte', ref_wfn=wfn)
 
+.. note::
+    The keyword :code:`noreorient` in the :code:`molecule` section is very important
+    if certain orientations of orbitals are selected in the subspace (e.g., 2pz of C).
+    Otherwise, the subspace orbital selection may end up the wrong direction.
+
 The AVAS procedure outputs::
 
     Sum of eigenvalues: 1.98526975
