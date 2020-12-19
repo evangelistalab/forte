@@ -387,6 +387,16 @@ void make_avas(psi::SharedWavefunction ref_wfn, std::shared_ptr<ForteOptions> op
     // Update both the alpha and beta orbitals assuming restricted orbitals
     ref_wfn->Ca()->copy(Ca);
     ref_wfn->Cb()->copy(Ca);
+
+    // Push to Psi4 environment
+    for (const std::string& name : {"RESTRICTED_DOCC", "ACTIVE", "RESTRICTED_UOCC"}) {
+        auto array = std::make_shared<psi::Matrix>("AVAS " + name, 1, nirrep);
+        for (int h = 0; h < nirrep; ++h) {
+            array->set(0, h, avas_dims[name][h]);
+        }
+        Process::environment.arrays[array->name()] = array;
+        ref_wfn->set_array_variable(array->name(), array);
+    }
 }
 
 std::shared_ptr<MOSpaceInfo> make_embedding(psi::SharedWavefunction ref_wfn,
