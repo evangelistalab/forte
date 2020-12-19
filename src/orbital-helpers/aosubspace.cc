@@ -98,7 +98,7 @@ psi::SharedMatrix make_aosubspace_projector(psi::SharedWavefunction wfn,
         // print the overlap of the projector
         psi::SharedMatrix CPsC = Ps->clone();
         CPsC->transform(wfn->Ca());
-        double print_threshold = 1.0e-4;
+        double print_threshold = 1.0e-3;
         outfile->Printf("\n  Orbital overlap with AO subspace (> %.2e):\n", print_threshold);
         outfile->Printf("    ========================\n");
         outfile->Printf("    Irrep   MO   <phi|P|phi>\n");
