@@ -82,7 +82,7 @@ set forte {
 job_type            newdriver
 subspace            ["Fe(3d)"]
 avas                true
-avas_num_active     7
+avas_cutoff         0.15
 int_type            df
 active_space_solver fci
 restricted_docc     [16,6,9,12]

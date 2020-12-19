@@ -83,18 +83,22 @@ void make_avas(psi::SharedWavefunction ref_wfn, std::shared_ptr<ForteOptions> op
     int avas_num_active_occ = options->get_int("AVAS_NUM_ACTIVE_OCC");
     int avas_num_active_vir = options->get_int("AVAS_NUM_ACTIVE_VIR");
     double avas_sigma = options->get_double("AVAS_SIGMA");
+    double avas_cutoff = options->get_double("AVAS_CUTOFF");
     double nonzero_threshold = options->get_double("AVAS_EVALS_THRESHOLD");
 
     // AVAS selection scheme for active/inactive orbitals
-    enum class AVAS_SELECTION { CUMULATIVE, ACTV_TOTAL, ACTV_SEPARATE };
+    enum class AVAS_SELECTION { CUMULATIVE, CUTOFF, ACTV_TOTAL, ACTV_SEPARATE };
     auto avas_selection = AVAS_SELECTION::CUMULATIVE;
     if (avas_num_active_occ + avas_num_active_vir > 0) {
         avas_selection = AVAS_SELECTION::ACTV_SEPARATE;
     } else if (avas_num_active > 0) {
         avas_selection = AVAS_SELECTION::ACTV_TOTAL;
+    } else if (1.0 - avas_cutoff > nonzero_threshold) {
+        avas_selection = AVAS_SELECTION::CUTOFF;
     }
     std::map<AVAS_SELECTION, std::string> avas_selection_to_string;
     avas_selection_to_string[AVAS_SELECTION::CUMULATIVE] = "SIGMA";
+    avas_selection_to_string[AVAS_SELECTION::CUTOFF] = "CUTOFF";
     avas_selection_to_string[AVAS_SELECTION::ACTV_SEPARATE] = "# DOCC/UOCC MOS";
     avas_selection_to_string[AVAS_SELECTION::ACTV_TOTAL] = "# ACTIVE MOS";
 
@@ -103,13 +107,14 @@ void make_avas(psi::SharedWavefunction ref_wfn, std::shared_ptr<ForteOptions> op
                            {{"AVAS selection scheme", avas_selection_to_string[avas_selection]}},
                            {{"Diagonalize projected overlap matrices", diagonalize_s}},
                            {{"AVAS sigma threshold (cumulative)", avas_sigma},
+                            {"AVAS sigma direct cutoff", avas_cutoff},
                             {"Nonzero eigenvalue threshold", nonzero_threshold}},
                            {{"Number of doubly occupied MOs", doccpi.sum()},
                             {"Number of singly occupied MOs", soccpi.sum()},
                             {"Number of unoccupied MOs", uoccpi.sum()},
-                            {"Number of AVAS MOs", avas_num_active},
-                            {"Number of active occupied AVAS MOs", avas_num_active_occ},
-                            {"Number of active virtual AVAS MOs", avas_num_active_vir}});
+                            {"# Active AVAS MOs requested", avas_num_active},
+                            {"# Active occupied AVAS MOs requested", avas_num_active_occ},
+                            {"# Active virtual AVAS MOs requested", avas_num_active_vir}});
 
     // compute projected overlap matrix
     auto Ca = ref_wfn->Ca()->clone();
@@ -232,6 +237,33 @@ void make_avas(psi::SharedWavefunction ref_wfn, std::shared_ptr<ForteOptions> op
                 Imos_uocc[h].push_back(idx);
             }
         }
+    } else if (avas_selection == AVAS_SELECTION::CUTOFF) {
+        double s_act_sum = 0.0;
+
+        for (const auto& mo_tuple : sorted_mos) {
+            double sigma;
+            bool is_occ;
+            int h, idx;
+            std::tie(sigma, is_occ, h, idx) = mo_tuple;
+
+            if (sigma > avas_cutoff and sigma >= nonzero_threshold) {
+                if (is_occ) {
+                    Amos_docc[h].push_back(idx);
+                } else {
+                    Amos_uocc[h].push_back(idx);
+                }
+                s_act_sum += sigma;
+            } else {
+                if (is_occ) {
+                    Imos_docc[h].push_back(idx);
+                } else {
+                    Imos_uocc[h].push_back(idx);
+                }
+            }
+        }
+
+        outfile->Printf("\n  Direct cutoff (%.3e) selection covers %.2f%% of the subspace.",
+                        avas_cutoff, 100.0 * s_act_sum / s_sum);
     } else {
         double s_act_sum = 0.0;
 
@@ -249,6 +281,7 @@ void make_avas(psi::SharedWavefunction ref_wfn, std::shared_ptr<ForteOptions> op
                 } else {
                     Amos_uocc[h].push_back(idx);
                 }
+                s_act_sum += sigma;
             } else {
                 if (is_occ) {
                     Imos_docc[h].push_back(idx);
@@ -256,8 +289,6 @@ void make_avas(psi::SharedWavefunction ref_wfn, std::shared_ptr<ForteOptions> op
                     Imos_uocc[h].push_back(idx);
                 }
             }
-
-            s_act_sum += sigma;
         }
     }
 
@@ -314,8 +345,8 @@ void make_avas(psi::SharedWavefunction ref_wfn, std::shared_ptr<ForteOptions> op
 
     outfile->Printf("\n    ===============================");
     outfile->Printf("\n     Irrep    MO  Occ.  <phi|P|phi>");
+    outfile->Printf("\n    -------------------------------");
     for (int h = 0; h < nirrep; ++h) {
-        outfile->Printf("\n    -------------------------------");
         auto label = irrep_labels[h].c_str();
 
         std::unordered_set<int> Adocc(Amos_docc[h].begin(), Amos_docc[h].end());
