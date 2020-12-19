@@ -290,6 +290,9 @@ void make_avas(psi::SharedWavefunction ref_wfn, std::shared_ptr<ForteOptions> op
                 }
             }
         }
+
+        outfile->Printf("\n  Cumulative sigma selection covers %.2f%% of the subspace.",
+                        100.0 * s_act_sum / s_sum);
     }
 
     // dimensions of subsets of orbitals
