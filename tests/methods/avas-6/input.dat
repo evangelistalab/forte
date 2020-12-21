@@ -71,13 +71,6 @@ for space_name, occ_array in ref_occ.items():
     array = variable('AVAS ' + space_name).np.reshape((4,))
     compare_values(occ_array, array, 6, 'AVAS ' + space_name)
 
-# check orbitals
-from forte.proc.orbital_helpers import read_orbitals
-refCa = read_orbitals().to_array()
-Ca = wfn.Ca().to_array()
-for h in range(4):
-    compare_values(np.abs(refCa[h]), np.abs(Ca[h]), 6, f"AVAS orbitals irrep {h}")
-
 set forte {
 job_type            newdriver
 subspace            ["Fe(3d)"]

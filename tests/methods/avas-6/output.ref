@@ -30,9 +30,9 @@
     -----------------------------------------------------------------------
 
 
-    Psi4 started on: Sunday, 20 December 2020 12:49AM
+    Psi4 started on: Tuesday, 22 December 2020 12:42AM
 
-    Process ID: 90059
+    Process ID: 65261
     Host:       Yorks-Mac.local
     PSIDATADIR: /Users/york/src/psi4new/psi4/share/psi4
     Memory:     500.0 MiB
@@ -114,13 +114,6 @@ for space_name, occ_array in ref_occ.items():
     array = variable('AVAS ' + space_name).np.reshape((4,))
     compare_values(occ_array, array, 6, 'AVAS ' + space_name)
 
-# check orbitals
-from forte.proc.orbital_helpers import read_orbitals
-refCa = read_orbitals().to_array()
-Ca = wfn.Ca().to_array()
-for h in range(4):
-    compare_values(np.abs(refCa[h]), np.abs(Ca[h]), 6, f"AVAS orbitals irrep {h}")
-
 set forte {
 job_type            newdriver
 subspace            ["Fe(3d)"]
@@ -140,11 +133,11 @@ compare_values(reffci, Ecasci, 8, "CASCI(10e,7o) energy")
 Scratch directory: /Users/york/scratch/psi4/
 
 *** tstart() called on Yorks-Mac.local
-*** at Sun Dec 20 00:49:51 2020
+*** at Tue Dec 22 00:42:02 2020
 
    => Loading Basis Set <=
 
-    Name: ANONYMOUSCB66DA72
+    Name: ANONYMOUS880EA66F
     Role: ORBITAL
     Keyword: BASIS
     atoms 1           entry FE         line  1835 file /Users/york/src/psi4new/psi4/share/psi4/basis/cc-pvdz.gbs 
@@ -216,7 +209,7 @@ Scratch directory: /Users/york/scratch/psi4/
 
   ==> Primary Basis <==
 
-  Basis Set: ANONYMOUSCB66DA72
+  Basis Set: ANONYMOUS880EA66F
     Blend: 6-31G + CC-PVDZ
     Number of shells: 85
     Number of basis function: 159
@@ -226,7 +219,7 @@ Scratch directory: /Users/york/scratch/psi4/
 
    => Loading Basis Set <=
 
-    Name: (ANONYMOUSCB66DA72 AUX)
+    Name: (ANONYMOUS880EA66F AUX)
     Role: JKFIT
     Keyword: DF_BASIS_SCF
     atoms 1           entry FE         line  1978 file /Users/york/src/psi4new/psi4/share/psi4/basis/def2-universal-jkfit.gbs 
@@ -251,7 +244,7 @@ Scratch directory: /Users/york/scratch/psi4/
 
    => Auxiliary Basis Set <=
 
-  Basis Set: (ANONYMOUSCB66DA72 AUX)
+  Basis Set: (ANONYMOUS880EA66F AUX)
     Blend: CC-PVDZ-JKFIT + DEF2-UNIVERSAL-JKFIT
     Number of shells: 388
     Number of basis function: 1437
@@ -282,21 +275,21 @@ Scratch directory: /Users/york/scratch/psi4/
 
                            Total Energy        Delta E     RMS |[F,P]|
 
-   @DF-RHF iter SAD: -1647.26164834452152   -1.64726e+03   0.00000e+00 
-   @DF-RHF iter   1: -1640.83009601667254    6.43155e+00   5.54634e-02 DIIS
-   @DF-RHF iter   2: -1621.93433769783360    1.88958e+01   9.60292e-02 DIIS
-   @DF-RHF iter   3: -1646.32335570167061   -2.43890e+01   7.64612e-03 DIIS
-   @DF-RHF iter   4: -1646.32720892575344   -3.85322e-03   1.16998e-02 DIIS
-   @DF-RHF iter   5: -1646.55194231010273   -2.24733e-01   5.23457e-03 DIIS
-   @DF-RHF iter   6: -1646.62165788594757   -6.97156e-02   8.47105e-04 DIIS
-   @DF-RHF iter   7: -1646.62487591542822   -3.21803e-03   5.13578e-04 DIIS
-   @DF-RHF iter   8: -1646.62613121198137   -1.25530e-03   8.27896e-05 DIIS
+   @DF-RHF iter SAD: -1647.26164835660893   -1.64726e+03   0.00000e+00 
+   @DF-RHF iter   1: -1640.83009601076469    6.43155e+00   5.54634e-02 DIIS
+   @DF-RHF iter   2: -1621.93433766016869    1.88958e+01   9.60292e-02 DIIS
+   @DF-RHF iter   3: -1646.32335570643932   -2.43890e+01   7.64612e-03 DIIS
+   @DF-RHF iter   4: -1646.32720892318275   -3.85322e-03   1.16998e-02 DIIS
+   @DF-RHF iter   5: -1646.55194230909888   -2.24733e-01   5.23457e-03 DIIS
+   @DF-RHF iter   6: -1646.62165788590073   -6.97156e-02   8.47105e-04 DIIS
+   @DF-RHF iter   7: -1646.62487591543027   -3.21803e-03   5.13578e-04 DIIS
+   @DF-RHF iter   8: -1646.62613121198251   -1.25530e-03   8.27896e-05 DIIS
    @DF-RHF iter   9: -1646.62616372407660   -3.25121e-05   3.67551e-05 DIIS
-   @DF-RHF iter  10: -1646.62616733932623   -3.61525e-06   7.61444e-06 DIIS
-   @DF-RHF iter  11: -1646.62616748403730   -1.44711e-07   8.29963e-07 DIIS
-   @DF-RHF iter  12: -1646.62616749133599   -7.29869e-09   5.02816e-07 DIIS
-   @DF-RHF iter  13: -1646.62616749215908   -8.23093e-10   4.95985e-08 DIIS
-   @DF-RHF iter  14: -1646.62616749217159   -1.25056e-11   8.76015e-09 DIIS
+   @DF-RHF iter  10: -1646.62616733932418   -3.61525e-06   7.61444e-06 DIIS
+   @DF-RHF iter  11: -1646.62616748403684   -1.44713e-07   8.29962e-07 DIIS
+   @DF-RHF iter  12: -1646.62616749133667   -7.29983e-09   5.02816e-07 DIIS
+   @DF-RHF iter  13: -1646.62616749215999   -8.23320e-10   4.95986e-08 DIIS
+   @DF-RHF iter  14: -1646.62616749217068   -1.06866e-11   8.76044e-09 DIIS
   Energy and wave function converged.
 
 
@@ -368,14 +361,14 @@ Scratch directory: /Users/york/scratch/psi4/
              A1    A2    B1    B2 
     DOCC [    18,    7,   10,   13 ]
 
-  @DF-RHF Final Energy: -1646.62616749217159
+  @DF-RHF Final Energy: -1646.62616749217068
 
    => Energetics <=
 
     Nuclear Repulsion Energy =            919.0508334365242717
-    One-Electron Energy =               -4094.3034263366421328
-    Two-Electron Energy =                1528.6264254079460443
-    Total Energy =                      -1646.6261674921715894
+    One-Electron Energy =               -4094.3034263366621417
+    Two-Electron Energy =                1528.6264254079669627
+    Total Energy =                      -1646.6261674921706799
 
 Computation Completed
 
@@ -397,15 +390,15 @@ Properties computed using the SCF density matrix
      X:     0.0000      Y:    -0.0000      Z:     0.0000     Total:     0.0000
 
 
-*** tstop() called on Yorks-Mac.local at Sun Dec 20 00:50:02 2020
+*** tstop() called on Yorks-Mac.local at Tue Dec 22 00:42:12 2020
 Module time:
-	user time   =      34.05 seconds =       0.57 minutes
-	system time =       1.60 seconds =       0.03 minutes
-	total time  =         11 seconds =       0.18 minutes
+	user time   =      33.08 seconds =       0.55 minutes
+	system time =       1.51 seconds =       0.03 minutes
+	total time  =         10 seconds =       0.17 minutes
 Total time:
-	user time   =      34.05 seconds =       0.57 minutes
-	system time =       1.60 seconds =       0.03 minutes
-	total time  =         11 seconds =       0.18 minutes
+	user time   =      33.08 seconds =       0.55 minutes
+	system time =       1.51 seconds =       0.03 minutes
+	total time  =         10 seconds =       0.17 minutes
     SCF energy............................................................................PASSED
 
 Scratch directory: /Users/york/scratch/psi4/
@@ -446,7 +439,7 @@ Scratch directory: /Users/york/scratch/psi4/
 
    => Loading Basis Set <=
 
-    Name: ANONYMOUSCB66DA72
+    Name: ANONYMOUS880EA66F
     Role: ORBITAL
     Keyword: BASIS
     atoms 1           entry FE         line  1835 file /Users/york/src/psi4new/psi4/share/psi4/basis/cc-pvdz.gbs 
@@ -686,7 +679,7 @@ Scratch directory: /Users/york/scratch/psi4/
   Diagonalizing the doubly occupied projected overlap matrix ... Done
   Diagonalizing the unoccupied projected overlap matrix ........ Done
   Sum of eigenvalues: 14.84610566
-  Cumulative sigma selection covers 98.15% of the subspace.
+  AVAS covers 98.15% of the subspace.
 
   ==> AVAS MOs Information <==
 
@@ -750,13 +743,6 @@ Scratch directory: /Users/york/scratch/psi4/
     AVAS ACTIVE...........................................................................PASSED
     AVAS RESTRICTED_UOCC..................................................................PASSED
 
-
-  Forte: Read orbitals from file forte_Ca.npz ... Done
-    AVAS orbitals irrep 0.................................................................PASSED
-    AVAS orbitals irrep 1.................................................................PASSED
-    AVAS orbitals irrep 2.................................................................PASSED
-    AVAS orbitals irrep 3.................................................................PASSED
-
 Scratch directory: /Users/york/scratch/psi4/
 
   Forte
@@ -798,7 +784,7 @@ Scratch directory: /Users/york/scratch/psi4/
 
    => Loading Basis Set <=
 
-    Name: ANONYMOUSCB66DA72
+    Name: ANONYMOUS880EA66F
     Role: ORBITAL
     Keyword: BASIS
     atoms 1           entry FE         line  1835 file /Users/york/src/psi4new/psi4/share/psi4/basis/cc-pvdz.gbs 
@@ -810,7 +796,7 @@ Scratch directory: /Users/york/scratch/psi4/
 
    => Loading Basis Set <=
 
-    Name: (ANONYMOUSCB66DA72 AUX)
+    Name: (ANONYMOUS880EA66F AUX)
     Role: RIFIT
     Keyword: DF_BASIS_MP2
     atoms 1           entry FE         line  2102 file /Users/york/src/psi4new/psi4/share/psi4/basis/def2-qzvpp-ri.gbs 
@@ -976,7 +962,7 @@ Scratch directory: /Users/york/scratch/psi4/
   Diagonalizing the doubly occupied projected overlap matrix ... Done
   Diagonalizing the unoccupied projected overlap matrix ........ Done
   Sum of eigenvalues: 4.87171546
-  Direct cutoff (1.500e-01) selection covers 94.22% of the subspace.
+  AVAS covers 94.22% of the subspace.
 
   ==> AVAS MOs Information <==
 
@@ -1021,7 +1007,7 @@ Scratch directory: /Users/york/scratch/psi4/
 
   ==> Primary Basis Set Summary <==
 
-  Basis Set: ANONYMOUSCB66DA72
+  Basis Set: ANONYMOUS880EA66F
     Blend: 6-31G + CC-PVDZ
     Number of shells: 85
     Number of basis function: 159
@@ -1047,7 +1033,7 @@ Scratch directory: /Users/york/scratch/psi4/
 
    => Auxiliary Basis Set <=
 
-  Basis Set: (ANONYMOUSCB66DA72 AUX)
+  Basis Set: (ANONYMOUS880EA66F AUX)
     Blend: CC-PVDZ-RI + DEF2-QZVPP-RI
     Number of shells: 301
     Number of basis function: 1009
@@ -1090,10 +1076,10 @@ Scratch directory: /Users/york/scratch/psi4/
 
 
   Transforming DF Integrals
-  Timing for density-fitting transformation:                  2.761 s.
+  Timing for density-fitting transformation:                  2.301 s.
 
   Timing for freezing core and virtual orbitals:              0.000 s.
-  Timing for computing density-fitted integrals:              9.120 s.
+  Timing for computing density-fitted integrals:              8.146 s.
 
   ==> Summary of Active Space Solver Input <==
 
@@ -1117,14 +1103,14 @@ Scratch directory: /Users/york/scratch/psi4/
   Number of beta strings (N-3)  = 21
   Timing for strings        =      0.000 s
   Timing for NN strings     =      0.000 s
-  Timing for VO strings     =      0.000 s
+  Timing for VO strings     =      0.001 s
   Timing for OO strings     =      0.000 s
-  Timing for VVOO strings   =      0.000 s
+  Timing for VVOO strings   =      0.001 s
   Timing for VOVO strings   =      0.000 s
   Timing for 1-hole strings =      0.000 s
   Timing for 2-hole strings =      0.000 s
   Timing for 3-hole strings =      0.001 s
-  Total timing              =      0.001 s
+  Total timing              =      0.002 s
 
   ==> FCI Solver <==
 
@@ -1142,28 +1128,28 @@ Scratch directory: /Users/york/scratch/psi4/
   ---------------------------------------------
     Root            Energy     <S^2>   Spin
   ---------------------------------------------
-      0    -1646.644084973494  0.000  singlet
+      0    -1646.644084973495  0.000  singlet
       1    -1646.545241082837  6.000  quintet
-      2    -1646.518176751938  6.000  quintet
-      3    -1646.445778848439  2.000  triplet
-      4    -1646.442406598847  2.000  triplet
-      5    -1646.428829107811  2.000  triplet
-      6    -1646.420244150431  2.000  triplet
-      7    -1646.417794382138  2.000  triplet
-      8    -1646.402122890398  2.000  triplet
-      9    -1646.396783637644  0.000  singlet
+      2    -1646.518176751941  6.000  quintet
+      3    -1646.445778848440  2.000  triplet
+      4    -1646.442406598848  2.000  triplet
+      5    -1646.428829107813  2.000  triplet
+      6    -1646.420244150433  2.000  triplet
+      7    -1646.417794382137  2.000  triplet
+      8    -1646.402122890399  2.000  triplet
+      9    -1646.396783637645  0.000  singlet
      10    -1646.390326358354  0.000  singlet
-     11    -1646.386231043526  2.000  triplet
-     12    -1646.377419481676  0.000  singlet
-     13    -1646.372613452047  0.000  singlet
+     11    -1646.386231043527  2.000  triplet
+     12    -1646.377419481677  0.000  singlet
+     13    -1646.372613452048  0.000  singlet
      14    -1646.356575749081  0.000  singlet
-     15    -1646.350430364834  0.000  singlet
+     15    -1646.350430364835  0.000  singlet
      16    -1646.319057022489  2.000  triplet
-     17    -1646.274639504454  0.000  singlet
-     18    -1646.222677485891  0.000  singlet
-     19    -1646.208525658845  0.000  singlet
+     17    -1646.274639504455  0.000  singlet
+     18    -1646.222677485893  0.000  singlet
+     19    -1646.208525658846  0.000  singlet
   ---------------------------------------------
-  Timing for initial guess  =      0.001 s
+  Timing for initial guess  =      0.005 s
 
   Projecting out root 1
   Projecting out root 2
@@ -1183,16 +1169,16 @@ Scratch directory: /Users/york/scratch/psi4/
   -----------------------------------------------------
     Iter.      Avg. Energy       Delta_E     Res. Norm
   -----------------------------------------------------
-      1    -1646.644084973496  -1.647e+03  +1.663e-01
-      2    -1646.661098520371  -1.701e-02  +8.082e-02
-      3    -1646.664867656569  -3.769e-03  +1.974e-02
-      4    -1646.665063147427  -1.955e-04  +4.996e-03
-      5    -1646.665078152083  -1.500e-05  +8.107e-04
-      6    -1646.665078702032  -5.499e-07  +2.084e-04
-      7    -1646.665078748482  -4.645e-08  +4.988e-05
-      8    -1646.665078750443  -1.961e-09  +7.308e-06
-      9    -1646.665078750492  -4.934e-11  +1.424e-06
-     10    -1646.665078750493  -1.137e-12  +3.068e-07
+      1    -1646.644084973494  -1.647e+03  +1.663e-01
+      2    -1646.661098520369  -1.701e-02  +8.082e-02
+      3    -1646.664867656565  -3.769e-03  +1.974e-02
+      4    -1646.665063147425  -1.955e-04  +4.996e-03
+      5    -1646.665078152080  -1.500e-05  +8.107e-04
+      6    -1646.665078702028  -5.499e-07  +2.084e-04
+      7    -1646.665078748480  -4.645e-08  +4.988e-05
+      8    -1646.665078750439  -1.959e-09  +7.308e-06
+      9    -1646.665078750493  -5.434e-11  +1.424e-06
+     10    -1646.665078750494  -1.137e-12  +3.068e-07
   -----------------------------------------------------
   The Davidson-Liu algorithm converged in 11 iterations.
 
@@ -1200,20 +1186,20 @@ Scratch directory: /Users/york/scratch/psi4/
 
     22 20 2 20     -0.97638778
 
-    Total Energy:     -1646.665078750493421
+    Total Energy:     -1646.665078750494331
 
   ==> Energy Summary <==
 
     Multi.(2ms)  Irrep.  No.               Energy
     ---------------------------------------------
-       1  (  0)    A1     0    -1646.665078750493
+       1  (  0)    A1     0    -1646.665078750494
     ---------------------------------------------
 
-  Time to prepare integrals:       14.203 seconds
-  Time to run job          :        1.088 seconds
-  Total                    :       15.291 seconds    CASCI(10e,7o) energy..................................................................PASSED
+  Time to prepare integrals:       12.921 seconds
+  Time to run job          :        0.877 seconds
+  Total                    :       13.799 seconds    CASCI(10e,7o) energy..................................................................PASSED
 
-    Psi4 stopped on: Sunday, 20 December 2020 12:50AM
-    Psi4 wall time for execution: 0:00:26.40
+    Psi4 stopped on: Tuesday, 22 December 2020 12:42AM
+    Psi4 wall time for execution: 0:00:24.28
 
 *** Psi4 exiting successfully. Buy a developer a beer!
