@@ -32,7 +32,6 @@
 #include "psi4/libmints/molecule.h"
 #include "psi4/libmints/basisset.h"
 
-
 #define _DEBUG_AOSUBSPACE_ 0
 
 namespace forte {
@@ -220,7 +219,7 @@ class AOSubspace {
     void parse_subspace();
 
     /// Parse the options object
-    void parse_subspace_entry(const std::string& s);
+    bool parse_subspace_entry(const std::string& s);
 
     /// Parse the AO basis set
     void parse_basis_set();

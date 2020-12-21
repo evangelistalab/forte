@@ -103,6 +103,11 @@ followed by a CASCI computation.::
     }
     Ecasci = energy('forte', ref_wfn=wfn)
 
+.. note::
+    The keyword :code:`noreorient` in the :code:`molecule` section is very important
+    if certain orientations of orbitals are selected in the subspace (e.g., 2pz of C).
+    Otherwise, the subspace orbital selection may end up the wrong direction.
+
 The AVAS procedure outputs::
 
     Sum of eigenvalues: 1.98526975
@@ -123,15 +128,16 @@ The AVAS procedure outputs::
       RESTRICTED_UOCC    13     3     4     8
       ---------------------------------------
 
-    ==> Atomic Valence MOs <==
+    ==> Atomic Valence MOs (Active Marked by *) <==
 
-      ==============================
-      Irrep    MO  Occ.  <phi|P|phi>
-      ------------------------------
-         B1     0     2     0.970513
-         B1     1     0     0.992548
-         B1     2     0     0.022209
-      ==============================
+      ===============================
+       Irrep    MO  Occ.  <phi|P|phi>
+      -------------------------------
+      *  B1      0    2      0.970513
+      *  B1      1    0      0.992548
+      *  B1      2    0      0.022209
+      ===============================
+
 
 The :code:`Sum of eigenvalues` is the sum of traces of projected overlap matrices
 :math:`\mathbf{S}` and :math:`\mathbf{\bar{S}}`.
@@ -199,11 +205,20 @@ is larger than the threshold.
 * Type: double
 * Default: 0.98
 
+**AVAS_CUTOFF**
+
+The threshold greater than which to the eigenvalues of the projected overlap
+matrices will be considered as active orbitals. If not equal to 1.0, it takes
+priority over the sigma threshold selection.
+
+* Type: double
+* Default: 1.0
+
 **AVAS_NUM_ACTIVE**
 
 The total number of orbitals considered as active for
 doubly occupied and virtual orbitals (singly occupied orbitals not included).
-If not equal to 0, it will take priority over the sigma threshold selection.
+If not equal to 0, it will take priority over the sigma or cutoff selections.
 
 * Type: int
 * Default: 0
@@ -212,7 +227,7 @@ If not equal to 0, it will take priority over the sigma threshold selection.
 
 The number of doubly occupied orbitals considered as active.
 If not equal to 0, it will take priority over the selection schemes based on
-sigma threshold selection and the total number of active orbitals.
+sigma and cutoff selections and the total number of active orbitals.
 
 * Type: int
 * Default: 0
@@ -221,7 +236,7 @@ sigma threshold selection and the total number of active orbitals.
 
 The number of virtual orbitals considered as active.
 If not equal to 0, it will take priority over the selection schemes based on
-sigma threshold selection and the total number of active orbitals.
+sigma and cutoff selections and the total number of active orbitals.
 
 * Type: int
 * Default: 0
