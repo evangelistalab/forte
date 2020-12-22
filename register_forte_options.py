@@ -108,22 +108,28 @@ def register_avas_options(options):
                        " This value is tested against"
                        " (sum of active e.values) / (sum of total e.values)")
 
+    options.add_double("AVAS_CUTOFF", 1.0,
+                       "The eigenvalues of the overlap greater than this cutoff"
+                       " will be considered as active. If not equal to 1.0,"
+                       " it takes priority over cumulative cutoff selection.")
+
     options.add_double("AVAS_EVALS_THRESHOLD", 1.0e-6,
-                       "Threshold smaller than which is considered as zero for an eigenvalue.")
+                       "Threshold smaller than which is considered as zero"
+                       " for an eigenvalue of the projected overlap.")
 
     options.add_int("AVAS_NUM_ACTIVE", 0,
                     "The total number of active orbitals. If not equal to 0,"
-                    " it takes priority over threshold based selection.")
+                    " it takes priority over threshold-based selections.")
 
     options.add_int("AVAS_NUM_ACTIVE_OCC", 0,
-                    "The number of active occupied orbitals."
-                    " If not equal to 0, it takes priority over"
-                    " threshold based selection.")
+                    "The number of active occupied orbitals. If not equal to 0,"
+                    " it takes priority over cutoff-based selections and"
+                    " that based on the total number of active orbitals.")
 
     options.add_int("AVAS_NUM_ACTIVE_VIR", 0,
-                    "The number of active virtual orbitals."
-                    " If not equal to 0, it takes priority over"
-                    " threshold based selection.")
+                    "The number of active virtual orbitals. If not equal to 0,"
+                    " it takes priority over cutoff-based selections and"
+                    " that based on the total number of active orbitals.")
 
 
 def register_cino_options(options):
