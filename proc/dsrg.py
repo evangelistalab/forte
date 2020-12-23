@@ -226,6 +226,11 @@ class ProcedureDSRG:
             # - Semi-canonicalize RDMs and orbitals
             if self.do_semicanonical:
                 self.semi.semicanonicalize(self.rdms)
+                # NOT read previous orbitals if fixing orbital ordering and phases failed
+                if (not self.semi.fix_orbital_success()) and self.Heff_implemented:
+                    psi4.core.print_out("\n  DSRG checkpoint files removed due to the unsuccessful"
+                                        " attempt to fix orbital phase and order.")
+                    self.dsrg_solver.clean_checkpoints()
             self.Ua, self.Ub = self.semi.Ua_t(), self.semi.Ub_t()
 
             # - Compute DSRG energy

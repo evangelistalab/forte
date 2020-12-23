@@ -59,8 +59,7 @@ class SemiCanonical {
                   std::shared_ptr<ForteOptions> options, bool quiet_banner = false);
 
     /// Transforms integrals and RDMs
-    RDMs semicanonicalize(RDMs& rdms, const bool& build_fock = true,
-                          const bool& transform = true);
+    RDMs semicanonicalize(RDMs& rdms, const bool& build_fock = true, const bool& transform = true);
 
     /// Return the alpha rotation matrix
     psi::SharedMatrix Ua() { return Ua_; }
@@ -73,6 +72,9 @@ class SemiCanonical {
 
     /// Return the beta rotation matrix in the active space
     ambit::Tensor Ub_t() { return Ub_t_; }
+
+    /// Return if the orbital ordering and phases are fixed successfully
+    bool fix_orbital_success() { return fix_orbital_success_; }
 
     /// Set if rotating orbitals to natural orbital basis
     void set_natural_orbital(bool nat_orb) { natural_orb_ = nat_orb; }
@@ -114,7 +116,7 @@ class SemiCanonical {
     /// A copy of the beta Fock matrix
     psi::SharedMatrix Fb_;
     /// Prepare the Fock matrices for diagonalization
-    void prepare_fock(RDMs &rdms);
+    void prepare_fock(RDMs& rdms);
 
     /// Unitary matrix for alpha orbital rotation
     psi::SharedMatrix Ua_;
@@ -145,6 +147,9 @@ class SemiCanonical {
 
     /// Fill ambit::Tensor Ua_t_ (Ub_t_) using psi::SharedMatrix Ua_ (Ub_)
     void fill_Uactv(psi::SharedMatrix U, ambit::Tensor Ut);
+
+    /// Successfully fix the orbital ordering and phases
+    bool fix_orbital_success_;
 };
 } // namespace forte
 

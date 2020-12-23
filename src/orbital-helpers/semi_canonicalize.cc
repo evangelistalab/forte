@@ -80,6 +80,8 @@ void SemiCanonical::read_options(std::shared_ptr<ForteOptions> foptions) {
     auto rconv = foptions->get_double("R_CONVERGENCE");
     auto dconv = foptions->get_double("D_CONVERGENCE");
     threshold_1rdm_ = rconv > dconv ? rconv : dconv;
+
+    fix_orbital_success_ = true;
 }
 
 void SemiCanonical::startup() {
@@ -306,7 +308,7 @@ void SemiCanonical::build_transformation_matrices() {
         }
 
         // keep phase and order unchanged
-        ints_->fix_orbital_phases(U, is_alpha);
+        fix_orbital_success_ &= ints_->fix_orbital_phases(U, is_alpha);
 
         // fill in UData
         auto& Ut = is_alpha ? Ua_t_ : Ub_t_;
