@@ -66,8 +66,7 @@ void SA_DSRGPT::print_options() {
         {"Integral type", ints_type_},
         {"Source operator", source_},
         {"Core-Virtual source type", ccvv_source_},
-        {"Reference relaxation", relax_ref_},
-        {"Internal amplitudes", internal_amp_}};
+        {"Reference relaxation", relax_ref_}};
 
     if (multi_state_) {
         calculation_info_string.push_back({"State type", "MULTIPLE STATES"});
@@ -76,8 +75,8 @@ void SA_DSRGPT::print_options() {
         calculation_info_string.push_back({"State type", "SINGLE STATE"});
     }
 
+    calculation_info_string.push_back({"Internal amplitudes levels", internal_amp_});
     if (internal_amp_ != "NONE") {
-        calculation_info_string.push_back({"Internal amplitudes levels", internal_amp_});
         calculation_info_string.push_back({"Internal amplitudes selection", internal_amp_select_});
     }
 

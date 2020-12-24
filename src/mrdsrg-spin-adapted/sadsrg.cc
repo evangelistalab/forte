@@ -178,15 +178,7 @@ void SADSRG::read_options() {
     internal_amp_ = foptions_->get_str("INTERNAL_AMP");
     internal_amp_select_ = foptions_->get_str("INTERNAL_AMP_SELECT");
     if (internal_amp_ != "NONE") {
-        auto actv_dim = mo_space_info_->dimension("ACTIVE");
-        auto gas_spaces = mo_space_info_->composite_space_names()["ACTIVE"];
-        auto single_gas = false;
-        for (const std::string& gas_name : gas_spaces) {
-            if (mo_space_info_->dimension(gas_name) == actv_dim) {
-                single_gas = true;
-                break;
-            }
-        }
+        auto single_gas = (mo_space_info_->nonzero_gas_spaces().size() == 1);
         if (single_gas and internal_amp_select_ != "ALL") {
             outfile->Printf(
                 "\n  Warning: INTERNAL_AMP_SELECT option %s is not defined for a single GAS space.",
@@ -677,11 +669,8 @@ bool SADSRG::check_semi_orbs() {
     }
 
     auto nactv = actv_mos_.size();
-    auto active_space_names = mo_space_info_->composite_space_names()["ACTIVE"];
+    auto active_space_names = mo_space_info_->nonzero_gas_spaces();
     for (const std::string& space : active_space_names) {
-        if (mo_space_info_->size(space) == 0)
-            continue;
-
         auto rel_indices = mo_space_info_->pos_in_space(space, "ACTIVE");
         auto size = rel_indices.size();
         double fmax = 0.0, fmean = 0.0;
@@ -826,7 +815,7 @@ void SADSRG::print_cumulant_summary() {
 }
 
 void SADSRG::build_internal_amps_types() {
-    auto gas_spaces = mo_space_info_->composite_space_names()["ACTIVE"];
+    auto gas_spaces = mo_space_info_->nonzero_gas_spaces();
     int n_gas = gas_spaces.size();
 
     // T1 internals
@@ -834,21 +823,13 @@ void SADSRG::build_internal_amps_types() {
     if (internal_amp_.find("SINGLES") != std::string::npos) {
         // excitation O-V
         for (int o = 0; o < n_gas; ++o) {
-            if (gas_actv_rel_mos_[gas_spaces[o]].size() == 0)
-                continue;
-
             for (int v = o + 1; v < n_gas; ++v) {
-                if (gas_actv_rel_mos_[gas_spaces[v]].size() == 0)
-                    continue;
-
                 t1_internals_.push_back({gas_spaces[o], gas_spaces[v], false});
             }
         }
         // pure internal
         if (internal_amp_select_ == "ALL") {
             for (int x = 0; x < n_gas; ++x) {
-                if (gas_actv_rel_mos_[gas_spaces[x]].size() == 0)
-                    continue;
                 t1_internals_.push_back({gas_spaces[x], gas_spaces[x], true});
             }
         }
@@ -859,23 +840,11 @@ void SADSRG::build_internal_amps_types() {
     if (internal_amp_.find("DOUBLES") != std::string::npos) {
         // pure excitation
         for (int o1 = 0; o1 < n_gas; ++o1) {
-            if (gas_actv_rel_mos_[gas_spaces[o1]].size() == 0)
-                continue;
-
             for (int o2 = 0; o2 < n_gas; ++o2) {
-                if (gas_actv_rel_mos_[gas_spaces[o2]].size() == 0)
-                    continue;
-
                 int o_max = o1 < o2 ? o2 : o1;
 
                 for (int v1 = o_max + 1; v1 < n_gas; ++v1) {
-                    if (gas_actv_rel_mos_[gas_spaces[v1]].size() == 0)
-                        continue;
-
                     for (int v2 = o_max + 1; v2 < n_gas; ++v2) {
-                        if (gas_actv_rel_mos_[gas_spaces[v2]].size() == 0)
-                            continue;
-
                         t2_internals_.push_back({gas_spaces[o1], gas_spaces[o2], gas_spaces[v1],
                                                  gas_spaces[v2], false});
                     }
@@ -887,12 +856,7 @@ void SADSRG::build_internal_amps_types() {
         if (internal_amp_select_ != "OOVV") {
 
             for (int o = 0; o < n_gas; ++o) {
-                if (gas_actv_rel_mos_[gas_spaces[o]].size() == 0)
-                    continue;
-
                 for (int v = o + 1; v < n_gas; ++v) {
-                    if (gas_actv_rel_mos_[gas_spaces[v]].size() == 0)
-                        continue;
 
                     // oo->ov
                     t2_internals_.push_back(
@@ -908,8 +872,6 @@ void SADSRG::build_internal_amps_types() {
 
                     // ox->vx
                     for (int x = 0; x < n_gas; ++x) {
-                        if (gas_actv_rel_mos_[gas_spaces[x]].size() == 0)
-                            continue;
 
                         if (x == o or x == v)
                             continue;
@@ -930,15 +892,11 @@ void SADSRG::build_internal_amps_types() {
         // pure internal
         if (internal_amp_select_ == "ALL") {
             for (int x1 = 0; x1 < n_gas; ++x1) {
-                if (gas_actv_rel_mos_[gas_spaces[x1]].size() == 0)
-                    continue;
 
                 t2_internals_.push_back(
                     {gas_spaces[x1], gas_spaces[x1], gas_spaces[x1], gas_spaces[x1], true});
 
                 for (int x2 = x1 + 1; x2 < n_gas; ++x2) {
-                    if (gas_actv_rel_mos_[gas_spaces[x2]].size() == 0)
-                        continue;
 
                     t2_internals_.push_back(
                         {gas_spaces[x1], gas_spaces[x2], gas_spaces[x1], gas_spaces[x2], true});
