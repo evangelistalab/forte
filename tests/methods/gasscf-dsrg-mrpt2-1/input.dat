@@ -47,6 +47,7 @@ set forte {
   casscf_maxiter 100
   casscf_e_convergence 10
   casscf_g_convergence 10
+  casscf_micro_maxiter 4
   casscf_active_frozen_orbital [0]
 }
 
