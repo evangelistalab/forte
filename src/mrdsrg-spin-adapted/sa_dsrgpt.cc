@@ -90,11 +90,49 @@ void SA_DSRGPT::init_fock() {
     // link F_ with Fock_ of SADSRG
     F_ = Fock_;
 
-    F0th_ = BTF_->build(tensor_type_, "Fock 0th", diag_one_labels());
-    F0th_["pq"] = F_["pq"];
+    // GAS spaces
+    auto gas_spaces = mo_space_info_->nonzero_gas_spaces();
 
-    F1st_ = BTF_->build(tensor_type_, "Fock 1st", od_one_labels());
-    F1st_["pq"] = F_["pq"];
+    std::string actv_block_label = actv_label_ + actv_label_;
+    size_t nactv = actv_mos_.size();
+
+    // zero-order Fock: diagonal blocks of Fock
+    F0th_ = BTF_->build(tensor_type_, "Fock 0th", diag_one_labels());
+
+    for (const std::string& block : diag_one_labels()) {
+        if (block != actv_block_label) {
+            F0th_.block(block)("pq") = F_.block(block)("pq");
+        } else {
+            // active contains all GAS spaces
+            auto& F0th_actv_data = F0th_.block(block).data();
+            const auto& Factv_data = F_.block(block).data();
+
+            for (const std::string& gas : gas_spaces) {
+                auto gas_in_actv = mo_space_info_->pos_in_space(gas, "ACTIVE");
+
+                for (size_t p = 0, size = gas_in_actv.size(); p < size; ++p) {
+                    auto np = gas_in_actv[p];
+                    for (size_t q = 0; q < size; ++q) {
+                        auto nq = gas_in_actv[q];
+                        F0th_actv_data[np * nactv + nq] = Factv_data[np * nactv + nq];
+                    }
+                }
+            }
+        }
+    }
+
+    // first-order Fock
+    if (gas_spaces.size() == 1) {
+        F1st_ = BTF_->build(tensor_type_, "Fock 1st", od_one_labels());
+        F1st_["pq"] = F_["pq"];
+    } else {
+        // need to include active-active block if doing GAS
+        auto F1st_blocks = od_one_labels();
+        F1st_blocks.push_back(actv_block_label);
+        F1st_ = BTF_->build(tensor_type_, "Fock 1st", F1st_blocks);
+
+        F1st_["pq"] = F_["pq"] - F0th_["pq"];
+    }
 }
 
 void SA_DSRGPT::compute_t2_full() {

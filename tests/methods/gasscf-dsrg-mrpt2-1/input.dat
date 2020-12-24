@@ -56,7 +56,7 @@ compare_values(refgasscf, egasscf, 9, "GASSCF energy")
 
 set forte {
   job_type newdriver
-  correlation_solver dsrg-mrpt2
+  correlation_solver sa-mrdsrg
   dsrg_s 1.0
 }
 
