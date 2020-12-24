@@ -449,6 +449,19 @@ MOSpaceInfo::read_mo_space_from_map(const std::string& space,
     return std::make_pair(space_info, read);
 }
 
+std::vector<std::string> MOSpaceInfo::nonzero_gas_spaces() {
+    std::vector<std::string> nonzero_gas;
+
+    auto gas_spaces = composite_space_names()["ACTIVE"];
+    for (const std::string& gas_name : gas_spaces) {
+        if (size(gas_name) != 0) {
+            nonzero_gas.push_back(gas_name);
+        }
+    }
+
+    return nonzero_gas;
+}
+
 std::shared_ptr<MOSpaceInfo> make_mo_space_info(const psi::Dimension& nmopi,
                                                 const std::string& point_group,
                                                 std::shared_ptr<ForteOptions> options) {

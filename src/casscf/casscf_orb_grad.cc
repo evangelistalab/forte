@@ -155,14 +155,7 @@ void CASSCF_ORB_GRAD::setup_mos() {
     BlockedTensor::add_composite_mo_space("G", "P,Q,R,S", {"f", "c", "a", "v", "u"});
 
     // test if we are doing GAS
-    gas_ref_ = true;
-    auto gas_spaces = mo_space_info_->composite_space_names()["ACTIVE"];
-    for (const std::string& gas_name : gas_spaces) {
-        if (mo_space_info_->dimension(gas_name) == nactvpi_) {
-            gas_ref_ = false;
-            break;
-        }
-    }
+    gas_ref_ = (mo_space_info_->nonzero_gas_spaces().size() != 1);
 }
 
 void CASSCF_ORB_GRAD::read_options() {
@@ -295,24 +288,20 @@ void CASSCF_ORB_GRAD::nonredundant_pairs() {
     }
 
     // GASm-GASn with m != n rotations
-    auto gas_spaces = mo_space_info_->composite_space_names()["ACTIVE"];
+    auto gas_spaces = mo_space_info_->nonzero_gas_spaces();
     if (gas_ref_) {
         const auto& mos = label_to_mos_["a"];
 
         // loop over GASm spaces
         for (int g0 = 0, space_size = gas_spaces.size(); g0 < space_size; ++g0) {
-            if (mo_space_info_->size(gas_spaces[g0]) == 0)
-                continue;
             auto g0_in_actv = mo_space_info_->pos_in_space(gas_spaces[g0], "ACTIVE");
 
             // loop over GASn spaces
             for (int g1 = g0 + 1; g1 < space_size; ++g1) {
-                if (mo_space_info_->size(gas_spaces[g1]) == 0)
-                    continue;
                 auto g1_in_actv = mo_space_info_->pos_in_space(gas_spaces[g1], "ACTIVE");
 
-                // space name for printing, convert to 1-based GAS
-                std::string space_name = std::to_string(g0 + 1) + std::to_string(g1 + 1);
+                // space name for printing
+                std::string space_name = gas_spaces[g0].substr(3) + gas_spaces[g1].substr(3);
                 nrots[space_name] = std::vector<int>(nirrep_, 0);
 
                 // loop over indices in GASm
@@ -344,12 +333,10 @@ void CASSCF_ORB_GRAD::nonredundant_pairs() {
         const auto& mos = label_to_mos_["a"];
 
         for (int g = 0, space_size = gas_spaces.size(); g < space_size; ++g) {
-            if (mo_space_info_->size(gas_spaces[g]) == 0)
-                continue;
             auto g_in_actv = mo_space_info_->pos_in_space(gas_spaces[g], "ACTIVE");
 
             // space name for printing, convert to 1-based GAS
-            std::string space_name = std::to_string(g + 1) + std::to_string(g + 1);
+            std::string space_name = gas_spaces[g].substr(3) + gas_spaces[g].substr(3);
             nrots[space_name] = std::vector<int>(nirrep_, 0);
 
             for (int u = 0, size = g_in_actv.size(); u < size; ++u) {

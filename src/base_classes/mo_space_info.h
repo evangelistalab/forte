@@ -226,6 +226,9 @@ class MOSpaceInfo {
     /// @return The number of irreps
     size_t nirrep() { return nirrep_; }
 
+    /// @return The names of nonzero GAS spaces
+    std::vector<std::string> nonzero_gas_spaces();
+
   private:
     // ==> Class Data <==
     Symmetry symmetry_;
