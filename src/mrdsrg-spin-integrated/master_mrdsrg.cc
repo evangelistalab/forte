@@ -1294,18 +1294,18 @@ void MASTER_DSRG::H2_T1_C1(BlockedTensor& H2, BlockedTensor& T1, const double& a
     local_timer timer;
 
     C1["qp"] += alpha * T1["ma"] * H2["qapm"];
-    C1["qp"] += alpha * T1["xe"] * Gamma1_["yx"] * H2["qepy"];
-    C1["qp"] -= alpha * T1["mu"] * Gamma1_["uv"] * H2["qvpm"];
+    C1["qp"] += alpha * T1["xa"] * Gamma1_["yx"] * H2["qapy"];
+    C1["qp"] -= alpha * T1["iu"] * Gamma1_["uv"] * H2["qvpi"];
     C1["qp"] += alpha * T1["MA"] * H2["qApM"];
-    C1["qp"] += alpha * T1["XE"] * Gamma1_["YX"] * H2["qEpY"];
-    C1["qp"] -= alpha * T1["MU"] * Gamma1_["UV"] * H2["qVpM"];
+    C1["qp"] += alpha * T1["XA"] * Gamma1_["YX"] * H2["qApY"];
+    C1["qp"] -= alpha * T1["IU"] * Gamma1_["UV"] * H2["qVpI"];
 
     C1["QP"] += alpha * T1["ma"] * H2["aQmP"];
-    C1["QP"] += alpha * T1["xe"] * Gamma1_["yx"] * H2["eQyP"];
-    C1["QP"] -= alpha * T1["mu"] * Gamma1_["uv"] * H2["vQmP"];
+    C1["QP"] += alpha * T1["xa"] * Gamma1_["yx"] * H2["aQyP"];
+    C1["QP"] -= alpha * T1["iu"] * Gamma1_["uv"] * H2["vQiP"];
     C1["QP"] += alpha * T1["MA"] * H2["QAPM"];
-    C1["QP"] += alpha * T1["XE"] * Gamma1_["YX"] * H2["QEPY"];
-    C1["QP"] -= alpha * T1["MU"] * Gamma1_["UV"] * H2["QVPM"];
+    C1["QP"] += alpha * T1["XA"] * Gamma1_["YX"] * H2["QAPY"];
+    C1["QP"] -= alpha * T1["IU"] * Gamma1_["UV"] * H2["QVPI"];
 
     if (print_ > 2) {
         outfile->Printf("\n    Time for [H2, T1] -> C1 : %12.3f", timer.get());
@@ -1520,27 +1520,27 @@ void MASTER_DSRG::H2_T2_C1(BlockedTensor& H2, BlockedTensor& T2, const double& a
     C1["jb"] -= alpha * temp["XI"] * T2["jIbX"];
     C1["JB"] -= alpha * temp["XI"] * T2["IJXB"];
 
-    temp = ambit::BlockedTensor::build(tensor_type_, "temp", {"av"});
-    temp["xe"] += 0.5 * T2["uvey"] * Lambda2_["xyuv"];
-    temp["xe"] += T2["uVeY"] * Lambda2_["xYuV"];
-    C1["qs"] += alpha * temp["xe"] * H2["eqxs"];
-    C1["QS"] += alpha * temp["xe"] * H2["eQxS"];
-    temp = ambit::BlockedTensor::build(tensor_type_, "temp", {"AV"});
-    temp["XE"] += 0.5 * T2["UVEY"] * Lambda2_["XYUV"];
-    temp["XE"] += T2["uVyE"] * Lambda2_["yXuV"];
-    C1["qs"] += alpha * temp["XE"] * H2["qEsX"];
-    C1["QS"] += alpha * temp["XE"] * H2["EQXS"];
+    temp = ambit::BlockedTensor::build(tensor_type_, "temp", {"ap"});
+    temp["xa"] += 0.5 * T2["uvay"] * Lambda2_["xyuv"];
+    temp["xa"] += T2["uVaY"] * Lambda2_["xYuV"];
+    C1["qs"] += alpha * temp["xa"] * H2["aqxs"];
+    C1["QS"] += alpha * temp["xa"] * H2["aQxS"];
+    temp = ambit::BlockedTensor::build(tensor_type_, "temp", {"AP"});
+    temp["XA"] += 0.5 * T2["UVAY"] * Lambda2_["XYUV"];
+    temp["XA"] += T2["uVyA"] * Lambda2_["yXuV"];
+    C1["qs"] += alpha * temp["XA"] * H2["qAsX"];
+    C1["QS"] += alpha * temp["XA"] * H2["AQXS"];
 
-    temp = ambit::BlockedTensor::build(tensor_type_, "temp", {"ca"});
-    temp["mu"] += 0.5 * T2["mvxy"] * Lambda2_["xyuv"];
-    temp["mu"] += T2["mVxY"] * Lambda2_["xYuV"];
-    C1["qs"] -= alpha * temp["mu"] * H2["uqms"];
-    C1["QS"] -= alpha * temp["mu"] * H2["uQmS"];
-    temp = ambit::BlockedTensor::build(tensor_type_, "temp", {"CA"});
-    temp["MU"] += 0.5 * T2["MVXY"] * Lambda2_["XYUV"];
-    temp["MU"] += T2["vMxY"] * Lambda2_["xYvU"];
-    C1["qs"] -= alpha * temp["MU"] * H2["qUsM"];
-    C1["QS"] -= alpha * temp["MU"] * H2["UQMS"];
+    temp = ambit::BlockedTensor::build(tensor_type_, "temp", {"ha"});
+    temp["iu"] += 0.5 * T2["ivxy"] * Lambda2_["xyuv"];
+    temp["iu"] += T2["iVxY"] * Lambda2_["xYuV"];
+    C1["qs"] -= alpha * temp["iu"] * H2["uqis"];
+    C1["QS"] -= alpha * temp["iu"] * H2["uQiS"];
+    temp = ambit::BlockedTensor::build(tensor_type_, "temp", {"HA"});
+    temp["IU"] += 0.5 * T2["IVXY"] * Lambda2_["XYUV"];
+    temp["IU"] += T2["vIxY"] * Lambda2_["xYvU"];
+    C1["qs"] -= alpha * temp["IU"] * H2["qUsI"];
+    C1["QS"] -= alpha * temp["IU"] * H2["UQIS"];
 
     if (print_ > 2) {
         outfile->Printf("\n    Time for [H2, T2] -> C1 : %12.3f", timer.get());

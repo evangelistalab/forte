@@ -217,15 +217,14 @@ std::vector<double> SADSRG::H2_T2_C0_T2small(BlockedTensor& H2, BlockedTensor& T
 
     if (t2_internals_.size()) {
         // [H2, T2] L1 from aaaa
-        temp.zero();
         temp.set_name("temp_aaaa");
-        temp["wzxy"] += 0.25 * S2["uvxy"] * L1_["wu"] * L1_["zv"];
+        temp["wzxy"] = 0.25 * S2["uvxy"] * L1_["wu"] * L1_["zv"];
         E1 += 0.25 * H2["uvxy"] * temp["xywz"] * Eta1_["wu"] * Eta1_["zv"];
 
         // <[Hbar2, T2]> C_4 (C_2)^2
 
         // HH
-        temp["uvxy"] += 0.125 * H2["u,v,a1,a2"] * T2["a3,a4,x,y"] * L1_["a1,a3"] * L1_["a2,a4"];
+        temp["uvxy"] = 0.125 * H2["u,v,a1,a2"] * T2["a3,a4,x,y"] * L1_["a1,a3"] * L1_["a2,a4"];
 
         // PP
         temp["uvxy"] += 0.125 * H2["a1,a2,x,y"] * T2["u,v,a3,a4"] * Eta1_["a3,a1"] * Eta1_["a4,a2"];
