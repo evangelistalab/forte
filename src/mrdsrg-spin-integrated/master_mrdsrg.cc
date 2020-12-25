@@ -672,6 +672,116 @@ void MASTER_DSRG::fill_three_index_ints(ambit::BlockedTensor T) {
     }
 }
 
+void MASTER_DSRG::prune_t1_internals(BlockedTensor& T1) {
+    if (t1_internals_.size() == 0) {
+        T1.block("AA").zero();
+        T1.block("aa").zero();
+    } else {
+        int nactv = actv_mos_.size();
+
+        for (const std::string& block : {"aa", "AA"}) {
+            auto& T1data = T1.block(block).data();
+            std::vector<double> T1copy(T1data.size());
+
+            for (const auto& t : t1_internals_) {
+                std::string gas1, gas2;
+                bool pure;
+                std::tie(gas1, gas2, pure) = t;
+
+                auto mos_o = gas_actv_rel_mos_[gas1];
+                auto mos_v = gas_actv_rel_mos_[gas2];
+                int no = mos_o.size();
+                int nv = mos_v.size();
+
+                if (pure) {
+                    for (int p = 0; p < no; ++p) {
+                        for (int q = p + 1; q < no; ++q) {
+                            int id = mos_o[p] * nactv + mos_o[q];
+                            T1copy[id] = T1data[id];
+                        }
+                    }
+                } else {
+                    for (int i = 0; i < no; ++i) {
+                        for (int a = 0; a < nv; ++a) {
+                            int id = mos_o[i] * nactv + mos_v[a];
+                            T1copy[id] = T1data[id];
+                        }
+                    }
+                }
+            }
+
+            T1data = T1copy;
+        }
+    }
+}
+
+void MASTER_DSRG::prune_t2_internals(BlockedTensor& T2) {
+    if (t2_internals_.size() == 0) {
+        T2.block("aaaa").zero();
+        T2.block("aAaA").zero();
+        T2.block("AAAA").zero();
+    } else {
+        int na1 = actv_mos_.size();
+        int na2 = na1 * na1;
+        int na3 = na2 * na1;
+
+        for (const std::string& block : {"aaaa", "aAaA", "AAAA"}) {
+            auto& T2data = T2.block(block).data();
+            std::vector<double> T2copy(T2data.size());
+
+            for (const auto& t : t2_internals_) {
+                std::string gas1, gas2, gas3, gas4;
+                bool pure;
+                std::tie(gas1, gas2, gas3, gas4, pure) = t;
+
+                auto mos_o1 = gas_actv_rel_mos_[gas1];
+                auto mos_o2 = gas_actv_rel_mos_[gas2];
+                auto mos_v1 = gas_actv_rel_mos_[gas3];
+                auto mos_v2 = gas_actv_rel_mos_[gas4];
+
+                int no1 = mos_o1.size();
+                int no2 = mos_o2.size();
+                int nv1 = mos_v1.size();
+                int nv2 = mos_v2.size();
+
+                if (pure) {
+                    for (int i = 0; i < no1; ++i) {
+                        for (int j = 0; j < no2; ++j) {
+                            int o = i * na1 + j;
+
+                            for (int a = 0; a < nv1; ++a) {
+                                for (int b = 0; b < nv2; ++b) {
+                                    int v = a * na1 + b;
+
+                                    if (o < v) {
+                                        auto id = mos_o1[i] * na3 + mos_o2[j] * na2 +
+                                                  mos_v1[a] * na1 + mos_v2[b];
+                                        T2copy[id] = T2data[id];
+                                    }
+                                }
+                            }
+                        }
+                    }
+                } else {
+                    for (int i = 0; i < no1; ++i) {
+                        for (int j = 0; j < no2; ++j) {
+                            for (int a = 0; a < nv1; ++a) {
+                                for (int b = 0; b < nv2; ++b) {
+                                    auto id = mos_o1[i] * na3 + mos_o2[j] * na2 + mos_v1[a] * na1 +
+                                              mos_v2[b];
+                                    T2copy[id] = T2data[id];
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            T2data = T2copy;
+        }
+    }
+}
+
 ambit::BlockedTensor MASTER_DSRG::deGNO_Tamp(BlockedTensor& T1, BlockedTensor& T2,
                                              BlockedTensor& D1) {
     BlockedTensor T1eff = BTF_->build(tensor_type_, "T1eff from de-GNO", spin_cases({"hp"}));

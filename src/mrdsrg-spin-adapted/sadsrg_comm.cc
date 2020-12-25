@@ -225,10 +225,10 @@ std::vector<double> SADSRG::H2_T2_C0_T2small(BlockedTensor& H2, BlockedTensor& T
         // <[Hbar2, T2]> C_4 (C_2)^2
 
         // HH
-        temp["uvxy"] += 0.5 * H2["u,v,a1,a2"] * T2["a3,a4,x,y"] * L1_["a1,a3"] * L1_["a2,a4"];
+        temp["uvxy"] += 0.125 * H2["u,v,a1,a2"] * T2["a3,a4,x,y"] * L1_["a1,a3"] * L1_["a2,a4"];
 
         // PP
-        temp["uvxy"] += 0.5 * H2["a1,a2,x,y"] * T2["u,v,a3,a4"] * Eta1_["a3,a1"] * Eta1_["a4,a2"];
+        temp["uvxy"] += 0.125 * H2["a1,a2,x,y"] * T2["u,v,a3,a4"] * Eta1_["a3,a1"] * Eta1_["a4,a2"];
 
         // HP
         temp["uvxy"] += 0.25 * H2["u,a1,x,a2"] * S2["v,a3,y,a4"] * L1_["a2,a3"] * Eta1_["a4,a1"];

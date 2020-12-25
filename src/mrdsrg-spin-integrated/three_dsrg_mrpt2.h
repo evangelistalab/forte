@@ -102,11 +102,6 @@ class THREE_DSRG_MRPT2 : public MASTER_DSRG {
   protected:
     // => Class data <= //
 
-    /// Include internal amplitudes or not
-    bool internal_amp_;
-    /// Include which part of internal amplitudes?
-    std::string internal_amp_select_;
-
     /// The type of SCF reference
     std::string ref_type_;
     /// The number of corrleated MO
