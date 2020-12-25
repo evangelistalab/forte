@@ -1,3 +1,31 @@
+/*
+ * @BEGIN LICENSE
+ *
+ * Forte: an open-source plugin to Psi4 (https://github.com/psi4/psi4)
+ * that implements a variety of quantum chemistry methods for strongly
+ * correlated electrons.
+ *
+ * Copyright (c) 2012-2020 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
+ *
+ * The copyrights for code used from other parties are included in
+ * the corresponding files.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with this program.  If not, see http://www.gnu.org/licenses/.
+ *
+ * @END LICENSE
+ */
+
 #ifndef _dynamic_correlation_solver_h_
 #define _dynamic_correlation_solver_h_
 
@@ -84,6 +112,29 @@ class DynamicCorrelationSolver {
     int diis_max_vec_;
     /// Frequency of extrapolating the current DIIS vectors
     int diis_freq_;
+
+    // ==> internal amplitudes <==
+
+    /// How to consider internal amplitudes
+    std::string internal_amp_;
+    /// Include which part of internal amplitudes?
+    std::string internal_amp_select_;
+
+    /// Relative indices of GASn within the active
+    std::map<std::string, std::vector<size_t>> gas_actv_rel_mos_;
+
+    /// T1 internal types (e.g., [(GAS1,GAS1,1), (GAS1,GAS2,0), ...])
+    /// Boolean is true if it is pure internal
+    std::vector<std::tuple<std::string, std::string, bool>> t1_internals_;
+    /// T2 internal types (e.g., [(GAS1,GAS1,GAS1,GAS1,1), (GAS1,GAS1,GAS2,GAS2,0), ...])
+    std::vector<std::tuple<std::string, std::string, std::string, std::string, bool>> t2_internals_;
+
+    /// Figure out allowed internal amplitudes types
+    void build_internal_amps_types();
+    /// Figure out allowed internal T1 amplitudes types
+    void build_t1_internal_types();
+    /// Figure out allowed internal T2 amplitudes types
+    void build_t2_internal_types();
 
     // ==> amplitudes file names <==
 

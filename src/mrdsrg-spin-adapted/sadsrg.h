@@ -284,27 +284,10 @@ class SADSRG : public DynamicCorrelationSolver {
 
     // ==> internal amplitudes <==
 
-    /// How to consider internal amplitudes
-    std::string internal_amp_;
-    /// Include which part of internal amplitudes?
-    std::string internal_amp_select_;
-
     /// Prune internal amplitudes for T1
     void internal_amps_T1(BlockedTensor& T1);
     /// Prune internal amplitudes for T2
     void internal_amps_T2(BlockedTensor& T2);
-
-    /// Relative indices of GASn within the active
-    std::map<std::string, std::vector<size_t>> gas_actv_rel_mos_;
-
-    /// T1 internal types (e.g., [(GAS1,GAS1,1), (GAS1,GAS2,0), ...])
-    /// Boolean is true if it is pure internal
-    std::vector<std::tuple<std::string, std::string, bool>> t1_internals_;
-    /// T2 internal types (e.g., [(GAS1,GAS1,GAS1,GAS1,1), (GAS1,GAS1,GAS2,GAS2,0), ...])
-    std::vector<std::tuple<std::string, std::string, std::string, std::string, bool>> t2_internals_;
-
-    /// Figure out allowed internal amplitudes types
-    void build_internal_amps_types();
 
     // ==> commutators <==
 

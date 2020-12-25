@@ -28,12 +28,12 @@
 
 #include <numeric>
 
+#include "psi4/psi4-dec.h"
 #include "psi4/libmints/matrix.h"
 #include "psi4/libmints/molecule.h"
 #include "psi4/libpsi4util/process.h"
 #include "psi4/libpsi4util/PsiOutStream.h"
 #include "psi4/libmints/vector.h"
-#include "psi4/libpsio/psio.hpp"
 
 #include "forte-def.h"
 #include "helpers/helpers.h"
@@ -122,9 +122,6 @@ void SADSRG::startup() {
 
     // check if using semicanonical orbitals
     semi_canonical_ = check_semi_orbs();
-
-    // find allowed internal amplitudes types
-    build_internal_amps_types();
 }
 
 void SADSRG::build_fock_from_ints() {
@@ -174,21 +171,6 @@ void SADSRG::read_options() {
 
     ntamp_ = foptions_->get_int("NTAMP");
     intruder_tamp_ = foptions_->get_double("INTRUDER_TAMP");
-
-    internal_amp_ = foptions_->get_str("INTERNAL_AMP");
-    internal_amp_select_ = foptions_->get_str("INTERNAL_AMP_SELECT");
-    if (internal_amp_ != "NONE") {
-        auto single_gas = (mo_space_info_->nonzero_gas_spaces().size() == 1);
-        if (single_gas and internal_amp_select_ != "ALL") {
-            outfile->Printf(
-                "\n  Warning: INTERNAL_AMP_SELECT option %s is not defined for a single GAS space.",
-                internal_amp_select_.c_str());
-            outfile->Printf("\n  Changed INTERNAL_AMP_SELECT option to ALL");
-            internal_amp_select_ = "ALL";
-            warnings_.push_back(std::make_tuple("Unsupported INTERNAL_AMP_SELECT", "Change to ALL",
-                                                "Change options in input.dat"));
-        }
-    }
 
     dump_amps_cwd_ = foptions_->get_bool("DSRG_DUMP_AMPS");
     read_amps_cwd_ = foptions_->get_bool("DSRG_READ_AMPS");
@@ -812,124 +794,6 @@ void SADSRG::print_cumulant_summary() {
     outfile->Printf("\n    %-6s %12.6f %12.6f", "max", maxes[0], maxes[1]);
     outfile->Printf("\n    %-6s %12.6f %12.6f", "2-norm", norms[0], norms[1]);
     outfile->Printf("\n    %s", dash.c_str());
-}
-
-void SADSRG::build_internal_amps_types() {
-    auto gas_spaces = mo_space_info_->nonzero_gas_spaces();
-    int n_gas = gas_spaces.size();
-
-    // T1 internals
-    t1_internals_.clear();
-    if (internal_amp_.find("SINGLES") != std::string::npos) {
-        // excitation O-V
-        for (int o = 0; o < n_gas; ++o) {
-            for (int v = o + 1; v < n_gas; ++v) {
-                t1_internals_.push_back({gas_spaces[o], gas_spaces[v], false});
-            }
-        }
-        // pure internal
-        if (internal_amp_select_ == "ALL") {
-            for (int x = 0; x < n_gas; ++x) {
-                t1_internals_.push_back({gas_spaces[x], gas_spaces[x], true});
-            }
-        }
-    }
-
-    // T2 internals
-    t2_internals_.clear();
-    if (internal_amp_.find("DOUBLES") != std::string::npos) {
-        // pure excitation
-        for (int o1 = 0; o1 < n_gas; ++o1) {
-            for (int o2 = 0; o2 < n_gas; ++o2) {
-                int o_max = o1 < o2 ? o2 : o1;
-
-                for (int v1 = o_max + 1; v1 < n_gas; ++v1) {
-                    for (int v2 = o_max + 1; v2 < n_gas; ++v2) {
-                        t2_internals_.push_back({gas_spaces[o1], gas_spaces[o2], gas_spaces[v1],
-                                                 gas_spaces[v2], false});
-                    }
-                }
-            }
-        }
-
-        // semi-internals
-        if (internal_amp_select_ != "OOVV") {
-
-            for (int o = 0; o < n_gas; ++o) {
-                for (int v = o + 1; v < n_gas; ++v) {
-
-                    // oo->ov
-                    t2_internals_.push_back(
-                        {gas_spaces[o], gas_spaces[o], gas_spaces[o], gas_spaces[v], false});
-                    t2_internals_.push_back(
-                        {gas_spaces[o], gas_spaces[o], gas_spaces[v], gas_spaces[o], false});
-
-                    // ov->vv
-                    t2_internals_.push_back(
-                        {gas_spaces[o], gas_spaces[v], gas_spaces[v], gas_spaces[v], false});
-                    t2_internals_.push_back(
-                        {gas_spaces[v], gas_spaces[o], gas_spaces[v], gas_spaces[v], false});
-
-                    // ox->vx
-                    for (int x = 0; x < n_gas; ++x) {
-
-                        if (x == o or x == v)
-                            continue;
-
-                        t2_internals_.push_back(
-                            {gas_spaces[x], gas_spaces[o], gas_spaces[x], gas_spaces[v], false});
-                        t2_internals_.push_back(
-                            {gas_spaces[x], gas_spaces[o], gas_spaces[v], gas_spaces[x], false});
-                        t2_internals_.push_back(
-                            {gas_spaces[o], gas_spaces[x], gas_spaces[v], gas_spaces[x], false});
-                        t2_internals_.push_back(
-                            {gas_spaces[o], gas_spaces[x], gas_spaces[x], gas_spaces[v], false});
-                    }
-                }
-            }
-        }
-
-        // pure internal
-        if (internal_amp_select_ == "ALL") {
-            for (int x1 = 0; x1 < n_gas; ++x1) {
-
-                t2_internals_.push_back(
-                    {gas_spaces[x1], gas_spaces[x1], gas_spaces[x1], gas_spaces[x1], true});
-
-                for (int x2 = x1 + 1; x2 < n_gas; ++x2) {
-
-                    t2_internals_.push_back(
-                        {gas_spaces[x1], gas_spaces[x2], gas_spaces[x1], gas_spaces[x2], true});
-                    t2_internals_.push_back(
-                        {gas_spaces[x1], gas_spaces[x2], gas_spaces[x2], gas_spaces[x1], true});
-                    t2_internals_.push_back(
-                        {gas_spaces[x2], gas_spaces[x1], gas_spaces[x2], gas_spaces[x1], true});
-                    t2_internals_.push_back(
-                        {gas_spaces[x2], gas_spaces[x1], gas_spaces[x1], gas_spaces[x2], true});
-                }
-            }
-        }
-    }
-
-    // debug printing
-    if (print_ > 2) {
-        print_h2("T1 Internal Amplitudes Types");
-        for (const auto& t : t1_internals_) {
-            std::string gas1, gas2;
-            bool pure;
-            std::tie(gas1, gas2, pure) = t;
-            outfile->Printf("\n  %s -> %s; pure internal: %d", gas1.c_str(), gas2.c_str(), pure);
-        }
-
-        print_h2("T2 Internal Amplitudes Types");
-        for (const auto& t : t2_internals_) {
-            std::string gas1, gas2, gas3, gas4;
-            bool pure;
-            std::tie(gas1, gas2, gas3, gas4, pure) = t;
-            outfile->Printf("\n  %s,%s -> %s,%s; pure internal: %d", gas1.c_str(), gas2.c_str(),
-                            gas3.c_str(), gas4.c_str(), pure);
-        }
-    }
 }
 
 void SADSRG::print_contents(const std::string& str, size_t size) {
