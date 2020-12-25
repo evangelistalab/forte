@@ -980,20 +980,6 @@ double DSRG_MRPT2::E_VT2_4HH() {
     double E = 0.0;
     BlockedTensor temp = BTF_->build(tensor_type_, "temp", spin_cases({"aaaa"}), true);
 
-//    auto L = BTF_->build(tensor_type_, "L1", spin_cases({"hh"}), true);
-//    L["pq"] = Gamma1_["pq"];
-//    L["PQ"] = Gamma1_["PQ"];
-//    for (const auto& block : {"cc", "CC"}) {
-//        L.block(block).iterate([&](const std::vector<size_t>& i, double& value) {
-//            if (i[0] == i[1]) {
-//                value = 1.0;
-//            }
-//        });
-//    }
-//    temp["uvxy"] += 0.125 * V_["uvkl"] * T2_["ijxy"] * L["ki"] * L["lj"];
-//    temp["uVxY"] += V_["uVkL"] * T2_["iJxY"] * L["ki"] * L["LJ"];
-//    temp["UVXY"] += 0.125 * V_["UVKL"] * T2_["IJXY"] * L["KI"] * L["LJ"];
-
     temp["uvxy"] += 0.125 * V_["uvmn"] * T2_["mnxy"];
     temp["uvxy"] += 0.25 * Gamma1_["wz"] * V_["uvmw"] * T2_["mzxy"];
     temp["uVxY"] += V_["uVmN"] * T2_["mNxY"];
@@ -1012,22 +998,6 @@ double DSRG_MRPT2::E_VT2_4HH() {
     E += Lambda2_["xYuV"] * temp["uVxY"];
     E += Lambda2_["XYUV"] * temp["UVXY"];
 
-//    if (t2_internals_.size()) {
-//        temp.zero();
-//        temp["uvxy"] -= 0.125 * V_["uvwz"] * T2_["wzxy"];
-//        temp["uVxY"] -= V_["uVwZ"] * T2_["wZxY"];
-//        temp["UVXY"] -= 0.125 * V_["UVWZ"] * T2_["WZXY"];
-
-//        temp["uvxy"] += 0.25 * V_["uv1w"] * T2_["1zxy"] * Gamma1_["wz"];
-//        temp["uVxY"] += V_["uV1W"] * T2_["1ZxY"] * Gamma1_["WZ"];
-//        temp["uVxY"] += V_["uVw!"] * T2_["z!xY"] * Gamma1_["wz"];
-//        temp["UVXY"] += 0.25 * V_["UV!W"] * T2_["!ZXY"] * Gamma1_["WZ"];
-
-//        E += Lambda2_["xyuv"] * temp["uvxy"];
-//        E += Lambda2_["XYUV"] * temp["UVXY"];
-//        E += Lambda2_["xYuV"] * temp["uVxY"];
-//    }
-
     outfile->Printf("  Done. Timing %15.6f s", timer.get());
     dsrg_time_.add("220", timer.get());
     return E;
@@ -1040,20 +1010,6 @@ double DSRG_MRPT2::E_VT2_4PP() {
 
     double E = 0.0;
     BlockedTensor temp = BTF_->build(tensor_type_, "temp", spin_cases({"aaaa"}), true);
-
-//    auto L = BTF_->build(tensor_type_, "L1", spin_cases({"pp"}), true);
-//    L["pq"] = Eta1_["pq"];
-//    L["PQ"] = Eta1_["PQ"];
-//    for (const auto& block : {"vv", "VV"}) {
-//        L.block(block).iterate([&](const std::vector<size_t>& i, double& value) {
-//            if (i[0] == i[1]) {
-//                value = 1.0;
-//            }
-//        });
-//    }
-//    temp["uvxy"] += 0.125 * V_["cdxy"] * T2_["uvab"] * L["ac"] * L["bd"];
-//    temp["uVxY"] += V_["cDxY"] * T2_["uVaB"] * L["ac"] * L["BD"];
-//    temp["UVXY"] += 0.125 * V_["CDXY"] * T2_["UVAB"] * L["AC"] * L["BD"];
 
     temp["uvxy"] += 0.125 * V_["efxy"] * T2_["uvef"];
     temp["uvxy"] += 0.25 * Eta1_["wz"] * T2_["uvew"] * V_["ezxy"];
@@ -1073,22 +1029,6 @@ double DSRG_MRPT2::E_VT2_4PP() {
     E += Lambda2_["xYuV"] * temp["uVxY"];
     E += Lambda2_["XYUV"] * temp["UVXY"];
 
-//    if (t2_internals_.size()) {
-//        temp.zero();
-//        temp["uvxy"] += 0.125 * V_["wzxy"] * T2_["uvwz"];
-//        temp["uVxY"] += V_["wZxY"] * T2_["uVwZ"];
-//        temp["UVXY"] += 0.125 * V_["WZXY"] * T2_["UVWZ"];
-
-//        temp["uvxy"] -= 0.25 * V_["1zxy"] * T2_["uv1w"] * Gamma1_["wz"];
-//        temp["uVxY"] -= V_["1ZxY"] * T2_["uV1W"] * Gamma1_["WZ"];
-//        temp["uVxY"] -= V_["z!xY"] * T2_["uVw!"] * Gamma1_["wz"];
-//        temp["UVXY"] -= 0.25 * V_["!ZXY"] * T2_["UV!W"] * Gamma1_["WZ"];
-
-//        E += Lambda2_["xyuv"] * temp["uvxy"];
-//        E += Lambda2_["xYuV"] * temp["uVxY"];
-//        E += Lambda2_["XYUV"] * temp["UVXY"];
-//    }
-
     outfile->Printf("  Done. Timing %15.6f s", timer.get());
     dsrg_time_.add("220", timer.get());
     return E;
@@ -1101,45 +1041,6 @@ double DSRG_MRPT2::E_VT2_4PH() {
 
     double E = 0.0;
     BlockedTensor temp = BTF_->build(tensor_type_, "temp", spin_cases({"aaaa"}), true);
-
-//    auto L = BTF_->build(tensor_type_, "L1", spin_cases({"hh"}), true);
-//    L["pq"] = Gamma1_["pq"];
-//    L["PQ"] = Gamma1_["PQ"];
-//    for (const auto& block : {"cc", "CC"}) {
-//        L.block(block).iterate([&](const std::vector<size_t>& i, double& value) {
-//            if (i[0] == i[1]) {
-//                value = 1.0;
-//            }
-//        });
-//    }
-
-//    auto C = BTF_->build(tensor_type_, "C1", spin_cases({"pp"}), true);
-//    C["pq"] = Eta1_["pq"];
-//    C["PQ"] = Eta1_["PQ"];
-//    for (const auto& block : {"vv", "VV"}) {
-//        C.block(block).iterate([&](const std::vector<size_t>& i, double& value) {
-//            if (i[0] == i[1]) {
-//                value = 1.0;
-//            }
-//        });
-//    }
-
-//    temp["uvxy"] -= V_["v,b,x,j"] * T2_["i,u,a,y"] * L["j,i"] * C["a,b"];
-//    temp["uvxy"] -= V_["v,B,x,J"] * T2_["u,I,y,A"] * L["J,I"] * C["A,B"];
-//    E += temp["uvxy"] * Lambda2_["xyuv"];
-
-//    temp["UVXY"] -= V_["b,V,j,X"] * T2_["i,U,a,Y"] * L["j,i"] * C["a,b"];
-//    temp["UVXY"] -= V_["V,B,X,J"] * T2_["I,U,A,Y"] * L["J,I"] * C["A,B"];
-//    E += temp["UVXY"] * Lambda2_["XYUV"];
-
-//    temp["uVxY"] += V_["u,b,x,j"] * T2_["i,V,a,Y"] * L["j,i"] * C["a,b"];
-//    temp["uVxY"] += V_["u,B,x,J"] * T2_["I,V,A,Y"] * L["J,I"] * C["A,B"];
-//    temp["uVxY"] += V_["b,V,j,Y"] * T2_["i,u,a,x"] * L["j,i"] * C["a,b"];
-//    temp["uVxY"] += V_["B,V,J,Y"] * T2_["u,I,x,A"] * L["J,I"] * C["A,B"];
-
-//    temp["uVxY"] -= V_["b,V,x,J"] * T2_["u,I,a,Y"] * L["J,I"] * C["a,b"];
-//    temp["uVxY"] -= V_["u,B,j,Y"] * T2_["i,V,x,A"] * L["j,i"] * C["A,B"];
-//    E += temp["uVxY"] * Lambda2_["xYuV"];
 
     temp["uvxy"] += V_["eumx"] * T2_["mvey"];
     temp["uvxy"] += V_["uExM"] * T2_["vMyE"];
@@ -1198,36 +1099,6 @@ double DSRG_MRPT2::E_VT2_4PH() {
         temp["uVxY"] -= V_["u,A3,a1,Y"] * T2_["a0,V,x,A2"] * Gamma1_["a1,a0"] * Eta1_["A2,A3"];
         E += temp["uVxY"] * Lambda2_["xYuV"];
     }
-
-//    if (t2_internals_.size()) {
-//        temp.zero();
-//        temp["uvxy"] -= V_["v1xw"] * T2_["zu1y"] * Gamma1_["wz"];
-//        temp["uvxy"] -= V_["v!xW"] * T2_["uZy!"] * Gamma1_["WZ"];
-//        temp["uvxy"] += V_["vzx1"] * T2_["1uwy"] * Gamma1_["wz"];
-//        temp["uvxy"] += V_["vZx!"] * T2_["u!yW"] * Gamma1_["WZ"];
-//        E += temp["uvxy"] * Lambda2_["xyuv"];
-
-//        temp["UVXY"] -= V_["V!XW"] * T2_["ZU!Y"] * Gamma1_["WZ"];
-//        temp["UVXY"] -= V_["1VwX"] * T2_["zU1Y"] * Gamma1_["wz"];
-//        temp["UVXY"] += V_["VZX!"] * T2_["!UWY"] * Gamma1_["WZ"];
-//        temp["UVXY"] += V_["zV1X"] * T2_["1UwY"] * Gamma1_["wz"];
-//        E += temp["UVXY"] * Lambda2_["XYUV"];
-
-//        temp["uVxY"] -= V_["1VxW"] * T2_["uZ1Y"] * Gamma1_["WZ"];
-//        temp["uVxY"] -= V_["u!wY"] * T2_["zVx!"] * Gamma1_["wz"];
-//        temp["uVxY"] += V_["u1xw"] * T2_["zV1Y"] * Gamma1_["wz"];
-//        temp["uVxY"] += V_["u!xW"] * T2_["ZV!Y"] * Gamma1_["WZ"];
-//        temp["uVxY"] += V_["1VwY"] * T2_["zu1x"] * Gamma1_["wz"];
-//        temp["uVxY"] += V_["!VWY"] * T2_["uZx!"] * Gamma1_["WZ"];
-
-//        temp["uVxY"] += V_["zVx!"] * T2_["u!wY"] * Gamma1_["wz"];
-//        temp["uVxY"] += V_["uZ1Y"] * T2_["1VxW"] * Gamma1_["WZ"];
-//        temp["uVxY"] -= V_["uzx1"] * T2_["1VwY"] * Gamma1_["wz"];
-//        temp["uVxY"] -= V_["uZx!"] * T2_["!VWY"] * Gamma1_["WZ"];
-//        temp["uVxY"] -= V_["zV1Y"] * T2_["1uwx"] * Gamma1_["wz"];
-//        temp["uVxY"] -= V_["ZV!Y"] * T2_["u!xW"] * Gamma1_["WZ"];
-//        E += temp["uVxY"] * Lambda2_["xYuV"];
-//    }
 
     outfile->Printf("  Done. Timing %15.6f s", timer.get());
     dsrg_time_.add("220", timer.get());
