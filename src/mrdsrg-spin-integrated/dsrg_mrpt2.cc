@@ -781,11 +781,8 @@ double DSRG_MRPT2::E_FT1() {
     E += F_["XM"] * T1_["MY"] * Eta1_["YX"];
 
     if (t1_internals_.size()) {
-        E += F_["xv"] * T1_["ux"] * Gamma1_["vu"];
-        E -= F_["yu"] * T1_["ux"] * Gamma1_["xy"];
-
-        E += F_["XV"] * T1_["UX"] * Gamma1_["VU"];
-        E -= F_["YU"] * T1_["UX"] * Gamma1_["XY"];
+        E += F_["ux"] * T1_["yv"] * Gamma1_["xy"] * Eta1_["vu"];
+        E += F_["UX"] * T1_["YV"] * Gamma1_["XY"] * Eta1_["VU"];
     }
 
     outfile->Printf("  Done. Timing %15.6f s", timer.get());

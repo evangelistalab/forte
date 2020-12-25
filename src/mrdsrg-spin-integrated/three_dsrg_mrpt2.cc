@@ -787,11 +787,8 @@ double THREE_DSRG_MRPT2::E_FT1() {
     E += F_["XM"] * T1_["MY"] * Eta1_["YX"];
 
     if (t1_internals_.size()) {
-        E += F_["xv"] * T1_["ux"] * Gamma1_["vu"];
-        E -= F_["yu"] * T1_["ux"] * Gamma1_["xy"];
-
-        E += F_["XV"] * T1_["UX"] * Gamma1_["VU"];
-        E -= F_["YU"] * T1_["UX"] * Gamma1_["XY"];
+        E += F_["ux"] * T1_["yv"] * Gamma1_["xy"] * Eta1_["vu"];
+        E += F_["UX"] * T1_["YV"] * Gamma1_["XY"] * Eta1_["VU"];
     }
 
     outfile->Printf("... Done. Timing %15.6f s", timer.get());
@@ -1052,27 +1049,14 @@ double THREE_DSRG_MRPT2::E_VT2_2() {
 
     if (t2_internals_.size() && my_proc == 0) {
         temp.zero();
+
         temp["uvxy"] += 0.25 * V_["uvwz"] * Gamma1_["wx"] * Gamma1_["zy"];
         temp["uVxY"] += V_["uVwZ"] * Gamma1_["wx"] * Gamma1_["ZY"];
         temp["UVXY"] += 0.25 * V_["UVWZ"] * Gamma1_["WX"] * Gamma1_["ZY"];
 
-        temp["uvxy"] -= 0.25 * V_["wzxy"] * Gamma1_["uw"] * Gamma1_["vz"];
-        temp["uVxY"] -= V_["wZxY"] * Gamma1_["uw"] * Gamma1_["VZ"];
-        temp["UVXY"] -= 0.25 * V_["WZXY"] * Gamma1_["UW"] * Gamma1_["VZ"];
-
-        temp["uvxy"] -= 0.5 * V_["u1wz"] * Gamma1_["v1"] * Gamma1_["wx"] * Gamma1_["zy"];
-        temp["uVxY"] -= V_["u!wZ"] * Gamma1_["V!"] * Gamma1_["wx"] * Gamma1_["ZY"];
-        temp["uVxY"] -= V_["1VwZ"] * Gamma1_["u1"] * Gamma1_["wx"] * Gamma1_["ZY"];
-        temp["UVXY"] -= 0.5 * V_["U!WZ"] * Gamma1_["V!"] * Gamma1_["WX"] * Gamma1_["ZY"];
-
-        temp["uvxy"] += 0.5 * V_["wzx1"] * Gamma1_["uw"] * Gamma1_["vz"] * Gamma1_["1y"];
-        temp["uVxY"] += V_["wZx!"] * Gamma1_["uw"] * Gamma1_["VZ"] * Gamma1_["!Y"];
-        temp["uVxY"] += V_["wZ1Y"] * Gamma1_["uw"] * Gamma1_["VZ"] * Gamma1_["1x"];
-        temp["UVXY"] += 0.5 * V_["WZX!"] * Gamma1_["UW"] * Gamma1_["VZ"] * Gamma1_["!Y"];
-
-        E += temp["uvxy"] * T2_["xyuv"];
-        E += temp["uVxY"] * T2_["xYuV"];
-        E += temp["UVXY"] * T2_["XYUV"];
+        E += temp["uvxy"] * T2_["xywz"] * Eta1_["wu"] * Eta1_["zv"];
+        E += temp["uVxY"] * T2_["xYwZ"] * Eta1_["wu"] * Eta1_["ZV"];
+        E += temp["UVXY"] * T2_["XYWZ"] * Eta1_["WU"] * Eta1_["ZV"];
     }
 
     dsrg_time_.add("220", timer.get());
@@ -1094,25 +1078,15 @@ double THREE_DSRG_MRPT2::E_VT2_4HH() {
     temp["UVXY"] += 0.125 * V_["UVMN"] * T2_["MNXY"];
     temp["UVXY"] += 0.25 * Gamma1_["WZ"] * V_["UVMW"] * T2_["MZXY"];
 
+    if (t2_internals_.size()) {
+        temp["uvxy"] += 0.125 * V_["u,v,w,a1"] * T2_["z,a3,x,y"] * Gamma1_["wz"] * Gamma1_["a1,a3"];
+        temp["uVxY"] += V_["u,V,w,A1"] * T2_["z,A3,x,Y"] * Gamma1_["wz"] * Gamma1_["A1,A3"];
+        temp["UVXY"] += 0.125 * V_["U,V,W,A1"] * T2_["Z,A3,X,Y"] * Gamma1_["WZ"] * Gamma1_["A1,A3"];
+    }
+
     E += Lambda2_["xyuv"] * temp["uvxy"];
     E += Lambda2_["xYuV"] * temp["uVxY"];
     E += Lambda2_["XYUV"] * temp["UVXY"];
-
-    if (t2_internals_.size()) {
-        temp.zero();
-        temp["uvxy"] -= 0.125 * V_["uvwz"] * T2_["wzxy"];
-        temp["uVxY"] -= V_["uVwZ"] * T2_["wZxY"];
-        temp["UVXY"] -= 0.125 * V_["UVWZ"] * T2_["WZXY"];
-
-        temp["uvxy"] += 0.25 * V_["uv1w"] * T2_["1zxy"] * Gamma1_["wz"];
-        temp["uVxY"] += V_["uV1W"] * T2_["1ZxY"] * Gamma1_["WZ"];
-        temp["uVxY"] += V_["uVw!"] * T2_["z!xY"] * Gamma1_["wz"];
-        temp["UVXY"] += 0.25 * V_["UV!W"] * T2_["!ZXY"] * Gamma1_["WZ"];
-
-        E += Lambda2_["xyuv"] * temp["uvxy"];
-        E += Lambda2_["XYUV"] * temp["UVXY"];
-        E += Lambda2_["xYuV"] * temp["uVxY"];
-    }
 
     outfile->Printf("... Done. Timing %15.6f s", timer.get());
     dsrg_time_.add("220", timer.get());
@@ -1134,25 +1108,15 @@ double THREE_DSRG_MRPT2::E_VT2_4PP() {
     temp["UVXY"] += 0.125 * V_["EFXY"] * T2_["UVEF"];
     temp["UVXY"] += 0.25 * Eta1_["WZ"] * T2_["UVEW"] * V_["EZXY"];
 
+    if (t2_internals_.size()) {
+        temp["uvxy"] += 0.125 * V_["w,a0,x,y"] * T2_["u,v,z,a1"] * Eta1_["zw"] * Eta1_["a1,a0"];
+        temp["uVxY"] += V_["w,A0,x,Y"] * T2_["u,V,z,A1"] * Eta1_["zw"] * Eta1_["A1,A0"];
+        temp["UVXY"] += 0.125 * V_["W,A0,X,Y"] * T2_["U,V,Z,A1"] * Eta1_["ZW"] * Eta1_["A1,A0"];
+    }
+
     E += Lambda2_["xyuv"] * temp["uvxy"];
     E += Lambda2_["xYuV"] * temp["uVxY"];
     E += Lambda2_["XYUV"] * temp["UVXY"];
-
-    if (t2_internals_.size()) {
-        temp.zero();
-        temp["uvxy"] += 0.125 * V_["wzxy"] * T2_["uvwz"];
-        temp["uVxY"] += V_["wZxY"] * T2_["uVwZ"];
-        temp["UVXY"] += 0.125 * V_["WZXY"] * T2_["UVWZ"];
-
-        temp["uvxy"] -= 0.25 * V_["1zxy"] * T2_["uv1w"] * Gamma1_["wz"];
-        temp["uVxY"] -= V_["1ZxY"] * T2_["uV1W"] * Gamma1_["WZ"];
-        temp["uVxY"] -= V_["z!xY"] * T2_["uVw!"] * Gamma1_["wz"];
-        temp["UVXY"] -= 0.25 * V_["!ZXY"] * T2_["UV!W"] * Gamma1_["WZ"];
-
-        E += Lambda2_["xyuv"] * temp["uvxy"];
-        E += Lambda2_["xYuV"] * temp["uVxY"];
-        E += Lambda2_["XYUV"] * temp["UVXY"];
-    }
 
     outfile->Printf("... Done. Timing %15.6f s", timer.get());
     dsrg_time_.add("220", timer.get());
@@ -1206,31 +1170,21 @@ double THREE_DSRG_MRPT2::E_VT2_4PH() {
 
     if (t2_internals_.size()) {
         temp.zero();
-        temp["uvxy"] -= V_["v1xw"] * T2_["zu1y"] * Gamma1_["wz"];
-        temp["uvxy"] -= V_["v!xW"] * T2_["uZy!"] * Gamma1_["WZ"];
-        temp["uvxy"] += V_["vzx1"] * T2_["1uwy"] * Gamma1_["wz"];
-        temp["uvxy"] += V_["vZx!"] * T2_["u!yW"] * Gamma1_["WZ"];
+        temp["uvxy"] -= V_["v,a3,x,a1"] * T2_["a0,u,a2,y"] * Gamma1_["a1,a0"] * Eta1_["a2,a3"];
+        temp["uvxy"] -= V_["v,A3,x,A1"] * T2_["u,A0,y,A2"] * Gamma1_["A1,A0"] * Eta1_["A2,A3"];
         E += temp["uvxy"] * Lambda2_["xyuv"];
 
-        temp["UVXY"] -= V_["V!XW"] * T2_["ZU!Y"] * Gamma1_["WZ"];
-        temp["UVXY"] -= V_["1VwX"] * T2_["zU1Y"] * Gamma1_["wz"];
-        temp["UVXY"] += V_["VZX!"] * T2_["!UWY"] * Gamma1_["WZ"];
-        temp["UVXY"] += V_["zV1X"] * T2_["1UwY"] * Gamma1_["wz"];
+        temp["UVXY"] -= V_["a3,V,a1,X"] * T2_["a0,U,a2,Y"] * Gamma1_["a1,a0"] * Eta1_["a2,a3"];
+        temp["UVXY"] -= V_["V,A3,X,A1"] * T2_["A0,U,A2,Y"] * Gamma1_["A1,A0"] * Eta1_["A2,A3"];
         E += temp["UVXY"] * Lambda2_["XYUV"];
 
-        temp["uVxY"] -= V_["1VxW"] * T2_["uZ1Y"] * Gamma1_["WZ"];
-        temp["uVxY"] -= V_["u!wY"] * T2_["zVx!"] * Gamma1_["wz"];
-        temp["uVxY"] += V_["u1xw"] * T2_["zV1Y"] * Gamma1_["wz"];
-        temp["uVxY"] += V_["u!xW"] * T2_["ZV!Y"] * Gamma1_["WZ"];
-        temp["uVxY"] += V_["1VwY"] * T2_["zu1x"] * Gamma1_["wz"];
-        temp["uVxY"] += V_["!VWY"] * T2_["uZx!"] * Gamma1_["WZ"];
+        temp["uVxY"] += V_["u,a3,x,a1"] * T2_["a0,V,a2,Y"] * Gamma1_["a1,a0"] * Eta1_["a2,a3"];
+        temp["uVxY"] += V_["u,A3,x,A1"] * T2_["A0,V,A2,Y"] * Gamma1_["A1,A0"] * Eta1_["A2,A3"];
+        temp["uVxY"] += V_["a3,V,a1,Y"] * T2_["a0,u,a2,x"] * Gamma1_["a1,a0"] * Eta1_["a2,a3"];
+        temp["uVxY"] += V_["A3,V,A1,Y"] * T2_["u,A0,x,A2"] * Gamma1_["A1,A0"] * Eta1_["A2,A3"];
 
-        temp["uVxY"] += V_["zVx!"] * T2_["u!wY"] * Gamma1_["wz"];
-        temp["uVxY"] += V_["uZ1Y"] * T2_["1VxW"] * Gamma1_["WZ"];
-        temp["uVxY"] -= V_["uzx1"] * T2_["1VwY"] * Gamma1_["wz"];
-        temp["uVxY"] -= V_["uZx!"] * T2_["!VWY"] * Gamma1_["WZ"];
-        temp["uVxY"] -= V_["zV1Y"] * T2_["1uwx"] * Gamma1_["wz"];
-        temp["uVxY"] -= V_["ZV!Y"] * T2_["u!xW"] * Gamma1_["WZ"];
+        temp["uVxY"] -= V_["a3,V,x,A1"] * T2_["u,A0,a2,Y"] * Gamma1_["A1,A0"] * Eta1_["a2,a3"];
+        temp["uVxY"] -= V_["u,A3,a1,Y"] * T2_["a0,V,x,A2"] * Gamma1_["a1,a0"] * Eta1_["A2,A3"];
         E += temp["uVxY"] * Lambda2_["xYuV"];
     }
 
