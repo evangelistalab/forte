@@ -40,7 +40,7 @@ std::vector<std::string> SADSRG::diag_one_labels() {
     return labels;
 }
 
-std::vector<std::string> SADSRG::od_one_labels_hp() {
+std::vector<std::string> SADSRG::od_one_labels_hp(bool aa) {
     std::vector<std::string> labels;
     for (const std::string& p : {core_label_, actv_label_}) {
         for (const std::string& q : {actv_label_, virt_label_}) {
@@ -50,25 +50,28 @@ std::vector<std::string> SADSRG::od_one_labels_hp() {
             labels.push_back(p + q);
         }
     }
+    if (aa) {
+        labels.push_back(actv_label_ + actv_label_);
+    }
     return labels;
 }
 
-std::vector<std::string> SADSRG::od_one_labels_ph() {
-    std::vector<std::string> blocks1(od_one_labels_hp());
+std::vector<std::string> SADSRG::od_one_labels_ph(bool aa) {
+    std::vector<std::string> blocks1(od_one_labels_hp(aa));
     for (auto& block : blocks1) {
         std::swap(block[0], block[1]);
     }
     return blocks1;
 }
 
-std::vector<std::string> SADSRG::od_one_labels() {
+std::vector<std::string> SADSRG::od_one_labels(bool aa) {
     std::vector<std::string> labels(od_one_labels_hp());
-    std::vector<std::string> temp(od_one_labels_ph());
+    std::vector<std::string> temp(od_one_labels_ph(aa));
     labels.insert(std::end(labels), std::begin(temp), std::end(temp));
     return labels;
 }
 
-std::vector<std::string> SADSRG::od_two_labels_hhpp() {
+std::vector<std::string> SADSRG::od_two_labels_hhpp(bool aaaa) {
     std::vector<std::string> labels;
     for (const std::string& p : {core_label_, actv_label_}) {
         for (const std::string& q : {core_label_, actv_label_}) {
@@ -83,11 +86,14 @@ std::vector<std::string> SADSRG::od_two_labels_hhpp() {
             }
         }
     }
+    if (aaaa) {
+        labels.push_back(actv_label_ + actv_label_ + actv_label_ + actv_label_);
+    }
     return labels;
 }
 
-std::vector<std::string> SADSRG::od_two_labels_pphh() {
-    std::vector<std::string> labels(od_two_labels_hhpp());
+std::vector<std::string> SADSRG::od_two_labels_pphh(bool aaaa) {
+    std::vector<std::string> labels(od_two_labels_hhpp(aaaa));
     for (auto& block : labels) {
         std::swap(block[0], block[2]);
         std::swap(block[1], block[3]);
@@ -95,9 +101,9 @@ std::vector<std::string> SADSRG::od_two_labels_pphh() {
     return labels;
 }
 
-std::vector<std::string> SADSRG::od_two_labels() {
+std::vector<std::string> SADSRG::od_two_labels(bool aaaa) {
     std::vector<std::string> labels(od_two_labels_hhpp());
-    std::vector<std::string> temp(od_two_labels_pphh());
+    std::vector<std::string> temp(od_two_labels_pphh(aaaa));
     labels.insert(std::end(labels), std::begin(temp), std::end(temp));
     return labels;
 }

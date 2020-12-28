@@ -200,13 +200,13 @@ class SADSRG : public DynamicCorrelationSolver {
     /// Compute retaining excitation blocks labels of a two-body operator
     std::vector<std::string> re_two_labels();
     /// Compute off-diagonal blocks labels of a one-body operator
-    std::vector<std::string> od_one_labels();
-    std::vector<std::string> od_one_labels_hp();
-    std::vector<std::string> od_one_labels_ph();
+    std::vector<std::string> od_one_labels(bool aa = false);
+    std::vector<std::string> od_one_labels_hp(bool aa = false);
+    std::vector<std::string> od_one_labels_ph(bool aa = false);
     /// Compute off-diagonal blocks labels of a two-body operator
-    std::vector<std::string> od_two_labels();
-    std::vector<std::string> od_two_labels_hhpp();
-    std::vector<std::string> od_two_labels_pphh();
+    std::vector<std::string> od_two_labels(bool aaaa = false);
+    std::vector<std::string> od_two_labels_hhpp(bool aaaa = false);
+    std::vector<std::string> od_two_labels_pphh(bool aaaa = false);
     /// Compute the blocks labels used in NIVO (number of virtual < 3)
     std::vector<std::string> nivo_labels();
 

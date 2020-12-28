@@ -210,22 +210,27 @@ double SA_MRPT3::compute_energy_pt3_1() {
     local_timer t1;
     print_contents("Computing 3rd-order energy (1/3)");
 
+    bool include_actv = t1_internals_.size() or t2_internals_.size();
+
     // 1- and 2-body -[[H0th,A1st],A1st]
-    O1_ = BTF_->build(tensor_type_, "O1 PT3 1/3", od_one_labels_ph());
-    O2_ = BTF_->build(tensor_type_, "O2 PT3 1/3", od_two_labels_pphh());
+    O1_ = BTF_->build(tensor_type_, "O1 PT3 1/3", od_one_labels_ph(include_actv));
+    O2_ = BTF_->build(tensor_type_, "O2 PT3 1/3", od_two_labels_pphh(include_actv));
 
     // declare other tensors
-    BlockedTensor C1, C2, temp1, temp2;
+    auto C1 = BTF_->build(tensor_type_, "C1", od_one_labels(include_actv));
+    auto C2 = BTF_->build(tensor_type_, "C2", od_two_labels(include_actv));
+    auto temp1 = BTF_->build(tensor_type_, "temp1 pt3 1/3", od_one_labels_hp(include_actv));
+    auto temp2 = BTF_->build(tensor_type_, "temp2 pt3 1/3", od_two_labels_hhpp(include_actv));
 
     // compute -[H0th,A1st] = Delta * T and save to C1 and C2
-    C1 = BTF_->build(tensor_type_, "C1", od_one_labels());
-    C2 = BTF_->build(tensor_type_, "C2", od_two_labels());
-    H1_T1_C1(F0th_, T1_, -1.0, C1);
-    H1_T2_C1(F0th_, T2_, -1.0, C1);
-    H1_T2_C2(F0th_, T2_, -1.0, C2);
+    H1_T1_C1(F0th_, T1_, -1.0, temp1);
+    H1_T2_C1(F0th_, T2_, -1.0, temp1);
+    H1_T2_C2(F0th_, T2_, -1.0, temp2);
 
-    C1["ai"] += C1["ia"];
-    C2["abij"] += C2["ijab"];
+    C1["pq"] += temp1["pq"];
+    C1["qp"] += temp1["pq"];
+    C2["pqrs"] += temp2["pqrs"];
+    C2["rspq"] += temp2["pqrs"];
 
     // compute -[[H0th,A1st],A1st]
     // - Step 1: ph and pphh part
@@ -238,8 +243,8 @@ double SA_MRPT3::compute_energy_pt3_1() {
     H2_T2_C2(C2, T2_, S2_, 1.0, O2_);
 
     // - Step 2: hp and hhpp part
-    temp1 = BTF_->build(tensor_type_, "temp1 pt3 1/3", od_one_labels_hp());
-    temp2 = BTF_->build(tensor_type_, "temp2 pt3 1/3", od_two_labels_hhpp());
+    temp1.zero();
+    temp2.zero();
     H1_T1_C1(C1, T1_, 1.0, temp1);
     H1_T2_C1(C1, T2_, 1.0, temp1);
     H2_T1_C1(C2, T1_, 1.0, temp1);
@@ -279,11 +284,13 @@ double SA_MRPT3::compute_energy_pt3_2() {
     local_timer t1;
     print_contents("Preparing 2nd-order amplitudes");
 
+    bool include_actv = t1_internals_.size() or t2_internals_.size();
+
     // compute 2nd-order amplitudes
     // Step 1: compute 0.5 * [H1st + Hbar1st, A1st] = [H1st, A1st] + 0.5 * [[H0th, A1st], A1st]
     //     a) keep a copy of H1st + Hbar1st
-    auto X1 = BTF_->build(tensor_type_, "O1 pt3 2/3", od_one_labels_ph());
-    auto X2 = BTF_->build(tensor_type_, "O2 pt3 2/3", od_two_labels_pphh());
+    auto X1 = BTF_->build(tensor_type_, "O1 pt3 2/3", od_one_labels_ph(include_actv));
+    auto X2 = BTF_->build(tensor_type_, "O2 pt3 2/3", od_two_labels_pphh(include_actv));
     X1["ai"] = F_["ai"];
     X2["abij"] = V_["abij"];
 
@@ -302,8 +309,8 @@ double SA_MRPT3::compute_energy_pt3_2() {
     H1_T2_C1(F1st_, T2_, 1.0, F_);
     H1_T2_C2(F1st_, T2_, 1.0, V_);
 
-    O1_ = BTF_->build(tensor_type_, "HP2 pt3 2/3", od_one_labels_hp());
-    O2_ = BTF_->build(tensor_type_, "HP2 pt3 2/3", od_two_labels_hhpp());
+    O1_ = BTF_->build(tensor_type_, "HP2 pt3 2/3", od_one_labels_hp(include_actv));
+    O2_ = BTF_->build(tensor_type_, "HP2 pt3 2/3", od_two_labels_hhpp(include_actv));
     H1_T1_C1(F1st_, T1_, 1.0, O1_);
     H1_T2_C1(F1st_, T2_, 1.0, O1_);
     H1_T2_C2(F1st_, T2_, 1.0, O2_);

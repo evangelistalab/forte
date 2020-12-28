@@ -110,11 +110,6 @@ void DSRG_MRPT3::startup() {
         B_ = BTF_->build(tensor_type_, "B 3-idx", {"Lgg", "LGG"});
         fill_three_index_ints(B_);
 
-        ///        B_.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>&,
-        ///        double& value) {
-        ////            value = ints_->three_integral(i[0], i[1], i[2]);
-        //        });
-
         size_t sL = aux_mos_.size();
         nelement += sL * sg * sg;
         mem_info.push_back({"Memory used before DSRG", to_XB(nelement, sizeof(double))});
@@ -249,6 +244,18 @@ void DSRG_MRPT3::startup() {
         outfile->Printf("\n  Minimum memory required: %s\n", to_XB(mem_dipole, 1).c_str());
         throw psi::PSIEXCEPTION("Not enough memory to compute DSRG-MRPT3 dipole.");
     }
+
+    // Warning for internal ampliltudes
+    if (internal_amp_ != "NONE") {
+        outfile->Printf("\n    Warning: DSRG-MRPT3 doesn't supported internal amplitudes for now.");
+        outfile->Printf("\n             Set INTERNAL_AMP back to default NONE.");
+        internal_amp_ = "NONE";
+        t1_internals_.clear();
+        t2_internals_.clear();
+
+        warnings_.push_back(std::make_tuple("Unsupported INTERNAL_AMP", "Change to NONE",
+                                            "Change options in input.dat"));
+    }
 }
 
 void DSRG_MRPT3::build_tei(BlockedTensor& V) {
@@ -272,106 +279,6 @@ void DSRG_MRPT3::build_tei(BlockedTensor& V) {
             });
     }
 }
-
-// void DSRG_MRPT3::build_fock_half() {
-//    for (const auto& block : F_.block_labels()) {
-//        // lowercase: alpha spin
-//        if (islower(block[0])) {
-//            F_.block(block).iterate([&](const std::vector<size_t>& i, double& value) {
-//                size_t np = label_to_spacemo_[block[0]][i[0]];
-//                size_t nq = label_to_spacemo_[block[1]][i[1]];
-//                value = ints_->oei_a(np, nq);
-
-//                for (const size_t& nm : core_mos_) {
-//                    value += ints_->aptei_aa(np, nm, nq, nm);
-//                    value += ints_->aptei_ab(np, nm, nq, nm);
-//                }
-//            });
-//        } else {
-//            F_.block(block).iterate([&](const std::vector<size_t>& i, double& value) {
-//                size_t np = label_to_spacemo_[block[0]][i[0]];
-//                size_t nq = label_to_spacemo_[block[1]][i[1]];
-//                value = ints_->oei_b(np, nq);
-
-//                for (const size_t& nm : core_mos_) {
-//                    value += ints_->aptei_bb(np, nm, nq, nm);
-//                    value += ints_->aptei_ab(nm, np, nm, nq);
-//                }
-//            });
-//        }
-//    }
-
-//    // core-core block
-//    BlockedTensor VFock =
-//        ambit::BlockedTensor::build(tensor_type_, "VFock", {"caca", "cAcA", "aCaC", "CACA"});
-//    build_tei(VFock);
-//    F_["mn"] += VFock["mvnu"] * Gamma1_["uv"];
-//    F_["mn"] += VFock["mVnU"] * Gamma1_["UV"];
-//    F_["MN"] += VFock["vMuN"] * Gamma1_["uv"];
-//    F_["MN"] += VFock["MVNU"] * Gamma1_["UV"];
-
-//    // virtual-virtual block
-//    VFock = ambit::BlockedTensor::build(tensor_type_, "VFock", {"vava", "vAvA", "aVaV", "VAVA"});
-//    build_tei(VFock);
-//    F_["ef"] += VFock["evfu"] * Gamma1_["uv"];
-//    F_["ef"] += VFock["eVfU"] * Gamma1_["UV"];
-//    F_["EF"] += VFock["vEuF"] * Gamma1_["uv"];
-//    F_["EF"] += VFock["EVFU"] * Gamma1_["UV"];
-
-//    // off-diagonal and all-active blocks
-//    F_["ai"] += V_["aviu"] * Gamma1_["uv"];
-//    F_["ai"] += V_["aViU"] * Gamma1_["UV"];
-//    F_["AI"] += V_["vAuI"] * Gamma1_["uv"];
-//    F_["AI"] += V_["AVIU"] * Gamma1_["UV"];
-
-//    // obtain diagonal elements of Fock matrix
-//    F_.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>& spin, double& value)
-//    {
-//        if (spin[0] == AlphaSpin and (i[0] == i[1])) {
-//            Fa_[i[0]] = value;
-//        }
-//        if (spin[0] == BetaSpin and (i[0] == i[1])) {
-//            Fb_[i[0]] = value;
-//        }
-//    });
-//}
-
-// void DSRG_MRPT3::build_fock_full() {
-//    // copy one-electron integrals and core part of two-electron integrals
-//    F_.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>& spin, double& value)
-//    {
-//        if (spin[0] == AlphaSpin) {
-//            value = ints_->oei_a(i[0], i[1]);
-//            for (const size_t& nm : core_mos_) {
-//                value += ints_->aptei_aa(i[0], nm, i[1], nm);
-//                value += ints_->aptei_ab(i[0], nm, i[1], nm);
-//            }
-//        } else {
-//            value = ints_->oei_b(i[0], i[1]);
-//            for (const size_t& nm : core_mos_) {
-//                value += ints_->aptei_bb(i[0], nm, i[1], nm);
-//                value += ints_->aptei_ab(nm, i[0], nm, i[1]);
-//            }
-//        }
-//    });
-
-//    // active part of two-electron integrals
-//    F_["pq"] += V_["pvqu"] * Gamma1_["uv"];
-//    F_["pq"] += V_["pVqU"] * Gamma1_["UV"];
-//    F_["PQ"] += V_["vPuQ"] * Gamma1_["uv"];
-//    F_["PQ"] += V_["PVQU"] * Gamma1_["UV"];
-
-//    // obtain diagonal elements of Fock matrix
-//    F_.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>& spin, double& value)
-//    {
-//        if (spin[0] == AlphaSpin and (i[0] == i[1])) {
-//            Fa_[i[0]] = value;
-//        }
-//        if (spin[0] == BetaSpin and (i[0] == i[1])) {
-//            Fb_[i[0]] = value;
-//        }
-//    });
-//}
 
 void DSRG_MRPT3::print_options_summary() {
     // Print a summary
