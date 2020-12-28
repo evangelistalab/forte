@@ -29,7 +29,7 @@ class OrbitalTransform {
 
     virtual psi::SharedMatrix get_Ub() = 0;
 
-    // The integrals
+    /// The Forte integrals
     std::shared_ptr<ForteIntegrals> ints_;
     /// The MOSpace info
     std::shared_ptr<MOSpaceInfo> mo_space_info_;

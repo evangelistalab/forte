@@ -106,16 +106,6 @@ class MASTER_DSRG : public DynamicCorrelationSolver {
         Uactv_.block("AA")("pq") = Ub("pq");
     }
 
-    /// Set active active occupied MOs (relative to active)
-    void set_actv_occ(std::vector<size_t> actv_occ) {
-        actv_occ_mos_ = std::vector<size_t>(actv_occ);
-    }
-
-    /// Set active active unoccupied MOs (relative to active)
-    void set_actv_uocc(std::vector<size_t> actv_uocc) {
-        actv_uocc_mos_ = std::vector<size_t>(actv_uocc);
-    }
-
   protected:
     /// Startup function called in constructor
     void startup();
@@ -315,6 +305,13 @@ class MASTER_DSRG : public DynamicCorrelationSolver {
      * Fill the tensor T with three-index DF or CD integrals
      */
     void fill_three_index_ints(ambit::BlockedTensor T);
+
+    // ==> internal amplitdes <==
+
+    /// Prune internal amplitudes for T1
+    void prune_t1_internals(BlockedTensor& T1);
+    /// Prune internal amplitudes for T2
+    void prune_t2_internals(BlockedTensor& T2);
 
     // ==> dipole moment <==
 

@@ -91,6 +91,8 @@ void export_RDMs(py::module& m) {
             "Return the alpha-beta-beta 3-cumulant as a numpy array")
         .def(
             "L3bbb", [](RDMs& rdm) { return ambit_to_np(rdm.L3bbb()); },
-            "Return the beta-beta-beta 3-cumulant as a numpy array");
+            "Return the beta-beta-beta 3-cumulant as a numpy array")
+        .def("rotate", &RDMs::rotate, "Ua"_a, "Ub"_a,
+             "Return the RDMs rotated using the input unitary matrices");
 }
 } // namespace forte

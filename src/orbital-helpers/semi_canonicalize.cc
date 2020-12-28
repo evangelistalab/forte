@@ -59,8 +59,14 @@ SemiCanonical::SemiCanonical(std::shared_ptr<MOSpaceInfo> mo_space_info,
                              "Chenyang Li, Jeffrey B. Schriber and Francesco A. Evangelista"});
     }
 
-    // 0. initialize the dimension objects
+    // initialize the dimension objects
+    read_options(foptions);
     startup();
+}
+
+void SemiCanonical::read_options(std::shared_ptr<ForteOptions> foptions) {
+    inactive_mix_ = foptions->get_bool("SEMI_CANONICAL_MIX_INACTIVE");
+    active_mix_ = foptions->get_bool("SEMI_CANONICAL_MIX_ACTIVE");
 
     // compute thresholds from options
     double econv = foptions->get_double("E_CONVERGENCE");
@@ -70,10 +76,15 @@ SemiCanonical::SemiCanonical(std::shared_ptr<MOSpaceInfo> mo_space_info,
         threshold_tight_ = (threshold_tight_ < 0.5 * cd_tlr) ? 0.5 * cd_tlr : threshold_tight_;
     }
     threshold_loose_ = 10.0 * threshold_tight_;
+
+    auto rconv = foptions->get_double("R_CONVERGENCE");
+    auto dconv = foptions->get_double("D_CONVERGENCE");
+    threshold_1rdm_ = rconv > dconv ? rconv : dconv;
+
+    fix_orbital_success_ = true;
 }
 
 void SemiCanonical::startup() {
-    // some basics
     nirrep_ = mo_space_info_->nirrep();
     nmopi_ = mo_space_info_->dimension("ALL");
     nact_ = mo_space_info_->size("ACTIVE");
@@ -89,66 +100,122 @@ void SemiCanonical::startup() {
     // Initialize U to identity
     set_U_to_identity();
 
+    // Get the list of elementary spaces
+    auto composite_spaces = mo_space_info_->composite_space_names();
+    auto docc_names = inactive_mix_ ? std::vector<std::string>{"INACTIVE_DOCC"}
+                                    : composite_spaces["INACTIVE_DOCC"];
+    auto actv_names = active_mix_ ? std::vector<std::string>{"ACTIVE"} : composite_spaces["ACTIVE"];
+    auto uocc_names = inactive_mix_ ? std::vector<std::string>{"INACTIVE_UOCC"}
+                                    : composite_spaces["INACTIVE_UOCC"];
+
+    std::vector<std::string> space_names(docc_names);
+    space_names.insert(space_names.end(), actv_names.begin(), actv_names.end());
+    space_names.insert(space_names.end(), uocc_names.begin(), uocc_names.end());
+
     // Form dimension map
-    std::vector<std::string> space_names = mo_space_info_->space_names();
-    for (const std::string& space : space_names) {
+    for (std::string& space : space_names) {
         mo_dims_[space] = mo_space_info_->dimension(space);
     }
 
     // Compute the offset of GAS spaces within the ACTIVE
-    auto active_space_names = mo_space_info_->composite_space_names()["ACTIVE"];
-
-    for (const std::string& space : active_space_names) {
+    for (const std::string& space : actv_names) {
         actv_offsets_[space] = psi::Dimension(nirrep_);
     }
     for (size_t h = 0, offset = 0; h < nirrep_; ++h) {
-        for (const std::string& space : active_space_names) {
+        for (const std::string& space : actv_names) {
             actv_offsets_[space][h] = offset;
             offset += mo_dims_[space][h];
         }
     }
 }
 
-RDMs SemiCanonical::semicanonicalize(RDMs& rdms, const int& max_rdm_level, const bool& build_fock,
-                                     const bool& transform) {
-    local_timer SemiCanonicalize;
+void SemiCanonical::set_U_to_identity() {
+    Ua_->identity();
+    Ub_->identity();
 
-    // 1. Build the Fock matrix from ForteIntegral
+    Ua_t_.iterate(
+        [&](const std::vector<size_t>& i, double& value) { value = (i[0] == i[1]) ? 1.0 : 0.0; });
+
+    Ub_t_.iterate(
+        [&](const std::vector<size_t>& i, double& value) { value = (i[0] == i[1]) ? 1.0 : 0.0; });
+}
+
+RDMs SemiCanonical::semicanonicalize(RDMs& rdms, const bool& build_fock, const bool& transform) {
+    local_timer timer;
+
+    // Build the Fock matrix from ForteIntegral
     if (build_fock) {
-        local_timer FockTime;
         ints_->make_fock_matrix(rdms.g1a(), rdms.g1b());
-        outfile->Printf("\n  Took %8.6f s to build Fock matrix", FockTime.get());
+        outfile->Printf("\n  Took %8.6f s to build Fock matrix", timer.get());
     }
 
-    // Check Fock matrix
-    bool semi = check_fock_matrix();
+    // Prepare the Fock matrix
+    // If doing natural orbitals, the active part of Fock will be 1-RDM
+    prepare_fock(rdms);
 
-    if (semi) {
-        outfile->Printf("\n  Orbitals are already semicanonicalized.");
+    // Check Fock matrix
+    if (check_fock_matrix()) {
         set_U_to_identity();
+        outfile->Printf("\n  Orbitals are already semi-canonicalized.");
     } else {
-        // 2. Build transformation matrices from diagononalizing blocks in F
+        // Build transformation matrices from diagononalizing blocks in F
         build_transformation_matrices();
 
-        // 3. Retransform integrals and cumulants/RDMs
+        // Retransform integrals and RDMs
         if (transform) {
             ints_->rotate_orbitals(Ua_, Ub_);
-            rdms = transform_rdms(Ua_t_, Ub_t_, rdms, max_rdm_level);
+            rdms = rdms.rotate(Ua_t_, Ub_t_);
         }
-        print_timing("semi-canonicalization", SemiCanonicalize.get());
+        print_timing("semi-canonicalizing orbitals", timer.get());
     }
 
     return rdms;
 }
 
-bool SemiCanonical::check_fock_matrix() {
-    print_h2("Checking Fock Matrix Diagonal Blocks");
-    bool semi = true;
-
+void SemiCanonical::prepare_fock(RDMs& rdms) {
     auto fock_a = ints_->get_fock_a(false);
     auto fock_b = ints_->get_fock_b(false);
+
+    if (!natural_orb_) {
+        Fa_ = fock_a;
+        Fb_ = fock_b;
+    } else {
+        auto relative_mos = mo_space_info_->relative_mo("ACTIVE");
+
+        auto fill_data = [&](ambit::Tensor t, psi::SharedMatrix m) {
+            t.citerate([&](const std::vector<size_t>& i, const double& value) {
+                size_t h0, p0, h1, p1;
+                std::tie(h0, p0) = relative_mos[i[0]];
+                std::tie(h1, p1) = relative_mos[i[1]];
+                if (h0 == h1) {
+                    m->set(h0, p0, p1, value);
+                }
+            });
+        };
+
+        Fa_ = fock_a->clone();
+        auto g1a = rdms.g1a();
+        fill_data(g1a, Fa_); // fill Fa_ active with alpha 1-RDMs
+
+        if (fock_a == fock_b and rdms.g1_spin_diff() < threshold_1rdm_) {
+            Fb_ = Fa_;
+        } else {
+            Fb_ = fock_b->clone();
+            auto g1b = rdms.g1b();
+            fill_data(g1b, Fb_); // fill Fb_ active with beta 1-RDMs
+        }
+    }
+}
+
+bool SemiCanonical::check_fock_matrix() {
+    print_h2("Checking Fock Matrix Diagonal Blocks");
+    if (natural_orb_) {
+        outfile->Printf("\n    Natural orbitals requested:");
+        outfile->Printf("\n    Checking 1-RDM instead of Fock for active orbitals.\n");
+    }
+
     std::vector<std::string> spin_cases{"alpha"};
-    if (fock_a != fock_b)
+    if (Fa_ != Fb_)
         spin_cases.push_back("beta");
 
     int width = 18 + 2 + 13 + 2 + 13;
@@ -158,12 +225,19 @@ bool SemiCanonical::check_fock_matrix() {
     outfile->Printf("\n    %s", dash.c_str());
 
     for (const std::string& spin : spin_cases) {
-        auto& fock = (spin == "alpha") ? fock_a : fock_b;
+        auto& fock = (spin == "alpha") ? Fa_ : Fb_;
+
+        if (spin_cases.size() == 2) {
+            outfile->Printf("\n    %s spin", spin.c_str());
+            outfile->Printf("\n    %s", dash.c_str());
+        }
 
         // loop over orbital spaces
         for (const auto& name_dim_pair : mo_dims_) {
             std::string name = name_dim_pair.first;
             psi::Dimension npi = name_dim_pair.second;
+            if (npi.sum() == 0)
+                continue;
 
             // grab Fock matrix of this diagonal block
             auto slice = mo_space_info_->range(name);
@@ -178,52 +252,40 @@ bool SemiCanonical::check_fock_matrix() {
 
             // check threshold
             double threshold_norm = npi.sum() * (npi.sum() - 1) * threshold_tight_;
-            bool Fdo = (Fmax <= threshold_loose_ && Fnorm <= threshold_norm) ? false : true;
+            bool Fdo = Fmax > threshold_loose_ or Fnorm > threshold_norm;
             checked_results_[name + spin] = Fdo;
-            if (Fdo) {
-                semi = false;
-            }
         }
+
         outfile->Printf("\n    %s", dash.c_str());
     }
 
-    return semi;
-}
-
-void SemiCanonical::set_U_to_identity() {
-    Ua_->identity();
-    Ub_->identity();
-
-    Ua_t_.iterate(
-        [&](const std::vector<size_t>& i, double& value) { value = (i[0] == i[1]) ? 1.0 : 0.0; });
-
-    Ub_t_.iterate(
-        [&](const std::vector<size_t>& i, double& value) { value = (i[0] == i[1]) ? 1.0 : 0.0; });
+    // return if orbitals are already semi-canonicalized
+    return std::all_of(checked_results_.begin(), checked_results_.end(),
+                       [](const auto& p) { return !p.second; });
 }
 
 void SemiCanonical::build_transformation_matrices() {
-    // 2. Diagonalize the diagonal blocks of the Fock matrix
+    // Diagonalize the diagonal blocks of the Fock matrix
 
     // set Ua and Ub to identity by default
     set_U_to_identity();
 
-    auto fock_a = ints_->get_fock_a(false);
-    auto fock_b = ints_->get_fock_b(false);
-
     std::vector<std::string> spin_cases{"alpha"};
-    if (fock_a != fock_b)
+    if (Fa_ != Fb_)
         spin_cases.push_back("beta");
 
     for (const std::string& spin : spin_cases) {
         bool is_alpha = (spin == "alpha");
 
-        auto& fock = is_alpha ? fock_a : fock_b;
+        auto& fock = is_alpha ? Fa_ : Fb_;
         auto& U = is_alpha ? Ua_ : Ub_;
 
         // loop over orbital spaces
         for (const auto& name_dim_pair : mo_dims_) {
             const std::string& name = name_dim_pair.first;
             psi::Dimension npi = name_dim_pair.second;
+            if (npi.sum() == 0)
+                continue;
 
             if (checked_results_[name + spin]) {
                 // build Fock matrix of this diagonal block
@@ -234,7 +296,11 @@ void SemiCanonical::build_transformation_matrices() {
                 // diagonalize this Fock block
                 auto Usub = std::make_shared<psi::Matrix>("U " + name + " " + spin, npi, npi);
                 auto evals = std::make_shared<psi::Vector>("evals" + name + " " + spin, npi);
-                Fsub->diagonalize(Usub, evals);
+                if (natural_orb_ and mo_space_info_->contained_in_space(name, "ACTIVE")) {
+                    Fsub->diagonalize(Usub, evals, descending);
+                } else {
+                    Fsub->diagonalize(Usub, evals, ascending);
+                }
 
                 // fill in Ua or Ub
                 U->set_block(slice, slice, Usub);
@@ -242,129 +308,45 @@ void SemiCanonical::build_transformation_matrices() {
         }
 
         // keep phase and order unchanged
-        ints_->fix_orbital_phases(U, is_alpha);
+        fix_orbital_success_ &= ints_->fix_orbital_phases(U, is_alpha);
 
         // fill in UData
-        auto& UData = is_alpha ? Ua_t_.data() : Ub_t_.data();
-
-        auto active_space_names = mo_space_info_->composite_space_names()["ACTIVE"];
-        for (const std::string& name : active_space_names) {
-            auto dim = mo_space_info_->dimension(name);
-            auto slice = mo_space_info_->range(name);
-            auto Usub = U->get_block(slice, slice);
-
-            for (size_t h = 0; h < nirrep_; ++h) {
-                int actv_off = actv_offsets_[name][h];
-
-                for (int u = 0; u < dim[h]; ++u) {
-                    int nu = u + actv_off;
-
-                    for (int v = 0; v < dim[h]; ++v) {
-                        UData[nu * nact_ + v + actv_off] = Usub->get(h, u, v);
-                    }
-                }
-            }
-        }
+        auto& Ut = is_alpha ? Ua_t_ : Ub_t_;
+        fill_Uactv(U, Ut);
     }
 
-    if (fock_a == fock_b) {
+    if (Fa_ == Fb_) {
         Ub_->copy(Ua_);
         Ub_t_.copy(Ua_t_);
     }
 }
 
-RDMs SemiCanonical::transform_rdms(ambit::Tensor& Ua, ambit::Tensor& Ub, RDMs& rdms,
-                                   const int& max_rdm_level) {
-    if (max_rdm_level < 1)
-        return RDMs();
+void SemiCanonical::fill_Uactv(psi::SharedMatrix U, ambit::Tensor Ut) {
+    auto actv_names = active_mix_ ? std::vector<std::string>{"ACTIVE"}
+                                  : mo_space_info_->composite_space_names()["ACTIVE"];
+    auto& Ut_data = Ut.data();
 
-    print_h2("RDMs Transformation to Semicanonical Basis");
+    for (const std::string& name : actv_names) {
+        auto size = mo_space_info_->size(name);
+        if (size == 0)
+            continue;
 
-    if (rdms.ms_avg()) {
-        auto g1 = rdms.g1a();
-        auto g1T = ambit::Tensor::build(ambit::CoreTensor, "g1aT", {nact_, nact_});
-        g1T("pq") = Ua("ap") * g1("ab") * Ua("bq");
-        outfile->Printf("\n    Transformed 1 RDM.");
-        if (max_rdm_level == 1) {
-            return RDMs(true, g1T);
+        auto pos = mo_space_info_->pos_in_space(name, "ACTIVE");
+        auto relative_mos = mo_space_info_->relative_mo(name);
+
+        for (size_t p = 0; p < size; ++p) {
+            size_t hp, np;
+            std::tie(hp, np) = relative_mos[p];
+
+            for (size_t q = 0; q < size; ++q) {
+                size_t hq, nq;
+                std::tie(hq, nq) = relative_mos[q];
+                if (hp != hq)
+                    continue;
+
+                Ut_data[pos[p] * nact_ + pos[q]] = U->get(hp, np, nq);
+            }
         }
-
-        auto g2 = rdms.g2ab();
-        auto g2T = ambit::Tensor::build(ambit::CoreTensor, "g2abT", {nact_, nact_, nact_, nact_});
-        g2T("pQrS") = Ua("ap") * Ua("BQ") * g2("aBcD") * Ua("cr") * Ua("DS");
-        outfile->Printf("\n    Transformed 2 RDM.");
-        if (max_rdm_level == 2)
-            return RDMs(true, g1T, g2T);
-
-        auto g3 = rdms.g3aab();
-        auto g3T = ambit::Tensor::build(ambit::CoreTensor, "g3aabT", std::vector<size_t>(6, nact_));
-        g3T("pqRstU") =
-            Ua("ap") * Ua("bq") * Ua("CR") * g3("abCijK") * Ua("is") * Ua("jt") * Ua("KU");
-        outfile->Printf("\n    Transformed 3 RDM.");
-        return RDMs(true, g1T, g2T, g3T);
     }
-
-    // Transform the 1-cumulants
-    ambit::Tensor g1a0 = rdms.g1a();
-    ambit::Tensor g1b0 = rdms.g1b();
-
-    ambit::Tensor g1aT = ambit::Tensor::build(ambit::CoreTensor, "g1aT", {nact_, nact_});
-    ambit::Tensor g1bT = ambit::Tensor::build(ambit::CoreTensor, "g1bT", {nact_, nact_});
-
-    g1aT("pq") = Ua("ap") * g1a0("ab") * Ua("bq");
-    g1bT("PQ") = Ub("AP") * g1b0("AB") * Ub("BQ");
-
-    outfile->Printf("\n    Transformed 1 RDMs.");
-
-    if (max_rdm_level == 1)
-        return RDMs(g1aT, g1bT);
-
-    // the original 2-rdms
-    ambit::Tensor g2aa0 = rdms.g2aa();
-    ambit::Tensor g2ab0 = rdms.g2ab();
-    ambit::Tensor g2bb0 = rdms.g2bb();
-
-    //   aa spin
-    auto g2Taa = ambit::Tensor::build(ambit::CoreTensor, "g2aaT", {nact_, nact_, nact_, nact_});
-    g2Taa("pqrs") = Ua("ap") * Ua("bq") * g2aa0("abcd") * Ua("cr") * Ua("ds");
-
-    //   ab spin
-    auto g2Tab = ambit::Tensor::build(ambit::CoreTensor, "g2abT", {nact_, nact_, nact_, nact_});
-    g2Tab("pQrS") = Ua("ap") * Ub("BQ") * g2ab0("aBcD") * Ua("cr") * Ub("DS");
-
-    //   bb spin
-    auto g2Tbb = ambit::Tensor::build(ambit::CoreTensor, "g2bbT", {nact_, nact_, nact_, nact_});
-    g2Tbb("PQRS") = Ub("AP") * Ub("BQ") * g2bb0("ABCD") * Ub("CR") * Ub("DS");
-
-    outfile->Printf("\n    Transformed 2 RDMs.");
-
-    if (max_rdm_level == 2)
-        return RDMs(g1aT, g1bT, g2Taa, g2Tab, g2Tbb);
-
-    // Transform 3 cumulants
-    ambit::Tensor g3aaa0 = rdms.g3aaa();
-    ambit::Tensor g3aab0 = rdms.g3aab();
-    ambit::Tensor g3abb0 = rdms.g3abb();
-    ambit::Tensor g3bbb0 = rdms.g3bbb();
-
-    auto g3Taaa = ambit::Tensor::build(ambit::CoreTensor, "g3aaaT", std::vector<size_t>(6, nact_));
-    g3Taaa("pqrstu") =
-        Ua("ap") * Ua("bq") * Ua("cr") * g3aaa0("abcijk") * Ua("is") * Ua("jt") * Ua("ku");
-
-    auto g3Taab = ambit::Tensor::build(ambit::CoreTensor, "g3aabT", std::vector<size_t>(6, nact_));
-    g3Taab("pqRstU") =
-        Ua("ap") * Ua("bq") * Ub("CR") * g3aab0("abCijK") * Ua("is") * Ua("jt") * Ub("KU");
-
-    auto g3Tabb = ambit::Tensor::build(ambit::CoreTensor, "g3abbT", std::vector<size_t>(6, nact_));
-    g3Tabb("pQRsTU") =
-        Ua("ap") * Ub("BQ") * Ub("CR") * g3abb0("aBCiJK") * Ua("is") * Ub("JT") * Ub("KU");
-
-    auto g3Tbbb = ambit::Tensor::build(ambit::CoreTensor, "g3bbbT", std::vector<size_t>(6, nact_));
-    g3Tbbb("PQRSTU") =
-        Ub("AP") * Ub("BQ") * Ub("CR") * g3bbb0("ABCIJK") * Ub("IS") * Ub("JT") * Ub("KU");
-
-    outfile->Printf("\n    Transformed 3 RDMs.");
-
-    return RDMs(g1aT, g1bT, g2Taa, g2Tab, g2Tbb, g3Taaa, g3Taab, g3Tabb, g3Tbbb);
 }
 } // namespace forte

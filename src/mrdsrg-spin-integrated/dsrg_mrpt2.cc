@@ -71,10 +71,6 @@ DSRG_MRPT2::DSRG_MRPT2(RDMs rdms, std::shared_ptr<SCFInfo> scf_info,
 DSRG_MRPT2::~DSRG_MRPT2() { cleanup(); }
 
 void DSRG_MRPT2::startup() {
-    // options for internal
-    internal_amp_ = foptions_->get_str("INTERNAL_AMP") != "NONE";
-    internal_amp_select_ = foptions_->get_str("INTERNAL_AMP_SELECT");
-
     // prepare integrals
     V_ = BTF_->build(tensor_type_, "V", spin_cases({"pphh"}));
     build_ints();
@@ -268,8 +264,8 @@ void DSRG_MRPT2::print_options_summary() {
         calculation_info_string.push_back({"state_type", "STATE-SPECIFIC"});
     }
 
-    if (internal_amp_) {
-        calculation_info_string.push_back({"internal_amp", foptions_->get_str("INTERNAL_AMP")});
+    calculation_info_string.push_back({"internal_amp", internal_amp_});
+    if (internal_amp_ != "NONE") {
         calculation_info_string.push_back({"internal_amp_select", internal_amp_select_});
     }
 
@@ -286,38 +282,6 @@ void DSRG_MRPT2::print_options_summary() {
 }
 
 void DSRG_MRPT2::cleanup() {}
-
-double DSRG_MRPT2::compute_ref() {
-    local_timer timer;
-    std::string str = "Computing reference energy";
-    outfile->Printf("\n    %-40s ...", str.c_str());
-    double E = 0.0;
-
-    for (const std::string block : {"cc", "CC"}) {
-        F_.block(block).iterate([&](const std::vector<size_t>& i, double& value) {
-            if (i[0] == i[1]) {
-                E += 0.5 * value;
-            }
-        });
-        Hoei_.block(block).iterate([&](const std::vector<size_t>& i, double& value) {
-            if (i[0] == i[1]) {
-                E += 0.5 * value;
-            }
-        });
-    }
-
-    E += 0.5 * Hoei_["uv"] * Gamma1_["vu"];
-    E += 0.5 * Hoei_["UV"] * Gamma1_["VU"];
-    E += 0.5 * F_["uv"] * Gamma1_["vu"];
-    E += 0.5 * F_["UV"] * Gamma1_["VU"];
-
-    E += 0.25 * V_["uvxy"] * Lambda2_["xyuv"];
-    E += 0.25 * V_["UVXY"] * Lambda2_["XYUV"];
-    E += V_["uVxY"] * Lambda2_["xYuV"];
-
-    outfile->Printf("  Done. Timing %15.6f s", timer.get());
-    return E + Efrzc_ + Enuc_;
-}
 
 double DSRG_MRPT2::compute_energy() {
     // check semi-canonical orbitals
@@ -558,113 +522,8 @@ void DSRG_MRPT2::compute_t2() {
         T2_["IJCD"] = tempT2["IJAB"] * U_["BD"] * U_["AC"];
     }
 
-    // internal amplitudes (AA->AA)
-    std::string internal_amp = foptions_->get_str("INTERNAL_AMP");
-    if (internal_amp.find("DOUBLES") != string::npos) {
-        size_t nactv1 = mo_space_info_->size("ACTIVE");
-        size_t nactv2 = nactv1 * nactv1;
-        size_t nactv3 = nactv2 * nactv1;
-        size_t nactv_occ = actv_occ_mos_.size();
-        size_t nactv_uocc = actv_uocc_mos_.size();
-
-        if (internal_amp_select_ == "ALL") {
-            for (size_t i = 0; i < nactv1; ++i) {
-                for (size_t j = 0; j < nactv1; ++j) {
-                    size_t c = i * nactv1 + j;
-
-                    for (size_t a = 0; a < nactv1; ++a) {
-                        for (size_t b = 0; b < nactv1; ++b) {
-                            size_t v = a * nactv1 + b;
-
-                            if (c >= v) {
-                                size_t idx = i * nactv3 + j * nactv2 + a * nactv1 + b;
-                                for (const std::string& block : {"aaaa", "aAaA", "AAAA"}) {
-                                    T2_.block(block).data()[idx] = 0.0;
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        } else if (internal_amp_select_ == "OOVV") {
-            for (const std::string& block : {"aaaa", "aAaA", "AAAA"}) {
-                // copy original data
-                std::vector<double> data(T2_.block(block).data());
-
-                T2_.block(block).zero();
-                for (size_t I = 0; I < nactv_occ; ++I) {
-                    for (size_t J = 0; J < nactv_occ; ++J) {
-                        for (size_t A = 0; A < nactv_uocc; ++A) {
-                            for (size_t B = 0; B < nactv_uocc; ++B) {
-                                size_t idx = actv_occ_mos_[I] * nactv3 + actv_occ_mos_[J] * nactv2 +
-                                             actv_uocc_mos_[A] * nactv1 + actv_uocc_mos_[B];
-                                T2_.block(block).data()[idx] = data[idx];
-                            }
-                        }
-                    }
-                }
-            }
-        } else {
-            for (const std::string& block : {"aaaa", "aAaA", "AAAA"}) {
-                // copy original data
-                std::vector<double> data(T2_.block(block).data());
-                T2_.block(block).zero();
-
-                // OO->VV
-                for (size_t I = 0; I < nactv_occ; ++I) {
-                    for (size_t J = 0; J < nactv_occ; ++J) {
-                        for (size_t A = 0; A < nactv_uocc; ++A) {
-                            for (size_t B = 0; B < nactv_uocc; ++B) {
-                                size_t idx = actv_occ_mos_[I] * nactv3 + actv_occ_mos_[J] * nactv2 +
-                                             actv_uocc_mos_[A] * nactv1 + actv_uocc_mos_[B];
-                                T2_.block(block).data()[idx] = data[idx];
-                            }
-                        }
-                    }
-                }
-
-                // OO->OV, OO->VO
-                for (size_t I = 0; I < nactv_occ; ++I) {
-                    for (size_t J = 0; J < nactv_occ; ++J) {
-                        for (size_t K = 0; K < nactv_occ; ++K) {
-                            for (size_t A = 0; A < nactv_uocc; ++A) {
-                                size_t idx = actv_occ_mos_[I] * nactv3 + actv_occ_mos_[J] * nactv2 +
-                                             actv_occ_mos_[K] * nactv1 + actv_uocc_mos_[A];
-                                T2_.block(block).data()[idx] = data[idx];
-
-                                idx = actv_occ_mos_[I] * nactv3 + actv_occ_mos_[J] * nactv2 +
-                                      actv_uocc_mos_[A] * nactv1 + actv_occ_mos_[K];
-                                T2_.block(block).data()[idx] = data[idx];
-                            }
-                        }
-                    }
-                }
-
-                // OV->VV, VO->VV
-                for (size_t I = 0; I < nactv_occ; ++I) {
-                    for (size_t A = 0; A < nactv_uocc; ++A) {
-                        for (size_t B = 0; B < nactv_uocc; ++B) {
-                            for (size_t C = 0; C < nactv_uocc; ++C) {
-                                size_t idx = actv_occ_mos_[I] * nactv3 +
-                                             actv_uocc_mos_[A] * nactv2 +
-                                             actv_uocc_mos_[B] * nactv1 + actv_uocc_mos_[C];
-                                T2_.block(block).data()[idx] = data[idx];
-
-                                idx = actv_uocc_mos_[A] * nactv3 + actv_occ_mos_[I] * nactv2 +
-                                      actv_uocc_mos_[B] * nactv1 + actv_uocc_mos_[C];
-                                T2_.block(block).data()[idx] = data[idx];
-                            }
-                        }
-                    }
-                }
-            }
-        }
-
-    } else {
-        T2_.block("aaaa").zero();
-        T2_.block("aAaA").zero();
-        T2_.block("AAAA").zero();
-    }
+    // internal amplitudes
+    prune_t2_internals(T2_);
 
     // This is used to print the tensor out for further analysis.
     // Only used as a test for some future tensor factorizations and other
@@ -767,51 +626,8 @@ void DSRG_MRPT2::compute_t1() {
         T1_["IA"] = tempT1["IA"];
     }
 
-    // internal amplitudes (A->A)
-    std::string internal_amp = foptions_->get_str("INTERNAL_AMP");
-    if (internal_amp.find("SINGLES") != std::string::npos) {
-        size_t nactv = mo_space_info_->size("ACTIVE");
-
-        // zero half internals to avoid double counting
-        for (size_t i = 0; i < nactv; ++i) {
-            for (size_t a = 0; a < nactv; ++a) {
-                if (i >= a) {
-                    size_t idx = i * nactv + a;
-                    for (const std::string& block : {"aa", "AA"}) {
-                        T1_.block(block).data()[idx] = 0.0;
-                    }
-                }
-            }
-        }
-
-        if (internal_amp_select_ != "ALL") {
-            size_t nactv_occ = actv_occ_mos_.size();
-            size_t nactv_uocc = actv_uocc_mos_.size();
-
-            // zero O->O internals
-            for (size_t I = 0; I < nactv_occ; ++I) {
-                for (size_t J = 0; J < nactv_occ; ++J) {
-                    size_t idx = actv_occ_mos_[I] * nactv + actv_occ_mos_[J];
-                    for (const std::string& block : {"aa", "AA"}) {
-                        T1_.block(block).data()[idx] = 0.0;
-                    }
-                }
-            }
-
-            // zero V->V internals
-            for (size_t A = 0; A < nactv_uocc; ++A) {
-                for (size_t B = 0; B < nactv_uocc; ++B) {
-                    size_t idx = actv_uocc_mos_[A] * nactv + actv_uocc_mos_[B];
-                    for (const std::string& block : {"aa", "AA"}) {
-                        T1_.block(block).data()[idx] = 0.0;
-                    }
-                }
-            }
-        }
-    } else {
-        T1_.block("AA").zero();
-        T1_.block("aa").zero();
-    }
+    // internal amplitudes
+    prune_t1_internals(T1_);
 
     outfile->Printf("  Done. Timing %15.6f s", timer.get());
 }
@@ -964,12 +780,9 @@ double DSRG_MRPT2::E_FT1() {
     E += F_["EX"] * T1_["YE"] * Gamma1_["XY"];
     E += F_["XM"] * T1_["MY"] * Eta1_["YX"];
 
-    if (internal_amp_) {
-        E += F_["xv"] * T1_["ux"] * Gamma1_["vu"];
-        E -= F_["yu"] * T1_["ux"] * Gamma1_["xy"];
-
-        E += F_["XV"] * T1_["UX"] * Gamma1_["VU"];
-        E -= F_["YU"] * T1_["UX"] * Gamma1_["XY"];
+    if (t1_internals_.size()) {
+        E += F_["ux"] * T1_["yv"] * Gamma1_["xy"] * Eta1_["vu"];
+        E += F_["UX"] * T1_["YV"] * Gamma1_["XY"] * Eta1_["VU"];
     }
 
     outfile->Printf("  Done. Timing %15.6f s", timer.get());
@@ -1000,7 +813,7 @@ double DSRG_MRPT2::E_VT1() {
     E += 0.5 * temp["UVXY"] * Lambda2_["XYUV"];
     E += temp["uVxY"] * Lambda2_["xYuV"];
 
-    if (internal_amp_) {
+    if (t1_internals_.size()) {
         temp.zero();
 
         temp["uvxy"] += V_["wvxy"] * T1_["uw"];
@@ -1047,7 +860,7 @@ double DSRG_MRPT2::E_FT2() {
     E += 0.5 * temp["UVXY"] * Lambda2_["XYUV"];
     E += temp["uVxY"] * Lambda2_["xYuV"];
 
-    if (internal_amp_) {
+    if (t2_internals_.size()) {
         temp.zero();
 
         temp["uvxy"] += F_["wx"] * T2_["uvwy"];
@@ -1077,6 +890,7 @@ double DSRG_MRPT2::E_VT2_2() {
     outfile->Printf("\n    %-40s ...", str.c_str());
 
     double E = 0.0;
+
     E += 0.25 * V_["efmn"] * T2_["mnef"];
     E += 0.25 * V_["EFMN"] * T2_["MNEF"];
     E += V_["eFmN"] * T2_["mNeF"];
@@ -1138,29 +952,16 @@ double DSRG_MRPT2::E_VT2_2() {
     temp["YVXU"] += Eta1_["wz"] * V_["zVmX"] * T2_["mYwU"];
     E += temp["YVXU"] * Gamma1_["XY"] * Eta1_["UV"];
 
-    if (internal_amp_) {
+    if (t2_internals_.size()) {
         temp.zero();
+
         temp["uvxy"] += 0.25 * V_["uvwz"] * Gamma1_["wx"] * Gamma1_["zy"];
         temp["uVxY"] += V_["uVwZ"] * Gamma1_["wx"] * Gamma1_["ZY"];
         temp["UVXY"] += 0.25 * V_["UVWZ"] * Gamma1_["WX"] * Gamma1_["ZY"];
 
-        temp["uvxy"] -= 0.25 * V_["wzxy"] * Gamma1_["uw"] * Gamma1_["vz"];
-        temp["uVxY"] -= V_["wZxY"] * Gamma1_["uw"] * Gamma1_["VZ"];
-        temp["UVXY"] -= 0.25 * V_["WZXY"] * Gamma1_["UW"] * Gamma1_["VZ"];
-
-        temp["uvxy"] -= 0.5 * V_["u1wz"] * Gamma1_["v1"] * Gamma1_["wx"] * Gamma1_["zy"];
-        temp["uVxY"] -= V_["u!wZ"] * Gamma1_["V!"] * Gamma1_["wx"] * Gamma1_["ZY"];
-        temp["uVxY"] -= V_["1VwZ"] * Gamma1_["u1"] * Gamma1_["wx"] * Gamma1_["ZY"];
-        temp["UVXY"] -= 0.5 * V_["U!WZ"] * Gamma1_["V!"] * Gamma1_["WX"] * Gamma1_["ZY"];
-
-        temp["uvxy"] += 0.5 * V_["wzx1"] * Gamma1_["uw"] * Gamma1_["vz"] * Gamma1_["1y"];
-        temp["uVxY"] += V_["wZx!"] * Gamma1_["uw"] * Gamma1_["VZ"] * Gamma1_["!Y"];
-        temp["uVxY"] += V_["wZ1Y"] * Gamma1_["uw"] * Gamma1_["VZ"] * Gamma1_["1x"];
-        temp["UVXY"] += 0.5 * V_["WZX!"] * Gamma1_["UW"] * Gamma1_["VZ"] * Gamma1_["!Y"];
-
-        E += temp["uvxy"] * T2_["xyuv"];
-        E += temp["uVxY"] * T2_["xYuV"];
-        E += temp["UVXY"] * T2_["XYUV"];
+        E += temp["uvxy"] * T2_["xywz"] * Eta1_["wu"] * Eta1_["zv"];
+        E += temp["uVxY"] * T2_["xYwZ"] * Eta1_["wu"] * Eta1_["ZV"];
+        E += temp["UVXY"] * T2_["XYWZ"] * Eta1_["WU"] * Eta1_["ZV"];
     }
 
     outfile->Printf("  Done. Timing %15.6f s", timer.get());
@@ -1184,25 +985,15 @@ double DSRG_MRPT2::E_VT2_4HH() {
     temp["UVXY"] += 0.125 * V_["UVMN"] * T2_["MNXY"];
     temp["UVXY"] += 0.25 * Gamma1_["WZ"] * V_["UVMW"] * T2_["MZXY"];
 
+    if (t2_internals_.size()) {
+        temp["uvxy"] += 0.125 * V_["u,v,w,a1"] * T2_["z,a3,x,y"] * Gamma1_["wz"] * Gamma1_["a1,a3"];
+        temp["uVxY"] += V_["u,V,w,A1"] * T2_["z,A3,x,Y"] * Gamma1_["wz"] * Gamma1_["A1,A3"];
+        temp["UVXY"] += 0.125 * V_["U,V,W,A1"] * T2_["Z,A3,X,Y"] * Gamma1_["WZ"] * Gamma1_["A1,A3"];
+    }
+
     E += Lambda2_["xyuv"] * temp["uvxy"];
     E += Lambda2_["xYuV"] * temp["uVxY"];
     E += Lambda2_["XYUV"] * temp["UVXY"];
-
-    if (internal_amp_) {
-        temp.zero();
-        temp["uvxy"] -= 0.125 * V_["uvwz"] * T2_["wzxy"];
-        temp["uVxY"] -= V_["uVwZ"] * T2_["wZxY"];
-        temp["UVXY"] -= 0.125 * V_["UVWZ"] * T2_["WZXY"];
-
-        temp["uvxy"] += 0.25 * V_["uv1w"] * T2_["1zxy"] * Gamma1_["wz"];
-        temp["uVxY"] += V_["uV1W"] * T2_["1ZxY"] * Gamma1_["WZ"];
-        temp["uVxY"] += V_["uVw!"] * T2_["z!xY"] * Gamma1_["wz"];
-        temp["UVXY"] += 0.25 * V_["UV!W"] * T2_["!ZXY"] * Gamma1_["WZ"];
-
-        E += Lambda2_["xyuv"] * temp["uvxy"];
-        E += Lambda2_["XYUV"] * temp["UVXY"];
-        E += Lambda2_["xYuV"] * temp["uVxY"];
-    }
 
     outfile->Printf("  Done. Timing %15.6f s", timer.get());
     dsrg_time_.add("220", timer.get());
@@ -1225,25 +1016,15 @@ double DSRG_MRPT2::E_VT2_4PP() {
     temp["UVXY"] += 0.125 * V_["EFXY"] * T2_["UVEF"];
     temp["UVXY"] += 0.25 * Eta1_["WZ"] * T2_["UVEW"] * V_["EZXY"];
 
+    if (t2_internals_.size()) {
+        temp["uvxy"] += 0.125 * V_["w,a0,x,y"] * T2_["u,v,z,a1"] * Eta1_["zw"] * Eta1_["a1,a0"];
+        temp["uVxY"] += V_["w,A0,x,Y"] * T2_["u,V,z,A1"] * Eta1_["zw"] * Eta1_["A1,A0"];
+        temp["UVXY"] += 0.125 * V_["W,A0,X,Y"] * T2_["U,V,Z,A1"] * Eta1_["ZW"] * Eta1_["A1,A0"];
+    }
+
     E += Lambda2_["xyuv"] * temp["uvxy"];
     E += Lambda2_["xYuV"] * temp["uVxY"];
     E += Lambda2_["XYUV"] * temp["UVXY"];
-
-    if (internal_amp_) {
-        temp.zero();
-        temp["uvxy"] += 0.125 * V_["wzxy"] * T2_["uvwz"];
-        temp["uVxY"] += V_["wZxY"] * T2_["uVwZ"];
-        temp["UVXY"] += 0.125 * V_["WZXY"] * T2_["UVWZ"];
-
-        temp["uvxy"] -= 0.25 * V_["1zxy"] * T2_["uv1w"] * Gamma1_["wz"];
-        temp["uVxY"] -= V_["1ZxY"] * T2_["uV1W"] * Gamma1_["WZ"];
-        temp["uVxY"] -= V_["z!xY"] * T2_["uVw!"] * Gamma1_["wz"];
-        temp["UVXY"] -= 0.25 * V_["!ZXY"] * T2_["UV!W"] * Gamma1_["WZ"];
-
-        E += Lambda2_["xyuv"] * temp["uvxy"];
-        E += Lambda2_["xYuV"] * temp["uVxY"];
-        E += Lambda2_["XYUV"] * temp["UVXY"];
-    }
 
     outfile->Printf("  Done. Timing %15.6f s", timer.get());
     dsrg_time_.add("220", timer.get());
@@ -1296,33 +1077,23 @@ double DSRG_MRPT2::E_VT2_4PH() {
     temp["uVxY"] += Eta1_["ZW"] * V_["WVMY"] * T2_["uMxZ"];
     E += temp["uVxY"] * Lambda2_["xYuV"];
 
-    if (internal_amp_) {
+    if (t2_internals_.size()) {
         temp.zero();
-        temp["uvxy"] -= V_["v1xw"] * T2_["zu1y"] * Gamma1_["wz"];
-        temp["uvxy"] -= V_["v!xW"] * T2_["uZy!"] * Gamma1_["WZ"];
-        temp["uvxy"] += V_["vzx1"] * T2_["1uwy"] * Gamma1_["wz"];
-        temp["uvxy"] += V_["vZx!"] * T2_["u!yW"] * Gamma1_["WZ"];
+        temp["uvxy"] -= V_["v,a3,x,a1"] * T2_["a0,u,a2,y"] * Gamma1_["a1,a0"] * Eta1_["a2,a3"];
+        temp["uvxy"] -= V_["v,A3,x,A1"] * T2_["u,A0,y,A2"] * Gamma1_["A1,A0"] * Eta1_["A2,A3"];
         E += temp["uvxy"] * Lambda2_["xyuv"];
 
-        temp["UVXY"] -= V_["V!XW"] * T2_["ZU!Y"] * Gamma1_["WZ"];
-        temp["UVXY"] -= V_["1VwX"] * T2_["zU1Y"] * Gamma1_["wz"];
-        temp["UVXY"] += V_["VZX!"] * T2_["!UWY"] * Gamma1_["WZ"];
-        temp["UVXY"] += V_["zV1X"] * T2_["1UwY"] * Gamma1_["wz"];
+        temp["UVXY"] -= V_["a3,V,a1,X"] * T2_["a0,U,a2,Y"] * Gamma1_["a1,a0"] * Eta1_["a2,a3"];
+        temp["UVXY"] -= V_["V,A3,X,A1"] * T2_["A0,U,A2,Y"] * Gamma1_["A1,A0"] * Eta1_["A2,A3"];
         E += temp["UVXY"] * Lambda2_["XYUV"];
 
-        temp["uVxY"] -= V_["1VxW"] * T2_["uZ1Y"] * Gamma1_["WZ"];
-        temp["uVxY"] -= V_["u!wY"] * T2_["zVx!"] * Gamma1_["wz"];
-        temp["uVxY"] += V_["u1xw"] * T2_["zV1Y"] * Gamma1_["wz"];
-        temp["uVxY"] += V_["u!xW"] * T2_["ZV!Y"] * Gamma1_["WZ"];
-        temp["uVxY"] += V_["1VwY"] * T2_["zu1x"] * Gamma1_["wz"];
-        temp["uVxY"] += V_["!VWY"] * T2_["uZx!"] * Gamma1_["WZ"];
+        temp["uVxY"] += V_["u,a3,x,a1"] * T2_["a0,V,a2,Y"] * Gamma1_["a1,a0"] * Eta1_["a2,a3"];
+        temp["uVxY"] += V_["u,A3,x,A1"] * T2_["A0,V,A2,Y"] * Gamma1_["A1,A0"] * Eta1_["A2,A3"];
+        temp["uVxY"] += V_["a3,V,a1,Y"] * T2_["a0,u,a2,x"] * Gamma1_["a1,a0"] * Eta1_["a2,a3"];
+        temp["uVxY"] += V_["A3,V,A1,Y"] * T2_["u,A0,x,A2"] * Gamma1_["A1,A0"] * Eta1_["A2,A3"];
 
-        temp["uVxY"] += V_["zVx!"] * T2_["u!wY"] * Gamma1_["wz"];
-        temp["uVxY"] += V_["uZ1Y"] * T2_["1VxW"] * Gamma1_["WZ"];
-        temp["uVxY"] -= V_["uzx1"] * T2_["1VwY"] * Gamma1_["wz"];
-        temp["uVxY"] -= V_["uZx!"] * T2_["!VWY"] * Gamma1_["WZ"];
-        temp["uVxY"] -= V_["zV1Y"] * T2_["1uwx"] * Gamma1_["wz"];
-        temp["uVxY"] -= V_["ZV!Y"] * T2_["u!xW"] * Gamma1_["WZ"];
+        temp["uVxY"] -= V_["a3,V,x,A1"] * T2_["u,A0,a2,Y"] * Gamma1_["A1,A0"] * Eta1_["a2,a3"];
+        temp["uVxY"] -= V_["u,A3,a1,Y"] * T2_["a0,V,x,A2"] * Gamma1_["a1,a0"] * Eta1_["A2,A3"];
         E += temp["uVxY"] * Lambda2_["xYuV"];
     }
 
@@ -1343,7 +1114,7 @@ double DSRG_MRPT2::E_VT2_6() {
     temp["uvwxyz"] += V_["uvmz"] * T2_["mwxy"];
     temp["uvwxyz"] += V_["wexy"] * T2_["uvez"];
 
-    if (internal_amp_) {
+    if (t2_internals_.size()) {
         temp["uvwxyz"] += V_["uv1z"] * T2_["1wxy"];
         temp["uvwxyz"] += V_["w1xy"] * T2_["uv1z"];
     }
@@ -1354,7 +1125,7 @@ double DSRG_MRPT2::E_VT2_6() {
     temp["UVWXYZ"] += V_["UVMZ"] * T2_["MWXY"];
     temp["UVWXYZ"] += V_["WEXY"] * T2_["UVEZ"];
 
-    if (internal_amp_) {
+    if (t2_internals_.size()) {
         temp["UVWXYZ"] += V_["UV!Z"] * T2_["!WXY"];
         temp["UVWXYZ"] += V_["W!XY"] * T2_["UV!Z"];
     }
@@ -1370,7 +1141,7 @@ double DSRG_MRPT2::E_VT2_6() {
     temp["uvWxyZ"] -= V_["vexy"] * T2_["uWeZ"];
     temp["uvWxyZ"] -= 2.0 * V_["vExZ"] * T2_["uWyE"];
 
-    if (internal_amp_) {
+    if (t2_internals_.size()) {
         temp["uvWxyZ"] -= V_["uv1y"] * T2_["1WxZ"];
         temp["uvWxyZ"] -= V_["uW1Z"] * T2_["1vxy"];
         temp["uvWxyZ"] += 2.0 * V_["uWy!"] * T2_["v!xZ"];
@@ -1391,7 +1162,7 @@ double DSRG_MRPT2::E_VT2_6() {
     temp["uVWxYZ"] -= V_["WEYZ"] * T2_["uVxE"];
     temp["uVWxYZ"] -= 2.0 * V_["eWxY"] * T2_["uVeZ"];
 
-    if (internal_amp_) {
+    if (t2_internals_.size()) {
         temp["uVWxYZ"] -= V_["VW!Z"] * T2_["u!xY"];
         temp["uVWxYZ"] -= V_["uVx!"] * T2_["!WYZ"];
         temp["uVWxYZ"] += 2.0 * V_["uV1Z"] * T2_["1WxY"];
@@ -2228,18 +1999,18 @@ void DSRG_MRPT2::H2_T1_C1aa(BlockedTensor& H2, BlockedTensor& T1, const double& 
     local_timer timer;
 
     C1["uv"] += alpha * T1["ma"] * H2["uavm"];
-    C1["uv"] += alpha * T1["xe"] * Gamma1_["yx"] * H2["uevy"];
-    C1["uv"] -= alpha * T1["mx"] * Gamma1_["xy"] * H2["uyvm"];
+    C1["uv"] += alpha * T1["xa"] * Gamma1_["yx"] * H2["uavy"];
+    C1["uv"] -= alpha * T1["ix"] * Gamma1_["xy"] * H2["uyvi"];
     C1["uv"] += alpha * T1["MA"] * H2["uAvM"];
-    C1["uv"] += alpha * T1["XE"] * Gamma1_["YX"] * H2["uEvY"];
-    C1["uv"] -= alpha * T1["MX"] * Gamma1_["XY"] * H2["uYvM"];
+    C1["uv"] += alpha * T1["XA"] * Gamma1_["YX"] * H2["uAvY"];
+    C1["uv"] -= alpha * T1["IX"] * Gamma1_["XY"] * H2["uYvI"];
 
     C1["UV"] += alpha * T1["ma"] * H2["aUmV"];
-    C1["UV"] += alpha * T1["xe"] * Gamma1_["yx"] * H2["eUyV"];
-    C1["UV"] -= alpha * T1["mx"] * Gamma1_["xy"] * H2["yUmV"];
+    C1["UV"] += alpha * T1["xa"] * Gamma1_["yx"] * H2["aUyV"];
+    C1["UV"] -= alpha * T1["ix"] * Gamma1_["xy"] * H2["yUiV"];
     C1["UV"] += alpha * T1["MA"] * H2["UAVM"];
-    C1["UV"] += alpha * T1["XE"] * Gamma1_["YX"] * H2["UEVY"];
-    C1["UV"] -= alpha * T1["MX"] * Gamma1_["XY"] * H2["UYVM"];
+    C1["UV"] += alpha * T1["XA"] * Gamma1_["YX"] * H2["UAVY"];
+    C1["UV"] -= alpha * T1["IX"] * Gamma1_["XY"] * H2["UYVI"];
 
     if (print_ > 2) {
         outfile->Printf("\n    Time for [H2, T1] -> C1 : %12.3f", timer.get());
@@ -2380,27 +2151,27 @@ void DSRG_MRPT2::H2_T2_C1aa(BlockedTensor& H2, BlockedTensor& T2, const double& 
     C1["vu"] -= alpha * temp["XI"] * T2["vIuX"];
     C1["VU"] -= alpha * temp["XI"] * T2["IVXU"];
 
-    temp = ambit::BlockedTensor::build(tensor_type_, "temp", {"av"});
-    temp["xe"] += 0.5 * T2["uvey"] * Lambda2_["xyuv"];
-    temp["xe"] += T2["uVeY"] * Lambda2_["xYuV"];
-    C1["uv"] += alpha * temp["xe"] * H2["euxv"];
-    C1["UV"] += alpha * temp["xe"] * H2["eUxV"];
-    temp = ambit::BlockedTensor::build(tensor_type_, "temp", {"AV"});
-    temp["XE"] += 0.5 * T2["UVEY"] * Lambda2_["XYUV"];
-    temp["XE"] += T2["uVyE"] * Lambda2_["yXuV"];
-    C1["uv"] += alpha * temp["XE"] * H2["uEvX"];
-    C1["UV"] += alpha * temp["XE"] * H2["EUXV"];
+    temp = ambit::BlockedTensor::build(tensor_type_, "temp", {"ap"});
+    temp["xa"] += 0.5 * T2["uvay"] * Lambda2_["xyuv"];
+    temp["xa"] += T2["uVaY"] * Lambda2_["xYuV"];
+    C1["uv"] += alpha * temp["xa"] * H2["auxv"];
+    C1["UV"] += alpha * temp["xa"] * H2["aUxV"];
+    temp = ambit::BlockedTensor::build(tensor_type_, "temp", {"AP"});
+    temp["XA"] += 0.5 * T2["UVAY"] * Lambda2_["XYUV"];
+    temp["XA"] += T2["uVyA"] * Lambda2_["yXuV"];
+    C1["uv"] += alpha * temp["XA"] * H2["uAvX"];
+    C1["UV"] += alpha * temp["XA"] * H2["AUXV"];
 
-    temp = ambit::BlockedTensor::build(tensor_type_, "temp", {"ca"});
-    temp["mu"] += 0.5 * T2["mvxy"] * Lambda2_["xyuv"];
-    temp["mu"] += T2["mVxY"] * Lambda2_["xYuV"];
-    C1["xy"] -= alpha * temp["mu"] * H2["uxmy"];
-    C1["XY"] -= alpha * temp["mu"] * H2["uXmY"];
-    temp = ambit::BlockedTensor::build(tensor_type_, "temp", {"CA"});
-    temp["MU"] += 0.5 * T2["MVXY"] * Lambda2_["XYUV"];
-    temp["MU"] += T2["vMxY"] * Lambda2_["xYvU"];
-    C1["xy"] -= alpha * temp["MU"] * H2["xUyM"];
-    C1["XY"] -= alpha * temp["MU"] * H2["UXMY"];
+    temp = ambit::BlockedTensor::build(tensor_type_, "temp", {"ha"});
+    temp["iu"] += 0.5 * T2["ivxy"] * Lambda2_["xyuv"];
+    temp["iu"] += T2["iVxY"] * Lambda2_["xYuV"];
+    C1["xy"] -= alpha * temp["iu"] * H2["uxiy"];
+    C1["XY"] -= alpha * temp["iu"] * H2["uXiY"];
+    temp = ambit::BlockedTensor::build(tensor_type_, "temp", {"HA"});
+    temp["IU"] += 0.5 * T2["IVXY"] * Lambda2_["XYUV"];
+    temp["IU"] += T2["vIxY"] * Lambda2_["xYvU"];
+    C1["xy"] -= alpha * temp["IU"] * H2["xUyI"];
+    C1["XY"] -= alpha * temp["IU"] * H2["UXIY"];
 
     if (print_ > 2) {
         outfile->Printf("\n    Time for [H2, T2] -> C1 : %12.3f", timer.get());
@@ -2618,164 +2389,10 @@ void DSRG_MRPT2::H2_T2_C3aaaaaa(BlockedTensor& H2, BlockedTensor& T2, const doub
     dsrg_time_.add("223", timer.get());
 }
 
-// std::vector<std::vector<double>> DSRG_MRPT2::diagonalize_Fock_diagblocks(BlockedTensor& U) {
-//    // diagonal blocks identifiers (C-A-V ordering)
-//    std::vector<std::string> blocks{"cc", "aa", "vv", "CC", "AA", "VV"};
-
-//    // map MO space label to its psi::Dimension
-//    std::map<std::string, psi::Dimension> MOlabel_to_dimension;
-//    MOlabel_to_dimension[acore_label_] = mo_space_info_->dimension("RESTRICTED_DOCC");
-//    MOlabel_to_dimension[aactv_label_] = mo_space_info_->dimension("ACTIVE");
-//    MOlabel_to_dimension[avirt_label_] = mo_space_info_->dimension("RESTRICTED_UOCC");
-
-//    // eigen values to be returned
-//    size_t ncmo = mo_space_info_->size("CORRELATED");
-//    psi::Dimension corr = mo_space_info_->dimension("CORRELATED");
-//    std::vector<double> eigenvalues_a(ncmo, 0.0);
-//    std::vector<double> eigenvalues_b(ncmo, 0.0);
-
-//    // map MO space label to its offset psi::Dimension
-//    std::map<std::string, psi::Dimension> MOlabel_to_offset_dimension;
-//    int nirrep = corr.n();
-//    MOlabel_to_offset_dimension["c"] = psi::Dimension(std::vector<int>(nirrep, 0));
-//    MOlabel_to_offset_dimension["a"] = mo_space_info_->dimension("RESTRICTED_DOCC");
-//    MOlabel_to_offset_dimension["v"] =
-//        mo_space_info_->dimension("RESTRICTED_DOCC") + mo_space_info_->dimension("ACTIVE");
-
-//    // figure out index
-//    auto fill_eigen = [&](std::string block_label, int irrep, std::vector<double> values) {
-//        int h = irrep;
-//        size_t idx_begin = 0;
-//        while ((--h) >= 0)
-//            idx_begin += corr[h];
-
-//        std::string label(1, tolower(block_label[0]));
-//        idx_begin += MOlabel_to_offset_dimension[label][irrep];
-
-//        bool spin_alpha = islower(block_label[0]);
-//        size_t nvalues = values.size();
-//        if (spin_alpha) {
-//            for (size_t i = 0; i < nvalues; ++i) {
-//                eigenvalues_a[i + idx_begin] = values[i];
-//            }
-//        } else {
-//            for (size_t i = 0; i < nvalues; ++i) {
-//                eigenvalues_b[i + idx_begin] = values[i];
-//            }
-//        }
-//    };
-
-//    // diagonalize diagonal blocks
-//    for (const auto& block : blocks) {
-//        size_t dim = F_.block(block).dim(0);
-//        if (dim == 0) {
-//            continue;
-//        } else {
-//            std::string label(1, tolower(block[0]));
-//            psi::Dimension space = MOlabel_to_dimension[label];
-//            int nirrep = space.n();
-
-//            // separate Fock with irrep
-//            for (int h = 0; h < nirrep; ++h) {
-//                size_t h_dim = space[h];
-//                ambit::Tensor U_h;
-//                if (h_dim == 0) {
-//                    continue;
-//                } else if (h_dim == 1) {
-//                    U_h = ambit::Tensor::build(tensor_type_, "U_h", std::vector<size_t>(2,
-//                    h_dim)); U_h.data()[0] = 1.0; ambit::Tensor F_block =
-//                        ambit::Tensor::build(tensor_type_, "F_block", F_.block(block).dims());
-//                    F_block.data() = F_.block(block).data();
-//                    ambit::Tensor T_h = separate_tensor(F_block, space, h);
-//                    fill_eigen(block, h, T_h.data());
-//                } else {
-//                    ambit::Tensor F_block =
-//                        ambit::Tensor::build(tensor_type_, "F_block", F_.block(block).dims());
-//                    F_block.data() = F_.block(block).data();
-//                    ambit::Tensor T_h = separate_tensor(F_block, space, h);
-//                    auto Feigen = T_h.syev(AscendingEigenvalue);
-//                    U_h = ambit::Tensor::build(tensor_type_, "U_h", std::vector<size_t>(2,
-//                    h_dim)); U_h("pq") = Feigen["eigenvectors"]("pq"); fill_eigen(block, h,
-//                    Feigen["eigenvalues"].data());
-//                }
-//                ambit::Tensor U_out = U.block(block);
-//                combine_tensor(U_out, U_h, space, h);
-//            }
-//        }
-//    }
-//    return {eigenvalues_a, eigenvalues_b};
-//}
-
-// ambit::Tensor DSRG_MRPT2::separate_tensor(ambit::Tensor& tens, const psi::Dimension& irrep,
-//                                          const int& h) {
-//    // test tens and irrep
-//    size_t tens_dim = tens.dim(0);
-//    if (tens_dim != static_cast<size_t>(irrep.sum()) || tens_dim != tens.dim(1)) {
-//        throw psi::PSIEXCEPTION("Wrong dimension for the to-be-separated ambit Tensor.");
-//    }
-//    if (h >= irrep.n()) {
-//        throw psi::PSIEXCEPTION("Ask for wrong irrep.");
-//    }
-
-//    // from relative (blocks) to absolute (big tensor) index
-//    auto rel_to_abs = [&](size_t i, size_t j, size_t offset) {
-//        return (i + offset) * tens_dim + (j + offset);
-//    };
-
-//    // compute offset
-//    size_t offset = 0, h_dim = irrep[h];
-//    int h_local = h;
-//    while ((--h_local) >= 0)
-//        offset += irrep[h_local];
-
-//    // fill in values
-//    ambit::Tensor T_h = ambit::Tensor::build(tensor_type_, "T_h", std::vector<size_t>(2, h_dim));
-//    for (size_t i = 0; i < h_dim; ++i) {
-//        for (size_t j = 0; j < h_dim; ++j) {
-//            size_t abs_idx = rel_to_abs(i, j, offset);
-//            T_h.data()[i * h_dim + j] = tens.data()[abs_idx];
-//        }
-//    }
-
-//    return T_h;
-//}
-
-// void DSRG_MRPT2::combine_tensor(ambit::Tensor& tens, ambit::Tensor& tens_h,
-//                                const psi::Dimension& irrep, const int& h) {
-//    // test tens and irrep
-//    if (h >= irrep.n()) {
-//        throw psi::PSIEXCEPTION("Ask for wrong irrep.");
-//    }
-//    size_t tens_h_dim = tens_h.dim(0), h_dim = irrep[h];
-//    if (tens_h_dim != h_dim || tens_h_dim != tens_h.dim(1)) {
-//        throw psi::PSIEXCEPTION("Wrong dimension for the to-be-combined ambit Tensor.");
-//    }
-
-//    // from relative (blocks) to absolute (big tensor) index
-//    size_t tens_dim = tens.dim(0);
-//    auto rel_to_abs = [&](size_t i, size_t j, size_t offset) {
-//        return (i + offset) * tens_dim + (j + offset);
-//    };
-
-//    // compute offset
-//    size_t offset = 0;
-//    int h_local = h;
-//    while ((--h_local) >= 0)
-//        offset += irrep[h_local];
-
-//    // fill in values
-//    for (size_t i = 0; i < h_dim; ++i) {
-//        for (size_t j = 0; j < h_dim; ++j) {
-//            size_t abs_idx = rel_to_abs(i, j, offset);
-//            tens.data()[abs_idx] = tens_h.data()[i * h_dim + j];
-//        }
-//    }
-//}
-
 ambit::BlockedTensor DSRG_MRPT2::get_T1deGNO(double& T0deGNO) {
     ambit::BlockedTensor T1eff = deGNO_Tamp(T1_, T2_, Gamma1_);
 
-    if (internal_amp_) {
+    if (internal_amp_ != "NONE") {
         // the scalar term of amplitudes when de-normal-ordering
         T0deGNO -= T1_["uv"] * Gamma1_["vu"];
         T0deGNO -= T1_["UV"] * Gamma1_["VU"];

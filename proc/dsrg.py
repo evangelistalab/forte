@@ -117,7 +117,7 @@ class ProcedureDSRG:
         # Semi-canonicalize orbitals and rotation matrices
         self.semi = forte.SemiCanonical(mo_space_info, ints, options)
         if self.do_semicanonical:
-            self.semi.semicanonicalize(self.rdms, self.max_rdm_level)
+            self.semi.semicanonicalize(self.rdms)
         self.Ua, self.Ub = self.semi.Ua_t(), self.semi.Ub_t()
 
     def make_dsrg_solver(self):
@@ -221,11 +221,16 @@ class ProcedureDSRG:
                 self.rdms = self.active_space_solver.compute_average_rdms(self.state_weights_map, self.max_rdm_level)
 
             # - Transform RDMs to the semi-canonical orbitals of last step
-            self.rdms = self.semi.transform_rdms(self.Ua, self.Ub, self.rdms, self.max_rdm_level)
+            self.rdms = self.rdms.rotate(self.Ua, self.Ub)
 
             # - Semi-canonicalize RDMs and orbitals
             if self.do_semicanonical:
-                self.semi.semicanonicalize(self.rdms, self.max_rdm_level)
+                self.semi.semicanonicalize(self.rdms)
+                # NOT read previous orbitals if fixing orbital ordering and phases failed
+                if (not self.semi.fix_orbital_success()) and self.Heff_implemented:
+                    psi4.core.print_out("\n  DSRG checkpoint files removed due to the unsuccessful"
+                                        " attempt to fix orbital phase and order.")
+                    self.dsrg_solver.clean_checkpoints()
             self.Ua, self.Ub = self.semi.Ua_t(), self.semi.Ub_t()
 
             # - Compute DSRG energy
@@ -236,14 +241,15 @@ class ProcedureDSRG:
 
         self.dsrg_cleanup()
 
-        psi4.core.set_scalar_variable("CURRENT ENERGY", e_dsrg)
-
         # dump reference relaxation energies to json file
         if self.save_relax_energies:
             with open('dsrg_relaxed_energies.json', 'w') as w:
                 json.dump(self.energies_environment, w, sort_keys=True, indent=4)
 
-        return e_dsrg if len(self.energies) == 0 else e_relax
+        e_current = e_dsrg if len(self.energies) == 0 else e_relax
+        psi4.core.set_scalar_variable("CURRENT ENERGY", e_current)
+
+        return e_current
 
     def compute_dipole_relaxed(self):
         """ Compute dipole moments. """

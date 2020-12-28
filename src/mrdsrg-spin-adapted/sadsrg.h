@@ -115,11 +115,6 @@ class SADSRG : public DynamicCorrelationSolver {
     /// Threshold for amplitudes considered as intruders
     double intruder_tamp_;
 
-    /// How to consider internal amplitudes
-    std::string internal_amp_;
-    /// Include which part of internal amplitudes?
-    std::string internal_amp_select_;
-
     /// Relaxation type
     std::string relax_ref_;
 
@@ -172,11 +167,6 @@ class SADSRG : public DynamicCorrelationSolver {
     /// List of the symmetry of the active MOs
     std::vector<int> actv_mos_sym_;
 
-    /// List of active active occupied MOs (relative to active)
-    std::vector<size_t> actv_occ_mos_;
-    /// List of active active unoccupied MOs (relative to active)
-    std::vector<size_t> actv_uocc_mos_;
-
     /// List of auxiliary MOs when DF/CD
     std::vector<size_t> aux_mos_;
 
@@ -210,13 +200,13 @@ class SADSRG : public DynamicCorrelationSolver {
     /// Compute retaining excitation blocks labels of a two-body operator
     std::vector<std::string> re_two_labels();
     /// Compute off-diagonal blocks labels of a one-body operator
-    std::vector<std::string> od_one_labels();
-    std::vector<std::string> od_one_labels_hp();
-    std::vector<std::string> od_one_labels_ph();
+    std::vector<std::string> od_one_labels(bool aa = false);
+    std::vector<std::string> od_one_labels_hp(bool aa = false);
+    std::vector<std::string> od_one_labels_ph(bool aa = false);
     /// Compute off-diagonal blocks labels of a two-body operator
-    std::vector<std::string> od_two_labels();
-    std::vector<std::string> od_two_labels_hhpp();
-    std::vector<std::string> od_two_labels_pphh();
+    std::vector<std::string> od_two_labels(bool aaaa = false);
+    std::vector<std::string> od_two_labels_hhpp(bool aaaa = false);
+    std::vector<std::string> od_two_labels_pphh(bool aaaa = false);
     /// Compute the blocks labels used in NIVO (number of virtual < 3)
     std::vector<std::string> nivo_labels();
 
@@ -291,6 +281,13 @@ class SADSRG : public DynamicCorrelationSolver {
      * This assumes no internal amplitudes !!!
      */
     ambit::BlockedTensor deGNO_Tamp(BlockedTensor& T1, BlockedTensor& T2, BlockedTensor& D1);
+
+    // ==> internal amplitudes <==
+
+    /// Prune internal amplitudes for T1
+    void internal_amps_T1(BlockedTensor& T1);
+    /// Prune internal amplitudes for T2
+    void internal_amps_T2(BlockedTensor& T2);
 
     // ==> commutators <==
 
@@ -386,11 +383,6 @@ class SADSRG : public DynamicCorrelationSolver {
     void print_done(double t);
 
     // ==> common aplitudes analysis and printing <==
-
-    /// Prune internal amplitudes for T1
-    void internal_amps_T1(BlockedTensor& T1);
-    /// Prune internal amplitudes for T2
-    void internal_amps_T2(BlockedTensor& T2);
 
     /// Check T1 and return the largest amplitudes
     std::vector<std::pair<std::vector<size_t>, double>> check_t1(BlockedTensor& T1);

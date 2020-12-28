@@ -480,7 +480,7 @@ Psi4Integrals::make_fock_inactive(psi::Dimension dim_start, psi::Dimension dim_e
      * u,v,r,s: AO indices; i: MO indices
      */
     if (JK_status_ == JKStatus::finalized) {
-        outfile->Printf("\n  JK object had beed finalized. JK is about to be initialized.\n");
+        outfile->Printf("\n  JK object had been finalized. JK is about to be initialized.\n");
         jk_initialize(0.7);
     }
 
@@ -664,7 +664,7 @@ std::tuple<psi::SharedMatrix, psi::SharedMatrix> Psi4Integrals::make_fock_active
 
 psi::SharedMatrix Psi4Integrals::make_fock_active_restricted(psi::SharedMatrix g1) {
     if (JK_status_ == JKStatus::finalized) {
-        outfile->Printf("\n  JK object had beed finalized. JK is about to be initialized.\n");
+        outfile->Printf("\n  JK object had been finalized. JK is about to be initialized.\n");
         jk_initialize(0.7);
     }
 
@@ -715,7 +715,7 @@ psi::SharedMatrix Psi4Integrals::make_fock_active_restricted(psi::SharedMatrix g
 std::tuple<psi::SharedMatrix, psi::SharedMatrix>
 Psi4Integrals::make_fock_active_unrestricted(psi::SharedMatrix g1a, psi::SharedMatrix g1b) {
     if (JK_status_ == JKStatus::finalized) {
-        outfile->Printf("\n  JK object had beed finalized. JK is about to be initialized.\n");
+        outfile->Printf("\n  JK object had been finalized. JK is about to be initialized.\n");
         jk_initialize(0.7);
     }
 

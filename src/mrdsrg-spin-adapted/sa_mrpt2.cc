@@ -1230,10 +1230,15 @@ void SA_MRPT2::compute_hbar() {
         print_done(lt.get());
     } else {
         // set up G2["pqrs"] = 2 * H2["pqrs"] - H2["pqsr"]
-        auto G2 = ambit::BlockedTensor::build(tensor_type_, "G2H", {"avac", "aaac", "avaa"});
+        std::vector<std::string> blocks{"avac", "aaac", "avaa"};
+        if (t1_internals_.size() or t2_internals_.size()) {
+            blocks.push_back("aaaa");
+        }
+        auto G2 = ambit::BlockedTensor::build(tensor_type_, "G2H", blocks);
         G2["uevm"] += 2.0 * V_["uevm"] - V_["uemv"];
         G2["uvwm"] += 2.0 * V_["vumw"] - V_["uvmw"];
         G2["uexy"] += 2.0 * V_["euyx"] - V_["euxy"];
+        G2["uvxy"] += 2.0 * V_["uvxy"] - V_["uvyx"];
 
         local_timer lt;
         print_contents("Computing MRPT2 Hbar AAAA minimal");

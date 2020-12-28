@@ -1,0 +1,72 @@
+# Test VCIS/VCISD-DSRG-MRPT2 energy on 1B1u state of ethene
+
+Ecispt2  = -77.994851177968
+Ecisdpt2 = -77.995041230894
+
+import forte
+
+molecule C2H4{
+0 1
+H  0.000000  0.923274  1.238289
+H  0.000000 -0.923274  1.238289
+H  0.000000  0.923274 -1.238289
+H  0.000000 -0.923274 -1.238289
+C  0.000000  0.000000  0.668188
+C  0.000000  0.000000 -0.668188
+}
+
+set {
+reference      rhf
+scf_type       pk
+basis          cc-pvdz
+docc           [3,0,0,1,0,2,1,1]
+e_convergence  10
+d_convergence  12
+maxiter        100
+ints_tolerance 0.0
+}
+Escf, wfn = energy('scf', return_wfn=True)
+
+set forte{
+frozen_docc               [1,0,0,0,0,1,0,0]
+restricted_docc           [1,0,0,1,0,1,1,0]
+dsrg_s                    0.5
+active_space_solver       aci
+sigma                     0.00
+sci_enforce_spin_complete true
+active_ref_type           gas
+gas1                      [1,0,0,0,0,0,0,1]
+gas2                      [0,0,1,1,0,1,1,0]
+gas2max                   [1]
+root_sym                  5
+d_convergence             10
+correlation_solver        dsrg-mrpt2
+internal_amp              singles_doubles
+internal_amp_select       auto
+}
+Econv = energy('forte', ref_wfn=wfn)
+compare_values(Ecispt2, Econv, 8, "VCIS-DSRG-MRPT2 (spin-integrated) energy")
+
+set forte {
+correlation_solver        sa-mrdsrg
+corr_level                pt2
+}
+Econv = energy('forte', ref_wfn=wfn)
+compare_values(Ecispt2, Econv, 8, "VCIS-DSRG-MRPT2 (spin-adapted) energy")
+
+set forte {
+int_type                  cholesky
+cholesky_tolerance        12
+gas2max                   [2]
+relax_ref                 once
+correlation_solver        dsrg-mrpt2
+}
+Econv = energy('forte', ref_wfn=wfn)
+compare_values(Ecisdpt2, Econv, 8, "CD-VCISD-DSRG-MRPT2 (spin-integrated) energy")
+
+set forte {
+correlation_solver        sa-mrdsrg
+corr_level                pt2
+}
+Econv = energy('forte', ref_wfn=wfn)
+compare_values(Ecisdpt2, Econv, 8, "CD-VCISD-DSRG-MRPT2 (spin-adapted) energy")

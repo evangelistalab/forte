@@ -210,11 +210,6 @@ class DSRG_MRPT2 : public MASTER_DSRG {
     /// Max (with sign) of T1
     double T1max_;
 
-    /// Include internal amplitude?
-    bool internal_amp_;
-    /// Include which part of internal amplitudes?
-    std::string internal_amp_select_;
-
     /// Print amplitudes summary
     void print_amp_summary(const std::string& name,
                            const std::vector<std::pair<std::vector<size_t>, double>>& list,
@@ -232,8 +227,6 @@ class DSRG_MRPT2 : public MASTER_DSRG {
 
     // => Energy terms <= //
 
-    /// Compute reference energy
-    double compute_ref();
     /// Compute DSRG-PT2 correlation energy - Group of functions to calculate
     /// individual pieces of energy
     double E_FT1();

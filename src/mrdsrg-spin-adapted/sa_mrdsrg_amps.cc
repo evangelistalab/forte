@@ -75,6 +75,9 @@ void SA_MRDSRG::guess_t2(BlockedTensor& V, BlockedTensor& T2, BlockedTensor& B) 
         guess_t2_impl(T2);
     }
 
+    // zero internal amplitudes
+    internal_amps_T2(T2);
+
     T2max_ = T2.norm(0);
     T2norm_ = T2.norm();
     T2rms_ = 0.0;
@@ -121,9 +124,6 @@ void SA_MRDSRG::guess_t2_impl(BlockedTensor& T2) {
         tempT2["klab"] = U_["ik"] * U_["jl"] * T2["ijab"];
         T2["ijcd"] = tempT2["ijab"] * U_["bd"] * U_["ac"];
     }
-
-    // zero internal amplitudes
-    internal_amps_T2(T2);
 }
 
 void SA_MRDSRG::guess_t1(BlockedTensor& F, BlockedTensor& T2, BlockedTensor& T1) {
@@ -178,10 +178,10 @@ void SA_MRDSRG::guess_t1(BlockedTensor& F, BlockedTensor& T2, BlockedTensor& T1)
             tempX["jb"] = U_["ij"] * T1["ia"] * U_["ab"];
             T1["ia"] = tempX["ia"];
         }
-
-        // zero internal amplitudes
-        internal_amps_T1(T1);
     }
+
+    // zero internal amplitudes
+    internal_amps_T1(T1);
 
     // norms
     T1max_ = T1.norm(0);
@@ -305,7 +305,7 @@ void SA_MRDSRG::update_t2() {
     T2_["ijab"] += DT2_["ijab"];
 
     // compute norm and find maximum
-    T2norm_ = T2_.norm(2);
+    T2norm_ = T2_.norm();
     T2max_ = T2_.norm(0);
     t10.stop();
 
@@ -406,7 +406,7 @@ void SA_MRDSRG::update_t1() {
 
     // compute norm and find maximum
     T1max_ = T1_.norm(0);
-    T1norm_ = T1_.norm(2);
+    T1norm_ = T1_.norm();
 
     // reset the active part of Hbar2
     Hbar1_["uv"] = Hbar1copy["uv"];

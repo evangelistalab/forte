@@ -177,25 +177,33 @@ std::vector<std::pair<size_t, size_t>> MOSpaceInfo::get_relative_mo(const std::s
     return relative_mo(space);
 }
 
-std::vector<size_t> MOSpaceInfo::pos_in_space(const std::string& space,
-                                              const std::string& composite_space) {
-    std::vector<size_t> result;
+bool MOSpaceInfo::contained_in_space(const std::string& space, const std::string& composite_space) {
     if (composite_spaces_.count(space) * composite_spaces_.count(composite_space) == 0) {
-        std::string msg = "\n  MOSpaceInfo::pos_in_space - space " + space +
+        std::string msg = "\n  MOSpaceInfo::contained_in_space - space " + space +
                           " or composite space " + composite_space + " is not defined.";
         throw psi::PSIEXCEPTION(msg.c_str());
     }
 
-    // make sure that space is contained in composite_space
-    for (auto s : composite_spaces_[space]) {
-        auto it = find(composite_spaces_[composite_space].begin(),
-                       composite_spaces_[composite_space].end(), s);
-        if (it == composite_spaces_[composite_space].end()) {
-            std::string msg = "\n  MOSpaceInfo::pos_in_space - space " + s +
-                              " is not contained in composite space " + composite_space + " .";
-            throw psi::PSIEXCEPTION(msg.c_str());
+    std::unordered_set<std::string> composite_spaces(composite_spaces_[composite_space].begin(),
+                                                     composite_spaces_[composite_space].end());
+    for (const std::string& s : composite_spaces_[space]) {
+        if (composite_spaces.find(s) == composite_spaces.end()) {
+            return false;
         }
     }
+    return true;
+}
+
+std::vector<size_t> MOSpaceInfo::pos_in_space(const std::string& space,
+                                              const std::string& composite_space) {
+    // make sure that space is contained in composite_space
+    if (not contained_in_space(space, composite_space)) {
+        std::string msg = "\n  MOSpaceInfo::pos_in_space - space " + space +
+                          " is not contained in composite space " + composite_space + " .";
+        throw psi::PSIEXCEPTION(msg.c_str());
+    }
+
+    std::vector<size_t> result;
 
     auto abs_space = absolute_mo(space);
     auto abs_composite_space = absolute_mo(composite_space);
@@ -439,6 +447,19 @@ MOSpaceInfo::read_mo_space_from_map(const std::string& space,
     }
     SpaceInfo space_info(space_dim, vec_mo_info);
     return std::make_pair(space_info, read);
+}
+
+std::vector<std::string> MOSpaceInfo::nonzero_gas_spaces() {
+    std::vector<std::string> nonzero_gas;
+
+    auto gas_spaces = composite_space_names()["ACTIVE"];
+    for (const std::string& gas_name : gas_spaces) {
+        if (size(gas_name) != 0) {
+            nonzero_gas.push_back(gas_name);
+        }
+    }
+
+    return nonzero_gas;
 }
 
 std::shared_ptr<MOSpaceInfo> make_mo_space_info(const psi::Dimension& nmopi,

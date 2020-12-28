@@ -32,6 +32,7 @@ set forte {
   sigma 0.00
   charge 0
   sci_enforce_spin_complete true
+  spin_project_full true
   e_convergence 6
   active_ref_type gas
   GAS1 [1,0,0,0]

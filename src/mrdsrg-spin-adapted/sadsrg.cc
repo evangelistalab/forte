@@ -28,12 +28,12 @@
 
 #include <numeric>
 
+#include "psi4/psi4-dec.h"
 #include "psi4/libmints/matrix.h"
 #include "psi4/libmints/molecule.h"
 #include "psi4/libpsi4util/process.h"
 #include "psi4/libpsi4util/PsiOutStream.h"
 #include "psi4/libmints/vector.h"
-#include "psi4/libpsio/psio.hpp"
 
 #include "forte-def.h"
 #include "helpers/helpers.h"
@@ -155,7 +155,6 @@ void SADSRG::read_options() {
         outfile->Printf("\n  Warning: SOURCE option %s is not implemented.", source_.c_str());
         outfile->Printf("\n  Changed SOURCE option to STANDARD");
         source_ = "STANDARD";
-
         warnings_.push_back(std::make_tuple("Unsupported SOURCE", "Change to STANDARD",
                                             "Change options in input.dat"));
     }
@@ -172,9 +171,6 @@ void SADSRG::read_options() {
 
     ntamp_ = foptions_->get_int("NTAMP");
     intruder_tamp_ = foptions_->get_double("INTRUDER_TAMP");
-
-    internal_amp_ = foptions_->get_str("INTERNAL_AMP");
-    internal_amp_select_ = foptions_->get_str("INTERNAL_AMP_SELECT");
 
     dump_amps_cwd_ = foptions_->get_bool("DSRG_DUMP_AMPS");
     read_amps_cwd_ = foptions_->get_bool("DSRG_READ_AMPS");
@@ -196,6 +192,13 @@ void SADSRG::read_MOSpaceInfo() {
     if (eri_df_) {
         aux_mos_ = std::vector<size_t>(ints_->nthree());
         std::iota(aux_mos_.begin(), aux_mos_.end(), 0);
+    }
+
+    if (internal_amp_ != "NONE") {
+        auto gas_spaces = mo_space_info_->composite_space_names()["ACTIVE"];
+        for (const std::string& gas_name : gas_spaces) {
+            gas_actv_rel_mos_[gas_name] = mo_space_info_->pos_in_space(gas_name, "ACTIVE");
+        }
     }
 }
 
@@ -648,10 +651,8 @@ bool SADSRG::check_semi_orbs() {
     }
 
     auto nactv = actv_mos_.size();
-    for (const std::string& space : mo_space_info_->space_names()) {
-        if (space.find("GAS") == std::string::npos or mo_space_info_->size(space) == 0)
-            continue;
-
+    auto active_space_names = mo_space_info_->nonzero_gas_spaces();
+    for (const std::string& space : active_space_names) {
         auto rel_indices = mo_space_info_->pos_in_space(space, "ACTIVE");
         auto size = rel_indices.size();
         double fmax = 0.0, fmean = 0.0;
@@ -698,30 +699,6 @@ bool SADSRG::check_semi_orbs() {
     }
 
     return semi;
-}
-
-void SADSRG::print_cumulant_summary() {
-    print_h2("Density Cumulant Summary");
-
-    std::vector<double> maxes(2), norms(2);
-
-    maxes[0] = L2_.norm(0);
-    norms[0] = L2_.norm(2);
-
-    if (do_cu3_) {
-        maxes[1] = rdms_.SF_L3().norm(0);
-        norms[1] = rdms_.SF_L3().norm(2);
-    } else {
-        maxes[1] = 0.0;
-        norms[1] = 0.0;
-    }
-
-    std::string dash(6 + 13 * 2, '-');
-    outfile->Printf("\n    %-6s %12s %12s", "", "2-cumulant", "3-cumulant");
-    outfile->Printf("\n    %s", dash.c_str());
-    outfile->Printf("\n    %-6s %12.6f %12.6f", "max", maxes[0], maxes[1]);
-    outfile->Printf("\n    %-6s %12.6f %12.6f", "2-norm", norms[0], norms[1]);
-    outfile->Printf("\n    %s", dash.c_str());
 }
 
 std::vector<double> SADSRG::diagonalize_Fock_diagblocks(BlockedTensor& U) {
@@ -793,6 +770,30 @@ std::vector<double> SADSRG::diagonalize_Fock_diagblocks(BlockedTensor& U) {
     }
 
     return Fdiag;
+}
+
+void SADSRG::print_cumulant_summary() {
+    print_h2("Density Cumulant Summary");
+
+    std::vector<double> maxes(2), norms(2);
+
+    maxes[0] = L2_.norm(0);
+    norms[0] = L2_.norm(2);
+
+    if (do_cu3_) {
+        maxes[1] = rdms_.SF_L3().norm(0);
+        norms[1] = rdms_.SF_L3().norm(2);
+    } else {
+        maxes[1] = 0.0;
+        norms[1] = 0.0;
+    }
+
+    std::string dash(6 + 13 * 2, '-');
+    outfile->Printf("\n    %-6s %12s %12s", "", "2-cumulant", "3-cumulant");
+    outfile->Printf("\n    %s", dash.c_str());
+    outfile->Printf("\n    %-6s %12.6f %12.6f", "max", maxes[0], maxes[1]);
+    outfile->Printf("\n    %-6s %12.6f %12.6f", "2-norm", norms[0], norms[1]);
+    outfile->Printf("\n    %s", dash.c_str());
 }
 
 void SADSRG::print_contents(const std::string& str, size_t size) {

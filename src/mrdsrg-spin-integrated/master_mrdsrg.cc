@@ -672,6 +672,116 @@ void MASTER_DSRG::fill_three_index_ints(ambit::BlockedTensor T) {
     }
 }
 
+void MASTER_DSRG::prune_t1_internals(BlockedTensor& T1) {
+    if (t1_internals_.size() == 0) {
+        T1.block("AA").zero();
+        T1.block("aa").zero();
+    } else {
+        int nactv = actv_mos_.size();
+
+        for (const std::string& block : {"aa", "AA"}) {
+            auto& T1data = T1.block(block).data();
+            std::vector<double> T1copy(T1data.size());
+
+            for (const auto& t : t1_internals_) {
+                std::string gas1, gas2;
+                bool pure;
+                std::tie(gas1, gas2, pure) = t;
+
+                auto mos_o = gas_actv_rel_mos_[gas1];
+                auto mos_v = gas_actv_rel_mos_[gas2];
+                int no = mos_o.size();
+                int nv = mos_v.size();
+
+                if (pure) {
+                    for (int p = 0; p < no; ++p) {
+                        for (int q = p + 1; q < no; ++q) {
+                            int id = mos_o[p] * nactv + mos_o[q];
+                            T1copy[id] = T1data[id];
+                        }
+                    }
+                } else {
+                    for (int i = 0; i < no; ++i) {
+                        for (int a = 0; a < nv; ++a) {
+                            int id = mos_o[i] * nactv + mos_v[a];
+                            T1copy[id] = T1data[id];
+                        }
+                    }
+                }
+            }
+
+            T1data = T1copy;
+        }
+    }
+}
+
+void MASTER_DSRG::prune_t2_internals(BlockedTensor& T2) {
+    if (t2_internals_.size() == 0) {
+        T2.block("aaaa").zero();
+        T2.block("aAaA").zero();
+        T2.block("AAAA").zero();
+    } else {
+        int na1 = actv_mos_.size();
+        int na2 = na1 * na1;
+        int na3 = na2 * na1;
+
+        for (const std::string& block : {"aaaa", "aAaA", "AAAA"}) {
+            auto& T2data = T2.block(block).data();
+            std::vector<double> T2copy(T2data.size());
+
+            for (const auto& t : t2_internals_) {
+                std::string gas1, gas2, gas3, gas4;
+                bool pure;
+                std::tie(gas1, gas2, gas3, gas4, pure) = t;
+
+                auto mos_o1 = gas_actv_rel_mos_[gas1];
+                auto mos_o2 = gas_actv_rel_mos_[gas2];
+                auto mos_v1 = gas_actv_rel_mos_[gas3];
+                auto mos_v2 = gas_actv_rel_mos_[gas4];
+
+                int no1 = mos_o1.size();
+                int no2 = mos_o2.size();
+                int nv1 = mos_v1.size();
+                int nv2 = mos_v2.size();
+
+                if (pure) {
+                    for (int i = 0; i < no1; ++i) {
+                        for (int j = 0; j < no2; ++j) {
+                            int o = i * na1 + j;
+
+                            for (int a = 0; a < nv1; ++a) {
+                                for (int b = 0; b < nv2; ++b) {
+                                    int v = a * na1 + b;
+
+                                    if (o < v) {
+                                        auto id = mos_o1[i] * na3 + mos_o2[j] * na2 +
+                                                  mos_v1[a] * na1 + mos_v2[b];
+                                        T2copy[id] = T2data[id];
+                                    }
+                                }
+                            }
+                        }
+                    }
+                } else {
+                    for (int i = 0; i < no1; ++i) {
+                        for (int j = 0; j < no2; ++j) {
+                            for (int a = 0; a < nv1; ++a) {
+                                for (int b = 0; b < nv2; ++b) {
+                                    auto id = mos_o1[i] * na3 + mos_o2[j] * na2 + mos_v1[a] * na1 +
+                                              mos_v2[b];
+                                    T2copy[id] = T2data[id];
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            T2data = T2copy;
+        }
+    }
+}
+
 ambit::BlockedTensor MASTER_DSRG::deGNO_Tamp(BlockedTensor& T1, BlockedTensor& T2,
                                              BlockedTensor& D1) {
     BlockedTensor T1eff = BTF_->build(tensor_type_, "T1eff from de-GNO", spin_cases({"hp"}));
@@ -1184,18 +1294,18 @@ void MASTER_DSRG::H2_T1_C1(BlockedTensor& H2, BlockedTensor& T1, const double& a
     local_timer timer;
 
     C1["qp"] += alpha * T1["ma"] * H2["qapm"];
-    C1["qp"] += alpha * T1["xe"] * Gamma1_["yx"] * H2["qepy"];
-    C1["qp"] -= alpha * T1["mu"] * Gamma1_["uv"] * H2["qvpm"];
+    C1["qp"] += alpha * T1["xa"] * Gamma1_["yx"] * H2["qapy"];
+    C1["qp"] -= alpha * T1["iu"] * Gamma1_["uv"] * H2["qvpi"];
     C1["qp"] += alpha * T1["MA"] * H2["qApM"];
-    C1["qp"] += alpha * T1["XE"] * Gamma1_["YX"] * H2["qEpY"];
-    C1["qp"] -= alpha * T1["MU"] * Gamma1_["UV"] * H2["qVpM"];
+    C1["qp"] += alpha * T1["XA"] * Gamma1_["YX"] * H2["qApY"];
+    C1["qp"] -= alpha * T1["IU"] * Gamma1_["UV"] * H2["qVpI"];
 
     C1["QP"] += alpha * T1["ma"] * H2["aQmP"];
-    C1["QP"] += alpha * T1["xe"] * Gamma1_["yx"] * H2["eQyP"];
-    C1["QP"] -= alpha * T1["mu"] * Gamma1_["uv"] * H2["vQmP"];
+    C1["QP"] += alpha * T1["xa"] * Gamma1_["yx"] * H2["aQyP"];
+    C1["QP"] -= alpha * T1["iu"] * Gamma1_["uv"] * H2["vQiP"];
     C1["QP"] += alpha * T1["MA"] * H2["QAPM"];
-    C1["QP"] += alpha * T1["XE"] * Gamma1_["YX"] * H2["QEPY"];
-    C1["QP"] -= alpha * T1["MU"] * Gamma1_["UV"] * H2["QVPM"];
+    C1["QP"] += alpha * T1["XA"] * Gamma1_["YX"] * H2["QAPY"];
+    C1["QP"] -= alpha * T1["IU"] * Gamma1_["UV"] * H2["QVPI"];
 
     if (print_ > 2) {
         outfile->Printf("\n    Time for [H2, T1] -> C1 : %12.3f", timer.get());
@@ -1410,27 +1520,27 @@ void MASTER_DSRG::H2_T2_C1(BlockedTensor& H2, BlockedTensor& T2, const double& a
     C1["jb"] -= alpha * temp["XI"] * T2["jIbX"];
     C1["JB"] -= alpha * temp["XI"] * T2["IJXB"];
 
-    temp = ambit::BlockedTensor::build(tensor_type_, "temp", {"av"});
-    temp["xe"] += 0.5 * T2["uvey"] * Lambda2_["xyuv"];
-    temp["xe"] += T2["uVeY"] * Lambda2_["xYuV"];
-    C1["qs"] += alpha * temp["xe"] * H2["eqxs"];
-    C1["QS"] += alpha * temp["xe"] * H2["eQxS"];
-    temp = ambit::BlockedTensor::build(tensor_type_, "temp", {"AV"});
-    temp["XE"] += 0.5 * T2["UVEY"] * Lambda2_["XYUV"];
-    temp["XE"] += T2["uVyE"] * Lambda2_["yXuV"];
-    C1["qs"] += alpha * temp["XE"] * H2["qEsX"];
-    C1["QS"] += alpha * temp["XE"] * H2["EQXS"];
+    temp = ambit::BlockedTensor::build(tensor_type_, "temp", {"ap"});
+    temp["xa"] += 0.5 * T2["uvay"] * Lambda2_["xyuv"];
+    temp["xa"] += T2["uVaY"] * Lambda2_["xYuV"];
+    C1["qs"] += alpha * temp["xa"] * H2["aqxs"];
+    C1["QS"] += alpha * temp["xa"] * H2["aQxS"];
+    temp = ambit::BlockedTensor::build(tensor_type_, "temp", {"AP"});
+    temp["XA"] += 0.5 * T2["UVAY"] * Lambda2_["XYUV"];
+    temp["XA"] += T2["uVyA"] * Lambda2_["yXuV"];
+    C1["qs"] += alpha * temp["XA"] * H2["qAsX"];
+    C1["QS"] += alpha * temp["XA"] * H2["AQXS"];
 
-    temp = ambit::BlockedTensor::build(tensor_type_, "temp", {"ca"});
-    temp["mu"] += 0.5 * T2["mvxy"] * Lambda2_["xyuv"];
-    temp["mu"] += T2["mVxY"] * Lambda2_["xYuV"];
-    C1["qs"] -= alpha * temp["mu"] * H2["uqms"];
-    C1["QS"] -= alpha * temp["mu"] * H2["uQmS"];
-    temp = ambit::BlockedTensor::build(tensor_type_, "temp", {"CA"});
-    temp["MU"] += 0.5 * T2["MVXY"] * Lambda2_["XYUV"];
-    temp["MU"] += T2["vMxY"] * Lambda2_["xYvU"];
-    C1["qs"] -= alpha * temp["MU"] * H2["qUsM"];
-    C1["QS"] -= alpha * temp["MU"] * H2["UQMS"];
+    temp = ambit::BlockedTensor::build(tensor_type_, "temp", {"ha"});
+    temp["iu"] += 0.5 * T2["ivxy"] * Lambda2_["xyuv"];
+    temp["iu"] += T2["iVxY"] * Lambda2_["xYuV"];
+    C1["qs"] -= alpha * temp["iu"] * H2["uqis"];
+    C1["QS"] -= alpha * temp["iu"] * H2["uQiS"];
+    temp = ambit::BlockedTensor::build(tensor_type_, "temp", {"HA"});
+    temp["IU"] += 0.5 * T2["IVXY"] * Lambda2_["XYUV"];
+    temp["IU"] += T2["vIxY"] * Lambda2_["xYvU"];
+    C1["qs"] -= alpha * temp["IU"] * H2["qUsI"];
+    C1["QS"] -= alpha * temp["IU"] * H2["UQIS"];
 
     if (print_ > 2) {
         outfile->Printf("\n    Time for [H2, T2] -> C1 : %12.3f", timer.get());
@@ -1949,8 +2059,9 @@ bool MASTER_DSRG::check_semi_orbs() {
     }
 
     auto nactv = actv_mos_.size();
-    for (const std::string& space : mo_space_info_->space_names()) {
-        if (space.find("GAS") == std::string::npos or mo_space_info_->size(space) == 0)
+    auto active_space_names = mo_space_info_->composite_space_names()["ACTIVE"];
+    for (const std::string& space : active_space_names) {
+        if (mo_space_info_->size(space) == 0)
             continue;
 
         auto rel_indices = mo_space_info_->pos_in_space(space, "ACTIVE");

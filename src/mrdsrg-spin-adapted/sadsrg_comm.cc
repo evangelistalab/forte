@@ -45,6 +45,10 @@ double SADSRG::H1_T1_C0(BlockedTensor& H1, BlockedTensor& T1, const double& alph
     temp["uv"] += H1["ev"] * T1["ue"];
     temp["uv"] -= H1["um"] * T1["mv"];
 
+    if (t1_internals_.size()) {
+        temp["uv"] += 0.5 * H1["xv"] * T1["uy"] * Eta1_["yx"];
+    }
+
     E += L1_["vu"] * temp["uv"];
 
     E *= alpha;
@@ -64,6 +68,11 @@ double SADSRG::H1_T2_C0(BlockedTensor& H1, BlockedTensor& T2, const double& alph
     auto temp = ambit::BlockedTensor::build(tensor_type_, "Temp120", {"aaaa"});
     temp["uvxy"] += H1["ex"] * T2["uvey"];
     temp["uvxy"] -= H1["vm"] * T2["muyx"];
+
+    if (t2_internals_.size()) {
+        temp["uvxy"] += H1["zx"] * T2["uvzy"];
+        temp["uvxy"] -= H1["vz"] * T2["zuyx"];
+    }
 
     E += L2_["xyuv"] * temp["uvxy"];
 
@@ -85,6 +94,11 @@ double SADSRG::H2_T1_C0(BlockedTensor& H2, BlockedTensor& T1, const double& alph
     auto temp = ambit::BlockedTensor::build(tensor_type_, "Temp120", {"aaaa"});
     temp["uvxy"] += H2["evxy"] * T1["ue"];
     temp["uvxy"] -= H2["uvmy"] * T1["mx"];
+
+    if (t1_internals_.size()) {
+        temp["uvxy"] += H2["zvxy"] * T1["uz"];
+        temp["uvxy"] -= H2["uvzy"] * T1["zx"];
+    }
 
     E += L2_["xyuv"] * temp["uvxy"];
 
@@ -140,9 +154,9 @@ std::vector<double> SADSRG::H2_T2_C0_T2small(BlockedTensor& H2, BlockedTensor& T
                                              BlockedTensor& S2) {
     /**
      * Note the following blocks should be available in memory.
-     * H2: vvaa, aacc, avca, avac, vaaa, aaca
-     * T2: aavv, ccaa, caav, acav, aava, caaa
-     * S2: aavv, ccaa, caav, acav, aava, caaa
+     * H2: vvaa, aacc, avca, avac, vaaa, aaca, aaaa
+     * T2: aavv, ccaa, caav, acav, aava, caaa, aaaa
+     * S2: aavv, ccaa, caav, acav, aava, caaa, aaaa
      */
 
     double E1 = 0.0, E2 = 0.0, E3 = 0.0;
@@ -201,6 +215,34 @@ std::vector<double> SADSRG::H2_T2_C0_T2small(BlockedTensor& H2, BlockedTensor& T
         E3 -= H2.block("aaca")("uvmz") * T2.block("caaa")("mwxy") * rdms_.SF_L3()("xyzuwv");
     }
 
+    if (t2_internals_.size()) {
+        // [H2, T2] L1 from aaaa
+        temp.set_name("temp_aaaa");
+        temp["wzxy"] = 0.25 * S2["uvxy"] * L1_["wu"] * L1_["zv"];
+        E1 += 0.25 * H2["uvxy"] * temp["xywz"] * Eta1_["wu"] * Eta1_["zv"];
+
+        // <[Hbar2, T2]> C_4 (C_2)^2
+
+        // HH
+        temp["uvxy"] = 0.125 * H2["u,v,a1,a2"] * T2["a3,a4,x,y"] * L1_["a1,a3"] * L1_["a2,a4"];
+
+        // PP
+        temp["uvxy"] += 0.125 * H2["a1,a2,x,y"] * T2["u,v,a3,a4"] * Eta1_["a3,a1"] * Eta1_["a4,a2"];
+
+        // HP
+        temp["uvxy"] += 0.25 * H2["u,a1,x,a2"] * S2["v,a3,y,a4"] * L1_["a2,a3"] * Eta1_["a4,a1"];
+        temp["uvxy"] -= 0.25 * H2["u,a1,a2,x"] * T2["v,a3,y,a4"] * L1_["a2,a3"] * Eta1_["a4,a1"];
+        temp["uvxy"] -= 0.25 * H2["v,a1,a2,x"] * T2["a3,u,y,a4"] * L1_["a2,a3"] * Eta1_["a4,a1"];
+
+        E2 += temp["uvxy"] * L2_["uvxy"];
+
+        // <[Hbar2, T2]> C_6 C_2
+        if (do_cu3_) {
+            E3 += H2.block("aaaa")("ewxy") * T2.block("aaaa")("uvez") * rdms_.SF_L3()("xyzuwv");
+            E3 -= H2.block("aaaa")("uvmz") * T2.block("aaaa")("mwxy") * rdms_.SF_L3()("xyzuwv");
+        }
+    }
+
     return {E1, E2, E3};
 }
 
@@ -243,11 +285,26 @@ void SADSRG::H2_T1_C1(BlockedTensor& H2, BlockedTensor& T1, const double& alpha,
     C1["qp"] += 2.0 * alpha * T1["ma"] * H2["qapm"];
     C1["qp"] -= alpha * T1["ma"] * H2["aqpm"];
 
-    C1["qp"] += alpha * T1["xe"] * L1_["yx"] * H2["qepy"];
-    C1["qp"] -= 0.5 * alpha * T1["xe"] * L1_["yx"] * H2["eqpy"];
+    auto temp = ambit::BlockedTensor::build(tensor_type_, "temp_av", {"av"});
+    temp["ye"] = T1["xe"] * L1_["yx"];
+    C1["qp"] += alpha * temp["ye"] * H2["qepy"];
+    C1["qp"] -= 0.5 * alpha * temp["ye"] * H2["eqpy"];
 
-    C1["qp"] -= alpha * T1["mu"] * L1_["uv"] * H2["qvpm"];
-    C1["qp"] += 0.5 * alpha * T1["mu"] * L1_["uv"] * H2["vqpm"];
+    temp = ambit::BlockedTensor::build(tensor_type_, "temp_ca", {"ca"});
+    temp["mv"] = T1["mu"] * L1_["uv"];
+    C1["qp"] -= alpha * temp["mv"] * H2["qvpm"];
+    C1["qp"] += 0.5 * alpha * temp["mv"] * H2["vqpm"];
+
+    if (t1_internals_.size()) {
+        temp = ambit::BlockedTensor::build(tensor_type_, "temp_aa", {"aa"});
+        temp["yw"] = T1["xw"] * L1_["yx"];
+        C1["qp"] += alpha * temp["yw"] * H2["qwpy"];
+        C1["qp"] -= 0.5 * alpha * temp["yw"] * H2["wqpy"];
+
+        temp["wv"] = T1["wu"] * L1_["uv"];
+        C1["qp"] -= alpha * temp["wv"] * H2["qvpw"];
+        C1["qp"] += 0.5 * alpha * temp["wv"] * H2["vqpw"];
+    }
 
     if (print_ > 2) {
         outfile->Printf("\n    Time for [H2, T1] -> C1 : %12.3f", timer.get());
@@ -259,7 +316,7 @@ void SADSRG::H2_T2_C1(BlockedTensor& H2, BlockedTensor& T2, BlockedTensor& S2, c
                       BlockedTensor& C1) {
     local_timer timer;
 
-    // [Hbar2, T2] (C_2)^3 -> C1 particle contractions
+    // [H2, T2] (C_2)^3 -> C1 particle contractions
     C1["ir"] += alpha * H2["abrm"] * S2["imab"];
 
     C1["ir"] += 0.5 * alpha * L1_["uv"] * S2["ivab"] * H2["abru"];
@@ -272,14 +329,14 @@ void SADSRG::H2_T2_C1(BlockedTensor& H2, BlockedTensor& T2, BlockedTensor& S2, c
     C1["ir"] -= 0.25 * alpha * S2["iyub"] * L1_["uv"] * L1_["xy"] * H2["vbrx"];
     C1["ir"] -= 0.25 * alpha * S2["iybu"] * L1_["uv"] * L1_["xy"] * H2["bvrx"];
 
-    // [Hbar2, T2] C_4 C_2 2:2 -> C1 ir
+    // [H2, T2] C_4 C_2 2:2 -> C1 ir
     C1["ir"] += 0.5 * alpha * T2["ijxy"] * L2_["xyuv"] * H2["uvrj"];
 
     C1["ir"] += 0.5 * alpha * H2["aurx"] * S2["ivay"] * L2_["xyuv"];
     C1["ir"] -= 0.5 * alpha * H2["uarx"] * T2["ivay"] * L2_["xyuv"];
     C1["ir"] -= 0.5 * alpha * H2["uarx"] * T2["ivya"] * L2_["xyvu"];
 
-    // [Hbar2, T2] (C_2)^3 -> C1 hole contractions
+    // [H2, T2] (C_2)^3 -> C1 hole contractions
     C1["pa"] -= alpha * H2["peij"] * S2["ijae"];
 
     C1["pa"] -= 0.5 * alpha * Eta1_["uv"] * S2["ijau"] * H2["pvij"];
@@ -292,23 +349,38 @@ void SADSRG::H2_T2_C1(BlockedTensor& H2, BlockedTensor& T2, BlockedTensor& S2, c
     C1["pa"] += 0.25 * alpha * S2["vjax"] * Eta1_["uv"] * Eta1_["xy"] * H2["pyuj"];
     C1["pa"] += 0.25 * alpha * S2["jvax"] * Eta1_["xy"] * Eta1_["uv"] * H2["pyju"];
 
-    // [Hbar2, T2] C_4 C_2 2:2 -> C1 pa
+    // [H2, T2] C_4 C_2 2:2 -> C1 pa
     C1["pa"] -= 0.5 * alpha * L2_["xyuv"] * T2["uvab"] * H2["pbxy"];
 
     C1["pa"] -= 0.5 * alpha * H2["puix"] * S2["ivay"] * L2_["xyuv"];
     C1["pa"] += 0.5 * alpha * H2["puxi"] * T2["ivay"] * L2_["xyuv"];
     C1["pa"] += 0.5 * alpha * H2["puxi"] * T2["viay"] * L2_["xyvu"];
 
-    // [Hbar2, T2] C_4 C_2 1:3 -> C1
+    // [H2, T2] C_4 C_2 1:3 -> C1
     C1["jb"] += 0.5 * alpha * H2["avxy"] * S2["ujab"] * L2_["xyuv"];
 
     C1["jb"] -= 0.5 * alpha * H2["uviy"] * S2["ijxb"] * L2_["xyuv"];
 
-    C1["qs"] += alpha * H2["eqxs"] * T2["uvey"] * L2_["xyuv"];
-    C1["qs"] -= 0.5 * alpha * H2["eqsx"] * T2["uvey"] * L2_["xyuv"];
+    auto temp = ambit::BlockedTensor::build(tensor_type_, "temp_av", {"av"});
+    temp["xe"] = T2["uvey"] * L2_["xyuv"];
+    C1["qs"] += alpha * H2["eqxs"] * temp["xe"];
+    C1["qs"] -= 0.5 * alpha * H2["eqsx"] * temp["xe"];
 
-    C1["qs"] -= alpha * H2["uqms"] * T2["mvxy"] * L2_["xyuv"];
-    C1["qs"] += 0.5 * alpha * H2["uqsm"] * T2["mvxy"] * L2_["xyuv"];
+    temp = ambit::BlockedTensor::build(tensor_type_, "temp_ac", {"ac"});
+    temp["um"] = T2["mvxy"] * L2_["xyuv"];
+    C1["qs"] -= alpha * H2["uqms"] * temp["um"];
+    C1["qs"] += 0.5 * alpha * H2["uqsm"] * temp["um"];
+
+    if (t2_internals_.size()) {
+        temp = ambit::BlockedTensor::build(tensor_type_, "temp_aa", {"aa"});
+        temp["xz"] = T2["uvzy"] * L2_["xyuv"];
+        C1["qs"] += alpha * H2["zqxs"] * temp["xz"];
+        C1["qs"] -= 0.5 * alpha * H2["zqsx"] * temp["xz"];
+
+        temp["uz"] = T2["zvxy"] * L2_["xyuv"];
+        C1["qs"] -= alpha * H2["uqzs"] * temp["uz"];
+        C1["qs"] += 0.5 * alpha * H2["uqsz"] * temp["uz"];
+    }
 
     if (print_ > 2) {
         outfile->Printf("\n    Time for [H2, T2] -> C1 : %12.3f", timer.get());
@@ -415,6 +487,11 @@ void SADSRG::V_T1_C0_DF(BlockedTensor& B, BlockedTensor& T1, const double& alpha
     temp["gux"] += B["gex"] * T1["ue"];
     temp["gux"] -= B["gum"] * T1["mx"];
 
+    if (t1_internals_.size()) {
+        temp["gux"] += B["gzx"] * T1["uz"];
+        temp["gux"] -= B["guz"] * T1["zx"];
+    }
+
     E += L2_["xyuv"] * temp["gux"] * B["gvy"];
 
     E *= alpha;
@@ -443,6 +520,9 @@ std::vector<double> SADSRG::V_T2_C0_DF(BlockedTensor& B, BlockedTensor& T2, Bloc
 
     // form H2 for other blocks that fits memory
     std::vector<std::string> blocks{"aacc", "aaca", "vvaa", "vaaa", "avac", "avca"};
+    if (t2_internals_.size()) {
+        blocks.push_back("aaaa");
+    }
     auto H2 = ambit::BlockedTensor::build(tensor_type_, "temp_H2", blocks);
     H2["abij"] = B["gai"] * B["gbj"];
 
@@ -469,17 +549,24 @@ void SADSRG::V_T1_C1_DF(BlockedTensor& B, BlockedTensor& T1, const double& alpha
     local_timer timer;
 
     auto temp = ambit::BlockedTensor::build(tensor_type_, "DFtemp211", {"L"});
-    temp["g"] += 2.0 * alpha * T1["ma"] * B["gam"];
-    temp["g"] += alpha * T1["xe"] * L1_["yx"] * B["gey"];
-    temp["g"] -= alpha * T1["mu"] * L1_["uv"] * B["gvm"];
-    C1["qp"] += temp["g"] * B["gqp"];
+    temp["g"] += 2.0 * T1["ma"] * B["gam"];
+    temp["g"] += T1["xe"] * L1_["yx"] * B["gey"];
+    temp["g"] -= T1["mu"] * L1_["uv"] * B["gvm"];
+    if (t1_internals_.size()) {
+        temp["g"] += T1["xw"] * L1_["yx"] * B["gwy"];
+        temp["g"] -= T1["wu"] * L1_["uv"] * B["gvw"];
 
-    temp = ambit::BlockedTensor::build(tensor_type_, "DFtemp211", {"Lgc"});
-    temp["gpm"] -= alpha * T1["ma"] * B["gap"];
-    temp["gpm"] += 0.5 * alpha * T1["mu"] * L1_["uv"] * B["gvp"];
-    C1["qp"] += temp["gpm"] * B["gqm"];
+        C1["qp"] -= 0.5 * alpha * T1["xw"] * L1_["yx"] * B["gwp"] * B["gqy"];
+        C1["qp"] += 0.5 * alpha * T1["wu"] * L1_["uv"] * B["gvp"] * B["gqw"];
+    }
+    C1["qp"] += alpha * temp["g"] * B["gqp"];
 
     C1["qp"] -= 0.5 * alpha * T1["xe"] * L1_["yx"] * B["gep"] * B["gqy"];
+
+    temp = ambit::BlockedTensor::build(tensor_type_, "DFtemp211", {"Lgc"});
+    temp["gpm"] -= T1["ma"] * B["gap"];
+    temp["gpm"] += 0.5 * T1["mu"] * L1_["uv"] * B["gvp"];
+    C1["qp"] += alpha * temp["gpm"] * B["gqm"];
 
     if (print_ > 2) {
         outfile->Printf("\n    Time for [H2, T1] -> C1 : %12.3f", timer.get());
@@ -494,50 +581,50 @@ void SADSRG::V_T2_C1_DF(BlockedTensor& B, BlockedTensor& T2, BlockedTensor& S2, 
     // [Hbar2, T2] (C_2)^3 -> C1 particle contractions
     auto temp = ambit::BlockedTensor::build(tensor_type_, "DFtemp221", {"Lhp"});
 
-    temp["gia"] += alpha * B["gbm"] * S2["imab"];
+    temp["gia"] += B["gbm"] * S2["imab"];
 
-    temp["gia"] += 0.5 * alpha * L1_["uv"] * S2["ivab"] * B["gbu"];
+    temp["gia"] += 0.5 * L1_["uv"] * S2["ivab"] * B["gbu"];
 
-    temp["giv"] += 0.25 * alpha * S2["ijux"] * L1_["xy"] * L1_["uv"] * B["gyj"];
+    temp["giv"] += 0.25 * S2["ijux"] * L1_["xy"] * L1_["uv"] * B["gyj"];
 
-    temp["giv"] -= 0.5 * alpha * L1_["uv"] * S2["imub"] * B["gbm"];
-    temp["gia"] -= 0.5 * alpha * L1_["uv"] * S2["miua"] * B["gvm"];
+    temp["giv"] -= 0.5 * L1_["uv"] * S2["imub"] * B["gbm"];
+    temp["gia"] -= 0.5 * L1_["uv"] * S2["miua"] * B["gvm"];
 
-    temp["giv"] -= 0.25 * alpha * S2["iyub"] * L1_["uv"] * L1_["xy"] * B["gbx"];
-    temp["gia"] -= 0.25 * alpha * S2["iyau"] * L1_["uv"] * L1_["xy"] * B["gvx"];
+    temp["giv"] -= 0.25 * S2["iyub"] * L1_["uv"] * L1_["xy"] * B["gbx"];
+    temp["gia"] -= 0.25 * S2["iyau"] * L1_["uv"] * L1_["xy"] * B["gvx"];
 
     // [Hbar2, T2] C_4 C_2 2:2 -> C1 ir
-    temp["giu"] += 0.5 * alpha * T2["ijxy"] * L2_["xyuv"] * B["gvj"];
+    temp["giu"] += 0.5 * T2["ijxy"] * L2_["xyuv"] * B["gvj"];
 
-    temp["gia"] += 0.5 * alpha * B["gux"] * S2["ivay"] * L2_["xyuv"];
-    temp["giu"] -= 0.5 * alpha * B["gax"] * T2["ivay"] * L2_["xyuv"];
-    temp["giu"] -= 0.5 * alpha * B["gax"] * T2["ivya"] * L2_["xyvu"];
+    temp["gia"] += 0.5 * B["gux"] * S2["ivay"] * L2_["xyuv"];
+    temp["giu"] -= 0.5 * B["gax"] * T2["ivay"] * L2_["xyuv"];
+    temp["giu"] -= 0.5 * B["gax"] * T2["ivya"] * L2_["xyvu"];
 
-    C1["ir"] += temp["gia"] * B["gar"];
+    C1["ir"] += alpha * temp["gia"] * B["gar"];
 
     // [Hbar2, T2] (C_2)^3 -> C1 hole contractions
     temp.zero();
 
-    temp["gia"] -= alpha * B["gej"] * S2["ijae"];
+    temp["gia"] -= B["gej"] * S2["ijae"];
 
-    temp["gia"] -= 0.5 * alpha * Eta1_["uv"] * S2["ijau"] * B["gvj"];
+    temp["gia"] -= 0.5 * Eta1_["uv"] * S2["ijau"] * B["gvj"];
 
-    temp["gua"] -= 0.25 * alpha * S2["vyab"] * Eta1_["uv"] * Eta1_["xy"] * B["gbx"];
+    temp["gua"] -= 0.25 * S2["vyab"] * Eta1_["uv"] * Eta1_["xy"] * B["gbx"];
 
-    temp["gua"] += 0.5 * alpha * Eta1_["uv"] * S2["vjae"] * B["gej"];
-    temp["gia"] += 0.5 * alpha * Eta1_["uv"] * S2["ivae"] * B["geu"];
+    temp["gua"] += 0.5 * Eta1_["uv"] * S2["vjae"] * B["gej"];
+    temp["gia"] += 0.5 * Eta1_["uv"] * S2["ivae"] * B["geu"];
 
-    temp["gua"] += 0.25 * alpha * S2["vjax"] * Eta1_["uv"] * Eta1_["xy"] * B["gyj"];
-    temp["gia"] += 0.25 * alpha * S2["ivax"] * Eta1_["xy"] * Eta1_["uv"] * B["gyu"];
+    temp["gua"] += 0.25 * S2["vjax"] * Eta1_["uv"] * Eta1_["xy"] * B["gyj"];
+    temp["gia"] += 0.25 * S2["ivax"] * Eta1_["xy"] * Eta1_["uv"] * B["gyu"];
 
     // [Hbar2, T2] C_4 C_2 2:2 -> C1 pa
-    temp["gxa"] -= 0.5 * alpha * L2_["xyuv"] * T2["uvab"] * B["gby"];
+    temp["gxa"] -= 0.5 * L2_["xyuv"] * T2["uvab"] * B["gby"];
 
-    temp["gia"] -= 0.5 * alpha * B["gux"] * S2["ivay"] * L2_["xyuv"];
-    temp["gxa"] += 0.5 * alpha * B["gui"] * T2["ivay"] * L2_["xyuv"];
-    temp["gxa"] += 0.5 * alpha * B["gui"] * T2["viay"] * L2_["xyvu"];
+    temp["gia"] -= 0.5 * B["gux"] * S2["ivay"] * L2_["xyuv"];
+    temp["gxa"] += 0.5 * B["gui"] * T2["ivay"] * L2_["xyuv"];
+    temp["gxa"] += 0.5 * B["gui"] * T2["viay"] * L2_["xyvu"];
 
-    C1["pa"] += temp["gia"] * B["gpi"];
+    C1["pa"] += alpha * temp["gia"] * B["gpi"];
 
     // [Hbar2, T2] C_4 C_2 1:3 -> C1
     temp = ambit::BlockedTensor::build(tensor_type_, "DFtemp221", {"Laa"});
@@ -546,9 +633,16 @@ void SADSRG::V_T2_C1_DF(BlockedTensor& B, BlockedTensor& T2, BlockedTensor& S2, 
     C1["jb"] -= 0.5 * alpha * B["gui"] * S2["ijxb"] * temp["gxu"];
 
     temp = ambit::BlockedTensor::build(tensor_type_, "DFtemp221", {"L"});
-    temp["g"] += alpha * B["gex"] * T2["uvey"] * L2_["xyuv"];
-    temp["g"] -= alpha * B["gum"] * T2["mvxy"] * L2_["xyuv"];
-    C1["qs"] += temp["g"] * B["gqs"];
+    temp["g"] += B["gex"] * T2["uvey"] * L2_["xyuv"];
+    temp["g"] -= B["gum"] * T2["mvxy"] * L2_["xyuv"];
+    if (t2_internals_.size()) {
+        temp["g"] += B["gzx"] * T2["uvzy"] * L2_["xyuv"];
+        temp["g"] -= B["guz"] * T2["zvxy"] * L2_["xyuv"];
+
+        C1["qs"] -= 0.5 * alpha * B["gzs"] * B["gqx"] * T2["uvzy"] * L2_["xyuv"];
+        C1["qs"] += 0.5 * alpha * B["gus"] * B["gqz"] * T2["zvxy"] * L2_["xyuv"];
+    }
+    C1["qs"] += alpha * temp["g"] * B["gqs"];
 
     C1["qs"] -= 0.5 * alpha * B["ges"] * B["gqx"] * T2["uvey"] * L2_["xyuv"];
 
@@ -580,7 +674,6 @@ void SADSRG::V_T2_C2_DF(BlockedTensor& B, BlockedTensor& T2, BlockedTensor& S2, 
     local_timer timer;
 
     // particle-particle contractions
-    // TODO: need to investigate why using "r" fails when C2 does not contain all "rs"
     C2["ijes"] += batched("e", alpha * B["gae"] * B["gbs"] * T2["ijab"]);
     C2["ijus"] += batched("u", alpha * B["gau"] * B["gbs"] * T2["ijab"]);
     C2["ijms"] += batched("m", alpha * B["gam"] * B["gbs"] * T2["ijab"]);
@@ -712,7 +805,11 @@ void SADSRG::V_T2_C2_DF_PH_X(BlockedTensor& B, BlockedTensor& T2, const double& 
 void SADSRG::H_A_Ca(BlockedTensor& H1, BlockedTensor& H2, BlockedTensor& T1, BlockedTensor& T2,
                     BlockedTensor& S2, const double& alpha, BlockedTensor& C1, BlockedTensor& C2) {
     // set up G2["pqrs"] = 2 * H2["pqrs"] - H2["pqsr"]
-    auto G2 = ambit::BlockedTensor::build(tensor_type_, "G2H", {"avac", "aaac", "avaa"});
+    std::vector<std::string> blocks{"avac", "aaac", "avaa"};
+    if (t1_internals_.size() or t2_internals_.size()) {
+        blocks.push_back("aaaa");
+    }
+    auto G2 = ambit::BlockedTensor::build(tensor_type_, "G2H", blocks);
     G2["pqrs"] = 2.0 * H2["pqrs"] - H2["pqsr"];
 
     H_A_Ca_small(H1, H2, G2, T1, T2, S2, alpha, C1, C2);
@@ -730,7 +827,7 @@ void SADSRG::H_A_Ca_small(BlockedTensor& H1, BlockedTensor& H2, BlockedTensor& G
                           const double& alpha, BlockedTensor& C1, BlockedTensor& C2) {
     /**
      * The following blocks should be available in memory:
-     * G2: avac, aaac, avaa
+     * G2: avac, aaac, avaa, aaaa
      * H2: vvaa, aacc, avca, avac, vaaa, aaca, aaaa
      * T2: aavv, ccaa, caav, acav, aava, caaa, aaaa
      * S2: the same as T2
@@ -738,8 +835,8 @@ void SADSRG::H_A_Ca_small(BlockedTensor& H1, BlockedTensor& H2, BlockedTensor& G
 
     auto temp = ambit::BlockedTensor::build(ambit::CoreTensor, "tempHACa", {"aa"});
 
-    temp["uv"] += H1["ev"] * T1["ue"];
-    temp["uv"] -= H1["um"] * T1["mv"];
+    temp["uv"] += H1["av"] * T1["ua"];
+    temp["uv"] -= H1["ui"] * T1["iv"];
 
     H_T_C1a_smallG(G2, T1, T2, temp);
 
@@ -760,16 +857,16 @@ void SADSRG::H_T_C1a_smallG(BlockedTensor& G2, BlockedTensor& T1, BlockedTensor&
                             BlockedTensor& C1) {
     /**
      * The following blocks should be available in memory:
-     * G2: avac, aaac, avaa
-     * T2: aava, caaa
+     * G2: avac, aaac, avaa, aaaa
+     * T2: aava, caaa, aaaa
      */
 
     C1["uv"] += T1["ma"] * G2["uavm"];
-    C1["uv"] += 0.5 * T1["xe"] * L1_["yx"] * G2["uevy"];
-    C1["uv"] -= 0.5 * T1["mx"] * L1_["xy"] * G2["uyvm"];
+    C1["uv"] += 0.5 * T1["xa"] * L1_["yx"] * G2["uavy"];
+    C1["uv"] -= 0.5 * T1["ix"] * L1_["xy"] * G2["uyvi"];
 
-    C1["wz"] += 0.5 * G2["wezx"] * T2["uvey"] * L2_["xyuv"];
-    C1["wz"] -= 0.5 * G2["wuzm"] * T2["mvxy"] * L2_["xyuv"];
+    C1["wz"] += 0.5 * G2["wazx"] * T2["uvay"] * L2_["xyuv"];
+    C1["wz"] -= 0.5 * G2["wuzi"] * T2["ivxy"] * L2_["xyuv"];
 }
 
 void SADSRG::H_T_C1a_smallS(BlockedTensor& H1, BlockedTensor& H2, BlockedTensor& T2,
@@ -793,10 +890,12 @@ void SADSRG::H_T_C1a_smallS(BlockedTensor& H1, BlockedTensor& H2, BlockedTensor&
     C1["uv"] -= 0.5 * H1["ym"] * S2["muxv"] * L1_["xy"];
     C1["uv"] -= 0.5 * H1["yw"] * S2["uwvx"] * L1_["xy"];
 
+    // C1["wz"] += H2["abzm"] * S2["wmab"];
     C1["wz"] += H2["uemz"] * S2["mwue"];
     C1["wz"] += H2["uezm"] * S2["wmue"];
     C1["wz"] += H2["vumz"] * S2["mwvu"];
 
+    // C1["wz"] -= H2["weij"] * S2["ijze"];
     C1["wz"] -= H2["wemu"] * S2["muze"];
     C1["wz"] -= H2["weum"] * S2["umze"];
     C1["wz"] -= H2["ewvu"] * S2["vuez"];
@@ -817,6 +916,7 @@ void SADSRG::H_T_C1a_smallS(BlockedTensor& H1, BlockedTensor& H2, BlockedTensor&
     temp["wzuv"] -= 0.5 * S2["mwue"] * H2["vemz"];
     temp["wzuv"] -= 0.5 * S2["mwux"] * H2["vxmz"];
 
+    // [H2, T2] (C_2)^3 -> C1 particle, two L1
     temp["wzuv"] += 0.25 * S2["jwxu"] * L1_["xy"] * H2["yvjz"];
     temp["wzuv"] -= 0.25 * S2["ywbu"] * L1_["xy"] * H2["bvxz"];
     temp["wzuv"] -= 0.25 * S2["wybu"] * L1_["xy"] * H2["bvzx"];
@@ -838,21 +938,25 @@ void SADSRG::H_T_C1a_smallS(BlockedTensor& H1, BlockedTensor& H2, BlockedTensor&
     temp["wzuv"] += 0.5 * S2["mvze"] * H2["wemu"];
     temp["wzuv"] += 0.5 * S2["vxez"] * H2["ewux"];
 
+    // [H2, T2] (C_2)^3 -> C1 hole, two E1
     temp["wzuv"] -= 0.25 * S2["yvbz"] * Eta1_["xy"] * H2["bwxu"];
     temp["wzuv"] += 0.25 * S2["jvxz"] * Eta1_["xy"] * H2["ywju"];
     temp["wzuv"] += 0.25 * S2["jvzx"] * Eta1_["xy"] * H2["wyju"];
     C1["wz"] += temp["wzuv"] * Eta1_["uv"];
 
+    // [H2, T2] C_4 C_2 2:2 -> C1 ir
     C1["wz"] += 0.5 * H2["vujz"] * T2["jwyx"] * L2_["xyuv"];
     C1["wz"] += 0.5 * H2["auzx"] * S2["wvay"] * L2_["xyuv"];
     C1["wz"] -= 0.5 * H2["auxz"] * T2["wvay"] * L2_["xyuv"];
     C1["wz"] -= 0.5 * H2["auxz"] * T2["vway"] * L2_["xyvu"];
 
+    // [H2, T2] C_4 C_2 2:2 -> C1 pa
     C1["wz"] -= 0.5 * H2["bwyx"] * T2["vubz"] * L2_["xyuv"];
     C1["wz"] -= 0.5 * H2["wuix"] * S2["ivzy"] * L2_["xyuv"];
     C1["wz"] += 0.5 * H2["uwix"] * T2["ivzy"] * L2_["xyuv"];
     C1["wz"] += 0.5 * H2["uwix"] * T2["ivyz"] * L2_["xyvu"];
 
+    // [H2, T2] C_4 C_2 1:3 -> C1
     C1["wz"] += 0.5 * H2["avxy"] * S2["uwaz"] * L2_["xyuv"];
     C1["wz"] -= 0.5 * H2["uviy"] * S2["iwxz"] * L2_["xyuv"];
 }
