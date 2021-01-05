@@ -214,8 +214,7 @@ class ActiveSpaceIntegrals {
     inline size_t tei_index(size_t p, size_t q, size_t r, size_t s) const {
         return nmo3_ * p + nmo2_ * q + nmo_ * r + s;
     }
-    /// F^{Restricted}_{uv} = h_{uv} + \sum_{i = frozen_core}^{restricted_core}
-    /// 2(uv | ii) - (ui|vi)
+    /// F^{closed}_{uv} = h_{uv} + \sum_{i = frozen_core}^{restricted_core} 2(uv|ii) - (ui|vi)
     void RestrictedOneBodyOperator(std::vector<double>& oei_a, std::vector<double>& oei_b);
     void startup();
 };

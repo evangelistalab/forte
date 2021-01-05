@@ -56,259 +56,390 @@ psi::SharedMatrix semicanonicalize_block(psi::SharedWavefunction ref_wfn, psi::S
 
 void make_avas(psi::SharedWavefunction ref_wfn, std::shared_ptr<ForteOptions> options,
                psi::SharedMatrix Ps) {
-    if (Ps) {
-        outfile->Printf("\n  Generating AVAS orbitals\n");
-        int nocc = ref_wfn->nalpha();
-        int nso = ref_wfn->nso();
-        int nmo = ref_wfn->nmo();
-        int nvir = nmo - nocc;
+    print_method_banner({"Atomic Valence Active Space (AVAS)", "Chenxi Cai and Chenyang Li"});
 
-        int avas_num_active = options->get_int("AVAS_NUM_ACTIVE");
-        size_t avas_num_active_occ = options->get_int("AVAS_NUM_ACTIVE_OCC");
-        size_t avas_num_active_vir = options->get_int("AVAS_NUM_ACTIVE_VIR");
-        double avas_sigma = options->get_double("AVAS_SIGMA");
+    if (Ps == nullptr) {
+        outfile->Printf("Warning: AVAS projector not available!!! Skip AVAS.");
+        return;
+    }
 
-        outfile->Printf("\n  ==> AVAS Options <==");
-        outfile->Printf("\n    Number of AVAV MOs:                 %6d", avas_num_active);
-        outfile->Printf("\n    Number of active occupied AVAS MOs: %6d", avas_num_active_occ);
-        outfile->Printf("\n    Number of active virtual AVAS  MOs: %6d", avas_num_active_vir);
-        outfile->Printf("\n    AVAS sigma (cumulative threshold):       %5f", avas_sigma);
-        outfile->Printf("\n    Number of occupied MOs:             %6d", nocc);
-        outfile->Printf("\n    Number of virtual MOs:              %6d", nvir);
-        outfile->Printf("\n");
+    int nirrep = Ps->nirrep();
+    if (nirrep != ref_wfn->nirrep()) {
+        outfile->Printf("\n  Inconsistent number of irreps in AVAS projector", nirrep);
+        outfile->Printf(" and reference wavefunction (%d)", ref_wfn->nirrep());
+        outfile->Printf("\n  Please try C1 symmetry.");
+        throw std::runtime_error("Inconsistent number of irreps in AVAS. Try C1 symmetry?");
+    }
 
-        // Allocate a matrix for the occupied block
-        auto Socc = std::make_shared<psi::Matrix>("S occupied block", nocc, nocc);
-        auto Svir = std::make_shared<psi::Matrix>("S virtual block", nvir, nvir);
-        psi::SharedMatrix CPsC = Ps->clone();
-        CPsC->transform(ref_wfn->Ca());
-        // No diagonalization Socc and Svir
-        bool diagonalize_s = options->get_bool("AVAS_DIAGONALIZE");
+    auto nmopi = ref_wfn->nmopi();
+    auto doccpi = ref_wfn->doccpi();
+    auto soccpi = ref_wfn->soccpi();
+    auto uoccpi = nmopi - doccpi - soccpi;
+    auto dim_zero = nmopi - nmopi;
 
-        auto Uocc = std::make_shared<psi::Matrix>("U occupied block", nocc, nocc);
-        auto sigmaocc = std::make_shared<Vector>("sigma occupied block", nocc);
+    // read options
+    bool diagonalize_s = options->get_bool("AVAS_DIAGONALIZE");
+    int avas_num_active = options->get_int("AVAS_NUM_ACTIVE");
+    int avas_num_active_occ = options->get_int("AVAS_NUM_ACTIVE_OCC");
+    int avas_num_active_vir = options->get_int("AVAS_NUM_ACTIVE_VIR");
+    double avas_sigma = options->get_double("AVAS_SIGMA");
+    double avas_cutoff = options->get_double("AVAS_CUTOFF");
+    double nonzero_threshold = options->get_double("AVAS_EVALS_THRESHOLD");
 
-        auto Uvir = std::make_shared<psi::Matrix>("U virtual block", nvir, nvir);
-        auto sigmavir = std::make_shared<Vector>("sigma virtual block", nvir);
+    // AVAS selection scheme for active/inactive orbitals
+    enum class AVAS_SELECTION { CUMULATIVE, CUTOFF, ACTV_TOTAL, ACTV_SEPARATE };
+    auto avas_selection = AVAS_SELECTION::CUMULATIVE;
+    if (avas_num_active_occ + avas_num_active_vir > 0) {
+        avas_selection = AVAS_SELECTION::ACTV_SEPARATE;
+    } else if (avas_num_active > 0) {
+        avas_selection = AVAS_SELECTION::ACTV_TOTAL;
+    } else if (1.0 - avas_cutoff > nonzero_threshold) {
+        avas_selection = AVAS_SELECTION::CUTOFF;
+    }
+    std::map<AVAS_SELECTION, std::string> avas_selection_to_string;
+    avas_selection_to_string[AVAS_SELECTION::CUMULATIVE] = "SIGMA";
+    avas_selection_to_string[AVAS_SELECTION::CUTOFF] = "CUTOFF";
+    avas_selection_to_string[AVAS_SELECTION::ACTV_SEPARATE] = "# DOCC/UOCC MOS";
+    avas_selection_to_string[AVAS_SELECTION::ACTV_TOTAL] = "# ACTIVE MOS";
 
-        auto U = std::make_shared<psi::Matrix>("U", nmo, nmo);
-        // diagonalize S
-        if (diagonalize_s) {
-            outfile->Printf(
-                "\n  Diagonalizing the occupied/virtual blocks of the projector matrix");
-            // Grab the occupied block and diagonalize it
-            for (int i = 0; i < nocc; i++) {
-                for (int j = 0; j < nocc; j++) {
-                    double value = CPsC->get(i, j);
-                    Socc->set(i, j, value);
-                }
+    // print options
+    print_selected_options("AVAS Options",
+                           {{"AVAS selection scheme", avas_selection_to_string[avas_selection]}},
+                           {{"Diagonalize projected overlap matrices", diagonalize_s}},
+                           {{"AVAS sigma threshold (cumulative)", avas_sigma},
+                            {"AVAS sigma direct cutoff", avas_cutoff},
+                            {"Nonzero eigenvalue threshold", nonzero_threshold}},
+                           {{"Number of doubly occupied MOs", doccpi.sum()},
+                            {"Number of singly occupied MOs", soccpi.sum()},
+                            {"Number of unoccupied MOs", uoccpi.sum()},
+                            {"# Active AVAS MOs requested", avas_num_active},
+                            {"# Active occupied AVAS MOs requested", avas_num_active_occ},
+                            {"# Active virtual AVAS MOs requested", avas_num_active_vir}});
+
+    // compute projected overlap matrix
+    auto Ca = ref_wfn->Ca()->clone();
+    auto CPsC = psi::linalg::triplet(Ca, Ps, Ca, true, false, false);
+    CPsC->set_name("Projected Overlap ( C^+ Ps C )");
+
+    // build orbital rotation matrix
+    auto U = std::make_shared<psi::Matrix>("AVAS U", nmopi, nmopi);
+
+    auto sdocc = std::make_shared<psi::Vector>("AVAS sigma docc", doccpi);
+    psi::Slice slice_docc(dim_zero, doccpi);
+
+    auto suocc = std::make_shared<psi::Vector>("AVAS sigma uocc", uoccpi);
+    psi::Slice slice_uocc(doccpi + soccpi, nmopi);
+
+    if (diagonalize_s) {
+        outfile->Printf("\n  Diagonalizing the doubly occupied projected overlap matrix ...");
+        auto Udocc = std::make_shared<psi::Matrix>("AVAS Udocc", doccpi, doccpi);
+        auto Sdocc = CPsC->get_block(slice_docc, slice_docc);
+        Sdocc->diagonalize(Udocc, sdocc, descending);
+        U->set_block(slice_docc, slice_docc, Udocc);
+        outfile->Printf(" Done");
+
+        outfile->Printf("\n  Diagonalizing the unoccupied projected overlap matrix ........");
+        auto Uuocc = std::make_shared<psi::Matrix>("AVAS Uuocc", uoccpi, uoccpi);
+        auto Suocc = CPsC->get_block(slice_uocc, slice_uocc);
+        Suocc->diagonalize(Uuocc, suocc, descending);
+        U->set_block(slice_uocc, slice_uocc, Uuocc);
+        outfile->Printf(" Done");
+    } else {
+        outfile->Printf("\n  Skipping diagonalization of the projector matrix.");
+        outfile->Printf("\n  Orbitals will be sorted instead of being rotated.");
+
+        for (int h = 0; h < nirrep; ++h) {
+            for (int i = 0; i < doccpi[h]; ++i) {
+                sdocc->set(h, i, CPsC->get(h, i, i));
             }
 
-            Socc->diagonalize(Uocc, sigmaocc, descending);
-            // Grab the virtual block and diagonalize it
-            for (int a = 0; a < nvir; a++) {
-                for (int b = 0; b < nvir; b++) {
-                    double value = CPsC->get(nocc + a, nocc + b);
-                    Svir->set(a, b, value);
-                }
+            auto offset = doccpi[h] + soccpi[h];
+            for (int a = 0; a < uoccpi[h]; ++a) {
+                auto na = a + offset;
+                suocc->set(h, a, CPsC->get(h, na, na));
             }
-            Svir->diagonalize(Uvir, sigmavir, descending);
-            // Form the full matrix U
-            for (int i = 0; i < nocc; i++) {
-                for (int j = 0; j < nocc; j++) {
-                    double value = Uocc->get(i, j);
-                    U->set(i, j, value);
-                }
-            }
-            for (int a = 0; a < nvir; a++) {
-                for (int b = 0; b < nvir; b++) {
-                    double value = Uvir->get(a, b);
-                    U->set(a + nocc, b + nocc, value);
-                }
-            }
-        } else {
-            outfile->Printf("\n  Skipping diagonalization of the projector matrix.\n  Orbitals "
-                            "will be sorted instead of being rotated.");
-            // Socc
-            for (int i = 0; i < nocc; i++) {
-                for (int j = 0; j < nocc; j++) {
-                    double value = CPsC->get(i, j);
-                    Socc->set(i, j, value);
-                }
-            }
-
-            for (int i = 0; i < nocc; i++) {
-                double value = Socc->get(i, i);
-                sigmaocc->set(i, value);
-            }
-            // Svir
-            for (int a = 0; a < nvir; a++) {
-                for (int b = 0; b < nvir; b++) {
-                    double value = CPsC->get(nocc + a, nocc + b);
-                    Svir->set(a, b, value);
-                }
-            }
-
-            for (int a = 0; a < nvir; a++) {
-                double value = Svir->get(a, a);
-                sigmavir->set(a, value);
-            }
-            for (int p = 0; p < nmo; p++) {
-                for (int q = 0; q < nmo; q++) {
-                    U->set(p, q, p == q ? 1.0 : 0.0);
-                }
-            }
-        } // end options of dia
-        auto Ca_tilde = psi::linalg::doublet(ref_wfn->Ca(), U);
-
-        // sum of the eigenvalues (occ + vir)
-        double s_sum = 0.0;
-        for (int i = 0; i < nocc; i++) {
-            s_sum += sigmaocc->get(i);
         }
-        for (int a = 0; a < nvir; a++) {
-            s_sum += sigmavir->get(a);
-        }
-        outfile->Printf("\n  Sum of eigenvalues: %f\n", s_sum);
 
-        std::vector<std::tuple<double, bool, int>> sorted_mos;
-        for (int i = 0; i < nocc; i++) {
-            sorted_mos.push_back(std::make_tuple(sigmaocc->get(i), true, i));
-        }
-        for (int a = 0; a < nvir; a++) {
-            sorted_mos.push_back(std::make_tuple(sigmavir->get(a), false, a));
-        }
-        std::sort(sorted_mos.rbegin(), sorted_mos.rend());
+        U->identity();
+    }
 
-        std::vector<int> occ_inact, occ_act, vir_inact, vir_act;
+    // sort MOs according to eigen values of projected overlaps
+    // tuple of <sigma, is_occ, irrep, relative_index>
+    std::vector<std::tuple<double, bool, int, int>> sorted_mos;
 
-        if (avas_num_active_occ + avas_num_active_vir > 0) {
-            outfile->Printf(
-                "\n  AVAS selection based on number of occupied/virtual MOs requested\n");
-            for (const auto& mo_tuple : sorted_mos) {
-                bool is_occ = std::get<1>(mo_tuple);
-                int p = std::get<2>(mo_tuple);
-                if (is_occ) {
-                    if (occ_act.size() < avas_num_active_occ) {
-                        occ_act.push_back(p);
-                    } else {
-                        occ_inact.push_back(p);
-                    }
+    double s_sum = 0.0; // sum of the eigenvalues (occ + vir)
+
+    for (int h = 0; h < nirrep; ++h) {
+        for (int i = 0; i < doccpi[h]; ++i) {
+            s_sum += sdocc->get(h, i);
+            sorted_mos.push_back({sdocc->get(h, i), true, h, i});
+        }
+
+        auto a_offset = doccpi[h] + soccpi[h];
+        for (int a = 0; a < uoccpi[h]; ++a) {
+            s_sum += suocc->get(h, a);
+            sorted_mos.push_back({suocc->get(h, a), false, h, a + a_offset});
+        }
+    }
+    outfile->Printf("\n  Sum of eigenvalues: %.8f", s_sum);
+
+    std::sort(sorted_mos.rbegin(), sorted_mos.rend()); // in descending order
+
+    // partition orbitals to active and inactive
+    std::vector<std::vector<int>> Amos_docc(nirrep), Imos_docc(nirrep);
+    std::vector<std::vector<int>> Amos_uocc(nirrep), Imos_uocc(nirrep);
+
+    double s_act_sum = 0.0;
+
+    if (avas_selection == AVAS_SELECTION::ACTV_SEPARATE) {
+        int counter_Adocc = 0, counter_Auocc = 0;
+
+        for (const auto& mo_tuple : sorted_mos) {
+            double sigma;
+            bool is_occ;
+            int h, idx;
+            std::tie(sigma, is_occ, h, idx) = mo_tuple;
+
+            if (is_occ) {
+                if (counter_Adocc < avas_num_active_occ) {
+                    Amos_docc[h].push_back(idx);
+                    counter_Adocc += 1;
+                    s_act_sum += sigma;
                 } else {
-                    if (vir_act.size() < avas_num_active_vir) {
-                        vir_act.push_back(p);
-                    } else {
-                        vir_inact.push_back(p);
-                    }
+                    Imos_docc[h].push_back(idx);
                 }
-            }
-        } else if (avas_num_active > 0) {
-            outfile->Printf("\n  AVAS selection based on number of MOs requested\n");
-            for (int n = 0; n < avas_num_active; ++n) {
-                bool is_occ = std::get<1>(sorted_mos[n]);
-                int p = std::get<2>(sorted_mos[n]);
-                if (is_occ) {
-                    occ_act.push_back(p);
+            } else {
+                if (counter_Auocc < avas_num_active_vir) {
+                    Amos_uocc[h].push_back(idx);
+                    counter_Auocc += 1;
+                    s_act_sum += sigma;
                 } else {
-                    vir_act.push_back(p);
+                    Imos_uocc[h].push_back(idx);
                 }
             }
-            for (int n = avas_num_active; n < nmo; ++n) {
-                bool is_occ = std::get<1>(sorted_mos[n]);
-                int p = std::get<2>(sorted_mos[n]);
-                if (is_occ) {
-                    occ_inact.push_back(p);
-                } else {
-                    vir_inact.push_back(p);
-                }
-            }
-        } else {
-            // tollerance on the sum of singular values (for border cases, e.g. sigma = 1.0)
-            double sum_tollerance = 1.0e-9;
-            // threshold for including an orbital
-            double include_threshold = 1.0e-6;
-            outfile->Printf("\n  AVAS selection based cumulative threshold (sigma)\n");
-            double s_act_sum = 0.0;
-            for (const auto& mo_tuple : sorted_mos) {
-                double sigma = std::get<0>(mo_tuple);
-                bool is_occ = std::get<1>(mo_tuple);
-                int p = std::get<2>(mo_tuple);
+        }
+    } else if (avas_selection == AVAS_SELECTION::ACTV_TOTAL) {
+        for (int n = 0; n < avas_num_active; ++n) {
+            double sigma;
+            bool is_occ;
+            int h, idx;
+            std::tie(sigma, is_occ, h, idx) = sorted_mos[n];
 
+            if (is_occ) {
+                Amos_docc[h].push_back(idx);
+            } else {
+                Amos_uocc[h].push_back(idx);
+            }
+
+            s_act_sum += sigma;
+        }
+
+        for (int n = avas_num_active, size = sorted_mos.size(); n < size; ++n) {
+            bool is_occ;
+            int h, idx;
+            std::tie(std::ignore, is_occ, h, idx) = sorted_mos[n];
+
+            if (is_occ) {
+                Imos_docc[h].push_back(idx);
+            } else {
+                Imos_uocc[h].push_back(idx);
+            }
+        }
+    } else if (avas_selection == AVAS_SELECTION::CUTOFF) {
+        for (const auto& mo_tuple : sorted_mos) {
+            double sigma;
+            bool is_occ;
+            int h, idx;
+            std::tie(sigma, is_occ, h, idx) = mo_tuple;
+
+            if (sigma > avas_cutoff and sigma >= nonzero_threshold) {
+                if (is_occ) {
+                    Amos_docc[h].push_back(idx);
+                } else {
+                    Amos_uocc[h].push_back(idx);
+                }
                 s_act_sum += sigma;
-                double fraction = s_act_sum / s_sum;
-
-                // decide if this is orbital is active depending on the ratio of
-                // the
-                // partial sum of singular values and the total sum of singular
-                // values
-                if ((fraction <= avas_sigma + sum_tollerance) and
-                    (std::fabs(sigma) > include_threshold)) {
-                    if (is_occ) {
-                        occ_act.push_back(p);
-                    } else {
-                        vir_act.push_back(p);
-                    }
+            } else {
+                if (is_occ) {
+                    Imos_docc[h].push_back(idx);
                 } else {
-                    if (is_occ) {
-                        occ_inact.push_back(p);
-                    } else {
-                        vir_inact.push_back(p);
-                    }
+                    Imos_uocc[h].push_back(idx);
                 }
             }
         }
+    } else {
+        for (const auto& mo_tuple : sorted_mos) {
+            double sigma;
+            bool is_occ;
+            int h, idx;
+            std::tie(sigma, is_occ, h, idx) = mo_tuple;
 
-        outfile->Printf("\n  ==> AVAS MOs Information <==");
-        outfile->Printf("\n    Number of inactive occupied MOs: %6d", occ_inact.size());
-        outfile->Printf("\n    Number of active occupied MOs:   %6d", occ_act.size());
-        outfile->Printf("\n    Number of active virtual MOs:    %6d", vir_act.size());
-        outfile->Printf("\n    Number of inactive virtual MOs:  %6d", vir_inact.size());
-        outfile->Printf("\n");
-        outfile->Printf("\n    restricted_docc = [%d]", occ_inact.size());
-        outfile->Printf("\n    active          = [%d]", occ_act.size() + vir_act.size());
-        outfile->Printf("\n");
-
-        outfile->Printf("\n  Atomic Valence MOs:\n");
-        outfile->Printf("    ============================\n");
-        outfile->Printf("    Occupation  MO   <phi|P|phi>\n");
-        outfile->Printf("    ----------------------------\n");
-        for (int i : occ_act) {
-            outfile->Printf("      %1d       %4d    %.6f\n", 2, i + 1, sigmaocc->get(i));
-        }
-        for (int i : vir_act) {
-            outfile->Printf("      %1d       %4d    %.6f\n", 0, nocc + i + 1, sigmavir->get(i));
-        }
-        outfile->Printf("    ============================\n");
-
-        // occupied inactive
-        auto Coi = semicanonicalize_block(ref_wfn, Ca_tilde, occ_inact, 0);
-        auto Coa = semicanonicalize_block(ref_wfn, Ca_tilde, occ_act, 0);
-        auto Cvi = semicanonicalize_block(ref_wfn, Ca_tilde, vir_inact, nocc);
-        auto Cva = semicanonicalize_block(ref_wfn, Ca_tilde, vir_act, nocc);
-
-        auto Ca_tilde_prime = std::make_shared<psi::Matrix>("C tilde prime", nso, nmo);
-
-        int offset = 0;
-        for (auto& C_block : {Coi, Coa, Cva, Cvi}) {
-            int nmo_block = C_block->ncol();
-            for (int i = 0; i < nmo_block; ++i) {
-                for (int mu = 0; mu < nso; ++mu) {
-                    double value = C_block->get(mu, i);
-                    Ca_tilde_prime->set(mu, offset, value);
+            // decide if this orbital is active depending on the ratio of the
+            // partial sum of singular values and the total sum of singular values
+            if ((s_act_sum / s_sum - avas_sigma <= 1.0e-10) and (sigma >= nonzero_threshold)) {
+                if (is_occ) {
+                    Amos_docc[h].push_back(idx);
+                } else {
+                    Amos_uocc[h].push_back(idx);
                 }
-                offset += 1;
+                s_act_sum += sigma;
+            } else {
+                if (is_occ) {
+                    Imos_docc[h].push_back(idx);
+                } else {
+                    Imos_uocc[h].push_back(idx);
+                }
+            }
+        }
+    }
+    outfile->Printf("\n  AVAS covers %.2f%% of the subspace.", 100.0 * s_act_sum / s_sum);
+
+    // dimensions of subsets of orbitals
+    std::map<std::string, psi::Dimension> avas_dims;
+    auto to_dimension = [&](const std::vector<std::vector<int>>& mos) {
+        psi::Dimension dim(nirrep);
+        for (int h = 0; h < nirrep; ++h) {
+            dim[h] = mos[h].size();
+        }
+        return dim;
+    };
+
+    avas_dims["DOCC ACTIVE"] = to_dimension(Amos_docc);
+    avas_dims["DOCC INACTIVE"] = to_dimension(Imos_docc);
+    avas_dims["UOCC ACTIVE"] = to_dimension(Amos_uocc);
+    avas_dims["UOCC INACTIVE"] = to_dimension(Imos_uocc);
+    avas_dims["SOCC ACTIVE"] = soccpi;
+
+    avas_dims["RESTRICTED_DOCC"] = avas_dims["DOCC INACTIVE"];
+    avas_dims["RESTRICTED_UOCC"] = avas_dims["UOCC INACTIVE"];
+    avas_dims["ACTIVE"] = avas_dims["DOCC ACTIVE"] + avas_dims["UOCC ACTIVE"] + soccpi;
+
+    // printing AVAS MO summary
+    print_h2("AVAS MOs Information");
+
+    std::string dash(15 + 6 * nirrep, '-');
+    outfile->Printf("\n    %s", dash.c_str());
+    outfile->Printf("\n    %15s", " ");
+    auto irrep_labels = ref_wfn->molecule()->irrep_labels();
+    for (int h = 0; h < nirrep; ++h)
+        outfile->Printf(" %5s", irrep_labels[h].c_str());
+    outfile->Printf("\n    %s", dash.c_str());
+
+    for (const std::string& name :
+         {"DOCC INACTIVE", "DOCC ACTIVE", "SOCC ACTIVE", "UOCC ACTIVE", "UOCC INACTIVE"}) {
+        outfile->Printf("\n    %-15s", name.c_str());
+        for (int h = 0; h < nirrep; ++h) {
+            outfile->Printf(" %5d", avas_dims[name][h]);
+        }
+    }
+    outfile->Printf("\n    %s", dash.c_str());
+
+    for (const std::string& name : {"RESTRICTED_DOCC", "ACTIVE", "RESTRICTED_UOCC"}) {
+        outfile->Printf("\n    %-15s", name.c_str());
+        for (int h = 0; h < nirrep; ++h) {
+            outfile->Printf(" %5d", avas_dims[name][h]);
+        }
+    }
+    outfile->Printf("\n    %s", dash.c_str());
+
+    // print all MOs with nonzero overlap
+    print_h2("Atomic Valence MOs (Active Marked by *)");
+
+    outfile->Printf("\n    ===============================");
+    outfile->Printf("\n     Irrep    MO  Occ.  <phi|P|phi>");
+    outfile->Printf("\n    -------------------------------");
+    for (int h = 0; h < nirrep; ++h) {
+        auto label = irrep_labels[h].c_str();
+
+        std::unordered_set<int> Adocc(Amos_docc[h].begin(), Amos_docc[h].end());
+        for (int i = 0; i < doccpi[h]; ++i) {
+            double s_value = sdocc->get(h, i);
+            if (s_value < nonzero_threshold)
+                continue;
+            char chosen = Adocc.count(i) ? '*' : ' ';
+            outfile->Printf("\n    %c%4s  %5d  %3d  %12.6f", chosen, label, i, 2, s_value);
+        }
+
+        auto offset = doccpi[h] + soccpi[h];
+        std::unordered_set<int> Auocc(Amos_uocc[h].begin(), Amos_uocc[h].end());
+        for (int a = 0; a < uoccpi[h]; ++a) {
+            double s_value = suocc->get(h, a);
+            if (s_value < nonzero_threshold)
+                continue;
+            auto na = a + offset;
+            char chosen = Auocc.count(na) ? '*' : ' ';
+            outfile->Printf("\n    %c%4s  %5d  %3d  %12.6f", chosen, label, na, 0, s_value);
+        }
+    }
+    outfile->Printf("\n    ===============================");
+
+    // rotate orbitals
+    auto Ca_tilde = psi::linalg::doublet(Ca, U);
+
+    // canonicalize orbitals and pass to Ca
+    auto nsopi = ref_wfn->nsopi();
+    psi::Slice so_slice(dim_zero, nsopi);
+
+    auto canonicalize_block = [&](const std::string& title,
+                                  const std::vector<std::vector<int>>& mos,
+                                  const psi::Slice& slice) {
+        outfile->Printf("\n  Canonicalizing orbital block %s %s", title.c_str(),
+                        std::string(20 - title.size(), '.').c_str());
+        psi::Dimension dim_mo(nirrep);
+        for (int h = 0; h < nirrep; ++h) {
+            dim_mo[h] = mos[h].size();
+        }
+
+        // build sub block of Ca_tilde
+        auto Csub = std::make_shared<psi::Matrix>("Csub", nsopi, dim_mo);
+        for (int h = 0; h < nirrep; ++h) {
+            for (int p = 0; p < dim_mo[h]; ++p) {
+                Csub->set_column(h, p, Ca_tilde->get_column(h, mos[h][p]));
             }
         }
 
-        psi::SharedMatrix Fa = ref_wfn->Fa(); // get Fock matrix
-        psi::SharedMatrix Fa_mo = Fa->clone();
-        Fa_mo->transform(Ca_tilde_prime);
+        // diagonalize Fock matrix
+        auto Fsub = psi::linalg::triplet(Csub, ref_wfn->Fa(), Csub, true, false, false);
+        auto Usub = std::make_shared<psi::Matrix>("Usub", dim_mo, dim_mo);
+        auto Esub = std::make_shared<psi::Vector>("Esub", dim_mo);
+        Fsub->diagonalize(Usub, Esub);
 
-        // Update both the alpha and beta orbitals
-        // This assumes a restricted MO set
-        // TODO: generalize to unrestricted references
-        ref_wfn->Ca()->copy(Ca_tilde_prime);
-        ref_wfn->Cb()->copy(Ca_tilde_prime);
+        // rotated orbitals
+        auto Csub_r = psi::linalg::doublet(Csub, Usub);
+
+        // pass to Ca
+        Ca->set_block(so_slice, slice, Csub_r);
+        outfile->Printf(" Done");
+    };
+
+    print_h2("Semicanonicalize Subsets of Orbitals");
+
+    psi::Slice slice_Idocc(dim_zero, avas_dims["DOCC INACTIVE"]);
+    canonicalize_block("INACTIVE DOCC", Imos_docc, slice_Idocc);
+
+    psi::Slice slice_Adocc(slice_Idocc.end(),
+                           avas_dims["DOCC INACTIVE"] + avas_dims["DOCC ACTIVE"]);
+    canonicalize_block("ACTIVE DOCC", Amos_docc, slice_Adocc);
+
+    psi::Slice slice_Auocc(slice_Adocc.end() + soccpi,
+                           avas_dims["RESTRICTED_DOCC"] + avas_dims["ACTIVE"]);
+    canonicalize_block("ACTIVE UOCC", Amos_uocc, slice_Auocc);
+
+    psi::Slice slice_Iuocc(slice_Auocc.end(), nmopi);
+    canonicalize_block("INACTIVE UOCC", Imos_uocc, slice_Iuocc);
+
+    // Update both the alpha and beta orbitals assuming restricted orbitals
+    ref_wfn->Ca()->copy(Ca);
+    ref_wfn->Cb()->copy(Ca);
+
+    // Push to Psi4 environment
+    for (const std::string& name : {"RESTRICTED_DOCC", "ACTIVE", "RESTRICTED_UOCC"}) {
+        auto array = std::make_shared<psi::Matrix>("AVAS " + name, 1, nirrep);
+        for (int h = 0; h < nirrep; ++h) {
+            array->set(0, h, avas_dims[name][h]);
+        }
+        Process::environment.arrays[array->name()] = array;
+        ref_wfn->set_array_variable(array->name(), array);
     }
 }
 

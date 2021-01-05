@@ -49,6 +49,7 @@ void export_StateInfo(py::module& m) {
         .def("multiplicity_label", &StateInfo::multiplicity_label, "Multiplicity label")
         .def("irrep_label", &StateInfo::irrep_label, "Symbol for irreducible representation")
         .def("__eq__", [](const StateInfo& a, const StateInfo& b) { return a == b; })
-        .def("__lt__", [](const StateInfo& a, const StateInfo& b) { return a < b; });
+        .def("__lt__", [](const StateInfo& a, const StateInfo& b) { return a < b; })
+        .def("__hash__", [](const StateInfo& a) { return a.hash(); });
 }
 } // namespace forte

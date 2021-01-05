@@ -9,20 +9,19 @@
  * (5), Back-transform the TPDM.
  */
 
-#include "psi4/libpsi4util/PsiOutStream.h"
-#include "psi4/libmints/factory.h"
 #include "psi4/libiwl/iwl.hpp"
-#include "psi4/libpsio/psio.hpp"
+#include "psi4/libmints/factory.h"
 #include "psi4/libmints/matrix.h"
 #include "psi4/libmints/wavefunction.h"
 #include "psi4/psifiles.h"
+#include "psi4/libpsio/psio.hpp"
+#include "psi4/libpsi4util/PsiOutStream.h"
 
 #include "helpers/printing.h"
 #include "base_classes/active_space_solver.h"
 
-#include "gradient_tpdm/backtransform_tpdm.h"
-
 #include "casscf/casscf.h"
+#include "gradient_tpdm/backtransform_tpdm.h"
 
 using namespace ambit;
 using namespace psi;
@@ -212,13 +211,13 @@ void CASSCF::tpdm_backtransform() {
 
     std::vector<std::shared_ptr<psi::MOSpace>> spaces;
     spaces.push_back(psi::MOSpace::all);
-    std::shared_ptr<TPDMBackTransform> transform =
-        std::shared_ptr<TPDMBackTransform>(new TPDMBackTransform(
-            ints_->wfn(), spaces,
-            IntegralTransform::TransformationType::Unrestricted, // Transformation type
-            IntegralTransform::OutputType::DPDOnly,              // Output buffer
-            IntegralTransform::MOOrdering::QTOrder,              // MO ordering
-            IntegralTransform::FrozenOrbitals::None));           // Frozen orbitals?
+    auto transform = std::make_shared<TPDMBackTransform>(
+        ints_->wfn(), spaces,
+        IntegralTransform::TransformationType::Unrestricted, // Transformation type
+        IntegralTransform::OutputType::DPDOnly,              // Output buffer
+        IntegralTransform::MOOrdering::QTOrder,              // MO ordering
+        IntegralTransform::FrozenOrbitals::None);            // Frozen orbitals?
+    transform->set_print(print_);
     transform->backtransform_density();
     transform.reset();
 
@@ -251,8 +250,7 @@ void CASSCF::write_1rdm_spin_dependent() {
     SharedMatrix D1(new Matrix("1rdm coefficients contribution", nirrep_, nmo_dim_, nmo_dim_));
 
     for (size_t i = 0, size_c = core_mos_rel_.size(); i < size_c; ++i) {
-        D1->set(core_mos_rel_[i].first, core_mos_rel_[i].second,
-                core_mos_rel_[i].second, 1.0);
+        D1->set(core_mos_rel_[i].first, core_mos_rel_[i].second, core_mos_rel_[i].second, 1.0);
     }
 
     (Gamma1_.block("aa")).iterate([&](const std::vector<size_t>& i, double& value) {
@@ -301,7 +299,7 @@ void CASSCF::write_lagrangian() {
         });
     }
     L->back_transform(ints_->Ca());
-    ints_->wfn()->Lagrangian()->copy(L);
+    ints_->wfn()->X()->copy(L);
 
     outfile->Printf("Done");
 }
@@ -329,16 +327,17 @@ void CASSCF::write_2rdm_spin_dependent() {
         for (size_t j = 0; j < size_c; ++j) {
             auto n = core_mos_abs_[j];
             if (m != n) {
-                d2aa.write_value(m, m, n, n, 0.25, 0, "NULL", 0);
-                d2bb.write_value(m, m, n, n, 0.25, 0, "NULL", 0);
-                d2aa.write_value(m, n, n, m, -0.25, 0, "NULL", 0);
-                d2bb.write_value(m, n, n, m, -0.25, 0, "NULL", 0);
+                d2aa.write_value(m, m, n, n, 0.25, 0, "outfile", 0);
+                d2bb.write_value(m, m, n, n, 0.25, 0, "outfile", 0);
+                d2aa.write_value(m, n, n, m, -0.25, 0, "outfile", 0);
+                d2bb.write_value(m, n, n, m, -0.25, 0, "outfile", 0);
             }
-            d2ab.write_value(m, m, n, n, 1.00, 0, "NULL", 0);
+            d2ab.write_value(m, m, n, n, 1.00, 0, "outfile", 0);
         }
     }
 
-    for (size_t i = 0, size_c = core_mos_abs_.size(), size_a = actv_mos_abs_.size(); i < size_a; ++i) {
+    for (size_t i = 0, size_c = core_mos_abs_.size(), size_a = actv_mos_abs_.size(); i < size_a;
+         ++i) {
         auto u = actv_mos_abs_[i];
         for (size_t j = 0; j < size_a; ++j) {
             auto v = actv_mos_abs_[j];
@@ -348,11 +347,11 @@ void CASSCF::write_2rdm_spin_dependent() {
 
             for (size_t k = 0; k < size_c; ++k) {
                 auto m = core_mos_abs_[k];
-                d2aa.write_value(v, u, m, m, 0.5 * gamma_a, 0, "NULL", 0);
-                d2bb.write_value(v, u, m, m, 0.5 * gamma_b, 0, "NULL", 0);
-                d2aa.write_value(v, m, m, u, -0.5 * gamma_a, 0, "NULL", 0);
-                d2bb.write_value(v, m, m, u, -0.5 * gamma_b, 0, "NULL", 0);
-                d2ab.write_value(v, u, m, m, (gamma_a + gamma_b), 0, "NULL", 0);
+                d2aa.write_value(v, u, m, m, 0.5 * gamma_a, 0, "outfile", 0);
+                d2bb.write_value(v, u, m, m, 0.5 * gamma_b, 0, "outfile", 0);
+                d2aa.write_value(v, m, m, u, -0.5 * gamma_a, 0, "outfile", 0);
+                d2bb.write_value(v, m, m, u, -0.5 * gamma_b, 0, "outfile", 0);
+                d2ab.write_value(v, u, m, m, (gamma_a + gamma_b), 0, "outfile", 0);
             }
         }
     }
@@ -369,9 +368,9 @@ void CASSCF::write_2rdm_spin_dependent() {
                     auto gamma_aa = Gamma2_.block("aaaa").data()[idx];
                     auto gamma_bb = Gamma2_.block("AAAA").data()[idx];
                     auto gamma_ab = Gamma2_.block("aAaA").data()[idx];
-                    d2aa.write_value(x, u, y, v, 0.25 * gamma_aa, 0, "NULL", 0);
-                    d2bb.write_value(x, u, y, v, 0.25 * gamma_bb, 0, "NULL", 0);
-                    d2ab.write_value(x, u, y, v, gamma_ab, 0, "NULL", 0);
+                    d2aa.write_value(x, u, y, v, 0.25 * gamma_aa, 0, "outfile", 0);
+                    d2bb.write_value(x, u, y, v, 0.25 * gamma_bb, 0, "outfile", 0);
+                    d2ab.write_value(x, u, y, v, gamma_ab, 0, "outfile", 0);
                 }
             }
         }

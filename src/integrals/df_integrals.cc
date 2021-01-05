@@ -44,7 +44,9 @@
 #include <mpi.h>
 #endif
 
+#include "forte-def.h"
 #include "helpers/blockedtensorfactory.h"
+#include "helpers/helpers.h"
 #include "helpers/printing.h"
 #include "helpers/timer.h"
 #include "helpers/memory.h"
@@ -68,17 +70,17 @@ void DFIntegrals::initialize() {
     // If code calls constructor print things
     // But if someone calls retransform integrals do not print it
     print_info();
-    local_timer int_timer;
 
     int my_proc = 0;
 #ifdef HAVE_GA
     my_proc = GA_Nodeid();
 #endif
-    if (my_proc == 0) {
+    if (my_proc == 0 and (not skip_build_)) {
+        local_timer int_timer;
         gather_integrals();
         freeze_core_orbitals();
+        print_timing("computing density-fitted integrals", int_timer.get());
     }
-    print_timing("computing density-fitted integrals", int_timer.get());
 }
 
 double DFIntegrals::aptei_aa(size_t p, size_t q, size_t r, size_t s) {
@@ -220,12 +222,26 @@ void DFIntegrals::gather_integrals() {
 
     // Constructs the DF function
     // assume a RHF/UHF reference
-    std::shared_ptr<psi::DFHelper> df(new DFHelper(primary, auxiliary));
-    df->set_memory(psi::Process::environment.get_memory() / sizeof(double));
+    auto df = std::make_shared<psi::DFHelper>(primary, auxiliary);
+    size_t mem_sys = psi::Process::environment.get_memory() * 0.9 / sizeof(double);
+    int64_t mem = mem_sys;
+    if (JK_status_ == JKStatus::initialized) {
+        mem = mem_sys - JK_->memory_estimate();
+        if (mem < 0) {
+            auto xb = to_xb(static_cast<size_t>(-mem), sizeof(double));
+            std::string msg = "Not enough memory! Need at least ";
+            msg += std::to_string(xb.first) + " " + xb.second.c_str() + " more.";
+            outfile->Printf("\n  %s", msg.c_str());
+            throw psi::PSIEXCEPTION(msg);
+        }
+    }
+    df->set_memory(static_cast<size_t>(mem));
+    df->set_nthreads(omp_get_max_threads());
+    df->set_print_lvl(1);
     df->initialize();
+    df->print_header();
     // Pushes a C matrix that is ordered in pitzer ordering
     // into the C_matrix object
-
     df->add_space("ALL", Ca_ao);
 
     // set_C clears all the orbital spaces, so this creates the space

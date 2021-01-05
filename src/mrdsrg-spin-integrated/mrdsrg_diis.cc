@@ -205,5 +205,7 @@ void MRDSRG::diis_manager_extrapolate() {
 void MRDSRG::diis_manager_cleanup() {
     amp_ptrs_.clear();
     res_ptrs_.clear();
+    diis_manager_->reset_subspace();
+    diis_manager_->delete_diis_file();
 }
 } // namespace forte

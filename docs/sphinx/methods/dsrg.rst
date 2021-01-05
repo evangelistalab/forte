@@ -4,6 +4,7 @@ Driven Similarity Renormalization Group
 =======================================
 
 .. codeauthor:: Chenyang Li, Kevin P. Hannon, Tianyuan Zhang, Francesco A. Evangelista
+
 .. sectionauthor:: Chenyang Li, Francesco A. Evangelista, Tianyuan Zhang, Kevin P. Hannon
 
 .. important::
@@ -215,8 +216,9 @@ To perform a DSRG computation, the user is expected to specify the following key
   Most of our computations in :ref:`dsrg_ref` are performed using 0.5 or 1.0 a.u.
 
   .. caution::
-    By default, :code:`DSRG_S` is set to :math:`10^{10}` a.u.
+    By default, :code:`DSRG_S` is set to :math:`0.5` a.u.
     The user should always set this keyword by hand!
+    Non-perturbative methods may not converge for large values of flow parameter.
 
 * Orbital spaces:
   Here we also specify frozen core orbitals besides core and active orbitals.
@@ -464,7 +466,7 @@ Correlation level of MR-DSRG.
 The value of the flow parameter :math:`s`.
 
 * Type: double
-* Default: 1.0e10
+* Default: 0.5
 
 **DSRG_MAXITER**
 
@@ -790,18 +792,27 @@ Max macro iterations for MR-DSRG reference relaxation.
 * Type: integer
 * Default: 15
 
+**DSRG_DUMP_RELAXED_ENERGIES**
+
+Dump the energies after each reference relaxation step to JSON.
+The energies include all computed states and the averaged DSRG "Fixed"
+and "Relaxed" energies for every reference relaxation step.
+
+* Type: Boolean
+* Default: False
+
 **DSRG_RESTART_AMPS**
 
 Use converged amplitudes from the previous step as initial guesses of the current amplitudes.
 
-* Type: boolean
+* Type: Boolean
 * Default: True
 
 **SEMI_CANONICAL**
 
 Semicanonicalize orbitals after solving the active-space eigenvalue problem.
 
-* Type: boolean
+* Type: Boolean
 * Default: True
 
 **DSRG_HBAR_SEQ**
@@ -810,14 +821,14 @@ Apply the sequential transformation algorithm in evaluating the transformed Hami
 
 .. math:: \bar{H}(s) = e^{-\hat{A}_n(s)} \cdots e^{-\hat{A}_2(s)} e^{-\hat{A}_1(s)} \hat{H} e^{\hat{A}_1(s)} e^{\hat{A}_2(s)} \cdots e^{\hat{A}_n(s)}.
 
-* Type: boolean
+* Type: Boolean
 * Default: False
 
 **DSRG_NIVO**
 
 Apply non-interacting virtual orbital (NIVO) approximation in evaluating the transformed Hamiltonian.
 
-* Type: boolean
+* Type: Boolean
 * Default: False
 
 **DSRG_PT2_H0TH**
@@ -836,7 +847,7 @@ and ``forte.mrdsrg.CODE.t2.bin``, respectively.
 Here, ``CODE`` will be ``adapted`` if using the spin-adapted implementation,
 while ``spin`` if using the spin-integrated code.
 
-* Type: boolean
+* Type: Boolean
 * Default: False
 
 **DSRG_READ_AMPS**
@@ -844,7 +855,7 @@ while ``spin`` if using the spin-integrated code.
 Read amplitudes from the current directory for iterative MRDSRG methods.
 File format and content should match those with ``DSRG_DUMP_AMPS``.
 
-* Type: boolean
+* Type: Boolean
 * Default: False
 
 
@@ -1323,6 +1334,26 @@ At the end, we print the energy summary of the states of interest. ::
        1      A1     0      -106.990992362637
        1      A1     1      -106.981903302649
     -----------------------------------------
+
+.. tip::
+  It is sometimes cumbersome to grab the energies of all the computed states from
+  the output file, especially when multiple reference relaxation steps are performed.
+  Here, one could use the keyword **DSRG_DUMP_RELAXED_ENERGIES** where a JSON file
+  :code:`dsrg_relaxed_energies.json` is created.
+  In the above example, the file will read ::
+
+      {
+          "0": {
+              "ENERGY ROOT 0 1A1": -106.7725738559195,
+              "ENERGY ROOT 1 1A1": -106.7357981445238
+          },
+          "1": {
+              "DSRG FIXED": -106.98580610782275,
+              "DSRG RELAXED": -106.98644783264328,
+              "ENERGY ROOT 0 1A1": -106.99099236263731,
+              "ENERGY ROOT 1 1A1": -106.98190330264923
+          }
+      }
 
 The printing for SA-DSRG-PT2c (set :code:`DSRG_MULTI_STATE` to :code:`SA_SUB`) is slightly different from above.
 After the DSRG-PT2 computation, we build the effective Hamiltonian using the original CASCI states. ::

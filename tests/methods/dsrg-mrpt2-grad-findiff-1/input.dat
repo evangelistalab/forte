@@ -34,7 +34,7 @@ set forte{
   root_sym                 0
   nroot                    1
   dsrg_s                   0.5
-  active_space_solver      fci 
+  active_space_solver      fci
 }
 
 grad = gradient('forte',dertype=0)

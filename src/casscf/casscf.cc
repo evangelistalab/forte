@@ -138,62 +138,18 @@ void CASSCF::startup() {
 
     Hcore_ = SharedMatrix(ints_->wfn()->H()->clone());
 
-    local_timer JK_initialize;
-    auto integral_type = ints_->integral_type();
-    auto basis_set = ints_->wfn()->basisset();
-    if (integral_type == Conventional) {
-        JK_ = JK::build_JK(basis_set, psi::BasisSet::zero_ao_basis_set(),
-                           psi::Process::environment.options, "PK");
-    } else if (integral_type == Cholesky) {
-        //        JK_ = JK::build_JK(basis_set, psi::BasisSet::zero_ao_basis_set(),
-        //                           psi::Process::environment.options, "CD");
-        psi::Options& options = psi::Process::environment.options;
-        CDJK* jk = new CDJK(basis_set, options_->get_double("CHOLESKY_TOLERANCE"));
-
-        if (options["INTS_TOLERANCE"].has_changed())
-            jk->set_cutoff(options.get_double("INTS_TOLERANCE"));
-        if (options["SCREENING"].has_changed())
-            //            jk->set_csam(options.get_str("SCREENING") == "CSAM");
-            if (options["PRINT"].has_changed())
-                jk->set_print(options.get_int("PRINT"));
-        if (options["DEBUG"].has_changed())
-            jk->set_debug(options.get_int("DEBUG"));
-        if (options["BENCH"].has_changed())
-            jk->set_bench(options.get_int("BENCH"));
-        if (options["DF_INTS_IO"].has_changed())
-            jk->set_df_ints_io(options.get_str("DF_INTS_IO"));
-        jk->set_condition(options.get_double("DF_FITTING_CONDITION"));
-        if (options["DF_INTS_NUM_THREADS"].has_changed())
-            jk->set_df_ints_num_threads(options.get_int("DF_INTS_NUM_THREADS"));
-
-        JK_ = std::shared_ptr<JK>(jk);
-
-    } else if ((integral_type == DF) or (integral_type == DiskDF) or (integral_type == DistDF)) {
-        if (options_->get_str("SCF_TYPE") == "DF") {
-            JK_ = JK::build_JK(basis_set, ints_->wfn()->get_basisset("DF_BASIS_SCF"),
-                               psi::Process::environment.options, "MEM_DF");
-            //            auto df_basis = ints_->wfn()->get_basisset("DF_BASIS_SCF");
-            //            JK_ = std::make_shared<DiskDFJK>(basis_set, df_basis);
-        } else {
-            throw psi::PSIEXCEPTION(
-                "Trying to compute the frozen one-body operator with MEM_DF but "
-                "using a non-DF integral type");
-        }
+    if (ints_->jk_status() != ForteIntegrals::JKStatus::initialized) {
+        throw PSIEXCEPTION("CASSCF only supports Psi4 integrals. JK not initialized.");
     }
-
-    JK_->set_memory(psi::Process::environment.get_memory() * 0.85);
-    JK_->initialize();
+    JK_ = ints_->jk();
     JK_->C_left().clear();
     JK_->C_right().clear();
-
-    if (print_ > 0)
-        outfile->Printf("\n    JK takes %5.5f s", JK_initialize.get());
 }
 
 double CASSCF::compute_energy() {
     if (nactv_ == 0) {
         outfile->Printf("\n\n\n Please set the active space");
-        throw psi::PSIEXCEPTION(" The active space is zero.  Set the active space");
+        throw psi::PSIEXCEPTION("The active space is zero. Set the active space");
     } else if (nactv_ == ncmo_) {
         outfile->Printf("\n Your about to do an all active CASSCF");
         throw psi::PSIEXCEPTION("The active space is all the MOs.  Orbitals don't "
@@ -351,23 +307,30 @@ double CASSCF::compute_energy() {
         throw psi::PSIEXCEPTION("CASSCF did not converge.");
     }
 
-    // semicanonicalize orbitals
-    auto U = semicanonicalize(Ca);
-    auto Ca_semi = linalg::doublet(Ca, U, false, false);
-    Ca_semi->set_name(Ca->name());
+    // pass Ca to ForteIntegrals and Psi4
+    ints_->Ca()->copy(Ca);
+    ints_->wfn()->Ca()->copy(Ca);
 
-    // restransform integrals if derivatives are needed
-    if (options_->get_str("DERTYPE") == "FIRST") {
-        print_h2("Final Integral Transformation for CASSCF Gradients");
-        ints_->update_orbitals(Ca_semi, Ca_semi);
+    // semicanonicalize
+    if (options_->get_str("CASSCF_FINAL_ORBITAL") != "UNSPECIFIED" or
+        options_->get_str("DERTYPE") == "FIRST") {
 
-        // diagonalize the Hamiltonian one last time
-        diagonalize_hamiltonian();
-    } else {
-        if (options_->get_bool("CASSCF_SEMICANONICALIZE")) {
-            ints_->wfn()->Ca()->copy(Ca_semi);
-        } else {
-            ints_->wfn()->Ca()->copy(Ca);
+        SemiCanonical semi(mo_space_info_, ints_, options_);
+        semi.semicanonicalize(cas_ref_, 1, true, false);
+
+        auto U = semi.Ua();
+
+        auto Ca_name = Ca->name();
+        Ca = linalg::doublet(Ca, U, false, false);
+        Ca->set_name(Ca_name);
+
+        ints_->Ca()->copy(Ca);
+        ints_->wfn()->Ca()->copy(Ca);
+
+        if (options_->get_str("DERTYPE") == "FIRST") {
+            ints_->update_orbitals(Ca, Ca);
+            tei_gaaa_ = transform_integrals(Ca);
+            diagonalize_hamiltonian();
         }
     }
 

@@ -324,23 +324,12 @@ void THREE_DSRG_MRPT2::print_options_summary() {
         calculation_info_string.push_back({"Internal_amp_select", internal_amp_select_});
     }
 
-    if (foptions_->get_bool("FORM_HBAR3")) {
-        calculation_info_string.push_back({"form Hbar3", "TRUE"});
-    } else {
-        calculation_info_string.push_back({"form Hbar3", "FALSE"});
-    }
+    std::vector<std::pair<std::string, bool>> calculation_info_bool{
+        {"form Hbar3", foptions_->get_bool("FORM_HBAR3")}};
 
-    // Print some information
-    print_h2("Calculation Information");
-    for (auto& str_dim : calculation_info_int) {
-        outfile->Printf("\n    %-40s %15d", str_dim.first.c_str(), str_dim.second);
-    }
-    for (auto& str_dim : calculation_info_double) {
-        outfile->Printf("\n    %-40s %15.3e", str_dim.first.c_str(), str_dim.second);
-    }
-    for (auto& str_dim : calculation_info_string) {
-        outfile->Printf("\n    %-40s %15s", str_dim.first.c_str(), str_dim.second.c_str());
-    }
+    // print information
+    print_selected_options("Calculation Information", calculation_info_string,
+                           calculation_info_bool, calculation_info_double, calculation_info_int);
 }
 
 void THREE_DSRG_MRPT2::cleanup() {}

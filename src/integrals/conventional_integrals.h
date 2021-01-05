@@ -46,8 +46,7 @@ namespace forte {
  */
 class ConventionalIntegrals : public Psi4Integrals {
   public:
-    /// Contructor of the class.  Calls std::shared_ptr<ForteIntegrals> ints
-    /// constructor
+    /// Contructor of ConventionalIntegrals
     ConventionalIntegrals(std::shared_ptr<ForteOptions> options,
                           std::shared_ptr<psi::Wavefunction> ref_wfn,
                           std::shared_ptr<MOSpaceInfo> mo_space_info,

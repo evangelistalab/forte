@@ -45,6 +45,9 @@ MASTER_DSRG::~MASTER_DSRG() {
 void MASTER_DSRG::startup() {
     print_h2("Multireference Driven Similarity Renormalization Group");
 
+    // build fock using ForteIntegrals and clean up JK
+    build_fock_from_ints(ints_);
+
     // read options
     read_options();
 
@@ -82,6 +85,13 @@ void MASTER_DSRG::startup() {
             value = 1.0;
         }
     });
+}
+
+void MASTER_DSRG::build_fock_from_ints(std::shared_ptr<ForteIntegrals> ints) {
+    outfile->Printf("\n    Computing Fock matrix and cleaning JK ........... ");
+    ints->make_fock_matrix(rdms_.g1a(), rdms_.g1b());
+    ints->jk_finalize();
+    outfile->Printf("Done");
 }
 
 void MASTER_DSRG::read_options() {
@@ -236,23 +246,17 @@ void MASTER_DSRG::fill_density() {
 }
 
 void MASTER_DSRG::init_fock() {
-    outfile->Printf("\n    Building Fock matrix ............................ ");
-    build_fock_from_ints(ints_, Fock_);
-    fill_Fdiag(Fock_, Fdiag_a_, Fdiag_b_);
-    outfile->Printf("Done");
-}
-
-void MASTER_DSRG::build_fock_from_ints(std::shared_ptr<ForteIntegrals> ints, BlockedTensor& F) {
-    ints->make_fock_matrix(Gamma1_.block("aa"), Gamma1_.block("AA"));
-
-    F = BTF_->build(tensor_type_, "Fock", spin_cases({"gg"}));
-    F.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>& spin, double& value) {
+    outfile->Printf("\n    Filling Fock matrix from ForteIntegrals ......... ");
+    Fock_ = BTF_->build(tensor_type_, "Fock", spin_cases({"gg"}));
+    Fock_.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>& spin, double& value) {
         if (spin[0] == AlphaSpin) {
-            value = ints->get_fock_a(i[0], i[1]);
+            value = ints_->get_fock_a(i[0], i[1]);
         } else {
-            value = ints->get_fock_b(i[0], i[1]);
+            value = ints_->get_fock_b(i[0], i[1]);
         }
     });
+    fill_Fdiag(Fock_, Fdiag_a_, Fdiag_b_);
+    outfile->Printf("Done");
 }
 
 void MASTER_DSRG::fill_Fdiag(BlockedTensor& F, std::vector<double>& Fa, std::vector<double>& Fb) {

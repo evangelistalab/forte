@@ -60,27 +60,25 @@ avas:
    - avas-1
    - avas-2
    - avas-4
-embedding:
-  short:
-   - embedding-1
-   - embedding-3
-   - embedding-4
-   - embedding-5
-  medium:
-   - embedding-2
+   - avas-6
 casscf:
   short:
-   - casscf-2
    - casscf-7
    - df-casscf-1
+   - casscf-fcidump-1
+   - casscf-gradient-1
+   - casscf-gradient-3
   medium:
    - casscf-1
+   - casscf-2
    - casscf-3
    - casscf-4
    - casscf-5
    - casscf-6
    - casscf-9
-   - casscf-gradient-1
+   - casscf-gradient-2
+   - casscf-opt-1
+   - casscf-opt-2
   long:
    - casscf-8
 cd-dsrg-mrpt2:
@@ -156,8 +154,8 @@ dsrg-mrpt2:
    - dsrg-mrpt2-4
    - dsrg-mrpt2-12-localized-actv
    - aci-dsrg-mrpt2-5
-  unused:
    - dsrg-mrpt2-opt-findiff-2
+  unused:
    - dsrg-mrpt2-uno
 dsrg-mrpt3:
   short:
@@ -190,6 +188,14 @@ dwms-dsrgpt:
    - dwms-dsrgpt2-2
    - dwms-dsrgpt2-3
    - dwms-dsrgpt2-4
+embedding:
+  short:
+   - embedding-1
+   - embedding-3
+   - embedding-4
+   - embedding-5
+  medium:
+   - embedding-2
 fci:
   short:
    - fci-1
@@ -208,6 +214,27 @@ fci:
    - fci-rdms-2
   long:
    - fci-6
+gasci:
+  short:
+   - gasci-1
+   - gasci-2
+   - gasaci-1
+   - gasaci-4
+  medium:
+   - gasci-3
+   - gasaci-2
+   - gasaci-3
+gasscf:
+  short:
+   - gasscf-1
+   - gasscf-3
+   - sa-gasscf-1
+   - sa-gasscf-2
+   - sa-gasscf-dsrg-mrpt2-1
+  medium:
+   - gasscf-2
+   - gasscf-dsrg-mrpt2-1
+   - sa-gasscf-3
 integrals:
   short:
    - integrals-3
@@ -224,6 +251,9 @@ integrals:
    - integrals-fcidump-6
   unused:
    - integrals-6
+l-bfgs:
+  short:
+   - l-bfgs_rosenbrock
 mr-dsrg-pt2:
   short:
    - mr-dsrg-pt2-1
@@ -306,28 +336,11 @@ pci:
 #   - pci-7
    - pci-8
 #   - pci-9
-gasci:
+read-orbitals:
   short:
-   - gasci-1
-   - gasci-2
-   - gasaci-1
-   - gasaci-4
-  medium:
-   - gasci-3
-   - gasaci-2
-   - gasaci-3
-gasscf:
+   - read-orbitals-1
+   - read-orbitals-2
+x2c:
   short:
-   - gasscf-1
-   - gasscf-3
-   - sa-gasscf-1
-   - sa-gasscf-2
-   - sa-gasscf-dsrg-mrpt2-1
-  medium:
-   - gasscf-2
-   - gasscf-dsrg-mrpt2-1
-   - sa-gasscf-3
-#x2c:
-#  medium:
-#   - x2c-1
+   - x2c-1
 

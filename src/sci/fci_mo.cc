@@ -337,13 +337,15 @@ std::vector<double> FCI_MO::compute_ss_energies() {
     }
     print_CI(nroot_, options_->get_double("FCIMO_PRINT_CIVEC"), eigen_, determinant_);
 
-    // compute dipole moments
-    compute_permanent_dipole();
+    if (integral_->integral_type() != Custom) {
+        // compute dipole moments
+        compute_permanent_dipole();
 
-    // compute oscillator strength
-    if (nroot_ > 1) {
-        compute_transition_dipole();
-        compute_oscillator_strength();
+        // compute oscillator strength
+        if (nroot_ > 1) {
+            compute_transition_dipole();
+            compute_oscillator_strength();
+        }
     }
 
     double Eref = eigen_[root_].second;

@@ -22,6 +22,7 @@ correlated electrons.
    integrals
    methods/fci
    methods/aci
+   methods/mcscf
    methods/dsrg
    methods/embedding
    methods/avas
