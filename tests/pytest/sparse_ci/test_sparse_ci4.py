@@ -40,8 +40,8 @@ def test_sparse_ci4():
 
     dtest = det("20")
     ref = forte.StateVector({ det("20"): 0.5, det("02"): 0.8660254038})
-    wfn = forte.apply_exp_ah_factorized(gop,ref)
-    wfn_fast = forte.apply_exp_ah_factorized_fast(gop_fast,ref)
+    wfn = forte.apply_exp_ah_factorized_safe(gop,ref)
+    wfn_fast = forte.apply_exp_ah_factorized(gop_fast,ref)
 
     for d, c in wfn.map().items():
         assert c == pytest.approx(wfn_fast[d], abs=1e-9)
@@ -60,7 +60,7 @@ def test_sparse_ci4():
     gop.add_term_from_str('2.0 [2a+ 0a-] + [2b+ 0b-]',0.1)
     gop.add_term_from_str('0.5 [2a+ 2b+ 0b- 0a-] - 0.7 [3a+ 3b+ 1b- 1a-]',0.3)
     gop.add_term_from_str('+0.17 [1a+ 1b+ 3b- 3a-]',0.13)
-    wfn = forte.apply_operator_fast(gop,ref)
+    wfn = forte.apply_operator(gop,ref)
     print_wfn(wfn,4)
     assert det("2200") not in wfn
     assert wfn[det("+2-0")] == pytest.approx(-0.3, abs=1e-9)
@@ -75,7 +75,7 @@ def test_sparse_ci4():
     gop.add_term_from_str('[2a+ 0a-] + [2b+ 0b-]',0.1)
     gop.add_term_from_str('0.5 [2a+ 2b+ 0b- 0a-]',0.3)
     gop.add_term_from_str('-0.7 [3a+ 3b+ 1b- 1a-]',0.11)
-    wfn = forte.apply_exp_operator_fast(gop,ref)
+    wfn = forte.apply_exp_operator(gop,ref)
     assert wfn[det("2200")] == pytest.approx(1.0, abs=1e-9)
     assert wfn[det("0220")] == pytest.approx(0.16, abs=1e-9)
     assert wfn[det("+2-0")] == pytest.approx(-0.1, abs=1e-9)
@@ -92,7 +92,7 @@ def test_sparse_ci4():
     ref = forte.StateVector({ det("22"): 1.0 })
     gop.add_term_from_str('[2a+ 0a-] + [2b+ 0b-] - [0a+ 2a-] - [0b+ 2b-]',0.1)
     gop.add_term_from_str('0.5 [2a+ 2b+ 0b- 0a-] - 0.5 [0a+ 0b+ 2b- 2a-]',0.3)
-    wfn = forte.apply_exp_operator_fast(gop,ref)
+    wfn = forte.apply_exp_operator(gop,ref)
     print_wfn(wfn,4)
 
     ### Test the exponential operator 3 ###
@@ -101,8 +101,8 @@ def test_sparse_ci4():
     ref = forte.StateVector({ det("22"): 1.0 })
     gop.add_term_from_str('[2a+ 0a-] + [2b+ 0b-] - [0a+ 2a-] - [0b+ 2b-]',0.1)
     gop.add_term_from_str('0.5 [2a+ 2b+ 0b- 0a-] - 0.5 [0a+ 0b+ 2b- 2a-]',0.3)
-    wfn = forte.apply_exp_operator_fast(gop,ref)
-    wfn2 = forte.apply_exp_operator_fast(gop,wfn,-1.0)
+    wfn = forte.apply_exp_operator(gop,ref)
+    wfn2 = forte.apply_exp_operator(gop,wfn,-1.0)
     print_wfn(wfn2,4)
     assert wfn2[det("2200")] == pytest.approx(1.0, abs=1e-9)
     assert wfn2[det("0220")] == pytest.approx(0.0, abs=1e-9)
@@ -110,13 +110,13 @@ def test_sparse_ci4():
     assert wfn2[det("-2+0")] == pytest.approx(0.0, abs=1e-9)
 
     ### Test the factorized exponential operator ###
-    print('Test the factorized exponential operator (slow)')
+    print('Test the factorized exponential operator (safe)')
     gop = forte.GeneralOperator()
     gop.add_term_from_str('[2a+ 0a-] - [0a+ 2a-]',0.1)
     gop.add_term_from_str('[2b+ 0b-] - [0b+ 2b-]',0.2)
     gop.add_term_from_str('0.5 [2a+ 2b+ 0b- 0a-] - 0.5 [0a+ 0b+ 2b- 2a-]',0.3)
     ref = forte.StateVector({ det("22"): 1.0 })
-    wfn = forte.apply_exp_ah_factorized(gop,ref)
+    wfn = forte.apply_exp_ah_factorized_safe(gop,ref)
     print_wfn(wfn,4)
 
     print('Test the factorized exponential operator (fast)')
@@ -125,11 +125,11 @@ def test_sparse_ci4():
     gop.add_term_from_str('[2b+ 0b-] - [0b+ 2b-]',0.2)
     gop.add_term_from_str('0.5 [2a+ 2b+ 0b- 0a-] - 0.5 [0a+ 0b+ 2b- 2a-]',0.3)
     ref = forte.StateVector({ det("22"): 1.0 })
-    wfn = forte.apply_exp_ah_factorized_fast(gop,ref)
+    wfn = forte.apply_exp_ah_factorized(gop,ref)
     print_wfn(wfn,4)
 
     print('Test the factorized exponential operator (fast) inverse')
-    wfn2 = forte.apply_exp_ah_factorized_fast(gop,wfn,True)
+    wfn2 = forte.apply_exp_ah_factorized(gop,wfn,True)
     assert wfn2[det("2200")] == pytest.approx(1.0, abs=1e-9)
     print_wfn(wfn2,4)
 

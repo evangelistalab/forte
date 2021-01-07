@@ -207,26 +207,25 @@ void export_Determinant(py::module& m) {
         .def("__getitem__", [](StateVector& v, const Determinant& d) { return v[d]; })
         .def("__contains__", [](StateVector& v, const Determinant& d) { return v.map().count(d); });
 
-    m.def("apply_operator", &apply_operator);
-    m.def("apply_exp_ah_factorized", &apply_exp_ah_factorized);
+    m.def("apply_operator_safe", &apply_operator_safe);
+    m.def("apply_operator", &apply_operator, "gop"_a, "state0"_a, "screen_thresh"_a = 1.0e-12);
+    m.def("apply_operator_2", &apply_operator_2, "gop"_a, "state0"_a, "screen_thresh"_a = 1.0e-12);
 
-    m.def("apply_operator_fast", &apply_operator_fast, "gop"_a, "state0"_a,
-          "screen_thresh"_a = 1.0e-12);
-    m.def("apply_exp_operator_fast", &apply_exp_operator_fast, "gop"_a, "state0"_a,
+    m.def("apply_exp_operator", &apply_exp_operator, "gop"_a, "state0"_a, "scaling_factor"_a = 1.0,
+          "maxk"_a = 20, "screen_thresh"_a = 1.0e-12);
+    m.def("apply_exp_operator_2", &apply_exp_operator_2, "gop"_a, "state0"_a,
           "scaling_factor"_a = 1.0, "maxk"_a = 20, "screen_thresh"_a = 1.0e-12);
 
-    m.def("apply_operator_fast2", &apply_operator_fast2, "gop"_a, "state0"_a,
-          "screen_thresh"_a = 1.0e-12);
-    m.def("apply_exp_operator_fast2", &apply_exp_operator_fast2, "gop"_a, "state0"_a,
-          "scaling_factor"_a = 1.0, "maxk"_a = 20, "screen_thresh"_a = 1.0e-12);
-
-    m.def("apply_exp_ah_factorized_fast", &apply_exp_ah_factorized_fast, "gop"_a, "state0"_a,
+    m.def("apply_exp_ah_factorized_safe", &apply_exp_ah_factorized_safe);
+    m.def("apply_exp_ah_factorized", &apply_exp_ah_factorized, "gop"_a, "state0"_a,
           "inverse"_a = false);
-    m.def("energy_expectation_value", &energy_expectation_value);
+
     m.def("apply_number_projector", &apply_number_projector);
     m.def("apply_hamiltonian", &apply_hamiltonian, "as_ints"_a, "state0"_a,
           "screen_thresh"_a = 1.0e-12);
+
     m.def("get_projection", &get_projection);
+    m.def("hamiltonian_matrix_element", &hamiltonian_matrix_element);
     m.def("overlap", &overlap);
 
     py::class_<SingleOperator>(m, "SingleOperator")
