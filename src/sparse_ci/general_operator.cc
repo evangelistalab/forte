@@ -28,10 +28,12 @@
 
 #include <algorithm>
 #include <numeric>
+#include <regex>
 
 #include "integrals/active_space_integrals.h"
 #include "helpers/combinatorial.h"
 #include "helpers/timer.h"
+#include "helpers/string_algorithms.h"
 
 #include "general_operator.h"
 #include "determinant_hashvector.h"
@@ -62,7 +64,8 @@ std::tuple<bool, bool, int> flip_spin(const std::tuple<bool, bool, int>& t) {
     return std::make_tuple(std::get<0>(t), not std::get<1>(t), std::get<2>(t));
 }
 
-// Enforce the order  a+ b+ b- a-
+// a comparison function used to sort second quantized operators in the order
+//  alpha+ beta+ beta- alpha-
 bool compare_ops(const std::tuple<bool, bool, int>& lhs, const std::tuple<bool, bool, int>& rhs) {
     const auto& l_cre = std::get<0>(lhs);
     const auto& r_cre = std::get<0>(rhs);
@@ -73,9 +76,6 @@ bool compare_ops(const std::tuple<bool, bool, int>& lhs, const std::tuple<bool, 
 }
 
 SingleOperator op_t_to_SingleOperator(const op_t& op) {
-    // Form a single operator object
-    //    SingleOperator sop;
-
     const std::vector<std::tuple<bool, bool, int>>& creation_alpha_orb_vec = op.second;
 
     Determinant cre, ann;
@@ -85,6 +85,7 @@ SingleOperator op_t_to_SingleOperator(const op_t& op) {
     bool is_sorted =
         std::is_sorted(creation_alpha_orb_vec.begin(), creation_alpha_orb_vec.end(), compare_ops);
 
+    // if not sorted, compute the permutation factor
     if (not is_sorted) {
         // We first sort the operators so that they are ordered in the following way
         // [last](alpha cre. ascending) (beta cre. ascending) (beta ann. descending) (alpha ann.
@@ -123,20 +124,51 @@ SingleOperator op_t_to_SingleOperator(const op_t& op) {
     return SingleOperator(factor, cre, ann);
 }
 
-void GeneralOperator::add_operator(const std::vector<op_t>& op_list, double value) {
-    amplitudes_.push_back(value);
-    size_t start = op_list_.size();
-    size_t end = start + op_list.size();
-    op_indices_.push_back(std::make_pair(start, end));
-    // transform each term in the input into a SingleOperator object
-    for (const op_t& op : op_list) {
-        // Form a single operator object
-        op_list_.push_back(op_t_to_SingleOperator(op));
+double parse_sign(const std::string& s) {
+    if (s == "-") {
+        return -1.0;
     }
+    return 1.0;
 }
 
-void GeneralOperator::add_operator2(const std::vector<SingleOperator>& ops, double value) {
-    amplitudes_.push_back(value);
+double parse_factor(const std::string& s) {
+    if (s == "") {
+        return 1.0;
+    }
+    return stod(s);
+}
+
+std::vector<std::tuple<bool, bool, int>> parse_ops(const std::string& s) {
+    // reverse the operator order
+    auto clean_s = s.substr(1, s.size() - 2);
+
+    auto ops_str = split_string(clean_s, " ");
+    std::reverse(ops_str.begin(), ops_str.end());
+
+    std::vector<std::tuple<bool, bool, int>> ops_tuple;
+    for (auto op_str : ops_str) {
+        size_t len = op_str.size();
+        bool creation = op_str[len - 1] == '+' ? true : false;
+        bool alpha = op_str[len - 2] == 'a' ? true : false;
+        int orb = stoi(op_str.substr(0, len - 2));
+        ops_tuple.push_back(std::make_tuple(creation, alpha, orb));
+    }
+    return ops_tuple;
+}
+// void GeneralOperator::add_operator(const std::vector<op_t>& op_list, double value) {
+//    coefficients_.push_back(value);
+//    size_t start = op_list_.size();
+//    size_t end = start + op_list.size();
+//    op_indices_.push_back(std::make_pair(start, end));
+//    // transform each term in the input into a SingleOperator object
+//    for (const op_t& op : op_list) {
+//        // Form a single operator object
+//        op_list_.push_back(op_t_to_SingleOperator(op));
+//    }
+//}
+
+void GeneralOperator::add_term(const std::vector<SingleOperator>& ops, double value) {
+    coefficients_.push_back(value);
     size_t start = op_list_.size();
     size_t end = start + ops.size();
     op_indices_.push_back(std::make_pair(start, end));
@@ -146,16 +178,41 @@ void GeneralOperator::add_operator2(const std::vector<SingleOperator>& ops, doub
     }
 }
 
-std::pair<std::vector<SingleOperator>, double> GeneralOperator::get_operator(size_t n) {
+void GeneralOperator::add_term_from_str(std::string str, double value) {
+    std::vector<SingleOperator> ops;
+
+    // the regex to parse the entries
+    std::regex re("\\s?([\\+\\-])?\\s*(\\d*\\.?\\d*)?\\s*\\*?\\s*(\\[[0-9ab\\+\\-\\s]*\\])");
+    // the match object
+    std::smatch m;
+
+    // here we match all the terms that look like +/- factor [<orb><a/b><+/-> ...]
+    // in the middle of this code we parse the operator part and store it as a
+    // std::vector<std::tuple<bool, bool, int>>  (in parsed_ops)
+    // then we call op_t_to_SingleOperator to get a SingleOperator object
+    while (std::regex_search(str, m, re)) {
+        if (m.ready()) {
+            double sign = parse_sign(m[1]);
+            double factor = parse_factor(m[2]);
+            auto op = parse_ops(m[3]);
+            op_t parsed_ops = std::make_pair(sign * factor, op);
+            ops.push_back(op_t_to_SingleOperator(parsed_ops));
+        }
+        str = m.suffix().str();
+    }
+    add_term(ops, value);
+}
+
+std::pair<std::vector<SingleOperator>, double> GeneralOperator::get_term(size_t n) {
     size_t begin = op_indices_[n].first;
     size_t end = op_indices_[n].second;
     std::vector<SingleOperator> ops(op_list_.begin() + begin, op_list_.begin() + end);
-    return std::make_pair(ops, amplitudes_[n]);
+    return std::make_pair(ops, coefficients_[n]);
 }
 
-void GeneralOperator::pop_operator() {
-    if (nops() > 0) {
-        amplitudes_.pop_back();
+void GeneralOperator::pop_term() {
+    if (nterms() > 0) {
+        coefficients_.pop_back();
         auto start_end = op_indices_.back();
         op_indices_.pop_back();
         size_t start = start_end.first;
@@ -168,16 +225,19 @@ void GeneralOperator::pop_operator() {
 
 std::vector<std::string> GeneralOperator::str() {
     std::vector<std::string> result;
-    size_t nops = amplitudes_.size();
-    for (size_t n = 0; n < nops; n++) {
-        std::string s = std::to_string(amplitudes_[n]) + " * ( ";
+    size_t nterms = coefficients_.size();
+    for (size_t n = 0; n < nterms; n++) {
+        std::string s = std::to_string(coefficients_[n]) + " * ( ";
         size_t begin = op_indices_[n].first;
         size_t end = op_indices_[n].second;
         for (size_t j = begin; j < end; j++) {
             const double factor = op_list_[j].factor();
             const auto& ann = op_list_[j].ann();
             const auto& cre = op_list_[j].cre();
-            s += (j == begin ? "" : " + ") + std::to_string(factor) + " * [ ";
+            if (j != begin) {
+                s += (factor < 0.0) ? " " : " +";
+            }
+            s += std::to_string(factor) + " * [ ";
             auto acre = cre.get_alfa_occ(cre.norb());
             auto bcre = cre.get_beta_occ(cre.norb());
             auto aann = ann.get_alfa_occ(ann.norb());
@@ -239,16 +299,20 @@ void GeneralOperator::reset_timing() {
     ops_det_visit = 0;
 }
 
-det_hash<double> apply_operator(GeneralOperator& gop, const det_hash<double>& state) {
-    det_hash<double> new_state;
-    const auto& amplitudes = gop.amplitudes();
+StateVector::StateVector() { std::cout << "Created a StateVector object" << std::endl; }
+
+StateVector::StateVector(const det_hash<double>& state_vec) : state_vec_(state_vec) {}
+
+StateVector apply_operator(GeneralOperator& gop, const StateVector& state) {
+    StateVector new_state;
+    const auto& amplitudes = gop.coefficients();
     const auto& op_indices = gop.op_indices();
     const auto& op_list = gop.op_list();
-    size_t nops = amplitudes.size();
+    size_t nterms = amplitudes.size();
     Determinant d;
     for (const auto& det_c : state) {
         const double c = det_c.second;
-        for (size_t n = 0; n < nops; n++) {
+        for (size_t n = 0; n < nterms; n++) {
             size_t begin = op_indices[n].first;
             size_t end = op_indices[n].second;
             for (size_t j = begin; j < end; j++) {
@@ -263,10 +327,10 @@ det_hash<double> apply_operator(GeneralOperator& gop, const det_hash<double>& st
     return new_state;
 }
 
-det_hash<double> apply_lin_op(det_hash<double> state, size_t n, const GeneralOperator& gop) {
-    det_hash<double> new_state;
+StateVector apply_lin_op(StateVector state, size_t n, const GeneralOperator& gop) {
+    StateVector new_state;
 
-    const auto& amplitudes = gop.amplitudes();
+    const auto& amplitudes = gop.coefficients();
     const auto& op_indices = gop.op_indices();
     const auto& op_list = gop.op_list();
     const size_t begin = op_indices[n].first;
@@ -285,15 +349,15 @@ det_hash<double> apply_lin_op(det_hash<double> state, size_t n, const GeneralOpe
     return new_state;
 }
 
-det_hash<double> apply_exp_op(const Determinant& d, size_t n, const GeneralOperator& gop) {
-    det_hash<double> state;
+StateVector apply_exp_op(const Determinant& d, size_t n, const GeneralOperator& gop) {
+    StateVector state;
     state[d] = 1.0;
-    det_hash<double> exp_state = state;
+    StateVector exp_state = state;
     double factor = 1.0;
     int maxk = 16;
     for (int k = 1; k <= maxk; k++) {
         factor = factor / static_cast<double>(k);
-        det_hash<double> new_state = apply_lin_op(state, n, gop);
+        StateVector new_state = apply_lin_op(state, n, gop);
         if (new_state.size() == 0)
             break;
         for (const auto& det_c : new_state) {
@@ -304,17 +368,17 @@ det_hash<double> apply_exp_op(const Determinant& d, size_t n, const GeneralOpera
     return exp_state;
 }
 
-det_hash<double> apply_exp_ah_factorized(GeneralOperator& gop, const det_hash<double>& state0) {
-    det_hash<double> state(state0);
-    det_hash<double> new_state;
-    size_t nops = gop.nops();
+StateVector apply_exp_ah_factorized(GeneralOperator& gop, const StateVector& state0) {
+    StateVector state(state0);
+    StateVector new_state;
+    size_t nterms = gop.nterms();
     Determinant d;
-    for (size_t n = 0; n < nops; n++) {
+    for (size_t n = 0; n < nterms; n++) {
         new_state.clear();
         for (const auto& det_c : state) {
             const double c = det_c.second;
             d = det_c.first;
-            det_hash<double> terms = apply_exp_op(d, n, gop);
+            StateVector terms = apply_exp_op(d, n, gop);
             for (const auto& d_c : terms) {
                 new_state[d_c.first] += d_c.second * c;
             }
@@ -324,17 +388,17 @@ det_hash<double> apply_exp_ah_factorized(GeneralOperator& gop, const det_hash<do
     return new_state;
 }
 
-det_hash<double> apply_operator_fast(GeneralOperator& gop, const det_hash<double>& state0,
+StateVector apply_operator_fast(GeneralOperator& gop, const StateVector& state0,
                                      double screen_thresh) {
     local_timer t;
-    const auto& amplitudes = gop.amplitudes();
+    const auto& amplitudes = gop.coefficients();
     const auto& op_indices = gop.op_indices();
     const auto& op_list = gop.op_list();
 
-    det_hash<double> new_terms;
+    StateVector new_terms;
 
     // loop over all the operators
-    for (size_t n = 0, nops = gop.nops(); n < nops; n++) {
+    for (size_t n = 0, nterms = gop.nterms(); n < nterms; n++) {
         const size_t begin = op_indices[n].first;
         const size_t end = op_indices[n].second;
         if (amplitudes[n] == 0.0)
@@ -382,7 +446,7 @@ det_hash<double> apply_operator_fast(GeneralOperator& gop, const det_hash<double
     return new_terms;
 }
 
-det_hash<double> apply_operator_fast2(GeneralOperator& gop, const det_hash<double>& state0,
+StateVector apply_operator_fast2(GeneralOperator& gop, const StateVector& state0,
                                       double screen_thresh) {
     // make a copy of the state
     std::vector<std::tuple<double, double, Determinant>> state_sorted(state0.size());
@@ -396,18 +460,18 @@ det_hash<double> apply_operator_fast2(GeneralOperator& gop, const det_hash<doubl
     std::sort(state_sorted.rbegin(), state_sorted.rend());
 
     local_timer t;
-    const auto& amplitudes = gop.amplitudes();
+    const auto& amplitudes = gop.coefficients();
     const auto& op_indices = gop.op_indices();
     const auto& op_list = gop.op_list();
 
-    det_hash<double> new_terms;
+    StateVector new_terms;
 
     Determinant d;
     double c;
     double absc;
 
     // loop over all the operators
-    for (size_t n = 0, nops = gop.nops(); n < nops; n++) {
+    for (size_t n = 0, nterms = gop.nterms(); n < nterms; n++) {
         const size_t begin = op_indices[n].first;
         const size_t end = op_indices[n].second;
         if (amplitudes[n] == 0.0)
@@ -442,17 +506,17 @@ det_hash<double> apply_operator_fast2(GeneralOperator& gop, const det_hash<doubl
     return new_terms;
 }
 
-det_hash<double> apply_exp_operator_fast(GeneralOperator& gop, const det_hash<double>& state0,
+StateVector apply_exp_operator_fast(GeneralOperator& gop, const StateVector& state0,
                                          double scaling_factor, int maxk, double screen_thresh) {
     double convergence_threshold_ = screen_thresh;
 
     local_timer t;
-    det_hash<double> exp_state(state0);
-    det_hash<double> state(state0);
+    StateVector exp_state(state0);
+    StateVector state(state0);
     double factor = 1.0;
     for (int k = 1; k <= maxk; k++) {
         factor *= scaling_factor / static_cast<double>(k);
-        det_hash<double> new_terms = apply_operator_fast(gop, state, screen_thresh);
+        StateVector new_terms = apply_operator_fast(gop, state, screen_thresh);
         double norm = 0.0;
         double inf_norm = 0.0;
         for (const auto& det_c : new_terms) {
@@ -468,17 +532,17 @@ det_hash<double> apply_exp_operator_fast(GeneralOperator& gop, const det_hash<do
     return exp_state;
 }
 
-det_hash<double> apply_exp_operator_fast2(GeneralOperator& gop, const det_hash<double>& state0,
+StateVector apply_exp_operator_fast2(GeneralOperator& gop, const StateVector& state0,
                                           double scaling_factor, int maxk, double screen_thresh) {
     double convergence_threshold_ = screen_thresh;
 
     local_timer t;
-    det_hash<double> exp_state(state0);
-    det_hash<double> state(state0);
+    StateVector exp_state(state0);
+    StateVector state(state0);
     double factor = 1.0;
     for (int k = 1; k <= maxk; k++) {
         factor *= scaling_factor / static_cast<double>(k);
-        det_hash<double> new_terms = apply_operator_fast2(gop, state, screen_thresh);
+        StateVector new_terms = apply_operator_fast2(gop, state, screen_thresh);
         double norm = 0.0;
         double inf_norm = 0.0;
         for (const auto& det_c : new_terms) {
@@ -496,7 +560,7 @@ det_hash<double> apply_exp_operator_fast2(GeneralOperator& gop, const det_hash<d
 
 #define DEBUG_EXP_ALGORITHM 0
 void apply_exp_op_fast(const Determinant& d, Determinant& new_d, const Determinant& cre,
-                       const Determinant& ann, double amp, double c, det_hash<double>& new_terms) {
+                       const Determinant& ann, double amp, double c, StateVector& new_terms) {
 #if DEBUG_EXP_ALGORITHM
     std::cout << "\nApplying: " << amp << "\n"
               << str(cre, 16) << "+\n"
@@ -515,16 +579,16 @@ void apply_exp_op_fast(const Determinant& d, Determinant& new_d, const Determina
     }
 }
 
-det_hash<double> apply_exp_ah_factorized_fast(GeneralOperator& gop, const det_hash<double>& state0,
+StateVector apply_exp_ah_factorized_fast(GeneralOperator& gop, const StateVector& state0,
                                               bool inverse) {
     local_timer t;
-    const auto& amplitudes = gop.amplitudes();
+    const auto& amplitudes = gop.coefficients();
     const auto& op_indices = gop.op_indices();
     const auto& op_list = gop.op_list();
 
     // initialize a state object
-    det_hash<double> state(state0);
-    det_hash<double> new_terms;
+    StateVector state(state0);
+    StateVector new_terms;
 
     //    // create a vector of determinants (for fast comparison)
     //    std::vector<Determinant> dets;
@@ -532,8 +596,8 @@ det_hash<double> apply_exp_ah_factorized_fast(GeneralOperator& gop, const det_ha
     //        dets.push_back(det_c.first);
     //    }
 
-    for (size_t m = 0, nops = gop.nops(); m < nops; m++) {
-        size_t n = inverse ? nops - m - 1 : m;
+    for (size_t m = 0, nterms = gop.nterms(); m < nterms; m++) {
+        size_t n = inverse ? nterms - m - 1 : m;
 
         // zero the new terms
         new_terms.clear();
@@ -587,12 +651,12 @@ det_hash<double> apply_exp_ah_factorized_fast(GeneralOperator& gop, const det_ha
     return state;
 }
 
-det_hash<double> apply_hamiltonian(std::shared_ptr<ActiveSpaceIntegrals> as_ints,
-                                   const det_hash<double>& state0, double screen_thresh) {
+StateVector apply_hamiltonian(std::shared_ptr<ActiveSpaceIntegrals> as_ints,
+                                   const StateVector& state0, double screen_thresh) {
     local_timer t;
 
     // initialize a state object
-    det_hash<double> state;
+    StateVector state;
 
     size_t nmo = as_ints->nmo();
 
@@ -727,10 +791,10 @@ det_hash<double> apply_hamiltonian(std::shared_ptr<ActiveSpaceIntegrals> as_ints
     return state;
 }
 
-std::vector<double> get_projection(GeneralOperator& gop, const det_hash<double>& ref,
-                                   const det_hash<double>& state0) {
+std::vector<double> get_projection(GeneralOperator& gop, const StateVector& ref,
+                                   const StateVector& state0) {
     local_timer t;
-    std::vector<double> proj(gop.nops(), 0.0);
+    std::vector<double> proj(gop.nterms(), 0.0);
 
     const auto& op_indices = gop.op_indices();
     const auto& op_list = gop.op_list();
@@ -738,7 +802,7 @@ std::vector<double> get_projection(GeneralOperator& gop, const det_hash<double>&
     Determinant d;
 
     // loop over all the operators
-    for (size_t n = 0, nops = gop.nops(); n < nops; n++) {
+    for (size_t n = 0, nterms = gop.nterms(); n < nterms; n++) {
         double value = 0.0;
 
         // apply the operator op_n
@@ -764,7 +828,7 @@ std::vector<double> get_projection(GeneralOperator& gop, const det_hash<double>&
     return proj;
 }
 
-double energy_expectation_value(det_hash<double>& left_state, det_hash<double>& right_state,
+double energy_expectation_value(StateVector& left_state, StateVector& right_state,
                                 std::shared_ptr<ActiveSpaceIntegrals> as_ints) {
     local_timer t;
     /// Return nuclear repulsion energy
@@ -790,8 +854,8 @@ double energy_expectation_value(det_hash<double>& left_state, det_hash<double>& 
     return E;
 }
 
-det_hash<double> apply_number_projector(int na, int nb, det_hash<double>& state) {
-    det_hash<double> new_state;
+StateVector apply_number_projector(int na, int nb, StateVector& state) {
+    StateVector new_state;
     for (const auto& det_c : state) {
         if ((det_c.first.count_alfa() == na) and (det_c.first.count_beta() == nb) and
             (std::fabs(det_c.second) > 1.0e-12)) {
@@ -801,7 +865,7 @@ det_hash<double> apply_number_projector(int na, int nb, det_hash<double>& state)
     return new_state;
 }
 
-double overlap(det_hash<double>& left_state, det_hash<double>& right_state) {
+double overlap(StateVector& left_state, StateVector& right_state) {
     double overlap = 0.0;
     for (const auto& det_c_r : right_state) {
         auto it = left_state.find(det_c_r.first);
@@ -811,55 +875,4 @@ double overlap(det_hash<double>& left_state, det_hash<double>& right_state) {
     }
     return overlap;
 }
-
-// std::vector<SingleOperator> to_gen_op(const std::string& s)
-//{
-//    std::vector<SingleOperator> terms;
-//    // '<something>[1b+ 0b+] +-<something>[1b+ 0b+]'
-//    std::regex
-//    word_regex("'\\s?([\\+\\-])?\\s*(\\d*\\.?\\d*)?\\s*\\*?\\s*(\\[[0-9ab\\+\\-\\s]*\\])'");
-
-//    smatch res;
-//    string str = "first second third forth";
-
-//    while (regex_search(str, res, exp)) {
-//        cout << res[0] << endl;
-//        str = res.suffix();
-//    }
-
-//    m = re.findall(match_op,str)
-//    if m:
-//        for group in m:
-//            sign = parse_sign(group[0])
-//            factor = parse_factor(group[1])
-//            ops = parse_ops(group[2])
-//            terms.append((sign * factor,ops))
-//    return terms
-
-//    }
-
-////    def parse_sign(s):
-////    if s == '' or s == '+':
-////        return 1.0
-////    if s == '-':
-////        return -1.0
-////    print(f'There was an error parsing the sign {s}')
-
-////def parse_factor(s):
-////    if s == '':
-////        return 1.0
-////    return(float(s))
-
-////def parse_ops(s):
-////    ops = []
-////    # we reverse the operator order
-////    for op in s[1:-1].split(' ')[::-1]:
-////        creation = True if op[-1] == '+' else False
-////        alpha = True if op[-2] == 'a' else False
-////        orb = int(op[0:-2])
-////        ops.append((creation,alpha,orb))
-////    return ops
-
-//}
-
 } // namespace forte

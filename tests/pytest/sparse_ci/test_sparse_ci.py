@@ -101,3 +101,5 @@ def test_sparse_ci():
 
     # Clean up forte (necessary)
     forte.cleanup()
+
+test_sparse_ci()

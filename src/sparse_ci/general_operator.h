@@ -61,26 +61,67 @@ class SingleOperator {
     Determinant ann_;
 };
 
-// used to represent a combination of:
-//    creation  : bool (true = creation, false = annihilation)
-//    alpha     : bool (true = alpha, false = beta)
-//    orb       : int  (the index of the mo)
+/// This function converts a string to a single operator
+std::vector<SingleOperator> string_to_op_term(const std::string& str);
+
+/**
+ * A data structure used to represent a second quantized operator string like
+ *
+ *  factor * ... op(2) op(1) op(0),
+ *
+ * like, for example
+ *
+ *  0.1 * a^\dagger_2a a^\dagger_3b a_1b a_0a
+ *
+ * This operator is stored as
+ *
+ *  (0.1, [(false,true,0),(false,false,1),(true,false,3),(true,true,2)])
+ *
+ * The data format is
+ *
+ *  (factor, [(creation_0, alpha_0, orb_0), (creation_1, alpha_1, orb_1), ...])
+ *
+ * where the operators are arranged as
+ *
+ * where
+ *  creation_i  : bool (true = creation, false = annihilation)
+ *  alpha_i     : bool (true = alpha, false = beta)
+ *  orb_i       : int  (the index of the mo)
+ *
+ */
 using op_t = std::pair<double, std::vector<std::tuple<bool, bool, int>>>;
 
 /**
  * @brief The GeneralOperator class
- *        Base class for generic second quantized operators
+ * Base class for generic second quantized operators.
+ *
+ * Each term is represented as a linear combination of second quantized
+ * operator strings times a coefficient.
+ *
+ * For example:
+ *   0.1 * {[2a+ 0a-] + 2.0 [2b+ 0b-]} - 0.5 * {2.0 [2a+ 0a-] + [2b+ 0b-]} + ...
+ *              Term 0                                      Term 1
  */
 class GeneralOperator {
   public:
-    std::pair<std::vector<SingleOperator>, double> get_operator(size_t n);
-    void add_operator(const std::vector<op_t>& op_list, double value = 0.0);
-    void add_operator2(const std::vector<SingleOperator>& ops, double value = 0.0);
-    void pop_operator();
-    size_t nops() const { return amplitudes_.size(); }
-    const std::vector<double>& amplitudes() const { return amplitudes_; }
-    void set_amplitudes(std::vector<double>& amplitudes) { amplitudes_ = amplitudes; }
-    void set_amplitude(double value, size_t n) { amplitudes_[n] = value; }
+    /// add a term to this operator
+    void add_term(const std::vector<SingleOperator>& ops, double value = 0.0);
+    /// add a term to this operator
+    void add_term_from_str(std::string str, double value);
+    /// remove the last term from this operator
+    void pop_term();
+    /// @return a term
+    std::pair<std::vector<SingleOperator>, double> get_term(size_t n);
+    /// @return the number of terms
+    size_t nterms() const { return coefficients_.size(); }
+
+    /// @return the coefficients associated with each term
+    const std::vector<double>& coefficients() const { return coefficients_; }
+    /// set the value of the coefficients
+    void set_coefficients(std::vector<double>& values) { coefficients_ = values; }
+    /// set the value of one coefficient
+    void set_coefficient(double value, size_t n) { coefficients_[n] = value; }
+
     const std::vector<std::pair<size_t, size_t>>& op_indices() const { return op_indices_; }
     const std::vector<SingleOperator>& op_list() const { return op_list_; }
     std::vector<std::string> str();
@@ -88,40 +129,65 @@ class GeneralOperator {
     static void reset_timing();
 
   private:
-    std::vector<double> amplitudes_;
+    /// coefficients associate with each operator
+    std::vector<double> coefficients_;
+    /// beginning and end of the SingleOperator associated with a given amplitude
     std::vector<std::pair<size_t, size_t>> op_indices_;
+    /// a vector of SingleOperator objects
     std::vector<SingleOperator> op_list_;
 };
 
-det_hash<double> apply_operator(GeneralOperator& gop, const det_hash<double>& state);
-det_hash<double> apply_exp_ah_factorized(GeneralOperator& gop, const det_hash<double>& state);
+class StateVector {
+  public:
+    StateVector();
+    StateVector(const det_hash<double>& state_vec);
+    det_hash<double>& map() { return state_vec_; }
 
-det_hash<double> apply_operator_fast(GeneralOperator& gop, const det_hash<double>& state0,
+    auto size() const { return state_vec_.size(); }
+    void clear() { state_vec_.clear(); }
+    auto find(const Determinant& d) const { return state_vec_.find(d); }
+
+    auto begin() { return state_vec_.begin(); }
+    auto end() { return state_vec_.end(); }
+
+    auto begin() const { return state_vec_.begin(); }
+    auto end() const { return state_vec_.end(); }
+
+    double& operator[](const Determinant& d) { return state_vec_[d]; }
+
+  private:
+    det_hash<double> state_vec_;
+};
+
+StateVector apply_operator(GeneralOperator& gop, const StateVector& state);
+StateVector apply_exp_ah_factorized(GeneralOperator& gop, const StateVector& state);
+
+StateVector apply_operator_fast(GeneralOperator& gop, const StateVector& state0,
+                                double screen_thresh = 1.0e-12);
+StateVector apply_exp_operator_fast(GeneralOperator& gop, const StateVector& state0,
+                                    double scaling_factor = 1.0, int maxk = 20,
+                                    double screen_thresh = 1.0e-12);
+
+StateVector apply_operator_fast2(GeneralOperator& gop, const StateVector& state0,
+                                 double screen_thresh = 1.0e-12);
+StateVector apply_exp_operator_fast2(GeneralOperator& gop, const StateVector& state0,
+                                     double scaling_factor = 1.0, int maxk = 20,
                                      double screen_thresh = 1.0e-12);
-det_hash<double> apply_exp_operator_fast(GeneralOperator& gop, const det_hash<double>& state0,
-                                         double scaling_factor = 1.0, int maxk = 20,
-                                         double screen_thresh = 1.0e-12);
 
-det_hash<double> apply_operator_fast2(GeneralOperator& gop, const det_hash<double>& state0,
-                                      double screen_thresh = 1.0e-12);
-det_hash<double> apply_exp_operator_fast2(GeneralOperator& gop, const det_hash<double>& state0,
-                                          double scaling_factor = 1.0, int maxk = 20,
-                                          double screen_thresh = 1.0e-12);
-
-det_hash<double> apply_exp_ah_factorized_fast(GeneralOperator& gop, const det_hash<double>& state0,
-                                              bool inverse = false);
-double energy_expectation_value(det_hash<double>& left_state, det_hash<double>& right_state,
+StateVector apply_exp_ah_factorized_fast(GeneralOperator& gop, const StateVector& state0,
+                                         bool inverse = false);
+double energy_expectation_value(StateVector& left_state, StateVector& right_state,
                                 std::shared_ptr<ActiveSpaceIntegrals> as_ints);
-det_hash<double> apply_number_projector(int na, int nb, det_hash<double>& state);
+StateVector apply_number_projector(int na, int nb, StateVector& state);
 
-det_hash<double> apply_hamiltonian(std::shared_ptr<ActiveSpaceIntegrals> as_ints,
-                                   const det_hash<double>& state0, double screen_thresh = 1.0e-12);
+StateVector apply_hamiltonian(std::shared_ptr<ActiveSpaceIntegrals> as_ints,
+                              const StateVector& state0, double screen_thresh = 1.0e-12);
 
 /// Compute the projection  <state0 | op | ref>, for each operator op in gop
-std::vector<double> get_projection(GeneralOperator& gop, const det_hash<double>& ref,
-                                   const det_hash<double>& state0);
+std::vector<double> get_projection(GeneralOperator& gop, const StateVector& ref,
+                                   const StateVector& state0);
 
-double overlap(det_hash<double>& left_state, det_hash<double>& right_state);
+double overlap(StateVector& left_state, StateVector& right_state);
 
 } // namespace forte
 
