@@ -60,9 +60,11 @@
 #include "mrdsrg-spin-adapted/sadsrg.h"
 
 #include "sparse_ci/determinant.h"
-#include "sparse_ci/general_operator.h"
 #include "post_process/spin_corr.h"
 #include "sparse_ci/determinant_hashvector.h"
+#include "sparse_ci/sparse_state_vector.h"
+#include "sparse_ci/sparse_operator.h"
+#include "sparse_ci/general_operator.h"
 
 namespace py = pybind11;
 using namespace pybind11::literals;
@@ -186,7 +188,12 @@ void export_Determinant(py::module& m) {
 
     py::class_<GeneralOperator>(m, "GeneralOperator")
         .def(py::init<>())
-        .def("add_term", &GeneralOperator::add_term)
+        .def("add_term",
+             py::overload_cast<const std::vector<op_t>&, double>(&GeneralOperator::add_term),
+             "op_list"_a, "value"_a = 0.0)
+        .def("add_term",
+             py::overload_cast<const std::vector<SQOperator>&, double>(&GeneralOperator::add_term),
+             "op_list"_a, "value"_a = 0.0)
         .def("add_term_from_str", &GeneralOperator::add_term_from_str)
         .def("pop_term", &GeneralOperator::pop_term)
         .def("get_term", &GeneralOperator::get_term)
@@ -197,13 +204,33 @@ void export_Determinant(py::module& m) {
         .def("op_indices", &GeneralOperator::op_indices)
         .def("op_list", &GeneralOperator::op_list)
         .def("str", &GeneralOperator::str)
+        .def("latex", &GeneralOperator::latex)
         .def("timing", &GeneralOperator::timing)
         .def("reset_timing", &GeneralOperator::reset_timing);
+
+    py::class_<SparseOperator>(m, "SparseOperator")
+        .def(py::init<>())
+        .def("add_term",
+             py::overload_cast<const std::vector<std::tuple<bool, bool, int>>&, double>(
+                 &SparseOperator::add_term),
+             "op_list"_a, "value"_a = 0.0)
+        .def("add_term", py::overload_cast<const SQOperator&>(&SparseOperator::add_term))
+        .def("add_term_from_str", &SparseOperator::add_term_from_str)
+        .def("pop_term", &SparseOperator::pop_term)
+        .def("get_term", &SparseOperator::get_term)
+        .def("nterms", &SparseOperator::nterms)
+        .def("coefficients", &SparseOperator::coefficients)
+        .def("set_coefficients", &SparseOperator::set_coefficients)
+        .def("set_coefficient", &SparseOperator::set_coefficient)
+        .def("op_list", &SparseOperator::op_list)
+        .def("str", &SparseOperator::str)
+        .def("latex", &SparseOperator::latex);
 
     py::class_<StateVector>(m, "StateVector")
         .def(py::init<>())
         .def(py::init<const det_hash<double>&>())
         .def("map", &StateVector::map)
+        .def("str", &StateVector::str)
         .def("__getitem__", [](StateVector& v, const Determinant& d) { return v[d]; })
         .def("__contains__", [](StateVector& v, const Determinant& d) { return v.map().count(d); });
 
@@ -228,10 +255,10 @@ void export_Determinant(py::module& m) {
     m.def("hamiltonian_matrix_element", &hamiltonian_matrix_element);
     m.def("overlap", &overlap);
 
-    py::class_<SingleOperator>(m, "SingleOperator")
-        .def("factor", &SingleOperator::factor)
-        .def("cre", &SingleOperator::cre)
-        .def("ann", &SingleOperator::ann);
+    py::class_<SQOperator>(m, "SQOperator")
+        .def("factor", &SQOperator::factor)
+        .def("cre", &SQOperator::cre)
+        .def("ann", &SQOperator::ann);
 
     m.def("spin2", &spin2<Determinant::nbits>);
 }

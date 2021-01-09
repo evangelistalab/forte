@@ -35,78 +35,32 @@
 #include "helpers/string_algorithms.h"
 
 #include "general_operator.h"
+#include "sparse_operator.h"
 
 namespace forte {
 
-SingleOperator::SingleOperator(double factor, const Determinant& cre, const Determinant& ann)
-    : factor_(factor), cre_(cre), ann_(ann) {}
-
-double SingleOperator::factor() const { return factor_; }
-const Determinant& SingleOperator::cre() const { return cre_; }
-const Determinant& SingleOperator::ann() const { return ann_; }
-
-std::tuple<bool, bool, int> flip_spin(const std::tuple<bool, bool, int>& t) {
-    return std::make_tuple(std::get<0>(t), not std::get<1>(t), std::get<2>(t));
+void GeneralOperator::add_term(const std::vector<std::pair<double, op_tuple_t>>& op_list,
+                               double value) {
+    coefficients_.push_back(value);
+    size_t start = op_list_.size();
+    size_t end = start + op_list.size();
+    op_indices_.push_back(std::make_pair(start, end));
+    // transform each term in the input into a SQOperator object
+    for (const std::pair<double, op_tuple_t>& factor_op : op_list) {
+        // Form a single operator object
+        op_list_.push_back(SQOperator(factor_op.second, factor_op.first));
+    }
 }
 
-// a comparison function used to sort second quantized operators in the order
-//  alpha+ beta+ beta- alpha-
-bool compare_ops(const std::tuple<bool, bool, int>& lhs, const std::tuple<bool, bool, int>& rhs) {
-    const auto& l_cre = std::get<0>(lhs);
-    const auto& r_cre = std::get<0>(rhs);
-    if ((l_cre == true) and (r_cre == true)) {
-        return flip_spin(lhs) > flip_spin(rhs);
+void GeneralOperator::add_term(const std::vector<SQOperator>& ops, double value) {
+    coefficients_.push_back(value);
+    size_t start = op_list_.size();
+    size_t end = start + ops.size();
+    op_indices_.push_back(std::make_pair(start, end));
+    // transform each term in the input into a SQOperator object
+    for (const SQOperator& op : ops) {
+        op_list_.push_back(op);
     }
-    return flip_spin(lhs) < flip_spin(rhs);
-}
-
-SingleOperator op_t_to_SingleOperator(const op_t& op) {
-    const std::vector<std::tuple<bool, bool, int>>& creation_alpha_orb_vec = op.second;
-
-    Determinant cre, ann;
-    // set the factor including the parity of the permutation
-    double factor = op.first;
-
-    bool is_sorted =
-        std::is_sorted(creation_alpha_orb_vec.begin(), creation_alpha_orb_vec.end(), compare_ops);
-
-    // if not sorted, compute the permutation factor
-    if (not is_sorted) {
-        // We first sort the operators so that they are ordered in the following way
-        // [last](alpha cre. ascending) (beta cre. ascending) (beta ann. descending) (alpha ann.
-        // descending)[first] and keep track of the sign. We sort the operators using a set of
-        // auxiliary indices so that we can keep track of the permutation of the operators and their
-        // sign
-        std::vector<size_t> idx(creation_alpha_orb_vec.size());
-        std::iota(idx.begin(), idx.end(), 0);
-        std::stable_sort(idx.begin(), idx.end(), [&creation_alpha_orb_vec](size_t i1, size_t i2) {
-            return compare_ops(creation_alpha_orb_vec[i1], creation_alpha_orb_vec[i2]);
-        });
-        auto parity = permutation_parity(idx);
-        // set the factor including the parity of the permutation
-        factor *= 1.0 - 2.0 * parity;
-    }
-
-    // set the bitarray part of the operator (the order does not matter)
-    for (auto creation_alpha_orb : creation_alpha_orb_vec) {
-        bool creation = std::get<0>(creation_alpha_orb);
-        bool alpha = std::get<1>(creation_alpha_orb);
-        int orb = std::get<2>(creation_alpha_orb);
-        if (creation) {
-            if (alpha) {
-                cre.set_alfa_bit(orb, true);
-            } else {
-                cre.set_beta_bit(orb, true);
-            }
-        } else {
-            if (alpha) {
-                ann.set_alfa_bit(orb, true);
-            } else {
-                ann.set_beta_bit(orb, true);
-            }
-        }
-    }
-    return SingleOperator(factor, cre, ann);
 }
 
 double parse_sign(const std::string& s) {
@@ -130,41 +84,19 @@ std::vector<std::tuple<bool, bool, int>> parse_ops(const std::string& s) {
     auto ops_str = split_string(clean_s, " ");
     std::reverse(ops_str.begin(), ops_str.end());
 
-    std::vector<std::tuple<bool, bool, int>> ops_tuple;
+    std::vector<std::tuple<bool, bool, int>> ops_vec_tuple;
     for (auto op_str : ops_str) {
         size_t len = op_str.size();
         bool creation = op_str[len - 1] == '+' ? true : false;
         bool alpha = op_str[len - 2] == 'a' ? true : false;
         int orb = stoi(op_str.substr(0, len - 2));
-        ops_tuple.push_back(std::make_tuple(creation, alpha, orb));
+        ops_vec_tuple.push_back(std::make_tuple(creation, alpha, orb));
     }
-    return ops_tuple;
-}
-// void GeneralOperator::add_operator(const std::vector<op_t>& op_list, double value) {
-//    coefficients_.push_back(value);
-//    size_t start = op_list_.size();
-//    size_t end = start + op_list.size();
-//    op_indices_.push_back(std::make_pair(start, end));
-//    // transform each term in the input into a SingleOperator object
-//    for (const op_t& op : op_list) {
-//        // Form a single operator object
-//        op_list_.push_back(op_t_to_SingleOperator(op));
-//    }
-//}
-
-void GeneralOperator::add_term(const std::vector<SingleOperator>& ops, double value) {
-    coefficients_.push_back(value);
-    size_t start = op_list_.size();
-    size_t end = start + ops.size();
-    op_indices_.push_back(std::make_pair(start, end));
-    // transform each term in the input into a SingleOperator object
-    for (const SingleOperator& op : ops) {
-        op_list_.push_back(op);
-    }
+    return ops_vec_tuple;
 }
 
 void GeneralOperator::add_term_from_str(std::string str, double value) {
-    std::vector<SingleOperator> ops;
+    std::vector<SQOperator> ops;
 
     // the regex to parse the entries
     std::regex re("\\s?([\\+\\-])?\\s*(\\d*\\.?\\d*)?\\s*\\*?\\s*(\\[[0-9ab\\+\\-\\s]*\\])");
@@ -174,24 +106,23 @@ void GeneralOperator::add_term_from_str(std::string str, double value) {
     // here we match all the terms that look like +/- factor [<orb><a/b><+/-> ...]
     // in the middle of this code we parse the operator part and store it as a
     // std::vector<std::tuple<bool, bool, int>>  (in parsed_ops)
-    // then we call op_t_to_SingleOperator to get a SingleOperator object
+    // then we call op_t_to_SQOperator to get a SQOperator object
     while (std::regex_search(str, m, re)) {
         if (m.ready()) {
             double sign = parse_sign(m[1]);
             double factor = parse_factor(m[2]);
             auto op = parse_ops(m[3]);
-            op_t parsed_ops = std::make_pair(sign * factor, op);
-            ops.push_back(op_t_to_SingleOperator(parsed_ops));
+            ops.push_back(SQOperator(op, sign * factor));
         }
         str = m.suffix().str();
     }
     add_term(ops, value);
 }
 
-std::pair<std::vector<SingleOperator>, double> GeneralOperator::get_term(size_t n) {
+std::pair<std::vector<SQOperator>, double> GeneralOperator::get_term(size_t n) {
     size_t begin = op_indices_[n].first;
     size_t end = op_indices_[n].second;
-    std::vector<SingleOperator> ops(op_list_.begin() + begin, op_list_.begin() + end);
+    std::vector<SQOperator> ops(op_list_.begin() + begin, op_list_.begin() + end);
     return std::make_pair(ops, coefficients_[n]);
 }
 
@@ -208,7 +139,7 @@ void GeneralOperator::pop_term() {
     }
 }
 
-std::vector<std::string> GeneralOperator::str() {
+std::vector<std::string> GeneralOperator::str() const {
     std::vector<std::string> result;
     size_t nterms = coefficients_.size();
     for (size_t n = 0; n < nterms; n++) {
@@ -249,9 +180,76 @@ std::vector<std::string> GeneralOperator::str() {
     return result;
 }
 
-StateVector::StateVector() { /* std::cout << "Created a StateVector object" << std::endl; */
+std::string latex_sqops(const Determinant& cre, const Determinant& ann) {
+    auto acre = cre.get_alfa_occ(cre.norb());
+    auto bcre = cre.get_beta_occ(cre.norb());
+    auto aann = ann.get_alfa_occ(ann.norb());
+    auto bann = ann.get_beta_occ(ann.norb());
+    std::reverse(aann.begin(), aann.end());
+    std::reverse(bann.begin(), bann.end());
+
+    std::string s;
+    for (auto p : acre) {
+        s += "\\hat{a}_{" + std::to_string(p) + " \\alpha}^\\dagger";
+    }
+    for (auto p : bcre) {
+        s += "\\hat{a}_{" + std::to_string(p) + " \\beta}^\\dagger";
+    }
+    for (auto p : bann) {
+        s += "\\hat{a}_{" + std::to_string(p) + " \\beta}";
+    }
+    for (auto p : aann) {
+        s += "\\hat{a}_{" + std::to_string(p) + " \\alpha}";
+    }
+    return s;
 }
 
-StateVector::StateVector(const det_hash<double>& state_vec) : state_vec_(state_vec) {}
+std::string double_to_string(double value) {
+    if (value == -1.0) {
+        return "-";
+    }
+    if (value != 1.0) {
+        return std::to_string(value);
+    }
+    return "";
+}
+
+std::string GeneralOperator::latex() const {
+    std::vector<std::string> result;
+    size_t nterms = coefficients_.size();
+    // if we are printing only one term, distribute the coefficient
+    if (nterms == 1) {
+        std::string s;
+        size_t begin = op_indices_[0].first;
+        size_t end = op_indices_[0].second;
+        for (size_t j = begin; j < end; j++) {
+            const double factor = op_list_[j].factor();
+            s += double_to_string(coefficients_[0] * factor) + "\\;";
+
+            const auto& ann = op_list_[j].ann();
+            const auto& cre = op_list_[j].cre();
+            s += latex_sqops(cre, ann);
+        }
+        result.push_back(s);
+    } else {
+        for (size_t n = 0; n < nterms; n++) {
+            std::string s = std::to_string(coefficients_[n]) + " * ( ";
+            size_t begin = op_indices_[n].first;
+            size_t end = op_indices_[n].second;
+            for (size_t j = begin; j < end; j++) {
+                const double factor = op_list_[j].factor();
+                if (j != begin) {
+                    s += (factor < 0.0) ? " " : " +";
+                }
+                const auto& ann = op_list_[j].ann();
+                const auto& cre = op_list_[j].cre();
+                s += std::to_string(factor) + "\\; " + latex_sqops(cre, ann);
+            }
+            s += " )";
+            result.push_back(s);
+        }
+    }
+    return to_string(result, " + ");
+}
 
 } // namespace forte

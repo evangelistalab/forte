@@ -102,8 +102,6 @@ void view_modified_orbitals(std::shared_ptr<psi::Wavefunction> wfn,
  */
 std::string get_ms_string(double twice_ms);
 
-std::string to_string(const std::vector<std::string>& vec_str, const std::string& sep = ",");
-
 /**
  * @brief Compute the memory (in GB) required to store arrays
  * @typename T The data typename

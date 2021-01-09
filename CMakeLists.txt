@@ -217,6 +217,9 @@ src/sparse_ci/sigma_vector_dynamic.cc
 src/sparse_ci/sigma_vector_sparse_list.cc
 src/sparse_ci/sorted_string_list.cc
 src/sparse_ci/sparse_ci_solver.cc
+src/sparse_ci/sparse_operator.cc
+src/sparse_ci/sq_operator.cc
+src/sparse_ci/sparse_state_vector.cc
 src/v2rdm/v2rdm.cc
 )
 
