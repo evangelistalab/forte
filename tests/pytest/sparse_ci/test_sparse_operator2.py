@@ -117,7 +117,6 @@ def test_sparse_operator2():
     assert wfn[det("0220")] == pytest.approx(+0.158390400605, abs=1e-9)
     assert wfn[det("2200")] == pytest.approx(+0.978860446763, abs=1e-9)
 
-
     ### Test the exponential operator 3 ###
     print('Test the exponential operator 3 (inverse)')
     sop = forte.SparseOperator()
