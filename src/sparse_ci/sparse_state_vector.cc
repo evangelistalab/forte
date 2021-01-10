@@ -34,7 +34,6 @@
 #include "integrals/active_space_integrals.h"
 
 #include "sparse_ci/sparse_state_vector.h"
-#include "general_operator.h"
 
 double time_apply_exp_ah_factorized_fast = 0.0;
 double time_energy_expectation_value = 0.0;
@@ -231,7 +230,7 @@ StateVector apply_operator_2(SparseOperator& sop, const StateVector& state0, dou
                         new_d = d;
                         double value =
                             apply_op_safe(new_d, sqop.ann(), sqop.cre()) * sqop.factor() * c;
-                        new_terms[new_d] += value;
+                        new_terms[new_d] -= value;
                     }
                 }
             }

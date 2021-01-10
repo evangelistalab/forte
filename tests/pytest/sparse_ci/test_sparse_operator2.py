@@ -96,7 +96,7 @@ def test_sparse_operator2():
     sop.add_term_from_str('[2b+ 0b-]',0.1)
     sop.add_term_from_str('[2a+ 2b+ 0b- 0a-]',0.15)
     wfn = forte.apply_exp_operator(sop,ref)
-    print_wfn(wfn2,4)
+    print_wfn(wfn,4)
 
     assert wfn[det("-2+0")] == pytest.approx(-0.091500564912, abs=1e-9)
     assert wfn[det("+2-0")] == pytest.approx(-0.091500564912, abs=1e-9)
@@ -110,7 +110,7 @@ def test_sparse_operator2():
     sop.add_term_from_str('[2b+ 0b-]',0.1)
     sop.add_term_from_str('[2a+ 2b+ 0b- 0a-]',0.15)
     wfn = forte.apply_exp_operator_2(sop,ref)
-    print_wfn(wfn2,4)
+    print_wfn(wfn,4)
 
     assert wfn[det("-2+0")] == pytest.approx(-0.091500564912, abs=1e-9)
     assert wfn[det("+2-0")] == pytest.approx(-0.091500564912, abs=1e-9)
