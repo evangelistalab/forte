@@ -209,7 +209,7 @@ void export_Determinant(py::module& m) {
         .def("reset_timing", &GeneralOperator::reset_timing);
 
     py::class_<SparseOperator>(m, "SparseOperator")
-        .def(py::init<>())
+        .def(py::init<bool>(), "antihermitian"_a = false)
         .def("add_term",
              py::overload_cast<const std::vector<std::tuple<bool, bool, int>>&, double>(
                  &SparseOperator::add_term),
@@ -234,18 +234,63 @@ void export_Determinant(py::module& m) {
         .def("__getitem__", [](StateVector& v, const Determinant& d) { return v[d]; })
         .def("__contains__", [](StateVector& v, const Determinant& d) { return v.map().count(d); });
 
-    m.def("apply_operator_safe", &apply_operator_safe);
-    m.def("apply_operator", &apply_operator, "gop"_a, "state0"_a, "screen_thresh"_a = 1.0e-12);
-    m.def("apply_operator_2", &apply_operator_2, "gop"_a, "state0"_a, "screen_thresh"_a = 1.0e-12);
+    m.def("apply_operator_safe",
+          py::overload_cast<SparseOperator&, const StateVector&>(&apply_operator_safe));
+    m.def("apply_operator_safe",
+          py::overload_cast<GeneralOperator&, const StateVector&>(&apply_operator_safe));
 
-    m.def("apply_exp_operator", &apply_exp_operator, "gop"_a, "state0"_a, "scaling_factor"_a = 1.0,
-          "maxk"_a = 20, "screen_thresh"_a = 1.0e-12);
-    m.def("apply_exp_operator_2", &apply_exp_operator_2, "gop"_a, "state0"_a,
-          "scaling_factor"_a = 1.0, "maxk"_a = 20, "screen_thresh"_a = 1.0e-12);
+    m.def("apply_operator",
+          py::overload_cast<SparseOperator&, const StateVector&, double>(&apply_operator), "sop"_a,
+          "state0"_a, "screen_thresh"_a = 1.0e-12);
 
-    m.def("apply_exp_ah_factorized_safe", &apply_exp_ah_factorized_safe);
-    m.def("apply_exp_ah_factorized", &apply_exp_ah_factorized, "gop"_a, "state0"_a,
-          "inverse"_a = false);
+    m.def("apply_operator",
+          py::overload_cast<GeneralOperator&, const StateVector&, double>(&apply_operator), "gop"_a,
+          "state0"_a, "screen_thresh"_a = 1.0e-12);
+
+    m.def("apply_operator",
+          py::overload_cast<GeneralOperator&, const StateVector&, double>(&apply_operator), "gop"_a,
+          "state0"_a, "screen_thresh"_a = 1.0e-12);
+
+    m.def("apply_operator_2",
+          py::overload_cast<SparseOperator&, const StateVector&, double>(&apply_operator_2),
+          "gop"_a, "state0"_a, "screen_thresh"_a = 1.0e-12);
+    m.def("apply_operator_2",
+          py::overload_cast<GeneralOperator&, const StateVector&, double>(&apply_operator_2),
+          "gop"_a, "state0"_a, "screen_thresh"_a = 1.0e-12);
+
+    m.def("apply_exp_operator",
+          py::overload_cast<SparseOperator&, const StateVector&, double, int, double>(
+              &apply_exp_operator),
+          "sop"_a, "state0"_a, "scaling_factor"_a = 1.0, "maxk"_a = 20,
+          "screen_thresh"_a = 1.0e-12);
+    m.def("apply_exp_operator",
+          py::overload_cast<GeneralOperator&, const StateVector&, double, int, double>(
+              &apply_exp_operator),
+          "gop"_a, "state0"_a, "scaling_factor"_a = 1.0, "maxk"_a = 20,
+          "screen_thresh"_a = 1.0e-12);
+
+    m.def("apply_exp_operator_2",
+          py::overload_cast<SparseOperator&, const StateVector&, double, int, double>(
+              &apply_exp_operator_2),
+          "sop"_a, "state0"_a, "scaling_factor"_a = 1.0, "maxk"_a = 20,
+          "screen_thresh"_a = 1.0e-12);
+    m.def("apply_exp_operator_2",
+          py::overload_cast<GeneralOperator&, const StateVector&, double, int, double>(
+              &apply_exp_operator_2),
+          "gop"_a, "state0"_a, "scaling_factor"_a = 1.0, "maxk"_a = 20,
+          "screen_thresh"_a = 1.0e-12);
+
+    m.def("apply_exp_ah_factorized_safe",
+          py::overload_cast<SparseOperator&, const StateVector&>(&apply_exp_ah_factorized_safe));
+    m.def("apply_exp_ah_factorized_safe",
+          py::overload_cast<GeneralOperator&, const StateVector&>(&apply_exp_ah_factorized_safe));
+
+    m.def("apply_exp_ah_factorized",
+          py::overload_cast<SparseOperator&, const StateVector&, bool>(&apply_exp_ah_factorized),
+          "gop"_a, "state0"_a, "inverse"_a = false);
+    m.def("apply_exp_ah_factorized",
+          py::overload_cast<GeneralOperator&, const StateVector&, bool>(&apply_exp_ah_factorized),
+          "gop"_a, "state0"_a, "inverse"_a = false);
 
     m.def("apply_number_projector", &apply_number_projector);
     m.def("apply_hamiltonian", &apply_hamiltonian, "as_ints"_a, "state0"_a,

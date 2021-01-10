@@ -693,7 +693,8 @@ double apply_op(DeterminantImpl<N>& d, const DeterminantImpl<N>& cre,
     return sign;
 }
 
-/// this function assumes we can apply this operator to the determinant
+/// this function assumes we can apply this operator to the determinant.
+/// So there are no checks in place
 template <size_t N>
 double apply_op_safe(DeterminantImpl<N>& d, const DeterminantImpl<N>& cre,
                      const DeterminantImpl<N>& ann) {

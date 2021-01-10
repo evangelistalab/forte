@@ -55,6 +55,7 @@ std::vector<SQOperator> string_to_op_term(const std::string& str);
  */
 class SparseOperator {
   public:
+    SparseOperator(bool antihermitian = false) { antihermitian_ = antihermitian; }
     /// add a term to this operator (python-friendly version)
     /// the user has to pass a list of tuples of the form
     ///
@@ -82,11 +83,15 @@ class SparseOperator {
     void set_coefficients(std::vector<double>& values);
     /// set the value of one coefficient
     void set_coefficient(double value, size_t n) { op_list_[n].set_factor(value); }
+
+    bool is_antihermitian() const { return antihermitian_; }
     const std::vector<SQOperator>& op_list() const { return op_list_; }
     std::vector<std::string> str() const;
     std::string latex() const;
 
   private:
+    ///
+    bool antihermitian_ = false;
     /// a vector of SQOperator objects
     std::vector<SQOperator> op_list_;
 };

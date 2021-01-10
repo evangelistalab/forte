@@ -64,7 +64,7 @@ def test_sparse_operator2():
     sop.add_term_from_str('[3a+ 3b+ 1b- 1a-]',-0.21)
     sop.add_term_from_str('[1a+ 1b+ 3b- 3a-]',0.0221)
     wfn = forte.apply_operator(sop,ref)
-    print_wfn(wfn,4)
+#    print_wfn(wfn,4)
     assert det("2200") not in wfn
     assert wfn[det("+2-0")] == pytest.approx(-0.3, abs=1e-9)
     assert wfn[det("-2+0")] == pytest.approx(-0.3, abs=1e-9)
@@ -88,19 +88,38 @@ def test_sparse_operator2():
     assert wfn[det("+0-2")] == pytest.approx(-0.0077, abs=1e-9)
     assert wfn[det("-0+2")] == pytest.approx(-0.0077, abs=1e-9)
 
-    print_wfn(wfn,4)
-
     ### Test the exponential operator 2 ###
     print('Test the exponential operator 2')
-    sop = forte.SparseOperator()
+    sop = forte.SparseOperator(antihermitian=True)
     ref = forte.StateVector({ det("22"): 1.0 })
-    sop.add_term_from_str('[2a+ 0a-] + [2b+ 0b-] - [0a+ 2a-] - [0b+ 2b-]',0.1)
-    sop.add_term_from_str('0.5 [2a+ 2b+ 0b- 0a-] - 0.5 [0a+ 0b+ 2b- 2a-]',0.3)
+    sop.add_term_from_str('[2a+ 0a-]',0.1)
+    sop.add_term_from_str('[2b+ 0b-]',0.1)
+    sop.add_term_from_str('[2a+ 2b+ 0b- 0a-]',0.15)
     wfn = forte.apply_exp_operator(sop,ref)
-    print_wfn(wfn,4)
+    print_wfn(wfn2,4)
+
+    assert wfn[det("-2+0")] == pytest.approx(-0.091500564912, abs=1e-9)
+    assert wfn[det("+2-0")] == pytest.approx(-0.091500564912, abs=1e-9)
+    assert wfn[det("0220")] == pytest.approx(+0.158390400605, abs=1e-9)
+    assert wfn[det("2200")] == pytest.approx(+0.978860446763, abs=1e-9)
+
+    print('Test the exponential operator 2')
+    sop = forte.SparseOperator(antihermitian=True)
+    ref = forte.StateVector({ det("22"): 1.0 })
+    sop.add_term_from_str('[2a+ 0a-]',0.1)
+    sop.add_term_from_str('[2b+ 0b-]',0.1)
+    sop.add_term_from_str('[2a+ 2b+ 0b- 0a-]',0.15)
+    wfn = forte.apply_exp_operator_2(sop,ref)
+    print_wfn(wfn2,4)
+
+    assert wfn[det("-2+0")] == pytest.approx(-0.091500564912, abs=1e-9)
+    assert wfn[det("+2-0")] == pytest.approx(-0.091500564912, abs=1e-9)
+    assert wfn[det("0220")] == pytest.approx(+0.158390400605, abs=1e-9)
+    assert wfn[det("2200")] == pytest.approx(+0.978860446763, abs=1e-9)
+
 
     ### Test the exponential operator 3 ###
-    print('Test the exponential operator 3')
+    print('Test the exponential operator 3 (inverse)')
     sop = forte.SparseOperator()
     ref = forte.StateVector({ det("22"): 1.0 })
     sop.add_term_from_str('[2a+ 0a-] + [2b+ 0b-] - [0a+ 2a-] - [0b+ 2b-]',0.1)
@@ -115,16 +134,32 @@ def test_sparse_operator2():
 
     ### Test the factorized exponential operator ###
     print('Test the factorized exponential operator (safe)')
-    sop = forte.SparseOperator()
-    sop.add_term_from_str('[2a+ 0a-] - [0a+ 2a-]',0.1)
-    sop.add_term_from_str('[2b+ 0b-] - [0b+ 2b-]',0.2)
-    sop.add_term_from_str('0.5 [2a+ 2b+ 0b- 0a-] - 0.5 [0a+ 0b+ 2b- 2a-]',0.3)
+    sop = forte.SparseOperator(antihermitian=True) # we want the antihermitian version so set to True
+    sop.add_term_from_str('[2a+ 0a-]',0.1)
+    sop.add_term_from_str('[2b+ 0b-]',0.2)
+    sop.add_term_from_str('[2a+ 2b+ 0b- 0a-]',0.15)
     ref = forte.StateVector({ det("22"): 1.0 })
     wfn = forte.apply_exp_ah_factorized_safe(sop,ref)
-    print_wfn(wfn,4)
+    assert wfn[det("+2-0")] == pytest.approx(-0.197676811654, abs=1e-9)
+    assert wfn[det("-2+0")] == pytest.approx(-0.097843395007, abs=1e-9)
+    assert wfn[det("0220")] == pytest.approx(+0.165338757995, abs=1e-9)
+    assert wfn[det("2200")] == pytest.approx(+0.961256283877, abs=1e-9)
 
     print('Test the factorized exponential operator (fast)')
-    sop = forte.SparseOperator()
+    sop = forte.SparseOperator(antihermitian=True)
+    sop.add_term_from_str('[2a+ 0a-]',0.1)
+    sop.add_term_from_str('[2b+ 0b-]',0.2)
+    sop.add_term_from_str('[2a+ 2b+ 0b- 0a-]',0.15)
+    ref = forte.StateVector({ det("22"): 1.0 })
+    wfn = forte.apply_exp_ah_factorized(sop,ref)
+    print_wfn(wfn,4)
+    assert wfn[det("+2-0")] == pytest.approx(-0.197676811654, abs=1e-9)
+    assert wfn[det("-2+0")] == pytest.approx(-0.097843395007, abs=1e-9)
+    assert wfn[det("0220")] == pytest.approx(+0.165338757995, abs=1e-9)
+    assert wfn[det("2200")] == pytest.approx(+0.961256283877, abs=1e-9)
+
+    print('Test the factorized exponential operator (fast)')
+    sop = forte.GeneralOperator()
     sop.add_term_from_str('[2a+ 0a-] - [0a+ 2a-]',0.1)
     sop.add_term_from_str('[2b+ 0b-] - [0b+ 2b-]',0.2)
     sop.add_term_from_str('0.5 [2a+ 2b+ 0b- 0a-] - 0.5 [0a+ 0b+ 2b- 2a-]',0.3)
@@ -133,7 +168,13 @@ def test_sparse_operator2():
     print_wfn(wfn,4)
 
     print('Test the factorized exponential operator (fast) inverse')
-    wfn2 = forte.apply_exp_ah_factorized(sop,wfn,True)
+    sop = forte.SparseOperator(antihermitian=True)
+    sop.add_term_from_str('[2a+ 0a-]',0.1)
+    sop.add_term_from_str('[2b+ 0b-]',0.2)
+    sop.add_term_from_str('[2a+ 2b+ 0b- 0a-]',0.15)
+    ref = forte.StateVector({ det("22"): 1.0 })
+    wfn = forte.apply_exp_ah_factorized(sop,ref)
+    wfn2 = forte.apply_exp_ah_factorized(sop,wfn,inverse=True)
     assert wfn2[det("2200")] == pytest.approx(1.0, abs=1e-9)
     print_wfn(wfn2,4)
 
