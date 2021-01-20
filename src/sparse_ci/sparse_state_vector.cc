@@ -172,18 +172,6 @@ StateVector apply_operator_2(SparseOperator& sop, const StateVector& state0, dou
             const Determinant& d = det_c.first;
             const double c = det_c.second;
             // test if we can apply this operator to this determinant
-#if DEBUG_EXP_ALGORITHM
-            std::cout << "\nOperation\n"
-                      << str(op.cre, 16) << "+\n"
-                      << str(op.ann, 16) << "-\n"
-                      << str(d, 16) << std::endl;
-            std::cout << "Testing (cre)(ann) sequence" << std::endl;
-            std::cout << "Can annihilate: " << (d.fast_a_and_b_equal_b(op.ann) ? "True" : "False")
-                      << std::endl;
-            std::cout << "Can create:     " << (ucre.fast_a_and_b_eq_zero(d) ? "True" : "False")
-                      << std::endl;
-            std::cout << "Applying the (cre)(ann) sequence!" << std::endl;
-#endif
             // screen according to the product tau * c
             if (std::fabs(sqop.factor() * c) > screen_thresh) {
                 // check if this operator can be applied
@@ -211,18 +199,6 @@ StateVector apply_operator_2(SparseOperator& sop, const StateVector& state0, dou
                 const Determinant& d = det_c.first;
                 const double c = det_c.second;
                 // test if we can apply this operator to this determinant
-#if DEBUG_EXP_ALGORITHM
-                std::cout << "\nOperation\n"
-                          << str(op.cre, 16) << "+\n"
-                          << str(op.ann, 16) << "-\n"
-                          << str(d, 16) << std::endl;
-                std::cout << "Testing (cre)(ann) sequence" << std::endl;
-                std::cout << "Can annihilate: "
-                          << (d.fast_a_and_b_equal_b(op.ann) ? "True" : "False") << std::endl;
-                std::cout << "Can create:     " << (ucre.fast_a_and_b_eq_zero(d) ? "True" : "False")
-                          << std::endl;
-                std::cout << "Applying the (cre)(ann) sequence!" << std::endl;
-#endif
                 // screen according to the product tau * c
                 if (std::fabs(sqop.factor() * c) > screen_thresh) {
                     // check if this operator can be applied
@@ -564,19 +540,18 @@ std::vector<double> get_projection(SparseOperator& sop, const StateVector& ref,
     // loop over all the operators
     for (size_t n = 0, nterms = sop.nterms(); n < nterms; n++) {
         double value = 0.0;
+        const SQOperator& sqop = op_list[n];
 
         // apply the operator op_n
         for (const auto& det_c : ref) {
             const double c = det_c.second;
             d = det_c.first;
 
-            const SQOperator& sqop = op_list[n];
-
             const double sign = apply_op(d, sqop.cre(), sqop.ann());
             if (sign != 0.0) {
                 auto search = state0.find(d);
                 if (search != state0.end()) {
-                    value += sqop.factor() * sign * c * search->second;
+                    value += sign * c * search->second;
                 }
             }
         }

@@ -38,54 +38,6 @@
 
 namespace forte {
 
-// SQOperator creation_alpha_orb_vec_to_SQOperator(
-//    const std::vector<std::tuple<bool, bool, int>>& creation_alpha_orb_vec, double factor) {
-
-//    Determinant cre, ann;
-
-//    bool is_sorted =
-//        std::is_sorted(creation_alpha_orb_vec.begin(), creation_alpha_orb_vec.end(), compare_ops);
-
-//    // if not sorted, compute the permutation factor
-//    if (not is_sorted) {
-//        // We first sort the operators so that they are ordered in the following way
-//        // [last](alpha cre. ascending) (beta cre. ascending) (beta ann. descending) (alpha ann.
-//        // descending)[first] and keep track of the sign. We sort the operators using a set of
-//        // auxiliary indices so that we can keep track of the permutation of the operators and
-//        their
-//        // sign
-//        std::vector<size_t> idx(creation_alpha_orb_vec.size());
-//        std::iota(idx.begin(), idx.end(), 0);
-//        std::stable_sort(idx.begin(), idx.end(), [&creation_alpha_orb_vec](size_t i1, size_t i2) {
-//            return compare_ops(creation_alpha_orb_vec[i1], creation_alpha_orb_vec[i2]);
-//        });
-//        auto parity = permutation_parity(idx);
-//        // set the factor including the parity of the permutation
-//        factor *= 1.0 - 2.0 * parity;
-//    }
-
-//    // set the bitarray part of the operator (the order does not matter)
-//    for (auto creation_alpha_orb : creation_alpha_orb_vec) {
-//        bool creation = std::get<0>(creation_alpha_orb);
-//        bool alpha = std::get<1>(creation_alpha_orb);
-//        int orb = std::get<2>(creation_alpha_orb);
-//        if (creation) {
-//            if (alpha) {
-//                cre.set_alfa_bit(orb, true);
-//            } else {
-//                cre.set_beta_bit(orb, true);
-//            }
-//        } else {
-//            if (alpha) {
-//                ann.set_alfa_bit(orb, true);
-//            } else {
-//                ann.set_beta_bit(orb, true);
-//            }
-//        }
-//    }
-//    return SQOperator(factor, cre, ann);
-//}
-
 void SparseOperator::add_term(const std::vector<std::tuple<bool, bool, int>>& op_list,
                               double coefficient) {
     op_list_.push_back(SQOperator(op_list, coefficient));
@@ -155,6 +107,10 @@ std::vector<std::string> SparseOperator::str() const {
     std::vector<std::string> v;
     for (const SQOperator& sqop : op_list_) {
         v.push_back(sqop.str());
+        if (is_antihermitian()) {
+            auto sqop_dagger = SQOperator(-sqop.factor(), sqop.ann(), sqop.cre());
+            v.push_back(sqop_dagger.str());
+        }
     }
     return v;
 }
@@ -163,6 +119,10 @@ std::string SparseOperator::latex() const {
     std::vector<std::string> v;
     for (const SQOperator& sqop : op_list_) {
         v.push_back(sqop.latex());
+        if (is_antihermitian()) {
+            auto sqop_dagger = SQOperator(-sqop.factor(), sqop.ann(), sqop.cre());
+            v.push_back(sqop_dagger.latex());
+        }
     }
     return to_string(v, " + ");
 }

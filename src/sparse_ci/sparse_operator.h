@@ -43,28 +43,33 @@ class ActiveSpaceIntegrals;
 std::vector<SQOperator> string_to_op_term(const std::string& str);
 
 /**
- * @brief The GeneralOperator class
- * Base class for generic second quantized operators.
+ * @brief The SparseOperator class
+ * Base class for second quantized operators.
  *
  * Each term is represented as a linear combination of second quantized
  * operator strings times a coefficient.
  *
  * For example:
- *   0.1 * {[2a+ 0a-] + 2.0 [2b+ 0b-]} - 0.5 * {2.0 [2a+ 0a-] + [2b+ 0b-]} + ...
- *              Term 0                                      Term 1
+ *   0.1 * [2a+ 0a-] - 0.5 * [2a+ 0a-] + ...
+ *       Term 0            Term 1
  */
 class SparseOperator {
   public:
     SparseOperator(bool antihermitian = false) { antihermitian_ = antihermitian; }
-    /// add a term to this operator (python-friendly version)
-    /// the user has to pass a list of tuples of the form
+    /// add a term to this operator (python-friendly version) of the form
+    ///
+    ///     coefficient * [... q_2 q_1 q_0]
+    ///
+    /// where q_0, q_1, ... are second quantized operators. These operators are
+    /// passed as a list of tuples of the form
     ///
     ///     [(creation_0, alpha_0, orb_0), (creation_1, alpha_1, orb_1), ...]
     ///
     /// where the indices are defined as
-    /// creation_i  : bool (true = creation, false = annihilation)
-    /// alpha_i     : bool (true = alpha, false = beta)
-    /// orb_i       : int  (the index of the mo)
+    ///
+    ///     creation_i  : bool (true = creation, false = annihilation)
+    ///     alpha_i     : bool (true = alpha, false = beta)
+    ///     orb_i       : int  (the index of the mo)
     void add_term(const std::vector<std::tuple<bool, bool, int>>& op_list,
                   double coefficient = 0.0);
     /// add a term to this operator
