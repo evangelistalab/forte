@@ -3601,22 +3601,6 @@ void DSRG_MRPT2::solve_z() {
     Z["WM"] = Z["MW"];
     Z["WE"] = Z["EW"];
 
-
-    ipiv.clear();
-    ipiv.shrink_to_fit();
-    A.clear();
-    A.shrink_to_fit();
-    b.clear();
-    b.shrink_to_fit();
-    jpvt.clear();
-    jpvt.shrink_to_fit();
-    tau.clear();
-    tau.shrink_to_fit();
-    work.clear();
-    work.shrink_to_fit();
-    A2.clear();
-    A2.shrink_to_fit();
-
     outfile->Printf("Done");
 }
 
@@ -3635,9 +3619,6 @@ void DSRG_MRPT2::tpdm_backtransform() {
             IntegralTransform::FrozenOrbitals::None));           // Frozen orbitals?
     transform->backtransform_density();
     transform.reset();
-
-    spaces.clear();
-    spaces.shrink_to_fit();
 
     outfile->Printf("\n    TPDM Backtransformation ......................... Done");
 }
@@ -3672,8 +3653,6 @@ void DSRG_MRPT2::write_lagrangian() {
             }
         });
 
-        spin_pair.clear();
-        spin_pair.shrink_to_fit();
     }
 
     L->back_transform(ints_->Ca());
