@@ -106,6 +106,9 @@ class CI_Reference {
     /// GAS1_A, GAS1_B, GAS2_A, .... GAS6_B (12 elements)
     std::vector<std::vector<int>> gas_electrons_;
 
+    /// Print SCF orbital energies for GAS
+    void print_gas_scf_epsilon();
+
     /// Compute the occupation string for a given number of electrons and orbitals
     /// @return nirrep of vector of occupation
     std::vector<std::vector<std::vector<bool>>> build_occ_string(size_t norb, size_t nele,
