@@ -26,12 +26,16 @@
  * @END LICENSE
  */
 
+#include <numeric>
+
 #include "psi4/psi4-dec.h"
 #include "psi4/libpsi4util/PsiOutStream.h"
 #include "psi4/libmints/vector.h"
 
 #include "ci_reference.h"
 #include "base_classes/forte_options.h"
+#include "helpers/helpers.h"
+#include "helpers/printing.h"
 
 #include <algorithm>
 
@@ -489,6 +493,89 @@ void CI_Reference::build_cas_reference(std::vector<Determinant>& ref_space) {
     outfile->Printf("\n  Reference generated from %d MOs", na);
 }
 
+std::vector<std::vector<std::vector<bool>>>
+CI_Reference::build_occ_string(size_t norb, size_t nele, const std::vector<int>& symmetry) {
+    if (nele > norb) {
+        throw psi::PSIEXCEPTION("Invalid number of electron / orbital to build occ string.");
+    }
+
+    std::vector<std::vector<std::vector<bool>>> out(nirrep_, std::vector<std::vector<bool>>());
+
+    std::vector<bool> occ_tmp(norb, false);
+    for (size_t i = norb - nele; i < norb; ++i)
+        occ_tmp[i] = true;
+
+    do {
+        int sym = 0;
+        for (size_t p = 0; p < norb; ++p) {
+            if (occ_tmp[p])
+                sym ^= symmetry[p];
+        }
+        out[sym].emplace_back(occ_tmp.begin(), occ_tmp.end());
+    } while (std::next_permutation(occ_tmp.begin(), occ_tmp.begin() + norb));
+
+    return out;
+}
+
+std::vector<std::vector<bool>>
+CI_Reference::build_gas_occ_string(const std::vector<std::vector<std::vector<bool>>>& gas_strings,
+                                   const std::vector<std::vector<size_t>>& rel_mos) {
+    int ngas = gas_strings.size();
+    if (ngas != static_cast<int>(rel_mos.size()))
+        throw psi::PSIEXCEPTION("Inconsistent numbers of gas spaces");
+
+    // compute the cartesian product of strings
+    auto product = math::cartesian_product(gas_strings);
+    outfile->Printf("\nGAS strings");
+    for (const auto& x : gas_strings) {
+        for (const auto& y : x) {
+            outfile->Printf("\n");
+            for (bool i:y) {
+                outfile->Printf("%d", i);
+            }
+        }
+    }
+    outfile->Printf("\nGAS string product");
+    for (const auto& x : product) {
+        for (const auto& y : x) {
+            outfile->Printf("\n");
+            for (bool i:y) {
+                outfile->Printf("%d", i);
+            }
+        }
+    }
+
+    auto n_strings = product.size();
+    std::vector<std::vector<bool>> out(n_strings);
+    outfile->Printf("\n  nproduct = %zu", n_strings);
+
+    // combine gas strings to a string of size nactv_orbs
+#pragma omp parallel for
+    for (size_t n = 0; n < n_strings; ++n) {
+        const auto& strings = product[n];
+        std::vector<bool> s(nact_, false);
+
+        for (int g = 0; g < ngas; ++g) {
+            const auto& rel = rel_mos[g];
+            const auto& string = strings[g];
+            for (int p = 0, psize = string.size(); p < psize; ++p) {
+                if (string[p]) {
+                    outfile->Printf("\n  g = %d, p = %d, rel[p] = %zu", g, p, rel[p]);
+                    s[rel[p]] = true;
+                }
+            }
+        }
+
+        out[n] = s;
+        outfile->Printf("\n");
+        for (bool i : s) {
+            outfile->Printf("%d", i);
+        }
+    }
+
+    return out;
+}
+
 void CI_Reference::build_gas_single(std::vector<Determinant>& ref_space) {
 
     // build one single low energy determinant in the gas space
@@ -823,11 +910,136 @@ void CI_Reference::build_gas_single(std::vector<Determinant>& ref_space) {
 }
 
 void CI_Reference::build_gas_reference(std::vector<Determinant>& ref_space) {
+    // relative indices within the active orbitals
+    std::vector<std::vector<size_t>> rel_gas_mos;
+
+    // print GAS orbital energies
+    print_h2("GAS Orbital Energies from SCF");
+    outfile->Printf("\n    GAS        Energy  Index");
+    outfile->Printf("\n    ------------------------");
+
+    auto epsilon_a = scf_info_->epsilon_a();
+    for (int gas = 0; gas < 6; ++gas) {
+        std::string space_name = "GAS" + std::to_string(gas + 1);
+        auto abs_mos = mo_space_info_->absolute_mo(space_name);
+        if (abs_mos.size() == 0)
+            continue;
+
+        auto rel_mos = mo_space_info_->pos_in_space(space_name, "ACTIVE");
+        for (size_t i = 0, size = abs_mos.size(); i < size; ++i) {
+            outfile->Printf("\n    %2d %14.8f  %5zu", gas, epsilon_a->get(abs_mos[i]), rel_mos[i]);
+        }
+
+        rel_gas_mos.push_back(rel_mos);
+    }
+    outfile->Printf("\n    ------------------------");
+
+    int ngas = rel_gas_mos.size(); // number of nonzero size GAS
+
+    // figure out symmetry product
+    std::vector<std::vector<int>> irrep_pools(ngas);
+    for (int i = 0; i < ngas; ++i) {
+        std::vector<int> irrep(nirrep_);
+        std::iota(irrep.begin(), irrep.end(), 0);
+        irrep_pools[i] = irrep;
+    }
+    auto sym_product = math::cartesian_product(irrep_pools);
+
+    // loop over all GAS configurations
+    size_t ndets = 0;
+    for (size_t config = 0, size = gas_electrons_.size(); config < size; ++config) {
+
+        // build alpha or beta strings (ngas of nirrep of vector of occupation)
+        std::vector<std::vector<std::vector<std::vector<bool>>>> a_tmp, b_tmp;
+
+        for (int gas = 0; gas < 6; ++gas) {
+            auto space_name = "GAS" + std::to_string(gas + 1);
+            auto norb = mo_space_info_->size(space_name);
+            if (norb == 0)
+                continue;
+
+            auto sym = mo_space_info_->symmetry(space_name);
+
+            a_tmp.emplace_back(build_occ_string(norb, gas_electrons_[config][2 * gas], sym));
+            b_tmp.emplace_back(build_occ_string(norb, gas_electrons_[config][2 * gas + 1], sym));
+            outfile->Printf("\n  GAS %d, na = %d, nb = %d", gas + 1, gas_electrons_[config][2 * gas], gas_electrons_[config][2 * gas + 1]);
+        }
+
+        for (int g = 0; g < ngas; ++ g) {
+            outfile->Printf("\n  GAS %d", g + 1);
+            for (int h = 0; h < nirrep_; ++h) {
+                outfile->Printf("\n  Alpha h = %d", h);
+                for (const auto& occ: a_tmp[g][h]) {
+                    outfile->Printf("\n  ");
+                    for (bool i : occ)
+                        outfile->Printf("%d", i);
+                }
+                outfile->Printf("\n  Beta h = %d", h);
+                for (const auto& occ: b_tmp[g][h]) {
+                    outfile->Printf("\n  ");
+                    for (bool i : occ)
+                        outfile->Printf("%d", i);
+                }
+            }
+        }
+
+        // alpha and beta strings (nirrep of vector of occupations)
+        std::vector<std::vector<std::vector<bool>>> a_strings(nirrep_), b_strings(nirrep_);
+
+        // loop over symmetry product
+        for (const auto& sym : sym_product) {
+            int irrep = 0;
+            std::vector<std::vector<std::vector<bool>>> a(ngas), b(ngas);
+
+            for (int gas = 0; gas < ngas; ++gas) {
+                int h = sym[gas];
+                irrep ^= h;
+                a[gas] = a_tmp[gas][h];
+                b[gas] = b_tmp[gas][h];
+            }
+
+            // alpha
+            auto strings_irrep = build_gas_occ_string(a, rel_gas_mos);
+            std::move(strings_irrep.begin(), strings_irrep.end(), std::back_inserter(a_strings[irrep]));
+
+            // beta
+            strings_irrep = build_gas_occ_string(b, rel_gas_mos);
+            std::move(strings_irrep.begin(), strings_irrep.end(), std::back_inserter(b_strings[irrep]));
+        }
+
+        outfile->Printf("\n  Alpha strings");
+        for (int h = 0; h < nirrep_; ++h) {
+            outfile->Printf("\n  Irrep = %d", h);
+            for (const auto& occ: a_strings[h]) {
+                outfile->Printf("\n  ");
+                for (bool i: occ) {
+                    outfile->Printf("%d", i);
+                }
+            }
+        }
+
+        // combine alpha and beta strings to form determinant
+        size_t n = 0;
+        for (int ha = 0; ha < nirrep_; ++ha) {
+            int hb = root_sym_ ^ ha;
+            for (const auto& a : a_strings[ha]) {
+                for (const auto& b: b_strings[hb]) {
+                    Determinant det(a, b);
+                    outfile->Printf("\n  %s", str(det, nact_).c_str());
+                    n++;
+                }
+            }
+        }
+        ndets += n;
+        outfile->Printf("\n  Size of space: %zu", n);
+    }
+    outfile->Printf("\n  Size of final space: %zu", ndets);
+
     // Build the entire GAS space
 
     // The relative_mo of each GAS, without sorting the energy
 
-    std::shared_ptr<Vector> epsilon_a = scf_info_->epsilon_a();
+    //    std::shared_ptr<Vector> epsilon_a = scf_info_->epsilon_a();
     outfile->Printf("\n");
     outfile->Printf("\n  GAS Orbital Energies");
     outfile->Printf("\n  GAS   Energies    Orb ");
