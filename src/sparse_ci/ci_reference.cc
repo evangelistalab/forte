@@ -694,7 +694,7 @@ void CI_Reference::build_gas_single(std::vector<Determinant>& ref_space) {
                     const auto& occ = gas_occ[gas];
                     for (int p = 0, psize = occ.size(); p < psize; ++p) {
                         if (occ[p]) {
-                            big_string[p] = true;
+                            big_string[rel_gas_mos[gas][p]] = true;
                             e += rel_gas_eps[2 * gas_nonzero_to_full[gas] + shift][p];
                         }
                     }
