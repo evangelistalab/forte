@@ -563,11 +563,12 @@ CI_Reference::build_gas_occ_string(const std::vector<std::vector<std::vector<boo
     if (n_strings == 0)
         return out;
 
+    // combine gas strings to a string of size nactv_orbs
+
     size_t n_threads = omp_get_num_threads();
     if (n_threads > n_strings)
         n_threads = n_strings;
 
-        // combine gas strings to a string of size nactv_orbs
 #pragma omp parallel for num_threads(n_threads)
     for (size_t n = 0; n < n_strings; ++n) {
 
@@ -629,6 +630,7 @@ void CI_Reference::build_gas_single(std::vector<Determinant>& ref_space) {
     }
 
     // iterate over all possible gas occupations
+    timer timer_gas1("Build GAS aufbau determinant");
     for (size_t i_config = 0; i_config < gas_electrons_.size(); ++i_config) {
 
         size_t gas1_na = gas_electrons_[i_config][0];
@@ -949,10 +951,19 @@ void CI_Reference::build_gas_reference(std::vector<Determinant>& ref_space) {
     }
     auto sym_product = math::cartesian_product(irrep_pools);
 
+    // dynamic programming for given GAS n/orbital/electron
+    std::map<std::tuple<int, size_t, size_t>, std::vector<std::vector<std::vector<bool>>>>
+        gasn_config_to_occ_string;
+
     // loop over all GAS configurations
-    timer timer_gas("Build GAS determinants");
     print_h2("Building GAS Determinants");
+    outfile->Printf("\n    Config.  #Determinants     Time/s");
+    outfile->Printf("\n    ---------------------------------");
+
+    timer timer_gas("Build GAS determinants");
     for (size_t config = 0, size = gas_electrons_.size(); config < size; ++config) {
+        local_timer lt;
+        outfile->Printf("\n    %6d", config);
 
         // build alpha or beta strings (ngas of nirrep of vector of occupation)
         std::vector<std::vector<std::vector<std::vector<bool>>>> a_tmp, b_tmp;
@@ -965,8 +976,19 @@ void CI_Reference::build_gas_reference(std::vector<Determinant>& ref_space) {
 
             auto sym = mo_space_info_->symmetry(space_name);
 
-            a_tmp.emplace_back(build_occ_string(norb, gas_electrons_[config][2 * gas], sym));
-            b_tmp.emplace_back(build_occ_string(norb, gas_electrons_[config][2 * gas + 1], sym));
+            std::tuple<int, size_t, size_t> a_key{gas, norb, gas_electrons_[config][2 * gas]};
+            if (gasn_config_to_occ_string.find(a_key) == gasn_config_to_occ_string.end()) {
+                gasn_config_to_occ_string[a_key] =
+                    build_occ_string(norb, gas_electrons_[config][2 * gas], sym);
+            }
+            a_tmp.push_back(gasn_config_to_occ_string[a_key]);
+
+            std::tuple<int, size_t, size_t> b_key{gas, norb, gas_electrons_[config][2 * gas + 1]};
+            if (gasn_config_to_occ_string.find(b_key) == gasn_config_to_occ_string.end()) {
+                gasn_config_to_occ_string[b_key] =
+                    build_occ_string(norb, gas_electrons_[config][2 * gas + 1], sym);
+            }
+            b_tmp.push_back(gasn_config_to_occ_string[b_key]);
         }
 
         // alpha and beta strings (nirrep of vector of occupations)
@@ -996,22 +1018,27 @@ void CI_Reference::build_gas_reference(std::vector<Determinant>& ref_space) {
         }
 
         // combine alpha and beta strings to form determinant
+        size_t n = 0;
         for (int ha = 0; ha < nirrep_; ++ha) {
             int hb = root_sym_ ^ ha;
             for (const auto& a : a_strings[ha]) {
                 for (const auto& b : b_strings[hb]) {
                     ref_space.emplace_back(a, b);
+                    n++;
                 }
             }
         }
-    }
-    timer_gas.stop();
 
-    outfile->Printf("\n  Size of GAS reference: %zu", ref_space.size());
-    print_h2("GAS Determinants");
-    for (const auto& det : ref_space) {
-        outfile->Printf("\n    %s", str(det, nact_).c_str());
+        outfile->Printf("  %14zu  %9.3e", n, lt.get());
     }
+
+    outfile->Printf("\n    ---------------------------------");
+    outfile->Printf("\n    Total:  %14zu  %9.3e", ref_space.size(), timer_gas.stop());
+    outfile->Printf("\n    ---------------------------------");
+    //    print_h2("GAS Determinants");
+    //    for (const auto& det : ref_space) {
+    //        outfile->Printf("\n    %s", str(det, nact_).c_str());
+    //    }
 }
 
 std::vector<std::tuple<double, int, int>> CI_Reference::sym_labeled_orbitals(std::string type) {
