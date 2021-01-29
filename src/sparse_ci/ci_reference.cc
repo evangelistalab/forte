@@ -640,7 +640,7 @@ void CI_Reference::build_gas_single(std::vector<Determinant>& ref_space) {
     // in: nirrep of vector of occupation
     // out: nirrep of aufbau occupation
     auto aufbau_gas_occ = [&](std::vector<std::vector<std::vector<bool>>>& occ_strings,
-                          const std::vector<double>& eps) {
+                              const std::vector<double>& eps) {
         std::vector<std::vector<bool>> out(nirrep_);
         int norbs = eps.size();
 
@@ -669,7 +669,8 @@ void CI_Reference::build_gas_single(std::vector<Determinant>& ref_space) {
     // figure out the aufbau occupation of size nactv
     // in: ngas of nirrep of aufbau occupation
     // out: nirrep of <energy, aufbau occupation>
-    auto combine_aufbau_gas_occ = [&](const std::vector<std::vector<std::vector<bool>>>& gas_occs, bool beta) {
+    auto combine_aufbau_gas_occ = [&](const std::vector<std::vector<std::vector<bool>>>& gas_occs,
+                                      bool beta) {
         std::vector<std::tuple<double, std::vector<bool>>> strings(nirrep_);
 
         auto product = math::cartesian_product(gas_occs);
@@ -796,7 +797,7 @@ void CI_Reference::build_gas_reference(std::vector<Determinant>& ref_space) {
     timer timer_gas("Build GAS determinants");
     for (size_t config = 0, size = gas_electrons_.size(); config < size; ++config) {
         local_timer lt;
-        outfile->Printf("\n    %6d", config);
+        outfile->Printf("\n    %6d", config + 1);
 
         // build alpha or beta strings (ngas of nirrep of vector of occupation)
         std::vector<std::vector<std::vector<std::vector<bool>>>> a_tmp, b_tmp;
@@ -930,6 +931,10 @@ void CI_Reference::get_gas_occupation() {
     //    gas_num_ = gas_info.first;
     //    general_active_spaces_ = gas_info.second;
 
+    print_h2("Number of Electrons in GAS");
+    outfile->Printf("\n    GAS  MAX  MIN");
+    outfile->Printf("\n    -------------");
+
     // The vectors of maximum number of electrons, minimum number of electrons,
     // and the number of orbitals
     std::vector<int> gas_maxe;
@@ -941,43 +946,43 @@ void CI_Reference::get_gas_occupation() {
         int orbital_maximum = mo_space_info_->size(space);
         gas_orbital.push_back(orbital_maximum);
         if (orbital_maximum) {
+            outfile->Printf("\n    %3d", gas_count + 1);
+
             size_t max_e_number = state_info_.gas_max()[gas_count];
             // If the defined maximum number of electrons exceed number of orbitals,
             // redefine maximum number of elctrons
             if (max_e_number > std::min(orbital_maximum * 2, nalpha_ + nbeta_)) {
-                // outfile->Printf("\n  The maximum number of electrons in %s"
-                //                "\n  either exceeds the number of spin orbitals"
-                //                "\n  or total number of electrons or undefined!",
-                //               space.c_str());
-                gas_maxe.push_back(std::min(orbital_maximum * 2, nalpha_ + nbeta_));
-                outfile->Printf("\n  The maximum number of electrons in %s"
-                                " is %d ",
-                                space.c_str(), std::min(orbital_maximum * 2, nalpha_ + nbeta_));
-            } else {
-                outfile->Printf("\n  The maximum number of electrons in "
-                                "%s is %d",
-                                space.c_str(), max_e_number);
-                gas_maxe.push_back(max_e_number);
+                max_e_number = std::min(orbital_maximum * 2, nalpha_ + nbeta_);
             }
+            gas_maxe.push_back(max_e_number);
+
             int min_e_number = state_info_.gas_min()[gas_count];
             gas_mine.push_back(min_e_number);
-            outfile->Printf("\n  The minimum number of electrons in "
-                            "%s is %d",
-                            space.c_str(), min_e_number);
+
+            outfile->Printf(" %4d %4d", max_e_number, min_e_number);
             gas_num_ = gas_num_ + 1;
         } else {
             gas_maxe.push_back(0);
             gas_mine.push_back(0);
         }
     }
-    outfile->Printf("\n  ");
-    outfile->Printf("\n  Possible electron occupations in the GAS \n  ");
+    outfile->Printf("\n    -------------");
+
+    print_h2("Possible Electron Occupations in GAS");
+    outfile->Printf("\n    Config.");
+    int ndash = 7;
     std::vector<std::string> gas_electron_name = {"GAS1_A", "GAS1_B", "GAS2_A", "GAS2_B",
                                                   "GAS3_A", "GAS3_B", "GAS4_A", "GAS4_B",
                                                   "GAS5_A", "GAS5_B", "GAS6_A", "GAS6_B"};
     for (size_t i = 0; i < 2 * gas_num_; i++) {
-        outfile->Printf("%s  ", gas_electron_name.at(i).c_str());
+        std::string name = gas_electron_name.at(i).substr(3, 3);
+        outfile->Printf("  %s", name.c_str());
+        ndash += 5;
     }
+    std::string dash(ndash, '-');
+    outfile->Printf("\n    %s", dash.c_str());
+
+    int n_config = 0;
 
     for (int gas6_na = std::max(0, gas_mine[5] - gas_orbital[5]);
          gas6_na <= std::min(gas_maxe[5], gas_orbital[5]); gas6_na++) {
@@ -1014,16 +1019,16 @@ void CI_Reference::get_gas_occupation() {
                                             if (gas1_total <= gas_maxe[0] and
                                                 gas1_max <= gas_orbital[0] and gas1_min >= 0 and
                                                 gas1_total >= gas_mine[0]) {
-                                                std::vector<int> gas_configuration = {
+                                                std::vector<int> gas_configuration{
                                                     gas1_na, gas1_nb, gas2_na, gas2_nb,
                                                     gas3_na, gas3_nb, gas4_na, gas4_nb,
                                                     gas5_na, gas5_nb, gas6_na, gas6_nb};
-                                                outfile->Printf("\n  ");
-                                                for (size_t i = 0; i < 2 * gas_num_; i++) {
-                                                    outfile->Printf("   %d    ",
-                                                                    gas_configuration[i]);
-                                                }
                                                 gas_electrons_.push_back(gas_configuration);
+
+                                                outfile->Printf("\n    %6d ", ++n_config);
+                                                for (size_t i = 0; i < 2 * gas_num_; i++) {
+                                                    outfile->Printf(" %4d", gas_configuration[i]);
+                                                }
                                             }
                                         }
                                     }
@@ -1035,6 +1040,8 @@ void CI_Reference::get_gas_occupation() {
             }
         }
     }
+    outfile->Printf("\n    %s", dash.c_str());
+    outfile->Printf("\n    n_A/B: # of alpha/beta electrons in GASn");
 }
 
 std::vector<std::vector<int>> CI_Reference::gas_electrons() { return gas_electrons_; }
