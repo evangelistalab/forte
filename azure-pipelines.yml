@@ -78,6 +78,9 @@ jobs:
   - bash: |
       source activate p4env
       echo "Conda path:" ${CONDA_PREFIX}
+      echo "Python:" $(which python)
+      ls ${CONDA_PREFIX}/bin
+      ls ${CONDA_PREFIX}/lib
       python -V
       psi4 --version
       psi4 --plugin-compile
