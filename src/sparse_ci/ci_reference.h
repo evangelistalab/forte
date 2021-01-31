@@ -106,21 +106,6 @@ class CI_Reference {
     /// GAS1_A, GAS1_B, GAS2_A, .... GAS6_B (12 elements)
     std::vector<std::vector<int>> gas_electrons_;
 
-    /// Print SCF orbital energies for GAS
-    void print_gas_scf_epsilon();
-
-    /// Compute the occupation string for a given number of electrons and orbitals
-    /// @return nirrep of vector of occupation
-    std::vector<std::vector<std::vector<bool>>> build_occ_string(size_t norb, size_t nele,
-                                                          const std::vector<int>& symmetry);
-
-    /// Compute the cartesian product of occupation strings
-    /// @arg vector of vector of occupation
-    /// @return nirrep of vector of occupation
-    std::vector<std::vector<bool>>
-    build_gas_occ_string(const std::vector<std::vector<std::vector<bool>>>& gas_strings,
-                         const std::vector<std::vector<size_t>>& rel_mos);
-
   public:
     /// Default constructor
     CI_Reference(std::shared_ptr<SCFInfo> scf_info, std::shared_ptr<ForteOptions> options,
