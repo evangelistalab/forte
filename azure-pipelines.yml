@@ -89,8 +89,10 @@ jobs:
         -Dambit_DIR=${CONDA_PREFIX}/share/cmake/ambit \
         -DPYTHON_EXECUTABLE="${CONDA_PREFIX}/bin/python" \
         -DCMAKE_BUILD_TYPE=${BUILD_TYPE} \
-        -DCMAKE_CXX_FLAGS="-I${CONDA_PREFIX}/include ${PYBIND_INCLUDE}" \
         -DENABLE_CODECOV=ON \
+        -Dpsi4_CXX_STANDARD=17 \
+        -DCMAKE_CXX_FLAGS=-DPYBIND11_CPP17 \
+        -DCMAKE_CXX_STANDARD=17 \
         -DMAX_DET_ORB=${MAX_DET_ORB}
     displayName: 'Configure Build'
 
