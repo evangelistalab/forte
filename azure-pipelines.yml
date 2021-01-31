@@ -79,8 +79,6 @@ jobs:
       source activate p4env
       echo "Conda path:" ${CONDA_PREFIX}
       echo "Python:" $(which python)
-      ls ${CONDA_PREFIX}/bin
-      ls ${CONDA_PREFIX}/lib
       python -V
       psi4 --version
       psi4 --plugin-compile
@@ -89,7 +87,7 @@ jobs:
       cmake -H. -B. \
         -C${CONDA_PREFIX}/share/cmake/psi4/psi4PluginCache.cmake \
         -Dambit_DIR=${CONDA_PREFIX}/share/cmake/ambit \
-        -DPYTHON_EXECUTABLE="${CONDA_PREFIX}/envs/p4env/bin/python" \
+        -DPYTHON_EXECUTABLE="${CONDA_PREFIX}/bin/python" \
         -DCMAKE_BUILD_TYPE=${BUILD_TYPE} \
         -DCMAKE_CXX_FLAGS="-I${CONDA_PREFIX}/include ${PYBIND_INCLUDE}" \
         -DENABLE_CODECOV=ON \
