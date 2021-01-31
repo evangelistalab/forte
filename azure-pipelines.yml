@@ -59,16 +59,17 @@ jobs:
         gxx_linux-64 \
         gfortran_linux-64
       source activate p4env
-      conda install \
+      conda install -c conda-forge \
         cmake \
         hdf5 \
         boost \
         mkl-devel \
+        pybind11 \
         pytest \
         pytest-xdist \
-        conda-forge::codecov \
-        conda-forge::lcov \
-        conda-forge::pytest-cov
+        codecov \
+        lcov \
+        pytest-cov
       which python
       pip install git+https://github.com/i-pi/i-pi.git@master-py3
       conda list
