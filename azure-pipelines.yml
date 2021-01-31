@@ -90,9 +90,8 @@ jobs:
         -DPYTHON_EXECUTABLE="${CONDA_PREFIX}/bin/python" \
         -DCMAKE_BUILD_TYPE=${BUILD_TYPE} \
         -DENABLE_CODECOV=ON \
-        -Dpsi4_CXX_STANDARD=17 \
-        -DCMAKE_CXX_FLAGS=-DPYBIND11_CPP17 \
         -DCMAKE_CXX_STANDARD=17 \
+        -DCMAKE_CXX_FLAGS=-DPYBIND11_CPP17 \
         -DMAX_DET_ORB=${MAX_DET_ORB}
     displayName: 'Configure Build'
 
@@ -101,7 +100,7 @@ jobs:
 
       # copied from Psi4
       set -o pipefail
-      cmake --build . -- -j 2 VERBOSE=1 2>&1 | tee build.log | grep "Building"
+      cmake --build . -- -j2 VERBOSE=1 2>&1 | tee build.log | grep "Building"
       RESULT=$?
 
       if [ $RESULT -eq 0 ]; then
