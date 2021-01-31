@@ -73,7 +73,7 @@ jobs:
         psi4/label/dev::ci-psi4 \
         gcc_linux-64 \
         gxx_linux-64 \
-        gfortran_linux_64 \
+        gfortran_linux-64 \
         cmake \
         hdf5 \
         boost \
