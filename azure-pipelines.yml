@@ -87,10 +87,10 @@ jobs:
       cmake -H. -B. \
         -C${CONDA_PREFIX}/share/cmake/psi4/psi4PluginCache.cmake \
         -Dambit_DIR=${CONDA_PREFIX}/share/cmake/ambit \
+        -DCMAKE_CXX_STANDARD=17 \
         -DPYTHON_EXECUTABLE="${CONDA_PREFIX}/bin/python" \
         -DCMAKE_BUILD_TYPE=${BUILD_TYPE} \
         -DENABLE_CODECOV=ON \
-        -DCMAKE_CXX_STANDARD=17 \
         -DCMAKE_CXX_FLAGS=-DPYBIND11_CPP17 \
         -DMAX_DET_ORB=${MAX_DET_ORB}
     displayName: 'Configure Build'
