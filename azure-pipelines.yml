@@ -16,10 +16,10 @@ jobs:
         BUILD_TYPE: 'debug'
         MAX_DET_ORB: 64
 
-      max_det_orb_128:
-        PYTHON_VER: '3.8'
-        BUILD_TYPE: 'debug'
-        MAX_DET_ORB: 128
+#     max_det_orb_128:
+#       PYTHON_VER: '3.8'
+#       BUILD_TYPE: 'debug'
+#       MAX_DET_ORB: 128
 
   steps:
   - bash: |
@@ -51,22 +51,6 @@ jobs:
       conda create -q \
         -n p4env \
         python=$PYTHON_VER \
-        psi4/label/dev::gau2grid=2 \
-        psi4/label/dev::libint2 \
-        psi4/label/dev::libxc \
-        psi4/label/dev::ambit \
-        psi4/label/dev::chemps2 \
-        psi4/label/dev::dkh \
-        psi4/label/dev::gdma \
-        psi4/label/dev::pcmsolver \
-        psi4/label/dev::simint \
-        psi4/label/dev::dftd3 \
-        psi4/label/dev::gcp \
-        psi4/label/dev::resp \
-        psi4/label/dev::pycppe \
-        psi4/label/dev::pylibefp \
-        psi4/label/dev::fockci \
-        psi4/label/dev::mp2d \
         psi4/label/dev::pybind11-headers \
         psi4/label/dev::psi4 \
         psi4/label/dev::psi4-dev \
@@ -80,7 +64,6 @@ jobs:
         blas=*=mkl \
         mkl-include \
         mkl-devel \
-        networkx \
         pytest \
         eigen \
         mpfr \
@@ -88,11 +71,9 @@ jobs:
         conda-forge::qcelemental \
         conda-forge::qcengine \
         conda-forge::pint \
-        conda-forge::pymdi \
         conda-forge::codecov \
         conda-forge::lcov \
-        conda-forge::pytest-cov \
-        adcc::adcc
+        conda-forge::pytest-cov
       source activate p4env
       which python
       pip install git+https://github.com/i-pi/i-pi.git@master-py3
