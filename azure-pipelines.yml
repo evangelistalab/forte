@@ -12,12 +12,12 @@ jobs:
     maxParallel: 4
     matrix:
       max_det_orb_64:
-        PYTHON_VER: '3.8'
+        PYTHON_VER: '3.7'
         BUILD_TYPE: 'debug'
         MAX_DET_ORB: 64
 
 #     max_det_orb_128:
-#       PYTHON_VER: '3.8'
+#       PYTHON_VER: '3.7'
 #       BUILD_TYPE: 'debug'
 #       MAX_DET_ORB: 128
 
@@ -51,30 +51,24 @@ jobs:
       conda create -q \
         -n p4env \
         python=$PYTHON_VER \
-        psi4/label/dev::pybind11-headers \
         psi4/label/dev::psi4 \
         psi4/label/dev::psi4-dev \
         psi4/label/dev::ci-psi4 \
+        psi4/label/dev::pybind11-headers \
         gcc_linux-64 \
         gxx_linux-64 \
-        gfortran_linux-64 \
+        gfortran_linux-64
+      source activate p4env
+      conda install \
         cmake \
         hdf5 \
         boost \
-        blas=*=mkl \
-        mkl-include \
         mkl-devel \
         pytest \
-        eigen \
-        mpfr \
         pytest-xdist \
-        conda-forge::qcelemental \
-        conda-forge::qcengine \
-        conda-forge::pint \
         conda-forge::codecov \
         conda-forge::lcov \
         conda-forge::pytest-cov
-      source activate p4env
       which python
       pip install git+https://github.com/i-pi/i-pi.git@master-py3
       conda list
