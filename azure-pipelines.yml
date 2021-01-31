@@ -77,12 +77,6 @@ jobs:
 
   - bash: |
       source activate p4env
-      echo "C Ver:"
-      gcc --version
-      echo "CXX Ver:"
-      g++ --version
-      echo "F Ver:"
-      gfortran --version
       echo "Conda path:" ${CONDA_PREFIX}
       python -V
       psi4 --version
@@ -94,7 +88,7 @@ jobs:
         -Dambit_DIR=${CONDA_PREFIX}/share/cmake/ambit \
         -DPYTHON_EXECUTABLE="${CONDA_PREFIX}/envs/p4env/bin/python" \
         -DCMAKE_BUILD_TYPE=${BUILD_TYPE} \
-        -DCMAKE_CXX_FLAGS="-I${CONDA_PREFIX}/include ${PYBIND_INCLUDE}"
+        -DCMAKE_CXX_FLAGS=-DPYBIND11_CPP17 \ #"-I${CONDA_PREFIX}/include ${PYBIND_INCLUDE}" \
         -DENABLE_CODECOV=ON \
         -DMAX_DET_ORB=${MAX_DET_ORB}
     displayName: 'Configure Build'
