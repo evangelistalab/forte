@@ -2,18 +2,155 @@
 # Start with a minimal pipeline that you can customize to build and deploy your code.
 # Add steps that build, run tests, deploy, and more:
 # https://aka.ms/yaml
+jobs:
+- job: 'linux_build'
+  displayName: 'Linux Builds'
+  pool:
+    vmImage: 'ubuntu-latest'
+  timeoutInMinutes: 60
+  strategy:
+    maxParallel: 4
+    matrix:
+      max_det_orb_64:
+        PYTHON_VER: '3.8'
+        BUILD_TYPE: 'debug'
+        MAX_DET_ORB: 64
 
-trigger:
-- main
+      max_det_orb_128:
+        PYTHON_VER: '3.8'
+        BUILD_TYPE: 'debug'
+        MAX_DET_ORB: 128
 
-pool:
-  vmImage: 'ubuntu-latest'
+  steps:
+  - bash: |
+      echo "" && echo "Ubuntu"
+      lsb_release -a
 
-steps:
-- script: echo Hello, world!
-  displayName: 'Run a one-line script'
+      echo "" && echo "Uname:"
+      uname -a
 
-- script: |
-    echo Add other tasks to build, test, and deploy your project.
-    echo See https://aka.ms/yaml
-  displayName: 'Run a multi-line script'
+      echo "" && echo "Free:"
+      free -m
+
+      echo "" && echo "df:"
+      df -h
+
+      echo "" && echo "Ulimit:"
+      ulimit -a
+
+      echo "" && echo "Nprocs:"
+      getconf _NPROCESSORS_ONLN
+    displayName: "Setup Information"
+
+  - bash: |
+        echo "##vso[task.prependpath]$CONDA/bin"
+        conda config --set always_yes yes
+    displayName: "Add Conda to PATH"
+
+  - bash: |
+      conda create -q \
+        -n p4env \
+        python=$PYTHON_VER \
+        psi4/label/dev::gau2grid=2 \
+        psi4/label/dev::libint2 \
+        psi4/label/dev::libxc \
+        psi4/label/dev::ambit \
+        psi4/label/dev::chemps2 \
+        psi4/label/dev::dkh \
+        psi4/label/dev::gdma \
+        psi4/label/dev::pcmsolver \
+        psi4/label/dev::simint \
+        psi4/label/dev::dftd3 \
+        psi4/label/dev::gcp \
+        psi4/label/dev::resp \
+        psi4/label/dev::pycppe \
+        psi4/label/dev::pylibefp \
+        psi4/label/dev::fockci \
+        psi4/label/dev::mp2d \
+        psi4/label/dev::pybind11-headers \
+        psi4/label/dev::psi4 \
+        psi4/label/dev::psi4-dev \
+        psi4/label/dev::ci-psi4 \
+        gcc_linux-64 \
+        gxx_linux-64 \
+        gfortran_linux_64 \
+        cmake \
+        hdf5 \
+        boost \
+        blas=*=mkl \
+        mkl-include \
+        mkl-devel \
+        networkx \
+        pytest \
+        eigen \
+        mpfr \
+        pytest-xdist \
+        conda-forge::qcelemental \
+        conda-forge::qcengine \
+        conda-forge::pint \
+        conda-forge::pymdi \
+        conda-forge::codecov \
+        conda-forge::lcov \
+        conda-forge::pytest-cov \
+        adcc::adcc
+      source activate p4env
+      which python
+      pip install git+https://github.com/i-pi/i-pi.git@master-py3
+      conda list
+    displayName: 'Build Environment'
+
+  - bash: |
+      source activate p4env
+      echo "C Ver:"
+      gcc --version
+      echo "CXX Ver:"
+      g++ --version
+      echo "F Ver:"
+      gfortran --version
+      echo "Conda path:" ${CONDA_PREFIX}
+      python -V
+      psi4 --version
+      psi4 --plugin-compile
+      PYBIND_INCLUDE=$(python -m pybind11 --includes)
+      echo "PYBIND_INCLUDE:" $PYBIND_INCLUDE
+      cmake -H. -B. \
+        -C${CONDA_PREFIX}/share/cmake/psi4/psi4PluginCache.cmake \
+        -Dambit_DIR=${CONDA_PREFIX}/share/cmake/ambit \
+        -DPYTHON_EXECUTABLE="${CONDA_PREFIX}/envs/p4env/bin/python" \
+        -DCMAKE_BUILD_TYPE=${BUILD_TYPE} \
+        -DCMAKE_CXX_FLAGS="-I${CONDA_PREFIX}/include ${PYBIND_INCLUDE}"
+        -DENABLE_CODECOV=ON \
+        -DMAX_DET_ORB=${MAX_DET_ORB}
+    displayName: 'Configure Build'
+
+  - bash: |
+      source activate p4env
+
+      # copied from Psi4
+      set -o pipefail
+      cmake --build . -- -j 2 VERBOSE=1 2>&1 | tee build.log | grep "Building"
+      RESULT=$?
+
+      if [ $RESULT -eq 0 ]; then
+        echo build succeeded
+      else
+        echo build failed
+        cat build.log
+        exit 1
+      fi
+
+      export PYTHONPATH="$(dirname $PWD):$PYTHONPATH"
+    displayName: 'Build Forte'
+
+  - bash: |
+      bash tools/forte_codecov
+      if [ $MAX_DET_ORB -ge 128 ]; then
+        cd tests/large_det
+        python run_forte_tests.py --bw --failed_dump
+        cd ../..
+      fi
+      ./forte_tests
+      ./forte_benchmarks
+      cd tests/pytest
+      pytest
+    displayName: 'Run Forte tests'

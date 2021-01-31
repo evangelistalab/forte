@@ -26,12 +26,18 @@
  * @END LICENSE
  */
 
+#include <numeric>
+
 #include "psi4/psi4-dec.h"
 #include "psi4/libpsi4util/PsiOutStream.h"
 #include "psi4/libmints/vector.h"
 
+#include "forte-def.h"
 #include "ci_reference.h"
 #include "base_classes/forte_options.h"
+#include "helpers/helpers.h"
+#include "helpers/printing.h"
+#include "helpers/timer.h"
 
 #include <algorithm>
 
@@ -104,16 +110,39 @@ void CI_Reference::build_reference(std::vector<Determinant>& ref_space) {
         build_cas_reference(ref_space);
     } else if (ref_type_ == "GAS") {
         // Complete GAS
+        print_gas_scf_epsilon();
         get_gas_occupation();
         build_gas_reference(ref_space);
     } else if (ref_type_ == "GAS_SINGLE") {
         // Low(est) energy one in GAS
+        print_gas_scf_epsilon();
         get_gas_occupation();
         build_gas_single(ref_space);
     } else {
         build_ci_reference(ref_space);
         outfile->Printf("\n  Building_reference.", subspace_size_);
     }
+}
+
+void CI_Reference::print_gas_scf_epsilon() {
+    print_h2("GAS Orbital Energies from SCF");
+    outfile->Printf("\n    GAS        Energy  Index");
+    outfile->Printf("\n    ------------------------");
+
+    auto epsilon_a = scf_info_->epsilon_a();
+    for (int gas = 0; gas < 6; ++gas) {
+        std::string space_name = "GAS" + std::to_string(gas + 1);
+        auto abs_mos = mo_space_info_->absolute_mo(space_name);
+        if (abs_mos.size() == 0)
+            continue;
+
+        auto rel_mos = mo_space_info_->pos_in_space(space_name, "ACTIVE");
+        for (size_t i = 0, size = abs_mos.size(); i < size; ++i) {
+            outfile->Printf("\n    %2d %14.8f  %5zu", gas + 1, epsilon_a->get(abs_mos[i]),
+                            rel_mos[i]);
+        }
+    }
+    outfile->Printf("\n    ------------------------");
 }
 
 std::pair<std::map<std::vector<int>, std::vector<std::pair<size_t, size_t>>>,
@@ -489,6 +518,78 @@ void CI_Reference::build_cas_reference(std::vector<Determinant>& ref_space) {
     outfile->Printf("\n  Reference generated from %d MOs", na);
 }
 
+std::vector<std::vector<std::vector<bool>>>
+CI_Reference::build_occ_string(size_t norb, size_t nele, const std::vector<int>& symmetry) {
+    if (nele > norb) {
+        throw psi::PSIEXCEPTION("Invalid number of electron / orbital to build occ string.");
+    }
+
+    std::vector<std::vector<std::vector<bool>>> out(nirrep_, std::vector<std::vector<bool>>());
+
+    std::vector<bool> occ_tmp(norb, false);
+    for (size_t i = norb - nele; i < norb; ++i)
+        occ_tmp[i] = true;
+
+    do {
+        int sym = 0;
+        for (size_t p = 0; p < norb; ++p) {
+            if (occ_tmp[p])
+                sym ^= symmetry[p];
+        }
+        out[sym].emplace_back(occ_tmp.begin(), occ_tmp.end());
+    } while (std::next_permutation(occ_tmp.begin(), occ_tmp.begin() + norb));
+
+    return out;
+}
+
+std::vector<std::vector<bool>>
+CI_Reference::build_gas_occ_string(const std::vector<std::vector<std::vector<bool>>>& gas_strings,
+                                   const std::vector<std::vector<size_t>>& rel_mos) {
+    int ngas = gas_strings.size();
+    if (ngas != static_cast<int>(rel_mos.size()))
+        throw psi::PSIEXCEPTION("Inconsistent numbers of gas spaces");
+
+    // compute the cartesian product of strings
+    /* For example (see Python itertools product):
+     * input:  [[gas1_occ1, gas1_occ2, gas1_occ3, ...], [gas2_occ1, gas2_occ2, ...], ...]
+     * output: [[gas1_occ1, gas2_occ1, ...], [gas1_occ1, gas2_occ2, ...],
+     *          [gas1_occ2, gas2_occ1, ...], [gas1_occ2, gas2_occ2, ...],
+     *          [gas1_occ3, gas2_occ1, ...], [gas1_occ3, gas2_occ2, ...], ...]
+     */
+    auto product = math::cartesian_product(gas_strings);
+
+    auto n_strings = product.size();
+    std::vector<std::vector<bool>> out(n_strings);
+    if (n_strings == 0)
+        return out;
+
+    // combine gas strings to a string of size nactv_orbs
+
+    size_t n_threads = omp_get_num_threads();
+    if (n_threads > n_strings)
+        n_threads = n_strings;
+
+#pragma omp parallel for num_threads(n_threads)
+    for (size_t n = 0; n < n_strings; ++n) {
+
+        const auto& strings = product[n];
+        std::vector<bool> s(nact_, false);
+
+        for (int g = 0; g < ngas; ++g) {
+            const auto& rel = rel_mos[g];
+            const auto& string = strings[g];
+            for (int p = 0, psize = string.size(); p < psize; ++p) {
+                if (string[p]) {
+                    s[rel[p]] = true;
+                }
+            }
+        }
+        out[n] = s;
+    }
+
+    return out;
+}
+
 void CI_Reference::build_gas_single(std::vector<Determinant>& ref_space) {
 
     // build one single low energy determinant in the gas space
@@ -529,6 +630,7 @@ void CI_Reference::build_gas_single(std::vector<Determinant>& ref_space) {
     }
 
     // iterate over all possible gas occupations
+    timer timer_gas1("Build GAS aufbau determinant");
     for (size_t i_config = 0; i_config < gas_electrons_.size(); ++i_config) {
 
         size_t gas1_na = gas_electrons_[i_config][0];
@@ -823,309 +925,120 @@ void CI_Reference::build_gas_single(std::vector<Determinant>& ref_space) {
 }
 
 void CI_Reference::build_gas_reference(std::vector<Determinant>& ref_space) {
-    // Build the entire GAS space
+    ref_space.clear();
 
-    // The relative_mo of each GAS, without sorting the energy
+    // relative indices within the active orbitals
+    std::vector<std::vector<size_t>> rel_gas_mos;
 
-    std::shared_ptr<Vector> epsilon_a = scf_info_->epsilon_a();
-    outfile->Printf("\n");
-    outfile->Printf("\n  GAS Orbital Energies");
-    outfile->Printf("\n  GAS   Energies    Orb ");
-
-    std::vector<std::vector<size_t>> relative_gas_mo;
-    std::vector<size_t> act_mo = mo_space_info_->absolute_mo("ACTIVE");
-    std::map<int, int> re_ab_mo;
-    for (size_t i = 0; i < act_mo.size(); i++) {
-        re_ab_mo[act_mo[i]] = i;
-    }
-    for (size_t gas_count = 0; gas_count < 6; gas_count++) {
-        std::string space = "GAS" + std::to_string(gas_count + 1);
-        std::vector<size_t> relative_mo;
-        auto vec_mo_info = mo_space_info_->absolute_mo(space);
-        for (size_t i = 0, maxi = vec_mo_info.size(); i < maxi; ++i) {
-            size_t orb = vec_mo_info[i];
-            relative_mo.push_back(re_ab_mo[orb]);
-            outfile->Printf("\n  %d  %12.9f  %d ", gas_count + 1, epsilon_a->get(orb),
-                            re_ab_mo[orb]);
-        }
-        relative_gas_mo.push_back(relative_mo);
+    for (int gas = 0; gas < 6; ++gas) {
+        std::string space_name = "GAS" + std::to_string(gas + 1);
+        auto abs_mos = mo_space_info_->absolute_mo(space_name);
+        if (abs_mos.size() == 0)
+            continue;
+        rel_gas_mos.push_back(mo_space_info_->pos_in_space(space_name, "ACTIVE"));
     }
 
-    // iterate over all possible gas occupations
-    for (size_t i_config = 0; i_config < gas_electrons_.size(); ++i_config) {
-        size_t gas1_na = gas_electrons_[i_config][0];
-        size_t gas1_nb = gas_electrons_[i_config][1];
-        size_t gas2_na = gas_electrons_[i_config][2];
-        size_t gas2_nb = gas_electrons_[i_config][3];
-        size_t gas3_na = gas_electrons_[i_config][4];
-        size_t gas3_nb = gas_electrons_[i_config][5];
-        size_t gas4_na = gas_electrons_[i_config][6];
-        size_t gas4_nb = gas_electrons_[i_config][7];
-        size_t gas5_na = gas_electrons_[i_config][8];
-        size_t gas5_nb = gas_electrons_[i_config][9];
-        size_t gas6_na = gas_electrons_[i_config][10];
-        size_t gas6_nb = gas_electrons_[i_config][11];
-        size_t gas1_size = relative_gas_mo[0].size();
-        size_t gas2_size = relative_gas_mo[1].size();
-        size_t gas3_size = relative_gas_mo[2].size();
-        size_t gas4_size = relative_gas_mo[3].size();
-        size_t gas5_size = relative_gas_mo[4].size();
-        size_t gas6_size = relative_gas_mo[5].size();
+    int ngas = rel_gas_mos.size(); // number of nonzero-sized GAS
 
-        // create the occupation of orbitals
-        std::vector<bool> tmp_det_gas1_a(gas1_size, false);
-        std::vector<bool> tmp_det_gas1_b(gas1_size, false);
-        std::vector<bool> tmp_det_gas2_a(gas2_size, false);
-        std::vector<bool> tmp_det_gas2_b(gas2_size, false);
-        std::vector<bool> tmp_det_gas3_a(gas3_size, false);
-        std::vector<bool> tmp_det_gas3_b(gas3_size, false);
-        std::vector<bool> tmp_det_gas4_a(gas4_size, false);
-        std::vector<bool> tmp_det_gas4_b(gas4_size, false);
-        std::vector<bool> tmp_det_gas5_a(gas5_size, false);
-        std::vector<bool> tmp_det_gas5_b(gas5_size, false);
-        std::vector<bool> tmp_det_gas6_a(gas6_size, false);
-        std::vector<bool> tmp_det_gas6_b(gas6_size, false);
+    // figure out symmetry product
+    // e.g., [[gas1_h1, gas1_h2], [gas2_h1, gas2_h2]] ->
+    // [[gas1_h1, gas2_h1], [gas1_h1, gas2_h2], [gas1_h2, gas2_h1], [gas1_h2, gas2_h2]]
+    std::vector<std::vector<int>> irrep_pools(ngas);
+    for (int i = 0; i < ngas; ++i) {
+        std::vector<int> irrep(nirrep_);
+        std::iota(irrep.begin(), irrep.end(), 0);
+        irrep_pools[i] = irrep;
+    }
+    auto sym_product = math::cartesian_product(irrep_pools);
 
-        if (gas1_size > 0) {
-            for (size_t i = 0; i < gas1_na; ++i) {
-                tmp_det_gas1_a[i] = true;
+    // dynamic programming for given GAS n/orbital/electron
+    std::map<std::tuple<int, size_t, size_t>, std::vector<std::vector<std::vector<bool>>>>
+        gasn_config_to_occ_string;
+
+    // loop over all GAS configurations
+    print_h2("Building GAS Determinants");
+    outfile->Printf("\n    Config.  #Determinants     Time/s");
+    outfile->Printf("\n    ---------------------------------");
+
+    timer timer_gas("Build GAS determinants");
+    for (size_t config = 0, size = gas_electrons_.size(); config < size; ++config) {
+        local_timer lt;
+        outfile->Printf("\n    %6d", config);
+
+        // build alpha or beta strings (ngas of nirrep of vector of occupation)
+        std::vector<std::vector<std::vector<std::vector<bool>>>> a_tmp, b_tmp;
+
+        for (int gas = 0; gas < 6; ++gas) {
+            auto space_name = "GAS" + std::to_string(gas + 1);
+            auto norb = mo_space_info_->size(space_name);
+            if (norb == 0)
+                continue;
+
+            auto sym = mo_space_info_->symmetry(space_name);
+
+            std::tuple<int, size_t, size_t> a_key{gas, norb, gas_electrons_[config][2 * gas]};
+            if (gasn_config_to_occ_string.find(a_key) == gasn_config_to_occ_string.end()) {
+                gasn_config_to_occ_string[a_key] =
+                    build_occ_string(norb, gas_electrons_[config][2 * gas], sym);
             }
-            for (size_t i = 0; i < gas1_nb; ++i) {
-                tmp_det_gas1_b[i] = true;
+            a_tmp.push_back(gasn_config_to_occ_string[a_key]);
+
+            std::tuple<int, size_t, size_t> b_key{gas, norb, gas_electrons_[config][2 * gas + 1]};
+            if (gasn_config_to_occ_string.find(b_key) == gasn_config_to_occ_string.end()) {
+                gasn_config_to_occ_string[b_key] =
+                    build_occ_string(norb, gas_electrons_[config][2 * gas + 1], sym);
             }
-        }
-        if (gas2_size > 0) {
-            for (size_t i = 0; i < gas2_na; ++i) {
-                tmp_det_gas2_a[i] = true;
-            }
-            for (size_t i = 0; i < gas2_nb; ++i) {
-                tmp_det_gas2_b[i] = true;
-            }
-        }
-        if (gas3_size > 0) {
-            for (size_t i = 0; i < gas3_na; ++i) {
-                tmp_det_gas3_a[i] = true;
-            }
-            for (size_t i = 0; i < gas3_nb; ++i) {
-                tmp_det_gas3_b[i] = true;
-            }
-        }
-        if (gas4_size > 0) {
-            for (size_t i = 0; i < gas4_na; ++i) {
-                tmp_det_gas4_a[i] = true;
-            }
-            for (size_t i = 0; i < gas4_nb; ++i) {
-                tmp_det_gas4_b[i] = true;
-            }
-        }
-        if (gas5_size > 0) {
-            for (size_t i = 0; i < gas5_na; ++i) {
-                tmp_det_gas5_a[i] = true;
-            }
-            for (size_t i = 0; i < gas5_nb; ++i) {
-                tmp_det_gas5_b[i] = true;
-            }
-        }
-        if (gas6_size > 0) {
-            for (size_t i = 0; i < gas6_na; ++i) {
-                tmp_det_gas6_a[i] = true;
-            }
-            for (size_t i = 0; i < gas6_nb; ++i) {
-                tmp_det_gas6_b[i] = true;
-            }
+            b_tmp.push_back(gasn_config_to_occ_string[b_key]);
         }
 
-        // Sort
-        std::sort(begin(tmp_det_gas1_a), end(tmp_det_gas1_a));
-        std::sort(begin(tmp_det_gas1_b), end(tmp_det_gas1_b));
-        std::sort(begin(tmp_det_gas2_a), end(tmp_det_gas2_a));
-        std::sort(begin(tmp_det_gas2_b), end(tmp_det_gas2_b));
-        std::sort(begin(tmp_det_gas3_a), end(tmp_det_gas3_a));
-        std::sort(begin(tmp_det_gas3_b), end(tmp_det_gas3_b));
-        std::sort(begin(tmp_det_gas4_a), end(tmp_det_gas4_a));
-        std::sort(begin(tmp_det_gas4_b), end(tmp_det_gas4_b));
-        std::sort(begin(tmp_det_gas5_a), end(tmp_det_gas5_a));
-        std::sort(begin(tmp_det_gas5_b), end(tmp_det_gas5_b));
-        std::sort(begin(tmp_det_gas6_a), end(tmp_det_gas6_a));
-        std::sort(begin(tmp_det_gas6_b), end(tmp_det_gas6_b));
+        // alpha and beta strings (nirrep of vector of occupations)
+        std::vector<std::vector<std::vector<bool>>> a_strings(nirrep_), b_strings(nirrep_);
 
-        // Save all permutations
-        std::vector<std::vector<bool>> alldet_gas1_a;
-        std::vector<std::vector<bool>> alldet_gas1_b;
-        std::vector<std::vector<bool>> alldet_gas2_a;
-        std::vector<std::vector<bool>> alldet_gas2_b;
-        std::vector<std::vector<bool>> alldet_gas3_a;
-        std::vector<std::vector<bool>> alldet_gas3_b;
-        std::vector<std::vector<bool>> alldet_gas4_a;
-        std::vector<std::vector<bool>> alldet_gas4_b;
-        std::vector<std::vector<bool>> alldet_gas5_a;
-        std::vector<std::vector<bool>> alldet_gas5_b;
-        std::vector<std::vector<bool>> alldet_gas6_a;
-        std::vector<std::vector<bool>> alldet_gas6_b;
+        // loop over symmetry product
+        for (const auto& sym : sym_product) {
+            int irrep = 0;
+            std::vector<std::vector<std::vector<bool>>> a(ngas), b(ngas);
 
-        do {
-            alldet_gas1_a.push_back(tmp_det_gas1_a);
-        } while (std::next_permutation(tmp_det_gas1_a.begin(), tmp_det_gas1_a.begin() + gas1_size));
-        do {
-            alldet_gas1_b.push_back(tmp_det_gas1_b);
-        } while (std::next_permutation(tmp_det_gas1_b.begin(), tmp_det_gas1_b.begin() + gas1_size));
-        do {
-            alldet_gas2_a.push_back(tmp_det_gas2_a);
-        } while (std::next_permutation(tmp_det_gas2_a.begin(), tmp_det_gas2_a.begin() + gas2_size));
-        do {
-            alldet_gas2_b.push_back(tmp_det_gas2_b);
-        } while (std::next_permutation(tmp_det_gas2_b.begin(), tmp_det_gas2_b.begin() + gas2_size));
-        do {
-            alldet_gas3_a.push_back(tmp_det_gas3_a);
-        } while (std::next_permutation(tmp_det_gas3_a.begin(), tmp_det_gas3_a.begin() + gas3_size));
-        do {
-            alldet_gas3_b.push_back(tmp_det_gas3_b);
-        } while (std::next_permutation(tmp_det_gas3_b.begin(), tmp_det_gas3_b.begin() + gas3_size));
-        do {
-            alldet_gas4_a.push_back(tmp_det_gas4_a);
-        } while (std::next_permutation(tmp_det_gas4_a.begin(), tmp_det_gas4_a.begin() + gas4_size));
-        do {
-            alldet_gas4_b.push_back(tmp_det_gas4_b);
-        } while (std::next_permutation(tmp_det_gas4_b.begin(), tmp_det_gas4_b.begin() + gas4_size));
-        do {
-            alldet_gas5_a.push_back(tmp_det_gas5_a);
-        } while (std::next_permutation(tmp_det_gas5_a.begin(), tmp_det_gas5_a.begin() + gas5_size));
-        do {
-            alldet_gas5_b.push_back(tmp_det_gas5_b);
-        } while (std::next_permutation(tmp_det_gas5_b.begin(), tmp_det_gas5_b.begin() + gas5_size));
-        do {
-            alldet_gas6_a.push_back(tmp_det_gas6_a);
-        } while (std::next_permutation(tmp_det_gas6_a.begin(), tmp_det_gas6_a.begin() + gas6_size));
-        do {
-            alldet_gas6_b.push_back(tmp_det_gas6_b);
-        } while (std::next_permutation(tmp_det_gas6_b.begin(), tmp_det_gas6_b.begin() + gas6_size));
+            for (int gas = 0; gas < ngas; ++gas) {
+                int h = sym[gas];
+                irrep ^= h;
+                a[gas] = a_tmp[gas][h];
+                b[gas] = b_tmp[gas][h];
+            }
 
-        // Permutation of all the orbitals
-        for (const auto& det_gas1_a : alldet_gas1_a) {
-            for (const auto& det_gas1_b : alldet_gas1_b) {
-                for (const auto& det_gas2_a : alldet_gas2_a) {
-                    for (const auto& det_gas2_b : alldet_gas2_b) {
-                        for (const auto& det_gas3_a : alldet_gas3_a) {
-                            for (const auto& det_gas3_b : alldet_gas3_b) {
-                                for (const auto& det_gas4_a : alldet_gas4_a) {
-                                    for (const auto& det_gas4_b : alldet_gas4_b) {
-                                        for (const auto& det_gas5_a : alldet_gas5_a) {
-                                            for (const auto& det_gas5_b : alldet_gas5_b) {
-                                                for (const auto& det_gas6_a : alldet_gas6_a) {
-                                                    for (const auto& det_gas6_b : alldet_gas6_b) {
-                                                        // Build determinant
-                                                        // outfile->Printf(
-                                                        //   "\n Possible
-                                                        //   Configurations");
-                                                        Determinant det;
-                                                        int sym = 0;
-                                                        for (size_t p = 0; p < gas1_size; ++p) {
-                                                            det.set_alfa_bit(relative_gas_mo[0][p],
-                                                                             det_gas1_a[p]);
-                                                            det.set_beta_bit(relative_gas_mo[0][p],
-                                                                             det_gas1_b[p]);
-                                                            if (det_gas1_a[p]) {
-                                                                sym ^= mo_symmetry_
-                                                                    [relative_gas_mo[0][p]];
-                                                            }
-                                                            if (det_gas1_b[p]) {
-                                                                sym ^= mo_symmetry_
-                                                                    [relative_gas_mo[0][p]];
-                                                            }
-                                                        }
-                                                        for (size_t p = 0; p < gas2_size; ++p) {
-                                                            det.set_alfa_bit(relative_gas_mo[1][p],
-                                                                             det_gas2_a[p]);
-                                                            det.set_beta_bit(relative_gas_mo[1][p],
-                                                                             det_gas2_b[p]);
-                                                            if (det_gas2_a[p]) {
-                                                                sym ^= mo_symmetry_
-                                                                    [relative_gas_mo[1][p]];
-                                                            }
-                                                            if (det_gas2_b[p]) {
-                                                                sym ^= mo_symmetry_
-                                                                    [relative_gas_mo[1][p]];
-                                                            }
-                                                        }
-                                                        for (size_t p = 0; p < gas3_size; ++p) {
-                                                            det.set_alfa_bit(relative_gas_mo[2][p],
-                                                                             det_gas3_a[p]);
-                                                            det.set_beta_bit(relative_gas_mo[2][p],
-                                                                             det_gas3_b[p]);
-                                                            if (det_gas3_a[p]) {
-                                                                sym ^= mo_symmetry_
-                                                                    [relative_gas_mo[2][p]];
-                                                            }
-                                                            if (det_gas3_b[p]) {
-                                                                sym ^= mo_symmetry_
-                                                                    [relative_gas_mo[2][p]];
-                                                            }
-                                                        }
-                                                        for (size_t p = 0; p < gas4_size; ++p) {
-                                                            det.set_alfa_bit(relative_gas_mo[3][p],
-                                                                             det_gas4_a[p]);
-                                                            det.set_beta_bit(relative_gas_mo[3][p],
-                                                                             det_gas4_b[p]);
-                                                            if (det_gas4_a[p]) {
-                                                                sym ^= mo_symmetry_
-                                                                    [relative_gas_mo[3][p]];
-                                                            }
-                                                            if (det_gas4_b[p]) {
-                                                                sym ^= mo_symmetry_
-                                                                    [relative_gas_mo[3][p]];
-                                                            }
-                                                        }
-                                                        for (size_t p = 0; p < gas5_size; ++p) {
-                                                            det.set_alfa_bit(relative_gas_mo[4][p],
-                                                                             det_gas5_a[p]);
-                                                            det.set_beta_bit(relative_gas_mo[4][p],
-                                                                             det_gas5_b[p]);
-                                                            if (det_gas5_a[p]) {
-                                                                sym ^= mo_symmetry_
-                                                                    [relative_gas_mo[4][p]];
-                                                            }
-                                                            if (det_gas5_b[p]) {
-                                                                sym ^= mo_symmetry_
-                                                                    [relative_gas_mo[4][p]];
-                                                            }
-                                                        }
-                                                        for (size_t p = 0; p < gas6_size; ++p) {
-                                                            det.set_alfa_bit(relative_gas_mo[5][p],
-                                                                             det_gas6_a[p]);
-                                                            det.set_beta_bit(relative_gas_mo[5][p],
-                                                                             det_gas6_b[p]);
-                                                            if (det_gas6_a[p]) {
-                                                                sym ^= mo_symmetry_
-                                                                    [relative_gas_mo[5][p]];
-                                                            }
-                                                            if (det_gas6_b[p]) {
-                                                                sym ^= mo_symmetry_
-                                                                    [relative_gas_mo[5][p]];
-                                                            }
-                                                        }
-                                                        int nunpair =
-                                                            nalpha_ + nbeta_ - 2 * det.npair();
-                                                        // Check symmetry and multiplicity
-                                                        if (sym == root_sym_) {
-                                                            //                                                            outfile->Printf(
-                                                            //                                                                "\n  Ref: %s",
-                                                            //                                                                str(det, nact_).c_str());
-                                                            ref_space.push_back(det);
-                                                        }
-                                                    }
-                                                }
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
+            // alpha
+            auto strings_irrep = build_gas_occ_string(a, rel_gas_mos);
+            std::move(strings_irrep.begin(), strings_irrep.end(),
+                      std::back_inserter(a_strings[irrep]));
+
+            // beta
+            strings_irrep = build_gas_occ_string(b, rel_gas_mos);
+            std::move(strings_irrep.begin(), strings_irrep.end(),
+                      std::back_inserter(b_strings[irrep]));
+        }
+
+        // combine alpha and beta strings to form determinant
+        size_t n = 0;
+        for (int ha = 0; ha < nirrep_; ++ha) {
+            int hb = root_sym_ ^ ha;
+            for (const auto& a : a_strings[ha]) {
+                for (const auto& b : b_strings[hb]) {
+                    ref_space.emplace_back(a, b);
+                    n++;
                 }
             }
         }
+
+        outfile->Printf("  %14zu  %9.3e", n, lt.get());
     }
-    //  outfile->Printf("\n ref size: %zu", ref_space.size());
+
+    outfile->Printf("\n    ---------------------------------");
+    outfile->Printf("\n    Total:  %14zu  %9.3e", ref_space.size(), timer_gas.stop());
+    outfile->Printf("\n    ---------------------------------");
+    //    print_h2("GAS Determinants");
+    //    for (const auto& det : ref_space) {
+    //        outfile->Printf("\n    %s", str(det, nact_).c_str());
+    //    }
 }
 
 std::vector<std::tuple<double, int, int>> CI_Reference::sym_labeled_orbitals(std::string type) {
