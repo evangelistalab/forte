@@ -118,11 +118,13 @@ jobs:
     displayName: 'Build Psi4 Environment'
 
   - bash: |
+      source active psi4env
       git clone https://github.com/psi4/psi4.git psi4
-      ls
       cmake -H. -Bpsi4-obj
         -DCMAKE_INSTALL_PREFIX=$(Build.sourcesDirectory)/psi4-bin \
+        -Dpsi4_CXX_STANDARD=17 \
         -DCMAKE_CXX_STANDARD=17 \
+        -DPYTHON_EXECUTABLE="${CONDA_PREFIX}/bin/python" \
         -DCMAKE_CXX_FLAGS=-DPYBIND11_CPP17 \
         $(Build.sourcesDirectory)/psi4
       cd psi4-obj
