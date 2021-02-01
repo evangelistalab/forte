@@ -117,7 +117,7 @@ jobs:
     displayName: 'Build Psi4 Environment'
 
   - bash: |
-      source active p4env
+      source activate p4env
       git clone https://github.com/psi4/psi4.git psi4
       cmake -H. -Bpsi4-obj
         -DCMAKE_INSTALL_PREFIX=$(Build.sourcesDirectory)/psi4-bin \
