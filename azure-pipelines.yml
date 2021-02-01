@@ -21,6 +21,10 @@ jobs:
         MAX_DET_ORB: 64
 
 #     max_det_orb_128:
+#       F_COMPILER: 'gfortran'
+#       APT_INSTALL: 'gfortran'
+#       C_COMPILER: 'gcc'
+#       CXX_COMPILER: 'g++'
 #       PYTHON_VER: '3.7'
 #       BUILD_TYPE: 'debug'
 #       MAX_DET_ORB: 128
@@ -59,12 +63,18 @@ jobs:
 
       echo "F Ver:"
       ${F_COMPILER} --version
-    displayName: "Setup Information"
+    displayName: 'Setup Information'
 
   - bash: |
-        echo "##vso[task.prependpath]$CONDA/bin"
-        conda config --set always_yes yes
-    displayName: "Add Conda to PATH"
+      mkdir -p build/forte
+      cp -r !(build) build/forte/
+      ls build/forte/
+    displayName: 'Copy Forte Source'
+
+  - bash: |
+      echo "##vso[task.prependpath]$CONDA/bin"
+      conda config --set always_yes yes
+    displayName: 'Add Conda to PATH'
 
   - bash: |
       conda create -q \
@@ -147,15 +157,15 @@ jobs:
 
   - bash: |
       source activate p4env
-      echo "Conda path:" ${CONDA_PREFIX}
-      echo "Python:" $(which python)
+      echo "Conda path: ${CONDA_PREFIX}"
+      echo "Python: $(which python)"
       python -V
       export PATH="$(Build.SourcesDirectory)/build/psi4bin/bin:$PATH"
-      echo $PATH
       psi4 --version
       psi4 --plugin-compile
-      PYBIND_INCLUDE=$(python -m pybind11 --includes)
-      echo "PYBIND_INCLUDE:" $PYBIND_INCLUDE
+#     PYBIND_INCLUDE=$(python -m pybind11 --includes)
+#     echo "PYBIND_INCLUDE:" $PYBIND_INCLUDE
+      cd build/forte
       cmake -H. -B. \
         -C$(Build.SourcesDirectory)/build/psi4bin/share/cmake/psi4/psi4PluginCache.cmake \
         -Dambit_DIR=${CONDA_PREFIX}/share/cmake/ambit \
@@ -169,37 +179,22 @@ jobs:
 
   - bash: |
       source activate p4env
-
-      # copied from Psi4
-      set -o pipefail
-      cmake --build . -- -j2 VERBOSE=1 2>&1 | tee build.log | grep "Building"
-      RESULT=$?
-
-      if [ $RESULT -eq 0 ]; then
-        echo build succeeded
-      else
-        echo build failed
-        cat build.log
-        exit 1
-      fi
-
-      export PYTHONPATH="$(dirname $PWD):$PYTHONPATH"
+      cd build/forte
+      make -j2 VERBOSE=1
     displayName: 'Build Forte'
 
   - bash: |
       source activate p4env
-      echo $PATH
-      export PYTHONPATH="$(dirname $PWD):$PYTHONPATH"
-      export PATH="$(Build.SourcesDirectory)/build/psi4bin:$PATH"
+      export PYTHONPATH="$(Build.SourcesDirectory)/build/forte:$PYTHONPATH"
+      echo "PYTHONPATH: $PYTHONPATH"
+      export PATH="$(Build.SourcesDirectory)/build/psi4bin/bin:$PATH"
+      echo "PATH: $PATH"
 
       bash tools/forte_codecov
       if [ $MAX_DET_ORB -ge 128 ]; then
         cd tests/large_det
         python run_forte_tests.py --bw --failed_dump
-        cd ../..
       fi
-      ./forte_tests
-      ./forte_benchmarks
-      cd tests/pytest
+      cd $(Build.SourcesDirectory)/tests/pytest
       pytest
     displayName: 'Run Forte tests'
