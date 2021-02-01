@@ -67,7 +67,7 @@ jobs:
 
   - bash: |
       mkdir -p build/forte
-      cp -r !(build) build/forte/
+      cp -R * build/forte/
       ls build/forte/
     displayName: 'Copy Forte Source'
 
