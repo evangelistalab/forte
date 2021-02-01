@@ -12,7 +12,10 @@ jobs:
     maxParallel: 4
     matrix:
       max_det_orb_64:
+        F_COMPILER: 'gfortran'
         APT_INSTALL: 'gfortran'
+        C_COMPILER: 'gcc'
+        CXX_COMPILER: 'g++'
         PYTHON_VER: '3.7'
         BUILD_TYPE: 'debug'
         MAX_DET_ORB: 64
