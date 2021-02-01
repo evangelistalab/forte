@@ -116,10 +116,11 @@ jobs:
         mkl-devel \
         pybind11 \
         pytest \
+        pytest-cov \
         pytest-xdist \
+        pytest-shutil \
         codecov \
-        lcov \
-        pytest-cov
+        lcov
       which python
       pip install git+https://github.com/i-pi/i-pi.git@master-py3
       conda list
