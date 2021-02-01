@@ -184,6 +184,7 @@ jobs:
   - bash: |
       source activate p4env
       export PYTHONPATH="$(Build.SourcesDirectory)/build:$PYTHONPATH"
+      export PYTHONPATH="$(Build.SourcesDirectory)/build/psi4/stage/lib:$PYTHONPATH"
       echo "PYTHONPATH: $PYTHONPATH"
       export PATH="$(Build.SourcesDirectory)/build/psi4bin/bin:$PATH"
       echo "PATH: $PATH"
