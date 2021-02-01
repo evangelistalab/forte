@@ -132,6 +132,7 @@ jobs:
         -DCMAKE_C_COMPILER=${C_COMPILER} \
         -DCMAKE_Fortran_COMPILER=${F_COMPILER} \
         -DCMAKE_BUILD_TYPE=${BUILD_TYPE} \
+        -Dpsi4_CXX_STANDARD=17 \
         -DCMAKE_CXX_STANDARD=17 \
         -DCMAKE_PREFIX_PATH=${CONDA_PREFIX} \
         -DPYTHON_EXECUTABLE=${CONDA_PREFIX}/bin/python \
@@ -139,7 +140,6 @@ jobs:
         -DCMAKE_INSTALL_PREFIX=$(Build.SourcesDirectory)/build/psi4bin
       cd objdir
       echo "Now at directory (Psi4 objdir):" $PWD
-      ls
       make -j2
       make install >& psi4_install.log
       export PATH="$(Build.SourcesDirectory)/build/psi4bin:$PATH"
