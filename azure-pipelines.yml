@@ -183,13 +183,15 @@ jobs:
 
   - bash: |
       source activate p4env
-      export PYTHONPATH="$(Build.SourcesDirectory)/build/forte:$PYTHONPATH"
+      export PYTHONPATH="$(Build.SourcesDirectory)/build:$PYTHONPATH"
       echo "PYTHONPATH: $PYTHONPATH"
       export PATH="$(Build.SourcesDirectory)/build/psi4bin/bin:$PATH"
       echo "PATH: $PATH"
+      cd build
       python -c "import forte; print(forte.__path__)"
 
-      cd build/forte
+      cd forte
+      ls
       bash tools/forte_codecov
       if [ $MAX_DET_ORB -ge 128 ]; then
         cd tests/large_det
