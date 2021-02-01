@@ -141,15 +141,16 @@ jobs:
       cd objdir
       echo "Now at directory (Psi4 objdir):" $PWD
       make -j2
+      echo "Now install Psi4 at: $(Build.SourcesDirectory)/build/psi4bin"
       make install >& psi4_install.log
-      export PATH="$(Build.SourcesDirectory)/build/psi4bin:$PATH"
-    displayName: 'Compile Psi4'
+    displayName: 'Build Psi4 Manually'
 
   - bash: |
       source activate p4env
       echo "Conda path:" ${CONDA_PREFIX}
       echo "Python:" $(which python)
       python -V
+      export PATH="$(Build.SourcesDirectory)/build/psi4bin:$PATH"
       psi4 --version
       psi4 --plugin-compile
       PYBIND_INCLUDE=$(python -m pybind11 --includes)
@@ -185,6 +186,11 @@ jobs:
     displayName: 'Build Forte'
 
   - bash: |
+      source activate p4env
+      echo $PATH
+      export PYTHONPATH="$(dirname $PWD):$PYTHONPATH"
+      export PATH="$(Build.SourcesDirectory)/build/psi4bin:$PATH"
+
       bash tools/forte_codecov
       if [ $MAX_DET_ORB -ge 128 ]; then
         cd tests/large_det
