@@ -120,11 +120,15 @@ jobs:
       which cmake
       cmake --version
       echo "PWD:" $PWD
+      echo "Agent.BuildDirectory:" $(Agent.BuildDirectory)
       export CXX=${CXX_COMPILER}
       export CC=${C_COMPILER}
       export FC=${F_COMPILER}
+      mkdir build
+      cd build
       git clone https://github.com/psi4/psi4.git psi4
-      cmake -H. -Bpsi4-obj
+      cd psi4
+      cmake -H. -Bobjdir
         -DCMAKE_CXX_COMPILER=${CXX_COMPILER} \
         -DCMAKE_C_COMPILER=${C_COMPILER} \
         -DCMAKE_Fortran_COMPILER=${F_COMPILER} \
@@ -133,13 +137,13 @@ jobs:
         -DCMAKE_PREFIX_PATH=${CONDA_PREFIX} \
         -DPYTHON_EXECUTABLE=${CONDA_PREFIX}/bin/python \
         -DCMAKE_CXX_FLAGS=-DPYBIND11_CPP17 \
-        -DCMAKE_INSTALL_PREFIX=$(Agent.BuildDirectory)/psi4-bin \
+        -DCMAKE_INSTALL_PREFIX=$(Agent.BuildDirectory)/build/psi4-bin \
         .
-      cd psi4-obj
+      cd objdir
       ls
       make -j2
       make install >& psi4_install.log
-      export PATH="$(Agent.BuildDirectory)/psi4-bin:$PATH"
+      export PATH="$(Agent.BuildDirectory)/build/psi4-bin:$PATH"
     displayName: 'Compile Psi4'
 
   - bash: |
