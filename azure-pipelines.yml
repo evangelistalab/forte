@@ -120,13 +120,20 @@ jobs:
       which cmake
       cmake --version
       echo "PWD:" $PWD
+      export CXX=${CXX_COMPILER}
+      export CC=${C_COMPILER}
+      export FC=${F_COMPILER}
       git clone https://github.com/psi4/psi4.git psi4
       cmake -H. -Bpsi4-obj
-        -DCMAKE_INSTALL_PREFIX=$(Agent.BuildDirectory)/psi4-bin \
+        -DCMAKE_CXX_COMPILER=${CXX_COMPILER} \
+        -DCMAKE_C_COMPILER=${C_COMPILER} \
+        -DCMAKE_Fortran_COMPILER=${F_COMPILER} \
+        -DCMAKE_BUILD_TYPE=${BUILD_TYPE} \
         -DCMAKE_CXX_STANDARD=17 \
-        -DPYTHON_EXECUTABLE="${CONDA_PREFIX}/bin/python" \
-        -Dpybind11_DIR={CONDA_PREFIX}/share/cmake/pybind11 \
+        -DCMAKE_PREFIX_PATH=${CONDA_PREFIX} \
+        -DPYTHON_EXECUTABLE=${CONDA_PREFIX}/bin/python \
         -DCMAKE_CXX_FLAGS=-DPYBIND11_CPP17 \
+        -DCMAKE_INSTALL_PREFIX=$(Agent.BuildDirectory)/psi4-bin \
         .
       cd psi4-obj
       ls
