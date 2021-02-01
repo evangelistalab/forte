@@ -7,11 +7,12 @@ jobs:
   displayName: 'Linux Builds'
   pool:
     vmImage: 'ubuntu-latest'
-  timeoutInMinutes: 60
+  timeoutInMinutes: 90
   strategy:
     maxParallel: 4
     matrix:
       max_det_orb_64:
+        APT_INSTALL: 'gfortran'
         PYTHON_VER: '3.7'
         BUILD_TYPE: 'debug'
         MAX_DET_ORB: 64
@@ -22,6 +23,12 @@ jobs:
 #       MAX_DET_ORB: 128
 
   steps:
+  - bash: |
+      [[ "${APT_REPOSITORY}" ]] && echo "Add Repo ${APT_REPOSITORY}" && sudo add-apt-repository "${APT_REPOSITORY}"
+      sudo apt-get update
+      sudo apt-get install ${APT_INSTALL}
+    displayName: "Apt-Get Packages"
+
   - bash: |
       echo "" && echo "Ubuntu"
       lsb_release -a
@@ -40,6 +47,15 @@ jobs:
 
       echo "" && echo "Nprocs:"
       getconf _NPROCESSORS_ONLN
+
+      echo "C Ver:"
+      ${C_COMPILER} --version
+
+      echo "CXX Ver:"
+      ${CXX_COMPILER} --version
+
+      echo "F Ver:"
+      ${F_COMPILER} --version
     displayName: "Setup Information"
 
   - bash: |
@@ -51,13 +67,36 @@ jobs:
       conda create -q \
         -n p4env \
         python=$PYTHON_VER \
-        psi4/label/dev::psi4 \
+        psi4/label/dev::gau2grid=2 \
+        psi4/label/dev::libint2 \
+        psi4/label/dev::libxc \
+        psi4/label/dev::ambit \
+        psi4/label/dev::chemps2 \
+        psi4/label/dev::dkh \
+        psi4/label/dev::gdma \
+        psi4/label/dev::pcmsolver \
+        psi4/label/dev::simint \
+        psi4/label/dev::dftd3 \
+        psi4/label/dev::gcp \
+        psi4/label/dev::resp \
+        psi4/label/dev::pycppe \
+        psi4/label/dev::pylibefp \
+        psi4/label/dev::snsmp2 \
+        psi4/label/dev::fockci \
+        psi4/label/dev::mp2d \
         psi4/label/dev::psi4-dev \
         psi4/label/dev::ci-psi4 \
-        psi4/label/dev::pybind11-headers \
-        gcc_linux-64 \
-        gxx_linux-64 \
-        gfortran_linux-64
+        blas=*=mkl \
+        mkl-include \
+        networkx \
+        pytest \
+        eigen \
+        mpfr \
+        pytest-xdist \
+        conda-forge::qcelemental \
+        conda-forge::qcengine \
+        conda-forge::pymdi \
+        adcc::adcc
       source activate p4env
       conda install -c conda-forge \
         cmake \
@@ -73,7 +112,21 @@ jobs:
       which python
       pip install git+https://github.com/i-pi/i-pi.git@master-py3
       conda list
-    displayName: 'Build Environment'
+    displayName: 'Build Psi4 Environment'
+
+  - bash: |
+      git clone https://github.com/psi4/psi4.git psi4
+      ls
+      cmake -H. -Bpsi4-obj
+        -DCMAKE_INSTALL_PREFIX=$(Build.sourcesDirectory)/psi4-bin \
+        -DCMAKE_CXX_STANDARD=17 \
+        -DCMAKE_CXX_FLAGS=-DPYBIND11_CPP17 \
+        $(Build.sourcesDirectory)/psi4
+      cd psi4-obj
+      make -j2
+      make install >& psi4_install.log
+      export PATH="$(Build.sourcesDirectory)/psi4-bin:$PATH"
+    displayName: 'Compile Psi4'
 
   - bash: |
       source activate p4env
@@ -85,7 +138,7 @@ jobs:
       PYBIND_INCLUDE=$(python -m pybind11 --includes)
       echo "PYBIND_INCLUDE:" $PYBIND_INCLUDE
       cmake -H. -B. \
-        -C${CONDA_PREFIX}/share/cmake/psi4/psi4PluginCache.cmake \
+        -C$(Build.sourcesDirectory)/psi4-bin/share/cmake/psi4/psi4PluginCache.cmake \
         -Dambit_DIR=${CONDA_PREFIX}/share/cmake/ambit \
         -DCMAKE_CXX_STANDARD=17 \
         -DPYTHON_EXECUTABLE="${CONDA_PREFIX}/bin/python" \
