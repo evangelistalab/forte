@@ -87,7 +87,6 @@ jobs:
         psi4/label/dev::snsmp2 \
         psi4/label/dev::fockci \
         psi4/label/dev::mp2d \
-        psi4/label/dev::ci-psi4 \
         blas=*=mkl \
         mkl-include \
         networkx \
@@ -114,24 +113,26 @@ jobs:
       which python
       pip install git+https://github.com/i-pi/i-pi.git@master-py3
       conda list
-    displayName: 'Build Psi4 Environment'
+    displayName: 'Configure Environment'
 
   - bash: |
       source activate p4env
       which cmake
       cmake --version
+      echo "PWD:" $PWD
       git clone https://github.com/psi4/psi4.git psi4
       cmake -H. -Bpsi4-obj
-        -DCMAKE_INSTALL_PREFIX=$(Build.sourcesDirectory)/psi4-bin \
+        -DCMAKE_INSTALL_PREFIX=$(Agent.BuildDirectory)/psi4-bin \
         -DCMAKE_CXX_STANDARD=17 \
         -DPYTHON_EXECUTABLE="${CONDA_PREFIX}/bin/python" \
         -Dpybind11_DIR={CONDA_PREFIX}/share/cmake/pybind11 \
         -DCMAKE_CXX_FLAGS=-DPYBIND11_CPP17 \
-        $(Build.sourcesDirectory)/psi4
+        .
       cd psi4-obj
+      ls
       make -j2
       make install >& psi4_install.log
-      export PATH="$(Build.sourcesDirectory)/psi4-bin:$PATH"
+      export PATH="$(Agent.BuildDirectory)/psi4-bin:$PATH"
     displayName: 'Compile Psi4'
 
   - bash: |
@@ -144,7 +145,7 @@ jobs:
       PYBIND_INCLUDE=$(python -m pybind11 --includes)
       echo "PYBIND_INCLUDE:" $PYBIND_INCLUDE
       cmake -H. -B. \
-        -C$(Build.sourcesDirectory)/psi4-bin/share/cmake/psi4/psi4PluginCache.cmake \
+        -C$(Agent.BuildDirectory)/psi4-bin/share/cmake/psi4/psi4PluginCache.cmake \
         -Dambit_DIR=${CONDA_PREFIX}/share/cmake/ambit \
         -DCMAKE_CXX_STANDARD=17 \
         -DPYTHON_EXECUTABLE="${CONDA_PREFIX}/bin/python" \
