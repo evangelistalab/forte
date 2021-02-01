@@ -163,8 +163,6 @@ jobs:
       export PATH="$(Build.SourcesDirectory)/build/psi4bin/bin:$PATH"
       psi4 --version
       psi4 --plugin-compile
-#     PYBIND_INCLUDE=$(python -m pybind11 --includes)
-#     echo "PYBIND_INCLUDE:" $PYBIND_INCLUDE
       cd build/forte
       cmake -H. -B. \
         -C$(Build.SourcesDirectory)/build/psi4bin/share/cmake/psi4/psi4PluginCache.cmake \
