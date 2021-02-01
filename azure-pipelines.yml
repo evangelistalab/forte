@@ -187,12 +187,14 @@ jobs:
       echo "PYTHONPATH: $PYTHONPATH"
       export PATH="$(Build.SourcesDirectory)/build/psi4bin/bin:$PATH"
       echo "PATH: $PATH"
+      python -c "import forte; print(forte.__path__)"
 
+      cd build/forte
       bash tools/forte_codecov
       if [ $MAX_DET_ORB -ge 128 ]; then
         cd tests/large_det
         python run_forte_tests.py --bw --failed_dump
       fi
-      cd $(Build.SourcesDirectory)/tests/pytest
+      cd $(Build.SourcesDirectory)/build/forte/tests/pytest
       pytest
     displayName: 'Run Forte tests'
