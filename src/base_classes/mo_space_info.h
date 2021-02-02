@@ -280,9 +280,9 @@ class MOSpaceInfo {
                                              std::shared_ptr<ForteOptions> options);
 
     /// Read information about each elementary space from a map
-    std::pair<SpaceInfo, bool> read_mo_space_from_map(const std::string& space,
-                                                      const std::map < std::string,
-                                                      std::vector<size_t>& mo_space_map);
+    std::pair<SpaceInfo, bool>
+    read_mo_space_from_map(const std::string& space,
+                           const std::map<std::string, std::vector<size_t>>& mo_space_map);
 };
 
 /// Make MOSpaceInfo from input (options)
