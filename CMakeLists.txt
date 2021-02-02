@@ -35,7 +35,8 @@ include(autocmake_mpi)  # MPI option A
 #include(custom_static_library)
 
 #find_package(psi4 1.1 REQUIRED COMPONENTS ambit chemps2)
-find_package(pybind11 REQUIRED)
+find_package(Python COMPONENTS Interpreter Development REQUIRED)
+find_package(pybind11 CONFIG REQUIRED)
 find_package(psi4 1.3 REQUIRED)
 find_package(TargetLAPACK REQUIRED)
 find_package(ambit 0.4 REQUIRED)
@@ -219,7 +220,7 @@ src/sparse_ci/sparse_ci_solver.cc
 src/v2rdm/v2rdm.cc
 )
 
-target_link_libraries(forte PRIVATE psi4::core pybind11::module)
+target_link_libraries(forte PRIVATE psi4::core)
 target_link_libraries(forte PRIVATE tgt::MathOpenMP)
 set_target_properties(forte PROPERTIES PREFIX "")
 target_link_libraries(forte PRIVATE ambit::ambit)
