@@ -262,7 +262,7 @@ void MOSpaceInfo::read_options(std::shared_ptr<ForteOptions> options) {
     }
 }
 
-void MOSpaceInfo::read_from_map(std::map<std::string, std::vector<size_t>>& mo_space_map) {
+void MOSpaceInfo::read_from_map(const std::map<std::string, std::vector<size_t>>& mo_space_map) {
     // Read the elementary spaces
     for (std::string& space : elementary_spaces_) {
         std::pair<SpaceInfo, bool> result = read_mo_space_from_map(space, mo_space_map);
@@ -418,7 +418,7 @@ std::pair<SpaceInfo, bool> MOSpaceInfo::read_mo_space(const std::string& space,
 
 std::pair<SpaceInfo, bool>
 MOSpaceInfo::read_mo_space_from_map(const std::string& space,
-                                    std::map<std::string, std::vector<size_t>>& mo_space_map) {
+                                    const std::map<std::string, std::vector<size_t>>& mo_space_map) {
     bool read = false;
     psi::Dimension space_dim(nirrep_);
     std::vector<MOInfo> vec_mo_info;
@@ -426,7 +426,7 @@ MOSpaceInfo::read_mo_space_from_map(const std::string& space,
     // lookup the space
     auto it = mo_space_map.find(space);
     if (it != mo_space_map.end()) {
-        const auto& dim = mo_space_map[space];
+        const auto& dim = mo_space_map.at(space);
         if (dim.size() == nirrep_) {
             for (size_t h = 0; h < nirrep_; ++h) {
                 space_dim[h] = dim[h];
@@ -452,7 +452,7 @@ std::shared_ptr<MOSpaceInfo> make_mo_space_info(const psi::Dimension& nmopi,
 
 std::shared_ptr<MOSpaceInfo>
 make_mo_space_info_from_map(const psi::Dimension& nmopi, const std::string& point_group,
-                            std::map<std::string, std::vector<size_t>>& mo_space_map,
+                            const std::map<std::string, std::vector<size_t>>& mo_space_map,
                             std::vector<size_t> reorder) {
 
     auto mo_space_info = std::make_shared<MOSpaceInfo>(nmopi, point_group);
