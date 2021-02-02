@@ -20,14 +20,14 @@ jobs:
         BUILD_TYPE: 'debug'
         MAX_DET_ORB: 64
 
-#     max_det_orb_128:
-#       F_COMPILER: 'gfortran'
-#       APT_INSTALL: 'gfortran'
-#       C_COMPILER: 'gcc'
-#       CXX_COMPILER: 'g++'
-#       PYTHON_VER: '3.7'
-#       BUILD_TYPE: 'debug'
-#       MAX_DET_ORB: 128
+      max_det_orb_128:
+        F_COMPILER: 'gfortran'
+        APT_INSTALL: 'gfortran'
+        C_COMPILER: 'gcc'
+        CXX_COMPILER: 'g++'
+        PYTHON_VER: '3.7'
+        BUILD_TYPE: 'debug'
+        MAX_DET_ORB: 128
 
   steps:
   - bash: |
