@@ -219,7 +219,7 @@ src/sparse_ci/sparse_ci_solver.cc
 src/v2rdm/v2rdm.cc
 )
 
-target_link_libraries(forte PRIVATE psi4::core pybind11:module)
+target_link_libraries(forte PRIVATE psi4::core pybind11::module)
 target_link_libraries(forte PRIVATE tgt::MathOpenMP)
 set_target_properties(forte PROPERTIES PREFIX "")
 target_link_libraries(forte PRIVATE ambit::ambit)
