@@ -35,8 +35,8 @@ include(autocmake_mpi)  # MPI option A
 #include(custom_static_library)
 
 #find_package(psi4 1.1 REQUIRED COMPONENTS ambit chemps2)
-find_package(pybind11 CONFIG REQUIRED)
 find_package(psi4 1.3 REQUIRED)
+find_package(pybind11 CONFIG REQUIRED)
 find_package(Python COMPONENTS Interpreter Development REQUIRED)
 find_package(TargetLAPACK REQUIRED)
 find_package(ambit 0.5 REQUIRED)
