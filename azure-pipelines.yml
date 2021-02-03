@@ -137,7 +137,9 @@ jobs:
       cd build
       git clone https://github.com/psi4/psi4.git psi4
       cd psi4
-      echo "Now at directory (before Psi4 cmake):" $PWD
+      # the following line is needed as of Psi4 02/02/2020 to make plugin callable from Python
+      sed -i 's/core MODULE core.cc/core SHARED core.cc/' psi4/src/CMakeLists.txt
+      echo "Now at directory (Psi4 source):" $PWD
       cmake -H. -Bobjdir \
         -DCMAKE_CXX_COMPILER=${CXX_COMPILER} \
         -DCMAKE_C_COMPILER=${C_COMPILER} \
