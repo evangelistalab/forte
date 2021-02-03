@@ -132,15 +132,14 @@ jobs:
       cmake --version
       echo "Agent.BuildDirectory:" $(Agent.BuildDirectory)
       echo "Build.SourcesDirectory:" $(Build.SourcesDirectory)
-      echo "Now at directory:" $PWD
       mkdir -p build/psi4bin
       cd build
+      echo "Now at directory: $PWD"
       git clone https://github.com/psi4/psi4.git psi4
-      cd psi4
       # the following line is needed as of Psi4 02/02/2020 to make plugin callable from Python
-      sed -i 's/core MODULE core.cc/core SHARED core.cc/' psi4/src/CMakeLists.txt
-      echo "Now at directory (Psi4 source):" $PWD
-      cmake -H. -Bobjdir \
+      sed -i '0,/MODULE/{s/MODULE/SHARED/}' psi4/psi4/src/CMakeLists.txt
+      head -n3 psi4/psi4/src/CMakeLists.txt
+      cmake -Hpsi4 -Bpsi4obj \
         -DCMAKE_CXX_COMPILER=${CXX_COMPILER} \
         -DCMAKE_C_COMPILER=${C_COMPILER} \
         -DCMAKE_Fortran_COMPILER=${F_COMPILER} \
@@ -151,19 +150,27 @@ jobs:
         -DPython_EXECUTABLE=${CONDA_PREFIX}/bin/python \
         -DCMAKE_CXX_FLAGS=-DPYBIND11_CPP17 \
         -DCMAKE_INSTALL_PREFIX=$(Build.SourcesDirectory)/build/psi4bin
-      cd objdir
-      echo "Now at directory (Psi4 objdir):" $PWD
+    displayName: 'Configure Psi4 Build'
+
+  - bash: |
+      conda activate p4env
+      cd build/psi4obj
+      echo "Now at directory (Psi4 objdir): $PWD"
       make -j2
       echo "Now install Psi4 at: $(Build.SourcesDirectory)/build/psi4bin"
       make install
-    displayName: 'Build Psi4 Manually'
+      STAGED_INSTALL_PREFIX=$(Build.SourcesDirectory)/build/psi4obj/stage
+      export PATH="$(Build.SourcesDirectory)/build/psi4bin/bin:$PATH"
+      export PYTHONPATH="$(Build.SourcesDirectory)/build:$PYTHONPATH"
+      export PYTHONPATH="${STAGED_INSTALL_PREFIX}/lib:$PYTHONPATH"
+    displayName: 'Build Psi4'
 
   - bash: |
       source activate p4env
+      echo "Psi4 staging directory: $STAGED_INSTALL_PREFIX"
       echo "Conda path: ${CONDA_PREFIX}"
       echo "Python: $(which python)"
       python -V
-      export PATH="$(Build.SourcesDirectory)/build/psi4bin/bin:$PATH"
       psi4 --version
       psi4 --plugin-compile
       cd build/forte
@@ -172,6 +179,7 @@ jobs:
         -DCMAKE_CXX_COMPILER=${CXX_COMPILER} \
         -DCMAKE_C_COMPILER=${C_COMPILER} \
         -DCMAKE_Fortran_COMPILER=${F_COMPILER} \
+        -DTargetLAPACK_DIR=${STAGED_INSTALL_PREFIX}/share/cmake/TargetLAPACK \
         -Dambit_DIR=${CONDA_PREFIX}/share/cmake/ambit \
         -DCMAKE_CXX_STANDARD=17 \
         -DPython_EXECUTABLE="${CONDA_PREFIX}/bin/python" \
@@ -179,7 +187,7 @@ jobs:
         -DENABLE_CODECOV=ON \
         -DCMAKE_CXX_FLAGS=-DPYBIND11_CPP17 \
         -DMAX_DET_ORB=${MAX_DET_ORB}
-    displayName: 'Configure Build'
+    displayName: 'Configure Forte Build'
 
   - bash: |
       source activate p4env
@@ -189,16 +197,14 @@ jobs:
 
   - bash: |
       source activate p4env
-      export PYTHONPATH="$(Build.SourcesDirectory)/build:$PYTHONPATH"
-      export PYTHONPATH="$(Build.SourcesDirectory)/build/psi4/objdir/stage/lib:$PYTHONPATH"
-      echo "PYTHONPATH: $PYTHONPATH"
-      export PATH="$(Build.SourcesDirectory)/build/psi4bin/bin:$PATH"
       echo "PATH: $PATH"
+      echo "PYTHONPATH: $PYTHONPATH"
       cd build
       echo "Psi4 Python path:"
       python -c "import psi4; print(psi4.__path__)"
       echo "Forte Python path:"
       python -c "import forte; print(forte.__path__)"
+      python -c "import forte; forte.banner()"
 
       cd forte
       bash tools/forte_codecov
