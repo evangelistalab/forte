@@ -159,14 +159,19 @@ jobs:
       make -j2
       echo "Now install Psi4 at: $(Build.SourcesDirectory)/build/psi4bin"
       make install
-      STAGED_INSTALL_PREFIX=$(Build.SourcesDirectory)/build/psi4obj/stage
-      export PATH="$(Build.SourcesDirectory)/build/psi4bin/bin:$PATH"
-      export PYTHONPATH="${STAGED_INSTALL_PREFIX}/lib:$(Build.SourcesDirectory)/build:$PYTHONPATH"
     displayName: 'Build Psi4'
 
   - bash: |
       source activate p4env
-      echo "Psi4 staging directory: $STAGED_INSTALL_PREFIX"
+      STAGED_INSTALL_PREFIX=$(Build.SourcesDirectory)/build/psi4obj/stage
+      echo "##vso[task.setvariable variable=STAGED_INSTALL_PREFIX]$STAGED_INSTALL_PREFIX"
+      echo "##vso[task.setvariable variable=PYTHONPATH]${STAGED_INSTALL_PREFIX}/lib:$(Build.SourcesDirectory)/build:$(PYTHONPATH)"
+      echo "##vso[task.prependpath]$(Build.SourcesDirectory)/build/psi4bin/bin"
+    displayName: 'Add Psi4 to PATH and PYTHONPATH'
+
+  - bash: |
+      source activate p4env
+      echo "Psi4 staging directory: $(STAGED_INSTALL_PREFIX)"
       echo "Conda path: ${CONDA_PREFIX}"
       echo "Python: $(which python)"
       python -V
@@ -178,7 +183,7 @@ jobs:
         -DCMAKE_CXX_COMPILER=${CXX_COMPILER} \
         -DCMAKE_C_COMPILER=${C_COMPILER} \
         -DCMAKE_Fortran_COMPILER=${F_COMPILER} \
-        -DTargetLAPACK_DIR=${STAGED_INSTALL_PREFIX}/share/cmake/TargetLAPACK \
+        -DTargetLAPACK_DIR=$(STAGED_INSTALL_PREFIX)/share/cmake/TargetLAPACK \
         -Dambit_DIR=${CONDA_PREFIX}/share/cmake/ambit \
         -DCMAKE_CXX_STANDARD=17 \
         -DPython_EXECUTABLE="${CONDA_PREFIX}/bin/python" \
@@ -196,8 +201,8 @@ jobs:
 
   - bash: |
       source activate p4env
-      echo "PATH: $PATH"
-      echo "PYTHONPATH: $PYTHONPATH"
+      echo "PATH: $(PATH)"
+      echo "PYTHONPATH: $(PYTHONPATH)"
       cd build
       echo "Psi4 Python path:"
       python -c "import psi4; print(psi4.__path__)"
