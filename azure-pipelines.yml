@@ -153,7 +153,7 @@ jobs:
     displayName: 'Configure Psi4 Build'
 
   - bash: |
-      conda activate p4env
+      source activate p4env
       cd build/psi4obj
       echo "Now at directory (Psi4 objdir): $PWD"
       make -j2
@@ -161,8 +161,7 @@ jobs:
       make install
       STAGED_INSTALL_PREFIX=$(Build.SourcesDirectory)/build/psi4obj/stage
       export PATH="$(Build.SourcesDirectory)/build/psi4bin/bin:$PATH"
-      export PYTHONPATH="$(Build.SourcesDirectory)/build:$PYTHONPATH"
-      export PYTHONPATH="${STAGED_INSTALL_PREFIX}/lib:$PYTHONPATH"
+      export PYTHONPATH="${STAGED_INSTALL_PREFIX}/lib:$(Build.SourcesDirectory)/build:$PYTHONPATH"
     displayName: 'Build Psi4'
 
   - bash: |
