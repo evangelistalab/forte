@@ -166,18 +166,19 @@ jobs:
       cd build/psi4obj
       echo "Now at directory (Psi4 objdir): $PWD"
       make -j2
+      find . -name core*.so | xargs readelf -d
       echo "Now install Psi4 at: $(PSI4BIN_DIR)"
       make install
+      cd $(PSI4BIN_DIR)
+      readelf -d lib/psi4/core*.so
     displayName: 'Build Psi4'
 
   - bash: |
       source activate p4env
       STAGED_INSTALL_PREFIX=$(Build.SourcesDirectory)/build/psi4obj/stage
       echo "##vso[task.setvariable variable=STAGED_INSTALL_PREFIX]$STAGED_INSTALL_PREFIX"
-      echo "##vso[task.setvariable variable=PYTHONPATH]${STAGED_INSTALL_PREFIX}/lib:$(Build.SourcesDirectory)/build"
-      echo "PYTHONPATH: $PYTHONPATH"
+      echo "##vso[task.setvariable variable=PYTHONPATH]${STAGED_INSTALL_PREFIX}/lib:$(Build.SourcesDirectory)/build:{PYTHONPATH}"
       echo "##vso[task.setvariable variable=PATH]${PSI4BIN_DIR}/bin:${PATH}"
-      echo "PATH: $PATH"
     displayName: 'Add Psi4 to PATH and PYTHONPATH'
 
   - bash: |
@@ -201,14 +202,15 @@ jobs:
         -DCMAKE_BUILD_TYPE=${BUILD_TYPE} \
         -DENABLE_CODECOV=ON \
         -DCMAKE_CXX_FLAGS=-DPYBIND11_CPP17 \
-        -DMAX_DET_ORB=${MAX_DET_ORB}
+        -DMAX_DET_ORB=${MAX_DET_ORB} .
     displayName: 'Configure Forte Build'
 
   - bash: |
       source activate p4env
       cd build/forte
       make -j2 VERBOSE=1
-      ldd *.so
+      ldd forte*.so
+      readelf -d forte*.so
     displayName: 'Build Forte'
 
   - bash: |
