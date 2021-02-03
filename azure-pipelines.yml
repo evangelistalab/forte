@@ -11,23 +11,23 @@ jobs:
   strategy:
     maxParallel: 4
     matrix:
-      max_det_orb_64:
+      clang_py38_orb64:
         F_COMPILER: 'gfortran'
-        APT_INSTALL: 'gfortran'
-        C_COMPILER: 'gcc'
-        CXX_COMPILER: 'g++'
-        PYTHON_VER: '3.7'
+        C_COMPILER: 'clang'
+        CXX_COMPILER: 'clang++'
+        PYTHON_VER: '3.8'
         BUILD_TYPE: 'debug'
         MAX_DET_ORB: 64
+        APT_INSTALL: 'gfortran clang-10'
 
-      max_det_orb_128:
+      gcc_py37_orb128:
         F_COMPILER: 'gfortran'
-        APT_INSTALL: 'gfortran'
         C_COMPILER: 'gcc'
         CXX_COMPILER: 'g++'
         PYTHON_VER: '3.7'
         BUILD_TYPE: 'debug'
         MAX_DET_ORB: 128
+        APT_INSTALL: 'gfortran'
 
   steps:
   - bash: |
@@ -148,7 +148,7 @@ jobs:
         -Dpsi4_CXX_STANDARD=17 \
         -DCMAKE_CXX_STANDARD=17 \
         -DCMAKE_PREFIX_PATH=${CONDA_PREFIX} \
-        -DPYTHON_EXECUTABLE=${CONDA_PREFIX}/bin/python \
+        -DPython_EXECUTABLE=${CONDA_PREFIX}/bin/python \
         -DCMAKE_CXX_FLAGS=-DPYBIND11_CPP17 \
         -DCMAKE_INSTALL_PREFIX=$(Build.SourcesDirectory)/build/psi4bin
       cd objdir
@@ -169,9 +169,12 @@ jobs:
       cd build/forte
       cmake -H. -B. \
         -C$(Build.SourcesDirectory)/build/psi4bin/share/cmake/psi4/psi4PluginCache.cmake \
+        -DCMAKE_CXX_COMPILER=${CXX_COMPILER} \
+        -DCMAKE_C_COMPILER=${C_COMPILER} \
+        -DCMAKE_Fortran_COMPILER=${F_COMPILER} \
         -Dambit_DIR=${CONDA_PREFIX}/share/cmake/ambit \
         -DCMAKE_CXX_STANDARD=17 \
-        -DPYTHON_EXECUTABLE="${CONDA_PREFIX}/bin/python" \
+        -DPython_EXECUTABLE="${CONDA_PREFIX}/bin/python" \
         -DCMAKE_BUILD_TYPE=${BUILD_TYPE} \
         -DENABLE_CODECOV=ON \
         -DCMAKE_CXX_FLAGS=-DPYBIND11_CPP17 \
