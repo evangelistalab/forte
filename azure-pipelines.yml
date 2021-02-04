@@ -144,8 +144,8 @@ jobs:
       echo "Now at directory: $PWD"
       git clone https://github.com/psi4/psi4.git psi4
       cd psi4
-      git fetch origin pull/2103/head:pr2103
-      git checkout pr2103
+      git fetch origin pull/2103/head:pr2104
+      git checkout pr2104
     displayName: 'Clone Psi4 Source'
 
   - bash: |
