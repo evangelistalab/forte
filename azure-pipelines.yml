@@ -136,9 +136,9 @@ jobs:
       cd build
       echo "Now at directory: $PWD"
       git clone https://github.com/psi4/psi4.git psi4
-      # the following line is needed as of Psi4 02/02/2020 to make plugin callable from Python
-      sed -i '0,/MODULE/{s/MODULE/SHARED/}' psi4/psi4/src/CMakeLists.txt
-      head -n3 psi4/psi4/src/CMakeLists.txt
+      cd psi4
+      git fetch origin pull/2103/head:pr2103
+      git checkout pr2103
     displayName: 'Clone Psi4 Source'
 
   - bash: |
@@ -158,6 +158,7 @@ jobs:
         -DCMAKE_PREFIX_PATH=${CONDA_PREFIX} \
         -DPython_EXECUTABLE=${CONDA_PREFIX}/bin/python \
         -DCMAKE_CXX_FLAGS=-DPYBIND11_CPP17 \
+        -DENABLE_PLUGINS=ON \
         -DCMAKE_INSTALL_PREFIX=${PSI4BIN_DIR}
     displayName: 'Configure Psi4 Build'
 
@@ -170,6 +171,7 @@ jobs:
       echo "Now install Psi4 at: $(PSI4BIN_DIR)"
       make install
       cd $(PSI4BIN_DIR)
+      file lib/psi4/core*.so
       readelf -d lib/psi4/core*.so
     displayName: 'Build Psi4'
 
@@ -209,6 +211,7 @@ jobs:
       source activate p4env
       cd build/forte
       make -j2 VERBOSE=1
+      file forte*.so
       ldd forte*.so
       readelf -d forte*.so
     displayName: 'Build Forte'
