@@ -13,21 +13,28 @@ jobs:
     matrix:
       clang_py38_orb64:
         F_COMPILER: 'gfortran'
-        C_COMPILER: 'clang'
-        CXX_COMPILER: 'clang++'
+        C_COMPILER: 'gcc'
+        CXX_COMPILER: 'g++'
         PYTHON_VER: '3.8'
         BUILD_TYPE: 'debug'
         MAX_DET_ORB: 64
         APT_INSTALL: 'gfortran'
+          #F_COMPILER: 'gfortran'
+          #C_COMPILER: 'clang'
+          #CXX_COMPILER: 'clang++'
+          #PYTHON_VER: '3.8'
+          #BUILD_TYPE: 'debug'
+          #MAX_DET_ORB: 64
+          #APT_INSTALL: 'gfortran'
 
-      gcc_py37_orb128:
-        F_COMPILER: 'gfortran'
-        C_COMPILER: 'gcc'
-        CXX_COMPILER: 'g++'
-        PYTHON_VER: '3.7'
-        BUILD_TYPE: 'debug'
-        MAX_DET_ORB: 128
-        APT_INSTALL: 'gfortran'
+#     gcc_py37_orb128:
+#       F_COMPILER: 'gfortran'
+#       C_COMPILER: 'gcc'
+#       CXX_COMPILER: 'g++'
+#       PYTHON_VER: '3.7'
+#       BUILD_TYPE: 'debug'
+#       MAX_DET_ORB: 128
+#       APT_INSTALL: 'gfortran'
 
   steps:
   - bash: |
@@ -166,7 +173,7 @@ jobs:
       source activate p4env
       cd build/psi4obj
       echo "Now at directory (Psi4 objdir): $PWD"
-      make -j2
+      make -j2 VERBOSE=1
       find . -name core*.so | xargs readelf -d
       echo "Now install Psi4 at: $(PSI4BIN_DIR)"
       make install
