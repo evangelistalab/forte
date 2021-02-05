@@ -11,10 +11,10 @@ jobs:
   strategy:
     maxParallel: 4
     matrix:
-      gcc_py39_orb64:
+      clang_py39_orb64:
         F_COMPILER: 'gfortran'
-        C_COMPILER: 'gcc'
-        CXX_COMPILER: 'g++'
+        C_COMPILER: 'clang'
+        CXX_COMPILER: 'clang++'
         PYTHON_VER: '3.9'
         BUILD_TYPE: 'Debug'
         MAX_DET_ORB: 64
