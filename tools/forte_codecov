@@ -10,6 +10,15 @@ cd tests/methods
 python run_forte_tests.py --type short --failed_dump --bw
 test1=$?
 
+if [ "$1" -ge "128" ]; then
+  cd ../large_det
+  python run_forte_tests.py --bw --failed_dump
+  testlarge=$?
+  if [ $testlarge -ne 0 ] then
+    test1=$testlarge
+  fi
+fi
+
 cd ../..
 # Gather data
 lcov --directory . --capture --output-file coverage.info
@@ -34,10 +43,10 @@ then
   exit 0
 else
   echo "Some test(s) failed"
-  echo $test1
-  echo $test2
-  echo $test3
-  echo $test4
+  echo "Forte methods exit with $test1"
+  echo "Forte determinants exit with $test2"
+  echo "Forte speed benchmark exit with $test3"
+  echo "Forte pytest exit with $test4"
   exit 1
 fi
 

@@ -223,14 +223,9 @@ jobs:
       python -c "import psi4; print(psi4.__path__)"
       echo "Forte Python path:"
       python -c "import forte; print(forte.__path__)"
+      echo "Forte banner test:"
       python -c "import forte; forte.banner()"
 
       cd forte
-      bash tools/forte_codecov
-      if [ $MAX_DET_ORB -ge 128 ]; then
-        cd tests/large_det
-        python run_forte_tests.py --bw --failed_dump
-      fi
-      cd $(Build.SourcesDirectory)/build/forte/tests/pytest
-      pytest
+      bash tools/forte_codecov $MAX_DET_ORB
     displayName: 'Run Forte tests'
