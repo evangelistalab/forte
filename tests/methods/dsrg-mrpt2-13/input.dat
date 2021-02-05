@@ -38,7 +38,7 @@ set {
   mcscf_diis_start    6
 }
 Ecas, wfn_cas = energy('casscf', return_wfn=True)
-compare_values(E2_cas, Ecas, 9, "CASSCF energy of N2")
+compare_values(E2_cas, Ecas, 7, "CASSCF energy of N2")
 
 set forte {
   active_space_solver cas
@@ -52,7 +52,7 @@ set forte {
   relax_ref           once
 }
 Eforte2, wfn_cas = energy('forte', ref_wfn=wfn_cas, return_wfn=True)
-compare_values(E2_pt2, Eforte2, 9, "DSRG-MRPT2 relaxed energy of N2")
+compare_values(E2_pt2, Eforte2, 7, "DSRG-MRPT2 relaxed energy of N2")
 
 clean()
 
@@ -64,7 +64,7 @@ set {
   socc      [0,0,0,0,0,1,1,1]
 }
 Ecas, wfn_cas = energy('scf', return_wfn=True)
-compare_values(E1_cas, Ecas, 9, "CASSCF energy of N atom")
+compare_values(E1_cas, Ecas, 7, "CASSCF energy of N atom")
 
 set forte {
   frozen_docc      [1,0,0,0,0,0,0,0]
@@ -74,5 +74,5 @@ set forte {
   spin_avg_density true
 }
 Eforte1, wfn_cas = energy('forte', ref_wfn=wfn_cas, return_wfn=True)
-compare_values(E1_pt2, Eforte1, 9, "DSRG-MRPT2 relaxed energy of N atom")
-compare_values(Eforte2, 2.0 * Eforte1, 8, "Size consistency error: E_N2 - 2 * E_N")
+compare_values(E1_pt2, Eforte1, 7, "DSRG-MRPT2 relaxed energy of N atom")
+compare_values(Eforte2, 2.0 * Eforte1, 7, "Size consistency error: E_N2 - 2 * E_N")
