@@ -18,7 +18,7 @@ jobs:
         PYTHON_VER: '3.8'
         BUILD_TYPE: 'Debug'
         MAX_DET_ORB: 64
-        APT_INSTALL: 'gfortran libiomp5'
+        APT_INSTALL: 'gfortran'
 
 #     gcc_py37_orb128:
 #       F_COMPILER: 'gfortran'
