@@ -18,18 +18,16 @@ jobs:
         PYTHON_VER: '3.8'
         BUILD_TYPE: 'Debug'
         MAX_DET_ORB: 64
-        OpenMP_LIBRARY_DIRS: '/usr/lib/llvm-9/lib'
         APT_INSTALL: 'gfortran'
 
-      gcc_py37_orb128:
-        F_COMPILER: 'gfortran'
-        C_COMPILER: 'gcc'
-        CXX_COMPILER: 'g++'
-        PYTHON_VER: '3.7'
-        BUILD_TYPE: 'Debug'
-        MAX_DET_ORB: 128
-        OpenMP_LIBRARY_DIRS: '/usr/lib/x86_64-linux-gnu'
-        APT_INSTALL: 'gfortran'
+#     gcc_py37_orb128:
+#       F_COMPILER: 'gfortran'
+#       C_COMPILER: 'gcc'
+#       CXX_COMPILER: 'g++'
+#       PYTHON_VER: '3.7'
+#       BUILD_TYPE: 'Debug'
+#       MAX_DET_ORB: 128
+#       APT_INSTALL: 'gfortran'
 
   steps:
   - bash: |
@@ -65,9 +63,6 @@ jobs:
 
       echo "F Ver:"
       ${F_COMPILER} --version
-
-#     ls /usr/lib/x86_64-linux-gnu
-#     ls /usr/lib/llvm-9/lib/
     displayName: 'Setup Information'
 
   - bash: |
@@ -129,6 +124,8 @@ jobs:
       which python
       pip install git+https://github.com/i-pi/i-pi.git@master-py3
       conda list
+      echo "LD_LIBRARY_PATH: $LD_LIBRARY_PATH"
+      echo "##vso[task.setvariable variable=LD_LIBRARY_PATH]${CONDA_PREFIX}/lib"
     displayName: 'Configure Environment'
 
   - bash: |
@@ -144,6 +141,7 @@ jobs:
 
   - bash: |
       source activate p4env
+      echo "LD_LIBRARY_PATH: $LD_LIBRARY_PATH"
       cd build
       mkdir psi4bin
       PSI4BIN_DIR=$(Build.SourcesDirectory)/build/psi4bin
@@ -156,10 +154,13 @@ jobs:
         -DCMAKE_Fortran_COMPILER=${F_COMPILER} \
         -DPython_EXECUTABLE=${CONDA_PREFIX}/bin/python \
         -DCMAKE_BUILD_TYPE=${BUILD_TYPE} \
-        -DOpenMP_LIBRARY_DIRS={OpenMP_LIBRARY_DIRS} \
         -Dpsi4_CXX_STANDARD=17 \
         -DCMAKE_CXX_FLAGS=-DPYBIND11_CPP17 \
-        -DCMAKE_CXX_STANDARD=17
+        -DCMAKE_CXX_STANDARD=17 \
+        -DLAPACK_LIBRARIES=${CONDA_PREFIX}/lib/libmkl_rt.so \
+        -DLAPACK_INCLUDE_DIRS=${CONDA_PREFIX}/include \
+        -DOpenMP_LIBRARY_DIRS=${CONDA_PREFIX}/lib \
+        -DOpenMP_CXX_FLAG="-fopenmp=libiomp5"
     displayName: 'Configure Psi4 Build'
 
   - bash: |
@@ -176,7 +177,6 @@ jobs:
     displayName: 'Build Psi4'
 
   - bash: |
-      source activate p4env
       STAGED_INSTALL_PREFIX=$(Build.SourcesDirectory)/build/psi4obj/stage
       echo "##vso[task.setvariable variable=STAGED_INSTALL_PREFIX]$STAGED_INSTALL_PREFIX"
       echo "##vso[task.setvariable variable=PYTHONPATH]${STAGED_INSTALL_PREFIX}/lib:$(Build.SourcesDirectory)/build:{PYTHONPATH}"
@@ -185,6 +185,7 @@ jobs:
 
   - bash: |
       source activate p4env
+      export LD_LIBRARY_PATH=$(LD_LIBRARY_PATH):$LD_LIBRARY_PATH
       echo "Conda path: ${CONDA_PREFIX}"
       echo "$(python -V): $(which python)"
       echo "Psi4 staging directory: $(STAGED_INSTALL_PREFIX)"
@@ -197,11 +198,15 @@ jobs:
         -Dambit_DIR=${CONDA_PREFIX}/share/cmake/ambit \
         -DCMAKE_CXX_COMPILER=${CXX_COMPILER} \
         -DCMAKE_C_COMPILER=${C_COMPILER} \
-        -DCMAKE_Fortran_COMPILER=${F_COMPILER} \
         -DPython_EXECUTABLE="${CONDA_PREFIX}/bin/python" \
         -DCMAKE_CXX_STANDARD=17 \
         -DCMAKE_BUILD_TYPE=${BUILD_TYPE} \
         -DCMAKE_CXX_FLAGS=-DPYBIND11_CPP17 \
+        -DTargetLAPACK_DIR=$(STAGED_INSTALL_PREFIX)/share/cmake/TargetLAPACK \
+        -DLAPACK_LIBRARIES=${CONDA_PREFIX}/lib/libmkl_rt.so \
+        -DLAPACK_INCLUDE_DIRS=${CONDA_PREFIX}/include \
+        -DOpenMP_LIBRARY_DIRS=${CONDA_PREFIX}/lib \
+        -DOpenMP_CXX_FLAG="-fopenmp=libiomp5" \
         -DENABLE_CODECOV=ON \
         -DMAX_DET_ORB=${MAX_DET_ORB}
     displayName: 'Configure Forte Build'
@@ -215,18 +220,18 @@ jobs:
       readelf -d forte*.so
     displayName: 'Build Forte'
 
-# - bash: |
-#     source activate p4env
-#     echo "PATH: $PATH"
-#     echo "PYTHONPATH: $PYTHONPATH"
-#     cd build
-#     echo "Psi4 Python path:"
-#     python -c "import psi4; print(psi4.__path__)"
-#     echo "Forte Python path:"
-#     python -c "import forte; print(forte.__path__)"
-#     echo "Forte banner test:"
-#     python -c "import forte; forte.banner()"
+  - bash: |
+      source activate p4env
+      echo "PATH: $PATH"
+      echo "PYTHONPATH: $PYTHONPATH"
+      cd build
+      echo "Psi4 Python path:"
+      python -c "import psi4; print(psi4.__path__)"
+      echo "Forte Python path:"
+      python -c "import forte; print(forte.__path__)"
+      echo "Forte banner test:"
+      python -c "import forte; forte.banner()"
 
-#     cd forte
-#     bash tools/forte_codecov $MAX_DET_ORB
-#   displayName: 'Run Forte tests'
+      cd forte
+      bash tools/forte_codecov $MAX_DET_ORB
+    displayName: 'Run Forte tests'
