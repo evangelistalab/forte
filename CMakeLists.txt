@@ -38,7 +38,7 @@ include(autocmake_mpi)  # MPI option A
 find_package(psi4 1.3 REQUIRED)
 find_package(pybind11 CONFIG REQUIRED)
 find_package(Python COMPONENTS Interpreter Development REQUIRED)
-#find_package(TargetLAPACK REQUIRED)
+find_package(TargetLAPACK REQUIRED)
 find_package(ambit 0.5 REQUIRED)
 if(ENABLE_CheMPS2)
     find_package(CheMPS2 1.8.3 CONFIG REQUIRED)

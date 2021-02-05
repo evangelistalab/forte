@@ -155,11 +155,7 @@ jobs:
         -DCMAKE_BUILD_TYPE=${BUILD_TYPE} \
         -Dpsi4_CXX_STANDARD=17 \
         -DCMAKE_CXX_FLAGS=-DPYBIND11_CPP17 \
-        -DCMAKE_CXX_STANDARD=17 \
-        -DLAPACK_LIBRARIES=${CONDA_PREFIX}/lib/libmkl_rt.so \
-        -DLAPACK_INCLUDE_DIRS=${CONDA_PREFIX}/include \
-        -DOpenMP_LIBRARY_DIRS=${CONDA_PREFIX}/lib \
-        -DOpenMP_CXX_FLAG="-fopenmp=libiomp5"
+        -DCMAKE_CXX_STANDARD=17
     displayName: 'Configure Psi4 Build'
 
   - bash: |
