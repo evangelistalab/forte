@@ -202,7 +202,6 @@ jobs:
         -DCMAKE_CXX_STANDARD=17 \
         -DCMAKE_BUILD_TYPE=${BUILD_TYPE} \
         -DCMAKE_CXX_FLAGS=-DPYBIND11_CPP17 \
-        -DTargetLAPACK_DIR=$(STAGED_INSTALL_PREFIX)/share/cmake/TargetLAPACK \
         -DLAPACK_LIBRARIES=${CONDA_PREFIX}/lib/libmkl_rt.so \
         -DLAPACK_INCLUDE_DIRS=${CONDA_PREFIX}/include \
         -DOpenMP_LIBRARY_DIRS=${CONDA_PREFIX}/lib \
