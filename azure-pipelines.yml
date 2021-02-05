@@ -191,6 +191,7 @@ jobs:
         -C$(PSI4BIN_DIR)/share/cmake/psi4/psi4PluginCache.cmake \
         -DCMAKE_PREFIX_PATH=$(PSI4BIN_DIR) \
         -Dambit_DIR=${CONDA_PREFIX}/share/cmake/ambit \
+        -DOpenMP_LIBRARY_DIRS=/usr/lib/x86_64-linux-gnu \
         -DCMAKE_CXX_COMPILER=${CXX_COMPILER} \
         -DCMAKE_C_COMPILER=${C_COMPILER} \
         -DCMAKE_Fortran_COMPILER=${F_COMPILER} \
@@ -198,8 +199,6 @@ jobs:
         -DCMAKE_CXX_STANDARD=17 \
         -DCMAKE_BUILD_TYPE=${BUILD_TYPE} \
         -DCMAKE_CXX_FLAGS=-DPYBIND11_CPP17 \
-        -DOpenMP_LIBRARY_DIRS=${CONDA_PREFIX}/lib \
-        -DOpenMP_CXX_FLAG="-fopenmp=libiomp5" \
         -DENABLE_CODECOV=ON \
         -DMAX_DET_ORB=${MAX_DET_ORB}
     displayName: 'Configure Forte Build'
