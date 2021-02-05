@@ -124,6 +124,8 @@ jobs:
       which python
       pip install git+https://github.com/i-pi/i-pi.git@master-py3
       conda list
+      echo "LD_LIBRARY_PATH: $LD_LIBRARY_PATH"
+      echo "##vso[task.setvariable variable=LD_LIBRARY_PATH]${CONDA_PREFIX}/lib:$LD_LIBRARY_PATH"
     displayName: 'Configure Environment'
 
   - bash: |
@@ -144,21 +146,20 @@ jobs:
       PSI4BIN_DIR=$(Build.SourcesDirectory)/build/psi4bin
       echo "##vso[task.setvariable variable=PSI4BIN_DIR]${PSI4BIN_DIR}"
       echo "Psi4 bin directory: $PSI4BIN_DIR"
-      cmake -Hpsi4 -Bpsi4obj \
+      cmake -Spsi4 -Bpsi4obj \
+        -DCMAKE_INSTALL_PREFIX=${PSI4BIN_DIR} \
         -DCMAKE_CXX_COMPILER=${CXX_COMPILER} \
         -DCMAKE_C_COMPILER=${C_COMPILER} \
         -DCMAKE_Fortran_COMPILER=${F_COMPILER} \
         -DPython_EXECUTABLE=${CONDA_PREFIX}/bin/python \
-        -DCMAKE_PREFIX_PATH=${CONDA_PREFIX} \
         -DCMAKE_BUILD_TYPE=${BUILD_TYPE} \
         -Dpsi4_CXX_STANDARD=17 \
-        -DCMAKE_CXX_STANDARD=17 \
         -DCMAKE_CXX_FLAGS=-DPYBIND11_CPP17 \
+        -DCMAKE_CXX_STANDARD=17 \
         -DLAPACK_LIBRARIES=${CONDA_PREFIX}/lib/libmkl_rt.so \
         -DLAPACK_INCLUDE_DIRS=${CONDA_PREFIX}/include \
         -DOpenMP_LIBRARY_DIRS=${CONDA_PREFIX}/lib \
-        -DOpenMP_CXX_FLAG="-fopenmp=libiomp5" \
-        -DCMAKE_INSTALL_PREFIX=${PSI4BIN_DIR}
+        -DOpenMP_CXX_FLAG="-fopenmp=libiomp5"
     displayName: 'Configure Psi4 Build'
 
   - bash: |
@@ -190,21 +191,21 @@ jobs:
       echo "Psi4 version: $(psi4 --version)"
       echo "Psi4 plugin compile command: $(psi4 --plugin-compile)"
       cd build/forte
-      cmake -H. -B. \
+      cmake -S. -B. \
         -C$(PSI4BIN_DIR)/share/cmake/psi4/psi4PluginCache.cmake \
         -DCMAKE_PREFIX_PATH=$(PSI4BIN_DIR) \
+        -Dambit_DIR=${CONDA_PREFIX}/share/cmake/ambit \
         -DCMAKE_CXX_COMPILER=${CXX_COMPILER} \
         -DCMAKE_C_COMPILER=${C_COMPILER} \
         -DCMAKE_Fortran_COMPILER=${F_COMPILER} \
+        -DPython_EXECUTABLE="${CONDA_PREFIX}/bin/python" \
+        -DCMAKE_CXX_STANDARD=17 \
+        -DCMAKE_BUILD_TYPE=${BUILD_TYPE} \
+        -DCMAKE_CXX_FLAGS=-DPYBIND11_CPP17 \
         -DOpenMP_LIBRARY_DIRS=${CONDA_PREFIX}/lib \
         -DOpenMP_CXX_FLAG="-fopenmp=libiomp5" \
-        -Dambit_DIR=${CONDA_PREFIX}/share/cmake/ambit \
-        -DCMAKE_CXX_STANDARD=17 \
-        -DPython_EXECUTABLE="${CONDA_PREFIX}/bin/python" \
-        -DCMAKE_BUILD_TYPE=${BUILD_TYPE} \
         -DENABLE_CODECOV=ON \
-        -DCMAKE_CXX_FLAGS=-DPYBIND11_CPP17 \
-        -DMAX_DET_ORB=${MAX_DET_ORB} .
+        -DMAX_DET_ORB=${MAX_DET_ORB}
     displayName: 'Configure Forte Build'
 
   - bash: |
