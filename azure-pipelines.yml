@@ -66,6 +66,9 @@ jobs:
     displayName: 'Setup Information'
 
   - bash: |
+      echo "Current directory: $PWD"
+      echo "Agent.BuildDirectory:" $(Agent.BuildDirectory)
+      echo "Build.SourcesDirectory:" $(Build.SourcesDirectory)
       mkdir -p build/forte
       cp -R * build/forte/
       ls build/forte/
@@ -83,7 +86,6 @@ jobs:
         psi4/label/dev::gau2grid=2 \
         psi4/label/dev::libint2 \
         psi4/label/dev::libxc \
-        psi4/label/dev::ambit \
         psi4/label/dev::chemps2 \
         psi4/label/dev::dkh \
         psi4/label/dev::gdma \
@@ -127,11 +129,8 @@ jobs:
     displayName: 'Configure Environment'
 
   - bash: |
-      source activate p4env
       which cmake
       cmake --version
-      echo "Agent.BuildDirectory:" $(Agent.BuildDirectory)
-      echo "Build.SourcesDirectory:" $(Build.SourcesDirectory)
       cd build
       echo "Now at directory: $PWD"
       git clone https://github.com/psi4/psi4.git psi4
@@ -151,6 +150,7 @@ jobs:
         -DCMAKE_C_COMPILER=${C_COMPILER} \
         -DCMAKE_Fortran_COMPILER=${F_COMPILER} \
         -DPython_EXECUTABLE=${CONDA_PREFIX}/bin/python \
+        -DOpenMP_LIBRARY_DIRS=${CONDA_PREFIX}/lib \
         -DCMAKE_BUILD_TYPE=${BUILD_TYPE} \
         -Dpsi4_CXX_STANDARD=17 \
         -DCMAKE_CXX_FLAGS=-DPYBIND11_CPP17 \
@@ -178,6 +178,34 @@ jobs:
     displayName: 'Add Psi4 to PATH and PYTHONPATH'
 
   - bash: |
+      cd build
+      git clone https://github.com/jturney/ambit.git
+    displayName: 'Clone Ambit Source'
+
+  - bash: |
+      source activate p4env
+      cd build
+      mkdir ambit-bin
+      AMBIT_BIN_DIR=$(Build.SourcesDirectory)/build/ambit-bin
+      echo "##vso[task.setvariable variable=AMBIT_BIN_DIR]${AMBIT_BIN_DIR}"
+      cmake -Sambit -Bambitobj \
+        -DCMAKE_INSTALL_PREFIX=${AMBIT_BIN_DIR} \
+        -DCMAKE_CXX_COMPILER=${CXX_COMPILER} \
+        -DCMAKE_C_COMPILER=${C_COMPILER} \
+        -DPython_EXECUTABLE=${CONDA_PREFIX}/bin/python \
+        -DCMAKE_BUILD_TYPE=${BUILD_TYPE} \
+        -DOpenMP_LIBRARY_DIRS=${CONDA_PREFIX}/lib \
+        -DCMAKE_CXX_STANDARD=17
+    displayName: 'Configure Ambit Build'
+
+  - bash: |
+      source activate p4env
+      cd build/ambitobj
+      make -j2 VERBOSE=1
+      make install
+    displayName: 'Build Ambit'
+
+  - bash: |
       source activate p4env
       echo "Conda path: ${CONDA_PREFIX}"
       echo "$(python -V): $(which python)"
@@ -188,7 +216,7 @@ jobs:
       cmake -S. -B. \
         -C$(PSI4BIN_DIR)/share/cmake/psi4/psi4PluginCache.cmake \
         -DCMAKE_PREFIX_PATH=$(PSI4BIN_DIR) \
-        -Dambit_DIR=${CONDA_PREFIX}/share/cmake/ambit \
+        -Dambit_DIR=$(AMBIT_BIN_DIR)/share/cmake/ambit \
         -DCMAKE_CXX_COMPILER=${CXX_COMPILER} \
         -DCMAKE_C_COMPILER=${C_COMPILER} \
         -DPython_EXECUTABLE="${CONDA_PREFIX}/bin/python" \
