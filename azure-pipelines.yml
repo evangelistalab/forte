@@ -132,13 +132,9 @@ jobs:
       cmake --version
       echo "Agent.BuildDirectory:" $(Agent.BuildDirectory)
       echo "Build.SourcesDirectory:" $(Build.SourcesDirectory)
-      mkdir build
       cd build
       echo "Now at directory: $PWD"
       git clone https://github.com/psi4/psi4.git psi4
-      cd psi4
-      git fetch origin pull/2104/head:pr2104
-      git checkout pr2104
     displayName: 'Clone Psi4 Source'
 
   - bash: |
@@ -152,12 +148,16 @@ jobs:
         -DCMAKE_CXX_COMPILER=${CXX_COMPILER} \
         -DCMAKE_C_COMPILER=${C_COMPILER} \
         -DCMAKE_Fortran_COMPILER=${F_COMPILER} \
+        -DPython_EXECUTABLE=${CONDA_PREFIX}/bin/python \
+        -DCMAKE_PREFIX_PATH=${CONDA_PREFIX} \
         -DCMAKE_BUILD_TYPE=${BUILD_TYPE} \
         -Dpsi4_CXX_STANDARD=17 \
         -DCMAKE_CXX_STANDARD=17 \
-        -DCMAKE_PREFIX_PATH=${CONDA_PREFIX} \
-        -DPython_EXECUTABLE=${CONDA_PREFIX}/bin/python \
         -DCMAKE_CXX_FLAGS=-DPYBIND11_CPP17 \
+        -DLAPACK_LIBRARIES=${CONDA_PREFIX}/lib/libmkl_rt.so \
+        -DLAPACK_INCLUDE_DIRS=${CONDA_PREFIX}/include \
+        -DOpenMP_LIBRARY_DIRS=${CONDA_PREFIX}/lib \
+        -DOpenMP_CXX_FLAG="-fopenmp=libiomp5" \
         -DCMAKE_INSTALL_PREFIX=${PSI4BIN_DIR}
     displayName: 'Configure Psi4 Build'
 
@@ -195,7 +195,7 @@ jobs:
         -DCMAKE_CXX_COMPILER=${CXX_COMPILER} \
         -DCMAKE_C_COMPILER=${C_COMPILER} \
         -DCMAKE_Fortran_COMPILER=${F_COMPILER} \
-        -DTargetLAPACK_DIR=$(STAGED_INSTALL_PREFIX)/share/cmake/TargetLAPACK \
+        -DOpenMP_LIBRARY_DIRS=${CONDA_PREFIX}/lib \
         -Dambit_DIR=${CONDA_PREFIX}/share/cmake/ambit \
         -DCMAKE_CXX_STANDARD=17 \
         -DPython_EXECUTABLE="${CONDA_PREFIX}/bin/python" \

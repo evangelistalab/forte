@@ -14,7 +14,7 @@ if [ "$1" -ge "128" ]; then
   cd ../large_det
   python run_forte_tests.py --bw --failed_dump
   testlarge=$?
-  if [ $testlarge -ne 0 ] then
+  if [ $testlarge -ne 0 ]; then
     test1=$testlarge
   fi
 fi
