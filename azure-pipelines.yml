@@ -20,11 +20,11 @@ jobs:
         MAX_DET_ORB: 64
         APT_INSTALL: 'gfortran'
 
-      gcc_py38_orb128:
+      gcc_py37_orb128:
         F_COMPILER: 'gfortran'
         C_COMPILER: 'gcc'
         CXX_COMPILER: 'g++'
-        PYTHON_VER: '3.8'
+        PYTHON_VER: '3.7'
         BUILD_TYPE: 'Debug'
         MAX_DET_ORB: 128
         APT_INSTALL: 'gfortran'
@@ -139,7 +139,6 @@ jobs:
 
   - bash: |
       source activate p4env
-      echo "LD_LIBRARY_PATH: $LD_LIBRARY_PATH"
       cd build
       mkdir psi4bin
       PSI4BIN_DIR=$(Build.SourcesDirectory)/build/psi4bin
@@ -147,6 +146,7 @@ jobs:
       echo "Psi4 bin directory: $PSI4BIN_DIR"
       cmake -Spsi4 -Bpsi4obj \
         -DCMAKE_INSTALL_PREFIX=${PSI4BIN_DIR} \
+        -DCMAKE_PREFIX_PATH=${CONDA_PREFIX} \
         -DCMAKE_CXX_COMPILER=${CXX_COMPILER} \
         -DCMAKE_C_COMPILER=${C_COMPILER} \
         -DCMAKE_Fortran_COMPILER=${F_COMPILER} \
