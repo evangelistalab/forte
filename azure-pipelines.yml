@@ -64,9 +64,8 @@ jobs:
       echo "F Ver:"
       ${F_COMPILER} --version
 
-      dpkg -L libiomp5
-      dpkg -L libomp5
       ls /usr/lib/x86_64-linux-gnu
+      ls /usr/lib/llvm-9/lib/
     displayName: 'Setup Information'
 
 # - bash: |
