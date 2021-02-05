@@ -11,23 +11,23 @@ jobs:
   strategy:
     maxParallel: 4
     matrix:
-      clang_py38_orb64:
+      gcc_py39_orb64:
         F_COMPILER: 'gfortran'
-        C_COMPILER: 'clang'
-        CXX_COMPILER: 'clang++'
-        PYTHON_VER: '3.8'
+        C_COMPILER: 'gcc'
+        CXX_COMPILER: 'g++'
+        PYTHON_VER: '3.9'
         BUILD_TYPE: 'Debug'
         MAX_DET_ORB: 64
         APT_INSTALL: 'gfortran'
 
-#     gcc_py37_orb128:
-#       F_COMPILER: 'gfortran'
-#       C_COMPILER: 'gcc'
-#       CXX_COMPILER: 'g++'
-#       PYTHON_VER: '3.7'
-#       BUILD_TYPE: 'Debug'
-#       MAX_DET_ORB: 128
-#       APT_INSTALL: 'gfortran'
+      gcc_py38_orb128:
+        F_COMPILER: 'gfortran'
+        C_COMPILER: 'gcc'
+        CXX_COMPILER: 'g++'
+        PYTHON_VER: '3.8'
+        BUILD_TYPE: 'Debug'
+        MAX_DET_ORB: 128
+        APT_INSTALL: 'gfortran'
 
   steps:
   - bash: |
@@ -124,8 +124,6 @@ jobs:
       which python
       pip install git+https://github.com/i-pi/i-pi.git@master-py3
       conda list
-      echo "LD_LIBRARY_PATH: $LD_LIBRARY_PATH"
-      echo "##vso[task.setvariable variable=LD_LIBRARY_PATH]${CONDA_PREFIX}/lib"
     displayName: 'Configure Environment'
 
   - bash: |
@@ -156,11 +154,7 @@ jobs:
         -DCMAKE_BUILD_TYPE=${BUILD_TYPE} \
         -Dpsi4_CXX_STANDARD=17 \
         -DCMAKE_CXX_FLAGS=-DPYBIND11_CPP17 \
-        -DCMAKE_CXX_STANDARD=17 \
-        -DLAPACK_LIBRARIES=${CONDA_PREFIX}/lib/libmkl_rt.so \
-        -DLAPACK_INCLUDE_DIRS=${CONDA_PREFIX}/include \
-        -DOpenMP_LIBRARY_DIRS=${CONDA_PREFIX}/lib \
-        -DOpenMP_CXX_FLAG="-fopenmp=libiomp5"
+        -DCMAKE_CXX_STANDARD=17
     displayName: 'Configure Psi4 Build'
 
   - bash: |
@@ -185,7 +179,6 @@ jobs:
 
   - bash: |
       source activate p4env
-      export LD_LIBRARY_PATH=$(LD_LIBRARY_PATH):$LD_LIBRARY_PATH
       echo "Conda path: ${CONDA_PREFIX}"
       echo "$(python -V): $(which python)"
       echo "Psi4 staging directory: $(STAGED_INSTALL_PREFIX)"
@@ -202,9 +195,6 @@ jobs:
         -DCMAKE_CXX_STANDARD=17 \
         -DCMAKE_BUILD_TYPE=${BUILD_TYPE} \
         -DCMAKE_CXX_FLAGS=-DPYBIND11_CPP17 \
-        -DTargetLAPACK_DIR=$(STAGED_INSTALL_PREFIX)/share/cmake/TargetLAPACK \
-        -DOpenMP_LIBRARY_DIRS=${CONDA_PREFIX}/lib \
-        -DOpenMP_CXX_FLAG="-fopenmp=libiomp5" \
         -DENABLE_CODECOV=ON \
         -DMAX_DET_ORB=${MAX_DET_ORB}
     displayName: 'Configure Forte Build'
