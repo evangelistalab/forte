@@ -174,59 +174,60 @@ jobs:
       readelf -d lib/psi4/core*.so
     displayName: 'Build Psi4'
 
-# - bash: |
-#     source activate p4env
-#     STAGED_INSTALL_PREFIX=$(Build.SourcesDirectory)/build/psi4obj/stage
-#     echo "##vso[task.setvariable variable=STAGED_INSTALL_PREFIX]$STAGED_INSTALL_PREFIX"
-#     echo "##vso[task.setvariable variable=PYTHONPATH]${STAGED_INSTALL_PREFIX}/lib:$(Build.SourcesDirectory)/build:{PYTHONPATH}"
-#     echo "##vso[task.setvariable variable=PATH]${PSI4BIN_DIR}/bin:${PATH}"
-#   displayName: 'Add Psi4 to PATH and PYTHONPATH'
+  - bash: |
+      source activate p4env
+      STAGED_INSTALL_PREFIX=$(Build.SourcesDirectory)/build/psi4obj/stage
+      echo "##vso[task.setvariable variable=STAGED_INSTALL_PREFIX]$STAGED_INSTALL_PREFIX"
+      echo "##vso[task.setvariable variable=PYTHONPATH]${STAGED_INSTALL_PREFIX}/lib:$(Build.SourcesDirectory)/build:{PYTHONPATH}"
+      echo "##vso[task.setvariable variable=PATH]${PSI4BIN_DIR}/bin:${PATH}"
+    displayName: 'Add Psi4 to PATH and PYTHONPATH'
 
-# - bash: |
-#     source activate p4env
-#     echo "Conda path: ${CONDA_PREFIX}"
-#     echo "$(python -V): $(which python)"
-#     echo "Psi4 staging directory: $(STAGED_INSTALL_PREFIX)"
-#     echo "Psi4 version: $(psi4 --version)"
-#     echo "Psi4 plugin compile command: $(psi4 --plugin-compile)"
-#     cd build/forte
-#     cmake -H. -B. \
-#       -C$(PSI4BIN_DIR)/share/cmake/psi4/psi4PluginCache.cmake \
-#       -DCMAKE_PREFIX_PATH=$(PSI4BIN_DIR) \
-#       -DCMAKE_CXX_COMPILER=${CXX_COMPILER} \
-#       -DCMAKE_C_COMPILER=${C_COMPILER} \
-#       -DCMAKE_Fortran_COMPILER=${F_COMPILER} \
-#       -DOpenMP_LIBRARY_DIRS=${CONDA_PREFIX}/lib \
-#       -Dambit_DIR=${CONDA_PREFIX}/share/cmake/ambit \
-#       -DCMAKE_CXX_STANDARD=17 \
-#       -DPython_EXECUTABLE="${CONDA_PREFIX}/bin/python" \
-#       -DCMAKE_BUILD_TYPE=${BUILD_TYPE} \
-#       -DENABLE_CODECOV=ON \
-#       -DCMAKE_CXX_FLAGS=-DPYBIND11_CPP17 \
-#       -DMAX_DET_ORB=${MAX_DET_ORB} .
-#   displayName: 'Configure Forte Build'
+  - bash: |
+      source activate p4env
+      echo "Conda path: ${CONDA_PREFIX}"
+      echo "$(python -V): $(which python)"
+      echo "Psi4 staging directory: $(STAGED_INSTALL_PREFIX)"
+      echo "Psi4 version: $(psi4 --version)"
+      echo "Psi4 plugin compile command: $(psi4 --plugin-compile)"
+      cd build/forte
+      cmake -H. -B. \
+        -C$(PSI4BIN_DIR)/share/cmake/psi4/psi4PluginCache.cmake \
+        -DCMAKE_PREFIX_PATH=$(PSI4BIN_DIR) \
+        -DCMAKE_CXX_COMPILER=${CXX_COMPILER} \
+        -DCMAKE_C_COMPILER=${C_COMPILER} \
+        -DCMAKE_Fortran_COMPILER=${F_COMPILER} \
+        -DOpenMP_LIBRARY_DIRS=${CONDA_PREFIX}/lib \
+        -DOpenMP_CXX_FLAG="-fopenmp=libiomp5" \
+        -Dambit_DIR=${CONDA_PREFIX}/share/cmake/ambit \
+        -DCMAKE_CXX_STANDARD=17 \
+        -DPython_EXECUTABLE="${CONDA_PREFIX}/bin/python" \
+        -DCMAKE_BUILD_TYPE=${BUILD_TYPE} \
+        -DENABLE_CODECOV=ON \
+        -DCMAKE_CXX_FLAGS=-DPYBIND11_CPP17 \
+        -DMAX_DET_ORB=${MAX_DET_ORB} .
+    displayName: 'Configure Forte Build'
 
-# - bash: |
-#     source activate p4env
-#     cd build/forte
-#     make -j2 VERBOSE=1
-#     file forte*.so
-#     ldd forte*.so
-#     readelf -d forte*.so
-#   displayName: 'Build Forte'
+  - bash: |
+      source activate p4env
+      cd build/forte
+      make -j2 VERBOSE=1
+      file forte*.so
+      ldd forte*.so
+      readelf -d forte*.so
+    displayName: 'Build Forte'
 
-# - bash: |
-#     source activate p4env
-#     echo "PATH: $PATH"
-#     echo "PYTHONPATH: $PYTHONPATH"
-#     cd build
-#     echo "Psi4 Python path:"
-#     python -c "import psi4; print(psi4.__path__)"
-#     echo "Forte Python path:"
-#     python -c "import forte; print(forte.__path__)"
-#     echo "Forte banner test:"
-#     python -c "import forte; forte.banner()"
+  - bash: |
+      source activate p4env
+      echo "PATH: $PATH"
+      echo "PYTHONPATH: $PYTHONPATH"
+      cd build
+      echo "Psi4 Python path:"
+      python -c "import psi4; print(psi4.__path__)"
+      echo "Forte Python path:"
+      python -c "import forte; print(forte.__path__)"
+      echo "Forte banner test:"
+      python -c "import forte; forte.banner()"
 
-#     cd forte
-#     bash tools/forte_codecov $MAX_DET_ORB
-#   displayName: 'Run Forte tests'
+      cd forte
+      bash tools/forte_codecov $MAX_DET_ORB
+    displayName: 'Run Forte tests'
