@@ -12,7 +12,6 @@ jobs:
     maxParallel: 4
     matrix:
       gcc_py39_orb64:
-        F_COMPILER: 'x86_64-conda_cos6-linux-gnu-gfortran'
         C_COMPILER: 'x86_64-conda_cos6-linux-gnu-gcc'
         CXX_COMPILER: 'x86_64-conda_cos6-linux-gnu-g++'
         PYTHON_VER: '3.9'
@@ -21,16 +20,14 @@ jobs:
         APT_INSTALL: 'gcc_linux-64 gxx_linux-64 gfortran_linux-64'
 
       clang_py39_orb64:
-        F_COMPILER: 'x86_64-conda_cos6-linux-gnu-gfortran'
         C_COMPILER: 'clang'
         CXX_COMPILER: 'clang++'
         PYTHON_VER: '3.9'
         BUILD_TYPE: 'Debug'
         MAX_DET_ORB: 64
-        APT_INSTALL: 'clang clangxx clangdev gfortran_linux-64'
+        APT_INSTALL: 'clang clangxx clangdev'
 
 #     gcc_py37_orb128:
-#       F_COMPILER: 'x86_64-conda_cos6-linux-gnu-gfortran'
 #       C_COMPILER: 'x86_64-conda_cos6-linux-gnu-gcc'
 #       CXX_COMPILER: 'x86_64-conda_cos6-linux-gnu-g++'
 #       PYTHON_VER: '3.7'
@@ -129,9 +126,6 @@ jobs:
       echo "CXX Ver:"
       ${CXX_COMPILER} --version
 
-      echo "F Ver:"
-      ${F_COMPILER} --version
-
       echo "MKLROOT: $MKLROOT"
     displayName: 'Setup Information'
 
@@ -155,7 +149,6 @@ jobs:
         -DCMAKE_PREFIX_PATH=${CONDA_PREFIX} \
         -DCMAKE_CXX_COMPILER=${CXX_COMPILER} \
         -DCMAKE_C_COMPILER=${C_COMPILER} \
-        -DCMAKE_Fortran_COMPILER=${F_COMPILER} \
         -DPython_EXECUTABLE=${CONDA_PREFIX}/bin/python \
         -DLAPACK_LIBRARIES="${CONDA_PREFIX}/lib/libmkl_rt.so" \
         -DLAPACK_INCLUDE_DIRS=${CONDA_PREFIX}/include \
@@ -203,12 +196,8 @@ jobs:
         -DCMAKE_C_COMPILER=${C_COMPILER} \
         -DPython_EXECUTABLE=${CONDA_PREFIX}/bin/python \
         -DCMAKE_BUILD_TYPE=${BUILD_TYPE} \
-        -DLAPACK_LIBRARIES="${CONDA_PREFIX}/lib/libmkl_rt.so" \
-        -DLAPACK_INCLUDE_DIRS=${CONDA_PREFIX}/include \
         -DOpenMP_LIBRARY_DIRS=${CONDA_PREFIX}/lib \
         -DCMAKE_BUILD_TYPE=${BUILD_TYPE} \
-        -Dpsi4_CXX_STANDARD=17 \
-        -DCMAKE_CXX_FLAGS=-DPYBIND11_CPP17 \
         -DCMAKE_CXX_STANDARD=17
     displayName: 'Configure Ambit Build'
 
