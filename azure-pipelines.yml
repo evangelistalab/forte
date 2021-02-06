@@ -38,6 +38,7 @@ jobs:
 #       MAX_DET_ORB: 128
 #       APT_INSTALL: 'gcc_linux-64 gxx_linux-64 gfortran_linux-64'
 
+  steps:
   - bash: |
       echo "Current directory: $PWD"
       echo "Agent.BuildDirectory:" $(Agent.BuildDirectory)
