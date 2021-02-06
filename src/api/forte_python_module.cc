@@ -64,6 +64,7 @@
 #include "sparse_ci/determinant_hashvector.h"
 #include "sparse_ci/sparse_state_vector.h"
 #include "sparse_ci/sparse_operator.h"
+#include "sparse_ci/sparse_operations.h"
 #include "sparse_ci/general_operator.h"
 
 namespace py = pybind11;
@@ -224,7 +225,9 @@ void export_Determinant(py::module& m) {
         .def("set_coefficient", &SparseOperator::set_coefficient)
         .def("op_list", &SparseOperator::op_list)
         .def("str", &SparseOperator::str)
-        .def("latex", &SparseOperator::latex);
+        .def("latex", &SparseOperator::latex)
+        .def("timing", &SparseOperator::timing)
+        .def("reset_timing", &SparseOperator::reset_timing);
 
     py::class_<StateVector>(m, "StateVector")
         .def(py::init<>())
@@ -233,6 +236,20 @@ void export_Determinant(py::module& m) {
         .def("str", &StateVector::str)
         .def("__getitem__", [](StateVector& v, const Determinant& d) { return v[d]; })
         .def("__contains__", [](StateVector& v, const Determinant& d) { return v.map().count(d); });
+
+    py::class_<SparseHamiltonian>(m, "SparseHamiltonian")
+        .def(py::init<std::shared_ptr<ActiveSpaceIntegrals>>())
+        .def("compute", &SparseHamiltonian::compute)
+        .def("compute_on_the_fly", &SparseHamiltonian::compute_on_the_fly)
+        .def("time", &SparseHamiltonian::time);
+
+    py::class_<SparseFactExp>(m, "SparseFactExp")
+        .def(py::init<>())
+        .def("compute", &SparseFactExp::compute, "sop"_a, "state"_a, "inverse"_a = false,
+             "screen_thresh"_a = 1.0e-12)
+        .def("compute_on_the_fly", &SparseFactExp::compute_on_the_fly, "sop"_a, "state"_a,
+             "inverse"_a = false, "screen_thresh"_a = 1.0e-12)
+        .def("time", &SparseFactExp::time);
 
     m.def("apply_operator_safe",
           py::overload_cast<SparseOperator&, const StateVector&>(&apply_operator_safe));

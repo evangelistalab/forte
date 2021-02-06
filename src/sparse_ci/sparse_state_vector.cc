@@ -35,6 +35,7 @@
 
 #include "sparse_ci/sparse_state_vector.h"
 
+double time_apply_exp_ah_factorized = 0.0;
 double time_apply_exp_ah_factorized_fast = 0.0;
 double time_energy_expectation_value = 0.0;
 double time_apply_operator_fast = 0.0;
@@ -401,6 +402,7 @@ StateVector apply_exp_ah_factorized(SparseOperator& sop, const StateVector& stat
             }
         }
     }
+    time_apply_exp_ah_factorized += t.get();
     return state;
 }
 
@@ -525,6 +527,7 @@ StateVector apply_hamiltonian(std::shared_ptr<ActiveSpaceIntegrals> as_ints,
             }
         }
     }
+    time_apply_hamiltonian += t.get();
     return state;
 }
 
@@ -604,6 +607,40 @@ double overlap(StateVector& left_state, StateVector& right_state) {
         }
     }
     return overlap;
+}
+
+std::vector<std::pair<std::string, double>> SparseOperator::timing() {
+    std::vector<std::pair<std::string, double>> t;
+    t.push_back(std::make_pair("time_apply_exp_ah_factorized", time_apply_exp_ah_factorized));
+    t.push_back(std::make_pair("time_apply_hamiltonian", time_apply_hamiltonian));
+    //    t.push_back(std::make_pair("time_energy_expectation_value",
+    //    time_energy_expectation_value)); t.push_back(std::make_pair("time_apply_operator_fast",
+    //    time_apply_operator_fast)); t.push_back(std::make_pair("time_apply_exp_operator_fast",
+    //    time_apply_exp_operator_fast)); t.push_back(
+    //        std::make_pair("ops_apply_hamiltonian", static_cast<double>(ops_apply_hamiltonian)));
+    //    t.push_back({"ops_hash_push", static_cast<double>(ops_hash_push)});
+    //    t.push_back({"ops_screen", static_cast<double>(ops_screen)});
+    //    t.push_back({"ops_det_visit", static_cast<double>(ops_det_visit)});
+    //    t.push_back({"time_get_projection", static_cast<double>(time_get_projection)});
+    //    t.push_back({"time_apply_operator_fast2", time_apply_operator_fast2});
+    //    t.push_back({"time_apply_exp_operator_fast2", time_apply_exp_operator_fast2});
+
+    return t;
+}
+
+void SparseOperator::reset_timing() {
+    time_apply_exp_ah_factorized = 0.0;
+    time_apply_hamiltonian = 0.0;
+    //    time_energy_expectation_value = 0.0;
+    //    time_apply_operator_fast = 0.0;
+    //    time_apply_exp_operator_fast = 0.0;
+    //    time_apply_operator_fast2 = 0.0;
+    //    time_apply_exp_operator_fast2 = 0.0;
+    //    time_get_projection = 0.0;
+    //    ops_apply_hamiltonian = 0;
+    //    ops_hash_push = 0;
+    //    ops_screen = 0;
+    //    ops_det_visit = 0;
 }
 
 } // namespace forte

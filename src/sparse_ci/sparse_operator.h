@@ -94,6 +94,9 @@ class SparseOperator {
     std::vector<std::string> str() const;
     std::string latex() const;
 
+    static std::vector<std::pair<std::string, double>> timing();
+    static void reset_timing();
+
   private:
     ///
     bool antihermitian_ = false;

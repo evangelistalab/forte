@@ -116,7 +116,7 @@ def psi4_cubeprop(wfn,
         return load_cubes(path)
 
 
-def prepare_forte_objects(wfn,mo_spaces = None):
+def prepare_forte_objects(wfn,mo_spaces = None, active_space = 'ACTIVE',core_spaces = ['RESTRICTED_DOCC'],localize = False,localize_spaces = []):
     """
     Take a psi4 wavefunction object and prepare the ForteIntegrals, SCFInfo, and MOSpaceInfo objects
 
@@ -154,6 +154,7 @@ def prepare_forte_objects(wfn,mo_spaces = None):
 
     nmopi = wfn.nmopi()
     point_group = wfn.molecule().point_group().symbol()
+
     if mo_spaces == None:
         mo_space_info = forte.make_mo_space_info(nmopi, point_group, options)
     else:
@@ -163,11 +164,15 @@ def prepare_forte_objects(wfn,mo_spaces = None):
 
     ints = forte.make_ints_from_psi4(wfn, options, mo_space_info)
 
+    if localize:
+        localizer = forte.Localize(forte.forte_options, ints, mo_space_info)
+        localizer.set_orbital_space(localize_spaces)
+        localizer.compute_transformation()
+        Ua = localizer.get_Ua()
+        ints.rotate_orbitals(Ua,Ua)
 
     # the space that defines the active orbitals. We select only the 'ACTIVE' part
-    active_space = 'ACTIVE'
     # the space(s) with non-active doubly occupied orbitals
-    core_spaces = ['RESTRICTED_DOCC']
 
     as_ints = forte.make_active_space_ints(mo_space_info, ints, active_space, core_spaces)
 
