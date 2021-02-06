@@ -17,7 +17,8 @@ jobs:
         PYTHON_VER: '3.9'
         BUILD_TYPE: 'Debug'
         MAX_DET_ORB: 64
-        OpenMP_CXX_FLAG: '-fopenmp=libomp'
+        OpenMP_CXX_FLAG: '-fopenmp'
+        OpenMP_CXX_LIB_NAMES: 'libomp'
         APT_INSTALL: 'gcc_linux-64 gxx_linux-64 gfortran_linux-64'
 
       clang_py39_orb64:
@@ -27,6 +28,7 @@ jobs:
         BUILD_TYPE: 'Debug'
         MAX_DET_ORB: 64
         OpenMP_CXX_FLAG: '-fopenmp=libiomp5'
+        OpenMP_CXX_LIB_NAMES: 'libiomp5'
         APT_INSTALL: 'clang clangxx clangdev'
 
 #     gcc_py37_orb128:
@@ -156,7 +158,8 @@ jobs:
         -DLAPACK_LIBRARIES="${CONDA_PREFIX}/lib/libmkl_rt.so" \
         -DLAPACK_INCLUDE_DIRS=${CONDA_PREFIX}/include \
         -DOpenMP_LIBRARY_DIRS=${CONDA_PREFIX}/lib \
-        -DOpenMP_CXX_FLAG=${OpenMP_CXX_FLAG} \
+        -DOpenMP_CXX_FLAGS=${OpenMP_CXX_FLAG} \
+        -DOpenMP_CXX_LIB_NAMES=${OpenMP_CXX_LIB_NAMES} \
         -DCMAKE_BUILD_TYPE=${BUILD_TYPE} \
         -Dpsi4_CXX_STANDARD=17 \
         -DCMAKE_CXX_FLAGS=-DPYBIND11_CPP17 \
@@ -203,7 +206,7 @@ jobs:
         -DLAPACK_LIBRARIES="${CONDA_PREFIX}/lib/libmkl_rt.so" \
         -DLAPACK_INCLUDE_DIRS=${CONDA_PREFIX}/include \
         -DOpenMP_LIBRARY_DIRS=${CONDA_PREFIX}/lib \
-        -DOpenMP_CXX_FLAG=${OpenMP_CXX_FLAG} \
+        -DOpenMP_CXX_FLAGS=${OpenMP_CXX_FLAG} \
         -DCMAKE_BUILD_TYPE=${BUILD_TYPE} \
         -DCMAKE_CXX_STANDARD=17
     displayName: 'Configure Ambit Build'
@@ -235,7 +238,7 @@ jobs:
         -DLAPACK_LIBRARIES="${CONDA_PREFIX}/lib/libmkl_rt.so" \
         -DLAPACK_INCLUDE_DIRS=${CONDA_PREFIX}/include \
         -DOpenMP_LIBRARY_DIRS=${CONDA_PREFIX}/lib \
-        -DOpenMP_CXX_FLAG=${OpenMP_CXX_FLAG} \
+        -DOpenMP_CXX_FLAGS=${OpenMP_CXX_FLAG} \
         -DCMAKE_BUILD_TYPE=${BUILD_TYPE} \
         -DENABLE_CODECOV=ON \
         -DMAX_DET_ORB=${MAX_DET_ORB}
