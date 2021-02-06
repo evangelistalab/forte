@@ -17,7 +17,7 @@ jobs:
         PYTHON_VER: '3.9'
         BUILD_TYPE: 'Debug'
         MAX_DET_ORB: 64
-        APT_INSTALL: 'gcc_linux-64 gxx_linux-64 gfortran_linux-64'
+        APT_INSTALL: 'gcc_linux-64 gxx_linux-64 gfortran_linux-64 llvm-openmp'
 
       clang_py39_orb64:
         C_COMPILER: 'clang'
@@ -127,6 +127,7 @@ jobs:
       ${CXX_COMPILER} --version
 
       echo "MKLROOT: $MKLROOT"
+      ls ${CONDA_PREFIX}/lib
     displayName: 'Setup Information'
 
   - bash: |
