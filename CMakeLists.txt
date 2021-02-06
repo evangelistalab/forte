@@ -12,9 +12,11 @@ set(forte_DESCRIPTION  "Quantum Chemistry Methods for Strongly Correlated Electr
 set(forte_URL          "https://github.com/evangelistalab/forte")
 set(forte_LICENSE      "GPL-3.0+")
 set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF)
 set(TargetOpenMP_FIND_COMPONENTS "CXX")
 
-cmake_minimum_required(VERSION 3.1 FATAL_ERROR)
+cmake_minimum_required(VERSION 3.15 FATAL_ERROR)
 list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)
 
 include(psi4OptionsTools)
@@ -28,15 +30,16 @@ option_with_print(ENABLE_CODECOV "Enable compilation with code coverage flags" O
 option_with_print(ENABLE_UNTESTED_CODE "Enable code not covered by code coverage" OFF)
 #option_with_print(ENABLE_GENERIC "Enable mostly static linking in shared library" OFF)
 
-include(autocmake_omp)
+include(autocmake_omp)  # no longer useful, probably need to copy psi4/external/common/lapack to cmake
 include(autocmake_mpi)  # MPI option A
 #include(custom_static_library)
 
 #find_package(psi4 1.1 REQUIRED COMPONENTS ambit chemps2)
-find_package(pybind11 REQUIRED)
 find_package(psi4 1.3 REQUIRED)
+find_package(pybind11 CONFIG REQUIRED)
+find_package(Python COMPONENTS Interpreter Development REQUIRED)
 find_package(TargetLAPACK REQUIRED)
-find_package(ambit 0.4 REQUIRED)
+find_package(ambit 0.5 REQUIRED)
 if(ENABLE_CheMPS2)
     find_package(CheMPS2 1.8.3 CONFIG REQUIRED)
 endif()
