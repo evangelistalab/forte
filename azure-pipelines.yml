@@ -129,7 +129,7 @@ jobs:
         -DPython_EXECUTABLE="${CONDA_PREFIX}/bin/python" \
         -DCMAKE_CXX_STANDARD=17 \
         -DCMAKE_BUILD_TYPE=${BUILD_TYPE} \
-        -DCMAKE_CXX_FLAGS=-DPYBIND11_CPP17 \
+        -DCMAKE_CXX_FLAGS="-DPYBIND11_CPP17 -std=c++1z" \
         -DENABLE_CODECOV=ON \
         -DMAX_DET_ORB=${MAX_DET_ORB}
     displayName: 'Configure Forte Build'
