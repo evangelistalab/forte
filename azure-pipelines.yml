@@ -150,8 +150,6 @@ jobs:
         -DCMAKE_CXX_COMPILER=${CXX_COMPILER} \
         -DCMAKE_C_COMPILER=${C_COMPILER} \
         -DPython_EXECUTABLE=${CONDA_PREFIX}/bin/python \
-        -DLAPACK_LIBRARIES="${CONDA_PREFIX}/lib/libmkl_rt.so" \
-        -DLAPACK_INCLUDE_DIRS=${CONDA_PREFIX}/include \
         -DOpenMP_LIBRARY_DIRS=${CONDA_PREFIX}/lib \
         -DCMAKE_BUILD_TYPE=${BUILD_TYPE} \
         -Dpsi4_CXX_STANDARD=17 \
