@@ -159,6 +159,7 @@ jobs:
         -DLAPACK_INCLUDE_DIRS=${CONDA_PREFIX}/include \
         -DOpenMP_LIBRARY_DIRS=${CONDA_PREFIX}/lib \
         -DOpenMP_LIBRARIES=${CONDA_PREFIX}/lib/${OpenMP_CXX_LIB_NAMES}.so \
+        -DOpenMP_FLAGS=${OpenMP_CXX_FLAG} \
         -DOpenMP_CXX_FLAGS=${OpenMP_CXX_FLAG} \
         -DOpenMP_CXX_LIB_NAMES=${OpenMP_CXX_LIB_NAMES} \
         -DCMAKE_BUILD_TYPE=${BUILD_TYPE} \
