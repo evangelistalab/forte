@@ -82,7 +82,7 @@ def register_driver_options(options):
 
     options.add_double("MS", None, "Projection of spin onto the z axis")
 
-    options.add_str("ACTIVE_REF_TYPE", "CAS", ["CAS", "PAIRED", "GAS", "GAS_SINGLE"],
+    options.add_str("ACTIVE_REF_TYPE", "CAS", ["CAS", "DOCI", "GAS", "GAS_SINGLE"],
                     "Initial guess for active space wave functions")
 
     options.add_bool("SPIN_AVG_DENSITY", False,

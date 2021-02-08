@@ -76,7 +76,7 @@ class CI_Reference {
     int nact_;
 
     // Symmetry of each active MO
-    psi::Dimension mo_symmetry_;
+    std::vector<int> mo_symmetry_;
 
     // Number of active MOs per irrep
     psi::Dimension nactpi_;
@@ -136,6 +136,9 @@ class CI_Reference {
 
     /// Build the CAS reference (with a high limit of basis functions)
     void build_cas_reference(std::vector<Determinant>& ref_space);
+
+    /// Build the doubly occupied CI reference
+    void build_doci_reference(std::vector<Determinant>& ref_space);
 
     /// Build the complete GAS reference
     void build_gas_reference(std::vector<Determinant>& ref_space);

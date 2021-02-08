@@ -86,7 +86,7 @@ CI_Reference::CI_Reference(std::shared_ptr<SCFInfo> scf_info, std::shared_ptr<Fo
     ref_type_ = options->get_str("ACTIVE_REF_TYPE");
 
     // First determine number of alpha and beta electrons
-    // Assume twice_ms =( Na - Nb )
+    // Assume twice_ms = Na - Nb
     int nel = 0;
     for (int h = 0; h < nirrep_; ++h) {
         nel += 2 * doccpi[h] + soccpi[h];
@@ -108,6 +108,8 @@ CI_Reference::~CI_Reference() {}
 void CI_Reference::build_reference(std::vector<Determinant>& ref_space) {
     if (ref_type_ == "CAS") {
         build_cas_reference(ref_space);
+    } else if (ref_type_ == "DOCI") {
+        build_doci_reference(ref_space);
     } else if (ref_type_ == "GAS") {
         // Complete GAS
         print_gas_scf_epsilon();
@@ -540,6 +542,23 @@ CI_Reference::build_occ_string(size_t norb, size_t nele, const std::vector<int>&
     } while (std::next_permutation(occ_tmp.begin(), occ_tmp.begin() + norb));
 
     return out;
+}
+
+void CI_Reference::build_doci_reference(std::vector<Determinant>& ref_space) {
+    if (root_sym_ != 0) {
+        outfile->Printf("\n  State must be totally symmetric for DOCI.");
+        throw psi::PSIEXCEPTION("DOCI reference can only be under totally symmetric irrep.");
+    }
+
+    ref_space.clear();
+    auto strings_per_irrep = build_occ_string(nact_, nalpha_, mo_symmetry_);
+
+    // combine alpha and beta strings to form determinant
+    for (int h = 0; h < nirrep_; ++h) {
+        for (const auto& a : strings_per_irrep[h]) {
+            ref_space.emplace_back(a, a);
+        }
+    }
 }
 
 std::vector<std::vector<bool>>
