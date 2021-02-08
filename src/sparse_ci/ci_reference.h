@@ -137,6 +137,9 @@ class CI_Reference {
     /// Build the CAS reference (with a high limit of basis functions)
     void build_cas_reference(std::vector<Determinant>& ref_space);
 
+    /// Build the complete CAS reference
+    void build_cas_reference_full(std::vector<Determinant>& ref_space);
+
     /// Build the doubly occupied CI reference
     void build_doci_reference(std::vector<Determinant>& ref_space);
 

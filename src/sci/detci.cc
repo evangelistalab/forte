@@ -93,7 +93,13 @@ void DETCI::build_determinant_space() {
     p_space_.clear();
     ci_ref_ = std::make_shared<CI_Reference>(scf_info_, options_, mo_space_info_, as_ints_,
                                              multiplicity_, twice_ms_, wfn_irrep_, state_);
-    ci_ref_->build_reference(p_space_);
+    if (actv_space_type_ == "GAS") {
+        ci_ref_->build_gas_reference(p_space_);
+    } else if (actv_space_type_ == "DOCI") {
+        ci_ref_->build_doci_reference(p_space_);
+    } else {
+        ci_ref_->build_cas_reference_full(p_space_);
+    }
 
     auto size = p_space_.size();
     if (not quiet_) {
