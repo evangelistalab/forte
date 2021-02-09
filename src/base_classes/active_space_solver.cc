@@ -59,6 +59,7 @@ ActiveSpaceSolver::ActiveSpaceSolver(const std::string& method,
     print_options();
 
     ms_avg_ = options->get_bool("SPIN_AVG_DENSITY");
+    print_ = options->get_int("PRINT");
 }
 
 void ActiveSpaceSolver::set_print(int level) { print_ = level; }

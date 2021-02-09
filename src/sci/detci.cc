@@ -41,6 +41,9 @@ void DETCI::startup() {
                    state_.irrep_label();
 
     set_options(options_);
+
+    ci_ref_ = std::make_shared<CI_Reference>(scf_info_, options_, mo_space_info_, as_ints_,
+                                             multiplicity_, twice_ms_, wfn_irrep_, state_);
 }
 
 void DETCI::set_options(std::shared_ptr<ForteOptions> options) {
@@ -91,8 +94,7 @@ double DETCI::compute_energy() {
 
 void DETCI::build_determinant_space() {
     p_space_.clear();
-    ci_ref_ = std::make_shared<CI_Reference>(scf_info_, options_, mo_space_info_, as_ints_,
-                                             multiplicity_, twice_ms_, wfn_irrep_, state_);
+
     if (actv_space_type_ == "GAS") {
         ci_ref_->build_gas_reference(p_space_);
     } else if (actv_space_type_ == "DOCI") {
@@ -102,9 +104,6 @@ void DETCI::build_determinant_space() {
     }
 
     auto size = p_space_.size();
-    if (not quiet_) {
-        outfile->Printf("\n  Number of determinants: %zu", size);
-    }
 
     if (size == 0) {
         outfile->Printf("\n  There is no determinant matching the conditions!");
@@ -117,6 +116,9 @@ void DETCI::build_determinant_space() {
         for (const auto& det : p_space_) {
             outfile->Printf("\n  %s", str(det, nactv_).c_str());
         }
+    }
+    if (not quiet_) {
+        outfile->Printf("\n  Number of determinants (%s): %zu", actv_space_type_.c_str(), size);
     }
 
     if (size < 1500) {
@@ -131,10 +133,12 @@ void DETCI::diagoanlize_hamiltonian() {
     print_h2("Diagonalizing Hamiltonian " + state_label_);
 
     auto solver = prepare_ci_solver();
+
+    DeterminantHashVec detmap(p_space_);
     auto sigma_vector =
-        make_sigma_vector(p_space_, as_ints_, sigma_max_memory_, sigma_vector_type_);
+        make_sigma_vector(detmap, as_ints_, sigma_max_memory_, sigma_vector_type_);
     std::tie(evals_, evecs_) =
-        solver.diagonalize_hamiltonian(p_space_, sigma_vector, nroot_, multiplicity_);
+        solver->diagonalize_hamiltonian(detmap, sigma_vector, nroot_, multiplicity_);
 
     // add energy offset
     double energy_offset = as_ints_->scalar_energy() + as_ints_->nuclear_repulsion_energy();
@@ -146,23 +150,30 @@ void DETCI::diagoanlize_hamiltonian() {
     outfile->Printf("\n\n  Done diagonalizing Hamiltonian, %.3e seconds.", tdiag.stop());
 }
 
-SparseCISolver DETCI::prepare_ci_solver() {
-    SparseCISolver solver;
-    solver.set_parallel(true);
-    solver.set_spin_project(true);
-    solver.set_print_details(not quiet_);
+std::shared_ptr<SparseCISolver> DETCI::prepare_ci_solver() {
+    auto solver = std::make_shared<SparseCISolver>();
+    solver->set_parallel(true);
+    solver->set_spin_project(true);
+    solver->set_print_details(not quiet_);
 
-    solver.set_e_convergence(e_conv_);
-    solver.set_r_convergence(r_conv_);
-    solver.set_maxiter_davidson(maxiter_);
+    solver->set_e_convergence(e_conv_);
+    solver->set_r_convergence(r_conv_);
+    solver->set_maxiter_davidson(maxiter_);
 
-    solver.set_guess_dimension(dl_guess_size_);
+    solver->set_ncollapse_per_root(ncollapse_per_root_);
+    solver->set_nsubspace_per_root(nsubspace_per_root_);
+
+    // TODO check the format of initial_guess_
+    solver->set_guess_dimension(dl_guess_size_);
     if (initial_guess_.size() == p_space_.size()) {
-        solver.set_initial_guess(initial_guess_); // TODO check the format of initial_guess_
+        solver->set_initial_guess(initial_guess_);
     }
 
-    solver.set_ncollapse_per_root(ncollapse_per_root_);
-    solver.set_nsubspace_per_root(nsubspace_per_root_);
+    // TODO: set projected roots
+    if (projected_roots_.size() != 0) {
+        solver->set_root_project(true);
+        solver->add_bad_states(projected_roots_);
+    }
 
     return solver;
 }

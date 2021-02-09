@@ -46,6 +46,16 @@ class DETCI : public ActiveSpaceMethod {
 
     /// Quiet mode (no printing, for use with CASSCF)
     void set_quite_mode(bool quiet) { quiet_ = quiet; }
+
+    /// Set projected roots
+    void project_roots(std::vector<std::vector<std::pair<size_t, double>>>& projected) {
+        projected_roots_ = projected;
+    }
+
+    /// Set initial guess
+    void set_initial_guess(std::vector<std::pair<size_t, double>>& guess) {
+        initial_guess_ = guess;
+    }
 private:
     /// SCFInfo object
     std::shared_ptr<SCFInfo> scf_info_;
@@ -96,6 +106,9 @@ private:
     /// Initial guess vector
     std::vector<std::pair<size_t, double>> initial_guess_;
 
+    /// Roots to be projected out in the diagonalization
+    std::vector<std::vector<std::pair<size_t, double>>> projected_roots_;
+
     /// Number of trial vector to keep after collapsing of Davidson-Liu
     int ncollapse_per_root_;
     /// Number of trial vectors per root for Davidson-Liu
@@ -104,7 +117,7 @@ private:
     /// Diagonalize the Hamiltonian
     void diagoanlize_hamiltonian();
     /// Prepare Davidson-Liu solver
-    SparseCISolver prepare_ci_solver();
+    std::shared_ptr<SparseCISolver> prepare_ci_solver();
     /// Algorithm to build sigma vector
     SigmaVectorType sigma_vector_type_;
     /// Max memory can be used for sigma build
