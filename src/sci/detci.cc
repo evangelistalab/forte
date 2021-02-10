@@ -121,7 +121,7 @@ void DETCI::build_determinant_space() {
         outfile->Printf("\n  Number of determinants (%s): %zu", actv_space_type_.c_str(), size);
     }
 
-    if (size < 1500) {
+    if (size < 100) {
         sigma_vector_type_ = SigmaVectorType::Full;
     }
 }
