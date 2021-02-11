@@ -94,6 +94,12 @@ def register_driver_options(options):
 
     options.add_bool("DUMP_ORBITALS", False, "Save orbitals to file if true")
 
+    options.add_bool("DUMP_ASWFN", False,
+                     "Save CI wave function of ActiveSpaceSolver to disk")
+
+    options.add_bool("READ_ASWFN", False,
+                     "Read CI wave function of ActiveSpaceSolver from disk")
+
 
 def register_avas_options(options):
     options.set_group("AVAS")
