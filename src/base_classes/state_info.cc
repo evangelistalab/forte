@@ -155,6 +155,23 @@ std::string StateInfo::str() const {
            ")" + gas_restrictions;
 }
 
+std::string StateInfo::str_short() const {
+    std::string multi = "m" + std::to_string(multiplicity_) + ".z" + std::to_string(twice_ms_);
+    std::string sym = ".h" + std::to_string(irrep_);
+    std::string gmin, gmax;
+    if (gas_min_.size() > 0) {
+        gmin = ".g";
+        for (size_t i : gas_min_)
+            gmin += "_" + std::to_string(i);
+    }
+    if (gas_max_.size() > 0) {
+        gmax = ".g";
+        for (size_t i : gas_max_)
+            gmax += "_" + std::to_string(i);
+    }
+    return multi + sym + gmin + gmax;
+}
+
 std::size_t StateInfo::hash() const {
     // here we form a string representation and then call std::hash<std::string> on it.
     std::string repr = std::to_string(na_);

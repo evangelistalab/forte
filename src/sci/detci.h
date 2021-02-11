@@ -53,9 +53,15 @@ class DETCI : public ActiveSpaceMethod {
     }
 
     /// Set initial guess
-    void set_initial_guess(std::vector<std::pair<size_t, double>>& guess) {
+    void set_initial_guess(std::vector<std::vector<std::pair<size_t, double>>>& guess) {
         initial_guess_ = guess;
     }
+
+    /// Dump wave function to disk
+    void dump_wave_function(const std::string& filename) override;
+
+    /// Read wave function from disk as initial guess
+    bool read_wave_function(const std::string& filename) override;
 private:
     /// SCFInfo object
     std::shared_ptr<SCFInfo> scf_info_;
@@ -79,7 +85,7 @@ private:
     /// CI_Reference object
     std::shared_ptr<CI_Reference> ci_ref_;
     /// The determinant space
-    std::vector<Determinant> p_space_;
+    DeterminantHashVec p_space_;
     /// Build determinant space
     void build_determinant_space();
 
@@ -94,17 +100,13 @@ private:
     /// Number of irreps
     int nirrep_;
 
-    /// Energy convergence
-    double e_conv_;
-    /// Residue convergence
-    double r_conv_;
     /// Max iteration of Davidson-Liu
     int maxiter_;
 
     /// Number of guess basis for Davidson-Liu
     int dl_guess_size_;
     /// Initial guess vector
-    std::vector<std::pair<size_t, double>> initial_guess_;
+    std::vector<std::vector<std::pair<size_t, double>>> initial_guess_;
 
     /// Roots to be projected out in the diagonalization
     std::vector<std::vector<std::pair<size_t, double>>> projected_roots_;

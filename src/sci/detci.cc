@@ -1,4 +1,5 @@
 #include <algorithm>
+#include <fstream>
 
 #include "psi4/libpsi4util/PsiOutStream.h"
 #include "psi4/libpsi4util/process.h"
@@ -42,15 +43,17 @@ void DETCI::startup() {
 
     set_options(options_);
 
+    // build determinants
     ci_ref_ = std::make_shared<CI_Reference>(scf_info_, options_, mo_space_info_, as_ints_,
                                              multiplicity_, twice_ms_, wfn_irrep_, state_);
+    build_determinant_space();
 }
 
 void DETCI::set_options(std::shared_ptr<ForteOptions> options) {
     actv_space_type_ = options->get_str("ACTIVE_REF_TYPE");
 
-    e_conv_ = options->get_double("E_CONVERGENCE");
-    r_conv_ = options->get_double("R_CONVERGENCE");
+    e_convergence_ = options->get_double("E_CONVERGENCE");
+    r_convergence_ = options->get_double("R_CONVERGENCE");
     ci_print_threshold_ = options->get_double("FCIMO_PRINT_CIVEC");
 
     auto dl_maxiter = options->get_int("DL_MAXITER");
@@ -66,10 +69,43 @@ void DETCI::set_options(std::shared_ptr<ForteOptions> options) {
     sigma_max_memory_ = options_->get_int("SIGMA_VECTOR_MAX_MEMORY");
 }
 
-double DETCI::compute_energy() {
-    // build determinants
-    build_determinant_space();
+void DETCI::build_determinant_space() {
+    std::vector<Determinant> dets;
 
+    if (actv_space_type_ == "GAS") {
+        ci_ref_->build_gas_reference(dets);
+    } else if (actv_space_type_ == "DOCI") {
+        ci_ref_->build_doci_reference(dets);
+    } else {
+        ci_ref_->build_cas_reference_full(dets);
+    }
+
+    auto size = dets.size();
+
+    if (size == 0) {
+        outfile->Printf("\n  There is no determinant matching the conditions!");
+        outfile->Printf("\n  Please check the input (symmetry, multiplicity, etc.)!");
+        throw psi::PSIEXCEPTION("No determinant matching the conditions!");
+    }
+
+    if (print_ > 2) {
+        print_h2("Determinants");
+        for (const auto& det : dets) {
+            outfile->Printf("\n  %s", str(det, nactv_).c_str());
+        }
+    }
+    if (not quiet_) {
+        outfile->Printf("\n  Number of determinants (%s): %zu", actv_space_type_.c_str(), size);
+    }
+
+    if (size < 100) {
+        sigma_vector_type_ = SigmaVectorType::Full;
+    }
+
+    p_space_ = DeterminantHashVec(dets);
+}
+
+double DETCI::compute_energy() {
     // diagonalize Hamiltonian
     diagoanlize_hamiltonian();
 
@@ -92,40 +128,6 @@ double DETCI::compute_energy() {
     return energy;
 }
 
-void DETCI::build_determinant_space() {
-    p_space_.clear();
-
-    if (actv_space_type_ == "GAS") {
-        ci_ref_->build_gas_reference(p_space_);
-    } else if (actv_space_type_ == "DOCI") {
-        ci_ref_->build_doci_reference(p_space_);
-    } else {
-        ci_ref_->build_cas_reference_full(p_space_);
-    }
-
-    auto size = p_space_.size();
-
-    if (size == 0) {
-        outfile->Printf("\n  There is no determinant matching the conditions!");
-        outfile->Printf("\n  Please check the input (symmetry, multiplicity, etc.)!");
-        throw psi::PSIEXCEPTION("No determinant matching the conditions!");
-    }
-
-    if (print_ > 2) {
-        print_h2("Determinants");
-        for (const auto& det : p_space_) {
-            outfile->Printf("\n  %s", str(det, nactv_).c_str());
-        }
-    }
-    if (not quiet_) {
-        outfile->Printf("\n  Number of determinants (%s): %zu", actv_space_type_.c_str(), size);
-    }
-
-    if (size < 100) {
-        sigma_vector_type_ = SigmaVectorType::Full;
-    }
-}
-
 void DETCI::diagoanlize_hamiltonian() {
     timer tdiag("Diagonalize CI Hamiltonian");
     energies_ = std::vector<double>(nroot_);
@@ -135,8 +137,7 @@ void DETCI::diagoanlize_hamiltonian() {
     auto solver = prepare_ci_solver();
 
     DeterminantHashVec detmap(p_space_);
-    auto sigma_vector =
-        make_sigma_vector(detmap, as_ints_, sigma_max_memory_, sigma_vector_type_);
+    auto sigma_vector = make_sigma_vector(detmap, as_ints_, sigma_max_memory_, sigma_vector_type_);
     std::tie(evals_, evecs_) =
         solver->diagonalize_hamiltonian(detmap, sigma_vector, nroot_, multiplicity_);
 
@@ -156,20 +157,18 @@ std::shared_ptr<SparseCISolver> DETCI::prepare_ci_solver() {
     solver->set_spin_project(true);
     solver->set_print_details(not quiet_);
 
-    solver->set_e_convergence(e_conv_);
-    solver->set_r_convergence(r_conv_);
+    solver->set_e_convergence(e_convergence_);
+    solver->set_r_convergence(r_convergence_);
     solver->set_maxiter_davidson(maxiter_);
 
     solver->set_ncollapse_per_root(ncollapse_per_root_);
     solver->set_nsubspace_per_root(nsubspace_per_root_);
 
-    // TODO check the format of initial_guess_
     solver->set_guess_dimension(dl_guess_size_);
-    if (initial_guess_.size() == p_space_.size()) {
+    if (initial_guess_.size()) {
         solver->set_initial_guess(initial_guess_);
     }
 
-    // TODO: set projected roots
     if (projected_roots_.size() != 0) {
         solver->set_root_project(true);
         solver->add_bad_states(projected_roots_);
@@ -183,9 +182,9 @@ void DETCI::compute_1rdms() {
     opdm_b_.resize(nroot_);
 
     for (size_t N = 0; N < nroot_; ++N) {
-        CI_RDMS ci_rdms(as_ints_, p_space_, evecs_, N, N);
+        CI_RDMS ci_rdms(p_space_, as_ints_, evecs_, N, N);
         std::vector<double> opdm_a, opdm_b;
-        ci_rdms.compute_1rdm(opdm_a, opdm_b);
+        ci_rdms.compute_1rdm_op(opdm_a, opdm_b);
 
         std::string name = "Root " + std::to_string(N) + " of " + state_label_;
         auto da = std::make_shared<psi::Matrix>("D1a " + name, actv_dim_, actv_dim_);
@@ -210,11 +209,11 @@ void DETCI::compute_1rdms() {
 void DETCI::print_ci_wfn() {
     print_h2("CI Vectors & Occupation Number for " + state_label_);
 
-    outfile->Printf("\n  Important determinants with coefficients |C| >= %.3e\n",
+    outfile->Printf("\n  Important determinants with coefficients |C| >= %.3e",
                     ci_print_threshold_);
 
     for (size_t N = 0; N < nroot_; ++N) {
-        outfile->Printf("\n  ---- Root No. %d ----\n", N);
+        outfile->Printf("\n\n  ---- Root No. %d ----\n", N);
 
         if (nactv_) {
             // select coefficients greater than threshold
@@ -245,7 +244,7 @@ void DETCI::print_ci_wfn() {
             outfile->Printf("%16s\n    %s", "Coefficients", dash.c_str());
 
             for (size_t i = 0, size = id.size(); i < size; ++i) {
-                auto det = p_space_[id[i]];
+                auto det = p_space_.get_det(id[i]);
                 double ci = evecs_->get(id[i], N);
 
                 outfile->Printf("\n    ");
@@ -299,6 +298,109 @@ void DETCI::print_ci_wfn() {
     }
 }
 
+void DETCI::dump_wave_function(const std::string& filename) {
+    std::ofstream file(filename);
+    for (size_t I = 0, Isize = p_space_.size(); I < Isize; ++I) {
+        std::string det_str = str(p_space_.get_det(I), nactv_);
+        file << det_str;
+        for (size_t n = 0; n < nroot_; ++n) {
+            file << ", " << std::scientific << std::setprecision(12)
+                 << evecs_->get(I, n);
+        }
+        file << std::endl;
+    }
+    file.close();
+}
+
+bool DETCI::read_wave_function(const std::string& filename) {
+    std::string line;
+    std::ifstream file(filename);
+
+    if (!file.is_open()) {
+        return false;
+    }
+
+    std::vector<Determinant> dets;
+    std::vector<std::vector<double>> coeffs; // ndets by nroot
+
+    std::string delimiter = ", ";
+
+    while (getline(file, line)) {
+        // get the determinant
+        size_t next = line.find(delimiter);
+        auto det_str = line.substr(0, next);
+        int norb = det_str.size() - 2;
+
+        if (norb != nactv_) {
+            return false;
+        }
+
+        // form determinant
+        std::vector<bool> alpha(nactv_, false), beta(nactv_, false);
+        for (int i = 0; i < nactv_; ++i) {
+            char x = det_str[i + 1];
+            if (x == '2' or x == '+') {
+                alpha[i] = true;
+            }
+            if (x == '2' or x == '-') {
+                beta[i] = true;
+            }
+        }
+        dets.emplace_back(alpha, beta);
+
+        size_t last = next + 1;
+        std::vector<double> tmp;
+        while ((next = line.find(delimiter, last)) != string::npos) {
+            outfile->Printf("\n  F%s", line.substr(last, next - last).c_str());
+            tmp.push_back(std::stod(line.substr(last, next - last)));
+            last = next + 1;
+        }
+        tmp.push_back(std::stod(line.substr(last)));
+
+        coeffs.push_back(tmp);
+    }
+
+    // test the number of roots are consistent
+    size_t nroot = coeffs[0].size();
+    if (std::any_of(coeffs.begin(), coeffs.end(),
+                    [&](const std::vector<double>& tmp) { return tmp.size() != nroot; })) {
+        return false;
+    }
+
+    size_t ndets = coeffs.size();
+    std::vector<double> norms(nroot, 0);
+    std::vector<size_t> indices;
+
+    // make sure the determinants are in p_space_
+    for (size_t I = 0; I < ndets; ++I) {
+        const auto& det = dets[I];
+        if (not p_space_.has_det(det))
+            continue;
+
+        for (size_t n = 0; n < nroot; ++n) {
+            norms[n] += coeffs[I][n] * coeffs[I][n];
+        }
+
+        indices.push_back(I);
+    }
+
+    // translate to initial_guess_ format
+    initial_guess_.clear();
+
+    for (size_t n = 0; n < nroot; ++n) {
+        std::vector<std::pair<size_t, double>> tmp;
+        tmp.reserve(indices.size());
+        for (const size_t I : indices) {
+            const auto& det = dets[I];
+            size_t id = p_space_.get_idx(det);
+            tmp.push_back({id, coeffs[I][n] / norms[n]});
+        }
+        initial_guess_.push_back(tmp);
+    }
+
+    return true;
+}
+
 std::vector<RDMs> DETCI::rdms(const std::vector<std::pair<size_t, size_t>>& root_list,
                               int max_rdm_level) {
     if (max_rdm_level > 3 || max_rdm_level < 1) {
@@ -348,8 +450,8 @@ std::vector<ambit::Tensor> DETCI::compute_trans_1rdms_sosd(int root1, int root2)
             offset += actv_dim_[h];
         }
     } else {
-        CI_RDMS ci_rdms(as_ints_, p_space_, evecs_, root1, root2);
-        ci_rdms.compute_1rdm(a_data, b_data);
+        CI_RDMS ci_rdms(p_space_, as_ints_, evecs_, root1, root2);
+        ci_rdms.compute_1rdm_op(a_data, b_data);
     }
 
     return {a, b};
@@ -363,8 +465,8 @@ std::vector<ambit::Tensor> DETCI::compute_trans_2rdms_sosd(int root1, int root2)
     auto& ab_data = ab.data();
     auto& bb_data = bb.data();
 
-    CI_RDMS ci_rdms(as_ints_, p_space_, evecs_, root1, root2);
-    ci_rdms.compute_2rdm(aa_data, ab_data, bb_data);
+    CI_RDMS ci_rdms(p_space_, as_ints_, evecs_, root1, root2);
+    ci_rdms.compute_2rdm_op(aa_data, ab_data, bb_data);
 
     return {aa, ab, bb};
 }
@@ -380,8 +482,8 @@ std::vector<ambit::Tensor> DETCI::compute_trans_3rdms_sosd(int root1, int root2)
     auto& bbb_data = bbb.data();
 
     if (options_->get_str("THREEPDC") == "MK") {
-        CI_RDMS ci_rdms(as_ints_, p_space_, evecs_, root1, root2);
-        ci_rdms.compute_3rdm(aaa_data, aab_data, abb_data, bbb_data);
+        CI_RDMS ci_rdms(p_space_, as_ints_, evecs_, root1, root2);
+        ci_rdms.compute_3rdm_op(aaa_data, aab_data, abb_data, bbb_data);
     }
 
     return {aaa, aab, abb, bbb};

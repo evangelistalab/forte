@@ -60,6 +60,8 @@ ActiveSpaceSolver::ActiveSpaceSolver(const std::string& method,
 
     ms_avg_ = options->get_bool("SPIN_AVG_DENSITY");
     print_ = options->get_int("PRINT");
+    e_convergence_ = options->get_double("E_CONVERGENCE");
+    r_convergence_ = options->get_double("R_CONVERGENCE");
 }
 
 void ActiveSpaceSolver::set_print(int level) { print_ = level; }
@@ -73,6 +75,8 @@ const std::map<StateInfo, std::vector<double>>& ActiveSpaceSolver::compute_energ
         std::shared_ptr<ActiveSpaceMethod> method = make_active_space_method(
             method_, state, nroot, scf_info_, mo_space_info_, as_ints_, options_);
         method->set_print(print_);
+        method->set_e_convergence(e_convergence_);
+        method->set_r_convergence(r_convergence_);
         state_method_map_[state] = method;
 
         int twice_ms = state.twice_ms();
@@ -82,6 +86,11 @@ const std::map<StateInfo, std::vector<double>>& ActiveSpaceSolver::compute_energ
                                  twice_ms);
             continue;
         }
+
+        if (state_filename_map_.size()) {
+            method->read_wave_function(state_filename_map_[state]);
+        }
+
         method->compute_energy();
         const auto& energies = method->energies();
         state_energies_map_[state] = energies;
@@ -590,6 +599,26 @@ RDMs ActiveSpaceSolver::compute_avg_rdms_ms_avg(
     }
 
     return RDMs(true, g1a, g2ab, g3aab);
+}
+
+std::map<StateInfo, std::string> ActiveSpaceSolver::dump_wave_function() {
+    std::map<StateInfo, std::string> out;
+
+    std::string method_lowercase(method_);
+    std::transform(method_lowercase.begin(), method_lowercase.end(), method_lowercase.begin(),
+                   [](unsigned char c) { return std::tolower(c); });
+
+    std::string prefix = "forte.aswfn." + method_lowercase;
+
+    for (const auto& state_method : state_method_map_) {
+        const auto& state = state_method.first;
+        auto state_str = state.str_short();
+        std::string filename = prefix + "." + state_str + ".txt";
+        out[state] = filename;
+        state_method.second->dump_wave_function(filename);
+    }
+
+    return out;
 }
 
 const std::map<StateInfo, std::vector<double>>&

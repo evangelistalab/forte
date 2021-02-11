@@ -228,6 +228,12 @@ double MCSCF_2STEP::compute_energy() {
             break;
         }
 
+        // set convergence thresholds for Davidson-Liu solver
+        if (macro > 1) {
+            dl_e_conv_ = std::max(0.1 * std::fabs(de), e_conv_);
+            dl_r_conv_ = lbfgs_param->epsilon;
+        }
+
         // DIIS for orbitals
         if (do_diis_) {
             if (macro >= diis_start_) {
@@ -343,9 +349,14 @@ MCSCF_2STEP::diagonalize_hamiltonian(std::shared_ptr<ActiveSpaceIntegrals> fci_i
     auto active_space_solver = make_active_space_solver(ci_type_, state_map, scf_info_,
                                                         mo_space_info_, fci_ints, options_);
     active_space_solver->set_print(print);
+    active_space_solver->set_e_convergence(dl_e_conv_);
+    active_space_solver->set_r_convergence(dl_r_conv_);
+    if (state_ciwfn_map_.size()) {
+        active_space_solver->read_wave_function(state_ciwfn_map_);
+    }
     const auto state_energies_map = active_space_solver->compute_energy();
 
-    // TODO: need to save CI vectors and dump to file and let solver read them
+    state_ciwfn_map_ = active_space_solver->dump_wave_function();
 
     e_c = compute_average_state_energy(state_energies_map, state_weights_map_);
 

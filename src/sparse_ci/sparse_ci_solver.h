@@ -126,7 +126,7 @@ class SparseCISolver {
     void set_guess_dimension(size_t value) { dl_guess_ = value; }
 
     /// Set the initial guess
-    void set_initial_guess(std::vector<std::pair<size_t, double>>& guess);
+    void set_initial_guess(const std::vector<std::vector<std::pair<size_t, double>>>& guess);
     void manual_guess(bool value);
     void set_num_vecs(size_t value);
 
@@ -174,7 +174,7 @@ class SparseCISolver {
 
     /// Set the initial guess?
     bool set_guess_ = false;
-    std::vector<std::pair<size_t, double>> guess_;
+    std::vector<std::vector<std::pair<size_t, double>>> guess_; // nroot of guess size of (id, coefficent)
     // Number of guess vectors
     size_t nvec_ = 10;
 };

@@ -129,6 +129,11 @@ class MCSCF_2STEP {
     /// Orbital gradient convergence criteria
     double g_conv_;
 
+    /// Energy convergence for Davidson-Liu
+    double dl_e_conv_ = 1.0e-4;
+    /// Residual convergence for Davidson-Liu
+    double dl_r_conv_ = 5.0e-3;
+
     /// The name of CI solver
     std::string ci_type_;
 
@@ -139,6 +144,9 @@ class MCSCF_2STEP {
     std::unique_ptr<ActiveSpaceSolver>
     diagonalize_hamiltonian(std::shared_ptr<ActiveSpaceIntegrals> fci_ints, const int print,
                             double& e_c);
+
+    /// File names for CI wave function
+    std::map<StateInfo, std::string> state_ciwfn_map_;
 
     /// Class to store iteration data
     struct CASSCF_HISTORY {

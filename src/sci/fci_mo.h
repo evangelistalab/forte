@@ -211,7 +211,7 @@ class FCI_MO : public ActiveSpaceMethod {
     }
 
     /// Set initial guess
-    void set_initial_guess(std::vector<std::pair<size_t, double>>& guess) {
+    void set_initial_guess(const std::vector<std::vector<std::pair<size_t, double>>>& guess) {
         initial_guess_ = guess;
     }
 
@@ -384,7 +384,7 @@ class FCI_MO : public ActiveSpaceMethod {
     std::vector<std::vector<std::pair<size_t, double>>> projected_roots_;
 
     /// Initial guess vector
-    std::vector<std::pair<size_t, double>> initial_guess_;
+    std::vector<std::vector<std::pair<size_t, double>>> initial_guess_;
 
     /// Eigen Values and Eigen Vectors of Certain Symmetry
     std::vector<std::pair<psi::SharedVector, double>> eigen_;

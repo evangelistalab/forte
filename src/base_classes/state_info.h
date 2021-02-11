@@ -79,6 +79,9 @@ class StateInfo {
 
     /// string representation of this object
     std::string str() const;
+    /// string representation of this object, shorter version
+    std::string str_short() const;
+
     /// hash for this object
     std::size_t hash() const;
 

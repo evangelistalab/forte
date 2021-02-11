@@ -29,6 +29,7 @@
 #ifndef _active_space_solver_h_
 #define _active_space_solver_h_
 
+#include <map>
 #include <vector>
 #include <string>
 
@@ -111,6 +112,20 @@ class ActiveSpaceSolver {
         as_ints_ = as_ints;
     }
 
+    /// Save the wave function
+    std::map<StateInfo, std::string> dump_wave_function();
+
+    /// Read the wave function from file as initial guess
+    void read_wave_function(const std::map<StateInfo, std::string>& state_filename_map) {
+        state_filename_map_ = state_filename_map;
+    };
+
+    /// Set energy convergence
+    void set_e_convergence(double e_convergence) { e_convergence_ = e_convergence; }
+
+    /// Set residual convergence
+    void set_r_convergence(double r_convergence) { r_convergence_ = r_convergence; }
+
   protected:
     /// a string that specifies the method used (e.g. "FCI", "ACI", ...)
     std::string method_;
@@ -145,6 +160,9 @@ class ActiveSpaceSolver {
     /// A map of state symmetries to vectors of computed energies under given state symmetry
     std::map<StateInfo, std::vector<double>> state_energies_map_;
 
+    /// A map of state symmetries to the file name of wave function stored on disk
+    std::map<StateInfo, std::string> state_filename_map_;
+
     /// Average spin multiplets for RDMs
     /// If true, the weight of a state will be averaged by its multiplicity.
     /// Moreover, all its ms components will be computed by the solver.
@@ -160,6 +178,12 @@ class ActiveSpaceSolver {
 
     /// A variable to control printing information
     int print_ = 1;
+
+    /// The energy convergence criterion
+    double e_convergence_;
+
+    /// The residual 2-norm convergence criterion
+    double r_convergence_;
 
     /// Pairs of state info and the contracted CI eigen vectors
     std::map<StateInfo, std::shared_ptr<psi::Matrix>>

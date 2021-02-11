@@ -131,6 +131,16 @@ class ActiveSpaceMethod {
     /// @param options the options passed in
     virtual void set_options(std::shared_ptr<ForteOptions> options) = 0;
 
+    /// Dump the wave function to file
+    virtual void dump_wave_function(const std::string&) {
+        throw std::runtime_error("Please override!");
+    }
+
+    /// Read the wave function from file
+    virtual bool read_wave_function(const std::string&) {
+        throw std::runtime_error("Please override!");
+    }
+
     // ==> Base Class Functionality (inherited by derived classes) <==
 
     /// Pass a set of ActiveSpaceIntegrals to the solver (e.g. an effective Hamiltonian)
