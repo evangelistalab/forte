@@ -44,7 +44,7 @@ def register_driver_options(options):
                        "The density convergence criterion")
 
     options.add_str(
-        'ACTIVE_SPACE_SOLVER', '', ['FCI', 'ACI', 'CAS'],
+        'ACTIVE_SPACE_SOLVER', '', ['FCI', 'ACI', 'PCI', 'DETCI', 'CAS'],
         'Active space solver type'
     )  # TODO: why is PCI running even if it is not in this list (Francesco)
     options.add_str(
@@ -938,7 +938,7 @@ def register_casscf_options(options):
     options.add_str("CASSCF_FINAL_ORBITAL", "CANONICAL", ["CANONICAL", "NATURAL", "UNSPECIFIED"],
                     "Constraints for redundant orbital pairs at the end of macro iteration")
 
-    options.add_str("CASSCF_CI_SOLVER", "CAS",
+    options.add_str("CASSCF_CI_SOLVER", "DETCI",
                     "The active space solver to use in CASSCF")
 
     options.add_int("CASSCF_CI_FREQ", 1,

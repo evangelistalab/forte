@@ -351,12 +351,13 @@ MCSCF_2STEP::diagonalize_hamiltonian(std::shared_ptr<ActiveSpaceIntegrals> fci_i
     active_space_solver->set_print(print);
     active_space_solver->set_e_convergence(dl_e_conv_);
     active_space_solver->set_r_convergence(dl_r_conv_);
-    if (state_ciwfn_map_.size()) {
+    if (state_ciwfn_map_.size() and ci_type_ == "DETCI") {
         active_space_solver->read_wave_function(state_ciwfn_map_);
     }
     const auto state_energies_map = active_space_solver->compute_energy();
 
-    state_ciwfn_map_ = active_space_solver->dump_wave_function();
+    if (ci_type_ == "DETCI")
+        state_ciwfn_map_ = active_space_solver->dump_wave_function();
 
     e_c = compute_average_state_energy(state_energies_map, state_weights_map_);
 
