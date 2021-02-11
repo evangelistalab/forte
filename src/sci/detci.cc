@@ -1,5 +1,6 @@
 #include <algorithm>
 #include <fstream>
+#include <iomanip>
 
 #include "psi4/libpsi4util/PsiOutStream.h"
 #include "psi4/libpsi4util/process.h"
