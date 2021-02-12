@@ -352,7 +352,6 @@ bool DETCI::read_wave_function(const std::string& filename) {
         size_t last = next + 1;
         std::vector<double> tmp;
         while ((next = line.find(delimiter, last)) != string::npos) {
-            outfile->Printf("\n  F%s", line.substr(last, next - last).c_str());
             tmp.push_back(std::stod(line.substr(last, next - last)));
             last = next + 1;
         }
