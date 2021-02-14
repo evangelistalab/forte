@@ -172,7 +172,9 @@ double MCSCF_2STEP::compute_energy() {
         // solve CI problem
         if (macro == 1 or (not sr)) {
             auto fci_ints = cas_grad.active_space_ints();
-            auto as_solver = diagonalize_hamiltonian(fci_ints, debug_print_ ? print_ : 0, e_c);
+            auto print_level = debug_print_ ? print_ : 0;
+            auto do_dipole = print_ > 1;
+            auto as_solver = diagonalize_hamiltonian(fci_ints, print_level, do_dipole, e_c);
             rdms = as_solver->compute_average_rdms(state_weights_map_, 2);
         }
         double de_c = (macro > 1) ? e_c - history[macro - 2].e_c : e_c;
@@ -310,7 +312,7 @@ double MCSCF_2STEP::compute_energy() {
 
         // rediagonalize Hamiltonian
         auto fci_ints = cas_grad.active_space_ints();
-        auto as_solver = diagonalize_hamiltonian(fci_ints, print_, energy_);
+        auto as_solver = diagonalize_hamiltonian(fci_ints, print_, true, energy_);
 
         // pass to wave function
         auto Ca = cas_grad.Ca();
@@ -344,13 +346,14 @@ double MCSCF_2STEP::compute_energy() {
 
 std::unique_ptr<ActiveSpaceSolver>
 MCSCF_2STEP::diagonalize_hamiltonian(std::shared_ptr<ActiveSpaceIntegrals> fci_ints,
-                                     const int print, double& e_c) {
+                                     const int print, const bool do_dipole, double& e_c) {
     auto state_map = to_state_nroots_map(state_weights_map_);
     auto active_space_solver = make_active_space_solver(ci_type_, state_map, scf_info_,
                                                         mo_space_info_, fci_ints, options_);
     active_space_solver->set_print(print);
     active_space_solver->set_e_convergence(dl_e_conv_);
     active_space_solver->set_r_convergence(dl_r_conv_);
+    active_space_solver->set_do_dipole(do_dipole);
     if (state_ciwfn_map_.size() and ci_type_ == "DETCI") {
         active_space_solver->read_wave_function(state_ciwfn_map_);
     }

@@ -26,15 +26,15 @@ class DETCI : public ActiveSpaceMethod {
      * @param as_ints Active space integrals
      */
     DETCI(StateInfo state, size_t nroot, std::shared_ptr<SCFInfo> scf_info,
-           std::shared_ptr<ForteOptions> options, std::shared_ptr<MOSpaceInfo> mo_space_info,
-           std::shared_ptr<ActiveSpaceIntegrals> as_ints);
+          std::shared_ptr<ForteOptions> options, std::shared_ptr<MOSpaceInfo> mo_space_info,
+          std::shared_ptr<ActiveSpaceIntegrals> as_ints);
 
     /// Compute the energy
     double compute_energy() override;
 
     /// RDMs override
     std::vector<RDMs> rdms(const std::vector<std::pair<size_t, size_t>>& root_list,
-              int max_rdm_level) override;
+                           int max_rdm_level) override;
 
     /// Transition RDMs override
     std::vector<RDMs> transition_rdms(const std::vector<std::pair<size_t, size_t>>& root_list,
@@ -62,7 +62,8 @@ class DETCI : public ActiveSpaceMethod {
 
     /// Read wave function from disk as initial guess
     bool read_wave_function(const std::string& filename) override;
-private:
+
+  private:
     /// SCFInfo object
     std::shared_ptr<SCFInfo> scf_info_;
 
@@ -147,6 +148,11 @@ private:
     std::vector<ambit::Tensor> compute_trans_2rdms_sosd(int root1, int root2);
     /// Compute the (transition) 3RDMs, same orbital, same set of determinants
     std::vector<ambit::Tensor> compute_trans_3rdms_sosd(int root1, int root2);
+
+    /// Printing for CI_RDMs
+    bool print_ci_rdms_ = true;
+    /// Compute dipole moments of same symmetry, same orbital, same set of determinants
+    void compute_dipole_sosd();
 };
 } // namespace forte
 

@@ -183,7 +183,7 @@ void DeterminantSubstitutionLists::op_s_lists(const DeterminantHashVec& wfn) {
         }
     }
     if (!quiet_) {
-        outfile->Printf("\n        α          %7.6f s", ann.stop());
+        outfile->Printf("\n        α          %.3e seconds", ann.stop());
     }
 
     timer bnn("B lists");
@@ -223,7 +223,7 @@ void DeterminantSubstitutionLists::op_s_lists(const DeterminantHashVec& wfn) {
         }
     }
     if (!quiet_) {
-        outfile->Printf("\n        β          %7.6f s", bnn.stop());
+        outfile->Printf("\n        β          %.3e seconds", bnn.stop());
     }
 }
 
@@ -284,7 +284,7 @@ void DeterminantSubstitutionLists::tp_s_lists(const DeterminantHashVec& wfn) {
             }
         }
         if (!quiet_) {
-            outfile->Printf("\n        αα         %7.6f s", aa.stop());
+            outfile->Printf("\n        αα         %.3e seconds", aa.stop());
         }
     }
 
@@ -339,7 +339,7 @@ void DeterminantSubstitutionLists::tp_s_lists(const DeterminantHashVec& wfn) {
             }
         }
         if (!quiet_) {
-            outfile->Printf("\n        ββ         %7.6f s", bb.stop());
+            outfile->Printf("\n        ββ         %.3e seconds", bb.stop());
         }
     }
 
@@ -389,7 +389,7 @@ void DeterminantSubstitutionLists::tp_s_lists(const DeterminantHashVec& wfn) {
             }
         }
         if (!quiet_) {
-            outfile->Printf("\n        αβ         %7.6f s", ab.stop());
+            outfile->Printf("\n        αβ         %.3e seconds", ab.stop());
         }
     }
 }
@@ -467,7 +467,7 @@ void DeterminantSubstitutionLists::three_s_lists(const DeterminantHashVec& wfn) 
             }
         }
         if (!quiet_) {
-            outfile->Printf("\n        ααα        %7.6f s", aaa.stop());
+            outfile->Printf("\n        ααα        %.3e seconds", aaa.stop());
         }
     }
 
@@ -555,7 +555,7 @@ void DeterminantSubstitutionLists::three_s_lists(const DeterminantHashVec& wfn) 
             }
         }
         if (!quiet_)
-            outfile->Printf("\n        ααβ        %7.6f s", aab.stop());
+            outfile->Printf("\n        ααβ        %.3e seconds", aab.stop());
     }
 
     /// ABB coupling
@@ -615,7 +615,7 @@ void DeterminantSubstitutionLists::three_s_lists(const DeterminantHashVec& wfn) 
             }
         }
         if (!quiet_)
-            outfile->Printf("\n        αββ        %7.6f s", abb.stop());
+            outfile->Printf("\n        αββ        %.3e seconds", abb.stop());
     }
 
     /// BBB coupling
@@ -677,7 +677,7 @@ void DeterminantSubstitutionLists::three_s_lists(const DeterminantHashVec& wfn) 
             }
         }
         if (not quiet_)
-            outfile->Printf("\n        βββ        %7.6f s", bbb.stop());
+            outfile->Printf("\n        βββ        %.3e seconds", bbb.stop());
     }
 }
 

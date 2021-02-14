@@ -187,6 +187,7 @@ void CI_RDMS::compute_1rdm(std::vector<double>& oprdm_a, std::vector<double>& op
 void CI_RDMS::compute_1rdm_op(std::vector<double>& oprdm_a, std::vector<double>& oprdm_b) {
 
     auto op = std::make_shared<DeterminantSubstitutionLists>(fci_ints_);
+    op->set_quiet_mode(not print_);
     op->build_strings(wfn_);
     op->op_s_lists(wfn_);
 
@@ -257,7 +258,7 @@ void CI_RDMS::compute_1rdm_op(std::vector<double>& oprdm_a, std::vector<double>&
     }
 
     if (print_) {
-        outfile->Printf("\n  Time spent building 1-rdm:   %1.6f", build.get());
+        outfile->Printf("\n  Time spent building 1-rdm: %.3e seconds", build.get());
     }
 }
 
@@ -345,12 +346,12 @@ void CI_RDMS::compute_2rdm(std::vector<double>& tprdm_aa, std::vector<double>& t
 
 void CI_RDMS::compute_2rdm_op(std::vector<double>& tprdm_aa, std::vector<double>& tprdm_ab,
                               std::vector<double>& tprdm_bb) {
-    local_timer build;
-
     auto op = std::make_shared<DeterminantSubstitutionLists>(fci_ints_);
+    op->set_quiet_mode(not print_);
     op->build_strings(wfn_);
     op->tp_s_lists(wfn_);
 
+    local_timer build;
     const det_hashvec& dets = wfn_.wfn_hash();
 
     tprdm_aa.assign(ncmo4_, 0.0);
@@ -502,8 +503,9 @@ void CI_RDMS::compute_2rdm_op(std::vector<double>& tprdm_aa, std::vector<double>
         }
     }
 
-    if (print_)
-        outfile->Printf("\n  Time spent building 2-rdm:   %1.6f", build.get());
+    if (print_) {
+        outfile->Printf("\n  Time spent building 2-rdm: %.3e seconds", build.get());
+    }
 }
 
 void CI_RDMS::compute_3rdm(std::vector<double>& tprdm_aaa, std::vector<double>& tprdm_aab,
@@ -703,9 +705,11 @@ void CI_RDMS::compute_3rdm_op(std::vector<double>& tprdm_aaa, std::vector<double
                               std::vector<double>& tprdm_abb, std::vector<double>& tprdm_bbb) {
 
     auto op = std::make_shared<DeterminantSubstitutionLists>(fci_ints_);
+    op->set_quiet_mode(not print_);
     op->build_strings(wfn_);
     op->three_s_lists(wfn_);
 
+    local_timer build;
     size_t ncmo5 = ncmo4_ * ncmo_;
     size_t ncmo6 = ncmo3_ * ncmo3_;
 
@@ -1243,6 +1247,10 @@ void CI_RDMS::compute_3rdm_op(std::vector<double>& tprdm_aaa, std::vector<double
                 tprdm_bbb[t * ncmo5 + u * ncmo4_ + s * ncmo3_ + r * ncmo2_ + q * ncmo_ + p] -= el;
             }
         }
+    }
+
+    if (print_) {
+        outfile->Printf("\n  Time spent building 3-rdm: %.3e seconds", build.get());
     }
 }
 

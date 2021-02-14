@@ -169,6 +169,9 @@ class ActiveSpaceMethod {
     /// @param value the convergence criterion in a.u.
     void set_r_convergence(double value);
 
+    /// Set if compute dipole moments
+    void set_do_dipole(bool deploy) { do_dipole_ = deploy; }
+
     /// Set the root that will be used to compute the properties
     /// @param the root (root = 0, 1, 2, ...)
     void set_root(int value);
@@ -212,6 +215,9 @@ class ActiveSpaceMethod {
 
     /// A variable to control printing information
     int print_ = 0;
+
+    /// Compute (transition) dipole moments if true
+    bool do_dipole_ = true;
 
     /// Eigenvalues
     psi::SharedVector evals_;

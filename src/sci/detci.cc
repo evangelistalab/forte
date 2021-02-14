@@ -7,6 +7,7 @@
 #include "psi4/libmints/molecule.h"
 #include "psi4/libmints/integral.h"
 #include "psi4/libmints/basisset.h"
+#include "psi4/libmints/oeprop.h"
 #include "psi4/libpsio/psio.hpp"
 
 #include "helpers/timer.h"
@@ -55,7 +56,7 @@ void DETCI::set_options(std::shared_ptr<ForteOptions> options) {
 
     e_convergence_ = options->get_double("E_CONVERGENCE");
     r_convergence_ = options->get_double("R_CONVERGENCE");
-    ci_print_threshold_ = options->get_double("FCIMO_PRINT_CIVEC");
+    ci_print_threshold_ = options->get_double("DETCI_PRINT_CIVEC");
 
     auto dl_maxiter = options->get_int("DL_MAXITER");
     auto de_maxiter = options->get_int("MAXITER");
@@ -119,6 +120,9 @@ double DETCI::compute_energy() {
     }
 
     // compute dipole momemts
+    if (do_dipole_) {
+        compute_dipole_sosd();
+    }
 
     // save wave functions
 
@@ -185,6 +189,7 @@ void DETCI::compute_1rdms() {
     for (size_t N = 0; N < nroot_; ++N) {
         CI_RDMS ci_rdms(p_space_, as_ints_, evecs_, N, N);
         std::vector<double> opdm_a, opdm_b;
+        ci_rdms.set_print(print_ci_rdms_);
         ci_rdms.compute_1rdm_op(opdm_a, opdm_b);
 
         std::string name = "Root " + std::to_string(N) + " of " + state_label_;
@@ -236,7 +241,8 @@ void DETCI::print_ci_wfn() {
                 if (actv_dim_[h] == 0)
                     continue;
                 auto label = mo_space_info_->irrep_label(h);
-                size_t padding_size = actv_dim_[h] > label.size() ? actv_dim_[h] - label.size() : 0;
+                size_t nactv_h = actv_dim_[h];
+                size_t padding_size = nactv_h > label.size() ? nactv_h - label.size() : 0;
                 std::string padding(padding_size, ' ');
                 outfile->Printf(" %s%s", padding.c_str(), label.c_str());
                 dash_size += 1 + padding_size + label.size();
@@ -253,8 +259,8 @@ void DETCI::print_ci_wfn() {
                     if (actv_dim_[h] == 0)
                         continue;
                     std::string label = mo_space_info_->irrep_label(h);
-                    size_t padding_size =
-                        actv_dim_[h] < label.size() ? label.size() - actv_dim_[h] : 0;
+                    size_t nactv_h = actv_dim_[h];
+                    size_t padding_size = nactv_h < label.size() ? label.size() - nactv_h : 0;
                     outfile->Printf(" %s", std::string(padding_size, ' ').c_str());
                     for (int k = 0; k < actv_dim_[h]; ++k) {
                         auto nk = k + offset;
@@ -305,8 +311,7 @@ void DETCI::dump_wave_function(const std::string& filename) {
         std::string det_str = str(p_space_.get_det(I), nactv_);
         file << det_str;
         for (size_t n = 0; n < nroot_; ++n) {
-            file << ", " << std::scientific << std::setprecision(12)
-                 << evecs_->get(I, n);
+            file << ", " << std::scientific << std::setprecision(12) << evecs_->get(I, n);
         }
         file << std::endl;
     }
@@ -452,6 +457,7 @@ std::vector<ambit::Tensor> DETCI::compute_trans_1rdms_sosd(int root1, int root2)
     } else {
         CI_RDMS ci_rdms(p_space_, as_ints_, evecs_, root1, root2);
         ci_rdms.compute_1rdm_op(a_data, b_data);
+        ci_rdms.set_print(print_ci_rdms_);
     }
 
     return {a, b};
@@ -466,6 +472,7 @@ std::vector<ambit::Tensor> DETCI::compute_trans_2rdms_sosd(int root1, int root2)
     auto& bb_data = bb.data();
 
     CI_RDMS ci_rdms(p_space_, as_ints_, evecs_, root1, root2);
+    ci_rdms.set_print(print_ci_rdms_);
     ci_rdms.compute_2rdm_op(aa_data, ab_data, bb_data);
 
     return {aa, ab, bb};
@@ -483,14 +490,96 @@ std::vector<ambit::Tensor> DETCI::compute_trans_3rdms_sosd(int root1, int root2)
 
     if (options_->get_str("THREEPDC") == "MK") {
         CI_RDMS ci_rdms(p_space_, as_ints_, evecs_, root1, root2);
+        ci_rdms.set_print(print_ci_rdms_);
         ci_rdms.compute_3rdm_op(aaa_data, aab_data, abb_data, bbb_data);
     }
 
     return {aaa, aab, abb, bbb};
 }
 
-std::vector<RDMs> DETCI::transition_rdms(const std::vector<std::pair<size_t, size_t>>& root_list,
-                                         std::shared_ptr<ActiveSpaceMethod> method2,
-                                         int max_rdm_level) {}
+void DETCI::compute_dipole_sosd() {
+    print_h2("Dipole Moments for " + state_label_);
+
+    print_ci_rdms_ = false;
+    auto ints = as_ints_->ints();
+    auto wfn = ints->wfn();
+    auto nmopi = mo_space_info_->dimension("ALL");
+    auto doccpi = mo_space_info_->dimension("INACTIVE_DOCC");
+
+    // obtain AO dipole from ForteIntegrals
+    auto aodipole_ints = ints->ao_dipole_ints();
+
+    // Nuclear dipole contribution
+    auto ndip = wfn->molecule()->nuclear_dipole(psi::Vector3(0.0, 0.0, 0.0));
+
+    // SO to AO transformer
+    auto sotoao(wfn->aotoso()->transpose());
+    int nao = sotoao->coldim();
+
+    // loop over states
+    for (size_t A = 0; A < nroot_; ++A) {
+        for (size_t B = A; B < nroot_; ++B) {
+            std::string name = std::to_string(A) + " -> " + std::to_string(B);
+
+            auto opdm = compute_trans_1rdms_sosd(A, B);
+            const auto& a_data = opdm[0].data();
+
+            auto Da_so = std::make_shared<psi::Matrix>("Da_SO " + name, nmopi, nmopi);
+
+            for (size_t h = 0, offset_t = 0; h < size_t(nirrep_); ++h) {
+                size_t offset_m = doccpi[h];
+                for (int u = 0; u < actv_dim_[h]; ++u) {
+                    size_t u_t = u + offset_t;
+                    size_t u_m = u + offset_m;
+                    for (int v = 0; v < actv_dim_[h]; ++v) {
+                        double va = a_data[u_t * nactv_ + v + offset_t];
+                        Da_so->set(h, u_m, v + offset_m, va);
+                    }
+                }
+                offset_t += actv_dim_[h];
+            }
+
+            if (A == B) {
+                for (int h = 0; h < nirrep_; ++h) {
+                    for (int i = 0; i < doccpi[h]; ++i) {
+                        Da_so->set(h, i, i, 1.0);
+                    }
+                }
+            }
+
+            Da_so->back_transform(ints->Ca());
+
+            //            auto oe = std::make_shared<OEProp>(wfn);
+            //            oe->set_title("CAS TRANSITION");
+            //            oe->add("TRANSITION_DIPOLE");
+            //            oe->set_Da_so(Da_so);
+            //            oe->compute();
+
+            auto Da_ao = std::make_shared<psi::Matrix>("Da_AO " + name, nao, nao);
+            Da_ao->remove_symmetry(Da_so, sotoao);
+
+            std::vector<double> dipole(4, 0.0);
+            for (int i = 0; i < 3; ++i) {
+                dipole[i] = 2.0 * Da_ao->vector_dot(aodipole_ints[i]);
+                if (A == B)
+                    dipole[i] += ndip[i];
+                dipole[3] += dipole[i] * dipole[i];
+            }
+            dipole[3] = std::sqrt(dipole[3]);
+
+            if (dipole[3] > 1.0e-5) {
+                outfile->Printf("\n    %3zu -> %3zu:  X:%10.5f  Y:%10.5f  Z:%10.5f  Total:%10.5f",
+                                A, B, dipole[0], dipole[1], dipole[2], dipole[3]);
+            }
+        }
+    }
+
+    print_ci_rdms_ = true;
+}
+
+std::vector<RDMs> DETCI::transition_rdms(const std::vector<std::pair<size_t, size_t>>&,
+                                         std::shared_ptr<ActiveSpaceMethod>, int) {
+    throw std::runtime_error("Not Implemented");
+}
 
 } // namespace forte

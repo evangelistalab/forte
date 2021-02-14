@@ -644,6 +644,8 @@ def register_fci_mo_options(options):
 
     options.add_double("FCIMO_PRINT_CIVEC", 0.05,
                        "The printing threshold for CI vectors")
+    options.add_double("DETCI_PRINT_CIVEC", 0.05,
+                       "The printing threshold for CI vectors")
 
     # options.add_bool("FCIMO_IAO_ANALYSIS", False, "Intrinsic atomic orbital analysis")
 

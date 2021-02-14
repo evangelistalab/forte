@@ -126,6 +126,9 @@ class ActiveSpaceSolver {
     /// Set residual convergence
     void set_r_convergence(double r_convergence) { r_convergence_ = r_convergence; }
 
+    /// Set if compute dipole moments
+    void set_do_dipole(bool deploy) { do_dipole_ = deploy; }
+
   protected:
     /// a string that specifies the method used (e.g. "FCI", "ACI", ...)
     std::string method_;
@@ -178,6 +181,9 @@ class ActiveSpaceSolver {
 
     /// A variable to control printing information
     int print_ = 1;
+
+    /// Compute (transition) dipole moments if true
+    bool do_dipole_ = true;
 
     /// The energy convergence criterion
     double e_convergence_;

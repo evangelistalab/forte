@@ -77,6 +77,7 @@ const std::map<StateInfo, std::vector<double>>& ActiveSpaceSolver::compute_energ
         method->set_print(print_);
         method->set_e_convergence(e_convergence_);
         method->set_r_convergence(r_convergence_);
+        method->set_do_dipole(do_dipole_);
         state_method_map_[state] = method;
 
         int twice_ms = state.twice_ms();
