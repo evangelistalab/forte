@@ -64,7 +64,9 @@
 #include "sparse_ci/determinant_hashvector.h"
 #include "sparse_ci/sparse_state_vector.h"
 #include "sparse_ci/sparse_operator.h"
-#include "sparse_ci/sparse_operations.h"
+#include "sparse_ci/sparse_fact_exp.h"
+#include "sparse_ci/sparse_exp.h"
+#include "sparse_ci/sparse_hamiltonian.h"
 #include "sparse_ci/general_operator.h"
 
 namespace py = pybind11;
@@ -220,6 +222,7 @@ void export_Determinant(py::module& m) {
         .def("pop_term", &SparseOperator::pop_term)
         .def("get_term", &SparseOperator::get_term)
         .def("nterms", &SparseOperator::nterms)
+        .def("size", &SparseOperator::size)
         .def("coefficients", &SparseOperator::coefficients)
         .def("set_coefficients", &SparseOperator::set_coefficients)
         .def("set_coefficient", &SparseOperator::set_coefficient)
@@ -244,12 +247,20 @@ void export_Determinant(py::module& m) {
         .def("time", &SparseHamiltonian::time);
 
     py::class_<SparseFactExp>(m, "SparseFactExp")
-        .def(py::init<>())
+        .def(py::init<bool>(), "phaseless"_a = false)
         .def("compute", &SparseFactExp::compute, "sop"_a, "state"_a, "inverse"_a = false,
              "screen_thresh"_a = 1.0e-12)
         .def("compute_on_the_fly", &SparseFactExp::compute_on_the_fly, "sop"_a, "state"_a,
              "inverse"_a = false, "screen_thresh"_a = 1.0e-12)
         .def("time", &SparseFactExp::time);
+
+    py::class_<SparseExp>(m, "SparseExp")
+        .def(py::init<>())
+        .def("compute", &SparseExp::compute, "sop"_a, "state"_a, "scaling_factor"_a = 1.0,
+             "maxk"_a = 19, "screen_thresh"_a = 1.0e-12)
+        .def("compute_on_the_fly", &SparseExp::compute_on_the_fly, "sop"_a, "state"_a,
+             "scaling_factor"_a = 1.0, "maxk"_a = 19, "screen_thresh"_a = 1.0e-12)
+        .def("time", &SparseExp::time);
 
     m.def("apply_operator_safe",
           py::overload_cast<SparseOperator&, const StateVector&>(&apply_operator_safe));

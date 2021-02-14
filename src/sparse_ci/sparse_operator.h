@@ -82,6 +82,8 @@ class SparseOperator {
     const SQOperator& get_term(size_t n) const;
     /// @return the number of terms
     size_t nterms() const { return op_list_.size(); }
+    /// @return the number of terms
+    size_t size() const { return op_list_.size(); }
     /// set the value of the coefficients
     std::vector<double> coefficients();
     /// set the value of the coefficients
