@@ -130,7 +130,9 @@ import math
 def residual_equations(cc_type,t,op,sop,ref,as_ints,ham,exp,compute_threshold):
     if cc_type == 'cc':
         return cc_residual_equations(t,op,sop,ref,as_ints,ham,exp,compute_threshold)
-    if cc_type == 'ducc':
+    if cc_type == 'ucc':
+        return ucc_residual_equations(t,op,sop,ref,as_ints,ham,exp,compute_threshold)
+    if cc_type == 'ducc' or cc_type == 'fucc' or cc_type == 'factucc':
         return ducc_residual_equations(t,op,sop,ref,as_ints,ham,exp,compute_threshold)
     raise ValueError('Incorrect value for cc_type')
 
@@ -139,9 +141,27 @@ def cc_residual_equations(t,op,sop,ref,as_ints,ham,exp,compute_threshold):
     wfn = exp.compute(sop,ref)
     Hwfn = ham.compute(wfn,compute_threshold)    
     R = exp.compute(sop,Hwfn,scaling_factor=-1.0)
+    
 #     wfn = forte.apply_exp_operator(sop,ref) 
 #     Hwfn = forte.apply_hamiltonian(as_ints,wfn,compute_threshold) 
 #     R = forte.apply_exp_operator(sop,Hwfn,scaling_factor=-1.0)
+
+    residual = forte.get_projection(op,ref,R)
+    energy = 0.0
+    for d,c in ref.map().items():
+        energy += c * R[d];
+    return (residual, energy)
+
+def ucc_residual_equations(t,op,sop,ref,as_ints,ham,exp,compute_threshold):    
+    sop.set_coefficients(t)
+    wfn = exp.compute(sop,ref)
+    Hwfn = ham.compute(wfn,compute_threshold)        
+    R = exp.compute(sop,Hwfn,scaling_factor=-1.0)
+    
+#     wfn = forte.apply_exp_operator(sop,ref) 
+#     Hwfn = forte.apply_hamiltonian(as_ints,wfn,compute_threshold) 
+#     R = forte.apply_exp_operator(sop,Hwfn,scaling_factor=-1.0)
+    
     residual = forte.get_projection(op,ref,R)
     energy = 0.0
     for d,c in ref.map().items():
@@ -150,9 +170,13 @@ def cc_residual_equations(t,op,sop,ref,as_ints,ham,exp,compute_threshold):
 
 def ducc_residual_equations(t,op,sop,ref,as_ints,ham,exp,compute_threshold):    
     sop.set_coefficients(t)
-    wfn = forte.apply_exp_ah_factorized(sop,ref)
-    Hwfn = forte.apply_hamiltonian(as_ints,wfn,compute_threshold) 
-    R = forte.apply_exp_ah_factorized(sop,Hwfn,inverse=True)
+    wfn = exp.compute(sop,ref)
+    Hwfn = ham.compute(wfn,compute_threshold)    
+    R = exp.compute(sop,Hwfn,inverse=True)    
+    
+#     wfn = forte.apply_exp_ah_factorized(sop,ref)
+#     Hwfn = forte.apply_hamiltonian(as_ints,wfn,compute_threshold) 
+#     R = forte.apply_exp_ah_factorized(sop,Hwfn,inverse=True)
     residual = forte.get_projection(op,ref,R)
     energy = 0.0
     for d,c in ref.map().items():
@@ -174,7 +198,11 @@ def select_operator_pool(sorted_res,omega):
 def solve_selected_cc_equations(cc_type,t1,op,selected_op,op_pool,denominators,ref,as_ints,compute_threshold,e_convergence = 1.0e-10,r_convergence = 1.0e-10, maxiter = 100):
     diis = DIIS(t1)
     ham = forte.SparseHamiltonian(as_ints)
-    exp = forte.SparseExp()    
+    if cc_type == 'cc' or cc_type == 'ucc':
+        exp = forte.SparseExp()
+    if cc_type == 'ducc' or cc_type == 'fucc' or cc_type == 'factucc':
+        exp = forte.SparseFactExp()    
+        
     old_e_micro = 0.0
     
     for micro_iter in range(maxiter):
@@ -200,8 +228,7 @@ def solve_selected_cc_equations(cc_type,t1,op,selected_op,op_pool,denominators,r
 
         old_e_micro = e
 
-    print(f'I was here {exp.time()}')
-    return (t1, e, micro_iter + 1)
+    return (t1, e, micro_iter + 1,exp.time())
 
 class DIIS():
     def __init__(self,t):
@@ -345,11 +372,8 @@ def run_selected_ucc(forte_objs,psi4_wfn, max_exc, omega, ordering = 4,e_converg
         print(f'Number of operators selected: {selected_op.nterms()}')
         
         # step 2: solve the ucc equations and update the amplitudes
-        t1, e, micro_iter = solve_selected_ucc_equations(t1,op,selected_op,op_pool,denominators,ref,as_ints,compute_threshold,e_convergence,r_convergence)        
-        
-        print(f' -> {macro_iter:4d} {e:20.12f}   {delta_e_micro:+6e}            {time.time() - start:8.3f}', flush=True)
-        
-#         print(f'\n{macro_iter:9d} {e:20.12f} {e - old_e:20.12f} {time.time() - start:11.3e}\n', flush=True)  
+        t1, e, micro_iter = solve_selected_ucc_equations(t1,op,selected_op,op_pool,denominators,ref,as_ints,compute_threshold,e_convergence,r_convergence)                
+        print(f' -> {macro_iter:4d} {e:20.12f}   {delta_e_micro:+6e}             {time.time() - start:8.3f}', flush=True)
 
         nops = selected_op.nterms()
         
@@ -404,7 +428,6 @@ def run_cc(forte_objs,psi4_wfn,cc_type=None,select_type=None,max_exc=None,omega=
     op, denominators = make_cluster_operator(antihermitian, max_exc, naelpi, nmopi, mo_space_info, psi4_wfn)
     selected_op = forte.SparseOperator(antihermitian)
     
-    
     # the list of operators selected from the full list
     if select_type is None:
         op_pool = list(range(op.size()))
@@ -418,12 +441,8 @@ def run_cc(forte_objs,psi4_wfn,cc_type=None,select_type=None,max_exc=None,omega=
     old_e = 0.0
     start = time.time()
 
-
-
     ref = forte.StateVector({ make_hfref(naelpi,nbelpi,nmopi) : 1.0})
     print(ref.str(nmo))
-    
-    
     
     nops_old = 0
 
@@ -450,9 +469,9 @@ def run_cc(forte_objs,psi4_wfn,cc_type=None,select_type=None,max_exc=None,omega=
 #         print(f'Number of operators selected: {selected_op.nterms()}')
         
         # step 2: solve the ucc equations and update the amplitudes
-        t1, e, micro_iter = solve_selected_cc_equations(cc_type,t1,op,op,op_pool,denominators,ref,as_ints,compute_threshold,e_convergence,r_convergence)        
+        t1, e, micro_iter, timing = solve_selected_cc_equations(cc_type,t1,op,op,op_pool,denominators,ref,as_ints,compute_threshold,e_convergence,r_convergence)        
         
-        print(f'\n -> {macro_iter:4d} {e:20.12f}   {e - old_e:6e}                  {time.time() - start:8.3f}', flush=True)
+        print(f'\n -> {macro_iter:4d} {e:20.12f}   {e - old_e:6e}                   {time.time() - start:8.3f}', flush=True)
 
 
         nops = selected_op.nterms()
@@ -470,11 +489,6 @@ def run_cc(forte_objs,psi4_wfn,cc_type=None,select_type=None,max_exc=None,omega=
 
     print(f'{cc_type.upper()} energy:{e:20.12f}  Eh (Nops = {np.count_nonzero(t1):8d})')
     print(f'omega: {omega}')
-#     print(f'ordering: {ordering}')
-
-#     print(f' Computation summary')
-#     print(f' Nops.  Energy (Eh)')    
-#     for n,e,mi in calc_data:
-#         print(f'{n:6d} {e:20.12f} {mi}')
+    print(f'{timing}')
         
     return calc_data

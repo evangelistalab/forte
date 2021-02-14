@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-def test_ccsd():
-    """Test CCSD on H2 using RHF/DZ orbitals"""
+def test_uccsd():
+    """Test projective UCCSD on H2 using RHF/DZ orbitals"""
     
     import pytest    
     import scc
@@ -11,7 +11,7 @@ def test_ccsd():
 
     forte.startup()
 
-    ref_energy = -1.126712715716011 # CCSD = FCI energy from psi4
+    ref_energy = -1.126712715716011 # UCCSD = FCI energy from psi4
 
     geom = """
      H
@@ -27,11 +27,11 @@ def test_ccsd():
     
     energy = calc_data[-1][1]
 
-    print(f'  HF energy:   {scf_energy}')
-    print(f'  CCSD energy: {energy}')
-    print(f'  E - Eref:    {energy - ref_energy}')    
+    print(f'  HF energy:    {scf_energy}')
+    print(f'  UCCSD energy: {energy}')
+    print(f'  E - Eref:     {energy - ref_energy}')    
 
     assert energy == pytest.approx(ref_energy, 1.0e-11)
     
 if __name__ == "__main__":
-    test_ccsd()
+    test_uccsd()
