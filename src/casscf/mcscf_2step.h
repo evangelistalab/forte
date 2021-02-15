@@ -129,9 +129,9 @@ class MCSCF_2STEP {
     /// Orbital gradient convergence criteria
     double g_conv_;
 
-    /// Energy convergence for Davidson-Liu
+    /// Energy convergence for Davidson-Liu, will be tighter along optimization
     double dl_e_conv_ = 1.0e-4;
-    /// Residual convergence for Davidson-Liu
+    /// Residual convergence for Davidson-Liu, will be tighter along optimization
     double dl_r_conv_ = 5.0e-3;
 
     /// The name of CI solver
