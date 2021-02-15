@@ -62,11 +62,12 @@ CI_Reference::CI_Reference(std::shared_ptr<SCFInfo> scf_info, std::shared_ptr<Fo
     options_ = options;
 
     // Double and singly occupied MOs
+    // ONLY works if we have a Psi4 wave function!!!
     psi::Dimension doccpi = scf_info_->doccpi();
     psi::Dimension soccpi = scf_info_->soccpi();
 
     // Number of irreps
-    nirrep_ = doccpi.n();
+    nirrep_ = mo_space_info_->nirrep();
 
     // Frozen DOCC + RDOCC
     size_t ninact = mo_space_info_->size("INACTIVE_DOCC");
@@ -85,17 +86,8 @@ CI_Reference::CI_Reference(std::shared_ptr<SCFInfo> scf_info, std::shared_ptr<Fo
     // Reference type
     ref_type_ = options->get_str("ACTIVE_REF_TYPE");
 
-    // First determine number of alpha and beta electrons
-    // Assume twice_ms = Na - Nb
-    int nel = 0;
-    for (int h = 0; h < nirrep_; ++h) {
-        nel += 2 * doccpi[h] + soccpi[h];
-    }
-
-    nel -= 2 * ninact;
-
-    nalpha_ = 0.5 * (nel + twice_ms_);
-    nbeta_ = nel - nalpha_;
+    nalpha_ = state_info_.na() - ninact;
+    nbeta_ = state_info_.nb() - ninact;
 
     outfile->Printf("\n  Number of active orbitals: %d", nact_);
     outfile->Printf("\n  Number of active alpha electrons: %d", nalpha_);
