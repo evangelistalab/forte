@@ -1,3 +1,6 @@
+# Test DOCI of Forte
+# TCSCF of Psi4 returns natural orbital by default
+# and subsequent DOCI should be equivalent to CAS(2,2)
 import forte
 
 refmcscf     =  -99.939316382624
@@ -34,7 +37,5 @@ set forte{
 Emcscf, wfn = energy('mcscf', return_wfn=True)
 compare_values(refmcscf, variable("CURRENT ENERGY"), 10, "MCSCF energy")
 
-# TCSCF code of Psi4 returns natural orbital by default
-# and subsequent DOCI should be equivalent to CAS(2,2)
 energy('forte', ref_wfn=wfn)
 compare_values(refmcscf, variable("CURRENT ENERGY"), 10, "DOCI energy")

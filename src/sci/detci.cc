@@ -588,6 +588,13 @@ void DETCI::compute_dipole_sosd() {
             if (dipole[3] > 1.0e-5) {
                 outfile->Printf("\n    %3zu -> %3zu:  X:%10.5f  Y:%10.5f  Z:%10.5f  Total:%10.5f",
                                 A, B, dipole[0], dipole[1], dipole[2], dipole[3]);
+                std::string prefix = "DETCI " + name + " DIPOLE";
+                auto dipole_array = std::make_shared<Matrix>(prefix, 1, 3);
+                dipole_array->set(0, 0, dipole[0]);
+                dipole_array->set(0, 1, dipole[1]);
+                dipole_array->set(0, 2, dipole[2]);
+                psi::Process::environment.arrays[prefix] = dipole_array;
+                psi::Process::environment.globals[prefix + " TOTAL"] = dipole[3];
             }
         }
     }
