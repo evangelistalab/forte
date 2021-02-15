@@ -223,7 +223,10 @@ make_state_weights_map(std::shared_ptr<ForteOptions> options,
     py::list avg_state = options->get_gen_list("AVG_STATE");
 
     std::vector<size_t> gas_min(6, 0);
-    std::vector<size_t> gas_max(6, 1000);
+    std::vector<size_t> gas_max(6);
+    for (int i = 0; i < 6; ++i) {
+        gas_max[i] = 2 * mo_space_info->size("GAS" + std::to_string(i + 1));
+    }
 
     // if AVG_STATE is not defined, do a state-specific computation
     if (avg_state.size() == 0) {
