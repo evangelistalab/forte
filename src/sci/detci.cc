@@ -69,6 +69,14 @@ void DETCI::set_options(std::shared_ptr<ForteOptions> options) {
 
     sigma_vector_type_ = string_to_sigma_vector_type(options->get_str("DIAG_ALGORITHM"));
     sigma_max_memory_ = options_->get_int("SIGMA_VECTOR_MAX_MEMORY");
+
+    read_wfn_ = options_->get_bool("DETCI_READ_WFN");
+    dump_wfn_ = options_->get_bool("DETCI_DUMP_WFN");
+    if (read_wfn_ or dump_wfn_) {
+        std::string prefix = "forte.aswfn.detci.";
+        std::string state_str = state_.str_short();
+        wfn_filename_ = prefix + state_str + ".txt";
+    }
 }
 
 void DETCI::build_determinant_space() {
@@ -100,10 +108,6 @@ void DETCI::build_determinant_space() {
         outfile->Printf("\n  Number of determinants (%s): %zu", actv_space_type_.c_str(), size);
     }
 
-    if (size < 100) {
-        sigma_vector_type_ = SigmaVectorType::Full;
-    }
-
     p_space_ = DeterminantHashVec(dets);
 }
 
@@ -125,6 +129,9 @@ double DETCI::compute_energy() {
     }
 
     // save wave functions
+    if (dump_wfn_) {
+        dump_wave_function(wfn_filename_);
+    }
 
     // push to psi4 environment
     double energy = energies_[root_];
@@ -141,10 +148,13 @@ void DETCI::diagoanlize_hamiltonian() {
 
     auto solver = prepare_ci_solver();
 
-    DeterminantHashVec detmap(p_space_);
-    auto sigma_vector = make_sigma_vector(detmap, as_ints_, sigma_max_memory_, sigma_vector_type_);
+    if (p_space_.size() < 1500 and (not options_->get_bool("FORCE_DIAG_METHOD"))) {
+        sigma_vector_type_ = SigmaVectorType::Full;
+    }
+
+    auto sigma_vector = make_sigma_vector(p_space_, as_ints_, sigma_max_memory_, sigma_vector_type_);
     std::tie(evals_, evecs_) =
-        solver->diagonalize_hamiltonian(detmap, sigma_vector, nroot_, multiplicity_);
+        solver->diagonalize_hamiltonian(p_space_, sigma_vector, nroot_, multiplicity_);
 
     // add energy offset
     double energy_offset = as_ints_->scalar_energy() + as_ints_->nuclear_repulsion_energy();
@@ -168,6 +178,15 @@ std::shared_ptr<SparseCISolver> DETCI::prepare_ci_solver() {
 
     solver->set_ncollapse_per_root(ncollapse_per_root_);
     solver->set_nsubspace_per_root(nsubspace_per_root_);
+
+    if (read_wfn_) {
+        outfile->Printf("\n    Read wave function from disk as initial guess");
+        if (not read_wave_function(wfn_filename_)) {
+            outfile->Printf("  Failed!");
+        } else {
+            outfile->Printf("  Success!");
+        }
+    }
 
     solver->set_guess_dimension(dl_guess_size_);
     if (initial_guess_.size()) {

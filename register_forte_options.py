@@ -14,6 +14,7 @@ def register_forte_options(options):
     register_sci_options(options)
     register_aci_options(options)
     register_asci_options(options)
+    register_detci_options(options)
     register_fci_mo_options(options)
     register_active_space_solver_options(options)
     register_dsrg_options(options)
@@ -644,10 +645,18 @@ def register_fci_mo_options(options):
 
     options.add_double("FCIMO_PRINT_CIVEC", 0.05,
                        "The printing threshold for CI vectors")
+
+    # options.add_bool("FCIMO_IAO_ANALYSIS", False, "Intrinsic atomic orbital analysis")
+
+
+def register_detci_options(options):
+    options.set_group("DETCI")
+
     options.add_double("DETCI_PRINT_CIVEC", 0.05,
                        "The printing threshold for CI vectors")
 
-    # options.add_bool("FCIMO_IAO_ANALYSIS", False, "Intrinsic atomic orbital analysis")
+    options.add_bool("DETCI_DUMP_WFN", False, "Dump DETCI wave function to disk")
+    options.add_bool("DETCI_READ_WFN", False, "Read DETCI wave function from disk")
 
 
 def register_integral_options(options):

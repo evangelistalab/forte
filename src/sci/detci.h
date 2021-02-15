@@ -153,6 +153,13 @@ class DETCI : public ActiveSpaceMethod {
     bool print_ci_rdms_ = true;
     /// Compute dipole moments of same symmetry, same orbital, same set of determinants
     void compute_dipole_sosd();
+
+    /// Read wave function from disk
+    bool read_wfn_;
+    /// Dump wave function to disk
+    bool dump_wfn_;
+    /// Wave function file name
+    std::string wfn_filename_;
 };
 } // namespace forte
 
