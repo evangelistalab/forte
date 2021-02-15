@@ -605,11 +605,7 @@ RDMs ActiveSpaceSolver::compute_avg_rdms_ms_avg(
 std::map<StateInfo, std::string> ActiveSpaceSolver::dump_wave_function() {
     std::map<StateInfo, std::string> out;
 
-    std::string method_lowercase(method_);
-    std::transform(method_lowercase.begin(), method_lowercase.end(), method_lowercase.begin(),
-                   [](unsigned char c) { return std::tolower(c); });
-
-    std::string prefix = "forte.aswfn." + method_lowercase;
+    std::string prefix = "forte.aswfn." + lower_string(method_);
 
     for (const auto& state_method : state_method_map_) {
         const auto& state = state_method.first;
