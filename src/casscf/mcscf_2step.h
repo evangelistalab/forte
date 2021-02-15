@@ -143,7 +143,7 @@ class MCSCF_2STEP {
     /// Solve CI coefficients for the current orbitals
     std::unique_ptr<ActiveSpaceSolver>
     diagonalize_hamiltonian(std::shared_ptr<ActiveSpaceIntegrals> fci_ints, const int print,
-                            const bool do_dipole, double& e_c);
+                            const bool do_dipole);
 
     /// File names for CI wave function
     std::map<StateInfo, std::string> state_ciwfn_map_;

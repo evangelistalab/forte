@@ -180,6 +180,9 @@ class ActiveSpaceMethod {
     /// @param level the print level (0 = no printing, 1 default)
     void set_print(int level);
 
+    /// Quiet mode (no printing, for use with CASSCF)
+    void set_quite_mode(bool quiet) { quiet_ = quiet; }
+
   protected:
     /// The list of active orbitals (absolute ordering)
     std::vector<size_t> active_mo_;
@@ -215,6 +218,9 @@ class ActiveSpaceMethod {
 
     /// A variable to control printing information
     int print_ = 0;
+
+    /// Quiet printing
+    bool quiet_ = false;
 
     /// Compute (transition) dipole moments if true
     bool do_dipole_ = true;

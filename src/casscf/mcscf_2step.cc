@@ -174,7 +174,8 @@ double MCSCF_2STEP::compute_energy() {
             auto fci_ints = cas_grad.active_space_ints();
             auto print_level = debug_print_ ? print_ : 0;
             auto do_dipole = print_ > 1;
-            auto as_solver = diagonalize_hamiltonian(fci_ints, print_level, do_dipole, e_c);
+            auto as_solver = diagonalize_hamiltonian(fci_ints, print_level, do_dipole);
+            e_c = compute_average_state_energy(as_solver->state_energies_map(), state_weights_map_);
             rdms = as_solver->compute_average_rdms(state_weights_map_, 2);
         }
         double de_c = (macro > 1) ? e_c - history[macro - 2].e_c : e_c;
@@ -312,7 +313,8 @@ double MCSCF_2STEP::compute_energy() {
 
         // rediagonalize Hamiltonian
         auto fci_ints = cas_grad.active_space_ints();
-        auto as_solver = diagonalize_hamiltonian(fci_ints, print_, true, energy_);
+        auto as_solver = diagonalize_hamiltonian(fci_ints, print_, true);
+        energy_ = compute_average_state_energy(as_solver->state_energies_map(), state_weights_map_);
 
         // pass to wave function
         auto Ca = cas_grad.Ca();
@@ -346,7 +348,7 @@ double MCSCF_2STEP::compute_energy() {
 
 std::unique_ptr<ActiveSpaceSolver>
 MCSCF_2STEP::diagonalize_hamiltonian(std::shared_ptr<ActiveSpaceIntegrals> fci_ints,
-                                     const int print, const bool do_dipole, double& e_c) {
+                                     const int print, const bool do_dipole) {
     auto state_map = to_state_nroots_map(state_weights_map_);
     auto active_space_solver = make_active_space_solver(ci_type_, state_map, scf_info_,
                                                         mo_space_info_, fci_ints, options_);
@@ -361,8 +363,6 @@ MCSCF_2STEP::diagonalize_hamiltonian(std::shared_ptr<ActiveSpaceIntegrals> fci_i
 
     if (ci_type_ == "DETCI")
         state_ciwfn_map_ = active_space_solver->dump_wave_function();
-
-    e_c = compute_average_state_energy(state_energies_map, state_weights_map_);
 
     return active_space_solver;
 }

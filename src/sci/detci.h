@@ -44,9 +44,6 @@ class DETCI : public ActiveSpaceMethod {
     /// Set options override
     void set_options(std::shared_ptr<ForteOptions> options) override;
 
-    /// Quiet mode (no printing, for use with CASSCF)
-    void set_quite_mode(bool quiet) { quiet_ = quiet; }
-
     /// Set projected roots
     void project_roots(std::vector<std::vector<std::pair<size_t, double>>>& projected) {
         projected_roots_ = projected;
@@ -72,9 +69,6 @@ class DETCI : public ActiveSpaceMethod {
 
     /// Start up function
     void startup();
-
-    /// Quiet printing
-    bool quiet_ = false;
 
     /// Number of active orbitals
     int nactv_;

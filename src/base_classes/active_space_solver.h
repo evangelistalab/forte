@@ -112,7 +112,7 @@ class ActiveSpaceSolver {
         as_ints_ = as_ints;
     }
 
-    /// Save the wave function
+    /// Save the wave function and return a map from state to the file name
     std::map<StateInfo, std::string> dump_wave_function();
 
     /// Read the wave function from file as initial guess
