@@ -498,7 +498,7 @@ std::vector<ambit::Tensor> DETCI::compute_trans_3rdms_sosd(int root1, int root2)
 }
 
 void DETCI::compute_dipole_sosd() {
-    print_h2("Dipole Moments for " + state_label_);
+    print_h2("Dipole Moments [e a0] for " + state_label_);
 
     print_ci_rdms_ = false;
     auto ints = as_ints_->ints();
