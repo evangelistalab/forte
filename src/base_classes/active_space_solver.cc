@@ -126,16 +126,26 @@ void ActiveSpaceSolver::print_energies(std::map<StateInfo, std::vector<double>>&
         }
 
         for (int i = 0; i < nstates; ++i) {
-            auto label = "ENERGY ROOT " + std::to_string(i) + " " + std::to_string(multi) +
-                         irrep_symbol[irrep];
-
             double energy = energies[state][i];
             psi::outfile->Printf("\n     %3d  (%3d)   %3s    %2d  %20.12f", multi, twice_ms,
                                  irrep_symbol[irrep].c_str(), i, energy);
 
-            // make label case insensitive as required by Psi4 Python side
-            std::transform(label.begin(), label.end(), label.begin(), ::toupper);
-            psi::Process::environment.globals[label] = energy;
+            auto& globals = psi::Process::environment.globals;
+            auto label = "ENERGY ROOT " + std::to_string(i) + " " + std::to_string(multi) +
+                         irrep_symbol[irrep];
+            label = upper_string(label);
+
+            if (globals.find(label) != globals.end()) {
+                if (globals.find(label + " ENTRY 0") == globals.end())
+                    globals[label + " ENTRY 0"] = globals[label];
+
+                int n = 1;
+                while (globals.find(label + " ENTRY " + std::to_string(n)) != globals.end())
+                    n++;
+                globals[label + " ENTRY " + std::to_string(n)] = energy;
+            }
+
+            globals[label] = energy;
         }
 
         psi::outfile->Printf("\n    %s", dash.c_str());
