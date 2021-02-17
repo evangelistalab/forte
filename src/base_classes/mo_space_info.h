@@ -213,7 +213,7 @@ class MOSpaceInfo {
     void read_options(std::shared_ptr<ForteOptions> options);
 
     /// Read the space info from a map of space name-dimension_vector
-    void read_from_map(std::map<std::string, std::vector<size_t>>& mo_space_map);
+    void read_from_map(const std::map<std::string, std::vector<size_t>>& mo_space_map);
 
     /// Reorder MOs according to the input indexing vector
     void set_reorder(const std::vector<size_t>& reorder);
@@ -282,7 +282,7 @@ class MOSpaceInfo {
     /// Read information about each elementary space from a map
     std::pair<SpaceInfo, bool>
     read_mo_space_from_map(const std::string& space,
-                           std::map<std::string, std::vector<size_t>>& mo_space_map);
+                           const std::map<std::string, std::vector<size_t>>& mo_space_map);
 };
 
 /// Make MOSpaceInfo from input (options)
@@ -293,7 +293,7 @@ std::shared_ptr<MOSpaceInfo> make_mo_space_info(const psi::Dimension& nmopi,
 /// Make MOSpaceInfo from a map of spacename-dimension_vector ("ACTIVE", [size_t, size_t, ...])
 std::shared_ptr<MOSpaceInfo>
 make_mo_space_info_from_map(const psi::Dimension& nmopi, const std::string& point_group,
-                            std::map<std::string, std::vector<size_t>>& mo_space_map,
+                            const std::map<std::string, std::vector<size_t>>& mo_space_map,
                             std::vector<size_t> reorder);
 
 } // namespace forte

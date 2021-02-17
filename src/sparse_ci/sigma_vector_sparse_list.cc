@@ -120,7 +120,7 @@ void SigmaVectorSparseList::compute_sigma(psi::SharedVector sigma, psi::SharedVe
 
 #pragma omp parallel
     {
-        size_t num_thread = omp_get_max_threads();
+        size_t num_thread = omp_get_num_threads();
         size_t tid = omp_get_thread_num();
 
         // Each thread gets local copy of sigma
