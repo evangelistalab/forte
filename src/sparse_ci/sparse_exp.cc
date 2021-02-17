@@ -39,33 +39,44 @@ SparseExp::SparseExp() {}
 
 StateVector SparseExp::compute(const SparseOperator& sop, const StateVector& state0,
                                double scaling_factor, int maxk, double screen_thresh) {
-    //    for (const auto& det_c : state0) {
-    //        const Determinant& det = det_c.first;
-    //        exp_hash_.add(det);
-    //    }
-    return compute_on_the_fly(sop, state0, scaling_factor, maxk, screen_thresh);
+    local_timer t;
+    auto state = apply_exp_operator(sop, state0, scaling_factor, maxk, screen_thresh,
+                                    Algorithm::OnTheFlySorted);
+    time_ += t.get();
+    return state;
 }
 
 StateVector SparseExp::compute_on_the_fly(const SparseOperator& sop, const StateVector& state0,
                                           double scaling_factor, int maxk, double screen_thresh) {
     local_timer t;
 
-    auto state = apply_exp_operator(sop, state0, scaling_factor, maxk, screen_thresh);
+    auto state = apply_exp_operator(sop, state0, scaling_factor, maxk, screen_thresh,
+                                    Algorithm::OnTheFlySorted);
     on_the_fly_time_ += t.get();
     return state;
 }
 
 StateVector SparseExp::apply_exp_operator(const SparseOperator& sop, const StateVector& state0,
-                                          double scaling_factor, int maxk, double screen_thresh) {
+                                          double scaling_factor, int maxk, double screen_thresh,
+                                          Algorithm alg) {
     double convergence_threshold_ = screen_thresh;
 
     local_timer t;
+
     StateVector exp_state(state0);
     StateVector state(state0);
+    StateVector new_terms;
+
     double factor = 1.0;
     for (int k = 1; k <= maxk; k++) {
         factor *= scaling_factor / static_cast<double>(k);
-        StateVector new_terms = apply_operator_cached(sop, state, screen_thresh);
+        if (alg == Algorithm::OnTheFlySorted) {
+            new_terms = apply_operator(sop, state, screen_thresh);
+        } else if (alg == Algorithm::OnTheFlySorted) {
+            new_terms = apply_operator2(sop, state, screen_thresh);
+        } else if (alg == Algorithm::Cached) {
+            new_terms = apply_operator_cached(sop, state, screen_thresh);
+        }
         double norm = 0.0;
         double inf_norm = 0.0;
         for (const auto& det_c : new_terms) {
@@ -83,35 +94,8 @@ StateVector SparseExp::apply_exp_operator(const SparseOperator& sop, const State
     return exp_state;
 }
 
-StateVector SparseExp::apply_exp_operator2(const SparseOperator& sop, const StateVector& state0,
-                                           double scaling_factor, int maxk, double screen_thresh) {
-    double convergence_threshold_ = screen_thresh;
-
-    local_timer t;
-    StateVector exp_state(state0);
-    StateVector state(state0);
-    double factor = 1.0;
-    for (int k = 1; k <= maxk; k++) {
-        factor *= scaling_factor / static_cast<double>(k);
-        StateVector new_terms = apply_operator2(sop, state, screen_thresh);
-        double norm = 0.0;
-        double inf_norm = 0.0;
-        for (const auto& det_c : new_terms) {
-            exp_state[det_c.first] += factor * det_c.second;
-            norm += std::pow(factor * det_c.second, 2.0);
-            inf_norm = std::max(inf_norm, std::fabs(factor * det_c.second));
-        }
-        if (inf_norm < convergence_threshold_)
-            break;
-        state = new_terms;
-    }
-    return exp_state;
-}
-
 StateVector SparseExp::apply_operator_cached(const SparseOperator& sop, const StateVector& state0,
                                              double screen_thresh) {
-
-    local_timer t;
     // make a copy of the state
     std::vector<std::tuple<double, double, Determinant>> state_sorted(state0.size());
     size_t k = 0;
@@ -219,7 +203,6 @@ StateVector SparseExp::apply_operator_cached(const SparseOperator& sop, const St
             }
         }
     }
-    time_ += t.get();
     return new_terms;
 }
 

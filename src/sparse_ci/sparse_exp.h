@@ -40,6 +40,8 @@
 namespace forte {
 
 class SparseExp {
+    enum class Algorithm { OnTheFlySorted, OnTheFlyStd, Cached };
+
   public:
     SparseExp();
     StateVector compute(const SparseOperator& sop, const StateVector& state,
@@ -51,9 +53,8 @@ class SparseExp {
 
   private:
     StateVector apply_exp_operator(const SparseOperator& sop, const StateVector& state0,
-                                   double scaling_factor, int maxk, double screen_thresh);
-    StateVector apply_exp_operator2(const SparseOperator& sop, const StateVector& state0,
-                                    double scaling_factor, int maxk, double screen_thresh);
+                                   double scaling_factor, int maxk, double screen_thresh,
+                                   Algorithm alg);
     StateVector apply_operator(const SparseOperator& sop, const StateVector& state0,
                                double screen_thresh);
     StateVector apply_operator2(const SparseOperator& sop, const StateVector& state0,
