@@ -636,9 +636,105 @@ void DETCI::compute_dipole_sosd() {
     print_ci_rdms_ = true;
 }
 
-std::vector<RDMs> DETCI::transition_rdms(const std::vector<std::pair<size_t, size_t>>&,
-                                         std::shared_ptr<ActiveSpaceMethod>, int) {
-    throw std::runtime_error("Not Implemented");
+std::vector<RDMs> DETCI::transition_rdms(const std::vector<std::pair<size_t, size_t>>& root_list,
+                                         std::shared_ptr<ActiveSpaceMethod> method2,
+                                         int max_rdm_level) {
+    if (max_rdm_level > 3 || max_rdm_level < 1) {
+        throw std::runtime_error("Invalid max_rdm_level, required 1 <= max_rdm_level <= 3.");
+    }
+
+    // read wave function from method2
+    size_t norbs2;
+    std::vector<Determinant> dets2;
+    SharedMatrix evecs2;
+    std::tie(norbs2, dets2, evecs2) = method2->read_wave_function(method2->wfn_filename());
+
+    if (norbs2 != size_t(nactv_)) {
+        throw std::runtime_error("DETCI Error: Inconsistent number of active orbitals");
+    }
+
+    size_t nroot2 = evecs2->coldim();
+
+    // combine with current set of determinants
+    DeterminantHashVec dets(dets2);
+    for (const auto& det : p_space_) {
+        if (not dets.has_det(det))
+            dets.add(det);
+    }
+
+    // fill in eigen vectors
+    size_t ndets = dets.size();
+    size_t nroots = nroot_ + nroot2;
+    auto evecs = std::make_shared<psi::Matrix>("evecs combined", ndets, nroots);
+
+    for (const auto& det : p_space_) {
+        for (size_t n = 0; n < nroot_; ++n) {
+            evecs->set(dets[det], n, evecs_->get(p_space_[det], n));
+        }
+    }
+
+    for (size_t I = 0, size = dets2.size(); I < size; ++I) {
+        const auto& det = dets2[I];
+        for (size_t n = 0; n < nroot2; ++n) {
+            evecs->set(dets[det], n + nroot_, evecs2->get(I, n));
+        }
+    }
+
+    // loop over roots and compute the transition RDMs
+    std::vector<RDMs> rdms;
+    for (const auto& roots_pair : root_list) {
+        size_t root1 = roots_pair.first;
+        size_t root2 = roots_pair.second;
+
+        CI_RDMS ci_rdms(dets, as_ints_, evecs, root1, root2);
+        ci_rdms.set_print(print_ci_rdms_);
+
+        // compute 1-RDM
+        auto a = ambit::Tensor::build(CoreTensor, "TD1a", std::vector<size_t>(2, nactv_));
+        auto b = ambit::Tensor::build(CoreTensor, "TD1b", std::vector<size_t>(2, nactv_));
+        auto& a_data = a.data();
+        auto& b_data = b.data();
+
+        ci_rdms.compute_1rdm_op(a_data, b_data);
+
+        if (max_rdm_level == 1) {
+            rdms.emplace_back(a, b);
+        } else {
+            // compute 2-RDM
+            auto aa = ambit::Tensor::build(CoreTensor, "TD2aa", std::vector<size_t>(4, nactv_));
+            auto ab = ambit::Tensor::build(CoreTensor, "TD2ab", std::vector<size_t>(4, nactv_));
+            auto bb = ambit::Tensor::build(CoreTensor, "TD2bb", std::vector<size_t>(4, nactv_));
+            auto& aa_data = aa.data();
+            auto& ab_data = ab.data();
+            auto& bb_data = bb.data();
+
+            ci_rdms.compute_2rdm_op(aa_data, ab_data, bb_data);
+
+            if (max_rdm_level == 2) {
+                rdms.emplace_back(a, b, aa, ab, bb);
+            } else {
+                // compute 3-RDM
+                auto aaa =
+                    ambit::Tensor::build(CoreTensor, "TD3aaa", std::vector<size_t>(6, nactv_));
+                auto aab =
+                    ambit::Tensor::build(CoreTensor, "TD3aab", std::vector<size_t>(6, nactv_));
+                auto abb =
+                    ambit::Tensor::build(CoreTensor, "TD3abb", std::vector<size_t>(6, nactv_));
+                auto bbb =
+                    ambit::Tensor::build(CoreTensor, "TD3bbb", std::vector<size_t>(6, nactv_));
+                auto& aaa_data = aaa.data();
+                auto& aab_data = aab.data();
+                auto& abb_data = abb.data();
+                auto& bbb_data = bbb.data();
+
+                ci_rdms.compute_3rdm_op(aaa_data, aab_data, abb_data, bbb_data);
+
+                rdms.emplace_back(a, b, aa, ab, bb, aaa, aab, abb, bbb);
+            }
+        }
+    }
+
+    return rdms;
 }
 
 } // namespace forte
