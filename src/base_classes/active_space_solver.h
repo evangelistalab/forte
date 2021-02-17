@@ -83,6 +83,9 @@ class ActiveSpaceSolver {
     /// Compute the energy and return it // TODO: document (Francesco)
     const std::map<StateInfo, std::vector<double>>& compute_energy();
 
+    /// Compute the oscillator strengths assuming same orbitals
+    void compute_fosc_same_orbs();
+
     /// Compute the contracted CI energy
     const std::map<StateInfo, std::vector<double>>&
     compute_contracted_energy(std::shared_ptr<forte::ActiveSpaceIntegrals> as_ints,

@@ -134,9 +134,6 @@ StateInfo make_state_info_from_psi(std::shared_ptr<ForteOptions> options) {
 }
 
 std::string StateInfo::str() const {
-    std::string irrep_label_out =
-        irrep_label_.empty() ? "Irrep" + std::to_string(irrep_) : irrep_label();
-
     std::string gas_restrictions;
     if (gas_min_.size() > 0) {
         gas_restrictions += " GAS min: ";
@@ -151,8 +148,13 @@ std::string StateInfo::str() const {
             gas_restrictions += std::to_string(i) + " ";
         gas_restrictions += ";";
     }
-    return multiplicity_label() + " " + irrep_label_out + " (Ms = " + get_ms_string(twice_ms()) +
-           ")" + gas_restrictions;
+    return str_minimum() + gas_restrictions;
+}
+
+std::string StateInfo::str_minimum() const {
+    std::string irrep_label1 =
+        irrep_label_.empty() ? "Irrep" + std::to_string(irrep_) : irrep_label();
+    return multiplicity_label() + " (Ms = " + get_ms_string(twice_ms_) + ") " + irrep_label1;
 }
 
 std::string StateInfo::str_short() const {

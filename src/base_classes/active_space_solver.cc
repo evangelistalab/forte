@@ -29,6 +29,7 @@
 #include <algorithm>
 #include <numeric>
 #include <iomanip>
+#include <tuple>
 
 #include "psi4/psi4-dec.h"
 #include "psi4/libpsi4util/PsiOutStream.h"
@@ -88,9 +89,9 @@ const std::map<StateInfo, std::vector<double>>& ActiveSpaceSolver::compute_energ
             continue;
         }
 
-//        if (state_filename_map_.size()) {
-//            method->read_wave_function(state_filename_map_[state]);
-//        }
+        if (state_filename_map_.size()) {
+            method->read_initial_guess(state_filename_map_[state]);
+        }
 
         method->compute_energy();
         const auto& energies = method->energies();
@@ -105,6 +106,7 @@ const std::map<StateInfo, std::vector<double>>& ActiveSpaceSolver::compute_energ
         }
     }
     print_energies(state_energies_map_);
+    compute_fosc_same_orbs();
     return state_energies_map_;
 }
 
@@ -114,6 +116,7 @@ void ActiveSpaceSolver::print_energies(std::map<StateInfo, std::vector<double>>&
     std::string dash(45, '-');
     psi::outfile->Printf("\n    %s", dash.c_str());
     std::vector<std::string> irrep_symbol = mo_space_info_->irrep_labels();
+    auto& globals = psi::Process::environment.globals;
 
     for (const auto& state_nroot : state_nroots_map_) {
         const auto& state = state_nroot.first;
@@ -130,11 +133,11 @@ void ActiveSpaceSolver::print_energies(std::map<StateInfo, std::vector<double>>&
             psi::outfile->Printf("\n     %3d  (%3d)   %3s    %2d  %20.12f", multi, twice_ms,
                                  irrep_symbol[irrep].c_str(), i, energy);
 
-            auto& globals = psi::Process::environment.globals;
             auto label = "ENERGY ROOT " + std::to_string(i) + " " + std::to_string(multi) +
                          irrep_symbol[irrep];
             label = upper_string(label);
 
+            // try to fix states with different gas_min and gas_max
             if (globals.find(label) != globals.end()) {
                 if (globals.find(label + " ENTRY 0") == globals.end())
                     globals[label + " ENTRY 0"] = globals[label];
@@ -149,6 +152,66 @@ void ActiveSpaceSolver::print_energies(std::map<StateInfo, std::vector<double>>&
         }
 
         psi::outfile->Printf("\n    %s", dash.c_str());
+    }
+}
+
+void ActiveSpaceSolver::compute_fosc_same_orbs() {
+    // assume SAME set of orbitals!!!
+
+    std::vector<StateInfo> states;
+    for (const auto& state_nroot : state_nroots_map_) {
+        states.push_back(state_nroot.first);
+    }
+
+    for (size_t M = 0, n_entries = states.size(); M < n_entries; ++M) {
+        const auto& state1 = states[M];
+        size_t nroot1 = state_nroots_map_[state1];
+        const auto& method1 = state_method_map_[state1];
+
+        for (size_t N = M; N < n_entries; ++N) {
+            const auto& state2 = states[N];
+            size_t nroot2 = state_nroots_map_[state2];
+            const auto& method2 = state_method_map_[state2];
+
+            // skip different multiplicity (no spin-orbit coupling)
+            if (state1.multiplicity() != state2.multiplicity()) {
+                continue;
+            } else {
+                if (M != N and ms_avg_) {
+                    // skip same multiplicity but different Ms (no spin-orbit coupling)
+                    std::tuple<int, int, int, std::vector<size_t>, std::vector<size_t>> set1{
+                        state1.na(), state1.nb(), state1.irrep(), state1.gas_min(),
+                        state1.gas_max()};
+                    std::tuple<int, int, int, std::vector<size_t>, std::vector<size_t>> set2{
+                        state2.na(), state2.nb(), state2.irrep(), state2.gas_min(),
+                        state2.gas_max()};
+                    if (set1 == set2 and state1.twice_ms() != state2.twice_ms()) {
+                        continue;
+                    }
+                }
+            }
+
+            // prepare list of root pairs
+            std::vector<std::pair<size_t, size_t>> state_ids;
+            if (M == N) {
+                for (size_t i = 0; i < nroot1; ++i) {
+                    for (size_t j = i + 1; j < nroot2; ++j) {
+                        state_ids.push_back({i, j});
+                    }
+                }
+            } else {
+                for (size_t i = 0; i < nroot1; ++i) {
+                    for (size_t j = 0; j < nroot2; ++j) {
+                        state_ids.push_back({i, j});
+                    }
+                }
+            }
+            if (state_ids.size() == 0)
+                continue;
+
+            // compute oscillator strength
+            method1->compute_oscillator_strength_same_orbs(state_ids, method2);
+        }
     }
 }
 
@@ -618,7 +681,7 @@ RDMs ActiveSpaceSolver::compute_avg_rdms_ms_avg(
 std::map<StateInfo, std::string> ActiveSpaceSolver::dump_wave_function() {
     std::map<StateInfo, std::string> out;
 
-    std::string prefix = "forte.aswfn." + lower_string(method_);
+    std::string prefix = "forte." + lower_string(method_);
 
     for (const auto& state_method : state_method_map_) {
         const auto& state = state_method.first;

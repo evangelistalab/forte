@@ -96,6 +96,7 @@ detci:
   short:
    - detci-1
    - detci-2
+   - detci-3
 diag-alg:
   short:
    - diag-alg-1-dynamic

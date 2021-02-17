@@ -63,7 +63,7 @@ class DETCI : public ActiveSpaceMethod {
     read_wave_function(const std::string& filename) override;
 
     /// Read wave function from disk as initial guess
-    bool read_initial_guess(const std::string& filename);
+    bool read_initial_guess(const std::string& filename) override;
 
   private:
     /// SCFInfo object
@@ -150,8 +150,8 @@ class DETCI : public ActiveSpaceMethod {
 
     /// Printing for CI_RDMs
     bool print_ci_rdms_ = true;
-    /// Compute dipole moments of same symmetry, same orbital, same set of determinants
-    void compute_dipole_sosd();
+    /// Compute permanent dipole moments
+    void compute_permanent_dipole();
 
     /// Read wave function from disk
     bool read_wfn_;

@@ -71,8 +71,9 @@ void DETCI::set_options(std::shared_ptr<ForteOptions> options) {
 
     read_wfn_ = options_->get_bool("DETCI_READ_WFN");
     dump_wfn_ = options_->get_bool("DETCI_DUMP_WFN");
+    dump_wfn_ = true;
     if (read_wfn_ or dump_wfn_) {
-        std::string prefix = "forte.aswfn.detci.";
+        std::string prefix = "forte.detci.";
         std::string state_str = state_.str_short();
         wfn_filename_ = prefix + state_str + ".txt";
     }
@@ -124,7 +125,7 @@ double DETCI::compute_energy() {
 
     // compute dipole momemts
     if (do_dipole_) {
-        compute_dipole_sosd();
+        compute_permanent_dipole();
     }
 
     // save wave functions
@@ -549,10 +550,13 @@ std::vector<ambit::Tensor> DETCI::compute_trans_3rdms_sosd(int root1, int root2)
     return {aaa, aab, abb, bbb};
 }
 
-void DETCI::compute_dipole_sosd() {
-    print_h2("Dipole Moments [e a0] for " + state_label_);
+void DETCI::compute_permanent_dipole() {
+    print_h2("Permanent Dipole Moments [e a0] for " + state_label_);
 
-    print_ci_rdms_ = false;
+    psi::outfile->Printf("\n    %8s %14s %14s %14s %14s", "State", "DM_X", "DM_Y", "DM_Z", "|DM|");
+    std::string dash(68, '-');
+    psi::outfile->Printf("\n    %s", dash.c_str());
+
     auto ints = as_ints_->ints();
     auto wfn = ints->wfn();
     auto nmopi = mo_space_info_->dimension("ALL");
@@ -570,70 +574,80 @@ void DETCI::compute_dipole_sosd() {
 
     // loop over states
     for (size_t A = 0; A < nroot_; ++A) {
-        for (size_t B = A; B < nroot_; ++B) {
-            std::string name = std::to_string(A) + " -> " + std::to_string(B);
-
-            auto opdm = compute_trans_1rdms_sosd(A, B);
-            const auto& a_data = opdm[0].data();
-
-            auto Da_so = std::make_shared<psi::Matrix>("Da_SO " + name, nmopi, nmopi);
-
-            for (size_t h = 0, offset_t = 0; h < size_t(nirrep_); ++h) {
-                size_t offset_m = doccpi[h];
-                for (int u = 0; u < actv_dim_[h]; ++u) {
-                    size_t u_t = u + offset_t;
-                    size_t u_m = u + offset_m;
-                    for (int v = 0; v < actv_dim_[h]; ++v) {
-                        double va = a_data[u_t * nactv_ + v + offset_t];
-                        Da_so->set(h, u_m, v + offset_m, va);
-                    }
-                }
-                offset_t += actv_dim_[h];
-            }
-
-            if (A == B) {
-                for (int h = 0; h < nirrep_; ++h) {
-                    for (int i = 0; i < doccpi[h]; ++i) {
-                        Da_so->set(h, i, i, 1.0);
-                    }
-                }
-            }
-
-            Da_so->back_transform(ints->Ca());
-
-            //            auto oe = std::make_shared<OEProp>(wfn);
-            //            oe->set_title("CAS TRANSITION");
-            //            oe->add("TRANSITION_DIPOLE");
-            //            oe->set_Da_so(Da_so);
-            //            oe->compute();
-
-            auto Da_ao = std::make_shared<psi::Matrix>("Da_AO " + name, nao, nao);
-            Da_ao->remove_symmetry(Da_so, sotoao);
-
-            std::vector<double> dipole(4, 0.0);
-            for (int i = 0; i < 3; ++i) {
-                dipole[i] = 2.0 * Da_ao->vector_dot(aodipole_ints[i]);
-                if (A == B)
-                    dipole[i] += ndip[i];
-                dipole[3] += dipole[i] * dipole[i];
-            }
-            dipole[3] = std::sqrt(dipole[3]);
-
-            if (dipole[3] > 1.0e-5) {
-                outfile->Printf("\n    %3zu -> %3zu:  X:%10.5f  Y:%10.5f  Z:%10.5f  Total:%10.5f",
-                                A, B, dipole[0], dipole[1], dipole[2], dipole[3]);
-                std::string prefix = "DETCI " + name + " DIPOLE";
-                auto dipole_array = std::make_shared<Matrix>(prefix, 1, 3);
-                dipole_array->set(0, 0, dipole[0]);
-                dipole_array->set(0, 1, dipole[1]);
-                dipole_array->set(0, 2, dipole[2]);
-                psi::Process::environment.arrays[prefix] = dipole_array;
-                psi::Process::environment.globals[prefix + " TOTAL"] = dipole[3];
+        // transform 1-RDM to SO basis
+        auto Dt_so = std::make_shared<psi::Matrix>("Dt_SO " + std::to_string(A), nmopi, nmopi);
+        for (int h = 0; h < nirrep_; ++h) {
+            for (int i = 0; i < doccpi[h]; ++i) {
+                Dt_so->set(h, i, i, 2.0);
             }
         }
-    }
 
-    print_ci_rdms_ = true;
+        auto Da = opdm_a_[A];
+        auto Db = opdm_a_[A];
+        for (size_t h = 0; h < size_t(nirrep_); ++h) {
+            size_t offset_m = doccpi[h];
+            for (int u = 0; u < actv_dim_[h]; ++u) {
+                size_t u_m = u + offset_m;
+                for (int v = 0; v < actv_dim_[h]; ++v) {
+                    Dt_so->set(h, u_m, v + offset_m, Da->get(h, u, v) + Db->get(h, u, v));
+                }
+            }
+        }
+        Dt_so->back_transform(ints->Ca());
+
+        // transform 1-RDM to AO basis
+        auto Dt_ao = std::make_shared<psi::Matrix>("Dt_AO " + std::to_string(A), nao, nao);
+        Dt_ao->remove_symmetry(Dt_so, sotoao);
+
+        // compute dipole moments
+        std::vector<double> dipole(4, 0.0);
+        for (int i = 0; i < 3; ++i) {
+            dipole[i] = ndip[i] + Dt_ao->vector_dot(aodipole_ints[i]);
+            dipole[3] += dipole[i] * dipole[i];
+        }
+        dipole[3] = std::sqrt(dipole[3]);
+
+        // printing
+        std::string name = std::to_string(A) + upper_string(state_.irrep_label());
+
+        psi::outfile->Printf("\n    %8s%15.8f%15.8f%15.8f%15.8f", name.c_str(), dipole[0],
+                             dipole[1], dipole[2], dipole[3]);
+
+        // push to Psi4 global environment
+        auto& globals = psi::Process::environment.globals;
+
+        std::vector<std::string> keys{
+            " <" + name + "|DM_X|" + name + ">", " <" + name + "|DM_Y|" + name + ">",
+            " <" + name + "|DM_Z|" + name + ">", " |<" + name + "|DM|" + name + ">|"};
+
+        std::string multi_label = upper_string(state_.multiplicity_label());
+        std::string label = multi_label + keys[3];
+
+        // try to fix states with different gas_min and gas_max
+        if (globals.find(label) != globals.end()) {
+            if (globals.find(label + " ENTRY 0") == globals.end()) {
+                std::string suffix = " ENTRY 0";
+                for (int i = 0; i < 4; ++i) {
+                    globals[multi_label + keys[i] + suffix] = globals[multi_label + keys[i]];
+                }
+            }
+
+            int n = 1;
+            std::string suffix = " ENTRY 1";
+            while (globals.find(label + suffix) != globals.end()) {
+                suffix = " ENTRY " + std::to_string(++n);
+            }
+
+            for (int i = 0; i < 4; ++i) {
+                globals[multi_label + keys[i] + suffix] = dipole[i];
+            }
+        }
+
+        for (int i = 0; i < 4; ++i) {
+            globals[multi_label + keys[i]] = dipole[i];
+        }
+    }
+    psi::outfile->Printf("\n    %s", dash.c_str());
 }
 
 std::vector<RDMs> DETCI::transition_rdms(const std::vector<std::pair<size_t, size_t>>& root_list,
@@ -684,10 +698,10 @@ std::vector<RDMs> DETCI::transition_rdms(const std::vector<std::pair<size_t, siz
     std::vector<RDMs> rdms;
     for (const auto& roots_pair : root_list) {
         size_t root1 = roots_pair.first;
-        size_t root2 = roots_pair.second;
+        size_t root2 = roots_pair.second + nroot_;
 
         CI_RDMS ci_rdms(dets, as_ints_, evecs, root1, root2);
-        ci_rdms.set_print(print_ci_rdms_);
+        ci_rdms.set_print(false);
 
         // compute 1-RDM
         auto a = ambit::Tensor::build(CoreTensor, "TD1a", std::vector<size_t>(2, nactv_));
@@ -700,6 +714,8 @@ std::vector<RDMs> DETCI::transition_rdms(const std::vector<std::pair<size_t, siz
         if (max_rdm_level == 1) {
             rdms.emplace_back(a, b);
         } else {
+            ci_rdms.set_print(true);
+
             // compute 2-RDM
             auto aa = ambit::Tensor::build(CoreTensor, "TD2aa", std::vector<size_t>(4, nactv_));
             auto ab = ambit::Tensor::build(CoreTensor, "TD2ab", std::vector<size_t>(4, nactv_));

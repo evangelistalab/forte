@@ -81,6 +81,8 @@ class StateInfo {
     std::string str() const;
     /// string representation of this object, shorter version
     std::string str_short() const;
+    /// string representation of this object, no GAS information
+    std::string str_minimum() const;
 
     /// hash for this object
     std::size_t hash() const;
