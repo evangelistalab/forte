@@ -55,7 +55,7 @@ class SparseFactExp {
     StateVector compute_exp(const SparseOperator& sop, const StateVector& state0, bool inverse,
                             double screen_thresh);
 
-    bool phaseless_;
+    bool phaseless_ = false;
     bool initialized_ = false;
     bool initialized_inverse_ = false;
     double time_ = 0.0;

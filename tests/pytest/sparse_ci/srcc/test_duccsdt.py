@@ -11,8 +11,9 @@ def test_duccsdt():
 
     forte.startup()
 
-    ref_energy = -128.679016182803
-
+    ref_energy = -128.67901619203303 # this number was obtained with the on_the_fly implementation
+#     -128.679016182803
+-128.679016192038
     geom = "Ne"
     
     scf_energy, psi4_wfn = forte.utils.psi4_scf(geom, basis='cc-pVDZ', reference='RHF')

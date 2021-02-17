@@ -126,10 +126,6 @@ void AdaptiveCI::startup() {
     if (sigma_vector_type_ == SigmaVectorType::Dynamic) {
         build_lists_ = false;
     }
-
-    // state averaging
-    n_avg_ = options_->get_int("ACI_N_AVERAGE");
-    avg_offset_ = options_->get_int("ACI_AVERAGE_OFFSET");
 }
 
 void AdaptiveCI::print_info() {

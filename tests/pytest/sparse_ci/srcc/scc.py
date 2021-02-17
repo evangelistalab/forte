@@ -127,62 +127,34 @@ def make_cluster_operator(antihermitian,max_exc,naelpi,nmopi,mo_space_info,psi4_
 
 import math
 
-def residual_equations(cc_type,t,op,sop,ref,as_ints,ham,exp,compute_threshold):
-    if cc_type == 'cc':
-        return cc_residual_equations(t,op,sop,ref,as_ints,ham,exp,compute_threshold)
-    if cc_type == 'ucc':
-        return ucc_residual_equations(t,op,sop,ref,as_ints,ham,exp,compute_threshold)
-    if cc_type == 'ducc' or cc_type == 'fucc' or cc_type == 'factucc':
-        return ducc_residual_equations(t,op,sop,ref,as_ints,ham,exp,compute_threshold)
-    raise ValueError('Incorrect value for cc_type')
-
-def cc_residual_equations(t,op,sop,ref,as_ints,ham,exp,compute_threshold):    
+def residual_equations(cc_type,t,op,sop,ref,ham,exp,compute_threshold,on_the_fly=False):
     sop.set_coefficients(t)
-    wfn = exp.compute(sop,ref)
-    Hwfn = ham.compute(wfn,compute_threshold)    
-    R = exp.compute(sop,Hwfn,scaling_factor=-1.0)
-    
-#     wfn = forte.apply_exp_operator(sop,ref) 
-#     Hwfn = forte.apply_hamiltonian(as_ints,wfn,compute_threshold) 
-#     R = forte.apply_exp_operator(sop,Hwfn,scaling_factor=-1.0)
-
+    if on_the_fly:
+#         wfn = exp.compute(sop,ref)
+        wfn = exp.compute_on_the_fly(sop,ref)
+        Hwfn = ham.compute_on_the_fly(wfn,compute_threshold)
+        if cc_type == 'cc' or cc_type == 'ucc':
+            R = exp.compute_on_the_fly(sop,Hwfn,scaling_factor=-1.0)
+        elif cc_type == 'ducc' or cc_type == 'fucc' or cc_type == 'factucc':
+#             R = exp.compute(sop,Hwfn,inverse=True)    
+            R = exp.compute_on_the_fly(sop,Hwfn,inverse=True)    
+        else:
+            raise ValueError('Incorrect value for cc_type')            
+    else:
+        wfn = exp.compute(sop,ref)
+        Hwfn = ham.compute(wfn,compute_threshold)    
+        if cc_type == 'cc' or cc_type == 'ucc':
+            R = exp.compute(sop,Hwfn,scaling_factor=-1.0)
+        elif cc_type == 'ducc' or cc_type == 'fucc' or cc_type == 'factucc':
+            R = exp.compute(sop,Hwfn,inverse=True)    
+        else:
+            raise ValueError('Incorrect value for cc_type')    
     residual = forte.get_projection(op,ref,R)
     energy = 0.0
     for d,c in ref.map().items():
         energy += c * R[d];
-    return (residual, energy)
+    return (residual, energy)        
 
-def ucc_residual_equations(t,op,sop,ref,as_ints,ham,exp,compute_threshold):    
-    sop.set_coefficients(t)
-    wfn = exp.compute(sop,ref)
-    Hwfn = ham.compute(wfn,compute_threshold)        
-    R = exp.compute(sop,Hwfn,scaling_factor=-1.0)
-    
-#     wfn = forte.apply_exp_operator(sop,ref) 
-#     Hwfn = forte.apply_hamiltonian(as_ints,wfn,compute_threshold) 
-#     R = forte.apply_exp_operator(sop,Hwfn,scaling_factor=-1.0)
-    
-    residual = forte.get_projection(op,ref,R)
-    energy = 0.0
-    for d,c in ref.map().items():
-        energy += c * R[d];
-    return (residual, energy)
-
-def ducc_residual_equations(t,op,sop,ref,as_ints,ham,exp,compute_threshold):    
-    sop.set_coefficients(t)
-    wfn = exp.compute(sop,ref)
-    Hwfn = ham.compute(wfn,compute_threshold)    
-    R = exp.compute(sop,Hwfn,inverse=True)    
-    
-#     wfn = forte.apply_exp_ah_factorized(sop,ref)
-#     Hwfn = forte.apply_hamiltonian(as_ints,wfn,compute_threshold) 
-#     R = forte.apply_exp_ah_factorized(sop,Hwfn,inverse=True)
-    residual = forte.get_projection(op,ref,R)
-    energy = 0.0
-    for d,c in ref.map().items():
-        energy += c * R[d];
-    return (residual, energy)
-            
 def select_operator_pool(sorted_res,omega):
     sum_r2 = 0.0
     excluded = 0
@@ -208,7 +180,7 @@ def solve_selected_cc_equations(cc_type,t1,op,selected_op,op_pool,denominators,r
     for micro_iter in range(maxiter):
         micro_start = time.time()
         t1_old = copy.deepcopy(t1)
-        residual, e = residual_equations(cc_type,t1,op,selected_op,ref,as_ints,ham,exp,compute_threshold)
+        residual, e = residual_equations(cc_type,t1,op,selected_op,ref,ham,exp,compute_threshold)
         
         residual_norm = 0.0
         for l in range(selected_op.nterms()):
@@ -309,7 +281,10 @@ def run_selected_ucc(forte_objs,psi4_wfn, max_exc, omega, ordering = 4,e_converg
         # step 1: select new operators
 
         # compute the full residual and sort operators according to its magnitude
-        residual, e = residual_equations(t1,op,selected_op,ref,as_ints,compute_threshold)        
+        residual, e = residual_equations(cc_type,t1,op,selected_op,ref,as_ints,ham,exp,compute_threshold)
+        
+        
+        
         sorted_res = sorted(zip(residual,range(len(residual))), key= lambda x : abs(x[0]), reverse=False)
                 
         # get the list of operators to add
@@ -400,6 +375,66 @@ def run_selected_ucc(forte_objs,psi4_wfn, max_exc, omega, ordering = 4,e_converg
     return calc_data[-1]    
 
 
+def select_new_operators():
+    # get the list of operators to add
+    new_ops = select_operator_pool(sorted_res,omega)
+
+    if ordering == 1:
+        # add these operators 
+        for j in new_ops:
+            if j not in op_pool:    
+                op_pool.append(j)                
+                selected_op.add_term(op.get_term(j))
+                t1.append(0.0)
+
+    if ordering == 2:
+        # add these operators 
+        new_ops.reverse() # to make sure operators will be sorted from smallest to largest           
+        for j in new_ops:
+            if j not in op_pool:    
+                op_pool.append(j)                
+                selected_op.add_term(op.get_term(j))
+                t1.append(0.0)                    
+
+    if ordering == 3:
+        new_t1 = []
+        new_op_pool = []
+        new_selected_op = forte.SparseOperator()            
+        # add the operators
+        for j in new_ops:
+            if j not in op_pool:    
+                new_op_pool.append(j)                
+                new_selected_op.add_term(op.get_term(j))
+                new_t1.append(0.0)
+        for j in range(selected_op.nterms()):
+            new_selected_op.add_term(selected_op.get_term(j))
+        new_t1.extend(t1)
+        new_op_pool.extend(op_pool)
+        t1 = new_t1
+        op_pool = new_op_pool
+        selected_op = new_selected_op
+
+    if True:
+        new_t1 = []
+        new_op_pool = []
+        new_selected_op = forte.SparseOperator()    
+        new_ops.reverse() # to make sure operators will be sorted from smallest to largest            
+        # add the operators
+        for j in new_ops:
+            if j not in op_pool:    
+                new_op_pool.append(j)                
+                new_selected_op.add_term(op.get_term(j))
+                new_t1.append(0.0)
+        for j in range(selected_op.nterms()):
+            new_selected_op.add_term(selected_op.get_term(j))
+        new_t1.extend(t1)
+        new_op_pool.extend(op_pool)
+        t1 = new_t1
+        op_pool = new_op_pool
+        selected_op = new_selected_op    
+
+    print(f'Number of operators selected: {selected_op.nterms()}')
+
 def run_cc(forte_objs,psi4_wfn,cc_type=None,select_type=None,max_exc=None,omega=None,e_convergence = 1.0e-10,r_convergence = 1.0e-5,compute_threshold = 1.0e-16, selection_threshold = 1.0e-16):
     """This function implements selected CC """
     
@@ -457,27 +492,22 @@ def run_cc(forte_objs,psi4_wfn,cc_type=None,select_type=None,max_exc=None,omega=
 
     for macro_iter in range(max_macro_iter):
         
-#         # step 1: select new operators
+        # step 1: select new operators
+        if select_type is not None:
+            # compute the full residual and sort operators according to its magnitude
+            residual, e = residual_equations(cc_type,t1,op,selected_op,ref,None,None,compute_threshold,on_the_fly=True)
+            select_new_operators(select_type,residual,denominators,t1,op_pool)
 
-#         # compute the full residual and sort operators according to its magnitude
-#         residual, e = residual_equations(t1,op,selected_op,ref,as_ints,compute_threshold)        
-#         sorted_res = sorted(zip(residual,range(len(residual))), key= lambda x : abs(x[0]), reverse=False)
+            sorted_res = sorted(zip(residual,range(len(residual))), key= lambda x : abs(x[0]), reverse=False)
                 
-#         # get the list of operators to add
-#         new_ops = select_operator_pool(sorted_res,omega)
-
-#         print(f'Number of operators selected: {selected_op.nterms()}')
         
         # step 2: solve the ucc equations and update the amplitudes
         t1, e, micro_iter, timing = solve_selected_cc_equations(cc_type,t1,op,op,op_pool,denominators,ref,as_ints,compute_threshold,e_convergence,r_convergence)        
         
         print(f'\n -> {macro_iter:4d} {e:20.12f}   {e - old_e:6e}                   {time.time() - start:8.3f}', flush=True)
 
-
         nops = selected_op.nterms()
-        
-#         sum_res_eval += micro_iter * nops   
-        
+
         calc_data.append((nops,e))
         
         if (nops_old == selected_op.nterms()):
