@@ -116,7 +116,7 @@ class ActiveSpaceSolver {
     std::map<StateInfo, std::string> dump_wave_function();
 
     /// Read the wave function from file as initial guess
-    void read_wave_function(const std::map<StateInfo, std::string>& state_filename_map) {
+    void read_initial_guess(const std::map<StateInfo, std::string>& state_filename_map) {
         state_filename_map_ = state_filename_map;
     };
 

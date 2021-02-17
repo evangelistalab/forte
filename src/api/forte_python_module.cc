@@ -101,7 +101,7 @@ void export_ActiveSpaceSolver(py::module& m) {
         .def("set_active_space_integrals", &ActiveSpaceSolver::set_active_space_integrals,
              "Set the active space integrals manually")
         .def("dump_wave_function", &ActiveSpaceSolver::dump_wave_function)
-        .def("read_wave_function", &ActiveSpaceSolver::read_wave_function);
+        .def("read_initial_guess", &ActiveSpaceSolver::read_initial_guess);
 
     m.def("compute_average_state_energy", &compute_average_state_energy,
           "Compute the average energy given the energies and weights of each state");

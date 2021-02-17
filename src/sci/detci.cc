@@ -94,7 +94,7 @@ void DETCI::build_determinant_space() {
     if (size == 0) {
         outfile->Printf("\n  There is no determinant matching the conditions!");
         outfile->Printf("\n  Please check the input (symmetry, multiplicity, etc.)!");
-        throw psi::PSIEXCEPTION("No determinant matching the conditions!");
+        throw std::runtime_error("No determinant matching the conditions!");
     }
 
     if (print_ > 2) {
@@ -151,7 +151,8 @@ void DETCI::diagoanlize_hamiltonian() {
         sigma_vector_type_ = SigmaVectorType::Full;
     }
 
-    auto sigma_vector = make_sigma_vector(p_space_, as_ints_, sigma_max_memory_, sigma_vector_type_);
+    auto sigma_vector =
+        make_sigma_vector(p_space_, as_ints_, sigma_max_memory_, sigma_vector_type_);
     std::tie(evals_, evecs_) =
         solver->diagonalize_hamiltonian(p_space_, sigma_vector, nroot_, multiplicity_);
 
@@ -179,11 +180,11 @@ std::shared_ptr<SparseCISolver> DETCI::prepare_ci_solver() {
     solver->set_nsubspace_per_root(nsubspace_per_root_);
 
     if (read_wfn_) {
-        outfile->Printf("\n    Read wave function from disk as initial guess");
-        if (not read_wave_function(wfn_filename_)) {
-            outfile->Printf("  Failed!");
+        outfile->Printf("\n  Reading wave function from disk as initial guess:");
+        if (not read_initial_guess(wfn_filename_)) {
+            outfile->Printf(" Failed!");
         } else {
-            outfile->Printf("  Success!");
+            outfile->Printf(" Success!");
         }
     }
 
@@ -325,6 +326,8 @@ void DETCI::print_ci_wfn() {
 
 void DETCI::dump_wave_function(const std::string& filename) {
     std::ofstream file(filename);
+    file << "# DETCI: " << state_.str() << std::endl;
+    file << p_space_.size() << " " << nroot_ << std::endl;
     for (size_t I = 0, Isize = p_space_.size(); I < Isize; ++I) {
         std::string det_str = str(p_space_.get_det(I), nactv_);
         file << det_str;
@@ -336,32 +339,47 @@ void DETCI::dump_wave_function(const std::string& filename) {
     file.close();
 }
 
-bool DETCI::read_wave_function(const std::string& filename) {
+std::tuple<size_t, std::vector<Determinant>, psi::SharedMatrix>
+DETCI::read_wave_function(const std::string& filename) {
     std::string line;
     std::ifstream file(filename);
 
-    if (!file.is_open()) {
-        return false;
+    if (not file.is_open()) {
+        outfile->Printf("\n  DETCI Error: Failed to open wave function file!");
+        return {0, std::vector<Determinant>(), std::make_shared<psi::Matrix>()};
     }
 
-    std::vector<Determinant> dets;
-    std::vector<std::vector<double>> coeffs; // ndets by nroot
+    // read first line
+    std::getline(file, line);
+    if (line.find("DETCI") == std::string::npos) {
+        outfile->Printf("\n  DETCI Error: Wave function file not from a previous DETCI!");
+        std::runtime_error("Failed read wave function: file not generated from DETCI.");
+    }
 
+    // read second line for number of determinants and number of roots
+    std::getline(file, line);
+    size_t ndets, nroots;
+    stringstream ss;
+    ss << line;
+    ss >> ndets >> nroots;
+
+    std::vector<Determinant> det_space;
+    det_space.reserve(ndets);
+    auto evecs = std::make_shared<psi::Matrix>("evecs " + filename, ndets, nroots);
+
+    size_t norbs = 0; // number of active orbitals
+    size_t I = 0;     // index to keep track of determinant
     std::string delimiter = ", ";
 
-    while (getline(file, line)) {
-        // get the determinant
+    while (std::getline(file, line)) {
+        // get the determinant, format in file: e.g., |220ab002>
         size_t next = line.find(delimiter);
         auto det_str = line.substr(0, next);
-        int norb = det_str.size() - 2;
-
-        if (norb != nactv_) {
-            return false;
-        }
+        norbs = det_str.size() - 2;
 
         // form determinant
-        std::vector<bool> alpha(nactv_, false), beta(nactv_, false);
-        for (int i = 0; i < nactv_; ++i) {
+        std::vector<bool> alpha(norbs, false), beta(norbs, false);
+        for (size_t i = 0; i < norbs; ++i) {
             char x = det_str[i + 1];
             if (x == '2' or x == '+') {
                 alpha[i] = true;
@@ -370,38 +388,54 @@ bool DETCI::read_wave_function(const std::string& filename) {
                 beta[i] = true;
             }
         }
-        dets.emplace_back(alpha, beta);
+        det_space.emplace_back(alpha, beta);
 
-        size_t last = next + 1;
-        std::vector<double> tmp;
+        size_t last = next + 1, n = 0;
         while ((next = line.find(delimiter, last)) != string::npos) {
-            tmp.push_back(std::stod(line.substr(last, next - last)));
+            evecs->set(I, n, std::stod(line.substr(last, next - last)));
+            n++;
             last = next + 1;
         }
-        tmp.push_back(std::stod(line.substr(last)));
+        evecs->set(I, n, std::stod(line.substr(last)));
 
-        coeffs.push_back(tmp);
+        I++;
     }
 
-    // test the number of roots are consistent
-    size_t nroot = coeffs[0].size();
-    if (std::any_of(coeffs.begin(), coeffs.end(),
-                    [&](const std::vector<double>& tmp) { return tmp.size() != nroot; })) {
+    return {norbs, det_space, evecs};
+}
+
+bool DETCI::read_initial_guess(const std::string& filename) {
+    // read wave function from file
+    size_t norbs;
+    std::vector<Determinant> dets;
+    SharedMatrix evecs;
+    std::tie(norbs, dets, evecs) = read_wave_function(filename);
+
+    // failed to open the file or empty file
+    auto ndets = dets.size();
+    if (ndets == 0)
         return false;
-    }
 
-    size_t ndets = coeffs.size();
-    std::vector<double> norms(nroot, 0);
-    std::vector<size_t> indices;
+    // inconsistent number of active orbitals
+    if (norbs != size_t(nactv_))
+        return false;
+
+    // test the number of roots from file are larger or equal than current
+    size_t nroots = evecs->coldim();
+    if (nroots < nroot_)
+        return false;
 
     // make sure the determinants are in p_space_
+    std::vector<double> norms(nroots, 0.0);
+    std::vector<size_t> indices;
     for (size_t I = 0; I < ndets; ++I) {
         const auto& det = dets[I];
         if (not p_space_.has_det(det))
             continue;
 
-        for (size_t n = 0; n < nroot; ++n) {
-            norms[n] += coeffs[I][n] * coeffs[I][n];
+        for (size_t n = 0; n < nroots; ++n) {
+            double c = evecs->get(I, n);
+            norms[n] += c * c;
         }
 
         indices.push_back(I);
@@ -410,15 +444,15 @@ bool DETCI::read_wave_function(const std::string& filename) {
     // translate to initial_guess_ format
     initial_guess_.clear();
 
-    for (size_t n = 0; n < nroot; ++n) {
+    for (size_t n = 0; n < nroots; ++n) {
         std::vector<std::pair<size_t, double>> tmp;
         tmp.reserve(indices.size());
         for (const size_t I : indices) {
             const auto& det = dets[I];
-            size_t id = p_space_.get_idx(det);
-            tmp.push_back({id, coeffs[I][n] / norms[n]});
+            tmp.push_back({p_space_[det], evecs->get(I, n) / norms[n]});
         }
-        initial_guess_.push_back(tmp);
+        if (tmp.size())
+            initial_guess_.push_back(tmp);
     }
 
     return true;
@@ -427,7 +461,7 @@ bool DETCI::read_wave_function(const std::string& filename) {
 std::vector<RDMs> DETCI::rdms(const std::vector<std::pair<size_t, size_t>>& root_list,
                               int max_rdm_level) {
     if (max_rdm_level > 3 || max_rdm_level < 1) {
-        throw psi::PSIEXCEPTION("Invalid max_rdm_level, required 1 <= max_rdm_level <= 3.");
+        throw std::runtime_error("Invalid max_rdm_level, required 1 <= max_rdm_level <= 3.");
     }
 
     std::vector<RDMs> rdms;

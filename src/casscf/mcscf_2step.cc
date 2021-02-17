@@ -357,7 +357,7 @@ MCSCF_2STEP::diagonalize_hamiltonian(std::shared_ptr<ActiveSpaceIntegrals> fci_i
     active_space_solver->set_r_convergence(dl_r_conv_);
     active_space_solver->set_do_dipole(do_dipole);
     if (state_ciwfn_map_.size() and ci_type_ == "DETCI") {
-        active_space_solver->read_wave_function(state_ciwfn_map_);
+        active_space_solver->read_initial_guess(state_ciwfn_map_);
     }
     const auto state_energies_map = active_space_solver->compute_energy();
 

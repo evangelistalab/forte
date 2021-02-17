@@ -57,8 +57,13 @@ class DETCI : public ActiveSpaceMethod {
     /// Dump wave function to disk
     void dump_wave_function(const std::string& filename) override;
 
+    /// Read wave function from disk
+    /// Return the number of active orbitals, set of determinants, CI coefficients
+    std::tuple<size_t, std::vector<Determinant>, psi::SharedMatrix>
+    read_wave_function(const std::string& filename) override;
+
     /// Read wave function from disk as initial guess
-    bool read_wave_function(const std::string& filename) override;
+    bool read_initial_guess(const std::string& filename);
 
   private:
     /// SCFInfo object
@@ -152,8 +157,6 @@ class DETCI : public ActiveSpaceMethod {
     bool read_wfn_;
     /// Dump wave function to disk
     bool dump_wfn_;
-    /// Wave function file name
-    std::string wfn_filename_;
 };
 } // namespace forte
 

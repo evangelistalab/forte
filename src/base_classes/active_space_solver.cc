@@ -88,9 +88,9 @@ const std::map<StateInfo, std::vector<double>>& ActiveSpaceSolver::compute_energ
             continue;
         }
 
-        if (state_filename_map_.size()) {
-            method->read_wave_function(state_filename_map_[state]);
-        }
+//        if (state_filename_map_.size()) {
+//            method->read_wave_function(state_filename_map_[state]);
+//        }
 
         method->compute_energy();
         const auto& energies = method->energies();
