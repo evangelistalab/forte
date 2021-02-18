@@ -115,10 +115,12 @@ class ActiveSpaceSolver {
         as_ints_ = as_ints;
     }
 
-    /// Save the wave function and return a map from state to the file name
+    /// Save the wave function to disk
+    /// @return a map fo StateInfo to the wave function file name
     std::map<StateInfo, std::string> dump_wave_function();
 
-    /// Read the wave function from file as initial guess
+    /// Read the wave function from files as initial guess
+    /// @param state_filename_map the map of StateInfo to the wave function file name
     void read_initial_guess(const std::map<StateInfo, std::string>& state_filename_map) {
         state_filename_map_ = state_filename_map;
     };

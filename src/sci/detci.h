@@ -29,6 +29,8 @@ class DETCI : public ActiveSpaceMethod {
           std::shared_ptr<ForteOptions> options, std::shared_ptr<MOSpaceInfo> mo_space_info,
           std::shared_ptr<ActiveSpaceIntegrals> as_ints);
 
+    ~DETCI();
+
     /// Compute the energy
     double compute_energy() override;
 
@@ -80,10 +82,9 @@ class DETCI : public ActiveSpaceMethod {
     /// Number of active orbitals per irrep
     psi::Dimension actv_dim_;
 
-    /// Active space type
+    /// Active space type (CAS, GAS, DOCI)
     std::string actv_space_type_;
-    /// CI_Reference object
-    std::shared_ptr<CI_Reference> ci_ref_;
+
     /// The determinant space
     DeterminantHashVec p_space_;
     /// Build determinant space
@@ -153,8 +154,8 @@ class DETCI : public ActiveSpaceMethod {
     /// Compute permanent dipole moments
     void compute_permanent_dipole();
 
-    /// Read wave function from disk
-    bool read_wfn_;
+    /// Read wave function from disk as initial guess
+    bool read_wfn_guess_;
     /// Dump wave function to disk
     bool dump_wfn_;
 };

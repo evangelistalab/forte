@@ -146,7 +146,7 @@ class ActiveSpaceMethod {
     /// Dump the wave function to file
     /// @param file name
     virtual void dump_wave_function(const std::string&) {
-        throw std::runtime_error("Please override!");
+        throw std::runtime_error("Not yet implemented!");
     }
 
     /// Read the wave function from file
@@ -154,13 +154,14 @@ class ActiveSpaceMethod {
     /// @return the number of active orbitals, the set of determinants, CI coefficients
     virtual std::tuple<size_t, std::vector<Determinant>, psi::SharedMatrix>
     read_wave_function(const std::string&) {
-        throw std::runtime_error("Please override!");
+        throw std::runtime_error("Not yet implemented!");
     }
 
     /// Read the wave function from file as initial guess
     /// @param file name
+    /// @return if reading is success or not
     virtual bool read_initial_guess(const std::string&) {
-        throw std::runtime_error("Please override!");
+        throw std::runtime_error("Not yet implemented!");
     }
 
     // ==> Base Class Functionality (inherited by derived classes) <==
@@ -194,8 +195,8 @@ class ActiveSpaceMethod {
     /// @param value the convergence criterion in a.u.
     void set_r_convergence(double value);
 
-    /// Set if compute dipole moments
-    void set_do_dipole(bool deploy) { do_dipole_ = deploy; }
+    /// Set the file name for stroing wave function on disk
+    void set_wfn_filename(const std::string& name) { wfn_filename_ = name; }
 
     /// Set the root that will be used to compute the properties
     /// @param the root (root = 0, 1, 2, ...)
@@ -246,9 +247,6 @@ class ActiveSpaceMethod {
 
     /// Quiet printing
     bool quiet_ = false;
-
-    /// Compute (transition) dipole moments if true
-    bool do_dipole_ = true;
 
     /// Eigenvalues
     psi::SharedVector evals_;

@@ -78,7 +78,6 @@ const std::map<StateInfo, std::vector<double>>& ActiveSpaceSolver::compute_energ
         method->set_print(print_);
         method->set_e_convergence(e_convergence_);
         method->set_r_convergence(r_convergence_);
-        method->set_do_dipole(do_dipole_);
         state_method_map_[state] = method;
 
         int twice_ms = state.twice_ms();
@@ -106,7 +105,11 @@ const std::map<StateInfo, std::vector<double>>& ActiveSpaceSolver::compute_energ
         }
     }
     print_energies(state_energies_map_);
-    compute_fosc_same_orbs();
+
+    if (options_->get_bool("TRANSITION_DIPOLES")) {
+        compute_fosc_same_orbs();
+    }
+
     return state_energies_map_;
 }
 
@@ -680,17 +683,13 @@ RDMs ActiveSpaceSolver::compute_avg_rdms_ms_avg(
 
 std::map<StateInfo, std::string> ActiveSpaceSolver::dump_wave_function() {
     std::map<StateInfo, std::string> out;
-
-    std::string prefix = "forte." + lower_string(method_);
-
     for (const auto& state_method : state_method_map_) {
         const auto& state = state_method.first;
-        auto state_str = state.str_short();
-        std::string filename = prefix + "." + state_str + ".txt";
+        const auto& method = state_method.second;
+        std::string filename = method->wfn_filename();
         out[state] = filename;
         state_method.second->dump_wave_function(filename);
     }
-
     return out;
 }
 

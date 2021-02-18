@@ -1,4 +1,5 @@
 #include <algorithm>
+#include <cstdio>
 #include <fstream>
 #include <iomanip>
 
@@ -23,10 +24,6 @@ DETCI::DETCI(StateInfo state, size_t nroot, std::shared_ptr<SCFInfo> scf_info,
              std::shared_ptr<ActiveSpaceIntegrals> as_ints)
     : ActiveSpaceMethod(state, nroot, mo_space_info, as_ints), scf_info_(scf_info),
       options_(options) {
-    if (not quiet_) {
-        print_method_banner({"Determinant-Based Configuration Interaction", "Chenyang Li"});
-    }
-
     startup();
 }
 
@@ -43,11 +40,6 @@ void DETCI::startup() {
                    state_.irrep_label();
 
     set_options(options_);
-
-    // build determinants
-    ci_ref_ = std::make_shared<CI_Reference>(scf_info_, options_, mo_space_info_, as_ints_,
-                                             multiplicity_, twice_ms_, wfn_irrep_, state_);
-    build_determinant_space();
 }
 
 void DETCI::set_options(std::shared_ptr<ForteOptions> options) {
@@ -69,29 +61,63 @@ void DETCI::set_options(std::shared_ptr<ForteOptions> options) {
     sigma_vector_type_ = string_to_sigma_vector_type(options->get_str("DIAG_ALGORITHM"));
     sigma_max_memory_ = options_->get_int("SIGMA_VECTOR_MAX_MEMORY");
 
-    read_wfn_ = options_->get_bool("DETCI_READ_WFN");
-    dump_wfn_ = options_->get_bool("DETCI_DUMP_WFN");
-    dump_wfn_ = true;
-    if (read_wfn_ or dump_wfn_) {
-        std::string prefix = "forte.detci.";
-        std::string state_str = state_.str_short();
-        wfn_filename_ = prefix + state_str + ".txt";
+    read_wfn_guess_ = options_->get_bool("READ_ACTIVE_WFN_GUESS");
+    dump_wfn_ = options_->get_bool("DUMP_ACTIVE_WFN");
+}
+
+DETCI::~DETCI() {
+    // remove wave function file
+    if (not dump_wfn_) {
+        if (std::remove(wfn_filename_.c_str()) != 0) {
+            std::perror("Error when deleting DETCI wave function.");
+        }
     }
+}
+
+double DETCI::compute_energy() {
+    print_h2("General Determinant-Based CI Solver");
+
+    // build determinants
+    build_determinant_space();
+
+    // diagonalize Hamiltonian
+    diagoanlize_hamiltonian();
+
+    // compute 1RDMs
+    compute_1rdms();
+
+    // print CI vectors
+    if (not quiet_) {
+        print_ci_wfn();
+    }
+
+    // compute dipole momemts
+    compute_permanent_dipole();
+
+    // save wave functions by default
+    dump_wave_function(wfn_filename_);
+
+    // push to psi4 environment
+    double energy = energies_[root_];
+    psi::Process::environment.globals["CURRENT ENERGY"] = energy;
+    psi::Process::environment.globals["DETCI ENERGY"] = energy;
+    return energy;
 }
 
 void DETCI::build_determinant_space() {
     std::vector<Determinant> dets;
 
+    CI_Reference ci_ref(scf_info_, options_, mo_space_info_, as_ints_, multiplicity_, twice_ms_,
+                        wfn_irrep_, state_);
     if (actv_space_type_ == "GAS") {
-        ci_ref_->build_gas_reference(dets);
+        ci_ref.build_gas_reference(dets);
     } else if (actv_space_type_ == "DOCI") {
-        ci_ref_->build_doci_reference(dets);
+        ci_ref.build_doci_reference(dets);
     } else {
-        ci_ref_->build_cas_reference_full(dets);
+        ci_ref.build_cas_reference_full(dets);
     }
 
     auto size = dets.size();
-
     if (size == 0) {
         outfile->Printf("\n  There is no determinant matching the conditions!");
         outfile->Printf("\n  Please check the input (symmetry, multiplicity, etc.)!");
@@ -109,35 +135,6 @@ void DETCI::build_determinant_space() {
     }
 
     p_space_ = DeterminantHashVec(dets);
-}
-
-double DETCI::compute_energy() {
-    // diagonalize Hamiltonian
-    diagoanlize_hamiltonian();
-
-    // compute 1RDMs
-    compute_1rdms();
-
-    // print CI vectors
-    if (not quiet_) {
-        print_ci_wfn();
-    }
-
-    // compute dipole momemts
-    if (do_dipole_) {
-        compute_permanent_dipole();
-    }
-
-    // save wave functions
-    if (dump_wfn_) {
-        dump_wave_function(wfn_filename_);
-    }
-
-    // push to psi4 environment
-    double energy = energies_[root_];
-    psi::Process::environment.globals["CURRENT ENERGY"] = energy;
-    psi::Process::environment.globals["DETCI ENERGY"] = energy;
-    return energy;
 }
 
 void DETCI::diagoanlize_hamiltonian() {
@@ -180,13 +177,10 @@ std::shared_ptr<SparseCISolver> DETCI::prepare_ci_solver() {
     solver->set_ncollapse_per_root(ncollapse_per_root_);
     solver->set_nsubspace_per_root(nsubspace_per_root_);
 
-    if (read_wfn_) {
+    if (read_wfn_guess_) {
         outfile->Printf("\n  Reading wave function from disk as initial guess:");
-        if (not read_initial_guess(wfn_filename_)) {
-            outfile->Printf(" Failed!");
-        } else {
-            outfile->Printf(" Success!");
-        }
+        std::string status = read_initial_guess(wfn_filename_) ? "Success" : "Failed";
+        outfile->Printf(" %s!", status.c_str());
     }
 
     solver->set_guess_dimension(dl_guess_size_);
@@ -551,11 +545,13 @@ std::vector<ambit::Tensor> DETCI::compute_trans_3rdms_sosd(int root1, int root2)
 }
 
 void DETCI::compute_permanent_dipole() {
-    print_h2("Permanent Dipole Moments [e a0] for " + state_label_);
-
-    psi::outfile->Printf("\n    %8s %14s %14s %14s %14s", "State", "DM_X", "DM_Y", "DM_Z", "|DM|");
     std::string dash(68, '-');
-    psi::outfile->Printf("\n    %s", dash.c_str());
+    if (not quiet_) {
+        print_h2("Permanent Dipole Moments [e a0] for " + state_label_);
+        psi::outfile->Printf("\n    %8s %14s %14s %14s %14s", "State", "DM_X", "DM_Y", "DM_Z",
+                             "|DM|");
+        psi::outfile->Printf("\n    %s", dash.c_str());
+    }
 
     auto ints = as_ints_->ints();
     auto wfn = ints->wfn();
@@ -610,8 +606,10 @@ void DETCI::compute_permanent_dipole() {
         // printing
         std::string name = std::to_string(A) + upper_string(state_.irrep_label());
 
-        psi::outfile->Printf("\n    %8s%15.8f%15.8f%15.8f%15.8f", name.c_str(), dipole[0],
-                             dipole[1], dipole[2], dipole[3]);
+        if (not quiet_) {
+            psi::outfile->Printf("\n    %8s%15.8f%15.8f%15.8f%15.8f", name.c_str(), dipole[0],
+                                 dipole[1], dipole[2], dipole[3]);
+        }
 
         // push to Psi4 global environment
         auto& globals = psi::Process::environment.globals;
@@ -647,7 +645,9 @@ void DETCI::compute_permanent_dipole() {
             globals[multi_label + keys[i]] = dipole[i];
         }
     }
-    psi::outfile->Printf("\n    %s", dash.c_str());
+    if (not quiet_) {
+        psi::outfile->Printf("\n    %s", dash.c_str());
+    }
 }
 
 std::vector<RDMs> DETCI::transition_rdms(const std::vector<std::pair<size_t, size_t>>& root_list,
@@ -717,9 +717,10 @@ std::vector<RDMs> DETCI::transition_rdms(const std::vector<std::pair<size_t, siz
             ci_rdms.set_print(true);
 
             // compute 2-RDM
-            auto aa = ambit::Tensor::build(CoreTensor, "TD2aa", std::vector<size_t>(4, nactv_));
-            auto ab = ambit::Tensor::build(CoreTensor, "TD2ab", std::vector<size_t>(4, nactv_));
-            auto bb = ambit::Tensor::build(CoreTensor, "TD2bb", std::vector<size_t>(4, nactv_));
+            std::vector<size_t> dim4(4, nactv_);
+            auto aa = ambit::Tensor::build(CoreTensor, "TD2aa", dim4);
+            auto ab = ambit::Tensor::build(CoreTensor, "TD2ab", dim4);
+            auto bb = ambit::Tensor::build(CoreTensor, "TD2bb", dim4);
             auto& aa_data = aa.data();
             auto& ab_data = ab.data();
             auto& bb_data = bb.data();
@@ -730,14 +731,11 @@ std::vector<RDMs> DETCI::transition_rdms(const std::vector<std::pair<size_t, siz
                 rdms.emplace_back(a, b, aa, ab, bb);
             } else {
                 // compute 3-RDM
-                auto aaa =
-                    ambit::Tensor::build(CoreTensor, "TD3aaa", std::vector<size_t>(6, nactv_));
-                auto aab =
-                    ambit::Tensor::build(CoreTensor, "TD3aab", std::vector<size_t>(6, nactv_));
-                auto abb =
-                    ambit::Tensor::build(CoreTensor, "TD3abb", std::vector<size_t>(6, nactv_));
-                auto bbb =
-                    ambit::Tensor::build(CoreTensor, "TD3bbb", std::vector<size_t>(6, nactv_));
+                std::vector<size_t> dim6(6, nactv_);
+                auto aaa = ambit::Tensor::build(CoreTensor, "TD3aaa", dim6);
+                auto aab = ambit::Tensor::build(CoreTensor, "TD3aab", dim6);
+                auto abb = ambit::Tensor::build(CoreTensor, "TD3abb", dim6);
+                auto bbb = ambit::Tensor::build(CoreTensor, "TD3bbb", dim6);
                 auto& aaa_data = aaa.data();
                 auto& aab_data = aab.data();
                 auto& abb_data = abb.data();

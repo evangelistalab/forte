@@ -95,12 +95,6 @@ def register_driver_options(options):
 
     options.add_bool("DUMP_ORBITALS", False, "Save orbitals to file if true")
 
-    options.add_bool("DUMP_ASWFN", False,
-                     "Save CI wave function of ActiveSpaceSolver to disk")
-
-    options.add_bool("READ_ASWFN", False,
-                     "Read CI wave function of ActiveSpaceSolver from disk")
-
 
 def register_avas_options(options):
     options.set_group("AVAS")
@@ -283,6 +277,15 @@ def register_active_space_solver_options(options):
     options.add_int('NROOT', 1, 'The number of roots computed')
     options.add_int('ROOT', 0,
                     'The root selected for state-specific computations')
+
+    options.add_bool("DUMP_ACTIVE_WFN", False,
+                     "Save CI wave function of ActiveSpaceSolver to disk")
+
+    options.add_bool("READ_ACTIVE_WFN_GUESS", False,
+                     "Read CI wave function of ActiveSpaceSolver from disk")
+
+    options.add_bool("TRANSITION_DIPOLES", False,
+                     "Compute the transition dipole momemnts and oscillator strengths")
 
 
 def register_pt2_options(options):
@@ -549,16 +552,6 @@ def register_aci_options(options):
     options.add_bool("SPIN_MAT_TO_FILE", False,
                      "Save spin correlation matrix to file?")
 
-    options.add_bool("ACI_RELAXED_SPIN", False,
-                     "Do spin correlation analysis for relaxed wave function?")
-
-    options.add_bool("PRINT_IAOS", True, "Print IAOs?")
-
-    options.add_bool("PI_ACTIVE_SPACE", False, "Active space type?")
-
-    options.add_bool("SPIN_MAT_TO_FILE", False,
-                     "Save spin correlation matrix to file?")
-
     options.add_str("SPIN_BASIS", "LOCAL", ['LOCAL', 'IAO', 'NO', 'CANONICAL'],
                     "Basis for spin analysis")
 
@@ -654,9 +647,6 @@ def register_detci_options(options):
 
     options.add_double("DETCI_PRINT_CIVEC", 0.05,
                        "The printing threshold for CI vectors")
-
-    options.add_bool("DETCI_DUMP_WFN", False, "Dump DETCI wave function to disk")
-    options.add_bool("DETCI_READ_WFN", False, "Read DETCI wave function from disk")
 
 
 def register_integral_options(options):

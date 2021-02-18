@@ -144,7 +144,7 @@ std::vector<std::vector<double>> ActiveSpaceMethod::compute_transition_dipole_sa
     auto actv_in_mo = mo_space_info_->pos_in_space("ACTIVE", "ALL");
 
     // grab MO dipole moment integrals
-    auto mo_dipole_ints = ints->mo_dipole_ints(true, true); // just take alpha
+    auto mo_dipole_ints = ints->mo_dipole_ints(true, true); // just take alpha spin
 
     std::vector<ambit::Tensor> dipole_ints(3);
     std::vector<std::string> dirs{"X", "Y", "Z"};
@@ -234,33 +234,38 @@ std::unique_ptr<ActiveSpaceMethod> make_active_space_method(
     std::shared_ptr<MOSpaceInfo> mo_space_info, std::shared_ptr<ActiveSpaceIntegrals> as_ints,
     std::shared_ptr<ForteOptions> options) {
 
-    std::unique_ptr<ActiveSpaceMethod> solver;
+    std::unique_ptr<ActiveSpaceMethod> method;
     if (type == "FCI") {
-        solver = std::make_unique<FCISolver>(state, nroot, mo_space_info, as_ints);
+        method = std::make_unique<FCISolver>(state, nroot, mo_space_info, as_ints);
     } else if (type == "ACI") {
-        //        solver =
-        //            std::make_unique<AdaptiveCI>(state, nroot, scf_info, options, mo_space_info,
-        //            as_ints);
-        solver = std::make_unique<ExcitedStateSolver>(
+        method = std::make_unique<ExcitedStateSolver>(
             state, nroot, mo_space_info, as_ints,
             std::make_unique<AdaptiveCI>(state, nroot, scf_info, options, mo_space_info, as_ints));
     } else if (type == "CAS") {
-        solver = std::make_unique<FCI_MO>(state, nroot, scf_info, options, mo_space_info, as_ints);
+        method = std::make_unique<FCI_MO>(state, nroot, scf_info, options, mo_space_info, as_ints);
     } else if (type == "DETCI") {
-        solver = std::make_unique<DETCI>(state, nroot, scf_info, options, mo_space_info, as_ints);
+        method = std::make_unique<DETCI>(state, nroot, scf_info, options, mo_space_info, as_ints);
     } else if (type == "ASCI") {
-        solver = std::make_unique<ExcitedStateSolver>(
+        method = std::make_unique<ExcitedStateSolver>(
             state, nroot, mo_space_info, as_ints,
             std::make_unique<ASCI>(state, nroot, scf_info, options, mo_space_info, as_ints));
     } else if (type == "PCI") {
-        solver = std::make_unique<ExcitedStateSolver>(
+        method = std::make_unique<ExcitedStateSolver>(
             state, nroot, mo_space_info, as_ints,
             std::make_unique<ProjectorCI>(state, nroot, scf_info, options, mo_space_info, as_ints));
     } else {
         throw psi::PSIEXCEPTION("make_active_space_method: type = " + type + " was not recognized");
     }
+
     // read options
-    solver->set_options(options);
-    return solver;
+    method->set_options(options);
+
+    // set default file name if dump wave function to disk
+    auto nactv = mo_space_info->size("ACTIVE");
+    std::string prefix = "forte." + lower_string(type) + ".o" + std::to_string(nactv) + ".";
+    std::string state_str = method->state().str_short();
+    method->set_wfn_filename(prefix + state_str + ".txt");
+
+    return method;
 }
 } // namespace forte
