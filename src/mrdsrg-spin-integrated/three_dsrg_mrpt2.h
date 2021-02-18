@@ -29,18 +29,17 @@
 #ifndef _three_dsrg_mrpt2_h_
 #define _three_dsrg_mrpt2_h_
 
-#include <fstream>
-#include <string>
-#include <vector>
+//#include <fstream>
+//#include <string>
+//#include <vector>
 
-#include "psi4/libmints/wavefunction.h"
-#include "ambit/blocked_tensor.h"
+//#include "ambit/blocked_tensor.h"
 
-#include "integrals/integrals.h"
-#include "base_classes/rdms.h"
-#include "helpers/blockedtensorfactory.h"
-#include "mrdsrg-helper/dsrg_source.h"
-#include "mrdsrg-helper/dsrg_time.h"
+//#include "integrals/integrals.h"
+//#include "base_classes/rdms.h"
+//#include "helpers/blockedtensorfactory.h"
+//#include "mrdsrg-helper/dsrg_source.h"
+//#include "mrdsrg-helper/dsrg_time.h"
 #include "master_mrdsrg.h"
 
 namespace forte {

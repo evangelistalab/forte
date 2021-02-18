@@ -31,21 +31,7 @@
 
 #include <iostream>
 #include <fstream>
-//#include <sstream>
-//#include <tuple>
 
-//#include "psi4/libmints/wavefunction.h"
-//#include "psi4/libmints/molecule.h"
-//#include "ambit/blocked_tensor.h"
-
-//#include "integrals/integrals.h"
-//#include "base_classes/rdms.h"
-//#include "base_classes/mo_space_info.h"
-//#include "helpers/blockedtensorfactory.h"
-//#include "mrdsrg-helper/dsrg_time.h"
-//#include "mrdsrg-helper/dsrg_source.h"
-//#include "sparse_ci/determinant.h"
-//#include "integrals/active_space_integrals.h"
 #include "master_mrdsrg.h"
 
 using namespace ambit;

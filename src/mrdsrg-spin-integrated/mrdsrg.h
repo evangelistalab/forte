@@ -29,24 +29,13 @@
 #ifndef _mrdsrg_h_
 #define _mrdsrg_h_
 
-#include <cmath>
-#include <memory>
-
-#include "psi4/libdiis/diismanager.h"
-
-#include "psi4/libmints/wavefunction.h"
-#include "psi4/libpsio/psio.hpp"
-#include "psi4/libpsio/psio.h"
-#include "ambit/blocked_tensor.h"
-
-#include "boost/assign.hpp"
-#include "integrals/integrals.h"
-#include "base_classes/rdms.h"
-#include "helpers/blockedtensorfactory.h"
-#include "sparse_ci/determinant.h"
 #include "master_mrdsrg.h"
 
 using namespace ambit;
+
+namespace psi {
+class DIISManager;
+}
 
 namespace forte {
 
@@ -148,10 +137,21 @@ class MRDSRG : public MASTER_DSRG {
         LSRG2,
         SRG_PT2
     };
-    std::map<std::string, CORR_LV> corrlevelmap = boost::assign::map_list_of(
-        "LDSRG2", CORR_LV::LDSRG2)("LDSRG2_P3", CORR_LV::LDSRG2_P3)("PT2", CORR_LV::PT2)(
-        "PT3", CORR_LV::PT3)("LDSRG2_QC", CORR_LV::LDSRG2_QC)("QDSRG2", CORR_LV::QDSRG2)(
-        "QDSRG2_P3", CORR_LV::QDSRG2_P3)("LSRG2", CORR_LV::LSRG2)("SRG_PT2", CORR_LV::SRG_PT2);
+    std::map<std::string, CORR_LV> corrlevelmap = {{"LDSRG2", CORR_LV::LDSRG2},
+                                                   {"LDSRG2_P3", CORR_LV::LDSRG2_P3},
+                                                   {"PT2", CORR_LV::PT2},
+                                                   {"PT3", CORR_LV::PT3},
+                                                   {"LDSRG2_QC", CORR_LV::LDSRG2_QC},
+                                                   {"QDSRG2", CORR_LV::QDSRG2},
+                                                   {"QDSRG2_P3", CORR_LV::QDSRG2_P3},
+                                                   {"LSRG2", CORR_LV::LSRG2},
+                                                   {"SRG_PT2", CORR_LV::SRG_PT2}};
+
+    //     boost::assign::map_list_of(
+    //        "LDSRG2", CORR_LV::LDSRG2)("LDSRG2_P3", CORR_LV::LDSRG2_P3)("PT2", CORR_LV::PT2)(
+    //        "PT3", CORR_LV::PT3)("LDSRG2_QC", CORR_LV::LDSRG2_QC)("QDSRG2", CORR_LV::QDSRG2)(
+    //        "QDSRG2_P3", CORR_LV::QDSRG2_P3)("LSRG2", CORR_LV::LSRG2)("SRG_PT2",
+    //        CORR_LV::SRG_PT2);
 
     /// One-electron integral
     ambit::BlockedTensor H_;
@@ -178,10 +178,11 @@ class MRDSRG : public MASTER_DSRG {
 
     /// Automatic adjust the flow parameter
     enum class SMART_S { DSRG_S, MIN_DELTA1, MAX_DELTA1, DAVG_MIN_DELTA1, DAVG_MAX_DELTA1 };
-    std::map<std::string, SMART_S> smartsmap =
-        boost::assign::map_list_of("DSRG_S", SMART_S::DSRG_S)("MIN_DELTA1", SMART_S::MIN_DELTA1)(
-            "DAVG_MIN_DELTA1", SMART_S::DAVG_MIN_DELTA1)("MAX_DELTA1", SMART_S::MAX_DELTA1)(
-            "DAVG_MAX_DELTA1", SMART_S::DAVG_MAX_DELTA1);
+    std::map<std::string, SMART_S> smartsmap = {{"DSRG_S", SMART_S::DSRG_S},
+                                                {"MIN_DELTA1", SMART_S::MIN_DELTA1},
+                                                {"DAVG_MIN_DELTA1", SMART_S::DAVG_MIN_DELTA1},
+                                                {"MAX_DELTA1", SMART_S::MAX_DELTA1},
+                                                {"DAVG_MAX_DELTA1", SMART_S::DAVG_MAX_DELTA1}};
     /// Automatic adjusting the flow parameter
     double make_s_smart();
     /// Algorithm to compute energy threshold according to Delta1
