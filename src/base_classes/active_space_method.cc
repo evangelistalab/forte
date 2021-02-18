@@ -66,9 +66,17 @@ void ActiveSpaceMethod::set_e_convergence(double value) { e_convergence_ = value
 
 void ActiveSpaceMethod::set_r_convergence(double value) { r_convergence_ = value; }
 
+void ActiveSpaceMethod::set_read_wfn_guess(bool read) { read_wfn_guess_ = read; }
+
+void ActiveSpaceMethod::set_dump_wfn(bool dump) { dump_wfn_ = dump; }
+
+void ActiveSpaceMethod::set_wfn_filename(const std::string& name) { wfn_filename_ = name; }
+
 void ActiveSpaceMethod::set_root(int value) { root_ = value; }
 
 void ActiveSpaceMethod::set_print(int level) { print_ = level; }
+
+void ActiveSpaceMethod::set_quite_mode(bool quiet) { quiet_ = quiet; }
 
 std::vector<double> ActiveSpaceMethod::compute_oscillator_strength_same_orbs(
     const std::vector<std::pair<size_t, size_t>>& root_list,

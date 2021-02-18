@@ -93,7 +93,6 @@ void export_ActiveSpaceSolver(py::module& m) {
     py::class_<ActiveSpaceSolver>(m, "ActiveSpaceSolver")
         .def("compute_energy", &ActiveSpaceSolver::compute_energy)
         .def("rdms", &ActiveSpaceSolver::rdms)
-        .def("compute_fosc_same_orbs", &ActiveSpaceSolver::compute_fosc_same_orbs)
         .def("compute_contracted_energy", &ActiveSpaceSolver::compute_contracted_energy,
              "as_ints"_a, "max_body"_a,
              "Solve the contracted CI eigenvalue problem using given integrals")
@@ -101,8 +100,9 @@ void export_ActiveSpaceSolver(py::module& m) {
              "Compute the weighted average reference")
         .def("set_active_space_integrals", &ActiveSpaceSolver::set_active_space_integrals,
              "Set the active space integrals manually")
-        .def("dump_wave_function", &ActiveSpaceSolver::dump_wave_function)
-        .def("read_initial_guess", &ActiveSpaceSolver::read_initial_guess);
+        .def("compute_fosc_same_orbs", &ActiveSpaceSolver::compute_fosc_same_orbs)
+        .def("state_filename_map", &ActiveSpaceSolver::state_filename_map)
+        .def("dump_wave_function", &ActiveSpaceSolver::dump_wave_function);
 
     m.def("compute_average_state_energy", &compute_average_state_energy,
           "Compute the average energy given the energies and weights of each state");

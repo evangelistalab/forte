@@ -64,9 +64,6 @@ class DETCI : public ActiveSpaceMethod {
     std::tuple<size_t, std::vector<Determinant>, psi::SharedMatrix>
     read_wave_function(const std::string& filename) override;
 
-    /// Read wave function from disk as initial guess
-    bool read_initial_guess(const std::string& filename) override;
-
   private:
     /// SCFInfo object
     std::shared_ptr<SCFInfo> scf_info_;
@@ -155,9 +152,7 @@ class DETCI : public ActiveSpaceMethod {
     void compute_permanent_dipole();
 
     /// Read wave function from disk as initial guess
-    bool read_wfn_guess_;
-    /// Dump wave function to disk
-    bool dump_wfn_;
+    bool read_initial_guess(const std::string& filename);
 };
 } // namespace forte
 

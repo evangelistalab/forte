@@ -115,15 +115,11 @@ class ActiveSpaceSolver {
         as_ints_ = as_ints;
     }
 
-    /// Save the wave function to disk
-    /// @return a map fo StateInfo to the wave function file name
-    std::map<StateInfo, std::string> dump_wave_function();
+    /// Return the map of StateInfo to the wave function file name
+    std::map<StateInfo, std::string> state_filename_map() const { return state_filename_map_; }
 
-    /// Read the wave function from files as initial guess
-    /// @param state_filename_map the map of StateInfo to the wave function file name
-    void read_initial_guess(const std::map<StateInfo, std::string>& state_filename_map) {
-        state_filename_map_ = state_filename_map;
-    };
+    /// Save the wave function to disk
+    void dump_wave_function();
 
     /// Set energy convergence
     void set_e_convergence(double e_convergence) { e_convergence_ = e_convergence; }
@@ -131,8 +127,8 @@ class ActiveSpaceSolver {
     /// Set residual convergence
     void set_r_convergence(double r_convergence) { r_convergence_ = r_convergence; }
 
-    /// Set if compute dipole moments
-    void set_do_dipole(bool deploy) { do_dipole_ = deploy; }
+    /// Set if read wave function from file as initial guess
+    void set_read_initial_guess(bool read_guess) { read_initial_guess_ = read_guess; }
 
   protected:
     /// a string that specifies the method used (e.g. "FCI", "ACI", ...)
@@ -187,14 +183,14 @@ class ActiveSpaceSolver {
     /// A variable to control printing information
     int print_ = 1;
 
-    /// Compute (transition) dipole moments if true
-    bool do_dipole_ = true;
-
     /// The energy convergence criterion
-    double e_convergence_;
+    double e_convergence_ = 1.0e-10;
 
     /// The residual 2-norm convergence criterion
-    double r_convergence_;
+    double r_convergence_ = 1.0e-6;
+
+    /// Read wave function from disk as initial guess
+    bool read_initial_guess_;
 
     /// Pairs of state info and the contracted CI eigen vectors
     std::map<StateInfo, std::shared_ptr<psi::Matrix>>

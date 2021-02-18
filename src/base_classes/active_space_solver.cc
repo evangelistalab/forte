@@ -63,6 +63,7 @@ ActiveSpaceSolver::ActiveSpaceSolver(const std::string& method,
     print_ = options->get_int("PRINT");
     e_convergence_ = options->get_double("E_CONVERGENCE");
     r_convergence_ = options->get_double("R_CONVERGENCE");
+    read_initial_guess_ = options->get_bool("READ_ACTIVE_WFN_GUESS");
 }
 
 void ActiveSpaceSolver::set_print(int level) { print_ = level; }
@@ -88,8 +89,9 @@ const std::map<StateInfo, std::vector<double>>& ActiveSpaceSolver::compute_energ
             continue;
         }
 
-        if (state_filename_map_.size()) {
-            method->read_initial_guess(state_filename_map_[state]);
+        if (read_initial_guess_) {
+            state_filename_map_[state] = method->wfn_filename();
+            method->set_read_wfn_guess(read_initial_guess_);
         }
 
         method->compute_energy();
@@ -681,16 +683,13 @@ RDMs ActiveSpaceSolver::compute_avg_rdms_ms_avg(
     return RDMs(true, g1a, g2ab, g3aab);
 }
 
-std::map<StateInfo, std::string> ActiveSpaceSolver::dump_wave_function() {
-    std::map<StateInfo, std::string> out;
-    for (const auto& state_method : state_method_map_) {
-        const auto& state = state_method.first;
-        const auto& method = state_method.second;
-        std::string filename = method->wfn_filename();
-        out[state] = filename;
-        state_method.second->dump_wave_function(filename);
+void ActiveSpaceSolver::dump_wave_function() {
+    const auto& state_filenames = state_filename_map();
+    for (const auto& state_filename : state_filenames) {
+        const auto& state = state_filename.first;
+        state_method_map_[state]->set_dump_wfn(true);
+        state_method_map_[state]->dump_wave_function(state_filename.second);
     }
-    return out;
 }
 
 const std::map<StateInfo, std::vector<double>>&

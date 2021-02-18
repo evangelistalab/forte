@@ -104,11 +104,8 @@ class ProcedureDSRG:
         self.options = options
         self.scf_info = scf_info
 
-        # Dump CI wave function if needed
-        self.dump_as_wfn = options.get_bool('DUMP_ASWFN')
-        self.read_as_wfn = options.get_bool('READ_ASWFN')
-        if self.dump_as_wfn:
-            self.state_aswfn_file_map = self.active_space_solver.dump_wave_function()
+        # Read CI wave function as initial guess if needed
+        self.read_active_wfn_guess = options.get_bool('READ_ACTIVE_WFN_GUESS')
 
         # DSRG solver related
         self.dsrg_solver = None
@@ -199,11 +196,10 @@ class ProcedureDSRG:
 
             # Solver active space using dressed integrals
             self.active_space_solver.set_active_space_integrals(ints_dressed)
-            if self.read_as_wfn and self.state_aswfn_file_map:
-                self.active_space_solver.read_wave_function(self.state_aswfn_file_map)
+            if self.read_active_wfn_guess:
+                state_filename_map = self.active_space_solver.state_filename_map()
+                self.active_space_solver.read_initial_guess(state_filename_map)
             state_energies_list = self.active_space_solver.compute_energy()
-            if self.dump_as_wfn:
-                self.state_aswfn_file_map = self.active_space_solver.dump_wave_function()
             e_relax = forte.compute_average_state_energy(state_energies_list, self.state_weights_map)
             self.energies.append((e_dsrg, e_relax))
 

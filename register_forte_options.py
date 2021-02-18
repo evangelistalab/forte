@@ -926,6 +926,8 @@ def register_casscf_options(options):
     options.add_bool("CASSCF_DEBUG_PRINTING", False,
                      "Enable debug printing if True")
 
+    options.add_bool("CASSCF_DONT_ORBITAL", False, "No orbital optimization if true")
+
     options.add_bool("CASSCF_INTERNAL_ROT", False,
                      "Keep GASn-GASn orbital rotations if true")
 
@@ -939,7 +941,7 @@ def register_casscf_options(options):
     options.add_str("CASSCF_FINAL_ORBITAL", "CANONICAL", ["CANONICAL", "NATURAL", "UNSPECIFIED"],
                     "Constraints for redundant orbital pairs at the end of macro iteration")
 
-    options.add_str("CASSCF_CI_SOLVER", "DETCI",
+    options.add_str("CASSCF_CI_SOLVER", "FCI",
                     "The active space solver to use in CASSCF")
 
     options.add_int("CASSCF_CI_FREQ", 1,
