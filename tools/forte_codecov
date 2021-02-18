@@ -41,7 +41,6 @@ test4=$?
 if [ $test1 -eq 0 ] && [ $test2 -eq 0 ] && [ $test3 -eq 0 ] && [ $test4 -eq 0 ];
 then
   echo "All tests were successful"
-# exit 0
 else
   echo "Some test(s) failed"
   echo "Forte methods exit with $test1"
