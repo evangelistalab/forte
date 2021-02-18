@@ -84,12 +84,7 @@ void SparseCISolver::manual_guess(bool value) { set_guess_ = value; }
 void SparseCISolver::set_initial_guess(
     const std::vector<std::vector<std::pair<size_t, double>>>& guess) {
     set_guess_ = true;
-    guess_.clear();
-
     guess_ = guess;
-    //    for (size_t I = 0, max_I = guess.size(); I < max_I; ++I) {
-    //        guess_.push_back(guess[I]);
-    //    }
 }
 
 void SparseCISolver::set_num_vecs(size_t value) { nvec_ = value; }
