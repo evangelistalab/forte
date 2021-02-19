@@ -20,9 +20,9 @@ set globals{
    df_basis_mp2            cc-pvdz-ri
    df_basis_scf            cc-pvdz-jkfit
    reference               twocon
-   scf_type                DF
-   d_convergence           12
-   e_convergence           15
+   scf_type                df
+   d_convergence           10
+   e_convergence           12
 }
 
 set mcscf{
