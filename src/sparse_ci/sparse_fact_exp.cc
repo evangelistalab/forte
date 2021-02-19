@@ -41,15 +41,17 @@ StateVector SparseFactExp::compute(const SparseOperator& sop, const StateVector&
         exp_hash_.add(det);
     }
 
-    if (inverse and (not initialized_inverse_)) {
-        // compute the couplings
-        compute_couplings(sop, state, inverse);
-        initialized_inverse_ = true;
-    }
-    if (not inverse and (not initialized_)) {
-        // compute the couplings
-        compute_couplings(sop, state, inverse);
-        initialized_ = true;
+    // compute the couplings
+    if (inverse) {
+        if (not initialized_inverse_) {
+            compute_couplings(sop, state, inverse);
+            initialized_inverse_ = true;
+        }
+    } else {
+        if (not initialized_) {
+            compute_couplings(sop, state, inverse);
+            initialized_ = true;
+        }
     }
     return compute_exp(sop, state, inverse, screen_thresh);
 }
@@ -159,17 +161,20 @@ StateVector SparseFactExp::compute_exp(const SparseOperator& sop, const StateVec
 
         double amp = sop.get_term(n).factor();
 
-        const std::vector<std::tuple<size_t, size_t, double>>& d_couplings2 =
+        const std::vector<std::tuple<size_t, size_t, double>>& d_couplings =
             inverse ? inverse_couplings_[m] : couplings_[m];
 
         // zero the new terms
         size_t k = 0;
         const size_t vec_size = new_terms.size();
-        for (const auto& coupling : d_couplings2) {
+        for (const auto& coupling : d_couplings) {
             const size_t d_idx = std::get<0>(coupling);
             const size_t new_d_idx = std::get<1>(coupling);
             const double f = amp * std::get<2>(coupling);
             const double c = state_c[d_idx];
+            // do not apply this operator to this determinant if we expect the new determinant
+            // to have an amplitude less than screen_thresh
+            // (here we use the approximation sin(x) ~ x, for x small)
             if (std::fabs(f * c) > screen_thresh) {
                 if (k < vec_size) {
                     new_terms[k] = std::make_pair(d_idx, c * (std::cos(f) - 1.0));
@@ -230,20 +235,22 @@ StateVector SparseFactExp::compute_on_the_fly(const SparseOperator& sop, const S
         // loop over all determinants
         for (const auto& det_c : state) {
             const Determinant& d = det_c.first;
-
-            // test if we can apply this operator to this determinant
-            if (d.fast_a_and_b_equal_b(sqop.ann()) and d.fast_a_and_b_eq_zero(ucre)) {
-                const double c = det_c.second;
-                apply_exp_op_fast(d, new_d, sqop.cre(), sqop.ann(), tau, c, new_terms);
-            } else if (d.fast_a_and_b_equal_b(sqop.cre()) and d.fast_a_and_b_eq_zero(uann)) {
-                const double c = det_c.second;
-                apply_exp_op_fast(d, new_d, sqop.ann(), sqop.cre(), -tau, c, new_terms);
+            // do not apply this operator to this determinant if we expect the new determinant
+            // to have an amplitude less than screen_thresh
+            // (here we use the approximation sin(x) ~ x, for x small)
+            if (std::fabs(det_c.second * tau) > screen_thresh) {
+                // test if we can apply this operator to this determinant
+                if (d.fast_a_and_b_equal_b(sqop.ann()) and d.fast_a_and_b_eq_zero(ucre)) {
+                    const double c = det_c.second;
+                    apply_exp_op_fast(d, new_d, sqop.cre(), sqop.ann(), tau, c, new_terms);
+                } else if (d.fast_a_and_b_equal_b(sqop.cre()) and d.fast_a_and_b_eq_zero(uann)) {
+                    const double c = det_c.second;
+                    apply_exp_op_fast(d, new_d, sqop.ann(), sqop.cre(), -tau, c, new_terms);
+                }
             }
         }
         for (const auto& d_c : new_terms) {
-            if (std::fabs(d_c.second) > screen_thresh) {
-                state[d_c.first] += d_c.second;
-            }
+            state[d_c.first] += d_c.second;
         }
     }
     on_the_fly_time_ += t.get();

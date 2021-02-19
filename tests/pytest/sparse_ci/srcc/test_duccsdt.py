@@ -11,13 +11,13 @@ def test_duccsdt():
 
     forte.startup()
 
-    ref_energy = -128.67901619203303 # this number was obtained with the on_the_fly implementation
+    ref_energy = -128.679016191303 # this number was obtained with the on_the_fly implementation
 
     geom = "Ne"
     
     scf_energy, psi4_wfn = forte.utils.psi4_scf(geom, basis='cc-pVDZ', reference='RHF')
     forte_objs = scc.make_forte_objs(psi4_wfn,mo_spaces={'FROZEN_DOCC' :[1,0,0,0,0,0,0,0]})
-    calc_data = scc.run_cc(forte_objs,psi4_wfn,cc_type='ducc',max_exc=3,e_convergence = 1.0e-10)
+    calc_data = scc.run_cc(forte_objs,psi4_wfn,cc_type='ducc',max_exc=3,e_convergence = 1.0e-11)
 
     forte.cleanup()
     psi4.core.clean()
