@@ -76,26 +76,19 @@ void AdaptiveCI::startup() {
     add_aimed_degenerate_ = options_->get_bool("ACI_ADD_AIMED_DEGENERATE");
     project_out_spin_contaminants_ = options_->get_bool("SCI_PROJECT_OUT_SPIN_CONTAMINANTS");
 
-    one_cycle_ = options_->get_bool("ONE_CYCLE");
-    // Run only one calculation with initial ansatz;
-    // Can be used for CIS/CISD/CAS/GAS-CI for test
     gas_iteration_ = false;
     if (options_->get_str("ACTIVE_REF_TYPE") == "GAS_SINGLE" or
         options_->get_str("ACTIVE_REF_TYPE") == "GAS") {
         gas_iteration_ = true;
     }
-    // Iterations are within in GAS
 
     // Whether to do the occupation analysis after calculation
     occ_analysis_ = options_->get_bool("OCC_ANALYSIS");
 
-    if (one_cycle_) {
-        max_cycle_ = 0;
-    } else {
-        max_cycle_ = options_->get_int("SCI_MAX_CYCLE");
-    }
-
-    // max_cycle_ = options_->get_int("SCI_MAX_CYCLE");
+    // Run only one calculation with initial_reference
+    // Useful for CIS/CISD/CAS/GAS-CI for test
+    one_cycle_ = options_->get_bool("ONE_CYCLE");
+    max_cycle_ = one_cycle_ ? 0 : options_->get_int("SCI_MAX_CYCLE");
 
     spin_tol_ = options_->get_double("ACI_SPIN_TOL");
 

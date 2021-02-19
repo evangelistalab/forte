@@ -27,7 +27,6 @@ set global {
 }
 
 set forte {
-  active_space_solver detci
   e_convergence 10
   active_ref_type gas
   GAS1 [1,0,0,0]
@@ -50,6 +49,9 @@ compare_values(refgasscf, egasscf, 9, "GASSCF energy")
 
 set forte {
   job_type newdriver
+  active_space_solver aci
+  one_cycle true
+  sigma 0.00
   correlation_solver dsrg-mrpt2
   dsrg_s 1.0
   calc_type sa
