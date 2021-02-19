@@ -308,7 +308,8 @@ void AdaptiveCI::find_q_space() {
     if (spin_complete_) {
         PQ_space_.make_spin_complete(nact_); // <- xsize
         if (!quiet_mode_)
-            outfile->Printf("\n  Dimension of the PQ space (spin-complete) : %zu", PQ_space_.size());
+            outfile->Printf("\n  Dimension of the PQ space (spin-complete) : %zu",
+                            PQ_space_.size());
     }
 
     if ((ex_alg_ == "ROOT_ORTHOGONALIZE") and (root_ > 0) and cycle_ >= pre_iter_) {
@@ -319,47 +320,21 @@ void AdaptiveCI::find_q_space() {
     outfile->Printf("\n  Time spent building the model space: %1.6f", build_space.get());
 }
 
-double AdaptiveCI::average_q_values(const std::vector<double>& E2) {
-    // f_E2 and f_C1 will store the selected function of the chosen q criteria
-    // This functions should only be called when nroot_ > 1
-
-    size_t nroot = E2.size();
-
-
+double AdaptiveCI::average_q_values(int nroot, const std::vector<double>& E2) {
     if (naverage_ == 0)
         naverage_ = nroot;
     if ((average_offset_ + naverage_) > nroot)
-        average_offset_ = nroot - naverage_; // throw psi::PSIEXCEPTION("\n  Your desired number of
-                                             // roots and the offset exceeds the maximum number of
-                                             // roots!");
-//     size_t nav = n_avg_;
-//     size_t off = avg_offset_;
-
-//     if (nav == 0)
-//         nav = nroot;
-
-//     if ((off + nav) > nroot)
-//         off = nroot - nav; // throw psi::PSIEXCEPTION("\n  Your desired number of
-//                            // roots and the offset exceeds the maximum number of
-//                            // roots!");
+        average_offset_ = nroot - naverage_;
 
     double f_E2 = 0.0;
 
     // Choose the function of the couplings for each root
     // If nroot = 1, choose the max
-
     if ((average_function_ == AverageFunction::MaxF) or (nroot == 1)) {
         f_E2 = *std::max_element(E2.begin(), E2.end());
     } else if (average_function_ == AverageFunction::AvgF) {
-        double E2_average = 0.0;
-        double dim_inv = 1.0 / static_cast<double>(naverage_);
-        for (int n = 0; n < naverage_; ++n) {
-            E2_average += E2[n + average_offset_] * dim_inv;
-        }
-        f_E2 = E2_average;
-//     } else if (pq_function_ == "AVERAGE") {
-//         auto begin = E2.begin() + off;
-//         f_E2 = std::accumulate(begin, begin + nav, 0.0) / nav;
+        const auto begin = E2.begin() + average_offset_;
+        f_E2 = std::accumulate(begin, begin + naverage_, 0.0) / static_cast<double>(naverage_);
     }
     return f_E2;
 }
@@ -414,18 +389,18 @@ void AdaptiveCI::prune_q_space(DeterminantHashVec& PQ_space, DeterminantHashVec&
 
     if (naverage_ == 0)
         naverage_ = nroot;
-// =======
-//     int nav = n_avg_;
-//     int off = avg_offset_;
+    // =======
+    //     int nav = n_avg_;
+    //     int off = avg_offset_;
 
-//     if (nav == 0)
-//         nav = nroot;
+    //     if (nav == 0)
+    //         nav = nroot;
 
-//     //  if( options_->get_str("EXCITED_ALGORITHM") == "ROOT_COMBINE" and (nav ==
-//     //  1) and (nroot > 1)){
-//     //      off = ref_root_;
-//     //  }
-// >>>>>>> master
+    //     //  if( options_->get_str("EXCITED_ALGORITHM") == "ROOT_COMBINE" and (nav ==
+    //     //  1) and (nroot > 1)){
+    //     //      off = ref_root_;
+    //     //  }
+    // >>>>>>> master
 
     if ((average_offset_ + naverage_) > nroot)
         average_offset_ = nroot - naverage_; // throw psi::PSIEXCEPTION("\n  Your desired number of

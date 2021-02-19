@@ -130,23 +130,25 @@ import math
 def residual_equations(cc_type,t,op,sop,ref,ham,exp,compute_threshold,on_the_fly=False):
     sop.set_coefficients(t)
     if on_the_fly:
-#         wfn = exp.compute(sop,ref)
         wfn = exp.compute_on_the_fly(sop,ref)
         Hwfn = ham.compute_on_the_fly(wfn,compute_threshold)
         if cc_type == 'cc' or cc_type == 'ucc':
             R = exp.compute_on_the_fly(sop,Hwfn,scaling_factor=-1.0)
         elif cc_type == 'ducc' or cc_type == 'fucc' or cc_type == 'factucc':
-#             R = exp.compute(sop,Hwfn,inverse=True)    
             R = exp.compute_on_the_fly(sop,Hwfn,inverse=True)    
         else:
             raise ValueError('Incorrect value for cc_type')            
     else:
-        wfn = exp.compute(sop,ref)
-        Hwfn = ham.compute(wfn,compute_threshold)    
+#        wfn = exp.compute(sop,ref)
+#        Hwfn = ham.compute(wfn,compute_threshold)
         if cc_type == 'cc' or cc_type == 'ucc':
+            wfn = exp.compute(sop,ref)
+            Hwfn = ham.compute(wfn,compute_threshold)
             R = exp.compute(sop,Hwfn,scaling_factor=-1.0)
         elif cc_type == 'ducc' or cc_type == 'fucc' or cc_type == 'factucc':
-            R = exp.compute(sop,Hwfn,inverse=True)    
+            wfn = exp.compute_on_the_fly(sop,ref)
+            Hwfn = ham.compute(wfn,compute_threshold)
+            R = exp.compute_on_the_fly(sop,Hwfn,inverse=True)
         else:
             raise ValueError('Incorrect value for cc_type')    
     residual = forte.get_projection(op,ref,R)
