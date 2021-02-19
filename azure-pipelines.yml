@@ -8,6 +8,7 @@ jobs:
   pool:
     vmImage: 'ubuntu-latest'
   timeoutInMinutes: 90
+  cancelTimeoutInMinutes: 10
   strategy:
     maxParallel: 4
     matrix:
