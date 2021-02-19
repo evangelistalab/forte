@@ -29,28 +29,14 @@
 #ifndef _sadsrg_h_
 #define _sadsrg_h_
 
-//#include <cmath>
-//#include <memory>
-//#include <tuple>
-//#include <string>
-//#include <vector>
-//#include <map>
-
-//#include "ambit/tensor.h"
 #include "ambit/blocked_tensor.h"
 
-//#include "base_classes/forte_options.h"
 #include "base_classes/dynamic_correlation_solver.h"
-//#include "integrals/integrals.h"
-//#include "integrals/active_space_integrals.h"
-//#include "base_classes/rdms.h"
-//#include "base_classes/mo_space_info.h"
+
 #include "helpers/blockedtensorfactory.h"
 #include "mrdsrg-helper/dsrg_mem.h"
 #include "mrdsrg-helper/dsrg_source.h"
 #include "mrdsrg-helper/dsrg_time.h"
-//#include "mrdsrg-helper/dsrg_tensors.h"
-//#include "mrdsrg-helper/dsrg_transformed.h"
 
 using namespace ambit;
 

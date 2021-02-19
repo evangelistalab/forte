@@ -6,10 +6,7 @@
 #include "psi4/libmints/molecule.h"
 #include "psi4/libmints/matrix.h"
 #include "psi4/libmints/vector.h"
-//#include "psi4/libmints/dipole.h"
-//#include "psi4/libpsio/psio.hpp"
 
-//#include "helpers/disk_io.h"
 #include "helpers/printing.h"
 #include "helpers/timer.h"
 
