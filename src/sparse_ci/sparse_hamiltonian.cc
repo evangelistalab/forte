@@ -26,6 +26,8 @@
  * @END LICENSE
  */
 
+#include <cmath>
+
 #include "sparse_ci/sparse_hamiltonian.h"
 
 namespace forte {

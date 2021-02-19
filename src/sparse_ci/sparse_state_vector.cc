@@ -27,6 +27,7 @@
  */
 
 #include <algorithm>
+#include <cmath>
 #include <numeric>
 
 #include "helpers/timer.h"
