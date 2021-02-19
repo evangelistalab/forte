@@ -68,6 +68,7 @@ casscf:
    - casscf-fcidump-1
    - casscf-gradient-1
    - casscf-gradient-3
+   - casscf-opt-3
   medium:
    - casscf-1
    - casscf-2
