@@ -93,7 +93,7 @@ void MCSCF_2STEP::read_options() {
 
     ci_type_ = options_->get_str("CASSCF_CI_SOLVER");
 
-    opt_orbs_ = not options_->get_bool("CASSCF_DONT_ORBITAL");
+    opt_orbs_ = not options_->get_bool("CASSCF_NO_ORBOPT");
     max_rot_ = options_->get_double("CASSCF_MAX_ROTATION");
     internal_rot_ = options_->get_bool("CASSCF_INTERNAL_ROT");
 

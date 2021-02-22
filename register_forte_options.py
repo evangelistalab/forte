@@ -926,7 +926,7 @@ def register_casscf_options(options):
     options.add_bool("CASSCF_DEBUG_PRINTING", False,
                      "Enable debug printing if True")
 
-    options.add_bool("CASSCF_DONT_ORBITAL", False, "No orbital optimization if true")
+    options.add_bool("CASSCF_NO_ORBOPT", False, "No orbital optimization if true")
 
     options.add_bool("CASSCF_INTERNAL_ROT", False,
                      "Keep GASn-GASn orbital rotations if true")
