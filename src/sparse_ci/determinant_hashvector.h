@@ -124,6 +124,16 @@ class DeterminantHashVec {
     // Swap with a det_hashvec object
     void swap(det_hashvec& dets);
 
+    // Overload operator to get the determinant for a given index value
+    const Determinant& operator[](const size_t value) const { return get_det(value); }
+
+    // Overload operator to get the index value for a given determinant
+    size_t operator[](const Determinant& det) const { return get_idx(det); }
+
+    // Iterators
+    auto begin() const { return wfn_.begin(); }
+    auto end() const { return wfn_.end(); }
+
   protected:
     /// A hashvector of determinants
     det_hashvec wfn_;

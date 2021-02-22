@@ -238,6 +238,16 @@ Similarly, we can also optimize geometries using finite difference technique: ::
     After optimization, the input :code:`ref_wfn` no longer holds the data of the
     initial geometry!
 
+.. tip::
+    We could use this code to perform FCI analytic energy gradients
+    (and thus geometry optimizations).
+    The trick is to set all correalted orbitals as active.
+    In test case :code:`casscf-opt-3`, we optimize the geometry of HF molecule at the
+    FCI/3-21G level of theory with frozen 1s orbital of F.
+    Note that frozen orbitals will be kept as they are in the original geometry and
+    therefore the final optimized geometry will be slightly different
+    if a different starting geometry is used.
+
 
 Options
 ^^^^^^^
@@ -344,6 +354,13 @@ What type of orbitals to be used for redundant orbital pairs for a converged cal
 * Type: string
 * Options: CANONICAL, NATURAL, UNSPECIFIED
 * Default: CANONICAL
+
+**CASSCF_NO_ORBOPT**
+
+Turn off orbital optimization procedure if true.
+
+* Type: Boolean
+* Default: False
 
 Expert Options
 ~~~~~~~~~~~~~~~

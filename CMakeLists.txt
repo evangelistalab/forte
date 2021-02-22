@@ -206,6 +206,7 @@ src/sci/aci.cc
 src/sci/aci_build_F.cc
 src/sci/gasaci_build_F.cc
 src/sci/asci.cc
+src/sci/detci.cc
 src/sci/fci_mo.cc
 src/sci/mrpt2.cc
 src/sci/sci.cc

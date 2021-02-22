@@ -1,5 +1,6 @@
 #! usr/bin/env bash
 
+export KMP_DUPLICATE_LIB_OK=TRUE
 export CODECOV_TOKEN="f2ca5872-66d7-48dc-8464-e286452dd05b"
 
 
@@ -40,7 +41,6 @@ test4=$?
 if [ $test1 -eq 0 ] && [ $test2 -eq 0 ] && [ $test3 -eq 0 ] && [ $test4 -eq 0 ];
 then
   echo "All tests were successful"
-  exit 0
 else
   echo "Some test(s) failed"
   echo "Forte methods exit with $test1"

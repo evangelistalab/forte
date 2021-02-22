@@ -20,8 +20,8 @@ set globals{
 #   basis                   cc-pvtz
    basis                   cc-pvdz
    reference               ROHF
-   d_convergence           12
-   e_convergence           15
+   d_convergence           10
+   e_convergence           12
    frozen_docc             [1, 0, 0, 0]
    restricted_docc         [1,0,1,1]
    active                  [2,0,0,0]

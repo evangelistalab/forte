@@ -1,0 +1,60 @@
+# Test DETCI transition dipole and oscillator strengths
+
+import forte
+
+r_scf = -154.80914322697598
+r_0ag = -154.84695193645672
+r_1ag = -154.59019912152513
+r_2ag = -154.45363253270600
+r_0bu = -154.54629332287075
+rosc_0ag_0bu = 1.086716030595
+rosc_1ag_0bu = 0.013542791095
+rosc_2ag_0bu = 0.041762051475
+
+molecule butadiene{
+0 1
+H  1.080977 -2.558832  0.000000
+H -1.080977  2.558832  0.000000
+H  2.103773 -1.017723  0.000000
+H -2.103773  1.017723  0.000000
+H -0.973565 -1.219040  0.000000
+H  0.973565  1.219040  0.000000
+C  0.000000  0.728881  0.000000
+C  0.000000 -0.728881  0.000000
+C  1.117962 -1.474815  0.000000
+C -1.117962  1.474815  0.000000
+}
+
+set {
+  reference      rhf
+  scf_type       df
+  basis          def2-svp
+  df_basis_scf   def2-universal-jkfit
+  df_basis_mp2   def2-universal-jkfit
+  e_convergence  10
+  d_convergence  12
+  maxiter        100
+}
+Escf, wfn = energy('scf', return_wfn=True)
+compare_values(r_scf, Escf, 8, "SCF energy")
+
+set forte{
+  int_type            df
+  active_space_solver detci
+  e_convergence       10
+  frozen_docc         [2,0,0,2]
+  restricted_docc     [5,0,0,4]
+  active              [0,2,2,0]
+  avg_state           [[0,1,3], [3,1,1]]
+  transition_dipoles  true
+}
+energy('forte', ref_wfn=wfn)
+
+psi4.core.print_variables()
+compare_values(r_0ag, variable("ENERGY ROOT 0 1AG"), 8, "CASCI(4,4) singlet Ag energy 0")
+compare_values(r_1ag, variable("ENERGY ROOT 1 1AG"), 8, "CASCI(4,4) singlet Ag energy 1")
+compare_values(r_2ag, variable("ENERGY ROOT 2 1AG"), 8, "CASCI(4,4) singlet Ag energy 2")
+compare_values(r_0bu, variable("ENERGY ROOT 0 1BU"), 8, "CASCI(4,4) singlet Bu energy 0")
+compare_values(rosc_0ag_0bu, variable("OSC. SINGLET 0AG -> 0BU"), 6, "Oscillator strength singlet 0Ag -> 0Bu")
+compare_values(rosc_1ag_0bu, variable("OSC. SINGLET 1AG -> 0BU"), 6, "Oscillator strength singlet 1Ag -> 0Bu")
+compare_values(rosc_2ag_0bu, variable("OSC. SINGLET 2AG -> 0BU"), 6, "Oscillator strength singlet 2Ag -> 0Bu")

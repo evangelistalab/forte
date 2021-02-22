@@ -27,26 +27,22 @@ set global {
 
 set scf_type direct
 set forte {
-  active_space_solver aci
+  active_space_solver detci
   ms 0.0
   multiplicity 1
   root_sym 0
   charge 0
-  sigma 0.00
-  sci_enforce_spin_complete true
-  # for non-selective GAS, we always treat spin_project_full as true
-  # such that the following line is only optional
-  spin_project_full true
   active_ref_type gas
   GAS1 [1,0,0,0]
   GAS2 [3,0,1,2]
   GAS1MAX [1]
   GAS1MIN [0]
   job_type mcscf_two_step
-  casscf_ci_solver aci
+  casscf_ci_solver detci
   casscf_maxiter 100
   casscf_e_convergence 10
-  casscf_g_convergence 10
+  casscf_g_convergence 8
+  casscf_micro_maxiter 4
   casscf_active_frozen_orbital [0]
 }
 

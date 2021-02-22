@@ -713,7 +713,7 @@ bool CASSCF_ORB_GRAD::update_orbitals(psi::SharedVector x) {
     R_->add(dR);
 
     // U_new = U_old * exp(dR)
-    U_ = psi::linalg::doublet(U_, matrix_exponential(dR, 2), false, false);
+    U_ = psi::linalg::doublet(U_, matrix_exponential(dR, 3), false, false);
     U_->set_name("Orthogonal Transformation");
 
     // update orbitals

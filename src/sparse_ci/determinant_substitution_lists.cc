@@ -136,13 +136,13 @@ void DeterminantSubstitutionLists::op_s_lists(const DeterminantHashVec& wfn) {
     timer ops("Single sub. lists");
 
     if (!quiet_) {
-        print_h2("Computing Coupling Lists");
-        outfile->Printf("  --------------------------------");
+        print_h2("Computing 1 Coupling Lists");
     }
 
     // Get a reference to the determinants
     const det_hashvec& dets = wfn.wfn_hash();
-    local_timer ann;
+
+    timer ann("A lists");
     for (size_t b = 0, max_b = beta_strings_.size(); b < max_b; ++b) {
         size_t na_ann = 0;
         std::vector<std::vector<std::pair<size_t, short>>> tmp;
@@ -182,11 +182,11 @@ void DeterminantSubstitutionLists::op_s_lists(const DeterminantHashVec& wfn) {
             }
         }
     }
-
     if (!quiet_) {
-        outfile->Printf("\n        α          %7.6f s", ann.get());
+        outfile->Printf("\n        α          %.3e seconds", ann.stop());
     }
-    local_timer bnn;
+
+    timer bnn("B lists");
     for (size_t a = 0, max_a = alpha_strings_.size(); a < max_a; ++a) {
         size_t nb_ann = 0;
         std::vector<std::vector<std::pair<size_t, short>>> tmp;
@@ -223,17 +223,22 @@ void DeterminantSubstitutionLists::op_s_lists(const DeterminantHashVec& wfn) {
         }
     }
     if (!quiet_) {
-        outfile->Printf("\n        β          %7.6f s", bnn.get());
+        outfile->Printf("\n        β          %.3e seconds", bnn.stop());
     }
 }
 
 void DeterminantSubstitutionLists::tp_s_lists(const DeterminantHashVec& wfn) {
-
     timer ops("Double sub. lists");
+
+    if (!quiet_) {
+        print_h2("Computing 2 Coupling Lists");
+    }
+
     const det_hashvec& dets = wfn.wfn_hash();
+
     // Generate alpha-alpha coupling list
-    local_timer aa;
     {
+        timer aa("AA lists");
         for (size_t b = 0, max_b = beta_strings_.size(); b < max_b; ++b) {
             size_t naa_ann = 0;
             std::vector<std::vector<std::tuple<size_t, short, short>>> tmp;
@@ -278,13 +283,14 @@ void DeterminantSubstitutionLists::tp_s_lists(const DeterminantHashVec& wfn) {
                 }
             }
         }
+        if (!quiet_) {
+            outfile->Printf("\n        αα         %.3e seconds", aa.stop());
+        }
     }
-    if (!quiet_) {
-        outfile->Printf("\n        αα         %7.6f s", aa.get());
-    }
+
     // Generate beta-beta coupling list
-    local_timer bb;
     {
+        timer bb("BB lists");
         for (size_t a = 0, max_a = alpha_strings_.size(); a < max_a; ++a) {
             size_t nbb_ann = 0;
             std::vector<std::vector<std::tuple<size_t, short, short>>> tmp;
@@ -332,14 +338,14 @@ void DeterminantSubstitutionLists::tp_s_lists(const DeterminantHashVec& wfn) {
                 }
             }
         }
-    }
-    if (!quiet_) {
-        outfile->Printf("\n        ββ         %7.6f s", bb.get());
+        if (!quiet_) {
+            outfile->Printf("\n        ββ         %.3e seconds", bb.stop());
+        }
     }
 
-    local_timer ab;
     // Generate alfa-beta coupling list
     {
+        timer ab("AB lists");
         for (size_t a = 0, max_a = alpha_a_strings_.size(); a < max_a; ++a) {
             size_t nab_ann = 0;
             std::vector<std::vector<std::tuple<size_t, short, short>>> tmp;
@@ -382,10 +388,9 @@ void DeterminantSubstitutionLists::tp_s_lists(const DeterminantHashVec& wfn) {
                 }
             }
         }
-    }
-    if (!quiet_) {
-        outfile->Printf("\n        αβ         %7.6f s", ab.get());
-        outfile->Printf("\n  --------------------------------");
+        if (!quiet_) {
+            outfile->Printf("\n        αβ         %.3e seconds", ab.stop());
+        }
     }
 }
 
@@ -401,11 +406,17 @@ void DeterminantSubstitutionLists::clear_tp_s_lists() {
 }
 
 void DeterminantSubstitutionLists::three_s_lists(const DeterminantHashVec& wfn) {
-
     timer ops("Triple sub. lists");
+
+    if (!quiet_) {
+        print_h2("Computing 3 Coupling Lists");
+    }
+
     const det_hashvec& dets = wfn.wfn_hash();
-    //  Timer aaa;
+
+    /// AAA coupling
     {
+        timer aaa("AAA lists");
         for (size_t b = 0, max_b = beta_strings_.size(); b < max_b; ++b) {
             size_t naa_ann = 0;
             std::vector<std::vector<std::tuple<size_t, short, short, short>>> tmp;
@@ -455,14 +466,14 @@ void DeterminantSubstitutionLists::three_s_lists(const DeterminantHashVec& wfn) 
                 }
             }
         }
+        if (!quiet_) {
+            outfile->Printf("\n        ααα        %.3e seconds", aaa.stop());
+        }
     }
-    //  if (!quiet_) {
-    //      outfile->Printf("\n  Time spent building aaa_list  %1.6f s", aaa.get());
-    //  }
 
     /// AAB coupling
     {
-        local_timer aab;
+        timer aab("AAB lists");
         // We need the beta-1 list:
         const det_hashvec& wfn_map = wfn.wfn_hash();
         std::vector<std::vector<std::pair<int, size_t>>> beta_string;
@@ -543,12 +554,13 @@ void DeterminantSubstitutionLists::three_s_lists(const DeterminantHashVec& wfn) 
                 }
             }
         }
-        //      outfile->Printf("\n  Time spent building aab_list  %1.6f s", aab.get());
+        if (!quiet_)
+            outfile->Printf("\n        ααβ        %.3e seconds", aab.stop());
     }
 
     /// ABB coupling
     {
-        //   Timer abb;
+        timer abb("ABB lists");
         for (size_t a = 0, max_a = alpha_a_strings_.size(); a < max_a; ++a) {
             size_t nabb_ann = 0;
             det_hash<int> abb_ann_map;
@@ -602,12 +614,13 @@ void DeterminantSubstitutionLists::three_s_lists(const DeterminantHashVec& wfn) 
                 }
             }
         }
-        //    outfile->Printf("\n  Time spent building abb_list  %1.6f s", abb.get());
+        if (!quiet_)
+            outfile->Printf("\n        αββ        %.3e seconds", abb.stop());
     }
 
     /// BBB coupling
     {
-        // Timer bbb;
+        timer bbb("BBB lists");
         for (size_t a = 0, max_a = alpha_strings_.size(); a < max_a; ++a) {
             size_t nbbb_ann = 0;
             det_hash<int> bbb_ann_map;
@@ -663,7 +676,8 @@ void DeterminantSubstitutionLists::three_s_lists(const DeterminantHashVec& wfn) 
                 }
             }
         }
-        //  outfile->Printf("\n  Time spent building bbb_list  %1.6f s", bbb.get());
+        if (not quiet_)
+            outfile->Printf("\n        βββ        %.3e seconds", bbb.stop());
     }
 }
 

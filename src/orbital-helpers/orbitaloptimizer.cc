@@ -121,37 +121,21 @@ void OrbitalOptimizer::startup() {
     casscf_debug_print_ = options_->get_bool("CASSCF_DEBUG_PRINTING");
     nirrep_ = mo_space_info_->nirrep();
 
-    if (options_->get_str("CASSCF_CI_SOLVER") == "FCI") {
-        cas_ = true;
-    } else if (options_->get_str("CASSCF_CI_SOLVER") == "CAS") {
-        if (options_->get_str("FCIMO_ACTV_TYPE") != "COMPLETE") {
-            cas_ = false;
-        } else {
-            cas_ = true;
-        }
-    } else if (options_->get_str("CASSCF_CI_SOLVER") == "ACI") {
-        if (options_->get_double("SIGMA") == 0.0) {
-            cas_ = true;
-        } else {
-            cas_ = true;
-        }
-    } else if (options_->get_str("CASSCF_CI_SOLVER") == "DMRG") {
-        cas_ = true;
-    } else {
-        outfile->Printf("\n\n Please set your CASSCF_CI_SOLVER to either FCI, CAS, ACI, or DMRG");
+    auto ci_solver = options_->get_str("CASSCF_CI_SOLVER");
+    std::vector<std::string> ci_types{"FCI", "DETCI", "CAS", "ACI", "DMRG"};
+    if (std::find(ci_types.begin(), ci_types.end(), ci_solver) == ci_types.end()) {
+        outfile->Printf("\n\n Please set your CASSCF_CI_SOLVER to either FCI, DETCI, ACI, or DMRG");
         outfile->Printf("\n\n You set your CASSCF_CI_SOLVER to %s.",
                         options_->get_str("CASSCF_CI_SOLVER").c_str());
         throw psi::PSIEXCEPTION("You did not specify your CASSCF_CI_SOLVER correctly.");
     }
+
     cas_ = true;
     gas_ = false;
     if (options_->get_str("ACTIVE_REF_TYPE") == "GAS" or
         options_->get_str("ACTIVE_REF_TYPE") == "GAS_SINGLE") {
         cas_ = false;
         gas_ = true;
-        //        cas_ = true;
-        //        gas_ = false;
-        //        gas_info_ = mo_space_info_->gas_info();
     }
 }
 void OrbitalOptimizer::orbital_gradient() {
