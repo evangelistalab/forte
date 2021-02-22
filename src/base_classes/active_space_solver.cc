@@ -29,6 +29,7 @@
 #include <algorithm>
 #include <numeric>
 #include <iomanip>
+#include <tuple>
 
 #include "psi4/psi4-dec.h"
 #include "psi4/libpsi4util/PsiOutStream.h"
@@ -59,6 +60,10 @@ ActiveSpaceSolver::ActiveSpaceSolver(const std::string& method,
     print_options();
 
     ms_avg_ = options->get_bool("SPIN_AVG_DENSITY");
+    print_ = options->get_int("PRINT");
+    e_convergence_ = options->get_double("E_CONVERGENCE");
+    r_convergence_ = options->get_double("R_CONVERGENCE");
+    read_initial_guess_ = options->get_bool("READ_ACTIVE_WFN_GUESS");
 }
 
 void ActiveSpaceSolver::set_print(int level) { print_ = level; }
@@ -72,6 +77,8 @@ const std::map<StateInfo, std::vector<double>>& ActiveSpaceSolver::compute_energ
         std::shared_ptr<ActiveSpaceMethod> method = make_active_space_method(
             method_, state, nroot, scf_info_, mo_space_info_, as_ints_, options_);
         method->set_print(print_);
+        method->set_e_convergence(e_convergence_);
+        method->set_r_convergence(r_convergence_);
         state_method_map_[state] = method;
 
         int twice_ms = state.twice_ms();
@@ -81,6 +88,12 @@ const std::map<StateInfo, std::vector<double>>& ActiveSpaceSolver::compute_energ
                                  twice_ms);
             continue;
         }
+
+        if (read_initial_guess_) {
+            state_filename_map_[state] = method->wfn_filename();
+            method->set_read_wfn_guess(read_initial_guess_);
+        }
+
         method->compute_energy();
         const auto& energies = method->energies();
         state_energies_map_[state] = energies;
@@ -94,6 +107,11 @@ const std::map<StateInfo, std::vector<double>>& ActiveSpaceSolver::compute_energ
         }
     }
     print_energies(state_energies_map_);
+
+    if (options_->get_bool("TRANSITION_DIPOLES")) {
+        compute_fosc_same_orbs();
+    }
+
     return state_energies_map_;
 }
 
@@ -103,6 +121,7 @@ void ActiveSpaceSolver::print_energies(std::map<StateInfo, std::vector<double>>&
     std::string dash(45, '-');
     psi::outfile->Printf("\n    %s", dash.c_str());
     std::vector<std::string> irrep_symbol = mo_space_info_->irrep_labels();
+    auto& globals = psi::Process::environment.globals;
 
     for (const auto& state_nroot : state_nroots_map_) {
         const auto& state = state_nroot.first;
@@ -115,19 +134,89 @@ void ActiveSpaceSolver::print_energies(std::map<StateInfo, std::vector<double>>&
         }
 
         for (int i = 0; i < nstates; ++i) {
-            auto label = "ENERGY ROOT " + std::to_string(i) + " " + std::to_string(multi) +
-                         irrep_symbol[irrep];
-
             double energy = energies[state][i];
             psi::outfile->Printf("\n     %3d  (%3d)   %3s    %2d  %20.12f", multi, twice_ms,
                                  irrep_symbol[irrep].c_str(), i, energy);
 
-            // make label case insensitive as required by Psi4 Python side
-            std::transform(label.begin(), label.end(), label.begin(), ::toupper);
-            psi::Process::environment.globals[label] = energy;
+            auto label = "ENERGY ROOT " + std::to_string(i) + " " + std::to_string(multi) +
+                         irrep_symbol[irrep];
+            label = upper_string(label);
+
+            // try to fix states with different gas_min and gas_max
+            if (globals.find(label) != globals.end()) {
+                if (globals.find(label + " ENTRY 0") == globals.end())
+                    globals[label + " ENTRY 0"] = globals[label];
+
+                int n = 1;
+                while (globals.find(label + " ENTRY " + std::to_string(n)) != globals.end())
+                    n++;
+                globals[label + " ENTRY " + std::to_string(n)] = energy;
+            }
+
+            globals[label] = energy;
         }
 
         psi::outfile->Printf("\n    %s", dash.c_str());
+    }
+}
+
+void ActiveSpaceSolver::compute_fosc_same_orbs() {
+    // assume SAME set of orbitals!!!
+
+    std::vector<StateInfo> states;
+    for (const auto& state_nroot : state_nroots_map_) {
+        states.push_back(state_nroot.first);
+    }
+
+    for (size_t M = 0, n_entries = states.size(); M < n_entries; ++M) {
+        const auto& state1 = states[M];
+        size_t nroot1 = state_nroots_map_[state1];
+        const auto& method1 = state_method_map_[state1];
+
+        for (size_t N = M; N < n_entries; ++N) {
+            const auto& state2 = states[N];
+            size_t nroot2 = state_nroots_map_[state2];
+            const auto& method2 = state_method_map_[state2];
+
+            // skip different multiplicity (no spin-orbit coupling)
+            if (state1.multiplicity() != state2.multiplicity()) {
+                continue;
+            } else {
+                if (M != N and ms_avg_) {
+                    // skip same multiplicity but different Ms (no spin-orbit coupling)
+                    std::tuple<int, int, int, std::vector<size_t>, std::vector<size_t>> set1{
+                        state1.na(), state1.nb(), state1.irrep(), state1.gas_min(),
+                        state1.gas_max()};
+                    std::tuple<int, int, int, std::vector<size_t>, std::vector<size_t>> set2{
+                        state2.na(), state2.nb(), state2.irrep(), state2.gas_min(),
+                        state2.gas_max()};
+                    if (set1 == set2 and state1.twice_ms() != state2.twice_ms()) {
+                        continue;
+                    }
+                }
+            }
+
+            // prepare list of root pairs
+            std::vector<std::pair<size_t, size_t>> state_ids;
+            if (M == N) {
+                for (size_t i = 0; i < nroot1; ++i) {
+                    for (size_t j = i + 1; j < nroot2; ++j) {
+                        state_ids.push_back({i, j});
+                    }
+                }
+            } else {
+                for (size_t i = 0; i < nroot1; ++i) {
+                    for (size_t j = 0; j < nroot2; ++j) {
+                        state_ids.push_back({i, j});
+                    }
+                }
+            }
+            if (state_ids.size() == 0)
+                continue;
+
+            // compute oscillator strength
+            method1->compute_oscillator_strength_same_orbs(state_ids, method2);
+        }
     }
 }
 
@@ -212,7 +301,10 @@ make_state_weights_map(std::shared_ptr<ForteOptions> options,
     py::list avg_state = options->get_gen_list("AVG_STATE");
 
     std::vector<size_t> gas_min(6, 0);
-    std::vector<size_t> gas_max(6, 1000);
+    std::vector<size_t> gas_max(6);
+    for (int i = 0; i < 6; ++i) {
+        gas_max[i] = 2 * mo_space_info->size("GAS" + std::to_string(i + 1));
+    }
 
     // if AVG_STATE is not defined, do a state-specific computation
     if (avg_state.size() == 0) {
@@ -589,6 +681,15 @@ RDMs ActiveSpaceSolver::compute_avg_rdms_ms_avg(
     }
 
     return RDMs(true, g1a, g2ab, g3aab);
+}
+
+void ActiveSpaceSolver::dump_wave_function() {
+    const auto& state_filenames = state_filename_map();
+    for (const auto& state_filename : state_filenames) {
+        const auto& state = state_filename.first;
+        state_method_map_[state]->set_dump_wfn(true);
+        state_method_map_[state]->dump_wave_function(state_filename.second);
+    }
 }
 
 const std::map<StateInfo, std::vector<double>>&

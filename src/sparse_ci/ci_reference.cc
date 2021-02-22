@@ -62,11 +62,12 @@ CI_Reference::CI_Reference(std::shared_ptr<SCFInfo> scf_info, std::shared_ptr<Fo
     options_ = options;
 
     // Double and singly occupied MOs
+    // ONLY works if we have a Psi4 wave function!!!
     psi::Dimension doccpi = scf_info_->doccpi();
     psi::Dimension soccpi = scf_info_->soccpi();
 
     // Number of irreps
-    nirrep_ = doccpi.n();
+    nirrep_ = mo_space_info_->nirrep();
 
     // Frozen DOCC + RDOCC
     size_t ninact = mo_space_info_->size("INACTIVE_DOCC");
@@ -85,42 +86,28 @@ CI_Reference::CI_Reference(std::shared_ptr<SCFInfo> scf_info, std::shared_ptr<Fo
     // Reference type
     ref_type_ = options->get_str("ACTIVE_REF_TYPE");
 
-    // First determine number of alpha and beta electrons
-    // Assume twice_ms =( Na - Nb )
-    int nel = 0;
-    for (int h = 0; h < nirrep_; ++h) {
-        nel += 2 * doccpi[h] + soccpi[h];
-    }
+    nalpha_ = state_info_.na() - ninact;
+    nbeta_ = state_info_.nb() - ninact;
 
-    nel -= 2 * ninact;
-
-    nalpha_ = 0.5 * (nel + twice_ms_);
-    nbeta_ = nel - nalpha_;
-
-    //    outfile->Printf("\n  Number of active orbitals: %d", Determinant::nmo_);
+    outfile->Printf("\n  Number of active orbitals: %d", nact_);
     outfile->Printf("\n  Number of active alpha electrons: %d", nalpha_);
     outfile->Printf("\n  Number of active beta electrons: %d", nbeta_);
-    outfile->Printf("\n  Maximum reference space size: %zu", subspace_size_);
 }
 
 CI_Reference::~CI_Reference() {}
 
 void CI_Reference::build_reference(std::vector<Determinant>& ref_space) {
     if (ref_type_ == "CAS") {
+        outfile->Printf("\n  Maximum reference space size: %zu", subspace_size_);
         build_cas_reference(ref_space);
     } else if (ref_type_ == "GAS") {
         // Complete GAS
-        print_gas_scf_epsilon();
-        get_gas_occupation();
         build_gas_reference(ref_space);
     } else if (ref_type_ == "GAS_SINGLE") {
         // Low(est) energy one in GAS
-        print_gas_scf_epsilon();
-        get_gas_occupation();
         build_gas_single(ref_space);
     } else {
         build_ci_reference(ref_space);
-        outfile->Printf("\n  Building_reference.", subspace_size_);
     }
 }
 
@@ -504,7 +491,6 @@ void CI_Reference::build_cas_reference(std::vector<Determinant>& ref_space) {
                 nf += 1;
             }
             reverse = true;
-            //            outfile->Printf("  reverse = true");
         } else {
             add_mo = false;
         }
@@ -516,6 +502,24 @@ void CI_Reference::build_cas_reference(std::vector<Determinant>& ref_space) {
 
     outfile->Printf("\n  Number of reference determinants: %zu", ref_space.size());
     outfile->Printf("\n  Reference generated from %d MOs", na);
+}
+
+void CI_Reference::build_cas_reference_full(std::vector<Determinant>& ref_space) {
+    ref_space.clear();
+
+    // build alpha and beta strings
+    auto a_strings = build_occ_string(nact_, nalpha_, mo_symmetry_);
+    auto b_strings = build_occ_string(nact_, nbeta_, mo_symmetry_);
+
+    // construct determinants
+    for (int ha = 0; ha != nirrep_; ++ha) {
+        int hb = ha ^ root_sym_;
+        for (size_t a = 0, a_size = a_strings[ha].size(); a < a_size; ++a) {
+            for (size_t b = 0, b_size = b_strings[hb].size(); b < b_size; ++b) {
+                ref_space.emplace_back(a_strings[ha][a], b_strings[hb][b]);
+            }
+        }
+    }
 }
 
 std::vector<std::vector<std::vector<bool>>>
@@ -540,6 +544,23 @@ CI_Reference::build_occ_string(size_t norb, size_t nele, const std::vector<int>&
     } while (std::next_permutation(occ_tmp.begin(), occ_tmp.begin() + norb));
 
     return out;
+}
+
+void CI_Reference::build_doci_reference(std::vector<Determinant>& ref_space) {
+    if (root_sym_ != 0) {
+        outfile->Printf("\n  State must be totally symmetric for DOCI.");
+        throw psi::PSIEXCEPTION("DOCI reference can only be under totally symmetric irrep.");
+    }
+
+    ref_space.clear();
+    auto strings_per_irrep = build_occ_string(nact_, nalpha_, mo_symmetry_);
+
+    // combine alpha and beta strings to form determinant
+    for (int h = 0; h < nirrep_; ++h) {
+        for (const auto& a : strings_per_irrep[h]) {
+            ref_space.emplace_back(a, a);
+        }
+    }
 }
 
 std::vector<std::vector<bool>>
@@ -592,6 +613,8 @@ CI_Reference::build_gas_occ_string(const std::vector<std::vector<std::vector<boo
 
 void CI_Reference::build_gas_single(std::vector<Determinant>& ref_space) {
     // build the determinant from aufbau principle
+    print_gas_scf_epsilon();
+    get_gas_occupation();
     ref_space.clear();
 
     std::vector<std::vector<size_t>> rel_gas_mos;     // relative indices within active
@@ -759,6 +782,9 @@ void CI_Reference::build_gas_single(std::vector<Determinant>& ref_space) {
 }
 
 void CI_Reference::build_gas_reference(std::vector<Determinant>& ref_space) {
+    print_gas_scf_epsilon();
+    get_gas_occupation();
+
     ref_space.clear();
 
     // relative indices within the active orbitals
@@ -930,6 +956,7 @@ void CI_Reference::get_gas_occupation() {
     //        mo_space_info_->make_gas_info(options_);
     //    gas_num_ = gas_info.first;
     //    general_active_spaces_ = gas_info.second;
+    gas_electrons_.clear();
 
     print_h2("Number of Electrons in GAS");
     outfile->Printf("\n    GAS  MAX  MIN");

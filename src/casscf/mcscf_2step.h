@@ -92,6 +92,9 @@ class MCSCF_2STEP {
     /// Integral type
     std::string int_type_;
 
+    /// Derivative type for nuclear gradient
+    std::string der_type_;
+
     /// The printing level
     int print_;
     /// Enable debug printing or not
@@ -103,6 +106,9 @@ class MCSCF_2STEP {
     int micro_maxiter_;
     /// Min number of micro iterations
     int micro_miniter_;
+
+    /// Optimize orbitals or not
+    bool opt_orbs_;
 
     /// Max allowed value for orbital rotation
     double max_rot_;
@@ -136,9 +142,12 @@ class MCSCF_2STEP {
     double energy_;
 
     /// Solve CI coefficients for the current orbitals
-    std::unique_ptr<ActiveSpaceSolver>
-    diagonalize_hamiltonian(std::shared_ptr<ActiveSpaceIntegrals> fci_ints, const int print,
-                            double& e_c);
+    /// @param fci_ints the pointer of ActiveSpaceIntegrals
+    /// @param params the parameters <print level, e_conv, r_conv, read_wfn_guess, dump_wfn>
+    /// @return <ActiveSpaceSolver, averaged energy>
+    std::tuple<std::unique_ptr<ActiveSpaceSolver>, double>
+    diagonalize_hamiltonian(std::shared_ptr<ActiveSpaceIntegrals> fci_ints,
+                            const std::tuple<int, double, double, bool, bool>& params);
 
     /// Class to store iteration data
     struct CASSCF_HISTORY {

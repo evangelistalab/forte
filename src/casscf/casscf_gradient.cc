@@ -299,7 +299,7 @@ void CASSCF::write_lagrangian() {
         });
     }
     L->back_transform(ints_->Ca());
-    ints_->wfn()->X()->copy(L);
+    ints_->wfn()->lagrangian()->copy(L);
 
     outfile->Printf("Done");
 }

@@ -187,6 +187,7 @@ void CI_RDMS::compute_1rdm(std::vector<double>& oprdm_a, std::vector<double>& op
 void CI_RDMS::compute_1rdm_op(std::vector<double>& oprdm_a, std::vector<double>& oprdm_b) {
 
     auto op = std::make_shared<DeterminantSubstitutionLists>(fci_ints_);
+    op->set_quiet_mode(not print_);
     op->build_strings(wfn_);
     op->op_s_lists(wfn_);
 
@@ -230,7 +231,7 @@ void CI_RDMS::compute_1rdm_op(std::vector<double>& oprdm_a, std::vector<double>&
                 const double& sign_q = detJ.second > 0 ? 1.0 : -1.0;
                 const size_t& J = detJ.first;
                 oprdm_a[p * ncmo_ + q] +=
-                    evecs_->get(J, root1_) * evecs_->get(I, root2_) * sign_p * sign_q;
+                    evecs_->get(I, root1_) * evecs_->get(J, root2_) * sign_p * sign_q;
                 oprdm_a[q * ncmo_ + p] +=
                     evecs_->get(J, root1_) * evecs_->get(I, root2_) * sign_p * sign_q;
             }
@@ -249,7 +250,7 @@ void CI_RDMS::compute_1rdm_op(std::vector<double>& oprdm_a, std::vector<double>&
                 const double& sign_q = detJ.second > 0 ? 1.0 : -1.0;
                 const size_t& J = detJ.first;
                 oprdm_b[p * ncmo_ + q] +=
-                    evecs_->get(J, root1_) * evecs_->get(I, root2_) * sign_p * sign_q;
+                    evecs_->get(I, root1_) * evecs_->get(J, root2_) * sign_p * sign_q;
                 oprdm_b[q * ncmo_ + p] +=
                     evecs_->get(J, root1_) * evecs_->get(I, root2_) * sign_p * sign_q;
             }
@@ -257,7 +258,7 @@ void CI_RDMS::compute_1rdm_op(std::vector<double>& oprdm_a, std::vector<double>&
     }
 
     if (print_) {
-        outfile->Printf("\n  Time spent building 1-rdm:   %1.6f", build.get());
+        outfile->Printf("\n  Time spent building 1-rdm: %.3e seconds", build.get());
     }
 }
 
@@ -345,12 +346,12 @@ void CI_RDMS::compute_2rdm(std::vector<double>& tprdm_aa, std::vector<double>& t
 
 void CI_RDMS::compute_2rdm_op(std::vector<double>& tprdm_aa, std::vector<double>& tprdm_ab,
                               std::vector<double>& tprdm_bb) {
-    local_timer build;
-
     auto op = std::make_shared<DeterminantSubstitutionLists>(fci_ints_);
+    op->set_quiet_mode(not print_);
     op->build_strings(wfn_);
     op->tp_s_lists(wfn_);
 
+    local_timer build;
     const det_hashvec& dets = wfn_.wfn_hash();
 
     tprdm_aa.assign(ncmo4_, 0.0);
@@ -423,12 +424,14 @@ void CI_RDMS::compute_2rdm_op(std::vector<double>& tprdm_aa, std::vector<double>
                 const double& sign_rs = std::get<1>(detI) > 0.0 ? 1.0 : -1.0;
                 const size_t& I = std::get<0>(detI);
                 double rdm_element =
-                    evecs_->get(I, root1_) * evecs_->get(J, root2_) * sign_pq * sign_rs;
+                    evecs_->get(J, root1_) * evecs_->get(I, root2_) * sign_pq * sign_rs;
 
                 tprdm_aa[p * ncmo3_ + q * ncmo2_ + r * ncmo_ + s] += rdm_element;
                 tprdm_aa[p * ncmo3_ + q * ncmo2_ + s * ncmo_ + r] -= rdm_element;
                 tprdm_aa[q * ncmo3_ + p * ncmo2_ + r * ncmo_ + s] -= rdm_element;
                 tprdm_aa[q * ncmo3_ + p * ncmo2_ + s * ncmo_ + r] += rdm_element;
+
+                rdm_element = evecs_->get(I, root1_) * evecs_->get(J, root2_) * sign_pq * sign_rs;
 
                 tprdm_aa[r * ncmo3_ + s * ncmo2_ + p * ncmo_ + q] += rdm_element;
                 tprdm_aa[s * ncmo3_ + r * ncmo2_ + p * ncmo_ + q] -= rdm_element;
@@ -459,12 +462,14 @@ void CI_RDMS::compute_2rdm_op(std::vector<double>& tprdm_aa, std::vector<double>
                 const double& sign_rs = std::get<1>(detI) > 0.0 ? 1.0 : -1.0;
                 const size_t& I = std::get<0>(detI);
                 double rdm_element =
-                    evecs_->get(I, root1_) * evecs_->get(J, root2_) * sign_pq * sign_rs;
+                    evecs_->get(J, root1_) * evecs_->get(I, root2_) * sign_pq * sign_rs;
 
                 tprdm_bb[p * ncmo3_ + q * ncmo2_ + r * ncmo_ + s] += rdm_element;
                 tprdm_bb[p * ncmo3_ + q * ncmo2_ + s * ncmo_ + r] -= rdm_element;
                 tprdm_bb[q * ncmo3_ + p * ncmo2_ + r * ncmo_ + s] -= rdm_element;
                 tprdm_bb[q * ncmo3_ + p * ncmo2_ + s * ncmo_ + r] += rdm_element;
+
+                rdm_element = evecs_->get(I, root1_) * evecs_->get(J, root2_) * sign_pq * sign_rs;
 
                 tprdm_bb[r * ncmo3_ + s * ncmo2_ + p * ncmo_ + q] += rdm_element;
                 tprdm_bb[s * ncmo3_ + r * ncmo2_ + p * ncmo_ + q] -= rdm_element;
@@ -493,17 +498,20 @@ void CI_RDMS::compute_2rdm_op(std::vector<double>& tprdm_aa, std::vector<double>
                 const size_t& s = std::get<2>(detI);
                 const double& sign_rs = std::get<1>(detI) > 0.0 ? 1.0 : -1.0;
                 const size_t& I = std::get<0>(detI);
-                double rdm_element =
-                    evecs_->get(I, root1_) * evecs_->get(J, root2_) * sign_pq * sign_rs;
 
+                double rdm_element =
+                    evecs_->get(J, root1_) * evecs_->get(I, root2_) * sign_pq * sign_rs;
                 tprdm_ab[p * ncmo3_ + q * ncmo2_ + r * ncmo_ + s] += rdm_element;
+
+                rdm_element = evecs_->get(I, root1_) * evecs_->get(J, root2_) * sign_pq * sign_rs;
                 tprdm_ab[r * ncmo3_ + s * ncmo2_ + p * ncmo_ + q] += rdm_element;
             }
         }
     }
 
-    if (print_)
-        outfile->Printf("\n  Time spent building 2-rdm:   %1.6f", build.get());
+    if (print_) {
+        outfile->Printf("\n  Time spent building 2-rdm: %.3e seconds", build.get());
+    }
 }
 
 void CI_RDMS::compute_3rdm(std::vector<double>& tprdm_aaa, std::vector<double>& tprdm_aab,
@@ -703,9 +711,11 @@ void CI_RDMS::compute_3rdm_op(std::vector<double>& tprdm_aaa, std::vector<double
                               std::vector<double>& tprdm_abb, std::vector<double>& tprdm_bbb) {
 
     auto op = std::make_shared<DeterminantSubstitutionLists>(fci_ints_);
+    op->set_quiet_mode(not print_);
     op->build_strings(wfn_);
     op->three_s_lists(wfn_);
 
+    local_timer build;
     size_t ncmo5 = ncmo4_ * ncmo_;
     size_t ncmo6 = ncmo3_ * ncmo3_;
 
@@ -968,7 +978,7 @@ void CI_RDMS::compute_3rdm_op(std::vector<double>& tprdm_aaa, std::vector<double
                 const double& sign_stu = std::get<1>(detI) > 0.0 ? 1.0 : -1.0;
                 const size_t& I = std::get<0>(detI);
 
-                double el = evecs_->get(I, root1_) * evecs_->get(J, root2_) * sign_pqr * sign_stu;
+                double el = evecs_->get(J, root1_) * evecs_->get(I, root2_) * sign_pqr * sign_stu;
 
                 tprdm_aaa[p * ncmo5 + q * ncmo4_ + r * ncmo3_ + s * ncmo2_ + t * ncmo_ + u] += el;
                 tprdm_aaa[p * ncmo5 + q * ncmo4_ + r * ncmo3_ + s * ncmo2_ + u * ncmo_ + t] -= el;
@@ -1011,6 +1021,8 @@ void CI_RDMS::compute_3rdm_op(std::vector<double>& tprdm_aaa, std::vector<double
                 tprdm_aaa[r * ncmo5 + q * ncmo4_ + p * ncmo3_ + u * ncmo2_ + s * ncmo_ + t] -= el;
                 tprdm_aaa[r * ncmo5 + q * ncmo4_ + p * ncmo3_ + t * ncmo2_ + s * ncmo_ + u] += el;
                 tprdm_aaa[r * ncmo5 + q * ncmo4_ + p * ncmo3_ + t * ncmo2_ + u * ncmo_ + s] -= el;
+
+                el = evecs_->get(I, root1_) * evecs_->get(J, root2_) * sign_pqr * sign_stu;
 
                 tprdm_aaa[s * ncmo5 + t * ncmo4_ + u * ncmo3_ + p * ncmo2_ + q * ncmo_ + r] += el;
                 tprdm_aaa[s * ncmo5 + u * ncmo4_ + t * ncmo3_ + p * ncmo2_ + q * ncmo_ + r] -= el;
@@ -1080,13 +1092,13 @@ void CI_RDMS::compute_3rdm_op(std::vector<double>& tprdm_aaa, std::vector<double
                 const double& sign_stu = std::get<1>(detI) > 0.0 ? 1.0 : -1.0;
                 const size_t& I = std::get<0>(detI);
 
-                double el = evecs_->get(I, root1_) * evecs_->get(J, root2_) * sign_pqr * sign_stu;
-
+                double el = evecs_->get(J, root1_) * evecs_->get(I, root2_) * sign_pqr * sign_stu;
                 tprdm_aab[p * ncmo5 + q * ncmo4_ + r * ncmo3_ + s * ncmo2_ + t * ncmo_ + u] += el;
                 tprdm_aab[p * ncmo5 + q * ncmo4_ + r * ncmo3_ + t * ncmo2_ + s * ncmo_ + u] -= el;
                 tprdm_aab[q * ncmo5 + p * ncmo4_ + r * ncmo3_ + s * ncmo2_ + t * ncmo_ + u] -= el;
                 tprdm_aab[q * ncmo5 + p * ncmo4_ + r * ncmo3_ + t * ncmo2_ + s * ncmo_ + u] += el;
 
+                el = evecs_->get(I, root1_) * evecs_->get(J, root2_) * sign_pqr * sign_stu;
                 tprdm_aab[s * ncmo5 + t * ncmo4_ + u * ncmo3_ + p * ncmo2_ + q * ncmo_ + r] += el;
                 tprdm_aab[t * ncmo5 + s * ncmo4_ + u * ncmo3_ + p * ncmo2_ + q * ncmo_ + r] -= el;
                 tprdm_aab[s * ncmo5 + t * ncmo4_ + u * ncmo3_ + q * ncmo2_ + p * ncmo_ + r] -= el;
@@ -1118,13 +1130,13 @@ void CI_RDMS::compute_3rdm_op(std::vector<double>& tprdm_aaa, std::vector<double
                 const double& sign_stu = std::get<1>(detI) > 0.0 ? 1.0 : -1.0;
                 const size_t& I = std::get<0>(detI);
 
-                double el = evecs_->get(I, root1_) * evecs_->get(J, root2_) * sign_pqr * sign_stu;
-
+                double el = evecs_->get(J, root1_) * evecs_->get(I, root2_) * sign_pqr * sign_stu;
                 tprdm_abb[p * ncmo5 + q * ncmo4_ + r * ncmo3_ + s * ncmo2_ + t * ncmo_ + u] += el;
                 tprdm_abb[p * ncmo5 + q * ncmo4_ + r * ncmo3_ + s * ncmo2_ + u * ncmo_ + t] -= el;
                 tprdm_abb[p * ncmo5 + r * ncmo4_ + q * ncmo3_ + s * ncmo2_ + t * ncmo_ + u] -= el;
                 tprdm_abb[p * ncmo5 + r * ncmo4_ + q * ncmo3_ + s * ncmo2_ + u * ncmo_ + t] += el;
 
+                el = evecs_->get(I, root1_) * evecs_->get(J, root2_) * sign_pqr * sign_stu;
                 tprdm_abb[s * ncmo5 + t * ncmo4_ + u * ncmo3_ + p * ncmo2_ + q * ncmo_ + r] += el;
                 tprdm_abb[s * ncmo5 + u * ncmo4_ + t * ncmo3_ + p * ncmo2_ + q * ncmo_ + r] -= el;
                 tprdm_abb[s * ncmo5 + t * ncmo4_ + u * ncmo3_ + p * ncmo2_ + r * ncmo_ + q] -= el;
@@ -1156,7 +1168,7 @@ void CI_RDMS::compute_3rdm_op(std::vector<double>& tprdm_aaa, std::vector<double
                 const double& sign_stu = std::get<1>(detI) > 0.0 ? 1.0 : -1.0;
                 const size_t& I = std::get<0>(detI);
 
-                double el = evecs_->get(I, root1_) * evecs_->get(J, root2_) * sign_pqr * sign_stu;
+                double el = evecs_->get(J, root1_) * evecs_->get(I, root2_) * sign_pqr * sign_stu;
 
                 tprdm_bbb[p * ncmo5 + q * ncmo4_ + r * ncmo3_ + s * ncmo2_ + t * ncmo_ + u] += el;
                 tprdm_bbb[p * ncmo5 + q * ncmo4_ + r * ncmo3_ + s * ncmo2_ + u * ncmo_ + t] -= el;
@@ -1199,6 +1211,8 @@ void CI_RDMS::compute_3rdm_op(std::vector<double>& tprdm_aaa, std::vector<double
                 tprdm_bbb[r * ncmo5 + q * ncmo4_ + p * ncmo3_ + u * ncmo2_ + s * ncmo_ + t] -= el;
                 tprdm_bbb[r * ncmo5 + q * ncmo4_ + p * ncmo3_ + t * ncmo2_ + s * ncmo_ + u] += el;
                 tprdm_bbb[r * ncmo5 + q * ncmo4_ + p * ncmo3_ + t * ncmo2_ + u * ncmo_ + s] -= el;
+
+                el = evecs_->get(I, root1_) * evecs_->get(J, root2_) * sign_pqr * sign_stu;
 
                 tprdm_bbb[s * ncmo5 + t * ncmo4_ + u * ncmo3_ + p * ncmo2_ + q * ncmo_ + r] += el;
                 tprdm_bbb[s * ncmo5 + u * ncmo4_ + t * ncmo3_ + p * ncmo2_ + q * ncmo_ + r] -= el;
@@ -1243,6 +1257,10 @@ void CI_RDMS::compute_3rdm_op(std::vector<double>& tprdm_aaa, std::vector<double
                 tprdm_bbb[t * ncmo5 + u * ncmo4_ + s * ncmo3_ + r * ncmo2_ + q * ncmo_ + p] -= el;
             }
         }
+    }
+
+    if (print_) {
+        outfile->Printf("\n  Time spent building 3-rdm: %.3e seconds", build.get());
     }
 }
 

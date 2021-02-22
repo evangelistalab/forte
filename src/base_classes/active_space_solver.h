@@ -29,6 +29,7 @@
 #ifndef _active_space_solver_h_
 #define _active_space_solver_h_
 
+#include <map>
 #include <vector>
 #include <string>
 
@@ -82,6 +83,9 @@ class ActiveSpaceSolver {
     /// Compute the energy and return it // TODO: document (Francesco)
     const std::map<StateInfo, std::vector<double>>& compute_energy();
 
+    /// Compute the oscillator strengths assuming same orbitals
+    void compute_fosc_same_orbs();
+
     /// Compute the contracted CI energy
     const std::map<StateInfo, std::vector<double>>&
     compute_contracted_energy(std::shared_ptr<forte::ActiveSpaceIntegrals> as_ints,
@@ -110,6 +114,21 @@ class ActiveSpaceSolver {
     void set_active_space_integrals(std::shared_ptr<ActiveSpaceIntegrals> as_ints) {
         as_ints_ = as_ints;
     }
+
+    /// Return the map of StateInfo to the wave function file name
+    std::map<StateInfo, std::string> state_filename_map() const { return state_filename_map_; }
+
+    /// Save the wave function to disk
+    void dump_wave_function();
+
+    /// Set energy convergence
+    void set_e_convergence(double e_convergence) { e_convergence_ = e_convergence; }
+
+    /// Set residual convergence
+    void set_r_convergence(double r_convergence) { r_convergence_ = r_convergence; }
+
+    /// Set if read wave function from file as initial guess
+    void set_read_initial_guess(bool read_guess) { read_initial_guess_ = read_guess; }
 
   protected:
     /// a string that specifies the method used (e.g. "FCI", "ACI", ...)
@@ -145,6 +164,9 @@ class ActiveSpaceSolver {
     /// A map of state symmetries to vectors of computed energies under given state symmetry
     std::map<StateInfo, std::vector<double>> state_energies_map_;
 
+    /// A map of state symmetries to the file name of wave function stored on disk
+    std::map<StateInfo, std::string> state_filename_map_;
+
     /// Average spin multiplets for RDMs
     /// If true, the weight of a state will be averaged by its multiplicity.
     /// Moreover, all its ms components will be computed by the solver.
@@ -160,6 +182,15 @@ class ActiveSpaceSolver {
 
     /// A variable to control printing information
     int print_ = 1;
+
+    /// The energy convergence criterion
+    double e_convergence_ = 1.0e-10;
+
+    /// The residual 2-norm convergence criterion
+    double r_convergence_ = 1.0e-6;
+
+    /// Read wave function from disk as initial guess
+    bool read_initial_guess_;
 
     /// Pairs of state info and the contracted CI eigen vectors
     std::map<StateInfo, std::shared_ptr<psi::Matrix>>

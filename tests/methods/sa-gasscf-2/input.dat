@@ -20,23 +20,15 @@ set global {
   d_convergence 10
   r_convergence 10
   guess gwh
-  scf_type pk
+  scf_type direct
   reference rhf
 }
 
-set scf_type direct
 set forte {
-  active_space_solver aci
-  ms 0.0
-  multiplicity 1
-  sigma 0.00
-  root_sym 0
-  charge 0
-  sci_enforce_spin_complete true
   e_convergence 10
-  charge 0
-  active_ref_type gas
+  sigma 0.00
   one_cycle true
+  active_ref_type gas
   GAS1 [1,0,0,0]
   GAS2 [3,0,1,2]
   GAS1MAX [2,1]

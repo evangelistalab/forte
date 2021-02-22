@@ -1031,7 +1031,7 @@ void DWMS_DSRGPT2::compute_dwms_energy_separated_H(std::shared_ptr<FCI_MO>& fci_
                 for (size_t I = 0, nI = initial_guesses_[n][i]->dim(); I < nI; ++I) {
                     guess.push_back(std::make_pair(I, initial_guesses_[n][i]->get(I)));
                 }
-                fci_mo->set_initial_guess(guess);
+                fci_mo->set_initial_guess({guess});
 
                 // diagonalize DSRG-PT2 active Hamiltonian
                 Ept_[n][i] = fci_mo->compute_ss_energies()[0]; // bc set root = 0

@@ -7,7 +7,7 @@ import forte
 
 refscf = -76.0172965561
 refgasscf = -65.866749078651708
-refdsrg = -66.085753612282389
+refdsrg = -66.08575361222897
 
 memory 1000 mb
 molecule h2o{
@@ -26,25 +26,21 @@ set global {
   reference rhf
 }
 
-set scf_type direct
 set forte {
-  active_space_solver aci
-  sigma 0.00
-  charge 0
-  sci_enforce_spin_complete true
-  e_convergence 6
+  e_convergence 10
   active_ref_type gas
   GAS1 [1,0,0,0]
   GAS2 [3,0,1,2]
   GAS1MAX [2,1]
   GAS1MIN [0,0]
   AVG_STATE [[0,1,1],[2,1,1]]
-  job_type casscf
-  casscf_ci_solver aci
+  job_type mcscf_two_step
+  casscf_ci_solver detci
   casscf_maxiter 100
   casscf_e_convergence 1e-10
+  casscf_g_convergence 1e-8
   casscf_active_frozen_orbital [0]
-  casscf_diis_start 15
+  casscf_micro_maxiter 2
 }
 
 escf, wfn = energy('scf', return_wfn=True)
@@ -53,6 +49,9 @@ compare_values(refgasscf, egasscf, 9, "GASSCF energy")
 
 set forte {
   job_type newdriver
+  active_space_solver aci
+  one_cycle true
+  sigma 0.00
   correlation_solver dsrg-mrpt2
   dsrg_s 1.0
   calc_type sa

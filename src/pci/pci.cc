@@ -1130,7 +1130,7 @@ void ProjectorCI::propagate_DL(det_hashvec& dets_hashvec, std::vector<double>& C
     for (size_t I = 0; I < ref_size; ++I) {
         guess[I] = std::make_pair(I, C[I]);
     }
-    sparse_solver_.set_initial_guess(guess);
+    sparse_solver_.set_initial_guess({guess});
     sparse_solver_.set_spin_project(false);
     sparse_solver_.set_force_diag(true);
     psi::SharedMatrix PQ_evecs_;

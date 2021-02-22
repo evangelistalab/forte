@@ -84,7 +84,9 @@ void export_Localize(py::module& m);
 /// Export the ActiveSpaceMethod class
 void export_ActiveSpaceMethod(py::module& m) {
     py::class_<ActiveSpaceMethod>(m, "ActiveSpaceMethod")
-        .def("compute_energy", &ActiveSpaceMethod::compute_energy);
+        .def("compute_energy", &ActiveSpaceMethod::compute_energy)
+        .def("dump_wave_function", &ActiveSpaceMethod::dump_wave_function)
+        .def("read_wave_function", &ActiveSpaceMethod::read_wave_function);
 }
 
 void export_ActiveSpaceSolver(py::module& m) {
@@ -97,7 +99,10 @@ void export_ActiveSpaceSolver(py::module& m) {
         .def("compute_average_rdms", &ActiveSpaceSolver::compute_average_rdms,
              "Compute the weighted average reference")
         .def("set_active_space_integrals", &ActiveSpaceSolver::set_active_space_integrals,
-             "Set the active space integrals manually");
+             "Set the active space integrals manually")
+        .def("compute_fosc_same_orbs", &ActiveSpaceSolver::compute_fosc_same_orbs)
+        .def("state_filename_map", &ActiveSpaceSolver::state_filename_map)
+        .def("dump_wave_function", &ActiveSpaceSolver::dump_wave_function);
 
     m.def("compute_average_state_energy", &compute_average_state_energy,
           "Compute the average energy given the energies and weights of each state");

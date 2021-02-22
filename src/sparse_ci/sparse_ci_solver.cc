@@ -81,13 +81,10 @@ void SparseCISolver::set_root_project(bool value) { root_project_ = value; }
 
 void SparseCISolver::manual_guess(bool value) { set_guess_ = value; }
 
-void SparseCISolver::set_initial_guess(std::vector<std::pair<size_t, double>>& guess) {
+void SparseCISolver::set_initial_guess(
+    const std::vector<std::vector<std::pair<size_t, double>>>& guess) {
     set_guess_ = true;
-    guess_.clear();
-
-    for (size_t I = 0, max_I = guess.size(); I < max_I; ++I) {
-        guess_.push_back(guess[I]);
-    }
+    guess_ = guess;
 }
 
 void SparseCISolver::set_num_vecs(size_t value) { nvec_ = value; }
@@ -469,13 +466,17 @@ bool SparseCISolver::davidson_liu_solver(const DeterminantHashVec& space,
 
     if (set_guess_) {
         // Use previous solution as guess
-        b->zero();
-        for (size_t I = 0, max_I = guess_.size(); I < max_I; ++I) {
-            b->set(guess_[I].first, guess_[I].second);
+        if (print_details_)
+            outfile->Printf("\n  Adding %zu guess vectors by user", guess_.size());
+        for (const auto& guess_root : guess_) {
+            b->zero();
+            for (size_t I = 0, max_I = guess_root.size(); I < max_I; ++I) {
+                b->set(guess_root[I].first, guess_root[I].second);
+            }
+            double norm = sqrt(1.0 / b->norm());
+            b->scale(norm);
+            dls.add_guess(b);
         }
-        double norm = sqrt(1.0 / b->norm());
-        b->scale(norm);
-        dls.add_guess(b);
     } else {
         // Use the initial guess. Here we sort out the roots of correct multiplicity
         std::vector<int> guess_list;

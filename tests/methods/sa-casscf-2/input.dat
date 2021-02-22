@@ -14,11 +14,11 @@ molecule HF{
 set globals{
   basis                   cc-pvdz
   reference               rohf
-  d_convergence           12
-  e_convergence           15
+  d_convergence           8
+  e_convergence           12
   mcscf_e_convergence     12
   mcscf_r_convergence     8
-  frozen_docc             [1, 0, 0, 0]
+  frozen_docc             [1,0,0,0]
   restricted_docc         [1,0,1,1]
   active                  [2,0,0,0]
   scf_type                out_of_core
@@ -34,8 +34,6 @@ set forte{
   restricted_docc         [1,0,1,1]
   active                  [2,0,0,0]
   active_space_solver     fci
-  casscf_reference        true
-  int_type                conventional
   casscf_maxiter          25
   print                   1
   avg_state               [[0, 1, 2]]

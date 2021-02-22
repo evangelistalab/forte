@@ -68,6 +68,7 @@ casscf:
    - casscf-fcidump-1
    - casscf-gradient-1
    - casscf-gradient-3
+   - casscf-opt-3
   medium:
    - casscf-1
    - casscf-2
@@ -92,6 +93,12 @@ cd-dsrg-mrpt2:
    - cd-dsrg-mrpt2-1
    - cd-dsrg-mrpt2-2
    - cd-dsrg-mrpt2-5
+detci:
+  short:
+   - detci-1
+   - detci-2
+   - detci-3
+   - detci-4
 diag-alg:
   short:
    - diag-alg-1-dynamic
@@ -217,10 +224,10 @@ fci:
 gasci:
   short:
    - gasci-1
-   - gasci-2
    - gasaci-1
    - gasaci-4
   medium:
+   - gasci-2
    - gasci-3
    - gasaci-2
    - gasaci-3

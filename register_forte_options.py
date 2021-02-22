@@ -14,6 +14,7 @@ def register_forte_options(options):
     register_sci_options(options)
     register_aci_options(options)
     register_asci_options(options)
+    register_detci_options(options)
     register_fci_mo_options(options)
     register_active_space_solver_options(options)
     register_dsrg_options(options)
@@ -44,7 +45,7 @@ def register_driver_options(options):
                        "The density convergence criterion")
 
     options.add_str(
-        'ACTIVE_SPACE_SOLVER', '', ['FCI', 'ACI', 'CAS'],
+        'ACTIVE_SPACE_SOLVER', '', ['FCI', 'ACI', 'PCI', 'DETCI', 'CAS'],
         'Active space solver type'
     )  # TODO: why is PCI running even if it is not in this list (Francesco)
     options.add_str(
@@ -82,7 +83,7 @@ def register_driver_options(options):
 
     options.add_double("MS", None, "Projection of spin onto the z axis")
 
-    options.add_str("ACTIVE_REF_TYPE", "CAS",
+    options.add_str("ACTIVE_REF_TYPE", "CAS", ["CAS", "DOCI", "GAS", "GAS_SINGLE"],
                     "Initial guess for active space wave functions")
 
     options.add_bool("SPIN_AVG_DENSITY", False,
@@ -276,6 +277,15 @@ def register_active_space_solver_options(options):
     options.add_int('NROOT', 1, 'The number of roots computed')
     options.add_int('ROOT', 0,
                     'The root selected for state-specific computations')
+
+    options.add_bool("DUMP_ACTIVE_WFN", False,
+                     "Save CI wave function of ActiveSpaceSolver to disk")
+
+    options.add_bool("READ_ACTIVE_WFN_GUESS", False,
+                     "Read CI wave function of ActiveSpaceSolver from disk")
+
+    options.add_bool("TRANSITION_DIPOLES", False,
+                     "Compute the transition dipole momemnts and oscillator strengths")
 
 
 def register_pt2_options(options):
@@ -542,16 +552,6 @@ def register_aci_options(options):
     options.add_bool("SPIN_MAT_TO_FILE", False,
                      "Save spin correlation matrix to file?")
 
-    options.add_bool("ACI_RELAXED_SPIN", False,
-                     "Do spin correlation analysis for relaxed wave function?")
-
-    options.add_bool("PRINT_IAOS", True, "Print IAOs?")
-
-    options.add_bool("PI_ACTIVE_SPACE", False, "Active space type?")
-
-    options.add_bool("SPIN_MAT_TO_FILE", False,
-                     "Save spin correlation matrix to file?")
-
     options.add_str("SPIN_BASIS", "LOCAL", ['LOCAL', 'IAO', 'NO', 'CANONICAL'],
                     "Basis for spin analysis")
 
@@ -640,6 +640,13 @@ def register_fci_mo_options(options):
                        "The printing threshold for CI vectors")
 
     # options.add_bool("FCIMO_IAO_ANALYSIS", False, "Intrinsic atomic orbital analysis")
+
+
+def register_detci_options(options):
+    options.set_group("DETCI")
+
+    options.add_double("DETCI_PRINT_CIVEC", 0.05,
+                       "The printing threshold for CI vectors")
 
 
 def register_integral_options(options):
@@ -919,6 +926,8 @@ def register_casscf_options(options):
     options.add_bool("CASSCF_DEBUG_PRINTING", False,
                      "Enable debug printing if True")
 
+    options.add_bool("CASSCF_NO_ORBOPT", False, "No orbital optimization if true")
+
     options.add_bool("CASSCF_INTERNAL_ROT", False,
                      "Keep GASn-GASn orbital rotations if true")
 
@@ -932,7 +941,7 @@ def register_casscf_options(options):
     options.add_str("CASSCF_FINAL_ORBITAL", "CANONICAL", ["CANONICAL", "NATURAL", "UNSPECIFIED"],
                     "Constraints for redundant orbital pairs at the end of macro iteration")
 
-    options.add_str("CASSCF_CI_SOLVER", "CAS",
+    options.add_str("CASSCF_CI_SOLVER", "FCI",
                     "The active space solver to use in CASSCF")
 
     options.add_int("CASSCF_CI_FREQ", 1,
