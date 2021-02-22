@@ -185,8 +185,8 @@ double MCSCF_2STEP::compute_energy() {
     LBFGS lbfgs(lbfgs_param);
 
     // CI convergence criteria along the way
-    double dl_e_conv = nrot ? 1.0e-5 : e_conv_;
-    double dl_r_conv = nrot ? 5.0e-3 : r_conv;
+    double dl_e_conv = nrot ? 1.0e-6 : e_conv_;
+    double dl_r_conv = nrot ? 5.0e-4 : r_conv;
 
     // start iterations
     bool converged = false;
