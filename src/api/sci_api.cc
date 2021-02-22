@@ -159,6 +159,13 @@ void export_Determinant(py::module& m) {
         .def("timing", &SparseOperator::timing)
         .def("reset_timing", &SparseOperator::reset_timing);
 
+    py::class_<SQOperator>(m, "SQOperator")
+        .def("factor", &SQOperator::factor)
+        .def("cre", &SQOperator::cre)
+        .def("ann", &SQOperator::ann)
+        .def("str", &SQOperator::str)
+        .def("latex", &SQOperator::latex);
+
     py::class_<StateVector>(m, "StateVector")
         .def(py::init<>())
         .def(py::init<const det_hash<double>&>())
@@ -254,11 +261,6 @@ void export_Determinant(py::module& m) {
     m.def("get_projection", &get_projection);
     m.def("hamiltonian_matrix_element", &hamiltonian_matrix_element);
     m.def("overlap", &overlap);
-
-    py::class_<SQOperator>(m, "SQOperator")
-        .def("factor", &SQOperator::factor)
-        .def("cre", &SQOperator::cre)
-        .def("ann", &SQOperator::ann);
 
     m.def("spin2", &spin2<Determinant::nbits>);
 }

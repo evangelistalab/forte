@@ -228,7 +228,7 @@ std::vector<Determinant> find_minimum_spin_complete(std::vector<Determinant>& de
     }
     if (missing > 0) {
         outfile->Printf("\n  Initial guess determinants do not form a spin-complete set. %d "
-                        "determinants are missing\n",
+                        "determinant(s) missing\n",
                         missing);
     }
     return new_det_space;
