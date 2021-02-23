@@ -1,11 +1,13 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+import pytest
+
+@pytest.mark.skip(reason="This is a long test")
 def test_ccsdtqp():
     """Test CCSDTQP on Ne using RHF/cc-pVDZ orbitals"""
     
-    import pytest    
-    import scc
+    import forte.proc.scc as scc
     import forte
     import psi4
 
