@@ -841,10 +841,10 @@ double MRDSRG::compute_energy_ldsrg2() {
     // analyze converged amplitudes
     analyze_amplitudes("Final", T1_, T2_);
 
-    // fail to converge
-    if (failed) {
-        throw psi::PSIEXCEPTION("The MR-LDSRG(2) computation does not converge.");
-    }
+    // fail to converge (temp disable this!)
+    //if (failed) {
+    //    throw psi::PSIEXCEPTION("The MR-LDSRG(2) computation does not converge.");
+    //}
     final.stop();
 
     Hbar0_ = Ecorr;
@@ -1139,10 +1139,10 @@ double MRDSRG::compute_energy_ldsrg2_qc() {
     // analyze converged amplitudes
     analyze_amplitudes("Final", T1_, T2_);
 
-    // fail to converge
-    if (failed) {
-        throw psi::PSIEXCEPTION("The MR-LDSRG(2)-QC computation does not converge.");
-    }
+    // fail to converge (Temperarily disable this!)
+    //if (failed) {
+    //    throw psi::PSIEXCEPTION("The MR-LDSRG(2)-QC computation does not converge.");
+    //}
 
     Hbar0_ = Ecorr;
     return Ecorr;
