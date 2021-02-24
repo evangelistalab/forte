@@ -4,8 +4,7 @@ import forte
 
 def psi4_scf(geom, basis, reference, functional='hf',
              options={}) -> (float, psi4.core.Wavefunction):
-    """
-    Run a psi4 scf computation and return the energy and the Wavefunction object
+    """Run a psi4 scf computation and return the energy and the Wavefunction object
 
     Parameters
     ----------
@@ -117,8 +116,7 @@ def psi4_cubeprop(wfn,
 
 
 def prepare_forte_objects(wfn,mo_spaces = None, active_space = 'ACTIVE',core_spaces = ['RESTRICTED_DOCC'],localize = False,localize_spaces = []):
-    """
-    Take a psi4 wavefunction object and prepare the ForteIntegrals, SCFInfo, and MOSpaceInfo objects
+    """Take a psi4 wavefunction object and prepare the ForteIntegrals, SCFInfo, and MOSpaceInfo objects
 
     Parameters
     ----------
@@ -126,6 +124,14 @@ def prepare_forte_objects(wfn,mo_spaces = None, active_space = 'ACTIVE',core_spa
         A psi4 Wavefunction object
     mo_spaces : dict
         A dictionary with the size of each space (e.g., {'ACTIVE' : [3]})
+    active_space : str
+        The MO space treated as active (default: 'ACTIVE')
+    core_spaces : list(str)
+        The MO spaces treated as active (default: ['RESTRICTED_DOCC'])
+    localize : bool
+        Do localize the orbitals? (defaul: False)
+    localize_spaces : list(str)
+        A list of spaces to localize (default: [])
     Returns
     -------
     tuple(ForteIntegrals, ActiveSpaceIntegrals, SCFInfo, MOSpaceInfo, map(StateInfo : list)
