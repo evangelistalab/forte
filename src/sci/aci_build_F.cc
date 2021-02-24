@@ -467,7 +467,7 @@ void AdaptiveCI::get_excited_determinants_avg(
                     double criterion = 0.5 * (delta - sqrt(delta * delta + V * V * 4.0));
                     criteria[n] = std::fabs(criterion);
                 }
-                double value = average_q_values(nroot, criteria);
+                double value = average_q_values(criteria);
                 F_space[N] = std::make_pair(value, detpair.first);
             }
             N++;
@@ -716,7 +716,7 @@ void AdaptiveCI::get_excited_determinants_core(
                     double criterion = 0.5 * (delta - sqrt(delta * delta + V * V * 4.0));
                     criteria[n] = std::fabs(criterion);
                 }
-                double value = average_q_values(nroot, criteria);
+                double value = average_q_values(criteria);
 
                 F_space[N] = std::make_pair(value, detpair.first);
             }

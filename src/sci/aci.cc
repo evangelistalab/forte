@@ -111,6 +111,16 @@ void AdaptiveCI::startup() {
     naverage_ = options_->get_int("ACI_N_AVERAGE");
     average_offset_ = options_->get_int("ACI_AVERAGE_OFFSET");
 
+    // simple checks
+    if (naverage_ == 0)
+        naverage_ = nroot_;
+    if ((average_offset_ + naverage_) > nroot_) {
+        std::string except = "The sum of ACI_N_AVERAGE and ACI_AVERAGE_OFFSET is larger than the "
+                             "number of roots requested!";
+        throw std::runtime_error(except);
+    }
+    average_offset_ = nroot_ - naverage_;
+
     hole_ = 0;
 
     // Decide when to compute coupling lists
@@ -135,7 +145,8 @@ void AdaptiveCI::print_info() {
         {"Symmetry", wavefunction_symmetry_},
         {"Number of roots", nroot_},
         {"Root used for properties", root_},
-        {"Root used for averaging", naverage_}};
+        {"Roots used for averaging", naverage_},
+        {"Root averaging offset", average_offset_}};
 
     std::vector<std::pair<std::string, double>> calculation_info_double{
         {"Sigma (Eh)", sigma_},
@@ -245,7 +256,7 @@ void AdaptiveCI::find_q_space() {
         remainder = get_excited_determinants_batch_vecsort(P_evecs_, P_evals_, P_space_, F_space);
     } else {
         std::string except = screen_alg + " is not a valid screening algorithm";
-        throw psi::PSIEXCEPTION(except);
+        throw std::runtime_error(except);
     }
 
     // Add P_space determinants
@@ -313,17 +324,12 @@ void AdaptiveCI::find_q_space() {
     outfile->Printf("\n  Time spent building the model space: %1.6f", build_space.get());
 }
 
-double AdaptiveCI::average_q_values(int nroot, const std::vector<double>& E2) {
-    if (naverage_ == 0)
-        naverage_ = nroot;
-    if ((average_offset_ + naverage_) > nroot)
-        average_offset_ = nroot - naverage_;
-
+double AdaptiveCI::average_q_values(const std::vector<double>& E2) {
     double f_E2 = 0.0;
 
     // Choose the function of the couplings for each root
     // If nroot = 1, choose the max
-    if ((average_function_ == AverageFunction::MaxF) or (nroot == 1)) {
+    if ((average_function_ == AverageFunction::MaxF) or (nroot_ == 1)) {
         f_E2 = *std::max_element(E2.begin(), E2.end());
     } else if (average_function_ == AverageFunction::AvgF) {
         const auto begin = E2.begin() + average_offset_;
@@ -396,29 +402,27 @@ void AdaptiveCI::prune_q_space(DeterminantHashVec& PQ_space, DeterminantHashVec&
     // >>>>>>> master
 
     if ((average_offset_ + naverage_) > nroot)
-        average_offset_ = nroot - naverage_; // throw psi::PSIEXCEPTION("\n  Your desired number of
-                                             // roots and the offset exceeds the maximum number of
-                                             // roots!");
+        average_offset_ = nroot - naverage_;
 
     // Create a vector that stores the absolute value of the CI coefficients
     std::vector<std::pair<double, Determinant>> dm_det_list;
     // for (size_t I = 0, max = PQ_space.size(); I < max; ++I){
     const det_hashvec& detmap = PQ_space.wfn_hash();
     for (size_t i = 0, max_i = detmap.size(); i < max_i; ++i) {
-        double criteria = 0.0;
+        double criterion = 0.0;
         if ((nroot_ > 1) and (ex_alg_ == "AVERAGE" or cycle_ < pre_iter_)) {
             for (int n = 0; n < naverage_; ++n) {
                 if (average_function_ == AverageFunction::MaxF) {
-                    criteria = std::max(criteria, std::fabs(evecs->get(i, n)));
+                    criterion = std::max(criterion, std::fabs(evecs->get(i, n + average_offset_)));
                 } else if (average_function_ == AverageFunction::AvgF) {
-                    criteria += std::fabs(evecs->get(i, n + average_offset_));
+                    criterion += std::fabs(evecs->get(i, n + average_offset_));
                 }
             }
-            criteria /= static_cast<double>(naverage_);
+            criterion /= static_cast<double>(naverage_);
         } else {
-            criteria = std::fabs(evecs->get(i, ref_root_));
+            criterion = std::fabs(evecs->get(i, ref_root_));
         }
-        dm_det_list.push_back(std::make_pair(criteria, detmap[i]));
+        dm_det_list.push_back(std::make_pair(criterion, detmap[i]));
     }
 
     // Decide which determinants will go in pruned_space
@@ -822,7 +826,7 @@ void AdaptiveCI::prune_PQ_to_P() {
 
     // Print information about the wave function
     if (!quiet_mode_) {
-        (PQ_space_, PQ_evecs_, num_ref_roots_);
+        //        (PQ_space_, PQ_evecs_, num_ref_roots_);
         outfile->Printf("\n  Cycle %d took: %1.6f s", cycle_, cycle_time_.get());
     }
 }
