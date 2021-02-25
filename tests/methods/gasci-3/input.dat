@@ -42,7 +42,6 @@ set forte {
   GAS1MAX [2,1]
   GAS1MIN [0,0]
   avg_state [[0,1,1],[2,1,1]]
-  aci_n_average 2
 }
 
 escf, wfn = energy('scf', return_wfn=True)

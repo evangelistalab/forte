@@ -39,9 +39,9 @@ set {
   scf_type df
   guess sad
   maxiter 500
-  e_convergence 10
-  d_convergence 10
-  r_convergence 10
+  e_convergence 11
+  d_convergence 11
+  r_convergence 11
   reference rhf
 }
 
@@ -69,7 +69,7 @@ set_num_threads(8)
 
 e, scf_wfn = energy('scf', return_wfn=True)
 
-compare_values(escf,variable("CURRENT ENERGY"), 9, "SCF energy")
+compare_values(escf,variable("CURRENT ENERGY"), 8, "SCF energy")
 
 ea, awfn = energy('forte', ref_wfn=scf_wfn, return_wfn=True)
 compare_values(efix,variable("UNRELAXED ENERGY"), 8, "ACI-DSRG-MRPT2 fixed energy")
