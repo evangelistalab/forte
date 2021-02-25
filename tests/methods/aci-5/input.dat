@@ -27,7 +27,7 @@ set {
 
 set forte {
   active_space_solver aci
-  sci_excited_algorithm state_average
+  sci_excited_algorithm average
   aci_pq_function average
   root 0
   root_sym 0
@@ -37,6 +37,8 @@ set forte {
   charge 0
   sci_enforce_spin_complete false
   active_guess_size 56
+  ACI_N_AVERAGE 2
+  ACI_AVERAGE_OFFSET 0
 }
 
 Escf, wfn = energy('scf', return_wfn=True)

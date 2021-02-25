@@ -327,6 +327,11 @@ void AdaptiveCI::find_q_space() {
 double AdaptiveCI::average_q_values(const std::vector<double>& E2) {
     double f_E2 = 0.0;
 
+    outfile->Printf("\n");
+    for (double e : E2){
+        outfile->Printf("%16.12f",e);
+    }
+
     // Choose the function of the couplings for each root
     // If nroot = 1, choose the max
     if ((average_function_ == AverageFunction::MaxF) or (nroot_ == 1)) {
