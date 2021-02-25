@@ -540,7 +540,7 @@ def run_forte(name, **kwargs):
     psi4.core.print_out(
         f'\n  Time to run job          : {end - start:12.3f} seconds')
     psi4.core.print_out(
-        f'\n  Total                    : {end - start_pre_ints:12.3f} seconds')
+        f'\n  Total                    : {end - start_pre_ints:12.3f} seconds\n')
 
     if 'FCIDUMP' not in options.get_str('INT_TYPE'):
         if options.get_bool('DUMP_ORBITALS'):

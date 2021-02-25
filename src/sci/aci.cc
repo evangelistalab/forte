@@ -397,7 +397,10 @@ void AdaptiveCI::prune_q_space(DeterminantHashVec& PQ_space, DeterminantHashVec&
                     criterion += std::fabs(evecs->get(i, n + average_offset_));
                 }
             }
-            criterion /= static_cast<double>(naverage_);
+            // divide by naverage_ only if we are averaging
+            if (average_function_ == AverageFunction::AvgF) {
+                criterion /= static_cast<double>(naverage_);
+            }
         } else {
             criterion = std::fabs(evecs->get(i, ref_root_));
         }

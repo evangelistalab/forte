@@ -122,11 +122,10 @@ double ExcitedStateSolver::compute_energy() {
 
     print_method_banner(
         {"Selected Configuration Interaction Excited States",
-         "written by Jeffrey B. Schriber, Tianyuan Zhang and Francesco A. Evangelista"});
-    psi::outfile->Printf("\n  ==> Reference Information <==\n");
+         "written by Jeffrey B. Schriber, Tianyuan Zhang, and Francesco A. Evangelista"});
     print_info();
     if (!quiet_mode_) {
-        psi::outfile->Printf("\n  Using %d threads", omp_get_max_threads());
+        psi::outfile->Printf("\n  Using %d thread(s)", omp_get_max_threads());
     }
 
     // Compute wavefunction and energy
