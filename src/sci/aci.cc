@@ -119,7 +119,6 @@ void AdaptiveCI::startup() {
                              "number of roots requested!";
         throw std::runtime_error(except);
     }
-    average_offset_ = nroot_ - naverage_;
 
     hole_ = 0;
 
@@ -325,22 +324,15 @@ void AdaptiveCI::find_q_space() {
 }
 
 double AdaptiveCI::average_q_values(const std::vector<double>& E2) {
-    double f_E2 = 0.0;
-
-    outfile->Printf("\n");
-    for (double e : E2){
-        outfile->Printf("%16.12f",e);
-    }
-
     // Choose the function of the couplings for each root
     // If nroot = 1, choose the max
     if ((average_function_ == AverageFunction::MaxF) or (nroot_ == 1)) {
-        f_E2 = *std::max_element(E2.begin(), E2.end());
+        return *std::max_element(E2.begin(), E2.end());
     } else if (average_function_ == AverageFunction::AvgF) {
         const auto begin = E2.begin() + average_offset_;
-        f_E2 = std::accumulate(begin, begin + naverage_, 0.0) / static_cast<double>(naverage_);
+        return std::accumulate(begin, begin + naverage_, 0.0) / static_cast<double>(naverage_);
     }
-    return f_E2;
+    return 0.0;
 }
 
 bool AdaptiveCI::check_convergence(std::vector<std::vector<double>>& energy_history,
@@ -390,24 +382,6 @@ void AdaptiveCI::prune_q_space(DeterminantHashVec& PQ_space, DeterminantHashVec&
     P_space.clear();
 
     double tau_p = sigma_ * gamma_;
-
-    if (naverage_ == 0)
-        naverage_ = nroot;
-    // =======
-    //     int nav = n_avg_;
-    //     int off = avg_offset_;
-
-    //     if (nav == 0)
-    //         nav = nroot;
-
-    //     //  if( options_->get_str("EXCITED_ALGORITHM") == "ROOT_COMBINE" and (nav ==
-    //     //  1) and (nroot > 1)){
-    //     //      off = ref_root_;
-    //     //  }
-    // >>>>>>> master
-
-    if ((average_offset_ + naverage_) > nroot)
-        average_offset_ = nroot - naverage_;
 
     // Create a vector that stores the absolute value of the CI coefficients
     std::vector<std::pair<double, Determinant>> dm_det_list;
