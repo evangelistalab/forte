@@ -167,8 +167,9 @@ SparseCISolver::diagonalize_hamiltonian_full(const std::vector<Determinant>& spa
         double S = 0.5 * (std::sqrt(1.0 + 4.0 * avg_S2) - 1.0);
         double error = std::fabs(S - target_S);
         double S_rounded = 0.5 * std::lround(2.0 * S);
+        double twoSp1_rounded = std::lround(2.0 * S + 1.0);
         sorted_evals[I] = std::make_tuple(std::fabs(S_rounded - target_S), energy, I, S);
-        S_vals_sorted[2 * S_rounded + 1].emplace_back(S - std::round(S), I);
+        S_vals_sorted[twoSp1_rounded].emplace_back(S - S_rounded, I);
         if (I < std::max(2 * nroot, 10)) {
             outfile->Printf("\n     %3d   %20.12f %9.6f", I,
                             energy + as_ints->nuclear_repulsion_energy(), avg_S2);
