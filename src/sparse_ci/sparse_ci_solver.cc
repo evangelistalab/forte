@@ -144,6 +144,9 @@ SparseCISolver::diagonalize_hamiltonian_full(const std::vector<Determinant>& spa
         }
     }
 
+    const double target_S = 0.5 * (static_cast<double>(multiplicity) - 1.0);
+    const double target_multiplicity = static_cast<double>(multiplicity);
+
     // First, we check if this space is spin complete by looking at how much the
     // eigenvalue of S^2 deviate from their exact values
     auto S2vals = std::make_shared<psi::Vector>("S^2 Eigen Values", dim_space);
@@ -217,9 +220,13 @@ SparseCISolver::diagonalize_hamiltonian_full(const std::vector<Determinant>& spa
         H_vecs->set_name("H Eigen Vectors");
 
         // Fill in results
+        energies_.clear();
+        spin_.clear();
         for (int i = 0; i < nroot; ++i) {
             evals->set(i, Hss_vals->get(i));
             evecs->set_column(0, i, H_vecs->get_column(0, i));
+            spin_.push_back(target_S * (target_S + 1.0));
+            energies_.push_back(Hss_vals->get(i));
         }
     } else {
 
@@ -234,7 +241,6 @@ SparseCISolver::diagonalize_hamiltonian_full(const std::vector<Determinant>& spa
             psi::linalg::triplet(full_evecs, S2, full_evecs, true, false, false);
 
         // Find how each solution deviates from the target multiplicity
-        double target_S = 0.5 * (static_cast<double>(multiplicity) - 1.0);
         std::vector<std::tuple<double, double, size_t, double>> sorted_evals(dim_space);
         std::map<int, std::vector<std::pair<double, size_t>>> S_vals_sorted;
 
