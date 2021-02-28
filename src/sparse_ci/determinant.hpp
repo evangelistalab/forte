@@ -787,6 +787,11 @@ template <size_t N> double spin2(const DeterminantImpl<N>& lhs, const Determinan
     //     = Sz (Sz + 1) + Nbeta + Npairs - sum_pq' a+(qa) a+(pb) a-(qb) a-(pa)
     double matrix_element = 0.0;
 
+    // Make sure that Ms is the same otherwise the matrix element is automatically zero
+    if ((lhs.count_alfa() != rhs.count_alfa()) or (lhs.count_beta() != rhs.count_beta())) {
+        return 0.0;
+    }
+
     DeterminantImpl<N> lr_diff = lhs ^ rhs;
 
     int nadiff = lr_diff.count_alfa() / 2;
