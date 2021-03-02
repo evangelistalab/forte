@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-def test_sparse_ci():
+def test_sparse_ci2():
     import math
     import psi4
     import forte
@@ -85,6 +85,8 @@ def test_sparse_ci():
 
     energy, evals, evecs, spin = forte.diag(dets,as_ints,1,1,"FULL")
 
+    print(energy)
+
     efci = energy[0] + as_ints.nuclear_repulsion_energy()
 
     print('\n  FCI Energy: {}\n'.format(efci))
@@ -93,3 +95,6 @@ def test_sparse_ci():
 
     # Clean up forte (necessary)
     forte.cleanup()
+
+if __name__ == "__main__":
+    test_sparse_ci2()

@@ -107,6 +107,10 @@ void export_Determinant(py::module& m) {
         },
         "Make a determinant from a string (e.g., \'2+-0\')");
 
+    m.def(
+        "spin2", [](const Determinant& lhs, const Determinant& rhs) { return spin2(lhs, rhs); },
+        "Compute a matrix element of the S^2 operator");
+
     py::class_<DeterminantHashVec>(m, "DeterminantHashVec")
         .def(py::init<>())
         .def(py::init<const std::vector<Determinant>&>())
