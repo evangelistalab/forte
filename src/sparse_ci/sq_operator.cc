@@ -132,10 +132,10 @@ std::string sq_double_to_string(double value) {
     if (value == -1.0) {
         return "-";
     }
-    if (value != 1.0) {
-        return std::to_string(value);
-    }
-    return "";
+    if (value == 1.0) {
+        return "+";
+    }    
+    return (value > 0.0 ? "+" : "") + std::to_string(value);
 }
 
 std::string SQOperator::latex() const {

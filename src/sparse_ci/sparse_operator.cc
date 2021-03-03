@@ -124,6 +124,6 @@ std::string SparseOperator::latex() const {
             v.push_back(sqop_dagger.latex());
         }
     }
-    return to_string(v, " + ");
+    return to_string(v, " ");
 }
 } // namespace forte

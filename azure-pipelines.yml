@@ -17,7 +17,7 @@ jobs:
         C_COMPILER: 'gcc'
         CXX_COMPILER: 'g++'
         PYTHON_VER: '3.9'
-        BUILD_TYPE: 'Debug'
+        BUILD_TYPE: 'RelWithDebInfo'
         MAX_DET_ORB: 64
         APT_INSTALL: 'gfortran'
 
@@ -26,7 +26,7 @@ jobs:
         C_COMPILER: 'gcc'
         CXX_COMPILER: 'g++'
         PYTHON_VER: '3.7'
-        BUILD_TYPE: 'Debug'
+        BUILD_TYPE: 'RelWithDebInfo'
         MAX_DET_ORB: 128
         APT_INSTALL: 'gfortran'
 

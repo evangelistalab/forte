@@ -58,6 +58,9 @@ StateVector::StateVector() { /* std::cout << "Created a StateVector object" << s
 StateVector::StateVector(const det_hash<double>& state_vec) : state_vec_(state_vec) {}
 
 std::string StateVector::str(int n) const {
+    if (n == 0){
+        n = Determinant::get_nbits_half();
+    }
     std::string s;
     for (const auto& c_d : state_vec_) {
         s += forte::str(c_d.first, n) + " * " + std::to_string(c_d.second) + "\n";

@@ -79,7 +79,7 @@ void export_Determinant(py::module& m) {
                const std::vector<int>& bcre) { return gen_excitation(d, aann, acre, bann, bcre); },
             "Apply a generic excitation")
         .def(
-            "str", [](const Determinant& a, int n) { return str(a, n); }, "n"_a = 64,
+            "str", [](const Determinant& a, int n) { return str(a, n); }, "n"_a = Determinant::get_nbits_half(),
             "Get the string representation of the Slater determinant")
         .def("__repr__", [](const Determinant& a) { return str(a); })
         .def("__str__", [](const Determinant& a) { return str(a); })
@@ -175,6 +175,8 @@ void export_Determinant(py::module& m) {
         .def(py::init<const det_hash<double>&>())
         .def("map", &StateVector::map)
         .def("str", &StateVector::str)
+        .def("__repr__", [](const StateVector& v) { return v.str(); })
+        .def("__str__", [](const StateVector& v) { return v.str(); })        
         .def("__getitem__", [](StateVector& v, const Determinant& d) { return v[d]; })
         .def("__contains__", [](StateVector& v, const Determinant& d) { return v.map().count(d); });
 

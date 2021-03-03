@@ -88,7 +88,7 @@ template <size_t N> class DeterminantImpl : public BitArray<N> {
     static constexpr size_t beta_bit_offset = nwords_half * BitArray<N>::bits_per_word;
 
     /// returns half the number of bits
-    size_t get_nbits_half() const { return nbits_half; }
+    static constexpr size_t get_nbits_half() { return nbits_half; }
 
     size_t norb() const { return nbits_half; }
 

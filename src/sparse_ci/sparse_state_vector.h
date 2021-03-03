@@ -46,7 +46,7 @@ class StateVector {
     StateVector(const det_hash<double>& state_vec);
     det_hash<double>& map() { return state_vec_; }
 
-    std::string str(int n) const;
+    std::string str(int n = 0) const;
 
     auto size() const { return state_vec_.size(); }
     void clear() { state_vec_.clear(); }
