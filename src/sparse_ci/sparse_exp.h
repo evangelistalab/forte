@@ -40,27 +40,25 @@
 namespace forte {
 
 class SparseExp {
-    enum class Algorithm { OnTheFlySorted, OnTheFlyStd, Cached };
+    enum class Algorithm { Cached, OnTheFlySorted, OnTheFlyStd };
 
   public:
     SparseExp();
     StateVector compute(const SparseOperator& sop, const StateVector& state,
-                        double scaling_factor = 1.0, int maxk = 19, double screen_thresh = 1.0e-12);
-    StateVector compute_on_the_fly(const SparseOperator& sop, const StateVector& state,
-                                   double scaling_factor = 1.0, int maxk = 19,
-                                   double screen_thresh = 1.0e-12);
+                        const std::string& algorithm = "cached", double scaling_factor = 1.0,
+                        int maxk = 19, double screen_thresh = 1.0e-12);
     std::map<std::string, double> time() const;
 
   private:
     StateVector apply_exp_operator(const SparseOperator& sop, const StateVector& state0,
                                    double scaling_factor, int maxk, double screen_thresh,
                                    Algorithm alg);
-    StateVector apply_operator(const SparseOperator& sop, const StateVector& state0,
-                               double screen_thresh);
-    StateVector apply_operator2(const SparseOperator& sop, const StateVector& state0,
-                                double screen_thresh);
     StateVector apply_operator_cached(const SparseOperator& sop, const StateVector& state0,
                                       double screen_thresh);
+    StateVector apply_operator_sorted(const SparseOperator& sop, const StateVector& state0,
+                                      double screen_thresh);
+    StateVector apply_operator_std(const SparseOperator& sop, const StateVector& state0,
+                                   double screen_thresh);
 
     double time_ = 0.0;
     double couplings_time_ = 0.0;

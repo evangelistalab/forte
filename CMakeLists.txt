@@ -214,7 +214,6 @@ src/sparse_ci/ci_reference.cc
 src/sparse_ci/determinant_functions.cc
 src/sparse_ci/determinant_hashvector.cc
 src/sparse_ci/determinant_substitution_lists.cc
-src/sparse_ci/general_operator.cc
 src/sparse_ci/sigma_vector.cc
 src/sparse_ci/sigma_vector_dynamic.cc
 src/sparse_ci/sigma_vector_sparse_list.cc

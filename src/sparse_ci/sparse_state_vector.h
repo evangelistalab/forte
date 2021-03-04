@@ -33,7 +33,6 @@
 #include <unordered_map>
 
 #include "sparse_ci/determinant.h"
-#include "sparse_ci/general_operator.h"
 #include "sparse_ci/sparse_operator.h"
 
 namespace forte {
@@ -66,9 +65,9 @@ class StateVector {
 
 // Functions to apply operators, gop |state>
 
-/// apply the Hamiltonian operator H|state>
-StateVector apply_hamiltonian(std::shared_ptr<ActiveSpaceIntegrals> as_ints,
-                              const StateVector& state0, double screen_thresh = 1.0e-12);
+///// apply the Hamiltonian operator H|state>
+// StateVector apply_hamiltonian(std::shared_ptr<ActiveSpaceIntegrals> as_ints,
+//                              const StateVector& state0, double screen_thresh = 1.0e-12);
 
 /// apply the number projection operator P^alpha_na P^beta_nb |state>
 StateVector apply_number_projector(int na, int nb, StateVector& state);
@@ -77,9 +76,9 @@ StateVector apply_number_projector(int na, int nb, StateVector& state);
 std::vector<double> get_projection(SparseOperator& sop, const StateVector& ref,
                                    const StateVector& state0);
 
-/// compute the expectation value <left_state|H|right_state>
-double hamiltonian_matrix_element(StateVector& left_state, StateVector& right_state,
-                                  std::shared_ptr<ActiveSpaceIntegrals> as_ints);
+///// compute the expectation value <left_state|H|right_state>
+// double hamiltonian_matrix_element(StateVector& left_state, StateVector& right_state,
+//                                  std::shared_ptr<ActiveSpaceIntegrals> as_ints);
 
 /// compute the overlap value <left_state|right_state>
 double overlap(StateVector& left_state, StateVector& right_state);
@@ -89,54 +88,27 @@ StateVector apply_operator_safe(SparseOperator& sop, const StateVector& state);
 /// fast implementation of apply operator based on sorting
 StateVector apply_operator(SparseOperator& sop, const StateVector& state0,
                            double screen_thresh = 1.0e-12);
-/// fast implementation of apply operator
-StateVector apply_operator_2(SparseOperator& sop, const StateVector& state0,
-                             double screen_thresh = 1.0e-12);
+///// fast implementation of apply operator
+// StateVector apply_operator_2(SparseOperator& sop, const StateVector& state0,
+//                             double screen_thresh = 1.0e-12);
 
-// Functions to apply the exponential of an operator, exp(gop) |state0>
-/// fast implementation of exp operator based on sorting
-StateVector apply_exp_operator(SparseOperator& sop, const StateVector& state0,
-                               double scaling_factor = 1.0, int maxk = 20,
-                               double screen_thresh = 1.0e-12);
+//// Functions to apply the exponential of an operator, exp(gop) |state0>
+///// fast implementation of exp operator based on sorting
+// StateVector apply_exp_operator(SparseOperator& sop, const StateVector& state0,
+//                               double scaling_factor = 1.0, int maxk = 20,
+//                               double screen_thresh = 1.0e-12);
 
-StateVector apply_exp_operator_2(SparseOperator& sop, const StateVector& state0,
-                                 double scaling_factor = 1.0, int maxk = 20,
-                                 double screen_thresh = 1.0e-12);
+// StateVector apply_exp_operator_2(SparseOperator& sop, const StateVector& state0,
+//                                 double scaling_factor = 1.0, int maxk = 20,
+//                                 double screen_thresh = 1.0e-12);
 
-// Functions to apply the product of exponentials of anti-hermitian operators
-// ... exp(gop_3) exp(gop_2) exp(gop_1) |state0>
-/// safe implementation
-StateVector apply_exp_ah_factorized_safe(SparseOperator& sop, const StateVector& state);
-/// fast implementation of apply operator based on exact exponentiation
-StateVector apply_exp_ah_factorized(SparseOperator& sop, const StateVector& state0,
-                                    bool inverse = false);
-
-/// safe implementation of apply operator
-StateVector apply_operator_safe(GeneralOperator& gop, const StateVector& state);
-/// fast implementation of apply operator based on sorting
-StateVector apply_operator(GeneralOperator& gop, const StateVector& state0,
-                           double screen_thresh = 1.0e-12);
-/// fast implementation of apply operator
-StateVector apply_operator_2(GeneralOperator& gop, const StateVector& state0,
-                             double screen_thresh = 1.0e-12);
-
-// Functions to apply the exponential of an operator, exp(gop) |state0>
-/// fast implementation of exp operator based on sorting
-StateVector apply_exp_operator(GeneralOperator& gop, const StateVector& state0,
-                               double scaling_factor = 1.0, int maxk = 20,
-                               double screen_thresh = 1.0e-12);
-
-StateVector apply_exp_operator_2(GeneralOperator& gop, const StateVector& state0,
-                                 double scaling_factor = 1.0, int maxk = 20,
-                                 double screen_thresh = 1.0e-12);
-
-// Functions to apply the product of exponentials of anti-hermitian operators
-// ... exp(gop_3) exp(gop_2) exp(gop_1) |state0>
-/// safe implementation
-StateVector apply_exp_ah_factorized_safe(GeneralOperator& gop, const StateVector& state);
-/// fast implementation of apply operator based on exact exponentiation
-StateVector apply_exp_ah_factorized(GeneralOperator& gop, const StateVector& state0,
-                                    bool inverse = false);
+//// Functions to apply the product of exponentials of anti-hermitian operators
+//// ... exp(gop_3) exp(gop_2) exp(gop_1) |state0>
+///// safe implementation
+// StateVector apply_exp_ah_factorized_safe(SparseOperator& sop, const StateVector& state);
+///// fast implementation of apply operator based on exact exponentiation
+// StateVector apply_exp_ah_factorized(SparseOperator& sop, const StateVector& state0,
+//                                    bool inverse = false);
 
 } // namespace forte
 

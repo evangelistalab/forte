@@ -35,7 +35,23 @@ namespace forte {
 SparseFactExp::SparseFactExp(bool phaseless) : phaseless_(phaseless) {}
 
 StateVector SparseFactExp::compute(const SparseOperator& sop, const StateVector& state,
-                                   bool inverse, double screen_thresh) {
+                                   const std::string& algorithm, bool inverse,
+                                   double screen_thresh) {
+    local_timer t;
+    Algorithm alg = Algorithm::Cached;
+    StateVector result;
+    if (algorithm == "onthefly") {
+        result = compute_on_the_fly(sop, state, inverse, screen_thresh);
+    } else {
+        result = compute_cached(sop, state, inverse, screen_thresh);
+    }
+
+    time_ += t.get();
+    return result;
+}
+
+StateVector SparseFactExp::compute_cached(const SparseOperator& sop, const StateVector& state,
+                                          bool inverse, double screen_thresh) {
     for (const auto& det_c : state) {
         const Determinant& det = det_c.first;
         exp_hash_.add(det);

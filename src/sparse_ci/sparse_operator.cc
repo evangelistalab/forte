@@ -78,6 +78,10 @@ void SparseOperator::add_term_from_str(std::string str, double value) {
             auto ops_vec_tuple = sparse_parse_ops(m[1]);
             add_term(ops_vec_tuple, value);
         }
+    } else {
+        std::string msg =
+            "add_term_from_str(std::string str, double value) could not parse the string " + str;
+        throw std::runtime_error(msg);
     }
 }
 

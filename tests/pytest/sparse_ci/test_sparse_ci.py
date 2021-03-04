@@ -102,4 +102,5 @@ def test_sparse_ci():
     # Clean up forte (necessary)
     forte.cleanup()
 
-test_sparse_ci()
+if __name__ == "__main__":
+    test_sparse_ci()

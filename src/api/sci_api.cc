@@ -43,7 +43,6 @@
 #include "sparse_ci/sparse_fact_exp.h"
 #include "sparse_ci/sparse_exp.h"
 #include "sparse_ci/sparse_hamiltonian.h"
-#include "sparse_ci/general_operator.h"
 
 namespace py = pybind11;
 using namespace pybind11::literals;
@@ -79,7 +78,8 @@ void export_Determinant(py::module& m) {
                const std::vector<int>& bcre) { return gen_excitation(d, aann, acre, bann, bcre); },
             "Apply a generic excitation")
         .def(
-            "str", [](const Determinant& a, int n) { return str(a, n); }, "n"_a = Determinant::get_nbits_half(),
+            "str", [](const Determinant& a, int n) { return str(a, n); },
+            "n"_a = Determinant::get_nbits_half(),
             "Get the string representation of the Slater determinant")
         .def("__repr__", [](const Determinant& a) { return str(a); })
         .def("__str__", [](const Determinant& a) { return str(a); })
@@ -120,28 +120,6 @@ void export_Determinant(py::module& m) {
         .def("get_det", &DeterminantHashVec::get_det, "Return a specific determinant by reference")
         .def("get_idx", &DeterminantHashVec::get_idx, " Return the index of a determinant");
 
-    py::class_<GeneralOperator>(m, "GeneralOperator")
-        .def(py::init<>())
-        .def("add_term",
-             py::overload_cast<const std::vector<op_t>&, double>(&GeneralOperator::add_term),
-             "op_list"_a, "value"_a = 0.0)
-        .def("add_term",
-             py::overload_cast<const std::vector<SQOperator>&, double>(&GeneralOperator::add_term),
-             "op_list"_a, "value"_a = 0.0)
-        .def("add_term_from_str", &GeneralOperator::add_term_from_str)
-        .def("pop_term", &GeneralOperator::pop_term)
-        .def("get_term", &GeneralOperator::get_term)
-        .def("nterms", &GeneralOperator::nterms)
-        .def("set_coefficients", &GeneralOperator::set_coefficients)
-        .def("set_coefficient", &GeneralOperator::set_coefficient)
-        .def("coefficients", &GeneralOperator::coefficients)
-        .def("op_indices", &GeneralOperator::op_indices)
-        .def("op_list", &GeneralOperator::op_list)
-        .def("str", &GeneralOperator::str)
-        .def("latex", &GeneralOperator::latex)
-        .def("timing", &GeneralOperator::timing)
-        .def("reset_timing", &GeneralOperator::reset_timing);
-
     py::class_<SparseOperator>(m, "SparseOperator")
         .def(py::init<bool>(), "antihermitian"_a = false)
         .def("add_term",
@@ -159,9 +137,7 @@ void export_Determinant(py::module& m) {
         .def("set_coefficient", &SparseOperator::set_coefficient)
         .def("op_list", &SparseOperator::op_list)
         .def("str", &SparseOperator::str)
-        .def("latex", &SparseOperator::latex)
-        .def("timing", &SparseOperator::timing)
-        .def("reset_timing", &SparseOperator::reset_timing);
+        .def("latex", &SparseOperator::latex);
 
     py::class_<SQOperator>(m, "SQOperator")
         .def("factor", &SQOperator::factor)
@@ -176,7 +152,7 @@ void export_Determinant(py::module& m) {
         .def("map", &StateVector::map)
         .def("str", &StateVector::str)
         .def("__repr__", [](const StateVector& v) { return v.str(); })
-        .def("__str__", [](const StateVector& v) { return v.str(); })        
+        .def("__str__", [](const StateVector& v) { return v.str(); })
         .def("__getitem__", [](StateVector& v, const Determinant& d) { return v[d]; })
         .def("__contains__", [](StateVector& v, const Determinant& d) { return v.map().count(d); });
 
@@ -186,86 +162,24 @@ void export_Determinant(py::module& m) {
         .def("compute_on_the_fly", &SparseHamiltonian::compute_on_the_fly)
         .def("time", &SparseHamiltonian::time);
 
-    py::class_<SparseFactExp>(m, "SparseFactExp")
-        .def(py::init<bool>(), "phaseless"_a = false)
-        .def("compute", &SparseFactExp::compute, "sop"_a, "state"_a, "inverse"_a = false,
-             "screen_thresh"_a = 1.0e-13)
-        .def("compute_on_the_fly", &SparseFactExp::compute_on_the_fly, "sop"_a, "state"_a,
-             "inverse"_a = false, "screen_thresh"_a = 1.0e-13)
-        .def("time", &SparseFactExp::time);
-
     py::class_<SparseExp>(m, "SparseExp")
         .def(py::init<>())
-        .def("compute", &SparseExp::compute, "sop"_a, "state"_a, "scaling_factor"_a = 1.0,
-             "maxk"_a = 19, "screen_thresh"_a = 1.0e-12)
-        .def("compute_on_the_fly", &SparseExp::compute_on_the_fly, "sop"_a, "state"_a,
+        .def("compute", &SparseExp::compute, "sop"_a, "state"_a, "algorithm"_a = "cached",
              "scaling_factor"_a = 1.0, "maxk"_a = 19, "screen_thresh"_a = 1.0e-12)
         .def("time", &SparseExp::time);
 
-    m.def("apply_operator_safe",
-          py::overload_cast<SparseOperator&, const StateVector&>(&apply_operator_safe));
-    m.def("apply_operator_safe",
-          py::overload_cast<GeneralOperator&, const StateVector&>(&apply_operator_safe));
+    py::class_<SparseFactExp>(m, "SparseFactExp")
+        .def(py::init<bool>(), "phaseless"_a = false)
+        .def("compute", &SparseFactExp::compute, "sop"_a, "state"_a, "algorithm"_a = "cached",
+             "inverse"_a = false, "screen_thresh"_a = 1.0e-13)
+        .def("time", &SparseFactExp::time);
 
     m.def("apply_operator",
           py::overload_cast<SparseOperator&, const StateVector&, double>(&apply_operator), "sop"_a,
           "state0"_a, "screen_thresh"_a = 1.0e-12);
 
-    m.def("apply_operator",
-          py::overload_cast<GeneralOperator&, const StateVector&, double>(&apply_operator), "gop"_a,
-          "state0"_a, "screen_thresh"_a = 1.0e-12);
-
-    m.def("apply_operator",
-          py::overload_cast<GeneralOperator&, const StateVector&, double>(&apply_operator), "gop"_a,
-          "state0"_a, "screen_thresh"_a = 1.0e-12);
-
-    m.def("apply_operator_2",
-          py::overload_cast<SparseOperator&, const StateVector&, double>(&apply_operator_2),
-          "gop"_a, "state0"_a, "screen_thresh"_a = 1.0e-12);
-    m.def("apply_operator_2",
-          py::overload_cast<GeneralOperator&, const StateVector&, double>(&apply_operator_2),
-          "gop"_a, "state0"_a, "screen_thresh"_a = 1.0e-12);
-
-    m.def("apply_exp_operator",
-          py::overload_cast<SparseOperator&, const StateVector&, double, int, double>(
-              &apply_exp_operator),
-          "sop"_a, "state0"_a, "scaling_factor"_a = 1.0, "maxk"_a = 20,
-          "screen_thresh"_a = 1.0e-12);
-    m.def("apply_exp_operator",
-          py::overload_cast<GeneralOperator&, const StateVector&, double, int, double>(
-              &apply_exp_operator),
-          "gop"_a, "state0"_a, "scaling_factor"_a = 1.0, "maxk"_a = 20,
-          "screen_thresh"_a = 1.0e-12);
-
-    m.def("apply_exp_operator_2",
-          py::overload_cast<SparseOperator&, const StateVector&, double, int, double>(
-              &apply_exp_operator_2),
-          "sop"_a, "state0"_a, "scaling_factor"_a = 1.0, "maxk"_a = 20,
-          "screen_thresh"_a = 1.0e-12);
-    m.def("apply_exp_operator_2",
-          py::overload_cast<GeneralOperator&, const StateVector&, double, int, double>(
-              &apply_exp_operator_2),
-          "gop"_a, "state0"_a, "scaling_factor"_a = 1.0, "maxk"_a = 20,
-          "screen_thresh"_a = 1.0e-12);
-
-    m.def("apply_exp_ah_factorized_safe",
-          py::overload_cast<SparseOperator&, const StateVector&>(&apply_exp_ah_factorized_safe));
-    m.def("apply_exp_ah_factorized_safe",
-          py::overload_cast<GeneralOperator&, const StateVector&>(&apply_exp_ah_factorized_safe));
-
-    m.def("apply_exp_ah_factorized",
-          py::overload_cast<SparseOperator&, const StateVector&, bool>(&apply_exp_ah_factorized),
-          "gop"_a, "state0"_a, "inverse"_a = false);
-    m.def("apply_exp_ah_factorized",
-          py::overload_cast<GeneralOperator&, const StateVector&, bool>(&apply_exp_ah_factorized),
-          "gop"_a, "state0"_a, "inverse"_a = false);
-
     m.def("apply_number_projector", &apply_number_projector);
-    m.def("apply_hamiltonian", &apply_hamiltonian, "as_ints"_a, "state0"_a,
-          "screen_thresh"_a = 1.0e-12);
-
     m.def("get_projection", &get_projection);
-    m.def("hamiltonian_matrix_element", &hamiltonian_matrix_element);
     m.def("overlap", &overlap);
 
     m.def("spin2", &spin2<Determinant::nbits>);

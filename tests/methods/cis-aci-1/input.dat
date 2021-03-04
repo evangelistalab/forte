@@ -25,7 +25,7 @@ set {
 set forte {
   active_space_solver aci
   frozen_docc [1,0,0,0,0,1,0,0]
-  sigma 0.05
+  sigma 0.01
   charge 0
   nroot 2
   aci_n_average 2

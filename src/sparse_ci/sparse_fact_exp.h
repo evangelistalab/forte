@@ -40,12 +40,12 @@
 namespace forte {
 
 class SparseFactExp {
+    enum class Algorithm { Cached, OnTheFlySorted, OnTheFlyStd };
+
   public:
     SparseFactExp(bool phaseless = false);
-    StateVector compute(const SparseOperator& sop, const StateVector& state, bool inverse,
-                        double screen_thresh);
-    StateVector compute_on_the_fly(const SparseOperator& sop, const StateVector& state, bool inverse,
-                                   double screen_thresh);
+    StateVector compute(const SparseOperator& sop, const StateVector& state,
+                        const std::string& algorithm, bool inverse, double screen_thresh);
     std::map<std::string, double> time() const;
 
   private:
@@ -54,6 +54,10 @@ class SparseFactExp {
     void compute_couplings(const SparseOperator& sop, const StateVector& state0, bool inverse);
     StateVector compute_exp(const SparseOperator& sop, const StateVector& state0, bool inverse,
                             double screen_thresh);
+    StateVector compute_cached(const SparseOperator& sop, const StateVector& state, bool inverse,
+                               double screen_thresh);
+    StateVector compute_on_the_fly(const SparseOperator& sop, const StateVector& state0,
+                                   bool inverse, double screen_thresh);
 
     bool phaseless_ = false;
     bool initialized_ = false;

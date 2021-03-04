@@ -285,7 +285,7 @@ void AdaptiveCI::find_q_space() {
         size_t num_extra = 0;
         for (size_t I = 0, max_I = last_excluded; I < max_I; ++I) {
             size_t J = last_excluded - I;
-            if (std::fabs(F_space[last_excluded + 1].first - F_space[J].first) < 1.0e-9) {
+            if (std::fabs(F_space[last_excluded + 1].first - F_space[J].first) < 1.0e-6) {
                 PQ_space_.add(F_space[J].second);
                 num_extra++;
             } else {
@@ -293,7 +293,8 @@ void AdaptiveCI::find_q_space() {
             }
         }
         if (num_extra > 0 and (!quiet_mode_)) {
-            outfile->Printf("\n  Added %zu missing determinants in aimed selection.", num_extra);
+            outfile->Printf("\n  Added %zu missing determinants in aimed selection (find_q_space).",
+                            num_extra);
         }
     }
 
@@ -433,7 +434,7 @@ void AdaptiveCI::prune_q_space(DeterminantHashVec& PQ_space, DeterminantHashVec&
         size_t num_extra = 0;
         for (size_t I = 0, max_I = last_excluded; I < max_I; ++I) {
             size_t J = last_excluded - I;
-            if (std::fabs(dm_det_list[last_excluded + 1].first - dm_det_list[J].first) < 1.0e-9) {
+            if (std::fabs(dm_det_list[last_excluded + 1].first - dm_det_list[J].first) < 1.0e-6) {
                 P_space.add(dm_det_list[J].second);
                 num_extra += 1;
             } else {
@@ -441,7 +442,9 @@ void AdaptiveCI::prune_q_space(DeterminantHashVec& PQ_space, DeterminantHashVec&
             }
         }
         if (num_extra > 0 and !quiet_mode_) {
-            outfile->Printf("\n  Added %zu missing determinants in aimed selection.", num_extra);
+            outfile->Printf(
+                "\n  Added %zu missing determinants in aimed selection (prune_q_space).",
+                num_extra);
         }
     }
 }
@@ -1193,7 +1196,7 @@ void AdaptiveCI::print_occ_number(DeterminantHashVec& space, psi::SharedMatrix e
         outfile->Printf("\n  ");
         outfile->Printf("\n  Possible GAS occupation:");
 
-        for (auto const corr_orb : corr_orb_list) {
+        for (auto const& corr_orb : corr_orb_list) {
             size_t max_occ = corr_orb.size();
             std::vector<double> gas_occ_alpha(max_occ + 1, 0.0);
             std::vector<double> gas_occ_beta(max_occ + 1, 0.0);
