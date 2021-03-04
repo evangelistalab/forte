@@ -1,11 +1,8 @@
-# HF, RHF canonical orbitals, CAS-CI(2,2)
-#! Generated using commit GITCOMMIT
-
 import forte
 
 refscf = -108.71420304902
-refaci_root0 = -108.876796213905
-refaci_root1 = -108.083245646897
+refaci_root0 = -108.891576056156
+refaci_root1 = -108.127925636863
 
 molecule N2{
    N
