@@ -266,21 +266,11 @@ double FCISolver::compute_energy() {
     // Copy eigen values and eigen vectors
     evals_ = dls.eigenvalues();
     energies_ = std::vector<double>(nroot_, 0.0);
-    std::vector<double> spin(nroot_, 0.0);
-    double target_S = 0.5 * (static_cast<double>(multiplicity_) - 1.0);
-    double target_spin2 = target_S * (target_S + 1.0);
+    spin2_ = std::vector<double>(nroot_, 0.0);
     for (size_t r = 0; r < nroot_; r++) {
         energies_[r] = evals_->get(r);
         C_->copy(dls.eigenvector(r));
-        spin[r] = C_->compute_spin2();
-        if (std::fabs(target_spin2 - spin[r]) > 1.0e-3) {
-            std::string msg =
-                "Root " + std::to_string(r) +
-                " found by FCISolver converged on a state of incorrect multiplicity\n" +
-                "Target <S^2> = " + std::to_string(target_spin2) +
-                " differs from <S^2> = " + std::to_string(spin[r]);
-            throw std::runtime_error(msg);
-        }
+        spin2_[r] = C_->compute_spin2();
     }
     eigen_vecs_ = dls.eigenvectors();
 
@@ -327,7 +317,7 @@ double FCISolver::compute_energy() {
 
             double root_energy = dls.eigenvalues()->get(r);
 
-            outfile->Printf("\n\n    Total Energy: %25.15f, <S^2>: %f", root_energy, spin[r]);
+            outfile->Printf("\n\n    Total Energy: %20.12f, <S^2>: %8.6f", root_energy, spin2_[r]);
         }
     }
 
@@ -485,7 +475,7 @@ FCISolver::initial_guess(FCIVector& diag, size_t n,
         double S2 = 0.0;
         for (size_t I = 0; I < num_dets; ++I) {
             for (size_t J = 0; J < num_dets; ++J) {
-                const double S2IJ = spin2(bsdets[I], bsdets[J]);
+                const double S2IJ = ::forte::spin2(bsdets[I], bsdets[J]);
                 S2 += evecs.get(I, r) * evecs.get(J, r) * S2IJ;
             }
             norm += std::pow(evecs.get(I, r), 2.0);

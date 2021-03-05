@@ -62,6 +62,8 @@ psi::SharedVector ActiveSpaceMethod::evals() { return evals_; }
 
 const std::vector<double>& ActiveSpaceMethod::energies() const { return energies_; }
 
+const std::vector<double>& ActiveSpaceMethod::spin2() const { return spin2_; }
+
 void ActiveSpaceMethod::set_e_convergence(double value) { e_convergence_ = value; }
 
 void ActiveSpaceMethod::set_r_convergence(double value) { r_convergence_ = value; }

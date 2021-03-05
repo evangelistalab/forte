@@ -97,6 +97,22 @@ const std::map<StateInfo, std::vector<double>>& ActiveSpaceSolver::compute_energ
         method->compute_energy();
         const auto& energies = method->energies();
         state_energies_map_[state] = energies;
+        const auto& spin2 = method->spin2();
+
+        if (spin2.size() != 0) {
+            int target_S = (state.multiplicity() - 1) / 2;
+            for (double root_spin2 : spin2) {
+                double root_S = 0.5 * std::sqrt(1.0 + 4.0 * root_spin2) - 0.5;
+                if (std::fabs(static_cast<double>(target_S) - root_S) > 0.25) {
+                    std::string msg =
+                        "ActiveSpaceSolver: Found a root with S = " + std::to_string(root_S) +
+                        " but the target value of S = " + std::to_string(target_S);
+                    throw std::runtime_error(msg);
+                }
+            }
+        }
+
+        state_spin2_map_[state] = spin2;
 
         // save energies for ms < 0 states (same in energy as ms > 0) to ensure correct averaging
         if (twice_ms > 0 and ms_avg_) {
@@ -104,9 +120,10 @@ const std::map<StateInfo, std::vector<double>>& ActiveSpaceSolver::compute_energ
                                  state.irrep(), state.irrep_label(), state.gas_min(),
                                  state.gas_max());
             state_energies_map_[state_spin] = energies;
+            state_spin2_map_[state_spin] = spin2;
         }
     }
-    print_energies(state_energies_map_);
+    print_energies(state_energies_map_, state_spin2_map_);
 
     if (options_->get_bool("TRANSITION_DIPOLES")) {
         compute_fosc_same_orbs();
@@ -115,10 +132,11 @@ const std::map<StateInfo, std::vector<double>>& ActiveSpaceSolver::compute_energ
     return state_energies_map_;
 }
 
-void ActiveSpaceSolver::print_energies(std::map<StateInfo, std::vector<double>>& energies) {
+void ActiveSpaceSolver::print_energies(std::map<StateInfo, std::vector<double>>& energies,
+                                       std::map<StateInfo, std::vector<double>>& spin2) {
     print_h2("Energy Summary");
-    psi::outfile->Printf("\n    Multi.(2ms)  Irrep.  No.               Energy");
-    std::string dash(45, '-');
+    psi::outfile->Printf("\n    Multi.(2ms)  Irrep.  No.               Energy      <S^2>");
+    std::string dash(56, '-');
     psi::outfile->Printf("\n    %s", dash.c_str());
     std::vector<std::string> irrep_symbol = mo_space_info_->irrep_labels();
     auto& globals = psi::Process::environment.globals;
@@ -135,8 +153,14 @@ void ActiveSpaceSolver::print_energies(std::map<StateInfo, std::vector<double>>&
 
         for (int i = 0; i < nstates; ++i) {
             double energy = energies[state][i];
-            psi::outfile->Printf("\n     %3d  (%3d)   %3s    %2d  %20.12f", multi, twice_ms,
-                                 irrep_symbol[irrep].c_str(), i, energy);
+            if (spin2[state].size() > 0) {
+                double spin2_i = spin2[state][i];
+                psi::outfile->Printf("\n     %3d  (%3d)   %3s    %2d  %20.12f %10.6f", multi,
+                                     twice_ms, irrep_symbol[irrep].c_str(), i, energy, spin2_i);
+            } else {
+                psi::outfile->Printf("\n     %3d  (%3d)   %3s    %2d  %20.12f       n/a", multi,
+                                     twice_ms, irrep_symbol[irrep].c_str(), i, energy);
+            }
 
             auto label = "ENERGY ROOT " + std::to_string(i) + " " + std::to_string(multi) +
                          irrep_symbol[irrep];
@@ -765,7 +789,7 @@ ActiveSpaceSolver::compute_contracted_energy(std::shared_ptr<ActiveSpaceIntegral
         state_contracted_evecs_map_[state] = std::make_shared<psi::Matrix>(U);
     }
 
-    print_energies(state_energies_map_);
+    print_energies(state_energies_map_, state_spin2_map_);
     return state_energies_map_;
 }
 

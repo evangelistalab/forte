@@ -715,7 +715,7 @@ void AdaptiveCI::diagonalize_P_space() {
                 P_evals_->get(i) + nuclear_repulsion_energy_ + as_ints_->scalar_energy();
             double exc_energy = pc_hartree2ev * (P_evals_->get(i) - P_evals_->get(0));
             outfile->Printf("\n    P-space  CI Energy Root %3d        = "
-                            "%.12f Eh = %8.4f eV, S^2 = %5.6f",
+                            "%.12f Eh = %8.4f eV, S^2 = %8.6f",
                             i, abs_energy, exc_energy, spin[i]);
         }
         outfile->Printf("\n");
