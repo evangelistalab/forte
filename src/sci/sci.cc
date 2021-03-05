@@ -126,6 +126,8 @@ SigmaVectorType SelectedCIMethod::sigma_vector_type() const { return sigma_vecto
 
 size_t SelectedCIMethod::max_memory() const { return max_memory_; }
 
+std::vector<double> SelectedCIMethod::get_PQ_spin2() { return std::vector<double>(); }
+
 void SelectedCIMethod::print_wfn(DeterminantHashVec& space, psi::SharedMatrix evecs, int nroot,
                                  size_t max_dets_to_print) {
     std::string state_label;

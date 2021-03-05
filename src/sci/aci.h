@@ -97,6 +97,7 @@ class AdaptiveCI : public SelectedCIMethod {
     DeterminantHashVec get_PQ_space() override;
     psi::SharedMatrix get_PQ_evecs() override;
     psi::SharedVector get_PQ_evals() override;
+    std::vector<double> get_PQ_spin2() override;
     //    std::shared_ptr<WFNOperator> get_op() override;
     size_t get_ref_root() override;
     std::vector<double> get_multistate_pt2_energy_correction() override;
@@ -132,6 +133,7 @@ class AdaptiveCI : public SelectedCIMethod {
     psi::SharedMatrix PQ_evecs_;
     psi::SharedVector PQ_evals_;
     DeterminantHashVec PQ_space_;
+    std::vector<double> PQ_spin2_;
 
     // ==> Class data <==
 
