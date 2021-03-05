@@ -102,6 +102,10 @@ class FCIVector {
 
     void compute_rdms(int max_order = 2);
     void rdm_test();
+
+    /// Compute the expectation value of the S^2 operator
+    double compute_spin2();
+
     /// Print the natural_orbitals from FCIWFN
     /// Assume user specifed active space
     void print_natural_orbitals(std::shared_ptr<MOSpaceInfo>);
@@ -132,8 +136,6 @@ class FCIVector {
     psi::Dimension cmopi_;
     /// The offset array for cmopi_
     std::vector<size_t> cmopi_offset_;
-    //    /// The mapping between correlated molecular orbitals and all orbitals
-    //    std::vector<size_t> cmo_to_mo_;
     /// The number of determinants
     size_t ndet_;
     /// The number of determinants per irrep
@@ -165,8 +167,6 @@ class FCIVector {
     static std::shared_ptr<psi::Matrix> C1;
     static std::shared_ptr<psi::Matrix> Y1;
     static size_t sizeC1;
-    //    static FCIVector* tmp_wfn1;
-    //    static FCIVector* tmp_wfn2;
 
     // Timers
     static double hdiag_timer;
@@ -196,18 +196,6 @@ class FCIVector {
                 ncmo_ * ncmo_ * ncmo_ * r + ncmo_ * ncmo_ * s + ncmo_ * t + u);
     }
 
-    //    double oei_aa(size_t p, size_t q) const {return fci_ints_->oei_a(ncmo_
-    //    * p + q);}
-    //    double oei_bb(size_t p, size_t q) const {return fci_ints_->oei_b(ncmo_
-    //    * p + q);}
-
-    //    double tei_aaaa(size_t p, size_t q, size_t r, size_t s) const {return
-    //    fci_ints_->tei_aa(tei_index(p,q,r,s));}
-    //    double tei_aabb(size_t p, size_t q, size_t r, size_t s) const {return
-    //    fci_ints_->tei_ab(tei_index(p,q,r,s));}
-    //    double tei_bbbb(size_t p, size_t q, size_t r, size_t s) const {return
-    //    fci_ints_->tei_ab(tei_index(p,q,r,s));}
-
     void H0(FCIVector& result, std::shared_ptr<ActiveSpaceIntegrals> fci_ints);
     void H1(FCIVector& result, std::shared_ptr<ActiveSpaceIntegrals> fci_ints, bool alfa);
     void H2_aabb(FCIVector& result, std::shared_ptr<ActiveSpaceIntegrals> fci_ints);
@@ -215,6 +203,7 @@ class FCIVector {
 
     void compute_1rdm(std::vector<double>& rdm, bool alfa);
     void compute_2rdm_aa(std::vector<double>& rdm, bool alfa);
+    // Compute the matrix elements of the rdm <a^+_{pa} a^+_{qb} a_{sb} a_ra> -> tei_index(p,q,r,s)
     void compute_2rdm_ab(std::vector<double>& rdm);
     void compute_3rdm_aaa(std::vector<double>& rdm, bool alfa);
     void compute_3rdm_aab(std::vector<double>& rdm);

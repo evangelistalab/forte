@@ -933,4 +933,79 @@ void FCIVector::rdm_test() {
     delete[] Ia;
     delete[] Ib;
 }
+
+/**
+ * Compute the ab two-particle density matrix for a given wave function
+ * @param alfa flag for alfa or beta component, true = aa, false = bb
+ */
+double FCIVector::compute_spin2() {
+    double spin2 = 0.0;
+    // Loop over blocks of matrix C
+    for (int Ia_sym = 0; Ia_sym < nirrep_; ++Ia_sym) {
+        int Ib_sym = Ia_sym ^ symmetry_;
+        double** C = C_[Ia_sym]->pointer();
+
+        // Loop over all r,s
+        for (int rs_sym = 0; rs_sym < nirrep_; ++rs_sym) {
+            int Jb_sym = Ib_sym ^ rs_sym;    // <- Looks like it should fail for
+                                             // states with symmetry != A1  URGENT
+            int Ja_sym = Jb_sym ^ symmetry_; // <- Looks like it should fail for
+                                             // states with symmetry != A1
+                                             // URGENT
+            //            int Ja_sym = Ia_sym ^ rs_sym;
+            double** Y = C_[Ja_sym]->pointer();
+            for (int r_sym = 0; r_sym < nirrep_; ++r_sym) {
+                int s_sym = rs_sym ^ r_sym;
+
+                for (int r_rel = 0; r_rel < cmopi_[r_sym]; ++r_rel) {
+                    for (int s_rel = 0; s_rel < cmopi_[s_sym]; ++s_rel) {
+                        int r_abs = r_rel + cmopi_offset_[r_sym];
+                        int s_abs = s_rel + cmopi_offset_[s_sym];
+
+                        // Grab list (r,s,Ib_sym)
+                        std::vector<StringSubstitution>& vo_beta =
+                            lists_->get_beta_vo_list(r_abs, s_abs, Ib_sym);
+                        size_t maxSSb = vo_beta.size();
+
+                        // Loop over all p,q
+                        int pq_sym = rs_sym;
+                        for (int p_sym = 0; p_sym < nirrep_; ++p_sym) {
+                            int q_sym = pq_sym ^ p_sym;
+                            for (int p_rel = 0; p_rel < cmopi_[p_sym]; ++p_rel) {
+                                int p_abs = p_rel + cmopi_offset_[p_sym];
+                                for (int q_rel = 0; q_rel < cmopi_[q_sym]; ++q_rel) {
+                                    int q_abs = q_rel + cmopi_offset_[q_sym];
+
+                                    std::vector<StringSubstitution>& vo_alfa =
+                                        lists_->get_alfa_vo_list(p_abs, q_abs, Ia_sym);
+
+                                    size_t maxSSa = vo_alfa.size();
+                                    for (size_t SSa = 0; SSa < maxSSa; ++SSa) {
+                                        for (size_t SSb = 0; SSb < maxSSb; ++SSb) {
+                                            double V = static_cast<double>(vo_alfa[SSa].sign *
+                                                                           vo_beta[SSb].sign);
+                                            //<a^+_{pa} a^+_{qb} a_{sb} a_ra> -> tei_index(p,q,r,s)
+                                            //                                            rdm[tei_index(p_abs,
+                                            //                                            r_abs,
+                                            //                                            q_abs,
+                                            //                                            s_abs)] +=
+                                            if ((p_abs == s_abs) and (q_abs == r_abs)) {
+                                                spin2 += Y[vo_alfa[SSa].J][vo_beta[SSb].J] *
+                                                         C[vo_alfa[SSa].I][vo_beta[SSb].I] * V;
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        } // End loop over p,q
+                    }
+                } // End loop over r_rel,s_rel
+            }
+        }
+    }
+    double na = alfa_graph_->nones();
+    double nb = beta_graph_->nones();
+    return -spin2 + 0.25 * std::pow(na - nb, 2.0) + 0.5 * (na + nb);
+}
+
 } // namespace forte
