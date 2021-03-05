@@ -17,11 +17,11 @@ correlated electrons.
 
    overview
    running_forte
-   basics
-   mospaceinfo
+   basics/getting_started
+   basics/mospaceinfo
    basics/multistate
    basics/wfn_examples
-   integrals
+   basics/integrals
    methods/fci
    methods/aci
    methods/mcscf
