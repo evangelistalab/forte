@@ -19,6 +19,8 @@ correlated electrons.
    running_forte
    basics
    mospaceinfo
+   basics/multistate
+   basics/wfn_examples
    integrals
    methods/fci
    methods/aci

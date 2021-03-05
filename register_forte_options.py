@@ -254,22 +254,11 @@ def register_mo_space_info_options(options):
                           " [irrep, mo_1, mo_2, irrep, mo_3, mo_4]."
                           " Irrep and MOs are all 1-based (NOT 0-based)!")
 
-    # Options for state-averaged MCSCF/DSRG
-    options.add_array("AVG_STATE", "An array of states "
-                      "[[irrep1, multi1, nstates1],"
-                      " [irrep2, multi2, nstates2], ...]")
+    options.add_array("AVG_STATE", "A list of integer triplets that specify the irrep, multiplicity, and the number of states requested."
+                      "Uses the format [[irrep1, multi1, nstates1], [irrep2, multi2, nstates2], ...]")
 
-    options.add_array("AVG_WEIGHT", "An array of weights "
-                      "[[w1_1, w1_2, ..., w1_n],"
-                      " [w2_1, w2_2, ..., w2_n], ...]")
-
-    options.add_int_array("NROOTPI",
-                          "Number of roots per irrep (in Cotton order)")
-
-    # Options for state-averaged CASSCF (This is not used. York 11/22/2020)
-    options.add_array("STATES", "An array of states "
-                      "[[irrep1, multi1, nstates1],"
-                      " [irrep2, multi2, nstates2], ...]")
+    options.add_array("AVG_WEIGHT", "A list of lists that specify the weights assigned to all the states requested with AVG_STATE "
+                      "[[w1_1, w1_2, ..., w1_n], [w2_1, w2_2, ..., w2_n], ...]")
 
 
 def register_active_space_solver_options(options):
