@@ -1,7 +1,11 @@
 #
 # @BEGIN LICENSE
 #
-# Copyright (c) 2007-2021 The Forte Developers.
+# Forte: an open-source plugin to Psi4 (https://github.com/psi4/psi4)
+# that implements a variety of quantum chemistry methods for strongly
+# correlated electrons.
+#
+# Copyright (c) 2012-2020 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
 #
 # The copyrights for code used from other parties are included in
 # the corresponding files.
@@ -27,6 +31,11 @@ import psi4
 import forte
 
 def clean_options():
+    """
+    A function to clear the options object
+
+    This class also clears the psi4 options object
+    """
     # clear options
     psi4.core.clean_options()
     forte.forte_options.reset()
