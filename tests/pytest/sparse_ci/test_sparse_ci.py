@@ -13,8 +13,10 @@ def test_sparse_ci():
     ref_fci = -1.101150330132956
 
     psi4.core.clean()
+    # need to clean the options otherwise this job will interfere
+    forte.clean_options()
 
-    h2o = psi4.geometry("""
+    psi4.geometry("""
      H
      H 1 1.0
     """)

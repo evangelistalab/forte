@@ -6,6 +6,8 @@ def test_options():
     import forte
     from forte import forte_options
 
+    forte.clean_options()
+
     # read an option via the ForteOption class interface
     test1 = forte_options.get_double('E_CONVERGENCE')
 

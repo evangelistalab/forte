@@ -38,6 +38,8 @@ from .pymodule import *
 
 from .register_forte_options import *
 
+from .core import *
+
 # Load C++ plugin
 from .forte import *
 
