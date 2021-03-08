@@ -100,10 +100,10 @@ const std::map<StateInfo, std::vector<double>>& ActiveSpaceSolver::compute_energ
         const auto& spin2 = method->spin2();
 
         if (spin2.size() != 0) {
-            int target_S = (state.multiplicity() - 1) / 2;
+            double target_S = 0.5 * (static_cast<double>(state.multiplicity()) - 1.0);
             for (double root_spin2 : spin2) {
                 double root_S = 0.5 * std::sqrt(1.0 + 4.0 * root_spin2) - 0.5;
-                if (std::fabs(static_cast<double>(target_S) - root_S) > 0.25) {
+                if (std::fabs(target_S - root_S) > 0.25) {
                     std::string msg =
                         "ActiveSpaceSolver: Found a root with S = " + std::to_string(root_S) +
                         " but the target value of S = " + std::to_string(target_S);
