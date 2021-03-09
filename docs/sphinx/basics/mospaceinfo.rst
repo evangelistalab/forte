@@ -33,7 +33,7 @@ the options ``CHARGE`` and ``MULTIPLICITY`` in the forte input section.
 
 Note that the option ``MULTIPLICITY`` controls the value of the total spin
 (:math:`{\hat{S}}^2`).
-Recall that for an eigenfunction of the operator :math:`{\hat{S}}^2` the eigenvalues
+Recall that for an eigenfunction of the operator :math:`{\hat{S}}^2`, the eigenvalues
 are given expressed in terms of the total spin quantum number :math:`S` as (in atomic units)
 
 .. math:: {\hat{S}}^2 |S,M_S\rangle = S(S+1)|S,M_S\rangle,
