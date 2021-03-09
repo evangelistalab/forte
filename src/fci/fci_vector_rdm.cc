@@ -936,50 +936,41 @@ void FCIVector::rdm_test() {
 
 /**
  * Compute the ab two-particle density matrix for a given wave function
- * @param alfa flag for alfa or beta component, true = aa, false = bb
+ * @param alfa flag for alpha or beta component, true = aa, false = bb
  */
 double FCIVector::compute_spin2() {
     double spin2 = 0.0;
     // Loop over blocks of matrix C
     for (int Ia_sym = 0; Ia_sym < nirrep_; ++Ia_sym) {
-        int Ib_sym = Ia_sym ^ symmetry_;
+        const int Ib_sym = Ia_sym ^ symmetry_;
         double** C = C_[Ia_sym]->pointer();
 
         // Loop over all r,s
         for (int rs_sym = 0; rs_sym < nirrep_; ++rs_sym) {
-            int Jb_sym = Ib_sym ^ rs_sym;    // <- Looks like it should fail for
-                                             // states with symmetry != A1  URGENT
-            int Ja_sym = Jb_sym ^ symmetry_; // <- Looks like it should fail for
-                                             // states with symmetry != A1
-                                             // URGENT
-            //            int Ja_sym = Ia_sym ^ rs_sym;
+            const int Jb_sym = Ib_sym ^ rs_sym;
+            const int Ja_sym = Jb_sym ^ symmetry_;
             double** Y = C_[Ja_sym]->pointer();
             for (int r_sym = 0; r_sym < nirrep_; ++r_sym) {
                 int s_sym = rs_sym ^ r_sym;
 
                 for (int r_rel = 0; r_rel < cmopi_[r_sym]; ++r_rel) {
+                        const int r_abs = r_rel + cmopi_offset_[r_sym];
                     for (int s_rel = 0; s_rel < cmopi_[s_sym]; ++s_rel) {
-                        int r_abs = r_rel + cmopi_offset_[r_sym];
-                        int s_abs = s_rel + cmopi_offset_[s_sym];
+                        const int s_abs = s_rel + cmopi_offset_[s_sym];
 
                         // Grab list (r,s,Ib_sym)
-                        std::vector<StringSubstitution>& vo_beta =
+                        const auto& vo_alfa =
+                            lists_->get_alfa_vo_list(s_abs, r_abs, Ia_sym);
+                        const auto& vo_beta =
                             lists_->get_beta_vo_list(r_abs, s_abs, Ib_sym);
-                        size_t maxSSb = vo_beta.size();
 
-                        int q_abs = r_abs;
-                        int p_abs = s_abs;
+                        const size_t maxSSa = vo_alfa.size();
+                        const size_t maxSSb = vo_beta.size();
 
-                        std::vector<StringSubstitution>& vo_alfa =
-                            lists_->get_alfa_vo_list(p_abs, q_abs, Ia_sym);
-
-                        size_t maxSSa = vo_alfa.size();
                         for (size_t SSa = 0; SSa < maxSSa; ++SSa) {
                             for (size_t SSb = 0; SSb < maxSSb; ++SSb) {
-                                double V =
-                                    static_cast<double>(vo_alfa[SSa].sign * vo_beta[SSb].sign);
                                 spin2 += Y[vo_alfa[SSa].J][vo_beta[SSb].J] *
-                                         C[vo_alfa[SSa].I][vo_beta[SSb].I] * V;
+                                         C[vo_alfa[SSa].I][vo_beta[SSb].I] * static_cast<double>(vo_alfa[SSa].sign * vo_beta[SSb].sign);
                             }
                         }
                     }
