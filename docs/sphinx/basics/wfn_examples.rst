@@ -35,7 +35,7 @@ This input starts with the geometry specification::
 
 After this, we set the input for the forte computation. We specify a multiplicity
 equal to 3 and the :math:`B_1` irrep (``root_sym = 2``).
-In this example e keep the lowest :math:`^A_1` MO doubly occupied
+In this example we keep the lowest :math:`^A_1` MO doubly occupied
 (``'restricted_docc': [1, 0, 0, 0]``) and use an active space that contains three
 :math:`^A_1` MOs, and two MOs each of :math:`^B_1` and :math:`^B_2` symmetry::
 
@@ -121,6 +121,7 @@ the final orbitals will optimize the average energy
 
 We use the same active space of the previous example, but here to specify the state,
 we set the ``AVG_STATE`` option::
+
     import psi4
     import forte
 

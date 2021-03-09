@@ -341,12 +341,8 @@ void FCIVector::compute_2rdm_ab(std::vector<double>& rdm) {
 
         // Loop over all r,s
         for (int rs_sym = 0; rs_sym < nirrep_; ++rs_sym) {
-            int Jb_sym = Ib_sym ^ rs_sym;    // <- Looks like it should fail for
-                                             // states with symmetry != A1  URGENT
-            int Ja_sym = Jb_sym ^ symmetry_; // <- Looks like it should fail for
-                                             // states with symmetry != A1
-                                             // URGENT
-            //            int Ja_sym = Ia_sym ^ rs_sym;
+            int Jb_sym = Ib_sym ^ rs_sym;
+            int Ja_sym = Jb_sym ^ symmetry_;
             double** Y = C_[Ja_sym]->pointer();
             for (int r_sym = 0; r_sym < nirrep_; ++r_sym) {
                 int s_sym = rs_sym ^ r_sym;
@@ -549,11 +545,6 @@ void FCIVector::compute_3rdm_abb(std::vector<double>& rdm) {
                                     size_t q = Mel.p;
                                     size_t r = Mel.q;
                                     size_t M = Mel.J;
-                                    // outfile->Printf("\n C_I_p[%d][%d] =
-                                    // %8.8f", I, M, C_I_p[I][M]);
-                                    // if(C_I_p[I][M] > 1e-18)
-                                    //{
-
                                     for (const auto& Jel : Jlist) {
                                         size_t s = Jel.p;
                                         size_t J = Jel.J;
@@ -934,10 +925,6 @@ void FCIVector::rdm_test() {
     delete[] Ib;
 }
 
-/**
- * Compute the ab two-particle density matrix for a given wave function
- * @param alfa flag for alpha or beta component, true = aa, false = bb
- */
 double FCIVector::compute_spin2() {
     double spin2 = 0.0;
     // Loop over blocks of matrix C
