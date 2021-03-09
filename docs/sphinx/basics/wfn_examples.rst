@@ -112,7 +112,7 @@ Computing a manifold of solutions of different symmetry
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 The next example shows how to perform a state-averaged CASSCF computation on two
-electronic states of different symmetries. We stil conside methylene, and average
+electronic states of different symmetries. We still consider methylene, and average
 the lowest :math:`^3B_1` and :math:`^1A_1` states.
 To begin, we use ROHF orbitals optimized for the lowest :math:`^3B_1`. However,
 the final orbitals will optimize the average energy
@@ -153,5 +153,4 @@ The result of this computation is::
     --------------------------------------------------------
        3  (  0)    B1     0      -38.960623289646   2.000000
     --------------------------------------------------------
-
 
