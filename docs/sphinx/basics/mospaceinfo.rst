@@ -30,7 +30,7 @@ and
 
 .. math:: \hat{S}_z |S,M_S\rangle = M_S |S,M_S\rangle,\quad M_S = -S, -S + 1, \ldots, S-1, S
 
-The spin multiplicity, is defined as
+The spin multiplicity is defined as
 
 .. math:: \text{MULTIPLICITY} = 2S + 1.
 
