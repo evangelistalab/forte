@@ -13,6 +13,8 @@ def test_sparse_ci():
     ref_fci = -5.623851783330647
 
     psi4.core.clean()
+    # need to clean the options otherwise this job will interfere
+    forte.clean_options()
 
     h2o = psi4.geometry("""
      He
@@ -20,7 +22,7 @@ def test_sparse_ci():
     """)
 
     psi4.set_options({'basis': 'cc-pVDZ'})
-    E_scf, wfn = psi4.energy('scf', return_wfn=True)
+    _, wfn = psi4.energy('scf', return_wfn=True)
     na = wfn.nalpha()
     nb = wfn.nbeta()
     nirrep = wfn.nirrep()

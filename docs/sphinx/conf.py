@@ -30,7 +30,7 @@
 # Add any Sphinx extension module names here, as strings. They can be
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
-extensions = ['sphinx.ext.mathjax', 'sphinx.ext.githubpages', 'sphinx.ext.autodoc']
+extensions = ['sphinx.ext.mathjax', 'sphinx.ext.githubpages', 'sphinx.ext.autodoc', 'sphinx.ext.autosectionlabel']
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
@@ -46,7 +46,7 @@ master_doc = 'index'
 
 # General information about the project.
 project = u'Forte'
-copyright = u'2020, Evangelista lab'
+copyright = u'2021, Evangelista lab'
 author = u'Evangelista lab'
 
 # The version info for the project you're documenting, acts as replacement for

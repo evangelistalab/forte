@@ -715,7 +715,7 @@ void AdaptiveCI::diagonalize_P_space() {
                 P_evals_->get(i) + nuclear_repulsion_energy_ + as_ints_->scalar_energy();
             double exc_energy = pc_hartree2ev * (P_evals_->get(i) - P_evals_->get(0));
             outfile->Printf("\n    P-space  CI Energy Root %3d        = "
-                            "%.12f Eh = %8.4f eV, S^2 = %5.6f",
+                            "%.12f Eh = %8.4f eV, S^2 = %8.6f",
                             i, abs_energy, exc_energy, spin[i]);
         }
         outfile->Printf("\n");
@@ -752,6 +752,7 @@ void AdaptiveCI::diagonalize_PQ_space() {
     //        old_evecs = PQ_evecs->clone();
 
     auto spin = sparse_solver_->spin();
+    PQ_spin2_ = spin;
 
     if (!quiet_mode_) {
         // Print the energy
@@ -929,6 +930,8 @@ DeterminantHashVec AdaptiveCI::get_PQ_space() { return PQ_space_; }
 psi::SharedMatrix AdaptiveCI::get_PQ_evecs() { return PQ_evecs_; }
 
 psi::SharedVector AdaptiveCI::get_PQ_evals() { return PQ_evals_; }
+
+std::vector<double> AdaptiveCI::get_PQ_spin2() { return PQ_spin2_; };
 
 size_t AdaptiveCI::get_ref_root() { return ref_root_; }
 

@@ -158,11 +158,17 @@ class ActiveSpaceSolver {
     /// A map of state symmetries to the associated ActiveSpaceMethod
     std::map<StateInfo, std::shared_ptr<ActiveSpaceMethod>> state_method_map_;
 
+    /// Make sure that the values of <S^2> are consistent with the multiplicity
+    void validate_spin(const std::vector<double>& spin2, const StateInfo& state);
+
     /// Prints a summary of the energies with State info
-    void print_energies(std::map<StateInfo, std::vector<double>>& energies);
+    void print_energies();
 
     /// A map of state symmetries to vectors of computed energies under given state symmetry
     std::map<StateInfo, std::vector<double>> state_energies_map_;
+
+    /// A map of state symmetries to vectors of computed average S^2 under given state symmetry
+    std::map<StateInfo, std::vector<double>> state_spin2_map_;
 
     /// A map of state symmetries to the file name of wave function stored on disk
     std::map<StateInfo, std::string> state_filename_map_;
