@@ -12,7 +12,6 @@ Requesting multiple solutions of a given spin and symmetry
 Codes that support excited states take the additional option ``NROOT``,
 which can be used to specify the number of solutions (roots) of the
 charge, multiplicity, and symmetry specified by the user.
-This type of computation
 
 Assuming a :math:`C_{2v}` molecular point group, the following example is for
 an input to compute three state of symmetry :math:`^{4}A_{2}` for a neutral
@@ -29,7 +28,7 @@ molecule::
 Requesting multiple solutions of different spin and symmetry
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-For certain types of multistate computations (e.g., state-averaged CASSCF)
+For certain types of multistate computations (e.g., state-averaged CASSCF),
 one may want to compute solutions of different spin and symmetry.
 
 The simplest way to do so is by specifying the ``AVG_STATE`` option to
@@ -104,4 +103,3 @@ in the two electronic states::
 
 While the first state is representative of the ground state of water,
 the second state corresponds to a core-excited state.
-

@@ -199,9 +199,9 @@ The following table summarizes the properties of these orbital spaces:
   ``ACTIVE`` = ``GAS1 | GAS2 | GAS3 | GAS4 | GAS5 | GAS6``.
   When the user specifies the value of a composite space like ``ACTIVE``, then all the
   orbitals are by default assigned to the first space, which in the case of ``ACTIVE`` is ``GAS1``.
-  It is important also to note that when there is more than one irrep, the orbitals withing a
+  It is important also to note that when there is more than one irrep, the orbitals within a
   composite space are ordered **first** by irrep and then by elementary space.
-  This important to keep in mind when plotting orbitals or for developers writing code in forte.
+  This is important to keep in mind when plotting orbitals or for developers writing code in forte.
   
 
 Orbital space specification
@@ -237,7 +237,7 @@ Partial specification of orbital spaces and space priority
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Specifying all five orbital spaces for each computation is tedious and error prone.
-Forte can help reduced the number of orbital spaces that the user needs to
+Forte can help reduce the number of orbital spaces that the user needs to
 specify by making certain assumptions.
 The class that controls orbital spaces (``MOSpaceInfo``) assumes that orbital
 spaces have the following priority::
@@ -246,7 +246,7 @@ spaces have the following priority::
 
 When the input does not contain all five orbital spaces, Forte will infer the
 size of other orbital spaces. It first sums up all the orbitals specified by
-the user, and then assigns any remaining orbital to the space not specified in
+the user, and then assigns any remaining orbitals to the space not specified in
 the input that has the highest priority.
 
 In the case of the BeH\ :sub:`2` example, it is necessary to specify only the
@@ -284,10 +284,10 @@ active space::
         # frozen_uocc      [0 ,0 ,0 ,0]
     }
 
-Note, that except for full CI computations with small basis sets, in all
-other cases this computation might be unfeasible.
+Note that except for computations with small basis sets,
+declaring all orbitals active might be unfeasible.
 
-As a general rule, it is recommended that user run a SCF computations and
+As a general rule, it is recommended that users run SCF computations and
 inspect the orbitals prior to selecting an active space.
 
 Occupation numbers of GAS wave functions
