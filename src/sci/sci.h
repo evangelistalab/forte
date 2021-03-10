@@ -100,7 +100,6 @@ class SelectedCIMethod {
     virtual std::shared_ptr<psi::Matrix> get_PQ_evecs() = 0;
     virtual std::shared_ptr<psi::Vector> get_PQ_evals() = 0;
     virtual std::vector<double> get_PQ_spin2();
-    //    virtual std::shared_ptr<WFNOperator> get_op() = 0;
     virtual size_t get_ref_root() = 0;
     virtual std::vector<double> get_multistate_pt2_energy_correction() = 0;
     virtual size_t get_cycle();

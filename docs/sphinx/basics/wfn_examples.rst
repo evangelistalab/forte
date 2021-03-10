@@ -51,6 +51,8 @@ In this example we keep the lowest :math:`^A_1` MO doubly occupied
     psi4.energy('forte')
 
 This input will run a CASCI computation (since we have not requested orbital optimization).
+An example of how to request orbital optimization can be found in
+:ref:`Computing a manifold of solutions of different symmetry`.
 The output will return the energy and show the composition of the wave function::
 
     ==> Root No. 0 <==

@@ -114,7 +114,7 @@ Forte supports only Abelian groups (:math:`C_1`, :math:`C_s`, :math:`C_i`, :math
 point group symmetry, the largest Abelian subgroup will be used.
 For a given group, the irreducible representations
 (irrep) are arranged according to Cotton's book (`Chemical Applications of Group Theory`).
-This ordering is reproduced in the following table:
+This ordering is reproduced in the following table and is the same as used in Psi4:
 
 +----------------+----------------+----------------+----------------+----------------+----------------+----------------+----------------+----------------+
 | Point group    | Irrep 0        | Irrep 1        | Irrep 2        | Irrep 3        | Irrep 4        | Irrep 5        | Irrep 6        | Irrep 7        |
