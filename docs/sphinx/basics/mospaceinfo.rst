@@ -292,7 +292,7 @@ inspect the orbitals prior to selecting an active space.
 
 Occupation numbers of GAS wave functions
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-General active space (GAS) wave functions are defined by partitionining the
+General active space (GAS) wave functions are defined by partitioning the
 active space into subspaces and specifying constraints on the occupation of
 these subspaces.
 To specify a general active space (GAS) wave function, the user must select the
