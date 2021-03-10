@@ -31,7 +31,6 @@
 
 #include <vector>
 
-//#include "psi4/libmints/matrix.h"
 #include "psi4/libmints/dimension.h"
 
 #define CAPRICCIO_USE_DAXPY 1
@@ -102,6 +101,10 @@ class FCIVector {
 
     void compute_rdms(int max_order = 2);
     void rdm_test();
+
+    /// Compute the expectation value of the S^2 operator
+    double compute_spin2();
+
     /// Print the natural_orbitals from FCIWFN
     /// Assume user specifed active space
     void print_natural_orbitals(std::shared_ptr<MOSpaceInfo>);
@@ -132,8 +135,6 @@ class FCIVector {
     psi::Dimension cmopi_;
     /// The offset array for cmopi_
     std::vector<size_t> cmopi_offset_;
-    //    /// The mapping between correlated molecular orbitals and all orbitals
-    //    std::vector<size_t> cmo_to_mo_;
     /// The number of determinants
     size_t ndet_;
     /// The number of determinants per irrep
@@ -165,8 +166,6 @@ class FCIVector {
     static std::shared_ptr<psi::Matrix> C1;
     static std::shared_ptr<psi::Matrix> Y1;
     static size_t sizeC1;
-    //    static FCIVector* tmp_wfn1;
-    //    static FCIVector* tmp_wfn2;
 
     // Timers
     static double hdiag_timer;
@@ -196,28 +195,33 @@ class FCIVector {
                 ncmo_ * ncmo_ * ncmo_ * r + ncmo_ * ncmo_ * s + ncmo_ * t + u);
     }
 
-    //    double oei_aa(size_t p, size_t q) const {return fci_ints_->oei_a(ncmo_
-    //    * p + q);}
-    //    double oei_bb(size_t p, size_t q) const {return fci_ints_->oei_b(ncmo_
-    //    * p + q);}
-
-    //    double tei_aaaa(size_t p, size_t q, size_t r, size_t s) const {return
-    //    fci_ints_->tei_aa(tei_index(p,q,r,s));}
-    //    double tei_aabb(size_t p, size_t q, size_t r, size_t s) const {return
-    //    fci_ints_->tei_ab(tei_index(p,q,r,s));}
-    //    double tei_bbbb(size_t p, size_t q, size_t r, size_t s) const {return
-    //    fci_ints_->tei_ab(tei_index(p,q,r,s));}
-
     void H0(FCIVector& result, std::shared_ptr<ActiveSpaceIntegrals> fci_ints);
     void H1(FCIVector& result, std::shared_ptr<ActiveSpaceIntegrals> fci_ints, bool alfa);
     void H2_aabb(FCIVector& result, std::shared_ptr<ActiveSpaceIntegrals> fci_ints);
     void H2_aaaa2(FCIVector& result, std::shared_ptr<ActiveSpaceIntegrals> fci_ints, bool alfa);
 
+    // 1-RDM elements are stored in the format
+    // <a^+_{pa} a^+_{qb} a_{sb} a_ra> -> rdm[oei_index(p,q)]    
+
+    /// Compute the matrix elements of the same 1-RDM <a^+_{p} a_{q}>    
     void compute_1rdm(std::vector<double>& rdm, bool alfa);
+
+    // 2-RDM elements are stored in the format
+    // <a^+_{p} a^+_{q} a_{s} a_r> -> rdm[tei_index(p,q,r,s)]
+
+    /// Compute the matrix elements of the same spin 2-RDM <a^+_p a^+_q a_s a_r> (with all indices alpha or beta)
     void compute_2rdm_aa(std::vector<double>& rdm, bool alfa);
+    /// Compute the matrix elements of the alpha-beta 2-RDM <a^+_{pa} a^+_{qb} a_{sb} a_{ra}>
     void compute_2rdm_ab(std::vector<double>& rdm);
+    
+    // 3-RDM elements are stored in the format
+    // <a^+_p a^+_q a^+_r a_u a_t a_s> -> rdm[six_index(p,q,r,s,t,u)]
+
+    /// Compute the matrix elements of the same spin 3-RDM <a^+_p a^+_q a_s a_r> (with all indices alpha or beta)
     void compute_3rdm_aaa(std::vector<double>& rdm, bool alfa);
+    /// Compute the matrix elements of the alpha-alpha-beta 3-RDM <a^+_{pa} a^+_{qa} a^+_{rb} a_{ub} a_{ta} a_{sa}>
     void compute_3rdm_aab(std::vector<double>& rdm);
+    /// Compute the matrix elements of the alpha-beta-beta 3-RDM <a^+_{pa} a^+_{qb} a^+_{rb} a_{ub} a_{tb} a_{sa}>
     void compute_3rdm_abb(std::vector<double>& rdm);
 };
 } // namespace forte

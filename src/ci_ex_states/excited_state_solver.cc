@@ -276,6 +276,7 @@ double ExcitedStateSolver::compute_energy() {
         energies_[n] = PQ_evals->get(n) + as_ints_->ints()->nuclear_repulsion_energy() +
                        as_ints_->scalar_energy();
     }
+    spin2_ = sci_->get_PQ_spin2();
 
     return PQ_evals->get(root_) + as_ints_->ints()->nuclear_repulsion_energy() +
            as_ints_->scalar_energy();

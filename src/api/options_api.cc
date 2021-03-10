@@ -43,6 +43,7 @@ void export_ForteOptions(py::module& m) {
         .def(py::init<>())
         .def("set_dict", &ForteOptions::set_dict)
         .def("dict", &ForteOptions::dict)
+        .def("reset", &ForteOptions::reset_dict,"Reset the options")
         .def("set_group", &ForteOptions::set_group, "Set the options group")
         .def("add_bool", &ForteOptions::add_bool, "Add a boolean option")
         .def("add_int", &ForteOptions::add_int, "Add an integer option")

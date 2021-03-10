@@ -169,6 +169,9 @@ class ActiveSpaceMethod {
     /// Return a vector with the energies of all the states
     const std::vector<double>& energies() const;
 
+    /// Return a vector with the average value of S^2 of all the states
+    const std::vector<double>& spin2() const;
+
     /// Return the number of roots computed
     size_t nroot() const { return nroot_; }
 
@@ -259,6 +262,9 @@ class ActiveSpaceMethod {
 
     /// The energies (including nuclear repulsion) of all the states
     std::vector<double> energies_;
+
+    /// The average value of S^2 of all the states. If empty this quantity will not be checked
+    std::vector<double> spin2_;
 
     /// Read wave function from disk as initial guess?
     bool read_wfn_guess_ = false;
