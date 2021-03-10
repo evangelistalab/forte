@@ -19,7 +19,7 @@ charge of the nuclei (:math:`Z_A`) minus the number of electrons
 .. math:: Q = \sum_A Z_A - N_\text{el}.
 
 Recall that, in the absence of an external field, an electronic state is
-an eigenfunctions of the spin squared operator :math:`\hat{S}^2` and 
+an eigenfunction of the spin squared operator :math:`\hat{S}^2` and 
 the z component of the spin operator :math:`\hat{S}_z`.
 The eigenvalues of these two operators are related to the spin quantum
 numbers :math:`S` and :math:`M_S` via (in atomic units)
