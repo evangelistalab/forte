@@ -39,8 +39,8 @@
 namespace forte {
 
 void SparseOperator::add_term(const std::vector<std::tuple<bool, bool, int>>& op_list,
-                              double coefficient) {
-    op_list_.push_back(SQOperator(op_list, coefficient));
+                              double coefficient, bool allow_reordering) {
+    op_list_.push_back(SQOperator(op_list, coefficient, allow_reordering));
 }
 
 void SparseOperator::add_term(const SQOperator& sqop) { op_list_.push_back(sqop); }
@@ -63,7 +63,7 @@ std::vector<std::tuple<bool, bool, int>> sparse_parse_ops(const std::string& s) 
     return ops_vec_tuple;
 }
 
-void SparseOperator::add_term_from_str(std::string str, double value) {
+void SparseOperator::add_term_from_str(std::string str, double coefficient, bool allow_reordering) {
     // the regex to parse the entries
     std::regex re("\\s*(\\[[0-9ab\\+\\-\\s]*\\])");
     // the match object
@@ -76,7 +76,7 @@ void SparseOperator::add_term_from_str(std::string str, double value) {
     if (std::regex_match(str, m, re)) {
         if (m.ready()) {
             auto ops_vec_tuple = sparse_parse_ops(m[1]);
-            add_term(ops_vec_tuple, value);
+            add_term(ops_vec_tuple, coefficient,allow_reordering);
         }
     } else {
         std::string msg =
@@ -85,7 +85,7 @@ void SparseOperator::add_term_from_str(std::string str, double value) {
     }
 }
 
-const SQOperator& SparseOperator::get_term(size_t n) const { return op_list_[n]; }
+const SQOperator& SparseOperator::term(size_t n) const { return op_list_[n]; }
 
 std::vector<double> SparseOperator::coefficients() {
     std::vector<double> v;
@@ -102,7 +102,7 @@ void SparseOperator::set_coefficients(std::vector<double>& values) {
 }
 
 void SparseOperator::pop_term() {
-    if (nterms() > 0) {
+    if (size() > 0) {
         op_list_.pop_back();
     }
 }

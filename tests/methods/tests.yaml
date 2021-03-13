@@ -7,6 +7,7 @@
 aci:
   short:
    - aci-1
+   - aci-2   
    - aci-3
    - aci-4
    - aci-5
@@ -18,7 +19,6 @@ aci:
    - aci_scf-1
    - aci-full-pt2-1
   medium:
-   - aci-2
    - aci-6
    - aci-10
    - aci-11

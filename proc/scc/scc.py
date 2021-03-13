@@ -300,7 +300,7 @@ def make_cluster_operator(
                                 den = e_bvir + e_avir - e_aocc - e_bocc
                                 denominators.append(den)
 
-    print(f"Number of amplitudes: {sop.nterms()}")
+    print(f"Number of amplitudes: {sop.size()}")
     return (sop, denominators)
 
 
@@ -389,7 +389,7 @@ def select_new_operators(select_type, residual, denominators, selected_op, op_po
         for j in new_ops:
             if j not in op_pool:
                 op_pool.append(j)
-                selected_op.add_term(op.get_term(j))
+                selected_op.add_term(op.term(j))
                 t1.append(0.0)
 
     if ordering == 2:
@@ -398,7 +398,7 @@ def select_new_operators(select_type, residual, denominators, selected_op, op_po
         for j in new_ops:
             if j not in op_pool:
                 op_pool.append(j)
-                selected_op.add_term(op.get_term(j))
+                selected_op.add_term(op.term(j))
                 t1.append(0.0)
 
     if ordering == 3:
@@ -409,10 +409,10 @@ def select_new_operators(select_type, residual, denominators, selected_op, op_po
         for j in new_ops:
             if j not in op_pool:
                 new_op_pool.append(j)
-                new_selected_op.add_term(op.get_term(j))
+                new_selected_op.add_term(op.term(j))
                 new_t1.append(0.0)
-        for j in range(selected_op.nterms()):
-            new_selected_op.add_term(selected_op.get_term(j))
+        for j in range(selected_op.size()):
+            new_selected_op.add_term(selected_op.term(j))
         new_t1.extend(t1)
         new_op_pool.extend(op_pool)
         t1 = new_t1
@@ -428,17 +428,17 @@ def select_new_operators(select_type, residual, denominators, selected_op, op_po
         for j in new_ops:
             if j not in op_pool:
                 new_op_pool.append(j)
-                new_selected_op.add_term(op.get_term(j))
+                new_selected_op.add_term(op.term(j))
                 new_t1.append(0.0)
-        for j in range(selected_op.nterms()):
-            new_selected_op.add_term(selected_op.get_term(j))
+        for j in range(selected_op.size()):
+            new_selected_op.add_term(selected_op.term(j))
         new_t1.extend(t1)
         new_op_pool.extend(op_pool)
         t1 = new_t1
         op_pool = new_op_pool
         selected_op = new_selected_op
 
-    print(f"Number of operators selected: {selected_op.nterms()}")
+    print(f"Number of operators selected: {selected_op.size()}")
 
 
 def solve_selected_cc_equations(
@@ -472,7 +472,7 @@ def solve_selected_cc_equations(
         )
 
         residual_norm = 0.0
-        for l in range(selected_op.nterms()):
+        for l in range(selected_op.size()):
             t1[l] -= residual[op_pool[l]] / denominators[op_pool[l]]
             residual_norm += residual[op_pool[l]] ** 2
 
@@ -607,7 +607,7 @@ def run_selected_ucc(
             for j in new_ops:
                 if j not in op_pool:
                     op_pool.append(j)
-                    selected_op.add_term(op.get_term(j))
+                    selected_op.add_term(op.term(j))
                     t1.append(0.0)
 
         if ordering == 2:
@@ -616,7 +616,7 @@ def run_selected_ucc(
             for j in new_ops:
                 if j not in op_pool:
                     op_pool.append(j)
-                    selected_op.add_term(op.get_term(j))
+                    selected_op.add_term(op.term(j))
                     t1.append(0.0)
 
         if ordering == 3:
@@ -627,10 +627,10 @@ def run_selected_ucc(
             for j in new_ops:
                 if j not in op_pool:
                     new_op_pool.append(j)
-                    new_selected_op.add_term(op.get_term(j))
+                    new_selected_op.add_term(op.term(j))
                     new_t1.append(0.0)
-            for j in range(selected_op.nterms()):
-                new_selected_op.add_term(selected_op.get_term(j))
+            for j in range(selected_op.size()):
+                new_selected_op.add_term(selected_op.term(j))
             new_t1.extend(t1)
             new_op_pool.extend(op_pool)
             t1 = new_t1
@@ -646,17 +646,17 @@ def run_selected_ucc(
             for j in new_ops:
                 if j not in op_pool:
                     new_op_pool.append(j)
-                    new_selected_op.add_term(op.get_term(j))
+                    new_selected_op.add_term(op.term(j))
                     new_t1.append(0.0)
-            for j in range(selected_op.nterms()):
-                new_selected_op.add_term(selected_op.get_term(j))
+            for j in range(selected_op.size()):
+                new_selected_op.add_term(selected_op.term(j))
             new_t1.extend(t1)
             new_op_pool.extend(op_pool)
             t1 = new_t1
             op_pool = new_op_pool
             selected_op = new_selected_op
 
-        print(f"Number of operators selected: {selected_op.nterms()}")
+        print(f"Number of operators selected: {selected_op.size()}")
 
         # step 2: solve the ucc equations and update the amplitudes
         t1, e, micro_iter = solve_selected_ucc_equations(
@@ -676,17 +676,17 @@ def run_selected_ucc(
             flush=True,
         )
 
-        nops = selected_op.nterms()
+        nops = selected_op.size()
 
         sum_res_eval += micro_iter * nops
 
         calc_data.append((nops, e, sum_res_eval))
 
-        if nops_old == selected_op.nterms():
+        if nops_old == selected_op.size():
             break
 
         old_e = e
-        nops_old = selected_op.nterms()
+        nops_old = selected_op.size()
     print("=========================================================================")
 
     print(f"omega: {omega}")

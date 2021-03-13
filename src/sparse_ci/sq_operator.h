@@ -69,7 +69,7 @@ using op_tuple_t = std::vector<std::tuple<bool, bool, int>>;
  * form with respect to the true vacuum
  *
  *   a+_p1 a+_p2  ... a+_P1 a+_P2   ... a-_Q2 a-_Q1   ... a-_q2 a-_q1
- *   alpha creation  beta creation   alpha annihilation  beta annihilation
+ *   alpha creation  beta creation   beta annihilation  alpha annihilation
  *
  * The creation and annihilation operators are stored separately as bit arrays
  * using the Determinant class
@@ -77,22 +77,44 @@ using op_tuple_t = std::vector<std::tuple<bool, bool, int>>;
 class SQOperator {
   public:
     SQOperator(double factor, const Determinant& cre, const Determinant& ann);
-    SQOperator(const op_tuple_t& ops, double coefficient = 0.0);
+
+    /**
+     * @brief Create a second quantized operator
+     * 
+     * @param ops a vector of triplets (is_creation, is_alpha, orb) that specify the second quantized operators.
+     *        These must be  
+     * @param coefficient the factor associated with this operator
+     * @param allow_reordering if true this function will reorder all terms an put them in canonical
+     *        order adjusting the coefficient to account for the number of permutations.
+     *        If set to false, this function will only accept operators that are sorted in
+     *        the following format:
+     *                 a+_p1 a+_p2  ... a+_P1 a+_P2   ... a-_Q2 a-_Q1   ... a-_q2 a-_q1
+     *                alpha creation  beta creation   beta annihilation  alpha annihilation
+     * 
+     *        with p1 > p2 
+     */
+    SQOperator(const op_tuple_t& ops, double coefficient = 0.0, bool allow_reordering = false);
+    /// @return the numerical factor associated with this operator
     double factor() const;
+    /// @return a Determinant object that represents the creation operators
     const Determinant& cre() const;
+    /// @return a Determinant object that represents the annihilation operators    
     const Determinant& ann() const;
+    /// @param value set the factor associated with this operator
     void set_factor(double& value);
+    /// @return a string representation of this operator
     std::string str() const;
+    /// @return a latex representation of this operator
     std::string latex() const;
 
   private:
+    /// a numerical factor associated with this product of sq operators
     double factor_;
+    /// a Determinant that represents the creation operators
     Determinant cre_;
+    /// a Determinant that represents the annihilation operators
     Determinant ann_;
 };
-
-/// This function converts a string to a single operator
-std::vector<SQOperator> string_to_op_term(const std::string& str);
 
 } // namespace forte
 

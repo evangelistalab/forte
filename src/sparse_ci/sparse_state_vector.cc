@@ -146,14 +146,14 @@ StateVector apply_operator(SparseOperator& sop, const StateVector& state0, doubl
 std::vector<double> get_projection(SparseOperator& sop, const StateVector& ref,
                                    const StateVector& state0) {
     local_timer t;
-    std::vector<double> proj(sop.nterms(), 0.0);
+    std::vector<double> proj(sop.size(), 0.0);
 
     const auto& op_list = sop.op_list();
 
     Determinant d;
 
     // loop over all the operators
-    for (size_t n = 0, nterms = sop.nterms(); n < nterms; n++) {
+    for (size_t n = 0, nterms = sop.size(); n < nterms; n++) {
         double value = 0.0;
         const SQOperator& sqop = op_list[n];
 

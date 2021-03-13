@@ -53,7 +53,7 @@ bool compare_ops(const std::tuple<bool, bool, int>& lhs, const std::tuple<bool, 
     return flip_spin(lhs) < flip_spin(rhs);
 }
 
-SQOperator::SQOperator(const op_tuple_t& ops, double coefficient) {
+SQOperator::SQOperator(const op_tuple_t& ops, double coefficient, bool allow_reordering) {
     const std::vector<std::tuple<bool, bool, int>>& creation_alpha_orb_vec = ops;
     factor_ = coefficient;
 
@@ -62,6 +62,10 @@ SQOperator::SQOperator(const op_tuple_t& ops, double coefficient) {
 
     // if not sorted, compute the permutation factor
     if (not is_sorted) {
+        if (not allow_reordering) {
+            throw std::runtime_error(
+                "Trying to initialize a SQOperator object with a list that is not sorted");
+        }
         // We first sort the operators so that they are ordered in the following way
         // [last](alpha cre. ascending) (beta cre. ascending) (beta ann. descending) (alpha ann.
         // descending)[first] and keep track of the sign. We sort the operators using a set of
@@ -134,7 +138,7 @@ std::string sq_double_to_string(double value) {
     }
     if (value == 1.0) {
         return "+";
-    }    
+    }
     return (value > 0.0 ? "+" : "") + std::to_string(value);
 }
 

@@ -123,14 +123,14 @@ void export_Determinant(py::module& m) {
     py::class_<SparseOperator>(m, "SparseOperator")
         .def(py::init<bool>(), "antihermitian"_a = false)
         .def("add_term",
-             py::overload_cast<const std::vector<std::tuple<bool, bool, int>>&, double>(
+             py::overload_cast<const std::vector<std::tuple<bool, bool, int>>&, double, bool>(
                  &SparseOperator::add_term),
-             "op_list"_a, "value"_a = 0.0)
+             "op_list"_a, "value"_a = 0.0, "allow_reordering"_a = false)
         .def("add_term", py::overload_cast<const SQOperator&>(&SparseOperator::add_term))
-        .def("add_term_from_str", &SparseOperator::add_term_from_str)
+        .def("add_term_from_str", &SparseOperator::add_term_from_str, "str"_a,
+             "coefficient"_a = 0.0, "allow_reordering"_a = false)
         .def("pop_term", &SparseOperator::pop_term)
-        .def("get_term", &SparseOperator::get_term)
-        .def("nterms", &SparseOperator::nterms)
+        .def("get_term", &SparseOperator::term)
         .def("size", &SparseOperator::size)
         .def("coefficients", &SparseOperator::coefficients)
         .def("set_coefficients", &SparseOperator::set_coefficients)

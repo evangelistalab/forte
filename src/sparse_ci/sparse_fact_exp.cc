@@ -38,7 +38,6 @@ StateVector SparseFactExp::compute(const SparseOperator& sop, const StateVector&
                                    const std::string& algorithm, bool inverse,
                                    double screen_thresh) {
     local_timer t;
-    Algorithm alg = Algorithm::Cached;
     StateVector result;
     if (algorithm == "onthefly") {
         result = compute_on_the_fly(sop, state, inverse, screen_thresh);
@@ -82,7 +81,7 @@ void SparseFactExp::compute_couplings(const SparseOperator& sop, const StateVect
     StateVector new_terms;
 
     // loop over all operators
-    for (size_t m = 0, nterms = sop.nterms(); m < nterms; m++) {
+    for (size_t m = 0, nterms = sop.size(); m < nterms; m++) {
         size_t n = inverse ? nterms - m - 1 : m;
 
         std::vector<std::tuple<size_t, size_t, double>> d_couplings;
@@ -172,10 +171,10 @@ StateVector SparseFactExp::compute_exp(const SparseOperator& sop, const StateVec
     }
 
     // loop over all operators
-    for (size_t m = 0, nterms = sop.nterms(); m < nterms; m++) {
+    for (size_t m = 0, nterms = sop.size(); m < nterms; m++) {
         size_t n = inverse ? nterms - m - 1 : m;
 
-        double amp = sop.get_term(n).factor();
+        double amp = sop.term(n).factor();
 
         const std::vector<std::tuple<size_t, size_t, double>>& d_couplings =
             inverse ? inverse_couplings_[m] : couplings_[m];
@@ -237,7 +236,7 @@ StateVector SparseFactExp::compute_on_the_fly(const SparseOperator& sop, const S
     StateVector state(state0);
     StateVector new_terms;
 
-    for (size_t m = 0, nterms = sop.nterms(); m < nterms; m++) {
+    for (size_t m = 0, nterms = sop.size(); m < nterms; m++) {
         size_t n = inverse ? nterms - m - 1 : m;
 
         // zero the new terms

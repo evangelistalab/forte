@@ -32,22 +32,18 @@
 #include <vector>
 #include <unordered_map>
 
-#include "sparse_ci/determinant.h"
 #include "sparse_ci/sq_operator.h"
 
 namespace forte {
 
 class ActiveSpaceIntegrals;
 
-/// This function converts a string to a single operator
-std::vector<SQOperator> string_to_op_term(const std::string& str);
-
 /**
  * @brief The SparseOperator class
  * Base class for second quantized operators.
  *
- * Each term is represented as a linear combination of second quantized
- * operator strings times a coefficient.
+ * An operator is a sum of terms, where each term is a numerical factor
+ * times a product of second quantized operators (a SQOperator object)
  *
  * For example:
  *   0.1 * [2a+ 0a-] - 0.5 * [2a+ 0a-] + ...
@@ -70,18 +66,33 @@ class SparseOperator {
     ///     creation_i  : bool (true = creation, false = annihilation)
     ///     alpha_i     : bool (true = alpha, false = beta)
     ///     orb_i       : int  (the index of the mo)
+    /// 
     void add_term(const std::vector<std::tuple<bool, bool, int>>& op_list,
-                  double coefficient = 0.0);
+                  double coefficient = 0.0, bool allow_reordering = false);
     /// add a term to this operator
     void add_term(const SQOperator& sqop);
-    /// add a term to this operator
-    void add_term_from_str(std::string str, double value);
+    /// add a term to this operator of the form
+    ///
+    ///     coefficient * [... q_2 q_1 q_0]
+    ///
+    /// where q_0, q_1, ... are second quantized operators. These operators are
+    /// passed as string
+    ///
+    ///     '[... q_2 q_1 q_0]'
+    ///
+    /// where q_i = <orbital_i><spin_i><type_i> and the quantities in <> are
+    ///
+    /// orbital_i: int
+    /// spin_i: 'a' (alpha) or 'b' (beta)
+    /// type_i: '+' (creation) or '-' (annihilation)
+    ///
+    /// @param str a string that defines the product of operators in the format [... q_2 q_1 q_0]
+    /// @param coefficient a coefficient that multiplies the product of second quantized operators
+    void add_term_from_str(std::string str, double coefficient, bool allow_reordering = false);
     /// remove the last term from this operator
     void pop_term();
     /// @return a term
-    const SQOperator& get_term(size_t n) const;
-    /// @return the number of terms
-    size_t nterms() const { return op_list_.size(); }
+    const SQOperator& term(size_t n) const;
     /// @return the number of terms
     size_t size() const { return op_list_.size(); }
     /// set the value of the coefficients
@@ -90,14 +101,17 @@ class SparseOperator {
     void set_coefficients(std::vector<double>& values);
     /// set the value of one coefficient
     void set_coefficient(double value, size_t n) { op_list_[n].set_factor(value); }
-
+    /// is this operator antihermitian?
     bool is_antihermitian() const { return antihermitian_; }
+    /// @return the list of operators
     const std::vector<SQOperator>& op_list() const { return op_list_; }
+    /// @return a string representation of this operator
     std::vector<std::string> str() const;
+    /// @return a latex representation of this operator
     std::string latex() const;
 
   private:
-    ///
+    /// is this an antihermitian operator?
     bool antihermitian_ = false;
     /// a vector of SQOperator objects
     std::vector<SQOperator> op_list_;
