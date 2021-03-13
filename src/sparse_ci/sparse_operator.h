@@ -48,6 +48,14 @@ class ActiveSpaceIntegrals;
  * For example:
  *   0.1 * [2a+ 0a-] - 0.5 * [2a+ 0a-] + ...
  *       Term 0            Term 1
+ *  
+ *        This class stores operators in each term in the following canonical form
+ *            a+_p1 a+_p2 ...  a+_P1 a+_P2 ...   ... a-_Q2 a-_Q1   ... a-_q2 a-_q1
+ *            alpha creation   beta creation    beta annihilation  alpha annihilation
+ * 
+ *        with indices sorted as
+ * 
+ *            (p1 < p2 < ...) (P1 < P2 < ...)  (... > Q2 > Q1) (... > q2 > q1)
  */
 class SparseOperator {
   public:
@@ -82,9 +90,11 @@ class SparseOperator {
     ///
     /// where q_i = <orbital_i><spin_i><type_i> and the quantities in <> are
     ///
-    /// orbital_i: int
-    /// spin_i: 'a' (alpha) or 'b' (beta)
-    /// type_i: '+' (creation) or '-' (annihilation)
+    ///     orbital_i: int
+    ///     spin_i: 'a' (alpha) or 'b' (beta)
+    ///     type_i: '+' (creation) or '-' (annihilation)
+    ///
+    /// For example, '[0a+ 1b+ 12b- 0a-]'
     ///
     /// @param str a string that defines the product of operators in the format [... q_2 q_1 q_0]
     /// @param coefficient a coefficient that multiplies the product of second quantized operators

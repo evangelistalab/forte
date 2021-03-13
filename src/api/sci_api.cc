@@ -130,7 +130,7 @@ void export_Determinant(py::module& m) {
         .def("add_term_from_str", &SparseOperator::add_term_from_str, "str"_a,
              "coefficient"_a = 0.0, "allow_reordering"_a = false)
         .def("pop_term", &SparseOperator::pop_term)
-        .def("get_term", &SparseOperator::term)
+        .def("term", &SparseOperator::term)
         .def("size", &SparseOperator::size)
         .def("coefficients", &SparseOperator::coefficients)
         .def("set_coefficients", &SparseOperator::set_coefficients)
@@ -147,10 +147,10 @@ void export_Determinant(py::module& m) {
         .def("latex", &SQOperator::latex);
 
     py::class_<StateVector>(m, "StateVector")
-        .def(py::init<>())
         .def(py::init<const det_hash<double>&>())
         .def("map", &StateVector::map)
         .def("str", &StateVector::str)
+        .def("__eq__", &StateVector::operator==)
         .def("__repr__", [](const StateVector& v) { return v.str(); })
         .def("__str__", [](const StateVector& v) { return v.str(); })
         .def("__getitem__", [](StateVector& v, const Determinant& d) { return v[d]; })
@@ -181,7 +181,6 @@ void export_Determinant(py::module& m) {
     m.def("apply_number_projector", &apply_number_projector);
     m.def("get_projection", &get_projection);
     m.def("overlap", &overlap);
-
     m.def("spin2", &spin2<Determinant::nbits>);
 }
 

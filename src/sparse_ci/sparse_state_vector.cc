@@ -38,10 +38,23 @@
 
 namespace forte {
 
-StateVector::StateVector() { /* std::cout << "Created a StateVector object" << std::endl; */
-}
-
 StateVector::StateVector(const det_hash<double>& state_vec) : state_vec_(state_vec) {}
+
+bool StateVector::operator==(const StateVector& lhs) const {
+    double zero = 1.0e-14;
+    const auto& small_state = size() < lhs.size() ? *this : lhs;
+    const auto& large_state = size() < lhs.size() ? lhs : *this;
+    for (const auto& det_c_r : small_state) {
+        auto it = large_state.find(det_c_r.first);
+        if (it != large_state.end()) {
+            if (std::fabs(it->second - det_c_r.second) > zero)
+                return false;
+        } else {
+            return false;
+        }
+    }
+    return true;
+}
 
 std::string StateVector::str(int n) const {
     if (n == 0) {
@@ -54,7 +67,7 @@ std::string StateVector::str(int n) const {
     return s;
 }
 
- StateVector apply_operator_safe(SparseOperator& sop, const StateVector& state) {
+StateVector apply_operator_safe(SparseOperator& sop, const StateVector& state) {
     StateVector new_state;
     const auto& op_list = sop.op_list();
     Determinant d;
@@ -189,9 +202,11 @@ StateVector apply_number_projector(int na, int nb, StateVector& state) {
 
 double overlap(StateVector& left_state, StateVector& right_state) {
     double overlap = 0.0;
-    for (const auto& det_c_r : right_state) {
-        auto it = left_state.find(det_c_r.first);
-        if (it != left_state.end()) {
+    const auto& small_state = left_state.size() < right_state.size() ? left_state : right_state;
+    const auto& large_state = left_state.size() < right_state.size() ? right_state : left_state;
+    for (const auto& det_c_r : small_state) {
+        auto it = large_state.find(det_c_r.first);
+        if (it != large_state.end()) {
             overlap += it->second * det_c_r.second;
         }
     }

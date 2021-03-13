@@ -3,25 +3,8 @@
 
 import forte
 
-def parse_sign(s):
-    if s == '' or s == '+':
-        return 1.0
-    if s == '-':
-        return -1.0
-    print(f'There was an error parsing the sign {s}')
-
-def print_wfn(wfn, n):
-    for d, c in wfn.map().items():
-        print(f'{c:+20.12f} {d.str(n)}')
-
 def test_sparse_ci4():
-    import math
-    import psi4
-    import forte
-    import itertools
-    import numpy as np
     import pytest
-    from forte import forte_options
     from forte import det
 
     ### Test the linear operator ###
@@ -190,8 +173,3 @@ def test_sparse_ci4():
     assert wfn[det("-+0")] == pytest.approx(0.016058887563, abs=1e-9)
 
 test_sparse_ci4()
-
-
-
-
-

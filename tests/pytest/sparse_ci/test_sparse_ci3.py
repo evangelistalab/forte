@@ -3,31 +3,15 @@
 
 import forte
 
-def det(s):
-    d = forte.Determinant();
-    for k, c in enumerate(s):
-        if c == '+':
-            d.create_alfa_bit(k)
-        elif c == '-':
-            d.create_beta_bit(k)
-        elif c == '2':
-            d.create_alfa_bit(k)
-            d.create_beta_bit(k)
-    return d
-
 def print_wfn(wfn, n):
     for d, c in wfn.items():
         print(f'{c} {d.str(n)}')
 
 def test_sparse_ci3():
-    import math
-    import psi4
     import forte
-    import itertools
-    import numpy as np
     import pytest
-    from forte import forte_options
-
+    from forte import det
+    
     ### Operator ordering tests ###
     # test ordering: 0a+ 0b+ 0b- 0a- |2> = +|2>
     op = forte.SparseOperator()
@@ -262,9 +246,5 @@ def test_sparse_ci3():
     wfn = forte.apply_operator(op,ref)
     assert wfn[det("+20-")] == pytest.approx(-1.0, abs=1e-9)
 
-test_sparse_ci3()
-
-
-
-
-
+if __name__ == "__main__":
+    test_sparse_ci3()

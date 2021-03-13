@@ -40,6 +40,5 @@ def test_ccsd():
 
     assert energy == pytest.approx(ref_energy, 1.0e-11)
 
-
 if __name__ == "__main__":
     test_ccsd()

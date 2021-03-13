@@ -41,33 +41,45 @@ class ActiveSpaceIntegrals;
 
 class StateVector {
   public:
-    StateVector();
+    /// Constructor
+    StateVector() = default;
+    /// Constructor from a map/dictionary (python friendly)
     StateVector(const det_hash<double>& state_vec);
+
+    /// @return the map that holds the determinants
     det_hash<double>& map() { return state_vec_; }
+    /// @return true if the two states are identical
+    bool operator==(const StateVector& lhs) const;
 
+    /// @return a string representation of the object
     std::string str(int n = 0) const;
-
+    /// @return the number of elements (determinants)
     auto size() const { return state_vec_.size(); }
+    /// @brief reset this state
     void clear() { state_vec_.clear(); }
+    /// @brief find and return the element corresponding to a determinant
+    /// @param d the determinant to search for
+    /// @return the element found
     auto find(const Determinant& d) const { return state_vec_.find(d); }
 
+    /// @return the beginning of the map
     auto begin() { return state_vec_.begin(); }
-    auto end() { return state_vec_.end(); }
-
+    /// @return the beginning of the map (const)
     auto begin() const { return state_vec_.begin(); }
+    /// @return the end of the map
+    auto end() { return state_vec_.end(); }
+    /// @return the end of the map (const)
     auto end() const { return state_vec_.end(); }
-
+    /// @return the coefficient corresponding to a determinant
+    /// @param d the determinant to search
     double& operator[](const Determinant& d) { return state_vec_[d]; }
 
   private:
+    /// Holds an unordered map Determinant -> double
     det_hash<double> state_vec_;
 };
 
 // Functions to apply operators, gop |state>
-
-///// apply the Hamiltonian operator H|state>
-// StateVector apply_hamiltonian(std::shared_ptr<ActiveSpaceIntegrals> as_ints,
-//                              const StateVector& state0, double screen_thresh = 1.0e-12);
 
 /// apply the number projection operator P^alpha_na P^beta_nb |state>
 StateVector apply_number_projector(int na, int nb, StateVector& state);
@@ -75,10 +87,6 @@ StateVector apply_number_projector(int na, int nb, StateVector& state);
 /// compute the projection  <state0 | op | ref>, for each operator op in gop
 std::vector<double> get_projection(SparseOperator& sop, const StateVector& ref,
                                    const StateVector& state0);
-
-///// compute the expectation value <left_state|H|right_state>
-// double hamiltonian_matrix_element(StateVector& left_state, StateVector& right_state,
-//                                  std::shared_ptr<ActiveSpaceIntegrals> as_ints);
 
 /// compute the overlap value <left_state|right_state>
 double overlap(StateVector& left_state, StateVector& right_state);
@@ -88,27 +96,6 @@ StateVector apply_operator_safe(SparseOperator& sop, const StateVector& state);
 /// fast implementation of apply operator based on sorting
 StateVector apply_operator(SparseOperator& sop, const StateVector& state0,
                            double screen_thresh = 1.0e-12);
-///// fast implementation of apply operator
-// StateVector apply_operator_2(SparseOperator& sop, const StateVector& state0,
-//                             double screen_thresh = 1.0e-12);
-
-//// Functions to apply the exponential of an operator, exp(gop) |state0>
-///// fast implementation of exp operator based on sorting
-// StateVector apply_exp_operator(SparseOperator& sop, const StateVector& state0,
-//                               double scaling_factor = 1.0, int maxk = 20,
-//                               double screen_thresh = 1.0e-12);
-
-// StateVector apply_exp_operator_2(SparseOperator& sop, const StateVector& state0,
-//                                 double scaling_factor = 1.0, int maxk = 20,
-//                                 double screen_thresh = 1.0e-12);
-
-//// Functions to apply the product of exponentials of anti-hermitian operators
-//// ... exp(gop_3) exp(gop_2) exp(gop_1) |state0>
-///// safe implementation
-// StateVector apply_exp_ah_factorized_safe(SparseOperator& sop, const StateVector& state);
-///// fast implementation of apply operator based on exact exponentiation
-// StateVector apply_exp_ah_factorized(SparseOperator& sop, const StateVector& state0,
-//                                    bool inverse = false);
 
 } // namespace forte
 

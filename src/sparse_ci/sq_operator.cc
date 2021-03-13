@@ -64,7 +64,12 @@ SQOperator::SQOperator(const op_tuple_t& ops, double coefficient, bool allow_reo
     if (not is_sorted) {
         if (not allow_reordering) {
             throw std::runtime_error(
-                "Trying to initialize a SQOperator object with a list that is not sorted");
+                "Trying to initialize a SQOperator object with a product of\n"
+                "operators that are not arranged in the canonical form\n\n"
+                "    a+_p1 a+_p2 ...  a+_P1 a+_P2 ...   ... a-_Q2 a-_Q1   ... a-_q2 a-_q1\n"
+                "    alpha creation   beta creation    beta annihilation  alpha annihilation\n\n"
+                "with indices sorted as\n\n"
+                "    (p1 < p2 < ...) (P1 < P2 < ...)  (... > Q2 > Q1) (... > q2 > q1)\n");
         }
         // We first sort the operators so that they are ordered in the following way
         // [last](alpha cre. ascending) (beta cre. ascending) (beta ann. descending) (alpha ann.
