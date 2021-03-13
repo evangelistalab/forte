@@ -496,7 +496,7 @@ def solve_selected_cc_equations(
 
         old_e_micro = e
 
-    return (t1, e, micro_iter + 1, exp.time())
+    return (t1, e, micro_iter + 1, exp.timings())
 
 
 class DIIS:

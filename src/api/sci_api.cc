@@ -160,19 +160,19 @@ void export_Determinant(py::module& m) {
         .def(py::init<std::shared_ptr<ActiveSpaceIntegrals>>())
         .def("compute", &SparseHamiltonian::compute)
         .def("compute_on_the_fly", &SparseHamiltonian::compute_on_the_fly)
-        .def("time", &SparseHamiltonian::time);
+        .def("timings", &SparseHamiltonian::timings);
 
     py::class_<SparseExp>(m, "SparseExp")
         .def(py::init<>())
         .def("compute", &SparseExp::compute, "sop"_a, "state"_a, "algorithm"_a = "cached",
              "scaling_factor"_a = 1.0, "maxk"_a = 19, "screen_thresh"_a = 1.0e-12)
-        .def("time", &SparseExp::time);
+        .def("timings", &SparseExp::timings);
 
     py::class_<SparseFactExp>(m, "SparseFactExp")
         .def(py::init<bool>(), "phaseless"_a = false)
         .def("compute", &SparseFactExp::compute, "sop"_a, "state"_a, "algorithm"_a = "cached",
              "inverse"_a = false, "screen_thresh"_a = 1.0e-13)
-        .def("time", &SparseFactExp::time);
+        .def("timings", &SparseFactExp::timings);
 
     m.def("apply_operator",
           py::overload_cast<SparseOperator&, const StateVector&, double>(&apply_operator), "sop"_a,

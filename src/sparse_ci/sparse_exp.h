@@ -39,15 +39,44 @@
 
 namespace forte {
 
+/**
+ * @brief The SparseFactExp class
+ * This class implements an algorithm to apply the exponential of an operator to a state
+ * 
+ *    |state> -> exp(op) |state>
+ * 
+ */
 class SparseExp {
     enum class Algorithm { Cached, OnTheFlySorted, OnTheFlyStd };
 
   public:
-    SparseExp();
+
+    /// @brief Compute the exponential applied to a state via a Taylor expansion
+    ///
+    ///             exp(op) |state>
+    ///
+    /// This algorithms is useful when applying the exponential repeatedly
+    /// to the same state or in an iterative procedure
+    /// This function applies only those elements of the operator that satisfy the condition:
+    ///     |t * C_I| > screen_threshold
+    /// where C_I is the coefficient of a determinant
+    ///
+    /// @param sop the operator. Each term in this operator is applied in the order provided
+    /// @param state the state to which the factorized exponential will be applied
+    /// @param algorithm the algorithm used to compute the exponential. If algorithm = "onthefly"
+    /// this function will compute the factorized exponential using an on-the-fly implementation (slow).
+    /// If algorithm = "cached", a cached approach is used.
+    /// @param scaling_factor A scalr factor that multiplies the operator exponentiated. If set to -1.0
+    /// it allows to compute the inverse of the exponential exp(-op)
+    /// @param maxk the maximum power of op used in the Taylor expansion of exp(op)
+    /// @param screen_thresh a threshold to select which elements of the operator applied to the state.
+    /// An operator in the form exp(t ...), where t is an amplitude, will be applied to a determinant
+    /// Phi_I with coefficient C_I if the product |t * C_I| > screen_threshold
     StateVector compute(const SparseOperator& sop, const StateVector& state,
                         const std::string& algorithm = "cached", double scaling_factor = 1.0,
                         int maxk = 19, double screen_thresh = 1.0e-12);
-    std::map<std::string, double> time() const;
+    /// @return timings for this class
+    std::map<std::string, double> timings() const;
 
   private:
     StateVector apply_exp_operator(const SparseOperator& sop, const StateVector& state0,
@@ -60,12 +89,9 @@ class SparseExp {
     StateVector apply_operator_std(const SparseOperator& sop, const StateVector& state0,
                                    double screen_thresh);
 
-    double time_ = 0.0;
-    double couplings_time_ = 0.0;
-    double exp_time_ = 0.0;
-    double on_the_fly_time_ = 0.0;
-    DeterminantHashVec exp_hash_;
 
+    std::map<std::string, double> timings_;
+    DeterminantHashVec exp_hash_;
     // map Determinant -> [(operator, new determinant, factor),...]
     det_hash<std::vector<std::tuple<size_t, Determinant, double>>> couplings_;
     det_hash<std::vector<std::tuple<size_t, Determinant, double>>> couplings_dexc_;

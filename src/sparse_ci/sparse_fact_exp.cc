@@ -37,6 +37,10 @@ SparseFactExp::SparseFactExp(bool phaseless) : phaseless_(phaseless) {}
 StateVector SparseFactExp::compute(const SparseOperator& sop, const StateVector& state,
                                    const std::string& algorithm, bool inverse,
                                    double screen_thresh) {
+    if (not sop.is_antihermitian()) {
+        throw std::runtime_error("SparseFactExp: This class can only handle anti-Hermitian "
+                                 "operators\nbut sop is not defined as anti-Hermitian.");
+    }
     local_timer t;
     StateVector result;
     if (algorithm == "onthefly") {
@@ -44,8 +48,7 @@ StateVector SparseFactExp::compute(const SparseOperator& sop, const StateVector&
     } else {
         result = compute_cached(sop, state, inverse, screen_thresh);
     }
-
-    time_ += t.get();
+    timings_["total"] += t.get();
     return result;
 }
 
@@ -149,8 +152,8 @@ void SparseFactExp::compute_couplings(const SparseOperator& sop, const StateVect
             couplings_.push_back(d_couplings);
         }
     }
-    time_ += t.get();
-    couplings_time_ += t.get();
+    timings_["total"] += t.get();
+    timings_["couplings"] += t.get();
 }
 
 StateVector SparseFactExp::compute_exp(const SparseOperator& sop, const StateVector& state0,
@@ -210,8 +213,8 @@ StateVector SparseFactExp::compute_exp(const SparseOperator& sop, const StateVec
         const Determinant& d = exp_hash_.get_det(idx);
         state[d] = state_c[idx];
     }
-    time_ += t.get();
-    exp_time_ += t.get();
+    timings_["total"] += t.get();
+    timings_["exp"] += t.get();
     return state;
 }
 
@@ -268,17 +271,10 @@ StateVector SparseFactExp::compute_on_the_fly(const SparseOperator& sop, const S
             state[d_c.first] += d_c.second;
         }
     }
-    on_the_fly_time_ += t.get();
+    timings_["on_the_fly"] += t.get();
     return state;
 }
 
-std::map<std::string, double> SparseFactExp::time() const {
-    std::map<std::string, double> t;
-    t["time"] = time_;
-    t["couplings_time"] = couplings_time_;
-    t["exp_time"] = exp_time_;
-    t["on_the_fly_time"] = on_the_fly_time_;
-    return t;
-}
+std::map<std::string, double> SparseFactExp::timings() const { return timings_; }
 
 } // namespace forte

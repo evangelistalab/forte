@@ -35,8 +35,6 @@ namespace forte {
 size_t num_attempts_ = 0;
 size_t num_success_ = 0;
 
-SparseExp::SparseExp() {}
-
 StateVector SparseExp::compute(const SparseOperator& sop, const StateVector& state0,
                                const std::string& algorithm, double scaling_factor, int maxk,
                                double screen_thresh) {
@@ -50,7 +48,8 @@ StateVector SparseExp::compute(const SparseOperator& sop, const StateVector& sta
     }
 
     auto state = apply_exp_operator(sop, state0, scaling_factor, maxk, screen_thresh, alg);
-    time_ += t.get();
+
+    timings_["total"] = t.get();
     return state;
 }
 
@@ -58,8 +57,6 @@ StateVector SparseExp::apply_exp_operator(const SparseOperator& sop, const State
                                           double scaling_factor, int maxk, double screen_thresh,
                                           Algorithm alg) {
     double convergence_threshold_ = screen_thresh;
-
-    local_timer t;
 
     StateVector exp_state(state0);
     StateVector state(state0);
@@ -108,7 +105,6 @@ StateVector SparseExp::apply_operator_cached(const SparseOperator& sop, const St
     const auto& op_list = sop.op_list();
 
     StateVector new_terms;
-
     Determinant d_new;
 
     // loop over all determinants
@@ -139,7 +135,7 @@ StateVector SparseExp::apply_operator_cached(const SparseOperator& sop, const St
                     }
                 }
                 couplings_[d] = d_couplings;
-                couplings_time_ += t_couplings.get();
+                timings_["couplings"] += t_couplings.get();
             }
             local_timer t_sum;
             // apply the operator
@@ -150,7 +146,7 @@ StateVector SparseExp::apply_operator_cached(const SparseOperator& sop, const St
                 if (std::fabs(value) > screen_thresh)
                     new_terms[std::get<1>(op_d_f)] += value;
             }
-            exp_time_ += t_sum.get();
+            timings_["exp"] += t_sum.get();
         } else {
             break;
         }
@@ -184,7 +180,7 @@ StateVector SparseExp::apply_operator_cached(const SparseOperator& sop, const St
                         }
                     }
                     couplings_dexc_[d] = d_couplings;
-                    couplings_time_ += t_couplings.get();
+                    timings_["couplings"] += t_couplings.get();
                 }
                 local_timer t_sum;
                 // apply the operator
@@ -195,7 +191,7 @@ StateVector SparseExp::apply_operator_cached(const SparseOperator& sop, const St
                     if (std::fabs(value) > screen_thresh)
                         new_terms[std::get<1>(op_d_f)] -= value;
                 }
-                exp_time_ += t_sum.get();
+                timings_["exp"] += t_sum.get();
             } else {
                 break;
             }
@@ -347,15 +343,6 @@ StateVector SparseExp::apply_operator_std(const SparseOperator& sop, const State
     return new_terms;
 }
 
-std::map<std::string, double> SparseExp::time() const {
-    std::map<std::string, double> t;
-    t["time"] = time_;
-    t["couplings_time"] = couplings_time_;
-    t["exp_time"] = exp_time_;
-    t["on_the_fly_time"] = on_the_fly_time_;
-    t["num_attempts"] = static_cast<double>(num_attempts_);
-    t["num_success"] = static_cast<double>(num_success_);
-    return t;
-}
+std::map<std::string, double> SparseExp::timings() const { return timings_; }
 
 } // namespace forte

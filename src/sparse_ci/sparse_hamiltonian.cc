@@ -184,8 +184,8 @@ void SparseHamiltonian::compute_new_couplings(const std::vector<Determinant>& ne
             }
         }
     }
-    couplings_time_ += t.get();
-    time_ += t.get();
+    timings_["coupling_time"] += t.get();
+    timings_["time"] += t.get();
 }
 
 StateVector SparseHamiltonian::compute_sigma(const std::vector<double>& state_c,
@@ -207,8 +207,8 @@ StateVector SparseHamiltonian::compute_sigma(const std::vector<double>& state_c,
         sigma[sigma_hash_.get_det(n)] = sigma_c[n];
     }
 
-    sigma_time_ += t.get();
-    time_ += t.get();
+    timings_["total"] += t.get();
+    timings_["sigma"] += t.get();
     return sigma;
 }
 
@@ -329,18 +329,13 @@ StateVector SparseHamiltonian::compute_on_the_fly(const StateVector& state, doub
             }
         }
     }
-    time_ += t.get();
-    on_the_fly_time_ += t.get();
+    timings_["total"] += t.get();
+    timings_["on_the_fly"] += t.get();
     return sigma;
 }
 
-std::map<std::string, double> SparseHamiltonian::time() const {
-    std::map<std::string, double> t;
-    t["time"] = time_;
-    t["couplings_time"] = couplings_time_;
-    t["sigma_time"] = sigma_time_;
-    t["on_the_fly_time"] = on_the_fly_time_;
-    return t;
+std::map<std::string, double> SparseHamiltonian::timings() const {
+    return timings_;
 }
 
 } // namespace forte
