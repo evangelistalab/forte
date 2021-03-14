@@ -348,7 +348,7 @@ def residual_equations(
 
     residual = forte.get_projection(op, ref, R)
     energy = 0.0
-    for d, c in ref.map().items():
+    for d, c in ref.items():
         energy += c * R[d]
     return (residual, energy)
 

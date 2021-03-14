@@ -148,7 +148,11 @@ void export_Determinant(py::module& m) {
 
     py::class_<StateVector>(m, "StateVector")
         .def(py::init<const det_hash<double>&>())
-        .def("map", &StateVector::map)
+        // .def("map", &StateVector::map)
+        .def(
+            "items", [](const StateVector& v) { return py::make_iterator(v.begin(), v.end()); },
+            py::keep_alive<0, 1>())  // Essential: keep object alive while iterator exists
+        // .def("items",  [](StateVector& v) { return v.map(); })
         .def("str", &StateVector::str)
         .def("__eq__", &StateVector::operator==)
         .def("__repr__", [](const StateVector& v) { return v.str(); })

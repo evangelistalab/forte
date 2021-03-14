@@ -44,7 +44,6 @@
 
 #include "integrals/make_integrals.h"
 
-
 #include "orbital-helpers/aosubspace.h"
 #include "orbital-helpers/localize.h"
 #include "orbital-helpers/mp2_nos.h"
@@ -204,7 +203,12 @@ PYBIND11_MODULE(forte, m) {
     py::class_<SCFInfo, std::shared_ptr<SCFInfo>>(m, "SCFInfo")
         .def(py::init<psi::SharedWavefunction>())
         .def(py::init<const psi::Dimension&, const psi::Dimension&, double,
-                      std::shared_ptr<psi::Vector>, std::shared_ptr<psi::Vector>>());
+                      std::shared_ptr<psi::Vector>, std::shared_ptr<psi::Vector>>())
+        .def("doccpi", &SCFInfo::doccpi)
+        .def("soccpi", &SCFInfo::soccpi)
+        .def("doccpi", &SCFInfo::reference_energy)
+        .def("epsilon_a", &SCFInfo::epsilon_a)
+        .def("epsilon_a", &SCFInfo::epsilon_b);
 
     // export DynamicCorrelationSolver
     py::class_<DynamicCorrelationSolver, std::shared_ptr<DynamicCorrelationSolver>>(

@@ -76,7 +76,14 @@ void SparseOperator::add_term_from_str(std::string str, double coefficient, bool
     if (std::regex_match(str, m, re)) {
         if (m.ready()) {
             auto ops_vec_tuple = sparse_parse_ops(m[1]);
-            add_term(ops_vec_tuple, coefficient,allow_reordering);
+            if (is_antihermitian()) {
+                if (ops_vec_tuple.size() == 0) {
+                    throw std::runtime_error("SparseOperator: the operator " + str +
+                                             " contains a number component.\nThis is not allowed "
+                                             "for anti-Hermitian operators");
+                }
+            }
+            add_term(ops_vec_tuple, coefficient, allow_reordering);
         }
     } else {
         std::string msg =

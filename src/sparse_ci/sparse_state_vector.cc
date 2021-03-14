@@ -62,7 +62,9 @@ std::string StateVector::str(int n) const {
     }
     std::string s;
     for (const auto& c_d : state_vec_) {
-        s += forte::str(c_d.first, n) + " * " + std::to_string(c_d.second) + "\n";
+        if (std::fabs(c_d.second) > 1.0e-12) {
+            s += forte::str(c_d.first, n) + " * " + std::to_string(c_d.second) + "\n";
+        }
     }
     return s;
 }
