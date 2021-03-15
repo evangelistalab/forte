@@ -58,7 +58,7 @@ bool StateVector::operator==(const StateVector& lhs) const {
 
 std::string StateVector::str(int n) const {
     if (n == 0) {
-        n = Determinant::get_nbits_half();
+        n = Determinant::norb();
     }
     std::string s;
     for (const auto& c_d : state_vec_) {
@@ -86,11 +86,11 @@ StateVector apply_operator_safe(SparseOperator& sop, const StateVector& state) {
     return new_state;
 }
 
-StateVector apply_operator(SparseOperator& sop, const StateVector& state0, double screen_thresh) {
+StateVector apply_operator(SparseOperator& sop, const StateVector& state, double screen_thresh) {
     // make a copy of the state
-    std::vector<std::tuple<double, double, Determinant>> state_sorted(state0.size());
+    std::vector<std::tuple<double, double, Determinant>> state_sorted(state.size());
     size_t k = 0;
-    for (const auto& det_c : state0) {
+    for (const auto& det_c : state) {
         const Determinant& d = det_c.first;
         const double c = det_c.second;
         state_sorted[k] = std::make_tuple(std::fabs(c), c, d);
@@ -159,7 +159,7 @@ StateVector apply_operator(SparseOperator& sop, const StateVector& state0, doubl
 }
 
 std::vector<double> get_projection(SparseOperator& sop, const StateVector& ref,
-                                   const StateVector& state0) {
+                                   const StateVector& state) {
     local_timer t;
     std::vector<double> proj(sop.size(), 0.0);
 
@@ -179,8 +179,8 @@ std::vector<double> get_projection(SparseOperator& sop, const StateVector& ref,
 
             const double sign = apply_op(d, sqop.cre(), sqop.ann());
             if (sign != 0.0) {
-                auto search = state0.find(d);
-                if (search != state0.end()) {
+                auto search = state.find(d);
+                if (search != state.end()) {
                     value += sign * c * search->second;
                 }
             }

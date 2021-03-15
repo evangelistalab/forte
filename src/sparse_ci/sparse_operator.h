@@ -110,7 +110,7 @@ class SparseOperator {
     /// set the value of the coefficients
     void set_coefficients(std::vector<double>& values);
     /// set the value of one coefficient
-    void set_coefficient(double value, size_t n) { op_list_[n].set_factor(value); }
+    void set_coefficient(size_t n, double value) { op_list_[n].set_factor(value); }
     /// is this operator antihermitian?
     bool is_antihermitian() const { return antihermitian_; }
     /// @return the list of operators

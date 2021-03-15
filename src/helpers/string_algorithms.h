@@ -45,7 +45,6 @@ void to_lower_string(std::string& s);
 std::string lower_string(std::string s);
 
 /// Join a vector of strings using a separator
-std::string to_string(const std::vector<std::string>& vec_str, const std::string& sep = ",");
 std::string join(const std::vector<std::string>& vec_str, const std::string& sep = ",");
 
 

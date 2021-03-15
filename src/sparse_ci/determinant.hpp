@@ -87,10 +87,8 @@ template <size_t N> class DeterminantImpl : public BitArray<N> {
     /// the starting bit for beta orbitals
     static constexpr size_t beta_bit_offset = nwords_half * BitArray<N>::bits_per_word;
 
-    /// returns half the number of bits
-    static constexpr size_t get_nbits_half() { return nbits_half; }
-
-    size_t norb() const { return nbits_half; }
+    /// returns the number of orbitals (half the number of bits)
+    static constexpr size_t norb() { return nbits_half; }
 
     /// Default constructor
     DeterminantImpl() : BitArray<N>() {}

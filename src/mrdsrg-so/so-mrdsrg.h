@@ -31,17 +31,14 @@
 
 #include <fstream>
 
-
 #include "psi4/libmints/wavefunction.h"
 #include "ambit/blocked_tensor.h"
 
 #include "base_classes/dynamic_correlation_solver.h"
 #include "base_classes/mo_space_info.h"
-#include "boost/assign.hpp"
-#include "integrals/integrals.h"
 #include "base_classes/rdms.h"
 #include "helpers/blockedtensorfactory.h"
-
+#include "integrals/integrals.h"
 
 namespace forte {
 

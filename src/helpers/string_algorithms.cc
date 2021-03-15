@@ -67,18 +67,6 @@ std::string lower_string(std::string s) {
     return s;
 }
 
-std::string to_string(const std::vector<std::string>& vec_str, const std::string& sep) {
-    if (vec_str.size() == 0)
-        return std::string();
-
-    std::string ss;
-
-    std::for_each(vec_str.begin(), vec_str.end() - 1, [&](const std::string& s) { ss += s + sep; });
-    ss += vec_str.back();
-
-    return ss;
-}
-
 std::string join(const std::vector<std::string>& vec_str, const std::string& sep) {
     if (vec_str.size() == 0)
         return std::string();

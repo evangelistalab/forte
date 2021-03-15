@@ -8,7 +8,77 @@ def test_sparse_operator():
     import pytest
     from forte import det
 
+    # test get/set
+    sop = forte.SparseOperator()
+    sop.add_term_from_str('[]')
+    sop.add_term_from_str('[0a+ 0b+ 0b- 0a-]')
+    to_str = sop.str()
+    assert to_str == ['0.000000 * [ ]', '0.000000 * [ 0a+ 0b+ 0b- 0a- ]']
+    to_latex = sop.latex()
+    assert to_latex == r'0.000000\; 0.000000\;\hat{a}_{0 \alpha}^\dagger\hat{a}_{0 \beta}^\dagger\hat{a}_{0 \beta}\hat{a}_{0 \alpha}'
+
+    sop = forte.SparseOperator(antihermitian=True)
+    sop.add_term_from_str('[1a+ 1b+ 0b- 0a-]')
+    to_str = sop.str()
+    assert to_str == ['0.000000 * [ 1a+ 1b+ 0b- 0a- ]', '-0.000000 * [ 0a+ 0b+ 1b- 1a- ]']
+    to_latex = sop.latex()
+    assert to_latex == r'0.000000\;\hat{a}_{1 \alpha}^\dagger\hat{a}_{1 \beta}^\dagger\hat{a}_{0 \beta}\hat{a}_{0 \alpha} -0.000000\;\hat{a}_{0 \alpha}^\dagger\hat{a}_{0 \beta}^\dagger\hat{a}_{1 \beta}\hat{a}_{1 \alpha}'
+
+    sop = forte.SparseOperator()
+    sop.add_term_from_str('[]')
+    sop.add_term_from_str('[0a+ 0b+ 0b- 0a-]')
+
+    coeff = sop.coefficients()
+    assert coeff == pytest.approx([0.0,0.0], abs=1e-9)
+    sop.set_coefficient(0,0.5)
+    sop.set_coefficient(1,0.3)
+    coeff = sop.coefficients()
+    assert coeff == pytest.approx([0.5,0.3], abs=1e-9)
+    # remove one term from sop
+    sop.pop_term()
+    # check the size
+    assert sop.size() == 1    
+    # copy a term into a new operator
+    sop2 = forte.SparseOperator()
+    sop2.add_term(sop.term(0))
+
+    # test apply operator against safe implementation
+    sop = forte.SparseOperator()
+    sop.add_term_from_str('[2a+ 0a-]',0.0)
+    sop.add_term_from_str('[1a+ 0a-]',0.1)
+    sop.add_term_from_str('[1b+ 0b-]',0.3)    
+    sop.add_term_from_str('[1a+ 1b+ 0b- 0a-]',0.5)
+    dtest = det("20")
+    ref = forte.StateVector({ dtest: 1.0})
+    wfn = forte.apply_operator(sop,ref)
+    wfn_safe = forte.apply_operator_safe(sop,ref)    
+    assert wfn == wfn_safe
+
+    sop = forte.SparseOperator(antihermitian=True)
+    sop.add_term_from_str('[2a+ 0a-]',0.0)
+    sop.add_term_from_str('[1a+ 0a-]',0.1)
+    sop.add_term_from_str('[1b+ 0b-]',0.3)    
+    sop.add_term_from_str('[1a+ 1b+ 0b- 0a-]',0.7)
+    ref = forte.StateVector({ det("20"): 1.0, det("02"): 0.5})
+    wfn = forte.apply_operator(sop,ref)
+    assert wfn[det("20")] == pytest.approx(-0.35, abs=1e-9)
+    assert wfn[det("02")] == pytest.approx(0.7, abs=1e-9)
+    assert wfn[det("+-")] == pytest.approx(0.25, abs=1e-9)
+    assert wfn[det("-+")] == pytest.approx(-0.05, abs=1e-9)    
+
+    # wfn_safe = forte.apply_operator_safe(sop,ref)    
+    # assert wfn == wfn_safe
+
     ### Operator ordering tests ###
+    # test ordering exception
+    with pytest.raises(RuntimeError):
+        sop.add_term_from_str('[0a+ 0b+ 0a- 0b-]',1.0)
+
+    # test ordering exception
+    sop = forte.SparseOperator(antihermitian=True)
+    with pytest.raises(RuntimeError):
+        sop.add_term_from_str('[]',1.0)
+        
     # test ordering: 0a+ 0b+ 0b- 0a- |2> = +|2>
     sop = forte.SparseOperator()
     sop.add_term_from_str('[0a+ 0b+ 0b- 0a-]',1.0)
@@ -16,10 +86,6 @@ def test_sparse_operator():
     ref = forte.StateVector({ dtest: 1.0})
     wfn = forte.apply_operator(sop,ref)
     assert wfn[dtest] == pytest.approx(1.0, abs=1e-9)
-
-    # test ordering exception
-    with pytest.raises(RuntimeError):
-        sop.add_term_from_str('[0a+ 0b+ 0a- 0b-]',1.0)
 
     # test ordering: 0a+ 0b+ 0a- 0b- |2> = -|2>
     sop = forte.SparseOperator()

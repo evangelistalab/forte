@@ -391,7 +391,7 @@ void ForteOptions::push_options_to_psi4(psi::Options& options) {
                 for (const auto& s : py_allowed_values) {
                     allowed_values_vec.push_back(py::str(s));
                 }
-                std::string allowed = to_string(allowed_values_vec, " ");
+                std::string allowed = join(allowed_values_vec, " ");
 
                 if (py_default_value.is_none()) {
                     options.add_str(label, "", allowed);
@@ -555,7 +555,7 @@ std::string ForteOptions::generate_documentation() const {
         options_lines.push_back(p.second);
     }
 
-    return to_string(options_lines, "\n");
+    return join(options_lines, "\n");
 }
 
 std::string rst_bold(const std::string& s) { return "**" + s + "**"; }

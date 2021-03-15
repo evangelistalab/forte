@@ -147,12 +147,6 @@ class MRDSRG : public MASTER_DSRG {
                                                    {"LSRG2", CORR_LV::LSRG2},
                                                    {"SRG_PT2", CORR_LV::SRG_PT2}};
 
-    //     boost::assign::map_list_of(
-    //        "LDSRG2", CORR_LV::LDSRG2)("LDSRG2_P3", CORR_LV::LDSRG2_P3)("PT2", CORR_LV::PT2)(
-    //        "PT3", CORR_LV::PT3)("LDSRG2_QC", CORR_LV::LDSRG2_QC)("QDSRG2", CORR_LV::QDSRG2)(
-    //        "QDSRG2_P3", CORR_LV::QDSRG2_P3)("LSRG2", CORR_LV::LSRG2)("SRG_PT2",
-    //        CORR_LV::SRG_PT2);
-
     /// One-electron integral
     ambit::BlockedTensor H_;
     /// Two-electron integral

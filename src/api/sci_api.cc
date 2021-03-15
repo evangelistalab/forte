@@ -58,7 +58,7 @@ void export_Determinant(py::module& m) {
         .def("get_alfa_bits", &Determinant::get_alfa_bits, "Get alpha bits")
         .def("get_beta_bits", &Determinant::get_beta_bits, "Get beta bits")
         .def("nbits", &Determinant::get_nbits)
-        .def("nbits_half", &Determinant::get_nbits_half)
+        .def("norb", &Determinant::norb)
         .def("get_alfa_bit", &Determinant::get_alfa_bit, "n"_a, "Get the value of an alpha bit")
         .def("get_beta_bit", &Determinant::get_beta_bit, "n"_a, "Get the value of a beta bit")
         .def("set_alfa_bit", &Determinant::set_alfa_bit, "n"_a, "value"_a,
@@ -79,7 +79,7 @@ void export_Determinant(py::module& m) {
             "Apply a generic excitation")
         .def(
             "str", [](const Determinant& a, int n) { return str(a, n); },
-            "n"_a = Determinant::get_nbits_half(),
+            "n"_a = Determinant::norb(),
             "Get the string representation of the Slater determinant")
         .def("__repr__", [](const Determinant& a) { return str(a); })
         .def("__str__", [](const Determinant& a) { return str(a); })
@@ -181,6 +181,10 @@ void export_Determinant(py::module& m) {
     m.def("apply_operator",
           py::overload_cast<SparseOperator&, const StateVector&, double>(&apply_operator), "sop"_a,
           "state0"_a, "screen_thresh"_a = 1.0e-12);
+
+    m.def("apply_operator_safe",
+          py::overload_cast<SparseOperator&, const StateVector&>(&apply_operator_safe), "sop"_a,
+          "state0"_a);          
 
     m.def("apply_number_projector", &apply_number_projector);
     m.def("get_projection", &get_projection);
