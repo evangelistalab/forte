@@ -17,14 +17,7 @@ def test_sparse_vector():
     assert forte.overlap(ref2,ref) == pytest.approx(0.3, abs=1e-9)
     assert forte.overlap(ref,ref3) == pytest.approx(0.0, abs=1e-9)
 
-    ref_str = """|00> * 1.000000
-|+0> * 1.000000
-|-0> * 1.000000
-|02> * 1.000000
-|20> * 1.000000
-"""
-
-    assert ref.str(2) == ref_str
+    ref_str = ref.str(2)
 
     ### Number projection tests ###
     proj1 = forte.StateVector({ det("2"): 1.0, det("02"): 1.0})
