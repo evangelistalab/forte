@@ -122,42 +122,42 @@ std::pair<double, std::string> to_xb(size_t nele, size_t type_size) {
     return out;
 }
 
-void view_modified_orbitals(psi::SharedWavefunction wfn, const std::shared_ptr<psi::Matrix>& Ca,
-                            const std::shared_ptr<Vector>& diag_F,
-                            const std::shared_ptr<Vector>& occupation) {
-    std::shared_ptr<MoldenWriter> molden(new MoldenWriter(wfn));
-    std::string filename = get_writer_file_prefix(wfn->molecule()->name()) + ".molden";
+// void view_modified_orbitals(psi::SharedWavefunction wfn, const std::shared_ptr<psi::Matrix>& Ca,
+//                             const std::shared_ptr<Vector>& diag_F,
+//                             const std::shared_ptr<Vector>& occupation) {
+//     std::shared_ptr<MoldenWriter> molden(new MoldenWriter(wfn));
+//     std::string filename = get_writer_file_prefix(wfn->molecule()->name()) + ".molden";
 
-    if (remove(filename.c_str()) == 0) {
-        outfile->Printf("\n  Remove previous molden file named %s.", filename.c_str());
-    }
-    outfile->Printf("\n  Write molden file to %s.", filename.c_str());
-    molden->write(filename, Ca, Ca, diag_F, diag_F, occupation, occupation, true);
-}
+//     if (remove(filename.c_str()) == 0) {
+//         outfile->Printf("\n  Remove previous molden file named %s.", filename.c_str());
+//     }
+//     outfile->Printf("\n  Write molden file to %s.", filename.c_str());
+//     molden->write(filename, Ca, Ca, diag_F, diag_F, occupation, occupation, true);
+// }
 
-std::pair<std::vector<size_t>, std::vector<size_t>> split_up_tasks(size_t size_of_tasks,
-                                                                   size_t nproc) {
-    size_t mystart = 0;
-    size_t nbatch = 0;
-    std::vector<size_t> mystart_list(nproc, 0);
-    std::vector<size_t> myend_list(nproc, 0);
-    for (size_t me = 0; me < nproc; me++) {
-        mystart = (size_of_tasks / nproc) * me;
-        if (size_of_tasks % nproc > me) {
-            mystart += me;
-            nbatch = mystart + (size_of_tasks / nproc) + 1;
-        } else {
-            mystart += size_of_tasks % nproc;
-            nbatch = mystart + (size_of_tasks / nproc);
-        }
-        mystart_list[me] = mystart;
-        myend_list[me] = nbatch;
-    }
-    std::pair<std::vector<size_t>, std::vector<size_t>> my_lists =
-        std::make_pair(mystart_list, myend_list);
+// std::pair<std::vector<size_t>, std::vector<size_t>> split_up_tasks(size_t size_of_tasks,
+//                                                                    size_t nproc) {
+//     size_t mystart = 0;
+//     size_t nbatch = 0;
+//     std::vector<size_t> mystart_list(nproc, 0);
+//     std::vector<size_t> myend_list(nproc, 0);
+//     for (size_t me = 0; me < nproc; me++) {
+//         mystart = (size_of_tasks / nproc) * me;
+//         if (size_of_tasks % nproc > me) {
+//             mystart += me;
+//             nbatch = mystart + (size_of_tasks / nproc) + 1;
+//         } else {
+//             mystart += size_of_tasks % nproc;
+//             nbatch = mystart + (size_of_tasks / nproc);
+//         }
+//         mystart_list[me] = mystart;
+//         myend_list[me] = nbatch;
+//     }
+//     std::pair<std::vector<size_t>, std::vector<size_t>> my_lists =
+//         std::make_pair(mystart_list, myend_list);
 
-    return my_lists;
-}
+//     return my_lists;
+// }
 
 namespace math {
 size_t combinations(size_t n, size_t k) {
