@@ -584,7 +584,7 @@ def run_selected_ucc(
 
     print("=========================================================================")
     print("     Iter.         Energy       Delta Energy    Res. Norm         Time")
-    print("     Iter.          (Eh)             (Eh)         (Eh)             (s)")
+    print("                    (Eh)             (Eh)         (Eh)             (s)")
     print("-------------------------------------------------------------------------")
     for macro_iter in range(max_macro_iter):
 
@@ -699,5 +699,4 @@ def run_selected_ucc(
         print(f"{n:6d} {e:20.12f} {mi}")
 
     return calc_data[-1]
-
 
