@@ -330,13 +330,42 @@ def prepare_forte_objects_from_fcidump(options):
     ms2 = fcidump['ms2']
     na = (nel + ms2) // 2
     nb = nel - na
-    doccpi = psi4.core.Dimension([nb])
-    soccpi = psi4.core.Dimension([ms2])
-    if 'epsilon' in fcidump:
-        epsilon = psi4.core.Vector.from_array(fcidump['epsilon'])
+    if fcidump['pntgrp'] == 'C1':
+        doccpi = psi4.core.Dimension([nb])
+        soccpi = psi4.core.Dimension([ms2])
     else:
-        epsilon = psi4.core.Vector(nmopi)
-    scf_info = forte.SCFInfo(doccpi, soccpi, 0.0, epsilon, epsilon)
+        raise RuntimeError('FCIDUMP for non-C1 files is not fully implemented')
+
+    if 'epsilon' in fcidump:
+        epsilon_a = psi4.core.Vector.from_array(fcidump['epsilon'])
+        epsilon_b = psi4.core.Vector.from_array(fcidump['epsilon'])        
+    else:
+        # manufacture Fock matrices (C1 version)
+        if fcidump['pntgrp'] == 'C1':
+            epsilon_a = psi4.core.Vector(nmo)
+            epsilon_b = psi4.core.Vector(nmo)
+            hcore = fcidump['hcore']
+            eri = fcidump['eri']
+            nmo = fcidump['norb']
+            for i in range(nmo):
+                val = hcore[i,i]
+                for j in range(na):
+                    val += eri[i,i,j,j] - eri[i,j,i,j]
+                for j in range(nb):
+                    val += eri[i,i,j,j]
+                epsilon_a.set(i,val)
+
+                val = hcore[i,i]
+                for j in range(nb):
+                    val += eri[i,i,j,j] - eri[i,j,i,j]
+                for j in range(na):
+                    val += eri[i,i,j,j]
+                epsilon_b.set(i,val)                
+        else:
+            epsilon_a = psi4.core.Vector(nmopi)
+            epsilon_b = psi4.core.Vector(nmopi)
+    scf_info = forte.SCFInfo(doccpi, soccpi, 0.0, epsilon_a, epsilon_b)
+    print(epsilon_a)
 
     state_info = make_state_info_from_fcidump(fcidump, options)
     state_weights_map = {state_info: [1.0]}

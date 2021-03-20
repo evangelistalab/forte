@@ -263,16 +263,21 @@ void MOSpaceInfo::read_options(std::shared_ptr<ForteOptions> options) {
 }
 
 void MOSpaceInfo::read_from_map(const std::map<std::string, std::vector<size_t>>& mo_space_map) {
+    // Capitalize the space names to allow the user to use both lower or upper case strings
+    std::map<std::string, std::vector<size_t>> mo_space_map_capitalized;
+    for (const auto& el : mo_space_map){
+        mo_space_map_capitalized[upper_string(el.first)] = el.second;
+    }
     // Read the elementary spaces
     for (std::string& space : elementary_spaces_) {
-        std::pair<SpaceInfo, bool> result = read_mo_space_from_map(space, mo_space_map);
+        std::pair<SpaceInfo, bool> result = read_mo_space_from_map(space, mo_space_map_capitalized);
         if (result.second) {
             mo_spaces_[space] = result.first;
         }
     }
     for (auto& space_list : composite_spaces_) {
         const auto& space = space_list.first;
-        std::pair<SpaceInfo, bool> result = read_mo_space_from_map(space, mo_space_map);
+        std::pair<SpaceInfo, bool> result = read_mo_space_from_map(space, mo_space_map_capitalized);
         if (result.second) {
             mo_spaces_[space_list.second[0]] = result.first;
         }

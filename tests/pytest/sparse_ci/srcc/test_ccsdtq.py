@@ -25,7 +25,7 @@ def test_ccsdtq():
                                                 basis='DZ',
                                                 reference='RHF')
     forte_objs = forte.utils.prepare_forte_objects(psi4_wfn, mo_spaces={})
-    calc_data = scc.run_cc(forte_objs, psi4_wfn, cc_type='cc', max_exc=4)
+    calc_data = scc.run_cc(forte_objs[1],forte_objs[2],forte_objs[3], cc_type='cc', max_exc=4)
 
     forte.cleanup()
     psi4.core.clean()

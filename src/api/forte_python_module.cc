@@ -206,9 +206,9 @@ PYBIND11_MODULE(forte, m) {
                       std::shared_ptr<psi::Vector>, std::shared_ptr<psi::Vector>>())
         .def("doccpi", &SCFInfo::doccpi)
         .def("soccpi", &SCFInfo::soccpi)
-        .def("doccpi", &SCFInfo::reference_energy)
+        .def("reference_energy", &SCFInfo::reference_energy)
         .def("epsilon_a", &SCFInfo::epsilon_a)
-        .def("epsilon_a", &SCFInfo::epsilon_b);
+        .def("epsilon_b", &SCFInfo::epsilon_b);
 
     // export DynamicCorrelationSolver
     py::class_<DynamicCorrelationSolver, std::shared_ptr<DynamicCorrelationSolver>>(

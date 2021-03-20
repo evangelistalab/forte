@@ -72,7 +72,7 @@ class SparseHamiltonian {
     /// Compute couplings for new determinants
     void compute_new_couplings(const std::vector<Determinant>& new_dets, double screen_thresh);
     /// Compute sigma using the couplings
-    StateVector compute_sigma(const std::vector<double>& c_state, double screen_thresh);
+    StateVector compute_sigma(const StateVector& state, double screen_thresh);
 
     /// The integral object
     std::shared_ptr<ActiveSpaceIntegrals> as_ints_;
@@ -81,7 +81,8 @@ class SparseHamiltonian {
     /// A map that holds the list of the determinants obtained after applying H
     DeterminantHashVec sigma_hash_;
     /// A vector of determinant couplings
-    std::vector<std::tuple<size_t, size_t, double>> couplings_;
+    std::map<Determinant,std::vector<std::pair<size_t, double>>> couplings_;
+    // std::vector<std::tuple<size_t, size_t, double>> couplings_;
     /// A map that stores timing information
     std::map<std::string,double> timings_;
 };

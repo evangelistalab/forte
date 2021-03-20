@@ -158,6 +158,7 @@ void export_Determinant(py::module& m) {
         .def("__repr__", [](const StateVector& v) { return v.str(); })
         .def("__str__", [](const StateVector& v) { return v.str(); })
         .def("__getitem__", [](StateVector& v, const Determinant& d) { return v[d]; })
+        .def("__setitem__", [](StateVector& v, const Determinant& d, const double val) { v[d] = val; })
         .def("__contains__", [](StateVector& v, const Determinant& d) { return v.map().count(d); });
 
     py::class_<SparseHamiltonian>(m, "SparseHamiltonian")

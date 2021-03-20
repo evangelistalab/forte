@@ -11,25 +11,29 @@ import forte
 import forte.utils
 
 def run_cc(
-    forte_objs,
-    psi4_wfn,
+    as_ints,
+    scf_info,
+    mo_space_info,
     cc_type=None,
     select_type=None,
     max_exc=None,
     omega=None,
     e_convergence=1.0e-10,
     r_convergence=1.0e-5,
-    compute_threshold=1.0e-16,
-    selection_threshold=1.0e-16,
+    compute_threshold=1.0e-14,
+    selection_threshold=1.0e-14,
+    on_the_fly=False
 ):
-    """This function implements various selected CC methods
+    """This function implements various CC methods
 
     Parameters
     ----------
-    forte_objs : tuple(ForteIntegrals, ActiveSpaceIntegrals, SCFInfo, MOSpaceInfo, map(StateInfo : list))
-        a tuple containing the ForteIntegrals, SCFInfo, and MOSpaceInfo objects and a map of states and weights
-    psi4_wfn : psi4 Wavefunction
-        A psi4 Wavefunction object (to read the number of alpha/beta electrons)
+    as_ints : ActiveSpaceIntegrals
+        the molecular integrals
+    mo_space_info : MOSpaceInfo
+        the information about the molecular spaces
+    scf_info : SCFInfo
+        Information about the number of alpha/beta electrons
     cc_type : str
         The type of CC computation (cc/ucc/ducc)
     select_type : str
@@ -41,31 +45,34 @@ def run_cc(
     e_convergence : float
         The energy convergence criterion (default = 1.0e-10)
     r_convergence : float
-        The residual convergence criterion (default = =1.0e-5)
+        The residual convergence criterion (default = 1.0e-5)
     compute_threshold : float
-        The compute cutoff (default = =1.0e-16)
+        The compute cutoff (default = 1.0e-14)
     selection_threshold : float
-        The selection cutoff (default = =1.0e-16)
+        The selection cutoff (default = 1.0e-14)
+    on_the_fly : bool
+        Use the on-the-fly algorithms? By default this code uses a caching algorithm
+        that can be faster when using very small compute threshold values (default = False)
     Returns
     -------
     list(tuple(int,float))
         a list containing pairs of numbers that report the number of operators and the energy at each macroiteration
     """
 
-    as_ints = forte_objs[1]
-    mo_space_info = forte_objs[3]
     nirrep = mo_space_info.nirrep()
 
     nmo = mo_space_info.size("CORRELATED")
     nmopi = mo_space_info.dimension("CORRELATED").to_tuple()
+    nfrzdocc = mo_space_info.dimension("FROZEN_DOCC").to_tuple()
     # the number of alpha electrons per irrep
-    naelpi = (psi4_wfn.nalphapi() - mo_space_info.dimension("FROZEN_DOCC")).to_tuple()
+    naelpi = (scf_info.doccpi() + scf_info.soccpi() - mo_space_info.dimension("FROZEN_DOCC")).to_tuple()
     # the number of beta electrons per irrep
-    nbelpi = (psi4_wfn.nbetapi() - mo_space_info.dimension("FROZEN_DOCC")).to_tuple()
+    nbelpi = (scf_info.doccpi() - mo_space_info.dimension("FROZEN_DOCC")).to_tuple()
 
-    print(f"Number of orbitals per irrep:        {nmopi}")
-    print(f"Number of alpha electrons per irrep: {naelpi}")
-    print(f"Number of beta electrons per irrep:  {nbelpi}")
+    print(f"Number of frozen orbitals per irrep:     {nfrzdocc}")
+    print(f"Number of correlated orbitals per irrep: {nmopi}")
+    print(f"Number of alpha electrons per irrep:     {naelpi}")
+    print(f"Number of beta electrons per irrep:      {nbelpi}")
 
     # if not provided, define the maximum excitation level to be FCI
     if max_exc == None:
@@ -75,7 +82,7 @@ def run_cc(
 
     # create the operator pool
     op, denominators = make_cluster_operator(
-        antihermitian, max_exc, naelpi, mo_space_info, psi4_wfn
+        antihermitian, max_exc, naelpi, mo_space_info, scf_info
     )
     selected_op = forte.SparseOperator(antihermitian)
 
@@ -84,16 +91,22 @@ def run_cc(
         op_pool = list(range(op.size()))
         t = [0.0] * op.size()
         print(f"\n The excitation operator pool contains {op.size()} elements")
-        print(f"\n The selected operator pool contains {selected_op.size()} elements")
     else:
+        raise RuntimeError('Selected CC methods are not implemented yet')
         print(f"\n Selecting operators using the {selec_type} scheme")
         t = []
         op_pool = []
+        print(f"\n The selected operator pool contains {selected_op.size()} elements")
 
     old_e = 0.0
     start = time.time()
 
-    ref = forte.StateVector({make_hfref(naelpi, nbelpi, nmopi): 1.0})
+    hfref = make_hfref(naelpi, nbelpi, nmopi)
+    eref = as_ints.slater_rules(hfref,hfref) + as_ints.nuclear_repulsion_energy()
+    print(f"Reference determinant: {hfref.str(nmo)}")
+    print(f"Energy of the reference determinant: {eref}")
+
+    ref = forte.StateVector({hfref : 1.0})
 
     nops_old = 0
 
@@ -108,25 +121,8 @@ def run_cc(
 
     for macro_iter in range(max_macro_iter):
 
-        # step 1: select new operators
-        if select_type is not None:
-            # compute the full residual
-            residual, e = residual_equations(
-                cc_type,
-                t,
-                op,
-                selected_op,
-                ref,
-                None,
-                None,
-                compute_threshold,
-                on_the_fly=True,
-            )
-
-            select_new_operators(select_type, residual, denominators, selected_op, op_pool, t)
-
-        # step 2: solve the ucc equations and update the amplitudes
-        t, e, micro_iter, timing = solve_selected_cc_equations(
+        # solve the ucc equations and update the amplitudes
+        t, e, e_proj, micro_iter, timing = solve_cc_equations(
             cc_type,
             t,
             op,
@@ -138,6 +134,7 @@ def run_cc(
             compute_threshold,
             e_convergence,
             r_convergence,
+            on_the_fly
         )
 
         print(
@@ -157,7 +154,10 @@ def run_cc(
 
     print("=========================================================================")
 
-    print(f"{cc_type.upper()} energy:{e:20.12f}  Eh (Nops = {np.count_nonzero(t):8d})")
+    print(f"{cc_type.upper()} energy:           {e:20.12f}  Eh (Nops = {np.count_nonzero(t):8d})")
+    print(f"{cc_type.upper()} corr. energy:     {e - eref:20.12f}")
+    print(f"\n{cc_type.upper()} proj. energy:     {e_proj:20.12f}")
+    print(f"{cc_type.upper()} proj. corr energy:{e_proj - eref:20.12f}")
     print(f"omega: {omega}")
     print(f"{timing}")
 
@@ -191,8 +191,6 @@ def make_hfref(naelpi, nbelpi, nmopi):
             hfref.set_alfa_bit(irrep_start[h] + i, True)
         for i in range(nbelpi[h]):
             hfref.set_beta_bit(irrep_start[h] + i, True)
-
-    print(f"Reference determinant: {hfref.str(nmo)}")
 
     return hfref
 
@@ -303,147 +301,9 @@ def make_cluster_operator(
     print(f"Number of amplitudes: {sop.size()}")
     return (sop, denominators)
 
-
-def residual_equations(
-    cc_type, t, op, sop, ref, ham, exp, compute_threshold, on_the_fly=False
-):
-    """Evaluate the residual equations
-
-    Parameters
-    ----------
-    antihermitian : bool
-        Is this operator antihermitian?
-    max_exc : int
-        The maximum excitation level (defaul: None)
-    naelpi : psi4 Dimension
-        The number of alpha electrons per irrep
-    psi4_wfn : psi4 Wavefunction
-        A psi4 Wavefunction object (to read the number of alpha/beta electrons)
-    Returns
-    -------
-    Determinant
-        The Hartree-Fock determinant
-    """
-    # update the amplitudes
-    sop.set_coefficients(t)
-
-    if on_the_fly:
-        wfn = exp.compute_on_the_fly(sop, ref)
-        Hwfn = ham.compute_on_the_fly(wfn, compute_threshold)
-        if cc_type == "cc" or cc_type == "ucc":
-            R = exp.compute_on_the_fly(sop, Hwfn, scaling_factor=-1.0)
-        elif cc_type == "ducc" or cc_type == "fucc" or cc_type == "factucc":
-            R = exp.compute_on_the_fly(sop, Hwfn, inverse=True)
-        else:
-            raise ValueError("Incorrect value for cc_type")
-    else:
-        wfn = exp.compute(sop, ref)
-        Hwfn = ham.compute(wfn, compute_threshold)
-        if cc_type == "cc" or cc_type == "ucc":
-            R = exp.compute(sop, Hwfn, scaling_factor=-1.0)
-        elif cc_type == "ducc" or cc_type == "fucc" or cc_type == "factucc":
-            R = exp.compute(sop, Hwfn, inverse=True)
-        else:
-            raise ValueError("Incorrect value for cc_type")
-
-    residual = forte.get_projection(op, ref, R)
-    energy = 0.0
-    for d, c in ref.items():
-        energy += c * R[d]
-    return (residual, energy)
-
-def select_operator_pool(sorted_res, omega):
-    sum_r2 = 0.0
-    excluded = 0
-    for r, i in sorted_res:
-        sum_r2 += r ** 2
-        if sum_r2 >= omega ** 2:
-            break
-        excluded += 1
-    new_ops = [i[1] for i in sorted_res[excluded:]]
-    new_ops.reverse()  # so that operators are sorted from largest to smallest residual
-    return new_ops
-
-def select_new_operators(select_type, residual, denominators, selected_op, op_pool, t):
-    """Select new operator to include in the pool
-
-    Parameters
-    ----------
-    select_type : ???
-
-    Returns
-    -------
-
-    """
-    sorted_res = sorted(
-        zip(residual, range(len(residual))),
-        key=lambda x: abs(x[0]),
-        reverse=False,
-    )
-
-    # get the list of operators to add
-    new_ops = select_operator_pool(sorted_res, omega)
-
-    if ordering == 1:
-        # add these operators
-        for j in new_ops:
-            if j not in op_pool:
-                op_pool.append(j)
-                selected_op.add_term(op.term(j))
-                t1.append(0.0)
-
-    if ordering == 2:
-        # add these operators
-        new_ops.reverse()  # to make sure operators will be sorted from smallest to largest
-        for j in new_ops:
-            if j not in op_pool:
-                op_pool.append(j)
-                selected_op.add_term(op.term(j))
-                t1.append(0.0)
-
-    if ordering == 3:
-        new_t1 = []
-        new_op_pool = []
-        new_selected_op = forte.SparseOperator()
-        # add the operators
-        for j in new_ops:
-            if j not in op_pool:
-                new_op_pool.append(j)
-                new_selected_op.add_term(op.term(j))
-                new_t1.append(0.0)
-        for j in range(selected_op.size()):
-            new_selected_op.add_term(selected_op.term(j))
-        new_t1.extend(t1)
-        new_op_pool.extend(op_pool)
-        t1 = new_t1
-        op_pool = new_op_pool
-        selected_op = new_selected_op
-
-    if True:
-        new_t1 = []
-        new_op_pool = []
-        new_selected_op = forte.SparseOperator()
-        new_ops.reverse()  # to make sure operators will be sorted from smallest to largest
-        # add the operators
-        for j in new_ops:
-            if j not in op_pool:
-                new_op_pool.append(j)
-                new_selected_op.add_term(op.term(j))
-                new_t1.append(0.0)
-        for j in range(selected_op.size()):
-            new_selected_op.add_term(selected_op.term(j))
-        new_t1.extend(t1)
-        new_op_pool.extend(op_pool)
-        t1 = new_t1
-        op_pool = new_op_pool
-        selected_op = new_selected_op
-
-    print(f"Number of operators selected: {selected_op.size()}")
-
-
-def solve_selected_cc_equations(
+def solve_cc_equations(
     cc_type,
-    t1,
+    t,
     op,
     selected_op,
     op_pool,
@@ -452,10 +312,46 @@ def solve_selected_cc_equations(
     as_ints,
     compute_threshold,
     e_convergence=1.0e-10,
-    r_convergence=1.0e-10,
+    r_convergence=1.0e-5,
+    on_the_fly=False,
     maxiter=100,
 ):
-    diis = DIIS(t1)
+    """Solve the CC equations
+
+    Parameters
+    ----------
+    cc_type : str
+        The type of CC computation (cc/ucc/ducc)
+    t : list
+        The cluster amplitudes
+    op : SparseOperator
+        An operator that spans the full excitation space
+    op_pool : list
+        List of the operators that have been selected
+    denominators: list
+        Møller-Plesset denominators
+    ref : dict(Denominator : float)
+        The reference determinant
+    as_ints : ActiveSpaceIntegrals
+        the molecular integrals
+    compute_threshold : float
+        The compute cutoff
+    e_convergence : float
+        The energy convergence criterion (default = 1.0e-10)
+    r_convergence : float
+        The residual convergence criterion (default = 1.0e-5)
+    on_the_fly : bool
+        Use the on-the-fly algorithms? By default this code uses a caching algorithm
+        that can be faster when using very small compute threshold values (default = False)
+    maxiter : int
+        The maximum number of iterations
+    Returns
+    -------
+    tuple(t, e, e_proj, micro_iter + 1, exp.timings())
+        Returns the a tuple containign the converged amplitudes, the energy, the projective energy,
+        the number of iterations, and timings information
+    """
+    diis = DIIS(t)
     ham = forte.SparseHamiltonian(as_ints)
     if cc_type == "cc" or cc_type == "ucc":
         exp = forte.SparseExp()
@@ -466,19 +362,19 @@ def solve_selected_cc_equations(
 
     for micro_iter in range(maxiter):
         micro_start = time.time()
-        t1_old = copy.deepcopy(t1)
-        residual, e = residual_equations(
-            cc_type, t1, op, selected_op, ref, ham, exp, compute_threshold
+        t_old = copy.deepcopy(t)
+        residual, e, e_proj = residual_equations(
+            cc_type, t, op, selected_op, ref, ham, exp, compute_threshold,on_the_fly
         )
 
         residual_norm = 0.0
         for l in range(selected_op.size()):
-            t1[l] -= residual[op_pool[l]] / denominators[op_pool[l]]
+            t[l] -= residual[op_pool[l]] / denominators[op_pool[l]]
             residual_norm += residual[op_pool[l]] ** 2
 
         residual_norm = math.sqrt(residual_norm)
 
-        t1 = diis.update(t1, t1_old)
+        t = diis.update(t, t_old)
 
         delta_e_micro = e - old_e_micro
 
@@ -496,15 +392,108 @@ def solve_selected_cc_equations(
 
         old_e_micro = e
 
-    return (t1, e, micro_iter + 1, exp.timings())
+    return (t, e, e_proj, micro_iter + 1, exp.timings())
 
+def residual_equations(
+    cc_type, t, op, sop, ref, ham, exp, compute_threshold, on_the_fly=False, similarity=True
+):
+    """Evaluate the residual equations
+
+    Parameters
+    ----------
+    antihermitian : bool
+        Is this operator antihermitian?
+    max_exc : int
+        The maximum excitation level (defaul: None)
+    naelpi : psi4 Dimension
+        The number of alpha electrons per irrep
+    psi4_wfn : psi4 Wavefunction
+        A psi4 Wavefunction object (to read the number of alpha/beta electrons)
+    on_the_fly : bool
+        Use the on-the-fly algorithms? By default this code uses a caching algorithm
+        that can be faster when using very small compute threshold values (default = False)
+    similarity : bool
+        Use a similarity transformed formulation?
+    Returns
+    -------
+    tuple(list,float,float)
+        Returns the a tuple containign the residual (indexed as the operators/amplitudes),
+        the average energy, and the projective energy
+    """
+    # update the amplitudes
+    sop.set_coefficients(t)
+
+    c0 = 0.0
+    if on_the_fly:
+        wfn = exp.compute(sop, ref,algorithm='onthefly',screen_thresh=compute_threshold)
+        # compute <ref|Psi>
+        for d, c in ref.items():
+            c0 += c * wfn[d]
+        Hwfn = ham.compute_on_the_fly(wfn, compute_threshold)
+        if similarity:
+            if cc_type == "cc" or cc_type == "ucc":
+                R = exp.compute(sop, Hwfn, scaling_factor=-1.0,algorithm='onthefly',screen_thresh=compute_threshold)
+            elif cc_type == "ducc" or cc_type == "fucc" or cc_type == "factucc":
+                R = exp.compute(sop, Hwfn, inverse=True,algorithm='onthefly',screen_thresh=compute_threshold)
+            else:
+                raise ValueError("Incorrect value for cc_type")
+    else:
+        wfn = exp.compute(sop, ref,screen_thresh=compute_threshold)
+        # compute <ref|Psi>
+        for d, c in ref.items():
+            c0 += c * wfn[d]
+        Hwfn = ham.compute(wfn, compute_threshold)
+        if similarity:        
+            if cc_type == "cc" or cc_type == "ucc":
+                R = exp.compute(sop, Hwfn, scaling_factor=-1.0,screen_thresh=compute_threshold)
+            elif cc_type == "ducc" or cc_type == "fucc" or cc_type == "factucc":
+                R = exp.compute(sop, Hwfn, inverse=True,screen_thresh=compute_threshold)
+            else:
+                raise ValueError("Incorrect value for cc_type")
+
+    energy = 0.0
+    energy_proj = 0.0
+    if similarity:
+        # compute Eavg = <Psi|H|Psi> = <ref|U^+ H U|ref>
+        for d, c in ref.items():
+            energy += c * R[d]
+        # compute Eproj = <ref|H|Psi> / <ref|Psi> = <ref|H U|ref> / <ref|U|ref> 
+        for d, c in ref.items():
+            energy_proj += c * Hwfn[d] / c0
+        # compute R = <exc|U^+ H U|ref>
+        residual = forte.get_projection(op, ref, R)
+    else:
+        for d, c in ref.items():
+            energy += c * Hwfn[d] / c0
+        energy_proj = energy
+        # compute R = <exc|H U|ref> - E <exc|U|ref>
+        for d, c in wfn.items():
+            Hwfn[d] -= c * energy  
+        residual = forte.get_projection(op, ref, Hwfn)
+
+    return (residual, energy, energy_proj)
 
 class DIIS:
+    """A class that implements DIIS for CC theory 
+    """  
     def __init__(self, t):
         self.t_diis = [t]
         self.e_diis = []
 
     def update(self, t, t_old):
+        """Update the DIIS object and return extrapolted amplitudes
+
+        Parameters
+        ----------
+        t : list
+            The updated amplitudes
+        t_old : list
+            The previous set of amplitudes            
+        Returns
+        -------
+        list
+            The extrapolated amplitudes
+        """        
         self.t_diis.append(t)
         self.e_diis.append(np.subtract(t, t_old))
 
@@ -530,174 +519,3 @@ class DIIS:
             return copy.deepcopy(list(np.real(t_new)))
 
         return t
-
-
-def run_selected_ucc(
-    forte_objs,
-    psi4_wfn,
-    max_exc,
-    omega,
-    ordering=4,
-    e_convergence=1.0e-12,
-    r_convergence=1.0e-10,
-    compute_threshold=1.0e-10,
-    selection_threshold=1.0e-10,
-):
-    """This function implements selected factorized UCC (also known as SPQE)"""
-
-    as_ints = forte_objs[1]
-    mo_space_info = forte_objs[3]
-    nirrep = mo_space_info.nirrep()
-
-    nmo = mo_space_info.size("CORRELATED")
-    nmopi = mo_space_info.dimension("CORRELATED").to_tuple()
-    # the number of alpha electrons per irrep
-    naelpi = (psi4_wfn.nalphapi() - mo_space_info.dimension("FROZEN_DOCC")).to_tuple()
-    # the number of beta electrons per irrep
-    nbelpi = (psi4_wfn.nbetapi() - mo_space_info.dimension("FROZEN_DOCC")).to_tuple()
-
-    print(f"Number of orbitals per irrep:        {nmopi}")
-    print(f"Number of alpha electrons per irrep: {naelpi}")
-    print(f"Number of beta electrons per irrep:  {nbelpi}")
-
-    op, denominators = make_cluster_operator(
-        True, max_exc, naelpi, mo_space_info, psi4_wfn
-    )
-
-    old_e = 0.0
-    start = time.time()
-
-    selected_op = forte.SparseOperator()
-
-    ref = forte.StateVector({make_hfref(naelpi, nbelpi, nmopi): 1.0})
-    print(ref.str(nmo))
-
-    t1 = []
-
-    # the list of operators selected from the full list
-    op_pool = []
-    nops_old = 0
-
-    sum_res_eval = 0
-    max_macro_iter = 100
-    calc_data = []
-
-    print("=========================================================================")
-    print("     Iter.         Energy       Delta Energy    Res. Norm         Time")
-    print("     Iter.          (Eh)             (Eh)         (Eh)             (s)")
-    print("-------------------------------------------------------------------------")
-    for macro_iter in range(max_macro_iter):
-
-        # step 1: select new operators
-
-        # compute the full residual and sort operators according to its magnitude
-        residual, e = residual_equations(
-            cc_type, t1, op, selected_op, ref, as_ints, ham, exp, compute_threshold
-        )
-
-        sorted_res = sorted(
-            zip(residual, range(len(residual))), key=lambda x: abs(x[0]), reverse=False
-        )
-
-        # get the list of operators to add
-        new_ops = select_operator_pool(sorted_res, omega)
-
-        if ordering == 1:
-            # add these operators
-            for j in new_ops:
-                if j not in op_pool:
-                    op_pool.append(j)
-                    selected_op.add_term(op.term(j))
-                    t1.append(0.0)
-
-        if ordering == 2:
-            # add these operators
-            new_ops.reverse()  # to make sure operators will be sorted from smallest to largest
-            for j in new_ops:
-                if j not in op_pool:
-                    op_pool.append(j)
-                    selected_op.add_term(op.term(j))
-                    t1.append(0.0)
-
-        if ordering == 3:
-            new_t1 = []
-            new_op_pool = []
-            new_selected_op = forte.SparseOperator()
-            # add the operators
-            for j in new_ops:
-                if j not in op_pool:
-                    new_op_pool.append(j)
-                    new_selected_op.add_term(op.term(j))
-                    new_t1.append(0.0)
-            for j in range(selected_op.size()):
-                new_selected_op.add_term(selected_op.term(j))
-            new_t1.extend(t1)
-            new_op_pool.extend(op_pool)
-            t1 = new_t1
-            op_pool = new_op_pool
-            selected_op = new_selected_op
-
-        if True:
-            new_t1 = []
-            new_op_pool = []
-            new_selected_op = forte.SparseOperator()
-            new_ops.reverse()  # to make sure operators will be sorted from smallest to largest
-            # add the operators
-            for j in new_ops:
-                if j not in op_pool:
-                    new_op_pool.append(j)
-                    new_selected_op.add_term(op.term(j))
-                    new_t1.append(0.0)
-            for j in range(selected_op.size()):
-                new_selected_op.add_term(selected_op.term(j))
-            new_t1.extend(t1)
-            new_op_pool.extend(op_pool)
-            t1 = new_t1
-            op_pool = new_op_pool
-            selected_op = new_selected_op
-
-        print(f"Number of operators selected: {selected_op.size()}")
-
-        # step 2: solve the ucc equations and update the amplitudes
-        t1, e, micro_iter = solve_selected_ucc_equations(
-            t1,
-            op,
-            selected_op,
-            op_pool,
-            denominators,
-            ref,
-            as_ints,
-            compute_threshold,
-            e_convergence,
-            r_convergence,
-        )
-        print(
-            f" -> {macro_iter:4d} {e:20.12f}   {delta_e_micro:+6e}             {time.time() - start:8.3f}",
-            flush=True,
-        )
-
-        nops = selected_op.size()
-
-        sum_res_eval += micro_iter * nops
-
-        calc_data.append((nops, e, sum_res_eval))
-
-        if nops_old == selected_op.size():
-            break
-
-        old_e = e
-        nops_old = selected_op.size()
-    print("=========================================================================")
-
-    print(f"omega: {omega}")
-    print(f"ordering: {ordering}")
-    print(f" sUCC energy (forte): {e:20.12f}  Eh (Nops = {np.count_nonzero(t1):8d})")
-
-    print(f" Computation summary")
-    print(f" Nops.  Energy (Eh)")
-    for n, e, mi in calc_data:
-        print(f"{n:6d} {e:20.12f} {mi}")
-
-    return calc_data[-1]
-
-

@@ -36,19 +36,14 @@ SparseHamiltonian::SparseHamiltonian(std::shared_ptr<ActiveSpaceIntegrals> as_in
     : as_ints_(as_ints) {}
 
 StateVector SparseHamiltonian::compute(const StateVector& state, double screen_thresh) {
+    // store a list of determinants that we have never encountered before
     std::vector<Determinant> new_dets;
-    std::vector<double> state_c(state.size());
 
     // find new determinants
     for (const auto& det_c : state) {
         const Determinant& det = det_c.first;
-        const double c = det_c.second;
-        // if we already have precomputed this det, put the coefficient where it belongs
-        if (state_hash_.has_det(det)) {
-            state_c[state_hash_.get_idx(det)] = c;
-        } else {
-            size_t idx = state_hash_.add(det);
-            state_c[idx] = c;
+        // if we already have precomputed this det add it to the list of new dets
+        if (not state_hash_.has_det(det)) {
             new_dets.push_back(det);
         }
     }
@@ -57,7 +52,7 @@ StateVector SparseHamiltonian::compute(const StateVector& state, double screen_t
     compute_new_couplings(new_dets, screen_thresh);
 
     // compute sigma
-    return compute_sigma(state_c, screen_thresh);
+    return compute_sigma(state, screen_thresh);
 }
 
 void SparseHamiltonian::compute_new_couplings(const std::vector<Determinant>& new_dets,
@@ -65,21 +60,21 @@ void SparseHamiltonian::compute_new_couplings(const std::vector<Determinant>& ne
     local_timer t;
 
     size_t nmo = as_ints_->nmo();
-
     auto symm = as_ints_->active_mo_symmetry();
 
     Determinant new_det;
 
+    // contribution to the diagonal elements
+    double E_0 = as_ints_->nuclear_repulsion_energy() + as_ints_->scalar_energy();
+
     for (const auto& det : new_dets) {
-        size_t det_idx = state_hash_.get_idx(det);
+        std::vector<std::pair<size_t, double>> det_couplings;
 
-        // diagonal coupling
-        double E_0 = as_ints_->nuclear_repulsion_energy() + as_ints_->scalar_energy();
-
-        // index of det in the sigma hash
         size_t det_sigma_idx = sigma_hash_.add(det);
 
-        couplings_.emplace_back(det_idx, det_sigma_idx, E_0 + as_ints_->slater_rules(det, det));
+        // diagonal couplings
+        // couplings_.emplace_back(det_idx, det_sigma_idx, E_0 + as_ints_->slater_rules(det, det));
+        det_couplings.emplace_back(det_sigma_idx, E_0 + as_ints_->slater_rules(det, det));
 
         std::vector<int> aocc = det.get_alfa_occ(nmo);
         std::vector<int> bocc = det.get_beta_occ(nmo);
@@ -101,7 +96,7 @@ void SparseHamiltonian::compute_new_couplings(const std::vector<Determinant>& ne
                         new_det.set_alfa_bit(i, false);
                         new_det.set_alfa_bit(a, true);
                         size_t new_det_sigma_idx = sigma_hash_.add(new_det);
-                        couplings_.emplace_back(det_idx, new_det_sigma_idx, DHIJ);
+                        det_couplings.emplace_back(new_det_sigma_idx, DHIJ);
                     }
                 }
             }
@@ -116,7 +111,7 @@ void SparseHamiltonian::compute_new_couplings(const std::vector<Determinant>& ne
                         new_det.set_beta_bit(i, false);
                         new_det.set_beta_bit(a, true);
                         size_t new_det_sigma_idx = sigma_hash_.add(new_det);
-                        couplings_.emplace_back(det_idx, new_det_sigma_idx, DHIJ);
+                        det_couplings.emplace_back(new_det_sigma_idx, DHIJ);
                     }
                 }
             }
@@ -136,7 +131,7 @@ void SparseHamiltonian::compute_new_couplings(const std::vector<Determinant>& ne
                                 new_det = det;
                                 DHIJ *= new_det.double_excitation_aa(i, j, a, b);
                                 size_t new_det_sigma_idx = sigma_hash_.add(new_det);
-                                couplings_.emplace_back(det_idx, new_det_sigma_idx, DHIJ);
+                                det_couplings.emplace_back(new_det_sigma_idx, DHIJ);
                             }
                         }
                     }
@@ -154,7 +149,7 @@ void SparseHamiltonian::compute_new_couplings(const std::vector<Determinant>& ne
                                 new_det = det;
                                 DHIJ *= new_det.double_excitation_ab(i, j, a, b);
                                 size_t new_det_sigma_idx = sigma_hash_.add(new_det);
-                                couplings_.emplace_back(det_idx, new_det_sigma_idx, DHIJ);
+                                det_couplings.emplace_back(new_det_sigma_idx, DHIJ);
                             }
                         }
                     }
@@ -176,33 +171,48 @@ void SparseHamiltonian::compute_new_couplings(const std::vector<Determinant>& ne
                                 new_det = det;
                                 DHIJ *= new_det.double_excitation_bb(i, j, a, b);
                                 size_t new_det_sigma_idx = sigma_hash_.add(new_det);
-                                couplings_.emplace_back(det_idx, new_det_sigma_idx, DHIJ);
+                                det_couplings.emplace_back(new_det_sigma_idx, DHIJ);
                             }
                         }
                     }
                 }
             }
         }
+        // here we sort the couplings in decresing magnitude to help with the screening later
+        sort(begin(det_couplings), end(det_couplings), [](auto const& a, auto const& b) {
+            return std::fabs(a.second) > std::fabs(b.second);
+        });
+        couplings_[det] = det_couplings;
     }
     timings_["coupling_time"] += t.get();
     timings_["time"] += t.get();
 }
 
-StateVector SparseHamiltonian::compute_sigma(const std::vector<double>& state_c,
-                                             double screen_thresh) {
+StateVector SparseHamiltonian::compute_sigma(const StateVector& state, double screen_thresh) {
     local_timer t;
-    // initialize a state object
+
     std::vector<double> sigma_c(sigma_hash_.size(), 0.0);
-    StateVector sigma;
-    for (const auto& coupling : couplings_) {
-        const size_t det_idx = std::get<0>(coupling);
-        const size_t new_det_idx = std::get<1>(coupling);
-        const double h = std::get<2>(coupling);
-        const double c = state_c[det_idx];
-        if (std::fabs(c * h) > screen_thresh) {
-            sigma_c[new_det_idx] += c * h;
+
+    // compute the sigma vector
+    for (const auto& det_c : state) {
+        const auto& det = det_c.first;
+        const double c = det_c.second;
+        for (const auto& new_det_HIJ : couplings_[det]) {
+            const size_t new_det_idx = new_det_HIJ.first;
+            const double h = new_det_HIJ.second;
+            // since the couplings are sorted in decreasing magnitude
+            // once an element falls below the threshold we can just
+            // terminate the loop
+            if (std::fabs(c * h) > screen_thresh) {
+                sigma_c[new_det_idx] += c * h;
+            } else {
+                break;
+            }
         }
     }
+
+    // copy data to a StateVector object
+    StateVector sigma;
     for (size_t n = 0, maxn = sigma_hash_.size(); n < maxn; n++) {
         sigma[sigma_hash_.get_det(n)] = sigma_c[n];
     }
@@ -334,8 +344,6 @@ StateVector SparseHamiltonian::compute_on_the_fly(const StateVector& state, doub
     return sigma;
 }
 
-std::map<std::string, double> SparseHamiltonian::timings() const {
-    return timings_;
-}
+std::map<std::string, double> SparseHamiltonian::timings() const { return timings_; }
 
 } // namespace forte
