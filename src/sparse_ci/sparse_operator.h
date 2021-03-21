@@ -106,7 +106,7 @@ class SparseOperator {
     /// @return the number of terms
     size_t size() const { return op_list_.size(); }
     /// set the value of the coefficients
-    std::vector<double> coefficients();
+    std::vector<double> coefficients() const;
     /// set the value of the coefficients
     void set_coefficients(std::vector<double>& values);
     /// set the value of one coefficient

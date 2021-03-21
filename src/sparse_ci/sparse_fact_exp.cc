@@ -37,16 +37,21 @@ SparseFactExp::SparseFactExp(bool phaseless) : phaseless_(phaseless) {}
 StateVector SparseFactExp::compute(const SparseOperator& sop, const StateVector& state,
                                    const std::string& algorithm, bool inverse,
                                    double screen_thresh) {
-    if (not sop.is_antihermitian()) {
-        throw std::runtime_error("SparseFactExp: This class can only handle anti-Hermitian "
-                                 "operators\nbut sop is not defined as anti-Hermitian.");
-    }
     local_timer t;
     StateVector result;
     if (algorithm == "onthefly") {
-        result = compute_on_the_fly(sop, state, inverse, screen_thresh);
+        if (sop.is_antihermitian()) {
+            result = compute_on_the_fly_antihermitian(sop, state, inverse, screen_thresh);
+        } else {
+            result = compute_on_the_fly_excitation(sop, state, inverse, screen_thresh);
+        }
     } else {
-        result = compute_cached(sop, state, inverse, screen_thresh);
+        if (sop.is_antihermitian()) {
+            result = compute_cached(sop, state, inverse, screen_thresh);
+        } else {
+            throw std::runtime_error("SparseFactExp: This class can only handle anti-Hermitian "
+                                     "operators\nbut sop is not defined as anti-Hermitian.");
+        }
     }
     timings_["total"] += t.get();
     return result;
@@ -230,8 +235,9 @@ void SparseFactExp::apply_exp_op_fast(const Determinant& d, Determinant& new_d,
     }
 }
 
-StateVector SparseFactExp::compute_on_the_fly(const SparseOperator& sop, const StateVector& state0,
-                                              bool inverse, double screen_thresh) {
+StateVector SparseFactExp::compute_on_the_fly_antihermitian(const SparseOperator& sop,
+                                                            const StateVector& state0, bool inverse,
+                                                            double screen_thresh) {
     local_timer t;
     const auto& op_list = sop.op_list();
 
@@ -265,6 +271,52 @@ StateVector SparseFactExp::compute_on_the_fly(const SparseOperator& sop, const S
                     const double c = det_c.second;
                     apply_exp_op_fast(d, new_d, sqop.ann(), sqop.cre(), -tau, c, new_terms);
                 }
+            }
+        }
+        for (const auto& d_c : new_terms) {
+            state[d_c.first] += d_c.second;
+        }
+    }
+    timings_["on_the_fly"] += t.get();
+    return state;
+}
+
+StateVector SparseFactExp::compute_on_the_fly_excitation(const SparseOperator& sop,
+                                                         const StateVector& state0, bool inverse,
+                                                         double screen_thresh) {
+    local_timer t;
+    const auto& op_list = sop.op_list();
+
+    // initialize a state object
+    StateVector state(state0);
+    StateVector new_terms;
+    // const auto& amps = sop.coefficients();
+    // std::vector<std::pair<double, size_t>> sorted_amps(sop.size());
+    // for (size_t m = 0, nterms = sop.size(); m < nterms; m++) {
+    //     sorted_amps[m] = std::make_pair(std::fabs(amps[m]), m);
+    // }
+    // sort(begin(sorted_amps), end(sorted_amps),
+    //      [](const auto& a, const auto& b) { return a.first > b.first; });
+
+    for (size_t n = 0, nterms = sop.size(); n < nterms; n++) {
+        // zero the new terms
+        new_terms.clear();
+
+        const SQOperator& sqop = op_list[n];
+        const Determinant ucre = sqop.cre() - sqop.ann();
+        const double tau = (inverse ? -1.0 : 1.0) * sqop.factor();
+        Determinant new_d;
+        // loop over all determinants
+        for (const auto& det_c : state) {
+            const Determinant& d = det_c.first;
+            // do not apply this operator to this determinant if we expect the new determinant
+            // to have an amplitude less than screen_thresh
+            // test if we can apply this operator to this determinant
+            if ((std::fabs(det_c.second * tau) > screen_thresh) and
+                d.fast_a_and_b_equal_b(sqop.ann()) and d.fast_a_and_b_eq_zero(ucre)) {
+                new_d = d;
+                const double f = apply_op(new_d, sqop.cre(), sqop.ann()) * tau * det_c.second;
+                new_terms[new_d] += f;
             }
         }
         for (const auto& d_c : new_terms) {

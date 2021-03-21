@@ -35,7 +35,7 @@ def run_cc(
     scf_info : SCFInfo
         Information about the number of alpha/beta electrons
     cc_type : str
-        The type of CC computation (cc/ucc/ducc)
+        The type of CC computation (cc/ucc/dcc/ducc)
     select_type : str
         The selection algorithm (default: None = no selection)
     max_exc : int
@@ -78,7 +78,7 @@ def run_cc(
     if max_exc == None:
         max_exc = min(naelpi + nbelpi, nmo - naelpi + nbelpi)
 
-    antihermitian = False if cc_type == "cc" else True
+    antihermitian = False if cc_type == "cc" or cc_type == "dcc" else True
 
     # create the operator pool
     op, denominators = make_cluster_operator(
@@ -321,7 +321,7 @@ def solve_cc_equations(
     Parameters
     ----------
     cc_type : str
-        The type of CC computation (cc/ucc/ducc)
+        The type of CC computation (cc/ucc/dcc/ducc)
     t : list
         The cluster amplitudes
     op : SparseOperator
@@ -355,7 +355,7 @@ def solve_cc_equations(
     ham = forte.SparseHamiltonian(as_ints)
     if cc_type == "cc" or cc_type == "ucc":
         exp = forte.SparseExp()
-    if cc_type == "ducc" or cc_type == "fucc" or cc_type == "factucc":
+    if cc_type == "dcc" or cc_type == "ducc":
         exp = forte.SparseFactExp()
 
     old_e_micro = 0.0
@@ -433,7 +433,7 @@ def residual_equations(
         if similarity:
             if cc_type == "cc" or cc_type == "ucc":
                 R = exp.compute(sop, Hwfn, scaling_factor=-1.0,algorithm='onthefly',screen_thresh=compute_threshold)
-            elif cc_type == "ducc" or cc_type == "fucc" or cc_type == "factucc":
+            elif cc_type == "dcc" or cc_type == "ducc":
                 R = exp.compute(sop, Hwfn, inverse=True,algorithm='onthefly',screen_thresh=compute_threshold)
             else:
                 raise ValueError("Incorrect value for cc_type")
@@ -446,7 +446,7 @@ def residual_equations(
         if similarity:        
             if cc_type == "cc" or cc_type == "ucc":
                 R = exp.compute(sop, Hwfn, scaling_factor=-1.0,screen_thresh=compute_threshold)
-            elif cc_type == "ducc" or cc_type == "fucc" or cc_type == "factucc":
+            elif cc_type == "dcc" or cc_type == "ducc":
                 R = exp.compute(sop, Hwfn, inverse=True,screen_thresh=compute_threshold)
             else:
                 raise ValueError("Incorrect value for cc_type")

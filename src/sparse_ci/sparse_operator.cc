@@ -94,7 +94,7 @@ void SparseOperator::add_term_from_str(std::string str, double coefficient, bool
 
 const SQOperator& SparseOperator::term(size_t n) const { return op_list_[n]; }
 
-std::vector<double> SparseOperator::coefficients() {
+std::vector<double> SparseOperator::coefficients() const {
     std::vector<double> v;
     for (const SQOperator& sqop : op_list_) {
         v.push_back(sqop.factor());

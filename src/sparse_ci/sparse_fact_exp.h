@@ -42,9 +42,9 @@ namespace forte {
 /**
  * @brief The SparseFactExp class
  * This class implements an algorithm to apply a factorized exponential operator to a state
- * 
+ *
  *    |state> -> ... exp(op2) exp(op1) |state>
- * 
+ *
  */
 class SparseFactExp {
   public:
@@ -65,15 +65,15 @@ class SparseFactExp {
     /// @param sop the operator. Each term in this operator is applied in the order provided
     /// @param state the state to which the factorized exponential will be applied
     /// @param algorithm the algorithm used to compute the exponential. If algorithm = 'onthefly'
-    /// this function will compute the factorized exponential using an on-the-fly implementation (slow).
-    /// Otherwise, a caching algorithm is used.
+    /// this function will compute the factorized exponential using an on-the-fly implementation
+    /// (slow). Otherwise, a caching algorithm is used.
     /// @param inverse If true, compute the inverse of the factorized exponential
-    /// @param screen_thresh a threshold to select which elements of the operator applied to the state.
-    /// An operator in the form exp(t ...), where t is an amplitude, will be applied to a determinant
-    /// Phi_I with coefficient C_I if the product |t * C_I| > screen_threshold
+    /// @param screen_thresh a threshold to select which elements of the operator applied to the
+    /// state. An operator in the form exp(t ...), where t is an amplitude, will be applied to a
+    /// determinant Phi_I with coefficient C_I if the product |t * C_I| > screen_threshold
     StateVector compute(const SparseOperator& sop, const StateVector& state,
                         const std::string& algorithm, bool inverse, double screen_thresh);
-    /// @return timings for this class    
+    /// @return timings for this class
     std::map<std::string, double> timings() const;
 
   private:
@@ -84,8 +84,11 @@ class SparseFactExp {
                             double screen_thresh);
     StateVector compute_cached(const SparseOperator& sop, const StateVector& state, bool inverse,
                                double screen_thresh);
-    StateVector compute_on_the_fly(const SparseOperator& sop, const StateVector& state0,
-                                   bool inverse, double screen_thresh);
+    StateVector compute_on_the_fly_antihermitian(const SparseOperator& sop,
+                                                 const StateVector& state0, bool inverse,
+                                                 double screen_thresh);
+    StateVector compute_on_the_fly_excitation(const SparseOperator& sop, const StateVector& state0,
+                                              bool inverse, double screen_thresh);
 
     /// Ignore the fermionic phase?
     bool phaseless_ = false;
@@ -100,7 +103,7 @@ class SparseFactExp {
     /// A vector of determinant couplings used when applying the inverse exponential
     std::vector<std::vector<std::tuple<size_t, size_t, double>>> inverse_couplings_;
     /// A map that stores timing information
-    std::map<std::string,double> timings_;    
+    std::map<std::string, double> timings_;
 };
 
 } // namespace forte
