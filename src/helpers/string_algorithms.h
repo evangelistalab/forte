@@ -29,6 +29,7 @@
 #ifndef _string_algorithms_h_
 #define _string_algorithms_h_
 
+#include <sstream>
 #include <string>
 #include <vector>
 
@@ -47,6 +48,12 @@ std::string lower_string(std::string s);
 /// Join a vector of strings using a separator
 std::string join(const std::vector<std::string>& vec_str, const std::string& sep = ",");
 
+template <typename T> std::string to_string_with_precision(const T val, const int n = 6) {
+    std::ostringstream out;
+    out.precision(n);
+    out << std::fixed << val;
+    return out.str();
+}
 
 } // namespace forte
 

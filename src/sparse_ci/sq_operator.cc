@@ -30,6 +30,7 @@
 #include <numeric>
 
 #include "helpers/combinatorial.h"
+#include "helpers/string_algorithms.h"
 
 #include "sparse_ci/sq_operator.h"
 
@@ -113,7 +114,8 @@ const Determinant& SQOperator::ann() const { return ann_; }
 void SQOperator::set_factor(double& value) { factor_ = value; }
 
 std::string SQOperator::str() const {
-    std::string s = std::to_string(factor()) + " * [ ";
+    std::string s = to_string_with_precision(factor(), 12) + " * [ ";
+    // std::string s = std::to_string(factor()) + " * [ ";
     auto acre = cre_.get_alfa_occ(cre_.norb());
     auto bcre = cre_.get_beta_occ(cre_.norb());
     auto aann = ann_.get_alfa_occ(ann_.norb());

@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 import pytest
 
+
 @pytest.mark.skip(reason="This is a long test")
 def test_ccsd2():
     """Test CCSD on H2 using RHF/DZ orbitals"""
@@ -20,17 +21,19 @@ def test_ccsd2():
      H 1 1.0 2 104.5
     """
 
-    scf_energy, psi4_wfn = forte.utils.psi4_scf(geom,
-                                                basis='cc-pVDZ',
-                                                reference='RHF')
+    scf_energy, psi4_wfn = forte.utils.psi4_scf(geom, basis='cc-pVDZ', reference='RHF')
     forte_objs = forte.utils.prepare_forte_objects(psi4_wfn, mo_spaces={})
-    calc_data = scc.run_cc(forte_objs[1],forte_objs[2],forte_objs[3],
-                           cc_type='cc',
-                           max_exc=2,
-                           e_convergence=1.0e-6,
-                           r_convergence=1.0e-4,
-                           compute_threshold=1.0e-6,
-                           on_the_fly=True)
+    calc_data = scc.run_cc(
+        forte_objs[1],
+        forte_objs[2],
+        forte_objs[3],
+        cc_type='cc',
+        max_exc=2,
+        e_convergence=1.0e-6,
+        r_convergence=1.0e-4,
+        compute_threshold=1.0e-6,
+        on_the_fly=True
+    )
 
     forte.cleanup()
     psi4.core.clean()
@@ -42,6 +45,7 @@ def test_ccsd2():
     print(f'  E - Eref:    {energy - ref_energy}')
 
     #assert energy == pytest.approx(ref_energy, 1.0e-11)
+
 
 if __name__ == "__main__":
     test_ccsd2()

@@ -57,8 +57,9 @@ void export_Determinant(py::module& m) {
         .def(py::init<const std::vector<bool>&, const std::vector<bool>&>())
         .def("get_alfa_bits", &Determinant::get_alfa_bits, "Get alpha bits")
         .def("get_beta_bits", &Determinant::get_beta_bits, "Get beta bits")
-        .def("nbits", &Determinant::get_nbits)
-        .def("norb", &Determinant::norb)
+        .def("nbits", &Determinant::get_nbits, "The number of spin orbitals (twice norb)")
+        .def("nspinorb", &Determinant::get_nbits, "The number of spin orbitals (twice norb)")
+        .def("norb", &Determinant::norb, "The number of spatial orbitals")
         .def("get_alfa_bit", &Determinant::get_alfa_bit, "n"_a, "Get the value of an alpha bit")
         .def("get_beta_bit", &Determinant::get_beta_bit, "n"_a, "Get the value of a beta bit")
         .def("set_alfa_bit", &Determinant::set_alfa_bit, "n"_a, "value"_a,
@@ -76,11 +77,12 @@ void export_Determinant(py::module& m) {
             [](Determinant& d, const std::vector<int>& aann, const std::vector<int>& acre,
                const std::vector<int>& bann,
                const std::vector<int>& bcre) { return gen_excitation(d, aann, acre, bann, bcre); },
-            "Apply a generic excitation")
+            "Apply a generic excitation") // uses gen_excitation() defined in determinant.hpp
         .def(
             "str", [](const Determinant& a, int n) { return str(a, n); },
             "n"_a = Determinant::norb(),
-            "Get the string representation of the Slater determinant")
+            "Get the string representation of the Slater determinant") // uses str() defined in
+                                                                       // determinant.hpp
         .def("__repr__", [](const Determinant& a) { return str(a); })
         .def("__str__", [](const Determinant& a) { return str(a); })
         .def("__eq__", [](const Determinant& a, const Determinant& b) { return a == b; })
@@ -92,12 +94,13 @@ void export_Determinant(py::module& m) {
         [](const std::string& s) {
             Determinant d;
             int k = 0;
-            for (const char c : s) {
-                if (c == '+') {
+            for (const char cc : s) {
+                const char c = tolower(cc);
+                if ((c == '+') or (c == 'a')) {
                     d.create_alfa_bit(k);
-                } else if (c == '-') {
+                } else if ((c == '-') or (c == 'b')) {
                     d.create_beta_bit(k);
-                } else if (c == '2') {
+                } else if ((c == '2') or (c == 'x')) {
                     d.create_alfa_bit(k);
                     d.create_beta_bit(k);
                 }
@@ -105,7 +108,8 @@ void export_Determinant(py::module& m) {
             }
             return d;
         },
-        "Make a determinant from a string (e.g., \'2+-0\')");
+        "Make a determinant from a string (e.g., \'2+-0\'). 2 or x/X = doubly occupied MO, + or "
+        "a/A = alpha, - or b/B = beta. Orbital occupations are read from left to right.");
 
     m.def(
         "spin2", [](const Determinant& lhs, const Determinant& rhs) { return spin2(lhs, rhs); },
@@ -151,14 +155,15 @@ void export_Determinant(py::module& m) {
         // .def("map", &StateVector::map)
         .def(
             "items", [](const StateVector& v) { return py::make_iterator(v.begin(), v.end()); },
-            py::keep_alive<0, 1>())  // Essential: keep object alive while iterator exists
+            py::keep_alive<0, 1>()) // Essential: keep object alive while iterator exists
         // .def("items",  [](StateVector& v) { return v.map(); })
         .def("str", &StateVector::str)
         .def("__eq__", &StateVector::operator==)
         .def("__repr__", [](const StateVector& v) { return v.str(); })
         .def("__str__", [](const StateVector& v) { return v.str(); })
         .def("__getitem__", [](StateVector& v, const Determinant& d) { return v[d]; })
-        .def("__setitem__", [](StateVector& v, const Determinant& d, const double val) { v[d] = val; })
+        .def("__setitem__",
+             [](StateVector& v, const Determinant& d, const double val) { v[d] = val; })
         .def("__contains__", [](StateVector& v, const Determinant& d) { return v.map().count(d); });
 
     py::class_<SparseHamiltonian>(m, "SparseHamiltonian")
@@ -185,7 +190,7 @@ void export_Determinant(py::module& m) {
 
     m.def("apply_operator_safe",
           py::overload_cast<SparseOperator&, const StateVector&>(&apply_operator_safe), "sop"_a,
-          "state0"_a);          
+          "state0"_a);
 
     m.def("apply_number_projector", &apply_number_projector);
     m.def("get_projection", &get_projection);

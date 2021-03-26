@@ -117,6 +117,8 @@ void SparseOperator::pop_term() {
 std::vector<std::string> SparseOperator::str() const {
     std::vector<std::string> v;
     for (const SQOperator& sqop : op_list_) {
+        if (std::fabs(sqop.factor()) < 1.0e-12)
+            continue;
         v.push_back(sqop.str());
         if (is_antihermitian()) {
             auto sqop_dagger = SQOperator(-sqop.factor(), sqop.ann(), sqop.cre());

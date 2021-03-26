@@ -22,7 +22,9 @@ def run_cc(
     r_convergence=1.0e-5,
     compute_threshold=1.0e-14,
     selection_threshold=1.0e-14,
-    on_the_fly=False
+    on_the_fly=False,
+    linked=True,
+    maxk=19
 ):
     """This function implements various CC methods
 
@@ -134,7 +136,9 @@ def run_cc(
             compute_threshold,
             e_convergence,
             r_convergence,
-            on_the_fly
+            on_the_fly,
+            linked,
+            maxk
         )
 
         print(
@@ -144,7 +148,7 @@ def run_cc(
 
         nops = selected_op.size()
 
-        calc_data.append((nops, e))
+        calc_data.append((nops, e, e_proj))
 
         if nops_old == nops:
             break
@@ -314,6 +318,8 @@ def solve_cc_equations(
     e_convergence=1.0e-10,
     r_convergence=1.0e-5,
     on_the_fly=False,
+    linked=True,
+    maxk=19,
     maxiter=100,
 ):
     """Solve the CC equations
@@ -364,7 +370,7 @@ def solve_cc_equations(
         micro_start = time.time()
         t_old = copy.deepcopy(t)
         residual, e, e_proj = residual_equations(
-            cc_type, t, op, selected_op, ref, ham, exp, compute_threshold,on_the_fly
+            cc_type, t, op, selected_op, ref, ham, exp, compute_threshold,on_the_fly,linked,maxk
         )
 
         residual_norm = 0.0
@@ -395,7 +401,7 @@ def solve_cc_equations(
     return (t, e, e_proj, micro_iter + 1, exp.timings())
 
 def residual_equations(
-    cc_type, t, op, sop, ref, ham, exp, compute_threshold, on_the_fly=False, similarity=True
+    cc_type, t, op, sop, ref, ham, exp, compute_threshold, on_the_fly=False, linked=True,maxk=19
 ):
     """Evaluate the residual equations
 
@@ -412,8 +418,8 @@ def residual_equations(
     on_the_fly : bool
         Use the on-the-fly algorithms? By default this code uses a caching algorithm
         that can be faster when using very small compute threshold values (default = False)
-    similarity : bool
-        Use a similarity transformed formulation?
+    linked : bool
+        Use a linked formulation of the CC equations (a commutator series)?
     Returns
     -------
     tuple(list,float,float)
@@ -425,35 +431,34 @@ def residual_equations(
 
     c0 = 0.0
     if on_the_fly:
-        wfn = exp.compute(sop, ref,algorithm='onthefly',screen_thresh=compute_threshold)
-        # compute <ref|Psi>
-        for d, c in ref.items():
-            c0 += c * wfn[d]
-        Hwfn = ham.compute_on_the_fly(wfn, compute_threshold)
-        if similarity:
-            if cc_type == "cc" or cc_type == "ucc":
-                R = exp.compute(sop, Hwfn, scaling_factor=-1.0,algorithm='onthefly',screen_thresh=compute_threshold)
-            elif cc_type == "dcc" or cc_type == "ducc":
-                R = exp.compute(sop, Hwfn, inverse=True,algorithm='onthefly',screen_thresh=compute_threshold)
-            else:
-                raise ValueError("Incorrect value for cc_type")
+        if cc_type == "cc" or cc_type == "ucc":
+            wfn = exp.compute(sop, ref,algorithm='onthefly',screen_thresh=compute_threshold,maxk=maxk)
+            Hwfn = ham.compute_on_the_fly(wfn, compute_threshold)
+            R = exp.compute(sop, Hwfn, scaling_factor=-1.0,algorithm='onthefly',screen_thresh=compute_threshold,maxk=maxk)
+        elif cc_type == "dcc" or cc_type == "ducc":
+            wfn = exp.compute(sop, ref,algorithm='onthefly',screen_thresh=compute_threshold)
+            Hwfn = ham.compute_on_the_fly(wfn, compute_threshold)
+            R = exp.compute(sop, Hwfn, inverse=True,algorithm='onthefly',screen_thresh=compute_threshold)
+        else:
+            raise ValueError("Incorrect value for cc_type")
     else:
-        wfn = exp.compute(sop, ref,screen_thresh=compute_threshold)
-        # compute <ref|Psi>
-        for d, c in ref.items():
-            c0 += c * wfn[d]
-        Hwfn = ham.compute(wfn, compute_threshold)
-        if similarity:        
-            if cc_type == "cc" or cc_type == "ucc":
-                R = exp.compute(sop, Hwfn, scaling_factor=-1.0,screen_thresh=compute_threshold)
-            elif cc_type == "dcc" or cc_type == "ducc":
-                R = exp.compute(sop, Hwfn, inverse=True,screen_thresh=compute_threshold)
-            else:
-                raise ValueError("Incorrect value for cc_type")
+        if cc_type == "cc" or cc_type == "ucc":
+            wfn = exp.compute(sop, ref,screen_thresh=compute_threshold,maxk=maxk)
+            Hwfn = ham.compute(wfn, compute_threshold)
+            R = exp.compute(sop, Hwfn, scaling_factor=-1.0,screen_thresh=compute_threshold,maxk=maxk)
+        elif cc_type == "dcc" or cc_type == "ducc":
+            wfn = exp.compute(sop, ref,screen_thresh=compute_threshold)
+            Hwfn = ham.compute(wfn, compute_threshold)
+            R = exp.compute(sop, Hwfn, inverse=True,screen_thresh=compute_threshold)
+        else:
+            raise ValueError("Incorrect value for cc_type")
 
+    # compute <ref|Psi>
+    for d, c in ref.items():
+        c0 += c * wfn[d]
     energy = 0.0
     energy_proj = 0.0
-    if similarity:
+    if linked:
         # compute Eavg = <Psi|H|Psi> = <ref|U^+ H U|ref>
         for d, c in ref.items():
             energy += c * R[d]
@@ -463,12 +468,19 @@ def residual_equations(
         # compute R = <exc|U^+ H U|ref>
         residual = forte.get_projection(op, ref, R)
     else:
-        for d, c in ref.items():
-            energy += c * Hwfn[d] / c0
-        energy_proj = energy
-        # compute R = <exc|H U|ref> - E <exc|U|ref>
+        # compute the energy as the expectation value = <exc|U^+ H U|ref> / <exc|U^+U|ref>
+        N2 = 0.0
         for d, c in wfn.items():
-            Hwfn[d] -= c * energy  
+            N2 += c**2
+            energy += c * Hwfn[d]
+        energy = energy / N2
+        print(N2,energy)
+        # compute the projective energy as the expectation value = <ref|H U|ref> / <ref|U|ref>
+        for d, c in ref.items():
+            energy_proj += c * Hwfn[d] / c0
+        # compute R = <exc|H U|ref> - E_proj <exc|U|ref>
+        for d, c in wfn.items():
+            Hwfn[d] -= c * energy_proj  
         residual = forte.get_projection(op, ref, Hwfn)
 
     return (residual, energy, energy_proj)

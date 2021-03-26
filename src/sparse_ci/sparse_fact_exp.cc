@@ -49,8 +49,7 @@ StateVector SparseFactExp::compute(const SparseOperator& sop, const StateVector&
         if (sop.is_antihermitian()) {
             result = compute_cached(sop, state, inverse, screen_thresh);
         } else {
-            throw std::runtime_error("SparseFactExp: This class can only handle anti-Hermitian "
-                                     "operators\nbut sop is not defined as anti-Hermitian.");
+            result = compute_on_the_fly_excitation(sop, state, inverse, screen_thresh);                                     
         }
     }
     timings_["total"] += t.get();
