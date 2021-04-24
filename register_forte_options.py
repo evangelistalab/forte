@@ -182,11 +182,14 @@ def register_embedding_options(options):
         "EMBEDDING", False,
         "Whether to perform embedding partition and projection")
     options.add_str(
-        "EMBEDDING_CUTOFF_METHOD", "THRESHOLD",
+        "EMBEDDING_CUTOFF_METHOD", "THRESHOLD", ["THRESHOLD", "CUM_THRESHOLD", "NUM_OF_ORBITALS", "CORRELATED_BATH"],
         "Cut off by: threshold ,cum_threshold or num_of_orbitals.")
     options.add_double(
         "EMBEDDING_THRESHOLD", 0.5,
         "Projector eigenvalue threshold for both simple and cumulative threshold")
+    options.add_double(
+        "EMBEDDING_THRESHOLD_GAS", 0.5,
+        "Projector eigenvalue threshold for active space (if using GAS)")
     options.add_int(
         "NUM_A_DOCC", 0,
         "Number of occupied orbitals in A fixed to this value when embedding method is num_of_orbitals")
@@ -215,6 +218,9 @@ def register_embedding_options(options):
     options.add_bool(
         "PAO_FIX_VIRTUAL_NUMBER", False,
         "Enable this option will generate PAOs equivlent to ASET virtuals, instead of using threshold")
+    options.add_str(
+        "EMBEDDING_TYPE", "ASET_mf", ["ASET_mf", "ASET2", "GAS", "ASET-SWAP"],
+        "The type of embedding computations.")
 
 
 def register_mo_space_info_options(options):
