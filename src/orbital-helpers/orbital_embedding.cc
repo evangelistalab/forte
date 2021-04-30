@@ -54,6 +54,8 @@ psi::SharedMatrix semicanonicalize_block(psi::SharedWavefunction ref_wfn, psi::S
                                          std::vector<int>& mos, int offset,
                                          bool prevent_rotate = false);
 
+void Build_CAS_AO_Fock(psi::SharedWavefunction ref_wfn, psi::Options& options, int nirrep, psi::Dimension doccpi, psi::Dimension actvpi, psi::Dimension nmopi);
+
 void make_avas(psi::SharedWavefunction ref_wfn, std::shared_ptr<ForteOptions> options,
                psi::SharedMatrix Ps) {
     print_method_banner({"Atomic Valence Active Space (AVAS)", "Chenxi Cai and Chenyang Li"});
@@ -517,6 +519,18 @@ std::shared_ptr<MOSpaceInfo> make_embedding(psi::SharedWavefunction ref_wfn,
         actv_a[0] = 0;
     }
 
+    if (options.get_bool("EMBEDDING_FOCK_BUILD")) {
+        // Initialize AO Fock matrix for semi-canonicalization
+        psi::Dimension doccpi_tmp = mo_space_info->get_dimension("RESTRICTED_DOCC");
+        doccpi_tmp[0] += frzopi[0];
+        if (options.get_str("EMBEDDING_REFERENCE") != "HF") {
+            Build_CAS_AO_Fock(ref_wfn, options, nirrep, doccpi_tmp, actv_a, nmopi);
+        }
+        if (options.get_str("EMBEDDING_REFERENCE") == "HF") {
+            outfile->Printf("\n  Warning: will not build Fock for HF/DFT reference, using wfn->Fa() directly.");
+        }
+    }
+
     // Define corresponding blocks (slices), occ slick will start at frzopi
     Slice occ(frzopi, nroccpi + frzopi);
     Slice vir(frzopi + nroccpi + actv_a, nmopi - frzvpi);
@@ -947,6 +961,7 @@ std::shared_ptr<MOSpaceInfo> make_embedding(psi::SharedWavefunction ref_wfn,
     return mo_space_info_emb;
 } // namespace forte
 
+// Utility function #1: semicanonicalization
 psi::SharedMatrix semicanonicalize_block(psi::SharedWavefunction ref_wfn, psi::SharedMatrix C_tilde,
                                          std::vector<int>& mos, int offset, bool prevent_rotate) {
     int nso = ref_wfn->nso();
@@ -975,4 +990,122 @@ psi::SharedMatrix semicanonicalize_block(psi::SharedWavefunction ref_wfn, psi::S
         return C_block;
     }
 }
+
+// Utility function #2: CAS-AO Fock builder
+void Build_CAS_AO_Fock(psi::SharedWavefunction ref_wfn, psi::Options& options, int nirrep, psi::Dimension doccpi, psi::Dimension actvpi, psi::Dimension nmopi) {
+    outfile->Printf("\n\n  --------------- Build AO Fock Matrix --------------- \n ");
+    outfile->Printf("\n docc: %d, actv: %d \n", doccpi[0], actvpi[0]);
+
+    std::shared_ptr<PSIO> psio(_default_psio_lib_);
+    const psi::SharedMatrix Ca = ref_wfn->Ca()->clone();
+
+    outfile->Printf("\n Inactive size: %d, active size: %d \n ", doccpi[0], actvpi[0]);
+    // Build inactive Fock
+    psi::Dimension test_occ_pi = doccpi;
+    psi::SharedMatrix C_occ(new Matrix("C_occ", nirrep, nmopi, test_occ_pi));
+    for (int u = 0; u < nmopi[0]; ++u) {
+        for (int i = 0; i < test_occ_pi[0]; ++i) {
+            C_occ->set(0, u, i, Ca->get(0, u, i));
+        }
+    }
+    
+    outfile->Printf("\n\n  --------------- Build F(inactive) --------------- \n ");
+    std::shared_ptr<psi::JK> JK_occ;
+    JK_occ = JK::build_JK(ref_wfn->basisset(), psi::BasisSet::zero_ao_basis_set(), options);
+    JK_occ->set_memory(Process::environment.get_memory() * 0.8);
+
+    JK_occ->initialize();
+    JK_occ->set_do_J(true);
+    JK_occ->set_do_K(true);
+
+    std::vector<std::shared_ptr<psi::Matrix>>& Cl = JK_occ->C_left();
+    std::vector<std::shared_ptr<psi::Matrix>>& Cr = JK_occ->C_right();
+    Cl.clear();
+    Cr.clear();
+    Cl.push_back(C_occ);
+
+    JK_occ->compute();
+
+    psi::SharedMatrix F_inactive(JK_occ->J()[0]->clone());
+    psi::SharedMatrix K_inactive(JK_occ->K()[0]->clone());
+
+    F_inactive->scale(2.0);
+    F_inactive->subtract(K_inactive); //2J-K
+
+    psi::SharedMatrix T = SharedMatrix(ref_wfn->matrix_factory()->create_matrix(PSIF_SO_T)); //initialize matrix of wfn's SO size
+    psi::SharedMatrix V_oe = SharedMatrix(ref_wfn->matrix_factory()->create_matrix(PSIF_SO_V));
+    psi::SharedMatrix S = SharedMatrix(ref_wfn->matrix_factory()->create_matrix(PSIF_SO_S));
+
+    psi::MintsHelper mints(ref_wfn);
+    T = mints.so_kinetic();
+    V_oe = mints.so_potential();
+    S = mints.so_overlap();
+
+    psi::SharedMatrix Ha = T->clone();
+
+    Ha->add(V_oe);
+
+    F_inactive->add(Ha); //F_uv = H_uv + G_uv
+
+    // Build active Fock
+    // Reference: Kevin's thesis chapter 1
+    outfile->Printf("\n\n  --------------- Build F(active) --------------- \n ");
+
+    psi::SharedMatrix C_actv(new Matrix("C_actv", nirrep, nmopi, actvpi));
+    for (int u = 0; u < nmopi[0]; ++u) {
+        for (int i = 0; i < actvpi[0]; ++i) {
+            C_actv->set(0, u, i, Ca->get(0, u, i+doccpi[0]));
+        }
+    }
+    
+    // Retrive D
+    psi::SharedMatrix D(ref_wfn->Da()->clone());
+    psi::SharedMatrix rD_actv = psi::linalg::triplet(C_actv, D, C_actv, true, false, false);
+    D->transpose_this();
+
+    SharedMatrix back_M = psi::linalg::doublet(S, Ca, false, false);
+    SharedMatrix gamma = psi::linalg::triplet(back_M, D, back_M, true, false, false);
+
+    for (int s = 0; s < actvpi[0]; ++s) {
+        for (int t = 0; t < actvpi[0]; ++t) {
+            rD_actv->set(0, s, t, gamma->get(0, s+doccpi[0], t+doccpi[0]));
+        }
+    }
+
+    //outfile->Printf("\n  --------------- active 1-rDM from psi4 --------------- \n ");
+    //rD_actv->print();
+
+    std::shared_ptr<psi::JK> JK_actv;
+    JK_actv = JK::build_JK(ref_wfn->basisset(), psi::BasisSet::zero_ao_basis_set(), options);
+    JK_actv->set_memory(Process::environment.get_memory() * 0.8);
+
+    JK_actv->initialize();
+    JK_actv->set_do_J(true);
+    JK_actv->set_do_K(true);
+
+    std::vector<std::shared_ptr<psi::Matrix>>& Cl_actv = JK_actv->C_left();
+    std::vector<std::shared_ptr<psi::Matrix>>& Cr_actv = JK_actv->C_right();
+    Cl_actv.clear();
+    Cr_actv.clear();
+    psi::SharedMatrix C_actv_right = psi::linalg::doublet(C_actv, rD_actv, false, false);
+    Cl_actv.push_back(C_actv); // C^T
+    Cr_actv.push_back(C_actv_right); // rD * C
+
+    JK_actv->compute();
+
+    psi::SharedMatrix F_active(JK_actv->J()[0]->clone());
+    psi::SharedMatrix K_active(JK_actv->K()[0]->clone());
+
+    K_active->scale(0.5);
+    F_active->subtract(K_active);
+    F_active->scale(2.0);
+
+    outfile->Printf("\n\n  --------------- Write AO Fock to wfn --------------- \n ");
+    psi::SharedMatrix F_tot(F_inactive->clone());
+    F_tot->add(F_active);
+    ref_wfn->Fa()->copy(F_tot);
+
+    outfile->Printf("\n\n  --------------- AO Fock Matrix Done --------------- \n ");
+}
+
 } // namespace forte
