@@ -187,9 +187,6 @@ def register_embedding_options(options):
     options.add_double(
         "EMBEDDING_THRESHOLD", 0.5,
         "Projector eigenvalue threshold for both simple and cumulative threshold")
-    options.add_double(
-        "EMBEDDING_THRESHOLD_GAS", 0.5,
-        "Projector eigenvalue threshold for active space (if using GAS)")
     options.add_int(
         "NUM_A_DOCC", 0,
         "Number of occupied orbitals in A fixed to this value when embedding method is num_of_orbitals")

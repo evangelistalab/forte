@@ -39,12 +39,17 @@
 
 #include "psi4/libpsi4util/process.h"
 #include "psi4/libpsio/psio.hpp"
+#include "psi4/psifiles.h"
 
 #include "helpers/helpers.h"
 #include "helpers/printing.h"
 
 #include "orbital_embedding.h"
 #include "pao_builder.h"
+
+#include "psi4/libmints/factory.h"
+#include "psi4/libmints/mintshelper.h"
+#include "psi4/libfock/jk.h"
 
 using namespace psi;
 
@@ -54,7 +59,7 @@ psi::SharedMatrix semicanonicalize_block(psi::SharedWavefunction ref_wfn, psi::S
                                          std::vector<int>& mos, int offset,
                                          bool prevent_rotate = false);
 
-void Build_CAS_AO_Fock(psi::SharedWavefunction ref_wfn, psi::Options& options, int nirrep, psi::Dimension doccpi, psi::Dimension actvpi, psi::Dimension nmopi);
+void Build_CAS_AO_Fock(psi::SharedWavefunction ref_wfn, int nirrep, psi::Dimension doccpi, psi::Dimension actvpi, psi::Dimension nmopi);
 
 void make_avas(psi::SharedWavefunction ref_wfn, std::shared_ptr<ForteOptions> options,
                psi::SharedMatrix Ps) {
@@ -519,14 +524,14 @@ std::shared_ptr<MOSpaceInfo> make_embedding(psi::SharedWavefunction ref_wfn,
         actv_a[0] = 0;
     }
 
-    if (options.get_bool("EMBEDDING_FOCK_BUILD")) {
+    if (options->get_bool("EMBEDDING_FOCK_BUILD")) {
         // Initialize AO Fock matrix for semi-canonicalization
-        psi::Dimension doccpi_tmp = mo_space_info->get_dimension("RESTRICTED_DOCC");
+        psi::Dimension doccpi_tmp = mo_space_info->dimension("RESTRICTED_DOCC");
         doccpi_tmp[0] += frzopi[0];
-        if (options.get_str("EMBEDDING_REFERENCE") != "HF") {
-            Build_CAS_AO_Fock(ref_wfn, options, nirrep, doccpi_tmp, actv_a, nmopi);
+        if (options->get_str("EMBEDDING_REFERENCE") != "HF") {
+            Build_CAS_AO_Fock(ref_wfn, nirrep, doccpi_tmp, actv_a, nmopi);
         }
-        if (options.get_str("EMBEDDING_REFERENCE") == "HF") {
+        if (options->get_str("EMBEDDING_REFERENCE") == "HF") {
             outfile->Printf("\n  Warning: will not build Fock for HF/DFT reference, using wfn->Fa() directly.");
         }
     }
@@ -860,7 +865,7 @@ std::shared_ptr<MOSpaceInfo> make_embedding(psi::SharedWavefunction ref_wfn,
     SharedMatrix Ca_Rt(new Matrix("Ca rotated tilde", nirrep, nmopi, nmopi));
 
     int offset = 0;
-    for (auto& C_block : {C_Fo, C_bo, C_ao, C_A_1, C_A_2, C_av, C_bv, C_Fv}) {
+    for (auto& C_block : {C_Fo, C_bo, C_ao, C_A, C_av, C_bv, C_Fv}) {
         int nmo_block = C_block->ncol();
         for (int i = 0; i < nmo_block; ++i) {
             for (int mu = 0; mu < nmopi[0]; ++mu) {
@@ -922,6 +927,12 @@ std::shared_ptr<MOSpaceInfo> make_embedding(psi::SharedWavefunction ref_wfn,
 
         size_t a = static_cast<size_t>(actv_a[0] + num_Ao + num_Av);
         mo_space_map["ACTIVE"] = {a};
+
+        size_t a_occ = static_cast<size_t>(num_Ao);
+        mo_space_map["EMBEDDING_DOCC"] = {a_occ};
+
+        size_t a_actv = static_cast<size_t>(actv_a[0]);
+        mo_space_map["EMBEDDING_ACTV"] = {a_actv};
 
         size_t rv = static_cast<size_t>(num_Bv - adj_sys_uocc);
         mo_space_map["RESTRICTED_UOCC"] = {rv};
@@ -992,7 +1003,7 @@ psi::SharedMatrix semicanonicalize_block(psi::SharedWavefunction ref_wfn, psi::S
 }
 
 // Utility function #2: CAS-AO Fock builder
-void Build_CAS_AO_Fock(psi::SharedWavefunction ref_wfn, psi::Options& options, int nirrep, psi::Dimension doccpi, psi::Dimension actvpi, psi::Dimension nmopi) {
+void Build_CAS_AO_Fock(psi::SharedWavefunction ref_wfn, int nirrep, psi::Dimension doccpi, psi::Dimension actvpi, psi::Dimension nmopi) {
     outfile->Printf("\n\n  --------------- Build AO Fock Matrix --------------- \n ");
     outfile->Printf("\n docc: %d, actv: %d \n", doccpi[0], actvpi[0]);
 
@@ -1011,7 +1022,7 @@ void Build_CAS_AO_Fock(psi::SharedWavefunction ref_wfn, psi::Options& options, i
     
     outfile->Printf("\n\n  --------------- Build F(inactive) --------------- \n ");
     std::shared_ptr<psi::JK> JK_occ;
-    JK_occ = JK::build_JK(ref_wfn->basisset(), psi::BasisSet::zero_ao_basis_set(), options);
+    JK_occ = JK::build_JK(ref_wfn->basisset(), psi::BasisSet::zero_ao_basis_set(), ref_wfn->options());
     JK_occ->set_memory(Process::environment.get_memory() * 0.8);
 
     JK_occ->initialize();
@@ -1072,11 +1083,8 @@ void Build_CAS_AO_Fock(psi::SharedWavefunction ref_wfn, psi::Options& options, i
         }
     }
 
-    //outfile->Printf("\n  --------------- active 1-rDM from psi4 --------------- \n ");
-    //rD_actv->print();
-
     std::shared_ptr<psi::JK> JK_actv;
-    JK_actv = JK::build_JK(ref_wfn->basisset(), psi::BasisSet::zero_ao_basis_set(), options);
+    JK_actv = JK::build_JK(ref_wfn->basisset(), psi::BasisSet::zero_ao_basis_set(), ref_wfn->options());
     JK_actv->set_memory(Process::environment.get_memory() * 0.8);
 
     JK_actv->initialize();
@@ -1106,6 +1114,51 @@ void Build_CAS_AO_Fock(psi::SharedWavefunction ref_wfn, psi::Options& options, i
     ref_wfn->Fa()->copy(F_tot);
 
     outfile->Printf("\n\n  --------------- AO Fock Matrix Done --------------- \n ");
+}
+
+// Utility function #3: Build the second MO_SPACE_INFO for ASET(2) inner layer computations
+std::shared_ptr<MOSpaceInfo> build_aset2_fragment(psi::SharedWavefunction ref_wfn,
+                                               std::shared_ptr<MOSpaceInfo> mo_space_info) {
+
+    // int fragment_rvir = options.get_int("FRAGMENT_RUOCC");
+
+    psi::Dimension frzopi = mo_space_info->dimension("FROZEN_DOCC");
+    psi::Dimension nroccpi = mo_space_info->dimension("RESTRICTED_DOCC");
+    psi::Dimension fragment_rocc = mo_space_info->dimension("EMBEDDING_DOCC");
+    psi::Dimension fragment_active = mo_space_info->dimension("EMBEDDING_ACTV");
+    psi::Dimension actv_a = mo_space_info->dimension("ACTIVE");
+    psi::Dimension nrvirpi = mo_space_info->dimension("RESTRICTED_UOCC");
+    psi::Dimension frzvpi = mo_space_info->dimension("FROZEN_UOCC");
+
+    // Write the new active (inner-layer) MOSpaceInfo:
+    std::map<std::string, std::vector<size_t>> mo_space_map_fragment;
+
+    size_t freeze_o = static_cast<size_t>(frzopi[0] + nroccpi[0]);
+    mo_space_map_fragment["FROZEN_DOCC"] = {freeze_o};
+
+    size_t ro = static_cast<size_t>(fragment_rocc[0]);
+    mo_space_map_fragment["RESTRICTED_DOCC"] = {ro};
+
+    size_t a = static_cast<size_t>(fragment_active[0]);
+    mo_space_map_fragment["ACTIVE"] = {a};
+
+    size_t rv = static_cast<size_t>(actv_a[0] - fragment_rocc[0] -
+                                    fragment_active[0]); // Read fragment_docc and fragment_active, compute fragment_rvir
+    mo_space_map_fragment["RESTRICTED_UOCC"] = {rv};
+
+    size_t freeze_v = static_cast<size_t>(frzvpi[0] + nrvirpi[0]);
+    mo_space_map_fragment["FROZEN_UOCC"] = {freeze_v};
+
+    outfile->Printf("\n  Generating inner-layer MOSpaceInfo");
+    std::vector<size_t> reorder;
+    std::string point_group = ref_wfn->molecule()->point_group()->symbol();
+    auto nmopi = ref_wfn->nmopi();
+    std::shared_ptr<MOSpaceInfo> mo_space_info_fragment =
+        make_mo_space_info_from_map(nmopi, point_group, mo_space_map_fragment, reorder);
+
+    // Return the new embedding MOSpaceInfo to pymodule
+    outfile->Printf("\n\n  --------------- Entering inner-layer computation --------------- ");
+    return mo_space_info_fragment;
 }
 
 } // namespace forte
