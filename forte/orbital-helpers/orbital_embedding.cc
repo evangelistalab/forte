@@ -453,13 +453,6 @@ std::shared_ptr<MOSpaceInfo> make_embedding(psi::SharedWavefunction ref_wfn,
     if (thresh > 1.0 || thresh < 0.0) {
         throw PSIEXCEPTION("make_embedding: Embedding threshold must be between 0.0 and 1.0 !");
     }
-    double thresh_actv = 0.0;
-    if (options->get_str("EMBEDDING_TYPE") == "GAS") {
-        thresh_actv = options->get_double("EMBEDDING_THRESHOLD_GAS");
-        if (thresh_actv > 1.0 || thresh_actv < 0.0) {
-            throw PSIEXCEPTION("make_embedding: GAS Embedding threshold must be between 0.0 and 1.0 !");
-        }
-    }
 
     int A_docc = 0;
     int A_uocc = 0;
@@ -548,24 +541,9 @@ std::shared_ptr<MOSpaceInfo> make_embedding(psi::SharedWavefunction ref_wfn,
     SharedMatrix P_vv = Pf->get_block(vir, vir);
     P_vv->diagonalize(Uv, lv, descending);
 
-    if (options->get_str("EMBEDDING_TYPE") == "GAS") {
-        SharedMatrix Ua(new Matrix("Uv", nirrep, actv_a, actv_a));
-        SharedVector la(new Vector("lv", nirrep, actv_a));
-        SharedMatrix P_aa = Pf->get_block(actv, actv);
-        P_aa->diagonalize(Ua, la, descending);
-    }
-
     SharedMatrix U_all(new Matrix("U with Pab", nirrep, nmopi, nmopi));
     U_all->set_block(occ, occ, Uo);
     U_all->set_block(vir, vir, Uv);
-
-    SharedVector la(new Vector("la", nirrep, actv_a));
-    SharedMatrix Ua(new Matrix("Ua", nirrep, actv_a, actv_a));
-    if (options->get_str("EMBEDDING_TYPE") == "GAS") {
-        SharedMatrix P_aa = Pf->get_block(actv, actv);
-        P_aa->diagonalize(Ua, la, descending);
-        U_all->set_block(actv, actv, Ua);
-    }
 
     // Rotate MOs (This rotation will zero frozen and active space)
     ref_wfn->Ca()->copy(psi::linalg::doublet(Ca_ori, U_all, false, false));
@@ -579,25 +557,10 @@ std::shared_ptr<MOSpaceInfo> make_embedding(psi::SharedWavefunction ref_wfn,
     std::vector<int> index_B_occ = {};
     std::vector<int> index_B_vir = {};
     std::vector<int> index_actv = {};
-    std::vector<int> index_actv_2 = {};
 
     // Create the active orbital index vector (for any reference)
-    if (options->get_str("EMBEDDING_TYPE") != "GAS") {
-        for (int i = 0; i < actv_a[0]; ++i) {
-            index_actv.push_back(frzopi[0] + nroccpi[0] + i);
-        }
-    }
-
-    if (options->get_str("EMBEDDING_TYPE") == "GAS") {
-        if (options->get_str("EMBEDDING_CUTOFF_METHOD") == "THRESHOLD") {
-            for (int i = 0; i < actv_a[0]; i++) {
-                if (la->get(0, i) > thresh_actv) {
-                    index_actv.push_back(i + frzopi[0] + nroccpi[0]);
-                } else {
-                    index_actv_2.push_back(i + frzopi[0] + nroccpi[0]);
-                }
-            }
-        }
+    for (int i = 0; i < actv_a[0]; ++i) {
+        index_actv.push_back(frzopi[0] + nroccpi[0] + i);
     }
 
     int offset_vec = frzopi[0] + nroccpi[0] + actv_a[0];
@@ -797,9 +760,6 @@ std::shared_ptr<MOSpaceInfo> make_embedding(psi::SharedWavefunction ref_wfn,
     int num_Bv = index_B_vir.size();
     int num_Fv = index_frozen_virtual.size();
 
-    int num_AA = index_actv.size();
-    int num_BA = index_actv_2.size();
-
     // Print system orbital information
     outfile->Printf("\n    Frozen-orbital Embedding MOs (System A)\n");
     outfile->Printf("    ============================\n");
@@ -809,12 +769,7 @@ std::shared_ptr<MOSpaceInfo> make_embedding(psi::SharedWavefunction ref_wfn,
         outfile->Printf("    %4d   %8s   %.6f\n", i + 1, "Occupied", lo->get(i - frzopi[0]));
     }
     for (int i : index_actv) {
-        outfile->Printf("    %4d   %8s      --\n", i + 1, "Active(GAS1)");
-    }
-    if (options->get_str("EMBEDDING_TYPE") == "GAS") {
-        for (int i : index_actv_2) {
-            outfile->Printf("    %4d   %8s      --\n", i + 1, "Active_2(GAS2)");
-        }
+        outfile->Printf("    %4d   %8s      --\n", i + 1, "Active");
     }
     if (options->get_str("EMBEDDING_VIRTUAL_SPACE") == "ASET") {
         for (int i : index_A_vir) {
@@ -873,21 +828,11 @@ std::shared_ptr<MOSpaceInfo> make_embedding(psi::SharedWavefunction ref_wfn,
     // Copy the active block (if any) from original Ca_save
     SharedMatrix C_A(new Matrix("Active_coeff_block", nirrep, nmopi, actv_a));
 
-    psi::Dimension actv_1 = actv_a;
-    psi::Dimension actv_2 = actv_a;
-    actv_1[0] = num_AA;
-    actv_2[0] = num_BA;
-    SharedMatrix C_A_1(new Matrix("GAS1_coeff_block", nirrep, nmopi, actv_1));
-    SharedMatrix C_A_2(new Matrix("GAS2_coeff_block", nirrep, nmopi, actv_2));
-    if (options->get_str("EMBEDDING_REFERENCE") == "CASSCF" && options->get_str("EMBEDDING_TYPE") != "GAS") {
+    if (options->get_str("EMBEDDING_REFERENCE") == "CASSCF") {
         C_A->copy(semicanonicalize_block(ref_wfn, Ca_save, index_actv, 0, !semi_a));
         if (semi_a) {
             outfile->Printf("\n  Semi-canonicalizing active orbitals");
         }
-    }
-    else if (options->get_str("EMBEDDING_TYPE") == "GAS") {
-        C_A_1->copy(semicanonicalize_block(ref_wfn, Ca_save, index_actv, 0, !semi_a));
-        C_A_2->copy(semicanonicalize_block(ref_wfn, Ca_save, index_actv_2, 0, !semi_a));
     }
 
     // Copy the frozen blocks (if any) from original Ca_save without any changes
@@ -900,30 +845,15 @@ std::shared_ptr<MOSpaceInfo> make_embedding(psi::SharedWavefunction ref_wfn,
     // Form new C matrix: Frozen-core, B_occ, A_occ, Active, A_vir, B_vir, Frozen-virtual
     SharedMatrix Ca_Rt(new Matrix("Ca rotated tilde", nirrep, nmopi, nmopi));
 
-    if (options->get_str("EMBEDDING_TYPE") != "GAS") {
-        int offset = 0;
-        for (auto& C_block : {C_Fo, C_bo, C_ao, C_A, C_av, C_bv, C_Fv}) {
-            int nmo_block = C_block->ncol();
-            for (int i = 0; i < nmo_block; ++i) {
-                for (int mu = 0; mu < nmopi[0]; ++mu) {
-                    double value = C_block->get(mu, i);
-                    Ca_Rt->set(mu, offset, value);
-                }
-                offset += 1;
+    int offset = 0;
+    for (auto& C_block : {C_Fo, C_bo, C_ao, C_A_1, C_A_2, C_av, C_bv, C_Fv}) {
+        int nmo_block = C_block->ncol();
+        for (int i = 0; i < nmo_block; ++i) {
+            for (int mu = 0; mu < nmopi[0]; ++mu) {
+                double value = C_block->get(mu, i);
+                Ca_Rt->set(mu, offset, value);
             }
-        }
-    }
-    else {
-        int offset = 0;
-        for (auto& C_block : {C_Fo, C_bo, C_ao, C_A_1, C_A_2, C_av, C_bv, C_Fv}) {
-            int nmo_block = C_block->ncol();
-            for (int i = 0; i < nmo_block; ++i) {
-                for (int mu = 0; mu < nmopi[0]; ++mu) {
-                    double value = C_block->get(mu, i);
-                    Ca_Rt->set(mu, offset, value);
-                }
-                offset += 1;
-            }
+            offset += 1;
         }
     }
 
@@ -1004,30 +934,6 @@ std::shared_ptr<MOSpaceInfo> make_embedding(psi::SharedWavefunction ref_wfn,
         size_t freeze_v = static_cast<size_t>(num_Fv + num_Av + adj_sys_uocc);
         mo_space_map["FROZEN_UOCC"] = {freeze_v};
     }
-
-    // GAS
-    if (options->get_str("EMBEDDING_TYPE") == "GAS") {
-        // Normal partition for Frozen-Core embedding
-        size_t freeze_o = static_cast<size_t>(num_Fo + num_Bo +
-                                              adj_sys_docc); // Add the additional frozen core to Bo
-        mo_space_map["FROZEN_DOCC"] = {freeze_o};
-
-        size_t ro = static_cast<size_t>(num_Ao - adj_sys_docc);
-        mo_space_map["RESTRICTED_DOCC"] = {ro};
-
-        size_t a1 = static_cast<size_t>(num_AA);
-        mo_space_map["GAS1"] = {a1};
-
-        size_t a2 = static_cast<size_t>(num_BA);
-        mo_space_map["GAS2"] = {a2};
-
-        size_t rv = static_cast<size_t>(num_Av - adj_sys_uocc);
-        mo_space_map["RESTRICTED_UOCC"] = {rv};
-
-        size_t freeze_v = static_cast<size_t>(
-            num_Fv + num_Bv + adj_sys_uocc); // Add the additional frozen virtual to Bv
-        mo_space_map["FROZEN_UOCC"] = {freeze_v};
-    }    
 
     // Write new MOSpaceInfo
     outfile->Printf("\n  Updating MOSpaceInfo");
