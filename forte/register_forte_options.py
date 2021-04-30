@@ -218,7 +218,7 @@ def register_embedding_options(options):
         "PAO_FIX_VIRTUAL_NUMBER", False,
         "Enable this option will generate PAOs equivlent to ASET virtuals, instead of using threshold")
     options.add_str(
-        "EMBEDDING_TYPE", "ASET_mf", ["ASET_mf", "ASET2", "GAS", "ASET-SWAP"],
+        "EMBEDDING_TYPE", "ASET_mf", ["ASET_mf", "ASET2", "ASET-SWAP"],
         "The type of embedding computations.")
 
 
