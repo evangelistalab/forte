@@ -29,8 +29,11 @@ def read_wavefunction(ref_wfn):
                 C_list.append(None)
             else:
                 C_list.append(np.asarray(C_read[i]))
-
-        C_mat = psi4.core.Matrix.from_array(C_list)
+        # print(C_list)
+        if ref_wfn.nirrep() != 1:
+            C_mat = psi4.core.Matrix.from_array(C_list) 
+        else: # C1 no spatial symmetry, input is list(np.ndarray)
+            C_mat = psi4.core.Matrix.from_array([np.asarray(C_list)])  
         ref_wfn.Ca().copy(C_mat)
         ref_wfn.Cb().copy(C_mat)
 
