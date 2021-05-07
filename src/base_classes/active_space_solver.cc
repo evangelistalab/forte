@@ -755,6 +755,11 @@ ActiveSpaceSolver::compute_contracted_energy(std::shared_ptr<ActiveSpaceIntegral
         std::string state_name = state.multiplicity_label() + " " + state.irrep_label();
         auto method = state_method_map_.at(state);
 
+        int twice_ms = state.twice_ms();
+        if (twice_ms < 0 and ms_avg_) {
+            continue;
+        }
+
         // form the Hermitian effective Hamiltonian
         print_h2("Building Effective Hamiltonian for " + state_name);
         psi::Matrix Heff("Heff " + state_name, nroots, nroots);
@@ -791,6 +796,15 @@ ActiveSpaceSolver::compute_contracted_energy(std::shared_ptr<ActiveSpaceIntegral
         }
         state_energies_map_[state] = energies;
         state_contracted_evecs_map_[state] = std::make_shared<psi::Matrix>(U);
+
+        // save energies for ms < 0 states (same in energy as ms > 0) to ensure correct averaging
+        if (twice_ms > 0 and ms_avg_) {
+            StateInfo state_spin(state.nb(), state.na(), state.multiplicity(), -twice_ms,
+                                 state.irrep(), state.irrep_label(), state.gas_min(),
+                                 state.gas_max());
+            state_energies_map_[state_spin] = energies;
+            state_contracted_evecs_map_[state_spin] = std::make_shared<psi::Matrix>(U);
+        }
     }
 
     print_energies();
