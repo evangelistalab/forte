@@ -40,7 +40,6 @@ void DWMS_DSRGPT2::startup() {
 
     Enuc_ = ints_->nuclear_repulsion_energy();
 
-    int nirrep = mo_space_info_->nirrep();
     irrep_symbol_ = mo_space_info_->irrep_labels();
 
     multi_symbol_ = std::vector<std::string>{"Singlet", "Doublet", "Triplet", "Quartet", "Quintet",
