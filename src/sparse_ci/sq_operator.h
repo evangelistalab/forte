@@ -87,8 +87,8 @@ class SQOperator {
      * 
      * @param ops a vector of triplets (is_creation, is_alpha, orb) that specify
      *        the second quantized operators  
-     * @param coefficient the factor associated with this operator
-     * @param allow_reordering if true this function will reorder all terms an put them in canonical
+     * @param coefficient of the factor associated with this operator
+     * @param allow_reordering if true this function will reorder all terms and put them in canonical
      *        order adjusting the coefficient to account for the number of permutations.
      *        If set to false, this function will only accept operators that are already in the 
      *        canonical order

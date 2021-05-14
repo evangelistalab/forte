@@ -329,7 +329,7 @@ double AdaptiveCI::average_q_values(const std::vector<double>& E2) {
     // If nroot = 1, choose the max
     if ((average_function_ == AverageFunction::MaxF) or (nroot_ == 1)) {
         return *std::max_element(E2.begin(), E2.end());
-    } else if (average_function_ == AverageFunction::AvgF) {
+    } else {
         const auto begin = E2.begin() + average_offset_;
         return std::accumulate(begin, begin + naverage_, 0.0) / static_cast<double>(naverage_);
     }
@@ -394,7 +394,7 @@ void AdaptiveCI::prune_q_space(DeterminantHashVec& PQ_space, DeterminantHashVec&
             for (int n = 0; n < naverage_; ++n) {
                 if (average_function_ == AverageFunction::MaxF) {
                     criterion = std::max(criterion, std::fabs(evecs->get(i, n + average_offset_)));
-                } else if (average_function_ == AverageFunction::AvgF) {
+                } else {
                     criterion += std::fabs(evecs->get(i, n + average_offset_));
                 }
             }

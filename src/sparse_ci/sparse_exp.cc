@@ -43,7 +43,7 @@ StateVector SparseExp::compute(const SparseOperator& sop, const StateVector& sta
     if (algorithm == "onthefly") {
         alg = Algorithm::OnTheFlySorted;
     }
-    if (algorithm == "ontheflystd") {
+    else if (algorithm == "ontheflystd") {
         alg = Algorithm::OnTheFlyStd;
     }
 

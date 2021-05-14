@@ -133,7 +133,7 @@ SparseCISolver::diagonalize_hamiltonian_full(const std::vector<Determinant>& spa
     auto evals = std::make_shared<psi::Vector>("e", nroot);
 
     // Build the Hamiltonian
-    psi::SharedMatrix H = build_full_hamiltonian(space, as_ints);
+    auto H = build_full_hamiltonian(space, as_ints);
 
     // Build the S^2 matrix
     auto S2 = std::make_shared<psi::Matrix>("S^2", dim_space, dim_space);
@@ -201,7 +201,7 @@ SparseCISolver::diagonalize_hamiltonian_full(const std::vector<Determinant>& spa
         psi::SharedMatrix S2vecs_sub(
             new psi::Matrix("Spin Selected S^2 Eigen Vectors", dim_space, nfound));
         for (int i = 0; i < nfound; ++i) {
-            psi::SharedVector vec = S2vecs->get_column(0, multi_list[multiplicity][i]);
+            auto vec = S2vecs->get_column(0, multi_list[multiplicity][i]);
             S2vecs_sub->set_column(0, i, vec);
         }
 

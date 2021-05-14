@@ -705,7 +705,6 @@ bool SigmaVectorDynamic::compute_abab_coupling_and_store(const String& detIa,
 #endif
                     // find common bits
                     if (Ib.fast_a_xor_b_count(Jb) == 2) {
-                        IJb = Jb ^ Ib;
                         double H_IJ =
                             sign_ia * slater_rules_double_alpha_beta_pre(i, a, Ib, Jb, fci_ints_);
                         sigma_I += H_IJ * b[posJ];

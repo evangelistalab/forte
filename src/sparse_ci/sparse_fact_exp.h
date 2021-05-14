@@ -56,7 +56,7 @@ class SparseFactExp {
     ///
     ///             ... exp(op2) exp(op1) |state>
     ///
-    /// This algorithms is useful when applying the factorized exponential repeatedly
+    /// This algorithm is useful when applying the factorized exponential repeatedly
     /// to the same state or in an iterative procedure
     /// This function applies only those elements of the operator that satisfy the condition:
     ///     |t * C_I| > screen_threshold

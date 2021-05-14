@@ -66,7 +66,7 @@ class SparseExp {
     /// @param algorithm the algorithm used to compute the exponential. If algorithm = "onthefly"
     /// this function will compute the factorized exponential using an on-the-fly implementation (slow).
     /// If algorithm = "cached", a cached approach is used.
-    /// @param scaling_factor A scalr factor that multiplies the operator exponentiated. If set to -1.0
+    /// @param scaling_factor A scalar factor that multiplies the operator exponentiated. If set to -1.0
     /// it allows to compute the inverse of the exponential exp(-op)
     /// @param maxk the maximum power of op used in the Taylor expansion of exp(op)
     /// @param screen_thresh a threshold to select which elements of the operator applied to the state.

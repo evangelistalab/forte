@@ -31,7 +31,7 @@
 namespace forte {
 
 int permutation_parity(const std::vector<size_t>& p) {
-    int n = static_cast<int>(p.size());
+    auto n = static_cast<int>(p.size());
 
     // vector of elements visited
     std::vector<bool> visited(n, false);

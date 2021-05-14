@@ -50,7 +50,7 @@ class SparseHamiltonian {
     SparseHamiltonian(std::shared_ptr<ActiveSpaceIntegrals> as_ints);
 
     /// @brief Compute the state H|state> using an algorithm that caches the elements of H
-    /// This algorithms is useful when applying H repeatedly to the same state or in an
+    /// This algorithm is useful when applying H repeatedly to the same state or in an
     /// iterative procedure
     /// This function applies only those elements of H that satisfy the condition:
     ///     |H_IJ C_J| > screen_thresh
