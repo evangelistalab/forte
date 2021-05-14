@@ -24,7 +24,8 @@ def run_cc(
     selection_threshold=1.0e-14,
     on_the_fly=False,
     linked=True,
-    maxk=19
+    maxk=19,
+    diis_start=3
 ):
     """This function implements various CC methods
 
@@ -138,7 +139,8 @@ def run_cc(
             r_convergence,
             on_the_fly,
             linked,
-            maxk
+            maxk,
+            diis_start
         )
 
         print(
@@ -320,7 +322,8 @@ def solve_cc_equations(
     on_the_fly=False,
     linked=True,
     maxk=19,
-    maxiter=100,
+    diis_start=3,
+    maxiter=200,
 ):
     """Solve the CC equations
 
@@ -357,7 +360,7 @@ def solve_cc_equations(
         Returns the a tuple containign the converged amplitudes, the energy, the projective energy,
         the number of iterations, and timings information
     """
-    diis = DIIS(t)
+    diis = DIIS(t,diis_start)
     ham = forte.SparseHamiltonian(as_ints)
     if cc_type == "cc" or cc_type == "ucc":
         exp = forte.SparseExp()
@@ -474,7 +477,6 @@ def residual_equations(
             N2 += c**2
             energy += c * Hwfn[d]
         energy = energy / N2
-        print(N2,energy)
         # compute the projective energy as the expectation value = <ref|H U|ref> / <ref|U|ref>
         for d, c in ref.items():
             energy_proj += c * Hwfn[d] / c0
@@ -487,10 +489,16 @@ def residual_equations(
 
 class DIIS:
     """A class that implements DIIS for CC theory 
+
+        Parameters
+    ----------
+    diis_start : int
+        Start the iterations when the DIIS dimension is greather than this parameter (default = 3)
     """  
-    def __init__(self, t):
+    def __init__(self, t, diis_start=3):
         self.t_diis = [t]
         self.e_diis = []
+        self.diis_start = diis_start
 
     def update(self, t, t_old):
         """Update the DIIS object and return extrapolted amplitudes
@@ -505,13 +513,16 @@ class DIIS:
         -------
         list
             The extrapolated amplitudes
-        """        
+        """
+
+        if self.diis_start == -1:
+            return t
+
         self.t_diis.append(t)
         self.e_diis.append(np.subtract(t, t_old))
 
         diis_dim = len(self.t_diis) - 1
-
-        if (diis_dim >= 3) and (diis_dim < len(t)):
+        if (diis_dim >= self.diis_start) and (diis_dim < len(t)):
             # consturct diis B matrix (following Crawford Group github tutorial)
             B = np.ones((diis_dim + 1, diis_dim + 1)) * -1.0
             bsol = np.zeros(diis_dim + 1)

@@ -653,6 +653,8 @@ def register_integral_options(options):
 
     options.add_str('FCIDUMP_FILE', 'INTDUMP',
                     'The file that stores the FCIDUMP integrals')
+    options.add_int_array('FCIDUMP_DOCC', 'The number of doubly occupied orbitals assumed for a FCIDUMP file. This information is used to build orbital energies.')
+    options.add_int_array('FCIDUMP_SOCC', 'The number of singly occupied orbitals assumed for a FCIDUMP file. This information is used to build orbital energies.')
 
     options.add_double(
         "INTEGRAL_SCREENING", 1.0e-12,

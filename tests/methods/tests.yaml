@@ -267,7 +267,7 @@ mr-dsrg-pt2:
    - mr-dsrg-pt2-3
   medium:
    - mr-dsrg-pt2-2
-   - mr-dsrg-pt2-4
+# this uses the active-dsrg code which is not compiled   - mr-dsrg-pt2-4
 mrdsrg_so:
   short:
    - mrdsrg_so-1

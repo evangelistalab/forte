@@ -125,7 +125,7 @@ class AOInfo {
  *    ["C1"] - carbon atom #1
  *    ["C1-3"] - carbon atoms #1, #2, #3
  *    ["C(2p)"] - the 2p subset of all carbon atoms
- *    ["C(1s,2s)"] - the 1s/2s subsets of all carbon atoms
+ *    ["C(1s)","C(2s)"] - the 1s/2s subsets of all carbon atoms
  *    ["C1-3(2s)"] - the 2s subsets of carbon atoms #1, #2, #3
  */
 class AOSubspace {
