@@ -42,7 +42,7 @@ def run_cc(
     select_type : str
         The selection algorithm (default: None = no selection)
     max_exc : int
-        The maximum excitation level (defaul: None)
+        The maximum excitation level (default: None)
     omega : float
         The selection threshold (default: None)
     e_convergence : float
