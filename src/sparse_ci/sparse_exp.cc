@@ -142,7 +142,7 @@ StateVector SparseExp::apply_operator_cached(const SparseOperator& sop, const St
             const auto& d_couplings = couplings_[d];
             for (const auto& op_d_f : d_couplings) {
                 const double value =
-                    op_list[std::get<0>(op_d_f)].factor() * std::get<2>(op_d_f) * c;
+                    op_list[std::get<0>(op_d_f)].coefficient() * std::get<2>(op_d_f) * c;
                 if (std::fabs(value) > screen_thresh)
                     new_terms[std::get<1>(op_d_f)] += value;
             }
@@ -187,7 +187,7 @@ StateVector SparseExp::apply_operator_cached(const SparseOperator& sop, const St
                 const auto& d_couplings = couplings_dexc_[d];
                 for (const auto& op_d_f : d_couplings) {
                     const double value =
-                        op_list[std::get<0>(op_d_f)].factor() * std::get<2>(op_d_f) * c;
+                        op_list[std::get<0>(op_d_f)].coefficient() * std::get<2>(op_d_f) * c;
                     if (std::fabs(value) > screen_thresh)
                         new_terms[std::get<1>(op_d_f)] -= value;
                 }
@@ -223,7 +223,7 @@ StateVector SparseExp::apply_operator_sorted(const SparseOperator& sop, const St
 
     // loop over all the operators
     for (const SQOperator& sqop : op_list) {
-        if (sqop.factor() == 0.0)
+        if (sqop.coefficient() == 0.0)
             continue;
         // create a mask for screening determinants according to the creation operators
         // this mask looks only at creation operators that are not preceeded by annihilation
@@ -234,11 +234,11 @@ StateVector SparseExp::apply_operator_sorted(const SparseOperator& sop, const St
             num_attempts_++;
             std::tie(absc, c, d) = absc_c_det;
             // screen according to the product tau * c
-            if (std::fabs(sqop.factor() * c) > screen_thresh) {
+            if (std::fabs(sqop.coefficient() * c) > screen_thresh) {
                 // check if this operator can be applied
                 if (d.fast_a_and_b_equal_b(sqop.ann()) and d.fast_a_and_b_eq_zero(ucre)) {
                     const double value =
-                        apply_op_safe(d, sqop.cre(), sqop.ann()) * sqop.factor() * c;
+                        apply_op_safe(d, sqop.cre(), sqop.ann()) * sqop.coefficient() * c;
                     new_terms[d] += value;
                     num_success_++;
                 }
@@ -251,7 +251,7 @@ StateVector SparseExp::apply_operator_sorted(const SparseOperator& sop, const St
     if (sop.is_antihermitian()) {
         // loop over all the operators
         for (const SQOperator& sqop : op_list) {
-            if (sqop.factor() == 0.0)
+            if (sqop.coefficient() == 0.0)
                 continue;
             // create a mask for screening determinants according to the creation operators
             // this mask looks only at creation operators that are not preceeded by annihilation
@@ -263,10 +263,10 @@ StateVector SparseExp::apply_operator_sorted(const SparseOperator& sop, const St
 
                 std::tie(absc, c, d) = absc_c_det;
                 // screen according to the product tau * c
-                if (std::fabs(sqop.factor() * c) > screen_thresh) {
+                if (std::fabs(sqop.coefficient() * c) > screen_thresh) {
                     // check if this operator can be applied
                     if (d.fast_a_and_b_equal_b(sqop.cre()) and d.fast_a_and_b_eq_zero(ucre)) {
-                        double value = apply_op_safe(d, sqop.ann(), sqop.cre()) * sqop.factor() * c;
+                        double value = apply_op_safe(d, sqop.ann(), sqop.cre()) * sqop.coefficient() * c;
                         new_terms[d] -= value;
                         num_success_++;
                     }
@@ -288,7 +288,7 @@ StateVector SparseExp::apply_operator_std(const SparseOperator& sop, const State
 
     // loop over all the operators
     for (const SQOperator& sqop : op_list) {
-        if (sqop.factor() == 0.0)
+        if (sqop.coefficient() == 0.0)
             continue;
         // create a mask for screening determinants according to the creation operators
         // this mask looks only at creation operators that are not preceeded by annihilation
@@ -301,11 +301,11 @@ StateVector SparseExp::apply_operator_std(const SparseOperator& sop, const State
             const double c = det_c.second;
             // test if we can apply this operator to this determinant
             // screen according to the product tau * c
-            if (std::fabs(sqop.factor() * c) > screen_thresh) {
+            if (std::fabs(sqop.coefficient() * c) > screen_thresh) {
                 // check if this operator can be applied
                 if (d.fast_a_and_b_equal_b(sqop.ann()) and d.fast_a_and_b_eq_zero(ucre)) {
                     new_d = d;
-                    double value = apply_op_safe(new_d, sqop.cre(), sqop.ann()) * sqop.factor() * c;
+                    double value = apply_op_safe(new_d, sqop.cre(), sqop.ann()) * sqop.coefficient() * c;
                     new_terms[new_d] += value;
                 }
             }
@@ -315,7 +315,7 @@ StateVector SparseExp::apply_operator_std(const SparseOperator& sop, const State
     if (sop.is_antihermitian()) {
         // loop over all the operators
         for (const SQOperator& sqop : op_list) {
-            if (sqop.factor() == 0.0)
+            if (sqop.coefficient() == 0.0)
                 continue;
             // create a mask for screening determinants according to the creation operators
             // this mask looks only at creation operators that are not preceeded by annihilation
@@ -328,12 +328,12 @@ StateVector SparseExp::apply_operator_std(const SparseOperator& sop, const State
                 const double c = det_c.second;
                 // test if we can apply this operator to this determinant
                 // screen according to the product tau * c
-                if (std::fabs(sqop.factor() * c) > screen_thresh) {
+                if (std::fabs(sqop.coefficient() * c) > screen_thresh) {
                     // check if this operator can be applied
                     if (d.fast_a_and_b_equal_b(sqop.cre()) and d.fast_a_and_b_eq_zero(ucre)) {
                         new_d = d;
                         double value =
-                            apply_op_safe(new_d, sqop.ann(), sqop.cre()) * sqop.factor() * c;
+                            apply_op_safe(new_d, sqop.ann(), sqop.cre()) * sqop.coefficient() * c;
                         new_terms[new_d] -= value;
                     }
                 }

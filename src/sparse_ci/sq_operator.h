@@ -80,36 +80,36 @@ using op_tuple_t = std::vector<std::tuple<bool, bool, int>>;
  */
 class SQOperator {
   public:
-    SQOperator(double factor, const Determinant& cre, const Determinant& ann);
+    SQOperator(double coefficient, const Determinant& cre, const Determinant& ann);
 
     /**
      * @brief Create a second quantized operator
      * 
      * @param ops a vector of triplets (is_creation, is_alpha, orb) that specify
      *        the second quantized operators  
-     * @param coefficient of the factor associated with this operator
+     * @param coefficient of the coefficient associated with this operator
      * @param allow_reordering if true this function will reorder all terms and put them in canonical
      *        order adjusting the coefficient to account for the number of permutations.
      *        If set to false, this function will only accept operators that are already in the 
      *        canonical order
      */
     SQOperator(const op_tuple_t& ops, double coefficient = 0.0, bool allow_reordering = false);
-    /// @return the numerical factor associated with this operator
-    double factor() const;
+    /// @return the numerical coefficient associated with this operator
+    double coefficient() const;
     /// @return a Determinant object that represents the creation operators
     const Determinant& cre() const;
     /// @return a Determinant object that represents the annihilation operators    
     const Determinant& ann() const;
-    /// @param value set the factor associated with this operator
-    void set_factor(double& value);
+    /// @param value set the coefficient associated with this operator
+    void set_coefficient(double& value);
     /// @return a string representation of this operator
     std::string str() const;
     /// @return a latex representation of this operator
     std::string latex() const;
 
   private:
-    /// a numerical factor associated with this product of sq operators
-    double factor_;
+    /// a numerical coefficient associated with this product of sq operators
+    double coefficient_;
     /// a Determinant that represents the creation operators
     Determinant cre_;
     /// a Determinant that represents the annihilation operators

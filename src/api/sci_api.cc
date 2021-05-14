@@ -144,7 +144,7 @@ void export_Determinant(py::module& m) {
         .def("latex", &SparseOperator::latex);
 
     py::class_<SQOperator>(m, "SQOperator")
-        .def("factor", &SQOperator::factor)
+        .def("coefficient", &SQOperator::coefficient)
         .def("cre", &SQOperator::cre)
         .def("ann", &SQOperator::ann)
         .def("str", &SQOperator::str)

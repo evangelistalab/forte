@@ -64,6 +64,10 @@ def run_cc(
 
     nirrep = mo_space_info.nirrep()
 
+    if cc_type == None:
+        raise ValueError('No type of CC computation was selected. Specify a valid value for the cc_type option.')
+
+
     nmo = mo_space_info.size("CORRELATED")
     nmopi = mo_space_info.dimension("CORRELATED").to_tuple()
     nfrzdocc = mo_space_info.dimension("FROZEN_DOCC").to_tuple()
@@ -81,7 +85,7 @@ def run_cc(
     if max_exc == None:
         max_exc = min(naelpi + nbelpi, nmo - naelpi + nbelpi)
 
-    antihermitian = False if cc_type == "cc" or cc_type == "dcc" else True
+    antihermitian = (cc_type != "cc") or (cc_type != "dcc")
 
     # create the operator pool
     op, denominators = make_cluster_operator(
@@ -124,7 +128,7 @@ def run_cc(
 
     for macro_iter in range(max_macro_iter):
 
-        # solve the ucc equations and update the amplitudes
+        # solve the cc equations and update the amplitudes
         t, e, e_proj, micro_iter, timing = solve_cc_equations(
             cc_type,
             t,

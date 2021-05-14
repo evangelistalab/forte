@@ -181,7 +181,7 @@ StateVector SparseFactExp::compute_exp(const SparseOperator& sop, const StateVec
     for (size_t m = 0, nterms = sop.size(); m < nterms; m++) {
         size_t n = inverse ? nterms - m - 1 : m;
 
-        double amp = sop.term(n).factor();
+        double amp = sop.term(n).coefficient();
 
         const std::vector<std::tuple<size_t, size_t, double>>& d_couplings =
             inverse ? inverse_couplings_[m] : couplings_[m];
@@ -253,7 +253,7 @@ StateVector SparseFactExp::compute_on_the_fly_antihermitian(const SparseOperator
         const SQOperator& sqop = op_list[n];
         const Determinant ucre = sqop.cre() - sqop.ann();
         const Determinant uann = sqop.ann() - sqop.cre();
-        const double tau = (inverse ? -1.0 : 1.0) * sqop.factor();
+        const double tau = (inverse ? -1.0 : 1.0) * sqop.coefficient();
         Determinant new_d;
         // loop over all determinants
         for (const auto& det_c : state) {
@@ -303,7 +303,7 @@ StateVector SparseFactExp::compute_on_the_fly_excitation(const SparseOperator& s
 
         const SQOperator& sqop = op_list[n];
         const Determinant ucre = sqop.cre() - sqop.ann();
-        const double tau = (inverse ? -1.0 : 1.0) * sqop.factor();
+        const double tau = (inverse ? -1.0 : 1.0) * sqop.coefficient();
         Determinant new_d;
         // loop over all determinants
         for (const auto& det_c : state) {

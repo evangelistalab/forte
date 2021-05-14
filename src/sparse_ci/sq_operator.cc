@@ -36,8 +36,8 @@
 
 namespace forte {
 
-SQOperator::SQOperator(double factor, const Determinant& cre, const Determinant& ann)
-    : factor_(factor), cre_(cre), ann_(ann) {}
+SQOperator::SQOperator(double coefficient, const Determinant& cre, const Determinant& ann)
+    : coefficient_(coefficient), cre_(cre), ann_(ann) {}
 
 std::tuple<bool, bool, int> flip_spin(const std::tuple<bool, bool, int>& t) {
     return std::make_tuple(std::get<0>(t), not std::get<1>(t), std::get<2>(t));
@@ -56,12 +56,12 @@ bool compare_ops(const std::tuple<bool, bool, int>& lhs, const std::tuple<bool, 
 
 SQOperator::SQOperator(const op_tuple_t& ops, double coefficient, bool allow_reordering) {
     const std::vector<std::tuple<bool, bool, int>>& creation_alpha_orb_vec = ops;
-    factor_ = coefficient;
+    coefficient_ = coefficient;
 
     bool is_sorted =
         std::is_sorted(creation_alpha_orb_vec.begin(), creation_alpha_orb_vec.end(), compare_ops);
 
-    // if not sorted, compute the permutation factor
+    // if not sorted, compute the permutation coefficient
     if (not is_sorted) {
         if (not allow_reordering) {
             throw std::runtime_error(
@@ -83,8 +83,8 @@ SQOperator::SQOperator(const op_tuple_t& ops, double coefficient, bool allow_reo
             return compare_ops(creation_alpha_orb_vec[i1], creation_alpha_orb_vec[i2]);
         });
         auto parity = permutation_parity(idx);
-        // set the factor including the parity of the permutation
-        factor_ *= 1.0 - 2.0 * parity;
+        // set the coefficient including the parity of the permutation
+        coefficient_ *= 1.0 - 2.0 * parity;
     }
 
     // set the bitarray part of the operator (the order does not matter)
@@ -108,14 +108,14 @@ SQOperator::SQOperator(const op_tuple_t& ops, double coefficient, bool allow_reo
     }
 }
 
-double SQOperator::factor() const { return factor_; }
+double SQOperator::coefficient() const { return coefficient_; }
 const Determinant& SQOperator::cre() const { return cre_; }
 const Determinant& SQOperator::ann() const { return ann_; }
-void SQOperator::set_factor(double& value) { factor_ = value; }
+void SQOperator::set_coefficient(double& value) { coefficient_ = value; }
 
 std::string SQOperator::str() const {
-    std::string s = to_string_with_precision(factor(), 12) + " * [ ";
-    // std::string s = std::to_string(factor()) + " * [ ";
+    std::string s = to_string_with_precision(coefficient(), 12) + " * [ ";
+    // std::string s = std::to_string(coefficient()) + " * [ ";
     auto acre = cre_.get_alfa_occ(cre_.norb());
     auto bcre = cre_.get_beta_occ(cre_.norb());
     auto aann = ann_.get_alfa_occ(ann_.norb());
@@ -150,7 +150,7 @@ std::string sq_double_to_string(double value) {
 }
 
 std::string SQOperator::latex() const {
-    std::string s = sq_double_to_string(factor()) + "\\;";
+    std::string s = sq_double_to_string(coefficient()) + "\\;";
 
     auto acre = cre_.get_alfa_occ(cre_.norb());
     auto bcre = cre_.get_beta_occ(cre_.norb());

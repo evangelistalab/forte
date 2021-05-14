@@ -69,10 +69,9 @@ void SparseOperator::add_term_from_str(std::string str, double coefficient, bool
     // the match object
     std::smatch m;
 
-    // here we match onethe terms of the form [<orb><a/b><+/-> ...]
-    // in the middle of this code we parse the operator part and store it as a
-    // std::vector<std::tuple<bool, bool, int>>  (in parsed_ops)
-    // then we call creation_alpha_orb_vec_to_SQOperator to get a SQOperator object
+    // here we match terms of the form [<orb><a/b><+/-> ...], then parse the operator part
+    // and translate it into a term that is added to the operator.
+    // 
     if (std::regex_match(str, m, re)) {
         if (m.ready()) {
             auto ops_vec_tuple = sparse_parse_ops(m[1]);
@@ -97,14 +96,14 @@ const SQOperator& SparseOperator::term(size_t n) const { return op_list_[n]; }
 std::vector<double> SparseOperator::coefficients() const {
     std::vector<double> v;
     for (const SQOperator& sqop : op_list_) {
-        v.push_back(sqop.factor());
+        v.push_back(sqop.coefficient());
     }
     return v;
 }
 
 void SparseOperator::set_coefficients(std::vector<double>& values) {
     for (size_t n = 0, nmax = values.size(); n < nmax; ++n) {
-        op_list_[n].set_factor(values[n]);
+        op_list_[n].set_coefficient(values[n]);
     }
 }
 
@@ -117,11 +116,11 @@ void SparseOperator::pop_term() {
 std::vector<std::string> SparseOperator::str() const {
     std::vector<std::string> v;
     for (const SQOperator& sqop : op_list_) {
-        if (std::fabs(sqop.factor()) < 1.0e-12)
+        if (std::fabs(sqop.coefficient()) < 1.0e-12)
             continue;
         v.push_back(sqop.str());
         if (is_antihermitian()) {
-            auto sqop_dagger = SQOperator(-sqop.factor(), sqop.ann(), sqop.cre());
+            auto sqop_dagger = SQOperator(-sqop.coefficient(), sqop.ann(), sqop.cre());
             v.push_back(sqop_dagger.str());
         }
     }
@@ -133,7 +132,7 @@ std::string SparseOperator::latex() const {
     for (const SQOperator& sqop : op_list_) {
         v.push_back(sqop.latex());
         if (is_antihermitian()) {
-            auto sqop_dagger = SQOperator(-sqop.factor(), sqop.ann(), sqop.cre());
+            auto sqop_dagger = SQOperator(-sqop.coefficient(), sqop.ann(), sqop.cre());
             v.push_back(sqop_dagger.latex());
         }
     }

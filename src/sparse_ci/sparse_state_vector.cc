@@ -79,7 +79,7 @@ StateVector apply_operator_safe(SparseOperator& sop, const StateVector& state) {
             d = det_c.first;
             double sign = apply_op(d, sqop.cre(), sqop.ann());
             if (sign != 0.0) {
-                new_state[d] += sqop.factor() * sign * c;
+                new_state[d] += sqop.coefficient() * sign * c;
             }
         }
     }
@@ -108,7 +108,7 @@ StateVector apply_operator(SparseOperator& sop, const StateVector& state, double
 
     // loop over all the operators
     for (const SQOperator& sqop : op_list) {
-        if (sqop.factor() == 0.0)
+        if (sqop.coefficient() == 0.0)
             continue;
         // create a mask for screening determinants according to the creation operators
         // this mask looks only at creation operators that are not preceeded by annihilation
@@ -118,10 +118,10 @@ StateVector apply_operator(SparseOperator& sop, const StateVector& state, double
         for (const auto& absc_c_det : state_sorted) {
             std::tie(absc, c, d) = absc_c_det;
             // screen according to the product tau * c
-            if (std::fabs(sqop.factor() * c) > screen_thresh) {
+            if (std::fabs(sqop.coefficient() * c) > screen_thresh) {
                 // check if this operator can be applied
                 if (d.fast_a_and_b_equal_b(sqop.ann()) and d.fast_a_and_b_eq_zero(ucre)) {
-                    double value = apply_op_safe(d, sqop.cre(), sqop.ann()) * sqop.factor() * c;
+                    double value = apply_op_safe(d, sqop.cre(), sqop.ann()) * sqop.coefficient() * c;
                     new_terms[d] += value;
                 }
             } else {
@@ -133,7 +133,7 @@ StateVector apply_operator(SparseOperator& sop, const StateVector& state, double
     if (sop.is_antihermitian()) {
         // loop over all the operators
         for (const SQOperator& sqop : op_list) {
-            if (sqop.factor() == 0.0)
+            if (sqop.coefficient() == 0.0)
                 continue;
             // create a mask for screening determinants according to the creation operators
             // this mask looks only at creation operators that are not preceeded by annihilation
@@ -143,10 +143,10 @@ StateVector apply_operator(SparseOperator& sop, const StateVector& state, double
             for (const auto& absc_c_det : state_sorted) {
                 std::tie(absc, c, d) = absc_c_det;
                 // screen according to the product tau * c
-                if (std::fabs(sqop.factor() * c) > screen_thresh) {
+                if (std::fabs(sqop.coefficient() * c) > screen_thresh) {
                     // check if this operator can be applied
                     if (d.fast_a_and_b_equal_b(sqop.cre()) and d.fast_a_and_b_eq_zero(ucre)) {
-                        double value = apply_op_safe(d, sqop.ann(), sqop.cre()) * sqop.factor() * c;
+                        double value = apply_op_safe(d, sqop.ann(), sqop.cre()) * sqop.coefficient() * c;
                         new_terms[d] -= value;
                     }
                 } else {

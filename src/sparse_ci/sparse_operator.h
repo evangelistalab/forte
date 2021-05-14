@@ -42,7 +42,7 @@ class ActiveSpaceIntegrals;
  * @brief The SparseOperator class
  * Base class for second quantized operators.
  *
- * An operator is a sum of terms, where each term is a numerical factor
+ * An operator is a linear combination of terms, where each term is a numerical factor
  * times a product of second quantized operators (a SQOperator object)
  *
  * For example:
@@ -110,7 +110,7 @@ class SparseOperator {
     /// set the value of the coefficients
     void set_coefficients(std::vector<double>& values);
     /// set the value of one coefficient
-    void set_coefficient(size_t n, double value) { op_list_[n].set_factor(value); }
+    void set_coefficient(size_t n, double value) { op_list_[n].set_coefficient(value); }
     /// is this operator antihermitian?
     bool is_antihermitian() const { return antihermitian_; }
     /// @return the list of operators
