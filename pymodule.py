@@ -287,7 +287,7 @@ def make_state_info_from_fcidump(fcidump, options):
     return forte.StateInfo(na, nb, multiplicity, twice_ms, irrep)
 
 
-def prepare_forte_objects_from_fcidump(options,path):
+def prepare_forte_objects_from_fcidump(options,path='.'):
     fcidump_file = options.get_str('FCIDUMP_FILE')
     filename = pathlib.Path(path) / fcidump_file
     psi4.core.print_out(
