@@ -14,16 +14,16 @@ def test_sparse_operator():
     sop.add_term_from_str('[]')
     sop.add_term_from_str('[0a+ 0b+ 0b- 0a-]')
     to_str = sop.str()
-    assert to_str == ['0.000000 * [ ]', '0.000000 * [ 0a+ 0b+ 0b- 0a- ]']
+    assert to_str == []
     to_latex = sop.latex()
     assert to_latex == r'0.000000\; 0.000000\;\hat{a}_{0 \alpha}^\dagger\hat{a}_{0 \beta}^\dagger\hat{a}_{0 \beta}\hat{a}_{0 \alpha}'
 
     sop = forte.SparseOperator(antihermitian=True)
-    sop.add_term_from_str('[1a+ 1b+ 0b- 0a-]')
+    sop.add_term_from_str('[1a+ 1b+ 0b- 0a-]',1.0)
     to_str = sop.str()
-    assert to_str == ['0.000000 * [ 1a+ 1b+ 0b- 0a- ]', '-0.000000 * [ 0a+ 0b+ 1b- 1a- ]']
+    assert to_str == ['1.000000000000 * [ 1a+ 1b+ 0b- 0a- ]', '-1.000000000000 * [ 0a+ 0b+ 1b- 1a- ]']
     to_latex = sop.latex()
-    assert to_latex == r'0.000000\;\hat{a}_{1 \alpha}^\dagger\hat{a}_{1 \beta}^\dagger\hat{a}_{0 \beta}\hat{a}_{0 \alpha} -0.000000\;\hat{a}_{0 \alpha}^\dagger\hat{a}_{0 \beta}^\dagger\hat{a}_{1 \beta}\hat{a}_{1 \alpha}'
+    assert to_latex == r'+\;\hat{a}_{1 \alpha}^\dagger\hat{a}_{1 \beta}^\dagger\hat{a}_{0 \beta}\hat{a}_{0 \alpha} -\;\hat{a}_{0 \alpha}^\dagger\hat{a}_{0 \beta}^\dagger\hat{a}_{1 \beta}\hat{a}_{1 \alpha}'
 
     sop = forte.SparseOperator()
     sop.add_term_from_str('[]')

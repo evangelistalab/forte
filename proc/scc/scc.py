@@ -85,7 +85,7 @@ def run_cc(
     if max_exc == None:
         max_exc = min(naelpi + nbelpi, nmo - naelpi + nbelpi)
 
-    antihermitian = (cc_type != "cc") or (cc_type != "dcc")
+    antihermitian = (cc_type != 'cc') and (cc_type != 'dcc')
 
     # create the operator pool
     op, denominators = make_cluster_operator(
