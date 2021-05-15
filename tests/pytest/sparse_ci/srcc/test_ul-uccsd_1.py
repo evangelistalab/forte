@@ -19,6 +19,7 @@ def test_ul_uccsd_1():
         {
             'FORTE__FCIDUMP_FILE': 'INTDUMP2',
             'FORTE__FCIDUMP_DOCC': [2],
+            'FORTE__FROZEN_DOCC': [0],
         }
     )
 
