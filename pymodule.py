@@ -30,6 +30,7 @@
 import time
 import math
 import warnings
+import pathlib
 
 import numpy as np
 import psi4
@@ -286,8 +287,9 @@ def make_state_info_from_fcidump(fcidump, options):
     return forte.StateInfo(na, nb, multiplicity, twice_ms, irrep)
 
 
-def prepare_forte_objects_from_fcidump(options):
-    filename = options.get_str('FCIDUMP_FILE')
+def prepare_forte_objects_from_fcidump(options,path):
+    fcidump_file = options.get_str('FCIDUMP_FILE')
+    filename = pathlib.Path(path) / fcidump_file
     psi4.core.print_out(
         f'\n  Reading integral information from FCIDUMP file {filename}')
     fcidump = forte.proc.fcidump_from_file(filename, convert_to_psi4=True)

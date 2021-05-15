@@ -16,7 +16,7 @@ def test_ul_uccsd_1():
 
     psi4.set_options({'FORTE__FCIDUMP_FILE': 'INTDUMP2', 'FORTE__FCIDUMP_DOCC': [2]})
     options = forte.prepare_forte_options()
-    forte_objects = forte.prepare_forte_objects_from_fcidump(options)
+    forte_objects = forte.prepare_forte_objects_from_fcidump(options, os.path.dirname(__file__))
     state_weights_map, mo_space_info, scf_info, fcidump = forte_objects
     ints = forte.make_ints_from_fcidump(fcidump, options, mo_space_info)
     as_ints = forte.make_active_space_ints(mo_space_info, ints, 'CORRELATED', [])
