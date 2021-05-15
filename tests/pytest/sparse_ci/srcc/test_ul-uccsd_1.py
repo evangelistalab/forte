@@ -9,6 +9,7 @@ def test_ul_uccsd_1():
     import forte.proc.scc as scc
     import forte
     import psi4
+    import os.path
 
     forte.startup()
 
