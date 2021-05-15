@@ -19,10 +19,9 @@ def test_ul_uccsd_1():
         {
             'FORTE__FCIDUMP_FILE': 'INTDUMP2',
             'FORTE__FCIDUMP_DOCC': [2],
-            'FROZEN_DOCC': [0],
-            'RESTRICTED_DOCC': [2]
         }
     )
+
     options = forte.prepare_forte_options()
     forte_objects = forte.prepare_forte_objects_from_fcidump(options, os.path.dirname(__file__))
     state_weights_map, mo_space_info, scf_info, fcidump = forte_objects

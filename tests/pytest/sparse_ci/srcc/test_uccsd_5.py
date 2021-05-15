@@ -16,7 +16,7 @@ def test_uccsd_3():
 
     ref_energy = -107.655681875111
 
-    psi4.set_module_options('FORTE', {'FROZEN_DOCC': [2]})
+    psi4.set_options({'FORTE__FROZEN_DOCC': [2]})
     options = forte.prepare_forte_options()
     forte_objects = forte.prepare_forte_objects_from_fcidump(options, os.path.dirname(__file__))
     state_weights_map, mo_space_info, scf_info, fcidump = forte_objects
