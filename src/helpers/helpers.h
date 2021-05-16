@@ -86,23 +86,21 @@ psi::SharedMatrix tensor_to_matrix(ambit::Tensor t);
  */
 psi::SharedMatrix tensor_to_matrix(ambit::Tensor t, psi::Dimension dims);
 
-/**
- * @brief view_modified_orbitals Write orbitals using molden
- * @param Ca  The Ca matrix to be viewed with MOLDEN
- * @param diag_F -> The Orbital energies (diagonal elements of Fock operator)
- * @param occupation -> occupation vector
- */
-void view_modified_orbitals(std::shared_ptr<psi::Wavefunction> wfn,
-                            const std::shared_ptr<psi::Matrix>& Ca,
-                            const std::shared_ptr<psi::Vector>& diag_F,
-                            const std::shared_ptr<psi::Vector>& occupation);
+// /**
+//  * @brief view_modified_orbitals Write orbitals using molden
+//  * @param Ca  The Ca matrix to be viewed with MOLDEN
+//  * @param diag_F -> The Orbital energies (diagonal elements of Fock operator)
+//  * @param occupation -> occupation vector
+//  */
+// void view_modified_orbitals(std::shared_ptr<psi::Wavefunction> wfn,
+//                             const std::shared_ptr<psi::Matrix>& Ca,
+//                             const std::shared_ptr<psi::Vector>& diag_F,
+//                             const std::shared_ptr<psi::Vector>& occupation);
 
 /**
  * Returns the Ms as a string, using fractions if needed
  */
 std::string get_ms_string(double twice_ms);
-
-std::string to_string(const std::vector<std::string>& vec_str, const std::string& sep = ",");
 
 /**
  * @brief Compute the memory (in GB) required to store arrays
@@ -122,15 +120,15 @@ template <typename T> double to_gb(T num_el) {
  */
 std::pair<double, std::string> to_xb(size_t nele, size_t type_size);
 
-/**
- * @brief split up a vector into different processors
- * @param size_t size_of_tasks
- * @param nproc (the global number of processors)
- * @return a pair of vectors -> pair.0 -> start for each processor
- *                           -> pair.1 -> end or each processor
- */
-std::pair<std::vector<size_t>, std::vector<size_t>> split_up_tasks(size_t size_of_tasks,
-                                                                   size_t nproc);
+// /**
+//  * @brief split up a vector into different processors
+//  * @param size_t size_of_tasks
+//  * @param nproc (the global number of processors)
+//  * @return a pair of vectors -> pair.0 -> start for each processor
+//  *                           -> pair.1 -> end or each processor
+//  */
+// std::pair<std::vector<size_t>, std::vector<size_t>> split_up_tasks(size_t size_of_tasks,
+//                                                                    size_t nproc);
 
 template <typename T, typename Compare>
 std::vector<std::size_t> sort_permutation(const std::vector<T>& vec, Compare& compare) {

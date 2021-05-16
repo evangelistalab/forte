@@ -66,7 +66,7 @@ std::vector<std::pair<Determinant, size_t>> DeterminantHashVec::determinant_inde
 
 size_t DeterminantHashVec::size() const { return wfn_.size(); }
 
-void DeterminantHashVec::add(const Determinant& det) { wfn_.add(det); }
+size_t DeterminantHashVec::add(const Determinant& det) { return wfn_.add(det); }
 
 const Determinant& DeterminantHashVec::get_det(const size_t value) const {
     // Iterate through map to find the right one

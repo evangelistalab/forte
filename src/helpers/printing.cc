@@ -44,7 +44,7 @@ void print_h1(const std::string& text, bool centerd, const std::string& left_sep
     int margin_width = 78 - text_width - 2;
     int left_margin_width = centerd ? margin_width / 2 : 0;
     int right_margin_width = margin_width - left_margin_width;
-    outfile->Printf("\n\n  %s %s %s\n", std::string(left_margin_width, '-').c_str(), text.c_str(),
+    outfile->Printf("\n\n\n  %s %s %s", std::string(left_margin_width, '-').c_str(), text.c_str(),
                     std::string(right_margin_width, '-').c_str());
 }
 

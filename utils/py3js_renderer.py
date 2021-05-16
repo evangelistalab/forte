@@ -43,6 +43,7 @@ def xyz_to_atoms_list(xyz):
             atoms_list.append((symbol, float(x), float(y), float(z)))
     return atoms_list
 
+
 class Py3JSRenderer():
     """
     A lightweight molecule and orbital renderer
@@ -100,10 +101,10 @@ class Py3JSRenderer():
         self.height = height
         # aspect ratio
         self.aspect = float(self.width) / float(self.height)
-        self.bond_radius = 0.175  # a.u.
-        self.bond_color = '#555555'
+        self.bond_radius = 0.15 #0.2  # a.u.
+        self.bond_color = '#777777'
         self.angtobohr = 1.88973  # TODO: use Psi4's value
-        self.atom_size = 0.6  # scaling factor for atom geometry
+        self.atom_size = 0.5  # scaling factor for atom geometry
         self.atom_geometries = {}
         self.atom_materials = {}
         self.bond_materials = {}
@@ -112,15 +113,22 @@ class Py3JSRenderer():
         self.cube_meshes = defaultdict(list)
         # a list of active cubefile meshes
         self.active_cube_meshes = []
+        # normal mode meshes
+        self.normal_modes_meshes = []
+        # the active normal mode
+        self.active_normal_mode = None
+
         # set an initial scene size
         self.camera_width = 10.0
         self.camera_height = self.camera_width / self.aspect
 
-        self._color_schemes = {'national' : ['#e60000', '#0033a0'],
-    'bright':['#ffcc00', '#00bfff'],
-    'electron': ['#ff00bf', '#2eb82e'],
-    'wow':      ['#AC07F2', '#D7F205'],
-    'emory' : ['#f2a900', '#0033a0']}
+        self._color_schemes = {
+            'national': ['#e60000', '#0033a0'],
+            'bright': ['#ffcc00', '#00bfff'],
+            'electron': ['#ff00bf', '#2eb82e'],
+            'wow': ['#AC07F2', '#D7F205'],
+            'emory': ['#f2a900', '#0033a0']
+        }
 
         self.__initialize_pythreejs_renderer()
 
@@ -142,12 +150,12 @@ class Py3JSRenderer():
         """
         return list(self.cube_meshes.keys())
 
-    def set_active_cubes(self,active_cubes):
+    def set_active_cubes(self, active_cubes):
         """
         Set the active cubes
         """
         # let the user pass a string or a list of strings
-        if isinstance(active_cubes,str):
+        if isinstance(active_cubes, str):
             active_cubes = [active_cubes]
 
         # find cubes that must be removed (those plotted not included in the new list)
@@ -162,16 +170,35 @@ class Py3JSRenderer():
         # remove/add
         for cube in to_remove:
             if cube in self.cube_meshes:
-                for mesh in self.cube_meshes[cube]: # each cube has multiple meshes
+                for mesh in self.cube_meshes[
+                        cube]:  # each cube has multiple meshes
                     self.scene.remove(mesh)
 
+    def set_active_mode(self, active_mode):
+        """
+        Set the active cubes
+        """
+        # let the user pass a string or a list of strings
+#        if isinstance(active_mode, int):
+#            active_cubes = [active_cubes]
 
-    def show_molecule(self,wfn, shift_to_com=True):
+        # find cubes that must be removed (those plotted not included in the new list)
+#        to_remove = set(self.active_cube_meshes).difference(set(active_cubes))
+#        to_add = set(active_cubes).difference(set(self.active_cube_meshes))
+#        self.active_cube_meshes = active_cubes
+
+        self.scene.add(self.normal_modes_meshes[active_mode])
+        if self.active_normal_mode != None:
+            self.scene.remove(self.normal_modes_meshes[self.active_normal_mode])
+
+        self.active_normal_mode = active_mode
+
+    def show_molecule(self, wfn, shift_to_com=True):
         mol = wfn.molecule()
         natom = mol.natom()
-        atoms_list = [(mol.symbol(i),mol.x(i),mol.y(i),mol.z(i)) for i in range(natom)]
+        atoms_list = [(mol.symbol(i), mol.x(i), mol.y(i), mol.z(i))
+                      for i in range(natom)]
         self.add_molecule(atoms_list, bohr=True)
-
 
     def add_molecule(self, atoms_list, bohr=False, shift_to_com=True):
         """
@@ -335,16 +362,16 @@ class Py3JSRenderer():
                 self.scene.add(mesh)
 
     def add_cubefiles(self,
-                     cubes,
-                     type='mo',
-                     levels=None,
-                     colors=None,
-                     colorscheme='emory',
-                     opacity=1.0,
-                     sumlevel=0.85,
-                     add_geom=True,
-                     shift_to_com=True,
-                     show_surfaces=False):
+                      cubes,
+                      type='mo',
+                      levels=None,
+                      colors=None,
+                      colorscheme='emory',
+                      opacity=1.0,
+                      sumlevel=0.85,
+                      add_geom=True,
+                      shift_to_com=True,
+                      show_surfaces=False):
         """
         Add a cube file (and optionally the molecular geometry) to the scene. This function will automatically select the levels and colors
         with which to plot the surfaces
@@ -384,9 +411,7 @@ class Py3JSRenderer():
 
         if add_geom:
             # compute the center of mass
-            self.add_molecule(atoms_list,
-                              bohr=True,
-                              shift_to_com=shift_to_com)
+            self.add_molecule(atoms_list, bohr=True, shift_to_com=shift_to_com)
 
         if shift_to_com:
             Xcm, Ycm, Zcm = self.__center_of_mass(atoms_list)
@@ -401,14 +426,23 @@ class Py3JSRenderer():
             if label in self.cube_meshes:
                 continue
             # generate a mesh
-            self.cube_meshes[label] = self.__cube_mesh(cube,type,levels,sumlevel,colors,opacity,Xcm, Ycm, Zcm)
+            self.cube_meshes[label] = self.__cube_mesh(cube, type, levels,
+                                                       sumlevel, colors,
+                                                       opacity, Xcm, Ycm, Zcm)
 
         if show_surfaces:
             self.scene.add(mesh)
             self.active_cube_meshes.append(mesh)
 
+    def add_normal_modes(self,
+                         coordinates,
+                         frequencies,
+                         modes):
+        for freq, mode in zip(frequencies,modes):
+            self.normal_modes_meshes.append(self.__normal_mode_mesh(coordinates,mode))
 
-    def __cube_mesh(self,cube,type,levels,sumlevel,colors,opacity,Xcm, Ycm, Zcm):
+    def __cube_mesh(self, cube, type, levels, sumlevel, colors, opacity, Xcm,
+                    Ycm, Zcm):
         meshes = []
         # compute the isosurface levels
         if not levels:
@@ -423,13 +457,27 @@ class Py3JSRenderer():
                   [cube.min()[2] - Zcm,
                    cube.max()[2] - Zcm]]
         for level, color in zip(levels, colors):
-            if abs(level) > 1.0e-4:
+            if abs(level) > 1.0e-5:
                 mesh = self.__isosurface_mesh(data,
-                                          level=level,
-                                          color=color,
-                                          extent=extent,
-                                          opacity=opacity)
+                                              level=level,
+                                              color=color,
+                                              extent=extent,
+                                              opacity=opacity)
                 meshes.append(mesh)
+        return meshes
+
+    def __normal_mode_mesh(self, coordinates, mode):
+        meshes = []
+        for xyz,disp in zip(coordinates,mode):
+            norm = 0.0
+            for d in disp:
+                norm += d**2
+            if norm != 0.0:
+                xyz1 = [xyz[i + 1] for i in range(3)]
+                xyz2 = [xyz1[i] + 2.5 * disp[i] for i in range(3)]
+                arrow_meshes = self.__get_arrow_mesh(xyz1,xyz2,'#e60000',radius_small=0.25,radius_large=0.5)
+                for mesh in arrow_meshes:
+                    meshes.append(mesh)
         return meshes
 
     def add_sphere(self, position, radius, color, opacity=1.0):
@@ -862,6 +910,46 @@ class Py3JSRenderer():
         mesh.setRotationFromMatrix(R)
         return mesh
 
+    def __get_arrow_mesh(self,
+                  xyz1,
+                  xyz2,
+                  color,
+                  radius_small=0.1,
+                  radius_large=0.3,
+                  arrow_height=0.6):
+        """
+        This function returns a mesh for an arrow  between two points
+
+        Parameters
+        ----------
+        xyz1 : tuple(float, float, float)
+            The (x1, y1, z1) coordinates of the beginning of the arrow
+        xyz2 : tuple(float, float, float)
+            The (x2, y2, z2) coordinates of the end of the arrow
+        color : str
+            Hexadecimal color code
+        radius_small : float
+            The radius of the arrow tail
+        radius_large : float
+            The radius of the base of the arrow cone
+        arrow_height : float
+            The height of the arrow cone
+        """
+        x1, y1, z1 = xyz1
+        x2, y2, z2 = xyz2
+        d = sqrt((x1 - x2)**2 + (y1 - y2)**2 + (z1 - z2)**2)
+        fraction = (d - arrow_height) / d
+        xyz_base = [
+            x1 + (x2 - x1) * fraction, y1 + (y2 - y1) * fraction,
+            z1 + (z2 - z1) * fraction
+        ]
+        mesh = []
+        mesh.append(self.__get_cylinder_mesh(xyz1, xyz_base, radius_small,
+                                        radius_small, color))
+        mesh.append(self.__get_cylinder_mesh(xyz_base, xyz2, radius_large, 0.0,
+                                        color))
+        return mesh
+
     def __plane_rotation_matrix(self, normal):
         """
         Computes the rotation matrix that converts a plane (circle/square) geometry in
@@ -1005,16 +1093,16 @@ class Py3JSRenderer():
         -------
         a tuple of vertices and faces
         """
-        values = skimage.measure.marching_cubes_lewiner(data, level)
+        values = skimage.measure.marching_cubes_lewiner(data, level * 0.995)
         sk_verts, sk_faces, normals, values = values
         x, y, z = sk_verts.T
 
         # Rescale coordinates to given limits
         if extent:
             xlim, ylim, zlim = extent
-            x = x * np.diff(xlim) / (data.shape[0] - 1) + xlim[0]
-            y = y * np.diff(ylim) / (data.shape[1] - 1) + ylim[0]
-            z = z * np.diff(zlim) / (data.shape[2] - 1) + zlim[0]
+            x = x * np.diff(xlim) / (data.shape[0]) + xlim[0]
+            y = y * np.diff(ylim) / (data.shape[1]) + ylim[0]
+            z = z * np.diff(zlim) / (data.shape[2]) + zlim[0]
 
         # Assemble the list of vertices
         vertices = []

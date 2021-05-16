@@ -1,5 +1,7 @@
 import numpy as np
 import re
+import functools
+
 
 class CubeFile():
     """
@@ -8,7 +10,7 @@ class CubeFile():
     This class assumes that all coordinates (atoms, grid points)
     are stored in atomic units
 
-    Uses code from the parse_cube function written by Andy Simmonett
+    Uses code from the parse_cube function written by Andy Simmonett (psi4 project)
 
     Attributes
     ----------
@@ -104,7 +106,7 @@ class CubeFile():
             self.__num = (numx, numy, numz)
             self.__inc = (incx, incy, incz)
             self.__max = tuple(self.__min[i] + self.__inc[i] * self.__num[i]
-                             for i in range(3))
+                               for i in range(3))
 
             atnums = []
             coords = []
@@ -195,18 +197,19 @@ class CubeFile():
         self.data *= other.data
         self.levels = []
 
-    def compute_levels(self,mo_type, fraction):
-        sorted_data = sorted(self.__data.flatten(),key=abs,reverse=True)
+    def compute_levels(self, mo_type, fraction):
+        sorted_data = sorted(self.__data.flatten(), key=abs, reverse=True)
         power = 2
         if mo_type == "density":
             power = 1
 
         neg_level = 0.0
         pos_level = 0.0
-        sum = functools.reduce(lambda i, j: i + j ** power, [sorted_data[0]**power]+sorted_data[1:])
-        partial_sum = 0
+        sum = functools.reduce(lambda i, j: i + j**power,
+                               [sorted_data[0]**power] + sorted_data[1:])
+        partial_sum = 0.0
         for n in range(len(sorted_data)):
-            partial_sum += sorted_data[n] ** power;
+            partial_sum += sorted_data[n]**power
             if partial_sum / sum < fraction:
                 if sorted_data[n] < 0.0:
                     neg_level = sorted_data[n]

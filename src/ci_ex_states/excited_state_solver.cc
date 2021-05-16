@@ -70,6 +70,7 @@ void ExcitedStateSolver::set_options(std::shared_ptr<ForteOptions> options) {
 
     // TODO: move all ACI_* options to SCI_* and update register_forte_options.py
     ex_alg_ = options->get_str("SCI_EXCITED_ALGORITHM");
+
     // set a default
     if ((nroot_ > 1) and (ex_alg_ == "NONE")) {
         ex_alg_ = "ROOT_ORTHOGONALIZE";
@@ -121,11 +122,10 @@ double ExcitedStateSolver::compute_energy() {
 
     print_method_banner(
         {"Selected Configuration Interaction Excited States",
-         "written by Jeffrey B. Schriber, Tianyuan Zhang and Francesco A. Evangelista"});
-    psi::outfile->Printf("\n  ==> Reference Information <==\n");
+         "written by Jeffrey B. Schriber, Tianyuan Zhang, and Francesco A. Evangelista"});
     print_info();
     if (!quiet_mode_) {
-        psi::outfile->Printf("\n  Using %d threads", omp_get_max_threads());
+        psi::outfile->Printf("\n  Using %d thread(s)", omp_get_max_threads());
     }
 
     // Compute wavefunction and energy

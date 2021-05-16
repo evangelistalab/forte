@@ -254,11 +254,10 @@ void AdaptiveCI::get_excited_determinants_avg(
         size_t end_idx = start_idx + bin_size;
 
         if (omp_get_thread_num() == 0 and !quiet_mode_) {
-            outfile->Printf("\n  Using %d threads.", num_thread);
+            outfile->Printf("\n  Using %d thread(s).", num_thread);
         }
         // This will store the excited determinant info for each thread
-        std::vector<std::pair<Determinant, std::vector<double>>>
-            thread_ex_dets; //( noalpha * nvalpha  );
+        std::vector<std::pair<Determinant, std::vector<double>>> thread_ex_dets;
 
         for (size_t P = start_idx; P < end_idx; ++P) {
             const Determinant& det(P_dets[P]);

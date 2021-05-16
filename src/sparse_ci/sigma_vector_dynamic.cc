@@ -67,6 +67,9 @@ size_t count_aaaa = 0;
 size_t count_abab = 0;
 size_t count_bbbb = 0;
 #endif
+double saa_time = 0.0;
+double sbb_time = 0.0;
+double sabab_time = 0.0;
 
 void print_SigmaVectorDynamic_stats();
 
@@ -111,19 +114,32 @@ SigmaVectorDynamic::SigmaVectorDynamic(const DeterminantHashVec& space,
         first_abab_onthefly_group_.push_back(t);
     }
     H_IJ_list_.resize(total_space_);
-    outfile->Printf("\n\n SigmaVectorDynamic:");
-    outfile->Printf("\n Maximum memory   : %zu double", total_space_);
-    outfile->Printf("\n Number of threads: %d\n", num_threads_);
+    outfile->Printf("\n\n  SigmaVectorDynamic:");
+    outfile->Printf("\n  Maximum memory   : %zu double", total_space_);
+    outfile->Printf("\n  Number of threads: %d\n", num_threads_);
 }
 
 SigmaVectorDynamic::~SigmaVectorDynamic() { print_SigmaVectorDynamic_stats(); }
 
 void SigmaVectorDynamic::compute_sigma(psi::SharedVector sigma, psi::SharedVector b) {
     sigma->zero();
+
     compute_sigma_scalar(sigma, b);
-    compute_sigma_aa(sigma, b);
-    compute_sigma_bb(sigma, b);
-    compute_sigma_abab(sigma, b);
+    {
+        local_timer t;
+        compute_sigma_aa(sigma, b);
+        saa_time += t.get();
+    }
+    {
+        local_timer t;
+        compute_sigma_bb(sigma, b);
+        sbb_time += t.get();
+    }
+    {
+        local_timer t;
+        compute_sigma_abab(sigma, b);
+        sabab_time += t.get();
+    }
 
     if (num_builds_ == 0) {
         print_thread_stats();
@@ -146,6 +162,10 @@ void print_SigmaVectorDynamic_stats() {
                     double(count_bbbb) / double(count_bb_total));
     outfile->Printf("\n");
 #endif
+    outfile->Printf("\n\n SigmaVectorDynamic:");
+    outfile->Printf("\n saa_time   : %e", saa_time);
+    outfile->Printf("\n sbb_time   : %e", sbb_time);
+    outfile->Printf("\n sabab_time : %e", sabab_time);
 }
 
 void SigmaVectorDynamic::print_thread_stats() {
@@ -650,16 +670,13 @@ bool SigmaVectorDynamic::compute_abab_coupling_and_store(const String& detIa,
     bool stored = true;
     size_t end = H_IJ_abab_list_thread_end_[task_id];
     size_t limit = H_IJ_list_thread_limit_[task_id];
-    String detIJa_common;
     String Ib;
     String Jb;
     String IJb;
 
     size_t group_num_elements = 0;
     for (const auto& detJa : sorted_half_dets) {
-        detIJa_common = detIa ^ detJa;
-        int ndiff = detIJa_common.count();
-        if (ndiff == 2) {
+        if (detIa.fast_a_xor_b_count(detJa) == 2) {
             int i, a;
             for (size_t p = 0; p < nmo_; ++p) {
                 const bool la_p = detIa.get_bit(p);
@@ -680,16 +697,14 @@ bool SigmaVectorDynamic::compute_abab_coupling_and_store(const String& detIa,
             //    size_t num_elements = 0;
             for (size_t posI = first_I; posI < last_I; ++posI) {
                 sigma_I = 0.0;
-                Ib = sorted_dets[posI].get_beta_bits();
+                sorted_dets[posI].copy_beta_bits(Ib);
                 for (size_t posJ = first_J; posJ < last_J; ++posJ) {
-                    Jb = sorted_dets[posJ].get_beta_bits();
+                    sorted_dets[posJ].copy_beta_bits(Jb);
 #if SIGMA_VEC_DEBUG
                     count_abab_total++;
 #endif
                     // find common bits
-                    IJb = Jb ^ Ib;
-                    int ndiff = IJb.count();
-                    if (ndiff == 2) {
+                    if (Ib.fast_a_xor_b_count(Jb) == 2) {
                         double H_IJ =
                             sign_ia * slater_rules_double_alpha_beta_pre(i, a, Ib, Jb, fci_ints_);
                         sigma_I += H_IJ * b[posJ];
@@ -721,15 +736,11 @@ void SigmaVectorDynamic::compute_abab_coupling(const String& detIa, const std::v
     const auto& sorted_half_dets = a_sorted_string_list_.sorted_half_dets();
     const auto& sorted_dets = a_sorted_string_list_.sorted_dets();
     const auto& range_I = a_sorted_string_list_.range(detIa);
-    String detIJa_common;
     String Ib;
     String Jb;
     String IJb;
-
     for (const auto& detJa : sorted_half_dets) {
-        detIJa_common = detIa ^ detJa;
-        int ndiff = detIJa_common.count();
-        if (ndiff == 2) {
+        if (detIa.fast_a_xor_b_count(detJa) == 2) {
             int i, a;
             for (size_t p = 0; p < nmo_; ++p) {
                 const bool la_p = detIa.get_bit(p);
@@ -748,16 +759,15 @@ void SigmaVectorDynamic::compute_abab_coupling(const String& detIa, const std::v
             double sigma_I = 0.0;
             for (size_t posI = first_I; posI < last_I; ++posI) {
                 sigma_I = 0.0;
-                Ib = sorted_dets[posI].get_beta_bits();
+                sorted_dets[posI].copy_beta_bits(Ib);
                 for (size_t posJ = first_J; posJ < last_J; ++posJ) {
-                    Jb = sorted_dets[posJ].get_beta_bits();
+                    sorted_dets[posJ].copy_beta_bits(Jb);
 #if SIGMA_VEC_DEBUG
                     count_abab_total++;
 #endif
                     // find common bits
-                    IJb = Ib ^ Jb;
-                    int ndiff = IJb.count();
-                    if (ndiff == 2) {
+                    if (Ib.fast_a_xor_b_count(Jb) == 2) {
+                        IJb = Ib ^ Jb;
                         uint64_t j = IJb.find_and_clear_first_one();
                         uint64_t bb = IJb.find_first_one();
                         const double H_IJ = Ib.slater_sign(j, bb) * fci_ints_->tei_ab(i, j, a, bb);
@@ -771,7 +781,7 @@ void SigmaVectorDynamic::compute_abab_coupling(const String& detIa, const std::v
             }
         }
     }
-}
+} // namespace forte
 
 double SigmaVectorDynamic::compute_spin(const std::vector<double>& c) {
     double S2 = 0.0;

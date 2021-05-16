@@ -43,6 +43,8 @@ namespace forte {
 
 class Reference;
 
+enum class AverageFunction { MaxF, AvgF };
+
 /**
  * @brief The AdaptiveCI class
  * This class implements an adaptive CI algorithm
@@ -155,8 +157,8 @@ class AdaptiveCI : public SelectedCIMethod {
     /// Add missing degenerate determinants excluded from the aimed selection?
     bool add_aimed_degenerate_;
 
-    /// The function of the q-space criteria per root
-    std::string pq_function_;
+    /// The function used in the averaged multiroot algorithm to find the q-space
+    AverageFunction average_function_;
     /// the q reference
     std::string q_reference_;
     /// Algorithm for computing excited states
@@ -183,11 +185,10 @@ class AdaptiveCI : public SelectedCIMethod {
     bool det_hist_;
     /// Save dets to file?
     bool det_save_;
-
-    /// Number of roots to average
-    int n_avg_;
-    /// Offset for state averaging
-    int avg_offset_;
+    /// The number of states to average
+    int naverage_;
+    /// An offset for averaging states
+    int average_offset_;
 
     /// Control streamlining
     bool streamline_qspace_;

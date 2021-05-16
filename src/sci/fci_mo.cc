@@ -926,7 +926,9 @@ void FCI_MO::Diagonalize_H(const vecdet& p_space, const int& multi, const int& n
     DeterminantHashVec detmap(p_space);
 
     // Here we use the SparseList algorithm to diagonalize the Hamiltonian
-    auto sigma_vector = make_sigma_vector(detmap, as_ints_, 0, SigmaVectorType::SparseList);
+    auto sigma_vector_type_ = string_to_sigma_vector_type(options_->get_str("DIAG_ALGORITHM"));
+    size_t max_memory = options_->get_int("SIGMA_VECTOR_MAX_MEMORY");
+    auto sigma_vector = make_sigma_vector(detmap, as_ints_, max_memory, sigma_vector_type_);
     std::tie(evals, evecs) =
         sparse_solver.diagonalize_hamiltonian(detmap, sigma_vector, nroot, multi);
 

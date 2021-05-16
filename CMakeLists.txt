@@ -125,6 +125,7 @@ src/gradient_tpdm/backtransform_tpdm.cc
 src/gradient_tpdm/integraltransform_tpdm_unrestricted.cc
 src/gradient_tpdm/integraltransform_tpdm_restricted.cc
 src/helpers/blockedtensorfactory.cc
+src/helpers/combinatorial.cc
 src/helpers/cube_file.cc
 src/helpers/disk_io.cc
 src/helpers/helpers.cc
@@ -218,6 +219,12 @@ src/sparse_ci/sigma_vector_dynamic.cc
 src/sparse_ci/sigma_vector_sparse_list.cc
 src/sparse_ci/sorted_string_list.cc
 src/sparse_ci/sparse_ci_solver.cc
+src/sparse_ci/sparse_operator.cc
+src/sparse_ci/sparse_exp.cc
+src/sparse_ci/sparse_fact_exp.cc
+src/sparse_ci/sparse_hamiltonian.cc
+src/sparse_ci/sq_operator.cc
+src/sparse_ci/sparse_state_vector.cc
 src/v2rdm/v2rdm.cc
 )
 

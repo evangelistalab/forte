@@ -83,8 +83,7 @@ def register_driver_options(options):
 
     options.add_double("MS", None, "Projection of spin onto the z axis")
 
-    options.add_str("ACTIVE_REF_TYPE", "CAS", ["CAS", "DOCI", "GAS", "GAS_SINGLE"],
-                    "Initial guess for active space wave functions")
+    options.add_str("ACTIVE_REF_TYPE", "CAS", ["CAS", "GAS", "GAS_SINGLE","CIS","CID","CISD"], "Initial guess for active space wave functions")
 
     options.add_bool("SPIN_AVG_DENSITY", False,
                      "Form spin-averaged density if true")
@@ -490,7 +489,7 @@ def register_aci_options(options):
     options.add_bool("ACI_ADD_AIMED_DEGENERATE", True,
                      "Add degenerate determinants not included in the aimed selection")
 
-    options.add_int("ACI_N_AVERAGE", 1, "Number of roots to average")
+    options.add_int("ACI_N_AVERAGE", 0, "Number of roots to average. When set to zero (default) it averages over all roots")
 
     options.add_int("ACI_AVERAGE_OFFSET", 0, "Offset for state averaging")
 
@@ -654,6 +653,8 @@ def register_integral_options(options):
 
     options.add_str('FCIDUMP_FILE', 'INTDUMP',
                     'The file that stores the FCIDUMP integrals')
+    options.add_int_array('FCIDUMP_DOCC', 'The number of doubly occupied orbitals assumed for a FCIDUMP file. This information is used to build orbital energies.')
+    options.add_int_array('FCIDUMP_SOCC', 'The number of singly occupied orbitals assumed for a FCIDUMP file. This information is used to build orbital energies.')
 
     options.add_double(
         "INTEGRAL_SCREENING", 1.0e-12,

@@ -31,14 +31,15 @@
 
 #include <cmath>
 #include <vector>
-#include "boost/assign.hpp"
 
 #include "psi4/libmints/vector.h"
 #include "psi4/libmints/matrix.h"
+
 #include "base_classes/rdms.h"
 #include "base_classes/scf_info.h"
 #include "helpers/timer.h"
 #include "integrals/integrals.h"
+
 #include "mrdsrg-helper/dsrg_source.h"
 
 using d1 = std::vector<double>;
@@ -71,8 +72,8 @@ class MCSRGPT2_MO {
   protected:
     /// Source Operators
     enum sourceop { STANDARD, AMP, EMP2, LAMP, LEMP2 };
-    std::map<std::string, sourceop> sourcemap = boost::assign::map_list_of("STANDARD", STANDARD)(
-        "AMP", AMP)("EMP2", EMP2)("LAMP", LAMP)("LEMP2", LEMP2);
+    std::map<std::string, sourceop> sourcemap = {
+        {"STANDARD", STANDARD}, {"AMP", AMP}, {"EMP2", EMP2}, {"LAMP", LAMP}, {"LEMP2", LEMP2}};
 
     /// Basis preparation
     void startup();

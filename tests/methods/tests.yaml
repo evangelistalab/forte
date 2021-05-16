@@ -7,6 +7,7 @@
 aci:
   short:
    - aci-1
+   - aci-2   
    - aci-3
    - aci-4
    - aci-5
@@ -18,12 +19,10 @@ aci:
    - aci_scf-1
    - aci-full-pt2-1
   medium:
-   - aci-2
    - aci-6
    - aci-10
    - aci-11
    - aci-13
-   - aci-15
    - aci-16
    - aci-17
    - aci-19
@@ -268,7 +267,7 @@ mr-dsrg-pt2:
    - mr-dsrg-pt2-3
   medium:
    - mr-dsrg-pt2-2
-#   - mr-dsrg-pt2-4
+# this uses the active-dsrg code which is not compiled   - mr-dsrg-pt2-4
 mrdsrg_so:
   short:
    - mrdsrg_so-1

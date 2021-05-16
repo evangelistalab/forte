@@ -503,7 +503,7 @@ FCISolver::initial_guess(FCIVector& diag, size_t n,
         outfile->Printf("\n  ---------------------------------------------");
         outfile->Printf("\n    Root            Energy     <S^2>   Spin");
         outfile->Printf("\n  ---------------------------------------------");
-        outfile->Printf("\n%s", to_string(table, "\n").c_str());
+        outfile->Printf("\n%s", join(table, "\n").c_str());
         outfile->Printf("\n  ---------------------------------------------");
         outfile->Printf("\n  Timing for initial guess  = %10.3f s\n", t.get());
     }

@@ -33,12 +33,16 @@
 #include "psi4/libpsi4util/process.h"
 #include "psi4/libmints/wavefunction.h"
 
-#include "base_classes/active_space_solver.h"
-#include "base_classes/orbital_transform.h"
-#include "integrals/make_integrals.h"
-
 #include "helpers/printing.h"
 #include "helpers/lbfgs/rosenbrock.h"
+
+#include "base_classes/active_space_solver.h"
+#include "base_classes/orbital_transform.h"
+#include "base_classes/dynamic_correlation_solver.h"
+#include "base_classes/state_info.h"
+#include "base_classes/scf_info.h"
+
+#include "integrals/make_integrals.h"
 
 #include "orbital-helpers/aosubspace.h"
 #include "orbital-helpers/localize.h"
@@ -52,16 +56,11 @@
 #include "casscf/casscf.h"
 #include "casscf/mcscf_2step.h"
 #include "fci/fci_solver.h"
-#include "base_classes/dynamic_correlation_solver.h"
-#include "base_classes/state_info.h"
-#include "base_classes/scf_info.h"
 #include "mrdsrg-helper/run_dsrg.h"
 #include "mrdsrg-spin-integrated/master_mrdsrg.h"
 #include "mrdsrg-spin-adapted/sadsrg.h"
 
-#include "sparse_ci/determinant.h"
 #include "post_process/spin_corr.h"
-#include "sparse_ci/determinant_hashvector.h"
 
 namespace py = pybind11;
 using namespace pybind11::literals;
@@ -74,12 +73,16 @@ void export_ForteIntegrals(py::module& m);
 void export_ForteOptions(py::module& m);
 void export_MOSpaceInfo(py::module& m);
 void export_RDMs(py::module& m);
+void export_Determinant(py::module& m);
 void export_StateInfo(py::module& m);
 void export_SigmaVector(py::module& m);
 void export_SparseCISolver(py::module& m);
 void export_ForteCubeFile(py::module& m);
 void export_OrbitalTransform(py::module& m);
 void export_Localize(py::module& m);
+
+void set_master_screen_threshold(double value);
+double get_master_screen_threshold();
 
 /// Export the ActiveSpaceMethod class
 void export_ActiveSpaceMethod(py::module& m) {
@@ -117,55 +120,6 @@ void export_CASSCF(py::module& m) {
 void export_MCSCF_2STEP(py::module& m) {
     py::class_<MCSCF_2STEP>(m, "MCSCF_2STEP")
         .def("compute_energy", &MCSCF_2STEP::compute_energy, "Compute the MCSCF energy");
-}
-
-/// Export the Determinant class
-void export_Determinant(py::module& m) {
-    py::class_<Determinant>(m, "Determinant")
-        .def(py::init<>())
-        .def(py::init<const Determinant&>())
-        .def(py::init<const std::vector<bool>&, const std::vector<bool>&>())
-        .def("get_alfa_bits", &Determinant::get_alfa_bits, "Get alpha bits")
-        .def("get_beta_bits", &Determinant::get_beta_bits, "Get beta bits")
-        .def("nbits", &Determinant::get_nbits)
-        .def("nbits_half", &Determinant::get_nbits_half)
-        .def("get_alfa_bit", &Determinant::get_alfa_bit, "n"_a, "Get the value of an alpha bit")
-        .def("get_beta_bit", &Determinant::get_beta_bit, "n"_a, "Get the value of a beta bit")
-        .def("set_alfa_bit", &Determinant::set_alfa_bit, "n"_a, "value"_a,
-             "Set the value of an alpha bit")
-        .def("set_beta_bit", &Determinant::set_beta_bit, "n"_a, "value"_a,
-             "Set the value of an beta bit")
-        .def("create_alfa_bit", &Determinant::create_alfa_bit, "n"_a, "Create an alpha bit")
-        .def("create_beta_bit", &Determinant::create_beta_bit, "n"_a, "Create a beta bit")
-        .def("destroy_alfa_bit", &Determinant::destroy_alfa_bit, "n"_a, "Destroy an alpha bit")
-        .def("destroy_beta_bit", &Determinant::destroy_beta_bit, "n"_a, "Destroy a beta bit")
-        .def("count_alfa", &Determinant::count_alfa, "Count the number of set alpha bits")
-        .def("count_beta", &Determinant::count_beta, "Count the number of set beta bits")
-        .def(
-            "gen_excitation",
-            [](Determinant& d, const std::vector<int>& aann, const std::vector<int>& acre,
-               const std::vector<int>& bann,
-               const std::vector<int>& bcre) { return gen_excitation(d, aann, acre, bann, bcre); },
-            "Apply a generic excitation")
-        .def(
-            "str", [](const Determinant& a, int n) { return str(a, n); }, "n"_a = 64,
-            "Get the string representation of the Slater determinant")
-        .def("__repr__", [](const Determinant& a) { return str(a); })
-        .def("__str__", [](const Determinant& a) { return str(a); })
-        .def("__eq__", [](const Determinant& a, const Determinant& b) { return a == b; })
-        .def("__lt__", [](const Determinant& a, const Determinant& b) { return a < b; })
-        .def("__hash__", [](const Determinant& a) { return Determinant::Hash()(a); });
-
-    py::class_<DeterminantHashVec>(m, "DeterminantHashVec")
-        .def(py::init<>())
-        .def(py::init<const std::vector<Determinant>&>())
-        .def(py::init<const det_hashvec&>())
-        .def("add", &DeterminantHashVec::add, "Add a determinant")
-        .def("size", &DeterminantHashVec::size, "Get the size of the vector")
-        .def("get_det", &DeterminantHashVec::get_det, "Return a specific determinant by reference")
-        .def("get_idx", &DeterminantHashVec::get_idx, " Return the index of a determinant");
-
-    m.def("spin2", &spin2<Determinant::nbits>);
 }
 
 // TODO: export more classes using the function above
@@ -249,7 +203,12 @@ PYBIND11_MODULE(forte, m) {
     py::class_<SCFInfo, std::shared_ptr<SCFInfo>>(m, "SCFInfo")
         .def(py::init<psi::SharedWavefunction>())
         .def(py::init<const psi::Dimension&, const psi::Dimension&, double,
-                      std::shared_ptr<psi::Vector>, std::shared_ptr<psi::Vector>>());
+                      std::shared_ptr<psi::Vector>, std::shared_ptr<psi::Vector>>())
+        .def("doccpi", &SCFInfo::doccpi)
+        .def("soccpi", &SCFInfo::soccpi)
+        .def("reference_energy", &SCFInfo::reference_energy)
+        .def("epsilon_a", &SCFInfo::epsilon_a)
+        .def("epsilon_b", &SCFInfo::epsilon_b);
 
     // export DynamicCorrelationSolver
     py::class_<DynamicCorrelationSolver, std::shared_ptr<DynamicCorrelationSolver>>(
@@ -267,6 +226,7 @@ PYBIND11_MODULE(forte, m) {
              "Get the frozen core energy (contribution from FROZEN_DOCC)")
         .def("scalar_energy", &ActiveSpaceIntegrals::scalar_energy,
              "Get the scalar_energy energy (contribution from RESTRICTED_DOCC)")
+        .def("nmo", &ActiveSpaceIntegrals::nmo, "Get the number of active orbitals")
         .def("oei_a", &ActiveSpaceIntegrals::oei_a, "Get the alpha effective one-electron integral")
         .def("oei_b", &ActiveSpaceIntegrals::oei_b, "Get the beta effective one-electron integral")
         .def("tei_aa", &ActiveSpaceIntegrals::tei_aa, "alpha-alpha two-electron integral <pq||rs>")

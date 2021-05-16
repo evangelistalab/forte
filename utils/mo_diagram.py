@@ -2,6 +2,7 @@
 
 import plotly.graph_objects as go
 
+
 class MODiagram:
     """
     A class to make plots of MO levels
@@ -39,7 +40,7 @@ class MODiagram:
         if (self.__check_plotly_is_installed()):
             self.__compute_levels_scf()
 
-    def save(self,filename):
+    def save(self, filename):
         if self.fig == None:
             return
         self.fig.write_image(filename)
@@ -131,8 +132,10 @@ class MODiagram:
             x_vir_levels = self.__compute_level_position(ea_vir_data, 0.5)
             x_aocc = self.__compute_level_position(ea_occ_data, 0.5 - spacing)
             x_bocc = self.__compute_level_position(eb_occ_data, 0.5 + spacing)
-            self.__draw_levels(self.fig, x_occ_levels, y_aocc, aocc_labels, self.occupied_color)
-            self.__draw_levels(self.fig, x_vir_levels, y_avir, avir_labels, self.unoccupied_color)
+            self.__draw_levels(self.fig, x_occ_levels, y_aocc, aocc_labels,
+                               self.occupied_color)
+            self.__draw_levels(self.fig, x_vir_levels, y_avir, avir_labels,
+                               self.unoccupied_color)
             self.__draw_electrons(self.fig, x_aocc, y_aocc, True, self.height,
                                   y_range)
             self.__draw_electrons(self.fig, x_bocc, y_bocc, False, self.height,
@@ -144,10 +147,14 @@ class MODiagram:
             x_avir = self.__compute_level_position(ea_vir_data, 0.5)
             x_bocc = self.__compute_level_position(eb_occ_data, 1.5)
             x_bvir = self.__compute_level_position(eb_vir_data, 1.5)
-            self.__draw_levels(self.fig, x_aocc, y_aocc, aocc_labels, self.occupied_color)
-            self.__draw_levels(self.fig, x_avir, y_avir, avir_labels, self.unoccupied_color)
-            self.__draw_levels(self.fig, x_bocc, y_bocc, bocc_labels, self.occupied_color)
-            self.__draw_levels(self.fig, x_bvir, y_bvir, bvir_labels, self.unoccupied_color)
+            self.__draw_levels(self.fig, x_aocc, y_aocc, aocc_labels,
+                               self.occupied_color)
+            self.__draw_levels(self.fig, x_avir, y_avir, avir_labels,
+                               self.unoccupied_color)
+            self.__draw_levels(self.fig, x_bocc, y_bocc, bocc_labels,
+                               self.occupied_color)
+            self.__draw_levels(self.fig, x_bvir, y_bvir, bvir_labels,
+                               self.unoccupied_color)
             self.__draw_electrons(self.fig, x_aocc, y_aocc, True, self.height,
                                   y_range)
             self.__draw_electrons(self.fig, x_bocc, y_bocc, False, self.height,
@@ -155,18 +162,20 @@ class MODiagram:
 
         self.fig.update_xaxes(visible=False)
         self.fig.update_yaxes(title_text='Energy (Eh)',
-                         gridcolor='rgba(200, 200, 200, 1.0)',
-                         showline=True, linewidth=1, linecolor='black')
+                              gridcolor='rgba(200, 200, 200, 1.0)',
+                              showline=True,
+                              linewidth=1,
+                              linecolor='black')
         self.fig.update_layout(title=self.title,
-                          autosize=False,
-                          width=self.width,
-                          height=self.height,
-                          paper_bgcolor='rgba(0,0,0,0)',
-                          plot_bgcolor='rgba(0,0,0,0)',
-                          showlegend=False,
-                          hoverlabel_align='right',
-                          yaxis_zeroline=False,
-                          xaxis_zeroline=False)
+                               autosize=False,
+                               width=self.width,
+                               height=self.height,
+                               paper_bgcolor='rgba(0,0,0,0)',
+                               plot_bgcolor='rgba(0,0,0,0)',
+                               showlegend=False,
+                               hoverlabel_align='right',
+                               yaxis_zeroline=False,
+                               xaxis_zeroline=False)
         self.fig.show()
 
     def __compute_level_position(self,

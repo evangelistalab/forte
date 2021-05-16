@@ -30,6 +30,7 @@
 import time
 import math
 import warnings
+import pathlib
 
 import numpy as np
 import psi4
@@ -286,8 +287,9 @@ def make_state_info_from_fcidump(fcidump, options):
     return forte.StateInfo(na, nb, multiplicity, twice_ms, irrep)
 
 
-def prepare_forte_objects_from_fcidump(options):
-    filename = options.get_str('FCIDUMP_FILE')
+def prepare_forte_objects_from_fcidump(options,path='.'):
+    fcidump_file = options.get_str('FCIDUMP_FILE')
+    filename = pathlib.Path(path) / fcidump_file
     psi4.core.print_out(
         f'\n  Reading integral information from FCIDUMP file {filename}')
     fcidump = forte.proc.fcidump_from_file(filename, convert_to_psi4=True)
@@ -306,12 +308,14 @@ def prepare_forte_objects_from_fcidump(options):
     nmo = len(fcidump['orbsym'])
     if 'pntgrp' in fcidump:
         nirrep = irrep_size[fcidump['pntgrp'].lower()]
-        nmopi_list = [fcidump['orbsym'].count(x) for x in range(nirrep)]
+        nmopi_list = [fcidump['orbsym'].count(h) for h in range(nirrep)]
     else:
         fcidump['pntgrp'] = 'C1'  # set the point group to C1
         fcidump['isym'] = 0  # shift by -1
         nirrep = 1
         nmopi_list = [nmo]
+
+    nmopi_offset = [sum(nmopi_list[0:h]) for h in range(nirrep)]
 
     nmopi = psi4.core.Dimension(nmopi_list)
 
@@ -330,13 +334,46 @@ def prepare_forte_objects_from_fcidump(options):
     ms2 = fcidump['ms2']
     na = (nel + ms2) // 2
     nb = nel - na
-    doccpi = psi4.core.Dimension([nb])
-    soccpi = psi4.core.Dimension([ms2])
-    if 'epsilon' in fcidump:
-        epsilon = psi4.core.Vector.from_array(fcidump['epsilon'])
+    if fcidump['pntgrp'] == 'C1':
+        doccpi = psi4.core.Dimension([nb])
+        soccpi = psi4.core.Dimension([ms2])
     else:
-        epsilon = psi4.core.Vector(nmopi)
-    scf_info = forte.SCFInfo(doccpi, soccpi, 0.0, epsilon, epsilon)
+        doccpi = options.get_int_vec('FCIDUMP_DOCC')
+        soccpi = options.get_int_vec('FCIDUMP_SOCC')
+        if len(doccpi) + len(soccpi) == 0:
+            print('Reading a FCIDUMP file that uses symmetry but no DOCC and SOCC is specified.')
+            print('Use the FCIDUMP_DOCC and FCIDUMP_SOCC options to specify the number of occupied orbitals per irrep.')
+            doccpi = psi4.core.Dimension([0] * nirrep)
+            soccpi = psi4.core.Dimension([0] * nirrep)
+
+    if 'epsilon' in fcidump:
+        epsilon_a = psi4.core.Vector.from_array(fcidump['epsilon'])
+        epsilon_b = psi4.core.Vector.from_array(fcidump['epsilon'])        
+    else:
+        # manufacture Fock matrices
+        epsilon_a = psi4.core.Vector(nmo)
+        epsilon_b = psi4.core.Vector(nmo)
+        hcore = fcidump['hcore']
+        eri = fcidump['eri']
+        nmo = fcidump['norb']
+        for i in range(nmo):
+            val = hcore[i,i]
+            for h in range(nirrep):
+                for j in range(nmopi_offset[h],nmopi_offset[h]+doccpi[h]+soccpi[h]):
+                    val += eri[i,i,j,j] - eri[i,j,i,j]
+                for j in range(nmopi_offset[h],nmopi_offset[h]+doccpi[h]):
+                    val += eri[i,i,j,j]
+            epsilon_a.set(i,val)
+
+            val = hcore[i,i]
+            for h in range(nirrep):
+                for j in range(nmopi_offset[h],nmopi_offset[h]+doccpi[h]+soccpi[h]):
+                    val += eri[i,i,j,j]
+                for j in range(nmopi_offset[h],nmopi_offset[h]+doccpi[h]):
+                    val += eri[i,i,j,j] - eri[i,j,i,j]
+            epsilon_b.set(i,val)
+
+    scf_info = forte.SCFInfo(doccpi, soccpi, 0.0, epsilon_a, epsilon_b)
 
     state_info = make_state_info_from_fcidump(fcidump, options)
     state_weights_map = {state_info: [1.0]}
@@ -540,7 +577,7 @@ def run_forte(name, **kwargs):
     psi4.core.print_out(
         f'\n  Time to run job          : {end - start:12.3f} seconds')
     psi4.core.print_out(
-        f'\n  Total                    : {end - start_pre_ints:12.3f} seconds')
+        f'\n  Total                    : {end - start_pre_ints:12.3f} seconds\n')
 
     if 'FCIDUMP' not in options.get_str('INT_TYPE'):
         if options.get_bool('DUMP_ORBITALS'):

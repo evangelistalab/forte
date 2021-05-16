@@ -12,7 +12,7 @@ molecule N2{
   N
   N  1 R
 
-  R = 1000.0
+  R = 100.0
 }
 
 molecule N {

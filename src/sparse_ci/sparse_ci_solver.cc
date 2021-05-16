@@ -127,41 +127,52 @@ std::pair<std::shared_ptr<psi::Vector>, std::shared_ptr<psi::Matrix>>
 SparseCISolver::diagonalize_hamiltonian_full(const std::vector<Determinant>& space,
                                              std::shared_ptr<ActiveSpaceIntegrals> as_ints,
                                              int nroot, int multiplicity) {
-
+    // Diagonalize the full Hamiltonian
     size_t dim_space = space.size();
     auto evecs = std::make_shared<psi::Matrix>("U", dim_space, nroot);
     auto evals = std::make_shared<psi::Vector>("e", nroot);
 
-    if (spin_project_full_) {
-        // Diagonalize S^2 matrix
-        Matrix S2("S^2", dim_space, dim_space);
-        for (size_t I = 0; I < dim_space; ++I) {
-            for (size_t J = 0; J < dim_space; ++J) {
-                double S2IJ = spin2(space[I], space[J]);
-                S2.set(I, J, S2IJ);
+    // Build the Hamiltonian
+    auto H = build_full_hamiltonian(space, as_ints);
+
+    // Build the S^2 matrix
+    auto S2 = std::make_shared<psi::Matrix>("S^2", dim_space, dim_space);
+    for (size_t I = 0; I < dim_space; ++I) {
+        for (size_t J = 0; J < dim_space; ++J) {
+            double S2IJ = spin2(space[I], space[J]);
+            S2->set(I, J, S2IJ);
+        }
+    }
+
+    const double target_S = 0.5 * (static_cast<double>(multiplicity) - 1.0);
+    const double target_multiplicity = static_cast<double>(multiplicity);
+
+    // First, we check if this space is spin complete by looking at how much the
+    // eigenvalue of S^2 deviate from their exact values
+    auto S2vals = std::make_shared<psi::Vector>("S^2 Eigen Values", dim_space);
+    auto S2vecs = std::make_shared<psi::Matrix>("S^2 Eigen Vectors", dim_space, dim_space);
+
+    S2->diagonalize(S2vecs, S2vals);
+
+    bool spin_complete = true;
+    double Stollerance = 1.0e-4;
+    std::map<int, std::vector<int>> multi_list;
+    for (size_t i = 0; i < dim_space; ++i) {
+        double multi = std::sqrt(1.0 + 4.0 * S2vals->get(i));
+        double error = std::round(multi) - multi;
+        if (std::fabs(error) < Stollerance) {
+            int multi_round = std::llround(multi);
+            multi_list[multi_round].push_back(i);
+        } else {
+            spin_complete = false;
+            if (print_details_) {
+                outfile->Printf("\n  Spin multiplicity of root %zu not close to integer (%.4f) ", i,
+                                multi);
             }
         }
-        Vector S2vals("S^2 Eigen Values", dim_space);
-        Matrix S2vecs("S^2 Eigen Vectors", dim_space, dim_space);
-        S2.diagonalize(S2vecs, S2vals);
+    }
 
-        // Map multiplcity to index
-        double Stollerance = 1.0e-4;
-        std::map<int, std::vector<int>> multi_list;
-        for (size_t i = 0; i < dim_space; ++i) {
-            double multi = std::sqrt(1.0 + 4.0 * S2vals.get(i));
-            double error = std::round(multi) - multi;
-            if (std::fabs(error) < Stollerance) {
-                int multi_round = std::round(multi);
-                multi_list[multi_round].push_back(i);
-            } else {
-                if (print_details_) {
-                    outfile->Printf("\n  Spin multiplicity of root %zu not close to integer (%.4f)",
-                                    i, multi);
-                }
-            }
-        }
-
+    if (spin_complete) {
         // Test S^2 eigen values
         int nfound = 0;
         for (const auto& mi : multi_list) {
@@ -182,7 +193,7 @@ SparseCISolver::diagonalize_hamiltonian_full(const std::vector<Determinant>& spa
             outfile->Printf("\n  Error: ask for %d roots with 2S+1 = %d but only "
                             "%d were found!",
                             nroot, multiplicity, nfound);
-            throw psi::PSIEXCEPTION(
+            throw std::runtime_error(
                 "Too many roots of interest in full diag. of sparce_ci_solver.");
         }
 
@@ -190,7 +201,7 @@ SparseCISolver::diagonalize_hamiltonian_full(const std::vector<Determinant>& spa
         psi::SharedMatrix S2vecs_sub(
             new psi::Matrix("Spin Selected S^2 Eigen Vectors", dim_space, nfound));
         for (int i = 0; i < nfound; ++i) {
-            psi::SharedVector vec = S2vecs.get_column(0, multi_list[multiplicity][i]);
+            auto vec = S2vecs->get_column(0, multi_list[multiplicity][i]);
             S2vecs_sub->set_column(0, i, vec);
         }
 
@@ -209,35 +220,93 @@ SparseCISolver::diagonalize_hamiltonian_full(const std::vector<Determinant>& spa
         H_vecs->set_name("H Eigen Vectors");
 
         // Fill in results
+        energies_.clear();
+        spin_.clear();
         for (int i = 0; i < nroot; ++i) {
             evals->set(i, Hss_vals->get(i));
             evecs->set_column(0, i, H_vecs->get_column(0, i));
+            spin_.push_back(target_S * (target_S + 1.0));
+            energies_.push_back(Hss_vals->get(i));
         }
     } else {
-        // Find all the eigenvalues and eigenvectors of the Hamiltonian
-        psi::SharedMatrix H = build_full_hamiltonian(space, as_ints);
-        evecs.reset(new psi::Matrix("U", dim_space, dim_space));
-        evals.reset(new Vector("e", dim_space));
+
+        auto full_evecs = std::make_shared<psi::Matrix>("U", dim_space, dim_space);
+        auto full_evals = std::make_shared<psi::Vector>("e", dim_space);
 
         // Diagonalize H
-        H->diagonalize(evecs, evals);
-        spin_ = std::vector<double>(nroot, 0.5 * (static_cast<double>(multiplicity) - 1.0));
-    }
+        H->diagonalize(full_evecs, full_evals);
 
-    // Fill in results
-    energies_.clear();
-    spin_.clear();
-    for (int i = 0; i < nroot; ++i) {
-        energies_.push_back(evals->get(i));
-        double s2 = 0.0;
-        auto c = evecs->get_column(0, i);
+        // Compute (C)^+ S^2 C
+        psi::SharedMatrix CtSC =
+            psi::linalg::triplet(full_evecs, S2, full_evecs, true, false, false);
+
+        // Find how each solution deviates from the target multiplicity
+        std::vector<std::tuple<double, double, size_t, double>> sorted_evals(dim_space);
+        std::map<int, std::vector<std::pair<double, size_t>>> S_vals_sorted;
+
+        outfile->Printf("\n  Seeking %d roots with <S^2> = %f", nroot, target_S * (target_S + 1.0));
+
+        outfile->Printf("\n     Root           Energy         <S^2>");
+        outfile->Printf("\n    -------------------------------------");
         for (size_t I = 0; I < dim_space; ++I) {
-            for (size_t J = 0; J < dim_space; ++J) {
-                s2 += spin2(space[I], space[J]) * c->get(I) * c->get(J);
+            double avg_S2 = CtSC->get(I, I);
+            double energy = full_evals->get(I);
+            double S = 0.5 * (std::sqrt(1.0 + 4.0 * avg_S2) - 1.0);
+            double error = std::fabs(S - target_S);
+            double S_rounded = 0.5 * std::lround(2.0 * S);
+            double twoSp1_rounded = std::lround(2.0 * S + 1.0);
+            sorted_evals[I] = std::make_tuple(std::fabs(S_rounded - target_S), energy, I, S);
+            S_vals_sorted[twoSp1_rounded].emplace_back(S - S_rounded, I);
+            if (I < std::max(2 * nroot, 10)) {
+                outfile->Printf("\n     %3d   %20.12f %9.6f", I,
+                                energy + as_ints->nuclear_repulsion_energy(), avg_S2);
             }
         }
-        spin_.push_back(s2);
+        outfile->Printf("\n    -------------------------------------");
+        std::sort(begin(sorted_evals), end(sorted_evals));
+
+        outfile->Printf("\n\n    2S + 1   Roots");
+        outfile->Printf("\n    --------------");
+        for (const auto& k_v : S_vals_sorted) {
+            outfile->Printf("\n     %3d   %5zu", k_v.first, k_v.second.size());
+        }
+        outfile->Printf("\n    --------------");
+
+        const auto& target_S_vals = S_vals_sorted[std::llround(2 * target_S + 1)];
+        if (target_S_vals.size() < nroot) {
+            outfile->Printf("\n  Error: requested for %d roots with 2S+1 = %d but only "
+                            "%zu were found!",
+                            nroot, multiplicity, target_S_vals.size());
+            throw std::runtime_error(
+                "Too few roots of interest with correct value of 2S + 1 in full "
+                "diag. of sparce_ci_solver.");
+        }
+        double max_S_error = 0.0;
+        for (int n = 0; n < nroot; n++) {
+            max_S_error = std::max(std::fabs(target_S_vals[n].first), max_S_error);
+        }
+        outfile->Printf("\n  Largest deviation from target S value: %.6f\n", max_S_error);
+        if (max_S_error > 0.25) {
+            outfile->Printf("\n\n  Warning: The CI solutions are heavily spin contaminated.\n");
+        }
+
+        // Fill in results
+        energies_.clear();
+        spin_.clear();
+        for (int i = 0; i < nroot; ++i) {
+            double energy = std::get<1>(sorted_evals[i]);
+            size_t I = std::get<2>(sorted_evals[i]);
+            double S = std::get<3>(sorted_evals[i]);
+            energies_.push_back(energy);
+            evals->set(i, energy);
+            spin_.push_back(S * (S + 1.0));
+            for (size_t J = 0; J < dim_space; ++J) {
+                double C = full_evecs->get(J, I);
+                evecs->set(J, i, C);
+            }
+        }
     }
+
     return std::make_pair(evals, evecs);
 }
 

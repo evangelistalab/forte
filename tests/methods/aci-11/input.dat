@@ -5,8 +5,8 @@
 import forte
 
 refscf = -75.0525898286472852
-refaci = -75.354835591518
-refacipt2 = -75.374833674568
+refaci = -75.42436743651 # old value was -75.354835591518 but this used a sextet wfn in P space
+refacipt2 = -75.444336436 # old value was-75.374833674568 but this used a sextet wfn in P space
 
 molecule C2{
 0 1
@@ -22,7 +22,7 @@ set {
   reference rohf 
   e_convergence 10
   d_convergence 10
-  r_convergence 10
+  r_convergence 5
   docc [2,0,0,0,0,2,1,1]
   guess gwh
 }

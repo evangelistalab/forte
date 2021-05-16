@@ -1,19 +1,10 @@
 #ifndef _master_mrdsrg_h_
 #define _master_mrdsrg_h_
 
-#include <cmath>
-#include <memory>
-#include <tuple>
-
-#include "ambit/tensor.h"
 #include "ambit/blocked_tensor.h"
 
-#include "base_classes/forte_options.h"
 #include "base_classes/dynamic_correlation_solver.h"
-#include "integrals/integrals.h"
-#include "integrals/active_space_integrals.h"
-#include "base_classes/rdms.h"
-#include "base_classes/mo_space_info.h"
+
 #include "helpers/blockedtensorfactory.h"
 #include "mrdsrg-helper/dsrg_source.h"
 #include "mrdsrg-helper/dsrg_time.h"
@@ -23,6 +14,12 @@
 using namespace ambit;
 
 namespace forte {
+
+class SCFInfo;
+class ForteOptions;
+class ForteIntegrals;
+class MOSpaceInfo;
+
 class MASTER_DSRG : public DynamicCorrelationSolver {
   public:
     /**

@@ -73,8 +73,8 @@ class DeterminantHashVec {
     /// @return The hash
     det_hashvec& wfn_hash();
 
-    /// Add a determinant
-    void add(const Determinant& det);
+    /// Add a determinant and return its address
+    size_t add(const Determinant& det);
 
     /// Return the number of determinants
     size_t size() const;

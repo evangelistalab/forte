@@ -39,7 +39,6 @@
 
 #include "base_classes/rdms.h"
 #include "base_classes/dynamic_correlation_solver.h"
-#include "boost/assign.hpp"
 #include "integrals/integrals.h"
 #include "mrdsrg-helper/dsrg_source.h"
 #include "mrdsrg-helper/dsrg_time.h"

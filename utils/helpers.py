@@ -2,13 +2,9 @@ import psi4
 import forte
 
 
-def psi4_scf(geom,
-             basis,
-             reference,
-             functional='hf',
+def psi4_scf(geom, basis, reference, functional='hf',
              options={}) -> (float, psi4.core.Wavefunction):
-    """
-    Run a psi4 scf computation and return the energy and the Wavefunction object
+    """Run a psi4 scf computation and return the energy and the Wavefunction object
 
     Parameters
     ----------
@@ -56,57 +52,6 @@ def psi4_scf(geom,
     E_scf, wfn = psi4.energy(functional, return_wfn=True)
 
     return (E_scf, wfn)
-
-
-def load_cubes(path='.'):
-    """
-    Load all the cubefiles (suffix ".cube" ) in a given path
-
-    Parameters
-    ----------
-    path : str
-        The path of the directory that will contain the cube files
-    """
-
-    import os
-    cube_files = {}
-    isdir = os.path.isdir(path)
-    if isdir:
-        for file in os.listdir(path):
-            if file.endswith('.cube'):
-                cf = forte.CubeFile(os.path.join(path, file))
-                cube_files[file] = cf
-        if len(cube_files) == 0:
-            print(f'load_cubes: no cube files found in directory {path}')
-    else:
-        print(f'load_cubes: directory {path} does not exist')
-
-    return cube_files
-
-
-def list_cubes(path='.'):
-    """
-    List all the cubefiles (suffix ".cube" ) in a given path
-
-    Parameters
-    ----------
-    path : str
-        The path of the directory that will contain the cube files
-    """
-
-    import os
-    cube_files = []
-    isdir = os.path.isdir(path)
-    if isdir:
-        for file in os.listdir(path):
-            if file.endswith('.cube'):
-                cube_files.append(os.path.join(path,file))
-        if len(cube_files) == 0:
-            print(f'load_cubes: no cube files found in directory {path}')
-    else:
-        print(f'load_cubes: directory {path} does not exist')
-
-    return cube_files
 
 
 def psi4_cubeprop(wfn,
@@ -170,19 +115,27 @@ def psi4_cubeprop(wfn,
         return load_cubes(path)
 
 
-def prepare_forte_objects(wfn):
-    """
-    Take a psi4 wavefunction object and prepare the ForteIntegrals, SCFInfo, and MOSpaceInfo objects
+def prepare_forte_objects(wfn,mo_spaces = None, active_space = 'ACTIVE',core_spaces = ['RESTRICTED_DOCC'],localize = False,localize_spaces = []):
+    """Take a psi4 wavefunction object and prepare the ForteIntegrals, SCFInfo, and MOSpaceInfo objects
 
     Parameters
     ----------
-    wfn : psi4Wavefunction
+    wfn : psi4 Wavefunction
         A psi4 Wavefunction object
-
+    mo_spaces : dict
+        A dictionary with the size of each space (e.g., {'ACTIVE' : [3]})
+    active_space : str
+        The MO space treated as active (default: 'ACTIVE')
+    core_spaces : list(str)
+        The MO spaces treated as active (default: ['RESTRICTED_DOCC'])
+    localize : bool
+        Do localize the orbitals? (defaul: False)
+    localize_spaces : list(str)
+        A list of spaces to localize (default: [])
     Returns
     -------
-    tuple(ForteIntegrals, SCFInfo, MOSpaceInfo)
-        a tuple containing the ForteIntegrals, SCFInfo, and MOSpaceInfo objects
+    tuple(ForteIntegrals, ActiveSpaceIntegrals, SCFInfo, MOSpaceInfo, map(StateInfo : list)
+        a tuple containing the ForteIntegrals, SCFInfo, and MOSpaceInfo objects and a map of states and weights
     """
     # fill in the options object
     psi4_options = psi4.core.get_options()
@@ -204,7 +157,29 @@ def prepare_forte_objects(wfn):
 
     # Prepare base objects
     scf_info = forte.SCFInfo(wfn)
-    mo_space_info = forte.make_mo_space_info(wfn, options)
-    ints = forte.make_forte_integrals(wfn, options, mo_space_info)
 
-    return (ints, scf_info, mo_space_info)
+    nmopi = wfn.nmopi()
+    point_group = wfn.molecule().point_group().symbol()
+
+    if mo_spaces == None:
+        mo_space_info = forte.make_mo_space_info(nmopi, point_group, options)
+    else:
+        mo_space_info = forte.make_mo_space_info_from_map(nmopi,point_group,mo_spaces,[])
+
+    state_weights_map = forte.make_state_weights_map(options, mo_space_info)
+
+    ints = forte.make_ints_from_psi4(wfn, options, mo_space_info)
+
+    if localize:
+        localizer = forte.Localize(forte.forte_options, ints, mo_space_info)
+        localizer.set_orbital_space(localize_spaces)
+        localizer.compute_transformation()
+        Ua = localizer.get_Ua()
+        ints.rotate_orbitals(Ua,Ua)
+
+    # the space that defines the active orbitals. We select only the 'ACTIVE' part
+    # the space(s) with non-active doubly occupied orbitals
+
+    as_ints = forte.make_active_space_ints(mo_space_info, ints, active_space, core_spaces)
+
+    return (ints, as_ints, scf_info, mo_space_info, state_weights_map)
