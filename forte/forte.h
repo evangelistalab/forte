@@ -36,7 +36,4 @@ std::pair<int, int> startup();
 void banner();
 void cleanup();
 
-double forte_old_methods(psi::SharedWavefunction ref_wfn, std::shared_ptr<ForteOptions> options,
-                         std::shared_ptr<ForteIntegrals> ints,
-                         std::shared_ptr<MOSpaceInfo> mo_space_info);
 } // namespace forte

@@ -562,7 +562,7 @@ def run_forte(name, **kwargs):
         energy = forte_driver(state_weights_map, scf_info, options, ints,
                               mo_space_info)
     elif (job_type == 'MR-DSRG-PT2'):
-        energy = forte.forte_old_methods(ref_wfn, options, ints, mo_space_info)
+        raise Exception('Forte: jobtype MR-DSRG-PT2 has been deprecated')
 
     end = time.time()
 
@@ -584,6 +584,39 @@ def run_forte(name, **kwargs):
             dump_orbitals(ref_wfn)
         return ref_wfn
 
+def forte_old_methods():
+    raise Exception('Forte: forte_old_methods not implemented yet')
+
+#   timer method_timer("Method");
+
+#     double final_energy = 0.0;
+
+#     StateInfo state = make_state_info_from_psi(options); // TODO move py-side
+#     auto scf_info = std::make_shared<SCFInfo>(ref_wfn);
+#     // generate a list of states with their own weights
+#     auto state_weights_map = make_state_weights_map(options, mo_space_info);
+#     auto state_map = to_state_nroots_map(state_weights_map);
+
+#     if (options->get_str("JOB_TYPE") == "MR-DSRG-PT2") {
+#         std::string cas_type = options->get_str("ACTIVE_SPACE_SOLVER");
+#         std::string actv_type = options->get_str("FCIMO_ACTV_TYPE");
+#         if (actv_type == "CIS" or actv_type == "CISD") {
+#             throw psi::PSIEXCEPTION("VCIS/VCISD is not supported for MR-DSRG-PT2");
+#         }
+#         int max_rdm_level = (options->get_str("THREEPDC") == "ZERO") ? 2 : 3;
+#         auto as_ints = make_active_space_ints(mo_space_info, ints, "ACTIVE", {{"RESTRICTED_DOCC"}});
+#         auto ci = make_active_space_solver(cas_type, state_map, scf_info, mo_space_info, as_ints,
+#                                            options);
+#         ci->compute_energy();
+
+#         RDMs rdms = ci->compute_average_rdms(state_weights_map, max_rdm_level);
+#         SemiCanonical semi(mo_space_info, ints, options);
+#         semi.semicanonicalize(rdms, max_rdm_level);
+
+#         MCSRGPT2_MO mcsrgpt2_mo(rdms, options, ints, mo_space_info);
+#         final_energy = mcsrgpt2_mo.compute_energy();
+#     }
+#     return final_energy;
 
 def gradient_forte(name, **kwargs):
     r"""Function encoding sequence of PSI module and plugin calls so that
@@ -635,7 +668,8 @@ def gradient_forte(name, **kwargs):
         ints.rotate_orbitals(Ua, Ub)
 
     # Run gradient computation
-    energy = forte.forte_old_methods(ref_wfn, options, ints, mo_space_info)
+    energy = forte_old_methods()
+    # forte.forte_old_methods(ref_wfn, options, ints, mo_space_info)
 
     if job_type == "CASSCF":
         casscf = forte.make_casscf(state_weights_map, scf_info, options,
