@@ -23,8 +23,8 @@ message(STATUS "Git commit hash: ${GIT_COMMIT_HASH}")
 message(STATUS "Generating version.h")
 
 configure_file(
-  ${CMAKE_SOURCE_DIR}/src/version.h.in
-  ${CMAKE_BINARY_DIR}/src/version.h
+  ${CMAKE_SOURCE_DIR}/forte/version.h.in
+  ${CMAKE_BINARY_DIR}/forte/version.h
 )
 
 include_directories(${CMAKE_BINARY_DIR}/generated)

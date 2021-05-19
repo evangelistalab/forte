@@ -1,5 +1,3 @@
-
-
 /*
  * @BEGIN LICENSE
  *
@@ -28,47 +26,14 @@
  * @END LICENSE
  */
 
-#include "psi4/libmints/molecule.h"
-#include "psi4/libmints/wavefunction.h"
-
-
-#include "base_classes/mo_space_info.h"
-#include "integrals/integrals.h"
-#include "sparse_ci/determinant_hashvector.h"
-#include "integrals/active_space_integrals.h"
-#include "sparse_ci/sparse_ci_solver.h"
-
+#include "base_classes/forte_options.h"
 
 namespace forte {
 
-class MRCI : public psi::Wavefunction {
-  public:
-    // Class constructor and destructor
-    MRCI(psi::SharedWavefunction ref_wfn, std::shared_ptr<ForteOptions> options, std::shared_ptr<ForteIntegrals> ints,
-         std::shared_ptr<MOSpaceInfo> mo_space_info, DeterminantHashVec& reference);
+class ForteIntegrals;
 
-    ~MRCI();
+std::pair<int, int> startup();
+void banner();
+void cleanup();
 
-    std::shared_ptr<ForteIntegrals> ints_;
-    DeterminantHashVec& reference_;
-
-    double compute_energy();
-
-  private:
-    psi::SharedWavefunction ref_wfn_;
-    
-    std::shared_ptr<ActiveSpaceIntegrals> fci_ints_;
-    std::shared_ptr<MOSpaceInfo> mo_space_info_;
-
-    void startup();
-
-    std::vector<int> mo_symmetry_;
-
-    int nroot_;
-    int multiplicity_;
-    DiagonalizationMethod diag_method_;
-
-    void get_excited_determinants();
-    void upcast_reference();
-};
-}
+} // namespace forte

@@ -176,7 +176,7 @@ jobs:
   - bash: |
       STAGED_INSTALL_PREFIX=$(Build.SourcesDirectory)/build/psi4obj/stage
       echo "##vso[task.setvariable variable=STAGED_INSTALL_PREFIX]$STAGED_INSTALL_PREFIX"
-      echo "##vso[task.setvariable variable=PYTHONPATH]${STAGED_INSTALL_PREFIX}/lib:$(Build.SourcesDirectory)/build:{PYTHONPATH}"
+      echo "##vso[task.setvariable variable=PYTHONPATH]${STAGED_INSTALL_PREFIX}/lib:$(Build.SourcesDirectory)/build/forte:{PYTHONPATH}"
       echo "##vso[task.setvariable variable=PATH]${PSI4BIN_DIR}/bin:${PATH}"
     displayName: 'Add Psi4 to PATH and PYTHONPATH'
 
@@ -234,9 +234,9 @@ jobs:
       source activate p4env
       cd build/forte
       make -j2 VERBOSE=1
-      file forte*.so
-      ldd forte*.so
-      readelf -d forte*.so
+      file forte/forte*.so
+      ldd forte/forte*.so
+      readelf -d forte/forte*.so
     displayName: 'Build Forte'
 
   - bash: |

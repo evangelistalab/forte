@@ -3,7 +3,7 @@
 
 #include "catch.hpp"
 
-#include "../../src/sparse_ci/bitwise_operations.hpp"
+#include "forte/sparse_ci/bitwise_operations.hpp"
 
 // Convert a string of '0' and '1' into a 64-bit unsigned integer
 // The bit string can also contain separators, e.g.
