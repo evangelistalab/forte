@@ -16,7 +16,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 set(TargetOpenMP_FIND_COMPONENTS "CXX")
 
-cmake_minimum_required(VERSION 3.15 FATAL_ERROR)
+# cmake_minimum_required(VERSION 3.15 FATAL_ERROR)
 list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)
 
 include(psi4OptionsTools)
@@ -238,7 +238,7 @@ endif()
 
 target_include_directories(forte PRIVATE .)
 
-## 64bit implementation
+# 64bit implementation
 if(MAX_DET_ORB)
     add_definitions(-DMAX_DET_ORB=${MAX_DET_ORB})
 else()
@@ -254,22 +254,3 @@ endif()
 if(ENABLE_GA)
     target_link_libraries(forte PRIVATE GlobalArrays::ga)
 endif()
-
-#
-# Forte tests
-#
-option(ENABLE_ForteTests "Enable Forte tests." ON)
-
-
-# if (ENABLE_ForteTests)
-#   project (forte_tests)
-#   include_directories(${CMAKE_BINARY_DIR} ${CMAKE_BINARY_DIR}/catch2/forte/catch2/single_include)
-#   add_executable(forte_tests
-#     tests/code/test_determinant.cc
-#     tests/code/test_uint64.cc)
-
-#   project (forte_benchmarks)
-#   include_directories(${CMAKE_BINARY_DIR})
-#   add_executable(forte_benchmarks
-#     tests/benchmark/determinant_benchmark.cc)
-# endif (ENABLE_ForteTests)
