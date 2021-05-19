@@ -6,7 +6,7 @@ Makefile.*
 Makefile
 timer.dat
 *~
-src/version.h
+forte/version.h
 
 # Qt Creator project files
 *.config
@@ -41,5 +41,6 @@ docs/sphinx/_*
 
 CMakeCache.txt
 CMakeFiles/
+forte/CMakeFiles
 cmake_install.cmake
 *.DS_Store
