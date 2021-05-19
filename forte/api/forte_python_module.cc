@@ -59,6 +59,7 @@
 #include "mrdsrg-helper/run_dsrg.h"
 #include "mrdsrg-spin-integrated/master_mrdsrg.h"
 #include "mrdsrg-spin-adapted/sadsrg.h"
+#include "mrdsrg-spin-integrated/mcsrgpt2_mo.h"
 
 #include "post_process/spin_corr.h"
 
@@ -290,6 +291,11 @@ PYBIND11_MODULE(forte, m) {
         .def("compute_energy", &DSRG_MRPT::compute_energy, "Compute DSRG energy")
         .def("compute_Heff_actv", &DSRG_MRPT::compute_Heff_actv,
              "Return the DSRG dressed ActiveSpaceIntegrals");
+
+     py::class_<MCSRGPT2_MO>(m,"MCSRGPT2_MO")
+     .def(py::init<RDMs, std::shared_ptr<ForteOptions>,
+                std::shared_ptr<ForteIntegrals> , std::shared_ptr<MOSpaceInfo> >())
+         .def("compute_energy", &MCSRGPT2_MO::compute_energy, "Compute DSRG energy");
 
     // export DressedQuantity for dipole moments
     py::class_<DressedQuantity>(m, "DressedQuantity")
