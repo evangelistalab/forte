@@ -60,8 +60,8 @@ class CMakeBuild(build_ext):
         build_args = ['-j2']
 
         # call cmake and build
-        # subprocess.check_call(['cmake'] + cmake_args)
-        # subprocess.check_call(['cmake', '--build', '.'] + build_args)
+        subprocess.check_call(['cmake'] + cmake_args)
+        subprocess.check_call(['cmake', '--build', '.'] + build_args)
 
         print() # Add empty line for nicer output
 
