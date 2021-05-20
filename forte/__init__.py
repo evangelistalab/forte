@@ -28,20 +28,17 @@
 """Plugin docstring.
 
 """
-__version__ = '1.0'
-__author__ = 'Forte Developers'
 
 import sys
 
 # Load Python modules
 from .pymodule import *
-
 from .register_forte_options import *
-
 from .core import *
-
-# Load C++ plugin
 from .forte import *
+
+__version__ = '1.0'
+__author__ = 'Forte Developers'
 
 # Create a ForteOptions object (stores all options)
 forte_options = forte.ForteOptions()
