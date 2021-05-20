@@ -25,6 +25,7 @@
  *
  * @END LICENSE
  */
+#include <algorithm>
 
 #include "psi4/psi4-dec.h"
 #include "psi4/libpsi4util/PsiOutStream.h"

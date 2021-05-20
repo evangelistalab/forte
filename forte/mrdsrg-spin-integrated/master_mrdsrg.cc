@@ -1,3 +1,4 @@
+#include <algorithm>
 #include <numeric>
 
 #include "psi4/libpsi4util/PsiOutStream.h"
