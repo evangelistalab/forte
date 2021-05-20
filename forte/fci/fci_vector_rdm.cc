@@ -25,7 +25,7 @@
  *
  * @END LICENSE
  */
-
+#include <algorithm>
 #include <cmath>
 
 #include "psi4/psi4-dec.h"

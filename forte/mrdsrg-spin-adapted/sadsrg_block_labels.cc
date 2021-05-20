@@ -25,7 +25,7 @@
  *
  * @END LICENSE
  */
-
+#include <algorithm>
 #include "sadsrg.h"
 
 using namespace psi;
