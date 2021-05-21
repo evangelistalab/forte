@@ -88,23 +88,36 @@ SQOperator::SQOperator(const op_tuple_t& ops, double coefficient, bool allow_reo
     }
 
     // set the bitarray part of the operator (the order does not matter)
+    bool contains_duplicates = false;
     for (auto creation_alpha_orb : creation_alpha_orb_vec) {
         bool creation = std::get<0>(creation_alpha_orb);
         bool alpha = std::get<1>(creation_alpha_orb);
         int orb = std::get<2>(creation_alpha_orb);
         if (creation) {
             if (alpha) {
+                if (cre_.get_alfa_bit(orb))
+                    contains_duplicates = true;
                 cre_.set_alfa_bit(orb, true);
             } else {
+                if (cre_.get_beta_bit(orb))
+                    contains_duplicates = true;
                 cre_.set_beta_bit(orb, true);
             }
         } else {
             if (alpha) {
+                if (ann_.get_alfa_bit(orb))
+                    contains_duplicates = true;
                 ann_.set_alfa_bit(orb, true);
             } else {
+                if (ann_.get_beta_bit(orb))
+                    contains_duplicates = true;
                 ann_.set_beta_bit(orb, true);
             }
         }
+    }
+    if (contains_duplicates) {
+        throw std::runtime_error("Trying to initialize a SQOperator object with a product of\n"
+                                 "operators that contains repeated operators.\n");
     }
 }
 
