@@ -19,14 +19,17 @@ class CMakeExtension(Extension):
 
 class CMakeBuild(build_ext):
 
-    build_ext.user_options = build_ext.user_options + [('ambitpath', None, 'the path to ambit')]
+    build_ext.user_options = build_ext.user_options + [
+        ('ambitpath', None, 'the path to ambit'),
+        ('max_det_orb', 64, 'the maximum number of orbitals used by the Determinant class'),
+        ]
 
     def initialize_options(self):
         self.ambitpath = None
+        self.max_det_orb = 64
         return build_ext.initialize_options(self)
 
     def run(self):
-        print(f'self.ambitpath = {self.ambitpath}')
         try:
             out = subprocess.check_output(['cmake', '--version'])
         except OSError:
@@ -48,9 +51,10 @@ class CMakeBuild(build_ext):
 
         cfg = 'Debug' if self.debug else 'Release'
 
-        print(f'Compiling Forte in {cfg} mode.')
-        print(f'self.debug = {self.debug}')
-        print(f'self.ambitpath = {self.ambitpath}')
+        print(f'\n  Forte compilation options')
+        print(f'\n    BUILD_TYPE = {cfg}')
+        print(f'    AMBITPATH = {self.ambitpath}')
+        print(f'    MAX_DET_ORB = {self.max_det_orb}\n')
 
         if 'AMBITPATH' not in os.environ or self.ambitpath == None or self.ambitpath == 'None' or self.ambitpath == '':
             msg = """
@@ -71,6 +75,8 @@ class CMakeBuild(build_ext):
         # append cmake arguments
         cmake_args += [f'-Dambit_DIR={ambitpath}/share/cmake/ambit']
         cmake_args += [f'-DCMAKE_BUILD_TYPE={cfg}']
+        cmake_args += [f'-DMAX_DET_ORB={self.max_det_orb}']
+        
         cmake_args += [f'-DENABLE_ForteTests=TRUE']
 
         # define build arguments
