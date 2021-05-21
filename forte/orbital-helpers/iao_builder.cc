@@ -25,6 +25,8 @@
  * @END LICENSE
  */
 
+#include <algorithm>
+
 #include "boost/format.hpp"
 
 #include "psi4/psi4-dec.h"
