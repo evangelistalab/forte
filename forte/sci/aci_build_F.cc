@@ -26,7 +26,7 @@
  *
  * @END LICENSE
  */
-
+#include <algorithm>
 #include <cmath>
 
 #include "psi4/libpsi4util/PsiOutStream.h"
