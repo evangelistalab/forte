@@ -26,6 +26,7 @@
  *
  * @END LICENSE
  */
+#include <algorithm>
 
 #include "base_classes/mo_space_info.h"
 #include "helpers/helpers.h"
