@@ -25,6 +25,8 @@
  *
  * @END LICENSE
  */
+
+#include <algorithm>
 #include <cmath>
 
 #include "sparse_ci/sparse_exp.h"
