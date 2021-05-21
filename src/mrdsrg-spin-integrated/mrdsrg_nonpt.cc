@@ -820,7 +820,7 @@ double MRDSRG::compute_energy_ldsrg2() {
                             "iterations! Quitting.\n",
                             maxiter);
             converged = true;
-            failed = true;
+            //failed = true;
         }
 
         ++cycle;
@@ -1119,7 +1119,7 @@ double MRDSRG::compute_energy_ldsrg2_qc() {
                             "iterations! Quitting.\n",
                             maxiter);
             converged = true;
-            failed = true;
+            //failed = true;
         }
 
         ++cycle;
