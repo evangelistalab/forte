@@ -71,7 +71,26 @@ def test_sparse_operator():
     # assert wfn == wfn_safe
 
     ### Operator ordering tests ###
+
+    # test repeated operator exception
+    sop = forte.SparseOperator()
+    with pytest.raises(RuntimeError):
+        sop.add_term_from_str('[0a+ 0a+]', 1.0)
+
+    sop = forte.SparseOperator()
+    with pytest.raises(RuntimeError):
+        sop.add_term_from_str('[1b+ 1b+]', 1.0)
+
+    sop = forte.SparseOperator()
+    with pytest.raises(RuntimeError):
+        sop.add_term_from_str('[5a- 5a-]', 1.0)
+
+    sop = forte.SparseOperator()
+    with pytest.raises(RuntimeError):
+        sop.add_term_from_str('[3b- 3b-]', 1.0)
+
     # test ordering exception
+    sop = forte.SparseOperator()
     with pytest.raises(RuntimeError):
         sop.add_term_from_str('[0a+ 0b+ 0a- 0b-]', 1.0)
 
