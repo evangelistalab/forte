@@ -22,11 +22,13 @@ class CMakeBuild(build_ext):
     build_ext.user_options = build_ext.user_options + [
         ('ambitpath', None, 'the path to ambit'),
         ('max_det_orb', 64, 'the maximum number of orbitals used by the Determinant class'),
+        ('enable_codecov',False,'enable code coverage')
         ]
 
     def initialize_options(self):
         self.ambitpath = None
         self.max_det_orb = 64
+        self.enable_codecov = False
         return build_ext.initialize_options(self)
 
     def run(self):
@@ -54,37 +56,40 @@ class CMakeBuild(build_ext):
         print(f'\n  Forte compilation options')
         print(f'\n    BUILD_TYPE = {cfg}')
         print(f'    AMBITPATH = {self.ambitpath}')
-        print(f'    MAX_DET_ORB = {self.max_det_orb}\n')
+        print(f'    MAX_DET_ORB = {self.max_det_orb}')
+        print(f'    ENABLE_CODECOV = {str(self.enable_codecov).upper()}\n')
 
-        if 'AMBITPATH' not in os.environ or self.ambitpath == None or self.ambitpath == 'None' or self.ambitpath == '':
+        if 'AMBITPATH' in os.environ:
+            self.ambitpath = os.environ['AMBITPATH']
+        
+        if self.ambitpath == None or self.ambitpath == 'None' or self.ambitpath == '':
             msg = """
-    Please specifiy the ambit path. This can be done in two ways:
+    Please specifiy a correct ambit path. This can be done in two ways:
     1) Set the environmental variable AMBITPATH to the ambit install directory.
     2) Modify the setup.cfg file to include the lines:                
         >[CMakeBuild]
         >ambitpath=<path to ambit install dir>
 """
             raise RuntimeError(msg)
-        ambitpath = os.environ['AMBITPATH']
-
+       
         # grab the cmake configuration from psi4
         process = subprocess.Popen(['psi4', '--plugin-compile'], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         out, err = process.communicate()
         cmake_args = out.decode("utf-8").split()[1:]
 
         # append cmake arguments
-        cmake_args += [f'-Dambit_DIR={ambitpath}/share/cmake/ambit']
+        cmake_args += [f'-Dambit_DIR={self.ambitpath}/share/cmake/ambit']
         cmake_args += [f'-DCMAKE_BUILD_TYPE={cfg}']
         cmake_args += [f'-DMAX_DET_ORB={self.max_det_orb}']
-        
+        cmake_args += [f'-DENABLE_CODECOV={str(self.enable_codecov).upper()}']
         cmake_args += [f'-DENABLE_ForteTests=TRUE']
 
         # define build arguments
         build_args = ['-j2']
 
         # call cmake and build
-        subprocess.check_call(['cmake'] + cmake_args)
-        subprocess.check_call(['cmake', '--build', '.'] + build_args)
+        # subprocess.check_call(['cmake'] + cmake_args)
+        # subprocess.check_call(['cmake', '--build', '.'] + build_args)
 
         print() # Add empty line for nicer output
 
