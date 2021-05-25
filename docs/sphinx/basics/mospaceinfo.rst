@@ -71,10 +71,10 @@ select the highest possible value of :math:`M_S` compatible with :math:`S`,
 that is, :math:`M_S = S`.
 Note that :math:`M_S` is connected to the number of alpha/beta electrons via
 
-.. math:: M_S = \frac{1}{2} (N_\text{\alpha} - N_\text{\beta})
+.. math:: M_S = \frac{1}{2} (N_\alpha - N_\beta)
 
 and, therfore, together with the total number of electrons, it determines the
-value of :math:`N_\text{\alpha}` and :math:`N_\text{\beta}`.
+value of :math:`N_\alpha` and :math:`N_\beta`.
 
 In Forte, modules will select either the lowest absolute or highest value of :math:`M_S`
 compatible with :math:`S` (as specified via ``MULTIPLICITY``), depending on internal
