@@ -89,8 +89,8 @@ class CMakeBuild(build_ext):
 
         # call cmake and build
         print(cmake_args)
-        # subprocess.check_call(['cmake'] + cmake_args)
-        # subprocess.check_call(['cmake', '--build', '.'] + build_args)
+        subprocess.check_call(['cmake'] + cmake_args)
+        subprocess.check_call(['cmake', '--build', '.'] + build_args)
 
         print() # Add empty line for nicer output
 
