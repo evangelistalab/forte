@@ -28,7 +28,7 @@ class CMakeBuild(build_ext):
     def initialize_options(self):
         self.ambitpath = None
         self.max_det_orb = 64
-        self.enable_codecov = False
+        self.enable_codecov = 'OFF'
         return build_ext.initialize_options(self)
 
     def run(self):
@@ -88,6 +88,7 @@ class CMakeBuild(build_ext):
         build_args = ['-j2']
 
         # call cmake and build
+        print(cmake_args)
         # subprocess.check_call(['cmake'] + cmake_args)
         # subprocess.check_call(['cmake', '--build', '.'] + build_args)
 

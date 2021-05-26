@@ -25,7 +25,7 @@ Prior to the compilation of Forte you must first check to make sure you have the
 
 Once you have the current versions of Psi4, CMake, and Ambit, follow the following instructions to install Forte.
 
-### Compilation via `setup.py` (recommended)
+### 1. Compilation via `setup.py` (recommended)
 
 The most convenient way to compile forte is using the `setup.py` script. To compile Forte do the following:
 
@@ -53,7 +53,7 @@ This procedure will register forte within pip and you should be able to see fort
 pip list
 ```
 
-### Compilation via CMake
+### 2. Compilation via CMake
 
 Forte may also be compiled by directly invoking CMake by following these instructions:
 
@@ -102,7 +102,7 @@ $cmake_psi4 \
 -DENABLE_ForteTests=TRUE \
 ```
 
-### Compilation options
+### Advanced compilation options
 
 - **Maximum number of orbitals in the `Determinant` class**.
 By default, Forte is compiled assuming that the maximum number of orbitals that can be handled by codes that use the `Determinant` class is 64. To change this value modify the `<fortedir>/setup.cfg` file to include
@@ -113,5 +113,16 @@ max_det_orb=<a multiple of 64>
 or add the option
 ```tcsh
 -DMAX_DET_ORB=<a multiple of 64>
+```
+if compiling with CMake.
+
+- **Enabling code coverage**. To enable compilation with code coverage activated, set the option `enable_codecov` to `ON` in the `<fortedir>/setup.cfg` file
+```tcsh
+[CMakeBuild]
+enable_codecov=ON
+```
+or add the option
+```tcsh
+-DENABLE_CODECOV=ON
 ```
 if compiling with CMake.
