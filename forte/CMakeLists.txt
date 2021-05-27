@@ -28,18 +28,16 @@ option_with_print(ENABLE_GA "Enable Global Arrays" OFF)
 option_with_print(MAX_DET_ORB "Set the maximum number of orbitals in a determinant" OFF)
 option_with_print(ENABLE_CODECOV "Enable compilation with code coverage flags" OFF)
 option_with_print(ENABLE_UNTESTED_CODE "Enable code not covered by code coverage" OFF)
-#option_with_print(ENABLE_GENERIC "Enable mostly static linking in shared library" OFF)
 
 include(autocmake_omp)  # no longer useful, probably need to copy psi4/external/common/lapack to cmake
 include(autocmake_mpi)  # MPI option A
-#include(custom_static_library)
 
-#find_package(psi4 1.1 REQUIRED COMPONENTS ambit chemps2)
 find_package(psi4 1.3 REQUIRED)
 find_package(pybind11 CONFIG REQUIRED)
 find_package(Python COMPONENTS Interpreter Development REQUIRED)
 find_package(TargetLAPACK REQUIRED)
 find_package(ambit 0.5 REQUIRED)
+
 if(ENABLE_CheMPS2)
     find_package(CheMPS2 1.8.3 CONFIG REQUIRED)
 endif()
@@ -51,7 +49,6 @@ find_package(Boost REQUIRED)
 
 if(Boost_FOUND)
     include_directories(${Boost_INCLUDE_DIRS})
-#    target_link_libraries(forte ${Boost_LIBRARIES})
 endif()
 
 # Including custom cmake rules
