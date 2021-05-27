@@ -1,0 +1,51 @@
+#! Generated using commit GITCOMMIT 
+# GAS CI calculation with multi-gas algorithm
+
+import forte
+
+refscf = -76.0172965561
+refaci = -65.93594498028247131  # averaged ACI energy
+
+memory 6000mb
+molecule h2o{
+O
+H 1 1.00
+H 1 1.00 2 103.1
+}
+
+set global {
+  basis 6-31g**
+  e_convergence 10
+  d_convergence 10
+  r_convergence 10
+  guess gwh
+  scf_type pk
+  reference rhf
+}
+
+set scf_type direct
+set forte {
+  active_space_solver aci
+  ms 0.0
+  multiplicity 1
+  sigma 0.000
+  one_cycle True
+  root_sym 0
+  charge 0
+  sci_enforce_spin_complete true
+  aci_screen_alg multi_gas
+  e_convergence 10
+  charge 0
+  active_ref_type gas
+  GAS1 [1,0,0,0]
+  GAS2 [3,0,1,2]
+  GAS1MAX [2,1]
+  GAS1MIN [0,0]
+  avg_state [[0,1,1],[0,1,1]] #For same symmetry and different GAS
+}
+
+escf, wfn = energy('scf', return_wfn=True)
+compare_values(refscf, variable("CURRENT ENERGY"), 9, "SCF energy")
+
+eaci = energy('forte', ref_wfn=wfn)
+compare_values(refaci, eaci, 8, "Averaged ACI energy")

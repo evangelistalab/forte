@@ -22,8 +22,8 @@ set globals{
    basis                   cc-pvdz
    reference               rhf
    scf_type                pk
-   d_convergence           12
-   e_convergence           15
+   d_convergence           10
+   e_convergence           12
    maxiter                 300
 }
 
@@ -47,4 +47,4 @@ Escf, wfn = energy('scf', return_wfn=True)
 compare_values(refrhf,variable("CURRENT ENERGY"),10,"SCF energy")
 
 energy('forte', ref_wfn=wfn)
-compare_values(refudsrg,variable("UNRELAXED ENERGY"),10,"MRDSRG unrelaxed energy")
+compare_values(refudsrg,variable("UNRELAXED ENERGY"),8,"MRDSRG unrelaxed energy")

@@ -43,18 +43,14 @@ set forte{
    multiplicity            1
    ACTIVE_SPACE_SOLVER     ACI
    int_type                conventional
-   CASSCF_ITERATIONS        25
+   CASSCF_MAXITER        25
    print                    0
    CASSCF_DO_DIIS           false
    casscf_ci_solver         aci
    sigma                    0.0
    gamma                    0.0
    job_type                 CASSCF
-   aci_select_type              amp
 }
-
-
-#compare_values(refmcscf,variable("CURRENT ENERGY"),10,"MCSCF energy")
 
 casscf = energy('forte')
 compare_values(refcasscf,variable("CURRENT ENERGY"),6,"CASSCF energy")

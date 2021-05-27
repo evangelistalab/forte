@@ -25,19 +25,20 @@ set {
 
 set forte {
   active_space_solver aci
-  aci_select_type aimed_energy
   aci_add_aimed_degenerate false
-  aci_enforce_spin_complete false
+  sci_enforce_spin_complete false
   frozen_docc [1,0,0,0,0,1,0,0]
   restricted_docc [1,0,0,0,0,0,1,0]
   active [1,0,1,1,0,2,0,1]
   sigma 0.0001
   charge 0
   nroot 1
+  aci_screen_alg batch_vec
+  aci_nbatch 2
 }
 
-energy('scf')
+Escf, wfn = energy('scf', return_wfn=True)
 compare_values(refscf, variable("SCF total energy"),10, "SCF energy") #TEST
-energy('forte')
+energy('forte', ref_wfn=wfn)
 compare_values(refaci, variable("ACI ENERGY"),10, "ACI energy") #TEST
 compare_values(refacipt2, variable("ACI+PT2 ENERGY"),10, "ACI+PT2 energy") #TEST

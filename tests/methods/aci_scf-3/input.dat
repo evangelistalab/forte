@@ -1,11 +1,11 @@
 #! Generated using commit GITCOMMIT
-#! Perform aci on benzyne 
+#! Perform aci on benzyne
 
 import forte
 
 memory 500 mb
 
-refscf    = -229.20378006852584 
+refscf    = -229.20378006852584
 refaciscf = -229.419635547400
 
 molecule mbenzyne{
@@ -32,7 +32,7 @@ set globals{
    d_convergence           10
    e_convergence           12
    frozen_docc            [2,1,0,0,0,0,2,1]
-   restricted_docc	      [3,2,0,0,0,0,2,3]
+   restricted_docc        [3,2,0,0,0,0,2,3]
    active                 [1,0,1,2,1,2,1,0]
 }
 scf, refwfn = energy('scf', return_wfn=True)
@@ -42,17 +42,17 @@ set scf_type direct
 set forte {
   multiplicity 1
   frozen_docc            [2,1,0,0,0,0,2,1]
-  restricted_docc	     [3,2,0,0,0,0,2,3]
+  restricted_docc        [3,2,0,0,0,0,2,3]
   active                 [1,0,1,2,1,2,1,0]
   root_sym               0
   nroot                  1
-  sigma	                 0.001
-  aci_enforce_spin_complete   true
+  sigma                  0.001
+  sci_enforce_spin_complete   true
   casscf_reference       true
   casscf_ci_solver        ACI
   job_type                casscf
   print_no               true
-  casscf_iterations       50
+  casscf_maxiter         50
   CASSCF_DIIS_NORM        1e-3
   CASSCF_DIIS_START       5
   casscf_debug_printing   false
@@ -62,5 +62,3 @@ set forte {
 energy('forte', ref_wfn=refwfn)
 #compare_values(refaci, variable("ACI ENERGY"),10,"ACI energy")
 #compare_values(refacipt2, variable("ACI+PT2 ENERGY"),8,"ACI+PT2 energy")
-
-

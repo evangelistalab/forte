@@ -19,10 +19,10 @@ set globals{
    basis                   cc-pvdz
    df_basis_mp2            cc-pvdz-ri
    df_basis_scf            cc-pvdz-jkfit
-   reference               ROHF
-   scf_type                DF
-   d_convergence           12
-   e_convergence           15
+   reference               rohf
+   scf_type                df
+   d_convergence           10
+   e_convergence           12
 }
 set forte {
    frozen_docc            [1,0,0,0]

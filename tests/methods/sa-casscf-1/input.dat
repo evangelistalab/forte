@@ -34,7 +34,7 @@ set scf_type direct
 set forte {
   job_type               casscf
   casscf_reference       true
-  casscf_iterations      25
+  casscf_maxiter         25
   restricted_docc        [1, 0, 0, 0, 0, 1, 0, 0]
   active                 [2, 0, 1, 1, 0, 2, 1, 1]
   print                  1
@@ -46,5 +46,5 @@ set forte {
 }
 
 energy('forte')
-compare_values(variable('ENERGY ROOT 0'), eroot0, 6, 'CASSCF Energy')  #TEST
+compare_values(variable('ENERGY ROOT 0 1Ag'), eroot0, 6, 'CASSCF Energy')  #TEST
 

@@ -1,9 +1,9 @@
 
     -----------------------------------------------------------------------
           Psi4: An Open-Source Ab Initio Electronic Structure Package
-                               Psi4 1.3a2.dev26 
+                               Psi4 1.4a2.dev543 
 
-                         Git: Rev {master} e20a281 
+                         Git: Rev {bcc_frozen_virtual} bf127d9 dirty
 
 
     R. M. Parrish, L. A. Burns, D. G. A. Smith, A. C. Simmonett,
@@ -17,15 +17,16 @@
 
 
                          Additional Contributions by
-    P. Kraus, H. Kruse, M. H. Lechner, M. C. Schieber, and R. A. Shaw
+    P. Kraus, H. Kruse, M. H. Lechner, M. C. Schieber, R. A. Shaw,
+    A. Alenaizan, R. Galvelis, Z. L. Glick, S. Lehtola, and J. P. Misiewicz
 
     -----------------------------------------------------------------------
 
 
-    Psi4 started on: Tuesday, 06 November 2018 08:46PM
+    Psi4 started on: Monday, 18 May 2020 12:56AM
 
-    Process ID: 58901
-    Host:       dhcp189-8.emerson.emory.edu
+    Process ID: 85759
+    Host:       Yorks-Mac.local
     PSIDATADIR: /Users/york/src/psi4new/psi4/share/psi4
     Memory:     500.0 MiB
     Threads:    1
@@ -38,7 +39,7 @@
 import forte
 
 refmcscf   = -99.406065223640
-refdsrg    = -99.497356555037214 # no relaxation semi-canonical orbitals
+refdsrg    = -99.497356546928245 # no relaxation semi-canonical orbitals
 
 memory 500 mb
 
@@ -68,7 +69,8 @@ set mcscf{
 }
 
 set forte{
-   job_type               mrdsrg
+   correlation_solver     mrdsrg
+   active_space_solver    fci 
    corr_level             ldsrg2_qc
    frozen_docc            [1,0,0,0]
    restricted_docc        [1,0,1,1]
@@ -82,13 +84,15 @@ set forte{
 }
 
 Emcscf, wfn = energy('mcscf', return_wfn=True)
-compare_values(refmcscf,get_variable("CURRENT ENERGY"),10,"MCSCF energy") #TEST
+compare_values(refmcscf,variable("CURRENT ENERGY"),10,"MCSCF energy") #TEST
 
 energy('forte', ref_wfn=wfn)
-compare_values(refdsrg,get_variable("CURRENT ENERGY"),8,"MRDSRG relaxed energy") #TEST
+compare_values(refdsrg,variable("CURRENT ENERGY"),8,"MRDSRG relaxed energy") #TEST
 --------------------------------------------------------------------------
 
   Memory set to 476.837 MiB by Python driver.
+
+Scratch directory: /Users/york/scratch/psi4/
    => Loading Basis Set <=
 
     Name: 3-21G
@@ -98,8 +102,8 @@ compare_values(refdsrg,get_variable("CURRENT ENERGY"),8,"MRDSRG relaxed energy")
     atoms 2 entry H          line    21 file /Users/york/src/psi4new/psi4/share/psi4/basis/3-21g.gbs 
 
 
-*** tstart() called on dhcp189-8.emerson.emory.edu
-*** at Tue Nov  6 20:46:09 2018
+*** tstart() called on Yorks-Mac.local
+*** at Mon May 18 00:56:58 2020
 
 
          ------------------------------------------
@@ -139,7 +143,7 @@ compare_values(refdsrg,get_variable("CURRENT ENERGY"),8,"MRDSRG relaxed energy")
     ci      = [ 0.00000000, 0.00000000]
     ci_grad = [ 0.00000000, 0.00000000]
   Setting level shift to 0.500 S
-  @SCF    2      -99.181126225880       0.028082064215       0.014194650111
+  @SCF    2      -99.181126225880       0.028082064216       0.014194650111
     ci      = [ 0.00000000, 0.00000000]
     ci_grad = [ 0.00000000, 0.00000000]
   Setting level shift to 0.500 S
@@ -159,7 +163,7 @@ compare_values(refdsrg,get_variable("CURRENT ENERGY"),8,"MRDSRG relaxed energy")
     ci      = [ 0.00000000, 0.00000000]
     ci_grad = [ 0.00000000, 0.00000000]
   Setting level shift to 0.500 S/E
-  @SCF    7      -99.189018416397      -0.002110400739       0.001358833744
+  @SCF    7      -99.189018416396      -0.002110400739       0.001358833744
     ci      = [ 0.00000000, 0.00000000]
     ci_grad = [ 0.00000000, 0.00000000]
   Setting level shift to 0.500 S/E
@@ -167,7 +171,7 @@ compare_values(refdsrg,get_variable("CURRENT ENERGY"),8,"MRDSRG relaxed energy")
     ci      = [ 0.00000000, 0.00000000]
     ci_grad = [ 0.00000000, 0.00000000]
   Setting level shift to 0.500 S/E
-  @SCF    9      -99.188265995912       0.000055591352       0.000013369739
+  @SCF    9      -99.188265995913       0.000055591352       0.000013369739
     ci      = [ 0.00000000, 0.00000000]
     ci_grad = [ 0.00000000, 0.00000000]
   Setting level shift to 0.500 S/E
@@ -183,213 +187,221 @@ compare_values(refdsrg,get_variable("CURRENT ENERGY"),8,"MRDSRG relaxed energy")
     ci      = [-0.93934223, 0.34298130]
     ci_grad = [-0.00000029,-0.00000001]
   Setting level shift to 0.500 S/E
-  @SCF   13      -99.188257583891      -0.000002515042       0.000000557796
+  @SCF   13      -99.188257584029      -0.000002515179       0.000000557828
     ci      = [-0.93934249, 0.34298060]
     ci_grad = [ 0.00000250,-0.00000048]
   Setting level shift to 0.500 S/E
-  @SCF   14      -99.188256442094       0.000001141797       0.000000350212
+  @SCF   14      -99.188256442213       0.000001141816       0.000000350226
     ci      = [-0.93934242, 0.34298079]
     ci_grad = [-0.00000111, 0.00000029]
   Setting level shift to 0.500 S/E
-  @SCF   15      -99.188256647610      -0.000000205516       0.000000028652
+  @SCF   15      -99.188256651080      -0.000000208867       0.000000029039
     ci      = [-0.93934243, 0.34298075]
     ci_grad = [ 0.00000020,-0.00000005]
   Setting level shift to 0.500 S/E
-  @SCF   16      -99.188272219598      -0.000015571987       0.000001970923
+  @SCF   16      -99.188272176940      -0.000015525860       0.000001965376
     ci      = [-0.93934243, 0.34298075]
-    ci_grad = [ 0.00001560,-0.00000267]
+    ci_grad = [ 0.00001556,-0.00000265]
   Setting level shift to 0.500 S/E
-  @SCF   17      -99.188250651916       0.000021567682       0.000002909252
+  @SCF   17      -99.188250574325       0.000021602615       0.000002911338
     ci      = [-0.93934243, 0.34298075]
-    ci_grad = [-0.00002006, 0.00000794]
+    ci_grad = [-0.00002009, 0.00000796]
   Setting level shift to 0.500 S/E
-  @SCF   18      -99.338121751280      -0.149871099364       0.036391840947
+  @SCF   18      -99.338107004706      -0.149856430381       0.036379291665
     ci      = [-0.93934243, 0.34298075]
-    ci_grad = [ 0.16012530, 0.02802378]
+    ci_grad = [ 0.16014332, 0.02828725]
   Setting level shift to 0.500 S/E
-  @SCF   19      -99.382222254159      -0.044100502880       0.017282268121
+  @SCF   19      -99.382504779722      -0.044397775016       0.017257887672
     ci      = [-0.93934243, 0.34298075]
-    ci_grad = [ 0.05049211, 0.01325425]
+    ci_grad = [ 0.05078474, 0.01320294]
   Setting level shift to 0.500 S/E
-  @SCF   20      -99.390701242223      -0.008478988064       0.006387057079
+  @SCF   20      -99.390935344485      -0.008430564762       0.006427664455
     ci      = [-0.93934243, 0.34298075]
-    ci_grad = [ 0.01846823, 0.03066260]
+    ci_grad = [ 0.01839655, 0.03058465]
   Setting level shift to 0.500 S/E
-  @SCF   21      -99.396313560851      -0.005612318628       0.005228732828
+  @SCF   21      -99.396510548290      -0.005575203806       0.005248960957
     ci      = [-0.93934243, 0.34298075]
-    ci_grad = [ 0.01366243, 0.02392754]
+    ci_grad = [ 0.01353710, 0.02362722]
   Setting level shift to 0.500 S/E
-  @SCF   22      -99.401926327835      -0.005612766984       0.006534702139
+  @SCF   22      -99.402021424099      -0.005510875809       0.006508223204
     ci      = [-0.93934243, 0.34298075]
-    ci_grad = [ 0.01346055, 0.02315755]
+    ci_grad = [ 0.01329384, 0.02294880]
   Setting level shift to 0.500 S/E
-  @SCF   23      -99.404359609559      -0.002433281724       0.004417717383
+  @SCF   23      -99.404411394261      -0.002389970162       0.004401036368
     ci      = [-0.93934243, 0.34298075]
-    ci_grad = [ 0.00887264, 0.01884807]
+    ci_grad = [ 0.00881051, 0.01879228]
   Setting level shift to 0.500 S/E
-  @SCF   24      -99.405870291462      -0.001510681903       0.005264129063
+  @SCF   24      -99.405875519771      -0.001464125510       0.005179206175
     ci      = [-0.93934243, 0.34298075]
-    ci_grad = [ 0.00790990, 0.01881699]
+    ci_grad = [ 0.00789134, 0.01891417]
   Setting level shift to 0.500 S/E
-  @SCF   25      -99.405927833285      -0.000057541822       0.000690372400
+  @SCF   25      -99.405930598370      -0.000055078598       0.000673366888
     ci      = [-0.93934243, 0.34298075]
-    ci_grad = [ 0.00656544, 0.01937843]
+    ci_grad = [ 0.00658032, 0.01943481]
   Setting level shift to 0.500 S/E
-  @SCF   26      -99.405962481476      -0.000034648191       0.000462739471
+  @SCF   26      -99.405963598854      -0.000033000485       0.000471284709
     ci      = [-0.93934243, 0.34298075]
-    ci_grad = [ 0.00660658, 0.01958740]
+    ci_grad = [ 0.00660868, 0.01959969]
   Setting level shift to 0.500 S/E
-  @SCF   27      -99.405975041833      -0.000012560358       0.000398214983
+  @SCF   27      -99.405975268876      -0.000011670021       0.000407392977
     ci      = [-0.93934243, 0.34298075]
-    ci_grad = [ 0.00657727, 0.01956717]
+    ci_grad = [ 0.00657521, 0.01956360]
   Setting level shift to 0.500 S/E
-  @SCF   28      -99.405965394572       0.000009647261       0.000243880385
-    ci      = [-0.94798049, 0.31832844]
-    ci_grad = [ 0.00648583, 0.01934506]
+  @SCF   28      -99.405964155615       0.000011113260       0.000217935477
+    ci      = [-0.93934243, 0.34298075]
+    ci_grad = [ 0.00647899, 0.01932786]
   Setting level shift to 0.500 S/E
-  @SCF   29      -99.405972667346      -0.000007272774       0.000130654592
-    ci      = [-0.94802528, 0.31819502]
-    ci_grad = [ 0.00004188, 0.00010193]
+  @SCF   29      -99.405971607698      -0.000007452083       0.000140914589
+    ci      = [-0.94801773, 0.31821752]
+    ci_grad = [ 0.00652916, 0.01942794]
   Setting level shift to 0.500 S/E
-  @SCF   30      -99.405974887487      -0.000002220141       0.000011460523
-    ci      = [-0.94804257, 0.31814348]
-    ci_grad = [ 0.00001562, 0.00003956]
+  @SCF   30      -99.405971350226       0.000000257473       0.000038813345
+    ci      = [-0.94801472, 0.31822649]
+    ci_grad = [-0.00000260,-0.00000693]
   Setting level shift to 0.500 S/E
-  @SCF   31      -99.405974062535       0.000000824952       0.000005015609
-    ci      = [-0.94803621, 0.31816244]
-    ci_grad = [-0.00000575,-0.00001455]
+  @SCF   31      -99.405968893598       0.000002456628       0.000016780360
+    ci      = [-0.94799623, 0.31828155]
+    ci_grad = [-0.00001677,-0.00004223]
   Setting level shift to 0.500 S/E
-  @SCF   32      -99.405991943305      -0.000017880770       0.000137892289
-    ci      = [-0.94803621, 0.31816244]
-    ci_grad = [ 0.00012965, 0.00033062]
+  @SCF   32      -99.405964688117       0.000004205481       0.000024590124
+    ci      = [-0.94796529, 0.31837368]
+    ci_grad = [-0.00002815,-0.00007062]
   Setting level shift to 0.500 S/E
-  @SCF   33      -99.406007360116      -0.000015416811       0.000143496643
-    ci      = [-0.94803621, 0.31816244]
-    ci_grad = [ 0.00023643, 0.00065799]
+  @SCF   33      -99.405960110133       0.000004577984       0.000030157473
+    ci      = [-0.94793269, 0.31847075]
+    ci_grad = [-0.00002980,-0.00007433]
   Setting level shift to 0.500 S/E
-  @SCF   34      -99.406041652868      -0.000034292752       0.000443585337
-    ci      = [-0.94803621, 0.31816244]
-    ci_grad = [ 0.00057366, 0.00161329]
+  @SCF   34      -99.405972725048      -0.000012614915       0.000095489188
+    ci      = [-0.94793269, 0.31847075]
+    ci_grad = [ 0.00008347, 0.00020904]
   Setting level shift to 0.500 S/E
-  @SCF   35      -99.406049028233      -0.000007375366       0.000160955312
-    ci      = [-0.94884968, 0.31572819]
-    ci_grad = [ 0.00064473, 0.00191423]
+  @SCF   35      -99.405999402599      -0.000026677551       0.000241965556
+    ci      = [-0.94793269, 0.31847075]
+    ci_grad = [ 0.00026747, 0.00071470]
   Setting level shift to 0.500 S/E
-  @SCF   36      -99.406062448737      -0.000013420503       0.000413469389
-    ci      = [-0.94884968, 0.31572819]
-    ci_grad = [ 0.00030373, 0.00087373]
+  @SCF   36      -99.405990837120       0.000008565479       0.000088092290
+    ci      = [-0.94816807, 0.31776928]
+    ci_grad = [ 0.00017583, 0.00055159]
   Setting level shift to 0.500 S/E
-  @SCF   37      -99.406061952750       0.000000495987       0.000578632483
-    ci      = [-0.94969892, 0.31316444]
-    ci_grad = [ 0.00067069, 0.00203550]
+  @SCF   37      -99.406060926005      -0.000070088885       0.001070087706
+    ci      = [-0.94816807, 0.31776928]
+    ci_grad = [ 0.00083632, 0.00229872]
   Setting level shift to 0.500 S/E
-  @SCF   38      -99.406064526402      -0.000002573652       0.000402517109
-    ci      = [-0.94931616, 0.31432280]
-    ci_grad = [-0.00030080,-0.00091667]
+  @SCF   38      -99.406064059609      -0.000003133604       0.000196380477
+    ci      = [-0.94928150, 0.31442746]
+    ci_grad = [ 0.00087841, 0.00264203]
   Setting level shift to 0.500 S/E
-  @SCF   39      -99.406064792340      -0.000000265938       0.000249416800
-    ci      = [-0.94953421, 0.31366348]
-    ci_grad = [ 0.00017287, 0.00052248]
+  @SCF   39      -99.406064073177      -0.000000013568       0.000034687787
+    ci      = [-0.94927734, 0.31444004]
+    ci_grad = [-0.00000328,-0.00000995]
   Setting level shift to 0.500 S/E
-  @SCF   40      -99.406065210159      -0.000000417819       0.000094216739
-    ci      = [-0.94945275, 0.31390998]
-    ci_grad = [-0.00006414,-0.00019532]
+  @SCF   40      -99.406064842259      -0.000000769082       0.000287011470
+    ci      = [-0.94952919, 0.31367869]
+    ci_grad = [ 0.00020007, 0.00060318]
   Setting level shift to 0.500 S/E
-  @SCF   41      -99.406065178827       0.000000031332       0.000019627187
-    ci      = [-0.94946838, 0.31386270]
-    ci_grad = [ 0.00001235, 0.00003746]
+  @SCF   41      -99.406065201838      -0.000000359579       0.000078324336
+    ci      = [-0.94945756, 0.31389544]
+    ci_grad = [-0.00005641,-0.00017176]
   Setting level shift to 0.500 S/E
-  @SCF   42      -99.406065219436      -0.000000040609       0.000025997913
-    ci      = [-0.94944611, 0.31393006]
-    ci_grad = [-0.00001760,-0.00005335]
+  @SCF   42      -99.406065218748      -0.000000016910       0.000015523578
+    ci      = [-0.94944596, 0.31393053]
+    ci_grad = [-0.00000917,-0.00002779]
   Setting level shift to 0.500 S/E
-  @SCF   43      -99.406065223523      -0.000000004087       0.000010944920
-    ci      = [-0.94943813, 0.31395420]
-    ci_grad = [-0.00000632,-0.00001911]
+  @SCF   43      -99.406065218217       0.000000000531       0.000004010103
+    ci      = [-0.94944732, 0.31392642]
+    ci_grad = [ 0.00000108, 0.00000326]
   Setting level shift to 0.500 S/E
-  @SCF   44      -99.406065223492       0.000000000031       0.000000938478
-    ci      = [-0.94943870, 0.31395248]
-    ci_grad = [ 0.00000045, 0.00000136]
+  @SCF   44      -99.406065222634      -0.000000004417       0.000018516345
+    ci      = [-0.94943300, 0.31396972]
+    ci_grad = [-0.00001133,-0.00003429]
   Setting level shift to 0.500 S/E
-  @SCF   45      -99.406065223633      -0.000000000141       0.000002021055
-    ci      = [-0.94943701, 0.31395760]
-    ci_grad = [-0.00000134,-0.00000405]
+  @SCF   45      -99.406065223472      -0.000000000838       0.000004121601
+    ci      = [-0.94943735, 0.31395656]
+    ci_grad = [ 0.00000345, 0.00001042]
   Setting level shift to 0.500 S/E
-  @SCF   46      -99.406065223637      -0.000000000003       0.000000408047
-    ci      = [-0.94943714, 0.31395720]
-    ci_grad = [ 0.00000010, 0.00000031]
+  @SCF   46      -99.406065222450       0.000000001021       0.000005220629
+    ci      = [-0.94944205, 0.31394234]
+    ci_grad = [ 0.00000372, 0.00001126]
   Setting level shift to 0.500 S/E
-  @SCF   47      -99.406065223638      -0.000000000001       0.000000124993
-    ci      = [-0.94943709, 0.31395734]
-    ci_grad = [-0.00000004,-0.00000011]
+  @SCF   47      -99.406065223561      -0.000000001111       0.000004519131
+    ci      = [-0.94943805, 0.31395443]
+    ci_grad = [-0.00000316,-0.00000957]
   Setting level shift to 0.500 S/E
-  @SCF   48      -99.406065223639      -0.000000000001       0.000000169006
-    ci      = [-0.94943701, 0.31395758]
-    ci_grad = [-0.00000006,-0.00000019]
+  @SCF   48      -99.406065223543       0.000000000018       0.000000407596
+    ci      = [-0.94943835, 0.31395354]
+    ci_grad = [ 0.00000023, 0.00000070]
   Setting level shift to 0.500 S/E
-  @SCF   49      -99.406065223640      -0.000000000001       0.000000108802
-    ci      = [-0.94943699, 0.31395764]
-    ci_grad = [-0.00000001,-0.00000004]
+  @SCF   49      -99.406065223618      -0.000000000075       0.000000953749
+    ci      = [-0.94943756, 0.31395591]
+    ci_grad = [-0.00000062,-0.00000188]
   Setting level shift to 0.500 S/E
-  @SCF   50      -99.406065223640       0.000000000000       0.000000061851
-    ci      = [-0.94943696, 0.31395774]
+  @SCF   50      -99.406065223626      -0.000000000008       0.000001348507
+    ci      = [-0.94943643, 0.31395935]
+    ci_grad = [-0.00000090,-0.00000272]
+  Setting level shift to 0.500 S/E
+  @SCF   51      -99.406065223639      -0.000000000013       0.000000480913
+    ci      = [-0.94943687, 0.31395800]
+    ci_grad = [ 0.00000035, 0.00000106]
+  Setting level shift to 0.500 S/E
+  @SCF   52      -99.406065223640      -0.000000000001       0.000000089196
+    ci      = [-0.94943696, 0.31395773]
+    ci_grad = [ 0.00000007, 0.00000021]
+  Setting level shift to 0.500 S/E
+  @SCF   53      -99.406065223639       0.000000000000       0.000000017476
+    ci      = [-0.94943695, 0.31395777]
+    ci_grad = [-0.00000001,-0.00000003]
+  Setting level shift to 0.500 S/E
+  @SCF   54      -99.406065223639       0.000000000000       0.000000062236
+    ci      = [-0.94943701, 0.31395759]
+    ci_grad = [ 0.00000005, 0.00000015]
+  Setting level shift to 0.500 S/E
+  @SCF   55      -99.406065223640      -0.000000000000       0.000000038405
+    ci      = [-0.94943698, 0.31395769]
     ci_grad = [-0.00000003,-0.00000008]
   Setting level shift to 0.500 S/E
-  @SCF   51      -99.406065223640      -0.000000000000       0.000000011604
-    ci      = [-0.94943696, 0.31395773]
-    ci_grad = [ 0.00000000, 0.00000001]
-  Setting level shift to 0.500 S/E
-  @SCF   52      -99.406065223640      -0.000000000000       0.000000007888
-    ci      = [-0.94943696, 0.31395774]
+  @SCF   56      -99.406065223640      -0.000000000000       0.000000001835
+    ci      = [-0.94943697, 0.31395769]
     ci_grad = [-0.00000000,-0.00000000]
   Setting level shift to 0.500 S/E
-  @SCF   53      -99.406065223640       0.000000000000       0.000000010279
-    ci      = [-0.94943697, 0.31395772]
-    ci_grad = [ 0.00000001, 0.00000002]
+  @SCF   57      -99.406065223640       0.000000000000       0.000000004987
+    ci      = [-0.94943697, 0.31395770]
+    ci_grad = [-0.00000000,-0.00000001]
   Setting level shift to 0.500 S/E
-  @SCF   54      -99.406065223639       0.000000000000       0.000000003115
-    ci      = [-0.94943696, 0.31395772]
-    ci_grad = [-0.00000000,-0.00000000]
-  Setting level shift to 0.500 S/E
-  @SCF   55      -99.406065223640      -0.000000000000       0.000000005943
-    ci      = [-0.94943697, 0.31395771]
-    ci_grad = [ 0.00000000, 0.00000001]
-  Setting level shift to 0.500 S/E
-  @SCF   56      -99.406065223640      -0.000000000000       0.000000000629
-    ci      = [-0.94943697, 0.31395771]
-    ci_grad = [ 0.00000000, 0.00000000]
-  Setting level shift to 0.500 S/E
-  @SCF   57      -99.406065223640       0.000000000000       0.000000001170
-    ci      = [-0.94943697, 0.31395771]
-    ci_grad = [ 0.00000000, 0.00000000]
-  Setting level shift to 0.500 S/E
-  @SCF   58      -99.406065223640       0.000000000000       0.000000000386
-    ci      = [-0.94943697, 0.31395771]
-    ci_grad = [ 0.00000000, 0.00000000]
-  Setting level shift to 0.500 S/E
-  @SCF   59      -99.406065223639       0.000000000000       0.000000000973
+  @SCF   58      -99.406065223640       0.000000000000       0.000000001317
     ci      = [-0.94943697, 0.31395771]
     ci_grad = [-0.00000000,-0.00000000]
   Setting level shift to 0.500 S/E
-  @SCF   60      -99.406065223640      -0.000000000000       0.000000000193
-    ci      = [-0.94943697, 0.31395771]
-    ci_grad = [ 0.00000000, 0.00000000]
-  Setting level shift to 0.500 S/E
-  @SCF   61      -99.406065223639       0.000000000000       0.000000000279
+  @SCF   59      -99.406065223640       0.000000000000       0.000000001448
     ci      = [-0.94943697, 0.31395771]
     ci_grad = [-0.00000000,-0.00000000]
   Setting level shift to 0.500 S/E
-  @SCF   62      -99.406065223640      -0.000000000000       0.000000000036
+  @SCF   60      -99.406065223640       0.000000000000       0.000000001079
     ci      = [-0.94943697, 0.31395771]
     ci_grad = [ 0.00000000, 0.00000000]
   Setting level shift to 0.500 S/E
-  @SCF   63      -99.406065223640      -0.000000000000       0.000000000057
+  @SCF   61      -99.406065223640       0.000000000000       0.000000000291
     ci      = [-0.94943697, 0.31395771]
     ci_grad = [-0.00000000,-0.00000000]
   Setting level shift to 0.500 S/E
-  @SCF   64      -99.406065223640       0.000000000000       0.000000000034
+  @SCF   62      -99.406065223639       0.000000000000       0.000000000145
+    ci      = [-0.94943697, 0.31395771]
+    ci_grad = [-0.00000000,-0.00000000]
+  Setting level shift to 0.500 S/E
+  @SCF   63      -99.406065223640      -0.000000000000       0.000000000129
     ci      = [-0.94943697, 0.31395771]
     ci_grad = [ 0.00000000, 0.00000000]
+  Setting level shift to 0.500 S/E
+  @SCF   64      -99.406065223640       0.000000000000       0.000000000275
+    ci      = [-0.94943697, 0.31395771]
+    ci_grad = [-0.00000000,-0.00000000]
+  Setting level shift to 0.500 S/E
+  @SCF   65      -99.406065223639       0.000000000000       0.000000000158
+    ci      = [-0.94943697, 0.31395771]
+    ci_grad = [ 0.00000000, 0.00000000]
+  Setting level shift to 0.500 S/E
+  @SCF   66      -99.406065223640      -0.000000000000       0.000000000034
+    ci      = [-0.94943697, 0.31395771]
+    ci_grad = [-0.00000000,-0.00000000]
   =========================================================================================
 
       * SCF total energy   =     -99.406065223640
@@ -408,8 +420,8 @@ compare_values(refdsrg,get_variable("CURRENT ENERGY"),8,"MRDSRG relaxed energy")
   Eigenvalues (Eh)
   -------------------------------------------------------------------------
   Doubly occupied orbitals
-      1    -26.175209  A1      2     -1.495695  A1      3     -0.623385  B1
-      4     -0.623385  B2
+      1    -26.175209  A1      2     -1.495695  A1      3     -0.623385  B2
+      4     -0.623385  B1
   Active orbitals
       5     -0.510102  A1      6      0.074682  A1
   Unoccupied orbitals
@@ -421,16 +433,18 @@ compare_values(refdsrg,get_variable("CURRENT ENERGY"),8,"MRDSRG relaxed energy")
   MCSCF Execution Completed.
 
 
-*** tstop() called on dhcp189-8.emerson.emory.edu at Tue Nov  6 20:46:10 2018
+*** tstop() called on Yorks-Mac.local at Mon May 18 00:56:58 2020
 Module time:
-	user time   =       0.05 seconds =       0.00 minutes
+	user time   =       0.14 seconds =       0.00 minutes
 	system time =       0.02 seconds =       0.00 minutes
-	total time  =          1 seconds =       0.02 minutes
+	total time  =          0 seconds =       0.00 minutes
 Total time:
-	user time   =       0.05 seconds =       0.00 minutes
+	user time   =       0.14 seconds =       0.00 minutes
 	system time =       0.02 seconds =       0.00 minutes
-	total time  =          1 seconds =       0.02 minutes
-	MCSCF energy......................................................PASSED
+	total time  =          0 seconds =       0.00 minutes
+    MCSCF energy......................................................PASSED
+
+Scratch directory: /Users/york/scratch/psi4/
    => Loading Basis Set <=
 
     Name: STO-3G
@@ -440,29 +454,25 @@ Total time:
     atoms 2 entry H          line    19 file /Users/york/src/psi4new/psi4/share/psi4/basis/sto-3g.gbs 
 
 
-Reading options from the FORTE block
-Calling plugin forte.so.
-
-
-
   Forte
   ----------------------------------------------------------------------------
   A suite of quantum chemistry methods for strongly correlated electrons
 
-    git branch: dwsa-dsrg-pt - git commit: 84cccd4f
+    git branch: dsrg_file_io - git commit: 4899039e
 
   Developed by:
     Francesco A. Evangelista, Chenyang Li, Kevin P. Hannon,
-    Jeffrey B. Schriber, Tianyuan Zhang, Chenxi Cai
+    Jeffrey B. Schriber, Tianyuan Zhang, Chenxi Cai,
+    Nan He, Nicholas Stair, Shuhe Wang, Renke Huang
   ----------------------------------------------------------------------------
 
-  Size of Determinant class: 16
-
-  ==> MO Space Information <==
-
+  Size of Determinant class: 128 bits
   Read options for space FROZEN_DOCC
   Read options for space RESTRICTED_DOCC
   Read options for space ACTIVE
+
+  ==> MO Space Information <==
+
   -------------------------------------------------
                        A1    A2    B1    B2   Sum
   -------------------------------------------------
@@ -494,7 +504,7 @@ Calling plugin forte.so.
 	Starting second half-transformation.
 	Two-electron integral transformation complete.
 
-  Integral transformation done. 0.00694645 s
+  Integral transformation done. 0.00659761 s
   Reading the two-electron integrals from disk
   Size of two-electron integrals:   0.000327 GB  Using in-core PK algorithm.
    Calculation information:
@@ -513,23 +523,23 @@ Calling plugin forte.so.
   Whereas there are 406 unique shell quartets.
 
 
-  Frozen-core energy            -75.818535539737 a.u.
-  Timing for frozen one-body operator:                        0.029 s.
+  Frozen-core energy            -75.818535539738 a.u.
+  Timing for frozen one-body operator:                        0.033 s.
   Resorting integrals after freezing core.
-  Timing for freezing core and virtual orbitals:              0.030 s.
-  Conventional integrals take 0.05927903 s
+  Timing for freezing core and virtual orbitals:              0.035 s.
+  Conventional integrals take 0.06433638 s
 
-                -----------------------------------------------
-                  String-based Full Configuration Interaction
-                          by Francesco A. Evangelista
-                -----------------------------------------------
+  ==> Summary of Active Space Solver Input <==
 
-  Number of electrons: 10
-  Charge: 0
-  Multiplicity: 1
-  Davidson subspace max dim: 8
-  Davidson subspace min dim: 2
-  M_s: 0
+    Irrep.  Multi.(2ms)      N
+    --------------------------
+       A1      1  (  0)      1
+    --------------------------
+    N: number of roots
+    ms: spin z component
+    Total number of roots:   1
+    --------------------------
+
 
   ==> String Lists <==
 
@@ -565,29 +575,37 @@ Calling plugin forte.so.
     Root            Energy     <S^2>   Spin
   ---------------------------------------------
       0      -99.406065223640  0.000  singlet
-      1      -99.266219554016  2.000  triplet
-      2      -98.863152603389  0.000  singlet
-      3      -98.545355419275  0.000  singlet
+      1      -99.266219554022  2.000  triplet
+      2      -98.863152603383  0.000  singlet
+      3      -98.545355419337  0.000  singlet
   ---------------------------------------------
   Timing for initial guess  =      0.000 s
 
   Projecting out root 1
+
   ==> Diagonalizing Hamiltonian <==
 
-  ----------------------------------------
-    Iter.      Avg. Energy       Delta_E
-  ----------------------------------------
-      1      -99.406065223639  -9.941e+01
-      2      -99.406065223639  +0.000e+00
-  ----------------------------------------
+  -----------------------------------------------------
+    Iter.      Avg. Energy       Delta_E     Res. Norm
+  -----------------------------------------------------
+      1      -99.406065223640  -9.941e+01  +3.275e-14
+      2      -99.406065223640  +0.000e+00  +1.393e-13
+  -----------------------------------------------------
   The Davidson-Liu algorithm converged in 3 iterations.
 
   ==> Root No. 0 <==
 
-    20     -0.94943697
-    02      0.31395771
+    20      0.94943697
+    02     -0.31395771
 
-    Total Energy:       -99.406065223639445
+    Total Energy:       -99.406065223639558
+
+  ==> Energy Summary <==
+
+    Multi.(2ms)  Irrep.  No.               Energy
+    ---------------------------------------------
+       1  (  0)    A1     0      -99.406065223640
+    ---------------------------------------------
 
   ==> Computing RDMs for Root No. 0 <==
 
@@ -600,20 +618,24 @@ Calling plugin forte.so.
         1A1     1.802861      2A1     0.197139  
 
 
+       -----------------------------------------------------------------
+                            Semi-Canonical Orbitals
+         Chenyang Li, Jeffrey B. Schriber and Francesco A. Evangelista
+       -----------------------------------------------------------------
+
+
   ==> Multireference Driven Similarity Renormalization Group <==
 
     Reading DSRG options ............................ Done
     Setting ambit MO space .......................... Done
     Preparing tensors for density cumulants ......... Done
     Building Fock matrix ............................ Done
-    Checking reference energy ....................... Done
 
            ----------------------------------------------------------
              Multireference Driven Similarity Renormalization Group
-                                  Chenyang Li
+                   written by Chenyang Li and Tianyuan Zhang
            ----------------------------------------------------------
 
-  Additional contributions by: Tianyuan Zhang
 
   ==> Density Cumulant Summary <==
 
@@ -633,8 +655,8 @@ Calling plugin forte.so.
     Abs. max of Fock core, active, virtual blocks (Fij, i != j)
                   core          active         virtual
     --------------------------------------------------
-    Fα    0.0000000000    0.0348818653    0.0000000000
-    Fβ    0.0000000000    0.0348818653    0.0000000000
+    Fα    0.0000000000    0.0348818654    0.0000000000
+    Fβ    0.0000000000    0.0348818654    0.0000000000
     --------------------------------------------------
 
     1-Norm of Fock core, active, virtual blocks (Fij, i != j)
@@ -649,29 +671,34 @@ Calling plugin forte.so.
 
   ==> Calculation Information <==
 
-    ntamp                                            15
-    diis_min_vecs                                     2
-    diis_max_vecs                                     5
-    flow parameter                            1.000e+00
-    taylor expansion threshold                1.000e-03
-    intruder_tamp                             1.000e-01
-    corr_level                                LDSRG2_QC
-    int_type                               CONVENTIONAL
-    source operator                            STANDARD
-    smart_dsrg_s                                 DSRG_S
-    reference relaxation                           NONE
-    dsrg transformation type                    UNITARY
-    core virtual source type                     NORMAL
-    sequential dsrg transformation                FALSE
-    omit blocks of >= 3 virtual indices           FALSE
+    Number of T amplitudes                                15
+    DIIS start                                             2
+    Min DIIS vectors                                       2
+    Max DIIS vectors                                       6
+    DIIS extrapolating freq                                1
+    Flow parameter                                 1.000e+00
+    Taylor expansion threshold                     1.000e-03
+    Intruder amplitudes threshold                  1.000e-01
+    Correlation level                              LDSRG2_QC
+    Integral type                               CONVENTIONAL
+    Source operator                                 STANDARD
+    Adaptive DSRG flow type                           DSRG_S
+    Reference relaxation                                NONE
+    DSRG transformation type                         UNITARY
+    Core-Virtual source type                          NORMAL
+    Restart amplitudes                                  TRUE
+    Sequential DSRG transformation                     FALSE
+    Omit blocks of >= 3 virtual indices                FALSE
+    Read amplitudes from current dir                   FALSE
+    Write amplitudes to current dir                    FALSE
 
 
-  ==> Build Initial Amplitude from DSRG-MRPT2 <==
+  ==> Build Initial Amplitudes Guesses <==
 
-    Computing T2 amplitudes ...          Done. Timing      0.224 s
-    Computing T1 amplitudes ...          Done. Timing      0.017 s
+    Computing T2 amplitudes ...          Done. Timing      0.042 s
+    Computing T1 amplitudes ...          Done. Timing      0.005 s
 
-  ==> First-Order Excitation Amplitudes Summary <==
+  ==> Initial Excitation Amplitudes Summary <==
 
     Active Indices:    1    2 
     Largest T1 amplitudes for spin case A:
@@ -679,11 +706,11 @@ Calling plugin forte.so.
     --------------------------------------------------------------------------------
     [  2       4    ] 0.103516 [  2       3    ]-0.095610 [  0       1    ]-0.039975 
     [  1       4    ] 0.014373 [  1       3    ] 0.013263 [  2       5    ]-0.005067 
-    [  0       2    ] 0.004406 [  1       5    ]-0.002786 [  6       7    ] 0.000313 
-    [  8       9    ] 0.000313 [  0       3    ] 0.000094 [  0       5    ]-0.000043 
+    [  0       2    ] 0.004406 [  1       5    ]-0.002786 [  8       9    ] 0.000313 
+    [  6       7    ] 0.000313 [  0       3    ] 0.000094 [  0       5    ]-0.000043 
     [  0       4    ] 0.000023 
     --------------------------------------------------------------------------------
-    Norm of T1A vector: (nonzero elements: 13)                    0.147953920208688.
+    Norm of T1A vector: (nonzero elements: 13)                    0.147953920185120.
     --------------------------------------------------------------------------------
     Largest T1 amplitudes for spin case B:
        _       _                  _       _                  _       _               
@@ -695,18 +722,18 @@ Calling plugin forte.so.
     [  8       9    ] 0.000313 [  0       3    ] 0.000094 [  0       5    ]-0.000043 
     [  0       4    ] 0.000023 
     --------------------------------------------------------------------------------
-    Norm of T1B vector: (nonzero elements: 13)                    0.147953920208688.
+    Norm of T1B vector: (nonzero elements: 13)                    0.147953920185120.
     --------------------------------------------------------------------------------
     Largest T2 amplitudes for spin case AA:
        i   j   a   b              i   j   a   b              i   j   a   b           
     --------------------------------------------------------------------------------
-    [  2   6   1   7]-0.045763 [  2   8   1   9]-0.045763 [  1   6   1   7]-0.042298 
-    [  1   8   1   9]-0.042298 [  2   6   2   7]-0.040617 [  2   8   2   9]-0.040617 
+    [  2   8   1   9]-0.045763 [  2   6   1   7]-0.045763 [  1   8   1   9]-0.042298 
+    [  1   6   1   7]-0.042298 [  2   8   2   9]-0.040617 [  2   6   2   7]-0.040617 
     [  0   1   1   2]-0.035177 [  1   6   2   7]-0.031143 [  1   8   2   9]-0.031143 
     [  6   8   7   9]-0.024088 [  1   2   1   3]-0.023914 [  2   6   4   7] 0.020515 
     [  2   8   4   9] 0.020515 [  0   1   1   5]-0.019273 [  1   2   1   4] 0.019057 
     --------------------------------------------------------------------------------
-    Norm of T2AA vector: (nonzero elements: 240)                  0.282244264026581.
+    Norm of T2AA vector: (nonzero elements: 240)                  0.282244264025003.
     --------------------------------------------------------------------------------
     Largest T2 amplitudes for spin case AB:
            _       _                  _       _                  _       _           
@@ -715,22 +742,22 @@ Calling plugin forte.so.
     [  2   2   1   4] 0.076922 [  2   2   2   3]-0.069894 [  0   0   1   1]-0.056124 
     [  1   2   1   3]-0.052174 [  2   6   1   7]-0.050242 [  2   8   1   9]-0.050242 
     [  1   2   2   4] 0.048389 [  2   2   3   3]-0.048352 [  2   6   2   7]-0.044842 
-    [  2   8   2   9]-0.044842 [  1   2   1   4] 0.044731 [  1   6   1   7]-0.043821 
-    [  1   8   1   9]-0.043821 [  2   2   2   4] 0.037717 [  6   6   7   7]-0.036327 
+    [  2   8   2   9]-0.044842 [  1   2   1   4] 0.044731 [  1   8   1   9]-0.043821 
+    [  1   6   1   7]-0.043821 [  2   2   2   4] 0.037717 [  6   6   7   7]-0.036327 
     --------------------------------------------------------------------------------
-    Norm of T2AB vector: (nonzero elements: 405)                  0.349806856595550.
+    Norm of T2AB vector: (nonzero elements: 405)                  0.349806856587437.
     --------------------------------------------------------------------------------
     Largest T2 amplitudes for spin case BB:
        _   _   _   _              _   _   _   _              _   _   _   _           
        i   j   a   b              i   j   a   b              i   j   a   b           
     --------------------------------------------------------------------------------
-    [  2   6   1   7]-0.045763 [  2   8   1   9]-0.045763 [  1   6   1   7]-0.042298 
-    [  1   8   1   9]-0.042298 [  2   6   2   7]-0.040617 [  2   8   2   9]-0.040617 
+    [  2   8   1   9]-0.045763 [  2   6   1   7]-0.045763 [  1   8   1   9]-0.042298 
+    [  1   6   1   7]-0.042298 [  2   8   2   9]-0.040617 [  2   6   2   7]-0.040617 
     [  0   1   1   2]-0.035177 [  1   6   2   7]-0.031143 [  1   8   2   9]-0.031143 
     [  6   8   7   9]-0.024088 [  1   2   1   3]-0.023914 [  2   6   4   7] 0.020515 
     [  2   8   4   9] 0.020515 [  0   1   1   5]-0.019273 [  1   2   1   4] 0.019057 
     --------------------------------------------------------------------------------
-    Norm of T2BB vector: (nonzero elements: 240)                  0.282244264026581.
+    Norm of T2BB vector: (nonzero elements: 240)                  0.282244264025003.
     --------------------------------------------------------------------------------
 
   ==> Possible Intruders <==
@@ -755,27 +782,28 @@ Calling plugin forte.so.
     Reference:
       J. Chem. Phys. (in preparation)
 
-                  Energy (a.u.)           Non-Diagonal Norm        Amplitude RMS         Timings (s)   
+                  Energy (a.u.)           Non-Diagonal Norm        Amplitude RMS         Timings (s)
            ---------------------------  ---------------------  ---------------------  -----------------
-    Iter.        Corr.         Delta       Hbar1      Hbar2        T1         T2        Hbar     Amp.  
-    ---------------------------------------------------------------------------------------------------
-        0   -0.088647290798 -8.865e-02   1.457e-01  6.696e-01   4.339e-02  1.764e-01     3.806    0.343
-        1   -0.090872624875 -2.225e-03   1.416e-01  2.729e-01   2.134e-02  6.240e-02     3.868    0.336
-        2   -0.091201341903 -3.287e-04   1.107e-01  1.651e-01   5.031e-03  2.548e-02     3.851    0.332
-        3   -0.091292000800 -9.066e-05   1.147e-01  1.647e-01   2.331e-03  1.067e-02     3.852    0.341
-        4   -0.091289214891  2.786e-06   1.122e-01  1.551e-01   8.228e-04  4.485e-03     3.869    0.335
-        5   -0.091292051445 -2.837e-06   1.129e-01  1.576e-01   3.645e-04  1.910e-03     3.864    0.330 -> DIIS
-        6   -0.091291975836  7.561e-08   1.126e-01  1.562e-01   1.446e-04  8.111e-04     3.839    0.340 -> DIIS
-        7   -0.091291245104  7.307e-07   1.127e-01  1.566e-01   1.621e-06  6.207e-06     3.849    0.331 -> DIIS
-        8   -0.091291325559 -8.045e-08   1.127e-01  1.566e-01   4.777e-07  1.660e-06     3.846    0.341 -> DIIS
-        9   -0.091291323289  2.270e-09   1.127e-01  1.566e-01   9.106e-08  4.773e-07     3.879    0.356
-    ---------------------------------------------------------------------------------------------------
+    Iter.        Corr.         Delta       Hbar1      Hbar2        T1         T2        Hbar     Amp.    DIIS
+    ---------------------------------------------------------------------------------------------------------
+        1   -0.088647290797 -8.865e-02   1.457e-01  6.696e-01   4.339e-02  1.764e-01     1.771    0.069
+        2   -0.090872624875 -2.225e-03   1.416e-01  2.729e-01   2.134e-02  6.240e-02     1.980    0.087  S
+        3   -0.091201341903 -3.287e-04   1.107e-01  1.651e-01   5.031e-03  2.548e-02     2.063    0.070  S/E
+        4   -0.091311016314 -1.097e-04   1.132e-01  1.578e-01   6.654e-04  2.344e-03     1.784    0.069  S/E
+        5   -0.091296854693  1.416e-05   1.128e-01  1.566e-01   1.653e-04  5.510e-04     1.758    0.068  S/E
+        6   -0.091290976429  5.878e-06   1.127e-01  1.566e-01   2.990e-05  9.290e-05     1.769    0.071  S/E
+        7   -0.091291641168 -6.647e-07   1.127e-01  1.566e-01   7.001e-06  2.330e-05     1.768    0.068  S/E
+        8   -0.091291276538  3.646e-07   1.127e-01  1.566e-01   1.027e-06  4.706e-06     1.757    0.068  S/E
+        9   -0.091291314335 -3.780e-08   1.127e-01  1.566e-01   3.097e-07  1.152e-06     1.766    0.069  S/E
+       10   -0.091291327494 -1.316e-08   1.127e-01  1.566e-01   5.647e-08  3.398e-07     1.768    0.069  S/E
+       11   -0.091291329186 -1.691e-09   1.127e-01  1.566e-01   1.783e-08  8.224e-08     1.756    0.069  S/E
+    ---------------------------------------------------------------------------------------------------------
 
   ==> MR-LDSRG(2)-QC Energy Summary <==
 
-    E0 (reference)                      =     -99.406065223639445
-    MR-LDSRG(2)-QC correlation energy   =      -0.091291323288796
-    MR-LDSRG(2)-QC total energy         =     -99.497356546928245
+    E0 (reference)                      =     -99.406065223639544
+    MR-LDSRG(2)-QC correlation energy   =      -0.091291329185510
+    MR-LDSRG(2)-QC total energy         =     -99.497356552825053
 
   ==> Final Excitation Amplitudes Summary <==
 
@@ -786,10 +814,10 @@ Calling plugin forte.so.
     [  2       4    ] 0.089023 [  2       3    ]-0.085647 [  0       1    ]-0.048800 
     [  1       3    ] 0.011551 [  1       4    ] 0.008705 [  0       2    ] 0.008266 
     [  2       5    ]-0.002667 [  1       5    ]-0.001863 [  0       4    ] 0.000663 
-    [  0       3    ]-0.000642 [  0       5    ]-0.000592 [  6       7    ] 0.000206 
-    [  8       9    ] 0.000206 
+    [  0       3    ]-0.000642 [  0       5    ]-0.000592 [  8       9    ] 0.000206 
+    [  6       7    ] 0.000206 
     --------------------------------------------------------------------------------
-    Norm of T1A vector: (nonzero elements: 13)                    0.133908108589901.
+    Norm of T1A vector: (nonzero elements: 13)                    0.133908103358190.
     --------------------------------------------------------------------------------
     Largest T1 amplitudes for spin case B:
        _       _                  _       _                  _       _               
@@ -801,42 +829,42 @@ Calling plugin forte.so.
     [  0       3    ]-0.000642 [  0       5    ]-0.000592 [  6       7    ] 0.000206 
     [  8       9    ] 0.000206 
     --------------------------------------------------------------------------------
-    Norm of T1B vector: (nonzero elements: 13)                    0.133908108589901.
+    Norm of T1B vector: (nonzero elements: 13)                    0.133908103358189.
     --------------------------------------------------------------------------------
     Largest T2 amplitudes for spin case AA:
        i   j   a   b              i   j   a   b              i   j   a   b           
     --------------------------------------------------------------------------------
-    [  0   1   1   2]-0.042287 [  1   6   1   7]-0.034985 [  1   8   1   9]-0.034985 
-    [  2   6   1   7]-0.031010 [  2   8   1   9]-0.031010 [  2   6   2   7]-0.028548 
-    [  2   8   2   9]-0.028548 [  1   6   2   7]-0.026560 [  1   8   2   9]-0.026560 
+    [  0   1   1   2]-0.042287 [  1   8   1   9]-0.034985 [  1   6   1   7]-0.034985 
+    [  2   8   1   9]-0.031010 [  2   6   1   7]-0.031010 [  2   8   2   9]-0.028548 
+    [  2   6   2   7]-0.028548 [  1   8   2   9]-0.026560 [  1   6   2   7]-0.026560 
     [  6   8   7   9]-0.023101 [  1   2   1   3]-0.019149 [  1   2   2   3]-0.016814 
-    [  0   1   1   5]-0.015102 [  2   6   4   7] 0.014018 [  2   8   4   9] 0.014018 
+    [  0   1   1   5]-0.015102 [  2   8   4   9] 0.014018 [  2   6   4   7] 0.014018 
     --------------------------------------------------------------------------------
-    Norm of T2AA vector: (nonzero elements: 240)                  0.228381733916774.
+    Norm of T2AA vector: (nonzero elements: 240)                  0.228381681658274.
     --------------------------------------------------------------------------------
     Largest T2 amplitudes for spin case AB:
            _       _                  _       _                  _       _           
        i   j   a   b              i   j   a   b              i   j   a   b           
     --------------------------------------------------------------------------------
     [  0   0   1   1]-0.062411 [  2   2   2   3]-0.051237 [  1   2   1   3]-0.046021 
-    [  0   0   1   2]-0.042203 [  6   6   7   7]-0.041786 [  8   8   9   9]-0.041786 
-    [  1   6   1   7]-0.037927 [  1   8   1   9]-0.037927 [  2   6   1   7]-0.036181 
-    [  2   8   1   9]-0.036181 [  1   1   1   3] 0.036124 [  2   2   1   4] 0.035348 
-    [  2   6   2   7]-0.034846 [  2   8   2   9]-0.034846 [  0   0   2   2]-0.034601 
+    [  0   0   1   2]-0.042203 [  8   8   9   9]-0.041786 [  6   6   7   7]-0.041786 
+    [  1   8   1   9]-0.037927 [  1   6   1   7]-0.037927 [  2   8   1   9]-0.036181 
+    [  2   6   1   7]-0.036181 [  1   1   1   3] 0.036124 [  2   2   1   4] 0.035348 
+    [  2   8   2   9]-0.034846 [  2   6   2   7]-0.034846 [  0   0   2   2]-0.034601 
     --------------------------------------------------------------------------------
-    Norm of T2AB vector: (nonzero elements: 405)                  0.295719386633689.
+    Norm of T2AB vector: (nonzero elements: 405)                  0.295719383341761.
     --------------------------------------------------------------------------------
     Largest T2 amplitudes for spin case BB:
        _   _   _   _              _   _   _   _              _   _   _   _           
        i   j   a   b              i   j   a   b              i   j   a   b           
     --------------------------------------------------------------------------------
-    [  0   1   1   2]-0.042287 [  1   6   1   7]-0.034985 [  1   8   1   9]-0.034985 
-    [  2   6   1   7]-0.031010 [  2   8   1   9]-0.031010 [  2   6   2   7]-0.028548 
-    [  2   8   2   9]-0.028548 [  1   6   2   7]-0.026560 [  1   8   2   9]-0.026560 
+    [  0   1   1   2]-0.042287 [  1   8   1   9]-0.034985 [  1   6   1   7]-0.034985 
+    [  2   8   1   9]-0.031010 [  2   6   1   7]-0.031010 [  2   8   2   9]-0.028548 
+    [  2   6   2   7]-0.028548 [  1   8   2   9]-0.026560 [  1   6   2   7]-0.026560 
     [  6   8   7   9]-0.023101 [  1   2   1   3]-0.019149 [  1   2   2   3]-0.016814 
-    [  0   1   1   5]-0.015102 [  2   6   4   7] 0.014018 [  2   8   4   9] 0.014018 
+    [  0   1   1   5]-0.015102 [  2   8   4   9] 0.014018 [  2   6   4   7] 0.014018 
     --------------------------------------------------------------------------------
-    Norm of T2BB vector: (nonzero elements: 240)                  0.228381733916774.
+    Norm of T2BB vector: (nonzero elements: 240)                  0.228381681658275.
     --------------------------------------------------------------------------------
 
   ==> Possible Intruders <==
@@ -851,13 +879,17 @@ Calling plugin forte.so.
 
              [H1, T1]    [H1, T2]    [H2, T1]    [H2, T2]
     -----------------------------------------------------
-    -> C0       0.013       0.026       0.081       1.322
-    -> C1       0.082       0.472       0.725      10.713
-    -> C2                   1.517       3.601      19.368
+    -> C0       0.007       0.018       0.079       1.359
+    -> C1       0.036       0.216       0.487       7.124
+    -> C2                   0.610       1.521       8.295
     -----------------------------------------------------
-	MRDSRG relaxed energy.............................................PASSED
 
-    Psi4 stopped on: Tuesday, 06 November 2018 08:46PM
-    Psi4 wall time for execution: 0:00:42.47
+
+  Time to prepare integrals:        0.070 seconds
+  Time to run job          :       20.788 seconds
+  Total                    :       20.788 seconds    MRDSRG relaxed energy.............................................PASSED
+
+    Psi4 stopped on: Monday, 18 May 2020 12:57AM
+    Psi4 wall time for execution: 0:00:21.12
 
 *** Psi4 exiting successfully. Buy a developer a beer!

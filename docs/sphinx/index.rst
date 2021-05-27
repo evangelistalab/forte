@@ -17,13 +17,18 @@ correlated electrons.
 
    overview
    running_forte
-   basics
-   mospaceinfo
-   integrals
+   basics/getting_started
+   basics/mospaceinfo
+   basics/multistate
+   basics/wfn_examples
+   basics/integrals
    methods/fci
+   methods/aci
+   methods/mcscf
    methods/dsrg
    methods/embedding
    methods/avas
+   utils/plotting
    programming/index
    aci
    pci
@@ -31,6 +36,7 @@ correlated electrons.
    dsrg-mrpt
    mr-dsrg
    options
+   forte
 
 Indices and tables
 ==================

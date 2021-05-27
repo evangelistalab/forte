@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+
 def test_sparse_ci():
     import math
     import psi4
@@ -13,8 +14,10 @@ def test_sparse_ci():
     ref_fci = -1.101150330132956
 
     psi4.core.clean()
+    # need to clean the options otherwise this job will interfere
+    forte.clean_options()
 
-    h2o = psi4.geometry("""
+    psi4.geometry("""
      H
      H 1 1.0
     """)
@@ -29,13 +32,15 @@ def test_sparse_ci():
     forte.startup()
     forte.banner()
 
-    options = psi4.core.get_options()
-    options.set_current_module('FORTE')
-    forte_options.update_psi_options(options)
+    psi4_options = psi4.core.get_options()
+    psi4_options.set_current_module('FORTE')
+    forte_options.get_options_from_psi4(psi4_options)
 
     # Setup forte and prepare the active space integral class
-    mo_space_info = forte.make_mo_space_info(wfn, forte_options)
-    ints = forte.make_forte_integrals(wfn, options, mo_space_info)
+    nmopi = wfn.nmopi()
+    point_group = wfn.molecule().point_group().symbol()
+    mo_space_info = forte.make_mo_space_info(nmopi, point_group, forte_options)
+    ints = forte.make_ints_from_psi4(wfn, forte_options, mo_space_info)
     as_ints = forte.make_active_space_ints(mo_space_info, ints, 'ACTIVE', ['RESTRICTED_DOCC'])
     as_ints.print()
 
@@ -50,7 +55,7 @@ def test_sparse_ci():
             mo_sym.append(h)
 
     print('  Number of orbitals per irreps: [{}]'.format(','.join(nmopi_str)))
-    print('  Symmetry of the MOs: ',mo_sym)
+    print('  Symmetry of the MOs: ', mo_sym)
 
     hf_reference = forte.Determinant()
     hf_reference.create_alfa_bit(0)
@@ -58,15 +63,15 @@ def test_sparse_ci():
     print('  Hartree-Fock determinant: {}'.format(hf_reference.str(2)))
 
     # Compute the HF energy
-    hf_energy = as_ints.nuclear_repulsion_energy() + as_ints.slater_rules(hf_reference,hf_reference)
+    hf_energy = as_ints.nuclear_repulsion_energy() + as_ints.slater_rules(hf_reference, hf_reference)
     print('  Nuclear repulsion energy: {}'.format(as_ints.nuclear_repulsion_energy()))
     print('  Reference energy: {}'.format(hf_energy))
 
     # Build a list of determinants
     orblist = [i for i in range(nmo)]
     dets = []
-    for astr in itertools.combinations(orblist,na):
-        for bstr in itertools.combinations(orblist,nb):
+    for astr in itertools.combinations(orblist, na):
+        for bstr in itertools.combinations(orblist, nb):
             sym = 0
             d = forte.Determinant()
             for a in astr:
@@ -77,18 +82,18 @@ def test_sparse_ci():
                 sym = sym ^ mo_sym[b]
             if (sym == wfn_symmetry):
                 dets.append(d)
-                print('  Determinant {} has symmetry {}'.format(d.str(nmo),sym))
+                print('  Determinant {} has symmetry {}'.format(d.str(nmo), sym))
 
     # Build the Hamiltonian matrix using 'slater_rules'
     nfci = len(dets)
-    H = np.ndarray((nfci,nfci))
+    H = np.ndarray((nfci, nfci))
     for I in range(nfci):
         # off-diagonal terms
         for J in range(I + 1, nfci):
-            HIJ = as_ints.slater_rules(dets[I],dets[J])
+            HIJ = as_ints.slater_rules(dets[I], dets[J])
             H[I][J] = H[J][I] = HIJ
         # diagonal term
-        H[I][I] = as_ints.nuclear_repulsion_energy() + as_ints.slater_rules(dets[I],dets[I])
+        H[I][I] = as_ints.nuclear_repulsion_energy() + as_ints.slater_rules(dets[I], dets[I])
 
     # Find the lowest eigenvalue
     efci = np.linalg.eigh(H)[0][0]
@@ -100,4 +105,6 @@ def test_sparse_ci():
     # Clean up forte (necessary)
     forte.cleanup()
 
-test_sparse_ci()
+
+if __name__ == "__main__":
+    test_sparse_ci()

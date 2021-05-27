@@ -3,8 +3,8 @@
 
 import forte
 
-refrhf       = -2.1790725000725892
-refdsrgpt2   = -2.238709488021926
+refrhf       = -2.179072500072589
+refdsrgpt2   = -2.238605731722422
 
 memory 500 mb
 
@@ -22,8 +22,8 @@ set globals{
    df_basis_scf            cc-pvdz-jkfit
    reference               rhf
    scf_type                df
-   d_convergence           12
-   e_convergence           15
+   d_convergence           10
+   e_convergence           12
    maxiter                 300
 }
 
@@ -33,7 +33,7 @@ set forte{
    root_sym                0
    nroot                   1
    dsrg_s                  0.5
-   threepdc                mk
+   threepdc                zero
    int_type                diskdf
    correlation_solver      three-dsrg-mrpt2
    active_space_solver     fci

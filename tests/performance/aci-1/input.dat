@@ -33,7 +33,7 @@ set forte {
   gamma 0.0015
   nroot 1
   charge 0
-  aci_enforce_spin_complete true
+  sci_enforce_spin_complete true
 }
 
 energy('scf')

@@ -11,11 +11,11 @@ Li
 H 1 R
 
 R = 3.0
-units bohr 
+units bohr
 }
 
 set {
-  basis sto-3g 
+  basis sto-3g
   reference rhf
   scf_type pk
   e_convergence 12
@@ -30,11 +30,11 @@ set forte {
   multiplicity 3
   ms 0.0
   active_guess_size 4
+  diag_algorithm dynamic
 }
 
-
-energy('scf')
+Escf, wfn = energy('scf', return_wfn=True)
 compare_values(refscf, variable("CURRENT ENERGY"),11, "SCF energy") #TEST
 
-energy('forte')
+energy('forte', ref_wfn=wfn)
 compare_values(reffci, variable("CURRENT ENERGY"),11, "ACI energy") #TEST

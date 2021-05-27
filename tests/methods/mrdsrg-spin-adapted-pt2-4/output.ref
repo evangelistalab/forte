@@ -1,0 +1,4269 @@
+
+    -----------------------------------------------------------------------
+          Psi4: An Open-Source Ab Initio Electronic Structure Package
+                               Psi4 1.4a2.dev546 
+
+                         Git: Rev {master} 9701d60 dirty
+
+
+    R. M. Parrish, L. A. Burns, D. G. A. Smith, A. C. Simmonett,
+    A. E. DePrince III, E. G. Hohenstein, U. Bozkaya, A. Yu. Sokolov,
+    R. Di Remigio, R. M. Richard, J. F. Gonthier, A. M. James,
+    H. R. McAlexander, A. Kumar, M. Saitow, X. Wang, B. P. Pritchard,
+    P. Verma, H. F. Schaefer III, K. Patkowski, R. A. King, E. F. Valeev,
+    F. A. Evangelista, J. M. Turney, T. D. Crawford, and C. D. Sherrill,
+    J. Chem. Theory Comput. 13(7) pp 3185--3197 (2017).
+    (doi: 10.1021/acs.jctc.7b00174)
+
+
+                         Additional Contributions by
+    P. Kraus, H. Kruse, M. H. Lechner, M. C. Schieber, R. A. Shaw,
+    A. Alenaizan, R. Galvelis, Z. L. Glick, S. Lehtola, and J. P. Misiewicz
+
+    -----------------------------------------------------------------------
+
+
+    Psi4 started on: Tuesday, 23 June 2020 11:44PM
+
+    Process ID: 98117
+    Host:       Yorks-Mac.local
+    PSIDATADIR: /Users/york/src/psi4new/psi4/share/psi4
+    Memory:     500.0 MiB
+    Threads:    1
+    
+  ==> Input File <==
+
+--------------------------------------------------------------------------
+#! Generated using commit GITCOMMIT
+
+import forte
+
+memory 500 mb
+
+Ecas_psi4 = -149.707631190543310
+Ept2_ur   = -149.963420450775175
+Ept2_pr   = -149.965037165884098
+Ept2_r    = -149.965430919850434
+
+molecule {
+0 3
+O
+O 1 1.251
+}
+
+set globals{
+  basis                  cc-pvdz
+  reference              rohf
+  scf_type               pk
+  e_convergence          12
+  d_convergence          8
+  mcscf_e_convergence    12
+  mcscf_r_convergence    8
+  mcscf_diis_start       10
+  mcscf_max_rot          0.2
+  reference_sym          1
+  restricted_docc        [2,0,0,0,0,2,0,0]
+  active                 [1,0,1,1,0,1,1,1]
+}
+#Ecas, wfn = energy('casscf', return_wfn=True)
+#compare_values(Ecas_psi4, Ecas, 9, "CASSCF(6,6)/cc-pVDZ (PSI4) energy")
+
+set scf_type direct
+set forte{
+  job_type               casscf
+  casscf_ci_solver       fci
+  restricted_docc        [2,0,0,0,0,2,0,0]
+  active                 [1,0,1,1,0,1,1,1]
+  root_sym               1
+  e_convergence          12
+  r_convergence          8
+  casscf_g_convergence   1e-8
+  casscf_e_convergence   1e-12
+  spin_avg_density       true
+}
+Escf, wfn = energy('scf', return_wfn=True)
+Ecas, wfn = energy('forte', ref_wfn=wfn, return_wfn=True)
+compare_values(Ecas_psi4, Ecas, 9, "CASSCF(6,6)/cc-pVDZ (FORTE) energy")
+
+set forte{
+  job_type               newdriver
+  active_space_solver    cas
+  correlation_solver     sa-mrdsrg
+  corr_level             pt2
+  frozen_docc            [1,0,0,0,0,1,0,0]
+  restricted_docc        [1,0,0,0,0,1,0,0]
+  active                 [1,0,1,1,0,1,1,1]
+  root_sym               1
+  dsrg_s                 1.0
+  relax_ref              twice
+  e_convergence          12
+  r_convergence          8
+}
+energy('forte', ref_wfn=wfn)
+names = ["UNRELAXED ENERGY", "PARTIALLY RELAXED ENERGY", "RELAXED ENERGY"]
+refs = [Ept2_ur, Ept2_pr, Ept2_r]
+for name, Eref in zip(names, refs):
+    compare_values(Eref, variable(name), 9, "DSRG-MRPT2 " + name.lower())
+--------------------------------------------------------------------------
+
+  Memory set to 476.837 MiB by Python driver.
+
+Scratch directory: /Users/york/scratch/psi4/
+
+*** tstart() called on Yorks-Mac.local
+*** at Tue Jun 23 23:44:53 2020
+
+   => Loading Basis Set <=
+
+    Name: CC-PVDZ
+    Role: ORBITAL
+    Keyword: BASIS
+    atoms 1-2 entry O          line   198 file /Users/york/src/psi4new/psi4/share/psi4/basis/cc-pvdz.gbs 
+
+
+         ---------------------------------------------------------
+                                   SCF
+               by Justin Turney, Rob Parrish, Andy Simmonett
+                          and Daniel G. A. Smith
+                             ROHF Reference
+                        1 Threads,    476 MiB Core
+         ---------------------------------------------------------
+
+  ==> Geometry <==
+
+    Molecular point group: d2h
+    Full point group: D_inf_h
+
+    Geometry (in Angstrom), charge = 0, multiplicity = 3:
+
+       Center              X                  Y                   Z               Mass       
+    ------------   -----------------  -----------------  -----------------  -----------------
+         O            0.000000000000     0.000000000000    -0.625500000000    15.994914619570
+         O            0.000000000000     0.000000000000     0.625500000000    15.994914619570
+
+  Running in d2h symmetry.
+
+  Rotational constants: A = ************  B =      1.34688  C =      1.34688 [cm^-1]
+  Rotational constants: A = ************  B =  40378.54350  C =  40378.54350 [MHz]
+  Nuclear repulsion =   27.072215413972827
+
+  Charge       = 0
+  Multiplicity = 3
+  Electrons    = 16
+  Nalpha       = 9
+  Nbeta        = 7
+
+  ==> Algorithm <==
+
+  SCF Algorithm Type is DIRECT.
+  DIIS enabled.
+  MOM disabled.
+  Fractional occupation disabled.
+  Guess Type is SAD.
+  Energy threshold   = 1.00e-12
+  Density threshold  = 1.00e-08
+  Integral threshold = 0.00e+00
+
+  ==> Primary Basis <==
+
+  Basis Set: CC-PVDZ
+    Blend: CC-PVDZ
+    Number of shells: 12
+    Number of basis function: 28
+    Number of Cartesian functions: 30
+    Spherical Harmonics?: true
+    Max angular momentum: 2
+
+   => Loading Basis Set <=
+
+    Name: (CC-PVDZ AUX)
+    Role: JKFIT
+    Keyword: DF_BASIS_SCF
+    atoms 1-2 entry O          line   221 file /Users/york/src/psi4new/psi4/share/psi4/basis/cc-pvdz-jkfit.gbs 
+
+  Starting with a DF guess...
+
+  ==> Integral Setup <==
+
+  DFHelper Memory: AOs need 0.001 GiB; user supplied 0.349 GiB. Using in-core AOs.
+
+  ==> MemDFJK: Density-Fitted J/K Matrices <==
+
+    J tasked:                   Yes
+    K tasked:                   Yes
+    wK tasked:                   No
+    OpenMP threads:               1
+    Memory [MiB]:               357
+    Algorithm:                 Core
+    Schwarz Cutoff:           1E-12
+    Mask sparsity (%):       0.0000
+    Fitting Condition:        1E-10
+
+   => Auxiliary Basis Set <=
+
+  Basis Set: (CC-PVDZ AUX)
+    Blend: CC-PVDZ-JKFIT
+    Number of shells: 48
+    Number of basis function: 140
+    Number of Cartesian functions: 162
+    Spherical Harmonics?: true
+    Max angular momentum: 3
+
+  Minimum eigenvalue in the overlap matrix is 3.4249829088E-02.
+  Reciprocal condition number of the overlap matrix is 1.3555095415E-02.
+    Using symmetric orthogonalization.
+
+  ==> Pre-Iterations <==
+
+  SCF Guess: Superposition of Atomic Densities via on-the-fly atomic UHF (no occupation information).
+
+   -------------------------
+    Irrep   Nso     Nmo    
+   -------------------------
+     Ag         7       7 
+     B1g        1       1 
+     B2g        3       3 
+     B3g        3       3 
+     Au         1       1 
+     B1u        7       7 
+     B2u        3       3 
+     B3u        3       3 
+   -------------------------
+    Total      28      28
+   -------------------------
+
+  ==> Iterations <==
+
+                           Total Energy        Delta E     RMS |[F,P]|
+
+   @DF-ROHF iter SAD:  -148.72240130745931   -1.48722e+02   0.00000e+00 
+   @DF-ROHF iter   1:  -149.57520016905025   -8.52799e-01   1.59321e-02 DIIS
+   @DF-ROHF iter   2:  -149.59509284740415   -1.98927e-02   4.47057e-03 DIIS
+   @DF-ROHF iter   3:  -149.59666744646967   -1.57460e-03   6.59290e-04 DIIS
+   @DF-ROHF iter   4:  -149.59672286344536   -5.54170e-05   1.53141e-04 DIIS
+   @DF-ROHF iter   5:  -149.59672691093451   -4.04749e-06   1.87131e-05 DIIS
+   @DF-ROHF iter   6:  -149.59672697382769   -6.28932e-08   1.62776e-06 DIIS
+   @DF-ROHF iter   7:  -149.59672697426052   -4.32834e-10   1.73238e-07 DIIS
+   @DF-ROHF iter   8:  -149.59672697426564   -5.11591e-12   9.75769e-09 DIIS
+   @DF-ROHF iter   9:  -149.59672697426566   -2.84217e-14   4.34807e-10 DIIS
+
+  DF guess converged.
+
+  ==> DirectJK: Integral-Direct J/K Matrices <==
+
+    J tasked:                  Yes
+    K tasked:                  Yes
+    wK tasked:                  No
+    Integrals threads:           1
+    Schwarz Cutoff:          1E-12
+
+   @ROHF iter  10:  -149.59705784496046   -1.49597e+02   5.92945e-05 DIIS
+   @ROHF iter  11:  -149.59705813744645   -2.92486e-07   1.09648e-05 DIIS
+   @ROHF iter  12:  -149.59705814804857   -1.06021e-08   2.83913e-06 DIIS
+   @ROHF iter  13:  -149.59705814886217   -8.13600e-10   5.55151e-07 DIIS
+   @ROHF iter  14:  -149.59705814889895   -3.67777e-11   1.28177e-07 DIIS
+   @ROHF iter  15:  -149.59705814890140   -2.44427e-12   1.08756e-08 DIIS
+   @ROHF iter  16:  -149.59705814890148   -8.52651e-14   8.40018e-10 DIIS
+  Energy and wave function converged.
+
+
+  ==> Post-Iterations <==
+
+    Orbital Energies [Eh]
+    ---------------------
+
+    Doubly Occupied:                                                      
+
+       1Ag   -20.735902     1B1u  -20.735104     2Ag    -1.616638  
+       2B1u   -1.112814     3Ag    -0.716975     1B2u   -0.684776  
+       1B3u   -0.684776  
+
+    Singly Occupied:                                                      
+
+       1B3g   -0.225076     1B2g   -0.225076  
+
+    Virtual:                                                              
+
+       3B1u    0.409758     4B1u    1.067983     2B2u    1.111184  
+       2B3u    1.111184     4Ag     1.174692     2B3g    1.215083  
+       2B2g    1.215083     5Ag     1.341753     5B1u    1.945030  
+       3B3u    2.411038     3B2u    2.411038     1B1g    2.707852  
+       6Ag     2.707852     1Au     2.985893     6B1u    2.985893  
+       7Ag     3.059014     3B2g    3.600802     3B3g    3.600802  
+       7B1u    4.186933  
+
+    Final Occupation by Irrep:
+             Ag   B1g   B2g   B3g    Au   B1u   B2u   B3u 
+    DOCC [     3,    0,    0,    0,    0,    2,    1,    1 ]
+    SOCC [     0,    0,    1,    1,    0,    0,    0,    0 ]
+
+  @ROHF Final Energy:  -149.59705814890148
+
+   => Energetics <=
+
+    Nuclear Repulsion Energy =             27.0722154139728275
+    One-Electron Energy =                -259.6755862671871569
+    Two-Electron Energy =                  83.0063127043128475
+    Total Energy =                       -149.5970581489014819
+
+Computation Completed
+
+
+Properties will be evaluated at   0.000000,   0.000000,   0.000000 [a0]
+
+Properties computed using the SCF density matrix
+
+  Nuclear Dipole Moment: [e a0]
+     X:     0.0000      Y:     0.0000      Z:     0.0000
+
+  Electronic Dipole Moment: [e a0]
+     X:     0.0000      Y:     0.0000      Z:     0.0000
+
+  Dipole Moment: [e a0]
+     X:     0.0000      Y:     0.0000      Z:     0.0000     Total:     0.0000
+
+  Dipole Moment: [D]
+     X:     0.0000      Y:     0.0000      Z:     0.0000     Total:     0.0000
+
+
+*** tstop() called on Yorks-Mac.local at Tue Jun 23 23:44:54 2020
+Module time:
+	user time   =       0.52 seconds =       0.01 minutes
+	system time =       0.01 seconds =       0.00 minutes
+	total time  =          1 seconds =       0.02 minutes
+Total time:
+	user time   =       0.52 seconds =       0.01 minutes
+	system time =       0.01 seconds =       0.00 minutes
+	total time  =          1 seconds =       0.02 minutes
+
+Scratch directory: /Users/york/scratch/psi4/
+   => Loading Basis Set <=
+
+    Name: STO-3G
+    Role: ORBITAL
+    Keyword: MINAO_BASIS
+    atoms 1-2 entry O          line    81 file /Users/york/src/psi4new/psi4/share/psi4/basis/sto-3g.gbs 
+
+
+  Forte
+  ----------------------------------------------------------------------------
+  A suite of quantum chemistry methods for strongly correlated electrons
+
+    git branch: master - git commit: 5e031236
+
+  Developed by:
+    Francesco A. Evangelista, Chenyang Li, Kevin P. Hannon,
+    Jeffrey B. Schriber, Tianyuan Zhang, Chenxi Cai,
+    Nan He, Nicholas Stair, Shuhe Wang, Renke Huang
+  ----------------------------------------------------------------------------
+
+  Size of Determinant class: 128 bits
+  Read options for space RESTRICTED_DOCC
+  Read options for space ACTIVE
+
+  ==> MO Space Information <==
+
+  -------------------------------------------------------------------------
+                       Ag   B1g   B2g   B3g    Au   B1u   B2u   B3u   Sum
+  -------------------------------------------------------------------------
+    FROZEN_DOCC         0     0     0     0     0     0     0     0     0
+    RESTRICTED_DOCC     2     0     0     0     0     2     0     0     4
+    ACTIVE              1     0     1     1     0     1     1     1     6
+    RESTRICTED_UOCC     4     1     2     2     1     4     2     2    18
+    FROZEN_UOCC         0     0     0     0     0     0     0     0     0
+    Total               7     1     3     3     1     7     3     3    28
+  -------------------------------------------------------------------------
+
+  ==> Integral Transformation <==
+
+  Number of molecular orbitals:                    28
+  Number of correlated molecular orbitals:         28
+  Number of frozen occupied orbitals:               0
+  Number of frozen unoccupied orbitals:             0
+  Two-electron integral type:              Conventional
+
+
+  Overall Conventional Integrals timings
+
+	Presorting SO-basis two-electron integrals.
+	Sorting File: SO Ints (nn|nn) nbuckets = 1
+	Transforming the one-electron integrals and constructing Fock matrices
+	Starting first half-transformation.
+	Sorting half-transformed integrals.
+	First half integral transformation complete.
+	Starting second half-transformation.
+	Two-electron integral transformation complete.
+
+  Integral transformation done. 0.01524305 s
+  Reading the two-electron integrals from disk
+  Size of two-electron integrals:   0.013739 GB
+  Timing for freezing core and virtual orbitals:              0.000 s.
+  Conventional integrals take 0.05669553 s
+
+                -----------------------------------------------
+                  Complete Active Space Self Consistent Field
+                                 Kevin Hannon
+                -----------------------------------------------
+
+    JK takes 0.00950 s to initialize while using DIRECT
+
+  ==> CASSCF Iteration <==
+
+  iter    ||g||           Delta_E            E_CASSCF       CONV_TYPE
+
+  Transform Integrals takes 0.06552635 s.
+
+  Performing a CAS with FCI
+
+  ==> Summary of Active Space Solver Input <==
+
+    Irrep.  Multi.(2ms)      N
+    --------------------------
+      B1g      3  ( -2)      1
+      B1g      3  (  0)      1
+      B1g      3  (  2)      1
+    --------------------------
+    N: number of roots
+    ms: spin z component
+    Total number of roots:   3
+    --------------------------
+
+  Continue to the next symmetry block: No need to find the solution for ms = -2 / 2 < 0.
+
+  ==> String Lists <==
+
+  Number of alpha electrons     = 4
+  Number of beta electrons      = 4
+  Number of alpha strings       = 15
+  Number of beta strings        = 15
+  Number of alpha strings (N-3) = 6
+  Number of beta strings (N-3)  = 6
+  Timing for strings        =      0.000 s
+  Timing for NN strings     =      0.000 s
+  Timing for VO strings     =      0.000 s
+  Timing for OO strings     =      0.000 s
+  Timing for VVOO strings   =      0.000 s
+  Timing for VOVO strings   =      0.000 s
+  Timing for 1-hole strings =      0.000 s
+  Timing for 2-hole strings =      0.000 s
+  Timing for 3-hole strings =      0.000 s
+  Total timing              =      0.000 s
+
+  ==> FCI Solver <==
+
+    Number of determinants                          28
+    Symmetry                                         1
+    Multiplicity                                     3
+    Number of roots                                  1
+    Target root                                      0
+    Trial vectors per root                          10
+
+  Allocating memory for the Hamiltonian algorithm. Size: 2 x 3 x 3.   Memory: 0.000000 GB
+
+  ==> FCI Initial Guess <==
+
+  ---------------------------------------------
+    Root            Energy     <S^2>   Spin
+  ---------------------------------------------
+      0     -149.666491050599  2.000  triplet
+      1     -149.634958029785  0.000  singlet
+      2     -149.088289413190  2.000  triplet
+      3     -149.028610866471  0.000  singlet
+      4     -148.972751899348  6.000  quintet
+      5     -148.918733435456  2.000  triplet
+      6     -148.854924084501  2.000  triplet
+      7     -148.795192868185  0.000  singlet
+      8     -148.686446449965  0.000  singlet
+      9     -148.681399967162  2.000  triplet
+     10     -148.652250108568  6.000  quintet
+     11     -148.533837507234  2.000  triplet
+     12     -148.512017218634  2.000  triplet
+     13     -148.475283029181  0.000  singlet
+     14     -148.366162874026  2.000  triplet
+     15     -148.321387155556  2.000  triplet
+     16     -148.318716096597  0.000  singlet
+     17     -148.274117284983  0.000  singlet
+     18     -148.228401682865  2.000  triplet
+     19     -148.147593311960  0.000  singlet
+  ---------------------------------------------
+  Timing for initial guess  =      0.001 s
+
+  Projecting out root 1
+  Projecting out root 3
+  Projecting out root 4
+  Projecting out root 7
+  Projecting out root 8
+  Projecting out root 10
+  Projecting out root 13
+  Projecting out root 16
+  Projecting out root 17
+  Projecting out root 19
+
+  ==> Diagonalizing Hamiltonian <==
+
+  Energy   convergence: 1.00e-12
+  Residual convergence: 1.00e-08
+  -----------------------------------------------------
+    Iter.      Avg. Energy       Delta_E     Res. Norm
+  -----------------------------------------------------
+      1     -149.666491050599  -1.497e+02  +9.658e-02
+      2     -149.672644132588  -6.153e-03  +7.434e-03
+      3     -149.672673810341  -2.968e-05  +1.321e-03
+      4     -149.672675026970  -1.217e-06  +1.116e-04
+      5     -149.672675036651  -9.680e-09  +1.588e-05
+      6     -149.672675036903  -2.529e-10  +1.726e-06
+      7     -149.672675036906  -2.387e-12  +1.649e-07
+      8     -149.672675036906  -1.137e-13  +9.217e-14
+  -----------------------------------------------------
+  The Davidson-Liu algorithm converged in 9 iterations.
+
+  ==> Root No. 0 <==
+
+    2 b a 0 2 2      0.68431691
+    2 a b 0 2 2     -0.68431691
+    2 2 2 0 a b     -0.14037147
+    2 2 2 0 b a      0.14037147
+
+    Total Energy:      -149.672675036905986
+
+  ==> String Lists <==
+
+  Number of alpha electrons     = 5
+  Number of beta electrons      = 3
+  Number of alpha strings       = 6
+  Number of beta strings        = 20
+  Number of alpha strings (N-3) = 15
+  Number of beta strings (N-3)  = 1
+  Timing for strings        =      0.000 s
+  Timing for NN strings     =      0.000 s
+  Timing for VO strings     =      0.000 s
+  Timing for OO strings     =      0.000 s
+  Timing for VVOO strings   =      0.000 s
+  Timing for VOVO strings   =      0.000 s
+  Timing for 1-hole strings =      0.000 s
+  Timing for 2-hole strings =      0.000 s
+  Timing for 3-hole strings =      0.000 s
+  Total timing              =      0.000 s
+
+  ==> FCI Solver <==
+
+    Number of determinants                          16
+    Symmetry                                         1
+    Multiplicity                                     3
+    Number of roots                                  1
+    Target root                                      0
+    Trial vectors per root                          10
+
+  Allocating memory for the Hamiltonian algorithm. Size: 2 x 4 x 4.   Memory: 0.000000 GB
+
+  ==> FCI Initial Guess <==
+
+  ---------------------------------------------
+    Root            Energy     <S^2>   Spin
+  ---------------------------------------------
+      0     -149.672675036906  2.000  triplet
+      1     -149.096744766481  2.000  triplet
+      2     -148.972751899348  6.000  quintet
+      3     -148.918832513386  2.000  triplet
+      4     -148.855073576707  2.000  triplet
+      5     -148.681431612542  2.000  triplet
+      6     -148.652250108568  6.000  quintet
+      7     -148.565204661510  2.000  triplet
+      8     -148.534850131986  2.000  triplet
+      9     -148.512007199106  2.000  triplet
+     10     -148.484370135662  2.000  triplet
+     11     -148.443862607074  2.000  triplet
+     12     -148.175081691699  2.000  triplet
+     13     -148.163644726466  2.000  triplet
+     14     -148.090428889975  2.000  triplet
+     15     -147.453019062477  2.000  triplet
+  ---------------------------------------------
+  Timing for initial guess  =      0.001 s
+
+  Projecting out root 2
+  Projecting out root 6
+
+  ==> Diagonalizing Hamiltonian <==
+
+  Energy   convergence: 1.00e-12
+  Residual convergence: 1.00e-08
+  -----------------------------------------------------
+    Iter.      Avg. Energy       Delta_E     Res. Norm
+  -----------------------------------------------------
+      1     -149.672675036906  -1.497e+02  +1.763e-13
+      2     -149.672675036906  +0.000e+00  +1.763e-13
+  -----------------------------------------------------
+  The Davidson-Liu algorithm converged in 3 iterations.
+
+  ==> Root No. 0 <==
+
+    2 a a 0 2 2     -0.96777026
+    2 2 2 0 a a     -0.19851523
+
+    Total Energy:      -149.672675036906128
+
+  ==> Energy Summary <==
+
+    Multi.(2ms)  Irrep.  No.               Energy
+    ---------------------------------------------
+       3  (  0)   B1g     0     -149.672675036906
+    ---------------------------------------------
+       3  (  2)   B1g     0     -149.672675036906
+    ---------------------------------------------
+
+  ==> Computing RDMs for Root No. 0 <==
+
+    Timing for 1-RDM: 0.000 s
+    Timing for 2-RDM: 0.000 s
+
+  ==> NATURAL ORBITALS <==
+
+        1Ag     1.972605      1B2u    1.949245      1B3u    1.949245  
+        1B3g    1.050007      1B2g    1.050007      1B1u    0.028891  
+
+
+  ==> Computing RDMs for Root No. 0 <==
+
+    Timing for 1-RDM: 0.000 s
+    Timing for 2-RDM: 0.000 s
+
+  ==> NATURAL ORBITALS <==
+
+        1Ag     1.972605      1B2u    1.949245      1B3u    1.949245  
+        1B2g    1.050007      1B3g    1.050007      1B1u    0.028891  
+
+
+ CAS took 0.041342 seconds.
+
+ FormFockIntermediates took 0.03614111 s.
+
+ FormOrbitalGradient took 0.00014946 s.
+
+ FormDiagHessian took 0.00000977 s.
+
+ Update function takes 0.03632942 s
+    1 0.009647132309  -149.672675036906  -149.672675036906    0.1 s       ~
+
+  Transform Integrals takes 0.06457178 s.
+
+  Performing a CAS with FCI
+
+  ==> Summary of Active Space Solver Input <==
+
+    Irrep.  Multi.(2ms)      N
+    --------------------------
+      B1g      3  ( -2)      1
+      B1g      3  (  0)      1
+      B1g      3  (  2)      1
+    --------------------------
+    N: number of roots
+    ms: spin z component
+    Total number of roots:   3
+    --------------------------
+
+  Continue to the next symmetry block: No need to find the solution for ms = -2 / 2 < 0.
+
+  ==> String Lists <==
+
+  Number of alpha electrons     = 4
+  Number of beta electrons      = 4
+  Number of alpha strings       = 15
+  Number of beta strings        = 15
+  Number of alpha strings (N-3) = 6
+  Number of beta strings (N-3)  = 6
+  Timing for strings        =      0.000 s
+  Timing for NN strings     =      0.000 s
+  Timing for VO strings     =      0.000 s
+  Timing for OO strings     =      0.000 s
+  Timing for VVOO strings   =      0.000 s
+  Timing for VOVO strings   =      0.000 s
+  Timing for 1-hole strings =      0.000 s
+  Timing for 2-hole strings =      0.000 s
+  Timing for 3-hole strings =      0.000 s
+  Total timing              =      0.000 s
+
+  ==> FCI Solver <==
+
+    Number of determinants                          28
+    Symmetry                                         1
+    Multiplicity                                     3
+    Number of roots                                  1
+    Target root                                      0
+    Trial vectors per root                          10
+
+  Allocating memory for the Hamiltonian algorithm. Size: 2 x 3 x 3.   Memory: 0.000000 GB
+
+  ==> FCI Initial Guess <==
+
+  ---------------------------------------------
+    Root            Energy     <S^2>   Spin
+  ---------------------------------------------
+      0     -149.687355008946  2.000  triplet
+      1     -149.652951399223  0.000  singlet
+      2     -149.131920594217  2.000  triplet
+      3     -149.075590875929  0.000  singlet
+      4     -148.914596155546  6.000  quintet
+      5     -148.860718560200  2.000  triplet
+      6     -148.802240064581  2.000  triplet
+      7     -148.739744807397  0.000  singlet
+      8     -148.590027565402  6.000  quintet
+      9     -148.474857117817  2.000  triplet
+     10     -148.452742773716  2.000  triplet
+     11     -148.431096409236  0.000  singlet
+     12     -148.419634006232  2.000  triplet
+     13     -148.414818984990  0.000  singlet
+     14     -148.245681773564  2.000  triplet
+     15     -148.205689272411  2.000  triplet
+     16     -148.198838030136  0.000  singlet
+     17     -148.158104762796  0.000  singlet
+     18     -147.897156354098  2.000  triplet
+     19     -147.815659470191  0.000  singlet
+  ---------------------------------------------
+  Timing for initial guess  =      0.001 s
+
+  Projecting out root 1
+  Projecting out root 3
+  Projecting out root 4
+  Projecting out root 7
+  Projecting out root 8
+  Projecting out root 11
+  Projecting out root 13
+  Projecting out root 16
+  Projecting out root 17
+  Projecting out root 19
+
+  ==> Diagonalizing Hamiltonian <==
+
+  Energy   convergence: 1.00e-12
+  Residual convergence: 1.00e-08
+  -----------------------------------------------------
+    Iter.      Avg. Energy       Delta_E     Res. Norm
+  -----------------------------------------------------
+      1     -149.687355008946  -1.497e+02  +1.813e-01
+      2     -149.705703753944  -1.835e-02  +1.951e-02
+      3     -149.705874230903  -1.705e-04  +2.580e-03
+      4     -149.705879376042  -5.145e-06  +4.483e-04
+      5     -149.705879568324  -1.923e-07  +7.429e-05
+      6     -149.705879573134  -4.810e-09  +3.865e-06
+      7     -149.705879573143  -9.010e-12  +3.783e-07
+      8     -149.705879573143  -1.705e-13  +9.593e-14
+  -----------------------------------------------------
+  The Davidson-Liu algorithm converged in 9 iterations.
+
+  ==> Root No. 0 <==
+
+    2 a b 0 2 2      0.68309965
+    2 b a 0 2 2     -0.68309965
+    2 2 2 0 b a     -0.11846131
+    2 2 2 0 a b      0.11846131
+
+    Total Energy:      -149.705879573142795
+
+  ==> String Lists <==
+
+  Number of alpha electrons     = 5
+  Number of beta electrons      = 3
+  Number of alpha strings       = 6
+  Number of beta strings        = 20
+  Number of alpha strings (N-3) = 15
+  Number of beta strings (N-3)  = 1
+  Timing for strings        =      0.000 s
+  Timing for NN strings     =      0.000 s
+  Timing for VO strings     =      0.000 s
+  Timing for OO strings     =      0.000 s
+  Timing for VVOO strings   =      0.000 s
+  Timing for VOVO strings   =      0.000 s
+  Timing for 1-hole strings =      0.000 s
+  Timing for 2-hole strings =      0.000 s
+  Timing for 3-hole strings =      0.000 s
+  Total timing              =      0.000 s
+
+  ==> FCI Solver <==
+
+    Number of determinants                          16
+    Symmetry                                         1
+    Multiplicity                                     3
+    Number of roots                                  1
+    Target root                                      0
+    Trial vectors per root                          10
+
+  Allocating memory for the Hamiltonian algorithm. Size: 2 x 4 x 4.   Memory: 0.000000 GB
+
+  ==> FCI Initial Guess <==
+
+  ---------------------------------------------
+    Root            Energy     <S^2>   Spin
+  ---------------------------------------------
+      0     -149.705879573143  2.000  triplet
+      1     -149.147954107266  2.000  triplet
+      2     -148.914596155546  6.000  quintet
+      3     -148.861202494739  2.000  triplet
+      4     -148.802557930648  2.000  triplet
+      5     -148.590027565402  6.000  quintet
+      6     -148.480552869472  2.000  triplet
+      7     -148.452750457560  2.000  triplet
+      8     -148.451419861782  2.000  triplet
+      9     -148.419277524932  2.000  triplet
+     10     -148.375579501125  2.000  triplet
+     11     -148.265267884048  2.000  triplet
+     12     -148.041281050210  2.000  triplet
+     13     -148.040241613437  2.000  triplet
+     14     -147.777967632184  2.000  triplet
+     15     -147.004732734422  2.000  triplet
+  ---------------------------------------------
+  Timing for initial guess  =      0.001 s
+
+  Projecting out root 2
+  Projecting out root 5
+
+  ==> Diagonalizing Hamiltonian <==
+
+  Energy   convergence: 1.00e-12
+  Residual convergence: 1.00e-08
+  -----------------------------------------------------
+    Iter.      Avg. Energy       Delta_E     Res. Norm
+  -----------------------------------------------------
+      1     -149.705879573143  -1.497e+02  +1.146e-13
+      2     -149.705879573143  +0.000e+00  +1.146e-13
+  -----------------------------------------------------
+  The Davidson-Liu algorithm converged in 3 iterations.
+
+  ==> Root No. 0 <==
+
+    2 a a 0 2 2     -0.96604879
+    2 2 2 0 a a     -0.16752959
+
+    Total Energy:      -149.705879573142681
+
+  ==> Energy Summary <==
+
+    Multi.(2ms)  Irrep.  No.               Energy
+    ---------------------------------------------
+       3  (  0)   B1g     0     -149.705879573143
+    ---------------------------------------------
+       3  (  2)   B1g     0     -149.705879573143
+    ---------------------------------------------
+
+  ==> Computing RDMs for Root No. 0 <==
+
+    Timing for 1-RDM: 0.000 s
+    Timing for 2-RDM: 0.000 s
+
+  ==> NATURAL ORBITALS <==
+
+        1B3u    1.955329      1B2u    1.955329      1Ag     1.951720  
+        1B3g    1.043858      1B2g    1.043858      1B1u    0.049907  
+
+
+  ==> Computing RDMs for Root No. 0 <==
+
+    Timing for 1-RDM: 0.000 s
+    Timing for 2-RDM: 0.000 s
+
+  ==> NATURAL ORBITALS <==
+
+        1B3u    1.955329      1B2u    1.955329      1Ag     1.951720  
+        1B2g    1.043858      1B3g    1.043858      1B1u    0.049907  
+
+
+ CAS took 0.042040 seconds.
+
+ FormFockIntermediates took 0.03556165 s.
+
+ FormOrbitalGradient took 0.00011814 s.
+
+ FormDiagHessian took 0.00000997 s.
+
+ Update function takes 0.03572195 s
+    2 0.004937950902    -0.033204536237  -149.705879573143    0.1 s       ~
+
+  Transform Integrals takes 0.06844039 s.
+
+  Performing a CAS with FCI
+
+  ==> Summary of Active Space Solver Input <==
+
+    Irrep.  Multi.(2ms)      N
+    --------------------------
+      B1g      3  ( -2)      1
+      B1g      3  (  0)      1
+      B1g      3  (  2)      1
+    --------------------------
+    N: number of roots
+    ms: spin z component
+    Total number of roots:   3
+    --------------------------
+
+  Continue to the next symmetry block: No need to find the solution for ms = -2 / 2 < 0.
+
+  ==> String Lists <==
+
+  Number of alpha electrons     = 4
+  Number of beta electrons      = 4
+  Number of alpha strings       = 15
+  Number of beta strings        = 15
+  Number of alpha strings (N-3) = 6
+  Number of beta strings (N-3)  = 6
+  Timing for strings        =      0.000 s
+  Timing for NN strings     =      0.000 s
+  Timing for VO strings     =      0.000 s
+  Timing for OO strings     =      0.000 s
+  Timing for VVOO strings   =      0.000 s
+  Timing for VOVO strings   =      0.000 s
+  Timing for 1-hole strings =      0.000 s
+  Timing for 2-hole strings =      0.000 s
+  Timing for 3-hole strings =      0.000 s
+  Total timing              =      0.000 s
+
+  ==> FCI Solver <==
+
+    Number of determinants                          28
+    Symmetry                                         1
+    Multiplicity                                     3
+    Number of roots                                  1
+    Target root                                      0
+    Trial vectors per root                          10
+
+  Allocating memory for the Hamiltonian algorithm. Size: 2 x 3 x 3.   Memory: 0.000000 GB
+
+  ==> FCI Initial Guess <==
+
+  ---------------------------------------------
+    Root            Energy     <S^2>   Spin
+  ---------------------------------------------
+      0     -149.687539771117  2.000  triplet
+      1     -149.653119512043  0.000  singlet
+      2     -149.131375899695  2.000  triplet
+      3     -149.075177342297  0.000  singlet
+      4     -148.895263617841  6.000  quintet
+      5     -148.841364090152  2.000  triplet
+      6     -148.783200841396  2.000  triplet
+      7     -148.720435360105  0.000  singlet
+      8     -148.570501065191  6.000  quintet
+      9     -148.455471384912  2.000  triplet
+     10     -148.433229683998  2.000  triplet
+     11     -148.406271955137  0.000  singlet
+     12     -148.381095993411  0.000  singlet
+     13     -148.380434947382  2.000  triplet
+     14     -148.203100419960  2.000  triplet
+     15     -148.164024875493  2.000  triplet
+     16     -148.156387750497  0.000  singlet
+     17     -148.116379646035  0.000  singlet
+     18     -147.856033526175  2.000  triplet
+     19     -147.774541858693  0.000  singlet
+  ---------------------------------------------
+  Timing for initial guess  =      0.001 s
+
+  Projecting out root 1
+  Projecting out root 3
+  Projecting out root 4
+  Projecting out root 7
+  Projecting out root 8
+  Projecting out root 11
+  Projecting out root 12
+  Projecting out root 16
+  Projecting out root 17
+  Projecting out root 19
+
+  ==> Diagonalizing Hamiltonian <==
+
+  Energy   convergence: 1.00e-12
+  Residual convergence: 1.00e-08
+  -----------------------------------------------------
+    Iter.      Avg. Energy       Delta_E     Res. Norm
+  -----------------------------------------------------
+      1     -149.687539771117  -1.497e+02  +1.905e-01
+      2     -149.707142422990  -1.960e-02  +2.107e-02
+      3     -149.707336296195  -1.939e-04  +2.824e-03
+      4     -149.707342330923  -6.035e-06  +4.901e-04
+      5     -149.707342556476  -2.256e-07  +8.235e-05
+      6     -149.707342562200  -5.724e-09  +3.809e-06
+      7     -149.707342562208  -8.413e-12  +3.738e-07
+      8     -149.707342562209  -1.990e-13  +1.303e-13
+  -----------------------------------------------------
+  The Davidson-Liu algorithm converged in 9 iterations.
+
+  ==> Root No. 0 <==
+
+    2 a b 0 2 2      0.68319696
+    2 b a 0 2 2     -0.68319696
+    2 2 2 0 b a     -0.11805463
+    2 2 2 0 a b      0.11805463
+
+    Total Energy:      -149.707342562208510
+
+  ==> String Lists <==
+
+  Number of alpha electrons     = 5
+  Number of beta electrons      = 3
+  Number of alpha strings       = 6
+  Number of beta strings        = 20
+  Number of alpha strings (N-3) = 15
+  Number of beta strings (N-3)  = 1
+  Timing for strings        =      0.000 s
+  Timing for NN strings     =      0.000 s
+  Timing for VO strings     =      0.000 s
+  Timing for OO strings     =      0.000 s
+  Timing for VVOO strings   =      0.000 s
+  Timing for VOVO strings   =      0.000 s
+  Timing for 1-hole strings =      0.000 s
+  Timing for 2-hole strings =      0.000 s
+  Timing for 3-hole strings =      0.000 s
+  Total timing              =      0.000 s
+
+  ==> FCI Solver <==
+
+    Number of determinants                          16
+    Symmetry                                         1
+    Multiplicity                                     3
+    Number of roots                                  1
+    Target root                                      0
+    Trial vectors per root                          10
+
+  Allocating memory for the Hamiltonian algorithm. Size: 2 x 4 x 4.   Memory: 0.000000 GB
+
+  ==> FCI Initial Guess <==
+
+  ---------------------------------------------
+    Root            Energy     <S^2>   Spin
+  ---------------------------------------------
+      0     -149.707342562208  2.000  triplet
+      1     -149.147674797511  2.000  triplet
+      2     -148.895263617841  6.000  quintet
+      3     -148.841864720640  2.000  triplet
+      4     -148.783500657997  2.000  triplet
+      5     -148.570501065191  6.000  quintet
+      6     -148.461364805060  2.000  triplet
+      7     -148.433230466049  2.000  triplet
+      8     -148.409563159393  2.000  triplet
+      9     -148.380060984470  2.000  triplet
+     10     -148.336199929113  2.000  triplet
+     11     -148.223678283326  2.000  triplet
+     12     -147.998578872062  2.000  triplet
+     13     -147.998061501100  2.000  triplet
+     14     -147.715720283654  2.000  triplet
+     15     -146.936019530558  2.000  triplet
+  ---------------------------------------------
+  Timing for initial guess  =      0.001 s
+
+  Projecting out root 2
+  Projecting out root 5
+
+  ==> Diagonalizing Hamiltonian <==
+
+  Energy   convergence: 1.00e-12
+  Residual convergence: 1.00e-08
+  -----------------------------------------------------
+    Iter.      Avg. Energy       Delta_E     Res. Norm
+  -----------------------------------------------------
+      1     -149.707342562208  -1.497e+02  +1.357e-13
+      2     -149.707342562208  +0.000e+00  +1.357e-13
+  -----------------------------------------------------
+  The Davidson-Liu algorithm converged in 3 iterations.
+
+  ==> Root No. 0 <==
+
+    2 a a 0 2 2      0.96618641
+    2 2 2 0 a a      0.16695446
+
+    Total Energy:      -149.707342562208311
+
+  ==> Energy Summary <==
+
+    Multi.(2ms)  Irrep.  No.               Energy
+    ---------------------------------------------
+       3  (  0)   B1g     0     -149.707342562209
+    ---------------------------------------------
+       3  (  2)   B1g     0     -149.707342562208
+    ---------------------------------------------
+
+  ==> Computing RDMs for Root No. 0 <==
+
+    Timing for 1-RDM: 0.000 s
+    Timing for 2-RDM: 0.000 s
+
+  ==> NATURAL ORBITALS <==
+
+        1B3u    1.955777      1B2u    1.955777      1Ag     1.951393  
+        1B3g    1.043460      1B2g    1.043460      1B1u    0.050133  
+
+
+  ==> Computing RDMs for Root No. 0 <==
+
+    Timing for 1-RDM: 0.000 s
+    Timing for 2-RDM: 0.000 s
+
+  ==> NATURAL ORBITALS <==
+
+        1B3u    1.955777      1B2u    1.955777      1Ag     1.951393  
+        1B3g    1.043460      1B2g    1.043460      1B1u    0.050133  
+
+
+ CAS took 0.043525 seconds.
+
+ FormFockIntermediates took 0.03563730 s.
+
+ FormOrbitalGradient took 0.00020589 s.
+
+ FormDiagHessian took 0.00000971 s.
+
+ Update function takes 0.03589614 s
+    3 0.001528498309    -0.001462989066  -149.707342562208    0.1 s       ~
+
+  Transform Integrals takes 0.06681609 s.
+
+  Performing a CAS with FCI
+
+  ==> Summary of Active Space Solver Input <==
+
+    Irrep.  Multi.(2ms)      N
+    --------------------------
+      B1g      3  ( -2)      1
+      B1g      3  (  0)      1
+      B1g      3  (  2)      1
+    --------------------------
+    N: number of roots
+    ms: spin z component
+    Total number of roots:   3
+    --------------------------
+
+  Continue to the next symmetry block: No need to find the solution for ms = -2 / 2 < 0.
+
+  ==> String Lists <==
+
+  Number of alpha electrons     = 4
+  Number of beta electrons      = 4
+  Number of alpha strings       = 15
+  Number of beta strings        = 15
+  Number of alpha strings (N-3) = 6
+  Number of beta strings (N-3)  = 6
+  Timing for strings        =      0.000 s
+  Timing for NN strings     =      0.000 s
+  Timing for VO strings     =      0.000 s
+  Timing for OO strings     =      0.000 s
+  Timing for VVOO strings   =      0.000 s
+  Timing for VOVO strings   =      0.000 s
+  Timing for 1-hole strings =      0.000 s
+  Timing for 2-hole strings =      0.000 s
+  Timing for 3-hole strings =      0.000 s
+  Total timing              =      0.000 s
+
+  ==> FCI Solver <==
+
+    Number of determinants                          28
+    Symmetry                                         1
+    Multiplicity                                     3
+    Number of roots                                  1
+    Target root                                      0
+    Trial vectors per root                          10
+
+  Allocating memory for the Hamiltonian algorithm. Size: 2 x 3 x 3.   Memory: 0.000000 GB
+
+  ==> FCI Initial Guess <==
+
+  ---------------------------------------------
+    Root            Energy     <S^2>   Spin
+  ---------------------------------------------
+      0     -149.687396139293  2.000  triplet
+      1     -149.653044133310  0.000  singlet
+      2     -149.130551438718  2.000  triplet
+      3     -149.074356227070  0.000  singlet
+      4     -148.884160366762  6.000  quintet
+      5     -148.830079607697  2.000  triplet
+      6     -148.771884811069  2.000  triplet
+      7     -148.708801317837  0.000  singlet
+      8     -148.559576666975  6.000  quintet
+      9     -148.444245930163  2.000  triplet
+     10     -148.422244858197  2.000  triplet
+     11     -148.394733615779  0.000  singlet
+     12     -148.364038969086  0.000  singlet
+     13     -148.363166284107  2.000  triplet
+     14     -148.188703060882  2.000  triplet
+     15     -148.150200365304  2.000  triplet
+     16     -148.142104487608  0.000  singlet
+     17     -148.102554521861  0.000  singlet
+     18     -147.839534020168  2.000  triplet
+     19     -147.758081665540  0.000  singlet
+  ---------------------------------------------
+  Timing for initial guess  =      0.001 s
+
+  Projecting out root 1
+  Projecting out root 3
+  Projecting out root 4
+  Projecting out root 7
+  Projecting out root 8
+  Projecting out root 11
+  Projecting out root 12
+  Projecting out root 16
+  Projecting out root 17
+  Projecting out root 19
+
+  ==> Diagonalizing Hamiltonian <==
+
+  Energy   convergence: 1.00e-12
+  Residual convergence: 1.00e-08
+  -----------------------------------------------------
+    Iter.      Avg. Energy       Delta_E     Res. Norm
+  -----------------------------------------------------
+      1     -149.687396139292  -1.497e+02  +1.936e-01
+      2     -149.707346333448  -1.995e-02  +2.158e-02
+      3     -149.707547817293  -2.015e-04  +2.936e-03
+      4     -149.707554271275  -6.454e-06  +5.084e-04
+      5     -149.707554511518  -2.402e-07  +8.535e-05
+      6     -149.707554517581  -6.063e-09  +3.772e-06
+      7     -149.707554517589  -8.100e-12  +3.694e-07
+      8     -149.707554517589  -1.421e-13  +3.312e-13
+  -----------------------------------------------------
+  The Davidson-Liu algorithm converged in 9 iterations.
+
+  ==> Root No. 0 <==
+
+    2 a b 0 2 2      0.68329092
+    2 b a 0 2 2     -0.68329092
+    2 2 2 0 b a     -0.11824259
+    2 2 2 0 a b      0.11824259
+
+    Total Energy:      -149.707554517589131
+
+  ==> String Lists <==
+
+  Number of alpha electrons     = 5
+  Number of beta electrons      = 3
+  Number of alpha strings       = 6
+  Number of beta strings        = 20
+  Number of alpha strings (N-3) = 15
+  Number of beta strings (N-3)  = 1
+  Timing for strings        =      0.000 s
+  Timing for NN strings     =      0.000 s
+  Timing for VO strings     =      0.000 s
+  Timing for OO strings     =      0.000 s
+  Timing for VVOO strings   =      0.000 s
+  Timing for VOVO strings   =      0.000 s
+  Timing for 1-hole strings =      0.000 s
+  Timing for 2-hole strings =      0.000 s
+  Timing for 3-hole strings =      0.000 s
+  Total timing              =      0.000 s
+
+  ==> FCI Solver <==
+
+    Number of determinants                          16
+    Symmetry                                         1
+    Multiplicity                                     3
+    Number of roots                                  1
+    Target root                                      0
+    Trial vectors per root                          10
+
+  Allocating memory for the Hamiltonian algorithm. Size: 2 x 4 x 4.   Memory: 0.000000 GB
+
+  ==> FCI Initial Guess <==
+
+  ---------------------------------------------
+    Root            Energy     <S^2>   Spin
+  ---------------------------------------------
+      0     -149.707554517589  2.000  triplet
+      1     -149.146847335974  2.000  triplet
+      2     -148.884160366762  6.000  quintet
+      3     -148.830603319600  2.000  triplet
+      4     -148.772191159994  2.000  triplet
+      5     -148.559576666975  6.000  quintet
+      6     -148.450282795444  2.000  triplet
+      7     -148.422245687001  2.000  triplet
+      8     -148.395501482811  2.000  triplet
+      9     -148.362702226458  2.000  triplet
+     10     -148.322575072602  2.000  triplet
+     11     -148.204476486353  2.000  triplet
+     12     -147.984377294917  2.000  triplet
+     13     -147.984038011935  2.000  triplet
+     14     -147.687642616609  2.000  triplet
+     15     -146.906813232590  2.000  triplet
+  ---------------------------------------------
+  Timing for initial guess  =      0.001 s
+
+  Projecting out root 2
+  Projecting out root 5
+
+  ==> Diagonalizing Hamiltonian <==
+
+  Energy   convergence: 1.00e-12
+  Residual convergence: 1.00e-08
+  -----------------------------------------------------
+    Iter.      Avg. Energy       Delta_E     Res. Norm
+  -----------------------------------------------------
+      1     -149.707554517589  -1.497e+02  +2.019e-13
+      2     -149.707554517589  +0.000e+00  +2.019e-13
+  -----------------------------------------------------
+  The Davidson-Liu algorithm converged in 3 iterations.
+
+  ==> Root No. 0 <==
+
+    2 a a 0 2 2      0.96631929
+    2 2 2 0 a a      0.16722027
+
+    Total Energy:      -149.707554517589443
+
+  ==> Energy Summary <==
+
+    Multi.(2ms)  Irrep.  No.               Energy
+    ---------------------------------------------
+       3  (  0)   B1g     0     -149.707554517589
+    ---------------------------------------------
+       3  (  2)   B1g     0     -149.707554517589
+    ---------------------------------------------
+
+  ==> Computing RDMs for Root No. 0 <==
+
+    Timing for 1-RDM: 0.000 s
+    Timing for 2-RDM: 0.000 s
+
+  ==> NATURAL ORBITALS <==
+
+        1B3u    1.955915      1B2u    1.955915      1Ag     1.951698  
+        1B3g    1.043335      1B2g    1.043335      1B1u    0.049803  
+
+
+  ==> Computing RDMs for Root No. 0 <==
+
+    Timing for 1-RDM: 0.000 s
+    Timing for 2-RDM: 0.000 s
+
+  ==> NATURAL ORBITALS <==
+
+        1B3u    1.955915      1B2u    1.955915      1Ag     1.951698  
+        1B3g    1.043335      1B2g    1.043335      1B1u    0.049803  
+
+
+ CAS took 0.040551 seconds.
+
+ FormFockIntermediates took 0.03732077 s.
+
+ FormOrbitalGradient took 0.00012098 s.
+
+ FormDiagHessian took 0.00000993 s.
+
+ Update function takes 0.03748370 s
+    4 0.000771941820    -0.000211955381  -149.707554517589    0.1 s  DIIS ~
+
+  Transform Integrals takes 0.06507352 s.
+
+  Performing a CAS with FCI
+
+  ==> Summary of Active Space Solver Input <==
+
+    Irrep.  Multi.(2ms)      N
+    --------------------------
+      B1g      3  ( -2)      1
+      B1g      3  (  0)      1
+      B1g      3  (  2)      1
+    --------------------------
+    N: number of roots
+    ms: spin z component
+    Total number of roots:   3
+    --------------------------
+
+  Continue to the next symmetry block: No need to find the solution for ms = -2 / 2 < 0.
+
+  ==> String Lists <==
+
+  Number of alpha electrons     = 4
+  Number of beta electrons      = 4
+  Number of alpha strings       = 15
+  Number of beta strings        = 15
+  Number of alpha strings (N-3) = 6
+  Number of beta strings (N-3)  = 6
+  Timing for strings        =      0.000 s
+  Timing for NN strings     =      0.000 s
+  Timing for VO strings     =      0.000 s
+  Timing for OO strings     =      0.000 s
+  Timing for VVOO strings   =      0.000 s
+  Timing for VOVO strings   =      0.000 s
+  Timing for 1-hole strings =      0.000 s
+  Timing for 2-hole strings =      0.000 s
+  Timing for 3-hole strings =      0.000 s
+  Total timing              =      0.000 s
+
+  ==> FCI Solver <==
+
+    Number of determinants                          28
+    Symmetry                                         1
+    Multiplicity                                     3
+    Number of roots                                  1
+    Target root                                      0
+    Trial vectors per root                          10
+
+  Allocating memory for the Hamiltonian algorithm. Size: 2 x 3 x 3.   Memory: 0.000000 GB
+
+  ==> FCI Initial Guess <==
+
+  ---------------------------------------------
+    Root            Energy     <S^2>   Spin
+  ---------------------------------------------
+      0     -149.687244004964  2.000  triplet
+      1     -149.652976903974  0.000  singlet
+      2     -149.129434012048  2.000  triplet
+      3     -149.073190447174  0.000  singlet
+      4     -148.873873160230  6.000  quintet
+      5     -148.819479607244  2.000  triplet
+      6     -148.761122018426  2.000  triplet
+      7     -148.697590601654  0.000  singlet
+      8     -148.549306435528  6.000  quintet
+      9     -148.433403822122  2.000  triplet
+     10     -148.411765873091  2.000  triplet
+     11     -148.383809455099  0.000  singlet
+     12     -148.349240463174  0.000  singlet
+     13     -148.348509330655  2.000  triplet
+     14     -148.177922215093  2.000  triplet
+     15     -148.139990763174  2.000  triplet
+     16     -148.131433685531  0.000  singlet
+     17     -148.092335550667  0.000  singlet
+     18     -147.825803502251  2.000  triplet
+     19     -147.744359477273  0.000  singlet
+  ---------------------------------------------
+  Timing for initial guess  =      0.001 s
+
+  Projecting out root 1
+  Projecting out root 3
+  Projecting out root 4
+  Projecting out root 7
+  Projecting out root 8
+  Projecting out root 11
+  Projecting out root 12
+  Projecting out root 16
+  Projecting out root 17
+  Projecting out root 19
+
+  ==> Diagonalizing Hamiltonian <==
+
+  Energy   convergence: 1.00e-12
+  Residual convergence: 1.00e-08
+  -----------------------------------------------------
+    Iter.      Avg. Energy       Delta_E     Res. Norm
+  -----------------------------------------------------
+      1     -149.687244004964  -1.497e+02  +1.960e-01
+      2     -149.707414531563  -2.017e-02  +2.194e-02
+      3     -149.707621253879  -2.067e-04  +3.034e-03
+      4     -149.707628084958  -6.831e-06  +5.241e-04
+      5     -149.707628337871  -2.529e-07  +8.772e-05
+      6     -149.707628344205  -6.333e-09  +3.755e-06
+      7     -149.707628344213  -8.043e-12  +3.655e-07
+      8     -149.707628344213  -5.684e-14  +7.266e-14
+  -----------------------------------------------------
+  The Davidson-Liu algorithm converged in 9 iterations.
+
+  ==> Root No. 0 <==
+
+    2 a b 0 2 2      0.68337731
+    2 b a 0 2 2     -0.68337731
+    2 2 2 0 b a     -0.11860461
+    2 2 2 0 a b      0.11860461
+
+    Total Energy:      -149.707628344212736
+
+  ==> String Lists <==
+
+  Number of alpha electrons     = 5
+  Number of beta electrons      = 3
+  Number of alpha strings       = 6
+  Number of beta strings        = 20
+  Number of alpha strings (N-3) = 15
+  Number of beta strings (N-3)  = 1
+  Timing for strings        =      0.000 s
+  Timing for NN strings     =      0.000 s
+  Timing for VO strings     =      0.000 s
+  Timing for OO strings     =      0.000 s
+  Timing for VVOO strings   =      0.000 s
+  Timing for VOVO strings   =      0.000 s
+  Timing for 1-hole strings =      0.000 s
+  Timing for 2-hole strings =      0.000 s
+  Timing for 3-hole strings =      0.000 s
+  Total timing              =      0.000 s
+
+  ==> FCI Solver <==
+
+    Number of determinants                          16
+    Symmetry                                         1
+    Multiplicity                                     3
+    Number of roots                                  1
+    Target root                                      0
+    Trial vectors per root                          10
+
+  Allocating memory for the Hamiltonian algorithm. Size: 2 x 4 x 4.   Memory: 0.000000 GB
+
+  ==> FCI Initial Guess <==
+
+  ---------------------------------------------
+    Root            Energy     <S^2>   Spin
+  ---------------------------------------------
+      0     -149.707628344213  2.000  triplet
+      1     -149.145695759252  2.000  triplet
+      2     -148.873873160230  6.000  quintet
+      3     -148.820030131667  2.000  triplet
+      4     -148.761439708100  2.000  triplet
+      5     -148.549306435528  6.000  quintet
+      6     -148.439595545899  2.000  triplet
+      7     -148.411766388674  2.000  triplet
+      8     -148.385183729966  2.000  triplet
+      9     -148.347922526611  2.000  triplet
+     10     -148.312331024873  2.000  triplet
+     11     -148.187493905418  2.000  triplet
+     12     -147.973732172502  2.000  triplet
+     13     -147.973564246226  2.000  triplet
+     14     -147.663134039745  2.000  triplet
+     15     -146.881836199400  2.000  triplet
+  ---------------------------------------------
+  Timing for initial guess  =      0.001 s
+
+  Projecting out root 2
+  Projecting out root 5
+
+  ==> Diagonalizing Hamiltonian <==
+
+  Energy   convergence: 1.00e-12
+  Residual convergence: 1.00e-08
+  -----------------------------------------------------
+    Iter.      Avg. Energy       Delta_E     Res. Norm
+  -----------------------------------------------------
+      1     -149.707628344213  -1.497e+02  +1.680e-13
+      2     -149.707628344213  +0.000e+00  +1.680e-13
+  -----------------------------------------------------
+  The Davidson-Liu algorithm converged in 3 iterations.
+
+  ==> Root No. 0 <==
+
+    2 a a 0 2 2     -0.96644146
+    2 2 2 0 a a     -0.16773224
+
+    Total Energy:      -149.707628344212822
+
+  ==> Energy Summary <==
+
+    Multi.(2ms)  Irrep.  No.               Energy
+    ---------------------------------------------
+       3  (  0)   B1g     0     -149.707628344213
+    ---------------------------------------------
+       3  (  2)   B1g     0     -149.707628344213
+    ---------------------------------------------
+
+  ==> Computing RDMs for Root No. 0 <==
+
+    Timing for 1-RDM: 0.000 s
+    Timing for 2-RDM: 0.000 s
+
+  ==> NATURAL ORBITALS <==
+
+        1B3u    1.955975      1B2u    1.955975      1Ag     1.952123  
+        1B3g    1.043280      1B2g    1.043280      1B1u    0.049367  
+
+
+  ==> Computing RDMs for Root No. 0 <==
+
+    Timing for 1-RDM: 0.000 s
+    Timing for 2-RDM: 0.000 s
+
+  ==> NATURAL ORBITALS <==
+
+        1B3u    1.955975      1B2u    1.955975      1Ag     1.952123  
+        1B3g    1.043280      1B2g    1.043280      1B1u    0.049367  
+
+
+ CAS took 0.042154 seconds.
+
+ FormFockIntermediates took 0.03820627 s.
+
+ FormOrbitalGradient took 0.00011651 s.
+
+ FormDiagHessian took 0.00000945 s.
+
+ Update function takes 0.03835909 s
+    5 0.000265276156    -0.000073826623  -149.707628344213    0.1 s  DIIS ~
+
+  Transform Integrals takes 0.06672439 s.
+
+  Performing a CAS with FCI
+
+  ==> Summary of Active Space Solver Input <==
+
+    Irrep.  Multi.(2ms)      N
+    --------------------------
+      B1g      3  ( -2)      1
+      B1g      3  (  0)      1
+      B1g      3  (  2)      1
+    --------------------------
+    N: number of roots
+    ms: spin z component
+    Total number of roots:   3
+    --------------------------
+
+  Continue to the next symmetry block: No need to find the solution for ms = -2 / 2 < 0.
+
+  ==> String Lists <==
+
+  Number of alpha electrons     = 4
+  Number of beta electrons      = 4
+  Number of alpha strings       = 15
+  Number of beta strings        = 15
+  Number of alpha strings (N-3) = 6
+  Number of beta strings (N-3)  = 6
+  Timing for strings        =      0.000 s
+  Timing for NN strings     =      0.000 s
+  Timing for VO strings     =      0.000 s
+  Timing for OO strings     =      0.000 s
+  Timing for VVOO strings   =      0.000 s
+  Timing for VOVO strings   =      0.000 s
+  Timing for 1-hole strings =      0.000 s
+  Timing for 2-hole strings =      0.000 s
+  Timing for 3-hole strings =      0.000 s
+  Total timing              =      0.000 s
+
+  ==> FCI Solver <==
+
+    Number of determinants                          28
+    Symmetry                                         1
+    Multiplicity                                     3
+    Number of roots                                  1
+    Target root                                      0
+    Trial vectors per root                          10
+
+  Allocating memory for the Hamiltonian algorithm. Size: 2 x 3 x 3.   Memory: 0.000000 GB
+
+  ==> FCI Initial Guess <==
+
+  ---------------------------------------------
+    Root            Energy     <S^2>   Spin
+  ---------------------------------------------
+      0     -149.687242792385  2.000  triplet
+      1     -149.652996980881  0.000  singlet
+      2     -149.129174775426  2.000  triplet
+      3     -149.072915013539  0.000  singlet
+      4     -148.872247537644  6.000  quintet
+      5     -148.817738192819  2.000  triplet
+      6     -148.759312084778  2.000  triplet
+      7     -148.695625895039  0.000  singlet
+      8     -148.547688815805  6.000  quintet
+      9     -148.431573235233  2.000  triplet
+     10     -148.410068681274  2.000  triplet
+     11     -148.382027672870  0.000  singlet
+     12     -148.347248839790  0.000  singlet
+     13     -148.346654086330  2.000  triplet
+     14     -148.178063085749  2.000  triplet
+     15     -148.140292816237  2.000  triplet
+     16     -148.131611256936  0.000  singlet
+     17     -148.092636711836  0.000  singlet
+     18     -147.824198710203  2.000  triplet
+     19     -147.742754064490  0.000  singlet
+  ---------------------------------------------
+  Timing for initial guess  =      0.001 s
+
+  Projecting out root 1
+  Projecting out root 3
+  Projecting out root 4
+  Projecting out root 7
+  Projecting out root 8
+  Projecting out root 11
+  Projecting out root 12
+  Projecting out root 16
+  Projecting out root 17
+  Projecting out root 19
+
+  ==> Diagonalizing Hamiltonian <==
+
+  Energy   convergence: 1.00e-12
+  Residual convergence: 1.00e-08
+  -----------------------------------------------------
+    Iter.      Avg. Energy       Delta_E     Res. Norm
+  -----------------------------------------------------
+      1     -149.687242792385  -1.497e+02  +1.962e-01
+      2     -149.707416799531  -2.017e-02  +2.197e-02
+      3     -149.707623885171  -2.071e-04  +3.053e-03
+      4     -149.707630793378  -6.908e-06  +5.272e-04
+      5     -149.707631048754  -2.554e-07  +8.809e-05
+      6     -149.707631055137  -6.382e-09  +3.754e-06
+      7     -149.707631055145  -7.987e-12  +3.648e-07
+      8     -149.707631055144  +8.527e-14  +1.640e-13
+  -----------------------------------------------------
+  The Davidson-Liu algorithm converged in 9 iterations.
+
+  ==> Root No. 0 <==
+
+    2 b a 0 2 2      0.68339273
+    2 a b 0 2 2     -0.68339273
+    2 2 2 0 a b     -0.11870359
+    2 2 2 0 b a      0.11870359
+
+    Total Energy:      -149.707631055144475
+
+  ==> String Lists <==
+
+  Number of alpha electrons     = 5
+  Number of beta electrons      = 3
+  Number of alpha strings       = 6
+  Number of beta strings        = 20
+  Number of alpha strings (N-3) = 15
+  Number of beta strings (N-3)  = 1
+  Timing for strings        =      0.000 s
+  Timing for NN strings     =      0.000 s
+  Timing for VO strings     =      0.000 s
+  Timing for OO strings     =      0.000 s
+  Timing for VVOO strings   =      0.000 s
+  Timing for VOVO strings   =      0.000 s
+  Timing for 1-hole strings =      0.000 s
+  Timing for 2-hole strings =      0.000 s
+  Timing for 3-hole strings =      0.000 s
+  Total timing              =      0.000 s
+
+  ==> FCI Solver <==
+
+    Number of determinants                          16
+    Symmetry                                         1
+    Multiplicity                                     3
+    Number of roots                                  1
+    Target root                                      0
+    Trial vectors per root                          10
+
+  Allocating memory for the Hamiltonian algorithm. Size: 2 x 4 x 4.   Memory: 0.000000 GB
+
+  ==> FCI Initial Guess <==
+
+  ---------------------------------------------
+    Root            Energy     <S^2>   Spin
+  ---------------------------------------------
+      0     -149.707631055145  2.000  triplet
+      1     -149.145424339000  2.000  triplet
+      2     -148.872247537644  6.000  quintet
+      3     -148.818297365878  2.000  triplet
+      4     -148.759635595682  2.000  triplet
+      5     -148.547688815805  6.000  quintet
+      6     -148.437825634590  2.000  triplet
+      7     -148.410068969345  2.000  triplet
+      8     -148.385472756997  2.000  triplet
+      9     -148.346010931652  2.000  triplet
+     10     -148.312440870536  2.000  triplet
+     11     -148.185157556602  2.000  triplet
+     12     -147.973936045912  2.000  triplet
+     13     -147.973797735767  2.000  triplet
+     14     -147.659786411013  2.000  triplet
+     15     -146.878605170191  2.000  triplet
+  ---------------------------------------------
+  Timing for initial guess  =      0.001 s
+
+  Projecting out root 2
+  Projecting out root 5
+
+  ==> Diagonalizing Hamiltonian <==
+
+  Energy   convergence: 1.00e-12
+  Residual convergence: 1.00e-08
+  -----------------------------------------------------
+    Iter.      Avg. Energy       Delta_E     Res. Norm
+  -----------------------------------------------------
+      1     -149.707631055145  -1.497e+02  +6.871e-14
+      2     -149.707631055145  +0.000e+00  +6.871e-14
+  -----------------------------------------------------
+  The Davidson-Liu algorithm converged in 3 iterations.
+
+  ==> Root No. 0 <==
+
+    2 a a 0 2 2     -0.96646327
+    2 2 2 0 a a     -0.16787223
+
+    Total Energy:      -149.707631055144645
+
+  ==> Energy Summary <==
+
+    Multi.(2ms)  Irrep.  No.               Energy
+    ---------------------------------------------
+       3  (  0)   B1g     0     -149.707631055144
+    ---------------------------------------------
+       3  (  2)   B1g     0     -149.707631055145
+    ---------------------------------------------
+
+  ==> Computing RDMs for Root No. 0 <==
+
+    Timing for 1-RDM: 0.000 s
+    Timing for 2-RDM: 0.000 s
+
+  ==> NATURAL ORBITALS <==
+
+        1B3u    1.955970      1B2u    1.955970      1Ag     1.952234  
+        1B3g    1.043282      1B2g    1.043282      1B1u    0.049262  
+
+
+  ==> Computing RDMs for Root No. 0 <==
+
+    Timing for 1-RDM: 0.000 s
+    Timing for 2-RDM: 0.000 s
+
+  ==> NATURAL ORBITALS <==
+
+        1B3u    1.955970      1B2u    1.955970      1Ag     1.952234  
+        1B3g    1.043282      1B2g    1.043282      1B1u    0.049262  
+
+
+ CAS took 0.041669 seconds.
+
+ FormFockIntermediates took 0.03534572 s.
+
+ FormOrbitalGradient took 0.00012117 s.
+
+ FormDiagHessian took 0.00000944 s.
+
+ Update function takes 0.03551392 s
+    6 0.000081755265    -0.000002710932  -149.707631055145    0.1 s  DIIS ~
+
+  Transform Integrals takes 0.06810094 s.
+
+  Performing a CAS with FCI
+
+  ==> Summary of Active Space Solver Input <==
+
+    Irrep.  Multi.(2ms)      N
+    --------------------------
+      B1g      3  ( -2)      1
+      B1g      3  (  0)      1
+      B1g      3  (  2)      1
+    --------------------------
+    N: number of roots
+    ms: spin z component
+    Total number of roots:   3
+    --------------------------
+
+  Continue to the next symmetry block: No need to find the solution for ms = -2 / 2 < 0.
+
+  ==> String Lists <==
+
+  Number of alpha electrons     = 4
+  Number of beta electrons      = 4
+  Number of alpha strings       = 15
+  Number of beta strings        = 15
+  Number of alpha strings (N-3) = 6
+  Number of beta strings (N-3)  = 6
+  Timing for strings        =      0.000 s
+  Timing for NN strings     =      0.000 s
+  Timing for VO strings     =      0.000 s
+  Timing for OO strings     =      0.000 s
+  Timing for VVOO strings   =      0.000 s
+  Timing for VOVO strings   =      0.000 s
+  Timing for 1-hole strings =      0.000 s
+  Timing for 2-hole strings =      0.000 s
+  Timing for 3-hole strings =      0.000 s
+  Total timing              =      0.000 s
+
+  ==> FCI Solver <==
+
+    Number of determinants                          28
+    Symmetry                                         1
+    Multiplicity                                     3
+    Number of roots                                  1
+    Target root                                      0
+    Trial vectors per root                          10
+
+  Allocating memory for the Hamiltonian algorithm. Size: 2 x 3 x 3.   Memory: 0.000000 GB
+
+  ==> FCI Initial Guess <==
+
+  ---------------------------------------------
+    Root            Energy     <S^2>   Spin
+  ---------------------------------------------
+      0     -149.687244769969  2.000  triplet
+      1     -149.652995420030  0.000  singlet
+      2     -149.129193919368  2.000  triplet
+      3     -149.072934662696  0.000  singlet
+      4     -148.872495516964  6.000  quintet
+      5     -148.817991414369  2.000  triplet
+      6     -148.759569301524  2.000  triplet
+      7     -148.695890285912  0.000  singlet
+      8     -148.547922551956  6.000  quintet
+      9     -148.431817937642  2.000  triplet
+     10     -148.410303651140  2.000  triplet
+     11     -148.382272948649  0.000  singlet
+     12     -148.347560347679  0.000  singlet
+     13     -148.346962469040  2.000  triplet
+     14     -148.178344520118  2.000  triplet
+     15     -148.140564125177  2.000  triplet
+     16     -148.131889712681  0.000  singlet
+     17     -148.092906598619  0.000  singlet
+     18     -147.824443116616  2.000  triplet
+     19     -147.742995504069  0.000  singlet
+  ---------------------------------------------
+  Timing for initial guess  =      0.001 s
+
+  Projecting out root 1
+  Projecting out root 3
+  Projecting out root 4
+  Projecting out root 7
+  Projecting out root 8
+  Projecting out root 11
+  Projecting out root 12
+  Projecting out root 16
+  Projecting out root 17
+  Projecting out root 19
+
+  ==> Diagonalizing Hamiltonian <==
+
+  Energy   convergence: 1.00e-12
+  Residual convergence: 1.00e-08
+  -----------------------------------------------------
+    Iter.      Avg. Energy       Delta_E     Res. Norm
+  -----------------------------------------------------
+      1     -149.687244769969  -1.497e+02  +1.961e-01
+      2     -149.707417003641  -2.017e-02  +2.197e-02
+      3     -149.707624017616  -2.070e-04  +3.051e-03
+      4     -149.707630919837  -6.902e-06  +5.269e-04
+      5     -149.707631175032  -2.552e-07  +8.806e-05
+      6     -149.707631181412  -6.380e-09  +3.755e-06
+      7     -149.707631181420  -8.100e-12  +3.650e-07
+      8     -149.707631181420  +8.527e-14  +1.998e-13
+  -----------------------------------------------------
+  The Davidson-Liu algorithm converged in 9 iterations.
+
+  ==> Root No. 0 <==
+
+    2 a b 0 2 2      0.68338958
+    2 b a 0 2 2     -0.68338958
+    2 2 2 0 b a     -0.11869187
+    2 2 2 0 a b      0.11869187
+
+    Total Energy:      -149.707631181419544
+
+  ==> String Lists <==
+
+  Number of alpha electrons     = 5
+  Number of beta electrons      = 3
+  Number of alpha strings       = 6
+  Number of beta strings        = 20
+  Number of alpha strings (N-3) = 15
+  Number of beta strings (N-3)  = 1
+  Timing for strings        =      0.000 s
+  Timing for NN strings     =      0.000 s
+  Timing for VO strings     =      0.000 s
+  Timing for OO strings     =      0.000 s
+  Timing for VVOO strings   =      0.000 s
+  Timing for VOVO strings   =      0.000 s
+  Timing for 1-hole strings =      0.000 s
+  Timing for 2-hole strings =      0.000 s
+  Timing for 3-hole strings =      0.000 s
+  Total timing              =      0.000 s
+
+  ==> FCI Solver <==
+
+    Number of determinants                          16
+    Symmetry                                         1
+    Multiplicity                                     3
+    Number of roots                                  1
+    Target root                                      0
+    Trial vectors per root                          10
+
+  Allocating memory for the Hamiltonian algorithm. Size: 2 x 4 x 4.   Memory: 0.000000 GB
+
+  ==> FCI Initial Guess <==
+
+  ---------------------------------------------
+    Root            Energy     <S^2>   Spin
+  ---------------------------------------------
+      0     -149.707631181420  2.000  triplet
+      1     -149.145447215382  2.000  triplet
+      2     -148.872495516964  6.000  quintet
+      3     -148.818550041042  2.000  triplet
+      4     -148.759892609740  2.000  triplet
+      5     -148.547922551956  6.000  quintet
+      6     -148.438070214862  2.000  triplet
+      7     -148.410303939978  2.000  triplet
+      8     -148.385755796148  2.000  triplet
+      9     -148.346320567641  2.000  triplet
+     10     -148.312715942936  2.000  triplet
+     11     -148.185540067561  2.000  triplet
+     12     -147.974207338910  2.000  triplet
+     13     -147.974066632909  2.000  triplet
+     14     -147.660333751998  2.000  triplet
+     15     -146.879114997684  2.000  triplet
+  ---------------------------------------------
+  Timing for initial guess  =      0.001 s
+
+  Projecting out root 2
+  Projecting out root 5
+
+  ==> Diagonalizing Hamiltonian <==
+
+  Energy   convergence: 1.00e-12
+  Residual convergence: 1.00e-08
+  -----------------------------------------------------
+    Iter.      Avg. Energy       Delta_E     Res. Norm
+  -----------------------------------------------------
+      1     -149.707631181420  -1.497e+02  +2.183e-13
+      2     -149.707631181420  +0.000e+00  +2.183e-13
+  -----------------------------------------------------
+  The Davidson-Liu algorithm converged in 3 iterations.
+
+  ==> Root No. 0 <==
+
+    2 a a 0 2 2     -0.96645882
+    2 2 2 0 a a     -0.16785566
+
+    Total Energy:      -149.707631181419657
+
+  ==> Energy Summary <==
+
+    Multi.(2ms)  Irrep.  No.               Energy
+    ---------------------------------------------
+       3  (  0)   B1g     0     -149.707631181420
+    ---------------------------------------------
+       3  (  2)   B1g     0     -149.707631181420
+    ---------------------------------------------
+
+  ==> Computing RDMs for Root No. 0 <==
+
+    Timing for 1-RDM: 0.000 s
+    Timing for 2-RDM: 0.000 s
+
+  ==> NATURAL ORBITALS <==
+
+        1B2u    1.955969      1B3u    1.955969      1Ag     1.952217  
+        1B2g    1.043284      1B3g    1.043284      1B1u    0.049279  
+
+
+  ==> Computing RDMs for Root No. 0 <==
+
+    Timing for 1-RDM: 0.000 s
+    Timing for 2-RDM: 0.000 s
+
+  ==> NATURAL ORBITALS <==
+
+        1B2u    1.955969      1B3u    1.955969      1Ag     1.952217  
+        1B2g    1.043284      1B3g    1.043284      1B1u    0.049279  
+
+
+ CAS took 0.042172 seconds.
+
+ FormFockIntermediates took 0.03802809 s.
+
+ FormOrbitalGradient took 0.00012072 s.
+
+ FormDiagHessian took 0.00001015 s.
+
+ Update function takes 0.03819732 s
+    7 0.000022092316    -0.000000126275  -149.707631181420    0.1 s  DIIS ~
+
+  Transform Integrals takes 0.06508925 s.
+
+  Performing a CAS with FCI
+
+  ==> Summary of Active Space Solver Input <==
+
+    Irrep.  Multi.(2ms)      N
+    --------------------------
+      B1g      3  ( -2)      1
+      B1g      3  (  0)      1
+      B1g      3  (  2)      1
+    --------------------------
+    N: number of roots
+    ms: spin z component
+    Total number of roots:   3
+    --------------------------
+
+  Continue to the next symmetry block: No need to find the solution for ms = -2 / 2 < 0.
+
+  ==> String Lists <==
+
+  Number of alpha electrons     = 4
+  Number of beta electrons      = 4
+  Number of alpha strings       = 15
+  Number of beta strings        = 15
+  Number of alpha strings (N-3) = 6
+  Number of beta strings (N-3)  = 6
+  Timing for strings        =      0.000 s
+  Timing for NN strings     =      0.000 s
+  Timing for VO strings     =      0.000 s
+  Timing for OO strings     =      0.000 s
+  Timing for VVOO strings   =      0.000 s
+  Timing for VOVO strings   =      0.000 s
+  Timing for 1-hole strings =      0.000 s
+  Timing for 2-hole strings =      0.000 s
+  Timing for 3-hole strings =      0.000 s
+  Total timing              =      0.000 s
+
+  ==> FCI Solver <==
+
+    Number of determinants                          28
+    Symmetry                                         1
+    Multiplicity                                     3
+    Number of roots                                  1
+    Target root                                      0
+    Trial vectors per root                          10
+
+  Allocating memory for the Hamiltonian algorithm. Size: 2 x 3 x 3.   Memory: 0.000000 GB
+
+  ==> FCI Initial Guess <==
+
+  ---------------------------------------------
+    Root            Energy     <S^2>   Spin
+  ---------------------------------------------
+      0     -149.687244900704  2.000  triplet
+      1     -149.652994684266  0.000  singlet
+      2     -149.129207539844  2.000  triplet
+      3     -149.072949665158  0.000  singlet
+      4     -148.872573778097  6.000  quintet
+      5     -148.818073832563  2.000  triplet
+      6     -148.759654560448  2.000  triplet
+      7     -148.695980722449  0.000  singlet
+      8     -148.548005399517  6.000  quintet
+      9     -148.431908710041  2.000  triplet
+     10     -148.410390414450  2.000  triplet
+     11     -148.382362871292  0.000  singlet
+     12     -148.347657405056  0.000  singlet
+     13     -148.347055717445  2.000  triplet
+     14     -148.178414022363  2.000  triplet
+     15     -148.140630059552  2.000  triplet
+     16     -148.131958843893  0.000  singlet
+     17     -148.092972895560  0.000  singlet
+     18     -147.824529893252  2.000  triplet
+     19     -147.743083044336  0.000  singlet
+  ---------------------------------------------
+  Timing for initial guess  =      0.001 s
+
+  Projecting out root 1
+  Projecting out root 3
+  Projecting out root 4
+  Projecting out root 7
+  Projecting out root 8
+  Projecting out root 11
+  Projecting out root 12
+  Projecting out root 16
+  Projecting out root 17
+  Projecting out root 19
+
+  ==> Diagonalizing Hamiltonian <==
+
+  Energy   convergence: 1.00e-12
+  Residual convergence: 1.00e-08
+  -----------------------------------------------------
+    Iter.      Avg. Energy       Delta_E     Res. Norm
+  -----------------------------------------------------
+      1     -149.687244900704  -1.497e+02  +1.961e-01
+      2     -149.707417023615  -2.017e-02  +2.196e-02
+      3     -149.707624028851  -2.070e-04  +3.051e-03
+      4     -149.707630928858  -6.900e-06  +5.268e-04
+      5     -149.707631183979  -2.551e-07  +8.804e-05
+      6     -149.707631190357  -6.379e-09  +3.755e-06
+      7     -149.707631190365  -7.958e-12  +3.650e-07
+      8     -149.707631190365  -2.842e-14  +1.573e-13
+  -----------------------------------------------------
+  The Davidson-Liu algorithm converged in 9 iterations.
+
+  ==> Root No. 0 <==
+
+    2 a b 0 2 2     -0.68338900
+    2 b a 0 2 2      0.68338900
+    2 2 2 0 a b     -0.11868628
+    2 2 2 0 b a      0.11868628
+
+    Total Energy:      -149.707631190365419
+
+  ==> String Lists <==
+
+  Number of alpha electrons     = 5
+  Number of beta electrons      = 3
+  Number of alpha strings       = 6
+  Number of beta strings        = 20
+  Number of alpha strings (N-3) = 15
+  Number of beta strings (N-3)  = 1
+  Timing for strings        =      0.000 s
+  Timing for NN strings     =      0.000 s
+  Timing for VO strings     =      0.000 s
+  Timing for OO strings     =      0.000 s
+  Timing for VVOO strings   =      0.000 s
+  Timing for VOVO strings   =      0.000 s
+  Timing for 1-hole strings =      0.000 s
+  Timing for 2-hole strings =      0.000 s
+  Timing for 3-hole strings =      0.000 s
+  Total timing              =      0.000 s
+
+  ==> FCI Solver <==
+
+    Number of determinants                          16
+    Symmetry                                         1
+    Multiplicity                                     3
+    Number of roots                                  1
+    Target root                                      0
+    Trial vectors per root                          10
+
+  Allocating memory for the Hamiltonian algorithm. Size: 2 x 4 x 4.   Memory: 0.000000 GB
+
+  ==> FCI Initial Guess <==
+
+  ---------------------------------------------
+    Root            Energy     <S^2>   Spin
+  ---------------------------------------------
+      0     -149.707631190365  2.000  triplet
+      1     -149.145461819090  2.000  triplet
+      2     -148.872573778097  6.000  quintet
+      3     -148.818632199846  2.000  triplet
+      4     -148.759977730019  2.000  triplet
+      5     -148.548005399517  6.000  quintet
+      6     -148.438159810623  2.000  triplet
+      7     -148.410390707054  2.000  triplet
+      8     -148.385819269996  2.000  triplet
+      9     -148.346414735195  2.000  triplet
+     10     -148.312781572650  2.000  triplet
+     11     -148.185661735668  2.000  triplet
+     12     -147.974278540182  2.000  triplet
+     13     -147.974136669550  2.000  triplet
+     14     -147.660501667708  2.000  triplet
+     15     -146.879283431981  2.000  triplet
+  ---------------------------------------------
+  Timing for initial guess  =      0.001 s
+
+  Projecting out root 2
+  Projecting out root 5
+
+  ==> Diagonalizing Hamiltonian <==
+
+  Energy   convergence: 1.00e-12
+  Residual convergence: 1.00e-08
+  -----------------------------------------------------
+    Iter.      Avg. Energy       Delta_E     Res. Norm
+  -----------------------------------------------------
+      1     -149.707631190365  -1.497e+02  +1.862e-13
+      2     -149.707631190365  +0.000e+00  +1.862e-13
+  -----------------------------------------------------
+  The Davidson-Liu algorithm converged in 3 iterations.
+
+  ==> Root No. 0 <==
+
+    2 a a 0 2 2     -0.96645800
+    2 2 2 0 a a     -0.16784775
+
+    Total Energy:      -149.707631190365277
+
+  ==> Energy Summary <==
+
+    Multi.(2ms)  Irrep.  No.               Energy
+    ---------------------------------------------
+       3  (  0)   B1g     0     -149.707631190365
+    ---------------------------------------------
+       3  (  2)   B1g     0     -149.707631190365
+    ---------------------------------------------
+
+  ==> Computing RDMs for Root No. 0 <==
+
+    Timing for 1-RDM: 0.000 s
+    Timing for 2-RDM: 0.000 s
+
+  ==> NATURAL ORBITALS <==
+
+        1B3u    1.955969      1B2u    1.955969      1Ag     1.952212  
+        1B3g    1.043283      1B2g    1.043283      1B1u    0.049284  
+
+
+  ==> Computing RDMs for Root No. 0 <==
+
+    Timing for 1-RDM: 0.000 s
+    Timing for 2-RDM: 0.000 s
+
+  ==> NATURAL ORBITALS <==
+
+        1B3u    1.955969      1B2u    1.955969      1Ag     1.952212  
+        1B3g    1.043283      1B2g    1.043283      1B1u    0.049284  
+
+
+ CAS took 0.042410 seconds.
+
+ FormFockIntermediates took 0.03643491 s.
+
+ FormOrbitalGradient took 0.00011899 s.
+
+ FormDiagHessian took 0.00000970 s.
+
+ Update function takes 0.03659602 s
+    8 0.000003883094    -0.000000008946  -149.707631190365    0.1 s  DIIS ~
+
+  Transform Integrals takes 0.07063886 s.
+
+  Performing a CAS with FCI
+
+  ==> Summary of Active Space Solver Input <==
+
+    Irrep.  Multi.(2ms)      N
+    --------------------------
+      B1g      3  ( -2)      1
+      B1g      3  (  0)      1
+      B1g      3  (  2)      1
+    --------------------------
+    N: number of roots
+    ms: spin z component
+    Total number of roots:   3
+    --------------------------
+
+  Continue to the next symmetry block: No need to find the solution for ms = -2 / 2 < 0.
+
+  ==> String Lists <==
+
+  Number of alpha electrons     = 4
+  Number of beta electrons      = 4
+  Number of alpha strings       = 15
+  Number of beta strings        = 15
+  Number of alpha strings (N-3) = 6
+  Number of beta strings (N-3)  = 6
+  Timing for strings        =      0.000 s
+  Timing for NN strings     =      0.000 s
+  Timing for VO strings     =      0.000 s
+  Timing for OO strings     =      0.000 s
+  Timing for VVOO strings   =      0.000 s
+  Timing for VOVO strings   =      0.000 s
+  Timing for 1-hole strings =      0.000 s
+  Timing for 2-hole strings =      0.000 s
+  Timing for 3-hole strings =      0.000 s
+  Total timing              =      0.000 s
+
+  ==> FCI Solver <==
+
+    Number of determinants                          28
+    Symmetry                                         1
+    Multiplicity                                     3
+    Number of roots                                  1
+    Target root                                      0
+    Trial vectors per root                          10
+
+  Allocating memory for the Hamiltonian algorithm. Size: 2 x 3 x 3.   Memory: 0.000000 GB
+
+  ==> FCI Initial Guess <==
+
+  ---------------------------------------------
+    Root            Energy     <S^2>   Spin
+  ---------------------------------------------
+      0     -149.687244847329  2.000  triplet
+      1     -149.652994641502  0.000  singlet
+      2     -149.129207599649  2.000  triplet
+      3     -149.072949640091  0.000  singlet
+      4     -148.872573532588  6.000  quintet
+      5     -148.818073649853  2.000  triplet
+      6     -148.759654399935  2.000  triplet
+      7     -148.695980683008  0.000  singlet
+      8     -148.548004492468  6.000  quintet
+      9     -148.431907905412  2.000  triplet
+     10     -148.410389436878  2.000  triplet
+     11     -148.382361931302  0.000  singlet
+     12     -148.347656396754  0.000  singlet
+     13     -148.347054504475  2.000  triplet
+     14     -148.178407284980  2.000  triplet
+     15     -148.140623033811  2.000  triplet
+     16     -148.131951989925  0.000  singlet
+     17     -148.092965827607  0.000  singlet
+     18     -147.824528016839  2.000  triplet
+     19     -147.743081078516  0.000  singlet
+  ---------------------------------------------
+  Timing for initial guess  =      0.001 s
+
+  Projecting out root 1
+  Projecting out root 3
+  Projecting out root 4
+  Projecting out root 7
+  Projecting out root 8
+  Projecting out root 11
+  Projecting out root 12
+  Projecting out root 16
+  Projecting out root 17
+  Projecting out root 19
+
+  ==> Diagonalizing Hamiltonian <==
+
+  Energy   convergence: 1.00e-12
+  Residual convergence: 1.00e-08
+  -----------------------------------------------------
+    Iter.      Avg. Energy       Delta_E     Res. Norm
+  -----------------------------------------------------
+      1     -149.687244847329  -1.497e+02  +1.961e-01
+      2     -149.707417023398  -2.017e-02  +2.196e-02
+      3     -149.707624029098  -2.070e-04  +3.051e-03
+      4     -149.707630929035  -6.900e-06  +5.268e-04
+      5     -149.707631184154  -2.551e-07  +8.804e-05
+      6     -149.707631190533  -6.379e-09  +3.755e-06
+      7     -149.707631190541  -7.987e-12  +3.650e-07
+      8     -149.707631190541  +2.842e-14  +2.526e-13
+  -----------------------------------------------------
+  The Davidson-Liu algorithm converged in 9 iterations.
+
+  ==> Root No. 0 <==
+
+    2 b a 0 2 2     -0.68338896
+    2 a b 0 2 2      0.68338896
+    2 2 2 0 a b      0.11868658
+    2 2 2 0 b a     -0.11868658
+
+    Total Energy:      -149.707631190541093
+
+  ==> String Lists <==
+
+  Number of alpha electrons     = 5
+  Number of beta electrons      = 3
+  Number of alpha strings       = 6
+  Number of beta strings        = 20
+  Number of alpha strings (N-3) = 15
+  Number of beta strings (N-3)  = 1
+  Timing for strings        =      0.000 s
+  Timing for NN strings     =      0.000 s
+  Timing for VO strings     =      0.000 s
+  Timing for OO strings     =      0.000 s
+  Timing for VVOO strings   =      0.000 s
+  Timing for VOVO strings   =      0.000 s
+  Timing for 1-hole strings =      0.000 s
+  Timing for 2-hole strings =      0.000 s
+  Timing for 3-hole strings =      0.000 s
+  Total timing              =      0.000 s
+
+  ==> FCI Solver <==
+
+    Number of determinants                          16
+    Symmetry                                         1
+    Multiplicity                                     3
+    Number of roots                                  1
+    Target root                                      0
+    Trial vectors per root                          10
+
+  Allocating memory for the Hamiltonian algorithm. Size: 2 x 4 x 4.   Memory: 0.000000 GB
+
+  ==> FCI Initial Guess <==
+
+  ---------------------------------------------
+    Root            Energy     <S^2>   Spin
+  ---------------------------------------------
+      0     -149.707631190541  2.000  triplet
+      1     -149.145461860557  2.000  triplet
+      2     -148.872573532588  6.000  quintet
+      3     -148.818632005414  2.000  triplet
+      4     -148.759977556427  2.000  triplet
+      5     -148.548004492468  6.000  quintet
+      6     -148.438158873590  2.000  triplet
+      7     -148.410389729929  2.000  triplet
+      8     -148.385812624434  2.000  triplet
+      9     -148.346413657690  2.000  triplet
+     10     -148.312775399771  2.000  triplet
+     11     -148.185659914651  2.000  triplet
+     12     -147.974271275436  2.000  triplet
+     13     -147.974129415512  2.000  triplet
+     14     -147.660499676884  2.000  triplet
+     15     -146.879280617286  2.000  triplet
+  ---------------------------------------------
+  Timing for initial guess  =      0.001 s
+
+  Projecting out root 2
+  Projecting out root 5
+
+  ==> Diagonalizing Hamiltonian <==
+
+  Energy   convergence: 1.00e-12
+  Residual convergence: 1.00e-08
+  -----------------------------------------------------
+    Iter.      Avg. Energy       Delta_E     Res. Norm
+  -----------------------------------------------------
+      1     -149.707631190541  -1.497e+02  +1.154e-13
+      2     -149.707631190541  +0.000e+00  +1.154e-13
+  -----------------------------------------------------
+  The Davidson-Liu algorithm converged in 3 iterations.
+
+  ==> Root No. 0 <==
+
+    2 a a 0 2 2     -0.96645794
+    2 2 2 0 a a     -0.16784817
+
+    Total Energy:      -149.707631190541179
+
+  ==> Energy Summary <==
+
+    Multi.(2ms)  Irrep.  No.               Energy
+    ---------------------------------------------
+       3  (  0)   B1g     0     -149.707631190541
+    ---------------------------------------------
+       3  (  2)   B1g     0     -149.707631190541
+    ---------------------------------------------
+
+  ==> Computing RDMs for Root No. 0 <==
+
+    Timing for 1-RDM: 0.000 s
+    Timing for 2-RDM: 0.000 s
+
+  ==> NATURAL ORBITALS <==
+
+        1B3u    1.955969      1B2u    1.955969      1Ag     1.952212  
+        1B3g    1.043283      1B2g    1.043283      1B1u    0.049284  
+
+
+  ==> Computing RDMs for Root No. 0 <==
+
+    Timing for 1-RDM: 0.000 s
+    Timing for 2-RDM: 0.000 s
+
+  ==> NATURAL ORBITALS <==
+
+        1B3u    1.955969      1B2u    1.955969      1Ag     1.952212  
+        1B3g    1.043283      1B2g    1.043283      1B1u    0.049284  
+
+
+ CAS took 0.042030 seconds.
+
+ FormFockIntermediates took 0.03785850 s.
+
+ FormOrbitalGradient took 0.00012498 s.
+
+ FormDiagHessian took 0.00001043 s.
+
+ Update function takes 0.03803780 s
+    9 0.000000451997    -0.000000000176  -149.707631190541    0.2 s  DIIS ~
+
+  Transform Integrals takes 0.06777224 s.
+
+  Performing a CAS with FCI
+
+  ==> Summary of Active Space Solver Input <==
+
+    Irrep.  Multi.(2ms)      N
+    --------------------------
+      B1g      3  ( -2)      1
+      B1g      3  (  0)      1
+      B1g      3  (  2)      1
+    --------------------------
+    N: number of roots
+    ms: spin z component
+    Total number of roots:   3
+    --------------------------
+
+  Continue to the next symmetry block: No need to find the solution for ms = -2 / 2 < 0.
+
+  ==> String Lists <==
+
+  Number of alpha electrons     = 4
+  Number of beta electrons      = 4
+  Number of alpha strings       = 15
+  Number of beta strings        = 15
+  Number of alpha strings (N-3) = 6
+  Number of beta strings (N-3)  = 6
+  Timing for strings        =      0.000 s
+  Timing for NN strings     =      0.000 s
+  Timing for VO strings     =      0.000 s
+  Timing for OO strings     =      0.000 s
+  Timing for VVOO strings   =      0.000 s
+  Timing for VOVO strings   =      0.000 s
+  Timing for 1-hole strings =      0.000 s
+  Timing for 2-hole strings =      0.000 s
+  Timing for 3-hole strings =      0.000 s
+  Total timing              =      0.000 s
+
+  ==> FCI Solver <==
+
+    Number of determinants                          28
+    Symmetry                                         1
+    Multiplicity                                     3
+    Number of roots                                  1
+    Target root                                      0
+    Trial vectors per root                          10
+
+  Allocating memory for the Hamiltonian algorithm. Size: 2 x 3 x 3.   Memory: 0.000000 GB
+
+  ==> FCI Initial Guess <==
+
+  ---------------------------------------------
+    Root            Energy     <S^2>   Spin
+  ---------------------------------------------
+      0     -149.687244864073  2.000  triplet
+      1     -149.652994657329  0.000  singlet
+      2     -149.129207661344  2.000  triplet
+      3     -149.072949696335  0.000  singlet
+      4     -148.872574244467  6.000  quintet
+      5     -148.818074368415  2.000  triplet
+      6     -148.759655130479  2.000  triplet
+      7     -148.695981424434  0.000  singlet
+      8     -148.548005112191  6.000  quintet
+      9     -148.431908544947  2.000  triplet
+     10     -148.410390056175  2.000  triplet
+     11     -148.382362605165  0.000  singlet
+     12     -148.347657430801  0.000  singlet
+     13     -148.347055564314  2.000  triplet
+     14     -148.178408402723  2.000  triplet
+     15     -148.140624136719  2.000  triplet
+     16     -148.131953100488  0.000  singlet
+     17     -148.092966925453  0.000  singlet
+     18     -147.824528917003  2.000  triplet
+     19     -147.743081967594  0.000  singlet
+  ---------------------------------------------
+  Timing for initial guess  =      0.001 s
+
+  Projecting out root 1
+  Projecting out root 3
+  Projecting out root 4
+  Projecting out root 7
+  Projecting out root 8
+  Projecting out root 11
+  Projecting out root 12
+  Projecting out root 16
+  Projecting out root 17
+  Projecting out root 19
+
+  ==> Diagonalizing Hamiltonian <==
+
+  Energy   convergence: 1.00e-12
+  Residual convergence: 1.00e-08
+  -----------------------------------------------------
+    Iter.      Avg. Energy       Delta_E     Res. Norm
+  -----------------------------------------------------
+      1     -149.687244864073  -1.497e+02  +1.961e-01
+      2     -149.707417023800  -2.017e-02  +2.196e-02
+      3     -149.707624029116  -2.070e-04  +3.051e-03
+      4     -149.707630929037  -6.900e-06  +5.268e-04
+      5     -149.707631184156  -2.551e-07  +8.804e-05
+      6     -149.707631190535  -6.379e-09  +3.755e-06
+      7     -149.707631190543  -8.015e-12  +3.650e-07
+      8     -149.707631190543  -5.684e-14  +1.312e-13
+  -----------------------------------------------------
+  The Davidson-Liu algorithm converged in 9 iterations.
+
+  ==> Root No. 0 <==
+
+    2 a b 0 2 2     -0.68338895
+    2 b a 0 2 2      0.68338895
+    2 2 2 0 b a      0.11868661
+    2 2 2 0 a b     -0.11868661
+
+    Total Energy:      -149.707631190543083
+
+  ==> String Lists <==
+
+  Number of alpha electrons     = 5
+  Number of beta electrons      = 3
+  Number of alpha strings       = 6
+  Number of beta strings        = 20
+  Number of alpha strings (N-3) = 15
+  Number of beta strings (N-3)  = 1
+  Timing for strings        =      0.000 s
+  Timing for NN strings     =      0.000 s
+  Timing for VO strings     =      0.000 s
+  Timing for OO strings     =      0.000 s
+  Timing for VVOO strings   =      0.000 s
+  Timing for VOVO strings   =      0.000 s
+  Timing for 1-hole strings =      0.000 s
+  Timing for 2-hole strings =      0.000 s
+  Timing for 3-hole strings =      0.000 s
+  Total timing              =      0.000 s
+
+  ==> FCI Solver <==
+
+    Number of determinants                          16
+    Symmetry                                         1
+    Multiplicity                                     3
+    Number of roots                                  1
+    Target root                                      0
+    Trial vectors per root                          10
+
+  Allocating memory for the Hamiltonian algorithm. Size: 2 x 4 x 4.   Memory: 0.000000 GB
+
+  ==> FCI Initial Guess <==
+
+  ---------------------------------------------
+    Root            Energy     <S^2>   Spin
+  ---------------------------------------------
+      0     -149.707631190543  2.000  triplet
+      1     -149.145461923074  2.000  triplet
+      2     -148.872574244467  6.000  quintet
+      3     -148.818632723098  2.000  triplet
+      4     -148.759978286634  2.000  triplet
+      5     -148.548005112191  6.000  quintet
+      6     -148.438159517210  2.000  triplet
+      7     -148.410390349187  2.000  triplet
+      8     -148.385813781817  2.000  triplet
+      9     -148.346414716792  2.000  triplet
+     10     -148.312776494241  2.000  triplet
+     11     -148.185661031605  2.000  triplet
+     12     -147.974272339135  2.000  triplet
+     13     -147.974130475247  2.000  triplet
+     14     -147.660501338580  2.000  triplet
+     15     -146.879282247871  2.000  triplet
+  ---------------------------------------------
+  Timing for initial guess  =      0.001 s
+
+  Projecting out root 2
+  Projecting out root 5
+
+  ==> Diagonalizing Hamiltonian <==
+
+  Energy   convergence: 1.00e-12
+  Residual convergence: 1.00e-08
+  -----------------------------------------------------
+    Iter.      Avg. Energy       Delta_E     Res. Norm
+  -----------------------------------------------------
+      1     -149.707631190543  -1.497e+02  +1.161e-13
+      2     -149.707631190543  +0.000e+00  +1.161e-13
+  -----------------------------------------------------
+  The Davidson-Liu algorithm converged in 3 iterations.
+
+  ==> Root No. 0 <==
+
+    2 a a 0 2 2      0.96645792
+    2 2 2 0 a a      0.16784821
+
+    Total Energy:      -149.707631190542998
+
+  ==> Energy Summary <==
+
+    Multi.(2ms)  Irrep.  No.               Energy
+    ---------------------------------------------
+       3  (  0)   B1g     0     -149.707631190543
+    ---------------------------------------------
+       3  (  2)   B1g     0     -149.707631190543
+    ---------------------------------------------
+
+  ==> Computing RDMs for Root No. 0 <==
+
+    Timing for 1-RDM: 0.000 s
+    Timing for 2-RDM: 0.000 s
+
+  ==> NATURAL ORBITALS <==
+
+        1B2u    1.955969      1B3u    1.955969      1Ag     1.952212  
+        1B2g    1.043283      1B3g    1.043283      1B1u    0.049284  
+
+
+  ==> Computing RDMs for Root No. 0 <==
+
+    Timing for 1-RDM: 0.000 s
+    Timing for 2-RDM: 0.000 s
+
+  ==> NATURAL ORBITALS <==
+
+        1B3u    1.955969      1B2u    1.955969      1Ag     1.952212  
+        1B2g    1.043283      1B3g    1.043283      1B1u    0.049284  
+
+
+ CAS took 0.042197 seconds.
+
+ FormFockIntermediates took 0.03793969 s.
+
+ FormOrbitalGradient took 0.00012418 s.
+
+ FormDiagHessian took 0.00000989 s.
+
+ Update function takes 0.03811789 s
+   10 0.000000152955    -0.000000000002  -149.707631190543    0.1 s  DIIS ~
+
+  Transform Integrals takes 0.06807971 s.
+
+  Performing a CAS with FCI
+
+  ==> Summary of Active Space Solver Input <==
+
+    Irrep.  Multi.(2ms)      N
+    --------------------------
+      B1g      3  ( -2)      1
+      B1g      3  (  0)      1
+      B1g      3  (  2)      1
+    --------------------------
+    N: number of roots
+    ms: spin z component
+    Total number of roots:   3
+    --------------------------
+
+  Continue to the next symmetry block: No need to find the solution for ms = -2 / 2 < 0.
+
+  ==> String Lists <==
+
+  Number of alpha electrons     = 4
+  Number of beta electrons      = 4
+  Number of alpha strings       = 15
+  Number of beta strings        = 15
+  Number of alpha strings (N-3) = 6
+  Number of beta strings (N-3)  = 6
+  Timing for strings        =      0.000 s
+  Timing for NN strings     =      0.000 s
+  Timing for VO strings     =      0.000 s
+  Timing for OO strings     =      0.000 s
+  Timing for VVOO strings   =      0.000 s
+  Timing for VOVO strings   =      0.000 s
+  Timing for 1-hole strings =      0.000 s
+  Timing for 2-hole strings =      0.000 s
+  Timing for 3-hole strings =      0.000 s
+  Total timing              =      0.000 s
+
+  ==> FCI Solver <==
+
+    Number of determinants                          28
+    Symmetry                                         1
+    Multiplicity                                     3
+    Number of roots                                  1
+    Target root                                      0
+    Trial vectors per root                          10
+
+  Allocating memory for the Hamiltonian algorithm. Size: 2 x 3 x 3.   Memory: 0.000000 GB
+
+  ==> FCI Initial Guess <==
+
+  ---------------------------------------------
+    Root            Energy     <S^2>   Spin
+  ---------------------------------------------
+      0     -149.687244868558  2.000  triplet
+      1     -149.652994658632  0.000  singlet
+      2     -149.129207662413  2.000  triplet
+      3     -149.072949696280  0.000  singlet
+      4     -148.872574481322  6.000  quintet
+      5     -148.818074606785  2.000  triplet
+      6     -148.759655371506  2.000  triplet
+      7     -148.695981668213  0.000  singlet
+      8     -148.548005317382  6.000  quintet
+      9     -148.431908755158  2.000  triplet
+     10     -148.410390258523  2.000  triplet
+     11     -148.382362822104  0.000  singlet
+     12     -148.347657753866  0.000  singlet
+     13     -148.347055892630  2.000  triplet
+     14     -148.178408751690  2.000  triplet
+     15     -148.140624478908  2.000  triplet
+     16     -148.131953445979  0.000  singlet
+     17     -148.092967264929  0.000  singlet
+     18     -147.824529165263  2.000  triplet
+     19     -147.743082210722  0.000  singlet
+  ---------------------------------------------
+  Timing for initial guess  =      0.001 s
+
+  Projecting out root 1
+  Projecting out root 3
+  Projecting out root 4
+  Projecting out root 7
+  Projecting out root 8
+  Projecting out root 11
+  Projecting out root 12
+  Projecting out root 16
+  Projecting out root 17
+  Projecting out root 19
+
+  ==> Diagonalizing Hamiltonian <==
+
+  Energy   convergence: 1.00e-12
+  Residual convergence: 1.00e-08
+  -----------------------------------------------------
+    Iter.      Avg. Energy       Delta_E     Res. Norm
+  -----------------------------------------------------
+      1     -149.687244868558  -1.497e+02  +1.961e-01
+      2     -149.707417023931  -2.017e-02  +2.196e-02
+      3     -149.707624029122  -2.070e-04  +3.051e-03
+      4     -149.707630929037  -6.900e-06  +5.268e-04
+      5     -149.707631184156  -2.551e-07  +8.804e-05
+      6     -149.707631190535  -6.379e-09  +3.755e-06
+      7     -149.707631190543  -8.015e-12  +3.650e-07
+      8     -149.707631190543  -1.421e-13  +1.025e-13
+  -----------------------------------------------------
+  The Davidson-Liu algorithm converged in 9 iterations.
+
+  ==> Root No. 0 <==
+
+    2 b a 0 2 2     -0.68338894
+    2 a b 0 2 2      0.68338894
+    2 2 2 0 a b      0.11868660
+    2 2 2 0 b a     -0.11868660
+
+    Total Energy:      -149.707631190543168
+
+  ==> String Lists <==
+
+  Number of alpha electrons     = 5
+  Number of beta electrons      = 3
+  Number of alpha strings       = 6
+  Number of beta strings        = 20
+  Number of alpha strings (N-3) = 15
+  Number of beta strings (N-3)  = 1
+  Timing for strings        =      0.000 s
+  Timing for NN strings     =      0.000 s
+  Timing for VO strings     =      0.000 s
+  Timing for OO strings     =      0.000 s
+  Timing for VVOO strings   =      0.000 s
+  Timing for VOVO strings   =      0.000 s
+  Timing for 1-hole strings =      0.000 s
+  Timing for 2-hole strings =      0.000 s
+  Timing for 3-hole strings =      0.000 s
+  Total timing              =      0.000 s
+
+  ==> FCI Solver <==
+
+    Number of determinants                          16
+    Symmetry                                         1
+    Multiplicity                                     3
+    Number of roots                                  1
+    Target root                                      0
+    Trial vectors per root                          10
+
+  Allocating memory for the Hamiltonian algorithm. Size: 2 x 4 x 4.   Memory: 0.000000 GB
+
+  ==> FCI Initial Guess <==
+
+  ---------------------------------------------
+    Root            Energy     <S^2>   Spin
+  ---------------------------------------------
+      0     -149.707631190543  2.000  triplet
+      1     -149.145461926823  2.000  triplet
+      2     -148.872574481322  6.000  quintet
+      3     -148.818632961130  2.000  triplet
+      4     -148.759978527602  2.000  triplet
+      5     -148.548005317382  6.000  quintet
+      6     -148.438159729613  2.000  triplet
+      7     -148.410390551525  2.000  triplet
+      8     -148.385814145031  2.000  triplet
+      9     -148.346415044851  2.000  triplet
+     10     -148.312776837112  2.000  triplet
+     11     -148.185661404896  2.000  triplet
+     12     -147.974272669060  2.000  triplet
+     13     -147.974130803602  2.000  triplet
+     14     -147.660501884869  2.000  triplet
+     15     -146.879282750835  2.000  triplet
+  ---------------------------------------------
+  Timing for initial guess  =      0.001 s
+
+  Projecting out root 2
+  Projecting out root 5
+
+  ==> Diagonalizing Hamiltonian <==
+
+  Energy   convergence: 1.00e-12
+  Residual convergence: 1.00e-08
+  -----------------------------------------------------
+    Iter.      Avg. Energy       Delta_E     Res. Norm
+  -----------------------------------------------------
+      1     -149.707631190543  -1.497e+02  +1.198e-13
+      2     -149.707631190543  +0.000e+00  +1.198e-13
+  -----------------------------------------------------
+  The Davidson-Liu algorithm converged in 3 iterations.
+
+  ==> Root No. 0 <==
+
+    2 a a 0 2 2     -0.96645791
+    2 2 2 0 a a     -0.16784820
+
+    Total Energy:      -149.707631190543026
+
+  ==> Energy Summary <==
+
+    Multi.(2ms)  Irrep.  No.               Energy
+    ---------------------------------------------
+       3  (  0)   B1g     0     -149.707631190543
+    ---------------------------------------------
+       3  (  2)   B1g     0     -149.707631190543
+    ---------------------------------------------
+
+  ==> Computing RDMs for Root No. 0 <==
+
+    Timing for 1-RDM: 0.000 s
+    Timing for 2-RDM: 0.000 s
+
+  ==> NATURAL ORBITALS <==
+
+        1B3u    1.955969      1B2u    1.955969      1Ag     1.952212  
+        1B3g    1.043283      1B2g    1.043283      1B1u    0.049284  
+
+
+  ==> Computing RDMs for Root No. 0 <==
+
+    Timing for 1-RDM: 0.000 s
+    Timing for 2-RDM: 0.000 s
+
+  ==> NATURAL ORBITALS <==
+
+        1B3u    1.955969      1B2u    1.955969      1Ag     1.952212  
+        1B3g    1.043283      1B2g    1.043283      1B1u    0.049284  
+
+
+ CAS took 0.042287 seconds.
+
+ FormFockIntermediates took 0.03720723 s.
+
+ FormOrbitalGradient took 0.00012575 s.
+
+ FormDiagHessian took 0.00000992 s.
+
+ Update function takes 0.03738880 s
+   11 0.000000026773    -0.000000000000  -149.707631190543    0.1 s  DIIS ~
+
+  Transform Integrals takes 0.06560573 s.
+
+  Performing a CAS with FCI
+
+  ==> Summary of Active Space Solver Input <==
+
+    Irrep.  Multi.(2ms)      N
+    --------------------------
+      B1g      3  ( -2)      1
+      B1g      3  (  0)      1
+      B1g      3  (  2)      1
+    --------------------------
+    N: number of roots
+    ms: spin z component
+    Total number of roots:   3
+    --------------------------
+
+  Continue to the next symmetry block: No need to find the solution for ms = -2 / 2 < 0.
+
+  ==> String Lists <==
+
+  Number of alpha electrons     = 4
+  Number of beta electrons      = 4
+  Number of alpha strings       = 15
+  Number of beta strings        = 15
+  Number of alpha strings (N-3) = 6
+  Number of beta strings (N-3)  = 6
+  Timing for strings        =      0.000 s
+  Timing for NN strings     =      0.000 s
+  Timing for VO strings     =      0.000 s
+  Timing for OO strings     =      0.000 s
+  Timing for VVOO strings   =      0.000 s
+  Timing for VOVO strings   =      0.000 s
+  Timing for 1-hole strings =      0.000 s
+  Timing for 2-hole strings =      0.000 s
+  Timing for 3-hole strings =      0.000 s
+  Total timing              =      0.000 s
+
+  ==> FCI Solver <==
+
+    Number of determinants                          28
+    Symmetry                                         1
+    Multiplicity                                     3
+    Number of roots                                  1
+    Target root                                      0
+    Trial vectors per root                          10
+
+  Allocating memory for the Hamiltonian algorithm. Size: 2 x 3 x 3.   Memory: 0.000000 GB
+
+  ==> FCI Initial Guess <==
+
+  ---------------------------------------------
+    Root            Energy     <S^2>   Spin
+  ---------------------------------------------
+      0     -149.687244869044  2.000  triplet
+      1     -149.652994659068  0.000  singlet
+      2     -149.129207656016  2.000  triplet
+      3     -149.072949689370  0.000  singlet
+      4     -148.872574465389  6.000  quintet
+      5     -148.818074588599  2.000  triplet
+      6     -148.759655351692  2.000  triplet
+      7     -148.695981645674  0.000  singlet
+      8     -148.548005299157  6.000  quintet
+      9     -148.431908732623  2.000  triplet
+     10     -148.410390238050  2.000  triplet
+     11     -148.382362800293  0.000  singlet
+     12     -148.347657738020  0.000  singlet
+     13     -148.347055879150  2.000  triplet
+     14     -148.178408757951  2.000  triplet
+     15     -148.140624486456  2.000  triplet
+     16     -148.131953452188  0.000  singlet
+     17     -148.092967272106  0.000  singlet
+     18     -147.824529151423  2.000  triplet
+     19     -147.743082196345  0.000  singlet
+  ---------------------------------------------
+  Timing for initial guess  =      0.001 s
+
+  Projecting out root 1
+  Projecting out root 3
+  Projecting out root 4
+  Projecting out root 7
+  Projecting out root 8
+  Projecting out root 11
+  Projecting out root 12
+  Projecting out root 16
+  Projecting out root 17
+  Projecting out root 19
+
+  ==> Diagonalizing Hamiltonian <==
+
+  Energy   convergence: 1.00e-12
+  Residual convergence: 1.00e-08
+  -----------------------------------------------------
+    Iter.      Avg. Energy       Delta_E     Res. Norm
+  -----------------------------------------------------
+      1     -149.687244869043  -1.497e+02  +1.961e-01
+      2     -149.707417023938  -2.017e-02  +2.196e-02
+      3     -149.707624029122  -2.070e-04  +3.051e-03
+      4     -149.707630929037  -6.900e-06  +5.268e-04
+      5     -149.707631184156  -2.551e-07  +8.804e-05
+      6     -149.707631190535  -6.379e-09  +3.755e-06
+      7     -149.707631190543  -8.015e-12  +3.650e-07
+      8     -149.707631190543  -1.137e-13  +2.309e-13
+  -----------------------------------------------------
+  The Davidson-Liu algorithm converged in 9 iterations.
+
+  ==> Root No. 0 <==
+
+    2 a b 0 2 2      0.68338894
+    2 b a 0 2 2     -0.68338894
+    2 2 2 0 b a     -0.11868660
+    2 2 2 0 a b      0.11868660
+
+    Total Energy:      -149.707631190543168
+
+  ==> String Lists <==
+
+  Number of alpha electrons     = 5
+  Number of beta electrons      = 3
+  Number of alpha strings       = 6
+  Number of beta strings        = 20
+  Number of alpha strings (N-3) = 15
+  Number of beta strings (N-3)  = 1
+  Timing for strings        =      0.000 s
+  Timing for NN strings     =      0.000 s
+  Timing for VO strings     =      0.000 s
+  Timing for OO strings     =      0.000 s
+  Timing for VVOO strings   =      0.000 s
+  Timing for VOVO strings   =      0.000 s
+  Timing for 1-hole strings =      0.000 s
+  Timing for 2-hole strings =      0.000 s
+  Timing for 3-hole strings =      0.000 s
+  Total timing              =      0.000 s
+
+  ==> FCI Solver <==
+
+    Number of determinants                          16
+    Symmetry                                         1
+    Multiplicity                                     3
+    Number of roots                                  1
+    Target root                                      0
+    Trial vectors per root                          10
+
+  Allocating memory for the Hamiltonian algorithm. Size: 2 x 4 x 4.   Memory: 0.000000 GB
+
+  ==> FCI Initial Guess <==
+
+  ---------------------------------------------
+    Root            Energy     <S^2>   Spin
+  ---------------------------------------------
+      0     -149.707631190543  2.000  triplet
+      1     -149.145461920282  2.000  triplet
+      2     -148.872574465389  6.000  quintet
+      3     -148.818632943058  2.000  triplet
+      4     -148.759978507869  2.000  triplet
+      5     -148.548005299157  6.000  quintet
+      6     -148.438159707739  2.000  triplet
+      7     -148.410390531049  2.000  triplet
+      8     -148.385814154085  2.000  triplet
+      9     -148.346415030791  2.000  triplet
+     10     -148.312776842823  2.000  triplet
+     11     -148.185661384383  2.000  triplet
+     12     -147.974272674445  2.000  triplet
+     13     -147.974130809110  2.000  triplet
+     14     -147.660501857187  2.000  triplet
+     15     -146.879282721132  2.000  triplet
+  ---------------------------------------------
+  Timing for initial guess  =      0.001 s
+
+  Projecting out root 2
+  Projecting out root 5
+
+  ==> Diagonalizing Hamiltonian <==
+
+  Energy   convergence: 1.00e-12
+  Residual convergence: 1.00e-08
+  -----------------------------------------------------
+    Iter.      Avg. Energy       Delta_E     Res. Norm
+  -----------------------------------------------------
+      1     -149.707631190543  -1.497e+02  +4.727e-14
+      2     -149.707631190543  +0.000e+00  +4.727e-14
+  -----------------------------------------------------
+  The Davidson-Liu algorithm converged in 3 iterations.
+
+  ==> Root No. 0 <==
+
+    2 a a 0 2 2     -0.96645791
+    2 2 2 0 a a     -0.16784820
+
+    Total Energy:      -149.707631190543253
+
+  ==> Energy Summary <==
+
+    Multi.(2ms)  Irrep.  No.               Energy
+    ---------------------------------------------
+       3  (  0)   B1g     0     -149.707631190543
+    ---------------------------------------------
+       3  (  2)   B1g     0     -149.707631190543
+    ---------------------------------------------
+
+  ==> Computing RDMs for Root No. 0 <==
+
+    Timing for 1-RDM: 0.000 s
+    Timing for 2-RDM: 0.000 s
+
+  ==> NATURAL ORBITALS <==
+
+        1B2u    1.955969      1B3u    1.955969      1Ag     1.952212  
+        1B2g    1.043283      1B3g    1.043283      1B1u    0.049284  
+
+
+  ==> Computing RDMs for Root No. 0 <==
+
+    Timing for 1-RDM: 0.000 s
+    Timing for 2-RDM: 0.000 s
+
+  ==> NATURAL ORBITALS <==
+
+        1B2u    1.955969      1B3u    1.955969      1Ag     1.952212  
+        1B2g    1.043283      1B3g    1.043283      1B1u    0.049284  
+
+
+ CAS took 0.040866 seconds.
+
+ FormFockIntermediates took 0.03830427 s.
+
+ FormOrbitalGradient took 0.00012803 s.
+
+ FormDiagHessian took 0.00001006 s.
+
+ Update function takes 0.03848872 s
+    12   0.000000008354   -0.000000000000   -149.707631190543    0.145107 s
+
+  A miracle has come to pass: CASSCF iterations have converged.
+
+ @ Final CASSCF Energy = -149.707631190543225
+
+
+  ==> Semi-canonicalize CASSCF Orbitals <==
+
+    Building Fock matrix  ... Done.
+    Diagonalizing block 0 ... Done.
+    Diagonalizing block 1 ... Done.
+    Diagonalizing block 2 ... Done.
+
+  Time to prepare integrals:        0.058 seconds
+  Time to run job          :        1.837 seconds
+  Total                    :        1.837 seconds    CASSCF(6,6)/cc-pVDZ (FORTE) energy................................PASSED
+
+Scratch directory: /Users/york/scratch/psi4/
+   => Loading Basis Set <=
+
+    Name: STO-3G
+    Role: ORBITAL
+    Keyword: MINAO_BASIS
+    atoms 1-2 entry O          line    81 file /Users/york/src/psi4new/psi4/share/psi4/basis/sto-3g.gbs 
+
+
+  Forte
+  ----------------------------------------------------------------------------
+  A suite of quantum chemistry methods for strongly correlated electrons
+
+    git branch: master - git commit: 5e031236
+
+  Developed by:
+    Francesco A. Evangelista, Chenyang Li, Kevin P. Hannon,
+    Jeffrey B. Schriber, Tianyuan Zhang, Chenxi Cai,
+    Nan He, Nicholas Stair, Shuhe Wang, Renke Huang
+  ----------------------------------------------------------------------------
+
+  Size of Determinant class: 128 bits
+  Read options for space FROZEN_DOCC
+  Read options for space RESTRICTED_DOCC
+  Read options for space ACTIVE
+
+  ==> MO Space Information <==
+
+  -------------------------------------------------------------------------
+                       Ag   B1g   B2g   B3g    Au   B1u   B2u   B3u   Sum
+  -------------------------------------------------------------------------
+    FROZEN_DOCC         1     0     0     0     0     1     0     0     2
+    RESTRICTED_DOCC     1     0     0     0     0     1     0     0     2
+    ACTIVE              1     0     1     1     0     1     1     1     6
+    RESTRICTED_UOCC     4     1     2     2     1     4     2     2    18
+    FROZEN_UOCC         0     0     0     0     0     0     0     0     0
+    Total               7     1     3     3     1     7     3     3    28
+  -------------------------------------------------------------------------
+
+  ==> Integral Transformation <==
+
+  Number of molecular orbitals:                    28
+  Number of correlated molecular orbitals:         26
+  Number of frozen occupied orbitals:               2
+  Number of frozen unoccupied orbitals:             0
+  Two-electron integral type:              Conventional
+
+
+  Overall Conventional Integrals timings
+
+	Presorting SO-basis two-electron integrals.
+	Sorting File: SO Ints (nn|nn) nbuckets = 1
+	Transforming the one-electron integrals and constructing Fock matrices
+	Starting first half-transformation.
+	Sorting half-transformed integrals.
+	First half integral transformation complete.
+	Starting second half-transformation.
+	Two-electron integral transformation complete.
+
+  Integral transformation done. 0.01399564 s
+  Reading the two-electron integrals from disk
+  Size of two-electron integrals:   0.013739 GB
+  Frozen-core energy           -130.055374472977 a.u.
+  Timing for frozen one-body operator:                        0.046 s.
+  Resorting integrals after freezing core.
+  Timing for freezing core and virtual orbitals:              0.053 s.
+  Conventional integrals take 0.10726464 s
+
+  ==> Summary of Active Space Solver Input <==
+
+    Irrep.  Multi.(2ms)      N
+    --------------------------
+      B1g      3  ( -2)      1
+      B1g      3  (  0)      1
+      B1g      3  (  2)      1
+    --------------------------
+    N: number of roots
+    ms: spin z component
+    Total number of roots:   3
+    --------------------------
+
+
+              ---------------------------------------------------
+                Complete Active Space Configuration Interaction
+                                  Chenyang Li
+              ---------------------------------------------------
+
+
+  ==> Input Summary <==
+
+    No. a electrons in active      =     3
+    No. b electrons in active      =     5
+    multiplicity                   =     3
+    spin ms (2 * Sz)               =    -2
+
+  ==> Orbital Spaces <==
+
+    TOTAL MO                      [    7     1     3     3     1     7     3     3 ]
+    FROZEN CORE                   [    1     0     0     0     0     1     0     0 ]
+    FROZEN VIRTUAL                [    0     0     0     0     0     0     0     0 ]
+    CORRELATED MO                 [    6     1     3     3     1     6     3     3 ]
+    CORE                          [    1     0     0     0     0     1     0     0 ]
+    ACTIVE                        [    1     0     1     1     0     1     1     1 ]
+    VIRTUAL                       [    4     1     2     2     1     4     2     2 ]
+  Continue to the next symmetry block: No need to find the solution for ms = -2 / 2 < 0.
+
+              ---------------------------------------------------
+                Complete Active Space Configuration Interaction
+                                  Chenyang Li
+              ---------------------------------------------------
+
+
+  ==> Input Summary <==
+
+    No. a electrons in active      =     4
+    No. b electrons in active      =     4
+    multiplicity                   =     3
+    spin ms (2 * Sz)               =     0
+
+  ==> Orbital Spaces <==
+
+    TOTAL MO                      [    7     1     3     3     1     7     3     3 ]
+    FROZEN CORE                   [    1     0     0     0     0     1     0     0 ]
+    FROZEN VIRTUAL                [    0     0     0     0     0     0     0     0 ]
+    CORRELATED MO                 [    6     1     3     3     1     6     3     3 ]
+    CORE                          [    1     0     0     0     0     1     0     0 ]
+    ACTIVE                        [    1     0     1     1     0     1     1     1 ]
+    VIRTUAL                       [    4     1     2     2     1     4     2     2 ]
+  Forming alpha and beta strings      ...  Done. Timing        0.000025 s
+  Forming determinants                ...  Done. Timing        0.000007 s
+
+  ==> Determinants Summary <==
+
+    number of alpha active electrons         =     4
+    number of beta active electrons          =     4
+    root symmetry (zero based)               =     1
+    number of determinants                   =    28
+
+  Diagonalizing Hamiltonian           ...
+
+  ==> Computing Coupling Lists <==
+  --------------------------------
+        α          0.000050 s
+        β          0.000050 s
+        αα         0.000070 s
+        ββ         0.000064 s
+        αβ         0.000164 s
+  --------------------------------
+
+  Davidson-Liu solver algorithm using SigmaVectorSparseList sigma algorithm
+
+  Performing diagonalization of the H matrix
+  Found 12 roots with 2S+1 = 1
+  Found 14 roots with 2S+1 = 3 *
+  Found 2 roots with 2S+1 = 5  Done. Timing        0.000844 s
+
+  * * * * * * * * * * * * * * * * *
+  *  CI Vectors & Configurations  *
+  * * * * * * * * * * * * * * * * *
+
+  ==> Root No. 0 <==
+
+    2 b a 0 2 2         -0.6833889439
+    2 a b 0 2 2          0.6833889439
+    2 2 2 0 b a         -0.1186866034
+    2 2 2 0 a b          0.1186866034
+    0 b a 2 2 2          0.0662720381
+    0 a b 2 2 2         -0.0662720381
+    a 2 a b 2 b          0.0657539141
+    b 2 b a 2 a         -0.0657539141
+    a a 2 b b 2         -0.0657539141
+    b b 2 a a 2          0.0657539141
+
+    Total Energy:   -149.707631190543196
+
+
+
+  ==> Permanent Dipole Moments (B1g) <==
+
+  Only print nonzero (> 1.0e-5) elements.
+
+
+              ---------------------------------------------------
+                Complete Active Space Configuration Interaction
+                                  Chenyang Li
+              ---------------------------------------------------
+
+
+  ==> Input Summary <==
+
+    No. a electrons in active      =     5
+    No. b electrons in active      =     3
+    multiplicity                   =     3
+    spin ms (2 * Sz)               =     2
+
+  ==> Orbital Spaces <==
+
+    TOTAL MO                      [    7     1     3     3     1     7     3     3 ]
+    FROZEN CORE                   [    1     0     0     0     0     1     0     0 ]
+    FROZEN VIRTUAL                [    0     0     0     0     0     0     0     0 ]
+    CORRELATED MO                 [    6     1     3     3     1     6     3     3 ]
+    CORE                          [    1     0     0     0     0     1     0     0 ]
+    ACTIVE                        [    1     0     1     1     0     1     1     1 ]
+    VIRTUAL                       [    4     1     2     2     1     4     2     2 ]
+  Forming alpha and beta strings      ...  Done. Timing        0.000020 s
+  Forming determinants                ...  Done. Timing        0.000006 s
+
+  ==> Determinants Summary <==
+
+    number of alpha active electrons         =     5
+    number of beta active electrons          =     3
+    root symmetry (zero based)               =     1
+    number of determinants                   =    16
+
+  Diagonalizing Hamiltonian           ...
+
+  ==> Computing Coupling Lists <==
+  --------------------------------
+        α          0.000039 s
+        β          0.000027 s
+        αα         0.000066 s
+        ββ         0.000026 s
+        αβ         0.000108 s
+  --------------------------------
+
+  Davidson-Liu solver algorithm using SigmaVectorSparseList sigma algorithm
+
+  Performing diagonalization of the H matrix
+  Found 14 roots with 2S+1 = 3 *
+  Found 2 roots with 2S+1 = 5  Done. Timing        0.000538 s
+
+  * * * * * * * * * * * * * * * * *
+  *  CI Vectors & Configurations  *
+  * * * * * * * * * * * * * * * * *
+
+  ==> Root No. 0 <==
+
+    2 a a 0 2 2         -0.9664579129
+    2 2 2 0 a a         -0.1678482041
+    0 a a 2 2 2          0.0937228152
+    b 2 a a 2 a          0.0855756068
+    b a 2 a a 2         -0.0855756068
+    a 2 a b 2 a         -0.0733506822
+    a a 2 b a 2          0.0733506822
+
+    Total Energy:   -149.707631190543282
+
+
+
+  ==> Permanent Dipole Moments (B1g) <==
+
+  Only print nonzero (> 1.0e-5) elements.
+
+
+  ==> Energy Summary <==
+
+    Multi.(2ms)  Irrep.  No.               Energy
+    ---------------------------------------------
+       3  (  0)   B1g     0     -149.707631190543
+    ---------------------------------------------
+       3  (  2)   B1g     0     -149.707631190543
+    ---------------------------------------------
+ Computing  1RDMs (0 Triplet B1g - 0 Triplet B1g) ... Done. Timing        0.000139 s
+ Computing  2RDMs (0 Triplet B1g - 0 Triplet B1g) ... Done. Timing        0.000341 s
+ Computing  3RDMs (0 Triplet B1g - 0 Triplet B1g) ... Done. Timing        0.000827 s
+ Computing  1RDMs (0 Triplet B1g - 0 Triplet B1g) ... Done. Timing        0.000094 s
+ Computing  2RDMs (0 Triplet B1g - 0 Triplet B1g) ... Done. Timing        0.000208 s
+ Computing  3RDMs (0 Triplet B1g - 0 Triplet B1g) ... Done. Timing        0.000464 s
+
+       -----------------------------------------------------------------
+                            Semi-Canonical Orbitals
+         Chenyang Li, Jeffrey B. Schriber and Francesco A. Evangelista
+       -----------------------------------------------------------------
+
+  Took 0.000304 s to build Fock matrix
+
+  ==> Checking Fock Matrix Diagonal Blocks <==
+
+    Off-Diag. Elements       Max           2-Norm
+    ------------------------------------------------
+    Fa actv              0.0000000000   0.0000000000
+    Fb actv              0.0000000000   0.0000000000
+    ------------------------------------------------
+    Fa core              0.0000000000   0.0000000000
+    Fb core              0.0000000000   0.0000000000
+    ------------------------------------------------
+    Fa virt              0.0000000000   0.0000000000
+    Fb virt              0.0000000000   0.0000000000
+    ------------------------------------------------
+  Orbitals are already semicanonicalized.
+
+    -----------------------------------------------------------------------
+      Spin-Adapted Multireference Driven Similarity Renormalization Group
+                            written by Chenyang Li
+                                 1 OMP thread
+    -----------------------------------------------------------------------
+
+  Disclaimer:
+    The spin-adapted DSRG code is largely adopted from the spin-integrated code developed by
+    Chenyang Li, Kevin P. Hannon, Tianyuan Zhang, and Francesco A. Evangelista.
+
+  ==> Multireference Driven Similarity Renormalization Group <==
+
+    Reading DSRG options ............................ Done
+    Setting ambit MO space .......................... Done
+    Preparing tensors for density cumulants ......... Done
+    Building Fock matrix ............................ Done
+
+  ==> Density Cumulant Summary <==
+
+             2-cumulant   3-cumulant
+    --------------------------------
+    max        0.485916     0.079586
+    norm       1.219300     0.989611
+    --------------------------------
+
+  ==> Checking Semicanonical Orbitals <==
+
+    Fock core, active, virtual blocks (Fij, i != j)
+                      core          active         virtual
+    ------------------------------------------------------
+       max    0.0000000000    0.0000000000    0.0000000000
+    1-norm    0.0000000000    0.0000000000    0.0000000000
+    ------------------------------------------------------
+
+    Orbitals are semi-canonicalized.
+
+                  --------------------------------------------
+                    MR-DSRG Second-Order Perturbation Theory
+                  --------------------------------------------
+
+
+  ==> Computation Information <==
+
+    Integral type                               CONVENTIONAL
+    Source operator                                 STANDARD
+    Core-Virtual source type                          NORMAL
+    Reference relaxation                               TWICE
+    Internal amplitudes                                 NONE
+    State type                                  SINGLE STATE
+    Flow parameter                                 1.000e+00
+    Taylor expansion threshold                     1.000e-03
+    Intruder amplitudes threshold                  1.000e-01
+    Number of amplitudes for printing                     15
+
+
+  ==> DSRG-MRPT2 Memory Information <==
+
+    Memory assigned by the user                    500.00 MB
+    Memory available for MR-DSRG                   485.96 MB
+    Generalized Fock matrix                          5.62 KB
+    1-, 2-, and 3-density cumulants                384.19 KB
+    2-electron (4-index) integrals                 294.91 KB
+    T2 cluster amplitudes                          294.91 KB
+    T1 cluster amplitudes                            1.54 KB
+    1- and 2-body Hbar                              10.66 KB
+    Local 1- and 2-body intermediates               10.66 KB
+    Local integrals for forming Hbar                96.77 KB
+    Max memory for local intermediates              96.77 KB
+    Memory currently available                     484.97 MB
+
+
+  ==> First-Order Excitation Amplitudes Summary <==
+
+    Active Indices:    1    7   10   15   20   23
+    Largest T1 amplitudes (absolute values):
+        i    a                i    a                i    a
+    -----------------------------------------------------------------
+    [   0    1] 0.1685184 [  15   16] 0.0935945 [  15   17] 0.0580175
+    [  15   19] 0.0512977 [   7    8] 0.0483173 [  10   11] 0.0483173
+    [   1    2] 0.0089491 [  23   24] 0.0085826 [  20   21] 0.0085826
+    [  14   15] 0.0057445 [   1    5] 0.0051416 [   1    3] 0.0023396
+    [  23   25] 0.0018048 [  20   22] 0.0018048 [   7    9] 0.0009221
+    -----------------------------------------------------------------
+    2-Norm of T1 vector:                            0.219375283006034
+    Number of nonzero elements:                                    25
+    -----------------------------------------------------------------
+    Largest T2 amplitudes (absolute values):
+        i    j    a    b                i    j    a    b                i    j    a    b
+    -----------------------------------------------------------------------------------------------
+    [  15   10   15   11] 0.1027154 [  15    7   15    8] 0.1027154 [  15   20   15   21] 0.0878892
+    [  15   23   15   24] 0.0878892 [  15    1   15    2] 0.0831976 [   1   10    1   11] 0.0817827
+    [   1    7    1    8] 0.0817827 [   7    7    7    8] 0.0796821 [  10   10   10   11] 0.0796821
+    [  20   10   20   11] 0.0728997 [  23    7   23    8] 0.0728997 [   7   10    7   11] 0.0720904
+    [  10    7   10    8] 0.0720904 [  15   15    1    5] 0.0720241 [   0    0    1    1] 0.0702381
+    -----------------------------------------------------------------------------------------------
+    2-Norm of T2 vector:                                                          0.883124555208380
+    Number of nonzero elements:                                                                3032
+    -----------------------------------------------------------------------------------------------
+
+  ==> Possible Intruders <==
+
+    T1 amplitudes larger than 0.1000:
+     Amplitudes      Value                   Denominator
+    ----------------------------------------------------------------
+    [   0    1]  -0.168518414 ( -1.465258 -  -0.827979 =  -0.637280)
+    ----------------------------------------------------------------
+    T2 amplitudes larger than 0.1000:
+     Amplitudes      Value                   Denominator
+    ----------------------------------------------------------------------------------------------------
+    [  15   10   15   11]   0.102715407 (  0.567708 +  -0.221341 -   0.567708 -   1.221413 =  -1.442754)
+    [  15    7   15    8]   0.102715407 (  0.567708 +  -0.221341 -   0.567708 -   1.221413 =  -1.442754)
+    ----------------------------------------------------------------------------------------------------
+
+  ==> DSRG-MRPT2 Energy Summary <==
+
+    E0 (reference)                 =   -149.707631190543310
+    < Phi_0 | [Fr, T1] | Phi_0 >   =     -0.017779120614259
+    < Phi_0 | [Fr, T2] | Phi_0 >   =      0.014424429048866
+    < Phi_0 | [Vr, T1] | Phi_0 >   =      0.015516714277963
+    < Phi_0 | [Vr, T2] | Phi_0 >   =     -0.267951282944438
+      - [Vr, T2] L1 contribution   =     -0.387196304235437
+      - [Vr, T2] L2 contribution   =      0.100901603332272
+      - [Vr, T2] L3 contribution   =      0.018343417958728
+    DSRG-MRPT2 correlation energy  =     -0.255789260231867
+    DSRG-MRPT2 total energy        =   -149.963420450775175
+
+  ==> De-Normal-Order DSRG Transformed Hamiltonian <==
+
+    Computing the scalar term                ... Done. Timing    0.000 s
+    Computing the 1-body term                ... Done. Timing    0.000 s
+
+  ==> Rotate DSRG Transformed Hamiltonian back to Original Basis <==
+
+    Rotating 1-body term to original basis   ... Done. Timing    0.000 s
+    Rotating 2-body term to original basis   ... Done. Timing    0.001 s
+
+  ==> Summary of Active Space Solver Input <==
+
+    Irrep.  Multi.(2ms)      N
+    --------------------------
+      B1g      3  ( -2)      1
+      B1g      3  (  0)      1
+      B1g      3  (  2)      1
+    --------------------------
+    N: number of roots
+    ms: spin z component
+    Total number of roots:   3
+    --------------------------
+
+
+              ---------------------------------------------------
+                Complete Active Space Configuration Interaction
+                                  Chenyang Li
+              ---------------------------------------------------
+
+
+  ==> Input Summary <==
+
+    No. a electrons in active      =     3
+    No. b electrons in active      =     5
+    multiplicity                   =     3
+    spin ms (2 * Sz)               =    -2
+
+  ==> Orbital Spaces <==
+
+    TOTAL MO                      [    7     1     3     3     1     7     3     3 ]
+    FROZEN CORE                   [    1     0     0     0     0     1     0     0 ]
+    FROZEN VIRTUAL                [    0     0     0     0     0     0     0     0 ]
+    CORRELATED MO                 [    6     1     3     3     1     6     3     3 ]
+    CORE                          [    1     0     0     0     0     1     0     0 ]
+    ACTIVE                        [    1     0     1     1     0     1     1     1 ]
+    VIRTUAL                       [    4     1     2     2     1     4     2     2 ]
+  Continue to the next symmetry block: No need to find the solution for ms = -2 / 2 < 0.
+
+              ---------------------------------------------------
+                Complete Active Space Configuration Interaction
+                                  Chenyang Li
+              ---------------------------------------------------
+
+
+  ==> Input Summary <==
+
+    No. a electrons in active      =     4
+    No. b electrons in active      =     4
+    multiplicity                   =     3
+    spin ms (2 * Sz)               =     0
+
+  ==> Orbital Spaces <==
+
+    TOTAL MO                      [    7     1     3     3     1     7     3     3 ]
+    FROZEN CORE                   [    1     0     0     0     0     1     0     0 ]
+    FROZEN VIRTUAL                [    0     0     0     0     0     0     0     0 ]
+    CORRELATED MO                 [    6     1     3     3     1     6     3     3 ]
+    CORE                          [    1     0     0     0     0     1     0     0 ]
+    ACTIVE                        [    1     0     1     1     0     1     1     1 ]
+    VIRTUAL                       [    4     1     2     2     1     4     2     2 ]
+  Forming alpha and beta strings      ...  Done. Timing        0.000026 s
+  Forming determinants                ...  Done. Timing        0.000007 s
+
+  ==> Determinants Summary <==
+
+    number of alpha active electrons         =     4
+    number of beta active electrons          =     4
+    root symmetry (zero based)               =     1
+    number of determinants                   =    28
+
+  Diagonalizing Hamiltonian           ...
+
+  ==> Computing Coupling Lists <==
+  --------------------------------
+        α          0.000049 s
+        β          0.000048 s
+        αα         0.000070 s
+        ββ         0.000065 s
+        αβ         0.000171 s
+  --------------------------------
+
+  Davidson-Liu solver algorithm using SigmaVectorSparseList sigma algorithm
+
+  Performing diagonalization of the H matrix
+  Found 12 roots with 2S+1 = 1
+  Found 14 roots with 2S+1 = 3 *
+  Found 2 roots with 2S+1 = 5  Done. Timing        0.000793 s
+
+  * * * * * * * * * * * * * * * * *
+  *  CI Vectors & Configurations  *
+  * * * * * * * * * * * * * * * * *
+
+  ==> Root No. 0 <==
+
+    2 b a 0 2 2         -0.6871854811
+    2 a b 0 2 2          0.6871854811
+    2 2 2 0 b a         -0.1195955407
+    2 2 2 0 a b          0.1195955407
+    a a 2 b b 2         -0.0564194892
+    b b 2 a a 2          0.0564194892
+    b 2 b a 2 a         -0.0564194892
+    a 2 a b 2 b          0.0564194892
+    0 a b 2 2 2         -0.0557073074
+    0 b a 2 2 2          0.0557073074
+
+    Total Energy:   -149.965037165884041
+
+
+
+  ==> Permanent Dipole Moments (B1g) <==
+
+  Only print nonzero (> 1.0e-5) elements.
+
+
+              ---------------------------------------------------
+                Complete Active Space Configuration Interaction
+                                  Chenyang Li
+              ---------------------------------------------------
+
+
+  ==> Input Summary <==
+
+    No. a electrons in active      =     5
+    No. b electrons in active      =     3
+    multiplicity                   =     3
+    spin ms (2 * Sz)               =     2
+
+  ==> Orbital Spaces <==
+
+    TOTAL MO                      [    7     1     3     3     1     7     3     3 ]
+    FROZEN CORE                   [    1     0     0     0     0     1     0     0 ]
+    FROZEN VIRTUAL                [    0     0     0     0     0     0     0     0 ]
+    CORRELATED MO                 [    6     1     3     3     1     6     3     3 ]
+    CORE                          [    1     0     0     0     0     1     0     0 ]
+    ACTIVE                        [    1     0     1     1     0     1     1     1 ]
+    VIRTUAL                       [    4     1     2     2     1     4     2     2 ]
+  Forming alpha and beta strings      ...  Done. Timing        0.000019 s
+  Forming determinants                ...  Done. Timing        0.000006 s
+
+  ==> Determinants Summary <==
+
+    number of alpha active electrons         =     5
+    number of beta active electrons          =     3
+    root symmetry (zero based)               =     1
+    number of determinants                   =    16
+
+  Diagonalizing Hamiltonian           ...
+
+  ==> Computing Coupling Lists <==
+  --------------------------------
+        α          0.000038 s
+        β          0.000025 s
+        αα         0.000064 s
+        ββ         0.000024 s
+        αβ         0.000101 s
+  --------------------------------
+
+  Davidson-Liu solver algorithm using SigmaVectorSparseList sigma algorithm
+
+  Performing diagonalization of the H matrix
+  Found 14 roots with 2S+1 = 3 *
+  Found 2 roots with 2S+1 = 5  Done. Timing        0.000493 s
+
+  * * * * * * * * * * * * * * * * *
+  *  CI Vectors & Configurations  *
+  * * * * * * * * * * * * * * * * *
+
+  ==> Root No. 0 <==
+
+    2 a a 0 2 2          0.9718270272
+    2 2 2 0 a a          0.1691336357
+    0 a a 2 2 2         -0.0787820297
+    b 2 a a 2 a         -0.0729778473
+    b a 2 a a 2          0.0729778473
+    a 2 a b 2 a          0.0602309174
+    a a 2 b a 2         -0.0602309174
+
+    Total Energy:   -149.965037165884098
+
+
+
+  ==> Permanent Dipole Moments (B1g) <==
+
+  Only print nonzero (> 1.0e-5) elements.
+
+
+  ==> Energy Summary <==
+
+    Multi.(2ms)  Irrep.  No.               Energy
+    ---------------------------------------------
+       3  (  0)   B1g     0     -149.965037165884
+    ---------------------------------------------
+       3  (  2)   B1g     0     -149.965037165884
+    ---------------------------------------------
+ Computing  1RDMs (0 Triplet B1g - 0 Triplet B1g) ... Done. Timing        0.000122 s
+ Computing  2RDMs (0 Triplet B1g - 0 Triplet B1g) ... Done. Timing        0.000289 s
+ Computing  3RDMs (0 Triplet B1g - 0 Triplet B1g) ... Done. Timing        0.000783 s
+ Computing  1RDMs (0 Triplet B1g - 0 Triplet B1g) ... Done. Timing        0.000080 s
+ Computing  2RDMs (0 Triplet B1g - 0 Triplet B1g) ... Done. Timing        0.000182 s
+ Computing  3RDMs (0 Triplet B1g - 0 Triplet B1g) ... Done. Timing        0.000375 s
+
+  ==> RDMs Transformation to Semicanonical Basis <==
+
+    Transformed 1 RDM.
+    Transformed 2 RDM.
+    Transformed 3 RDM.
+  Took 0.000283 s to build Fock matrix
+
+  ==> Checking Fock Matrix Diagonal Blocks <==
+
+    Off-Diag. Elements       Max           2-Norm
+    ------------------------------------------------
+    Fa actv              0.0000000000   0.0000000000
+    Fb actv              0.0000000000   0.0000000000
+    ------------------------------------------------
+    Fa core              0.0000000000   0.0000000000
+    Fb core              0.0000000000   0.0000000000
+    ------------------------------------------------
+    Fa virt              0.0002601478   0.0005386249
+    Fb virt              0.0002601478   0.0005386249
+    ------------------------------------------------
+ Integrals are about to be computed.	Presorting SO-basis two-electron integrals.
+	Sorting File: SO Ints (nn|nn) nbuckets = 1
+	Transforming the one-electron integrals and constructing Fock matrices
+	Starting first half-transformation.
+	Sorting half-transformed integrals.
+	First half integral transformation complete.
+	Starting second half-transformation.
+	Two-electron integral transformation complete.
+
+  Integral transformation done. 0.01418615 s
+  Reading the two-electron integrals from disk
+  Size of two-electron integrals:   0.013739 GB
+ Integrals are about to be updated.
+  Frozen-core energy           -130.055374472977 a.u.
+  Timing for frozen one-body operator:                        0.044 s.
+  Resorting integrals after freezing core.
+  Timing for freezing core and virtual orbitals:              0.052 s.
+
+  ==> RDMs Transformation to Semicanonical Basis <==
+
+    Transformed 1 RDM.
+    Transformed 2 RDM.
+    Transformed 3 RDM.
+  SemiCanonicalize takes 0.171023 s.
+
+    -----------------------------------------------------------------------
+      Spin-Adapted Multireference Driven Similarity Renormalization Group
+                            written by Chenyang Li
+                                 1 OMP thread
+    -----------------------------------------------------------------------
+
+  Disclaimer:
+    The spin-adapted DSRG code is largely adopted from the spin-integrated code developed by
+    Chenyang Li, Kevin P. Hannon, Tianyuan Zhang, and Francesco A. Evangelista.
+
+  ==> Multireference Driven Similarity Renormalization Group <==
+
+    Reading DSRG options ............................ Done
+    Setting ambit MO space .......................... Done
+    Preparing tensors for density cumulants ......... Done
+    Building Fock matrix ............................ Done
+
+  ==> Density Cumulant Summary <==
+
+             2-cumulant   3-cumulant
+    --------------------------------
+    max        0.489857     0.080181
+    norm       1.177387     0.887409
+    --------------------------------
+
+  ==> Checking Semicanonical Orbitals <==
+
+    Fock core, active, virtual blocks (Fij, i != j)
+                      core          active         virtual
+    ------------------------------------------------------
+       max    0.0000000000    0.0000000000    0.0000000000
+    1-norm    0.0000000000    0.0000000000    0.0000000000
+    ------------------------------------------------------
+
+    Orbitals are semi-canonicalized.
+
+                  --------------------------------------------
+                    MR-DSRG Second-Order Perturbation Theory
+                  --------------------------------------------
+
+
+  ==> Computation Information <==
+
+    Integral type                               CONVENTIONAL
+    Source operator                                 STANDARD
+    Core-Virtual source type                          NORMAL
+    Reference relaxation                               TWICE
+    Internal amplitudes                                 NONE
+    State type                                  SINGLE STATE
+    Flow parameter                                 1.000e+00
+    Taylor expansion threshold                     1.000e-03
+    Intruder amplitudes threshold                  1.000e-01
+    Number of amplitudes for printing                     15
+
+
+  ==> DSRG-MRPT2 Memory Information <==
+
+    Memory assigned by the user                    500.00 MB
+    Memory available for MR-DSRG                   485.96 MB
+    Generalized Fock matrix                          5.62 KB
+    1-, 2-, and 3-density cumulants                384.19 KB
+    2-electron (4-index) integrals                 294.91 KB
+    T2 cluster amplitudes                          294.91 KB
+    T1 cluster amplitudes                            1.54 KB
+    1- and 2-body Hbar                              10.66 KB
+    Local 1- and 2-body intermediates               10.66 KB
+    Local integrals for forming Hbar                96.77 KB
+    Max memory for local intermediates              96.77 KB
+    Memory currently available                     484.97 MB
+
+
+  ==> Total Timings (s) for Computing Commutators <==
+
+             [H1, T1]    [H1, T2]    [H2, T1]    [H2, T2]
+    -----------------------------------------------------
+    -> C0       0.000       0.000       0.000       0.006
+    -> C1       0.000       0.000       0.000       0.000
+    -> C2                   0.000       0.000       0.000
+    -----------------------------------------------------
+
+
+  ==> First-Order Excitation Amplitudes Summary <==
+
+    Active Indices:    1    7   10   15   20   23
+    Largest T1 amplitudes (absolute values):
+        i    a                i    a                i    a
+    -----------------------------------------------------------------
+    [   0    1] 0.1682322 [  15   16] 0.0928602 [  15   17] 0.0582923
+    [  15   19] 0.0514478 [   7    8] 0.0481306 [  10   11] 0.0481306
+    [   1    2] 0.0085739 [  23   24] 0.0083076 [  20   21] 0.0083076
+    [  14   15] 0.0062140 [   1    5] 0.0052936 [   1    3] 0.0022934
+    [  23   25] 0.0018423 [  20   22] 0.0018423 [   7    9] 0.0009882
+    -----------------------------------------------------------------
+    2-Norm of T1 vector:                            0.218849985305988
+    Number of nonzero elements:                                    25
+    -----------------------------------------------------------------
+    Largest T2 amplitudes (absolute values):
+        i    j    a    b                i    j    a    b                i    j    a    b
+    -----------------------------------------------------------------------------------------------
+    [  15   10   15   11] 0.1027306 [  15    7   15    8] 0.1027306 [  15   20   15   21] 0.0878583
+    [  15   23   15   24] 0.0878583 [  15    1   15    2] 0.0830605 [   1   10    1   11] 0.0817948
+    [   1    7    1    8] 0.0817948 [   7    7    7    8] 0.0796940 [  10   10   10   11] 0.0796940
+    [  20   10   20   11] 0.0729105 [  23    7   23    8] 0.0729105 [   7   10    7   11] 0.0721012
+    [  10    7   10    8] 0.0721012 [  15   15    1    5] 0.0720154 [   0    0    1    1] 0.0703068
+    -----------------------------------------------------------------------------------------------
+    2-Norm of T2 vector:                                                          0.882886305307378
+    Number of nonzero elements:                                                                3032
+    -----------------------------------------------------------------------------------------------
+
+  ==> Possible Intruders <==
+
+    T1 amplitudes larger than 0.1000:
+     Amplitudes      Value                   Denominator
+    ----------------------------------------------------------------
+    [   0    1]  -0.168232242 ( -1.466288 -  -0.832134 =  -0.634154)
+    ----------------------------------------------------------------
+    T2 amplitudes larger than 0.1000:
+     Amplitudes      Value                   Denominator
+    ----------------------------------------------------------------------------------------------------
+    [  15   10   15   11]  -0.102730640 (  0.570807 +  -0.221239 -   0.570807 -   1.220982 =  -1.442221)
+    [  15    7   15    8]  -0.102730640 (  0.570807 +  -0.221239 -   0.570807 -   1.220982 =  -1.442221)
+    ----------------------------------------------------------------------------------------------------
+
+  ==> DSRG-MRPT2 Energy Summary <==
+
+    E0 (reference)                 =   -149.705558467288142
+    < Phi_0 | [Fr, T1] | Phi_0 >   =     -0.015424863734886
+    < Phi_0 | [Fr, T2] | Phi_0 >   =      0.013410928751008
+    < Phi_0 | [Vr, T1] | Phi_0 >   =      0.014334250284554
+    < Phi_0 | [Vr, T2] | Phi_0 >   =     -0.272192767862978
+      - [Vr, T2] L1 contribution   =     -0.382891398083331
+      - [Vr, T2] L2 contribution   =      0.092928065968768
+      - [Vr, T2] L3 contribution   =      0.017770564251586
+    DSRG-MRPT2 correlation energy  =     -0.259872452562301
+    DSRG-MRPT2 total energy        =   -149.965430919850434
+
+  ==> De-Normal-Order DSRG Transformed Hamiltonian <==
+
+    Computing the scalar term                ... Done. Timing    0.000 s
+    Computing the 1-body term                ... Done. Timing    0.000 s
+
+  ==> Rotate DSRG Transformed Hamiltonian back to Original Basis <==
+
+    Rotating 1-body term to original basis   ... Done. Timing    0.000 s
+    Rotating 2-body term to original basis   ... Done. Timing    0.001 s
+
+  ==> Summary of Active Space Solver Input <==
+
+    Irrep.  Multi.(2ms)      N
+    --------------------------
+      B1g      3  ( -2)      1
+      B1g      3  (  0)      1
+      B1g      3  (  2)      1
+    --------------------------
+    N: number of roots
+    ms: spin z component
+    Total number of roots:   3
+    --------------------------
+
+
+              ---------------------------------------------------
+                Complete Active Space Configuration Interaction
+                                  Chenyang Li
+              ---------------------------------------------------
+
+
+  ==> Input Summary <==
+
+    No. a electrons in active      =     3
+    No. b electrons in active      =     5
+    multiplicity                   =     3
+    spin ms (2 * Sz)               =    -2
+
+  ==> Orbital Spaces <==
+
+    TOTAL MO                      [    7     1     3     3     1     7     3     3 ]
+    FROZEN CORE                   [    1     0     0     0     0     1     0     0 ]
+    FROZEN VIRTUAL                [    0     0     0     0     0     0     0     0 ]
+    CORRELATED MO                 [    6     1     3     3     1     6     3     3 ]
+    CORE                          [    1     0     0     0     0     1     0     0 ]
+    ACTIVE                        [    1     0     1     1     0     1     1     1 ]
+    VIRTUAL                       [    4     1     2     2     1     4     2     2 ]
+  Continue to the next symmetry block: No need to find the solution for ms = -2 / 2 < 0.
+
+              ---------------------------------------------------
+                Complete Active Space Configuration Interaction
+                                  Chenyang Li
+              ---------------------------------------------------
+
+
+  ==> Input Summary <==
+
+    No. a electrons in active      =     4
+    No. b electrons in active      =     4
+    multiplicity                   =     3
+    spin ms (2 * Sz)               =     0
+
+  ==> Orbital Spaces <==
+
+    TOTAL MO                      [    7     1     3     3     1     7     3     3 ]
+    FROZEN CORE                   [    1     0     0     0     0     1     0     0 ]
+    FROZEN VIRTUAL                [    0     0     0     0     0     0     0     0 ]
+    CORRELATED MO                 [    6     1     3     3     1     6     3     3 ]
+    CORE                          [    1     0     0     0     0     1     0     0 ]
+    ACTIVE                        [    1     0     1     1     0     1     1     1 ]
+    VIRTUAL                       [    4     1     2     2     1     4     2     2 ]
+  Forming alpha and beta strings      ...  Done. Timing        0.000023 s
+  Forming determinants                ...  Done. Timing        0.000004 s
+
+  ==> Determinants Summary <==
+
+    number of alpha active electrons         =     4
+    number of beta active electrons          =     4
+    root symmetry (zero based)               =     1
+    number of determinants                   =    28
+
+  Diagonalizing Hamiltonian           ...
+
+  ==> Computing Coupling Lists <==
+  --------------------------------
+        α          0.000051 s
+        β          0.000050 s
+        αα         0.000072 s
+        ββ         0.000065 s
+        αβ         0.000169 s
+  --------------------------------
+
+  Davidson-Liu solver algorithm using SigmaVectorSparseList sigma algorithm
+
+  Performing diagonalization of the H matrix
+  Found 12 roots with 2S+1 = 1
+  Found 14 roots with 2S+1 = 3 *
+  Found 2 roots with 2S+1 = 5  Done. Timing        0.000768 s
+
+  * * * * * * * * * * * * * * * * *
+  *  CI Vectors & Configurations  *
+  * * * * * * * * * * * * * * * * *
+
+  ==> Root No. 0 <==
+
+    2 b a 0 2 2          0.6870420667
+    2 a b 0 2 2         -0.6870420667
+    2 2 2 0 b a          0.1202237368
+    2 2 2 0 a b         -0.1202237368
+    a a 2 b b 2          0.0565007031
+    b b 2 a a 2         -0.0565007031
+    b 2 b a 2 a          0.0565007031
+    a 2 a b 2 b         -0.0565007031
+    0 a b 2 2 2          0.0558650897
+    0 b a 2 2 2         -0.0558650897
+
+    Total Energy:   -149.965431642527818
+
+
+
+  ==> Permanent Dipole Moments (B1g) <==
+
+  Only print nonzero (> 1.0e-5) elements.
+
+
+              ---------------------------------------------------
+                Complete Active Space Configuration Interaction
+                                  Chenyang Li
+              ---------------------------------------------------
+
+
+  ==> Input Summary <==
+
+    No. a electrons in active      =     5
+    No. b electrons in active      =     3
+    multiplicity                   =     3
+    spin ms (2 * Sz)               =     2
+
+  ==> Orbital Spaces <==
+
+    TOTAL MO                      [    7     1     3     3     1     7     3     3 ]
+    FROZEN CORE                   [    1     0     0     0     0     1     0     0 ]
+    FROZEN VIRTUAL                [    0     0     0     0     0     0     0     0 ]
+    CORRELATED MO                 [    6     1     3     3     1     6     3     3 ]
+    CORE                          [    1     0     0     0     0     1     0     0 ]
+    ACTIVE                        [    1     0     1     1     0     1     1     1 ]
+    VIRTUAL                       [    4     1     2     2     1     4     2     2 ]
+  Forming alpha and beta strings      ...  Done. Timing        0.000017 s
+  Forming determinants                ...  Done. Timing        0.000004 s
+
+  ==> Determinants Summary <==
+
+    number of alpha active electrons         =     5
+    number of beta active electrons          =     3
+    root symmetry (zero based)               =     1
+    number of determinants                   =    16
+
+  Diagonalizing Hamiltonian           ...
+
+  ==> Computing Coupling Lists <==
+  --------------------------------
+        α          0.000038 s
+        β          0.000026 s
+        αα         0.000064 s
+        ββ         0.000023 s
+        αβ         0.000101 s
+  --------------------------------
+
+  Davidson-Liu solver algorithm using SigmaVectorSparseList sigma algorithm
+
+  Performing diagonalization of the H matrix
+  Found 14 roots with 2S+1 = 3 *
+  Found 2 roots with 2S+1 = 5  Done. Timing        0.000469 s
+
+  * * * * * * * * * * * * * * * * *
+  *  CI Vectors & Configurations  *
+  * * * * * * * * * * * * * * * * *
+
+  ==> Root No. 0 <==
+
+    2 a a 0 2 2          0.9716242087
+    2 2 2 0 a a          0.1700220390
+    0 a a 2 2 2         -0.0790051675
+    b 2 a a 2 a         -0.0730472403
+    b a 2 a a 2          0.0730472403
+    a 2 a b 2 a          0.0603231435
+    a a 2 b a 2         -0.0603231435
+
+    Total Energy:   -149.965431642527818
+
+
+
+  ==> Permanent Dipole Moments (B1g) <==
+
+  Only print nonzero (> 1.0e-5) elements.
+
+
+  ==> Energy Summary <==
+
+    Multi.(2ms)  Irrep.  No.               Energy
+    ---------------------------------------------
+       3  (  0)   B1g     0     -149.965431642528
+    ---------------------------------------------
+       3  (  2)   B1g     0     -149.965431642528
+    ---------------------------------------------
+
+  => SA-MRDSRG Reference Relaxation Energy Summary <=
+
+                         Fixed Ref. (a.u.)              Relaxed Ref. (a.u.)
+           -------------------------------  -------------------------------
+    Iter.          Total Energy      Delta          Total Energy      Delta
+    -----------------------------------------------------------------------
+        1     -149.963420450775 -1.500e+02     -149.965037165884 -1.500e+02
+        2     -149.965430919850 -2.010e-03     -149.965431642528 -3.945e-04
+    -----------------------------------------------------------------------
+
+  ==> Total Timings (s) for Computing Commutators <==
+
+             [H1, T1]    [H1, T2]    [H2, T1]    [H2, T2]
+    -----------------------------------------------------
+    -> C0       0.000       0.000       0.000       0.006
+    -> C1       0.000       0.000       0.000       0.000
+    -> C2                   0.000       0.000       0.000
+    -----------------------------------------------------
+
+
+  Time to prepare integrals:        0.109 seconds
+  Time to run job          :        0.348 seconds
+  Total                    :        0.348 seconds    DSRG-MRPT2 unrelaxed energy.......................................PASSED
+    DSRG-MRPT2 partially relaxed energy...............................PASSED
+    DSRG-MRPT2 relaxed energy.........................................PASSED
+
+    Psi4 stopped on: Tuesday, 23 June 2020 11:44PM
+    Psi4 wall time for execution: 0:00:02.95
+
+*** Psi4 exiting successfully. Buy a developer a beer!

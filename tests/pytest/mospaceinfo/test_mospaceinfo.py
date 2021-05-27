@@ -26,13 +26,16 @@ def test_mospaceinfo():
 
     options = psi4.core.get_options() # options = psi4 option object
     options.set_current_module('FORTE') # read options labeled 'FORTE'
-    forte_options.update_psi_options(options)
+    forte_options.get_options_from_psi4(options)
 
     # Setup forte and prepare the active space integral class
     mos_spaces = {'FROZEN_DOCC' :     [1,0,0,0,0,0,0,0],
                   'RESTRICTED_DOCC' : [0,0,0,0,0,1,0,0],
                   'FROZEN_UOCC' :     [1,0,0,0,0,0,0,0]}
-    mo_space_info = forte.make_mo_space_info_from_map(wfn,mos_spaces,[])
+
+    nmopi = wfn.nmopi()
+    point_group = wfn.molecule().point_group().symbol()
+    mo_space_info = forte.make_mo_space_info_from_map(nmopi,point_group,mos_spaces,[])
 
     assert mo_space_info.nirrep() == 8
 
@@ -48,4 +51,4 @@ def test_mospaceinfo():
     assert mo_space_info.dimension('RESTRICTED_UOCC').to_tuple() == (0,0,0,0,0,0,0,0)
     assert mo_space_info.dimension('FROZEN_UOCC').to_tuple() == (1,0,0,0,0,0,0,0)
 
-    assert mo_space_info.space_names() == ['FROZEN_DOCC','RESTRICTED_DOCC','ACTIVE','RESTRICTED_UOCC','FROZEN_UOCC']
+    assert mo_space_info.space_names() == ['FROZEN_DOCC','RESTRICTED_DOCC','GAS1','GAS2','GAS3','GAS4','GAS5','GAS6','RESTRICTED_UOCC','FROZEN_UOCC']

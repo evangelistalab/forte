@@ -1,0 +1,54 @@
+#! Generated using commit GITCOMMIT
+# Failed GAS-ACI will result in correct ACI energy but incorrect ACI-PT2 energy
+
+import forte 
+
+refscf = -14.5754349811462358 #TEST
+refaci = -14.508218401691 #TEST
+#refacipt2 = -14.5182124757 #TEST
+refacipt2 = -14.5181839579
+
+molecule li2{
+   Li
+   Li 1 1.0000
+}
+
+set {
+  basis DZ
+  e_convergence 10
+  d_convergence 10
+  r_convergence 10
+}
+
+set scf {
+  scf_type pk
+  reference rhf
+  docc = [2,0,0,0,0,1,0,0]
+  guess gwh
+}
+
+set forte {
+  active_space_solver aci
+  multiplicity 1
+  sci_excited_algorithm average
+  aci_n_average 2
+  aci_average_offset 1
+  sigma 0.01
+  nroot 3
+  root 1 
+  charge 0
+  active_ref_type gas_single
+  sci_enforce_spin_complete True
+  GAS1 [6,0,2,2,0,6,0,0]
+  GAS2 [0,0,0,0,0,0,2,2]
+  GAS2MAX [2]
+}
+
+
+energy('scf')
+
+compare_values(refscf, variable("CURRENT ENERGY"),9, "SCF energy") #TEST
+
+energy('forte')
+compare_values(refaci, variable("ACI ENERGY"),9, "ACI energy") #TEST
+compare_values(refacipt2, variable("ACI+PT2 ENERGY"),9, "ACI+PT2 energy") #TEST

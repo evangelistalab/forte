@@ -1,0 +1,61 @@
+#! Generated using commit GITCOMMIT
+
+import forte
+
+refscf = -14.54873910108353
+reffci = -97.1684126347554
+
+molecule HF {
+0 5
+H
+F 1 1.3001
+}
+
+set {
+  basis 3-21g
+  reference rohf
+  scf_type pk
+  e_convergence 12
+  d_convergence  6
+  docc [1,0,1,1]
+  socc [4,0,0,0]
+}
+
+set forte {
+  active_space_solver fci 
+  restricted_docc     [1,0,1,1]
+  active              [4,0,1,1]
+  multiplicity        5
+  e_convergence       10
+  r_convergence        6
+}
+
+energy('forte')
+compare_values(reffci, variable("CURRENT ENERGY"),11, "FCI energy") #TEST
+
+set forte {
+  active_space_solver fci
+  restricted_docc     [1,0,1,1]
+  active              [4,0,1,1]
+  multiplicity        5
+  ms                  2
+  e_convergence       10
+  r_convergence        6
+}
+
+energy('forte')
+compare_values(reffci, variable("CURRENT ENERGY"),11, "FCI energy") #TEST
+
+set forte {
+  active_space_solver fci
+  restricted_docc     [1,0,1,1]
+  active              [4,0,1,1]
+  multiplicity        5
+  ms                  -2
+  e_convergence       10
+  r_convergence        6
+}
+
+energy('forte')
+compare_values(reffci, variable("CURRENT ENERGY"),11, "FCI energy") #TEST
+

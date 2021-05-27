@@ -1,0 +1,54 @@
+#! Generated using commit GITCOMMIT
+
+ref_cas = -77.748792522752780
+ref_pt3 = -78.337068954478539
+
+import forte
+
+molecule C2H4{
+0 1
+H  0.000000  0.923274  1.238289
+H  0.000000 -0.923274  1.238289
+H  0.000000  0.923274 -1.238289
+H  0.000000 -0.923274 -1.238289
+C  0.000000  0.000000  0.668188
+C  0.000000  0.000000 -0.668188
+symmetry c2v
+}
+
+set {
+  reference           rhf
+  scf_type            out_of_core
+  basis               cc-pvdz
+  e_convergence       10
+  d_convergence       12
+  maxiter             100
+  docc                [5,0,1,2]
+  restricted_docc     [5,0,0,2]
+  active              [0,0,2,0]
+  mcscf_r_convergence 8
+  mcscf_e_convergence 10
+  mcscf_maxiter       200
+  mcscf_diis_start    15
+  mcscf_max_rot       0.1
+  num_roots           3
+  avg_states          [0,1,2]
+}
+Ecas, wfn = energy('casscf', return_wfn=True)
+compare_values(ref_cas, Ecas, 8, "CASSCF energy")
+
+set forte{
+  active_space_solver  cas
+  correlation_solver   sa-mrdsrg
+  corr_level           pt3
+  calc_type            sa
+  frozen_docc          [2,0,0,0]
+  restricted_docc      [3,0,0,2]
+  active               [0,0,2,0]
+  frozen_uocc          [0,0,0,0]
+  dsrg_s               0.5
+  avg_state            [[0,1,3]]
+}
+energy('forte', ref_wfn = wfn)
+Eroot0 = variable("ENERGY ROOT 0 1A1")
+compare_values(ref_pt3, Eroot0, 8, "SA-DSRG-PT3 energy root 0")

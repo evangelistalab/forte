@@ -3,9 +3,9 @@
 import forte
 
 refrohf    = -15.611546532146
-refudsrg   = -15.545427111263837 # unrelaxed
-refprdsrg  = -15.545445272160 # partially relaxed
-refrdsrg   = -15.545413272167 # relaxed
+refudsrg   = -15.545422485743 # unrelaxed
+refprdsrg  = -15.545440629861 # partially relaxed
+refrdsrg   = -15.545408668012 # relaxed
 
 molecule {
   0 3
@@ -60,7 +60,8 @@ set {
 }
 
 set forte {
-  job_type               mrdsrg
+  active_space_solver    fci
+  correlation_solver     mrdsrg
   int_type               cholesky
   cholesky_tolerance     1e-4
   corr_level             ldsrg2
@@ -76,12 +77,13 @@ set forte {
   e_convergence          8
   relax_ref              twice
   dsrg_nivo              true
+  dsrg_read_amps         true
 }
 
 Escf, wfn = energy('scf', return_wfn=True)
-compare_values(refrohf,variable("CURRENT ENERGY"),10,"ROHF energy")
+compare_values(refrohf, variable("CURRENT ENERGY"), 8, "ROHF energy")
 
 energy('forte', ref_wfn=wfn)
-compare_values(refudsrg,variable("UNRELAXED ENERGY"),8,"MRDSRG unrelaxed energy")
-compare_values(refprdsrg,variable("PARTIALLY RELAXED ENERGY"),8,"MRDSRG partially relaxed energy")
-compare_values(refrdsrg,variable("RELAXED ENERGY"),8,"MRDSRG relaxed energy")
+compare_values(refudsrg, variable("UNRELAXED ENERGY"), 8, "MRDSRG unrelaxed energy")
+compare_values(refprdsrg, variable("PARTIALLY RELAXED ENERGY"), 8, "MRDSRG partially relaxed energy")
+compare_values(refrdsrg, variable("RELAXED ENERGY"), 8, "MRDSRG relaxed energy")

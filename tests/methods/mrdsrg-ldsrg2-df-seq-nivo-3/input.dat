@@ -20,13 +20,13 @@ set globals{
    basis                   cc-pvdz
    reference               rhf
    scf_type                pk
-   d_convergence           12
-   e_convergence           15
+   d_convergence           10
+   e_convergence           12
    maxiter                 300
 }
 
 set forte{
-   active_space_solver    fci 
+   active_space_solver     fci
    correlation_solver      mrdsrg
    int_type                cholesky
    cholesky_tolerance      1e-4

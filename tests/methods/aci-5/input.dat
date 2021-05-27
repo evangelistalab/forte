@@ -1,5 +1,4 @@
-#
-#This tests the EX-CI procedure using energy selection
+#This tests the EX-CI procedure using energy selection only on the first state
 #! Generated using commit GITCOMMIT
 # Tests root-selection 
 
@@ -27,9 +26,7 @@ set {
 
 set forte {
   active_space_solver aci
-  aci_SELECT_TYPE aimed_energy
-  aci_perturb_select false
-  sci_excited_algorithm state_average
+  sci_excited_algorithm average
   aci_pq_function average
   root 0
   root_sym 0
@@ -37,14 +34,15 @@ set forte {
   sigma 0.005
   nroot 2
   charge 0
-  aci_enforce_spin_complete false
+  sci_enforce_spin_complete false
   active_guess_size 56
+  aci_n_average 1 # this overrides the default value
 }
 
-energy('scf')
+Escf, wfn = energy('scf', return_wfn=True)
 
 compare_values(refscf, variable("CURRENT ENERGY"),9, "SCF energy") #TEST
 
-energy('forte')
+energy('forte', ref_wfn=wfn)
 compare_values(refaci, variable("ACI ENERGY"),9, "ACI energy") #TEST
 compare_values(refacipt2, variable("ACI+PT2 ENERGY"),8, "ACI+PT2 energy") #TEST

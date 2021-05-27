@@ -33,7 +33,7 @@ Ecasscf, wfn = energy('casscf', return_wfn=True)
 compare_values(refcasscf,variable("CURRENT ENERGY"),9,"MCSCF energy") #TEST
 
 set forte{
-  active_space_solver     fci    
+  active_space_solver     fci
   correlation_solver      dsrg-mrpt3
   frozen_docc            [1,0,0,0,0,1,0,0]
   frozen_uocc            [0,0,0,0,0,0,0,0]
