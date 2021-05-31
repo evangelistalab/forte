@@ -32,16 +32,17 @@
 import sys
 
 # Load Python modules
-from .pymodule import *
-from .register_forte_options import *
-from .core import *
-from .forte import *
 from .molecule import Molecule
 from .basis import Basis
 from .hf import HF
 from .computation import Computation
 from .results import Results
 from .model import Model, MolecularModel
+
+from .pymodule import *
+from .register_forte_options import *
+from .core import *
+from .forte import *
 
 __version__ = '0.2.0'
 __author__ = 'Forte Developers'

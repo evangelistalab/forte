@@ -20,14 +20,17 @@ def test_input_example_2():
     H 1 1.085 2 135.5
     """)
 
-    psi4.set_options({'basis': 'DZ', 'scf_type': 'pk', 'e_convergence': 12, 'reference': 'rohf'})
-    psi4.set_module_options(
-        'FORTE', {
-            'job_type': 'mcscf_two_step',
-            'active_space_solver': 'fci',
-            'restricted_docc': [1, 0, 0, 0],
-            'active': [3, 0, 2, 2],
-            'avg_state': [[2, 3, 1], [0, 1, 1]]
+    psi4.set_options(
+        {
+            'basis': 'DZ',
+            'scf_type': 'pk',
+            'e_convergence': 12,
+            'reference': 'rohf',
+            'forte__job_type': 'mcscf_two_step',
+            'forte__active_space_solver': 'fci',
+            'forte__restricted_docc': [1, 0, 0, 0],
+            'forte__active': [3, 0, 2, 2],
+            'forte__avg_state': [[2, 3, 1], [0, 1, 1]]
         }
     )
     psi4.energy('forte')

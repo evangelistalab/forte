@@ -21,37 +21,48 @@ def test_input_example_1():
     H 1 1.085 2 135.5
     """)
 
-    psi4.set_options({'basis': 'DZ', 'scf_type': 'pk', 'e_convergence': 12, 'reference': 'rohf'})
-    psi4.set_module_options('FORTE', {
-        'active_space_solver': 'fci',
-        'restricted_docc': [1, 0, 0, 0],
-        'active': [3, 0, 2, 2],
-        'multiplicity': 3,
-        'root_sym': 2,
-    })
+    psi4.set_options(
+        {
+            'basis': 'DZ',
+            'scf_type': 'pk',
+            'e_convergence': 12,
+            'reference': 'rohf',
+            'forte__active_space_solver': 'fci',
+            'forte__restricted_docc': [1, 0, 0, 0],
+            'forte__active': [3, 0, 2, 2],
+            'forte__multiplicity': 3,
+            'forte__root_sym': 2,
+        }
+    )
     efci = psi4.energy('forte')
     assert efci == pytest.approx(ref_e_3b1, 1.0e-9)
 
-    psi4.set_module_options('FORTE', {
-        'active_space_solver': 'fci',
-        'restricted_docc': [1, 0, 0, 0],
-        'active': [3, 0, 2, 2],
-        'multiplicity': 1,
-        'root_sym': 0,
-        'nroot': 2
-    })
+    psi4.set_options(
+        {
+            'forte__active_space_solver': 'fci',
+            'forte__restricted_docc': [1, 0, 0, 0],
+            'forte__active': [3, 0, 2, 2],
+            'forte__multiplicity': 1,
+            'forte__root_sym': 0,
+            'forte__nroot': 2
+        }
+    )
+
     efci = psi4.energy('forte')
     assert efci == pytest.approx(ref_e_1a1, 1.0e-9)
 
-    psi4.set_module_options('FORTE', {
-        'active_space_solver': 'fci',
-        'restricted_docc': [1, 0, 0, 0],
-        'active': [3, 0, 2, 2],
-        'multiplicity': 1,
-        'root_sym': 0,
-        'nroot': 2,
-        'root': 1
-    })
+    psi4.set_options(
+        {
+            'forte__active_space_solver': 'fci',
+            'forte__restricted_docc': [1, 0, 0, 0],
+            'forte__active': [3, 0, 2, 2],
+            'forte__multiplicity': 1,
+            'forte__root_sym': 0,
+            'forte__nroot': 2,
+            'forte__root': 1
+        }
+    )
+
     efci = psi4.energy('forte')
     assert efci == pytest.approx(ref_e_1a1_ex, 1.0e-9)
 
