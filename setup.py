@@ -103,7 +103,7 @@ setup(
     # tell setuptools that all packages will be under the '.' directory
     package_dir={'':'.'},
     # add an extension module named 'forte' to the package
-    ext_modules=[CMakeExtension('.')],
+    ext_modules=[CMakeExtension('forte')],
     # add custom build_ext command
     cmdclass=dict(build_ext=CMakeBuild),
     test_suite='tests',

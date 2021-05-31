@@ -30,6 +30,7 @@
 import psi4
 import forte
 
+
 def clean_options():
     """
     A function to clear the options object
