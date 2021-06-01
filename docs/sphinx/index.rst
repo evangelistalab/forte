@@ -15,8 +15,8 @@ correlated electrons.
    :maxdepth: 3
    :caption: Contents:
 
-   overview
-   running_forte
+   00_overview
+   01_compilation
    basics/getting_started
    basics/mospaceinfo
    basics/multistate
