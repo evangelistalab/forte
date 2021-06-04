@@ -235,6 +235,12 @@ def register_mo_space_info_options(options):
                           " orbitals per irrep (in Cotton order)")
     options.add_int_array("FROZEN_UOCC", "Number of frozen unoccupied orbitals"
                           " per irrep (in Cotton order)")
+    options.add_int_array("EMBEDDING_DOCC", "Number of fragment occupied orbitals"
+                          " per irrep (in Cotton order)")
+    options.add_int_array("EMBEDDING_ACTV", "Number of fragment active orbitals"
+                          " per irrep (in Cotton order)")
+    options.add_int_array("EMBEDDING_ORB", "Number of all fragment orbitals"
+                          " per irrep (in Cotton order)")
 
     options.add_int_array("GAS1", "Number of GAS1 orbitals per irrep"
                           " (in Cotton order)")

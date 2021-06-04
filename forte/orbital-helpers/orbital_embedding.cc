@@ -688,6 +688,7 @@ std::shared_ptr<MOSpaceInfo> make_embedding(psi::SharedWavefunction ref_wfn,
 
     if (options->get_str("EMBEDDING_CUTOFF_METHOD") == "CORRELATED_BATH") {
         // Use t1 and t2 to partition: t1 = t, t2 = t/10000.
+        // A trick to reduce the ASET2 cost by truncating B further, freeze orbitals that have no overlap at all.
         double thresh_tail = thresh / 10000.0;
         for (int i = 0; i < nroccpi[0]; i++) {
             double lb = lo->get(0, i);
