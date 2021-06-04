@@ -41,7 +41,7 @@ import forte.proc.fcidump
 from forte.proc.dsrg import ProcedureDSRG
 from forte.proc.orbital_helpers import ortho_orbs_forte, orbital_projection
 from forte.proc.orbital_helpers import read_orbitals, dump_orbitals
-
+from forte.proc.aset2 import aset2_driver
 
 def run_psi4_ref(ref_type, molecule, print_warning=False, **kwargs):
     """
@@ -518,6 +518,9 @@ def run_forte(name, **kwargs):
         psi4.core.set_scalar_variable('CURRENT ENERGY', 0.0)
         forte.cleanup()
         return ref_wfn
+
+    if (job_type == 'ASET2'):
+        energy_aset2 = aset2_driver(state_weights_map, scf_info, ref_wfn, mo_space_info, options)
 
     start_pre_ints = time.time()
 
