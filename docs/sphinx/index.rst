@@ -17,8 +17,8 @@ correlated electrons.
 
    00_overview
    01_compilation
-   basics/getting_started
-   basics/mospaceinfo
+   02_getting_started
+   03_wavefunction
    basics/multistate
    basics/wfn_examples
    basics/integrals
