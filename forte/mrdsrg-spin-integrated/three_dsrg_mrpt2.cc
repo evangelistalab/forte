@@ -346,6 +346,14 @@ double THREE_DSRG_MRPT2::compute_energy() {
     if (my_proc == 0) {
         // check semi-canonical orbitals
         semi_canonical_ = check_semi_orbs();
+
+        // Bypass this check if we are doing environment (B) DSRG
+        bool semi_skip = foptions_->get_bool("EMBEDDING_DISABLE_SEMI_CHECK");
+        bool embedding = foptions_->get_bool("EMBEDDING");
+        if (embedding && semi_skip) {
+            semi_canonical_ = true;
+        }
+
         if (!semi_canonical_) {
             outfile->Printf("\n    Warning: DF/CD-DSRG-MRPT2 only takes semi-canonical orbitals.");
             outfile->Printf("\n    Energy is reliable to similar digit as max(|Fij|), i != j.");

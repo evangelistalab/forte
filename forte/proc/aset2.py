@@ -32,62 +32,131 @@ import forte
 from forte.proc.dsrg import ProcedureDSRG
 
 def aset2_driver(state_weights_map, scf_info, ref_wfn, mo_space_info, options):
-    # TODO:build an assertion function to check all options?    
-    # example options.get_bool('FORTE', 'EMBEDDING') should equal True
 
+    # Read all options
+    frag_corr_solver = options.get_str('FRAG_CORRELATION_SOLVER')
     frag_corr_level = options.get_str('FRAG_CORR_LEVEL')
+    env_corr_solver = options.get_str('ENV_CORRELATION_SOLVER')
     env_corr_level = options.get_str('ENV_CORR_LEVEL')
+    relax = options.get_str('RELAX_REF')
+    semi = options.get_bool('SEMI_CANONICAL')
+    int_type_frag = options.get_str('INT_TYPE_FRAG')
+    int_type_env = options.get_str('INT_TYPE_ENV')
+    do_aset_mf = options.get_bool('EMBEDDING_ASET2_MF_REF')
+    #fold = options.get_bool('DSRG_FOLD')
+    
+    # Build two option lists for fragment (A) and environment (B) solver
+    A_list = [frag_corr_solver, frag_corr_level, int_type_frag, relax, semi]
+    B_list = [env_corr_solver, env_corr_level, int_type_env]
 
-    # mo_space_info: fragment all active, environment restricted, core frozen
-    # mo_space_info_active: fragment-C,A,V, environment and core frozen
+    # TODO: print computation details here
+
+    # In ASET(2) procedure, We will keep 2 different mo_space_info:
+    # mo_space_info: Active = AC + AA + AV, restricted = BO + BV, frozen = F
+    # mo_space_info_active: Active = AA, restricted = AC + AV, frozen = BO + BV + F
     mo_space_info_active = forte.build_aset2_fragment(ref_wfn, mo_space_info)
 
-    # Build fragment and f-e integrals
-    ints_f = forte.make_ints_from_psi4(ref_wfn, options, mo_space_info_active)
-    # TODO:if custom, build custom integrals?
-
-    if ('DF' in options.get_str('INT_TYPE_ENV')):
-        aux_basis_env = psi4.core.BasisSet.build(ref_wfn.molecule(), 'DF_BASIS_MP2',
-                                         psi4.core.get_global_option('DF_BASIS_MP2'),
-                                         'RIFIT', psi4.core.get_global_option('BASIS'))
-        ref_wfn.set_basisset('DF_BASIS_MP2', aux_basis_env)
-        options.set_str('FORTE', 'INT_TYPE', 'DF')
-        forte.forte_options.update_psi_options(options)
-
+    # Build total (A+B) integrals first
+    update_environment_options(options, B_list, ref_wfn)
     ints_e = forte.make_ints_from_psi4(ref_wfn, options, mo_space_info)
-    
-    #ints_f.build_from_another_ints(ints_e, -4) # Make sure this function works! make ints_f elements same with ints_e for corresponding blocks
- 
 
-    # compute higher-level with mo_space_info_active(inner) and methods in options, -> E_high(origin)
+    # Compute ASET(mf) higher-level with mo_space_info_active(inner) and methods in options, -> E_high(origin)
+    energy_high = 0.0
+    if(do_aset_mf):
+        update_fragment_options(options, A_list, ref_wfn)
+        ints_f = forte.make_ints_from_psi4(ref_wfn, options, mo_space_info_active)
+        energy_high = forte_driver_fragment(state_weights_map, scf_info, forte.forte_options, ints_f, mo_space_info_active)
 
-    # TODO: add an option manager function
-    # TODO: make this ASET(mf) computation optional
-    #options.set_str('FORTE', 'INT_TYPE', 'CONVENTIONAL')
-    options.set_str('CORR_LEVEL', frag_corr_level)
-    #fold = options.get_bool('DSRG_FOLD')
-    #relax = options.get_str('RELAX_REF')
-    #options.set_bool('FORTE', 'DSRG_FOLD', False)
-    #options.set_str('FORTE', 'RELAX_REF', relax)
-    options.set_bool('EMBEDDING_DISABLE_SEMI_CHECK', False)
-    #options.set_bool('FORTE', 'EMBEDDING_ALIGN_FROZEN', False) #TODO: check why I do this
-    #options.set_bool('FORTE', 'SEMI_CANONICAL', False)
-    #forte.forte_options.update_psi_options(options) #TODO: check whether we still need this
-    energy_high = forte_driver_aset(state_weights_map, scf_info, forte.forte_options, ints_f, mo_space_info_active)
+    # Compute envrionment (B) amplitudes T1, T2 and energy corrections E_c^B, dress fragment ints
+    update_environment_options(options, B_list, ref_wfn)
 
     raise Exception('Breakpoint reached!')
 
-    options.set_bool('FORTE', 'DSRG_FOLD', fold)
-    options.set_bool('FORTE', 'EMBEDDING_DISABLE_SEMI_CHECK', True)
-    options.set_bool('FORTE', 'EMBEDDING_ALIGN_FROZEN', True)
-    options.set_str('FORTE', 'RELAX_REF', "ONCE")
-    
+    energy_cB, ints_dressed = forte_driver_environment(scf_info, mo_space_info, mo_space_info_active, ints_e, options)
+
+    # Build dressed fragment integrals.
+    update_fragment_options(options, A_list, ref_wfn)
+    ints_f = None
+    if(int_type_frag == "CONVENTIONAL"):
+        ints_f = forte.make_ints_from_psi4(ref_wfn, options, mo_space_info_active)
+    else:
+        #ints_f = build_empty_integral(mo_space_info_active)
+        # TODO: if fragment integrals is not conventional, build a custom empty ints here
+        raise Exception('Not finished here!')
+
+    # Reset scalar
+    frz1 = ints_f.frozen_core_energy()
+    scalar = ints_dressed.scalar_energy() - frz1
+    ints_f.set_scalar(scalar)
+    psi4.core.print_out("\n ints_f shifted scalar".format(ints_dressed.scalar_energy()))
+
+    # Build new ints for dressed computation
+    #state_map = forte.to_state_nroots_map(state_weights_map)
+    ints_f.build_from_asints(ints_dressed)
+
+    # Compute MRDSRG-in-PT2 energy (folded)
+    energy_high_dressed = forte_driver_fragment(state_weights_map, scf_info, forte.forte_options, ints_f, mo_space_info_active)
+    # TODO: extract E_0 and E_c^A in forte_driver_fragment, and print them
+
+    psi4.core.print_out("\n ==============ASET(2) Summary==============")
+    if(do_aset_mf):
+        psi4.core.print_out("\n E(fragment, undressed) = {:10.12f}".format(energy_high))
+    psi4.core.print_out("\n E_corr(env correlation) = {:10.12f}".format(energy_cB))
+    if(do_aset_mf):
+        psi4.core.print_out("\n E(embedding, undressed) = {:10.12f}".format(energy_high + energy_cB))
+    psi4.core.print_out("\n E(fragment, dressed) = {:10.12f}".format(energy_high_dressed))
+    psi4.core.print_out("\n E(embedding, dressed) = {:10.12f}".format(energy_high_dressed + energy_cB))
+    psi4.core.print_out("\n ==============ASET(2) procedure done============== \n")
+
+    return energy_high_dressed + energy_cB
+
+def forte_driver_fragment(state_weights_map, scf_info, options, ints, mo_space_info):
+    # TODO Modify this solver to consider frag/env
+    """
+    Driver to perform a Forte calculation using new solvers.
+
+    :param state_weights_map: dictionary of {state: weights}
+    :param scf_info: a SCFInfo object of Forte
+    :param options: a ForteOptions object of Forte
+    :param ints: a ForteIntegrals object of Forte
+    :param mo_space_info: a MOSpaceInfo object of Forte
+
+    :return: the computed energy
+    """
+    # map state to number of roots
+    state_map = forte.to_state_nroots_map(state_weights_map)
+
+    # create an active space solver object and compute the energy
+    active_space_solver_type = options.get_str('ACTIVE_SPACE_SOLVER')
+    as_ints = forte.make_active_space_ints(mo_space_info, ints, "ACTIVE", ["RESTRICTED_DOCC"])
+    active_space_solver = forte.make_active_space_solver(active_space_solver_type, state_map, scf_info,
+                                                         mo_space_info, as_ints, options)
+    state_energies_list = active_space_solver.compute_energy()
+
+    if options.get_bool('SPIN_ANALYSIS'):
+        rdms = active_space_solver.compute_average_rdms(state_weights_map, 2)
+        forte.perform_spin_analysis(rdms, options, mo_space_info, as_ints)
+
+    # solver for dynamical correlation from DSRG
+    correlation_solver_type = options.get_str('FRAG_CORRELATION_SOLVER')
+    if correlation_solver_type != 'NONE':
+        dsrg_proc = ProcedureDSRG(active_space_solver, state_weights_map, mo_space_info, ints, options, scf_info)
+        return_en = dsrg_proc.compute_energy()
+        dsrg_proc.print_summary()
+        dsrg_proc.push_to_psi4_environment()
+    else:
+        average_energy = forte.compute_average_state_energy(state_energies_list, state_weights_map)
+        return_en = average_energy
+
+    return return_en
+
+def forte_driver_environment(scf_info, mo_space_info, mo_space_info_active, ints_e, options):
     # TODO: Build C++ embedding_density class, automate rdm level, rdms = forte.embedding_density(scf_info, mo_space_info, mo_space_info_active, ...)
     rdm_level = 2
     # Form rdms for interaction correlation computation
     rdms = forte.RHF_DENSITY(scf_info, mo_space_info).rhf_rdms()
     # TODO: add option for CASCI density using FCI, consider doing this in python side?
-    if options.get_str('fragment_density') == "CASSCF": 
+    if options.get_str('fragment_density') == "CASSCF":
         as_ints = forte.make_active_space_ints(mo_space_info_active, ints_f, "ACTIVE", ["RESTRICTED_DOCC"])
         rdms = forte.build_casscf_density(rdm_level, scf_info, forte.forte_options, mo_space_info_active, mo_space_info, as_ints) # Stateinfo is no longer needed
     if options.get_str('fragment_density') == "FCI": # Expensive, for benchmarking only
@@ -128,80 +197,45 @@ def aset2_driver(state_weights_map, scf_info, ref_wfn, mo_space_info, options):
     # eH rotation
     ints_dressed = dsrg.compute_Heff_actv()
 
-    # Debug:
-    psi4.core.print_out("\n ints_f frozen core energy: {:10.8f}".format(ints_f.frozen_core_energy()))
-    psi4.core.print_out("\n ints_f original scalar: {:10.8f}".format(ints_f.scalar()))
-    psi4.core.print_out("\n ints_dressed frozen core energy: {:10.8f}".format(ints_dressed.frozen_core_energy()))
-    psi4.core.print_out("\n ints_dressed original scalar: {:10.8f}".format(ints_dressed.scalar_energy()))
+    return E_corr, ints_dressed
 
-    frz1 = ints_f.frozen_core_energy()
-    scalar = ints_dressed.scalar_energy() - frz1
-    ints_f.set_scalar(scalar)
+def update_fragment_options(options, A_list, ref_wfn):
 
-    psi4.core.print_out("\n ints_f shifted scalar".format(ints_dressed.scalar_energy()))
+    if ('DF' in A_list[2]):
+        aux_basis_frag = psi4.core.BasisSet.build(ref_wfn.molecule(), 'DF_BASIS_MP2',
+                                         psi4.core.get_global_option('DF_BASIS_MP2'),
+                                         'RIFIT', psi4.core.get_global_option('BASIS'))
+        ref_wfn.set_basisset('DF_BASIS_MP2', aux_basis_frag)
+        options.set_str('INT_TYPE', A_list[2])
 
-    # Build new ints for dressed computation
-    state_map = forte.to_state_nroots_map(state_weights_map)
-    ints_f.build_from_asints(ints_dressed)
+    options.set_str('CORRELATION_SOLVER', A_list[0])
+    options.set_str('CORR_LEVEL', A_list[1])
+    options.set_str('RELAX_REF', A_list[3])
+    options.set_bool('SEMI_CANONICAL', A_list[4])
+    options.set_bool('EMBEDDING_DISABLE_SEMI_CHECK', False)
+    #options.set_bool('EMBEDDING_ALIGN_FROZEN', False) #TODO: check why I do this
+    #forte.forte_options.update_psi_options(options) #TODO: check whether we still need this
 
-    # Compute MRDSRG-in-PT2 energy (folded)
-    options.set_str('FORTE', 'CORR_LEVEL', frag_corr_level)
-    options.set_bool('FORTE', 'DSRG_FOLD', False)
-    options.set_str('FORTE', 'RELAX_REF', relax)
-    options.set_bool('FORTE', 'EMBEDDING_DISABLE_SEMI_CHECK', False)
-    options.set_bool('FORTE', 'EMBEDDING_ALIGN_FROZEN', False)
-    options.set_str('FORTE', 'INT_TYPE', 'CONVENTIONAL')
-    forte.forte_options.update_psi_options(options)
+    # Block folding functionality will be in another PR
+    #options.set_bool('DSRG_FOLD', False)
+    #options.set_bool('EMBEDDING_ALIGN_FROZEN', False)
 
-    # Compute Ec1 dressed
-    energy_high_relaxed = forte_driver_aset(state_weights_map, scf_info, forte.forte_options, ints_f, mo_space_info_active)
+    return
 
-    psi4.core.print_out("\n ==============Embedding Summary==============")
-    psi4.core.print_out("\n E(fragment, undressed) = {:10.12f}".format(energy_high))
-    psi4.core.print_out("\n E_corr(env correlation) = {:10.12f}".format(E_corr))
-    psi4.core.print_out("\n E(embedding, undressed) = {:10.12f}".format(energy_high + E_corr))
-    psi4.core.print_out("\n E(fragment, dressed) = {:10.12f}".format(energy_high_relaxed))
-    psi4.core.print_out("\n E(embedding, dressed) = {:10.12f}".format(energy_high_relaxed + E_corr))
-    psi4.core.print_out("\n ==============MRDSRG embedding done============== \n")
+def update_environment_options(options, B_list, ref_wfn):
 
-    return energy_high_relaxed + E_corr
+    if ('DF' in B_list[2]):
+        aux_basis_env = psi4.core.BasisSet.build(ref_wfn.molecule(), 'DF_BASIS_MP2',
+                                         psi4.core.get_global_option('DF_BASIS_MP2'),
+                                         'RIFIT', psi4.core.get_global_option('BASIS'))
+        ref_wfn.set_basisset('DF_BASIS_MP2', aux_basis_env)
+        options.set_str('INT_TYPE', B_list[2])
 
-def forte_driver_aset(state_weights_map, scf_info, options, ints, mo_space_info):
-    # TODO Modify this solver to consider frag/env
-    """
-    Driver to perform a Forte calculation using new solvers.
+    options.set_str('CORRELATION_SOLVER', B_list[0])
+    options.set_str('CORR_LEVEL', B_list[1])
+    options.set_bool('EMBEDDING_DISABLE_SEMI_CHECK', True)
+    options.set_str('RELAX_REF', "ONCE") # Setting it here to bypass many relax_ref checks in all DSRG codes
+    #options.set_bool('DSRG_FOLD', fold)
+    #options.set_bool('EMBEDDING_ALIGN_FROZEN', True)
 
-    :param state_weights_map: dictionary of {state: weights}
-    :param scf_info: a SCFInfo object of Forte
-    :param options: a ForteOptions object of Forte
-    :param ints: a ForteIntegrals object of Forte
-    :param mo_space_info: a MOSpaceInfo object of Forte
-
-    :return: the computed energy
-    """
-    # map state to number of roots
-    state_map = forte.to_state_nroots_map(state_weights_map)
-
-    # create an active space solver object and compute the energy
-    active_space_solver_type = options.get_str('ACTIVE_SPACE_SOLVER')
-    as_ints = forte.make_active_space_ints(mo_space_info, ints, "ACTIVE", ["RESTRICTED_DOCC"])
-    active_space_solver = forte.make_active_space_solver(active_space_solver_type, state_map, scf_info,
-                                                         mo_space_info, as_ints, options)
-    state_energies_list = active_space_solver.compute_energy()
-
-    if options.get_bool('SPIN_ANALYSIS'):
-        rdms = active_space_solver.compute_average_rdms(state_weights_map, 2)
-        forte.perform_spin_analysis(rdms, options, mo_space_info, as_ints)
-
-    # solver for dynamical correlation from DSRG
-    correlation_solver_type = options.get_str('FRAG_CORRELATION_SOLVER')
-    if correlation_solver_type != 'NONE':
-        dsrg_proc = ProcedureDSRG(active_space_solver, state_weights_map, mo_space_info, ints, options, scf_info)
-        return_en = dsrg_proc.compute_energy()
-        dsrg_proc.print_summary()
-        dsrg_proc.push_to_psi4_environment()
-    else:
-        average_energy = forte.compute_average_state_energy(state_energies_list, state_weights_map)
-        return_en = average_energy
-
-    return return_en
+    return

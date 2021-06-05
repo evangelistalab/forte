@@ -246,6 +246,9 @@ def register_embedding_options(options):
     options.add_bool(
         "embedding_disable_semi_check", True,
         "Whether we skip semi-canonicalization check in DSRG code when computing ASET(2).")
+    options.add_bool(
+        "EMBEDDING_ASET2_MF_REF", True,
+        "Whether we compute an ASET(mf) for reference when doing ASET(2).")
 
 
 def register_mo_space_info_options(options):
@@ -691,12 +694,21 @@ def register_integral_options(options):
 
     options.add_str(
         "INT_TYPE_ENV", "CONVENTIONAL",
-        ["CONVENTIONAL", "CHOLESKY", "DF", "DISKDF", "FCIDUMP"],
+        ["CONVENTIONAL", "CHOLESKY", "DF", "DISKDF"],
         "The type of molecular integrals used in the embedding environment (B)"
         "- CONVENTIONAL Conventional four-index two-electron integrals"
         "- DF Density fitted two-electron integrals"
-        "- CHOLESKY Cholesky decomposed two-electron integrals"
-        "- FCIDUMP Read integrals from a file in the FCIDUMP format")
+        "- CHOLESKY Cholesky decomposed two-electron integrals")
+
+    options.add_str(
+        "INT_TYPE_FRAG", "CONVENTIONAL",
+        ["CONVENTIONAL", "CHOLESKY", "DF", "DISKDF"],
+        "The type of molecular integrals used in the embedding fragment (A)"
+        "Note that if CHOLESKY or DF is selected, they will only apply to the ASET(mf) fragment"
+        "And the ASET(2) driver will build a custom integral for the fragment (A) instead"
+        "- CONVENTIONAL Conventional four-index two-electron integrals"
+        "- DF Density fitted two-electron integrals"
+        "- CHOLESKY Cholesky decomposed two-electron integrals")
 
     options.add_str('FCIDUMP_FILE', 'INTDUMP',
                     'The file that stores the FCIDUMP integrals')
