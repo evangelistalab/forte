@@ -16,7 +16,7 @@ correlated electrons.
    :caption: Contents:
 
    00_overview
-   tutorial
+   tutorials
    howto
    programming/index
    options
