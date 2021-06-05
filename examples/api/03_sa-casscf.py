@@ -1,5 +1,5 @@
-# examples/api/03_fci_ms.py
-"""FCI computation on the triplet B1 state and singlet A1 electronic states of methylene"""
+# examples/api/03_ms-casscf.py
+"""State-averaged CASSCF computation on the triplet B1 state and singlet A1 electronic states of methylene"""
 
 import psi4
 import forte
