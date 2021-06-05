@@ -21,10 +21,3 @@ correlated electrons.
    programming/index
    options
    api
-
-Indices and tables
-==================
-
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`

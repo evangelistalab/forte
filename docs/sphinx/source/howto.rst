@@ -1,4 +1,4 @@
-How to
+HOWTOs
 ======
 
 .. toctree::
