@@ -5,7 +5,6 @@ How to
    :maxdepth: 2
    :caption: How to:
 
-   basics/integrals
    methods/fci
    methods/aci
    methods/mcscf

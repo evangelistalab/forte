@@ -9,4 +9,5 @@ Tutorials
    02_getting_started
    03_wavefunction
    04_multistate
-   basics/wfn_examples   
+   05_examples
+   06_integrals
