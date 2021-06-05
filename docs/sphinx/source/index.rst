@@ -8,6 +8,9 @@
    :alt: alternate text
    :align: center
 
+Home
+====
+
 Forte is an open-source suite of quantum chemistry methods for strongly
 correlated electrons.
 
