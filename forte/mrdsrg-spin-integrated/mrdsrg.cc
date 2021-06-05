@@ -113,18 +113,37 @@ void MRDSRG::startup() {
     // print norm and max of 2- and 3-cumulants
     print_cumulant_summary();
 
+    outfile->Printf("\n Debug #1");
+
     // copy Fock matrix from master_dsrg
     F_ = BTF_->build(tensor_type_, "Fock", spin_cases({"gg"}));
+    outfile->Printf("\n Debug #1.1");
     F_["pq"] = Fock_["pq"];
+    outfile->Printf("\n Debug #1.2");
     F_["PQ"] = Fock_["PQ"];
+    outfile->Printf("\n Debug #1.3");
     Fa_ = Fdiag_a_;
     Fb_ = Fdiag_b_;
+    outfile->Printf("\n Debug #1.4");
+
+    outfile->Printf("\n Debug #2");
 
     // auto adjusted s_
     s_ = make_s_smart();
 
+    outfile->Printf("\n Debug #3");
+
     // test semi-canonical
     semi_canonical_ = check_semi_orbs();
+
+    // Bypass this check if we are doing environment (B) MRDSRG
+    bool semi_skip = foptions_->get_bool("EMBEDDING_DISABLE_SEMI_CHECK");
+    bool embedding = foptions_->get_bool("EMBEDDING");
+    if (embedding && semi_skip) {
+        semi_canonical_ = true;
+    }
+
+    outfile->Printf("\n Debug #3");
 
     if (!semi_canonical_) {
         outfile->Printf("\n    Orbital invariant formalism will be employed for MR-DSRG.");
@@ -371,6 +390,8 @@ double MRDSRG::compute_energy() {
 void MRDSRG::print_cumulant_summary() {
     print_h2("Density Cumulant Summary");
 
+    outfile->Printf("\n Debug #0.1");
+
     // 2-body
     std::vector<double> maxes, norms;
 
@@ -386,32 +407,36 @@ void MRDSRG::print_cumulant_summary() {
     outfile->Printf("\n    %-8s %12.6f %12.6f %12.6f", "norm", norms[0], norms[1], norms[2]);
     outfile->Printf("\n    %s", dash.c_str());
 
+    outfile->Printf("\n Debug #0.2");
+
     // 3-body
-    maxes.clear();
-    maxes.push_back(rdms_.L3aaa().norm(0));
-    maxes.push_back(rdms_.L3aab().norm(0));
-    maxes.push_back(rdms_.L3abb().norm(0));
-    maxes.push_back(rdms_.L3bbb().norm(0));
-
-    norms.clear();
-    norms.push_back(rdms_.L3aaa().norm(2));
-    norms.push_back(rdms_.L3aab().norm(2));
-    norms.push_back(rdms_.L3abb().norm(2));
-    norms.push_back(rdms_.L3bbb().norm(2));
-
-    dash = std::string(8 + 13 * 4, '-');
-    outfile->Printf("\n    %-8s %12s %12s %12s %12s", "3-body", "AAA", "AAB", "ABB", "BBB");
-    outfile->Printf("\n    %s", dash.c_str());
-    outfile->Printf("\n    %-8s %12.6f %12.6f %12.6f %12.6f", "max", maxes[0], maxes[1], maxes[2],
-                    maxes[3]);
-    outfile->Printf("\n    %-8s %12.6f %12.6f %12.6f %12.6f", "norm", norms[0], norms[1], norms[2],
-                    norms[3]);
-    outfile->Printf("\n    %s", dash.c_str());
-
+    if (foptions_->get_str("THREEPDC") != "ZERO") {
+        maxes.clear();
+        maxes.push_back(rdms_.L3aaa().norm(0));
+        maxes.push_back(rdms_.L3aab().norm(0));
+        maxes.push_back(rdms_.L3abb().norm(0));
+        maxes.push_back(rdms_.L3bbb().norm(0));
+    
+        norms.clear();
+        norms.push_back(rdms_.L3aaa().norm(2));
+        norms.push_back(rdms_.L3aab().norm(2));
+        norms.push_back(rdms_.L3abb().norm(2));
+        norms.push_back(rdms_.L3bbb().norm(2));
+    
+        dash = std::string(8 + 13 * 4, '-');
+        outfile->Printf("\n    %-8s %12s %12s %12s %12s", "3-body", "AAA", "AAB", "ABB", "BBB");
+        outfile->Printf("\n    %s", dash.c_str());
+        outfile->Printf("\n    %-8s %12.6f %12.6f %12.6f %12.6f", "max", maxes[0], maxes[1], maxes[2],
+                        maxes[3]);
+        outfile->Printf("\n    %-8s %12.6f %12.6f %12.6f %12.6f", "norm", norms[0], norms[1], norms[2],
+                        norms[3]);
+        outfile->Printf("\n    %s", dash.c_str());
+    }
     //    check_density(Lambda2_, "2-body");
     //    if (foptions_->get_str("THREEPDC") != "ZERO") {
     //        check_density(Lambda3_, "3-body");
     //    }
+    outfile->Printf("\n Debug #0.3");
 }
 
 void MRDSRG::check_density(BlockedTensor& D, const std::string& name) {

@@ -919,6 +919,7 @@ std::shared_ptr<MOSpaceInfo> make_embedding(psi::SharedWavefunction ref_wfn,
 
     // ASET(2):
      if (options->get_str("EMBEDDING_TYPE") == "ASET2") {
+        outfile->Printf("\n\n  --------------- Generating Total (A + B) SpaceInfo --------------- ");
         // This will make A->active, B->restricted, for multilayer embedding/downfolding tests
         size_t freeze_o = static_cast<size_t>(num_Fo + adj_sys_docc);
         mo_space_map["FROZEN_DOCC"] = {freeze_o};
@@ -1150,7 +1151,7 @@ std::shared_ptr<MOSpaceInfo> build_aset2_fragment(psi::SharedWavefunction ref_wf
     size_t freeze_v = static_cast<size_t>(frzvpi[0] + nrvirpi[0]);
     mo_space_map_fragment["FROZEN_UOCC"] = {freeze_v};
 
-    outfile->Printf("\n  Generating inner-layer MOSpaceInfo");
+    outfile->Printf("\n\n  --------------- Generating Fragment (A) SpaceInfo --------------- ");
     std::vector<size_t> reorder;
     std::string point_group = ref_wfn->molecule()->point_group()->symbol();
     auto nmopi = ref_wfn->nmopi();
@@ -1158,7 +1159,7 @@ std::shared_ptr<MOSpaceInfo> build_aset2_fragment(psi::SharedWavefunction ref_wf
         make_mo_space_info_from_map(nmopi, point_group, mo_space_map_fragment, reorder);
 
     // Return the new embedding MOSpaceInfo to pymodule
-    outfile->Printf("\n\n  --------------- Entering inner-layer computation --------------- ");
+    outfile->Printf("\n\n  --------------- ASET(2) partition done --------------- ");
     return mo_space_info_fragment;
 }
 

@@ -29,29 +29,22 @@
 
 import psi4
 import forte
-from forte.pymodule import forte_driver
+from forte.proc.dsrg import ProcedureDSRG
 
 def aset2_driver(state_weights_map, scf_info, ref_wfn, mo_space_info, options):
     # TODO:build an assertion function to check all options?    
-    # TODO:set EMBEDDING_TYPE to be ASET2
-
-    # options.set_bool('FORTE', 'EMBEDDING', True)
-    # options.set_str('FORTE', 'EMBEDDING_CUTOFF_METHOD', 'CORRELATED_BATH')
-    # options.set_str('FORTE', 'EMBEDDING_SPECIAL', 'INNER_LAYER')
+    # example options.get_bool('FORTE', 'EMBEDDING') should equal True
 
     frag_corr_level = options.get_str('FRAG_CORR_LEVEL')
     env_corr_level = options.get_str('ENV_CORR_LEVEL')
 
     # mo_space_info: fragment all active, environment restricted, core frozen
     # mo_space_info_active: fragment-C,A,V, environment and core frozen
-    mo_space_info_active = forte.build_inner_space(ref_wfn, options, mo_space_info)
-    # TODO: add this function in api
+    mo_space_info_active = forte.build_aset2_fragment(ref_wfn, mo_space_info)
 
     # Build fragment and f-e integrals
-    ints_f = forte.make_forte_integrals_from_psi4(ref_wfn, options, mo_space_info_active)
+    ints_f = forte.make_ints_from_psi4(ref_wfn, options, mo_space_info_active)
     # TODO:if custom, build custom integrals?
-
-    psi4.core.print_out("\n Integral test (f original): oei_a(0, 2) = {:10.8f}".format(ints_f.oei_a(0, 2)))
 
     if ('DF' in options.get_str('INT_TYPE_ENV')):
         aux_basis_env = psi4.core.BasisSet.build(ref_wfn.molecule(), 'DF_BASIS_MP2',
@@ -61,29 +54,26 @@ def aset2_driver(state_weights_map, scf_info, ref_wfn, mo_space_info, options):
         options.set_str('FORTE', 'INT_TYPE', 'DF')
         forte.forte_options.update_psi_options(options)
 
-    ints_e = forte.make_forte_integrals_from_psi4(ref_wfn, options, mo_space_info)
+    ints_e = forte.make_ints_from_psi4(ref_wfn, options, mo_space_info)
     
-    #psi4.core.print_out("\n Integral test (e original): oei_a(4, 6) = {:10.8f}".format(ints_e.oei_a(4, 6)))
     #ints_f.build_from_another_ints(ints_e, -4) # Make sure this function works! make ints_f elements same with ints_e for corresponding blocks
-    #psi4.core.print_out("\n Integral test (f original): oei_a(0, 2) = {:10.8f}".format(ints_e.oei_a(4, 6)))
-    psi4.core.print_out("\n Integral test (f original): int_f ncmo: {:d}".format(ints_f.ncmo()))
-    psi4.core.print_out("\n Integral test (e original): int_e ncmo: {:d}".format(ints_e.ncmo()))
+ 
+
     # compute higher-level with mo_space_info_active(inner) and methods in options, -> E_high(origin)
 
     # TODO: add an option manager function
     # TODO: make this ASET(mf) computation optional
-    options.set_str('FORTE', 'INT_TYPE', 'CONVENTIONAL')
-    options.set_str('FORTE', 'CORR_LEVEL', frag_corr_level)
-    fold = options.get_bool('DSRG_FOLD')
-    relax = options.get_str('RELAX_REF')
-    options.set_bool('FORTE', 'DSRG_FOLD', False)
-    options.set_str('FORTE', 'RELAX_REF', relax)
-    options.set_bool('FORTE', 'EMBEDDING_DISABLE_SEMI_CHECK', False)
-    options.set_bool('FORTE', 'EMBEDDING_ALIGN_FROZEN', False)
+    #options.set_str('FORTE', 'INT_TYPE', 'CONVENTIONAL')
+    options.set_str('CORR_LEVEL', frag_corr_level)
+    #fold = options.get_bool('DSRG_FOLD')
+    #relax = options.get_str('RELAX_REF')
+    #options.set_bool('FORTE', 'DSRG_FOLD', False)
+    #options.set_str('FORTE', 'RELAX_REF', relax)
+    options.set_bool('EMBEDDING_DISABLE_SEMI_CHECK', False)
+    #options.set_bool('FORTE', 'EMBEDDING_ALIGN_FROZEN', False) #TODO: check why I do this
     #options.set_bool('FORTE', 'SEMI_CANONICAL', False)
-    forte.forte_options.update_psi_options(options)
+    #forte.forte_options.update_psi_options(options) #TODO: check whether we still need this
     energy_high = forte_driver_aset(state_weights_map, scf_info, forte.forte_options, ints_f, mo_space_info_active)
-    psi4.core.print_out("\n Integral test (f_1, after ldsrg2): oei_a(0, 2) = {:10.8f}".format(ints_f.oei_a(0, 2)))
 
     raise Exception('Breakpoint reached!')
 
@@ -153,7 +143,6 @@ def aset2_driver(state_weights_map, scf_info, ref_wfn, mo_space_info, options):
     # Build new ints for dressed computation
     state_map = forte.to_state_nroots_map(state_weights_map)
     ints_f.build_from_asints(ints_dressed)
-    psi4.core.print_out("\n Integral test (f_1 after dressing): oei_a(0, 2) = {:10.8f}".format(ints_f.oei_a(0, 2)))
 
     # Compute MRDSRG-in-PT2 energy (folded)
     options.set_str('FORTE', 'CORR_LEVEL', frag_corr_level)
@@ -166,8 +155,6 @@ def aset2_driver(state_weights_map, scf_info, ref_wfn, mo_space_info, options):
 
     # Compute Ec1 dressed
     energy_high_relaxed = forte_driver_aset(state_weights_map, scf_info, forte.forte_options, ints_f, mo_space_info_active)
-
-    psi4.core.print_out("\n Integral test (f_1 after relaxed ldsrg2): oei_a(0, 2) = {:10.8f}".format(ints_f.oei_a(0, 2)))
 
     psi4.core.print_out("\n ==============Embedding Summary==============")
     psi4.core.print_out("\n E(fragment, undressed) = {:10.12f}".format(energy_high))
@@ -207,7 +194,7 @@ def forte_driver_aset(state_weights_map, scf_info, options, ints, mo_space_info)
         forte.perform_spin_analysis(rdms, options, mo_space_info, as_ints)
 
     # solver for dynamical correlation from DSRG
-    correlation_solver_type = options.get_str('CORRELATION_SOLVER')
+    correlation_solver_type = options.get_str('FRAG_CORRELATION_SOLVER')
     if correlation_solver_type != 'NONE':
         dsrg_proc = ProcedureDSRG(active_space_solver, state_weights_map, mo_space_info, ints, options, scf_info)
         return_en = dsrg_proc.compute_energy()

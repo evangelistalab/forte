@@ -218,8 +218,34 @@ def register_embedding_options(options):
         "PAO_FIX_VIRTUAL_NUMBER", False,
         "Enable this option will generate PAOs equivlent to ASET virtuals, instead of using threshold")
     options.add_str(
-        "EMBEDDING_TYPE", "ASET_mf", ["ASET_mf", "ASET2", "ASET-SWAP"],
+        "EMBEDDING_TYPE", "ASET_MF", ["ASET_MF", "ASET2", "ASET-SWAP"],
         "The type of embedding computations.")
+    options.add_str(
+        'FRAGMENT_DENSITY', 'RHF', ['CASSCF', 'RHF', 'FCI'],
+        'The real/approximate RDMs used in the correlative environment computation')
+    options.add_str(
+        'FRAG_CORRELATION_SOLVER', 'MRDSRG',
+        ['DSRG-MRPT2', 'THREE-DSRG-MRPT2', 'DSRG-MRPT3', 'MRDSRG',
+         'SOMRDSRG', 'MRDSRG_SO', 'DSRG_MRPT'],
+        'Dynamical correlation solver type for Fragment inactive orbitals.')
+    options.add_str(
+        'ENV_CORRELATION_SOLVER', 'MRDSRG',
+        ['DSRG-MRPT2', 'THREE-DSRG-MRPT2', 'DSRG-MRPT3', 'MRDSRG',
+         'SOMRDSRG', 'MRDSRG_SO', 'DSRG_MRPT'],
+        'Dynamical correlation solver type for Fragment-environment correlation')
+    options.add_str("FRAG_CORR_LEVEL", "LDSRG2",
+        ["PT2", "PT3", "LDSRG2", "LDSRG2_QC", "LSRG2", "SRG_PT2", "QDSRG2",
+         "LDSRG2_P3", "QDSRG2_P3"],
+        "Correlation level of fragment MR-DSRG (used in mrdsrg code, "
+        "LDSRG2_P3 and QDSRG2_P3 not implemented)")
+    options.add_str("ENV_CORR_LEVEL", "PT2",
+        ["PT2", "PT3", "LDSRG2", "LDSRG2_QC", "LSRG2", "SRG_PT2", "QDSRG2",
+         "LDSRG2_P3", "QDSRG2_P3"],
+        "Correlation level of environment (interactive) MR-DSRG (used in mrdsrg code, "
+        "LDSRG2_P3 and QDSRG2_P3 not implemented)")
+    options.add_bool(
+        "embedding_disable_semi_check", True,
+        "Whether we skip semi-canonicalization check in DSRG code when computing ASET(2).")
 
 
 def register_mo_space_info_options(options):
@@ -658,6 +684,15 @@ def register_integral_options(options):
         "INT_TYPE", "CONVENTIONAL",
         ["CONVENTIONAL", "CHOLESKY", "DF", "DISKDF", "FCIDUMP"],
         "The type of molecular integrals used in a computation"
+        "- CONVENTIONAL Conventional four-index two-electron integrals"
+        "- DF Density fitted two-electron integrals"
+        "- CHOLESKY Cholesky decomposed two-electron integrals"
+        "- FCIDUMP Read integrals from a file in the FCIDUMP format")
+
+    options.add_str(
+        "INT_TYPE_ENV", "CONVENTIONAL",
+        ["CONVENTIONAL", "CHOLESKY", "DF", "DISKDF", "FCIDUMP"],
+        "The type of molecular integrals used in the embedding environment (B)"
         "- CONVENTIONAL Conventional four-index two-electron integrals"
         "- DF Density fitted two-electron integrals"
         "- CHOLESKY Cholesky decomposed two-electron integrals"
