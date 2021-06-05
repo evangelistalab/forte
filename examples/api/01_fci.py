@@ -1,3 +1,5 @@
+# examples/api/01_fci.py
+
 import psi4
 import forte
 

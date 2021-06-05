@@ -1,3 +1,6 @@
+# examples/api/03_fci_ms.py
+"""FCI computation on the triplet B1 state and singlet A1 electronic states of methylene"""
+
 import psi4
 import forte
 
@@ -14,6 +17,7 @@ psi4.set_options({'basis': 'DZ', 'scf_type': 'pk', 'e_convergence': 12, 'referen
         'forte__restricted_docc': [1, 0, 0, 0],
         'forte__active': [3, 0, 2, 2],
         'forte__avg_state': [[2, 3, 1], [0, 1, 1]]
+        # [(B1, triplet, 1 state), (A1,singlet,1 state)]
     }
 )
 

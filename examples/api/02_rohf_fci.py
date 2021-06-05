@@ -1,3 +1,5 @@
+# examples/api/02_rohf_fci.py
+
 import psi4
 import forte
 
