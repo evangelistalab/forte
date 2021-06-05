@@ -20,7 +20,6 @@ correlated electrons.
    howto
    programming/index
    options
-   forte
    api
 
 Indices and tables

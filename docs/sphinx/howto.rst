@@ -3,7 +3,6 @@ How to
 
 .. toctree::
    :maxdepth: 2
-   :caption: How to:
 
    methods/fci
    methods/aci
