@@ -64,6 +64,7 @@ def aset2_driver(state_weights_map, scf_info, ref_wfn, mo_space_info, options):
     energy_high = 0.0
     if(do_aset_mf):
         update_fragment_options(options, A_list, ref_wfn)
+        psi4.core.print_out("\n Fragment int_type: {:10s}".format(options.get_str('INT_TYPE')))
         ints_f = forte.make_ints_from_psi4(ref_wfn, options, mo_space_info_active)
         energy_high = forte_driver_fragment(state_weights_map, scf_info, forte.forte_options, ints_f, mo_space_info_active)
 
@@ -87,7 +88,6 @@ def aset2_driver(state_weights_map, scf_info, ref_wfn, mo_space_info, options):
     frz1 = ints_f.frozen_core_energy()
     scalar = ints_dressed.scalar_energy() - frz1
     ints_f.set_scalar(scalar)
-    psi4.core.print_out("\n ints_f shifted scalar".format(ints_dressed.scalar_energy()))
 
     # Build new ints for dressed computation
     #state_map = forte.to_state_nroots_map(state_weights_map)
@@ -198,10 +198,10 @@ def update_fragment_options(options, A_list, ref_wfn):
                                          psi4.core.get_global_option('DF_BASIS_MP2'),
                                          'RIFIT', psi4.core.get_global_option('BASIS'))
         ref_wfn.set_basisset('DF_BASIS_MP2', aux_basis_frag)
-        options.set_str('INT_TYPE', A_list[2])
-
+    
     options.set_str('CORRELATION_SOLVER', A_list[0])
     options.set_str('CORR_LEVEL', A_list[1])
+    options.set_str('INT_TYPE', A_list[2])
     options.set_str('RELAX_REF', A_list[3])
     options.set_bool('SEMI_CANONICAL', A_list[4])
     options.set_bool('EMBEDDING_DISABLE_SEMI_CHECK', False)
@@ -221,10 +221,10 @@ def update_environment_options(options, B_list, ref_wfn):
                                          psi4.core.get_global_option('DF_BASIS_MP2'),
                                          'RIFIT', psi4.core.get_global_option('BASIS'))
         ref_wfn.set_basisset('DF_BASIS_MP2', aux_basis_env)
-        options.set_str('INT_TYPE', B_list[2])
 
     options.set_str('CORRELATION_SOLVER', B_list[0])
     options.set_str('CORR_LEVEL', B_list[1])
+    options.set_str('INT_TYPE', B_list[2])
     options.set_bool('EMBEDDING_DISABLE_SEMI_CHECK', True)
     options.set_str('RELAX_REF', "ONCE") # Setting it here to bypass many relax_ref checks in all DSRG codes
     #options.set_bool('DSRG_FOLD', fold)

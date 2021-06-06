@@ -194,9 +194,9 @@ def register_embedding_options(options):
         "Number of virtual orbitals in A fixed to this value when embedding method is num_of_orbitals")
     options.add_str(
         "EMBEDDING_REFERENCE", "CASSCF",
-        "HF for any reference without active, CASSCF for any reference with an active space.")
+        "HF for any reference without active (DFT, for example), CASSCF for any reference with an active space.")
     options.add_bool(
-        "EMBEDDING_SEMICANONICALIZE_ACTIVE", True,
+        "EMBEDDING_SEMICANONICALIZE_ACTIVE", False,
         "Perform semi-canonicalization on active space or not")
     options.add_bool(
         "EMBEDDING_SEMICANONICALIZE_FROZEN", True,
