@@ -80,9 +80,16 @@ def aset2_driver(state_weights_map, scf_info, ref_wfn, mo_space_info, options):
     if(int_type_frag == "CONVENTIONAL"):
         ints_f = forte.make_ints_from_psi4(ref_wfn, options, mo_space_info_active)
     else:
-        #ints_f = build_empty_integral(mo_space_info_active)
-        # TODO: if fragment integrals is not conventional, build a custom empty ints here
-        raise Exception('Not finished here!')
+        # If fragment integrals is not conventional, build a custom empty ints here
+        nmo = ref_wfn->nbf()
+        scalar = 0.0 
+        hcore = np.zeros((nmo, nmo))
+        eri_aa = np.zeros((nmo, nmo, nmo, nmo))
+        eri_ab = np.zeros((nmo, nmo, nmo, nmo))
+        eri_bb = np.zeros((nmo, nmo, nmo, nmo))
+        ints_f = forte.make_custom_ints(options, mo_space_info_active, scalar,
+                                  hcore.flatten(), hcore.flatten(), eri_aa.flatten(),
+                                  eri_ab.flatten(), eri_bb.flatten())
 
     # Reset scalar
     frz1 = ints_f.frozen_core_energy()
@@ -90,11 +97,10 @@ def aset2_driver(state_weights_map, scf_info, ref_wfn, mo_space_info, options):
     ints_f.set_scalar(scalar)
 
     # Build new ints for dressed computation
-    #state_map = forte.to_state_nroots_map(state_weights_map)
     ints_f.build_from_asints(ints_dressed)
 
     # Compute MRDSRG-in-PT2 energy (folded)
-    energy_high_dressed = forte_driver_fragment(state_weights_map, scf_info, forte.forte_options, ints_f, mo_space_info_active)
+    energy_high_dressed = forte_driver_fragment(state_weights_map, scf_info, options, ints_f, mo_space_info_active)
     # TODO: extract E_0 and E_c^A in forte_driver_fragment, and print them
 
     psi4.core.print_out("\n ==============ASET(2) Summary==============")

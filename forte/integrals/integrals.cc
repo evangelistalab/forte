@@ -41,6 +41,7 @@
 #include "helpers/timer.h"
 #include "integrals.h"
 #include "memory.h"
+#include "integrals/active_space_integrals.h"
 
 #ifdef HAVE_GA
 #include <ga.h>
@@ -304,6 +305,17 @@ std::vector<std::shared_ptr<psi::Matrix>> ForteIntegrals::ao_dipole_ints() const
 void ForteIntegrals::set_oei(size_t p, size_t q, double value, bool alpha) {
     std::vector<double>& p_oei = alpha ? one_electron_integrals_a_ : one_electron_integrals_b_;
     p_oei[p * aptei_idx_ + q] = value;
+}
+
+void ForteIntegrals::set_oei_from_asints(std::shared_ptr<ActiveSpaceIntegrals> as_ints, bool alpha) {
+    std::vector<double>& p_oei = alpha ? one_electron_integrals_a_ : one_electron_integrals_b_;
+    for (size_t p = 0; p < aptei_idx_; ++p) {
+        for (size_t q = 0; q < aptei_idx_; ++q) {
+            outfile->Printf("\n Older value for (%d, %d): %8.8f", p, q, p_oei[p * aptei_idx_ + q]);
+            p_oei[p * aptei_idx_ + q] = alpha ? as_ints->oei_a(p, q) : as_ints->oei_b(p, q);
+            outfile->Printf("Updated value for (%d, %d): %8.8f", p, q, p_oei[p * aptei_idx_ + q]);
+        }
+    }
 }
 
 void ForteIntegrals::fix_orbital_phases(std::shared_ptr<psi::Matrix> U, bool is_alpha, bool debug) {
