@@ -1005,14 +1005,12 @@ psi::SharedMatrix semicanonicalize_block(psi::SharedWavefunction ref_wfn, psi::S
 }
 
 // Utility function #2: CAS-AO Fock builder
-void Build_CAS_AO_Fock(psi::SharedWavefunction ref_wfn, int nirrep, psi::Dimension doccpi, psi::Dimension actvpi, psi::Dimension nmopi) {
-    outfile->Printf("\n\n  --------------- Build AO Fock Matrix --------------- \n ");
-    outfile->Printf("\n docc: %d, actv: %d \n", doccpi[0], actvpi[0]);
-
+void Build_CAS_AO_Fock(psi::SharedWavefunction ref_wfn, int nirrep, psi::Dimension doccpi, psi::Dimension actvpi, 
+                       psi::Dimension nmopi) {
+    outfile->Printf("\n Building AO Fock Matrix ... \n ");
     std::shared_ptr<PSIO> psio(_default_psio_lib_);
     const psi::SharedMatrix Ca = ref_wfn->Ca()->clone();
 
-    outfile->Printf("\n Inactive size: %d, active size: %d \n ", doccpi[0], actvpi[0]);
     // Build inactive Fock
     psi::Dimension test_occ_pi = doccpi;
     psi::SharedMatrix C_occ(new Matrix("C_occ", nirrep, nmopi, test_occ_pi));
@@ -1022,9 +1020,14 @@ void Build_CAS_AO_Fock(psi::SharedWavefunction ref_wfn, int nirrep, psi::Dimensi
         }
     }
     
-    outfile->Printf("\n\n  --------------- Build F(inactive) --------------- \n ");
     std::shared_ptr<psi::JK> JK_occ;
-    JK_occ = JK::build_JK(ref_wfn->basisset(), psi::BasisSet::zero_ao_basis_set(), ref_wfn->options());
+    if (ref_wfn->options().get_str("SCF_TYPE") == "DF") {
+         auto basis_aux = ref_wfn->get_basisset("DF_BASIS_SCF");
+         JK_occ = JK::build_JK(ref_wfn->basisset(), basis_aux, ref_wfn->options(), "MEM_DF");
+    }
+    else {
+         JK_occ = JK::build_JK(ref_wfn->basisset(), psi::BasisSet::zero_ao_basis_set(), ref_wfn->options());
+    }
     JK_occ->set_memory(Process::environment.get_memory() * 0.8);
 
     JK_occ->initialize();
@@ -1062,8 +1065,6 @@ void Build_CAS_AO_Fock(psi::SharedWavefunction ref_wfn, int nirrep, psi::Dimensi
 
     // Build active Fock
     // Reference: Kevin's thesis chapter 1
-    outfile->Printf("\n\n  --------------- Build F(active) --------------- \n ");
-
     psi::SharedMatrix C_actv(new Matrix("C_actv", nirrep, nmopi, actvpi));
     for (int u = 0; u < nmopi[0]; ++u) {
         for (int i = 0; i < actvpi[0]; ++i) {
@@ -1086,7 +1087,13 @@ void Build_CAS_AO_Fock(psi::SharedWavefunction ref_wfn, int nirrep, psi::Dimensi
     }
 
     std::shared_ptr<psi::JK> JK_actv;
-    JK_actv = JK::build_JK(ref_wfn->basisset(), psi::BasisSet::zero_ao_basis_set(), ref_wfn->options());
+    if (ref_wfn->options().get_str("SCF_TYPE") == "DF") {
+         auto basis_aux = ref_wfn->get_basisset("DF_BASIS_SCF");
+         JK_actv = JK::build_JK(ref_wfn->basisset(), basis_aux, ref_wfn->options(), "MEM_DF");
+    }
+    else {
+         JK_actv = JK::build_JK(ref_wfn->basisset(), psi::BasisSet::zero_ao_basis_set(), ref_wfn->options());
+    }
     JK_actv->set_memory(Process::environment.get_memory() * 0.8);
 
     JK_actv->initialize();
@@ -1110,12 +1117,10 @@ void Build_CAS_AO_Fock(psi::SharedWavefunction ref_wfn, int nirrep, psi::Dimensi
     F_active->subtract(K_active);
     F_active->scale(2.0);
 
-    outfile->Printf("\n\n  --------------- Write AO Fock to wfn --------------- \n ");
+    outfile->Printf("\n Building finished, write AO Fock to wfn ... \n ");
     psi::SharedMatrix F_tot(F_inactive->clone());
     F_tot->add(F_active);
     ref_wfn->Fa()->copy(F_tot);
-
-    outfile->Printf("\n\n  --------------- AO Fock Matrix Done --------------- \n ");
 }
 
 // Utility function #3: Build the second MO_SPACE_INFO for ASET(2) inner layer computations
@@ -1151,7 +1156,8 @@ std::shared_ptr<MOSpaceInfo> build_aset2_fragment(psi::SharedWavefunction ref_wf
     size_t freeze_v = static_cast<size_t>(frzvpi[0] + nrvirpi[0]);
     mo_space_map_fragment["FROZEN_UOCC"] = {freeze_v};
 
-    outfile->Printf("\n\n  --------------- Generating Fragment (A) SpaceInfo --------------- ");
+    outfile->Printf("\n Generating fragment (A) SpaceInfo ... ");
+    outfile->Printf("\n The fragment MO is: \n ");
     std::vector<size_t> reorder;
     std::string point_group = ref_wfn->molecule()->point_group()->symbol();
     auto nmopi = ref_wfn->nmopi();
@@ -1159,7 +1165,7 @@ std::shared_ptr<MOSpaceInfo> build_aset2_fragment(psi::SharedWavefunction ref_wf
         make_mo_space_info_from_map(nmopi, point_group, mo_space_map_fragment, reorder);
 
     // Return the new embedding MOSpaceInfo to pymodule
-    outfile->Printf("\n\n  --------------- ASET(2) partition done --------------- ");
+    outfile->Printf("\n ASET(2) procedure started! ... \n ");
     return mo_space_info_fragment;
 }
 
