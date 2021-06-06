@@ -80,6 +80,7 @@ void export_ForteIntegrals(py::module& m) {
         .def("set_scalar", &ForteIntegrals::set_scalar, "Set the scalar energy")
         .def("set_oei", &ForteIntegrals::set_oei_all, "Set the one-electron integrals")
         .def("set_tei", &ForteIntegrals::set_tei_all, "Set the two-electron integrals")
+        //.def("build_from_asints", &ForteIntegrals::build_from_asints, "Build the integrals from as_ints.")
         .def("initialize", &ForteIntegrals::initialize, "Initialize the integrals")
         .def("print_ints", &ForteIntegrals::print_ints, "Print the integrals");
 }

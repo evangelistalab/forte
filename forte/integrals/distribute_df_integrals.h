@@ -83,6 +83,12 @@ class DistDFIntegrals : public Psi4Integrals {
         throw psi::PSIEXCEPTION("DistDF can not use set_tei");
     }
 
+    void build_from_asints(std::shared_ptr<ActiveSpaceIntegrals> as_ints) {
+        throw psi::PSIEXCEPTION("ASET downfolding do not support DistributedDF integrals!");
+    }
+
+    void set_tei_from_asints(std::shared_ptr<ActiveSpaceIntegrals> as_ints, bool alpha1, bool alpha2) {}
+
     /// Make a Fock matrix computed with respect to a given determinant
     virtual size_t nthree() const { return nthree_; }
     virtual int ga_handle() { return DistDF_ga_; }

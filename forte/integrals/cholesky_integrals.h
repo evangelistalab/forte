@@ -80,6 +80,10 @@ class CholeskyIntegrals : public Psi4Integrals {
     void set_tei(size_t p, size_t q, size_t r, size_t s, double value, bool alpha1,
                  bool alpha2) override;
 
+    void build_from_asints(std::shared_ptr<ActiveSpaceIntegrals> as_ints) {}
+
+    void set_tei_from_asints(std::shared_ptr<ActiveSpaceIntegrals> as_ints, bool alpha1, bool alpha2) {}
+
     size_t nthree() const override;
     std::shared_ptr<psi::Matrix> L_ao_;
 

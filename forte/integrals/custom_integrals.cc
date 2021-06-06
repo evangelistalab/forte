@@ -44,6 +44,8 @@
 
 #include "custom_integrals.h"
 
+#include "integrals/active_space_integrals.h"
+
 #define IOFFINDEX(i) (i * (i + 1) / 2)
 #define PAIRINDEX(i, j) ((i > j) ? (IOFFINDEX(i) + (j)) : (IOFFINDEX(j) + (i)))
 #define four(i, j, k, l) PAIRINDEX(PAIRINDEX(i, j), PAIRINDEX(k, l))
@@ -138,6 +140,34 @@ void CustomIntegrals::set_tei(size_t p, size_t q, size_t r, size_t s, double val
         aphys_tei_ab_[index] = value;
     if (alpha1 == false and alpha2 == false)
         aphys_tei_bb_[index] = value;
+}
+
+void CustomIntegrals::set_tei_from_asints(std::shared_ptr<ActiveSpaceIntegrals> as_ints, bool alpha1, bool alpha2) {
+    for (size_t p = 0; p < ncmo_; ++p) {
+        for (size_t q = 0; q < ncmo_; ++q) {
+            for (size_t r = 0; r < ncmo_; ++r) {
+                for (size_t s = 0; s < ncmo_; ++s) {
+                    size_t index = aptei_index(p, q, r, s);
+                    if (alpha1 == true and alpha2 == true)
+                        aphys_tei_aa_[index] = as_ints->tei_aa(p, q, r, s);
+                    if (alpha1 == true and alpha2 == false)
+                        aphys_tei_ab_[index] = as_ints->tei_ab(p, q, r, s);
+                    if (alpha1 == false and alpha2 == false)
+                        aphys_tei_bb_[index] = as_ints->tei_bb(p, q, r, s);
+                }
+            }
+        }
+    }
+}
+
+void CustomIntegrals::build_from_asints(std::shared_ptr<ActiveSpaceIntegrals> as_ints) {
+    outfile->Printf("\n  Updating one-electron integrals from Hbar");
+    set_oei_from_asints(as_ints, true);
+    set_oei_from_asints(as_ints, false);
+    outfile->Printf("\n  Updating two-electron integrals from Hbar");
+    set_tei_from_asints(as_ints, true, true);
+    set_tei_from_asints(as_ints, true, false);
+    set_tei_from_asints(as_ints, false, false);
 }
 
 void CustomIntegrals::gather_integrals() {
