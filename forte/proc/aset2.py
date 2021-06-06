@@ -69,10 +69,9 @@ def aset2_driver(state_weights_map, scf_info, ref_wfn, mo_space_info, options):
 
     # Compute envrionment (B) amplitudes T1, T2 and energy corrections E_c^B, dress fragment ints
     update_environment_options(options, B_list, ref_wfn)
+    energy_cB, ints_dressed = forte_driver_environment(state_weights_map, scf_info, ref_wfn,  mo_space_info, mo_space_info_active, ints_e, options)
 
     raise Exception('Breakpoint reached!')
-
-    energy_cB, ints_dressed = forte_driver_environment(scf_info, mo_space_info, mo_space_info_active, ints_e, options)
 
     # Build dressed fragment integrals.
     update_fragment_options(options, A_list, ref_wfn)
@@ -150,51 +149,44 @@ def forte_driver_fragment(state_weights_map, scf_info, options, ints, mo_space_i
 
     return return_en
 
-def forte_driver_environment(scf_info, mo_space_info, mo_space_info_active, ints_e, options):
-    # TODO: Build C++ embedding_density class, automate rdm level, rdms = forte.embedding_density(scf_info, mo_space_info, mo_space_info_active, ...)
-    rdm_level = 2
-    # Form rdms for interaction correlation computation
-    rdms = forte.RHF_DENSITY(scf_info, mo_space_info).rhf_rdms()
-    # TODO: add option for CASCI density using FCI, consider doing this in python side?
-    if options.get_str('fragment_density') == "CASSCF":
-        as_ints = forte.make_active_space_ints(mo_space_info_active, ints_f, "ACTIVE", ["RESTRICTED_DOCC"])
-        rdms = forte.build_casscf_density(rdm_level, scf_info, forte.forte_options, mo_space_info_active, mo_space_info, as_ints) # Stateinfo is no longer needed
-    if options.get_str('fragment_density') == "FCI": # Expensive, for benchmarking only
+def forte_driver_environment(state_weights_map, scf_info, ref_wfn, mo_space_info, mo_space_info_active, ints_e, options):
+
+    # Build integrals for fragment density approximation. Int type will be consistent with INT_TYPE_ENV
+    ints_d = forte.make_ints_from_psi4(ref_wfn, options, mo_space_info_active)
+
+    # Form an approximate or accurate rdms for A for the MRDSRG (A+B) computation
+    density = forte.EMBEDDING_DENSITY(state_weights_map, scf_info, mo_space_info, ints_d, options)
+
+    rdms = None
+    rdms_level = 3
+    if options.get_str('THREEPDC') == 'ZERO':
+        rdms_level = 2
+
+    if options.get_str('fragment_density') == "RHF":
+        rdms = density.rhf_rdms()
+    if options.get_str('fragment_density') == "CASSCF" or options.get_str('fragment_density') == "CASCI": # Default option
+        rdms = density.cas_rdms(mo_space_info_active)
+
+    if options.get_str('fragment_density') == "FULL": # Use active_space_solver to compute the whole fragment (A). Expensive, for benchmarking only
         state_map = forte.to_state_nroots_map(state_weights_map)
         as_ints_full = forte.make_active_space_ints(mo_space_info, ints_e, "ACTIVE", ["RESTRICTED_DOCC"])
         as_solver_full = forte.make_active_space_solver(options.get_str('ACTIVE_SPACE_SOLVER'),
                                                        state_map, scf_info,
                                                        mo_space_info, as_ints_full,
-                                                       forte.forte_options)
+                                                       options)
         state_energies_list = as_solver_full.compute_energy()
         rdms = as_solver_full.compute_average_rdms(state_weights_map, 3)
-    # if options.get_str('downfold_density') == "MRDSRG": NotImplemented
 
-    # DSRG-MRPT2(mo_space_info(outer), rdms)
-    options.set_str('FORTE', 'CORR_LEVEL', env_corr_level)
-    forte.forte_options.update_psi_options(options)
-
-    if ('DF' in options.get_str('INT_TYPE_ENV')):
-        aux_basis_env = psi4.core.BasisSet.build(ref_wfn.molecule(), 'DF_BASIS_MP2',
-                                         psi4.core.get_global_option('DF_BASIS_MP2'),
-                                         'RIFIT', psi4.core.get_global_option('BASIS'))
-        ref_wfn.set_basisset('DF_BASIS_MP2', aux_basis_env)
-        options.set_str('FORTE', 'INT_TYPE', 'DF')
-        forte.forte_options.update_psi_options(options)
-
-    dsrg = forte.make_dsrg_method(options.get_str('ENV_CORRELATION_SOLVER'), # TODO: ensure here always run canonical mr-dsrg (modify C++ side)
-                                  rdms, scf_info, forte.forte_options, ints_e, mo_space_info)
-
+    # Compute MRDSRG (A+B)
+    dsrg = forte.make_dsrg_method(rdms, scf_info, options, ints_e, mo_space_info)
     Edsrg = dsrg.compute_energy()
+
+    # Extract correlation energy E_cB
     psi4.core.set_scalar_variable('UNRELAXED ENERGY', Edsrg)
     E_ref1 = psi4.core.scalar_variable("DSRG REFERENCE ENERGY")
     E_corr = Edsrg - E_ref1
-    # E_corr = Edsrg - E_cas_ref
-    # Compute MRDSRG-in-PT2 energy (unfolded)
-    # E_emb = E(MRDSRG) + E(Corr)
 
-    # Test new MRDSRG energy (with rotated Heff/ints)
-    # eH rotation
+    # Compute Hbar 1, 2, return the dressed integral
     ints_dressed = dsrg.compute_Heff_actv()
 
     return E_corr, ints_dressed
@@ -213,7 +205,7 @@ def update_fragment_options(options, A_list, ref_wfn):
     options.set_str('RELAX_REF', A_list[3])
     options.set_bool('SEMI_CANONICAL', A_list[4])
     options.set_bool('EMBEDDING_DISABLE_SEMI_CHECK', False)
-    #options.set_bool('EMBEDDING_ALIGN_FROZEN', False) #TODO: check why I do this
+    options.set_bool('EMBEDDING_ALIGN_SCALAR', False)
     #forte.forte_options.update_psi_options(options) #TODO: check whether we still need this
 
     # Block folding functionality will be in another PR
@@ -236,6 +228,6 @@ def update_environment_options(options, B_list, ref_wfn):
     options.set_bool('EMBEDDING_DISABLE_SEMI_CHECK', True)
     options.set_str('RELAX_REF', "ONCE") # Setting it here to bypass many relax_ref checks in all DSRG codes
     #options.set_bool('DSRG_FOLD', fold)
-    #options.set_bool('EMBEDDING_ALIGN_FROZEN', True)
+    options.set_bool('EMBEDDING_ALIGN_SCALAR', True)
 
     return

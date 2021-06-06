@@ -221,7 +221,7 @@ def register_embedding_options(options):
         "EMBEDDING_TYPE", "ASET_MF", ["ASET_MF", "ASET2", "ASET-SWAP"],
         "The type of embedding computations.")
     options.add_str(
-        'FRAGMENT_DENSITY', 'RHF', ['CASSCF', 'RHF', 'FCI'],
+        'FRAGMENT_DENSITY', 'RHF', ['CASCI', 'CASSCF', 'RHF', 'FULL'],
         'The real/approximate RDMs used in the correlative environment computation')
     options.add_str(
         'FRAG_CORRELATION_SOLVER', 'MRDSRG',
@@ -246,6 +246,9 @@ def register_embedding_options(options):
     options.add_bool(
         "embedding_disable_semi_check", True,
         "Whether we skip semi-canonicalization check in DSRG code when computing ASET(2).")
+    options.add_bool(
+        "embedding_align_scalar", False,
+        "Do write shifts to align the integral scalar.")
     options.add_bool(
         "EMBEDDING_ASET2_MF_REF", True,
         "Whether we compute an ASET(mf) for reference when doing ASET(2).")
@@ -704,8 +707,8 @@ def register_integral_options(options):
         "INT_TYPE_FRAG", "CONVENTIONAL",
         ["CONVENTIONAL", "CHOLESKY", "DF", "DISKDF"],
         "The type of molecular integrals used in the embedding fragment (A)"
-        "Note that if CHOLESKY or DF is selected, they will only apply to the ASET(mf) fragment"
-        "And the ASET(2) driver will build a custom integral for the fragment (A) instead"
+        "Note that if CHOLESKY or DF is selected, they will only apply to the ASET(mf) steps!"
+        "And for Hbar, the ASET(2) driver will build a custom integral for the fragment (A) instead"
         "- CONVENTIONAL Conventional four-index two-electron integrals"
         "- DF Density fitted two-electron integrals"
         "- CHOLESKY Cholesky decomposed two-electron integrals")

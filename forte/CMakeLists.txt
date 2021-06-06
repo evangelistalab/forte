@@ -191,6 +191,7 @@ orbital-helpers/iao_builder.cc
 orbital-helpers/localize.cc
 orbital-helpers/mp2_nos.cc
 orbital-helpers/orbital_embedding.cc
+orbital-helpers/embedding_density.cc
 orbital-helpers/orbitaloptimizer.cc
 orbital-helpers/pao_builder.cc
 orbital-helpers/semi_canonicalize.cc
