@@ -887,7 +887,7 @@ std::shared_ptr<MOSpaceInfo> make_embedding(psi::SharedWavefunction ref_wfn,
     // Write orbital information into new mo_space_info based on different embedding methods:
 
     // ASET(mf):
-     if (options->get_str("EMBEDDING_TYPE") == "ASET_mf") {
+     if (options->get_str("EMBEDDING_TYPE") == "ASET_MF") {
         // Normal partition for Frozen-Core embedding
         size_t freeze_o = static_cast<size_t>(num_Fo + num_Bo +
                                               adj_sys_docc); // Add the additional frozen core to Bo
@@ -1020,13 +1020,15 @@ void Build_CAS_AO_Fock(psi::SharedWavefunction ref_wfn, int nirrep, psi::Dimensi
         }
     }
     
+    auto scf_type = ref_wfn->options().get_str("SCF_TYPE");
+
     std::shared_ptr<psi::JK> JK_occ;
-    if (ref_wfn->options().get_str("SCF_TYPE") == "DF") {
+    if (scf_type == "DF") {
          auto basis_aux = ref_wfn->get_basisset("DF_BASIS_SCF");
          JK_occ = JK::build_JK(ref_wfn->basisset(), basis_aux, ref_wfn->options(), "MEM_DF");
     }
     else {
-         JK_occ = JK::build_JK(ref_wfn->basisset(), psi::BasisSet::zero_ao_basis_set(), ref_wfn->options());
+         JK_occ = JK::build_JK(ref_wfn->basisset(), psi::BasisSet::zero_ao_basis_set(), ref_wfn->options(), scf_type);
     }
     JK_occ->set_memory(Process::environment.get_memory() * 0.8);
 
@@ -1087,12 +1089,12 @@ void Build_CAS_AO_Fock(psi::SharedWavefunction ref_wfn, int nirrep, psi::Dimensi
     }
 
     std::shared_ptr<psi::JK> JK_actv;
-    if (ref_wfn->options().get_str("SCF_TYPE") == "DF") {
+    if (scf_type == "DF") {
          auto basis_aux = ref_wfn->get_basisset("DF_BASIS_SCF");
          JK_actv = JK::build_JK(ref_wfn->basisset(), basis_aux, ref_wfn->options(), "MEM_DF");
     }
     else {
-         JK_actv = JK::build_JK(ref_wfn->basisset(), psi::BasisSet::zero_ao_basis_set(), ref_wfn->options());
+         JK_actv = JK::build_JK(ref_wfn->basisset(), psi::BasisSet::zero_ao_basis_set(), ref_wfn->options(), scf_type);
     }
     JK_actv->set_memory(Process::environment.get_memory() * 0.8);
 
