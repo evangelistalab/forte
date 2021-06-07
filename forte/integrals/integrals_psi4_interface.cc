@@ -471,6 +471,10 @@ void Psi4Integrals::make_fock_matrix(ambit::Tensor gamma_a, ambit::Tensor gamma_
     }
 }
 
+//void Psi4Integrals::make_fock_matrix_from_value(std::shared_ptr<psi::Matrix> gamma_a, std::shared_ptr<psi::Matrix> gamma_b) {
+//    throw std::runtime_error("Building downfolded Fock failed, INT_TYPE_FRAG not supported!.");
+//}
+
 std::tuple<psi::SharedMatrix, psi::SharedMatrix, double>
 Psi4Integrals::make_fock_inactive(psi::Dimension dim_start, psi::Dimension dim_end) {
     /* F_closed = Hcore + Vclosed in AO basis

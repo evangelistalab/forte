@@ -72,8 +72,6 @@ def aset2_driver(state_weights_map, scf_info, ref_wfn, mo_space_info, options):
     update_environment_options(options, B_list, ref_wfn)
     energy_cB, ints_dressed = forte_driver_environment(state_weights_map, scf_info, ref_wfn,  mo_space_info, mo_space_info_active, ints_e, options)
 
-    raise Exception('Breakpoint reached!')
-
     # Build dressed fragment integrals.
     update_fragment_options(options, A_list, ref_wfn)
     ints_f = None
@@ -81,12 +79,13 @@ def aset2_driver(state_weights_map, scf_info, ref_wfn, mo_space_info, options):
         ints_f = forte.make_ints_from_psi4(ref_wfn, options, mo_space_info_active)
     else:
         # If fragment integrals is not conventional, build a custom empty ints here
-        nmo = ref_wfn->nbf()
+        
+        ncmo = mo_space_info_active.size("CORRELATED")
         scalar = 0.0 
-        hcore = np.zeros((nmo, nmo))
-        eri_aa = np.zeros((nmo, nmo, nmo, nmo))
-        eri_ab = np.zeros((nmo, nmo, nmo, nmo))
-        eri_bb = np.zeros((nmo, nmo, nmo, nmo))
+        hcore = np.zeros((ncmo, ncmo))
+        eri_aa = np.zeros((ncmo, ncmo, ncmo, ncmo))
+        eri_ab = np.zeros((ncmo, ncmo, ncmo, ncmo))
+        eri_bb = np.zeros((ncmo, ncmo, ncmo, ncmo))
         ints_f = forte.make_custom_ints(options, mo_space_info_active, scalar,
                                   hcore.flatten(), hcore.flatten(), eri_aa.flatten(),
                                   eri_ab.flatten(), eri_bb.flatten())
@@ -95,6 +94,7 @@ def aset2_driver(state_weights_map, scf_info, ref_wfn, mo_space_info, options):
     frz1 = ints_f.frozen_core_energy()
     scalar = ints_dressed.scalar_energy() - frz1
     ints_f.set_scalar(scalar)
+    psi4.core.print_out("\n Scalar energy = {:10.12f} Eh".format(scalar))
 
     # Build new ints for dressed computation
     ints_f.build_from_asints(ints_dressed)
