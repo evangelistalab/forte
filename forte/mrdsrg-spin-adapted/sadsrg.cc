@@ -82,8 +82,12 @@ SADSRG::~SADSRG() {
 void SADSRG::startup() {
     print_h2("Multireference Driven Similarity Renormalization Group");
 
-    // build Fock and cleanup JK in ForteIntegrals
-    build_fock_from_ints();
+    bool JK_safe = foptions_->get_str("EMBEDDING_TYPE") != "ASET2" || foptions_->get_str("INT_TYPE_FRAG") != "CONVENTIONAL";
+
+    // build fock using ForteIntegrals and clean up JK
+    if (JK_safe) {
+        build_fock_from_ints();
+    }
 
     // read options
     read_options();
@@ -104,7 +108,12 @@ void SADSRG::startup() {
     init_density();
 
     // initialize Fock matrix
-    init_fock();
+    if (JK_safe) {
+        init_fock();
+    }
+    else {
+        init_fock_emb();
+    }
 
     // recompute reference energy from ForteIntegral
     compute_reference_energy_from_ints();
@@ -349,6 +358,34 @@ void SADSRG::fill_Fdiag(BlockedTensor& F, std::vector<double>& Fa) {
     });
 }
 
+void SADSRG::init_fock_emb() {
+    outfile->Printf("\n    Building Downfolded Fock matrix ............................ ");
+    size_t ncmo = mo_space_info_->size("CORRELATED");
+    Fock_ = BTF_->build(tensor_type_, "Fock", spin_cases({"gg"}));
+
+    psi::SharedMatrix D1a(new psi::Matrix("D1a", ncmo, ncmo));
+    psi::SharedMatrix D1b(new psi::Matrix("D1b", ncmo, ncmo));
+    for (size_t m = 0, ncore = core_mos_.size(); m < ncore; m++) {
+        D1a->set(core_mos_[m], core_mos_[m], 1.0);
+        D1b->set(core_mos_[m], core_mos_[m], 1.0);
+    }
+
+    L1_.block("aa").citerate([&](const std::vector<size_t>& i, const double& value) {
+        D1a->set(actv_mos_[i[0]], actv_mos_[i[1]], value);
+    });
+    L1_.block("AA").citerate([&](const std::vector<size_t>& i, const double& value) {
+        D1b->set(actv_mos_[i[0]], actv_mos_[i[1]], value);
+    });
+
+    ints_->make_fock_matrix_from_value(D1a, D1b);
+
+    Fock_.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>&, double& value) {
+        value = ints_->get_fock_a(i[0], i[1]);
+    });
+    fill_Fdiag(Fock_, Fdiag_);
+    outfile->Printf("Done");
+}
+
 double SADSRG::compute_reference_energy_from_ints() {
     BlockedTensor H = BTF_->build(tensor_type_, "OEI", {"cc", "aa"}, true);
     H.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>&, double& value) {
@@ -359,7 +396,7 @@ double SADSRG::compute_reference_energy_from_ints() {
     V.block("aaaa")("prqs") =
         ints_->aptei_ab_block(actv_mos_, actv_mos_, actv_mos_, actv_mos_)("prqs");
 
-    Eref_ = compute_reference_energy(H, Fock_, V);
+    Eref_ = compute_reference_energy(H, Fock_, V) + ints_->scalar();
     psi::Process::environment.globals["DSRG REFERENCE ENERGY"] = Eref_;
     return Eref_;
 }

@@ -64,7 +64,6 @@ def aset2_driver(state_weights_map, scf_info, ref_wfn, mo_space_info, options):
     energy_high = 0.0
     if(do_aset_mf):
         update_fragment_options(options, A_list, ref_wfn)
-        psi4.core.print_out("\n Fragment int_type: {:10s}".format(options.get_str('INT_TYPE')))
         ints_f = forte.make_ints_from_psi4(ref_wfn, options, mo_space_info_active)
         energy_high = forte_driver_fragment(state_weights_map, scf_info, forte.forte_options, ints_f, mo_space_info_active)
 
@@ -79,13 +78,12 @@ def aset2_driver(state_weights_map, scf_info, ref_wfn, mo_space_info, options):
         ints_f = forte.make_ints_from_psi4(ref_wfn, options, mo_space_info_active)
     else:
         # If fragment integrals is not conventional, build a custom empty ints here
-        
-        ncmo = mo_space_info_active.size("CORRELATED")
+        nmo = mo_space_info_active.size("ALL")
         scalar = 0.0 
-        hcore = np.zeros((ncmo, ncmo))
-        eri_aa = np.zeros((ncmo, ncmo, ncmo, ncmo))
-        eri_ab = np.zeros((ncmo, ncmo, ncmo, ncmo))
-        eri_bb = np.zeros((ncmo, ncmo, ncmo, ncmo))
+        hcore = np.zeros((nmo, nmo))
+        eri_aa = np.zeros((nmo, nmo, nmo, nmo))
+        eri_ab = np.zeros((nmo, nmo, nmo, nmo))
+        eri_bb = np.zeros((nmo, nmo, nmo, nmo))
         ints_f = forte.make_custom_ints(options, mo_space_info_active, scalar,
                                   hcore.flatten(), hcore.flatten(), eri_aa.flatten(),
                                   eri_ab.flatten(), eri_bb.flatten())

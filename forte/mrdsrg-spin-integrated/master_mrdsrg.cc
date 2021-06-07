@@ -1,4 +1,3 @@
-#include <algorithm>
 #include <numeric>
 
 #include "psi4/libpsi4util/PsiOutStream.h"
@@ -47,8 +46,10 @@ MASTER_DSRG::~MASTER_DSRG() {
 void MASTER_DSRG::startup() {
     print_h2("Multireference Driven Similarity Renormalization Group");
 
+    bool JK_safe = foptions_->get_str("EMBEDDING_TYPE") != "ASET2" || foptions_->get_str("INT_TYPE_FRAG") != "CONVENTIONAL";
+
     // build fock using ForteIntegrals and clean up JK
-    if (foptions_->get_str("EMBEDDING_TYPE") != "ASET2") {
+    if (JK_safe) {
         build_fock_from_ints(ints_);
     }
 
@@ -68,7 +69,7 @@ void MASTER_DSRG::startup() {
     init_density();
 
     // initialize Fock matrix
-    if (foptions_->get_str("EMBEDDING_TYPE") != "ASET2") {
+    if (JK_safe) {
         init_fock();
     }
     else {
@@ -273,7 +274,6 @@ void MASTER_DSRG::init_fock_emb() {
     size_t ncmo = mo_space_info_->size("CORRELATED");
     Fock_ = BTF_->build(tensor_type_, "Fock", spin_cases({"gg"}));
 
-    outfile->Printf("\n Debug #1 ");
     psi::SharedMatrix D1a(new psi::Matrix("D1a", ncmo, ncmo));
     psi::SharedMatrix D1b(new psi::Matrix("D1b", ncmo, ncmo));
     for (size_t m = 0, ncore = core_mos_.size(); m < ncore; m++) {
@@ -281,7 +281,6 @@ void MASTER_DSRG::init_fock_emb() {
         D1b->set(core_mos_[m], core_mos_[m], 1.0);
     }
 
-    outfile->Printf("\n Debug #2 ");
     Gamma1_.block("aa").citerate([&](const std::vector<size_t>& i, const double& value) {
         D1a->set(actv_mos_[i[0]], actv_mos_[i[1]], value);
     });
@@ -289,10 +288,8 @@ void MASTER_DSRG::init_fock_emb() {
         D1b->set(actv_mos_[i[0]], actv_mos_[i[1]], value);
     });
 
-    outfile->Printf("\n Debug #3 ");
     ints_->make_fock_matrix_from_value(D1a, D1b);
 
-    outfile->Printf("\n Debug #4 ");
     Fock_.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>& spin, double& value) {
         if (spin[0] == AlphaSpin) {
             value = ints_->get_fock_a(i[0], i[1], false);
@@ -300,7 +297,6 @@ void MASTER_DSRG::init_fock_emb() {
             value = ints_->get_fock_b(i[0], i[1], false);
         }
     });
-    outfile->Printf("\n Debug #5 ");
     fill_Fdiag(Fock_, Fdiag_a_, Fdiag_b_);
     outfile->Printf("Done");
 }
