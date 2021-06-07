@@ -100,6 +100,8 @@ class CustomIntegrals : public ForteIntegrals {
 
     void build_from_asints(std::shared_ptr<ActiveSpaceIntegrals> as_ints) override;
 
+    void make_fock_matrix_from_value(std::shared_ptr<psi::Matrix> gamma_a, std::shared_ptr<psi::Matrix> gamma_b) {};
+
   private:
     // ==> Class private data <==
 

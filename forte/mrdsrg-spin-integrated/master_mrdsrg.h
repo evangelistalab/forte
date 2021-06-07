@@ -265,6 +265,8 @@ class MASTER_DSRG : public DynamicCorrelationSolver {
 
     /// Initialize Fock matrix
     void init_fock();
+    /// Initialize Fock matrix for ASET computations
+    void init_fock_emb();
     /// Build Fock matrix from ForteIntegrals
     void build_fock_from_ints(std::shared_ptr<ForteIntegrals> ints);
     /// Fill in diagonal elements of Fock matrix to Fdiag

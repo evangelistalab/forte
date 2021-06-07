@@ -519,25 +519,25 @@ def run_forte(name, **kwargs):
         forte.cleanup()
         return ref_wfn
 
-    if (job_type == 'ASET2'):
-        energy_aset2 = aset2_driver(state_weights_map, scf_info, ref_wfn, mo_space_info, options)
-
     start_pre_ints = time.time()
 
     if 'FCIDUMP' in options.get_str('INT_TYPE'):
         psi4.core.print_out('\n  Forte will use custom integrals')
         # Make an integral object from the psi4 wavefunction object
         ints = make_ints_from_fcidump(fcidump, options, mo_space_info)
-    else:
+    elif job_type != 'ASET2':
         psi4.core.print_out('\n  Forte will use psi4 integrals')
         # Make an integral object from the psi4 wavefunction object
         ints = forte.make_ints_from_psi4(ref_wfn, options, mo_space_info)
+    else:
+        ints = None
+        psi4.core.print_out('\n  Will not build integrals here')
 
     start = time.time()
 
     # Rotate orbitals before computation (e.g. localization, MP2 natural orbitals, etc.)
     orb_type = options.get_str("ORBITAL_TYPE")
-    if orb_type != 'CANONICAL':
+    if orb_type != 'CANONICAL' and job_type != 'ASET2':
         orb_t = forte.make_orbital_transformation(orb_type, scf_info, options,
                                                   ints, mo_space_info)
         orb_t.compute_transformation()
@@ -547,6 +547,9 @@ def run_forte(name, **kwargs):
 
     # Run a method
     energy = 0.0
+
+    if (job_type == 'ASET2'):
+        energy = aset2_driver(state_weights_map, scf_info, ref_wfn, mo_space_info, options)
 
     if (options.get_bool("CASSCF_REFERENCE") or job_type == "CASSCF"):
         if options.get_str('INT_TYPE') == 'FCIDUMP':

@@ -30,8 +30,6 @@ void EMBEDDING_DENSITY::start_up() {
     auto actvpi = mo_space_info_->dimension("ACTIVE");
     auto actvopi = doccpi - rdoccpi - mo_space_info_->dimension("FROZEN_DOCC");
 
-    psi::outfile->Printf("\n docc: %d, rdocc: %d, actv: %d, actvo: %d", doccpi[0], rdoccpi[0], actvpi[0], actvopi[0]);
-
     mos_actv_o_.clear();
     mos_actv_o_.reserve(actvopi.sum());
     for (int h = 0, shift = 0, nirrep = mo_space_info_->nirrep(); h < nirrep; ++h) {
@@ -44,7 +42,7 @@ void EMBEDDING_DENSITY::start_up() {
 
 RDMs EMBEDDING_DENSITY::rhf_rdms() {
     size_t na = mo_space_info_->size("ACTIVE");
-    psi::outfile->Printf("\n na: %d", na);
+    psi::outfile->Printf("\n RHF(A) density will be written into the fragment (A) densiy blocks");
 
     // 1-RDM
     auto D1a = ambit::Tensor::build(ambit::CoreTensor, "D1a", std::vector<size_t>(2, na));
@@ -168,10 +166,6 @@ RDMs EMBEDDING_DENSITY::cas_rdms(std::shared_ptr<MOSpaceInfo> mo_space_info_acti
         mos_actv_in.push_back(i);
     }
 
-    psi::outfile->Printf("\n active/out: %d, active/in: %d", actvpi[0], actvpi_in[0]);
-    psi::outfile->Printf("\n rdoccpi/out: %d, rdoccpi/in: %d", rdoccpi[0], rdoccpi_in[0]);
-    psi::outfile->Printf("\n na/out: %d, na_in/in: %d", na, na_in);
-
     // 1-RDM
     auto D1a = ambit::Tensor::build(ambit::CoreTensor, "D1a", std::vector<size_t>(2, na));
     auto D1b = ambit::Tensor::build(ambit::CoreTensor, "D1b", std::vector<size_t>(2, na));
@@ -195,8 +189,6 @@ RDMs EMBEDDING_DENSITY::cas_rdms(std::shared_ptr<MOSpaceInfo> mo_space_info_acti
         }
     }
 
-    // D1a.print();
-
     // 2-RDM
     auto D2aa = ambit::Tensor::build(ambit::CoreTensor, "D2aa", std::vector<size_t>(4, na));
     auto D2ab = ambit::Tensor::build(ambit::CoreTensor, "D2ab", std::vector<size_t>(4, na));
@@ -212,8 +204,6 @@ RDMs EMBEDDING_DENSITY::cas_rdms(std::shared_ptr<MOSpaceInfo> mo_space_info_acti
 
     size_t v = rdoccpi_in[0];
 
-    ref_rdms.g2aa().print();
-
     for (auto p : mos_actv_in) {
         for (auto q : mos_actv_in) {
             for (auto r : mos_actv_in) {
@@ -225,8 +215,6 @@ RDMs EMBEDDING_DENSITY::cas_rdms(std::shared_ptr<MOSpaceInfo> mo_space_info_acti
             }
         }
     }
-
-    // D2aa.print();
 
     // 3-RDM # Leave at RHF level here as an approximation
     if (options_->get_str("THREEPDC") != "ZERO") {
