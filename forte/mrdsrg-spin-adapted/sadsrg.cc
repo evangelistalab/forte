@@ -361,27 +361,27 @@ void SADSRG::fill_Fdiag(BlockedTensor& F, std::vector<double>& Fa) {
 void SADSRG::init_fock_emb() {
     outfile->Printf("\n    Building Downfolded Fock matrix ............................ ");
     size_t ncmo = mo_space_info_->size("CORRELATED");
-    Fock_ = BTF_->build(tensor_type_, "Fock", spin_cases({"gg"}));
+    Fock_ = BTF_->build(tensor_type_, "Fock", {"gg"});
 
+    outfile->Printf("\n    Debug #1 ");
     psi::SharedMatrix D1a(new psi::Matrix("D1a", ncmo, ncmo));
-    psi::SharedMatrix D1b(new psi::Matrix("D1b", ncmo, ncmo));
     for (size_t m = 0, ncore = core_mos_.size(); m < ncore; m++) {
         D1a->set(core_mos_[m], core_mos_[m], 1.0);
-        D1b->set(core_mos_[m], core_mos_[m], 1.0);
     }
 
+    outfile->Printf("\n    Debug #2 ");
     L1_.block("aa").citerate([&](const std::vector<size_t>& i, const double& value) {
         D1a->set(actv_mos_[i[0]], actv_mos_[i[1]], value);
     });
-    L1_.block("AA").citerate([&](const std::vector<size_t>& i, const double& value) {
-        D1b->set(actv_mos_[i[0]], actv_mos_[i[1]], value);
-    });
 
-    ints_->make_fock_matrix_from_value(D1a, D1b);
+    outfile->Printf("\n    Debug #3 ");
+    ints_->make_fock_matrix_from_value(D1a, D1a);
 
+    outfile->Printf("\n    Debug #4 ");
     Fock_.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>&, double& value) {
-        value = ints_->get_fock_a(i[0], i[1]);
+        value = ints_->get_fock_a(i[0], i[1], false);
     });
+    outfile->Printf("\n    Debug #5 ");
     fill_Fdiag(Fock_, Fdiag_);
     outfile->Printf("Done");
 }
