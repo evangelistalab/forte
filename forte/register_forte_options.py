@@ -202,7 +202,7 @@ def register_embedding_options(options):
         "EMBEDDING_SEMICANONICALIZE_FROZEN", True,
         "Perform semi-canonicalization on frozen core/virtual space or not")
     options.add_bool(
-        "EMBEDDING_FOCK_BUILD", True,
+        "EMBEDDING_FOCK_BUILD", False,
         "Build AO-CAS Fock matrix before semicanonicalization, to guarantee block-diagonalized generalized Fock Matrix.")
     options.add_int(
         "EMBEDDING_ADJUST_B_DOCC", 0,
