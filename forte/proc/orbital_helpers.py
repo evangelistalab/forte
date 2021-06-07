@@ -81,7 +81,7 @@ def orbital_projection(ref_wfn, options, mo_space_info):
     if options.get_bool("EMBEDDING"):
 
         if (options.get_str('JOB_TYPE') == 'ASET2'):
-            forte.print_method_banner(["Systematic 2nd-order Active Space Embedding Theory [ASET(2)]", "Nan He"])
+            forte.print_method_banner(["General Active Space Embedding Theory (ASET)", "Nan He"])
             options.set_str('EMBEDDING_TYPE', 'ASET2')
             options.set_bool('EMBEDDING_FOCK_BUILD', True)
         else:

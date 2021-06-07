@@ -255,6 +255,9 @@ def register_embedding_options(options):
     options.add_bool(
         "EMBEDDING_JKFOCK", True,
         "Whether or not we use the make_fock_matrix in ForteIntegrals.")
+    options.add_bool(
+        "FRAG_DO_FCI", False,
+        "(For benchmarking) Perform a FCI computation on the fragment (A), override other settings.")
 
 
 def register_mo_space_info_options(options):

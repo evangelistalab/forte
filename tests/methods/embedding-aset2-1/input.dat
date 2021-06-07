@@ -52,7 +52,7 @@ set {
   restricted_docc        [3]
   active                 [2]
   restricted_uocc        [28]
-  num_roots              2
+  num_roots              1
   follow_root            0
 }
 
@@ -82,7 +82,7 @@ set forte {
    relax_ref              once
    fci_maxiter            150
    root_sym               0
-   nroot                  2
+   nroot                  1
    root                   0
    dsrg_s                 0.5
    ntrial_per_root        10

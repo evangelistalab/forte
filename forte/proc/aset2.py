@@ -32,8 +32,21 @@ import numpy as np
 from forte.proc.dsrg import ProcedureDSRG
 
 def aset2_driver(state_weights_map, scf_info, ref_wfn, mo_space_info, options):
+    """
+    Driver to run an systematic Active Space Embedding Theory (ASET) computation.
+
+    :param state_weights_map: dictionary of {state: weights}
+    :param scf_info: a SCFInfo object of Forte
+    :param ref_wfn: a Psi4::Wavefunction object
+    :param mo_space_info: a MOSpaceInfo object with embedding partitions (EMBEDDING_ORB)
+    :param options: a ForteOptions object of Forte
+
+    :return: the computed ASET energy.
+    """
 
     # Read all options
+    frag_as_solver = options.get_str('ACTIVE_SPACE_SOLVER')
+    frag_do_fci = options.get_bool('FRAG_DO_FCI')
     frag_corr_solver = options.get_str('FRAG_CORRELATION_SOLVER')
     frag_corr_level = options.get_str('FRAG_CORR_LEVEL')
     env_corr_solver = options.get_str('ENV_CORRELATION_SOLVER')
@@ -43,18 +56,48 @@ def aset2_driver(state_weights_map, scf_info, ref_wfn, mo_space_info, options):
     int_type_frag = options.get_str('INT_TYPE_FRAG')
     int_type_env = options.get_str('INT_TYPE_ENV')
     do_aset_mf = options.get_bool('EMBEDDING_ASET2_MF_REF')
+    frag_density = options.get_str('fragment_density')
+    name = frag_corr_solver + '-' + frag_corr_level
     #fold = options.get_bool('DSRG_FOLD')
     
     # Build two option lists for fragment (A) and environment (B) solver
     A_list = [frag_corr_solver, frag_corr_level, int_type_frag, relax, semi]
     B_list = [env_corr_solver, env_corr_level, int_type_env]
 
-    # TODO: print computation details here
+    psi4.core.print_out("\n    ========================ASET(2) Options========================")
+    psi4.core.print_out("\n    Fragment active space solver: {frag_as_solver}")
+    psi4.core.print_out("\n    Fragment correlation solver: {frag_corr_solver}")
+    psi4.core.print_out("\n    Fragment correlation level: {frag_corr_level}")
+    psi4.core.print_out("\n    Fragment integral type: {int_type_frag}")
+    if(frag_do_fci):
+        psi4.core.print_out("\n    {frag_as_solver} will be used on the whole fragment!")
+    psi4.core.print_out("\n    ---------------------------------------------------------------")
+    psi4.core.print_out("\n    Environment correlation solver: {env_corr_solver}")
+    psi4.core.print_out("\n    Environment correlation level: {env_corr_level}")
+    psi4.core.print_out("\n    Environment integral type: {int_type_env}")
+    psi4.core.print_out("\n    Fragment density evaluated using {frag_density}")
+    psi4.core.print_out("\n    ---------------------------------------------------------------")
+    if(do_aset_mf):
+        psi4.core.print_out("\n    Procedure: ASET(MF)-[{name}] -> {frag_density} -> ASET(2)-[{name}]")
+    else:
+        psi4.core.print_out("\n    Procedure: {frag_density} -> ASET(2)-[{name}]")
+    if(int_type_frag not in ["CONVENTIONAL", "CUSTOM", "FCIDUMP"]):
+        psi4.core.print_out("\n    Warning: DF/CD integrals inside the fragment (A) are not supported now.")
+        psi4.core.print_out("\n    Will build a Custom_Integral for H_bar instead.")
+    if(frag_corr_solver == "THREE-DSRG-MRPT2"):
+        psi4.core.print_out("\n    Warning: DF/CD integrals inside the fragment (A) are not supported now.")
+        psi4.core.print_out("\n    Will automatically convert to conventional DSRG-MRPT2 for H_bar.")
+    psi4.core.print_out("\n    ===============================================================")
+    psi4.core.print_out("\n    ")
 
     # In ASET(2) procedure, We will keep 2 different mo_space_info:
     # mo_space_info: Active = AC + AA + AV, restricted = BO + BV, frozen = F
     # mo_space_info_active: Active = AA, restricted = AC + AV, frozen = BO + BV + F
-    mo_space_info_active = forte.build_aset2_fragment(ref_wfn, mo_space_info)
+    mo_space_info_active = None
+    if (frag_do_fci):
+        mo_space_info_active = mo_space_info
+    else:
+        mo_space_info_active = forte.build_aset2_fragment(ref_wfn, mo_space_info)
 
     # Build total (A+B) integrals first
     update_environment_options(options, B_list, ref_wfn)
@@ -94,7 +137,6 @@ def aset2_driver(state_weights_map, scf_info, ref_wfn, mo_space_info, options):
     dressed_scalar = ints_dressed.scalar_energy()
     scalar = dressed_scalar - frz1
     if(int_type_frag != "CONVENTIONAL"):
-        # Custom integrals do not have molecule info, so we need to add it
         scalar += ints_e.nuclear_repulsion_energy()
     ints_f.set_scalar(scalar)
 
@@ -112,28 +154,27 @@ def aset2_driver(state_weights_map, scf_info, ref_wfn, mo_space_info, options):
     # Compute MRDSRG-in-PT2 energy (folded)
     energy_high_dressed = forte_driver_fragment(state_weights_map, scf_info, options, ints_f, mo_space_info_active)
 
-    psi4.core.print_out("\n      ==============ASET(2) Summary==============")
+    psi4.core.print_out("\n    ========================ASET(2) Summary====================")
     if(do_aset_mf):
-        psi4.core.print_out("\n      E[ASET(mf)] = {:10.12f}".format(energy_high))
-    psi4.core.print_out("\n      E_c^B (Environment correlation, Hbar0) = {:10.12f}".format(energy_env))
-    psi4.core.print_out("\n      E(Hbar) (Fragment energy computed using Hbar) = {:10.12f}".format(energy_high_dressed))
-    psi4.core.print_out("\n      E[ASET(2)] = {:10.12f}".format(energy_high_dressed + energy_env))
-    psi4.core.print_out("\n      ==============ASET(2) procedure done============== \n")
+        psi4.core.print_out("\n    ASET(mf)-[{name}] energy                       = {:10.12f}".format(energy_high))
+    psi4.core.print_out("\n    E_c^B (Environment correlation, Hbar0)         = {:10.12f}".format(energy_env))
+    psi4.core.print_out("\n    E(Hbar) (Fragment energy computed using Hbar)  = {:10.12f}".format(energy_high_dressed))
+    psi4.core.print_out("\n    ASET(2)-[{name}] energy                        = {:10.12f}".format(energy_high_dressed + energy_env))
+    psi4.core.print_out("\n    =====================ASET(2) Procedure Done================ \n")
 
     return energy_high_dressed + energy_env
 
 def forte_driver_fragment(state_weights_map, scf_info, options, ints, mo_space_info):
-    # TODO Modify this solver to consider frag/env
     """
-    Driver to perform a Forte calculation using new solvers.
+    Driver to perform a Forte calculation for embedded fragment (A).
 
     :param state_weights_map: dictionary of {state: weights}
     :param scf_info: a SCFInfo object of Forte
     :param options: a ForteOptions object of Forte
-    :param ints: a ForteIntegrals object of Forte
-    :param mo_space_info: a MOSpaceInfo object of Forte
+    :param ints: a fragment ForteIntegrals object (size = A)
+    :param mo_space_info: a MOSpaceInfo object inside the fragment (A)
 
-    :return: the computed energy
+    :return: the computed fragment energy (both for undressed or dressed)
     """
     # map state to number of roots
     state_map = forte.to_state_nroots_map(state_weights_map)
@@ -163,6 +204,20 @@ def forte_driver_fragment(state_weights_map, scf_info, options, ints, mo_space_i
     return return_en
 
 def forte_driver_environment(state_weights_map, scf_info, ref_wfn, mo_space_info, mo_space_info_active, ints_e, options):
+    """
+    Driver to perform a Forte calculation for embedding environment and downfolding (A+B).
+
+    :param state_weights_map: dictionary of {state: weights}
+    :param scf_info: a SCFInfo object of Forte
+    :param ref_wfn: a Psi4::Wavefunction object
+    :param options: a ForteOptions object of Forte
+    :param mo_space_info: a MOSpaceInfo object for A + B
+    :param mo_space_info_active: a MOSpaceInfo object for A
+    :param ints_e: a ForteIntegrals object of the whole system (size = A + B)
+    :param options: a ForteOptions object of Forte
+
+    :return: the computed environment energy E_corr, and dressed integrals ints_dressed
+    """
 
     # Build integrals for fragment density approximation. Int type will be consistent with INT_TYPE_ENV
     ints_d = forte.make_ints_from_psi4(ref_wfn, options, mo_space_info_active)
