@@ -82,7 +82,7 @@ SADSRG::~SADSRG() {
 void SADSRG::startup() {
     print_h2("Multireference Driven Similarity Renormalization Group");
 
-    bool JK_safe = foptions_->get_str("EMBEDDING_TYPE") != "ASET2" || foptions_->get_str("INT_TYPE_FRAG") != "CONVENTIONAL";
+    bool JK_safe = foptions_->get_bool("EMBEDDING_JKFOCK");
 
     // build fock using ForteIntegrals and clean up JK
     if (JK_safe) {
@@ -363,25 +363,20 @@ void SADSRG::init_fock_emb() {
     size_t ncmo = mo_space_info_->size("CORRELATED");
     Fock_ = BTF_->build(tensor_type_, "Fock", {"gg"});
 
-    outfile->Printf("\n    Debug #1 ");
     psi::SharedMatrix D1a(new psi::Matrix("D1a", ncmo, ncmo));
     for (size_t m = 0, ncore = core_mos_.size(); m < ncore; m++) {
         D1a->set(core_mos_[m], core_mos_[m], 1.0);
     }
 
-    outfile->Printf("\n    Debug #2 ");
     L1_.block("aa").citerate([&](const std::vector<size_t>& i, const double& value) {
         D1a->set(actv_mos_[i[0]], actv_mos_[i[1]], value);
     });
 
-    outfile->Printf("\n    Debug #3 ");
     ints_->make_fock_matrix_from_value(D1a, D1a);
 
-    outfile->Printf("\n    Debug #4 ");
     Fock_.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>&, double& value) {
         value = ints_->get_fock_a(i[0], i[1], false);
     });
-    outfile->Printf("\n    Debug #5 ");
     fill_Fdiag(Fock_, Fdiag_);
     outfile->Printf("Done");
 }

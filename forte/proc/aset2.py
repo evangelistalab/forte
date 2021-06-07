@@ -1,4 +1,3 @@
-#
 # @BEGIN LICENSE
 #
 # forte_inversion by Psi4 Developer, a plugin to:
@@ -29,6 +28,7 @@
 
 import psi4
 import forte
+import numpy as np
 from forte.proc.dsrg import ProcedureDSRG
 
 def aset2_driver(state_weights_map, scf_info, ref_wfn, mo_space_info, options):
@@ -69,15 +69,15 @@ def aset2_driver(state_weights_map, scf_info, ref_wfn, mo_space_info, options):
 
     # Compute envrionment (B) amplitudes T1, T2 and energy corrections E_c^B, dress fragment ints
     update_environment_options(options, B_list, ref_wfn)
-    energy_cB, ints_dressed = forte_driver_environment(state_weights_map, scf_info, ref_wfn,  mo_space_info, mo_space_info_active, ints_e, options)
+    energy_env, ints_dressed = forte_driver_environment(state_weights_map, scf_info, ref_wfn,  mo_space_info, mo_space_info_active, ints_e, options)
 
-    # Build dressed fragment integrals.
+    # Build dressed fragment integrals, starting from an ints object.
     update_fragment_options(options, A_list, ref_wfn)
     ints_f = None
     if(int_type_frag == "CONVENTIONAL"):
         ints_f = forte.make_ints_from_psi4(ref_wfn, options, mo_space_info_active)
     else:
-        # If fragment integrals is not conventional, build a custom empty ints here
+        # If fragment integrals is not convntional, build a custom empty ints here
         nmo = mo_space_info_active.size("ALL")
         scalar = 0.0 
         hcore = np.zeros((nmo, nmo))
@@ -87,31 +87,40 @@ def aset2_driver(state_weights_map, scf_info, ref_wfn, mo_space_info, options):
         ints_f = forte.make_custom_ints(options, mo_space_info_active, scalar,
                                   hcore.flatten(), hcore.flatten(), eri_aa.flatten(),
                                   eri_ab.flatten(), eri_bb.flatten())
+        options.set_str('INT_TYPE', "FCIDUMP")
 
-    # Reset scalar
+    # Set the scalar for the newly-made integral
     frz1 = ints_f.frozen_core_energy()
-    scalar = ints_dressed.scalar_energy() - frz1
+    dressed_scalar = ints_dressed.scalar_energy()
+    scalar = dressed_scalar - frz1
+    if(int_type_frag != "CONVENTIONAL"):
+        # Custom integrals do not have molecule info, so we need to add it
+        scalar += ints_e.nuclear_repulsion_energy()
     ints_f.set_scalar(scalar)
-    psi4.core.print_out("\n Scalar energy = {:10.12f} Eh".format(scalar))
 
     # Build new ints for dressed computation
     ints_f.build_from_asints(ints_dressed)
 
+    # For three-dsrg-mrpt2, automatically convert to dsrg-mrpt2 when computing the fragment (A)
+    if options.get_str('CORRELATION_SOLVER') == "THREE-DSRG-MRPT2":
+        options.set_str('CORRELATION_SOLVER', "MRDSRG")
+        options.set_str('CORR_LEVEL', "PT2")
+
+    # Use make_fock_matrix_from_value instead of make_fock_matrix in ForteIntegrals
+    options.set_bool('EMBEDDING_JKFOCK', False)
+
     # Compute MRDSRG-in-PT2 energy (folded)
     energy_high_dressed = forte_driver_fragment(state_weights_map, scf_info, options, ints_f, mo_space_info_active)
-    # TODO: extract E_0 and E_c^A in forte_driver_fragment, and print them
 
-    psi4.core.print_out("\n ==============ASET(2) Summary==============")
+    psi4.core.print_out("\n      ==============ASET(2) Summary==============")
     if(do_aset_mf):
-        psi4.core.print_out("\n E(fragment, undressed) = {:10.12f}".format(energy_high))
-    psi4.core.print_out("\n E_corr(env correlation) = {:10.12f}".format(energy_cB))
-    if(do_aset_mf):
-        psi4.core.print_out("\n E(embedding, undressed) = {:10.12f}".format(energy_high + energy_cB))
-    psi4.core.print_out("\n E(fragment, dressed) = {:10.12f}".format(energy_high_dressed))
-    psi4.core.print_out("\n E(embedding, dressed) = {:10.12f}".format(energy_high_dressed + energy_cB))
-    psi4.core.print_out("\n ==============ASET(2) procedure done============== \n")
+        psi4.core.print_out("\n      E[ASET(mf)] = {:10.12f}".format(energy_high))
+    psi4.core.print_out("\n      E_c^B (Environment correlation, Hbar0) = {:10.12f}".format(energy_env))
+    psi4.core.print_out("\n      E(Hbar) (Fragment energy computed using Hbar) = {:10.12f}".format(energy_high_dressed))
+    psi4.core.print_out("\n      E[ASET(2)] = {:10.12f}".format(energy_high_dressed + energy_env))
+    psi4.core.print_out("\n      ==============ASET(2) procedure done============== \n")
 
-    return energy_high_dressed + energy_cB
+    return energy_high_dressed + energy_env
 
 def forte_driver_fragment(state_weights_map, scf_info, options, ints, mo_space_info):
     # TODO Modify this solver to consider frag/env

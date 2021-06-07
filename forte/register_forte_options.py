@@ -252,6 +252,9 @@ def register_embedding_options(options):
     options.add_bool(
         "EMBEDDING_ASET2_MF_REF", True,
         "Whether we compute an ASET(mf) for reference when doing ASET(2).")
+    options.add_bool(
+        "EMBEDDING_JKFOCK", True,
+        "Whether or not we use the make_fock_matrix in ForteIntegrals.")
 
 
 def register_mo_space_info_options(options):

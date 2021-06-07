@@ -199,14 +199,12 @@ void ConventionalIntegrals::make_fock_matrix_from_value(std::shared_ptr<psi::Mat
                                              std::shared_ptr<psi::Matrix> gamma_b) {
     psi::SharedMatrix Fa(new psi::Matrix("Fa_fill", ncmo_, ncmo_));
     psi::SharedMatrix Fb(new psi::Matrix("Fb_fill", ncmo_, ncmo_));
-    outfile->Printf("\n    Debug #3.1 ");
     for (size_t p = 0; p < ncmo_; ++p) {
         for (size_t q = 0; q < ncmo_; ++q) {
             Fa->set(p, q, oei_a(p, q));
             Fb->set(p, q, oei_b(p, q));
         }
     }
-    outfile->Printf("\n    Debug #3.2 ");
     double zero = 1e-12;
     for (size_t r = 0; r < ncmo_; ++r) {
         for (size_t s = 0; s < ncmo_; ++s) {
@@ -221,7 +219,6 @@ void ConventionalIntegrals::make_fock_matrix_from_value(std::shared_ptr<psi::Mat
             }
         }
     }
-    outfile->Printf("\n    Debug #3.3 ");
     for (size_t r = 0; r < ncmo_; ++r) {
         for (size_t s = 0; s < ncmo_; ++s) {
             double gamma_b_rs = gamma_b->get(r, s);

@@ -259,6 +259,8 @@ PYBIND11_MODULE(forte, m) {
              "Return the DSRG dressed dipole integrals")
         .def("nuclear_dipole", &MASTER_DSRG::nuclear_dipole,
              "Return nuclear components of dipole moments")
+        .def("Hbar0", &MASTER_DSRG::Hbar0,
+             "Return Hbar0_ for reference")
         .def("set_Uactv", &MASTER_DSRG::set_Uactv, "Ua"_a, "Ub"_a,
              "Set active part orbital rotation matrix (from original to semicanonical)")
         .def("set_read_cwd_amps", &MASTER_DSRG::set_read_amps_cwd,

@@ -46,7 +46,7 @@ MASTER_DSRG::~MASTER_DSRG() {
 void MASTER_DSRG::startup() {
     print_h2("Multireference Driven Similarity Renormalization Group");
 
-    bool JK_safe = foptions_->get_str("EMBEDDING_TYPE") != "ASET2" || foptions_->get_str("INT_TYPE_FRAG") != "CONVENTIONAL";
+    bool JK_safe = foptions_->get_bool("EMBEDDING_JKFOCK");
 
     // build fock using ForteIntegrals and clean up JK
     if (JK_safe) {

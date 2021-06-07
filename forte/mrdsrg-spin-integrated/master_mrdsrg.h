@@ -90,6 +90,9 @@ class MASTER_DSRG : public DynamicCorrelationSolver {
     /// Return the Hbar of a given order
     std::vector<ambit::Tensor> Hbar(int n);
 
+    /// Return the Hbar0
+    double Hbar0() { return Hbar0_; }
+
     /// Return if dipole moments are computed
     bool do_dipole() { return do_dm_; }
 
