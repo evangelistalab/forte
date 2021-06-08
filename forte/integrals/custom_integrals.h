@@ -96,11 +96,13 @@ class CustomIntegrals : public ForteIntegrals {
     void set_tei(size_t p, size_t q, size_t r, size_t s, double value, bool alpha1,
                  bool alpha2) override;
 
-    void set_tei_from_asints(std::shared_ptr<ActiveSpaceIntegrals> as_ints, bool alpha1, bool alpha2) override;
+    void set_tei_from_asints(std::shared_ptr<ActiveSpaceIntegrals> as_ints, bool alpha1,
+                             bool alpha2) override;
 
     void build_from_asints(std::shared_ptr<ActiveSpaceIntegrals> as_ints) override;
 
-    void make_fock_matrix_from_value(std::shared_ptr<psi::Matrix> gamma_a, std::shared_ptr<psi::Matrix> gamma_b) override;
+    void make_fock_matrix_from_value(std::shared_ptr<psi::Matrix> gamma_a,
+                                     std::shared_ptr<psi::Matrix> gamma_b) override;
 
   private:
     // ==> Class private data <==

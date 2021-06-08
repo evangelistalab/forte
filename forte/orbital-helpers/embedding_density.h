@@ -14,61 +14,56 @@
 #include "integrals/active_space_integrals.h"
 
 namespace forte {
-class EMBEDDING_DENSITY {
 
 /**
-* @brief EMBEDDING_DENSITY does an orbital optimization given an 1RDM, 2RDM, and the integrals
-* Forms an orbital gradient:  g_{pq} = [ h_{pq} gamma_{pq} + Gamma_{pq}^{rs} <pq||rs> - A(p->q)]
-* Here only form a diagonal hessian of orbitals: Look at Hohenstein J. Chem. Phys. 142, 224103.
-* Diagonal Hessian only requires (pu|xy) integrals (many are built in JK library)
-* Daniel Smith's CASSCF code in PSI4 was integral in debugging.
+* @brief EMBEDDING_DENSITY generate density for the embedded fragment.
+* The density is organized as a RDMs object.
+* For RHF, we simply write the diagonal (i, i) elements to be 1.0, and 0.0 for other.
+* CASCI and CASSCF densities are generated using Active_Space_Solver and CASSCF objects.
+* Note that the rdms generated here depends on input mo_space_info, and
+* for embedding codes, mo_spce_info_A should be passed in to build CASCI/CASSCF densities.
 *
-* Usage of this class:  Contructor will just set_up the basic values
-* I learn best from examples:  Here is how I use it in the CASSCF code.
-* Note:  If you are not freezing core, you do not need F_froze
-*         OrbitalOptimizer orbital_optimizer(gamma1_,
-                                           gamma2_,
-                                           ints_->aptei_ab_block(nmo_abs_,
-active_abs_, active_abs_, active_abs_) ,
-                                           options_,
-                                           mo_space_info_);
-        orbital_optimizer.set_one_body(OneBody)
-        orbital_optimizer.set_frozen_one_body(F_froze_);
-        orbital_optimizer.set_no_symmetry_mo(Call_);
-        orbital_optimizer.set_symmmetry_mo(Ca);
+* Usage of this class:  Contructor will read the inputs, then use:
+* rhf_rdms() to return RHF rdms.
+* cas_rdms(mo_space_info_A) to build and return CASCI/CASSCF densities.
+* cas_rdms(mo_space_info_AB) to build and return FCI densities.
+* Example (build a CASCI density for A):
+*
+*     emb = EMBEDDING_DENSITY(state_weights_map, scf_info, mo_space_info_AB, ints, options)
+*     rdms = emb.cas_rdms(mo_space_info_A)
 
-        orbital_optimizer.update()
-        S = orbital_optimizer.approx_solve()
-        C_new = orbital_optimizer.rotate(Ca, S) -> Right now, if this is an
-iterative procedure, you should
-        use the Ca that was previously updated, ie (C_new  =
-Cold(exp(S_previous)) * exp(S))
 */
 
+class EMBEDDING_DENSITY {
+
+    // ==> Constructors <==
+
   public:
-    EMBEDDING_DENSITY(const std::map<StateInfo, std::vector<double>>& state_weights_map, 
-                      std::shared_ptr<SCFInfo> scf_info, 
-                      std::shared_ptr<MOSpaceInfo> mo_space_info, 
-                      std::shared_ptr<ForteIntegrals> ints, 
-                      std::shared_ptr<ForteOptions> options);
+    EMBEDDING_DENSITY(const std::map<StateInfo, std::vector<double>>& state_weights_map,
+                      std::shared_ptr<SCFInfo> scf_info, std::shared_ptr<MOSpaceInfo> mo_space_info,
+                      std::shared_ptr<ForteIntegrals> ints, std::shared_ptr<ForteOptions> options);
 
+    // ==> User's interface <==
+
+    /// Return RHF RDMs
     RDMs rhf_rdms();
-
+    /// Return CAS RDMs
     RDMs cas_rdms(std::shared_ptr<MOSpaceInfo> mo_space_info_active);
 
   private:
+    /// Set up options and inputs
     void start_up();
-
+    /// List of states and weights
     std::map<StateInfo, std::vector<double>> state_weights_map_;
-
+    /// Basic SCF info
     std::shared_ptr<SCFInfo> scf_info_;
-
+    /// MO info of A + B
     std::shared_ptr<MOSpaceInfo> mo_space_info_;
-
+    /// Active indices
     std::vector<size_t> mos_actv_o_;
-
+    /// Integrals (A + B)
     std::shared_ptr<ForteIntegrals> ints_;
-
+    /// Input options
     std::shared_ptr<ForteOptions> options_;
 };
 

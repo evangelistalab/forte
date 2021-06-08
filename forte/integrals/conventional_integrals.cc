@@ -167,7 +167,8 @@ void ConventionalIntegrals::set_tei(size_t p, size_t q, size_t r, size_t s, doub
         aphys_tei_bb_[index] = value;
 }
 
-void ConventionalIntegrals::set_tei_from_asints(std::shared_ptr<ActiveSpaceIntegrals> as_ints, bool alpha1, bool alpha2) {
+void ConventionalIntegrals::set_tei_from_asints(std::shared_ptr<ActiveSpaceIntegrals> as_ints,
+                                                bool alpha1, bool alpha2) {
     for (size_t p = 0; p < ncmo_; ++p) {
         for (size_t q = 0; q < ncmo_; ++q) {
             for (size_t r = 0; r < ncmo_; ++r) {
@@ -196,7 +197,7 @@ void ConventionalIntegrals::build_from_asints(std::shared_ptr<ActiveSpaceIntegra
 }
 
 void ConventionalIntegrals::make_fock_matrix_from_value(std::shared_ptr<psi::Matrix> gamma_a,
-                                             std::shared_ptr<psi::Matrix> gamma_b) {
+                                                        std::shared_ptr<psi::Matrix> gamma_b) {
     psi::SharedMatrix Fa(new psi::Matrix("Fa_fill", ncmo_, ncmo_));
     psi::SharedMatrix Fb(new psi::Matrix("Fb_fill", ncmo_, ncmo_));
     for (size_t p = 0; p < ncmo_; ++p) {

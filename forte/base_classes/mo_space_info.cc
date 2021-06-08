@@ -265,7 +265,7 @@ void MOSpaceInfo::read_options(std::shared_ptr<ForteOptions> options) {
 void MOSpaceInfo::read_from_map(const std::map<std::string, std::vector<size_t>>& mo_space_map) {
     // Capitalize the space names to allow the user to use both lower or upper case strings
     std::map<std::string, std::vector<size_t>> mo_space_map_capitalized;
-    for (const auto& el : mo_space_map){
+    for (const auto& el : mo_space_map) {
         mo_space_map_capitalized[upper_string(el.first)] = el.second;
     }
     // Read the elementary spaces
@@ -430,9 +430,8 @@ std::pair<SpaceInfo, bool> MOSpaceInfo::read_mo_space(const std::string& space,
     return std::make_pair(space_info, read);
 }
 
-std::pair<SpaceInfo, bool>
-MOSpaceInfo::read_mo_space_from_map(const std::string& space,
-                                    const std::map<std::string, std::vector<size_t>>& mo_space_map) {
+std::pair<SpaceInfo, bool> MOSpaceInfo::read_mo_space_from_map(
+    const std::string& space, const std::map<std::string, std::vector<size_t>>& mo_space_map) {
     bool read = false;
     psi::Dimension space_dim(nirrep_);
     std::vector<MOInfo> vec_mo_info;

@@ -10,12 +10,12 @@
 
 namespace forte {
 
-EMBEDDING_DENSITY::EMBEDDING_DENSITY(const std::map<StateInfo, std::vector<double>>& state_weights_map,
-                         std::shared_ptr<SCFInfo> scf_info,
-                         std::shared_ptr<MOSpaceInfo> mo_space_info,
-                         std::shared_ptr<ForteIntegrals> ints,
-                         std::shared_ptr<ForteOptions> options)
-    : state_weights_map_(state_weights_map), scf_info_(scf_info), mo_space_info_(mo_space_info), ints_(ints), options_(options) {
+EMBEDDING_DENSITY::EMBEDDING_DENSITY(
+    const std::map<StateInfo, std::vector<double>>& state_weights_map,
+    std::shared_ptr<SCFInfo> scf_info, std::shared_ptr<MOSpaceInfo> mo_space_info,
+    std::shared_ptr<ForteIntegrals> ints, std::shared_ptr<ForteOptions> options)
+    : state_weights_map_(state_weights_map), scf_info_(scf_info), mo_space_info_(mo_space_info),
+      ints_(ints), options_(options) {
 
     start_up();
 }
@@ -49,7 +49,7 @@ RDMs EMBEDDING_DENSITY::rhf_rdms() {
     auto D1b = ambit::Tensor::build(ambit::CoreTensor, "D1b", std::vector<size_t>(2, na));
 
     for (auto i : mos_actv_o_) {
-        //psi::outfile->Printf("\n rdm(%d, %d)", i, i);
+        // psi::outfile->Printf("\n rdm(%d, %d)", i, i);
         D1a.data()[i * na + i] = 1.0;
         D1b.data()[i * na + i] = 1.0;
     }
@@ -77,33 +77,31 @@ RDMs EMBEDDING_DENSITY::rhf_rdms() {
         auto D3aab = ambit::Tensor::build(ambit::CoreTensor, "D3aab", std::vector<size_t>(6, na));
         auto D3abb = ambit::Tensor::build(ambit::CoreTensor, "D3abb", std::vector<size_t>(6, na));
         auto D3bbb = ambit::Tensor::build(ambit::CoreTensor, "D3bbb", std::vector<size_t>(6, na));
-    
-    
+
         D3aaa("pqrstu") += D1a("ps") * D1a("qt") * D1a("ru");
         D3aaa("pqrstu") -= D1a("ps") * D1a("rt") * D1a("qu");
         D3aaa("pqrstu") -= D1a("qs") * D1a("pt") * D1a("ru");
         D3aaa("pqrstu") += D1a("qs") * D1a("rt") * D1a("pu");
         D3aaa("pqrstu") -= D1a("rs") * D1a("qt") * D1a("pu");
         D3aaa("pqrstu") += D1a("rs") * D1a("pt") * D1a("qu");
-    
+
         D3bbb("pqrstu") += D1b("ps") * D1b("qt") * D1b("ru");
         D3bbb("pqrstu") -= D1b("ps") * D1b("rt") * D1b("qu");
         D3bbb("pqrstu") -= D1b("qs") * D1b("pt") * D1b("ru");
         D3bbb("pqrstu") += D1b("qs") * D1b("rt") * D1b("pu");
         D3bbb("pqrstu") -= D1b("rs") * D1b("qt") * D1b("pu");
         D3bbb("pqrstu") += D1b("rs") * D1b("pt") * D1b("qu");
-    
+
         D3aab("pqrstu") += D1a("ps") * D1a("qt") * D1b("ru");
         D3aab("pqrstu") -= D1a("qs") * D1a("pt") * D1b("ru");
-    
+
         D3abb("pqrstu") += D1a("ps") * D1b("qt") * D1b("ru");
         D3abb("pqrstu") -= D1a("ps") * D1b("rt") * D1b("qu");
 
         psi::outfile->Printf("\n D3 formed.");
 
         return RDMs(D1a, D1b, D2aa, D2ab, D2bb, D3aaa, D3aab, D3abb, D3bbb);
-    }
-    else {
+    } else {
         psi::outfile->Printf("\n D3 skipped.");
 
         return RDMs(D1a, D1b, D2aa, D2ab, D2bb);
@@ -117,27 +115,29 @@ RDMs EMBEDDING_DENSITY::cas_rdms(std::shared_ptr<MOSpaceInfo> mo_space_info_acti
     if (options_->get_str("FRAGMENT_DENSITY") == "CASCI") {
         std::string ci_type = options_->get_str("ACTIVE_SPACE_SOLVER");
         auto state_map = to_state_nroots_map(state_weights_map_);
-        
+
         size_t nactv = mo_space_info_->size("ACTIVE");
         auto actv_mos = mo_space_info_active->corr_absolute_mo("ACTIVE");
         std::vector<int> actv_sym = mo_space_info_active->symmetry("ACTIVE");
         auto rdocc_mos = mo_space_info_active->corr_absolute_mo("RESTRICTED_DOCC");
 
-        auto fci_ints = std::make_shared<ActiveSpaceIntegrals>(ints_, actv_mos, actv_sym, rdocc_mos);
+        auto fci_ints =
+            std::make_shared<ActiveSpaceIntegrals>(ints_, actv_mos, actv_sym, rdocc_mos);
         fci_ints->set_active_integrals_and_restricted_docc();
 
-        auto active_space_solver = make_active_space_solver(ci_type, state_map, scf_info_,
-                                                    mo_space_info_active, fci_ints, options_);
+        auto active_space_solver = make_active_space_solver(
+            ci_type, state_map, scf_info_, mo_space_info_active, fci_ints, options_);
         active_space_solver->set_print(print_level);
         active_space_solver->compute_energy();
 
         ref_rdms = active_space_solver->compute_average_rdms(state_weights_map_, 2);
-        psi::outfile->Printf("\n CASCI(A) density will be written into the fragment (A) densiy blocks");
-    }
-    else if (options_->get_str("FRAGMENT_DENSITY") == "CASSCF") {
+        psi::outfile->Printf(
+            "\n CASCI(A) density will be written into the fragment (A) densiy blocks");
+    } else if (options_->get_str("FRAGMENT_DENSITY") == "CASSCF") {
         CASSCF cas_1(state_weights_map_, scf_info_, options_, mo_space_info_active, ints_);
         cas_1.compute_energy();
-        psi::outfile->Printf("\n CASSCF(A) density will be written into the fragment (A) densiy blocks");
+        psi::outfile->Printf(
+            "\n CASSCF(A) density will be written into the fragment (A) densiy blocks");
         ref_rdms = cas_1.ref_rdms();
     }
 
@@ -154,10 +154,10 @@ RDMs EMBEDDING_DENSITY::cas_rdms(std::shared_ptr<MOSpaceInfo> mo_space_info_acti
     // Inner-layer mospace
     auto rdoccpi_in = mo_space_info_active->dimension("RESTRICTED_DOCC");
     auto actvpi_in = mo_space_info_active->dimension("ACTIVE");
-    //auto actvopi_in = doccpi - rdoccpi_in - mo_space_info_active->dimension("FROZEN_DOCC");
+    // auto actvopi_in = doccpi - rdoccpi_in - mo_space_info_active->dimension("FROZEN_DOCC");
 
     std::vector<size_t> mos_oa;
-    for (int i = 0; i < rdoccpi_in[0]+actvpi_in[0]; ++i) {
+    for (int i = 0; i < rdoccpi_in[0] + actvpi_in[0]; ++i) {
         mos_oa.push_back(i);
     }
 
@@ -177,12 +177,10 @@ RDMs EMBEDDING_DENSITY::cas_rdms(std::shared_ptr<MOSpaceInfo> mo_space_info_acti
                 size_t jp = j - rdoccpi_in[0];
                 D1a.data()[i * na + j] = ref_rdms.g1a().data()[ip * na_in + jp];
                 D1b.data()[i * na + j] = ref_rdms.g1b().data()[ip * na_in + jp];
-            }
-            else if (i == j) {
+            } else if (i == j) {
                 D1a.data()[i * na + j] = 1.0;
                 D1b.data()[i * na + j] = 1.0;
-            }
-            else {
+            } else {
                 D1a.data()[i * na + j] = 0.0;
                 D1b.data()[i * na + j] = 0.0;
             }
@@ -208,10 +206,13 @@ RDMs EMBEDDING_DENSITY::cas_rdms(std::shared_ptr<MOSpaceInfo> mo_space_info_acti
         for (auto q : mos_actv_in) {
             for (auto r : mos_actv_in) {
                 for (auto s : mos_actv_in) {
-                    D2aa.data()[index_exp(na, p+v, q+v, r+v, s+v)] = ref_rdms.g2aa().data()[index_exp(na_in, p, q, r, s)];
-                    D2bb.data()[index_exp(na, p+v, q+v, r+v, s+v)] = ref_rdms.g2bb().data()[index_exp(na_in, p, q, r, s)];
-                    D2ab.data()[index_exp(na, p+v, q+v, r+v, s+v)] = ref_rdms.g2ab().data()[index_exp(na_in, p, q, r, s)];
-		}
+                    D2aa.data()[index_exp(na, p + v, q + v, r + v, s + v)] =
+                        ref_rdms.g2aa().data()[index_exp(na_in, p, q, r, s)];
+                    D2bb.data()[index_exp(na, p + v, q + v, r + v, s + v)] =
+                        ref_rdms.g2bb().data()[index_exp(na_in, p, q, r, s)];
+                    D2ab.data()[index_exp(na, p + v, q + v, r + v, s + v)] =
+                        ref_rdms.g2ab().data()[index_exp(na_in, p, q, r, s)];
+                }
             }
         }
     }
@@ -222,32 +223,31 @@ RDMs EMBEDDING_DENSITY::cas_rdms(std::shared_ptr<MOSpaceInfo> mo_space_info_acti
         auto D3aab = ambit::Tensor::build(ambit::CoreTensor, "D3aab", std::vector<size_t>(6, na));
         auto D3abb = ambit::Tensor::build(ambit::CoreTensor, "D3abb", std::vector<size_t>(6, na));
         auto D3bbb = ambit::Tensor::build(ambit::CoreTensor, "D3bbb", std::vector<size_t>(6, na));
-    
+
         D3aaa("pqrstu") += D1a("ps") * D1a("qt") * D1a("ru");
         D3aaa("pqrstu") -= D1a("ps") * D1a("rt") * D1a("qu");
         D3aaa("pqrstu") -= D1a("qs") * D1a("pt") * D1a("ru");
         D3aaa("pqrstu") += D1a("qs") * D1a("rt") * D1a("pu");
         D3aaa("pqrstu") -= D1a("rs") * D1a("qt") * D1a("pu");
         D3aaa("pqrstu") += D1a("rs") * D1a("pt") * D1a("qu");
-    
+
         D3bbb("pqrstu") += D1b("ps") * D1b("qt") * D1b("ru");
         D3bbb("pqrstu") -= D1b("ps") * D1b("rt") * D1b("qu");
         D3bbb("pqrstu") -= D1b("qs") * D1b("pt") * D1b("ru");
         D3bbb("pqrstu") += D1b("qs") * D1b("rt") * D1b("pu");
         D3bbb("pqrstu") -= D1b("rs") * D1b("qt") * D1b("pu");
         D3bbb("pqrstu") += D1b("rs") * D1b("pt") * D1b("qu");
-    
+
         D3aab("pqrstu") += D1a("ps") * D1a("qt") * D1b("ru");
         D3aab("pqrstu") -= D1a("qs") * D1a("pt") * D1b("ru");
-    
+
         D3abb("pqrstu") += D1a("ps") * D1b("qt") * D1b("ru");
         D3abb("pqrstu") -= D1a("ps") * D1b("rt") * D1b("qu");
-    
+
         return RDMs(D1a, D1b, D2aa, D2ab, D2bb, D3aaa, D3aab, D3abb, D3bbb);
-    }
-    else {
+    } else {
         return RDMs(D1a, D1b, D2aa, D2ab, D2bb);
-   }
+    }
 }
 
 } // namespace forte

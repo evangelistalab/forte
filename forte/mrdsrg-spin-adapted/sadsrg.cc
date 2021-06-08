@@ -110,8 +110,7 @@ void SADSRG::startup() {
     // initialize Fock matrix
     if (JK_safe) {
         init_fock();
-    }
-    else {
+    } else {
         init_fock_emb();
     }
 

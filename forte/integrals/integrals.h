@@ -265,7 +265,7 @@ class ForteIntegrals {
 
     /// Make the generalized Fock matrix directly from integral values, avoid using JK builder
     virtual void make_fock_matrix_from_value(std::shared_ptr<psi::Matrix> gamma_a,
-                                  std::shared_ptr<psi::Matrix> gamma_b) = 0;
+                                             std::shared_ptr<psi::Matrix> gamma_b) = 0;
 
     /// Make the closed-shell Fock matrix in MO basis (include frozen orbitals)
     /// @param dim_start Dimension for the starting index (per irrep) of closed-shell orbitals
@@ -338,7 +338,8 @@ class ForteIntegrals {
     virtual void build_from_asints(std::shared_ptr<ActiveSpaceIntegrals> as_ints) = 0;
 
     /// Set the value of the two-electron integrals from an active_space_integral object
-    virtual void set_tei_from_asints(std::shared_ptr<ActiveSpaceIntegrals> as_ints, bool alpha1, bool alpha2) = 0;
+    virtual void set_tei_from_asints(std::shared_ptr<ActiveSpaceIntegrals> as_ints, bool alpha1,
+                                     bool alpha2) = 0;
 
     /// Rotate the MO coefficients, update psi::Wavefunction, and re-transform integrals
     /// @param Ua the alpha unitary transformation matrix

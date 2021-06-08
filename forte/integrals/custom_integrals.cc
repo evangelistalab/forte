@@ -142,7 +142,8 @@ void CustomIntegrals::set_tei(size_t p, size_t q, size_t r, size_t s, double val
         aphys_tei_bb_[index] = value;
 }
 
-void CustomIntegrals::set_tei_from_asints(std::shared_ptr<ActiveSpaceIntegrals> as_ints, bool alpha1, bool alpha2) {
+void CustomIntegrals::set_tei_from_asints(std::shared_ptr<ActiveSpaceIntegrals> as_ints,
+                                          bool alpha1, bool alpha2) {
     for (size_t p = 0; p < ncmo_; ++p) {
         for (size_t q = 0; q < ncmo_; ++q) {
             for (size_t r = 0; r < ncmo_; ++r) {
@@ -169,16 +170,17 @@ void CustomIntegrals::build_from_asints(std::shared_ptr<ActiveSpaceIntegrals> as
     set_tei_from_asints(as_ints, true, false);
     set_tei_from_asints(as_ints, false, false);
     // OEI need to be updated to full_one_electron_integrals_a_ and full_one_electron_integrals_b_
-    //for (size_t p = 0; p < ncmo_; ++p) {
+    // for (size_t p = 0; p < ncmo_; ++p) {
     //    for (size_t q = 0; q < ncmo_; ++q) {
-    //        full_one_electron_integrals_a_[cmotomo_[p] * nmo_ + cmotomo_[q]] = one_electron_integrals_a_[p * ncmo_ + q];
-    //        full_one_electron_integrals_b_[cmotomo_[p] * nmo_ + cmotomo_[q]] = one_electron_integrals_b_[p * ncmo_ + q];
+    //        full_one_electron_integrals_a_[cmotomo_[p] * nmo_ + cmotomo_[q]] =
+    //        one_electron_integrals_a_[p * ncmo_ + q]; full_one_electron_integrals_b_[cmotomo_[p] *
+    //        nmo_ + cmotomo_[q]] = one_electron_integrals_b_[p * ncmo_ + q];
     //    }
     //}
 }
 
 void CustomIntegrals::make_fock_matrix_from_value(std::shared_ptr<psi::Matrix> gamma_a,
-                                             std::shared_ptr<psi::Matrix> gamma_b) {
+                                                  std::shared_ptr<psi::Matrix> gamma_b) {
     psi::SharedMatrix Fa(new psi::Matrix("Fa_fill", ncmo_, ncmo_));
     psi::SharedMatrix Fb(new psi::Matrix("Fb_fill", ncmo_, ncmo_));
     for (size_t p = 0; p < ncmo_; ++p) {

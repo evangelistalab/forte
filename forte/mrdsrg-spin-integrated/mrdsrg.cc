@@ -393,7 +393,6 @@ void MRDSRG::print_cumulant_summary() {
     outfile->Printf("\n    %-8s %12.6f %12.6f %12.6f", "norm", norms[0], norms[1], norms[2]);
     outfile->Printf("\n    %s", dash.c_str());
 
-
     // 3-body
     if (foptions_->get_str("THREEPDC") != "ZERO") {
         maxes.clear();
@@ -401,20 +400,20 @@ void MRDSRG::print_cumulant_summary() {
         maxes.push_back(rdms_.L3aab().norm(0));
         maxes.push_back(rdms_.L3abb().norm(0));
         maxes.push_back(rdms_.L3bbb().norm(0));
-    
+
         norms.clear();
         norms.push_back(rdms_.L3aaa().norm(2));
         norms.push_back(rdms_.L3aab().norm(2));
         norms.push_back(rdms_.L3abb().norm(2));
         norms.push_back(rdms_.L3bbb().norm(2));
-    
+
         dash = std::string(8 + 13 * 4, '-');
         outfile->Printf("\n    %-8s %12s %12s %12s %12s", "3-body", "AAA", "AAB", "ABB", "BBB");
         outfile->Printf("\n    %s", dash.c_str());
-        outfile->Printf("\n    %-8s %12.6f %12.6f %12.6f %12.6f", "max", maxes[0], maxes[1], maxes[2],
-                        maxes[3]);
-        outfile->Printf("\n    %-8s %12.6f %12.6f %12.6f %12.6f", "norm", norms[0], norms[1], norms[2],
-                        norms[3]);
+        outfile->Printf("\n    %-8s %12.6f %12.6f %12.6f %12.6f", "max", maxes[0], maxes[1],
+                        maxes[2], maxes[3]);
+        outfile->Printf("\n    %-8s %12.6f %12.6f %12.6f %12.6f", "norm", norms[0], norms[1],
+                        norms[2], norms[3]);
         outfile->Printf("\n    %s", dash.c_str());
     }
     //    check_density(Lambda2_, "2-body");

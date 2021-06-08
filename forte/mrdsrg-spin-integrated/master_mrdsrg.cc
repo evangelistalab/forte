@@ -71,8 +71,7 @@ void MASTER_DSRG::startup() {
     // initialize Fock matrix
     if (JK_safe) {
         init_fock();
-    }
-    else {
+    } else {
         init_fock_emb();
     }
 
@@ -258,13 +257,14 @@ void MASTER_DSRG::fill_density() {
 void MASTER_DSRG::init_fock() {
     outfile->Printf("\n    Filling Fock matrix from ForteIntegrals ......... ");
     Fock_ = BTF_->build(tensor_type_, "Fock", spin_cases({"gg"}));
-    Fock_.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>& spin, double& value) {
-        if (spin[0] == AlphaSpin) {
-            value = ints_->get_fock_a(i[0], i[1]);
-        } else {
-            value = ints_->get_fock_b(i[0], i[1]);
-        }
-    });
+    Fock_.iterate(
+        [&](const std::vector<size_t>& i, const std::vector<SpinType>& spin, double& value) {
+            if (spin[0] == AlphaSpin) {
+                value = ints_->get_fock_a(i[0], i[1]);
+            } else {
+                value = ints_->get_fock_b(i[0], i[1]);
+            }
+        });
     fill_Fdiag(Fock_, Fdiag_a_, Fdiag_b_);
     outfile->Printf("Done");
 }
@@ -290,13 +290,14 @@ void MASTER_DSRG::init_fock_emb() {
 
     ints_->make_fock_matrix_from_value(D1a, D1b);
 
-    Fock_.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>& spin, double& value) {
-        if (spin[0] == AlphaSpin) {
-            value = ints_->get_fock_a(i[0], i[1], false);
-        } else {
-            value = ints_->get_fock_b(i[0], i[1], false);
-        }
-    });
+    Fock_.iterate(
+        [&](const std::vector<size_t>& i, const std::vector<SpinType>& spin, double& value) {
+            if (spin[0] == AlphaSpin) {
+                value = ints_->get_fock_a(i[0], i[1], false);
+            } else {
+                value = ints_->get_fock_b(i[0], i[1], false);
+            }
+        });
     fill_Fdiag(Fock_, Fdiag_a_, Fdiag_b_);
     outfile->Printf("Done");
 }

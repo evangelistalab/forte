@@ -32,20 +32,22 @@
 #include "psi4/libmints/matrix.h"
 #include "psi4/libmints/wavefunction.h"
 
-
 #include "base_classes/forte_options.h"
 #include "base_classes/mo_space_info.h"
 
 namespace forte {
 
-void make_avas(psi::SharedWavefunction ref_wfn, std::shared_ptr<ForteOptions> options, psi::SharedMatrix Ps);
+void make_avas(psi::SharedWavefunction ref_wfn, std::shared_ptr<ForteOptions> options,
+               psi::SharedMatrix Ps);
 
-std::shared_ptr<MOSpaceInfo> make_embedding(psi::SharedWavefunction ref_wfn, std::shared_ptr<ForteOptions> options,
+std::shared_ptr<MOSpaceInfo> make_embedding(psi::SharedWavefunction ref_wfn,
+                                            std::shared_ptr<ForteOptions> options,
                                             psi::SharedMatrix Pf, int nbf_A,
                                             std::shared_ptr<MOSpaceInfo> mo_space_info);
 
 std::shared_ptr<MOSpaceInfo> build_aset2_fragment(psi::SharedWavefunction ref_wfn,
-                                            std::shared_ptr<MOSpaceInfo> mo_space_info, std::shared_ptr<ForteOptions> options);
+                                                  std::shared_ptr<MOSpaceInfo> mo_space_info,
+                                                  std::shared_ptr<ForteOptions> options);
 } // namespace forte
 
 #endif // _orbital_embedding_h_
