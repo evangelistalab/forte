@@ -135,7 +135,6 @@ PYBIND11_MODULE(forte, m) {
     m.def("make_mo_space_info_from_map", &make_mo_space_info_from_map, "nmopi"_a, "point_group"_a,
           "mo_space_map"_a, "reorder"_a = std::vector<size_t>(),
           "Make a MOSpaceInfo object using a dictionary");
-
     m.def("make_aosubspace_projector", &make_aosubspace_projector, "Make a AOSubspace projector");
     m.def("make_avas", &make_avas, "Make AVAS orbitals");
     m.def("make_fragment_projector", &make_fragment_projector,
@@ -170,6 +169,10 @@ PYBIND11_MODULE(forte, m) {
           "Make a DSRG pointer (spin-adapted implementation)");
     m.def("make_casscf", &make_casscf, "Make a CASSCF object");
     m.def("make_mcscf_two_step", &make_mcscf_two_step, "Make a 2-step MCSCF object");
+    m.def("make_mcscf",
+          [](std::map<StateInfo, std::vector<double>> state_weight_map,
+             std::shared_ptr<SCFInfo> scf_info, std::shared_ptr<ForteOptions> options,
+             std::shared_ptr<MOSpaceInfo> mo_space_info, std::shared_ptr<ForteIntegrals> ints) {});
     m.def("test_lbfgs_rosenbrock", &test_lbfgs_rosenbrock, "Test L-BFGS on Rosenbrock function");
 
     export_ambit(m);
@@ -202,8 +205,9 @@ PYBIND11_MODULE(forte, m) {
     // export SCFInfo
     py::class_<SCFInfo, std::shared_ptr<SCFInfo>>(m, "SCFInfo")
         .def(py::init<psi::SharedWavefunction>())
-        .def(py::init<const psi::Dimension&, const psi::Dimension&, double,
+        .def(py::init<const psi::Dimension&, const psi::Dimension&, const psi::Dimension&, double,
                       std::shared_ptr<psi::Vector>, std::shared_ptr<psi::Vector>>())
+        .def("nmopi", &SCFInfo::nmopi)
         .def("doccpi", &SCFInfo::doccpi)
         .def("soccpi", &SCFInfo::soccpi)
         .def("reference_energy", &SCFInfo::reference_energy)
@@ -292,10 +296,10 @@ PYBIND11_MODULE(forte, m) {
         .def("compute_Heff_actv", &DSRG_MRPT::compute_Heff_actv,
              "Return the DSRG dressed ActiveSpaceIntegrals");
 
-     py::class_<MCSRGPT2_MO>(m,"MCSRGPT2_MO")
-     .def(py::init<RDMs, std::shared_ptr<ForteOptions>,
-                std::shared_ptr<ForteIntegrals> , std::shared_ptr<MOSpaceInfo> >())
-         .def("compute_energy", &MCSRGPT2_MO::compute_energy, "Compute DSRG energy");
+    py::class_<MCSRGPT2_MO>(m, "MCSRGPT2_MO")
+        .def(py::init<RDMs, std::shared_ptr<ForteOptions>, std::shared_ptr<ForteIntegrals>,
+                      std::shared_ptr<MOSpaceInfo>>())
+        .def("compute_energy", &MCSRGPT2_MO::compute_energy, "Compute DSRG energy");
 
     // export DressedQuantity for dipole moments
     py::class_<DressedQuantity>(m, "DressedQuantity")

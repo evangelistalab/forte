@@ -48,3 +48,20 @@ def clean_options():
     psi_options = psi4.core.get_options()
     psi_options.set_current_module('FORTE')
     forte.forte_options.push_options_to_psi4(psi_options)
+
+
+class ForteManager(object):
+    """Singleton class to handle startup and cleanup of forte (mosly ambit)"""
+    _instance = None
+
+    def __new__(cls):
+        if cls._instance is None:
+            cls._instance = True
+            print('Creating the ambit object')
+            # Put any initialization here.
+            forte.startup()
+        return cls._instance
+
+    def __del__(cls):
+        forte.cleanup()
+        print('Deleting the ambit object')

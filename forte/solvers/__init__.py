@@ -1,1 +1,3 @@
-from .hf_solver import hf_solver
+from .hf import HF
+from .mcscf import MCSCF
+from .solver import molecular_model

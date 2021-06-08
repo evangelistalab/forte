@@ -37,11 +37,15 @@ namespace forte {
 class SCFInfo {
   public:
     /// Constructor
-    SCFInfo(const psi::Dimension& doccpi, const psi::Dimension& soccpi, double reference_energy,
-            std::shared_ptr<psi::Vector> epsilon_a, std::shared_ptr<psi::Vector> epsilon_b);
+    SCFInfo(const psi::Dimension& nmopi, const psi::Dimension& doccpi, const psi::Dimension& soccpi,
+            double reference_energy, std::shared_ptr<psi::Vector> epsilon_a,
+            std::shared_ptr<psi::Vector> epsilon_b);
 
     /// Constructor based on Psi4 Wavefunction
     SCFInfo(psi::SharedWavefunction wfn);
+
+    /// return doccpi
+    psi::Dimension nmopi();
 
     /// return doccpi
     psi::Dimension doccpi();
@@ -59,10 +63,13 @@ class SCFInfo {
     std::shared_ptr<psi::Vector> epsilon_b();
 
   private:
-    // Doubly occupied in RHF
+    // Orbitals per irrep
+    psi::Dimension nmopi_;
+
+    // Doubly occupied orbitals per irrep
     psi::Dimension doccpi_;
 
-    // Singly occupied in RHF
+    // Singly occupied orbitals per irrep
     psi::Dimension soccpi_;
 
     // SCF energy

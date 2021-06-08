@@ -26,7 +26,6 @@
  * @END LICENSE
  */
 
-
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 
@@ -44,6 +43,7 @@ void export_MOSpaceInfo(py::module& m) {
 
     // export MOSpaceInfo
     py::class_<MOSpaceInfo, std::shared_ptr<MOSpaceInfo>>(m, "MOSpaceInfo")
+        .def(py::init<const psi::Dimension&, const std::string&>())
         .def("dimension", &MOSpaceInfo::dimension,
              "Return a psi::Dimension object for the given space")
         .def("absolute_mo", &MOSpaceInfo::absolute_mo,
@@ -70,7 +70,9 @@ void export_MOSpaceInfo(py::module& m) {
         .def("space_names", &MOSpaceInfo::space_names, "Return the names of orbital spaces")
         .def("irrep_labels", &MOSpaceInfo::irrep_labels, "Return the labels of the irreps")
         .def("irrep_label", &MOSpaceInfo::irrep_label, "Return the labels of the irreps")
-        .def("point_group_label", &MOSpaceInfo::point_group_label, "Return the labels of the irreps");
+        .def("point_group_label", &MOSpaceInfo::point_group_label,
+             "Return the labels of the irreps")
+        .def("__str__", &MOSpaceInfo::str);
 }
 
 } // namespace forte

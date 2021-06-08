@@ -22,13 +22,15 @@ class CMakeBuild(build_ext):
     build_ext.user_options = build_ext.user_options + [
         ('ambitpath', None, 'the path to ambit'),
         ('max_det_orb', 64, 'the maximum number of orbitals used by the Determinant class'),
-        ('enable_codecov',False,'enable code coverage')
+        ('enable_codecov',False,'enable code coverage'),
+        ('build_type','Release','build type')
         ]
 
     def initialize_options(self):
         self.ambitpath = None
         self.max_det_orb = 64
         self.enable_codecov = 'OFF'
+        self.build_type = 'Release'
         return build_ext.initialize_options(self)
 
     def run(self):
@@ -54,7 +56,7 @@ class CMakeBuild(build_ext):
         cfg = 'Debug' if self.debug else 'Release'
 
         print(f'\n  Forte compilation options')
-        print(f'\n    BUILD_TYPE = {cfg}')
+        print(f'\n    BUILD_TYPE = {self.build_type}')
         print(f'    AMBITPATH = {self.ambitpath}')
         print(f'    MAX_DET_ORB = {self.max_det_orb}')
         print(f'    ENABLE_CODECOV = {str(self.enable_codecov).upper()}\n')
@@ -79,7 +81,7 @@ class CMakeBuild(build_ext):
 
         # append cmake arguments
         cmake_args += [f'-Dambit_DIR={self.ambitpath}/share/cmake/ambit']
-        cmake_args += [f'-DCMAKE_BUILD_TYPE={cfg}']
+        cmake_args += [f'-DCMAKE_BUILD_TYPE={self.build_type}']
         cmake_args += [f'-DMAX_DET_ORB={self.max_det_orb}']
         cmake_args += [f'-DENABLE_CODECOV={str(self.enable_codecov).upper()}']
         cmake_args += [f'-DENABLE_ForteTests=TRUE']

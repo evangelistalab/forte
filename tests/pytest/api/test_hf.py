@@ -3,7 +3,7 @@
 import pytest
 
 from forte import Molecule, Basis, MolecularModel
-from forte.solvers import hf_solver
+from forte.solvers import HF, molecular_model
 
 
 def test_hf():
@@ -21,13 +21,15 @@ def test_hf():
     basis = Basis('cc-pVDZ')
 
     # create a molecular model
-    model = MolecularModel(molecule=mol, basis=basis)
+    root = molecular_model(molecule=mol, basis=basis)
 
-    hf = hf_solver(model)
+    # specify the electronic state
+    state = root.model.state(charge=0, multiplicity=1, sym='ag')
 
-    results = hf.energy()
+    hf = HF(root, state=state)
+    hf.run()
 
-    assert results.value('hf energy') == pytest.approx(ref_energy, 1.0e-10)
+    assert hf.value('hf energy') == pytest.approx(ref_energy, 1.0e-10)
 
 
 if __name__ == "__main__":

@@ -1,15 +1,17 @@
-"""Test the CASSCF solver."""
+"""Test the HF solver."""
 
+from numpy import multiply
+import forte
 import pytest
 
-from forte import Molecule, Basis, MolecularModel
-from forte.solvers import mcscf_solver
+from forte import Molecule, Basis
+from forte.solvers import HF, MCSCF, molecular_model
 
 
 def test_casscf():
-    """Test CASSCF."""
+    """Test RHF."""
 
-    ref_energy = -1.127199399856466
+    ref_energy = -1.1271993998799024
 
     # create a molecule from a string
     mol = Molecule.from_geom("""
@@ -21,14 +23,21 @@ def test_casscf():
     basis = Basis('cc-pVDZ')
 
     # create a molecular model
-    model = MolecularModel(molecule=mol, basis=basis)
+    root = molecular_model(molecule=mol, basis=basis)
 
-    hf = mcscf_solver(model)
+    # specify the electronic state
+    state = root.model.state(charge=0, multiplicity=1, sym='ag')
 
-    results = hf.energy()
+    # compute HF orbitals
+    hf = HF(root, state=state)
 
-    assert results.value('mcscf energy') == pytest.approx(ref_energy, 1.0e-10)
+    # create an MCSCF object
+    mcscf = MCSCF(hf, states=state, active=[1, 0, 0, 0, 0, 1, 0, 0])
+
+    mcscf.run()
+
+    assert mcscf.value('mcscf energy')[0] == pytest.approx(ref_energy, 1.0e-10)
 
 
 if __name__ == "__main__":
-    test_hf()
+    test_casscf()

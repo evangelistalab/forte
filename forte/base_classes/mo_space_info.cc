@@ -49,36 +49,49 @@ MOSpaceInfo::MOSpaceInfo(const psi::Dimension& nmopi, const std::string& point_g
     }
 }
 
-size_t MOSpaceInfo::size(const std::string& space) {
+std::string MOSpaceInfo::str() const {
+    std::string s;
+    for (auto& space : space_names()) {
+        s += "space: " + space + " ";
+        const auto dim = dimension(space);
+        for (size_t h = 0; h < dim.n(); h++) {
+            s += " " + std::to_string(dim[h]);
+        }
+        s += '\n';
+    }
+    return s;
+}
+
+size_t MOSpaceInfo::size(const std::string& space) const {
     size_t s = 0;
     if (composite_spaces_.count(space) == 0) {
         std::string msg = "\n  MOSpaceInfo::size - composite space " + space + " is not defined.";
         throw psi::PSIEXCEPTION(msg.c_str());
     } else {
-        for (const auto& el_space : composite_spaces_[space]) {
+        for (const auto& el_space : composite_spaces_.at(space)) {
             if (mo_spaces_.count(el_space))
-                s += mo_spaces_[el_space].first.sum();
+                s += mo_spaces_.at(el_space).first.sum();
         }
     }
     return s;
 }
 
-psi::Dimension MOSpaceInfo::dimension(const std::string& space) {
+psi::Dimension MOSpaceInfo::dimension(const std::string& space) const {
     psi::Dimension result(nirrep_);
     if (composite_spaces_.count(space) == 0) {
         std::string msg =
             "\n  MOSpaceInfo::dimension - composite space " + space + " is not defined.";
         throw psi::PSIEXCEPTION(msg.c_str());
     } else {
-        for (const auto& el_space : composite_spaces_[space]) {
+        for (const auto& el_space : composite_spaces_.at(space)) {
             if (mo_spaces_.count(el_space))
-                result += mo_spaces_[el_space].first;
+                result += mo_spaces_.at(el_space).first;
         }
     }
     return result;
 }
 
-std::vector<int> MOSpaceInfo::symmetry(const std::string& space) {
+std::vector<int> MOSpaceInfo::symmetry(const std::string& space) const {
     psi::Dimension dims = dimension(space);
     std::vector<int> result;
     for (int h = 0; h < dims.n(); ++h) {
@@ -89,7 +102,7 @@ std::vector<int> MOSpaceInfo::symmetry(const std::string& space) {
     return result;
 }
 
-std::vector<size_t> MOSpaceInfo::absolute_mo(const std::string& space) {
+std::vector<size_t> MOSpaceInfo::absolute_mo(const std::string& space) const {
     std::vector<size_t> result;
     if (composite_spaces_.count(space) == 0) {
         std::string msg =
@@ -97,9 +110,9 @@ std::vector<size_t> MOSpaceInfo::absolute_mo(const std::string& space) {
         throw psi::PSIEXCEPTION(msg.c_str());
     } else {
         std::vector<std::vector<size_t>> mo_list(nirrep_);
-        for (const auto& el_space : composite_spaces_[space]) {
+        for (const auto& el_space : composite_spaces_.at(space)) {
             if (mo_spaces_.count(el_space)) {
-                auto& vec_mo_info = mo_spaces_[el_space].second;
+                auto& vec_mo_info = mo_spaces_.at(el_space).second;
                 for (auto& mo_info : vec_mo_info) {
                     size_t h = std::get<1>(mo_info);            // <- the orbital irrep
                     mo_list[h].push_back(std::get<0>(mo_info)); // <- grab the absolute index
@@ -115,7 +128,7 @@ std::vector<size_t> MOSpaceInfo::absolute_mo(const std::string& space) {
     return result;
 }
 
-std::vector<size_t> MOSpaceInfo::corr_absolute_mo(const std::string& space) {
+std::vector<size_t> MOSpaceInfo::corr_absolute_mo(const std::string& space) const {
     std::vector<size_t> result;
     if (composite_spaces_.count(space) == 0) {
         std::string msg =
@@ -124,9 +137,9 @@ std::vector<size_t> MOSpaceInfo::corr_absolute_mo(const std::string& space) {
     } else {
         std::vector<std::vector<size_t>> mo_list(nirrep_);
         // Loop over all the spaces
-        for (const auto& el_space : composite_spaces_[space]) {
+        for (const auto& el_space : composite_spaces_.at(space)) {
             if (mo_spaces_.count(el_space)) {
-                auto& vec_mo_info = mo_spaces_[el_space].second;
+                auto& vec_mo_info = mo_spaces_.at(el_space).second;
                 for (auto& mo_info : vec_mo_info) {
                     size_t h = std::get<1>(mo_info); // <- the orbital irrep
                     mo_list[h].push_back(
@@ -144,7 +157,7 @@ std::vector<size_t> MOSpaceInfo::corr_absolute_mo(const std::string& space) {
     return result;
 }
 
-std::vector<std::pair<size_t, size_t>> MOSpaceInfo::relative_mo(const std::string& space) {
+std::vector<std::pair<size_t, size_t>> MOSpaceInfo::relative_mo(const std::string& space) const {
     std::vector<std::pair<size_t, size_t>> result;
     if (composite_spaces_.count(space) == 0) {
         std::string msg =
@@ -153,9 +166,9 @@ std::vector<std::pair<size_t, size_t>> MOSpaceInfo::relative_mo(const std::strin
     } else {
         std::vector<std::vector<std::pair<size_t, size_t>>> mo_list(nirrep_);
 
-        for (const auto& el_space : composite_spaces_[space]) {
+        for (const auto& el_space : composite_spaces_.at(space)) {
             if (mo_spaces_.count(el_space)) {
-                auto& vec_mo_info = mo_spaces_[el_space].second;
+                auto& vec_mo_info = mo_spaces_.at(el_space).second;
                 for (auto& mo_info : vec_mo_info) {
                     size_t h = std::get<1>(mo_info); // <- the orbital irrep
                     mo_list[h].push_back(std::make_pair(
@@ -173,7 +186,8 @@ std::vector<std::pair<size_t, size_t>> MOSpaceInfo::relative_mo(const std::strin
     return result;
 }
 
-std::vector<std::pair<size_t, size_t>> MOSpaceInfo::get_relative_mo(const std::string& space) {
+std::vector<std::pair<size_t, size_t>>
+MOSpaceInfo::get_relative_mo(const std::string& space) const {
     return relative_mo(space);
 }
 
@@ -187,7 +201,7 @@ std::vector<size_t> MOSpaceInfo::pos_in_space(const std::string& space,
     }
 
     // make sure that space is contained in composite_space
-    for (auto s : composite_spaces_[space]) {
+    for (auto s : composite_spaces_.at(space)) {
         auto it = find(composite_spaces_[composite_space].begin(),
                        composite_spaces_[composite_space].end(), s);
         if (it == composite_spaces_[composite_space].end()) {
@@ -219,11 +233,11 @@ psi::Slice MOSpaceInfo::range(const std::string& space) {
 
     // make sure the elmentary spaces in composite space are consecutive
     int start = std::find(elementary_spaces_.begin(), elementary_spaces_.end(),
-                          composite_spaces_[space][0]) -
+                          composite_spaces_.at(space)[0]) -
                 elementary_spaces_.begin();
 
-    for (int i = 1, size = composite_spaces_[space].size(); i < size; ++i) {
-        if (composite_spaces_[space][i] != elementary_spaces_[start + i]) {
+    for (int i = 1, size = composite_spaces_.at(space).size(); i < size; ++i) {
+        if (composite_spaces_.at(space)[i] != elementary_spaces_[start + i]) {
             std::string msg = "\n  MOSpaceInfo::range - elementary spaces in composite space " +
                               space + " are not consecutive.";
             throw psi::PSIEXCEPTION(msg.c_str());
@@ -238,7 +252,7 @@ psi::Slice MOSpaceInfo::range(const std::string& space) {
 
     psi::Dimension dim_end(nirrep_, space + " end");
     dim_end += dim_start;
-    for (int i = start, end = start + composite_spaces_[space].size(); i < end; ++i) {
+    for (int i = start, end = start + composite_spaces_.at(space).size(); i < end; ++i) {
         dim_end += mo_spaces_[elementary_spaces_[i]].first;
     }
 
@@ -265,7 +279,7 @@ void MOSpaceInfo::read_options(std::shared_ptr<ForteOptions> options) {
 void MOSpaceInfo::read_from_map(const std::map<std::string, std::vector<size_t>>& mo_space_map) {
     // Capitalize the space names to allow the user to use both lower or upper case strings
     std::map<std::string, std::vector<size_t>> mo_space_map_capitalized;
-    for (const auto& el : mo_space_map){
+    for (const auto& el : mo_space_map) {
         mo_space_map_capitalized[upper_string(el.first)] = el.second;
     }
     // Read the elementary spaces
@@ -421,9 +435,8 @@ std::pair<SpaceInfo, bool> MOSpaceInfo::read_mo_space(const std::string& space,
     return std::make_pair(space_info, read);
 }
 
-std::pair<SpaceInfo, bool>
-MOSpaceInfo::read_mo_space_from_map(const std::string& space,
-                                    const std::map<std::string, std::vector<size_t>>& mo_space_map) {
+std::pair<SpaceInfo, bool> MOSpaceInfo::read_mo_space_from_map(
+    const std::string& space, const std::map<std::string, std::vector<size_t>>& mo_space_map) {
     bool read = false;
     psi::Dimension space_dim(nirrep_);
     std::vector<MOInfo> vec_mo_info;
@@ -458,7 +471,7 @@ std::shared_ptr<MOSpaceInfo> make_mo_space_info(const psi::Dimension& nmopi,
 std::shared_ptr<MOSpaceInfo>
 make_mo_space_info_from_map(const psi::Dimension& nmopi, const std::string& point_group,
                             const std::map<std::string, std::vector<size_t>>& mo_space_map,
-                            std::vector<size_t> reorder) {
+                            const std::vector<size_t>& reorder) {
 
     auto mo_space_info = std::make_shared<MOSpaceInfo>(nmopi, point_group);
     mo_space_info->set_reorder(reorder);
