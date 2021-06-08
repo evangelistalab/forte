@@ -64,40 +64,44 @@ def aset2_driver(state_weights_map, scf_info, ref_wfn, mo_space_info, options):
     A_list = [frag_corr_solver, frag_corr_level, int_type_frag, relax, semi]
     B_list = [env_corr_solver, env_corr_level, int_type_env]
 
-    psi4.core.print_out("\n    ========================ASET(2) Options========================")
-    psi4.core.print_out("\n    Fragment active space solver: {frag_as_solver}")
-    psi4.core.print_out("\n    Fragment correlation solver: {frag_corr_solver}")
-    psi4.core.print_out("\n    Fragment correlation level: {frag_corr_level}")
-    psi4.core.print_out("\n    Fragment integral type: {int_type_frag}")
+    psi4.core.print_out("\n  ")
+    forte.print_method_banner(["Second-order Active Space Embedding Theory [ASET(2)]", "Nan He, Chenyang Li"])
+    psi4.core.print_out("\n  ===========================ASET(2) Options===========================")
+    psi4.core.print_out("\n  Fragment active space solver:             {:s}".format(frag_as_solver))
+    psi4.core.print_out("\n  Fragment correlation solver:              {:s}".format(frag_corr_solver))
+    psi4.core.print_out("\n  Fragment correlation level:               {:s}".format(frag_corr_level))
+    psi4.core.print_out("\n  Fragment integral type:                   {:s}".format(int_type_frag))
     if(frag_do_fci):
-        psi4.core.print_out("\n    {frag_as_solver} will be used on the whole fragment!")
-    psi4.core.print_out("\n    ---------------------------------------------------------------")
-    psi4.core.print_out("\n    Environment correlation solver: {env_corr_solver}")
-    psi4.core.print_out("\n    Environment correlation level: {env_corr_level}")
-    psi4.core.print_out("\n    Environment integral type: {int_type_env}")
-    psi4.core.print_out("\n    Fragment density evaluated using {frag_density}")
-    psi4.core.print_out("\n    ---------------------------------------------------------------")
+        psi4.core.print_out("\n  {:s} will be used on the whole fragment!".format(frag_as_solver))
+    psi4.core.print_out("\n  ---------------------------------------------------------------------")
+    psi4.core.print_out("\n  Environment correlation solver:           {:s}".format(env_corr_solver))
+    psi4.core.print_out("\n  Environment correlation level:            {:s}".format(env_corr_level))
+    psi4.core.print_out("\n  Environment integral type:                {:s}".format(int_type_env))
+    psi4.core.print_out("\n  Fragment density will be evaluated using: {:s}".format(frag_density))
+    psi4.core.print_out("\n  ---------------------------------------------------------------------")
     if(do_aset_mf):
-        psi4.core.print_out("\n    Procedure: ASET(MF)-[{name}] -> {frag_density} -> ASET(2)-[{name}]")
+        psi4.core.print_out("\n  Procedure: ASET(MF)-[{:s}] -> {:s} -> ASET(2)-[{:s}]".format(name, frag_density, name))
     else:
-        psi4.core.print_out("\n    Procedure: {frag_density} -> ASET(2)-[{name}]")
+        psi4.core.print_out("\n  Procedure: {:s} -> ASET(2)-[{:s}]".format(frag_density, name))
     if(int_type_frag not in ["CONVENTIONAL", "CUSTOM", "FCIDUMP"]):
-        psi4.core.print_out("\n    Warning: DF/CD integrals inside the fragment (A) are not supported now.")
-        psi4.core.print_out("\n    Will build a Custom_Integral for H_bar instead.")
+        psi4.core.print_out("\n  Warning: DF/CD integrals inside the fragment (A) are not supported now.")
+        psi4.core.print_out("\n  Will build a Custom_Integral for H_bar instead.")
     if(frag_corr_solver == "THREE-DSRG-MRPT2"):
-        psi4.core.print_out("\n    Warning: DF/CD integrals inside the fragment (A) are not supported now.")
-        psi4.core.print_out("\n    Will automatically convert to conventional DSRG-MRPT2 for H_bar.")
-    psi4.core.print_out("\n    ===============================================================")
-    psi4.core.print_out("\n    ")
+        psi4.core.print_out("\n  Warning: DF/CD integrals inside the fragment (A) are not supported now.")
+        psi4.core.print_out("\n  Will automatically convert to conventional DSRG-MRPT2 for H_bar.")
+    psi4.core.print_out("\n  =====================================================================")
+    psi4.core.print_out("\n  ")
+    psi4.core.print_out("\n  ")
+    psi4.core.print_out("\n  ")
 
     # In ASET(2) procedure, We will keep 2 different mo_space_info:
     # mo_space_info: Active = AC + AA + AV, restricted = BO + BV, frozen = F
     # mo_space_info_active: Active = AA, restricted = AC + AV, frozen = BO + BV + F
-    mo_space_info_active = None
-    if (frag_do_fci):
-        mo_space_info_active = mo_space_info
-    else:
-        mo_space_info_active = forte.build_aset2_fragment(ref_wfn, mo_space_info)
+    mo_space_info_active = forte.build_aset2_fragment(ref_wfn, mo_space_info)
+
+    # TODO:Fix this
+    #if (frag_do_fci):
+    #    mo_space_info_active
 
     # Build total (A+B) integrals first
     update_environment_options(options, B_list, ref_wfn)
@@ -154,13 +158,13 @@ def aset2_driver(state_weights_map, scf_info, ref_wfn, mo_space_info, options):
     # Compute MRDSRG-in-PT2 energy (folded)
     energy_high_dressed = forte_driver_fragment(state_weights_map, scf_info, options, ints_f, mo_space_info_active)
 
-    psi4.core.print_out("\n    ========================ASET(2) Summary====================")
+    psi4.core.print_out("\n    ============================ASET(2) Summary========================")
     if(do_aset_mf):
-        psi4.core.print_out("\n    ASET(mf)-[{name}] energy                       = {:10.12f}".format(energy_high))
+        psi4.core.print_out("\n    ASET(mf) energy                                = {:10.12f}".format(energy_high))
     psi4.core.print_out("\n    E_c^B (Environment correlation, Hbar0)         = {:10.12f}".format(energy_env))
     psi4.core.print_out("\n    E(Hbar) (Fragment energy computed using Hbar)  = {:10.12f}".format(energy_high_dressed))
-    psi4.core.print_out("\n    ASET(2)-[{name}] energy                        = {:10.12f}".format(energy_high_dressed + energy_env))
-    psi4.core.print_out("\n    =====================ASET(2) Procedure Done================ \n")
+    psi4.core.print_out("\n    ASET(2) energy                                 = {:10.12f}".format(energy_high_dressed + energy_env))
+    psi4.core.print_out("\n    =========================ASET(2) Procedure Done==================== \n")
 
     return energy_high_dressed + energy_env
 

@@ -970,7 +970,7 @@ std::shared_ptr<MOSpaceInfo> make_embedding(psi::SharedWavefunction ref_wfn,
         make_mo_space_info_from_map(nmopi, point_group, mo_space_map, reorder);
 
     // Return the new embedding MOSpaceInfo to pymodule
-    outfile->Printf("\n\n  --------------- End of Frozen-orbital Embedding --------------- ");
+    outfile->Printf("\n\n  ");
     return mo_space_info_emb;
 } // namespace forte
 

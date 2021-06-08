@@ -200,8 +200,10 @@ embedding:
    - embedding-3
    - embedding-4
    - embedding-5
+   - embedding-aset-2
   medium:
    - embedding-2
+   - embedding-aset-1
 fci:
   short:
    - fci-1
