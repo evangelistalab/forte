@@ -30,9 +30,9 @@
     -----------------------------------------------------------------------
 
 
-    Psi4 started on: Monday, 07 June 2021 03:18AM
+    Psi4 started on: Tuesday, 08 June 2021 06:51AM
 
-    Process ID: 13836
+    Process ID: 26546
     Host:       master
     PSIDATADIR: /home/nan/psi4_new/bin/share/psi4
     Memory:     500.0 MiB
@@ -95,7 +95,7 @@ set {
   restricted_docc        [3]
   active                 [2]
   restricted_uocc        [28]
-  num_roots              2
+  num_roots              1
   follow_root            0
 }
 
@@ -125,7 +125,7 @@ set forte {
    relax_ref              once
    fci_maxiter            150
    root_sym               0
-   nroot                  2
+   nroot                  1
    root                   0
    dsrg_s                 0.5
    ntrial_per_root        10
@@ -138,7 +138,7 @@ compare_values(refaset2,variable("CURRENT ENERGY"),8,"ASET2-[DSRG-MRPT2] energy"
 Scratch directory: /tmp/
 
 *** tstart() called on master
-*** at Mon Jun  7 03:18:22 2021
+*** at Tue Jun  8 06:51:21 2021
 
    => Loading Basis Set <=
 
@@ -261,35 +261,35 @@ Scratch directory: /tmp/
 
                            Total Energy        Delta E     RMS |[F,P]|
 
-   @DF-ROHF iter SAD:   -21.90128089041692   -2.19013e+01   0.00000e+00 
-   @DF-ROHF iter   1:   -22.53867739754896   -6.37397e-01   2.29789e-03 
-   @DF-ROHF iter   2:   -22.55612780660337   -1.74504e-02   3.61984e-04 DAMP=40%
-   @DF-ROHF iter   3:   -22.55574737438015    3.80432e-04   1.16927e-04 SOSCF, nmicro=4/DAMP=40%
-   @DF-ROHF iter   4:   -22.55593050395629   -1.83130e-04   1.50904e-06 SOSCF, nmicro=4/DAMP=40%
-   @DF-ROHF iter   5:   -22.55655077151168   -6.20268e-04   9.59810e-10 SOSCF, nmicro=4/DAMP=40%
-   @DF-ROHF iter   6:   -22.55681627798034   -2.65506e-04   2.26952e-12 SOSCF, nmicro=2/DAMP=40%
-   @DF-ROHF iter   7:   -22.55692249201488   -1.06214e-04   1.07158e-13 SOSCF, nmicro=2/DAMP=40%
-   @DF-ROHF iter   8:   -22.55696497763406   -4.24856e-05   7.70789e-15 SOSCF, nmicro=2/DAMP=40%
-   @DF-ROHF iter   9:   -22.55698197188158   -1.69942e-05   4.92535e-16 SOSCF, nmicro=2/DAMP=40%
-   @DF-ROHF iter  10:   -22.55698876958061   -6.79770e-06   6.67370e-17 SOSCF, nmicro=2/DAMP=40%
-   @DF-ROHF iter  11:   -22.55699148866022   -2.71908e-06   6.03870e-17 SOSCF, nmicro=2/DAMP=40%
-   @DF-ROHF iter  12:   -22.55699257629207   -1.08763e-06   6.85921e-17 SOSCF, nmicro=2/DAMP=40%
-   @DF-ROHF iter  13:   -22.55699301134480   -4.35053e-07   5.59781e-17 SOSCF, nmicro=2/DAMP=40%
-   @DF-ROHF iter  14:   -22.55699318536590   -1.74021e-07   8.78292e-17 SOSCF, nmicro=2/DAMP=40%
-   @DF-ROHF iter  15:   -22.55699325497434   -6.96084e-08   1.09437e-16 SOSCF, nmicro=2/DAMP=40%
-   @DF-ROHF iter  16:   -22.55699328281771   -2.78434e-08   1.10176e-16 SOSCF, nmicro=2/DAMP=40%
-   @DF-ROHF iter  17:   -22.55699329395507   -1.11374e-08   7.85001e-17 SOSCF, nmicro=2/DAMP=40%
-   @DF-ROHF iter  18:   -22.55699329841001   -4.45494e-09   7.91498e-17 SOSCF, nmicro=2/DAMP=40%
-   @DF-ROHF iter  19:   -22.55699330019199   -1.78198e-09   7.29748e-17 SOSCF, nmicro=2/DAMP=40%
-   @DF-ROHF iter  20:   -22.55699330090478   -7.12784e-10   8.63643e-17 SOSCF, nmicro=2/DAMP=40%
-   @DF-ROHF iter  21:   -22.55699330118990   -2.85123e-10   7.90016e-17 SOSCF, nmicro=2/DAMP=40%
-   @DF-ROHF iter  22:   -22.55699330130395   -1.14049e-10   8.55011e-17 SOSCF, nmicro=2/DAMP=40%
-   @DF-ROHF iter  23:   -22.55699330134956   -4.56097e-11   7.15037e-17 SOSCF, nmicro=2/DAMP=40%
-   @DF-ROHF iter  24:   -22.55699330136781   -1.82503e-11   7.99654e-17 SOSCF, nmicro=2/DAMP=40%
-   @DF-ROHF iter  25:   -22.55699330137510   -7.29372e-12   5.83172e-17 SOSCF, nmicro=2/DAMP=40%
-   @DF-ROHF iter  26:   -22.55699330137803   -2.93099e-12   7.38995e-17 SOSCF, nmicro=2/DAMP=40%
-   @DF-ROHF iter  27:   -22.55699330137919   -1.15818e-12   1.01482e-16 SOSCF, nmicro=2/DAMP=40%
-   @DF-ROHF iter  28:   -22.55699330137966   -4.72511e-13   6.81419e-17 SOSCF, nmicro=conv/DAMP=40%
+   @DF-ROHF iter SAD:   -21.90128089041683   -2.19013e+01   0.00000e+00 
+   @DF-ROHF iter   1:   -22.53867739754880   -6.37397e-01   2.29789e-03 
+   @DF-ROHF iter   2:   -22.55612780660324   -1.74504e-02   3.61984e-04 DAMP=40%
+   @DF-ROHF iter   3:   -22.55574737438003    3.80432e-04   1.16927e-04 SOSCF, nmicro=4/DAMP=40%
+   @DF-ROHF iter   4:   -22.55593050395618   -1.83130e-04   1.50904e-06 SOSCF, nmicro=4/DAMP=40%
+   @DF-ROHF iter   5:   -22.55655077151158   -6.20268e-04   9.59810e-10 SOSCF, nmicro=4/DAMP=40%
+   @DF-ROHF iter   6:   -22.55681627798025   -2.65506e-04   2.26948e-12 SOSCF, nmicro=2/DAMP=40%
+   @DF-ROHF iter   7:   -22.55692249201478   -1.06214e-04   1.07141e-13 SOSCF, nmicro=2/DAMP=40%
+   @DF-ROHF iter   8:   -22.55696497763395   -4.24856e-05   7.71041e-15 SOSCF, nmicro=2/DAMP=40%
+   @DF-ROHF iter   9:   -22.55698197188148   -1.69942e-05   4.73615e-16 SOSCF, nmicro=2/DAMP=40%
+   @DF-ROHF iter  10:   -22.55698876958051   -6.79770e-06   1.37396e-16 SOSCF, nmicro=2/DAMP=40%
+   @DF-ROHF iter  11:   -22.55699148866012   -2.71908e-06   9.31485e-17 SOSCF, nmicro=2/DAMP=40%
+   @DF-ROHF iter  12:   -22.55699257629196   -1.08763e-06   9.70058e-17 SOSCF, nmicro=2/DAMP=40%
+   @DF-ROHF iter  13:   -22.55699301134471   -4.35053e-07   6.69891e-17 SOSCF, nmicro=2/DAMP=40%
+   @DF-ROHF iter  14:   -22.55699318536580   -1.74021e-07   7.51896e-17 SOSCF, nmicro=2/DAMP=40%
+   @DF-ROHF iter  15:   -22.55699325497423   -6.96084e-08   6.29521e-17 SOSCF, nmicro=2/DAMP=40%
+   @DF-ROHF iter  16:   -22.55699328281762   -2.78434e-08   1.03160e-16 SOSCF, nmicro=2/DAMP=40%
+   @DF-ROHF iter  17:   -22.55699329395497   -1.11373e-08   9.00648e-17 SOSCF, nmicro=2/DAMP=40%
+   @DF-ROHF iter  18:   -22.55699329840991   -4.45495e-09   1.02181e-16 SOSCF, nmicro=2/DAMP=40%
+   @DF-ROHF iter  19:   -22.55699330019188   -1.78197e-09   1.22795e-16 SOSCF, nmicro=2/DAMP=40%
+   @DF-ROHF iter  20:   -22.55699330090468   -7.12799e-10   5.03751e-17 SOSCF, nmicro=2/DAMP=40%
+   @DF-ROHF iter  21:   -22.55699330118979   -2.85112e-10   7.36752e-17 SOSCF, nmicro=2/DAMP=40%
+   @DF-ROHF iter  22:   -22.55699330130384   -1.14049e-10   6.33080e-17 SOSCF, nmicro=2/DAMP=40%
+   @DF-ROHF iter  23:   -22.55699330134946   -4.56239e-11   8.74718e-17 SOSCF, nmicro=2/DAMP=40%
+   @DF-ROHF iter  24:   -22.55699330136770   -1.82361e-11   1.30696e-16 SOSCF, nmicro=2/DAMP=40%
+   @DF-ROHF iter  25:   -22.55699330137500   -7.29727e-12   8.83974e-17 SOSCF, nmicro=2/DAMP=40%
+   @DF-ROHF iter  26:   -22.55699330137793   -2.93099e-12   7.07432e-17 SOSCF, nmicro=2/DAMP=40%
+   @DF-ROHF iter  27:   -22.55699330137908   -1.15108e-12   7.73160e-17 SOSCF, nmicro=2/DAMP=40%
+   @DF-ROHF iter  28:   -22.55699330137955   -4.68958e-13   1.20818e-16 SOSCF, nmicro=conv/DAMP=40%
 
   DF guess converged.
 
@@ -302,24 +302,24 @@ Scratch directory: /tmp/
     Schwarz Cutoff:          1E-12
 
    @ROHF iter  29:   -22.55699070451499   -2.25570e+01   6.52612e-07 SOSCF, nmicro=4/DAMP=40%
-   @ROHF iter  30:   -22.55698853349135    2.17102e-06   6.30868e-10 SOSCF, nmicro=4/DAMP=40%
-   @ROHF iter  31:   -22.55698983689931   -1.30341e-06   7.59465e-13 SOSCF, nmicro=2/DAMP=40%
-   @ROHF iter  32:   -22.55699035804429   -5.21145e-07   3.99793e-14 SOSCF, nmicro=2/DAMP=40%
-   @ROHF iter  33:   -22.55699056650040   -2.08456e-07   3.66849e-15 SOSCF, nmicro=2/DAMP=40%
-   @ROHF iter  34:   -22.55699064988280   -8.33824e-08   2.43259e-16 SOSCF, nmicro=2/DAMP=40%
-   @ROHF iter  35:   -22.55699068323575   -3.33530e-08   8.93764e-17 SOSCF, nmicro=2/DAMP=40%
-   @ROHF iter  36:   -22.55699069657694   -1.33412e-08   8.95289e-17 SOSCF, nmicro=2/DAMP=40%
-   @ROHF iter  37:   -22.55699070191341   -5.33647e-09   1.03677e-16 SOSCF, nmicro=2/DAMP=40%
-   @ROHF iter  38:   -22.55699070404802   -2.13461e-09   5.70383e-17 SOSCF, nmicro=2/DAMP=40%
-   @ROHF iter  39:   -22.55699070490184   -8.53824e-10   8.73066e-17 SOSCF, nmicro=2/DAMP=40%
-   @ROHF iter  40:   -22.55699070524337   -3.41529e-10   4.88139e-17 SOSCF, nmicro=2/DAMP=40%
-   @ROHF iter  41:   -22.55699070537999   -1.36616e-10   1.31489e-16 SOSCF, nmicro=2/DAMP=40%
-   @ROHF iter  42:   -22.55699070543464   -5.46549e-11   1.04252e-16 SOSCF, nmicro=2/DAMP=40%
-   @ROHF iter  43:   -22.55699070545649   -2.18421e-11   7.93992e-17 SOSCF, nmicro=2/DAMP=40%
-   @ROHF iter  44:   -22.55699070546523   -8.74678e-12   7.69886e-17 SOSCF, nmicro=2/DAMP=40%
-   @ROHF iter  45:   -22.55699070546872   -3.49232e-12   1.34451e-16 SOSCF, nmicro=2/DAMP=40%
-   @ROHF iter  46:   -22.55699070547013   -1.40687e-12   1.19393e-16 SOSCF, nmicro=2/DAMP=40%
-   @ROHF iter  47:   -22.55699070547069   -5.57776e-13   1.21716e-16 SOSCF, nmicro=conv/DAMP=40%
+   @ROHF iter  30:   -22.55698853349133    2.17102e-06   6.30868e-10 SOSCF, nmicro=4/DAMP=40%
+   @ROHF iter  31:   -22.55698983689931   -1.30341e-06   7.59435e-13 SOSCF, nmicro=2/DAMP=40%
+   @ROHF iter  32:   -22.55699035804431   -5.21145e-07   4.00006e-14 SOSCF, nmicro=2/DAMP=40%
+   @ROHF iter  33:   -22.55699056650042   -2.08456e-07   3.65614e-15 SOSCF, nmicro=2/DAMP=40%
+   @ROHF iter  34:   -22.55699064988283   -8.33824e-08   2.42849e-16 SOSCF, nmicro=2/DAMP=40%
+   @ROHF iter  35:   -22.55699068323578   -3.33530e-08   1.20618e-16 SOSCF, nmicro=2/DAMP=40%
+   @ROHF iter  36:   -22.55699069657696   -1.33412e-08   1.89554e-16 SOSCF, nmicro=2/DAMP=40%
+   @ROHF iter  37:   -22.55699070191343   -5.33647e-09   1.21568e-16 SOSCF, nmicro=2/DAMP=40%
+   @ROHF iter  38:   -22.55699070404803   -2.13460e-09   1.20985e-16 SOSCF, nmicro=2/DAMP=40%
+   @ROHF iter  39:   -22.55699070490186   -8.53831e-10   8.80800e-17 SOSCF, nmicro=2/DAMP=40%
+   @ROHF iter  40:   -22.55699070524339   -3.41529e-10   9.44327e-17 SOSCF, nmicro=2/DAMP=40%
+   @ROHF iter  41:   -22.55699070538001   -1.36616e-10   8.87846e-17 SOSCF, nmicro=2/DAMP=40%
+   @ROHF iter  42:   -22.55699070543466   -5.46514e-11   4.97027e-17 SOSCF, nmicro=2/DAMP=40%
+   @ROHF iter  43:   -22.55699070545651   -2.18527e-11   5.68840e-17 SOSCF, nmicro=2/DAMP=40%
+   @ROHF iter  44:   -22.55699070546526   -8.75033e-12   7.05103e-17 SOSCF, nmicro=2/DAMP=40%
+   @ROHF iter  45:   -22.55699070546876   -3.49232e-12   1.14011e-16 SOSCF, nmicro=2/DAMP=40%
+   @ROHF iter  46:   -22.55699070547016   -1.40687e-12   1.22906e-16 SOSCF, nmicro=2/DAMP=40%
+   @ROHF iter  47:   -22.55699070547072   -5.54223e-13   1.25812e-16 SOSCF, nmicro=conv/DAMP=40%
   Energy and wave function converged.
 
 
@@ -355,14 +355,14 @@ Scratch directory: /tmp/
     DOCC [     4 ]
     SOCC [     0 ]
 
-  @ROHF Final Energy:   -22.55699070547069
+  @ROHF Final Energy:   -22.55699070547072
 
    => Energetics <=
 
     Nuclear Repulsion Energy =              2.8869901804359364
-    One-Electron Energy =                 -35.4119677020256063
-    Two-Electron Energy =                   9.9679868161189784
-    Total Energy =                        -22.5569907054706889
+    One-Electron Energy =                 -35.4119677020256773
+    Two-Electron Energy =                   9.9679868161190228
+    Total Energy =                        -22.5569907054707173
 
 Computation Completed
 
@@ -384,15 +384,15 @@ Properties computed using the SCF density matrix
      X:     0.0000      Y:    -0.0000      Z:    -7.0757     Total:     7.0757
 
 
-*** tstop() called on master at Mon Jun  7 03:18:32 2021
+*** tstop() called on master at Tue Jun  8 06:51:30 2021
 Module time:
-	user time   =       6.86 seconds =       0.11 minutes
-	system time =       3.04 seconds =       0.05 minutes
-	total time  =         10 seconds =       0.17 minutes
+	user time   =       6.82 seconds =       0.11 minutes
+	system time =       2.92 seconds =       0.05 minutes
+	total time  =          9 seconds =       0.15 minutes
 Total time:
-	user time   =       6.86 seconds =       0.11 minutes
-	system time =       3.04 seconds =       0.05 minutes
-	total time  =         10 seconds =       0.17 minutes
+	user time   =       6.82 seconds =       0.11 minutes
+	system time =       2.92 seconds =       0.05 minutes
+	total time  =          9 seconds =       0.15 minutes
  MINTS: Wrapper to libmints.
    by Justin Turney
 
@@ -510,68 +510,68 @@ Warning: iopen=0,opentype!=closed. Making iopen=1
    ==> Starting MCSCF iterations <==
 
         Iter         Total Energy       Delta E   Orb RMS    CI RMS  NCI NORB
-   @MCSCF  1:    -22.556992783389   -2.0779e-06  3.67e-06  1.44e-15    1    1  Initial CI
+   @MCSCF  1:    -22.556992783389   -2.0779e-06  3.67e-06  1.34e-15    1    1  Initial CI
       Warning! Maxstep = 2.32, scaling to 0.20
-   @MCSCF  2:    -22.557048981287   -5.6198e-05  8.47e-05  5.54e-17    3    1  TS
+   @MCSCF  2:    -22.557048981287   -5.6198e-05  8.47e-05  1.87e-16    3    1  TS
       Warning! Maxstep = 1.10, scaling to 0.20
-   @MCSCF  3:    -22.557498936906   -4.4996e-04  5.65e-04  4.64e-15    3    1  TS
+   @MCSCF  3:    -22.557498936906   -4.4996e-04  5.65e-04  3.31e-15    3    1  TS
       Warning! Maxstep = 0.61, scaling to 0.20
-   @MCSCF  4:    -22.559038659023   -1.5397e-03  1.64e-03  3.11e-16    3    1  TS
+   @MCSCF  4:    -22.559038659023   -1.5397e-03  1.64e-03  3.22e-15    3    1  TS
       Warning! Maxstep = 0.43, scaling to 0.20
-   @MCSCF  5:    -22.562956430825   -3.9178e-03  3.34e-03  3.71e-16    2    1  TS
+   @MCSCF  5:    -22.562956430825   -3.9178e-03  3.34e-03  4.78e-15    2    1  TS
       Warning! Maxstep = 0.31, scaling to 0.20
-   @MCSCF  6:    -22.568980558654   -6.0241e-03  4.10e-03  1.03e-15    2    1  TS
-   @MCSCF  7:    -22.572529114618   -3.5486e-03  2.54e-03  2.22e-15    2    1  TS
-   @MCSCF  8:    -22.573029674932   -5.0056e-04  1.16e-03  9.36e-16    2    1  TS
-   @MCSCF  9:    -22.573140512222   -1.1084e-04  6.20e-04  1.09e-15    2    1  TS
-   @MCSCF 10:    -22.573171229507   -3.0717e-05  3.72e-04  2.96e-15    2    1  TS
-   @MCSCF 11:    -22.573181399437   -1.0170e-05  2.40e-04  3.96e-15    2    1  TS
-   @MCSCF 12:    -22.573185327693   -3.9283e-06  1.68e-04  3.18e-15    2    1  TS
-   @MCSCF 13:    -22.573187050920   -1.7232e-06  1.20e-04  3.35e-15    2    1  TS
-   @MCSCF 14:    -22.573187884397   -8.3348e-07  9.00e-05  1.75e-15    2    1  TS
-   @MCSCF 15:    -22.573188318908   -4.3451e-07  6.82e-05  1.24e-15    2    1  TS
-   @MCSCF 16:    -22.573188559073   -2.4016e-07  5.28e-05  1.56e-15    2    1  TS
-   @MCSCF 17:    -22.573188698070   -1.3900e-07  4.12e-05  2.71e-16    2    1  TS
-   @MCSCF 18:    -22.573188781445   -8.3375e-08  3.26e-05  2.87e-16    2    1  TS
-   @MCSCF 19:    -22.573188832830   -5.1385e-08  2.59e-05  2.78e-16    2    1  TS
-   @MCSCF 20:    -22.573188865139   -3.2309e-08  2.07e-05  5.44e-16    2    1  TS
-   @MCSCF 21:    -22.573188885749   -2.0610e-08  1.66e-05  2.73e-15    2    1  TS
-   @MCSCF 22:    -22.573188899032   -1.3283e-08  1.34e-05  1.78e-15    2    1  TS
-   @MCSCF 23:    -22.573188907655   -8.6231e-09  1.08e-05  8.35e-16    2    1  TS
-   @MCSCF 24:    -22.573188913282   -5.6264e-09  8.71e-06  1.40e-15    2    1  TS
-   @MCSCF 25:    -22.573188916966   -3.6843e-09  7.04e-06  2.19e-15    2    1  TS
-   @MCSCF 26:    -22.573188919385   -2.4187e-09  5.70e-06  2.26e-15    2    1  TS
-   @MCSCF 27:    -22.573188920976   -1.5908e-09  4.62e-06  2.27e-15    2    1  TS
-   @MCSCF 28:    -22.573188922023   -1.0476e-09  3.75e-06  4.61e-15    2    1  TS
-   @MCSCF 29:    -22.573188922714   -6.9055e-10  3.04e-06  4.99e-15    2    1  TS
-   @MCSCF 30:    -22.573188923169   -4.5553e-10  2.47e-06  4.22e-15    2    1  TS
-   @MCSCF 31:    -22.573188923470   -3.0063e-10  2.00e-06  4.39e-15    2    1  TS
-   @MCSCF 32:    -22.573188923669   -1.9852e-10  1.63e-06  6.25e-15    2    1  TS
-   @MCSCF 33:    -22.573188923800   -1.3111e-10  1.32e-06  6.87e-15    2    1  TS
-   @MCSCF 34:    -22.573188923886   -8.6608e-11  1.07e-06  6.93e-15    2    1  TS
-   @MCSCF 35:    -22.573188923943   -5.7238e-11  8.71e-07  6.96e-15    2    1  TS
-   @MCSCF 36:    -22.573188923981   -3.7812e-11  7.08e-07  6.74e-15    2    1  TS
-   @MCSCF 37:    -22.573188924006   -2.5008e-11  5.75e-07  7.66e-15    2    1  TS
-   @MCSCF 38:    -22.573188924023   -1.6520e-11  4.68e-07  9.89e-15    2    1  TS
-   @MCSCF 39:    -22.573188924034   -1.0925e-11  3.80e-07  9.01e-15    2    1  TS
-   @MCSCF 40:    -22.573188924041   -7.2191e-12  3.09e-07  8.43e-15    2    1  TS
-   @MCSCF 41:    -22.573188924046   -4.7820e-12  2.51e-07  8.78e-15    2    1  TS
-   @MCSCF 42:    -22.573188924049   -3.1655e-12  2.04e-07  9.56e-15    2    1  TS
-   @MCSCF 43:    -22.573188924051   -2.0854e-12  1.66e-07  1.01e-14    2    1  TS
-   @MCSCF 44:    -22.573188924052   -1.3749e-12  1.35e-07  9.89e-15    2    1  TS
-   @MCSCF 45:    -22.573188924053   -9.0594e-13  1.10e-07  1.09e-14    2    1  TS
-   @MCSCF 46:    -22.573188924054   -6.0041e-13  8.92e-08  1.25e-14    2    1  TS
+   @MCSCF  6:    -22.568980558654   -6.0241e-03  4.10e-03  3.31e-15    2    1  TS
+   @MCSCF  7:    -22.572529114618   -3.5486e-03  2.54e-03  5.20e-15    2    1  TS
+   @MCSCF  8:    -22.573029674932   -5.0056e-04  1.16e-03  7.01e-15    2    1  TS
+   @MCSCF  9:    -22.573140512222   -1.1084e-04  6.20e-04  8.02e-15    2    1  TS
+   @MCSCF 10:    -22.573171229507   -3.0717e-05  3.72e-04  9.43e-15    2    1  TS
+   @MCSCF 11:    -22.573181399437   -1.0170e-05  2.40e-04  8.93e-15    2    1  TS
+   @MCSCF 12:    -22.573185327693   -3.9283e-06  1.68e-04  7.57e-15    2    1  TS
+   @MCSCF 13:    -22.573187050920   -1.7232e-06  1.20e-04  8.92e-15    2    1  TS
+   @MCSCF 14:    -22.573187884397   -8.3348e-07  9.00e-05  7.54e-15    2    1  TS
+   @MCSCF 15:    -22.573188318908   -4.3451e-07  6.82e-05  7.51e-15    2    1  TS
+   @MCSCF 16:    -22.573188559073   -2.4016e-07  5.28e-05  8.08e-15    2    1  TS
+   @MCSCF 17:    -22.573188698070   -1.3900e-07  4.12e-05  6.13e-15    2    1  TS
+   @MCSCF 18:    -22.573188781445   -8.3375e-08  3.26e-05  5.34e-15    2    1  TS
+   @MCSCF 19:    -22.573188832830   -5.1385e-08  2.59e-05  5.16e-15    2    1  TS
+   @MCSCF 20:    -22.573188865139   -3.2309e-08  2.07e-05  4.70e-15    2    1  TS
+   @MCSCF 21:    -22.573188885749   -2.0610e-08  1.66e-05  2.18e-15    2    1  TS
+   @MCSCF 22:    -22.573188899032   -1.3283e-08  1.34e-05  3.17e-15    2    1  TS
+   @MCSCF 23:    -22.573188907655   -8.6231e-09  1.08e-05  4.26e-15    2    1  TS
+   @MCSCF 24:    -22.573188913282   -5.6264e-09  8.71e-06  3.62e-15    2    1  TS
+   @MCSCF 25:    -22.573188916966   -3.6843e-09  7.04e-06  2.82e-15    2    1  TS
+   @MCSCF 26:    -22.573188919385   -2.4187e-09  5.70e-06  3.90e-15    2    1  TS
+   @MCSCF 27:    -22.573188920976   -1.5908e-09  4.62e-06  2.60e-15    2    1  TS
+   @MCSCF 28:    -22.573188922023   -1.0476e-09  3.75e-06  6.61e-16    2    1  TS
+   @MCSCF 29:    -22.573188922714   -6.9055e-10  3.04e-06  1.03e-15    2    1  TS
+   @MCSCF 30:    -22.573188923169   -4.5553e-10  2.47e-06  7.32e-16    2    1  TS
+   @MCSCF 31:    -22.573188923470   -3.0063e-10  2.00e-06  6.30e-16    2    1  TS
+   @MCSCF 32:    -22.573188923669   -1.9853e-10  1.63e-06  1.72e-15    2    1  TS
+   @MCSCF 33:    -22.573188923800   -1.3111e-10  1.32e-06  3.24e-15    2    1  TS
+   @MCSCF 34:    -22.573188923886   -8.6608e-11  1.07e-06  3.52e-15    2    1  TS
+   @MCSCF 35:    -22.573188923943   -5.7234e-11  8.71e-07  4.08e-15    2    1  TS
+   @MCSCF 36:    -22.573188923981   -3.7819e-11  7.08e-07  4.54e-15    2    1  TS
+   @MCSCF 37:    -22.573188924006   -2.5004e-11  5.75e-07  4.76e-15    2    1  TS
+   @MCSCF 38:    -22.573188924023   -1.6513e-11  4.68e-07  6.11e-15    2    1  TS
+   @MCSCF 39:    -22.573188924034   -1.0935e-11  3.80e-07  5.98e-15    2    1  TS
+   @MCSCF 40:    -22.573188924041   -7.2085e-12  3.09e-07  5.08e-15    2    1  TS
+   @MCSCF 41:    -22.573188924046   -4.7891e-12  2.51e-07  6.30e-15    2    1  TS
+   @MCSCF 42:    -22.573188924049   -3.1584e-12  2.04e-07  7.34e-15    2    1  TS
+   @MCSCF 43:    -22.573188924051   -2.0890e-12  1.66e-07  6.99e-15    2    1  TS
+   @MCSCF 44:    -22.573188924052   -1.3785e-12  1.35e-07  7.17e-15    2    1  TS
+   @MCSCF 45:    -22.573188924053   -9.1305e-13  1.10e-07  8.30e-15    2    1  TS
+   @MCSCF 46:    -22.573188924054   -5.9686e-13  8.92e-08  9.02e-15    2    1  TS
 
           @MCSCF has converged!
 
-   @MCSCF Final Energy:  -22.573188924053877
+   @MCSCF Final Energy:  -22.573188924053873
 
    Computing CI Semicanonical Orbitals
 
    ==> Energetics <==
 
-    SCF energy =          -22.556990705470689
-    Total MCSCF energy =  -22.573188924053877
+    SCF energy =          -22.556990705470717
+    Total MCSCF energy =  -22.573188924053873
 
    ==> MCSCF root 0 information <==
 
@@ -583,10 +583,10 @@ Warning: iopen=0,opentype!=closed. Making iopen=1
 
    The 4 most important determinants:
 
-    *   1    0.990472  (    0,    0)  4AX 
-    *   2   -0.137716  (    1,    1)  5AX 
-    *   3    0.000162  (    0,    1)  4AA 5AB 
-    *   4    0.000162  (    1,    0)  4AB 5AA 
+    *   1   -0.990472  (    0,    0)  4AX 
+    *   2    0.137716  (    1,    1)  5AX 
+    *   3   -0.000162  (    0,    1)  4AA 5AB 
+    *   4   -0.000162  (    1,    0)  4AB 5AA 
 
 
 
@@ -649,7 +649,7 @@ Warning: iopen=0,opentype!=closed. Making iopen=1
     VAL EX LEVEL   =        0      H0 GUESS SIZE =     1000
     H0COUPLINGSIZE =        0      H0 COUPLING   =       NO
     MAXITER        =      100      NUM PRINT     =       20
-    NUM ROOTS      =        2      ICORE         =        1
+    NUM ROOTS      =        1      ICORE         =        1
     PRINT LVL      =        1      FCI           =      YES
     R CONV         = 1.00e-04      MIXED         =      YES
     E CONV         = 1.00e-12      MIXED4        =      YES
@@ -659,7 +659,7 @@ Warning: iopen=0,opentype!=closed. Making iopen=1
     S              =   0.0000      Ms0           =      YES
     GUESS VECTOR   =  H0BLOCK      OPENTYPE      =  SINGLET
     COLLAPSE SIZE  =        1      HD AVG        = EVANGELISTI
-    MAX NUM VECS   =      202      REF SYM       =     AUTO
+    MAX NUM VECS   =      101      REF SYM       =     AUTO
     IOPEN        =      YES
 
     EX ALLOW       =  1  1 
@@ -703,23 +703,17 @@ Warning: iopen=0,opentype!=closed. Making iopen=1
     H0 Block Eigenvalue = -22.57318892
 
     Simultaneous Expansion Method (Block Davidson Method)
-    Using 2 initial trial vectors
+    Using 1 initial trial vectors
 
-(sem_iter): H0block_->H0b_diag[1][1] - H0block_->H0b_diag[2][1] = -0.707107 - 0.707107 = -1.414214 > 1.0E-8
      Iter   Root       Total Energy       Delta E      C RMS
 
-   @CI  0:     0    -22.573188924054   -1.1102E+00   8.0341E-15  
-   @CI  0:     1    -22.022196749409   -5.5917E-01   3.8005E-15  
-
+   @CI  0:     0    -22.573188924054   -1.1102E+00   9.2867E-15  
     Warning: Norm of correction (root 0) is < 1.0E-13
-    Warning: Norm of correction (root 1) is < 1.0E-13
-   @CI  1:     0    -22.573188924054   0.0000E+00   3.1159E-14 c
-   @CI  1:     1    -22.022196749409   0.0000E+00   2.5277E-14 c
-
+   @CI  1:     0    -22.573188924054   0.0000E+00   3.3772E-15 c
 
    ==> Energetics <==
 
-    SCF energy =          -22.556990705470689
+    SCF energy =          -22.556990705470717
     Total CI energy =     -22.573188924053888
 
    ==> DETCI root 0 information <==
@@ -732,18 +726,6 @@ Warning: iopen=0,opentype!=closed. Making iopen=1
     *   2   -0.137716  (    1,    1)  5AX 
     *   3    0.000162  (    0,    1)  4AA 5AB 
     *   4    0.000162  (    1,    0)  4AB 5AA 
-
-
-   ==> DETCI root 1 information <==
-
-    DETCI Root 1 energy =   -22.022196749409389
-
-   The 4 most important determinants:
-
-    *   1    0.707104  (    1,    0)  4AB 5AA 
-    *   2    0.707104  (    0,    1)  4AA 5AB 
-    *   3   -0.002519  (    1,    1)  5AX 
-    *   4   -0.000581  (    0,    0)  4AX 
 
 		 "A good bug is a dead bug" 
 
@@ -759,7 +741,7 @@ Scratch directory: /tmp/
   ----------------------------------------------------------------------------
   A suite of quantum chemistry methods for strongly correlated electrons
 
-    git branch: ASET2_PR1 - git commit: 341eda6
+    git branch: ASET2_PR1 - git commit: 05b1a6c
 
   Developed by:
     Francesco A. Evangelista, Chenyang Li, Kevin P. Hannon,
@@ -821,10 +803,10 @@ Scratch directory: /tmp/
 
 
 
-        ----------------------------------------------------------------
-          Systematic 2nd-order Active Space Embedding Theory [ASET(2)]
+                ------------------------------------------------
+                  General Active Space Embedding Theory (ASET)
                                      Nan He
-        ----------------------------------------------------------------
+                ------------------------------------------------
 
   The input molecule has 2 fragments, treating the first fragment as the system.
 
@@ -998,7 +980,7 @@ Scratch directory: /tmp/
       26    Virtual   0.000000
       27    Virtual   0.000000
       28    Virtual   0.000000
-      29    Virtual   0.000000
+      29    Virtual   -0.000000
       30    Virtual   -0.000000
       31    Virtual   -0.000000
       32    Virtual   -0.000000
@@ -1034,10 +1016,34 @@ Scratch directory: /tmp/
     Total              33    33
   -------------------------------
 
-  --------------- End of Frozen-orbital Embedding --------------- 
+  
   Will not build integrals here
- Generating fragment (A) SpaceInfo ... 
- The fragment MO is: 
+  
+  
+
+            --------------------------------------------------------
+              Second-order Active Space Embedding Theory [ASET(2)]
+                              Nan He, Chenyang Li
+            --------------------------------------------------------
+
+  ===========================ASET(2) Options===========================
+  Fragment active space solver:             FCI
+  Fragment correlation solver:              MRDSRG
+  Fragment correlation level:               PT2
+  Fragment integral type:                   CONVENTIONAL
+  ---------------------------------------------------------------------
+  Environment correlation solver:           MRDSRG
+  Environment correlation level:            PT2
+  Environment integral type:                CONVENTIONAL
+  Fragment density will be evaluated using: CASCI
+  ---------------------------------------------------------------------
+  Procedure: ASET(MF)-[MRDSRG-PT2] -> CASCI -> ASET(2)-[MRDSRG-PT2]
+  =====================================================================
+  
+  
+  
+   Generating fragment (A) SpaceInfo ... 
+   The fragment MO is: 
  
 
   ==> MO Space Information <==
@@ -1059,7 +1065,7 @@ Scratch directory: /tmp/
     EMBEDDING_ACTV      0     0
     Total              33    33
   -------------------------------
- ASET(2) procedure started! ... 
+   ASET(2) procedure started! ... 
  
 
   ==> Primary Basis Set Summary <==
@@ -1120,13 +1126,12 @@ Scratch directory: /tmp/
 	Starting second half-transformation.
 	Two-electron integral transformation complete.
 
-  Integral transformation done. 0.27781765 s
+  Integral transformation done. 0.08013926 s
   Reading the two-electron integrals from disk
   Size of two-electron integrals:   0.026507 GB
-  Timing for conventional integral transformation:            2.294 s.
+  Timing for conventional integral transformation:            0.360 s.
   Timing for freezing core and virtual orbitals:              0.000 s.
-  Timing for computing conventional integrals:                2.294 s.
- Fragment int_type: CONVENTIONAL
+  Timing for computing conventional integrals:                0.361 s.
 
   ==> Primary Basis Set Summary <==
 
@@ -1186,25 +1191,25 @@ Scratch directory: /tmp/
 	Starting second half-transformation.
 	Two-electron integral transformation complete.
 
-  Integral transformation done. 0.65140506 s
+  Integral transformation done. 0.15439074 s
   Reading the two-electron integrals from disk
   Size of two-electron integrals:   0.026507 GB
-  Timing for conventional integral transformation:            2.220 s.
+  Timing for conventional integral transformation:            0.462 s.
   Frozen-core energy         -16.443872171331627 a.u.
   Timing for frozen one-body operator:                        0.001 s.
   Resorting integrals after freezing core.
-  Timing for freezing core and virtual orbitals:              0.019 s.
-  Timing for computing conventional integrals:                2.239 s.
+  Timing for freezing core and virtual orbitals:              0.022 s.
+  Timing for computing conventional integrals:                0.484 s.
 
   ==> Summary of Active Space Solver Input <==
 
     Irrep.  Multi.(2ms)      N
     --------------------------
-        A      1  (  0)      2
+        A      1  (  0)      1
     --------------------------
     N: number of roots
     ms: spin z component
-    Total number of roots:   2
+    Total number of roots:   1
     --------------------------
 
 
@@ -1230,7 +1235,7 @@ Scratch directory: /tmp/
     Number of determinants                           4
     Symmetry                                         0
     Multiplicity                                     1
-    Number of roots                                  2
+    Number of roots                                  1
     Target root                                      0
     Trial vectors per root                          10
 
@@ -1257,32 +1262,23 @@ Scratch directory: /tmp/
   -----------------------------------------------------
     Iter.      Avg. Energy       Delta_E     Res. Norm
   -----------------------------------------------------
-  Rejected new correction vector 1 with norm: 361.730998
-      1      -22.297692836732  -2.230e+01  +2.202e+01
-      2      -22.297692836732  -1.776e-14  +5.639e-15
+      1      -22.573188924054  -2.257e+01  +3.889e-15
+      2      -22.573188924054  +0.000e+00  +3.889e-15
   -----------------------------------------------------
   The Davidson-Liu algorithm converged in 3 iterations.
 
   ==> Root No. 0 <==
 
-    20      0.99047167
-    02     -0.13771641
+    20     -0.99047167
+    02      0.13771641
 
     Total Energy:     -22.573188924054, <S^2>: 0.000000
-
-  ==> Root No. 1 <==
-
-    ab      0.70710442
-    ba      0.70710442
-
-    Total Energy:     -22.022196749409, <S^2>: 0.000000
 
   ==> Energy Summary <==
 
     Multi.(2ms)  Irrep.  No.               Energy      <S^2>
     --------------------------------------------------------
        1  (  0)     A     0      -22.573188924054   0.000000
-       1  (  0)     A     1      -22.022196749409   0.000000
     --------------------------------------------------------
 
   ==> Computing RDMs for Root No. 0 <==
@@ -1303,18 +1299,11 @@ Scratch directory: /tmp/
 
   ==> Multireference Driven Similarity Renormalization Group <==
 
+    Computing Fock matrix and cleaning JK ........... Done
     Reading DSRG options ............................ Done
     Setting ambit MO space .......................... Done
     Preparing tensors for density cumulants ......... Done
-    Building Downfolded Fock matrix ............................ 
- Debug #1 
- Debug #2 
- Debug #3 
- Debug #3.1 
- Debug #3.2 
- Debug #3.3 
- Debug #4 
- Debug #5 Done
+    Filling Fock matrix from ForteIntegrals ......... Done
 
            ----------------------------------------------------------
              Multireference Driven Similarity Renormalization Group
@@ -1367,8 +1356,8 @@ Scratch directory: /tmp/
 
   ==> Build Initial Amplitudes Guesses <==
 
-    Computing T2 amplitudes ...          Done. Timing      0.002 s
-    Computing T1 amplitudes ...          Done. Timing      0.002 s
+    Computing T2 amplitudes ...          Done. Timing      0.003 s
+    Computing T1 amplitudes ...          Done. Timing      0.003 s
 
   ==> Initial Excitation Amplitudes Summary <==
 
@@ -1376,46 +1365,46 @@ Scratch directory: /tmp/
     Largest T1 amplitudes for spin case A:
        i       a                  i       a                  i       a               
     --------------------------------------------------------------------------------
-    [  2      15    ] 0.032444 [  2      14    ]-0.012259 [  2       3    ]-0.012118 
-    [  2       9    ] 0.012079 [  1      15    ] 0.003949 [  0       1    ] 0.002538 
-    [  1      14    ]-0.001609 [  1      18    ] 0.001027 [  2       6    ]-0.000514 
-    [  1       9    ]-0.000428 [  1       3    ] 0.000307 [  1       6    ] 0.000213 
-    [  0       2    ] 0.000171 [  2      18    ] 0.000130 [  0      14    ] 0.000000 
+    [  2      15    ]-0.032444 [  2      14    ] 0.012259 [  2       3    ] 0.012118 
+    [  2       9    ]-0.012079 [  1      15    ]-0.003949 [  0       1    ] 0.002538 
+    [  1      14    ] 0.001609 [  1      18    ]-0.001027 [  2       6    ] 0.000514 
+    [  1       9    ] 0.000428 [  1       3    ]-0.000307 [  1       6    ]-0.000213 
+    [  0       2    ] 0.000171 [  2      18    ]-0.000130 [  0      14    ]-0.000000 
     --------------------------------------------------------------------------------
-    Norm of T1A vector: (nonzero elements: 20)                    0.039012125164789.
+    Norm of T1A vector: (nonzero elements: 20)                    0.039012125164785.
     --------------------------------------------------------------------------------
     Largest T1 amplitudes for spin case B:
        _       _                  _       _                  _       _               
        i       a                  i       a                  i       a               
     --------------------------------------------------------------------------------
-    [  2      15    ] 0.032444 [  2      14    ]-0.012259 [  2       3    ]-0.012118 
-    [  2       9    ] 0.012079 [  1      15    ] 0.003949 [  0       1    ] 0.002538 
-    [  1      14    ]-0.001609 [  1      18    ] 0.001027 [  2       6    ]-0.000514 
-    [  1       9    ]-0.000428 [  1       3    ] 0.000307 [  1       6    ] 0.000213 
-    [  0       2    ] 0.000171 [  2      18    ] 0.000130 [  0      14    ] 0.000000 
+    [  2      15    ]-0.032444 [  2      14    ] 0.012259 [  2       3    ] 0.012118 
+    [  2       9    ]-0.012079 [  1      15    ]-0.003949 [  0       1    ] 0.002538 
+    [  1      14    ] 0.001609 [  1      18    ]-0.001027 [  2       6    ] 0.000514 
+    [  1       9    ] 0.000428 [  1       3    ]-0.000307 [  1       6    ]-0.000213 
+    [  0       2    ] 0.000171 [  2      18    ]-0.000130 [  0      14    ]-0.000000 
     --------------------------------------------------------------------------------
-    Norm of T1B vector: (nonzero elements: 20)                    0.039012125164789.
+    Norm of T1B vector: (nonzero elements: 20)                    0.039012125164785.
     --------------------------------------------------------------------------------
     Largest T2 amplitudes for spin case AA:
        i   j   a   b              i   j   a   b              i   j   a   b           
     --------------------------------------------------------------------------------
-    [  1   2   2  14]-0.012059 [  1   2   2  15] 0.010391 [  1   2   2  18] 0.009919 
-    [  1   2  10  17]-0.009790 [  1   2  11  16]-0.009790 [  1   2   1  15] 0.007355 
-    [  1   2  14  18] 0.007040 [  1   2   9  18] 0.006573 [  1   2  11  17] 0.005714 
-    [  1   2  10  16]-0.005714 [  1   2   2   9]-0.005673 [  1   2   5  17]-0.004643 
-    [  1   2   4  16]-0.004643 [  1   2   7  16]-0.004554 [  1   2   8  17] 0.004554 
+    [  1   2   2  14] 0.012059 [  1   2  10  17]-0.011334 [  1   2  11  16]-0.011334 
+    [  1   2   2  15]-0.010391 [  1   2   2  18]-0.009919 [  1   2   1  15]-0.007355 
+    [  1   2  14  18] 0.007040 [  1   2   9  18] 0.006573 [  1   2   7  17] 0.006003 
+    [  1   2   8  16]-0.006003 [  1   2   2   9] 0.005673 [  1   2   4  17]-0.004176 
+    [  1   2   5  16]-0.004176 [  0   1   1  14] 0.004044 [  1   2  15  18] 0.003671 
     --------------------------------------------------------------------------------
-    Norm of T2AA vector: (nonzero elements: 620)                  0.065469200510588.
+    Norm of T2AA vector: (nonzero elements: 620)                  0.065469200510587.
     --------------------------------------------------------------------------------
     Largest T2 amplitudes for spin case AB:
            _       _                  _       _                  _       _           
        i   j   a   b              i   j   a   b              i   j   a   b           
     --------------------------------------------------------------------------------
-    [  1   2   2  15] 0.029061 [  2   2  16  16]-0.022810 [  2   2  17  17]-0.022810 
+    [  1   2   2  15]-0.029061 [  2   2  16  16]-0.022810 [  2   2  17  17]-0.022810 
     [  2   2  18  18]-0.020522 [  1   1  17  17]-0.020374 [  1   1  16  16]-0.020374 
-    [  1   2  17  17]-0.020115 [  1   2  16  16]-0.020115 [  2   2   1  15]-0.017928 
+    [  1   2  17  17]-0.020115 [  1   2  16  16]-0.020115 [  2   2   1  15] 0.017928 
     [  1   1  15  15]-0.017634 [  1   2  18  18]-0.016423 [  1   1  18  18]-0.015991 
-    [  1   1   2  15] 0.014751 [  1   1  10  10]-0.013074 [  1   1  11  11]-0.013074 
+    [  1   1   2  15]-0.014751 [  1   1  10  10]-0.013074 [  1   1  11  11]-0.013074 
     --------------------------------------------------------------------------------
     Norm of T2AB vector: (nonzero elements: 1082)                 0.123443821524661.
     --------------------------------------------------------------------------------
@@ -1423,13 +1412,13 @@ Scratch directory: /tmp/
        _   _   _   _              _   _   _   _              _   _   _   _           
        i   j   a   b              i   j   a   b              i   j   a   b           
     --------------------------------------------------------------------------------
-    [  1   2   2  14]-0.012059 [  1   2   2  15] 0.010391 [  1   2   2  18] 0.009919 
-    [  1   2  10  17]-0.009790 [  1   2  11  16]-0.009790 [  1   2   1  15] 0.007355 
-    [  1   2  14  18] 0.007040 [  1   2   9  18] 0.006573 [  1   2  11  17] 0.005714 
-    [  1   2  10  16]-0.005714 [  1   2   2   9]-0.005673 [  1   2   5  17]-0.004643 
-    [  1   2   4  16]-0.004643 [  1   2   7  16]-0.004554 [  1   2   8  17] 0.004554 
+    [  1   2   2  14] 0.012059 [  1   2  10  17]-0.011334 [  1   2  11  16]-0.011334 
+    [  1   2   2  15]-0.010391 [  1   2   2  18]-0.009919 [  1   2   1  15]-0.007355 
+    [  1   2  14  18] 0.007040 [  1   2   9  18] 0.006573 [  1   2   7  17] 0.006003 
+    [  1   2   8  16]-0.006003 [  1   2   2   9] 0.005673 [  1   2   4  17]-0.004176 
+    [  1   2   5  16]-0.004176 [  0   1   1  14] 0.004044 [  1   2  15  18] 0.003671 
     --------------------------------------------------------------------------------
-    Norm of T2BB vector: (nonzero elements: 620)                  0.065469200510588.
+    Norm of T2BB vector: (nonzero elements: 620)                  0.065469200510587.
     --------------------------------------------------------------------------------
 
   ==> Possible Intruders <==
@@ -1449,13 +1438,13 @@ Scratch directory: /tmp/
 
   ==> DSRG-MRPT2 Energy Summary <==
 
-    E0 (reference)                 =    -22.573188924053881
+    E0 (reference)                 =    -22.573188924053877
     <[F, A1]>                      =     -0.000880750595587
     <[F, A2]>                      =      0.003460424081963
     <[V, A1]>                      =      0.000687396679385
     <[V, A2]>                      =     -0.012439254245646
     DSRG-MRPT2 correlation energy  =     -0.009172184079885
-    DSRG-MRPT2 total energy        =    -22.582361108133767
+    DSRG-MRPT2 total energy        =    -22.582361108133764
 
   ==> De-Normal-Order DSRG Transformed Hamiltonian <==
 
@@ -1489,7 +1478,7 @@ Scratch directory: /tmp/
     Number of determinants                           4
     Symmetry                                         0
     Multiplicity                                     1
-    Number of roots                                  2
+    Number of roots                                  1
     Target root                                      0
     Trial vectors per root                          10
 
@@ -1516,32 +1505,23 @@ Scratch directory: /tmp/
   -----------------------------------------------------
     Iter.      Avg. Energy       Delta_E     Res. Norm
   -----------------------------------------------------
-  Rejected new correction vector 1 with norm: 407.962633
-      1      -22.321742276943  -2.232e+01  +2.206e+01
-      2      -22.321742276943  -7.105e-15  +6.493e-15
+      1      -22.582847032164  -2.258e+01  +4.469e-15
+      2      -22.582847032164  +0.000e+00  +4.469e-15
   -----------------------------------------------------
   The Davidson-Liu algorithm converged in 3 iterations.
 
   ==> Root No. 0 <==
 
-    20      0.99262558
-    02     -0.11951973
+    20     -0.99262558
+    02      0.11951973
 
-    Total Energy:     -22.582847032164, <S^2>: 0.000000
-
-  ==> Root No. 1 <==
-
-    ab      0.70532454
-    ba      0.70532454
-
-    Total Energy:     -22.060637521722, <S^2>: 0.000000
+    Total Energy:     -22.582847032164, <S^2>: -0.000000
 
   ==> Energy Summary <==
 
     Multi.(2ms)  Irrep.  No.               Energy      <S^2>
     --------------------------------------------------------
-       1  (  0)     A     0      -22.582847032164   0.000000
-       1  (  0)     A     1      -22.060637521722   0.000000
+       1  (  0)     A     0      -22.582847032164  -0.000000
     --------------------------------------------------------
 
   => MRDSRG Reference Relaxation Energy Summary <=
@@ -1557,9 +1537,9 @@ Scratch directory: /tmp/
 
              [H1, T1]    [H1, T2]    [H2, T1]    [H2, T2]
     -----------------------------------------------------
-    -> C0       0.002       0.009       0.000       0.070
-    -> C1       0.007       0.038       0.026       0.369
-    -> C2                   0.132       0.151       0.710
+    -> C0       0.002       0.012       0.000       0.089
+    -> C1       0.009       0.048       0.033       0.473
+    -> C2                   0.168       0.156       0.699
     -----------------------------------------------------
 
 
@@ -1621,52 +1601,43 @@ Scratch directory: /tmp/
 	Starting second half-transformation.
 	Two-electron integral transformation complete.
 
-  Integral transformation done. 0.64681641 s
+  Integral transformation done. 0.60542194 s
   Reading the two-electron integrals from disk
   Size of two-electron integrals:   0.026507 GB
-  Timing for conventional integral transformation:            2.221 s.
+  Timing for conventional integral transformation:            2.104 s.
   Frozen-core energy         -16.443872171331627 a.u.
   Timing for frozen one-body operator:                        0.001 s.
   Resorting integrals after freezing core.
-  Timing for freezing core and virtual orbitals:              0.020 s.
-  Timing for computing conventional integrals:                2.241 s.
+  Timing for freezing core and virtual orbitals:              0.017 s.
+  Timing for computing conventional integrals:                2.121 s.
 
   ==> Summary of Active Space Solver Input <==
 
     Irrep.  Multi.(2ms)      N
     --------------------------
-        A      1  (  0)      2
+        A      1  (  0)      1
     --------------------------
     N: number of roots
     ms: spin z component
-    Total number of roots:   2
+    Total number of roots:   1
     --------------------------
 
-  Rejected new correction vector 1 with norm: 361.730998
 
   ==> Energy Summary <==
 
     Multi.(2ms)  Irrep.  No.               Energy      <S^2>
     --------------------------------------------------------
        1  (  0)     A     0      -22.573188924054   0.000000
-       1  (  0)     A     1      -22.022196749409   0.000000
     --------------------------------------------------------
  CASCI(A) density will be written into the fragment (A) densiy blocks
 
   ==> Multireference Driven Similarity Renormalization Group <==
 
+    Computing Fock matrix and cleaning JK ........... Done
     Reading DSRG options ............................ Done
     Setting ambit MO space .......................... Done
     Preparing tensors for density cumulants ......... Done
-    Building Downfolded Fock matrix ............................ 
- Debug #1 
- Debug #2 
- Debug #3 
- Debug #3.1 
- Debug #3.2 
- Debug #3.3 
- Debug #4 
- Debug #5 Done
+    Filling Fock matrix from ForteIntegrals ......... Done
 
            ----------------------------------------------------------
              Multireference Driven Similarity Renormalization Group
@@ -1719,8 +1690,8 @@ Scratch directory: /tmp/
 
   ==> Build Initial Amplitudes Guesses <==
 
-    Computing T2 amplitudes ...          Done. Timing      0.152 s
-    Computing T1 amplitudes ...          Done. Timing      0.006 s
+    Computing T2 amplitudes ...          Done. Timing      0.150 s
+    Computing T1 amplitudes ...          Done. Timing      0.005 s
 
   ==> Initial Excitation Amplitudes Summary <==
 
@@ -1729,60 +1700,60 @@ Scratch directory: /tmp/
     Largest T1 amplitudes for spin case A:
        i       a                  i       a                  i       a               
     --------------------------------------------------------------------------------
-    [ 20      32    ]-0.084833 [ 20      23    ]-0.073524 [ 20      27    ] 0.050029 
-    [ 20      24    ]-0.047087 [ 17      23    ]-0.030046 [ 17      32    ] 0.014243 
-    [ 16      23    ]-0.009251 [ 17      27    ] 0.007669 [  4      32    ]-0.007128 
-    [  5      27    ] 0.006060 [  4      23    ] 0.005712 [ 16      32    ] 0.005632 
-    [ 17      24    ]-0.005134 [  5      32    ]-0.004635 [ 18      25    ]-0.003998 
+    [ 20      32    ]-0.084833 [ 20      23    ] 0.073524 [ 20      27    ]-0.050029 
+    [ 20      24    ]-0.047087 [ 17      23    ] 0.030046 [ 17      32    ] 0.014243 
+    [ 16      23    ] 0.009251 [ 17      27    ]-0.007669 [  4      32    ] 0.007128 
+    [  5      27    ]-0.006060 [  4      23    ] 0.005712 [ 16      32    ] 0.005632 
+    [ 17      24    ]-0.005134 [  5      32    ]-0.004635 [ 18      22    ]-0.004376 
     --------------------------------------------------------------------------------
-    Norm of T1A vector: (nonzero elements: 115)                   0.137393788429934.
+    Norm of T1A vector: (nonzero elements: 115)                   0.137393788429919.
     --------------------------------------------------------------------------------
     Largest T1 amplitudes for spin case B:
        _       _                  _       _                  _       _               
        i       a                  i       a                  i       a               
     --------------------------------------------------------------------------------
-    [ 20      32    ]-0.084833 [ 20      23    ]-0.073524 [ 20      27    ] 0.050029 
-    [ 20      24    ]-0.047087 [ 17      23    ]-0.030046 [ 17      32    ] 0.014243 
-    [ 16      23    ]-0.009251 [ 17      27    ] 0.007669 [  4      32    ]-0.007128 
-    [  5      27    ] 0.006060 [  4      23    ] 0.005712 [ 16      32    ] 0.005632 
-    [ 17      24    ]-0.005134 [  5      32    ]-0.004635 [ 18      25    ]-0.003998 
+    [ 20      32    ]-0.084833 [ 20      23    ] 0.073524 [ 20      27    ]-0.050029 
+    [ 20      24    ]-0.047087 [ 17      23    ] 0.030046 [ 17      32    ] 0.014243 
+    [ 16      23    ] 0.009251 [ 17      27    ]-0.007669 [  4      32    ] 0.007128 
+    [  5      27    ]-0.006060 [  4      23    ] 0.005712 [ 16      32    ] 0.005632 
+    [ 17      24    ]-0.005134 [  5      32    ]-0.004635 [ 18      22    ]-0.004376 
     --------------------------------------------------------------------------------
-    Norm of T1B vector: (nonzero elements: 115)                   0.137393788429934.
+    Norm of T1B vector: (nonzero elements: 115)                   0.137393788429919.
     --------------------------------------------------------------------------------
     Largest T2 amplitudes for spin case AA:
        i   j   a   b              i   j   a   b              i   j   a   b           
     --------------------------------------------------------------------------------
-    [  2  20   2  32]-0.010286 [  2  20   2  27] 0.008118 [  2  20   2  23]-0.007545 
-    [ 19  20  19  23]-0.007500 [ 18  20  18  23]-0.007500 [ 19  20  19  32]-0.007333 
-    [ 18  20  18  32]-0.007333 [ 17  20  20  23] 0.006771 [ 17  19  19  23] 0.006737 
-    [ 17  18  18  23] 0.006737 [  1  17  17  23] 0.006633 [  1  20  20  23] 0.006418 
+    [  2  20   2  32]-0.010286 [  2  20   2  27]-0.008118 [  2  20   2  23] 0.007545 
+    [ 19  20  19  23] 0.007500 [ 18  20  18  23] 0.007500 [ 19  20  19  32]-0.007333 
+    [ 18  20  18  32]-0.007333 [ 17  20  20  23]-0.006771 [ 17  19  19  23]-0.006737 
+    [ 17  18  18  23]-0.006737 [  1  17  17  23] 0.006633 [  1  20  20  23] 0.006418 
     [  1  19  19  23] 0.005902 [  1  18  18  23] 0.005902 [  3  20   3  32]-0.005774 
     --------------------------------------------------------------------------------
-    Norm of T2AA vector: (nonzero elements: 117560)               0.113727997239579.
+    Norm of T2AA vector: (nonzero elements: 117560)               0.113727997239573.
     --------------------------------------------------------------------------------
     Largest T2 amplitudes for spin case AB:
            _       _                  _       _                  _       _           
        i   j   a   b              i   j   a   b              i   j   a   b           
     --------------------------------------------------------------------------------
-    [  1   1  23  23]-0.021157 [  1   1  24  24]-0.020442 [  1   1  22  22]-0.017437 
-    [  1   1  21  21]-0.017437 [  1   1  26  26]-0.015821 [  1   1  25  25]-0.015821 
+    [  1   1  23  23]-0.021157 [  1   1  24  24]-0.020442 [  1   1  21  21]-0.017437 
+    [  1   1  22  22]-0.017437 [  1   1  26  26]-0.015821 [  1   1  25  25]-0.015821 
     [  1   1  29  29]-0.015449 [  1   1  28  28]-0.015449 [  1   1  31  31]-0.015272 
-    [  1   1  30  30]-0.015272 [  1   1  32  32]-0.012512 [  2  20   2  32]-0.011790 
-    [  1   1  27  27]-0.011163 [  1   1  22  26] 0.010444 [  1   1  21  25] 0.010444 
+    [  1   1  30  30]-0.015272 [  1   1  32  32]-0.012512 [  1   1  21  26]-0.012405 
+    [  1   1  22  25]-0.012405 [  2  20   2  32]-0.011790 [  1   1  27  27]-0.011163 
     --------------------------------------------------------------------------------
-    Norm of T2AB vector: (nonzero elements: 126752)               0.118994643916316.
+    Norm of T2AB vector: (nonzero elements: 126752)               0.118994643916315.
     --------------------------------------------------------------------------------
     Largest T2 amplitudes for spin case BB:
        _   _   _   _              _   _   _   _              _   _   _   _           
        i   j   a   b              i   j   a   b              i   j   a   b           
     --------------------------------------------------------------------------------
-    [  2  20   2  32]-0.010286 [  2  20   2  27] 0.008118 [  2  20   2  23]-0.007545 
-    [ 19  20  19  23]-0.007500 [ 18  20  18  23]-0.007500 [ 19  20  19  32]-0.007333 
-    [ 18  20  18  32]-0.007333 [ 17  20  20  23] 0.006771 [ 17  19  19  23] 0.006737 
-    [ 17  18  18  23] 0.006737 [  1  17  17  23] 0.006633 [  1  20  20  23] 0.006418 
+    [  2  20   2  32]-0.010286 [  2  20   2  27]-0.008118 [  2  20   2  23] 0.007545 
+    [ 19  20  19  23] 0.007500 [ 18  20  18  23] 0.007500 [ 19  20  19  32]-0.007333 
+    [ 18  20  18  32]-0.007333 [ 17  20  20  23]-0.006771 [ 17  19  19  23]-0.006737 
+    [ 17  18  18  23]-0.006737 [  1  17  17  23] 0.006633 [  1  20  20  23] 0.006418 
     [  1  19  19  23] 0.005902 [  1  18  18  23] 0.005902 [  3  20   3  32]-0.005774 
     --------------------------------------------------------------------------------
-    Norm of T2BB vector: (nonzero elements: 117560)               0.113727997239579.
+    Norm of T2BB vector: (nonzero elements: 117560)               0.113727997239573.
     --------------------------------------------------------------------------------
 
   ==> Possible Intruders <==
@@ -1802,13 +1773,13 @@ Scratch directory: /tmp/
 
   ==> DSRG-MRPT2 Energy Summary <==
 
-    E0 (reference)                 =    -22.573188924053895
+    E0 (reference)                 =    -22.573188924053888
     <[F, A1]>                      =     -0.000006275345153
     <[F, A2]>                      =      0.000101777681820
     <[V, A1]>                      =      0.000002297899541
     <[V, A2]>                      =     -0.017248844079867
     DSRG-MRPT2 correlation energy  =     -0.017151043843660
-    DSRG-MRPT2 total energy        =    -22.590339967897556
+    DSRG-MRPT2 total energy        =    -22.590339967897549
 
   ==> De-Normal-Order DSRG Transformed Hamiltonian <==
 
@@ -1824,9 +1795,9 @@ Scratch directory: /tmp/
 
              [H1, T1]    [H1, T2]    [H2, T1]    [H2, T2]
     -----------------------------------------------------
-    -> C0       0.002       0.035       0.000       0.381
-    -> C1       0.007       0.055       0.030       0.880
-    -> C2                   0.276       0.297       2.592
+    -> C0       0.002       0.034       0.000       0.418
+    -> C1       0.007       0.055       0.030       0.844
+    -> C2                   0.267       0.287       2.512
     -----------------------------------------------------
 
 
@@ -1888,750 +1859,27 @@ Scratch directory: /tmp/
 	Starting second half-transformation.
 	Two-electron integral transformation complete.
 
-  Integral transformation done. 0.05271935 s
+  Integral transformation done. 0.07196290 s
   Reading the two-electron integrals from disk
   Size of two-electron integrals:   0.026507 GB
-  Timing for conventional integral transformation:            0.303 s.
+  Timing for conventional integral transformation:            0.322 s.
   Frozen-core energy         -16.443872171331627 a.u.
   Timing for frozen one-body operator:                        0.001 s.
   Resorting integrals after freezing core.
-  Timing for freezing core and virtual orbitals:              0.017 s.
-  Timing for computing conventional integrals:                0.320 s.
- Scalar energy = -0.009826550017 Eh
+  Timing for freezing core and virtual orbitals:              0.018 s.
+  Timing for computing conventional integrals:                0.339 s.
   Updating one-electron integrals from Hbar
- Older value for (0, 0): -4.77771387Updated value for (0, 0): -4.77474218
- Older value for (0, 1): 0.07508914Updated value for (0, 1): 0.07506196
- Older value for (0, 2): -0.07002220Updated value for (0, 2): -0.06913038
- Older value for (0, 3): -0.04186197Updated value for (0, 3): -0.04171335
- Older value for (0, 4): -0.00000000Updated value for (0, 4): -0.00000000
- Older value for (0, 5): 0.00000000Updated value for (0, 5): 0.00000000
- Older value for (0, 6): -0.10843350Updated value for (0, 6): -0.10949050
- Older value for (0, 7): 0.00000000Updated value for (0, 7): 0.00000000
- Older value for (0, 8): 0.00000000Updated value for (0, 8): 0.00000000
- Older value for (0, 9): -0.00033813Updated value for (0, 9): 0.00054038
- Older value for (0, 10): -0.00000000Updated value for (0, 10): -0.00000000
- Older value for (0, 11): -0.00000000Updated value for (0, 11): -0.00000000
- Older value for (0, 12): -0.00000000Updated value for (0, 12): -0.00000000
- Older value for (0, 13): 0.00000000Updated value for (0, 13): 0.00000000
- Older value for (0, 14): 0.05464979Updated value for (0, 14): 0.05497497
- Older value for (0, 15): 0.01442969Updated value for (0, 15): 0.01158747
- Older value for (0, 16): -0.00000000Updated value for (0, 16): -0.00000000
- Older value for (0, 17): 0.00000000Updated value for (0, 17): 0.00000000
- Older value for (0, 18): 0.05267104Updated value for (0, 18): 0.05258148
- Older value for (1, 0): 0.07508914Updated value for (1, 0): 0.07506196
- Older value for (1, 1): -1.45549214Updated value for (1, 1): -1.45031229
- Older value for (1, 2): -0.15060952Updated value for (1, 2): -0.14942782
- Older value for (1, 3): 0.02601551Updated value for (1, 3): 0.02626559
- Older value for (1, 4): -0.00000000Updated value for (1, 4): -0.00000000
- Older value for (1, 5): 0.00000000Updated value for (1, 5): 0.00000000
- Older value for (1, 6): 0.07029708Updated value for (1, 6): 0.07026516
- Older value for (1, 7): -0.00000000Updated value for (1, 7): -0.00000000
- Older value for (1, 8): -0.00000000Updated value for (1, 8): -0.00000000
- Older value for (1, 9): 0.12010617Updated value for (1, 9): 0.12021977
- Older value for (1, 10): -0.00000000Updated value for (1, 10): -0.00000000
- Older value for (1, 11): -0.00000000Updated value for (1, 11): -0.00000000
- Older value for (1, 12): -0.00000000Updated value for (1, 12): -0.00000000
- Older value for (1, 13): 0.00000000Updated value for (1, 13): 0.00000000
- Older value for (1, 14): 0.11378843Updated value for (1, 14): 0.11387589
- Older value for (1, 15): 0.09331339Updated value for (1, 15): 0.09345170
- Older value for (1, 16): -0.00000000Updated value for (1, 16): -0.00000000
- Older value for (1, 17): -0.00000000Updated value for (1, 17): -0.00000000
- Older value for (1, 18): -0.09589866Updated value for (1, 18): -0.09615410
- Older value for (2, 0): -0.07002220Updated value for (2, 0): -0.06913038
- Older value for (2, 1): -0.15060952Updated value for (2, 1): -0.14942782
- Older value for (2, 2): -0.95681108Updated value for (2, 2): -0.95273561
- Older value for (2, 3): -0.04651331Updated value for (2, 3): -0.04663260
- Older value for (2, 4): -0.00000000Updated value for (2, 4): -0.00000000
- Older value for (2, 5): 0.00000000Updated value for (2, 5): 0.00000000
- Older value for (2, 6): -0.12225426Updated value for (2, 6): -0.12174040
- Older value for (2, 7): 0.00000000Updated value for (2, 7): 0.00000000
- Older value for (2, 8): 0.00000000Updated value for (2, 8): 0.00000000
- Older value for (2, 9): -0.06134751Updated value for (2, 9): -0.06139028
- Older value for (2, 10): 0.00000000Updated value for (2, 10): 0.00000000
- Older value for (2, 11): 0.00000000Updated value for (2, 11): 0.00000000
- Older value for (2, 12): 0.00000000Updated value for (2, 12): 0.00000000
- Older value for (2, 13): 0.00000000Updated value for (2, 13): 0.00000000
- Older value for (2, 14): 0.04274134Updated value for (2, 14): 0.04357706
- Older value for (2, 15): -0.10855346Updated value for (2, 15): -0.10815053
- Older value for (2, 16): 0.00000000Updated value for (2, 16): 0.00000000
- Older value for (2, 17): -0.00000000Updated value for (2, 17): -0.00000000
- Older value for (2, 18): -0.06374736Updated value for (2, 18): -0.06230528
- Older value for (3, 0): -0.04186197Updated value for (3, 0): -0.04171335
- Older value for (3, 1): 0.02601551Updated value for (3, 1): 0.02626559
- Older value for (3, 2): -0.04651331Updated value for (3, 2): -0.04663260
- Older value for (3, 3): -0.60461508Updated value for (3, 3): -0.60308053
- Older value for (3, 4): 0.00000000Updated value for (3, 4): 0.00000000
- Older value for (3, 5): 0.00000000Updated value for (3, 5): 0.00000000
- Older value for (3, 6): -0.19520654Updated value for (3, 6): -0.19460597
- Older value for (3, 7): 0.00000000Updated value for (3, 7): 0.00000000
- Older value for (3, 8): 0.00000000Updated value for (3, 8): 0.00000000
- Older value for (3, 9): 0.10990107Updated value for (3, 9): 0.10926829
- Older value for (3, 10): 0.00000000Updated value for (3, 10): 0.00000000
- Older value for (3, 11): 0.00000000Updated value for (3, 11): 0.00000000
- Older value for (3, 12): 0.00000000Updated value for (3, 12): 0.00000000
- Older value for (3, 13): 0.00000000Updated value for (3, 13): 0.00000000
- Older value for (3, 14): 0.03993434Updated value for (3, 14): 0.03930282
- Older value for (3, 15): -0.06692353Updated value for (3, 15): -0.06724929
- Older value for (3, 16): -0.00000000Updated value for (3, 16): -0.00000000
- Older value for (3, 17): 0.00000000Updated value for (3, 17): 0.00000000
- Older value for (3, 18): 0.02755500Updated value for (3, 18): 0.02858200
- Older value for (4, 0): -0.00000000Updated value for (4, 0): -0.00000000
- Older value for (4, 1): -0.00000000Updated value for (4, 1): -0.00000000
- Older value for (4, 2): -0.00000000Updated value for (4, 2): -0.00000000
- Older value for (4, 3): 0.00000000Updated value for (4, 3): 0.00000000
- Older value for (4, 4): -0.61952506Updated value for (4, 4): -0.61760363
- Older value for (4, 5): 0.00000000Updated value for (4, 5): 0.00000000
- Older value for (4, 6): -0.00000000Updated value for (4, 6): -0.00000000
- Older value for (4, 7): -0.08168275Updated value for (4, 7): -0.08151967
- Older value for (4, 8): -0.22857408Updated value for (4, 8): -0.22811772
- Older value for (4, 9): 0.00000000Updated value for (4, 9): 0.00000000
- Older value for (4, 10): -0.00463570Updated value for (4, 10): -0.00459017
- Older value for (4, 11): -0.06244557Updated value for (4, 11): -0.06183215
- Older value for (4, 12): 0.00000000Updated value for (4, 12): 0.00000000
- Older value for (4, 13): 0.00000000Updated value for (4, 13): 0.00000000
- Older value for (4, 14): -0.00000000Updated value for (4, 14): -0.00000000
- Older value for (4, 15): -0.00000000Updated value for (4, 15): -0.00000000
- Older value for (4, 16): -0.00295441Updated value for (4, 16): -0.00290132
- Older value for (4, 17): 0.00144252Updated value for (4, 17): 0.00141659
- Older value for (4, 18): -0.00000000Updated value for (4, 18): -0.00000000
- Older value for (5, 0): 0.00000000Updated value for (5, 0): 0.00000000
- Older value for (5, 1): 0.00000000Updated value for (5, 1): 0.00000000
- Older value for (5, 2): 0.00000000Updated value for (5, 2): 0.00000000
- Older value for (5, 3): 0.00000000Updated value for (5, 3): 0.00000000
- Older value for (5, 4): 0.00000000Updated value for (5, 4): 0.00000000
- Older value for (5, 5): -0.61952506Updated value for (5, 5): -0.61760363
- Older value for (5, 6): -0.00000000Updated value for (5, 6): -0.00000000
- Older value for (5, 7): -0.22857408Updated value for (5, 7): -0.22811772
- Older value for (5, 8): 0.08168275Updated value for (5, 8): 0.08151967
- Older value for (5, 9): 0.00000000Updated value for (5, 9): 0.00000000
- Older value for (5, 10): -0.06244557Updated value for (5, 10): -0.06183215
- Older value for (5, 11): 0.00463570Updated value for (5, 11): 0.00459017
- Older value for (5, 12): 0.00000000Updated value for (5, 12): 0.00000000
- Older value for (5, 13): 0.00000000Updated value for (5, 13): 0.00000000
- Older value for (5, 14): -0.00000000Updated value for (5, 14): -0.00000000
- Older value for (5, 15): -0.00000000Updated value for (5, 15): -0.00000000
- Older value for (5, 16): -0.00144252Updated value for (5, 16): -0.00141659
- Older value for (5, 17): -0.00295441Updated value for (5, 17): -0.00290132
- Older value for (5, 18): -0.00000000Updated value for (5, 18): -0.00000000
- Older value for (6, 0): -0.10843350Updated value for (6, 0): -0.10949050
- Older value for (6, 1): 0.07029708Updated value for (6, 1): 0.07026516
- Older value for (6, 2): -0.12225426Updated value for (6, 2): -0.12174040
- Older value for (6, 3): -0.19520654Updated value for (6, 3): -0.19460597
- Older value for (6, 4): -0.00000000Updated value for (6, 4): -0.00000000
- Older value for (6, 5): -0.00000000Updated value for (6, 5): -0.00000000
- Older value for (6, 6): -0.78750273Updated value for (6, 6): -0.78637121
- Older value for (6, 7): 0.00000000Updated value for (6, 7): 0.00000000
- Older value for (6, 8): -0.00000000Updated value for (6, 8): -0.00000000
- Older value for (6, 9): 0.10423495Updated value for (6, 9): 0.10517872
- Older value for (6, 10): -0.00000000Updated value for (6, 10): -0.00000000
- Older value for (6, 11): -0.00000000Updated value for (6, 11): -0.00000000
- Older value for (6, 12): 0.00000000Updated value for (6, 12): 0.00000000
- Older value for (6, 13): 0.00000000Updated value for (6, 13): 0.00000000
- Older value for (6, 14): 0.13271011Updated value for (6, 14): 0.13253624
- Older value for (6, 15): -0.03413715Updated value for (6, 15): -0.03530300
- Older value for (6, 16): 0.00000000Updated value for (6, 16): 0.00000000
- Older value for (6, 17): 0.00000000Updated value for (6, 17): 0.00000000
- Older value for (6, 18): 0.04822554Updated value for (6, 18): 0.05225516
- Older value for (7, 0): 0.00000000Updated value for (7, 0): 0.00000000
- Older value for (7, 1): -0.00000000Updated value for (7, 1): -0.00000000
- Older value for (7, 2): 0.00000000Updated value for (7, 2): 0.00000000
- Older value for (7, 3): 0.00000000Updated value for (7, 3): 0.00000000
- Older value for (7, 4): -0.08168275Updated value for (7, 4): -0.08151967
- Older value for (7, 5): -0.22857408Updated value for (7, 5): -0.22811772
- Older value for (7, 6): 0.00000000Updated value for (7, 6): 0.00000000
- Older value for (7, 7): -0.93996444Updated value for (7, 7): -0.93753644
- Older value for (7, 8): -0.00000000Updated value for (7, 8): -0.00000000
- Older value for (7, 9): 0.00000000Updated value for (7, 9): 0.00000000
- Older value for (7, 10): -0.08740908Updated value for (7, 10): -0.08680577
- Older value for (7, 11): -0.02410788Updated value for (7, 11): -0.02394148
- Older value for (7, 12): 0.00000000Updated value for (7, 12): 0.00000000
- Older value for (7, 13): 0.00000000Updated value for (7, 13): 0.00000000
- Older value for (7, 14): -0.00000000Updated value for (7, 14): -0.00000000
- Older value for (7, 15): -0.00000000Updated value for (7, 15): -0.00000000
- Older value for (7, 16): -0.00783482Updated value for (7, 16): -0.00774154
- Older value for (7, 17): -0.00764861Updated value for (7, 17): -0.00755754
- Older value for (7, 18): -0.00000000Updated value for (7, 18): -0.00000000
- Older value for (8, 0): 0.00000000Updated value for (8, 0): 0.00000000
- Older value for (8, 1): -0.00000000Updated value for (8, 1): -0.00000000
- Older value for (8, 2): 0.00000000Updated value for (8, 2): 0.00000000
- Older value for (8, 3): 0.00000000Updated value for (8, 3): 0.00000000
- Older value for (8, 4): -0.22857408Updated value for (8, 4): -0.22811772
- Older value for (8, 5): 0.08168275Updated value for (8, 5): 0.08151967
- Older value for (8, 6): -0.00000000Updated value for (8, 6): -0.00000000
- Older value for (8, 7): -0.00000000Updated value for (8, 7): -0.00000000
- Older value for (8, 8): -0.93996444Updated value for (8, 8): -0.93753644
- Older value for (8, 9): -0.00000000Updated value for (8, 9): -0.00000000
- Older value for (8, 10): 0.02410788Updated value for (8, 10): 0.02394148
- Older value for (8, 11): -0.08740908Updated value for (8, 11): -0.08680577
- Older value for (8, 12): 0.00000000Updated value for (8, 12): 0.00000000
- Older value for (8, 13): 0.00000000Updated value for (8, 13): 0.00000000
- Older value for (8, 14): -0.00000000Updated value for (8, 14): -0.00000000
- Older value for (8, 15): -0.00000000Updated value for (8, 15): -0.00000000
- Older value for (8, 16): -0.00764861Updated value for (8, 16): -0.00755754
- Older value for (8, 17): 0.00783482Updated value for (8, 17): 0.00774154
- Older value for (8, 18): -0.00000000Updated value for (8, 18): -0.00000000
- Older value for (9, 0): -0.00033813Updated value for (9, 0): 0.00054038
- Older value for (9, 1): 0.12010617Updated value for (9, 1): 0.12021977
- Older value for (9, 2): -0.06134751Updated value for (9, 2): -0.06139028
- Older value for (9, 3): 0.10990107Updated value for (9, 3): 0.10926829
- Older value for (9, 4): 0.00000000Updated value for (9, 4): 0.00000000
- Older value for (9, 5): 0.00000000Updated value for (9, 5): 0.00000000
- Older value for (9, 6): 0.10423495Updated value for (9, 6): 0.10517872
- Older value for (9, 7): 0.00000000Updated value for (9, 7): 0.00000000
- Older value for (9, 8): -0.00000000Updated value for (9, 8): -0.00000000
- Older value for (9, 9): -0.69189124Updated value for (9, 9): -0.69019569
- Older value for (9, 10): 0.00000000Updated value for (9, 10): 0.00000000
- Older value for (9, 11): 0.00000000Updated value for (9, 11): 0.00000000
- Older value for (9, 12): -0.00000000Updated value for (9, 12): -0.00000000
- Older value for (9, 13): 0.00000000Updated value for (9, 13): 0.00000000
- Older value for (9, 14): -0.14867867Updated value for (9, 14): -0.14813177
- Older value for (9, 15): -0.11498002Updated value for (9, 15): -0.11302109
- Older value for (9, 16): 0.00000000Updated value for (9, 16): 0.00000000
- Older value for (9, 17): -0.00000000Updated value for (9, 17): -0.00000000
- Older value for (9, 18): 0.01927456Updated value for (9, 18): 0.01452933
- Older value for (10, 0): -0.00000000Updated value for (10, 0): -0.00000000
- Older value for (10, 1): -0.00000000Updated value for (10, 1): -0.00000000
- Older value for (10, 2): 0.00000000Updated value for (10, 2): 0.00000000
- Older value for (10, 3): 0.00000000Updated value for (10, 3): 0.00000000
- Older value for (10, 4): -0.00463570Updated value for (10, 4): -0.00459017
- Older value for (10, 5): -0.06244557Updated value for (10, 5): -0.06183215
- Older value for (10, 6): -0.00000000Updated value for (10, 6): -0.00000000
- Older value for (10, 7): -0.08740908Updated value for (10, 7): -0.08680577
- Older value for (10, 8): 0.02410788Updated value for (10, 8): 0.02394148
- Older value for (10, 9): 0.00000000Updated value for (10, 9): 0.00000000
- Older value for (10, 10): -0.75757325Updated value for (10, 10): -0.75413237
- Older value for (10, 11): -0.00000000Updated value for (10, 11): -0.00000000
- Older value for (10, 12): 0.00000000Updated value for (10, 12): 0.00000000
- Older value for (10, 13): 0.00000000Updated value for (10, 13): 0.00000000
- Older value for (10, 14): -0.00000000Updated value for (10, 14): -0.00000000
- Older value for (10, 15): -0.00000000Updated value for (10, 15): -0.00000000
- Older value for (10, 16): -0.06041171Updated value for (10, 16): -0.06022391
- Older value for (10, 17): -0.10350693Updated value for (10, 17): -0.10318516
- Older value for (10, 18): 0.00000000Updated value for (10, 18): 0.00000000
- Older value for (11, 0): -0.00000000Updated value for (11, 0): -0.00000000
- Older value for (11, 1): -0.00000000Updated value for (11, 1): -0.00000000
- Older value for (11, 2): 0.00000000Updated value for (11, 2): 0.00000000
- Older value for (11, 3): 0.00000000Updated value for (11, 3): 0.00000000
- Older value for (11, 4): -0.06244557Updated value for (11, 4): -0.06183215
- Older value for (11, 5): 0.00463570Updated value for (11, 5): 0.00459017
- Older value for (11, 6): -0.00000000Updated value for (11, 6): -0.00000000
- Older value for (11, 7): -0.02410788Updated value for (11, 7): -0.02394148
- Older value for (11, 8): -0.08740908Updated value for (11, 8): -0.08680577
- Older value for (11, 9): 0.00000000Updated value for (11, 9): 0.00000000
- Older value for (11, 10): -0.00000000Updated value for (11, 10): -0.00000000
- Older value for (11, 11): -0.75757325Updated value for (11, 11): -0.75413237
- Older value for (11, 12): 0.00000000Updated value for (11, 12): 0.00000000
- Older value for (11, 13): 0.00000000Updated value for (11, 13): 0.00000000
- Older value for (11, 14): -0.00000000Updated value for (11, 14): -0.00000000
- Older value for (11, 15): -0.00000000Updated value for (11, 15): -0.00000000
- Older value for (11, 16): -0.10350693Updated value for (11, 16): -0.10318516
- Older value for (11, 17): 0.06041171Updated value for (11, 17): 0.06022391
- Older value for (11, 18): -0.00000000Updated value for (11, 18): -0.00000000
- Older value for (12, 0): -0.00000000Updated value for (12, 0): -0.00000000
- Older value for (12, 1): -0.00000000Updated value for (12, 1): -0.00000000
- Older value for (12, 2): 0.00000000Updated value for (12, 2): 0.00000000
- Older value for (12, 3): 0.00000000Updated value for (12, 3): 0.00000000
- Older value for (12, 4): 0.00000000Updated value for (12, 4): 0.00000000
- Older value for (12, 5): 0.00000000Updated value for (12, 5): 0.00000000
- Older value for (12, 6): 0.00000000Updated value for (12, 6): 0.00000000
- Older value for (12, 7): 0.00000000Updated value for (12, 7): 0.00000000
- Older value for (12, 8): 0.00000000Updated value for (12, 8): 0.00000000
- Older value for (12, 9): -0.00000000Updated value for (12, 9): -0.00000000
- Older value for (12, 10): 0.00000000Updated value for (12, 10): 0.00000000
- Older value for (12, 11): 0.00000000Updated value for (12, 11): 0.00000000
- Older value for (12, 12): -0.69100616Updated value for (12, 12): -0.68822845
- Older value for (12, 13): 0.00000000Updated value for (12, 13): 0.00000000
- Older value for (12, 14): -0.00000000Updated value for (12, 14): -0.00000000
- Older value for (12, 15): -0.00000000Updated value for (12, 15): -0.00000000
- Older value for (12, 16): 0.00000000Updated value for (12, 16): 0.00000000
- Older value for (12, 17): 0.00000000Updated value for (12, 17): 0.00000000
- Older value for (12, 18): 0.00000000Updated value for (12, 18): 0.00000000
- Older value for (13, 0): 0.00000000Updated value for (13, 0): 0.00000000
- Older value for (13, 1): 0.00000000Updated value for (13, 1): 0.00000000
- Older value for (13, 2): 0.00000000Updated value for (13, 2): 0.00000000
- Older value for (13, 3): 0.00000000Updated value for (13, 3): 0.00000000
- Older value for (13, 4): 0.00000000Updated value for (13, 4): 0.00000000
- Older value for (13, 5): 0.00000000Updated value for (13, 5): 0.00000000
- Older value for (13, 6): 0.00000000Updated value for (13, 6): 0.00000000
- Older value for (13, 7): 0.00000000Updated value for (13, 7): 0.00000000
- Older value for (13, 8): 0.00000000Updated value for (13, 8): 0.00000000
- Older value for (13, 9): 0.00000000Updated value for (13, 9): 0.00000000
- Older value for (13, 10): 0.00000000Updated value for (13, 10): 0.00000000
- Older value for (13, 11): 0.00000000Updated value for (13, 11): 0.00000000
- Older value for (13, 12): 0.00000000Updated value for (13, 12): 0.00000000
- Older value for (13, 13): -0.69100616Updated value for (13, 13): -0.68822845
- Older value for (13, 14): -0.00000000Updated value for (13, 14): -0.00000000
- Older value for (13, 15): 0.00000000Updated value for (13, 15): 0.00000000
- Older value for (13, 16): 0.00000000Updated value for (13, 16): 0.00000000
- Older value for (13, 17): 0.00000000Updated value for (13, 17): 0.00000000
- Older value for (13, 18): 0.00000000Updated value for (13, 18): 0.00000000
- Older value for (14, 0): 0.05464979Updated value for (14, 0): 0.05497497
- Older value for (14, 1): 0.11378843Updated value for (14, 1): 0.11387589
- Older value for (14, 2): 0.04274134Updated value for (14, 2): 0.04357706
- Older value for (14, 3): 0.03993434Updated value for (14, 3): 0.03930282
- Older value for (14, 4): -0.00000000Updated value for (14, 4): -0.00000000
- Older value for (14, 5): -0.00000000Updated value for (14, 5): -0.00000000
- Older value for (14, 6): 0.13271011Updated value for (14, 6): 0.13253624
- Older value for (14, 7): -0.00000000Updated value for (14, 7): -0.00000000
- Older value for (14, 8): -0.00000000Updated value for (14, 8): -0.00000000
- Older value for (14, 9): -0.14867867Updated value for (14, 9): -0.14813177
- Older value for (14, 10): -0.00000000Updated value for (14, 10): -0.00000000
- Older value for (14, 11): -0.00000000Updated value for (14, 11): -0.00000000
- Older value for (14, 12): -0.00000000Updated value for (14, 12): -0.00000000
- Older value for (14, 13): -0.00000000Updated value for (14, 13): -0.00000000
- Older value for (14, 14): -0.67949476Updated value for (14, 14): -0.67599617
- Older value for (14, 15): -0.04607973Updated value for (14, 15): -0.04552111
- Older value for (14, 16): 0.00000000Updated value for (14, 16): 0.00000000
- Older value for (14, 17): 0.00000000Updated value for (14, 17): 0.00000000
- Older value for (14, 18): 0.12506250Updated value for (14, 18): 0.11899825
- Older value for (15, 0): 0.01442969Updated value for (15, 0): 0.01158747
- Older value for (15, 1): 0.09331339Updated value for (15, 1): 0.09345170
- Older value for (15, 2): -0.10855346Updated value for (15, 2): -0.10815053
- Older value for (15, 3): -0.06692353Updated value for (15, 3): -0.06724929
- Older value for (15, 4): -0.00000000Updated value for (15, 4): -0.00000000
- Older value for (15, 5): -0.00000000Updated value for (15, 5): -0.00000000
- Older value for (15, 6): -0.03413715Updated value for (15, 6): -0.03530300
- Older value for (15, 7): -0.00000000Updated value for (15, 7): -0.00000000
- Older value for (15, 8): -0.00000000Updated value for (15, 8): -0.00000000
- Older value for (15, 9): -0.11498002Updated value for (15, 9): -0.11302109
- Older value for (15, 10): -0.00000000Updated value for (15, 10): -0.00000000
- Older value for (15, 11): -0.00000000Updated value for (15, 11): -0.00000000
- Older value for (15, 12): -0.00000000Updated value for (15, 12): -0.00000000
- Older value for (15, 13): 0.00000000Updated value for (15, 13): 0.00000000
- Older value for (15, 14): -0.04607973Updated value for (15, 14): -0.04552111
- Older value for (15, 15): -0.48226327Updated value for (15, 15): -0.47739570
- Older value for (15, 16): 0.00000000Updated value for (15, 16): 0.00000000
- Older value for (15, 17): 0.00000000Updated value for (15, 17): 0.00000000
- Older value for (15, 18): 0.10617393Updated value for (15, 18): 0.10728473
- Older value for (16, 0): -0.00000000Updated value for (16, 0): -0.00000000
- Older value for (16, 1): -0.00000000Updated value for (16, 1): -0.00000000
- Older value for (16, 2): 0.00000000Updated value for (16, 2): 0.00000000
- Older value for (16, 3): -0.00000000Updated value for (16, 3): -0.00000000
- Older value for (16, 4): -0.00295441Updated value for (16, 4): -0.00290132
- Older value for (16, 5): -0.00144252Updated value for (16, 5): -0.00141659
- Older value for (16, 6): 0.00000000Updated value for (16, 6): 0.00000000
- Older value for (16, 7): -0.00783482Updated value for (16, 7): -0.00774154
- Older value for (16, 8): -0.00764861Updated value for (16, 8): -0.00755754
- Older value for (16, 9): 0.00000000Updated value for (16, 9): 0.00000000
- Older value for (16, 10): -0.06041171Updated value for (16, 10): -0.06022391
- Older value for (16, 11): -0.10350693Updated value for (16, 11): -0.10318516
- Older value for (16, 12): 0.00000000Updated value for (16, 12): 0.00000000
- Older value for (16, 13): 0.00000000Updated value for (16, 13): 0.00000000
- Older value for (16, 14): 0.00000000Updated value for (16, 14): 0.00000000
- Older value for (16, 15): 0.00000000Updated value for (16, 15): 0.00000000
- Older value for (16, 16): 0.11576650Updated value for (16, 16): 0.12203184
- Older value for (16, 17): 0.00000000Updated value for (16, 17): 0.00000000
- Older value for (16, 18): 0.00000000Updated value for (16, 18): 0.00000000
- Older value for (17, 0): 0.00000000Updated value for (17, 0): 0.00000000
- Older value for (17, 1): -0.00000000Updated value for (17, 1): -0.00000000
- Older value for (17, 2): -0.00000000Updated value for (17, 2): -0.00000000
- Older value for (17, 3): 0.00000000Updated value for (17, 3): 0.00000000
- Older value for (17, 4): 0.00144252Updated value for (17, 4): 0.00141659
- Older value for (17, 5): -0.00295441Updated value for (17, 5): -0.00290132
- Older value for (17, 6): 0.00000000Updated value for (17, 6): 0.00000000
- Older value for (17, 7): -0.00764861Updated value for (17, 7): -0.00755754
- Older value for (17, 8): 0.00783482Updated value for (17, 8): 0.00774154
- Older value for (17, 9): -0.00000000Updated value for (17, 9): -0.00000000
- Older value for (17, 10): -0.10350693Updated value for (17, 10): -0.10318516
- Older value for (17, 11): 0.06041171Updated value for (17, 11): 0.06022391
- Older value for (17, 12): 0.00000000Updated value for (17, 12): 0.00000000
- Older value for (17, 13): 0.00000000Updated value for (17, 13): 0.00000000
- Older value for (17, 14): 0.00000000Updated value for (17, 14): 0.00000000
- Older value for (17, 15): 0.00000000Updated value for (17, 15): 0.00000000
- Older value for (17, 16): 0.00000000Updated value for (17, 16): 0.00000000
- Older value for (17, 17): 0.11576650Updated value for (17, 17): 0.12203184
- Older value for (17, 18): 0.00000000Updated value for (17, 18): 0.00000000
- Older value for (18, 0): 0.05267104Updated value for (18, 0): 0.05258148
- Older value for (18, 1): -0.09589866Updated value for (18, 1): -0.09615410
- Older value for (18, 2): -0.06374736Updated value for (18, 2): -0.06230528
- Older value for (18, 3): 0.02755500Updated value for (18, 3): 0.02858200
- Older value for (18, 4): -0.00000000Updated value for (18, 4): -0.00000000
- Older value for (18, 5): -0.00000000Updated value for (18, 5): -0.00000000
- Older value for (18, 6): 0.04822554Updated value for (18, 6): 0.05225516
- Older value for (18, 7): -0.00000000Updated value for (18, 7): -0.00000000
- Older value for (18, 8): -0.00000000Updated value for (18, 8): -0.00000000
- Older value for (18, 9): 0.01927456Updated value for (18, 9): 0.01452933
- Older value for (18, 10): 0.00000000Updated value for (18, 10): 0.00000000
- Older value for (18, 11): -0.00000000Updated value for (18, 11): -0.00000000
- Older value for (18, 12): 0.00000000Updated value for (18, 12): 0.00000000
- Older value for (18, 13): 0.00000000Updated value for (18, 13): 0.00000000
- Older value for (18, 14): 0.12506250Updated value for (18, 14): 0.11899825
- Older value for (18, 15): 0.10617393Updated value for (18, 15): 0.10728473
- Older value for (18, 16): 0.00000000Updated value for (18, 16): 0.00000000
- Older value for (18, 17): 0.00000000Updated value for (18, 17): 0.00000000
- Older value for (18, 18): 0.26347144Updated value for (18, 18): 0.28206885
- Older value for (0, 0): -4.77771387Updated value for (0, 0): -4.77474218
- Older value for (0, 1): 0.07508914Updated value for (0, 1): 0.07506196
- Older value for (0, 2): -0.07002220Updated value for (0, 2): -0.06913038
- Older value for (0, 3): -0.04186197Updated value for (0, 3): -0.04171335
- Older value for (0, 4): -0.00000000Updated value for (0, 4): -0.00000000
- Older value for (0, 5): 0.00000000Updated value for (0, 5): 0.00000000
- Older value for (0, 6): -0.10843350Updated value for (0, 6): -0.10949050
- Older value for (0, 7): 0.00000000Updated value for (0, 7): 0.00000000
- Older value for (0, 8): 0.00000000Updated value for (0, 8): 0.00000000
- Older value for (0, 9): -0.00033813Updated value for (0, 9): 0.00054038
- Older value for (0, 10): -0.00000000Updated value for (0, 10): -0.00000000
- Older value for (0, 11): -0.00000000Updated value for (0, 11): -0.00000000
- Older value for (0, 12): -0.00000000Updated value for (0, 12): -0.00000000
- Older value for (0, 13): 0.00000000Updated value for (0, 13): 0.00000000
- Older value for (0, 14): 0.05464979Updated value for (0, 14): 0.05497497
- Older value for (0, 15): 0.01442969Updated value for (0, 15): 0.01158747
- Older value for (0, 16): -0.00000000Updated value for (0, 16): -0.00000000
- Older value for (0, 17): 0.00000000Updated value for (0, 17): 0.00000000
- Older value for (0, 18): 0.05267104Updated value for (0, 18): 0.05258148
- Older value for (1, 0): 0.07508914Updated value for (1, 0): 0.07506196
- Older value for (1, 1): -1.45549214Updated value for (1, 1): -1.45031229
- Older value for (1, 2): -0.15060952Updated value for (1, 2): -0.14942782
- Older value for (1, 3): 0.02601551Updated value for (1, 3): 0.02626559
- Older value for (1, 4): -0.00000000Updated value for (1, 4): -0.00000000
- Older value for (1, 5): 0.00000000Updated value for (1, 5): 0.00000000
- Older value for (1, 6): 0.07029708Updated value for (1, 6): 0.07026516
- Older value for (1, 7): -0.00000000Updated value for (1, 7): -0.00000000
- Older value for (1, 8): -0.00000000Updated value for (1, 8): -0.00000000
- Older value for (1, 9): 0.12010617Updated value for (1, 9): 0.12021977
- Older value for (1, 10): -0.00000000Updated value for (1, 10): -0.00000000
- Older value for (1, 11): -0.00000000Updated value for (1, 11): -0.00000000
- Older value for (1, 12): -0.00000000Updated value for (1, 12): -0.00000000
- Older value for (1, 13): 0.00000000Updated value for (1, 13): 0.00000000
- Older value for (1, 14): 0.11378843Updated value for (1, 14): 0.11387589
- Older value for (1, 15): 0.09331339Updated value for (1, 15): 0.09345170
- Older value for (1, 16): -0.00000000Updated value for (1, 16): -0.00000000
- Older value for (1, 17): -0.00000000Updated value for (1, 17): -0.00000000
- Older value for (1, 18): -0.09589866Updated value for (1, 18): -0.09615410
- Older value for (2, 0): -0.07002220Updated value for (2, 0): -0.06913038
- Older value for (2, 1): -0.15060952Updated value for (2, 1): -0.14942782
- Older value for (2, 2): -0.95681108Updated value for (2, 2): -0.95273561
- Older value for (2, 3): -0.04651331Updated value for (2, 3): -0.04663260
- Older value for (2, 4): -0.00000000Updated value for (2, 4): -0.00000000
- Older value for (2, 5): 0.00000000Updated value for (2, 5): 0.00000000
- Older value for (2, 6): -0.12225426Updated value for (2, 6): -0.12174040
- Older value for (2, 7): 0.00000000Updated value for (2, 7): 0.00000000
- Older value for (2, 8): 0.00000000Updated value for (2, 8): 0.00000000
- Older value for (2, 9): -0.06134751Updated value for (2, 9): -0.06139028
- Older value for (2, 10): 0.00000000Updated value for (2, 10): 0.00000000
- Older value for (2, 11): 0.00000000Updated value for (2, 11): 0.00000000
- Older value for (2, 12): 0.00000000Updated value for (2, 12): 0.00000000
- Older value for (2, 13): 0.00000000Updated value for (2, 13): 0.00000000
- Older value for (2, 14): 0.04274134Updated value for (2, 14): 0.04357706
- Older value for (2, 15): -0.10855346Updated value for (2, 15): -0.10815053
- Older value for (2, 16): 0.00000000Updated value for (2, 16): 0.00000000
- Older value for (2, 17): -0.00000000Updated value for (2, 17): -0.00000000
- Older value for (2, 18): -0.06374736Updated value for (2, 18): -0.06230528
- Older value for (3, 0): -0.04186197Updated value for (3, 0): -0.04171335
- Older value for (3, 1): 0.02601551Updated value for (3, 1): 0.02626559
- Older value for (3, 2): -0.04651331Updated value for (3, 2): -0.04663260
- Older value for (3, 3): -0.60461508Updated value for (3, 3): -0.60308053
- Older value for (3, 4): 0.00000000Updated value for (3, 4): 0.00000000
- Older value for (3, 5): 0.00000000Updated value for (3, 5): 0.00000000
- Older value for (3, 6): -0.19520654Updated value for (3, 6): -0.19460597
- Older value for (3, 7): 0.00000000Updated value for (3, 7): 0.00000000
- Older value for (3, 8): 0.00000000Updated value for (3, 8): 0.00000000
- Older value for (3, 9): 0.10990107Updated value for (3, 9): 0.10926829
- Older value for (3, 10): 0.00000000Updated value for (3, 10): 0.00000000
- Older value for (3, 11): 0.00000000Updated value for (3, 11): 0.00000000
- Older value for (3, 12): 0.00000000Updated value for (3, 12): 0.00000000
- Older value for (3, 13): 0.00000000Updated value for (3, 13): 0.00000000
- Older value for (3, 14): 0.03993434Updated value for (3, 14): 0.03930282
- Older value for (3, 15): -0.06692353Updated value for (3, 15): -0.06724929
- Older value for (3, 16): -0.00000000Updated value for (3, 16): -0.00000000
- Older value for (3, 17): 0.00000000Updated value for (3, 17): 0.00000000
- Older value for (3, 18): 0.02755500Updated value for (3, 18): 0.02858200
- Older value for (4, 0): -0.00000000Updated value for (4, 0): -0.00000000
- Older value for (4, 1): -0.00000000Updated value for (4, 1): -0.00000000
- Older value for (4, 2): -0.00000000Updated value for (4, 2): -0.00000000
- Older value for (4, 3): 0.00000000Updated value for (4, 3): 0.00000000
- Older value for (4, 4): -0.61952506Updated value for (4, 4): -0.61760363
- Older value for (4, 5): 0.00000000Updated value for (4, 5): 0.00000000
- Older value for (4, 6): -0.00000000Updated value for (4, 6): -0.00000000
- Older value for (4, 7): -0.08168275Updated value for (4, 7): -0.08151967
- Older value for (4, 8): -0.22857408Updated value for (4, 8): -0.22811772
- Older value for (4, 9): 0.00000000Updated value for (4, 9): 0.00000000
- Older value for (4, 10): -0.00463570Updated value for (4, 10): -0.00459017
- Older value for (4, 11): -0.06244557Updated value for (4, 11): -0.06183215
- Older value for (4, 12): 0.00000000Updated value for (4, 12): 0.00000000
- Older value for (4, 13): 0.00000000Updated value for (4, 13): 0.00000000
- Older value for (4, 14): -0.00000000Updated value for (4, 14): -0.00000000
- Older value for (4, 15): -0.00000000Updated value for (4, 15): -0.00000000
- Older value for (4, 16): -0.00295441Updated value for (4, 16): -0.00290132
- Older value for (4, 17): 0.00144252Updated value for (4, 17): 0.00141659
- Older value for (4, 18): -0.00000000Updated value for (4, 18): -0.00000000
- Older value for (5, 0): 0.00000000Updated value for (5, 0): 0.00000000
- Older value for (5, 1): 0.00000000Updated value for (5, 1): 0.00000000
- Older value for (5, 2): 0.00000000Updated value for (5, 2): 0.00000000
- Older value for (5, 3): 0.00000000Updated value for (5, 3): 0.00000000
- Older value for (5, 4): 0.00000000Updated value for (5, 4): 0.00000000
- Older value for (5, 5): -0.61952506Updated value for (5, 5): -0.61760363
- Older value for (5, 6): -0.00000000Updated value for (5, 6): -0.00000000
- Older value for (5, 7): -0.22857408Updated value for (5, 7): -0.22811772
- Older value for (5, 8): 0.08168275Updated value for (5, 8): 0.08151967
- Older value for (5, 9): 0.00000000Updated value for (5, 9): 0.00000000
- Older value for (5, 10): -0.06244557Updated value for (5, 10): -0.06183215
- Older value for (5, 11): 0.00463570Updated value for (5, 11): 0.00459017
- Older value for (5, 12): 0.00000000Updated value for (5, 12): 0.00000000
- Older value for (5, 13): 0.00000000Updated value for (5, 13): 0.00000000
- Older value for (5, 14): -0.00000000Updated value for (5, 14): -0.00000000
- Older value for (5, 15): -0.00000000Updated value for (5, 15): -0.00000000
- Older value for (5, 16): -0.00144252Updated value for (5, 16): -0.00141659
- Older value for (5, 17): -0.00295441Updated value for (5, 17): -0.00290132
- Older value for (5, 18): -0.00000000Updated value for (5, 18): -0.00000000
- Older value for (6, 0): -0.10843350Updated value for (6, 0): -0.10949050
- Older value for (6, 1): 0.07029708Updated value for (6, 1): 0.07026516
- Older value for (6, 2): -0.12225426Updated value for (6, 2): -0.12174040
- Older value for (6, 3): -0.19520654Updated value for (6, 3): -0.19460597
- Older value for (6, 4): -0.00000000Updated value for (6, 4): -0.00000000
- Older value for (6, 5): -0.00000000Updated value for (6, 5): -0.00000000
- Older value for (6, 6): -0.78750273Updated value for (6, 6): -0.78637121
- Older value for (6, 7): 0.00000000Updated value for (6, 7): 0.00000000
- Older value for (6, 8): -0.00000000Updated value for (6, 8): -0.00000000
- Older value for (6, 9): 0.10423495Updated value for (6, 9): 0.10517872
- Older value for (6, 10): -0.00000000Updated value for (6, 10): -0.00000000
- Older value for (6, 11): -0.00000000Updated value for (6, 11): -0.00000000
- Older value for (6, 12): 0.00000000Updated value for (6, 12): 0.00000000
- Older value for (6, 13): 0.00000000Updated value for (6, 13): 0.00000000
- Older value for (6, 14): 0.13271011Updated value for (6, 14): 0.13253624
- Older value for (6, 15): -0.03413715Updated value for (6, 15): -0.03530300
- Older value for (6, 16): 0.00000000Updated value for (6, 16): 0.00000000
- Older value for (6, 17): 0.00000000Updated value for (6, 17): 0.00000000
- Older value for (6, 18): 0.04822554Updated value for (6, 18): 0.05225516
- Older value for (7, 0): 0.00000000Updated value for (7, 0): 0.00000000
- Older value for (7, 1): -0.00000000Updated value for (7, 1): -0.00000000
- Older value for (7, 2): 0.00000000Updated value for (7, 2): 0.00000000
- Older value for (7, 3): 0.00000000Updated value for (7, 3): 0.00000000
- Older value for (7, 4): -0.08168275Updated value for (7, 4): -0.08151967
- Older value for (7, 5): -0.22857408Updated value for (7, 5): -0.22811772
- Older value for (7, 6): 0.00000000Updated value for (7, 6): 0.00000000
- Older value for (7, 7): -0.93996444Updated value for (7, 7): -0.93753644
- Older value for (7, 8): -0.00000000Updated value for (7, 8): -0.00000000
- Older value for (7, 9): 0.00000000Updated value for (7, 9): 0.00000000
- Older value for (7, 10): -0.08740908Updated value for (7, 10): -0.08680577
- Older value for (7, 11): -0.02410788Updated value for (7, 11): -0.02394148
- Older value for (7, 12): 0.00000000Updated value for (7, 12): 0.00000000
- Older value for (7, 13): 0.00000000Updated value for (7, 13): 0.00000000
- Older value for (7, 14): -0.00000000Updated value for (7, 14): -0.00000000
- Older value for (7, 15): -0.00000000Updated value for (7, 15): -0.00000000
- Older value for (7, 16): -0.00783482Updated value for (7, 16): -0.00774154
- Older value for (7, 17): -0.00764861Updated value for (7, 17): -0.00755754
- Older value for (7, 18): -0.00000000Updated value for (7, 18): -0.00000000
- Older value for (8, 0): 0.00000000Updated value for (8, 0): 0.00000000
- Older value for (8, 1): -0.00000000Updated value for (8, 1): -0.00000000
- Older value for (8, 2): 0.00000000Updated value for (8, 2): 0.00000000
- Older value for (8, 3): 0.00000000Updated value for (8, 3): 0.00000000
- Older value for (8, 4): -0.22857408Updated value for (8, 4): -0.22811772
- Older value for (8, 5): 0.08168275Updated value for (8, 5): 0.08151967
- Older value for (8, 6): -0.00000000Updated value for (8, 6): -0.00000000
- Older value for (8, 7): -0.00000000Updated value for (8, 7): -0.00000000
- Older value for (8, 8): -0.93996444Updated value for (8, 8): -0.93753644
- Older value for (8, 9): -0.00000000Updated value for (8, 9): -0.00000000
- Older value for (8, 10): 0.02410788Updated value for (8, 10): 0.02394148
- Older value for (8, 11): -0.08740908Updated value for (8, 11): -0.08680577
- Older value for (8, 12): 0.00000000Updated value for (8, 12): 0.00000000
- Older value for (8, 13): 0.00000000Updated value for (8, 13): 0.00000000
- Older value for (8, 14): -0.00000000Updated value for (8, 14): -0.00000000
- Older value for (8, 15): -0.00000000Updated value for (8, 15): -0.00000000
- Older value for (8, 16): -0.00764861Updated value for (8, 16): -0.00755754
- Older value for (8, 17): 0.00783482Updated value for (8, 17): 0.00774154
- Older value for (8, 18): -0.00000000Updated value for (8, 18): -0.00000000
- Older value for (9, 0): -0.00033813Updated value for (9, 0): 0.00054038
- Older value for (9, 1): 0.12010617Updated value for (9, 1): 0.12021977
- Older value for (9, 2): -0.06134751Updated value for (9, 2): -0.06139028
- Older value for (9, 3): 0.10990107Updated value for (9, 3): 0.10926829
- Older value for (9, 4): 0.00000000Updated value for (9, 4): 0.00000000
- Older value for (9, 5): 0.00000000Updated value for (9, 5): 0.00000000
- Older value for (9, 6): 0.10423495Updated value for (9, 6): 0.10517872
- Older value for (9, 7): 0.00000000Updated value for (9, 7): 0.00000000
- Older value for (9, 8): -0.00000000Updated value for (9, 8): -0.00000000
- Older value for (9, 9): -0.69189124Updated value for (9, 9): -0.69019569
- Older value for (9, 10): 0.00000000Updated value for (9, 10): 0.00000000
- Older value for (9, 11): 0.00000000Updated value for (9, 11): 0.00000000
- Older value for (9, 12): -0.00000000Updated value for (9, 12): -0.00000000
- Older value for (9, 13): 0.00000000Updated value for (9, 13): 0.00000000
- Older value for (9, 14): -0.14867867Updated value for (9, 14): -0.14813177
- Older value for (9, 15): -0.11498002Updated value for (9, 15): -0.11302109
- Older value for (9, 16): 0.00000000Updated value for (9, 16): 0.00000000
- Older value for (9, 17): -0.00000000Updated value for (9, 17): -0.00000000
- Older value for (9, 18): 0.01927456Updated value for (9, 18): 0.01452933
- Older value for (10, 0): -0.00000000Updated value for (10, 0): -0.00000000
- Older value for (10, 1): -0.00000000Updated value for (10, 1): -0.00000000
- Older value for (10, 2): 0.00000000Updated value for (10, 2): 0.00000000
- Older value for (10, 3): 0.00000000Updated value for (10, 3): 0.00000000
- Older value for (10, 4): -0.00463570Updated value for (10, 4): -0.00459017
- Older value for (10, 5): -0.06244557Updated value for (10, 5): -0.06183215
- Older value for (10, 6): -0.00000000Updated value for (10, 6): -0.00000000
- Older value for (10, 7): -0.08740908Updated value for (10, 7): -0.08680577
- Older value for (10, 8): 0.02410788Updated value for (10, 8): 0.02394148
- Older value for (10, 9): 0.00000000Updated value for (10, 9): 0.00000000
- Older value for (10, 10): -0.75757325Updated value for (10, 10): -0.75413237
- Older value for (10, 11): -0.00000000Updated value for (10, 11): -0.00000000
- Older value for (10, 12): 0.00000000Updated value for (10, 12): 0.00000000
- Older value for (10, 13): 0.00000000Updated value for (10, 13): 0.00000000
- Older value for (10, 14): -0.00000000Updated value for (10, 14): -0.00000000
- Older value for (10, 15): -0.00000000Updated value for (10, 15): -0.00000000
- Older value for (10, 16): -0.06041171Updated value for (10, 16): -0.06022391
- Older value for (10, 17): -0.10350693Updated value for (10, 17): -0.10318516
- Older value for (10, 18): 0.00000000Updated value for (10, 18): 0.00000000
- Older value for (11, 0): -0.00000000Updated value for (11, 0): -0.00000000
- Older value for (11, 1): -0.00000000Updated value for (11, 1): -0.00000000
- Older value for (11, 2): 0.00000000Updated value for (11, 2): 0.00000000
- Older value for (11, 3): 0.00000000Updated value for (11, 3): 0.00000000
- Older value for (11, 4): -0.06244557Updated value for (11, 4): -0.06183215
- Older value for (11, 5): 0.00463570Updated value for (11, 5): 0.00459017
- Older value for (11, 6): -0.00000000Updated value for (11, 6): -0.00000000
- Older value for (11, 7): -0.02410788Updated value for (11, 7): -0.02394148
- Older value for (11, 8): -0.08740908Updated value for (11, 8): -0.08680577
- Older value for (11, 9): 0.00000000Updated value for (11, 9): 0.00000000
- Older value for (11, 10): -0.00000000Updated value for (11, 10): -0.00000000
- Older value for (11, 11): -0.75757325Updated value for (11, 11): -0.75413237
- Older value for (11, 12): 0.00000000Updated value for (11, 12): 0.00000000
- Older value for (11, 13): 0.00000000Updated value for (11, 13): 0.00000000
- Older value for (11, 14): -0.00000000Updated value for (11, 14): -0.00000000
- Older value for (11, 15): -0.00000000Updated value for (11, 15): -0.00000000
- Older value for (11, 16): -0.10350693Updated value for (11, 16): -0.10318516
- Older value for (11, 17): 0.06041171Updated value for (11, 17): 0.06022391
- Older value for (11, 18): -0.00000000Updated value for (11, 18): -0.00000000
- Older value for (12, 0): -0.00000000Updated value for (12, 0): -0.00000000
- Older value for (12, 1): -0.00000000Updated value for (12, 1): -0.00000000
- Older value for (12, 2): 0.00000000Updated value for (12, 2): 0.00000000
- Older value for (12, 3): 0.00000000Updated value for (12, 3): 0.00000000
- Older value for (12, 4): 0.00000000Updated value for (12, 4): 0.00000000
- Older value for (12, 5): 0.00000000Updated value for (12, 5): 0.00000000
- Older value for (12, 6): 0.00000000Updated value for (12, 6): 0.00000000
- Older value for (12, 7): 0.00000000Updated value for (12, 7): 0.00000000
- Older value for (12, 8): 0.00000000Updated value for (12, 8): 0.00000000
- Older value for (12, 9): -0.00000000Updated value for (12, 9): -0.00000000
- Older value for (12, 10): 0.00000000Updated value for (12, 10): 0.00000000
- Older value for (12, 11): 0.00000000Updated value for (12, 11): 0.00000000
- Older value for (12, 12): -0.69100616Updated value for (12, 12): -0.68822845
- Older value for (12, 13): 0.00000000Updated value for (12, 13): 0.00000000
- Older value for (12, 14): -0.00000000Updated value for (12, 14): -0.00000000
- Older value for (12, 15): -0.00000000Updated value for (12, 15): -0.00000000
- Older value for (12, 16): 0.00000000Updated value for (12, 16): 0.00000000
- Older value for (12, 17): 0.00000000Updated value for (12, 17): 0.00000000
- Older value for (12, 18): 0.00000000Updated value for (12, 18): 0.00000000
- Older value for (13, 0): 0.00000000Updated value for (13, 0): 0.00000000
- Older value for (13, 1): 0.00000000Updated value for (13, 1): 0.00000000
- Older value for (13, 2): 0.00000000Updated value for (13, 2): 0.00000000
- Older value for (13, 3): 0.00000000Updated value for (13, 3): 0.00000000
- Older value for (13, 4): 0.00000000Updated value for (13, 4): 0.00000000
- Older value for (13, 5): 0.00000000Updated value for (13, 5): 0.00000000
- Older value for (13, 6): 0.00000000Updated value for (13, 6): 0.00000000
- Older value for (13, 7): 0.00000000Updated value for (13, 7): 0.00000000
- Older value for (13, 8): 0.00000000Updated value for (13, 8): 0.00000000
- Older value for (13, 9): 0.00000000Updated value for (13, 9): 0.00000000
- Older value for (13, 10): 0.00000000Updated value for (13, 10): 0.00000000
- Older value for (13, 11): 0.00000000Updated value for (13, 11): 0.00000000
- Older value for (13, 12): 0.00000000Updated value for (13, 12): 0.00000000
- Older value for (13, 13): -0.69100616Updated value for (13, 13): -0.68822845
- Older value for (13, 14): -0.00000000Updated value for (13, 14): -0.00000000
- Older value for (13, 15): 0.00000000Updated value for (13, 15): 0.00000000
- Older value for (13, 16): 0.00000000Updated value for (13, 16): 0.00000000
- Older value for (13, 17): 0.00000000Updated value for (13, 17): 0.00000000
- Older value for (13, 18): 0.00000000Updated value for (13, 18): 0.00000000
- Older value for (14, 0): 0.05464979Updated value for (14, 0): 0.05497497
- Older value for (14, 1): 0.11378843Updated value for (14, 1): 0.11387589
- Older value for (14, 2): 0.04274134Updated value for (14, 2): 0.04357706
- Older value for (14, 3): 0.03993434Updated value for (14, 3): 0.03930282
- Older value for (14, 4): -0.00000000Updated value for (14, 4): -0.00000000
- Older value for (14, 5): -0.00000000Updated value for (14, 5): -0.00000000
- Older value for (14, 6): 0.13271011Updated value for (14, 6): 0.13253624
- Older value for (14, 7): -0.00000000Updated value for (14, 7): -0.00000000
- Older value for (14, 8): -0.00000000Updated value for (14, 8): -0.00000000
- Older value for (14, 9): -0.14867867Updated value for (14, 9): -0.14813177
- Older value for (14, 10): -0.00000000Updated value for (14, 10): -0.00000000
- Older value for (14, 11): -0.00000000Updated value for (14, 11): -0.00000000
- Older value for (14, 12): -0.00000000Updated value for (14, 12): -0.00000000
- Older value for (14, 13): -0.00000000Updated value for (14, 13): -0.00000000
- Older value for (14, 14): -0.67949476Updated value for (14, 14): -0.67599617
- Older value for (14, 15): -0.04607973Updated value for (14, 15): -0.04552111
- Older value for (14, 16): 0.00000000Updated value for (14, 16): 0.00000000
- Older value for (14, 17): 0.00000000Updated value for (14, 17): 0.00000000
- Older value for (14, 18): 0.12506250Updated value for (14, 18): 0.11899825
- Older value for (15, 0): 0.01442969Updated value for (15, 0): 0.01158747
- Older value for (15, 1): 0.09331339Updated value for (15, 1): 0.09345170
- Older value for (15, 2): -0.10855346Updated value for (15, 2): -0.10815053
- Older value for (15, 3): -0.06692353Updated value for (15, 3): -0.06724929
- Older value for (15, 4): -0.00000000Updated value for (15, 4): -0.00000000
- Older value for (15, 5): -0.00000000Updated value for (15, 5): -0.00000000
- Older value for (15, 6): -0.03413715Updated value for (15, 6): -0.03530300
- Older value for (15, 7): -0.00000000Updated value for (15, 7): -0.00000000
- Older value for (15, 8): -0.00000000Updated value for (15, 8): -0.00000000
- Older value for (15, 9): -0.11498002Updated value for (15, 9): -0.11302109
- Older value for (15, 10): -0.00000000Updated value for (15, 10): -0.00000000
- Older value for (15, 11): -0.00000000Updated value for (15, 11): -0.00000000
- Older value for (15, 12): -0.00000000Updated value for (15, 12): -0.00000000
- Older value for (15, 13): 0.00000000Updated value for (15, 13): 0.00000000
- Older value for (15, 14): -0.04607973Updated value for (15, 14): -0.04552111
- Older value for (15, 15): -0.48226327Updated value for (15, 15): -0.47739570
- Older value for (15, 16): 0.00000000Updated value for (15, 16): 0.00000000
- Older value for (15, 17): 0.00000000Updated value for (15, 17): 0.00000000
- Older value for (15, 18): 0.10617393Updated value for (15, 18): 0.10728473
- Older value for (16, 0): -0.00000000Updated value for (16, 0): -0.00000000
- Older value for (16, 1): -0.00000000Updated value for (16, 1): -0.00000000
- Older value for (16, 2): 0.00000000Updated value for (16, 2): 0.00000000
- Older value for (16, 3): -0.00000000Updated value for (16, 3): -0.00000000
- Older value for (16, 4): -0.00295441Updated value for (16, 4): -0.00290132
- Older value for (16, 5): -0.00144252Updated value for (16, 5): -0.00141659
- Older value for (16, 6): 0.00000000Updated value for (16, 6): 0.00000000
- Older value for (16, 7): -0.00783482Updated value for (16, 7): -0.00774154
- Older value for (16, 8): -0.00764861Updated value for (16, 8): -0.00755754
- Older value for (16, 9): 0.00000000Updated value for (16, 9): 0.00000000
- Older value for (16, 10): -0.06041171Updated value for (16, 10): -0.06022391
- Older value for (16, 11): -0.10350693Updated value for (16, 11): -0.10318516
- Older value for (16, 12): 0.00000000Updated value for (16, 12): 0.00000000
- Older value for (16, 13): 0.00000000Updated value for (16, 13): 0.00000000
- Older value for (16, 14): 0.00000000Updated value for (16, 14): 0.00000000
- Older value for (16, 15): 0.00000000Updated value for (16, 15): 0.00000000
- Older value for (16, 16): 0.11576650Updated value for (16, 16): 0.12203184
- Older value for (16, 17): 0.00000000Updated value for (16, 17): 0.00000000
- Older value for (16, 18): 0.00000000Updated value for (16, 18): 0.00000000
- Older value for (17, 0): 0.00000000Updated value for (17, 0): 0.00000000
- Older value for (17, 1): -0.00000000Updated value for (17, 1): -0.00000000
- Older value for (17, 2): -0.00000000Updated value for (17, 2): -0.00000000
- Older value for (17, 3): 0.00000000Updated value for (17, 3): 0.00000000
- Older value for (17, 4): 0.00144252Updated value for (17, 4): 0.00141659
- Older value for (17, 5): -0.00295441Updated value for (17, 5): -0.00290132
- Older value for (17, 6): 0.00000000Updated value for (17, 6): 0.00000000
- Older value for (17, 7): -0.00764861Updated value for (17, 7): -0.00755754
- Older value for (17, 8): 0.00783482Updated value for (17, 8): 0.00774154
- Older value for (17, 9): -0.00000000Updated value for (17, 9): -0.00000000
- Older value for (17, 10): -0.10350693Updated value for (17, 10): -0.10318516
- Older value for (17, 11): 0.06041171Updated value for (17, 11): 0.06022391
- Older value for (17, 12): 0.00000000Updated value for (17, 12): 0.00000000
- Older value for (17, 13): 0.00000000Updated value for (17, 13): 0.00000000
- Older value for (17, 14): 0.00000000Updated value for (17, 14): 0.00000000
- Older value for (17, 15): 0.00000000Updated value for (17, 15): 0.00000000
- Older value for (17, 16): 0.00000000Updated value for (17, 16): 0.00000000
- Older value for (17, 17): 0.11576650Updated value for (17, 17): 0.12203184
- Older value for (17, 18): 0.00000000Updated value for (17, 18): 0.00000000
- Older value for (18, 0): 0.05267104Updated value for (18, 0): 0.05258148
- Older value for (18, 1): -0.09589866Updated value for (18, 1): -0.09615410
- Older value for (18, 2): -0.06374736Updated value for (18, 2): -0.06230528
- Older value for (18, 3): 0.02755500Updated value for (18, 3): 0.02858200
- Older value for (18, 4): -0.00000000Updated value for (18, 4): -0.00000000
- Older value for (18, 5): -0.00000000Updated value for (18, 5): -0.00000000
- Older value for (18, 6): 0.04822554Updated value for (18, 6): 0.05225516
- Older value for (18, 7): -0.00000000Updated value for (18, 7): -0.00000000
- Older value for (18, 8): -0.00000000Updated value for (18, 8): -0.00000000
- Older value for (18, 9): 0.01927456Updated value for (18, 9): 0.01452933
- Older value for (18, 10): 0.00000000Updated value for (18, 10): 0.00000000
- Older value for (18, 11): -0.00000000Updated value for (18, 11): -0.00000000
- Older value for (18, 12): 0.00000000Updated value for (18, 12): 0.00000000
- Older value for (18, 13): 0.00000000Updated value for (18, 13): 0.00000000
- Older value for (18, 14): 0.12506250Updated value for (18, 14): 0.11899825
- Older value for (18, 15): 0.10617393Updated value for (18, 15): 0.10728473
- Older value for (18, 16): 0.00000000Updated value for (18, 16): 0.00000000
- Older value for (18, 17): 0.00000000Updated value for (18, 17): 0.00000000
- Older value for (18, 18): 0.26347144Updated value for (18, 18): 0.28206885
   Updating two-electron integrals from Hbar
 
   ==> Summary of Active Space Solver Input <==
 
     Irrep.  Multi.(2ms)      N
     --------------------------
-        A      1  (  0)      2
+        A      1  (  0)      1
     --------------------------
     N: number of roots
     ms: spin z component
-    Total number of roots:   2
+    Total number of roots:   1
     --------------------------
 
 
@@ -2657,7 +1905,7 @@ Scratch directory: /tmp/
     Number of determinants                           4
     Symmetry                                         0
     Multiplicity                                     1
-    Number of roots                                  2
+    Number of roots                                  1
     Target root                                      0
     Trial vectors per root                          10
 
@@ -2684,9 +1932,8 @@ Scratch directory: /tmp/
   -----------------------------------------------------
     Iter.      Avg. Energy       Delta_E     Res. Norm
   -----------------------------------------------------
-  Rejected new correction vector 0 with norm: 2665.155992
-      1      -22.298070189606  -2.230e+01  +2.257e+01
-      2      -22.298070189606  +7.105e-15  +8.122e-15
+      1      -22.573189276903  -2.257e+01  +5.169e-15
+      2      -22.573189276903  +0.000e+00  +5.169e-15
   -----------------------------------------------------
   The Davidson-Liu algorithm converged in 3 iterations.
 
@@ -2695,21 +1942,13 @@ Scratch directory: /tmp/
     20      0.99055805
     02     -0.13709380
 
-    Total Energy:     -22.573189276903, <S^2>: 0.000000
-
-  ==> Root No. 1 <==
-
-    ba     -0.70710440
-    ab     -0.70710440
-
-    Total Energy:     -22.022951102310, <S^2>: 0.000000
+    Total Energy:     -22.573189276903, <S^2>: -0.000000
 
   ==> Energy Summary <==
 
     Multi.(2ms)  Irrep.  No.               Energy      <S^2>
     --------------------------------------------------------
-       1  (  0)     A     0      -22.573189276903   0.000000
-       1  (  0)     A     1      -22.022951102310   0.000000
+       1  (  0)     A     0      -22.573189276903  -0.000000
     --------------------------------------------------------
 
   ==> Computing RDMs for Root No. 0 <==
@@ -2733,15 +1972,7 @@ Scratch directory: /tmp/
     Reading DSRG options ............................ Done
     Setting ambit MO space .......................... Done
     Preparing tensors for density cumulants ......... Done
-    Building Downfolded Fock matrix ............................ 
- Debug #1 
- Debug #2 
- Debug #3 
- Debug #3.1 
- Debug #3.2 
- Debug #3.3 
- Debug #4 
- Debug #5 Done
+    Building Downfolded Fock matrix ............................ Done
 
            ----------------------------------------------------------
              Multireference Driven Similarity Renormalization Group
@@ -2762,7 +1993,7 @@ Scratch directory: /tmp/
     Block             Fa Max         Fa Mean           Fb Max         Fb Mean
     -------------------------------------------------------------------------
     CORE        0.0000000000    0.0000000000     0.0000000000    0.0000000000
-    VIRTUAL     0.0329914865    0.0004136528     0.0329914865    0.0004136528
+    VIRTUAL     0.0329914865    0.0004140295     0.0329914865    0.0004140295
     GAS1        0.0000064189    0.0000032095     0.0000064189    0.0000032095
     -------------------------------------------------------------------------
     Warning! Orbitals are not semi-canonicalized!
@@ -2804,46 +2035,46 @@ Scratch directory: /tmp/
     Largest T1 amplitudes for spin case A:
        i       a                  i       a                  i       a               
     --------------------------------------------------------------------------------
-    [  2      15    ] 0.033075 [  2       9    ] 0.012120 [  2      14    ]-0.012112 
-    [  2       3    ]-0.011921 [  2      18    ] 0.005042 [  1      15    ] 0.003910 
-    [  0       1    ] 0.002552 [  1      14    ]-0.001543 [  1      18    ] 0.001027 
-    [  2       6    ]-0.000506 [  1       9    ]-0.000363 [  1       3    ] 0.000331 
-    [  1       6    ] 0.000225 [  0       2    ] 0.000164 [  0       6    ]-0.000032 
+    [  2      15    ]-0.033075 [  2       9    ]-0.012120 [  2      14    ] 0.012112 
+    [  2       3    ] 0.011921 [  2      18    ]-0.005042 [  1      15    ]-0.003910 
+    [  0       1    ] 0.002552 [  1      14    ] 0.001543 [  1      18    ]-0.001027 
+    [  2       6    ] 0.000506 [  1       9    ] 0.000363 [  1       3    ]-0.000331 
+    [  1       6    ]-0.000225 [  0       2    ] 0.000164 [  0       6    ] 0.000032 
     --------------------------------------------------------------------------------
-    Norm of T1A vector: (nonzero elements: 20)                    0.039760735602158.
+    Norm of T1A vector: (nonzero elements: 20)                    0.039760735602156.
     --------------------------------------------------------------------------------
     Largest T1 amplitudes for spin case B:
        _       _                  _       _                  _       _               
        i       a                  i       a                  i       a               
     --------------------------------------------------------------------------------
-    [  2      15    ] 0.033075 [  2       9    ] 0.012120 [  2      14    ]-0.012112 
-    [  2       3    ]-0.011921 [  2      18    ] 0.005042 [  1      15    ] 0.003910 
-    [  0       1    ] 0.002552 [  1      14    ]-0.001543 [  1      18    ] 0.001027 
-    [  2       6    ]-0.000506 [  1       9    ]-0.000363 [  1       3    ] 0.000331 
-    [  1       6    ] 0.000225 [  0       2    ] 0.000164 [  0       6    ]-0.000032 
+    [  2      15    ]-0.033075 [  2       9    ]-0.012120 [  2      14    ] 0.012112 
+    [  2       3    ] 0.011921 [  2      18    ]-0.005042 [  1      15    ]-0.003910 
+    [  0       1    ] 0.002552 [  1      14    ] 0.001543 [  1      18    ]-0.001027 
+    [  2       6    ] 0.000506 [  1       9    ] 0.000363 [  1       3    ]-0.000331 
+    [  1       6    ]-0.000225 [  0       2    ] 0.000164 [  0       6    ] 0.000032 
     --------------------------------------------------------------------------------
-    Norm of T1B vector: (nonzero elements: 20)                    0.039760735602158.
+    Norm of T1B vector: (nonzero elements: 20)                    0.039760735602156.
     --------------------------------------------------------------------------------
     Largest T2 amplitudes for spin case AA:
        i   j   a   b              i   j   a   b              i   j   a   b           
     --------------------------------------------------------------------------------
-    [  1   2   2  14]-0.012203 [  1   2   2  18] 0.010144 [  1   2   2  15] 0.010101 
-    [  1   2  10  17]-0.009819 [  1   2  11  16]-0.009819 [  1   2   1  15] 0.007527 
-    [  1   2  14  18] 0.006874 [  1   2   9  18] 0.006433 [  1   2  10  16]-0.005731 
-    [  1   2  11  17] 0.005731 [  1   2   2   9]-0.005692 [  1   2   5  17]-0.004650 
-    [  1   2   4  16]-0.004650 [  1   2   7  16]-0.004551 [  1   2   8  17] 0.004551 
+    [  1   2   2  14] 0.012203 [  1   2  10  17]-0.011368 [  1   2  11  16]-0.011368 
+    [  1   2   2  18]-0.010144 [  1   2   2  15]-0.010101 [  1   2   1  15]-0.007527 
+    [  1   2  14  18] 0.006874 [  1   2   9  18] 0.006433 [  1   2   7  17] 0.005999 
+    [  1   2   8  16]-0.005999 [  1   2   2   9] 0.005692 [  1   2   4  17]-0.004182 
+    [  1   2   5  16]-0.004182 [  0   1   1  14] 0.004018 [  1   2   1   9]-0.003667 
     --------------------------------------------------------------------------------
-    Norm of T2AA vector: (nonzero elements: 620)                  0.065652830334145.
+    Norm of T2AA vector: (nonzero elements: 624)                  0.065652830334145.
     --------------------------------------------------------------------------------
     Largest T2 amplitudes for spin case AB:
            _       _                  _       _                  _       _           
        i   j   a   b              i   j   a   b              i   j   a   b           
     --------------------------------------------------------------------------------
-    [  1   2   2  15] 0.028722 [  2   2  16  16]-0.022819 [  2   2  17  17]-0.022819 
+    [  1   2   2  15]-0.028722 [  2   2  16  16]-0.022819 [  2   2  17  17]-0.022819 
     [  1   1  17  17]-0.020389 [  1   1  16  16]-0.020389 [  1   2  17  17]-0.020117 
-    [  1   2  16  16]-0.020117 [  2   2  18  18]-0.019971 [  2   2   1  15]-0.017601 
+    [  1   2  16  16]-0.020117 [  2   2  18  18]-0.019971 [  2   2   1  15] 0.017601 
     [  1   1  15  15]-0.017235 [  1   2  18  18]-0.016112 [  1   1  18  18]-0.015770 
-    [  1   1   2  15] 0.014455 [  1   1  10  10]-0.013045 [  1   1  11  11]-0.013045 
+    [  1   1   2  15]-0.014455 [  1   1  10  10]-0.013045 [  1   1  11  11]-0.013045 
     --------------------------------------------------------------------------------
     Norm of T2AB vector: (nonzero elements: 1082)                 0.123753876783713.
     --------------------------------------------------------------------------------
@@ -2851,13 +2082,13 @@ Scratch directory: /tmp/
        _   _   _   _              _   _   _   _              _   _   _   _           
        i   j   a   b              i   j   a   b              i   j   a   b           
     --------------------------------------------------------------------------------
-    [  1   2   2  14]-0.012203 [  1   2   2  18] 0.010144 [  1   2   2  15] 0.010101 
-    [  1   2  10  17]-0.009819 [  1   2  11  16]-0.009819 [  1   2   1  15] 0.007527 
-    [  1   2  14  18] 0.006874 [  1   2   9  18] 0.006433 [  1   2  11  17] 0.005731 
-    [  1   2  10  16]-0.005731 [  1   2   2   9]-0.005692 [  1   2   5  17]-0.004650 
-    [  1   2   4  16]-0.004650 [  1   2   7  16]-0.004551 [  1   2   8  17] 0.004551 
+    [  1   2   2  14] 0.012203 [  1   2  10  17]-0.011368 [  1   2  11  16]-0.011368 
+    [  1   2   2  18]-0.010144 [  1   2   2  15]-0.010101 [  1   2   1  15]-0.007527 
+    [  1   2  14  18] 0.006874 [  1   2   9  18] 0.006433 [  1   2   7  17] 0.005999 
+    [  1   2   8  16]-0.005999 [  1   2   2   9] 0.005692 [  1   2   4  17]-0.004182 
+    [  1   2   5  16]-0.004182 [  0   1   1  14] 0.004018 [  1   2   1   9]-0.003667 
     --------------------------------------------------------------------------------
-    Norm of T2BB vector: (nonzero elements: 624)                  0.065652830334145.
+    Norm of T2BB vector: (nonzero elements: 620)                  0.065652830334145.
     --------------------------------------------------------------------------------
 
   ==> Possible Intruders <==
@@ -2877,13 +2108,13 @@ Scratch directory: /tmp/
 
   ==> DSRG-MRPT2 Energy Summary <==
 
-    E0 (reference)                 =    -22.573189276902681
-    <[F, A1]>                      =     -0.000880989650146
+    E0 (reference)                 =    -22.573189276902671
+    <[F, A1]>                      =     -0.000880989650145
     <[F, A2]>                      =      0.003398244569269
     <[V, A1]>                      =      0.000683427058998
-    <[V, A2]>                      =     -0.012362585980899
+    <[V, A2]>                      =     -0.012362585980900
     DSRG-MRPT2 correlation energy  =     -0.009161904002778
-    DSRG-MRPT2 total energy        =    -22.582351180905459
+    DSRG-MRPT2 total energy        =    -22.582351180905448
 
   ==> De-Normal-Order DSRG Transformed Hamiltonian <==
 
@@ -2917,7 +2148,7 @@ Scratch directory: /tmp/
     Number of determinants                           4
     Symmetry                                         0
     Multiplicity                                     1
-    Number of roots                                  2
+    Number of roots                                  1
     Target root                                      0
     Trial vectors per root                          10
 
@@ -2944,9 +2175,8 @@ Scratch directory: /tmp/
   -----------------------------------------------------
     Iter.      Avg. Energy       Delta_E     Res. Norm
   -----------------------------------------------------
-  Rejected new correction vector 0 with norm: 3516.507331
-      1      -22.322123816607  -2.232e+01  +2.258e+01
-      2      -22.322123816607  +7.105e-15  +9.777e-15
+      1      -22.582819250984  -2.258e+01  +1.491e-14
+      2      -22.582819250984  +0.000e+00  +1.491e-14
   -----------------------------------------------------
   The Davidson-Liu algorithm converged in 3 iterations.
 
@@ -2955,21 +2185,13 @@ Scratch directory: /tmp/
     20      0.99267160
     02     -0.11920204
 
-    Total Energy:     -22.582819250984, <S^2>: 0.000000
-
-  ==> Root No. 1 <==
-
-    ab      0.70526411
-    ba      0.70526411
-
-    Total Energy:     -22.061428382230, <S^2>: 0.000000
+    Total Energy:     -22.582819250984, <S^2>: -0.000000
 
   ==> Energy Summary <==
 
     Multi.(2ms)  Irrep.  No.               Energy      <S^2>
     --------------------------------------------------------
-       1  (  0)     A     0      -22.582819250984   0.000000
-       1  (  0)     A     1      -22.061428382230   0.000000
+       1  (  0)     A     0      -22.582819250984  -0.000000
     --------------------------------------------------------
 
   => MRDSRG Reference Relaxation Energy Summary <=
@@ -2986,25 +2208,27 @@ Scratch directory: /tmp/
              [H1, T1]    [H1, T2]    [H2, T1]    [H2, T2]
     -----------------------------------------------------
     -> C0       0.002       0.009       0.000       0.068
-    -> C1       0.007       0.037       0.026       0.368
-    -> C2                   0.130       0.151       0.707
+    -> C1       0.007       0.037       0.026       0.364
+    -> C2                   0.129       0.149       0.701
     -----------------------------------------------------
 
- ==============ASET(2) Summary==============
- E(fragment, undressed) = -22.582847032164
- E_corr(env correlation) = -0.017151043844
- E(embedding, undressed) = -22.599998076008
- E(fragment, dressed) = -22.582819250984
- E(embedding, dressed) = -22.599970294828
- ==============ASET(2) procedure done============== 
+  
+  
+    ============================ASET(2) Summary========================
+    ASET(mf) energy                                = -22.582847032164
+    E_c^B (Environment correlation, Hbar0)         = -0.017151043844
+    E(Hbar) (Fragment energy computed using Hbar)  = -22.582819250984
+    ASET(2) energy                                 = -22.599970294828
+    =========================ASET(2) Procedure Done==================== 
 
+  
 
   Time to prepare integrals:        0.000 seconds
-  Time to run job          :       29.023 seconds
-  Total                    :       29.023 seconds
+  Time to run job          :       17.491 seconds
+  Total                    :       17.491 seconds
     ASET2-[DSRG-MRPT2] energy.............................................................PASSED
 
-    Psi4 stopped on: Monday, 07 June 2021 03:19AM
-    Psi4 wall time for execution: 0:00:56.00
+    Psi4 stopped on: Tuesday, 08 June 2021 06:52AM
+    Psi4 wall time for execution: 0:00:43.49
 
 *** Psi4 exiting successfully. Buy a developer a beer!

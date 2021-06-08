@@ -56,7 +56,8 @@ def aset2_driver(state_weights_map, scf_info, ref_wfn, mo_space_info, options):
     int_type_frag = options.get_str('INT_TYPE_FRAG')
     int_type_env = options.get_str('INT_TYPE_ENV')
     do_aset_mf = options.get_bool('EMBEDDING_ASET2_MF_REF')
-    frag_density = options.get_str('fragment_density')
+    frag_density = options.get_str('FRAGMENT_DENSITY')
+    ref_type = options.get_str('EMBEDDING_REFERENCE')
     name = frag_corr_solver + '-' + frag_corr_level
     #fold = options.get_bool('DSRG_FOLD')
     
@@ -64,6 +65,7 @@ def aset2_driver(state_weights_map, scf_info, ref_wfn, mo_space_info, options):
     A_list = [frag_corr_solver, frag_corr_level, int_type_frag, relax, semi]
     B_list = [env_corr_solver, env_corr_level, int_type_env]
 
+    psi4.core.print_out("\n  ")
     psi4.core.print_out("\n  ")
     forte.print_method_banner(["Second-order Active Space Embedding Theory [ASET(2)]", "Nan He, Chenyang Li"])
     psi4.core.print_out("\n  ===========================ASET(2) Options===========================")
@@ -89,6 +91,9 @@ def aset2_driver(state_weights_map, scf_info, ref_wfn, mo_space_info, options):
     if(frag_corr_solver == "THREE-DSRG-MRPT2"):
         psi4.core.print_out("\n  Warning: DF/CD integrals inside the fragment (A) are not supported now.")
         psi4.core.print_out("\n  Will automatically convert to conventional DSRG-MRPT2 for H_bar.")
+    if(ref_type == "HF"):
+        psi4.core.print_out("\n  Warning: reference has no information on active orbital selections.")
+        psi4.core.print_out("\n  Please ensure that they are set manually in the inputs.")
     psi4.core.print_out("\n  =====================================================================")
     psi4.core.print_out("\n  ")
     psi4.core.print_out("\n  ")
@@ -97,11 +102,7 @@ def aset2_driver(state_weights_map, scf_info, ref_wfn, mo_space_info, options):
     # In ASET(2) procedure, We will keep 2 different mo_space_info:
     # mo_space_info: Active = AC + AA + AV, restricted = BO + BV, frozen = F
     # mo_space_info_active: Active = AA, restricted = AC + AV, frozen = BO + BV + F
-    mo_space_info_active = forte.build_aset2_fragment(ref_wfn, mo_space_info)
-
-    # TODO:Fix this
-    #if (frag_do_fci):
-    #    mo_space_info_active
+    mo_space_info_active = forte.build_aset2_fragment(ref_wfn, mo_space_info, options)
 
     # Build total (A+B) integrals first
     update_environment_options(options, B_list, ref_wfn)
@@ -121,7 +122,7 @@ def aset2_driver(state_weights_map, scf_info, ref_wfn, mo_space_info, options):
     # Build dressed fragment integrals, starting from an ints object.
     update_fragment_options(options, A_list, ref_wfn)
     ints_f = None
-    if(int_type_frag == "CONVENTIONAL"):
+    if(int_type_frag == "CONVENTIONAL" and not frag_do_fci):
         ints_f = forte.make_ints_from_psi4(ref_wfn, options, mo_space_info_active)
     else:
         # If fragment integrals is not convntional, build a custom empty ints here
@@ -140,7 +141,7 @@ def aset2_driver(state_weights_map, scf_info, ref_wfn, mo_space_info, options):
     frz1 = ints_f.frozen_core_energy()
     dressed_scalar = ints_dressed.scalar_energy()
     scalar = dressed_scalar - frz1
-    if(int_type_frag != "CONVENTIONAL"):
+    if(int_type_frag != "CONVENTIONAL") or (int_type_frag == "CONVENTIONAL" and frag_do_fci):
         scalar += ints_e.nuclear_repulsion_energy()
     ints_f.set_scalar(scalar)
 
@@ -158,6 +159,8 @@ def aset2_driver(state_weights_map, scf_info, ref_wfn, mo_space_info, options):
     # Compute MRDSRG-in-PT2 energy (folded)
     energy_high_dressed = forte_driver_fragment(state_weights_map, scf_info, options, ints_f, mo_space_info_active)
 
+    psi4.core.print_out("\n  ")
+    psi4.core.print_out("\n  ")
     psi4.core.print_out("\n    ============================ASET(2) Summary========================")
     if(do_aset_mf):
         psi4.core.print_out("\n    ASET(mf) energy                                = {:10.12f}".format(energy_high))
@@ -165,6 +168,7 @@ def aset2_driver(state_weights_map, scf_info, ref_wfn, mo_space_info, options):
     psi4.core.print_out("\n    E(Hbar) (Fragment energy computed using Hbar)  = {:10.12f}".format(energy_high_dressed))
     psi4.core.print_out("\n    ASET(2) energy                                 = {:10.12f}".format(energy_high_dressed + energy_env))
     psi4.core.print_out("\n    =========================ASET(2) Procedure Done==================== \n")
+    psi4.core.print_out("\n  ")
 
     return energy_high_dressed + energy_env
 
@@ -275,7 +279,7 @@ def update_fragment_options(options, A_list, ref_wfn):
     options.set_str('CORR_LEVEL', A_list[1])
     options.set_str('INT_TYPE', A_list[2])
     options.set_str('RELAX_REF', A_list[3])
-    options.set_bool('SEMI_CANONICAL', A_list[4])
+    options.set_bool('SEMI_CANONICAL', False)
     options.set_bool('EMBEDDING_DISABLE_SEMI_CHECK', False)
     options.set_bool('EMBEDDING_ALIGN_SCALAR', False)
     #forte.forte_options.update_psi_options(options) #TODO: check whether we still need this

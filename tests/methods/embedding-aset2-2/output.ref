@@ -30,9 +30,9 @@
     -----------------------------------------------------------------------
 
 
-    Psi4 started on: Monday, 07 June 2021 07:53PM
+    Psi4 started on: Tuesday, 08 June 2021 06:53AM
 
-    Process ID: 13707
+    Process ID: 26589
     Host:       master
     PSIDATADIR: /home/nan/psi4_new/bin/share/psi4
     Memory:     500.0 MiB
@@ -137,7 +137,7 @@ compare_values(refaset2,variable("CURRENT ENERGY"),8,"DF-ASET2-[DSRG-MRPT2] ener
 Scratch directory: /tmp/
 
 *** tstart() called on master
-*** at Mon Jun  7 19:53:44 2021
+*** at Tue Jun  8 06:53:58 2021
 
    => Loading Basis Set <=
 
@@ -259,34 +259,34 @@ Scratch directory: /tmp/
                            Total Energy        Delta E     RMS |[F,P]|
 
    @DF-ROHF iter SAD:   -21.90128089041682   -2.19013e+01   0.00000e+00 
-   @DF-ROHF iter   1:   -22.53867739754881   -6.37397e-01   2.29789e-03 
+   @DF-ROHF iter   1:   -22.53867739754878   -6.37397e-01   2.29789e-03 
    @DF-ROHF iter   2:   -22.55612780660321   -1.74504e-02   3.61984e-04 DAMP=40%
    @DF-ROHF iter   3:   -22.55574737438000    3.80432e-04   1.16927e-04 SOSCF, nmicro=4/DAMP=40%
-   @DF-ROHF iter   4:   -22.55593050395613   -1.83130e-04   1.50904e-06 SOSCF, nmicro=4/DAMP=40%
-   @DF-ROHF iter   5:   -22.55655077151152   -6.20268e-04   9.59810e-10 SOSCF, nmicro=4/DAMP=40%
-   @DF-ROHF iter   6:   -22.55681627798019   -2.65506e-04   2.26951e-12 SOSCF, nmicro=2/DAMP=40%
-   @DF-ROHF iter   7:   -22.55692249201473   -1.06214e-04   1.07174e-13 SOSCF, nmicro=2/DAMP=40%
-   @DF-ROHF iter   8:   -22.55696497763390   -4.24856e-05   7.68998e-15 SOSCF, nmicro=2/DAMP=40%
-   @DF-ROHF iter   9:   -22.55698197188144   -1.69942e-05   4.83506e-16 SOSCF, nmicro=2/DAMP=40%
-   @DF-ROHF iter  10:   -22.55698876958046   -6.79770e-06   1.30705e-16 SOSCF, nmicro=2/DAMP=40%
-   @DF-ROHF iter  11:   -22.55699148866009   -2.71908e-06   9.78929e-17 SOSCF, nmicro=2/DAMP=40%
-   @DF-ROHF iter  12:   -22.55699257629192   -1.08763e-06   8.22899e-17 SOSCF, nmicro=2/DAMP=40%
-   @DF-ROHF iter  13:   -22.55699301134467   -4.35053e-07   9.87589e-17 SOSCF, nmicro=2/DAMP=40%
-   @DF-ROHF iter  14:   -22.55699318536575   -1.74021e-07   1.29717e-16 SOSCF, nmicro=2/DAMP=40%
-   @DF-ROHF iter  15:   -22.55699325497419   -6.96084e-08   1.09841e-16 SOSCF, nmicro=2/DAMP=40%
-   @DF-ROHF iter  16:   -22.55699328281756   -2.78434e-08   1.16187e-16 SOSCF, nmicro=2/DAMP=40%
-   @DF-ROHF iter  17:   -22.55699329395492   -1.11374e-08   1.19961e-16 SOSCF, nmicro=2/DAMP=40%
-   @DF-ROHF iter  18:   -22.55699329840986   -4.45494e-09   1.37230e-16 SOSCF, nmicro=2/DAMP=40%
-   @DF-ROHF iter  19:   -22.55699330019185   -1.78198e-09   1.34219e-16 SOSCF, nmicro=2/DAMP=40%
-   @DF-ROHF iter  20:   -22.55699330090464   -7.12788e-10   1.08264e-16 SOSCF, nmicro=2/DAMP=40%
-   @DF-ROHF iter  21:   -22.55699330118973   -2.85098e-10   1.39128e-16 SOSCF, nmicro=2/DAMP=40%
-   @DF-ROHF iter  22:   -22.55699330130379   -1.14056e-10   1.48458e-16 SOSCF, nmicro=2/DAMP=40%
-   @DF-ROHF iter  23:   -22.55699330134941   -4.56168e-11   1.04942e-16 SOSCF, nmicro=2/DAMP=40%
-   @DF-ROHF iter  24:   -22.55699330136765   -1.82467e-11   1.34335e-16 SOSCF, nmicro=2/DAMP=40%
-   @DF-ROHF iter  25:   -22.55699330137494   -7.29017e-12   8.30654e-17 SOSCF, nmicro=2/DAMP=40%
-   @DF-ROHF iter  26:   -22.55699330137787   -2.92744e-12   7.98985e-17 SOSCF, nmicro=2/DAMP=40%
-   @DF-ROHF iter  27:   -22.55699330137903   -1.16174e-12   5.76081e-17 SOSCF, nmicro=2/DAMP=40%
-   @DF-ROHF iter  28:   -22.55699330137951   -4.76064e-13   6.38286e-17 SOSCF, nmicro=conv/DAMP=40%
+   @DF-ROHF iter   4:   -22.55593050395614   -1.83130e-04   1.50904e-06 SOSCF, nmicro=4/DAMP=40%
+   @DF-ROHF iter   5:   -22.55655077151153   -6.20268e-04   9.59810e-10 SOSCF, nmicro=4/DAMP=40%
+   @DF-ROHF iter   6:   -22.55681627798020   -2.65506e-04   2.26951e-12 SOSCF, nmicro=2/DAMP=40%
+   @DF-ROHF iter   7:   -22.55692249201473   -1.06214e-04   1.07135e-13 SOSCF, nmicro=2/DAMP=40%
+   @DF-ROHF iter   8:   -22.55696497763392   -4.24856e-05   7.69707e-15 SOSCF, nmicro=2/DAMP=40%
+   @DF-ROHF iter   9:   -22.55698197188144   -1.69942e-05   5.11003e-16 SOSCF, nmicro=2/DAMP=40%
+   @DF-ROHF iter  10:   -22.55698876958048   -6.79770e-06   1.21756e-16 SOSCF, nmicro=2/DAMP=40%
+   @DF-ROHF iter  11:   -22.55699148866010   -2.71908e-06   1.02422e-16 SOSCF, nmicro=2/DAMP=40%
+   @DF-ROHF iter  12:   -22.55699257629194   -1.08763e-06   8.36442e-17 SOSCF, nmicro=2/DAMP=40%
+   @DF-ROHF iter  13:   -22.55699301134468   -4.35053e-07   9.66658e-17 SOSCF, nmicro=2/DAMP=40%
+   @DF-ROHF iter  14:   -22.55699318536577   -1.74021e-07   9.93189e-17 SOSCF, nmicro=2/DAMP=40%
+   @DF-ROHF iter  15:   -22.55699325497421   -6.96084e-08   6.49361e-17 SOSCF, nmicro=2/DAMP=40%
+   @DF-ROHF iter  16:   -22.55699328281758   -2.78434e-08   5.31486e-17 SOSCF, nmicro=2/DAMP=40%
+   @DF-ROHF iter  17:   -22.55699329395493   -1.11374e-08   2.89962e-17 SOSCF, nmicro=2/DAMP=40%
+   @DF-ROHF iter  18:   -22.55699329840987   -4.45494e-09   7.45487e-17 SOSCF, nmicro=2/DAMP=40%
+   @DF-ROHF iter  19:   -22.55699330019185   -1.78198e-09   1.07054e-16 SOSCF, nmicro=2/DAMP=40%
+   @DF-ROHF iter  20:   -22.55699330090464   -7.12788e-10   1.18626e-16 SOSCF, nmicro=2/DAMP=40%
+   @DF-ROHF iter  21:   -22.55699330118976   -2.85123e-10   1.19272e-16 SOSCF, nmicro=2/DAMP=40%
+   @DF-ROHF iter  22:   -22.55699330130381   -1.14049e-10   1.07588e-16 SOSCF, nmicro=2/DAMP=40%
+   @DF-ROHF iter  23:   -22.55699330134943   -4.56168e-11   1.19910e-16 SOSCF, nmicro=2/DAMP=40%
+   @DF-ROHF iter  24:   -22.55699330136767   -1.82396e-11   5.45478e-17 SOSCF, nmicro=2/DAMP=40%
+   @DF-ROHF iter  25:   -22.55699330137497   -7.30083e-12   1.13403e-16 SOSCF, nmicro=2/DAMP=40%
+   @DF-ROHF iter  26:   -22.55699330137789   -2.91678e-12   1.20008e-16 SOSCF, nmicro=2/DAMP=40%
+   @DF-ROHF iter  27:   -22.55699330137906   -1.16884e-12   8.86852e-17 SOSCF, nmicro=2/DAMP=40%
+   @DF-ROHF iter  28:   -22.55699330137952   -4.68958e-13   4.78092e-17 SOSCF, nmicro=conv/DAMP=40%
   Energy and wave function converged.
 
 
@@ -322,14 +322,14 @@ Scratch directory: /tmp/
     DOCC [     4 ]
     SOCC [     0 ]
 
-  @DF-ROHF Final Energy:   -22.55699330137951
+  @DF-ROHF Final Energy:   -22.55699330137952
 
    => Energetics <=
 
     Nuclear Repulsion Energy =              2.8869901804359364
-    One-Electron Energy =                 -35.4119568444892039
-    Two-Electron Energy =                   9.9679733626737566
-    Total Energy =                        -22.5569933013795101
+    One-Electron Energy =                 -35.4119568444892465
+    Two-Electron Energy =                   9.9679733626737850
+    Total Energy =                        -22.5569933013795243
 
 Computation Completed
 
@@ -342,24 +342,24 @@ Properties computed using the SCF density matrix
      X:     0.0000      Y:     0.0000      Z:    -0.6050
 
   Electronic Dipole Moment: [e a0]
-     X:     0.0000      Y:    -0.0000      Z:    -2.1788
+     X:    -0.0000      Y:    -0.0000      Z:    -2.1788
 
   Dipole Moment: [e a0]
-     X:     0.0000      Y:    -0.0000      Z:    -2.7839     Total:     2.7839
+     X:    -0.0000      Y:    -0.0000      Z:    -2.7839     Total:     2.7839
 
   Dipole Moment: [D]
-     X:     0.0000      Y:    -0.0000      Z:    -7.0759     Total:     7.0759
+     X:    -0.0000      Y:    -0.0000      Z:    -7.0759     Total:     7.0759
 
 
-*** tstop() called on master at Mon Jun  7 19:53:46 2021
+*** tstop() called on master at Tue Jun  8 06:53:59 2021
 Module time:
-	user time   =       0.61 seconds =       0.01 minutes
-	system time =       1.60 seconds =       0.03 minutes
-	total time  =          2 seconds =       0.03 minutes
+	user time   =       0.76 seconds =       0.01 minutes
+	system time =       0.02 seconds =       0.00 minutes
+	total time  =          1 seconds =       0.02 minutes
 Total time:
-	user time   =       0.61 seconds =       0.01 minutes
-	system time =       1.60 seconds =       0.03 minutes
-	total time  =          2 seconds =       0.03 minutes
+	user time   =       0.76 seconds =       0.01 minutes
+	system time =       0.02 seconds =       0.00 minutes
+	total time  =          1 seconds =       0.02 minutes
  MINTS: Wrapper to libmints.
    by Justin Turney
 
@@ -493,70 +493,70 @@ Warning: iopen=0,opentype!=closed. Making iopen=1
    ==> Starting MCSCF iterations <==
 
         Iter         Total Energy       Delta E   Orb RMS    CI RMS  NCI NORB
-   @MCSCF  1:    -22.556994386420   -1.0850e-06  4.58e-06  5.13e-16    1    1  Initial CI
+   @MCSCF  1:    -22.556994386420   -1.0850e-06  4.58e-06  2.26e-16    1    1  Initial CI
       Warning! Maxstep = 4.00, scaling to 0.20
-   @MCSCF  2:    -22.557019419862   -2.5033e-05  4.27e-05  2.34e-16    3    1  TS
+   @MCSCF  2:    -22.557019419862   -2.5033e-05  4.27e-05  1.09e-16    3    1  TS
       Warning! Maxstep = 1.33, scaling to 0.20
-   @MCSCF  3:    -22.557344245635   -3.2483e-04  4.49e-04  1.14e-14    3    1  TS
+   @MCSCF  3:    -22.557344245637   -3.2483e-04  4.49e-04  2.52e-15    3    1  TS
       Warning! Maxstep = 0.76, scaling to 0.20
-   @MCSCF  4:    -22.558777108016   -1.4329e-03  1.67e-03  4.11e-15    3    1  TS
+   @MCSCF  4:    -22.558777108019   -1.4329e-03  1.67e-03  8.62e-16    3    1  TS
       Warning! Maxstep = 0.51, scaling to 0.20
-   @MCSCF  5:    -22.562562130687   -3.7850e-03  3.55e-03  2.73e-15    2    1  TS
+   @MCSCF  5:    -22.562562130690   -3.7850e-03  3.55e-03  7.92e-16    2    1  TS
       Warning! Maxstep = 0.33, scaling to 0.20
-   @MCSCF  6:    -22.568623011314   -6.0609e-03  4.39e-03  5.12e-15    2    1  TS
-   @MCSCF  7:    -22.572427380386   -3.8044e-03  2.69e-03  5.90e-15    2    1  TS
-   @MCSCF  8:    -22.573015008255   -5.8763e-04  1.20e-03  6.46e-15    2    1  TS
-   @MCSCF  9:    -22.573142389378   -1.2738e-04  6.07e-04  3.56e-15    2    1  TS
-   @MCSCF 10:    -22.573174966015   -3.2577e-05  3.42e-04  1.38e-15    2    1  TS
-   @MCSCF 11:    -22.573184614774   -9.6488e-06  2.09e-04  3.10e-15    2    1  TS
-   @MCSCF 12:    -22.573187923658   -3.3089e-06  1.41e-04  3.60e-15    2    1  TS
-   @MCSCF 13:    -22.573189227646   -1.3040e-06  9.73e-05  3.96e-15    2    1  TS
-   @MCSCF 14:    -22.573189803883   -5.7624e-07  7.09e-05  4.38e-15    2    1  TS
-   @MCSCF 15:    -22.573190082003   -2.7812e-07  5.22e-05  5.58e-15    2    1  TS
-   @MCSCF 16:    -22.573190225528   -1.4353e-07  3.95e-05  6.68e-15    2    1  TS
-   @MCSCF 17:    -22.573190303566   -7.8038e-08  3.01e-05  6.37e-15    2    1  TS
-   @MCSCF 18:    -22.573190347805   -4.4239e-08  2.33e-05  6.87e-15    2    1  TS
-   @MCSCF 19:    -22.573190373740   -2.5934e-08  1.82e-05  7.70e-15    2    1  TS
-   @MCSCF 20:    -22.573190389354   -1.5615e-08  1.43e-05  8.68e-15    2    1  TS
-   @MCSCF 21:    -22.573190398954   -9.5996e-09  1.13e-05  8.80e-15    2    1  TS
-   @MCSCF 22:    -22.573190404951   -5.9974e-09  8.99e-06  9.09e-15    2    1  TS
-   @MCSCF 23:    -22.573190408744   -3.7931e-09  7.16e-06  9.53e-15    2    1  TS
-   @MCSCF 24:    -22.573190411166   -2.4214e-09  5.73e-06  9.90e-15    2    1  TS
-   @MCSCF 25:    -22.573190412723   -1.5566e-09  4.59e-06  1.12e-14    2    1  TS
-   @MCSCF 26:    -22.573190413729   -1.0060e-09  3.69e-06  1.21e-14    2    1  TS
-   @MCSCF 27:    -22.573190414381   -6.5279e-10  2.97e-06  1.37e-14    2    1  TS
-   @MCSCF 28:    -22.573190414806   -4.2494e-10  2.39e-06  1.43e-14    2    1  TS
-   @MCSCF 29:    -22.573190415083   -2.7726e-10  1.93e-06  1.38e-14    2    1  TS
-   @MCSCF 30:    -22.573190415265   -1.8123e-10  1.56e-06  1.45e-14    2    1  TS
-   @MCSCF 31:    -22.573190415383   -1.1865e-10  1.26e-06  1.49e-14    2    1  TS
-   @MCSCF 32:    -22.573190415461   -7.7776e-11  1.02e-06  1.67e-14    2    1  TS
-   @MCSCF 33:    -22.573190415512   -5.1024e-11  8.25e-07  1.64e-14    2    1  TS
-   @MCSCF 34:    -22.573190415546   -3.3488e-11  6.68e-07  1.75e-14    2    1  TS
-   @MCSCF 35:    -22.573190415568   -2.2002e-11  5.41e-07  1.90e-14    2    1  TS
-   @MCSCF 36:    -22.573190415582   -1.4460e-11  4.38e-07  1.73e-14    2    1  TS
-   @MCSCF 37:    -22.573190415592   -9.5035e-12  3.55e-07  1.88e-14    2    1  TS
-   @MCSCF 38:    -22.573190415598   -6.2634e-12  2.88e-07  2.10e-14    2    1  TS
-   @MCSCF 39:    -22.573190415602   -4.1105e-12  2.33e-07  2.12e-14    2    1  TS
-   @MCSCF 40:    -22.573190415605   -2.7036e-12  1.89e-07  1.96e-14    2    1  TS
-   @MCSCF 41:    -22.573190415606   -1.7799e-12  1.53e-07  1.98e-14    2    1  TS
-   @MCSCF 42:    -22.573190415608   -1.1902e-12  1.24e-07  2.03e-14    2    1  TS
-   @MCSCF 43:    -22.573190415608   -7.7094e-13  1.01e-07  1.96e-14    2    1  TS
-   @MCSCF 44:    -22.573190415609   -5.0449e-13  8.19e-08  2.05e-14    2    1  TS
+   @MCSCF  6:    -22.568623011317   -6.0609e-03  4.39e-03  1.16e-15    2    1  TS
+   @MCSCF  7:    -22.572427380387   -3.8044e-03  2.69e-03  2.27e-15    2    1  TS
+   @MCSCF  8:    -22.573015008255   -5.8763e-04  1.20e-03  3.11e-15    2    1  TS
+   @MCSCF  9:    -22.573142389378   -1.2738e-04  6.07e-04  2.32e-15    2    1  TS
+   @MCSCF 10:    -22.573174966015   -3.2577e-05  3.42e-04  2.89e-15    2    1  TS
+   @MCSCF 11:    -22.573184614774   -9.6488e-06  2.09e-04  3.79e-15    2    1  TS
+   @MCSCF 12:    -22.573187923658   -3.3089e-06  1.41e-04  2.74e-15    2    1  TS
+   @MCSCF 13:    -22.573189227646   -1.3040e-06  9.73e-05  2.29e-15    2    1  TS
+   @MCSCF 14:    -22.573189803883   -5.7624e-07  7.09e-05  1.54e-15    2    1  TS
+   @MCSCF 15:    -22.573190082002   -2.7812e-07  5.22e-05  5.96e-16    2    1  TS
+   @MCSCF 16:    -22.573190225528   -1.4353e-07  3.95e-05  1.18e-15    2    1  TS
+   @MCSCF 17:    -22.573190303566   -7.8038e-08  3.01e-05  1.89e-15    2    1  TS
+   @MCSCF 18:    -22.573190347805   -4.4239e-08  2.33e-05  2.67e-15    2    1  TS
+   @MCSCF 19:    -22.573190373740   -2.5934e-08  1.82e-05  3.42e-15    2    1  TS
+   @MCSCF 20:    -22.573190389354   -1.5615e-08  1.43e-05  3.80e-15    2    1  TS
+   @MCSCF 21:    -22.573190398954   -9.5996e-09  1.13e-05  3.49e-15    2    1  TS
+   @MCSCF 22:    -22.573190404951   -5.9974e-09  8.99e-06  5.00e-15    2    1  TS
+   @MCSCF 23:    -22.573190408744   -3.7931e-09  7.16e-06  4.69e-15    2    1  TS
+   @MCSCF 24:    -22.573190411166   -2.4214e-09  5.73e-06  5.47e-15    2    1  TS
+   @MCSCF 25:    -22.573190412722   -1.5566e-09  4.59e-06  5.75e-15    2    1  TS
+   @MCSCF 26:    -22.573190413728   -1.0060e-09  3.69e-06  6.71e-15    2    1  TS
+   @MCSCF 27:    -22.573190414381   -6.5281e-10  2.97e-06  7.98e-15    2    1  TS
+   @MCSCF 28:    -22.573190414806   -4.2491e-10  2.39e-06  9.21e-15    2    1  TS
+   @MCSCF 29:    -22.573190415083   -2.7727e-10  1.93e-06  8.77e-15    2    1  TS
+   @MCSCF 30:    -22.573190415265   -1.8123e-10  1.56e-06  9.08e-15    2    1  TS
+   @MCSCF 31:    -22.573190415383   -1.1864e-10  1.26e-06  9.83e-15    2    1  TS
+   @MCSCF 32:    -22.573190415461   -7.7780e-11  1.02e-06  1.02e-14    2    1  TS
+   @MCSCF 33:    -22.573190415512   -5.1028e-11  8.25e-07  9.74e-15    2    1  TS
+   @MCSCF 34:    -22.573190415546   -3.3484e-11  6.68e-07  1.13e-14    2    1  TS
+   @MCSCF 35:    -22.573190415568   -2.2009e-11  5.41e-07  1.25e-14    2    1  TS
+   @MCSCF 36:    -22.573190415582   -1.4470e-11  4.38e-07  1.29e-14    2    1  TS
+   @MCSCF 37:    -22.573190415592   -9.4929e-12  3.55e-07  1.37e-14    2    1  TS
+   @MCSCF 38:    -22.573190415598   -6.2670e-12  2.88e-07  1.41e-14    2    1  TS
+   @MCSCF 39:    -22.573190415602   -4.1140e-12  2.33e-07  1.40e-14    2    1  TS
+   @MCSCF 40:    -22.573190415605   -2.6965e-12  1.89e-07  1.26e-14    2    1  TS
+   @MCSCF 41:    -22.573190415606   -1.7835e-12  1.53e-07  1.39e-14    2    1  TS
+   @MCSCF 42:    -22.573190415608   -1.1937e-12  1.24e-07  1.36e-14    2    1  TS
+   @MCSCF 43:    -22.573190415608   -7.6383e-13  1.01e-07  1.41e-14    2    1  TS
+   @MCSCF 44:    -22.573190415609   -4.9738e-13  8.19e-08  1.42e-14    2    1  TS
 
           @MCSCF has converged!
 
-   @MCSCF Final Energy:  -22.573190415608956
+   @MCSCF Final Energy:  -22.573190415608856
 
    Computing CI Semicanonical Orbitals
 
    ==> Energetics <==
 
-    SCF energy =          -22.556993301379510
-    Total MCSCF energy =  -22.573190415608956
+    SCF energy =          -22.556993301379524
+    Total MCSCF energy =  -22.573190415608856
 
    ==> MCSCF root 0 information <==
 
-    MCSCF Root 0 energy =   -22.573190415608956
+    MCSCF Root 0 energy =   -22.573190415608856
 
    Active Space Natural occupation numbers:
 
@@ -688,13 +688,13 @@ Warning: iopen=0,opentype!=closed. Making iopen=1
 
      Iter   Root       Total Energy       Delta E      C RMS
 
-   @CI  0:     0    -22.573188923525   -1.1102E+00   6.7552E-16  
+   @CI  0:     0    -22.573188923525   -1.1102E+00   4.2744E-16  
     Warning: Norm of correction (root 0) is < 1.0E-13
-   @CI  1:     0    -22.573188923525   0.0000E+00   2.2218E-15 c
+   @CI  1:     0    -22.573188923525   0.0000E+00   6.8554E-17 c
 
    ==> Energetics <==
 
-    SCF energy =          -22.556993301379510
+    SCF energy =          -22.556993301379524
     Total CI energy =     -22.573188923524619
 
    ==> DETCI root 0 information <==
@@ -722,7 +722,7 @@ Scratch directory: /tmp/
   ----------------------------------------------------------------------------
   A suite of quantum chemistry methods for strongly correlated electrons
 
-    git branch: ASET2_PR1 - git commit: 341eda6
+    git branch: ASET2_PR1 - git commit: 05b1a6c
 
   Developed by:
     Francesco A. Evangelista, Chenyang Li, Kevin P. Hannon,
@@ -965,8 +965,8 @@ Scratch directory: /tmp/
       26    Virtual   0.000000
       27    Virtual   0.000000
       28    Virtual   0.000000
-      29    Virtual   0.000000
-      30    Virtual   0.000000
+      29    Virtual   -0.000000
+      30    Virtual   -0.000000
       31    Virtual   -0.000000
       32    Virtual   -0.000000
       33    Virtual   -0.000000
@@ -1004,6 +1004,7 @@ Scratch directory: /tmp/
   
   Will not build integrals here
   
+  
 
             --------------------------------------------------------
               Second-order Active Space Embedding Theory [ASET(2)]
@@ -1030,8 +1031,8 @@ Scratch directory: /tmp/
   
   
   
- Generating fragment (A) SpaceInfo ... 
- The fragment MO is: 
+   Generating fragment (A) SpaceInfo ... 
+   The fragment MO is: 
  
 
   ==> MO Space Information <==
@@ -1053,7 +1054,7 @@ Scratch directory: /tmp/
     EMBEDDING_ACTV      0     0
     Total              33    33
   -------------------------------
- ASET(2) procedure started! ... 
+   ASET(2) procedure started! ... 
     => Loading Basis Set <=
 
     Name: (CC-PVDZ AUX)
@@ -1136,10 +1137,10 @@ Scratch directory: /tmp/
 
 
   Transforming DF Integrals
-  Timing for density-fitting transformation:                  0.117 s.
+  Timing for density-fitting transformation:                  0.111 s.
 
   Timing for freezing core and virtual orbitals:              0.000 s.
-  Timing for computing density-fitted integrals:              0.171 s.   => Loading Basis Set <=
+  Timing for computing density-fitted integrals:              0.179 s.   => Loading Basis Set <=
 
     Name: (CC-PVDZ AUX)
     Role: RIFIT
@@ -1221,14 +1222,14 @@ Scratch directory: /tmp/
 
 
   Transforming DF Integrals
-  Timing for density-fitting transformation:                  0.017 s.
+  Timing for density-fitting transformation:                  0.047 s.
 
-  Frozen-core energy         -16.444009083389567 a.u.
+  Frozen-core energy         -16.444009083389552 a.u.
   Timing for frozen one-body operator:                        0.001 s.
   Resorting integrals after freezing core.
-  Timing for resorting DF integrals:                          0.002 s.
-  Timing for freezing core and virtual orbitals:              0.002 s.
-  Timing for computing density-fitted integrals:              0.777 s.
+  Timing for resorting DF integrals:                          0.003 s.
+  Timing for freezing core and virtual orbitals:              0.004 s.
+  Timing for computing density-fitted integrals:              0.634 s.
 
   ==> Summary of Active Space Solver Input <==
 
@@ -1291,8 +1292,8 @@ Scratch directory: /tmp/
   -----------------------------------------------------
     Iter.      Avg. Energy       Delta_E     Res. Norm
   -----------------------------------------------------
-      1      -22.573364533485  -2.257e+01  +9.129e-15
-      2      -22.573364533485  +0.000e+00  +9.129e-15
+      1      -22.573364533485  -2.257e+01  +1.111e-14
+      2      -22.573364533485  +0.000e+00  +1.111e-14
   -----------------------------------------------------
   The Davidson-Liu algorithm converged in 3 iterations.
 
@@ -1367,7 +1368,7 @@ Scratch directory: /tmp/
     Block             Fa Max         Fa Mean           Fb Max         Fb Mean
     -------------------------------------------------------------------------
     CORE        0.0000000000    0.0000000000     0.0000000000    0.0000000000
-    VIRTUAL     0.0002024935    0.0000179332     0.0002024935    0.0000179332
+    VIRTUAL     0.0001946098    0.0000188831     0.0001946098    0.0000188831
     GAS1        0.0000237131    0.0000118566     0.0000237131    0.0000118566
     -------------------------------------------------------------------------
     Warning! Orbitals are not semi-canonicalized!
@@ -1379,25 +1380,25 @@ Scratch directory: /tmp/
 
   ==> Computing DSRG-MRPT2 Energy <==
 
-  Reference Energy = -22.573364533484696
-    Computing T2                             ...... Done. Timing        0.002228 s
-    Renormalizing V                          ...... Done. Timing        0.001320 s
-    Computing T1                             ...... Done. Timing        0.003200 s
-    Renormalizing F                          ...... Done. Timing        0.004008 s
-    Computing <[F, T1]>                      ...... Done. Timing        0.000884 s
-    Computing <[F, T2]>                      ...... Done. Timing        0.002672 s
-    Computing <[V, T1]>                      ...... Done. Timing        0.002695 s
-    Computing <[V, T2]> 4HH                  ...... Done. Timing        0.004704 s
-    Computing <V, T2]> 4PP                   ...... Done. Timing        0.004801 s
-    Computing [V, T2] 4PH                    ...... Done. Timing        0.020459 s
-    Computing [V, T2] λ3                     ...... Done. Timing        0.000011 s
-    Computing <[V, T2]> (C_2)^4 (no ccvv)    ...... Done. Timing        0.016060 s
-    Computing <[V, T2]> (C_2)^4 ccvv         ...... Done. Timing        0.000543 s
+  Reference Energy = -22.573364533484614
+    Computing T2                             ...... Done. Timing        0.003053 s
+    Renormalizing V                          ...... Done. Timing        0.001805 s
+    Computing T1                             ...... Done. Timing        0.004416 s
+    Renormalizing F                          ...... Done. Timing        0.005363 s
+    Computing <[F, T1]>                      ...... Done. Timing        0.001178 s
+    Computing <[F, T2]>                      ...... Done. Timing        0.003536 s
+    Computing <[V, T1]>                      ...... Done. Timing        0.003503 s
+    Computing <[V, T2]> 4HH                  ...... Done. Timing        0.005913 s
+    Computing <V, T2]> 4PP                   ...... Done. Timing        0.006057 s
+    Computing [V, T2] 4PH                    ...... Done. Timing        0.026530 s
+    Computing [V, T2] λ3                     ...... Done. Timing        0.000014 s
+    Computing <[V, T2]> (C_2)^4 (no ccvv)    ...... Done. Timing        0.020988 s
+    Computing <[V, T2]> (C_2)^4 ccvv         ...... Done. Timing        0.000694 s
   Eccvv: -0.0001664240
 
   ==> DSRG-MRPT2 (DF/CD) Energy Summary <==
 
-    E0 (reference)                 =    -22.573364533484696
+    E0 (reference)                 =    -22.573364533484614
     <[F, T1]>                      =     -0.000881861195635
     <[F, T2]>                      =      0.003460562976025
     <[V, T1]>                      =      0.000689108281074
@@ -1406,16 +1407,16 @@ Scratch directory: /tmp/
     <[V, T2]> C_4 (C_2)^2 PH       =     -0.001940646028690
     <[V, T2]> C_6 C_2              =      0.000000000000000
     <[V, T2]> (C_2)^4              =     -0.013650774237393
-    <[V, T2]>                      =     -0.012404676220648
-    DSRG-MRPT2 correlation energy  =     -0.009136866159184
-    DSRG-MRPT2 total energy        =    -22.582501399643881
-    max(T1)                        =      0.032502460005019
-    ||T1||                         =      0.055257648589371
+    <[V, T2]>                      =     -0.012404676220647
+    DSRG-MRPT2 correlation energy  =     -0.009136866159183
+    DSRG-MRPT2 total energy        =    -22.582501399643796
+    max(T1)                        =      0.032502460005029
+    ||T1||                         =      0.055257648589379
 
   ==> Form DSRG-PT2 Transformed Hamiltonian <==
 
-    Initalizing Hbar                         ... Done. Timing:      0.005 s.
-    Computing all-active Hbar                ... Done. Timing:      0.270 s.
+    Initalizing Hbar                         ... Done. Timing:      0.007 s.
+    Computing all-active Hbar                ... Done. Timing:      0.334 s.
 
   ==> De-Normal-Order DSRG Transformed Hamiltonian <==
 
@@ -1425,7 +1426,7 @@ Scratch directory: /tmp/
   ==> Rotate DSRG Transformed Hamiltonian back to Original Basis <==
 
     Rotating 1-body term to original basis   ... Done. Timing    0.000 s
-    Rotating 2-body term to original basis   ... Done. Timing    0.008 s
+    Rotating 2-body term to original basis   ... Done. Timing    0.011 s
 
   ==> String Lists <==
 
@@ -1461,7 +1462,7 @@ Scratch directory: /tmp/
     Root            Energy     <S^2>   Spin
   ---------------------------------------------
       0      -22.582987282754  0.000  singlet
-      1      -22.277995900229  2.000  triplet
+      1      -22.277995900228  2.000  triplet
       2      -22.060847323239  0.000  singlet
       3      -21.705836620372  0.000  singlet
   ---------------------------------------------
@@ -1476,23 +1477,23 @@ Scratch directory: /tmp/
   -----------------------------------------------------
     Iter.      Avg. Energy       Delta_E     Res. Norm
   -----------------------------------------------------
-      1      -22.582987282754  -2.258e+01  +8.286e-15
-      2      -22.582987282754  +0.000e+00  +8.286e-15
+      1      -22.582987282754  -2.258e+01  +6.682e-15
+      2      -22.582987282754  +0.000e+00  +6.682e-15
   -----------------------------------------------------
   The Davidson-Liu algorithm converged in 3 iterations.
 
   ==> Root No. 0 <==
 
-    20     -0.99261925
-    02      0.11954735
+    20      0.99261925
+    02     -0.11954735
 
-    Total Energy:     -22.582987282754, <S^2>: -0.000000
+    Total Energy:     -22.582987282754, <S^2>: 0.000000
 
   ==> Energy Summary <==
 
     Multi.(2ms)  Irrep.  No.               Energy      <S^2>
     --------------------------------------------------------
-       1  (  0)     A     0      -22.582987282754  -0.000000
+       1  (  0)     A     0      -22.582987282754   0.000000
     --------------------------------------------------------
 
   => THREE-DSRG-MRPT2 Reference Relaxation Energy Summary <=
@@ -1508,9 +1509,9 @@ Scratch directory: /tmp/
 
              [H1, T1]    [H1, T2]    [H2, T1]    [H2, T2]
     -----------------------------------------------------
-    -> C0       0.001       0.003       0.003       0.047
-    -> C1       0.001       0.009       0.007       0.139
-    -> C2                   0.010       0.016       0.086
+    -> C0       0.001       0.004       0.004       0.060
+    -> C1       0.002       0.011       0.009       0.174
+    -> C2                   0.013       0.020       0.106
     -----------------------------------------------------
 
 
@@ -1603,14 +1604,14 @@ Scratch directory: /tmp/
 
 
   Transforming DF Integrals
-  Timing for density-fitting transformation:                  0.018 s.
+  Timing for density-fitting transformation:                  0.017 s.
 
-  Frozen-core energy         -16.444009083389478 a.u.
+  Frozen-core energy         -16.444009083389460 a.u.
   Timing for frozen one-body operator:                        0.001 s.
   Resorting integrals after freezing core.
   Timing for resorting DF integrals:                          0.002 s.
   Timing for freezing core and virtual orbitals:              0.002 s.
-  Timing for computing density-fitted integrals:              0.823 s.
+  Timing for computing density-fitted integrals:              1.010 s.
 
   ==> Summary of Active Space Solver Input <==
 
@@ -1673,32 +1674,32 @@ Scratch directory: /tmp/
     Block             Fa Max         Fa Mean           Fb Max         Fb Mean
     -------------------------------------------------------------------------
     CORE        0.0000226054    0.0000113027     0.0000226054    0.0000113027
-    VIRTUAL     0.0000523679    0.0000033815     0.0000523679    0.0000033815
-    GAS1        0.3021396053    0.0037696588     0.3021396053    0.0037696588
+    VIRTUAL     0.0000523679    0.0000034008     0.0000523679    0.0000034008
+    GAS1        0.3021396053    0.0037703323     0.3021396053    0.0037703323
     -------------------------------------------------------------------------
     Warning! Orbitals are not semi-canonicalized!
 
   ==> Computing DSRG-MRPT2 Energy <==
 
-  Reference Energy = -22.573364533484654
-    Computing T2                             ...... Done. Timing        0.199454 s
-    Renormalizing V                          ...... Done. Timing        0.196927 s
-    Computing T1                             ...... Done. Timing        0.006715 s
-    Renormalizing F                          ...... Done. Timing        0.006262 s
-    Computing <[F, T1]>                      ...... Done. Timing        0.000960 s
-    Computing <[F, T2]>                      ...... Done. Timing        0.010666 s
-    Computing <[V, T1]>                      ...... Done. Timing        0.007512 s
-    Computing <[V, T2]> 4HH                  ...... Done. Timing        0.009062 s
-    Computing <V, T2]> 4PP                   ...... Done. Timing        0.025605 s
-    Computing [V, T2] 4PH                    ...... Done. Timing        0.089770 s
-    Computing [V, T2] λ3                     ...... Done. Timing        0.000031 s
-    Computing <[V, T2]> (C_2)^4 (no ccvv)    ...... Done. Timing        0.057083 s
-    Computing <[V, T2]> (C_2)^4 ccvv         ...... Done. Timing        0.001243 s
+  Reference Energy = -22.573364533484643
+    Computing T2                             ...... Done. Timing        0.192638 s
+    Renormalizing V                          ...... Done. Timing        0.187840 s
+    Computing T1                             ...... Done. Timing        0.006078 s
+    Renormalizing F                          ...... Done. Timing        0.005962 s
+    Computing <[F, T1]>                      ...... Done. Timing        0.000937 s
+    Computing <[F, T2]>                      ...... Done. Timing        0.010259 s
+    Computing <[V, T1]>                      ...... Done. Timing        0.007277 s
+    Computing <[V, T2]> 4HH                  ...... Done. Timing        0.008529 s
+    Computing <V, T2]> 4PP                   ...... Done. Timing        0.024249 s
+    Computing [V, T2] 4PH                    ...... Done. Timing        0.085204 s
+    Computing [V, T2] λ3                     ...... Done. Timing        0.000024 s
+    Computing <[V, T2]> (C_2)^4 (no ccvv)    ...... Done. Timing        0.054856 s
+    Computing <[V, T2]> (C_2)^4 ccvv         ...... Done. Timing        0.001207 s
   Eccvv: -0.0156642146
 
   ==> DSRG-MRPT2 (DF/CD) Energy Summary <==
 
-    E0 (reference)                 =    -22.573364533484654
+    E0 (reference)                 =    -22.573364533484643
     <[F, T1]>                      =     -0.000004492127575
     <[F, T2]>                      =      0.000103951128232
     <[V, T1]>                      =      0.000002734537302
@@ -1706,17 +1707,17 @@ Scratch directory: /tmp/
     <[V, T2]> C_4 (C_2)^2 PP       =      0.000091793234045
     <[V, T2]> C_4 (C_2)^2 PH       =      0.000020550970417
     <[V, T2]> C_6 C_2              =      0.000000000000000
-    <[V, T2]> (C_2)^4              =     -0.017368659638751
-    <[V, T2]>                      =     -0.017251503664091
-    DSRG-MRPT2 correlation energy  =     -0.017149310126131
-    DSRG-MRPT2 total energy        =    -22.590513843610786
-    max(T1)                        =      0.084833199777751
-    ||T1||                         =      0.194335820463761
+    <[V, T2]> (C_2)^4              =     -0.017368659638749
+    <[V, T2]>                      =     -0.017251503664089
+    DSRG-MRPT2 correlation energy  =     -0.017149310126129
+    DSRG-MRPT2 total energy        =    -22.590513843610772
+    max(T1)                        =      0.084833199777758
+    ||T1||                         =      0.194335820463781
 
   ==> Form DSRG-PT2 Transformed Hamiltonian <==
 
-    Initalizing Hbar                         ... Done. Timing:      0.024 s.
-    Computing all-active Hbar                ... Done. Timing:      0.938 s.
+    Initalizing Hbar                         ... Done. Timing:      0.023 s.
+    Computing all-active Hbar                ... Done. Timing:      0.905 s.
 
   ==> De-Normal-Order DSRG Transformed Hamiltonian <==
 
@@ -1726,15 +1727,15 @@ Scratch directory: /tmp/
   ==> Rotate DSRG Transformed Hamiltonian back to Original Basis <==
 
     Rotating 1-body term to original basis   ... Done. Timing    0.000 s
-    Rotating 2-body term to original basis   ... Done. Timing    0.027 s
+    Rotating 2-body term to original basis   ... Done. Timing    0.026 s
 
   ==> Total Timings (s) for Computing Commutators <==
 
              [H1, T1]    [H1, T2]    [H2, T1]    [H2, T2]
     -----------------------------------------------------
-    -> C0       0.001       0.011       0.008       0.183
-    -> C1       0.001       0.014       0.009       0.455
-    -> C2                   0.025       0.031       0.401
+    -> C0       0.001       0.010       0.007       0.174
+    -> C1       0.001       0.013       0.009       0.431
+    -> C2                   0.024       0.030       0.395
     -----------------------------------------------------
    => Loading Basis Set <=
 
@@ -1759,8 +1760,8 @@ Scratch directory: /tmp/
   Frozen-core energy           0.000000000000000 a.u.
   Timing for frozen one-body operator:                        0.001 s.
   Resorting integrals after freezing core.
-  Timing for freezing core and virtual orbitals:              0.013 s.
-  Timing for preparing custom (FCIDUMP) integrals:            0.022 s.
+  Timing for freezing core and virtual orbitals:              0.012 s.
+  Timing for preparing custom (FCIDUMP) integrals:            0.025 s.
   Updating one-electron integrals from Hbar
   Updating two-electron integrals from Hbar
 
@@ -1825,8 +1826,8 @@ Scratch directory: /tmp/
   -----------------------------------------------------
     Iter.      Avg. Energy       Delta_E     Res. Norm
   -----------------------------------------------------
-      1      -22.573364915528  -2.257e+01  +1.448e-14
-      2      -22.573364915528  +0.000e+00  +1.448e-14
+      1      -22.573364915528  -2.257e+01  +1.102e-14
+      2      -22.573364915528  +0.000e+00  +1.102e-14
   -----------------------------------------------------
   The Davidson-Liu algorithm converged in 3 iterations.
 
@@ -1886,7 +1887,7 @@ Scratch directory: /tmp/
     Block             Fa Max         Fa Mean           Fb Max         Fb Mean
     -------------------------------------------------------------------------
     CORE        0.0000000000    0.0000000000     0.0000000000    0.0000000000
-    VIRTUAL     0.0332001441    0.0004228391     0.0332001441    0.0004228391
+    VIRTUAL     0.0332001441    0.0004238161     0.0332001441    0.0004238161
     GAS1        0.0000353162    0.0000176581     0.0000353162    0.0000176581
     -------------------------------------------------------------------------
     Warning! Orbitals are not semi-canonicalized!
@@ -1919,7 +1920,7 @@ Scratch directory: /tmp/
 
   ==> Build Initial Amplitudes Guesses <==
 
-    Computing T2 amplitudes ...          Done. Timing      0.146 s
+    Computing T2 amplitudes ...          Done. Timing      0.139 s
     Computing T1 amplitudes ...          Done. Timing      0.013 s
 
   ==> Initial Excitation Amplitudes Summary <==
@@ -1934,7 +1935,7 @@ Scratch directory: /tmp/
     [  2       6    ]-0.000499 [  1       9    ] 0.000364 [  1       3    ]-0.000334 
     [  1       6    ] 0.000225 [  0       2    ] 0.000166 [  0       6    ]-0.000031 
     --------------------------------------------------------------------------------
-    Norm of T1A vector: (nonzero elements: 20)                    0.039846808792706.
+    Norm of T1A vector: (nonzero elements: 20)                    0.039846808792712.
     --------------------------------------------------------------------------------
     Largest T1 amplitudes for spin case B:
        _       _                  _       _                  _       _               
@@ -1946,18 +1947,18 @@ Scratch directory: /tmp/
     [  2       6    ]-0.000499 [  1       9    ] 0.000364 [  1       3    ]-0.000334 
     [  1       6    ] 0.000225 [  0       2    ] 0.000166 [  0       6    ]-0.000031 
     --------------------------------------------------------------------------------
-    Norm of T1B vector: (nonzero elements: 20)                    0.039846808792706.
+    Norm of T1B vector: (nonzero elements: 20)                    0.039846808792712.
     --------------------------------------------------------------------------------
     Largest T2 amplitudes for spin case AA:
        i   j   a   b              i   j   a   b              i   j   a   b           
     --------------------------------------------------------------------------------
-    [  1   2   2  14] 0.012248 [  1   2  11  17]-0.011291 [  1   2  10  16]-0.011291 
-    [  1   2   2  15]-0.010134 [  1   2   2  18]-0.010118 [  1   2   1  15]-0.007556 
-    [  1   2  14  18] 0.006904 [  1   2   9  18] 0.006427 [  1   2   7  16]-0.005967 
-    [  1   2   8  17]-0.005967 [  1   2   2   9] 0.005702 [  1   2   5  17] 0.004863 
-    [  1   2   4  16] 0.004863 [  0   1   1  14] 0.004017 [  1   2   1   9]-0.003677 
+    [  1   2   2  14] 0.012248 [  1   2   2  15]-0.010134 [  1   2   2  18]-0.010118 
+    [  1   2  11  17] 0.009249 [  1   2  10  16] 0.009249 [  1   2   1  15]-0.007556 
+    [  1   2  14  18] 0.006904 [  1   2  10  17] 0.006722 [  1   2  11  16]-0.006722 
+    [  1   2   9  18] 0.006427 [  1   2   7  16]-0.006063 [  1   2   8  17] 0.006063 
+    [  1   2   2   9] 0.005702 [  1   2   5  17] 0.004896 [  1   2   4  16]-0.004896 
     --------------------------------------------------------------------------------
-    Norm of T2AA vector: (nonzero elements: 620)                  0.065819488549008.
+    Norm of T2AA vector: (nonzero elements: 628)                  0.065819488549010.
     --------------------------------------------------------------------------------
     Largest T2 amplitudes for spin case AB:
            _       _                  _       _                  _       _           
@@ -1969,19 +1970,19 @@ Scratch directory: /tmp/
     [  1   1  15  15]-0.017210 [  1   2  18  18]-0.016099 [  1   1  18  18]-0.015764 
     [  1   1   2  15]-0.014430 [  1   1  11  11]-0.012845 [  1   1  10  10]-0.012845 
     --------------------------------------------------------------------------------
-    Norm of T2AB vector: (nonzero elements: 1088)                 0.123759777679318.
+    Norm of T2AB vector: (nonzero elements: 1088)                 0.123759777679320.
     --------------------------------------------------------------------------------
     Largest T2 amplitudes for spin case BB:
        _   _   _   _              _   _   _   _              _   _   _   _           
        i   j   a   b              i   j   a   b              i   j   a   b           
     --------------------------------------------------------------------------------
-    [  1   2   2  14] 0.012248 [  1   2  11  17]-0.011291 [  1   2  10  16]-0.011291 
-    [  1   2   2  15]-0.010134 [  1   2   2  18]-0.010118 [  1   2   1  15]-0.007556 
-    [  1   2  14  18] 0.006904 [  1   2   9  18] 0.006427 [  1   2   7  16]-0.005967 
-    [  1   2   8  17]-0.005967 [  1   2   2   9] 0.005702 [  1   2   5  17] 0.004863 
-    [  1   2   4  16] 0.004863 [  0   1   1  14] 0.004017 [  1   2   1   9]-0.003677 
+    [  1   2   2  14] 0.012248 [  1   2   2  15]-0.010134 [  1   2   2  18]-0.010118 
+    [  1   2  11  17] 0.009249 [  1   2  10  16] 0.009249 [  1   2   1  15]-0.007556 
+    [  1   2  14  18] 0.006904 [  1   2  10  17] 0.006722 [  1   2  11  16]-0.006722 
+    [  1   2   9  18] 0.006427 [  1   2   7  16]-0.006063 [  1   2   8  17] 0.006063 
+    [  1   2   2   9] 0.005702 [  1   2   5  17] 0.004896 [  1   2   4  16]-0.004896 
     --------------------------------------------------------------------------------
-    Norm of T2BB vector: (nonzero elements: 624)                  0.065819488549008.
+    Norm of T2BB vector: (nonzero elements: 628)                  0.065819488549010.
     --------------------------------------------------------------------------------
 
   ==> Possible Intruders <==
@@ -2001,18 +2002,18 @@ Scratch directory: /tmp/
 
   ==> DSRG-MRPT2 Energy Summary <==
 
-    E0 (reference)                 =    -22.573364915527570
-    <[F, A1]>                      =     -0.000883338862188
+    E0 (reference)                 =    -22.573364915527563
+    <[F, A1]>                      =     -0.000883338862189
     <[F, A2]>                      =      0.003400337197444
     <[V, A1]>                      =      0.000686160660223
     <[V, A2]>                      =     -0.012332191368633
     DSRG-MRPT2 correlation energy  =     -0.009129032373154
-    DSRG-MRPT2 total energy        =    -22.582493947900723
+    DSRG-MRPT2 total energy        =    -22.582493947900716
 
   ==> De-Normal-Order DSRG Transformed Hamiltonian <==
 
     Computing the scalar term                ... Done. Timing    0.003 s
-    Computing the 1-body term                ... Done. Timing    0.003 s
+    Computing the 1-body term                ... Done. Timing    0.002 s
 
   ==> Rotate DSRG Transformed Hamiltonian back to Original Basis <==
 
@@ -2068,15 +2069,15 @@ Scratch directory: /tmp/
   -----------------------------------------------------
     Iter.      Avg. Energy       Delta_E     Res. Norm
   -----------------------------------------------------
-      1      -22.582962487500  -2.258e+01  +1.030e-14
-      2      -22.582962487500  +0.000e+00  +1.030e-14
+      1      -22.582962487500  -2.258e+01  +2.250e-14
+      2      -22.582962487500  +0.000e+00  +2.250e-14
   -----------------------------------------------------
   The Davidson-Liu algorithm converged in 3 iterations.
 
   ==> Root No. 0 <==
 
-    20     -0.99266825
-    02      0.11919564
+    20      0.99266825
+    02     -0.11919564
 
     Total Energy:     -22.582962487500, <S^2>: -0.000000
 
@@ -2100,11 +2101,13 @@ Scratch directory: /tmp/
 
              [H1, T1]    [H1, T2]    [H2, T1]    [H2, T2]
     -----------------------------------------------------
-    -> C0       0.002       0.009       0.000       0.071
-    -> C1       0.007       0.038       0.027       0.380
-    -> C2                   0.135       0.159       0.731
+    -> C0       0.002       0.009       0.000       0.069
+    -> C1       0.007       0.037       0.026       0.363
+    -> C2                   0.130       0.149       0.701
     -----------------------------------------------------
 
+  
+  
     ============================ASET(2) Summary========================
     ASET(mf) energy                                = -22.582987282754
     E_c^B (Environment correlation, Hbar0)         = -0.017149310126
@@ -2112,13 +2115,14 @@ Scratch directory: /tmp/
     ASET(2) energy                                 = -22.600111797626
     =========================ASET(2) Procedure Done==================== 
 
+  
 
   Time to prepare integrals:        0.000 seconds
-  Time to run job          :       12.816 seconds
-  Total                    :       12.816 seconds
+  Time to run job          :       14.982 seconds
+  Total                    :       14.982 seconds
     DF-ASET2-[DSRG-MRPT2] energy..........................................................PASSED
 
-    Psi4 stopped on: Monday, 07 June 2021 07:54PM
-    Psi4 wall time for execution: 0:00:16.69
+    Psi4 stopped on: Tuesday, 08 June 2021 06:54AM
+    Psi4 wall time for execution: 0:00:17.89
 
 *** Psi4 exiting successfully. Buy a developer a beer!

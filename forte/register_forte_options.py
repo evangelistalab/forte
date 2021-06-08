@@ -223,6 +223,12 @@ def register_embedding_options(options):
     options.add_str(
         'FRAGMENT_DENSITY', 'RHF', ['CASCI', 'CASSCF', 'RHF', 'FULL'],
         'The real/approximate RDMs used in the correlative environment computation')
+    options.add_int(
+        "ADD_FRAGMENT_DOCC", 0,
+        "Manually ddjust number of restricted occupied orbitals A_C in A for mo_space_info_A")
+    options.add_int(
+        "ADD_FRAGMENT_ACTIVE", 0,
+        "Manually ddjust number of active orbitals A_A in A for mo_space_info_A")
     options.add_str(
         'FRAG_CORRELATION_SOLVER', 'MRDSRG',
         ['DSRG-MRPT2', 'THREE-DSRG-MRPT2', 'DSRG-MRPT3', 'MRDSRG',

@@ -1,0 +1,79 @@
+import forte
+
+refaset2 = -9.088018880703
+
+molecule {
+r1=1.65
+    0 1
+    Li      0.0  0.0  0.0
+    H       0.0  0.0  r1
+--
+    H      0.0  0.0  4.8
+    H      0.0  0.0  5.57
+    
+     units angstrom
+     no_reorient
+     symmetry c1
+}
+
+set {
+  basis                  3-21g
+  reference              rohf
+  scf_type               df
+  diis                   true
+  diis_start             11
+  maxiter                300
+  soscf                  true
+  soscf_max_iter         35
+  damping_percentage     40
+  fail_on_maxiter        false
+  e_convergence          12
+  d_convergence          8
+  docc                   [3]
+  restricted_docc        [2]
+  active                 [2]
+  mcscf_maxiter          500
+  mcscf_algorithm        ts
+  mcscf_r_convergence    7
+  mcscf_e_convergence    11
+  mcscf_diis_start       50
+  mcscf_max_rot          0.2
+}
+
+E, wfn_cas = energy('casscf', return_wfn = True)
+#compare_values(refmcscf,variable("CURRENT ENERGY"),8,"MCSCF energy")
+
+set forte {
+# Embedding settings
+  job_type ASET2
+  embedding true
+  embedding_threshold 0.5
+  embedding_reference casscf
+  EMBEDDING_ASET2_MF_REF  false # Skip the ASET_mf step
+
+# Fragment methods and space info:
+   active_space_solver    fci
+   FRAG_CORRELATION_SOLVER     mrdsrg
+   FRAG_CORR_LEVEL        pt3
+   INT_TYPE_FRAG          conventional
+
+# Environment (interaction) methods
+   FRAGMENT_DENSITY       CASCI
+   ENV_CORRELATION_SOLVER      three-dsrg-mrpt2  # DF for B, conventional for A
+   ENV_CORR_LEVEL         pt2
+   INT_TYPE_ENV           df
+
+# DSRG settings
+   # threepdc will be on            
+   relax_ref              once
+   semi_canonical         false
+   fci_maxiter            100
+   root_sym               0
+   nroot                  1
+   root                   0
+   dsrg_s                 0.5
+   ntrial_per_root        10
+}
+
+Eforte, wfn = energy('forte', ref_wfn = wfn_cas, return_wfn=True)
+compare_values(refaset2,variable("CURRENT ENERGY"),8,"DF-ASET2-[DSRG-MRPT3] (3-PDC on) energy")

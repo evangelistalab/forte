@@ -1127,7 +1127,7 @@ void Build_CAS_AO_Fock(psi::SharedWavefunction ref_wfn, int nirrep, psi::Dimensi
 
 // Utility function #3: Build the second MO_SPACE_INFO for ASET(2) inner layer computations
 std::shared_ptr<MOSpaceInfo> build_aset2_fragment(psi::SharedWavefunction ref_wfn,
-                                               std::shared_ptr<MOSpaceInfo> mo_space_info) {
+                                               std::shared_ptr<MOSpaceInfo> mo_space_info, std::shared_ptr<ForteOptions> options) {
 
     // int fragment_rvir = options.get_int("FRAGMENT_RUOCC");
 
@@ -1138,6 +1138,9 @@ std::shared_ptr<MOSpaceInfo> build_aset2_fragment(psi::SharedWavefunction ref_wf
     psi::Dimension actv_a = mo_space_info->dimension("ACTIVE");
     psi::Dimension nrvirpi = mo_space_info->dimension("RESTRICTED_UOCC");
     psi::Dimension frzvpi = mo_space_info->dimension("FROZEN_UOCC");
+    int add_a_docc = options->get_int("ADD_FRAGMENT_DOCC");
+    int add_a_actv = options->get_int("ADD_FRAGMENT_ACTIVE");
+    bool do_fci = options->get_bool("FRAG_DO_FCI");
 
     // Write the new active (inner-layer) MOSpaceInfo:
     std::map<std::string, std::vector<size_t>> mo_space_map_fragment;
@@ -1146,20 +1149,30 @@ std::shared_ptr<MOSpaceInfo> build_aset2_fragment(psi::SharedWavefunction ref_wf
     mo_space_map_fragment["FROZEN_DOCC"] = {freeze_o};
 
     size_t ro = static_cast<size_t>(fragment_rocc[0]);
+    ro += add_a_docc;
+    if(do_fci) {
+        ro = 0;
+    }
     mo_space_map_fragment["RESTRICTED_DOCC"] = {ro};
 
     size_t a = static_cast<size_t>(fragment_active[0]);
+    a += add_a_actv;
+    if(do_fci) {
+        a = actv_a[0];
+    }
     mo_space_map_fragment["ACTIVE"] = {a};
 
-    size_t rv = static_cast<size_t>(actv_a[0] - fragment_rocc[0] -
-                                    fragment_active[0]); // Read fragment_docc and fragment_active, compute fragment_rvir
+    size_t rv = static_cast<size_t>(actv_a[0] - ro - a); // Read fragment_docc and fragment_active, compute fragment_rvir
+    if(do_fci) {
+        rv = 0;
+    }
     mo_space_map_fragment["RESTRICTED_UOCC"] = {rv};
 
     size_t freeze_v = static_cast<size_t>(frzvpi[0] + nrvirpi[0]);
     mo_space_map_fragment["FROZEN_UOCC"] = {freeze_v};
 
-    outfile->Printf("\n Generating fragment (A) SpaceInfo ... ");
-    outfile->Printf("\n The fragment MO is: \n ");
+    outfile->Printf("\n   Generating fragment (A) SpaceInfo ... ");
+    outfile->Printf("\n   The fragment MO is: \n ");
     std::vector<size_t> reorder;
     std::string point_group = ref_wfn->molecule()->point_group()->symbol();
     auto nmopi = ref_wfn->nmopi();
@@ -1167,7 +1180,7 @@ std::shared_ptr<MOSpaceInfo> build_aset2_fragment(psi::SharedWavefunction ref_wf
         make_mo_space_info_from_map(nmopi, point_group, mo_space_map_fragment, reorder);
 
     // Return the new embedding MOSpaceInfo to pymodule
-    outfile->Printf("\n ASET(2) procedure started! ... \n ");
+    outfile->Printf("\n   ASET(2) procedure started! ... \n ");
     return mo_space_info_fragment;
 }
 
