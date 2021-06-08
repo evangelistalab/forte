@@ -203,11 +203,11 @@ embedding:
    - embedding-aset2-2
    - embedding-aset2-3
    - embedding-aset2-5
+   - embedding-aset2-6
   medium:
    - embedding-2
    - embedding-aset2-1
    - embedding-aset2-4
-   - embedding-aset2-6
 fci:
   short:
    - fci-1
