@@ -1,7 +1,7 @@
 import forte
 
 refmcscf = -9.069030173956
-refaset2 = -9.088018880703
+refaset2 = -9.088016822202
 
 molecule {
 r1=1.65
@@ -59,10 +59,10 @@ set forte {
    INT_TYPE_FRAG          conventional
 
 # Environment (interaction) methods
-   FRAGMENT_DENSITY       CASCI
-   ENV_CORRELATION_SOLVER      three-dsrg-mrpt2  # DF for B, conventional for A
+   FRAGMENT_DENSITY       RHF
+   ENV_CORRELATION_SOLVER      mrdsrg
    ENV_CORR_LEVEL         pt2
-   INT_TYPE_ENV           df
+   INT_TYPE_ENV           conventional
 
 # DSRG settings
    # threepdc will be on            
@@ -77,4 +77,4 @@ set forte {
 }
 
 Eforte, wfn = energy('forte', ref_wfn = wfn_cas, return_wfn=True)
-compare_values(refaset2,variable("CURRENT ENERGY"),8,"DF-ASET2-[DSRG-MRPT3] (3-PDC on) energy")
+compare_values(refaset2,variable("CURRENT ENERGY"),8,"ASET2-[DSRG-MRPT3] (3-PDC on) energy")
