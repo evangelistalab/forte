@@ -1,0 +1,91 @@
+import forte
+
+refmcscf = -22.573190415609
+refaset2 = -22.600111797626
+
+molecule {
+r1=1.595
+r2=5.0
+    0 1
+    Li      0.0  0.0  0.0
+    H       0.0  0.0  r1
+--
+    Be      0.0  0.0  r2
+    
+     units angstrom
+     no_reorient
+     symmetry c1
+}
+
+set {
+  basis                  cc-pvdz
+  reference              rohf
+  scf_type               df
+  diis                   true
+  diis_start             11
+  maxiter                300
+  soscf                  true
+  soscf_max_iter         35
+  damping_percentage     40
+  fail_on_maxiter        false
+  e_convergence          12
+  d_convergence          8
+  docc                   [4]
+  restricted_docc        [3]
+  active                 [2]
+  mcscf_maxiter          500
+  mcscf_algorithm        ts
+  mcscf_r_convergence    7
+  mcscf_e_convergence    11
+  mcscf_diis_start       50
+  mcscf_max_rot          0.2
+}
+
+E, wfn_cas = energy('casscf', return_wfn = True)
+compare_values(refmcscf,variable("CURRENT ENERGY"),8,"MCSCF energy")
+
+set {
+  ci_maxiter            100
+  fci                   True
+  docc                   [4]
+  frozen_docc            [0]
+  restricted_docc        [3]
+  active                 [2]
+  restricted_uocc        [28]
+  num_roots              1
+  follow_root            0
+}
+
+E, wfn_detci = energy('detci', return_wfn=True, ref_wfn=wfn_cas)
+
+set forte {
+# Embedding settings
+  job_type ASET2
+  embedding true
+  embedding_threshold 0.5
+
+# Fragment methods and space info:
+   active_space_solver    fci # fragment CASCI for inner-layer
+   FRAG_CORRELATION_SOLVER     three-dsrg-mrpt2 # fragment (inner layer) correlation solver
+   FRAG_CORR_LEVEL        pt2
+   INT_TYPE_FRAG          df
+
+# Environment (interaction) methods
+   FRAGMENT_DENSITY       CASCI
+   ENV_CORRELATION_SOLVER      three-dsrg-mrpt2
+   ENV_CORR_LEVEL         pt2
+   INT_TYPE_ENV           df
+
+# DSRG settings
+   threepdc               zero
+   semi_canonical         false
+   relax_ref              once
+   fci_maxiter            150
+   root_sym               0
+   nroot                  1
+   root                   0
+   dsrg_s                 0.5
+}
+
+Eforte, wfn = energy('forte', ref_wfn = wfn_detci, return_wfn=True)
+compare_values(refaset2,variable("CURRENT ENERGY"),8,"DF-ASET2-[DSRG-MRPT2] energy")
