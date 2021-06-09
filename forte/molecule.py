@@ -48,7 +48,7 @@ class Molecule:
         geom : str
             a string representing a molecule
         """
-        return Molecule(geometry(geom))
+        return Molecule(geometry(geom))  # <- call psi4.geometry()
 
     @staticmethod
     def from_geom_file(filename, path='.'):

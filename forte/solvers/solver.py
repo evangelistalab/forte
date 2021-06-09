@@ -1,6 +1,6 @@
 import psi4
 from abc import ABC, abstractmethod
-from forte.collection import Collection
+from forte.data import Data
 from forte.model import Model, MolecularModel
 from forte.results import Results
 from forte.forte import MOSpaceInfo
@@ -16,22 +16,19 @@ class Solver(ABC):
     Attributes
     ----------
     """
-    def __init__(self, model=None, psi_wfn=None, scf_info=None, mo_space_info=None, ints=None):
+    def __init__(self):
         self._results = Results()
-        self._model = model
-        self._psi_wfn = psi_wfn
-        self._scf_info = scf_info
-        self._mo_space_info = mo_space_info
-        self._ints = ints
+        self._data = Data()
         self._output_file = 'output.dat'
+        self._executed = False
 
-    def copy(self, other):
-        self.model = other.model
-        self.psi_wfn = other.psi_wfn
-        self.scf_info = other.scf_info
-        self.mo_space_info = other.mo_space_info
-        self.ints = other.ints
-        self.output_file = other.output_file
+    # def copy(self, other):
+    #     self.model = other.model
+    #     self.psi_wfn = other.psi_wfn
+    #     self.scf_info = other.scf_info
+    #     self.mo_space_info = other.mo_space_info
+    #     self.ints = other.ints
+    #     self.output_file = other.output_file
 
     @abstractmethod
     def run(self):
@@ -42,44 +39,52 @@ class Solver(ABC):
         return self._results
 
     @property
-    def psi_wfn(self):
-        return self._psi_wfn
-
-    @psi_wfn.setter
-    def psi_wfn(self, val):
-        self._psi_wfn = val
+    def data(self):
+        return self._data
 
     @property
-    def scf_info(self):
-        return self._scf_info
+    def executed(self):
+        return self._executed
 
-    @scf_info.setter
-    def scf_info(self, val):
-        self._scf_info = val
+    # @property
+    # def psi_wfn(self):
+    #     return self._psi_wfn
 
-    @property
-    def ints(self):
-        return self._ints
+    # @psi_wfn.setter
+    # def psi_wfn(self, val):
+    #     self._psi_wfn = val
 
-    @ints.setter
-    def ints(self, val):
-        self._ints = val
+    # @property
+    # def scf_info(self):
+    #     return self._scf_info
 
-    @property
-    def mo_space_info(self):
-        return self._mo_space_info
+    # @scf_info.setter
+    # def scf_info(self, val):
+    #     self._scf_info = val
 
-    @mo_space_info.setter
-    def mo_space_info(self, val):
-        self._mo_space_info = val
+    # @property
+    # def ints(self):
+    #     return self._ints
 
-    @property
-    def model(self):
-        return self._model
+    # @ints.setter
+    # def ints(self, val):
+    #     self._ints = val
 
-    @model.setter
-    def model(self, val):
-        self._model = val
+    # @property
+    # def mo_space_info(self):
+    #     return self._mo_space_info
+
+    # @mo_space_info.setter
+    # def mo_space_info(self, val):
+    #     self._mo_space_info = val
+
+    # @property
+    # def model(self):
+    #     return self._model
+
+    # @model.setter
+    # def model(self, val):
+    #     self._model = val
 
     @property
     def output_file(self):
@@ -108,5 +113,5 @@ class BasicSolver(Solver):
 
 def molecular_model(molecule: Molecule, basis: Basis):
     solver = BasicSolver()
-    solver.model = MolecularModel(molecule=molecule, basis=basis)
+    solver.data.model = MolecularModel(molecule=molecule, basis=basis)
     return solver

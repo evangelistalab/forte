@@ -34,7 +34,7 @@ class HF(Solver):
         """
         # initialize common objects
         super().__init__()
-        self.copy(parent_solver)
+        self._data = parent_solver.data
         self._state = state
         self._restricted = restricted
         self._e_convergence = e_convergence
@@ -63,7 +63,7 @@ class HF(Solver):
     @property
     def charge(self):
         # compute the number of electrons
-        molecule = self.model.molecule
+        molecule = self.data.model.molecule
         natom = molecule.natom()
         charge = round(sum([molecule.Z(i) for i in range(natom)])) - self.state.na() - self.state.nb()
         return charge
@@ -83,14 +83,16 @@ class HF(Solver):
     def run(self):
         """Compute the energy using psi4"""
         import psi4
-        if not isinstance(self.model, MolecularModel):
+        if not isinstance(self.data.model, MolecularModel):
             raise RuntimeError('HF.energy() is implemented only for MolecularModel objects')
 
-        self.model.molecule.set_molecular_charge(self.charge)
-        self.model.molecule.set_multiplicity(self.multiplicity)
+        molecule = self.data.model.molecule
+
+        molecule.set_molecular_charge(self.charge)
+        molecule.set_multiplicity(self.multiplicity)
 
         options = {
-            'BASIS': self.model.basis,
+            'BASIS': self.data.model.basis,
             'REFERENCE': 'RHF' if self._restricted else 'UHF',
             'SCF_TYPE': 'pk',
             'E_CONVERGENCE': self.e_convergence,
@@ -104,13 +106,15 @@ class HF(Solver):
         psi4.core.set_output_file(self._output_file, True)
 
         # run scf and return the energy and a wavefunction object
-        energy, psi_wfn = psi4.energy('scf', return_wfn=True)
+        energy, psi_wfn = psi4.energy('scf', molecule=molecule, return_wfn=True)
 
         # add the energy to the results
         self._results.add('hf energy', energy, 'Hartree-Fock energy', 'Eh')
 
         # add objects to the collection
-        self.psi_wfn = psi_wfn
-        self.scf_info = SCFInfo(psi_wfn)
+        self.data.psi_wfn = psi_wfn
+        self.data.scf_info = SCFInfo(psi_wfn)
+
+        self._executed = True
 
         return self

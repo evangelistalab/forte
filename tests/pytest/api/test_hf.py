@@ -24,7 +24,7 @@ def test_hf():
     root = molecular_model(molecule=mol, basis=basis)
 
     # specify the electronic state
-    state = root.model.state(charge=0, multiplicity=1, sym='ag')
+    state = root.data.model.state(charge=0, multiplicity=1, sym='ag')
 
     hf = HF(root, state=state)
     hf.run()
