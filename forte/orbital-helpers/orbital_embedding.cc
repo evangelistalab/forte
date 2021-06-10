@@ -1154,7 +1154,7 @@ std::shared_ptr<MOSpaceInfo> build_aset2_fragment(psi::SharedWavefunction ref_wf
     size_t freeze_o = static_cast<size_t>(frzopi[0] + nroccpi[0]);
     mo_space_map_fragment["FROZEN_DOCC"] = {freeze_o};
 
-    size_t ro = static_cast<size_t>(fragment_rocc[0]);
+    size_t ro = do_fci ? 0 : fragment_rocc[0] + add_a_docc;
     ro += add_a_docc;
     if (do_fci) {
         ro = 0;
