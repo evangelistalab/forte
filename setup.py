@@ -20,9 +20,12 @@ class CMakeExtension(Extension):
 class CMakeBuild(build_ext):
 
     build_ext.user_options = build_ext.user_options + [
+        # Notes: the first option is the option string
+        #        the second option is an abbreviated form of an option, which we avoid with None
         ('ambitpath', None, 'the path to ambit'),
         ('max-det-orb', None, 'the maximum number of orbitals used by the Determinant class'),
-        ('enable-codecov', None, 'enable code coverage'), ('cmake-config-options', None, 'cmake configuration'),
+        ('enable-codecov', None, 'enable code coverage'),
+        ('cmake-config-options', None, 'cmake configuration'),
         ('cmake-build-options', None, 'cmake build options')
     ]
 
@@ -31,7 +34,12 @@ class CMakeBuild(build_ext):
         self.max_det_orb = 64
         self.enable_codecov = 'OFF'
         self.cmake_config_options = ''
-        nprocs = 1 if os.cpu_count() is None else os.cpu_count()
+        # get the CPU count. None is returned if the number of CPUs is undeterminded.
+        cpu_count = os.cpu_count()
+        if cpu_count is None:
+            nprocs = 1
+        # choose a reasonable number of processes
+        nprocs = cpu_count / 2 + 1 if cpu_count > 4 else cpu_count
         self.cmake_build_options = f'-j{nprocs}'
         return build_ext.initialize_options(self)
 
