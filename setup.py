@@ -1,10 +1,7 @@
 from setuptools import find_packages
 
 import os
-import psutil
 import re
-import sys
-import sysconfig
 import platform
 import subprocess
 
@@ -13,29 +10,28 @@ from setuptools import setup, find_packages, Extension
 from setuptools.command.build_ext import build_ext
 from shutil import copyfile, copymode
 
+
 class CMakeExtension(Extension):
     def __init__(self, name, sourcedir=''):
         Extension.__init__(self, name, sources=[])
         self.sourcedir = os.path.abspath(sourcedir)
+
 
 class CMakeBuild(build_ext):
 
     build_ext.user_options = build_ext.user_options + [
         ('ambitpath', None, 'the path to ambit'),
         ('max-det-orb', None, 'the maximum number of orbitals used by the Determinant class'),
-        ('enable-codecov', None,'enable code coverage'),
-        ('cmake-config-options', '', 'cmake configuration'),
-        ('cmake-build-options', '', 'cmake build options')
-        ]
+        ('enable-codecov', None, 'enable code coverage'), ('cmake-config-options', None, 'cmake configuration'),
+        ('cmake-build-options', None, 'cmake build options')
+    ]
 
     def initialize_options(self):
         self.ambitpath = None
         self.max_det_orb = 64
         self.enable_codecov = 'OFF'
         self.cmake_config_options = ''
-        ncore_phys = psutil.cpu_count(logical=False)
-        ncore_virt = psutil.cpu_count(logical=True)
-        nprocs = ncore_phys + 1 if ncore_phys != ncore_virt else ncore_phys
+        nprocs = 1 if os.cpu_count() is None else os.cpu_count()
         self.cmake_build_options = f'-j{nprocs}'
         return build_ext.initialize_options(self)
 
@@ -45,11 +41,11 @@ class CMakeBuild(build_ext):
         except OSError:
             raise RuntimeError(
                 "CMake must be installed to build the following extensions: " +
-                ", ".join(e.name for e in self.extensions))
+                ", ".join(e.name for e in self.extensions)
+            )
 
         if platform.system() == "Windows":
-            cmake_version = LooseVersion(re.search(r'version\s*([\d.]+)',
-                                         out.decode()).group(1))
+            cmake_version = LooseVersion(re.search(r'version\s*([\d.]+)', out.decode()).group(1))
             if cmake_version < '3.1.0':
                 raise RuntimeError("CMake >= 3.1.0 is required on Windows")
 
@@ -83,8 +79,7 @@ class CMakeBuild(build_ext):
             raise RuntimeError(msg)
 
         # grab the cmake configuration from psi4
-        process = subprocess.Popen(['psi4', '--plugin-compile'],
-                                   stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        process = subprocess.Popen(['psi4', '--plugin-compile'], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         out, err = process.communicate()
         cmake_args = out.decode("utf-8").split()[1:]
 
@@ -103,21 +98,24 @@ class CMakeBuild(build_ext):
         subprocess.check_call(['cmake'] + cmake_args)
         subprocess.check_call(['cmake', '--build', '.'] + build_args)
 
-        print() # Add empty line for nicer output
+        print()  # Add empty line for nicer output
+
 
 setup(
     name='forte',
     version='0.2.0',
     author='Forte team',
     description='A hybrid Python/C++ quantum chemistry package for strongly correlated electrons.',
-    long_description='Forte is an open-source plugin to Psi4 that implements a variety of quantum chemistry methods for strongly correlated electrons.',
+    long_description=
+    'Forte is an open-source plugin to Psi4 that implements a variety of quantum chemistry methods for strongly correlated electrons.',
     packages=['forte'],
     # tell setuptools that all packages will be under the '.' directory
-    package_dir={'':'.'},
+    package_dir={'': '.'},
     # add an extension module named 'forte' to the package
     ext_modules=[CMakeExtension('.')],
     # add custom build_ext command
     cmdclass=dict(build_ext=CMakeBuild),
     test_suite='tests',
     zip_safe=False,
+    install_requires=['psutil']
 )
