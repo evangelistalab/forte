@@ -1161,7 +1161,7 @@ std::shared_ptr<MOSpaceInfo> build_aset2_fragment(psi::SharedWavefunction ref_wf
     }
     mo_space_map_fragment["RESTRICTED_DOCC"] = {ro};
 
-    size_t a = static_cast<size_t>(fragment_active[0]);
+    size_t a = do_fci ? actv_a[0] : fragment_active[0] + add_a_actv;
     a += add_a_actv;
     if (do_fci) {
         a = actv_a[0];
