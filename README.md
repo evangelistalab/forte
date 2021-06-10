@@ -79,6 +79,11 @@ Forte may also be compiled by directly invoking CMake by following these instruc
   make
  ```
 
+### Setting up the `PYTHONPATH`
+
+If Forte is compiled with CMake, you will need to specify `PYTHONPATH` environment variable to make sure that it can be imported in python. Assuming that Forte is installed in the folder `<fortedir>`, then `PYTHONPATH` should contain `<fortedir>`. Note that if you instead include `<fortedir>/forte` in `PYTHONPATH` you will get an error.
+
+
 The following script automates steps 1 and 2 of the forte compilation process
 
 ```

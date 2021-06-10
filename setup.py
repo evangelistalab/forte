@@ -21,8 +21,8 @@ class CMakeBuild(build_ext):
 
     build_ext.user_options = build_ext.user_options + [
         ('ambitpath', None, 'the path to ambit'),
-        ('max_det_orb', 64, 'the maximum number of orbitals used by the Determinant class'),
-        ('enable_codecov',False,'enable code coverage')
+        ('max-det-orb', None, 'the maximum number of orbitals used by the Determinant class'),
+        ('enable-codecov', None,'enable code coverage')
         ]
 
     def initialize_options(self):

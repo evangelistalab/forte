@@ -57,6 +57,11 @@ void export_Determinant(py::module& m) {
         .def(py::init<const std::vector<bool>&, const std::vector<bool>&>())
         .def("get_alfa_bits", &Determinant::get_alfa_bits, "Get alpha bits")
         .def("get_beta_bits", &Determinant::get_beta_bits, "Get beta bits")
+        .def("get_alfa_occ", &Determinant::get_alfa_occ, "Get a vector of alpha occupied orbitals")
+        .def("get_beta_occ", &Determinant::get_beta_occ, "Get a vector of beta occupied orbitals")
+        .def("get_alfa_vir", &Determinant::get_alfa_vir,
+             "Get a vector of alpha unoccupied orbitals")
+        .def("get_beta_vir", &Determinant::get_beta_vir, "Get a vector of beta unoccupied orbitals")
         .def("nbits", &Determinant::get_nbits, "The number of spin orbitals (twice norb)")
         .def("nspinorb", &Determinant::get_nbits, "The number of spin orbitals (twice norb)")
         .def("norb", &Determinant::norb, "The number of spatial orbitals")
