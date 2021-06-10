@@ -532,7 +532,7 @@ std::shared_ptr<MOSpaceInfo> make_embedding(psi::SharedWavefunction ref_wfn,
         if (options->get_str("EMBEDDING_REFERENCE") != "HF") {
             Build_CAS_AO_Fock(ref_wfn, nirrep, doccpi_tmp, actv_a, nmopi);
         }
-        if (options->get_str("EMBEDDING_REFERENCE") == "HF") {
+        } else {
             outfile->Printf(
                 "\n  Warning: will not build Fock for HF/DFT reference, using wfn->Fa() directly.");
         }
