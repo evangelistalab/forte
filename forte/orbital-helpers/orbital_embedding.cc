@@ -1168,7 +1168,8 @@ std::shared_ptr<MOSpaceInfo> build_aset2_fragment(psi::SharedWavefunction ref_wf
     }
     mo_space_map_fragment["ACTIVE"] = {a};
 
-    size_t rv = static_cast<size_t>(
+    // Read fragment_docc and fragment_active, compute fragment_rvir
+    size_t rv = do_fci ? 0 : actv_a[0] - ro - a;
         actv_a[0] - ro - a); // Read fragment_docc and fragment_active, compute fragment_rvir
     if (do_fci) {
         rv = 0;
