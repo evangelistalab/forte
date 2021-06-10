@@ -1,5 +1,5 @@
 from forte.solvers.solver import Solver
-from forte.model import Model, MolecularModel
+from forte.model import MolecularModel
 from forte.forte import SCFInfo
 
 
@@ -87,10 +87,10 @@ class HF(Solver):
             raise RuntimeError('HF.energy() is implemented only for MolecularModel objects')
 
         molecule = self.data.model.molecule
-
         molecule.set_molecular_charge(self.charge)
         molecule.set_multiplicity(self.multiplicity)
 
+        # prepare options for psi4
         options = {
             'BASIS': self.data.model.basis,
             'REFERENCE': 'RHF' if self._restricted else 'UHF',

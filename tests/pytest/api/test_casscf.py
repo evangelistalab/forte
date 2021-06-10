@@ -27,14 +27,14 @@ def test_casscf():
     state = root.model.state(charge=0, multiplicity=1, sym='ag')
 
     # compute HF orbitals
-    hf = HF(root, state=state)
+    hf = HF(root,state=state)
 
     fci = FCI(states=state, active=[1, 0, 0, 0, 0, 1, 0, 0])
     # create an MCSCF object
     mcscf = MCSCF()
     mcscf.run()
 
-    def run_casscf(xyz,)
+    def run_casscf()
 
         state = root.model.state(charge=0, multiplicity=1, sym='ag')
 

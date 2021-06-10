@@ -2,8 +2,8 @@
 
 import pytest
 
-from forte import Molecule, Basis, MolecularModel
-from forte.solvers import HF, molecular_model
+from forte import Molecule, Basis
+from forte.solvers import molecular_model, HF
 
 
 def test_hf():

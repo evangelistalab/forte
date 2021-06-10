@@ -22,14 +22,6 @@ class Solver(ABC):
         self._output_file = 'output.dat'
         self._executed = False
 
-    # def copy(self, other):
-    #     self.model = other.model
-    #     self.psi_wfn = other.psi_wfn
-    #     self.scf_info = other.scf_info
-    #     self.mo_space_info = other.mo_space_info
-    #     self.ints = other.ints
-    #     self.output_file = other.output_file
-
     @abstractmethod
     def run(self):
         """Interface for computing the energy"""
