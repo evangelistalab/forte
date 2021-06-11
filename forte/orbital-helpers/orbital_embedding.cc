@@ -532,7 +532,7 @@ std::shared_ptr<MOSpaceInfo> make_embedding(psi::SharedWavefunction ref_wfn,
         if (options->get_str("EMBEDDING_REFERENCE") != "HF") {
             Build_CAS_AO_Fock(ref_wfn, nirrep, doccpi_tmp, actv_a, nmopi);
         }
-        } else {
+        else {
             outfile->Printf(
                 "\n  Warning: will not build Fock for HF/DFT reference, using wfn->Fa() directly.");
         }
@@ -1155,25 +1155,13 @@ std::shared_ptr<MOSpaceInfo> build_aset2_fragment(psi::SharedWavefunction ref_wf
     mo_space_map_fragment["FROZEN_DOCC"] = {freeze_o};
 
     size_t ro = do_fci ? 0 : fragment_rocc[0] + add_a_docc;
-    ro += add_a_docc;
-    if (do_fci) {
-        ro = 0;
-    }
     mo_space_map_fragment["RESTRICTED_DOCC"] = {ro};
 
     size_t a = do_fci ? actv_a[0] : fragment_active[0] + add_a_actv;
-    a += add_a_actv;
-    if (do_fci) {
-        a = actv_a[0];
-    }
     mo_space_map_fragment["ACTIVE"] = {a};
 
     // Read fragment_docc and fragment_active, compute fragment_rvir
     size_t rv = do_fci ? 0 : actv_a[0] - ro - a;
-        actv_a[0] - ro - a); // Read fragment_docc and fragment_active, compute fragment_rvir
-    if (do_fci) {
-        rv = 0;
-    }
     mo_space_map_fragment["RESTRICTED_UOCC"] = {rv};
 
     size_t freeze_v = static_cast<size_t>(frzvpi[0] + nrvirpi[0]);
