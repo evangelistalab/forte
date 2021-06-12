@@ -6,11 +6,6 @@ from forte.forte import SCFInfo
 class HF(Solver):
     """
     A class to run Hartree-Fock computations
-
-    Attributes
-    ----------
-    restricted : bool
-        is this a restricted computation
     """
     def __init__(
         self,
@@ -19,6 +14,10 @@ class HF(Solver):
         restricted=True,
         e_convergence=1.0e-10,
         d_convergence=1.0e-6,
+        int_type='conventional',
+        docc=None,
+        socc=None,
+        options=None
     ):
         """
         initialize a Basis object
@@ -30,7 +29,15 @@ class HF(Solver):
         e_convergence: float
             energy convergence criterion
         d_convergence: float
-            density matrix convergence criterion                        
+            density matrix convergence criterion
+        int_type: str
+            the type of integrals used in the HF procedure (conventional = pk, direct, df, ...)
+        docc: list(int)
+            The number of doubly occupied orbitals per irrep
+        socc: list(int)
+            The number of singly occupied orbitals per irrep
+        options: dict()
+            Additional options passed to control psi4
         """
         # initialize common objects
         super().__init__()
@@ -39,6 +46,10 @@ class HF(Solver):
         self._restricted = restricted
         self._e_convergence = e_convergence
         self._d_convergence = d_convergence
+        self._int_type = int_type
+        self._docc = docc
+        self._socc = socc
+        self._options = {} if options is None else options
 
     def __repr__(self):
         """
@@ -80,9 +91,18 @@ class HF(Solver):
     def d_convergence(self):
         return self._d_convergence
 
+    @property
+    def docc(self):
+        return self._docc
+
+    @property
+    def socc(self):
+        return self._socc
+
     def run(self):
-        """Compute the energy using psi4"""
+        """Compute the Hartree-Fock energy"""
         import psi4
+        # currently limited to molecules
         if not isinstance(self.data.model, MolecularModel):
             raise RuntimeError('HF.energy() is implemented only for MolecularModel objects')
 
@@ -91,16 +111,34 @@ class HF(Solver):
         molecule.set_multiplicity(self.multiplicity)
 
         # prepare options for psi4
+        scf_type_dict = {
+            'CONVENTIONAL': 'PK',
+            'STD': 'PK',
+        }
+
+        if self._int_type.upper() in scf_type_dict:
+            scf_type = scf_type_dict[self._int_type.upper()]
+        else:
+            scf_type = self._int_type.upper()
+
         options = {
             'BASIS': self.data.model.basis,
             'REFERENCE': 'RHF' if self._restricted else 'UHF',
-            'SCF_TYPE': 'pk',
+            'SCF_TYPE': scf_type,
             'E_CONVERGENCE': self.e_convergence,
             'D_CONVERGENCE': self.d_convergence
         }
 
+        # optionally specify docc/socc
+        if self.docc is not None:
+            options['DOCC'] = self.docc
+        if self.socc is not None:
+            options['SOCC'] = self.socc
+
+        full_options = {**options, **self._options}
+
         # set the options
-        psi4.set_options(options)
+        psi4.set_options(full_options)
 
         # pipe output to the file self._output_file
         psi4.core.set_output_file(self._output_file, True)
@@ -111,10 +149,11 @@ class HF(Solver):
         # add the energy to the results
         self._results.add('hf energy', energy, 'Hartree-Fock energy', 'Eh')
 
-        # add objects to the collection
+        # store calculation outputs in the Data object
         self.data.psi_wfn = psi_wfn
         self.data.scf_info = SCFInfo(psi_wfn)
 
+        # set executed flag
         self._executed = True
 
         return self

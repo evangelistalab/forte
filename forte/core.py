@@ -51,7 +51,7 @@ def clean_options():
 
 
 class ForteManager(object):
-    """Singleton class to handle startup and cleanup of forte (mosly ambit)"""
+    """Singleton class to handle startup and cleanup of forte (mostly ambit)"""
     _instance = None
 
     def __new__(cls):
@@ -59,7 +59,7 @@ class ForteManager(object):
             cls._instance = True
             print('Creating the ambit object')
             # Put any initialization here.
-            forte.startup()
+            my_proc, n_nodes = forte.startup()
         return cls._instance
 
     def __del__(cls):
