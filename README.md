@@ -107,7 +107,7 @@ $cmake_psi4 \
 -DPYTHON_EXECUTABLE=/opt/anaconda3/bin/python \
 -DENABLE_ForteTests=TRUE \
 
-make -j4
+make -j`getconf _NPROCESSORS_ONLN`
 ```
 
 ### Advanced compilation options
