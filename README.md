@@ -4,7 +4,7 @@
 [![Documentation Status](https://readthedocs.org/projects/forte/badge/?version=latest)](http://forte.readthedocs.io/en/latest/?badge=latest)
 [![codecov](https://codecov.io/gh/evangelistalab/forte/branch/master/graph/badge.svg)](https://codecov.io/gh/evangelistalab/forte)
 
-#### Code Authors: Evangelistalab
+#### Code Authors: EvangelistaLab
 
 #### Manual (http://forte.readthedocs.io/)
 #### Web: evangelistalab.org
@@ -12,7 +12,7 @@
 Forte is an open-source plugin to Psi4 (https://github.com/psi4/psi4) that implements a variety of quantum chemistry methods
 for strongly correlated electrons.
 
-## Download and compilation
+## Download and compilation of Forte
 
 Prior to the compilation of Forte you must first check to make sure you have the following:
 
@@ -25,7 +25,7 @@ Prior to the compilation of Forte you must first check to make sure you have the
 
 Once you have the current versions of Psi4, CMake, and Ambit, follow the following instructions to install Forte.
 
-### Download
+### Download Forte
 
 1. Open a terminal and change the current working directory to the location where you want to clone the Forte directory.
 Let's assume this is the folder `src`.
@@ -34,20 +34,21 @@ Let's assume this is the folder `src`.
 ```bash
 git clone git@github.com:evangelistalab/forte.git
 ```
+The repository will be cloned in the folder `src/forte`
 
 ### 1. Compilation via `setup.py` (recommended)
 
 The most convenient way to compile forte is using the `setup.py` script. To compile Forte do the following:
 
 1. From the `src` directory change to the forte directory `src/forte`
-1. Tell `setup.py` where to find ambit, which can be done either by setting the environmental variable `AMBITDIR` to point to the ambit install directory (note: there is no need to append `share/cmake/ambit`)
-```tcsh
-export AMBITPATH=<ambit install dir>
-```
-or by modifying the `src/forte/setup.cfg` file to include
+1. Tell `setup.py` where to find ambit, which can be done by creating the `src/forte/setup.cfg` file and adding the following lines
 ```tcsh
 [CMakeBuild]
 ambitpath=<ambit install dir>
+```
+or alternatively by setting the environmental variable `AMBITDIR` to point to the ambit install directory (note: there is no need to append `share/cmake/ambit`)
+```tcsh
+export AMBITPATH=<ambit install dir>
 ```
 3. Compile forte by calling
 ```tcsh
@@ -55,7 +56,7 @@ python setup.py develop
 ```
 or for Debug mode
 ```tcsh
-fortedir> python setup.py build_ext --debug develop
+python setup.py build_ext --debug develop
 ```
 This procedure will register forte within pip and you should be able to see forte listed just by calling
 ```tcsh
@@ -88,7 +89,7 @@ Forte may also be compiled by directly invoking CMake by following these instruc
  ```
  
  3. Run make
- ```
+ ```tcsh
   make
  ```
 
@@ -131,8 +132,29 @@ make -j`getconf _NPROCESSORS_ONLN`
 
 ### Advanced compilation options
 
-- **Maximum number of orbitals in the `Determinant` class**.
-By default, Forte is compiled assuming that the maximum number of orbitals that can be handled by codes that use the `Determinant` class is 64. To change this value modify the `<fortedir>/setup.cfg` file to include
+#### **Number of threads used to compile Forte**
+To speed up compilation of Forte specify the number of threads to use for compilation.
+This can be done in the `setup.cfg` file via
+```tcsh
+[CMakeBuild]
+nprocs=<number of threads>
+```
+or when using CMake, compile Forte with the option -jn, for example, to compile with four threads
+```tcsh
+make -j4
+```
+
+#### Add configuration and build options
+When using `setup.py` you can specify the `CMAKE_CONFIG_OPTIONS` and `CMAKE_BUILD_OPTIONS` passed internally to CMake in `setup.cfg`
+```tcsh
+[CMakeBuild]
+cmake_config_options=...
+cmake_build_options=...
+```
+These are convenient if you want to specify a different compiler from the one automatically detected by CMake.
+
+#### **Maximum number of orbitals in the `Determinant` class**
+By default, Forte is compiled assuming that the maximum number of orbitals that can be handled by codes that use the `Determinant` class is 64. To change this value modify the `setup.cfg` file to include
 ```tcsh
 [CMakeBuild]
 max_det_orb=<a multiple of 64>
@@ -143,13 +165,14 @@ or add the option
 ```
 if compiling with CMake.
 
-- **Enabling code coverage**. To enable compilation with code coverage activated, set the option `enable_codecov` to `ON` in the `<fortedir>/setup.cfg` file
-```tcsh
-[CMakeBuild]
-enable_codecov=ON
-```
+#### **Enabling code coverage**
+To enable compilation with code coverage activated, set the option `enable_codecov` to `ON` in the `setup.cfg` file
+  ```tcsh
+  [CMakeBuild]
+  enable_codecov=ON
+  ```
 or add the option
-```tcsh
--DENABLE_CODECOV=ON
-```
+  ```tcsh
+  -DENABLE_CODECOV=ON
+  ```
 if compiling with CMake.
