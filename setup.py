@@ -27,7 +27,6 @@ class CMakeBuild(build_ext):
         ('enable-codecov', None, 'enable code coverage'),
         ('cmake-config-options', None, 'cmake configuration'),
         ('cmake-build-options', None, 'cmake build options'),
-        ('cmake-build-options', None, 'cmake build options'),
         ('nprocs', None, 'number of threads used to compile Forte')
     ]
 
