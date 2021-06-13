@@ -26,7 +26,9 @@ class CMakeBuild(build_ext):
         ('max-det-orb', None, 'the maximum number of orbitals used by the Determinant class'),
         ('enable-codecov', None, 'enable code coverage'),
         ('cmake-config-options', None, 'cmake configuration'),
-        ('cmake-build-options', None, 'cmake build options')
+        ('cmake-build-options', None, 'cmake build options'),
+        ('cmake-build-options', None, 'cmake build options'),
+        ('nprocs', None, 'number of threads used to compile Forte')
     ]
 
     def initialize_options(self):
@@ -34,13 +36,8 @@ class CMakeBuild(build_ext):
         self.max_det_orb = 64
         self.enable_codecov = 'OFF'
         self.cmake_config_options = ''
-        # get the CPU count. None is returned if the number of CPUs is undeterminded.
-        cpu_count = os.cpu_count()
-        if cpu_count is None:
-            nprocs = 1
-        # choose a reasonable number of processes
-        nprocs = cpu_count / 2 + 1 if cpu_count > 4 else cpu_count
-        self.cmake_build_options = f'-j{nprocs}'
+        self.cmake_build_options = ''
+        self.nprocs = None
         return build_ext.initialize_options(self)
 
     def run(self):
@@ -65,13 +62,21 @@ class CMakeBuild(build_ext):
 
         cfg = 'Debug' if self.debug else 'Release'
 
-        print(f'\n  Forte compilation options')
+        # if nprocs is not specified we use os.cpu_count() to find the CPU count
+        if self.nprocs in [None, 'None', '']:
+            # None is returned if the number of CPUs is undetermined
+            cpu_count = os.cpu_count()
+            # use the maximum number of processors
+            self.nprocs = 1 if cpu_count is None else cpu_count
+
+        print('\n  Forte compilation options')
         print(f'\n    BUILD_TYPE = {cfg}')
         print(f'    AMBITPATH = {self.ambitpath}')
         print(f'    MAX_DET_ORB = {self.max_det_orb}')
         print(f'    ENABLE_CODECOV = {str(self.enable_codecov).upper()}')
         print(f'    CMAKE_CONFIG_OPTIONS = {self.cmake_config_options}')
-        print(f'    CMAKE_BUILD_OPTIONS = {self.cmake_build_options}\n')
+        print(f'    CMAKE_BUILD_OPTIONS = {self.cmake_build_options}')
+        print(f'    NPROCS = {self.nprocs}\n')
 
         if 'AMBITPATH' in os.environ:
             self.ambitpath = os.environ['AMBITPATH']
@@ -101,6 +106,7 @@ class CMakeBuild(build_ext):
 
         # define build arguments
         build_args = self.cmake_build_options.split()
+        build_args.append(f'-j{self.nprocs}')
 
         # call cmake and build
         subprocess.check_call(['cmake'] + cmake_args)

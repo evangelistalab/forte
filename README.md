@@ -12,7 +12,7 @@
 Forte is an open-source plugin to Psi4 (https://github.com/psi4/psi4) that implements a variety of quantum chemistry methods
 for strongly correlated electrons.
 
-## Compilation
+## Download and compilation
 
 Prior to the compilation of Forte you must first check to make sure you have the following:
 
@@ -25,24 +25,33 @@ Prior to the compilation of Forte you must first check to make sure you have the
 
 Once you have the current versions of Psi4, CMake, and Ambit, follow the following instructions to install Forte.
 
+### Download
+
+1. Open a terminal and change the current working directory to the location where you want to clone the Forte directory.
+Let's assume this is the folder `src`.
+
+2. Clone Forte from GitHub by pasting the following command:
+```bash
+git clone git@github.com:evangelistalab/forte.git
+```
+
 ### 1. Compilation via `setup.py` (recommended)
 
 The most convenient way to compile forte is using the `setup.py` script. To compile Forte do the following:
 
+1. From the `src` directory change to the forte directory `src/forte`
 1. Tell `setup.py` where to find ambit, which can be done either by setting the environmental variable `AMBITDIR` to point to the ambit install directory (note: there is no need to append `share/cmake/ambit`)
-
 ```tcsh
 export AMBITPATH=<ambit install dir>
 ```
-or by modifying the `<fortedir>/setup.cfg` file to include
+or by modifying the `src/forte/setup.cfg` file to include
 ```tcsh
 [CMakeBuild]
 ambitpath=<ambit install dir>
 ```
-
-2. Compile forte by calling
+3. Compile forte by calling
 ```tcsh
-fortedir> python setup.py develop 
+python setup.py develop 
 ```
 or for Debug mode
 ```tcsh
@@ -51,6 +60,10 @@ fortedir> python setup.py build_ext --debug develop
 This procedure will register forte within pip and you should be able to see forte listed just by calling
 ```tcsh
 pip list
+```
+You can test that the path to Forte is set correctly by running python and importing forte:
+```python
+import forte
 ```
 
 ### 2. Compilation via CMake
@@ -81,7 +94,13 @@ Forte may also be compiled by directly invoking CMake by following these instruc
 
 #### Setting up the `PYTHONPATH`
 
-If Forte is compiled with CMake, you will need to specify `PYTHONPATH` environment variable to make sure that it can be imported in python. Assuming that Forte is installed in the folder `<fortedir>`, then `PYTHONPATH` should contain `<fortedir>`. Note that if you instead include `<fortedir>/forte` in `PYTHONPATH` you will get an error.
+If Forte is compiled with CMake, you will need to specify `PYTHONPATH` environment variable to make sure that it can be imported in python. Assuming that you cloned Forte from the folder `src` then you will have a folder named `src/forte`.
+Your `PYTHONPATH` should then include `src/forte`
+```bash
+# in bash
+export PYTHONPATH=<homedir>/src/forte:$PYTHONPATH 
+```
+This allows Forte to be imported correctly since the main `__init__.py` file for Forte is found at `src/forte/forte/__init__.py`
 
 
 #### CMake script
