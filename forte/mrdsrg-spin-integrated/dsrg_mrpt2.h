@@ -234,12 +234,6 @@ class DSRG_MRPT2 : public MASTER_DSRG {
     void set_z_aa_diag();
     void set_w();
 
-
-    // void change_zmn_degenerate(ambit::BlockedTensor& temp1, 
-    //     ambit::BlockedTensor& temp2, ambit::BlockedTensor& zmn_d, double coeff);
-    // void change_zef_degenerate(ambit::BlockedTensor& temp1, 
-    //     ambit::BlockedTensor& temp2, ambit::BlockedTensor& zef_d, double coeff);
-
     double s;
 
     size_t ndets;
