@@ -57,6 +57,9 @@ class DSRG_MRPT2 : public MASTER_DSRG {
     /// Compute the DSRG-MRPT2 energy
     virtual double compute_energy();
 
+    /// Compute the DSRG-MRPT2 gradient
+    psi::SharedMatrix compute_gradient() override;
+
     /// Compute second-order effective Hamiltonian couplings
     /// <M|H + HA(N)|N> = Heff1 * TrD1 + Heff2 * TrD2 + Heff3 * TrD3 if CAS
     virtual void compute_Heff_2nd_coupling(double& H0, ambit::Tensor& H1a, ambit::Tensor& H1b,
@@ -174,6 +177,196 @@ class DSRG_MRPT2 : public MASTER_DSRG {
 
     /// Unitary matrix to block diagonal Fock
     ambit::BlockedTensor U_;
+
+
+    // NOTICE These are essential variables and functions for computing DSRG-MRPT2 gradient.
+    // Some variables may be redundant thus need further elimination
+    /// Set ambit tensor labels
+    void set_ambit_space();
+    /// Set tensors
+    void set_tensor();
+    /// Set density
+    void set_density();
+    /// Set Fock matrix
+    void set_fock();
+    /// Set Hamiltonian
+    void set_h();
+    /// Set two-electron integrals
+    void set_v();
+    /// Set CI-relevant integrals
+    void set_ci_ints();
+
+    /// Set MO space environment and global variables
+    void set_global_variables();
+    size_t nmo_;
+    size_t ncore_;
+    size_t nvirt_;
+    size_t na_;
+    size_t nirrep_;
+
+
+    void set_dsrg_tensor();
+
+   
+    /// Write the Lagrangian
+    void write_lagrangian();
+    /// Write spin_dependent one-RDMs coefficients
+    void write_1rdm_spin_dependent();
+    /// Write spin_dependent two-RDMs coefficients using IWL
+    void write_2rdm_spin_dependent();
+    /// TPDM backtransform
+    void tpdm_backtransform();
+
+   
+    void set_multiplier(); 
+
+    void solve_z();
+    void set_sigma();
+    void set_xi();
+    void set_tau();
+    void set_kappa();
+    void set_z();
+    void set_alpha();
+    void set_CI();
+    void set_b();
+    void set_z_cc();
+    void set_z_vv();
+    void set_z_aa_diag();
+    void set_w();
+
+
+    // void change_zmn_degenerate(ambit::BlockedTensor& temp1, 
+    //     ambit::BlockedTensor& temp2, ambit::BlockedTensor& zmn_d, double coeff);
+    // void change_zef_degenerate(ambit::BlockedTensor& temp1, 
+    //     ambit::BlockedTensor& temp2, ambit::BlockedTensor& zef_d, double coeff);
+
+    double s;
+
+    size_t ndets;
+
+    /// List of core MOs (Correlated)
+    std::vector<size_t> core_mos_;
+    /// List of active MOs (Correlated)
+    std::vector<size_t> actv_mos_;
+    /// List of virtual MOs (Correlated)
+    std::vector<size_t> virt_mos_;
+    /// List of core MOs (Absolute)
+   
+    std::vector<size_t> core_all_;
+    /// List of active MOs (Absolute)
+    std::vector<size_t> actv_all_;
+    std::vector<size_t> virt_all_;
+
+    /// List of relative core MOs
+    std::vector<std::pair<unsigned long, unsigned long>,
+                std::allocator<std::pair<unsigned long, unsigned long>>>
+        core_mos_relative;
+    /// List of relative active MOs
+    std::vector<std::pair<unsigned long, unsigned long>,
+                std::allocator<std::pair<unsigned long, unsigned long>>>
+        actv_mos_relative;
+    /// List of relative virtual MOs
+    std::vector<std::pair<unsigned long, unsigned long>,
+                std::allocator<std::pair<unsigned long, unsigned long>>>
+        virt_mos_relative;
+
+    /// Dimension of different irreps
+    psi::Dimension irrep_vec;
+
+    /// Two-body denisty tensor
+    ambit::BlockedTensor Gamma2_;
+    /// Lagrangian tensor
+    ambit::BlockedTensor W_;
+
+    // core Hamiltonian
+    ambit::BlockedTensor H;
+    // two-electron integrals
+    ambit::BlockedTensor V;
+    // Fock matrix
+    ambit::BlockedTensor F;
+
+    ambit::BlockedTensor Eeps1;
+    ambit::BlockedTensor Eeps1_m1;
+    ambit::BlockedTensor Eeps1_m2;
+    ambit::BlockedTensor Eeps2;
+    ambit::BlockedTensor Eeps2_p;
+    ambit::BlockedTensor Eeps2_m1;
+    ambit::BlockedTensor Eeps2_m2;
+
+
+    ambit::BlockedTensor Delta1;
+    ambit::BlockedTensor Delta2;
+    ambit::BlockedTensor DelGam1;
+    ambit::BlockedTensor DelEeps1;
+
+
+
+    ambit::BlockedTensor I;
+
+    // Lagrange multiplier
+    ambit::BlockedTensor Z;
+    ambit::BlockedTensor Z_b;
+    ambit::BlockedTensor Tau1;
+    ambit::BlockedTensor Tau2;
+    ambit::BlockedTensor T2OverDelta;
+    ambit::BlockedTensor Kappa;
+    ambit::BlockedTensor Sigma;
+    ambit::BlockedTensor Sigma1;
+    ambit::BlockedTensor Sigma2;
+    ambit::BlockedTensor Sigma3;
+    ambit::BlockedTensor Xi;
+    ambit::BlockedTensor Xi1;
+    ambit::BlockedTensor Xi2;
+    ambit::BlockedTensor Xi3;
+
+
+
+    double Alpha;
+    ambit::Tensor x_ci;
+
+    // Tensors for solving CI equations
+    ambit::BlockedTensor CI_1;
+    ambit::BlockedTensor CI_2;
+
+    ambit::BlockedTensor V_N_Alpha;
+    ambit::BlockedTensor V_N_Beta;
+    ambit::BlockedTensor V_R_Beta;
+    ambit::BlockedTensor V_all_Beta;
+
+    CouplingCoefficients cc;
+    ambit::Tensor ci;
+
+    ambit::Tensor cc1a_n;
+    ambit::Tensor cc1a_r;
+    ambit::Tensor cc1b_n;
+    ambit::Tensor cc1b_r;
+
+    ambit::Tensor cc2aa_n;
+    ambit::Tensor cc2aa_r;
+    ambit::Tensor cc2bb_n;
+    ambit::Tensor cc2bb_r;
+    ambit::Tensor cc2ab_n;
+    ambit::Tensor cc2ab_r;
+
+    ambit::Tensor cc3aaa_n;
+    ambit::Tensor cc3aaa_r;
+    ambit::Tensor cc3bbb_n;
+    ambit::Tensor cc3bbb_r;
+    ambit::Tensor cc3aab_n;
+    ambit::Tensor cc3aab_r;
+    ambit::Tensor cc3abb_n;
+    ambit::Tensor cc3abb_r;
+
+    ambit::Tensor dlamb_aa;
+    ambit::Tensor dlamb_bb;
+    ambit::Tensor dlamb_ab;
+
+    ambit::Tensor dlamb3_aaa;
+    ambit::Tensor dlamb3_bbb;
+    ambit::Tensor dlamb3_aab;
+    ambit::Tensor dlamb3_abb;
+
+
 
     // => Amplitude <= //
 

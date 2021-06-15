@@ -245,6 +245,26 @@ class ProcedureDSRG:
 
         return e_dsrg if len(self.energies) == 0 else e_relax
 
+    def compute_gradient(self, coupling_coefficients, ci_vectors):
+        """ Compute DSRG-MRPT2 analytic gradients. """
+        # Notes (Shuhe Wang):
+
+        e_relax = 0.0  # initialize this to avoid PyCharm warning
+
+        # Perform the initial un-relaxed DSRG
+        self.make_dsrg_solver()
+        self.dsrg_setup()
+        e_dsrg = self.dsrg_solver.compute_energy()
+
+        self.dsrg_solver.set_coupling_coefficients(coupling_coefficients)
+        self.dsrg_solver.set_ci_vectors(ci_vectors)
+        self.dsrg_solver.compute_gradient()
+
+        self.dsrg_cleanup()
+
+        return True
+
+
     def compute_dipole_relaxed(self):
         """ Compute dipole moments. """
         dipole_moments = self.dsrg_solver.nuclear_dipole()

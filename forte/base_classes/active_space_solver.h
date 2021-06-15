@@ -36,6 +36,7 @@
 #include "psi4/libmints/matrix.h"
 
 #include "base_classes/state_info.h"
+#include "base_classes/coupling_coefficients.h"
 
 namespace forte {
 
@@ -129,6 +130,12 @@ class ActiveSpaceSolver {
 
     /// Set if read wave function from file as initial guess
     void set_read_initial_guess(bool read_guess) { read_initial_guess_ = read_guess; }
+
+    /// Return the coupling coefficients for a given state
+    CouplingCoefficients coupling_coefficients(const StateInfo& state, int max_level = 2);
+
+    /// Return the eigen vectors for a given state
+    std::vector<ambit::Tensor> eigen_vectors(const StateInfo& state);
 
   protected:
     /// a string that specifies the method used (e.g. "FCI", "ACI", ...)

@@ -478,10 +478,29 @@ def forte_driver(state_weights_map, scf_info, options, ints, mo_space_info):
     # solver for dynamical correlation from DSRG
     correlation_solver_type = options.get_str('CORRELATION_SOLVER')
     if correlation_solver_type != 'NONE':
+
+        # Grab coupling coefficients
+        # NOTE: Orbitals have to be semicanonicalized already to make sure
+        #       DSRG reads consistent CI coefficients before and after SemiCanonical class.
+        do_grad = options.get_str('DERTYPE') == 'FIRST'
+        if active_space_solver_type == "CAS" and do_grad:
+            # This is OK only when running state-specific calculations
+            state = list(state_map.keys())[0]
+            coupling_coefficients = active_space_solver.coupling_coefficients(state, 3)
+            ci_vectors = active_space_solver.eigen_vectors(state)
+
         dsrg_proc = ProcedureDSRG(active_space_solver, state_weights_map, mo_space_info, ints, options, scf_info)
-        return_en = dsrg_proc.compute_energy()
+
+        if do_grad:
+            dsrg_proc.compute_gradient(coupling_coefficients, ci_vectors)
+        else:
+            return_en = dsrg_proc.compute_energy()
+
         dsrg_proc.print_summary()
         dsrg_proc.push_to_psi4_environment()
+
+        if do_grad:
+            return True
     else:
         average_energy = forte.compute_average_state_energy(state_energies_list, state_weights_map)
         return_en = average_energy
@@ -638,9 +657,10 @@ def gradient_forte(name, **kwargs):
 
     # Run a method
     job_type = options.get_str('JOB_TYPE')
+    correlation_solver = options.get_str('CORRELATION_SOLVER')
 
-    if job_type not in {"CASSCF", "MCSCF_TWO_STEP"}:
-        raise Exception('Analytic energy gradients are only implemented for job_types CASSCF and MCSCF_TWO_STEP.')
+    if job_type not in {"CASSCF", "MCSCF_TWO_STEP"} and not correlation_solver == 'DSRG-MRPT2':
+        raise Exception('Analytic energy gradients are only implemented for job_types CASSCF, DSRG-MRPT2 and MCSCF_TWO_STEP.')
 
     # Prepare Forte objects: state_weights_map, mo_space_info, scf_info
     forte_objects = prepare_forte_objects(options, name, **kwargs)
@@ -673,6 +693,10 @@ def gradient_forte(name, **kwargs):
         casscf = forte.make_mcscf_two_step(state_weights_map, scf_info, options,
                                            mo_space_info, ints)
         energy = casscf.compute_energy()
+
+    if correlation_solver == 'DSRG-MRPT2':
+        forte_driver(state_weights_map, scf_info, options, ints,
+                              mo_space_info)
 
     time_pre_deriv = time.time()
 

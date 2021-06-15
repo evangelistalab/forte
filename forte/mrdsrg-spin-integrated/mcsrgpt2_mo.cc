@@ -222,6 +222,13 @@ double MCSRGPT2_MO::ElementRH(const std::string& source, const double& D, const 
     }
 }
 
+SharedMatrix MCSRGPT2_MO::compute_gradient() {   
+    outfile->Printf("\n Oh no!, you tried to compute gradient but this "
+                    "is not there!!");
+    throw psi::PSIEXCEPTION("gradient is not implemented");
+    return std::make_shared<Matrix>("nullptr", 0, 0);
+}
+
 void MCSRGPT2_MO::Form_Fock_SRG() {
     timer_on("Fock_SRG");
 

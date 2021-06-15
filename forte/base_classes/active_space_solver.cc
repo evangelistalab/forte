@@ -39,6 +39,7 @@
 #include "base_classes/forte_options.h"
 #include "base_classes/rdms.h"
 #include "base_classes/mo_space_info.h"
+#include "base_classes/coupling_coefficients.h"
 #include "helpers/printing.h"
 #include "integrals/active_space_integrals.h"
 #include "mrdsrg-helper/dsrg_transformed.h"
@@ -824,6 +825,15 @@ compute_average_state_energy(const std::map<StateInfo, std::vector<double>>& sta
             std::inner_product(energies.begin(), energies.end(), weights.begin(), 0.0);
     }
     return average_energy;
+}
+
+CouplingCoefficients ActiveSpaceSolver::coupling_coefficients(const StateInfo& state,
+                                                              int max_level) {
+    return state_method_map_[state]->coupling_coefficients(max_level);
+}
+
+std::vector<ambit::Tensor> ActiveSpaceSolver::eigen_vectors(const StateInfo& state) {
+    return state_method_map_[state]->eigen_vectors();
 }
 
 } // namespace forte

@@ -36,6 +36,7 @@
 #include "sparse_ci/determinant.h"
 #include "psi4/libmints/matrix.h"
 #include "psi4/libmints/vector.h"
+#include "base_classes/coupling_coefficients.h"
 
 namespace forte {
 
@@ -132,6 +133,17 @@ class ActiveSpaceMethod {
     /// Set options from an option object
     /// @param options the options passed in
     virtual void set_options(std::shared_ptr<ForteOptions> options) = 0;
+
+    /// Return the coupling coefficients in ambit::Tensor format
+    virtual CouplingCoefficients coupling_coefficients(int level) {
+        throw std::runtime_error("Not Implemented other than FCI_MO! level = " +
+                                 std::to_string(level));
+    }
+
+    /// Return the eigen vectors
+    virtual std::vector<ambit::Tensor> eigen_vectors() {
+        throw std::runtime_error("Not Implemented!");
+    }
 
     /// Compute transition dipole moments assuming same orbitals
     std::vector<std::vector<double>>

@@ -112,6 +112,9 @@ class FCI_MO : public ActiveSpaceMethod {
     /// Compute state-specific CASCI energy
     std::vector<double> compute_ss_energies();
 
+    /// Return the coupling coefficients
+    CouplingCoefficients coupling_coefficients(int level) override;
+
     /// Compute the reduced density matrices up to a given particle rank (max_rdm_level)
     std::vector<RDMs> rdms(const std::vector<std::pair<size_t, size_t>>& root_list,
                            int max_rdm_level) override;
@@ -264,6 +267,31 @@ class FCI_MO : public ActiveSpaceMethod {
     /// Return the parsed state-averaged info
     std::vector<std::tuple<int, int, int, std::vector<double>>> sa_info() { return sa_info_; }
 
+    /// Return the 1-alpha coupling coefficients
+    ambit::Tensor coupling_coeffcients_1a();
+    /// Return the 1-beta coupling coefficients
+    ambit::Tensor coupling_coeffcients_1b();
+    /// Return the 2-alpha-alpha coupling coefficients
+    ambit::Tensor coupling_coeffcients_2aa();
+    /// Return the 2-alpha-beta coupling coefficients
+    ambit::Tensor coupling_coeffcients_2ab();
+    /// Return the 2-beta-beta coupling coefficients
+    ambit::Tensor coupling_coeffcients_2bb();
+    /// Return the 3-alpha-alpha-alpha coupling coefficients
+    ambit::Tensor coupling_coeffcients_3aaa();
+    /// Return the 3-alpha-alpha-beta coupling coefficients
+    ambit::Tensor coupling_coeffcients_3aab();
+    /// Return the 3-alpha-beta-beta coupling coefficients
+    ambit::Tensor coupling_coeffcients_3abb();
+    /// Return the 3-beta-beta-beta coupling coefficients
+    ambit::Tensor coupling_coeffcients_3bbb();
+
+    /// Return the eigen vector in ambit Tensor format
+    std::vector<ambit::Tensor> eigen_vectors() override;
+
+    /// Return the size of determinants
+    size_t det_size();
+
   protected:
     /// Basic Preparation
     void startup();
@@ -360,6 +388,9 @@ class FCI_MO : public ActiveSpaceMethod {
     vecdet determinant_;
     std::vector<Determinant> dominant_dets_;
     std::vector<vecdet> p_spaces_;
+
+    /// Determinants in hash vector form
+    DeterminantHashVec det_hash_vec_;
 
     /// Size of Singles Determinants
     size_t singles_size_;

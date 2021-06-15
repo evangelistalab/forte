@@ -54,6 +54,9 @@ class DSRG_MRPT3 : public MASTER_DSRG {
     /// Compute the DSRG-MRPT3 energy
     virtual double compute_energy();
 
+    /// Compute gradient
+    psi::SharedMatrix compute_gradient() override;
+
     /// Compute the DSRG-MRPT3 energy with relaxed reference (once)
     double compute_energy_relaxed();
 

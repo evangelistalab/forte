@@ -50,6 +50,29 @@ class DSRG_SOURCE {
     /// Renormalize denominator
     virtual double compute_renormalized_denominator(const double& D) = 0;
 
+    double compute_denominator(const double& D, int i) {
+        if (std::fabs(D) < 1e-6) {
+            switch(i) {
+                case 1:
+                    return 0;
+                case 2:
+                    return s_;
+            }
+        }
+        else {
+            switch(i) {
+                case 1:
+                    return (1.0 - std::exp(-s_ * D * D)) / D;
+                case 2:
+                    return (1.0 - std::exp(-s_ * D * D)) / D / D;
+            }
+        }
+    }
+
+    double get_s() {
+        return s_;
+    }
+
   protected:
     /// Flow parameter
     double s_;
