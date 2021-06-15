@@ -127,11 +127,12 @@ def aset2_driver(state_weights_map, scf_info, ref_wfn, mo_space_info, options):
     else:
         # If fragment integrals is not convntional, build a custom empty ints here
         nmo = mo_space_info_active.size("ALL")
+        ncmo = mo_space_info_active.size("CORRELATED")
         scalar = 0.0 
         hcore = np.zeros((nmo, nmo))
-        eri_aa = np.zeros((nmo, nmo, nmo, nmo))
-        eri_ab = np.zeros((nmo, nmo, nmo, nmo))
-        eri_bb = np.zeros((nmo, nmo, nmo, nmo))
+        eri_aa = np.zeros((ncmo, ncmo, ncmo, ncmo))
+        eri_ab = np.zeros((ncmo, ncmo, ncmo, ncmo))
+        eri_bb = np.zeros((ncmo, ncmo, ncmo, ncmo))
         ints_f = forte.make_custom_ints(options, mo_space_info_active, scalar,
                                   hcore.flatten(), hcore.flatten(), eri_aa.flatten(),
                                   eri_ab.flatten(), eri_bb.flatten())
