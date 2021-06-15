@@ -1,7 +1,6 @@
 from setuptools import find_packages
 
 import os
-import psutil
 import re
 import platform
 import subprocess
@@ -29,6 +28,7 @@ class CMakeBuild(build_ext):
         ('cmake-config-options', None, 'cmake configuration'),
         ('cmake-build-options', None, 'cmake build options'),
         ('nprocs', None, 'number of threads used to compile Forte')
+    ]
 
     def initialize_options(self):
         self.ambitpath = None
@@ -91,8 +91,7 @@ class CMakeBuild(build_ext):
             raise RuntimeError(msg)
 
         # grab the cmake configuration from psi4
-        process = subprocess.Popen(['psi4', '--plugin-compile'],
-                                   stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        process = subprocess.Popen(['psi4', '--plugin-compile'], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         out, err = process.communicate()
         cmake_args = out.decode("utf-8").split()[1:]
 
