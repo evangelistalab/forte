@@ -1,4 +1,5 @@
 # examples/api/02_rohf_fci.py
+"""Example of a FCI computation on the triplet state of methylene using ROHF orbitals"""
 
 import psi4
 import forte

@@ -18,7 +18,7 @@ e, wfn = psi4.energy('scf', return_wfn=True)
 psi4.set_options(
     {
         'forte__job_type': 'mcscf_two_step',
-        'forte__multiplicity': 1,  # <-- to override multiplicity = 2 assumed from geometry
+        'forte__multiplicity': 1,  # <-- to override multiplicity = 3 assumed from geometry
         'forte__active_space_solver': 'fci',
         'forte__restricted_docc': [1, 0, 0, 0],
         'forte__active': [3, 0, 2, 2],

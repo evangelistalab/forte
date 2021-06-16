@@ -4,9 +4,9 @@ Tutorials
 .. toctree::
    :maxdepth: 2
 
-   01_compilation
-   02_getting_started
-   03_wavefunction
-   04_multistate
-   05_examples
-   06_integrals
+   nb_01_compilation
+   nb_02_getting_started
+   nb_03_wavefunction
+   nb_04_multistate
+   nb_05_examples
+   nb_06_integrals

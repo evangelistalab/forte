@@ -1,5 +1,7 @@
 import forte
 
+# Example of a FCI computation on singlet lithium dimer using RHF orbitals
+
 molecule {
 0 1
 Li 0.0 0.0 0.0

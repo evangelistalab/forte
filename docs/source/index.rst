@@ -18,7 +18,7 @@ correlated electrons.
    :maxdepth: 2
    :caption: Contents:
 
-   00_overview
+   nb_00_overview
    tutorials
    howto
    programming/index

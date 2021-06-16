@@ -7,4 +7,5 @@ Programmer's Manual
 
 .. toctree::
 
+   nb_00_docs
    psi4
