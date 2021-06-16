@@ -142,7 +142,7 @@ class ActiveSpaceMethod {
 
     /// Return the eigen vectors
     virtual std::vector<ambit::Tensor> eigenvectors() {
-        throw std::runtime_error("Not Implemented!");
+        throw std::runtime_error("ActiveSpaceMethod::eigenvectors(): Not Implemented for this class!");
     }
 
     /// Compute transition dipole moments assuming same orbitals
