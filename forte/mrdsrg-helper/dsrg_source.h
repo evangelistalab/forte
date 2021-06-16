@@ -85,7 +85,7 @@ class STD_SOURCE : public DSRG_SOURCE {
     }
 
     virtual double compute_renormalized_denominator_deriv(const double& D, int i) {
-        if (std::fabs(D) < 1e-6) {
+        if (std::fabs(D) < small_) {
             switch(i) {
                 case 1:
                     return 0;
