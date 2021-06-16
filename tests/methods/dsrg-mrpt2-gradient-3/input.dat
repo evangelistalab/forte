@@ -1,4 +1,4 @@
-
+# DSRG-MRPT2 gradient on N2 with c1 symmetry
 import forte
 
 ref_grad = psi4.Matrix.from_list([
@@ -18,7 +18,6 @@ set {
   scf_type pk
   e_convergence 10
   d_convergence 10
-  # docc [3,0,1,1]
   restricted_docc [ 2,  0,  0,  0, 0, 2,  0, 0]
   active          [ 1,  0,  1,  1, 0, 1,  1, 1]
    mcscf_type           conv
