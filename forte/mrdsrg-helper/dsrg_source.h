@@ -50,7 +50,12 @@ class DSRG_SOURCE {
     /// Renormalize denominator
     virtual double compute_renormalized_denominator(const double& D) = 0;
 
-    double compute_denominator(const double& D, int i) {
+    // /// Derivative of renormalized denominator with respect to Delta
+    // virtual double compute_renormalized_denominator_deriv(const double& D) {
+    //     throw std::runtime_error("Not implemented. Child class should override this function.");
+    // }
+
+    double compute_renormalized_denominator_deriv(const double& D, int i) {
         if (std::fabs(D) < 1e-6) {
             switch(i) {
                 case 1:
