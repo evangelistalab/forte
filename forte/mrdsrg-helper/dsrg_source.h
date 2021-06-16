@@ -30,6 +30,7 @@
 #define _dsrg_source_h_
 
 #include <cmath>
+#include <stdexcept>
 
 
 namespace forte {
@@ -50,28 +51,9 @@ class DSRG_SOURCE {
     /// Renormalize denominator
     virtual double compute_renormalized_denominator(const double& D) = 0;
 
-    // /// Derivative of renormalized denominator with respect to Delta
-    // virtual double compute_renormalized_denominator_deriv(const double& D) {
-    //     throw std::runtime_error("Not implemented. Child class should override this function.");
-    // }
-
-    double compute_renormalized_denominator_deriv(const double& D, int i) {
-        if (std::fabs(D) < 1e-6) {
-            switch(i) {
-                case 1:
-                    return 0;
-                case 2:
-                    return s_;
-            }
-        }
-        else {
-            switch(i) {
-                case 1:
-                    return (1.0 - std::exp(-s_ * D * D)) / D;
-                case 2:
-                    return (1.0 - std::exp(-s_ * D * D)) / D / D;
-            }
-        }
+    /// Derivative of renormalized denominator with respect to Delta
+    virtual double compute_renormalized_denominator_deriv(const double& D, int i) {
+        throw std::runtime_error("Not implemented. Child class should override this function.");
     }
 
   protected:
@@ -99,6 +81,25 @@ class STD_SOURCE : public DSRG_SOURCE {
             return Taylor_Exp(Z, taylor_order_) * std::sqrt(s_);
         } else {
             return (1.0 - std::exp(-s_ * D * D)) / D;
+        }
+    }
+
+    virtual double compute_renormalized_denominator_deriv(const double& D, int i) {
+        if (std::fabs(D) < 1e-6) {
+            switch(i) {
+                case 1:
+                    return 0;
+                case 2:
+                    return s_;
+            }
+        }
+        else {
+            switch(i) {
+                case 1:
+                    return (1.0 - std::exp(-s_ * D * D)) / D;
+                case 2:
+                    return (1.0 - std::exp(-s_ * D * D)) / D / D;
+            }
         }
     }
 
