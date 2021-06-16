@@ -141,7 +141,7 @@ class ActiveSpaceMethod {
     }
 
     /// Return the eigen vectors
-    virtual std::vector<ambit::Tensor> eigen_vectors() {
+    virtual std::vector<ambit::Tensor> eigenvectors() {
         throw std::runtime_error("Not Implemented!");
     }
 

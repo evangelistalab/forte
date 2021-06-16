@@ -108,7 +108,7 @@ void export_ActiveSpaceSolver(py::module& m) {
         .def("state_filename_map", &ActiveSpaceSolver::state_filename_map)
         .def("dump_wave_function", &ActiveSpaceSolver::dump_wave_function)
         .def("coupling_coefficients", &ActiveSpaceSolver::coupling_coefficients)
-        .def("eigen_vectors", &ActiveSpaceSolver::eigen_vectors);
+        .def("eigenvectors", &ActiveSpaceSolver::eigenvectors);
 
     m.def("compute_average_state_energy", &compute_average_state_energy,
           "Compute the average energy given the energies and weights of each state");

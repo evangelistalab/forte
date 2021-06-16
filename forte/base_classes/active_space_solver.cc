@@ -832,8 +832,8 @@ CouplingCoefficients ActiveSpaceSolver::coupling_coefficients(const StateInfo& s
     return state_method_map_[state]->coupling_coefficients(max_level);
 }
 
-std::vector<ambit::Tensor> ActiveSpaceSolver::eigen_vectors(const StateInfo& state) {
-    return state_method_map_[state]->eigen_vectors();
+std::vector<ambit::Tensor> ActiveSpaceSolver::eigenvectors(const StateInfo& state) {
+    return state_method_map_[state]->eigenvectors();
 }
 
 } // namespace forte

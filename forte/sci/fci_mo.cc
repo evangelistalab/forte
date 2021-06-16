@@ -3860,7 +3860,7 @@ ambit::Tensor FCI_MO::coupling_coeffcients_3bbb() {
     return out;
 }
 
-std::vector<ambit::Tensor> FCI_MO::eigen_vectors() {
+std::vector<ambit::Tensor> FCI_MO::eigenvectors() {
     size_t ndets = determinant_.size();
 
     std::vector<ambit::Tensor> out;

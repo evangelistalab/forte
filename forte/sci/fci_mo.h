@@ -287,7 +287,7 @@ class FCI_MO : public ActiveSpaceMethod {
     ambit::Tensor coupling_coeffcients_3bbb();
 
     /// Return the eigen vector in ambit Tensor format
-    std::vector<ambit::Tensor> eigen_vectors() override;
+    std::vector<ambit::Tensor> eigenvectors() override;
 
     /// Return the size of determinants
     size_t det_size();

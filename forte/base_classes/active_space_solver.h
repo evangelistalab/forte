@@ -135,7 +135,7 @@ class ActiveSpaceSolver {
     CouplingCoefficients coupling_coefficients(const StateInfo& state, int max_level = 2);
 
     /// Return the eigen vectors for a given state
-    std::vector<ambit::Tensor> eigen_vectors(const StateInfo& state);
+    std::vector<ambit::Tensor> eigenvectors(const StateInfo& state);
 
   protected:
     /// a string that specifies the method used (e.g. "FCI", "ACI", ...)
