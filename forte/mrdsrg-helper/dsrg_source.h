@@ -69,10 +69,6 @@ class DSRG_SOURCE {
         }
     }
 
-    double get_s() {
-        return s_;
-    }
-
   protected:
     /// Flow parameter
     double s_;

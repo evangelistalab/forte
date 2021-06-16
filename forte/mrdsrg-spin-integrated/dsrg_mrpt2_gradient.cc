@@ -77,7 +77,6 @@ SharedMatrix DSRG_MRPT2::compute_gradient() {
 void DSRG_MRPT2::set_global_variables() {
     outfile->Printf("\n    Initializing Global Variables ................... ");
     nmo_ = mo_space_info_->size("CORRELATED");
-    s = dsrg_source_->get_s();
     core_mos_ = mo_space_info_->corr_absolute_mo("RESTRICTED_DOCC");
     actv_mos_ = mo_space_info_->corr_absolute_mo("ACTIVE");
     virt_mos_ = mo_space_info_->corr_absolute_mo("RESTRICTED_UOCC");
@@ -1361,23 +1360,23 @@ void DSRG_MRPT2::set_z_cc() {
 
     // core-core diagonal entries
     if (CORRELATION_TERM) {
-        val1["m"] += -2 * s * Sigma1["ma"] * F["ma"];
-        val1["m"] += -2 * s * DelGam1["xu"] * T2_["muax"] * Sigma1["ma"];
-        val1["m"] += -2 * s * DelGam1["XU"] * T2_["mUaX"] * Sigma1["ma"];
+        val1["m"] += -2 * s_ * Sigma1["ma"] * F["ma"];
+        val1["m"] += -2 * s_ * DelGam1["xu"] * T2_["muax"] * Sigma1["ma"];
+        val1["m"] += -2 * s_ * DelGam1["XU"] * T2_["mUaX"] * Sigma1["ma"];
     }
     if (CORRELATION_TERM) {
         val1["m"] -= Xi1["ma"] * F["ma"];
-        val1["m"] += 2 * s * Xi2["ma"] * F["ma"];
+        val1["m"] += 2 * s_ * Xi2["ma"] * F["ma"];
         val1["m"] -= Xi1["ma"] * T2_["muax"] * DelGam1["xu"];
         val1["m"] -= Xi1["ma"] * T2_["mUaX"] * DelGam1["XU"];
-        val1["m"] += 2 * s * Xi2["ma"] * T2_["muax"] * DelGam1["xu"];
-        val1["m"] += 2 * s * Xi2["ma"] * T2_["mUaX"] * DelGam1["XU"];
+        val1["m"] += 2 * s_ * Xi2["ma"] * T2_["muax"] * DelGam1["xu"];
+        val1["m"] += 2 * s_ * Xi2["ma"] * T2_["mUaX"] * DelGam1["XU"];
     }
     if (CORRELATION_TERM) {
         temp["mjab"] += V["abmj"] * Eeps2["mjab"];
         temp["mJaB"] += V["aBmJ"] * Eeps2["mJaB"];
-        val1["m"] += 4.0 * s * Tau2["mjab"] * temp["mjab"]; 
-        val1["m"] += 8.0 * s * Tau2["mJaB"] * temp["mJaB"]; 
+        val1["m"] += 4.0 * s_ * Tau2["mjab"] * temp["mjab"]; 
+        val1["m"] += 8.0 * s_ * Tau2["mJaB"] * temp["mJaB"]; 
         temp.zero();
 
         val1["m"] -= 2.0 * T2OverDelta["mjab"] * Tau2["mjab"];
@@ -1387,8 +1386,8 @@ void DSRG_MRPT2::set_z_cc() {
         temp["mLcD"] += V["cDmL"] * Eeps2["mLcD"];
         temp_1["mlcd"] += Kappa["mlcd"] * Delta2["mlcd"];
         temp_1["mLcD"] += Kappa["mLcD"] * Delta2["mLcD"];
-        val1["m"] -= 4.0 * s * temp["mlcd"] * temp_1["mlcd"];
-        val1["m"] -= 8.0 * s * temp["mLcD"] * temp_1["mLcD"];
+        val1["m"] -= 4.0 * s_ * temp["mlcd"] * temp_1["mlcd"];
+        val1["m"] -= 8.0 * s_ * temp["mLcD"] * temp_1["mLcD"];
         temp.zero();
         temp_1.zero();
     }
@@ -1440,25 +1439,25 @@ void DSRG_MRPT2::set_z_vv() {
 
     // virtual-virtual diagonal entries
     if (CORRELATION_TERM) {
-        val2["e"] += 2 * s * Sigma1["ie"] * F["ie"];
-        val2["e"] += 2 * s * DelGam1["xu"] * T2_["iuex"] * Sigma1["ie"];
-        val2["e"] += 2 * s * DelGam1["XU"] * T2_["iUeX"] * Sigma1["ie"];
+        val2["e"] += 2 * s_ * Sigma1["ie"] * F["ie"];
+        val2["e"] += 2 * s_ * DelGam1["xu"] * T2_["iuex"] * Sigma1["ie"];
+        val2["e"] += 2 * s_ * DelGam1["XU"] * T2_["iUeX"] * Sigma1["ie"];
     }
 
     if (CORRELATION_TERM) {
         val2["e"] += Xi1["ie"] * F["ie"];
-        val2["e"] -= 2 * s * Xi2["ie"] * F["ie"];
+        val2["e"] -= 2 * s_ * Xi2["ie"] * F["ie"];
         val2["e"] += Xi1["ie"] * T2_["iuex"] * DelGam1["xu"];
         val2["e"] += Xi1["ie"] * T2_["iUeX"] * DelGam1["XU"];
-        val2["e"] -= 2 * s * Xi2["ie"] * T2_["iuex"] * DelGam1["xu"];
-        val2["e"] -= 2 * s * Xi2["ie"] * T2_["iUeX"] * DelGam1["XU"];
+        val2["e"] -= 2 * s_ * Xi2["ie"] * T2_["iuex"] * DelGam1["xu"];
+        val2["e"] -= 2 * s_ * Xi2["ie"] * T2_["iUeX"] * DelGam1["XU"];
     }
 
     if (CORRELATION_TERM) {
         temp["ijeb"] += V["ebij"] * Eeps2["ijeb"];
         temp["iJeB"] += V["eBiJ"] * Eeps2["iJeB"];
-        val2["e"] -= 4.0 * s * Tau2["ijeb"] * temp["ijeb"]; 
-        val2["e"] -= 8.0 * s * Tau2["iJeB"] * temp["iJeB"]; 
+        val2["e"] -= 4.0 * s_ * Tau2["ijeb"] * temp["ijeb"]; 
+        val2["e"] -= 8.0 * s_ * Tau2["iJeB"] * temp["iJeB"]; 
         temp.zero();
 
         val2["e"] += 2.0 * T2OverDelta["ijeb"] * Tau2["ijeb"];
@@ -1468,8 +1467,8 @@ void DSRG_MRPT2::set_z_vv() {
         temp["kLeD"] += V["eDkL"] * Eeps2["kLeD"];
         temp_1["kled"] += Kappa["kled"] * Delta2["kled"];
         temp_1["kLeD"] += Kappa["kLeD"] * Delta2["kLeD"];
-        val2["e"] += 4.0 * s * temp["kled"] * temp_1["kled"];
-        val2["e"] += 8.0 * s * temp["kLeD"] * temp_1["kLeD"];
+        val2["e"] += 4.0 * s_ * temp["kled"] * temp_1["kled"];
+        val2["e"] += 8.0 * s_ * temp["kLeD"] * temp_1["kLeD"];
         temp.zero();
         temp_1.zero();
     }
@@ -1524,12 +1523,12 @@ void DSRG_MRPT2::set_z_aa_diag() {
 
     // active-active diagonal entries
     if (CORRELATION_TERM) {
-        val3["w"] += -2 * s * Sigma1["wa"] * F["wa"];
-        val3["w"] += -2 * s * DelGam1["xu"] * T2_["wuax"] * Sigma1["wa"];
-        val3["w"] += -2 * s * DelGam1["XU"] * T2_["wUaX"] * Sigma1["wa"];
-        val3["w"] +=  2 * s * Sigma1["iw"] * F["iw"];
-        val3["w"] +=  2 * s * DelGam1["xu"] * T2_["iuwx"] * Sigma1["iw"];
-        val3["w"] +=  2 * s * DelGam1["XU"] * T2_["iUwX"] * Sigma1["iw"];
+        val3["w"] += -2 * s_ * Sigma1["wa"] * F["wa"];
+        val3["w"] += -2 * s_ * DelGam1["xu"] * T2_["wuax"] * Sigma1["wa"];
+        val3["w"] += -2 * s_ * DelGam1["XU"] * T2_["wUaX"] * Sigma1["wa"];
+        val3["w"] +=  2 * s_ * Sigma1["iw"] * F["iw"];
+        val3["w"] +=  2 * s_ * DelGam1["xu"] * T2_["iuwx"] * Sigma1["iw"];
+        val3["w"] +=  2 * s_ * DelGam1["XU"] * T2_["iUwX"] * Sigma1["iw"];
 
         val3["w"] += Sigma2["ia"] * T2_["iuaw"] * Gamma1_["wu"];
         val3["w"] += Sigma2["IA"] * T2_["uIwA"] * Gamma1_["wu"];
@@ -1539,18 +1538,18 @@ void DSRG_MRPT2::set_z_aa_diag() {
 
     if (CORRELATION_TERM) {
         val3["w"] -= Xi1["wa"] * F["wa"];
-        val3["w"] += 2 * s * Xi2["wa"] * F["wa"];
+        val3["w"] += 2 * s_ * Xi2["wa"] * F["wa"];
         val3["w"] -= Xi1["wa"] * T2_["wuax"] * DelGam1["xu"];
         val3["w"] -= Xi1["wa"] * T2_["wUaX"] * DelGam1["XU"];
-        val3["w"] += 2 * s * Xi2["wa"] * T2_["wuax"] * DelGam1["xu"];
-        val3["w"] += 2 * s * Xi2["wa"] * T2_["wUaX"] * DelGam1["XU"];
+        val3["w"] += 2 * s_ * Xi2["wa"] * T2_["wuax"] * DelGam1["xu"];
+        val3["w"] += 2 * s_ * Xi2["wa"] * T2_["wUaX"] * DelGam1["XU"];
 
         val3["w"] += Xi1["iw"] * F["iw"];
-        val3["w"] -= 2 * s * Xi2["iw"] * F["iw"];
+        val3["w"] -= 2 * s_ * Xi2["iw"] * F["iw"];
         val3["w"] += Xi1["iw"] * T2_["iuwx"] * DelGam1["xu"];
         val3["w"] += Xi1["iw"] * T2_["iUwX"] * DelGam1["XU"];
-        val3["w"] -= 2 * s * Xi2["iw"] * T2_["iuwx"] * DelGam1["xu"];
-        val3["w"] -= 2 * s * Xi2["iw"] * T2_["iUwX"] * DelGam1["XU"];
+        val3["w"] -= 2 * s_ * Xi2["iw"] * T2_["iuwx"] * DelGam1["xu"];
+        val3["w"] -= 2 * s_ * Xi2["iw"] * T2_["iUwX"] * DelGam1["XU"];
 
         val3["w"] += Xi3["ia"] * T2_["iuaw"] * Gamma1_["wu"];
         val3["w"] += Xi3["IA"] * T2_["uIwA"] * Gamma1_["wu"];
@@ -1561,8 +1560,8 @@ void DSRG_MRPT2::set_z_aa_diag() {
     if (CORRELATION_TERM) {
         temp["ujab"] += V["abuj"] * Eeps2["ujab"];
         temp["uJaB"] += V["aBuJ"] * Eeps2["uJaB"];
-        val3["u"] += 4.0 * s * Tau2["ujab"] * temp["ujab"]; 
-        val3["u"] += 8.0 * s * Tau2["uJaB"] * temp["uJaB"]; 
+        val3["u"] += 4.0 * s_ * Tau2["ujab"] * temp["ujab"]; 
+        val3["u"] += 8.0 * s_ * Tau2["uJaB"] * temp["uJaB"]; 
         temp.zero();
 
         val3["u"] -= 2.0 * T2OverDelta["ujab"] * Tau2["ujab"];
@@ -1572,15 +1571,15 @@ void DSRG_MRPT2::set_z_aa_diag() {
         temp["uLcD"] += V["cDuL"] * Eeps2["uLcD"];
         temp_1["ulcd"] += Kappa["ulcd"] * Delta2["ulcd"];
         temp_1["uLcD"] += Kappa["uLcD"] * Delta2["uLcD"];
-        val3["u"] -= 4.0 * s * temp["ulcd"] * temp_1["ulcd"];
-        val3["u"] -= 8.0 * s * temp["uLcD"] * temp_1["uLcD"];
+        val3["u"] -= 4.0 * s_ * temp["ulcd"] * temp_1["ulcd"];
+        val3["u"] -= 8.0 * s_ * temp["uLcD"] * temp_1["uLcD"];
         temp.zero();
         temp_1.zero();
 
         temp["ijub"] += V["ubij"] * Eeps2["ijub"];
         temp["iJuB"] += V["uBiJ"] * Eeps2["iJuB"];
-        val3["u"] -= 4.0 * s * Tau2["ijub"] * temp["ijub"]; 
-        val3["u"] -= 8.0 * s * Tau2["iJuB"] * temp["iJuB"]; 
+        val3["u"] -= 4.0 * s_ * Tau2["ijub"] * temp["ijub"]; 
+        val3["u"] -= 8.0 * s_ * Tau2["iJuB"] * temp["iJuB"]; 
         temp.zero();
 
         val3["u"] += 2.0 * T2OverDelta["ijub"] * Tau2["ijub"];
@@ -1590,8 +1589,8 @@ void DSRG_MRPT2::set_z_aa_diag() {
         temp["kLuD"] += V["uDkL"] * Eeps2["kLuD"];
         temp_1["klud"] += Kappa["klud"] * Delta2["klud"];
         temp_1["kLuD"] += Kappa["kLuD"] * Delta2["kLuD"];
-        val3["u"] += 4.0 * s * temp["klud"] * temp_1["klud"];
-        val3["u"] += 8.0 * s * temp["kLuD"] * temp_1["kLuD"];
+        val3["u"] += 4.0 * s_ * temp["klud"] * temp_1["klud"];
+        val3["u"] += 8.0 * s_ * temp["kLuD"] * temp_1["kLuD"];
         temp.zero();
         temp_1.zero();
     }

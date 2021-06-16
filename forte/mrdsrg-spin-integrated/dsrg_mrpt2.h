@@ -234,8 +234,6 @@ class DSRG_MRPT2 : public MASTER_DSRG {
     void set_z_aa_diag();
     void set_w();
 
-    double s;
-
     size_t ndets;
 
     /// List of core MOs (Correlated)
