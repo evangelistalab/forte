@@ -225,33 +225,6 @@ To enable compilation with code coverage activated, set the option
 ``tcsh   [CMakeBuild]   enable_codecov=ON`` or add the option
 ``tcsh   -DENABLE_CODECOV=ON`` if compiling with CMake.
 
-Obtaining Forte
-~~~~~~~~~~~~~~~
-
-You can download the source code of Forte from
-`GitHub <https://github.com/evangelistalab/forte>`__. To clone the
-latest version of the repository run:
-
-::
-
-   git clone https://github.com/evangelistalab/forte.git forte
-
-Prior to the compilation of Forte, you must first check to make sure you
-have the following:
-
-1. CMake version 3.0 or higher
-
-2. An updated version of Psi4 (obtain it from
-   https://github.com/psi4/psi4)
-
-3. The tensor library Ambit (obtain it from
-   https://github.com/jturney/ambit). Note that ambit is included in the
-   conda distribution of psi4. So if you already have the latest version
-   of psi4 installed there is no need to compile ambit.
-
-Once you have the current versions of Psi4, CMake, and Ambit, follow the
-following instructions to install Forte.
-
 Compilation via ``setup.py`` (recommended)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
