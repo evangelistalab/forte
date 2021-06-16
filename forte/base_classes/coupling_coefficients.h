@@ -1,5 +1,5 @@
-#ifndef COUPLINGCOEFFICIENTS_H
-#define COUPLINGCOEFFICIENTS_H
+#ifndef _coupling_coefficients_h_
+#define _coupling_coefficients_h_
 
 #include <ambit/tensor.h>
 
@@ -58,4 +58,4 @@ class CouplingCoefficients {
     ambit::Tensor cc3bbb_;
 };
 } // namespace forte
-#endif // COUPLINGCOEFFICIENTS_H
+#endif // _coupling_coefficients_h_
