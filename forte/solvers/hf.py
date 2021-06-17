@@ -1,4 +1,4 @@
-from forte.solvers.solver import Solver
+from forte.solvers.solver import Solver, CallbackHandler
 from forte.model import MolecularModel
 from forte.forte import SCFInfo
 
@@ -17,7 +17,8 @@ class HF(Solver):
         int_type='conventional',
         docc=None,
         socc=None,
-        options=None
+        options=None,
+        ch=None
     ):
         """
         initialize a Basis object
@@ -50,6 +51,7 @@ class HF(Solver):
         self._docc = docc
         self._socc = socc
         self._options = {} if options is None else options
+        self._ch = CallbackHandler() if ch is None else ch
 
     def __repr__(self):
         """
@@ -165,6 +167,9 @@ class HF(Solver):
         # pipe output to the file self._output_file
         psi4.core.set_output_file(self._output_file, True)
 
+        # pre hf callback
+        self._ch.callback('pre hf', self)
+
         # run scf and return the energy and a wavefunction object
         energy, psi_wfn = psi4.energy('scf', molecule=molecule, return_wfn=True)
 
@@ -177,6 +182,9 @@ class HF(Solver):
         # store calculation outputs in the Data object
         self.data.psi_wfn = psi_wfn
         self.data.scf_info = SCFInfo(psi_wfn)
+
+        # post hf callback
+        self._ch.callback('post hf', self)
 
         # set executed flag
         self._executed = True

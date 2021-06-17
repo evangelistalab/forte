@@ -38,13 +38,13 @@ class Solver(ABC):
     def executed(self):
         return self._executed
 
-    # @property
-    # def psi_wfn(self):
-    #     return self._psi_wfn
+    @property
+    def psi_wfn(self):
+        return self.data.psi_wfn
 
-    # @psi_wfn.setter
-    # def psi_wfn(self, val):
-    #     self._psi_wfn = val
+    @psi_wfn.setter
+    def psi_wfn(self, val):
+        self.data.psi_wfn = val
 
     # @property
     # def scf_info(self):
@@ -104,6 +104,18 @@ class BasicSolver(Solver):
 
     def run(self):
         """Nothing to run"""
+
+
+class CallbackHandler():
+    def __init__(self):
+        self._callback_list = {}
+
+    def add_callback(self, id, func):
+        self._callback_list[id] = func
+
+    def callback(self, id, state):
+        if id in self._callback_list:
+            self._callback_list[id](state)
 
 
 def molecular_model(molecule: Molecule, basis: Basis):
