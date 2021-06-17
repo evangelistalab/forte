@@ -169,7 +169,11 @@ mrdsrg-spin-adapted/sa_mrpt2.cc
 mrdsrg-spin-adapted/sa_mrpt3.cc
 mrdsrg-spin-integrated/active_dsrgpt2.cc
 mrdsrg-spin-integrated/dsrg_mrpt2.cc
-mrdsrg-spin-integrated/dsrg_mrpt2_gradient.cc
+mrdsrg-spin-integrated/dsrg_mrpt2_grad/dsrg_mrpt2_gradient.cc
+mrdsrg-spin-integrated/dsrg_mrpt2_grad/dsrg_mrpt2_deriv_write_rdms.cc
+mrdsrg-spin-integrated/dsrg_mrpt2_grad/dsrg_mrpt2_deriv_solve_zvector.cc
+mrdsrg-spin-integrated/dsrg_mrpt2_grad/dsrg_mrpt2_deriv_multipliers.cc
+mrdsrg-spin-integrated/dsrg_mrpt2_grad/dsrg_mrpt2_deriv_tensors.cc
 mrdsrg-spin-integrated/dsrg_mrpt2_ms.cc
 mrdsrg-spin-integrated/dsrg_mrpt3.cc
 mrdsrg-spin-integrated/dwms_mrpt2.cc
