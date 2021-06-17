@@ -358,7 +358,7 @@ def prepare_forte_objects_from_fcidump(options, path='.'):
                     val += eri[i, i, j, j] - eri[i, j, i, j]
             epsilon_b.set(i, val)
 
-    scf_info = forte.SCFInfo(doccpi, soccpi, 0.0, epsilon_a, epsilon_b)
+    scf_info = forte.SCFInfo(nmopi, doccpi, soccpi, 0.0, epsilon_a, epsilon_b)
 
     state_info = make_state_info_from_fcidump(fcidump, options)
     state_weights_map = {state_info: [1.0]}
