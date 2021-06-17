@@ -1,11 +1,12 @@
-import psi4
 from abc import ABC, abstractmethod
+import logging
+
 from forte.data import Data
-from forte.model import Model, MolecularModel
+from forte.model import MolecularModel
 from forte.results import Results
-from forte.forte import MOSpaceInfo
 from forte.molecule import Molecule
 from forte.basis import Basis
+
 import forte
 
 
@@ -134,6 +135,7 @@ class CallbackHandler():
 
 def solver_factory(molecule, basis, scf_aux_basis=None, corr_aux_basis=None):
     """A factory to build a basic solver object"""
+    logging.info('Calling solver factory')
     if isinstance(molecule, str):
         molecule = Molecule.from_geom(molecule)
     if isinstance(basis, str):

@@ -1,0 +1,263 @@
+
+    -----------------------------------------------------------------------
+          Psi4: An Open-Source Ab Initio Electronic Structure Package
+                               Psi4 undefined 
+
+                         Git: Rev {master} ff26262 
+
+
+    D. G. A. Smith, L. A. Burns, A. C. Simmonett, R. M. Parrish,
+    M. C. Schieber, R. Galvelis, P. Kraus, H. Kruse, R. Di Remigio,
+    A. Alenaizan, A. M. James, S. Lehtola, J. P. Misiewicz, M. Scheurer,
+    R. A. Shaw, J. B. Schriber, Y. Xie, Z. L. Glick, D. A. Sirianni,
+    J. S. O'Brien, J. M. Waldrop, A. Kumar, E. G. Hohenstein,
+    B. P. Pritchard, B. R. Brooks, H. F. Schaefer III, A. Yu. Sokolov,
+    K. Patkowski, A. E. DePrince III, U. Bozkaya, R. A. King,
+    F. A. Evangelista, J. M. Turney, T. D. Crawford, C. D. Sherrill,
+    J. Chem. Phys. 152(18) 184108 (2020). https://doi.org/10.1063/5.0006002
+
+                            Additional Code Authors
+    E. T. Seidl, C. L. Janssen, E. F. Valeev, M. L. Leininger,
+    J. F. Gonthier, R. M. Richard, H. R. McAlexander, M. Saitow, X. Wang,
+    P. Verma, and M. H. Lechner
+
+             Previous Authors, Complete List of Code Contributors,
+                       and Citations for Specific Modules
+    https://github.com/psi4/psi4/blob/master/codemeta.json
+    https://github.com/psi4/psi4/graphs/contributors
+    http://psicode.org/psi4manual/master/introduction.html#citing-psifour
+
+    -----------------------------------------------------------------------
+
+
+    Psi4 started on: Thursday, 17 June 2021 01:28PM
+
+    Process ID: 69565
+    Host:       CHE-FEVANGE
+    PSIDATADIR: /Users/fevange/Source/psi4/objdir-Debug/stage/share/psi4
+    Memory:     500.0 MiB
+    Threads:    1
+    
+  ==> Input File <==
+
+--------------------------------------------------------------------------
+molecule {
+    H 0.0 0.0 0.0
+    F 0.0 0.0 1.0
+}
+
+set scf_type df
+set basis cc-pVTZ
+set df_basis_scf cc-pVQZ-JKFIT
+
+energy('scf')
+--------------------------------------------------------------------------
+
+Scratch directory: /tmp/
+
+*** tstart() called on CHE-FEVANGE
+*** at Thu Jun 17 13:28:05 2021
+
+   => Loading Basis Set <=
+
+    Name: CC-PVTZ
+    Role: ORBITAL
+    Keyword: BASIS
+    atoms 1 entry H          line    23 file /Users/fevange/Source/psi4/objdir-Debug/stage/share/psi4/basis/cc-pvtz.gbs 
+    atoms 2 entry F          line   300 file /Users/fevange/Source/psi4/objdir-Debug/stage/share/psi4/basis/cc-pvtz.gbs 
+
+
+         ---------------------------------------------------------
+                                   SCF
+               by Justin Turney, Rob Parrish, Andy Simmonett
+                          and Daniel G. A. Smith
+                              RHF Reference
+                        1 Threads,    500 MiB Core
+         ---------------------------------------------------------
+
+  ==> Geometry <==
+
+    Molecular point group: c2v
+    Full point group: C_inf_v
+
+    Geometry (in Angstrom), charge = 0, multiplicity = 1:
+
+       Center              X                  Y                   Z               Mass       
+    ------------   -----------------  -----------------  -----------------  -----------------
+         H            0.000000000000     0.000000000000    -0.949624435830     1.007825032230
+         F            0.000000000000     0.000000000000     0.050375564170    18.998403162730
+
+  Running in c2v symmetry.
+
+  Rotational constants: A = ************  B =     17.61406  C =     17.61406 [cm^-1]
+  Rotational constants: A = ************  B = 528056.23735  C = 528056.23735 [MHz]
+  Nuclear repulsion =    4.762594896030000
+
+  Charge       = 0
+  Multiplicity = 1
+  Electrons    = 10
+  Nalpha       = 5
+  Nbeta        = 5
+
+  ==> Algorithm <==
+
+  SCF Algorithm Type is DF.
+  DIIS enabled.
+  MOM disabled.
+  Fractional occupation disabled.
+  Guess Type is SAD.
+  Energy threshold   = 1.00e-06
+  Density threshold  = 1.00e-06
+  Integral threshold = 1.00e-12
+
+  ==> Primary Basis <==
+
+  Basis Set: CC-PVTZ
+    Blend: CC-PVTZ
+    Number of shells: 16
+    Number of basis functions: 44
+    Number of Cartesian functions: 50
+    Spherical Harmonics?: true
+    Max angular momentum: 3
+
+   => Loading Basis Set <=
+
+    Name: CC-PVQZ-JKFIT
+    Role: JKFIT
+    Keyword: DF_BASIS_SCF
+    atoms 1 entry H          line    51 file /Users/fevange/Source/psi4/objdir-Debug/stage/share/psi4/basis/cc-pvqz-jkfit.gbs 
+    atoms 2 entry F          line   311 file /Users/fevange/Source/psi4/objdir-Debug/stage/share/psi4/basis/cc-pvqz-jkfit.gbs 
+
+  ==> Integral Setup <==
+
+  DFHelper Memory: AOs need 0.003 GiB; user supplied 0.366 GiB. Using in-core AOs.
+
+  ==> MemDFJK: Density-Fitted J/K Matrices <==
+
+    J tasked:                   Yes
+    K tasked:                   Yes
+    wK tasked:                   No
+    OpenMP threads:               1
+    Memory [MiB]:               375
+    Algorithm:                 Core
+    Schwarz Cutoff:           1E-12
+    Mask sparsity (%):       0.0000
+    Fitting Condition:        1E-10
+
+   => Auxiliary Basis Set <=
+
+  Basis Set: CC-PVQZ-JKFIT
+    Blend: CC-PVQZ-JKFIT
+    Number of shells: 41
+    Number of basis functions: 157
+    Number of Cartesian functions: 208
+    Spherical Harmonics?: true
+    Max angular momentum: 5
+
+  Minimum eigenvalue in the overlap matrix is 5.5511406181E-03.
+  Reciprocal condition number of the overlap matrix is 1.4606167060E-03.
+    Using symmetric orthogonalization.
+
+  ==> Pre-Iterations <==
+
+  SCF Guess: Superposition of Atomic Densities via on-the-fly atomic UHF (no occupation information).
+
+   -------------------------
+    Irrep   Nso     Nmo    
+   -------------------------
+     A1        20      20 
+     A2         4       4 
+     B1        10      10 
+     B2        10      10 
+   -------------------------
+    Total      44      44
+   -------------------------
+
+  ==> Iterations <==
+
+                           Total Energy        Delta E     RMS |[F,P]|
+
+   @DF-RHF iter SAD:   -99.57186575300661   -9.95719e+01   0.00000e+00 
+   @DF-RHF iter   1:  -100.00436815582442   -4.32502e-01   1.36444e-02 DIIS
+   @DF-RHF iter   2:  -100.03447910266756   -3.01109e-02   9.37860e-03 DIIS
+   @DF-RHF iter   3:  -100.04739941167799   -1.29203e-02   8.27662e-04 DIIS
+   @DF-RHF iter   4:  -100.04771331361675   -3.13902e-04   2.63499e-04 DIIS
+   @DF-RHF iter   5:  -100.04775368108757   -4.03675e-05   5.52638e-05 DIIS
+   @DF-RHF iter   6:  -100.04775597915793   -2.29807e-06   8.32439e-06 DIIS
+   @DF-RHF iter   7:  -100.04775602524956   -4.60916e-08   7.25782e-07 DIIS
+  Energy and wave function converged.
+
+
+  ==> Post-Iterations <==
+
+    Orbital Energies [Eh]
+    ---------------------
+
+    Doubly Occupied:                                                      
+
+       1A1   -26.287061     2A1    -1.567798     3A1    -0.728067  
+       1B2    -0.635073     1B1    -0.635073  
+
+    Virtual:                                                              
+
+       4A1     0.128182     5A1     0.510587     2B1     0.822511  
+       2B2     0.822511     6A1     0.841620     3B2     1.004201  
+       3B1     1.004201     7A1     1.357899     8A1     1.570148  
+       1A2     2.240751     9A1     2.240751    10A1     2.411453  
+       4B1     2.474328     4B2     2.474328    11A1     3.086145  
+      12A1     3.493970     2A2     3.493970     5B1     3.846938  
+       5B2     3.846938    13A1     4.172301     6B2     4.184704  
+       6B1     4.184704    14A1     4.775372     7B2     5.289882  
+       7B1     5.289882    15A1     6.326333     8B2     7.419708  
+       8B1     7.419708     3A2     7.529463    16A1     7.529463  
+       9B1     8.170483     9B2     8.170483    17A1     8.385283  
+       4A2     8.905838    18A1     8.905838    10B1     9.292230  
+      10B2     9.292230    19A1     9.655835    20A1    11.707512  
+
+    Final Occupation by Irrep:
+             A1    A2    B1    B2 
+    DOCC [     3,    0,    1,    1 ]
+
+  @DF-RHF Final Energy:  -100.04775602524956
+
+   => Energetics <=
+
+    Nuclear Repulsion Energy =              4.7625948960300004
+    One-Electron Energy =                -149.9145618108775011
+    Two-Electron Energy =                  45.1042108895979368
+    Total Energy =                       -100.0477560252495550
+
+Computation Completed
+
+
+Properties will be evaluated at   0.000000,   0.000000,   0.000000 [a0]
+
+Properties computed using the SCF density matrix
+
+  Nuclear Dipole Moment: [e a0]
+     X:     0.0000      Y:     0.0000      Z:    -0.9378
+
+  Electronic Dipole Moment: [e a0]
+     X:     0.0000      Y:     0.0000      Z:     0.1105
+
+  Dipole Moment: [e a0]
+     X:     0.0000      Y:     0.0000      Z:    -0.8272     Total:     0.8272
+
+  Dipole Moment: [D]
+     X:     0.0000      Y:     0.0000      Z:    -2.1026     Total:     2.1026
+
+
+*** tstop() called on CHE-FEVANGE at Thu Jun 17 13:28:06 2021
+Module time:
+	user time   =       0.80 seconds =       0.01 minutes
+	system time =       0.07 seconds =       0.00 minutes
+	total time  =          1 seconds =       0.02 minutes
+Total time:
+	user time   =       0.80 seconds =       0.01 minutes
+	system time =       0.07 seconds =       0.00 minutes
+	total time  =          1 seconds =       0.02 minutes
+
+    Psi4 stopped on: Thursday, 17 June 2021 01:28PM
+    Psi4 wall time for execution: 0:00:01.23
+
+*** Psi4 exiting successfully. Buy a developer a beer!
