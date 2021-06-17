@@ -26,6 +26,7 @@
  * @END LICENSE
  */
 
+#include <algorithm>
 #include <iterator>
 #include <stdexcept>
 
@@ -37,8 +38,7 @@ namespace forte {
 Symmetry::Symmetry(std::string point_group) {
     to_upper_string(point_group); // capitalize
     // check if this is a valid point group label
-    std::vector<std::string>::const_iterator search =
-        std::find(__point_groups.cbegin(), __point_groups.cend(), point_group);
+    auto search = std::find(__point_groups.cbegin(), __point_groups.cend(), point_group);
     if (search == __point_groups.end()) {
         std::string msg = "Point group " + point_group + " not found or supported by forte.\n";
         throw std::runtime_error(msg);
