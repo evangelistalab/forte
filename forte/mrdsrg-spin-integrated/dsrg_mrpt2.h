@@ -198,11 +198,11 @@ class DSRG_MRPT2 : public MASTER_DSRG {
 
     /// Set MO space environment and global variables
     void set_global_variables();
-    size_t nmo_;
-    size_t ncore_;
-    size_t nvirt_;
-    size_t na_;
-    size_t nirrep_;
+    size_t nmo;
+    size_t ncore;
+    size_t nvirt;
+    size_t na;
+    size_t nirrep;
 
 
     void set_dsrg_tensor();
@@ -237,17 +237,17 @@ class DSRG_MRPT2 : public MASTER_DSRG {
     size_t ndets;
 
     /// List of core MOs (Correlated)
-    std::vector<size_t> core_mos_;
+    std::vector<size_t> core_mos;
     /// List of active MOs (Correlated)
-    std::vector<size_t> actv_mos_;
+    std::vector<size_t> actv_mos;
     /// List of virtual MOs (Correlated)
-    std::vector<size_t> virt_mos_;
+    std::vector<size_t> virt_mos;
     /// List of core MOs (Absolute)
    
-    std::vector<size_t> core_all_;
+    std::vector<size_t> core_all;
     /// List of active MOs (Absolute)
-    std::vector<size_t> actv_all_;
-    std::vector<size_t> virt_all_;
+    std::vector<size_t> actv_all;
+    std::vector<size_t> virt_all;
 
     /// List of relative core MOs
     std::vector<std::pair<unsigned long, unsigned long>,
@@ -268,7 +268,7 @@ class DSRG_MRPT2 : public MASTER_DSRG {
     /// Two-body denisty tensor
     ambit::BlockedTensor Gamma2_;
     /// Lagrangian tensor
-    ambit::BlockedTensor W_;
+    ambit::BlockedTensor W;
 
     // core Hamiltonian
     ambit::BlockedTensor H;
