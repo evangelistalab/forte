@@ -262,8 +262,6 @@ class ProcedureDSRG:
 
         self.dsrg_cleanup()
 
-
-
     def compute_dipole_relaxed(self):
         """ Compute dipole moments. """
         dipole_moments = self.dsrg_solver.nuclear_dipole()
