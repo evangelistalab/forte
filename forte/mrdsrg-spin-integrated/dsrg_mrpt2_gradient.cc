@@ -570,7 +570,7 @@ void DSRG_MRPT2::set_multiplier() {
 }
 
 void DSRG_MRPT2::set_tau() {
-    outfile->Printf("\n    Initializing Tau ................................ ");
+    outfile->Printf("\n    Initializing multipliers for two-body amplitude.. ");
     Tau1 = BTF_->build(CoreTensor, "Tau1", spin_cases({"hhpp"}));
     Tau2 = BTF_->build(CoreTensor, "Tau2", spin_cases({"hhpp"}));
     // Tau * Delta
@@ -894,7 +894,7 @@ void DSRG_MRPT2::set_tau() {
 }
 
 void DSRG_MRPT2::set_sigma() {
-    outfile->Printf("\n    Initializing Sigma .............................. ");
+    outfile->Printf("\n    Initializing multipliers for one-body amplitude.. ");
     Sigma = BTF_->build(CoreTensor, "Sigma", spin_cases({"hp"}));
     Sigma1 = BTF_->build(CoreTensor, "Sigma * DelEeps1", spin_cases({"hp"}));
     Sigma2 = BTF_->build(CoreTensor, "Sigma * Eeps1", spin_cases({"hp"}));
@@ -937,7 +937,7 @@ void DSRG_MRPT2::set_sigma() {
 }
 
 void DSRG_MRPT2::set_xi() {
-    outfile->Printf("\n    Initializing Xi ................................. ");
+    outfile->Printf("\n    Initializing multipliers for renormalize Fock ... ");
     Xi = BTF_->build(CoreTensor, "Xi", spin_cases({"hp"}));
     Xi1 = BTF_->build(CoreTensor, "Xi * Eeps1_m2", spin_cases({"hp"}));
     Xi2 = BTF_->build(CoreTensor, "Xi * Eeps1", spin_cases({"hp"}));
@@ -978,7 +978,7 @@ void DSRG_MRPT2::set_xi() {
 }
 
 void DSRG_MRPT2::set_kappa() {
-    outfile->Printf("\n    Initializing Kappa .............................. ");
+    outfile->Printf("\n    Initializing multipliers for renormalize ERIs ... ");
     Kappa = BTF_->build(CoreTensor, "Kappa", spin_cases({"hhpp"}));
     // <[V, T2]> (C_2)^4
     if (PT2_TERM) {
@@ -1184,7 +1184,7 @@ void DSRG_MRPT2::set_kappa() {
 
 void DSRG_MRPT2::set_z() {
     Z = BTF_->build(CoreTensor, "Z Matrix", spin_cases({"gg"}));
-    outfile->Printf("\n    Initializing Diagonal Entries of Z .............. ");
+    outfile->Printf("\n    Initializing Diagonal Entries of the OPDM Z ..... ");
     set_z_cc();
     set_z_vv();
     set_z_aa_diag();
@@ -1194,8 +1194,8 @@ void DSRG_MRPT2::set_z() {
 }
 
 void DSRG_MRPT2::set_w() {
-    outfile->Printf("\n    Solving Entries of W ............................ ");
-    W = BTF_->build(CoreTensor, "Lagrangian", spin_cases({"gg"}));
+    outfile->Printf("\n    Solving Entries of the EWDM W.................... ");
+    W = BTF_->build(CoreTensor, "Energy weighted density matrix(Lagrangian)", spin_cases({"gg"}));
     BlockedTensor temp = BTF_->build(CoreTensor, "temporal tensor", spin_cases({"hhpp"}));
 
     // NOTICE: w for {virtual-general}
@@ -3582,7 +3582,7 @@ void DSRG_MRPT2::tpdm_backtransform() {
 
 void DSRG_MRPT2::write_lagrangian() {
     // NOTICE: write the Lagrangian
-    outfile->Printf("\n    Writing Lagrangian .............................. ");
+    outfile->Printf("\n    Writing EWDM (Lagrangian) ....................... ");
 
     SharedMatrix L(new Matrix("Lagrangian", nirrep, irrep_vec, irrep_vec));
 
