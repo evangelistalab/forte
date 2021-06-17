@@ -25,7 +25,7 @@ def test_uhf():
     root = molecular_model(molecule=mol, basis=basis)
 
     # specify the electronic state
-    state = root.data.model.state(charge=0, multiplicity=3, sym='b1')
+    state = root.state(charge=0, multiplicity=3, sym='b1')
 
     # define a HF object
     hf = HF(root, state=state, restricted=False)
@@ -51,7 +51,7 @@ def test_uhf_wrong_sym():
     root = molecular_model(molecule=mol, basis=basis)
 
     # specify the electronic state
-    state = root.data.model.state(charge=0, multiplicity=3, sym='a1')
+    state = root.state(charge=0, multiplicity=3, sym='a1')
 
     # define a HF object
     hf = HF(root, state=state, docc=[2, 0, 0, 1], socc=[1, 0, 1, 0], restricted=False)

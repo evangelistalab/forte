@@ -24,7 +24,7 @@ def test_rhf():
     root = molecular_model(molecule=mol, basis=basis)
 
     # specify the electronic state
-    state = root.data.model.state(charge=0, multiplicity=1, sym='ag')
+    state = root.state(charge=0, multiplicity=1, sym='ag')
 
     hf = HF(root, state=state)
     hf.run()
@@ -50,7 +50,7 @@ def test_rhf_docc():
     root = molecular_model(molecule=mol, basis=basis)
 
     # specify the electronic state
-    state = root.data.model.state(charge=0, multiplicity=1, sym='a1')
+    state = root.state(charge=0, multiplicity=1, sym='a1')
 
     hf = HF(root, state=state, docc=[1, 0, 1, 0])
     hf.run()

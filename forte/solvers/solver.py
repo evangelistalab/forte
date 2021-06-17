@@ -93,6 +93,9 @@ class Solver(ABC):
         nmopi = self.scf_info.nmopi()
         return forte.make_mo_space_info_from_map(nmopi, self.model.point_group, mo_spaces)
 
+    def state(self, charge: int, multiplicity: int, ms: float = None, sym: str = None):
+        return self.data.model.state(charge, multiplicity, ms, sym)
+
 
 class BasicSolver(Solver):
     """A simple solver"""
