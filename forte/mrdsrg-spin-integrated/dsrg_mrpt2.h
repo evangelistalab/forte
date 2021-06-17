@@ -58,7 +58,7 @@ class DSRG_MRPT2 : public MASTER_DSRG {
     virtual double compute_energy();
 
     /// Compute the DSRG-MRPT2 gradient
-    psi::SharedMatrix compute_gradient() override;
+    virtual psi::SharedMatrix compute_gradient() override;
 
     /// Compute second-order effective Hamiltonian couplings
     /// <M|H + HA(N)|N> = Heff1 * TrD1 + Heff2 * TrD2 + Heff3 * TrD3 if CAS

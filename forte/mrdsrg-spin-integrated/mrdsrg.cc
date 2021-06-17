@@ -189,13 +189,6 @@ void MRDSRG::print_options() {
                            calculation_info_bool, calculation_info_double, calculation_info_int);
 }
 
-SharedMatrix MRDSRG::compute_gradient() {   
-    outfile->Printf("\n Oh no!, you tried to compute gradient but this "
-                    "is not there!!");
-    throw psi::PSIEXCEPTION("gradient is not implemented");
-    return std::make_shared<Matrix>("nullptr", 0, 0);
-}
-
 void MRDSRG::build_ints() {
     // prepare one-electron integrals
     H_.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>& spin, double& value) {

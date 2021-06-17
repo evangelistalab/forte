@@ -69,9 +69,6 @@ class MCSRGPT2_MO {
     /// Compute the energy
     double compute_energy();
 
-    /// Compute gradient
-    psi::SharedMatrix compute_gradient();
-
   protected:
     /// Source Operators
     enum sourceop { STANDARD, AMP, EMP2, LAMP, LEMP2 };

@@ -61,9 +61,6 @@ class MRDSRG : public MASTER_DSRG {
     /// Compute the corr_level energy with fixed reference
     virtual double compute_energy() override;
 
-    /// Compute gradient
-    psi::SharedMatrix compute_gradient() override;
-
     /// Compute state-average MR-DSRG energy
     double compute_energy_sa();
 
