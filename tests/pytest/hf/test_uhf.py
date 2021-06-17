@@ -35,7 +35,7 @@ def test_uhf():
 
 
 def test_uhf_wrong_sym():
-    """Test UHF computation of the B1 state of methylene."""
+    """Test UHF computation that lands on the wrong symmetry state."""
 
     # create a molecule from a string
     mol = Molecule.from_geom("""
