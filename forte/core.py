@@ -57,11 +57,9 @@ class ForteManager(object):
     def __new__(cls):
         if cls._instance is None:
             cls._instance = True
-            print('Creating the ambit object')
             # Put any initialization here.
             my_proc, n_nodes = forte.startup()
         return cls._instance
 
     def __del__(cls):
         forte.cleanup()
-        print('Deleting the ambit object')
