@@ -35,6 +35,8 @@
 #include "psi4/libmints/molecule.h"
 #include "psi4/libmints/wavefunction.h"
 
+#include "helpers/string_algorithms.h"
+
 #include "base_classes/mo_space_info.h"
 
 using namespace psi;

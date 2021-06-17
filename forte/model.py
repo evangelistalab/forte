@@ -2,6 +2,7 @@ from abc import ABC, abstractmethod
 from forte.molecule import Molecule
 from forte.basis import Basis
 from forte.forte import StateInfo
+from forte.forte import Symmetry
 
 
 class Model(ABC):
@@ -16,40 +17,46 @@ class Model(ABC):
         """The model point group"""
 
 
-def label_to_irrep_num_(irrep_label, pg_symbol):
-    pg_irrep_labels = {
-        'C1': ['A'],
-        'Cs': ['Ap', 'App'],
-        'Ci': ['Ag', 'Au'],
-        'C2': ['A', 'B'],
-        'C2h': ['Ag', 'Bg', 'Au', 'Bu'],
-        'C2v': ['A1', 'A2', 'B1', 'B2'],
-        'D2': ['A', 'B1', 'B2', 'B3'],
-        'D2h': ['Ag', 'B1g', 'B2g', 'B3g', 'Au', 'B1u', 'B2u', 'B3u']
-    }
+# def label_to_irrep_num_(irrep_label, pg_symbol):
+#     # list of irrep labels for each point group
+#     pg_irrep_labels = {
+#         'C1': ['A'],
+#         'Cs': ['Ap', 'App'],
+#         'Ci': ['Ag', 'Au'],
+#         'C2': ['A', 'B'],
+#         'C2h': ['Ag', 'Bg', 'Au', 'Bu'],
+#         'C2v': ['A1', 'A2', 'B1', 'B2'],
+#         'D2': ['A', 'B1', 'B2', 'B3'],
+#         'D2h': ['Ag', 'B1g', 'B2g', 'B3g', 'Au', 'B1u', 'B2u', 'B3u']
+#     }
 
-    pg_symbol = pg_symbol.capitalize()
-    pg_labels_dict = {}
-    for i, label in enumerate(pg_irrep_labels[pg_symbol]):
-        pg_labels_dict[label.capitalize()] = i
+#     pg_symbol = pg_symbol.capitalize()
+#     pg_labels_dict = {}
+#     for i, label in enumerate(pg_irrep_labels[pg_symbol]):
+#         pg_labels_dict[label.capitalize()] = i
 
-    irrep_label = irrep_label.capitalize()
-    return pg_labels_dict[irrep_label]
+#     irrep_label = irrep_label.capitalize()
+#     if irrep_label in pg_labels_dict:
+#         return pg_labels_dict[irrep_label]
+#     raise ValueError(
+#         f'label_to_irrep_num_: the irrep label ({irrep_label}) '
+#         f'passed is not allowed for point group {pg_symbol}. '
+#         f'The allowed values are: [{",".join(pg_irrep_labels[pg_symbol])}].'
+#     )
 
-
-def irrep_num_to_label_(h, pg_symbol):
-    pg_symbol = pg_symbol.capitalize()
-    pg_irrep_labels = {
-        'C1': ['A'],
-        'Cs': ['Ap', 'App'],
-        'Ci': ['Ag', 'Au'],
-        'C2': ['A', 'B'],
-        'C2h': ['Ag', 'Bg', 'Au', 'Bu'],
-        'C2v': ['A1', 'A2', 'B1', 'B2'],
-        'D2': ['A', 'B1', 'B2', 'B3'],
-        'D2h': ['Ag', 'B1g', 'B2g', 'B3g', 'Au', 'B1u', 'B2u', 'B3u']
-    }
-    return pg_irrep_labels[pg_symbol][h]
+# def irrep_num_to_label_(h, pg_symbol):
+#     pg_symbol = pg_symbol.capitalize()
+#     pg_irrep_labels = {
+#         'C1': ['A'],
+#         'Cs': ['Ap', 'App'],
+#         'Ci': ['Ag', 'Au'],
+#         'C2': ['A', 'B'],
+#         'C2h': ['Ag', 'Bg', 'Au', 'Bu'],
+#         'C2v': ['A1', 'A2', 'B1', 'B2'],
+#         'D2': ['A', 'B1', 'B2', 'B3'],
+#         'D2h': ['Ag', 'B1g', 'B2g', 'B3g', 'Au', 'B1u', 'B2u', 'B3u']
+#     }
+#     return pg_irrep_labels[pg_symbol][h]
 
 
 class MolecularModel(Model):
@@ -64,6 +71,7 @@ class MolecularModel(Model):
     def __init__(self, molecule: Molecule, basis: Basis):
         self._molecule = molecule
         self._basis = basis
+        self.symmetry = Symmetry(molecule.molecule.point_group().symbol().capitalize())
 
     def __repr__(self):
         """
@@ -85,7 +93,7 @@ class MolecularModel(Model):
 
     @property
     def point_group(self) -> str:
-        return self.molecule.point_group().symbol()
+        return self.symmetry.point_group_label()
 
     def state(self, charge: int, multiplicity: int, ms: float = None, sym: str = None):
         if ms is None:
@@ -104,14 +112,22 @@ class MolecularModel(Model):
         nel = round(sum([molecule.Z(i) for i in range(natom)])) - charge
 
         if (nel - twice_ms) % 2 != 0:
-            raise ValueError(f'The value of M_S ({ms}) is incompatible with the number of electrons ({nel})')
+            raise ValueError(
+                f'(MolecularModel) The value of M_S ({ms}) is incompatible with the number of electrons ({nel})'
+            )
 
         # compute the number of alpha/beta electrons
         na = (nel + twice_ms) // 2  # from ms = (na - nb) / 2
         nb = nel - na
 
         # compute the irrep index and produce a standard label
-        pg_symbol = molecule.point_group().symbol().capitalize()
-        irrep = label_to_irrep_num_(sym, pg_symbol)
-        irrep_label = irrep_num_to_label_(irrep, pg_symbol)
-        return StateInfo(na, nb, multiplicity, twice_ms, irrep, irrep_label)
+        if sym is None:
+            if sym.nirrep() == 1:
+                sym = 'A'
+            else:
+                raise ValueError(
+                    f'(MolecularModel) The value of sym ({sym}) is invalid.'
+                    f' Please specify a valid symmetry label.'
+                )
+        irrep = self.symmetry.irrep_label_to_index(sym)
+        return StateInfo(na, nb, multiplicity, twice_ms, irrep, sym)

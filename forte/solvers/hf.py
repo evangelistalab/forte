@@ -99,9 +99,26 @@ class HF(Solver):
     def socc(self):
         return self._socc
 
+    def check_symmetry_(self, psi_wfn):
+        socc = psi_wfn.soccpi()
+        sym = 0
+        for h in range(socc.n()):
+            if socc[h] % 2 == 1:
+                sym = sym ^ h
+        if self.state.irrep() != sym:
+            model = self.data.model
+
+            target = model.symmetry.irrep_label(self.state.irrep())
+            actual = model.symmetry.irrep_label(sym)
+            raise RuntimeError(f'(HF) The HF equations converged on a state with the wrong symmetry ({actual})')
+
     def run(self):
         """Compute the Hartree-Fock energy"""
         import psi4
+
+        # reset psi4's options to avoid pollution
+        psi4.core.clean_options()
+
         # currently limited to molecules
         if not isinstance(self.data.model, MolecularModel):
             raise RuntimeError('HF.energy() is implemented only for MolecularModel objects')
@@ -121,9 +138,14 @@ class HF(Solver):
         else:
             scf_type = self._int_type.upper()
 
+        if self._restricted:
+            ref = 'RHF' if self.multiplicity == 1 else 'ROHF'
+        else:
+            ref = 'UHF'
+
         options = {
             'BASIS': self.data.model.basis,
-            'REFERENCE': 'RHF' if self._restricted else 'UHF',
+            'REFERENCE': ref,
             'SCF_TYPE': scf_type,
             'E_CONVERGENCE': self.e_convergence,
             'D_CONVERGENCE': self.d_convergence
@@ -145,6 +167,9 @@ class HF(Solver):
 
         # run scf and return the energy and a wavefunction object
         energy, psi_wfn = psi4.energy('scf', molecule=molecule, return_wfn=True)
+
+        # check symmetry
+        self.check_symmetry_(psi_wfn)
 
         # add the energy to the results
         self._results.add('hf energy', energy, 'Hartree-Fock energy', 'Eh')

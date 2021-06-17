@@ -40,6 +40,7 @@
 #include "base_classes/rdms.h"
 #include "base_classes/mo_space_info.h"
 #include "helpers/printing.h"
+#include "helpers/string_algorithms.h"
 #include "integrals/active_space_integrals.h"
 #include "mrdsrg-helper/dsrg_transformed.h"
 #include "active_space_method.h"

@@ -94,7 +94,7 @@ class CMakeBuild(build_ext):
 
         # append cmake arguments
         cmake_args += [f'-Dambit_DIR={self.ambitpath}/share/cmake/ambit']
-        cmake_args += [f'-DCMAKE_BUILD_TYPE={self.build_type}']
+        cmake_args += [f'-DCMAKE_BUILD_TYPE={cfg}']
         cmake_args += [f'-DMAX_DET_ORB={self.max_det_orb}']
         cmake_args += [f'-DENABLE_CODECOV={str(self.enable_codecov).upper()}']
         cmake_args += [f'-DENABLE_ForteTests=TRUE']

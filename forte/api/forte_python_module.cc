@@ -35,6 +35,7 @@
 
 #include "helpers/printing.h"
 #include "helpers/lbfgs/rosenbrock.h"
+#include "helpers/symmetry.h"
 
 #include "base_classes/active_space_solver.h"
 #include "base_classes/orbital_transform.h"
@@ -123,6 +124,18 @@ void export_MCSCF_2STEP(py::module& m) {
         .def("compute_energy", &MCSCF_2STEP::compute_energy, "Compute the MCSCF energy");
 }
 
+void export_Symmetry(py::module& m) {
+    py::class_<Symmetry>(m, "Symmetry")
+        .def(py::init<std::string>())
+        .def("point_group_label", &Symmetry::point_group_label, "the label of this point group")
+        .def("irrep_labels", &Symmetry::irrep_labels, "vector of irrep labels")
+        .def("irrep_label", &Symmetry::irrep_label, "the label of irrep h")
+        .def("irrep_label_to_index", &Symmetry::irrep_label_to_index,
+             "the index of a given irrep label")
+        .def("nirrep", &Symmetry::nirrep, "the number of irreps")
+        .def("irrep_product", &Symmetry::irrep_product, "the product of irreps h and g");
+}
+
 // TODO: export more classes using the function above
 PYBIND11_MODULE(forte, m) {
     m.doc() = "pybind11 Forte module"; // module docstring
@@ -186,6 +199,7 @@ PYBIND11_MODULE(forte, m) {
     export_MCSCF_2STEP(m);
     export_ForteIntegrals(m);
 
+    export_Symmetry(m);
     export_OrbitalTransform(m);
     export_Localize(m);
 
