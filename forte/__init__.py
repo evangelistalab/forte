@@ -30,6 +30,10 @@
 """
 
 import sys
+import logging
+
+logging.basicConfig(filename='forte.log', level=logging.INFO)
+logging.info('Starting the Forte logger')
 
 # Load Python modules
 from .molecule import Molecule

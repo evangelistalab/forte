@@ -1,3 +1,5 @@
+import logging
+
 from forte.solvers.solver import Solver, CallbackHandler
 from forte.model import MolecularModel
 from forte.forte import SCFInfo
@@ -134,7 +136,7 @@ class HF(Solver):
             'CONVENTIONAL': 'PK',
             'STD': 'PK',
         }
-
+        # deal with equivalent keywords
         if self._int_type.upper() in scf_type_dict:
             scf_type = scf_type_dict[self._int_type.upper()]
         else:
@@ -159,6 +161,9 @@ class HF(Solver):
         if self.socc is not None:
             options['SOCC'] = self.socc
 
+        if self.data.model.scf_aux_basis is not None:
+            options['DF_BASIS_SCF'] = self.data.model.scf_aux_basis
+
         full_options = {**options, **self._options}
 
         # set the options
@@ -171,6 +176,7 @@ class HF(Solver):
         self._ch.callback('pre hf', self)
 
         # run scf and return the energy and a wavefunction object
+        logging.info('HF calling psi4.energy')
         energy, psi_wfn = psi4.energy('scf', molecule=molecule, return_wfn=True)
 
         # check symmetry

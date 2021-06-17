@@ -132,12 +132,18 @@ class CallbackHandler():
             self._callback_list[id](state)
 
 
-def solver_factory(molecule, basis):
+def solver_factory(molecule, basis, scf_aux_basis=None, corr_aux_basis=None):
     """A factory to build a basic solver object"""
     if isinstance(molecule, str):
         molecule = Molecule.from_geom(molecule)
     if isinstance(basis, str):
         basis = Basis(basis)
+    if isinstance(scf_aux_basis, str):
+        scf_aux_basis = Basis(scf_aux_basis)
+    if isinstance(corr_aux_basis, str):
+        corr_aux_basis = Basis(corr_aux_basis)
     solver = BasicSolver()
-    solver.data.model = MolecularModel(molecule=molecule, basis=basis)
+    solver.data.model = MolecularModel(
+        molecule=molecule, basis=basis, scf_aux_basis=scf_aux_basis, corr_aux_basis=corr_aux_basis
+    )
     return solver

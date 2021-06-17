@@ -26,9 +26,11 @@ class MolecularModel(Model):
     Attributes
     ----------
     """
-    def __init__(self, molecule: Molecule, basis: Basis):
+    def __init__(self, molecule: Molecule, basis: Basis, scf_aux_basis: Basis = None, corr_aux_basis: Basis = None):
         self._molecule = molecule
         self._basis = basis
+        self._scf_aux_basis = scf_aux_basis
+        self._corr_aux_basis = corr_aux_basis
         self.symmetry = Symmetry(molecule.molecule.point_group().symbol().capitalize())
 
     def __repr__(self):
@@ -48,6 +50,18 @@ class MolecularModel(Model):
     @property
     def basis(self):
         return self._basis.basis
+
+    @property
+    def scf_aux_basis(self):
+        if self._scf_aux_basis is None:
+            return None
+        return self._scf_aux_basis.basis
+
+    @property
+    def corr_aux_basis(self):
+        if self._corr_aux_basis is None:
+            return None
+        return self._corr_aux_basis.basis
 
     @property
     def point_group(self) -> str:
