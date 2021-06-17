@@ -39,7 +39,9 @@ class MASTER_DSRG : public DynamicCorrelationSolver {
     virtual double compute_energy() = 0;
 
     /// Compute the DSRG gradient
-    virtual psi::SharedMatrix compute_gradient() = 0;
+    virtual psi::SharedMatrix compute_gradient() {
+        throw std::runtime_error("The analytic gradient code is only implemented for DSRG-MRPT2.");
+    }
 
     /// Compute DSRG transformed Hamiltonian
     virtual std::shared_ptr<ActiveSpaceIntegrals> compute_Heff_actv();
