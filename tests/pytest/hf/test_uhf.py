@@ -3,7 +3,7 @@
 import pytest
 
 from forte import Molecule, Basis
-from forte.solvers import molecular_model, HF
+from forte.solvers import solver_factory, HF
 
 
 def test_uhf():
@@ -22,7 +22,7 @@ def test_uhf():
     basis = Basis('cc-pVDZ')
 
     # create a molecular model
-    root = molecular_model(molecule=mol, basis=basis)
+    root = solver_factory(molecule=mol, basis=basis)
 
     # specify the electronic state
     state = root.state(charge=0, multiplicity=3, sym='b1')
@@ -48,7 +48,7 @@ def test_uhf_wrong_sym():
     basis = Basis('cc-pVDZ')
 
     # create a molecular model
-    root = molecular_model(molecule=mol, basis=basis)
+    root = solver_factory(molecule=mol, basis=basis)
 
     # specify the electronic state
     state = root.state(charge=0, multiplicity=3, sym='a1')

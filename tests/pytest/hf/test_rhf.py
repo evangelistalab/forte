@@ -3,7 +3,7 @@
 import pytest
 
 from forte import Molecule, Basis
-from forte.solvers import molecular_model, HF, CallbackHandler
+from forte.solvers import solver_factory, HF, CallbackHandler
 
 
 def test_rhf():
@@ -11,17 +11,14 @@ def test_rhf():
 
     ref_energy = -1.10015376479352
 
-    # create a molecule from a string
-    mol = Molecule.from_geom("""
+    # define a molecule
+    xyz = """
     H 0.0 0.0 0.0
     H 0.0 0.0 1.0
-    """)
-
-    # create a basis object
-    basis = Basis('cc-pVDZ')
+    """
 
     # create a molecular model
-    root = molecular_model(molecule=mol, basis=basis)
+    root = solver_factory(molecule=xyz, basis='cc-pVDZ')
 
     # specify the electronic state
     state = root.state(charge=0, multiplicity=1, sym='ag')
@@ -47,7 +44,7 @@ def test_rhf_docc():
     basis = Basis('cc-pVDZ')
 
     # create a molecular model
-    root = molecular_model(molecule=mol, basis=basis)
+    root = solver_factory(molecule=mol, basis=basis)
 
     # specify the electronic state
     state = root.state(charge=0, multiplicity=1, sym='a1')
@@ -71,7 +68,7 @@ def test_hf_callback():
     basis = Basis('cc-pVDZ')
 
     # create a molecular model
-    root = molecular_model(molecule=mol, basis=basis)
+    root = solver_factory(molecule=mol, basis=basis)
 
     # specify the electronic state
     state = root.state(charge=0, multiplicity=1, sym='a1')

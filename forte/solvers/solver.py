@@ -13,14 +13,14 @@ class Solver(ABC):
     """
     A class used to implement a quantum chemistry solver.
 
-    Attributes
-    ----------
+    Solver stores Forte base objects in a data attribute
+    and a results object
     """
     def __init__(self):
-        self._results = Results()
-        self._data = Data()
-        self._output_file = 'output.dat'
         self._executed = False
+        self._data = Data()
+        self._results = Results()
+        self._output_file = 'output.dat'
 
     @abstractmethod
     def run(self):
@@ -98,7 +98,7 @@ class Solver(ABC):
 
 
 class BasicSolver(Solver):
-    """A simple solver"""
+    """A simple solver used to instantiate a new job"""
     def __init__(self):
         super().__init__()
 
@@ -107,18 +107,37 @@ class BasicSolver(Solver):
 
 
 class CallbackHandler():
+    """
+    This class stores a list of callback functions labeled by an ID
+
+    Use:
+    > ch = CallbackHandler()
+    > def func(state):
+    >     <do something with state>   
+    > ch.add_callback(id='post',func=func) # define callback with id='post'
+    > ...
+    > ch.callback('pre',mystate) # id 'pre' is not defined, skip
+    > ch.callback('post',mystate) # calls func(mystate)
+    """
     def __init__(self):
         self._callback_list = {}
 
     def add_callback(self, id, func):
+        """Add a callback function labeled by an ID"""
         self._callback_list[id] = func
 
     def callback(self, id, state):
+        """Call the function ID on a given state"""
         if id in self._callback_list:
             self._callback_list[id](state)
 
 
-def molecular_model(molecule: Molecule, basis: Basis):
+def solver_factory(molecule, basis):
+    """A factory to build a basic solver object"""
+    if isinstance(molecule, str):
+        molecule = Molecule.from_geom(molecule)
+    if isinstance(basis, str):
+        basis = Basis(basis)
     solver = BasicSolver()
     solver.data.model = MolecularModel(molecule=molecule, basis=basis)
     return solver
