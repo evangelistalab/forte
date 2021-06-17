@@ -18,7 +18,6 @@ set {
   scf_type pk
   e_convergence 10
   d_convergence 10
-  # docc [3,0,1,1]
   restricted_docc [ 2, 0, 1, 1]
   active          [ 2, 0, 0, 0]
    mcscf_type           conv
