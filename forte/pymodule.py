@@ -490,17 +490,19 @@ def forte_driver(state_weights_map, scf_info, options, ints, mo_space_info):
             ci_vectors = active_space_solver.eigenvectors(state)
 
         dsrg_proc = ProcedureDSRG(active_space_solver, state_weights_map, mo_space_info, ints, options, scf_info)
-
-        if do_grad:
-            dsrg_proc.compute_gradient(coupling_coefficients, ci_vectors)
-        else:
-            return_en = dsrg_proc.compute_energy()
-
+        return_en = dsrg_proc.compute_energy()
         dsrg_proc.print_summary()
         dsrg_proc.push_to_psi4_environment()
 
-        if do_grad:
-            return True
+        if options.get_str('DERTYPE') == 'FIRST' and ctive_space_solver_type == "CAS":
+            # Compute coupling coefficients
+            # NOTE: 1. Orbitals have to be semicanonicalized already to make sure
+            #          DSRG reads consistent CI coefficients before and after SemiCanonical class.
+            #       2. This is OK only when running ground-state calculations
+            state = list(state_map.keys())[0]
+            coupling_coefficients = active_space_solver.coupling_coefficients(state, 3)
+            ci_vectors = active_space_solver.eigen_vectors(state)
+            dsrg_proc.compute_gradient(coupling_coefficients, ci_vectors)
     else:
         average_energy = forte.compute_average_state_energy(state_energies_list, state_weights_map)
         return_en = average_energy
