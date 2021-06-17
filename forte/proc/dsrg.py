@@ -262,7 +262,6 @@ class ProcedureDSRG:
 
         self.dsrg_cleanup()
 
-        return True
 
 
     def compute_dipole_relaxed(self):
