@@ -56,6 +56,9 @@ class ProcedureDSRG:
         if self.relax_ref == "NONE" and self.do_multi_state:
             self.relax_ref = "ONCE"
 
+        if self.relax_ref != "NONE" and options.get_str("DERTYPE") != "NONE":
+            raise NotImplementedError("The analytic gradient is only implemented for cases with unrelaxed reference.")
+
         self.max_rdm_level = 3 if options.get_str("THREEPDC") != "ZERO" else 2
 
         self.relax_convergence = float('inf')
@@ -255,6 +258,9 @@ class ProcedureDSRG:
         self.make_dsrg_solver()
         self.dsrg_setup()
         e_dsrg = self.dsrg_solver.compute_energy()
+
+        if self.relax_ref != "NONE" and options.get_str("DERTYPE") != "NONE":
+            raise NotImplementedError("The analytic gradient is only implemented for cases with unrelaxed reference.")
 
         self.dsrg_solver.set_coupling_coefficients(coupling_coefficients)
         self.dsrg_solver.set_ci_vectors(ci_vectors)
