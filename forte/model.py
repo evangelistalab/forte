@@ -7,7 +7,7 @@ from forte.forte import Symmetry
 
 class Model(ABC):
     """
-    A class used to implement a model.
+    An abstract base class used to implement a model.
 
     Attributes
     ----------
@@ -15,48 +15,6 @@ class Model(ABC):
     @abstractmethod
     def point_group(self) -> str:
         """The model point group"""
-
-
-# def label_to_irrep_num_(irrep_label, pg_symbol):
-#     # list of irrep labels for each point group
-#     pg_irrep_labels = {
-#         'C1': ['A'],
-#         'Cs': ['Ap', 'App'],
-#         'Ci': ['Ag', 'Au'],
-#         'C2': ['A', 'B'],
-#         'C2h': ['Ag', 'Bg', 'Au', 'Bu'],
-#         'C2v': ['A1', 'A2', 'B1', 'B2'],
-#         'D2': ['A', 'B1', 'B2', 'B3'],
-#         'D2h': ['Ag', 'B1g', 'B2g', 'B3g', 'Au', 'B1u', 'B2u', 'B3u']
-#     }
-
-#     pg_symbol = pg_symbol.capitalize()
-#     pg_labels_dict = {}
-#     for i, label in enumerate(pg_irrep_labels[pg_symbol]):
-#         pg_labels_dict[label.capitalize()] = i
-
-#     irrep_label = irrep_label.capitalize()
-#     if irrep_label in pg_labels_dict:
-#         return pg_labels_dict[irrep_label]
-#     raise ValueError(
-#         f'label_to_irrep_num_: the irrep label ({irrep_label}) '
-#         f'passed is not allowed for point group {pg_symbol}. '
-#         f'The allowed values are: [{",".join(pg_irrep_labels[pg_symbol])}].'
-#     )
-
-# def irrep_num_to_label_(h, pg_symbol):
-#     pg_symbol = pg_symbol.capitalize()
-#     pg_irrep_labels = {
-#         'C1': ['A'],
-#         'Cs': ['Ap', 'App'],
-#         'Ci': ['Ag', 'Au'],
-#         'C2': ['A', 'B'],
-#         'C2h': ['Ag', 'Bg', 'Au', 'Bu'],
-#         'C2v': ['A1', 'A2', 'B1', 'B2'],
-#         'D2': ['A', 'B1', 'B2', 'B3'],
-#         'D2h': ['Ag', 'B1g', 'B2g', 'B3g', 'Au', 'B1u', 'B2u', 'B3u']
-#     }
-#     return pg_irrep_labels[pg_symbol][h]
 
 
 class MolecularModel(Model):
@@ -96,6 +54,7 @@ class MolecularModel(Model):
         return self.symmetry.point_group_label()
 
     def state(self, charge: int, multiplicity: int, ms: float = None, sym: str = None):
+        """This function is ued to create a StateInfo object. It checks for potential errors.""""
         if ms is None:
             # If ms = None take the lowest value consistent with multiplicity
             # For example:
@@ -123,11 +82,14 @@ class MolecularModel(Model):
         # compute the irrep index and produce a standard label
         if sym is None:
             if sym.nirrep() == 1:
+                # in this case there is only one possible choice
                 sym = 'A'
             else:
                 raise ValueError(
                     f'(MolecularModel) The value of sym ({sym}) is invalid.'
                     f' Please specify a valid symmetry label.'
                 )
+
+        # get the irrep index from the symbol
         irrep = self.symmetry.irrep_label_to_index(sym)
         return StateInfo(na, nb, multiplicity, twice_ms, irrep, sym)

@@ -1,11 +1,6 @@
 class Basis:
     """
     A class used to store basis information.
-
-    Attributes
-    ----------
-    basis : str
-        the basis name
     """
     def __init__(self, basis):
         """

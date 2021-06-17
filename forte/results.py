@@ -1,17 +1,16 @@
 class Results:
     """
-    A class used to store the output of a computation.
-
-    Attributes
-    ----------
+    A class used to store the results of a computation.
     """
     def __init__(self):
         self._data = dict()
 
     def add(self, label, value, description, units):
+        """"Add a result"""
         self._data[label] = {'value': value, 'description': description, 'units': units}
 
     def value(self, label):
+        """"Get the value of a result"""
         return self._data[label]['value']
 
     def __repr__(self):
