@@ -1,14 +1,11 @@
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
+import psi4
+import forte
+import pytest
 
 
 def test_input_example_2():
     """Run a FCISCF computation on methylene using ROHF orbitals optimized for the 3B1 state.
        Computes both the lowest 3B1 and 1A1 states."""
-    import math
-    import psi4
-    import forte
-    import pytest
 
     ref_e_1a1 = -38.900217662950
     ref_e_3b1 = -38.960623289646

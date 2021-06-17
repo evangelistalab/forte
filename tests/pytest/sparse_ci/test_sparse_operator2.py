@@ -11,8 +11,6 @@ def test_sparse_operator2():
     import psi4
     from forte import det
 
-    forte.startup()
-
     geom = """
      H
      H 1 1.0
@@ -30,7 +28,6 @@ def test_sparse_operator2():
     assert Href1[det("20")] == pytest.approx(-1.094572, abs=1e-6)
     assert Href2[det("20")] == pytest.approx(-1.094572, abs=1e-6)
 
-    forte.cleanup()
     psi4.core.clean()
 
 

@@ -39,7 +39,7 @@ from .model import Model, MolecularModel
 
 from .pymodule import *
 from .register_forte_options import *
-from .core import *
+from .core import ForteManager, clean_options
 from .forte import *
 from .active_space import *
 
@@ -52,6 +52,7 @@ forte_options = forte.ForteOptions()
 # Register options defined in Forte in the forte_options object
 register_forte_options(forte_options)
 
+# create a singleton to handle startup and cleanup of forte
 forte_manager = ForteManager()
 
 # If we are running psi4, push the options defined in forte_options to psi

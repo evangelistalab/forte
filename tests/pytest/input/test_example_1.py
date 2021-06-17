@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-import forte
 import psi4
+import forte
 import pytest
 
 
@@ -20,6 +20,8 @@ def test_input_example_1():
     H 1 1.085
     H 1 1.085 2 135.5
     """)
+
+    forte.clean_options()
 
     psi4.set_options(
         {

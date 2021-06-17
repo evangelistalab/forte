@@ -5,7 +5,6 @@ import forte
 
 def test_ambit():
     """Test the conversion of ambit::Tensor to numpy"""
-    forte.startup()
     t = forte.test_ambit_3d()
     n = 0
     shape = t.shape
@@ -14,4 +13,3 @@ def test_ambit():
             for k in range(shape[2]):
                 assert t[i][j][k] == n
                 n += 1
-    forte.cleanup()
