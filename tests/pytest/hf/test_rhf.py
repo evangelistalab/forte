@@ -23,6 +23,7 @@ def test_rhf():
     # specify the electronic state
     state = root.state(charge=0, multiplicity=1, sym='ag')
 
+    # create a HF object and run
     hf = HF(root, state=state)
     hf.run()
 
@@ -30,7 +31,8 @@ def test_rhf():
 
 
 def test_rhf_docc():
-    """Test RHF on LiH using an occupation pattern that is not optimal."""
+    """Test RHF on LiH using an occupation pattern that is not optimal.
+    This example shows an alternative way to build the molecule/basis."""
 
     ref_energy = -7.40425598707951
 
