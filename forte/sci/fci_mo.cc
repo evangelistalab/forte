@@ -2834,7 +2834,7 @@ ambit::Tensor FCI_MO::coupling_coeffcients_2aa() {
                                     {ndets, ndets, nactv_, nactv_, nactv_, nactv_});
 
     const auto& dets = det_hash_vec_.wfn_hash();
-    
+
     auto op = std::make_shared<DeterminantSubstitutionLists>(fci_ints_);
     op->set_quiet_mode(not print_);
     op->build_strings(det_hash_vec_);
@@ -3897,7 +3897,7 @@ CICouplingCoefficients FCI_MO::coupling_coefficients(int level) {
             auto cc3abb = coupling_coeffcients_3abb();
             auto cc3bbb = coupling_coeffcients_3bbb();
             return CICouplingCoefficients(cc1a, cc1b, cc2aa, cc2ab, cc2bb, cc3aaa, cc3aab, cc3abb,
-                                        cc3bbb);
+                                          cc3bbb);
         }
     } else {
         throw PSIEXCEPTION("Not implemented other than level 2 or 3");

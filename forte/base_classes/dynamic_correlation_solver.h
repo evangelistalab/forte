@@ -44,7 +44,9 @@ class DynamicCorrelationSolver {
 
     /// Set coupling coefficients
     /// TODO: remove this when implemented more efficient way of computing CI response
-    virtual void set_coupling_coefficients(const CICouplingCoefficients& cc) { coupling_coefficients_ = cc; }
+    virtual void set_coupling_coefficients(const CICouplingCoefficients& cc) {
+        coupling_coefficients_ = cc;
+    }
 
     /// Set CI coefficients
     /// TODO: remove this when implemented more efficient way of computing CI response

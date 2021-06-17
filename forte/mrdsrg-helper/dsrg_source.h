@@ -32,7 +32,6 @@
 #include <cmath>
 #include <stdexcept>
 
-
 namespace forte {
 
 class DSRG_SOURCE {
@@ -86,19 +85,18 @@ class STD_SOURCE : public DSRG_SOURCE {
 
     virtual double compute_renormalized_denominator_deriv(const double& D, int i) {
         if (std::fabs(D) < small_) {
-            switch(i) {
-                case 1:
-                    return 0;
-                case 2:
-                    return s_;
+            switch (i) {
+            case 1:
+                return 0;
+            case 2:
+                return s_;
             }
-        }
-        else {
-            switch(i) {
-                case 1:
-                    return (1.0 - std::exp(-s_ * D * D)) / D;
-                case 2:
-                    return (1.0 - std::exp(-s_ * D * D)) / D / D;
+        } else {
+            switch (i) {
+            case 1:
+                return (1.0 - std::exp(-s_ * D * D)) / D;
+            case 2:
+                return (1.0 - std::exp(-s_ * D * D)) / D / D;
             }
         }
     }
@@ -201,6 +199,6 @@ class MP2_SOURCE : public DSRG_SOURCE {
 
     virtual double compute_renormalized_denominator(const double& D) { return 1.0 / D; }
 };
-}
+} // namespace forte
 
 #endif // DSRG_SOURCE_H

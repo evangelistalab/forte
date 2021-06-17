@@ -178,7 +178,6 @@ class DSRG_MRPT2 : public MASTER_DSRG {
     /// Unitary matrix to block diagonal Fock
     ambit::BlockedTensor U_;
 
-
     // NOTICE These are essential variables and functions for computing DSRG-MRPT2 gradient.
     // Some variables may be redundant thus need further elimination
     /// Set ambit tensor labels
@@ -204,10 +203,8 @@ class DSRG_MRPT2 : public MASTER_DSRG {
     size_t na;
     size_t nirrep;
 
-
     void set_dsrg_tensor();
 
-   
     /// Write the Lagrangian
     void write_lagrangian();
     /// Write spin_dependent one-RDMs coefficients
@@ -217,8 +214,7 @@ class DSRG_MRPT2 : public MASTER_DSRG {
     /// TPDM backtransform
     void tpdm_backtransform();
 
-   
-    void set_multiplier(); 
+    void set_multiplier();
 
     void solve_z();
     void set_sigma();
@@ -243,7 +239,7 @@ class DSRG_MRPT2 : public MASTER_DSRG {
     /// List of virtual MOs (Correlated)
     std::vector<size_t> virt_mos;
     /// List of core MOs (Absolute)
-   
+
     std::vector<size_t> core_all;
     /// List of active MOs (Absolute)
     std::vector<size_t> actv_all;
@@ -285,13 +281,10 @@ class DSRG_MRPT2 : public MASTER_DSRG {
     ambit::BlockedTensor Eeps2_m1;
     ambit::BlockedTensor Eeps2_m2;
 
-
     ambit::BlockedTensor Delta1;
     ambit::BlockedTensor Delta2;
     ambit::BlockedTensor DelGam1;
     ambit::BlockedTensor DelEeps1;
-
-
 
     ambit::BlockedTensor I;
 
@@ -310,8 +303,6 @@ class DSRG_MRPT2 : public MASTER_DSRG {
     ambit::BlockedTensor Xi1;
     ambit::BlockedTensor Xi2;
     ambit::BlockedTensor Xi3;
-
-
 
     double Alpha;
     ambit::Tensor x_ci;
@@ -357,8 +348,6 @@ class DSRG_MRPT2 : public MASTER_DSRG {
     ambit::Tensor dlamb3_bbb;
     ambit::Tensor dlamb3_aab;
     ambit::Tensor dlamb3_abb;
-
-
 
     // => Amplitude <= //
 

@@ -11,12 +11,12 @@ class CICouplingCoefficients {
 
     /// @brief Construct using 1 and 2 coupling coefficients
     CICouplingCoefficients(ambit::Tensor cc1a, ambit::Tensor cc1b, ambit::Tensor cc2aa,
-                         ambit::Tensor cc2ab, ambit::Tensor cc2bb);
+                           ambit::Tensor cc2ab, ambit::Tensor cc2bb);
 
     /// @brief Construct using 1, 2, and 3 coupling coefficients
     CICouplingCoefficients(ambit::Tensor cc1a, ambit::Tensor cc1b, ambit::Tensor cc2aa,
-                         ambit::Tensor cc2ab, ambit::Tensor cc2bb, ambit::Tensor cc3aaa,
-                         ambit::Tensor cc3aab, ambit::Tensor cc3abb, ambit::Tensor cc3bbb);
+                           ambit::Tensor cc2ab, ambit::Tensor cc2bb, ambit::Tensor cc3aaa,
+                           ambit::Tensor cc3aab, ambit::Tensor cc3abb, ambit::Tensor cc3bbb);
 
     /// @return the alpha 1-coupling coefficients
     ambit::Tensor cc1a() const { return cc1a_; }

@@ -828,7 +828,7 @@ compute_average_state_energy(const std::map<StateInfo, std::vector<double>>& sta
 }
 
 CICouplingCoefficients ActiveSpaceSolver::coupling_coefficients(const StateInfo& state,
-                                                              int max_level) {
+                                                                int max_level) {
     return state_method_map_[state]->coupling_coefficients(max_level);
 }
 

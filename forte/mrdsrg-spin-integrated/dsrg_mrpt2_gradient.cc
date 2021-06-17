@@ -43,24 +43,23 @@
 #include "master_mrdsrg.h"
 #include "helpers/timer.h"
 
-
 using namespace ambit;
 using namespace psi;
 
 namespace forte {
 
-const bool PT2_TERM         = true;
-const bool X1_TERM          = true;
-const bool X2_TERM          = true;
-const bool X3_TERM          = true;
-const bool X4_TERM          = true;
-const bool X5_TERM          = true;
-const bool X6_TERM          = true;
-const bool X7_TERM          = true;
+const bool PT2_TERM = true;
+const bool X1_TERM = true;
+const bool X2_TERM = true;
+const bool X3_TERM = true;
+const bool X4_TERM = true;
+const bool X5_TERM = true;
+const bool X6_TERM = true;
+const bool X7_TERM = true;
 const bool CORRELATION_TERM = true;
 
 SharedMatrix DSRG_MRPT2::compute_gradient() {
-    // NOTICE: compute the DSRG_MRPT2 gradient 
+    // NOTICE: compute the DSRG_MRPT2 gradient
     print_method_banner({"DSRG-MRPT2 Gradient", "Shuhe Wang"});
     set_global_variables();
     set_tensor();
@@ -142,9 +141,14 @@ void DSRG_MRPT2::set_ci_ints() {
     cc3abb_n("KuVWxYZ") = cc.cc3abb()("KJuVWxYZ") * ci("J");
     cc3abb_r("KuVWxYZ") = cc.cc3abb()("JKuVWxYZ") * ci("J");
 
-    dlamb_aa = ambit::Tensor::build(ambit::CoreTensor, "derivatives of Lambda2_ w.r.t. C_K alpha-alpha", {ndets, na, na, na, na});
-    dlamb_bb = ambit::Tensor::build(ambit::CoreTensor, "derivatives of Lambda2_ w.r.t. C_K beta-beta", {ndets, na, na, na, na});
-    dlamb_ab = ambit::Tensor::build(ambit::CoreTensor, "derivatives of Lambda2_ w.r.t. C_K alpha-beta", {ndets, na, na, na, na});
+    dlamb_aa =
+        ambit::Tensor::build(ambit::CoreTensor, "derivatives of Lambda2_ w.r.t. C_K alpha-alpha",
+                             {ndets, na, na, na, na});
+    dlamb_bb = ambit::Tensor::build(
+        ambit::CoreTensor, "derivatives of Lambda2_ w.r.t. C_K beta-beta", {ndets, na, na, na, na});
+    dlamb_ab =
+        ambit::Tensor::build(ambit::CoreTensor, "derivatives of Lambda2_ w.r.t. C_K alpha-beta",
+                             {ndets, na, na, na, na});
 
     // alpha-alpha
     dlamb_aa("Kxyuv") += cc2aa_n("Kxyuv");
@@ -179,10 +183,18 @@ void DSRG_MRPT2::set_ci_ints() {
     dlamb_ab("KxYuV") -= cc1b_n("KYV") * Gamma1_.block("aa")("xu");
     dlamb_ab("KxYuV") -= cc1b_n("KVY") * Gamma1_.block("aa")("xu");
 
-    dlamb3_aaa = ambit::Tensor::build(ambit::CoreTensor, "derivatives of Lambda3_ w.r.t. C_K alpha-alpha-alpha", {ndets, na, na, na, na, na, na});
-    dlamb3_bbb = ambit::Tensor::build(ambit::CoreTensor, "derivatives of Lambda3_ w.r.t. C_K beta-beta-beta", {ndets, na, na, na, na, na, na});
-    dlamb3_aab = ambit::Tensor::build(ambit::CoreTensor, "derivatives of Lambda3_ w.r.t. C_K alpha-alpha-beta", {ndets, na, na, na, na, na, na});
-    dlamb3_abb = ambit::Tensor::build(ambit::CoreTensor, "derivatives of Lambda3_ w.r.t. C_K alpha-beta-beta", {ndets, na, na, na, na, na, na});
+    dlamb3_aaa = ambit::Tensor::build(ambit::CoreTensor,
+                                      "derivatives of Lambda3_ w.r.t. C_K alpha-alpha-alpha",
+                                      {ndets, na, na, na, na, na, na});
+    dlamb3_bbb =
+        ambit::Tensor::build(ambit::CoreTensor, "derivatives of Lambda3_ w.r.t. C_K beta-beta-beta",
+                             {ndets, na, na, na, na, na, na});
+    dlamb3_aab = ambit::Tensor::build(ambit::CoreTensor,
+                                      "derivatives of Lambda3_ w.r.t. C_K alpha-alpha-beta",
+                                      {ndets, na, na, na, na, na, na});
+    dlamb3_abb = ambit::Tensor::build(ambit::CoreTensor,
+                                      "derivatives of Lambda3_ w.r.t. C_K alpha-beta-beta",
+                                      {ndets, na, na, na, na, na, na});
 
     // alpha-alpha-alpha
     dlamb3_aaa("Kxyzuvw") += cc3aaa_n("Kxyzuvw");
@@ -203,18 +215,30 @@ void DSRG_MRPT2::set_ci_ints() {
     dlamb3_aaa("Kxyzuvw") += 2.0 * cc1a_r("Kxw") * Gamma2_.block("aaaa")("uvzy");
     dlamb3_aaa("Kxyzuvw") += 2.0 * cc2aa_n("Kuvzy") * Gamma1_.block("aa")("xw");
     dlamb3_aaa("Kxyzuvw") += 2.0 * cc2aa_r("Kuvzy") * Gamma1_.block("aa")("xw");
-    dlamb3_aaa("Kxyzuvw") += 8.0 * cc1a_n("Kuz") * Gamma1_.block("aa")("xv")* Gamma1_.block("aa")("yw");
-    dlamb3_aaa("Kxyzuvw") += 8.0 * cc1a_r("Kuz") * Gamma1_.block("aa")("xv")* Gamma1_.block("aa")("yw");
-    dlamb3_aaa("Kxyzuvw") += 8.0 * cc1a_n("Kxv") * Gamma1_.block("aa")("uz")* Gamma1_.block("aa")("yw");
-    dlamb3_aaa("Kxyzuvw") += 8.0 * cc1a_r("Kxv") * Gamma1_.block("aa")("uz")* Gamma1_.block("aa")("yw");
-    dlamb3_aaa("Kxyzuvw") += 8.0 * cc1a_n("Kyw") * Gamma1_.block("aa")("uz")* Gamma1_.block("aa")("xv");
-    dlamb3_aaa("Kxyzuvw") += 8.0 * cc1a_r("Kyw") * Gamma1_.block("aa")("uz")* Gamma1_.block("aa")("xv");
-    dlamb3_aaa("Kxyzuvw") += 4.0 * cc1a_n("Kwz") * Gamma1_.block("aa")("xu")* Gamma1_.block("aa")("yv");
-    dlamb3_aaa("Kxyzuvw") += 4.0 * cc1a_r("Kwz") * Gamma1_.block("aa")("xu")* Gamma1_.block("aa")("yv");
-    dlamb3_aaa("Kxyzuvw") += 4.0 * cc1a_n("Kxu") * Gamma1_.block("aa")("wz")* Gamma1_.block("aa")("yv");
-    dlamb3_aaa("Kxyzuvw") += 4.0 * cc1a_r("Kxu") * Gamma1_.block("aa")("wz")* Gamma1_.block("aa")("yv");
-    dlamb3_aaa("Kxyzuvw") += 4.0 * cc1a_n("Kyv") * Gamma1_.block("aa")("wz")* Gamma1_.block("aa")("xu");
-    dlamb3_aaa("Kxyzuvw") += 4.0 * cc1a_r("Kyv") * Gamma1_.block("aa")("wz")* Gamma1_.block("aa")("xu");
+    dlamb3_aaa("Kxyzuvw") +=
+        8.0 * cc1a_n("Kuz") * Gamma1_.block("aa")("xv") * Gamma1_.block("aa")("yw");
+    dlamb3_aaa("Kxyzuvw") +=
+        8.0 * cc1a_r("Kuz") * Gamma1_.block("aa")("xv") * Gamma1_.block("aa")("yw");
+    dlamb3_aaa("Kxyzuvw") +=
+        8.0 * cc1a_n("Kxv") * Gamma1_.block("aa")("uz") * Gamma1_.block("aa")("yw");
+    dlamb3_aaa("Kxyzuvw") +=
+        8.0 * cc1a_r("Kxv") * Gamma1_.block("aa")("uz") * Gamma1_.block("aa")("yw");
+    dlamb3_aaa("Kxyzuvw") +=
+        8.0 * cc1a_n("Kyw") * Gamma1_.block("aa")("uz") * Gamma1_.block("aa")("xv");
+    dlamb3_aaa("Kxyzuvw") +=
+        8.0 * cc1a_r("Kyw") * Gamma1_.block("aa")("uz") * Gamma1_.block("aa")("xv");
+    dlamb3_aaa("Kxyzuvw") +=
+        4.0 * cc1a_n("Kwz") * Gamma1_.block("aa")("xu") * Gamma1_.block("aa")("yv");
+    dlamb3_aaa("Kxyzuvw") +=
+        4.0 * cc1a_r("Kwz") * Gamma1_.block("aa")("xu") * Gamma1_.block("aa")("yv");
+    dlamb3_aaa("Kxyzuvw") +=
+        4.0 * cc1a_n("Kxu") * Gamma1_.block("aa")("wz") * Gamma1_.block("aa")("yv");
+    dlamb3_aaa("Kxyzuvw") +=
+        4.0 * cc1a_r("Kxu") * Gamma1_.block("aa")("wz") * Gamma1_.block("aa")("yv");
+    dlamb3_aaa("Kxyzuvw") +=
+        4.0 * cc1a_n("Kyv") * Gamma1_.block("aa")("wz") * Gamma1_.block("aa")("xu");
+    dlamb3_aaa("Kxyzuvw") +=
+        4.0 * cc1a_r("Kyv") * Gamma1_.block("aa")("wz") * Gamma1_.block("aa")("xu");
 
     // beta-beta-beta
     dlamb3_bbb("KXYZUVW") += cc3bbb_n("KXYZUVW");
@@ -235,18 +259,30 @@ void DSRG_MRPT2::set_ci_ints() {
     dlamb3_bbb("KXYZUVW") += 2.0 * cc1b_r("KXW") * Gamma2_.block("AAAA")("UVZY");
     dlamb3_bbb("KXYZUVW") += 2.0 * cc2bb_n("KUVZY") * Gamma1_.block("AA")("XW");
     dlamb3_bbb("KXYZUVW") += 2.0 * cc2bb_r("KUVZY") * Gamma1_.block("AA")("XW");
-    dlamb3_bbb("KXYZUVW") += 8.0 * cc1b_n("KUZ") * Gamma1_.block("AA")("XV")* Gamma1_.block("AA")("YW");
-    dlamb3_bbb("KXYZUVW") += 8.0 * cc1b_r("KUZ") * Gamma1_.block("AA")("XV")* Gamma1_.block("AA")("YW");
-    dlamb3_bbb("KXYZUVW") += 8.0 * cc1b_n("KXV") * Gamma1_.block("AA")("UZ")* Gamma1_.block("AA")("YW");
-    dlamb3_bbb("KXYZUVW") += 8.0 * cc1b_r("KXV") * Gamma1_.block("AA")("UZ")* Gamma1_.block("AA")("YW");
-    dlamb3_bbb("KXYZUVW") += 8.0 * cc1b_n("KYW") * Gamma1_.block("AA")("UZ")* Gamma1_.block("AA")("XV");
-    dlamb3_bbb("KXYZUVW") += 8.0 * cc1b_r("KYW") * Gamma1_.block("AA")("UZ")* Gamma1_.block("AA")("XV");
-    dlamb3_bbb("KXYZUVW") += 4.0 * cc1b_n("KWZ") * Gamma1_.block("AA")("XU")* Gamma1_.block("AA")("YV");
-    dlamb3_bbb("KXYZUVW") += 4.0 * cc1b_r("KWZ") * Gamma1_.block("AA")("XU")* Gamma1_.block("AA")("YV");
-    dlamb3_bbb("KXYZUVW") += 4.0 * cc1b_n("KXU") * Gamma1_.block("AA")("WZ")* Gamma1_.block("AA")("YV");
-    dlamb3_bbb("KXYZUVW") += 4.0 * cc1b_r("KXU") * Gamma1_.block("AA")("WZ")* Gamma1_.block("AA")("YV");
-    dlamb3_bbb("KXYZUVW") += 4.0 * cc1b_n("KYV") * Gamma1_.block("AA")("WZ")* Gamma1_.block("AA")("XU");
-    dlamb3_bbb("KXYZUVW") += 4.0 * cc1b_r("KYV") * Gamma1_.block("AA")("WZ")* Gamma1_.block("AA")("XU");
+    dlamb3_bbb("KXYZUVW") +=
+        8.0 * cc1b_n("KUZ") * Gamma1_.block("AA")("XV") * Gamma1_.block("AA")("YW");
+    dlamb3_bbb("KXYZUVW") +=
+        8.0 * cc1b_r("KUZ") * Gamma1_.block("AA")("XV") * Gamma1_.block("AA")("YW");
+    dlamb3_bbb("KXYZUVW") +=
+        8.0 * cc1b_n("KXV") * Gamma1_.block("AA")("UZ") * Gamma1_.block("AA")("YW");
+    dlamb3_bbb("KXYZUVW") +=
+        8.0 * cc1b_r("KXV") * Gamma1_.block("AA")("UZ") * Gamma1_.block("AA")("YW");
+    dlamb3_bbb("KXYZUVW") +=
+        8.0 * cc1b_n("KYW") * Gamma1_.block("AA")("UZ") * Gamma1_.block("AA")("XV");
+    dlamb3_bbb("KXYZUVW") +=
+        8.0 * cc1b_r("KYW") * Gamma1_.block("AA")("UZ") * Gamma1_.block("AA")("XV");
+    dlamb3_bbb("KXYZUVW") +=
+        4.0 * cc1b_n("KWZ") * Gamma1_.block("AA")("XU") * Gamma1_.block("AA")("YV");
+    dlamb3_bbb("KXYZUVW") +=
+        4.0 * cc1b_r("KWZ") * Gamma1_.block("AA")("XU") * Gamma1_.block("AA")("YV");
+    dlamb3_bbb("KXYZUVW") +=
+        4.0 * cc1b_n("KXU") * Gamma1_.block("AA")("WZ") * Gamma1_.block("AA")("YV");
+    dlamb3_bbb("KXYZUVW") +=
+        4.0 * cc1b_r("KXU") * Gamma1_.block("AA")("WZ") * Gamma1_.block("AA")("YV");
+    dlamb3_bbb("KXYZUVW") +=
+        4.0 * cc1b_n("KYV") * Gamma1_.block("AA")("WZ") * Gamma1_.block("AA")("XU");
+    dlamb3_bbb("KXYZUVW") +=
+        4.0 * cc1b_r("KYV") * Gamma1_.block("AA")("WZ") * Gamma1_.block("AA")("XU");
 
     // alpha-alpha-beta
     dlamb3_aab("KxyZuvW") += cc3aab_n("KxyZuvW");
@@ -349,34 +385,32 @@ void DSRG_MRPT2::set_h() {
 }
 
 void DSRG_MRPT2::set_v() {
-    V = BTF_->build(CoreTensor, "Electron Repulsion Integral", 
-        spin_cases({"gphh", "pghh", "ppgh", "pphg",
-                    "gchc", "pghc", "pcgc", "pchg",
-                    "gcpc", "hgpc", "hcgc", "hcpg", 
-                    "gccc", "cgcc", "ccgc", "cccg", 
-                    "gcvc", "vgvc", "vcgc", "vcvg",
-                    "cgch", "gpch", "cpcg", "cpgh",
-                    "cgcp", "ghcp", "chcg", "chgp", 
-                    "cgcv", "gvcv", "cvcg", "cvgv"}));
+    V = BTF_->build(CoreTensor, "Electron Repulsion Integral",
+                    spin_cases({"gphh", "pghh", "ppgh", "pphg", "gchc", "pghc", "pcgc", "pchg",
+                                "gcpc", "hgpc", "hcgc", "hcpg", "gccc", "cgcc", "ccgc", "cccg",
+                                "gcvc", "vgvc", "vcgc", "vcvg", "cgch", "gpch", "cpcg", "cpgh",
+                                "cgcp", "ghcp", "chcg", "chgp", "cgcv", "gvcv", "cvcg", "cvgv"}));
 
     V.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>& spin, double& value) {
         if (spin[0] == AlphaSpin) {
             if (spin[1] == AlphaSpin) {
                 value = ints_->aptei_aa(i[0], i[1], i[2], i[3]);
-            } 
-            else {
+            } else {
                 value = ints_->aptei_ab(i[0], i[1], i[2], i[3]);
             }
-        } 
-        else if (spin[1] == BetaSpin) {
+        } else if (spin[1] == BetaSpin) {
             value = ints_->aptei_bb(i[0], i[1], i[2], i[3]);
         }
     });
 
-    V_N_Alpha = BTF_->build(CoreTensor, "normal Dimention-reduced Electron Repulsion Integral alpha", {"gg"});
-    V_N_Beta = BTF_->build(CoreTensor, "normal Dimention-reduced Electron Repulsion Integral beta", {"gg"});
-    V_R_Beta = BTF_->build(CoreTensor, "index-reversed Dimention-reduced Electron Repulsion Integral beta", {"GG"});
-    V_all_Beta = BTF_->build(CoreTensor, "normal Dimention-reduced Electron Repulsion Integral all beta", {"GG"});
+    V_N_Alpha = BTF_->build(CoreTensor,
+                            "normal Dimention-reduced Electron Repulsion Integral alpha", {"gg"});
+    V_N_Beta = BTF_->build(CoreTensor, "normal Dimention-reduced Electron Repulsion Integral beta",
+                           {"gg"});
+    V_R_Beta = BTF_->build(
+        CoreTensor, "index-reversed Dimention-reduced Electron Repulsion Integral beta", {"GG"});
+    V_all_Beta = BTF_->build(
+        CoreTensor, "normal Dimention-reduced Electron Repulsion Integral all beta", {"GG"});
 
     // Summation of V["pmqm"] over index "m" or V["mpmq"] over index "m"
     V_N_Alpha["pq"] = V["pmqn"] * I["mn"];
@@ -403,94 +437,119 @@ void DSRG_MRPT2::set_fock() {
 }
 
 void DSRG_MRPT2::set_dsrg_tensor() {
-    Eeps1       = BTF_->build(CoreTensor, "e^[-s*(Delta1)^2]", spin_cases({"hp"}));
-    Eeps1_m1    = BTF_->build(CoreTensor, "{1-e^[-s*(Delta1)^2]}/(Delta1)", spin_cases({"hp"}));
-    Eeps1_m2    = BTF_->build(CoreTensor, "{1-e^[-s*(Delta1)^2]}/(Delta1)^2", spin_cases({"hp"}));
-    Eeps2       = BTF_->build(CoreTensor, "e^[-s*(Delta2)^2]", spin_cases({"hhpp"}));
-    Eeps2_p     = BTF_->build(CoreTensor, "1+e^[-s*(Delta2)^2]", spin_cases({"hhpp"}));
-    Eeps2_m1    = BTF_->build(CoreTensor, "{1-e^[-s*(Delta2)^2]}/(Delta2)", spin_cases({"hhpp"}));
-    Eeps2_m2    = BTF_->build(CoreTensor, "{1-e^[-s*(Delta2)^2]}/(Delta2)^2", spin_cases({"hhpp"}));
-    Delta1      = BTF_->build(CoreTensor, "Delta1", spin_cases({"gg"}));
-    Delta2      = BTF_->build(CoreTensor, "Delta2", spin_cases({"hhpp"}));
-    DelGam1     = BTF_->build(CoreTensor, "Delta1 * Gamma1_", spin_cases({"aa"}));
-    DelEeps1    = BTF_->build(CoreTensor, "Delta1 * Eeps1", spin_cases({"hp"}));
+    Eeps1 = BTF_->build(CoreTensor, "e^[-s*(Delta1)^2]", spin_cases({"hp"}));
+    Eeps1_m1 = BTF_->build(CoreTensor, "{1-e^[-s*(Delta1)^2]}/(Delta1)", spin_cases({"hp"}));
+    Eeps1_m2 = BTF_->build(CoreTensor, "{1-e^[-s*(Delta1)^2]}/(Delta1)^2", spin_cases({"hp"}));
+    Eeps2 = BTF_->build(CoreTensor, "e^[-s*(Delta2)^2]", spin_cases({"hhpp"}));
+    Eeps2_p = BTF_->build(CoreTensor, "1+e^[-s*(Delta2)^2]", spin_cases({"hhpp"}));
+    Eeps2_m1 = BTF_->build(CoreTensor, "{1-e^[-s*(Delta2)^2]}/(Delta2)", spin_cases({"hhpp"}));
+    Eeps2_m2 = BTF_->build(CoreTensor, "{1-e^[-s*(Delta2)^2]}/(Delta2)^2", spin_cases({"hhpp"}));
+    Delta1 = BTF_->build(CoreTensor, "Delta1", spin_cases({"gg"}));
+    Delta2 = BTF_->build(CoreTensor, "Delta2", spin_cases({"hhpp"}));
+    DelGam1 = BTF_->build(CoreTensor, "Delta1 * Gamma1_", spin_cases({"aa"}));
+    DelEeps1 = BTF_->build(CoreTensor, "Delta1 * Eeps1", spin_cases({"hp"}));
     T2OverDelta = BTF_->build(CoreTensor, "T2/Delta", spin_cases({"hhpp"}));
 
     Eeps1.iterate(
         [&](const std::vector<size_t>& i, const std::vector<SpinType>& spin, double& value) {
-            if (spin[0] == AlphaSpin) { value = dsrg_source_->compute_renormalized(Fa_[i[0]] - Fa_[i[1]]);}
-            else { value = dsrg_source_->compute_renormalized(Fb_[i[0]] - Fb_[i[1]]);}
-        }
-    );
+            if (spin[0] == AlphaSpin) {
+                value = dsrg_source_->compute_renormalized(Fa_[i[0]] - Fa_[i[1]]);
+            } else {
+                value = dsrg_source_->compute_renormalized(Fb_[i[0]] - Fb_[i[1]]);
+            }
+        });
     Delta1.iterate(
         [&](const std::vector<size_t>& i, const std::vector<SpinType>& spin, double& value) {
-            if (spin[0] == AlphaSpin) { value = Fa_[i[0]] - Fa_[i[1]];}
-            else { value = Fb_[i[0]] - Fb_[i[1]];}
-        }
-    );
+            if (spin[0] == AlphaSpin) {
+                value = Fa_[i[0]] - Fa_[i[1]];
+            } else {
+                value = Fb_[i[0]] - Fb_[i[1]];
+            }
+        });
     Delta2.iterate(
         [&](const std::vector<size_t>& i, const std::vector<SpinType>& spin, double& value) {
-            if (spin[0] == AlphaSpin&& spin[1] == AlphaSpin) 
-                { value = Fa_[i[0]] + Fa_[i[1]] - Fa_[i[2]] - Fa_[i[3]];}
-            else if (spin[0] == BetaSpin&& spin[1] == BetaSpin)
-                { value = Fb_[i[0]] + Fb_[i[1]] - Fb_[i[2]] - Fb_[i[3]];}
-            else { value = Fa_[i[0]] + Fb_[i[1]] - Fa_[i[2]] - Fb_[i[3]];}
+            if (spin[0] == AlphaSpin && spin[1] == AlphaSpin) {
+                value = Fa_[i[0]] + Fa_[i[1]] - Fa_[i[2]] - Fa_[i[3]];
+            } else if (spin[0] == BetaSpin && spin[1] == BetaSpin) {
+                value = Fb_[i[0]] + Fb_[i[1]] - Fb_[i[2]] - Fb_[i[3]];
+            } else {
+                value = Fa_[i[0]] + Fb_[i[1]] - Fa_[i[2]] - Fb_[i[3]];
+            }
+        });
+    Eeps2.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>& spin,
+                      double& value) {
+        if (spin[0] == AlphaSpin && spin[1] == AlphaSpin) {
+            value =
+                dsrg_source_->compute_renormalized(Fa_[i[0]] + Fa_[i[1]] - Fa_[i[2]] - Fa_[i[3]]);
+        } else if (spin[0] == BetaSpin && spin[1] == BetaSpin) {
+            value =
+                dsrg_source_->compute_renormalized(Fb_[i[0]] + Fb_[i[1]] - Fb_[i[2]] - Fb_[i[3]]);
+        } else {
+            value =
+                dsrg_source_->compute_renormalized(Fa_[i[0]] + Fb_[i[1]] - Fa_[i[2]] - Fb_[i[3]]);
         }
-    );
-    Eeps2.iterate(
-        [&](const std::vector<size_t>& i, const std::vector<SpinType>& spin, double& value) {
-            if (spin[0] == AlphaSpin&& spin[1] == AlphaSpin) 
-                { value = dsrg_source_->compute_renormalized(Fa_[i[0]] + Fa_[i[1]] - Fa_[i[2]] - Fa_[i[3]]);}
-            else if (spin[0] == BetaSpin&& spin[1] == BetaSpin)
-                { value = dsrg_source_->compute_renormalized(Fb_[i[0]] + Fb_[i[1]] - Fb_[i[2]] - Fb_[i[3]]);}
-            else { value = dsrg_source_->compute_renormalized(Fa_[i[0]] + Fb_[i[1]] - Fa_[i[2]] - Fb_[i[3]]);}
-        }
-    );
+    });
     Eeps2_p.iterate(
         [&](const std::vector<size_t>& i, const std::vector<SpinType>& spin, double& value) {
-            if (spin[0] == AlphaSpin&& spin[1] == AlphaSpin) 
-                { value = 1.0 + dsrg_source_->compute_renormalized(Fa_[i[0]] + Fa_[i[1]] - Fa_[i[2]] - Fa_[i[3]]);}
-            else if (spin[0] == BetaSpin&& spin[1] == BetaSpin)
-                { value = 1.0 + dsrg_source_->compute_renormalized(Fb_[i[0]] + Fb_[i[1]] - Fb_[i[2]] - Fb_[i[3]]);}
-            else { value = 1.0 + dsrg_source_->compute_renormalized(Fa_[i[0]] + Fb_[i[1]] - Fa_[i[2]] - Fb_[i[3]]);}
-        }
-    );
+            if (spin[0] == AlphaSpin && spin[1] == AlphaSpin) {
+                value = 1.0 + dsrg_source_->compute_renormalized(Fa_[i[0]] + Fa_[i[1]] - Fa_[i[2]] -
+                                                                 Fa_[i[3]]);
+            } else if (spin[0] == BetaSpin && spin[1] == BetaSpin) {
+                value = 1.0 + dsrg_source_->compute_renormalized(Fb_[i[0]] + Fb_[i[1]] - Fb_[i[2]] -
+                                                                 Fb_[i[3]]);
+            } else {
+                value = 1.0 + dsrg_source_->compute_renormalized(Fa_[i[0]] + Fb_[i[1]] - Fa_[i[2]] -
+                                                                 Fb_[i[3]]);
+            }
+        });
     Eeps2_m1.iterate(
         [&](const std::vector<size_t>& i, const std::vector<SpinType>& spin, double& value) {
-            if (spin[0] == AlphaSpin&& spin[1] == AlphaSpin) 
-                { value = dsrg_source_->compute_renormalized_denominator_deriv(Fa_[i[0]] + Fa_[i[1]] - Fa_[i[2]] - Fa_[i[3]], 1);}
-            else if (spin[0] == BetaSpin&& spin[1] == BetaSpin)
-                { value = dsrg_source_->compute_renormalized_denominator_deriv(Fb_[i[0]] + Fb_[i[1]] - Fb_[i[2]] - Fb_[i[3]], 1);}
-            else { value = dsrg_source_->compute_renormalized_denominator_deriv(Fa_[i[0]] + Fb_[i[1]] - Fa_[i[2]] - Fb_[i[3]], 1);}
-        }
-    );
+            if (spin[0] == AlphaSpin && spin[1] == AlphaSpin) {
+                value = dsrg_source_->compute_renormalized_denominator_deriv(
+                    Fa_[i[0]] + Fa_[i[1]] - Fa_[i[2]] - Fa_[i[3]], 1);
+            } else if (spin[0] == BetaSpin && spin[1] == BetaSpin) {
+                value = dsrg_source_->compute_renormalized_denominator_deriv(
+                    Fb_[i[0]] + Fb_[i[1]] - Fb_[i[2]] - Fb_[i[3]], 1);
+            } else {
+                value = dsrg_source_->compute_renormalized_denominator_deriv(
+                    Fa_[i[0]] + Fb_[i[1]] - Fa_[i[2]] - Fb_[i[3]], 1);
+            }
+        });
     Eeps2_m2.iterate(
         [&](const std::vector<size_t>& i, const std::vector<SpinType>& spin, double& value) {
-            if (spin[0] == AlphaSpin&& spin[1] == AlphaSpin) 
-                { value = dsrg_source_->compute_renormalized_denominator_deriv(Fa_[i[0]] + Fa_[i[1]] - Fa_[i[2]] - Fa_[i[3]], 2);}
-            else if (spin[0] == BetaSpin&& spin[1] == BetaSpin)
-                { value = dsrg_source_->compute_renormalized_denominator_deriv(Fb_[i[0]] + Fb_[i[1]] - Fb_[i[2]] - Fb_[i[3]], 2);}
-            else { value = dsrg_source_->compute_renormalized_denominator_deriv(Fa_[i[0]] + Fb_[i[1]] - Fa_[i[2]] - Fb_[i[3]], 2);}
-        }
-    ); 
+            if (spin[0] == AlphaSpin && spin[1] == AlphaSpin) {
+                value = dsrg_source_->compute_renormalized_denominator_deriv(
+                    Fa_[i[0]] + Fa_[i[1]] - Fa_[i[2]] - Fa_[i[3]], 2);
+            } else if (spin[0] == BetaSpin && spin[1] == BetaSpin) {
+                value = dsrg_source_->compute_renormalized_denominator_deriv(
+                    Fb_[i[0]] + Fb_[i[1]] - Fb_[i[2]] - Fb_[i[3]], 2);
+            } else {
+                value = dsrg_source_->compute_renormalized_denominator_deriv(
+                    Fa_[i[0]] + Fb_[i[1]] - Fa_[i[2]] - Fb_[i[3]], 2);
+            }
+        });
 
-    Eeps1_m1.iterate(
-        [&](const std::vector<size_t>& i, const std::vector<SpinType>& spin, double& value) {
-            if (spin[0] == AlphaSpin) { value = dsrg_source_->compute_renormalized_denominator_deriv(Fa_[i[0]] - Fa_[i[1]], 1);}
-            else { value = dsrg_source_->compute_renormalized_denominator_deriv(Fb_[i[0]] - Fb_[i[1]], 1);}
+    Eeps1_m1.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>& spin,
+                         double& value) {
+        if (spin[0] == AlphaSpin) {
+            value = dsrg_source_->compute_renormalized_denominator_deriv(Fa_[i[0]] - Fa_[i[1]], 1);
+        } else {
+            value = dsrg_source_->compute_renormalized_denominator_deriv(Fb_[i[0]] - Fb_[i[1]], 1);
         }
-    );
+    });
 
-    Eeps1_m2.iterate(
-        [&](const std::vector<size_t>& i, const std::vector<SpinType>& spin, double& value) {
-            if (spin[0] == AlphaSpin) { value = dsrg_source_->compute_renormalized_denominator_deriv(Fa_[i[0]] - Fa_[i[1]], 2);}
-            else { value = dsrg_source_->compute_renormalized_denominator_deriv(Fb_[i[0]] - Fb_[i[1]], 2);}
+    Eeps1_m2.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>& spin,
+                         double& value) {
+        if (spin[0] == AlphaSpin) {
+            value = dsrg_source_->compute_renormalized_denominator_deriv(Fa_[i[0]] - Fa_[i[1]], 2);
+        } else {
+            value = dsrg_source_->compute_renormalized_denominator_deriv(Fb_[i[0]] - Fb_[i[1]], 2);
         }
-    );
-    
+    });
+
     // An intermediate tensor : T2 / Delta
     T2OverDelta["ijab"] += V["abij"] * Eeps2_m2["ijab"];
-    T2OverDelta["iJaB"] += V["aBiJ"] * Eeps2_m2["iJaB"];   
+    T2OverDelta["iJaB"] += V["aBiJ"] * Eeps2_m2["iJaB"];
 
     // Delta1 * Gamma1_
     DelGam1["xu"] = Delta1["xu"] * Gamma1_["xu"];
@@ -507,11 +566,11 @@ void DSRG_MRPT2::set_multiplier() {
     set_tau();
     set_kappa();
     set_z();
-    set_w();   
+    set_w();
 }
 
 void DSRG_MRPT2::set_tau() {
-    outfile->Printf("\n    Initializing Tau ................................ ");  
+    outfile->Printf("\n    Initializing Tau ................................ ");
     Tau1 = BTF_->build(CoreTensor, "Tau1", spin_cases({"hhpp"}));
     Tau2 = BTF_->build(CoreTensor, "Tau2", spin_cases({"hhpp"}));
     // Tau * Delta
@@ -532,7 +591,8 @@ void DSRG_MRPT2::set_tau() {
         Tau2["vyef"] += 0.25 * V_["efux"] * Gamma1_["uv"] * Gamma1_["xy"];
         Tau2["vyez"] += 0.25 * V_["ewux"] * Gamma1_["uv"] * Gamma1_["xy"] * Eta1_["zw"];
         Tau2["vyze"] += 0.25 * V_["weux"] * Gamma1_["uv"] * Gamma1_["xy"] * Eta1_["zw"];
-        Tau2["v,y,z,u1"] += 0.25 * V_["w,a1,u,x"] * Gamma1_["uv"] * Gamma1_["xy"] * Eta1_["zw"] * Eta1_["u1,a1"];
+        Tau2["v,y,z,u1"] +=
+            0.25 * V_["w,a1,u,x"] * Gamma1_["uv"] * Gamma1_["xy"] * Eta1_["zw"] * Eta1_["u1,a1"];
 
         Tau2["MNEF"] += 0.25 * V_["EFMN"];
         Tau2["MNEU"] += 0.25 * V_["EVMN"] * Eta1_["UV"];
@@ -549,7 +609,8 @@ void DSRG_MRPT2::set_tau() {
         Tau2["VYEF"] += 0.25 * V_["EFUX"] * Gamma1_["UV"] * Gamma1_["XY"];
         Tau2["VYEZ"] += 0.25 * V_["EWUX"] * Gamma1_["UV"] * Gamma1_["XY"] * Eta1_["ZW"];
         Tau2["VYZE"] += 0.25 * V_["WEUX"] * Gamma1_["UV"] * Gamma1_["XY"] * Eta1_["ZW"];
-        Tau2["V,Y,Z,U1"] += 0.25 * V_["W,A1,U,X"] * Gamma1_["UV"] * Gamma1_["XY"] * Eta1_["ZW"] * Eta1_["U1,A1"];
+        Tau2["V,Y,Z,U1"] +=
+            0.25 * V_["W,A1,U,X"] * Gamma1_["UV"] * Gamma1_["XY"] * Eta1_["ZW"] * Eta1_["U1,A1"];
 
         Tau2["mNeF"] += 0.25 * V_["eFmN"];
         Tau2["mNeZ"] += 0.25 * V_["eWmN"] * Eta1_["ZW"];
@@ -566,133 +627,162 @@ void DSRG_MRPT2::set_tau() {
         Tau2["vYeF"] += 0.25 * V_["eFuX"] * Gamma1_["uv"] * Gamma1_["XY"];
         Tau2["vYeZ"] += 0.25 * V_["eWuX"] * Gamma1_["uv"] * Gamma1_["XY"] * Eta1_["ZW"];
         Tau2["vYzE"] += 0.25 * V_["wEuX"] * Gamma1_["uv"] * Gamma1_["XY"] * Eta1_["zw"];
-        Tau2["v,Y,z,U1"] += 0.25 * V_["w,A1,u,X"] * Gamma1_["uv"] * Gamma1_["XY"] * Eta1_["zw"] * Eta1_["U1,A1"];
+        Tau2["v,Y,z,U1"] +=
+            0.25 * V_["w,A1,u,X"] * Gamma1_["uv"] * Gamma1_["XY"] * Eta1_["zw"] * Eta1_["U1,A1"];
     }
     // <[V, T2]> C_4 (C_2)^2 PP
     if (X1_TERM) {
         Tau2["uvef"] += 0.125 * V_["efxy"] * Lambda2_["xyuv"];
         Tau2["uvez"] += 0.125 * V_["ewxy"] * Eta1_["zw"] * Lambda2_["xyuv"];
         Tau2["uvze"] += 0.125 * V_["wexy"] * Eta1_["zw"] * Lambda2_["xyuv"];
-        Tau2["u,v,z,u1"] += 0.125 * V_["w,a1,x,y"] * Eta1_["zw"] * Eta1_["u1,a1"] * Lambda2_["xyuv"];
+        Tau2["u,v,z,u1"] +=
+            0.125 * V_["w,a1,x,y"] * Eta1_["zw"] * Eta1_["u1,a1"] * Lambda2_["xyuv"];
         Tau2["UVEF"] += 0.125 * V_["EFXY"] * Lambda2_["XYUV"];
         Tau2["UVEZ"] += 0.125 * V_["EWXY"] * Eta1_["ZW"] * Lambda2_["XYUV"];
         Tau2["UVZE"] += 0.125 * V_["WEXY"] * Eta1_["ZW"] * Lambda2_["XYUV"];
-        Tau2["U,V,Z,U1"] += 0.125 * V_["W,A1,X,Y"] * Eta1_["ZW"] * Eta1_["U1,A1"] * Lambda2_["XYUV"];
+        Tau2["U,V,Z,U1"] +=
+            0.125 * V_["W,A1,X,Y"] * Eta1_["ZW"] * Eta1_["U1,A1"] * Lambda2_["XYUV"];
         Tau2["uVeF"] += 0.250 * V_["eFxY"] * Lambda2_["xYuV"];
         Tau2["uVeZ"] += 0.250 * V_["eWxY"] * Eta1_["ZW"] * Lambda2_["xYuV"];
         Tau2["uVzE"] += 0.250 * V_["wExY"] * Eta1_["zw"] * Lambda2_["xYuV"];
-        Tau2["u,V,z,U1"] += 0.250 * V_["w,A1,x,Y"] * Eta1_["zw"] * Eta1_["U1,A1"] * Lambda2_["xYuV"];
+        Tau2["u,V,z,U1"] +=
+            0.250 * V_["w,A1,x,Y"] * Eta1_["zw"] * Eta1_["U1,A1"] * Lambda2_["xYuV"];
     }
     // <[V, T2]> C_4 (C_2)^2 HH
     if (X2_TERM) {
         Tau2["mnxy"] += 0.125 * V_["uvmn"] * Lambda2_["xyuv"];
         Tau2["mwxy"] += 0.125 * V_["uvmz"] * Gamma1_["zw"] * Lambda2_["xyuv"];
         Tau2["a1,m,x,y"] += 0.125 * V_["u,v,u1,m"] * Gamma1_["u1,a1"] * Lambda2_["xyuv"];
-        Tau2["a1,w,x,y"] += 0.125 * V_["u,v,u1,z"] * Gamma1_["u1,a1"] * Gamma1_["zw"] * Lambda2_["xyuv"];
+        Tau2["a1,w,x,y"] +=
+            0.125 * V_["u,v,u1,z"] * Gamma1_["u1,a1"] * Gamma1_["zw"] * Lambda2_["xyuv"];
 
         Tau2["MNXY"] += 0.125 * V_["UVMN"] * Lambda2_["XYUV"];
         Tau2["MWXY"] += 0.125 * V_["UVMZ"] * Gamma1_["ZW"] * Lambda2_["XYUV"];
         Tau2["WMXY"] += 0.125 * V_["UVZM"] * Gamma1_["ZW"] * Lambda2_["XYUV"];
-        Tau2["W,A1,X,Y"] += 0.125 * V_["U,V,Z,U1"] * Gamma1_["ZW"] * Gamma1_["U1,A1"] * Lambda2_["XYUV"];
+        Tau2["W,A1,X,Y"] +=
+            0.125 * V_["U,V,Z,U1"] * Gamma1_["ZW"] * Gamma1_["U1,A1"] * Lambda2_["XYUV"];
 
         Tau2["mNxY"] += 0.250 * V_["uVmN"] * Lambda2_["xYuV"];
         Tau2["mWxY"] += 0.250 * V_["uVmZ"] * Gamma1_["ZW"] * Lambda2_["xYuV"];
         Tau2["wMxY"] += 0.250 * V_["uVzM"] * Gamma1_["zw"] * Lambda2_["xYuV"];
-        Tau2["w,A1,x,Y"] += 0.250 * V_["u,V,z,U1"] * Gamma1_["zw"] * Gamma1_["U1,A1"] * Lambda2_["xYuV"];
+        Tau2["w,A1,x,Y"] +=
+            0.250 * V_["u,V,z,U1"] * Gamma1_["zw"] * Gamma1_["U1,A1"] * Lambda2_["xYuV"];
     }
     // <[V, T2]> C_4 (C_2)^2 PH
     if (X3_TERM) {
         Tau2["muye"] -= 0.25 * V_["vemx"] * Lambda2_["xyuv"];
         Tau2["muyz"] -= 0.25 * V_["vwmx"] * Eta1_["zw"] * Lambda2_["xyuv"];
         Tau2["zuye"] -= 0.25 * V_["vewx"] * Gamma1_["zw"] * Lambda2_["xyuv"];
-        Tau2["z,u,y,u1"] -= 0.25 * V_["v,a1,w,x"] * Gamma1_["zw"] * Eta1_["u1,a1"] * Lambda2_["xyuv"];
+        Tau2["z,u,y,u1"] -=
+            0.25 * V_["v,a1,w,x"] * Gamma1_["zw"] * Eta1_["u1,a1"] * Lambda2_["xyuv"];
         Tau2["muye"] -= 0.25 * V_["eVmX"] * Lambda2_["yXuV"];
         Tau2["muyz"] -= 0.25 * V_["wVmX"] * Eta1_["zw"] * Lambda2_["yXuV"];
         Tau2["zuye"] -= 0.25 * V_["eVwX"] * Gamma1_["zw"] * Lambda2_["yXuV"];
-        Tau2["z,u,y,u1"] -= 0.25 * V_["a1,V,w,X"] * Gamma1_["zw"] * Eta1_["u1,a1"] * Lambda2_["yXuV"];
+        Tau2["z,u,y,u1"] -=
+            0.25 * V_["a1,V,w,X"] * Gamma1_["zw"] * Eta1_["u1,a1"] * Lambda2_["yXuV"];
         Tau2["MUYE"] -= 0.25 * V_["VEMX"] * Lambda2_["XYUV"];
         Tau2["MUYZ"] -= 0.25 * V_["VWMX"] * Eta1_["ZW"] * Lambda2_["XYUV"];
         Tau2["ZUYE"] -= 0.25 * V_["VEWX"] * Gamma1_["ZW"] * Lambda2_["XYUV"];
-        Tau2["Z,U,Y,U1"] -= 0.25 * V_["V,A1,W,X"] * Gamma1_["ZW"] * Eta1_["U1,A1"] * Lambda2_["XYUV"];
+        Tau2["Z,U,Y,U1"] -=
+            0.25 * V_["V,A1,W,X"] * Gamma1_["ZW"] * Eta1_["U1,A1"] * Lambda2_["XYUV"];
         Tau2["MUYE"] -= 0.25 * V_["vExM"] * Lambda2_["xYvU"];
         Tau2["MUYZ"] -= 0.25 * V_["vWxM"] * Eta1_["ZW"] * Lambda2_["xYvU"];
         Tau2["ZUYE"] -= 0.25 * V_["vExW"] * Gamma1_["ZW"] * Lambda2_["xYvU"];
-        Tau2["Z,U,Y,U1"] -= 0.25 * V_["v,A1,x,W"] * Gamma1_["ZW"] * Eta1_["U1,A1"] * Lambda2_["xYvU"];
+        Tau2["Z,U,Y,U1"] -=
+            0.25 * V_["v,A1,x,W"] * Gamma1_["ZW"] * Eta1_["U1,A1"] * Lambda2_["xYvU"];
         Tau2["mUyE"] -= 0.25 * V_["vEmX"] * Lambda2_["yXvU"];
         Tau2["mUyZ"] -= 0.25 * V_["vWmX"] * Eta1_["ZW"] * Lambda2_["yXvU"];
         Tau2["zUyE"] -= 0.25 * V_["vEwX"] * Gamma1_["zw"] * Lambda2_["yXvU"];
-        Tau2["z,U,y,U1"] -= 0.25 * V_["v,A1,w,X"] * Gamma1_["zw"] * Eta1_["U1,A1"] * Lambda2_["yXvU"];
+        Tau2["z,U,y,U1"] -=
+            0.25 * V_["v,A1,w,X"] * Gamma1_["zw"] * Eta1_["U1,A1"] * Lambda2_["yXvU"];
 
         Tau2["umye"] -= 0.25 * V_["vexm"] * Lambda2_["xyuv"];
         Tau2["umyz"] -= 0.25 * V_["vwxm"] * Eta1_["zw"] * Lambda2_["xyuv"];
         Tau2["uzye"] -= 0.25 * V_["vexw"] * Gamma1_["zw"] * Lambda2_["xyuv"];
-        Tau2["u,z,y,u1"] -= 0.25 * V_["v,a1,x,w"] * Gamma1_["zw"] * Eta1_["u1,a1"] * Lambda2_["xyuv"];
+        Tau2["u,z,y,u1"] -=
+            0.25 * V_["v,a1,x,w"] * Gamma1_["zw"] * Eta1_["u1,a1"] * Lambda2_["xyuv"];
         Tau2["umye"] += 0.25 * V_["eVmX"] * Lambda2_["yXuV"];
         Tau2["umyz"] += 0.25 * V_["wVmX"] * Eta1_["zw"] * Lambda2_["yXuV"];
         Tau2["uzye"] += 0.25 * V_["eVwX"] * Gamma1_["zw"] * Lambda2_["yXuV"];
-        Tau2["u,z,y,u1"] += 0.25 * V_["a1,V,w,X"] * Gamma1_["zw"] * Eta1_["u1,a1"] * Lambda2_["yXuV"];
+        Tau2["u,z,y,u1"] +=
+            0.25 * V_["a1,V,w,X"] * Gamma1_["zw"] * Eta1_["u1,a1"] * Lambda2_["yXuV"];
         Tau2["UMYE"] -= 0.25 * V_["VEXM"] * Lambda2_["XYUV"];
         Tau2["UMYZ"] -= 0.25 * V_["VWXM"] * Eta1_["ZW"] * Lambda2_["XYUV"];
         Tau2["UZYE"] -= 0.25 * V_["VEXW"] * Gamma1_["ZW"] * Lambda2_["XYUV"];
-        Tau2["U,Z,Y,U1"] -= 0.25 * V_["V,A1,X,W"] * Gamma1_["ZW"] * Eta1_["U1,A1"] * Lambda2_["XYUV"];
+        Tau2["U,Z,Y,U1"] -=
+            0.25 * V_["V,A1,X,W"] * Gamma1_["ZW"] * Eta1_["U1,A1"] * Lambda2_["XYUV"];
         Tau2["UMYE"] += 0.25 * V_["vExM"] * Lambda2_["xYvU"];
         Tau2["UMYZ"] += 0.25 * V_["vWxM"] * Eta1_["ZW"] * Lambda2_["xYvU"];
         Tau2["UZYE"] += 0.25 * V_["vExW"] * Gamma1_["ZW"] * Lambda2_["xYvU"];
-        Tau2["U,Z,Y,U1"] += 0.25 * V_["v,A1,x,W"] * Gamma1_["ZW"] * Eta1_["U1,A1"] * Lambda2_["xYvU"];
+        Tau2["U,Z,Y,U1"] +=
+            0.25 * V_["v,A1,x,W"] * Gamma1_["ZW"] * Eta1_["U1,A1"] * Lambda2_["xYvU"];
         Tau2["uMyE"] -= 0.25 * V_["vExM"] * Lambda2_["xyuv"];
         Tau2["uMyZ"] -= 0.25 * V_["vWxM"] * Eta1_["ZW"] * Lambda2_["xyuv"];
         Tau2["uZyE"] -= 0.25 * V_["vExW"] * Gamma1_["ZW"] * Lambda2_["xyuv"];
-        Tau2["u,Z,y,U1"] -= 0.25 * V_["v,A1,x,W"] * Gamma1_["ZW"] * Eta1_["U1,A1"] * Lambda2_["xyuv"];
+        Tau2["u,Z,y,U1"] -=
+            0.25 * V_["v,A1,x,W"] * Gamma1_["ZW"] * Eta1_["U1,A1"] * Lambda2_["xyuv"];
         Tau2["uMyE"] += 0.25 * V_["VEXM"] * Lambda2_["yXuV"];
         Tau2["uMyZ"] += 0.25 * V_["VWXM"] * Eta1_["ZW"] * Lambda2_["yXuV"];
         Tau2["uZyE"] += 0.25 * V_["VEXW"] * Gamma1_["ZW"] * Lambda2_["yXuV"];
-        Tau2["u,Z,y,U1"] += 0.25 * V_["V,A1,X,W"] * Gamma1_["ZW"] * Eta1_["U1,A1"] * Lambda2_["yXuV"];
+        Tau2["u,Z,y,U1"] +=
+            0.25 * V_["V,A1,X,W"] * Gamma1_["ZW"] * Eta1_["U1,A1"] * Lambda2_["yXuV"];
 
         Tau2["umey"] -= 0.25 * V_["evxm"] * Lambda2_["xyuv"];
         Tau2["umzy"] -= 0.25 * V_["wvxm"] * Eta1_["zw"] * Lambda2_["xyuv"];
         Tau2["uzey"] -= 0.25 * V_["evxw"] * Gamma1_["zw"] * Lambda2_["xyuv"];
-        Tau2["u,z,u1,y"] -= 0.25 * V_["a1,v,x,w"] * Gamma1_["zw"] * Eta1_["u1,a1"] * Lambda2_["xyuv"];
+        Tau2["u,z,u1,y"] -=
+            0.25 * V_["a1,v,x,w"] * Gamma1_["zw"] * Eta1_["u1,a1"] * Lambda2_["xyuv"];
         Tau2["umey"] -= 0.25 * V_["eVmX"] * Lambda2_["yXuV"];
         Tau2["umzy"] -= 0.25 * V_["wVmX"] * Eta1_["zw"] * Lambda2_["yXuV"];
         Tau2["uzey"] -= 0.25 * V_["eVwX"] * Gamma1_["zw"] * Lambda2_["yXuV"];
-        Tau2["u,z,u1,y"] -= 0.25 * V_["a1,V,w,X"] * Gamma1_["zw"] * Eta1_["u1,a1"] * Lambda2_["yXuV"];
+        Tau2["u,z,u1,y"] -=
+            0.25 * V_["a1,V,w,X"] * Gamma1_["zw"] * Eta1_["u1,a1"] * Lambda2_["yXuV"];
         Tau2["UMEY"] -= 0.25 * V_["EVXM"] * Lambda2_["XYUV"];
         Tau2["UMZY"] -= 0.25 * V_["WVXM"] * Eta1_["ZW"] * Lambda2_["XYUV"];
         Tau2["UZEY"] -= 0.25 * V_["EVXW"] * Gamma1_["ZW"] * Lambda2_["XYUV"];
-        Tau2["U,Z,U1,Y"] -= 0.25 * V_["A1,V,X,W"] * Gamma1_["ZW"] * Eta1_["U1,A1"] * Lambda2_["XYUV"];
+        Tau2["U,Z,U1,Y"] -=
+            0.25 * V_["A1,V,X,W"] * Gamma1_["ZW"] * Eta1_["U1,A1"] * Lambda2_["XYUV"];
         Tau2["UMEY"] -= 0.25 * V_["vExM"] * Lambda2_["xYvU"];
         Tau2["UMZY"] -= 0.25 * V_["vWxM"] * Eta1_["ZW"] * Lambda2_["xYvU"];
         Tau2["UZEY"] -= 0.25 * V_["vExW"] * Gamma1_["ZW"] * Lambda2_["xYvU"];
-        Tau2["U,Z,U1,Y"] -= 0.25 * V_["v,A1,x,W"] * Gamma1_["ZW"] * Eta1_["U1,A1"] * Lambda2_["xYvU"];
+        Tau2["U,Z,U1,Y"] -=
+            0.25 * V_["v,A1,x,W"] * Gamma1_["ZW"] * Eta1_["U1,A1"] * Lambda2_["xYvU"];
         Tau2["uMeY"] -= 0.25 * V_["eVxM"] * Lambda2_["xYuV"];
         Tau2["uMzY"] -= 0.25 * V_["wVxM"] * Eta1_["zw"] * Lambda2_["xYuV"];
         Tau2["uZeY"] -= 0.25 * V_["eVxW"] * Gamma1_["ZW"] * Lambda2_["xYuV"];
-        Tau2["u,Z,u1,Y"] -= 0.25 * V_["a1,V,x,W"] * Gamma1_["ZW"] * Eta1_["u1,a1"] * Lambda2_["xYuV"];
+        Tau2["u,Z,u1,Y"] -=
+            0.25 * V_["a1,V,x,W"] * Gamma1_["ZW"] * Eta1_["u1,a1"] * Lambda2_["xYuV"];
 
         Tau2["muey"] -= 0.25 * V_["evmx"] * Lambda2_["xyuv"];
         Tau2["muzy"] -= 0.25 * V_["wvmx"] * Eta1_["zw"] * Lambda2_["xyuv"];
         Tau2["zuey"] -= 0.25 * V_["evwx"] * Gamma1_["zw"] * Lambda2_["xyuv"];
-        Tau2["z,u,u1,y"] -= 0.25 * V_["a1,v,w,x"] * Gamma1_["zw"] * Eta1_["u1,a1"] * Lambda2_["xyuv"];
+        Tau2["z,u,u1,y"] -=
+            0.25 * V_["a1,v,w,x"] * Gamma1_["zw"] * Eta1_["u1,a1"] * Lambda2_["xyuv"];
         Tau2["muey"] += 0.25 * V_["eVmX"] * Lambda2_["yXuV"];
         Tau2["muzy"] += 0.25 * V_["wVmX"] * Eta1_["zw"] * Lambda2_["yXuV"];
         Tau2["zuey"] += 0.25 * V_["eVwX"] * Gamma1_["zw"] * Lambda2_["yXuV"];
-        Tau2["z,u,u1,y"] += 0.25 * V_["a1,V,w,X"] * Gamma1_["zw"] * Eta1_["u1,a1"] * Lambda2_["yXuV"];
+        Tau2["z,u,u1,y"] +=
+            0.25 * V_["a1,V,w,X"] * Gamma1_["zw"] * Eta1_["u1,a1"] * Lambda2_["yXuV"];
         Tau2["MUEY"] -= 0.25 * V_["EVMX"] * Lambda2_["XYUV"];
         Tau2["MUZY"] -= 0.25 * V_["WVMX"] * Eta1_["ZW"] * Lambda2_["XYUV"];
         Tau2["ZUEY"] -= 0.25 * V_["EVWX"] * Gamma1_["ZW"] * Lambda2_["XYUV"];
-        Tau2["Z,U,U1,Y"] -= 0.25 * V_["A1,V,W,X"] * Gamma1_["ZW"] * Eta1_["U1,A1"] * Lambda2_["XYUV"];
+        Tau2["Z,U,U1,Y"] -=
+            0.25 * V_["A1,V,W,X"] * Gamma1_["ZW"] * Eta1_["U1,A1"] * Lambda2_["XYUV"];
         Tau2["MUEY"] += 0.25 * V_["vExM"] * Lambda2_["xYvU"];
         Tau2["MUZY"] += 0.25 * V_["vWxM"] * Eta1_["ZW"] * Lambda2_["xYvU"];
         Tau2["ZUEY"] += 0.25 * V_["vExW"] * Gamma1_["ZW"] * Lambda2_["xYvU"];
-        Tau2["Z,U,U1,Y"] += 0.25 * V_["v,A1,x,W"] * Gamma1_["ZW"] * Eta1_["U1,A1"] * Lambda2_["xYvU"];
+        Tau2["Z,U,U1,Y"] +=
+            0.25 * V_["v,A1,x,W"] * Gamma1_["ZW"] * Eta1_["U1,A1"] * Lambda2_["xYvU"];
         Tau2["mUeY"] -= 0.25 * V_["eVmX"] * Lambda2_["XYUV"];
         Tau2["mUzY"] -= 0.25 * V_["wVmX"] * Eta1_["zw"] * Lambda2_["XYUV"];
         Tau2["zUeY"] -= 0.25 * V_["eVwX"] * Gamma1_["zw"] * Lambda2_["XYUV"];
-        Tau2["z,U,u1,Y"] -= 0.25 * V_["a1,V,w,X"] * Gamma1_["zw"] * Eta1_["u1,a1"] * Lambda2_["XYUV"];
+        Tau2["z,U,u1,Y"] -=
+            0.25 * V_["a1,V,w,X"] * Gamma1_["zw"] * Eta1_["u1,a1"] * Lambda2_["XYUV"];
         Tau2["mUeY"] += 0.25 * V_["evmx"] * Lambda2_["xYvU"];
         Tau2["mUzY"] += 0.25 * V_["wvmx"] * Eta1_["zw"] * Lambda2_["xYvU"];
         Tau2["zUeY"] += 0.25 * V_["evwx"] * Gamma1_["zw"] * Lambda2_["xYvU"];
-        Tau2["z,U,u1,Y"] += 0.25 * V_["a1,v,w,x"] * Gamma1_["zw"] * Eta1_["u1,a1"] * Lambda2_["xYvU"];
+        Tau2["z,U,u1,Y"] +=
+            0.25 * V_["a1,v,w,x"] * Gamma1_["zw"] * Eta1_["u1,a1"] * Lambda2_["xYvU"];
     }
     // <[V, T2]> C_6 C_2
     if (X4_TERM) {
@@ -709,7 +799,7 @@ void DSRG_MRPT2::set_tau() {
         Tau2.block("ACAA")("WMXY") += 0.250 * V_.block("aAaC")("uVzM") * rdms_.L3abb()("zXYuVW");
         Tau2.block("aCaA")("wMxY") += 0.125 * V_.block("AAAC")("UVZM") * rdms_.L3abb()("xYZwUV");
         Tau2.block("aCaA")("wMxY") += 0.250 * V_.block("aAaC")("uVzM") * rdms_.L3aab()("xzYuwV");
- 
+
         Tau2.block("aava")("xyew") -= 0.125 * V_.block("vaaa")("ezuv") * rdms_.L3aaa()("xyzuvw");
         Tau2.block("aava")("xyew") += 0.250 * V_.block("vAaA")("eZuV") * rdms_.L3aab()("xyZuwV");
         Tau2.block("AAVA")("XYEW") -= 0.125 * V_.block("VAAA")("EZUV") * rdms_.L3bbb()("XYZUVW");
@@ -756,7 +846,7 @@ void DSRG_MRPT2::set_tau() {
         Tau2["vuey"] += 0.125 * F_["ex"] * Lambda2_["xyvu"];
         Tau2["VUEY"] += 0.125 * F_["EX"] * Lambda2_["XYVU"];
         Tau2["vUeY"] += 0.125 * F_["ex"] * Lambda2_["xYvU"];
-    
+
         Tau2["umxy"] -= 0.125 * F_["vm"] * Lambda2_["xyuv"];
         Tau2["UMXY"] -= 0.125 * F_["VM"] * Lambda2_["XYUV"];
         Tau2["uMxY"] -= 0.125 * F_["VM"] * Lambda2_["xYuV"];
@@ -805,9 +895,9 @@ void DSRG_MRPT2::set_tau() {
 
 void DSRG_MRPT2::set_sigma() {
     outfile->Printf("\n    Initializing Sigma .............................. ");
-    Sigma = BTF_->build(CoreTensor, "Sigma", spin_cases({"hp"}));    
-    Sigma1 = BTF_->build(CoreTensor, "Sigma * DelEeps1", spin_cases({"hp"}));    
-    Sigma2 = BTF_->build(CoreTensor, "Sigma * Eeps1", spin_cases({"hp"}));    
+    Sigma = BTF_->build(CoreTensor, "Sigma", spin_cases({"hp"}));
+    Sigma1 = BTF_->build(CoreTensor, "Sigma * DelEeps1", spin_cases({"hp"}));
+    Sigma2 = BTF_->build(CoreTensor, "Sigma * Eeps1", spin_cases({"hp"}));
     Sigma3 = BTF_->build(CoreTensor, "Sigma * (1 + Eeps1)", spin_cases({"hp"}));
 
     if (X5_TERM) {
@@ -815,7 +905,7 @@ void DSRG_MRPT2::set_sigma() {
         Sigma["xe"] += T2_["uVeY"] * Lambda2_["xYuV"];
         Sigma["XE"] += 0.5 * T2_["UVEY"] * Lambda2_["XYUV"];
         Sigma["XE"] += T2_["uVyE"] * Lambda2_["yXuV"];
-    
+
         Sigma["mv"] -= 0.5 * T2_["umxy"] * Lambda2_["xyuv"];
         Sigma["mv"] -= T2_["mUxY"] * Lambda2_["xYvU"];
         Sigma["MV"] -= 0.5 * T2_["UMXY"] * Lambda2_["XYUV"];
@@ -848,17 +938,17 @@ void DSRG_MRPT2::set_sigma() {
 
 void DSRG_MRPT2::set_xi() {
     outfile->Printf("\n    Initializing Xi ................................. ");
-    Xi = BTF_->build(CoreTensor, "Xi", spin_cases({"hp"}));    
-    Xi1 = BTF_->build(CoreTensor, "Xi * Eeps1_m2", spin_cases({"hp"}));  
-    Xi2 = BTF_->build(CoreTensor, "Xi * Eeps1", spin_cases({"hp"}));    
-    Xi3 = BTF_->build(CoreTensor, "Xi * Eeps1_m1", spin_cases({"hp"}));   
+    Xi = BTF_->build(CoreTensor, "Xi", spin_cases({"hp"}));
+    Xi1 = BTF_->build(CoreTensor, "Xi * Eeps1_m2", spin_cases({"hp"}));
+    Xi2 = BTF_->build(CoreTensor, "Xi * Eeps1", spin_cases({"hp"}));
+    Xi3 = BTF_->build(CoreTensor, "Xi * Eeps1_m1", spin_cases({"hp"}));
 
     if (X6_TERM) {
         Xi["ue"] += 0.5 * V_["evxy"] * Lambda2_["xyuv"];
         Xi["ue"] += V_["eVxY"] * Lambda2_["xYuV"];
         Xi["UE"] += 0.5 * V_["EVXY"] * Lambda2_["XYUV"];
         Xi["UE"] += V_["vExY"] * Lambda2_["xYvU"];
-    
+
         Xi["mx"] -= 0.5 * V_["uvmy"] * Lambda2_["xyuv"];
         Xi["mx"] -= V_["uVmY"] * Lambda2_["xYuV"];
         Xi["MX"] -= 0.5 * V_["UVMY"] * Lambda2_["XYUV"];
@@ -889,7 +979,7 @@ void DSRG_MRPT2::set_xi() {
 
 void DSRG_MRPT2::set_kappa() {
     outfile->Printf("\n    Initializing Kappa .............................. ");
-    Kappa = BTF_->build(CoreTensor, "Kappa", spin_cases({"hhpp"}));  
+    Kappa = BTF_->build(CoreTensor, "Kappa", spin_cases({"hhpp"}));
     // <[V, T2]> (C_2)^4
     if (PT2_TERM) {
         Kappa["mnef"] += 0.25 * T2_["mnef"];
@@ -1021,7 +1111,6 @@ void DSRG_MRPT2::set_kappa() {
         Kappa["xMwV"] -= 0.25 * T2_["uMzY"] * Eta1_["zw"] * Lambda2_["xYuV"];
         Kappa["xWeV"] -= 0.25 * T2_["uZeY"] * Gamma1_["ZW"] * Lambda2_["xYuV"];
 
-
         Kappa["mxev"] -= 0.25 * T2_["muey"] * Lambda2_["xyuv"];
         Kappa["mxwv"] -= 0.25 * T2_["muzy"] * Eta1_["zw"] * Lambda2_["xyuv"];
         Kappa["wxev"] -= 0.25 * T2_["zuey"] * Gamma1_["zw"] * Lambda2_["xyuv"];
@@ -1077,10 +1166,10 @@ void DSRG_MRPT2::set_kappa() {
         Kappa["XYEV"] += 0.25 * T1_["UE"] * Lambda2_["XYUV"];
         Kappa["xYeV"] += 0.25 * T1_["ue"] * Lambda2_["xYuV"];
 
-        Kappa["yxve"] += 0.25 * T1_["ue"] * Lambda2_["yxvu"]; 
-        Kappa["YXVE"] += 0.25 * T1_["UE"] * Lambda2_["YXVU"]; 
-        Kappa["yXvE"] += 0.25 * T1_["UE"] * Lambda2_["yXvU"]; 
-    
+        Kappa["yxve"] += 0.25 * T1_["ue"] * Lambda2_["yxvu"];
+        Kappa["YXVE"] += 0.25 * T1_["UE"] * Lambda2_["YXVU"];
+        Kappa["yXvE"] += 0.25 * T1_["UE"] * Lambda2_["yXvU"];
+
         Kappa["myuv"] -= 0.25 * T1_["mx"] * Lambda2_["xyuv"];
         Kappa["MYUV"] -= 0.25 * T1_["MX"] * Lambda2_["XYUV"];
         Kappa["mYuV"] -= 0.25 * T1_["mx"] * Lambda2_["xYuV"];
@@ -1096,7 +1185,7 @@ void DSRG_MRPT2::set_kappa() {
 void DSRG_MRPT2::set_z() {
     Z = BTF_->build(CoreTensor, "Z Matrix", spin_cases({"gg"}));
     outfile->Printf("\n    Initializing Diagonal Entries of Z .............. ");
-    set_z_cc();  
+    set_z_cc();
     set_z_vv();
     set_z_aa_diag();
     outfile->Printf("Done");
@@ -1109,7 +1198,7 @@ void DSRG_MRPT2::set_w() {
     W = BTF_->build(CoreTensor, "Lagrangian", spin_cases({"gg"}));
     BlockedTensor temp = BTF_->build(CoreTensor, "temporal tensor", spin_cases({"hhpp"}));
 
-    //NOTICE: w for {virtual-general}
+    // NOTICE: w for {virtual-general}
     if (CORRELATION_TERM) {
         W["pe"] += 0.5 * Sigma3["ie"] * F["ip"];
     }
@@ -1137,7 +1226,7 @@ void DSRG_MRPT2::set_w() {
     W["pe"] += Z["e,f1"] * F["f1,p"];
     W["ei"] = W["ie"];
 
-    //NOTICE: w for {core-hole}
+    // NOTICE: w for {core-hole}
     if (CORRELATION_TERM) {
         W["jm"] += 0.5 * Sigma3["ma"] * F["ja"];
         W["jm"] += 0.5 * Sigma3["ia"] * V["amij"];
@@ -1207,7 +1296,7 @@ void DSRG_MRPT2::set_w() {
     W.block("ac")("xm") += 0.5 * V.block("cAaA")("mUxV") * x_ci("J") * cc1b_r("JUV");
     W["mu"] = W["um"];
 
-    //NOTICE: w for {active-active}
+    // NOTICE: w for {active-active}
     if (CORRELATION_TERM) {
         W["zw"] += 0.5 * Sigma3["wa"] * F["za"];
         W["zw"] += 0.5 * Sigma3["iw"] * F["iz"];
@@ -1243,17 +1332,17 @@ void DSRG_MRPT2::set_w() {
         temp["wLcD"] += Kappa["wLcD"] * Eeps2_p["wLcD"];
         W["zw"] += temp["wlcd"] * V["cdzl"];
         W["zw"] += 2.0 * temp["wLcD"] * V["cDzL"];
-        temp.zero(); 
+        temp.zero();
     }
-    W["zw"] += Z["e1,m1"] * V["e1,u,m1,z"] * Gamma1_["uw"]; 
-    W["zw"] += Z["E1,M1"] * V["u,E1,z,M1"] * Gamma1_["uw"]; 
-    W["zw"] += Z["e1,m1"] * V["e1,z,m1,u"] * Gamma1_["uw"]; 
+    W["zw"] += Z["e1,m1"] * V["e1,u,m1,z"] * Gamma1_["uw"];
+    W["zw"] += Z["E1,M1"] * V["u,E1,z,M1"] * Gamma1_["uw"];
+    W["zw"] += Z["e1,m1"] * V["e1,z,m1,u"] * Gamma1_["uw"];
     W["zw"] += Z["E1,M1"] * V["z,E1,u,M1"] * Gamma1_["uw"];
     W["zw"] += Z["n1,w"] * F["z,n1"];
     W["zw"] += Z["n1,u"] * V["u,v,n1,z"] * Gamma1_["wv"];
     W["zw"] += Z["N1,U"] * V["v,U,z,N1"] * Gamma1_["wv"];
     W["zw"] += Z["n1,u"] * V["u,z,n1,v"] * Gamma1_["wv"];
-    W["zw"] += Z["N1,U"] * V["z,U,v,N1"] * Gamma1_["wv"];   
+    W["zw"] += Z["N1,U"] * V["z,U,v,N1"] * Gamma1_["wv"];
     W["zw"] -= Z["n1,u"] * H["z,n1"] * Gamma1_["uw"];
     W["zw"] -= Z["n1,u"] * V_N_Alpha["z,n1"] * Gamma1_["uw"];
     W["zw"] -= Z["n1,u"] * V_N_Beta["z,n1"] * Gamma1_["uw"];
@@ -1283,14 +1372,14 @@ void DSRG_MRPT2::set_w() {
     W.block("aa")("zw") += 0.25 * x_ci("I") * H.block("aa")("zu") * cc1a_n("Iuw");
     W.block("aa")("zw") += 0.25 * x_ci("J") * H.block("aa")("zu") * cc1a_r("Juw");
 
-    W.block("aa")("zw") += 0.25 * V_N_Alpha.block("aa")("uz") * cc1a_n("Iuw") * x_ci("I"); 
-    W.block("aa")("zw") += 0.25 * V_N_Alpha.block("aa")("uz") * cc1a_r("Juw") * x_ci("J"); 
-    W.block("aa")("zw") += 0.25 * V_N_Beta.block("aa")("uz") * cc1a_n("Iuw") * x_ci("I"); 
-    W.block("aa")("zw") += 0.25 * V_N_Beta.block("aa")("uz") * cc1a_r("Juw") * x_ci("J"); 
-    W.block("aa")("zw") += 0.25 * V_N_Alpha.block("aa")("zv") * cc1a_n("Iwv") * x_ci("I"); 
-    W.block("aa")("zw") += 0.25 * V_N_Alpha.block("aa")("zv") * cc1a_r("Jwv") * x_ci("J"); 
-    W.block("aa")("zw") += 0.25 * V_N_Beta.block("aa")("zv") * cc1a_n("Iwv") * x_ci("I"); 
-    W.block("aa")("zw") += 0.25 * V_N_Beta.block("aa")("zv") * cc1a_r("Jwv") * x_ci("J"); 
+    W.block("aa")("zw") += 0.25 * V_N_Alpha.block("aa")("uz") * cc1a_n("Iuw") * x_ci("I");
+    W.block("aa")("zw") += 0.25 * V_N_Alpha.block("aa")("uz") * cc1a_r("Juw") * x_ci("J");
+    W.block("aa")("zw") += 0.25 * V_N_Beta.block("aa")("uz") * cc1a_n("Iuw") * x_ci("I");
+    W.block("aa")("zw") += 0.25 * V_N_Beta.block("aa")("uz") * cc1a_r("Juw") * x_ci("J");
+    W.block("aa")("zw") += 0.25 * V_N_Alpha.block("aa")("zv") * cc1a_n("Iwv") * x_ci("I");
+    W.block("aa")("zw") += 0.25 * V_N_Alpha.block("aa")("zv") * cc1a_r("Jwv") * x_ci("J");
+    W.block("aa")("zw") += 0.25 * V_N_Beta.block("aa")("zv") * cc1a_n("Iwv") * x_ci("I");
+    W.block("aa")("zw") += 0.25 * V_N_Beta.block("aa")("zv") * cc1a_r("Jwv") * x_ci("J");
 
     W.block("aa")("zw") += 0.0625 * x_ci("I") * V.block("aaaa")("zvxy") * cc2aa_n("Iwvxy");
     W.block("aa")("zw") += 0.1250 * x_ci("I") * V.block("aAaA")("zVxY") * cc2ab_n("IwVxY");
@@ -1321,7 +1410,7 @@ void DSRG_MRPT2::set_w() {
     W["up"] += 0.5 * V["xypv"] * Gamma2_["uvxy"];
     W["up"] += V["xYpV"] * Gamma2_["uVxY"];
 
-    // Copy alpha-alpha to beta-beta 
+    // Copy alpha-alpha to beta-beta
     (W.block("CC")).iterate([&](const std::vector<size_t>& i, double& value) {
         value = W.block("cc").data()[i[0] * ncore + i[1]];
     });
@@ -1352,8 +1441,7 @@ void DSRG_MRPT2::set_w() {
     outfile->Printf("Done");
 }
 
-
-void DSRG_MRPT2::set_z_cc() {   
+void DSRG_MRPT2::set_z_cc() {
     BlockedTensor val1 = BTF_->build(CoreTensor, "val1", {"c"});
     BlockedTensor temp = BTF_->build(CoreTensor, "temporal tensor", spin_cases({"hhpp"}));
     BlockedTensor temp_1 = BTF_->build(CoreTensor, "temporal tensor_1", spin_cases({"hhpp"}));
@@ -1375,8 +1463,8 @@ void DSRG_MRPT2::set_z_cc() {
     if (CORRELATION_TERM) {
         temp["mjab"] += V["abmj"] * Eeps2["mjab"];
         temp["mJaB"] += V["aBmJ"] * Eeps2["mJaB"];
-        val1["m"] += 4.0 * s_ * Tau2["mjab"] * temp["mjab"]; 
-        val1["m"] += 8.0 * s_ * Tau2["mJaB"] * temp["mJaB"]; 
+        val1["m"] += 4.0 * s_ * Tau2["mjab"] * temp["mjab"];
+        val1["m"] += 8.0 * s_ * Tau2["mJaB"] * temp["mJaB"];
         temp.zero();
 
         val1["m"] -= 2.0 * T2OverDelta["mjab"] * Tau2["mjab"];
@@ -1407,29 +1495,32 @@ void DSRG_MRPT2::set_z_cc() {
 
         temp["nlcd"] += Kappa["nlcd"] * Eeps2_p["nlcd"];
         temp["nLcD"] += Kappa["nLcD"] * Eeps2_p["nLcD"];
-        zmn["mn"] += temp["nlcd"] * V["cdml"] ; 
+        zmn["mn"] += temp["nlcd"] * V["cdml"];
         zmn["mn"] += 2.0 * temp["nLcD"] * V["cDmL"];
-        temp.zero(); 
+        temp.zero();
 
         zmn["mn"] -= Tau1["mjab"] * V["abnj"];
         zmn["mn"] -= 2.0 * Tau1["mJaB"] * V["aBnJ"];
 
         temp["mlcd"] += Kappa["mlcd"] * Eeps2_p["mlcd"];
         temp["mLcD"] += Kappa["mLcD"] * Eeps2_p["mLcD"];
-        zmn["mn"] -= temp["mlcd"] * V["cdnl"]; 
-        zmn["mn"] -= 2.0 * temp["mLcD"] * V["cDnL"]; 
+        zmn["mn"] -= temp["mlcd"] * V["cdnl"];
+        zmn["mn"] -= 2.0 * temp["mLcD"] * V["cDnL"];
         temp.zero();
     }
 
     for (const std::string& block : {"cc", "CC"}) {
         (Z.block(block)).iterate([&](const std::vector<size_t>& i, double& value) {
-            if (i[0] == i[1]) { value = val1.block("c").data()[i[0]];}
-            else {
+            if (i[0] == i[1]) {
+                value = val1.block("c").data()[i[0]];
+            } else {
                 auto dmt = Delta1.block("cc").data()[i[1] * ncore + i[0]];
-                if (std::fabs(dmt) > 1e-12) { value = zmn.block("cc").data()[i[0] * ncore + i[1]] / dmt;}
-            }       
+                if (std::fabs(dmt) > 1e-12) {
+                    value = zmn.block("cc").data()[i[0] * ncore + i[1]] / dmt;
+                }
+            }
         });
-    }  
+    }
 }
 
 void DSRG_MRPT2::set_z_vv() {
@@ -1456,8 +1547,8 @@ void DSRG_MRPT2::set_z_vv() {
     if (CORRELATION_TERM) {
         temp["ijeb"] += V["ebij"] * Eeps2["ijeb"];
         temp["iJeB"] += V["eBiJ"] * Eeps2["iJeB"];
-        val2["e"] -= 4.0 * s_ * Tau2["ijeb"] * temp["ijeb"]; 
-        val2["e"] -= 8.0 * s_ * Tau2["iJeB"] * temp["iJeB"]; 
+        val2["e"] -= 4.0 * s_ * Tau2["ijeb"] * temp["ijeb"];
+        val2["e"] -= 8.0 * s_ * Tau2["iJeB"] * temp["iJeB"];
         temp.zero();
 
         val2["e"] += 2.0 * T2OverDelta["ijeb"] * Tau2["ijeb"];
@@ -1472,7 +1563,7 @@ void DSRG_MRPT2::set_z_vv() {
         temp.zero();
         temp_1.zero();
     }
-   
+
     BlockedTensor zef = BTF_->build(CoreTensor, "z{ef} normal", {"vv"});
     // virtual-virtual block entries within normal conditions
     if (CORRELATION_TERM) {
@@ -1491,29 +1582,32 @@ void DSRG_MRPT2::set_z_vv() {
 
         temp["klfd"] += Kappa["klfd"] * Eeps2_p["klfd"];
         temp["kLfD"] += Kappa["kLfD"] * Eeps2_p["kLfD"];
-        zef["ef"] += temp["klfd"] * V["edkl"] ; 
+        zef["ef"] += temp["klfd"] * V["edkl"];
         zef["ef"] += 2.0 * temp["kLfD"] * V["eDkL"];
-        temp.zero(); 
+        temp.zero();
 
         zef["ef"] -= Tau1["ijeb"] * V["fbij"];
         zef["ef"] -= 2.0 * Tau1["iJeB"] * V["fBiJ"];
 
         temp["kled"] += Kappa["kled"] * Eeps2_p["kled"];
         temp["kLeD"] += Kappa["kLeD"] * Eeps2_p["kLeD"];
-        zef["ef"] -= temp["kled"] * V["fdkl"]; 
-        zef["ef"] -= 2.0 * temp["kLeD"] * V["fDkL"]; 
+        zef["ef"] -= temp["kled"] * V["fdkl"];
+        zef["ef"] -= 2.0 * temp["kLeD"] * V["fDkL"];
         temp.zero();
     }
 
     for (const std::string& block : {"vv", "VV"}) {
         (Z.block(block)).iterate([&](const std::vector<size_t>& i, double& value) {
-            if (i[0] == i[1]) { value = val2.block("v").data()[i[0]];}
-            else {
+            if (i[0] == i[1]) {
+                value = val2.block("v").data()[i[0]];
+            } else {
                 auto dmt = Delta1.block("vv").data()[i[1] * nvirt + i[0]];
-                if (std::fabs(dmt) > 1e-12) { value = zef.block("vv").data()[i[0] * nvirt + i[1]] / dmt;}
-            }       
+                if (std::fabs(dmt) > 1e-12) {
+                    value = zef.block("vv").data()[i[0] * nvirt + i[1]] / dmt;
+                }
+            }
         });
-    }  
+    }
 }
 
 void DSRG_MRPT2::set_z_aa_diag() {
@@ -1526,9 +1620,9 @@ void DSRG_MRPT2::set_z_aa_diag() {
         val3["w"] += -2 * s_ * Sigma1["wa"] * F["wa"];
         val3["w"] += -2 * s_ * DelGam1["xu"] * T2_["wuax"] * Sigma1["wa"];
         val3["w"] += -2 * s_ * DelGam1["XU"] * T2_["wUaX"] * Sigma1["wa"];
-        val3["w"] +=  2 * s_ * Sigma1["iw"] * F["iw"];
-        val3["w"] +=  2 * s_ * DelGam1["xu"] * T2_["iuwx"] * Sigma1["iw"];
-        val3["w"] +=  2 * s_ * DelGam1["XU"] * T2_["iUwX"] * Sigma1["iw"];
+        val3["w"] += 2 * s_ * Sigma1["iw"] * F["iw"];
+        val3["w"] += 2 * s_ * DelGam1["xu"] * T2_["iuwx"] * Sigma1["iw"];
+        val3["w"] += 2 * s_ * DelGam1["XU"] * T2_["iUwX"] * Sigma1["iw"];
 
         val3["w"] += Sigma2["ia"] * T2_["iuaw"] * Gamma1_["wu"];
         val3["w"] += Sigma2["IA"] * T2_["uIwA"] * Gamma1_["wu"];
@@ -1560,8 +1654,8 @@ void DSRG_MRPT2::set_z_aa_diag() {
     if (CORRELATION_TERM) {
         temp["ujab"] += V["abuj"] * Eeps2["ujab"];
         temp["uJaB"] += V["aBuJ"] * Eeps2["uJaB"];
-        val3["u"] += 4.0 * s_ * Tau2["ujab"] * temp["ujab"]; 
-        val3["u"] += 8.0 * s_ * Tau2["uJaB"] * temp["uJaB"]; 
+        val3["u"] += 4.0 * s_ * Tau2["ujab"] * temp["ujab"];
+        val3["u"] += 8.0 * s_ * Tau2["uJaB"] * temp["uJaB"];
         temp.zero();
 
         val3["u"] -= 2.0 * T2OverDelta["ujab"] * Tau2["ujab"];
@@ -1578,8 +1672,8 @@ void DSRG_MRPT2::set_z_aa_diag() {
 
         temp["ijub"] += V["ubij"] * Eeps2["ijub"];
         temp["iJuB"] += V["uBiJ"] * Eeps2["iJuB"];
-        val3["u"] -= 4.0 * s_ * Tau2["ijub"] * temp["ijub"]; 
-        val3["u"] -= 8.0 * s_ * Tau2["iJuB"] * temp["iJuB"]; 
+        val3["u"] -= 4.0 * s_ * Tau2["ijub"] * temp["ijub"];
+        val3["u"] -= 8.0 * s_ * Tau2["iJuB"] * temp["iJuB"];
         temp.zero();
 
         val3["u"] += 2.0 * T2OverDelta["ijub"] * Tau2["ijub"];
@@ -1594,18 +1688,20 @@ void DSRG_MRPT2::set_z_aa_diag() {
         temp.zero();
         temp_1.zero();
     }
-  
+
     for (const std::string& block : {"aa", "AA"}) {
         (Z.block(block)).iterate([&](const std::vector<size_t>& i, double& value) {
-            if (i[0] == i[1]) { value = val3.block("a").data()[i[0]];}
+            if (i[0] == i[1]) {
+                value = val3.block("a").data()[i[0]];
+            }
         });
-    } 
+    }
 }
 
 void DSRG_MRPT2::set_b() {
     outfile->Printf("\n    Initializing b of the Linear System ............. ");
     Z_b = BTF_->build(CoreTensor, "b(AX=b)", spin_cases({"gg"}));
-    //NOTICE: constant b for z{core-virtual}
+    // NOTICE: constant b for z{core-virtual}
     BlockedTensor temp = BTF_->build(CoreTensor, "temporal tensor", spin_cases({"hhpp"}));
 
     if (CORRELATION_TERM) {
@@ -1651,7 +1747,7 @@ void DSRG_MRPT2::set_b() {
     Z_b["em"] += Z["e1,f"] * V["f,e,e1,m"];
     Z_b["em"] += Z["E1,F"] * V["e,F,m,E1"];
 
-    //NOTICE: constant b for z{active-active}
+    // NOTICE: constant b for z{active-active}
     if (CORRELATION_TERM) {
         Z_b["wz"] += 0.5 * Sigma3["za"] * F["wa"];
         Z_b["wz"] += 0.5 * Sigma3["iz"] * F["iw"];
@@ -1733,7 +1829,7 @@ void DSRG_MRPT2::set_b() {
     Z_b["wz"] -= Z["e1,f1"] * V["f1,v,e1,z"] * Gamma1_["wv"];
     Z_b["wz"] -= Z["E1,F1"] * V["v,F1,z,E1"] * Gamma1_["wv"];
 
-    //NOTICE: constant b for z{virtual-active}
+    // NOTICE: constant b for z{virtual-active}
     if (CORRELATION_TERM) {
         Z_b["ew"] += 0.5 * Sigma3["wa"] * F["ea"];
         Z_b["ew"] += 0.5 * Sigma3["iw"] * F["ie"];
@@ -1788,7 +1884,7 @@ void DSRG_MRPT2::set_b() {
     Z_b["ew"] += Z["e1,f1"] * V["e1,e,f1,v"] * Gamma1_["wv"];
     Z_b["ew"] += Z["E1,F1"] * V["e,E1,v,F1"] * Gamma1_["wv"];
 
-    //NOTICE: constant b for z{core-active}
+    // NOTICE: constant b for z{core-active}
     if (CORRELATION_TERM) {
         Z_b["mw"] += 0.5 * Sigma3["wa"] * F["ma"];
         Z_b["mw"] += 0.5 * Sigma3["iw"] * F["im"];
@@ -1865,36 +1961,34 @@ void DSRG_MRPT2::set_b() {
 void DSRG_MRPT2::solve_z() {
     set_b();
 
-    int dim_vc = nvirt * ncore,
-        dim_ca = ncore * na,
-        dim_va = nvirt * na,
-        dim_aa = na * (na - 1) / 2,
-        dim_ci = ndets;
-        // dim_ci = 0;
+    int dim_vc = nvirt * ncore, dim_ca = ncore * na, dim_va = nvirt * na,
+        dim_aa = na * (na - 1) / 2, dim_ci = ndets;
+    // dim_ci = 0;
     int dim = dim_vc + dim_ca + dim_va + dim_aa + dim_ci;
-    int N=dim;
-    int NRHS=1, LDA=N,LDB=N;
+    int N = dim;
+    int NRHS = 1, LDA = N, LDB = N;
     int n = N, nrhs = NRHS, lda = LDA, ldb = LDB;
     std::vector<int> ipiv(N);
 
     std::vector<double> A(dim * dim);
     std::vector<double> b(dim);
 
-    std::map<string,int> preidx = {
-        {"vc", 0}, {"VC", 0}, {"ca", dim_vc}, {"CA", dim_vc},
-        {"va", dim_vc + dim_ca}, {"VA", dim_vc + dim_ca},
-        {"aa", dim_vc + dim_ca + dim_va}, {"AA", dim_vc + dim_ca + dim_va},
-        {"ci", dim_vc + dim_ca + dim_va + dim_aa} 
-    };
+    std::map<string, int> preidx = {{"vc", 0},
+                                    {"VC", 0},
+                                    {"ca", dim_vc},
+                                    {"CA", dim_vc},
+                                    {"va", dim_vc + dim_ca},
+                                    {"VA", dim_vc + dim_ca},
+                                    {"aa", dim_vc + dim_ca + dim_va},
+                                    {"AA", dim_vc + dim_ca + dim_va},
+                                    {"ci", dim_vc + dim_ca + dim_va + dim_aa}};
 
-    std::map<string,int> block_dim = {
-        {"vc", ncore}, {"VC", ncore}, {"ca", na}, {"CA", na},
-        {"va", na}, {"VA", na}, {"aa", 0}, {"AA", 0}
-    };
+    std::map<string, int> block_dim = {{"vc", ncore}, {"VC", ncore}, {"ca", na}, {"CA", na},
+                                       {"va", na},    {"VA", na},    {"aa", 0},  {"AA", 0}};
 
-    //NOTICE:b
+    // NOTICE:b
     BlockedTensor temp2 = BTF_->build(CoreTensor, "temporal tensor 2", {"gg"});
-    BlockedTensor temp3 = BTF_->build(CoreTensor, "temporal tensor 3", {"aa","AA"});
+    BlockedTensor temp3 = BTF_->build(CoreTensor, "temporal tensor 3", {"aa", "AA"});
 
     temp3["uv"] += Z["uv"] * I["uv"];
     temp3["UV"] += Z["UV"] * I["UV"];
@@ -1930,27 +2024,24 @@ void DSRG_MRPT2::solve_z() {
             if (block != "aa") {
                 int index = preidx[block] + i[0] * block_dim[block] + i[1];
                 b.at(index) = value;
-            }
-            else if (block == "aa" && i[0] > i[1]) {
+            } else if (block == "aa" && i[0] > i[1]) {
                 int index = preidx[block] + i[0] * (i[0] - 1) / 2 + i[1];
                 b.at(index) = value;
-            }    
+            }
         });
-    } 
+    }
 
     outfile->Printf("Done");
     outfile->Printf("\n    Initializing A of the Linear System ............. ");
 
-    //NOTICE: Linear system A
-    BlockedTensor temp1 = BTF_->build(CoreTensor, "temporal tensor 1", 
-        {"vcvc","vcca", "vcva", "vcaa", 
-         "cavc","caca", "cava", "caaa",
-         "vavc","vaca", "vava", "vaaa",
-         "aavc","aaca", "aava", "aaaa",
-         "vcVC","vcCA", "vcVA", "vcAA", 
-         "caVC","caCA", "caVA", "caAA",
-         "vaVC","vaCA", "vaVA", "vaAA",
-         "aaVC","aaCA", "aaVA", "aaAA",});
+    // NOTICE: Linear system A
+    BlockedTensor temp1 = BTF_->build(
+        CoreTensor, "temporal tensor 1",
+        {
+            "vcvc", "vcca", "vcva", "vcaa", "cavc", "caca", "cava", "caaa", "vavc", "vaca", "vava",
+            "vaaa", "aavc", "aaca", "aava", "aaaa", "vcVC", "vcCA", "vcVA", "vcAA", "caVC", "caCA",
+            "caVA", "caAA", "vaVC", "vaCA", "vaVA", "vaAA", "aaVC", "aaCA", "aaVA", "aaAA",
+        });
 
     // VIRTUAL-CORE
     temp1["e,m,e1,m1"] += Delta1["m1,e1"] * I["e1,e"] * I["m1,m"];
@@ -2143,7 +2234,7 @@ void DSRG_MRPT2::solve_z() {
     temp1["w,z,e1,u"] -= V["e1,v,w,y"] * Gamma2_["u,v,z,y"];
     temp1["w,z,e1,u"] -= V["e1,V,w,Y"] * Gamma2_["u,V,z,Y"];
     temp1["w,z,E1,U"] -= V["v,E1,w,Y"] * Gamma2_["v,U,z,Y"];
-    
+
     temp1["w,z,e1,u"] += H["z,e1"] * Gamma1_["uw"];
     temp1["w,z,e1,u"] += V["e1,m,z,m1"] * Gamma1_["uw"] * I["m1,m"];
     temp1["w,z,e1,u"] += V["e1,M,z,M1"] * Gamma1_["uw"] * I["M1,M"];
@@ -2159,59 +2250,57 @@ void DSRG_MRPT2::solve_z() {
     temp1["w,z,u1,a1"] += V["a1,v,u1,z"] * Gamma1_["wv"];
     temp1["w,z,U1,A1"] += V["v,A1,z,U1"] * Gamma1_["wv"];
 
-    for (const std::string& row : {"vc","ca","va","aa"}) {
+    for (const std::string& row : {"vc", "ca", "va", "aa"}) {
         int idx1 = block_dim[row];
         int pre1 = preidx[row];
 
-        for (const std::string& col : {"vc","VC","ca","CA","va","VA","aa","AA"}) {
+        for (const std::string& col : {"vc", "VC", "ca", "CA", "va", "VA", "aa", "AA"}) {
             int idx2 = block_dim[col];
             int pre2 = preidx[col];
             if (row != "aa" && col != "aa" && col != "AA") {
                 (temp1.block(row + col)).iterate([&](const std::vector<size_t>& i, double& value) {
-                    int index = (pre1 + i[0] * idx1 + i[1]) 
-                                 + dim * (pre2 + i[2] * idx2 + i[3]);
+                    int index = (pre1 + i[0] * idx1 + i[1]) + dim * (pre2 + i[2] * idx2 + i[3]);
                     A.at(index) += value;
                 });
-            }
-            else if (row == "aa" && col != "aa" && col != "AA") {       
+            } else if (row == "aa" && col != "aa" && col != "AA") {
                 (temp1.block(row + col)).iterate([&](const std::vector<size_t>& i, double& value) {
-                    if (i[0] > i[1] ) {
-                        int index = (pre1 + i[0] * (i[0] - 1) / 2 + i[1])
-                                     + dim * (pre2 + i[2] * idx2 + i[3]); 
-                        A.at(index) += value;    
+                    if (i[0] > i[1]) {
+                        int index = (pre1 + i[0] * (i[0] - 1) / 2 + i[1]) +
+                                    dim * (pre2 + i[2] * idx2 + i[3]);
+                        A.at(index) += value;
                     }
                 });
-            }
-            else if (row != "aa" && (col == "aa" || col == "AA")) {
+            } else if (row != "aa" && (col == "aa" || col == "AA")) {
                 (temp1.block(row + col)).iterate([&](const std::vector<size_t>& i, double& value) {
-                    int i2 = i[2] > i[3]? i[2]: i[3],
-                        i3 = i[2] > i[3]? i[3]: i[2];
-                    if (i2 != i3 ) {
-                        int index = (pre1 + i[0] * idx1 + i[1]) 
-                                     + dim * (pre2 + i2 * (i2 - 1) / 2 + i3);
-                        A.at(index) += value;    
+                    int i2 = i[2] > i[3] ? i[2] : i[3], i3 = i[2] > i[3] ? i[3] : i[2];
+                    if (i2 != i3) {
+                        int index =
+                            (pre1 + i[0] * idx1 + i[1]) + dim * (pre2 + i2 * (i2 - 1) / 2 + i3);
+                        A.at(index) += value;
                     }
-                });   
-            }
-            else {
+                });
+            } else {
                 (temp1.block(row + col)).iterate([&](const std::vector<size_t>& i, double& value) {
-                    int i2 = i[2] > i[3]? i[2]: i[3],
-                        i3 = i[2] > i[3]? i[3]: i[2];
+                    int i2 = i[2] > i[3] ? i[2] : i[3], i3 = i[2] > i[3] ? i[3] : i[2];
                     if (i[0] > i[1] && i2 != i3) {
-                        int index = (pre1 + i[0] * (i[0] - 1) / 2 + i[1])
-                                     + dim * (pre2 + i2 * (i2 - 1) / 2 + i3);
-                        A.at(index) += value;    
-                    }       
+                        int index = (pre1 + i[0] * (i[0] - 1) / 2 + i[1]) +
+                                    dim * (pre2 + i2 * (i2 - 1) / 2 + i3);
+                        A.at(index) += value;
+                    }
                 });
             }
         }
-    } 
+    }
 
     // CI contribution
-    auto ci_vc = ambit::Tensor::build(ambit::CoreTensor, "ci contribution to z{vc}", {ndets, nvirt, ncore});
-    auto ci_ca = ambit::Tensor::build(ambit::CoreTensor, "ci contribution to z{ca}", {ndets, ncore, na});
-    auto ci_va = ambit::Tensor::build(ambit::CoreTensor, "ci contribution to z{va}", {ndets, nvirt, na});
-    auto ci_aa = ambit::Tensor::build(ambit::CoreTensor, "ci contribution to z{aa}", {ndets, na, na});
+    auto ci_vc =
+        ambit::Tensor::build(ambit::CoreTensor, "ci contribution to z{vc}", {ndets, nvirt, ncore});
+    auto ci_ca =
+        ambit::Tensor::build(ambit::CoreTensor, "ci contribution to z{ca}", {ndets, ncore, na});
+    auto ci_va =
+        ambit::Tensor::build(ambit::CoreTensor, "ci contribution to z{va}", {ndets, nvirt, na});
+    auto ci_aa =
+        ambit::Tensor::build(ambit::CoreTensor, "ci contribution to z{aa}", {ndets, na, na});
 
     // CI contribution to Z{VC}
     ci_vc("Iem") -= H.block("vc")("em") * ci("I");
@@ -2228,13 +2317,13 @@ void DSRG_MRPT2::solve_z() {
     ci_ca("Imw") -= 0.25 * H.block("ac")("vm") * cc1a_r("Iwv");
     ci_ca("Imw") -= 0.25 * H.block("ca")("mu") * cc1a_r("Iuw");
     ci_ca("Imw") -= 0.25 * V_N_Alpha.block("ac")("um") * cc1a_n("Iuw");
-    ci_ca("Imw") -= 0.25 * V_N_Beta.block("ac")("um")  * cc1a_n("Iuw");
+    ci_ca("Imw") -= 0.25 * V_N_Beta.block("ac")("um") * cc1a_n("Iuw");
     ci_ca("Imw") -= 0.25 * V_N_Alpha.block("ac")("um") * cc1a_r("Iuw");
-    ci_ca("Imw") -= 0.25 * V_N_Beta.block("ac")("um")  * cc1a_r("Iuw");
-    ci_ca("Imw") -= 0.25 * V_N_Alpha.block("ca")("mv") * cc1a_n("Iwv"); 
-    ci_ca("Imw") -= 0.25 * V_N_Beta.block("ca")("mv")  * cc1a_n("Iwv"); 
-    ci_ca("Imw") -= 0.25 * V_N_Alpha.block("ca")("mv") * cc1a_r("Iwv"); 
-    ci_ca("Imw") -= 0.25 * V_N_Beta.block("ca")("mv")  * cc1a_r("Iwv"); 
+    ci_ca("Imw") -= 0.25 * V_N_Beta.block("ac")("um") * cc1a_r("Iuw");
+    ci_ca("Imw") -= 0.25 * V_N_Alpha.block("ca")("mv") * cc1a_n("Iwv");
+    ci_ca("Imw") -= 0.25 * V_N_Beta.block("ca")("mv") * cc1a_n("Iwv");
+    ci_ca("Imw") -= 0.25 * V_N_Alpha.block("ca")("mv") * cc1a_r("Iwv");
+    ci_ca("Imw") -= 0.25 * V_N_Beta.block("ca")("mv") * cc1a_r("Iwv");
     ci_ca("Imw") -= 0.0625 * V.block("aaca")("xymv") * cc2aa_n("Iwvxy");
     ci_ca("Imw") -= 0.1250 * V.block("aAcA")("xYmV") * cc2ab_n("IwVxY");
     ci_ca("Imw") -= 0.0625 * V.block("aaac")("xyum") * cc2aa_n("Iuwxy");
@@ -2267,13 +2356,13 @@ void DSRG_MRPT2::solve_z() {
     ci_va("Iew") -= 0.25 * H.block("va")("eu") * cc1a_r("Iuw");
 
     ci_va("Iew") -= 0.25 * V_N_Alpha.block("av")("ue") * cc1a_n("Iuw");
-    ci_va("Iew") -= 0.25 * V_N_Beta.block("av")("ue")  * cc1a_n("Iuw");
+    ci_va("Iew") -= 0.25 * V_N_Beta.block("av")("ue") * cc1a_n("Iuw");
     ci_va("Iew") -= 0.25 * V_N_Alpha.block("va")("ev") * cc1a_n("Iwv");
-    ci_va("Iew") -= 0.25 * V_N_Beta.block("va")("ev")  * cc1a_n("Iwv");
+    ci_va("Iew") -= 0.25 * V_N_Beta.block("va")("ev") * cc1a_n("Iwv");
     ci_va("Iew") -= 0.25 * V_N_Alpha.block("av")("ue") * cc1a_r("Iuw");
-    ci_va("Iew") -= 0.25 * V_N_Beta.block("av")("ue")  * cc1a_r("Iuw");
+    ci_va("Iew") -= 0.25 * V_N_Beta.block("av")("ue") * cc1a_r("Iuw");
     ci_va("Iew") -= 0.25 * V_N_Alpha.block("va")("ev") * cc1a_r("Iwv");
-    ci_va("Iew") -= 0.25 * V_N_Beta.block("va")("ev")  * cc1a_r("Iwv");
+    ci_va("Iew") -= 0.25 * V_N_Beta.block("va")("ev") * cc1a_r("Iwv");
 
     ci_va("Iew") -= 0.0625 * V.block("vaaa")("evxy") * cc2aa_n("Iwvxy");
     ci_va("Iew") -= 0.1250 * V.block("vAaA")("eVxY") * cc2ab_n("IwVxY");
@@ -2304,22 +2393,22 @@ void DSRG_MRPT2::solve_z() {
     ci_aa("Iwz") += 0.25 * H.block("aa")("zu") * cc1a_r("Iuw");
 
     ci_aa("Iwz") -= 0.25 * V_N_Alpha.block("aa")("uw") * cc1a_n("Iuz");
-    ci_aa("Iwz") -= 0.25 * V_N_Beta.block("aa")("uw")  * cc1a_n("Iuz");
+    ci_aa("Iwz") -= 0.25 * V_N_Beta.block("aa")("uw") * cc1a_n("Iuz");
     ci_aa("Iwz") -= 0.25 * V_N_Alpha.block("aa")("wv") * cc1a_n("Izv");
-    ci_aa("Iwz") -= 0.25 * V_N_Beta.block("aa")("wv")  * cc1a_n("Izv");
+    ci_aa("Iwz") -= 0.25 * V_N_Beta.block("aa")("wv") * cc1a_n("Izv");
     ci_aa("Iwz") -= 0.25 * V_N_Alpha.block("aa")("uw") * cc1a_r("Iuz");
-    ci_aa("Iwz") -= 0.25 * V_N_Beta.block("aa")("uw")  * cc1a_r("Iuz");
+    ci_aa("Iwz") -= 0.25 * V_N_Beta.block("aa")("uw") * cc1a_r("Iuz");
     ci_aa("Iwz") -= 0.25 * V_N_Alpha.block("aa")("wv") * cc1a_r("Izv");
-    ci_aa("Iwz") -= 0.25 * V_N_Beta.block("aa")("wv")  * cc1a_r("Izv");
+    ci_aa("Iwz") -= 0.25 * V_N_Beta.block("aa")("wv") * cc1a_r("Izv");
 
     ci_aa("Iwz") += 0.25 * V_N_Alpha.block("aa")("uz") * cc1a_n("Iuw");
-    ci_aa("Iwz") += 0.25 * V_N_Beta.block("aa")("uz")  * cc1a_n("Iuw");
+    ci_aa("Iwz") += 0.25 * V_N_Beta.block("aa")("uz") * cc1a_n("Iuw");
     ci_aa("Iwz") += 0.25 * V_N_Alpha.block("aa")("zv") * cc1a_n("Iwv");
-    ci_aa("Iwz") += 0.25 * V_N_Beta.block("aa")("zv")  * cc1a_n("Iwv");
+    ci_aa("Iwz") += 0.25 * V_N_Beta.block("aa")("zv") * cc1a_n("Iwv");
     ci_aa("Iwz") += 0.25 * V_N_Alpha.block("aa")("uz") * cc1a_r("Iuw");
-    ci_aa("Iwz") += 0.25 * V_N_Beta.block("aa")("uz")  * cc1a_r("Iuw");
+    ci_aa("Iwz") += 0.25 * V_N_Beta.block("aa")("uz") * cc1a_r("Iuw");
     ci_aa("Iwz") += 0.25 * V_N_Alpha.block("aa")("zv") * cc1a_r("Iwv");
-    ci_aa("Iwz") += 0.25 * V_N_Beta.block("aa")("zv")  * cc1a_r("Iwv");
+    ci_aa("Iwz") += 0.25 * V_N_Beta.block("aa")("zv") * cc1a_r("Iwv");
 
     ci_aa("Iwz") -= 0.0625 * V.block("aaaa")("wvxy") * cc2aa_n("Izvxy");
     ci_aa("Iwz") -= 0.1250 * V.block("aAaA")("wVxY") * cc2ab_n("IzVxY");
@@ -2355,50 +2444,50 @@ void DSRG_MRPT2::solve_z() {
     ci_aa("Jwz") += 0.0625 * V.block("aaaa")("uvxz") * cc2aa_r("Juvxw");
     ci_aa("Jwz") += 0.1250 * V.block("aAaA")("uVzX") * cc2ab_r("JuVwX");
 
-    for (const std::string& row : {"vc","ca","va","aa"}) {
+    for (const std::string& row : {"vc", "ca", "va", "aa"}) {
         int idx1 = block_dim[row];
         int pre1 = preidx[row];
         auto temp_ci = ci_vc;
-        if (row == "ca") temp_ci = ci_ca;
-        else if (row == "va") temp_ci = ci_va;
-        else if (row == "aa") temp_ci = ci_aa;
+        if (row == "ca")
+            temp_ci = ci_ca;
+        else if (row == "va")
+            temp_ci = ci_va;
+        else if (row == "aa")
+            temp_ci = ci_aa;
 
         for (const std::string& col : {"ci"}) {
             int pre2 = preidx[col];
             if (row != "aa") {
                 (temp_ci).iterate([&](const std::vector<size_t>& i, double& value) {
-                    int index = (pre1 + i[1] * idx1 + i[2]) 
-                                 + dim * (pre2 + i[0]);
+                    int index = (pre1 + i[1] * idx1 + i[2]) + dim * (pre2 + i[0]);
                     A.at(index) += value;
                 });
-            }
-            else if (row == "aa") {       
+            } else if (row == "aa") {
                 (temp_ci).iterate([&](const std::vector<size_t>& i, double& value) {
-                    if (i[1] > i[2] ) {
-                        int index = (pre1 + i[1] * (i[1] - 1) / 2 + i[2])
-                                     + dim * (pre2 + i[0]); 
-                        A.at(index) += value;    
+                    if (i[1] > i[2]) {
+                        int index = (pre1 + i[1] * (i[1] - 1) / 2 + i[2]) + dim * (pre2 + i[0]);
+                        A.at(index) += value;
                     }
                 });
             }
         }
-    } 
+    }
 
-    auto b_ck  = ambit::Tensor::build(ambit::CoreTensor, "ci equations b part", {ndets});
+    auto b_ck = ambit::Tensor::build(ambit::CoreTensor, "ci equations b part", {ndets});
     b_ck("K") -= H.block("aa")("vu") * cc1a_n("Kuv");
     b_ck("K") -= H.block("AA")("VU") * cc1b_n("KUV");
     b_ck("K") -= H.block("aa")("vu") * cc1a_r("Kuv");
     b_ck("K") -= H.block("AA")("VU") * cc1b_r("KUV");
 
     b_ck("K") -= V_N_Alpha.block("aa")("vu") * cc1a_n("Kuv");
-    b_ck("K") -= V_N_Beta.block("aa")("vu")  * cc1a_n("Kuv");
+    b_ck("K") -= V_N_Beta.block("aa")("vu") * cc1a_n("Kuv");
     b_ck("K") -= V_N_Alpha.block("aa")("vu") * cc1a_r("Kuv");
-    b_ck("K") -= V_N_Beta.block("aa")("vu")  * cc1a_r("Kuv");
+    b_ck("K") -= V_N_Beta.block("aa")("vu") * cc1a_r("Kuv");
 
     b_ck("K") -= V_all_Beta.block("AA")("VU") * cc1b_n("KUV");
-    b_ck("K") -= V_R_Beta.block("AA")("VU")   * cc1b_n("KUV");
+    b_ck("K") -= V_R_Beta.block("AA")("VU") * cc1b_n("KUV");
     b_ck("K") -= V_all_Beta.block("AA")("VU") * cc1b_r("KUV");
-    b_ck("K") -= V_R_Beta.block("AA")("VU")   * cc1b_r("KUV");
+    b_ck("K") -= V_R_Beta.block("AA")("VU") * cc1b_r("KUV");
 
     b_ck("K") -= 0.5 * V.block("aaaa")("xyuv") * cc2aa_n("Kuvxy");
     b_ck("K") -= 0.5 * V.block("AAAA")("XYUV") * cc2bb_n("KUVXY");
@@ -2406,7 +2495,7 @@ void DSRG_MRPT2::solve_z() {
     b_ck("J") -= V.block("aAaA")("xYuV") * cc2ab_r("JuVxY");
 
     // Alpha
-    Alpha  = 0.0;
+    Alpha = 0.0;
     Alpha += H["vu"] * Gamma1_["uv"];
     Alpha += H["VU"] * Gamma1_["UV"];
     Alpha += V_N_Alpha["v,u"] * Gamma1_["uv"];
@@ -2417,7 +2506,7 @@ void DSRG_MRPT2::solve_z() {
     Alpha += 0.25 * V["XYUV"] * Gamma2_["UVXY"];
     Alpha += V["xYuV"] * Gamma2_["uVxY"];
 
-    BlockedTensor temp = BTF_->build(CoreTensor, "temporal tensor", {"aa","AA"});
+    BlockedTensor temp = BTF_->build(CoreTensor, "temporal tensor", {"aa", "AA"});
 
     if (PT2_TERM) {
         temp["uv"] += 0.25 * T2_["vmef"] * V_["efum"];
@@ -2449,13 +2538,13 @@ void DSRG_MRPT2::solve_z() {
         temp["UV"] += 0.50 * T2_["wVeX"] * V_["eYzU"] * Gamma1_["zw"] * Eta1_["XY"];
         temp["UV"] += 0.50 * T2_["wVxE"] * V_["yEzU"] * Gamma1_["zw"] * Eta1_["xy"];
 
-        temp["uv"] += 0.25 * T2_["umef"] * V_["efvm"]; 
-        temp["uv"] += 0.25 * T2_["umez"] * V_["ewvm"] * Eta1_["zw"]; 
-        temp["uv"] += 0.25 * T2_["umze"] * V_["wevm"] * Eta1_["zw"]; 
-        temp["uv"] += 0.25 * T2_["umzx"] * V_["wyvm"] * Eta1_["zw"] * Eta1_["xy"]; 
-        temp["uv"] += 0.25 * T2_["uwef"] * V_["efvz"] * Gamma1_["zw"]; 
-        temp["uv"] += 0.25 * T2_["uwex"] * V_["eyvz"] * Gamma1_["zw"] * Eta1_["xy"]; 
-        temp["uv"] += 0.25 * T2_["uwxe"] * V_["yevz"] * Gamma1_["zw"] * Eta1_["xy"]; 
+        temp["uv"] += 0.25 * T2_["umef"] * V_["efvm"];
+        temp["uv"] += 0.25 * T2_["umez"] * V_["ewvm"] * Eta1_["zw"];
+        temp["uv"] += 0.25 * T2_["umze"] * V_["wevm"] * Eta1_["zw"];
+        temp["uv"] += 0.25 * T2_["umzx"] * V_["wyvm"] * Eta1_["zw"] * Eta1_["xy"];
+        temp["uv"] += 0.25 * T2_["uwef"] * V_["efvz"] * Gamma1_["zw"];
+        temp["uv"] += 0.25 * T2_["uwex"] * V_["eyvz"] * Gamma1_["zw"] * Eta1_["xy"];
+        temp["uv"] += 0.25 * T2_["uwxe"] * V_["yevz"] * Gamma1_["zw"] * Eta1_["xy"];
         temp["uv"] += 0.50 * T2_["uMeF"] * V_["eFvM"];
         temp["uv"] += 0.50 * T2_["uMeZ"] * V_["eWvM"] * Eta1_["ZW"];
         temp["uv"] += 0.50 * T2_["uMzE"] * V_["wEvM"] * Eta1_["zw"];
@@ -2477,7 +2566,6 @@ void DSRG_MRPT2::solve_z() {
         temp["UV"] += 0.50 * T2_["wUeF"] * V_["eFzV"] * Gamma1_["zw"];
         temp["UV"] += 0.50 * T2_["wUeX"] * V_["eYzV"] * Gamma1_["zw"] * Eta1_["XY"];
         temp["UV"] += 0.50 * T2_["wUxE"] * V_["yEzV"] * Gamma1_["zw"] * Eta1_["xy"];
-
 
         temp["uv"] += 0.25 * T2_["mvef"] * V_["efmu"];
         temp["uv"] += 0.25 * T2_["mvez"] * V_["ewmu"] * Eta1_["zw"];
@@ -2508,7 +2596,6 @@ void DSRG_MRPT2::solve_z() {
         temp["UV"] += 0.50 * T2_["wVeX"] * V_["eYzU"] * Gamma1_["zw"] * Eta1_["XY"];
         temp["UV"] += 0.50 * T2_["wVxE"] * V_["yEzU"] * Gamma1_["zw"] * Eta1_["xy"];
 
-
         temp["uv"] += 0.25 * T2_["muef"] * V_["efmv"];
         temp["uv"] += 0.25 * T2_["muez"] * V_["ewmv"] * Eta1_["zw"];
         temp["uv"] += 0.25 * T2_["muze"] * V_["wemv"] * Eta1_["zw"];
@@ -2537,7 +2624,6 @@ void DSRG_MRPT2::solve_z() {
         temp["UV"] += 0.50 * T2_["wUeF"] * V_["eFzV"] * Gamma1_["zw"];
         temp["UV"] += 0.50 * T2_["wUeX"] * V_["eYzV"] * Gamma1_["zw"] * Eta1_["XY"];
         temp["UV"] += 0.50 * T2_["wUxE"] * V_["yEzV"] * Gamma1_["zw"] * Eta1_["xy"];
-
 
         temp["uv"] -= 0.25 * T2_["mnue"] * V_["vemn"];
         temp["uv"] -= 0.25 * T2_["mnuz"] * V_["vwmn"] * Eta1_["zw"];
@@ -2568,7 +2654,6 @@ void DSRG_MRPT2::solve_z() {
         temp["UV"] -= 0.50 * T2_["wMxU"] * V_["yVzM"] * Gamma1_["zw"] * Eta1_["xy"];
         temp["UV"] -= 0.50 * T2_["wYeU"] * V_["eVzX"] * Gamma1_["zw"] * Gamma1_["XY"];
 
-
         temp["uv"] -= 0.25 * T2_["mnve"] * V_["uemn"];
         temp["uv"] -= 0.25 * T2_["mnvz"] * V_["uwmn"] * Eta1_["zw"];
         temp["uv"] -= 0.25 * T2_["mwve"] * V_["uemz"] * Gamma1_["zw"];
@@ -2598,7 +2683,6 @@ void DSRG_MRPT2::solve_z() {
         temp["UV"] -= 0.50 * T2_["wMxV"] * V_["yUzM"] * Gamma1_["zw"] * Eta1_["xy"];
         temp["UV"] -= 0.50 * T2_["wYeV"] * V_["eUzX"] * Gamma1_["zw"] * Gamma1_["XY"];
 
-
         temp["uv"] -= 0.25 * T2_["mneu"] * V_["evmn"];
         temp["uv"] -= 0.25 * T2_["mnzu"] * V_["wvmn"] * Eta1_["zw"];
         temp["uv"] -= 0.25 * T2_["mweu"] * V_["evmz"] * Gamma1_["zw"];
@@ -2627,7 +2711,6 @@ void DSRG_MRPT2::solve_z() {
         temp["UV"] -= 0.50 * T2_["wMeU"] * V_["eVzM"] * Gamma1_["zw"];
         temp["UV"] -= 0.50 * T2_["wMxU"] * V_["yVzM"] * Gamma1_["zw"] * Eta1_["xy"];
         temp["UV"] -= 0.50 * T2_["wYeU"] * V_["eVzX"] * Gamma1_["zw"] * Gamma1_["XY"];
-
 
         temp["uv"] -= 0.25 * T2_["mnev"] * V_["eumn"];
         temp["uv"] -= 0.25 * T2_["mnzv"] * V_["wumn"] * Eta1_["zw"];
@@ -2700,7 +2783,7 @@ void DSRG_MRPT2::solve_z() {
         temp["zw"] += 0.125 * T2_["mzxy"] * V_["uvmw"] * Lambda2_["xyuv"];
         temp["zw"] += 0.500 * T2_["zMxY"] * V_["uVwM"] * Lambda2_["xYuV"];
         temp["ZW"] += 0.125 * T2_["MZXY"] * V_["UVMW"] * Lambda2_["XYUV"];
-        temp["ZW"] += 0.500 * T2_["mZxY"] * V_["uVmW"] * Lambda2_["xYuV"]; 
+        temp["ZW"] += 0.500 * T2_["mZxY"] * V_["uVmW"] * Lambda2_["xYuV"];
     }
 
     if (X3_TERM) {
@@ -2790,7 +2873,7 @@ void DSRG_MRPT2::solve_z() {
         temp["xu"] += Xi3["ia"] * Delta1["ux"] * T2_["ixau"];
         temp["xu"] += Xi3["IA"] * Delta1["ux"] * T2_["xIuA"];
         temp["XU"] += Xi3["IA"] * Delta1["UX"] * T2_["IXAU"];
-        temp["XU"] += Xi3["ia"] * Delta1["UX"] * T2_["iXaU"];  
+        temp["XU"] += Xi3["ia"] * Delta1["UX"] * T2_["iXaU"];
     }
 
     if (X7_TERM) {
@@ -2807,15 +2890,15 @@ void DSRG_MRPT2::solve_z() {
         temp["UV"] -= F_["UM"] * T1_["MV"];
     }
 
-    b_ck("K") -= 0.5 * temp.block("aa")("uv") * cc1a_n("Kuv"); 
+    b_ck("K") -= 0.5 * temp.block("aa")("uv") * cc1a_n("Kuv");
     b_ck("K") -= 0.5 * temp.block("AA")("UV") * cc1b_n("KUV");
-    b_ck("K") -= 0.5 * temp.block("aa")("uv") * cc1a_r("Kuv"); 
+    b_ck("K") -= 0.5 * temp.block("aa")("uv") * cc1a_r("Kuv");
     b_ck("K") -= 0.5 * temp.block("AA")("UV") * cc1b_r("KUV");
-    Alpha += 0.5 * temp["uv"] * Gamma1_["uv"]; 
+    Alpha += 0.5 * temp["uv"] * Gamma1_["uv"];
     Alpha += 0.5 * temp["UV"] * Gamma1_["UV"];
     temp.zero();
 
-    BlockedTensor temp4 = BTF_->build(CoreTensor, "temporal tensor 4", {"aaaa","AAAA","aAaA"});
+    BlockedTensor temp4 = BTF_->build(CoreTensor, "temporal tensor 4", {"aaaa", "AAAA", "aAaA"});
 
     if (X1_TERM) {
         temp4["uvxy"] += 0.125 * V_["efxy"] * T2_["uvef"];
@@ -2912,40 +2995,64 @@ void DSRG_MRPT2::solve_z() {
     temp4.zero();
 
     if (X4_TERM) {
-        b_ck("K") -= 0.25 * V_.block("aaca")("uvmz") * T2_.block("caaa")("mwxy") * dlamb3_aaa("Kxyzuvw");
-        b_ck("K") -= 0.25 * V_.block("AACA")("UVMZ") * T2_.block("CAAA")("MWXY") * dlamb3_bbb("KXYZUVW");
-        b_ck("K") += 0.50 * V_.block("aaca")("uvmy") * T2_.block("cAaA")("mWxZ") * dlamb3_aab("KxyZuvW"); 
-        b_ck("K") += 0.50 * V_.block("aAcA")("uWmZ") * T2_.block("caaa")("mvxy") * dlamb3_aab("KxyZuvW"); 
-        b_ck("K") -= 1.00 * V_.block("aAaC")("uWyM") * T2_.block("aCaA")("vMxZ") * dlamb3_aab("KxyZuvW"); 
-        b_ck("K") += 0.50 * V_.block("AACA")("VWMZ") * T2_.block("aCaA")("uMxY") * dlamb3_abb("KxYZuVW");
-        b_ck("K") += 0.50 * V_.block("aAaC")("uVxM") * T2_.block("CAAA")("MWYZ") * dlamb3_abb("KxYZuVW");
-        b_ck("K") -= 1.00 * V_.block("aAcA")("uVmZ") * T2_.block("cAaA")("mWxY") * dlamb3_abb("KxYZuVW");  
-        b_ck("K") += 0.25 * V_.block("vaaa")("ewxy") * T2_.block("aava")("uvez") * dlamb3_aaa("Kxyzuvw");
-        b_ck("K") += 0.25 * V_.block("VAAA")("EWXY") * T2_.block("AAVA")("UVEZ") * dlamb3_bbb("KXYZUVW");
-        b_ck("K") -= 0.50 * V_.block("vAaA")("eWxZ") * T2_.block("aava")("uvey") * dlamb3_aab("KxyZuvW");
-        b_ck("K") += 0.50 * V_.block("avaa")("vexy") * T2_.block("aAvA")("uWeZ") * dlamb3_aab("KxyZuvW");
-        b_ck("K") += 1.00 * V_.block("aVaA")("vExZ") * T2_.block("aAaV")("uWyE") * dlamb3_aab("KxyZuvW");
-        b_ck("K") -= 0.50 * V_.block("aVaA")("uExY") * T2_.block("AAVA")("VWEZ") * dlamb3_abb("KxYZuVW");
-        b_ck("K") += 0.50 * V_.block("AVAA")("WEYZ") * T2_.block("aAaV")("uVxE") * dlamb3_abb("KxYZuVW");
-        b_ck("K") += 1.00 * V_.block("vAaA")("eWxY") * T2_.block("aAvA")("uVeZ") * dlamb3_abb("KxYZuVW");
+        b_ck("K") -=
+            0.25 * V_.block("aaca")("uvmz") * T2_.block("caaa")("mwxy") * dlamb3_aaa("Kxyzuvw");
+        b_ck("K") -=
+            0.25 * V_.block("AACA")("UVMZ") * T2_.block("CAAA")("MWXY") * dlamb3_bbb("KXYZUVW");
+        b_ck("K") +=
+            0.50 * V_.block("aaca")("uvmy") * T2_.block("cAaA")("mWxZ") * dlamb3_aab("KxyZuvW");
+        b_ck("K") +=
+            0.50 * V_.block("aAcA")("uWmZ") * T2_.block("caaa")("mvxy") * dlamb3_aab("KxyZuvW");
+        b_ck("K") -=
+            1.00 * V_.block("aAaC")("uWyM") * T2_.block("aCaA")("vMxZ") * dlamb3_aab("KxyZuvW");
+        b_ck("K") +=
+            0.50 * V_.block("AACA")("VWMZ") * T2_.block("aCaA")("uMxY") * dlamb3_abb("KxYZuVW");
+        b_ck("K") +=
+            0.50 * V_.block("aAaC")("uVxM") * T2_.block("CAAA")("MWYZ") * dlamb3_abb("KxYZuVW");
+        b_ck("K") -=
+            1.00 * V_.block("aAcA")("uVmZ") * T2_.block("cAaA")("mWxY") * dlamb3_abb("KxYZuVW");
+        b_ck("K") +=
+            0.25 * V_.block("vaaa")("ewxy") * T2_.block("aava")("uvez") * dlamb3_aaa("Kxyzuvw");
+        b_ck("K") +=
+            0.25 * V_.block("VAAA")("EWXY") * T2_.block("AAVA")("UVEZ") * dlamb3_bbb("KXYZUVW");
+        b_ck("K") -=
+            0.50 * V_.block("vAaA")("eWxZ") * T2_.block("aava")("uvey") * dlamb3_aab("KxyZuvW");
+        b_ck("K") +=
+            0.50 * V_.block("avaa")("vexy") * T2_.block("aAvA")("uWeZ") * dlamb3_aab("KxyZuvW");
+        b_ck("K") +=
+            1.00 * V_.block("aVaA")("vExZ") * T2_.block("aAaV")("uWyE") * dlamb3_aab("KxyZuvW");
+        b_ck("K") -=
+            0.50 * V_.block("aVaA")("uExY") * T2_.block("AAVA")("VWEZ") * dlamb3_abb("KxYZuVW");
+        b_ck("K") +=
+            0.50 * V_.block("AVAA")("WEYZ") * T2_.block("aAaV")("uVxE") * dlamb3_abb("KxYZuVW");
+        b_ck("K") +=
+            1.00 * V_.block("vAaA")("eWxY") * T2_.block("aAvA")("uVeZ") * dlamb3_abb("KxYZuVW");
     }
 
     if (X4_TERM) {
-        Alpha += 0.25 * V_.block("aaca")("uvmz") * T2_.block("caaa")("mwxy") * rdms_.g3aaa()("xyzuvw");
-        Alpha += 0.25 * V_.block("AACA")("UVMZ") * T2_.block("CAAA")("MWXY") * rdms_.g3bbb()("XYZUVW");
-        Alpha -= 0.50 * V_.block("aaca")("uvmy") * T2_.block("cAaA")("mWxZ") * rdms_.g3aab()("xyZuvW"); 
-        Alpha -= 0.50 * V_.block("aAcA")("uWmZ") * T2_.block("caaa")("mvxy") * rdms_.g3aab()("xyZuvW"); 
-        Alpha += 1.00 * V_.block("aAaC")("uWyM") * T2_.block("aCaA")("vMxZ") * rdms_.g3aab()("xyZuvW"); 
-        Alpha -= 0.50 * V_.block("AACA")("VWMZ") * T2_.block("aCaA")("uMxY") * rdms_.g3abb()("xYZuVW");
-        Alpha -= 0.50 * V_.block("aAaC")("uVxM") * T2_.block("CAAA")("MWYZ") * rdms_.g3abb()("xYZuVW");
-        Alpha += 1.00 * V_.block("aAcA")("uVmZ") * T2_.block("cAaA")("mWxY") * rdms_.g3abb()("xYZuVW");
+        Alpha +=
+            0.25 * V_.block("aaca")("uvmz") * T2_.block("caaa")("mwxy") * rdms_.g3aaa()("xyzuvw");
+        Alpha +=
+            0.25 * V_.block("AACA")("UVMZ") * T2_.block("CAAA")("MWXY") * rdms_.g3bbb()("XYZUVW");
+        Alpha -=
+            0.50 * V_.block("aaca")("uvmy") * T2_.block("cAaA")("mWxZ") * rdms_.g3aab()("xyZuvW");
+        Alpha -=
+            0.50 * V_.block("aAcA")("uWmZ") * T2_.block("caaa")("mvxy") * rdms_.g3aab()("xyZuvW");
+        Alpha +=
+            1.00 * V_.block("aAaC")("uWyM") * T2_.block("aCaA")("vMxZ") * rdms_.g3aab()("xyZuvW");
+        Alpha -=
+            0.50 * V_.block("AACA")("VWMZ") * T2_.block("aCaA")("uMxY") * rdms_.g3abb()("xYZuVW");
+        Alpha -=
+            0.50 * V_.block("aAaC")("uVxM") * T2_.block("CAAA")("MWYZ") * rdms_.g3abb()("xYZuVW");
+        Alpha +=
+            1.00 * V_.block("aAcA")("uVmZ") * T2_.block("cAaA")("mWxY") * rdms_.g3abb()("xYZuVW");
 
         Alpha -= 1.0 * V_["uvmz"] * T2_["mwxy"] * Gamma1_["uz"] * Gamma2_["xyvw"];
         Alpha -= 2.0 * V_["uvmz"] * T2_["mWxY"] * Gamma1_["uz"] * Gamma2_["xYvW"];
         Alpha += 1.0 * V_["uVzM"] * T2_["MWXY"] * Gamma1_["uz"] * Gamma2_["XYVW"];
         Alpha += 2.0 * V_["uVzM"] * T2_["wMxY"] * Gamma1_["uz"] * Gamma2_["xYwV"];
         Alpha -= 1.0 * V_["UVMZ"] * T2_["MWXY"] * Gamma1_["UZ"] * Gamma2_["XYVW"];
-        Alpha -= 2.0 * V_["UVMZ"] * T2_["wMxY"] * Gamma1_["UZ"] * Gamma2_["xYwV"];  
+        Alpha -= 2.0 * V_["UVMZ"] * T2_["wMxY"] * Gamma1_["UZ"] * Gamma2_["xYwV"];
         Alpha += 1.0 * V_["vUmZ"] * T2_["mwxy"] * Gamma1_["UZ"] * Gamma2_["xyvw"];
         Alpha += 2.0 * V_["vUmZ"] * T2_["mWxY"] * Gamma1_["UZ"] * Gamma2_["xYvW"];
 
@@ -2991,21 +3098,29 @@ void DSRG_MRPT2::solve_z() {
         Alpha += 3.0 * V_["UVMZ"] * T2_["MWXY"] * Gamma1_["WZ"] * Gamma1_["XU"] * Gamma1_["YV"];
         Alpha += 6.0 * V_["uVzM"] * T2_["wMxY"] * Gamma1_["wz"] * Gamma1_["xu"] * Gamma1_["YV"];
 
-        Alpha -= 0.25 * V_.block("vaaa")("ewxy") * T2_.block("aava")("uvez") * rdms_.g3aaa()("xyzuvw");
-        Alpha -= 0.25 * V_.block("VAAA")("EWXY") * T2_.block("AAVA")("UVEZ") * rdms_.g3bbb()("XYZUVW");
-        Alpha += 0.50 * V_.block("vAaA")("eWxZ") * T2_.block("aava")("uvey") * rdms_.g3aab()("xyZuvW");
-        Alpha -= 0.50 * V_.block("avaa")("vexy") * T2_.block("aAvA")("uWeZ") * rdms_.g3aab()("xyZuvW");
-        Alpha -= 1.00 * V_.block("aVaA")("vExZ") * T2_.block("aAaV")("uWyE") * rdms_.g3aab()("xyZuvW");
-        Alpha += 0.50 * V_.block("aVaA")("uExY") * T2_.block("AAVA")("VWEZ") * rdms_.g3abb()("xYZuVW");
-        Alpha -= 0.50 * V_.block("AVAA")("WEYZ") * T2_.block("aAaV")("uVxE") * rdms_.g3abb()("xYZuVW");
-        Alpha -= 1.00 * V_.block("vAaA")("eWxY") * T2_.block("aAvA")("uVeZ") * rdms_.g3abb()("xYZuVW");
+        Alpha -=
+            0.25 * V_.block("vaaa")("ewxy") * T2_.block("aava")("uvez") * rdms_.g3aaa()("xyzuvw");
+        Alpha -=
+            0.25 * V_.block("VAAA")("EWXY") * T2_.block("AAVA")("UVEZ") * rdms_.g3bbb()("XYZUVW");
+        Alpha +=
+            0.50 * V_.block("vAaA")("eWxZ") * T2_.block("aava")("uvey") * rdms_.g3aab()("xyZuvW");
+        Alpha -=
+            0.50 * V_.block("avaa")("vexy") * T2_.block("aAvA")("uWeZ") * rdms_.g3aab()("xyZuvW");
+        Alpha -=
+            1.00 * V_.block("aVaA")("vExZ") * T2_.block("aAaV")("uWyE") * rdms_.g3aab()("xyZuvW");
+        Alpha +=
+            0.50 * V_.block("aVaA")("uExY") * T2_.block("AAVA")("VWEZ") * rdms_.g3abb()("xYZuVW");
+        Alpha -=
+            0.50 * V_.block("AVAA")("WEYZ") * T2_.block("aAaV")("uVxE") * rdms_.g3abb()("xYZuVW");
+        Alpha -=
+            1.00 * V_.block("vAaA")("eWxY") * T2_.block("aAvA")("uVeZ") * rdms_.g3abb()("xYZuVW");
 
         Alpha += 1.0 * V_["ezuv"] * T2_["xyew"] * Gamma1_["uz"] * Gamma2_["xyvw"];
         Alpha += 2.0 * V_["ezuv"] * T2_["xYeW"] * Gamma1_["uz"] * Gamma2_["xYvW"];
         Alpha -= 1.0 * V_["zEuV"] * T2_["XYEW"] * Gamma1_["uz"] * Gamma2_["XYVW"];
         Alpha -= 2.0 * V_["zEuV"] * T2_["xYwE"] * Gamma1_["uz"] * Gamma2_["xYwV"];
         Alpha += 1.0 * V_["EZUV"] * T2_["XYEW"] * Gamma1_["UZ"] * Gamma2_["XYVW"];
-        Alpha += 2.0 * V_["EZUV"] * T2_["xYwE"] * Gamma1_["UZ"] * Gamma2_["xYwV"];  
+        Alpha += 2.0 * V_["EZUV"] * T2_["xYwE"] * Gamma1_["UZ"] * Gamma2_["xYwV"];
         Alpha -= 1.0 * V_["eZvU"] * T2_["xyew"] * Gamma1_["UZ"] * Gamma2_["xyvw"];
         Alpha -= 2.0 * V_["eZvU"] * T2_["xYeW"] * Gamma1_["UZ"] * Gamma2_["xYvW"];
 
@@ -3066,10 +3181,10 @@ void DSRG_MRPT2::solve_z() {
 
     b_ck("K") += 2 * Alpha * ci("K");
 
-    b_ck("K") -= 2 * temp3.block("aa")("xy") * V.block("aaaa")("xvyu") * cc1a_n("Kuv"); 
-    b_ck("K") -= 2 * temp3.block("aa")("xy") * V.block("aAaA")("xVyU") * cc1b_n("KUV"); 
-    b_ck("K") -= 2 * temp3.block("AA")("XY") * V.block("AAAA")("XVYU") * cc1b_n("KUV"); 
-    b_ck("K") -= 2 * temp3.block("AA")("XY") * V.block("aAaA")("vXuY") * cc1a_n("Kuv"); 
+    b_ck("K") -= 2 * temp3.block("aa")("xy") * V.block("aaaa")("xvyu") * cc1a_n("Kuv");
+    b_ck("K") -= 2 * temp3.block("aa")("xy") * V.block("aAaA")("xVyU") * cc1b_n("KUV");
+    b_ck("K") -= 2 * temp3.block("AA")("XY") * V.block("AAAA")("XVYU") * cc1b_n("KUV");
+    b_ck("K") -= 2 * temp3.block("AA")("XY") * V.block("aAaA")("vXuY") * cc1a_n("Kuv");
 
     temp["uv"] += 2 * Z["mn"] * V["mvnu"];
     temp["uv"] += 2 * Z["MN"] * V["vMuN"];
@@ -3080,25 +3195,33 @@ void DSRG_MRPT2::solve_z() {
     temp["UV"] += 2 * Z["EF"] * V["EVFU"];
     temp["UV"] += 2 * Z["ef"] * V["eVfU"];
 
-    b_ck("K") -= temp.block("aa")("uv") * cc1a_n("Kuv"); 
-    b_ck("K") -= temp.block("AA")("UV") * cc1b_n("KUV"); 
+    b_ck("K") -= temp.block("aa")("uv") * cc1a_n("Kuv");
+    b_ck("K") -= temp.block("AA")("UV") * cc1b_n("KUV");
 
     for (const std::string& block : {"ci"}) {
         (b_ck).iterate([&](const std::vector<size_t>& i, double& value) {
             int index = preidx[block] + i[0];
             b.at(index) = value;
         });
-    } 
+    }
 
-    auto ck_vc_a = ambit::Tensor::build(ambit::CoreTensor, "ci equations z{vc} alpha part", {ndets, nvirt, ncore});
-    auto ck_ca_a = ambit::Tensor::build(ambit::CoreTensor, "ci equations z{ca} alpha part", {ndets, ncore, na});
-    auto ck_va_a = ambit::Tensor::build(ambit::CoreTensor, "ci equations z{va} alpha part", {ndets, nvirt, na});
-    auto ck_aa_a = ambit::Tensor::build(ambit::CoreTensor, "ci equations z{aa} alpha part", {ndets, na, na});
+    auto ck_vc_a = ambit::Tensor::build(ambit::CoreTensor, "ci equations z{vc} alpha part",
+                                        {ndets, nvirt, ncore});
+    auto ck_ca_a = ambit::Tensor::build(ambit::CoreTensor, "ci equations z{ca} alpha part",
+                                        {ndets, ncore, na});
+    auto ck_va_a = ambit::Tensor::build(ambit::CoreTensor, "ci equations z{va} alpha part",
+                                        {ndets, nvirt, na});
+    auto ck_aa_a =
+        ambit::Tensor::build(ambit::CoreTensor, "ci equations z{aa} alpha part", {ndets, na, na});
 
-    auto ck_vc_b = ambit::Tensor::build(ambit::CoreTensor, "ci equations z{vc} beta part", {ndets, nvirt, ncore});
-    auto ck_ca_b = ambit::Tensor::build(ambit::CoreTensor, "ci equations z{ca} beta part", {ndets, ncore, na});
-    auto ck_va_b = ambit::Tensor::build(ambit::CoreTensor, "ci equations z{va} beta part", {ndets, nvirt, na});
-    auto ck_aa_b = ambit::Tensor::build(ambit::CoreTensor, "ci equations z{aa} beta part", {ndets, na, na});
+    auto ck_vc_b = ambit::Tensor::build(ambit::CoreTensor, "ci equations z{vc} beta part",
+                                        {ndets, nvirt, ncore});
+    auto ck_ca_b =
+        ambit::Tensor::build(ambit::CoreTensor, "ci equations z{ca} beta part", {ndets, ncore, na});
+    auto ck_va_b =
+        ambit::Tensor::build(ambit::CoreTensor, "ci equations z{va} beta part", {ndets, nvirt, na});
+    auto ck_aa_b =
+        ambit::Tensor::build(ambit::CoreTensor, "ci equations z{aa} beta part", {ndets, na, na});
 
     // virtual-core
     ck_vc_a("Kem") += 2 * V.block("vaca")("eumv") * cc1a_n("Kuv");
@@ -3122,7 +3245,7 @@ void DSRG_MRPT2::solve_z() {
     ck_ca_a("Knu") += 2 * V.block("aAcA")("uYnX") * cc1b_n("KXY");
     ck_ca_a("Knu") -= 2 * H.block("ac")("vn") * cc1a_n("Kuv");
     ck_ca_a("Knu") -= 2 * V_N_Alpha.block("ac")("vn") * cc1a_n("Kuv");
-    ck_ca_a("Knu") -= 2 * V_N_Beta.block("ac")("vn")  * cc1a_n("Kuv");
+    ck_ca_a("Knu") -= 2 * V_N_Beta.block("ac")("vn") * cc1a_n("Kuv");
     ck_ca_a("Knu") -= V.block("aaca")("xynv") * cc2aa_n("Kuvxy");
     ck_ca_a("Knu") -= V.block("aAcA")("xYnV") * cc2ab_n("KuVxY");
     ck_ca_a("Knu") -= V.block("aAcA")("xYnV") * cc2ab_n("KuVxY");
@@ -3130,7 +3253,7 @@ void DSRG_MRPT2::solve_z() {
     ck_ca_a("Knu") += 2 * V.block("aAcA")("uYnX") * cc1b_r("KXY");
     ck_ca_a("Knu") -= 2 * H.block("ac")("vn") * cc1a_r("Kuv");
     ck_ca_a("Knu") -= 2 * V_N_Alpha.block("ac")("vn") * cc1a_r("Kuv");
-    ck_ca_a("Knu") -= 2 * V_N_Beta.block("ac")("vn")  * cc1a_r("Kuv");
+    ck_ca_a("Knu") -= 2 * V_N_Beta.block("ac")("vn") * cc1a_r("Kuv");
     ck_ca_a("Knu") -= V.block("aaca")("xynv") * cc2aa_r("Kuvxy");
     ck_ca_a("Knu") -= V.block("aAcA")("xYnV") * cc2ab_r("KuVxY");
     ck_ca_a("Knu") -= V.block("aAcA")("xYnV") * cc2ab_r("KuVxY");
@@ -3140,56 +3263,56 @@ void DSRG_MRPT2::solve_z() {
     ck_ca_b("KNU") += 2 * V.block("aAaC")("yUxN") * cc1a_n("Kxy");
     ck_ca_b("KNU") -= 2 * H.block("AC")("VN") * cc1b_n("KUV");
     ck_ca_b("KNU") -= 2 * V_all_Beta.block("AC")("VN") * cc1b_n("KUV");
-    ck_ca_b("KNU") -= 2 * V_R_Beta.block("AC")("VN")   * cc1b_n("KUV");
+    ck_ca_b("KNU") -= 2 * V_R_Beta.block("AC")("VN") * cc1b_n("KUV");
     ck_ca_b("KNU") -= V.block("AACA")("XYNV") * cc2bb_n("KUVXY");
     ck_ca_b("KNU") -= 2 * V.block("aAaC")("xYvN") * cc2ab_n("KvUxY");
     ck_ca_b("KNU") += 2 * V.block("AACA")("UYNX") * cc1b_r("KXY");
     ck_ca_b("KNU") += 2 * V.block("aAaC")("yUxN") * cc1a_r("Kxy");
     ck_ca_b("KNU") -= 2 * H.block("AC")("VN") * cc1b_r("KUV");
     ck_ca_b("KNU") -= 2 * V_all_Beta.block("AC")("VN") * cc1b_r("KUV");
-    ck_ca_b("KNU") -= 2 * V_R_Beta.block("AC")("VN")   * cc1b_r("KUV");
+    ck_ca_b("KNU") -= 2 * V_R_Beta.block("AC")("VN") * cc1b_r("KUV");
     ck_ca_b("KNU") -= V.block("AACA")("XYNV") * cc2bb_r("KUVXY");
     ck_ca_b("KNU") -= 2 * V.block("aAaC")("xYvN") * cc2ab_r("KvUxY");
 
     // contribution from Alpha
     ck_ca_a("Knu") += -4 * ci("K") * V.block("aaca")("uynx") * Gamma1_.block("aa")("xy");
     ck_ca_a("Knu") += -4 * ci("K") * V.block("aAcA")("uYnX") * Gamma1_.block("AA")("XY");
-    ck_ca_a("Knu") +=  4 * ci("K") * H.block("ac")("vn") * Gamma1_.block("aa")("uv");
-    ck_ca_a("Knu") +=  4 * ci("K") * V_N_Alpha.block("ac")("vn") * Gamma1_.block("aa")("uv");
-    ck_ca_a("Knu") +=  4 * ci("K") * V_N_Beta.block("ac")("vn") * Gamma1_.block("aa")("uv");
-    ck_ca_a("Knu") +=  2 * ci("K") * V.block("aaca")("xynv") * Gamma2_.block("aaaa")("uvxy");
-    ck_ca_a("Knu") +=  4 * ci("K") * V.block("aAcA")("xYnV") * Gamma2_.block("aAaA")("uVxY");
+    ck_ca_a("Knu") += 4 * ci("K") * H.block("ac")("vn") * Gamma1_.block("aa")("uv");
+    ck_ca_a("Knu") += 4 * ci("K") * V_N_Alpha.block("ac")("vn") * Gamma1_.block("aa")("uv");
+    ck_ca_a("Knu") += 4 * ci("K") * V_N_Beta.block("ac")("vn") * Gamma1_.block("aa")("uv");
+    ck_ca_a("Knu") += 2 * ci("K") * V.block("aaca")("xynv") * Gamma2_.block("aaaa")("uvxy");
+    ck_ca_a("Knu") += 4 * ci("K") * V.block("aAcA")("xYnV") * Gamma2_.block("aAaA")("uVxY");
 
     // NOTICE beta
     ck_ca_b("KNU") += -4 * ci("K") * V.block("AACA")("UYNX") * Gamma1_.block("AA")("XY");
     ck_ca_b("KNU") += -4 * ci("K") * V.block("aAaC")("yUxN") * Gamma1_.block("aa")("xy");
-    ck_ca_b("KNU") +=  4 * ci("K") * H.block("AC")("VN") * Gamma1_.block("AA")("UV");
-    ck_ca_b("KNU") +=  4 * ci("K") * V_all_Beta.block("AC")("VN") * Gamma1_.block("AA")("UV");
-    ck_ca_b("KNU") +=  4 * ci("K") * V_R_Beta.block("AC")("VN") * Gamma1_.block("AA")("UV");
-    ck_ca_b("KNU") +=  2 * ci("K") * V.block("AACA")("XYNV") * Gamma2_.block("AAAA")("UVXY");
-    ck_ca_b("KNU") +=  4 * ci("K") * V.block("aAaC")("xYvN") * Gamma2_.block("aAaA")("vUxY");
+    ck_ca_b("KNU") += 4 * ci("K") * H.block("AC")("VN") * Gamma1_.block("AA")("UV");
+    ck_ca_b("KNU") += 4 * ci("K") * V_all_Beta.block("AC")("VN") * Gamma1_.block("AA")("UV");
+    ck_ca_b("KNU") += 4 * ci("K") * V_R_Beta.block("AC")("VN") * Gamma1_.block("AA")("UV");
+    ck_ca_b("KNU") += 2 * ci("K") * V.block("AACA")("XYNV") * Gamma2_.block("AAAA")("UVXY");
+    ck_ca_b("KNU") += 4 * ci("K") * V.block("aAaC")("xYvN") * Gamma2_.block("aAaA")("vUxY");
 
     // virtual-active
     ck_va_a("Keu") += 2 * H.block("av")("ve") * cc1a_n("Kuv");
     ck_va_a("Keu") += 2 * V_N_Alpha.block("av")("ve") * cc1a_n("Kuv");
-    ck_va_a("Keu") += 2 * V_N_Beta.block("av")("ve")  * cc1a_n("Kuv");
+    ck_va_a("Keu") += 2 * V_N_Beta.block("av")("ve") * cc1a_n("Kuv");
     ck_va_a("Keu") += V.block("vaaa")("evxy") * cc2aa_n("Kuvxy");
     ck_va_a("Keu") += 2 * V.block("vAaA")("eVxY") * cc2ab_n("KuVxY");
     ck_va_a("Keu") += 2 * H.block("av")("ve") * cc1a_r("Kuv");
     ck_va_a("Keu") += 2 * V_N_Alpha.block("av")("ve") * cc1a_r("Kuv");
-    ck_va_a("Keu") += 2 * V_N_Beta.block("av")("ve")  * cc1a_r("Kuv");
+    ck_va_a("Keu") += 2 * V_N_Beta.block("av")("ve") * cc1a_r("Kuv");
     ck_va_a("Keu") += V.block("vaaa")("evxy") * cc2aa_r("Kuvxy");
     ck_va_a("Keu") += 2 * V.block("vAaA")("eVxY") * cc2ab_r("KuVxY");
 
     // NOTICE beta
     ck_va_b("KEU") += 2 * H.block("AV")("VE") * cc1b_n("KUV");
     ck_va_b("KEU") += 2 * V_all_Beta.block("AV")("VE") * cc1b_n("KUV");
-    ck_va_b("KEU") += 2 * V_R_Beta.block("AV")("VE")   * cc1b_n("KUV");
+    ck_va_b("KEU") += 2 * V_R_Beta.block("AV")("VE") * cc1b_n("KUV");
     ck_va_b("KEU") += V.block("VAAA")("EVXY") * cc2bb_n("KUVXY");
     ck_va_b("KEU") += 2 * V.block("aVaA")("vExY") * cc2ab_n("KvUxY");
     ck_va_b("KEU") += 2 * H.block("AV")("VE") * cc1b_r("KUV");
     ck_va_b("KEU") += 2 * V_all_Beta.block("AV")("VE") * cc1b_r("KUV");
-    ck_va_b("KEU") += 2 * V_R_Beta.block("AV")("VE")   * cc1b_r("KUV");
+    ck_va_b("KEU") += 2 * V_R_Beta.block("AV")("VE") * cc1b_r("KUV");
     ck_va_b("KEU") += V.block("VAAA")("EVXY") * cc2bb_r("KUVXY");
     ck_va_b("KEU") += 2 * V.block("aVaA")("vExY") * cc2ab_r("KvUxY");
 
@@ -3231,14 +3354,17 @@ void DSRG_MRPT2::solve_z() {
     for (const std::string& row : {"ci"}) {
         int pre1 = preidx[row];
 
-        for (const std::string& col : {"vc","ca","va","aa"}) {
+        for (const std::string& col : {"vc", "ca", "va", "aa"}) {
             int idx2 = block_dim[col];
             int pre2 = preidx[col];
             auto temp_ci = ck_vc_a;
 
-            if (col == "ca") temp_ci = ck_ca_a;
-            else if (col == "va") temp_ci = ck_va_a;
-            else if (col == "aa") temp_ci = ck_aa_a;
+            if (col == "ca")
+                temp_ci = ck_ca_a;
+            else if (col == "va")
+                temp_ci = ck_va_a;
+            else if (col == "aa")
+                temp_ci = ck_aa_a;
 
             if (col != "aa") {
                 (temp_ci).iterate([&](const std::vector<size_t>& i, double& value) {
@@ -3249,28 +3375,30 @@ void DSRG_MRPT2::solve_z() {
 
             else if (col == "aa") {
                 (temp_ci).iterate([&](const std::vector<size_t>& i, double& value) {
-                    int i1 = i[1] > i[2]? i[1]: i[2],
-                        i2 = i[1] > i[2]? i[2]: i[1];
-                    if (i1 != i2 ) {
+                    int i1 = i[1] > i[2] ? i[1] : i[2], i2 = i[1] > i[2] ? i[2] : i[1];
+                    if (i1 != i2) {
                         int index = (pre1 + i[0]) + dim * (pre2 + i1 * (i1 - 1) / 2 + i2);
-                        A.at(index) += value;    
+                        A.at(index) += value;
                     }
-                });   
+                });
             }
         }
-    } 
+    }
 
     for (const std::string& row : {"ci"}) {
         int pre1 = preidx[row];
 
-        for (const std::string& col : {"VC","CA","VA","AA"}) {
+        for (const std::string& col : {"VC", "CA", "VA", "AA"}) {
             int idx2 = block_dim[col];
             int pre2 = preidx[col];
             auto temp_ci = ck_vc_b;
 
-            if (col == "CA") temp_ci = ck_ca_b;
-            else if (col == "VA") temp_ci = ck_va_b;
-            else if (col == "AA") temp_ci = ck_aa_b;
+            if (col == "CA")
+                temp_ci = ck_ca_b;
+            else if (col == "VA")
+                temp_ci = ck_va_b;
+            else if (col == "AA")
+                temp_ci = ck_aa_b;
 
             if (col != "AA") {
                 (temp_ci).iterate([&](const std::vector<size_t>& i, double& value) {
@@ -3281,24 +3409,22 @@ void DSRG_MRPT2::solve_z() {
 
             else if (col == "AA") {
                 (temp_ci).iterate([&](const std::vector<size_t>& i, double& value) {
-                    int i1 = i[1] > i[2]? i[1]: i[2],
-                        i2 = i[1] > i[2]? i[2]: i[1];
-                    if (i1 != i2 ) {
+                    int i1 = i[1] > i[2] ? i[1] : i[2], i2 = i[1] > i[2] ? i[2] : i[1];
+                    if (i1 != i2) {
                         int index = (pre1 + i[0]) + dim * (pre2 + i1 * (i1 - 1) / 2 + i2);
-                        A.at(index) += value;    
+                        A.at(index) += value;
                     }
-                });   
+                });
             }
         }
-    } 
+    }
 
-    auto ck_ci = ambit::Tensor::build(ambit::CoreTensor, "ci equations ci multiplier part", {ndets, ndets});
+    auto ck_ci =
+        ambit::Tensor::build(ambit::CoreTensor, "ci equations ci multiplier part", {ndets, ndets});
     auto I_ci = ambit::Tensor::build(ambit::CoreTensor, "identity", {ndets, ndets});
 
-    I_ci.iterate([&](const std::vector<size_t>& i, double& value) {
-        value = (i[0] == i[1]) ? 1.0 : 0.0;
-    });
-    
+    I_ci.iterate(
+        [&](const std::vector<size_t>& i, double& value) { value = (i[0] == i[1]) ? 1.0 : 0.0; });
 
     ck_ci("KI") += H.block("cc")("mn") * I.block("cc")("mn") * I_ci("KI");
     ck_ci("KI") += H.block("CC")("MN") * I.block("CC")("MN") * I_ci("KI");
@@ -3307,11 +3433,11 @@ void DSRG_MRPT2::solve_z() {
 
     ck_ci("KI") += 0.5 * V_N_Alpha["m,m1"] * I["m,m1"] * I_ci("KI");
     ck_ci("KI") += 0.5 * V_all_Beta["M,M1"] * I["M,M1"] * I_ci("KI");
-    ck_ci("KI") +=       V_N_Beta["m,m1"] * I["m,m1"] * I_ci("KI");
+    ck_ci("KI") += V_N_Beta["m,m1"] * I["m,m1"] * I_ci("KI");
 
     ck_ci("KI") += cc.cc1a()("KIuv") * V_N_Alpha.block("aa")("uv");
     ck_ci("KI") += cc.cc1b()("KIUV") * V_all_Beta.block("AA")("UV");
-    
+
     ck_ci("KI") += cc.cc1a()("KIuv") * V_N_Beta.block("aa")("uv");
     ck_ci("KI") += cc.cc1b()("KIUV") * V_R_Beta.block("AA")("UV");
 
@@ -3322,7 +3448,7 @@ void DSRG_MRPT2::solve_z() {
 
     ck_ci("KI") -= (Eref_ - Enuc_ - Efrzc_) * I_ci("KI");
 
-    // NOTICE: QR decomposition with column pivoting 
+    // NOTICE: QR decomposition with column pivoting
     int dim2 = ndets;
     int n2 = dim2, lda2 = dim2;
     int lwork = 3 * n2 + 3;
@@ -3331,8 +3457,6 @@ void DSRG_MRPT2::solve_z() {
     std::vector<double> work(lwork);
     std::vector<double> A2(dim2 * dim2);
 
-    
-
     for (const std::string& row : {"ci"}) {
         for (const std::string& col : {"ci"}) {
             (ck_ci).iterate([&](const std::vector<size_t>& i, double& value) {
@@ -3340,7 +3464,7 @@ void DSRG_MRPT2::solve_z() {
                 A2.at(index) = value;
             });
         }
-    } 
+    }
 
     C_DGEQP3(n2, n2, &A2[0], lda2, &jpvt[0], &tau[0], &work[0], lwork);
 
@@ -3364,31 +3488,28 @@ void DSRG_MRPT2::solve_z() {
                 A.at(index) += value;
             });
 
-            for(int j = 0; j < pre2; j++) 
+            for (int j = 0; j < pre2; j++)
                 A.at((pre1 + ROW2DEL) + dim * j) = 0.0;
             b.at(pre1 + ROW2DEL) = 0.0;
         }
-    } 
+    }
 
     outfile->Printf("Done");
     outfile->Printf("\n    Solving Off-diagonal Entries of Z ............... ");
     int info;
 
-    C_DGESV( n, nrhs, &A[0], lda, &ipiv[0], &b[0], ldb);
+    C_DGESV(n, nrhs, &A[0], lda, &ipiv[0], &b[0], ldb);
 
-    for (const std::string& block : {"vc","ca","va","aa"}) {
-        int pre = preidx[block],
-            idx = block_dim[block];
+    for (const std::string& block : {"vc", "ca", "va", "aa"}) {
+        int pre = preidx[block], idx = block_dim[block];
         if (block != "aa") {
             (Z.block(block)).iterate([&](const std::vector<size_t>& i, double& value) {
                 int index = pre + i[0] * idx + i[1];
                 value = b.at(index);
             });
-        }
-        else {
+        } else {
             (Z.block(block)).iterate([&](const std::vector<size_t>& i, double& value) {
-                int i0 = i[0] > i[1]? i[0]: i[1],
-                    i1 = i[0] > i[1]? i[1]: i[0];
+                int i0 = i[0] > i[1] ? i[0] : i[1], i1 = i[0] > i[1] ? i[1] : i[0];
                 if (i0 != i1) {
                     int index = pre + i0 * (i0 - 1) / 2 + i1;
                     value = b.at(index);
@@ -3403,7 +3524,7 @@ void DSRG_MRPT2::solve_z() {
             int index = pre + i[0];
             value = b.at(index);
         });
-    } 
+    }
 
     Z["me"] = Z["em"];
     Z["wm"] = Z["mw"];
@@ -3419,18 +3540,18 @@ void DSRG_MRPT2::solve_z() {
         (Z.block(block)).iterate([&](const std::vector<size_t>& i, double& value) {
             value = Z.block("ca").data()[i[0] * na + i[1]];
         });
-    } 
+    }
     for (const std::string& block : {"VA"}) {
         (Z.block(block)).iterate([&](const std::vector<size_t>& i, double& value) {
             value = Z.block("va").data()[i[0] * na + i[1]];
         });
-    } 
+    }
 
     for (const std::string& block : {"AA"}) {
         (Z.block(block)).iterate([&](const std::vector<size_t>& i, double& value) {
             value = Z.block("aa").data()[i[0] * na + i[1]];
         });
-    } 
+    }
 
     Z["ME"] = Z["EM"];
     Z["WM"] = Z["MW"];
@@ -3441,8 +3562,9 @@ void DSRG_MRPT2::solve_z() {
 
 void DSRG_MRPT2::tpdm_backtransform() {
     // Backtransform the TPDM
-    // NOTICE: This function also appears in the CASSCF gradient code thus can be refined in the future!!
-    
+    // NOTICE: This function also appears in the CASSCF gradient code thus can be refined in the
+    // future!!
+
     std::vector<std::shared_ptr<psi::MOSpace>> spaces;
     spaces.push_back(psi::MOSpace::all);
     std::shared_ptr<TPDMBackTransform> transform =
@@ -3464,8 +3586,8 @@ void DSRG_MRPT2::write_lagrangian() {
 
     SharedMatrix L(new Matrix("Lagrangian", nirrep, irrep_vec, irrep_vec));
 
-    for (const std::string& block : {"cc", "CC", "aa", "AA", "ca", "ac", "CA", "AC",
-                    "vv", "VV", "av", "cv", "va", "vc", "AV", "CV", "VA", "VC"}) {
+    for (const std::string& block : {"cc", "CC", "aa", "AA", "ca", "ac", "CA", "AC", "vv", "VV",
+                                     "av", "cv", "va", "vc", "AV", "CV", "VA", "VC"}) {
         std::vector<std::vector<std::pair<unsigned long, unsigned long>,
                                 std::allocator<std::pair<unsigned long, unsigned long>>>>
             spin_pair;
@@ -3475,8 +3597,7 @@ void DSRG_MRPT2::write_lagrangian() {
                 spin_pair.push_back(core_mos_relative);
             } else if (spin == 'a') {
                 spin_pair.push_back(actv_mos_relative);
-            }
-            else if (spin == 'v') {
+            } else if (spin == 'v') {
                 spin_pair.push_back(virt_mos_relative);
             }
         }
@@ -3487,11 +3608,11 @@ void DSRG_MRPT2::write_lagrangian() {
                        spin_pair[1][i[1]].second, value);
             }
         });
-
     }
 
     L->back_transform(ints_->Ca());
-    ints_->wfn()->set_lagrangian(SharedMatrix(new Matrix("Lagrangian", nirrep, irrep_vec, irrep_vec)));
+    ints_->wfn()->set_lagrangian(
+        SharedMatrix(new Matrix("Lagrangian", nirrep, irrep_vec, irrep_vec)));
     ints_->wfn()->Lagrangian()->copy(L);
 
     outfile->Printf("Done");
@@ -3503,16 +3624,16 @@ void DSRG_MRPT2::write_lagrangian() {
  * We force "Da == Db". This function needs be changed if such constraint is revoked.
  */
 void DSRG_MRPT2::write_1rdm_spin_dependent() {
-    // NOTICE: write spin_dependent one-RDMs coefficients. 
+    // NOTICE: write spin_dependent one-RDMs coefficients.
     outfile->Printf("\n    Writing 1RDM Coefficients ....................... ");
     SharedMatrix D1(new Matrix("1rdm coefficients contribution", nirrep, irrep_vec, irrep_vec));
 
     (Z.block("vc")).iterate([&](const std::vector<size_t>& i, double& value) {
         if (virt_mos_relative[i[0]].first == core_mos_relative[i[1]].first) {
             D1->set(virt_mos_relative[i[0]].first, virt_mos_relative[i[0]].second,
-                core_mos_relative[i[1]].second, value);
+                    core_mos_relative[i[1]].second, value);
             D1->set(virt_mos_relative[i[0]].first, core_mos_relative[i[1]].second,
-                virt_mos_relative[i[0]].second, value);
+                    virt_mos_relative[i[0]].second, value);
         }
     });
 
@@ -3523,9 +3644,9 @@ void DSRG_MRPT2::write_1rdm_spin_dependent() {
     (temp.block("ca")).iterate([&](const std::vector<size_t>& i, double& value) {
         if (core_mos_relative[i[0]].first == actv_mos_relative[i[1]].first) {
             D1->set(core_mos_relative[i[0]].first, core_mos_relative[i[0]].second,
-                actv_mos_relative[i[1]].second, value);
+                    actv_mos_relative[i[1]].second, value);
             D1->set(core_mos_relative[i[0]].first, actv_mos_relative[i[1]].second,
-                core_mos_relative[i[0]].second, value);
+                    core_mos_relative[i[0]].second, value);
         }
     });
 
@@ -3535,30 +3656,30 @@ void DSRG_MRPT2::write_1rdm_spin_dependent() {
     (temp.block("va")).iterate([&](const std::vector<size_t>& i, double& value) {
         if (virt_mos_relative[i[0]].first == actv_mos_relative[i[1]].first) {
             D1->set(virt_mos_relative[i[0]].first, virt_mos_relative[i[0]].second,
-                actv_mos_relative[i[1]].second, value);
+                    actv_mos_relative[i[1]].second, value);
             D1->set(virt_mos_relative[i[0]].first, actv_mos_relative[i[1]].second,
-                virt_mos_relative[i[0]].second, value);
+                    virt_mos_relative[i[0]].second, value);
         }
     });
 
     (Z.block("cc")).iterate([&](const std::vector<size_t>& i, double& value) {
         if (core_mos_relative[i[0]].first == core_mos_relative[i[1]].first) {
             D1->set(core_mos_relative[i[0]].first, core_mos_relative[i[0]].second,
-                core_mos_relative[i[1]].second, value);
+                    core_mos_relative[i[1]].second, value);
         }
     });
 
     (Z.block("aa")).iterate([&](const std::vector<size_t>& i, double& value) {
         if (actv_mos_relative[i[0]].first == actv_mos_relative[i[1]].first) {
             D1->set(actv_mos_relative[i[0]].first, actv_mos_relative[i[0]].second,
-                actv_mos_relative[i[1]].second, value);
+                    actv_mos_relative[i[1]].second, value);
         }
     });
 
     (Z.block("vv")).iterate([&](const std::vector<size_t>& i, double& value) {
         if (virt_mos_relative[i[0]].first == virt_mos_relative[i[1]].first) {
             D1->set(virt_mos_relative[i[0]].first, virt_mos_relative[i[0]].second,
-                virt_mos_relative[i[1]].second, value);
+                    virt_mos_relative[i[1]].second, value);
         }
     });
 
@@ -3566,27 +3687,27 @@ void DSRG_MRPT2::write_1rdm_spin_dependent() {
     (Sigma3.block("ca")).iterate([&](const std::vector<size_t>& i, double& value) {
         if (core_mos_relative[i[0]].first == actv_mos_relative[i[1]].first) {
             D1->add(core_mos_relative[i[0]].first, core_mos_relative[i[0]].second,
-                actv_mos_relative[i[1]].second, 0.5 * value);
+                    actv_mos_relative[i[1]].second, 0.5 * value);
             D1->add(core_mos_relative[i[0]].first, actv_mos_relative[i[1]].second,
-                core_mos_relative[i[0]].second, 0.5 * value);
+                    core_mos_relative[i[0]].second, 0.5 * value);
         }
     });
 
     (Sigma3.block("cv")).iterate([&](const std::vector<size_t>& i, double& value) {
         if (core_mos_relative[i[0]].first == virt_mos_relative[i[1]].first) {
             D1->add(core_mos_relative[i[0]].first, core_mos_relative[i[0]].second,
-                virt_mos_relative[i[1]].second, 0.5 * value);
+                    virt_mos_relative[i[1]].second, 0.5 * value);
             D1->add(core_mos_relative[i[0]].first, virt_mos_relative[i[1]].second,
-                core_mos_relative[i[0]].second, 0.5 * value);
+                    core_mos_relative[i[0]].second, 0.5 * value);
         }
     });
 
     (Sigma3.block("av")).iterate([&](const std::vector<size_t>& i, double& value) {
         if (actv_mos_relative[i[0]].first == virt_mos_relative[i[1]].first) {
             D1->add(actv_mos_relative[i[0]].first, actv_mos_relative[i[0]].second,
-                virt_mos_relative[i[1]].second, 0.5 * value);
+                    virt_mos_relative[i[1]].second, 0.5 * value);
             D1->add(actv_mos_relative[i[0]].first, virt_mos_relative[i[1]].second,
-                actv_mos_relative[i[0]].second, 0.5 * value);
+                    actv_mos_relative[i[0]].second, 0.5 * value);
         }
     });
 
@@ -3594,27 +3715,27 @@ void DSRG_MRPT2::write_1rdm_spin_dependent() {
     (Xi3.block("ca")).iterate([&](const std::vector<size_t>& i, double& value) {
         if (core_mos_relative[i[0]].first == actv_mos_relative[i[1]].first) {
             D1->add(core_mos_relative[i[0]].first, core_mos_relative[i[0]].second,
-                actv_mos_relative[i[1]].second, 0.5 * value);
+                    actv_mos_relative[i[1]].second, 0.5 * value);
             D1->add(core_mos_relative[i[0]].first, actv_mos_relative[i[1]].second,
-                core_mos_relative[i[0]].second, 0.5 * value);
+                    core_mos_relative[i[0]].second, 0.5 * value);
         }
     });
 
     (Xi3.block("cv")).iterate([&](const std::vector<size_t>& i, double& value) {
         if (core_mos_relative[i[0]].first == virt_mos_relative[i[1]].first) {
             D1->add(core_mos_relative[i[0]].first, core_mos_relative[i[0]].second,
-                virt_mos_relative[i[1]].second, 0.5 * value);
+                    virt_mos_relative[i[1]].second, 0.5 * value);
             D1->add(core_mos_relative[i[0]].first, virt_mos_relative[i[1]].second,
-                core_mos_relative[i[0]].second, 0.5 * value);
+                    core_mos_relative[i[0]].second, 0.5 * value);
         }
     });
 
     (Xi3.block("av")).iterate([&](const std::vector<size_t>& i, double& value) {
         if (actv_mos_relative[i[0]].first == virt_mos_relative[i[1]].first) {
             D1->add(actv_mos_relative[i[0]].first, actv_mos_relative[i[0]].second,
-                virt_mos_relative[i[1]].second, 0.5 * value);
+                    virt_mos_relative[i[1]].second, 0.5 * value);
             D1->add(actv_mos_relative[i[0]].first, virt_mos_relative[i[1]].second,
-                actv_mos_relative[i[0]].second, 0.5 * value);
+                    actv_mos_relative[i[0]].second, 0.5 * value);
         }
     });
 
@@ -3623,7 +3744,6 @@ void DSRG_MRPT2::write_1rdm_spin_dependent() {
         D1->add(core_mos_relative[i].first, core_mos_relative[i].second,
                 core_mos_relative[i].second, 1.0);
     }
-
 
     (Gamma1_.block("aa")).iterate([&](const std::vector<size_t>& i, double& value) {
         if (actv_mos_relative[i[0]].first == actv_mos_relative[i[1]].first) {
@@ -3635,7 +3755,7 @@ void DSRG_MRPT2::write_1rdm_spin_dependent() {
     // CI contribution
     auto tp = ambit::Tensor::build(ambit::CoreTensor, "temporal tensor", {na, na});
 
-    tp("uv") = 0.5  * x_ci("I") * cc1a_n("Iuv");
+    tp("uv") = 0.5 * x_ci("I") * cc1a_n("Iuv");
     tp("uv") += 0.5 * x_ci("J") * cc1a_r("Juv");
 
     (tp).iterate([&](const std::vector<size_t>& i, double& value) {
@@ -3644,7 +3764,6 @@ void DSRG_MRPT2::write_1rdm_spin_dependent() {
                     actv_mos_relative[i[1]].second, value);
         }
     });
-
 
     D1->back_transform(ints_->Ca());
     ints_->wfn()->Da()->copy(D1);
@@ -3688,11 +3807,11 @@ void DSRG_MRPT2::write_2rdm_spin_dependent() {
             auto z_b = Z.block("VC").data()[idx] + temp.block("VC").data()[idx];
             for (size_t j = 0; j < size_c; ++j) {
                 auto m1 = core_all[j];
-                
+
                 d2aa.write_value(m, e, m1, m1, z_a, 0, "outfile", 0);
                 d2bb.write_value(m, e, m1, m1, z_b, 0, "outfile", 0);
                 d2aa.write_value(m, m1, m1, e, -z_a, 0, "outfile", 0);
-                d2bb.write_value(m, m1, m1, e, -z_b, 0, "outfile", 0); 
+                d2bb.write_value(m, m1, m1, e, -z_b, 0, "outfile", 0);
                 d2ab.write_value(m, e, m1, m1, 2.0 * (z_a + z_b), 0, "outfile", 0);
             }
         }
@@ -3718,7 +3837,7 @@ void DSRG_MRPT2::write_2rdm_spin_dependent() {
             auto z_a = temp.block("ac").data()[idx];
             auto z_b = temp.block("AC").data()[idx];
             for (size_t j = 0; j < size_c; ++j) {
-                auto m1 = core_all[j];              
+                auto m1 = core_all[j];
                 if (n != m1) {
                     d2aa.write_value(u, n, m1, m1, z_a, 0, "outfile", 0);
                     d2bb.write_value(u, n, m1, m1, z_b, 0, "outfile", 0);
@@ -3749,11 +3868,11 @@ void DSRG_MRPT2::write_2rdm_spin_dependent() {
             auto z_b = temp.block("VA").data()[idx];
             for (size_t j = 0, size_c = core_all.size(); j < size_c; ++j) {
                 auto m1 = core_all[j];
-                
+
                 d2aa.write_value(v, e, m1, m1, z_a, 0, "outfile", 0);
                 d2bb.write_value(v, e, m1, m1, z_b, 0, "outfile", 0);
                 d2aa.write_value(v, m1, m1, e, -z_a, 0, "outfile", 0);
-                d2bb.write_value(v, m1, m1, e, -z_b, 0, "outfile", 0);  
+                d2bb.write_value(v, m1, m1, e, -z_b, 0, "outfile", 0);
                 d2ab.write_value(v, e, m1, m1, 2.0 * (z_a + z_b), 0, "outfile", 0);
             }
         }
@@ -3777,17 +3896,18 @@ void DSRG_MRPT2::write_2rdm_spin_dependent() {
                 }
 
                 if (m != m1) {
-                    d2aa.write_value(n, m, m1, m1,  a1, 0, "outfile", 0);
-                    d2bb.write_value(n, m, m1, m1,  v2, 0, "outfile", 0);
+                    d2aa.write_value(n, m, m1, m1, a1, 0, "outfile", 0);
+                    d2bb.write_value(n, m, m1, m1, v2, 0, "outfile", 0);
                     d2aa.write_value(n, m1, m1, m, -a1, 0, "outfile", 0);
                     d2bb.write_value(n, m1, m1, m, -v2, 0, "outfile", 0);
-                }  
+                }
                 d2ab.write_value(n, m, m1, m1, v3, 0, "outfile", 0);
             }
         }
     }
 
-    auto ci_g1_a = ambit::Tensor::build(ambit::CoreTensor, "effective alpha gamma tensor", {na, na});
+    auto ci_g1_a =
+        ambit::Tensor::build(ambit::CoreTensor, "effective alpha gamma tensor", {na, na});
     auto ci_g1_b = ambit::Tensor::build(ambit::CoreTensor, "effective beta gamma tensor", {na, na});
 
     ci_g1_a("uv") += 0.5 * x_ci("I") * cc1a_n("Iuv");
@@ -3811,11 +3931,11 @@ void DSRG_MRPT2::write_2rdm_spin_dependent() {
 
             for (size_t j = 0, size_c = core_all.size(); j < size_c; ++j) {
                 auto m1 = core_all[j];
-                
+
                 d2aa.write_value(v, u, m1, m1, 0.5 * a1, 0, "outfile", 0);
                 d2bb.write_value(v, u, m1, m1, 0.5 * v2, 0, "outfile", 0);
                 d2aa.write_value(v, m1, m1, u, -0.5 * a1, 0, "outfile", 0);
-                d2bb.write_value(v, m1, m1, u, -0.5 * v2, 0, "outfile", 0);   
+                d2bb.write_value(v, m1, m1, u, -0.5 * v2, 0, "outfile", 0);
                 d2ab.write_value(v, u, m1, m1, (a1 + v2), 0, "outfile", 0);
             }
         }
@@ -3830,11 +3950,11 @@ void DSRG_MRPT2::write_2rdm_spin_dependent() {
             auto z_b = Z.block("VV").data()[idx];
             for (size_t j = 0, size_c = core_all.size(); j < size_c; ++j) {
                 auto m1 = core_all[j];
-                
+
                 d2aa.write_value(f, e, m1, m1, 0.5 * z_a, 0, "outfile", 0);
                 d2bb.write_value(f, e, m1, m1, 0.5 * z_b, 0, "outfile", 0);
                 d2aa.write_value(f, m1, m1, e, -0.5 * z_a, 0, "outfile", 0);
-                d2bb.write_value(f, m1, m1, e, -0.5 * z_b, 0, "outfile", 0);    
+                d2bb.write_value(f, m1, m1, e, -0.5 * z_b, 0, "outfile", 0);
                 d2ab.write_value(f, e, m1, m1, (z_a + z_b), 0, "outfile", 0);
             }
         }
@@ -3854,7 +3974,7 @@ void DSRG_MRPT2::write_2rdm_spin_dependent() {
                     auto idx1 = l * na + k;
                     auto g_a = Gamma1_.block("aa").data()[idx1];
                     auto g_b = Gamma1_.block("AA").data()[idx1];
-                
+
                     d2aa.write_value(n, m, a1, u1, 0.5 * z_a * g_a, 0, "outfile", 0);
                     d2bb.write_value(n, m, a1, u1, 0.5 * z_b * g_b, 0, "outfile", 0);
                     d2aa.write_value(n, u1, a1, m, -0.5 * z_a * g_a, 0, "outfile", 0);
@@ -3879,7 +3999,7 @@ void DSRG_MRPT2::write_2rdm_spin_dependent() {
                     auto idx1 = l * na + k;
                     auto g_a = Gamma1_.block("aa").data()[idx1];
                     auto g_b = Gamma1_.block("AA").data()[idx1];
-                
+
                     d2aa.write_value(f, e, a1, u1, 0.5 * z_a * g_a, 0, "outfile", 0);
                     d2bb.write_value(f, e, a1, u1, 0.5 * z_b * g_b, 0, "outfile", 0);
                     d2aa.write_value(f, u1, a1, e, -0.5 * z_a * g_a, 0, "outfile", 0);
@@ -3892,7 +4012,7 @@ void DSRG_MRPT2::write_2rdm_spin_dependent() {
 
     // terms with overlap
     temp = BTF_->build(CoreTensor, "temporal tensor", {"pphh", "PPHH", "pPhH"});
-    BlockedTensor temp2 = BTF_->build(CoreTensor, "temporal tensor 2", {"phph","phPH"});
+    BlockedTensor temp2 = BTF_->build(CoreTensor, "temporal tensor 2", {"phph", "phPH"});
 
     if (CORRELATION_TERM) {
         temp["abij"] += Tau1["ijab"];
@@ -3904,9 +4024,9 @@ void DSRG_MRPT2::write_2rdm_spin_dependent() {
         temp["cDkL"] += Kappa["kLcD"] * Eeps2_p["kLcD"];
     }
 
-    temp["xynv"] -= Z["un"] * Gamma2_["uvxy"]; 
-    temp["XYNV"] -= Z["UN"] * Gamma2_["UVXY"]; 
-    temp["xYnV"] -= Z["un"] * Gamma2_["uVxY"]; 
+    temp["xynv"] -= Z["un"] * Gamma2_["uvxy"];
+    temp["XYNV"] -= Z["UN"] * Gamma2_["UVXY"];
+    temp["xYnV"] -= Z["un"] * Gamma2_["uVxY"];
 
     temp["evxy"] += Z["eu"] * Gamma2_["uvxy"];
     temp["EVXY"] += Z["EU"] * Gamma2_["UVXY"];
@@ -3938,22 +4058,22 @@ void DSRG_MRPT2::write_2rdm_spin_dependent() {
     temp["EUMV"] += 2.0 * Z["EM"] * Gamma1_["UV"];
     temp["eUmV"] += 2.0 * Z["em"] * Gamma1_["UV"];
 
-    temp["u,a1,n,u1"] += 2.0 * Z["un"] * Gamma1_["u1,a1"]; 
+    temp["u,a1,n,u1"] += 2.0 * Z["un"] * Gamma1_["u1,a1"];
     temp["U,A1,N,U1"] += 2.0 * Z["UN"] * Gamma1_["U1,A1"];
-    temp["u,A1,n,U1"] += 2.0 * Z["un"] * Gamma1_["U1,A1"]; 
+    temp["u,A1,n,U1"] += 2.0 * Z["un"] * Gamma1_["U1,A1"];
 
     temp["v,a1,u,u1"] += Z["uv"] * Gamma1_["u1,a1"];
     temp["V,A1,U,U1"] += Z["UV"] * Gamma1_["U1,A1"];
     temp["v,A1,u,U1"] += Z["uv"] * Gamma1_["U1,A1"];
 
     // <[F, T2]>
-    if (X5_TERM||X7_TERM) {
+    if (X5_TERM || X7_TERM) {
         temp["aviu"] += Sigma3["ia"] * Gamma1_["uv"];
         temp["AVIU"] += Sigma3["IA"] * Gamma1_["UV"];
         temp["aViU"] += Sigma3["ia"] * Gamma1_["UV"];
     }
     // <[V, T1]>
-    if (X6_TERM||X7_TERM) {
+    if (X6_TERM || X7_TERM) {
         temp["aviu"] += Xi3["ia"] * Gamma1_["uv"];
         temp["AVIU"] += Xi3["IA"] * Gamma1_["UV"];
         temp["aViU"] += Xi3["ia"] * Gamma1_["UV"];
@@ -3965,17 +4085,17 @@ void DSRG_MRPT2::write_2rdm_spin_dependent() {
     // alpha-beta
     temp2["ckDL"] += 2.0 * temp["cDkL"];
 
-    temp2.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>& spin, double& value) {
-        if (std::fabs(value) > 1e-12) {
-            if (spin[2] == AlphaSpin) {
-                d2aa.write_value(i[0], i[1], i[2], i[3], 0.5 * value, 0, "outfile", 0);          
-                d2bb.write_value(i[0], i[1], i[2], i[3], 0.5 * value, 0, "outfile", 0);          
+    temp2.iterate(
+        [&](const std::vector<size_t>& i, const std::vector<SpinType>& spin, double& value) {
+            if (std::fabs(value) > 1e-12) {
+                if (spin[2] == AlphaSpin) {
+                    d2aa.write_value(i[0], i[1], i[2], i[3], 0.5 * value, 0, "outfile", 0);
+                    d2bb.write_value(i[0], i[1], i[2], i[3], 0.5 * value, 0, "outfile", 0);
+                } else {
+                    d2ab.write_value(i[0], i[1], i[2], i[3], value, 0, "outfile", 0);
+                }
             }
-            else {
-                d2ab.write_value(i[0], i[1], i[2], i[3], value, 0, "outfile", 0); 
-            }
-        }
-    }); 
+        });
 
     d2aa.flush(1);
     d2bb.flush(1);
@@ -3992,4 +4112,4 @@ void DSRG_MRPT2::write_2rdm_spin_dependent() {
     outfile->Printf("Done");
 }
 
-} 
+} // namespace forte
