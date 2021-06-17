@@ -201,8 +201,8 @@ PYBIND11_MODULE(forte, m) {
 
     export_MOSpaceInfo(m);
 
-    // export CouplingCoefficients
-    py::class_<CouplingCoefficients>(m, "CouplingCoefficients");
+    // export CICouplingCoefficients
+    py::class_<CICouplingCoefficients>(m, "CICouplingCoefficients");
 
     // export SCFInfo
     py::class_<SCFInfo, std::shared_ptr<SCFInfo>>(m, "SCFInfo")

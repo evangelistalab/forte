@@ -135,7 +135,7 @@ class ActiveSpaceMethod {
     virtual void set_options(std::shared_ptr<ForteOptions> options) = 0;
 
     /// Return the coupling coefficients in ambit::Tensor format
-    virtual CouplingCoefficients coupling_coefficients(int level) {
+    virtual CICouplingCoefficients coupling_coefficients(int level) {
         throw std::runtime_error("Not Implemented other than FCI_MO! level = " +
                                  std::to_string(level));
     }

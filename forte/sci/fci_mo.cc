@@ -3881,7 +3881,7 @@ std::vector<ambit::Tensor> FCI_MO::eigenvectors() {
 
 size_t FCI_MO::det_size() { return determinant_.size(); }
 
-CouplingCoefficients FCI_MO::coupling_coefficients(int level) {
+CICouplingCoefficients FCI_MO::coupling_coefficients(int level) {
     if (level <= 3) {
         auto cc1a = coupling_coeffcients_1a();
         auto cc1b = coupling_coeffcients_1b();
@@ -3890,13 +3890,13 @@ CouplingCoefficients FCI_MO::coupling_coefficients(int level) {
         auto cc2bb = coupling_coeffcients_2bb();
 
         if (level < 3) {
-            return CouplingCoefficients(cc1a, cc1b, cc2aa, cc2ab, cc2bb);
+            return CICouplingCoefficients(cc1a, cc1b, cc2aa, cc2ab, cc2bb);
         } else {
             auto cc3aaa = coupling_coeffcients_3aaa();
             auto cc3aab = coupling_coeffcients_3aab();
             auto cc3abb = coupling_coeffcients_3abb();
             auto cc3bbb = coupling_coeffcients_3bbb();
-            return CouplingCoefficients(cc1a, cc1b, cc2aa, cc2ab, cc2bb, cc3aaa, cc3aab, cc3abb,
+            return CICouplingCoefficients(cc1a, cc1b, cc2aa, cc2ab, cc2bb, cc3aaa, cc3aab, cc3abb,
                                         cc3bbb);
         }
     } else {

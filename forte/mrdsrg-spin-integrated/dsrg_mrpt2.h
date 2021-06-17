@@ -325,7 +325,7 @@ class DSRG_MRPT2 : public MASTER_DSRG {
     ambit::BlockedTensor V_R_Beta;
     ambit::BlockedTensor V_all_Beta;
 
-    CouplingCoefficients cc;
+    CICouplingCoefficients cc;
     ambit::Tensor ci;
 
     ambit::Tensor cc1a_n;
