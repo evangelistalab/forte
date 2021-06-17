@@ -17,9 +17,18 @@ def test_scfinfo():
     psi4.core.clean()
 
     mol = psi4.geometry(geom)
-    psi4.set_options({'basis': 'cc-pVDZ', 'scf_type': 'pk', 'reference': 'uhf'})
-    E_scf, wfn = psi4.energy('scf', return_wfn=True, molecule=mol)
+    psi4.set_options(
+        {
+            'basis': 'cc-pVDZ',
+            'scf_type': 'pk',
+            'reference': 'uhf',
+            'docc': [3, 0, 1, 0],
+            'socc': [0, 0, 0, 1]
+        }
+    )
+    _, wfn = psi4.energy('scf', return_wfn=True, molecule=mol)
 
+    # create an SCFInfo object from the psi4 wavefunction
     scfinfo = forte.SCFInfo(wfn)
 
     assert tuple(scfinfo.nmopi()) == (10, 1, 4, 4)
