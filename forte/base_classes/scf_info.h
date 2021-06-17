@@ -44,16 +44,16 @@ class SCFInfo {
     /// Constructor based on Psi4 Wavefunction
     SCFInfo(psi::SharedWavefunction wfn);
 
-    /// return doccpi
+    /// return the number of orbitals per irrep
     psi::Dimension nmopi();
 
-    /// return doccpi
+    /// return the number of doubly occupied orbitals per irrep
     psi::Dimension doccpi();
 
-    /// return soccpi
+    /// return the number of singly occupied orbitals per irrep
     psi::Dimension soccpi();
 
-    /// return energy
+    /// return the reference energy
     double reference_energy();
 
     /// alpha orbital energy

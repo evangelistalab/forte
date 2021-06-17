@@ -221,12 +221,12 @@ PYBIND11_MODULE(forte, m) {
         .def(py::init<psi::SharedWavefunction>())
         .def(py::init<const psi::Dimension&, const psi::Dimension&, const psi::Dimension&, double,
                       std::shared_ptr<psi::Vector>, std::shared_ptr<psi::Vector>>())
-        .def("nmopi", &SCFInfo::nmopi)
-        .def("doccpi", &SCFInfo::doccpi)
-        .def("soccpi", &SCFInfo::soccpi)
-        .def("reference_energy", &SCFInfo::reference_energy)
-        .def("epsilon_a", &SCFInfo::epsilon_a)
-        .def("epsilon_b", &SCFInfo::epsilon_b);
+        .def("nmopi", &SCFInfo::nmopi, "the number of orbitals per irrep")
+        .def("doccpi", &SCFInfo::doccpi, "the number of doubly occupied orbitals per irrep")
+        .def("soccpi", &SCFInfo::soccpi, "the number of singly occupied orbitals per irrep")
+        .def("reference_energy", &SCFInfo::reference_energy, "the reference energy")
+        .def("epsilon_a", &SCFInfo::epsilon_a, "a vector of alpha orbital energy (psi::Vector)")
+        .def("epsilon_b", &SCFInfo::epsilon_b, "a vector of beta orbital energy (psi::Vector)");
 
     // export DynamicCorrelationSolver
     py::class_<DynamicCorrelationSolver, std::shared_ptr<DynamicCorrelationSolver>>(
