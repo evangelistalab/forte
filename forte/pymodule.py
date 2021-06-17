@@ -685,7 +685,7 @@ def gradient_forte(name, **kwargs):
                                            mo_space_info, ints)
         energy = casscf.compute_energy()
 
-    if correlation_solver == 'DSRG-MRPT2':
+    if job_type == 'NEWDRIVER' and correlation_solver == 'DSRG-MRPT2':
         forte_driver(state_weights_map, scf_info, options, ints,
                               mo_space_info)
 
