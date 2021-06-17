@@ -54,7 +54,7 @@ class MolecularModel(Model):
         return self.symmetry.point_group_label()
 
     def state(self, charge: int, multiplicity: int, ms: float = None, sym: str = None):
-        """This function is ued to create a StateInfo object. It checks for potential errors.""""
+        """This function is ued to create a StateInfo object. It checks for potential errors."""
         if ms is None:
             # If ms = None take the lowest value consistent with multiplicity
             # For example:

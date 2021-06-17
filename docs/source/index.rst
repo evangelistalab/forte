@@ -22,5 +22,5 @@ correlated electrons.
    tutorials
    howto
    programming/index
+   api/index
    options
-   api

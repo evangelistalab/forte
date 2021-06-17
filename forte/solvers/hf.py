@@ -113,7 +113,7 @@ class HF(Solver):
             raise RuntimeError(f'(HF) The HF equations converged on a state with the wrong symmetry ({actual})')
 
     def run(self):
-        """Compute the Hartree-Fock energy"""
+        """Run a Hartree-Fock computation"""
         import psi4
 
         # reset psi4's options to avoid pollution
