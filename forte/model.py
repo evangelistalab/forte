@@ -63,19 +63,19 @@ class MolecularModel(Model):
 
     @property
     def basis(self):
-        return self._basis.basis
+        return self._basis.__str__()
 
     @property
     def scf_aux_basis(self):
         if self._scf_aux_basis is None:
             return None
-        return self._scf_aux_basis.basis
+        return self._scf_aux_basis.__str__()
 
     @property
     def corr_aux_basis(self):
         if self._corr_aux_basis is None:
             return None
-        return self._corr_aux_basis.basis
+        return self._corr_aux_basis.__str__()
 
     @property
     def point_group(self) -> str:
