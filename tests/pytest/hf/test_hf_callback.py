@@ -27,9 +27,9 @@ def test_hf_callback():
         C = wfn.Ca_subset("AO", "ALL")
         Local = psi4.core.Localizer.build("PIPEK_MEZEY", basis_, C)
         Local.localize()
-        new_C_occ = Local.L
-        wfn.Ca().copy(new_C_occ)
-        wfn.Cb().copy(new_C_occ)
+        new_C = Local.L
+        wfn.Ca().copy(new_C)
+        wfn.Cb().copy(new_C)
 
     cbh.add_callback('post hf', localize)
     hf = HF(root, state=state, restricted=False, cbh=cbh)
