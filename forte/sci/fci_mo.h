@@ -267,24 +267,12 @@ class FCI_MO : public ActiveSpaceMethod {
     /// Return the parsed state-averaged info
     std::vector<std::tuple<int, int, int, std::vector<double>>> sa_info() { return sa_info_; }
 
-    /// Return the 1-alpha coupling coefficients
-    ambit::Tensor coupling_coeffcients_1a();
-    /// Return the 1-beta coupling coefficients
-    ambit::Tensor coupling_coeffcients_1b();
-    /// Return the 2-alpha-alpha coupling coefficients
-    ambit::Tensor coupling_coeffcients_2aa();
-    /// Return the 2-alpha-beta coupling coefficients
-    ambit::Tensor coupling_coeffcients_2ab();
-    /// Return the 2-beta-beta coupling coefficients
-    ambit::Tensor coupling_coeffcients_2bb();
-    /// Return the 3-alpha-alpha-alpha coupling coefficients
-    ambit::Tensor coupling_coeffcients_3aaa();
-    /// Return the 3-alpha-alpha-beta coupling coefficients
-    ambit::Tensor coupling_coeffcients_3aab();
-    /// Return the 3-alpha-beta-beta coupling coefficients
-    ambit::Tensor coupling_coeffcients_3abb();
-    /// Return the 3-beta-beta-beta coupling coefficients
-    ambit::Tensor coupling_coeffcients_3bbb();
+    /// Return 1 coupling coefficients
+    std::vector<ambit::Tensor> coupling_coeffcients_1();
+    /// Return 2 coupling coefficients
+    std::vector<ambit::Tensor> coupling_coeffcients_2();
+    /// Return 3 coupling coefficients
+    std::vector<ambit::Tensor> coupling_coeffcients_3();
 
     /// Return the eigen vector in ambit Tensor format
     std::vector<ambit::Tensor> eigenvectors() override;
