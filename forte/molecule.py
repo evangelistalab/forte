@@ -26,7 +26,7 @@ class Molecule:
         """
         return a string representation of this object
         """
-        return self._molecule.to_string(dtype='xyz')
+        return f"Molecule({self._molecule.to_string(dtype='xyz')})"
 
     def __str__(self):
         """

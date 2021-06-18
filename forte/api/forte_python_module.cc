@@ -134,6 +134,13 @@ void export_Symmetry(py::module& m) {
         .def("irrep_label_to_index", &Symmetry::irrep_label_to_index, "label"_a,
              "Returns the index of a given irrep ``label``")
         .def("nirrep", &Symmetry::nirrep, "Returns the number of irreps")
+        .def(
+            "__repr__",
+            [](const Symmetry& sym) { return "Symmetry(" + sym.point_group_label() + ")"; },
+            "Returns a representation of this object")
+        .def(
+            "__str__", [](const Symmetry& sym) { return sym.point_group_label(); },
+            "Returns a string representation of this object")
         .def_static("irrep_product", &Symmetry::irrep_product, "h"_a, "g"_a,
                     "Returns the product of irreps ``h`` and ``g``");
 }

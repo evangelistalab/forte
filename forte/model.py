@@ -9,8 +9,11 @@ class Model(ABC):
     """
     An abstract base class used to implement a model.
 
-    Attributes
-    ----------
+    A model contains the information necessary to compute
+    the Hamiltonian for a system (number of orbitals,
+    symmetry information, basis set).
+    This allows to deal with molecules, model Hamiltonians
+    (e.g. Hubbard), effective Hamiltonians, in a unified way.
     """
     @abstractmethod
     def point_group(self) -> str:
@@ -20,8 +23,6 @@ class Model(ABC):
 class MolecularModel(Model):
     """
     A class used to handle molecules.
-
-    This class is used to compute the integrals once a model has been defined.
 
     Attributes
     ----------
@@ -37,11 +38,13 @@ class MolecularModel(Model):
         """
         return a string representation of this object
         """
+        return f"MolecularModel(\n{repr(self._molecule)},\n{repr(self._basis)})"
 
     def __str__(self):
         """
         return a string representation of this object
         """
+        return self.__repr__()
 
     @property
     def molecule(self):
