@@ -107,32 +107,6 @@ class BasicSolver(Solver):
         """Nothing to run"""
 
 
-class CallbackHandler():
-    """
-    This class stores a list of callback functions labeled by an ID
-
-    Use:
-    > ch = CallbackHandler()
-    > def func(state):
-    >     <do something with state>   
-    > ch.add_callback(id='post',func=func) # define callback with id='post'
-    > ...
-    > ch.callback('pre',mystate) # id 'pre' is not defined, skip
-    > ch.callback('post',mystate) # calls func(mystate)
-    """
-    def __init__(self):
-        self._callback_list = {}
-
-    def add_callback(self, id, func):
-        """Add a callback function labeled by an ID"""
-        self._callback_list[id] = func
-
-    def callback(self, id, state):
-        """Call the function ID on a given state"""
-        if id in self._callback_list:
-            self._callback_list[id](state)
-
-
 def solver_factory(molecule, basis, scf_aux_basis=None, corr_aux_basis=None):
     """A factory to build a basic solver object"""
     logging.info('Calling solver factory')

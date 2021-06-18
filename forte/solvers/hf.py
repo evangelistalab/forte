@@ -1,6 +1,7 @@
 import logging
 
-from forte.solvers.solver import Solver, CallbackHandler
+from forte.solvers.solver import Solver
+from forte.solvers.callback_handler import CallbackHandler
 from forte.model import MolecularModel
 from forte.forte import SCFInfo
 
@@ -41,6 +42,8 @@ class HF(Solver):
             The number of singly occupied orbitals per irrep
         options: dict()
             Additional options passed to control psi4
+        ch: CallbackHandler
+            A callback object used to inject code into the HF class
         """
         # initialize common objects
         super().__init__()
@@ -118,6 +121,9 @@ class HF(Solver):
 
     def run(self):
         """Run a Hartree-Fock computation"""
+
+        logging.info('HF: entering run()')
+
         import psi4
 
         # reset psi4's options to avoid pollution
@@ -176,7 +182,7 @@ class HF(Solver):
         self._ch.callback('pre hf', self)
 
         # run scf and return the energy and a wavefunction object
-        logging.info('HF calling psi4.energy')
+        logging.info('HF: calling psi4.energy')
         energy, psi_wfn = psi4.energy('scf', molecule=molecule, return_wfn=True)
 
         # check symmetry
@@ -194,5 +200,7 @@ class HF(Solver):
 
         # set executed flag
         self._executed = True
+
+        logging.info('HF: exiting run()')
 
         return self

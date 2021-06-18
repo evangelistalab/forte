@@ -5,4 +5,9 @@ Forte's Python API
    :maxdepth: 2
 
    molecule
+   basis
+   molecular_model
+   results
+   solver
    hf
+   callback_handler
