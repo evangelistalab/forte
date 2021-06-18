@@ -95,7 +95,7 @@ class MolecularModel(Model):
 
         # compute the irrep index and produce a standard label
         if sym is None:
-            if sym.nirrep() == 1:
+            if self.symmetry.nirrep() == 1:
                 # in this case there is only one possible choice
                 sym = 'A'
             else:

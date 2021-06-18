@@ -1,34 +1,39 @@
 """Test the HF solver."""
 
 import pytest
-
 from forte.solvers import solver_factory, HF, CallbackHandler
 
 
 def test_hf_callback():
-    """Example of using a callback to check if UHF broke alpha/beta symmetry."""
+    """Example of using a callback to localize HF MOs."""
 
     xyz = """
     H 0.0 0.0 0.0
     H 0.0 0.0 1.0
+    H 0.0 0.0 2.0
+    H 0.0 0.0 3.0
+    symmetry c1
     """
-    root = solver_factory(molecule=xyz, basis='cc-pVDZ')
-    state = root.state(charge=0, multiplicity=1, sym='ag')
+    root = solver_factory(molecule=xyz, basis='sto-3g')
+    state = root.state(charge=0, multiplicity=1)
 
     cbh = CallbackHandler()
 
-    def check_broken(cb, state):
-        """Check if the MOs broke symmetry by computing |Ca - Cb|"""
-        Ca = state.data.psi_wfn.Ca().clone()
-        Cb = state.data.psi_wfn.Cb().clone()
-        Ca.axpy(-1.0, Cb)
-        # here we store the value so that it can be refererenced later
-        cb.report = Ca.rms()
+    def localize(cb, state):
+        """Localize the orbitals after a HF computation"""
+        import psi4
+        wfn = state.data.psi_wfn
+        basis_ = wfn.basisset()
+        C = wfn.Ca_subset("AO", "ALL")
+        Local = psi4.core.Localizer.build("PIPEK_MEZEY", basis_, C)
+        Local.localize()
+        new_C_occ = Local.L
+        wfn.Ca().copy(new_C_occ)
+        wfn.Cb().copy(new_C_occ)
 
-    cbh.add_callback('post hf', check_broken)
+    cbh.add_callback('post hf', localize)
     hf = HF(root, state=state, restricted=False, cbh=cbh)
     hf.run()
-    assert cbh.report('post hf') == 0.0
 
 
 if __name__ == "__main__":

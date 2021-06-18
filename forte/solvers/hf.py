@@ -192,15 +192,15 @@ class HF(Solver):
         logging.info('HF: checking symmetry of the HF solution.')
         self.check_symmetry_(psi_wfn)
 
+        # post hf callback
+        self._cbh.call('post hf', self)
+
         # add the energy to the results
         self._results.add('hf energy', energy, 'Hartree-Fock energy', 'Eh')
 
         # store calculation outputs in the Data object
         self.data.psi_wfn = psi_wfn
         self.data.scf_info = SCFInfo(psi_wfn)
-
-        # post hf callback
-        self._cbh.call('post hf', self)
 
         # set executed flag
         self._executed = True
