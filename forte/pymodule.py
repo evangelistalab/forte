@@ -75,36 +75,23 @@ def run_psi4_ref(ref_type, molecule, print_warning=False, **kwargs):
     return wfn
 
 
-def check_MO_overlap(options, molecule, Ca):
+def check_MO_orthonormality(S, Ca):
     """
-    Test the MO overlap matrix is identity or not.
-    We will recompute the SO overlap from molecule and test against Ca,
+    Return whether the MO overlap matrix is identity or not.
     S_MO = Ca^T S_SO Ca.
-    If the molecule and Ca are consistent, S_MO should be identity matrix.
+    The MO overlap is the identity if and only if the orbitals are orthonormal.
+    Most electronic structure methods are derived assuming orthonormal orbitals.
 
-    :param options: a ForteOptions object
-    :param molecule: a Psi4 Molecule object
+    :param S: a Psi4 Matrix of overlap integrals in the SO basis
     :param Ca: a Psi4 Matrix that holds orbital coefficients
 
     :return: S_MO == I
     """
     p4print = psi4.core.print_out
-    p4print("\n\n")
-
-    basis = options.get_str('BASIS')
-    wfn = psi4.core.Wavefunction.build(molecule, basis)
-
-    if psi4.core.get_global_option("RELATIVISTIC") in ["X2C", "DKH"]:
-        basis_rel = options.get_str("BASIS_RELATIVISTIC")
-        puream = wfn.basisset().has_puream()
-        rel_bas = psi4.core.BasisSet.build(molecule, "BASIS_RELATIVISTIC", basis_rel, "DECON", basis, puream=puream)
-        wfn.set_basisset('BASIS_RELATIVISTIC', rel_bas)
 
     p4print("\n  Checking orbital orthonormality against current geometry ...")
 
-    # build MO overlap
-    mints = wfn.mintshelper()
-    S = mints.so_overlap()
+    S = S.clone()
     S.transform(Ca)  # S = Ca^T S Ca
 
     # test orbital orthonormality
@@ -185,8 +172,9 @@ def prepare_psi4_ref_wfn(options, **kwargs):
         if Ca.rowdim() != nmopi or Ca.coldim() != nmopi:
             raise ValueError("Invalid orbitals: different basis set / molecule")
 
-        # check orbital orthonormality
-        if check_MO_overlap(options, molecule, Ca):
+        new_S = psi4.core.Wavefunction.build(molecule, options.get_str("BASIS")).S()
+
+        if check_MO_orthonormality(new_S, Ca):
             wfn_new = ref_wfn
             wfn_new.Ca().copy(Ca)
         else:
