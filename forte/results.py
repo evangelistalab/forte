@@ -13,6 +13,14 @@ class Results:
         """"Get the value of a result"""
         return self._data[label]['value']
 
+    def description(self, label):
+        """"Get the description of a result"""
+        return self._data[label]['description']
+
+    def units(self, label):
+        """"Get the units of a result"""
+        return self._data[label]['units']
+
     def __repr__(self):
         return repr(self._data)
 
