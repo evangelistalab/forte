@@ -53,7 +53,7 @@ MOSpaceInfo::MOSpaceInfo(const psi::Dimension& nmopi, const std::string& point_g
 
 std::string MOSpaceInfo::str() const {
     std::string s;
-    for (auto& space : space_names()) {
+    for (const auto& space : space_names()) {
         s += "space: " + space + " ";
         const auto dim = dimension(space);
         for (size_t h = 0; h < dim.n(); h++) {
