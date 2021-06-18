@@ -188,11 +188,6 @@ std::vector<std::pair<size_t, size_t>> MOSpaceInfo::relative_mo(const std::strin
     return result;
 }
 
-std::vector<std::pair<size_t, size_t>>
-MOSpaceInfo::get_relative_mo(const std::string& space) const {
-    return relative_mo(space);
-}
-
 std::vector<size_t> MOSpaceInfo::pos_in_space(const std::string& space,
                                               const std::string& composite_space) {
     std::vector<size_t> result;

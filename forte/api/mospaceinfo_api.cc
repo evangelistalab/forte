@@ -56,7 +56,6 @@ void export_MOSpaceInfo(py::module& m) {
         .def("pos_in_space", &MOSpaceInfo::pos_in_space,
              "Return the position of the orbitals in a space within another space")
         .def("relative_mo", &MOSpaceInfo::relative_mo, "Return the relative MOs")
-        .def("get_relative_mo", &MOSpaceInfo::relative_mo, "Return the relative MOs")
         .def("read_options", &MOSpaceInfo::read_options, "Read options")
         .def("read_from_map", &MOSpaceInfo::read_from_map,
              "Read the space info from a map {spacename -> dimension vector}")

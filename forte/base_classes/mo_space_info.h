@@ -202,10 +202,6 @@ class MOSpaceInfo {
     /// @return The list of the relative index (h,p_rel) of the molecular
     /// orbitals in space
     std::vector<std::pair<size_t, size_t>> relative_mo(const std::string& space) const;
-    /// @return The list of the relative index (h,p_rel) of the molecular
-    /// orbitals in space
-    [[deprecated("this function will soon be removed")]] std::vector<std::pair<size_t, size_t>>
-    get_relative_mo(const std::string& space) const;
     /// @return The position of the orbitals in a space in a larger composite space
     std::vector<size_t> pos_in_space(const std::string& space, const std::string& composite_space);
     /// @return The psi::Slice for a space counting started at absolute zero
