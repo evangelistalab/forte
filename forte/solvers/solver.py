@@ -15,7 +15,7 @@ class Solver(ABC):
     A class used to implement a quantum chemistry solver.
 
     Solver stores Forte base objects in a data attribute
-    and a results object
+    and a results object.
     """
     def __init__(self):
         self._executed = False
@@ -25,7 +25,7 @@ class Solver(ABC):
 
     @abstractmethod
     def run(self):
-        """Interface for computing the energy"""
+        """Interface for running the solver."""
 
     @property
     def results(self):
@@ -47,37 +47,25 @@ class Solver(ABC):
     def psi_wfn(self, val):
         self.data.psi_wfn = val
 
-    # @property
-    # def scf_info(self):
-    #     return self._scf_info
+    @property
+    def scf_info(self):
+        return self.data.scf_info
 
-    # @scf_info.setter
-    # def scf_info(self, val):
-    #     self._scf_info = val
+    @scf_info.setter
+    def scf_info(self, val):
+        self.data.scf_info = val
 
-    # @property
-    # def ints(self):
-    #     return self._ints
+    @property
+    def mo_space_info(self):
+        return self.data.mo_space_info
 
-    # @ints.setter
-    # def ints(self, val):
-    #     self._ints = val
+    @mo_space_info.setter
+    def mo_space_info(self, val):
+        self.data.mo_space_info = val
 
-    # @property
-    # def mo_space_info(self):
-    #     return self._mo_space_info
-
-    # @mo_space_info.setter
-    # def mo_space_info(self, val):
-    #     self._mo_space_info = val
-
-    # @property
-    # def model(self):
-    #     return self._model
-
-    # @model.setter
-    # def model(self, val):
-    #     self._model = val
+    @property
+    def model(self):
+        return self.data.model
 
     @property
     def output_file(self):
@@ -104,12 +92,16 @@ class BasicSolver(Solver):
         super().__init__()
 
     def run(self):
-        """Nothing to run"""
+        pass
 
 
 def solver_factory(molecule, basis, scf_aux_basis=None, corr_aux_basis=None):
     """A factory to build a basic solver object"""
     logging.info('Calling solver factory')
+
+    # TODO: generalize to other type of models (e.g. if molecule/basis are not provided)
+
+    # convert string arguments to objects if necessary
     if isinstance(molecule, str):
         molecule = Molecule.from_geom(molecule)
     if isinstance(basis, str):
@@ -118,6 +110,8 @@ def solver_factory(molecule, basis, scf_aux_basis=None, corr_aux_basis=None):
         scf_aux_basis = Basis(scf_aux_basis)
     if isinstance(corr_aux_basis, str):
         corr_aux_basis = Basis(corr_aux_basis)
+
+    # create an empty solver and pass the model in
     solver = BasicSolver()
     solver.data.model = MolecularModel(
         molecule=molecule, basis=basis, scf_aux_basis=scf_aux_basis, corr_aux_basis=corr_aux_basis
