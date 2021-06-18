@@ -21,7 +21,7 @@ class HF(Solver):
         docc=None,
         socc=None,
         options=None,
-        ch=None
+        cbh=None
     ):
         """
         initialize a Basis object
@@ -42,7 +42,7 @@ class HF(Solver):
             The number of singly occupied orbitals per irrep
         options: dict()
             Additional options passed to control psi4
-        ch: CallbackHandler
+        cbh: CallbackHandler
             A callback object used to inject code into the HF class
         """
         # initialize common objects
@@ -56,7 +56,7 @@ class HF(Solver):
         self._docc = docc
         self._socc = socc
         self._options = {} if options is None else options
-        self._ch = CallbackHandler() if ch is None else ch
+        self._cbh = CallbackHandler() if cbh is None else cbh
 
     def __repr__(self):
         """
@@ -182,7 +182,7 @@ class HF(Solver):
         psi4.core.set_output_file(self._output_file, True)
 
         # pre hf callback
-        self._ch.callback('pre hf', self)
+        self._cbh.call('pre hf', self)
 
         # run scf and return the energy and a wavefunction object
         logging.info('HF: calling psi4.energy.')
@@ -200,7 +200,7 @@ class HF(Solver):
         self.data.scf_info = SCFInfo(psi_wfn)
 
         # post hf callback
-        self._ch.callback('post hf', self)
+        self._cbh.call('post hf', self)
 
         # set executed flag
         self._executed = True

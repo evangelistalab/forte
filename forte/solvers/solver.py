@@ -87,7 +87,13 @@ class Solver(ABC):
 
 
 class BasicSolver(Solver):
-    """A simple solver used to instantiate a new job"""
+    """
+    This solver class is used as a starting point of computations.
+    
+    When initialized, this solver does not contain any information.
+    It is used by the function `solver_factory` which fills it with
+    information about a model.
+    """
     def __init__(self):
         super().__init__()
 

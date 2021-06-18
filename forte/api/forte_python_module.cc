@@ -182,10 +182,6 @@ PYBIND11_MODULE(forte, m) {
           "Make a DSRG pointer (spin-adapted implementation)");
     m.def("make_casscf", &make_casscf, "Make a CASSCF object");
     m.def("make_mcscf_two_step", &make_mcscf_two_step, "Make a 2-step MCSCF object");
-    m.def("make_mcscf",
-          [](std::map<StateInfo, std::vector<double>> state_weight_map,
-             std::shared_ptr<SCFInfo> scf_info, std::shared_ptr<ForteOptions> options,
-             std::shared_ptr<MOSpaceInfo> mo_space_info, std::shared_ptr<ForteIntegrals> ints) {});
     m.def("test_lbfgs_rosenbrock", &test_lbfgs_rosenbrock, "Test L-BFGS on Rosenbrock function");
 
     export_ambit(m);

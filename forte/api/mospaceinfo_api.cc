@@ -71,7 +71,7 @@ void export_MOSpaceInfo(py::module& m) {
         .def("irrep_labels", &MOSpaceInfo::irrep_labels, "Return the labels of the irreps")
         .def("irrep_label", &MOSpaceInfo::irrep_label, "Return the labels of the irreps")
         .def("point_group_label", &MOSpaceInfo::point_group_label,
-             "Return the labels of the irreps")
+             "Return the label of the point group")
         .def("__str__", &MOSpaceInfo::str);
 }
 

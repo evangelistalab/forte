@@ -6,6 +6,7 @@ Forte's Python API
 
    molecule
    basis
+   symmetry
    molecular_model
    results
    solver

@@ -57,7 +57,7 @@ forte_options = forte.ForteOptions()
 register_forte_options(forte_options)
 
 # create a singleton to handle startup and cleanup of forte
-forte_manager = ForteManager()
+ForteManager()
 
 # If we are running psi4, push the options defined in forte_options to psi
 if 'psi4' in sys.modules:
