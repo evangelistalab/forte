@@ -255,7 +255,6 @@ class ProcedureDSRG:
         if self.dsrg_solver is None:
             raise ValueError("Please compute energy before calling compute_gradient")
 
-        psi4.core.print_out("\n  ==> Coupling Coefficients for DSRG-MRPT2 Gradients <==")
         self.dsrg_solver.set_coupling_coefficients(coupling_coefficients)
         self.dsrg_solver.set_ci_vectors(ci_vectors)
         self.dsrg_solver.compute_gradient()
