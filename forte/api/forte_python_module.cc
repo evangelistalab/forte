@@ -127,13 +127,15 @@ void export_MCSCF_2STEP(py::module& m) {
 void export_Symmetry(py::module& m) {
     py::class_<Symmetry>(m, "Symmetry")
         .def(py::init<std::string>())
-        .def("point_group_label", &Symmetry::point_group_label, "the label of this point group")
-        .def("irrep_labels", &Symmetry::irrep_labels, "vector of irrep labels")
-        .def("irrep_label", &Symmetry::irrep_label, "the label of irrep h")
-        .def("irrep_label_to_index", &Symmetry::irrep_label_to_index,
-             "the index of a given irrep label")
-        .def("nirrep", &Symmetry::nirrep, "the number of irreps")
-        .def("irrep_product", &Symmetry::irrep_product, "the product of irreps h and g");
+        .def("point_group_label", &Symmetry::point_group_label,
+             "Returns the label of this point group")
+        .def("irrep_labels", &Symmetry::irrep_labels, "Returns a vector of irrep labels")
+        .def("irrep_label", &Symmetry::irrep_label, "h"_a, "Returns the label of irrep ``h``")
+        .def("irrep_label_to_index", &Symmetry::irrep_label_to_index, "label"_a,
+             "Returns the index of a given irrep ``label``")
+        .def("nirrep", &Symmetry::nirrep, "Returns the number of irreps")
+        .def_static("irrep_product", &Symmetry::irrep_product, "h"_a, "g"_a,
+                    "Returns the product of irreps ``h`` and ``g``");
 }
 
 // TODO: export more classes using the function above
