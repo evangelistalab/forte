@@ -24,10 +24,3 @@ class Basis:
         return a string representation of this object
         """
         return self._basis
-
-    @property
-    def basis(self):
-        """
-        return the basis as a string
-        """
-        return self._basis

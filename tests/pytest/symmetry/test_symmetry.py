@@ -3,6 +3,7 @@ from forte import Symmetry
 
 
 def test_symmetry():
+    """Test the Symmetry class"""
 
     sym = Symmetry('D2H')
     assert sym.point_group_label() == 'D2H'
@@ -30,6 +31,12 @@ def test_symmetry():
     for h in range(8):
         for g in range(8):
             assert Symmetry.irrep_product(h, g) == h ^ g
+
+
+def test_bad_symmetry():
+    """Test initializing a Symmetry object with an invalid point group"""
+    with pytest.raises(RuntimeError):
+        Symmetry('D5H')
 
 
 if __name__ == '__main__':
