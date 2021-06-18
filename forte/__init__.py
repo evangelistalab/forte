@@ -45,7 +45,6 @@ from .pymodule import *
 from .register_forte_options import *
 from .core import ForteManager, clean_options
 from .forte import *
-from .active_space import *
 
 __version__ = '0.2.0'
 __author__ = 'Forte Developers'
