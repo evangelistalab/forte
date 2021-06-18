@@ -348,7 +348,7 @@ def prepare_forte_objects_from_fcidump(options,path='.'):
 
     if 'epsilon' in fcidump:
         epsilon_a = psi4.core.Vector.from_array(fcidump['epsilon'])
-        epsilon_b = psi4.core.Vector.from_array(fcidump['epsilon'])        
+        epsilon_b = psi4.core.Vector.from_array(fcidump['epsilon'])
     else:
         # manufacture Fock matrices
         epsilon_a = psi4.core.Vector(nmo)
@@ -499,6 +499,7 @@ def forte_driver(state_weights_map, scf_info, options, ints, mo_space_info):
 
     return return_en
 
+
 def run_forte(name, **kwargs):
     r"""Function encoding sequence of PSI module and plugin calls so that
     forte can be called via :py:func:`~driver.energy`. For post-scf plugins.
@@ -594,12 +595,13 @@ def run_forte(name, **kwargs):
             dump_orbitals(ref_wfn)
         return ref_wfn
 
+
 def mr_dsrg_pt2(job_type,forte_objects,ints,options):
     """
     Driver to perform a MCSRGPT2_MO computation.
 
     :return: the computed energy
-    """    
+    """
     final_energy = 0.0
     ref_wfn, state_weights_map, mo_space_info, scf_info, fcidump = forte_objects
 
@@ -623,6 +625,7 @@ def mr_dsrg_pt2(job_type,forte_objects,ints,options):
     mcsrgpt2_mo = forte.MCSRGPT2_MO(rdms, options, ints, mo_space_info)
     energy = mcsrgpt2_mo.compute_energy()
     return energy
+
 
 def gradient_forte(name, **kwargs):
     r"""Function encoding sequence of PSI module and plugin calls so that
@@ -650,8 +653,9 @@ def gradient_forte(name, **kwargs):
     job_type = options.get_str('JOB_TYPE')
     correlation_solver = options.get_str('CORRELATION_SOLVER')
 
-    if job_type not in {"CASSCF", "MCSCF_TWO_STEP"} and not correlation_solver == 'DSRG-MRPT2':
-        raise Exception('Analytic energy gradients are only implemented for job_types CASSCF, DSRG-MRPT2 and MCSCF_TWO_STEP.')
+    if job_type not in {"CASSCF", "MCSCF_TWO_STEP"} and correlation_solver != 'DSRG-MRPT2':
+        raise Exception('Analytic energy gradients are only implemented for'
+                        ' CASSCF, MCSCF_TWO_STEP, or DSRG-MRPT2.')
 
     # Prepare Forte objects: state_weights_map, mo_space_info, scf_info
     forte_objects = prepare_forte_objects(options, name, **kwargs)
@@ -687,7 +691,7 @@ def gradient_forte(name, **kwargs):
 
     if job_type == 'NEWDRIVER' and correlation_solver == 'DSRG-MRPT2':
         forte_driver(state_weights_map, scf_info, options, ints,
-                              mo_space_info)
+                     mo_space_info)
 
     time_pre_deriv = time.time()
 
