@@ -23,11 +23,22 @@ class Model(ABC):
 class MolecularModel(Model):
     """
     A class used to handle molecules.
-
-    Attributes
-    ----------
     """
     def __init__(self, molecule: Molecule, basis: Basis, scf_aux_basis: Basis = None, corr_aux_basis: Basis = None):
+        """
+        Initialize a MolecularModel object
+
+        Parameters
+        ----------
+        molecule: Molecule
+            the molecule information
+        basis: Basis
+            the computational basis
+        scf_aux_basis: Basis
+            the auxiliary basis set used in density-fitted SCF computations
+        corr_aux_basis: Basis
+            the auxiliary basis set used in density-fitted correlated computations        
+        """
         self._molecule = molecule
         self._basis = basis
         self._scf_aux_basis = scf_aux_basis
@@ -71,7 +82,21 @@ class MolecularModel(Model):
         return self.symmetry.point_group_label()
 
     def state(self, charge: int, multiplicity: int, ms: float = None, sym: str = None):
-        """This function is used to create a StateInfo object. It checks for potential errors."""
+        """This function is used to create a StateInfo object.
+        It checks for potential errors.
+
+        Parameters
+        ----------
+        charge: int
+            total charge
+        multiplicity: int
+            the spin multiplicity of the state
+        ms: float
+            projection of spin on the z axis (e.g. 0.5, 2.0,).
+            (default = lowest value consistent with multiplicity)
+        sym: str
+            the state irrep label (e.g., 'C2v')
+        """
         if ms is None:
             # If ms = None take the lowest value consistent with multiplicity
             # For example:
