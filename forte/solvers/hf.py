@@ -117,7 +117,10 @@ class HF(Solver):
 
             target = model.symmetry.irrep_label(self.state.irrep())
             actual = model.symmetry.irrep_label(sym)
-            raise RuntimeError(f'(HF) The HF equations converged on a state with the wrong symmetry ({actual})')
+            raise RuntimeError(
+                f'(HF) The HF equations converged on a state with the wrong symmetry ({actual}).'
+                '\nPass the docc and socc options to converge to a solution with the correct symmetry.'
+            )
 
     def run(self):
         """Run a Hartree-Fock computation"""
@@ -182,10 +185,11 @@ class HF(Solver):
         self._ch.callback('pre hf', self)
 
         # run scf and return the energy and a wavefunction object
-        logging.info('HF: calling psi4.energy')
+        logging.info('HF: calling psi4.energy.')
         energy, psi_wfn = psi4.energy('scf', molecule=molecule, return_wfn=True)
 
         # check symmetry
+        logging.info('HF: checking symmetry of the HF solution.')
         self.check_symmetry_(psi_wfn)
 
         # add the energy to the results
@@ -201,6 +205,6 @@ class HF(Solver):
         # set executed flag
         self._executed = True
 
-        logging.info('HF: exiting run()')
+        logging.info('HF: exiting run().')
 
         return self
