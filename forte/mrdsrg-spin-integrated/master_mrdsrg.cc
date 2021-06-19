@@ -274,8 +274,8 @@ void MASTER_DSRG::init_fock() {
 void MASTER_DSRG::build_custom_fock() {
     size_t ncmo = mo_space_info_->size("CORRELATED");
 
-    psi::SharedMatrix D1a(new psi::Matrix("D1a", ncmo, ncmo));
-    psi::SharedMatrix D1b(new psi::Matrix("D1b", ncmo, ncmo));
+    auto D1a = std::make_shared<psi::Matrix>("D1a", ncmo, ncmo);
+    auto D1b = std::make_shared<psi::Matrix>("D1b", ncmo, ncmo);
     for (size_t m = 0, ncore = core_mos_.size(); m < ncore; m++) {
         D1a->set(core_mos_[m], core_mos_[m], 1.0);
         D1b->set(core_mos_[m], core_mos_[m], 1.0);
