@@ -35,6 +35,7 @@
 
 #include "helpers/printing.h"
 #include "helpers/lbfgs/rosenbrock.h"
+#include "helpers/symmetry.h"
 
 #include "base_classes/active_space_solver.h"
 #include "base_classes/orbital_transform.h"
@@ -125,6 +126,27 @@ void export_MCSCF_2STEP(py::module& m) {
         .def("compute_energy", &MCSCF_2STEP::compute_energy, "Compute the MCSCF energy");
 }
 
+void export_Symmetry(py::module& m) {
+    py::class_<Symmetry>(m, "Symmetry")
+        .def(py::init<std::string>())
+        .def("point_group_label", &Symmetry::point_group_label,
+             "Returns the label of this point group")
+        .def("irrep_labels", &Symmetry::irrep_labels, "Returns a vector of irrep labels")
+        .def("irrep_label", &Symmetry::irrep_label, "h"_a, "Returns the label of irrep ``h``")
+        .def("irrep_label_to_index", &Symmetry::irrep_label_to_index, "label"_a,
+             "Returns the index of a given irrep ``label``")
+        .def("nirrep", &Symmetry::nirrep, "Returns the number of irreps")
+        .def(
+            "__repr__",
+            [](const Symmetry& sym) { return "Symmetry(" + sym.point_group_label() + ")"; },
+            "Returns a representation of this object")
+        .def(
+            "__str__", [](const Symmetry& sym) { return sym.point_group_label(); },
+            "Returns a string representation of this object")
+        .def_static("irrep_product", &Symmetry::irrep_product, "h"_a, "g"_a,
+                    "Returns the product of irreps ``h`` and ``g``");
+}
+
 // TODO: export more classes using the function above
 PYBIND11_MODULE(forte, m) {
     m.doc() = "pybind11 Forte module"; // module docstring
@@ -137,7 +159,6 @@ PYBIND11_MODULE(forte, m) {
     m.def("make_mo_space_info_from_map", &make_mo_space_info_from_map, "nmopi"_a, "point_group"_a,
           "mo_space_map"_a, "reorder"_a = std::vector<size_t>(),
           "Make a MOSpaceInfo object using a dictionary");
-
     m.def("make_aosubspace_projector", &make_aosubspace_projector, "Make a AOSubspace projector");
     m.def("make_avas", &make_avas, "Make AVAS orbitals");
     m.def("make_fragment_projector", &make_fragment_projector,
@@ -186,6 +207,7 @@ PYBIND11_MODULE(forte, m) {
     export_MCSCF_2STEP(m);
     export_ForteIntegrals(m);
 
+    export_Symmetry(m);
     export_OrbitalTransform(m);
     export_Localize(m);
 
@@ -205,13 +227,14 @@ PYBIND11_MODULE(forte, m) {
     // export SCFInfo
     py::class_<SCFInfo, std::shared_ptr<SCFInfo>>(m, "SCFInfo")
         .def(py::init<psi::SharedWavefunction>())
-        .def(py::init<const psi::Dimension&, const psi::Dimension&, double,
+        .def(py::init<const psi::Dimension&, const psi::Dimension&, const psi::Dimension&, double,
                       std::shared_ptr<psi::Vector>, std::shared_ptr<psi::Vector>>())
-        .def("doccpi", &SCFInfo::doccpi)
-        .def("soccpi", &SCFInfo::soccpi)
-        .def("reference_energy", &SCFInfo::reference_energy)
-        .def("epsilon_a", &SCFInfo::epsilon_a)
-        .def("epsilon_b", &SCFInfo::epsilon_b);
+        .def("nmopi", &SCFInfo::nmopi, "the number of orbitals per irrep")
+        .def("doccpi", &SCFInfo::doccpi, "the number of doubly occupied orbitals per irrep")
+        .def("soccpi", &SCFInfo::soccpi, "the number of singly occupied orbitals per irrep")
+        .def("reference_energy", &SCFInfo::reference_energy, "the reference energy")
+        .def("epsilon_a", &SCFInfo::epsilon_a, "a vector of alpha orbital energy (psi::Vector)")
+        .def("epsilon_b", &SCFInfo::epsilon_b, "a vector of beta orbital energy (psi::Vector)");
 
     // export DynamicCorrelationSolver
     py::class_<DynamicCorrelationSolver, std::shared_ptr<DynamicCorrelationSolver>>(
@@ -295,10 +318,10 @@ PYBIND11_MODULE(forte, m) {
         .def("compute_Heff_actv", &DSRG_MRPT::compute_Heff_actv,
              "Return the DSRG dressed ActiveSpaceIntegrals");
 
-     py::class_<MCSRGPT2_MO>(m,"MCSRGPT2_MO")
-     .def(py::init<RDMs, std::shared_ptr<ForteOptions>,
-                std::shared_ptr<ForteIntegrals> , std::shared_ptr<MOSpaceInfo> >())
-         .def("compute_energy", &MCSRGPT2_MO::compute_energy, "Compute DSRG energy");
+    py::class_<MCSRGPT2_MO>(m, "MCSRGPT2_MO")
+        .def(py::init<RDMs, std::shared_ptr<ForteOptions>, std::shared_ptr<ForteIntegrals>,
+                      std::shared_ptr<MOSpaceInfo>>())
+        .def("compute_energy", &MCSRGPT2_MO::compute_energy, "Compute DSRG energy");
 
     // export DressedQuantity for dipole moments
     py::class_<DressedQuantity>(m, "DressedQuantity")

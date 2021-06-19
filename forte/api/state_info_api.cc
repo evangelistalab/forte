@@ -39,6 +39,12 @@ void export_StateInfo(py::module& m) {
     py::class_<StateInfo, std::shared_ptr<StateInfo>>(m, "StateInfo")
         .def(py::init<int, int, int, int, int>(), "na"_a, "nb"_a, "multiplicity"_a, "twice_ms"_a,
              "irrep"_a)
+        .def(py::init<int, int, int, int, int, const std::string&>(), "na"_a, "nb"_a,
+             "multiplicity"_a, "twice_ms"_a, "irrep"_a, "irrep_label"_a)
+        .def(py::init<int, int, int, int, int, const std::string&, const std::vector<size_t>,
+                      const std::vector<size_t>>(),
+             "na"_a, "nb"_a, "multiplicity"_a, "twice_ms"_a, "irrep"_a, "irrep_label"_a,
+             "gas_min"_a, "gas_max"_a)
         .def("__str__", &StateInfo::str, "String representation of StateInfo")
         .def("__repr__", &StateInfo::str, "String representation of StateInfo")
         .def("na", &StateInfo::na, "Number of alpha electrons")

@@ -153,7 +153,7 @@ std::string StateInfo::str() const {
 
 std::string StateInfo::str_minimum() const {
     std::string irrep_label1 =
-        irrep_label_.empty() ? "Irrep" + std::to_string(irrep_) : irrep_label();
+        irrep_label_.empty() ? "Irrep " + std::to_string(irrep_) : irrep_label();
     return multiplicity_label() + " (Ms = " + get_ms_string(twice_ms_) + ") " + irrep_label1;
 }
 

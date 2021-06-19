@@ -10,8 +10,6 @@ def test_uccsd_6():
     import forte
     import psi4
 
-    forte.startup()
-
     ref_energy = -1.981824023630  # from CISD
 
     geom = """
@@ -34,7 +32,6 @@ def test_uccsd_6():
         maxk=1
     )
 
-    forte.cleanup()
     psi4.core.clean()
 
     energy = calc_data[-1][1]
