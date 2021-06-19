@@ -360,7 +360,7 @@ void SADSRG::fill_Fdiag(BlockedTensor& F, std::vector<double>& Fa) {
 void SADSRG::build_custom_fock() {
     size_t ncmo = mo_space_info_->size("CORRELATED");
 
-    auto D1a = std::make_shared<psi::Matrix("D1a", ncmo, ncmo)>;
+    auto D1a = std::make_shared<psi::Matrix>("D1a", ncmo, ncmo);
     for (size_t m = 0, ncore = core_mos_.size(); m < ncore; m++) {
         D1a->set(core_mos_[m], core_mos_[m], 1.0);
     }

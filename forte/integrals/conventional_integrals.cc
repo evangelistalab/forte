@@ -201,8 +201,8 @@ void ConventionalIntegrals::make_fock_matrix_from_value(std::shared_ptr<psi::Mat
     if (options_->get_str("EMBEDDING_TYPE") != "ASET2") {
         throw psi::PSIEXCEPTION("Wrong Fock builder!");
     }
-    auto Fa = std::make_shared<psi::Matrix>("Fa_fill", ncmo_, ncmo_));
-    auto Fb = std::make_shared<psi::Matrix>("Fb_fill", ncmo_, ncmo_));
+    auto Fa = std::make_shared<psi::Matrix>("Fa_fill", ncmo_, ncmo_);
+    auto Fb = std::make_shared<psi::Matrix>("Fb_fill", ncmo_, ncmo_);
     for (size_t p = 0; p < ncmo_; ++p) {
         for (size_t q = 0; q < ncmo_; ++q) {
             Fa->set(p, q, oei_a(p, q));
