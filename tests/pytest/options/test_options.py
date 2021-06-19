@@ -1,6 +1,3 @@
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
-
 def test_options():
     import math
     import forte
@@ -30,3 +27,7 @@ def test_options():
     test2 = forte_options.get_double('E_CONVERGENCE')
     assert e_conv['value'] == 1e-05
     assert test2 == 1e-05
+
+
+if __name__ == "__main__":
+    test_options()

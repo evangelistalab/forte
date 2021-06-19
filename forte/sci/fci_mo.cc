@@ -48,6 +48,7 @@
 #include "helpers/disk_io.h"
 #include "helpers/printing.h"
 #include "helpers/timer.h"
+#include "helpers/string_algorithms.h"
 
 #include "sparse_ci/determinant_hashvector.h"
 #include "sparse_ci/determinant_substitution_lists.h"

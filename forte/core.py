@@ -30,11 +30,15 @@
 import psi4
 import forte
 
+
 def clean_options():
     """
     A function to clear the options object
 
-    This class also clears the psi4 options object
+    This function does the following
+    1. clears the psi4 and Forte options object
+    2. re-registers all of Forte options (in their default values)
+    3. pushes the value of Forte options to the psi4 options object
     """
     # clear options
     psi4.core.clean_options()
@@ -47,3 +51,18 @@ def clean_options():
     psi_options = psi4.core.get_options()
     psi_options.set_current_module('FORTE')
     forte.forte_options.push_options_to_psi4(psi_options)
+
+
+class ForteManager(object):
+    """Singleton class to handle startup and cleanup of forte (mostly ambit)"""
+    _instance = None
+
+    def __new__(cls):
+        if cls._instance is None:
+            cls._instance = True
+            # Put any initialization here.
+            my_proc, n_nodes = forte.startup()
+        return cls._instance
+
+    def __del__(cls):
+        forte.cleanup()

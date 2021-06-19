@@ -11,8 +11,6 @@ def test_ccsd2():
     import forte
     import psi4
 
-    forte.startup()
-
     ref_energy = -76.237730204702288  # CCSD energy from psi4
 
     geom = """
@@ -35,7 +33,6 @@ def test_ccsd2():
         on_the_fly=True
     )
 
-    forte.cleanup()
     psi4.core.clean()
 
     energy = calc_data[-1][1]
