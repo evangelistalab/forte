@@ -335,7 +335,7 @@ class ForteIntegrals {
     void set_oei_from_asints(std::shared_ptr<ActiveSpaceIntegrals> as_ints, bool alpha);
 
     /// Build the integral from an active_space_integral object
-    virtual void build_from_asints(std::shared_ptr<ActiveSpaceIntegrals> as_ints) = 0;
+    virtual void build_from_asints(std::shared_ptr<ActiveSpaceIntegrals> as_ints);
 
     /// Set the value of the two-electron integrals from an active_space_integral object
     virtual void set_tei_from_asints(std::shared_ptr<ActiveSpaceIntegrals> as_ints, bool alpha1,
