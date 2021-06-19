@@ -69,6 +69,8 @@ space: GAS5  0 0 0 0 0 0 0 0
 space: GAS6  0 0 0 0 0 0 0 0
 space: RESTRICTED_UOCC  0 0 0 0 0 0 0 0
 space: FROZEN_UOCC  1 0 0 0 0 0 0 0
+space: EMBEDDING_DOCC  0 0 0 0 0 0 0 0
+space: EMBEDDING_ACTV  0 0 0 0 0 0 0 0
 """
     assert str(mo_space_info) == str_test
 

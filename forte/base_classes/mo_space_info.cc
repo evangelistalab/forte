@@ -307,7 +307,7 @@ void MOSpaceInfo::compute_space_info() {
         unassigned -= str_si.second.first;
     }
 
-    // Exclude dounle-counting in MO space due to embedding
+    // Exclude double-counting in MO space due to embedding
     psi::Dimension emb_count(nirrep_);
     for (const auto& el_space : composite_spaces_["EMBEDDING_ORB"]) {
         if (mo_spaces_.count(el_space))

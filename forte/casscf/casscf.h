@@ -70,7 +70,7 @@ class CASSCF {
     ambit::Tensor gamma1() { return gamma1_; }
     /// Return the final gamma2;
     ambit::Tensor gamma2() { return gamma2_; }
-    /// Return the CASCI RDMS
+    /// Return the CASCI RDMS object
     RDMs ref_rdms() { return cas_ref_; }
     /// Compute the CASSCF energy
     double compute_energy();

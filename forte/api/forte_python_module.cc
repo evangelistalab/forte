@@ -117,7 +117,7 @@ void export_ActiveSpaceSolver(py::module& m) {
 void export_CASSCF(py::module& m) {
     py::class_<CASSCF>(m, "CASSCF")
         .def("compute_energy", &CASSCF::compute_energy, "Compute the CASSCF energy")
-        .def("ref_rdms", &CASSCF::ref_rdms, "Return the RDMs after CASSCF")
+        .def("ref_rdms", &CASSCF::ref_rdms, "Return the RDMs object after CASSCF")
         .def("compute_gradient", &CASSCF::compute_gradient, "Compute the CASSCF gradient");
 }
 
@@ -334,8 +334,8 @@ PYBIND11_MODULE(forte, m) {
                       std::shared_ptr<SCFInfo>, std::shared_ptr<MOSpaceInfo>, 
                       std::shared_ptr<ForteIntegrals>, std::shared_ptr<ForteOptions> >(), 
                       "state_weights_map"_a, "scf_info"_a, "mo_space_info"_a, "ints"_a, "options"_a)
-        .def("rhf_rdms", &EMBEDDING_DENSITY::rhf_rdms, "Return RHF RDMs in the active space")
-        .def("cas_rdms", &EMBEDDING_DENSITY::cas_rdms, "Return CASCI/CASSCF RDMs in the active space");
+        .def("rhf_rdms", &EMBEDDING_DENSITY::rhf_rdms, "Return RHF RDMs object in the active space")
+        .def("cas_rdms", &EMBEDDING_DENSITY::cas_rdms, "Return CASCI/CASSCF RDMs object in the active space");
 }
 
 } // namespace forte
