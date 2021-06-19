@@ -1,0 +1,12 @@
+molecule {
+0 3
+C
+H 1 1.085
+H 1 1.085 2 135.5
+}
+
+set scf_type pk
+set basis cc-pVDZ
+set reference uhf
+
+energy('scf')

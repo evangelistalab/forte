@@ -12,6 +12,7 @@
 
 #include "helpers/timer.h"
 #include "helpers/printing.h"
+#include "helpers/string_algorithms.h"
 #include "sparse_ci/ci_reference.h"
 #include "detci.h"
 

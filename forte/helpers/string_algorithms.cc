@@ -79,4 +79,14 @@ std::string join(const std::vector<std::string>& vec_str, const std::string& sep
     return ss;
 }
 
+std::vector<std::string>::const_iterator
+find_case_insensitive(const std::string& str, const std::vector<std::string>& vec) {
+    auto ret = std::find_if(vec.cbegin(), vec.cend(), [&str](const std::string& s) {
+        if (s.size() != str.size())
+            return false;
+        return std::equal(s.cbegin(), s.cend(), str.cbegin(), str.cend(),
+                          [](auto c1, auto c2) { return std::toupper(c1) == std::toupper(c2); });
+    });
+    return ret;
+}
 } // namespace forte

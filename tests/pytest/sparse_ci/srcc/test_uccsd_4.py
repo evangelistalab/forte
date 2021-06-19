@@ -10,8 +10,6 @@ def test_uccsd_4():
     import forte
     import psi4
 
-    forte.startup()
-
     ref_energy = -107.655681875111
 
     geom = """
@@ -24,7 +22,6 @@ def test_uccsd_4():
     forte_objs = forte.utils.prepare_forte_objects(psi4_wfn, mo_spaces={'frozen_docc': [2]})
     calc_data = scc.run_cc(forte_objs[1], forte_objs[2], forte_objs[3], cc_type='ucc', max_exc=2, e_convergence=1.0e-10)
 
-    forte.cleanup()
     psi4.core.clean()
 
     energy = calc_data[-1][1]

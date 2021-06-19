@@ -35,6 +35,7 @@
 #include "base_classes/mo_space_info.h"
 #include "base_classes/forte_options.h"
 #include "helpers/printing.h"
+#include "helpers/string_algorithms.h"
 #include "fci/fci_solver.h"
 #include "casscf/casscf.h"
 #include "sci/aci.h"
