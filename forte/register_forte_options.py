@@ -228,7 +228,7 @@ def register_embedding_options(options):
         "Manually adjust number of restricted occupied orbitals A_C in A for mo_space_info_A")
     options.add_int(
         "ADD_FRAGMENT_ACTIVE", 0,
-        "Manually ddjust number of active orbitals A_A in A for mo_space_info_A")
+        "Manually adjust number of active orbitals A_A in A for mo_space_info_A")
     options.add_str(
         'FRAG_CORRELATION_SOLVER', 'MRDSRG',
         ['DSRG-MRPT2', 'THREE-DSRG-MRPT2', 'DSRG-MRPT3', 'MRDSRG',
