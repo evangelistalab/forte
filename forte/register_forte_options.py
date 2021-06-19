@@ -225,7 +225,7 @@ def register_embedding_options(options):
         'The real/approximate RDMs used in the correlative environment computation')
     options.add_int(
         "ADD_FRAGMENT_DOCC", 0,
-        "Manually ddjust number of restricted occupied orbitals A_C in A for mo_space_info_A")
+        "Manually adjust number of restricted occupied orbitals A_C in A for mo_space_info_A")
     options.add_int(
         "ADD_FRAGMENT_ACTIVE", 0,
         "Manually ddjust number of active orbitals A_A in A for mo_space_info_A")
