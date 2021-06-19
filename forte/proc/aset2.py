@@ -67,7 +67,7 @@ def aset2_driver(state_weights_map, scf_info, ref_wfn, mo_space_info, options):
 
     psi4.core.print_out("\n  ")
     psi4.core.print_out("\n  ")
-    forte.print_method_banner(["Second-order Active Space Embedding Theory [ASET(2)]", "Nan He, Chenyang Li"])
+    forte.print_method_banner(["Second-order Active Space Embedding Theory [ASET(2)]", "Nan He"])
     psi4.core.print_out("\n  ===========================ASET(2) Options===========================")
     psi4.core.print_out("\n  Fragment active space solver:             {:s}".format(frag_as_solver))
     psi4.core.print_out("\n  Fragment correlation solver:              {:s}".format(frag_corr_solver))

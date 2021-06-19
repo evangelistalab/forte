@@ -1,12 +1,43 @@
+/*
+ * @BEGIN LICENSE
+ *
+ * Forte: an open-source plugin to Psi4 (https://github.com/psi4/psi4)
+ * that implements a variety of quantum chemistry methods for strongly
+ * correlated electrons.
+ *
+ * Copyright (c) 2012-2020 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
+ *
+ * The copyrights for code used from other parties are included in
+ * the corresponding files.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with this program.  If not, see http://www.gnu.org/licenses/.
+ *
+ * @END LICENSE
+ */
+
 #include <tuple>
 
 #include "ambit/tensor.h"
-#include "embedding_density.h"
-#include "base_classes/active_space_solver.h"
+
 #include "psi4/psi4-dec.h"
 #include "psi4/libpsi4util/PsiOutStream.h"
 #include "psi4/libpsi4util/process.h"
 #include "psi4/libpsio/psio.hpp"
+
+#include "base_classes/active_space_solver.h"
+
+#include "embedding_density.h"
 
 namespace forte {
 
@@ -177,12 +208,9 @@ RDMs EMBEDDING_DENSITY::cas_rdms(std::shared_ptr<MOSpaceInfo> mo_space_info_acti
                 size_t jp = j - rdoccpi_in[0];
                 D1a.data()[i * na + j] = ref_rdms.g1a().data()[ip * na_in + jp];
                 D1b.data()[i * na + j] = ref_rdms.g1b().data()[ip * na_in + jp];
-            } else if (i == j) {
-                D1a.data()[i * na + j] = 1.0;
-                D1b.data()[i * na + j] = 1.0;
             } else {
-                D1a.data()[i * na + j] = 0.0;
-                D1b.data()[i * na + j] = 0.0;
+                D1a.data()[i * na + i] = 1.0;
+                D1b.data()[i * na + i] = 1.0;
             }
         }
     }
@@ -217,34 +245,9 @@ RDMs EMBEDDING_DENSITY::cas_rdms(std::shared_ptr<MOSpaceInfo> mo_space_info_acti
         }
     }
 
-    // 3-RDM # Leave at RHF level here as an approximation
+    // Do not allow 3RDM when using CASCI/CASSCF density builder
     if (options_->get_str("THREEPDC") != "ZERO") {
-        auto D3aaa = ambit::Tensor::build(ambit::CoreTensor, "D3aaa", std::vector<size_t>(6, na));
-        auto D3aab = ambit::Tensor::build(ambit::CoreTensor, "D3aab", std::vector<size_t>(6, na));
-        auto D3abb = ambit::Tensor::build(ambit::CoreTensor, "D3abb", std::vector<size_t>(6, na));
-        auto D3bbb = ambit::Tensor::build(ambit::CoreTensor, "D3bbb", std::vector<size_t>(6, na));
-
-        D3aaa("pqrstu") += D1a("ps") * D1a("qt") * D1a("ru");
-        D3aaa("pqrstu") -= D1a("ps") * D1a("rt") * D1a("qu");
-        D3aaa("pqrstu") -= D1a("qs") * D1a("pt") * D1a("ru");
-        D3aaa("pqrstu") += D1a("qs") * D1a("rt") * D1a("pu");
-        D3aaa("pqrstu") -= D1a("rs") * D1a("qt") * D1a("pu");
-        D3aaa("pqrstu") += D1a("rs") * D1a("pt") * D1a("qu");
-
-        D3bbb("pqrstu") += D1b("ps") * D1b("qt") * D1b("ru");
-        D3bbb("pqrstu") -= D1b("ps") * D1b("rt") * D1b("qu");
-        D3bbb("pqrstu") -= D1b("qs") * D1b("pt") * D1b("ru");
-        D3bbb("pqrstu") += D1b("qs") * D1b("rt") * D1b("pu");
-        D3bbb("pqrstu") -= D1b("rs") * D1b("qt") * D1b("pu");
-        D3bbb("pqrstu") += D1b("rs") * D1b("pt") * D1b("qu");
-
-        D3aab("pqrstu") += D1a("ps") * D1a("qt") * D1b("ru");
-        D3aab("pqrstu") -= D1a("qs") * D1a("pt") * D1b("ru");
-
-        D3abb("pqrstu") += D1a("ps") * D1b("qt") * D1b("ru");
-        D3abb("pqrstu") -= D1a("ps") * D1b("rt") * D1b("qu");
-
-        return RDMs(D1a, D1b, D2aa, D2ab, D2bb, D3aaa, D3aab, D3abb, D3bbb);
+        throw psi::PSIEXCEPTION("CASCI/CASSCF embedding density builder do not support 3-RDM!");
     } else {
         return RDMs(D1a, D1b, D2aa, D2ab, D2bb);
     }

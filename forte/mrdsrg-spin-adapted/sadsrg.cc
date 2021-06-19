@@ -82,10 +82,8 @@ SADSRG::~SADSRG() {
 void SADSRG::startup() {
     print_h2("Multireference Driven Similarity Renormalization Group");
 
-    bool JK_safe = foptions_->get_bool("EMBEDDING_JKFOCK");
-
     // build fock using ForteIntegrals and clean up JK
-    if (JK_safe) {
+    if (foptions_->get_bool("EMBEDDING_JKFOCK")) {
         build_fock_from_ints();
     }
 
@@ -108,11 +106,7 @@ void SADSRG::startup() {
     init_density();
 
     // initialize Fock matrix
-    if (JK_safe) {
-        init_fock();
-    } else {
-        init_fock_emb();
-    }
+    init_fock();
 
     // recompute reference energy from ForteIntegral
     compute_reference_energy_from_ints();
@@ -339,8 +333,14 @@ void SADSRG::init_fock() {
     local_timer lt;
     print_contents("Filling Fock matrix from ForteIntegrals");
     Fock_ = BTF_->build(tensor_type_, "Fock", {"gg"});
+
+    bool JKSafe = foptions_->get_bool("EMBEDDING_JKFOCK");
+
+    if (!JKSafe) {
+        build_custom_fock();
+    }
     Fock_.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>&, double& value) {
-        value = ints_->get_fock_a(i[0], i[1]);
+        value = ints_->get_fock_a(i[0], i[1], JKSafe);
     });
     fill_Fdiag(Fock_, Fdiag_);
     print_done(lt.get());
@@ -357,10 +357,8 @@ void SADSRG::fill_Fdiag(BlockedTensor& F, std::vector<double>& Fa) {
     });
 }
 
-void SADSRG::init_fock_emb() {
-    outfile->Printf("\n    Building Downfolded Fock matrix ............................ ");
+void SADSRG::build_custom_fock() {
     size_t ncmo = mo_space_info_->size("CORRELATED");
-    Fock_ = BTF_->build(tensor_type_, "Fock", {"gg"});
 
     psi::SharedMatrix D1a(new psi::Matrix("D1a", ncmo, ncmo));
     for (size_t m = 0, ncore = core_mos_.size(); m < ncore; m++) {
@@ -372,12 +370,6 @@ void SADSRG::init_fock_emb() {
     });
 
     ints_->make_fock_matrix_from_value(D1a, D1a);
-
-    Fock_.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>&, double& value) {
-        value = ints_->get_fock_a(i[0], i[1], false);
-    });
-    fill_Fdiag(Fock_, Fdiag_);
-    outfile->Printf("Done");
 }
 
 double SADSRG::compute_reference_energy_from_ints() {

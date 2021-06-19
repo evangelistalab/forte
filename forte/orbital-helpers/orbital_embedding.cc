@@ -40,16 +40,15 @@
 #include "psi4/libpsi4util/process.h"
 #include "psi4/libpsio/psio.hpp"
 #include "psi4/psifiles.h"
+#include "psi4/libmints/factory.h"
+#include "psi4/libmints/mintshelper.h"
+#include "psi4/libfock/jk.h"
 
 #include "helpers/helpers.h"
 #include "helpers/printing.h"
 
 #include "orbital_embedding.h"
 #include "pao_builder.h"
-
-#include "psi4/libmints/factory.h"
-#include "psi4/libmints/mintshelper.h"
-#include "psi4/libfock/jk.h"
 
 using namespace psi;
 
@@ -477,8 +476,7 @@ std::shared_ptr<MOSpaceInfo> make_embedding(psi::SharedWavefunction ref_wfn,
         A_uocc = options->get_int("NUM_A_UOCC");
         outfile->Printf("\n  Number of A occupied/virtual MOs set to %d and %d\n", A_docc, A_uocc);
     } else if (options->get_str("EMBEDDING_CUTOFF_METHOD") == "CORRELATED_BATH") {
-        print_h2("Orbital partition done according to threshold t1 and t2=t1/10000 to build a "
-                 "correlated bath");
+        print_h2("Orbital partition done according to threshold t1 and a correlated bath");
         outfile->Printf("\n  Threshold t1 = %8.8f, t2 = %8.8f", thresh, thresh / 10000.0);
     } else {
         throw PSIEXCEPTION("make_embedding: Impossible embedding cutoff method!");

@@ -90,9 +90,6 @@ class MASTER_DSRG : public DynamicCorrelationSolver {
     /// Return the Hbar of a given order
     std::vector<ambit::Tensor> Hbar(int n);
 
-    /// Return the Hbar0
-    double Hbar0() { return Hbar0_; }
-
     /// Return if dipole moments are computed
     bool do_dipole() { return do_dm_; }
 
@@ -269,7 +266,7 @@ class MASTER_DSRG : public DynamicCorrelationSolver {
     /// Initialize Fock matrix
     void init_fock();
     /// Initialize Fock matrix for ASET computations
-    void init_fock_emb();
+    void build_custom_fock();
     /// Build Fock matrix from ForteIntegrals
     void build_fock_from_ints(std::shared_ptr<ForteIntegrals> ints);
     /// Fill in diagonal elements of Fock matrix to Fdiag

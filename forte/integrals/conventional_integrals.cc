@@ -198,6 +198,9 @@ void ConventionalIntegrals::build_from_asints(std::shared_ptr<ActiveSpaceIntegra
 
 void ConventionalIntegrals::make_fock_matrix_from_value(std::shared_ptr<psi::Matrix> gamma_a,
                                                         std::shared_ptr<psi::Matrix> gamma_b) {
+    if (options_->get_str("EMBEDDING_TYPE") != "ASET2") {
+        throw psi::PSIEXCEPTION("Wrong Fock builder!");
+    }
     psi::SharedMatrix Fa(new psi::Matrix("Fa_fill", ncmo_, ncmo_));
     psi::SharedMatrix Fb(new psi::Matrix("Fb_fill", ncmo_, ncmo_));
     for (size_t p = 0; p < ncmo_; ++p) {

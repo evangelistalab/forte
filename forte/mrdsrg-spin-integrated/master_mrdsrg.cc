@@ -46,10 +46,8 @@ MASTER_DSRG::~MASTER_DSRG() {
 void MASTER_DSRG::startup() {
     print_h2("Multireference Driven Similarity Renormalization Group");
 
-    bool JK_safe = foptions_->get_bool("EMBEDDING_JKFOCK");
-
     // build fock using ForteIntegrals and clean up JK
-    if (JK_safe) {
+    if (foptions_->get_bool("EMBEDDING_JKFOCK")) {
         build_fock_from_ints(ints_);
     }
 
@@ -69,11 +67,7 @@ void MASTER_DSRG::startup() {
     init_density();
 
     // initialize Fock matrix
-    if (JK_safe) {
-        init_fock();
-    } else {
-        init_fock_emb();
-    }
+    init_fock();
 
     // setup bare dipole tensors and compute reference dipoles
     if (do_dm_) {
@@ -257,22 +251,33 @@ void MASTER_DSRG::fill_density() {
 void MASTER_DSRG::init_fock() {
     outfile->Printf("\n    Filling Fock matrix from ForteIntegrals ......... ");
     Fock_ = BTF_->build(tensor_type_, "Fock", spin_cases({"gg"}));
+
+    bool JKSafe = foptions_->get_bool("EMBEDDING_JKFOCK");
+
+    if (!JKSafe) {
+        outfile->Printf("\n    Debug #2");
+        build_custom_fock();
+    }
+
+    outfile->Printf("\n    Debug #7");
+
     Fock_.iterate(
         [&](const std::vector<size_t>& i, const std::vector<SpinType>& spin, double& value) {
             if (spin[0] == AlphaSpin) {
-                value = ints_->get_fock_a(i[0], i[1]);
+                value = ints_->get_fock_a(i[0], i[1], JKSafe);
             } else {
-                value = ints_->get_fock_b(i[0], i[1]);
+                value = ints_->get_fock_b(i[0], i[1], JKSafe);
             }
         });
+    outfile->Printf("\n    Debug #8");
     fill_Fdiag(Fock_, Fdiag_a_, Fdiag_b_);
+    outfile->Printf("\n    Debug #9");
     outfile->Printf("Done");
 }
 
-void MASTER_DSRG::init_fock_emb() {
-    outfile->Printf("\n    Building Downfolded Fock matrix ............................ ");
+void MASTER_DSRG::build_custom_fock() {
     size_t ncmo = mo_space_info_->size("CORRELATED");
-    Fock_ = BTF_->build(tensor_type_, "Fock", spin_cases({"gg"}));
+    outfile->Printf("\n    Debug #3");
 
     psi::SharedMatrix D1a(new psi::Matrix("D1a", ncmo, ncmo));
     psi::SharedMatrix D1b(new psi::Matrix("D1b", ncmo, ncmo));
@@ -281,6 +286,8 @@ void MASTER_DSRG::init_fock_emb() {
         D1b->set(core_mos_[m], core_mos_[m], 1.0);
     }
 
+    outfile->Printf("\n    Debug #4");
+
     Gamma1_.block("aa").citerate([&](const std::vector<size_t>& i, const double& value) {
         D1a->set(actv_mos_[i[0]], actv_mos_[i[1]], value);
     });
@@ -288,18 +295,10 @@ void MASTER_DSRG::init_fock_emb() {
         D1b->set(actv_mos_[i[0]], actv_mos_[i[1]], value);
     });
 
-    ints_->make_fock_matrix_from_value(D1a, D1b);
+    outfile->Printf("\n    Debug #5");
 
-    Fock_.iterate(
-        [&](const std::vector<size_t>& i, const std::vector<SpinType>& spin, double& value) {
-            if (spin[0] == AlphaSpin) {
-                value = ints_->get_fock_a(i[0], i[1], false);
-            } else {
-                value = ints_->get_fock_b(i[0], i[1], false);
-            }
-        });
-    fill_Fdiag(Fock_, Fdiag_a_, Fdiag_b_);
-    outfile->Printf("Done");
+    ints_->make_fock_matrix_from_value(D1a, D1b);
+    outfile->Printf("\n    Debug #6");
 }
 
 void MASTER_DSRG::fill_Fdiag(BlockedTensor& F, std::vector<double>& Fa, std::vector<double>& Fb) {
