@@ -1129,7 +1129,7 @@ void Build_CAS_AO_Fock(psi::SharedWavefunction ref_wfn, int nirrep, psi::Dimensi
 }
 
 // Utility function #3: Build the second MO_SPACE_INFO for ASET(2) inner layer computations
-std::shared_ptr<MOSpaceInfo> build_aset2_fragment(psi::SharedWavefunction ref_wfn,
+std::shared_ptr<MOSpaceInfo> build_aset2_spaceinfo(psi::SharedWavefunction ref_wfn,
                                                   std::shared_ptr<MOSpaceInfo> mo_space_info,
                                                   std::shared_ptr<ForteOptions> options) {
 

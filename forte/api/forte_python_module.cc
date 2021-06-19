@@ -164,7 +164,7 @@ PYBIND11_MODULE(forte, m) {
     m.def("make_fragment_projector", &make_fragment_projector,
           "Make a fragment(embedding) projector");
     m.def("make_embedding", &make_embedding, "Apply fragment projector to embed");
-    m.def("build_aset2_fragment", &build_aset2_fragment, "Generate fragment (A) MOSpaceInfo object");
+    m.def("build_aset2_spaceinfo", &build_aset2_spaceinfo, "Generate fragment (A) MOSpaceInfo object");
     m.def("make_ints_from_psi4", &make_forte_integrals_from_psi4,
           "Make Forte integral object from psi4");
     m.def("make_custom_ints", &make_custom_forte_integrals, "Make a custom integral object");
@@ -334,8 +334,8 @@ PYBIND11_MODULE(forte, m) {
                       std::shared_ptr<SCFInfo>, std::shared_ptr<MOSpaceInfo>, 
                       std::shared_ptr<ForteIntegrals>, std::shared_ptr<ForteOptions> >(), 
                       "state_weights_map"_a, "scf_info"_a, "mo_space_info"_a, "ints"_a, "options"_a)
-        .def("rhf_rdms", &EMBEDDING_DENSITY::rhf_rdms, "RHF RDMs in the active space")
-        .def("cas_rdms", &EMBEDDING_DENSITY::cas_rdms, "CASCI/CASSCF RDMs in the active space");
+        .def("rhf_rdms", &EMBEDDING_DENSITY::rhf_rdms, "Return RHF RDMs in the active space")
+        .def("cas_rdms", &EMBEDDING_DENSITY::cas_rdms, "Return CASCI/CASSCF RDMs in the active space");
 }
 
 } // namespace forte

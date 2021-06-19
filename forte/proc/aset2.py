@@ -102,7 +102,7 @@ def aset2_driver(state_weights_map, scf_info, ref_wfn, mo_space_info, options):
     # In ASET(2) procedure, We will keep 2 different mo_space_info:
     # mo_space_info: Active = AC + AA + AV, restricted = BO + BV, frozen = F
     # mo_space_info_active: Active = AA, restricted = AC + AV, frozen = BO + BV + F
-    mo_space_info_active = forte.build_aset2_fragment(ref_wfn, mo_space_info, options)
+    mo_space_info_active = forte.build_aset2_spaceinfo(ref_wfn, mo_space_info, options)
 
     # Build total (A+B) integrals first
     update_environment_options(options, B_list, ref_wfn)
