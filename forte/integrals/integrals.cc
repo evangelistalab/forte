@@ -546,8 +546,18 @@ double** ForteIntegrals::three_integral_pointer() {
 
 void ForteIntegrals::rotate_mos() { _undefined_function("rotate_mos"); }
 
-void ForteIntegrals::build_from_asints(std::shared_ptr<ActiveSpaceIntegrals> as_ints) {
-    _undefined_function("build_from_asints");
+void ForteIntegrals::set_ints_from_asints(std::shared_ptr<ActiveSpaceIntegrals> as_ints) {
+    _undefined_function("set_ints_from_asints");
+}
+
+void ForteIntegrals::set_tei_from_asints(std::shared_ptr<ActiveSpaceIntegrals> as_ints, bool alpha1,
+                                         bool alpha2) {
+    _undefined_function("set_tei_from_asints");
+}
+
+void ForteIntegrals::make_fock_matrix_from_value(std::shared_ptr<psi::Matrix> gamma_a,
+                                                 std::shared_ptr<psi::Matrix> gamma_b) {
+    _undefined_function("make_fock_matrix_from_value");
 }
 
 std::vector<std::shared_ptr<psi::Matrix>> ForteIntegrals::mo_dipole_ints(const bool&, const bool&) {

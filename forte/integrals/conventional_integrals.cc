@@ -186,7 +186,7 @@ void ConventionalIntegrals::set_tei_from_asints(std::shared_ptr<ActiveSpaceInteg
     }
 }
 
-void ConventionalIntegrals::build_from_asints(std::shared_ptr<ActiveSpaceIntegrals> as_ints) {
+void ConventionalIntegrals::set_ints_from_asints(std::shared_ptr<ActiveSpaceIntegrals> as_ints) {
     outfile->Printf("\n  Updating one-electron integrals from Hbar");
     set_oei_from_asints(as_ints, true);
     set_oei_from_asints(as_ints, false);

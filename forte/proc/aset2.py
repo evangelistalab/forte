@@ -147,7 +147,7 @@ def aset2_driver(state_weights_map, scf_info, ref_wfn, mo_space_info, options):
     ints_f.set_scalar(scalar)
 
     # Build new ints for dressed computation
-    ints_f.build_from_asints(ints_dressed)
+    ints_f.set_ints_from_asints(ints_dressed)
 
     # For three-dsrg-mrpt2, automatically convert to dsrg-mrpt2 when computing the fragment (A)
     if options.get_str('CORRELATION_SOLVER') == "THREE-DSRG-MRPT2":

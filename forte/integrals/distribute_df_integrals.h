@@ -83,12 +83,6 @@ class DistDFIntegrals : public Psi4Integrals {
         throw psi::PSIEXCEPTION("DistDF can not use set_tei");
     }
 
-    void set_tei_from_asints(std::shared_ptr<ActiveSpaceIntegrals> as_ints, bool alpha1,
-                             bool alpha2) {}
-
-    void make_fock_matrix_from_value(std::shared_ptr<psi::Matrix> gamma_a,
-                                     std::shared_ptr<psi::Matrix> gamma_b) {}
-
     /// Make a Fock matrix computed with respect to a given determinant
     virtual size_t nthree() const { return nthree_; }
     virtual int ga_handle() { return DistDF_ga_; }

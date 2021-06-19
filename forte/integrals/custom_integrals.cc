@@ -161,7 +161,7 @@ void CustomIntegrals::set_tei_from_asints(std::shared_ptr<ActiveSpaceIntegrals> 
     }
 }
 
-void CustomIntegrals::build_from_asints(std::shared_ptr<ActiveSpaceIntegrals> as_ints) {
+void CustomIntegrals::set_ints_from_asints(std::shared_ptr<ActiveSpaceIntegrals> as_ints) {
     outfile->Printf("\n  Updating one-electron integrals from Hbar");
     set_oei_from_asints(as_ints, true);
     set_oei_from_asints(as_ints, false);
@@ -169,7 +169,10 @@ void CustomIntegrals::build_from_asints(std::shared_ptr<ActiveSpaceIntegrals> as
     set_tei_from_asints(as_ints, true, true);
     set_tei_from_asints(as_ints, true, false);
     set_tei_from_asints(as_ints, false, false);
-    // OEI need to be updated to full_one_electron_integrals_a_ and full_one_electron_integrals_b_
+    // For future reference:
+    // full_one_electron_integrals_a_ and full_one_electron_integrals_b_ values are not set !
+    // If we want to build frozen Fock, OEI values need to be written to 
+    // full_one_electron_integrals_a_ and full_one_electron_integrals_b_
     // for (size_t p = 0; p < ncmo_; ++p) {
     //    for (size_t q = 0; q < ncmo_; ++q) {
     //        full_one_electron_integrals_a_[cmotomo_[p] * nmo_ + cmotomo_[q]] =
@@ -181,6 +184,9 @@ void CustomIntegrals::build_from_asints(std::shared_ptr<ActiveSpaceIntegrals> as
 
 void CustomIntegrals::make_fock_matrix_from_value(std::shared_ptr<psi::Matrix> gamma_a,
                                                   std::shared_ptr<psi::Matrix> gamma_b) {
+    if (options_->get_str("EMBEDDING_TYPE") != "ASET2") {
+        throw psi::PSIEXCEPTION("Wrong Fock builder!");
+    }
     psi::SharedMatrix Fa(new psi::Matrix("Fa_fill", ncmo_, ncmo_));
     psi::SharedMatrix Fb(new psi::Matrix("Fb_fill", ncmo_, ncmo_));
     for (size_t p = 0; p < ncmo_; ++p) {
