@@ -43,7 +43,7 @@ void export_ForteOptions(py::module& m) {
         .def(py::init<>())
         .def("set_dict", &ForteOptions::set_dict)
         .def("dict", &ForteOptions::dict)
-        .def("reset", &ForteOptions::reset_dict,"Reset the options")
+        .def("reset", &ForteOptions::reset_dict, "Reset the options")
         .def("set_group", &ForteOptions::set_group, "Set the options group")
         .def("add_bool", &ForteOptions::add_bool, "Add a boolean option")
         .def("add_int", &ForteOptions::add_int, "Add an integer option")
@@ -68,8 +68,7 @@ void export_ForteOptions(py::module& m) {
         .def("get_int_vec", &ForteOptions::get_int_vec, "Get a vector of integers option")
         .def("get_double_vec", &ForteOptions::get_double_vec,
              "Get a vector of doubles (py::float) option")
-        .def("get_gen_vec", &ForteOptions::get_gen_list,
-             "Get a general vector")
+        .def("get_gen_vec", &ForteOptions::get_gen_list, "Get a general vector")
         .def("set_bool", &ForteOptions::set_bool, "Set a boolean option")
         .def("set_int", &ForteOptions::set_int, "Set an integer option")
         .def("set_double", &ForteOptions::set_double, "Set a double option")
@@ -81,6 +80,8 @@ void export_ForteOptions(py::module& m) {
              "Push the options list to Psi4")
         .def("get_options_from_psi4", &ForteOptions::get_options_from_psi4,
              "Read the value of options from Psi4")
+        .def("set_from_dict", &ForteOptions::set_options_from_dict,
+             "Set options from a dictionary `dict` of labels -> values")
         .def("generate_documentation", &ForteOptions::generate_documentation);
 }
 

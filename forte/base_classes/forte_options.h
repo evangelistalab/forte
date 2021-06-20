@@ -172,44 +172,44 @@ class ForteOptions {
      * @brief Get a boolean option
      * @param label Option label
      */
-    bool get_bool(const std::string& label);
+    bool get_bool(const std::string& label) const;
 
     /**
      * @brief Get a integer option
      * @param label Option label
      */
-    int get_int(const std::string& label);
+    int get_int(const std::string& label) const;
 
     /**
      * @brief Get a double option
      * @param label Option label
      */
-    double get_double(const std::string& label);
+    double get_double(const std::string& label) const;
 
     /**
      * @brief Get a string option
      * @param label Option label
      */
-    std::string get_str(const std::string& label);
+    std::string get_str(const std::string& label) const;
 
     /**
      * @brief Get a general python list
      * @param label
      * @return a py list
      */
-    py::list get_gen_list(const std::string& label);
+    py::list get_gen_list(const std::string& label) const;
 
     /**
      * @brief Get a vector of int option
      * @param label Option label
      */
-    std::vector<int> get_int_vec(const std::string& label);
+    std::vector<int> get_int_vec(const std::string& label) const;
 
     /**
      * @brief Get a vector of int option
      * @param label Option label
      */
-    std::vector<double> get_double_vec(const std::string& label);
+    std::vector<double> get_double_vec(const std::string& label) const;
 
     /**
      * @brief Set a boolean option
@@ -264,7 +264,7 @@ class ForteOptions {
      * @brief Register the options with Psi4's options object
      * @param options a Psi4 option object
      */
-    void push_options_to_psi4(psi::Options& options);
+    void push_options_to_psi4(psi::Options& options) const;
 
     /**
      * @brief Read options from a Psi4's options object
@@ -283,9 +283,29 @@ class ForteOptions {
      */
     pybind11::dict dict();
 
-    void set_dict(pybind11::dict dict) { dict_ = dict; }
+    /**
+     * @brief Set the value of options from a python dictionary
+     *
+     * This function assumes that dict only contains the option
+     * label and the corresponding value.
+     * @param dict
+     */
+    void set_options_from_dict(pybind11::dict dict);
 
-    void reset_dict() { dict_ = pybind11::dict(); }
+    /**
+     * @brief Set the python dictionary that stores options
+     */
+    void set_dict(pybind11::dict dict);
+
+    /**
+     * @brief Reset the python dictionary that stores the options
+     */
+    void reset_dict();
+
+    /**
+     * @brief Return a string representation of this object
+     */
+    std::string str() const;
 
   private:
     pybind11::dict dict_;

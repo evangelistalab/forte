@@ -24,7 +24,9 @@ class ActiveSpaceSolver(Solver):
         restricted_docc=None,
         frozen_docc=None,
         e_convergence=1.0e-10,
-        r_convergence=1.0e-6
+        r_convergence=1.0e-6,
+        options=None,
+        cbh=None
     ):
         """
         Initialize a FCI object
@@ -47,6 +49,10 @@ class ActiveSpaceSolver(Solver):
             energy convergence criterion
         r_convergence: float
             residual convergence criterion
+        options: dict()
+            Additional options passed to control the active space solver            
+        cbh: CallbackHandler
+            A callback object used to inject code into the HF class            
         """
         super().__init__()
         self._type = type.upper()
@@ -62,6 +68,8 @@ class ActiveSpaceSolver(Solver):
         )
         self._e_convergence = e_convergence
         self._r_convergence = r_convergence
+        self._options = {} if options is None else options
+        self._cbh = CallbackHandler() if cbh is None else cbh
 
     def __repr__(self):
         """
