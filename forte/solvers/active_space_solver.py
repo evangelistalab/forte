@@ -2,13 +2,13 @@
 import logging
 
 from forte.solvers.solver import Solver
+
+from forte.solvers.callback_handler import CallbackHandler
 from forte.forte import StateInfo
+from forte.forte import ForteOptions
 from forte import to_state_nroots_map
 from forte import forte_options
 from forte.forte import make_active_space_ints, make_active_space_solver
-# from forte.solvers.hf import HF
-# from forte.model import Model
-# from forte import prepare_forte_options, make_ints_from_psi4, make_mcscf_two_step, make_mcscf
 
 
 class ActiveSpaceSolver(Solver):
@@ -44,15 +44,15 @@ class ActiveSpaceSolver(Solver):
         restricted_docc: list(int)
             The number of restricted doubly occupied MOs per irrep
         frozen_docc: list(int)
-            The number of frozen doubly occupied MOs per irrep            
+            The number of frozen doubly occupied MOs per irrep
         e_convergence: float
             energy convergence criterion
         r_convergence: float
             residual convergence criterion
         options: dict()
-            Additional options passed to control the active space solver            
+            Additional options passed to control the active space solver
         cbh: CallbackHandler
-            A callback object used to inject code into the HF class            
+            A callback object used to inject code into the HF class
         """
         super().__init__()
         self._type = type.upper()
@@ -96,14 +96,17 @@ class ActiveSpaceSolver(Solver):
 
         # make the integral objects
         # options = self.prepare_forte_options()  # TODO: this is a hack
-        self.ints = self.model.ints(self.data, forte_options)
+        local_options = ForteOptions(forte_options)
+        local_options.set_from_dict(self._options)
+        print(local_options)
+        self.ints = self.model.ints(self.data, local_options)
 
         # Make an active space integral object
         as_ints = make_active_space_ints(self.mo_space_info, self.ints, "ACTIVE", ["RESTRICTED_DOCC"])
 
         # create an active space solver object and compute the energy
         active_space_solver = make_active_space_solver(
-            self._type, state_map, self.scf_info, self.mo_space_info, as_ints, forte_options
+            self._type, state_map, self.scf_info, self.mo_space_info, as_ints, local_options
         )
         state_energies_list = active_space_solver.compute_energy()
         self._results.add('active space energy', state_energies_list, 'Active space energy', 'Eh')

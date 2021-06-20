@@ -41,6 +41,7 @@ namespace forte {
 void export_ForteOptions(py::module& m) {
     py::class_<ForteOptions, std::shared_ptr<ForteOptions>>(m, "ForteOptions")
         .def(py::init<>())
+        .def(py::init<const ForteOptions&>())
         .def("set_dict", &ForteOptions::set_dict)
         .def("dict", &ForteOptions::dict)
         .def("reset", &ForteOptions::reset_dict, "Reset the options")
