@@ -1,8 +1,11 @@
+import logging
 from abc import ABC, abstractmethod
+
 from forte.molecule import Molecule
 from forte.basis import Basis
 from forte.forte import StateInfo
 from forte.forte import Symmetry
+from forte.forte import make_ints_from_psi4
 
 
 class Model(ABC):
@@ -18,6 +21,10 @@ class Model(ABC):
     @abstractmethod
     def point_group(self) -> str:
         """The model point group"""
+
+    @abstractmethod
+    def ints(self, mo_space_info):
+        """Make a ForteIntegral object"""
 
 
 class MolecularModel(Model):
@@ -135,3 +142,7 @@ class MolecularModel(Model):
         # get the irrep index from the symbol
         irrep = self.symmetry.irrep_label_to_index(sym)
         return StateInfo(na, nb, multiplicity, twice_ms, irrep, sym)
+
+    def ints(self, data, options):
+        logging.info('MolecularModel: preparing integrals from psi4')
+        return make_ints_from_psi4(data.psi_wfn, options, data.mo_space_info)

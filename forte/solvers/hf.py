@@ -28,7 +28,9 @@ class HF(Solver):
 
         Parameters
         ----------
-        restricted : bool
+        state: StateInfo
+            the state to optimize (defines the number of alpha/beta electrons and m_s)
+        restricted: bool
             do restricted HF?
         e_convergence: float
             energy convergence criterion
