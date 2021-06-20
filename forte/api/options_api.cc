@@ -82,7 +82,9 @@ void export_ForteOptions(py::module& m) {
              "Read the value of options from Psi4")
         .def("set_from_dict", &ForteOptions::set_options_from_dict,
              "Set options from a dictionary `dict` of labels -> values")
-        .def("generate_documentation", &ForteOptions::generate_documentation);
+        .def("generate_documentation", &ForteOptions::generate_documentation,
+             "Generate documentation from the options list")
+        .def("__str__", &ForteOptions::str, "Returns a string represenation of this object");
 }
 
 } // namespace forte

@@ -180,6 +180,9 @@ void ForteOptions::set_options_from_dict(pybind11::dict dict) {
             // here we convert to the option type and check
             // for an exception if there is a type mismatch
             try {
+                if (value_type.second == "bool") {
+                    set(label, py::bool_(obj));
+                }
                 if (value_type.second == "int") {
                     set(label, py::int_(obj));
                 }
@@ -593,47 +596,39 @@ std::string ForteOptions::str() const {
     for (auto item : dict_) {
         auto label = py::cast<std::string>(item.first);
         auto type = py::cast<std::string>(item.second["type"]);
-        if (type == "bool") {
+        if (is_none(label)) {
+            s += label + ": None";
+            continue;
+        } else if (type == "bool") {
             bool value = get_bool(label);
             s += label + ": " + std::to_string(value);
-        }
-        if (type == "int") {
+        } else if (type == "int") {
             int value = get_int(label);
             s += label + ": " + std::to_string(value);
-        }
-        if (type == "float") {
+        } else if (type == "float") {
             double value = get_double(label);
             s += label + ": " + std::to_string(value);
-        }
-        if (type == "str") {
+        } else if (type == "str") {
             s += label + ": " + get_str(label);
+
+        } else if (type == "int_list") {
+            s += label + ": [";
+            std::vector<int> value = get_int_vec(label);
+            for (auto e : value) {
+                s += std::to_string(e) + ",";
+            }
+            s += "]";
+        } else if (type == "float_list") {
+            s += label + ": [";
+            std::vector<double> value = get_double_vec(label);
+            for (auto e : value) {
+                s += std::to_string(e) + ",";
+            }
+            s += "]";
+        } else {
+            s += label + ": gen_list()";
         }
-        // if (type == "int_list") {
-        //     std::vector<int> value = options.get_int_vector(label);
-        //     auto py_list = py::list();
-        //     for (auto e : value) {
-        //         py_list.append(py::int_(e));
-        //     }
-        //     item.second["value"] = py_list;
-        // }
-        // if (type == "float_list") {
-        //     std::vector<double> value = options.get_double_vector(label);
-        //     auto py_list = py::list();
-        //     for (auto e : value) {
-        //         py_list.append(py::float_(e));
-        //     }
-        //     item.second["value"] = py_list;
-        // }
-        // if (type == "gen_list") {
-        //     auto& psi_array_data = options[label];
-        //     auto py_list = py::list();
-        //     size_t nentry = psi_array_data.size();
-        //     for (size_t i = 0; i < nentry; i++) {
-        //         auto result = process_psi4_array_data(psi_array_data[i]);
-        //         py_list.append(result);
-        //     }
-        //     item.second["value"] = py_list;
-        // }
+        s += "\n";
     }
     return s;
 }
