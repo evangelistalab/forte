@@ -17,8 +17,8 @@ class ActiveSpaceSolver(Solver):
     """
     def __init__(
         self,
+        mo_solver,
         type,
-        mos,
         states,
         active=None,
         restricted_docc=None,
@@ -35,7 +35,7 @@ class ActiveSpaceSolver(Solver):
         ----------
         type: str
             The type of solver (set by the derived classes)
-        mos: Solver
+        mo_solver: Solver
             The solver that will provide the molecular orbitals
         states: dict()
             A dictionary of StateInfo -> list(float) of all the states that will be computed.
@@ -56,13 +56,13 @@ class ActiveSpaceSolver(Solver):
         """
         super().__init__()
         self._type = type.upper()
-        self._mos = mos
+        self._mo_solver = mo_solver
         # allow passing a single StateInfo object
         if isinstance(states, StateInfo):
             self._states = {states: [1.0]}
         else:
             self._states = states
-        self._data = mos._data
+        self._data = mo_solver._data
         self._mo_space_info_map = self._mo_space_info_map(
             frozen_docc=frozen_docc, restricted_docc=restricted_docc, active=active
         )
@@ -92,9 +92,13 @@ class ActiveSpaceSolver(Solver):
         return self._r_convergence
 
     def run(self):
+        """Run an active space solver computation"""
+
+        logging.info('ActiveSpaceSolver: entering run()')
+
         # compute the guess orbitals
-        if not self._mos.executed:
-            self._mos.run()
+        if not self._mo_solver.executed:
+            self._mo_solver.run()
 
         # make the state_map
         state_map = to_state_nroots_map(self._states)
@@ -122,5 +126,7 @@ class ActiveSpaceSolver(Solver):
         )
         state_energies_list = active_space_solver.compute_energy()
         self._results.add('active space energy', state_energies_list, 'Active space energy', 'Eh')
+
+        logging.info('ActiveSpaceSolver: exiting run()')
 
         return self

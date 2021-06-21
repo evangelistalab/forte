@@ -22,10 +22,13 @@ def test_fci():
     # specify the electronic state
     state = root.state(charge=0, multiplicity=1, sym='ag')
 
-    # create a HF object and run
+    # create a HF object
     hf = HF(root, state=state)
-    fci = ActiveSpaceSolver(type='FCI', mos=hf, states=state, active=[1, 0, 0, 0, 0, 1, 0, 0])
+    # create a FCI object that grabs the MOs from the HF object (hf)
+    fci = ActiveSpaceSolver(mo_solver=hf, type='FCI', states=state, active=[1, 0, 0, 0, 0, 1, 0, 0])
+    # run the computation
     fci.run()
+    # check the FCI energy
     assert list(fci.value('active space energy').items())[0][1][0] == pytest.approx(ref_energy, 1.0e-10)
 
 
