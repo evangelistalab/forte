@@ -47,6 +47,9 @@ using namespace psi;
 
 namespace forte {
 
+/**
+ * The main function of computing gradients.
+ */
 SharedMatrix DSRG_MRPT2::compute_gradient() {
     // NOTICE: compute the DSRG_MRPT2 gradient
     print_method_banner({"DSRG-MRPT2 Gradient", "Shuhe Wang"});
@@ -62,6 +65,11 @@ SharedMatrix DSRG_MRPT2::compute_gradient() {
     return std::make_shared<Matrix>("nullptr", 0, 0);
 }
 
+/**
+ * Initialize global variables.
+ *
+ * MO indices list, dimension of different MOs, CI-related variables etc.
+ */
 void DSRG_MRPT2::set_global_variables() {
     outfile->Printf("\n    Initializing Global Variables ................... ");
     nmo = mo_space_info_->size("CORRELATED");
@@ -84,7 +92,11 @@ void DSRG_MRPT2::set_global_variables() {
     outfile->Printf("Done");
 }
 
-
+/**
+ * Initialize tensors.
+ *
+ * Density tensors, one- and two-electron integrals, Fock matrix, DSRG and CI tensors.
+ */
 void DSRG_MRPT2::set_tensor() {
     outfile->Printf("\n    Initializing RDMs, DSRG Tensors and CI integrals. ");
     I = BTF_->build(CoreTensor, "identity matrix", {"cc", "CC", "aa", "AA", "vv", "VV"});
@@ -103,6 +115,16 @@ void DSRG_MRPT2::set_tensor() {
     outfile->Printf("Done");
 }
 
+/**
+ * Initialize and solve Lagrange multipliers.
+ *
+ * Sigma: constraint of the one-body DSRG amplitude (T1) definition.
+ * Xi:    constraint of the renormalized Fock matrix (F1) definition.
+ * Tau:   constraint of the two-body DSRG amplitude (T2) definition.
+ * Kappa: constraint of the renormalized ERIs (\tilde{V}) definition.
+ * Z:     OPDM, constraint of the CASSCF reference.
+ * W:     EWDM, constraint of the orthonormal overlap integral.
+ */
 void DSRG_MRPT2::set_multiplier() {
     set_sigma();
     set_xi();

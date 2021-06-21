@@ -37,6 +37,9 @@ using namespace psi;
 
 namespace forte {
 
+/**
+ * Write the energy-weighted density matrix into Psi4 Lagrangian_.
+ */
 void DSRG_MRPT2::write_lagrangian() {
     // NOTICE: write the Lagrangian
     outfile->Printf("\n    Writing EWDM (Lagrangian) ....................... ");
@@ -76,9 +79,9 @@ void DSRG_MRPT2::write_lagrangian() {
 }
 
 /**
- * Write spin_dependent one-RDMs coefficients.
+ * Write spin_dependent one-RDMs coefficients into Psi4 Da_ and Db_.
  *
- * We force "Da == Db". This function needs be changed if such constraint is revoked.
+ * We assume "Da == Db". This function needs be changed if such constraint is revoked.
  */
 void DSRG_MRPT2::write_1rdm_spin_dependent() {
     // NOTICE: write spin_dependent one-RDMs coefficients.
@@ -569,10 +572,11 @@ void DSRG_MRPT2::write_2rdm_spin_dependent() {
     outfile->Printf("Done");
 }
 
+/**
+ * Backtransform the TPDM.
+ */
 void DSRG_MRPT2::tpdm_backtransform() {
     // Backtransform the TPDM
-    // NOTICE: This function also appears in the CASSCF gradient code thus can be refined in the
-    // future!!
 
     std::vector<std::shared_ptr<psi::MOSpace>> spaces;
     spaces.push_back(psi::MOSpace::all);

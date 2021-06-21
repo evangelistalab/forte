@@ -36,6 +36,14 @@ using namespace psi;
 
 namespace forte {
 
+/**
+ * Initialize and solve the multiplier Z (OPDM).
+ *
+ * Z: OPDM, constraint of the CASSCF reference.
+ * The core-core, virtual-virtual blocks and diagonal entries of the active-active
+ * blocks are solved directly based on other multipliers. The rest need be solved
+ * Through iterative approaches. Currently, we use LAPACK as the solver.
+ */
 void DSRG_MRPT2::set_z() {
     Z = BTF_->build(CoreTensor, "Z Matrix", spin_cases({"gg"}));
     outfile->Printf("\n    Initializing Diagonal Entries of the OPDM Z ..... ");
@@ -47,6 +55,12 @@ void DSRG_MRPT2::set_z() {
     solve_z();
 }
 
+/**
+ * Initialize and solve the multiplier W.
+ *
+ * W: EWDM, constraint of the orthonormal overlap integral.
+ * Solved directly after all other multipliers are solved.
+ */
 void DSRG_MRPT2::set_w() {
     outfile->Printf("\n    Solving Entries of the EWDM W.................... ");
     W = BTF_->build(CoreTensor, "Energy weighted density matrix(Lagrangian)", spin_cases({"gg"}));
@@ -295,6 +309,9 @@ void DSRG_MRPT2::set_w() {
     outfile->Printf("Done");
 }
 
+/**
+ * The core-core block of the OPDM Z.
+ */
 void DSRG_MRPT2::set_z_cc() {
     BlockedTensor val1 = BTF_->build(CoreTensor, "val1", {"c"});
     BlockedTensor temp = BTF_->build(CoreTensor, "temporal tensor", spin_cases({"hhpp"}));
@@ -377,6 +394,9 @@ void DSRG_MRPT2::set_z_cc() {
     }
 }
 
+/**
+ * The virtual-virtual block of the OPDM Z.
+ */
 void DSRG_MRPT2::set_z_vv() {
     BlockedTensor val2 = BTF_->build(CoreTensor, "val2", {"v"});
     BlockedTensor temp = BTF_->build(CoreTensor, "temporal tensor", spin_cases({"hhpp"}));
@@ -464,6 +484,9 @@ void DSRG_MRPT2::set_z_vv() {
     }
 }
 
+/**
+ * The diagonal entries of the active-active block of the OPDM Z.
+ */
 void DSRG_MRPT2::set_z_aa_diag() {
     BlockedTensor val3 = BTF_->build(CoreTensor, "val3", {"a"});
     BlockedTensor temp = BTF_->build(CoreTensor, "temporal tensor", spin_cases({"hhpp"}));
@@ -552,6 +575,9 @@ void DSRG_MRPT2::set_z_aa_diag() {
     }
 }
 
+/**
+ * Initializing the b of the Linear System Ax=b.
+ */
 void DSRG_MRPT2::set_b() {
     outfile->Printf("\n    Initializing b of the Linear System ............. ");
     Z_b = BTF_->build(CoreTensor, "b(AX=b)", spin_cases({"gg"}));
@@ -812,6 +838,9 @@ void DSRG_MRPT2::set_b() {
     Z_b["mw"] -= Z["E1,F"] * V["w,F,m,E1"];
 }
 
+/**
+ * Solve the Linear System Ax=b and yield Z.
+ */
 void DSRG_MRPT2::solve_z() {
     set_b();
 
@@ -2371,7 +2400,6 @@ void DSRG_MRPT2::solve_z() {
             });
         }
     }
-
     for (const std::string& block : {"ci"}) {
         int pre = preidx[block];
         (x_ci).iterate([&](const std::vector<size_t>& i, double& value) {
@@ -2379,7 +2407,6 @@ void DSRG_MRPT2::solve_z() {
             value = b.at(index);
         });
     }
-
     Z["me"] = Z["em"];
     Z["wm"] = Z["mw"];
     Z["we"] = Z["ew"];
@@ -2400,13 +2427,11 @@ void DSRG_MRPT2::solve_z() {
             value = Z.block("va").data()[i[0] * na + i[1]];
         });
     }
-
     for (const std::string& block : {"AA"}) {
         (Z.block(block)).iterate([&](const std::vector<size_t>& i, double& value) {
             value = Z.block("aa").data()[i[0] * na + i[1]];
         });
     }
-
     Z["ME"] = Z["EM"];
     Z["WM"] = Z["MW"];
     Z["WE"] = Z["EW"];
@@ -2415,6 +2440,3 @@ void DSRG_MRPT2::solve_z() {
 }
 
 }// namespace forte
-
-
-

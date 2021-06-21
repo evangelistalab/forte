@@ -39,6 +39,9 @@ using namespace psi;
 
 namespace forte {
 
+/**
+ * Initializing CI integrals for the z-vector equation.
+ */
 void DSRG_MRPT2::set_ci_ints() {
     cc = coupling_coefficients_;
     ci = ci_vectors_[0];
@@ -291,6 +294,11 @@ void DSRG_MRPT2::set_ci_ints() {
     dlamb3_abb("KxYZuVW") += cc1b_r("KYW") * Gamma1_.block("AA")("ZV") * Gamma1_.block("aa")("xu");
 }
 
+/**
+ * Initializing the two-body density Gamma2_.
+ *
+ * NOTICE: this function shall be deprecated in the future.
+ */
 void DSRG_MRPT2::set_density() {
     Gamma2_ = BTF_->build(CoreTensor, "Gamma2_", spin_cases({"aaaa"}));
 
@@ -299,6 +307,11 @@ void DSRG_MRPT2::set_density() {
     Gamma2_.block("AAAA")("pqrs") = rdms_.g2bb()("pqrs");
 }
 
+/**
+ * Initializing the one-electron integral H.
+ *
+ * NOTICE: this function shall be deprecated in the future.
+ */
 void DSRG_MRPT2::set_h() {
     H = BTF_->build(CoreTensor, "One-Electron Integral", spin_cases({"gg"}));
     H.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>& spin, double& value) {
@@ -310,6 +323,11 @@ void DSRG_MRPT2::set_h() {
     });
 }
 
+/**
+ * Initializing the ERIs V.
+ *
+ * NOTICE: this function shall be deprecated in the future.
+ */
 void DSRG_MRPT2::set_v() {
     V = BTF_->build(CoreTensor, "Electron Repulsion Integral",
                     spin_cases({"gphh", "pghh", "ppgh", "pphg", "gchc", "pghc", "pcgc", "pchg",
@@ -348,6 +366,11 @@ void DSRG_MRPT2::set_v() {
     V_all_Beta["PQ"] = V["PMQN"] * I["MN"];
 }
 
+/**
+ * Initializing the Fock F.
+ *
+ * NOTICE: this function shall be deprecated in the future.
+ */
 void DSRG_MRPT2::set_fock() {
     F = BTF_->build(CoreTensor, "Fock Matrix", spin_cases({"gg"}));
 
@@ -362,6 +385,9 @@ void DSRG_MRPT2::set_fock() {
     });
 }
 
+/**
+ * Initializing the DSRG-related auxiliary tensors.
+ */
 void DSRG_MRPT2::set_dsrg_tensor() {
     Eeps1 = BTF_->build(CoreTensor, "e^[-s*(Delta1)^2]", spin_cases({"hp"}));
     Eeps1_m1 = BTF_->build(CoreTensor, "{1-e^[-s*(Delta1)^2]}/(Delta1)", spin_cases({"hp"}));

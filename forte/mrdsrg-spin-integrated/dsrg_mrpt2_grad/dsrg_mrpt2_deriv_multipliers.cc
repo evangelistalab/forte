@@ -36,6 +36,12 @@ using namespace psi;
 
 namespace forte {
 
+/**
+ * Initialize and solve the multiplier Tau.
+ *
+ * Tau: constraint of the two-body DSRG amplitude (T2) definition.
+ * Solved directly.
+ */
 void DSRG_MRPT2::set_tau() {
     outfile->Printf("\n    Initializing multipliers for two-body amplitude.. ");
     Tau1 = BTF_->build(CoreTensor, "Tau1", spin_cases({"hhpp"}));
@@ -360,6 +366,12 @@ void DSRG_MRPT2::set_tau() {
     outfile->Printf("Done");
 }
 
+/**
+ * Initialize and solve the multiplier Sigma.
+ *
+ * Sigma: constraint of the one-body DSRG amplitude (T1) definition.
+ * Solved directly.
+ */
 void DSRG_MRPT2::set_sigma() {
     outfile->Printf("\n    Initializing multipliers for one-body amplitude.. ");
     Sigma = BTF_->build(CoreTensor, "Sigma", spin_cases({"hp"}));
@@ -403,6 +415,12 @@ void DSRG_MRPT2::set_sigma() {
     outfile->Printf("Done");
 }
 
+/**
+ * Initialize and solve the multiplier Xi.
+ *
+ * Xi: constraint of the renormalized Fock matrix (F1) definition.
+ * Solved directly.
+ */
 void DSRG_MRPT2::set_xi() {
     outfile->Printf("\n    Initializing multipliers for renormalize Fock ... ");
     Xi = BTF_->build(CoreTensor, "Xi", spin_cases({"hp"}));
@@ -444,6 +462,12 @@ void DSRG_MRPT2::set_xi() {
     outfile->Printf("Done");
 }
 
+/**
+ * Initialize and solve the multiplier Kappa.
+ *
+ * Kappa: constraint of the renormalized ERIs (\tilde{V}) definition.
+ * Solved directly.
+ */
 void DSRG_MRPT2::set_kappa() {
     outfile->Printf("\n    Initializing multipliers for renormalize ERIs ... ");
     Kappa = BTF_->build(CoreTensor, "Kappa", spin_cases({"hhpp"}));
@@ -645,7 +669,6 @@ void DSRG_MRPT2::set_kappa() {
         Kappa["YMVU"] -= 0.25 * T1_["MX"] * Lambda2_["YXVU"];
         Kappa["yMvU"] -= 0.25 * T1_["MX"] * Lambda2_["yXvU"];
     }
-
     outfile->Printf("Done");
 }
 

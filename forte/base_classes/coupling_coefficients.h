@@ -5,6 +5,19 @@
 
 namespace forte {
 
+/**
+ * A CI coupling-coefficients class for the DSRG gradient implementation.
+ *
+ * A container for CI coupling coefficients.
+ * We have |Psi_0> = sum_{i} C_i * |phi_i>, where C is the CI coefficient.
+ * cc1_: <phi| p^ q| Psi_0>
+ * cc2_: <phi| p^ q^ r s| Psi_0>
+ * cc3_: <phi| o^ p^ q^ r s t| Psi_0>
+ * a and b are for alpha and beta, respectively.
+ *
+ * Coupling coefficients are paired with the CI-related Lagrange multiplier
+ * in the DSRG gradient code when solving the z-vector equation.
+ */
 class CICouplingCoefficients {
   public:
     CICouplingCoefficients();
