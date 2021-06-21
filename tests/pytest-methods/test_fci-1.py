@@ -1,12 +1,10 @@
-"""Test the HF solver."""
-
 import pytest
 
 from forte.solvers import solver_factory, HF, ActiveSpaceSolver
 
 
 def test_fci_1():
-    """Test FCI on Li2/STO-3G. Reproduces the test fci-1"""
+    """Test FCI on Li2/STO-3G"""
 
     ref_hf_energy = -14.54873910108353
     ref_fci_energy = -14.595808852754054

@@ -121,7 +121,7 @@ class MolecularModel(Model):
 
         if (nel - twice_ms) % 2 != 0:
             raise ValueError(
-                f'(MolecularModel) The value of M_S ({ms}) is incompatible with the number of electrons ({nel})'
+                f'(MolecularModel) The value of M_S ({twice_ms / 2.0}) is incompatible with the number of electrons ({nel})'
             )
 
         # compute the number of alpha/beta electrons

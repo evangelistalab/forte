@@ -1,5 +1,3 @@
-"""Test the HF solver."""
-
 import pytest
 
 from forte.solvers import solver_factory, HF, ActiveSpaceSolver

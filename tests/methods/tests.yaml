@@ -6,7 +6,6 @@
 #
 aci:
    short:
-      # - aci-1 # moved to pytest
       - aci-2
       - aci-3
       - aci-4
@@ -28,6 +27,7 @@ aci:
       - aci-19
       - aci-local-20
    long:
+      - aci-1 # moved to pytest
       - aci-7
       - aci-full-pt2-2
       - cis-aci-1
@@ -204,10 +204,6 @@ embedding:
       - embedding-2
 fci:
    short:
-      # - fci-1 # moved to pytest
-      # - fci-7 # moved to pytest
-      - fci-ex-1
-      - fci-rdms-1
    medium:
       - fci-2
       - fci-3
@@ -221,6 +217,10 @@ fci:
       - fci-rdms-2
    long:
       - fci-6
+      - fci-1 # moved to pytest
+      - fci-7 # moved to pytest
+      - fci-ex-1 # moved to pytest
+      - fci-rdms-1 # moved to pytest
 gasci:
    short:
       - gasci-1

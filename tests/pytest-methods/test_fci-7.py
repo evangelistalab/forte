@@ -1,12 +1,13 @@
-"""Test the HF solver."""
-
 import pytest
 
 from forte.solvers import solver_factory, HF, ActiveSpaceSolver
 
 
 def test_fci_7():
-    """Test FCI on Li2/STO-3G. Reproduces the test fci-1"""
+    """
+    Test FCI on the doublet state of CH and triplet state of CH+.
+    It also verifies that computations with different values of M_S yield the same energy
+    """
 
     ref_hf_energy = -37.43945401822133
     ref_fci_energy = -37.49081328115731
