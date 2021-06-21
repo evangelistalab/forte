@@ -23,7 +23,7 @@ def test_fci_1():
 
     # check results
     assert hf.value('hf energy') == pytest.approx(ref_hf_energy, 1.0e-10)
-    assert list(fci.value('active space energy').items())[0][1][0] == pytest.approx(ref_fci_energy, 1.0e-10)
+    assert fci.value('active space energy')[state] == pytest.approx([ref_fci_energy], 1.0e-10)
 
 
 if __name__ == "__main__":

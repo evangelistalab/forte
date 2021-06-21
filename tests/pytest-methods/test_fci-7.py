@@ -31,13 +31,13 @@ def test_fci_7():
 
     # check results
     assert hf_doublet.value('hf energy') == pytest.approx(ref_hf_energy, 1.0e-10)
-    assert list(fci_doublet_1.value('active space energy').items())[0][1][0] == pytest.approx(ref_fci_energy, 1.0e-10)
+    assert fci_doublet_1.value('active space energy')[state_doublet_1] == pytest.approx([ref_fci_energy], 1.0e-10)
 
     # compute the FCI energy for the double B1 (M_S =  1/2) solution
     state_doublet_2 = root.state(charge=0, multiplicity=2, ms=-0.5, sym='b1')
     fci_doublet_2 = ActiveSpaceSolver(hf_doublet, type='FCI', states=state_doublet_2)
     fci_doublet_2.run()
-    assert list(fci_doublet_2.value('active space energy').items())[0][1][0] == pytest.approx(ref_fci_energy, 1.0e-10)
+    assert fci_doublet_2.value('active space energy')[state_doublet_2] == pytest.approx([ref_fci_energy], 1.0e-10)
 
     state = root.state(charge=1, multiplicity=3, sym='b1')
 
@@ -54,19 +54,19 @@ def test_fci_7():
 
     # check results
     assert hf_triplet.value('hf energy') == pytest.approx(ref_hf_triplet, 1.0e-10)
-    assert list(fci_triplet_1.value('active space energy').items())[0][1][0] == pytest.approx(ref_fci_triplet, 1.0e-10)
+    assert fci_triplet_1.value('active space energy')[state_triplet_1] == pytest.approx([ref_fci_triplet], 1.0e-10)
 
     # compute the FCI energy for the triplet B1 (M_S =  0) solution
     state_triplet_2 = root.state(charge=1, multiplicity=3, ms=0.0, sym='b1')
     fci_triplet_2 = ActiveSpaceSolver(hf_triplet, type='FCI', states=state_triplet_2)
     fci_triplet_2.run()
-    assert list(fci_triplet_2.value('active space energy').items())[0][1][0] == pytest.approx(ref_fci_triplet, 1.0e-10)
+    assert fci_triplet_2.value('active space energy')[state_triplet_2] == pytest.approx([ref_fci_triplet], 1.0e-10)
 
     # compute the FCI energy for the triplet B1 (M_S =  0) solution
     state_triplet_3 = root.state(charge=1, multiplicity=3, ms=-1.0, sym='b1')
     fci_triplet_3 = ActiveSpaceSolver(hf_triplet, type='FCI', states=state_triplet_3)
     fci_triplet_3.run()
-    assert list(fci_triplet_3.value('active space energy').items())[0][1][0] == pytest.approx(ref_fci_triplet, 1.0e-10)
+    assert fci_triplet_3.value('active space energy')[state_triplet_3] == pytest.approx([ref_fci_triplet], 1.0e-10)
 
 
 if __name__ == "__main__":

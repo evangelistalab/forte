@@ -28,7 +28,7 @@ def test_aci_1():
 
     # check results
     assert hf.value('hf energy') == pytest.approx(ref_hf_energy, 1.0e-10)
-    assert list(aci.value('active space energy').items())[0][1][0] == pytest.approx(ref_aci_energy, 1.0e-10)
+    assert aci.value('active space energy')[state] == pytest.approx([ref_aci_energy], 1.0e-10)
 
 
 if __name__ == "__main__":
