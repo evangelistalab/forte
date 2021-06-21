@@ -210,6 +210,9 @@ class HF(Solver):
         # set executed flag
         self._executed = True
 
+        flog('info', 'HF: calling psi4.core.clean()')
+        psi4.core.clean()
+
         flog('info', 'HF: exiting run()')
 
         return self
