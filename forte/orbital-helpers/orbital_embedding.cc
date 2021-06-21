@@ -1145,11 +1145,12 @@ std::shared_ptr<MOSpaceInfo> build_aset2_spaceinfo(psi::SharedWavefunction ref_w
     int add_a_docc = options->get_int("ADD_FRAGMENT_DOCC");
     int add_a_actv = options->get_int("ADD_FRAGMENT_ACTIVE");
     bool do_fci = options->get_bool("FRAG_DO_FCI");
+    bool truncate_nmo = options->get_bool("TRUNCATE_MO_SPACE");
 
     // Write the new active (inner-layer) MOSpaceInfo:
     std::map<std::string, std::vector<size_t>> mo_space_map_fragment;
 
-    size_t freeze_o = static_cast<size_t>(frzopi[0] + nroccpi[0]);
+    size_t freeze_o = truncate_nmo ? 0 : static_cast<size_t>(frzopi[0] + nroccpi[0]);
     mo_space_map_fragment["FROZEN_DOCC"] = {freeze_o};
 
     size_t ro = do_fci ? 0 : fragment_rocc[0] + add_a_docc;
@@ -1162,14 +1163,30 @@ std::shared_ptr<MOSpaceInfo> build_aset2_spaceinfo(psi::SharedWavefunction ref_w
     size_t rv = do_fci ? 0 : actv_a[0] - ro - a;
     mo_space_map_fragment["RESTRICTED_UOCC"] = {rv};
 
-    size_t freeze_v = static_cast<size_t>(frzvpi[0] + nrvirpi[0]);
+    size_t freeze_v =  truncate_nmo ? 0 : static_cast<size_t>(frzvpi[0] + nrvirpi[0]);
     mo_space_map_fragment["FROZEN_UOCC"] = {freeze_v};
 
     outfile->Printf("\n   Generating fragment (A) SpaceInfo ... ");
+    if (truncate_nmo) {
+        outfile->Printf("\n   The fragment MO will not include environment (B) orbitals. \n ");
+    }
+    else {
+        outfile->Printf("\n   The fragment MO will include environment (B) orbitals, but they will be frozen. \n ");
+    }
     outfile->Printf("\n   The fragment MO is: \n ");
     std::vector<size_t> reorder;
     std::string point_group = ref_wfn->molecule()->point_group()->symbol();
     auto nmopi = ref_wfn->nmopi();
+
+    if (truncate_nmo) {
+        nmopi[0] -= frzopi[0];
+        nmopi[0] -= nroccpi[0];
+        nmopi[0] -= nrvirpi[0];
+        nmopi[0] -= frzvpi[0];
+    }
+
+    outfile->Printf("\n   Debug: nmopi[0] is: %d \n ", nmopi[0]);
+
     std::shared_ptr<MOSpaceInfo> mo_space_info_fragment =
         make_mo_space_info_from_map(nmopi, point_group, mo_space_map_fragment, reorder);
 

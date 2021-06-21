@@ -45,8 +45,11 @@ StringLists::StringLists(RequiredLists required_lists, psi::Dimension cmopi, std
 }
 
 void StringLists::startup() {
+    outfile->Printf("\n\n  Debug #2 \n");
     nirrep_ = cmopi_.n();
     ncmo_ = cmopi_.sum();
+
+    outfile->Printf("\n\n  Debug #3: %d, %d \n", nirrep_, ncmo_);
 
     cmopi_offset_.push_back(0);
     for (int h = 1; h < nirrep_; ++h) {
@@ -58,6 +61,8 @@ void StringLists::startup() {
     for (int h = 0; h < nirrep_; ++h) {
         cmopi_int.push_back(cmopi_[h]);
     }
+
+    outfile->Printf("\n\n  Debug #4 \n");
 
     // Allocate the alfa and beta graphs
     alfa_graph_ = std::shared_ptr<BinaryGraph>(new BinaryGraph(ncmo_, na_, cmopi_int));
@@ -85,6 +90,8 @@ void StringLists::startup() {
         beta_graph_3h_ = std::shared_ptr<BinaryGraph>(new BinaryGraph(ncmo_, nb_ - 3, cmopi_int));
     }
 
+    outfile->Printf("\n\n  Debug #5 \n");
+
     nas_ = 0;
     nbs_ = 0;
     for (int h = 0; h < nirrep_; ++h) {
@@ -103,12 +110,16 @@ void StringLists::startup() {
     double vovo_list_timer = 0.0;
     double vvoo_list_timer = 0.0;
 
+    outfile->Printf("\n\n  Debug #6: %d, %d \n", na_, nb_);
+    outfile->Printf("\n\n  Debug #6.1: %d, %d \n", nas_, nbs_);
+
     {
         local_timer t;
         make_strings(alfa_graph_, alfa_list_);
         make_strings(beta_graph_, beta_list_);
         str_list_timer += t.get();
     }
+    outfile->Printf("\n\n  Debug #7 \n");
     {
         local_timer t;
         make_pair_list(nn_list);

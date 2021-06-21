@@ -50,6 +50,9 @@ class SCFInfo {
     /// return the number of doubly occupied orbitals per irrep
     psi::Dimension doccpi();
 
+    /// set the number of doubly occupied orbitals per irrep
+    void set_doccpi(psi::Dimension doccpi);
+
     /// return the number of singly occupied orbitals per irrep
     psi::Dimension soccpi();
 

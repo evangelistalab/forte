@@ -479,6 +479,8 @@ make_mo_space_info_from_map(const psi::Dimension& nmopi, const std::string& poin
                             const std::map<std::string, std::vector<size_t>>& mo_space_map,
                             const std::vector<size_t>& reorder) {
 
+    outfile->Printf("\n  Debug: nmopi: %d", nmopi[0]);    
+
     auto mo_space_info = std::make_shared<MOSpaceInfo>(nmopi, point_group);
     mo_space_info->set_reorder(reorder);
     mo_space_info->read_from_map(mo_space_map);

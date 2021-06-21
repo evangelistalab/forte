@@ -434,6 +434,7 @@ def forte_driver(state_weights_map, scf_info, options, ints, mo_space_info):
 
     :return: the computed energy
     """
+
     # map state to number of roots
     state_map = forte.to_state_nroots_map(state_weights_map)
 

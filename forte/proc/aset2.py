@@ -122,28 +122,28 @@ def aset2_driver(state_weights_map, scf_info, ref_wfn, mo_space_info, options):
     # Build dressed fragment integrals, starting from an ints object.
     update_fragment_options(options, A_list, ref_wfn)
     ints_f = None
-    if(int_type_frag == "CONVENTIONAL" and not frag_do_fci):
-        ints_f = forte.make_ints_from_psi4(ref_wfn, options, mo_space_info_active)
-    else:
-        # If fragment integrals is not convntional, build a custom empty ints here
-        nmo = mo_space_info_active.size("ALL")
-        ncmo = mo_space_info_active.size("CORRELATED")
-        scalar = 0.0 
-        hcore = np.zeros((nmo, nmo))
-        eri_aa = np.zeros((ncmo, ncmo, ncmo, ncmo))
-        eri_ab = np.zeros((ncmo, ncmo, ncmo, ncmo))
-        eri_bb = np.zeros((ncmo, ncmo, ncmo, ncmo))
-        ints_f = forte.make_custom_ints(options, mo_space_info_active, scalar,
-                                  hcore.flatten(), hcore.flatten(), eri_aa.flatten(),
-                                  eri_ab.flatten(), eri_bb.flatten())
-        options.set_str('INT_TYPE', "FCIDUMP")
+    options.set_bool('TRUNCATE_MO_SPACE', True)
+    mo_space_info_truncated = forte.build_aset2_spaceinfo(ref_wfn, mo_space_info, options)
+#    if(int_type_frag == "CONVENTIONAL" and not frag_do_fci):
+    # Build custom integrals for dressed H
+    #ints_f = forte.make_ints_from_psi4(ref_wfn, options, mo_space_info_active)
+    nmo = mo_space_info_truncated.size("ALL")
+    scalar = 0.0 
+    hcore = np.zeros((nmo, nmo))
+    eri_aa = np.zeros((nmo, nmo, nmo, nmo))
+    eri_ab = np.zeros((nmo, nmo, nmo, nmo))
+    eri_bb = np.zeros((nmo, nmo, nmo, nmo))
+    ints_f = forte.make_custom_ints(options, mo_space_info_truncated, scalar,
+                              hcore.flatten(), hcore.flatten(), eri_aa.flatten(),
+                              eri_ab.flatten(), eri_bb.flatten())
+    options.set_str('INT_TYPE', "FCIDUMP")
 
     # Set the scalar for the newly-made integral
     frz1 = ints_f.frozen_core_energy()
     dressed_scalar = ints_dressed.scalar_energy()
     scalar = dressed_scalar - frz1
-    if(int_type_frag != "CONVENTIONAL") or (int_type_frag == "CONVENTIONAL" and frag_do_fci):
-        scalar += ints_e.nuclear_repulsion_energy()
+    #if(int_type_frag != "CONVENTIONAL") or (int_type_frag == "CONVENTIONAL" and frag_do_fci):
+    scalar += ints_e.nuclear_repulsion_energy()
     ints_f.set_scalar(scalar)
 
     # Build new ints for dressed computation
@@ -154,11 +154,29 @@ def aset2_driver(state_weights_map, scf_info, ref_wfn, mo_space_info, options):
         options.set_str('CORRELATION_SOLVER', "MRDSRG")
         options.set_str('CORR_LEVEL', "PT2")
 
+    psi4.core.print_out("\n    Integral dressing successed !  ")
+
     # Use make_fock_matrix_from_value instead of make_fock_matrix in ForteIntegrals
     options.set_bool('EMBEDDING_JKFOCK', False)
 
-    # Compute MRDSRG-in-PT2 energy (folded)
-    energy_high_dressed = forte_driver_fragment(state_weights_map, scf_info, options, ints_f, mo_space_info_active)
+    # Compute number of doccs we should set for the fragment compution   
+    docc_all = scf_info.doccpi()
+    docc_B = mo_space_info.dimension("RESTRICTED_DOCC")
+    docc_A = docc_all - docc_B
+    scf_info.set_doccpi(docc_A)
+
+    # Reduce na and nb of all states by docc_B
+    state_info_list = list(state_weights_map.keys())
+    for state_info in state_info_list:
+        na = state_info.na() - docc_B[0]
+        nb = state_info.nb() - docc_B[0]
+        multiplicity = state_info.multiplicity()
+        twice_ms = state_info.twice_ms()
+        state_info_new = forte.StateInfo(na, nb, multiplicity, twice_ms, 0)
+        state_weights_map[state_info_new] = state_weights_map.pop(state_info)
+
+    # Run the fragment (A) computation
+    energy_high_dressed = forte_driver_fragment(state_weights_map, scf_info, options, ints_f, mo_space_info_truncated)
 
     psi4.core.print_out("\n  ")
     psi4.core.print_out("\n  ")
@@ -185,12 +203,15 @@ def forte_driver_fragment(state_weights_map, scf_info, options, ints, mo_space_i
 
     :return: the computed fragment energy (both for undressed or dressed)
     """
+
     # map state to number of roots
     state_map = forte.to_state_nroots_map(state_weights_map)
 
     # create an active space solver object and compute the energy
     active_space_solver_type = options.get_str('ACTIVE_SPACE_SOLVER')
+
     as_ints = forte.make_active_space_ints(mo_space_info, ints, "ACTIVE", ["RESTRICTED_DOCC"])
+
     active_space_solver = forte.make_active_space_solver(active_space_solver_type, state_map, scf_info,
                                                          mo_space_info, as_ints, options)
     state_energies_list = active_space_solver.compute_energy()

@@ -251,19 +251,22 @@ def register_embedding_options(options):
         "LDSRG2_P3 and QDSRG2_P3 not implemented)")
     options.add_bool(
         "embedding_disable_semi_check", True,
-        "Whether we skip semi-canonicalization check in DSRG code when computing ASET(2).")
+        "(Internal option) Whether we skip semi-canonicalization check in DSRG code when computing ASET(2).")
     options.add_bool(
         "embedding_align_scalar", False,
-        "Do write shifts to align the integral scalar.")
+        "(Internal option) Do write shifts to align the integral scalar.")
     options.add_bool(
         "EMBEDDING_ASET2_MF_REF", True,
         "Whether we compute an ASET(mf) for reference when doing ASET(2).")
     options.add_bool(
         "EMBEDDING_JKFOCK", True,
-        "Whether or not we use the make_fock_matrix in ForteIntegrals.")
+        "(Internal option) Whether or not we use the make_fock_matrix in ForteIntegrals.")
     options.add_bool(
         "FRAG_DO_FCI", False,
         "(For benchmarking) Perform a FCI computation on the fragment (A), override other settings.")
+    options.add_bool(
+        "TRUNCATE_MO_SPACE", False,
+        "(Internal option) When building the mo_space_info from the orbital_embedding, this option control whether the size of resulting object is A or A+B.")
 
 
 def register_mo_space_info_options(options):

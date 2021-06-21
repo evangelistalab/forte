@@ -65,6 +65,7 @@ ActiveSpaceSolver::ActiveSpaceSolver(const std::string& method,
     e_convergence_ = options->get_double("E_CONVERGENCE");
     r_convergence_ = options->get_double("R_CONVERGENCE");
     read_initial_guess_ = options->get_bool("READ_ACTIVE_WFN_GUESS");
+    psi::outfile->Printf("Debug #1");
 }
 
 void ActiveSpaceSolver::set_print(int level) { print_ = level; }
