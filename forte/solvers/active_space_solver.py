@@ -83,6 +83,14 @@ class ActiveSpaceSolver(Solver):
         """
         return repr(self)
 
+    @property
+    def e_convergence(self):
+        return self._e_convergence
+
+    @property
+    def r_convergence(self):
+        return self._r_convergence
+
     def run(self):
         # compute the guess orbitals
         if not self._mos.executed:
@@ -94,11 +102,15 @@ class ActiveSpaceSolver(Solver):
         # make the mo_space_info object
         self.make_mo_space_info(self._mo_space_info_map)
 
-        # make the integral objects
-        # options = self.prepare_forte_options()  # TODO: this is a hack
+        # prepare the options
+        options = {'E_CONVERGENCE': self.e_convergence, 'R_CONVERGENCE': self.r_convergence}
+
+        # values from self._options (user specified) replace those from options
+        full_options = {**options, **self._options}
+
         local_options = ForteOptions(forte_options)
-        local_options.set_from_dict(self._options)
-        print(local_options)
+        local_options.set_from_dict(full_options)
+
         self.ints = self.model.ints(self.data, local_options)
 
         # Make an active space integral object

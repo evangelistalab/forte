@@ -5,7 +5,7 @@ import pytest
 from forte.solvers import solver_factory, HF, ActiveSpaceSolver
 
 
-def test_active_space_solver():
+def test_fci():
     """Test FCI on H2."""
 
     ref_energy = -1.108337719536
@@ -30,4 +30,4 @@ def test_active_space_solver():
 
 
 if __name__ == "__main__":
-    test_active_space_solver()
+    test_fci()
