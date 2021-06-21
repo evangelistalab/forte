@@ -1,9 +1,8 @@
-# import psi4
-import logging
+from forte.core import flog, increase_log_dept
 
 from forte.solvers.solver import Solver
-
 from forte.solvers.callback_handler import CallbackHandler
+
 from forte.forte import StateInfo
 from forte.forte import ForteOptions
 from forte import to_state_nroots_map
@@ -91,14 +90,18 @@ class ActiveSpaceSolver(Solver):
     def r_convergence(self):
         return self._r_convergence
 
+    @increase_log_dept
     def run(self):
         """Run an active space solver computation"""
 
-        logging.info('ActiveSpaceSolver: entering run()')
+        flog('info', 'ActiveSpaceSolver: entering run()')
 
         # compute the guess orbitals
         if not self._mo_solver.executed:
+            flog('info', 'ActiveSpaceSolver: MOs not available in mo_solver. Calling mo_solver run()')
             self._mo_solver.run()
+        else:
+            flog('info', 'ActiveSpaceSolver: MOs read from mo_solver object')
 
         # make the state_map
         state_map = to_state_nroots_map(self._states)
@@ -112,21 +115,30 @@ class ActiveSpaceSolver(Solver):
         # values from self._options (user specified) replace those from options
         full_options = {**options, **self._options}
 
+        flog('info', 'ActiveSpaceSolver: adding options')
         local_options = ForteOptions(forte_options)
         local_options.set_from_dict(full_options)
 
+        flog('info', 'ActiveSpaceSolver: getting integral from the model object')
         self.ints = self.model.ints(self.data, local_options)
 
         # Make an active space integral object
+        flog('info', 'ActiveSpaceSolver: making active space integrals')
         as_ints = make_active_space_ints(self.mo_space_info, self.ints, "ACTIVE", ["RESTRICTED_DOCC"])
 
         # create an active space solver object and compute the energy
+        flog('info', 'ActiveSpaceSolver: creating active space solver object')
         active_space_solver = make_active_space_solver(
             self._type, state_map, self.scf_info, self.mo_space_info, as_ints, local_options
         )
+
+        flog('info', 'ActiveSpaceSolver: calling compute_energy() on active space solver object')
         state_energies_list = active_space_solver.compute_energy()
+        flog('info', 'ActiveSpaceSolver: compute_energy() done')
+
+        flog('info', f'ActiveSpaceSolver: active space energy = {state_energies_list}')
         self._results.add('active space energy', state_energies_list, 'Active space energy', 'Eh')
 
-        logging.info('ActiveSpaceSolver: exiting run()')
+        flog('info', 'ActiveSpaceSolver: exiting run()')
 
         return self

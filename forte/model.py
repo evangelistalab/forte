@@ -1,6 +1,6 @@
-import logging
 from abc import ABC, abstractmethod
 
+from forte.core import flog
 from forte.molecule import Molecule
 from forte.basis import Basis
 from forte.forte import StateInfo
@@ -144,5 +144,5 @@ class MolecularModel(Model):
         return StateInfo(na, nb, multiplicity, twice_ms, irrep, sym)
 
     def ints(self, data, options):
-        logging.info('MolecularModel: preparing integrals from psi4')
+        flog('info', 'MolecularModel: preparing integrals from psi4')
         return make_ints_from_psi4(data.psi_wfn, options, data.mo_space_info)

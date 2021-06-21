@@ -1,4 +1,4 @@
-import logging
+from forte.core import flog, increase_log_dept
 
 from forte.solvers.solver import Solver
 from forte.solvers.callback_handler import CallbackHandler
@@ -124,10 +124,11 @@ class HF(Solver):
                 '\nPass the docc and socc options to converge to a solution with the correct symmetry.'
             )
 
+    @increase_log_dept
     def run(self):
         """Run a Hartree-Fock computation"""
 
-        logging.info('HF: entering run()')
+        flog('info', 'HF: entering run()')
 
         import psi4
 
@@ -187,14 +188,16 @@ class HF(Solver):
         self._cbh.call('pre hf', self)
 
         # run scf and return the energy and a wavefunction object
-        logging.info('HF: calling psi4.energy.')
+        flog('info', 'HF: calling psi4.energy().')
         energy, psi_wfn = psi4.energy('scf', molecule=molecule, return_wfn=True)
+        flog('info', 'HF: psi4.energy() done')
 
         # check symmetry
-        logging.info('HF: checking symmetry of the HF solution.')
+        flog('info', 'HF: checking symmetry of the HF solution')
         self.check_symmetry_(psi_wfn)
 
         # add the energy to the results
+        flog('info', f'HF: hf energy = {energy}')
         self._results.add('hf energy', energy, 'Hartree-Fock energy', 'Eh')
 
         # store calculation outputs in the Data object
@@ -207,6 +210,6 @@ class HF(Solver):
         # set executed flag
         self._executed = True
 
-        logging.info('HF: exiting run().')
+        flog('info', 'HF: exiting run()')
 
         return self

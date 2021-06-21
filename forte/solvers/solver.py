@@ -24,7 +24,7 @@ class Solver(ABC):
         self._output_file = 'output.dat'
 
     @abstractmethod
-    def run(self):
+    def run(self, level=None):
         """Interface for running the solver."""
 
     @property

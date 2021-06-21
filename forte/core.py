@@ -27,8 +27,11 @@
 # @END LICENSE
 #
 
+import logging
 import psi4
 import forte
+
+logging_depth = 0
 
 
 def clean_options():
@@ -66,3 +69,34 @@ class ForteManager(object):
 
     def __del__(cls):
         forte.cleanup()
+
+
+def flog(level, msg):
+    """
+    Log the message ``msg`` with logging level ``level``.
+
+    This function calls the logging module and puts some spaces before
+    the message that we want to log.
+    """
+    global logging_depth
+    if level == 'info':
+        spaces = ' ' * max((logging_depth - 1), 0) * 2
+        logging.info(f"{spaces}{msg}")
+
+
+def increase_log_dept(func):
+    """
+    This is a decorator used to increase the depth of forte's log.
+
+    It is used to decorate the run() function of solvers:
+        @increase_log_dept
+            def run(self):
+                ...
+    """
+    def wrapper(*args, **kwargs):
+        global logging_depth
+        logging_depth += 1
+        func(*args, **kwargs)
+        logging_depth += -1
+
+    return wrapper
