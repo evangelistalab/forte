@@ -8,11 +8,10 @@ namespace forte {
 /**
  * A container class for the CI coupling coefficients.
  * Mainly used for the pilot implementation of DSRG-MRPT2 analytic gradients.
- * NOTE: Any production-level code should NOT use this class!
  *
  * The CI coupling coefficients are defined as
  *
- * < Phi_I | p^+ q^+ ... s r | Phi_J >
+ * < Phi_I | p^+ q^+ ... s r | Phi_J >,
  *
  * where Phi_I are Slater determinants (or configuration state functions),
  * while p^+ and p stand for fermionic creation and annihilation operators.
@@ -20,6 +19,9 @@ namespace forte {
  * This container class supports at most three body coupling coefficients (cc3).
  * For cc3, there are four unique spin cases aaa, aab, abb, and bbb.
  * The function and variable names should then be self explanatory.
+ *
+ * NOTE: 1. Any production-level code should NOT use this class!
+ *       2. Users are responsible for the indexing conventions!
  */
 class CICouplingCoefficients {
   public:

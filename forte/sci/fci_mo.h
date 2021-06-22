@@ -268,11 +268,11 @@ class FCI_MO : public ActiveSpaceMethod {
     std::vector<std::tuple<int, int, int, std::vector<double>>> sa_info() { return sa_info_; }
 
     /// Return 1 coupling coefficients
-    std::vector<ambit::Tensor> coupling_coeffcients_1();
+    std::vector<ambit::Tensor> coupling_coeffcients_1() const;
     /// Return 2 coupling coefficients
-    std::vector<ambit::Tensor> coupling_coeffcients_2();
+    std::vector<ambit::Tensor> coupling_coeffcients_2() const;
     /// Return 3 coupling coefficients
-    std::vector<ambit::Tensor> coupling_coeffcients_3();
+    std::vector<ambit::Tensor> coupling_coeffcients_3() const;
 
     /// Return the eigen vector in ambit Tensor format
     std::vector<ambit::Tensor> eigenvectors() override;

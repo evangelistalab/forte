@@ -251,7 +251,11 @@ class ProcedureDSRG:
         return e_dsrg if len(self.energies) == 0 else e_relax
 
     def compute_gradient(self, coupling_coefficients, ci_vectors):
-        """ Compute DSRG-MRPT2 analytic gradients. """
+        """
+        Compute DSRG-MRPT2 analytic gradients.
+        :param coupling_coefficients: a CICouplingCoefficients returned from an ActiveSpaceSolver
+        :param ci_vectors: the wave functions (vector of ambit::Tensor) from an ActiveSpaceSolver
+        """
         if self.dsrg_solver is None:
             raise ValueError("Please compute energy before calling compute_gradient")
 

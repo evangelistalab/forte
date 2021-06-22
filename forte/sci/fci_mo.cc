@@ -2706,7 +2706,7 @@ void FCI_MO::print_occupation_strings_perirrep(
     }
 }
 
-std::vector<ambit::Tensor> FCI_MO::coupling_coeffcients_1() {
+std::vector<ambit::Tensor> FCI_MO::coupling_coeffcients_1() const {
     size_t ndets = determinant_.size();
 
     size_t na1 = nactv_;
@@ -2770,7 +2770,7 @@ std::vector<ambit::Tensor> FCI_MO::coupling_coeffcients_1() {
     return out;
 }
 
-std::vector<ambit::Tensor> FCI_MO::coupling_coeffcients_2() {
+std::vector<ambit::Tensor> FCI_MO::coupling_coeffcients_2() const {
     size_t ndets = determinant_.size();
 
     size_t na1 = nactv_;
@@ -2902,7 +2902,7 @@ std::vector<ambit::Tensor> FCI_MO::coupling_coeffcients_2() {
     return out;
 }
 
-std::vector<ambit::Tensor> FCI_MO::coupling_coeffcients_3() {
+std::vector<ambit::Tensor> FCI_MO::coupling_coeffcients_3() const {
     size_t ndets = determinant_.size();
 
     size_t na1 = nactv_;
