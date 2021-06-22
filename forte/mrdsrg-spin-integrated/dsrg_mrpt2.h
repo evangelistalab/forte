@@ -182,20 +182,43 @@ class DSRG_MRPT2 : public MASTER_DSRG {
     // Some variables may be redundant thus need further elimination
     /// Set ambit tensor labels
     void set_ambit_space();
-    /// Set tensors
+    /**
+     * Initialize tensors.
+     *
+     * Density tensors, one- and two-electron integrals, Fock matrix, DSRG and CI tensors.
+     */
     void set_tensor();
-    /// Set density
+    /**
+     * Initializing the two-body density Gamma2_.
+     *
+     * NOTICE: this function shall be deprecated in the future.
+     */
     void set_density();
-    /// Set Fock matrix
+    /**
+     * Initializing the Fock F.
+     *
+     * NOTICE: this function shall be deprecated in the future.
+     */
     void set_fock();
-    /// Set Hamiltonian
+    /**
+     * Initializing the one-electron integral H.
+     *
+     * NOTICE: this function shall be deprecated in the future.
+     */
     void set_h();
-    /// Set two-electron integrals
+    /**
+     * Initializing the ERIs V.
+     *
+     * NOTICE: this function shall be deprecated in the future.
+     */
     void set_v();
     /// Set CI-relevant integrals
     void set_ci_ints();
-
-    /// Set MO space environment and global variables
+    /**
+     * Initialize global variables.
+     *
+     * MO indices list, dimension of different MOs, CI-related variables etc.
+     */
     void set_global_variables();
     size_t nmo;
     size_t ncore;
@@ -212,36 +235,115 @@ class DSRG_MRPT2 : public MASTER_DSRG {
     const bool X6_TERM = true;
     const bool X7_TERM = true;
     const bool CORRELATION_TERM = true;
-
+    /**
+     * Initializing the DSRG-related auxiliary tensors.
+     */
     void set_dsrg_tensor();
-
-    /// Write the Lagrangian
+    /**
+     * Write the energy-weighted density matrix into Psi4 Lagrangian_.
+     */
     void write_lagrangian();
-    /// Write spin_dependent one-RDMs coefficients
+    /**
+     * Write spin_dependent one-RDMs coefficients into Psi4 Da_ and Db_.
+     *
+     * We assume "Da == Db". This function needs be changed if such constraint is revoked.
+     */
     void write_1rdm_spin_dependent();
-    /// Write spin_dependent two-RDMs coefficients using IWL
+    /**
+     * Write spin_dependent two-RDMs coefficients using IWL.
+     *
+     * Coefficients in d2aa and d2bb need be multiplied with additional 1/2!
+     * Specifically:
+     * If you have v_aa as coefficients before 2-RDMs_alpha_alpha, v_bb before
+     * 2-RDMs_beta_beta and v_bb before 2-RDMs_alpha_beta, you need to write
+     * 0.5 * v_aa, 0.5 * v_bb and v_ab into the IWL file instead of using
+     * the original coefficients v_aa, v_bb and v_ab.
+     */
     void write_2rdm_spin_dependent();
-    /// TPDM backtransform
+    /**
+     * Backtransform the TPDM.
+     */
     void tpdm_backtransform();
-
+    /**
+     * Initialize and solve Lagrange multipliers.
+     *
+     * Sigma: constraint of the one-body DSRG amplitude (T1) definition.
+     * Xi:    constraint of the renormalized Fock matrix (F1) definition.
+     * Tau:   constraint of the two-body DSRG amplitude (T2) definition.
+     * Kappa: constraint of the renormalized ERIs (\tilde{V}) definition.
+     * Z:     OPDM, constraint of the CASSCF reference.
+     * W:     EWDM, constraint of the orthonormal overlap integral.
+     */
     void set_multiplier();
-
+    /**
+     * Solve the Linear System Ax=b and yield Z.
+     */
     void solve_z();
+    /**
+     * Initialize and solve the multiplier Sigma.
+     *
+     * Sigma: constraint of the one-body DSRG amplitude (T1) definition.
+     * Solved directly.
+     */
     void set_sigma();
+    /**
+     * Initialize and solve the multiplier Xi.
+     *
+     * Xi: constraint of the renormalized Fock matrix (F1) definition.
+     * Solved directly.
+     */
     void set_xi();
+    /**
+     * Initialize and solve the multiplier Tau.
+     *
+     * Tau: constraint of the two-body DSRG amplitude (T2) definition.
+     * Solved directly.
+     */
     void set_tau();
+    /**
+     * Initialize and solve the multiplier Kappa.
+     *
+     * Kappa: constraint of the renormalized ERIs (\tilde{V}) definition.
+     * Solved directly.
+     */
     void set_kappa();
+    /**
+     * Initialize and solve the multiplier Z (OPDM).
+     *
+     * Z: OPDM, constraint of the CASSCF reference.
+     * The core-core, virtual-virtual blocks and diagonal entries of the active-active
+     * blocks are solved directly based on other multipliers. The rest need be solved
+     * Through iterative approaches. Currently, we use LAPACK as the solver.
+     */
     void set_z();
     void set_alpha();
     void set_CI();
+    /**
+     * Initializing the b of the Linear System Ax=b.
+     */
     void set_b();
+    /**
+     * The core-core block of the OPDM Z.
+     */
     void set_z_cc();
+    /**
+     * The virtual-virtual block of the OPDM Z.
+     */
     void set_z_vv();
+    /**
+     * The diagonal entries of the active-active block of the OPDM Z.
+     */
     void set_z_aa_diag();
+    /**
+     * Initialize and solve the multiplier W.
+     *
+     * W: EWDM, constraint of the orthonormal overlap integral.
+     * Solved directly after all other multipliers are solved.
+     */
     void set_w();
 
+    /// Size of determinants
     size_t ndets;
-
     /// List of core MOs (Correlated)
     std::vector<size_t> core_mos;
     /// List of active MOs (Correlated)
@@ -270,12 +372,10 @@ class DSRG_MRPT2 : public MASTER_DSRG {
 
     /// Dimension of different irreps
     psi::Dimension irrep_vec;
-
     /// Two-body denisty tensor
     ambit::BlockedTensor Gamma2_;
     /// Lagrangian tensor
     ambit::BlockedTensor W;
-
     // core Hamiltonian
     ambit::BlockedTensor H;
     // two-electron integrals
@@ -289,8 +389,7 @@ class DSRG_MRPT2 : public MASTER_DSRG {
     ambit::BlockedTensor Eeps2;
     ambit::BlockedTensor Eeps2_p;
     ambit::BlockedTensor Eeps2_m1;
-    ambit::BlockedTensor Eeps2_m2;
-
+    ambit::BlockedTensor Eeps2_m2
     ambit::BlockedTensor Delta1;
     ambit::BlockedTensor Delta2;
     ambit::BlockedTensor DelGam1;
@@ -333,14 +432,12 @@ class DSRG_MRPT2 : public MASTER_DSRG {
     ambit::Tensor cc1a_r;
     ambit::Tensor cc1b_n;
     ambit::Tensor cc1b_r;
-
     ambit::Tensor cc2aa_n;
     ambit::Tensor cc2aa_r;
     ambit::Tensor cc2bb_n;
     ambit::Tensor cc2bb_r;
     ambit::Tensor cc2ab_n;
     ambit::Tensor cc2ab_r;
-
     ambit::Tensor cc3aaa_n;
     ambit::Tensor cc3aaa_r;
     ambit::Tensor cc3bbb_n;
@@ -353,7 +450,6 @@ class DSRG_MRPT2 : public MASTER_DSRG {
     ambit::Tensor dlamb_aa;
     ambit::Tensor dlamb_bb;
     ambit::Tensor dlamb_ab;
-
     ambit::Tensor dlamb3_aaa;
     ambit::Tensor dlamb3_bbb;
     ambit::Tensor dlamb3_aab;
