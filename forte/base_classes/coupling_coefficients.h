@@ -6,17 +6,20 @@
 namespace forte {
 
 /**
- * A CI coupling-coefficients class for the DSRG gradient implementation.
+ * A container class for the CI coupling coefficients.
+ * Mainly used for the pilot implementation of DSRG-MRPT2 analytic gradients.
+ * NOTE: Any production-level code should NOT use this class!
  *
- * A container for CI coupling coefficients.
- * We have |Psi_0> = sum_{i} C_i * |phi_i>, where C is the CI coefficient.
- * cc1_: <phi| p^ q| Psi_0>
- * cc2_: <phi| p^ q^ r s| Psi_0>
- * cc3_: <phi| o^ p^ q^ r s t| Psi_0>
- * a and b are for alpha and beta, respectively.
+ * The CI coupling coefficients are defined as
  *
- * Coupling coefficients are paired with the CI-related Lagrange multiplier
- * in the DSRG gradient code when solving the z-vector equation.
+ * < Phi_I | p^+ q^+ ... s r | Phi_J >
+ *
+ * where Phi_I are Slater determinants (or configuration state functions),
+ * while p^+ and p stand for fermionic creation and annihilation operators.
+ *
+ * This container class supports at most three body coupling coefficients (cc3).
+ * For cc3, there are four unique spin cases aaa, aab, abb, and bbb.
+ * The function and variable names should then be self explanatory.
  */
 class CICouplingCoefficients {
   public:

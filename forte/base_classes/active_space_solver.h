@@ -132,10 +132,10 @@ class ActiveSpaceSolver {
     void set_read_initial_guess(bool read_guess) { read_initial_guess_ = read_guess; }
 
     /// Return the coupling coefficients for a given state
-    CICouplingCoefficients coupling_coefficients(const StateInfo& state, int max_level = 2);
+    CICouplingCoefficients coupling_coefficients(const StateInfo& state, int max_level = 2) const;
 
     /// Return the eigen vectors for a given state
-    std::vector<ambit::Tensor> eigenvectors(const StateInfo& state);
+    std::vector<ambit::Tensor> eigenvectors(const StateInfo& state) const;
 
   protected:
     /// a string that specifies the method used (e.g. "FCI", "ACI", ...)

@@ -828,12 +828,12 @@ compute_average_state_energy(const std::map<StateInfo, std::vector<double>>& sta
 }
 
 CICouplingCoefficients ActiveSpaceSolver::coupling_coefficients(const StateInfo& state,
-                                                                int max_level) {
-    return state_method_map_[state]->coupling_coefficients(max_level);
+                                                                int max_level) const {
+    return state_method_map_.at(state)->coupling_coefficients(max_level);
 }
 
-std::vector<ambit::Tensor> ActiveSpaceSolver::eigenvectors(const StateInfo& state) {
-    return state_method_map_[state]->eigenvectors();
+std::vector<ambit::Tensor> ActiveSpaceSolver::eigenvectors(const StateInfo& state) const {
+    return state_method_map_.at(state)->eigenvectors();
 }
 
 } // namespace forte
