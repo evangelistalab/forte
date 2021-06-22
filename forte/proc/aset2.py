@@ -159,11 +159,8 @@ def aset2_driver(state_weights_map, scf_info, ref_wfn, mo_space_info, options):
     # Use make_fock_matrix_from_value instead of make_fock_matrix in ForteIntegrals
     options.set_bool('EMBEDDING_JKFOCK', False)
 
-    # Compute number of doccs we should set for the fragment compution   
-    docc_all = scf_info.doccpi()
+    # Get the number of doccs we should set for the fragment compution   
     docc_B = mo_space_info.dimension("RESTRICTED_DOCC")
-    docc_A = docc_all - docc_B
-    scf_info.set_doccpi(docc_A)
 
     # Reduce na and nb of all states by docc_B
     state_info_list = list(state_weights_map.keys())

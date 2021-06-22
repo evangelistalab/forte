@@ -16,8 +16,6 @@ psi::Dimension SCFInfo::nmopi() { return nmopi_; }
 
 psi::Dimension SCFInfo::doccpi() { return doccpi_; }
 
-void SCFInfo::set_doccpi(psi::Dimension doccpi) { doccpi_ = doccpi; }
-
 psi::Dimension SCFInfo::soccpi() { return soccpi_; }
 
 double SCFInfo::reference_energy() { return energy_; }
