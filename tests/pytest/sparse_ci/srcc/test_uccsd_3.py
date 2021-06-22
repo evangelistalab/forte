@@ -12,8 +12,6 @@ def test_uccsd_3():
     import psi4
     import os.path
 
-    forte.startup()
-
     ref_energy = -107.655681875111
 
     psi4.set_options({'FORTE__FROZEN_DOCC': [2]})
@@ -24,7 +22,6 @@ def test_uccsd_3():
     as_ints = forte.make_active_space_ints(mo_space_info, ints, 'CORRELATED', [])
     calc_data = scc.run_cc(as_ints, scf_info, mo_space_info, cc_type='ucc', max_exc=2, e_convergence=1.0e-10)
 
-    forte.cleanup()
     psi4.core.clean()
 
     energy = calc_data[-1][1]

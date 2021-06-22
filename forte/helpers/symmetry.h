@@ -30,59 +30,49 @@
 #define _symmetry_h_
 
 #include <map>
-#include <stdexcept>
 #include <string>
 #include <vector>
 
-#include "helpers/string_algorithms.h"
-
 namespace forte {
 
-enum class PointGroup { C1, Cs, Ci, C2, C2h, C2v, D2, D2h };
-
+/**
+ * @brief The Symmetry class provides symmetry information for a given point group
+ */
 class Symmetry {
   public:
-    Symmetry(std::string point_group) {
-        to_upper_string(point_group); // capitalize
-        auto search = __str_to_pg.find(point_group);
-        if (search != __str_to_pg.end()) {
-            pg_ = __str_to_pg.at(point_group);
-        } else {
-            std::string msg = "Point group " + point_group + " not found or supported by forte.\n";
-            throw std::runtime_error(msg);
-        }
-    }
-    Symmetry(PointGroup pg) : pg_(pg) {}
+    /// Constructor
+    /// @param point_group the molecular point group label
+    Symmetry(std::string point_group);
 
-    const std::vector<std::string>& irrep_labels() const { return __irrep_labels.at(pg_); }
-    const std::string& irrep_label(size_t h) const { return __irrep_labels.at(pg_)[h]; }
-    size_t nirrep() const { return __irrep_labels.at(pg_).size(); }
-    size_t irrep_product(size_t h, size_t g) const { return h ^ g; }
-    std::string point_group_label() const {
-        for (const auto& p : __str_to_pg) {
-            if (p.second == pg_) {
-                return p.first;
-            }
-        }
-        return std::string("");
-    }
+    /// @return the label of this point group
+    const std::string& point_group_label() const;
+    /// @return a vector of irrep labels
+    const std::vector<std::string>& irrep_labels() const;
+    /// @return the label of irrep h
+    const std::string& irrep_label(size_t h) const;
+    /// @return the label of irrep h
+    size_t irrep_label_to_index(const std::string& label) const;
+    /// @return the number of irreps
+    size_t nirrep() const;
+    /// @return the product of irreps h and g
+    static size_t irrep_product(size_t h, size_t g);
 
   private:
-    PointGroup pg_;
-    const std::map<std::string, PointGroup> __str_to_pg{
-        {"C1", PointGroup::C1}, {"CS", PointGroup::Cs},   {"CI", PointGroup::Ci},
-        {"C2", PointGroup::C2}, {"C2H", PointGroup::C2h}, {"C2V", PointGroup::C2v},
-        {"D2", PointGroup::D2}, {"D2H", PointGroup::D2h}};
-
-    const std::map<PointGroup, std::vector<std::string>> __irrep_labels{
-        {PointGroup::C1, {"A"}},
-        {PointGroup::Cs, {"Ap", "App"}},
-        {PointGroup::Ci, {"Ag", "Au"}},
-        {PointGroup::C2, {"A", "B"}},
-        {PointGroup::C2h, {"Ag", "Bg", "Au", "Bu"}},
-        {PointGroup::C2v, {"A1", "A2", "B1", "B2"}},
-        {PointGroup::D2, {"A", "B1", "B2", "B3"}},
-        {PointGroup::D2h, {"Ag", "B1g", "B2g", "B3g", "Au", "B1u", "B2u", "B3u"}}};
+    /// the point group label
+    std::string pg_;
+    /// the point group labels
+    const std::vector<std::string> __point_groups{"C1",  "CS",  "CI", "C2",
+                                                  "C2H", "C2V", "D2", "D2H"};
+    /// a map point group -> irrep labels (in Cotton order)
+    const std::map<std::string, std::vector<std::string>> __pg_to_irrep_labels{
+        {"C1", {"A"}},
+        {"CS", {"Ap", "App"}},
+        {"CI", {"Ag", "Au"}},
+        {"C2", {"A", "B"}},
+        {"C2H", {"Ag", "Bg", "Au", "Bu"}},
+        {"C2V", {"A1", "A2", "B1", "B2"}},
+        {"D2", {"A", "B1", "B2", "B3"}},
+        {"D2H", {"Ag", "B1g", "B2g", "B3g", "Au", "B1u", "B2u", "B3u"}}};
 };
 
 } // namespace forte

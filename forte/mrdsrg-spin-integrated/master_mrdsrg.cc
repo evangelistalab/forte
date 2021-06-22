@@ -234,7 +234,7 @@ void MASTER_DSRG::init_density() {
 void MASTER_DSRG::fill_density() {
     // 1-particle density (make a copy)
     Gamma1_.block("aa")("pq") = rdms_.g1a()("pq");
-    Gamma1_.block("AA")("pq") = rdms_.g1a()("pq");
+    Gamma1_.block("AA")("pq") = rdms_.g1b()("pq");
 
     // 1-hole density
     for (const std::string& block : {"aa", "AA"}) {

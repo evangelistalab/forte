@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+
 def test_mospaceinfo():
     """Test the MOSpaceInfo python API"""
     import psi4
@@ -9,11 +10,11 @@ def test_mospaceinfo():
 
     print("Testing the MOSpaceInfo python API")
 
-    geom = "H 0.0 0.0 0.0\nH 0.0 0.0 1.0"""
+    geom = "H 0.0 0.0 0.0\nH 0.0 0.0 1.0" ""
 
     psi4.core.clean()
 
-    mol = psi4.geometry(geom)
+    psi4.geometry(geom)
 
     # set basis/options
     psi4.set_options({'basis': 'cc-pVDZ', 'scf_type': 'pk'})
@@ -24,18 +25,20 @@ def test_mospaceinfo():
     # run scf and return the energy and a wavefunction object (will work only if pass return_wfn=True)
     E_scf, wfn = psi4.energy('scf', return_wfn=True)
 
-    options = psi4.core.get_options() # options = psi4 option object
-    options.set_current_module('FORTE') # read options labeled 'FORTE'
+    options = psi4.core.get_options()  # options = psi4 option object
+    options.set_current_module('FORTE')  # read options labeled 'FORTE'
     forte_options.get_options_from_psi4(options)
 
     # Setup forte and prepare the active space integral class
-    mos_spaces = {'FROZEN_DOCC' :     [1,0,0,0,0,0,0,0],
-                  'RESTRICTED_DOCC' : [0,0,0,0,0,1,0,0],
-                  'FROZEN_UOCC' :     [1,0,0,0,0,0,0,0]}
+    mos_spaces = {
+        'FROZEN_DOCC': [1, 0, 0, 0, 0, 0, 0, 0],
+        'RESTRICTED_DOCC': [0, 0, 0, 0, 0, 1, 0, 0],
+        'FROZEN_UOCC': [1, 0, 0, 0, 0, 0, 0, 0]
+    }
 
     nmopi = wfn.nmopi()
     point_group = wfn.molecule().point_group().symbol()
-    mo_space_info = forte.make_mo_space_info_from_map(nmopi,point_group,mos_spaces,[])
+    mo_space_info = forte.make_mo_space_info_from_map(nmopi, point_group, mos_spaces, [])
 
     assert mo_space_info.nirrep() == 8
 
@@ -45,10 +48,30 @@ def test_mospaceinfo():
     assert mo_space_info.size('RESTRICTED_UOCC') == 0
     assert mo_space_info.size('FROZEN_UOCC') == 1
 
-    assert mo_space_info.dimension('FROZEN_DOCC').to_tuple() == (1,0,0,0,0,0,0,0)
-    assert mo_space_info.dimension('RESTRICTED_DOCC').to_tuple() == (0,0,0,0,0,1,0,0)
-    assert mo_space_info.dimension('ACTIVE').to_tuple() == (1,0,1,1,0,2,1,1)
-    assert mo_space_info.dimension('RESTRICTED_UOCC').to_tuple() == (0,0,0,0,0,0,0,0)
-    assert mo_space_info.dimension('FROZEN_UOCC').to_tuple() == (1,0,0,0,0,0,0,0)
+    assert mo_space_info.dimension('FROZEN_DOCC').to_tuple() == (1, 0, 0, 0, 0, 0, 0, 0)
+    assert mo_space_info.dimension('RESTRICTED_DOCC').to_tuple() == (0, 0, 0, 0, 0, 1, 0, 0)
+    assert mo_space_info.dimension('ACTIVE').to_tuple() == (1, 0, 1, 1, 0, 2, 1, 1)
+    assert mo_space_info.dimension('RESTRICTED_UOCC').to_tuple() == (0, 0, 0, 0, 0, 0, 0, 0)
+    assert mo_space_info.dimension('FROZEN_UOCC').to_tuple() == (1, 0, 0, 0, 0, 0, 0, 0)
 
-    assert mo_space_info.space_names() == ['FROZEN_DOCC','RESTRICTED_DOCC','GAS1','GAS2','GAS3','GAS4','GAS5','GAS6','RESTRICTED_UOCC','FROZEN_UOCC']
+    assert mo_space_info.space_names() == [
+        'FROZEN_DOCC', 'RESTRICTED_DOCC', 'GAS1', 'GAS2', 'GAS3', 'GAS4', 'GAS5', 'GAS6', 'RESTRICTED_UOCC',
+        'FROZEN_UOCC'
+    ]
+
+    str_test = """space: FROZEN_DOCC  1 0 0 0 0 0 0 0
+space: RESTRICTED_DOCC  0 0 0 0 0 1 0 0
+space: GAS1  1 0 1 1 0 2 1 1
+space: GAS2  0 0 0 0 0 0 0 0
+space: GAS3  0 0 0 0 0 0 0 0
+space: GAS4  0 0 0 0 0 0 0 0
+space: GAS5  0 0 0 0 0 0 0 0
+space: GAS6  0 0 0 0 0 0 0 0
+space: RESTRICTED_UOCC  0 0 0 0 0 0 0 0
+space: FROZEN_UOCC  1 0 0 0 0 0 0 0
+"""
+    assert str(mo_space_info) == str_test
+
+
+if __name__ == '__main__':
+    test_mospaceinfo()

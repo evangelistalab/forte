@@ -1,0 +1,10 @@
+molecule {
+    H 0.0 0.0 0.0
+    F 0.0 0.0 1.0
+}
+
+set scf_type df
+set basis cc-pVTZ
+set df_basis_scf cc-pVQZ-JKFIT
+
+energy('scf')

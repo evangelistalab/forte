@@ -29,9 +29,6 @@ def test_sparse_ci():
     nirrep = wfn.nirrep()
     wfn_symmetry = 0
 
-    forte.startup()
-    forte.banner()
-
     psi4_options = psi4.core.get_options()
     psi4_options.set_current_module('FORTE')
     forte_options.get_options_from_psi4(psi4_options)
@@ -101,9 +98,6 @@ def test_sparse_ci():
     print('\n  FCI Energy: {}\n'.format(efci))
 
     assert efci == pytest.approx(ref_fci, 1.0e-9)
-
-    # Clean up forte (necessary)
-    forte.cleanup()
 
 
 if __name__ == "__main__":

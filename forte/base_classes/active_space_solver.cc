@@ -41,6 +41,7 @@
 #include "base_classes/mo_space_info.h"
 #include "base_classes/coupling_coefficients.h"
 #include "helpers/printing.h"
+#include "helpers/string_algorithms.h"
 #include "integrals/active_space_integrals.h"
 #include "mrdsrg-helper/dsrg_transformed.h"
 #include "active_space_method.h"
@@ -401,7 +402,6 @@ make_state_weights_map(std::shared_ptr<ForteOptions> options,
                 psi::outfile->Printf("\n  Error: invalid multiplicity in AVG_STATE.");
                 throw std::runtime_error("Invaid multiplicity in AVG_STATE");
             }
-
             if (nstates_this < 1) {
                 psi::outfile->Printf("\n  Error: invalid \"number of states\" in AVG_STATE.");
                 psi::outfile->Printf(
@@ -534,7 +534,7 @@ make_state_weights_map(std::shared_ptr<ForteOptions> options,
     }
 
     return state_weights_map_ms_avg;
-} // namespace forte
+}
 
 RDMs ActiveSpaceSolver::compute_average_rdms(
     const std::map<StateInfo, std::vector<double>>& state_weights_map, int max_rdm_level) {

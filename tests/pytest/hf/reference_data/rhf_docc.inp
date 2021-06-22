@@ -1,0 +1,10 @@
+molecule {
+Li 0.0 0.0 0.0
+H  0.0 0.0 1.6
+}
+
+set scf_type pk
+set basis cc-pVDZ
+set docc [1,0,1,0]
+
+energy('scf')

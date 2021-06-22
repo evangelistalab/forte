@@ -12,8 +12,6 @@ def test_duccsdtq():
     import forte
     import psi4
 
-    forte.startup()
-
     ref_energy = -128.679023738907
 
     geom = "Ne"
@@ -24,7 +22,6 @@ def test_duccsdtq():
         forte_objs[1], forte_objs[2], forte_objs[3], cc_type='ducc', max_exc=4, e_convergence=1.0e-11
     )
 
-    forte.cleanup()
     psi4.core.clean()
 
     energy = calc_data[-1][1]

@@ -48,12 +48,17 @@ std::string lower_string(std::string s);
 /// Join a vector of strings using a separator
 std::string join(const std::vector<std::string>& vec_str, const std::string& sep = ",");
 
+/// Convert a number to string with a given precision
 template <typename T> std::string to_string_with_precision(const T val, const int n = 6) {
     std::ostringstream out;
     out.precision(n);
     out << std::fixed << val;
     return out.str();
 }
+
+/// Find a string in a vector of strings in a case insensitive
+std::vector<std::string>::const_iterator find_case_insensitive(const std::string& str,
+                                                               const std::vector<std::string>& vec);
 
 } // namespace forte
 
