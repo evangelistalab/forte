@@ -42,10 +42,12 @@ void export_ForteOptions(py::module& m) {
     py::class_<ForteOptions, std::shared_ptr<ForteOptions>>(m, "ForteOptions")
         .def(py::init<>())
         .def(py::init<const ForteOptions&>())
-        .def("set_dict", &ForteOptions::set_dict)
-        .def("dict", &ForteOptions::dict)
+        .def("set_dict", &ForteOptions::set_dict, "Set the options dictionary")
+        .def("dict", &ForteOptions::dict, "Returns the options dictionary")
         .def("reset", &ForteOptions::reset_dict, "Reset the options")
         .def("set_group", &ForteOptions::set_group, "Set the options group")
+        .def("is_none", &ForteOptions::is_none, "Is this variable defined?")
+        .def("exists", &ForteOptions::exists, "Does this option exist?")
         .def("add_bool", &ForteOptions::add_bool, "Add a boolean option")
         .def("add_int", &ForteOptions::add_int, "Add an integer option")
         .def("add_double", &ForteOptions::add_double, "Add a double option")
@@ -61,7 +63,6 @@ void export_ForteOptions(py::module& m) {
         .def("add_int_list", &ForteOptions::add_int_array, "Add a list of integers option")
         .def("add_double_list", &ForteOptions::add_double_array, "Add a list of doubles option")
         .def("add_list", &ForteOptions::add_array, "Add an array option for general elements")
-        .def("is_none", &ForteOptions::is_none, "Is this variable defined?")
         .def("get_bool", &ForteOptions::get_bool, "Get a boolean option")
         .def("get_int", &ForteOptions::get_int, "Get an integer option")
         .def("get_double", &ForteOptions::get_double, "Get a double option")
@@ -85,7 +86,8 @@ void export_ForteOptions(py::module& m) {
              "Set options from a dictionary `dict` of labels -> values")
         .def("generate_documentation", &ForteOptions::generate_documentation,
              "Generate documentation from the options list")
-        .def("__str__", &ForteOptions::str, "Returns a string represenation of this object");
+        .def("__str__", &ForteOptions::str, "Returns a string represenation of this object")
+        .def("__repr__", &ForteOptions::str, "Returns a string represenation of this object");
 }
 
 } // namespace forte

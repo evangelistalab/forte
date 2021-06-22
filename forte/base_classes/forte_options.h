@@ -44,13 +44,36 @@ namespace forte {
 
 /**
  * @brief The ForteOptions class
+ *
+ * This class handles options passed to different computational methods.
+ *
+ * The options are held in python dictionary (pybind11::dict) and can
+ * be easily grabbed (via the dict() function) or set from python.
+ * When copying this object, we make sure that a deep copy is performed,
+ * otherwise a change in one object may change options in a different
+ * object from which it was obtained.
+ *
+ * Each option is held in dictionary with the following entries:
+ * - type: string the option type (e.g. "int")
+ * - group: the group to which this option belongs (may be empy "")
+ * - value: the value of the option
+ * - default_value: the default value given to the option
+ * - description: a description of the this option and what it controlss
  */
 class ForteOptions {
   public:
-    /**
-     * @brief ForteOptions
-     */
+    /// @brief Constructor
     ForteOptions();
+
+    /**
+     * @brief Copy constructor
+     *
+     * This constructor makes a deep copy of the options dictionary.
+     */
+    ForteOptions(const ForteOptions& other);
+
+    // Disable default copy assignment
+    ForteOptions& operator=(ForteOptions&) = delete;
 
     /**
      * @brief Set the group to which options are added
@@ -295,7 +318,7 @@ class ForteOptions {
     /**
      * @brief Set the python dictionary that stores options
      */
-    void set_dict(pybind11::dict dict);
+    void set_dict(const pybind11::dict dict);
 
     /**
      * @brief Reset the python dictionary that stores the options
@@ -308,7 +331,9 @@ class ForteOptions {
     std::string str() const;
 
   private:
+    /// a python dictionary object
     pybind11::dict dict_;
+    /// the current option group
     std::string group_ = "";
 };
 } // namespace forte

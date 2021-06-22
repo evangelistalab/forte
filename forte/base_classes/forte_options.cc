@@ -51,6 +51,11 @@ std::string option_formatter(const std::string& type, const std::string& label,
 
 ForteOptions::ForteOptions() {}
 
+ForteOptions::ForteOptions(const ForteOptions& other) {
+    set_dict(other.dict_);
+    group_ = other.group_;
+}
+
 pybind11::dict ForteOptions::dict() { return dict_; }
 
 py::dict make_dict_entry(const std::string& type, const std::string& group,
@@ -216,7 +221,7 @@ void ForteOptions::set_options_from_dict(pybind11::dict dict) {
     }
 }
 
-void ForteOptions::set_dict(pybind11::dict dict) {
+void ForteOptions::set_dict(const pybind11::dict dict) {
     dict_ = py::module::import("copy").attr("deepcopy")(dict);
 }
 
