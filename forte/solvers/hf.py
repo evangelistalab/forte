@@ -1,4 +1,4 @@
-from forte.core import flog, increase_log_dept
+from forte.core import flog
 
 from forte.solvers.solver import Solver
 from forte.solvers.callback_handler import CallbackHandler
@@ -24,10 +24,12 @@ class HF(Solver):
         cbh=None
     ):
         """
-        initialize a Basis object
+        initialize a HF object
 
         Parameters
         ----------
+        parent_solver: Solver
+            the object that provides information about this computation
         state: StateInfo
             the state to optimize (defines the number of alpha/beta electrons and m_s)
         restricted: bool
@@ -124,12 +126,8 @@ class HF(Solver):
                 '\nPass the docc and socc options to converge to a solution with the correct symmetry.'
             )
 
-    @increase_log_dept
-    def run(self):
+    def _run(self):
         """Run a Hartree-Fock computation"""
-
-        flog('info', 'HF: entering run()')
-
         import psi4
 
         # reset psi4's options to avoid pollution
@@ -207,12 +205,7 @@ class HF(Solver):
         # post hf callback
         self._cbh.call('post hf', self)
 
-        # set executed flag
-        self._executed = True
-
         flog('info', 'HF: calling psi4.core.clean()')
         psi4.core.clean()
-
-        flog('info', 'HF: exiting run()')
 
         return self

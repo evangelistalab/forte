@@ -84,7 +84,7 @@ def flog(level, msg):
         logging.info(f"{spaces}{msg}")
 
 
-def increase_log_dept(func):
+def increase_log_depth(func):
     """
     This is a decorator used to increase the depth of forte's log.
 

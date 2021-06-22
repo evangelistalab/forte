@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
-import logging
 
+from forte.core import flog, increase_log_depth
 from forte.data import Data
 from forte.model import MolecularModel
 from forte.results import Results
@@ -23,9 +23,30 @@ class Solver(ABC):
         self._results = Results()
         self._output_file = 'output.dat'
 
+    # decorate to icrease the log depth
+    @increase_log_depth
+    def run(self):
+        """
+        A general solver interface.
+
+        This method is common to all solvers, and in turn it is routed to
+        the method ``_run()`` implemented differently in each solver.
+        """
+        # log call to run()
+        flog('info', f'{type(self).__name__}: calling run()')
+
+        # call derived class implementation of _run()
+        self._run()
+
+        # log end of run()
+        flog('info', f'{type(self).__name__}: run() finished executing')
+
+        # set executed flag
+        self._executed = True
+
     @abstractmethod
-    def run(self, level=None):
-        """Interface for running the solver."""
+    def _run():
+        """The actual run function implemented by each method"""
 
     @property
     def results(self):
@@ -70,6 +91,14 @@ class Solver(ABC):
     @ints.setter
     def ints(self, val):
         self.data.ints = val
+
+    @property
+    def as_ints(self):
+        return self.data.as_ints
+
+    @as_ints.setter
+    def as_ints(self, val):
+        self.data.as_ints = val
 
     @property
     def model(self):
@@ -280,13 +309,13 @@ class BasicSolver(Solver):
     def __init__(self):
         super().__init__()
 
-    def run(self):
+    def _run(self):
         pass
 
 
 def solver_factory(molecule, basis, scf_aux_basis=None, corr_aux_basis=None):
     """A factory to build a basic solver object"""
-    logging.info('Calling solver factory')
+    flog('info', 'Calling solver factory')
 
     # TODO: generalize to other type of models (e.g. if molecule/basis are not provided)
 

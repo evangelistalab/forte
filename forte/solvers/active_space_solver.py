@@ -1,4 +1,4 @@
-from forte.core import flog, increase_log_dept
+from forte.core import flog
 
 from forte.solvers.solver import Solver
 from forte.solvers.callback_handler import CallbackHandler
@@ -90,11 +90,8 @@ class ActiveSpaceSolver(Solver):
     def r_convergence(self):
         return self._r_convergence
 
-    @increase_log_dept
-    def run(self):
+    def _run(self):
         """Run an active space solver computation"""
-
-        flog('info', 'ActiveSpaceSolver: entering run()')
 
         # compute the guess orbitals
         if not self._mo_solver.executed:
@@ -124,21 +121,19 @@ class ActiveSpaceSolver(Solver):
 
         # Make an active space integral object
         flog('info', 'ActiveSpaceSolver: making active space integrals')
-        as_ints = make_active_space_ints(self.mo_space_info, self.ints, "ACTIVE", ["RESTRICTED_DOCC"])
+        self.as_ints = make_active_space_ints(self.mo_space_info, self.ints, "ACTIVE", ["RESTRICTED_DOCC"])
 
         # create an active space solver object and compute the energy
         flog('info', 'ActiveSpaceSolver: creating active space solver object')
-        active_space_solver = make_active_space_solver(
-            self._type, state_map, self.scf_info, self.mo_space_info, as_ints, local_options
+        self._active_space_solver = make_active_space_solver(
+            self._type, state_map, self.scf_info, self.mo_space_info, self.as_ints, local_options
         )
 
         flog('info', 'ActiveSpaceSolver: calling compute_energy() on active space solver object')
-        state_energies_list = active_space_solver.compute_energy()
+        state_energies_list = self._active_space_solver.compute_energy()
         flog('info', 'ActiveSpaceSolver: compute_energy() done')
 
         flog('info', f'ActiveSpaceSolver: active space energy = {state_energies_list}')
         self._results.add('active space energy', state_energies_list, 'Active space energy', 'Eh')
-
-        flog('info', 'ActiveSpaceSolver: exiting run()')
 
         return self

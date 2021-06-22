@@ -203,6 +203,8 @@ embedding:
    medium:
       - embedding-2
 fci:
+   short:
+      - fci-1 # moved to pytest
    medium:
       - fci-2
       - fci-3
@@ -216,7 +218,6 @@ fci:
       - fci-rdms-2
    long:
       - fci-6
-      - fci-1 # moved to pytest
       - fci-7 # moved to pytest
       - fci-ex-1 # moved to pytest
       - fci-rdms-1 # moved to pytest

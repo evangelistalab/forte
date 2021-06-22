@@ -1,7 +1,7 @@
 import pytest
 import psi4
 
-from forte.solvers import solver_factory, HF, ActiveSpaceSolver
+from forte.solvers import solver_factory, HF, ActiveSpaceSolver, SpinAnalysis
 
 
 def test_aci_3():
@@ -25,20 +25,18 @@ def test_aci_3():
     options = {
         'sigma': 0.001,
         'active_ref_type': 'hf',
-        # 'diag_algorithm': 'sparse',
+        'diag_algorithm': 'SPARSE',
         'active_guess_size': 300,
-        # 'aci_screen_alg': 'batch_hash',
-        'aci_nbatch': 2,
-        'spin_analysis': True,
-        'spin_test': True
+        'aci_screen_alg': 'BATCH_HASH',
+        'aci_nbatch': 2
     }
     aci = ActiveSpaceSolver(hf, type='ACI', states=state, e_convergence=1.0e-11, r_convergence=1.0e-7, options=options)
-    aci.run()
+    spin = SpinAnalysis(aci, options={'SPIN_TEST': True})
+    spin.run()
 
     # check results
     assert hf.value('hf energy') == pytest.approx(ref_hf_energy, 1.0e-10)
     assert aci.value('active space energy')[state] == pytest.approx([ref_aci_energy], 1.0e-9)
-    print(psi4.core.variable("ACI+PT2 ENERGY"))
     assert psi4.core.variable("ACI+PT2 ENERGY") == pytest.approx(ref_acipt2_energy, 1.0e-8)
     assert psi4.core.variable("SPIN CORRELATION TEST") == pytest.approx(spin_val, 1.0e-7)
 
