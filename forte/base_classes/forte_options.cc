@@ -213,59 +213,12 @@ void ForteOptions::set_options_from_dict(pybind11::dict dict) {
                 "\n  ForteOptions::set_options_from_dict: option " + label + " is not defined\n";
             throw std::runtime_error(msg);
         }
-
-        // auto py_default_value = item.second["default_value"];
-        // if (type == "bool") {
-        //     if (py_default_value.is_none()) {
-        //         options.add_bool(label, false);
-        //     } else {
-        //         options.add_bool(label, py::cast<bool>(py_default_value));
-        //     }
-        // }
-        // if (type == "int") {
-        //     if (py_default_value.is_none()) {
-        //         options.add_int(label, 0);
-        //     } else {
-        //         options.add_int(label, py::cast<int>(py_default_value));
-        //     }
-        // }
-        // if (type == "float") {
-        //     if (py_default_value.is_none()) {
-        //         options.add_double(label, 0.0);
-        //     } else {
-        //         options.add_double(label, py::cast<double>(py_default_value));
-        //     }
-        // }
-        // if (type == "str") {
-        //     if (item.second.contains("allowed_values")) {
-        //         // Here we take a py list of strings and convert it to a string with spaces
-        //         auto py_allowed_values = item.second["allowed_values"];
-        //         std::vector<std::string> allowed_values_vec;
-        //         for (const auto& s : py_allowed_values) {
-        //             allowed_values_vec.push_back(py::str(s));
-        //         }
-        //         std::string allowed = join(allowed_values_vec, " ");
-
-        //         if (py_default_value.is_none()) {
-        //             options.add_str(label, "", allowed);
-        //         } else {
-        //             options.add_str(label, py::cast<std::string>(py_default_value), allowed);
-        //         }
-        //     } else {
-        //         if (py_default_value.is_none()) {
-        //             options.add_str(label, "");
-        //         } else {
-        //             options.add_str(label, py::cast<std::string>(py_default_value));
-        //         }
-        //     }
-        // }
-        // if ((type == "int_list") or (type == "float_list") or (type == "gen_list")) {
-        //     options.add(label, new psi::ArrayType());
-        // }
     }
 }
 
-void ForteOptions::set_dict(pybind11::dict dict) { dict_ = dict; }
+void ForteOptions::set_dict(pybind11::dict dict) {
+    dict_ = py::module::import("copy").attr("deepcopy")(dict);
+}
 
 void ForteOptions::reset_dict() { dict_ = pybind11::dict(); }
 

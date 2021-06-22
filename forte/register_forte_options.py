@@ -68,7 +68,7 @@ def register_driver_options(options):
 
     options.add_str('MINAO_BASIS', 'STO-3G', "The basis used to define an orbital subspace")
 
-    options.add_array("SUBSPACE", "A list of orbital subspaces")
+    options.add_list("SUBSPACE", "A list of orbital subspaces")
 
     options.add_double("MS", None, "Projection of spin onto the z axis")
 
@@ -137,7 +137,7 @@ def register_cino_options(options):
 
     options.add_int("CINO_NROOT", 1, "The number of roots computed")
 
-    options.add_int_array("CINO_ROOTS_PER_IRREP", "The number of excited states per irreducible representation")
+    options.add_int_list("CINO_ROOTS_PER_IRREP", "The number of excited states per irreducible representation")
     options.add_double("CINO_THRESHOLD", 0.99, "The fraction of NOs to include in the active space")
     options.add_bool("CINO_AUTO", False, "{ass frozen_docc, actice_docc, and restricted_docc?")
 
@@ -151,7 +151,7 @@ def register_mrcino_options(options):
 
     options.add_int("MRCINO_NROOT", 1, "The number of roots computed")
 
-    options.add_int_array("MRCINO_ROOTS_PER_IRREP", "The number of excited states per irreducible representation")
+    options.add_int_list("MRCINO_ROOTS_PER_IRREP", "The number of excited states per irreducible representation")
     options.add_double("MRCINO_THRESHOLD", 0.99, "The fraction of NOs to include in the active space")
     options.add_bool(
         "MRCINO_AUTO", False, "Allow the users to choose"
@@ -199,21 +199,21 @@ def register_embedding_options(options):
 def register_mo_space_info_options(options):
     options.set_group("MO Space Info")
 
-    options.add_int_array("FROZEN_DOCC", "Number of frozen occupied orbitals" " per irrep (in Cotton order)")
-    options.add_int_array(
+    options.add_int_list("FROZEN_DOCC", "Number of frozen occupied orbitals" " per irrep (in Cotton order)")
+    options.add_int_list(
         "RESTRICTED_DOCC", "Number of restricted doubly"
         " occupied orbitals per irrep (in Cotton order)"
     )
-    options.add_int_array("ACTIVE", " Number of active orbitals per irrep" " (in Cotton order)")
-    options.add_int_array("RESTRICTED_UOCC", "Number of restricted unoccupied" " orbitals per irrep (in Cotton order)")
-    options.add_int_array("FROZEN_UOCC", "Number of frozen unoccupied orbitals" " per irrep (in Cotton order)")
+    options.add_int_list("ACTIVE", " Number of active orbitals per irrep" " (in Cotton order)")
+    options.add_int_list("RESTRICTED_UOCC", "Number of restricted unoccupied" " orbitals per irrep (in Cotton order)")
+    options.add_int_list("FROZEN_UOCC", "Number of frozen unoccupied orbitals" " per irrep (in Cotton order)")
 
-    options.add_int_array("GAS1", "Number of GAS1 orbitals per irrep" " (in Cotton order)")
-    options.add_int_array("GAS2", "Number of GAS2 orbitals per irrep" " (in Cotton order)")
-    options.add_int_array("GAS3", "Number of GAS3 orbitals per irrep" " (in Cotton order)")
-    options.add_int_array("GAS4", "Number of GAS4 orbitals per irrep" " (in Cotton order)")
-    options.add_int_array("GAS5", "Number of GAS5 orbitals per irrep" " (in Cotton order)")
-    options.add_int_array("GAS6", "Number of GAS6 orbitals per irrep" " (in Cotton order)")
+    options.add_int_list("GAS1", "Number of GAS1 orbitals per irrep" " (in Cotton order)")
+    options.add_int_list("GAS2", "Number of GAS2 orbitals per irrep" " (in Cotton order)")
+    options.add_int_list("GAS3", "Number of GAS3 orbitals per irrep" " (in Cotton order)")
+    options.add_int_list("GAS4", "Number of GAS4 orbitals per irrep" " (in Cotton order)")
+    options.add_int_list("GAS5", "Number of GAS5 orbitals per irrep" " (in Cotton order)")
+    options.add_int_list("GAS6", "Number of GAS6 orbitals per irrep" " (in Cotton order)")
 
     #    /*- Molecular orbitals to swap -
     #     *  Swap mo_1 with mo_2 in irrep symmetry
@@ -221,7 +221,7 @@ def register_mo_space_info_options(options):
     #     *  Format: [irrep, mo_1, mo_2, irrep, mo_3, mo_4]
     #     *          Irrep and MO indices are 1-based (NOT 0-based)!
     #    -*/
-    options.add_int_array(
+    options.add_int_list(
         "ROTATE_MOS", "An array of MOs to swap in the format"
         " [irrep, mo_1, mo_2, irrep, mo_3, mo_4]."
         " Irrep and MOs are all 1-based (NOT 0-based)!"
@@ -233,13 +233,13 @@ def register_active_space_solver_options(options):
     options.add_int('NROOT', 1, 'The number of roots computed')
     options.add_int('ROOT', 0, 'The root selected for state-specific computations')
 
-    options.add_array(
+    options.add_list(
         "AVG_STATE",
         "A list of integer triplets that specify the irrep, multiplicity, and the number of states requested."
         "Uses the format [[irrep1, multi1, nstates1], [irrep2, multi2, nstates2], ...]"
     )
 
-    options.add_array(
+    options.add_list(
         "AVG_WEIGHT", "A list of lists that specify the weights assigned to all the states requested with AVG_STATE "
         "[[w1_1, w1_2, ..., w1_n], [w2_1, w2_2, ..., w2_n], ...]"
     )
@@ -562,11 +562,11 @@ def register_integral_options(options):
     )
 
     options.add_str('FCIDUMP_FILE', 'INTDUMP', 'The file that stores the FCIDUMP integrals')
-    options.add_int_array(
+    options.add_int_list(
         'FCIDUMP_DOCC',
         'The number of doubly occupied orbitals assumed for a FCIDUMP file. This information is used to build orbital energies.'
     )
-    options.add_int_array(
+    options.add_int_list(
         'FCIDUMP_SOCC',
         'The number of singly occupied orbitals assumed for a FCIDUMP file. This information is used to build orbital energies.'
     )
@@ -801,7 +801,7 @@ def register_dwms_options(options):
 def register_localize_options(options):
     options.set_group("Localize")
     options.add_str("LOCALIZE", "PIPEK_MEZEY", ["PIPEK_MEZEY", "BOYS"], "The method used to localize the orbitals")
-    options.add_int_array("LOCALIZE_SPACE", "Sets the orbital space for localization")
+    options.add_int_list("LOCALIZE_SPACE", "Sets the orbital space for localization")
 
 
 def register_casscf_options(options):
@@ -833,7 +833,7 @@ def register_casscf_options(options):
     # Format: [[irrep1, mo1, mo2], [irrep1, mo3, mo4], ...]
     # Irreps are 0-based, while MO indices are 1-based!
     # MO indices are relative indices within the irrep, e.g., 3A1 and 2A1: [[0, 3, 2]]
-    options.add_array("CASSCF_ZERO_ROT", "An array of MOs [[irrep1, mo1, mo2], [irrep2, mo3, mo4], ...]")
+    options.add_list("CASSCF_ZERO_ROT", "An array of MOs [[irrep1, mo1, mo2], [irrep2, mo3, mo4], ...]")
 
     options.add_str(
         "CASSCF_FINAL_ORBITAL", "CANONICAL", ["CANONICAL", "NATURAL", "UNSPECIFIED"],
@@ -880,7 +880,7 @@ def register_casscf_options(options):
 
     options.add_bool("MONITOR_SA_SOLUTION", False, "Monitor the CAS-CI solutions through iterations")
 
-    options.add_int_array(
+    options.add_int_list(
         "CASSCF_ACTIVE_FROZEN_ORBITAL",
         "A list of active orbitals to be frozen in the casscf optimization (in Pitzer order,"
         " zero based). Useful when doing core-excited state computations."
@@ -938,18 +938,18 @@ def register_psi_options(options):
 
 def register_gas_options(options):
     options.set_group("GAS")
-    options.add_int_array("GAS1MAX", "The maximum number of electrons in GAS1 for different states")
-    options.add_int_array("GAS1MIN", "The minimum number of electrons in GAS1 for different states")
-    options.add_int_array("GAS2MAX", "The maximum number of electrons in GAS2 for different states")
-    options.add_int_array("GAS2MIN", "The minimum number of electrons in GAS2 for different states")
-    options.add_int_array("GAS3MAX", "The maximum number of electrons in GAS3 for different states")
-    options.add_int_array("GAS3MIN", "The minimum number of electrons in GAS3 for different states")
-    options.add_int_array("GAS4MAX", "The maximum number of electrons in GAS4 for different states")
-    options.add_int_array("GAS4MIN", "The minimum number of electrons in GAS4 for different states")
-    options.add_int_array("GAS5MAX", "The maximum number of electrons in GAS5 for different states")
-    options.add_int_array("GAS5MIN", "The minimum number of electrons in GAS5 for different states")
-    options.add_int_array("GAS6MAX", "The maximum number of electrons in GAS6 for different states")
-    options.add_int_array("GAS6MIN", "The minimum number of electrons in GAS6 for different states")
+    options.add_int_list("GAS1MAX", "The maximum number of electrons in GAS1 for different states")
+    options.add_int_list("GAS1MIN", "The minimum number of electrons in GAS1 for different states")
+    options.add_int_list("GAS2MAX", "The maximum number of electrons in GAS2 for different states")
+    options.add_int_list("GAS2MIN", "The minimum number of electrons in GAS2 for different states")
+    options.add_int_list("GAS3MAX", "The maximum number of electrons in GAS3 for different states")
+    options.add_int_list("GAS3MIN", "The minimum number of electrons in GAS3 for different states")
+    options.add_int_list("GAS4MAX", "The maximum number of electrons in GAS4 for different states")
+    options.add_int_list("GAS4MIN", "The minimum number of electrons in GAS4 for different states")
+    options.add_int_list("GAS5MAX", "The maximum number of electrons in GAS5 for different states")
+    options.add_int_list("GAS5MIN", "The minimum number of electrons in GAS5 for different states")
+    options.add_int_list("GAS6MAX", "The maximum number of electrons in GAS6 for different states")
+    options.add_int_list("GAS6MIN", "The minimum number of electrons in GAS6 for different states")
 
     #    /*- The minimum excitation level (Default value: 0) -*/
     #    options.add_int("MIN_EXC_LEVEL", 0)
@@ -1047,6 +1047,7 @@ def register_gas_options(options):
     #    options.add_int("PRINT", 0)
     #    /*-  -*/
 
+
 #    // Options for the Cartographer class //
 #    /*- Density of determinants format -*/
 #    options.add_str("DOD_FORMAT", "HISTOGRAM", "GAUSSIAN HISTOGRAM")
@@ -1116,25 +1117,25 @@ def register_gas_options(options):
 #    -*/
 #    options.add_int("DMRG_WFN_IRREP", -1)
 #    /*- FrozenDocc for DMRG (frozen means restricted) -*/
-#    options.add_array("DMRG_FROZEN_DOCC")
+#    options.add_list("DMRG_FROZEN_DOCC")
 
 #    /*- The number of reduced renormalized basis states to be
 #        retained during successive DMRG instructions -*/
-#    options.add_array("DMRG_STATES")
+#    options.add_list("DMRG_STATES")
 
 #    /*- The energy convergence to stop an instruction
 #        during successive DMRG instructions -*/
-#    options.add_array("DMRG_ECONV")
+#    options.add_list("DMRG_ECONV")
 
 #    /*- The maximum number of sweeps to stop an instruction
 #        during successive DMRG instructions -*/
-#    options.add_array("DMRG_MAXSWEEPS")
+#    options.add_list("DMRG_MAXSWEEPS")
 #    /*- The Davidson R tolerance (Wouters says this will cause RDms to be
 #     * close to exact -*/
-#    options.add_array("DMRG_DAVIDSON_RTOL")
+#    options.add_list("DMRG_DAVIDSON_RTOL")
 
 #    /*- The noiseprefactors for successive DMRG instructions -*/
-#    options.add_array("DMRG_NOISEPREFACTORS")
+#    options.add_list("DMRG_NOISEPREFACTORS")
 
 #    /*- Whether or not to print the correlation functions after the DMRG
 #     * calculation -*/
@@ -1226,7 +1227,6 @@ def register_gas_options(options):
 #    //////////////////////////////////////////////////////////////
 #    ///         OPTIONS FOR THE PILOT FULL CI CODE
 #    //////////////////////////////////////////////////////////////
-
 
 #    /*- The density convergence criterion -*/
 #    options.add_double("D_CONVERGENCE", 1.0e-8)
