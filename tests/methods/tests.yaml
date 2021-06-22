@@ -203,7 +203,6 @@ embedding:
    medium:
       - embedding-2
 fci:
-   short:
    medium:
       - fci-2
       - fci-3
