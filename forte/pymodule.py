@@ -58,9 +58,11 @@ def run_psi4_ref(ref_type, molecule, print_warning=False, **kwargs):
 
     if ref_type in ['scf', 'hf', 'rhf', 'rohf', 'uhf']:
         if print_warning:
-            msg = ['Forte is using orbitals from a Psi4 SCF reference.',
-                   'This is not the best for multireference computations.',
-                   'To use Psi4 CASSCF orbitals, set REF_TYPE to CASSCF.']
+            msg = [
+                'Forte is using orbitals from a Psi4 SCF reference.',
+                'This is not the best for multireference computations.',
+                'To use Psi4 CASSCF orbitals, set REF_TYPE to CASSCF.'
+            ]
             msg = '\n  '.join(msg)
             warnings.warn(f"\n  {msg}\n", UserWarning)
 
@@ -73,38 +75,23 @@ def run_psi4_ref(ref_type, molecule, print_warning=False, **kwargs):
     return wfn
 
 
-def check_MO_overlap(options, molecule, Ca):
+def check_MO_orthonormality(S, Ca):
     """
-    Test the MO overlap matrix is identity or not.
-    We will recompute the SO overlap from molecule and test against Ca,
+    Return whether the MO overlap matrix is identity or not.
     S_MO = Ca^T S_SO Ca.
-    If the molecule and Ca are consistent, S_MO should be identity matrix.
+    The MO overlap is the identity if and only if the orbitals are orthonormal.
+    Most electronic structure methods are derived assuming orthonormal orbitals.
 
-    :param options: a ForteOptions object
-    :param molecule: a Psi4 Molecule object
+    :param S: a Psi4 Matrix of overlap integrals in the SO basis
     :param Ca: a Psi4 Matrix that holds orbital coefficients
 
     :return: S_MO == I
     """
     p4print = psi4.core.print_out
-    p4print("\n\n")
-
-    basis = options.get_str('BASIS')
-    wfn = psi4.core.Wavefunction.build(molecule, basis)
-
-    if psi4.core.get_global_option("RELATIVISTIC") in ["X2C", "DKH"]:
-        basis_rel = options.get_str("BASIS_RELATIVISTIC")
-        puream = wfn.basisset().has_puream()
-        rel_bas = psi4.core.BasisSet.build(molecule, "BASIS_RELATIVISTIC",
-                                           basis_rel, "DECON", basis,
-                                           puream=puream)
-        wfn.set_basisset('BASIS_RELATIVISTIC', rel_bas)
 
     p4print("\n  Checking orbital orthonormality against current geometry ...")
 
-    # build MO overlap
-    mints = wfn.mintshelper()
-    S = mints.so_overlap()
+    S = S.clone()
     S.transform(Ca)  # S = Ca^T S Ca
 
     # test orbital orthonormality
@@ -159,13 +146,11 @@ def prepare_psi4_ref_wfn(options, **kwargs):
 
     if ref_wfn is None:
         ref_type = options.get_str('REF_TYPE')
-        p4print('\n  No reference wave function provided for Forte.'
-                f' Computing {ref_type} orbitals using Psi4 ...\n')
+        p4print('\n  No reference wave function provided for Forte.' f' Computing {ref_type} orbitals using Psi4 ...\n')
 
         # no warning printing for MCSCF
         job_type = options.get_str('JOB_TYPE')
-        do_mcscf = (job_type in ["CASSCF", "MCSCF_TWO_STEP"] or
-                    options.get_bool("CASSCF_REFERENCE"))
+        do_mcscf = (job_type in ["CASSCF", "MCSCF_TWO_STEP"] or options.get_bool("CASSCF_REFERENCE"))
 
         # run Psi4 SCF or MCSCF
         ref_wfn = run_psi4_ref(ref_type, molecule, not do_mcscf, **kwargs)
@@ -187,8 +172,9 @@ def prepare_psi4_ref_wfn(options, **kwargs):
         if Ca.rowdim() != nmopi or Ca.coldim() != nmopi:
             raise ValueError("Invalid orbitals: different basis set / molecule")
 
-        # check orbital orthonormality
-        if check_MO_overlap(options, molecule, Ca):
+        new_S = psi4.core.Wavefunction.build(molecule, options.get_str("BASIS")).S()
+
+        if check_MO_orthonormality(new_S, Ca):
             wfn_new = ref_wfn
             wfn_new.Ca().copy(Ca)
         else:
@@ -209,14 +195,13 @@ def prepare_psi4_ref_wfn(options, **kwargs):
 
     # set DF and MINAO basis
     if 'DF' in options.get_str('INT_TYPE'):
-        aux_basis = psi4.core.BasisSet.build(molecule, 'DF_BASIS_MP2',
-                                             options.get_str('DF_BASIS_MP2'),
-                                             'RIFIT', options.get_str('BASIS'))
+        aux_basis = psi4.core.BasisSet.build(
+            molecule, 'DF_BASIS_MP2', options.get_str('DF_BASIS_MP2'), 'RIFIT', options.get_str('BASIS')
+        )
         wfn_new.set_basisset('DF_BASIS_MP2', aux_basis)
 
     if options.get_str('MINAO_BASIS'):
-        minao_basis = psi4.core.BasisSet.build(molecule, 'MINAO_BASIS',
-                                               options.get_str('MINAO_BASIS'))
+        minao_basis = psi4.core.BasisSet.build(molecule, 'MINAO_BASIS', options.get_str('MINAO_BASIS'))
         wfn_new.set_basisset('MINAO_BASIS', minao_basis)
 
     return wfn_new, mo_space_info
@@ -273,9 +258,7 @@ def make_state_info_from_fcidump(fcidump, options):
         twice_ms = int(round(2.0 * options.get_double("MS")))
 
     if (((nel - twice_ms) % 2) != 0):
-        raise Exception(
-            f'Forte: the value of MS ({twice_ms}/2) is incompatible with the number of electrons ({nel})'
-        )
+        raise Exception(f'Forte: the value of MS ({twice_ms}/2) is incompatible with the number of electrons ({nel})')
 
     na = (nel + twice_ms) // 2
     nb = nel - na
@@ -287,23 +270,13 @@ def make_state_info_from_fcidump(fcidump, options):
     return forte.StateInfo(na, nb, multiplicity, twice_ms, irrep)
 
 
-def prepare_forte_objects_from_fcidump(options,path='.'):
+def prepare_forte_objects_from_fcidump(options, path='.'):
     fcidump_file = options.get_str('FCIDUMP_FILE')
     filename = pathlib.Path(path) / fcidump_file
-    psi4.core.print_out(
-        f'\n  Reading integral information from FCIDUMP file {filename}')
+    psi4.core.print_out(f'\n  Reading integral information from FCIDUMP file {filename}')
     fcidump = forte.proc.fcidump_from_file(filename, convert_to_psi4=True)
 
-    irrep_size = {
-        'c1': 1,
-        'ci': 2,
-        'c2': 2,
-        'cs': 2,
-        'd2': 4,
-        'c2v': 4,
-        'c2h': 4,
-        'd2h': 8
-    }
+    irrep_size = {'c1': 1, 'ci': 2, 'c2': 2, 'cs': 2, 'd2': 4, 'c2v': 4, 'c2h': 4, 'd2h': 8}
 
     nmo = len(fcidump['orbsym'])
     if 'pntgrp' in fcidump:
@@ -357,23 +330,23 @@ def prepare_forte_objects_from_fcidump(options,path='.'):
         eri = fcidump['eri']
         nmo = fcidump['norb']
         for i in range(nmo):
-            val = hcore[i,i]
+            val = hcore[i, i]
             for h in range(nirrep):
-                for j in range(nmopi_offset[h],nmopi_offset[h]+doccpi[h]+soccpi[h]):
-                    val += eri[i,i,j,j] - eri[i,j,i,j]
-                for j in range(nmopi_offset[h],nmopi_offset[h]+doccpi[h]):
-                    val += eri[i,i,j,j]
-            epsilon_a.set(i,val)
+                for j in range(nmopi_offset[h], nmopi_offset[h] + doccpi[h] + soccpi[h]):
+                    val += eri[i, i, j, j] - eri[i, j, i, j]
+                for j in range(nmopi_offset[h], nmopi_offset[h] + doccpi[h]):
+                    val += eri[i, i, j, j]
+            epsilon_a.set(i, val)
 
-            val = hcore[i,i]
+            val = hcore[i, i]
             for h in range(nirrep):
-                for j in range(nmopi_offset[h],nmopi_offset[h]+doccpi[h]+soccpi[h]):
-                    val += eri[i,i,j,j]
-                for j in range(nmopi_offset[h],nmopi_offset[h]+doccpi[h]):
-                    val += eri[i,i,j,j] - eri[i,j,i,j]
-            epsilon_b.set(i,val)
+                for j in range(nmopi_offset[h], nmopi_offset[h] + doccpi[h] + soccpi[h]):
+                    val += eri[i, i, j, j]
+                for j in range(nmopi_offset[h], nmopi_offset[h] + doccpi[h]):
+                    val += eri[i, i, j, j] - eri[i, j, i, j]
+            epsilon_b.set(i, val)
 
-    scf_info = forte.SCFInfo(doccpi, soccpi, 0.0, epsilon_a, epsilon_b)
+    scf_info = forte.SCFInfo(nmopi, doccpi, soccpi, 0.0, epsilon_a, epsilon_b)
 
     state_info = make_state_info_from_fcidump(fcidump, options)
     state_weights_map = {state_info: [1.0]}
@@ -396,10 +369,10 @@ def make_ints_from_fcidump(fcidump, options, mo_space_info):
     eri_bb += np.einsum('ikjl->ijkl', eri)
     eri_bb -= np.einsum('iljk->ijkl', eri)
 
-    return forte.make_custom_ints(options, mo_space_info, fcidump['enuc'],
-                                  fcidump['hcore'].flatten(),
-                                  fcidump['hcore'].flatten(), eri_aa.flatten(),
-                                  eri_ab.flatten(), eri_bb.flatten())
+    return forte.make_custom_ints(
+        options, mo_space_info, fcidump['enuc'], fcidump['hcore'].flatten(), fcidump['hcore'].flatten(),
+        eri_aa.flatten(), eri_ab.flatten(), eri_bb.flatten()
+    )
 
 
 def prepare_forte_options():
@@ -467,8 +440,9 @@ def forte_driver(state_weights_map, scf_info, options, ints, mo_space_info):
     # create an active space solver object and compute the energy
     active_space_solver_type = options.get_str('ACTIVE_SPACE_SOLVER')
     as_ints = forte.make_active_space_ints(mo_space_info, ints, "ACTIVE", ["RESTRICTED_DOCC"])
-    active_space_solver = forte.make_active_space_solver(active_space_solver_type, state_map, scf_info,
-                                                         mo_space_info, as_ints, options)
+    active_space_solver = forte.make_active_space_solver(
+        active_space_solver_type, state_map, scf_info, mo_space_info, as_ints, options
+    )
     state_energies_list = active_space_solver.compute_energy()
 
     if options.get_bool('SPIN_ANALYSIS'):
@@ -509,9 +483,9 @@ def run_forte(name, **kwargs):
 
     """
 
-    # Start Forte, initialize ambit
-    my_proc_n_nodes = forte.startup()
-    my_proc, n_nodes = my_proc_n_nodes
+    # # Start Forte, initialize ambit
+    # my_proc_n_nodes = forte.startup()
+    # my_proc, n_nodes = my_proc_n_nodes
 
     # Build Forte options
     options = prepare_forte_options()
@@ -528,7 +502,7 @@ def run_forte(name, **kwargs):
 
     if job_type == 'NONE':
         psi4.core.set_scalar_variable('CURRENT ENERGY', 0.0)
-        forte.cleanup()
+        # forte.cleanup()
         return ref_wfn
 
     start_pre_ints = time.time()
@@ -547,8 +521,7 @@ def run_forte(name, **kwargs):
     # Rotate orbitals before computation (e.g. localization, MP2 natural orbitals, etc.)
     orb_type = options.get_str("ORBITAL_TYPE")
     if orb_type != 'CANONICAL':
-        orb_t = forte.make_orbital_transformation(orb_type, scf_info, options,
-                                                  ints, mo_space_info)
+        orb_t = forte.make_orbital_transformation(orb_type, scf_info, options, ints, mo_space_info)
         orb_t.compute_transformation()
         Ua = orb_t.get_Ua()
         Ub = orb_t.get_Ub()
@@ -559,11 +532,9 @@ def run_forte(name, **kwargs):
 
     if (options.get_bool("CASSCF_REFERENCE") or job_type == "CASSCF"):
         if options.get_str('INT_TYPE') == 'FCIDUMP':
-            raise Exception('Forte: the CASSCF code cannot use integrals read'
-                            ' from a FCIDUMP file')
+            raise Exception('Forte: the CASSCF code cannot use integrals read' ' from a FCIDUMP file')
 
-        casscf = forte.make_casscf(state_weights_map, scf_info, options,
-                                   mo_space_info, ints)
+        casscf = forte.make_casscf(state_weights_map, scf_info, options, mo_space_info, ints)
         energy = casscf.compute_energy()
 
     if (job_type == "MCSCF_TWO_STEP"):
@@ -571,25 +542,20 @@ def run_forte(name, **kwargs):
         energy = casscf.compute_energy()
 
     if (job_type == 'NEWDRIVER'):
-        energy = forte_driver(state_weights_map, scf_info, options, ints,
-                              mo_space_info)
+        energy = forte_driver(state_weights_map, scf_info, options, ints, mo_space_info)
     elif (job_type == 'MR-DSRG-PT2'):
-        energy = mr_dsrg_pt2(job_type,forte_objects,ints,options)
+        energy = mr_dsrg_pt2(job_type, forte_objects, ints, options)
 
     end = time.time()
 
     # Close ambit, etc.
-    forte.cleanup()
+    # forte.cleanup()
 
     psi4.core.set_scalar_variable('CURRENT ENERGY', energy)
 
-    psi4.core.print_out(
-        f'\n\n  Time to prepare integrals: {start - start_pre_ints:12.3f} seconds'
-    )
-    psi4.core.print_out(
-        f'\n  Time to run job          : {end - start:12.3f} seconds')
-    psi4.core.print_out(
-        f'\n  Total                    : {end - start_pre_ints:12.3f} seconds\n')
+    psi4.core.print_out(f'\n\n  Time to prepare integrals: {start - start_pre_ints:12.3f} seconds')
+    psi4.core.print_out(f'\n  Time to run job          : {end - start:12.3f} seconds')
+    psi4.core.print_out(f'\n  Total                    : {end - start_pre_ints:12.3f} seconds\n')
 
     if 'FCIDUMP' not in options.get_str('INT_TYPE'):
         if options.get_bool('DUMP_ORBITALS'):
@@ -597,7 +563,7 @@ def run_forte(name, **kwargs):
         return ref_wfn
 
 
-def mr_dsrg_pt2(job_type,forte_objects,ints,options):
+def mr_dsrg_pt2(job_type, forte_objects, ints, options):
     """
     Driver to perform a MCSRGPT2_MO computation.
 
@@ -610,8 +576,8 @@ def mr_dsrg_pt2(job_type,forte_objects,ints,options):
     # generate a list of states with their own weights
     state_map = forte.to_state_nroots_map(state_weights_map)
 
-    cas_type = options.get_str("ACTIVE_SPACE_SOLVER");
-    actv_type = options.get_str("FCIMO_ACTV_TYPE");
+    cas_type = options.get_str("ACTIVE_SPACE_SOLVER")
+    actv_type = options.get_str("FCIMO_ACTV_TYPE")
     if actv_type == "CIS" or actv_type == "CISD":
         raise Exception('Forte: VCIS/VCISD is not supported for MR-DSRG-PT2')
     max_rdm_level = 2 if options.get_str("THREEPDC") == "ZERO" else 3
@@ -636,9 +602,9 @@ def gradient_forte(name, **kwargs):
         available for : CASSCF
     """
 
-    # Start Forte, initialize ambit
-    my_proc_n_nodes = forte.startup()
-    my_proc, n_nodes = my_proc_n_nodes
+    # # Start Forte, initialize ambit
+    # my_proc_n_nodes = forte.startup()
+    # my_proc, n_nodes = my_proc_n_nodes
 
     # Get the psi4 option object
     optstash = p4util.OptionsState(['GLOBALS', 'DERTYPE'])
@@ -672,22 +638,19 @@ def gradient_forte(name, **kwargs):
     # Rotate orbitals before computation
     orb_type = options.get_str("ORBITAL_TYPE")
     if orb_type != 'CANONICAL':
-        orb_t = forte.make_orbital_transformation(orb_type, scf_info, options,
-                                                  ints, mo_space_info)
+        orb_t = forte.make_orbital_transformation(orb_type, scf_info, options, ints, mo_space_info)
         orb_t.compute_transformation()
         Ua = orb_t.get_Ua()
         Ub = orb_t.get_Ub()
         ints.rotate_orbitals(Ua, Ub)
 
     if job_type == "CASSCF":
-        casscf = forte.make_casscf(state_weights_map, scf_info, options,
-                                   mo_space_info, ints)
+        casscf = forte.make_casscf(state_weights_map, scf_info, options, mo_space_info, ints)
         energy = casscf.compute_energy()
-        casscf.compute_gradient();
+        casscf.compute_gradient()
 
     if job_type == "MCSCF_TWO_STEP":
-        casscf = forte.make_mcscf_two_step(state_weights_map, scf_info, options,
-                                           mo_space_info, ints)
+        casscf = forte.make_mcscf_two_step(state_weights_map, scf_info, options, mo_space_info, ints)
         energy = casscf.compute_energy()
 
     if job_type == 'NEWDRIVER' and correlation_solver == 'DSRG-MRPT2':
@@ -706,19 +669,18 @@ def gradient_forte(name, **kwargs):
     end = time.time()
 
     # Close ambit, etc.
-    forte.cleanup()
+    # forte.cleanup()
 
     # Print timings
     psi4.core.print_out('\n\n ==> Forte Timings <==\n')
-    times = [('prepare integrals', start - time_pre_ints),
-             ('run forte energy', time_pre_deriv - start),
-             ('compute derivative integrals', end - time_pre_deriv)]
+    times = [
+        ('prepare integrals', start - time_pre_ints), ('run forte energy', time_pre_deriv - start),
+        ('compute derivative integrals', end - time_pre_deriv)
+    ]
     max_key_size = max(len(k) for k, v in times)
     for key, value in times:
-        psi4.core.print_out(f'\n  Time to {key:{max_key_size}} :'
-                            f' {value:12.3f} seconds')
-    psi4.core.print_out(f'\n  {"Total":{max_key_size + 8}} :'
-                        f' {end - time_pre_ints:12.3f} seconds\n')
+        psi4.core.print_out(f'\n  Time to {key:{max_key_size}} :' f' {value:12.3f} seconds')
+    psi4.core.print_out(f'\n  {"Total":{max_key_size + 8}} :' f' {end - time_pre_ints:12.3f} seconds\n')
 
     # Dump orbitals if needed
     if options.get_bool('DUMP_ORBITALS'):

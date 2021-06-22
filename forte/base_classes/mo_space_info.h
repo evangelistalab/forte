@@ -174,6 +174,8 @@ class MOSpaceInfo {
 
     // ==> Class Interface <==
 
+    /// @return A string representation of this object
+    std::string str() const;
     /// @return A vector of labels of each irrep (e.g. ["A1","A2"])
     const std::vector<std::string>& irrep_labels() const { return symmetry_.irrep_labels(); }
     /// @return The label of each irrep h (e.g. h = 0 -> "A1")
@@ -181,29 +183,25 @@ class MOSpaceInfo {
     /// @return The label of the molecular point groupo (e.g. "C2V")
     std::string point_group_label() const { return symmetry_.point_group_label(); }
     /// @return The names of the elementary orbital spaces
-    std::vector<std::string> space_names() const { return elementary_spaces_; }
+    const std::vector<std::string>& space_names() const { return elementary_spaces_; }
     /// @return The names of the composite orbital spaces
     std::map<std::string, std::vector<std::string>> composite_space_names() const {
         return composite_spaces_;
     }
     /// @return The number of orbitals in a space
-    size_t size(const std::string& space);
+    size_t size(const std::string& space) const;
     /// @return The psi::Dimension object for space
-    psi::Dimension dimension(const std::string& space);
+    psi::Dimension dimension(const std::string& space) const;
     /// @return The symmetry of each orbital
-    std::vector<int> symmetry(const std::string& space);
+    std::vector<int> symmetry(const std::string& space) const;
     /// @return The list of the absolute index of the molecular orbitals in a space
-    std::vector<size_t> absolute_mo(const std::string& space);
+    std::vector<size_t> absolute_mo(const std::string& space) const;
     /// @return The list of the absolute index of the molecular orbitals in a
     /// space excluding the frozen core/virtual orbitals
-    std::vector<size_t> corr_absolute_mo(const std::string& space);
+    std::vector<size_t> corr_absolute_mo(const std::string& space) const;
     /// @return The list of the relative index (h,p_rel) of the molecular
     /// orbitals in space
-    std::vector<std::pair<size_t, size_t>> relative_mo(const std::string& space);
-    /// @return The list of the relative index (h,p_rel) of the molecular
-    /// orbitals in space
-    [[deprecated("this function will soon be removed")]] std::vector<std::pair<size_t, size_t>>
-    get_relative_mo(const std::string& space);
+    std::vector<std::pair<size_t, size_t>> relative_mo(const std::string& space) const;
     /// @return The position of the orbitals in a space in a larger composite space
     std::vector<size_t> pos_in_space(const std::string& space, const std::string& composite_space);
     /// @return The psi::Slice for a space counting started at absolute zero
@@ -294,7 +292,7 @@ std::shared_ptr<MOSpaceInfo> make_mo_space_info(const psi::Dimension& nmopi,
 std::shared_ptr<MOSpaceInfo>
 make_mo_space_info_from_map(const psi::Dimension& nmopi, const std::string& point_group,
                             const std::map<std::string, std::vector<size_t>>& mo_space_map,
-                            std::vector<size_t> reorder);
+                            const std::vector<size_t>& reorder);
 
 } // namespace forte
 

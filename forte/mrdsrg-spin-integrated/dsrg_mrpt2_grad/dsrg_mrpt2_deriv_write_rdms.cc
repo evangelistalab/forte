@@ -37,9 +37,6 @@ using namespace psi;
 
 namespace forte {
 
-/**
- * Write the energy-weighted density matrix into Psi4 Lagrangian_.
- */
 void DSRG_MRPT2::write_lagrangian() {
     // NOTICE: write the Lagrangian
     outfile->Printf("\n    Writing EWDM (Lagrangian) ....................... ");
@@ -78,11 +75,6 @@ void DSRG_MRPT2::write_lagrangian() {
     outfile->Printf("Done");
 }
 
-/**
- * Write spin_dependent one-RDMs coefficients into Psi4 Da_ and Db_.
- *
- * We assume "Da == Db". This function needs be changed if such constraint is revoked.
- */
 void DSRG_MRPT2::write_1rdm_spin_dependent() {
     // NOTICE: write spin_dependent one-RDMs coefficients.
     outfile->Printf("\n    Writing 1RDM Coefficients ....................... ");
@@ -232,16 +224,6 @@ void DSRG_MRPT2::write_1rdm_spin_dependent() {
     outfile->Printf("Done");
 }
 
-/**
- * Write spin_dependent two-RDMs coefficients using IWL.
- *
- * Coefficients in d2aa and d2bb need be multiplied with additional 1/2!
- * Specifically:
- * If you have v_aa as coefficients before 2-RDMs_alpha_alpha, v_bb before
- * 2-RDMs_beta_beta and v_bb before 2-RDMs_alpha_beta, you need to write
- * 0.5 * v_aa, 0.5 * v_bb and v_ab into the IWL file instead of using
- * the original coefficients v_aa, v_bb and v_ab.
- */
 void DSRG_MRPT2::write_2rdm_spin_dependent() {
     // NOTICE: write spin_dependent two-RDMs coefficients using IWL
     outfile->Printf("\n    Writing 2RDM Coefficients ....................... ");
@@ -572,9 +554,6 @@ void DSRG_MRPT2::write_2rdm_spin_dependent() {
     outfile->Printf("Done");
 }
 
-/**
- * Backtransform the TPDM.
- */
 void DSRG_MRPT2::tpdm_backtransform() {
     // Backtransform the TPDM
 
