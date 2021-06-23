@@ -53,7 +53,7 @@ def test_options():
     assert forte_options.get_bool('MY_BOOL')
     assert forte_options.get_int('MY_INT') == 2
     assert forte_options.get_double('MY_FLOAT') == 1.0e-12
-    assert forte_options.get_str('MY_STR') == 'New string'
+    assert forte_options.get_str('MY_STR') == 'NEW STRING'
     assert forte_options.get_int_list('MY_INT_LIST') == [1, 1, 2, 3, 5, 8]
     assert forte_options.get_double_list('MY_FLOAT_LIST') == [1.0, 2.0, 3.0]
     assert forte_options.get_list('MY_GEN_LIST') == ['singlet', 'triplet', 42]
@@ -98,7 +98,7 @@ def test_options():
             'MY_BOOL': True,
             'MY_INT': 2,
             'MY_FLOAT': 1.0e-12,
-            'MY_STR': 'New string',
+            'MY_STR': 'NEW STRING',
             'MY_INT_LIST': [1, 1, 2, 3, 5, 8],
             'MY_FLOAT_LIST': [1.0, 2.0, 3.0],
             'MY_GEN_LIST': ['singlet', 'triplet', 42]
@@ -108,7 +108,7 @@ def test_options():
     test_str = """MY_BOOL: 1
 MY_INT: 2
 MY_FLOAT: 0.000000
-MY_STR: New string
+MY_STR: NEW STRING
 MY_INT_LIST: [1,1,2,3,5,8,]
 MY_FLOAT_LIST: [1.000000,2.000000,3.000000,]
 MY_GEN_LIST: gen_list()

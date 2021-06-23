@@ -505,7 +505,7 @@ void ForteOptions::get_options_from_psi4(psi::Options& options) {
                 item.second["value"] = py::cast(value);
             }
             if (type == "int_list") {
-                std::vector<int> value = options.get_int_listtor(label);
+                std::vector<int> value = options.get_int_vector(label);
                 auto py_list = py::list();
                 for (auto e : value) {
                     py_list.append(py::int_(e));

@@ -23,7 +23,8 @@ class Solver(ABC):
         self._executed = False
         self._data = Data()
         self._results = Results()
-        self._output_file = f'output.{time.strftime("%Y-%m-%d-%H:%M:%S")}.dat'
+        # self._output_file = f'output.{time.strftime("%Y-%m-%d-%H:%M:%S")}.dat'
+        self._output_file = 'output.dat'
 
     # decorate to icrease the log depth
     @increase_log_depth
