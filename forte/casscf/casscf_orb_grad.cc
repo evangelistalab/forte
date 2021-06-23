@@ -212,7 +212,7 @@ void CASSCF_ORB_GRAD::read_options() {
         }
     }
 
-    auto frza_rot = options_->get_int_vec("CASSCF_ACTIVE_FROZEN_ORBITAL");
+    auto frza_rot = options_->get_int_list("CASSCF_ACTIVE_FROZEN_ORBITAL");
     auto actv_rel_mos = mo_space_info_->relative_mo("ACTIVE");
     if (frza_rot.size() != 0) {
         for (size_t i = 0, size = frza_rot.size(); i < size; ++i) {

@@ -1628,7 +1628,7 @@ std::vector<std::pair<int, Determinant>> AdaptiveCI::ras_masks() {
 
     // Get the number of masks;
     // Input => [ <irrep>, <min mo>, <max mo>, <ndiff>, ... ]
-    std::vector<int> ras_spaces = options_->get_int_vector("ACI_RAS_SPACES");
+    std::vector<int> ras_spaces = options_->get_int_listtor("ACI_RAS_SPACES");
     size_t total_size = ras_spaces.size();
 
     if( (total_size % 3) != 0 ){

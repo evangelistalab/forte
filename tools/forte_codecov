@@ -32,7 +32,7 @@ cd tests/pytest
 pytest
 test4=$?
 
-cd tests/pytest-methods
+cd ../../tests/pytest-methods
 pytest
 test5=$?
 

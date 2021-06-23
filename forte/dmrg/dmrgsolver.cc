@@ -233,11 +233,11 @@ void DMRGSolver::compute_reference(double* one_rdm, double* two_rdm, double* thr
 void DMRGSolver::compute_energy() {
     const int wfn_irrep = options_->get_int("ROOT_SYM");
     const int wfn_multp = options_->get_int("MULTIPLICITY");
-    std::vector<int> dmrg_states = options_->get_int_vec("DMRG_STATES");
+    std::vector<int> dmrg_states = options_->get_int_list("DMRG_STATES");
     const int ndmrg_states = dmrg_states.size();
     std::vector<double> dmrg_econv = options_->get_double_vec("DMRG_ECONV");
     const int ndmrg_econv = dmrg_econv.size();
-    std::vector<int> dmrg_maxsweeps = options_->get_int_vec("DMRG_MAXSWEEPS");
+    std::vector<int> dmrg_maxsweeps = options_->get_int_list("DMRG_MAXSWEEPS");
     const int ndmrg_maxsweeps = dmrg_maxsweeps.size();
     std::vector<double> dmrg_noiseprefactors = options_->get_double_vec("DMRG_NOISEPREFACTORS");
     const int ndmrg_noiseprefactors = dmrg_noiseprefactors.size();

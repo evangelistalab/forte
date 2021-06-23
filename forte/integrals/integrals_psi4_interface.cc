@@ -95,7 +95,7 @@ void Psi4Integrals::setup_psi4_ints() {
     /// If MO_ROTATE is set in option, call rotate_mos.
     /// Wasn't really sure where to put this function, but since, integrals is
     /// always called, this seems like a good spot.
-    auto rotate_mos_list = options_->get_int_vec("ROTATE_MOS");
+    auto rotate_mos_list = options_->get_int_list("ROTATE_MOS");
     if (rotate_mos_list.size() > 0) {
         rotate_mos();
     }
@@ -307,7 +307,7 @@ void Psi4Integrals::freeze_core_orbitals() {
 }
 
 void Psi4Integrals::rotate_mos() {
-    auto rotate_mos_list = options_->get_int_vec("ROTATE_MOS");
+    auto rotate_mos_list = options_->get_int_list("ROTATE_MOS");
     int size_mo_rotate = rotate_mos_list.size();
     outfile->Printf("\n\n\n  ==> ROTATING MOS <==");
     if (size_mo_rotate % 3 != 0) {

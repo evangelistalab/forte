@@ -67,7 +67,7 @@ void export_ForteOptions(py::module& m) {
         .def("get_int", &ForteOptions::get_int, "Get an integer option")
         .def("get_double", &ForteOptions::get_double, "Get a double option")
         .def("get_str", &ForteOptions::get_str, "Get a string option")
-        .def("get_int_list", &ForteOptions::get_int_vec, "Get a list of integers option")
+        .def("get_int_list", &ForteOptions::get_int_list, "Get a list of integers option")
         .def("get_double_list", &ForteOptions::get_double_vec,
              "Get a vector of doubles (py::float) option")
         .def("get_list", &ForteOptions::get_gen_list, "Get a general list")

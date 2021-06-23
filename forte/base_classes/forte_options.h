@@ -226,7 +226,7 @@ class ForteOptions {
      * @brief Get a vector of int option
      * @param label Option label
      */
-    std::vector<int> get_int_vec(const std::string& label) const;
+    std::vector<int> get_int_list(const std::string& label) const;
 
     /**
      * @brief Get a vector of int option

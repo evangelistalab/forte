@@ -48,7 +48,7 @@ Localize::Localize(std::shared_ptr<ForteOptions> options, std::shared_ptr<ForteI
         throw psi::PSIEXCEPTION("\n\n ERROR: Localizer only implemented for C1 symmetry!");
     }
 
-    orbital_spaces_ = options->get_int_vec("LOCALIZE_SPACE");
+    orbital_spaces_ = options->get_int_list("LOCALIZE_SPACE");
     local_method_ = options->get_str("LOCALIZE");
 
     print_h2("Orbital Localizer");

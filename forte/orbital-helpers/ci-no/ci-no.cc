@@ -95,7 +95,7 @@ void CINO::compute_transformation() {
     // Build CAS determinants
     // std::vector<std::vector<Determinant> > dets_cas = build_dets_cas();
 
-    std::vector<int> root_pi = options_->get_int_vec("CINO_ROOTS_PER_IRREP");
+    std::vector<int> root_pi = options_->get_int_list("CINO_ROOTS_PER_IRREP");
     for (int h = 0; h < nirrep_; ++h) {
         int nsolutions = root_pi[h];
         sum += nsolutions;

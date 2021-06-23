@@ -44,7 +44,7 @@ def test_options():
             'MY_BOOL': True,
             'MY_INT': 2,
             'MY_FLOAT': 1.0e-12,
-            'MY_STR': 'New string',
+            'MY_STR': 'NEW STRING',  # this also tests conversion of string options to upper case
             'MY_INT_LIST': [1, 1, 2, 3, 5, 8],
             'MY_FLOAT_LIST': [1.0, 2.0, 3.0],
             'MY_GEN_LIST': ['singlet', 'triplet', 42]

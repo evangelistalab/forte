@@ -106,7 +106,7 @@ void MRCINO::compute_transformation() {
     // Build CAS determinants
     std::vector<std::vector<Determinant>> dets_cas = build_dets_cas();
 
-    std::vector<int> rootspi = options_->get_int_vec("MRCINO_ROOTS_PER_IRREP");
+    std::vector<int> rootspi = options_->get_int_list("MRCINO_ROOTS_PER_IRREP");
     for (int h = 0; h < nirrep_; ++h) {
         int nsolutions = rootspi[h];
         sum += nsolutions;

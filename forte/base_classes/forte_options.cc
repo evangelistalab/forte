@@ -303,7 +303,7 @@ py::list ForteOptions::get_gen_list(const std::string& label) const {
     return py::list();
 }
 
-std::vector<int> ForteOptions::get_int_vec(const std::string& label) const {
+std::vector<int> ForteOptions::get_int_list(const std::string& label) const {
     std::vector<int> result;
     auto value_type = get(label);
     check_options_none(value_type.first, "int_vec", label);
@@ -399,7 +399,7 @@ void ForteOptions::set_int_vec(const std::string& label, const std::vector<int>&
     if (value_type.second == "int_list") {
         set(label, py::cast(val));
     } else {
-        std::string msg = "Called ForteOptions::get_int_vec(" + label +
+        std::string msg = "Called ForteOptions::get_int_list(" + label +
                           ") but the type for this option is " + value_type.second;
         throw std::runtime_error(msg);
     }
@@ -505,7 +505,7 @@ void ForteOptions::get_options_from_psi4(psi::Options& options) {
                 item.second["value"] = py::cast(value);
             }
             if (type == "int_list") {
-                std::vector<int> value = options.get_int_vector(label);
+                std::vector<int> value = options.get_int_listtor(label);
                 auto py_list = py::list();
                 for (auto e : value) {
                     py_list.append(py::int_(e));
@@ -576,7 +576,7 @@ std::string ForteOptions::str() const {
 
         } else if (type == "int_list") {
             s += label + ": [";
-            std::vector<int> value = get_int_vec(label);
+            std::vector<int> value = get_int_list(label);
             for (auto e : value) {
                 s += std::to_string(e) + ",";
             }
