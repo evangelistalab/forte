@@ -389,7 +389,7 @@ class DSRG_MRPT2 : public MASTER_DSRG {
     ambit::BlockedTensor Eeps2;
     ambit::BlockedTensor Eeps2_p;
     ambit::BlockedTensor Eeps2_m1;
-    ambit::BlockedTensor Eeps2_m2
+    ambit::BlockedTensor Eeps2_m2;
     ambit::BlockedTensor Delta1;
     ambit::BlockedTensor Delta2;
     ambit::BlockedTensor DelGam1;
