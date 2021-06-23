@@ -1,3 +1,5 @@
+import time
+
 from abc import ABC, abstractmethod
 
 from forte.core import flog, increase_log_depth
@@ -21,7 +23,7 @@ class Solver(ABC):
         self._executed = False
         self._data = Data()
         self._results = Results()
-        self._output_file = 'output.dat'
+        self._output_file = f'output.{time.strftime("%Y-%m-%d-%H:%M:%S")}.dat'
 
     # decorate to icrease the log depth
     @increase_log_depth
@@ -115,11 +117,22 @@ class Solver(ABC):
     def value(self, label):
         return self._results.value(label)
 
-    def state(self, charge: int, multiplicity: int, ms: float = None, sym: str = None):
-        return self.data.model.state(charge, multiplicity, ms, sym)
+    def state(self, *args, **kwargs):
+        return self.data.model.state(*args, **kwargs)
 
-    def _mo_space_info_map(
-        self, frozen_docc=None, restricted_docc=None, active=None, restricted_uocc=None, frozen_uocc=None
+    def _make_mo_space_info_map(
+        self,
+        frozen_docc=None,
+        restricted_docc=None,
+        active=None,
+        restricted_uocc=None,
+        frozen_uocc=None,
+        gas1=None,
+        gas2=None,
+        gas3=None,
+        gas4=None,
+        gas5=None,
+        gas6=None
     ):
         mo_space = {}
         if frozen_docc is not None:
@@ -128,6 +141,18 @@ class Solver(ABC):
             mo_space['RESTRICTED_DOCC'] = restricted_docc
         if active is not None:
             mo_space['ACTIVE'] = active
+        if gas1 is not None:
+            mo_space['GAS1'] = gas1
+        if gas2 is not None:
+            mo_space['GAS2'] = gas2
+        if gas3 is not None:
+            mo_space['GAS3'] = gas3
+        if gas4 is not None:
+            mo_space['GAS4'] = gas4
+        if gas5 is not None:
+            mo_space['GAS5'] = gas5
+        if gas6 is not None:
+            mo_space['GAS6'] = gas6
         if restricted_uocc is not None:
             mo_space['RESTRICTED_UOCC'] = restricted_uocc
         if frozen_uocc is not None:

@@ -195,7 +195,9 @@ void ForteOptions::set_options_from_dict(pybind11::dict dict) {
                     set(label, py::float_(obj));
                 }
                 if (value_type.second == "str") {
-                    set(label, py::str(obj));
+                    std::string s = py::str(obj);
+                    to_upper_string(s);
+                    set(label, py::str(s));
                 }
                 if (value_type.second == "gen_list") {
                     set(label, obj);
@@ -370,6 +372,8 @@ void ForteOptions::set_double(const std::string& label, double val) {
 void ForteOptions::set_str(const std::string& label, const std::string& val) {
     auto value_type = get(label);
     if (value_type.second == "str") {
+        // capitalize the string
+        auto ucase_val = upper_string(val);
         set(label, py::str(val));
     } else {
         std::string msg = "Called ForteOptions::get_str(" + label +
@@ -496,6 +500,8 @@ void ForteOptions::get_options_from_psi4(psi::Options& options) {
             }
             if (type == "str") {
                 std::string value = options.get_str(label);
+                // capitalize the string
+                to_upper_string(value);
                 item.second["value"] = py::cast(value);
             }
             if (type == "int_list") {
@@ -556,7 +562,6 @@ std::string ForteOptions::str() const {
         auto type = py::cast<std::string>(item.second["type"]);
         if (is_none(label)) {
             s += label + ": None";
-            continue;
         } else if (type == "bool") {
             bool value = get_bool(label);
             s += label + ": " + std::to_string(value);
@@ -583,7 +588,7 @@ std::string ForteOptions::str() const {
                 s += std::to_string(e) + ",";
             }
             s += "]";
-        } else {
+        } else if (type == "gen_list") {
             s += label + ": gen_list()";
         }
         s += "\n";

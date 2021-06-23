@@ -22,6 +22,12 @@ class ActiveSpaceSolver(Solver):
         active=None,
         restricted_docc=None,
         frozen_docc=None,
+        gas1=None,
+        gas2=None,
+        gas3=None,
+        gas4=None,
+        gas5=None,
+        gas6=None,
         e_convergence=1.0e-10,
         r_convergence=1.0e-6,
         options=None,
@@ -62,8 +68,16 @@ class ActiveSpaceSolver(Solver):
         else:
             self._states = states
         self._data = mo_solver._data
-        self._mo_space_info_map = self._mo_space_info_map(
-            frozen_docc=frozen_docc, restricted_docc=restricted_docc, active=active
+        self._mo_space_info_map = self._make_mo_space_info_map(
+            frozen_docc=frozen_docc,
+            restricted_docc=restricted_docc,
+            active=active,
+            gas1=gas1,
+            gas2=gas2,
+            gas3=gas3,
+            gas4=gas4,
+            gas5=gas5,
+            gas6=gas6
         )
         self._e_convergence = e_convergence
         self._r_convergence = r_convergence

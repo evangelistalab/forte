@@ -65,9 +65,9 @@ const std::string& Symmetry::irrep_label(size_t h) const {
 size_t Symmetry::irrep_label_to_index(const std::string& label) const {
     const auto& irrep_labels = __pg_to_irrep_labels.at(pg_);
     auto search = find_case_insensitive(label, irrep_labels);
-    // auto search = std::find(irrep_labels.begin(), irrep_labels.end(), label);
     if (search == irrep_labels.end()) {
-        std::string msg = "Irrep label " + label + " not found in point group " + pg_ + ".\n";
+        std::string msg = "\n  Irrep label " + label + " not found in point group " + pg_ + ".\n" +
+                          "  Allowed values are: " + join(irrep_labels, ", ") + "\n";
         throw std::runtime_error(msg);
     }
     return std::distance(irrep_labels.begin(), search);

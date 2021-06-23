@@ -82,6 +82,7 @@ def test_options():
     assert forte_options.get_double('E_CONVERGENCE') == 1.0e-12
     assert new_options.get_double('E_CONVERGENCE') == 1.0e-2
 
+    # now reset new_options, define new options, and print them to test str()
     new_options.reset()
     new_options.add_bool('MY_BOOL', False, 'A boolean')
     new_options.add_int('MY_INT', 0, 'An integer')
@@ -90,6 +91,8 @@ def test_options():
     new_options.add_int_list('MY_INT_LIST', 'A list of integers')
     new_options.add_double_list('MY_FLOAT_LIST', 'A list of floating point numbers')
     new_options.add_list('MY_GEN_LIST', 'A general list')
+    new_options.add_int('MY_NONE', None, 'An integer')
+
     new_options.set_from_dict(
         {
             'MY_BOOL': True,
@@ -109,6 +112,7 @@ MY_STR: New string
 MY_INT_LIST: [1,1,2,3,5,8,]
 MY_FLOAT_LIST: [1.000000,2.000000,3.000000,]
 MY_GEN_LIST: gen_list()
+MY_NONE: None
 """
     assert str(new_options) == test_str
 

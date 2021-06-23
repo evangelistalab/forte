@@ -88,7 +88,7 @@ class MolecularModel(Model):
     def point_group(self) -> str:
         return self.symmetry.point_group_label()
 
-    def state(self, charge: int, multiplicity: int, ms: float = None, sym: str = None):
+    def state(self, charge: int, multiplicity: int, ms: float = None, sym: str = None, gasmin=None, gasmax=None):
         """This function is used to create a StateInfo object.
         It checks for potential errors.
 
@@ -103,6 +103,10 @@ class MolecularModel(Model):
             (default = lowest value consistent with multiplicity)
         sym: str
             the state irrep label (e.g., 'C2v')
+        gasmin: list(int)
+            the minimum number of electrons in each GAS space
+        gasmax: list(int)
+            the maximum number of electrons in each GAS space
         """
         if ms is None:
             # If ms = None take the lowest value consistent with multiplicity
@@ -141,7 +145,10 @@ class MolecularModel(Model):
 
         # get the irrep index from the symbol
         irrep = self.symmetry.irrep_label_to_index(sym)
-        return StateInfo(na, nb, multiplicity, twice_ms, irrep, sym)
+
+        gasmin = [] if gasmin is None else gasmin
+        gasmax = [] if gasmax is None else gasmax
+        return StateInfo(na, nb, multiplicity, twice_ms, irrep, sym, gasmin, gasmax)
 
     def ints(self, data, options):
         flog('info', 'MolecularModel: preparing integrals from psi4')
