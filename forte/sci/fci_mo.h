@@ -112,6 +112,9 @@ class FCI_MO : public ActiveSpaceMethod {
     /// Compute state-specific CASCI energy
     std::vector<double> compute_ss_energies();
 
+    /// Return the coupling coefficients
+    CICouplingCoefficients coupling_coefficients(int level) override;
+
     /// Compute the reduced density matrices up to a given particle rank (max_rdm_level)
     std::vector<RDMs> rdms(const std::vector<std::pair<size_t, size_t>>& root_list,
                            int max_rdm_level) override;
@@ -264,6 +267,19 @@ class FCI_MO : public ActiveSpaceMethod {
     /// Return the parsed state-averaged info
     std::vector<std::tuple<int, int, int, std::vector<double>>> sa_info() { return sa_info_; }
 
+    /// Return 1 coupling coefficients
+    std::vector<ambit::Tensor> coupling_coeffcients_1() const;
+    /// Return 2 coupling coefficients
+    std::vector<ambit::Tensor> coupling_coeffcients_2() const;
+    /// Return 3 coupling coefficients
+    std::vector<ambit::Tensor> coupling_coeffcients_3() const;
+
+    /// Return the eigen vector in ambit Tensor format
+    std::vector<ambit::Tensor> eigenvectors() override;
+
+    /// Return the size of determinants
+    size_t det_size();
+
   protected:
     /// Basic Preparation
     void startup();
@@ -360,6 +376,9 @@ class FCI_MO : public ActiveSpaceMethod {
     vecdet determinant_;
     std::vector<Determinant> dominant_dets_;
     std::vector<vecdet> p_spaces_;
+
+    /// Determinants in hash vector form
+    DeterminantHashVec det_hash_vec_;
 
     /// Size of Singles Determinants
     size_t singles_size_;

@@ -92,5 +92,6 @@ void export_RDMs(py::module& m) {
         .def(
             "L3bbb", [](RDMs& rdm) { return ambit_to_np(rdm.L3bbb()); },
             "Return the beta-beta-beta 3-cumulant as a numpy array");
+
 }
 } // namespace forte

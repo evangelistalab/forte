@@ -75,6 +75,11 @@ class ProcedureDSRG:
 
         self.save_relax_energies = options.get_bool("DSRG_DUMP_RELAXED_ENERGIES")
 
+        # Filter out levels for analytic gradients
+        if options.get_str("DERTYPE") != "NONE":
+            if self.relax_ref != 'NONE' or self.solver_type != 'DSRG-MRPT2':
+                raise NotImplementedError("Analytic energy gradients are only implemented for unrelaxed DSRG-MRPT2!")
+
         # Filter out some ms-dsrg algorithms
         ms_dsrg_algorithm = options.get_str("DSRG_MULTI_STATE")
         if self.do_multi_state and ("SA" not in ms_dsrg_algorithm):
@@ -244,6 +249,19 @@ class ProcedureDSRG:
                 json.dump(self.energies_environment, w, sort_keys=True, indent=4)
 
         return e_dsrg if len(self.energies) == 0 else e_relax
+
+    def compute_gradient(self, coupling_coefficients, ci_vectors):
+        """
+        Compute DSRG-MRPT2 analytic gradients.
+        :param coupling_coefficients: a CICouplingCoefficients returned from an ActiveSpaceSolver
+        :param ci_vectors: the wave functions (vector of ambit::Tensor) from an ActiveSpaceSolver
+        """
+        if self.dsrg_solver is None:
+            raise ValueError("Please compute energy before calling compute_gradient")
+
+        self.dsrg_solver.set_coupling_coefficients(coupling_coefficients)
+        self.dsrg_solver.set_ci_vectors(ci_vectors)
+        self.dsrg_solver.compute_gradient()
 
     def compute_dipole_relaxed(self):
         """ Compute dipole moments. """
