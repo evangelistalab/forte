@@ -382,27 +382,38 @@ class DSRG_MRPT2 : public MASTER_DSRG {
     ambit::BlockedTensor V;
     // Fock matrix
     ambit::BlockedTensor F;
-
+    /// e^[-s*(Delta1)^2]
     ambit::BlockedTensor Eeps1;
+    /// {1-e^[-s*(Delta1)^2]}/(Delta1)
     ambit::BlockedTensor Eeps1_m1;
+    /// {1-e^[-s*(Delta1)^2]}/(Delta1)^2
     ambit::BlockedTensor Eeps1_m2;
+    /// e^[-s*(Delta2)^2]
     ambit::BlockedTensor Eeps2;
+    /// 1+e^[-s*(Delta2)^2]
     ambit::BlockedTensor Eeps2_p;
+    /// {1-e^[-s*(Delta2)^2]}/(Delta2)
     ambit::BlockedTensor Eeps2_m1;
+    /// {1-e^[-s*(Delta2)^2]}/(Delta2)^2
     ambit::BlockedTensor Eeps2_m2;
+    /// Delta1_a^i = \varepsilon_i - \varepsilon_a
     ambit::BlockedTensor Delta1;
+    /// Delta2_{ab}^{ij} = \varepsilon_i + \varepsilon_j - \varepsilon_a - \varepsilon_b
     ambit::BlockedTensor Delta2;
+    /// Delta1 * Gamma1_
     ambit::BlockedTensor DelGam1;
+    /// Delta1 * Eeps1
     ambit::BlockedTensor DelEeps1;
-
+    /// Identity matrix
     ambit::BlockedTensor I;
+    /// T2/Delta
+    ambit::BlockedTensor T2OverDelta;
 
     // Lagrange multiplier
     ambit::BlockedTensor Z;
     ambit::BlockedTensor Z_b;
     ambit::BlockedTensor Tau1;
     ambit::BlockedTensor Tau2;
-    ambit::BlockedTensor T2OverDelta;
     ambit::BlockedTensor Kappa;
     ambit::BlockedTensor Sigma;
     ambit::BlockedTensor Sigma1;
