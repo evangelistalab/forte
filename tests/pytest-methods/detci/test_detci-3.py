@@ -1,5 +1,5 @@
 import pytest
-
+import psi4
 from forte.solvers import solver_factory, HF, ActiveSpaceSolver
 
 
@@ -63,19 +63,13 @@ def test_detci_3():
     # check results
     assert fci.value('active space energy')[ag_state] == pytest.approx(ref_ag_energies, 1.0e-10)
     assert fci.value('active space energy')[bu_state] == pytest.approx(ref_bu_energies, 1.0e-10)
+    print("Oscillator strength singlet 0Ag -> 0Bu")
+    assert psi4.core.variable("OSC. SINGLET 0AG -> 0BU") == pytest.approx(ref_osc_0ag_0bu, 1.0e-8)
+    print("Oscillator strength singlet 1Ag -> 0Bu")
+    assert psi4.core.variable("OSC. SINGLET 1AG -> 0BU") == pytest.approx(ref_osc_1ag_0bu, 1.0e-8)
+    print("Oscillator strength singlet 2Ag -> 0Bu")
+    assert psi4.core.variable("OSC. SINGLET 2AG -> 0BU") == pytest.approx(ref_osc_2ag_0bu, 1.0e-8)
 
-
-# set forte{
-#   int_type            df
-#   active_space_solver detci
-#   e_convergence       10
-#   frozen_docc         [2,0,0,2]
-#   restricted_docc     [5,0,0,4]
-#   active              [0,2,2,0]
-#   avg_state           [[0,1,3], [3,1,1]]
-#   transition_dipoles  true
-# }
-# energy('forte', ref_wfn=wfn)
 
 if __name__ == "__main__":
     test_detci_3()

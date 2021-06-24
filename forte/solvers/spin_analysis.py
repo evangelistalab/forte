@@ -25,7 +25,7 @@ class SpinAnalysis(Solver):
             A callback object used to inject code into the HF class
         """
         # initialize common objects
-        super().__init__()
+        super().__init__(options, cbh)
         self._parent_solver = parent_solver
         self._data = parent_solver.data
         self._options = {} if options is None else options
