@@ -20,9 +20,7 @@
 #include "helpers/printing.h"
 #include "../dsrg_mrpt2.h"
 
-#include "psi4/libmints/factory.h"
 #include "psi4/libiwl/iwl.hpp"
-#include "psi4/libpsio/psio.hpp"
 
 #include "gradient_tpdm/backtransform_tpdm.h"
 #include "psi4/libmints/matrix.h"
