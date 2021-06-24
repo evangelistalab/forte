@@ -7,7 +7,6 @@
 aci:
    short:
       - aci-2
-      - aci-3
       - aci-4
       - aci-5
       - aci-8
@@ -28,6 +27,7 @@ aci:
       - aci-local-20
    long:
       - aci-1 # moved to pytest
+      - aci-3 # moved to pytest
       - aci-7
       - aci-full-pt2-2
       - cis-aci-1
@@ -95,9 +95,10 @@ cd-dsrg-mrpt2:
 detci:
    short:
       - detci-1
-      - detci-2
-      - detci-3
-      - detci-4
+   long:
+      - detci-2 # moved to pytest
+      - detci-3 # moved to pytest
+      - detci-4 # moved to pytest
 diag-alg:
    short:
       - diag-alg-1-dynamic
@@ -214,13 +215,13 @@ fci:
       - fci-9
       - fci-ecp-1
       - fci-ecp-2
-      - fci-one-electron
       - fci-rdms-2
    long:
       - fci-6
       - fci-7 # moved to pytest
       - fci-ex-1 # moved to pytest
       - fci-rdms-1 # moved to pytest
+      - fci-one-electron # moved to pytest
 gasci:
    short:
       - gasci-1
