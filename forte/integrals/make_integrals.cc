@@ -31,7 +31,7 @@
 
 #include "base_classes/forte_options.h"
 #include "helpers/timer.h"
-
+#include "helpers/string_algorithms.h"
 #include "integrals/integrals.h"
 #include "integrals/cholesky_integrals.h"
 #include "integrals/custom_integrals.h"
@@ -76,6 +76,33 @@ make_forte_integrals_from_psi4(std::shared_ptr<psi::Wavefunction> ref_wfn,
         ints->print_ints();
     }
 
+    return ints;
+}
+
+std::shared_ptr<ForteIntegrals>
+make_forte_integrals_from_psi4(std::string int_type, std::shared_ptr<psi::Wavefunction> ref_wfn,
+                               std::shared_ptr<ForteOptions> options,
+                               std::shared_ptr<MOSpaceInfo> mo_space_info) {
+    // capitalize argument
+    to_upper_string(int_type);
+    std::shared_ptr<ForteIntegrals> ints;
+    if (int_type == "CHOLESKY") {
+        ints = std::make_shared<CholeskyIntegrals>(options, ref_wfn, mo_space_info,
+                                                   IntegralSpinRestriction::Restricted);
+    } else if (int_type == "DF") {
+        ints = std::make_shared<DFIntegrals>(options, ref_wfn, mo_space_info,
+                                             IntegralSpinRestriction::Restricted);
+    } else if (int_type == "DISKDF") {
+        ints = std::make_shared<DISKDFIntegrals>(options, ref_wfn, mo_space_info,
+                                                 IntegralSpinRestriction::Restricted);
+    } else if (int_type == "CONVENTIONAL") {
+        ints = std::make_shared<ConventionalIntegrals>(options, ref_wfn, mo_space_info,
+                                                       IntegralSpinRestriction::Restricted);
+    } else {
+        std::string msg = "\n  make_forte_integrals_from_psi4(): int_type " + int_type +
+                          " is not allowed.\n  Choices are CHOLESKY, DF, DISKDF, or CONVENTIONAL";
+        throw std::runtime_error("INT_TYPE is not allowed.  Check options");
+    }
     return ints;
 }
 

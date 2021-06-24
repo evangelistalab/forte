@@ -31,7 +31,14 @@ class MolecularModel(Model):
     """
     A class used to handle molecules.
     """
-    def __init__(self, molecule: Molecule, basis: Basis, scf_aux_basis: Basis = None, corr_aux_basis: Basis = None):
+    def __init__(
+        self,
+        molecule: Molecule,
+        basis: Basis,
+        int_type: str = None,
+        scf_aux_basis: Basis = None,
+        corr_aux_basis: Basis = None
+    ):
         """
         Initialize a MolecularModel object
 
@@ -39,15 +46,18 @@ class MolecularModel(Model):
         ----------
         molecule: Molecule
             the molecule information
+        int_type: str
+            the type of integrals (e.g., 'CONVENTIONAL', 'DF', 'CD',...)
         basis: Basis
             the computational basis
         scf_aux_basis: Basis
             the auxiliary basis set used in density-fitted SCF computations
         corr_aux_basis: Basis
-            the auxiliary basis set used in density-fitted correlated computations        
+            the auxiliary basis set used in density-fitted correlated computations
         """
         self._molecule = molecule
         self._basis = basis
+        self._int_type = 'CONVENTIONAL' if int_type is None else int_type.upper()
         self._scf_aux_basis = scf_aux_basis
         self._corr_aux_basis = corr_aux_basis
         self.symmetry = Symmetry(molecule.molecule.point_group().symbol().capitalize())
@@ -56,7 +66,7 @@ class MolecularModel(Model):
         """
         return a string representation of this object
         """
-        return f"MolecularModel(\n{repr(self._molecule)},\n{repr(self._basis)})"
+        return f"MolecularModel(\n{repr(self._molecule)},\n{repr(self._basis)},\n{self._int_type})"
 
     def __str__(self):
         """
@@ -67,6 +77,10 @@ class MolecularModel(Model):
     @property
     def molecule(self):
         return self._molecule.molecule
+
+    @property
+    def int_type(self):
+        return self._int_type
 
     @property
     def basis(self):
@@ -151,5 +165,11 @@ class MolecularModel(Model):
         return StateInfo(na, nb, multiplicity, twice_ms, irrep, sym, gasmin, gasmax)
 
     def ints(self, data, options):
+        import psi4
         flog('info', 'MolecularModel: preparing integrals from psi4')
-        return make_ints_from_psi4(data.psi_wfn, options, data.mo_space_info)
+        if self.int_type == 'DF':
+            aux_basis = psi4.core.BasisSet.build(
+                self.molecule, 'DF_BASIS_MP2', self.corr_aux_basis, 'RIFIT', self.basis
+            )
+            data.psi_wfn.set_basisset('DF_BASIS_MP2', aux_basis)
+        return make_ints_from_psi4(self._int_type, data.psi_wfn, options, data.mo_space_info)

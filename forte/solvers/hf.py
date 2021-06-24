@@ -17,7 +17,6 @@ class HF(Solver):
         restricted=True,
         e_convergence=1.0e-10,
         d_convergence=1.0e-6,
-        int_type='conventional',
         docc=None,
         socc=None,
         options=None,
@@ -38,8 +37,6 @@ class HF(Solver):
             energy convergence criterion
         d_convergence: float
             density matrix convergence criterion
-        int_type: str
-            the type of integrals used in the HF procedure (conventional = pk, direct, df, ...)
         docc: list(int)
             The number of doubly occupied orbitals per irrep
         socc: list(int)
@@ -50,17 +47,14 @@ class HF(Solver):
             A callback object used to inject code into the HF class
         """
         # initialize common objects
-        super().__init__()
+        super().__init__(options, cbh)
         self._data = parent_solver.data
         self._state = state
         self._restricted = restricted
         self._e_convergence = e_convergence
         self._d_convergence = d_convergence
-        self._int_type = int_type
         self._docc = docc
         self._socc = socc
-        self._options = {} if options is None else options
-        self._cbh = CallbackHandler() if cbh is None else cbh
 
     def __repr__(self):
         """
@@ -146,11 +140,12 @@ class HF(Solver):
             'CONVENTIONAL': 'PK',
             'STD': 'PK',
         }
-        # deal with equivalent keywords
-        if self._int_type.upper() in scf_type_dict:
-            scf_type = scf_type_dict[self._int_type.upper()]
+        # convert to psi4 terminology
+        int_type = self.model.int_type.upper()
+        if int_type in scf_type_dict:
+            scf_type = scf_type_dict[int_type]
         else:
-            scf_type = self._int_type.upper()
+            scf_type = int_type
 
         if self._restricted:
             ref = 'RHF' if self.multiplicity == 1 else 'ROHF'

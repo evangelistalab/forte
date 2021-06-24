@@ -8,6 +8,7 @@ from forte.model import MolecularModel
 from forte.results import Results
 from forte.molecule import Molecule
 from forte.basis import Basis
+from forte.solvers.callback_handler import CallbackHandler
 
 import forte
 
@@ -19,12 +20,22 @@ class Solver(ABC):
     Solver stores Forte base objects in a data attribute
     and a results object.
     """
-    def __init__(self):
+    def __init__(self, options, cbh):
+        """
+        Parameters
+        ----------
+        options: dict(str -> obj)
+            a dictionary of options to pass to the forte modules
+        cbh: CallbackHandler
+            a callback handler object
+        """
         self._executed = False
         self._data = Data()
         self._results = Results()
         # self._output_file = f'output.{time.strftime("%Y-%m-%d-%H:%M:%S")}.dat'
         self._output_file = 'output.dat'
+        self._options = {} if options is None else options
+        self._cbh = CallbackHandler() if cbh is None else cbh
 
     # decorate to icrease the log depth
     @increase_log_depth
@@ -327,19 +338,19 @@ class Solver(ABC):
 class BasicSolver(Solver):
     """
     This solver class is used as a starting point of computations.
-    
+
     When initialized, this solver does not contain any information.
     It is used by the function `solver_factory` which fills it with
     information about a model.
     """
-    def __init__(self):
-        super().__init__()
+    def __init__(self, options=None, bch=None):
+        super().__init__(options, bch)
 
     def _run(self):
         pass
 
 
-def solver_factory(molecule, basis, scf_aux_basis=None, corr_aux_basis=None):
+def solver_factory(molecule, basis, int_type=None, scf_aux_basis=None, corr_aux_basis=None):
     """A factory to build a basic solver object"""
     flog('info', 'Calling solver factory')
 
@@ -358,6 +369,6 @@ def solver_factory(molecule, basis, scf_aux_basis=None, corr_aux_basis=None):
     # create an empty solver and pass the model in
     solver = BasicSolver()
     solver.data.model = MolecularModel(
-        molecule=molecule, basis=basis, scf_aux_basis=scf_aux_basis, corr_aux_basis=corr_aux_basis
+        molecule=molecule, int_type=int_type, basis=basis, scf_aux_basis=scf_aux_basis, corr_aux_basis=corr_aux_basis
     )
     return solver

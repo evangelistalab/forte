@@ -1,7 +1,6 @@
 from forte.core import flog
 
 from forte.solvers.solver import Solver
-from forte.solvers.callback_handler import CallbackHandler
 
 from forte.forte import StateInfo
 from forte.forte import ForteOptions
@@ -59,7 +58,7 @@ class ActiveSpaceSolver(Solver):
         cbh: CallbackHandler
             A callback object used to inject code into the HF class
         """
-        super().__init__()
+        super().__init__(options, cbh)
         self._type = type.upper()
         self._mo_solver = mo_solver
         # allow passing a single StateInfo object
@@ -81,8 +80,6 @@ class ActiveSpaceSolver(Solver):
         )
         self._e_convergence = e_convergence
         self._r_convergence = r_convergence
-        self._options = {} if options is None else options
-        self._cbh = CallbackHandler() if cbh is None else cbh
 
     def __repr__(self):
         """
