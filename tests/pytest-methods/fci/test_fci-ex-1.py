@@ -31,7 +31,7 @@ def test_fci_ex_1():
 
     # compute the FCI energy for the double B1 (M_S =  1/2) solution
     fci = ActiveSpaceSolver(
-        mo_solver=hf,
+        hf,
         type='FCI',
         states={state: [1.0, 1.0]},
         frozen_docc=[3, 0, 0, 1],

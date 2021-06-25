@@ -1,6 +1,6 @@
 from forte.core import flog
 
-from forte.solvers.solver import Solver
+from forte.solvers.solver import Feature, Solver
 
 from forte.forte import StateInfo
 from forte.forte import ForteOptions
@@ -15,9 +15,9 @@ class ActiveSpaceSolver(Solver):
     """
     def __init__(
         self,
-        mo_solver,
-        type,
+        input,
         states,
+        type,
         active=None,
         restricted_docc=None,
         frozen_docc=None,
@@ -37,12 +37,12 @@ class ActiveSpaceSolver(Solver):
 
         Parameters
         ----------
-        type: str
-            The type of solver (set by the derived classes)
-        mo_solver: Solver
+        input: Solver
             The solver that will provide the molecular orbitals
         states: dict()
             A dictionary of StateInfo -> list(float) of all the states that will be computed.
+        type: str
+            The type of solver (e.g. one of 'FCI', 'ACI', ...)
         active: list(int)
             The number of active MOs per irrep
         restricted_docc: list(int)
@@ -58,15 +58,20 @@ class ActiveSpaceSolver(Solver):
         cbh: CallbackHandler
             A callback object used to inject code into the HF class
         """
-        super().__init__(options, cbh)
-        self._type = type.upper()
-        self._mo_solver = mo_solver
+        super().__init__(
+            input=input,
+            needs=[Feature.MODEL, Feature.ORBITALS],
+            provides=[Feature.MODEL, Feature.ORBITALS, Feature.RDMS],
+            options=options,
+            cbh=cbh
+        )
+        self._data = self.input[0].data
         # allow passing a single StateInfo object
         if isinstance(states, StateInfo):
             self._states = {states: [1.0]}
         else:
             self._states = states
-        self._data = mo_solver._data
+        self._type = type.upper()
         self._mo_space_info_map = self._make_mo_space_info_map(
             frozen_docc=frozen_docc,
             restricted_docc=restricted_docc,
@@ -105,9 +110,9 @@ class ActiveSpaceSolver(Solver):
         """Run an active space solver computation"""
 
         # compute the guess orbitals
-        if not self._mo_solver.executed:
+        if not self.input[0].executed:
             flog('info', 'ActiveSpaceSolver: MOs not available in mo_solver. Calling mo_solver run()')
-            self._mo_solver.run()
+            self.input[0].run()
         else:
             flog('info', 'ActiveSpaceSolver: MOs read from mo_solver object')
 

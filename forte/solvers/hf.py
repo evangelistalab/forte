@@ -1,7 +1,6 @@
 from forte.core import flog
 
-from forte.solvers.solver import Solver
-from forte.solvers.callback_handler import CallbackHandler
+from forte.solvers.solver import Feature, Solver
 from forte.model import MolecularModel
 from forte.forte import SCFInfo
 
@@ -12,7 +11,7 @@ class HF(Solver):
     """
     def __init__(
         self,
-        parent_solver,
+        input,
         state,
         restricted=True,
         e_convergence=1.0e-10,
@@ -27,7 +26,7 @@ class HF(Solver):
 
         Parameters
         ----------
-        parent_solver: Solver
+        input: Solver
             the object that provides information about this computation
         state: StateInfo
             the state to optimize (defines the number of alpha/beta electrons and m_s)
@@ -47,8 +46,10 @@ class HF(Solver):
             A callback object used to inject code into the HF class
         """
         # initialize common objects
-        super().__init__(options, cbh)
-        self._data = parent_solver.data
+        super().__init__(
+            input=input, needs=[Feature.MODEL], provides=[Feature.MODEL, Feature.ORBITALS], options=options, cbh=cbh
+        )
+        self._data = self.input[0].data
         self._state = state
         self._restricted = restricted
         self._e_convergence = e_convergence

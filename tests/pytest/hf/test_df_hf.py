@@ -17,13 +17,13 @@ def test_df_rhf():
     """
 
     # create a molecular model
-    root = solver_factory(molecule=xyz, basis='cc-pVTZ')
+    root = solver_factory(molecule=xyz, basis='cc-pVTZ', int_type='df')
 
     # specify the electronic state
     state = root.state(charge=0, multiplicity=1, sym='a1')
 
     # create a HF object and run
-    hf = HF(root, state=state, int_type='df')
+    hf = HF(root, state=state)
     hf.run()
 
     assert hf.value('hf energy') == pytest.approx(ref_energy, 1.0e-10)
@@ -41,13 +41,13 @@ def test_df_rhf_select_aux():
     """
 
     # create a molecular model
-    root = solver_factory(molecule=xyz, basis='cc-pVTZ', scf_aux_basis='cc-pVQZ-JKFIT')
+    root = solver_factory(molecule=xyz, int_type='df', basis='cc-pVTZ', scf_aux_basis='cc-pVQZ-JKFIT')
 
     # specify the electronic state
     state = root.state(charge=0, multiplicity=1, sym='a1')
 
     # create a HF object and run
-    hf = HF(root, state=state, int_type='df')
+    hf = HF(root, state=state)
     hf.run()
 
     assert hf.value('hf energy') == pytest.approx(ref_energy, 1.0e-10)

@@ -2,22 +2,22 @@ from forte.core import flog
 
 from forte import forte_options
 from forte import ForteOptions
-from forte.solvers.solver import Solver
+from forte.solvers.solver import Feature, Solver
 from forte.solvers.callback_handler import CallbackHandler
 from forte.forte import perform_spin_analysis
 
 
 class SpinAnalysis(Solver):
     """
-    A class to perform spin analysis
+    A class to perform spin analysis of an active space solver wave function
     """
-    def __init__(self, parent_solver, options=None, cbh=None):
+    def __init__(self, input, options=None, cbh=None):
         """
         initialize a SpinAnalysis object
 
         Parameters
         ----------
-        parent_solver: Solver
+        input: Solver
             the object that provides information about this computation
         options: dict()
             Additional options passed to control psi4
@@ -25,11 +25,8 @@ class SpinAnalysis(Solver):
             A callback object used to inject code into the HF class
         """
         # initialize common objects
-        super().__init__(options, cbh)
-        self._parent_solver = parent_solver
-        self._data = parent_solver.data
-        self._options = {} if options is None else options
-        self._cbh = CallbackHandler() if cbh is None else cbh
+        super().__init__(input=input, needs=[Feature.RDMS], provides=[], options=options, cbh=cbh)
+        self._data = self.input[0].data
 
     def __repr__(self):
         """
@@ -45,12 +42,12 @@ class SpinAnalysis(Solver):
 
     def _run(self):
         """Run a Hartree-Fock computation"""
-        if not self._parent_solver.executed:
+        if not self.input[0].executed:
             flog(
                 'info',
                 f'{__class__.__name__}: active space solver not available in parent_solver. Calling parent_solver run()'
             )
-            self._parent_solver.run()
+            self.input[0].run()
         else:
             flog('info', f'{__class__.__name__}: MOs read from mo_solver object')
 
@@ -60,7 +57,7 @@ class SpinAnalysis(Solver):
         local_options.set_from_dict(self._options)
 
         flog('info', f'{__class__.__name__}: preparing the 1- and 2-body reduced density matrices')
-        rdms = self._parent_solver._active_space_solver.compute_average_rdms(self._parent_solver._states, 2)
+        rdms = self.input[0]._active_space_solver.compute_average_rdms(self.input[0]._states, 2)
         perform_spin_analysis(rdms, local_options, self.mo_space_info, self.as_ints)
 
         return self

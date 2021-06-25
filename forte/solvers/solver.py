@@ -1,43 +1,76 @@
-import time
+# import time
 
+from enum import Enum, auto
 from abc import ABC, abstractmethod
 
 from forte.core import flog, increase_log_depth
-from forte.data import Data
-from forte.model import MolecularModel
-from forte.results import Results
-from forte.molecule import Molecule
-from forte.basis import Basis
 from forte.solvers.callback_handler import CallbackHandler
+from forte.data import Data
+from forte.results import Results
 
 import forte
 
 
+class Feature(Enum):
+    """
+    This enum class is used to store all possible Features needed
+    or provided by a solver.
+    """
+    MODEL = auto()
+    ORBITALS = auto()
+    RDMS = auto()
+
+
 class Solver(ABC):
     """
-    A class used to implement a quantum chemistry solver.
+    Represents a node on a computational graph that performs
+    an operation.
+
+    A Solver is a node in a graph that takes zero or more input
+    solvers. This class is used to implement quantum chemistry
+    methods and other operations.
+    This class implements a ``run()`` method that can be called
+    to start the evaluation of the computational graph.
+
+    To check if the validity of a graph, each node provides a
+    list of features that are needed and provided.
+    The features that are needed must be part of the input node(s).
 
     Solver stores Forte base objects in a data attribute
     and a results object.
     """
-    def __init__(self, options, cbh):
+    def __init__(self, needs, provides, input=None, options=None, cbh=None):
         """
         Parameters
         ----------
+        needs: list(str)
+            a list of features required by this solver
+        provides: list(str)
+            a list of features provided by this solver
+        input: list(Solver)
+            a list of input nodes to this node
         options: dict(str -> obj)
             a dictionary of options to pass to the forte modules
         cbh: CallbackHandler
             a callback handler object
         """
+        self._needs = needs
+        self._provides = provides
+        # input can be None, a single element, or a list
+        input = [] if input is None else input
+        self._input = [input] if type(input) is not list else input
+        self._check_input()
+
+        self._options = {} if options is None else options
+        self._cbh = CallbackHandler() if cbh is None else cbh
         self._executed = False
         self._data = Data()
         self._results = Results()
-        # self._output_file = f'output.{time.strftime("%Y-%m-%d-%H:%M:%S")}.dat'
+        # the default psi4 output file
         self._output_file = 'output.dat'
-        self._options = {} if options is None else options
-        self._cbh = CallbackHandler() if cbh is None else cbh
+        # self._output_file = f'output.{time.strftime("%Y-%m-%d-%H:%M:%S")}.dat'
 
-    # decorate to icrease the log depth
+    # decorate to increase the log depth
     @increase_log_depth
     def run(self):
         """
@@ -45,6 +78,10 @@ class Solver(ABC):
 
         This method is common to all solvers, and in turn it is routed to
         the method ``_run()`` implemented differently in each solver.
+
+        Return
+        ------
+            A data object
         """
         # log call to run()
         flog('info', f'{type(self).__name__}: calling run()')
@@ -58,9 +95,23 @@ class Solver(ABC):
         # set executed flag
         self._executed = True
 
+        return self.data
+
     @abstractmethod
     def _run():
         """The actual run function implemented by each method"""
+
+    @property
+    def input(self):
+        return self._input
+
+    @property
+    def needs(self):
+        return self._needs
+
+    @property
+    def provides(self):
+        return self._provides
 
     @property
     def results(self):
@@ -146,6 +197,12 @@ class Solver(ABC):
         gas5=None,
         gas6=None
     ):
+        """
+        Returns a dictionary with the size of each orbital space defined.
+
+        This function acts mainly as an interface. This is a good place
+        for future implementation of error checking.
+        """
         mo_space = {}
         if frozen_docc is not None:
             mo_space['FROZEN_DOCC'] = frozen_docc
@@ -173,14 +230,47 @@ class Solver(ABC):
         return mo_space
 
     def make_mo_space_info(self, mo_spaces):
+        """
+        Make a MOSpaceInfo object from a dictionary
+
+        Parameters
+        ----------
+        mo_spaces: dict(str -> list(int))
+            A dictionary of orbital space labels to a list of number of orbitals per irrep
+        Return
+        ------
+            A MOSpaceInfo object
+        """
         nmopi = self.data.scf_info.nmopi()
         point_group = self.model.point_group
         reorder = []  # TODO: enable reorder
         self.data.mo_space_info = forte.make_mo_space_info_from_map(nmopi, point_group, mo_spaces, reorder)
 
+    def _check_input(self):
+        # verify that this solver can get all that it needs from its inputs
+        for need in self.needs:
+            need_met = False
+            for input in self.input:
+                if need in input.provides:
+                    need_met = True
+            if not need_met:
+                raise RuntimeError(
+                    f'\n\n  ** The computational graph is inconsistent ** \n\n{self.computational_graph()}'
+                    f'\n\n  The solver {self.__class__.__name__} cannot get a feature ({need}) from its input solver: '
+                    + ','.join([input.__class__.__name__ for input in self.input]) + '\n'
+                )
+
+    def computational_graph(self):
+        graph = f'{self.__class__.__name__}'
+        if len(self.input) > 0:
+            graph += '\n |\n'
+            for input in self.input:
+                graph += input.computational_graph()
+        return graph
+
     def prepare_forte_options(self):
         """
-        Return a ForteOptions object.
+        Return a ForteOptions object
         """
         import psi4
         # Get the option object
@@ -196,179 +286,3 @@ class Solver(ABC):
             options.set_bool('SPIN_AVG_DENSITY', True)
 
         return options
-
-    def prepare_forte_objects(self, options, name, **kwargs):
-        """
-        Prepare the ForteIntegrals, SCFInfo, and MOSpaceInfo objects.
-
-        Parameters
-        ----------
-        options
-            the ForteOptions object
-        name
-            the name of the module associated with Psi4
-        kwargs
-            named arguments associated with Psi4
-        Return
-        ------
-            a tuple of (Wavefunction, ForteIntegrals, SCFInfo, MOSpaceInfo, FCIDUMP)
-        """
-        lowername = name.lower().strip()
-
-        # if 'FCIDUMP' in options.get_str('INT_TYPE'):
-        # if 'FIRST' in options.get_str('DERTYPE'):
-        #     raise Exception("Energy gradients NOT available for custom integrals!")
-
-        # psi4.core.print_out('\n  Preparing forte objects from a custom source\n')
-        # forte_objects = prepare_forte_objects_from_fcidump(options)
-        # state_weights_map, mo_space_info, scf_info, fcidump = forte_objects
-        # ref_wfn = None
-        # else:
-        if isinstance(self.model, MolecularModel):
-            psi4.core.print_out('\n\n  Preparing forte objects from a Psi4 Wavefunction object')
-            ref_wfn, mo_space_info = prepare_psi4_ref_wfn(options, **kwargs)
-            forte_objects = prepare_forte_objects_from_psi4_wfn(options, ref_wfn, mo_space_info)
-            state_weights_map, mo_space_info, scf_info = forte_objects
-            fcidump = None
-        else:
-            raise RuntimeError('The new driver does not yet implement FCIDUMP')
-
-        return ref_wfn, state_weights_map, mo_space_info, scf_info, fcidump
-
-    def prepare_psi4_ref_wfn(options, **kwargs):
-        """
-        Prepare a Psi4 Wavefunction as reference for Forte.
-        :param options: a ForteOptions object for options
-        :param kwargs: named arguments associated with Psi4
-        :return: (the processed Psi4 Wavefunction, a Forte MOSpaceInfo object)
-
-        Notes:
-            We will create a new Psi4 Wavefunction (wfn_new) if necessary.
-
-            1. For an empty ref_wfn, wfn_new will come from Psi4 SCF or MCSCF.
-
-            2. For a valid ref_wfn, we will test the orbital orthonormality against molecule.
-            If the orbitals from ref_wfn are consistent with the active geometry,
-            wfn_new will simply be a link to ref_wfn.
-            If not, we will rerun a Psi4 SCF and orthogonalize orbitals, where
-            wfn_new comes from this new Psi4 SCF computation.
-        """
-        p4print = psi4.core.print_out
-
-        # grab reference Wavefunction and Molecule from kwargs
-        kwargs = p4util.kwargs_lower(kwargs)
-
-        ref_wfn = kwargs.get('ref_wfn', None)
-
-        molecule = kwargs.pop('molecule', psi4.core.get_active_molecule())
-        point_group = molecule.point_group().symbol()
-
-        # try to read orbitals from file
-        Ca = read_orbitals() if options.get_bool('READ_ORBITALS') else None
-
-        need_orbital_check = True
-        fresh_ref_wfn = True if ref_wfn is None else False
-
-        if ref_wfn is None:
-            ref_type = options.get_str('REF_TYPE')
-            p4print(
-                '\n  No reference wave function provided for Forte.'
-                f' Computing {ref_type} orbitals using Psi4 ...\n'
-            )
-
-            # no warning printing for MCSCF
-            job_type = options.get_str('JOB_TYPE')
-            do_mcscf = (job_type in ["CASSCF", "MCSCF_TWO_STEP"] or options.get_bool("CASSCF_REFERENCE"))
-
-            # run Psi4 SCF or MCSCF
-            ref_wfn = run_psi4_ref(ref_type, molecule, not do_mcscf, **kwargs)
-
-            need_orbital_check = False if Ca is None else True
-        else:
-            # Ca from file has higher priority than that of ref_wfn
-            Ca = ref_wfn.Ca().clone() if Ca is None else Ca
-
-        # build Forte MOSpaceInfo
-        nmopi = ref_wfn.nmopi()
-        mo_space_info = forte.make_mo_space_info(nmopi, point_group, options)
-
-        # do we need to check MO overlap?
-        if not need_orbital_check:
-            wfn_new = ref_wfn
-        else:
-            # test if input Ca has the correct dimension
-            if Ca.rowdim() != nmopi or Ca.coldim() != nmopi:
-                raise ValueError("Invalid orbitals: different basis set / molecule")
-
-            new_S = psi4.core.Wavefunction.build(molecule, options.get_str("BASIS")).S()
-
-            if check_MO_orthonormality(new_S, Ca):
-                wfn_new = ref_wfn
-                wfn_new.Ca().copy(Ca)
-            else:
-                if fresh_ref_wfn:
-                    wfn_new = ref_wfn
-                    wfn_new.Ca().copy(ortho_orbs_forte(wfn_new, mo_space_info, Ca))
-                else:
-                    p4print("\n  Perform new SCF at current geometry ...\n")
-
-                    kwargs_copy = {k: v for k, v in kwargs.items() if k != 'ref_wfn'}
-                    wfn_new = run_psi4_ref('scf', molecule, False, **kwargs_copy)
-
-                    # orthonormalize orbitals
-                    wfn_new.Ca().copy(ortho_orbs_forte(wfn_new, mo_space_info, Ca))
-
-                    # copy wfn_new to ref_wfn
-                    ref_wfn.shallow_copy(wfn_new)
-
-        # set DF and MINAO basis
-        if 'DF' in options.get_str('INT_TYPE'):
-            aux_basis = psi4.core.BasisSet.build(
-                molecule, 'DF_BASIS_MP2', options.get_str('DF_BASIS_MP2'), 'RIFIT', options.get_str('BASIS')
-            )
-            wfn_new.set_basisset('DF_BASIS_MP2', aux_basis)
-
-        if options.get_str('MINAO_BASIS'):
-            minao_basis = psi4.core.BasisSet.build(molecule, 'MINAO_BASIS', options.get_str('MINAO_BASIS'))
-            wfn_new.set_basisset('MINAO_BASIS', minao_basis)
-
-        return wfn_new, mo_space_info
-
-
-class BasicSolver(Solver):
-    """
-    This solver class is used as a starting point of computations.
-
-    When initialized, this solver does not contain any information.
-    It is used by the function `solver_factory` which fills it with
-    information about a model.
-    """
-    def __init__(self, options=None, bch=None):
-        super().__init__(options, bch)
-
-    def _run(self):
-        pass
-
-
-def solver_factory(molecule, basis, int_type=None, scf_aux_basis=None, corr_aux_basis=None):
-    """A factory to build a basic solver object"""
-    flog('info', 'Calling solver factory')
-
-    # TODO: generalize to other type of models (e.g. if molecule/basis are not provided)
-
-    # convert string arguments to objects if necessary
-    if isinstance(molecule, str):
-        molecule = Molecule.from_geom(molecule)
-    if isinstance(basis, str):
-        basis = Basis(basis)
-    if isinstance(scf_aux_basis, str):
-        scf_aux_basis = Basis(scf_aux_basis)
-    if isinstance(corr_aux_basis, str):
-        corr_aux_basis = Basis(corr_aux_basis)
-
-    # create an empty solver and pass the model in
-    solver = BasicSolver()
-    solver.data.model = MolecularModel(
-        molecule=molecule, int_type=int_type, basis=basis, scf_aux_basis=scf_aux_basis, corr_aux_basis=corr_aux_basis
-    )
-    return solver
