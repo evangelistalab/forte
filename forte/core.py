@@ -71,6 +71,12 @@ class ForteManager(object):
         forte.cleanup()
 
 
+def start_logging():
+    """This function starts logging"""
+    logging.basicConfig(filename='forte.log', level=logging.DEBUG, format='# %(asctime)s | %(levelname)s | %(message)s')
+    logging.info('Starting the Forte logger')
+
+
 def flog(level, msg):
     """
     Log the message ``msg`` with logging level ``level``.

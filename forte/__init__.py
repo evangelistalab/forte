@@ -30,11 +30,6 @@
 """
 
 import sys
-import logging
-from logging.handlers import RotatingFileHandler
-
-logging.basicConfig(filename='forte.log', level=logging.DEBUG, format='# %(asctime)s | %(levelname)s | %(message)s')
-logging.info('Starting the Forte logger')
 
 # Load Python modules
 from .molecule import Molecule

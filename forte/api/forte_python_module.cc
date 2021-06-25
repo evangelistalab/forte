@@ -162,7 +162,7 @@ PYBIND11_MODULE(forte, m) {
     m.def("make_fragment_projector", &make_fragment_projector,
           "Make a fragment(embedding) projector");
     m.def("make_embedding", &make_embedding, "Apply fragment projector to embed");
-    m.def("make_custom_forte_integrals", &make_custom_forte_integrals,
+    m.def("make_custom_ints", &make_custom_forte_integrals,
           "Make a custom Forte integral object from arrays");
     m.def("make_ints_from_psi4",
           py::overload_cast<std::shared_ptr<psi::Wavefunction>, std::shared_ptr<ForteOptions>,

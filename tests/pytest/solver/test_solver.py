@@ -23,7 +23,8 @@ def test_solver():
     state = input.state(charge=0, multiplicity=1, sym='ag')
 
     # create a HF object and run
-    spin = SpinAnalysis(input)
+    with pytest.raises(AssertionError):
+        spin = SpinAnalysis(input)
 
 
 if __name__ == "__main__":

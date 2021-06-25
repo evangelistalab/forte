@@ -254,7 +254,7 @@ class Solver(ABC):
                 if need in input.provides:
                     need_met = True
             if not need_met:
-                raise RuntimeError(
+                raise AssertionError(
                     f'\n\n  ** The computational graph is inconsistent ** \n\n{self.computational_graph()}'
                     f'\n\n  The solver {self.__class__.__name__} cannot get a feature ({need}) from its input solver: '
                     + ','.join([input.__class__.__name__ for input in self.input]) + '\n'
