@@ -25,11 +25,12 @@ def test_fci():
     # create a HF object
     hf = HF(input, state=state)
     # create a FCI object that grabs the MOs from the HF object (hf)
-    fci = ActiveSpaceSolver(hf, type='FCI', states=state, active=[1, 0, 0, 0, 0, 1, 0, 0])
+    fci = ActiveSpaceSolver(hf, type='FCI', states={state: [1., 1.]}, active=[1, 0, 0, 0, 0, 1, 0, 0])
     # run the computation
     fci.run()
     # check the FCI energy
-    assert list(fci.value('active space energy').items())[0][1][0] == pytest.approx(ref_energy, 1.0e-10)
+    assert fci.value('active space energy')[state][0] == pytest.approx(ref_energy, 1.0e-10)
+    print(fci.value('active space energy')[state])
 
 
 if __name__ == "__main__":

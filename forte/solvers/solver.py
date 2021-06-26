@@ -237,6 +237,7 @@ class Solver(ABC):
         ----------
         mo_spaces: dict(str -> list(int))
             A dictionary of orbital space labels to a list of number of orbitals per irrep
+
         Return
         ------
             A MOSpaceInfo object
