@@ -30,7 +30,10 @@ class Model(ABC):
 
 class MolecularModel(Model):
     """
-    A class used to handle molecules.
+    A class used to handle molecules
+
+    This class knows the molecular structure and the basis,
+    and is responsible for providing integrals over molecular orbitals.
     """
     def __init__(
         self,
@@ -47,8 +50,8 @@ class MolecularModel(Model):
         ----------
         molecule: Molecule
             the molecule information
-        int_type: str
-            the type of integrals (e.g., 'CONVENTIONAL', 'DF', 'CD',...)
+        int_type: {'CONVENTIONAL', 'DF, 'CD', 'DISKDF'}
+            the type of integrals used
         basis: Basis
             the computational basis
         scf_aux_basis: Basis

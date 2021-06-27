@@ -11,6 +11,29 @@ from forte.forte import make_active_space_ints, make_active_space_solver
 class ActiveSpaceSolver(Solver):
     """
     A class to diagonalize the Hamiltonian in a subset of molecular orbitals.
+
+    Multi-state computations need a dict[StateInfo,list(float)] object,
+    which can be cumbersome to prepare for all computations.
+    Therefore, this class accepts various inputs, for example:
+    
+        >>> # single state (one eigenstate of state ``state``)
+        >>> state = StateInfo(...)
+        >>> _parse_states(state)
+
+        >>> # list of states (one eigenstate of ``state_1`` and one of ``state_2``)
+        >>> state_1 = StateInfo(...)
+        >>> state_2 = StateInfo(...)
+        >>> _parse_states([state_1,state_2])
+
+        >>> # dict of states (5 eigenstate of ``state_1`` and 3 of ``state_2``)
+        >>> state_info_1 = StateInfo(...)
+        >>> state_info_2 = StateInfo(...)
+        >>> _parse_states({state_info_1: 5,state_info_2: 3})
+
+        >>> # dict of states with weights (5 eigenstate of ``state_1`` and 3 of ``state_2``)
+        >>> state_info_1 = StateInfo(...)
+        >>> state_info_2 = StateInfo(...)
+        >>> _parse_states({state_info_1: [1.0,1.0,0.5,0.5,0.5],state_info_2: [0.25,0.25,0.25]})
     """
     def __init__(
         self,
@@ -32,16 +55,22 @@ class ActiveSpaceSolver(Solver):
         cbh=None
     ):
         """
-        Initialize a FCI object
+        Initialize an ActiveSpaceSolver object
 
         Parameters
         ----------
         input: Solver
             The solver that will provide the molecular orbitals
-        states: dict()
-            A dictionary of StateInfo -> list(float) of all the states that will be computed.
-        type: str
-            The type of solver (e.g. one of 'FCI', 'ACI', ...)
+        states: StateInfo, or list(StateInfo), or dict[StateInfo,int], or dict[StateInfo,list(float)]
+            The state(s) to be computed passed in one of the following ways
+            1. A single state
+            2. A list of single states (will compute one level for each type of state)
+            3. A dictionary that maps StateInfo objects to the number of states to compute
+            4. A dictionary that maps StateInfo objects to a list of weights for the states to compute
+            If explicit weights are passed, these are used in procedures that average properties
+            over states (e.g., state-averaged CASSCF)
+        type: {'FCI','ACI','CAS','DETCI','ASCI','PCI'}
+            The type of solver
         active: list(int)
             The number of active MOs per irrep
         restricted_docc: list(int)
