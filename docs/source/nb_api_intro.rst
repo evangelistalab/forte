@@ -10,7 +10,7 @@ Creating the input node
 -----------------------
 
 The starting point for a Forte computation is an input object
-(``InputSolver``). The input can be created via a factory function
+(``Input``). The input can be created via a factory function
 (``forte.solvers.solver_factory``)
 
 .. code:: python
