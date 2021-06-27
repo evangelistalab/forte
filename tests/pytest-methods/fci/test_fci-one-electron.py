@@ -16,15 +16,11 @@ def test_fci_one_electron():
     input = solver_factory(molecule=xyz, basis='aug-cc-pVDZ')
     state = input.state(charge=1, multiplicity=2, sym='ag')
     hf = HF(input, state=state, e_convergence=1.0e-12)
-    fci = ActiveSpaceSolver(
-        hf,
-        type='FCI',
-        states=state,
-        e_convergence=1.0e-12,
-        frozen_docc=[0, 0, 0, 0, 0, 0, 0, 0],
-        restricted_docc=[0, 0, 0, 0, 0, 0, 0, 0],
-        active=[1, 0, 0, 0, 0, 0, 0, 0]
+    # define an active space
+    mo_spaces = input.mo_spaces(
+        frozen_docc=[0, 0, 0, 0, 0, 0, 0, 0], restricted_docc=[0, 0, 0, 0, 0, 0, 0, 0], active=[1, 0, 0, 0, 0, 0, 0, 0]
     )
+    fci = ActiveSpaceSolver(hf, type='FCI', states=state, e_convergence=1.0e-12, mo_spaces=mo_spaces)
     fci.run()
 
     # check results

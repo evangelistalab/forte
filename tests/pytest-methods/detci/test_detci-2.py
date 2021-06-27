@@ -25,14 +25,11 @@ def test_detci_2():
     gas_state_1 = input.state(charge=0, multiplicity=1, sym='a1', gasmin=[0], gasmax=[2])
     gas_state_2 = input.state(charge=0, multiplicity=1, sym='a1', gasmin=[0], gasmax=[1])
 
+    # define the active space
+    mo_spaces = input.mo_spaces(gas1=[1, 0, 0, 0], gas2=[3, 0, 1, 2])
     # create a detci solver
     fci = ActiveSpaceSolver(
-        hf,
-        type='detci',
-        states=[gas_state_1, gas_state_2],
-        gas1=[1, 0, 0, 0],
-        gas2=[3, 0, 1, 2],
-        options={'active_ref_type': 'gas'}
+        hf, type='detci', states=[gas_state_1, gas_state_2], mo_spaces=mo_spaces, options={'active_ref_type': 'gas'}
     )
     fci.run()
 

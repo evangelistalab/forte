@@ -11,13 +11,13 @@ class SpinAnalysis(Solver):
     """
     A class to perform spin analysis of an active space solver wave function
     """
-    def __init__(self, input, options=None, cbh=None):
+    def __init__(self, input_nodes, options=None, cbh=None):
         """
         initialize a SpinAnalysis object
 
         Parameters
         ----------
-        input: Solver
+        input_nodes: Solver
             the object that provides information about this computation
         options: dict()
             Additional options passed to control psi4
@@ -25,8 +25,8 @@ class SpinAnalysis(Solver):
             A callback object used to inject code into the HF class
         """
         # initialize common objects
-        super().__init__(input=input, needs=[Feature.RDMS], provides=[], options=options, cbh=cbh)
-        self._data = self.input[0].data
+        super().__init__(input_nodes=input_nodes, needs=[Feature.RDMS], provides=[], options=options, cbh=cbh)
+        self._data = self.input_nodes[0].data
 
     def __repr__(self):
         """
@@ -42,12 +42,12 @@ class SpinAnalysis(Solver):
 
     def _run(self):
         """Run the spin analysis"""
-        if not self.input[0].executed:
+        if not self.input_nodes[0].executed:
             flog(
                 'info',
                 f'{__class__.__name__}: active space solver not available in parent_solver. Calling parent_solver run()'
             )
-            self.input[0].run()
+            self.input_nodes[0].run()
         else:
             flog('info', f'{__class__.__name__}: MOs read from mo_solver object')
 
@@ -57,7 +57,7 @@ class SpinAnalysis(Solver):
         local_options.set_from_dict(self._options)
 
         flog('info', f'{__class__.__name__}: preparing the 1- and 2-body reduced density matrices')
-        rdms = self.input[0]._active_space_solver.compute_average_rdms(self.input[0]._states, 2)
+        rdms = self.input_nodes[0]._active_space_solver.compute_average_rdms(self.input_nodes[0]._states, 2)
         perform_spin_analysis(rdms, local_options, self.mo_space_info, self.as_ints)
 
         return self

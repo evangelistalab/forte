@@ -37,18 +37,10 @@ class ActiveSpaceSolver(Solver):
     """
     def __init__(
         self,
-        input,
+        input_nodes,
         states,
         type,
-        active=None,
-        restricted_docc=None,
-        frozen_docc=None,
-        gas1=None,
-        gas2=None,
-        gas3=None,
-        gas4=None,
-        gas5=None,
-        gas6=None,
+        mo_spaces=None,
         e_convergence=1.0e-10,
         r_convergence=1.0e-6,
         options=None,
@@ -59,7 +51,7 @@ class ActiveSpaceSolver(Solver):
 
         Parameters
         ----------
-        input: Solver
+        input_nodes: Solver
             The solver that will provide the molecular orbitals
         states: StateInfo, or list(StateInfo), or dict[StateInfo,int], or dict[StateInfo,list(float)]
             The state(s) to be computed passed in one of the following ways
@@ -71,12 +63,6 @@ class ActiveSpaceSolver(Solver):
             over states (e.g., state-averaged CASSCF)
         type: {'FCI','ACI','CAS','DETCI','ASCI','PCI'}
             The type of solver
-        active: list(int)
-            The number of active MOs per irrep
-        restricted_docc: list(int)
-            The number of restricted doubly occupied MOs per irrep
-        frozen_docc: list(int)
-            The number of frozen doubly occupied MOs per irrep
         e_convergence: float
             energy convergence criterion
         r_convergence: float
@@ -88,30 +74,20 @@ class ActiveSpaceSolver(Solver):
         """
         # initialize the base class
         super().__init__(
-            input=input,
+            input_nodes=input_nodes,
             needs=[Feature.MODEL, Feature.ORBITALS],
             provides=[Feature.MODEL, Feature.ORBITALS, Feature.RDMS],
             options=options,
             cbh=cbh
         )
-        self._data = self.input[0].data
+        self._data = self.input_nodes[0].data
 
         # parse the states parameter
         self._states = self._parse_states(states)
 
         self._type = type.upper()
 
-        self._mo_space_info_map = self._make_mo_space_info_map(
-            frozen_docc=frozen_docc,
-            restricted_docc=restricted_docc,
-            active=active,
-            gas1=gas1,
-            gas2=gas2,
-            gas3=gas3,
-            gas4=gas4,
-            gas5=gas5,
-            gas6=gas6
-        )
+        self._mo_space_info_map = {} if mo_spaces is None else mo_spaces
         self._e_convergence = e_convergence
         self._r_convergence = r_convergence
 
@@ -139,9 +115,9 @@ class ActiveSpaceSolver(Solver):
         """Run an active space solver computation"""
 
         # compute the guess orbitals
-        if not self.input[0].executed:
+        if not self.input_nodes[0].executed:
             flog('info', 'ActiveSpaceSolver: MOs not available in mo_solver. Calling mo_solver run()')
-            self.input[0].run()
+            self.input_nodes[0].run()
         else:
             flog('info', 'ActiveSpaceSolver: MOs read from mo_solver object')
 

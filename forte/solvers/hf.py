@@ -11,7 +11,7 @@ class HF(Solver):
     """
     def __init__(
         self,
-        input,
+        input_nodes,
         state,
         restricted=True,
         e_convergence=1.0e-10,
@@ -26,7 +26,7 @@ class HF(Solver):
 
         Parameters
         ----------
-        input: Solver
+        input_nodes: Solver
             the object that provides information about this computation
         state: StateInfo
             the state to optimize (defines the number of alpha/beta electrons and m_s)
@@ -47,9 +47,13 @@ class HF(Solver):
         """
         # initialize common objects
         super().__init__(
-            input=input, needs=[Feature.MODEL], provides=[Feature.MODEL, Feature.ORBITALS], options=options, cbh=cbh
+            input_nodes=input_nodes,
+            needs=[Feature.MODEL],
+            provides=[Feature.MODEL, Feature.ORBITALS],
+            options=options,
+            cbh=cbh
         )
-        self._data = self.input[0].data
+        self._data = self.input_nodes[0].data
         self._state = state
         self._restricted = restricted
         self._e_convergence = e_convergence

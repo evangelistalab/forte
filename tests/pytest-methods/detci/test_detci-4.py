@@ -16,11 +16,13 @@ def test_detci_4():
     input = solver_factory(molecule=xyz, basis='6-31g')
     state = input.state(charge=0, multiplicity=1, sym='a1')
     hf = HF(input, state=state, e_convergence=1.0e-12, d_convergence=1.0e-8)
-    hf.run()
-
     # create a detci solver
     fci = ActiveSpaceSolver(
-        hf, type='detci', states=state, frozen_docc=[1, 0, 0, 0], options={'active_ref_type': 'cas'}
+        hf,
+        type='detci',
+        states=state,
+        mo_spaces=input.mo_spaces(frozen_docc=[1, 0, 0, 0]),
+        options={'active_ref_type': 'cas'}
     )
     fci.run()
 

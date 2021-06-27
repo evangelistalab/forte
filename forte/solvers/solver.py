@@ -15,14 +15,83 @@ import forte
 class Feature(Enum):
     """
     This enum class is used to store all possible Features needed
-    or provided by a solver.
+    or provided by a node in the computational graph
     """
     MODEL = auto()
     ORBITALS = auto()
     RDMS = auto()
 
 
-class Solver(ABC):
+class Node():
+    """
+    Represents a node part of a computational graph.
+
+    A ``Node`` provides only basic functionality and this class
+    is specialized in derived classes (Solver, Input,...).
+    A ``Node`` stores the list of input nodes and a
+    list of features (elements of ``Features``) that are needed and provided.
+    The features that are needed must be part of the input node(s).
+    This information is used to check the validity of a graph.
+    """
+    def __init__(self, needs, provides, input_nodes=None, data=None):
+        """
+        Parameters
+        ----------
+        needs: list(Feature)
+            a list of features required by this solver
+        provides: list(Feature)
+            a list of features provided by this solver
+        input: list(Solver)
+            a list of input nodes to this node
+        """
+        self._needs = needs
+        self._provides = provides
+        # input_nodes can be None, a single element, or a list
+        input_nodes = [] if input_nodes is None else input_nodes
+        self._input_nodes = input_nodes if type(input_nodes) is list else [input_nodes]
+        self._check_input()
+        self._data = Data() if data is None else data
+
+    @property
+    def needs(self):
+        return self._needs
+
+    @property
+    def provides(self):
+        return self._provides
+
+    @property
+    def input_nodes(self):
+        return self._input_nodes
+
+    @property
+    def data(self):
+        return self._data
+
+    def _check_input(self):
+        # verify that this solver can get all that it needs from its inputs
+        for need in self.needs:
+            need_met = False
+            for input in self.input_nodes:
+                if need in input.provides:
+                    need_met = True
+            if not need_met:
+                raise AssertionError(
+                    f'\n\n  ** The computational graph is inconsistent ** \n\n{self.computational_graph()}'
+                    f'\n\n  The solver {self.__class__.__name__} cannot get a feature ({need}) from its input solver: '
+                    + ','.join([input.__class__.__name__ for input in self.input_nodes]) + '\n'
+                )
+
+    def computational_graph(self):
+        graph = f'{self.__class__.__name__}'
+        if len(self.input_nodes) > 0:
+            graph += '\n |\n'
+            for input in self.input_nodes:
+                graph += input.computational_graph()
+        return graph
+
+
+class Solver(Node):
     """
     Represents a node on a computational graph that performs
     an operation.
@@ -40,7 +109,7 @@ class Solver(ABC):
     Solver stores Forte base objects in a data attribute
     and a results object.
     """
-    def __init__(self, needs, provides, input=None, options=None, cbh=None):
+    def __init__(self, needs, provides, input_nodes=None, options=None, cbh=None):
         """
         Parameters
         ----------
@@ -55,17 +124,11 @@ class Solver(ABC):
         cbh: CallbackHandler
             a callback handler object
         """
-        self._needs = needs
-        self._provides = provides
-        # input can be None, a single element, or a list
-        input = [] if input is None else input
-        self._input = [input] if type(input) is not list else input
-        self._check_input()
+        super().__init__(needs, provides, input_nodes)
 
         self._options = {} if options is None else options
         self._cbh = CallbackHandler() if cbh is None else cbh
         self._executed = False
-        self._data = Data()
         self._results = Results()
         # the default psi4 output file
         self._output_file = 'output.dat'
@@ -104,24 +167,8 @@ class Solver(ABC):
         pass
 
     @property
-    def input(self):
-        return self._input
-
-    @property
-    def needs(self):
-        return self._needs
-
-    @property
-    def provides(self):
-        return self._provides
-
-    @property
     def results(self):
         return self._results
-
-    @property
-    def data(self):
-        return self._data
 
     @property
     def executed(self):
@@ -217,52 +264,6 @@ class Solver(ABC):
             raise ValueError(f'could not parse stats input {states}')
         return parsed_states
 
-    def _make_mo_space_info_map(
-        self,
-        frozen_docc=None,
-        restricted_docc=None,
-        active=None,
-        restricted_uocc=None,
-        frozen_uocc=None,
-        gas1=None,
-        gas2=None,
-        gas3=None,
-        gas4=None,
-        gas5=None,
-        gas6=None
-    ):
-        """
-        Returns a dictionary with the size of each orbital space defined.
-
-        This function acts mainly as an interface. This is a good place
-        for future implementation of error checking.
-        """
-        mo_space = {}
-        if frozen_docc is not None:
-            mo_space['FROZEN_DOCC'] = frozen_docc
-        if restricted_docc is not None:
-            mo_space['RESTRICTED_DOCC'] = restricted_docc
-        if active is not None:
-            mo_space['ACTIVE'] = active
-        if gas1 is not None:
-            mo_space['GAS1'] = gas1
-        if gas2 is not None:
-            mo_space['GAS2'] = gas2
-        if gas3 is not None:
-            mo_space['GAS3'] = gas3
-        if gas4 is not None:
-            mo_space['GAS4'] = gas4
-        if gas5 is not None:
-            mo_space['GAS5'] = gas5
-        if gas6 is not None:
-            mo_space['GAS6'] = gas6
-        if restricted_uocc is not None:
-            mo_space['RESTRICTED_UOCC'] = restricted_uocc
-        if frozen_uocc is not None:
-            mo_space['FROZEN_UOCC'] = frozen_uocc
-
-        return mo_space
-
     def make_mo_space_info(self, mo_spaces):
         """
         Make a MOSpaceInfo object from a dictionary
@@ -280,28 +281,6 @@ class Solver(ABC):
         point_group = self.model.point_group
         reorder = []  # TODO: enable reorder
         self.data.mo_space_info = forte.make_mo_space_info_from_map(nmopi, point_group, mo_spaces, reorder)
-
-    def _check_input(self):
-        # verify that this solver can get all that it needs from its inputs
-        for need in self.needs:
-            need_met = False
-            for input in self.input:
-                if need in input.provides:
-                    need_met = True
-            if not need_met:
-                raise AssertionError(
-                    f'\n\n  ** The computational graph is inconsistent ** \n\n{self.computational_graph()}'
-                    f'\n\n  The solver {self.__class__.__name__} cannot get a feature ({need}) from its input solver: '
-                    + ','.join([input.__class__.__name__ for input in self.input]) + '\n'
-                )
-
-    def computational_graph(self):
-        graph = f'{self.__class__.__name__}'
-        if len(self.input) > 0:
-            graph += '\n |\n'
-            for input in self.input:
-                graph += input.computational_graph()
-        return graph
 
     def prepare_forte_options(self):
         """

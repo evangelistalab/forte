@@ -45,18 +45,14 @@ def test_detci_3():
     ag_state = input.state(charge=0, multiplicity=1, sym='ag')
     bu_state = input.state(charge=0, multiplicity=1, sym='bu')
 
+    # define the active space
+    mo_spaces = input.mo_spaces(frozen_docc=[2, 0, 0, 2], restricted_docc=[5, 0, 0, 4], active=[0, 2, 2, 0])
     # create a detci solver
     fci = ActiveSpaceSolver(
-        hf,
-        type='detci',
-        frozen_docc=[2, 0, 0, 2],
-        restricted_docc=[5, 0, 0, 4],
-        active=[0, 2, 2, 0],
-        states={
+        hf, type='detci', states={
             ag_state: 3,
             bu_state: 1
-        },
-        options={'transition_dipoles': True}
+        }, mo_spaces=mo_spaces, options={'transition_dipoles': True}
     )
     fci.run()
 

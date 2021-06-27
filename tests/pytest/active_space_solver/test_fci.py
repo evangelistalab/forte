@@ -19,13 +19,14 @@ def test_fci():
     # create a molecular model
     input = solver_factory(molecule=xyz, basis='cc-pVDZ')
 
-    # specify the electronic state
+    # specify the electronic state and the active orbitals
     state = input.state(charge=0, multiplicity=1, sym='ag')
+    mo_spaces = input.mo_spaces(active=[1, 0, 0, 0, 0, 1, 0, 0])
 
     # create a HF object
     hf = HF(input, state=state)
     # create a FCI object that grabs the MOs from the HF object (hf)
-    fci = ActiveSpaceSolver(hf, type='FCI', states={state: 2}, active=[1, 0, 0, 0, 0, 1, 0, 0])
+    fci = ActiveSpaceSolver(hf, type='FCI', states={state: 2}, mo_spaces=mo_spaces)
     # run the computation
     fci.run()
     # check the FCI energy

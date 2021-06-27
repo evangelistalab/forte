@@ -29,10 +29,10 @@ def test_fci_ex_1():
     hf.run()
     assert hf.value('hf energy') == pytest.approx(ref_hf_energy, 1.0e-10)
 
+    # define an active space
+    mo_spaces = input.mo_spaces(frozen_docc=[3, 0, 0, 1], restricted_docc=[4, 1, 1, 3], active=[2, 0, 2, 1])
     # compute the FCI energy for the double B1 (M_S =  1/2) solution
-    fci = ActiveSpaceSolver(
-        hf, type='FCI', states={state: 2}, frozen_docc=[3, 0, 0, 1], restricted_docc=[4, 1, 1, 3], active=[2, 0, 2, 1]
-    )
+    fci = ActiveSpaceSolver(hf, type='FCI', states={state: 2}, mo_spaces=mo_spaces)
     fci.run()
 
     # check results
