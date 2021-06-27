@@ -94,10 +94,13 @@ an ``ActiveSpaceSolver`` node
    # create the HF object
    hf = HF(input, state=state)  
 
-   # initialize a FCI solver, passing the HF object, the target electronic state,
-   # and an array that specifies the number of MOs per irrep taken as active
+   # specify the active space
+   # we pass an array that specifies the number of active MOs per irrep
    # We use Cotton ordering, so this selects one MO from irrep 0 (Ag) and one from irrep 5 (B1u)
-   fci = ActiveSpaceSolver(hf, type='FCI', states=state, active=[1, 0, 0, 0, 0, 1, 0, 0])
+   mo_spaces = input.mo_spaces(active=[1, 0, 0, 0, 0, 1, 0, 0])
+
+   # initialize a FCI solver and pass the HF object, the target electronic state, and the MO space information
+   fci = ActiveSpaceSolver(hf, type='FCI', states=state, mo_spaces=mo_spaces)
 
    # call run() on the FCI node
    fci.run()  
@@ -115,7 +118,7 @@ that maps states to number of desired solutions
 
 .. code:: python
 
-   fci = ActiveSpaceSolver(hf, type='FCI', states={state : 2}, active=[1, 0, 0, 0, 0, 1, 0, 0])
+   fci = ActiveSpaceSolver(hf, type='FCI', states={state : 2}, mo_spaces=mo_spaces)
 
 The energy of the two :math:`^1 A_{g}` states can still be retrieved
 with the ``value`` function:
