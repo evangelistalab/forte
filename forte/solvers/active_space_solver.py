@@ -54,15 +54,21 @@ class ActiveSpaceSolver(Solver):
         input_nodes: Solver
             The solver that will provide the molecular orbitals
         states: StateInfo, or list(StateInfo), or dict[StateInfo,int], or dict[StateInfo,list(float)]
-            The state(s) to be computed passed in one of the following ways
-            1. A single state
-            2. A list of single states (will compute one level for each type of state)
-            3. A dictionary that maps StateInfo objects to the number of states to compute
-            4. A dictionary that maps StateInfo objects to a list of weights for the states to compute
+            The state(s) to be computed passed in one of the following ways:
+                1. A single state
+                2. A list of single states (will compute one level for each type of state)
+                3. A dictionary that maps StateInfo objects to the number of states to compute
+                4. A dictionary that maps StateInfo objects to a list of weights for the states to compute
             If explicit weights are passed, these are used in procedures that average properties
             over states (e.g., state-averaged CASSCF)
         type: {'FCI','ACI','CAS','DETCI','ASCI','PCI'}
             The type of solver
+        mo_spaces: dict[str,list(int)]
+            A dictionary that specifies the number of MOs per irrep that belong to a given orbital space.
+            The available spaces are: frozen_docc, restricted_docc, active, restricted_uocc, frozen_uocc, and gas1-gas6.
+            Please consult the manual for the meaning of these orbital spaces.
+            A convenience function is provided by the Input class [mo_spaces()] to facilitate the creation of this dict.
+            Note that an empty dict implies that all orbitals are treated as active.
         e_convergence: float
             energy convergence criterion
         r_convergence: float
