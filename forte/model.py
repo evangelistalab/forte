@@ -25,6 +25,7 @@ class Model(ABC):
     @abstractmethod
     def ints(self, mo_space_info):
         """Make a ForteIntegral object"""
+        pass
 
 
 class MolecularModel(Model):

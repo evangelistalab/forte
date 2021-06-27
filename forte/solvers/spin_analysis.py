@@ -41,7 +41,7 @@ class SpinAnalysis(Solver):
         return repr(self)
 
     def _run(self):
-        """Run a Hartree-Fock computation"""
+        """Run the spin analysis"""
         if not self.input[0].executed:
             flog(
                 'info',

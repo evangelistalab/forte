@@ -101,6 +101,7 @@ class Solver(ABC):
     @abstractmethod
     def _run():
         """The actual run function implemented by each method"""
+        pass
 
     @property
     def input(self):
