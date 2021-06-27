@@ -15,7 +15,7 @@ class ActiveSpaceSolver(Solver):
     Multi-state computations need a dict[StateInfo,list(float)] object,
     which can be cumbersome to prepare for all computations.
     Therefore, this class accepts various inputs, for example:
-    
+
         >>> # single state (one eigenstate of state ``state``)
         >>> state = StateInfo(...)
         >>> _parse_states(state)

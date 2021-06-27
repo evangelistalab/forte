@@ -1,7 +1,6 @@
 # import time
 
 from enum import Enum, auto
-from abc import ABC, abstractmethod
 
 from forte.forte import StateInfo
 from forte.core import flog, increase_log_depth
