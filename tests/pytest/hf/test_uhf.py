@@ -1,5 +1,3 @@
-"""Test the HF solver."""
-
 import pytest
 
 from forte import Molecule, Basis

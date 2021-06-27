@@ -71,9 +71,19 @@ class ForteManager(object):
         forte.cleanup()
 
 
-def start_logging():
-    """This function starts logging"""
-    logging.basicConfig(filename='forte.log', level=logging.DEBUG, format='# %(asctime)s | %(levelname)s | %(message)s')
+def start_logging(filename='forte.log', level=logging.DEBUG):
+    """
+    This function sets the output of logs to ``filename`` (default = forte.log)
+    and sets the log level to all information.
+
+    Parameters
+    ----------
+    filename: str
+        the name of the log file (default = 'forte.log')
+    level: {logging.DEBUG, logging.INFO, logging.WARNING, logging.ERROR, logging.CRITICAL}
+        the level of severity of the events tracked (default = logging.DEBUG, which means track everything)
+    """
+    logging.basicConfig(filename=filename, level=level, format='# %(asctime)s | %(levelname)s | %(message)s')
     logging.info('Starting the Forte logger')
 
 
@@ -81,13 +91,36 @@ def flog(level, msg):
     """
     Log the message ``msg`` with logging level ``level``.
 
+    ``level`` should be chosen in this way:
+    debug: for detailed ouput mostly for diagnostic purpose
+    info: for information produced during normal operation of the program
+    warning: for a warning regarding a particular runtime event
+    error: for an error that does not raise an exception
+
+    Parameters
+    ----------
+    level: str
+        the level of the message logged. Can be any of ('debug','info','warning','error')
+    msg: str
+        the text to be logged
+
     This function calls the logging module and puts some spaces before
     the message that we want to log.
     """
     global logging_depth
+    level = level.lower()
+    spaces = ' ' * max((logging_depth - 1), 0) * 2
+    s = f"{spaces}{msg}"
     if level == 'info':
-        spaces = ' ' * max((logging_depth - 1), 0) * 2
-        logging.info(f"{spaces}{msg}")
+        logging.info(s)
+    elif level == 'warning':
+        logging.warning(s)
+    elif level == 'debug':
+        logging.debug(s)
+    elif level == 'error':
+        logging.error(s)
+    else:
+        raise ValueError(f'forte.core.flog was called with an unrecognized level ({level})')
 
 
 def increase_log_depth(func):
