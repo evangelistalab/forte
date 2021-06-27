@@ -1,6 +1,6 @@
 import pytest
 import forte
-from forte import forte_options
+from forte import forte_options, ForteOptions
 
 
 def test_options():
@@ -83,7 +83,7 @@ def test_options():
     assert new_options.get_double('E_CONVERGENCE') == 1.0e-2
 
     # now reset new_options, define new options, and print them to test str()
-    new_options.reset()
+    new_options = ForteOptions()
     new_options.add_bool('MY_BOOL', False, 'A boolean')
     new_options.add_int('MY_INT', 0, 'An integer')
     new_options.add_double('MY_FLOAT', 0, 'A float')
@@ -124,7 +124,7 @@ MY_NONE: None
     with pytest.raises(RuntimeError):
         new_options.set_double_list('MY_FLOAT', [1, 2, 3])
     with pytest.raises(RuntimeError):
-        new_options.set_gen_list('MY_FLOAT', [1, 2, 3])
+        new_options.set_list('MY_FLOAT', [1, 2, 3])
 
 
 if __name__ == "__main__":

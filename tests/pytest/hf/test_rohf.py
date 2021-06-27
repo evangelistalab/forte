@@ -22,13 +22,13 @@ def test_rohf():
     basis = Basis('cc-pVDZ')
 
     # create a molecular model
-    root = solver_factory(molecule=mol, basis=basis)
+    input = solver_factory(molecule=mol, basis=basis)
 
     # specify the electronic state
-    state = root.state(charge=0, multiplicity=3, sym='b1')
+    state = input.state(charge=0, multiplicity=3, sym='b1')
 
     # define a HF object
-    hf = HF(root, state=state)
+    hf = HF(input, state=state)
     hf.run()
 
     assert hf.value('hf energy') == pytest.approx(ref_energy, 1.0e-10)

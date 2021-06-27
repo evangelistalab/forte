@@ -16,23 +16,20 @@ def test_detci_2():
     H 1 1.00
     H 1 1.00 2 103.1
     """
-    root = solver_factory(molecule=xyz, basis='6-31g**')
-    state = root.state(charge=0, multiplicity=1, sym='a1')
-    hf = HF(root, state=state, d_convergence=1.0e-10)
+    input = solver_factory(molecule=xyz, basis='6-31g**')
+    state = input.state(charge=0, multiplicity=1, sym='a1')
+    hf = HF(input, state=state, d_convergence=1.0e-10)
     hf.run()
 
     # define two states with different number of GAS constraints
-    gas_state_1 = root.state(charge=0, multiplicity=1, sym='a1', gasmin=[0], gasmax=[2])
-    gas_state_2 = root.state(charge=0, multiplicity=1, sym='a1', gasmin=[0], gasmax=[1])
+    gas_state_1 = input.state(charge=0, multiplicity=1, sym='a1', gasmin=[0], gasmax=[2])
+    gas_state_2 = input.state(charge=0, multiplicity=1, sym='a1', gasmin=[0], gasmax=[1])
 
     # create a detci solver
     fci = ActiveSpaceSolver(
         hf,
         type='detci',
-        states={
-            gas_state_1: [1.0],
-            gas_state_2: [1.0]
-        },
+        states=[gas_state_1, gas_state_2],
         gas1=[1, 0, 0, 0],
         gas2=[3, 0, 1, 2],
         options={'active_ref_type': 'gas'}

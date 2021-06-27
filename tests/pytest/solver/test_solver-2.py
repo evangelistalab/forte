@@ -13,16 +13,23 @@ def test_solver_2():
     """
 
     # create a molecular model
-    root = solver_factory(molecule=xyz, basis='cc-pVDZ')
+    input = solver_factory(molecule=xyz, basis='cc-pVDZ')
 
     # specify the electronic state
-    state = root.state(charge=0, multiplicity=1, sym='ag')
+    state = input.state(charge=0, multiplicity=1, sym='ag')
 
     # create a HF object and run
-    hf = HF(root, state=state)
+    hf = HF(input, state=state)
     fci = ActiveSpaceSolver(hf, state, 'FCI')
     spin = SpinAnalysis(fci)
-    print(spin.computational_graph())
+    test_graph = """SpinAnalysis
+ |
+ActiveSpaceSolver
+ |
+HF
+ |
+Input"""
+    assert spin.computational_graph() == test_graph
 
 
 if __name__ == "__main__":

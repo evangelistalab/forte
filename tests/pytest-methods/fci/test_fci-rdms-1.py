@@ -13,9 +13,9 @@ def test_fci_rdms_1():
     H 1 3.0
     units bohr
     """
-    root = solver_factory(molecule=xyz, basis='sto-3g')
-    state = root.state(charge=0, multiplicity=1, sym='a1')
-    hf = HF(root, state=state)
+    input = solver_factory(molecule=xyz, basis='sto-3g')
+    state = input.state(charge=0, multiplicity=1, sym='a1')
+    hf = HF(input, state=state)
     fci = ActiveSpaceSolver(hf, type='FCI', states=state, options={'fci_test_rdms': True})
     fci.run()
 

@@ -13,9 +13,9 @@ def test_detci_4():
     F
     H 1 1.0
     """
-    root = solver_factory(molecule=xyz, basis='6-31g')
-    state = root.state(charge=0, multiplicity=1, sym='a1')
-    hf = HF(root, state=state, e_convergence=1.0e-12, d_convergence=1.0e-8)
+    input = solver_factory(molecule=xyz, basis='6-31g')
+    state = input.state(charge=0, multiplicity=1, sym='a1')
+    hf = HF(input, state=state, e_convergence=1.0e-12, d_convergence=1.0e-8)
     hf.run()
 
     # create a detci solver

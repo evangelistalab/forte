@@ -27,7 +27,7 @@ def test_detci_3():
     C  1.117962 -1.474815  0.000000
     C -1.117962  1.474815  0.000000
     """
-    root = solver_factory(
+    input = solver_factory(
         molecule=butadiene,
         basis='def2-svp',
         scf_aux_basis='def2-universal-jkfit',
@@ -35,15 +35,15 @@ def test_detci_3():
         int_type='df'
     )
 
-    state = root.state(charge=0, multiplicity=1, sym='ag')
-    hf = HF(root, state=state, d_convergence=1.0e-12)
+    state = input.state(charge=0, multiplicity=1, sym='ag')
+    hf = HF(input, state=state, d_convergence=1.0e-12)
     hf.run()
 
     assert hf.value('hf energy') == pytest.approx(ref_hf_energy, 1.0e-10)
 
     # define two states with different number of GAS constraints
-    ag_state = root.state(charge=0, multiplicity=1, sym='ag')
-    bu_state = root.state(charge=0, multiplicity=1, sym='bu')
+    ag_state = input.state(charge=0, multiplicity=1, sym='ag')
+    bu_state = input.state(charge=0, multiplicity=1, sym='bu')
 
     # create a detci solver
     fci = ActiveSpaceSolver(
@@ -53,8 +53,8 @@ def test_detci_3():
         restricted_docc=[5, 0, 0, 4],
         active=[0, 2, 2, 0],
         states={
-            ag_state: [1.0, 1.0, 1.0],
-            bu_state: [1.0]
+            ag_state: 3,
+            bu_state: 1
         },
         options={'transition_dipoles': True}
     )

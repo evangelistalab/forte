@@ -165,11 +165,14 @@ class MolecularModel(Model):
         return StateInfo(na, nb, multiplicity, twice_ms, irrep, sym, gasmin, gasmax)
 
     def ints(self, data, options):
-        import psi4
         flog('info', 'MolecularModel: preparing integrals from psi4')
+        # if we do DF, we need to make sure that psi4's wavefunction object
+        # has a DF_BASIS_MP2 basis registered
         if self.int_type == 'DF':
+            import psi4
             aux_basis = psi4.core.BasisSet.build(
                 self.molecule, 'DF_BASIS_MP2', self.corr_aux_basis, 'RIFIT', self.basis
             )
             data.psi_wfn.set_basisset('DF_BASIS_MP2', aux_basis)
-        return make_ints_from_psi4(self._int_type, data.psi_wfn, options, data.mo_space_info)
+        # get the appropriate integral object
+        return make_ints_from_psi4(data.psi_wfn, options, data.mo_space_info, self._int_type)

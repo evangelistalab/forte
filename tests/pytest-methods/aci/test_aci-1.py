@@ -14,9 +14,9 @@ def test_aci_1():
     Li
     Li 1 2.0
     """
-    root = solver_factory(molecule=xyz, basis='DZ')
-    state = root.state(charge=0, multiplicity=1, sym='ag')
-    hf = HF(root, state=state)
+    input = solver_factory(molecule=xyz, basis='DZ')
+    state = input.state(charge=0, multiplicity=1, sym='ag')
+    hf = HF(input, state=state)
     options = {
         'sigma': 0.001,
         'sci_enforce_spin_complete': False,

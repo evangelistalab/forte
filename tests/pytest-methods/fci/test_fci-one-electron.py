@@ -13,9 +13,9 @@ def test_fci_one_electron():
     H
     H 1 1.0
     """
-    root = solver_factory(molecule=xyz, basis='aug-cc-pVDZ')
-    state = root.state(charge=1, multiplicity=2, sym='ag')
-    hf = HF(root, state=state, e_convergence=1.0e-12)
+    input = solver_factory(molecule=xyz, basis='aug-cc-pVDZ')
+    state = input.state(charge=1, multiplicity=2, sym='ag')
+    hf = HF(input, state=state, e_convergence=1.0e-12)
     fci = ActiveSpaceSolver(
         hf,
         type='FCI',

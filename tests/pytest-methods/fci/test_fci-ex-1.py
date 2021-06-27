@@ -22,21 +22,16 @@ def test_fci_ex_1():
     O   0.000000   0.000000   1.227600
     units angstrom
     """
-    root = solver_factory(molecule=xyz, basis='3-21g')
-    state = root.state(charge=0, multiplicity=1, sym='a1')
+    input = solver_factory(molecule=xyz, basis='3-21g')
+    state = input.state(charge=0, multiplicity=1, sym='a1')
 
-    hf = HF(root, state=state, docc=[8, 1, 2, 5])
+    hf = HF(input, state=state, docc=[8, 1, 2, 5])
     hf.run()
     assert hf.value('hf energy') == pytest.approx(ref_hf_energy, 1.0e-10)
 
     # compute the FCI energy for the double B1 (M_S =  1/2) solution
     fci = ActiveSpaceSolver(
-        hf,
-        type='FCI',
-        states={state: [1.0, 1.0]},
-        frozen_docc=[3, 0, 0, 1],
-        restricted_docc=[4, 1, 1, 3],
-        active=[2, 0, 2, 1]
+        hf, type='FCI', states={state: 2}, frozen_docc=[3, 0, 0, 1], restricted_docc=[4, 1, 1, 3], active=[2, 0, 2, 1]
     )
     fci.run()
 

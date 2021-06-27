@@ -14,8 +14,8 @@ def test_hf_callback():
     H 0.0 0.0 3.0
     symmetry c1
     """
-    root = solver_factory(molecule=xyz, basis='sto-3g')
-    state = root.state(charge=0, multiplicity=1)
+    input = solver_factory(molecule=xyz, basis='sto-3g')
+    state = input.state(charge=0, multiplicity=1)
 
     cbh = CallbackHandler()
 
@@ -32,7 +32,7 @@ def test_hf_callback():
         wfn.Cb().copy(new_C)
 
     cbh.add_callback('post hf', localize)
-    hf = HF(root, state=state, restricted=False, cbh=cbh)
+    hf = HF(input, state=state, restricted=False, cbh=cbh)
     hf.run()
 
 

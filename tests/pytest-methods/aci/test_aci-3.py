@@ -19,9 +19,9 @@ def test_aci_3():
     H  0.1 -0.3 1.0
     H -0.1  0.5 1.0
     """
-    root = solver_factory(molecule=xyz, basis='cc-pVDZ')
-    state = root.state(charge=0, multiplicity=1, sym='a')
-    hf = HF(root, state=state, e_convergence=1.0e-12, d_convergence=1.0e-6)
+    input = solver_factory(molecule=xyz, basis='cc-pVDZ')
+    state = input.state(charge=0, multiplicity=1, sym='a')
+    hf = HF(input, state=state, e_convergence=1.0e-12, d_convergence=1.0e-6)
     options = {
         'sigma': 0.001,
         'active_ref_type': 'hf',

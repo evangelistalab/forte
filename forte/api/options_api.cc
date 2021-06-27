@@ -77,6 +77,8 @@ void export_ForteOptions(py::module& m) {
         .def("set_int_list", &ForteOptions::set_int_list, "Set a vector of integers option")
         .def("set_double_list", &ForteOptions::set_double_list,
              "Set a vector of doubles (py::float) option")
+        .def("set_list", &ForteOptions::set_gen_list,
+             "Set a vector of python objects (py::object) option")
         .def("push_options_to_psi4", &ForteOptions::push_options_to_psi4,
              "Push the options list to Psi4")
         .def("get_options_from_psi4", &ForteOptions::get_options_from_psi4,

@@ -184,23 +184,48 @@ class Solver(ABC):
     def state(self, *args, **kwargs):
         return self.data.model.state(*args, **kwargs)
 
-    def _parse_states(states):
+    def _parse_states(self, states):
         """
-        This functions converts the input of a user into the standard
+        This function converts the input of a user into the standard
         input for a multi-state computation.
+
+        Multi-state computations need a dict[StateInfo,list(float)] object,
+        which can be cumbersome to write out. This function accepts various inputs,
+        for example:
+            >>> # single state (one eigenstate of state ``state``)
+            >>> state = StateInfo(...)
+            >>> _parse_states(state)
+
+            >>> # list of states (one eigenstate of ``state_1`` and one of ``state_2``)
+            >>> state_1 = StateInfo(...)
+            >>> state_2 = StateInfo(...)
+            >>> _parse_states([state_1,state_2])
+
+            >>> # dict of states (5 eigenstate of ``state_1`` and 3 of ``state_2``)
+            >>> state_info_1 = StateInfo(...)
+            >>> state_info_2 = StateInfo(...)
+            >>> _parse_states({state_info_1: 5,state_info_2: 3})
+
+            >>> # dict of states (5 eigenstate of ``state_1`` and 3 of ``state_2``)
+            >>> state_info_1 = StateInfo(...)
+            >>> state_info_2 = StateInfo(...)
+            >>> _parse_states({state_info_1: [1.0,1.0,0.5,0.5,0.5],state_info_2: [0.25,0.25,0.25]})
 
         Parameters
         ----------
-        states: (StateInfo, dict(StateInfo -> int), dict(StateInfo -> list(float))
+        states: (StateInfo, list(StateInfo), dict[StateInfo,int], dict[StateInfo,list(float)]
             The user input can be one of three options:
             1. A single state
-            2. A dictionary that maps StateInfo objects to the number of states to compute
-            3. A dictionary that maps StateInfo objects to a list of weights
+            2. A list of single states (will compute one level for each type of state)
+            3. A dictionary that maps StateInfo objects to the number of states to compute
+            4. A dictionary that maps StateInfo objects to a list of weights for the states to compute
         """
         parsed_states = {}
-        # 1. single state
         if isinstance(states, StateInfo):
             parsed_states[states] = [1.0]
+        elif isinstance(states, list):
+            for state in states:
+                parsed_states[state] = [1.0]
         elif isinstance(states, dict):
             for k, v in states.items():
                 if isinstance(v, int):
@@ -208,9 +233,9 @@ class Solver(ABC):
                 elif isinstance(v, list):
                     parsed_states[k] = v
                 else:
-                    raise ValueError('could not parse stats input {states}')
+                    raise ValueError(f'could not parse stats input {states}')
         else:
-            raise ValueError('could not parse stats input {states}')
+            raise ValueError(f'could not parse stats input {states}')
         return parsed_states
 
     def _make_mo_space_info_map(
