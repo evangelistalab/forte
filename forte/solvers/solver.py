@@ -1,5 +1,4 @@
-# import time
-
+from abc import abstractmethod
 from enum import Enum, auto
 
 from forte.forte import StateInfo
