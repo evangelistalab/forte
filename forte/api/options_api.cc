@@ -44,7 +44,6 @@ void export_ForteOptions(py::module& m) {
         .def(py::init<const ForteOptions&>())
         .def("set_dict", &ForteOptions::set_dict, "Set the options dictionary")
         .def("dict", &ForteOptions::dict, "Returns the options dictionary")
-        .def("reset", &ForteOptions::reset_dict, "Reset the options")
         .def("set_group", &ForteOptions::set_group, "Set the options group")
         .def("is_none", &ForteOptions::is_none, "Is this variable defined?")
         .def("exists", &ForteOptions::exists, "Does this option exist?")
@@ -68,21 +67,21 @@ void export_ForteOptions(py::module& m) {
         .def("get_double", &ForteOptions::get_double, "Get a double option")
         .def("get_str", &ForteOptions::get_str, "Get a string option")
         .def("get_int_list", &ForteOptions::get_int_list, "Get a list of integers option")
-        .def("get_double_list", &ForteOptions::get_double_vec,
+        .def("get_double_list", &ForteOptions::get_double_list,
              "Get a vector of doubles (py::float) option")
         .def("get_list", &ForteOptions::get_gen_list, "Get a general list")
         .def("set_bool", &ForteOptions::set_bool, "Set a boolean option")
         .def("set_int", &ForteOptions::set_int, "Set an integer option")
         .def("set_double", &ForteOptions::set_double, "Set a double option")
         .def("set_str", &ForteOptions::set_str, "Set a string option")
-        .def("set_int_vec", &ForteOptions::set_int_vec, "Set a vector of integers option")
-        .def("set_double_vec", &ForteOptions::set_double_vec,
+        .def("set_int_list", &ForteOptions::set_int_list, "Set a vector of integers option")
+        .def("set_double_list", &ForteOptions::set_double_list,
              "Set a vector of doubles (py::float) option")
         .def("push_options_to_psi4", &ForteOptions::push_options_to_psi4,
              "Push the options list to Psi4")
         .def("get_options_from_psi4", &ForteOptions::get_options_from_psi4,
              "Read the value of options from Psi4")
-        .def("set_from_dict", &ForteOptions::set_options_from_dict,
+        .def("set_from_dict", &ForteOptions::set_from_dict,
              "Set options from a dictionary `dict` of labels -> values")
         .def("generate_documentation", &ForteOptions::generate_documentation,
              "Generate documentation from the options list")

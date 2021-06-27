@@ -36,8 +36,11 @@ Hartree–Fock theory
 -------------------
 
 To run a Hartree–Fock (HF) computation on the molecule defined above the
-user has to do the following: 1. Specify the electronic state 2. Create
-a Hartree–Fock solver object 3. Call the ``run()`` function
+user has to do the following:
+
+1. Specify the electronic state
+2. Create a Hartree–Fock solver object
+3. Call the ``run()`` function
 
 Here is an example that shows the full input for a HF computation:
 
@@ -108,11 +111,11 @@ the states computed:
    fci.value('active space energy')[state] -> [-1.1083377195359851]
 
 To compute two :math:`^1 A_{g}` states we can simply pass a dictionary
-of states and their weight
+that maps states to number of desired solutions
 
 .. code:: python
 
-   fci = ActiveSpaceSolver(hf, type='FCI', states={state : [1.,1.]}, active=[1, 0, 0, 0, 0, 1, 0, 0])
+   fci = ActiveSpaceSolver(hf, type='FCI', states={state : 2}, active=[1, 0, 0, 0, 0, 1, 0, 0])
 
 The energy of the two :math:`^1 A_{g}` states can still be retrieved
 with the ``value`` function:

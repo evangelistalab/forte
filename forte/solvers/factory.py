@@ -2,7 +2,7 @@ from forte.core import flog
 from forte.model import MolecularModel
 from forte.molecule import Molecule
 from forte.basis import Basis
-from forte.solvers.input import InputSolver
+from forte.solvers.input import Input
 
 
 def solver_factory(molecule, basis, int_type=None, scf_aux_basis=None, corr_aux_basis=None):
@@ -22,7 +22,7 @@ def solver_factory(molecule, basis, int_type=None, scf_aux_basis=None, corr_aux_
         corr_aux_basis = Basis(corr_aux_basis)
 
     # create an empty solver and pass the model in
-    solver = InputSolver()
+    solver = Input()
     solver.data.model = MolecularModel(
         molecule=molecule, int_type=int_type, basis=basis, scf_aux_basis=scf_aux_basis, corr_aux_basis=corr_aux_basis
     )

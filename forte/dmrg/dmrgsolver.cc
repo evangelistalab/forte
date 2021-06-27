@@ -235,11 +235,11 @@ void DMRGSolver::compute_energy() {
     const int wfn_multp = options_->get_int("MULTIPLICITY");
     std::vector<int> dmrg_states = options_->get_int_list("DMRG_STATES");
     const int ndmrg_states = dmrg_states.size();
-    std::vector<double> dmrg_econv = options_->get_double_vec("DMRG_ECONV");
+    std::vector<double> dmrg_econv = options_->get_double_list("DMRG_ECONV");
     const int ndmrg_econv = dmrg_econv.size();
     std::vector<int> dmrg_maxsweeps = options_->get_int_list("DMRG_MAXSWEEPS");
     const int ndmrg_maxsweeps = dmrg_maxsweeps.size();
-    std::vector<double> dmrg_noiseprefactors = options_->get_double_vec("DMRG_NOISEPREFACTORS");
+    std::vector<double> dmrg_noiseprefactors = options_->get_double_list("DMRG_NOISEPREFACTORS");
     const int ndmrg_noiseprefactors = dmrg_noiseprefactors.size();
     const bool dmrg_print_corr = options_->get_bool("DMRG_PRINT_CORR");
     psi::Dimension frozen_docc = mo_space_info_->dimension("INACTIVE_DOCC");
@@ -255,7 +255,7 @@ void DMRGSolver::compute_energy() {
     const bool dmrgscf_state_avg = options_->get_bool("DMRG_AVG_STATES");
     const string dmrgscf_active_space = options_->get_str("DMRG_ACTIVE_SPACE");
     const bool dmrgscf_loc_random = options_->get_bool("DMRG_LOC_RANDOM");
-    std::vector<double> dmrg_davidson_tol = options_->get_double_vec("DMRG_DAVIDSON_RTOL");
+    std::vector<double> dmrg_davidson_tol = options_->get_double_list("DMRG_DAVIDSON_RTOL");
     const int ndmrg_davidson_tol = dmrg_davidson_tol.size();
     const int dmrgscf_num_vec_diis = CheMPS2::DMRGSCF_numDIISvecs;
     const std::string unitaryname =

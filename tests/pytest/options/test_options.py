@@ -93,6 +93,8 @@ def test_options():
     new_options.add_list('MY_GEN_LIST', 'A general list')
     new_options.add_int('MY_NONE', None, 'An integer')
 
+    new_options.set_str('MY_STR', 'NEW STRING')
+
     new_options.set_from_dict(
         {
             'MY_BOOL': True,
@@ -115,6 +117,14 @@ MY_GEN_LIST: gen_list()
 MY_NONE: None
 """
     assert str(new_options) == test_str
+
+    # test catching impossible type conversions
+    with pytest.raises(RuntimeError):
+        new_options.set_int_list('MY_FLOAT', [1, 2, 3])
+    with pytest.raises(RuntimeError):
+        new_options.set_double_list('MY_FLOAT', [1, 2, 3])
+    with pytest.raises(RuntimeError):
+        new_options.set_gen_list('MY_FLOAT', [1, 2, 3])
 
 
 if __name__ == "__main__":

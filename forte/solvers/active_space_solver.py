@@ -2,7 +2,6 @@ from forte.core import flog
 
 from forte.solvers.solver import Feature, Solver
 
-from forte.forte import StateInfo
 from forte.forte import ForteOptions
 from forte import to_state_nroots_map
 from forte import forte_options
@@ -58,6 +57,7 @@ class ActiveSpaceSolver(Solver):
         cbh: CallbackHandler
             A callback object used to inject code into the HF class
         """
+        # initialize the base class
         super().__init__(
             input=input,
             needs=[Feature.MODEL, Feature.ORBITALS],
@@ -66,12 +66,12 @@ class ActiveSpaceSolver(Solver):
             cbh=cbh
         )
         self._data = self.input[0].data
-        # allow passing a single StateInfo object
-        if isinstance(states, StateInfo):
-            self._states = {states: [1.0]}
-        else:
-            self._states = states
+
+        # parse the states parameter
+        self._states = self._parse_states(states)
+
         self._type = type.upper()
+
         self._mo_space_info_map = self._make_mo_space_info_map(
             frozen_docc=frozen_docc,
             restricted_docc=restricted_docc,

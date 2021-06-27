@@ -8,7 +8,7 @@ from forte.solvers import solver_factory, HF, ActiveSpaceSolver
 def test_fci():
     """Test FCI on H2."""
 
-    ref_energy = -1.108337719536
+    ref_energy = [-1.1083377195359851, -0.2591786932627466]
 
     # define a molecule
     xyz = """
@@ -25,12 +25,11 @@ def test_fci():
     # create a HF object
     hf = HF(input, state=state)
     # create a FCI object that grabs the MOs from the HF object (hf)
-    fci = ActiveSpaceSolver(hf, type='FCI', states={state: [1., 1.]}, active=[1, 0, 0, 0, 0, 1, 0, 0])
+    fci = ActiveSpaceSolver(hf, type='FCI', states={state: 2}, active=[1, 0, 0, 0, 0, 1, 0, 0])
     # run the computation
     fci.run()
     # check the FCI energy
-    assert fci.value('active space energy')[state][0] == pytest.approx(ref_energy, 1.0e-10)
-    print(fci.value('active space energy')[state])
+    assert fci.value('active space energy')[state] == pytest.approx(ref_energy, 1.0e-10)
 
 
 if __name__ == "__main__":

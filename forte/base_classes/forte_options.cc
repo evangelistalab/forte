@@ -74,7 +74,7 @@ py::dict make_dict_entry(const std::string& type, const std::string& group,
 
 void ForteOptions::set_group(const std::string& group) { group_ = group; }
 
-const std::string& ForteOptions::get_group() { return group_; }
+const std::string& ForteOptions::get_group() const { return group_; }
 
 void ForteOptions::add(const std::string& label, const std::string& type, py::object default_value,
                        const std::string& description) {
@@ -176,8 +176,8 @@ void ForteOptions::add_double_array(const std::string& label, const std::string&
     add(label, "float_list", py::list(), description);
 }
 
-void ForteOptions::set_options_from_dict(pybind11::dict dict) {
-    for (auto item : dict) {
+void ForteOptions::set_from_dict(const pybind11::dict& dict) {
+    for (const auto& item : dict) {
         auto label = py::cast<std::string>(item.first);
         if (exists(label)) {
             auto obj = py::cast<py::object>(item.second);
@@ -217,17 +217,15 @@ void ForteOptions::set_options_from_dict(pybind11::dict dict) {
             }
         } else {
             std::string msg =
-                "\n  ForteOptions::set_options_from_dict: option " + label + " is not defined\n";
+                "\n  ForteOptions::set_from_dict: option " + label + " is not defined\n";
             throw std::runtime_error(msg);
         }
     }
 }
 
-void ForteOptions::set_dict(const pybind11::dict dict) {
+void ForteOptions::set_dict(const pybind11::dict& dict) {
     dict_ = py::module::import("copy").attr("deepcopy")(dict);
 }
-
-void ForteOptions::reset_dict() { dict_ = pybind11::dict(); }
 
 void check_options_none(py::object obj, const std::string& type, const std::string& label) {
     if (obj.is_none()) {
@@ -317,7 +315,7 @@ std::vector<int> ForteOptions::get_int_list(const std::string& label) const {
     return result;
 }
 
-std::vector<double> ForteOptions::get_double_vec(const std::string& label) const {
+std::vector<double> ForteOptions::get_double_list(const std::string& label) const {
     std::vector<double> result;
     auto value_type = get(label);
     check_options_none(value_type.first, "double_vec", label);
@@ -333,8 +331,8 @@ std::vector<double> ForteOptions::get_double_vec(const std::string& label) const
 }
 
 void set_gen_list(const std::string& label, py::list val);
-void set_int_vec(const std::string& label);
-void set_double_vec(const std::string& label, const std::vector<double>& val);
+void set_int_list(const std::string& label);
+void set_double_list(const std::string& label, const std::vector<double>& val);
 
 void ForteOptions::set_bool(const std::string& label, bool val) {
     auto value_type = get(label);
@@ -393,7 +391,7 @@ void ForteOptions::set_gen_list(const std::string& label, py::list val) {
     }
 }
 
-void ForteOptions::set_int_vec(const std::string& label, const std::vector<int>& val) {
+void ForteOptions::set_int_list(const std::string& label, const std::vector<int>& val) {
     std::vector<int> result;
     auto value_type = get(label);
     if (value_type.second == "int_list") {
@@ -405,13 +403,13 @@ void ForteOptions::set_int_vec(const std::string& label, const std::vector<int>&
     }
 }
 
-void ForteOptions::set_double_vec(const std::string& label, const std::vector<double>& val) {
+void ForteOptions::set_double_list(const std::string& label, const std::vector<double>& val) {
     std::vector<double> result;
     auto value_type = get(label);
     if (value_type.second == "float_list") {
         set(label, py::cast(val));
     } else {
-        std::string msg = "Called ForteOptions::set_double_vec(" + label +
+        std::string msg = "Called ForteOptions::set_double_list(" + label +
                           ") but the type for this option is " + value_type.second;
         throw std::runtime_error(msg);
     }
@@ -583,7 +581,7 @@ std::string ForteOptions::str() const {
             s += "]";
         } else if (type == "float_list") {
             s += label + ": [";
-            std::vector<double> value = get_double_vec(label);
+            std::vector<double> value = get_double_list(label);
             for (auto e : value) {
                 s += std::to_string(e) + ",";
             }

@@ -3,6 +3,7 @@
 from enum import Enum, auto
 from abc import ABC, abstractmethod
 
+from forte.forte import StateInfo
 from forte.core import flog, increase_log_depth
 from forte.solvers.callback_handler import CallbackHandler
 from forte.data import Data
@@ -182,6 +183,35 @@ class Solver(ABC):
 
     def state(self, *args, **kwargs):
         return self.data.model.state(*args, **kwargs)
+
+    def _parse_states(states):
+        """
+        This functions converts the input of a user into the standard
+        input for a multi-state computation.
+
+        Parameters
+        ----------
+        states: (StateInfo, dict(StateInfo -> int), dict(StateInfo -> list(float))
+            The user input can be one of three options:
+            1. A single state
+            2. A dictionary that maps StateInfo objects to the number of states to compute
+            3. A dictionary that maps StateInfo objects to a list of weights
+        """
+        parsed_states = {}
+        # 1. single state
+        if isinstance(states, StateInfo):
+            parsed_states[states] = [1.0]
+        elif isinstance(states, dict):
+            for k, v in states.items():
+                if isinstance(v, int):
+                    parsed_states[k] = [1.0] * v
+                elif isinstance(v, list):
+                    parsed_states[k] = v
+                else:
+                    raise ValueError('could not parse stats input {states}')
+        else:
+            raise ValueError('could not parse stats input {states}')
+        return parsed_states
 
     def _make_mo_space_info_map(
         self,

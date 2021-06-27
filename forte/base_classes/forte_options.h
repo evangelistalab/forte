@@ -62,13 +62,13 @@ namespace forte {
  */
 class ForteOptions {
   public:
-    /// @brief Constructor
+    /// @brief Default constructor
     ForteOptions();
 
     /**
      * @brief Copy constructor
      *
-     * This constructor makes a deep copy of the options dictionary.
+     * This constructor makes a deep copy of the options dictionary
      */
     ForteOptions(const ForteOptions& other);
 
@@ -85,7 +85,7 @@ class ForteOptions {
      * @brief Get the group to which options are added
      * @return the group name
      */
-    const std::string& get_group();
+    const std::string& get_group() const;
 
     /**
      * @brief Add a python object option
@@ -183,12 +183,24 @@ class ForteOptions {
                  const std::string& description = "");
 
     /**
-     * @brief Add an array option
+     * @brief Add a general array option
      * @param label Option label
      * @param description Description of the option
      */
     void add_array(const std::string& label, const std::string& description = "");
+
+    /**
+     * @brief Add a integer array option
+     * @param label Option label
+     * @param description Description of the option
+     */
     void add_int_array(const std::string& label, const std::string& description = "");
+
+    /**
+     * @brief Add a double array option
+     * @param label Option label
+     * @param description Description of the option
+     */
     void add_double_array(const std::string& label, const std::string& description = "");
 
     /**
@@ -232,7 +244,7 @@ class ForteOptions {
      * @brief Get a vector of int option
      * @param label Option label
      */
-    std::vector<double> get_double_vec(const std::string& label) const;
+    std::vector<double> get_double_list(const std::string& label) const;
 
     /**
      * @brief Set a boolean option
@@ -274,14 +286,14 @@ class ForteOptions {
      * @param label Option label
      * @param val Option value
      */
-    void set_int_vec(const std::string& label, const std::vector<int>& val);
+    void set_int_list(const std::string& label, const std::vector<int>& val);
 
     /**
      * @brief Set a vector of int option
      * @param label Option label
      * @param val Option value
      */
-    void set_double_vec(const std::string& label, const std::vector<double>& val);
+    void set_double_list(const std::string& label, const std::vector<double>& val);
 
     /**
      * @brief Register the options with Psi4's options object
@@ -311,19 +323,25 @@ class ForteOptions {
      *
      * This function assumes that dict only contains the option
      * label and the corresponding value.
-     * @param dict
+     *
+     * @param dict a dict[str, py::object] that maps option labels (str)
+     * to option values (py::object)
      */
-    void set_options_from_dict(pybind11::dict dict);
+    void set_from_dict(const pybind11::dict& dict);
 
     /**
      * @brief Set the python dictionary that stores options
+     *
+     * This function replaces the dictionary attribute stored
+     * in this object. The new dictionary has to have the same
+     * structure of this class' dict.
+     * To set the value of options, use instead the function
+     * set_from_dict.
+     *
+     * @param dict a dictionary that meets the specifications
+     * of this class
      */
-    void set_dict(const pybind11::dict dict);
-
-    /**
-     * @brief Reset the python dictionary that stores the options
-     */
-    void reset_dict();
+    void set_dict(const pybind11::dict& dict);
 
     /**
      * @brief Return a string representation of this object
