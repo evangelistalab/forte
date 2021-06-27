@@ -55,10 +55,10 @@ namespace forte {
  *
  * Each option is held in dictionary with the following entries:
  * - type: string the option type (e.g. "int")
- * - group: the group to which this option belongs (may be empy "")
+ * - group: the group to which this option belongs (may be empty "")
  * - value: the value of the option
  * - default_value: the default value given to the option
- * - description: a description of the this option and what it controlss
+ * - description: a description of the option and what it controlss
  */
 class ForteOptions {
   public:
