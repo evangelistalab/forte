@@ -199,21 +199,21 @@ def register_embedding_options(options):
 def register_mo_space_info_options(options):
     options.set_group("MO Space Info")
 
-    options.add_int_list("FROZEN_DOCC", "Number of frozen occupied orbitals" " per irrep (in Cotton order)")
+    options.add_int_list("FROZEN_DOCC", "Number of frozen occupied orbitals per irrep (in Cotton order)")
     options.add_int_list(
         "RESTRICTED_DOCC", "Number of restricted doubly"
         " occupied orbitals per irrep (in Cotton order)"
     )
-    options.add_int_list("ACTIVE", " Number of active orbitals per irrep" " (in Cotton order)")
-    options.add_int_list("RESTRICTED_UOCC", "Number of restricted unoccupied" " orbitals per irrep (in Cotton order)")
-    options.add_int_list("FROZEN_UOCC", "Number of frozen unoccupied orbitals" " per irrep (in Cotton order)")
+    options.add_int_list("ACTIVE", " Number of active orbitals per irrep (in Cotton order)")
+    options.add_int_list("RESTRICTED_UOCC", "Number of restricted unoccupied orbitals per irrep (in Cotton order)")
+    options.add_int_list("FROZEN_UOCC", "Number of frozen unoccupied orbitals per irrep (in Cotton order)")
 
-    options.add_int_list("GAS1", "Number of GAS1 orbitals per irrep" " (in Cotton order)")
-    options.add_int_list("GAS2", "Number of GAS2 orbitals per irrep" " (in Cotton order)")
-    options.add_int_list("GAS3", "Number of GAS3 orbitals per irrep" " (in Cotton order)")
-    options.add_int_list("GAS4", "Number of GAS4 orbitals per irrep" " (in Cotton order)")
-    options.add_int_list("GAS5", "Number of GAS5 orbitals per irrep" " (in Cotton order)")
-    options.add_int_list("GAS6", "Number of GAS6 orbitals per irrep" " (in Cotton order)")
+    options.add_int_list("GAS1", "Number of GAS1 orbitals per irrep (in Cotton order)")
+    options.add_int_list("GAS2", "Number of GAS2 orbitals per irrep (in Cotton order)")
+    options.add_int_list("GAS3", "Number of GAS3 orbitals per irrep (in Cotton order)")
+    options.add_int_list("GAS4", "Number of GAS4 orbitals per irrep (in Cotton order)")
+    options.add_int_list("GAS5", "Number of GAS5 orbitals per irrep (in Cotton order)")
+    options.add_int_list("GAS6", "Number of GAS6 orbitals per irrep (in Cotton order)")
 
     #    /*- Molecular orbitals to swap -
     #     *  Swap mo_1 with mo_2 in irrep symmetry
@@ -272,8 +272,7 @@ def register_pci_options(options):
     options.add_double("PCI_SPAWNING_THRESHOLD", 0.001, "The determinant importance threshold")
 
     options.add_int(
-        "PCI_MAX_GUESS_SIZE", 10000, "The maximum number of determinants used to form the "
-        "guess wave function"
+        "PCI_MAX_GUESS_SIZE", 10000, "The maximum number of determinants used to form the guess wave function"
     )
 
     options.add_double("PCI_GUESS_SPAWNING_THRESHOLD", -1, "The determinant importance threshold")
@@ -489,14 +488,12 @@ def register_aci_options(options):
 
     options.add_double(
         "OCC_LIMIT", 0.0001, "Occupation limit for considering"
-        " if an orbital is occupied/unoccupied in the post"
-        " calculation analysis."
+        " if an orbital is occupied/unoccupied in the post calculation analysis."
     )
 
     options.add_double(
         "CORR_LIMIT", -0.01, "Correlation limit for considering"
-        " if two orbitals are correlated in the post"
-        " calculation analysis."
+        " if two orbitals are correlated in the post calculation analysis."
     )
 
 
@@ -870,7 +867,7 @@ def register_casscf_options(options):
     options.add_bool("CASSCF_DO_DIIS", True, "Use DIIS in CASSCF orbital optimization")
     options.add_int("CASSCF_DIIS_MIN_VEC", 2, "Minimum size of DIIS vectors for orbital rotations")
     options.add_int("CASSCF_DIIS_MAX_VEC", 8, "Maximum size of DIIS vectors for orbital rotations")
-    options.add_int("CASSCF_DIIS_START", 2, "Iteration number to start adding error vectors" " (< 1 will not do DIIS)")
+    options.add_int("CASSCF_DIIS_START", 2, "Iteration number to start adding error vectors (< 1 will not do DIIS)")
     options.add_int("CASSCF_DIIS_FREQ", 1, "How often to do DIIS extrapolation")
     options.add_double("CASSCF_DIIS_NORM", 1e-3, "Do DIIS when the orbital gradient norm is below this value")
 
