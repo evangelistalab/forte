@@ -357,7 +357,7 @@ void OrbitalOptimizer::orbital_gradient() {
             // Zero-out diagonal and one-block of the off-diagonal matrix
             relative_gas_mo_.push_back(relative_mo);
         }
-        auto active_frozen = options_->get_int_vec("CASSCF_ACTIVE_FROZEN_ORBITAL");
+        auto active_frozen = options_->get_int_list("CASSCF_ACTIVE_FROZEN_ORBITAL");
         std::vector<int> active;
         for (int i = 0; i < na_; i++) {
             active.push_back(i);

@@ -20,7 +20,8 @@ Molecule(2
 H                     0.000000000000     0.000000000000    -0.500000000000
 H                     0.000000000000     0.000000000000     0.500000000000
 ),
-Basis('cc-pVDZ'))"""
+Basis('cc-pVDZ'),
+CONVENTIONAL)"""
 
     assert str(mm) == test_mm_str
 

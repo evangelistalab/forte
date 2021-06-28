@@ -5,41 +5,41 @@
 # test script can run certain subsets of all tests.
 #
 aci:
-  short:
-   - aci-1
-   - aci-2   
-   - aci-3
-   - aci-4
-   - aci-5
-   - aci-8
-   - aci-9
-   - aci-12
-   - aci-14
-   - aci-18
-   - aci_scf-1
-   - aci-full-pt2-1
-  medium:
-   - aci-6
-   - aci-10
-   - aci-11
-   - aci-13
-   - aci-16
-   - aci-17
-   - aci-19
-   - aci-local-20
-  long:
-   - aci-7
-   - aci-full-pt2-2
-   - cis-aci-1
-  unused:
-   - aci-mrcisd-1
-   - aci-mrcisd-2
+   short:
+      - aci-2
+      - aci-4
+      - aci-5
+      - aci-8
+      - aci-9
+      - aci-12
+      - aci-14
+      - aci-18
+      - aci_scf-1
+      - aci-full-pt2-1
+   medium:
+      - aci-6
+      - aci-10
+      - aci-11
+      - aci-13
+      - aci-16
+      - aci-17
+      - aci-19
+      - aci-local-20
+   long:
+      - aci-1 # moved to pytest
+      - aci-3 # moved to pytest
+      - aci-7
+      - aci-full-pt2-2
+      - cis-aci-1
+   unused:
+      - aci-mrcisd-1
+      - aci-mrcisd-2
 asci:
-  short:
-   - asci-2
-   - asci-3
-  long:
-   - asci-1
+   short:
+      - asci-2
+      - asci-3
+   long:
+      - asci-1
 #actv-dsrg:
 #  medium:
 #   - actv-dsrg-1-C2H4-cis
@@ -52,302 +52,302 @@ asci:
 #  - actv-dsrg-4-C4H6-triplet
 #   - actv-dsrg-size-intensive
 avas:
-  short:
-   - avas-3
-   - avas-5
-  medium:
-   - avas-1
-   - avas-2
-   - avas-4
-   - avas-6
+   short:
+      - avas-3
+      - avas-5
+   medium:
+      - avas-1
+      - avas-2
+      - avas-4
+      - avas-6
 casscf:
-  short:
-   - casscf-7
-   - df-casscf-1
-   - casscf-fcidump-1
-   - casscf-gradient-1
-   - casscf-gradient-3
-   - casscf-opt-3
-  medium:
-   - casscf-1
-   - casscf-2
-   - casscf-3
-   - casscf-4
-   - casscf-5
-   - casscf-6
-   - casscf-9
-   - casscf-gradient-2
-   - casscf-opt-1
-   - casscf-opt-2
-  long:
-   - casscf-8
+   short:
+      - casscf-7
+      - df-casscf-1
+      - casscf-fcidump-1
+      - casscf-gradient-1
+      - casscf-gradient-3
+      - casscf-opt-3
+   medium:
+      - casscf-1
+      - casscf-2
+      - casscf-3
+      - casscf-4
+      - casscf-5
+      - casscf-6
+      - casscf-9
+      - casscf-gradient-2
+      - casscf-opt-1
+      - casscf-opt-2
+   long:
+      - casscf-8
 cd-dsrg-mrpt2:
-  short:
-   - cd-dsrg-mrpt2-7-sa
-  medium:
-   - cd-dsrg-mrpt2-3
-   - cd-dsrg-mrpt2-4
-   - cd-dsrg-mrpt2-6
-  long:
-   - cd-dsrg-mrpt2-1
-   - cd-dsrg-mrpt2-2
-   - cd-dsrg-mrpt2-5
+   short:
+      - cd-dsrg-mrpt2-7-sa
+   medium:
+      - cd-dsrg-mrpt2-3
+      - cd-dsrg-mrpt2-4
+      - cd-dsrg-mrpt2-6
+   long:
+      - cd-dsrg-mrpt2-1
+      - cd-dsrg-mrpt2-2
+      - cd-dsrg-mrpt2-5
 detci:
-  short:
-   - detci-1
-   - detci-2
-   - detci-3
-   - detci-4
+   short:
+      - detci-1
+   long:
+      - detci-2 # moved to pytest
+      - detci-3 # moved to pytest
+      - detci-4 # moved to pytest
 diag-alg:
-  short:
-   - diag-alg-1-dynamic
-   - diag-alg-2-dynamic
-   - diag-alg-1-sparse
-   - diag-alg-2-sparse
-  long:
-   - diag-alg-3-dynamic
+   short:
+      - diag-alg-1-dynamic
+      - diag-alg-2-dynamic
+      - diag-alg-1-sparse
+      - diag-alg-2-sparse
+   long:
+      - diag-alg-3-dynamic
 df-dsrg-mrpt2:
-  short:
-   - df-dsrg-mrpt2-1
-   - diskdf-dsrg-mrpt2-4
-   - df-aci-dsrg-mrpt2-2
-  medium:
-   - df-dsrg-mrpt2-2
-   - df-dsrg-mrpt2-6
-   - df-dsrg-mrpt2-threading2
-   - diskdf-dsrg-mrpt2-1
-   - diskdf-dsrg-mrpt2-3
-   - diskdf-dsrg-mrpt2-threading4
-   - df-aci-dsrg-mrpt2-1
-  long:
-   - df-dsrg-mrpt2-3
-   - df-dsrg-mrpt2-4
-   - df-dsrg-mrpt2-5
-   - df-dsrg-mrpt2-7-localized-actv
-   - df-dsrg-mrpt2-threading1
-   - df-dsrg-mrpt2-threading4
-   - diskdf-dsrg-mrpt2-2
-   - diskdf-dsrg-mrpt2-5
-   - diskdf-dsrg-mrpt2-threading1
-  unused:
-   - df-dsrg-mrpt2-testccvv
+   short:
+      - df-dsrg-mrpt2-1
+      - diskdf-dsrg-mrpt2-4
+      - df-aci-dsrg-mrpt2-2
+   medium:
+      - df-dsrg-mrpt2-2
+      - df-dsrg-mrpt2-6
+      - df-dsrg-mrpt2-threading2
+      - diskdf-dsrg-mrpt2-1
+      - diskdf-dsrg-mrpt2-3
+      - diskdf-dsrg-mrpt2-threading4
+      - df-aci-dsrg-mrpt2-1
+   long:
+      - df-dsrg-mrpt2-3
+      - df-dsrg-mrpt2-4
+      - df-dsrg-mrpt2-5
+      - df-dsrg-mrpt2-7-localized-actv
+      - df-dsrg-mrpt2-threading1
+      - df-dsrg-mrpt2-threading4
+      - diskdf-dsrg-mrpt2-2
+      - diskdf-dsrg-mrpt2-5
+      - diskdf-dsrg-mrpt2-threading1
+   unused:
+      - df-dsrg-mrpt2-testccvv
 dsrg-mrpt2_spin_adapted:
-  short:
-   - dsrg-mrpt2_spin_adapted-1
+   short:
+      - dsrg-mrpt2_spin_adapted-1
 dsrg-mrpt2:
-  short:
-   - dsrg-mrpt2-8-sa
-   - dsrg-mrpt2-10-CO
-   - dsrg-mrpt2-13
-   - aci-dsrg-mrpt2-3
-   - dsrg-mrpt2-fcidump-1
-   - dsrg-mrpt2-grad-findiff-1
-  medium:
-   - dsrg-mrpt2-1
-   - dsrg-mrpt2-2
-   - dsrg-mrpt2-5
-   - dsrg-mrpt2-6
-   - dsrg-mrpt2-7-casscf-natorbs
-#  - dsrg-mrpt2-9-xms
-   - dsrg-mrpt2-11-sa-C2H4
-   - aci-dsrg-mrpt2-1
-   - aci-dsrg-mrpt2-2
-   - aci-dsrg-mrpt2-4
-   - dsrg-mrpt2-10-CO-fcidump
-   - dsrg-mrpt2-opt-findiff-1
-  long:
-   - dsrg-mrpt2-3
-   - dsrg-mrpt2-4
-   - dsrg-mrpt2-12-localized-actv
-   - aci-dsrg-mrpt2-5
-   - dsrg-mrpt2-opt-findiff-2
-  unused:
-   - dsrg-mrpt2-uno
+   short:
+      - dsrg-mrpt2-8-sa
+      - dsrg-mrpt2-10-CO
+      - dsrg-mrpt2-13
+      - aci-dsrg-mrpt2-3
+      - dsrg-mrpt2-fcidump-1
+      - dsrg-mrpt2-grad-findiff-1
+   medium:
+      - dsrg-mrpt2-1
+      - dsrg-mrpt2-2
+      - dsrg-mrpt2-5
+      - dsrg-mrpt2-6
+      - dsrg-mrpt2-7-casscf-natorbs
+      #  - dsrg-mrpt2-9-xms
+      - dsrg-mrpt2-11-sa-C2H4
+      - aci-dsrg-mrpt2-1
+      - aci-dsrg-mrpt2-2
+      - aci-dsrg-mrpt2-4
+      - dsrg-mrpt2-10-CO-fcidump
+      - dsrg-mrpt2-opt-findiff-1
+   long:
+      - dsrg-mrpt2-3
+      - dsrg-mrpt2-4
+      - dsrg-mrpt2-12-localized-actv
+      - aci-dsrg-mrpt2-5
+      - dsrg-mrpt2-opt-findiff-2
+   unused:
+      - dsrg-mrpt2-uno
 dsrg-mrpt3:
-  short:
-   - dsrg-mrpt3-7-CO
-   - dsrg-mrpt3-9
-  medium:
-   - dsrg-mrpt3-1
-   - dsrg-mrpt3-2
-   - dsrg-mrpt3-5
-   - aci-dsrg-mrpt3-1
-  long:
-   - dsrg-mrpt3-3
-   - dsrg-mrpt3-4
-   - dsrg-mrpt3-6-sa
-   - dsrg-mrpt3-8-sa-C2H4
+   short:
+      - dsrg-mrpt3-7-CO
+      - dsrg-mrpt3-9
+   medium:
+      - dsrg-mrpt3-1
+      - dsrg-mrpt3-2
+      - dsrg-mrpt3-5
+      - aci-dsrg-mrpt3-1
+   long:
+      - dsrg-mrpt3-3
+      - dsrg-mrpt3-4
+      - dsrg-mrpt3-6-sa
+      - dsrg-mrpt3-8-sa-C2H4
 dwms-dsrgpt:
-# medium:
-#  - dwms-dsrgpt-1-sa
-#  - dwms-dsrgpt-2-sa
-#  - dwms-dsrgpt-4-sa
-#  - dwms-dsrgpt-5-ms
-#  - dwms-dsrgpt-8-separated
-# long:
-#  - dwms-dsrgpt-3-sa
-#  - dwms-dsrgpt-6-ms
-#  - dwms-dsrgpt-7-ms
-#  - dwms-dsrgpt-9-sa-C6H6
-  unused:
-   - dwms-dsrgpt2-1
-   - dwms-dsrgpt2-2
-   - dwms-dsrgpt2-3
-   - dwms-dsrgpt2-4
+   # medium:
+   #  - dwms-dsrgpt-1-sa
+   #  - dwms-dsrgpt-2-sa
+   #  - dwms-dsrgpt-4-sa
+   #  - dwms-dsrgpt-5-ms
+   #  - dwms-dsrgpt-8-separated
+   # long:
+   #  - dwms-dsrgpt-3-sa
+   #  - dwms-dsrgpt-6-ms
+   #  - dwms-dsrgpt-7-ms
+   #  - dwms-dsrgpt-9-sa-C6H6
+   unused:
+      - dwms-dsrgpt2-1
+      - dwms-dsrgpt2-2
+      - dwms-dsrgpt2-3
+      - dwms-dsrgpt2-4
 embedding:
-  short:
-   - embedding-1
-   - embedding-3
-   - embedding-4
-   - embedding-5
-  medium:
-   - embedding-2
+   short:
+      - embedding-1
+      - embedding-3
+      - embedding-4
+      - embedding-5
+   medium:
+      - embedding-2
 fci:
-  short:
-   - fci-1
-   - fci-7
-   - fci-ex-1
-   - fci-rdms-1
-  medium:
-   - fci-2
-   - fci-3
-   - fci-4
-   - fci-5
-   - fci-8
-   - fci-9
-   - fci-ecp-1
-   - fci-ecp-2
-   - fci-one-electron
-   - fci-rdms-2
-  long:
-   - fci-6
+   short:
+      - fci-1 # moved to pytest
+   medium:
+      - fci-2
+      - fci-3
+      - fci-4
+      - fci-5
+      - fci-8
+      - fci-9
+      - fci-ecp-1
+      - fci-ecp-2
+      - fci-rdms-2
+   long:
+      - fci-6
+      - fci-7 # moved to pytest
+      - fci-ex-1 # moved to pytest
+      - fci-rdms-1 # moved to pytest
+      - fci-one-electron # moved to pytest
 gasci:
-  short:
-   - gasci-1
-   - gasaci-1
-   - gasaci-4
-  medium:
-   - gasci-2
-   - gasci-3
-   - gasaci-2
-   - gasaci-3
+   short:
+      - gasci-1
+      - gasaci-1
+      - gasaci-4
+   medium:
+      - gasci-2
+      - gasci-3
+      - gasaci-2
+      - gasaci-3
 gasscf:
-  short:
-   - gasscf-1
-   - gasscf-3
-   - sa-gasscf-1
-   - sa-gasscf-2
-   - sa-gasscf-dsrg-mrpt2-1
-  medium:
-   - gasscf-2
-   - gasscf-dsrg-mrpt2-1
-   - sa-gasscf-3
+   short:
+      - gasscf-1
+      - gasscf-3
+      - sa-gasscf-1
+      - sa-gasscf-2
+      - sa-gasscf-dsrg-mrpt2-1
+   medium:
+      - gasscf-2
+      - gasscf-dsrg-mrpt2-1
+      - sa-gasscf-3
 integrals:
-  short:
-   - integrals-3
-   - integrals-4
-   - integrals-fcidump-1
-  medium:
-   - integrals-1
-   - integrals-2
-   - integrals-5
-   - integrals-fcidump-2
-   - integrals-fcidump-3
-   - integrals-fcidump-4
-   - integrals-fcidump-5
-   - integrals-fcidump-6
-  unused:
-   - integrals-6
+   short:
+      - integrals-3
+      - integrals-4
+      - integrals-fcidump-1
+   medium:
+      - integrals-1
+      - integrals-2
+      - integrals-5
+      - integrals-fcidump-2
+      - integrals-fcidump-3
+      - integrals-fcidump-4
+      - integrals-fcidump-5
+      - integrals-fcidump-6
+   unused:
+      - integrals-6
 l-bfgs:
-  short:
-   - l-bfgs_rosenbrock
+   short:
+      - l-bfgs_rosenbrock
 mr-dsrg-pt2:
-  short:
-   - mr-dsrg-pt2-1
-   - mr-dsrg-pt2-3
-  medium:
-   - mr-dsrg-pt2-2
+   short:
+      - mr-dsrg-pt2-1
+      - mr-dsrg-pt2-3
+   medium:
+      - mr-dsrg-pt2-2
 # this uses the active-dsrg code which is not compiled   - mr-dsrg-pt2-4
 mrdsrg_so:
-  short:
-   - mrdsrg_so-1
-  long:
-   - mrdsrg_so-2
+   short:
+      - mrdsrg_so-1
+   long:
+      - mrdsrg_so-2
 mrdsrg-ldsrg2-df-spin-integrated:
-  short:
-   - mrdsrg-ldsrg2-qc-df-2
-   - mrdsrg-ldsrg2-df-seq-nivo-1
-  medium:
-   - mrdsrg-ldsrg2-df-3
-   - mrdsrg-ldsrg2-df-nivo-1
-  long:
-   - mrdsrg-ldsrg2-df-1
-   - mrdsrg-ldsrg2-df-2
-   - mrdsrg-ldsrg2-df-4
-   - mrdsrg-ldsrg2-df-nivo-2
-   - mrdsrg-ldsrg2-df-nivo-3
-   - mrdsrg-ldsrg2-df-seq-1
-   - mrdsrg-ldsrg2-df-seq-2
-   - mrdsrg-ldsrg2-df-seq-3
-   - mrdsrg-ldsrg2-df-seq-4
-   - mrdsrg-ldsrg2-df-seq-nivo-2
-   - mrdsrg-ldsrg2-df-seq-nivo-3
+   short:
+      - mrdsrg-ldsrg2-qc-df-2
+      - mrdsrg-ldsrg2-df-seq-nivo-1
+   medium:
+      - mrdsrg-ldsrg2-df-3
+      - mrdsrg-ldsrg2-df-nivo-1
+   long:
+      - mrdsrg-ldsrg2-df-1
+      - mrdsrg-ldsrg2-df-2
+      - mrdsrg-ldsrg2-df-4
+      - mrdsrg-ldsrg2-df-nivo-2
+      - mrdsrg-ldsrg2-df-nivo-3
+      - mrdsrg-ldsrg2-df-seq-1
+      - mrdsrg-ldsrg2-df-seq-2
+      - mrdsrg-ldsrg2-df-seq-3
+      - mrdsrg-ldsrg2-df-seq-4
+      - mrdsrg-ldsrg2-df-seq-nivo-2
+      - mrdsrg-ldsrg2-df-seq-nivo-3
 mrdsrg-ldsrg2-spin-integrated:
-  short:
-   - mrdsrg-ldsrg2-1
-  medium:
-   - mrdsrg-ldsrg2-qc-2
-  long:
-   - mrdsrg-ldsrg2-qc-1
-   - mrdsrg-srgpt2-1
-   - mrdsrg-srgpt2-2
+   short:
+      - mrdsrg-ldsrg2-1
+   medium:
+      - mrdsrg-ldsrg2-qc-2
+   long:
+      - mrdsrg-ldsrg2-qc-1
+      - mrdsrg-srgpt2-1
+      - mrdsrg-srgpt2-2
 mrdsrg-pt2:
-  short:
-   - mrdsrg-pt2-2
-  medium:
-   - mrdsrg-pt2-1
-   - mrdsrg-pt2-4
-  long:
-   - mrdsrg-pt2-3
-   - mrdsrg-pt2-5
+   short:
+      - mrdsrg-pt2-2
+   medium:
+      - mrdsrg-pt2-1
+      - mrdsrg-pt2-4
+   long:
+      - mrdsrg-pt2-3
+      - mrdsrg-pt2-5
 mrdsrg-spin-adapted:
-  short:
-   - mrdsrg-spin-adapted-1
-   - mrdsrg-spin-adapted-3
-  medium:
-   - mrdsrg-spin-adapted-2
-   - mrdsrg-spin-adapted-4
-   - mrdsrg-spin-adapted-5
+   short:
+      - mrdsrg-spin-adapted-1
+      - mrdsrg-spin-adapted-3
+   medium:
+      - mrdsrg-spin-adapted-2
+      - mrdsrg-spin-adapted-4
+      - mrdsrg-spin-adapted-5
 mrdsrg-spin-adapted-pt2:
-  short:
-   - mrdsrg-spin-adapted-pt2-1
-   - mrdsrg-spin-adapted-pt2-2
-   - mrdsrg-spin-adapted-pt2-5
-  medium:
-   - mrdsrg-spin-adapted-pt2-3
-   - mrdsrg-spin-adapted-pt2-4
+   short:
+      - mrdsrg-spin-adapted-pt2-1
+      - mrdsrg-spin-adapted-pt2-2
+      - mrdsrg-spin-adapted-pt2-5
+   medium:
+      - mrdsrg-spin-adapted-pt2-3
+      - mrdsrg-spin-adapted-pt2-4
 mrdsrg-spin-adapted-pt3:
-  short:
-   - mrdsrg-spin-adapted-pt3-1
-  medium:
-   - mrdsrg-spin-adapted-pt3-2
+   short:
+      - mrdsrg-spin-adapted-pt3-1
+   medium:
+      - mrdsrg-spin-adapted-pt3-2
 pci:
-  short:
-   - pci-1
-   - pci-3
-   - pci-4
-  medium:
-#   - pci-2
-#   - pci-5
-   - pci-6
-#   - pci-7
-   - pci-8
+   short:
+      - pci-1
+      - pci-3
+      - pci-4
+   medium:
+      #   - pci-2
+      #   - pci-5
+      - pci-6
+      #   - pci-7
+      - pci-8
 #   - pci-9
 read-orbitals:
-  short:
-   - read-orbitals-1
-   - read-orbitals-2
+   short:
+      - read-orbitals-1
+      - read-orbitals-2
 x2c:
-  short:
-   - x2c-1
-
+   short:
+      - x2c-1

@@ -414,10 +414,10 @@ std::pair<SpaceInfo, bool> MOSpaceInfo::read_mo_space(const std::string& space,
         SpaceInfo space_info(space_dim, vec_mo_info);
         return std::make_pair(space_info, false);
     }
-    size_t vec_size = options->get_int_vec(space).size();
+    size_t vec_size = options->get_int_list(space).size();
     if (vec_size == nirrep_) {
         for (size_t h = 0; h < nirrep_; ++h) {
-            space_dim[h] = options->get_int_vec(space)[h];
+            space_dim[h] = options->get_int_list(space)[h];
         }
         read = true;
         outfile->Printf("\n  Read options for space %s", space.c_str());
