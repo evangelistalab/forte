@@ -105,6 +105,7 @@ psi::SharedMatrix make_aosubspace_projector(psi::SharedWavefunction wfn,
 
         // Create an AOSubspace object
         AOSubspace aosub(subspace_str, molecule, min_basis, pi_planes);
+        //        aosub.set_debug_mode(true);
 
         // Compute the subspaces (right now this is required before any other call)
         aosub.find_subspace();
@@ -216,6 +217,9 @@ AOSubspace::build_projector(std::shared_ptr<psi::BasisSet> large_basis) {
     std::unique_ptr<OneBodyAOInt> ao_mm(ints_mm->ao_overlap());
     auto Smm = std::make_shared<psi::Matrix>("Smm", nbf_m, nbf_m);
     ao_mm->compute(Smm);
+    if (debug_) {
+        Smm->print();
+    }
 
     // compute the overlap matrix between target subspace orbitals
     int nbf_s = subspace_counter_;
@@ -226,14 +230,26 @@ AOSubspace::build_projector(std::shared_ptr<psi::BasisSet> large_basis) {
         std::tie(m, s, c) = tup;
         Cms->set(m, s, c);
     }
+    if (debug_) {
+        Cms->print();
+    }
 
     auto Sss = psi::linalg::triplet(Cms, Smm, Cms, true, false, false);
     Sss->set_name("Sss");
+    if (debug_) {
+        Sss->print();
+    }
 
     // orthogonalize the subspace
     auto Xss = Sss->clone();
     Xss->set_name("Xss");
     Xss->power(-0.5);
+    if (debug_) {
+        Xss->print();
+        auto Sss_clone = Sss->clone();
+        Sss_clone->transform(Xss);
+        Sss_clone->print();
+    }
 
     // compute the overlap between the subspace and large bases
     auto ints_ml =
@@ -245,14 +261,26 @@ AOSubspace::build_projector(std::shared_ptr<psi::BasisSet> large_basis) {
 
     auto Ssl = psi::linalg::doublet(Cms, Sml, true, false);
     Ssl->set_name("Ssl");
+    if (debug_) {
+        Ssl->print();
+    }
 
     // build AO projector
     // Pao = Ssl^T Sss^-1 Ssl = (Cms^T Sml)^T (Xss^T Xss) (Cms^T Sml)
     auto Xsl = psi::linalg::doublet(Xss, Ssl, false, false);
     Xsl->set_name("Xsl");
+    if (debug_) {
+        Xsl->print();
+        auto Sss_clone = Sss->clone();
+        Sss_clone->transform(Xsl);
+        Sss_clone->print();
+    }
 
     auto Pao = psi::linalg::doublet(Xsl, Xsl, true, false);
     Pao->set_name("PAO");
+    if (debug_) {
+        Pao->print();
+    }
 
     // transform AO projector to account for symmetry
     auto ints_ll =
@@ -260,27 +288,10 @@ AOSubspace::build_projector(std::shared_ptr<psi::BasisSet> large_basis) {
     auto plist = std::make_unique<psi::PetiteList>(large_basis, ints_ll);
     auto ao_to_so = plist->aotoso();
 
-    auto Pso = psi::linalg::triplet(ao_to_so, Pao, ao_to_so, true, false, false);
-
-    // debug printing
+    auto dim = plist->SO_basisdim();
+    auto Pso = std::make_shared<psi::Matrix>("PSO", dim, dim);
+    Pso->apply_symmetry(Pao, ao_to_so);
     if (debug_) {
-        Smm->print();
-        Cms->print();
-        Sss->print();
-        Xss->print();
-
-        auto Sss_clone = Sss->clone();
-        Sss_clone->transform(Xss);
-        Sss_clone->print();
-
-        Ssl->print();
-        Xsl->print();
-
-        Sss_clone = Sss->clone();
-        Sss_clone->transform(Xsl);
-        Sss_clone->print();
-
-        Pao->print();
         Pso->print();
     }
 
