@@ -122,7 +122,8 @@ psi::SharedMatrix make_aosubspace_projector(psi::SharedWavefunction wfn,
         CPsC->transform(wfn->Ca());
         double print_threshold = 1.0e-3;
         auto irrep_labels = molecule->irrep_labels();
-        outfile->Printf("\n  Orbital overlap with AO subspace (> %.2e):\n", print_threshold);
+        outfile->Printf("\n  ==> Orbital Overlap with AO Subspace (> %.2e) <==\n\n",
+                        print_threshold);
         outfile->Printf("    =======================\n");
         outfile->Printf("    Irrep   MO  <phi|P|phi>\n");
         outfile->Printf("    -----------------------\n");
@@ -406,7 +407,7 @@ void AOSubspace::parse_subspace() {
     }
     outfile->Printf("\n");
     if (not subspace_pi_str_.empty()) {
-        outfile->Printf("  NOTE: Subspace orbitals may be truncated based on requested planes!\n");
+        outfile->Printf("  NOTE: Subspace orbitals may be truncated based on requested planes!");
     }
 
     // parse subspace orbitals
@@ -414,14 +415,6 @@ void AOSubspace::parse_subspace() {
     bool all_found = true;
     for (const std::string& s : subspace_str_) {
         all_found &= parse_subspace_entry(s);
-    }
-
-    // AOs that build the subspace orbitals
-    std::unordered_set<int> minao_idx;
-    for (const auto& tup : subspace_tuple_) {
-        int i_min;
-        std::tie(i_min, std::ignore, std::ignore) = tup;
-        minao_idx.insert(i_min);
     }
 
     // print basis and mark those are selected into the subspace
@@ -442,6 +435,8 @@ void AOSubspace::parse_subspace() {
         outfile->Printf("\n    %4d  %4d %6s %8s  %11.4E", i_min, A, atom_label.c_str(),
                         ao_type.c_str(), c);
     }
+    outfile->Printf("\n    ---------------------------------------");
+    outfile->Printf("\n    Number of subspace orbitals: %10d", subspace_counter_);
     outfile->Printf("\n    =======================================\n");
 
     //    outfile->Printf("\n  The AO basis set (The subspace contains %d AOs marked by *):\n",
