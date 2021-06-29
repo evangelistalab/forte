@@ -1,7 +1,6 @@
-import logging
+from forte.core import flog
 
-from forte.solvers.solver import Solver
-from forte.solvers.callback_handler import CallbackHandler
+from forte.solvers.solver import Feature, Solver
 from forte.model import MolecularModel
 from forte.forte import SCFInfo
 
@@ -12,30 +11,31 @@ class HF(Solver):
     """
     def __init__(
         self,
-        parent_solver,
+        input_nodes,
         state,
         restricted=True,
         e_convergence=1.0e-10,
         d_convergence=1.0e-6,
-        int_type='conventional',
         docc=None,
         socc=None,
         options=None,
         cbh=None
     ):
         """
-        initialize a Basis object
+        initialize a HF object
 
         Parameters
         ----------
-        restricted : bool
+        input_nodes: Solver
+            the object that provides information about this computation
+        state: StateInfo
+            the state to optimize (defines the number of alpha/beta electrons and m_s)
+        restricted: bool
             do restricted HF?
         e_convergence: float
             energy convergence criterion
         d_convergence: float
             density matrix convergence criterion
-        int_type: str
-            the type of integrals used in the HF procedure (conventional = pk, direct, df, ...)
         docc: list(int)
             The number of doubly occupied orbitals per irrep
         socc: list(int)
@@ -46,17 +46,20 @@ class HF(Solver):
             A callback object used to inject code into the HF class
         """
         # initialize common objects
-        super().__init__()
-        self._data = parent_solver.data
+        super().__init__(
+            input_nodes=input_nodes,
+            needs=[Feature.MODEL],
+            provides=[Feature.MODEL, Feature.ORBITALS],
+            options=options,
+            cbh=cbh
+        )
+        self._data = self.input_nodes[0].data
         self._state = state
         self._restricted = restricted
         self._e_convergence = e_convergence
         self._d_convergence = d_convergence
-        self._int_type = int_type
         self._docc = docc
         self._socc = socc
-        self._options = {} if options is None else options
-        self._cbh = CallbackHandler() if cbh is None else cbh
 
     def __repr__(self):
         """
@@ -122,11 +125,8 @@ class HF(Solver):
                 '\nPass the docc and socc options to converge to a solution with the correct symmetry.'
             )
 
-    def run(self):
+    def _run(self):
         """Run a Hartree-Fock computation"""
-
-        logging.info('HF: entering run()')
-
         import psi4
 
         # reset psi4's options to avoid pollution
@@ -145,11 +145,12 @@ class HF(Solver):
             'CONVENTIONAL': 'PK',
             'STD': 'PK',
         }
-        # deal with equivalent keywords
-        if self._int_type.upper() in scf_type_dict:
-            scf_type = scf_type_dict[self._int_type.upper()]
+        # convert to psi4 terminology
+        int_type = self.model.int_type.upper()
+        if int_type in scf_type_dict:
+            scf_type = scf_type_dict[int_type]
         else:
-            scf_type = self._int_type.upper()
+            scf_type = int_type
 
         if self._restricted:
             ref = 'RHF' if self.multiplicity == 1 else 'ROHF'
@@ -185,14 +186,16 @@ class HF(Solver):
         self._cbh.call('pre hf', self)
 
         # run scf and return the energy and a wavefunction object
-        logging.info('HF: calling psi4.energy.')
+        flog('info', 'HF: calling psi4.energy().')
         energy, psi_wfn = psi4.energy('scf', molecule=molecule, return_wfn=True)
+        flog('info', 'HF: psi4.energy() done')
 
         # check symmetry
-        logging.info('HF: checking symmetry of the HF solution.')
+        flog('info', 'HF: checking symmetry of the HF solution')
         self.check_symmetry_(psi_wfn)
 
         # add the energy to the results
+        flog('info', f'HF: hf energy = {energy}')
         self._results.add('hf energy', energy, 'Hartree-Fock energy', 'Eh')
 
         # store calculation outputs in the Data object
@@ -202,9 +205,7 @@ class HF(Solver):
         # post hf callback
         self._cbh.call('post hf', self)
 
-        # set executed flag
-        self._executed = True
-
-        logging.info('HF: exiting run().')
+        flog('info', 'HF: calling psi4.core.clean()')
+        psi4.core.clean()
 
         return self

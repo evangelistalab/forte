@@ -16,7 +16,7 @@ def test_ccsdtq():
      H 0.0 0.0 0.0
      H 0.0 0.0 1.0
      H 0.0 0.0 2.0
-     H 0.0 0.0 3.0     
+     H 0.0 0.0 3.0
     """
 
     scf_energy, psi4_wfn = forte.utils.psi4_scf(geom, basis='DZ', reference='RHF')

@@ -311,8 +311,8 @@ def prepare_forte_objects_from_fcidump(options, path='.'):
         doccpi = psi4.core.Dimension([nb])
         soccpi = psi4.core.Dimension([ms2])
     else:
-        doccpi = options.get_int_vec('FCIDUMP_DOCC')
-        soccpi = options.get_int_vec('FCIDUMP_SOCC')
+        doccpi = options.get_int_list('FCIDUMP_DOCC')
+        soccpi = options.get_int_list('FCIDUMP_SOCC')
         if len(doccpi) + len(soccpi) == 0:
             print('Reading a FCIDUMP file that uses symmetry but no DOCC and SOCC is specified.')
             print('Use the FCIDUMP_DOCC and FCIDUMP_SOCC options to specify the number of occupied orbitals per irrep.')
