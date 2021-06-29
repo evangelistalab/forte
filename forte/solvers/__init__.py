@@ -1,5 +1,6 @@
 from .hf import HF
 from .active_space_solver import ActiveSpaceSolver
+from .mcscf import MCSCF
 from .spin_analysis import SpinAnalysis
 from .solver import Solver
 from .factory import solver_factory

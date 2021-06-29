@@ -28,7 +28,7 @@ class Solver(Node):
     Solver stores Forte base objects in a data attribute
     and a results object.
     """
-    def __init__(self, needs, provides, input_nodes=None, options=None, cbh=None):
+    def __init__(self, needs, provides, input_nodes=None, data=None, options=None, cbh=None):
         """
         Parameters
         ----------
@@ -43,7 +43,7 @@ class Solver(Node):
         cbh: CallbackHandler
             a callback handler object
         """
-        super().__init__(needs, provides, input_nodes)
+        super().__init__(needs, provides, input_nodes, data)
 
         self._options = {} if options is None else options
         self._cbh = CallbackHandler() if cbh is None else cbh
