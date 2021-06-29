@@ -137,7 +137,7 @@ class AOSubspace {
     // Constructor with list of subspaces
     AOSubspace(std::vector<std::string> subspace_str, std::shared_ptr<psi::Molecule> molecule,
                std::shared_ptr<psi::BasisSet> basis);
-    // Constructor with list of subspaces
+    // Constructor with list of subspaces and planes
     AOSubspace(std::vector<std::string> subspace_str, std::shared_ptr<psi::Molecule> molecule,
                std::shared_ptr<psi::BasisSet> basis,
                std::vector<std::vector<std::string>> subspace_pi_str);
@@ -182,6 +182,9 @@ class AOSubspace {
 
     /// Return a vector of AOInfo objects
     const std::vector<AOInfo>& aoinfo() const;
+
+    /// Set debug mode
+    void set_debug_mode(bool debug) { debug_ = debug; }
 
   private:
     /// The vector of subspace descriptors passed by the user
@@ -252,6 +255,16 @@ class AOSubspace {
     void parse_pi_planes();
 
     /// Parse atoms approximately define the plane
+    /// @param atoms_labels: a vector of atom labels
+    /// @param atom_to_abs_indices: a map from atom label (e.g., C3) to absolute index in molecule
+    /// @return a tuple of atoms (atomic number, relative index) lying in plane and the plane normal
+    ///
+    /// Examples for atom labels:
+    ///    - C      # all carbon atoms
+    ///    - C3     # the third carbon atom
+    ///    - Be3-6  # the third to sixth beryllium atoms
+    /// Atoms labels defining the plane are just a list of atom labels, for example,
+    ///    - {'C3-7', 'N2'}
     std::tuple<std::vector<std::pair<int, int>>, psi::SharedVector>
     parse_pi_plane(const std::vector<std::string>& atoms_labels,
                    const std::map<std::string, std::vector<int>>& atom_to_abs_indices);

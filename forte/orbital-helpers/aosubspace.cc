@@ -664,7 +664,11 @@ void AOSubspace::parse_pi_planes() {
         std::tie(atoms, plane_normal) = parse_pi_plane(atoms_labels, atom_to_abs_indices);
         for (const auto& atom : atoms) {
             if (atom_to_plane_.find(atom) != atom_to_plane_.end()) {
-                atom_to_plane_[atom]->add(plane_normal);
+                if (atom_to_plane_[atom]->vector_dot(plane_normal) >= 0) {
+                    atom_to_plane_[atom]->add(plane_normal);
+                } else {
+                    atom_to_plane_[atom]->subtract(plane_normal);
+                }
             } else {
                 atom_to_plane_[atom] = std::make_shared<psi::Vector>(*plane_normal);
             }
@@ -676,6 +680,17 @@ void AOSubspace::parse_pi_planes() {
         const auto& atom = key_value.first;
         auto& plane = key_value.second;
         atom_to_plane_[atom]->scale(1.0 / plane->norm());
+    }
+
+    if (debug_) {
+        for (const auto& tup : atom_to_plane_) {
+            std::pair<int, int> Zi;
+            psi::SharedVector normal;
+            std::tie(Zi, normal) = tup;
+            outfile->Printf("\n  Atom Z: %3d, Atom rel. index: %3d", Zi.first, Zi.second);
+            outfile->Printf(", normal: (%12.8f, %12.8f, %12.8f)", normal->get(0), normal->get(1),
+                            normal->get(2));
+        }
     }
 }
 
