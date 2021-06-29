@@ -1,6 +1,8 @@
 from forte.core import flog
 
-from forte.solvers.solver import Feature, Solver
+from forte.solvers.feature import Feature
+from forte.solvers.solver import Solver
+
 from forte.model import MolecularModel
 from forte.forte import SCFInfo
 

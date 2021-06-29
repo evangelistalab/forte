@@ -1,4 +1,5 @@
-from forte.solvers.solver import Feature, Node
+from forte.solvers.feature import Feature
+from forte.solvers.node import Node
 from forte.data import Data
 
 

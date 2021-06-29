@@ -1,6 +1,7 @@
 from forte.core import flog
 
-from forte.solvers.solver import Feature, Solver
+from forte.solvers.solver import Solver
+from forte.solvers.feature import Feature
 
 from forte.forte import ForteOptions
 from forte import to_state_nroots_map
@@ -82,7 +83,7 @@ class ActiveSpaceSolver(Solver):
         super().__init__(
             input_nodes=input_nodes,
             needs=[Feature.MODEL, Feature.ORBITALS],
-            provides=[Feature.MODEL, Feature.ORBITALS, Feature.RDMS],
+            provides=[Feature.MODEL, Feature.ORBITALS, Feature.ACTIVESPACESOLVER, Feature.RDMS],
             options=options,
             cbh=cbh
         )
