@@ -31,6 +31,7 @@
 
 #include "psi4/libmints/molecule.h"
 #include "psi4/libmints/basisset.h"
+#include "psi4/libmints/vector3.h"
 
 #define _DEBUG_AOSUBSPACE_ 0
 
@@ -230,13 +231,15 @@ class AOSubspace {
     int subspace_counter_;
 
     /// A map from <atomic number, relative index> to plane normal
-    std::map<std::pair<int, int>, psi::SharedVector> atom_to_plane_;
+    std::map<std::pair<int, int>, psi::Vector3> atom_to_plane_;
 
     /// The AOs spanned by the subspace selected by the user
     std::vector<std::string> ao_info_;
 
-    /// Counts how many copies of each element are there
+    /// Molecular centroid
+    psi::Vector3 centroid_;
 
+    /// Debug flag
     bool debug_ = false;
 
     /// The startup function
@@ -265,7 +268,7 @@ class AOSubspace {
     ///    - Be3-6  # the third to sixth beryllium atoms
     /// Atoms labels defining the plane are just a list of atom labels, for example,
     ///    - {'C3-7', 'N2'}
-    std::tuple<std::vector<std::pair<int, int>>, psi::SharedVector>
+    std::tuple<std::vector<std::pair<int, int>>, psi::Vector3>
     parse_pi_plane(const std::vector<std::string>& atoms_labels,
                    const std::map<std::string, std::vector<int>>& atom_to_abs_indices);
 };

@@ -39,8 +39,8 @@ namespace py = pybind11;
 #include "psi4/libmints/element_to_Z.h"
 #include "psi4/libmints/integral.h"
 #include "psi4/libmints/matrix.h"
-#include "psi4/libmints/vector.h"
 #include "psi4/libmints/petitelist.h"
+#include "psi4/libmints/vector.h"
 #include "psi4/libmints/wavefunction.h"
 #include "psi4/masses.h"
 
@@ -533,7 +533,7 @@ bool AOSubspace::parse_subspace_entry(const std::string& s) {
                                                         subspace_counter_);
                                     // directions: AO: pz, px, py; plane normal: x, y, z
                                     int m = (aoinfo_vec_[pos].m() + 2) % 3;
-                                    double c = atom_to_plane_[atom_key]->get(m);
+                                    double c = atom_to_plane_[atom_key][m];
                                     subspace_tuple_.emplace_back(pos, subspace_counter_, c);
                                 }
                             }
@@ -576,7 +576,7 @@ bool AOSubspace::parse_subspace_entry(const std::string& s) {
                                             subspace_counter_);
                         // directions: AO: pz, px, py; plane normal: x, y, z
                         int m = (aoinfo_vec_[pos].m() + 2) % 3;
-                        double c = atom_to_plane_[atom_key]->get(m);
+                        double c = atom_to_plane_[atom_key][m];
                         subspace_tuple_.emplace_back(pos, subspace_counter_, c);
                         subspace_counter_ += aoinfo_vec_[pos].m() == 2 ? 1 : 0;
                     } else {
@@ -658,6 +658,7 @@ void AOSubspace::parse_pi_planes() {
 
     // clear parsed plane
     atom_to_plane_.clear();
+    centroid_ = psi::Vector3();
 
     // prepare a map from relative atomic indices to absolute atomic indices
     auto n_atoms = molecule_->natom();
@@ -666,22 +667,22 @@ void AOSubspace::parse_pi_planes() {
         std::string atom_label = molecule_->label(i);
         to_upper_string(atom_label);
         atom_to_abs_indices[atom_label].push_back(i);
+        centroid_[0] += molecule_->x(i);
+        centroid_[1] += molecule_->y(i);
+        centroid_[2] += molecule_->z(i);
     }
+    centroid_ /= n_atoms;
 
     // find plane normal on each atom
     for (const std::vector<std::string>& atoms_labels : subspace_pi_str_) {
         std::vector<std::pair<int, int>> atoms;
-        psi::SharedVector plane_normal;
+        psi::Vector3 plane_normal;
         std::tie(atoms, plane_normal) = parse_pi_plane(atoms_labels, atom_to_abs_indices);
         for (const auto& atom : atoms) {
             if (atom_to_plane_.find(atom) != atom_to_plane_.end()) {
-                if (atom_to_plane_[atom]->vector_dot(plane_normal) >= 0) {
-                    atom_to_plane_[atom]->add(plane_normal);
-                } else {
-                    atom_to_plane_[atom]->subtract(plane_normal);
-                }
+                atom_to_plane_[atom] += plane_normal;
             } else {
-                atom_to_plane_[atom] = std::make_shared<psi::Vector>(*plane_normal);
+                atom_to_plane_[atom] = plane_normal;
             }
         }
     }
@@ -689,23 +690,23 @@ void AOSubspace::parse_pi_planes() {
     // normalize vectors
     for (auto& key_value : atom_to_plane_) {
         const auto& atom = key_value.first;
-        auto& plane = key_value.second;
-        atom_to_plane_[atom]->scale(1.0 / plane->norm());
+        atom_to_plane_[atom].normalize();
     }
 
     if (debug_) {
         for (const auto& tup : atom_to_plane_) {
-            std::pair<int, int> Zi;
-            psi::SharedVector normal;
-            std::tie(Zi, normal) = tup;
-            outfile->Printf("\n  Atom Z: %3d, Atom rel. index: %3d", Zi.first, Zi.second);
-            outfile->Printf(", normal: (%12.8f, %12.8f, %12.8f)", normal->get(0), normal->get(1),
-                            normal->get(2));
+            int Z = std::get<0>(tup).first;
+            int i = std::get<0>(tup).second;
+            outfile->Printf("\n  Atom Z: %3d, Atom rel. index: %3d", Z, i);
+            psi::Vector3 normal(std::get<1>(tup));
+            normal *= 3;
+            outfile->Printf(", normal (scaled by 3): %12.8f %12.8f %12.8f", normal[0], normal[1],
+                            normal[2]);
         }
     }
 }
 
-std::tuple<std::vector<std::pair<int, int>>, psi::SharedVector>
+std::tuple<std::vector<std::pair<int, int>>, psi::Vector3>
 AOSubspace::parse_pi_plane(const std::vector<std::string>& atoms_labels,
                            const std::map<std::string, std::vector<int>>& atom_to_abs_indices) {
     std::regex re(R"(([A-Za-z]{1,2})\s*(\d*)\s*-?\s*(\d*))");
@@ -740,35 +741,33 @@ AOSubspace::parse_pi_plane(const std::vector<std::string>& atoms_labels,
 
     int n_atoms = atoms_abs_indices.size();
     if (n_atoms < 3) {
-        throw std::runtime_error("Not enough atoms to define a plane");
+        throw std::runtime_error("Not enough atoms to define a plane!");
     }
 
     // form the plane
-    std::vector<double> centroid(3, 0.0);
+    psi::Vector3 frag_centroid;
     auto xyz0 = std::make_shared<psi::Matrix>(molecule_->name() + " sub", n_atoms, 3);
     for (int i = 0; i < n_atoms; ++i) {
         std::vector<double> xyz{molecule_->x(atoms_abs_indices[i]),
                                 molecule_->y(atoms_abs_indices[i]),
                                 molecule_->z(atoms_abs_indices[i])};
         for (int z = 0; z < 3; ++z) {
-            centroid[z] += xyz[z];
+            frag_centroid[z] += xyz[z];
             xyz0->set(i, z, xyz[z]);
         }
     }
-    for (int z = 0; z < 3; ++z) {
-        centroid[z] /= n_atoms;
-    }
+    frag_centroid /= n_atoms;
 
     // shift the plane
     for (int i = 0; i < n_atoms; ++i) {
         for (int z = 0; z < 3; ++z) {
-            xyz0->set(i, z, xyz0->get(i, z) - centroid[z]);
+            xyz0->set(i, z, xyz0->get(i, z) - frag_centroid[z]);
         }
     }
 
     // find normal vector (smallest principal axis)
-    SharedMatrix U, Vh;
-    SharedVector S;
+    psi::SharedMatrix U, Vh;
+    psi::SharedVector S;
     std::tie(U, S, Vh) = xyz0->svd_temps();
     xyz0->svd(U, S, Vh);
 
@@ -778,6 +777,13 @@ AOSubspace::parse_pi_plane(const std::vector<std::string>& atoms_labels,
         Vh->print();
     }
 
-    return {plane_atoms, Vh->get_row(0, 2)};
+    // unit normal and fix direction
+    auto normal = Vector3(Vh->get(2, 0), Vh->get(2, 1), Vh->get(2, 2));
+    auto direction = frag_centroid - centroid_;
+    if (direction.dot(normal) < 0) {
+        normal *= -1.0;
+    }
+
+    return {plane_atoms, normal};
 }
 } // namespace forte
