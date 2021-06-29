@@ -39,6 +39,7 @@ namespace py = pybind11;
 #include "psi4/libmints/element_to_Z.h"
 #include "psi4/libmints/integral.h"
 #include "psi4/libmints/matrix.h"
+#include "psi4/libmints/vector.h"
 #include "psi4/libmints/petitelist.h"
 #include "psi4/libmints/wavefunction.h"
 #include "psi4/masses.h"
@@ -47,6 +48,7 @@ namespace py = pybind11;
 
 #include "helpers/string_algorithms.h"
 #include "base_classes/forte_options.h"
+#include "helpers/printing.h"
 
 #include "aosubspace.h"
 
@@ -69,6 +71,7 @@ psi::SharedMatrix make_aosubspace_projector(psi::SharedWavefunction wfn,
 
     // Run this code only if user specified a subspace
     py::list subspace_list = options->get_gen_list("SUBSPACE");
+    py::list subspace_pi_list = options->get_gen_list("SUBSPACE_PI_PLANES");
 
     int subspace_list_size = subspace_list.size();
     if (subspace_list_size > 0) {
@@ -83,29 +86,48 @@ psi::SharedMatrix make_aosubspace_projector(psi::SharedWavefunction wfn,
         // Create a basis set parser object and read the minimal basis
         std::shared_ptr<psi::Molecule> molecule = wfn->molecule();
         std::shared_ptr<psi::BasisSet> min_basis = wfn->get_basisset("MINAO_BASIS");
-        auto irrep_labels = molecule->irrep_labels();
+
+        // Read subspace pi planes
+        std::vector<std::vector<std::string>> pi_planes;
+        int n_planes = subspace_pi_list.size();
+        if (n_planes) {
+            for (int entry = 0; entry < n_planes; ++entry) {
+                std::vector<std::string> pi_plane;
+                py::list plane = subspace_pi_list[entry];
+                for (int atoms = 0, n = plane.size(); atoms < n; ++atoms) {
+                    std::string s = py::str(plane[atoms]);
+                    to_upper_string(s);
+                    pi_plane.push_back(s);
+                }
+                pi_planes.push_back(pi_plane);
+            }
+        }
 
         // Create an AOSubspace object
-        AOSubspace aosub(subspace_str, molecule, min_basis);
+        AOSubspace aosub(subspace_str, molecule, min_basis, pi_planes);
 
         // Compute the subspaces (right now this is required before any other call)
         aosub.find_subspace();
 
-        const std::vector<int>& subspace = aosub.subspace();
-
         // build the projector
-        Ps = aosub.build_projector(subspace, molecule, min_basis, wfn->basisset());
+        Ps = aosub.build_projector(wfn->basisset());
+
+        //        const std::vector<int>& subspace = aosub.subspace();
+        //
+        //        // build the projector
+        //        Ps = aosub.build_projector(subspace, molecule, min_basis, wfn->basisset());
 
         // print the overlap of the projector
         psi::SharedMatrix CPsC = Ps->clone();
         CPsC->transform(wfn->Ca());
         double print_threshold = 1.0e-3;
+        auto irrep_labels = molecule->irrep_labels();
         outfile->Printf("\n  Orbital overlap with AO subspace (> %.2e):\n", print_threshold);
         outfile->Printf("    =======================\n");
         outfile->Printf("    Irrep   MO  <phi|P|phi>\n");
         outfile->Printf("    -----------------------\n");
-        for (int h = 0; h < CPsC->nirrep(); h++) {
-            for (int i = 0; i < CPsC->rowspi(h); i++) {
+        for (int h = 0, nirrep = CPsC->nirrep(); h < nirrep; h++) {
+            for (int i = 0, size = CPsC->rowspi(h); i < size; i++) {
                 if (CPsC->get(h, i, i) > print_threshold) {
                     outfile->Printf("    %4s  %4d  %10.6f\n", irrep_labels[h].c_str(), i + 1,
                                     CPsC->get(h, i, i));
@@ -118,19 +140,29 @@ psi::SharedMatrix make_aosubspace_projector(psi::SharedWavefunction wfn,
 }
 
 AOSubspace::AOSubspace(std::shared_ptr<Molecule> molecule, std::shared_ptr<BasisSet> basis)
-    : molecule_(molecule), basis_(basis) {
+    : molecule_(molecule), min_basis_(basis) {
     startup();
 }
 
 AOSubspace::AOSubspace(std::vector<std::string> subspace_str,
                        std::shared_ptr<psi::Molecule> molecule,
                        std::shared_ptr<psi::BasisSet> basis)
-    : subspace_str_(subspace_str), molecule_(molecule), basis_(basis) {
+    : subspace_str_(subspace_str), molecule_(molecule), min_basis_(basis) {
+    startup();
+}
+
+AOSubspace::AOSubspace(std::vector<std::string> subspace_str,
+                       std::shared_ptr<psi::Molecule> molecule,
+                       std::shared_ptr<psi::BasisSet> basis,
+                       std::vector<std::vector<std::string>> subspace_pi_str)
+    : subspace_str_(subspace_str), molecule_(molecule), min_basis_(basis),
+      subspace_pi_str_(subspace_pi_str) {
     startup();
 }
 
 void AOSubspace::find_subspace() {
     parse_basis_set();
+    parse_pi_planes();
     parse_subspace();
 }
 
@@ -167,6 +199,91 @@ void AOSubspace::startup() {
         }
         labels_sperical_to_lm_[l_labels_[l]] = lm_vec;
     }
+
+    // Check the point group of the molecule. If it is not set, set it
+    if (!molecule_->point_group()) {
+        molecule_->set_point_group(molecule_->find_point_group());
+    }
+}
+
+std::shared_ptr<psi::Matrix>
+AOSubspace::build_projector(std::shared_ptr<psi::BasisSet> large_basis) {
+    // compute the overlap matrix between minimal (MINAO) orbitals
+    auto ints_mm =
+        std::make_unique<IntegralFactory>(min_basis_, min_basis_, min_basis_, min_basis_);
+    int nbf_m = min_basis_->nbf();
+    std::unique_ptr<OneBodyAOInt> ao_mm(ints_mm->ao_overlap());
+    auto Smm = std::make_shared<psi::Matrix>("Smm", nbf_m, nbf_m);
+    ao_mm->compute(Smm);
+
+    // compute the overlap matrix between target subspace orbitals
+    int nbf_s = subspace_counter_;
+    auto Cms = std::make_shared<psi::Matrix>("Cms", nbf_m, nbf_s);
+    for (const auto& tup : subspace_tuple_) {
+        int m, s;
+        double c;
+        std::tie(m, s, c) = tup;
+        Cms->set(m, s, c);
+    }
+
+    auto Sss = psi::linalg::triplet(Cms, Smm, Cms, true, false, false);
+    Sss->set_name("Sss");
+
+    // orthogonalize the subspace
+    auto Xss = Sss->clone();
+    Xss->set_name("Xss");
+    Xss->power(-0.5);
+
+    // compute the overlap between the subspace and large bases
+    auto ints_ml =
+        std::make_unique<IntegralFactory>(min_basis_, large_basis, min_basis_, large_basis);
+    int nbf_l = large_basis->nbf();
+    std::unique_ptr<OneBodyAOInt> ao_ml(ints_ml->ao_overlap());
+    auto Sml = std::make_shared<psi::Matrix>("Sml", nbf_m, nbf_l);
+    ao_ml->compute(Sml);
+
+    auto Ssl = psi::linalg::doublet(Cms, Sml, true, false);
+    Ssl->set_name("Ssl");
+
+    // build AO projector
+    // Pao = Ssl^T Sss^-1 Ssl = (Cms^T Sml)^T (Xss^T Xss) (Cms^T Sml)
+    auto Xsl = psi::linalg::doublet(Xss, Ssl, false, false);
+    Xsl->set_name("Xsl");
+
+    auto Pao = psi::linalg::doublet(Xsl, Xsl, true, false);
+    Pao->set_name("PAO");
+
+    // transform AO projector to account for symmetry
+    auto ints_ll =
+        std::make_shared<IntegralFactory>(large_basis, large_basis, large_basis, large_basis);
+    auto plist = std::make_unique<psi::PetiteList>(large_basis, ints_ll);
+    auto ao_to_so = plist->aotoso();
+
+    auto Pso = psi::linalg::triplet(ao_to_so, Pao, ao_to_so, true, false, false);
+
+    // debug printing
+    if (debug_) {
+        Smm->print();
+        Cms->print();
+        Sss->print();
+        Xss->print();
+
+        auto Sss_clone = Sss->clone();
+        Sss_clone->transform(Xss);
+        Sss_clone->print();
+
+        Ssl->print();
+        Xsl->print();
+
+        Sss_clone = Sss->clone();
+        Sss_clone->transform(Xsl);
+        Sss_clone->print();
+
+        Pao->print();
+        Pso->print();
+    }
+
+    return Pso;
 }
 
 psi::SharedMatrix AOSubspace::build_projector(const std::vector<int>& subspace,
@@ -281,34 +398,63 @@ std::vector<std::string> AOSubspace::aolabels(std::string str_format) const {
 const std::vector<AOInfo>& AOSubspace::aoinfo() const { return aoinfo_vec_; }
 
 void AOSubspace::parse_subspace() {
-    outfile->Printf("\n\n  List of subspace orbitals requested:\n  ");
-    for (int i = 0, size = subspace_str_.size(); i < size; ++i) {
+    print_h2("List of Subspace Orbitals Requested");
+    for (size_t i = 0, size = subspace_str_.size(); i < size; ++i) {
         outfile->Printf(" %13s", subspace_str_[i].c_str());
         if ((i + 1) % 5 == 0 and i + 1 != size)
             outfile->Printf("\n  ");
     }
     outfile->Printf("\n");
+    if (not subspace_pi_str_.empty()) {
+        outfile->Printf("  NOTE: Subspace orbitals may be truncated based on requested planes!\n");
+    }
 
     // parse subspace orbitals
+    subspace_counter_ = 0;
     bool all_found = true;
     for (const std::string& s : subspace_str_) {
         all_found &= parse_subspace_entry(s);
     }
 
-    // print basis and mark those are selected into the subspace
-    std::unordered_set<int> subspace_idx(subspace_.begin(), subspace_.end());
-
-    outfile->Printf("\n  The AO basis set (The subspace contains %d AOs marked by *):\n",
-                    subspace_.size());
-    outfile->Printf("    ==================================\n");
-    outfile->Printf("       AO      Atom  Label  AO type\n");
-    outfile->Printf("    ----------------------------------\n");
-    std::vector<std::string> labels = aolabels("%1$4d%2$-2s%3$6d     %4$d%5$s");
-    for (int i = 0, size = labels.size(); i < size; ++i) {
-        outfile->Printf("    %5d %c  %s\n", i + 1, subspace_idx.count(i) ? '*' : ' ',
-                        labels[i].c_str());
+    // AOs that build the subspace orbitals
+    std::unordered_set<int> minao_idx;
+    for (const auto& tup : subspace_tuple_) {
+        int i_min;
+        std::tie(i_min, std::ignore, std::ignore) = tup;
+        minao_idx.insert(i_min);
     }
-    outfile->Printf("    ==================================\n");
+
+    // print basis and mark those are selected into the subspace
+    print_h2("AO Basis Set Selected By Subspace");
+    outfile->Printf("\n    =======================================");
+    outfile->Printf("\n      AO  Atom  Label     Type  Coefficient");
+    outfile->Printf("\n    ---------------------------------------");
+    for (const auto& tup : subspace_tuple_) {
+        int i_min, i_sub;
+        double c;
+        std::tie(i_min, i_sub, c) = tup;
+
+        const auto& ao_info = aoinfo_vec_[i_min];
+        int A = ao_info.A() + 1;
+        auto atom_label = atomic_labels[ao_info.Z()] + std::to_string(ao_info.element_count() + 1);
+        auto ao_type = std::to_string(ao_info.n()) + lm_labels_sperical_[ao_info.l()][ao_info.m()];
+
+        outfile->Printf("\n    %4d  %4d %6s %8s  %11.4E", i_min, A, atom_label.c_str(),
+                        ao_type.c_str(), c);
+    }
+    outfile->Printf("\n    =======================================\n");
+
+    //    outfile->Printf("\n  The AO basis set (The subspace contains %d AOs marked by *):\n",
+    //                    minao_idx.size());
+    //    outfile->Printf("    ==================================\n");
+    //    outfile->Printf("       AO      Atom  Label  AO type\n");
+    //    outfile->Printf("    ----------------------------------\n");
+    //    std::vector<std::string> labels = aolabels("%1$4d%2$-2s%3$6d     %4$d%5$s");
+    //    for (int i = 0, size = labels.size(); i < size; ++i) {
+    //        outfile->Printf("    %5d %c  %s\n", i + 1, minao_idx.count(i) ? '*' : ' ',
+    //                        labels[i].c_str());
+    //    }
+    //    outfile->Printf("    ==================================\n");
 
     // throw if input is wrong
     if (not all_found) {
@@ -371,19 +517,37 @@ bool AOSubspace::parse_subspace_entry(const std::string& s) {
                 int n = atoi(&str[0]);
                 str.erase(0, 1);
                 if (labels_sperical_to_lm_.count(str) > 0) {
-                    for (std::pair<int, int> lm : labels_sperical_to_lm_[str]) {
-                        int l = lm.first;
-                        int m = lm.second;
-                        if (debug_)
-                            outfile->Printf("     -> %s (n = %d,l = %d, m = %d)\n", str.c_str(), n,
-                                            l, m);
-                        for (int A = minA; A < maxA; A++) {
+                    for (int A = minA; A < maxA; ++A) {
+                        std::pair<int, int> atom_key{Z, A};
+                        if (str == "P" and atom_to_plane_.find(atom_key) != atom_to_plane_.end()) {
                             for (int pos : atom_to_aos_[Z][A]) {
-                                if ((aoinfo_vec_[pos].n() == n) and (aoinfo_vec_[pos].l() == l) and
-                                    (aoinfo_vec_[pos].m() == m)) {
+                                if ((aoinfo_vec_[pos].n() == n) and (aoinfo_vec_[pos].l() == 1)) {
                                     if (debug_)
-                                        outfile->Printf("     + found at position %d\n", pos);
-                                    subspace_.push_back(pos);
+                                        outfile->Printf("     + found AO @ %d, SUB @ %d\n", pos,
+                                                        subspace_counter_);
+                                    // directions: AO: pz, px, py; plane normal: x, y, z
+                                    int m = (aoinfo_vec_[pos].m() + 2) % 3;
+                                    double c = atom_to_plane_[atom_key]->get(m);
+                                    subspace_tuple_.emplace_back(pos, subspace_counter_, c);
+                                }
+                            }
+                            subspace_counter_ += 1;
+                        } else {
+                            for (std::pair<int, int> lm : labels_sperical_to_lm_[str]) {
+                                int l = lm.first;
+                                int m = lm.second;
+                                if (debug_)
+                                    outfile->Printf("     -> %s (n = %d,l = %d, m = %d)\n",
+                                                    str.c_str(), n, l, m);
+                                for (int pos : atom_to_aos_[Z][A]) {
+                                    if ((aoinfo_vec_[pos].n() == n) and
+                                        (aoinfo_vec_[pos].l() == l) and
+                                        (aoinfo_vec_[pos].m() == m)) {
+                                        if (debug_)
+                                            outfile->Printf("     + found AO @ %d, SUB @ %d\n", pos,
+                                                            subspace_counter_);
+                                        subspace_tuple_.emplace_back(pos, subspace_counter_++, 1.0);
+                                    }
                                 }
                             }
                         }
@@ -396,14 +560,30 @@ bool AOSubspace::parse_subspace_entry(const std::string& s) {
         } else {
             // Include all the AOs
             for (int A = minA; A < maxA; A++) {
+                std::pair<int, int> atom_key{Z, A};
+                bool in_plane = atom_to_plane_.find(atom_key) != atom_to_plane_.end();
+
                 for (int pos : atom_to_aos_[Z][A]) {
-                    if (debug_)
-                        outfile->Printf("     + found at position %d\n", pos);
-                    subspace_.push_back(pos);
+                    if (aoinfo_vec_[pos].l() == 1 and in_plane) {
+                        if (debug_)
+                            outfile->Printf("     + found AO @ %d, SUB @ %d\n", pos,
+                                            subspace_counter_);
+                        // directions: AO: pz, px, py; plane normal: x, y, z
+                        int m = (aoinfo_vec_[pos].m() + 2) % 3;
+                        double c = atom_to_plane_[atom_key]->get(m);
+                        subspace_tuple_.emplace_back(pos, subspace_counter_, c);
+                        subspace_counter_ += aoinfo_vec_[pos].m() == 2 ? 1 : 0;
+                    } else {
+                        if (debug_)
+                            outfile->Printf("     + found AO @ %d, SUB @ %d\n", pos,
+                                            subspace_counter_);
+                        subspace_tuple_.emplace_back(pos, subspace_counter_++, 1.0);
+                    }
                 }
             }
         }
     }
+
     return found;
 }
 
@@ -411,7 +591,7 @@ void AOSubspace::parse_basis_set() {
     // Form a map that lists all functions on a given atom and with a given ang.
     // momentum
     std::map<std::pair<int, int>, std::vector<int>> atom_am_to_f;
-    bool pure_am = basis_->has_puream();
+    bool pure_am = min_basis_->has_puream();
 
     if (debug_) {
         outfile->Printf("\n  Parsing basis set\n");
@@ -425,7 +605,7 @@ void AOSubspace::parse_basis_set() {
     for (int A = 0; A < molecule_->natom(); A++) {
         int Z = static_cast<int>(round(molecule_->Z(A)));
 
-        int n_shell = basis_->nshell_on_center(A);
+        int n_shell = min_basis_->nshell_on_center(A);
 
         std::vector<int> n_count(10, 1);
         std::iota(n_count.begin(), n_count.end(), 1);
@@ -436,7 +616,7 @@ void AOSubspace::parse_basis_set() {
             outfile->Printf("\n  Atom %d (Z = %d) has %d shells\n", A, Z, n_shell);
 
         for (int Q = 0; Q < n_shell; Q++) {
-            const GaussianShell& shell = basis_->shell(A, Q);
+            const GaussianShell& shell = min_basis_->shell(A, Q);
             int nfunction = shell.nfunction();
             int l = shell.am();
             if (debug_)
@@ -455,5 +635,128 @@ void AOSubspace::parse_basis_set() {
 
         element_count[Z] += 1; // increase the element count
     }
+}
+
+void AOSubspace::parse_pi_planes() {
+    // print information to be parsed
+    print_h2("List of Planes Requested");
+    for (size_t i = 0, n_planes = subspace_pi_str_.size(); i < n_planes; ++i) {
+        outfile->Printf("\n    Plane %2d", i + 1);
+        for (size_t a = 0, n_entries = subspace_pi_str_[i].size(); a < n_entries; ++a) {
+            if (a % 8 == 0) {
+                outfile->Printf("\n    ");
+            }
+            outfile->Printf("%10s", subspace_pi_str_[i][a].c_str());
+        }
+    }
+
+    // clear parsed plane
+    atom_to_plane_.clear();
+
+    // prepare a map from relative atomic indices to absolute atomic indices
+    auto n_atoms = molecule_->natom();
+    std::map<std::string, std::vector<int>> atom_to_abs_indices;
+    for (int i = 0; i < n_atoms; ++i) {
+        std::string atom_label = molecule_->label(i);
+        to_upper_string(atom_label);
+        atom_to_abs_indices[atom_label].push_back(i);
+    }
+
+    // find plane normal on each atom
+    for (const std::vector<std::string>& atoms_labels : subspace_pi_str_) {
+        std::vector<std::pair<int, int>> atoms;
+        psi::SharedVector plane_normal;
+        std::tie(atoms, plane_normal) = parse_pi_plane(atoms_labels, atom_to_abs_indices);
+        for (const auto& atom : atoms) {
+            if (atom_to_plane_.find(atom) != atom_to_plane_.end()) {
+                atom_to_plane_[atom]->add(plane_normal);
+            } else {
+                atom_to_plane_[atom] = std::make_shared<psi::Vector>(*plane_normal);
+            }
+        }
+    }
+
+    // normalize vectors
+    for (auto& key_value : atom_to_plane_) {
+        const auto& atom = key_value.first;
+        auto& plane = key_value.second;
+        atom_to_plane_[atom]->scale(1.0 / plane->norm());
+    }
+}
+
+std::tuple<std::vector<std::pair<int, int>>, psi::SharedVector>
+AOSubspace::parse_pi_plane(const std::vector<std::string>& atoms_labels,
+                           const std::map<std::string, std::vector<int>>& atom_to_abs_indices) {
+    std::regex re(R"(([A-Za-z]{1,2})\s*(\d*)\s*-?\s*(\d*))");
+    Element_to_Z etoZ;
+
+    // grab plane atoms indices
+    std::vector<int> atoms_abs_indices;
+    std::vector<std::pair<int, int>> plane_atoms;
+    for (const std::string& labels : atoms_labels) {
+        std::smatch sm;
+        std::regex_match(labels, sm, re);
+
+        if (sm.size() != 4) {
+            throw std::runtime_error("Invalid syntax for atoms forming the pi plane");
+        }
+
+        std::string atom_label = sm[1];
+        int Z = static_cast<int>(etoZ[atom_label]);
+
+        int start = 1;
+        int end = static_cast<int>(atom_to_abs_indices.at(atom_label).size());
+        if (sm[2].length()) {
+            start = std::stoi(sm[2]);
+            end = sm[3].length() ? std::stoi(sm[3]) : start;
+        }
+
+        for (int i = start - 1; i < end; ++i) {
+            atoms_abs_indices.push_back(atom_to_abs_indices.at(atom_label)[i]);
+            plane_atoms.push_back({Z, i});
+        }
+    }
+
+    int n_atoms = atoms_abs_indices.size();
+    if (n_atoms < 3) {
+        throw std::runtime_error("Not enough atoms to define a plane");
+    }
+
+    // form the plane
+    std::vector<double> centroid(3, 0.0);
+    auto xyz0 = std::make_shared<psi::Matrix>(molecule_->name() + " sub", n_atoms, 3);
+    for (int i = 0; i < n_atoms; ++i) {
+        std::vector<double> xyz{molecule_->x(atoms_abs_indices[i]),
+                                molecule_->y(atoms_abs_indices[i]),
+                                molecule_->z(atoms_abs_indices[i])};
+        for (int z = 0; z < 3; ++z) {
+            centroid[z] += xyz[z];
+            xyz0->set(i, z, xyz[z]);
+        }
+    }
+    for (int z = 0; z < 3; ++z) {
+        centroid[z] /= n_atoms;
+    }
+
+    // shift the plane
+    for (int i = 0; i < n_atoms; ++i) {
+        for (int z = 0; z < 3; ++z) {
+            xyz0->set(i, z, xyz0->get(i, z) - centroid[z]);
+        }
+    }
+
+    // find normal vector (smallest principal axis)
+    SharedMatrix U, Vh;
+    SharedVector S;
+    std::tie(U, S, Vh) = xyz0->svd_temps();
+    xyz0->svd(U, S, Vh);
+
+    if (debug_) {
+        outfile->Printf("\n  ==> XYZ Singular Value Results <==");
+        S->print();
+        Vh->print();
+    }
+
+    return {plane_atoms, Vh->get_row(0, 2)};
 }
 } // namespace forte

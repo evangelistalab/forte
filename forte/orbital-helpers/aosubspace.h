@@ -137,6 +137,10 @@ class AOSubspace {
     // Constructor with list of subspaces
     AOSubspace(std::vector<std::string> subspace_str, std::shared_ptr<psi::Molecule> molecule,
                std::shared_ptr<psi::BasisSet> basis);
+    // Constructor with list of subspaces
+    AOSubspace(std::vector<std::string> subspace_str, std::shared_ptr<psi::Molecule> molecule,
+               std::shared_ptr<psi::BasisSet> basis,
+               std::vector<std::vector<std::string>> subspace_pi_str);
 
     // ==> User's interface <==
 
@@ -148,6 +152,13 @@ class AOSubspace {
 
     // Return the index of the AOs that span the subspace selected
     const std::vector<int>& subspace();
+
+    /// Build the projector Pso = Ssl^T Sss^-1 Ssl
+    /// Ssl: overlap between subspace and large (computational) orbitals
+    /// Sss: overlap between subspace orbitals
+    /// @param large_basis: the large computational basis set
+    /// @return: the projector in SO basis
+    std::shared_ptr<psi::Matrix> build_projector(std::shared_ptr<psi::BasisSet> large_basis);
 
     psi::SharedMatrix build_projector(const std::vector<int>& subspace,
                                       std::shared_ptr<psi::Molecule> molecule,
@@ -178,7 +189,9 @@ class AOSubspace {
     /// The molecule
     std::shared_ptr<psi::Molecule> molecule_;
     /// The AO basis set
-    std::shared_ptr<psi::BasisSet> basis_;
+    std::shared_ptr<psi::BasisSet> min_basis_;
+    /// The vector of pi planes
+    std::vector<std::vector<std::string>> subspace_pi_str_;
 
     /// The label of Cartesian atomic orbitals.
     /// lm_labels_cartesian_[l][m] returns the label for an orbital
@@ -200,10 +213,21 @@ class AOSubspace {
     /// The list of all AOs with their properties
     std::vector<AOInfo> aoinfo_vec_;
 
+    /// A map from atomic number to its atomic orbitals
     std::map<int, std::vector<std::vector<int>>> atom_to_aos_;
 
     /// The AOs spanned by the subspace selected by the user
     std::vector<int> subspace_;
+
+    /// The AOs spanned by the subspace selected by the user
+    /// AO position, subspace position, coefficient
+    std::vector<std::tuple<int, int, double>> subspace_tuple_;
+
+    /// Counter for the actual number of subspace orbitals
+    int subspace_counter_;
+
+    /// A map from <atomic number, relative index> to plane normal
+    std::map<std::pair<int, int>, psi::SharedVector> atom_to_plane_;
 
     /// The AOs spanned by the subspace selected by the user
     std::vector<std::string> ao_info_;
@@ -223,6 +247,14 @@ class AOSubspace {
 
     /// Parse the AO basis set
     void parse_basis_set();
+
+    /// Parse planes
+    void parse_pi_planes();
+
+    /// Parse atoms approximately define the plane
+    std::tuple<std::vector<std::pair<int, int>>, psi::SharedVector>
+    parse_pi_plane(const std::vector<std::string>& atoms_labels,
+                   const std::map<std::string, std::vector<int>>& atom_to_abs_indices);
 };
 
 // Helper function to make a projector using info in wfn and options
