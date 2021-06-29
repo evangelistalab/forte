@@ -70,7 +70,7 @@ def register_driver_options(options):
 
     options.add_list("SUBSPACE", "A list of orbital subspaces")
 
-    options.add_array("SUBSPACE_PI_PLANES", "A list of arrays of atoms composing the plane")
+    options.add_list("SUBSPACE_PI_PLANES", "A list of arrays of atoms composing the plane")
 
     options.add_double("MS", None, "Projection of spin onto the z axis")
 
