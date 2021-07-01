@@ -61,7 +61,7 @@ avas:
       - avas-2
       - avas-4
       - avas-6
-    long:
+   long:
       - avas-8
 casscf:
    short:
