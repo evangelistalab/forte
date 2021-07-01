@@ -48,7 +48,7 @@ def parse_subspace_pi_planes(molecule, planes_expr, debug=False):
       - "C": all carbon atoms
       - "C2": the second carbon atom of the molecule
       - "C1-4": the first to fourth carbon atoms
-    Examples for planes' expressions:
+    Examples for planes expressions:
       - [['C', 'H', 'O']]: only one plane consisting all C, H, and O atoms of the molecule.
       - [['C1-6'], ['N1-2', 'C9-11']]: plane 1 with the first six C atoms of the molecule,
                                        plane 2 with C9, C10, C11, N1 and N2 atoms.
@@ -98,7 +98,7 @@ def parse_subspace_pi_planes(molecule, planes_expr, debug=False):
         for j, atom in enumerate(plane):
             if j % 10 == 0:
                 p4print("\n    ")
-            p4print(f"{atom:10s}")
+            p4print(f"{atom:>8s}")
 
     # create index map {'C': [absolute indices in molecule], 'BE': [...], ...}
     n_atoms = molecule.natom()
@@ -190,7 +190,7 @@ def parse_subspace_pi_planes(molecule, planes_expr, debug=False):
     if debug:
         print("Averaged vector perpendicular to the requested planes on each atom")
         for z, i in sorted(atom_dirs.keys()):
-            n_str = ' '.join(f'{i:15.10f}' for i in atom_dirs[(z, i)] * 3.0)
+            n_str = ' '.join(f'{i:15.10f}' for i in atom_dirs[(z, i)])
             print(f"  Atom Z: {z:3d}, relative index: {i:3d}, direction: {n_str}")
 
     return atom_dirs

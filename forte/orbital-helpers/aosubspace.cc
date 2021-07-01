@@ -32,6 +32,7 @@
 #include <vector>
 
 #include <pybind11/pybind11.h>
+#include <pybind11/stl.h>
 
 namespace py = pybind11;
 
@@ -65,79 +66,140 @@ using namespace psi;
 
 namespace forte {
 
+// psi::SharedMatrix make_aosubspace_projector(psi::SharedWavefunction wfn,
+//                                             std::shared_ptr<ForteOptions> options) {
+//     psi::SharedMatrix Ps;
+//
+//     // Run this code only if user specified a subspace
+//     py::list subspace_list = options->get_gen_list("SUBSPACE");
+//     py::list subspace_pi_list = options->get_gen_list("SUBSPACE_PI_PLANES");
+//
+//     int subspace_list_size = subspace_list.size();
+//     if (subspace_list_size > 0) {
+//         std::vector<std::string> subspace_str;
+//         for (int entry = 0; entry < subspace_list_size; ++entry) {
+//             std::string s = py::str(subspace_list[entry]);
+//             // convert to upper case
+//             to_upper_string(s);
+//             subspace_str.push_back(s);
+//         }
+//
+//         // Create a basis set parser object and read the minimal basis
+//         std::shared_ptr<psi::Molecule> molecule = wfn->molecule();
+//         std::shared_ptr<psi::BasisSet> min_basis = wfn->get_basisset("MINAO_BASIS");
+//
+//         // Read subspace pi planes
+//         std::vector<std::vector<std::string>> pi_planes;
+//         int n_planes = subspace_pi_list.size();
+//         if (n_planes) {
+//             for (int entry = 0; entry < n_planes; ++entry) {
+//                 std::vector<std::string> pi_plane;
+//                 py::list plane = subspace_pi_list[entry];
+//                 for (int atoms = 0, n = plane.size(); atoms < n; ++atoms) {
+//                     std::string s = py::str(plane[atoms]);
+//                     to_upper_string(s);
+//                     pi_plane.push_back(s);
+//                 }
+//                 pi_planes.push_back(pi_plane);
+//             }
+//         }
+//
+//         // Create an AOSubspace object
+//         AOSubspace aosub(subspace_str, molecule, min_basis, pi_planes);
+//         //        aosub.set_debug_mode(true);
+//
+//         // Compute the subspaces (right now this is required before any other call)
+//         aosub.find_subspace();
+//
+//         // build the projector
+//         Ps = aosub.build_projector(wfn->basisset());
+//
+//         //        const std::vector<int>& subspace = aosub.subspace();
+//         //
+//         //        // build the projector
+//         //        Ps = aosub.build_projector(subspace, molecule, min_basis, wfn->basisset());
+//
+//         // print the overlap of the projector
+//         psi::SharedMatrix CPsC = Ps->clone();
+//         CPsC->transform(wfn->Ca());
+//         double print_threshold = 1.0e-3;
+//         auto irrep_labels = molecule->irrep_labels();
+//         outfile->Printf("\n  ==> Orbital Overlap with AO Subspace (> %.2e) <==\n\n",
+//                         print_threshold);
+//         outfile->Printf("    =======================\n");
+//         outfile->Printf("    Irrep   MO  <phi|P|phi>\n");
+//         outfile->Printf("    -----------------------\n");
+//         for (int h = 0, nirrep = CPsC->nirrep(); h < nirrep; h++) {
+//             for (int i = 0, size = CPsC->rowspi(h); i < size; i++) {
+//                 if (CPsC->get(h, i, i) > print_threshold) {
+//                     outfile->Printf("    %4s  %4d  %10.6f\n", irrep_labels[h].c_str(), i + 1,
+//                                     CPsC->get(h, i, i));
+//                 }
+//             }
+//         }
+//         outfile->Printf("    ========================\n");
+//     }
+//     return Ps;
+// }
+
 psi::SharedMatrix make_aosubspace_projector(psi::SharedWavefunction wfn,
-                                            std::shared_ptr<ForteOptions> options) {
+                                            std::shared_ptr<ForteOptions> options,
+                                            const py::dict& atom_normals) {
     psi::SharedMatrix Ps;
 
-    // Run this code only if user specified a subspace
     py::list subspace_list = options->get_gen_list("SUBSPACE");
-    py::list subspace_pi_list = options->get_gen_list("SUBSPACE_PI_PLANES");
 
-    int subspace_list_size = subspace_list.size();
-    if (subspace_list_size > 0) {
-        std::vector<std::string> subspace_str;
-        for (int entry = 0; entry < subspace_list_size; ++entry) {
-            std::string s = py::str(subspace_list[entry]);
-            // convert to upper case
-            to_upper_string(s);
-            subspace_str.push_back(s);
-        }
+    int subspace_list_size = static_cast<int>(subspace_list.size());
+    if (subspace_list_size <= 0)
+        return Ps;
 
-        // Create a basis set parser object and read the minimal basis
-        std::shared_ptr<psi::Molecule> molecule = wfn->molecule();
-        std::shared_ptr<psi::BasisSet> min_basis = wfn->get_basisset("MINAO_BASIS");
-
-        // Read subspace pi planes
-        std::vector<std::vector<std::string>> pi_planes;
-        int n_planes = subspace_pi_list.size();
-        if (n_planes) {
-            for (int entry = 0; entry < n_planes; ++entry) {
-                std::vector<std::string> pi_plane;
-                py::list plane = subspace_pi_list[entry];
-                for (int atoms = 0, n = plane.size(); atoms < n; ++atoms) {
-                    std::string s = py::str(plane[atoms]);
-                    to_upper_string(s);
-                    pi_plane.push_back(s);
-                }
-                pi_planes.push_back(pi_plane);
-            }
-        }
-
-        // Create an AOSubspace object
-        AOSubspace aosub(subspace_str, molecule, min_basis, pi_planes);
-        //        aosub.set_debug_mode(true);
-
-        // Compute the subspaces (right now this is required before any other call)
-        aosub.find_subspace();
-
-        // build the projector
-        Ps = aosub.build_projector(wfn->basisset());
-
-        //        const std::vector<int>& subspace = aosub.subspace();
-        //
-        //        // build the projector
-        //        Ps = aosub.build_projector(subspace, molecule, min_basis, wfn->basisset());
-
-        // print the overlap of the projector
-        psi::SharedMatrix CPsC = Ps->clone();
-        CPsC->transform(wfn->Ca());
-        double print_threshold = 1.0e-3;
-        auto irrep_labels = molecule->irrep_labels();
-        outfile->Printf("\n  ==> Orbital Overlap with AO Subspace (> %.2e) <==\n\n",
-                        print_threshold);
-        outfile->Printf("    =======================\n");
-        outfile->Printf("    Irrep   MO  <phi|P|phi>\n");
-        outfile->Printf("    -----------------------\n");
-        for (int h = 0, nirrep = CPsC->nirrep(); h < nirrep; h++) {
-            for (int i = 0, size = CPsC->rowspi(h); i < size; i++) {
-                if (CPsC->get(h, i, i) > print_threshold) {
-                    outfile->Printf("    %4s  %4d  %10.6f\n", irrep_labels[h].c_str(), i + 1,
-                                    CPsC->get(h, i, i));
-                }
-            }
-        }
-        outfile->Printf("    ========================\n");
+    // Run this code only if user specified a subspace
+    std::vector<std::string> subspace_str;
+    for (int entry = 0; entry < subspace_list_size; ++entry) {
+        std::string s = py::str(subspace_list[entry]);
+        to_upper_string(s); // convert to upper case
+        subspace_str.push_back(s);
     }
+
+    // Create a basis set parser object and read the minimal basis
+    std::shared_ptr<psi::Molecule> molecule = wfn->molecule();
+    std::shared_ptr<psi::BasisSet> min_basis = wfn->get_basisset("MINAO_BASIS");
+
+    // Parse the atom normals used to project the p orbitals
+    std::map<std::pair<int, int>, psi::Vector3> atom_to_normal;
+    for (const auto& item : atom_normals) {
+        auto atom = item.first.cast<std::pair<int, int>>();
+        auto normal = item.second.cast<std::array<double, 3>>();
+        atom_to_normal[atom] = psi::Vector3(normal);
+    }
+
+    // Create an AOSubspace object
+    AOSubspace aosub(subspace_str, molecule, min_basis, atom_to_normal);
+
+    // Compute the subspaces (right now this is required before any other call)
+    aosub.find_subspace();
+
+    // build the projector
+    Ps = aosub.build_projector(wfn->basisset());
+
+    // print the overlap of the projector
+    psi::SharedMatrix CPsC = Ps->clone();
+    CPsC->transform(wfn->Ca());
+    double print_threshold = 1.0e-3;
+    auto irrep_labels = molecule->irrep_labels();
+    outfile->Printf("\n  ==> Orbital Overlap with AO Subspace (> %.2e) <==\n", print_threshold);
+    outfile->Printf("\n    =======================");
+    outfile->Printf("\n    Irrep   MO  <phi|P|phi>");
+    outfile->Printf("\n    -----------------------");
+    for (int h = 0, nirrep = CPsC->nirrep(); h < nirrep; h++) {
+        for (int i = 0, size = CPsC->rowspi(h); i < size; i++) {
+            if (CPsC->get(h, i, i) > print_threshold) {
+                outfile->Printf("\n    %4s  %4d  %10.6f", irrep_labels[h].c_str(), i + 1,
+                                CPsC->get(h, i, i));
+            }
+        }
+    }
+    outfile->Printf("\n    ========================");
     return Ps;
 }
 
@@ -156,15 +218,14 @@ AOSubspace::AOSubspace(std::vector<std::string> subspace_str,
 AOSubspace::AOSubspace(std::vector<std::string> subspace_str,
                        std::shared_ptr<psi::Molecule> molecule,
                        std::shared_ptr<psi::BasisSet> basis,
-                       std::vector<std::vector<std::string>> subspace_pi_str)
-    : subspace_str_(subspace_str), molecule_(molecule), min_basis_(basis),
-      subspace_pi_str_(subspace_pi_str) {
+                       std::map<std::pair<int, int>, psi::Vector3> atom_normals, bool debug_mode)
+    : subspace_str_(subspace_str), molecule_(molecule), min_basis_(basis), subspace_counter_(0),
+      atom_to_plane_(atom_normals), debug_(debug_mode) {
     startup();
 }
 
 void AOSubspace::find_subspace() {
     parse_basis_set();
-    parse_pi_planes();
     parse_subspace();
 }
 
@@ -417,7 +478,7 @@ void AOSubspace::parse_subspace() {
             outfile->Printf("\n  ");
     }
     outfile->Printf("\n");
-    if (not subspace_pi_str_.empty()) {
+    if (not atom_to_plane_.empty()) {
         outfile->Printf("  NOTE: Subspace orbitals may be truncated based on requested planes!");
     }
 
@@ -449,18 +510,6 @@ void AOSubspace::parse_subspace() {
     outfile->Printf("\n    ---------------------------------------");
     outfile->Printf("\n    Number of subspace orbitals: %10d", subspace_counter_);
     outfile->Printf("\n    =======================================\n");
-
-    //    outfile->Printf("\n  The AO basis set (The subspace contains %d AOs marked by *):\n",
-    //                    minao_idx.size());
-    //    outfile->Printf("    ==================================\n");
-    //    outfile->Printf("       AO      Atom  Label  AO type\n");
-    //    outfile->Printf("    ----------------------------------\n");
-    //    std::vector<std::string> labels = aolabels("%1$4d%2$-2s%3$6d     %4$d%5$s");
-    //    for (int i = 0, size = labels.size(); i < size; ++i) {
-    //        outfile->Printf("    %5d %c  %s\n", i + 1, minao_idx.count(i) ? '*' : ' ',
-    //                        labels[i].c_str());
-    //    }
-    //    outfile->Printf("    ==================================\n");
 
     // throw if input is wrong
     if (not all_found) {

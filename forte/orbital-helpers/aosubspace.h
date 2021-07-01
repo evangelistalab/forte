@@ -33,6 +33,8 @@
 #include "psi4/libmints/basisset.h"
 #include "psi4/libmints/vector3.h"
 
+#include <pybind11/pybind11.h>
+
 #define _DEBUG_AOSUBSPACE_ 0
 
 namespace forte {
@@ -138,10 +140,11 @@ class AOSubspace {
     // Constructor with list of subspaces
     AOSubspace(std::vector<std::string> subspace_str, std::shared_ptr<psi::Molecule> molecule,
                std::shared_ptr<psi::BasisSet> basis);
-    // Constructor with list of subspaces and planes
+    // Constructor using the atom normals
     AOSubspace(std::vector<std::string> subspace_str, std::shared_ptr<psi::Molecule> molecule,
                std::shared_ptr<psi::BasisSet> basis,
-               std::vector<std::vector<std::string>> subspace_pi_str);
+               std::map<std::pair<int, int>, psi::Vector3> atom_normals,
+               bool debug_mode=false);
 
     // ==> User's interface <==
 
@@ -183,9 +186,6 @@ class AOSubspace {
 
     /// Return a vector of AOInfo objects
     const std::vector<AOInfo>& aoinfo() const;
-
-    /// Set debug mode
-    void set_debug_mode(bool debug) { debug_ = debug; }
 
   private:
     /// The vector of subspace descriptors passed by the user
@@ -273,9 +273,14 @@ class AOSubspace {
                    const std::map<std::string, std::vector<int>>& atom_to_abs_indices);
 };
 
-// Helper function to make a projector using info in wfn and options
+///// Helper function to make a projector using info in wfn and options
+//psi::SharedMatrix make_aosubspace_projector(psi::SharedWavefunction wfn,
+//                                            std::shared_ptr<ForteOptions> options);
+
+/// Make a projector using wfn and options with pruned atomic p orbitals for molecular pi orbitals
 psi::SharedMatrix make_aosubspace_projector(psi::SharedWavefunction wfn,
-                                            std::shared_ptr<ForteOptions> options);
+                                            std::shared_ptr<ForteOptions> options,
+                                            const pybind11::dict& atom_normals);
 } // namespace forte
 
 #endif // _aosubspace_h_

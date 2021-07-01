@@ -103,4 +103,4 @@ for i in range(Ca.cols()):
 #    np.savez_compressed(f, *Ca_np)
 
 Ca_ref = psi4.core.Matrix.from_array([np.load('Ca_ref.npz')['arr_0']])
-compare_matrices(Ca_ref, Ca, 7, "AVAS orbitals")
+compare_matrices(Ca_ref, Ca, 6, "AVAS orbitals")
