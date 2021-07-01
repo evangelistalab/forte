@@ -35,8 +35,6 @@
 
 #include <pybind11/pybind11.h>
 
-#define _DEBUG_AOSUBSPACE_ 0
-
 namespace forte {
 class ForteOptions;
 
@@ -82,18 +80,23 @@ class AOInfo {
  *        }
  *    }
  *
+ *    // Grab MINAO basis set
+ *    std::shared_ptr<psi::BasisSet> min_basis = wfn->get_basisset("MINAO_BASIS");
+ *
+ *    // atom normals used to project atomic p orbitals
+ *    // empty map: px, py, pz (3 orbitals) -> px, py, pz (3 orbitals)
+ *    // nonempty: px, py, pz (3 orbitals) -> nx * px + ny * py + nz * pz (1 orbital)
+ *    // implemented in Python side (see aosubspace.py in forte/proc)
+ *    std::map<std::pair<int, int>, psi::Vector3> atom_normals;
+ *
+ *    // Debug printing
+ *    debug = false;
+ *
  *    // Create an AOSubspace object
- *    AOSubspace aosub(subspace_str,wfn->molecule(),wfn->basisset());
+ *    AOSubspace aosub(subspace_str, wfn->molecule(), min_basis, atom_normals, debug);
  *
- *    // Compute the subspaces
- *    aosub.find_subspace();
- *
- *    // Get the subspaces
- *    std::vector<int> subspace = aosub.subspace();
- *
- *    // Build a projector
- *    psi::SharedMatrix Ps =
- * aosub.build_projector(subspace,molecule,min_basis,basis);
+ *    // Build a projector for computational (large) basis
+ *    psi::SharedMatrix Ps = aosub.build_projector(wfn->basisset());
  *
  *  Syntax:
  *
@@ -113,13 +116,11 @@ class AOInfo {
  *                               e.g. '(1s)', '(2s)', '(2p)',...
  *                               n = 1, 2, 3, ...
  *                               l = 's', 'p', 'd', 'f', 'g', ...
- *                3) '(nlm)'   : select the n-th level with angular momentum l
- * and component m
- *                               e.g. '(2pz)', '(3dzz)', '(3dxx-yy)'
+ *                3) '(nlm)'   : select the n-th level with angular momentum l and component m
+ *                               e.g. '(2pz)', '(3dz2)', '(3dx2-y2)'
  *                               n = 1, 2, 3, ...
  *                               l = 's', 'p', 'd', 'f', 'g', ...
- *                               m = 'x', 'y', 'z', 'xy', 'xz', 'yz', 'zz',
- * 'xx-yy'
+ *                               m = 'x', 'y', 'z', 'xy', 'xz', 'yz', 'z2', 'x2-y2'
  *
  *    Valid options include:
  *
@@ -130,6 +131,7 @@ class AOInfo {
  *    ["C(2p)"] - the 2p subset of all carbon atoms
  *    ["C(1s)","C(2s)"] - the 1s/2s subsets of all carbon atoms
  *    ["C1-3(2s)"] - the 2s subsets of carbon atoms #1, #2, #3
+ *    ["Ce(4fzx2-zy2)"] - the 4f zxx-zyy orbital of all Ce atoms
  */
 class AOSubspace {
   public:
@@ -140,52 +142,21 @@ class AOSubspace {
     // Constructor with list of subspaces
     AOSubspace(std::vector<std::string> subspace_str, std::shared_ptr<psi::Molecule> molecule,
                std::shared_ptr<psi::BasisSet> basis);
-    // Constructor using the atom normals
+    /// Constructor using the atom normals
+    /// an atom normal is a 3D vector onto which p orbitals are projected:
+    /// px, py, pz (3 orbitals) -> nx px + ny py + nz pz (1 orbital)
     AOSubspace(std::vector<std::string> subspace_str, std::shared_ptr<psi::Molecule> molecule,
                std::shared_ptr<psi::BasisSet> basis,
-               std::map<std::pair<int, int>, psi::Vector3> atom_normals,
-               bool debug_mode=false);
+               std::map<std::pair<int, int>, psi::Vector3> atom_normals, bool debug_mode = false);
 
     // ==> User's interface <==
-
-    // Adds a subspace, e.g. add_subspace("C(1s,2s)")
-    void add_subspace(std::string);
-
-    // Compute the AOs in the subspace
-    void find_subspace();
-
-    // Return the index of the AOs that span the subspace selected
-    const std::vector<int>& subspace();
 
     /// Build the projector Pso = Ssl^T Sss^-1 Ssl
     /// Ssl: overlap between subspace and large (computational) orbitals
     /// Sss: overlap between subspace orbitals
     /// @param large_basis: the large computational basis set
     /// @return: the projector in SO basis
-    std::shared_ptr<psi::Matrix> build_projector(std::shared_ptr<psi::BasisSet> large_basis);
-
-    psi::SharedMatrix build_projector(const std::vector<int>& subspace,
-                                      std::shared_ptr<psi::Molecule> molecule,
-                                      std::shared_ptr<psi::BasisSet> min_basis,
-                                      std::shared_ptr<psi::BasisSet> large_basis);
-
-    /// Return a vector of labels for each atomic orbital.  This function
-    /// accepts
-    /// an optional argument that indicates the formatting that will be fed to
-    /// boost::format.
-    ///
-    /// The field available for printing are:
-    ///   1. Atom number (int)
-    ///   2. Atom label, e.g. "C" (string)
-    ///   3. Atom count, e.g. 3 = third atom of a given kind (int)
-    ///   4. Energy level (n), 2 = 2s or 2p (int)
-    ///   5. l/m label, e.g. "2px" (string)
-    ///
-    /// @arg str_format A string that specifies the output formatting
-    std::vector<std::string> aolabels(std::string str_format = "%2$s%3$d (%4$d%5$s)") const;
-
-    /// Return a vector of AOInfo objects
-    const std::vector<AOInfo>& aoinfo() const;
+    std::shared_ptr<psi::Matrix> build_projector(const std::shared_ptr<psi::BasisSet>& large_basis);
 
   private:
     /// The vector of subspace descriptors passed by the user
@@ -194,8 +165,6 @@ class AOSubspace {
     std::shared_ptr<psi::Molecule> molecule_;
     /// The AO basis set
     std::shared_ptr<psi::BasisSet> min_basis_;
-    /// The vector of pi planes
-    std::vector<std::vector<std::string>> subspace_pi_str_;
 
     /// The label of Cartesian atomic orbitals.
     /// lm_labels_cartesian_[l][m] returns the label for an orbital
@@ -208,11 +177,11 @@ class AOSubspace {
     std::vector<std::string> l_labels_;
 
     /// The label of Spherical atomic orbitals.
-    /// lm_labels_sperical_[l][m] returns the label for an orbital
+    /// lm_labels_spherical_[l][m] returns the label for an orbital
     /// with angular momentum quantum number l and index m
-    std::vector<std::vector<std::string>> lm_labels_sperical_;
+    std::vector<std::vector<std::string>> lm_labels_spherical_;
 
-    std::map<std::string, std::vector<std::pair<int, int>>> labels_sperical_to_lm_;
+    std::map<std::string, std::vector<std::pair<int, int>>> labels_spherical_to_lm_;
 
     /// The list of all AOs with their properties
     std::vector<AOInfo> aoinfo_vec_;
@@ -221,23 +190,16 @@ class AOSubspace {
     std::map<int, std::vector<std::vector<int>>> atom_to_aos_;
 
     /// The AOs spanned by the subspace selected by the user
-    std::vector<int> subspace_;
-
-    /// The AOs spanned by the subspace selected by the user
     /// AO position, subspace position, coefficient
-    std::vector<std::tuple<int, int, double>> subspace_tuple_;
+    std::vector<std::tuple<int, int, double>> subspace_;
 
     /// Counter for the actual number of subspace orbitals
     int subspace_counter_;
 
-    /// A map from <atomic number, relative index> to plane normal
-    std::map<std::pair<int, int>, psi::Vector3> atom_to_plane_;
-
-    /// The AOs spanned by the subspace selected by the user
-    std::vector<std::string> ao_info_;
-
-    /// Molecular centroid
-    psi::Vector3 centroid_;
+    /// A map from <atomic number, relative index> to atom normal
+    /// An atom normal is a 3D vector where the p orbitals are projected onto:
+    /// px, py, pz (3 orbitals) -> nx * px + ny * py + nz * pz (1 orbital)
+    std::map<std::pair<int, int>, psi::Vector3> atom_normals_;
 
     /// Debug flag
     bool debug_ = false;
@@ -253,31 +215,12 @@ class AOSubspace {
 
     /// Parse the AO basis set
     void parse_basis_set();
-
-    /// Parse planes
-    void parse_pi_planes();
-
-    /// Parse atoms approximately define the plane
-    /// @param atoms_labels: a vector of atom labels
-    /// @param atom_to_abs_indices: a map from atom label (e.g., C3) to absolute index in molecule
-    /// @return a tuple of atoms (atomic number, relative index) lying in plane and the plane normal
-    ///
-    /// Examples for atom labels:
-    ///    - C      # all carbon atoms
-    ///    - C3     # the third carbon atom
-    ///    - Be3-6  # the third to sixth beryllium atoms
-    /// Atoms labels defining the plane are just a list of atom labels, for example,
-    ///    - {'C3-7', 'N2'}
-    std::tuple<std::vector<std::pair<int, int>>, psi::Vector3>
-    parse_pi_plane(const std::vector<std::string>& atoms_labels,
-                   const std::map<std::string, std::vector<int>>& atom_to_abs_indices);
 };
 
-///// Helper function to make a projector using info in wfn and options
-//psi::SharedMatrix make_aosubspace_projector(psi::SharedWavefunction wfn,
-//                                            std::shared_ptr<ForteOptions> options);
-
 /// Make a projector using wfn and options with pruned atomic p orbitals for molecular pi orbitals
+/// @param wfn: A Psi4 Wavefunction object
+/// @param options: A ForteOptions object
+/// @param atom_normals: The direction of 'pz' orbital on each atom
 psi::SharedMatrix make_aosubspace_projector(psi::SharedWavefunction wfn,
                                             std::shared_ptr<ForteOptions> options,
                                             const pybind11::dict& atom_normals);
