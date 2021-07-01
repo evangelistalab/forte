@@ -24,8 +24,8 @@ set {
 }
 
 set forte {
-  subspace ["C(2p)", "O(2P)"]  # has to include all p orbitals
-  subspace_pi_planes [["C", "O", "H"]]  # a list of planes
+  subspace ["C(2p)","O(2P)"]  # must include all p orbitals
+  subspace_pi_planes [["C","O","H"]]  # a list of planes
   avas true
   avas_diagonalize true
   avas_sigma 1.0

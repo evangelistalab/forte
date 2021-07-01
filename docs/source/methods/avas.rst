@@ -66,7 +66,7 @@ Input Example
 ^^^^^^^^^^^^^
 
 In this example, we perform the AVAS procedure on formaldehyde
-followed by a CASCI computation.::
+followed by a CASCI computation. ::
 
     import forte
     molecule H2CO{
@@ -142,7 +142,7 @@ The AVAS procedure outputs::
 The :code:`Sum of eigenvalues` is the sum of traces of projected overlap matrices
 :math:`\mathbf{S}` and :math:`\mathbf{\bar{S}}`.
 We see that AVAS generates three active orbitals of B1 symmetry.
-We then use this guess of active orbitals to compute the CASCI energy:::
+We then use this guess of active orbitals to compute the CASCI energy: ::
 
     ==> Root No. 0 <==
 
@@ -167,6 +167,197 @@ We then use this guess of active orbitals to compute the CASCI energy:::
 
 For more examples, see :code:`avas-1` to :code:`avas-6` in the :code:`tests/methods` folder.
 In particular, :code:`avas-6` is a practical example on ferrocene.
+
+Defining the molecular plane for π orbitals
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+For the above example, the molecule is placed on the yz plane such that the directions of p orbitals
+are aligned with the molecule xyz frame.
+However, sometimes it is hard to make these two xyz frames aligned.
+For example, the molecule contains multiple π subsystems or the plane is not perfect.
+In such cases, if only pi orbitals are desired, we can linearly combine the px, py, and pz orbitals
+to a single 'pz' orbital that perpendicular to the π subsystem plane.
+
+We use the keyword :code:`SUBSPACE_PI_PLANES` to define all the π subsystems planes,
+where each plane is given by a list of atoms' expressions.
+Some valid expressions would be: ::
+
+  - [['C', 'H', 'O']]  # only one plane consisting all C, H, and O atoms of the molecule.
+  - [['C1-6'], ['N1-2', 'C9-11']]  # plane 1 with the first six C atoms of the molecule,
+                                   # plane 2 with C9, C10, C11, N1 and N2 atoms.
+  - [['C1-4'], ['C1-2', 'C5-6']]:  # plane 1 with the first four C atoms of the molecule,
+                                   # plane 2 with C1, C2, C5, and C6 atoms.
+                                   # Two planes share C1 and C2!
+
+Take the formaldehyde example above.
+We now reorient it such that the plane normal points at (1.0, 1.0, 1.0).
+The same AVAS orbitals can be obtained using the following input: ::
+
+  molecule H2CO{
+  0 1
+  C        0.346146295209737    0.126698337466632   -0.472844632676369
+  O       -0.346053592352928   -0.126664405871036    0.472717998223964
+  H        1.227335215970831   -0.489581944167415   -0.737753271803415
+  H        0.143281782803090    0.991262584630455   -1.134544367433545
+  noreorient
+  }
+
+  set forte {
+    subspace           ["C(2p)", "O(2p)"]  # must include all p orbitals!
+    subspace_pi_planes [["C", "O", "H"]]   # only one plane, defined by all C, O and H atoms
+    avas               true
+    avas_diagonalize   true
+    avas_sigma         1.0
+  }
+
+If the :code:`SUBSPACE_PI_PLANES` option is not empty, the code will prune the subspace p orbitals
+and linearly combine them to one p orbital per atom in the direction perpendicular to the plane.
+In the above example, we will end up with only two p orbitals perpendicular to the molecular plane.
+If :code:`SUBSPACE_PI_PLANES` is empty, we would have had 6 p orbitals in the subspace.
+
+.. note::
+    It is very important to include all p orbitals in :code:`SUBSPACE`.
+    Otherwise, the code will follow the directions given by :code:`SUBSPACE`.
+
+.. tip::
+    The code is flexible enough to treat double active spaces (e.g., double-π or double-d-shell).
+    For example, the double-π active space of formaldehyde can be obtained via ::
+
+      set forte {
+        minao_basis        double-shell
+        subspace           ["C(2p)","C(3p)","O(2p)","O(3p)"]
+        subspace_pi_planes [["C","O","H"]]
+        avas               true
+        avas_diagonalize   true
+        avas_cutoff        0.5
+      }
+
+    You need to prepare your own MINAO basis (here I prepare a basis called "double-shell.gbs").
+    This MINAO basis should include at least the 2p and 3p orbitals of C and O,
+    which can be grabbed from the cc-pVTZ or ANO-RCC-VTZP basis sets.
+
+For a more realistic example, consider the following iron porphyrin related molecule:
+
+.. image:: images/FeP.png
+    :width: 600
+    :align: center
+    :alt: An iron porphyrin complex.
+
+This molecule contains two π systems, namely, porphyrin and imidazole.
+Also, the porphyrin is not a perfect plane anymore.
+The following input snippet selects all 3d orbitals of Fe, 3p orbitals of S,
+and all 'pz' orbitals of porphyrin and imidazole rings. ::
+
+  set forte {
+    avas                true
+    avas_diagonalize    true
+    avas_cutoff         0.5
+    minao_basis         cc-pvtz-minao
+    subspace            ["Fe(3d)","C6-25(2p)","N(2p)","S(3p)","C1-3(2p)"]
+    subspace_pi_planes  [["Fe","C6-25","N3-6"], ["N1-2","C1-3"]]
+  }
+
+The AVAS output selects exactly 37 orbitals we wanted. ::
+
+  Sum of eigenvalues: 36.98863914
+  AVAS covers 96.59% of the subspace.
+
+  ==> AVAS MOs Information <==
+
+    ---------------------
+                        A
+    ---------------------
+    DOCC INACTIVE     106
+    DOCC ACTIVE        22
+    SOCC ACTIVE         0
+    UOCC ACTIVE        15
+    UOCC INACTIVE     462
+    ---------------------
+    RESTRICTED_DOCC   106
+    ACTIVE             37
+    RESTRICTED_UOCC   462
+    ---------------------
+
+  ==> Atomic Valence MOs (Active Marked by *) <==
+
+    ===============================
+     Irrep    MO  Occ.  <phi|P|phi>
+    -------------------------------
+    *   A      0    2      0.999085
+    *   A      1    2      0.998642
+    *   A      2    2      0.998359
+    *   A      3    2      0.996035
+    *   A      4    2      0.994644
+    *   A      5    2      0.994278
+    *   A      6    2      0.993868
+    *   A      7    2      0.993659
+    *   A      8    2      0.993108
+    *   A      9    2      0.992442
+    *   A     10    2      0.991897
+    *   A     11    2      0.991522
+    *   A     12    2      0.991168
+    *   A     13    2      0.990619
+    *   A     14    2      0.989037
+    *   A     15    2      0.988792
+    *   A     16    2      0.987373
+    *   A     17    2      0.986867
+    *   A     18    2      0.984205
+    *   A     19    2      0.974919
+    *   A     20    2      0.855068
+    *   A     21    2      0.747171
+        A     22    2      0.215276
+        A     23    2      0.175599
+        A     24    2      0.056342
+        A     25    2      0.047345
+        A     26    2      0.034783
+        A     27    2      0.030997
+        A     28    2      0.028569
+        A     29    2      0.026469
+        A     30    2      0.023365
+        A     31    2      0.017892
+        A     32    2      0.016921
+        A     33    2      0.014212
+        A     34    2      0.010871
+        A     35    2      0.001703
+        A     36    2      0.000408
+    *   A    128    0      0.999163
+    *   A    129    0      0.997849
+    *   A    130    0      0.988687
+    *   A    131    0      0.985388
+    *   A    132    0      0.982652
+    *   A    133    0      0.981676
+    *   A    134    0      0.976224
+    *   A    135    0      0.973079
+    *   A    136    0      0.971042
+    *   A    137    0      0.968590
+    *   A    138    0      0.964765
+    *   A    139    0      0.952259
+    *   A    140    0      0.943277
+    *   A    141    0      0.824388
+    *   A    142    0      0.784721
+        A    143    0      0.252635
+        A    144    0      0.144740
+        A    145    0      0.024759
+        A    146    0      0.015490
+        A    147    0      0.012840
+        A    148    0      0.012333
+        A    149    0      0.010860
+        A    150    0      0.010643
+        A    151    0      0.009008
+        A    152    0      0.008557
+        A    153    0      0.008096
+        A    154    0      0.007851
+        A    155    0      0.007346
+        A    156    0      0.006517
+        A    157    0      0.005974
+        A    158    0      0.005795
+        A    159    0      0.005433
+        A    160    0      0.004976
+        A    161    0      0.003642
+        A    162    0      0.001632
+        A    163    0      0.001346
+        A    164    0      0.000898
+    ===============================
 
 Options
 ^^^^^^^
