@@ -176,3 +176,15 @@ or add the option
   -DENABLE_CODECOV=ON
   ```
 if compiling with CMake.
+
+### Build the manual locally
+
+The documentation can be built locally using `sphinx`.
+Additionally, `sphinx_rtd_theme` and `nbsphinx` modules are required.
+  ```
+  cd <homedir>/src/forte/docs
+  make html
+  ```
+If successful, the HTML documents can be found under the directory `docs/build/html/`.
+Otherwise, it is likely some Python modules are missing,
+and they should be installed via `conda` or `pip`.
