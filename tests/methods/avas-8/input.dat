@@ -35,7 +35,7 @@ set {
   df_basis_scf  cc-pvdz-jkfit
   reference     rhf
   scf_type      df
-  d_convergence 8
+  d_convergence 10
 }
 Escf, wfn = energy('scf', return_wfn=True)
 compare_values(refscf, variable("CURRENT ENERGY"), 8, "SCF energy")
@@ -98,9 +98,17 @@ for i in range(Ca.cols()):
     if Ca.get(0, i) < 0:
         Ca.scale_column(0, i, -1.0)
 
-#Ca_np = [Ca.to_array()]
-#with open('Ca_ref.npz', 'wb') as f:
-#    np.savez_compressed(f, *Ca_np)
+# test only the core and active orbitals
+Ca_np = Ca.to_array()[:, : 70]
+Ca = psi4.core.Matrix.from_array(Ca_np)
 
+# save to disk
+#Ca_list = [Ca_np]
+#with open('Ca_ref.npz', 'wb') as f:
+#    np.savez_compressed(f, *Ca_list)
+
+# read reference Ca values from disk
 Ca_ref = psi4.core.Matrix.from_array([np.load('Ca_ref.npz')['arr_0']])
+
+# compare computed values from the reference ones
 compare_matrices(Ca_ref, Ca, 6, "AVAS orbitals")
