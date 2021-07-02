@@ -137,14 +137,31 @@ class AOSubspace {
   public:
     // ==> Constructors <==
 
-    // Simple constructor
-    AOSubspace(std::shared_ptr<psi::Molecule> molecule, std::shared_ptr<psi::BasisSet> basis);
-    // Constructor with list of subspaces
+    /// Constructor with list of subspaces
+    /// @param subspace_str: a list of subspace orbitals, e.g, {"C2", "N", "Fe(3d)", "Mo(3dx2-y2)"}
+    /// @param molecule: a Psi4 Molecule object
+    /// @param basis: a Psi4 Basis object, a minimal basis where subspace orbitals are selected
     AOSubspace(std::vector<std::string> subspace_str, std::shared_ptr<psi::Molecule> molecule,
                std::shared_ptr<psi::BasisSet> basis);
+
     /// Constructor using the atom normals
-    /// an atom normal is a 3D vector onto which p orbitals are projected:
-    /// px, py, pz (3 orbitals) -> nx px + ny py + nz pz (1 orbital)
+    /// @param subspace_str: a list of subspace orbitals, e.g, {"C2", "N", "Fe(3d)", "Mo(3dx2-y2)"}
+    /// @param molecule: a Psi4 Molecule object
+    /// @param basis: a Psi4 basis object, a minimal basis where subspace orbitals are selected
+    /// @param atom_normals: (optional) a map from the atom to its normal
+    /// @param debug_mode: debug mode if True (more printing)
+    ///
+    /// For the argument of atom_normals:
+    ///   An atom is characterized by its atomic number and the relative index.
+    ///   For example, {6, 2} - the third carbon atom of the molecule (index is 0-based)
+    ///
+    ///   This argument is used to make the subspace p orbitals of an atom aligned to the normal:
+    ///   px, py, pz (3 orbitals) -> nx * px + ny * py + nz * pz (1 orbital),
+    ///   where the atom normal is a 3D unit vector (nx, ny, nz).
+    ///
+    ///   If the map is empty, the p orbitals are in the xyz frame defined the molecule.
+    ///   Equivalently, 3 normals are attached to each atom: (1,0,0), (0,1,0), and (0,0,1).
+    ///   As such, we still have a full set of p orbitals in the subspace.
     AOSubspace(std::vector<std::string> subspace_str, std::shared_ptr<psi::Molecule> molecule,
                std::shared_ptr<psi::BasisSet> basis,
                std::map<std::pair<int, int>, psi::Vector3> atom_normals, bool debug_mode = false);
@@ -197,7 +214,7 @@ class AOSubspace {
     int subspace_counter_;
 
     /// A map from <atomic number, relative index> to atom normal
-    /// An atom normal is a 3D vector where the p orbitals are projected onto:
+    /// An atom normal is a 3D unit vector where the p orbitals are projected onto:
     /// px, py, pz (3 orbitals) -> nx * px + ny * py + nz * pz (1 orbital)
     std::map<std::pair<int, int>, psi::Vector3> atom_normals_;
 
