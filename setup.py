@@ -113,7 +113,7 @@ class CMakeBuild(build_ext):
 
 setup(
     name='forte',
-    version='0.2.0',
+    version='0.2.3',
     author='Forte developers',
     description='A hybrid Python/C++ quantum chemistry package for strongly correlated electrons.',
     long_description=
