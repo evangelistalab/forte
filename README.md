@@ -41,7 +41,7 @@ The repository will be cloned in the folder `src/forte`
 The most convenient way to compile forte is using the `setup.py` script. To compile Forte do the following:
 
 1. From the `src` directory change to the forte directory `src/forte`
-1. Tell `setup.py` where to find ambit, which can be done by creating the `src/forte/setup.cfg` file and adding the following lines
+2. Tell `setup.py` where to find ambit, which can be done by creating the `src/forte/setup.cfg` file and adding the following lines
 ```tcsh
 [CMakeBuild]
 ambitpath=<ambit install dir>
@@ -180,9 +180,10 @@ if compiling with CMake.
 ### Build the manual locally
 
 The documentation can be built locally using `sphinx`.
-Additionally, `sphinx_rtd_theme` and `nbsphinx` modules are required.
+Additionally, the `sphinx_rtd_theme` and `nbsphinx` modules are required.
+From the Forte source directory (e.g., `src/forte`), change to the directory `docs` and call `make html`:
   ```
-  cd <homedir>/src/forte/docs
+  cd docs
   make html
   ```
 If successful, the HTML documents can be found under the directory `docs/build/html/`.
