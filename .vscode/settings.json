@@ -1,0 +1,4 @@
+{
+    "python.pythonPath": "/home/mhuang/anaconda3/envs/psi4py37/bin/python",
+    "cmake.configureSettings": { "ambit_DIR": "/home/mhuang/ambit/bin/share/cmake/ambit"}
+}

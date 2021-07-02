@@ -1,0 +1,757 @@
+[
+{
+  "directory": "/home/mhuang/forte",
+  "command": "/home/mhuang/anaconda3/envs/psi4py37/bin/x86_64-conda_cos6-linux-gnu-g++ -DMAX_DET_ORB=64 -I/home/mhuang/forte -I/home/mhuang/forte/catch2/forte/catch2/single_include -fvisibility-inlines-hidden -std=c++17 -fmessage-length=0 -march=nocona -mtune=haswell -ftree-vectorize -fPIC -fstack-protector-strong -fno-plt -O2 -ffunction-sections -pipe -isystem /home/mhuang/anaconda3/envs/psi4py37/include -g -std=c++1z -o CMakeFiles/forte_tests.dir/tests/code/test_determinant.cc.o -c /home/mhuang/forte/tests/code/test_determinant.cc",
+  "file": "/home/mhuang/forte/tests/code/test_determinant.cc"
+},
+{
+  "directory": "/home/mhuang/forte",
+  "command": "/home/mhuang/anaconda3/envs/psi4py37/bin/x86_64-conda_cos6-linux-gnu-g++ -DMAX_DET_ORB=64 -I/home/mhuang/forte -I/home/mhuang/forte/catch2/forte/catch2/single_include -fvisibility-inlines-hidden -std=c++17 -fmessage-length=0 -march=nocona -mtune=haswell -ftree-vectorize -fPIC -fstack-protector-strong -fno-plt -O2 -ffunction-sections -pipe -isystem /home/mhuang/anaconda3/envs/psi4py37/include -g -std=c++1z -o CMakeFiles/forte_tests.dir/tests/code/test_uint64.cc.o -c /home/mhuang/forte/tests/code/test_uint64.cc",
+  "file": "/home/mhuang/forte/tests/code/test_uint64.cc"
+},
+{
+  "directory": "/home/mhuang/forte",
+  "command": "/home/mhuang/anaconda3/envs/psi4py37/bin/x86_64-conda_cos6-linux-gnu-g++ -DMAX_DET_ORB=64 -I/home/mhuang/forte -I/home/mhuang/forte/catch2/forte/catch2/single_include -fvisibility-inlines-hidden -std=c++17 -fmessage-length=0 -march=nocona -mtune=haswell -ftree-vectorize -fPIC -fstack-protector-strong -fno-plt -O2 -ffunction-sections -pipe -isystem /home/mhuang/anaconda3/envs/psi4py37/include -g -std=c++1z -o CMakeFiles/forte_benchmarks.dir/tests/benchmark/determinant_benchmark.cc.o -c /home/mhuang/forte/tests/benchmark/determinant_benchmark.cc",
+  "file": "/home/mhuang/forte/tests/benchmark/determinant_benchmark.cc"
+},
+{
+  "directory": "/home/mhuang/forte/forte",
+  "command": "/home/mhuang/anaconda3/envs/psi4py37/bin/x86_64-conda_cos6-linux-gnu-g++ -DHAVE_OPENMP -DMAX_DET_ORB=64 -DUSING_LAPACK_MKL -DUSING_ambit -Dforte_EXPORTS -I/home/mhuang/forte/generated -I/home/mhuang/forte/include -I/home/mhuang/anaconda3/envs/psi4py37/include/python3.7m -I/home/mhuang/forte/forte/. -isystem /home/mhuang/psi4_install/include -isystem /usr/local/include/eigen3 -isystem /home/mhuang/ambit/bin/include -fvisibility-inlines-hidden -std=c++17 -fmessage-length=0 -march=nocona -mtune=haswell -ftree-vectorize -fPIC -fstack-protector-strong -fno-plt -O2 -ffunction-sections -pipe -isystem /home/mhuang/anaconda3/envs/psi4py37/include -fopenmp -msse4.2 -Wno-c++1z-extensions -g -fPIC -fvisibility=hidden -Wall -Wextra -pedantic -fopenmp -std=c++14 -o CMakeFiles/forte.dir/api/ambit_api.cc.o -c /home/mhuang/forte/forte/api/ambit_api.cc",
+  "file": "/home/mhuang/forte/forte/api/ambit_api.cc"
+},
+{
+  "directory": "/home/mhuang/forte/forte",
+  "command": "/home/mhuang/anaconda3/envs/psi4py37/bin/x86_64-conda_cos6-linux-gnu-g++ -DHAVE_OPENMP -DMAX_DET_ORB=64 -DUSING_LAPACK_MKL -DUSING_ambit -Dforte_EXPORTS -I/home/mhuang/forte/generated -I/home/mhuang/forte/include -I/home/mhuang/anaconda3/envs/psi4py37/include/python3.7m -I/home/mhuang/forte/forte/. -isystem /home/mhuang/psi4_install/include -isystem /usr/local/include/eigen3 -isystem /home/mhuang/ambit/bin/include -fvisibility-inlines-hidden -std=c++17 -fmessage-length=0 -march=nocona -mtune=haswell -ftree-vectorize -fPIC -fstack-protector-strong -fno-plt -O2 -ffunction-sections -pipe -isystem /home/mhuang/anaconda3/envs/psi4py37/include -fopenmp -msse4.2 -Wno-c++1z-extensions -g -fPIC -fvisibility=hidden -Wall -Wextra -pedantic -fopenmp -std=c++14 -o CMakeFiles/forte.dir/api/cube_file_api.cc.o -c /home/mhuang/forte/forte/api/cube_file_api.cc",
+  "file": "/home/mhuang/forte/forte/api/cube_file_api.cc"
+},
+{
+  "directory": "/home/mhuang/forte/forte",
+  "command": "/home/mhuang/anaconda3/envs/psi4py37/bin/x86_64-conda_cos6-linux-gnu-g++ -DHAVE_OPENMP -DMAX_DET_ORB=64 -DUSING_LAPACK_MKL -DUSING_ambit -Dforte_EXPORTS -I/home/mhuang/forte/generated -I/home/mhuang/forte/include -I/home/mhuang/anaconda3/envs/psi4py37/include/python3.7m -I/home/mhuang/forte/forte/. -isystem /home/mhuang/psi4_install/include -isystem /usr/local/include/eigen3 -isystem /home/mhuang/ambit/bin/include -fvisibility-inlines-hidden -std=c++17 -fmessage-length=0 -march=nocona -mtune=haswell -ftree-vectorize -fPIC -fstack-protector-strong -fno-plt -O2 -ffunction-sections -pipe -isystem /home/mhuang/anaconda3/envs/psi4py37/include -fopenmp -msse4.2 -Wno-c++1z-extensions -g -fPIC -fvisibility=hidden -Wall -Wextra -pedantic -fopenmp -std=c++14 -o CMakeFiles/forte.dir/api/integrals_api.cc.o -c /home/mhuang/forte/forte/api/integrals_api.cc",
+  "file": "/home/mhuang/forte/forte/api/integrals_api.cc"
+},
+{
+  "directory": "/home/mhuang/forte/forte",
+  "command": "/home/mhuang/anaconda3/envs/psi4py37/bin/x86_64-conda_cos6-linux-gnu-g++ -DHAVE_OPENMP -DMAX_DET_ORB=64 -DUSING_LAPACK_MKL -DUSING_ambit -Dforte_EXPORTS -I/home/mhuang/forte/generated -I/home/mhuang/forte/include -I/home/mhuang/anaconda3/envs/psi4py37/include/python3.7m -I/home/mhuang/forte/forte/. -isystem /home/mhuang/psi4_install/include -isystem /usr/local/include/eigen3 -isystem /home/mhuang/ambit/bin/include -fvisibility-inlines-hidden -std=c++17 -fmessage-length=0 -march=nocona -mtune=haswell -ftree-vectorize -fPIC -fstack-protector-strong -fno-plt -O2 -ffunction-sections -pipe -isystem /home/mhuang/anaconda3/envs/psi4py37/include -fopenmp -msse4.2 -Wno-c++1z-extensions -g -fPIC -fvisibility=hidden -Wall -Wextra -pedantic -fopenmp -std=c++14 -o CMakeFiles/forte.dir/api/mospaceinfo_api.cc.o -c /home/mhuang/forte/forte/api/mospaceinfo_api.cc",
+  "file": "/home/mhuang/forte/forte/api/mospaceinfo_api.cc"
+},
+{
+  "directory": "/home/mhuang/forte/forte",
+  "command": "/home/mhuang/anaconda3/envs/psi4py37/bin/x86_64-conda_cos6-linux-gnu-g++ -DHAVE_OPENMP -DMAX_DET_ORB=64 -DUSING_LAPACK_MKL -DUSING_ambit -Dforte_EXPORTS -I/home/mhuang/forte/generated -I/home/mhuang/forte/include -I/home/mhuang/anaconda3/envs/psi4py37/include/python3.7m -I/home/mhuang/forte/forte/. -isystem /home/mhuang/psi4_install/include -isystem /usr/local/include/eigen3 -isystem /home/mhuang/ambit/bin/include -fvisibility-inlines-hidden -std=c++17 -fmessage-length=0 -march=nocona -mtune=haswell -ftree-vectorize -fPIC -fstack-protector-strong -fno-plt -O2 -ffunction-sections -pipe -isystem /home/mhuang/anaconda3/envs/psi4py37/include -fopenmp -msse4.2 -Wno-c++1z-extensions -g -fPIC -fvisibility=hidden -Wall -Wextra -pedantic -fopenmp -std=c++14 -o CMakeFiles/forte.dir/api/rdms_api.cc.o -c /home/mhuang/forte/forte/api/rdms_api.cc",
+  "file": "/home/mhuang/forte/forte/api/rdms_api.cc"
+},
+{
+  "directory": "/home/mhuang/forte/forte",
+  "command": "/home/mhuang/anaconda3/envs/psi4py37/bin/x86_64-conda_cos6-linux-gnu-g++ -DHAVE_OPENMP -DMAX_DET_ORB=64 -DUSING_LAPACK_MKL -DUSING_ambit -Dforte_EXPORTS -I/home/mhuang/forte/generated -I/home/mhuang/forte/include -I/home/mhuang/anaconda3/envs/psi4py37/include/python3.7m -I/home/mhuang/forte/forte/. -isystem /home/mhuang/psi4_install/include -isystem /usr/local/include/eigen3 -isystem /home/mhuang/ambit/bin/include -fvisibility-inlines-hidden -std=c++17 -fmessage-length=0 -march=nocona -mtune=haswell -ftree-vectorize -fPIC -fstack-protector-strong -fno-plt -O2 -ffunction-sections -pipe -isystem /home/mhuang/anaconda3/envs/psi4py37/include -fopenmp -msse4.2 -Wno-c++1z-extensions -g -fPIC -fvisibility=hidden -Wall -Wextra -pedantic -fopenmp -std=c++14 -o CMakeFiles/forte.dir/api/options_api.cc.o -c /home/mhuang/forte/forte/api/options_api.cc",
+  "file": "/home/mhuang/forte/forte/api/options_api.cc"
+},
+{
+  "directory": "/home/mhuang/forte/forte",
+  "command": "/home/mhuang/anaconda3/envs/psi4py37/bin/x86_64-conda_cos6-linux-gnu-g++ -DHAVE_OPENMP -DMAX_DET_ORB=64 -DUSING_LAPACK_MKL -DUSING_ambit -Dforte_EXPORTS -I/home/mhuang/forte/generated -I/home/mhuang/forte/include -I/home/mhuang/anaconda3/envs/psi4py37/include/python3.7m -I/home/mhuang/forte/forte/. -isystem /home/mhuang/psi4_install/include -isystem /usr/local/include/eigen3 -isystem /home/mhuang/ambit/bin/include -fvisibility-inlines-hidden -std=c++17 -fmessage-length=0 -march=nocona -mtune=haswell -ftree-vectorize -fPIC -fstack-protector-strong -fno-plt -O2 -ffunction-sections -pipe -isystem /home/mhuang/anaconda3/envs/psi4py37/include -fopenmp -msse4.2 -Wno-c++1z-extensions -g -fPIC -fvisibility=hidden -Wall -Wextra -pedantic -fopenmp -std=c++14 -o CMakeFiles/forte.dir/api/orbital_api.cc.o -c /home/mhuang/forte/forte/api/orbital_api.cc",
+  "file": "/home/mhuang/forte/forte/api/orbital_api.cc"
+},
+{
+  "directory": "/home/mhuang/forte/forte",
+  "command": "/home/mhuang/anaconda3/envs/psi4py37/bin/x86_64-conda_cos6-linux-gnu-g++ -DHAVE_OPENMP -DMAX_DET_ORB=64 -DUSING_LAPACK_MKL -DUSING_ambit -Dforte_EXPORTS -I/home/mhuang/forte/generated -I/home/mhuang/forte/include -I/home/mhuang/anaconda3/envs/psi4py37/include/python3.7m -I/home/mhuang/forte/forte/. -isystem /home/mhuang/psi4_install/include -isystem /usr/local/include/eigen3 -isystem /home/mhuang/ambit/bin/include -fvisibility-inlines-hidden -std=c++17 -fmessage-length=0 -march=nocona -mtune=haswell -ftree-vectorize -fPIC -fstack-protector-strong -fno-plt -O2 -ffunction-sections -pipe -isystem /home/mhuang/anaconda3/envs/psi4py37/include -fopenmp -msse4.2 -Wno-c++1z-extensions -g -fPIC -fvisibility=hidden -Wall -Wextra -pedantic -fopenmp -std=c++14 -o CMakeFiles/forte.dir/api/sci_api.cc.o -c /home/mhuang/forte/forte/api/sci_api.cc",
+  "file": "/home/mhuang/forte/forte/api/sci_api.cc"
+},
+{
+  "directory": "/home/mhuang/forte/forte",
+  "command": "/home/mhuang/anaconda3/envs/psi4py37/bin/x86_64-conda_cos6-linux-gnu-g++ -DHAVE_OPENMP -DMAX_DET_ORB=64 -DUSING_LAPACK_MKL -DUSING_ambit -Dforte_EXPORTS -I/home/mhuang/forte/generated -I/home/mhuang/forte/include -I/home/mhuang/anaconda3/envs/psi4py37/include/python3.7m -I/home/mhuang/forte/forte/. -isystem /home/mhuang/psi4_install/include -isystem /usr/local/include/eigen3 -isystem /home/mhuang/ambit/bin/include -fvisibility-inlines-hidden -std=c++17 -fmessage-length=0 -march=nocona -mtune=haswell -ftree-vectorize -fPIC -fstack-protector-strong -fno-plt -O2 -ffunction-sections -pipe -isystem /home/mhuang/anaconda3/envs/psi4py37/include -fopenmp -msse4.2 -Wno-c++1z-extensions -g -fPIC -fvisibility=hidden -Wall -Wextra -pedantic -fopenmp -std=c++14 -o CMakeFiles/forte.dir/api/state_info_api.cc.o -c /home/mhuang/forte/forte/api/state_info_api.cc",
+  "file": "/home/mhuang/forte/forte/api/state_info_api.cc"
+},
+{
+  "directory": "/home/mhuang/forte/forte",
+  "command": "/home/mhuang/anaconda3/envs/psi4py37/bin/x86_64-conda_cos6-linux-gnu-g++ -DHAVE_OPENMP -DMAX_DET_ORB=64 -DUSING_LAPACK_MKL -DUSING_ambit -Dforte_EXPORTS -I/home/mhuang/forte/generated -I/home/mhuang/forte/include -I/home/mhuang/anaconda3/envs/psi4py37/include/python3.7m -I/home/mhuang/forte/forte/. -isystem /home/mhuang/psi4_install/include -isystem /usr/local/include/eigen3 -isystem /home/mhuang/ambit/bin/include -fvisibility-inlines-hidden -std=c++17 -fmessage-length=0 -march=nocona -mtune=haswell -ftree-vectorize -fPIC -fstack-protector-strong -fno-plt -O2 -ffunction-sections -pipe -isystem /home/mhuang/anaconda3/envs/psi4py37/include -fopenmp -msse4.2 -Wno-c++1z-extensions -g -fPIC -fvisibility=hidden -Wall -Wextra -pedantic -fopenmp -std=c++14 -o CMakeFiles/forte.dir/api/forte_python_module.cc.o -c /home/mhuang/forte/forte/api/forte_python_module.cc",
+  "file": "/home/mhuang/forte/forte/api/forte_python_module.cc"
+},
+{
+  "directory": "/home/mhuang/forte/forte",
+  "command": "/home/mhuang/anaconda3/envs/psi4py37/bin/x86_64-conda_cos6-linux-gnu-g++ -DHAVE_OPENMP -DMAX_DET_ORB=64 -DUSING_LAPACK_MKL -DUSING_ambit -Dforte_EXPORTS -I/home/mhuang/forte/generated -I/home/mhuang/forte/include -I/home/mhuang/anaconda3/envs/psi4py37/include/python3.7m -I/home/mhuang/forte/forte/. -isystem /home/mhuang/psi4_install/include -isystem /usr/local/include/eigen3 -isystem /home/mhuang/ambit/bin/include -fvisibility-inlines-hidden -std=c++17 -fmessage-length=0 -march=nocona -mtune=haswell -ftree-vectorize -fPIC -fstack-protector-strong -fno-plt -O2 -ffunction-sections -pipe -isystem /home/mhuang/anaconda3/envs/psi4py37/include -fopenmp -msse4.2 -Wno-c++1z-extensions -g -fPIC -fvisibility=hidden -Wall -Wextra -pedantic -fopenmp -std=c++14 -o CMakeFiles/forte.dir/base_classes/active_space_method.cc.o -c /home/mhuang/forte/forte/base_classes/active_space_method.cc",
+  "file": "/home/mhuang/forte/forte/base_classes/active_space_method.cc"
+},
+{
+  "directory": "/home/mhuang/forte/forte",
+  "command": "/home/mhuang/anaconda3/envs/psi4py37/bin/x86_64-conda_cos6-linux-gnu-g++ -DHAVE_OPENMP -DMAX_DET_ORB=64 -DUSING_LAPACK_MKL -DUSING_ambit -Dforte_EXPORTS -I/home/mhuang/forte/generated -I/home/mhuang/forte/include -I/home/mhuang/anaconda3/envs/psi4py37/include/python3.7m -I/home/mhuang/forte/forte/. -isystem /home/mhuang/psi4_install/include -isystem /usr/local/include/eigen3 -isystem /home/mhuang/ambit/bin/include -fvisibility-inlines-hidden -std=c++17 -fmessage-length=0 -march=nocona -mtune=haswell -ftree-vectorize -fPIC -fstack-protector-strong -fno-plt -O2 -ffunction-sections -pipe -isystem /home/mhuang/anaconda3/envs/psi4py37/include -fopenmp -msse4.2 -Wno-c++1z-extensions -g -fPIC -fvisibility=hidden -Wall -Wextra -pedantic -fopenmp -std=c++14 -o CMakeFiles/forte.dir/base_classes/active_space_solver.cc.o -c /home/mhuang/forte/forte/base_classes/active_space_solver.cc",
+  "file": "/home/mhuang/forte/forte/base_classes/active_space_solver.cc"
+},
+{
+  "directory": "/home/mhuang/forte/forte",
+  "command": "/home/mhuang/anaconda3/envs/psi4py37/bin/x86_64-conda_cos6-linux-gnu-g++ -DHAVE_OPENMP -DMAX_DET_ORB=64 -DUSING_LAPACK_MKL -DUSING_ambit -Dforte_EXPORTS -I/home/mhuang/forte/generated -I/home/mhuang/forte/include -I/home/mhuang/anaconda3/envs/psi4py37/include/python3.7m -I/home/mhuang/forte/forte/. -isystem /home/mhuang/psi4_install/include -isystem /usr/local/include/eigen3 -isystem /home/mhuang/ambit/bin/include -fvisibility-inlines-hidden -std=c++17 -fmessage-length=0 -march=nocona -mtune=haswell -ftree-vectorize -fPIC -fstack-protector-strong -fno-plt -O2 -ffunction-sections -pipe -isystem /home/mhuang/anaconda3/envs/psi4py37/include -fopenmp -msse4.2 -Wno-c++1z-extensions -g -fPIC -fvisibility=hidden -Wall -Wextra -pedantic -fopenmp -std=c++14 -o CMakeFiles/forte.dir/base_classes/dynamic_correlation_solver.cc.o -c /home/mhuang/forte/forte/base_classes/dynamic_correlation_solver.cc",
+  "file": "/home/mhuang/forte/forte/base_classes/dynamic_correlation_solver.cc"
+},
+{
+  "directory": "/home/mhuang/forte/forte",
+  "command": "/home/mhuang/anaconda3/envs/psi4py37/bin/x86_64-conda_cos6-linux-gnu-g++ -DHAVE_OPENMP -DMAX_DET_ORB=64 -DUSING_LAPACK_MKL -DUSING_ambit -Dforte_EXPORTS -I/home/mhuang/forte/generated -I/home/mhuang/forte/include -I/home/mhuang/anaconda3/envs/psi4py37/include/python3.7m -I/home/mhuang/forte/forte/. -isystem /home/mhuang/psi4_install/include -isystem /usr/local/include/eigen3 -isystem /home/mhuang/ambit/bin/include -fvisibility-inlines-hidden -std=c++17 -fmessage-length=0 -march=nocona -mtune=haswell -ftree-vectorize -fPIC -fstack-protector-strong -fno-plt -O2 -ffunction-sections -pipe -isystem /home/mhuang/anaconda3/envs/psi4py37/include -fopenmp -msse4.2 -Wno-c++1z-extensions -g -fPIC -fvisibility=hidden -Wall -Wextra -pedantic -fopenmp -std=c++14 -o CMakeFiles/forte.dir/base_classes/forte_options.cc.o -c /home/mhuang/forte/forte/base_classes/forte_options.cc",
+  "file": "/home/mhuang/forte/forte/base_classes/forte_options.cc"
+},
+{
+  "directory": "/home/mhuang/forte/forte",
+  "command": "/home/mhuang/anaconda3/envs/psi4py37/bin/x86_64-conda_cos6-linux-gnu-g++ -DHAVE_OPENMP -DMAX_DET_ORB=64 -DUSING_LAPACK_MKL -DUSING_ambit -Dforte_EXPORTS -I/home/mhuang/forte/generated -I/home/mhuang/forte/include -I/home/mhuang/anaconda3/envs/psi4py37/include/python3.7m -I/home/mhuang/forte/forte/. -isystem /home/mhuang/psi4_install/include -isystem /usr/local/include/eigen3 -isystem /home/mhuang/ambit/bin/include -fvisibility-inlines-hidden -std=c++17 -fmessage-length=0 -march=nocona -mtune=haswell -ftree-vectorize -fPIC -fstack-protector-strong -fno-plt -O2 -ffunction-sections -pipe -isystem /home/mhuang/anaconda3/envs/psi4py37/include -fopenmp -msse4.2 -Wno-c++1z-extensions -g -fPIC -fvisibility=hidden -Wall -Wextra -pedantic -fopenmp -std=c++14 -o CMakeFiles/forte.dir/base_classes/mo_space_info.cc.o -c /home/mhuang/forte/forte/base_classes/mo_space_info.cc",
+  "file": "/home/mhuang/forte/forte/base_classes/mo_space_info.cc"
+},
+{
+  "directory": "/home/mhuang/forte/forte",
+  "command": "/home/mhuang/anaconda3/envs/psi4py37/bin/x86_64-conda_cos6-linux-gnu-g++ -DHAVE_OPENMP -DMAX_DET_ORB=64 -DUSING_LAPACK_MKL -DUSING_ambit -Dforte_EXPORTS -I/home/mhuang/forte/generated -I/home/mhuang/forte/include -I/home/mhuang/anaconda3/envs/psi4py37/include/python3.7m -I/home/mhuang/forte/forte/. -isystem /home/mhuang/psi4_install/include -isystem /usr/local/include/eigen3 -isystem /home/mhuang/ambit/bin/include -fvisibility-inlines-hidden -std=c++17 -fmessage-length=0 -march=nocona -mtune=haswell -ftree-vectorize -fPIC -fstack-protector-strong -fno-plt -O2 -ffunction-sections -pipe -isystem /home/mhuang/anaconda3/envs/psi4py37/include -fopenmp -msse4.2 -Wno-c++1z-extensions -g -fPIC -fvisibility=hidden -Wall -Wextra -pedantic -fopenmp -std=c++14 -o CMakeFiles/forte.dir/base_classes/orbital_transform.cc.o -c /home/mhuang/forte/forte/base_classes/orbital_transform.cc",
+  "file": "/home/mhuang/forte/forte/base_classes/orbital_transform.cc"
+},
+{
+  "directory": "/home/mhuang/forte/forte",
+  "command": "/home/mhuang/anaconda3/envs/psi4py37/bin/x86_64-conda_cos6-linux-gnu-g++ -DHAVE_OPENMP -DMAX_DET_ORB=64 -DUSING_LAPACK_MKL -DUSING_ambit -Dforte_EXPORTS -I/home/mhuang/forte/generated -I/home/mhuang/forte/include -I/home/mhuang/anaconda3/envs/psi4py37/include/python3.7m -I/home/mhuang/forte/forte/. -isystem /home/mhuang/psi4_install/include -isystem /usr/local/include/eigen3 -isystem /home/mhuang/ambit/bin/include -fvisibility-inlines-hidden -std=c++17 -fmessage-length=0 -march=nocona -mtune=haswell -ftree-vectorize -fPIC -fstack-protector-strong -fno-plt -O2 -ffunction-sections -pipe -isystem /home/mhuang/anaconda3/envs/psi4py37/include -fopenmp -msse4.2 -Wno-c++1z-extensions -g -fPIC -fvisibility=hidden -Wall -Wextra -pedantic -fopenmp -std=c++14 -o CMakeFiles/forte.dir/base_classes/rdms.cc.o -c /home/mhuang/forte/forte/base_classes/rdms.cc",
+  "file": "/home/mhuang/forte/forte/base_classes/rdms.cc"
+},
+{
+  "directory": "/home/mhuang/forte/forte",
+  "command": "/home/mhuang/anaconda3/envs/psi4py37/bin/x86_64-conda_cos6-linux-gnu-g++ -DHAVE_OPENMP -DMAX_DET_ORB=64 -DUSING_LAPACK_MKL -DUSING_ambit -Dforte_EXPORTS -I/home/mhuang/forte/generated -I/home/mhuang/forte/include -I/home/mhuang/anaconda3/envs/psi4py37/include/python3.7m -I/home/mhuang/forte/forte/. -isystem /home/mhuang/psi4_install/include -isystem /usr/local/include/eigen3 -isystem /home/mhuang/ambit/bin/include -fvisibility-inlines-hidden -std=c++17 -fmessage-length=0 -march=nocona -mtune=haswell -ftree-vectorize -fPIC -fstack-protector-strong -fno-plt -O2 -ffunction-sections -pipe -isystem /home/mhuang/anaconda3/envs/psi4py37/include -fopenmp -msse4.2 -Wno-c++1z-extensions -g -fPIC -fvisibility=hidden -Wall -Wextra -pedantic -fopenmp -std=c++14 -o CMakeFiles/forte.dir/base_classes/scf_info.cc.o -c /home/mhuang/forte/forte/base_classes/scf_info.cc",
+  "file": "/home/mhuang/forte/forte/base_classes/scf_info.cc"
+},
+{
+  "directory": "/home/mhuang/forte/forte",
+  "command": "/home/mhuang/anaconda3/envs/psi4py37/bin/x86_64-conda_cos6-linux-gnu-g++ -DHAVE_OPENMP -DMAX_DET_ORB=64 -DUSING_LAPACK_MKL -DUSING_ambit -Dforte_EXPORTS -I/home/mhuang/forte/generated -I/home/mhuang/forte/include -I/home/mhuang/anaconda3/envs/psi4py37/include/python3.7m -I/home/mhuang/forte/forte/. -isystem /home/mhuang/psi4_install/include -isystem /usr/local/include/eigen3 -isystem /home/mhuang/ambit/bin/include -fvisibility-inlines-hidden -std=c++17 -fmessage-length=0 -march=nocona -mtune=haswell -ftree-vectorize -fPIC -fstack-protector-strong -fno-plt -O2 -ffunction-sections -pipe -isystem /home/mhuang/anaconda3/envs/psi4py37/include -fopenmp -msse4.2 -Wno-c++1z-extensions -g -fPIC -fvisibility=hidden -Wall -Wextra -pedantic -fopenmp -std=c++14 -o CMakeFiles/forte.dir/base_classes/state_info.cc.o -c /home/mhuang/forte/forte/base_classes/state_info.cc",
+  "file": "/home/mhuang/forte/forte/base_classes/state_info.cc"
+},
+{
+  "directory": "/home/mhuang/forte/forte",
+  "command": "/home/mhuang/anaconda3/envs/psi4py37/bin/x86_64-conda_cos6-linux-gnu-g++ -DHAVE_OPENMP -DMAX_DET_ORB=64 -DUSING_LAPACK_MKL -DUSING_ambit -Dforte_EXPORTS -I/home/mhuang/forte/generated -I/home/mhuang/forte/include -I/home/mhuang/anaconda3/envs/psi4py37/include/python3.7m -I/home/mhuang/forte/forte/. -isystem /home/mhuang/psi4_install/include -isystem /usr/local/include/eigen3 -isystem /home/mhuang/ambit/bin/include -fvisibility-inlines-hidden -std=c++17 -fmessage-length=0 -march=nocona -mtune=haswell -ftree-vectorize -fPIC -fstack-protector-strong -fno-plt -O2 -ffunction-sections -pipe -isystem /home/mhuang/anaconda3/envs/psi4py37/include -fopenmp -msse4.2 -Wno-c++1z-extensions -g -fPIC -fvisibility=hidden -Wall -Wextra -pedantic -fopenmp -std=c++14 -o CMakeFiles/forte.dir/casscf/casscf.cc.o -c /home/mhuang/forte/forte/casscf/casscf.cc",
+  "file": "/home/mhuang/forte/forte/casscf/casscf.cc"
+},
+{
+  "directory": "/home/mhuang/forte/forte",
+  "command": "/home/mhuang/anaconda3/envs/psi4py37/bin/x86_64-conda_cos6-linux-gnu-g++ -DHAVE_OPENMP -DMAX_DET_ORB=64 -DUSING_LAPACK_MKL -DUSING_ambit -Dforte_EXPORTS -I/home/mhuang/forte/generated -I/home/mhuang/forte/include -I/home/mhuang/anaconda3/envs/psi4py37/include/python3.7m -I/home/mhuang/forte/forte/. -isystem /home/mhuang/psi4_install/include -isystem /usr/local/include/eigen3 -isystem /home/mhuang/ambit/bin/include -fvisibility-inlines-hidden -std=c++17 -fmessage-length=0 -march=nocona -mtune=haswell -ftree-vectorize -fPIC -fstack-protector-strong -fno-plt -O2 -ffunction-sections -pipe -isystem /home/mhuang/anaconda3/envs/psi4py37/include -fopenmp -msse4.2 -Wno-c++1z-extensions -g -fPIC -fvisibility=hidden -Wall -Wextra -pedantic -fopenmp -std=c++14 -o CMakeFiles/forte.dir/casscf/casscf_gradient.cc.o -c /home/mhuang/forte/forte/casscf/casscf_gradient.cc",
+  "file": "/home/mhuang/forte/forte/casscf/casscf_gradient.cc"
+},
+{
+  "directory": "/home/mhuang/forte/forte",
+  "command": "/home/mhuang/anaconda3/envs/psi4py37/bin/x86_64-conda_cos6-linux-gnu-g++ -DHAVE_OPENMP -DMAX_DET_ORB=64 -DUSING_LAPACK_MKL -DUSING_ambit -Dforte_EXPORTS -I/home/mhuang/forte/generated -I/home/mhuang/forte/include -I/home/mhuang/anaconda3/envs/psi4py37/include/python3.7m -I/home/mhuang/forte/forte/. -isystem /home/mhuang/psi4_install/include -isystem /usr/local/include/eigen3 -isystem /home/mhuang/ambit/bin/include -fvisibility-inlines-hidden -std=c++17 -fmessage-length=0 -march=nocona -mtune=haswell -ftree-vectorize -fPIC -fstack-protector-strong -fno-plt -O2 -ffunction-sections -pipe -isystem /home/mhuang/anaconda3/envs/psi4py37/include -fopenmp -msse4.2 -Wno-c++1z-extensions -g -fPIC -fvisibility=hidden -Wall -Wextra -pedantic -fopenmp -std=c++14 -o CMakeFiles/forte.dir/casscf/casscf_orb_grad.cc.o -c /home/mhuang/forte/forte/casscf/casscf_orb_grad.cc",
+  "file": "/home/mhuang/forte/forte/casscf/casscf_orb_grad.cc"
+},
+{
+  "directory": "/home/mhuang/forte/forte",
+  "command": "/home/mhuang/anaconda3/envs/psi4py37/bin/x86_64-conda_cos6-linux-gnu-g++ -DHAVE_OPENMP -DMAX_DET_ORB=64 -DUSING_LAPACK_MKL -DUSING_ambit -Dforte_EXPORTS -I/home/mhuang/forte/generated -I/home/mhuang/forte/include -I/home/mhuang/anaconda3/envs/psi4py37/include/python3.7m -I/home/mhuang/forte/forte/. -isystem /home/mhuang/psi4_install/include -isystem /usr/local/include/eigen3 -isystem /home/mhuang/ambit/bin/include -fvisibility-inlines-hidden -std=c++17 -fmessage-length=0 -march=nocona -mtune=haswell -ftree-vectorize -fPIC -fstack-protector-strong -fno-plt -O2 -ffunction-sections -pipe -isystem /home/mhuang/anaconda3/envs/psi4py37/include -fopenmp -msse4.2 -Wno-c++1z-extensions -g -fPIC -fvisibility=hidden -Wall -Wextra -pedantic -fopenmp -std=c++14 -o CMakeFiles/forte.dir/casscf/casscf_orb_grad_deriv.cc.o -c /home/mhuang/forte/forte/casscf/casscf_orb_grad_deriv.cc",
+  "file": "/home/mhuang/forte/forte/casscf/casscf_orb_grad_deriv.cc"
+},
+{
+  "directory": "/home/mhuang/forte/forte",
+  "command": "/home/mhuang/anaconda3/envs/psi4py37/bin/x86_64-conda_cos6-linux-gnu-g++ -DHAVE_OPENMP -DMAX_DET_ORB=64 -DUSING_LAPACK_MKL -DUSING_ambit -Dforte_EXPORTS -I/home/mhuang/forte/generated -I/home/mhuang/forte/include -I/home/mhuang/anaconda3/envs/psi4py37/include/python3.7m -I/home/mhuang/forte/forte/. -isystem /home/mhuang/psi4_install/include -isystem /usr/local/include/eigen3 -isystem /home/mhuang/ambit/bin/include -fvisibility-inlines-hidden -std=c++17 -fmessage-length=0 -march=nocona -mtune=haswell -ftree-vectorize -fPIC -fstack-protector-strong -fno-plt -O2 -ffunction-sections -pipe -isystem /home/mhuang/anaconda3/envs/psi4py37/include -fopenmp -msse4.2 -Wno-c++1z-extensions -g -fPIC -fvisibility=hidden -Wall -Wextra -pedantic -fopenmp -std=c++14 -o CMakeFiles/forte.dir/casscf/cpscf.cc.o -c /home/mhuang/forte/forte/casscf/cpscf.cc",
+  "file": "/home/mhuang/forte/forte/casscf/cpscf.cc"
+},
+{
+  "directory": "/home/mhuang/forte/forte",
+  "command": "/home/mhuang/anaconda3/envs/psi4py37/bin/x86_64-conda_cos6-linux-gnu-g++ -DHAVE_OPENMP -DMAX_DET_ORB=64 -DUSING_LAPACK_MKL -DUSING_ambit -Dforte_EXPORTS -I/home/mhuang/forte/generated -I/home/mhuang/forte/include -I/home/mhuang/anaconda3/envs/psi4py37/include/python3.7m -I/home/mhuang/forte/forte/. -isystem /home/mhuang/psi4_install/include -isystem /usr/local/include/eigen3 -isystem /home/mhuang/ambit/bin/include -fvisibility-inlines-hidden -std=c++17 -fmessage-length=0 -march=nocona -mtune=haswell -ftree-vectorize -fPIC -fstack-protector-strong -fno-plt -O2 -ffunction-sections -pipe -isystem /home/mhuang/anaconda3/envs/psi4py37/include -fopenmp -msse4.2 -Wno-c++1z-extensions -g -fPIC -fvisibility=hidden -Wall -Wextra -pedantic -fopenmp -std=c++14 -o CMakeFiles/forte.dir/casscf/mcscf_2step.cc.o -c /home/mhuang/forte/forte/casscf/mcscf_2step.cc",
+  "file": "/home/mhuang/forte/forte/casscf/mcscf_2step.cc"
+},
+{
+  "directory": "/home/mhuang/forte/forte",
+  "command": "/home/mhuang/anaconda3/envs/psi4py37/bin/x86_64-conda_cos6-linux-gnu-g++ -DHAVE_OPENMP -DMAX_DET_ORB=64 -DUSING_LAPACK_MKL -DUSING_ambit -Dforte_EXPORTS -I/home/mhuang/forte/generated -I/home/mhuang/forte/include -I/home/mhuang/anaconda3/envs/psi4py37/include/python3.7m -I/home/mhuang/forte/forte/. -isystem /home/mhuang/psi4_install/include -isystem /usr/local/include/eigen3 -isystem /home/mhuang/ambit/bin/include -fvisibility-inlines-hidden -std=c++17 -fmessage-length=0 -march=nocona -mtune=haswell -ftree-vectorize -fPIC -fstack-protector-strong -fno-plt -O2 -ffunction-sections -pipe -isystem /home/mhuang/anaconda3/envs/psi4py37/include -fopenmp -msse4.2 -Wno-c++1z-extensions -g -fPIC -fvisibility=hidden -Wall -Wextra -pedantic -fopenmp -std=c++14 -o CMakeFiles/forte.dir/ci_ex_states/excited_state_solver.cc.o -c /home/mhuang/forte/forte/ci_ex_states/excited_state_solver.cc",
+  "file": "/home/mhuang/forte/forte/ci_ex_states/excited_state_solver.cc"
+},
+{
+  "directory": "/home/mhuang/forte/forte",
+  "command": "/home/mhuang/anaconda3/envs/psi4py37/bin/x86_64-conda_cos6-linux-gnu-g++ -DHAVE_OPENMP -DMAX_DET_ORB=64 -DUSING_LAPACK_MKL -DUSING_ambit -Dforte_EXPORTS -I/home/mhuang/forte/generated -I/home/mhuang/forte/include -I/home/mhuang/anaconda3/envs/psi4py37/include/python3.7m -I/home/mhuang/forte/forte/. -isystem /home/mhuang/psi4_install/include -isystem /usr/local/include/eigen3 -isystem /home/mhuang/ambit/bin/include -fvisibility-inlines-hidden -std=c++17 -fmessage-length=0 -march=nocona -mtune=haswell -ftree-vectorize -fPIC -fstack-protector-strong -fno-plt -O2 -ffunction-sections -pipe -isystem /home/mhuang/anaconda3/envs/psi4py37/include -fopenmp -msse4.2 -Wno-c++1z-extensions -g -fPIC -fvisibility=hidden -Wall -Wextra -pedantic -fopenmp -std=c++14 -o CMakeFiles/forte.dir/ci_rdm/ci_rdms.cc.o -c /home/mhuang/forte/forte/ci_rdm/ci_rdms.cc",
+  "file": "/home/mhuang/forte/forte/ci_rdm/ci_rdms.cc"
+},
+{
+  "directory": "/home/mhuang/forte/forte",
+  "command": "/home/mhuang/anaconda3/envs/psi4py37/bin/x86_64-conda_cos6-linux-gnu-g++ -DHAVE_OPENMP -DMAX_DET_ORB=64 -DUSING_LAPACK_MKL -DUSING_ambit -Dforte_EXPORTS -I/home/mhuang/forte/generated -I/home/mhuang/forte/include -I/home/mhuang/anaconda3/envs/psi4py37/include/python3.7m -I/home/mhuang/forte/forte/. -isystem /home/mhuang/psi4_install/include -isystem /usr/local/include/eigen3 -isystem /home/mhuang/ambit/bin/include -fvisibility-inlines-hidden -std=c++17 -fmessage-length=0 -march=nocona -mtune=haswell -ftree-vectorize -fPIC -fstack-protector-strong -fno-plt -O2 -ffunction-sections -pipe -isystem /home/mhuang/anaconda3/envs/psi4py37/include -fopenmp -msse4.2 -Wno-c++1z-extensions -g -fPIC -fvisibility=hidden -Wall -Wextra -pedantic -fopenmp -std=c++14 -o CMakeFiles/forte.dir/ci_rdm/ci_rdms_dynamic.cc.o -c /home/mhuang/forte/forte/ci_rdm/ci_rdms_dynamic.cc",
+  "file": "/home/mhuang/forte/forte/ci_rdm/ci_rdms_dynamic.cc"
+},
+{
+  "directory": "/home/mhuang/forte/forte",
+  "command": "/home/mhuang/anaconda3/envs/psi4py37/bin/x86_64-conda_cos6-linux-gnu-g++ -DHAVE_OPENMP -DMAX_DET_ORB=64 -DUSING_LAPACK_MKL -DUSING_ambit -Dforte_EXPORTS -I/home/mhuang/forte/generated -I/home/mhuang/forte/include -I/home/mhuang/anaconda3/envs/psi4py37/include/python3.7m -I/home/mhuang/forte/forte/. -isystem /home/mhuang/psi4_install/include -isystem /usr/local/include/eigen3 -isystem /home/mhuang/ambit/bin/include -fvisibility-inlines-hidden -std=c++17 -fmessage-length=0 -march=nocona -mtune=haswell -ftree-vectorize -fPIC -fstack-protector-strong -fno-plt -O2 -ffunction-sections -pipe -isystem /home/mhuang/anaconda3/envs/psi4py37/include -fopenmp -msse4.2 -Wno-c++1z-extensions -g -fPIC -fvisibility=hidden -Wall -Wextra -pedantic -fopenmp -std=c++14 -o CMakeFiles/forte.dir/dmrg/dmrgscf.cc.o -c /home/mhuang/forte/forte/dmrg/dmrgscf.cc",
+  "file": "/home/mhuang/forte/forte/dmrg/dmrgscf.cc"
+},
+{
+  "directory": "/home/mhuang/forte/forte",
+  "command": "/home/mhuang/anaconda3/envs/psi4py37/bin/x86_64-conda_cos6-linux-gnu-g++ -DHAVE_OPENMP -DMAX_DET_ORB=64 -DUSING_LAPACK_MKL -DUSING_ambit -Dforte_EXPORTS -I/home/mhuang/forte/generated -I/home/mhuang/forte/include -I/home/mhuang/anaconda3/envs/psi4py37/include/python3.7m -I/home/mhuang/forte/forte/. -isystem /home/mhuang/psi4_install/include -isystem /usr/local/include/eigen3 -isystem /home/mhuang/ambit/bin/include -fvisibility-inlines-hidden -std=c++17 -fmessage-length=0 -march=nocona -mtune=haswell -ftree-vectorize -fPIC -fstack-protector-strong -fno-plt -O2 -ffunction-sections -pipe -isystem /home/mhuang/anaconda3/envs/psi4py37/include -fopenmp -msse4.2 -Wno-c++1z-extensions -g -fPIC -fvisibility=hidden -Wall -Wextra -pedantic -fopenmp -std=c++14 -o CMakeFiles/forte.dir/dmrg/dmrgsolver.cc.o -c /home/mhuang/forte/forte/dmrg/dmrgsolver.cc",
+  "file": "/home/mhuang/forte/forte/dmrg/dmrgsolver.cc"
+},
+{
+  "directory": "/home/mhuang/forte/forte",
+  "command": "/home/mhuang/anaconda3/envs/psi4py37/bin/x86_64-conda_cos6-linux-gnu-g++ -DHAVE_OPENMP -DMAX_DET_ORB=64 -DUSING_LAPACK_MKL -DUSING_ambit -Dforte_EXPORTS -I/home/mhuang/forte/generated -I/home/mhuang/forte/include -I/home/mhuang/anaconda3/envs/psi4py37/include/python3.7m -I/home/mhuang/forte/forte/. -isystem /home/mhuang/psi4_install/include -isystem /usr/local/include/eigen3 -isystem /home/mhuang/ambit/bin/include -fvisibility-inlines-hidden -std=c++17 -fmessage-length=0 -march=nocona -mtune=haswell -ftree-vectorize -fPIC -fstack-protector-strong -fno-plt -O2 -ffunction-sections -pipe -isystem /home/mhuang/anaconda3/envs/psi4py37/include -fopenmp -msse4.2 -Wno-c++1z-extensions -g -fPIC -fvisibility=hidden -Wall -Wextra -pedantic -fopenmp -std=c++14 -o CMakeFiles/forte.dir/fci/binary_graph.cc.o -c /home/mhuang/forte/forte/fci/binary_graph.cc",
+  "file": "/home/mhuang/forte/forte/fci/binary_graph.cc"
+},
+{
+  "directory": "/home/mhuang/forte/forte",
+  "command": "/home/mhuang/anaconda3/envs/psi4py37/bin/x86_64-conda_cos6-linux-gnu-g++ -DHAVE_OPENMP -DMAX_DET_ORB=64 -DUSING_LAPACK_MKL -DUSING_ambit -Dforte_EXPORTS -I/home/mhuang/forte/generated -I/home/mhuang/forte/include -I/home/mhuang/anaconda3/envs/psi4py37/include/python3.7m -I/home/mhuang/forte/forte/. -isystem /home/mhuang/psi4_install/include -isystem /usr/local/include/eigen3 -isystem /home/mhuang/ambit/bin/include -fvisibility-inlines-hidden -std=c++17 -fmessage-length=0 -march=nocona -mtune=haswell -ftree-vectorize -fPIC -fstack-protector-strong -fno-plt -O2 -ffunction-sections -pipe -isystem /home/mhuang/anaconda3/envs/psi4py37/include -fopenmp -msse4.2 -Wno-c++1z-extensions -g -fPIC -fvisibility=hidden -Wall -Wextra -pedantic -fopenmp -std=c++14 -o CMakeFiles/forte.dir/fci/fci_solver.cc.o -c /home/mhuang/forte/forte/fci/fci_solver.cc",
+  "file": "/home/mhuang/forte/forte/fci/fci_solver.cc"
+},
+{
+  "directory": "/home/mhuang/forte/forte",
+  "command": "/home/mhuang/anaconda3/envs/psi4py37/bin/x86_64-conda_cos6-linux-gnu-g++ -DHAVE_OPENMP -DMAX_DET_ORB=64 -DUSING_LAPACK_MKL -DUSING_ambit -Dforte_EXPORTS -I/home/mhuang/forte/generated -I/home/mhuang/forte/include -I/home/mhuang/anaconda3/envs/psi4py37/include/python3.7m -I/home/mhuang/forte/forte/. -isystem /home/mhuang/psi4_install/include -isystem /usr/local/include/eigen3 -isystem /home/mhuang/ambit/bin/include -fvisibility-inlines-hidden -std=c++17 -fmessage-length=0 -march=nocona -mtune=haswell -ftree-vectorize -fPIC -fstack-protector-strong -fno-plt -O2 -ffunction-sections -pipe -isystem /home/mhuang/anaconda3/envs/psi4py37/include -fopenmp -msse4.2 -Wno-c++1z-extensions -g -fPIC -fvisibility=hidden -Wall -Wextra -pedantic -fopenmp -std=c++14 -o CMakeFiles/forte.dir/fci/fci_vector.cc.o -c /home/mhuang/forte/forte/fci/fci_vector.cc",
+  "file": "/home/mhuang/forte/forte/fci/fci_vector.cc"
+},
+{
+  "directory": "/home/mhuang/forte/forte",
+  "command": "/home/mhuang/anaconda3/envs/psi4py37/bin/x86_64-conda_cos6-linux-gnu-g++ -DHAVE_OPENMP -DMAX_DET_ORB=64 -DUSING_LAPACK_MKL -DUSING_ambit -Dforte_EXPORTS -I/home/mhuang/forte/generated -I/home/mhuang/forte/include -I/home/mhuang/anaconda3/envs/psi4py37/include/python3.7m -I/home/mhuang/forte/forte/. -isystem /home/mhuang/psi4_install/include -isystem /usr/local/include/eigen3 -isystem /home/mhuang/ambit/bin/include -fvisibility-inlines-hidden -std=c++17 -fmessage-length=0 -march=nocona -mtune=haswell -ftree-vectorize -fPIC -fstack-protector-strong -fno-plt -O2 -ffunction-sections -pipe -isystem /home/mhuang/anaconda3/envs/psi4py37/include -fopenmp -msse4.2 -Wno-c++1z-extensions -g -fPIC -fvisibility=hidden -Wall -Wextra -pedantic -fopenmp -std=c++14 -o CMakeFiles/forte.dir/fci/fci_vector_h_diag.cc.o -c /home/mhuang/forte/forte/fci/fci_vector_h_diag.cc",
+  "file": "/home/mhuang/forte/forte/fci/fci_vector_h_diag.cc"
+},
+{
+  "directory": "/home/mhuang/forte/forte",
+  "command": "/home/mhuang/anaconda3/envs/psi4py37/bin/x86_64-conda_cos6-linux-gnu-g++ -DHAVE_OPENMP -DMAX_DET_ORB=64 -DUSING_LAPACK_MKL -DUSING_ambit -Dforte_EXPORTS -I/home/mhuang/forte/generated -I/home/mhuang/forte/include -I/home/mhuang/anaconda3/envs/psi4py37/include/python3.7m -I/home/mhuang/forte/forte/. -isystem /home/mhuang/psi4_install/include -isystem /usr/local/include/eigen3 -isystem /home/mhuang/ambit/bin/include -fvisibility-inlines-hidden -std=c++17 -fmessage-length=0 -march=nocona -mtune=haswell -ftree-vectorize -fPIC -fstack-protector-strong -fno-plt -O2 -ffunction-sections -pipe -isystem /home/mhuang/anaconda3/envs/psi4py37/include -fopenmp -msse4.2 -Wno-c++1z-extensions -g -fPIC -fvisibility=hidden -Wall -Wextra -pedantic -fopenmp -std=c++14 -o CMakeFiles/forte.dir/fci/fci_vector_hamiltonian.cc.o -c /home/mhuang/forte/forte/fci/fci_vector_hamiltonian.cc",
+  "file": "/home/mhuang/forte/forte/fci/fci_vector_hamiltonian.cc"
+},
+{
+  "directory": "/home/mhuang/forte/forte",
+  "command": "/home/mhuang/anaconda3/envs/psi4py37/bin/x86_64-conda_cos6-linux-gnu-g++ -DHAVE_OPENMP -DMAX_DET_ORB=64 -DUSING_LAPACK_MKL -DUSING_ambit -Dforte_EXPORTS -I/home/mhuang/forte/generated -I/home/mhuang/forte/include -I/home/mhuang/anaconda3/envs/psi4py37/include/python3.7m -I/home/mhuang/forte/forte/. -isystem /home/mhuang/psi4_install/include -isystem /usr/local/include/eigen3 -isystem /home/mhuang/ambit/bin/include -fvisibility-inlines-hidden -std=c++17 -fmessage-length=0 -march=nocona -mtune=haswell -ftree-vectorize -fPIC -fstack-protector-strong -fno-plt -O2 -ffunction-sections -pipe -isystem /home/mhuang/anaconda3/envs/psi4py37/include -fopenmp -msse4.2 -Wno-c++1z-extensions -g -fPIC -fvisibility=hidden -Wall -Wextra -pedantic -fopenmp -std=c++14 -o CMakeFiles/forte.dir/fci/fci_vector_rdm.cc.o -c /home/mhuang/forte/forte/fci/fci_vector_rdm.cc",
+  "file": "/home/mhuang/forte/forte/fci/fci_vector_rdm.cc"
+},
+{
+  "directory": "/home/mhuang/forte/forte",
+  "command": "/home/mhuang/anaconda3/envs/psi4py37/bin/x86_64-conda_cos6-linux-gnu-g++ -DHAVE_OPENMP -DMAX_DET_ORB=64 -DUSING_LAPACK_MKL -DUSING_ambit -Dforte_EXPORTS -I/home/mhuang/forte/generated -I/home/mhuang/forte/include -I/home/mhuang/anaconda3/envs/psi4py37/include/python3.7m -I/home/mhuang/forte/forte/. -isystem /home/mhuang/psi4_install/include -isystem /usr/local/include/eigen3 -isystem /home/mhuang/ambit/bin/include -fvisibility-inlines-hidden -std=c++17 -fmessage-length=0 -march=nocona -mtune=haswell -ftree-vectorize -fPIC -fstack-protector-strong -fno-plt -O2 -ffunction-sections -pipe -isystem /home/mhuang/anaconda3/envs/psi4py37/include -fopenmp -msse4.2 -Wno-c++1z-extensions -g -fPIC -fvisibility=hidden -Wall -Wextra -pedantic -fopenmp -std=c++14 -o CMakeFiles/forte.dir/fci/string_hole_list.cc.o -c /home/mhuang/forte/forte/fci/string_hole_list.cc",
+  "file": "/home/mhuang/forte/forte/fci/string_hole_list.cc"
+},
+{
+  "directory": "/home/mhuang/forte/forte",
+  "command": "/home/mhuang/anaconda3/envs/psi4py37/bin/x86_64-conda_cos6-linux-gnu-g++ -DHAVE_OPENMP -DMAX_DET_ORB=64 -DUSING_LAPACK_MKL -DUSING_ambit -Dforte_EXPORTS -I/home/mhuang/forte/generated -I/home/mhuang/forte/include -I/home/mhuang/anaconda3/envs/psi4py37/include/python3.7m -I/home/mhuang/forte/forte/. -isystem /home/mhuang/psi4_install/include -isystem /usr/local/include/eigen3 -isystem /home/mhuang/ambit/bin/include -fvisibility-inlines-hidden -std=c++17 -fmessage-length=0 -march=nocona -mtune=haswell -ftree-vectorize -fPIC -fstack-protector-strong -fno-plt -O2 -ffunction-sections -pipe -isystem /home/mhuang/anaconda3/envs/psi4py37/include -fopenmp -msse4.2 -Wno-c++1z-extensions -g -fPIC -fvisibility=hidden -Wall -Wextra -pedantic -fopenmp -std=c++14 -o CMakeFiles/forte.dir/fci/string_lists.cc.o -c /home/mhuang/forte/forte/fci/string_lists.cc",
+  "file": "/home/mhuang/forte/forte/fci/string_lists.cc"
+},
+{
+  "directory": "/home/mhuang/forte/forte",
+  "command": "/home/mhuang/anaconda3/envs/psi4py37/bin/x86_64-conda_cos6-linux-gnu-g++ -DHAVE_OPENMP -DMAX_DET_ORB=64 -DUSING_LAPACK_MKL -DUSING_ambit -Dforte_EXPORTS -I/home/mhuang/forte/generated -I/home/mhuang/forte/include -I/home/mhuang/anaconda3/envs/psi4py37/include/python3.7m -I/home/mhuang/forte/forte/. -isystem /home/mhuang/psi4_install/include -isystem /usr/local/include/eigen3 -isystem /home/mhuang/ambit/bin/include -fvisibility-inlines-hidden -std=c++17 -fmessage-length=0 -march=nocona -mtune=haswell -ftree-vectorize -fPIC -fstack-protector-strong -fno-plt -O2 -ffunction-sections -pipe -isystem /home/mhuang/anaconda3/envs/psi4py37/include -fopenmp -msse4.2 -Wno-c++1z-extensions -g -fPIC -fvisibility=hidden -Wall -Wextra -pedantic -fopenmp -std=c++14 -o CMakeFiles/forte.dir/fci/string_oo_list.cc.o -c /home/mhuang/forte/forte/fci/string_oo_list.cc",
+  "file": "/home/mhuang/forte/forte/fci/string_oo_list.cc"
+},
+{
+  "directory": "/home/mhuang/forte/forte",
+  "command": "/home/mhuang/anaconda3/envs/psi4py37/bin/x86_64-conda_cos6-linux-gnu-g++ -DHAVE_OPENMP -DMAX_DET_ORB=64 -DUSING_LAPACK_MKL -DUSING_ambit -Dforte_EXPORTS -I/home/mhuang/forte/generated -I/home/mhuang/forte/include -I/home/mhuang/anaconda3/envs/psi4py37/include/python3.7m -I/home/mhuang/forte/forte/. -isystem /home/mhuang/psi4_install/include -isystem /usr/local/include/eigen3 -isystem /home/mhuang/ambit/bin/include -fvisibility-inlines-hidden -std=c++17 -fmessage-length=0 -march=nocona -mtune=haswell -ftree-vectorize -fPIC -fstack-protector-strong -fno-plt -O2 -ffunction-sections -pipe -isystem /home/mhuang/anaconda3/envs/psi4py37/include -fopenmp -msse4.2 -Wno-c++1z-extensions -g -fPIC -fvisibility=hidden -Wall -Wextra -pedantic -fopenmp -std=c++14 -o CMakeFiles/forte.dir/fci/string_vo_list.cc.o -c /home/mhuang/forte/forte/fci/string_vo_list.cc",
+  "file": "/home/mhuang/forte/forte/fci/string_vo_list.cc"
+},
+{
+  "directory": "/home/mhuang/forte/forte",
+  "command": "/home/mhuang/anaconda3/envs/psi4py37/bin/x86_64-conda_cos6-linux-gnu-g++ -DHAVE_OPENMP -DMAX_DET_ORB=64 -DUSING_LAPACK_MKL -DUSING_ambit -Dforte_EXPORTS -I/home/mhuang/forte/generated -I/home/mhuang/forte/include -I/home/mhuang/anaconda3/envs/psi4py37/include/python3.7m -I/home/mhuang/forte/forte/. -isystem /home/mhuang/psi4_install/include -isystem /usr/local/include/eigen3 -isystem /home/mhuang/ambit/bin/include -fvisibility-inlines-hidden -std=c++17 -fmessage-length=0 -march=nocona -mtune=haswell -ftree-vectorize -fPIC -fstack-protector-strong -fno-plt -O2 -ffunction-sections -pipe -isystem /home/mhuang/anaconda3/envs/psi4py37/include -fopenmp -msse4.2 -Wno-c++1z-extensions -g -fPIC -fvisibility=hidden -Wall -Wextra -pedantic -fopenmp -std=c++14 -o CMakeFiles/forte.dir/fci/string_vvoo_list.cc.o -c /home/mhuang/forte/forte/fci/string_vvoo_list.cc",
+  "file": "/home/mhuang/forte/forte/fci/string_vvoo_list.cc"
+},
+{
+  "directory": "/home/mhuang/forte/forte",
+  "command": "/home/mhuang/anaconda3/envs/psi4py37/bin/x86_64-conda_cos6-linux-gnu-g++ -DHAVE_OPENMP -DMAX_DET_ORB=64 -DUSING_LAPACK_MKL -DUSING_ambit -Dforte_EXPORTS -I/home/mhuang/forte/generated -I/home/mhuang/forte/include -I/home/mhuang/anaconda3/envs/psi4py37/include/python3.7m -I/home/mhuang/forte/forte/. -isystem /home/mhuang/psi4_install/include -isystem /usr/local/include/eigen3 -isystem /home/mhuang/ambit/bin/include -fvisibility-inlines-hidden -std=c++17 -fmessage-length=0 -march=nocona -mtune=haswell -ftree-vectorize -fPIC -fstack-protector-strong -fno-plt -O2 -ffunction-sections -pipe -isystem /home/mhuang/anaconda3/envs/psi4py37/include -fopenmp -msse4.2 -Wno-c++1z-extensions -g -fPIC -fvisibility=hidden -Wall -Wextra -pedantic -fopenmp -std=c++14 -o CMakeFiles/forte.dir/finite_temperature/finite_temperature.cc.o -c /home/mhuang/forte/forte/finite_temperature/finite_temperature.cc",
+  "file": "/home/mhuang/forte/forte/finite_temperature/finite_temperature.cc"
+},
+{
+  "directory": "/home/mhuang/forte/forte",
+  "command": "/home/mhuang/anaconda3/envs/psi4py37/bin/x86_64-conda_cos6-linux-gnu-g++ -DHAVE_OPENMP -DMAX_DET_ORB=64 -DUSING_LAPACK_MKL -DUSING_ambit -Dforte_EXPORTS -I/home/mhuang/forte/generated -I/home/mhuang/forte/include -I/home/mhuang/anaconda3/envs/psi4py37/include/python3.7m -I/home/mhuang/forte/forte/. -isystem /home/mhuang/psi4_install/include -isystem /usr/local/include/eigen3 -isystem /home/mhuang/ambit/bin/include -fvisibility-inlines-hidden -std=c++17 -fmessage-length=0 -march=nocona -mtune=haswell -ftree-vectorize -fPIC -fstack-protector-strong -fno-plt -O2 -ffunction-sections -pipe -isystem /home/mhuang/anaconda3/envs/psi4py37/include -fopenmp -msse4.2 -Wno-c++1z-extensions -g -fPIC -fvisibility=hidden -Wall -Wextra -pedantic -fopenmp -std=c++14 -o CMakeFiles/forte.dir/forte.cc.o -c /home/mhuang/forte/forte/forte.cc",
+  "file": "/home/mhuang/forte/forte/forte.cc"
+},
+{
+  "directory": "/home/mhuang/forte/forte",
+  "command": "/home/mhuang/anaconda3/envs/psi4py37/bin/x86_64-conda_cos6-linux-gnu-g++ -DHAVE_OPENMP -DMAX_DET_ORB=64 -DUSING_LAPACK_MKL -DUSING_ambit -Dforte_EXPORTS -I/home/mhuang/forte/generated -I/home/mhuang/forte/include -I/home/mhuang/anaconda3/envs/psi4py37/include/python3.7m -I/home/mhuang/forte/forte/. -isystem /home/mhuang/psi4_install/include -isystem /usr/local/include/eigen3 -isystem /home/mhuang/ambit/bin/include -fvisibility-inlines-hidden -std=c++17 -fmessage-length=0 -march=nocona -mtune=haswell -ftree-vectorize -fPIC -fstack-protector-strong -fno-plt -O2 -ffunction-sections -pipe -isystem /home/mhuang/anaconda3/envs/psi4py37/include -fopenmp -msse4.2 -Wno-c++1z-extensions -g -fPIC -fvisibility=hidden -Wall -Wextra -pedantic -fopenmp -std=c++14 -o CMakeFiles/forte.dir/gradient_tpdm/backtransform_tpdm.cc.o -c /home/mhuang/forte/forte/gradient_tpdm/backtransform_tpdm.cc",
+  "file": "/home/mhuang/forte/forte/gradient_tpdm/backtransform_tpdm.cc"
+},
+{
+  "directory": "/home/mhuang/forte/forte",
+  "command": "/home/mhuang/anaconda3/envs/psi4py37/bin/x86_64-conda_cos6-linux-gnu-g++ -DHAVE_OPENMP -DMAX_DET_ORB=64 -DUSING_LAPACK_MKL -DUSING_ambit -Dforte_EXPORTS -I/home/mhuang/forte/generated -I/home/mhuang/forte/include -I/home/mhuang/anaconda3/envs/psi4py37/include/python3.7m -I/home/mhuang/forte/forte/. -isystem /home/mhuang/psi4_install/include -isystem /usr/local/include/eigen3 -isystem /home/mhuang/ambit/bin/include -fvisibility-inlines-hidden -std=c++17 -fmessage-length=0 -march=nocona -mtune=haswell -ftree-vectorize -fPIC -fstack-protector-strong -fno-plt -O2 -ffunction-sections -pipe -isystem /home/mhuang/anaconda3/envs/psi4py37/include -fopenmp -msse4.2 -Wno-c++1z-extensions -g -fPIC -fvisibility=hidden -Wall -Wextra -pedantic -fopenmp -std=c++14 -o CMakeFiles/forte.dir/gradient_tpdm/integraltransform_tpdm_unrestricted.cc.o -c /home/mhuang/forte/forte/gradient_tpdm/integraltransform_tpdm_unrestricted.cc",
+  "file": "/home/mhuang/forte/forte/gradient_tpdm/integraltransform_tpdm_unrestricted.cc"
+},
+{
+  "directory": "/home/mhuang/forte/forte",
+  "command": "/home/mhuang/anaconda3/envs/psi4py37/bin/x86_64-conda_cos6-linux-gnu-g++ -DHAVE_OPENMP -DMAX_DET_ORB=64 -DUSING_LAPACK_MKL -DUSING_ambit -Dforte_EXPORTS -I/home/mhuang/forte/generated -I/home/mhuang/forte/include -I/home/mhuang/anaconda3/envs/psi4py37/include/python3.7m -I/home/mhuang/forte/forte/. -isystem /home/mhuang/psi4_install/include -isystem /usr/local/include/eigen3 -isystem /home/mhuang/ambit/bin/include -fvisibility-inlines-hidden -std=c++17 -fmessage-length=0 -march=nocona -mtune=haswell -ftree-vectorize -fPIC -fstack-protector-strong -fno-plt -O2 -ffunction-sections -pipe -isystem /home/mhuang/anaconda3/envs/psi4py37/include -fopenmp -msse4.2 -Wno-c++1z-extensions -g -fPIC -fvisibility=hidden -Wall -Wextra -pedantic -fopenmp -std=c++14 -o CMakeFiles/forte.dir/gradient_tpdm/integraltransform_tpdm_restricted.cc.o -c /home/mhuang/forte/forte/gradient_tpdm/integraltransform_tpdm_restricted.cc",
+  "file": "/home/mhuang/forte/forte/gradient_tpdm/integraltransform_tpdm_restricted.cc"
+},
+{
+  "directory": "/home/mhuang/forte/forte",
+  "command": "/home/mhuang/anaconda3/envs/psi4py37/bin/x86_64-conda_cos6-linux-gnu-g++ -DHAVE_OPENMP -DMAX_DET_ORB=64 -DUSING_LAPACK_MKL -DUSING_ambit -Dforte_EXPORTS -I/home/mhuang/forte/generated -I/home/mhuang/forte/include -I/home/mhuang/anaconda3/envs/psi4py37/include/python3.7m -I/home/mhuang/forte/forte/. -isystem /home/mhuang/psi4_install/include -isystem /usr/local/include/eigen3 -isystem /home/mhuang/ambit/bin/include -fvisibility-inlines-hidden -std=c++17 -fmessage-length=0 -march=nocona -mtune=haswell -ftree-vectorize -fPIC -fstack-protector-strong -fno-plt -O2 -ffunction-sections -pipe -isystem /home/mhuang/anaconda3/envs/psi4py37/include -fopenmp -msse4.2 -Wno-c++1z-extensions -g -fPIC -fvisibility=hidden -Wall -Wextra -pedantic -fopenmp -std=c++14 -o CMakeFiles/forte.dir/helpers/blockedtensorfactory.cc.o -c /home/mhuang/forte/forte/helpers/blockedtensorfactory.cc",
+  "file": "/home/mhuang/forte/forte/helpers/blockedtensorfactory.cc"
+},
+{
+  "directory": "/home/mhuang/forte/forte",
+  "command": "/home/mhuang/anaconda3/envs/psi4py37/bin/x86_64-conda_cos6-linux-gnu-g++ -DHAVE_OPENMP -DMAX_DET_ORB=64 -DUSING_LAPACK_MKL -DUSING_ambit -Dforte_EXPORTS -I/home/mhuang/forte/generated -I/home/mhuang/forte/include -I/home/mhuang/anaconda3/envs/psi4py37/include/python3.7m -I/home/mhuang/forte/forte/. -isystem /home/mhuang/psi4_install/include -isystem /usr/local/include/eigen3 -isystem /home/mhuang/ambit/bin/include -fvisibility-inlines-hidden -std=c++17 -fmessage-length=0 -march=nocona -mtune=haswell -ftree-vectorize -fPIC -fstack-protector-strong -fno-plt -O2 -ffunction-sections -pipe -isystem /home/mhuang/anaconda3/envs/psi4py37/include -fopenmp -msse4.2 -Wno-c++1z-extensions -g -fPIC -fvisibility=hidden -Wall -Wextra -pedantic -fopenmp -std=c++14 -o CMakeFiles/forte.dir/helpers/combinatorial.cc.o -c /home/mhuang/forte/forte/helpers/combinatorial.cc",
+  "file": "/home/mhuang/forte/forte/helpers/combinatorial.cc"
+},
+{
+  "directory": "/home/mhuang/forte/forte",
+  "command": "/home/mhuang/anaconda3/envs/psi4py37/bin/x86_64-conda_cos6-linux-gnu-g++ -DHAVE_OPENMP -DMAX_DET_ORB=64 -DUSING_LAPACK_MKL -DUSING_ambit -Dforte_EXPORTS -I/home/mhuang/forte/generated -I/home/mhuang/forte/include -I/home/mhuang/anaconda3/envs/psi4py37/include/python3.7m -I/home/mhuang/forte/forte/. -isystem /home/mhuang/psi4_install/include -isystem /usr/local/include/eigen3 -isystem /home/mhuang/ambit/bin/include -fvisibility-inlines-hidden -std=c++17 -fmessage-length=0 -march=nocona -mtune=haswell -ftree-vectorize -fPIC -fstack-protector-strong -fno-plt -O2 -ffunction-sections -pipe -isystem /home/mhuang/anaconda3/envs/psi4py37/include -fopenmp -msse4.2 -Wno-c++1z-extensions -g -fPIC -fvisibility=hidden -Wall -Wextra -pedantic -fopenmp -std=c++14 -o CMakeFiles/forte.dir/helpers/cube_file.cc.o -c /home/mhuang/forte/forte/helpers/cube_file.cc",
+  "file": "/home/mhuang/forte/forte/helpers/cube_file.cc"
+},
+{
+  "directory": "/home/mhuang/forte/forte",
+  "command": "/home/mhuang/anaconda3/envs/psi4py37/bin/x86_64-conda_cos6-linux-gnu-g++ -DHAVE_OPENMP -DMAX_DET_ORB=64 -DUSING_LAPACK_MKL -DUSING_ambit -Dforte_EXPORTS -I/home/mhuang/forte/generated -I/home/mhuang/forte/include -I/home/mhuang/anaconda3/envs/psi4py37/include/python3.7m -I/home/mhuang/forte/forte/. -isystem /home/mhuang/psi4_install/include -isystem /usr/local/include/eigen3 -isystem /home/mhuang/ambit/bin/include -fvisibility-inlines-hidden -std=c++17 -fmessage-length=0 -march=nocona -mtune=haswell -ftree-vectorize -fPIC -fstack-protector-strong -fno-plt -O2 -ffunction-sections -pipe -isystem /home/mhuang/anaconda3/envs/psi4py37/include -fopenmp -msse4.2 -Wno-c++1z-extensions -g -fPIC -fvisibility=hidden -Wall -Wextra -pedantic -fopenmp -std=c++14 -o CMakeFiles/forte.dir/helpers/disk_io.cc.o -c /home/mhuang/forte/forte/helpers/disk_io.cc",
+  "file": "/home/mhuang/forte/forte/helpers/disk_io.cc"
+},
+{
+  "directory": "/home/mhuang/forte/forte",
+  "command": "/home/mhuang/anaconda3/envs/psi4py37/bin/x86_64-conda_cos6-linux-gnu-g++ -DHAVE_OPENMP -DMAX_DET_ORB=64 -DUSING_LAPACK_MKL -DUSING_ambit -Dforte_EXPORTS -I/home/mhuang/forte/generated -I/home/mhuang/forte/include -I/home/mhuang/anaconda3/envs/psi4py37/include/python3.7m -I/home/mhuang/forte/forte/. -isystem /home/mhuang/psi4_install/include -isystem /usr/local/include/eigen3 -isystem /home/mhuang/ambit/bin/include -fvisibility-inlines-hidden -std=c++17 -fmessage-length=0 -march=nocona -mtune=haswell -ftree-vectorize -fPIC -fstack-protector-strong -fno-plt -O2 -ffunction-sections -pipe -isystem /home/mhuang/anaconda3/envs/psi4py37/include -fopenmp -msse4.2 -Wno-c++1z-extensions -g -fPIC -fvisibility=hidden -Wall -Wextra -pedantic -fopenmp -std=c++14 -o CMakeFiles/forte.dir/helpers/helpers.cc.o -c /home/mhuang/forte/forte/helpers/helpers.cc",
+  "file": "/home/mhuang/forte/forte/helpers/helpers.cc"
+},
+{
+  "directory": "/home/mhuang/forte/forte",
+  "command": "/home/mhuang/anaconda3/envs/psi4py37/bin/x86_64-conda_cos6-linux-gnu-g++ -DHAVE_OPENMP -DMAX_DET_ORB=64 -DUSING_LAPACK_MKL -DUSING_ambit -Dforte_EXPORTS -I/home/mhuang/forte/generated -I/home/mhuang/forte/include -I/home/mhuang/anaconda3/envs/psi4py37/include/python3.7m -I/home/mhuang/forte/forte/. -isystem /home/mhuang/psi4_install/include -isystem /usr/local/include/eigen3 -isystem /home/mhuang/ambit/bin/include -fvisibility-inlines-hidden -std=c++17 -fmessage-length=0 -march=nocona -mtune=haswell -ftree-vectorize -fPIC -fstack-protector-strong -fno-plt -O2 -ffunction-sections -pipe -isystem /home/mhuang/anaconda3/envs/psi4py37/include -fopenmp -msse4.2 -Wno-c++1z-extensions -g -fPIC -fvisibility=hidden -Wall -Wextra -pedantic -fopenmp -std=c++14 -o CMakeFiles/forte.dir/helpers/symmetry.cc.o -c /home/mhuang/forte/forte/helpers/symmetry.cc",
+  "file": "/home/mhuang/forte/forte/helpers/symmetry.cc"
+},
+{
+  "directory": "/home/mhuang/forte/forte",
+  "command": "/home/mhuang/anaconda3/envs/psi4py37/bin/x86_64-conda_cos6-linux-gnu-g++ -DHAVE_OPENMP -DMAX_DET_ORB=64 -DUSING_LAPACK_MKL -DUSING_ambit -Dforte_EXPORTS -I/home/mhuang/forte/generated -I/home/mhuang/forte/include -I/home/mhuang/anaconda3/envs/psi4py37/include/python3.7m -I/home/mhuang/forte/forte/. -isystem /home/mhuang/psi4_install/include -isystem /usr/local/include/eigen3 -isystem /home/mhuang/ambit/bin/include -fvisibility-inlines-hidden -std=c++17 -fmessage-length=0 -march=nocona -mtune=haswell -ftree-vectorize -fPIC -fstack-protector-strong -fno-plt -O2 -ffunction-sections -pipe -isystem /home/mhuang/anaconda3/envs/psi4py37/include -fopenmp -msse4.2 -Wno-c++1z-extensions -g -fPIC -fvisibility=hidden -Wall -Wextra -pedantic -fopenmp -std=c++14 -o CMakeFiles/forte.dir/helpers/iterative_solvers.cc.o -c /home/mhuang/forte/forte/helpers/iterative_solvers.cc",
+  "file": "/home/mhuang/forte/forte/helpers/iterative_solvers.cc"
+},
+{
+  "directory": "/home/mhuang/forte/forte",
+  "command": "/home/mhuang/anaconda3/envs/psi4py37/bin/x86_64-conda_cos6-linux-gnu-g++ -DHAVE_OPENMP -DMAX_DET_ORB=64 -DUSING_LAPACK_MKL -DUSING_ambit -Dforte_EXPORTS -I/home/mhuang/forte/generated -I/home/mhuang/forte/include -I/home/mhuang/anaconda3/envs/psi4py37/include/python3.7m -I/home/mhuang/forte/forte/. -isystem /home/mhuang/psi4_install/include -isystem /usr/local/include/eigen3 -isystem /home/mhuang/ambit/bin/include -fvisibility-inlines-hidden -std=c++17 -fmessage-length=0 -march=nocona -mtune=haswell -ftree-vectorize -fPIC -fstack-protector-strong -fno-plt -O2 -ffunction-sections -pipe -isystem /home/mhuang/anaconda3/envs/psi4py37/include -fopenmp -msse4.2 -Wno-c++1z-extensions -g -fPIC -fvisibility=hidden -Wall -Wextra -pedantic -fopenmp -std=c++14 -o CMakeFiles/forte.dir/helpers/lbfgs/lbfgs.cc.o -c /home/mhuang/forte/forte/helpers/lbfgs/lbfgs.cc",
+  "file": "/home/mhuang/forte/forte/helpers/lbfgs/lbfgs.cc"
+},
+{
+  "directory": "/home/mhuang/forte/forte",
+  "command": "/home/mhuang/anaconda3/envs/psi4py37/bin/x86_64-conda_cos6-linux-gnu-g++ -DHAVE_OPENMP -DMAX_DET_ORB=64 -DUSING_LAPACK_MKL -DUSING_ambit -Dforte_EXPORTS -I/home/mhuang/forte/generated -I/home/mhuang/forte/include -I/home/mhuang/anaconda3/envs/psi4py37/include/python3.7m -I/home/mhuang/forte/forte/. -isystem /home/mhuang/psi4_install/include -isystem /usr/local/include/eigen3 -isystem /home/mhuang/ambit/bin/include -fvisibility-inlines-hidden -std=c++17 -fmessage-length=0 -march=nocona -mtune=haswell -ftree-vectorize -fPIC -fstack-protector-strong -fno-plt -O2 -ffunction-sections -pipe -isystem /home/mhuang/anaconda3/envs/psi4py37/include -fopenmp -msse4.2 -Wno-c++1z-extensions -g -fPIC -fvisibility=hidden -Wall -Wextra -pedantic -fopenmp -std=c++14 -o CMakeFiles/forte.dir/helpers/lbfgs/lbfgs_param.cc.o -c /home/mhuang/forte/forte/helpers/lbfgs/lbfgs_param.cc",
+  "file": "/home/mhuang/forte/forte/helpers/lbfgs/lbfgs_param.cc"
+},
+{
+  "directory": "/home/mhuang/forte/forte",
+  "command": "/home/mhuang/anaconda3/envs/psi4py37/bin/x86_64-conda_cos6-linux-gnu-g++ -DHAVE_OPENMP -DMAX_DET_ORB=64 -DUSING_LAPACK_MKL -DUSING_ambit -Dforte_EXPORTS -I/home/mhuang/forte/generated -I/home/mhuang/forte/include -I/home/mhuang/anaconda3/envs/psi4py37/include/python3.7m -I/home/mhuang/forte/forte/. -isystem /home/mhuang/psi4_install/include -isystem /usr/local/include/eigen3 -isystem /home/mhuang/ambit/bin/include -fvisibility-inlines-hidden -std=c++17 -fmessage-length=0 -march=nocona -mtune=haswell -ftree-vectorize -fPIC -fstack-protector-strong -fno-plt -O2 -ffunction-sections -pipe -isystem /home/mhuang/anaconda3/envs/psi4py37/include -fopenmp -msse4.2 -Wno-c++1z-extensions -g -fPIC -fvisibility=hidden -Wall -Wextra -pedantic -fopenmp -std=c++14 -o CMakeFiles/forte.dir/helpers/lbfgs/rosenbrock.cc.o -c /home/mhuang/forte/forte/helpers/lbfgs/rosenbrock.cc",
+  "file": "/home/mhuang/forte/forte/helpers/lbfgs/rosenbrock.cc"
+},
+{
+  "directory": "/home/mhuang/forte/forte",
+  "command": "/home/mhuang/anaconda3/envs/psi4py37/bin/x86_64-conda_cos6-linux-gnu-g++ -DHAVE_OPENMP -DMAX_DET_ORB=64 -DUSING_LAPACK_MKL -DUSING_ambit -Dforte_EXPORTS -I/home/mhuang/forte/generated -I/home/mhuang/forte/include -I/home/mhuang/anaconda3/envs/psi4py37/include/python3.7m -I/home/mhuang/forte/forte/. -isystem /home/mhuang/psi4_install/include -isystem /usr/local/include/eigen3 -isystem /home/mhuang/ambit/bin/include -fvisibility-inlines-hidden -std=c++17 -fmessage-length=0 -march=nocona -mtune=haswell -ftree-vectorize -fPIC -fstack-protector-strong -fno-plt -O2 -ffunction-sections -pipe -isystem /home/mhuang/anaconda3/envs/psi4py37/include -fopenmp -msse4.2 -Wno-c++1z-extensions -g -fPIC -fvisibility=hidden -Wall -Wextra -pedantic -fopenmp -std=c++14 -o CMakeFiles/forte.dir/helpers/printing.cc.o -c /home/mhuang/forte/forte/helpers/printing.cc",
+  "file": "/home/mhuang/forte/forte/helpers/printing.cc"
+},
+{
+  "directory": "/home/mhuang/forte/forte",
+  "command": "/home/mhuang/anaconda3/envs/psi4py37/bin/x86_64-conda_cos6-linux-gnu-g++ -DHAVE_OPENMP -DMAX_DET_ORB=64 -DUSING_LAPACK_MKL -DUSING_ambit -Dforte_EXPORTS -I/home/mhuang/forte/generated -I/home/mhuang/forte/include -I/home/mhuang/anaconda3/envs/psi4py37/include/python3.7m -I/home/mhuang/forte/forte/. -isystem /home/mhuang/psi4_install/include -isystem /usr/local/include/eigen3 -isystem /home/mhuang/ambit/bin/include -fvisibility-inlines-hidden -std=c++17 -fmessage-length=0 -march=nocona -mtune=haswell -ftree-vectorize -fPIC -fstack-protector-strong -fno-plt -O2 -ffunction-sections -pipe -isystem /home/mhuang/anaconda3/envs/psi4py37/include -fopenmp -msse4.2 -Wno-c++1z-extensions -g -fPIC -fvisibility=hidden -Wall -Wextra -pedantic -fopenmp -std=c++14 -o CMakeFiles/forte.dir/helpers/string_algorithms.cc.o -c /home/mhuang/forte/forte/helpers/string_algorithms.cc",
+  "file": "/home/mhuang/forte/forte/helpers/string_algorithms.cc"
+},
+{
+  "directory": "/home/mhuang/forte/forte",
+  "command": "/home/mhuang/anaconda3/envs/psi4py37/bin/x86_64-conda_cos6-linux-gnu-g++ -DHAVE_OPENMP -DMAX_DET_ORB=64 -DUSING_LAPACK_MKL -DUSING_ambit -Dforte_EXPORTS -I/home/mhuang/forte/generated -I/home/mhuang/forte/include -I/home/mhuang/anaconda3/envs/psi4py37/include/python3.7m -I/home/mhuang/forte/forte/. -isystem /home/mhuang/psi4_install/include -isystem /usr/local/include/eigen3 -isystem /home/mhuang/ambit/bin/include -fvisibility-inlines-hidden -std=c++17 -fmessage-length=0 -march=nocona -mtune=haswell -ftree-vectorize -fPIC -fstack-protector-strong -fno-plt -O2 -ffunction-sections -pipe -isystem /home/mhuang/anaconda3/envs/psi4py37/include -fopenmp -msse4.2 -Wno-c++1z-extensions -g -fPIC -fvisibility=hidden -Wall -Wextra -pedantic -fopenmp -std=c++14 -o CMakeFiles/forte.dir/integrals/active_space_integrals.cc.o -c /home/mhuang/forte/forte/integrals/active_space_integrals.cc",
+  "file": "/home/mhuang/forte/forte/integrals/active_space_integrals.cc"
+},
+{
+  "directory": "/home/mhuang/forte/forte",
+  "command": "/home/mhuang/anaconda3/envs/psi4py37/bin/x86_64-conda_cos6-linux-gnu-g++ -DHAVE_OPENMP -DMAX_DET_ORB=64 -DUSING_LAPACK_MKL -DUSING_ambit -Dforte_EXPORTS -I/home/mhuang/forte/generated -I/home/mhuang/forte/include -I/home/mhuang/anaconda3/envs/psi4py37/include/python3.7m -I/home/mhuang/forte/forte/. -isystem /home/mhuang/psi4_install/include -isystem /usr/local/include/eigen3 -isystem /home/mhuang/ambit/bin/include -fvisibility-inlines-hidden -std=c++17 -fmessage-length=0 -march=nocona -mtune=haswell -ftree-vectorize -fPIC -fstack-protector-strong -fno-plt -O2 -ffunction-sections -pipe -isystem /home/mhuang/anaconda3/envs/psi4py37/include -fopenmp -msse4.2 -Wno-c++1z-extensions -g -fPIC -fvisibility=hidden -Wall -Wextra -pedantic -fopenmp -std=c++14 -o CMakeFiles/forte.dir/integrals/cholesky_integrals.cc.o -c /home/mhuang/forte/forte/integrals/cholesky_integrals.cc",
+  "file": "/home/mhuang/forte/forte/integrals/cholesky_integrals.cc"
+},
+{
+  "directory": "/home/mhuang/forte/forte",
+  "command": "/home/mhuang/anaconda3/envs/psi4py37/bin/x86_64-conda_cos6-linux-gnu-g++ -DHAVE_OPENMP -DMAX_DET_ORB=64 -DUSING_LAPACK_MKL -DUSING_ambit -Dforte_EXPORTS -I/home/mhuang/forte/generated -I/home/mhuang/forte/include -I/home/mhuang/anaconda3/envs/psi4py37/include/python3.7m -I/home/mhuang/forte/forte/. -isystem /home/mhuang/psi4_install/include -isystem /usr/local/include/eigen3 -isystem /home/mhuang/ambit/bin/include -fvisibility-inlines-hidden -std=c++17 -fmessage-length=0 -march=nocona -mtune=haswell -ftree-vectorize -fPIC -fstack-protector-strong -fno-plt -O2 -ffunction-sections -pipe -isystem /home/mhuang/anaconda3/envs/psi4py37/include -fopenmp -msse4.2 -Wno-c++1z-extensions -g -fPIC -fvisibility=hidden -Wall -Wextra -pedantic -fopenmp -std=c++14 -o CMakeFiles/forte.dir/integrals/conventional_integrals.cc.o -c /home/mhuang/forte/forte/integrals/conventional_integrals.cc",
+  "file": "/home/mhuang/forte/forte/integrals/conventional_integrals.cc"
+},
+{
+  "directory": "/home/mhuang/forte/forte",
+  "command": "/home/mhuang/anaconda3/envs/psi4py37/bin/x86_64-conda_cos6-linux-gnu-g++ -DHAVE_OPENMP -DMAX_DET_ORB=64 -DUSING_LAPACK_MKL -DUSING_ambit -Dforte_EXPORTS -I/home/mhuang/forte/generated -I/home/mhuang/forte/include -I/home/mhuang/anaconda3/envs/psi4py37/include/python3.7m -I/home/mhuang/forte/forte/. -isystem /home/mhuang/psi4_install/include -isystem /usr/local/include/eigen3 -isystem /home/mhuang/ambit/bin/include -fvisibility-inlines-hidden -std=c++17 -fmessage-length=0 -march=nocona -mtune=haswell -ftree-vectorize -fPIC -fstack-protector-strong -fno-plt -O2 -ffunction-sections -pipe -isystem /home/mhuang/anaconda3/envs/psi4py37/include -fopenmp -msse4.2 -Wno-c++1z-extensions -g -fPIC -fvisibility=hidden -Wall -Wextra -pedantic -fopenmp -std=c++14 -o CMakeFiles/forte.dir/integrals/custom_integrals.cc.o -c /home/mhuang/forte/forte/integrals/custom_integrals.cc",
+  "file": "/home/mhuang/forte/forte/integrals/custom_integrals.cc"
+},
+{
+  "directory": "/home/mhuang/forte/forte",
+  "command": "/home/mhuang/anaconda3/envs/psi4py37/bin/x86_64-conda_cos6-linux-gnu-g++ -DHAVE_OPENMP -DMAX_DET_ORB=64 -DUSING_LAPACK_MKL -DUSING_ambit -Dforte_EXPORTS -I/home/mhuang/forte/generated -I/home/mhuang/forte/include -I/home/mhuang/anaconda3/envs/psi4py37/include/python3.7m -I/home/mhuang/forte/forte/. -isystem /home/mhuang/psi4_install/include -isystem /usr/local/include/eigen3 -isystem /home/mhuang/ambit/bin/include -fvisibility-inlines-hidden -std=c++17 -fmessage-length=0 -march=nocona -mtune=haswell -ftree-vectorize -fPIC -fstack-protector-strong -fno-plt -O2 -ffunction-sections -pipe -isystem /home/mhuang/anaconda3/envs/psi4py37/include -fopenmp -msse4.2 -Wno-c++1z-extensions -g -fPIC -fvisibility=hidden -Wall -Wextra -pedantic -fopenmp -std=c++14 -o CMakeFiles/forte.dir/integrals/df_integrals.cc.o -c /home/mhuang/forte/forte/integrals/df_integrals.cc",
+  "file": "/home/mhuang/forte/forte/integrals/df_integrals.cc"
+},
+{
+  "directory": "/home/mhuang/forte/forte",
+  "command": "/home/mhuang/anaconda3/envs/psi4py37/bin/x86_64-conda_cos6-linux-gnu-g++ -DHAVE_OPENMP -DMAX_DET_ORB=64 -DUSING_LAPACK_MKL -DUSING_ambit -Dforte_EXPORTS -I/home/mhuang/forte/generated -I/home/mhuang/forte/include -I/home/mhuang/anaconda3/envs/psi4py37/include/python3.7m -I/home/mhuang/forte/forte/. -isystem /home/mhuang/psi4_install/include -isystem /usr/local/include/eigen3 -isystem /home/mhuang/ambit/bin/include -fvisibility-inlines-hidden -std=c++17 -fmessage-length=0 -march=nocona -mtune=haswell -ftree-vectorize -fPIC -fstack-protector-strong -fno-plt -O2 -ffunction-sections -pipe -isystem /home/mhuang/anaconda3/envs/psi4py37/include -fopenmp -msse4.2 -Wno-c++1z-extensions -g -fPIC -fvisibility=hidden -Wall -Wextra -pedantic -fopenmp -std=c++14 -o CMakeFiles/forte.dir/integrals/diskdf_integrals.cc.o -c /home/mhuang/forte/forte/integrals/diskdf_integrals.cc",
+  "file": "/home/mhuang/forte/forte/integrals/diskdf_integrals.cc"
+},
+{
+  "directory": "/home/mhuang/forte/forte",
+  "command": "/home/mhuang/anaconda3/envs/psi4py37/bin/x86_64-conda_cos6-linux-gnu-g++ -DHAVE_OPENMP -DMAX_DET_ORB=64 -DUSING_LAPACK_MKL -DUSING_ambit -Dforte_EXPORTS -I/home/mhuang/forte/generated -I/home/mhuang/forte/include -I/home/mhuang/anaconda3/envs/psi4py37/include/python3.7m -I/home/mhuang/forte/forte/. -isystem /home/mhuang/psi4_install/include -isystem /usr/local/include/eigen3 -isystem /home/mhuang/ambit/bin/include -fvisibility-inlines-hidden -std=c++17 -fmessage-length=0 -march=nocona -mtune=haswell -ftree-vectorize -fPIC -fstack-protector-strong -fno-plt -O2 -ffunction-sections -pipe -isystem /home/mhuang/anaconda3/envs/psi4py37/include -fopenmp -msse4.2 -Wno-c++1z-extensions -g -fPIC -fvisibility=hidden -Wall -Wextra -pedantic -fopenmp -std=c++14 -o CMakeFiles/forte.dir/integrals/distribute_df_integrals.cc.o -c /home/mhuang/forte/forte/integrals/distribute_df_integrals.cc",
+  "file": "/home/mhuang/forte/forte/integrals/distribute_df_integrals.cc"
+},
+{
+  "directory": "/home/mhuang/forte/forte",
+  "command": "/home/mhuang/anaconda3/envs/psi4py37/bin/x86_64-conda_cos6-linux-gnu-g++ -DHAVE_OPENMP -DMAX_DET_ORB=64 -DUSING_LAPACK_MKL -DUSING_ambit -Dforte_EXPORTS -I/home/mhuang/forte/generated -I/home/mhuang/forte/include -I/home/mhuang/anaconda3/envs/psi4py37/include/python3.7m -I/home/mhuang/forte/forte/. -isystem /home/mhuang/psi4_install/include -isystem /usr/local/include/eigen3 -isystem /home/mhuang/ambit/bin/include -fvisibility-inlines-hidden -std=c++17 -fmessage-length=0 -march=nocona -mtune=haswell -ftree-vectorize -fPIC -fstack-protector-strong -fno-plt -O2 -ffunction-sections -pipe -isystem /home/mhuang/anaconda3/envs/psi4py37/include -fopenmp -msse4.2 -Wno-c++1z-extensions -g -fPIC -fvisibility=hidden -Wall -Wextra -pedantic -fopenmp -std=c++14 -o CMakeFiles/forte.dir/integrals/integrals.cc.o -c /home/mhuang/forte/forte/integrals/integrals.cc",
+  "file": "/home/mhuang/forte/forte/integrals/integrals.cc"
+},
+{
+  "directory": "/home/mhuang/forte/forte",
+  "command": "/home/mhuang/anaconda3/envs/psi4py37/bin/x86_64-conda_cos6-linux-gnu-g++ -DHAVE_OPENMP -DMAX_DET_ORB=64 -DUSING_LAPACK_MKL -DUSING_ambit -Dforte_EXPORTS -I/home/mhuang/forte/generated -I/home/mhuang/forte/include -I/home/mhuang/anaconda3/envs/psi4py37/include/python3.7m -I/home/mhuang/forte/forte/. -isystem /home/mhuang/psi4_install/include -isystem /usr/local/include/eigen3 -isystem /home/mhuang/ambit/bin/include -fvisibility-inlines-hidden -std=c++17 -fmessage-length=0 -march=nocona -mtune=haswell -ftree-vectorize -fPIC -fstack-protector-strong -fno-plt -O2 -ffunction-sections -pipe -isystem /home/mhuang/anaconda3/envs/psi4py37/include -fopenmp -msse4.2 -Wno-c++1z-extensions -g -fPIC -fvisibility=hidden -Wall -Wextra -pedantic -fopenmp -std=c++14 -o CMakeFiles/forte.dir/integrals/integrals_psi4_interface.cc.o -c /home/mhuang/forte/forte/integrals/integrals_psi4_interface.cc",
+  "file": "/home/mhuang/forte/forte/integrals/integrals_psi4_interface.cc"
+},
+{
+  "directory": "/home/mhuang/forte/forte",
+  "command": "/home/mhuang/anaconda3/envs/psi4py37/bin/x86_64-conda_cos6-linux-gnu-g++ -DHAVE_OPENMP -DMAX_DET_ORB=64 -DUSING_LAPACK_MKL -DUSING_ambit -Dforte_EXPORTS -I/home/mhuang/forte/generated -I/home/mhuang/forte/include -I/home/mhuang/anaconda3/envs/psi4py37/include/python3.7m -I/home/mhuang/forte/forte/. -isystem /home/mhuang/psi4_install/include -isystem /usr/local/include/eigen3 -isystem /home/mhuang/ambit/bin/include -fvisibility-inlines-hidden -std=c++17 -fmessage-length=0 -march=nocona -mtune=haswell -ftree-vectorize -fPIC -fstack-protector-strong -fno-plt -O2 -ffunction-sections -pipe -isystem /home/mhuang/anaconda3/envs/psi4py37/include -fopenmp -msse4.2 -Wno-c++1z-extensions -g -fPIC -fvisibility=hidden -Wall -Wextra -pedantic -fopenmp -std=c++14 -o CMakeFiles/forte.dir/integrals/make_integrals.cc.o -c /home/mhuang/forte/forte/integrals/make_integrals.cc",
+  "file": "/home/mhuang/forte/forte/integrals/make_integrals.cc"
+},
+{
+  "directory": "/home/mhuang/forte/forte",
+  "command": "/home/mhuang/anaconda3/envs/psi4py37/bin/x86_64-conda_cos6-linux-gnu-g++ -DHAVE_OPENMP -DMAX_DET_ORB=64 -DUSING_LAPACK_MKL -DUSING_ambit -Dforte_EXPORTS -I/home/mhuang/forte/generated -I/home/mhuang/forte/include -I/home/mhuang/anaconda3/envs/psi4py37/include/python3.7m -I/home/mhuang/forte/forte/. -isystem /home/mhuang/psi4_install/include -isystem /usr/local/include/eigen3 -isystem /home/mhuang/ambit/bin/include -fvisibility-inlines-hidden -std=c++17 -fmessage-length=0 -march=nocona -mtune=haswell -ftree-vectorize -fPIC -fstack-protector-strong -fno-plt -O2 -ffunction-sections -pipe -isystem /home/mhuang/anaconda3/envs/psi4py37/include -fopenmp -msse4.2 -Wno-c++1z-extensions -g -fPIC -fvisibility=hidden -Wall -Wextra -pedantic -fopenmp -std=c++14 -o CMakeFiles/forte.dir/integrals/parallel_ccvv_algorithms.cc.o -c /home/mhuang/forte/forte/integrals/parallel_ccvv_algorithms.cc",
+  "file": "/home/mhuang/forte/forte/integrals/parallel_ccvv_algorithms.cc"
+},
+{
+  "directory": "/home/mhuang/forte/forte",
+  "command": "/home/mhuang/anaconda3/envs/psi4py37/bin/x86_64-conda_cos6-linux-gnu-g++ -DHAVE_OPENMP -DMAX_DET_ORB=64 -DUSING_LAPACK_MKL -DUSING_ambit -Dforte_EXPORTS -I/home/mhuang/forte/generated -I/home/mhuang/forte/include -I/home/mhuang/anaconda3/envs/psi4py37/include/python3.7m -I/home/mhuang/forte/forte/. -isystem /home/mhuang/psi4_install/include -isystem /usr/local/include/eigen3 -isystem /home/mhuang/ambit/bin/include -fvisibility-inlines-hidden -std=c++17 -fmessage-length=0 -march=nocona -mtune=haswell -ftree-vectorize -fPIC -fstack-protector-strong -fno-plt -O2 -ffunction-sections -pipe -isystem /home/mhuang/anaconda3/envs/psi4py37/include -fopenmp -msse4.2 -Wno-c++1z-extensions -g -fPIC -fvisibility=hidden -Wall -Wextra -pedantic -fopenmp -std=c++14 -o CMakeFiles/forte.dir/integrals/paralleldfmo.cc.o -c /home/mhuang/forte/forte/integrals/paralleldfmo.cc",
+  "file": "/home/mhuang/forte/forte/integrals/paralleldfmo.cc"
+},
+{
+  "directory": "/home/mhuang/forte/forte",
+  "command": "/home/mhuang/anaconda3/envs/psi4py37/bin/x86_64-conda_cos6-linux-gnu-g++ -DHAVE_OPENMP -DMAX_DET_ORB=64 -DUSING_LAPACK_MKL -DUSING_ambit -Dforte_EXPORTS -I/home/mhuang/forte/generated -I/home/mhuang/forte/include -I/home/mhuang/anaconda3/envs/psi4py37/include/python3.7m -I/home/mhuang/forte/forte/. -isystem /home/mhuang/psi4_install/include -isystem /usr/local/include/eigen3 -isystem /home/mhuang/ambit/bin/include -fvisibility-inlines-hidden -std=c++17 -fmessage-length=0 -march=nocona -mtune=haswell -ftree-vectorize -fPIC -fstack-protector-strong -fno-plt -O2 -ffunction-sections -pipe -isystem /home/mhuang/anaconda3/envs/psi4py37/include -fopenmp -msse4.2 -Wno-c++1z-extensions -g -fPIC -fvisibility=hidden -Wall -Wextra -pedantic -fopenmp -std=c++14 -o CMakeFiles/forte.dir/mrdsrg-helper/dsrg_mem.cc.o -c /home/mhuang/forte/forte/mrdsrg-helper/dsrg_mem.cc",
+  "file": "/home/mhuang/forte/forte/mrdsrg-helper/dsrg_mem.cc"
+},
+{
+  "directory": "/home/mhuang/forte/forte",
+  "command": "/home/mhuang/anaconda3/envs/psi4py37/bin/x86_64-conda_cos6-linux-gnu-g++ -DHAVE_OPENMP -DMAX_DET_ORB=64 -DUSING_LAPACK_MKL -DUSING_ambit -Dforte_EXPORTS -I/home/mhuang/forte/generated -I/home/mhuang/forte/include -I/home/mhuang/anaconda3/envs/psi4py37/include/python3.7m -I/home/mhuang/forte/forte/. -isystem /home/mhuang/psi4_install/include -isystem /usr/local/include/eigen3 -isystem /home/mhuang/ambit/bin/include -fvisibility-inlines-hidden -std=c++17 -fmessage-length=0 -march=nocona -mtune=haswell -ftree-vectorize -fPIC -fstack-protector-strong -fno-plt -O2 -ffunction-sections -pipe -isystem /home/mhuang/anaconda3/envs/psi4py37/include -fopenmp -msse4.2 -Wno-c++1z-extensions -g -fPIC -fvisibility=hidden -Wall -Wextra -pedantic -fopenmp -std=c++14 -o CMakeFiles/forte.dir/mrdsrg-helper/dsrg_source.cc.o -c /home/mhuang/forte/forte/mrdsrg-helper/dsrg_source.cc",
+  "file": "/home/mhuang/forte/forte/mrdsrg-helper/dsrg_source.cc"
+},
+{
+  "directory": "/home/mhuang/forte/forte",
+  "command": "/home/mhuang/anaconda3/envs/psi4py37/bin/x86_64-conda_cos6-linux-gnu-g++ -DHAVE_OPENMP -DMAX_DET_ORB=64 -DUSING_LAPACK_MKL -DUSING_ambit -Dforte_EXPORTS -I/home/mhuang/forte/generated -I/home/mhuang/forte/include -I/home/mhuang/anaconda3/envs/psi4py37/include/python3.7m -I/home/mhuang/forte/forte/. -isystem /home/mhuang/psi4_install/include -isystem /usr/local/include/eigen3 -isystem /home/mhuang/ambit/bin/include -fvisibility-inlines-hidden -std=c++17 -fmessage-length=0 -march=nocona -mtune=haswell -ftree-vectorize -fPIC -fstack-protector-strong -fno-plt -O2 -ffunction-sections -pipe -isystem /home/mhuang/anaconda3/envs/psi4py37/include -fopenmp -msse4.2 -Wno-c++1z-extensions -g -fPIC -fvisibility=hidden -Wall -Wextra -pedantic -fopenmp -std=c++14 -o CMakeFiles/forte.dir/mrdsrg-helper/dsrg_time.cc.o -c /home/mhuang/forte/forte/mrdsrg-helper/dsrg_time.cc",
+  "file": "/home/mhuang/forte/forte/mrdsrg-helper/dsrg_time.cc"
+},
+{
+  "directory": "/home/mhuang/forte/forte",
+  "command": "/home/mhuang/anaconda3/envs/psi4py37/bin/x86_64-conda_cos6-linux-gnu-g++ -DHAVE_OPENMP -DMAX_DET_ORB=64 -DUSING_LAPACK_MKL -DUSING_ambit -Dforte_EXPORTS -I/home/mhuang/forte/generated -I/home/mhuang/forte/include -I/home/mhuang/anaconda3/envs/psi4py37/include/python3.7m -I/home/mhuang/forte/forte/. -isystem /home/mhuang/psi4_install/include -isystem /usr/local/include/eigen3 -isystem /home/mhuang/ambit/bin/include -fvisibility-inlines-hidden -std=c++17 -fmessage-length=0 -march=nocona -mtune=haswell -ftree-vectorize -fPIC -fstack-protector-strong -fno-plt -O2 -ffunction-sections -pipe -isystem /home/mhuang/anaconda3/envs/psi4py37/include -fopenmp -msse4.2 -Wno-c++1z-extensions -g -fPIC -fvisibility=hidden -Wall -Wextra -pedantic -fopenmp -std=c++14 -o CMakeFiles/forte.dir/mrdsrg-helper/dsrg_transformed.cc.o -c /home/mhuang/forte/forte/mrdsrg-helper/dsrg_transformed.cc",
+  "file": "/home/mhuang/forte/forte/mrdsrg-helper/dsrg_transformed.cc"
+},
+{
+  "directory": "/home/mhuang/forte/forte",
+  "command": "/home/mhuang/anaconda3/envs/psi4py37/bin/x86_64-conda_cos6-linux-gnu-g++ -DHAVE_OPENMP -DMAX_DET_ORB=64 -DUSING_LAPACK_MKL -DUSING_ambit -Dforte_EXPORTS -I/home/mhuang/forte/generated -I/home/mhuang/forte/include -I/home/mhuang/anaconda3/envs/psi4py37/include/python3.7m -I/home/mhuang/forte/forte/. -isystem /home/mhuang/psi4_install/include -isystem /usr/local/include/eigen3 -isystem /home/mhuang/ambit/bin/include -fvisibility-inlines-hidden -std=c++17 -fmessage-length=0 -march=nocona -mtune=haswell -ftree-vectorize -fPIC -fstack-protector-strong -fno-plt -O2 -ffunction-sections -pipe -isystem /home/mhuang/anaconda3/envs/psi4py37/include -fopenmp -msse4.2 -Wno-c++1z-extensions -g -fPIC -fvisibility=hidden -Wall -Wextra -pedantic -fopenmp -std=c++14 -o CMakeFiles/forte.dir/mrdsrg-helper/run_dsrg.cc.o -c /home/mhuang/forte/forte/mrdsrg-helper/run_dsrg.cc",
+  "file": "/home/mhuang/forte/forte/mrdsrg-helper/run_dsrg.cc"
+},
+{
+  "directory": "/home/mhuang/forte/forte",
+  "command": "/home/mhuang/anaconda3/envs/psi4py37/bin/x86_64-conda_cos6-linux-gnu-g++ -DHAVE_OPENMP -DMAX_DET_ORB=64 -DUSING_LAPACK_MKL -DUSING_ambit -Dforte_EXPORTS -I/home/mhuang/forte/generated -I/home/mhuang/forte/include -I/home/mhuang/anaconda3/envs/psi4py37/include/python3.7m -I/home/mhuang/forte/forte/. -isystem /home/mhuang/psi4_install/include -isystem /usr/local/include/eigen3 -isystem /home/mhuang/ambit/bin/include -fvisibility-inlines-hidden -std=c++17 -fmessage-length=0 -march=nocona -mtune=haswell -ftree-vectorize -fPIC -fstack-protector-strong -fno-plt -O2 -ffunction-sections -pipe -isystem /home/mhuang/anaconda3/envs/psi4py37/include -fopenmp -msse4.2 -Wno-c++1z-extensions -g -fPIC -fvisibility=hidden -Wall -Wextra -pedantic -fopenmp -std=c++14 -o CMakeFiles/forte.dir/mrdsrg-so/mrdsrg_so.cc.o -c /home/mhuang/forte/forte/mrdsrg-so/mrdsrg_so.cc",
+  "file": "/home/mhuang/forte/forte/mrdsrg-so/mrdsrg_so.cc"
+},
+{
+  "directory": "/home/mhuang/forte/forte",
+  "command": "/home/mhuang/anaconda3/envs/psi4py37/bin/x86_64-conda_cos6-linux-gnu-g++ -DHAVE_OPENMP -DMAX_DET_ORB=64 -DUSING_LAPACK_MKL -DUSING_ambit -Dforte_EXPORTS -I/home/mhuang/forte/generated -I/home/mhuang/forte/include -I/home/mhuang/anaconda3/envs/psi4py37/include/python3.7m -I/home/mhuang/forte/forte/. -isystem /home/mhuang/psi4_install/include -isystem /usr/local/include/eigen3 -isystem /home/mhuang/ambit/bin/include -fvisibility-inlines-hidden -std=c++17 -fmessage-length=0 -march=nocona -mtune=haswell -ftree-vectorize -fPIC -fstack-protector-strong -fno-plt -O2 -ffunction-sections -pipe -isystem /home/mhuang/anaconda3/envs/psi4py37/include -fopenmp -msse4.2 -Wno-c++1z-extensions -g -fPIC -fvisibility=hidden -Wall -Wextra -pedantic -fopenmp -std=c++14 -o CMakeFiles/forte.dir/mrdsrg-so/so-mrdsrg.cc.o -c /home/mhuang/forte/forte/mrdsrg-so/so-mrdsrg.cc",
+  "file": "/home/mhuang/forte/forte/mrdsrg-so/so-mrdsrg.cc"
+},
+{
+  "directory": "/home/mhuang/forte/forte",
+  "command": "/home/mhuang/anaconda3/envs/psi4py37/bin/x86_64-conda_cos6-linux-gnu-g++ -DHAVE_OPENMP -DMAX_DET_ORB=64 -DUSING_LAPACK_MKL -DUSING_ambit -Dforte_EXPORTS -I/home/mhuang/forte/generated -I/home/mhuang/forte/include -I/home/mhuang/anaconda3/envs/psi4py37/include/python3.7m -I/home/mhuang/forte/forte/. -isystem /home/mhuang/psi4_install/include -isystem /usr/local/include/eigen3 -isystem /home/mhuang/ambit/bin/include -fvisibility-inlines-hidden -std=c++17 -fmessage-length=0 -march=nocona -mtune=haswell -ftree-vectorize -fPIC -fstack-protector-strong -fno-plt -O2 -ffunction-sections -pipe -isystem /home/mhuang/anaconda3/envs/psi4py37/include -fopenmp -msse4.2 -Wno-c++1z-extensions -g -fPIC -fvisibility=hidden -Wall -Wextra -pedantic -fopenmp -std=c++14 -o CMakeFiles/forte.dir/mrdsrg-spin-adapted/dsrg_mrpt.cc.o -c /home/mhuang/forte/forte/mrdsrg-spin-adapted/dsrg_mrpt.cc",
+  "file": "/home/mhuang/forte/forte/mrdsrg-spin-adapted/dsrg_mrpt.cc"
+},
+{
+  "directory": "/home/mhuang/forte/forte",
+  "command": "/home/mhuang/anaconda3/envs/psi4py37/bin/x86_64-conda_cos6-linux-gnu-g++ -DHAVE_OPENMP -DMAX_DET_ORB=64 -DUSING_LAPACK_MKL -DUSING_ambit -Dforte_EXPORTS -I/home/mhuang/forte/generated -I/home/mhuang/forte/include -I/home/mhuang/anaconda3/envs/psi4py37/include/python3.7m -I/home/mhuang/forte/forte/. -isystem /home/mhuang/psi4_install/include -isystem /usr/local/include/eigen3 -isystem /home/mhuang/ambit/bin/include -fvisibility-inlines-hidden -std=c++17 -fmessage-length=0 -march=nocona -mtune=haswell -ftree-vectorize -fPIC -fstack-protector-strong -fno-plt -O2 -ffunction-sections -pipe -isystem /home/mhuang/anaconda3/envs/psi4py37/include -fopenmp -msse4.2 -Wno-c++1z-extensions -g -fPIC -fvisibility=hidden -Wall -Wextra -pedantic -fopenmp -std=c++14 -o CMakeFiles/forte.dir/mrdsrg-spin-adapted/dsrg_mrpt_2nd.cc.o -c /home/mhuang/forte/forte/mrdsrg-spin-adapted/dsrg_mrpt_2nd.cc",
+  "file": "/home/mhuang/forte/forte/mrdsrg-spin-adapted/dsrg_mrpt_2nd.cc"
+},
+{
+  "directory": "/home/mhuang/forte/forte",
+  "command": "/home/mhuang/anaconda3/envs/psi4py37/bin/x86_64-conda_cos6-linux-gnu-g++ -DHAVE_OPENMP -DMAX_DET_ORB=64 -DUSING_LAPACK_MKL -DUSING_ambit -Dforte_EXPORTS -I/home/mhuang/forte/generated -I/home/mhuang/forte/include -I/home/mhuang/anaconda3/envs/psi4py37/include/python3.7m -I/home/mhuang/forte/forte/. -isystem /home/mhuang/psi4_install/include -isystem /usr/local/include/eigen3 -isystem /home/mhuang/ambit/bin/include -fvisibility-inlines-hidden -std=c++17 -fmessage-length=0 -march=nocona -mtune=haswell -ftree-vectorize -fPIC -fstack-protector-strong -fno-plt -O2 -ffunction-sections -pipe -isystem /home/mhuang/anaconda3/envs/psi4py37/include -fopenmp -msse4.2 -Wno-c++1z-extensions -g -fPIC -fvisibility=hidden -Wall -Wextra -pedantic -fopenmp -std=c++14 -o CMakeFiles/forte.dir/mrdsrg-spin-adapted/dsrg_mrpt_amp.cc.o -c /home/mhuang/forte/forte/mrdsrg-spin-adapted/dsrg_mrpt_amp.cc",
+  "file": "/home/mhuang/forte/forte/mrdsrg-spin-adapted/dsrg_mrpt_amp.cc"
+},
+{
+  "directory": "/home/mhuang/forte/forte",
+  "command": "/home/mhuang/anaconda3/envs/psi4py37/bin/x86_64-conda_cos6-linux-gnu-g++ -DHAVE_OPENMP -DMAX_DET_ORB=64 -DUSING_LAPACK_MKL -DUSING_ambit -Dforte_EXPORTS -I/home/mhuang/forte/generated -I/home/mhuang/forte/include -I/home/mhuang/anaconda3/envs/psi4py37/include/python3.7m -I/home/mhuang/forte/forte/. -isystem /home/mhuang/psi4_install/include -isystem /usr/local/include/eigen3 -isystem /home/mhuang/ambit/bin/include -fvisibility-inlines-hidden -std=c++17 -fmessage-length=0 -march=nocona -mtune=haswell -ftree-vectorize -fPIC -fstack-protector-strong -fno-plt -O2 -ffunction-sections -pipe -isystem /home/mhuang/anaconda3/envs/psi4py37/include -fopenmp -msse4.2 -Wno-c++1z-extensions -g -fPIC -fvisibility=hidden -Wall -Wextra -pedantic -fopenmp -std=c++14 -o CMakeFiles/forte.dir/mrdsrg-spin-adapted/dsrg_mrpt_comm.cc.o -c /home/mhuang/forte/forte/mrdsrg-spin-adapted/dsrg_mrpt_comm.cc",
+  "file": "/home/mhuang/forte/forte/mrdsrg-spin-adapted/dsrg_mrpt_comm.cc"
+},
+{
+  "directory": "/home/mhuang/forte/forte",
+  "command": "/home/mhuang/anaconda3/envs/psi4py37/bin/x86_64-conda_cos6-linux-gnu-g++ -DHAVE_OPENMP -DMAX_DET_ORB=64 -DUSING_LAPACK_MKL -DUSING_ambit -Dforte_EXPORTS -I/home/mhuang/forte/generated -I/home/mhuang/forte/include -I/home/mhuang/anaconda3/envs/psi4py37/include/python3.7m -I/home/mhuang/forte/forte/. -isystem /home/mhuang/psi4_install/include -isystem /usr/local/include/eigen3 -isystem /home/mhuang/ambit/bin/include -fvisibility-inlines-hidden -std=c++17 -fmessage-length=0 -march=nocona -mtune=haswell -ftree-vectorize -fPIC -fstack-protector-strong -fno-plt -O2 -ffunction-sections -pipe -isystem /home/mhuang/anaconda3/envs/psi4py37/include -fopenmp -msse4.2 -Wno-c++1z-extensions -g -fPIC -fvisibility=hidden -Wall -Wextra -pedantic -fopenmp -std=c++14 -o CMakeFiles/forte.dir/mrdsrg-spin-adapted/sadsrg.cc.o -c /home/mhuang/forte/forte/mrdsrg-spin-adapted/sadsrg.cc",
+  "file": "/home/mhuang/forte/forte/mrdsrg-spin-adapted/sadsrg.cc"
+},
+{
+  "directory": "/home/mhuang/forte/forte",
+  "command": "/home/mhuang/anaconda3/envs/psi4py37/bin/x86_64-conda_cos6-linux-gnu-g++ -DHAVE_OPENMP -DMAX_DET_ORB=64 -DUSING_LAPACK_MKL -DUSING_ambit -Dforte_EXPORTS -I/home/mhuang/forte/generated -I/home/mhuang/forte/include -I/home/mhuang/anaconda3/envs/psi4py37/include/python3.7m -I/home/mhuang/forte/forte/. -isystem /home/mhuang/psi4_install/include -isystem /usr/local/include/eigen3 -isystem /home/mhuang/ambit/bin/include -fvisibility-inlines-hidden -std=c++17 -fmessage-length=0 -march=nocona -mtune=haswell -ftree-vectorize -fPIC -fstack-protector-strong -fno-plt -O2 -ffunction-sections -pipe -isystem /home/mhuang/anaconda3/envs/psi4py37/include -fopenmp -msse4.2 -Wno-c++1z-extensions -g -fPIC -fvisibility=hidden -Wall -Wextra -pedantic -fopenmp -std=c++14 -o CMakeFiles/forte.dir/mrdsrg-spin-adapted/sadsrg_amps_analysis.cc.o -c /home/mhuang/forte/forte/mrdsrg-spin-adapted/sadsrg_amps_analysis.cc",
+  "file": "/home/mhuang/forte/forte/mrdsrg-spin-adapted/sadsrg_amps_analysis.cc"
+},
+{
+  "directory": "/home/mhuang/forte/forte",
+  "command": "/home/mhuang/anaconda3/envs/psi4py37/bin/x86_64-conda_cos6-linux-gnu-g++ -DHAVE_OPENMP -DMAX_DET_ORB=64 -DUSING_LAPACK_MKL -DUSING_ambit -Dforte_EXPORTS -I/home/mhuang/forte/generated -I/home/mhuang/forte/include -I/home/mhuang/anaconda3/envs/psi4py37/include/python3.7m -I/home/mhuang/forte/forte/. -isystem /home/mhuang/psi4_install/include -isystem /usr/local/include/eigen3 -isystem /home/mhuang/ambit/bin/include -fvisibility-inlines-hidden -std=c++17 -fmessage-length=0 -march=nocona -mtune=haswell -ftree-vectorize -fPIC -fstack-protector-strong -fno-plt -O2 -ffunction-sections -pipe -isystem /home/mhuang/anaconda3/envs/psi4py37/include -fopenmp -msse4.2 -Wno-c++1z-extensions -g -fPIC -fvisibility=hidden -Wall -Wextra -pedantic -fopenmp -std=c++14 -o CMakeFiles/forte.dir/mrdsrg-spin-adapted/sadsrg_block_labels.cc.o -c /home/mhuang/forte/forte/mrdsrg-spin-adapted/sadsrg_block_labels.cc",
+  "file": "/home/mhuang/forte/forte/mrdsrg-spin-adapted/sadsrg_block_labels.cc"
+},
+{
+  "directory": "/home/mhuang/forte/forte",
+  "command": "/home/mhuang/anaconda3/envs/psi4py37/bin/x86_64-conda_cos6-linux-gnu-g++ -DHAVE_OPENMP -DMAX_DET_ORB=64 -DUSING_LAPACK_MKL -DUSING_ambit -Dforte_EXPORTS -I/home/mhuang/forte/generated -I/home/mhuang/forte/include -I/home/mhuang/anaconda3/envs/psi4py37/include/python3.7m -I/home/mhuang/forte/forte/. -isystem /home/mhuang/psi4_install/include -isystem /usr/local/include/eigen3 -isystem /home/mhuang/ambit/bin/include -fvisibility-inlines-hidden -std=c++17 -fmessage-length=0 -march=nocona -mtune=haswell -ftree-vectorize -fPIC -fstack-protector-strong -fno-plt -O2 -ffunction-sections -pipe -isystem /home/mhuang/anaconda3/envs/psi4py37/include -fopenmp -msse4.2 -Wno-c++1z-extensions -g -fPIC -fvisibility=hidden -Wall -Wextra -pedantic -fopenmp -std=c++14 -o CMakeFiles/forte.dir/mrdsrg-spin-adapted/sadsrg_comm.cc.o -c /home/mhuang/forte/forte/mrdsrg-spin-adapted/sadsrg_comm.cc",
+  "file": "/home/mhuang/forte/forte/mrdsrg-spin-adapted/sadsrg_comm.cc"
+},
+{
+  "directory": "/home/mhuang/forte/forte",
+  "command": "/home/mhuang/anaconda3/envs/psi4py37/bin/x86_64-conda_cos6-linux-gnu-g++ -DHAVE_OPENMP -DMAX_DET_ORB=64 -DUSING_LAPACK_MKL -DUSING_ambit -Dforte_EXPORTS -I/home/mhuang/forte/generated -I/home/mhuang/forte/include -I/home/mhuang/anaconda3/envs/psi4py37/include/python3.7m -I/home/mhuang/forte/forte/. -isystem /home/mhuang/psi4_install/include -isystem /usr/local/include/eigen3 -isystem /home/mhuang/ambit/bin/include -fvisibility-inlines-hidden -std=c++17 -fmessage-length=0 -march=nocona -mtune=haswell -ftree-vectorize -fPIC -fstack-protector-strong -fno-plt -O2 -ffunction-sections -pipe -isystem /home/mhuang/anaconda3/envs/psi4py37/include -fopenmp -msse4.2 -Wno-c++1z-extensions -g -fPIC -fvisibility=hidden -Wall -Wextra -pedantic -fopenmp -std=c++14 -o CMakeFiles/forte.dir/mrdsrg-spin-adapted/sa_dsrgpt.cc.o -c /home/mhuang/forte/forte/mrdsrg-spin-adapted/sa_dsrgpt.cc",
+  "file": "/home/mhuang/forte/forte/mrdsrg-spin-adapted/sa_dsrgpt.cc"
+},
+{
+  "directory": "/home/mhuang/forte/forte",
+  "command": "/home/mhuang/anaconda3/envs/psi4py37/bin/x86_64-conda_cos6-linux-gnu-g++ -DHAVE_OPENMP -DMAX_DET_ORB=64 -DUSING_LAPACK_MKL -DUSING_ambit -Dforte_EXPORTS -I/home/mhuang/forte/generated -I/home/mhuang/forte/include -I/home/mhuang/anaconda3/envs/psi4py37/include/python3.7m -I/home/mhuang/forte/forte/. -isystem /home/mhuang/psi4_install/include -isystem /usr/local/include/eigen3 -isystem /home/mhuang/ambit/bin/include -fvisibility-inlines-hidden -std=c++17 -fmessage-length=0 -march=nocona -mtune=haswell -ftree-vectorize -fPIC -fstack-protector-strong -fno-plt -O2 -ffunction-sections -pipe -isystem /home/mhuang/anaconda3/envs/psi4py37/include -fopenmp -msse4.2 -Wno-c++1z-extensions -g -fPIC -fvisibility=hidden -Wall -Wextra -pedantic -fopenmp -std=c++14 -o CMakeFiles/forte.dir/mrdsrg-spin-adapted/sa_ldsrg2.cc.o -c /home/mhuang/forte/forte/mrdsrg-spin-adapted/sa_ldsrg2.cc",
+  "file": "/home/mhuang/forte/forte/mrdsrg-spin-adapted/sa_ldsrg2.cc"
+},
+{
+  "directory": "/home/mhuang/forte/forte",
+  "command": "/home/mhuang/anaconda3/envs/psi4py37/bin/x86_64-conda_cos6-linux-gnu-g++ -DHAVE_OPENMP -DMAX_DET_ORB=64 -DUSING_LAPACK_MKL -DUSING_ambit -Dforte_EXPORTS -I/home/mhuang/forte/generated -I/home/mhuang/forte/include -I/home/mhuang/anaconda3/envs/psi4py37/include/python3.7m -I/home/mhuang/forte/forte/. -isystem /home/mhuang/psi4_install/include -isystem /usr/local/include/eigen3 -isystem /home/mhuang/ambit/bin/include -fvisibility-inlines-hidden -std=c++17 -fmessage-length=0 -march=nocona -mtune=haswell -ftree-vectorize -fPIC -fstack-protector-strong -fno-plt -O2 -ffunction-sections -pipe -isystem /home/mhuang/anaconda3/envs/psi4py37/include -fopenmp -msse4.2 -Wno-c++1z-extensions -g -fPIC -fvisibility=hidden -Wall -Wextra -pedantic -fopenmp -std=c++14 -o CMakeFiles/forte.dir/mrdsrg-spin-adapted/sa_mrdsrg.cc.o -c /home/mhuang/forte/forte/mrdsrg-spin-adapted/sa_mrdsrg.cc",
+  "file": "/home/mhuang/forte/forte/mrdsrg-spin-adapted/sa_mrdsrg.cc"
+},
+{
+  "directory": "/home/mhuang/forte/forte",
+  "command": "/home/mhuang/anaconda3/envs/psi4py37/bin/x86_64-conda_cos6-linux-gnu-g++ -DHAVE_OPENMP -DMAX_DET_ORB=64 -DUSING_LAPACK_MKL -DUSING_ambit -Dforte_EXPORTS -I/home/mhuang/forte/generated -I/home/mhuang/forte/include -I/home/mhuang/anaconda3/envs/psi4py37/include/python3.7m -I/home/mhuang/forte/forte/. -isystem /home/mhuang/psi4_install/include -isystem /usr/local/include/eigen3 -isystem /home/mhuang/ambit/bin/include -fvisibility-inlines-hidden -std=c++17 -fmessage-length=0 -march=nocona -mtune=haswell -ftree-vectorize -fPIC -fstack-protector-strong -fno-plt -O2 -ffunction-sections -pipe -isystem /home/mhuang/anaconda3/envs/psi4py37/include -fopenmp -msse4.2 -Wno-c++1z-extensions -g -fPIC -fvisibility=hidden -Wall -Wextra -pedantic -fopenmp -std=c++14 -o CMakeFiles/forte.dir/mrdsrg-spin-adapted/sa_mrdsrg_amps.cc.o -c /home/mhuang/forte/forte/mrdsrg-spin-adapted/sa_mrdsrg_amps.cc",
+  "file": "/home/mhuang/forte/forte/mrdsrg-spin-adapted/sa_mrdsrg_amps.cc"
+},
+{
+  "directory": "/home/mhuang/forte/forte",
+  "command": "/home/mhuang/anaconda3/envs/psi4py37/bin/x86_64-conda_cos6-linux-gnu-g++ -DHAVE_OPENMP -DMAX_DET_ORB=64 -DUSING_LAPACK_MKL -DUSING_ambit -Dforte_EXPORTS -I/home/mhuang/forte/generated -I/home/mhuang/forte/include -I/home/mhuang/anaconda3/envs/psi4py37/include/python3.7m -I/home/mhuang/forte/forte/. -isystem /home/mhuang/psi4_install/include -isystem /usr/local/include/eigen3 -isystem /home/mhuang/ambit/bin/include -fvisibility-inlines-hidden -std=c++17 -fmessage-length=0 -march=nocona -mtune=haswell -ftree-vectorize -fPIC -fstack-protector-strong -fno-plt -O2 -ffunction-sections -pipe -isystem /home/mhuang/anaconda3/envs/psi4py37/include -fopenmp -msse4.2 -Wno-c++1z-extensions -g -fPIC -fvisibility=hidden -Wall -Wextra -pedantic -fopenmp -std=c++14 -o CMakeFiles/forte.dir/mrdsrg-spin-adapted/sa_mrdsrg_diis.cc.o -c /home/mhuang/forte/forte/mrdsrg-spin-adapted/sa_mrdsrg_diis.cc",
+  "file": "/home/mhuang/forte/forte/mrdsrg-spin-adapted/sa_mrdsrg_diis.cc"
+},
+{
+  "directory": "/home/mhuang/forte/forte",
+  "command": "/home/mhuang/anaconda3/envs/psi4py37/bin/x86_64-conda_cos6-linux-gnu-g++ -DHAVE_OPENMP -DMAX_DET_ORB=64 -DUSING_LAPACK_MKL -DUSING_ambit -Dforte_EXPORTS -I/home/mhuang/forte/generated -I/home/mhuang/forte/include -I/home/mhuang/anaconda3/envs/psi4py37/include/python3.7m -I/home/mhuang/forte/forte/. -isystem /home/mhuang/psi4_install/include -isystem /usr/local/include/eigen3 -isystem /home/mhuang/ambit/bin/include -fvisibility-inlines-hidden -std=c++17 -fmessage-length=0 -march=nocona -mtune=haswell -ftree-vectorize -fPIC -fstack-protector-strong -fno-plt -O2 -ffunction-sections -pipe -isystem /home/mhuang/anaconda3/envs/psi4py37/include -fopenmp -msse4.2 -Wno-c++1z-extensions -g -fPIC -fvisibility=hidden -Wall -Wextra -pedantic -fopenmp -std=c++14 -o CMakeFiles/forte.dir/mrdsrg-spin-adapted/sa_mrpt2.cc.o -c /home/mhuang/forte/forte/mrdsrg-spin-adapted/sa_mrpt2.cc",
+  "file": "/home/mhuang/forte/forte/mrdsrg-spin-adapted/sa_mrpt2.cc"
+},
+{
+  "directory": "/home/mhuang/forte/forte",
+  "command": "/home/mhuang/anaconda3/envs/psi4py37/bin/x86_64-conda_cos6-linux-gnu-g++ -DHAVE_OPENMP -DMAX_DET_ORB=64 -DUSING_LAPACK_MKL -DUSING_ambit -Dforte_EXPORTS -I/home/mhuang/forte/generated -I/home/mhuang/forte/include -I/home/mhuang/anaconda3/envs/psi4py37/include/python3.7m -I/home/mhuang/forte/forte/. -isystem /home/mhuang/psi4_install/include -isystem /usr/local/include/eigen3 -isystem /home/mhuang/ambit/bin/include -fvisibility-inlines-hidden -std=c++17 -fmessage-length=0 -march=nocona -mtune=haswell -ftree-vectorize -fPIC -fstack-protector-strong -fno-plt -O2 -ffunction-sections -pipe -isystem /home/mhuang/anaconda3/envs/psi4py37/include -fopenmp -msse4.2 -Wno-c++1z-extensions -g -fPIC -fvisibility=hidden -Wall -Wextra -pedantic -fopenmp -std=c++14 -o CMakeFiles/forte.dir/mrdsrg-spin-adapted/sa_mrpt3.cc.o -c /home/mhuang/forte/forte/mrdsrg-spin-adapted/sa_mrpt3.cc",
+  "file": "/home/mhuang/forte/forte/mrdsrg-spin-adapted/sa_mrpt3.cc"
+},
+{
+  "directory": "/home/mhuang/forte/forte",
+  "command": "/home/mhuang/anaconda3/envs/psi4py37/bin/x86_64-conda_cos6-linux-gnu-g++ -DHAVE_OPENMP -DMAX_DET_ORB=64 -DUSING_LAPACK_MKL -DUSING_ambit -Dforte_EXPORTS -I/home/mhuang/forte/generated -I/home/mhuang/forte/include -I/home/mhuang/anaconda3/envs/psi4py37/include/python3.7m -I/home/mhuang/forte/forte/. -isystem /home/mhuang/psi4_install/include -isystem /usr/local/include/eigen3 -isystem /home/mhuang/ambit/bin/include -fvisibility-inlines-hidden -std=c++17 -fmessage-length=0 -march=nocona -mtune=haswell -ftree-vectorize -fPIC -fstack-protector-strong -fno-plt -O2 -ffunction-sections -pipe -isystem /home/mhuang/anaconda3/envs/psi4py37/include -fopenmp -msse4.2 -Wno-c++1z-extensions -g -fPIC -fvisibility=hidden -Wall -Wextra -pedantic -fopenmp -std=c++14 -o CMakeFiles/forte.dir/mrdsrg-spin-integrated/active_dsrgpt2.cc.o -c /home/mhuang/forte/forte/mrdsrg-spin-integrated/active_dsrgpt2.cc",
+  "file": "/home/mhuang/forte/forte/mrdsrg-spin-integrated/active_dsrgpt2.cc"
+},
+{
+  "directory": "/home/mhuang/forte/forte",
+  "command": "/home/mhuang/anaconda3/envs/psi4py37/bin/x86_64-conda_cos6-linux-gnu-g++ -DHAVE_OPENMP -DMAX_DET_ORB=64 -DUSING_LAPACK_MKL -DUSING_ambit -Dforte_EXPORTS -I/home/mhuang/forte/generated -I/home/mhuang/forte/include -I/home/mhuang/anaconda3/envs/psi4py37/include/python3.7m -I/home/mhuang/forte/forte/. -isystem /home/mhuang/psi4_install/include -isystem /usr/local/include/eigen3 -isystem /home/mhuang/ambit/bin/include -fvisibility-inlines-hidden -std=c++17 -fmessage-length=0 -march=nocona -mtune=haswell -ftree-vectorize -fPIC -fstack-protector-strong -fno-plt -O2 -ffunction-sections -pipe -isystem /home/mhuang/anaconda3/envs/psi4py37/include -fopenmp -msse4.2 -Wno-c++1z-extensions -g -fPIC -fvisibility=hidden -Wall -Wextra -pedantic -fopenmp -std=c++14 -o CMakeFiles/forte.dir/mrdsrg-spin-integrated/dsrg_mrpt2.cc.o -c /home/mhuang/forte/forte/mrdsrg-spin-integrated/dsrg_mrpt2.cc",
+  "file": "/home/mhuang/forte/forte/mrdsrg-spin-integrated/dsrg_mrpt2.cc"
+},
+{
+  "directory": "/home/mhuang/forte/forte",
+  "command": "/home/mhuang/anaconda3/envs/psi4py37/bin/x86_64-conda_cos6-linux-gnu-g++ -DHAVE_OPENMP -DMAX_DET_ORB=64 -DUSING_LAPACK_MKL -DUSING_ambit -Dforte_EXPORTS -I/home/mhuang/forte/generated -I/home/mhuang/forte/include -I/home/mhuang/anaconda3/envs/psi4py37/include/python3.7m -I/home/mhuang/forte/forte/. -isystem /home/mhuang/psi4_install/include -isystem /usr/local/include/eigen3 -isystem /home/mhuang/ambit/bin/include -fvisibility-inlines-hidden -std=c++17 -fmessage-length=0 -march=nocona -mtune=haswell -ftree-vectorize -fPIC -fstack-protector-strong -fno-plt -O2 -ffunction-sections -pipe -isystem /home/mhuang/anaconda3/envs/psi4py37/include -fopenmp -msse4.2 -Wno-c++1z-extensions -g -fPIC -fvisibility=hidden -Wall -Wextra -pedantic -fopenmp -std=c++14 -o CMakeFiles/forte.dir/mrdsrg-spin-integrated/dsrg_mrpt2_ms.cc.o -c /home/mhuang/forte/forte/mrdsrg-spin-integrated/dsrg_mrpt2_ms.cc",
+  "file": "/home/mhuang/forte/forte/mrdsrg-spin-integrated/dsrg_mrpt2_ms.cc"
+},
+{
+  "directory": "/home/mhuang/forte/forte",
+  "command": "/home/mhuang/anaconda3/envs/psi4py37/bin/x86_64-conda_cos6-linux-gnu-g++ -DHAVE_OPENMP -DMAX_DET_ORB=64 -DUSING_LAPACK_MKL -DUSING_ambit -Dforte_EXPORTS -I/home/mhuang/forte/generated -I/home/mhuang/forte/include -I/home/mhuang/anaconda3/envs/psi4py37/include/python3.7m -I/home/mhuang/forte/forte/. -isystem /home/mhuang/psi4_install/include -isystem /usr/local/include/eigen3 -isystem /home/mhuang/ambit/bin/include -fvisibility-inlines-hidden -std=c++17 -fmessage-length=0 -march=nocona -mtune=haswell -ftree-vectorize -fPIC -fstack-protector-strong -fno-plt -O2 -ffunction-sections -pipe -isystem /home/mhuang/anaconda3/envs/psi4py37/include -fopenmp -msse4.2 -Wno-c++1z-extensions -g -fPIC -fvisibility=hidden -Wall -Wextra -pedantic -fopenmp -std=c++14 -o CMakeFiles/forte.dir/mrdsrg-spin-integrated/dsrg_mrpt3.cc.o -c /home/mhuang/forte/forte/mrdsrg-spin-integrated/dsrg_mrpt3.cc",
+  "file": "/home/mhuang/forte/forte/mrdsrg-spin-integrated/dsrg_mrpt3.cc"
+},
+{
+  "directory": "/home/mhuang/forte/forte",
+  "command": "/home/mhuang/anaconda3/envs/psi4py37/bin/x86_64-conda_cos6-linux-gnu-g++ -DHAVE_OPENMP -DMAX_DET_ORB=64 -DUSING_LAPACK_MKL -DUSING_ambit -Dforte_EXPORTS -I/home/mhuang/forte/generated -I/home/mhuang/forte/include -I/home/mhuang/anaconda3/envs/psi4py37/include/python3.7m -I/home/mhuang/forte/forte/. -isystem /home/mhuang/psi4_install/include -isystem /usr/local/include/eigen3 -isystem /home/mhuang/ambit/bin/include -fvisibility-inlines-hidden -std=c++17 -fmessage-length=0 -march=nocona -mtune=haswell -ftree-vectorize -fPIC -fstack-protector-strong -fno-plt -O2 -ffunction-sections -pipe -isystem /home/mhuang/anaconda3/envs/psi4py37/include -fopenmp -msse4.2 -Wno-c++1z-extensions -g -fPIC -fvisibility=hidden -Wall -Wextra -pedantic -fopenmp -std=c++14 -o CMakeFiles/forte.dir/mrdsrg-spin-integrated/dwms_mrpt2.cc.o -c /home/mhuang/forte/forte/mrdsrg-spin-integrated/dwms_mrpt2.cc",
+  "file": "/home/mhuang/forte/forte/mrdsrg-spin-integrated/dwms_mrpt2.cc"
+},
+{
+  "directory": "/home/mhuang/forte/forte",
+  "command": "/home/mhuang/anaconda3/envs/psi4py37/bin/x86_64-conda_cos6-linux-gnu-g++ -DHAVE_OPENMP -DMAX_DET_ORB=64 -DUSING_LAPACK_MKL -DUSING_ambit -Dforte_EXPORTS -I/home/mhuang/forte/generated -I/home/mhuang/forte/include -I/home/mhuang/anaconda3/envs/psi4py37/include/python3.7m -I/home/mhuang/forte/forte/. -isystem /home/mhuang/psi4_install/include -isystem /usr/local/include/eigen3 -isystem /home/mhuang/ambit/bin/include -fvisibility-inlines-hidden -std=c++17 -fmessage-length=0 -march=nocona -mtune=haswell -ftree-vectorize -fPIC -fstack-protector-strong -fno-plt -O2 -ffunction-sections -pipe -isystem /home/mhuang/anaconda3/envs/psi4py37/include -fopenmp -msse4.2 -Wno-c++1z-extensions -g -fPIC -fvisibility=hidden -Wall -Wextra -pedantic -fopenmp -std=c++14 -o CMakeFiles/forte.dir/mrdsrg-spin-integrated/master_mrdsrg.cc.o -c /home/mhuang/forte/forte/mrdsrg-spin-integrated/master_mrdsrg.cc",
+  "file": "/home/mhuang/forte/forte/mrdsrg-spin-integrated/master_mrdsrg.cc"
+},
+{
+  "directory": "/home/mhuang/forte/forte",
+  "command": "/home/mhuang/anaconda3/envs/psi4py37/bin/x86_64-conda_cos6-linux-gnu-g++ -DHAVE_OPENMP -DMAX_DET_ORB=64 -DUSING_LAPACK_MKL -DUSING_ambit -Dforte_EXPORTS -I/home/mhuang/forte/generated -I/home/mhuang/forte/include -I/home/mhuang/anaconda3/envs/psi4py37/include/python3.7m -I/home/mhuang/forte/forte/. -isystem /home/mhuang/psi4_install/include -isystem /usr/local/include/eigen3 -isystem /home/mhuang/ambit/bin/include -fvisibility-inlines-hidden -std=c++17 -fmessage-length=0 -march=nocona -mtune=haswell -ftree-vectorize -fPIC -fstack-protector-strong -fno-plt -O2 -ffunction-sections -pipe -isystem /home/mhuang/anaconda3/envs/psi4py37/include -fopenmp -msse4.2 -Wno-c++1z-extensions -g -fPIC -fvisibility=hidden -Wall -Wextra -pedantic -fopenmp -std=c++14 -o CMakeFiles/forte.dir/mrdsrg-spin-integrated/mcsrgpt2_mo.cc.o -c /home/mhuang/forte/forte/mrdsrg-spin-integrated/mcsrgpt2_mo.cc",
+  "file": "/home/mhuang/forte/forte/mrdsrg-spin-integrated/mcsrgpt2_mo.cc"
+},
+{
+  "directory": "/home/mhuang/forte/forte",
+  "command": "/home/mhuang/anaconda3/envs/psi4py37/bin/x86_64-conda_cos6-linux-gnu-g++ -DHAVE_OPENMP -DMAX_DET_ORB=64 -DUSING_LAPACK_MKL -DUSING_ambit -Dforte_EXPORTS -I/home/mhuang/forte/generated -I/home/mhuang/forte/include -I/home/mhuang/anaconda3/envs/psi4py37/include/python3.7m -I/home/mhuang/forte/forte/. -isystem /home/mhuang/psi4_install/include -isystem /usr/local/include/eigen3 -isystem /home/mhuang/ambit/bin/include -fvisibility-inlines-hidden -std=c++17 -fmessage-length=0 -march=nocona -mtune=haswell -ftree-vectorize -fPIC -fstack-protector-strong -fno-plt -O2 -ffunction-sections -pipe -isystem /home/mhuang/anaconda3/envs/psi4py37/include -fopenmp -msse4.2 -Wno-c++1z-extensions -g -fPIC -fvisibility=hidden -Wall -Wextra -pedantic -fopenmp -std=c++14 -o CMakeFiles/forte.dir/mrdsrg-spin-integrated/mrdsrg.cc.o -c /home/mhuang/forte/forte/mrdsrg-spin-integrated/mrdsrg.cc",
+  "file": "/home/mhuang/forte/forte/mrdsrg-spin-integrated/mrdsrg.cc"
+},
+{
+  "directory": "/home/mhuang/forte/forte",
+  "command": "/home/mhuang/anaconda3/envs/psi4py37/bin/x86_64-conda_cos6-linux-gnu-g++ -DHAVE_OPENMP -DMAX_DET_ORB=64 -DUSING_LAPACK_MKL -DUSING_ambit -Dforte_EXPORTS -I/home/mhuang/forte/generated -I/home/mhuang/forte/include -I/home/mhuang/anaconda3/envs/psi4py37/include/python3.7m -I/home/mhuang/forte/forte/. -isystem /home/mhuang/psi4_install/include -isystem /usr/local/include/eigen3 -isystem /home/mhuang/ambit/bin/include -fvisibility-inlines-hidden -std=c++17 -fmessage-length=0 -march=nocona -mtune=haswell -ftree-vectorize -fPIC -fstack-protector-strong -fno-plt -O2 -ffunction-sections -pipe -isystem /home/mhuang/anaconda3/envs/psi4py37/include -fopenmp -msse4.2 -Wno-c++1z-extensions -g -fPIC -fvisibility=hidden -Wall -Wextra -pedantic -fopenmp -std=c++14 -o CMakeFiles/forte.dir/mrdsrg-spin-integrated/mrdsrg_amplitude.cc.o -c /home/mhuang/forte/forte/mrdsrg-spin-integrated/mrdsrg_amplitude.cc",
+  "file": "/home/mhuang/forte/forte/mrdsrg-spin-integrated/mrdsrg_amplitude.cc"
+},
+{
+  "directory": "/home/mhuang/forte/forte",
+  "command": "/home/mhuang/anaconda3/envs/psi4py37/bin/x86_64-conda_cos6-linux-gnu-g++ -DHAVE_OPENMP -DMAX_DET_ORB=64 -DUSING_LAPACK_MKL -DUSING_ambit -Dforte_EXPORTS -I/home/mhuang/forte/generated -I/home/mhuang/forte/include -I/home/mhuang/anaconda3/envs/psi4py37/include/python3.7m -I/home/mhuang/forte/forte/. -isystem /home/mhuang/psi4_install/include -isystem /usr/local/include/eigen3 -isystem /home/mhuang/ambit/bin/include -fvisibility-inlines-hidden -std=c++17 -fmessage-length=0 -march=nocona -mtune=haswell -ftree-vectorize -fPIC -fstack-protector-strong -fno-plt -O2 -ffunction-sections -pipe -isystem /home/mhuang/anaconda3/envs/psi4py37/include -fopenmp -msse4.2 -Wno-c++1z-extensions -g -fPIC -fvisibility=hidden -Wall -Wextra -pedantic -fopenmp -std=c++14 -o CMakeFiles/forte.dir/mrdsrg-spin-integrated/mrdsrg_commutator.cc.o -c /home/mhuang/forte/forte/mrdsrg-spin-integrated/mrdsrg_commutator.cc",
+  "file": "/home/mhuang/forte/forte/mrdsrg-spin-integrated/mrdsrg_commutator.cc"
+},
+{
+  "directory": "/home/mhuang/forte/forte",
+  "command": "/home/mhuang/anaconda3/envs/psi4py37/bin/x86_64-conda_cos6-linux-gnu-g++ -DHAVE_OPENMP -DMAX_DET_ORB=64 -DUSING_LAPACK_MKL -DUSING_ambit -Dforte_EXPORTS -I/home/mhuang/forte/generated -I/home/mhuang/forte/include -I/home/mhuang/anaconda3/envs/psi4py37/include/python3.7m -I/home/mhuang/forte/forte/. -isystem /home/mhuang/psi4_install/include -isystem /usr/local/include/eigen3 -isystem /home/mhuang/ambit/bin/include -fvisibility-inlines-hidden -std=c++17 -fmessage-length=0 -march=nocona -mtune=haswell -ftree-vectorize -fPIC -fstack-protector-strong -fno-plt -O2 -ffunction-sections -pipe -isystem /home/mhuang/anaconda3/envs/psi4py37/include -fopenmp -msse4.2 -Wno-c++1z-extensions -g -fPIC -fvisibility=hidden -Wall -Wextra -pedantic -fopenmp -std=c++14 -o CMakeFiles/forte.dir/mrdsrg-spin-integrated/mrdsrg_diis.cc.o -c /home/mhuang/forte/forte/mrdsrg-spin-integrated/mrdsrg_diis.cc",
+  "file": "/home/mhuang/forte/forte/mrdsrg-spin-integrated/mrdsrg_diis.cc"
+},
+{
+  "directory": "/home/mhuang/forte/forte",
+  "command": "/home/mhuang/anaconda3/envs/psi4py37/bin/x86_64-conda_cos6-linux-gnu-g++ -DHAVE_OPENMP -DMAX_DET_ORB=64 -DUSING_LAPACK_MKL -DUSING_ambit -Dforte_EXPORTS -I/home/mhuang/forte/generated -I/home/mhuang/forte/include -I/home/mhuang/anaconda3/envs/psi4py37/include/python3.7m -I/home/mhuang/forte/forte/. -isystem /home/mhuang/psi4_install/include -isystem /usr/local/include/eigen3 -isystem /home/mhuang/ambit/bin/include -fvisibility-inlines-hidden -std=c++17 -fmessage-length=0 -march=nocona -mtune=haswell -ftree-vectorize -fPIC -fstack-protector-strong -fno-plt -O2 -ffunction-sections -pipe -isystem /home/mhuang/anaconda3/envs/psi4py37/include -fopenmp -msse4.2 -Wno-c++1z-extensions -g -fPIC -fvisibility=hidden -Wall -Wextra -pedantic -fopenmp -std=c++14 -o CMakeFiles/forte.dir/mrdsrg-spin-integrated/mrdsrg_nonpt.cc.o -c /home/mhuang/forte/forte/mrdsrg-spin-integrated/mrdsrg_nonpt.cc",
+  "file": "/home/mhuang/forte/forte/mrdsrg-spin-integrated/mrdsrg_nonpt.cc"
+},
+{
+  "directory": "/home/mhuang/forte/forte",
+  "command": "/home/mhuang/anaconda3/envs/psi4py37/bin/x86_64-conda_cos6-linux-gnu-g++ -DHAVE_OPENMP -DMAX_DET_ORB=64 -DUSING_LAPACK_MKL -DUSING_ambit -Dforte_EXPORTS -I/home/mhuang/forte/generated -I/home/mhuang/forte/include -I/home/mhuang/anaconda3/envs/psi4py37/include/python3.7m -I/home/mhuang/forte/forte/. -isystem /home/mhuang/psi4_install/include -isystem /usr/local/include/eigen3 -isystem /home/mhuang/ambit/bin/include -fvisibility-inlines-hidden -std=c++17 -fmessage-length=0 -march=nocona -mtune=haswell -ftree-vectorize -fPIC -fstack-protector-strong -fno-plt -O2 -ffunction-sections -pipe -isystem /home/mhuang/anaconda3/envs/psi4py37/include -fopenmp -msse4.2 -Wno-c++1z-extensions -g -fPIC -fvisibility=hidden -Wall -Wextra -pedantic -fopenmp -std=c++14 -o CMakeFiles/forte.dir/mrdsrg-spin-integrated/mrdsrg_pt.cc.o -c /home/mhuang/forte/forte/mrdsrg-spin-integrated/mrdsrg_pt.cc",
+  "file": "/home/mhuang/forte/forte/mrdsrg-spin-integrated/mrdsrg_pt.cc"
+},
+{
+  "directory": "/home/mhuang/forte/forte",
+  "command": "/home/mhuang/anaconda3/envs/psi4py37/bin/x86_64-conda_cos6-linux-gnu-g++ -DHAVE_OPENMP -DMAX_DET_ORB=64 -DUSING_LAPACK_MKL -DUSING_ambit -Dforte_EXPORTS -I/home/mhuang/forte/generated -I/home/mhuang/forte/include -I/home/mhuang/anaconda3/envs/psi4py37/include/python3.7m -I/home/mhuang/forte/forte/. -isystem /home/mhuang/psi4_install/include -isystem /usr/local/include/eigen3 -isystem /home/mhuang/ambit/bin/include -fvisibility-inlines-hidden -std=c++17 -fmessage-length=0 -march=nocona -mtune=haswell -ftree-vectorize -fPIC -fstack-protector-strong -fno-plt -O2 -ffunction-sections -pipe -isystem /home/mhuang/anaconda3/envs/psi4py37/include -fopenmp -msse4.2 -Wno-c++1z-extensions -g -fPIC -fvisibility=hidden -Wall -Wextra -pedantic -fopenmp -std=c++14 -o CMakeFiles/forte.dir/mrdsrg-spin-integrated/mrdsrg_smart_s.cc.o -c /home/mhuang/forte/forte/mrdsrg-spin-integrated/mrdsrg_smart_s.cc",
+  "file": "/home/mhuang/forte/forte/mrdsrg-spin-integrated/mrdsrg_smart_s.cc"
+},
+{
+  "directory": "/home/mhuang/forte/forte",
+  "command": "/home/mhuang/anaconda3/envs/psi4py37/bin/x86_64-conda_cos6-linux-gnu-g++ -DHAVE_OPENMP -DMAX_DET_ORB=64 -DUSING_LAPACK_MKL -DUSING_ambit -Dforte_EXPORTS -I/home/mhuang/forte/generated -I/home/mhuang/forte/include -I/home/mhuang/anaconda3/envs/psi4py37/include/python3.7m -I/home/mhuang/forte/forte/. -isystem /home/mhuang/psi4_install/include -isystem /usr/local/include/eigen3 -isystem /home/mhuang/ambit/bin/include -fvisibility-inlines-hidden -std=c++17 -fmessage-length=0 -march=nocona -mtune=haswell -ftree-vectorize -fPIC -fstack-protector-strong -fno-plt -O2 -ffunction-sections -pipe -isystem /home/mhuang/anaconda3/envs/psi4py37/include -fopenmp -msse4.2 -Wno-c++1z-extensions -g -fPIC -fvisibility=hidden -Wall -Wextra -pedantic -fopenmp -std=c++14 -o CMakeFiles/forte.dir/mrdsrg-spin-integrated/mrdsrg_srg.cc.o -c /home/mhuang/forte/forte/mrdsrg-spin-integrated/mrdsrg_srg.cc",
+  "file": "/home/mhuang/forte/forte/mrdsrg-spin-integrated/mrdsrg_srg.cc"
+},
+{
+  "directory": "/home/mhuang/forte/forte",
+  "command": "/home/mhuang/anaconda3/envs/psi4py37/bin/x86_64-conda_cos6-linux-gnu-g++ -DHAVE_OPENMP -DMAX_DET_ORB=64 -DUSING_LAPACK_MKL -DUSING_ambit -Dforte_EXPORTS -I/home/mhuang/forte/generated -I/home/mhuang/forte/include -I/home/mhuang/anaconda3/envs/psi4py37/include/python3.7m -I/home/mhuang/forte/forte/. -isystem /home/mhuang/psi4_install/include -isystem /usr/local/include/eigen3 -isystem /home/mhuang/ambit/bin/include -fvisibility-inlines-hidden -std=c++17 -fmessage-length=0 -march=nocona -mtune=haswell -ftree-vectorize -fPIC -fstack-protector-strong -fno-plt -O2 -ffunction-sections -pipe -isystem /home/mhuang/anaconda3/envs/psi4py37/include -fopenmp -msse4.2 -Wno-c++1z-extensions -g -fPIC -fvisibility=hidden -Wall -Wextra -pedantic -fopenmp -std=c++14 -o CMakeFiles/forte.dir/mrdsrg-spin-integrated/three_dsrg_mrpt2.cc.o -c /home/mhuang/forte/forte/mrdsrg-spin-integrated/three_dsrg_mrpt2.cc",
+  "file": "/home/mhuang/forte/forte/mrdsrg-spin-integrated/three_dsrg_mrpt2.cc"
+},
+{
+  "directory": "/home/mhuang/forte/forte",
+  "command": "/home/mhuang/anaconda3/envs/psi4py37/bin/x86_64-conda_cos6-linux-gnu-g++ -DHAVE_OPENMP -DMAX_DET_ORB=64 -DUSING_LAPACK_MKL -DUSING_ambit -Dforte_EXPORTS -I/home/mhuang/forte/generated -I/home/mhuang/forte/include -I/home/mhuang/anaconda3/envs/psi4py37/include/python3.7m -I/home/mhuang/forte/forte/. -isystem /home/mhuang/psi4_install/include -isystem /usr/local/include/eigen3 -isystem /home/mhuang/ambit/bin/include -fvisibility-inlines-hidden -std=c++17 -fmessage-length=0 -march=nocona -mtune=haswell -ftree-vectorize -fPIC -fstack-protector-strong -fno-plt -O2 -ffunction-sections -pipe -isystem /home/mhuang/anaconda3/envs/psi4py37/include -fopenmp -msse4.2 -Wno-c++1z-extensions -g -fPIC -fvisibility=hidden -Wall -Wextra -pedantic -fopenmp -std=c++14 -o CMakeFiles/forte.dir/orbital-helpers/ao_helper.cc.o -c /home/mhuang/forte/forte/orbital-helpers/ao_helper.cc",
+  "file": "/home/mhuang/forte/forte/orbital-helpers/ao_helper.cc"
+},
+{
+  "directory": "/home/mhuang/forte/forte",
+  "command": "/home/mhuang/anaconda3/envs/psi4py37/bin/x86_64-conda_cos6-linux-gnu-g++ -DHAVE_OPENMP -DMAX_DET_ORB=64 -DUSING_LAPACK_MKL -DUSING_ambit -Dforte_EXPORTS -I/home/mhuang/forte/generated -I/home/mhuang/forte/include -I/home/mhuang/anaconda3/envs/psi4py37/include/python3.7m -I/home/mhuang/forte/forte/. -isystem /home/mhuang/psi4_install/include -isystem /usr/local/include/eigen3 -isystem /home/mhuang/ambit/bin/include -fvisibility-inlines-hidden -std=c++17 -fmessage-length=0 -march=nocona -mtune=haswell -ftree-vectorize -fPIC -fstack-protector-strong -fno-plt -O2 -ffunction-sections -pipe -isystem /home/mhuang/anaconda3/envs/psi4py37/include -fopenmp -msse4.2 -Wno-c++1z-extensions -g -fPIC -fvisibility=hidden -Wall -Wextra -pedantic -fopenmp -std=c++14 -o CMakeFiles/forte.dir/orbital-helpers/aosubspace.cc.o -c /home/mhuang/forte/forte/orbital-helpers/aosubspace.cc",
+  "file": "/home/mhuang/forte/forte/orbital-helpers/aosubspace.cc"
+},
+{
+  "directory": "/home/mhuang/forte/forte",
+  "command": "/home/mhuang/anaconda3/envs/psi4py37/bin/x86_64-conda_cos6-linux-gnu-g++ -DHAVE_OPENMP -DMAX_DET_ORB=64 -DUSING_LAPACK_MKL -DUSING_ambit -Dforte_EXPORTS -I/home/mhuang/forte/generated -I/home/mhuang/forte/include -I/home/mhuang/anaconda3/envs/psi4py37/include/python3.7m -I/home/mhuang/forte/forte/. -isystem /home/mhuang/psi4_install/include -isystem /usr/local/include/eigen3 -isystem /home/mhuang/ambit/bin/include -fvisibility-inlines-hidden -std=c++17 -fmessage-length=0 -march=nocona -mtune=haswell -ftree-vectorize -fPIC -fstack-protector-strong -fno-plt -O2 -ffunction-sections -pipe -isystem /home/mhuang/anaconda3/envs/psi4py37/include -fopenmp -msse4.2 -Wno-c++1z-extensions -g -fPIC -fvisibility=hidden -Wall -Wextra -pedantic -fopenmp -std=c++14 -o CMakeFiles/forte.dir/orbital-helpers/ci-no/ci-no.cc.o -c /home/mhuang/forte/forte/orbital-helpers/ci-no/ci-no.cc",
+  "file": "/home/mhuang/forte/forte/orbital-helpers/ci-no/ci-no.cc"
+},
+{
+  "directory": "/home/mhuang/forte/forte",
+  "command": "/home/mhuang/anaconda3/envs/psi4py37/bin/x86_64-conda_cos6-linux-gnu-g++ -DHAVE_OPENMP -DMAX_DET_ORB=64 -DUSING_LAPACK_MKL -DUSING_ambit -Dforte_EXPORTS -I/home/mhuang/forte/generated -I/home/mhuang/forte/include -I/home/mhuang/anaconda3/envs/psi4py37/include/python3.7m -I/home/mhuang/forte/forte/. -isystem /home/mhuang/psi4_install/include -isystem /usr/local/include/eigen3 -isystem /home/mhuang/ambit/bin/include -fvisibility-inlines-hidden -std=c++17 -fmessage-length=0 -march=nocona -mtune=haswell -ftree-vectorize -fPIC -fstack-protector-strong -fno-plt -O2 -ffunction-sections -pipe -isystem /home/mhuang/anaconda3/envs/psi4py37/include -fopenmp -msse4.2 -Wno-c++1z-extensions -g -fPIC -fvisibility=hidden -Wall -Wextra -pedantic -fopenmp -std=c++14 -o CMakeFiles/forte.dir/orbital-helpers/ci-no/mrci-no.cc.o -c /home/mhuang/forte/forte/orbital-helpers/ci-no/mrci-no.cc",
+  "file": "/home/mhuang/forte/forte/orbital-helpers/ci-no/mrci-no.cc"
+},
+{
+  "directory": "/home/mhuang/forte/forte",
+  "command": "/home/mhuang/anaconda3/envs/psi4py37/bin/x86_64-conda_cos6-linux-gnu-g++ -DHAVE_OPENMP -DMAX_DET_ORB=64 -DUSING_LAPACK_MKL -DUSING_ambit -Dforte_EXPORTS -I/home/mhuang/forte/generated -I/home/mhuang/forte/include -I/home/mhuang/anaconda3/envs/psi4py37/include/python3.7m -I/home/mhuang/forte/forte/. -isystem /home/mhuang/psi4_install/include -isystem /usr/local/include/eigen3 -isystem /home/mhuang/ambit/bin/include -fvisibility-inlines-hidden -std=c++17 -fmessage-length=0 -march=nocona -mtune=haswell -ftree-vectorize -fPIC -fstack-protector-strong -fno-plt -O2 -ffunction-sections -pipe -isystem /home/mhuang/anaconda3/envs/psi4py37/include -fopenmp -msse4.2 -Wno-c++1z-extensions -g -fPIC -fvisibility=hidden -Wall -Wextra -pedantic -fopenmp -std=c++14 -o CMakeFiles/forte.dir/orbital-helpers/fragment_projector.cc.o -c /home/mhuang/forte/forte/orbital-helpers/fragment_projector.cc",
+  "file": "/home/mhuang/forte/forte/orbital-helpers/fragment_projector.cc"
+},
+{
+  "directory": "/home/mhuang/forte/forte",
+  "command": "/home/mhuang/anaconda3/envs/psi4py37/bin/x86_64-conda_cos6-linux-gnu-g++ -DHAVE_OPENMP -DMAX_DET_ORB=64 -DUSING_LAPACK_MKL -DUSING_ambit -Dforte_EXPORTS -I/home/mhuang/forte/generated -I/home/mhuang/forte/include -I/home/mhuang/anaconda3/envs/psi4py37/include/python3.7m -I/home/mhuang/forte/forte/. -isystem /home/mhuang/psi4_install/include -isystem /usr/local/include/eigen3 -isystem /home/mhuang/ambit/bin/include -fvisibility-inlines-hidden -std=c++17 -fmessage-length=0 -march=nocona -mtune=haswell -ftree-vectorize -fPIC -fstack-protector-strong -fno-plt -O2 -ffunction-sections -pipe -isystem /home/mhuang/anaconda3/envs/psi4py37/include -fopenmp -msse4.2 -Wno-c++1z-extensions -g -fPIC -fvisibility=hidden -Wall -Wextra -pedantic -fopenmp -std=c++14 -o CMakeFiles/forte.dir/orbital-helpers/iao_builder.cc.o -c /home/mhuang/forte/forte/orbital-helpers/iao_builder.cc",
+  "file": "/home/mhuang/forte/forte/orbital-helpers/iao_builder.cc"
+},
+{
+  "directory": "/home/mhuang/forte/forte",
+  "command": "/home/mhuang/anaconda3/envs/psi4py37/bin/x86_64-conda_cos6-linux-gnu-g++ -DHAVE_OPENMP -DMAX_DET_ORB=64 -DUSING_LAPACK_MKL -DUSING_ambit -Dforte_EXPORTS -I/home/mhuang/forte/generated -I/home/mhuang/forte/include -I/home/mhuang/anaconda3/envs/psi4py37/include/python3.7m -I/home/mhuang/forte/forte/. -isystem /home/mhuang/psi4_install/include -isystem /usr/local/include/eigen3 -isystem /home/mhuang/ambit/bin/include -fvisibility-inlines-hidden -std=c++17 -fmessage-length=0 -march=nocona -mtune=haswell -ftree-vectorize -fPIC -fstack-protector-strong -fno-plt -O2 -ffunction-sections -pipe -isystem /home/mhuang/anaconda3/envs/psi4py37/include -fopenmp -msse4.2 -Wno-c++1z-extensions -g -fPIC -fvisibility=hidden -Wall -Wextra -pedantic -fopenmp -std=c++14 -o CMakeFiles/forte.dir/orbital-helpers/localize.cc.o -c /home/mhuang/forte/forte/orbital-helpers/localize.cc",
+  "file": "/home/mhuang/forte/forte/orbital-helpers/localize.cc"
+},
+{
+  "directory": "/home/mhuang/forte/forte",
+  "command": "/home/mhuang/anaconda3/envs/psi4py37/bin/x86_64-conda_cos6-linux-gnu-g++ -DHAVE_OPENMP -DMAX_DET_ORB=64 -DUSING_LAPACK_MKL -DUSING_ambit -Dforte_EXPORTS -I/home/mhuang/forte/generated -I/home/mhuang/forte/include -I/home/mhuang/anaconda3/envs/psi4py37/include/python3.7m -I/home/mhuang/forte/forte/. -isystem /home/mhuang/psi4_install/include -isystem /usr/local/include/eigen3 -isystem /home/mhuang/ambit/bin/include -fvisibility-inlines-hidden -std=c++17 -fmessage-length=0 -march=nocona -mtune=haswell -ftree-vectorize -fPIC -fstack-protector-strong -fno-plt -O2 -ffunction-sections -pipe -isystem /home/mhuang/anaconda3/envs/psi4py37/include -fopenmp -msse4.2 -Wno-c++1z-extensions -g -fPIC -fvisibility=hidden -Wall -Wextra -pedantic -fopenmp -std=c++14 -o CMakeFiles/forte.dir/orbital-helpers/mp2_nos.cc.o -c /home/mhuang/forte/forte/orbital-helpers/mp2_nos.cc",
+  "file": "/home/mhuang/forte/forte/orbital-helpers/mp2_nos.cc"
+},
+{
+  "directory": "/home/mhuang/forte/forte",
+  "command": "/home/mhuang/anaconda3/envs/psi4py37/bin/x86_64-conda_cos6-linux-gnu-g++ -DHAVE_OPENMP -DMAX_DET_ORB=64 -DUSING_LAPACK_MKL -DUSING_ambit -Dforte_EXPORTS -I/home/mhuang/forte/generated -I/home/mhuang/forte/include -I/home/mhuang/anaconda3/envs/psi4py37/include/python3.7m -I/home/mhuang/forte/forte/. -isystem /home/mhuang/psi4_install/include -isystem /usr/local/include/eigen3 -isystem /home/mhuang/ambit/bin/include -fvisibility-inlines-hidden -std=c++17 -fmessage-length=0 -march=nocona -mtune=haswell -ftree-vectorize -fPIC -fstack-protector-strong -fno-plt -O2 -ffunction-sections -pipe -isystem /home/mhuang/anaconda3/envs/psi4py37/include -fopenmp -msse4.2 -Wno-c++1z-extensions -g -fPIC -fvisibility=hidden -Wall -Wextra -pedantic -fopenmp -std=c++14 -o CMakeFiles/forte.dir/orbital-helpers/orbital_embedding.cc.o -c /home/mhuang/forte/forte/orbital-helpers/orbital_embedding.cc",
+  "file": "/home/mhuang/forte/forte/orbital-helpers/orbital_embedding.cc"
+},
+{
+  "directory": "/home/mhuang/forte/forte",
+  "command": "/home/mhuang/anaconda3/envs/psi4py37/bin/x86_64-conda_cos6-linux-gnu-g++ -DHAVE_OPENMP -DMAX_DET_ORB=64 -DUSING_LAPACK_MKL -DUSING_ambit -Dforte_EXPORTS -I/home/mhuang/forte/generated -I/home/mhuang/forte/include -I/home/mhuang/anaconda3/envs/psi4py37/include/python3.7m -I/home/mhuang/forte/forte/. -isystem /home/mhuang/psi4_install/include -isystem /usr/local/include/eigen3 -isystem /home/mhuang/ambit/bin/include -fvisibility-inlines-hidden -std=c++17 -fmessage-length=0 -march=nocona -mtune=haswell -ftree-vectorize -fPIC -fstack-protector-strong -fno-plt -O2 -ffunction-sections -pipe -isystem /home/mhuang/anaconda3/envs/psi4py37/include -fopenmp -msse4.2 -Wno-c++1z-extensions -g -fPIC -fvisibility=hidden -Wall -Wextra -pedantic -fopenmp -std=c++14 -o CMakeFiles/forte.dir/orbital-helpers/orbitaloptimizer.cc.o -c /home/mhuang/forte/forte/orbital-helpers/orbitaloptimizer.cc",
+  "file": "/home/mhuang/forte/forte/orbital-helpers/orbitaloptimizer.cc"
+},
+{
+  "directory": "/home/mhuang/forte/forte",
+  "command": "/home/mhuang/anaconda3/envs/psi4py37/bin/x86_64-conda_cos6-linux-gnu-g++ -DHAVE_OPENMP -DMAX_DET_ORB=64 -DUSING_LAPACK_MKL -DUSING_ambit -Dforte_EXPORTS -I/home/mhuang/forte/generated -I/home/mhuang/forte/include -I/home/mhuang/anaconda3/envs/psi4py37/include/python3.7m -I/home/mhuang/forte/forte/. -isystem /home/mhuang/psi4_install/include -isystem /usr/local/include/eigen3 -isystem /home/mhuang/ambit/bin/include -fvisibility-inlines-hidden -std=c++17 -fmessage-length=0 -march=nocona -mtune=haswell -ftree-vectorize -fPIC -fstack-protector-strong -fno-plt -O2 -ffunction-sections -pipe -isystem /home/mhuang/anaconda3/envs/psi4py37/include -fopenmp -msse4.2 -Wno-c++1z-extensions -g -fPIC -fvisibility=hidden -Wall -Wextra -pedantic -fopenmp -std=c++14 -o CMakeFiles/forte.dir/orbital-helpers/pao_builder.cc.o -c /home/mhuang/forte/forte/orbital-helpers/pao_builder.cc",
+  "file": "/home/mhuang/forte/forte/orbital-helpers/pao_builder.cc"
+},
+{
+  "directory": "/home/mhuang/forte/forte",
+  "command": "/home/mhuang/anaconda3/envs/psi4py37/bin/x86_64-conda_cos6-linux-gnu-g++ -DHAVE_OPENMP -DMAX_DET_ORB=64 -DUSING_LAPACK_MKL -DUSING_ambit -Dforte_EXPORTS -I/home/mhuang/forte/generated -I/home/mhuang/forte/include -I/home/mhuang/anaconda3/envs/psi4py37/include/python3.7m -I/home/mhuang/forte/forte/. -isystem /home/mhuang/psi4_install/include -isystem /usr/local/include/eigen3 -isystem /home/mhuang/ambit/bin/include -fvisibility-inlines-hidden -std=c++17 -fmessage-length=0 -march=nocona -mtune=haswell -ftree-vectorize -fPIC -fstack-protector-strong -fno-plt -O2 -ffunction-sections -pipe -isystem /home/mhuang/anaconda3/envs/psi4py37/include -fopenmp -msse4.2 -Wno-c++1z-extensions -g -fPIC -fvisibility=hidden -Wall -Wextra -pedantic -fopenmp -std=c++14 -o CMakeFiles/forte.dir/orbital-helpers/semi_canonicalize.cc.o -c /home/mhuang/forte/forte/orbital-helpers/semi_canonicalize.cc",
+  "file": "/home/mhuang/forte/forte/orbital-helpers/semi_canonicalize.cc"
+},
+{
+  "directory": "/home/mhuang/forte/forte",
+  "command": "/home/mhuang/anaconda3/envs/psi4py37/bin/x86_64-conda_cos6-linux-gnu-g++ -DHAVE_OPENMP -DMAX_DET_ORB=64 -DUSING_LAPACK_MKL -DUSING_ambit -Dforte_EXPORTS -I/home/mhuang/forte/generated -I/home/mhuang/forte/include -I/home/mhuang/anaconda3/envs/psi4py37/include/python3.7m -I/home/mhuang/forte/forte/. -isystem /home/mhuang/psi4_install/include -isystem /usr/local/include/eigen3 -isystem /home/mhuang/ambit/bin/include -fvisibility-inlines-hidden -std=c++17 -fmessage-length=0 -march=nocona -mtune=haswell -ftree-vectorize -fPIC -fstack-protector-strong -fno-plt -O2 -ffunction-sections -pipe -isystem /home/mhuang/anaconda3/envs/psi4py37/include -fopenmp -msse4.2 -Wno-c++1z-extensions -g -fPIC -fvisibility=hidden -Wall -Wextra -pedantic -fopenmp -std=c++14 -o CMakeFiles/forte.dir/orbital-helpers/unpaired_density.cc.o -c /home/mhuang/forte/forte/orbital-helpers/unpaired_density.cc",
+  "file": "/home/mhuang/forte/forte/orbital-helpers/unpaired_density.cc"
+},
+{
+  "directory": "/home/mhuang/forte/forte",
+  "command": "/home/mhuang/anaconda3/envs/psi4py37/bin/x86_64-conda_cos6-linux-gnu-g++ -DHAVE_OPENMP -DMAX_DET_ORB=64 -DUSING_LAPACK_MKL -DUSING_ambit -Dforte_EXPORTS -I/home/mhuang/forte/generated -I/home/mhuang/forte/include -I/home/mhuang/anaconda3/envs/psi4py37/include/python3.7m -I/home/mhuang/forte/forte/. -isystem /home/mhuang/psi4_install/include -isystem /usr/local/include/eigen3 -isystem /home/mhuang/ambit/bin/include -fvisibility-inlines-hidden -std=c++17 -fmessage-length=0 -march=nocona -mtune=haswell -ftree-vectorize -fPIC -fstack-protector-strong -fno-plt -O2 -ffunction-sections -pipe -isystem /home/mhuang/anaconda3/envs/psi4py37/include -fopenmp -msse4.2 -Wno-c++1z-extensions -g -fPIC -fvisibility=hidden -Wall -Wextra -pedantic -fopenmp -std=c++14 -o CMakeFiles/forte.dir/pci/pci.cc.o -c /home/mhuang/forte/forte/pci/pci.cc",
+  "file": "/home/mhuang/forte/forte/pci/pci.cc"
+},
+{
+  "directory": "/home/mhuang/forte/forte",
+  "command": "/home/mhuang/anaconda3/envs/psi4py37/bin/x86_64-conda_cos6-linux-gnu-g++ -DHAVE_OPENMP -DMAX_DET_ORB=64 -DUSING_LAPACK_MKL -DUSING_ambit -Dforte_EXPORTS -I/home/mhuang/forte/generated -I/home/mhuang/forte/include -I/home/mhuang/anaconda3/envs/psi4py37/include/python3.7m -I/home/mhuang/forte/forte/. -isystem /home/mhuang/psi4_install/include -isystem /usr/local/include/eigen3 -isystem /home/mhuang/ambit/bin/include -fvisibility-inlines-hidden -std=c++17 -fmessage-length=0 -march=nocona -mtune=haswell -ftree-vectorize -fPIC -fstack-protector-strong -fno-plt -O2 -ffunction-sections -pipe -isystem /home/mhuang/anaconda3/envs/psi4py37/include -fopenmp -msse4.2 -Wno-c++1z-extensions -g -fPIC -fvisibility=hidden -Wall -Wextra -pedantic -fopenmp -std=c++14 -o CMakeFiles/forte.dir/pci/pci_sigma.cc.o -c /home/mhuang/forte/forte/pci/pci_sigma.cc",
+  "file": "/home/mhuang/forte/forte/pci/pci_sigma.cc"
+},
+{
+  "directory": "/home/mhuang/forte/forte",
+  "command": "/home/mhuang/anaconda3/envs/psi4py37/bin/x86_64-conda_cos6-linux-gnu-g++ -DHAVE_OPENMP -DMAX_DET_ORB=64 -DUSING_LAPACK_MKL -DUSING_ambit -Dforte_EXPORTS -I/home/mhuang/forte/generated -I/home/mhuang/forte/include -I/home/mhuang/anaconda3/envs/psi4py37/include/python3.7m -I/home/mhuang/forte/forte/. -isystem /home/mhuang/psi4_install/include -isystem /usr/local/include/eigen3 -isystem /home/mhuang/ambit/bin/include -fvisibility-inlines-hidden -std=c++17 -fmessage-length=0 -march=nocona -mtune=haswell -ftree-vectorize -fPIC -fstack-protector-strong -fno-plt -O2 -ffunction-sections -pipe -isystem /home/mhuang/anaconda3/envs/psi4py37/include -fopenmp -msse4.2 -Wno-c++1z-extensions -g -fPIC -fvisibility=hidden -Wall -Wextra -pedantic -fopenmp -std=c++14 -o CMakeFiles/forte.dir/post_process/spin_corr.cc.o -c /home/mhuang/forte/forte/post_process/spin_corr.cc",
+  "file": "/home/mhuang/forte/forte/post_process/spin_corr.cc"
+},
+{
+  "directory": "/home/mhuang/forte/forte",
+  "command": "/home/mhuang/anaconda3/envs/psi4py37/bin/x86_64-conda_cos6-linux-gnu-g++ -DHAVE_OPENMP -DMAX_DET_ORB=64 -DUSING_LAPACK_MKL -DUSING_ambit -Dforte_EXPORTS -I/home/mhuang/forte/generated -I/home/mhuang/forte/include -I/home/mhuang/anaconda3/envs/psi4py37/include/python3.7m -I/home/mhuang/forte/forte/. -isystem /home/mhuang/psi4_install/include -isystem /usr/local/include/eigen3 -isystem /home/mhuang/ambit/bin/include -fvisibility-inlines-hidden -std=c++17 -fmessage-length=0 -march=nocona -mtune=haswell -ftree-vectorize -fPIC -fstack-protector-strong -fno-plt -O2 -ffunction-sections -pipe -isystem /home/mhuang/anaconda3/envs/psi4py37/include -fopenmp -msse4.2 -Wno-c++1z-extensions -g -fPIC -fvisibility=hidden -Wall -Wextra -pedantic -fopenmp -std=c++14 -o CMakeFiles/forte.dir/sci/aci.cc.o -c /home/mhuang/forte/forte/sci/aci.cc",
+  "file": "/home/mhuang/forte/forte/sci/aci.cc"
+},
+{
+  "directory": "/home/mhuang/forte/forte",
+  "command": "/home/mhuang/anaconda3/envs/psi4py37/bin/x86_64-conda_cos6-linux-gnu-g++ -DHAVE_OPENMP -DMAX_DET_ORB=64 -DUSING_LAPACK_MKL -DUSING_ambit -Dforte_EXPORTS -I/home/mhuang/forte/generated -I/home/mhuang/forte/include -I/home/mhuang/anaconda3/envs/psi4py37/include/python3.7m -I/home/mhuang/forte/forte/. -isystem /home/mhuang/psi4_install/include -isystem /usr/local/include/eigen3 -isystem /home/mhuang/ambit/bin/include -fvisibility-inlines-hidden -std=c++17 -fmessage-length=0 -march=nocona -mtune=haswell -ftree-vectorize -fPIC -fstack-protector-strong -fno-plt -O2 -ffunction-sections -pipe -isystem /home/mhuang/anaconda3/envs/psi4py37/include -fopenmp -msse4.2 -Wno-c++1z-extensions -g -fPIC -fvisibility=hidden -Wall -Wextra -pedantic -fopenmp -std=c++14 -o CMakeFiles/forte.dir/sci/aci_build_F.cc.o -c /home/mhuang/forte/forte/sci/aci_build_F.cc",
+  "file": "/home/mhuang/forte/forte/sci/aci_build_F.cc"
+},
+{
+  "directory": "/home/mhuang/forte/forte",
+  "command": "/home/mhuang/anaconda3/envs/psi4py37/bin/x86_64-conda_cos6-linux-gnu-g++ -DHAVE_OPENMP -DMAX_DET_ORB=64 -DUSING_LAPACK_MKL -DUSING_ambit -Dforte_EXPORTS -I/home/mhuang/forte/generated -I/home/mhuang/forte/include -I/home/mhuang/anaconda3/envs/psi4py37/include/python3.7m -I/home/mhuang/forte/forte/. -isystem /home/mhuang/psi4_install/include -isystem /usr/local/include/eigen3 -isystem /home/mhuang/ambit/bin/include -fvisibility-inlines-hidden -std=c++17 -fmessage-length=0 -march=nocona -mtune=haswell -ftree-vectorize -fPIC -fstack-protector-strong -fno-plt -O2 -ffunction-sections -pipe -isystem /home/mhuang/anaconda3/envs/psi4py37/include -fopenmp -msse4.2 -Wno-c++1z-extensions -g -fPIC -fvisibility=hidden -Wall -Wextra -pedantic -fopenmp -std=c++14 -o CMakeFiles/forte.dir/sci/gasaci_build_F.cc.o -c /home/mhuang/forte/forte/sci/gasaci_build_F.cc",
+  "file": "/home/mhuang/forte/forte/sci/gasaci_build_F.cc"
+},
+{
+  "directory": "/home/mhuang/forte/forte",
+  "command": "/home/mhuang/anaconda3/envs/psi4py37/bin/x86_64-conda_cos6-linux-gnu-g++ -DHAVE_OPENMP -DMAX_DET_ORB=64 -DUSING_LAPACK_MKL -DUSING_ambit -Dforte_EXPORTS -I/home/mhuang/forte/generated -I/home/mhuang/forte/include -I/home/mhuang/anaconda3/envs/psi4py37/include/python3.7m -I/home/mhuang/forte/forte/. -isystem /home/mhuang/psi4_install/include -isystem /usr/local/include/eigen3 -isystem /home/mhuang/ambit/bin/include -fvisibility-inlines-hidden -std=c++17 -fmessage-length=0 -march=nocona -mtune=haswell -ftree-vectorize -fPIC -fstack-protector-strong -fno-plt -O2 -ffunction-sections -pipe -isystem /home/mhuang/anaconda3/envs/psi4py37/include -fopenmp -msse4.2 -Wno-c++1z-extensions -g -fPIC -fvisibility=hidden -Wall -Wextra -pedantic -fopenmp -std=c++14 -o CMakeFiles/forte.dir/sci/asci.cc.o -c /home/mhuang/forte/forte/sci/asci.cc",
+  "file": "/home/mhuang/forte/forte/sci/asci.cc"
+},
+{
+  "directory": "/home/mhuang/forte/forte",
+  "command": "/home/mhuang/anaconda3/envs/psi4py37/bin/x86_64-conda_cos6-linux-gnu-g++ -DHAVE_OPENMP -DMAX_DET_ORB=64 -DUSING_LAPACK_MKL -DUSING_ambit -Dforte_EXPORTS -I/home/mhuang/forte/generated -I/home/mhuang/forte/include -I/home/mhuang/anaconda3/envs/psi4py37/include/python3.7m -I/home/mhuang/forte/forte/. -isystem /home/mhuang/psi4_install/include -isystem /usr/local/include/eigen3 -isystem /home/mhuang/ambit/bin/include -fvisibility-inlines-hidden -std=c++17 -fmessage-length=0 -march=nocona -mtune=haswell -ftree-vectorize -fPIC -fstack-protector-strong -fno-plt -O2 -ffunction-sections -pipe -isystem /home/mhuang/anaconda3/envs/psi4py37/include -fopenmp -msse4.2 -Wno-c++1z-extensions -g -fPIC -fvisibility=hidden -Wall -Wextra -pedantic -fopenmp -std=c++14 -o CMakeFiles/forte.dir/sci/detci.cc.o -c /home/mhuang/forte/forte/sci/detci.cc",
+  "file": "/home/mhuang/forte/forte/sci/detci.cc"
+},
+{
+  "directory": "/home/mhuang/forte/forte",
+  "command": "/home/mhuang/anaconda3/envs/psi4py37/bin/x86_64-conda_cos6-linux-gnu-g++ -DHAVE_OPENMP -DMAX_DET_ORB=64 -DUSING_LAPACK_MKL -DUSING_ambit -Dforte_EXPORTS -I/home/mhuang/forte/generated -I/home/mhuang/forte/include -I/home/mhuang/anaconda3/envs/psi4py37/include/python3.7m -I/home/mhuang/forte/forte/. -isystem /home/mhuang/psi4_install/include -isystem /usr/local/include/eigen3 -isystem /home/mhuang/ambit/bin/include -fvisibility-inlines-hidden -std=c++17 -fmessage-length=0 -march=nocona -mtune=haswell -ftree-vectorize -fPIC -fstack-protector-strong -fno-plt -O2 -ffunction-sections -pipe -isystem /home/mhuang/anaconda3/envs/psi4py37/include -fopenmp -msse4.2 -Wno-c++1z-extensions -g -fPIC -fvisibility=hidden -Wall -Wextra -pedantic -fopenmp -std=c++14 -o CMakeFiles/forte.dir/sci/fci_mo.cc.o -c /home/mhuang/forte/forte/sci/fci_mo.cc",
+  "file": "/home/mhuang/forte/forte/sci/fci_mo.cc"
+},
+{
+  "directory": "/home/mhuang/forte/forte",
+  "command": "/home/mhuang/anaconda3/envs/psi4py37/bin/x86_64-conda_cos6-linux-gnu-g++ -DHAVE_OPENMP -DMAX_DET_ORB=64 -DUSING_LAPACK_MKL -DUSING_ambit -Dforte_EXPORTS -I/home/mhuang/forte/generated -I/home/mhuang/forte/include -I/home/mhuang/anaconda3/envs/psi4py37/include/python3.7m -I/home/mhuang/forte/forte/. -isystem /home/mhuang/psi4_install/include -isystem /usr/local/include/eigen3 -isystem /home/mhuang/ambit/bin/include -fvisibility-inlines-hidden -std=c++17 -fmessage-length=0 -march=nocona -mtune=haswell -ftree-vectorize -fPIC -fstack-protector-strong -fno-plt -O2 -ffunction-sections -pipe -isystem /home/mhuang/anaconda3/envs/psi4py37/include -fopenmp -msse4.2 -Wno-c++1z-extensions -g -fPIC -fvisibility=hidden -Wall -Wextra -pedantic -fopenmp -std=c++14 -o CMakeFiles/forte.dir/sci/mrpt2.cc.o -c /home/mhuang/forte/forte/sci/mrpt2.cc",
+  "file": "/home/mhuang/forte/forte/sci/mrpt2.cc"
+},
+{
+  "directory": "/home/mhuang/forte/forte",
+  "command": "/home/mhuang/anaconda3/envs/psi4py37/bin/x86_64-conda_cos6-linux-gnu-g++ -DHAVE_OPENMP -DMAX_DET_ORB=64 -DUSING_LAPACK_MKL -DUSING_ambit -Dforte_EXPORTS -I/home/mhuang/forte/generated -I/home/mhuang/forte/include -I/home/mhuang/anaconda3/envs/psi4py37/include/python3.7m -I/home/mhuang/forte/forte/. -isystem /home/mhuang/psi4_install/include -isystem /usr/local/include/eigen3 -isystem /home/mhuang/ambit/bin/include -fvisibility-inlines-hidden -std=c++17 -fmessage-length=0 -march=nocona -mtune=haswell -ftree-vectorize -fPIC -fstack-protector-strong -fno-plt -O2 -ffunction-sections -pipe -isystem /home/mhuang/anaconda3/envs/psi4py37/include -fopenmp -msse4.2 -Wno-c++1z-extensions -g -fPIC -fvisibility=hidden -Wall -Wextra -pedantic -fopenmp -std=c++14 -o CMakeFiles/forte.dir/sci/sci.cc.o -c /home/mhuang/forte/forte/sci/sci.cc",
+  "file": "/home/mhuang/forte/forte/sci/sci.cc"
+},
+{
+  "directory": "/home/mhuang/forte/forte",
+  "command": "/home/mhuang/anaconda3/envs/psi4py37/bin/x86_64-conda_cos6-linux-gnu-g++ -DHAVE_OPENMP -DMAX_DET_ORB=64 -DUSING_LAPACK_MKL -DUSING_ambit -Dforte_EXPORTS -I/home/mhuang/forte/generated -I/home/mhuang/forte/include -I/home/mhuang/anaconda3/envs/psi4py37/include/python3.7m -I/home/mhuang/forte/forte/. -isystem /home/mhuang/psi4_install/include -isystem /usr/local/include/eigen3 -isystem /home/mhuang/ambit/bin/include -fvisibility-inlines-hidden -std=c++17 -fmessage-length=0 -march=nocona -mtune=haswell -ftree-vectorize -fPIC -fstack-protector-strong -fno-plt -O2 -ffunction-sections -pipe -isystem /home/mhuang/anaconda3/envs/psi4py37/include -fopenmp -msse4.2 -Wno-c++1z-extensions -g -fPIC -fvisibility=hidden -Wall -Wextra -pedantic -fopenmp -std=c++14 -o CMakeFiles/forte.dir/sparse_ci/ci_reference.cc.o -c /home/mhuang/forte/forte/sparse_ci/ci_reference.cc",
+  "file": "/home/mhuang/forte/forte/sparse_ci/ci_reference.cc"
+},
+{
+  "directory": "/home/mhuang/forte/forte",
+  "command": "/home/mhuang/anaconda3/envs/psi4py37/bin/x86_64-conda_cos6-linux-gnu-g++ -DHAVE_OPENMP -DMAX_DET_ORB=64 -DUSING_LAPACK_MKL -DUSING_ambit -Dforte_EXPORTS -I/home/mhuang/forte/generated -I/home/mhuang/forte/include -I/home/mhuang/anaconda3/envs/psi4py37/include/python3.7m -I/home/mhuang/forte/forte/. -isystem /home/mhuang/psi4_install/include -isystem /usr/local/include/eigen3 -isystem /home/mhuang/ambit/bin/include -fvisibility-inlines-hidden -std=c++17 -fmessage-length=0 -march=nocona -mtune=haswell -ftree-vectorize -fPIC -fstack-protector-strong -fno-plt -O2 -ffunction-sections -pipe -isystem /home/mhuang/anaconda3/envs/psi4py37/include -fopenmp -msse4.2 -Wno-c++1z-extensions -g -fPIC -fvisibility=hidden -Wall -Wextra -pedantic -fopenmp -std=c++14 -o CMakeFiles/forte.dir/sparse_ci/determinant_functions.cc.o -c /home/mhuang/forte/forte/sparse_ci/determinant_functions.cc",
+  "file": "/home/mhuang/forte/forte/sparse_ci/determinant_functions.cc"
+},
+{
+  "directory": "/home/mhuang/forte/forte",
+  "command": "/home/mhuang/anaconda3/envs/psi4py37/bin/x86_64-conda_cos6-linux-gnu-g++ -DHAVE_OPENMP -DMAX_DET_ORB=64 -DUSING_LAPACK_MKL -DUSING_ambit -Dforte_EXPORTS -I/home/mhuang/forte/generated -I/home/mhuang/forte/include -I/home/mhuang/anaconda3/envs/psi4py37/include/python3.7m -I/home/mhuang/forte/forte/. -isystem /home/mhuang/psi4_install/include -isystem /usr/local/include/eigen3 -isystem /home/mhuang/ambit/bin/include -fvisibility-inlines-hidden -std=c++17 -fmessage-length=0 -march=nocona -mtune=haswell -ftree-vectorize -fPIC -fstack-protector-strong -fno-plt -O2 -ffunction-sections -pipe -isystem /home/mhuang/anaconda3/envs/psi4py37/include -fopenmp -msse4.2 -Wno-c++1z-extensions -g -fPIC -fvisibility=hidden -Wall -Wextra -pedantic -fopenmp -std=c++14 -o CMakeFiles/forte.dir/sparse_ci/determinant_hashvector.cc.o -c /home/mhuang/forte/forte/sparse_ci/determinant_hashvector.cc",
+  "file": "/home/mhuang/forte/forte/sparse_ci/determinant_hashvector.cc"
+},
+{
+  "directory": "/home/mhuang/forte/forte",
+  "command": "/home/mhuang/anaconda3/envs/psi4py37/bin/x86_64-conda_cos6-linux-gnu-g++ -DHAVE_OPENMP -DMAX_DET_ORB=64 -DUSING_LAPACK_MKL -DUSING_ambit -Dforte_EXPORTS -I/home/mhuang/forte/generated -I/home/mhuang/forte/include -I/home/mhuang/anaconda3/envs/psi4py37/include/python3.7m -I/home/mhuang/forte/forte/. -isystem /home/mhuang/psi4_install/include -isystem /usr/local/include/eigen3 -isystem /home/mhuang/ambit/bin/include -fvisibility-inlines-hidden -std=c++17 -fmessage-length=0 -march=nocona -mtune=haswell -ftree-vectorize -fPIC -fstack-protector-strong -fno-plt -O2 -ffunction-sections -pipe -isystem /home/mhuang/anaconda3/envs/psi4py37/include -fopenmp -msse4.2 -Wno-c++1z-extensions -g -fPIC -fvisibility=hidden -Wall -Wextra -pedantic -fopenmp -std=c++14 -o CMakeFiles/forte.dir/sparse_ci/determinant_substitution_lists.cc.o -c /home/mhuang/forte/forte/sparse_ci/determinant_substitution_lists.cc",
+  "file": "/home/mhuang/forte/forte/sparse_ci/determinant_substitution_lists.cc"
+},
+{
+  "directory": "/home/mhuang/forte/forte",
+  "command": "/home/mhuang/anaconda3/envs/psi4py37/bin/x86_64-conda_cos6-linux-gnu-g++ -DHAVE_OPENMP -DMAX_DET_ORB=64 -DUSING_LAPACK_MKL -DUSING_ambit -Dforte_EXPORTS -I/home/mhuang/forte/generated -I/home/mhuang/forte/include -I/home/mhuang/anaconda3/envs/psi4py37/include/python3.7m -I/home/mhuang/forte/forte/. -isystem /home/mhuang/psi4_install/include -isystem /usr/local/include/eigen3 -isystem /home/mhuang/ambit/bin/include -fvisibility-inlines-hidden -std=c++17 -fmessage-length=0 -march=nocona -mtune=haswell -ftree-vectorize -fPIC -fstack-protector-strong -fno-plt -O2 -ffunction-sections -pipe -isystem /home/mhuang/anaconda3/envs/psi4py37/include -fopenmp -msse4.2 -Wno-c++1z-extensions -g -fPIC -fvisibility=hidden -Wall -Wextra -pedantic -fopenmp -std=c++14 -o CMakeFiles/forte.dir/sparse_ci/sigma_vector.cc.o -c /home/mhuang/forte/forte/sparse_ci/sigma_vector.cc",
+  "file": "/home/mhuang/forte/forte/sparse_ci/sigma_vector.cc"
+},
+{
+  "directory": "/home/mhuang/forte/forte",
+  "command": "/home/mhuang/anaconda3/envs/psi4py37/bin/x86_64-conda_cos6-linux-gnu-g++ -DHAVE_OPENMP -DMAX_DET_ORB=64 -DUSING_LAPACK_MKL -DUSING_ambit -Dforte_EXPORTS -I/home/mhuang/forte/generated -I/home/mhuang/forte/include -I/home/mhuang/anaconda3/envs/psi4py37/include/python3.7m -I/home/mhuang/forte/forte/. -isystem /home/mhuang/psi4_install/include -isystem /usr/local/include/eigen3 -isystem /home/mhuang/ambit/bin/include -fvisibility-inlines-hidden -std=c++17 -fmessage-length=0 -march=nocona -mtune=haswell -ftree-vectorize -fPIC -fstack-protector-strong -fno-plt -O2 -ffunction-sections -pipe -isystem /home/mhuang/anaconda3/envs/psi4py37/include -fopenmp -msse4.2 -Wno-c++1z-extensions -g -fPIC -fvisibility=hidden -Wall -Wextra -pedantic -fopenmp -std=c++14 -o CMakeFiles/forte.dir/sparse_ci/sigma_vector_dynamic.cc.o -c /home/mhuang/forte/forte/sparse_ci/sigma_vector_dynamic.cc",
+  "file": "/home/mhuang/forte/forte/sparse_ci/sigma_vector_dynamic.cc"
+},
+{
+  "directory": "/home/mhuang/forte/forte",
+  "command": "/home/mhuang/anaconda3/envs/psi4py37/bin/x86_64-conda_cos6-linux-gnu-g++ -DHAVE_OPENMP -DMAX_DET_ORB=64 -DUSING_LAPACK_MKL -DUSING_ambit -Dforte_EXPORTS -I/home/mhuang/forte/generated -I/home/mhuang/forte/include -I/home/mhuang/anaconda3/envs/psi4py37/include/python3.7m -I/home/mhuang/forte/forte/. -isystem /home/mhuang/psi4_install/include -isystem /usr/local/include/eigen3 -isystem /home/mhuang/ambit/bin/include -fvisibility-inlines-hidden -std=c++17 -fmessage-length=0 -march=nocona -mtune=haswell -ftree-vectorize -fPIC -fstack-protector-strong -fno-plt -O2 -ffunction-sections -pipe -isystem /home/mhuang/anaconda3/envs/psi4py37/include -fopenmp -msse4.2 -Wno-c++1z-extensions -g -fPIC -fvisibility=hidden -Wall -Wextra -pedantic -fopenmp -std=c++14 -o CMakeFiles/forte.dir/sparse_ci/sigma_vector_sparse_list.cc.o -c /home/mhuang/forte/forte/sparse_ci/sigma_vector_sparse_list.cc",
+  "file": "/home/mhuang/forte/forte/sparse_ci/sigma_vector_sparse_list.cc"
+},
+{
+  "directory": "/home/mhuang/forte/forte",
+  "command": "/home/mhuang/anaconda3/envs/psi4py37/bin/x86_64-conda_cos6-linux-gnu-g++ -DHAVE_OPENMP -DMAX_DET_ORB=64 -DUSING_LAPACK_MKL -DUSING_ambit -Dforte_EXPORTS -I/home/mhuang/forte/generated -I/home/mhuang/forte/include -I/home/mhuang/anaconda3/envs/psi4py37/include/python3.7m -I/home/mhuang/forte/forte/. -isystem /home/mhuang/psi4_install/include -isystem /usr/local/include/eigen3 -isystem /home/mhuang/ambit/bin/include -fvisibility-inlines-hidden -std=c++17 -fmessage-length=0 -march=nocona -mtune=haswell -ftree-vectorize -fPIC -fstack-protector-strong -fno-plt -O2 -ffunction-sections -pipe -isystem /home/mhuang/anaconda3/envs/psi4py37/include -fopenmp -msse4.2 -Wno-c++1z-extensions -g -fPIC -fvisibility=hidden -Wall -Wextra -pedantic -fopenmp -std=c++14 -o CMakeFiles/forte.dir/sparse_ci/sorted_string_list.cc.o -c /home/mhuang/forte/forte/sparse_ci/sorted_string_list.cc",
+  "file": "/home/mhuang/forte/forte/sparse_ci/sorted_string_list.cc"
+},
+{
+  "directory": "/home/mhuang/forte/forte",
+  "command": "/home/mhuang/anaconda3/envs/psi4py37/bin/x86_64-conda_cos6-linux-gnu-g++ -DHAVE_OPENMP -DMAX_DET_ORB=64 -DUSING_LAPACK_MKL -DUSING_ambit -Dforte_EXPORTS -I/home/mhuang/forte/generated -I/home/mhuang/forte/include -I/home/mhuang/anaconda3/envs/psi4py37/include/python3.7m -I/home/mhuang/forte/forte/. -isystem /home/mhuang/psi4_install/include -isystem /usr/local/include/eigen3 -isystem /home/mhuang/ambit/bin/include -fvisibility-inlines-hidden -std=c++17 -fmessage-length=0 -march=nocona -mtune=haswell -ftree-vectorize -fPIC -fstack-protector-strong -fno-plt -O2 -ffunction-sections -pipe -isystem /home/mhuang/anaconda3/envs/psi4py37/include -fopenmp -msse4.2 -Wno-c++1z-extensions -g -fPIC -fvisibility=hidden -Wall -Wextra -pedantic -fopenmp -std=c++14 -o CMakeFiles/forte.dir/sparse_ci/sparse_ci_solver.cc.o -c /home/mhuang/forte/forte/sparse_ci/sparse_ci_solver.cc",
+  "file": "/home/mhuang/forte/forte/sparse_ci/sparse_ci_solver.cc"
+},
+{
+  "directory": "/home/mhuang/forte/forte",
+  "command": "/home/mhuang/anaconda3/envs/psi4py37/bin/x86_64-conda_cos6-linux-gnu-g++ -DHAVE_OPENMP -DMAX_DET_ORB=64 -DUSING_LAPACK_MKL -DUSING_ambit -Dforte_EXPORTS -I/home/mhuang/forte/generated -I/home/mhuang/forte/include -I/home/mhuang/anaconda3/envs/psi4py37/include/python3.7m -I/home/mhuang/forte/forte/. -isystem /home/mhuang/psi4_install/include -isystem /usr/local/include/eigen3 -isystem /home/mhuang/ambit/bin/include -fvisibility-inlines-hidden -std=c++17 -fmessage-length=0 -march=nocona -mtune=haswell -ftree-vectorize -fPIC -fstack-protector-strong -fno-plt -O2 -ffunction-sections -pipe -isystem /home/mhuang/anaconda3/envs/psi4py37/include -fopenmp -msse4.2 -Wno-c++1z-extensions -g -fPIC -fvisibility=hidden -Wall -Wextra -pedantic -fopenmp -std=c++14 -o CMakeFiles/forte.dir/sparse_ci/sparse_operator.cc.o -c /home/mhuang/forte/forte/sparse_ci/sparse_operator.cc",
+  "file": "/home/mhuang/forte/forte/sparse_ci/sparse_operator.cc"
+},
+{
+  "directory": "/home/mhuang/forte/forte",
+  "command": "/home/mhuang/anaconda3/envs/psi4py37/bin/x86_64-conda_cos6-linux-gnu-g++ -DHAVE_OPENMP -DMAX_DET_ORB=64 -DUSING_LAPACK_MKL -DUSING_ambit -Dforte_EXPORTS -I/home/mhuang/forte/generated -I/home/mhuang/forte/include -I/home/mhuang/anaconda3/envs/psi4py37/include/python3.7m -I/home/mhuang/forte/forte/. -isystem /home/mhuang/psi4_install/include -isystem /usr/local/include/eigen3 -isystem /home/mhuang/ambit/bin/include -fvisibility-inlines-hidden -std=c++17 -fmessage-length=0 -march=nocona -mtune=haswell -ftree-vectorize -fPIC -fstack-protector-strong -fno-plt -O2 -ffunction-sections -pipe -isystem /home/mhuang/anaconda3/envs/psi4py37/include -fopenmp -msse4.2 -Wno-c++1z-extensions -g -fPIC -fvisibility=hidden -Wall -Wextra -pedantic -fopenmp -std=c++14 -o CMakeFiles/forte.dir/sparse_ci/sparse_exp.cc.o -c /home/mhuang/forte/forte/sparse_ci/sparse_exp.cc",
+  "file": "/home/mhuang/forte/forte/sparse_ci/sparse_exp.cc"
+},
+{
+  "directory": "/home/mhuang/forte/forte",
+  "command": "/home/mhuang/anaconda3/envs/psi4py37/bin/x86_64-conda_cos6-linux-gnu-g++ -DHAVE_OPENMP -DMAX_DET_ORB=64 -DUSING_LAPACK_MKL -DUSING_ambit -Dforte_EXPORTS -I/home/mhuang/forte/generated -I/home/mhuang/forte/include -I/home/mhuang/anaconda3/envs/psi4py37/include/python3.7m -I/home/mhuang/forte/forte/. -isystem /home/mhuang/psi4_install/include -isystem /usr/local/include/eigen3 -isystem /home/mhuang/ambit/bin/include -fvisibility-inlines-hidden -std=c++17 -fmessage-length=0 -march=nocona -mtune=haswell -ftree-vectorize -fPIC -fstack-protector-strong -fno-plt -O2 -ffunction-sections -pipe -isystem /home/mhuang/anaconda3/envs/psi4py37/include -fopenmp -msse4.2 -Wno-c++1z-extensions -g -fPIC -fvisibility=hidden -Wall -Wextra -pedantic -fopenmp -std=c++14 -o CMakeFiles/forte.dir/sparse_ci/sparse_fact_exp.cc.o -c /home/mhuang/forte/forte/sparse_ci/sparse_fact_exp.cc",
+  "file": "/home/mhuang/forte/forte/sparse_ci/sparse_fact_exp.cc"
+},
+{
+  "directory": "/home/mhuang/forte/forte",
+  "command": "/home/mhuang/anaconda3/envs/psi4py37/bin/x86_64-conda_cos6-linux-gnu-g++ -DHAVE_OPENMP -DMAX_DET_ORB=64 -DUSING_LAPACK_MKL -DUSING_ambit -Dforte_EXPORTS -I/home/mhuang/forte/generated -I/home/mhuang/forte/include -I/home/mhuang/anaconda3/envs/psi4py37/include/python3.7m -I/home/mhuang/forte/forte/. -isystem /home/mhuang/psi4_install/include -isystem /usr/local/include/eigen3 -isystem /home/mhuang/ambit/bin/include -fvisibility-inlines-hidden -std=c++17 -fmessage-length=0 -march=nocona -mtune=haswell -ftree-vectorize -fPIC -fstack-protector-strong -fno-plt -O2 -ffunction-sections -pipe -isystem /home/mhuang/anaconda3/envs/psi4py37/include -fopenmp -msse4.2 -Wno-c++1z-extensions -g -fPIC -fvisibility=hidden -Wall -Wextra -pedantic -fopenmp -std=c++14 -o CMakeFiles/forte.dir/sparse_ci/sparse_hamiltonian.cc.o -c /home/mhuang/forte/forte/sparse_ci/sparse_hamiltonian.cc",
+  "file": "/home/mhuang/forte/forte/sparse_ci/sparse_hamiltonian.cc"
+},
+{
+  "directory": "/home/mhuang/forte/forte",
+  "command": "/home/mhuang/anaconda3/envs/psi4py37/bin/x86_64-conda_cos6-linux-gnu-g++ -DHAVE_OPENMP -DMAX_DET_ORB=64 -DUSING_LAPACK_MKL -DUSING_ambit -Dforte_EXPORTS -I/home/mhuang/forte/generated -I/home/mhuang/forte/include -I/home/mhuang/anaconda3/envs/psi4py37/include/python3.7m -I/home/mhuang/forte/forte/. -isystem /home/mhuang/psi4_install/include -isystem /usr/local/include/eigen3 -isystem /home/mhuang/ambit/bin/include -fvisibility-inlines-hidden -std=c++17 -fmessage-length=0 -march=nocona -mtune=haswell -ftree-vectorize -fPIC -fstack-protector-strong -fno-plt -O2 -ffunction-sections -pipe -isystem /home/mhuang/anaconda3/envs/psi4py37/include -fopenmp -msse4.2 -Wno-c++1z-extensions -g -fPIC -fvisibility=hidden -Wall -Wextra -pedantic -fopenmp -std=c++14 -o CMakeFiles/forte.dir/sparse_ci/sq_operator.cc.o -c /home/mhuang/forte/forte/sparse_ci/sq_operator.cc",
+  "file": "/home/mhuang/forte/forte/sparse_ci/sq_operator.cc"
+},
+{
+  "directory": "/home/mhuang/forte/forte",
+  "command": "/home/mhuang/anaconda3/envs/psi4py37/bin/x86_64-conda_cos6-linux-gnu-g++ -DHAVE_OPENMP -DMAX_DET_ORB=64 -DUSING_LAPACK_MKL -DUSING_ambit -Dforte_EXPORTS -I/home/mhuang/forte/generated -I/home/mhuang/forte/include -I/home/mhuang/anaconda3/envs/psi4py37/include/python3.7m -I/home/mhuang/forte/forte/. -isystem /home/mhuang/psi4_install/include -isystem /usr/local/include/eigen3 -isystem /home/mhuang/ambit/bin/include -fvisibility-inlines-hidden -std=c++17 -fmessage-length=0 -march=nocona -mtune=haswell -ftree-vectorize -fPIC -fstack-protector-strong -fno-plt -O2 -ffunction-sections -pipe -isystem /home/mhuang/anaconda3/envs/psi4py37/include -fopenmp -msse4.2 -Wno-c++1z-extensions -g -fPIC -fvisibility=hidden -Wall -Wextra -pedantic -fopenmp -std=c++14 -o CMakeFiles/forte.dir/sparse_ci/sparse_state_vector.cc.o -c /home/mhuang/forte/forte/sparse_ci/sparse_state_vector.cc",
+  "file": "/home/mhuang/forte/forte/sparse_ci/sparse_state_vector.cc"
+},
+{
+  "directory": "/home/mhuang/forte/forte",
+  "command": "/home/mhuang/anaconda3/envs/psi4py37/bin/x86_64-conda_cos6-linux-gnu-g++ -DHAVE_OPENMP -DMAX_DET_ORB=64 -DUSING_LAPACK_MKL -DUSING_ambit -Dforte_EXPORTS -I/home/mhuang/forte/generated -I/home/mhuang/forte/include -I/home/mhuang/anaconda3/envs/psi4py37/include/python3.7m -I/home/mhuang/forte/forte/. -isystem /home/mhuang/psi4_install/include -isystem /usr/local/include/eigen3 -isystem /home/mhuang/ambit/bin/include -fvisibility-inlines-hidden -std=c++17 -fmessage-length=0 -march=nocona -mtune=haswell -ftree-vectorize -fPIC -fstack-protector-strong -fno-plt -O2 -ffunction-sections -pipe -isystem /home/mhuang/anaconda3/envs/psi4py37/include -fopenmp -msse4.2 -Wno-c++1z-extensions -g -fPIC -fvisibility=hidden -Wall -Wextra -pedantic -fopenmp -std=c++14 -o CMakeFiles/forte.dir/v2rdm/v2rdm.cc.o -c /home/mhuang/forte/forte/v2rdm/v2rdm.cc",
+  "file": "/home/mhuang/forte/forte/v2rdm/v2rdm.cc"
+}
+]

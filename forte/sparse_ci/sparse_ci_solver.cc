@@ -661,8 +661,8 @@ bool SparseCISolver::davidson_liu_solver(const DeterminantHashVec& space,
         }
     }
 
-    if (converged == SolverStatus::NotConverged) {
-        outfile->Printf("\n  FCI did not converge!");
+    if (converged != SolverStatus::Converged) {
+        outfile->Printf("\n  The Davidson-Liu algorithm did not converge! Consider to increase DL_MAXITER. ");
         exit(1);
     }
 
