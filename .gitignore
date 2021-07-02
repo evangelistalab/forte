@@ -7,8 +7,10 @@ Makefile
 timer.dat
 *~
 forte/version.h
-*.in
+.cmake
+.vscod
 *.json
+a.out
 
 # Qt Creator project files
 *.config
