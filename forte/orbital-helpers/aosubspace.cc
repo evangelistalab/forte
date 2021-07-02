@@ -125,14 +125,6 @@ psi::SharedMatrix make_aosubspace_projector(psi::SharedWavefunction wfn,
 
 AOSubspace::AOSubspace(std::vector<std::string> subspace_str,
                        std::shared_ptr<psi::Molecule> molecule,
-                       std::shared_ptr<psi::BasisSet> basis)
-    : subspace_str_(subspace_str), molecule_(molecule), min_basis_(basis), subspace_counter_(0),
-      atom_normals_({}), debug_(false) {
-    startup();
-}
-
-AOSubspace::AOSubspace(std::vector<std::string> subspace_str,
-                       std::shared_ptr<psi::Molecule> molecule,
                        std::shared_ptr<psi::BasisSet> basis,
                        std::map<std::pair<int, int>, psi::Vector3> atom_normals, bool debug_mode)
     : subspace_str_(subspace_str), molecule_(molecule), min_basis_(basis), subspace_counter_(0),
