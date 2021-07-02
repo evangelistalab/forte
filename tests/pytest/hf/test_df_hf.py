@@ -39,7 +39,7 @@ def test_df_rhf_select_aux():
     """
 
     # create a molecular model
-    input = solver_factory(molecule=xyz, int_type='df', basis='cc-pVTZ', scf_aux_basis='cc-pVQZ-JKFIT')
+    input = solver_factory(molecule=xyz, int_type='df', basis='cc-pVTZ', jkfit_aux_basis='cc-pVQZ-JKFIT')
 
     # specify the electronic state
     state = input.state(charge=0, multiplicity=1, sym='a1')

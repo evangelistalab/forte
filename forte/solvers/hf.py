@@ -173,8 +173,8 @@ class HF(Solver):
         if self.socc is not None:
             options['SOCC'] = self.socc
 
-        if self.data.model.scf_aux_basis is not None:
-            options['DF_BASIS_SCF'] = self.data.model.scf_aux_basis
+        if self.data.model.jkfit_aux_basis is not None:
+            options['DF_BASIS_SCF'] = self.data.model.jkfit_aux_basis
 
         full_options = {**options, **self._options}
 

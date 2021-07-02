@@ -56,11 +56,11 @@ class MCSCF_2STEP {
      *   See J. Chem. Phys. 142, 224103 (2015) and Theor. Chem. Acc. 97, 88-95 (1997)
      */
     MCSCF_2STEP(const std::map<StateInfo, std::vector<double>>& state_weights_map,
-                std::shared_ptr<ForteOptions> options, std::shared_ptr<MOSpaceInfo> mo_space_info,
-                std::shared_ptr<forte::SCFInfo> scf_info, std::shared_ptr<ForteIntegrals> ints);
+                std::shared_ptr<ForteOptions> options, std::shared_ptr<ForteIntegrals> ints,
+                std::shared_ptr<ActiveSpaceSolver> active_space_solver);
 
     /// Compute the MCSCF energy
-    double compute_energy();
+    std::map<StateInfo, std::vector<double>> compute_energy();
 
   private:
     /// The list of states to computed. Passed to the ActiveSpaceSolver
@@ -77,6 +77,9 @@ class MCSCF_2STEP {
 
     /// The Forte integral
     std::shared_ptr<ForteIntegrals> ints_;
+
+    /// The active space solver
+    std::shared_ptr<ActiveSpaceSolver> active_space_solver_;
 
     /// Common setup for the class
     void startup();
@@ -141,11 +144,14 @@ class MCSCF_2STEP {
     /// Final total energy
     double energy_;
 
+    /// A map that holds a list of energies for each state
+    std::map<StateInfo, std::vector<double>> state_energy_map_;
+
     /// Solve CI coefficients for the current orbitals
     /// @param fci_ints the pointer of ActiveSpaceIntegrals
     /// @param params the parameters <print level, e_conv, r_conv, read_wfn_guess, dump_wfn>
-    /// @return <ActiveSpaceSolver, averaged energy>
-    std::tuple<std::unique_ptr<ActiveSpaceSolver>, double>
+    /// @return <ActiveSpaceSolver, average energy, state -> energy map>
+    std::tuple<double, std::map<StateInfo, std::vector<double>>>
     diagonalize_hamiltonian(std::shared_ptr<ActiveSpaceIntegrals> fci_ints,
                             const std::tuple<int, double, double, bool, bool>& params);
 
@@ -165,9 +171,8 @@ class MCSCF_2STEP {
 
 std::unique_ptr<MCSCF_2STEP>
 make_mcscf_two_step(const std::map<StateInfo, std::vector<double>>& state_weight_map,
-                    std::shared_ptr<SCFInfo> ref_wfn, std::shared_ptr<ForteOptions> options,
-                    std::shared_ptr<MOSpaceInfo> mo_space_info,
-                    std::shared_ptr<ForteIntegrals> ints);
+                    std::shared_ptr<ForteOptions> options, std::shared_ptr<ForteIntegrals> ints,
+                    std::shared_ptr<ActiveSpaceSolver> active_space_solver);
 
 } // namespace forte
 

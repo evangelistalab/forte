@@ -3,10 +3,11 @@ from forte.core import flog
 from forte.solvers.feature import Feature
 from forte.solvers.solver import Solver
 
-# from forte.forte import ForteOptions
+from forte.forte import ForteOptions
+from forte import forte_options
 # from forte import to_state_nroots_map
-# from forte import forte_options
 # from forte.forte import make_active_space_ints, make_active_space_solver
+from forte.forte import make_mcscf_two_step
 
 
 class MCSCF(Solver):
@@ -72,6 +73,16 @@ class MCSCF(Solver):
         else:
             flog('info', 'ActiveSpaceSolver: MOs read from mo_solver object')
 
+        # prepare the options
+        options = {'E_CONVERGENCE': self.e_convergence, 'R_CONVERGENCE': self.r_convergence}
+
+        # values from self._options (user specified) replace those from options
+        full_options = {**options, **self._options}
+
+        flog('info', 'MCSCF: adding options')
+        local_options = ForteOptions(forte_options)
+        local_options.set_from_dict(full_options)
+
         # options = prepare_forte_options()
 
         # ints = make_ints_from_psi4(self.guess.psi_wfn, options, mo_space_info)
@@ -79,8 +90,10 @@ class MCSCF(Solver):
         # # pipe output to the file self._output_file
         # psi4.core.set_output_file(self._output_file, True)
 
-        # casscf = make_mcscf_two_step(self._states, self.guess.scf_info, options, mo_space_info, ints)
-        # energy = casscf.compute_energy()
-        # self._results.add('mcscf energy', [energy], 'MCSCF energy', 'Eh')
+        mcscf = make_mcscf_two_step(
+            self.input_nodes[0]._states, local_options, self.ints, self.input_nodes[0].active_space_solver
+        )
+        energy = mcscf.compute_energy()
+        self._results.add('mcscf energy', energy, 'MCSCF energy', 'Eh')
 
         return self

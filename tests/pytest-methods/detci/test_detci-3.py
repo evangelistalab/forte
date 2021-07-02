@@ -30,8 +30,8 @@ def test_detci_3():
     input = solver_factory(
         molecule=butadiene,
         basis='def2-svp',
-        scf_aux_basis='def2-universal-jkfit',
-        corr_aux_basis='def2-universal-jkfit',
+        jkfit_aux_basis='def2-universal-jkfit',
+        rifit_aux_basis='def2-universal-jkfit',
         int_type='df'
     )
 
