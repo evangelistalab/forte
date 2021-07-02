@@ -93,7 +93,6 @@ void MCSCF_2STEP::read_options() {
     orb_type_redundant_ = options_->get_str("CASSCF_FINAL_ORBITAL");
 
     ci_type_ = active_space_solver_->method();
-    // ci_type_ = options_->get_str("CASSCF_CI_SOLVER");
 
     opt_orbs_ = not options_->get_bool("CASSCF_NO_ORBOPT");
     max_rot_ = options_->get_double("CASSCF_MAX_ROTATION");
