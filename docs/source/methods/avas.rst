@@ -75,7 +75,7 @@ followed by a CASCI computation. ::
     O           -0.000000000000     0.000000000001     0.599382404096
     H           -0.000000000000    -0.938817812172    -1.186989139808
     H            0.000000000000     0.938817812225    -1.186989139839
-    noreorient
+    noreorient  # ask Psi4 to not reorient the xyz coordinate
     }
 
     set {
@@ -92,7 +92,7 @@ followed by a CASCI computation. ::
       avas_diagonalize    true                 # diagonalize the projected overlaps
       avas_sigma          1.0                  # fraction of eigenvalues included as active
     }
-    Escf, wfn = energy('forte', return_wfn=True)
+    Ezero, wfn = energy('forte', return_wfn=True)
 
     set forte {
       job_type            newdriver  # compute some forte energy
@@ -171,56 +171,104 @@ In particular, :code:`avas-6` is a practical example on ferrocene.
 Defining the molecular plane for π orbitals
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-For the above example, the molecule is placed on the yz plane such that the directions of p orbitals
-are aligned with the molecule xyz frame.
-However, sometimes it is hard to make these two xyz frames aligned.
-For example, the molecule contains multiple π subsystems or the plane is not perfect.
-In such cases, if only pi orbitals are desired, we can linearly combine the px, py, and pz orbitals
-to a single 'pz' orbital that perpendicular to the π subsystem plane.
+Molecular systems with conjugated π bonds generally process planar geometries.
+For such systems, the active orbitals are usually chosen as the π orbitals perpendicular to the plane.
+Each π orbital consists of atomic p orbitals, which are also perpendicular to the plane.
+Take the above formaldehyde as an example.
+The π and π* orbitals are built from the 2p orbitals of C and O that are perpendicular to the molecular plane.
+We are very lucky that the formaldehyde molecule is in yz plane and
+the subspace 2p orbitals can be easily chosen as the 2px orbitals of C and O atoms.
 
-We use the keyword :code:`SUBSPACE_PI_PLANES` to define all the π subsystems planes,
-where each plane is given by a list of atoms' expressions.
-Some valid expressions would be: ::
-
-  - [['C', 'H', 'O']]  # only one plane consisting all C, H, and O atoms of the molecule.
-  - [['C1-6'], ['N1-2', 'C9-11']]  # plane 1 with the first six C atoms of the molecule,
-                                   # plane 2 with C9, C10, C11, N1 and N2 atoms.
-  - [['C1-4'], ['C1-2', 'C5-6']]:  # plane 1 with the first four C atoms of the molecule,
-                                   # plane 2 with C1, C2, C5, and C6 atoms.
-                                   # Two planes share C1 and C2!
-
-Take the formaldehyde example above.
-We now reorient it such that the plane normal points at (1.0, 1.0, 1.0).
-The same AVAS orbitals can be obtained using the following input: ::
+In reality, such perfect alignment does not happen often.
+Consider the below formaldehyde geometry ::
 
   molecule H2CO{
-  0 1
   C        0.346146295209737    0.126698337466632   -0.472844632676369
   O       -0.346053592352928   -0.126664405871036    0.472717998223964
   H        1.227335215970831   -0.489581944167415   -0.737753271803415
   H        0.143281782803090    0.991262584630455   -1.134544367433545
-  noreorient
+  noreorient  # ask Psi4 not to reorient the xyz
   }
 
+Now the plane normal points to (1.0, 1.0, 1.0).
+Unfortunately Psi4 does not recognize the symmetry anymore unless we let it reorient the coordinate.
+However, you should confirm that the bond lengths and angles are identical to those in the previous geometry.
+If we use the same input for AVAS as above, here is what we get ::
+
+  ==> Atomic Valence MOs (Active Marked by *) <==
+
+    ===============================
+     Irrep    MO  Occ.  <phi|P|phi>
+    -------------------------------
+    *   A      0    2      0.905072
+    *   A      1    2      0.621379
+    *   A      8    0      0.374453
+    *   A      9    0      0.087267
+    ===============================
+
+Pay attention to the overlap metric.
+The projector becomes less effective and it is unclear which is the π orbital.
+The π* orbital also has a small overlap (0.374), much smaller than that from the previous aligned geometry (0.993).
+The reason for this is simply the subspace orbitals (i.e., 2px of C and O)
+are not perpendicular to the molecular plane.
+
+There are two ways to fix this problem.
+One is to reorient the molecule such that the molecular plane lying in yz plane.
+However, this approach is not flexible enough to treat multiple π systems in a molecule.
+The other approach is to use all px, py, pz orbitals as basis,
+using which the p orbital perpendicular to the plane can be defined.
+To do this, we need to specify two keywords: :code:`SUBSPACE` and :code:`SUBSPACE_PI_PLANES`.
+The latter is used to define the π plane, while we need all p orbitals for the former
+because neither of the three directions is perpendicular to the π plane.
+This leads to the following input section of AVAS: ::
+
   set forte {
-    subspace           ["C(2p)", "O(2p)"]  # must include all p orbitals!
-    subspace_pi_planes [["C", "O", "H"]]   # only one plane, defined by all C, O and H atoms
+    subspace           ["C(2p)","O(2p)"]  # must include all 2p orbitals!
+    subspace_pi_planes [["C","O","H"]]    # only one plane, defined by all C, O and H atoms
     avas               true
     avas_diagonalize   true
     avas_sigma         1.0
   }
 
-If the :code:`SUBSPACE_PI_PLANES` option is not empty, the code will prune the subspace p orbitals
-and linearly combine them to one p orbital per atom in the direction perpendicular to the plane.
-In the above example, we will end up with only two p orbitals perpendicular to the molecular plane.
-If :code:`SUBSPACE_PI_PLANES` is empty, we would have had 6 p orbitals in the subspace.
+and the output is now identical to the very first example ::
+
+  ==> Atomic Valence MOs (Active Marked by *) <==
+
+    ===============================
+     Irrep    MO  Occ.  <phi|P|phi>
+    -------------------------------
+    *   A      0    2      0.970513
+    *   A      8    0      0.992548
+    *   A      9    0      0.022209
+    ===============================
+
+Some comments on the expressions of :code:`SUBSPACE_PI_PLANES` are necessary.
+Some valid expressions to define the π planes would be: ::
+
+  - [['C', 'H', 'O']]              # only one plane consisting all C, H, and O atoms of the molecule.
+  - [['C1-6'], ['N1-2', 'C9-11']]  # plane 1 with the first six C atoms of the molecule,
+                                   # plane 2 with C atoms #9, #10, and #11, and N atoms #1 and #2.
+  - [['C1-4'], ['C1-2', 'C5-6']]   # plane 1 with the first four C atoms of the molecule,
+                                   # plane 2 with C atoms #1, #2, #5, and #6.
+                                   # Two planes share C1 and C2!
+
+This syntax follows the one used by :code:`SUBSPACE`: ::
+
+  - ["C"]              # all carbon atoms
+  - ["C","N"]          # all carbon and nitrogen atoms
+  - ["C1"]             # carbon atom #1
+  - ["C1-3"]           # carbon atoms #1, #2, #3
+  - ["C(2p)"]          # the 2p subset of all carbon atoms
+  - ["C(1s)","C(2s)"]  # the 1s/2s subsets of all carbon atoms
+  - ["C1-3(2s)"]       # the 2s subsets of carbon atoms #1, #2, #3
+  - ["Ce(4fzx2-zy2)"]  # the 4f zxx-zyy orbital of all Ce atoms
 
 .. note::
-    It is very important to include all p orbitals in :code:`SUBSPACE`.
+    It is very important to include a complete set of p orbitals in :code:`SUBSPACE` if π planes are defined.
     Otherwise, the code will follow the directions given by :code:`SUBSPACE`.
 
 .. tip::
-    The code is flexible enough to treat double active spaces (e.g., double-π or double-d-shell).
+    The code is flexible enough to treat double active spaces (e.g., double π or double d-shell).
     For example, the double-π active space of formaldehyde can be obtained via ::
 
       set forte {
@@ -232,9 +280,8 @@ If :code:`SUBSPACE_PI_PLANES` is empty, we would have had 6 p orbitals in the su
         avas_cutoff        0.5
       }
 
-    You need to prepare your own MINAO basis (here I prepare a basis called "double-shell.gbs").
-    This MINAO basis should include at least the 2p and 3p orbitals of C and O,
-    which can be grabbed from the cc-pVTZ or ANO-RCC-VTZP basis sets.
+    Here I prepare a basis called "double-shell.gbs", which includes the 2p and 3p orbitals of C and O atoms.
+    You can also prepare your own MINAO basis by truncating the the cc-pVTZ or ANO-RCC-VTZP basis sets.
 
 For a more realistic example, consider the following iron porphyrin related molecule:
 
@@ -245,8 +292,8 @@ For a more realistic example, consider the following iron porphyrin related mole
 
 This molecule contains two π systems, namely, porphyrin and imidazole.
 Also, the porphyrin is not a perfect plane anymore.
-The following input snippet selects all 3d orbitals of Fe, 3p orbitals of S,
-and all 'pz' orbitals of porphyrin and imidazole rings. ::
+The following snippet selects all 3d orbitals of Fe, 3p orbitals of S,
+and all p orbitals that are perpendicular of porphyrin and imidazole rings. ::
 
   set forte {
     avas                true
@@ -258,9 +305,6 @@ and all 'pz' orbitals of porphyrin and imidazole rings. ::
   }
 
 The AVAS output selects exactly 37 orbitals we wanted. ::
-
-  Sum of eigenvalues: 36.98863914
-  AVAS covers 96.59% of the subspace.
 
   ==> AVAS MOs Information <==
 
