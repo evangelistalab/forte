@@ -1,13 +1,12 @@
-# Test the pi orbital selection of AOSubspace on overlapped planes C20 molecule
+# Test the pi orbital selection of AOSubspace on overlapped planes C20 fullerene
 
 import forte
 
 refscf = -756.50604655444420
-reffci = -113.911667467206257
 
 molecule C20{
 # grabed from https://nanotube.msu.edu/fullerene/fullerene.php?C=20
-# C1 symmetry due to Jahn-Teller distortion
+# C1 symmetry due to Jahn-Teller distortion, not Ih point group!
 C        1.5691000000     -0.6566000000     -0.9364000000
 C        1.7669000000      0.6431000000     -0.4720000000
 C        0.4705000000     -0.6652000000     -1.7927000000
@@ -40,14 +39,13 @@ set {
 Escf, wfn = energy('scf', return_wfn=True)
 compare_values(refscf, variable("CURRENT ENERGY"), 8, "SCF energy")
 
-# figure out planes
+# figure out the 12 planes of C20 fullerene
 import numpy as np
 from collections import defaultdict
 from itertools import combinations
 
 # grab molecule xyz
-mol = psi4.core.get_active_molecule()
-xyz = np.array(mol.geometry())  # in Bohr
+xyz = np.array(C20.geometry())  # in Bohr
 n_atoms = xyz.shape[0]
 
 # compute bond vectors
