@@ -131,11 +131,9 @@ AOSubspace::AOSubspace(std::vector<std::string> subspace_str,
 }
 
 void AOSubspace::startup() {
-    lm_labels_cartesian_ = {
-        {"S"},
-        {"PX", "PY", "PZ"},
-        {"DX2", "DXY", "DXZ", "DY2", "DYZ", "DZ2"},
-        {"FX3", "FX2Y", "FX2Z", "FXY2", "FXYZ", "FXZ2", "FY3", "FY2Z", "FYZ2", "FZ3"}};
+    if (not min_basis_->has_puream()) {
+        throw std::runtime_error("Only support spherical MINAO basis!");
+    }
 
     l_labels_ = {"S", "P", "D", "F", "G", "H", "I", "K", "L", "M"};
 

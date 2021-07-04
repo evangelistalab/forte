@@ -140,7 +140,8 @@ class AOSubspace {
     /// Constructor using a list of subspaces and atom normals
     /// @param subspace_str: a list of subspace orbitals, e.g, {"C2", "N", "Fe(3d)", "Mo(3dx2-y2)"}
     /// @param molecule: a Psi4 Molecule object
-    /// @param minao_basis: a Psi4 Basis object, a minimal basis where subspace orbitals are selected
+    /// @param minao_basis: a Psi4 Basis object,
+    ///                     a minimal basis set where subspace orbitals are selected from
     /// @param atom_normals: (optional) a map from the atom to its normal
     /// @param debug_mode: debug mode if True (more printing)
     ///
@@ -177,22 +178,32 @@ class AOSubspace {
     /// The AO basis set
     std::shared_ptr<psi::BasisSet> min_basis_;
 
-    /// The label of Cartesian atomic orbitals.
-    /// lm_labels_cartesian_[l][m] returns the label for an orbital
-    /// with angular momentum quantum number l and index m
-    std::vector<std::vector<std::string>> lm_labels_cartesian_;
-
     /// The l-label of atomic orbitals.
     /// l_labels_[l] returns the label for an orbital
     /// with angular momentum quantum number l
     std::vector<std::string> l_labels_;
 
-    /// The label of Spherical atomic orbitals.
+    /// The label of spherical atomic orbitals.
     /// lm_labels_spherical_[l][m] returns the label for an orbital
     /// with angular momentum quantum number l and index m
     std::vector<std::vector<std::string>> lm_labels_spherical_;
 
+    /// The map from labels to angular momentum quantum numbers
+    /// e.g., labels_spherical_to_lm_["P"] = {{1,0}, {1,1}, {1,2}}
+    /// e.g., labels_spherical_to_lm_["PZ"] = {{1,0}}
+    /// e.g., labels_spherical_to_lm_["PX"] = {{1,1}}
+    /// e.g., labels_spherical_to_lm_["PY"] = {{1,2}}
+    /// ordering can be found in lm_labels_spherical_
     std::map<std::string, std::vector<std::pair<int, int>>> labels_spherical_to_lm_;
+
+    /// The label of Cartesian atomic orbitals.
+    /// lm_labels_cartesian_[l][m] returns the label for an orbital
+    /// with angular momentum quantum number l and index m
+    std::vector<std::vector<std::string>> lm_labels_cartesian_ = {
+        {"S"},
+        {"PX", "PY", "PZ"},
+        {"DX2", "DXY", "DXZ", "DY2", "DYZ", "DZ2"},
+        {"FX3", "FX2Y", "FX2Z", "FXY2", "FXYZ", "FXZ2", "FY3", "FY2Z", "FYZ2", "FZ3"}};
 
     /// The list of all AOs with their properties
     std::vector<AOInfo> aoinfo_vec_;
