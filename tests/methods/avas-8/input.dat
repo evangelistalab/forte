@@ -84,7 +84,7 @@ for i in range(n_atoms):
 set forte {
   job_type           none
   subspace           ["C(2p)"]  # must include all p orbitals
-  subspace_pi_planes $planes  # a list of planes
+  subspace_pi_planes $planes  # the list of planes forming the C20 cage
   avas               true
   avas_diagonalize   true
   avas_cutoff        0.5
