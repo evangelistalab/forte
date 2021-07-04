@@ -1,4 +1,5 @@
-# Test the pi orbital selection of AOSubspace on overlapped planes C20 fullerene
+# An example of how AVAS can be used to select the π orbitals of the C20 fullerene.
+# We use the nearest and second nearest neighbors of each atom to determine the 12 planes forming the C20 cage.
 
 import forte
 

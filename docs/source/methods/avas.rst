@@ -39,13 +39,13 @@ If the option :code:`AVAS_DIAGONALIZE` is :code:`TRUE`, AVAS will diagonalize ma
 the Hartree-Fock energy is unaffected:
 
 .. math::
-    \mathbf{S U} &= \mathbf{U \sigma_{\rm DOCC}}, \quad
+    \mathbf{S U} &= \mathbf{U \sigma_\mathrm{DOCC}}, \quad
     \tilde{C}_{\mu i} = \sum_{j} C_{\mu j} U_{ji}, \\
-    \mathbf{\bar{S} \bar{U}} &= \mathbf{\bar{U} \sigma_{\rm UOCC}}, \quad
+    \mathbf{\bar{S} \bar{U}} &= \mathbf{\bar{U} \sigma_\mathrm{UOCC}}, \quad
     \tilde{C}_{\mu a} = \sum_{b} C_{\mu b} \bar{U}_{ba}.
 
 The two sets of eigenvalues are combined
-:math:`\mathbf{\sigma = \sigma_{\rm DOCC} \oplus \sigma_{\rm UOCC}}`
+:math:`\mathbf{\sigma = \sigma_\mathrm{DOCC} \oplus \sigma_\mathrm{UOCC}}`
 and subsequently sorted in descending order.
 If :code:`AVAS_DIAGONALIZE` is set to :code:`FALSE`,
 the "eigenvalues" will be directly grabbed from the diagonal elements of the projected overlap matrices
@@ -62,11 +62,11 @@ the inactive occupied and inactive virtual orbitals.
     For ROHF reference, our implementation does not touch any singly occupied orbitals,
     which are all considered as active orbitals and assumed in canonical form.
 
-Input Example
+Input example
 ^^^^^^^^^^^^^
 
-In this example, we perform the AVAS procedure on formaldehyde
-followed by a CASCI computation. ::
+In this example, we use AVAS to find an active space for formaldehyde that
+spans the :math:`2p_x` orbitals of the C and O atoms, followed by a CASCI computation. ::
 
     import forte
     molecule H2CO{
@@ -105,7 +105,7 @@ followed by a CASCI computation. ::
 
 .. note::
     The keyword :code:`noreorient` in the :code:`molecule` section is very important
-    if certain orientations of orbitals are selected in the subspace (e.g., 2pz of C).
+    if certain orientations of orbitals are selected in the subspace (e.g., :math:`2pz` of C).
     Otherwise, the subspace orbital selection may end up the wrong direction.
 
 The AVAS procedure outputs::
@@ -171,54 +171,25 @@ In particular, :code:`avas-6` is a practical example on ferrocene.
 Defining the molecular plane for π orbitals
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Molecular systems with conjugated π bonds generally process planar geometries.
-For such systems, the active orbitals are usually chosen as the π orbitals perpendicular to the plane.
-Each π orbital consists of atomic p orbitals, which are also perpendicular to the plane.
-Take the above formaldehyde as an example.
-The π and π* orbitals are built from the 2p orbitals of C and O that are perpendicular to the molecular plane.
-We are very lucky that the formaldehyde molecule is in yz plane and
-the subspace 2p orbitals can be easily chosen as the 2px orbitals of C and O atoms.
-
-In reality, such perfect alignment does not happen often.
-Consider the below formaldehyde geometry ::
-
-  molecule H2CO{
-  C        0.346146295209737    0.126698337466632   -0.472844632676369
-  O       -0.346053592352928   -0.126664405871036    0.472717998223964
-  H        1.227335215970831   -0.489581944167415   -0.737753271803415
-  H        0.143281782803090    0.991262584630455   -1.134544367433545
-  noreorient  # ask Psi4 not to reorient the xyz
-  }
-
-Now the plane normal points to (1.0, 1.0, 1.0).
-Unfortunately Psi4 does not recognize the symmetry anymore unless we let it reorient the coordinate.
-However, you should confirm that the bond lengths and angles are identical to those in the previous geometry.
-If we use the same input for AVAS as above, here is what we get ::
-
-  ==> Atomic Valence MOs (Active Marked by *) <==
-
-    ===============================
-     Irrep    MO  Occ.  <phi|P|phi>
-    -------------------------------
-    *   A      0    2      0.905072
-    *   A      1    2      0.621379
-    *   A      8    0      0.374453
-    *   A      9    0      0.087267
-    ===============================
-
-Pay attention to the overlap metric.
-The projector becomes less effective and it is unclear which is the π orbital.
-The π* orbital also has a small overlap (0.374), much smaller than that from the previous aligned geometry (0.993).
-The reason for this is simply the subspace orbitals (i.e., 2px of C and O)
-are not perpendicular to the molecular plane.
+Molecular systems with conjugated π bonds are often arranged into planar geometries.
+For such systems, it often desirable to select an active space that includes π orbitals perpendicular to the plane.
+Each π orbital is a linear combination of atomic p orbitals, which are also perpendicular to the plane.
+However, unlike the case of formaldehyde, where it easy to select the appropriate π and π* orbitals,
+in the more general case a π orbital is a linear combination of :math:`2p_x`, :math:`2p_y`, and :math:`2p_z` orbitals.
+The approach described in the previous section is not flexible enough to treat general π systems
+like molecules containing multiple π systems or π systems that are not aligned with a specific molecular axis.
 
 There are two ways to fix this problem.
 One is to reorient the molecule such that the molecular plane lying in yz plane.
 However, this approach is not flexible enough to treat multiple π systems in a molecule.
-The other approach is to use all px, py, pz orbitals as basis,
+The other approach is to use all :math:`p_x`, :math:`p_y`, :math:`p_z` orbitals as basis,
 using which the p orbital perpendicular to the plane can be defined.
 To do this, we need to specify two keywords: :code:`SUBSPACE` and :code:`SUBSPACE_PI_PLANES`.
-The latter is used to define the π plane, while we need all p orbitals for the former
+The option :code:`SUBSPACE_PI_PLANES` takes a list of atoms (3 or more) that form a plane,
+and in this case is used to define the π plane.
+Note that this option uses the same syntax as :code:`SUBSPACE`,
+whereby indicating an element (e.g., H) includes all the hydrogen atoms in the list that defines the plane.
+The option :code:`SUBSPACE`, is used to select all the 2p orbitals,
 because neither of the three directions is perpendicular to the π plane.
 This leads to the following input section of AVAS: ::
 
@@ -243,7 +214,7 @@ and the output is now identical to the very first example ::
     ===============================
 
 Some comments on the expressions of :code:`SUBSPACE_PI_PLANES` are necessary.
-Some valid expressions to define the π planes would be: ::
+Possible expressions to define the π planes include: ::
 
   - [['C', 'H', 'O']]              # only one plane consisting all C, H, and O atoms of the molecule.
   - [['C1-6'], ['N1-2', 'C9-11']]  # plane 1 with the first six C atoms of the molecule,
@@ -262,6 +233,30 @@ This syntax follows the one used by :code:`SUBSPACE`: ::
   - ["C(1s)","C(2s)"]  # the 1s/2s subsets of all carbon atoms
   - ["C1-3(2s)"]       # the 2s subsets of carbon atoms #1, #2, #3
   - ["Ce(4fzx2-zy2)"]  # the 4f zxx-zyy orbital of all Ce atoms
+
+Essentially, :code:`SUBSPACE_PI_PLANES` defines a list of planes and the code attaches each atom of the plane
+with the plane unit normal :math:`\mathbf{n} = (n_x, n_y, n_z)`.
+A complete subset of atomic p orbitals (:math:`p_x`, :math:`p_y`, :math:`p_z`) are projected onto that vector
+so that the target p orbital becomes :math:`|p\rangle = \sum_{i \in \{x,y,z\}} n_i |p_i \rangle`.
+This means we attach a coefficient to every subspace orbital,
+where the coefficient of the :math:`p_i` orbital on the atom of the plane is :math:`n_i`,
+while the coefficient for all other subspace AOs is 1.0.
+The projector is then modified as
+
+.. math::
+    P_{\mu\nu} = \sum_{r's'} \langle \mu | r' \rangle (\rho^{-1})_{r's'} \langle s' | \nu \rangle,
+    \quad r', s' \in \{\text{Target Valence Atomic Orbitals}\},
+
+where :math:`|r'\rangle = \sum_{r} C_{rr'} |r\rangle` and :math:`|r\rangle` are the AOs from the MINAO basis set.
+The coefficient matrix :math:`C_{rr'}` is given by
+
+.. math::
+    C_{rr'} =
+    \begin{cases}
+      n_i, \quad& r' \in \{p \text{ orbitals on plane atoms if planes are defined}\}, \\
+      1.0, \quad& r' \in \{\text{other AOs in the subspace chosen by the user}\}, \\
+      0, \quad& \text{otherwise}.
+    \end{cases}
 
 .. note::
     It is very important to include a complete set of p orbitals in :code:`SUBSPACE` if π planes are defined.
@@ -283,6 +278,9 @@ This syntax follows the one used by :code:`SUBSPACE`: ::
     Here I prepare a basis called "double-shell.gbs", which includes the 2p and 3p orbitals of C and O atoms.
     You can also prepare your own MINAO basis by truncating the the cc-pVTZ or ANO-RCC-VTZP basis sets.
 
+Systems with multiple π systems
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
 For a more realistic example, consider the following iron porphyrin related molecule:
 
 .. image:: images/FeP.png
@@ -290,10 +288,13 @@ For a more realistic example, consider the following iron porphyrin related mole
     :align: center
     :alt: An iron porphyrin complex.
 
-This molecule contains two π systems, namely, porphyrin and imidazole.
-Also, the porphyrin is not a perfect plane anymore.
-The following snippet selects all 3d orbitals of Fe, 3p orbitals of S,
-and all p orbitals that are perpendicular of porphyrin and imidazole rings. ::
+By checking the geometry, we see that the molecule contains two π systems, namely, porphyrin and imidazole.
+The π orbitals are perpendicular to the corresponding planes.
+However, the porphyrin is not a perfect plane and we assume the π orbitals are
+perpendicular to the averaged plane formed by the porphyrin backbone.
+The iron 3d orbitals may interact with the π orbitals of porphyrin and imidazole rings
+and the sulfur 3p orbitals.
+We would like to ask AVAS to select these orbitals as active, which can be achieved by the following ::
 
   set forte {
     avas                true
@@ -304,6 +305,9 @@ and all p orbitals that are perpendicular of porphyrin and imidazole rings. ::
     subspace_pi_planes  [["Fe","C6-25","N3-6"], ["N1-2","C1-3"]]
   }
 
+Here, the porphyrin plane is defined by the iron atom, carbon atoms #6 to #25, and nitrogen atoms #3 to #6.
+The imidazole plane is defined by the first two nitrogen atoms and the first three carbon atoms.
+The atom ordering is consistent with the one used in the molecule section of the input (see the figure).
 The AVAS output selects exactly 37 orbitals we wanted. ::
 
   ==> AVAS MOs Information <==
@@ -329,79 +333,38 @@ The AVAS output selects exactly 37 orbitals we wanted. ::
     -------------------------------
     *   A      0    2      0.999085
     *   A      1    2      0.998642
-    *   A      2    2      0.998359
-    *   A      3    2      0.996035
-    *   A      4    2      0.994644
-    *   A      5    2      0.994278
-    *   A      6    2      0.993868
-    *   A      7    2      0.993659
-    *   A      8    2      0.993108
-    *   A      9    2      0.992442
-    *   A     10    2      0.991897
-    *   A     11    2      0.991522
-    *   A     12    2      0.991168
-    *   A     13    2      0.990619
-    *   A     14    2      0.989037
-    *   A     15    2      0.988792
-    *   A     16    2      0.987373
-    *   A     17    2      0.986867
-    *   A     18    2      0.984205
+    ...
     *   A     19    2      0.974919
     *   A     20    2      0.855068
     *   A     21    2      0.747171
         A     22    2      0.215276
         A     23    2      0.175599
-        A     24    2      0.056342
-        A     25    2      0.047345
-        A     26    2      0.034783
-        A     27    2      0.030997
-        A     28    2      0.028569
-        A     29    2      0.026469
-        A     30    2      0.023365
-        A     31    2      0.017892
-        A     32    2      0.016921
-        A     33    2      0.014212
-        A     34    2      0.010871
-        A     35    2      0.001703
+    ...
         A     36    2      0.000408
     *   A    128    0      0.999163
     *   A    129    0      0.997849
-    *   A    130    0      0.988687
-    *   A    131    0      0.985388
-    *   A    132    0      0.982652
-    *   A    133    0      0.981676
-    *   A    134    0      0.976224
-    *   A    135    0      0.973079
-    *   A    136    0      0.971042
-    *   A    137    0      0.968590
-    *   A    138    0      0.964765
-    *   A    139    0      0.952259
+    ...
     *   A    140    0      0.943277
     *   A    141    0      0.824388
     *   A    142    0      0.784721
         A    143    0      0.252635
         A    144    0      0.144740
-        A    145    0      0.024759
-        A    146    0      0.015490
-        A    147    0      0.012840
-        A    148    0      0.012333
-        A    149    0      0.010860
-        A    150    0      0.010643
-        A    151    0      0.009008
-        A    152    0      0.008557
-        A    153    0      0.008096
-        A    154    0      0.007851
-        A    155    0      0.007346
-        A    156    0      0.006517
-        A    157    0      0.005974
-        A    158    0      0.005795
-        A    159    0      0.005433
-        A    160    0      0.004976
-        A    161    0      0.003642
-        A    162    0      0.001632
-        A    163    0      0.001346
+    ...
         A    164    0      0.000898
     ===============================
+
+The code is also flexible enough treat planes that share some atoms.
+Let's assume atom A is shared by planes :math:`P_1` and :math:`P_2`
+with the plane unit normals :math:`\mathbf{n}_1` and :math:`\mathbf{n}_2`, respectively.
+The positive direction of :math:`\mathbf{n}_i` (:math:`i = 1, 2`) is taken such that
+:math:`\mathbf{n}_i \cdot \mathbf{d} \geq 0`, where :math:`\mathbf{d}` is the vector from
+the centroid of the molecule to the centroid of the plane :math:`P_i`.
+The vector attached to atom A is then a normalized vector sum given by
+:math:`\mathbf{n}_\mathrm{A} = (\mathbf{n}_1 + \mathbf{n}_2) / || \mathbf{n}_1 + \mathbf{n}_2 ||`.
+Based on this feature, we may ask AVAS to pick the π active space for C20 fullerene (see test case avas-8).
+For C20 fullerene, there are 12 planes forming the cage
+and we would like to make the target valence AOs pointing outwards the cage sphere.
+The planes can be specified manually or figured out using the nearest and second nearest neighbors of an atom.
 
 Options
 ^^^^^^^
