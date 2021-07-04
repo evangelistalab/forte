@@ -140,7 +140,7 @@ class AOSubspace {
     /// Constructor using a list of subspaces and atom normals
     /// @param subspace_str: a list of subspace orbitals, e.g, {"C2", "N", "Fe(3d)", "Mo(3dx2-y2)"}
     /// @param molecule: a Psi4 Molecule object
-    /// @param basis: a Psi4 basis object, a minimal basis where subspace orbitals are selected
+    /// @param minao_basis: a Psi4 Basis object, a minimal basis where subspace orbitals are selected
     /// @param atom_normals: (optional) a map from the atom to its normal
     /// @param debug_mode: debug mode if True (more printing)
     ///
@@ -156,7 +156,7 @@ class AOSubspace {
     ///   Equivalently, 3 normals are attached to each atom: (1,0,0), (0,1,0), and (0,0,1).
     ///   As such, we still have a full set of p orbitals in the subspace.
     AOSubspace(std::vector<std::string> subspace_str, std::shared_ptr<psi::Molecule> molecule,
-               std::shared_ptr<psi::BasisSet> basis,
+               std::shared_ptr<psi::BasisSet> minao_basis,
                std::map<std::pair<int, int>, psi::Vector3> atom_normals = {},
                bool debug_mode = false);
 

@@ -53,8 +53,6 @@ namespace py = pybind11;
 
 #include "aosubspace.h"
 
-std::vector<std::string> mysplit(const std::string& input, const std::string& regex);
-
 std::vector<std::string> mysplit(const std::string& input, const std::string& regex) {
     // passing -1 as the submatch index parameter performs splitting
     std::regex re(regex);
@@ -125,9 +123,9 @@ psi::SharedMatrix make_aosubspace_projector(psi::SharedWavefunction wfn,
 
 AOSubspace::AOSubspace(std::vector<std::string> subspace_str,
                        std::shared_ptr<psi::Molecule> molecule,
-                       std::shared_ptr<psi::BasisSet> basis,
+                       std::shared_ptr<psi::BasisSet> minao_basis,
                        std::map<std::pair<int, int>, psi::Vector3> atom_normals, bool debug_mode)
-    : subspace_str_(subspace_str), molecule_(molecule), min_basis_(basis), subspace_counter_(0),
+    : subspace_str_(subspace_str), molecule_(molecule), min_basis_(minao_basis), subspace_counter_(0),
       atom_normals_(atom_normals), debug_(debug_mode) {
     startup();
 }
