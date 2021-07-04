@@ -211,7 +211,11 @@ class ActiveSpaceSolver {
 };                                   // namespace forte
 
 /**
- * @brief Make an active space solver object.
+ * @brief Make an active space solver object
+ *
+ * Here we make a shared pointer because this object will be passed to other
+ * classes, like MCSCF.
+ *
  * @param type a string that specifies the type (e.g. "FCI", "ACI", ...)
  * @param state_nroots_map a map from state symmetry to the number of roots
  * @param scf_info information about a previous SCF computation
