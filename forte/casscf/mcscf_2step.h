@@ -47,10 +47,9 @@ class MCSCF_2STEP {
     /**
      * @brief Constructor of the AO-based CASSCF class
      * @param state_weights_map: The state to weights map of Forte
-     * @param options: The ForteOptions pointer
-     * @param mo_space_info: The MOSpaceInfo pointer of Forte
-     * @param scf_info: The SCF_INFO pointer of Forte
-     * @param ints: The ForteIntegral pointer
+     * @param options: The ForteOptions object pointer
+     * @param ints: The ForteIntegral object pointer
+     * @param active_space_solver: The ActiveSpaceSolver object pointer
      *
      * Implementation notes:
      *   See J. Chem. Phys. 142, 224103 (2015) and Theor. Chem. Acc. 97, 88-95 (1997)
@@ -60,7 +59,8 @@ class MCSCF_2STEP {
                 std::shared_ptr<ActiveSpaceSolver> active_space_solver);
 
     /// Compute the MCSCF energy
-    std::map<StateInfo, std::vector<double>> compute_energy();
+    /// @return a pair of the average energy and a map of states to energies
+    std::pair<double, std::map<StateInfo, std::vector<double>>> compute_energy();
 
   private:
     /// The list of states to computed. Passed to the ActiveSpaceSolver

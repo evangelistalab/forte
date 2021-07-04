@@ -93,7 +93,7 @@ class MCSCF(Solver):
         mcscf = make_mcscf_two_step(
             self.input_nodes[0]._states, local_options, self.ints, self.input_nodes[0].active_space_solver
         )
-        energy = mcscf.compute_energy()
-        self._results.add('mcscf energy', energy, 'MCSCF energy', 'Eh')
+        average_energy, energie = mcscf.compute_energy()
+        self._results.add('mcscf energy', energie, 'MCSCF energy', 'Eh')
 
         return self

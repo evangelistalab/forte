@@ -141,7 +141,7 @@ void MCSCF_2STEP::print_options() {
                            info_int);
 }
 
-std::map<StateInfo, std::vector<double>> MCSCF_2STEP::compute_energy() {
+std::pair<double, std::map<StateInfo, std::vector<double>>> MCSCF_2STEP::compute_energy() {
     // prepare for orbital gradients
     CASSCF_ORB_GRAD cas_grad(options_, mo_space_info_, ints_);
     auto nrot = cas_grad.nrot();
@@ -163,7 +163,7 @@ std::map<StateInfo, std::vector<double>> MCSCF_2STEP::compute_energy() {
         if (der_type_ == "FIRST") {
             cas_grad.compute_nuclear_gradient();
         }
-        return state_energy_map_;
+        return std::make_pair(energy_, state_energy_map_);
     }
 
     // DIIS extropolation for macro iteration
@@ -372,7 +372,7 @@ std::map<StateInfo, std::vector<double>> MCSCF_2STEP::compute_energy() {
         throw_converence_error();
     }
 
-    return state_energy_map_;
+    return std::make_pair(energy_, state_energy_map_);
 }
 
 std::tuple<double, std::map<StateInfo, std::vector<double>>>

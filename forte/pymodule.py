@@ -526,8 +526,17 @@ def run_forte(name, **kwargs):
         energy = casscf.compute_energy()
 
     if (job_type == "MCSCF_TWO_STEP"):
-        casscf = forte.make_mcscf_two_step(state_weights_map, scf_info, options, mo_space_info, ints)
-        energy = casscf.compute_energy()
+        state_map = forte.to_state_nroots_map(state_weights_map)
+
+        # create an active space solver object and compute the energy
+        as_ints = forte.make_active_space_ints(mo_space_info, ints, "ACTIVE", ["RESTRICTED_DOCC"])
+
+        active_space_solver_type = options.get_str('CASSCF_CI_SOLVER')
+        active_space_solver = forte.make_active_space_solver(
+            active_space_solver_type, state_map, scf_info, mo_space_info, as_ints, options
+        )
+        casscf = forte.make_mcscf_two_step(state_weights_map, options, ints, active_space_solver)
+        energy, _ = casscf.compute_energy()
 
     if (job_type == 'NEWDRIVER'):
         energy = forte_driver(state_weights_map, scf_info, options, ints, mo_space_info)
@@ -535,9 +544,6 @@ def run_forte(name, **kwargs):
         energy = mr_dsrg_pt2(job_type, forte_objects, ints, options)
 
     end = time.time()
-
-    # Close ambit, etc.
-    # forte.cleanup()
 
     psi4.core.set_scalar_variable('CURRENT ENERGY', energy)
 
@@ -636,8 +642,15 @@ def gradient_forte(name, **kwargs):
         casscf.compute_gradient()
 
     if job_type == "MCSCF_TWO_STEP":
-        casscf = forte.make_mcscf_two_step(state_weights_map, scf_info, options, mo_space_info, ints)
-        energy = casscf.compute_energy()
+        state_map = forte.to_state_nroots_map(state_weights_map)
+        # create an active space solver object and compute the energy
+        as_ints = forte.make_active_space_ints(mo_space_info, ints, "ACTIVE", ["RESTRICTED_DOCC"])
+        active_space_solver_type = options.get_str('CASSCF_CI_SOLVER')
+        active_space_solver = forte.make_active_space_solver(
+            active_space_solver_type, state_map, scf_info, mo_space_info, as_ints, options
+        )
+        casscf = forte.make_mcscf_two_step(state_weights_map, options, ints, active_space_solver)
+        energy, _ = casscf.compute_energy()
 
     time_pre_deriv = time.time()
 
