@@ -413,8 +413,6 @@ void ForteIntegrals::print_info() {
 }
 
 void ForteIntegrals::print_ints() {
-    //    Ca_->print();
-    //    Cb_->print();
     outfile->Printf("\n  nmo_ = %zu", nmo_);
 
     outfile->Printf("\n  Nuclear repulsion energy: %20.12f", nucrep_);

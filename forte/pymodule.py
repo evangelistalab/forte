@@ -471,10 +471,6 @@ def run_forte(name, **kwargs):
 
     """
 
-    # # Start Forte, initialize ambit
-    # my_proc_n_nodes = forte.startup()
-    # my_proc, n_nodes = my_proc_n_nodes
-
     # Build Forte options
     options = prepare_forte_options()
 
@@ -596,10 +592,6 @@ def gradient_forte(name, **kwargs):
         available for : CASSCF
     """
 
-    # # Start Forte, initialize ambit
-    # my_proc_n_nodes = forte.startup()
-    # my_proc, n_nodes = my_proc_n_nodes
-
     # Get the psi4 option object
     optstash = p4util.OptionsState(['GLOBALS', 'DERTYPE'])
     psi4.core.set_global_option('DERTYPE', 'FIRST')
@@ -662,9 +654,6 @@ def gradient_forte(name, **kwargs):
     optstash.restore()
 
     end = time.time()
-
-    # Close ambit, etc.
-    # forte.cleanup()
 
     # Print timings
     psi4.core.print_out('\n\n ==> Forte Timings <==\n')

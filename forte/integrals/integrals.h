@@ -132,7 +132,7 @@ class ForteIntegrals {
     virtual void initialize() = 0;
 
     /// Skip integral transformation
-    bool skip_build_;
+    bool skip_build_ = false;
 
     /// Return Ca
     std::shared_ptr<psi::Matrix> Ca() const;
@@ -148,7 +148,7 @@ class ForteIntegrals {
     /// Return the Pis4 JK object
     std::shared_ptr<psi::JK> jk();
 
-    /// Enum class for the status of Pis4 JK
+    /// Enum class for the status of Psi4 JK
     enum class JKStatus { empty, initialized, finalized };
     /// Return the status of Psi4 JK object
     JKStatus jk_status();
