@@ -55,11 +55,14 @@ avas:
    short:
       - avas-3
       - avas-5
+      - avas-7
    medium:
       - avas-1
       - avas-2
       - avas-4
       - avas-6
+   long:
+      - avas-8
 casscf:
    short:
       - casscf-7
