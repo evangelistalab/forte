@@ -1,0 +1,41 @@
+# Test the pi orbital selection of AOSubspace
+# Same as AVAS-1 test with rotated xyz (plane normal: [1,1,1])
+
+import forte
+
+refscf = -113.87663391962522
+reffci = -113.911667467206257
+
+molecule {
+0 1
+C        0.346146295209737    0.126698337466632   -0.472844632676369
+O       -0.346053592352928   -0.126664405871036    0.472717998223964
+H        1.227335215970831   -0.489581944167415   -0.737753271803415
+H        0.143281782803090    0.991262584630455   -1.134544367433545
+noreorient
+symmetry c1
+}
+
+set {
+  basis cc-pvdz
+  reference rhf
+  scf_type pk
+  e_convergence 12
+}
+
+set forte {
+  subspace ["C(2p)","O(2P)"]  # must include all p orbitals
+  subspace_pi_planes [["C","O","H"]]  # the pi plane defined by all C, O and H atoms
+  avas true
+  avas_diagonalize true
+  avas_sigma 1.0
+  active_space_solver fci
+  restricted_docc [7]
+  active [3]
+}
+
+Escf, wfn = energy('scf', return_wfn=True)
+compare_values(refscf, variable("CURRENT ENERGY"), 9, "SCF energy")
+
+energy('forte', ref_wfn=wfn)
+compare_values(reffci, variable("CURRENT ENERGY"),9, "FCI energy")
