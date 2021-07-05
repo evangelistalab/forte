@@ -12,10 +12,11 @@ def test_mcscf():
 
     input = solver_factory(molecule=xyz, basis='cc-pVDZ', int_type='DF', jkfit_aux_basis='cc-pVDZ-RI')
     state = input.state(charge=0, multiplicity=1, sym='ag')
+    mo_spaces = input.mo_spaces(active=[1, 0, 0, 0, 0, 1, 0, 0])
 
     # create a HF object
     hf = HF(input, state=state)
-    fci = ActiveSpaceSolver(hf, type='FCI', states=state, mo_spaces={'ACTIVE': [1, 0, 0, 0, 0, 1, 0, 0]})
+    fci = ActiveSpaceSolver(hf, type='FCI', states=state, mo_spaces=mo_spaces)
     # pass the FCI object to MCSCF
     mcscf = MCSCF(fci, e_convergence=1.0e-11)  # <- use information in fci to get active space, etc.
     # run the computation

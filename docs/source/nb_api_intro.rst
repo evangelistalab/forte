@@ -68,8 +68,25 @@ However, the results of this computation are also stored in the HF
 object. For example, the HF energy can be accessed via
 ``hf.value('hf energy')``.
 
-FCI and CASCI
--------------
+To understand what happens when we setup this computation it is
+convenient to visualize it in the following way:
+
+.. raw:: html
+
+   <center>
+
+.. raw:: html
+
+   </center>
+
+This image represents the computation as a graph, where each step
+(setting up the input, running the HF computation) method is a node
+connected to the next step in a computation. When we invoke the method
+``run()`` on the Hartree–Fock object, the computation is executed,
+starting from the HF object backwards.
+
+Active space solvers: Full Configuration Interation (FCI), Complete Active Space CI (CASCI), and more
+-----------------------------------------------------------------------------------------------------
 
 Forte implements several solvers that diagonalize the Hamiltonian in a
 (small) space of orbitals, including FCI, selected CI methods, and
@@ -77,7 +94,18 @@ generalized active space (GAS). To perform one of these computations
 just pass an object that can provide molecular orbitals to an
 ``ActiveSpaceSolver`` object. For example, we can perform a CASCI
 computation on the same molecule as above by passing the ``HF`` node to
-an ``ActiveSpaceSolver`` node
+an ``ActiveSpaceSolver`` node, as show in the following image
+
+.. raw:: html
+
+   <center>
+
+.. raw:: html
+
+   </center>
+
+The following input performs a CASCI computation on H\ :math:`_2` using
+RHF orbitals
 
 .. code:: python
 
@@ -95,8 +123,8 @@ an ``ActiveSpaceSolver`` node
    hf = HF(input, state=state)  
 
    # specify the active space
-   # we pass an array that specifies the number of active MOs per irrep
-   # We use Cotton ordering, so this selects one MO from irrep 0 (Ag) and one from irrep 5 (B1u)
+   # we pass an array with the number of active MOs per irrep based on Cotton ordering
+   # this selects an active space with one MO from irrep 0 (Ag) and one from irrep 5 (B1u)
    mo_spaces = input.mo_spaces(active=[1, 0, 0, 0, 0, 1, 0, 0])
 
    # initialize a FCI solver and pass the HF object, the target electronic state, and the MO space information
@@ -126,3 +154,41 @@ with the ``value`` function:
 .. code:: python
 
    fci.value('active space energy')[state] -> [-1.1083377195359851, -0.2591786932627466]
+
+Multiconfigurational SCF (MCSCF)
+--------------------------------
+
+To run an MCSCF computation in which we simultaneously optimize the
+orbitals and active space wave function, we use the MCSCF class. This
+class requires as an input node an ``ActiveSpaceSolver`` object, and
+therefore, can be combine with any of the solvers implemented in Forte.
+The following shows a scheme of a typical CASCI computation, using
+Hartree–Fock orbitals as initial guess for the MCSCF computation
+
+.. raw:: html
+
+   <center>
+
+.. raw:: html
+
+   </center>
+
+.. code:: python
+
+   from forte.solvers import HF, ActiveSpaceSolver, MCSCF, solver_factory
+
+   xyz = """
+   H 0.0 0.0 0.0
+   H 0.0 0.0 1.0
+   """
+
+   input = solver_factory(molecule=xyz, basis='cc-pVDZ')
+   state = input.state(charge=0, multiplicity=1, sym='ag')
+   mo_spaces = input.mo_spaces(active=[1, 0, 0, 0, 0, 1, 0, 0])
+
+   hf = HF(input, state=state)
+   fci = ActiveSpaceSolver(hf, type='FCI', states=state, mo_spaces=mo_spaces)
+   mcscf = MCSCF(fci)  # <- use information in fci to get active space, etc.
+   mcscf.run()
+
+   # results are stored in mcscf.value('mcscf energy')[state]
