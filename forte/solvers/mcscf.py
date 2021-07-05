@@ -5,8 +5,6 @@ from forte.solvers.solver import Solver
 
 from forte.forte import ForteOptions
 from forte import forte_options
-# from forte import to_state_nroots_map
-# from forte.forte import make_active_space_ints, make_active_space_solver
 from forte.forte import make_mcscf_two_step
 
 
@@ -39,8 +37,8 @@ class MCSCF(Solver):
             options=options,
             cbh=cbh
         )
+        # grab a pointer to the data from the input node
         self._data = self.input_nodes[0].data
-        # parse the states parameter
         self._e_convergence = e_convergence
         self._r_convergence = r_convergence
 
@@ -68,10 +66,10 @@ class MCSCF(Solver):
         """Run an MCSCF computation"""
         # make sure the active space solver executed
         if not self.input_nodes[0].executed:
-            flog('info', 'ActiveSpaceSolver: MOs not available in mo_solver. Calling mo_solver run()')
+            flog('info', 'MCSCF: reference not available. Calling run() on input node')
             self.input_nodes[0].run()
         else:
-            flog('info', 'ActiveSpaceSolver: MOs read from mo_solver object')
+            flog('info', 'MCSCF: reference read from input node')
 
         # prepare the options
         options = {'E_CONVERGENCE': self.e_convergence, 'R_CONVERGENCE': self.r_convergence}
@@ -83,17 +81,15 @@ class MCSCF(Solver):
         local_options = ForteOptions(forte_options)
         local_options.set_from_dict(full_options)
 
-        # options = prepare_forte_options()
-
-        # ints = make_ints_from_psi4(self.guess.psi_wfn, options, mo_space_info)
-
-        # # pipe output to the file self._output_file
-        # psi4.core.set_output_file(self._output_file, True)
-
+        flog('info', 'MCSCF: making the mcscf object')
         mcscf = make_mcscf_two_step(
             self.input_nodes[0]._states, local_options, self.ints, self.input_nodes[0].active_space_solver
         )
-        average_energy, energie = mcscf.compute_energy()
-        self._results.add('mcscf energy', energie, 'MCSCF energy', 'Eh')
+        flog('info', 'MCSCF: computing the energy')
+        average_energy, energies = mcscf.compute_energy()
+        flog('info', f'MCSCF: mcscf average energy = {average_energy}')
+        flog('info', f'MCSCF: mcscf energy = {energies}')
+
+        self._results.add('mcscf energy', energies, 'MCSCF energy', 'Eh')
 
         return self

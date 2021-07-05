@@ -6,7 +6,20 @@ from forte.solvers.input import Input
 
 
 def solver_factory(molecule, basis, int_type=None, jkfit_aux_basis=None, rifit_aux_basis=None):
-    """A factory to build a basic solver object"""
+    """
+    A factory to build an input solver object
+
+    Parameters
+    ----------
+    basis: str or Basis
+        the basis set
+    int_type: {'CONVENTIONAL','DF','CD','DISKDF'}
+        the integral type
+    jkfit_aux_basis: str
+        the JK fitting basis set (default = None, this will let psi4 choose a basis if int_type = 'DF')
+    rifit_aux_basis: str
+        the RI fitting basis set (default = None, this will let psi4 choose a basis if int_type = 'DF')
+    """
     flog('info', 'Calling solver factory')
 
     # TODO: generalize to other type of models (e.g. if molecule/basis are not provided)

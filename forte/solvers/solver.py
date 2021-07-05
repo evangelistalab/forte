@@ -49,7 +49,7 @@ class Solver(Node):
         self._cbh = CallbackHandler() if cbh is None else cbh
         self._executed = False
         self._results = Results()
-        # the default psi4 output file
+        # set the default psi4 output file
         self._output_file = 'output.dat'
         # self._output_file = f'output.{time.strftime("%Y-%m-%d-%H:%M:%S")}.dat'
 
@@ -183,7 +183,7 @@ class Solver(Node):
             raise ValueError(f'could not parse stats input {states}')
         return parsed_states
 
-    def make_mo_space_info(self, mo_spaces):
+    def make_mo_space_info(self, mo_spaces, reorder=None):
         """
         Make a MOSpaceInfo object from a dictionary
 
@@ -191,14 +191,16 @@ class Solver(Node):
         ----------
         mo_spaces: dict(str -> list(int))
             A dictionary of orbital space labels to a list of number of orbitals per irrep
-
+        reorder: list(int)
+            A list used to reorder the MOs. If not provided, use Pitzer order as obtained
+            from psi4
         Return
         ------
             A MOSpaceInfo object
         """
         nmopi = self.data.scf_info.nmopi()
         point_group = self.model.point_group
-        reorder = []  # TODO: enable reorder
+        reorder = [] if reorder is None else reorder
         self.data.mo_space_info = forte.make_mo_space_info_from_map(nmopi, point_group, mo_spaces, reorder)
 
     def prepare_forte_options(self):

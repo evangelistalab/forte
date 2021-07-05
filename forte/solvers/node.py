@@ -8,9 +8,13 @@ class Node():
     A ``Node`` provides only basic functionality and this class
     is specialized in derived classes (Solver, Input,...).
     A ``Node`` stores the list of input nodes and a
-    list of features (elements of ``Features``) that are needed and provided.
-    The features that are needed must be part of the input node(s).
-    This information is used to check the validity of a graph.
+    list of features that are needed and provided.
+    Feautures are elements of the enum ``Features`` that should be adapted
+    if a new type of feature is added to Forte.
+    Features are used to check the formal validity of a computational
+    graph, by making sure that features needed by a given node
+    are provided by the input node(s).
+    If a graph cannot be evaluated, an exception will be triggered.
     """
     def __init__(self, needs, provides, input_nodes=None, data=None):
         """
@@ -22,6 +26,9 @@ class Node():
             a list of features provided by this solver
         input: list(Solver)
             a list of input nodes to this node
+        data: Data
+            a Data object that stores Forte objects necessary
+            to perform a computation
         """
         self._needs = needs
         self._provides = provides
@@ -80,28 +87,39 @@ class Node():
         return self._make_graph()
 
     def _make_graph(self, level=0, prefix=None, last=False):
-        # The algorithm uses a recursive code that is a bit hard to follow
-        # this will collect string
+        """
+        The actual function that makes a simple text representation of
+        the computational graph
+
+        Parameters
+        ----------
+        level: int
+            the level of the graph. The root node corresponds to level = 0
+        prefix: list(str)
+            a list of prefixes to use at each level
+        last: bool
+            is this the last input node of the parent node?
+        """
+        # The algorithm uses a recursive approach
+
+        # this list collects the
         graph = []
         # this variable is used to store the text that goes to the left of a node label
         prefix = [] if prefix is None else prefix
         # at the 0-th level just print the class name
         if level == 0:
             graph.append(f'{self.__class__.__name__}')
-            # graph = f'{self.__class__.__name__}\n'
         else:
             # at the i-th level print:
             # - the prefix up to the previous level
-            # - a connection
+            # - a connector (└── or ├──)
             # - the class name
             if last:
                 # if we are printing the last node, use the two way connector └
                 graph.append(''.join(prefix[:level - 1]) + f'└──{self.__class__.__name__}')
-                # graph = ''.join(prefix[:level - 1]) + f'└──{self.__class__.__name__}\n'
             else:
                 # if we are printing the any other node, use the three way connector ├
                 graph.append(''.join(prefix[:level - 1]) + f'├──{self.__class__.__name__}')
-                # graph = ''.join(prefix[:level - 1]) + f'├──{self.__class__.__name__}\n'
         # now let's think what should happen to the prefix after we display this done
         if len(self.input_nodes) > 1:
             # if we have 2 or more input nodes, we should print a vertical line in the next level of printing
@@ -109,7 +127,7 @@ class Node():
         else:
             # otherwise, print empty text
             prefix.append('   ')
-        # now we ask to print the input nodes
+        # now we print the input nodes
         last = False
         for k, input in enumerate(self.input_nodes):
             # we have to treat the last node in a special way, so let's flag it
@@ -120,5 +138,5 @@ class Node():
             graph.append(input._make_graph(level + 1, prefix, last))
         # we are now back one level down, so pop the last prefix added
         prefix.pop()
-        # return graph
+        # return the list graph converted to text
         return '\n'.join(graph)
