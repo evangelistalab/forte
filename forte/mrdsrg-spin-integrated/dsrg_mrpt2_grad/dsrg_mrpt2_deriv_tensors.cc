@@ -326,13 +326,13 @@ void DSRG_MRPT2::set_v() {
     });
 
     V_sumA_Alpha = BTF_->build(CoreTensor,
-                            "normal Dimention-reduced Electron Repulsion Integral alpha", {"gg"});
-    V_sumB_Alpha = BTF_->build(CoreTensor, "normal Dimention-reduced Electron Repulsion Integral beta",
+                            "normal Dimension-reduced Electron Repulsion Integral alpha", {"gg"});
+    V_sumB_Alpha = BTF_->build(CoreTensor, "normal Dimension-reduced Electron Repulsion Integral beta",
                            {"gg"});
     V_sumA_Beta = BTF_->build(
-        CoreTensor, "index-reversed Dimention-reduced Electron Repulsion Integral beta", {"GG"});
+        CoreTensor, "index-reversed Dimension-reduced Electron Repulsion Integral beta", {"GG"});
     V_sumB_Beta = BTF_->build(
-        CoreTensor, "normal Dimention-reduced Electron Repulsion Integral all beta", {"GG"});
+        CoreTensor, "normal Dimension-reduced Electron Repulsion Integral all beta", {"GG"});
 
     // Summation of V["pmqm"] over index "m" or V["mpmq"] over index "m"
     V_sumA_Alpha["pq"] = V["pmqn"] * I["mn"];
