@@ -1,34 +1,15 @@
 /**
  * Write 1- and 2-RDMs and back-transform the TPDM.
  */
-#include <algorithm>
-#include <map>
-#include <vector>
-#include <math.h>
-#include <numeric>
-#include <ctype.h>
-#include <string>
-
 #include "psi4/libpsi4util/PsiOutStream.h"
-#include "psi4/libpsio/psio.h"
-#include "psi4/libpsio/psio.hpp"
-#include "psi4/libqt/qt.h"
-#include "psi4/libmints/dipole.h"
-
-#include "helpers/timer.h"
-#include "boost/format.hpp"
-#include "helpers/printing.h"
-#include "../dsrg_mrpt2.h"
-
 #include "psi4/libiwl/iwl.hpp"
-
-#include "gradient_tpdm/backtransform_tpdm.h"
 #include "psi4/libmints/matrix.h"
 #include "psi4/libmints/wavefunction.h"
 #include "psi4/psifiles.h"
-
 #include "../master_mrdsrg.h"
+#include "../dsrg_mrpt2.h"
 #include "helpers/timer.h"
+#include "gradient_tpdm/backtransform_tpdm.h"
 
 using namespace ambit;
 using namespace psi;
