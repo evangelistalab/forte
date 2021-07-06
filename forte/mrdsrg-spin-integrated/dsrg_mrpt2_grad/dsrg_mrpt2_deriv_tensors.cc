@@ -325,23 +325,23 @@ void DSRG_MRPT2::set_v() {
         }
     });
 
-    V_N_Alpha = BTF_->build(CoreTensor,
+    V_sumA_Alpha = BTF_->build(CoreTensor,
                             "normal Dimention-reduced Electron Repulsion Integral alpha", {"gg"});
-    V_N_Beta = BTF_->build(CoreTensor, "normal Dimention-reduced Electron Repulsion Integral beta",
+    V_sumB_Alpha = BTF_->build(CoreTensor, "normal Dimention-reduced Electron Repulsion Integral beta",
                            {"gg"});
-    V_R_Beta = BTF_->build(
+    V_sumA_Beta = BTF_->build(
         CoreTensor, "index-reversed Dimention-reduced Electron Repulsion Integral beta", {"GG"});
-    V_all_Beta = BTF_->build(
+    V_sumB_Beta = BTF_->build(
         CoreTensor, "normal Dimention-reduced Electron Repulsion Integral all beta", {"GG"});
 
     // Summation of V["pmqm"] over index "m" or V["mpmq"] over index "m"
-    V_N_Alpha["pq"] = V["pmqn"] * I["mn"];
+    V_sumA_Alpha["pq"] = V["pmqn"] * I["mn"];
     // Summation of V["pMqM"] over index "M"
-    V_N_Beta["pq"] = V["pMqN"] * I["MN"];
+    V_sumB_Alpha["pq"] = V["pMqN"] * I["MN"];
     // Summation of V["mPmQ"] over index "m"
-    V_R_Beta["PQ"] = V["mPnQ"] * I["mn"];
+    V_sumA_Beta["PQ"] = V["mPnQ"] * I["mn"];
     // Summation of V["PMQM"] over index "M"
-    V_all_Beta["PQ"] = V["PMQN"] * I["MN"];
+    V_sumB_Beta["PQ"] = V["PMQN"] * I["MN"];
 }
 
 void DSRG_MRPT2::set_fock() {
