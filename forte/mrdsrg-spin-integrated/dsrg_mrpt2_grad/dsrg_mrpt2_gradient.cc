@@ -13,7 +13,6 @@
 #include "psi4/libmints/matrix.h"
 #include "sci/fci_mo.h"
 #include "helpers/printing.h"
-#include "../master_mrdsrg.h"
 #include "../dsrg_mrpt2.h"
 #include "helpers/timer.h"
 

@@ -6,7 +6,6 @@
 #include "psi4/libmints/matrix.h"
 #include "psi4/libmints/wavefunction.h"
 #include "psi4/psifiles.h"
-#include "../master_mrdsrg.h"
 #include "../dsrg_mrpt2.h"
 #include "helpers/timer.h"
 #include "gradient_tpdm/backtransform_tpdm.h"
