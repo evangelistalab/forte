@@ -9,33 +9,13 @@
  * (5), Write 1RDMs and 2RDMs coefficients;
  * (6), Back-transform the TPDM.
  */
-#include <algorithm>
-#include <map>
-#include <vector>
-#include <math.h>
-#include <numeric>
-#include <ctype.h>
-#include <string>
-
 #include "psi4/libpsi4util/PsiOutStream.h"
-#include "psi4/libpsio/psio.h"
-#include "psi4/libpsio/psio.hpp"
-#include "psi4/libqt/qt.h"
-#include "psi4/libmints/dipole.h"
-
-#include "helpers/timer.h"
-#include "ci_rdm/ci_rdms.h"
-#include "boost/format.hpp"
-#include "sci/fci_mo.h"
-#include "fci/fci_solver.h"
-#include "helpers/printing.h"
-#include "../dsrg_mrpt2.h"
-
 #include "psi4/libmints/matrix.h"
-#include "psi4/libmints/wavefunction.h"
-#include "psi4/psifiles.h"
 
+#include "sci/fci_mo.h"
+#include "helpers/printing.h"
 #include "../master_mrdsrg.h"
+#include "../dsrg_mrpt2.h"
 #include "helpers/timer.h"
 
 using namespace ambit;
