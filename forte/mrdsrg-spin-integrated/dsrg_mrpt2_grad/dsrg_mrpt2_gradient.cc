@@ -92,7 +92,7 @@ void DSRG_MRPT2::set_tensor() {
     set_density();
     set_h();
     set_v();
-    set_fock();
+    set_active_fock();
     set_dsrg_tensor();
     set_ci_ints();
     outfile->Printf("Done");

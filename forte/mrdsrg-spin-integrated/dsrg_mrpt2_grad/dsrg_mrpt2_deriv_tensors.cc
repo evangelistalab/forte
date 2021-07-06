@@ -344,7 +344,7 @@ void DSRG_MRPT2::set_v() {
     V_sumB_Beta["PQ"] = V["PMQN"] * I["MN"];
 }
 
-void DSRG_MRPT2::set_fock() {
+void DSRG_MRPT2::set_active_fock() {
     F = BTF_->build(CoreTensor, "Fock Matrix", spin_cases({"gg"}));
 
     ints_->make_fock_matrix(Gamma1_.block("aa"), Gamma1_.block("AA"));

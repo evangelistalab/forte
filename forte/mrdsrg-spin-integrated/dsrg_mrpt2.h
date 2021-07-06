@@ -199,7 +199,7 @@ class DSRG_MRPT2 : public MASTER_DSRG {
      *
      * NOTICE: this function shall be deprecated in the future.
      */
-    void set_fock();
+    void set_active_fock();
     /**
      * Initializing the one-electron integral H.
      *
