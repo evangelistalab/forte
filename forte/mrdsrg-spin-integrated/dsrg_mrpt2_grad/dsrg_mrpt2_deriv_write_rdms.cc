@@ -205,8 +205,8 @@ void DSRG_MRPT2::write_1rdm_spin_dependent() {
     // CI contribution
     auto tp = ambit::Tensor::build(ambit::CoreTensor, "temporal tensor", {na, na});
 
-    tp("uv") = 0.5 * x_ci("I") * cc1a_n("Iuv");
-    tp("uv") += 0.5 * x_ci("J") * cc1a_r("Juv");
+    tp("uv") = 0.5 * x_ci("I") * cc1a_bra("Iuv");
+    tp("uv") += 0.5 * x_ci("J") * cc1a_ket("Juv");
 
     (tp).iterate([&](const std::vector<size_t>& i, double& value) {
         if (actv_mos_relative[i[0]].first == actv_mos_relative[i[1]].first) {
@@ -350,10 +350,10 @@ void DSRG_MRPT2::write_2rdm_spin_dependent() {
         ambit::Tensor::build(ambit::CoreTensor, "effective alpha gamma tensor", {na, na});
     auto ci_g1_b = ambit::Tensor::build(ambit::CoreTensor, "effective beta gamma tensor", {na, na});
 
-    ci_g1_a("uv") += 0.5 * x_ci("I") * cc1a_n("Iuv");
-    ci_g1_a("uv") += 0.5 * x_ci("J") * cc1a_r("Juv");
-    ci_g1_b("UV") += 0.5 * x_ci("I") * cc1b_n("IUV");
-    ci_g1_b("UV") += 0.5 * x_ci("J") * cc1b_r("JUV");
+    ci_g1_a("uv") += 0.5 * x_ci("I") * cc1a_bra("Iuv");
+    ci_g1_a("uv") += 0.5 * x_ci("J") * cc1a_ket("Juv");
+    ci_g1_b("UV") += 0.5 * x_ci("I") * cc1b_bra("IUV");
+    ci_g1_b("UV") += 0.5 * x_ci("J") * cc1b_ket("JUV");
 
     for (size_t i = 0, size_a = actv_all.size(); i < size_a; ++i) {
         auto v = actv_all[i];
@@ -478,13 +478,13 @@ void DSRG_MRPT2::write_2rdm_spin_dependent() {
     temp["xYuV"] += 0.25 * Gamma2_["uVxY"];
 
     // CI contribution
-    temp.block("aaaa")("xyuv") += 0.5 * 0.25 * cc2aa_n("Iuvxy") * x_ci("I");
-    temp.block("AAAA")("XYUV") += 0.5 * 0.25 * cc2bb_n("IUVXY") * x_ci("I");
-    temp.block("aAaA")("xYuV") += 0.5 * 0.25 * cc2ab_n("IuVxY") * x_ci("I");
+    temp.block("aaaa")("xyuv") += 0.5 * 0.25 * cc2aa_bra("Iuvxy") * x_ci("I");
+    temp.block("AAAA")("XYUV") += 0.5 * 0.25 * cc2bb_bra("IUVXY") * x_ci("I");
+    temp.block("aAaA")("xYuV") += 0.5 * 0.25 * cc2ab_bra("IuVxY") * x_ci("I");
 
-    temp.block("aaaa")("xyuv") += 0.5 * 0.25 * cc2aa_r("Juvxy") * x_ci("J");
-    temp.block("AAAA")("XYUV") += 0.5 * 0.25 * cc2bb_r("JUVXY") * x_ci("J");
-    temp.block("aAaA")("xYuV") += 0.5 * 0.25 * cc2ab_r("JuVxY") * x_ci("J");
+    temp.block("aaaa")("xyuv") += 0.5 * 0.25 * cc2aa_ket("Juvxy") * x_ci("J");
+    temp.block("AAAA")("XYUV") += 0.5 * 0.25 * cc2bb_ket("JUVXY") * x_ci("J");
+    temp.block("aAaA")("xYuV") += 0.5 * 0.25 * cc2ab_ket("JuVxY") * x_ci("J");
 
     // all-alpha and all-beta
     temp2["ckdl"] += temp["cdkl"];
