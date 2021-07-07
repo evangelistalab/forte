@@ -121,9 +121,11 @@ void DETCI::build_determinant_space() {
 
     auto size = dets.size();
     if (size == 0) {
-        outfile->Printf("\n  There is no determinant matching the conditions!");
+        outfile->Printf("\n  No determinant found that matches the state requested!");
         outfile->Printf("\n  Please check the input (symmetry, multiplicity, etc.)!");
-        throw std::runtime_error("No determinant matching the conditions!");
+        throw std::runtime_error(
+            "No determinant found that matches the state requested!\n  Please check the "
+            "input (symmetry and multiplicity of the root, etc.)!");
     }
 
     if (print_ > 2) {
