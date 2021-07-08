@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2020 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
+ * Copyright (c) 2012-2021 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
  *
  * The copyrights for code used from other parties are included in
  * the corresponding files.
@@ -343,8 +343,8 @@ make_state_weights_map(std::shared_ptr<ForteOptions> options,
         std::vector<double> weights(nroot, 0.0);
         weights[root] = 1.0;
         for (int gasn = 0; gasn < 6; gasn++) {
-            auto gas_space_min = options->get_int_vec("GAS" + std::to_string(gasn + 1) + "MIN");
-            auto gas_space_max = options->get_int_vec("GAS" + std::to_string(gasn + 1) + "MAX");
+            auto gas_space_min = options->get_int_list("GAS" + std::to_string(gasn + 1) + "MIN");
+            auto gas_space_max = options->get_int_list("GAS" + std::to_string(gasn + 1) + "MAX");
             if (gas_space_min.size() > 0) {
                 if (gas_space_min.size() > 1) {
                     std::string msg =
@@ -443,8 +443,10 @@ make_state_weights_map(std::shared_ptr<ForteOptions> options,
             sum_of_weights += std::accumulate(std::begin(weights), std::end(weights), 0.0);
 
             for (int gasn = 0; gasn < 6; gasn++) {
-                auto gas_space_min = options->get_int_vec("GAS" + std::to_string(gasn + 1) + "MIN");
-                auto gas_space_max = options->get_int_vec("GAS" + std::to_string(gasn + 1) + "MAX");
+                auto gas_space_min =
+                    options->get_int_list("GAS" + std::to_string(gasn + 1) + "MIN");
+                auto gas_space_max =
+                    options->get_int_list("GAS" + std::to_string(gasn + 1) + "MAX");
                 if (gas_space_min.size() > 0) {
                     if (i >= gas_space_min.size()) {
                         std::string msg = "\n  Error: GAS" + std::to_string(gasn + 1) +

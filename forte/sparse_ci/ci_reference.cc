@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2020 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
+ * Copyright (c) 2012-2021 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
  *
  * The copyrights for code used from other parties are included in
  * the corresponding files.
@@ -951,11 +951,6 @@ std::vector<std::tuple<double, int, int>> CI_Reference::sym_labeled_orbitals(std
 }
 
 void CI_Reference::get_gas_occupation() {
-    // Calculate gas_info from mo_space_info_
-    //    std::pair<size_t, std::map<std::string, SpaceInfo>> gas_info =
-    //        mo_space_info_->make_gas_info(options_);
-    //    gas_num_ = gas_info.first;
-    //    general_active_spaces_ = gas_info.second;
     gas_electrons_.clear();
 
     print_h2("Number of Electrons in GAS");
@@ -975,15 +970,22 @@ void CI_Reference::get_gas_occupation() {
         if (orbital_maximum) {
             outfile->Printf("\n    %3d", gas_count + 1);
 
-            size_t max_e_number = state_info_.gas_max()[gas_count];
-            // If the defined maximum number of electrons exceed number of orbitals,
-            // redefine maximum number of elctrons
-            if (max_e_number > std::min(orbital_maximum * 2, nalpha_ + nbeta_)) {
-                max_e_number = std::min(orbital_maximum * 2, nalpha_ + nbeta_);
+            // define max_e_number to be the largest possible
+            size_t max_e_number = std::min(orbital_maximum * 2, nalpha_ + nbeta_);
+            // but if we can read its value, do so
+            if (state_info_.gas_max().size() > gas_count) {
+                // If the defined maximum number of electrons exceed number of orbitals,
+                // redefine maximum number of elctrons
+                max_e_number = std::min(state_info_.gas_max()[gas_count], max_e_number);
             }
             gas_maxe.push_back(max_e_number);
 
-            int min_e_number = state_info_.gas_min()[gas_count];
+            // define min_e_number to be the smallest possible
+            size_t min_e_number = 0;
+            // but if we can read its value, do so
+            if (state_info_.gas_min().size() > gas_count) {
+                min_e_number = state_info_.gas_min()[gas_count];
+            }
             gas_mine.push_back(min_e_number);
 
             outfile->Printf(" %4d %4d", max_e_number, min_e_number);

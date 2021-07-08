@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2020 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
+ * Copyright (c) 2012-2021 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
  *
  * The copyrights for code used from other parties are included in
  * the corresponding files.
@@ -95,7 +95,7 @@ void Psi4Integrals::setup_psi4_ints() {
     /// If MO_ROTATE is set in option, call rotate_mos.
     /// Wasn't really sure where to put this function, but since, integrals is
     /// always called, this seems like a good spot.
-    auto rotate_mos_list = options_->get_int_vec("ROTATE_MOS");
+    auto rotate_mos_list = options_->get_int_list("ROTATE_MOS");
     if (rotate_mos_list.size() > 0) {
         rotate_mos();
     }
@@ -173,11 +173,12 @@ void Psi4Integrals::make_psi4_JK() {
             throw psi::PSIEXCEPTION("Unrestricted orbitals not supported for DF integrals");
         }
 
-        if (options_->get_str("SCF_TYPE").find("DF") == std::string::npos) {
-            print_h1("Vital Warning from Forte JK Builder (DF)");
-            outfile->Printf("\n  Inconsistent integrals used in Psi4 and Forte!");
-            outfile->Printf("\n  This can be fixed by setting SCF_TYPE to DF or DISK_DF.");
-        }
+        if (not options_->is_none("SCF_TYPE"))
+            if (options_->get_str("SCF_TYPE").find("DF") == std::string::npos) {
+                print_h1("Vital Warning from Forte JK Builder (DF)");
+                outfile->Printf("\n  Inconsistent integrals used in Psi4 and Forte!");
+                outfile->Printf("\n  This can be fixed by setting SCF_TYPE to DF or DISK_DF.");
+            }
 
         auto basis_aux = wfn_->get_basisset("DF_BASIS_MP2");
         auto job_type = options_->get_str("JOB_TYPE");
@@ -307,7 +308,7 @@ void Psi4Integrals::freeze_core_orbitals() {
 }
 
 void Psi4Integrals::rotate_mos() {
-    auto rotate_mos_list = options_->get_int_vec("ROTATE_MOS");
+    auto rotate_mos_list = options_->get_int_list("ROTATE_MOS");
     int size_mo_rotate = rotate_mos_list.size();
     outfile->Printf("\n\n\n  ==> ROTATING MOS <==");
     if (size_mo_rotate % 3 != 0) {

@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2020 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
+ * Copyright (c) 2012-2021 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
  *
  * The copyrights for code used from other parties are included in
  * the corresponding files.
@@ -44,13 +44,36 @@ namespace forte {
 
 /**
  * @brief The ForteOptions class
+ *
+ * This class handles options passed to different computational methods.
+ *
+ * The options are held in python dictionary (pybind11::dict) and can
+ * be easily grabbed (via the dict() function) or set from python.
+ * When copying this object, we make sure that a deep copy is performed,
+ * otherwise a change in one object may change options in a different
+ * object from which it was obtained.
+ *
+ * Each option is held in dictionary with the following entries:
+ * - type: string the option type (e.g. "int")
+ * - group: the group to which this option belongs (may be empty "")
+ * - value: the value of the option
+ * - default_value: the default value given to the option
+ * - description: a description of the option and what it controlss
  */
 class ForteOptions {
   public:
-    /**
-     * @brief ForteOptions
-     */
+    /// @brief Default constructor
     ForteOptions();
+
+    /**
+     * @brief Copy constructor
+     *
+     * This constructor makes a deep copy of the options dictionary
+     */
+    ForteOptions(const ForteOptions& other);
+
+    // Disable default copy assignment
+    ForteOptions& operator=(ForteOptions&) = delete;
 
     /**
      * @brief Set the group to which options are added
@@ -62,7 +85,7 @@ class ForteOptions {
      * @brief Get the group to which options are added
      * @return the group name
      */
-    const std::string& get_group();
+    const std::string& get_group() const;
 
     /**
      * @brief Add a python object option
@@ -160,56 +183,68 @@ class ForteOptions {
                  const std::string& description = "");
 
     /**
-     * @brief Add an array option
+     * @brief Add a general array option
      * @param label Option label
      * @param description Description of the option
      */
     void add_array(const std::string& label, const std::string& description = "");
+
+    /**
+     * @brief Add a integer array option
+     * @param label Option label
+     * @param description Description of the option
+     */
     void add_int_array(const std::string& label, const std::string& description = "");
+
+    /**
+     * @brief Add a double array option
+     * @param label Option label
+     * @param description Description of the option
+     */
     void add_double_array(const std::string& label, const std::string& description = "");
 
     /**
      * @brief Get a boolean option
      * @param label Option label
      */
-    bool get_bool(const std::string& label);
+    bool get_bool(const std::string& label) const;
 
     /**
      * @brief Get a integer option
      * @param label Option label
      */
-    int get_int(const std::string& label);
+    int get_int(const std::string& label) const;
 
     /**
      * @brief Get a double option
      * @param label Option label
      */
-    double get_double(const std::string& label);
+    double get_double(const std::string& label) const;
 
     /**
      * @brief Get a string option
      * @param label Option label
      */
-    std::string get_str(const std::string& label);
+    std::string get_str(const std::string& label) const;
 
     /**
      * @brief Get a general python list
      * @param label
      * @return a py list
      */
-    py::list get_gen_list(const std::string& label);
+    py::list get_gen_list(const std::string& label) const;
 
     /**
      * @brief Get a vector of int option
      * @param label Option label
      */
-    std::vector<int> get_int_vec(const std::string& label);
+    std::vector<int> get_int_list(const std::string& label) const;
 
     /**
      * @brief Get a vector of int option
      * @param label Option label
      */
-    std::vector<double> get_double_vec(const std::string& label);
+    std::vector<double> get_double_list(const std::string& label) const;
 
     /**
      * @brief Set a boolean option
@@ -251,20 +286,20 @@ class ForteOptions {
      * @param label Option label
      * @param val Option value
      */
-    void set_int_vec(const std::string& label, const std::vector<int>& val);
+    void set_int_list(const std::string& label, const std::vector<int>& val);
 
     /**
      * @brief Set a vector of int option
      * @param label Option label
      * @param val Option value
      */
-    void set_double_vec(const std::string& label, const std::vector<double>& val);
+    void set_double_list(const std::string& label, const std::vector<double>& val);
 
     /**
      * @brief Register the options with Psi4's options object
      * @param options a Psi4 option object
      */
-    void push_options_to_psi4(psi::Options& options);
+    void push_options_to_psi4(psi::Options& options) const;
 
     /**
      * @brief Read options from a Psi4's options object
@@ -283,12 +318,40 @@ class ForteOptions {
      */
     pybind11::dict dict();
 
-    void set_dict(pybind11::dict dict) { dict_ = dict; }
+    /**
+     * @brief Set the value of options from a python dictionary
+     *
+     * This function assumes that dict only contains the option
+     * label and the corresponding value.
+     *
+     * @param dict a dict[str, py::object] that maps option labels (str)
+     * to option values (py::object)
+     */
+    void set_from_dict(const pybind11::dict& dict);
 
-    void reset_dict() { dict_ = pybind11::dict(); }
+    /**
+     * @brief Set the python dictionary that stores options
+     *
+     * This function replaces the dictionary attribute stored
+     * in this object. The new dictionary has to have the same
+     * structure of this class' dict.
+     * To set the value of options, use instead the function
+     * set_from_dict.
+     *
+     * @param dict a dictionary that meets the specifications
+     * of this class
+     */
+    void set_dict(const pybind11::dict& dict);
+
+    /**
+     * @brief Return a string representation of this object
+     */
+    std::string str() const;
 
   private:
+    /// a python dictionary object
     pybind11::dict dict_;
+    /// the current option group
     std::string group_ = "";
 };
 } // namespace forte
