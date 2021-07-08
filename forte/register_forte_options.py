@@ -258,21 +258,21 @@ def register_embedding_options(options):
 def register_mo_space_info_options(options):
     options.set_group("MO Space Info")
 
-    options.add_int_array("FROZEN_DOCC", "Number of frozen occupied orbitals"
+    options.add_int_list("FROZEN_DOCC", "Number of frozen occupied orbitals"
                           " per irrep (in Cotton order)")
-    options.add_int_array("RESTRICTED_DOCC", "Number of restricted doubly"
+    options.add_int_list("RESTRICTED_DOCC", "Number of restricted doubly"
                           " occupied orbitals per irrep (in Cotton order)")
-    options.add_int_array("ACTIVE", " Number of active orbitals per irrep"
+    options.add_int_list("ACTIVE", " Number of active orbitals per irrep"
                           " (in Cotton order)")
-    options.add_int_array("RESTRICTED_UOCC", "Number of restricted unoccupied"
+    options.add_int_list("RESTRICTED_UOCC", "Number of restricted unoccupied"
                           " orbitals per irrep (in Cotton order)")
-    options.add_int_array("FROZEN_UOCC", "Number of frozen unoccupied orbitals"
+    options.add_int_list("FROZEN_UOCC", "Number of frozen unoccupied orbitals"
                           " per irrep (in Cotton order)")
-    options.add_int_array("EMBEDDING_DOCC", "Number of fragment occupied orbitals"
+    options.add_int_list("EMBEDDING_DOCC", "Number of fragment occupied orbitals"
                           " per irrep (in Cotton order)")
-    options.add_int_array("EMBEDDING_ACTV", "Number of fragment active orbitals"
+    options.add_int_list("EMBEDDING_ACTV", "Number of fragment active orbitals"
                           " per irrep (in Cotton order)")
-    options.add_int_array("EMBEDDING_ORB", "Number of all fragment orbitals"
+    options.add_int_list("EMBEDDING_ORB", "Number of all fragment orbitals"
                           " per irrep (in Cotton order)")
 
     options.add_int_list("GAS1", "Number of GAS1 orbitals per irrep (in Cotton order)")
