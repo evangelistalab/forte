@@ -14,10 +14,8 @@ void DSRG_MRPT2::set_ci_ints() {
     cc = coupling_coefficients_;
     ci = ci_vectors_[0];
 
-    cc1a_bra = ambit::Tensor::build(ambit::CoreTensor, "<K|p^+ q|0>", {ndets, na, na});
-    cc1a_ket = ambit::Tensor::build(ambit::CoreTensor, "<0|p^+ q|K>", {ndets, na, na});
-    cc1b_bra = ambit::Tensor::build(ambit::CoreTensor, "<K|P^+ Q|0>", {ndets, na, na});
-    cc1b_ket = ambit::Tensor::build(ambit::CoreTensor, "<0|P^+ Q|K>", {ndets, na, na});
+    cc1a = ambit::Tensor::build(ambit::CoreTensor, "<K|p^+ q|0> + <0|p^+ q|K>", {ndets, na, na});
+    cc1b = ambit::Tensor::build(ambit::CoreTensor, "<K|P^+ Q|0> + <0|P^+ Q|K>", {ndets, na, na});
 
     cc2aa_bra = ambit::Tensor::build(ambit::CoreTensor, "<K|p^+ q^+ r s|0>", {ndets, na, na, na, na});
     cc2aa_ket = ambit::Tensor::build(ambit::CoreTensor, "<0|p^+ q^+ r s|K>", {ndets, na, na, na, na});
@@ -35,10 +33,11 @@ void DSRG_MRPT2::set_ci_ints() {
     cc3abb_bra = ambit::Tensor::build(ambit::CoreTensor, "<K|o^+ P^+ Q^+ r S T|0>", {ndets, na, na, na, na, na, na});
     cc3abb_ket = ambit::Tensor::build(ambit::CoreTensor, "<0|o^+ P^+ Q^+ r S T|K>", {ndets, na, na, na, na, na, na});
 
-    cc1a_bra("Kzw") = cc.cc1a()("KJzw") * ci("J");
-    cc1a_ket("Kzw") = cc.cc1a()("JKzw") * ci("J");
-    cc1b_bra("KZW") = cc.cc1b()("KJZW") * ci("J");
-    cc1b_ket("KZW") = cc.cc1b()("JKZW") * ci("J");
+    cc1a("Kzw") += cc.cc1a()("KJzw") * ci("J");
+    cc1a("Kzw") += cc.cc1a()("KJwz") * ci("J");
+
+    cc1b("KZW") += cc.cc1b()("KJZW") * ci("J");
+    cc1b("KZW") += cc.cc1b()("KJWZ") * ci("J");
 
     cc2aa_bra("Kuvxy") = cc.cc2aa()("KJuvxy") * ci("J");
     cc2aa_ket("Kuvxy") = cc.cc2aa()("JKuvxy") * ci("J");
@@ -68,35 +67,24 @@ void DSRG_MRPT2::set_ci_ints() {
     // alpha-alpha
     dlamb_aa("Kxyuv") += cc2aa_bra("Kxyuv");
     dlamb_aa("Kxyuv") += cc2aa_ket("Kxyuv");
-
-    dlamb_aa("Kxyuv") -= cc1a_bra("Kxu") * Gamma1_.block("aa")("yv");
-    dlamb_aa("Kxyuv") -= cc1a_bra("Kux") * Gamma1_.block("aa")("yv");
-    dlamb_aa("Kxyuv") -= cc1a_bra("Kyv") * Gamma1_.block("aa")("xu");
-    dlamb_aa("Kxyuv") -= cc1a_bra("Kvy") * Gamma1_.block("aa")("xu");
-    dlamb_aa("Kxyuv") += cc1a_bra("Kxv") * Gamma1_.block("aa")("yu");
-    dlamb_aa("Kxyuv") += cc1a_bra("Kvx") * Gamma1_.block("aa")("yu");
-    dlamb_aa("Kxyuv") += cc1a_bra("Kyu") * Gamma1_.block("aa")("xv");
-    dlamb_aa("Kxyuv") += cc1a_bra("Kuy") * Gamma1_.block("aa")("xv");
+    dlamb_aa("Kxyuv") -= cc1a("Kux") * Gamma1_.block("aa")("yv");
+    dlamb_aa("Kxyuv") -= cc1a("Kvy") * Gamma1_.block("aa")("xu");
+    dlamb_aa("Kxyuv") += cc1a("Kvx") * Gamma1_.block("aa")("yu");
+    dlamb_aa("Kxyuv") += cc1a("Kuy") * Gamma1_.block("aa")("xv");
 
     // beta-beta
     dlamb_bb("KXYUV") += cc2bb_bra("KXYUV");
     dlamb_bb("KXYUV") += cc2bb_ket("KXYUV");
-    dlamb_bb("KXYUV") -= cc1b_bra("KXU") * Gamma1_.block("AA")("YV");
-    dlamb_bb("KXYUV") -= cc1b_bra("KUX") * Gamma1_.block("AA")("YV");
-    dlamb_bb("KXYUV") -= cc1b_bra("KYV") * Gamma1_.block("AA")("XU");
-    dlamb_bb("KXYUV") -= cc1b_bra("KVY") * Gamma1_.block("AA")("XU");
-    dlamb_bb("KXYUV") += cc1b_bra("KXV") * Gamma1_.block("AA")("YU");
-    dlamb_bb("KXYUV") += cc1b_bra("KVX") * Gamma1_.block("AA")("YU");
-    dlamb_bb("KXYUV") += cc1b_bra("KYU") * Gamma1_.block("AA")("XV");
-    dlamb_bb("KXYUV") += cc1b_bra("KUY") * Gamma1_.block("AA")("XV");
+    dlamb_bb("KXYUV") -= cc1b("KXU") * Gamma1_.block("AA")("YV");
+    dlamb_bb("KXYUV") -= cc1b("KYV") * Gamma1_.block("AA")("XU");
+    dlamb_bb("KXYUV") += cc1b("KXV") * Gamma1_.block("AA")("YU");
+    dlamb_bb("KXYUV") += cc1b("KYU") * Gamma1_.block("AA")("XV");
 
     // alpha-beta
     dlamb_ab("KxYuV") += cc2ab_bra("KxYuV");
     dlamb_ab("KxYuV") += cc2ab_ket("KxYuV");
-    dlamb_ab("KxYuV") -= cc1a_bra("Kxu") * Gamma1_.block("AA")("YV");
-    dlamb_ab("KxYuV") -= cc1a_bra("Kux") * Gamma1_.block("AA")("YV");
-    dlamb_ab("KxYuV") -= cc1b_bra("KYV") * Gamma1_.block("aa")("xu");
-    dlamb_ab("KxYuV") -= cc1b_bra("KVY") * Gamma1_.block("aa")("xu");
+    dlamb_ab("KxYuV") -= cc1a("Kux") * Gamma1_.block("AA")("YV");
+    dlamb_ab("KxYuV") -= cc1b("KYV") * Gamma1_.block("aa")("xu");
 
     dlamb3_aaa = ambit::Tensor::build(ambit::CoreTensor,
                                       "derivatives of Lambda3_ w.r.t. C_K alpha-alpha-alpha",
@@ -114,152 +102,98 @@ void DSRG_MRPT2::set_ci_ints() {
     // alpha-alpha-alpha
     dlamb3_aaa("Kxyzuvw") += cc3aaa_bra("Kxyzuvw");
     dlamb3_aaa("Kxyzuvw") += cc3aaa_ket("Kxyzuvw");
-    dlamb3_aaa("Kxyzuvw") -= 2.0 * cc1a_bra("Kuz") * Gamma2_.block("aaaa")("xyvw");
-    dlamb3_aaa("Kxyzuvw") -= 2.0 * cc1a_ket("Kuz") * Gamma2_.block("aaaa")("xyvw");
+    dlamb3_aaa("Kxyzuvw") -= 2.0 * cc1a("Kuz") * Gamma2_.block("aaaa")("xyvw");
     dlamb3_aaa("Kxyzuvw") -= 2.0 * cc2aa_bra("Kxyvw") * Gamma1_.block("aa")("uz");
     dlamb3_aaa("Kxyzuvw") -= 2.0 * cc2aa_ket("Kxyvw") * Gamma1_.block("aa")("uz");
-    dlamb3_aaa("Kxyzuvw") -= cc1a_bra("Kwz") * Gamma2_.block("aaaa")("xyuv");
-    dlamb3_aaa("Kxyzuvw") -= cc1a_ket("Kwz") * Gamma2_.block("aaaa")("xyuv");
+    dlamb3_aaa("Kxyzuvw") -= cc1a("Kwz") * Gamma2_.block("aaaa")("xyuv");
     dlamb3_aaa("Kxyzuvw") -= cc2aa_bra("Kxyuv") * Gamma1_.block("aa")("wz");
     dlamb3_aaa("Kxyzuvw") -= cc2aa_ket("Kxyuv") * Gamma1_.block("aa")("wz");
-    dlamb3_aaa("Kxyzuvw") += 4.0 * cc1a_bra("Kxu") * Gamma2_.block("aaaa")("vwzy");
-    dlamb3_aaa("Kxyzuvw") += 4.0 * cc1a_ket("Kxu") * Gamma2_.block("aaaa")("vwzy");
+    dlamb3_aaa("Kxyzuvw") += 4.0 * cc1a("Kxu") * Gamma2_.block("aaaa")("vwzy");
     dlamb3_aaa("Kxyzuvw") += 4.0 * cc2aa_bra("Kvwzy") * Gamma1_.block("aa")("xu");
     dlamb3_aaa("Kxyzuvw") += 4.0 * cc2aa_ket("Kvwzy") * Gamma1_.block("aa")("xu");
-    dlamb3_aaa("Kxyzuvw") += 2.0 * cc1a_bra("Kxw") * Gamma2_.block("aaaa")("uvzy");
-    dlamb3_aaa("Kxyzuvw") += 2.0 * cc1a_ket("Kxw") * Gamma2_.block("aaaa")("uvzy");
+    dlamb3_aaa("Kxyzuvw") += 2.0 * cc1a("Kxw") * Gamma2_.block("aaaa")("uvzy");
     dlamb3_aaa("Kxyzuvw") += 2.0 * cc2aa_bra("Kuvzy") * Gamma1_.block("aa")("xw");
     dlamb3_aaa("Kxyzuvw") += 2.0 * cc2aa_ket("Kuvzy") * Gamma1_.block("aa")("xw");
     dlamb3_aaa("Kxyzuvw") +=
-        8.0 * cc1a_bra("Kuz") * Gamma1_.block("aa")("xv") * Gamma1_.block("aa")("yw");
+        8.0 * cc1a("Kuz") * Gamma1_.block("aa")("xv") * Gamma1_.block("aa")("yw");
     dlamb3_aaa("Kxyzuvw") +=
-        8.0 * cc1a_ket("Kuz") * Gamma1_.block("aa")("xv") * Gamma1_.block("aa")("yw");
+        8.0 * cc1a("Kxv") * Gamma1_.block("aa")("uz") * Gamma1_.block("aa")("yw");
     dlamb3_aaa("Kxyzuvw") +=
-        8.0 * cc1a_bra("Kxv") * Gamma1_.block("aa")("uz") * Gamma1_.block("aa")("yw");
+        8.0 * cc1a("Kyw") * Gamma1_.block("aa")("uz") * Gamma1_.block("aa")("xv");
     dlamb3_aaa("Kxyzuvw") +=
-        8.0 * cc1a_ket("Kxv") * Gamma1_.block("aa")("uz") * Gamma1_.block("aa")("yw");
+        4.0 * cc1a("Kwz") * Gamma1_.block("aa")("xu") * Gamma1_.block("aa")("yv");
     dlamb3_aaa("Kxyzuvw") +=
-        8.0 * cc1a_bra("Kyw") * Gamma1_.block("aa")("uz") * Gamma1_.block("aa")("xv");
+        4.0 * cc1a("Kxu") * Gamma1_.block("aa")("wz") * Gamma1_.block("aa")("yv");
     dlamb3_aaa("Kxyzuvw") +=
-        8.0 * cc1a_ket("Kyw") * Gamma1_.block("aa")("uz") * Gamma1_.block("aa")("xv");
-    dlamb3_aaa("Kxyzuvw") +=
-        4.0 * cc1a_bra("Kwz") * Gamma1_.block("aa")("xu") * Gamma1_.block("aa")("yv");
-    dlamb3_aaa("Kxyzuvw") +=
-        4.0 * cc1a_ket("Kwz") * Gamma1_.block("aa")("xu") * Gamma1_.block("aa")("yv");
-    dlamb3_aaa("Kxyzuvw") +=
-        4.0 * cc1a_bra("Kxu") * Gamma1_.block("aa")("wz") * Gamma1_.block("aa")("yv");
-    dlamb3_aaa("Kxyzuvw") +=
-        4.0 * cc1a_ket("Kxu") * Gamma1_.block("aa")("wz") * Gamma1_.block("aa")("yv");
-    dlamb3_aaa("Kxyzuvw") +=
-        4.0 * cc1a_bra("Kyv") * Gamma1_.block("aa")("wz") * Gamma1_.block("aa")("xu");
-    dlamb3_aaa("Kxyzuvw") +=
-        4.0 * cc1a_ket("Kyv") * Gamma1_.block("aa")("wz") * Gamma1_.block("aa")("xu");
+        4.0 * cc1a("Kyv") * Gamma1_.block("aa")("wz") * Gamma1_.block("aa")("xu");
 
     // beta-beta-beta
     dlamb3_bbb("KXYZUVW") += cc3bbb_bra("KXYZUVW");
     dlamb3_bbb("KXYZUVW") += cc3bbb_ket("KXYZUVW");
-    dlamb3_bbb("KXYZUVW") -= 2.0 * cc1b_bra("KUZ") * Gamma2_.block("AAAA")("XYVW");
-    dlamb3_bbb("KXYZUVW") -= 2.0 * cc1b_ket("KUZ") * Gamma2_.block("AAAA")("XYVW");
+    dlamb3_bbb("KXYZUVW") -= 2.0 * cc1b("KUZ") * Gamma2_.block("AAAA")("XYVW");
     dlamb3_bbb("KXYZUVW") -= 2.0 * cc2bb_bra("KXYVW") * Gamma1_.block("AA")("UZ");
     dlamb3_bbb("KXYZUVW") -= 2.0 * cc2bb_ket("KXYVW") * Gamma1_.block("AA")("UZ");
-    dlamb3_bbb("KXYZUVW") -= cc1b_bra("KWZ") * Gamma2_.block("AAAA")("XYUV");
-    dlamb3_bbb("KXYZUVW") -= cc1b_ket("KWZ") * Gamma2_.block("AAAA")("XYUV");
+    dlamb3_bbb("KXYZUVW") -= cc1b("KWZ") * Gamma2_.block("AAAA")("XYUV");
     dlamb3_bbb("KXYZUVW") -= cc2bb_bra("KXYUV") * Gamma1_.block("AA")("WZ");
     dlamb3_bbb("KXYZUVW") -= cc2bb_ket("KXYUV") * Gamma1_.block("AA")("WZ");
-    dlamb3_bbb("KXYZUVW") += 4.0 * cc1b_bra("KXU") * Gamma2_.block("AAAA")("VWZY");
-    dlamb3_bbb("KXYZUVW") += 4.0 * cc1b_ket("KXU") * Gamma2_.block("AAAA")("VWZY");
+    dlamb3_bbb("KXYZUVW") += 4.0 * cc1b("KXU") * Gamma2_.block("AAAA")("VWZY");
     dlamb3_bbb("KXYZUVW") += 4.0 * cc2bb_bra("KVWZY") * Gamma1_.block("AA")("XU");
     dlamb3_bbb("KXYZUVW") += 4.0 * cc2bb_ket("KVWZY") * Gamma1_.block("AA")("XU");
-    dlamb3_bbb("KXYZUVW") += 2.0 * cc1b_bra("KXW") * Gamma2_.block("AAAA")("UVZY");
-    dlamb3_bbb("KXYZUVW") += 2.0 * cc1b_ket("KXW") * Gamma2_.block("AAAA")("UVZY");
+    dlamb3_bbb("KXYZUVW") += 2.0 * cc1b("KXW") * Gamma2_.block("AAAA")("UVZY");
     dlamb3_bbb("KXYZUVW") += 2.0 * cc2bb_bra("KUVZY") * Gamma1_.block("AA")("XW");
     dlamb3_bbb("KXYZUVW") += 2.0 * cc2bb_ket("KUVZY") * Gamma1_.block("AA")("XW");
     dlamb3_bbb("KXYZUVW") +=
-        8.0 * cc1b_bra("KUZ") * Gamma1_.block("AA")("XV") * Gamma1_.block("AA")("YW");
+        8.0 * cc1b("KUZ") * Gamma1_.block("AA")("XV") * Gamma1_.block("AA")("YW");
     dlamb3_bbb("KXYZUVW") +=
-        8.0 * cc1b_ket("KUZ") * Gamma1_.block("AA")("XV") * Gamma1_.block("AA")("YW");
+        8.0 * cc1b("KXV") * Gamma1_.block("AA")("UZ") * Gamma1_.block("AA")("YW");
     dlamb3_bbb("KXYZUVW") +=
-        8.0 * cc1b_bra("KXV") * Gamma1_.block("AA")("UZ") * Gamma1_.block("AA")("YW");
+        8.0 * cc1b("KYW") * Gamma1_.block("AA")("UZ") * Gamma1_.block("AA")("XV");
     dlamb3_bbb("KXYZUVW") +=
-        8.0 * cc1b_ket("KXV") * Gamma1_.block("AA")("UZ") * Gamma1_.block("AA")("YW");
+        4.0 * cc1b("KWZ") * Gamma1_.block("AA")("XU") * Gamma1_.block("AA")("YV");
     dlamb3_bbb("KXYZUVW") +=
-        8.0 * cc1b_bra("KYW") * Gamma1_.block("AA")("UZ") * Gamma1_.block("AA")("XV");
+        4.0 * cc1b("KXU") * Gamma1_.block("AA")("WZ") * Gamma1_.block("AA")("YV");
     dlamb3_bbb("KXYZUVW") +=
-        8.0 * cc1b_ket("KYW") * Gamma1_.block("AA")("UZ") * Gamma1_.block("AA")("XV");
-    dlamb3_bbb("KXYZUVW") +=
-        4.0 * cc1b_bra("KWZ") * Gamma1_.block("AA")("XU") * Gamma1_.block("AA")("YV");
-    dlamb3_bbb("KXYZUVW") +=
-        4.0 * cc1b_ket("KWZ") * Gamma1_.block("AA")("XU") * Gamma1_.block("AA")("YV");
-    dlamb3_bbb("KXYZUVW") +=
-        4.0 * cc1b_bra("KXU") * Gamma1_.block("AA")("WZ") * Gamma1_.block("AA")("YV");
-    dlamb3_bbb("KXYZUVW") +=
-        4.0 * cc1b_ket("KXU") * Gamma1_.block("AA")("WZ") * Gamma1_.block("AA")("YV");
-    dlamb3_bbb("KXYZUVW") +=
-        4.0 * cc1b_bra("KYV") * Gamma1_.block("AA")("WZ") * Gamma1_.block("AA")("XU");
-    dlamb3_bbb("KXYZUVW") +=
-        4.0 * cc1b_ket("KYV") * Gamma1_.block("AA")("WZ") * Gamma1_.block("AA")("XU");
+        4.0 * cc1b("KYV") * Gamma1_.block("AA")("WZ") * Gamma1_.block("AA")("XU");
 
     // alpha-alpha-beta
     dlamb3_aab("KxyZuvW") += cc3aab_bra("KxyZuvW");
     dlamb3_aab("KxyZuvW") += cc3aab_ket("KxyZuvW");
-    dlamb3_aab("KxyZuvW") -= cc1a_bra("Kxu") * Lambda2_.block("aAaA")("yZvW");
-    dlamb3_aab("KxyZuvW") -= cc1a_ket("Kxu") * Lambda2_.block("aAaA")("yZvW");
+    dlamb3_aab("KxyZuvW") -= cc1a("Kxu") * Lambda2_.block("aAaA")("yZvW");
     dlamb3_aab("KxyZuvW") -= Gamma1_.block("aa")("xu") * dlamb_ab("KyZvW");
-    dlamb3_aab("KxyZuvW") += cc1a_bra("Kxv") * Lambda2_.block("aAaA")("yZuW");
-    dlamb3_aab("KxyZuvW") += cc1a_ket("Kxv") * Lambda2_.block("aAaA")("yZuW");
+    dlamb3_aab("KxyZuvW") += cc1a("Kxv") * Lambda2_.block("aAaA")("yZuW");
     dlamb3_aab("KxyZuvW") += Gamma1_.block("aa")("xv") * dlamb_ab("KyZuW");
-    dlamb3_aab("KxyZuvW") += cc1a_bra("Kyu") * Lambda2_.block("aAaA")("xZvW");
-    dlamb3_aab("KxyZuvW") += cc1a_ket("Kyu") * Lambda2_.block("aAaA")("xZvW");
+    dlamb3_aab("KxyZuvW") += cc1a("Kyu") * Lambda2_.block("aAaA")("xZvW");
     dlamb3_aab("KxyZuvW") += Gamma1_.block("aa")("yu") * dlamb_ab("KxZvW");
-    dlamb3_aab("KxyZuvW") -= cc1a_bra("Kyv") * Lambda2_.block("aAaA")("xZuW");
-    dlamb3_aab("KxyZuvW") -= cc1a_ket("Kyv") * Lambda2_.block("aAaA")("xZuW");
+    dlamb3_aab("KxyZuvW") -= cc1a("Kyv") * Lambda2_.block("aAaA")("xZuW");
     dlamb3_aab("KxyZuvW") -= Gamma1_.block("aa")("yv") * dlamb_ab("KxZuW");
-    dlamb3_aab("KxyZuvW") -= cc1b_bra("KZW") * Lambda2_.block("aaaa")("xyuv");
-    dlamb3_aab("KxyZuvW") -= cc1b_ket("KZW") * Lambda2_.block("aaaa")("xyuv");
+    dlamb3_aab("KxyZuvW") -= cc1b("KZW") * Lambda2_.block("aaaa")("xyuv");
     dlamb3_aab("KxyZuvW") -= Gamma1_.block("AA")("ZW") * dlamb_aa("Kxyuv");
-    dlamb3_aab("KxyZuvW") -= cc1a_bra("Kxu") * Gamma1_.block("aa")("yv") * Gamma1_.block("AA")("ZW");
-    dlamb3_aab("KxyZuvW") -= cc1a_ket("Kxu") * Gamma1_.block("aa")("yv") * Gamma1_.block("AA")("ZW");
-    dlamb3_aab("KxyZuvW") -= cc1a_bra("Kyv") * Gamma1_.block("aa")("xu") * Gamma1_.block("AA")("ZW");
-    dlamb3_aab("KxyZuvW") -= cc1a_ket("Kyv") * Gamma1_.block("aa")("xu") * Gamma1_.block("AA")("ZW");
-    dlamb3_aab("KxyZuvW") -= cc1b_bra("KZW") * Gamma1_.block("aa")("yv") * Gamma1_.block("aa")("xu");
-    dlamb3_aab("KxyZuvW") -= cc1b_ket("KZW") * Gamma1_.block("aa")("yv") * Gamma1_.block("aa")("xu");
-    dlamb3_aab("KxyZuvW") += cc1a_bra("Kxv") * Gamma1_.block("aa")("yu") * Gamma1_.block("AA")("ZW");
-    dlamb3_aab("KxyZuvW") += cc1a_ket("Kxv") * Gamma1_.block("aa")("yu") * Gamma1_.block("AA")("ZW");
-    dlamb3_aab("KxyZuvW") += cc1a_bra("Kyu") * Gamma1_.block("aa")("xv") * Gamma1_.block("AA")("ZW");
-    dlamb3_aab("KxyZuvW") += cc1a_ket("Kyu") * Gamma1_.block("aa")("xv") * Gamma1_.block("AA")("ZW");
-    dlamb3_aab("KxyZuvW") += cc1b_bra("KZW") * Gamma1_.block("aa")("yu") * Gamma1_.block("aa")("xv");
-    dlamb3_aab("KxyZuvW") += cc1b_ket("KZW") * Gamma1_.block("aa")("yu") * Gamma1_.block("aa")("xv");
+    dlamb3_aab("KxyZuvW") -= cc1a("Kxu") * Gamma1_.block("aa")("yv") * Gamma1_.block("AA")("ZW");
+    dlamb3_aab("KxyZuvW") -= cc1a("Kyv") * Gamma1_.block("aa")("xu") * Gamma1_.block("AA")("ZW");
+    dlamb3_aab("KxyZuvW") -= cc1b("KZW") * Gamma1_.block("aa")("yv") * Gamma1_.block("aa")("xu");
+    dlamb3_aab("KxyZuvW") += cc1a("Kxv") * Gamma1_.block("aa")("yu") * Gamma1_.block("AA")("ZW");
+    dlamb3_aab("KxyZuvW") += cc1a("Kyu") * Gamma1_.block("aa")("xv") * Gamma1_.block("AA")("ZW");
+    dlamb3_aab("KxyZuvW") += cc1b("KZW") * Gamma1_.block("aa")("yu") * Gamma1_.block("aa")("xv");
 
     // alpha-beta-beta
     dlamb3_abb("KxYZuVW") += cc3abb_bra("KxYZuVW");
     dlamb3_abb("KxYZuVW") += cc3abb_ket("KxYZuVW");
-    dlamb3_abb("KxYZuVW") -= cc1a_bra("Kxu") * Lambda2_.block("AAAA")("YZVW");
-    dlamb3_abb("KxYZuVW") -= cc1a_ket("Kxu") * Lambda2_.block("AAAA")("YZVW");
+    dlamb3_abb("KxYZuVW") -= cc1a("Kxu") * Lambda2_.block("AAAA")("YZVW");
     dlamb3_abb("KxYZuVW") -= Gamma1_.block("aa")("xu") * dlamb_bb("KYZVW");
-    dlamb3_abb("KxYZuVW") -= cc1b_bra("KYV") * Lambda2_.block("aAaA")("xZuW");
-    dlamb3_abb("KxYZuVW") -= cc1b_ket("KYV") * Lambda2_.block("aAaA")("xZuW");
+    dlamb3_abb("KxYZuVW") -= cc1b("KYV") * Lambda2_.block("aAaA")("xZuW");
     dlamb3_abb("KxYZuVW") -= Gamma1_.block("AA")("YV") * dlamb_ab("KxZuW");
-    dlamb3_abb("KxYZuVW") += cc1b_bra("KYW") * Lambda2_.block("aAaA")("xZuV");
-    dlamb3_abb("KxYZuVW") += cc1b_ket("KYW") * Lambda2_.block("aAaA")("xZuV");
+    dlamb3_abb("KxYZuVW") += cc1b("KYW") * Lambda2_.block("aAaA")("xZuV");
     dlamb3_abb("KxYZuVW") += Gamma1_.block("AA")("YW") * dlamb_ab("KxZuV");
-    dlamb3_abb("KxYZuVW") += cc1b_bra("KZV") * Lambda2_.block("aAaA")("xYuW");
-    dlamb3_abb("KxYZuVW") += cc1b_ket("KZV") * Lambda2_.block("aAaA")("xYuW");
+    dlamb3_abb("KxYZuVW") += cc1b("KZV") * Lambda2_.block("aAaA")("xYuW");
     dlamb3_abb("KxYZuVW") += Gamma1_.block("AA")("ZV") * dlamb_ab("KxYuW");
-    dlamb3_abb("KxYZuVW") -= cc1b_bra("KZW") * Lambda2_.block("aAaA")("xYuV");
-    dlamb3_abb("KxYZuVW") -= cc1b_ket("KZW") * Lambda2_.block("aAaA")("xYuV");
+    dlamb3_abb("KxYZuVW") -= cc1b("KZW") * Lambda2_.block("aAaA")("xYuV");
     dlamb3_abb("KxYZuVW") -= Gamma1_.block("AA")("ZW") * dlamb_ab("KxYuV");
-    dlamb3_abb("KxYZuVW") -= cc1a_bra("Kxu") * Gamma1_.block("AA")("YV") * Gamma1_.block("AA")("ZW");
-    dlamb3_abb("KxYZuVW") -= cc1a_ket("Kxu") * Gamma1_.block("AA")("YV") * Gamma1_.block("AA")("ZW");
-    dlamb3_abb("KxYZuVW") -= cc1b_bra("KYV") * Gamma1_.block("aa")("xu") * Gamma1_.block("AA")("ZW");
-    dlamb3_abb("KxYZuVW") -= cc1b_ket("KYV") * Gamma1_.block("aa")("xu") * Gamma1_.block("AA")("ZW");
-    dlamb3_abb("KxYZuVW") -= cc1b_bra("KZW") * Gamma1_.block("AA")("YV") * Gamma1_.block("aa")("xu");
-    dlamb3_abb("KxYZuVW") -= cc1b_ket("KZW") * Gamma1_.block("AA")("YV") * Gamma1_.block("aa")("xu");
-    dlamb3_abb("KxYZuVW") += cc1a_bra("Kxu") * Gamma1_.block("AA")("ZV") * Gamma1_.block("AA")("YW");
-    dlamb3_abb("KxYZuVW") += cc1a_ket("Kxu") * Gamma1_.block("AA")("ZV") * Gamma1_.block("AA")("YW");
-    dlamb3_abb("KxYZuVW") += cc1b_bra("KZV") * Gamma1_.block("aa")("xu") * Gamma1_.block("AA")("YW");
-    dlamb3_abb("KxYZuVW") += cc1b_ket("KZV") * Gamma1_.block("aa")("xu") * Gamma1_.block("AA")("YW");
-    dlamb3_abb("KxYZuVW") += cc1b_bra("KYW") * Gamma1_.block("AA")("ZV") * Gamma1_.block("aa")("xu");
-    dlamb3_abb("KxYZuVW") += cc1b_ket("KYW") * Gamma1_.block("AA")("ZV") * Gamma1_.block("aa")("xu");
+    dlamb3_abb("KxYZuVW") -= cc1a("Kxu") * Gamma1_.block("AA")("YV") * Gamma1_.block("AA")("ZW");
+    dlamb3_abb("KxYZuVW") -= cc1b("KYV") * Gamma1_.block("aa")("xu") * Gamma1_.block("AA")("ZW");
+    dlamb3_abb("KxYZuVW") -= cc1b("KZW") * Gamma1_.block("AA")("YV") * Gamma1_.block("aa")("xu");
+    dlamb3_abb("KxYZuVW") += cc1a("Kxu") * Gamma1_.block("AA")("ZV") * Gamma1_.block("AA")("YW");
+    dlamb3_abb("KxYZuVW") += cc1b("KZV") * Gamma1_.block("aa")("xu") * Gamma1_.block("AA")("YW");
+    dlamb3_abb("KxYZuVW") += cc1b("KYW") * Gamma1_.block("AA")("ZV") * Gamma1_.block("aa")("xu");
 }
 
 void DSRG_MRPT2::set_density() {

@@ -185,8 +185,7 @@ void DSRG_MRPT2::write_1rdm_spin_dependent() {
     // CI contribution
     auto tp = ambit::Tensor::build(ambit::CoreTensor, "temporal tensor", {na, na});
 
-    tp("uv") = 0.5 * x_ci("I") * cc1a_bra("Iuv");
-    tp("uv") += 0.5 * x_ci("J") * cc1a_ket("Juv");
+    tp("uv") = 0.5 * x_ci("I") * cc1a("Iuv");
 
     (tp).iterate([&](const std::vector<size_t>& i, double& value) {
         if (actv_mos_relative[i[0]].first == actv_mos_relative[i[1]].first) {
@@ -330,10 +329,8 @@ void DSRG_MRPT2::write_2rdm_spin_dependent() {
         ambit::Tensor::build(ambit::CoreTensor, "effective alpha gamma tensor", {na, na});
     auto ci_g1_b = ambit::Tensor::build(ambit::CoreTensor, "effective beta gamma tensor", {na, na});
 
-    ci_g1_a("uv") += 0.5 * x_ci("I") * cc1a_bra("Iuv");
-    ci_g1_a("uv") += 0.5 * x_ci("J") * cc1a_ket("Juv");
-    ci_g1_b("UV") += 0.5 * x_ci("I") * cc1b_bra("IUV");
-    ci_g1_b("UV") += 0.5 * x_ci("J") * cc1b_ket("JUV");
+    ci_g1_a("uv") += 0.5 * x_ci("I") * cc1a("Iuv");
+    ci_g1_b("UV") += 0.5 * x_ci("I") * cc1b("IUV");
 
     for (size_t i = 0, size_a = actv_all.size(); i < size_a; ++i) {
         auto v = actv_all[i];
