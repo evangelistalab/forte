@@ -1185,8 +1185,6 @@ std::shared_ptr<MOSpaceInfo> build_aset2_spaceinfo(psi::SharedWavefunction ref_w
         nmopi[0] -= frzvpi[0];
     }
 
-    outfile->Printf("\n   Debug: nmopi[0] is: %d \n ", nmopi[0]);
-
     std::shared_ptr<MOSpaceInfo> mo_space_info_fragment =
         make_mo_space_info_from_map(nmopi, point_group, mo_space_map_fragment, reorder);
 
