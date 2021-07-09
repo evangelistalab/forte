@@ -173,13 +173,17 @@ void CustomIntegrals::set_ints_from_asints(std::shared_ptr<ActiveSpaceIntegrals>
     // full_one_electron_integrals_a_ and full_one_electron_integrals_b_ values are not set !
     // If we want to build frozen Fock, OEI values need to be written to 
     // full_one_electron_integrals_a_ and full_one_electron_integrals_b_
-    // for (size_t p = 0; p < ncmo_; ++p) {
-    //    for (size_t q = 0; q < ncmo_; ++q) {
-    //        full_one_electron_integrals_a_[cmotomo_[p] * nmo_ + cmotomo_[q]] =
-    //        one_electron_integrals_a_[p * ncmo_ + q]; full_one_electron_integrals_b_[cmotomo_[p] *
-    //        nmo_ + cmotomo_[q]] = one_electron_integrals_b_[p * ncmo_ + q];
-    //    }
-    //}
+    for (size_t p = 0; p < ncmo_; ++p) {
+        for (size_t q = 0; q < ncmo_; ++q) {
+            full_one_electron_integrals_a_[cmotomo_[p] * nmo_ + cmotomo_[q]] =
+            one_electron_integrals_a_[p * ncmo_ + q]; 
+            full_one_electron_integrals_b_[cmotomo_[p] * nmo_ + cmotomo_[q]] = 
+            one_electron_integrals_b_[p * ncmo_ + q];
+        }
+    }
+    full_aphys_tei_aa_ = aphys_tei_aa_;
+    full_aphys_tei_ab_ = aphys_tei_ab_;
+    full_aphys_tei_bb_ = aphys_tei_bb_;
 }
 
 void CustomIntegrals::make_fock_matrix_from_value(std::shared_ptr<psi::Matrix> gamma_a,
