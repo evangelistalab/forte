@@ -11,7 +11,7 @@ def test_hf_callback():
     H 0.0 0.0 3.0
     symmetry c1
     """
-    input = solver_factory(molecule=xyz, basis='sto-3g')
+    input = input_factory(molecule=xyz, basis='sto-3g')
     state = input.state(charge=0, multiplicity=1)
 
     cbh = CallbackHandler()

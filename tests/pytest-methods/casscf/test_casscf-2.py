@@ -14,7 +14,7 @@ def test_casscf_2():
     symmetry c1
     """
 
-    input = solver_factory(molecule=xyz, basis='cc-pvdz')
+    input = input_factory(molecule=xyz, basis='cc-pvdz')
     state = input.state(charge=0, multiplicity=1)
     mo_spaces = input.mo_spaces(restricted_docc=[4], active=[2])
 

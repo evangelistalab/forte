@@ -17,7 +17,7 @@ def test_solver():
     """
 
     # create a molecular model
-    input = solver_factory(molecule=xyz, basis='cc-pVDZ')
+    input = input_factory(molecule=xyz, basis='cc-pVDZ')
 
     # create a HF object and run
     with pytest.raises(AssertionError):

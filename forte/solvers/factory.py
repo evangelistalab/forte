@@ -5,7 +5,7 @@ from forte.basis import Basis
 from forte.solvers.input import Input
 
 
-def solver_factory(molecule, basis, int_type=None, jkfit_aux_basis=None, rifit_aux_basis=None):
+def input_factory(molecule, basis, int_type=None, jkfit_aux_basis=None, rifit_aux_basis=None):
     """
     A factory to build an input solver object
 

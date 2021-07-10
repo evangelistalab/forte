@@ -14,7 +14,7 @@ def test_solver_2():
     """
 
     # create a molecular model
-    input = solver_factory(molecule=xyz, basis='cc-pVDZ')
+    input = input_factory(molecule=xyz, basis='cc-pVDZ')
 
     # specify the electronic state
     state = input.state(charge=0, multiplicity=1, sym='ag')

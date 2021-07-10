@@ -123,7 +123,7 @@ class HF(Solver):
             target = model.symmetry.irrep_label(self.state.irrep())
             actual = model.symmetry.irrep_label(sym)
             raise RuntimeError(
-                f'(HF) The HF equations converged on a state with the wrong symmetry ({actual}).'
+                f'(HF) The HF equations converged on a state with a symmetry ({actual}) different from the one requested ({target}).'
                 '\nPass the docc and socc options to converge to a solution with the correct symmetry.'
             )
 

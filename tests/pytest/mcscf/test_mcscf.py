@@ -10,7 +10,7 @@ def test_mcscf():
     H 0.0 0.0 1.0
     """
 
-    input = solver_factory(molecule=xyz, basis='cc-pVDZ', int_type='DF', jkfit_aux_basis='cc-pVDZ-RI')
+    input = input_factory(molecule=xyz, basis='cc-pVDZ', int_type='DF', jkfit_aux_basis='cc-pVDZ-RI')
     state = input.state(charge=0, multiplicity=1, sym='ag')
     mo_spaces = input.mo_spaces(active=[1, 0, 0, 0, 0, 1, 0, 0])
 
@@ -33,7 +33,7 @@ def test_mcscf_detci():
     H 0.0 0.0 1.0
     """
 
-    input = solver_factory(molecule=xyz, basis='cc-pVDZ', int_type='DF', jkfit_aux_basis='cc-pVDZ-RI')
+    input = input_factory(molecule=xyz, basis='cc-pVDZ', int_type='DF', jkfit_aux_basis='cc-pVDZ-RI')
     state = input.state(charge=0, multiplicity=1, sym='ag')
 
     # create a HF object
@@ -55,7 +55,7 @@ def test_mcscf_aci():
     H 0.0 0.0 1.0
     """
 
-    input = solver_factory(molecule=xyz, basis='cc-pVDZ', int_type='DF', jkfit_aux_basis='cc-pVDZ-RI')
+    input = input_factory(molecule=xyz, basis='cc-pVDZ', int_type='DF', jkfit_aux_basis='cc-pVDZ-RI')
     state = input.state(charge=0, multiplicity=1, sym='ag')
 
     # create a HF object

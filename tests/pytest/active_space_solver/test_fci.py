@@ -17,7 +17,7 @@ def test_fci():
     """
 
     # create a molecular model
-    input = solver_factory(molecule=xyz, basis='cc-pVDZ')
+    input = input_factory(molecule=xyz, basis='cc-pVDZ')
 
     # specify the electronic state and the active orbitals
     state = input.state(charge=0, multiplicity=1, sym='ag')

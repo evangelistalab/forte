@@ -16,7 +16,7 @@ def test_casscf_7():
     C   0.000000   0.651229  -0.499559
     """
 
-    input = solver_factory(molecule=xyz, basis='3-21g')
+    input = input_factory(molecule=xyz, basis='3-21g')
     state = input.state(charge=0, multiplicity=1, sym='a1')
     mo_spaces = input.mo_spaces(restricted_docc=[6, 0, 1, 2], active=[0, 1, 1, 1])
 

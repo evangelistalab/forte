@@ -20,7 +20,7 @@ def test_uhf():
     basis = Basis('cc-pVDZ')
 
     # create a molecular model
-    input = solver_factory(molecule=mol, basis=basis)
+    input = input_factory(molecule=mol, basis=basis)
 
     # specify the electronic state
     state = input.state(charge=0, multiplicity=3, sym='b1')
@@ -46,7 +46,7 @@ def test_uhf_wrong_sym():
     basis = Basis('cc-pVDZ')
 
     # create a molecular model
-    input = solver_factory(molecule=mol, basis=basis)
+    input = input_factory(molecule=mol, basis=basis)
 
     # specify the electronic state
     state = input.state(charge=0, multiplicity=3, sym='a1')

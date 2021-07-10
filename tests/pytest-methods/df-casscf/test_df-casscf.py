@@ -11,7 +11,7 @@ def test_df_casscf_1():
     H 1 1.5
     """
 
-    input = solver_factory(molecule=xyz, basis='cc-pVDZ', jkfit_aux_basis='cc-pVDZ-jkfit', int_type='DF')
+    input = input_factory(molecule=xyz, basis='cc-pVDZ', jkfit_aux_basis='cc-pVDZ-jkfit', int_type='DF')
     state = input.state(charge=0, multiplicity=1, sym='a1')
     mo_spaces = input.mo_spaces(frozen_docc=[1, 0, 0, 0], restricted_docc=[1, 0, 1, 1], active=[2, 0, 0, 0])
     # create a HF object
@@ -29,7 +29,7 @@ def test_df_casscf_1():
     H 1 1.6
     """
 
-    input = solver_factory(molecule=xyz, basis='cc-pVDZ', jkfit_aux_basis='cc-pVDZ-jkfit', int_type='DF')
+    input = input_factory(molecule=xyz, basis='cc-pVDZ', jkfit_aux_basis='cc-pVDZ-jkfit', int_type='DF')
     state = input.state(charge=0, multiplicity=1, sym='a1')
     mo_spaces = input.mo_spaces(frozen_docc=[1, 0, 0, 0], restricted_docc=[1, 0, 1, 1], active=[2, 0, 0, 0])
     # create a HF object

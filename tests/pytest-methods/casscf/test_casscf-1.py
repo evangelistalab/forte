@@ -16,7 +16,7 @@ def test_casscf_1():
     no_reorient
     """
 
-    input = solver_factory(molecule=xyz, basis='3-21g')
+    input = input_factory(molecule=xyz, basis='3-21g')
     state = input.state(charge=0, multiplicity=1)
     mo_spaces = input.mo_spaces(restricted_docc=[2], active=[2])
 
