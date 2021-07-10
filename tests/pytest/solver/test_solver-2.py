@@ -1,6 +1,6 @@
 import pytest
 
-from forte.solvers import solver_factory, HF, ActiveSpaceSolver, SpinAnalysis
+from forte.solvers import input_factory, HF, ActiveSpaceSolver, SpinAnalysis
 from forte.solvers.solver import Node
 
 

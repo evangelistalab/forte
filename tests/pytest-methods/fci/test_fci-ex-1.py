@@ -1,5 +1,5 @@
 import pytest
-from forte.solvers import solver_factory, HF, ActiveSpaceSolver
+from forte.solvers import input_factory, HF, ActiveSpaceSolver
 
 
 def test_fci_ex_1():

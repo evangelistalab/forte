@@ -2,7 +2,7 @@
 
 import pytest
 
-from forte.solvers import solver_factory, HF, SpinAnalysis
+from forte.solvers import input_factory, HF, SpinAnalysis
 
 
 def test_solver():

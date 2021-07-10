@@ -8,7 +8,7 @@ class Input(Node):
     This solver class is used as a starting point of computations.
 
     When initialized, the resulting object does not contain any information.
-    It is used by the function `solver_factory` which fills it with
+    It is used by the function `input_factory` which fills it with
     an object from a class derived from the Model class.
     """
     def __init__(self):

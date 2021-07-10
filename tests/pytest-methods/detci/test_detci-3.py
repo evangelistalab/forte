@@ -1,6 +1,6 @@
 import pytest
 import psi4
-from forte.solvers import solver_factory, HF, ActiveSpaceSolver
+from forte.solvers import input_factory, HF, ActiveSpaceSolver
 
 
 def test_detci_3():

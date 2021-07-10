@@ -1,4 +1,4 @@
-from forte.solvers import solver_factory, HF, CallbackHandler
+from forte.solvers import input_factory, HF, CallbackHandler
 
 
 def test_hf_callback():

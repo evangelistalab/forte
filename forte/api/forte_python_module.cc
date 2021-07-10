@@ -191,6 +191,8 @@ PYBIND11_MODULE(forte, m) {
     m.def("make_dsrg_spin_adapted", &make_dsrg_spin_adapted,
           "Make a DSRG pointer (spin-adapted implementation)");
     m.def("make_casscf", &make_casscf, "Make a CASSCF object");
+    m.def("make_mcscf_two_step", &make_mcscf_two_step, "state_weights_map"_a, "options"_a, "ints"_a,
+          "active_space_solver"_a, "Make a 2-step MCSCF object");
     m.def("test_lbfgs_rosenbrock", &test_lbfgs_rosenbrock, "Test L-BFGS on Rosenbrock function");
 
     export_ambit(m);
@@ -324,9 +326,6 @@ PYBIND11_MODULE(forte, m) {
     py::class_<DressedQuantity>(m, "DressedQuantity")
         .def("contract_with_rdms", &DressedQuantity::contract_with_rdms, "reference"_a,
              "Contract densities with quantity");
-
-    m.def("make_mcscf_two_step", &make_mcscf_two_step, "state_weights_map"_a, "options"_a, "ints"_a,
-          "active_space_solver"_a, "Make a 2-step MCSCF object");
 }
 
 } // namespace forte

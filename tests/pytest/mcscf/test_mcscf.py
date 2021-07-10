@@ -1,5 +1,5 @@
 import pytest
-from forte.solvers import HF, ActiveSpaceSolver, MCSCF, solver_factory
+from forte.solvers import HF, ActiveSpaceSolver, MCSCF, input_factory
 
 
 def test_mcscf():

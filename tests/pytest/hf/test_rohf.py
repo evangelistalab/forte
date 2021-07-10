@@ -1,7 +1,7 @@
 import pytest
 
 from forte import Molecule, Basis
-from forte.solvers import solver_factory, HF
+from forte.solvers import input_factory, HF
 
 
 def test_rohf():
