@@ -1,6 +1,6 @@
 import pytest
 import psi4
-from forte.solvers import solver_factory, HF, ActiveSpaceSolver
+from forte.solvers import input_factory, HF, ActiveSpaceSolver
 
 
 def test_detci_3():
@@ -27,11 +27,11 @@ def test_detci_3():
     C  1.117962 -1.474815  0.000000
     C -1.117962  1.474815  0.000000
     """
-    input = solver_factory(
+    input = input_factory(
         molecule=butadiene,
         basis='def2-svp',
-        scf_aux_basis='def2-universal-jkfit',
-        corr_aux_basis='def2-universal-jkfit',
+        jkfit_aux_basis='def2-universal-jkfit',
+        rifit_aux_basis='def2-universal-jkfit',
         int_type='df'
     )
 

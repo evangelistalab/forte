@@ -2,7 +2,7 @@
 
 import pytest
 
-from forte.solvers import solver_factory, HF, ActiveSpaceSolver
+from forte.solvers import input_factory, HF, ActiveSpaceSolver
 
 
 def test_fci():
@@ -17,7 +17,7 @@ def test_fci():
     """
 
     # create a molecular model
-    input = solver_factory(molecule=xyz, basis='cc-pVDZ')
+    input = input_factory(molecule=xyz, basis='cc-pVDZ')
 
     # specify the electronic state and the active orbitals
     state = input.state(charge=0, multiplicity=1, sym='ag')

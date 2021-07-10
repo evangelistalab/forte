@@ -2,8 +2,10 @@ from forte.core import flog
 
 from forte import forte_options
 from forte import ForteOptions
-from forte.solvers.solver import Feature, Solver
-from forte.solvers.callback_handler import CallbackHandler
+
+from forte.solvers.feature import Feature
+from forte.solvers.solver import Solver
+
 from forte.forte import perform_spin_analysis
 
 

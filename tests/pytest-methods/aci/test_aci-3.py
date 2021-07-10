@@ -1,7 +1,7 @@
 import pytest
 import psi4
 
-from forte.solvers import solver_factory, HF, ActiveSpaceSolver, SpinAnalysis
+from forte.solvers import input_factory, HF, ActiveSpaceSolver, SpinAnalysis
 
 
 def test_aci_3():
@@ -19,7 +19,7 @@ def test_aci_3():
     H  0.1 -0.3 1.0
     H -0.1  0.5 1.0
     """
-    input = solver_factory(molecule=xyz, basis='cc-pVDZ')
+    input = input_factory(molecule=xyz, basis='cc-pVDZ')
     state = input.state(charge=0, multiplicity=1, sym='a')
     hf = HF(input, state=state, e_convergence=1.0e-12, d_convergence=1.0e-6)
     options = {

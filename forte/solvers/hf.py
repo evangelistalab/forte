@@ -1,6 +1,8 @@
 from forte.core import flog
 
-from forte.solvers.solver import Feature, Solver
+from forte.solvers.feature import Feature
+from forte.solvers.solver import Solver
+
 from forte.model import MolecularModel
 from forte.forte import SCFInfo
 
@@ -121,7 +123,7 @@ class HF(Solver):
             target = model.symmetry.irrep_label(self.state.irrep())
             actual = model.symmetry.irrep_label(sym)
             raise RuntimeError(
-                f'(HF) The HF equations converged on a state with the wrong symmetry ({actual}).'
+                f'(HF) The HF equations converged on a state with a symmetry ({actual}) different from the one requested ({target}).'
                 '\nPass the docc and socc options to converge to a solution with the correct symmetry.'
             )
 
@@ -171,8 +173,8 @@ class HF(Solver):
         if self.socc is not None:
             options['SOCC'] = self.socc
 
-        if self.data.model.scf_aux_basis is not None:
-            options['DF_BASIS_SCF'] = self.data.model.scf_aux_basis
+        if self.data.model.jkfit_aux_basis is not None:
+            options['DF_BASIS_SCF'] = self.data.model.jkfit_aux_basis
 
         full_options = {**options, **self._options}
 

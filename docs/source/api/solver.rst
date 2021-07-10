@@ -7,6 +7,6 @@ Solver class
    :undoc-members:
    :show-inheritance:
 
-.. autoclass:: forte.solvers.input.InputSolver
+.. autoclass:: forte.solvers.input.Input
    :members:
    :special-members: __init__

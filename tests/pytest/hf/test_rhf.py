@@ -1,7 +1,7 @@
 import pytest
 
 from forte import Molecule, Basis
-from forte.solvers import solver_factory, HF
+from forte.solvers import input_factory, HF
 
 
 def test_rhf():
@@ -16,7 +16,7 @@ def test_rhf():
     """
 
     # create a molecular model
-    input = solver_factory(molecule=xyz, basis='cc-pVDZ')
+    input = input_factory(molecule=xyz, basis='cc-pVDZ')
 
     # specify the electronic state
     state = input.state(charge=0, multiplicity=1, sym='ag')
@@ -44,7 +44,7 @@ def test_rhf_docc():
     basis = Basis('cc-pVDZ')
 
     # create a molecular model
-    input = solver_factory(molecule=mol, basis=basis)
+    input = input_factory(molecule=mol, basis=basis)
 
     # specify the electronic state
     state = input.state(charge=0, multiplicity=1, sym='a1')

@@ -1,6 +1,6 @@
 import pytest
 
-from forte.solvers import solver_factory, HF, ActiveSpaceSolver
+from forte.solvers import input_factory, HF, ActiveSpaceSolver
 
 
 def test_aci_1():
@@ -14,7 +14,7 @@ def test_aci_1():
     Li
     Li 1 2.0
     """
-    input = solver_factory(molecule=xyz, basis='DZ')
+    input = input_factory(molecule=xyz, basis='DZ')
     state = input.state(charge=0, multiplicity=1, sym='ag')
     hf = HF(input, state=state)
     options = {

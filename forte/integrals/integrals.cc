@@ -119,10 +119,6 @@ void ForteIntegrals::read_information() {
     num_tei_ = INDEX4(nmo_ - 1, nmo_ - 1, nmo_ - 1, nmo_ - 1) + 1;
     num_aptei_ = nmo_ * nmo_ * nmo_ * nmo_;
     num_threads_ = omp_get_max_threads();
-
-    // skip integral allocation and transformation if doing CASSCF
-    auto job_type = options_->get_str("JOB_TYPE");
-    skip_build_ = (job_type == "MCSCF_TWO_STEP") and (integral_type_ != Custom);
 }
 
 void ForteIntegrals::allocate() {
@@ -417,8 +413,6 @@ void ForteIntegrals::print_info() {
 }
 
 void ForteIntegrals::print_ints() {
-    //    Ca_->print();
-    //    Cb_->print();
     outfile->Printf("\n  nmo_ = %zu", nmo_);
 
     outfile->Printf("\n  Nuclear repulsion energy: %20.12f", nucrep_);

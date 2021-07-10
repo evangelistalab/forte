@@ -57,7 +57,6 @@ ActiveSpaceSolver::ActiveSpaceSolver(const std::string& method,
                                      std::shared_ptr<ForteOptions> options)
     : method_(method), state_nroots_map_(state_nroots_map), scf_info_(scf_info),
       mo_space_info_(mo_space_info), as_ints_(as_ints), options_(options) {
-
     print_options();
 
     ms_avg_ = options->get_bool("SPIN_AVG_DENSITY");
@@ -68,6 +67,12 @@ ActiveSpaceSolver::ActiveSpaceSolver(const std::string& method,
 }
 
 void ActiveSpaceSolver::set_print(int level) { print_ = level; }
+
+std::string ActiveSpaceSolver::method() const { return method_; };
+
+std::shared_ptr<MOSpaceInfo> ActiveSpaceSolver::mo_space_info() const { return mo_space_info_; }
+
+std::shared_ptr<SCFInfo> ActiveSpaceSolver::scf_info() const { return scf_info_; }
 
 const std::map<StateInfo, std::vector<double>>& ActiveSpaceSolver::compute_energy() {
     state_energies_map_.clear();
@@ -301,11 +306,11 @@ void ActiveSpaceSolver::print_options() {
     psi::outfile->Printf("\n    %s\n", dash.c_str());
 }
 
-std::unique_ptr<ActiveSpaceSolver> make_active_space_solver(
+std::shared_ptr<ActiveSpaceSolver> make_active_space_solver(
     const std::string& method, const std::map<StateInfo, size_t>& state_nroots_map,
     std::shared_ptr<SCFInfo> scf_info, std::shared_ptr<MOSpaceInfo> mo_space_info,
     std::shared_ptr<ActiveSpaceIntegrals> as_ints, std::shared_ptr<ForteOptions> options) {
-    return std::make_unique<ActiveSpaceSolver>(method, state_nroots_map, scf_info, mo_space_info,
+    return std::make_shared<ActiveSpaceSolver>(method, state_nroots_map, scf_info, mo_space_info,
                                                as_ints, options);
 }
 
