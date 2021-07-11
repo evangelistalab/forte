@@ -1,5 +1,8 @@
 import forte
 
+# The "regular" ASET2 computation
+# ASET2-[DSRG-MRPT2] with CASCI density and conventional integrals
+
 refmcscf = -22.573188924054
 refaset2 = -22.599970294828
 

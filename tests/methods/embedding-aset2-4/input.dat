@@ -1,5 +1,7 @@
 import forte
 
+# ASET2-[MR-LDSRG2] with RHF reference
+
 refaset2 = -9.083859821406
 
 molecule {

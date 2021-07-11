@@ -1,5 +1,7 @@
 import forte
 
+# ASET2-[DSRG-MRPT3] with CASSCF optimized density
+
 refmcscf = -9.069018284886
 refaset2 = -9.088090939391
 

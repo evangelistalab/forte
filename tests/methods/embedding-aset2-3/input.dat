@@ -1,5 +1,7 @@
 import forte
 
+# ASET2-[FCI] with conventional integrals
+
 refaset2 = -9.089187884511
 
 molecule {
