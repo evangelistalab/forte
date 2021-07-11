@@ -309,11 +309,11 @@ void ForteIntegrals::set_oei(size_t p, size_t q, double value, bool alpha) {
 
 void ForteIntegrals::set_oei_from_asints(std::shared_ptr<ActiveSpaceIntegrals> as_ints,
                                          bool alpha) {
-    std::vector<double>& p_oei = alpha ? one_electron_integrals_a_ : one_electron_integrals_b_;
-    for (size_t p = 0; p < aptei_idx_; ++p) {
-        for (size_t q = 0; q < aptei_idx_; ++q) {
-            p_oei[p * aptei_idx_ + q] = alpha ? as_ints->oei_a(p, q) : as_ints->oei_b(p, q);
-        }
+    if (alpha) {
+        one_electron_integrals_a_ = as_ints->oei_a_vector();
+    }
+    else {
+        one_electron_integrals_b_ = as_ints->oei_b_vector();
     }
 }
 
@@ -550,8 +550,7 @@ void ForteIntegrals::set_ints_from_asints(std::shared_ptr<ActiveSpaceIntegrals> 
     _undefined_function("set_ints_from_asints");
 }
 
-void ForteIntegrals::set_tei_from_asints(std::shared_ptr<ActiveSpaceIntegrals> as_ints, bool alpha1,
-                                         bool alpha2) {
+void ForteIntegrals::set_tei_from_asints(std::shared_ptr<ActiveSpaceIntegrals> as_ints) {
     _undefined_function("set_tei_from_asints");
 }
 

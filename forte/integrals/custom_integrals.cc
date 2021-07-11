@@ -142,23 +142,10 @@ void CustomIntegrals::set_tei(size_t p, size_t q, size_t r, size_t s, double val
         aphys_tei_bb_[index] = value;
 }
 
-void CustomIntegrals::set_tei_from_asints(std::shared_ptr<ActiveSpaceIntegrals> as_ints,
-                                          bool alpha1, bool alpha2) {
-    for (size_t p = 0; p < ncmo_; ++p) {
-        for (size_t q = 0; q < ncmo_; ++q) {
-            for (size_t r = 0; r < ncmo_; ++r) {
-                for (size_t s = 0; s < ncmo_; ++s) {
-                    size_t index = aptei_index(p, q, r, s);
-                    if (alpha1 == true and alpha2 == true)
-                        aphys_tei_aa_[index] = as_ints->tei_aa(p, q, r, s);
-                    if (alpha1 == true and alpha2 == false)
-                        aphys_tei_ab_[index] = as_ints->tei_ab(p, q, r, s);
-                    if (alpha1 == false and alpha2 == false)
-                        aphys_tei_bb_[index] = as_ints->tei_bb(p, q, r, s);
-                }
-            }
-        }
-    }
+void CustomIntegrals::set_tei_from_asints(std::shared_ptr<ActiveSpaceIntegrals> as_ints) {
+    aphys_tei_aa_ = as_ints->tei_aa_vector();
+    aphys_tei_ab_ = as_ints->tei_ab_vector();
+    aphys_tei_bb_ = as_ints->tei_bb_vector();
 }
 
 void CustomIntegrals::set_ints_from_asints(std::shared_ptr<ActiveSpaceIntegrals> as_ints) {
@@ -166,13 +153,8 @@ void CustomIntegrals::set_ints_from_asints(std::shared_ptr<ActiveSpaceIntegrals>
     set_oei_from_asints(as_ints, true);
     set_oei_from_asints(as_ints, false);
     outfile->Printf("\n  Updating two-electron integrals from Hbar");
-    set_tei_from_asints(as_ints, true, true);
-    set_tei_from_asints(as_ints, true, false);
-    set_tei_from_asints(as_ints, false, false);
-    // For future reference:
-    // full_one_electron_integrals_a_ and full_one_electron_integrals_b_ values are not set !
-    // If we want to build frozen Fock, OEI values need to be written to 
-    // full_one_electron_integrals_a_ and full_one_electron_integrals_b_
+    set_tei_from_asints(as_ints);
+
     for (size_t p = 0; p < ncmo_; ++p) {
         for (size_t q = 0; q < ncmo_; ++q) {
             full_one_electron_integrals_a_[cmotomo_[p] * nmo_ + cmotomo_[q]] =

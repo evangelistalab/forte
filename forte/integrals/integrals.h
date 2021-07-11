@@ -334,8 +334,7 @@ class ForteIntegrals {
     virtual void set_ints_from_asints(std::shared_ptr<ActiveSpaceIntegrals> as_ints);
 
     /// Set the value of the two-electron integrals from an active_space_integral object
-    virtual void set_tei_from_asints(std::shared_ptr<ActiveSpaceIntegrals> as_ints, bool alpha1,
-                                     bool alpha2);
+    virtual void set_tei_from_asints(std::shared_ptr<ActiveSpaceIntegrals> as_ints);
 
     /// Rotate the MO coefficients, update psi::Wavefunction, and re-transform integrals
     /// @param Ua the alpha unitary transformation matrix

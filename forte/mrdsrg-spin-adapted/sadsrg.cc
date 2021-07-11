@@ -82,7 +82,7 @@ SADSRG::~SADSRG() {
 void SADSRG::startup() {
     print_h2("Multireference Driven Similarity Renormalization Group");
 
-    // build fock using ForteIntegrals and clean up JK
+    // build Fock and cleanup JK in ForteIntegrals
     build_fock_from_ints();
 
     // read options
@@ -331,7 +331,6 @@ void SADSRG::init_fock() {
     local_timer lt;
     print_contents("Filling Fock matrix from ForteIntegrals");
     Fock_ = BTF_->build(tensor_type_, "Fock", {"gg"});
-
     Fock_.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>&, double& value) {
         value = ints_->get_fock_a(i[0], i[1]);
     });
@@ -360,6 +359,9 @@ double SADSRG::compute_reference_energy_from_ints() {
     V.block("aaaa")("prqs") =
         ints_->aptei_ab_block(actv_mos_, actv_mos_, actv_mos_, actv_mos_)("prqs");
 
+    // Adding scalar because when using custom integrals (A) in ASET, 
+    // we need to add NRE and frozen energy to the final results
+    // This scalar will be zero except during embedding
     Eref_ = compute_reference_energy(H, Fock_, V) + ints_->scalar();
     psi::Process::environment.globals["DSRG REFERENCE ENERGY"] = Eref_;
     return Eref_;

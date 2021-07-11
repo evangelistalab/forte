@@ -44,8 +44,6 @@
 
 #include "conventional_integrals.h"
 
-#include "integrals/active_space_integrals.h"
-
 #define ID(x) integral_transform->DPD_ID(x)
 
 using namespace psi;

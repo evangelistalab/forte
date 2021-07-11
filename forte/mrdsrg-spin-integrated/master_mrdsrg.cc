@@ -1,3 +1,4 @@
+#include <algorithm>
 #include <numeric>
 
 #include "psi4/libpsi4util/PsiOutStream.h"
@@ -249,15 +250,13 @@ void MASTER_DSRG::fill_density() {
 void MASTER_DSRG::init_fock() {
     outfile->Printf("\n    Filling Fock matrix from ForteIntegrals ......... ");
     Fock_ = BTF_->build(tensor_type_, "Fock", spin_cases({"gg"}));
-
-    Fock_.iterate(
-        [&](const std::vector<size_t>& i, const std::vector<SpinType>& spin, double& value) {
-            if (spin[0] == AlphaSpin) {
-                value = ints_->get_fock_a(i[0], i[1]);
-            } else {
-                value = ints_->get_fock_b(i[0], i[1]);
-            }
-        });
+    Fock_.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>& spin, double& value) {
+        if (spin[0] == AlphaSpin) {
+            value = ints_->get_fock_a(i[0], i[1]);
+        } else {
+            value = ints_->get_fock_b(i[0], i[1]);
+        }
+    });
     fill_Fdiag(Fock_, Fdiag_a_, Fdiag_b_);
     outfile->Printf("Done");
 }
@@ -375,6 +374,9 @@ double MASTER_DSRG::compute_reference_energy_from_ints(std::shared_ptr<ForteInte
     F.block("CC")("pq") += Vtemp("prqs") * Gamma1_.block("AA")("rs");
     F.block("AA")("pq") += Vtemp("rpsq") * I2("rs");
 
+    // Adding scalar because when using custom integrals (A) in ASET,
+    // we need to add NRE and frozen energy to the final results
+    // This scalar will be zero except during embedding
     return compute_reference_energy(H, F, V) + ints->scalar();
 }
 
