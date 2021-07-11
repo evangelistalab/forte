@@ -84,6 +84,13 @@ void SA_MRDSRG::startup() {
     // link F_ with Fock_ of SADSRG
     F_ = Fock_;
 
+    // bypass the check when doing ASET (B)
+    bool semi_skip = foptions_->get_bool("EMBEDDING_DISABLE_SEMI_CHECK");
+    bool embedding = foptions_->get_bool("EMBEDDING");
+    if (embedding && semi_skip) {
+        semi_canonical_ = true;
+    }
+
     // test semi-canonical
     if (!semi_canonical_) {
         outfile->Printf("\n  Orbital invariant formalism will be employed for MR-DSRG.");

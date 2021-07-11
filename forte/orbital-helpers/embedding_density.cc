@@ -230,16 +230,24 @@ RDMs EMBEDDING_DENSITY::cas_rdms(std::shared_ptr<MOSpaceInfo> mo_space_info_acti
 
     size_t v = rdoccpi_in[0];
 
+    auto& D2aa_data = D2aa.data();
+    auto& D2ab_data = D2ab.data();
+    auto& D2bb_data = D2bb.data();
+
+    auto g2aa_data = ref_rdms.g2aa().data();
+    auto g2bb_data = ref_rdms.g2bb().data();
+    auto g2ab_data = ref_rdms.g2ab().data();
+
     for (auto p : mos_actv_in) {
         for (auto q : mos_actv_in) {
             for (auto r : mos_actv_in) {
                 for (auto s : mos_actv_in) {
-                    D2aa.data()[index_exp(na, p + v, q + v, r + v, s + v)] =
-                        ref_rdms.g2aa().data()[index_exp(na_in, p, q, r, s)];
-                    D2bb.data()[index_exp(na, p + v, q + v, r + v, s + v)] =
-                        ref_rdms.g2bb().data()[index_exp(na_in, p, q, r, s)];
-                    D2ab.data()[index_exp(na, p + v, q + v, r + v, s + v)] =
-                        ref_rdms.g2ab().data()[index_exp(na_in, p, q, r, s)];
+                    D2aa_data[index_exp(na, p + v, q + v, r + v, s + v)] =
+                        g2aa_data[index_exp(na_in, p, q, r, s)];
+                    D2bb_data[index_exp(na, p + v, q + v, r + v, s + v)] =
+                        g2bb_data[index_exp(na_in, p, q, r, s)];
+                    D2ab_data[index_exp(na, p + v, q + v, r + v, s + v)] =
+                        g2ab_data[index_exp(na_in, p, q, r, s)];
                 }
             }
         }
