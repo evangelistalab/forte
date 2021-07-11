@@ -263,10 +263,6 @@ class ForteIntegrals {
     /// @param Db The beta 1RDM (nactv x nactv, no symmetry) from RDMs class
     virtual void make_fock_matrix(ambit::Tensor Da, ambit::Tensor Db) = 0;
 
-    /// Make the generalized Fock matrix directly from integral values, avoid using JK builder
-    virtual void make_fock_matrix_from_value(std::shared_ptr<psi::Matrix> gamma_a,
-                                             std::shared_ptr<psi::Matrix> gamma_b);
-
     /// Make the closed-shell Fock matrix in MO basis (include frozen orbitals)
     /// @param dim_start Dimension for the starting index (per irrep) of closed-shell orbitals
     /// @param dim_end Dimension for the ending index (per irrep) of closed-shell orbitals

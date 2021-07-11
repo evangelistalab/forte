@@ -555,11 +555,6 @@ void ForteIntegrals::set_tei_from_asints(std::shared_ptr<ActiveSpaceIntegrals> a
     _undefined_function("set_tei_from_asints");
 }
 
-void ForteIntegrals::make_fock_matrix_from_value(std::shared_ptr<psi::Matrix> gamma_a,
-                                                 std::shared_ptr<psi::Matrix> gamma_b) {
-    _undefined_function("make_fock_matrix_from_value");
-}
-
 std::vector<std::shared_ptr<psi::Matrix>> ForteIntegrals::mo_dipole_ints(const bool&, const bool&) {
     std::vector<std::shared_ptr<psi::Matrix>> mo_dipole_ints_;
     _undefined_function("compute_MOdipole_ints");

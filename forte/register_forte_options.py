@@ -245,9 +245,6 @@ def register_embedding_options(options):
         "EMBEDDING_ASET2_MF_REF", True,
         "Whether we compute an ASET(mf) for reference when doing ASET(2).")
     options.add_bool(
-        "EMBEDDING_JKFOCK", True,
-        "(Internal option) Whether or not we use the make_fock_matrix in ForteIntegrals.")
-    options.add_bool(
         "FRAG_DO_FCI", False,
         "(For benchmarking) Perform a FCI computation on the fragment (A), override other settings.")
     options.add_bool(

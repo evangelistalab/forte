@@ -83,9 +83,7 @@ void SADSRG::startup() {
     print_h2("Multireference Driven Similarity Renormalization Group");
 
     // build fock using ForteIntegrals and clean up JK
-    if (foptions_->get_bool("EMBEDDING_JKFOCK")) {
-        build_fock_from_ints();
-    }
+    build_fock_from_ints();
 
     // read options
     read_options();
@@ -334,13 +332,8 @@ void SADSRG::init_fock() {
     print_contents("Filling Fock matrix from ForteIntegrals");
     Fock_ = BTF_->build(tensor_type_, "Fock", {"gg"});
 
-    bool JKSafe = foptions_->get_bool("EMBEDDING_JKFOCK");
-
-    if (!JKSafe) {
-        build_custom_fock();
-    }
     Fock_.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>&, double& value) {
-        value = ints_->get_fock_a(i[0], i[1], JKSafe);
+        value = ints_->get_fock_a(i[0], i[1]);
     });
     fill_Fdiag(Fock_, Fdiag_);
     print_done(lt.get());
@@ -355,21 +348,6 @@ void SADSRG::fill_Fdiag(BlockedTensor& F, std::vector<double>& Fa) {
             Fa[i[0]] = value;
         }
     });
-}
-
-void SADSRG::build_custom_fock() {
-    size_t ncmo = mo_space_info_->size("CORRELATED");
-
-    auto D1a = std::make_shared<psi::Matrix>("D1a", ncmo, ncmo);
-    for (size_t m = 0, ncore = core_mos_.size(); m < ncore; m++) {
-        D1a->set(core_mos_[m], core_mos_[m], 1.0);
-    }
-
-    L1_.block("aa").citerate([&](const std::vector<size_t>& i, const double& value) {
-        D1a->set(actv_mos_[i[0]], actv_mos_[i[1]], value);
-    });
-
-    ints_->make_fock_matrix_from_value(D1a, D1a);
 }
 
 double SADSRG::compute_reference_energy_from_ints() {

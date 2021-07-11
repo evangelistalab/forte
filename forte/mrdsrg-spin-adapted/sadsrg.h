@@ -229,8 +229,6 @@ class SADSRG : public DynamicCorrelationSolver {
 
     /// Initialize Fock matrix
     void init_fock();
-    /// Initialize Downfolded Fock matrix
-    void build_custom_fock();
     /// Build Fock matrix from ForteIntegrals
     void build_fock_from_ints();
     /// Fill in diagonal elements of Fock matrix to Fdiag

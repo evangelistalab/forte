@@ -47,9 +47,7 @@ void MASTER_DSRG::startup() {
     print_h2("Multireference Driven Similarity Renormalization Group");
 
     // build fock using ForteIntegrals and clean up JK
-    if (foptions_->get_bool("EMBEDDING_JKFOCK")) {
-        build_fock_from_ints(ints_);
-    }
+    build_fock_from_ints(ints_);
 
     // read options
     read_options();
@@ -252,43 +250,16 @@ void MASTER_DSRG::init_fock() {
     outfile->Printf("\n    Filling Fock matrix from ForteIntegrals ......... ");
     Fock_ = BTF_->build(tensor_type_, "Fock", spin_cases({"gg"}));
 
-    bool JKSafe = foptions_->get_bool("EMBEDDING_JKFOCK");
-
-    if (!JKSafe) {
-        build_custom_fock();
-    }
-
-
     Fock_.iterate(
         [&](const std::vector<size_t>& i, const std::vector<SpinType>& spin, double& value) {
             if (spin[0] == AlphaSpin) {
-                value = ints_->get_fock_a(i[0], i[1], JKSafe);
+                value = ints_->get_fock_a(i[0], i[1]);
             } else {
-                value = ints_->get_fock_b(i[0], i[1], JKSafe);
+                value = ints_->get_fock_b(i[0], i[1]);
             }
         });
     fill_Fdiag(Fock_, Fdiag_a_, Fdiag_b_);
     outfile->Printf("Done");
-}
-
-void MASTER_DSRG::build_custom_fock() {
-    size_t ncmo = mo_space_info_->size("CORRELATED");
-
-    auto D1a = std::make_shared<psi::Matrix>("D1a", ncmo, ncmo);
-    auto D1b = std::make_shared<psi::Matrix>("D1b", ncmo, ncmo);
-    for (size_t m = 0, ncore = core_mos_.size(); m < ncore; m++) {
-        D1a->set(core_mos_[m], core_mos_[m], 1.0);
-        D1b->set(core_mos_[m], core_mos_[m], 1.0);
-    }
-
-    Gamma1_.block("aa").citerate([&](const std::vector<size_t>& i, const double& value) {
-        D1a->set(actv_mos_[i[0]], actv_mos_[i[1]], value);
-    });
-    Gamma1_.block("AA").citerate([&](const std::vector<size_t>& i, const double& value) {
-        D1b->set(actv_mos_[i[0]], actv_mos_[i[1]], value);
-    });
-
-    ints_->make_fock_matrix_from_value(D1a, D1b);
 }
 
 void MASTER_DSRG::fill_Fdiag(BlockedTensor& F, std::vector<double>& Fa, std::vector<double>& Fb) {

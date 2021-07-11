@@ -155,9 +155,6 @@ def aset2_driver(state_weights_map, scf_info, ref_wfn, mo_space_info, options):
 
     psi4.core.print_out("\n    Integral dressing successed !  ")
 
-    # Use make_fock_matrix_from_value instead of make_fock_matrix in ForteIntegrals
-    options.set_bool('EMBEDDING_JKFOCK', True)
-
     # Get the number of doccs we should set for the fragment compution   
     docc_B = mo_space_info.dimension("RESTRICTED_DOCC")
 
