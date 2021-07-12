@@ -46,8 +46,8 @@ std::shared_ptr<MOSpaceInfo> make_embedding(psi::SharedWavefunction ref_wfn,
                                             std::shared_ptr<MOSpaceInfo> mo_space_info);
 
 std::shared_ptr<MOSpaceInfo> build_aset2_spaceinfo(psi::SharedWavefunction ref_wfn,
-                                                  std::shared_ptr<MOSpaceInfo> mo_space_info,
-                                                  std::shared_ptr<ForteOptions> options);
+                                                   std::shared_ptr<MOSpaceInfo> mo_space_info,
+                                                   std::shared_ptr<ForteOptions> options);
 } // namespace forte
 
 #endif // _orbital_embedding_h_
