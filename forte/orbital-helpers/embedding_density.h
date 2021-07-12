@@ -31,7 +31,6 @@ namespace forte {
 *
 *     emb = EMBEDDING_DENSITY(state_weights_map, scf_info, mo_space_info_AB, ints, options)
 *     rdms = emb.cas_rdms(mo_space_info_A)
-
 */
 
 class EMBEDDING_DENSITY {
