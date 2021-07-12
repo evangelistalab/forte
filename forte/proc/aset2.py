@@ -31,6 +31,7 @@ import forte
 import numpy as np
 from forte.proc.dsrg import ProcedureDSRG
 
+
 def aset2_driver(state_weights_map, scf_info, ref_wfn, mo_space_info, options):
     """
     Driver to run an systematic Active Space Embedding Theory (ASET) computation.
