@@ -126,7 +126,6 @@ def aset2_driver(state_weights_map, scf_info, ref_wfn, mo_space_info, options):
     options.set_bool('TRUNCATE_MO_SPACE', True)
     mo_space_info_truncated = forte.build_aset2_spaceinfo(ref_wfn, mo_space_info, options)
     # Build custom integrals for dressed H
-    #ints_f = forte.make_ints_from_psi4(ref_wfn, options, mo_space_info_active)
     nmo = mo_space_info_truncated.size("ALL")
     scalar = 0.0 
     hcore = np.zeros((nmo, nmo))
