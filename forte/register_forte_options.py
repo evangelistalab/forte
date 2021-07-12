@@ -628,9 +628,9 @@ def register_integral_options(options):
     options.add_str(
         "INT_TYPE_ENV", "CONVENTIONAL",
         ["CONVENTIONAL", "CHOLESKY", "DF", "DISKDF"],
-        "The type of molecular integrals used in the embedding environment (B)"
-        "- CONVENTIONAL Conventional four-index two-electron integrals"
-        "- DF Density fitted two-electron integrals"
+        "The type of molecular integrals used in the embedding environment (B)\n"
+        "- CONVENTIONAL Conventional four-index two-electron integrals\n"
+        "- DF Density fitted two-electron integrals\n"
         "- CHOLESKY Cholesky decomposed two-electron integrals")
 
     options.add_str(
