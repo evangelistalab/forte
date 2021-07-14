@@ -201,16 +201,22 @@ RDMs EMBEDDING_DENSITY::cas_rdms(std::shared_ptr<MOSpaceInfo> mo_space_info_acti
     auto D1a = ambit::Tensor::build(ambit::CoreTensor, "D1a", std::vector<size_t>(2, na));
     auto D1b = ambit::Tensor::build(ambit::CoreTensor, "D1b", std::vector<size_t>(2, na));
 
+    auto& D1a_data = D1a.data();
+    auto& D1b_data = D1b.data();
+
+    auto g1a_data = ref_rdms.g1a().data();
+    auto g1b_data = ref_rdms.g1b().data();
+
     for (auto i : mos_oa) {
         for (auto j : mos_oa) {
             if (i >= rdoccpi_in[0] && j >= rdoccpi_in[0]) {
                 size_t ip = i - rdoccpi_in[0];
                 size_t jp = j - rdoccpi_in[0];
-                D1a.data()[i * na + j] = ref_rdms.g1a().data()[ip * na_in + jp];
-                D1b.data()[i * na + j] = ref_rdms.g1b().data()[ip * na_in + jp];
+                D1a_data[i * na + j] = g1a_data[ip * na_in + jp];
+                D1b_data[i * na + j] = g1b_data[ip * na_in + jp];
             } else {
-                D1a.data()[i * na + i] = 1.0;
-                D1b.data()[i * na + i] = 1.0;
+                D1a_data[i * na + i] = 1.0;
+                D1b_data[i * na + i] = 1.0;
             }
         }
     }

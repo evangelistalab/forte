@@ -894,23 +894,16 @@ std::shared_ptr<MOSpaceInfo> make_embedding(psi::SharedWavefunction ref_wfn,
                                               adj_sys_docc); // Add the additional frozen core to Bo
         mo_space_map["FROZEN_DOCC"] = {freeze_o};
 
-        size_t ro = static_cast<size_t>(num_Ao - adj_sys_docc);
-        if (options->get_str("EMBEDDING_REFERENCE") == "HF") {
-            ro -= diff;
-        }
+        bool hf_ref = options->get_str("EMBEDDING_REFERENCE") == "HF";
+
+        size_t ro = hf_ref ? static_cast<size_t>(num_Ao - adj_sys_docc) : static_cast<size_t>(num_Ao - adj_sys_docc - diff);
+
         mo_space_map["RESTRICTED_DOCC"] = {ro};
 
-        size_t a = static_cast<size_t>(actv_a[0]);
-        if (options->get_str("EMBEDDING_REFERENCE") == "HF") {
-            a += diff;
-            a += diff2;
-        }
+        size_t a = hf_ref ? static_cast<size_t>(actv_a[0]) : static_cast<size_t>(actv_a[0] + diff + diff2);
         mo_space_map["ACTIVE"] = {a};
 
-        size_t rv = static_cast<size_t>(num_Av - adj_sys_uocc);
-        if (options->get_str("EMBEDDING_REFERENCE") == "HF") {
-            rv -= diff2;
-        }
+        size_t rv = hf_ref ? static_cast<size_t>(num_Av - adj_sys_uocc) : static_cast<size_t>(num_Av - adj_sys_uocc - diff2);
         mo_space_map["RESTRICTED_UOCC"] = {rv};
 
         size_t freeze_v = static_cast<size_t>(

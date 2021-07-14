@@ -420,7 +420,8 @@ std::shared_ptr<ActiveSpaceIntegrals> SADSRG::compute_Heff_actv() {
     auto fci_ints =
         std::make_shared<ActiveSpaceIntegrals>(ints_, actv_mos_, actv_mos_sym_, core_mos_);
     fci_ints->set_scalar_energy(Edsrg - Enuc_ - Efrzc_);
-    if (foptions_->get_bool("EMBEDDING_ALIGN_SCALAR") == true) {
+    // In the ints(A) of ASET2, Efrzc_ is always zero. The actual shift value (zeroth order) is Hbar0."
+    if (foptions_->get_bool("EMBEDDING_ALIGN_SCALAR")) {
         fci_ints->set_scalar_energy(Edsrg - Enuc_ - Hbar0_);
     }
     fci_ints->set_restricted_one_body_operator(Hbar1_.block("aa").data(),
