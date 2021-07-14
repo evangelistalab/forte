@@ -896,14 +896,14 @@ std::shared_ptr<MOSpaceInfo> make_embedding(psi::SharedWavefunction ref_wfn,
 
         bool hf_ref = options->get_str("EMBEDDING_REFERENCE") == "HF";
 
-        size_t ro = hf_ref ? static_cast<size_t>(num_Ao - adj_sys_docc) : static_cast<size_t>(num_Ao - adj_sys_docc - diff);
+        size_t ro = hf_ref ? static_cast<size_t>(num_Ao - adj_sys_docc - diff) : static_cast<size_t>(num_Ao - adj_sys_docc);
 
         mo_space_map["RESTRICTED_DOCC"] = {ro};
 
-        size_t a = hf_ref ? static_cast<size_t>(actv_a[0]) : static_cast<size_t>(actv_a[0] + diff + diff2);
+        size_t a = hf_ref ? static_cast<size_t>(actv_a[0] + diff + diff2) : static_cast<size_t>(actv_a[0]);
         mo_space_map["ACTIVE"] = {a};
 
-        size_t rv = hf_ref ? static_cast<size_t>(num_Av - adj_sys_uocc) : static_cast<size_t>(num_Av - adj_sys_uocc - diff2);
+        size_t rv = hf_ref ? static_cast<size_t>(num_Av - adj_sys_uocc - diff2) : static_cast<size_t>(num_Av - adj_sys_uocc);
         mo_space_map["RESTRICTED_UOCC"] = {rv};
 
         size_t freeze_v = static_cast<size_t>(
