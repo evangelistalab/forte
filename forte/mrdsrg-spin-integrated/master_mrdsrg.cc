@@ -374,9 +374,9 @@ double MASTER_DSRG::compute_reference_energy_from_ints(std::shared_ptr<ForteInte
     F.block("CC")("pq") += Vtemp("prqs") * Gamma1_.block("AA")("rs");
     F.block("AA")("pq") += Vtemp("rpsq") * I2("rs");
 
-    // Adding scalar because when using custom integrals (A) in ASET,
-    // we need to add NRE and frozen energy to the final results
-    // This scalar will be zero except during embedding
+    // Some integral types do not include NRE or frozen core energy in
+    // their integrals, instead treating those as a scalar in the Hamiltonian.
+    // At time of writing, only the embedding code does this.
     return compute_reference_energy(H, F, V) + ints->scalar();
 }
 
