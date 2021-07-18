@@ -39,6 +39,10 @@
 
 #include "psi4/libpsi4util/process.h"
 #include "psi4/libpsio/psio.hpp"
+#include "psi4/psifiles.h"
+#include "psi4/libmints/factory.h"
+#include "psi4/libmints/mintshelper.h"
+#include "psi4/libfock/jk.h"
 
 #include "helpers/helpers.h"
 #include "helpers/printing.h"
@@ -53,6 +57,8 @@ namespace forte {
 psi::SharedMatrix semicanonicalize_block(psi::SharedWavefunction ref_wfn, psi::SharedMatrix C_tilde,
                                          std::vector<int>& mos, int offset,
                                          bool prevent_rotate = false);
+
+void Build_CAS_AO_Fock(psi::SharedWavefunction ref_wfn, int nirrep, psi::Dimension doccpi, psi::Dimension actvpi, psi::Dimension nmopi);
 
 void make_avas(psi::SharedWavefunction ref_wfn, std::shared_ptr<ForteOptions> options,
                psi::SharedMatrix Ps) {
@@ -469,6 +475,9 @@ std::shared_ptr<MOSpaceInfo> make_embedding(psi::SharedWavefunction ref_wfn,
         A_docc = options->get_int("NUM_A_DOCC");
         A_uocc = options->get_int("NUM_A_UOCC");
         outfile->Printf("\n  Number of A occupied/virtual MOs set to %d and %d\n", A_docc, A_uocc);
+    } else if (options->get_str("EMBEDDING_CUTOFF_METHOD") == "CORRELATED_BATH") {
+        print_h2("Orbital partition done according to threshold t1 and a correlated bath");
+        outfile->Printf("\n  Threshold t1 = %8.8f, t2 = %8.8f", thresh, thresh / 10000.0);
     } else {
         throw PSIEXCEPTION("make_embedding: Impossible embedding cutoff method!");
     }
@@ -512,6 +521,19 @@ std::shared_ptr<MOSpaceInfo> make_embedding(psi::SharedWavefunction ref_wfn,
         nroccpi[0] += diff;
         nrvirpi[0] += diff2;
         actv_a[0] = 0;
+    }
+
+    if (options->get_bool("EMBEDDING_FOCK_BUILD")) {
+        // Initialize AO Fock matrix for semi-canonicalization
+        psi::Dimension doccpi_tmp = mo_space_info->dimension("RESTRICTED_DOCC");
+        doccpi_tmp[0] += frzopi[0];
+        if (options->get_str("EMBEDDING_REFERENCE") != "HF") {
+            Build_CAS_AO_Fock(ref_wfn, nirrep, doccpi_tmp, actv_a, nmopi);
+        }
+        else {
+            outfile->Printf(
+                "\n  Warning: will not build Fock for HF/DFT reference, using wfn->Fa() directly.");
+        }
     }
 
     // Define corresponding blocks (slices), occ slick will start at frzopi
@@ -664,6 +686,34 @@ std::shared_ptr<MOSpaceInfo> make_embedding(psi::SharedWavefunction ref_wfn,
         }
     }
 
+    if (options->get_str("EMBEDDING_CUTOFF_METHOD") == "CORRELATED_BATH") {
+        // Use t1 and t2 to partition: t1 = t, t2 = t/10000.
+        // A trick to reduce the ASET2 cost by truncating B further, freeze orbitals that have no
+        // overlap at all.
+        double thresh_tail = thresh / 10000.0;
+        for (int i = 0; i < nroccpi[0]; i++) {
+            double lb = lo->get(0, i);
+            if (lb < thresh_tail) {
+                index_frozen_core.push_back(i + frzopi[0]);
+            } else if (lb > thresh_tail && lb < thresh) {
+                index_B_occ.push_back(i + frzopi[0]);
+            } else {
+                index_A_occ.push_back(i + frzopi[0]);
+            }
+        }
+
+        for (int i = 0; i < nrvirpi[0]; i++) {
+            double lb = lv->get(0, i);
+            if (lb < thresh_tail) {
+                index_frozen_virtual.push_back(i + offset_vec);
+            } else if (lb > thresh_tail && lb < thresh) {
+                index_B_vir.push_back(i + offset_vec);
+            } else {
+                index_A_vir.push_back(i + offset_vec);
+            }
+        }
+    }
+
     if (options->get_str("EMBEDDING_VIRTUAL_SPACE") == "PAO") {
         outfile->Printf("\n ****** Build PAOs for virtual space ******");
 
@@ -798,6 +848,7 @@ std::shared_ptr<MOSpaceInfo> make_embedding(psi::SharedWavefunction ref_wfn,
 
     // Copy the active block (if any) from original Ca_save
     SharedMatrix C_A(new Matrix("Active_coeff_block", nirrep, nmopi, actv_a));
+
     if (options->get_str("EMBEDDING_REFERENCE") == "CASSCF") {
         C_A->copy(semicanonicalize_block(ref_wfn, Ca_save, index_actv, 0, !semi_a));
         if (semi_a) {
@@ -834,37 +885,77 @@ std::shared_ptr<MOSpaceInfo> make_embedding(psi::SharedWavefunction ref_wfn,
     // Write a new MOSpaceInfo:
     std::map<std::string, std::vector<size_t>> mo_space_map;
 
-    // Frozen docc space
-    size_t freeze_o =
-        static_cast<size_t>(num_Fo + num_Bo + adj_sys_docc); // Add the additional frozen core to Bo
-    mo_space_map["FROZEN_DOCC"] = {freeze_o};
+    // Write orbital information into new mo_space_info based on different embedding methods:
 
-    // Restricted docc space
-    size_t ro = static_cast<size_t>(num_Ao - adj_sys_docc);
-    if (options->get_str("EMBEDDING_REFERENCE") == "HF") {
-        ro -= diff;
+    // ASET(mf):
+    if (options->get_str("EMBEDDING_TYPE") == "ASET_MF") {
+        // Normal partition for Frozen-Core embedding
+        size_t freeze_o = static_cast<size_t>(num_Fo + num_Bo +
+                                              adj_sys_docc); // Add the additional frozen core to Bo
+        mo_space_map["FROZEN_DOCC"] = {freeze_o};
+
+        bool hf_ref = options->get_str("EMBEDDING_REFERENCE") == "HF";
+
+        size_t ro = hf_ref ? static_cast<size_t>(num_Ao - adj_sys_docc - diff) : static_cast<size_t>(num_Ao - adj_sys_docc);
+
+        mo_space_map["RESTRICTED_DOCC"] = {ro};
+
+        size_t a = hf_ref ? static_cast<size_t>(actv_a[0] + diff + diff2) : static_cast<size_t>(actv_a[0]);
+        mo_space_map["ACTIVE"] = {a};
+
+        size_t rv = hf_ref ? static_cast<size_t>(num_Av - adj_sys_uocc - diff2) : static_cast<size_t>(num_Av - adj_sys_uocc);
+        mo_space_map["RESTRICTED_UOCC"] = {rv};
+
+        size_t freeze_v = static_cast<size_t>(
+            num_Fv + num_Bv + adj_sys_uocc); // Add the additional frozen virtual to Bv
+        mo_space_map["FROZEN_UOCC"] = {freeze_v};
     }
-    mo_space_map["RESTRICTED_DOCC"] = {ro};
 
-    // Active space
-    size_t a = static_cast<size_t>(actv_a[0]);
-    if (options->get_str("EMBEDDING_REFERENCE") == "HF") {
-        a += diff;
-        a += diff2;
+    // ASET(2):
+    if (options->get_str("EMBEDDING_TYPE") == "ASET2") {
+        outfile->Printf(
+            "\n\n  --------------- Generating Total (A + B) SpaceInfo --------------- ");
+        // This will make A->active, B->restricted, for multilayer embedding/downfolding tests
+        size_t freeze_o = static_cast<size_t>(num_Fo + adj_sys_docc);
+        mo_space_map["FROZEN_DOCC"] = {freeze_o};
+
+        size_t ro = static_cast<size_t>(num_Bo - adj_sys_docc);
+        mo_space_map["RESTRICTED_DOCC"] = {ro};
+
+        size_t a = static_cast<size_t>(actv_a[0] + num_Ao + num_Av);
+        mo_space_map["ACTIVE"] = {a};
+
+        size_t a_occ = static_cast<size_t>(num_Ao);
+        mo_space_map["EMBEDDING_DOCC"] = {a_occ};
+
+        size_t a_actv = static_cast<size_t>(actv_a[0]);
+        mo_space_map["EMBEDDING_ACTV"] = {a_actv};
+
+        size_t rv = static_cast<size_t>(num_Bv - adj_sys_uocc);
+        mo_space_map["RESTRICTED_UOCC"] = {rv};
+
+        size_t freeze_v = static_cast<size_t>(num_Fv + adj_sys_uocc);
+        mo_space_map["FROZEN_UOCC"] = {freeze_v};
     }
-    mo_space_map["ACTIVE"] = {a};
 
-    // Restricted uocc space
-    size_t rv = static_cast<size_t>(num_Av - adj_sys_uocc);
-    if (options->get_str("EMBEDDING_REFERENCE") == "HF") {
-        rv -= diff2;
+    // ASET-SWAP
+    if (options->get_str("EMBEDDING_TYPE") == "ASET-SWAP") {
+        // This will swap the fragment (A) and environment (B)
+        size_t freeze_o = static_cast<size_t>(num_Fo + num_Ao + adj_sys_docc);
+        mo_space_map["FROZEN_DOCC"] = {freeze_o};
+
+        size_t ro = static_cast<size_t>(num_Bo - adj_sys_docc);
+        mo_space_map["RESTRICTED_DOCC"] = {ro};
+
+        size_t a = static_cast<size_t>(actv_a[0]);
+        mo_space_map["ACTIVE"] = {a};
+
+        size_t rv = static_cast<size_t>(num_Bv - adj_sys_uocc);
+        mo_space_map["RESTRICTED_UOCC"] = {rv};
+
+        size_t freeze_v = static_cast<size_t>(num_Fv + num_Av + adj_sys_uocc);
+        mo_space_map["FROZEN_UOCC"] = {freeze_v};
     }
-    mo_space_map["RESTRICTED_UOCC"] = {rv};
-
-    // Frozen uocc space
-    size_t freeze_v = static_cast<size_t>(num_Fv + num_Bv +
-                                          adj_sys_uocc); // Add the additional frozen virtual to Bv
-    mo_space_map["FROZEN_UOCC"] = {freeze_v};
 
     // Write new MOSpaceInfo
     outfile->Printf("\n  Updating MOSpaceInfo");
@@ -874,10 +965,11 @@ std::shared_ptr<MOSpaceInfo> make_embedding(psi::SharedWavefunction ref_wfn,
         make_mo_space_info_from_map(nmopi, point_group, mo_space_map, reorder);
 
     // Return the new embedding MOSpaceInfo to pymodule
-    outfile->Printf("\n\n  --------------- End of Frozen-orbital Embedding --------------- ");
+    outfile->Printf("\n\n  ");
     return mo_space_info_emb;
 } // namespace forte
 
+// Utility function #1: semicanonicalization
 psi::SharedMatrix semicanonicalize_block(psi::SharedWavefunction ref_wfn, psi::SharedMatrix C_tilde,
                                          std::vector<int>& mos, int offset, bool prevent_rotate) {
     int nso = ref_wfn->nso();
@@ -906,4 +998,192 @@ psi::SharedMatrix semicanonicalize_block(psi::SharedWavefunction ref_wfn, psi::S
         return C_block;
     }
 }
+
+// Utility function #2: CAS-AO Fock builder
+void Build_CAS_AO_Fock(psi::SharedWavefunction ref_wfn, int nirrep, psi::Dimension doccpi,
+                       psi::Dimension actvpi, psi::Dimension nmopi) {
+    outfile->Printf("\n Building AO Fock Matrix ... \n ");
+    std::shared_ptr<PSIO> psio(_default_psio_lib_);
+    const psi::SharedMatrix Ca = ref_wfn->Ca()->clone();
+
+    // Build inactive Fock
+    psi::Dimension test_occ_pi = doccpi;
+    psi::SharedMatrix C_occ(new Matrix("C_occ", nirrep, nmopi, test_occ_pi));
+    for (int u = 0; u < nmopi[0]; ++u) {
+        for (int i = 0; i < test_occ_pi[0]; ++i) {
+            C_occ->set(0, u, i, Ca->get(0, u, i));
+        }
+    }
+
+    auto scf_type = ref_wfn->options().get_str("SCF_TYPE");
+
+    std::shared_ptr<psi::JK> JK_occ;
+    if (scf_type == "DF") {
+        auto basis_aux = ref_wfn->get_basisset("DF_BASIS_SCF");
+        JK_occ = JK::build_JK(ref_wfn->basisset(), basis_aux, ref_wfn->options(), "MEM_DF");
+    } else {
+        JK_occ = JK::build_JK(ref_wfn->basisset(), psi::BasisSet::zero_ao_basis_set(),
+                              ref_wfn->options(), scf_type);
+    }
+    JK_occ->set_memory(Process::environment.get_memory() * 0.8);
+
+    JK_occ->initialize();
+    JK_occ->set_do_J(true);
+    JK_occ->set_do_K(true);
+
+    std::vector<std::shared_ptr<psi::Matrix>>& Cl = JK_occ->C_left();
+    std::vector<std::shared_ptr<psi::Matrix>>& Cr = JK_occ->C_right();
+    Cl.clear();
+    Cr.clear();
+    Cl.push_back(C_occ);
+
+    JK_occ->compute();
+
+    psi::SharedMatrix F_inactive(JK_occ->J()[0]->clone());
+    psi::SharedMatrix K_inactive(JK_occ->K()[0]->clone());
+
+    F_inactive->scale(2.0);
+    F_inactive->subtract(K_inactive); // 2J-K
+
+    psi::SharedMatrix T = SharedMatrix(
+        ref_wfn->matrix_factory()->create_matrix(PSIF_SO_T)); // initialize matrix of wfn's SO size
+    psi::SharedMatrix V_oe = SharedMatrix(ref_wfn->matrix_factory()->create_matrix(PSIF_SO_V));
+    psi::SharedMatrix S = SharedMatrix(ref_wfn->matrix_factory()->create_matrix(PSIF_SO_S));
+
+    psi::MintsHelper mints(ref_wfn);
+    T = mints.so_kinetic();
+    V_oe = mints.so_potential();
+    S = mints.so_overlap();
+
+    psi::SharedMatrix Ha = T->clone();
+
+    Ha->add(V_oe);
+
+    F_inactive->add(Ha); // F_uv = H_uv + G_uv
+
+    // Build active Fock
+    // Reference: Kevin's thesis chapter 1
+    psi::SharedMatrix C_actv(new Matrix("C_actv", nirrep, nmopi, actvpi));
+    for (int u = 0; u < nmopi[0]; ++u) {
+        for (int i = 0; i < actvpi[0]; ++i) {
+            C_actv->set(0, u, i, Ca->get(0, u, i + doccpi[0]));
+        }
+    }
+
+    // Retrive D
+    psi::SharedMatrix D(ref_wfn->Da()->clone());
+    psi::SharedMatrix rD_actv = psi::linalg::triplet(C_actv, D, C_actv, true, false, false);
+    D->transpose_this();
+
+    SharedMatrix back_M = psi::linalg::doublet(S, Ca, false, false);
+    SharedMatrix gamma = psi::linalg::triplet(back_M, D, back_M, true, false, false);
+
+    for (int s = 0; s < actvpi[0]; ++s) {
+        for (int t = 0; t < actvpi[0]; ++t) {
+            rD_actv->set(0, s, t, gamma->get(0, s + doccpi[0], t + doccpi[0]));
+        }
+    }
+
+    std::shared_ptr<psi::JK> JK_actv;
+    if (scf_type == "DF") {
+        auto basis_aux = ref_wfn->get_basisset("DF_BASIS_SCF");
+        JK_actv = JK::build_JK(ref_wfn->basisset(), basis_aux, ref_wfn->options(), "MEM_DF");
+    } else {
+        JK_actv = JK::build_JK(ref_wfn->basisset(), psi::BasisSet::zero_ao_basis_set(),
+                               ref_wfn->options(), scf_type);
+    }
+    JK_actv->set_memory(Process::environment.get_memory() * 0.8);
+
+    JK_actv->initialize();
+    JK_actv->set_do_J(true);
+    JK_actv->set_do_K(true);
+
+    std::vector<std::shared_ptr<psi::Matrix>>& Cl_actv = JK_actv->C_left();
+    std::vector<std::shared_ptr<psi::Matrix>>& Cr_actv = JK_actv->C_right();
+    Cl_actv.clear();
+    Cr_actv.clear();
+    psi::SharedMatrix C_actv_right = psi::linalg::doublet(C_actv, rD_actv, false, false);
+    Cl_actv.push_back(C_actv);       // C^T
+    Cr_actv.push_back(C_actv_right); // rD * C
+
+    JK_actv->compute();
+
+    psi::SharedMatrix F_active(JK_actv->J()[0]->clone());
+    psi::SharedMatrix K_active(JK_actv->K()[0]->clone());
+
+    K_active->scale(0.5);
+    F_active->subtract(K_active);
+    F_active->scale(2.0);
+
+    outfile->Printf("\n Building finished, write AO Fock to wfn ... \n ");
+    psi::SharedMatrix F_tot(F_inactive->clone());
+    F_tot->add(F_active);
+    ref_wfn->Fa()->copy(F_tot);
+}
+
+// Utility function #3: Build the second MO_SPACE_INFO for ASET(2) inner layer computations
+std::shared_ptr<MOSpaceInfo> build_aset2_spaceinfo(psi::SharedWavefunction ref_wfn,
+                                                  std::shared_ptr<MOSpaceInfo> mo_space_info,
+                                                  std::shared_ptr<ForteOptions> options) {
+
+    // int fragment_rvir = options.get_int("FRAGMENT_RUOCC");
+
+    psi::Dimension frzopi = mo_space_info->dimension("FROZEN_DOCC");
+    psi::Dimension nroccpi = mo_space_info->dimension("RESTRICTED_DOCC");
+    psi::Dimension fragment_rocc = mo_space_info->dimension("EMBEDDING_DOCC");
+    psi::Dimension fragment_active = mo_space_info->dimension("EMBEDDING_ACTV");
+    psi::Dimension actv_a = mo_space_info->dimension("ACTIVE");
+    psi::Dimension nrvirpi = mo_space_info->dimension("RESTRICTED_UOCC");
+    psi::Dimension frzvpi = mo_space_info->dimension("FROZEN_UOCC");
+    int add_a_docc = options->get_int("ADD_FRAGMENT_DOCC");
+    int add_a_actv = options->get_int("ADD_FRAGMENT_ACTIVE");
+    bool do_fci = options->get_bool("FRAG_DO_FCI");
+    bool truncate_nmo = options->get_bool("TRUNCATE_MO_SPACE");
+
+    // Write the new active (inner-layer) MOSpaceInfo:
+    std::map<std::string, std::vector<size_t>> mo_space_map_fragment;
+
+    size_t freeze_o = truncate_nmo ? 0 : static_cast<size_t>(frzopi[0] + nroccpi[0]);
+    mo_space_map_fragment["FROZEN_DOCC"] = {freeze_o};
+
+    size_t ro = do_fci ? 0 : fragment_rocc[0] + add_a_docc;
+    mo_space_map_fragment["RESTRICTED_DOCC"] = {ro};
+
+    size_t a = do_fci ? actv_a[0] : fragment_active[0] + add_a_actv;
+    mo_space_map_fragment["ACTIVE"] = {a};
+
+    // Read fragment_docc and fragment_active, compute fragment_rvir
+    size_t rv = do_fci ? 0 : actv_a[0] - ro - a;
+    mo_space_map_fragment["RESTRICTED_UOCC"] = {rv};
+
+    size_t freeze_v =  truncate_nmo ? 0 : static_cast<size_t>(frzvpi[0] + nrvirpi[0]);
+    mo_space_map_fragment["FROZEN_UOCC"] = {freeze_v};
+
+    outfile->Printf("\n   Generating fragment (A) SpaceInfo ... ");
+    if (truncate_nmo) {
+        outfile->Printf("\n   The fragment MO will not include environment (B) orbitals. \n ");
+    }
+    else {
+        outfile->Printf("\n   The fragment MO will include environment (B) orbitals, but they will be frozen. \n ");
+    }
+    outfile->Printf("\n   The fragment MO is: \n ");
+    std::vector<size_t> reorder;
+    std::string point_group = ref_wfn->molecule()->point_group()->symbol();
+    auto nmopi = ref_wfn->nmopi();
+
+    if (truncate_nmo) {
+        nmopi[0] -= frzopi[0];
+        nmopi[0] -= nroccpi[0];
+        nmopi[0] -= nrvirpi[0];
+        nmopi[0] -= frzvpi[0];
+    }
+
+    std::shared_ptr<MOSpaceInfo> mo_space_info_fragment =
+        make_mo_space_info_from_map(nmopi, point_group, mo_space_map_fragment, reorder);
+
+    // Return the new embedding MOSpaceInfo to pymodule
+    outfile->Printf("\n   ASET(2) procedure started! ... \n ");
+    return mo_space_info_fragment;
+}
+
 } // namespace forte

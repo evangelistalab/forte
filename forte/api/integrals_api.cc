@@ -31,6 +31,7 @@
 
 #include "helpers/helpers.h"
 #include "integrals/integrals.h"
+#include "base_classes/dynamic_correlation_solver.h"
 
 namespace py = pybind11;
 
@@ -77,9 +78,12 @@ void export_ForteIntegrals(py::module& m) {
             "Return the beta-beta 2e-integrals in physicists' notation")
         .def("set_nuclear_repulsion", &ForteIntegrals::set_nuclear_repulsion,
              "Set the nuclear repulsion energy")
+        .def("nuclear_repulsion_energy", &ForteIntegrals::nuclear_repulsion_energy, "Get the nuclear repulsion energy")
+        .def("frozen_core_energy", &ForteIntegrals::frozen_core_energy, "Get the frozen core energy")
         .def("set_scalar", &ForteIntegrals::set_scalar, "Set the scalar energy")
         .def("set_oei", &ForteIntegrals::set_oei_all, "Set the one-electron integrals")
         .def("set_tei", &ForteIntegrals::set_tei_all, "Set the two-electron integrals")
+        .def("set_ints_from_asints", &ForteIntegrals::set_ints_from_asints, "Build the integrals from as_ints.")
         .def("initialize", &ForteIntegrals::initialize, "Initialize the integrals")
         .def("print_ints", &ForteIntegrals::print_ints, "Print the integrals");
 }

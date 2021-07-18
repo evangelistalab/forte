@@ -56,7 +56,7 @@ def test_mospaceinfo():
 
     assert mo_space_info.space_names() == [
         'FROZEN_DOCC', 'RESTRICTED_DOCC', 'GAS1', 'GAS2', 'GAS3', 'GAS4', 'GAS5', 'GAS6', 'RESTRICTED_UOCC',
-        'FROZEN_UOCC'
+        'FROZEN_UOCC','EMBEDDING_DOCC','EMBEDDING_ACTV'
     ]
 
     str_test = """space: FROZEN_DOCC  1 0 0 0 0 0 0 0
@@ -69,9 +69,10 @@ space: GAS5  0 0 0 0 0 0 0 0
 space: GAS6  0 0 0 0 0 0 0 0
 space: RESTRICTED_UOCC  0 0 0 0 0 0 0 0
 space: FROZEN_UOCC  1 0 0 0 0 0 0 0
+space: EMBEDDING_DOCC  0 0 0 0 0 0 0 0
+space: EMBEDDING_ACTV  0 0 0 0 0 0 0 0
 """
     assert str(mo_space_info) == str_test
-
 
 if __name__ == '__main__':
     test_mospaceinfo()

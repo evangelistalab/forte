@@ -374,7 +374,10 @@ double MASTER_DSRG::compute_reference_energy_from_ints(std::shared_ptr<ForteInte
     F.block("CC")("pq") += Vtemp("prqs") * Gamma1_.block("AA")("rs");
     F.block("AA")("pq") += Vtemp("rpsq") * I2("rs");
 
-    return compute_reference_energy(H, F, V);
+    // Some integral types do not include NRE or frozen core energy in
+    // their integrals, instead treating those as a scalar in the Hamiltonian.
+    // At time of writing, only the embedding code does this.
+    return compute_reference_energy(H, F, V) + ints->scalar();
 }
 
 double MASTER_DSRG::compute_reference_energy(BlockedTensor H, BlockedTensor F, BlockedTensor V) {
@@ -535,7 +538,10 @@ std::shared_ptr<ActiveSpaceIntegrals> MASTER_DSRG::compute_Heff_actv() {
     fci_ints->set_restricted_one_body_operator(Hbar1_.block("aa").data(),
                                                Hbar1_.block("AA").data());
     fci_ints->set_scalar_energy(Edsrg - Enuc_ - Efrzc_);
-
+    // In the ints(A) of ASET2, Efrzc_ is always zero. The actual shift value (zeroth order) is Hbar0."
+    if (foptions_->get_bool("EMBEDDING_ALIGN_SCALAR")) {
+        fci_ints->set_scalar_energy(Edsrg - Enuc_ - Hbar0_);
+    }
     return fci_ints;
 }
 

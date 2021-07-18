@@ -41,6 +41,7 @@
 #include "helpers/timer.h"
 #include "integrals.h"
 #include "memory.h"
+#include "integrals/active_space_integrals.h"
 
 #ifdef HAVE_GA
 #include <ga.h>
@@ -306,6 +307,16 @@ void ForteIntegrals::set_oei(size_t p, size_t q, double value, bool alpha) {
     p_oei[p * aptei_idx_ + q] = value;
 }
 
+void ForteIntegrals::set_oei_from_asints(std::shared_ptr<ActiveSpaceIntegrals> as_ints,
+                                         bool alpha) {
+    if (alpha) {
+        one_electron_integrals_a_ = as_ints->oei_a_vector();
+    }
+    else {
+        one_electron_integrals_b_ = as_ints->oei_b_vector();
+    }
+}
+
 void ForteIntegrals::fix_orbital_phases(std::shared_ptr<psi::Matrix> U, bool is_alpha, bool debug) {
     if (integral_type_ == Custom) {
         outfile->Printf("\n  Warning: Cannot fix orbital phases (%s) for CustomIntegrals.",
@@ -534,6 +545,14 @@ double** ForteIntegrals::three_integral_pointer() {
 }
 
 void ForteIntegrals::rotate_mos() { _undefined_function("rotate_mos"); }
+
+void ForteIntegrals::set_ints_from_asints(std::shared_ptr<ActiveSpaceIntegrals> as_ints) {
+    _undefined_function("set_ints_from_asints");
+}
+
+void ForteIntegrals::set_tei_from_asints(std::shared_ptr<ActiveSpaceIntegrals> as_ints) {
+    _undefined_function("set_tei_from_asints");
+}
 
 std::vector<std::shared_ptr<psi::Matrix>> ForteIntegrals::mo_dipole_ints(const bool&, const bool&) {
     std::vector<std::shared_ptr<psi::Matrix>> mo_dipole_ints_;

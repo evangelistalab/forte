@@ -232,9 +232,18 @@ class MOSpaceInfo {
     /// Information about each elementary space stored in a map
     std::map<std::string, SpaceInfo> mo_spaces_;
     /// The list of elementary spaces
-    std::vector<std::string> elementary_spaces_{
-        "FROZEN_DOCC", "RESTRICTED_DOCC", "GAS1",       "GAS2", "GAS3", "GAS4", "GAS5",
-        "GAS6",        "RESTRICTED_UOCC", "FROZEN_UOCC"};
+    std::vector<std::string> elementary_spaces_{"FROZEN_DOCC",
+                                                "RESTRICTED_DOCC",
+                                                "GAS1",
+                                                "GAS2",
+                                                "GAS3",
+                                                "GAS4",
+                                                "GAS5",
+                                                "GAS6",
+                                                "RESTRICTED_UOCC",
+                                                "FROZEN_UOCC",
+                                                "EMBEDDING_DOCC",
+                                                "EMBEDDING_ACTV"};
     /// The priority used to assign orbitals to elementary spaces
     std::vector<std::string> elementary_spaces_priority_{"GAS1",
                                                          "RESTRICTED_UOCC",
@@ -245,7 +254,9 @@ class MOSpaceInfo {
                                                          "GAS3",
                                                          "GAS4",
                                                          "GAS5",
-                                                         "GAS6"};
+                                                         "GAS6",
+                                                         "EMBEDDING_DOCC",
+                                                         "EMBEDDING_ACTV"};
 
     /// Defines composite orbital spaces
     std::map<std::string, std::vector<std::string>> composite_spaces_{
@@ -262,6 +273,7 @@ class MOSpaceInfo {
         {"GENERALIZED HOLE", {"RESTRICTED_DOCC", "GAS1", "GAS2", "GAS3", "GAS4", "GAS5", "GAS6"}},
         {"GENERALIZED PARTICLE",
          {"GAS1", "GAS2", "GAS3", "GAS4", "GAS5", "GAS6", "RESTRICTED_UOCC"}},
+        {"EMBEDDING_ORB", {"EMBEDDING_DOCC", "EMBEDDING_ACTV"}},
         {"CORE", {"RESTRICTED_DOCC"}},
         {"VIRTUAL", {"RESTRICTED_UOCC"}}};
 

@@ -359,7 +359,10 @@ double SADSRG::compute_reference_energy_from_ints() {
     V.block("aaaa")("prqs") =
         ints_->aptei_ab_block(actv_mos_, actv_mos_, actv_mos_, actv_mos_)("prqs");
 
-    Eref_ = compute_reference_energy(H, Fock_, V);
+    // Some integral types do not include NRE or frozen core energy in
+    // their integrals, instead treating those as a scalar in the Hamiltonian.
+    // At time of writing, only the embedding code does this.
+    Eref_ = compute_reference_energy(H, Fock_, V) + ints_->scalar();
     psi::Process::environment.globals["DSRG REFERENCE ENERGY"] = Eref_;
     return Eref_;
 }
@@ -417,6 +420,10 @@ std::shared_ptr<ActiveSpaceIntegrals> SADSRG::compute_Heff_actv() {
     auto fci_ints =
         std::make_shared<ActiveSpaceIntegrals>(ints_, actv_mos_, actv_mos_sym_, core_mos_);
     fci_ints->set_scalar_energy(Edsrg - Enuc_ - Efrzc_);
+    // In the ints(A) of ASET2, Efrzc_ is always zero. The actual shift value (zeroth order) is Hbar0."
+    if (foptions_->get_bool("EMBEDDING_ALIGN_SCALAR")) {
+        fci_ints->set_scalar_energy(Edsrg - Enuc_ - Hbar0_);
+    }
     fci_ints->set_restricted_one_body_operator(Hbar1_.block("aa").data(),
                                                Hbar1_.block("aa").data());
 

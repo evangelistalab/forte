@@ -44,6 +44,8 @@
 
 #include "custom_integrals.h"
 
+#include "integrals/active_space_integrals.h"
+
 #define IOFFINDEX(i) (i * (i + 1) / 2)
 #define PAIRINDEX(i, j) ((i > j) ? (IOFFINDEX(i) + (j)) : (IOFFINDEX(j) + (i)))
 #define four(i, j, k, l) PAIRINDEX(PAIRINDEX(i, j), PAIRINDEX(k, l))
@@ -138,6 +140,32 @@ void CustomIntegrals::set_tei(size_t p, size_t q, size_t r, size_t s, double val
         aphys_tei_ab_[index] = value;
     if (alpha1 == false and alpha2 == false)
         aphys_tei_bb_[index] = value;
+}
+
+void CustomIntegrals::set_tei_from_asints(std::shared_ptr<ActiveSpaceIntegrals> as_ints) {
+    aphys_tei_aa_ = as_ints->tei_aa_vector();
+    aphys_tei_ab_ = as_ints->tei_ab_vector();
+    aphys_tei_bb_ = as_ints->tei_bb_vector();
+}
+
+void CustomIntegrals::set_ints_from_asints(std::shared_ptr<ActiveSpaceIntegrals> as_ints) {
+    outfile->Printf("\n  Updating one-electron integrals from Hbar");
+    set_oei_from_asints(as_ints, true);
+    set_oei_from_asints(as_ints, false);
+    outfile->Printf("\n  Updating two-electron integrals from Hbar");
+    set_tei_from_asints(as_ints);
+
+    for (size_t p = 0; p < ncmo_; ++p) {
+        for (size_t q = 0; q < ncmo_; ++q) {
+            full_one_electron_integrals_a_[cmotomo_[p] * nmo_ + cmotomo_[q]] =
+            one_electron_integrals_a_[p * ncmo_ + q]; 
+            full_one_electron_integrals_b_[cmotomo_[p] * nmo_ + cmotomo_[q]] = 
+            one_electron_integrals_b_[p * ncmo_ + q];
+        }
+    }
+    full_aphys_tei_aa_ = aphys_tei_aa_;
+    full_aphys_tei_ab_ = aphys_tei_ab_;
+    full_aphys_tei_bb_ = aphys_tei_bb_;
 }
 
 void CustomIntegrals::gather_integrals() {

@@ -126,6 +126,13 @@ void MRDSRG::startup() {
     // test semi-canonical
     semi_canonical_ = check_semi_orbs();
 
+    // Bypass this check if we are doing environment (B) DSRG
+    bool semi_skip = foptions_->get_bool("EMBEDDING_DISABLE_SEMI_CHECK");
+    bool embedding = foptions_->get_bool("EMBEDDING");
+    if (embedding && semi_skip) {
+        semi_canonical_ = true;
+    }
+
     if (!semi_canonical_) {
         outfile->Printf("\n    Orbital invariant formalism will be employed for MR-DSRG.");
         U_ = ambit::BlockedTensor::build(tensor_type_, "U", spin_cases({"gg"}));
@@ -387,27 +394,28 @@ void MRDSRG::print_cumulant_summary() {
     outfile->Printf("\n    %s", dash.c_str());
 
     // 3-body
-    maxes.clear();
-    maxes.push_back(rdms_.L3aaa().norm(0));
-    maxes.push_back(rdms_.L3aab().norm(0));
-    maxes.push_back(rdms_.L3abb().norm(0));
-    maxes.push_back(rdms_.L3bbb().norm(0));
+    if (foptions_->get_str("THREEPDC") != "ZERO") {
+        maxes.clear();
+        maxes.push_back(rdms_.L3aaa().norm(0));
+        maxes.push_back(rdms_.L3aab().norm(0));
+        maxes.push_back(rdms_.L3abb().norm(0));
+        maxes.push_back(rdms_.L3bbb().norm(0));
 
-    norms.clear();
-    norms.push_back(rdms_.L3aaa().norm(2));
-    norms.push_back(rdms_.L3aab().norm(2));
-    norms.push_back(rdms_.L3abb().norm(2));
-    norms.push_back(rdms_.L3bbb().norm(2));
+        norms.clear();
+        norms.push_back(rdms_.L3aaa().norm(2));
+        norms.push_back(rdms_.L3aab().norm(2));
+        norms.push_back(rdms_.L3abb().norm(2));
+        norms.push_back(rdms_.L3bbb().norm(2));
 
-    dash = std::string(8 + 13 * 4, '-');
-    outfile->Printf("\n    %-8s %12s %12s %12s %12s", "3-body", "AAA", "AAB", "ABB", "BBB");
-    outfile->Printf("\n    %s", dash.c_str());
-    outfile->Printf("\n    %-8s %12.6f %12.6f %12.6f %12.6f", "max", maxes[0], maxes[1], maxes[2],
-                    maxes[3]);
-    outfile->Printf("\n    %-8s %12.6f %12.6f %12.6f %12.6f", "norm", norms[0], norms[1], norms[2],
-                    norms[3]);
-    outfile->Printf("\n    %s", dash.c_str());
-
+        dash = std::string(8 + 13 * 4, '-');
+        outfile->Printf("\n    %-8s %12s %12s %12s %12s", "3-body", "AAA", "AAB", "ABB", "BBB");
+        outfile->Printf("\n    %s", dash.c_str());
+        outfile->Printf("\n    %-8s %12.6f %12.6f %12.6f %12.6f", "max", maxes[0], maxes[1],
+                        maxes[2], maxes[3]);
+        outfile->Printf("\n    %-8s %12.6f %12.6f %12.6f %12.6f", "norm", norms[0], norms[1],
+                        norms[2], norms[3]);
+        outfile->Printf("\n    %s", dash.c_str());
+    }
     //    check_density(Lambda2_, "2-body");
     //    if (foptions_->get_str("THREEPDC") != "ZERO") {
     //        check_density(Lambda3_, "3-body");

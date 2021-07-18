@@ -41,7 +41,7 @@ import forte.proc.fcidump
 from forte.proc.dsrg import ProcedureDSRG
 from forte.proc.orbital_helpers import ortho_orbs_forte, orbital_projection
 from forte.proc.orbital_helpers import read_orbitals, dump_orbitals
-
+from forte.proc.aset2 import aset2_driver
 
 def run_psi4_ref(ref_type, molecule, print_warning=False, **kwargs):
     """
@@ -434,6 +434,7 @@ def forte_driver(state_weights_map, scf_info, options, ints, mo_space_info):
 
     :return: the computed energy
     """
+
     # map state to number of roots
     state_map = forte.to_state_nroots_map(state_weights_map)
 
@@ -499,16 +500,19 @@ def run_forte(name, **kwargs):
         psi4.core.print_out('\n  Forte will use custom integrals')
         # Make an integral object from the psi4 wavefunction object
         ints = make_ints_from_fcidump(fcidump, options, mo_space_info)
-    else:
+    elif job_type != 'ASET2':
         psi4.core.print_out('\n  Forte will use psi4 integrals')
         # Make an integral object from the psi4 wavefunction object
         ints = forte.make_ints_from_psi4(ref_wfn, options, mo_space_info)
+    else:
+        ints = None
+        psi4.core.print_out('\n  Will not build integrals here')
 
     start = time.time()
 
     # Rotate orbitals before computation (e.g. localization, MP2 natural orbitals, etc.)
     orb_type = options.get_str("ORBITAL_TYPE")
-    if orb_type != 'CANONICAL':
+    if orb_type != 'CANONICAL' and job_type != 'ASET2':
         orb_t = forte.make_orbital_transformation(orb_type, scf_info, options, ints, mo_space_info)
         orb_t.compute_transformation()
         Ua = orb_t.get_Ua()
@@ -517,6 +521,9 @@ def run_forte(name, **kwargs):
 
     # Run a method
     energy = 0.0
+
+    if (job_type == 'ASET2'):
+        energy = aset2_driver(state_weights_map, scf_info, ref_wfn, mo_space_info, options)
 
     if (options.get_bool("CASSCF_REFERENCE") or job_type == "CASSCF"):
         if options.get_str('INT_TYPE') == 'FCIDUMP':

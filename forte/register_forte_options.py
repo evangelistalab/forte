@@ -165,8 +165,12 @@ def register_mrcino_options(options):
 
 def register_embedding_options(options):
     options.set_group("Embedding")
-    options.add_bool("EMBEDDING", False, "Whether to perform embedding partition and projection")
-    options.add_str("EMBEDDING_CUTOFF_METHOD", "THRESHOLD", "Cut off by: threshold ,cum_threshold or num_of_orbitals.")
+    options.add_bool(
+        "EMBEDDING", False,
+        "Whether to perform embedding partition and projection")
+    options.add_str(
+        "EMBEDDING_CUTOFF_METHOD", "THRESHOLD", ["THRESHOLD", "CUM_THRESHOLD", "NUM_OF_ORBITALS", "CORRELATED_BATH"],
+        "Cut off by: threshold ,cum_threshold or num_of_orbitals.")
     options.add_double(
         "EMBEDDING_THRESHOLD", 0.5, "Projector eigenvalue threshold for both simple and cumulative threshold"
     )
@@ -178,12 +182,16 @@ def register_embedding_options(options):
     )
     options.add_str(
         "EMBEDDING_REFERENCE", "CASSCF",
-        "HF for any reference without active, CASSCF for any reference with an active space."
-    )
-    options.add_bool("EMBEDDING_SEMICANONICALIZE_ACTIVE", True, "Perform semi-canonicalization on active space or not")
+        "HF for any reference without active (DFT, for example), CASSCF for any reference with an active space.")
     options.add_bool(
-        "EMBEDDING_SEMICANONICALIZE_FROZEN", True, "Perform semi-canonicalization on frozen core/virtual space or not"
-    )
+        "EMBEDDING_SEMICANONICALIZE_ACTIVE", False,
+        "Perform semi-canonicalization on active space or not")
+    options.add_bool(
+        "EMBEDDING_SEMICANONICALIZE_FROZEN", True,
+        "Perform semi-canonicalization on frozen core/virtual space or not")
+    options.add_bool(
+        "EMBEDDING_FOCK_BUILD", False,
+        "Build AO-CAS Fock matrix before semicanonicalization, to guarantee block-diagonalized generalized Fock Matrix.")
     options.add_int(
         "EMBEDDING_ADJUST_B_DOCC", 0, "Adjust number of occupied orbitals between A and B, +: move to B, -: move to A"
     )
@@ -194,21 +202,78 @@ def register_embedding_options(options):
     options.add_double("PAO_THRESHOLD", 1e-8, "Virtual space truncation threshold for PAO.")
     options.add_bool(
         "PAO_FIX_VIRTUAL_NUMBER", False,
-        "Enable this option will generate PAOs equivlent to ASET virtuals, instead of using threshold"
-    )
+        "Enable this option will generate PAOs equivlent to ASET virtuals, instead of using threshold")
+    options.add_str(
+        "EMBEDDING_TYPE", "ASET_MF", ["ASET_MF", "ASET2", "ASET-SWAP"],
+        "The type of embedding computations.")
+    options.add_str(
+        'FRAGMENT_DENSITY', 'RHF', ['CASCI', 'CASSCF', 'RHF', 'FULL'],
+        'The real/approximate RDMs used in the correlative environment computation')
+    options.add_int(
+        "ADD_FRAGMENT_DOCC", 0,
+        "Manually adjust number of restricted occupied orbitals A_C in A for mo_space_info_A")
+    options.add_int(
+        "ADD_FRAGMENT_ACTIVE", 0,
+        "Manually adjust number of active orbitals A_A in A for mo_space_info_A")
+    options.add_str(
+        'FRAG_CORRELATION_SOLVER', 'MRDSRG',
+        ['DSRG-MRPT2', 'THREE-DSRG-MRPT2', 'DSRG-MRPT3', 'MRDSRG',
+         'SOMRDSRG', 'MRDSRG_SO', 'DSRG_MRPT'],
+        'Dynamical correlation solver type for Fragment inactive orbitals.')
+    options.add_str(
+        'ENV_CORRELATION_SOLVER', 'MRDSRG',
+        ['DSRG-MRPT2', 'THREE-DSRG-MRPT2', 'DSRG-MRPT3', 'MRDSRG',
+         'SOMRDSRG', 'MRDSRG_SO', 'DSRG_MRPT'],
+        'Dynamical correlation solver type for Fragment-environment correlation')
+    options.add_str("FRAG_CORR_LEVEL", "LDSRG2",
+        ["PT2", "PT3", "LDSRG2", "LDSRG2_QC", "LSRG2", "SRG_PT2", "QDSRG2",
+         "LDSRG2_P3", "QDSRG2_P3"],
+        "Correlation level of fragment MR-DSRG (used in mrdsrg code, "
+        "LDSRG2_P3 and QDSRG2_P3 not implemented)")
+    options.add_str("ENV_CORR_LEVEL", "PT2",
+        ["PT2", "PT3", "LDSRG2", "LDSRG2_QC", "LSRG2", "SRG_PT2", "QDSRG2",
+         "LDSRG2_P3", "QDSRG2_P3"],
+        "Correlation level of environment (interactive) MR-DSRG (used in mrdsrg code, "
+        "LDSRG2_P3 and QDSRG2_P3 not implemented)")
+    options.add_bool(
+        "embedding_disable_semi_check", True,
+        "(Internal option, controlled by proc/aset2.py) Turn on/off semi-canonicalization check in DSRG code when computing ASET(2).")
+    options.add_bool(
+        "embedding_align_scalar", False,
+        "(Internal option, controlled by proc/aset2.py) Turn on/off shifts to align the integral scalar "
+        "(explanation: when we build a custom integrals for A only, it doesn't have the information of frozen orbitals and NRE)."
+        "So we need to turn this term off for the A+B computation, and turn it on to add those energy back when only computing A")
+    options.add_bool(
+        "EMBEDDING_ASET2_MF_REF", True,
+        "Whether we compute an additional ASET(mf) as reference when doing ASET(2).")
+    options.add_bool(
+        "FRAG_DO_FCI", False,
+        "(For benchmarking) Perform a FCI computation on the fragment (A), override other settings.")
+    options.add_bool(
+        "TRUNCATE_MO_SPACE", False,
+        "(Internal option, controlled by proc/aset2.py) When building the mo_space_info object from the orbital_embedding.cc,"
+        " this option control whether the size of resulting object is A or A+B.")
 
 
 def register_mo_space_info_options(options):
     options.set_group("MO Space Info")
 
-    options.add_int_list("FROZEN_DOCC", "Number of frozen occupied orbitals per irrep (in Cotton order)")
-    options.add_int_list(
-        "RESTRICTED_DOCC", "Number of restricted doubly"
-        " occupied orbitals per irrep (in Cotton order)"
-    )
-    options.add_int_list("ACTIVE", " Number of active orbitals per irrep (in Cotton order)")
-    options.add_int_list("RESTRICTED_UOCC", "Number of restricted unoccupied orbitals per irrep (in Cotton order)")
-    options.add_int_list("FROZEN_UOCC", "Number of frozen unoccupied orbitals per irrep (in Cotton order)")
+    options.add_int_list("FROZEN_DOCC", "Number of frozen occupied orbitals"
+                          " per irrep (in Cotton order)")
+    options.add_int_list("RESTRICTED_DOCC", "Number of restricted doubly"
+                          " occupied orbitals per irrep (in Cotton order)")
+    options.add_int_list("ACTIVE", " Number of active orbitals per irrep"
+                          " (in Cotton order)")
+    options.add_int_list("RESTRICTED_UOCC", "Number of restricted unoccupied"
+                          " orbitals per irrep (in Cotton order)")
+    options.add_int_list("FROZEN_UOCC", "Number of frozen unoccupied orbitals"
+                          " per irrep (in Cotton order)")
+    options.add_int_list("EMBEDDING_DOCC", "Number of fragment occupied orbitals"
+                          " per irrep (in Cotton order)")
+    options.add_int_list("EMBEDDING_ACTV", "Number of fragment active orbitals"
+                          " per irrep (in Cotton order)")
+    options.add_int_list("EMBEDDING_ORB", "Number of all fragment orbitals"
+                          " per irrep (in Cotton order)")
 
     options.add_int_list("GAS1", "Number of GAS1 orbitals per irrep (in Cotton order)")
     options.add_int_list("GAS2", "Number of GAS2 orbitals per irrep (in Cotton order)")
@@ -559,6 +624,24 @@ def register_integral_options(options):
         "- CHOLESKY Cholesky decomposed two-electron integrals"
         "- FCIDUMP Read integrals from a file in the FCIDUMP format"
     )
+
+    options.add_str(
+        "INT_TYPE_ENV", "CONVENTIONAL",
+        ["CONVENTIONAL", "CHOLESKY", "DF", "DISKDF"],
+        "The type of molecular integrals used in the embedding environment (B)\n"
+        "- CONVENTIONAL Conventional four-index two-electron integrals\n"
+        "- DF Density fitted two-electron integrals\n"
+        "- CHOLESKY Cholesky decomposed two-electron integrals")
+
+    options.add_str(
+        "INT_TYPE_FRAG", "CONVENTIONAL",
+        ["CONVENTIONAL", "CHOLESKY", "DF", "DISKDF"],
+        "The type of molecular integrals used in the embedding fragment (A)"
+        "Note that if CHOLESKY or DF is selected, they will only apply to the ASET(mf) steps!"
+        "And for Hbar, the ASET(2) driver will build a custom integral for the fragment (A) instead"
+        "- CONVENTIONAL Conventional four-index two-electron integrals"
+        "- DF Density fitted two-electron integrals"
+        "- CHOLESKY Cholesky decomposed two-electron integrals")
 
     options.add_str('FCIDUMP_FILE', 'INTDUMP', 'The file that stores the FCIDUMP integrals')
     options.add_int_list(

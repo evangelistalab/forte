@@ -307,6 +307,13 @@ void MOSpaceInfo::compute_space_info() {
         unassigned -= str_si.second.first;
     }
 
+    // Exclude double-counting in MO space due to embedding
+    for (const auto& el_space : composite_spaces_["EMBEDDING_ORB"]) {
+        if (mo_spaces_.count(el_space))
+            unassigned += mo_spaces_[el_space].first;
+    }
+
+    // Assert number of unassigned orbitals
     for (size_t h = 0; h < nirrep_; ++h) {
         if (unassigned[h] < 0) {
             outfile->Printf("\n  There is an error in the definition of the "
