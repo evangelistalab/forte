@@ -37,7 +37,7 @@ def test_mospaceinfo2():
 
     mo_space_info = forte.make_mo_space_info_from_map(nmopi,point_group,mos_spaces,[])
 
-    space_names = ['FROZEN_DOCC','RESTRICTED_DOCC','GAS1','GAS2','GAS3','GAS4','GAS5','GAS6','RESTRICTED_UOCC','FROZEN_UOCC',"EMBEDDING_DOCC","EMBEDDING_ACTV"]
+    space_names = ["FROZEN_DOCC", "RESTRICTED_DOCC", "GAS1", "GAS2", "GAS3" ,"GAS4", "GAS5", "GAS6", "RESTRICTED_UOCC", "FROZEN_UOCC", "EMBEDDING_DOCC", "EMBEDDING_ACTV"]
 
     assert mo_space_info.nirrep() == 4
 
