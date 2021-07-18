@@ -359,9 +359,9 @@ double SADSRG::compute_reference_energy_from_ints() {
     V.block("aaaa")("prqs") =
         ints_->aptei_ab_block(actv_mos_, actv_mos_, actv_mos_, actv_mos_)("prqs");
 
-    // Adding scalar because when using custom integrals (A) in ASET, 
-    // we need to add NRE and frozen energy to the final results
-    // This scalar will be zero except during embedding
+    // Some integral types do not include NRE or frozen core energy in
+    // their integrals, instead treating those as a scalar in the Hamiltonian.
+    // At time of writing, only the embedding code does this.
     Eref_ = compute_reference_energy(H, Fock_, V) + ints_->scalar();
     psi::Process::environment.globals["DSRG REFERENCE ENERGY"] = Eref_;
     return Eref_;
