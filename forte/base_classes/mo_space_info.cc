@@ -308,12 +308,10 @@ void MOSpaceInfo::compute_space_info() {
     }
 
     // Exclude double-counting in MO space due to embedding
-    psi::Dimension emb_count(nirrep_);
     for (const auto& el_space : composite_spaces_["EMBEDDING_ORB"]) {
         if (mo_spaces_.count(el_space))
-            emb_count += mo_spaces_[el_space].first;
+            unassigned += mo_spaces_[el_space].first;
     }
-    unassigned += emb_count;
 
     // Assert number of unassigned orbitals
     for (size_t h = 0; h < nirrep_; ++h) {
