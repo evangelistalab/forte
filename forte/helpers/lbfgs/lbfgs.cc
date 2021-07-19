@@ -83,6 +83,7 @@ template <class Foo> double LBFGS::minimize(Foo& func, psi::SharedVector x) {
 
     // start iteration
     converged_ = false;
+    int bad_shift = 0;
     do {
         // compute diagonal Hessian if needed
         if (iter_ != 0 and param_->h0_freq > 0) {
@@ -115,28 +116,41 @@ template <class Foo> double LBFGS::minimize(Foo& func, psi::SharedVector x) {
             break;
         }
 
+        // compute differences
+        auto s = std::make_shared<psi::Vector>(*x->clone());
+        s->subtract(x_last_);
+
+        auto y = std::make_shared<psi::Vector>(*g_->clone());
+        y->subtract(g_last_);
+
+        double rho = y->vector_dot(s);
+
         // save history
-        int index = (iter_ - 1) % param_->m;
+        if (rho > 0) {
+            int iter = iter_ - bad_shift;
+            int index = (iter - 1) % param_->m;
 
-        if (iter_ <= param_->m) {
-            s_[index] = std::make_shared<psi::Vector>("s", dimpi_);
-            y_[index] = std::make_shared<psi::Vector>("y", dimpi_);
+            if (iter <= param_->m) {
+                s_[index] = std::make_shared<psi::Vector>("s", dimpi_);
+                y_[index] = std::make_shared<psi::Vector>("y", dimpi_);
+            }
+
+            s_[index]->copy(*s);
+            y_[index]->copy(*y);
+            rho_[index] = 1.0 / rho;
+
+            x_last_->copy(*x);
+            g_last_->copy(*g_);
+        } else {
+            bad_shift++;
+            if (param_->print > 1) {
+                outfile->Printf("\n  L-BFGS Warning: Skip this vector due to negative rho");
+            }
         }
-
-        s_[index]->copy(*x);
-        s_[index]->subtract(x_last_);
-
-        y_[index]->copy(*g_);
-        y_[index]->subtract(g_last_);
-
-        rho_[index] = 1.0 / y_[index]->vector_dot(s_[index]);
-
-        x_last_->copy(*x);
-        g_last_->copy(*g_);
     } while (iter_ < param_->maxiter);
 
     if ((not converged_) and param_->print > 1) {
-        outfile->Printf("\n  Warning: L-BFGS did not converge in %d iterations", iter_);
+        outfile->Printf("\n  L-BFGS Warning: No convergence in %d iterations", iter_);
     }
 
     return fx;
