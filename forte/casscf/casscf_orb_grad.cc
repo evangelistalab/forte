@@ -133,7 +133,7 @@ void CASSCF_ORB_GRAD::setup_mos() {
 
     // in Pitzer ordering
     mos_rel_space_.resize(nmo_);
-    for (std::string space : {"f", "c", "a", "v", "u"}) {
+    for (const std::string& space : {"f", "c", "a", "v", "u"}) {
         const auto& mos = label_to_mos_[space];
         for (size_t p = 0, size = mos.size(); p < size; ++p) {
             mos_rel_space_[mos[p]] = std::make_pair(space, p);
@@ -179,9 +179,9 @@ void CASSCF_ORB_GRAD::read_options() {
     zero_rots_.resize(nirrep_);
     auto zero_rots = options_->get_gen_list("CASSCF_ZERO_ROT");
 
-    if (zero_rots.size() != 0) {
-        for (size_t i = 0, npairs = zero_rots.size(); i < npairs; ++i) {
-            py::list pair = zero_rots[i];
+    if (!zero_rots.empty()) {
+        for (auto&& zero_rot : zero_rots) {
+            py::list pair = zero_rot;
             if (pair.size() != 3) {
                 outfile->Printf("\n  Error: invalid input of CASSCF_ZERO_ROT.");
                 outfile->Printf("\n  Each entry should take an array of three numbers.");
@@ -214,9 +214,8 @@ void CASSCF_ORB_GRAD::read_options() {
 
     auto frza_rot = options_->get_int_list("CASSCF_ACTIVE_FROZEN_ORBITAL");
     auto actv_rel_mos = mo_space_info_->relative_mo("ACTIVE");
-    if (frza_rot.size() != 0) {
-        for (size_t i = 0, size = frza_rot.size(); i < size; ++i) {
-            size_t u = frza_rot[i];
+    if (not frza_rot.empty()) {
+        for (size_t u : frza_rot) {
             if (u >= nactv_) {
                 outfile->Printf("\n  Error: invalid indices in CASSCF_ACTIVE_FROZEN_ORBITAL.");
                 outfile->Printf("\n  Active orbitals include all of those in GAS1-GAS6");
@@ -235,7 +234,7 @@ void CASSCF_ORB_GRAD::read_options() {
         }
     }
 
-    if (debug_print_ and zero_rots_.size()) {
+    if (debug_print_ and !zero_rots_.empty()) {
         print_h2("Orbital Rotations Ignored (User Defined)");
         outfile->Printf("\n    Both irrep and indices are zero-based.\n");
         for (int h = 0; h < nirrep_; ++h) {
@@ -287,8 +286,8 @@ void CASSCF_ORB_GRAD::nonredundant_pairs() {
                 if (in_zero_rots(hi, ni, nj))
                     continue;
 
-                rot_mos_irrep_.push_back(std::make_tuple(hi, ni, nj));
-                rot_mos_block_.push_back(std::make_tuple(block, i, j));
+                rot_mos_irrep_.emplace_back(hi, ni, nj);
+                rot_mos_block_.emplace_back(block, i, j);
                 nrots[block][hi] += 1;
             }
         }
@@ -316,22 +315,22 @@ void CASSCF_ORB_GRAD::nonredundant_pairs() {
                 nrots[space_name] = std::vector<int>(nirrep_, 0);
 
                 // loop over indices in GASm
-                for (int u = 0, u_size = g0_in_actv.size(); u < u_size; ++u) {
-                    int hu = mos_rel_[mos[g0_in_actv[u]]].first;
-                    auto nu = mos_rel_[mos[g0_in_actv[u]]].second;
+                for (size_t u : g0_in_actv) {
+                    int hu = mos_rel_[mos[u]].first;
+                    auto nu = mos_rel_[mos[u]].second;
 
                     // loop over indices in GASn
-                    for (int v = 0, v_size = g1_in_actv.size(); v < v_size; ++v) {
-                        if (hu != mos_rel_[mos[g1_in_actv[v]]].first)
+                    for (size_t v : g1_in_actv) {
+                        if (hu != mos_rel_[mos[v]].first)
                             continue;
 
-                        auto nv = mos_rel_[mos[g1_in_actv[v]]].second;
+                        auto nv = mos_rel_[mos[v]].second;
 
                         if (in_zero_rots(hu, nu, nv))
                             continue;
 
-                        rot_mos_irrep_.push_back({hu, nv, nu});
-                        rot_mos_block_.push_back({"aa", g1_in_actv[v], g0_in_actv[u]});
+                        rot_mos_irrep_.emplace_back(hu, nv, nu);
+                        rot_mos_block_.emplace_back("aa", v, u);
                         nrots[space_name][hu] += 1;
                     }
                 }
@@ -365,8 +364,8 @@ void CASSCF_ORB_GRAD::nonredundant_pairs() {
                     if (in_zero_rots(hu, nu, nv))
                         continue;
 
-                    rot_mos_irrep_.push_back({hu, nv, nu});
-                    rot_mos_block_.push_back({"aa", g_in_actv[v], g_in_actv[u]});
+                    rot_mos_irrep_.emplace_back(hu, nv, nu);
+                    rot_mos_block_.emplace_back("aa", g_in_actv[v], g_in_actv[u]);
                     nrots[space_name][hu] += 1;
                 }
             }
@@ -427,7 +426,7 @@ void CASSCF_ORB_GRAD::init_tensors() {
 
     std::vector<std::string> g_blocks{"ac", "vc", "va"};
     if (internal_rot_ or gas_ref_) {
-        g_blocks.push_back("aa");
+        g_blocks.emplace_back("aa");
         Guu_ = ambit::BlockedTensor::build(CoreTensor, "Guu", {"aa"});
         Guv_ = ambit::BlockedTensor::build(CoreTensor, "Guv", {"aa"});
         jk_internal_ = ambit::BlockedTensor::build(CoreTensor, "tei_internal", {"aaa"});
@@ -473,6 +472,9 @@ void CASSCF_ORB_GRAD::fill_tei_custom(ambit::BlockedTensor V) {
 }
 
 void CASSCF_ORB_GRAD::build_tei_from_ao() {
+    if (nactv_ == 0)
+        return;
+
     // This function will do an integral transformation using the JK builder,
     // and return the integrals of type <px|uy> = (pu|xy).
     timer_on("Build (pu|xy) integrals");
@@ -523,7 +525,7 @@ void CASSCF_ORB_GRAD::build_tei_from_ao() {
     Cl.clear();
     Cr.clear();
 
-    // figure out memeory bottleneck
+    // figure out memory bottleneck
     size_t mem_sys = psi::Process::environment.get_memory() * 0.85;
     size_t max_elements = nactv_ * nactv_ * nso_ * nso_ * sizeof(double);
     size_t n_buckets = max_elements / mem_sys + (max_elements % mem_sys ? 1 : 0);
@@ -545,7 +547,7 @@ void CASSCF_ORB_GRAD::build_tei_from_ao() {
     pairs.reserve(nactv_ * (nactv_ + 1) / 2);
     for (size_t x = 0; x < nactv_; ++x) {
         for (size_t y = x; y < nactv_; ++y) {
-            pairs.push_back(std::make_tuple(x, y));
+            pairs.emplace_back(x, y);
         }
     }
 
@@ -890,7 +892,7 @@ void CASSCF_ORB_GRAD::compute_orbital_hess_diag() {
 void CASSCF_ORB_GRAD::reshape_rot_ambit(ambit::BlockedTensor bt, psi::SharedVector sv) {
     size_t vec_size = sv->dimpi().sum();
     if (vec_size != nrot_) {
-        std::runtime_error("Inconsistent size between SharedVector and number of rotaitons");
+        throw std::runtime_error("Inconsistent size between SharedVector and number of rotations");
     }
 
     for (size_t n = 0; n < nrot_; ++n) {
@@ -982,7 +984,7 @@ std::shared_ptr<psi::Matrix> CASSCF_ORB_GRAD::canonicalize() {
     if (orb_type_redundant_ == "CANONICAL") {
         mos_dim.push_back(nactvpi_);
         mos_offsets.push_back(ndoccpi_);
-        names.push_back("ACTIVE");
+        names.emplace_back("ACTIVE");
     }
 
     for (int i = 0, size = mos_dim.size(); i < size; ++i) {

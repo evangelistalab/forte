@@ -102,7 +102,7 @@ void MCSCF_2STEP::read_options() {
     diis_start_ = options_->get_int("CASSCF_DIIS_START");
     diis_max_vec_ = options_->get_int("CASSCF_DIIS_MAX_VEC");
     diis_min_vec_ = options_->get_int("CASSCF_DIIS_MIN_VEC");
-    do_diis_ = (diis_start_ < 1) ? false : true;
+    do_diis_ = diis_start_ >= 1;
 }
 
 void MCSCF_2STEP::print_options() {
@@ -129,10 +129,10 @@ void MCSCF_2STEP::print_options() {
         {"Debug printing", debug_print_}};
 
     if (do_diis_) {
-        info_int.push_back({"DIIS start", diis_start_});
-        info_int.push_back({"Min DIIS vectors", diis_min_vec_});
-        info_int.push_back({"Max DIIS vectors", diis_max_vec_});
-        info_int.push_back({"Frequency of DIIS extrapolation", diis_freq_});
+        info_int.emplace_back("DIIS start", diis_start_);
+        info_int.emplace_back("Min DIIS vectors", diis_min_vec_);
+        info_int.emplace_back("Max DIIS vectors", diis_max_vec_);
+        info_int.emplace_back("Frequency of DIIS extrapolation", diis_freq_);
     }
 
     // print some information
@@ -177,7 +177,6 @@ double MCSCF_2STEP::compute_energy() {
 
     // set up L-BFGS solver and its parameters for micro iteration
     auto lbfgs_param = std::make_shared<LBFGS_PARAM>();
-    lbfgs_param->maxiter = micro_miniter_;
     lbfgs_param->print = debug_print_ ? 5 : print_;
     lbfgs_param->max_dir = max_rot_;
     lbfgs_param->step_length_method = LBFGS_PARAM::STEP_LENGTH_METHOD::MAX_CORRECTION;
@@ -185,13 +184,15 @@ double MCSCF_2STEP::compute_energy() {
     LBFGS lbfgs(lbfgs_param);
 
     // CI convergence criteria along the way
-    double dl_e_conv = nrot ? 1.0e-6 : e_conv_;
-    double dl_r_conv = nrot ? 5.0e-4 : r_conv;
+    double dl_e_conv = nrot ? 1.0e-7 : e_conv_;
+    double dl_r_conv = nrot ? 5.0e-5 : r_conv;
 
     // start iterations
-    bool converged = false;
     bool sr = mo_space_info_->size("ACTIVE") == 0;
+    lbfgs_param->epsilon = sr ? g_conv_ : 1.0e-6;
+    lbfgs_param->maxiter = sr ? micro_maxiter_ : micro_miniter_;
     double e_c;
+    bool converged = false;
     RDMs rdms;
     std::vector<CASSCF_HISTORY> history;
     bool dump_wfn = ci_type_ == "DETCI";
@@ -249,8 +250,19 @@ double MCSCF_2STEP::compute_energy() {
         bool is_e_conv =
             std::fabs(de) < e_conv_ and std::fabs(de_c) < e_conv_ and std::fabs(de_o) < e_conv_;
         bool is_g_conv = g_rms < g_conv_ or lbfgs.converged();
+        if (sr) {
+            if (is_g_conv) {
+                psi::outfile->Printf("\n\n  SCF iterations have converged!");
+                energy_ = e_o;
+                converged = true;
+            } else {
+                std::string msg = "SCF did not converge! Please increase CASSCF_MICRO_MAXITER.";
+                throw std::runtime_error(msg);
+            }
+            break;
+        }
         // at convergence, DIIS should not be just reset
-        bool is_diis_conv = !do_diis_ or (diis_manager.subspace_size() > 1);
+        bool is_diis_conv = !do_diis_ or (diis_manager.subspace_size() > 1) or sr;
         if (is_e_conv and is_g_conv and is_diis_conv) {
             std::string msg = "A miracle has come to pass: MCSCF iterations have converged!";
             psi::outfile->Printf("\n\n  %s", msg.c_str());
@@ -404,8 +416,8 @@ MCSCF_2STEP::diagonalize_hamiltonian(std::shared_ptr<ActiveSpaceIntegrals> fci_i
 
 void MCSCF_2STEP::print_macro_iteration(std::vector<CASSCF_HISTORY>& history) {
     print_h2("MCSCF Iteration Summary");
-    std::string dash1 = std::string(30, '-').c_str();
-    std::string dash2 = std::string(88, '-').c_str();
+    std::string dash1 = std::string(30, '-');
+    std::string dash2 = std::string(88, '-');
     psi::outfile->Printf("\n                      Energy CI                    Energy Orbital");
     psi::outfile->Printf("\n           %s  %s", dash1.c_str(), dash1.c_str());
     psi::outfile->Printf("\n    Iter.        Total Energy       Delta        Total Energy       "
