@@ -84,6 +84,8 @@ class LBFGS {
 
     /// The current iteration number
     int iter_;
+    /// The shift to iteration number
+    int iter_shift_;
 
     /// Parameters of L-BFGS
     std::shared_ptr<LBFGS_PARAM> param_;

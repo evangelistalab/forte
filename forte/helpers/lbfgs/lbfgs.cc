@@ -83,7 +83,6 @@ template <class Foo> double LBFGS::minimize(Foo& func, psi::SharedVector x) {
 
     // start iteration
     converged_ = false;
-    int bad_shift = 0;
     do {
         // compute diagonal Hessian if needed
         if (iter_ != 0 and param_->h0_freq > 0) {
@@ -117,17 +116,17 @@ template <class Foo> double LBFGS::minimize(Foo& func, psi::SharedVector x) {
         }
 
         // compute differences
-        auto s = std::make_shared<psi::Vector>(*x->clone());
+        auto s = std::make_shared<psi::Vector>(*x);
         s->subtract(x_last_);
 
-        auto y = std::make_shared<psi::Vector>(*g_->clone());
+        auto y = std::make_shared<psi::Vector>(*g_);
         y->subtract(g_last_);
 
         double rho = y->vector_dot(s);
 
         // save history
         if (rho > 0) {
-            int iter = iter_ - bad_shift;
+            int iter = iter_ - iter_shift_;
             int index = (iter - 1) % param_->m;
 
             if (iter <= param_->m) {
@@ -142,7 +141,7 @@ template <class Foo> double LBFGS::minimize(Foo& func, psi::SharedVector x) {
             x_last_->copy(*x);
             g_last_->copy(*g_);
         } else {
-            bad_shift++;
+            iter_shift_++;
             if (param_->print > 1) {
                 outfile->Printf("\n  L-BFGS Warning: Skip this vector due to negative rho");
             }
@@ -159,8 +158,8 @@ template <class Foo> double LBFGS::minimize(Foo& func, psi::SharedVector x) {
 void LBFGS::update() {
     p_->copy(*g_);
 
-    int m = std::min(iter_, param_->m);
-    int end = m ? (iter_ - 1) % m : 0; // skip for the very first iteration
+    int m = std::min(iter_ - iter_shift_, param_->m);
+    int end = m ? (iter_ - iter_shift_ - 1) % m : 0; // skip for the very first iteration
 
     // first loop
     for (int k = 0; k < m; ++k) {
@@ -217,7 +216,7 @@ void LBFGS::scale_direction_vector(Foo& func, psi::SharedVector x, double& fx, d
 
     x->axpy(step, p_);
 
-    bool do_grad = iter_ + 1 < param_->maxiter;
+    bool do_grad = iter_ - iter_shift_ + 1 < param_->maxiter;
     fx = func.evaluate(x, g_, do_grad);
 }
 
@@ -418,8 +417,8 @@ void LBFGS::apply_h0(psi::SharedVector q) {
 
 double LBFGS::compute_gamma() {
     double value = 1.0;
-    if (iter_) {
-        int end = (iter_ - 1) % (std::min(iter_, param_->m));
+    if (iter_ - iter_shift_) {
+        int end = (iter_ - iter_shift_ - 1) % (std::min(iter_ - iter_shift_, param_->m));
         value = s_[end]->vector_dot(y_[end]) / y_[end]->vector_dot(y_[end]);
     }
     return value;
@@ -435,6 +434,7 @@ void LBFGS::resize(int m) {
 void LBFGS::reset() {
     resize(param_->m);
     iter_ = 0;
+    iter_shift_ = 0;
 }
 
 template double LBFGS::minimize(ROSENBROCK& func, psi::SharedVector x);
