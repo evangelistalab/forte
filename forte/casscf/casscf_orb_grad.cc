@@ -180,8 +180,8 @@ void CASSCF_ORB_GRAD::read_options() {
     auto zero_rots = options_->get_gen_list("CASSCF_ZERO_ROT");
 
     if (!zero_rots.empty()) {
-        for (auto&& zero_rot : zero_rots) {
-            py::list pair = zero_rot;
+        for (size_t i = 0, npairs = zero_rots.size(); i < npairs; ++i) {
+            py::list pair = zero_rots[i];
             if (pair.size() != 3) {
                 outfile->Printf("\n  Error: invalid input of CASSCF_ZERO_ROT.");
                 outfile->Printf("\n  Each entry should take an array of three numbers.");
