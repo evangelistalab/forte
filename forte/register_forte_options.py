@@ -808,9 +808,9 @@ def register_casscf_options(options):
 
     options.add_int("CASSCF_MAXITER", 100, "The maximum number of CASSCF macro iterations")
 
-    options.add_int("CASSCF_MICRO_MAXITER", 50, "The maximum number of CASSCF micro iterations")
+    options.add_int("CASSCF_MICRO_MAXITER", 12, "The maximum number of CASSCF micro iterations")
 
-    options.add_int("CASSCF_MICRO_MINITER", 15, "The minimum number of CASSCF micro iterations")
+    options.add_int("CASSCF_MICRO_MINITER", 4, "The minimum number of CASSCF micro iterations")
 
     options.add_int("CPSCF_MAXITER", 50, "Max iteration of solving coupled perturbed SCF equation")
 
@@ -860,16 +860,16 @@ def register_casscf_options(options):
 
     options.add_bool("RESTRICTED_DOCC_JK", True, "Use JK builder for restricted docc (EXPERT)?")
 
-    options.add_double("CASSCF_MAX_ROTATION", 0.5, "Max value in orbital update vector")
+    options.add_double("CASSCF_MAX_ROTATION", 0.1, "Max value in orbital update vector")
 
     options.add_str(
         "ORB_ROTATION_ALGORITHM", "DIAGONAL", ["DIAGONAL", "AUGMENTED_HESSIAN"], "Orbital rotation algorithm"
     )
 
     options.add_bool("CASSCF_DO_DIIS", True, "Use DIIS in CASSCF orbital optimization")
-    options.add_int("CASSCF_DIIS_MIN_VEC", 2, "Minimum size of DIIS vectors for orbital rotations")
+    options.add_int("CASSCF_DIIS_MIN_VEC", 4, "Minimum size of DIIS vectors for orbital rotations")
     options.add_int("CASSCF_DIIS_MAX_VEC", 8, "Maximum size of DIIS vectors for orbital rotations")
-    options.add_int("CASSCF_DIIS_START", 2, "Iteration number to start adding error vectors (< 1 will not do DIIS)")
+    options.add_int("CASSCF_DIIS_START", 4, "Iteration number to start adding error vectors (< 1 will not do DIIS)")
     options.add_int("CASSCF_DIIS_FREQ", 1, "How often to do DIIS extrapolation")
     options.add_double("CASSCF_DIIS_NORM", 1e-3, "Do DIIS when the orbital gradient norm is below this value")
 
@@ -903,7 +903,13 @@ def register_old_options(options):
     options.add_bool("USE_DMRGSCF", False, "Use the older DMRGSCF algorithm?")
 
     #    /*- Semicanonicalize orbitals -*/
-    options.add_bool("SEMI_CANONICAL", True, "Semicanonicalize orbitals")
+    options.add_bool("SEMI_CANONICAL", True,
+                     "Semicanonicalize orbitals for each elementary orbital space")
+    options.add_bool("SEMI_CANONICAL_MIX_INACTIVE", False,
+                     "Treat frozen and restricted orbitals together for semi-canonicalization")
+    options.add_bool("SEMI_CANONICAL_MIX_ACTIVE", False,
+                     "Treat all GAS orbitals together for semi-canonicalization")
+
     #    /*- Two-particle density cumulant -*/
     options.add_str("TWOPDC", "MK", ["MK", "ZERO"], "The form of the two-particle density cumulant")
     options.add_str("THREEPDC", "MK", ["MK", "MK_DECOMP", "ZERO"], "The form of the three-particle density cumulant")

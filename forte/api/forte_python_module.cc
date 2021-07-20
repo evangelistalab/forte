@@ -46,9 +46,7 @@
 #include "integrals/make_integrals.h"
 
 #include "orbital-helpers/aosubspace.h"
-#include "orbital-helpers/localize.h"
 #include "orbital-helpers/mp2_nos.h"
-#include "orbital-helpers/semi_canonicalize.h"
 #include "orbital-helpers/orbital_embedding.h"
 #include "orbital-helpers/fragment_projector.h"
 
@@ -82,6 +80,7 @@ void export_SparseCISolver(py::module& m);
 void export_ForteCubeFile(py::module& m);
 void export_OrbitalTransform(py::module& m);
 void export_Localize(py::module& m);
+void export_SemiCanonical(py::module& m);
 
 void set_master_screen_threshold(double value);
 double get_master_screen_threshold();
@@ -208,6 +207,7 @@ PYBIND11_MODULE(forte, m) {
     export_Symmetry(m);
     export_OrbitalTransform(m);
     export_Localize(m);
+    export_SemiCanonical(m);
 
     export_Determinant(m);
 
@@ -257,19 +257,6 @@ PYBIND11_MODULE(forte, m) {
         .def("tei_ab", &ActiveSpaceIntegrals::tei_ab, "alpha-beta two-electron integral <pq|rs>")
         .def("tei_bb", &ActiveSpaceIntegrals::tei_bb, "beta-beta two-electron integral <pq||rs>")
         .def("print", &ActiveSpaceIntegrals::print, "Print the integrals (alpha-alpha case)");
-
-    // export SemiCanonical
-    py::class_<SemiCanonical>(m, "SemiCanonical")
-        .def(py::init<std::shared_ptr<MOSpaceInfo>, std::shared_ptr<ForteIntegrals>,
-                      std::shared_ptr<ForteOptions>, bool>(),
-             "mo_space_info"_a, "ints"_a, "options"_a, "quiet_banner"_a = false)
-        .def("semicanonicalize", &SemiCanonical::semicanonicalize, "reference"_a,
-             "max_rdm_level"_a = 3, "build_fock"_a = true, "transform"_a = true,
-             "Semicanonicalize the orbitals and transform the integrals and reference")
-        .def("transform_rdms", &SemiCanonical::transform_rdms, "Ua"_a, "Ub"_a, "reference"_a,
-             "max_rdm_level"_a, "Transform the RDMs by input rotation matrices")
-        .def("Ua_t", &SemiCanonical::Ua_t, "Return the alpha rotation matrix in the active space")
-        .def("Ub_t", &SemiCanonical::Ub_t, "Return the beta rotation matrix in the active space");
 
     // export MASTER_DSRG
     py::class_<MASTER_DSRG>(m, "MASTER_DSRG")

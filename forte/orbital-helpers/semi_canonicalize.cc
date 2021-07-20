@@ -178,7 +178,7 @@ bool SemiCanonical::check_fock_matrix() {
 
             // check threshold
             double threshold_norm = npi.sum() * (npi.sum() - 1) * threshold_tight_;
-            bool Fdo = (Fmax <= threshold_loose_ && Fnorm <= threshold_norm) ? false : true;
+            bool Fdo = !(Fmax <= threshold_loose_ && Fnorm <= threshold_norm);
             checked_results_[name + spin] = Fdo;
             if (Fdo) {
                 semi = false;
@@ -212,7 +212,7 @@ void SemiCanonical::build_transformation_matrices() {
 
     std::vector<std::string> spin_cases{"alpha"};
     if (fock_a != fock_b)
-        spin_cases.push_back("beta");
+        spin_cases.emplace_back("beta");
 
     for (const std::string& spin : spin_cases) {
         bool is_alpha = (spin == "alpha");
