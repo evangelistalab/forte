@@ -55,7 +55,8 @@ class MCSCF_2STEP {
      *   See J. Chem. Phys. 142, 224103 (2015) and Theor. Chem. Acc. 97, 88-95 (1997)
      */
     MCSCF_2STEP(const std::map<StateInfo, std::vector<double>>& state_weights_map,
-                std::shared_ptr<ForteOptions> options, std::shared_ptr<ForteIntegrals> ints,
+                std::shared_ptr<MOSpaceInfo> mo_space_info, std::shared_ptr<ForteOptions> options,
+                std::shared_ptr<ForteIntegrals> ints,
                 std::shared_ptr<ActiveSpaceSolver> active_space_solver);
 
     /// Compute the MCSCF energy
@@ -171,6 +172,7 @@ class MCSCF_2STEP {
 
 std::unique_ptr<MCSCF_2STEP>
 make_mcscf_two_step(const std::map<StateInfo, std::vector<double>>& state_weight_map,
+                    std::shared_ptr<MOSpaceInfo> mo_space_info,
                     std::shared_ptr<ForteOptions> options, std::shared_ptr<ForteIntegrals> ints,
                     std::shared_ptr<ActiveSpaceSolver> active_space_solver);
 

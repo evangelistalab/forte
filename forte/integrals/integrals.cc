@@ -288,15 +288,6 @@ std::vector<std::shared_ptr<psi::Matrix>> ForteIntegrals::ao_dipole_ints() const
     return dipole_ints_ao_;
 }
 
-// void ForteIntegrals::set_oei(double** ints, bool alpha) {
-//    std::vector<double>& p_oei = alpha ? one_electron_integrals_a_ : one_electron_integrals_b_;
-//    for (size_t p = 0; p < aptei_idx_; ++p) {
-//        for (size_t q = 0; q < aptei_idx_; ++q) {
-//            p_oei[p * aptei_idx_ + q] = ints[p][q];
-//        }
-//    }
-//}
-
 void ForteIntegrals::set_oei(size_t p, size_t q, double value, bool alpha) {
     std::vector<double>& p_oei = alpha ? one_electron_integrals_a_ : one_electron_integrals_b_;
     p_oei[p * aptei_idx_ + q] = value;

@@ -256,6 +256,8 @@ psi::Slice MOSpaceInfo::range(const std::string& space) {
     return psi::Slice(dim_start, dim_end);
 }
 
+const std::vector<size_t>& MOSpaceInfo::reorder() const { return reorder_; }
+
 void MOSpaceInfo::read_options(std::shared_ptr<ForteOptions> options) {
     // Read the elementary spaces
     for (const std::string& space : elementary_spaces_) {

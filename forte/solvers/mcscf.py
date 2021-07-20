@@ -5,14 +5,16 @@ from forte.solvers.solver import Solver
 
 from forte.forte import ForteOptions
 from forte import forte_options
-from forte.forte import make_mcscf_two_step
+from forte.forte import make_mcscf_two_step, make_mo_space_info_from_map
 
 
 class MCSCF(Solver):
     """
     A class to perform orbital optimization
     """
-    def __init__(self, input_nodes, e_convergence=1.0e-10, r_convergence=1.0e-6, options=None, cbh=None):
+    def __init__(
+        self, input_nodes, e_convergence=1.0e-10, r_convergence=1.0e-6, freeze_core=False, options=None, cbh=None
+    ):
         """
         Initialize an ActiveSpaceSolver object
 
@@ -24,6 +26,8 @@ class MCSCF(Solver):
             energy convergence criterion
         r_convergence: float
             residual convergence criterion
+        freeze_core: bool
+            freeze rotations of the core orbitals? (default = False)
         options: dict()
             Additional options passed to control the active space solver
         cbh: CallbackHandler
@@ -41,6 +45,7 @@ class MCSCF(Solver):
         self._data = self.input_nodes[0].data
         self._e_convergence = e_convergence
         self._r_convergence = r_convergence
+        self._freeze_core = freeze_core
 
     def __repr__(self):
         """
@@ -81,9 +86,15 @@ class MCSCF(Solver):
         local_options = ForteOptions(forte_options)
         local_options.set_from_dict(full_options)
 
+        if not self._freeze_core:
+            mcscf_mo_space_info = self._make_mcscf_mo_space_info()
+        else:
+            mcscf_mo_space_info = self.mo_space_info
+
         flog('info', 'MCSCF: making the mcscf object')
         mcscf = make_mcscf_two_step(
-            self.input_nodes[0]._states, local_options, self.ints, self.input_nodes[0].active_space_solver
+            self.input_nodes[0]._states, mcscf_mo_space_info, local_options, self.ints,
+            self.input_nodes[0].active_space_solver
         )
         flog('info', 'MCSCF: computing the energy')
         average_energy, energies = mcscf.compute_energy()
@@ -93,3 +104,30 @@ class MCSCF(Solver):
         self._results.add('mcscf energy', energies, 'MCSCF energy', 'Eh')
 
         return self
+
+    def _make_mcscf_mo_space_info(self):
+        """This function prepares a MOSpaceInfo info object for a MCSCF computation
+
+        We basically take frozen orbitals and combined them with the restricted ones
+        """
+        print(self.mo_space_info)
+        mo_space_dict = {}
+        for space in self.mo_space_info.space_names():
+            mo_space_dict[space] = list(self.mo_space_info.dimension(space).to_tuple())
+        docc = []
+        uocc = []
+        for x, y in zip(mo_space_dict['FROZEN_DOCC'], mo_space_dict['RESTRICTED_DOCC']):
+            docc.append(x + y)
+        for x, y in zip(mo_space_dict['FROZEN_UOCC'], mo_space_dict['RESTRICTED_UOCC']):
+            uocc.append(x + y)
+        mo_space_dict.pop('FROZEN_DOCC')
+        mo_space_dict.pop('FROZEN_UOCC')
+        mo_space_dict['RESTRICTED_DOCC'] = docc
+        mo_space_dict['RESTRICTED_UOCC'] = uocc
+
+        nmopi = self.data.scf_info.nmopi()
+        point_group = self.model.point_group
+        mcscf_mo_info = make_mo_space_info_from_map(nmopi, point_group, mo_space_dict, self.mo_space_info.reorder())
+        print(mcscf_mo_info)
+
+        return mcscf_mo_info

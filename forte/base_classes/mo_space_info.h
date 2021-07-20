@@ -206,6 +206,8 @@ class MOSpaceInfo {
     std::vector<size_t> pos_in_space(const std::string& space, const std::string& composite_space);
     /// @return The psi::Slice for a space counting started at absolute zero
     psi::Slice range(const std::string& space);
+    /// @return The reorder vector
+    const std::vector<size_t>& reorder() const;
 
     /// Read the space info from forte options(inputs)
     void read_options(std::shared_ptr<ForteOptions> options);
