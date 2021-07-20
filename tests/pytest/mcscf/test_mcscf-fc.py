@@ -22,7 +22,6 @@ def test_mcscf_nofc():
     fci = ActiveSpaceSolver(hf, type='DETCI', states=state, mo_spaces=mo_spaces)
     mcscf = MCSCF(fci)
     mcscf.run()
-    print(mcscf.value('mcscf energy')[state])
     assert mcscf.value('mcscf energy')[state] == pytest.approx([ref_mcscf_energy], 1.0e-10)
 
 

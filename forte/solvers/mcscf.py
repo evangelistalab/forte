@@ -110,7 +110,6 @@ class MCSCF(Solver):
 
         We basically take frozen orbitals and combined them with the restricted ones
         """
-        print(self.mo_space_info)
         mo_space_dict = {}
         for space in self.mo_space_info.space_names():
             mo_space_dict[space] = list(self.mo_space_info.dimension(space).to_tuple())
@@ -125,9 +124,9 @@ class MCSCF(Solver):
         mo_space_dict['RESTRICTED_DOCC'] = docc
         mo_space_dict['RESTRICTED_UOCC'] = uocc
 
+        # build a MOSpaceInfo object with frozen MOs merged with the restricted MOs
         nmopi = self.data.scf_info.nmopi()
         point_group = self.model.point_group
         mcscf_mo_info = make_mo_space_info_from_map(nmopi, point_group, mo_space_dict, self.mo_space_info.reorder())
-        print(mcscf_mo_info)
 
         return mcscf_mo_info
