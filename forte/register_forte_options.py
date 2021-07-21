@@ -191,7 +191,7 @@ def register_embedding_options(options):
         "Perform semi-canonicalization on frozen core/virtual space or not")
     options.add_bool(
         "EMBEDDING_FOCK_BUILD", False,
-        "Build AO-CAS Fock matrix before semicanonicalization, to guarantee block-diagonalized generalized Fock Matrix.")
+        "(Internal option) Build AO-CAS Fock matrix before semicanonicalization, to guarantee block-diagonalized generalized Fock Matrix.")
     options.add_int(
         "EMBEDDING_ADJUST_B_DOCC", 0, "Adjust number of occupied orbitals between A and B, +: move to B, -: move to A"
     )
@@ -205,7 +205,7 @@ def register_embedding_options(options):
         "Enable this option will generate PAOs equivlent to ASET virtuals, instead of using threshold")
     options.add_str(
         "EMBEDDING_TYPE", "ASET_MF", ["ASET_MF", "ASET2", "ASET-SWAP"],
-        "The type of embedding computations.")
+        "(Internal option, controled by job_type and proc/aset2.py) The type of embedding computations.")
     options.add_str(
         'FRAGMENT_DENSITY', 'RHF', ['CASCI', 'CASSCF', 'RHF', 'FULL'],
         'The real/approximate RDMs used in the correlative environment computation')
@@ -245,7 +245,8 @@ def register_embedding_options(options):
         "So we need to turn this term off for the A+B computation, and turn it on to add those energy back when only computing A")
     options.add_bool(
         "EMBEDDING_ASET2_MF_REF", True,
-        "Whether we compute an additional ASET(mf) as reference when doing ASET(2).")
+        "(for benchmarking) When running aset2 driver, we can run an additional ASET(mf) as reference."
+        "If we want both ASET(mf) and ASET(2) data, this will be cheaper than running both seperately.")
     options.add_bool(
         "FRAG_DO_FCI", False,
         "(For benchmarking) Perform a FCI computation on the fragment (A), override other settings.")

@@ -86,14 +86,14 @@ def aset2_driver(state_weights_map, scf_info, ref_wfn, mo_space_info, options):
         psi4.core.print_out("\n  Procedure: ASET(MF)-[{:s}] -> {:s} -> ASET(2)-[{:s}]".format(name, frag_density, name))
     else:
         psi4.core.print_out("\n  Procedure: {:s} -> ASET(2)-[{:s}]".format(frag_density, name))
-    if(int_type_frag not in ["CONVENTIONAL", "CUSTOM", "FCIDUMP"]):
+    if(int_type_frag in ["CHOLESKY", "DF", "DISKDF"]):
         psi4.core.print_out("\n  Warning: DF/CD integrals inside the fragment (A) are not supported now.")
         psi4.core.print_out("\n  Will build a Custom_Integral for H_bar instead.")
     if(frag_corr_solver == "THREE-DSRG-MRPT2"):
         psi4.core.print_out("\n  Warning: DF/CD integrals inside the fragment (A) are not supported now.")
         psi4.core.print_out("\n  Will automatically convert to conventional DSRG-MRPT2 for H_bar.")
     if(ref_type == "HF"):
-        psi4.core.print_out("\n  Warning: reference has no information on active orbital selections.")
+        psi4.core.print_out("\n  Warning: reference may have no information on active orbital space definitions.")
         psi4.core.print_out("\n  Please ensure that they are set manually in the inputs.")
     psi4.core.print_out("\n  =====================================================================")
     psi4.core.print_out("\n  ")

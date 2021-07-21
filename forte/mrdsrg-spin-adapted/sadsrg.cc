@@ -407,6 +407,7 @@ void SADSRG::fill_three_index_ints(ambit::BlockedTensor B) {
 
 std::shared_ptr<ActiveSpaceIntegrals> SADSRG::compute_Heff_actv() {
     // de-normal-order DSRG transformed Hamiltonian
+    // TODO: add another function that return the fints as ForteIntegral
     double Edsrg = Eref_ + Hbar0_;
     if (foptions_->get_bool("FORM_HBAR3")) {
         deGNO_ints("Hamiltonian", Edsrg, Hbar1_, Hbar2_, Hbar3_);

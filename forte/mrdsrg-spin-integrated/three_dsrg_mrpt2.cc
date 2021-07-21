@@ -348,6 +348,8 @@ double THREE_DSRG_MRPT2::compute_energy() {
         semi_canonical_ = check_semi_orbs();
 
         // Bypass this check if we are doing environment (B) DSRG
+        // Since in ASET we have space A and B, and we can only semicanonicalize as A or A+B, not both.
+        // Therefore, this internal option keeps tracking the situation and turn the semi on/off
         bool semi_skip = foptions_->get_bool("EMBEDDING_DISABLE_SEMI_CHECK");
         bool embedding = foptions_->get_bool("EMBEDDING");
         if (embedding && semi_skip) {
