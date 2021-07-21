@@ -144,11 +144,14 @@ class RDMs {
     /// @return the spin-free 3-cumulant
     ambit::Tensor SF_L3();
 
+    /// Rotate the current RDMs using the input unitary matrices
+    void rotate(const ambit::Tensor& Ua, const ambit::Tensor& Ub);
+
     // class variables
 
-    size_t max_rdm_level() { return max_rdm_; }
+    size_t max_rdm_level() const { return max_rdm_; }
 
-    bool ms_avg() { return ms_avg_; }
+    bool ms_avg() const { return ms_avg_; }
 
   protected:
     // ==> Class Data <==
@@ -236,8 +239,6 @@ class RDMs {
     /// Was L3bbb built?
     bool have_L3bbb_ = false;
 
-    /// Was SF_L1_ built?
-    bool have_SF_L1_ = false;
     /// Was SF_L2_ built?
     bool have_SF_L2_ = false;
     /// Was SF_L3_ built?
@@ -245,6 +246,11 @@ class RDMs {
 
     /// Was SF_g2_ built?
     bool have_SF_g2_ = false;
+
+    /// Rotate the current RDMs based on Ms-averaged formalism
+    void rotate_restricted(const ambit::Tensor& Ua);
+    /// Rotate the current RDMs for all spin cases
+    void rotate_unrestricted(const ambit::Tensor& Ua, const ambit::Tensor& Ub);
 };
 
 /**
@@ -352,8 +358,8 @@ void make_cumulant_L3bbb_in_place(const ambit::Tensor& g1b, const ambit::Tensor&
  * @param Enuc the nucleaer repulsion energy
  * @return the reference energy
  */
-double compute_Eref_from_rdms(RDMs& ref, std::shared_ptr<ForteIntegrals> ints,
-                              std::shared_ptr<MOSpaceInfo> mo_space_info);
+double compute_Eref_from_rdms(RDMs& ref, const std::shared_ptr<ForteIntegrals>& ints,
+                              const std::shared_ptr<MOSpaceInfo>& mo_space_info);
 } // namespace forte
 
-#endif // _reference_h_
+#endif // _rdms_h_

@@ -860,16 +860,16 @@ def register_casscf_options(options):
 
     options.add_bool("RESTRICTED_DOCC_JK", True, "Use JK builder for restricted docc (EXPERT)?")
 
-    options.add_double("CASSCF_MAX_ROTATION", 0.1, "Max value in orbital update vector")
+    options.add_double("CASSCF_MAX_ROTATION", 0.2, "Max value in orbital update vector")
 
     options.add_str(
         "ORB_ROTATION_ALGORITHM", "DIAGONAL", ["DIAGONAL", "AUGMENTED_HESSIAN"], "Orbital rotation algorithm"
     )
 
     options.add_bool("CASSCF_DO_DIIS", True, "Use DIIS in CASSCF orbital optimization")
-    options.add_int("CASSCF_DIIS_MIN_VEC", 4, "Minimum size of DIIS vectors for orbital rotations")
+    options.add_int("CASSCF_DIIS_MIN_VEC", 2, "Minimum size of DIIS vectors for orbital rotations")
     options.add_int("CASSCF_DIIS_MAX_VEC", 8, "Maximum size of DIIS vectors for orbital rotations")
-    options.add_int("CASSCF_DIIS_START", 4, "Iteration number to start adding error vectors (< 1 will not do DIIS)")
+    options.add_int("CASSCF_DIIS_START", 15, "Iteration number to start adding error vectors (< 1 will not do DIIS)")
     options.add_int("CASSCF_DIIS_FREQ", 1, "How often to do DIIS extrapolation")
     options.add_double("CASSCF_DIIS_NORM", 1e-3, "Do DIIS when the orbital gradient norm is below this value")
 
