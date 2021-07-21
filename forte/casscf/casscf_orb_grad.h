@@ -67,7 +67,7 @@ class CASSCF_ORB_GRAD {
     double evaluate(psi::SharedVector x, psi::SharedVector g, bool do_g = true);
 
     /// Evaluate the diagonal orbital Hessian
-    void hess_diag(psi::SharedVector x, psi::SharedVector h0);
+    void hess_diag(psi::SharedVector x, const psi::SharedVector& h0);
 
     /// Set RDMs used for orbital optimization
     void set_rdms(RDMs& rdms);
@@ -76,7 +76,7 @@ class CASSCF_ORB_GRAD {
     std::shared_ptr<ActiveSpaceIntegrals> active_space_ints();
 
     /// Return the number of nonredundant orbital rotations
-    size_t nrot() { return nrot_; }
+    size_t nrot() const { return nrot_; }
 
     /// Return the initial (not optimized) MO coefficients
     psi::SharedMatrix Ca_initial() { return C0_; }
@@ -88,7 +88,7 @@ class CASSCF_ORB_GRAD {
     psi::SharedMatrix fock() { return Fock_; }
 
     /// Canonicalize the final orbitals
-    void canonicalize_final(psi::SharedMatrix U);
+    void canonicalize_final(const psi::SharedMatrix& U);
 
     /// Compute nuclear gradient
     void compute_nuclear_gradient();
@@ -281,6 +281,10 @@ class CASSCF_ORB_GRAD {
     /// Update orbitals using the given rotation matrix in vector form
     bool update_orbitals(psi::SharedVector x);
 
+    /// Test if new orbitals are significantly different from the beginning orbitals
+    /// Return a tuple of <irrep, old active orbital index, new active orbital index>
+    std::vector<std::tuple<int, int, int>> test_orbital_rotations(const psi::SharedMatrix& U);
+
     // => Nuclear gradient related functions <=
 
     /// compute AO Lagrangian matrix and push to Psi4
@@ -343,13 +347,13 @@ class CASSCF_ORB_GRAD {
     void fill_A_matrix_data(ambit::BlockedTensor A);
 
     /// Reshape the orbital rotation related BlockedTensor to SharedVector
-    void reshape_rot_ambit(ambit::BlockedTensor bt, psi::SharedVector sv);
+    void reshape_rot_ambit(ambit::BlockedTensor bt, const psi::SharedVector& sv);
 
     /// Fix redundant orbitals and return the rotation matrix
     std::shared_ptr<psi::Matrix> canonicalize();
 
     /// Compute the exponential of a skew-symmetric matrix
-    psi::SharedMatrix matrix_exponential(psi::SharedMatrix A, int n);
+    psi::SharedMatrix matrix_exponential(const psi::SharedMatrix& A, int n);
 
     /// Grab part of the orbital coefficients
     psi::SharedMatrix C_subset(const std::string& name, psi::SharedMatrix C,

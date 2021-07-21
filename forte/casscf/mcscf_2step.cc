@@ -380,6 +380,11 @@ double MCSCF_2STEP::compute_energy() {
             cas_grad.compute_nuclear_gradient();
         }
     } else {
+        // pass to wave function
+        auto Ca = cas_grad.Ca();
+        ints_->wfn()->Ca()->copy(Ca);
+        ints_->wfn()->Cb()->copy(Ca);
+
         // throw error if not converged
         throw_converence_error();
     }

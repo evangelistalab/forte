@@ -27,6 +27,7 @@
  */
 
 #include <ctype.h>
+#include <numeric>
 
 #include "psi4/psi4-dec.h"
 #include "psi4/psifiles.h"
@@ -714,14 +715,30 @@ bool CASSCF_ORB_GRAD::update_orbitals(psi::SharedVector x) {
     // officially save progress of dR
     R_->add(dR);
 
+    // compute exp(dR) and test against previous step
+    auto dU = matrix_exponential(dR, 3);
+    auto bad_rotations = test_orbital_rotations(dU);
+    if (not bad_rotations.empty()) {
+        print_h2("WARNING: Orbital Rotated Outside Active", "!!!", "!!!");
+        for (const auto& tup : bad_rotations) {
+            int h, i_old, i_new;
+            std::tie(h, i_old, i_new) = tup;
+            std::string h_label = mo_space_info_->irrep_label(h);
+            std::string space = i_new < ndoccpi_[h] ? "RESTRICTED_DOCC" : "RESTRICTED_UOCC";
+            outfile->Printf("\n    %s  %6d (ACTIVE) -> %6d %s", h_label.c_str(), i_old, i_new,
+                            space.c_str());
+        }
+    }
+
     // U_new = U_old * exp(dR)
-    U_ = psi::linalg::doublet(U_, matrix_exponential(dR, 3), false, false);
+    U_ = psi::linalg::doublet(U_, dU, false, false);
     U_->set_name("Orthogonal Transformation");
 
     // update orbitals
     C_->gemm(false, false, 1.0, C0_, U_, 0.0);
-    if (ints_->integral_type() == Custom)
+    if (ints_->integral_type() == Custom) {
         ints_->update_orbitals(C_, C_);
+    }
 
     // printing
     if (debug_print_) {
@@ -734,7 +751,7 @@ bool CASSCF_ORB_GRAD::update_orbitals(psi::SharedVector x) {
     return true;
 }
 
-psi::SharedMatrix CASSCF_ORB_GRAD::matrix_exponential(psi::SharedMatrix A, int n) {
+psi::SharedMatrix CASSCF_ORB_GRAD::matrix_exponential(const psi::SharedMatrix& A, int n) {
     auto U = std::make_shared<psi::Matrix>("U = exp(A)", A->rowspi(), A->colspi());
     U->identity();
     U->add(A);
@@ -753,6 +770,51 @@ psi::SharedMatrix CASSCF_ORB_GRAD::matrix_exponential(psi::SharedMatrix A, int n
 
     U->schmidt();
     return U;
+}
+
+std::vector<std::tuple<int, int, int>>
+CASSCF_ORB_GRAD::test_orbital_rotations(const psi::SharedMatrix& U) {
+    // the overlap between new and old orbitals is simply U
+    // O = Cold^T S Cnew = Cold^T S Cold U = U
+    // MOM projection index: Pj = sum_{i}^{actv} O_ij
+    std::vector<std::tuple<int, int, int>> out;
+
+    for (int h = 0; h < nirrep_; ++h) {
+        std::vector<std::pair<double, int>> p;
+        for (int j = 0; j < nmopi_[h]; ++j) {
+            double sum = 0.0;
+            for (int i = 0; i < nactvpi_[h]; ++i) {
+                sum += std::fabs(U->get(h, i + ndoccpi_[h], j));
+            }
+            p.emplace_back(sum, j);
+        }
+
+        // sort the Pj in descending order
+        std::sort(p.rbegin(), p.rend());
+
+        // find are there any orbitals rotated outside active
+        std::vector<int> i_old(nactvpi_[h]);
+        std::iota(i_old.begin(), i_old.end(), ndoccpi_[h]);
+        std::vector<int> i_new;
+
+        for (int i = 0; i < nactvpi_[h]; ++i) {
+            auto j = p[i].second;
+            if (j < ndoccpi_[h] or j >= ndoccpi_[h] + nactvpi_[h]) {
+                i_new.push_back(j);
+            } else {
+                auto it = std::find(i_old.begin(), i_old.end(), j);
+                if (it != i_old.end())
+                    i_old.erase(it);
+            }
+        }
+
+        // print warning if orbitals are rotated outside active
+        for (size_t i = 0, ni = i_old.size(); i < ni; ++i) {
+            out.emplace_back(h, i_old[i], i_new[i]);
+        }
+    }
+
+    return out;
 }
 
 void CASSCF_ORB_GRAD::compute_reference_energy() {
@@ -784,7 +846,7 @@ void CASSCF_ORB_GRAD::compute_orbital_grad() {
     }
 }
 
-void CASSCF_ORB_GRAD::hess_diag(psi::SharedVector, psi::SharedVector h0) {
+void CASSCF_ORB_GRAD::hess_diag(psi::SharedVector, const psi::SharedVector& h0) {
     compute_orbital_hess_diag();
     h0->copy(*hess_diag_);
 }
@@ -889,7 +951,7 @@ void CASSCF_ORB_GRAD::compute_orbital_hess_diag() {
     }
 }
 
-void CASSCF_ORB_GRAD::reshape_rot_ambit(ambit::BlockedTensor bt, psi::SharedVector sv) {
+void CASSCF_ORB_GRAD::reshape_rot_ambit(ambit::BlockedTensor bt, const psi::SharedVector& sv) {
     size_t vec_size = sv->dimpi().sum();
     if (vec_size != nrot_) {
         throw std::runtime_error("Inconsistent size between SharedVector and number of rotations");
@@ -958,9 +1020,23 @@ std::shared_ptr<ActiveSpaceIntegrals> CASSCF_ORB_GRAD::active_space_ints() {
     return fci_ints;
 }
 
-void CASSCF_ORB_GRAD::canonicalize_final(psi::SharedMatrix U) {
+void CASSCF_ORB_GRAD::canonicalize_final(const psi::SharedMatrix& U) {
     U_ = psi::linalg::doublet(U_, U, false, false);
     U_->set_name("Orthogonal Transformation");
+
+    auto bad_rotations = test_orbital_rotations(U_);
+    if (not bad_rotations.empty()) {
+        std::string msg = "Final Active Orbitals Significantly Different from the Original";
+        print_h2(msg, "!!!", "!!!");
+        for (const auto& tup : bad_rotations) {
+            int h, i_old, i_new;
+            std::tie(h, i_old, i_new) = tup;
+            std::string h_label = mo_space_info_->irrep_label(h);
+            std::string space = i_new < ndoccpi_[h] ? "RESTRICTED_DOCC" : "RESTRICTED_UOCC";
+            outfile->Printf("\n    %6d%s -> %-6d%s (%s)", i_old, h_label.c_str(), i_new,
+                            h_label.c_str(), space.c_str());
+        }
+    }
 
     C_->gemm(false, false, 1.0, C0_, U_, 0.0);
     build_mo_integrals();
