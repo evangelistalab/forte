@@ -44,14 +44,14 @@ class ForteOptions;
 
 /**
  * @brief The SemiCanonical class
- * Computes semi-canonical orbitals
+ * Computes semi-canonical orbitals for given 1RDMs
  */
 class SemiCanonical {
   public:
     /**
      * @brief SemiCanonical Constructor
      * @param options ForteOptions
-     * @param ints ForteInegrals
+     * @param ints ForteIntegrals
      * @param mo_space_info MOSpaceInfo
      * @param quiet_banner Method banner is not printed if set to true
      */
@@ -78,25 +78,36 @@ class SemiCanonical {
     ambit::Tensor Ub_t() { return Ub_t_; }
 
   private:
+    /// startup function to find dimensions and variables
     void startup();
 
+    /// read ForteOptions
+    void read_options(const std::shared_ptr<ForteOptions>& foptions);
+
+    /// Forte MOSpaceInfo
     std::shared_ptr<MOSpaceInfo> mo_space_info_;
 
+    /// Forte integral
     std::shared_ptr<ForteIntegrals> ints_;
 
-    // Dimension for all orbitals (number of MOs per irrep)
+    /// Mix the frozen and restricted orbitals together
+    bool inactive_mix_;
+    /// Mix all GAS orbitals together
+    bool active_mix_;
+
+    /// Dimension for all orbitals (number of MOs per irrep)
     psi::Dimension nmopi_;
 
-    // Blocks map
+    /// Blocks map
     std::map<std::string, psi::Dimension> mo_dims_;
 
-    // Offset of GAS orbitals within ACTIVE
+    /// Offset of GAS orbitals within ACTIVE
     std::map<std::string, psi::Dimension> actv_offsets_;
 
-    // Number of active MOs
+    /// Number of active MOs
     size_t nact_;
 
-    // Number of irreps
+    /// Number of irreps
     size_t nirrep_;
 
     /// Unitary matrix for alpha orbital rotation

@@ -54,13 +54,20 @@ SemiCanonical::SemiCanonical(std::shared_ptr<MOSpaceInfo> mo_space_info,
                              std::shared_ptr<ForteOptions> foptions, bool quiet_banner)
     : mo_space_info_(mo_space_info), ints_(ints) {
 
+    read_options(foptions);
     if (!quiet_banner) {
-        print_method_banner({"Semi-Canonical Orbitals",
-                             "Chenyang Li, Jeffrey B. Schriber and Francesco A. Evangelista"});
+        print_h2("Canonicalize Orbitals");
+        outfile->Printf("MIX INACTIVE ORBITALS   ...... ", inactive_mix_ ? "TRUE" : "FALSE");
+        outfile->Printf("MIX GAS ACTIVE ORBITALS ...... ", active_mix_ ? "TRUE" : "FALSE");
     }
 
-    // 0. initialize the dimension objects
+    // initialize the dimension objects
     startup();
+}
+
+void SemiCanonical::read_options(const std::shared_ptr<ForteOptions>& foptions) {
+    inactive_mix_ = foptions->get_bool("SEMI_CANONICAL_MIX_INACTIVE");
+    active_mix_ = foptions->get_bool("SEMI_CANONICAL_MIX_ACTIVE");
 
     // compute thresholds from options
     double econv = foptions->get_double("E_CONVERGENCE");
@@ -70,6 +77,12 @@ SemiCanonical::SemiCanonical(std::shared_ptr<MOSpaceInfo> mo_space_info,
         threshold_tight_ = (threshold_tight_ < 0.5 * cd_tlr) ? 0.5 * cd_tlr : threshold_tight_;
     }
     threshold_loose_ = 10.0 * threshold_tight_;
+
+    //    auto rconv = foptions->get_double("R_CONVERGENCE");
+    //    auto dconv = foptions->get_double("D_CONVERGENCE");
+    //    threshold_1rdm_ = rconv > dconv ? rconv : dconv;
+    //
+    //    fix_orbital_success_ = true;
 }
 
 void SemiCanonical::startup() {

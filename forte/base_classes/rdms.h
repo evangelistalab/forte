@@ -144,14 +144,16 @@ class RDMs {
     /// @return the spin-free 3-cumulant
     ambit::Tensor SF_L3();
 
-    /// Rotate the current RDMs using the input unitary matrices
-    void rotate(const ambit::Tensor& Ua, const ambit::Tensor& Ub);
-
     // class variables
 
     size_t max_rdm_level() const { return max_rdm_; }
 
     bool ms_avg() const { return ms_avg_; }
+
+    // class methods
+
+    /// Rotate the current RDMs using the input unitary matrices
+    void rotate(const ambit::Tensor& Ua, const ambit::Tensor& Ub);
 
   protected:
     // ==> Class Data <==

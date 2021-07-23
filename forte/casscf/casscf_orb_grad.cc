@@ -1026,15 +1026,17 @@ void CASSCF_ORB_GRAD::canonicalize_final(const psi::SharedMatrix& U) {
 
     auto bad_rotations = test_orbital_rotations(U_);
     if (not bad_rotations.empty()) {
-        std::string msg = "Final Active Orbitals Significantly Different from the Original";
+        std::string msg = "Final Active Orbitals Maybe Different from the Original";
         print_h2(msg, "!!!", "!!!");
+        outfile->Printf("\n    Based on projections of maximum overlap method:");
         for (const auto& tup : bad_rotations) {
             int h, i_old, i_new;
             std::tie(h, i_old, i_new) = tup;
-            std::string h_label = mo_space_info_->irrep_label(h);
+            std::string i_old_str = std::to_string(i_old) + mo_space_info_->irrep_label(h);
+            std::string i_new_str = std::to_string(i_new) + mo_space_info_->irrep_label(h);
             std::string space = i_new < ndoccpi_[h] ? "RESTRICTED_DOCC" : "RESTRICTED_UOCC";
-            outfile->Printf("\n    %6d%s -> %-6d%s (%s)", i_old, h_label.c_str(), i_new,
-                            h_label.c_str(), space.c_str());
+            outfile->Printf("\n    %9s -> %-9s %s", i_old_str.c_str(), i_new_str.c_str(),
+                            space.c_str());
         }
     }
 
