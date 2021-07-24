@@ -119,8 +119,8 @@ class StringLists {
   public:
     // ==> Constructor and Destructor <==
 
-    StringLists(RequiredLists required_lists, psi::Dimension cmopi, std::vector<size_t> core_mo,
-                std::vector<size_t> cmo_to_mo, size_t na, size_t nb, int print);
+    StringLists(RequiredLists required_lists, psi::Dimension cmopi, size_t na, size_t nb,
+                int print);
     ~StringLists() {}
 
     // ==> Class Public Functions <==
@@ -129,7 +129,6 @@ class StringLists {
     int nirrep() const { return nirrep_; }
     size_t ncmo() const { return ncmo_; }
     std::vector<size_t> cmo_to_mo() const { return cmo_to_mo_; }
-    std::vector<size_t> fomo_to_mo() const { return fomo_to_mo_; }
     psi::Dimension cmopi() const { return cmopi_; }
     std::vector<size_t> cmopi_offset() const { return cmopi_offset_; }
     size_t nb() const { return nb_; }

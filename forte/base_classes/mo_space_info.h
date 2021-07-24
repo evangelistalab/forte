@@ -178,16 +178,16 @@ class MOSpaceInfo {
     std::string str() const;
     /// @return A vector of labels of each irrep (e.g. ["A1","A2"])
     const std::vector<std::string>& irrep_labels() const { return symmetry_.irrep_labels(); }
+    /// @return the number of irreps
+    size_t nirrep() const;
     /// @return The label of each irrep h (e.g. h = 0 -> "A1")
-    const std::string& irrep_label(size_t h) const { return symmetry_.irrep_label(h); }
+    const std::string& irrep_label(size_t h) const;
     /// @return The label of the molecular point groupo (e.g. "C2V")
-    std::string point_group_label() const { return symmetry_.point_group_label(); }
+    std::string point_group_label() const;
     /// @return The names of the elementary orbital spaces
-    const std::vector<std::string>& space_names() const { return elementary_spaces_; }
+    const std::vector<std::string>& space_names() const;
     /// @return The names of the composite orbital spaces
-    std::map<std::string, std::vector<std::string>> composite_space_names() const {
-        return composite_spaces_;
-    }
+    std::map<std::string, std::vector<std::string>> composite_space_names() const;
     /// @return The number of orbitals in a space
     size_t size(const std::string& space) const;
     /// @return The psi::Dimension object for space
@@ -220,9 +220,6 @@ class MOSpaceInfo {
 
     /// Process current MOSpaceInfo: calculate frozen core, count, and assign orbitals
     void compute_space_info();
-
-    /// @return The number of irreps
-    size_t nirrep() { return nirrep_; }
 
   private:
     // ==> Class Data <==

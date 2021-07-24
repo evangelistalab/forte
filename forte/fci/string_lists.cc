@@ -37,10 +37,9 @@ using namespace psi;
 
 namespace forte {
 
-StringLists::StringLists(RequiredLists required_lists, psi::Dimension cmopi, std::vector<size_t> core_mo,
-                         std::vector<size_t> cmo_to_mo, size_t na, size_t nb, int print)
-    : required_lists_(required_lists), cmopi_(cmopi), cmo_to_mo_(cmo_to_mo), fomo_to_mo_(core_mo),
-      na_(na), nb_(nb), print_(print) {
+StringLists::StringLists(RequiredLists required_lists, psi::Dimension cmopi, size_t na, size_t nb,
+                         int print)
+    : required_lists_(required_lists), cmopi_(cmopi), na_(na), nb_(nb), print_(print) {
     startup();
 }
 
@@ -345,5 +344,4 @@ void StringLists::print_string(bool* I, size_t n) {
 //  delete[] I;
 //  delete[] b;
 //*/
-}
-
+} // namespace forte

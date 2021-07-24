@@ -65,11 +65,10 @@ class MOSpaceInfo;
 FCISolver::FCISolver(StateInfo state, size_t nroot, std::shared_ptr<MOSpaceInfo> mo_space_info,
                      std::shared_ptr<ActiveSpaceIntegrals> as_ints)
     : ActiveSpaceMethod(state, nroot, mo_space_info, as_ints),
-      active_dim_(mo_space_info->dimension("ACTIVE")), nirrep_(as_ints->ints()->nirrep()),
+      active_dim_(mo_space_info->dimension("ACTIVE")), nirrep_(mo_space_info->nirrep()),
       symmetry_(state.irrep()), multiplicity_(state.multiplicity()) {
-    // TODO: read this info from the base class
-    na_ = state.na() - core_mo_.size() - mo_space_info->size("FROZEN_DOCC");
-    nb_ = state.nb() - core_mo_.size() - mo_space_info->size("FROZEN_DOCC");
+    na_ = state.na() - mo_space_info->size("INACTIVE_DOCC");
+    nb_ = state.nb() - mo_space_info->size("INACTIVE_DOCC");
 }
 
 void FCISolver::set_ntrial_per_root(int value) { ntrial_per_root_ = value; }
@@ -82,8 +81,7 @@ void FCISolver::set_subspace_per_root(int value) { subspace_per_root_ = value; }
 
 void FCISolver::startup() {
     // Create the string lists
-    lists_ = std::shared_ptr<StringLists>(
-        new StringLists(twoSubstituitionVVOO, active_dim_, core_mo_, active_mo_, na_, nb_, print_));
+    lists_ = std::make_shared<StringLists>(twoSubstituitionVVOO, active_dim_, na_, nb_, print_);
 
     size_t ndfci = 0;
     for (int h = 0; h < nirrep_; ++h) {
@@ -394,7 +392,8 @@ FCISolver::initial_guess(FCIVector& diag, size_t n,
     std::vector<Determinant> bsdets;
 
     // Build the full determinants
-    size_t nact = active_mo_.size();
+    // size_t nact = active_mo_.size();
+    size_t nact = mo_space_info_->size("ACTIVE");
     for (auto det : dets) {
         double e;
         size_t h, add_Ia, add_Ib;
@@ -440,8 +439,8 @@ FCISolver::initial_guess(FCIVector& diag, size_t n,
             std::tuple<double, size_t, size_t, size_t> d(0.0, h, add_Ia, add_Ib);
             dets.push_back(d);
         }
-        delete[] Ia;
-        delete[] Ib;
+        delete Ia;
+        delete Ib;
     }
     num_dets = dets.size();
 

@@ -51,6 +51,18 @@ MOSpaceInfo::MOSpaceInfo(const psi::Dimension& nmopi, const std::string& point_g
     }
 }
 
+size_t MOSpaceInfo::nirrep() const { return nirrep_; }
+
+const std::string& MOSpaceInfo::irrep_label(size_t h) const { return symmetry_.irrep_label(h); }
+
+std::string MOSpaceInfo::point_group_label() const { return symmetry_.point_group_label(); }
+
+const std::vector<std::string>& MOSpaceInfo::space_names() const { return elementary_spaces_; }
+
+std::map<std::string, std::vector<std::string>> MOSpaceInfo::composite_space_names() const {
+    return composite_spaces_;
+}
+
 std::string MOSpaceInfo::str() const {
     std::string s;
     for (const auto& space : space_names()) {
