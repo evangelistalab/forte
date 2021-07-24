@@ -392,7 +392,6 @@ FCISolver::initial_guess(FCIVector& diag, size_t n,
     std::vector<Determinant> bsdets;
 
     // Build the full determinants
-    // size_t nact = active_mo_.size();
     size_t nact = mo_space_info_->size("ACTIVE");
     for (auto det : dets) {
         double e;

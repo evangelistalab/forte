@@ -30,7 +30,6 @@
 
 #include "string_lists.h"
 
-
 namespace forte {
 
 /**
@@ -84,8 +83,8 @@ void StringLists::make_oo(GraphPtr graph, OOList& list, int pq_sym, size_t pq) {
 
         int n = graph->nbits() - 2;
         bool* b = new bool[n];
-        bool* I = new bool[ncmo_];
-        bool* J = new bool[ncmo_];
+        bool* I = new bool[nmo_];
+        bool* J = new bool[nmo_];
 
         for (int h = 0; h < nirrep_; ++h) {
             // Create the key to the map
@@ -107,7 +106,7 @@ void StringLists::make_oo(GraphPtr graph, OOList& list, int pq_sym, size_t pq) {
                     J[i] = I[i] = b[k];
                     k++;
                 }
-                for (int i = p + 1; i < static_cast<int>(ncmo_); ++i) {
+                for (int i = p + 1; i < static_cast<int>(nmo_); ++i) {
                     J[i] = I[i] = b[k];
                     k++;
                 }
@@ -128,4 +127,3 @@ void StringLists::make_oo(GraphPtr graph, OOList& list, int pq_sym, size_t pq) {
     }
 }
 } // namespace forte
-

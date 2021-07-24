@@ -42,7 +42,6 @@
 
 #include "string_lists.h"
 
-
 namespace forte {
 
 /**
@@ -73,10 +72,10 @@ void StringLists::make_vo_list(GraphPtr graph, VOList& list) {
         // Loop over irreps of p
         for (int p_sym = 0; p_sym < nirrep_; ++p_sym) {
             int q_sym = pq_sym ^ p_sym;
-            for (int p_rel = 0; p_rel < cmopi_[p_sym]; ++p_rel) {
-                for (int q_rel = 0; q_rel < cmopi_[q_sym]; ++q_rel) {
-                    int p_abs = p_rel + cmopi_offset_[p_sym];
-                    int q_abs = q_rel + cmopi_offset_[q_sym];
+            for (int p_rel = 0; p_rel < mopi_[p_sym]; ++p_rel) {
+                for (int q_rel = 0; q_rel < mopi_[q_sym]; ++q_rel) {
+                    int p_abs = p_rel + mopi_offset_[p_sym];
+                    int q_abs = q_rel + mopi_offset_[q_sym];
                     make_vo(graph, list, p_abs, q_abs);
                 }
             }
@@ -93,8 +92,8 @@ void StringLists::make_vo(GraphPtr graph, VOList& list, int p, int q) {
     int n = graph->nbits() - 1 - (p == q ? 0 : 1);
     int k = graph->nones() - 1;
     bool* b = new bool[n];
-    bool* I = new bool[ncmo_];
-    bool* J = new bool[ncmo_];
+    bool* I = new bool[nmo_];
+    bool* J = new bool[nmo_];
     if ((k >= 0) and (k <= n)) { // check that (n > 0) makes sense.
         for (int h = 0; h < nirrep_; ++h) {
             // Create the key to the map
@@ -119,7 +118,7 @@ void StringLists::make_vo(GraphPtr graph, VOList& list, int p, int q) {
                         sign *= -1;
                     k++;
                 }
-                for (int i = std::max(p, q) + 1; i < static_cast<int>(ncmo_); ++i) {
+                for (int i = std::max(p, q) + 1; i < static_cast<int>(nmo_); ++i) {
                     J[i] = I[i] = b[k];
                     k++;
                 }
@@ -143,7 +142,6 @@ void StringLists::make_vo(GraphPtr graph, VOList& list, int p, int q) {
 }
 } // namespace forte
 
-
 ///**
 // * Generate all the pairs of strings I,J connected by a^{+}_p a_q
 // * that is: J = ± a^{+}_p a_q I. p and q are absolute indices and I belongs to
@@ -152,10 +150,10 @@ void StringLists::make_vo(GraphPtr graph, VOList& list, int p, int q) {
 // void StringLists::make_kh_list(GraphPtr graph, KHList& list) {
 //    int n = graph->nbits();
 //    int k = graph->nones();
-//    outfile->Printf("\n n = %d, k = %d, ncmo_ = %d",n,k,ncmo_);
+//    outfile->Printf("\n n = %d, k = %d, nmo_ = %d",n,k,nmo_);
 //    if ((k >= 0) and (k <= n)) { // check that (n > 0) makes sense.
-//        bool* I = new bool[ncmo_];
-//        bool* J = new bool[ncmo_];
+//        bool* I = new bool[nmo_];
+//        bool* J = new bool[nmo_];
 //        for (int h_I = 0; h_I < nirrep_; ++h_I) {
 //            // Generate the strings 1111100000
 //            //                      { k }{n-k}
@@ -171,11 +169,11 @@ void StringLists::make_vo(GraphPtr graph, VOList& list, int p, int q) {
 //                        J[i] = I[i];
 
 //                    // apply a^{+}_p a_q I
-//                    for (int q = 0; q < ncmo_; ++q) {
+//                    for (int q = 0; q < nmo_; ++q) {
 //                        if (J[q]) {
 //                            J[q] = false;
 //                            short q_sign = string_sign(J, q);
-//                            for (int p = 0; p < ncmo_; ++p) {
+//                            for (int p = 0; p < nmo_; ++p) {
 //                                if (not J[p]) {
 //                                    short pq_sign = q_sign * string_sign(J, p);
 //                                    J[p] = true;
