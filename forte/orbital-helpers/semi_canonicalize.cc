@@ -56,9 +56,10 @@ SemiCanonical::SemiCanonical(std::shared_ptr<MOSpaceInfo> mo_space_info,
 
     read_options(foptions);
     if (!quiet_banner) {
+        auto true_or_false = [](bool x) { return x ? "TRUE" : "FALSE"; };
         print_h2("Canonicalize Orbitals");
-        outfile->Printf("MIX INACTIVE ORBITALS   ...... ", inactive_mix_ ? "TRUE" : "FALSE");
-        outfile->Printf("MIX GAS ACTIVE ORBITALS ...... ", active_mix_ ? "TRUE" : "FALSE");
+        outfile->Printf("\n    MIX INACTIVE ORBITALS   ...... %s", true_or_false(inactive_mix_));
+        outfile->Printf("\n    MIX GAS ACTIVE ORBITALS ...... %s", true_or_false(active_mix_));
     }
 
     // initialize the dimension objects

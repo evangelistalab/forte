@@ -977,8 +977,8 @@ void CASSCF_ORB_GRAD::set_rdms(RDMs& rdms) {
     format_1rdm();
 
     // change to chemists' notation
-    D2_.block("aaaa")("pqrs") = rdms.SFg2()("prqs");
-    D2_.block("aaaa")("pqrs") += rdms.SFg2()("qrps");
+    D2_.block("aaaa")("pqrs") = rdms.SF_G2()("prqs");
+    D2_.block("aaaa")("pqrs") += rdms.SF_G2()("qrps");
     D2_.scale(0.5);
 }
 

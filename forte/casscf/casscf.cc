@@ -359,7 +359,7 @@ void CASSCF::diagonalize_hamiltonian() {
     gamma1_("ij") += cas_ref_.g1b()("ij");
 
     // Compute 2-RDM
-    gamma2_ = cas_ref_.SFg2();
+    gamma2_ = cas_ref_.SF_G2();
 }
 
 std::shared_ptr<psi::Matrix> CASSCF::set_frozen_core_orbitals() {

@@ -114,9 +114,9 @@ class RDMs {
     // Spin-free (spin-summed) RDMs
 
     /// @return the spin-free 2-RDM
-    /// If ms is NOT averaged, G2 will be computed using the definition (see SF_g2_ below).
+    /// If ms is NOT averaged, G2 will be computed using the definition (see SF_G2_ below).
     /// If ms is averaged, G2 will be computed using only g2ab to avoid computing g2aa and g2bb.
-    ambit::Tensor SFg2();
+    ambit::Tensor SF_G2();
 
     // Reduced density cumulants
 
@@ -200,7 +200,7 @@ class RDMs {
 
     /// Spin-free (spin-summed) 2-RDM defined as
     /// G2[pqrs] = g2aa[pqrs] + g2ab[pqrs] + g2ab[qpsr] + g2bb[pqrs]
-    ambit::Tensor SF_g2_;
+    ambit::Tensor SF_G2_;
 
     // Reduced density cumulants
 
@@ -246,7 +246,7 @@ class RDMs {
     /// Was SF_L3_ built?
     bool have_SF_L3_ = false;
 
-    /// Was SF_g2_ built?
+    /// Was SF_G2_ built?
     bool have_SF_g2_ = false;
 
     /// Rotate the current RDMs based on Ms-averaged formalism
