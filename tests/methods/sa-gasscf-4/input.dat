@@ -1,0 +1,50 @@
+# Test correct implementation of casscf_active_frozen_orbital
+refgasscf = -168.895998770165 #TEST
+import forte
+memory 2gb
+
+molecule n2o{
+ N          0.00000        0.00000       -1.21202
+ N          0.00000        0.00000       -0.06157
+ O          0.00000        0.00000        1.11439
+}
+
+set basis cc-pvdz
+
+set {
+scf_type            pk
+reference           rohf
+e_convergence       8
+d_convergence       8
+}
+
+Ezero, wfn = energy('scf', return_wfn=True)
+
+set forte {
+  ms 0.0
+  multiplicity 1
+  job_type            mcscf_two_step
+  active_space_solver aci
+  casscf_ci_solver    aci
+  active_ref_type     gas
+  one_cycle           true
+  gas1                [1,0,0,0]
+  gas2                [1,0,0,0]
+  gas3                [1,0,0,0]
+  gas4                [4,0,1,1]
+  gas5                [0,0,2,2]
+  gas1max             [2,2]
+  gas1min             [2,2]
+  gas2max             [2,2]
+  gas2min             [2,2]
+  gas3max             [1,1]
+  gas4max             [12,12]
+  gas4min             [12,12]
+  avg_state           [[2,1,1],[3,1,1]]
+  casscf_active_frozen_orbital [1,2] #This option now freezes all rotations 
+  # between orbital 1/2 and all other orbitals EXCEPT the rotation between 1 and 2.
+   
+}
+egasscf, wfn_gasscf = energy('forte', return_wfn = True, ref_wfn=wfn)
+compare_values(refgasscf, egasscf ,9, "GASSCF energy") #TEST
+                                                                           

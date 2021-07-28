@@ -246,6 +246,7 @@ gasscf:
       - gasscf-2
       - gasscf-dsrg-mrpt2-1
       - sa-gasscf-3
+      - sa-gasscf-4
 integrals:
    short:
       - integrals-3

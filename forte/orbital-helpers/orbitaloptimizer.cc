@@ -366,14 +366,16 @@ void OrbitalOptimizer::orbital_gradient() {
         std::set_difference(active.begin(), active.end(), active_frozen.begin(),
                             active_frozen.end(), std::inserter(unfrozen, unfrozen.begin()));
 
-        for (int i : active_frozen) {
-            for (int j : active_frozen) {
-                size_t ii = active_abs_[i];
-                size_t jj = active_abs_[j];
-                Orb_grad_Fock->set(nhole_map_[ii], npart_map_[jj], 0.0);
-                Orb_grad_Fock->set(nhole_map_[jj], npart_map_[ii], 0.0);
-            }
-        }
+        // This part is removed to enable the rotation between the orbitals within
+        // CASSCF_ACTIVE_FROZEN_ORBITAL
+        // for (int i : active_frozen) {
+        //    for (int j : active_frozen) {
+        //        size_t ii = active_abs_[i];
+        //        size_t jj = active_abs_[j];
+        //        Orb_grad_Fock->set(nhole_map_[ii], npart_map_[jj], 0.0);
+        //        Orb_grad_Fock->set(nhole_map_[jj], npart_map_[ii], 0.0);
+        //    }
+        // }
         for (int i : active_frozen) {
             for (int j : unfrozen) {
                 size_t ii = active_abs_[i];

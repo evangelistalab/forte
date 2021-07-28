@@ -232,6 +232,16 @@ void CASSCF_ORB_GRAD::read_options() {
                 zero_rots_[irrep][nu].emplace(p);
                 zero_rots_[irrep][p].emplace(nu);
             }
+
+            // enable rotation between the orbitals within CASSCF_ACTIVE_FROZEN_ORBITAL
+            for (size_t j = 0; j < i; ++j) {
+                size_t v = frza_rot[j];
+                if (actv_rel_mos[v].first == irrep) {
+                    auto ki = actv_rel_mos[v].second;
+                    zero_rots_[irrep][nu].erase(ki);
+                    zero_rots_[irrep][ki].erase(nu);
+                }
+            }
         }
     }
 
