@@ -163,6 +163,13 @@ void DETCI::diagoanlize_hamiltonian() {
         energies_[i] = evals_->get(i);
     }
 
+    // fix CI coefficient phase
+    for (int i = 0; i < nroot_; ++i) {
+        if (evecs_->get(0, i) < 0.0) {
+            evecs_->scale_column(0, i, -1.0);
+        }
+    }
+
     outfile->Printf("\n\n  Done diagonalizing Hamiltonian, %.3e seconds.", tdiag.stop());
 }
 

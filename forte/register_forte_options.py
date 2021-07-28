@@ -625,6 +625,9 @@ def register_dsrg_options(options):
 
     options.add_int("MAXITER_RELAX_REF", 15, "Max macro iterations for DSRG reference relaxation")
 
+    options.add_bool("DSRG_RELAX_FOLLOW_STATE", False,
+                     "Follow the states with max overlaps between original and relaxed states")
+
     options.add_double("RELAX_E_CONVERGENCE", 1.0e-8, "The energy relaxation convergence criterion")
 
     options.add_bool(
@@ -869,7 +872,7 @@ def register_casscf_options(options):
     options.add_bool("CASSCF_DO_DIIS", True, "Use DIIS in CASSCF orbital optimization")
     options.add_int("CASSCF_DIIS_MIN_VEC", 2, "Minimum size of DIIS vectors for orbital rotations")
     options.add_int("CASSCF_DIIS_MAX_VEC", 8, "Maximum size of DIIS vectors for orbital rotations")
-    options.add_int("CASSCF_DIIS_START", 15, "Iteration number to start adding error vectors (< 1 will not do DIIS)")
+    options.add_int("CASSCF_DIIS_START", 4, "Iteration number to start adding error vectors (< 1 will not do DIIS)")
     options.add_int("CASSCF_DIIS_FREQ", 1, "How often to do DIIS extrapolation")
     options.add_double("CASSCF_DIIS_NORM", 1e-3, "Do DIIS when the orbital gradient norm is below this value")
 
@@ -881,9 +884,11 @@ def register_casscf_options(options):
 
     options.add_int_list(
         "CASSCF_ACTIVE_FROZEN_ORBITAL",
-        "A list of active orbitals to be frozen in the casscf optimization (in Pitzer order,"
+        "A list of active orbitals to be frozen in the MCSCF optimization (in Pitzer order,"
         " zero based). Useful when doing core-excited state computations."
     )
+
+    options.add_bool("CASSCF_NO_CONVERGENCE_CHECK", False, "Ignore convergence check at the end of MCSCF")
 
 
 def register_old_options(options):

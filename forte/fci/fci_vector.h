@@ -106,7 +106,7 @@ class FCIVector {
     double compute_spin2();
 
     /// Print the natural_orbitals from FCIWFN
-    /// Assume user specifed active space
+    /// Assume user specified active space
     void print_natural_orbitals(std::shared_ptr<MOSpaceInfo>);
 
     /// Return the elements with the smallest value

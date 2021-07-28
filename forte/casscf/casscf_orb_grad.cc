@@ -719,13 +719,15 @@ bool CASSCF_ORB_GRAD::update_orbitals(psi::SharedVector x) {
     auto dU = matrix_exponential(dR, 3);
     auto bad_rotations = test_orbital_rotations(dU);
     if (not bad_rotations.empty()) {
-        print_h2("WARNING: Orbital Rotated Outside Active", "!!!", "!!!");
+        std::string msg = "WARNING: Active Orbitals Different from the Previous Step";
+        print_h2(msg, "!!!", "!!!");
         for (const auto& tup : bad_rotations) {
             int h, i_old, i_new;
             std::tie(h, i_old, i_new) = tup;
-            std::string h_label = mo_space_info_->irrep_label(h);
+            std::string i_old_str = std::to_string(i_old) + mo_space_info_->irrep_label(h);
+            std::string i_new_str = std::to_string(i_new) + mo_space_info_->irrep_label(h);
             std::string space = i_new < ndoccpi_[h] ? "RESTRICTED_DOCC" : "RESTRICTED_UOCC";
-            outfile->Printf("\n    %s  %6d (ACTIVE) -> %6d %s", h_label.c_str(), i_old, i_new,
+            outfile->Printf("\n    %9s -> %-9s %s", i_old_str.c_str(), i_new_str.c_str(),
                             space.c_str());
         }
     }

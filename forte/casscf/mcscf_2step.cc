@@ -338,10 +338,16 @@ double MCSCF_2STEP::compute_energy() {
     print_macro_iteration(history);
 
     // function to throw not converging error
-    auto throw_converence_error = [&]() {
+    auto throw_convergence_error = [&]() {
         if (not converged) {
-            auto m = std::to_string(maxiter_);
-            throw std::runtime_error("MCSCF did not converge in " + m + " iterations!");
+            std::stringstream msg;
+            msg << "MCSCF did not converge in " << maxiter_ << " iterations!";
+            psi::outfile->Printf("\n  %s", msg.str().c_str());
+            if (not options_->get_bool("CASSCF_NO_CONVERGENCE_CHECK")) {
+                psi::outfile->Printf("\n  This convergence check may be turned off by setting "
+                                     "'CASSCF_NO_CONVERGENCE_CHECK' to 'TRUE'.");
+                throw std::runtime_error(msg.str());
+            }
         }
     };
 
@@ -367,7 +373,7 @@ double MCSCF_2STEP::compute_energy() {
         ints_->wfn()->Cb()->copy(Ca);
 
         // throw error if not converged
-        throw_converence_error();
+        throw_convergence_error();
 
         // for nuclear gradient
         if (der_type_ == "FIRST") {
@@ -380,13 +386,8 @@ double MCSCF_2STEP::compute_energy() {
             cas_grad.compute_nuclear_gradient();
         }
     } else {
-        // pass to wave function
-        auto Ca = cas_grad.Ca();
-        ints_->wfn()->Ca()->copy(Ca);
-        ints_->wfn()->Cb()->copy(Ca);
-
         // throw error if not converged
-        throw_converence_error();
+        throw_convergence_error();
     }
 
     return energy_;
