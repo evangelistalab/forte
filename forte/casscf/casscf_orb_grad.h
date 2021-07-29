@@ -349,9 +349,6 @@ class CASSCF_ORB_GRAD {
     /// Reshape the orbital rotation related BlockedTensor to SharedVector
     void reshape_rot_ambit(ambit::BlockedTensor bt, const psi::SharedVector& sv);
 
-    /// Fix redundant orbitals and return the rotation matrix
-    std::shared_ptr<psi::Matrix> canonicalize();
-
     /// Compute the exponential of a skew-symmetric matrix
     psi::SharedMatrix matrix_exponential(const psi::SharedMatrix& A, int n);
 

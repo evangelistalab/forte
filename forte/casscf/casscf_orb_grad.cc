@@ -155,15 +155,8 @@ void CASSCF_ORB_GRAD::setup_mos() {
     BlockedTensor::add_composite_mo_space("g", "p,q,r,s", {"c", "a", "v"});
     BlockedTensor::add_composite_mo_space("G", "P,Q,R,S", {"f", "c", "a", "v", "u"});
 
-    // test if we are doing GAS
-    gas_ref_ = true;
-    auto gas_spaces = mo_space_info_->composite_space_names()["ACTIVE"];
-    for (const std::string& gas_name : gas_spaces) {
-        if (mo_space_info_->dimension(gas_name) == nactvpi_) {
-            gas_ref_ = false;
-            break;
-        }
-    }
+    // if we are doing GAS
+    gas_ref_ = (mo_space_info_->nonzero_gas_spaces().size() != 1);
 }
 
 void CASSCF_ORB_GRAD::read_options() {
@@ -295,24 +288,20 @@ void CASSCF_ORB_GRAD::nonredundant_pairs() {
     }
 
     // GASm-GASn with m != n rotations
-    auto gas_spaces = mo_space_info_->composite_space_names()["ACTIVE"];
+    auto gas_spaces = mo_space_info_->nonzero_gas_spaces();
     if (gas_ref_) {
         const auto& mos = label_to_mos_["a"];
 
         // loop over GASm spaces
         for (int g0 = 0, space_size = gas_spaces.size(); g0 < space_size; ++g0) {
-            if (mo_space_info_->size(gas_spaces[g0]) == 0)
-                continue;
             auto g0_in_actv = mo_space_info_->pos_in_space(gas_spaces[g0], "ACTIVE");
 
             // loop over GASn spaces
             for (int g1 = g0 + 1; g1 < space_size; ++g1) {
-                if (mo_space_info_->size(gas_spaces[g1]) == 0)
-                    continue;
                 auto g1_in_actv = mo_space_info_->pos_in_space(gas_spaces[g1], "ACTIVE");
 
-                // space name for printing, convert to 1-based GAS
-                std::string space_name = std::to_string(g0 + 1) + std::to_string(g1 + 1);
+                // space name for printing
+                std::string space_name = gas_spaces[g0].substr(3) + gas_spaces[g1].substr(3);
                 nrots[space_name] = std::vector<int>(nirrep_, 0);
 
                 // loop over indices in GASm
@@ -343,16 +332,14 @@ void CASSCF_ORB_GRAD::nonredundant_pairs() {
     if (internal_rot_) {
         const auto& mos = label_to_mos_["a"];
 
-        for (int g = 0, space_size = gas_spaces.size(); g < space_size; ++g) {
-            if (mo_space_info_->size(gas_spaces[g]) == 0)
-                continue;
-            auto g_in_actv = mo_space_info_->pos_in_space(gas_spaces[g], "ACTIVE");
+        for (auto & gas_space : gas_spaces) {
+            auto g_in_actv = mo_space_info_->pos_in_space(gas_space, "ACTIVE");
 
             // space name for printing, convert to 1-based GAS
-            std::string space_name = std::to_string(g + 1) + std::to_string(g + 1);
+            std::string space_name = gas_space.substr(3) + gas_space.substr(3);
             nrots[space_name] = std::vector<int>(nirrep_, 0);
 
-            for (int u = 0, size = g_in_actv.size(); u < size; ++u) {
+            for (int u = 0, size = static_cast<int>(g_in_actv.size()); u < size; ++u) {
                 int hu = mos_rel_[mos[g_in_actv[u]]].first;
                 auto nu = mos_rel_[mos[g_in_actv[u]]].second;
 
@@ -1044,108 +1031,5 @@ void CASSCF_ORB_GRAD::canonicalize_final(const psi::SharedMatrix& U) {
 
     C_->gemm(false, false, 1.0, C0_, U_, 0.0);
     build_mo_integrals();
-}
-
-// to be removed once SemiCanonical class has natural orbitals
-std::shared_ptr<psi::Matrix> CASSCF_ORB_GRAD::canonicalize() {
-    print_h2("Canonicalize Orbitals (" + orb_type_redundant_ + ")");
-
-    // unitary rotation matrix for output
-    auto U = std::make_shared<psi::Matrix>("U_redundant", nmopi_, nmopi_);
-    U->identity();
-
-    // diagonalize sub-blocks of Fock
-    auto ncorepi = mo_space_info_->dimension("RESTRICTED_DOCC");
-    auto nvirtpi = mo_space_info_->dimension("RESTRICTED_UOCC");
-    std::vector<psi::Dimension> mos_dim{ncorepi, nvirtpi};
-    std::vector<psi::Dimension> mos_offsets{nfrzcpi_, ndoccpi_ + nactvpi_};
-    std::vector<std::string> names{"RESTRICTED_DOCC", "RESTRICTED_UOCC"};
-
-    if (orb_type_redundant_ == "CANONICAL") {
-        mos_dim.push_back(nactvpi_);
-        mos_offsets.push_back(ndoccpi_);
-        names.emplace_back("ACTIVE");
-    }
-
-    for (int i = 0, size = mos_dim.size(); i < size; ++i) {
-        std::string block_name = "Diagonalizing Fock block " + names[i] + " ...";
-        outfile->Printf("\n    %-44s", block_name.c_str());
-
-        auto dim = mos_dim[i];
-        auto offset_dim = mos_offsets[i];
-
-        auto Fsub = std::make_shared<psi::Matrix>("Fsub_" + names[i], dim, dim);
-
-        for (int h = 0; h < nirrep_; ++h) {
-            for (int p = 0; p < dim[h]; ++p) {
-                size_t np = p + offset_dim[h];
-                for (int q = 0; q < dim[h]; ++q) {
-                    size_t nq = q + offset_dim[h];
-                    Fsub->set(h, p, q, Fock_->get(h, np, nq));
-                }
-            }
-        }
-
-        // test off-diagonal elements to decide if need to diagonalize this block
-        auto Fsub_od = Fsub->clone();
-        Fsub_od->zero_diagonal();
-
-        double Fsub_max = Fsub_od->absmax();
-        double Fsub_norm = std::sqrt(Fsub_od->sum_of_squares());
-
-        double threshold_max = 0.1 * g_conv_;
-        if (ints_->integral_type() == Cholesky) {
-            double cd_tlr = options_->get_double("CHOLESKY_TOLERANCE");
-            threshold_max = (threshold_max < 0.5 * cd_tlr) ? 0.5 * cd_tlr : threshold_max;
-        }
-        double threshold_rms = std::sqrt(dim.sum() * (dim.sum() - 1) / 2.0) * threshold_max;
-
-        // diagonalize
-        if (Fsub_max > threshold_max or Fsub_norm > threshold_rms) {
-            auto Usub = std::make_shared<psi::Matrix>("Usub_" + names[i], dim, dim);
-            auto Esub = std::make_shared<psi::Vector>("Esub_" + names[i], dim);
-            Fsub->diagonalize(Usub, Esub);
-
-            // fill in data
-            for (int h = 0; h < nirrep_; ++h) {
-                for (int p = 0; p < dim[h]; ++p) {
-                    size_t np = p + offset_dim[h];
-                    for (int q = 0; q < dim[h]; ++q) {
-                        size_t nq = q + offset_dim[h];
-                        U->set(h, np, nq, Usub->get(h, p, q));
-                    }
-                }
-            }
-        } // end if need to diagonalize
-        outfile->Printf(" Done.");
-    } // end sub block
-
-    // natural orbitals
-    if (orb_type_redundant_ == "NATURAL") {
-        std::string block_name = "Diagonalizing 1-RDM ...";
-        outfile->Printf("\n    %-44s", block_name.c_str());
-
-        auto Usub = std::make_shared<psi::Matrix>("Usub_ACTIVE", nactvpi_, nactvpi_);
-        auto Esub = std::make_shared<psi::Vector>("Esub_ACTIVE", nactvpi_);
-        rdm1_->diagonalize(Usub, Esub, descending);
-
-        // fill in data
-        for (int h = 0; h < nirrep_; ++h) {
-            for (int p = 0; p < nactvpi_[h]; ++p) {
-                size_t np = p + ndoccpi_[h];
-                for (int q = 0; q < nactvpi_[h]; ++q) {
-                    size_t nq = q + ndoccpi_[h];
-                    U->set(h, np, nq, Usub->get(h, p, q));
-                }
-            }
-        }
-
-        outfile->Printf(" Done.");
-    }
-
-    if (debug_print_)
-        U->print();
-
-    return U;
 }
 } // namespace forte

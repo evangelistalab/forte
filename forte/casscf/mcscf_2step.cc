@@ -344,7 +344,7 @@ double MCSCF_2STEP::compute_energy() {
             msg << "MCSCF did not converge in " << maxiter_ << " iterations!";
             psi::outfile->Printf("\n  %s", msg.str().c_str());
             if (not options_->get_bool("CASSCF_NO_CONVERGENCE_CHECK")) {
-                psi::outfile->Printf("\n  This convergence check may be turned off by setting "
+                psi::outfile->Printf("\n  Convergence check may be turned off by setting "
                                      "'CASSCF_NO_CONVERGENCE_CHECK' to 'TRUE'.");
                 throw std::runtime_error(msg.str());
             }
@@ -357,11 +357,12 @@ double MCSCF_2STEP::compute_energy() {
         ints_->set_fock_matrix(F, F);
 
         SemiCanonical semi(mo_space_info_, ints_, options_);
-        semi.semicanonicalize(rdms, 1, false, false);
+        bool do_nat_orb = options_->get_str("CASSCF_FINAL_ORBITAL") == "NATURAL";
+        semi.semicanonicalize(rdms, false, do_nat_orb, false);
 
         cas_grad.canonicalize_final(semi.Ua());
 
-        // rediagonalize Hamiltonian
+        // re-diagonalize Hamiltonian
         auto fci_ints = cas_grad.active_space_ints();
         auto dump_wfn_new = dump_wfn and options_->get_bool("DUMP_ACTIVE_WFN");
         std::tie(as_solver, energy_) = diagonalize_hamiltonian(
