@@ -313,15 +313,8 @@ bool ForteIntegrals::fix_orbital_phases(std::shared_ptr<psi::Matrix> U, bool is_
         return false;
     }
 
-    // grab the old orbitals
-    std::shared_ptr<psi::Matrix> Cold = is_alpha ? Ca_ : Cb_;
-
-    // build MO overlap matrix (old by new)
-    auto Cnew = psi::linalg::doublet(Cold, U, false, false);
-    Cnew->set_name("MO coefficients (new)");
-
-    auto Smo = psi::linalg::triplet(Cold, wfn_->S(), Cnew, true, false, false);
-    Smo->set_name("MO overlap (old by new)");
+    // MO overlap (old by new)
+    // S_MO = Cold^T S_AO Cnew = Cold^T S_AO Cold U = U
 
     // transformation matrix
     auto T = std::make_shared<psi::Matrix>("Reordering matrix", U->rowspi(), U->colspi());
@@ -334,7 +327,7 @@ bool ForteIntegrals::fix_orbital_phases(std::shared_ptr<psi::Matrix> U, bool is_
             int p_temp = q;
 
             for (int p = 0; p < nrow; ++p) {
-                double v = Smo->get(h, p, q);
+                double v = U->get(h, p, q);
                 if (std::fabs(v) > max) {
                     max = std::fabs(v);
                     p_temp = p;
@@ -377,7 +370,7 @@ bool ForteIntegrals::fix_orbital_phases(std::shared_ptr<psi::Matrix> U, bool is_
         psi::outfile->Printf("\n  Warning: Failed to fix orbital phase and order.");
         if (debug) {
             psi::outfile->Printf("\n  Printing the MO overlap and transformation matrix.\n");
-            Smo->print();
+            U->print();
             T->print();
         }
         return false;
