@@ -110,8 +110,8 @@ class ActiveSpaceSolver {
         return state_energies_map_;
     }
 
-    /// Return a map of StateInfo to the CI wave functions
-    std::map<StateInfo, std::tuple<DeterminantHashVec, psi::SharedMatrix>> state_ci_wfn_map() const;
+    /// Return a map of StateInfo to the CI wave functions (deterministic determinant space)
+    std::map<StateInfo, psi::SharedMatrix> state_ci_wfn_map() const;
 
     /// Pass a set of ActiveSpaceIntegrals to the solver (e.g. an effective Hamiltonian)
     /// @param as_ints the pointer to a set of acitve-space integrals

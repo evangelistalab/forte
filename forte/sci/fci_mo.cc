@@ -2679,6 +2679,16 @@ RDMs FCI_MO::transition_reference(int root1, int root2, bool multi_state, int en
     }
 }
 
+psi::SharedMatrix FCI_MO::ci_wave_functions() {
+    int nroots = static_cast<int>(eigen_.size());
+    int ndets = static_cast<int>(determinant_.size());
+    auto evecs = std::make_shared<psi::Matrix>("evecs", ndets, nroots);
+    for (int i = 0; i < nroots; ++i) {
+        evecs->set_column(0, i, (eigen_[i]).first);
+    }
+    return evecs;
+}
+
 void FCI_MO::print_det(const vecdet& dets) {
     print_h2("Determinants |alpha|beta>");
     for (const Determinant& x : dets) {

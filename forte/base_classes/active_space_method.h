@@ -158,8 +158,8 @@ class ActiveSpaceMethod {
         throw std::runtime_error("Not yet implemented!");
     }
 
-    /// @return the wave function
-    virtual std::tuple<DeterminantHashVec, psi::SharedMatrix> ci_wave_function() {
+    /// @return the CI wave functions for the current StateInfo (deterministic determinant space)
+    virtual psi::SharedMatrix ci_wave_functions() {
         throw std::runtime_error("Not implemented! Derived class should override.");
     }
 

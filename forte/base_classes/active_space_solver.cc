@@ -720,13 +720,10 @@ void ActiveSpaceSolver::dump_wave_function() {
     }
 }
 
-std::map<StateInfo, std::tuple<DeterminantHashVec, psi::SharedMatrix>>
-ActiveSpaceSolver::state_ci_wfn_map() const {
-    std::map<StateInfo, std::tuple<DeterminantHashVec, psi::SharedMatrix>> out;
+std::map<StateInfo, psi::SharedMatrix> ActiveSpaceSolver::state_ci_wfn_map() const {
+    std::map<StateInfo, psi::SharedMatrix> out;
     for (const auto& pair : state_method_map_) {
-        const auto& state = pair.first;
-        const auto& method = pair.second;
-        out[state] = method->ci_wave_function();
+        out[pair.first] = pair.second->ci_wave_functions();
     }
     return out;
 }

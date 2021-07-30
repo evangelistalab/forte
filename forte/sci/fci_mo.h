@@ -133,6 +133,9 @@ class FCI_MO : public ActiveSpaceMethod {
 
     void set_options(std::shared_ptr<ForteOptions>) override {} // TODO implement
 
+    /// Return the CI wave functions for current state symmetry
+    psi::SharedMatrix ci_wave_functions() override;
+
     /// Compute densities or transition densities
     /// root1, root2 -- the ket and bra roots of p_space and eigen
     /// multi_state -- grab p_spaces_ and eigens_ if true, otherwise p_space_ and eigen_

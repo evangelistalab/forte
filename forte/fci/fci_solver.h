@@ -95,6 +95,8 @@ class FCISolver : public ActiveSpaceMethod {
     std::shared_ptr<FCIVector> get_FCIWFN() { return C_; }
     /// Return eigen vectors
     psi::SharedMatrix evecs() { return eigen_vecs_; }
+    /// Return the CI wave functions for current state symmetry
+    psi::SharedMatrix ci_wave_functions() override { return eigen_vecs_; }
     /// Return string lists
     std::shared_ptr<StringLists> lists() { return lists_; }
     /// Return symmetry

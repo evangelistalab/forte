@@ -43,6 +43,9 @@ class DETCI : public ActiveSpaceMethod {
                                       std::shared_ptr<ActiveSpaceMethod> method2,
                                       int max_rdm_level) override;
 
+    /// Return the CI wave functions for current state symmetry
+    psi::SharedMatrix ci_wave_functions() override { return evecs_; }
+
     /// Set options override
     void set_options(std::shared_ptr<ForteOptions> options) override;
 
