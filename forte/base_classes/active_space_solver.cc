@@ -28,11 +28,9 @@
 
 #include <algorithm>
 #include <numeric>
-#include <iomanip>
 #include <tuple>
 
 #include "psi4/psi4-dec.h"
-#include "psi4/libpsi4util/PsiOutStream.h"
 #include "psi4/libmints/molecule.h"
 #include "psi4/libpsi4util/process.h"
 
@@ -720,6 +718,17 @@ void ActiveSpaceSolver::dump_wave_function() {
         state_method_map_[state]->set_dump_wfn(true);
         state_method_map_[state]->dump_wave_function(state_filename.second);
     }
+}
+
+std::map<StateInfo, std::tuple<DeterminantHashVec, psi::SharedMatrix>>
+ActiveSpaceSolver::state_ci_wfn_map() const {
+    std::map<StateInfo, std::tuple<DeterminantHashVec, psi::SharedMatrix>> out;
+    for (const auto& pair : state_method_map_) {
+        const auto& state = pair.first;
+        const auto& method = pair.second;
+        out[state] = method->ci_wave_function();
+    }
+    return out;
 }
 
 const std::map<StateInfo, std::vector<double>>&

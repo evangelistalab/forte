@@ -104,9 +104,14 @@ void export_ActiveSpaceSolver(py::module& m) {
              "Compute the weighted average reference")
         .def("set_active_space_integrals", &ActiveSpaceSolver::set_active_space_integrals,
              "Set the active space integrals manually")
-        .def("compute_fosc_same_orbs", &ActiveSpaceSolver::compute_fosc_same_orbs)
-        .def("state_filename_map", &ActiveSpaceSolver::state_filename_map)
-        .def("dump_wave_function", &ActiveSpaceSolver::dump_wave_function);
+        .def("compute_fosc_same_orbs", &ActiveSpaceSolver::compute_fosc_same_orbs,
+             "Compute the oscillator strength assuming using same orbitals")
+        .def("state_ci_wfn_map", &ActiveSpaceSolver::state_ci_wfn_map,
+             "Return a map from StateInfo to CI wave functions (DeterminantHashVec, eigenvectors)")
+        .def("state_filename_map", &ActiveSpaceSolver::state_filename_map,
+             "Return a map from StateInfo to wave function file names")
+        .def("dump_wave_function", &ActiveSpaceSolver::dump_wave_function,
+             "Dump wave functions to disk");
 
     m.def("compute_average_state_energy", &compute_average_state_energy,
           "Compute the average energy given the energies and weights of each state");

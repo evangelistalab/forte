@@ -34,6 +34,7 @@
 
 #include "base_classes/state_info.h"
 #include "sparse_ci/determinant.h"
+#include "sparse_ci/determinant_hashvector.h"
 #include "psi4/libmints/matrix.h"
 #include "psi4/libmints/vector.h"
 
@@ -157,6 +158,11 @@ class ActiveSpaceMethod {
         throw std::runtime_error("Not yet implemented!");
     }
 
+    /// @return the wave function
+    virtual std::tuple<DeterminantHashVec, psi::SharedMatrix> ci_wave_function() {
+        throw std::runtime_error("Not implemented! Derived class should override.");
+    }
+
     // ==> Base Class Functionality (inherited by derived classes) <==
 
     /// Pass a set of ActiveSpaceIntegrals to the solver (e.g. an effective Hamiltonian)
@@ -203,7 +209,7 @@ class ActiveSpaceMethod {
     /// Set if we dump the wave function to disk
     void set_dump_wfn(bool dump);
 
-    /// Set the file name for stroing wave function on disk
+    /// Set the file name for storing wave function on disk
     /// @param name the wave function file name
     void set_wfn_filename(const std::string& name);
 
