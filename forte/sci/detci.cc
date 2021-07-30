@@ -93,7 +93,7 @@ double DETCI::compute_energy() {
         print_ci_wfn();
     }
 
-    // compute dipole momemts
+    // compute dipole moments
     compute_permanent_dipole();
 
     // save wave functions by default

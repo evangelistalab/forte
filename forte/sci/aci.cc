@@ -921,7 +921,7 @@ psi::SharedMatrix AdaptiveCI::get_PQ_evecs() { return PQ_evecs_; }
 
 psi::SharedVector AdaptiveCI::get_PQ_evals() { return PQ_evals_; }
 
-std::vector<double> AdaptiveCI::get_PQ_spin2() { return PQ_spin2_; };
+std::vector<double> AdaptiveCI::get_PQ_spin2() { return PQ_spin2_; }
 
 size_t AdaptiveCI::get_ref_root() { return ref_root_; }
 

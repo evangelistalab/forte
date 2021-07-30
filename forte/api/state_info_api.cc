@@ -55,6 +55,8 @@ void export_StateInfo(py::module& m) {
         .def("irrep", &StateInfo::irrep, "Irreducible representation")
         .def("multiplicity_label", &StateInfo::multiplicity_label, "Multiplicity label")
         .def("irrep_label", &StateInfo::irrep_label, "Symbol for irreducible representation")
+        .def("gas_min", &StateInfo::gas_min, "The minimum occupation of each gas state")
+        .def("gas_max", &StateInfo::gas_max, "The maximum occupation of each gas state")
         .def("__eq__", [](const StateInfo& a, const StateInfo& b) { return a == b; })
         .def("__lt__", [](const StateInfo& a, const StateInfo& b) { return a < b; })
         .def("__hash__", [](const StateInfo& a) { return a.hash(); });
