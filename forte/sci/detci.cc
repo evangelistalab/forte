@@ -29,8 +29,8 @@ DETCI::DETCI(StateInfo state, size_t nroot, std::shared_ptr<SCFInfo> scf_info,
 }
 
 void DETCI::startup() {
-    nirrep_ = mo_space_info_->nirrep();
-    nactv_ = mo_space_info_->size("ACTIVE");
+    nirrep_ = static_cast<int>(mo_space_info_->nirrep());
+    nactv_ = static_cast<int>(mo_space_info_->size("ACTIVE"));
     actv_dim_ = mo_space_info_->dimension("ACTIVE");
 
     multiplicity_ = state_.multiplicity();
@@ -163,13 +163,6 @@ void DETCI::diagoanlize_hamiltonian() {
         energies_[i] = evals_->get(i);
     }
 
-    // fix CI coefficient phase
-    for (int i = 0; i < nroot_; ++i) {
-        if (evecs_->get(0, i) < 0.0) {
-            evecs_->scale_column(0, i, -1.0);
-        }
-    }
-
     outfile->Printf("\n\n  Done diagonalizing Hamiltonian, %.3e seconds.", tdiag.stop());
 }
 
@@ -193,11 +186,11 @@ std::shared_ptr<SparseCISolver> DETCI::prepare_ci_solver() {
     }
 
     solver->set_guess_dimension(dl_guess_size_);
-    if (initial_guess_.size()) {
+    if (not initial_guess_.empty()) {
         solver->set_initial_guess(initial_guess_);
     }
 
-    if (projected_roots_.size() != 0) {
+    if (not projected_roots_.empty()) {
         solver->set_root_project(true);
         solver->add_bad_states(projected_roots_);
     }
@@ -273,9 +266,9 @@ void DETCI::print_ci_wfn() {
             std::string dash = std::string(dash_size, '-');
             outfile->Printf("%16s\n    %s", "Coefficients", dash.c_str());
 
-            for (size_t i = 0, size = id.size(); i < size; ++i) {
-                auto det = p_space_.get_det(id[i]);
-                double ci = evecs_->get(id[i], N);
+            for (const int& i : id) {
+                auto det = p_space_.get_det(i);
+                double ci = evecs_->get(i, N);
 
                 outfile->Printf("\n    ");
                 for (int h = 0, offset = 0; h < nirrep_; ++h) {
@@ -314,7 +307,7 @@ void DETCI::print_ci_wfn() {
 
             // print orbital occupations
             outfile->Printf("\n\n    Occupation Numbers:");
-            for (int i = 0, size = vec_irrep_occupation.size(); i < size; ++i) {
+            for (int i = 0, size = static_cast<int>(vec_irrep_occupation.size()); i < size; ++i) {
                 if (i % 4 == 0) {
                     outfile->Printf("\n    ");
                 }
@@ -357,7 +350,7 @@ DETCI::read_wave_function(const std::string& filename) {
     std::getline(file, line);
     if (line.find("DETCI") == std::string::npos) {
         outfile->Printf("\n  DETCI Error: Wave function file not from a previous DETCI!");
-        std::runtime_error("Failed read wave function: file not generated from DETCI.");
+        throw std::runtime_error("Failed read wave function: file not generated from DETCI.");
     }
 
     // read second line for number of determinants and number of roots
@@ -453,9 +446,9 @@ bool DETCI::read_initial_guess(const std::string& filename) {
         tmp.reserve(indices.size());
         for (const size_t I : indices) {
             const auto& det = dets[I];
-            tmp.push_back({p_space_[det], evecs->get(I, n) / norms[n]});
+            tmp.emplace_back(p_space_[det], evecs->get(I, n) / norms[n]);
         }
-        if (tmp.size())
+        if (not tmp.empty())
             initial_guess_.push_back(tmp);
     }
 

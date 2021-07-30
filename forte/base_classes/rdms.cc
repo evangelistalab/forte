@@ -215,12 +215,16 @@ ambit::Tensor RDMs::SF_G1() {
 
 std::shared_ptr<psi::Matrix> RDMs::SF_G1mat() {
     SF_G1();
-    return tensor_to_matrix(SF_G1_);
+    auto M = tensor_to_matrix(SF_G1_);
+    M->set_name("1-RDM NoSym");
+    return M;
 }
 
 std::shared_ptr<psi::Matrix> RDMs::SF_G1mat(const psi::Dimension& dim) {
     SF_G1();
-    return tensor_to_matrix(SF_G1_, dim);
+    auto M = tensor_to_matrix(SF_G1_, dim);
+    M->set_name("1-RDM");
+    return M;
 }
 
 ambit::Tensor RDMs::SF_G2() {
