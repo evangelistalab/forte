@@ -625,9 +625,6 @@ def register_dsrg_options(options):
 
     options.add_int("MAXITER_RELAX_REF", 15, "Max macro iterations for DSRG reference relaxation")
 
-    options.add_bool("DSRG_RELAX_FOLLOW_STATE", False,
-                     "Follow the states with max overlaps between original and relaxed states")
-
     options.add_double("RELAX_E_CONVERGENCE", 1.0e-8, "The energy relaxation convergence criterion")
 
     options.add_bool(
@@ -811,9 +808,9 @@ def register_casscf_options(options):
 
     options.add_int("CASSCF_MAXITER", 100, "The maximum number of CASSCF macro iterations")
 
-    options.add_int("CASSCF_MICRO_MAXITER", 12, "The maximum number of CASSCF micro iterations")
+    options.add_int("CASSCF_MICRO_MAXITER", 20, "The maximum number of CASSCF micro iterations")
 
-    options.add_int("CASSCF_MICRO_MINITER", 4, "The minimum number of CASSCF micro iterations")
+    options.add_int("CASSCF_MICRO_MINITER", 6, "The minimum number of CASSCF micro iterations")
 
     options.add_int("CPSCF_MAXITER", 50, "Max iteration of solving coupled perturbed SCF equation")
 
