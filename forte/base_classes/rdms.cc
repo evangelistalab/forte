@@ -397,50 +397,46 @@ void RDMs::rotate(const ambit::Tensor& Ua, const ambit::Tensor& Ub) {
 }
 
 void RDMs::rotate_restricted(const ambit::Tensor& Ua) {
-    psi::outfile->Printf("\n  Rotating RDMs using spin restricted formalism ...");
-
-    if (max_rdm_ < 1)
+    if (max_rdm_ < 1) {
         return;
+    }
 
+    psi::outfile->Printf("\n  Rotating RDMs using spin restricted formalism ...");
+    reset_built_flags();
+
+    // transform 1-RDM
     auto g1T = ambit::Tensor::build(ambit::CoreTensor, "g1aT", g1a_.dims());
     g1T("pq") = Ua("ap") * g1a_("ab") * Ua("bq");
+    g1a_("pq") = g1T("pq");
+    g1T.reset();
     psi::outfile->Printf("\n    Transformed 1 RDM.");
-    if (max_rdm_ >= 1) {
-        g1a_("pq") = g1T("pq");
-        g1T.reset();
-        have_g1b_ = false;
-        have_SF_G1_ = false;
-    }
+    if (max_rdm_ == 1)
+        return;
 
+    // transform 2-RDM
     auto g2T = ambit::Tensor::build(ambit::CoreTensor, "g2abT", g2ab_.dims());
     g2T("pQrS") = Ua("ap") * Ua("BQ") * g2ab_("aBcD") * Ua("cr") * Ua("DS");
+    g2ab_("pqrs") = g2T("pqrs");
+    g2T.reset();
     psi::outfile->Printf("\n    Transformed 2 RDM.");
-    if (max_rdm_ >= 2) {
-        g2ab_("pqrs") = g2T("pqrs");
-        g2T.reset();
-        have_g2aa_ = false;
-        have_g2bb_ = false;
-        have_SF_G2_ = false;
-        have_SF_L2_ = false;
-    }
+    if (max_rdm_ == 2)
+        return;
 
+    // transform 3-RDM
     auto g3T = ambit::Tensor::build(ambit::CoreTensor, "g3aabT", g3aab_.dims());
     g3T("pqRstU") =
         Ua("ap") * Ua("bq") * Ua("CR") * g3aab_("abCijK") * Ua("is") * Ua("jt") * Ua("KU");
-    psi::outfile->Printf("\n    Transformed 3 RDM.");
     g3aab_("abcijk") = g3T("abcijk");
     g3T.reset();
-    have_g3aaa_ = false;
-    have_g3abb_ = false;
-    have_g3aaa_ = false;
-    have_SF_L3_ = false;
+    psi::outfile->Printf("\n    Transformed 3 RDM.");
 }
 
 void RDMs::rotate_unrestricted(const ambit::Tensor& Ua, const ambit::Tensor& Ub) {
-    psi::outfile->Printf("\n  Rotating RDMs using spin unrestricted formalism ...");
-
     if (max_rdm_ < 1)
         return;
+
+    psi::outfile->Printf("\n  Rotating RDMs using spin unrestricted formalism ...");
+    reset_built_flags();
 
     // Transform the 1-rdms
     ambit::Tensor g1aT = ambit::Tensor::build(ambit::CoreTensor, "g1aT", g1a_.dims());
@@ -449,13 +445,13 @@ void RDMs::rotate_unrestricted(const ambit::Tensor& Ua, const ambit::Tensor& Ub)
     g1aT("pq") = Ua("ap") * g1a_("ab") * Ua("bq");
     g1bT("PQ") = Ub("AP") * g1b_("AB") * Ub("BQ");
 
+    g1a_("pq") = g1aT("pq");
+    g1b_("pq") = g1bT("pq");
+
     psi::outfile->Printf("\n    Transformed 1 RDMs.");
 
-    if (max_rdm_ >= 1) {
-        g1a_("pq") = g1aT("pq");
-        g1b_("pq") = g1bT("pq");
-        have_SF_G1_ = false;
-    }
+    if (max_rdm_ == 1)
+        return;
 
     // Transform the 2-rdms
     auto g2Taa = ambit::Tensor::build(ambit::CoreTensor, "g2aaT", g2aa_.dims());
@@ -466,17 +462,14 @@ void RDMs::rotate_unrestricted(const ambit::Tensor& Ua, const ambit::Tensor& Ub)
     g2Tab("pQrS") = Ua("ap") * Ub("BQ") * g2ab_("aBcD") * Ua("cr") * Ub("DS");
     g2Tbb("PQRS") = Ub("AP") * Ub("BQ") * g2bb_("ABCD") * Ub("CR") * Ub("DS");
 
+    g2aa_("pqrs") = g2Taa("pqrs");
+    g2ab_("pqrs") = g2Tab("pqrs");
+    g2bb_("pqrs") = g2Tbb("pqrs");
+
     psi::outfile->Printf("\n    Transformed 2 RDMs.");
 
-    if (max_rdm_ >= 2) {
-        g2aa_("pqrs") = g2Taa("pqrs");
-        g2ab_("pqrs") = g2Tab("pqrs");
-        g2bb_("pqrs") = g2Tbb("pqrs");
-        have_L2aa_ = false;
-        have_L2ab_ = false;
-        have_L2bb_ = false;
-        have_SF_G2_ = false;
-    }
+    if (max_rdm_ == 2)
+        return;
 
     // Transform the 3-rdms
     auto g3T = ambit::Tensor::build(ambit::CoreTensor, "g3T", g3aaa_.dims());
@@ -497,10 +490,32 @@ void RDMs::rotate_unrestricted(const ambit::Tensor& Ua, const ambit::Tensor& Ub)
     g3bbb_("pqrstu") = g3T("pqrstu");
 
     psi::outfile->Printf("\n    Transformed 3 RDMs.");
-    have_L3aaa_ = false;
-    have_L3aab_ = false;
-    have_L3abb_ = false;
-    have_L3bbb_ = false;
+}
+
+void RDMs::reset_built_flags() {
+    if (max_rdm_ >= 1) {
+        have_g1b_ = false;
+        have_SF_G1_ = false;
+    }
+    if (max_rdm_ >= 2) {
+        have_g2aa_ = false;
+        have_g2bb_ = false;
+        have_SF_G2_ = false;
+        have_L2aa_ = false;
+        have_L2ab_ = false;
+        have_L2bb_ = false;
+        have_SF_L2_ = false;
+    }
+    if (max_rdm_ >= 3) {
+        have_g3aaa_ = false;
+        have_g3abb_ = false;
+        have_g3bbb_ = false;
+        have_L3aaa_ = false;
+        have_L3aab_ = false;
+        have_L3abb_ = false;
+        have_L3bbb_ = false;
+        have_SF_L3_ = false;
+    }
 }
 
 double compute_Eref_from_rdms(RDMs& ref, const std::shared_ptr<ForteIntegrals>& ints,

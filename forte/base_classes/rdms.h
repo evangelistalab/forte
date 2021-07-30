@@ -270,6 +270,9 @@ class RDMs {
     void rotate_restricted(const ambit::Tensor& Ua);
     /// Rotate the current RDMs for all spin cases
     void rotate_unrestricted(const ambit::Tensor& Ua, const ambit::Tensor& Ub);
+
+    /// Reset built cumulants or RDMs
+    void reset_built_flags();
 };
 
 /**
