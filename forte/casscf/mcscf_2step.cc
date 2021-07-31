@@ -352,21 +352,24 @@ double MCSCF_2STEP::compute_energy() {
     };
 
     if (ints_->integral_type() != Custom) {
-        // fix orbitals for redundant pairs
-        auto F = cas_grad.fock();
-        ints_->set_fock_matrix(F, F);
+        auto final_orbs = options_->get_str("CASSCF_FINAL_ORBITAL");
 
-        SemiCanonical semi(mo_space_info_, ints_, options_);
-        bool do_nat_orb = options_->get_str("CASSCF_FINAL_ORBITAL") == "NATURAL";
-        semi.semicanonicalize(rdms, false, do_nat_orb, false);
+        if (final_orbs != "UNSPECIFIED") {
+            // fix orbitals for redundant pairs
+            auto F = cas_grad.fock();
+            ints_->set_fock_matrix(F, F);
 
-        cas_grad.canonicalize_final(semi.Ua());
+            SemiCanonical semi(mo_space_info_, ints_, options_);
+            semi.semicanonicalize(rdms, false, final_orbs == "NATURAL", false);
 
-        // re-diagonalize Hamiltonian
-        auto fci_ints = cas_grad.active_space_ints();
-        auto dump_wfn_new = dump_wfn and options_->get_bool("DUMP_ACTIVE_WFN");
-        std::tie(as_solver, energy_) = diagonalize_hamiltonian(
-            fci_ints, {print_, dl_e_conv, dl_r_conv, dump_wfn, dump_wfn_new});
+            cas_grad.canonicalize_final(semi.Ua());
+
+            // re-diagonalize Hamiltonian
+            auto fci_ints = cas_grad.active_space_ints();
+            auto dump_wfn_new = dump_wfn and options_->get_bool("DUMP_ACTIVE_WFN");
+            std::tie(as_solver, energy_) = diagonalize_hamiltonian(
+                fci_ints, {print_, dl_e_conv, dl_r_conv, dump_wfn, dump_wfn_new});
+        }
 
         // pass to wave function
         auto Ca = cas_grad.Ca();
@@ -379,9 +382,11 @@ double MCSCF_2STEP::compute_energy() {
         // for nuclear gradient
         if (der_type_ == "FIRST") {
             // recompute gradient due to canonicalization
-            rdms = as_solver->compute_average_rdms(state_weights_map_, 2);
-            cas_grad.set_rdms(rdms);
-            cas_grad.evaluate(R, dG);
+            if (final_orbs != "UNSPECIFIED") {
+                rdms = as_solver->compute_average_rdms(state_weights_map_, 2);
+                cas_grad.set_rdms(rdms);
+                cas_grad.evaluate(R, dG);
+            }
 
             // compute densities used for nuclear gradient
             cas_grad.compute_nuclear_gradient();

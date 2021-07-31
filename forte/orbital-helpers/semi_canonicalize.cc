@@ -243,8 +243,10 @@ void SemiCanonical::prepare_matrix_blocks(RDMs& rdms, const bool& nat_orb) {
         if (nat_orb and name.find("OCC") == std::string::npos) {
             auto actv_slice = psi::Slice(slice.begin() - docc_offset, slice.end() - docc_offset);
             mats_[name] = d1->get_block(actv_slice, actv_slice);
+            mats_[name]->set_name("D1 " + name);
         } else {
             mats_[name] = fock->get_block(slice, slice);
+            mats_[name]->set_name("Fock " + name);
         }
     }
 }
