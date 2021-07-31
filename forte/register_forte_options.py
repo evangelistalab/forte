@@ -735,9 +735,9 @@ def register_dsrg_options(options):
 
     options.add_int("DSRG_DIIS_FREQ", 1, "Frequency of extrapolating error vectors for DSRG DIIS")
 
-    options.add_int("DSRG_DIIS_MIN_VEC", 2, "Minimum size of DIIS vectors")
+    options.add_int("DSRG_DIIS_MIN_VEC", 3, "Minimum size of DIIS vectors")
 
-    options.add_int("DSRG_DIIS_MAX_VEC", 6, "Maximum size of DIIS vectors")
+    options.add_int("DSRG_DIIS_MAX_VEC", 8, "Maximum size of DIIS vectors")
 
     options.add_bool("DSRG_RESTART_AMPS", True, "Restart DSRG amplitudes from a previous step")
 
@@ -819,7 +819,7 @@ def register_casscf_options(options):
     options.add_double("CASSCF_E_CONVERGENCE", 1e-8, "The energy convergence criterion (two consecutive energies)")
 
     options.add_double(
-        "CASSCF_G_CONVERGENCE", 1e-6, "The orbital gradient convergence criterion (RMS of gradient vector)"
+        "CASSCF_G_CONVERGENCE", 1e-7, "The orbital gradient convergence criterion (RMS of gradient vector)"
     )
 
     options.add_bool("CASSCF_DEBUG_PRINTING", False, "Enable debug printing if True")

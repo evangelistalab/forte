@@ -540,14 +540,14 @@ For example, 1 means do DIIS every iteration and 2 is for every other iteration,
 Minimum number of error vectors stored for DIIS extrapolation in MRDSRG.
 
 * Type: int
-* Default: 2
+* Default: 3
 
 **DSRG_DIIS_MAX_VEC**
 
 Maximum number of error vectors stored for DIIS extrapolation in MRDSRG.
 
 * Type: int
-* Default: 6
+* Default: 8
 
 .. _dsrg_variants:
 
