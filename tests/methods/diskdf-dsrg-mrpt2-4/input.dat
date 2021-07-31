@@ -1,10 +1,10 @@
-#! Generated using commit GITCOMMIT
-#! Perform a DF-DSRG-MRPT2 on N2
+# Perform a DF-DSRG-MRPT2 on N2
+# Test semicanonical orbitals with mixed frozen and restricted docc
 import forte
 
-refrhf    = -108.9534883789603725
-refpt2_u  = -109.250177951844961 # unrelaxed
-refpt2_pr = -109.251789007702669 # partially relaxed
+refrhf    = -108.953488378960373
+refpt2_u  = -109.245931498356370 # unrelaxed
+refpt2_pr = -109.247539498857194 # partially relaxed
 
 memory 500 mb
 
@@ -26,17 +26,18 @@ set globals{
 }
 
 set forte {
-   correlation_solver      three-dsrg-mrpt2
-   int_type                diskdf
-   restricted_docc         [2,0,0,0,0,2,0,0]
-   active                  [1,0,1,1,0,1,1,1]
-   root_sym                0
-   nroot                   1
-   dsrg_s                  1.0
-   semi_canonical          true
-   ntrial_per_root         100
-   active_space_solver     cas
-   relax_ref               once
+  correlation_solver          three-dsrg-mrpt2
+  int_type                    diskdf
+  frozen_docc                 [1,0,0,0,0,1,0,0]
+  restricted_docc             [1,0,0,0,0,1,0,0]
+  active                      [1,0,1,1,0,1,1,1]
+  root_sym                    0
+  nroot                       1
+  dsrg_s                      1.0
+  ntrial_per_root             100
+  active_space_solver         cas
+  relax_ref                   once
+  semi_canonical_mix_inactive true
 }
 
 Escf, wfn = energy('scf', return_wfn=True)
