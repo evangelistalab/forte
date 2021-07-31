@@ -819,7 +819,7 @@ def register_casscf_options(options):
     options.add_double("CASSCF_E_CONVERGENCE", 1e-8, "The energy convergence criterion (two consecutive energies)")
 
     options.add_double(
-        "CASSCF_G_CONVERGENCE", 1e-7, "The orbital gradient convergence criterion (RMS of gradient vector)"
+        "CASSCF_G_CONVERGENCE", 1e-6, "The orbital gradient convergence criterion (RMS of gradient vector)"
     )
 
     options.add_bool("CASSCF_DEBUG_PRINTING", False, "Enable debug printing if True")
@@ -867,9 +867,9 @@ def register_casscf_options(options):
     )
 
     options.add_bool("CASSCF_DO_DIIS", True, "Use DIIS in CASSCF orbital optimization")
-    options.add_int("CASSCF_DIIS_MIN_VEC", 2, "Minimum size of DIIS vectors for orbital rotations")
+    options.add_int("CASSCF_DIIS_MIN_VEC", 3, "Minimum size of DIIS vectors for orbital rotations")
     options.add_int("CASSCF_DIIS_MAX_VEC", 8, "Maximum size of DIIS vectors for orbital rotations")
-    options.add_int("CASSCF_DIIS_START", 4, "Iteration number to start adding error vectors (< 1 will not do DIIS)")
+    options.add_int("CASSCF_DIIS_START", 15, "Iteration number to start adding error vectors (< 1 will not do DIIS)")
     options.add_int("CASSCF_DIIS_FREQ", 1, "How often to do DIIS extrapolation")
     options.add_double("CASSCF_DIIS_NORM", 1e-3, "Do DIIS when the orbital gradient norm is below this value")
 
