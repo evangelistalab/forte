@@ -112,6 +112,21 @@ class CMakeBuild(build_ext):
 
     @staticmethod
     def split_options(options):
+        """
+        Split the given string of options
+        :param options: a string of options
+        :return: split options in lists
+
+        For example, the input is
+        '-DOpenMP_iomp5_LIBRARY=/usr/local/lib/libomp.dylib '
+        '-DOpenMP_CXX_FLAGS="-Xpreprocessor -fopenmp=iomp5 -I/usr/local/lib/" '
+        '-DOpenMP_CXX_LIB_NAMES=iomp5'
+
+        The output should give
+        ['-DOpenMP_iomp5_LIBRARY=/usr/local/lib/libomp.dylib',
+         '-DOpenMP_CXX_FLAGS="-Xpreprocessor -fopenmp=iomp5 -I/usr/local/lib/"',
+         '-DOpenMP_CXX_LIB_NAMES=iomp5']
+        """
         out = []
         temp = ""
         for i in options.split():
@@ -127,7 +142,6 @@ class CMakeBuild(build_ext):
                     temp += f" {i}"
                     out.append(temp)
                     temp = ""
-        print(out)
         return out
 
 
