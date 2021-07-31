@@ -77,6 +77,10 @@ def parse_subspace_pi_planes(molecule, planes_expr, debug=False):
 
     PR #261: https://github.com/evangelistalab/forte/pull/261
     """
+    # return empty dictionary if no planes are defined
+    if not planes_expr:
+        return {}
+
     # test input
     if not isinstance(molecule, psi4.core.Molecule):
         raise ValueError("Invalid argument for molecule!")
