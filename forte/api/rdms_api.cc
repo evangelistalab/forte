@@ -70,9 +70,6 @@ void export_RDMs(py::module& m) {
             "g3bbb", [](RDMs& rdm) { return ambit_to_np(rdm.g3bbb()); },
             "Return the beta-beta-beta 3RDM as a numpy array")
         .def(
-            "SFg2_data", [](RDMs& rdm) { return ambit_to_np(rdm.SF_G2()); },
-            "Return the spin-free 2-RDM as a numpy array")
-        .def(
             "L2aa", [](RDMs& rdm) { return ambit_to_np(rdm.L2aa()); },
             "Return the alpha-alpha 2-cumulant as a numpy array")
         .def(
@@ -93,12 +90,19 @@ void export_RDMs(py::module& m) {
         .def(
             "L3bbb", [](RDMs& rdm) { return ambit_to_np(rdm.L3bbb()); },
             "Return the beta-beta-beta 3-cumulant as a numpy array")
+        .def("SF_G1mat", py::overload_cast<>(&RDMs::SF_G1mat),
+             "Return the spin-free 1RDM as a Psi4 Matrix without symmetry")
+        .def("SF_G1mat", py::overload_cast<const psi::Dimension&>(&RDMs::SF_G1mat),
+             "Return the spin-free 1RDM as a Psi4 Matrix with symmetry given by input")
         .def(
-            "SF_L1", [](RDMs& rdm) { return ambit_to_np(rdm.SF_L1()); },
+            "SF_G1", [](RDMs& rdm) { return ambit_to_np(rdm.SF_G1()); },
             "Return the spin-free 1RDM as a numpy array")
         .def(
             "SF_G2", [](RDMs& rdm) { return ambit_to_np(rdm.SF_G2()); },
             "Return the spin-free 2RDM as a numpy array")
+        .def(
+            "SF_L1", [](RDMs& rdm) { return ambit_to_np(rdm.SF_L1()); },
+            "Return the spin-free 1RDM as a numpy array")
         .def(
             "SF_L2", [](RDMs& rdm) { return ambit_to_np(rdm.SF_L2()); },
             "Return the spin-free (Ms-averaged) 2-cumulant as a numpy array")
