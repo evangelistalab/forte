@@ -203,7 +203,12 @@ class ProcedureDSRG:
             # Solve active space using dressed integrals
             self.active_space_solver.set_active_space_integrals(ints_dressed)
             state_energies_list = self.active_space_solver.compute_energy()
-            self.reorder_weights()  # Reorder weights if needed
+
+            # Reorder weights if needed
+            state_ci_wfn_map = self.active_space_solver.state_ci_wfn_map()
+            self.reorder_weights(state_ci_wfn_map)
+            self.state_ci_wfn_map = state_ci_wfn_map
+
             e_relax = forte.compute_average_state_energy(state_energies_list, self.state_weights_map)
             self.energies.append((e_dsrg, e_relax))
 
@@ -301,14 +306,14 @@ class ProcedureDSRG:
 
         return self.converged
 
-    def reorder_weights(self):
-        """ Check CI overlap and reorder weights between consecutive relaxation steps. """
+    def reorder_weights(self, state_ci_wfn_map):
+        """
+        Check CI overlap and reorder weights between consecutive relaxation steps.
+        :param state_ci_wfn_map: the map to be compared to self.state_ci_wfn_map
+        """
         # bypass this check if state to CI vectors map not available
         if self.state_ci_wfn_map is None:
             return
-
-        # grab the current CI vectors
-        state_ci_wfn_map = self.active_space_solver.state_ci_wfn_map()
 
         for state in self.states:
             twice_ms = state.twice_ms()
