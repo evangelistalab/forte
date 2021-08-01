@@ -147,7 +147,7 @@ class ActiveSpaceMethod {
     /// Dump the wave function to file
     /// @param file name
     virtual void dump_wave_function(const std::string&) {
-        throw std::runtime_error("Not yet implemented!");
+        throw std::runtime_error("ActiveSpaceMethod::dump_wave_function: Not yet implemented!");
     }
 
     /// Read the wave function from file
@@ -155,12 +155,12 @@ class ActiveSpaceMethod {
     /// @return the number of active orbitals, the set of determinants, CI coefficients
     virtual std::tuple<size_t, std::vector<Determinant>, psi::SharedMatrix>
     read_wave_function(const std::string&) {
-        throw std::runtime_error("Not yet implemented!");
+        throw std::runtime_error("ActiveSpaceMethod::read_wave_function: Not yet implemented!");
     }
 
     /// @return the CI wave functions for the current StateInfo (deterministic determinant space)
     virtual psi::SharedMatrix ci_wave_functions() {
-        throw std::runtime_error("Not implemented! Derived class should override.");
+        throw std::runtime_error("ActiveSpaceMethod::ci_wave_functions: Not yet implemented!");
     }
 
     // ==> Base Class Functionality (inherited by derived classes) <==

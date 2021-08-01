@@ -205,9 +205,10 @@ class ProcedureDSRG:
             state_energies_list = self.active_space_solver.compute_energy()
 
             # Reorder weights if needed
-            state_ci_wfn_map = self.active_space_solver.state_ci_wfn_map()
-            self.reorder_weights(state_ci_wfn_map)
-            self.state_ci_wfn_map = state_ci_wfn_map
+            if self.state_ci_wfn_map is not None:
+                state_ci_wfn_map = self.active_space_solver.state_ci_wfn_map()
+                self.reorder_weights(state_ci_wfn_map)
+                self.state_ci_wfn_map = state_ci_wfn_map
 
             e_relax = forte.compute_average_state_energy(state_energies_list, self.state_weights_map)
             self.energies.append((e_dsrg, e_relax))
@@ -325,7 +326,10 @@ class ProcedureDSRG:
             overlap.name = f"CI Overlap of {state}"
 
             # check overlap and determine if we need to permute states
-            check_pass, permutation = self.check_ci_overlap(overlap)
+            overlap_np = np.abs(overlap.to_array())
+            max_values = np.max(overlap_np, axis=1)
+            permutation = np.argmax(overlap_np, axis=1)
+            check_pass = len(permutation) == len(set(permutation)) and np.all(max_values > 0.5)
 
             if not check_pass:
                 msg = "Relaxed states are likely wrong. Please increase the number of roots."
@@ -360,18 +364,6 @@ class ProcedureDSRG:
                                                  state.gas_min(), state.gas_max())
                     if state_spin in self.state_weights_map:
                         self.state_weights_map[state_spin] = weights_new
-
-    def check_ci_overlap(self, overlap):
-        """
-        Check the overlap matrix of two sets of CI vectors.
-        :param overlap: the overlap matrix
-        :return: pass or not, the permutation for reordering
-        """
-        s = np.abs(overlap.to_array())
-        max_values = np.max(s, axis=1)
-        permutation = np.argmax(s, axis=1)
-        check_pass = len(permutation) == len(set(permutation)) and np.all(max_values > 0.5)
-        return check_pass, permutation
 
     def print_summary(self):
         """ Print energies and dipole moment to output file. """
