@@ -196,7 +196,7 @@ void Psi4Integrals::make_psi4_JK() {
         throw psi::PSIEXCEPTION("Unknown Pis4 integral type to initialize JK in Forte");
     }
 
-    JK_->set_cutoff(options_->get_double("INTEGRAL_SCREENING"));
+    JK_->set_cutoff(options_->get_double("INTS_TOLERANCE"));
     jk_initialize();
     JK_->print_header();
 }

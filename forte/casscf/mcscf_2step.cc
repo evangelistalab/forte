@@ -37,6 +37,8 @@
 
 #include "base_classes/rdms.h"
 #include "integrals/integrals.h"
+#include "integrals/active_space_integrals.h"
+#include "integrals/make_integrals.h"
 #include "helpers/printing.h"
 #include "helpers/lbfgs/lbfgs.h"
 #include "helpers/lbfgs/lbfgs_param.h"
@@ -369,12 +371,30 @@ double MCSCF_2STEP::compute_energy() {
             auto dump_wfn_new = dump_wfn and options_->get_bool("DUMP_ACTIVE_WFN");
             std::tie(as_solver, energy_) = diagonalize_hamiltonian(
                 fci_ints, {print_, dl_e_conv, dl_r_conv, dump_wfn, dump_wfn_new});
+
+            rdms = as_solver->compute_average_rdms(state_weights_map_, 1);
+            ints_->make_fock_matrix(rdms.g1a(), rdms.g1b());
+            ints_->get_fock_a(false)->print();
         }
 
         // pass to wave function
         auto Ca = cas_grad.Ca();
         ints_->wfn()->Ca()->copy(Ca);
         ints_->wfn()->Cb()->copy(Ca);
+
+        options_->set_str("JOB_TYPE", "NEWDRIVER");
+        auto ints = make_forte_integrals_from_psi4(ints_->wfn(), options_, mo_space_info_);
+        auto as_ints = make_active_space_ints(mo_space_info_, ints, "ACTIVE", {"FROZEN_DOCC", "RESTRICTED_DOCC"});
+        auto state_map = to_state_nroots_map(state_weights_map_);
+        auto ass = make_active_space_solver("FCI", state_map, scf_info_, mo_space_info_, as_ints,
+                                            options_);
+        ass->set_e_convergence(1.0e-8);
+        ass->set_r_convergence(1.0e-6);
+        auto state_energies_map = ass->compute_energy();
+        compute_average_state_energy(state_energies_map, state_weights_map_);
+        auto ass_rdms = ass->compute_average_rdms(state_weights_map_, 1);
+        ints_->make_fock_matrix(ass_rdms.g1a(), ass_rdms.g1b());
+        ints_->get_fock_a(false)->print();
 
         // throw error if not converged
         throw_convergence_error();
