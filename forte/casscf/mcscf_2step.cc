@@ -404,7 +404,9 @@ double MCSCF_2STEP::compute_energy() {
             diagonalize_hamiltonian(as_ints, {1, dl_e_conv, dl_r_conv, false, false});
         cg.set_rdms(ass_rdms);
         cg.evaluate(R, dG, true);
-        dG->print();
+        psi::outfile->Printf("\n  grad rms: %.15f", dG->rms());
+        psi::outfile->Printf("\n  grad norm: %.15f", dG->norm());
+        psi::outfile->Printf("\n  grad sum of squares: %.15f", dG->sum_of_squares());
 
         // throw error if not converged
         throw_convergence_error();
