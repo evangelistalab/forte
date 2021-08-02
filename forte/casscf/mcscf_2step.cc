@@ -168,7 +168,7 @@ double MCSCF_2STEP::compute_energy() {
         return energy_;
     }
 
-    // DIIS extropolation for macro iteration
+    // DIIS extrapolation for macro iteration
     psi::DIISManager diis_manager(do_diis_ ? diis_max_vec_ : 0, "MCSCF DIIS",
                                   psi::DIISManager::OldestAdded, psi::DIISManager::OnDisk);
     if (do_diis_) {
@@ -384,7 +384,8 @@ double MCSCF_2STEP::compute_energy() {
 
         options_->set_str("JOB_TYPE", "NEWDRIVER");
         auto ints = make_forte_integrals_from_psi4(ints_->wfn(), options_, mo_space_info_);
-        auto as_ints = make_active_space_ints(mo_space_info_, ints, "ACTIVE", {"FROZEN_DOCC", "RESTRICTED_DOCC"});
+        auto as_ints = make_active_space_ints(mo_space_info_, ints, "ACTIVE",
+                                              {"FROZEN_DOCC", "RESTRICTED_DOCC"});
         auto state_map = to_state_nroots_map(state_weights_map_);
         auto ass = make_active_space_solver("FCI", state_map, scf_info_, mo_space_info_, as_ints,
                                             options_);
@@ -392,9 +393,18 @@ double MCSCF_2STEP::compute_energy() {
         ass->set_r_convergence(1.0e-6);
         auto state_energies_map = ass->compute_energy();
         compute_average_state_energy(state_energies_map, state_weights_map_);
-        auto ass_rdms = ass->compute_average_rdms(state_weights_map_, 1);
-        ints_->make_fock_matrix(ass_rdms.g1a(), ass_rdms.g1b());
-        ints_->get_fock_a(false)->print();
+        auto ass_rdms = ass->compute_average_rdms(state_weights_map_, 2);
+        ints->make_fock_matrix(ass_rdms.g1a(), ass_rdms.g1b());
+        ints->get_fock_a(false)->print();
+
+        CASSCF_ORB_GRAD cg(options_, mo_space_info_, ints);
+        R->zero();
+        dG->zero();
+        std::tie(ass, e_c) =
+            diagonalize_hamiltonian(as_ints, {1, dl_e_conv, dl_r_conv, false, false});
+        cg.set_rdms(ass_rdms);
+        cg.evaluate(R, dG, true);
+        dG->print();
 
         // throw error if not converged
         throw_convergence_error();
