@@ -82,7 +82,7 @@ void FCISolver::set_subspace_per_root(int value) { subspace_per_root_ = value; }
 
 psi::SharedMatrix FCISolver::ci_wave_functions() {
     if (eigen_vecs_ == nullptr)
-        return eigen_vecs_;
+        return std::make_shared<psi::Matrix>();
 
     auto evecs = std::make_shared<psi::Matrix>("FCI Eigenvectors", eigen_vecs_->ncol(), nroot_);
     for (int i = 0, size = static_cast<int>(nroot_); i < size; ++i) {

@@ -371,42 +371,12 @@ double MCSCF_2STEP::compute_energy() {
             auto dump_wfn_new = dump_wfn and options_->get_bool("DUMP_ACTIVE_WFN");
             std::tie(as_solver, energy_) = diagonalize_hamiltonian(
                 fci_ints, {print_, dl_e_conv, dl_r_conv, dump_wfn, dump_wfn_new});
-
-            rdms = as_solver->compute_average_rdms(state_weights_map_, 1);
-            ints_->make_fock_matrix(rdms.g1a(), rdms.g1b());
-            ints_->get_fock_a(false)->print();
         }
 
         // pass to wave function
         auto Ca = cas_grad.Ca();
         ints_->wfn()->Ca()->copy(Ca);
         ints_->wfn()->Cb()->copy(Ca);
-
-        options_->set_str("JOB_TYPE", "NEWDRIVER");
-        auto ints = make_forte_integrals_from_psi4(ints_->wfn(), options_, mo_space_info_);
-        auto as_ints = make_active_space_ints(mo_space_info_, ints, "ACTIVE",
-                                              {"FROZEN_DOCC", "RESTRICTED_DOCC"});
-        auto state_map = to_state_nroots_map(state_weights_map_);
-        auto ass = make_active_space_solver("FCI", state_map, scf_info_, mo_space_info_, as_ints,
-                                            options_);
-        ass->set_e_convergence(1.0e-8);
-        ass->set_r_convergence(1.0e-6);
-        auto state_energies_map = ass->compute_energy();
-        compute_average_state_energy(state_energies_map, state_weights_map_);
-        auto ass_rdms = ass->compute_average_rdms(state_weights_map_, 2);
-        ints->make_fock_matrix(ass_rdms.g1a(), ass_rdms.g1b());
-        ints->get_fock_a(false)->print();
-
-        CASSCF_ORB_GRAD cg(options_, mo_space_info_, ints);
-        R->zero();
-        dG->zero();
-        std::tie(ass, e_c) =
-            diagonalize_hamiltonian(as_ints, {1, dl_e_conv, dl_r_conv, false, false});
-        cg.set_rdms(ass_rdms);
-        cg.evaluate(R, dG, true);
-        psi::outfile->Printf("\n  grad rms: %.15f", dG->rms());
-        psi::outfile->Printf("\n  grad norm: %.15f", dG->norm());
-        psi::outfile->Printf("\n  grad sum of squares: %.15f", dG->sum_of_squares());
 
         // throw error if not converged
         throw_convergence_error();
