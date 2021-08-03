@@ -258,7 +258,7 @@ std::vector<RDMs> ActiveSpaceSolver::rdms(
 
         if (state1 != state2) {
             throw std::runtime_error("ActiveSpaceSolver::reference called with states of different "
-                                     "symmetry! This function is not yet suported in Forte.");
+                                     "symmetry! This function is not yet supported in Forte.");
         }
 
         std::vector<RDMs> state_refs =
@@ -592,7 +592,7 @@ RDMs ActiveSpaceSolver::compute_avg_rdms(
 
             // Get the RDMs
             std::vector<std::pair<size_t, size_t>> state_ids;
-            state_ids.push_back(std::make_pair(r, r));
+            state_ids.emplace_back(r, r);
             RDMs method_rdms = method->rdms(state_ids, max_rdm_level)[0];
 
             // Average the RDMs
@@ -671,7 +671,7 @@ RDMs ActiveSpaceSolver::compute_avg_rdms_ms_avg(
 
             // Get the RDMs
             std::vector<std::pair<size_t, size_t>> state_ids;
-            state_ids.push_back(std::make_pair(r, r));
+            state_ids.emplace_back(r, r);
             RDMs method_rdms = method->rdms(state_ids, max_rdm_level)[0];
 
             // Average the RDMs
