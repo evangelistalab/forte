@@ -283,7 +283,8 @@ class CASSCF_ORB_GRAD {
 
     /// Test if new orbitals are significantly different from the beginning orbitals
     /// Return a tuple of <irrep, old active orbital index, new active orbital index>
-    std::vector<std::tuple<int, int, int>> test_orbital_rotations(const psi::SharedMatrix& U);
+    std::vector<std::tuple<int, int, int>> test_orbital_rotations(const psi::SharedMatrix& U,
+                                                                  const std::string& warning_msg);
 
     // => Nuclear gradient related functions <=
 

@@ -156,7 +156,7 @@ void CASSCF_ORB_GRAD::setup_mos() {
     BlockedTensor::add_composite_mo_space("G", "P,Q,R,S", {"f", "c", "a", "v", "u"});
 
     // if we are doing GAS
-    gas_ref_ = (mo_space_info_->nonzero_gas_spaces().size() != 1);
+    gas_ref_ = mo_space_info_->nonzero_gas_spaces().size() > 1;
 }
 
 void CASSCF_ORB_GRAD::read_options() {
@@ -173,7 +173,7 @@ void CASSCF_ORB_GRAD::read_options() {
     zero_rots_.resize(nirrep_);
     auto zero_rots = options_->get_gen_list("CASSCF_ZERO_ROT");
 
-    if (!zero_rots.empty()) {
+    if (not zero_rots.empty()) {
         for (size_t i = 0, npairs = zero_rots.size(); i < npairs; ++i) {
             py::list pair = zero_rots[i];
             if (pair.size() != 3) {
@@ -332,7 +332,7 @@ void CASSCF_ORB_GRAD::nonredundant_pairs() {
     if (internal_rot_) {
         const auto& mos = label_to_mos_["a"];
 
-        for (auto & gas_space : gas_spaces) {
+        for (auto& gas_space : gas_spaces) {
             auto g_in_actv = mo_space_info_->pos_in_space(gas_space, "ACTIVE");
 
             // space name for printing, convert to 1-based GAS
@@ -704,20 +704,7 @@ bool CASSCF_ORB_GRAD::update_orbitals(psi::SharedVector x) {
 
     // compute exp(dR) and test against previous step
     auto dU = matrix_exponential(dR, 3);
-    auto bad_rotations = test_orbital_rotations(dU);
-    if (not bad_rotations.empty()) {
-        std::string msg = "WARNING: Active Orbitals Different from the Previous Step";
-        print_h2(msg, "!!!", "!!!");
-        for (const auto& tup : bad_rotations) {
-            int h, i_old, i_new;
-            std::tie(h, i_old, i_new) = tup;
-            std::string i_old_str = std::to_string(i_old) + mo_space_info_->irrep_label(h);
-            std::string i_new_str = std::to_string(i_new) + mo_space_info_->irrep_label(h);
-            std::string space = i_new < ndoccpi_[h] ? "RESTRICTED_DOCC" : "RESTRICTED_UOCC";
-            outfile->Printf("\n    %9s -> %-9s %s", i_old_str.c_str(), i_new_str.c_str(),
-                            space.c_str());
-        }
-    }
+    test_orbital_rotations(dU, "WARNING: Active Orbitals Different from the Previous Step");
 
     // U_new = U_old * exp(dR)
     U_ = psi::linalg::doublet(U_, dU, false, false);
@@ -762,7 +749,8 @@ psi::SharedMatrix CASSCF_ORB_GRAD::matrix_exponential(const psi::SharedMatrix& A
 }
 
 std::vector<std::tuple<int, int, int>>
-CASSCF_ORB_GRAD::test_orbital_rotations(const psi::SharedMatrix& U) {
+CASSCF_ORB_GRAD::test_orbital_rotations(const psi::SharedMatrix& U,
+                                        const std::string& warning_msg) {
     // the overlap between new and old orbitals is simply U
     // O = Cold^T S Cnew = Cold^T S Cold U = U
     // MOM projection index: Pj = sum_{i}^{actv} O_ij
@@ -800,6 +788,20 @@ CASSCF_ORB_GRAD::test_orbital_rotations(const psi::SharedMatrix& U) {
         // print warning if orbitals are rotated outside active
         for (size_t i = 0, ni = i_old.size(); i < ni; ++i) {
             out.emplace_back(h, i_old[i], i_new[i]);
+        }
+    }
+
+    if (not out.empty()) {
+        print_h2(warning_msg, "!!!", "!!!");
+        outfile->Printf("\n    Based on projections of maximum overlap method:");
+        for (const auto& tup : out) {
+            int h, i_old, i_new;
+            std::tie(h, i_old, i_new) = tup;
+            std::string i_old_str = std::to_string(i_old) + mo_space_info_->irrep_label(h);
+            std::string i_new_str = std::to_string(i_new) + mo_space_info_->irrep_label(h);
+            std::string space = i_new < ndoccpi_[h] ? "RESTRICTED_DOCC" : "RESTRICTED_UOCC";
+            outfile->Printf("\n    %9s -> %-9s %s", i_old_str.c_str(), i_new_str.c_str(),
+                            space.c_str());
         }
     }
 
@@ -1013,21 +1015,7 @@ void CASSCF_ORB_GRAD::canonicalize_final(const psi::SharedMatrix& U) {
     U_ = psi::linalg::doublet(U_, U, false, false);
     U_->set_name("Orthogonal Transformation");
 
-    auto bad_rotations = test_orbital_rotations(U_);
-    if (not bad_rotations.empty()) {
-        std::string msg = "Final Active Orbitals Maybe Different from the Original";
-        print_h2(msg, "!!!", "!!!");
-        outfile->Printf("\n    Based on projections of maximum overlap method:");
-        for (const auto& tup : bad_rotations) {
-            int h, i_old, i_new;
-            std::tie(h, i_old, i_new) = tup;
-            std::string i_old_str = std::to_string(i_old) + mo_space_info_->irrep_label(h);
-            std::string i_new_str = std::to_string(i_new) + mo_space_info_->irrep_label(h);
-            std::string space = i_new < ndoccpi_[h] ? "RESTRICTED_DOCC" : "RESTRICTED_UOCC";
-            outfile->Printf("\n    %9s -> %-9s %s", i_old_str.c_str(), i_new_str.c_str(),
-                            space.c_str());
-        }
-    }
+    test_orbital_rotations(U_, "WARNING: Final Active Orbitals Maybe Different from the Original");
 
     C_->gemm(false, false, 1.0, C0_, U_, 0.0);
     build_mo_integrals();

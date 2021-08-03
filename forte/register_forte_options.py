@@ -570,7 +570,6 @@ def register_integral_options(options):
         'The number of singly occupied orbitals assumed for a FCIDUMP file. This information is used to build orbital energies.'
     )
 
-    options.add_double("INTEGRAL_SCREENING", 1.0e-12, "The screening threshold for JK builds and DF libraries")
     options.add_double("CHOLESKY_TOLERANCE", 1.0e-6, "The tolerance for cholesky integrals")
     options.add_double("INTS_TOLERANCE", 1.0e-12, "The tolerance for cholesky integrals")
     options.add_bool("PRINT_INTS", False, "Print the one- and two-electron integrals?")
