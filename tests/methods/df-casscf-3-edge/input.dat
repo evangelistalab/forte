@@ -1,0 +1,64 @@
+# Test edge cases of MCSCF_2STEP
+# - no orbital rotaion: FCI
+# - single determinant: RHF / ROHF
+
+import forte
+
+Efci_ref = -100.0260207551682  # FCI/6-31G of HF molecule
+Escf_ref = -54.40017283553823  # DF-ROHF/cc-pVQZ quartet N atom
+
+molecule HF{
+F
+H 1 1.5
+}
+
+set globals{
+  basis                   6-31g
+  reference               rhf
+  d_convergence           8
+  e_convergence           9
+  scf_type                pk
+  fci                     true
+}
+Efci_psi4 = energy('detci')
+compare_values(Efci_ref, Efci_psi4, 7, "Psi4 FCI energy")
+
+set forte{
+  job_type                mcscf_two_step
+  casscf_ci_solver        fci
+}
+Efci_forte = energy('forte')
+compare_values(Efci_psi4, Efci_forte, 7, "FORTE FCI using MCSCF_2STEP")
+
+clean()
+
+molecule N {
+0 4
+N
+}
+activate(N)
+
+set {
+  reference     rohf
+  basis         cc-pvqz
+  df_basis_scf  cc-pvqz-jkfit
+  d_convergence 8
+  e_convergence 10
+  scf_type      df
+}
+Escf_psi4 = energy('scf')
+compare_values(Escf_ref, Escf_psi4, 9, "Psi4 SCF energy")
+
+# leave some room for improvement for Forte
+set e_convergence 0.9
+set d_convergence 0.9
+
+set forte {
+  int_type         df
+  root_sym         4
+  restricted_docc  [2,0,0,0,0,0,0,0]
+  active           [0,0,0,0,0,1,1,1]
+  ms               1.5
+}
+Escf_forte = energy('forte')
+compare_values(Escf_psi4, Escf_forte, 8, "FORTE SCF using MCSCF_2STEP")
