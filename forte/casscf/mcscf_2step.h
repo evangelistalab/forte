@@ -149,6 +149,9 @@ class MCSCF_2STEP {
     diagonalize_hamiltonian(std::shared_ptr<ActiveSpaceIntegrals> fci_ints,
                             const std::tuple<int, double, double, bool, bool>& params);
 
+    /// Test if we are doing a single-reference orbital optimization
+    bool is_single_reference();
+
     /// Class to store iteration data
     struct CASSCF_HISTORY {
         CASSCF_HISTORY(double ec, double eo, double g, int n)
@@ -159,8 +162,11 @@ class MCSCF_2STEP {
         int n_micro;  // number of micro iteration
     };
 
+    /// Test energy history and return if the energies are converging or not
+    bool test_history(const std::vector<CASSCF_HISTORY>& history, const int& n_samples);
+
     /// Print iteration information
-    void print_macro_iteration(std::vector<CASSCF_HISTORY>& history);
+    void print_macro_iteration(const std::vector<CASSCF_HISTORY>& history);
 };
 
 std::unique_ptr<MCSCF_2STEP>
