@@ -90,7 +90,7 @@ class StateInfo {
   private:
     // number of alpha electrons (including core, excludes ecp)
     int na_;
-    // numebr of beta electrons (including core, excludes ecp)
+    // number of beta electrons (including core, excludes ecp)
     int nb_;
     // 2S + 1
     int multiplicity_;

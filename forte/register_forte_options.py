@@ -807,7 +807,7 @@ def register_casscf_options(options):
 
     options.add_int("CASSCF_MAXITER", 100, "The maximum number of CASSCF macro iterations")
 
-    options.add_int("CASSCF_MICRO_MAXITER", 20, "The maximum number of CASSCF micro iterations")
+    options.add_int("CASSCF_MICRO_MAXITER", 40, "The maximum number of CASSCF micro iterations")
 
     options.add_int("CASSCF_MICRO_MINITER", 6, "The minimum number of CASSCF micro iterations")
 
@@ -884,7 +884,7 @@ def register_casscf_options(options):
         " zero based). Useful when doing core-excited state computations."
     )
 
-    options.add_bool("CASSCF_NO_CONVERGENCE_CHECK", False, "Ignore convergence check at the end of MCSCF")
+    options.add_bool("CASSCF_DIE_IF_NOT_CONVERGED", True, "Stop Forte if MCSCF is not converged")
 
 
 def register_old_options(options):

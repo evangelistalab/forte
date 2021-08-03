@@ -267,7 +267,7 @@ The maximum number of macro iterations.
 The maximum number of micro iterations.
 
 * Type: int
-* Default: 20
+* Default: 40
 
 **CASSCF_MICRO_MINITER**
 
@@ -361,6 +361,13 @@ Turn off orbital optimization procedure if true.
 
 * Type: Boolean
 * Default: False
+
+**CASSCF_DIE_IF_NOT_CONVERGED**
+
+Stop Forte if MCSCF did not converge.
+
+* Type: Boolean
+* Default: True
 
 Expert Options
 ~~~~~~~~~~~~~~~

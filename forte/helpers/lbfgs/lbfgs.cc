@@ -101,7 +101,7 @@ template <class Foo> double LBFGS::minimize(Foo& func, psi::SharedVector x) {
         // print current iteration
         g_norm = g_->norm();
         if (param_->print > 0)
-            outfile->Printf("\n  L-BFGS Iter:%3d; fx = %20.15f; g_norm = %12.6e; step = %9.3e",
+            outfile->Printf("\n    L-BFGS Iter:%3d; fx = %20.15f; g_norm = %12.6e; step = %9.3e",
                             iter_ + 1, fx, g_norm, step);
 
         // skip the rest if terminate
@@ -267,14 +267,14 @@ void LBFGS::line_search_backtracking(Foo& func, psi::SharedVector x, double& fx,
 
         if (step > param_->max_step) {
             if (param_->print > 1)
-                outfile->Printf("\n  Step length > max allowed value. Stopped line search.");
+                outfile->Printf("\n    Step length > max allowed value. Stopped line search.");
             step = param_->max_step;
             break;
         }
 
         if (step < param_->min_step) {
             if (param_->print > 1)
-                outfile->Printf("\n  Step length < min allowed value. Stopped line search.");
+                outfile->Printf("\n    Step length < min allowed value. Stopped line search.");
             step = param_->min_step;
             break;
         }
@@ -316,7 +316,7 @@ void LBFGS::line_search_bracketing_zoom(Foo& func, psi::SharedVector x, double& 
 
         if (std::fabs(dg) <= w2) {
             if (param_->print > 2) {
-                outfile->Printf("\n  Optimal step length from bracketing stage: %.15f", step);
+                outfile->Printf("\n    Optimal step length from bracketing stage: %.15f", step);
             }
             return;
         }
@@ -333,7 +333,7 @@ void LBFGS::line_search_bracketing_zoom(Foo& func, psi::SharedVector x, double& 
         step *= 2.0;
     }
     if (param_->print > 2) {
-        outfile->Printf("\n  Step lengths after bracketing stage: low = %.10f, high = %.10f",
+        outfile->Printf("\n    Step lengths after bracketing stage: low = %.10f, high = %.10f",
                         step_low, step_high);
     }
 
@@ -356,7 +356,7 @@ void LBFGS::line_search_bracketing_zoom(Foo& func, psi::SharedVector x, double& 
 
             if (std::fabs(dg) <= w2) {
                 if (param_->print > 2) {
-                    outfile->Printf("\n  Optimal step length from zooming stage: %.15f", step);
+                    outfile->Printf("\n    Optimal step length from zooming stage: %.15f", step);
                 }
                 break;
             }
@@ -371,19 +371,19 @@ void LBFGS::line_search_bracketing_zoom(Foo& func, psi::SharedVector x, double& 
         }
     }
     if (param_->print > 2) {
-        outfile->Printf("\n  Step lengths after zooming stage: low = %.10f, high = %.10f", step_low,
-                        step_high);
+        outfile->Printf("\n    Step lengths after zooming stage: low = %.10f, high = %.10f",
+                        step_low, step_high);
     }
 
     if (step > param_->max_step) {
         if (param_->print > 1)
-            outfile->Printf("\n  Step length > max allowed value. Use max allowed value.");
+            outfile->Printf("\n    Step length > max allowed value. Use max allowed value.");
         step = param_->max_step;
     }
 
     if (step < param_->min_step) {
         if (param_->print > 1)
-            outfile->Printf("\n  Step length < min allowed value. Use min allowed value.");
+            outfile->Printf("\n    Step length < min allowed value. Use min allowed value.");
         step = param_->min_step;
     }
 }
@@ -392,7 +392,7 @@ void LBFGS::apply_h0(psi::SharedVector q) {
     if (param_->h0_freq < 0) {
         double gamma = compute_gamma();
         if (param_->print > 2)
-            outfile->Printf("\n  gamma for H0: %.15f", gamma);
+            outfile->Printf("\n    gamma for H0: %.15f", gamma);
 
         for (int h = 0; h < nirrep_; ++h) {
             for (int i = 0; i < dimpi_[h]; ++i) {
@@ -407,7 +407,8 @@ void LBFGS::apply_h0(psi::SharedVector q) {
                     q->set(h, i, q->get(h, i) / vh);
                 } else {
                     if (param_->print > 1) {
-                        outfile->Printf("\n  Zero diagonal Hessian element (irrep: %d, i: %d)", h, i);
+                        outfile->Printf("\n    Zero diagonal Hessian element (irrep: %d, i: %d)", h,
+                                        i);
                     }
                 }
             }
