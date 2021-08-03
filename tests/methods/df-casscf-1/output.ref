@@ -1,9 +1,9 @@
 
     -----------------------------------------------------------------------
           Psi4: An Open-Source Ab Initio Electronic Structure Package
-                               Psi4 1.4a2.dev1024 
+                               Psi4 undefined 
 
-                         Git: Rev {master} b603cfc dirty
+                         Git: Rev {fix_mcscf_mismatch} cb9ce46 dirty
 
 
     D. G. A. Smith, L. A. Burns, A. C. Simmonett, R. M. Parrish,
@@ -30,13 +30,13 @@
     -----------------------------------------------------------------------
 
 
-    Psi4 started on: Monday, 23 November 2020 08:22AM
+    Psi4 started on: Tuesday, 03 August 2021 11:58PM
 
-    Process ID: 37729
+    Process ID: 79882
     Host:       Yorks-Mac.local
     PSIDATADIR: /Users/york/src/psi4new/psi4/share/psi4
     Memory:     500.0 MiB
-    Threads:    1
+    Threads:    8
     
   ==> Input File <==
 
@@ -59,15 +59,14 @@ molecule HF{
 set globals{
   basis                   cc-pvdz
   reference               rhf
-  d_convergence           10
-  e_convergence           12
+  d_convergence           8
+  e_convergence           9
   frozen_docc             [1,0,0,0]
   restricted_docc         [1,0,1,1]
   active                  [2,0,0,0]
   scf_type                df
   df_basis_scf            cc-pvdz-jkfit
   mcscf_type              df
-  mcscf_e_convergence     10
 }
 
 HF.R = 1.5
@@ -87,15 +86,14 @@ set forte{
   print                   0
 }
 Ecas_1 = energy('forte')
-compare_values(Ecas_1, psi4_casscf_1, 6, "FORTE CASSCF energy @ 1.5")
+compare_values(psi4_casscf_1, Ecas_1, 6, "FORTE CASSCF energy @ 1.5")
 
 HF.R = 1.6
 set forte {
   job_type              mcscf_two_step
-  casscf_micro_maxiter  3
 }
 Ecas_2 = energy('forte', ref_wfn=wfn)
-compare_values(Ecas_2, psi4_casscf_2, 6, "FORTE 2-step MCSCF energy @ 1.6")
+compare_values(psi4_casscf_2, Ecas_2, 6, "FORTE 2-step MCSCF energy @ 1.6")
 --------------------------------------------------------------------------
 
   Memory set to 476.837 MiB by Python driver.
@@ -106,7 +104,7 @@ Molecule: Setting geometry variable R to 1.500000
 Scratch directory: /Users/york/scratch/psi4/
 
 *** tstart() called on Yorks-Mac.local
-*** at Mon Nov 23 08:22:56 2020
+*** at Tue Aug  3 23:58:19 2021
 
    => Loading Basis Set <=
 
@@ -122,7 +120,7 @@ Scratch directory: /Users/york/scratch/psi4/
                by Justin Turney, Rob Parrish, Andy Simmonett
                           and Daniel G. A. Smith
                               RHF Reference
-                        1 Threads,    476 MiB Core
+                        8 Threads,    476 MiB Core
          ---------------------------------------------------------
 
   ==> Geometry <==
@@ -156,16 +154,16 @@ Scratch directory: /Users/york/scratch/psi4/
   MOM disabled.
   Fractional occupation disabled.
   Guess Type is SAD.
-  Energy threshold   = 1.00e-12
-  Density threshold  = 1.00e-10
-  Integral threshold = 0.00e+00
+  Energy threshold   = 1.00e-09
+  Density threshold  = 1.00e-08
+  Integral threshold = 1.00e-12
 
   ==> Primary Basis <==
 
   Basis Set: CC-PVDZ
     Blend: CC-PVDZ
     Number of shells: 9
-    Number of basis function: 19
+    Number of basis functions: 19
     Number of Cartesian functions: 20
     Spherical Harmonics?: true
     Max angular momentum: 2
@@ -187,7 +185,7 @@ Scratch directory: /Users/york/scratch/psi4/
     J tasked:                   Yes
     K tasked:                   Yes
     wK tasked:                   No
-    OpenMP threads:               1
+    OpenMP threads:               8
     Memory [MiB]:               357
     Algorithm:                 Core
     Schwarz Cutoff:           1E-12
@@ -199,7 +197,7 @@ Scratch directory: /Users/york/scratch/psi4/
   Basis Set: CC-PVDZ-JKFIT
     Blend: CC-PVDZ-JKFIT
     Number of shells: 33
-    Number of basis function: 93
+    Number of basis functions: 93
     Number of Cartesian functions: 106
     Spherical Harmonics?: true
     Max angular momentum: 3
@@ -227,19 +225,17 @@ Scratch directory: /Users/york/scratch/psi4/
 
                            Total Energy        Delta E     RMS |[F,P]|
 
-   @DF-RHF iter SAD:   -99.27377095935084   -9.92738e+01   0.00000e+00 
-   @DF-RHF iter   1:   -99.77292039981756   -4.99149e-01   3.58792e-02 DIIS
-   @DF-RHF iter   2:   -99.82685767114233   -5.39373e-02   3.40175e-02 DIIS
-   @DF-RHF iter   3:   -99.87047224199580   -4.36146e-02   4.81154e-03 DIIS
-   @DF-RHF iter   4:   -99.87267238923208   -2.20015e-03   1.44616e-03 DIIS
-   @DF-RHF iter   5:   -99.87284816450241   -1.75775e-04   1.38877e-04 DIIS
-   @DF-RHF iter   6:   -99.87285074348226   -2.57898e-06   1.78380e-05 DIIS
-   @DF-RHF iter   7:   -99.87285077621594   -3.27337e-08   2.42160e-06 DIIS
-   @DF-RHF iter   8:   -99.87285077653873   -3.22785e-10   3.11253e-07 DIIS
-   @DF-RHF iter   9:   -99.87285077654636   -7.63123e-12   2.52388e-08 DIIS
-   @DF-RHF iter  10:   -99.87285077654646   -9.94760e-14   7.65775e-10 DIIS
-   @DF-RHF iter  11:   -99.87285077654633    1.27898e-13   1.08834e-10 DIIS
-   @DF-RHF iter  12:   -99.87285077654631    1.42109e-14   1.31927e-11 DIIS
+   @DF-RHF iter SAD:   -99.27377095935098   -9.92738e+01   0.00000e+00 
+   @DF-RHF iter   1:   -99.77292039981764   -4.99149e-01   3.58792e-02 DIIS
+   @DF-RHF iter   2:   -99.82685767114248   -5.39373e-02   3.40175e-02 DIIS
+   @DF-RHF iter   3:   -99.87047224199603   -4.36146e-02   4.81154e-03 DIIS
+   @DF-RHF iter   4:   -99.87267238923228   -2.20015e-03   1.44616e-03 DIIS
+   @DF-RHF iter   5:   -99.87284816450250   -1.75775e-04   1.38877e-04 DIIS
+   @DF-RHF iter   6:   -99.87285074348236   -2.57898e-06   1.78380e-05 DIIS
+   @DF-RHF iter   7:   -99.87285077621620   -3.27338e-08   2.42160e-06 DIIS
+   @DF-RHF iter   8:   -99.87285077653881   -3.22615e-10   3.11253e-07 DIIS
+   @DF-RHF iter   9:   -99.87285077654641   -7.60281e-12   2.52388e-08 DIIS
+   @DF-RHF iter  10:   -99.87285077654649   -7.10543e-14   7.65775e-10 DIIS
   Energy and wave function converged.
 
 
@@ -250,29 +246,29 @@ Scratch directory: /Users/york/scratch/psi4/
 
     Doubly Occupied:                                                      
 
-       1A1   -26.279410     2A1    -1.484572     1B1    -0.593968  
-       1B2    -0.593968     3A1    -0.565054  
+       1A1   -26.279410     2A1    -1.484572     1B2    -0.593968  
+       1B1    -0.593968     3A1    -0.565054  
 
     Virtual:                                                              
 
-       4A1     0.016631     5A1     0.576874     2B1     1.315550  
-       2B2     1.315550     6A1     1.464142     3B1     1.599468  
-       3B2     1.599468     7A1     1.633209     8A1     2.301112  
-       4B2     4.038915     4B1     4.038915     9A1     4.041504  
+       4A1     0.016631     5A1     0.576874     2B2     1.315550  
+       2B1     1.315550     6A1     1.464142     3B2     1.599468  
+       3B1     1.599468     7A1     1.633209     8A1     2.301112  
+       4B1     4.038915     4B2     4.038915     9A1     4.041504  
        1A2     4.041504    10A1     4.220351  
 
     Final Occupation by Irrep:
              A1    A2    B1    B2 
     DOCC [     3,    0,    1,    1 ]
 
-  @DF-RHF Final Energy:   -99.87285077654631
+  @DF-RHF Final Energy:   -99.87285077654649
 
    => Energetics <=
 
     Nuclear Repulsion Energy =              3.1750632640200003
-    One-Electron Energy =                -147.0618843459220102
-    Two-Electron Energy =                  44.0139703053556843
-    Total Energy =                        -99.8728507765463291
+    One-Electron Energy =                -147.0618843415278150
+    Two-Electron Energy =                  44.0139703009613328
+    Total Energy =                        -99.8728507765464855
 
 Computation Completed
 
@@ -294,15 +290,15 @@ Properties computed using the SCF density matrix
      X:     0.0000      Y:     0.0000      Z:     2.9585     Total:     2.9585
 
 
-*** tstop() called on Yorks-Mac.local at Mon Nov 23 08:22:56 2020
+*** tstop() called on Yorks-Mac.local at Tue Aug  3 23:58:20 2021
 Module time:
-	user time   =       0.23 seconds =       0.00 minutes
-	system time =       0.01 seconds =       0.00 minutes
-	total time  =          0 seconds =       0.00 minutes
+	user time   =       2.19 seconds =       0.04 minutes
+	system time =       0.07 seconds =       0.00 minutes
+	total time  =          1 seconds =       0.02 minutes
 Total time:
-	user time   =       0.23 seconds =       0.00 minutes
-	system time =       0.01 seconds =       0.00 minutes
-	total time  =          0 seconds =       0.00 minutes
+	user time   =       2.19 seconds =       0.04 minutes
+	system time =       0.07 seconds =       0.00 minutes
+	total time  =          1 seconds =       0.02 minutes
   Constructing Basis Sets for MCSCF...
 
    => Loading Basis Set <=
@@ -332,7 +328,7 @@ Total time:
     NUM ROOTS      =        1      ICORE         =        1
     PRINT LVL      =        1      FCI           =      YES
     R CONV         = 1.00e-07      MIXED         =      YES
-    E CONV         = 1.00e-12      MIXED4        =      YES
+    E CONV         = 1.00e-09      MIXED4        =      YES
     R4S            =       NO      REPL OTF      =       NO
     DIAG METHOD    =      SEM      FOLLOW ROOT   =        0
     PRECONDITIONER = DAVIDSON      UPDATE        = DAVIDSON
@@ -378,7 +374,7 @@ Total time:
     J tasked:                   Yes
     K tasked:                   Yes
     wK tasked:                   No
-    OpenMP threads:               1
+    OpenMP threads:               8
     Memory [MiB]:               381
     Algorithm:                 Core
     Schwarz Cutoff:           1E-12
@@ -390,7 +386,7 @@ Total time:
   Basis Set: CC-PVDZ-JKFIT
     Blend: CC-PVDZ-JKFIT
     Number of shells: 33
-    Number of basis function: 93
+    Number of basis functions: 93
     Number of Cartesian functions: 106
     Spherical Harmonics?: true
     Max angular momentum: 3
@@ -401,43 +397,55 @@ Total time:
    ==> Starting DF-MCSCF iterations <==
 
            Iter         Total Energy       Delta E   Orb RMS    CI RMS  NCI NORB
-   @DF-MCSCF  1:    -99.910206879153   -3.7356e-02  4.58e-02  7.31e-15    1    1  Initial CI
-   @DF-MCSCF  2:    -99.936697340953   -2.6490e-02  2.20e-02  6.11e-16    2    1  TS
-   @DF-MCSCF  3:    -99.938890418910   -2.1931e-03  7.97e-03  9.87e-16    2    1  TS
-   @DF-MCSCF  4:    -99.939227166625   -3.3675e-04  3.25e-03  1.42e-15    2    1  TS, DIIS
-   @DF-MCSCF  5:    -99.939291482037   -6.4315e-05  1.44e-03  1.50e-15    2    1  TS, DIIS
-   @DF-MCSCF  6:    -99.939308629559   -1.7148e-05  3.46e-04  3.87e-15    2    1  TS, DIIS
-   @DF-MCSCF  7:    -99.939309212747   -5.8319e-07  6.01e-05  3.96e-15    2    1  TS, DIIS
-   @DF-MCSCF  8:    -99.939309226380   -1.3633e-08  4.74e-05  4.20e-15    2    1  TS, DIIS
-   @DF-MCSCF  9:    -99.939309240584   -1.4203e-08  2.18e-05  2.95e-15    3    1  TS, DIIS
-   @DF-MCSCF 10:    -99.939309243517   -2.9336e-09  9.51e-07  8.26e-16    2    1  TS, DIIS
-   @DF-MCSCF 11:    -99.939309243520   -2.5295e-12  3.25e-07  8.79e-16    2    1  TS, DIIS
+   @DF-MCSCF  1:    -99.910206879204   -3.7356e-02  4.58e-02  2.43e-13    1    1  Initial CI
+   @DF-MCSCF  2:    -99.936697340948   -2.6490e-02  2.20e-02  1.40e-13    2    1  TS
+   @DF-MCSCF  3:    -99.938890418911   -2.1931e-03  7.97e-03  1.62e-13    2    1  TS
+   @DF-MCSCF  4:    -99.939227166625   -3.3675e-04  3.25e-03  1.60e-13    2    1  TS, DIIS
+   @DF-MCSCF  5:    -99.939291482037   -6.4315e-05  1.44e-03  1.59e-13    2    1  TS, DIIS
+   @DF-MCSCF  6:    -99.939308395590   -1.6914e-05  3.99e-04  1.59e-13    2    1  TS, DIIS
+   @DF-MCSCF  7:    -99.939309199601   -8.0401e-07  7.18e-05  1.58e-13    2    1  TS, DIIS
+   @DF-MCSCF  8:    -99.939309205407   -5.8060e-09  7.26e-05  1.58e-13    2    1  TS, DIIS
+   @DF-MCSCF  9:    -99.939309242441   -3.7034e-08  1.38e-05  1.60e-13    3    1  TS, DIIS
+   @DF-MCSCF 10:    -99.939309243511   -1.0695e-09  1.06e-06  1.60e-13    2    1  TS, DIIS
 
           @DF-MCSCF has converged!
 
-   @DF-MCSCF Final Energy:  -99.939309243519943
+   @DF-MCSCF Final Energy:  -99.939309243510678
 
    Computing CI Semicanonical Orbitals
 
+   ==> Starting CI iterations <==
+
+    H0 Block Eigenvalue = -99.93930924
+
+    Simultaneous Expansion Method (Block Davidson Method)
+    Using 1 initial trial vectors
+
+     Iter   Root       Total Energy       Delta E      C RMS
+
+   @CI  0:     0    -99.939309243511   -1.8311E+00   2.5393E-14  
+    Warning: Norm of correction (root 0) is < 1.0E-13
+   @CI  1:     0    -99.939309243511   -2.2204E-16   7.2024E-14 c
+
    ==> Energetics <==
 
-    SCF energy =          -99.872850776546329
-    Total MCSCF energy =  -99.939309243519943
+    SCF energy =          -99.872850776546485
+    Total MCSCF energy =  -99.939309243510678
 
    ==> MCSCF root 0 information <==
 
-    MCSCF Root 0 energy =   -99.939309243519943
+    MCSCF Root 0 energy =   -99.939309243510579
 
    Active Space Natural occupation numbers:
 
-        A1   1.823686        A1   0.176314
+        A1   1.823687        A1   0.176313
 
    The 4 most important determinants:
 
-    *   1   -0.950866  (    0,    0)  3A1X 
-    *   2    0.292874  (    1,    1)  4A1X 
-    *   3    0.070989  (    0,    1)  3A1A 4A1B 
-    *   4    0.070989  (    1,    0)  3A1B 4A1A 
+    *   1    0.950866  (    0,    0)  3A1X 
+    *   2   -0.292873  (    1,    1)  4A1X 
+    *   3   -0.070988  (    0,    1)  3A1A 4A1B 
+    *   4   -0.070988  (    1,    0)  3A1B 4A1A 
 
 
 
@@ -465,7 +473,7 @@ Scratch directory: /Users/york/scratch/psi4/
   ----------------------------------------------------------------------------
   A suite of quantum chemistry methods for strongly correlated electrons
 
-    git branch: cas_hessian - git commit: 8268bee1
+    git branch: mcscf_minor_change - git commit: 851de6c7
 
   Developed by:
     Francesco A. Evangelista, Chenyang Li, Kevin P. Hannon,
@@ -473,12 +481,13 @@ Scratch directory: /Users/york/scratch/psi4/
     Nan He, Nicholas Stair, Shuhe Wang, Renke Huang
   ----------------------------------------------------------------------------
 
-  Size of Determinant class: 256 bits
-  Preparing forte objects from a psi4 Wavefunction object
-  No reference wavefunction provided. Computing SCF orbitals with psi4
+  Size of Determinant class: 128 bits
+
+  Preparing forte objects from a Psi4 Wavefunction object
+  No reference wave function provided for Forte. Computing SCF orbitals using Psi4 ...
 
 *** tstart() called on Yorks-Mac.local
-*** at Mon Nov 23 08:22:57 2020
+*** at Tue Aug  3 23:58:20 2021
 
    => Loading Basis Set <=
 
@@ -494,7 +503,7 @@ Scratch directory: /Users/york/scratch/psi4/
                by Justin Turney, Rob Parrish, Andy Simmonett
                           and Daniel G. A. Smith
                               RHF Reference
-                        1 Threads,    476 MiB Core
+                        8 Threads,    476 MiB Core
          ---------------------------------------------------------
 
   ==> Geometry <==
@@ -528,16 +537,16 @@ Scratch directory: /Users/york/scratch/psi4/
   MOM disabled.
   Fractional occupation disabled.
   Guess Type is SAD.
-  Energy threshold   = 1.00e-12
-  Density threshold  = 1.00e-10
-  Integral threshold = 0.00e+00
+  Energy threshold   = 1.00e-09
+  Density threshold  = 1.00e-08
+  Integral threshold = 1.00e-12
 
   ==> Primary Basis <==
 
   Basis Set: CC-PVDZ
     Blend: CC-PVDZ
     Number of shells: 9
-    Number of basis function: 19
+    Number of basis functions: 19
     Number of Cartesian functions: 20
     Spherical Harmonics?: true
     Max angular momentum: 2
@@ -559,7 +568,7 @@ Scratch directory: /Users/york/scratch/psi4/
     J tasked:                   Yes
     K tasked:                   Yes
     wK tasked:                   No
-    OpenMP threads:               1
+    OpenMP threads:               8
     Memory [MiB]:               357
     Algorithm:                 Core
     Schwarz Cutoff:           1E-12
@@ -571,7 +580,7 @@ Scratch directory: /Users/york/scratch/psi4/
   Basis Set: CC-PVDZ-JKFIT
     Blend: CC-PVDZ-JKFIT
     Number of shells: 33
-    Number of basis function: 93
+    Number of basis functions: 93
     Number of Cartesian functions: 106
     Spherical Harmonics?: true
     Max angular momentum: 3
@@ -599,19 +608,17 @@ Scratch directory: /Users/york/scratch/psi4/
 
                            Total Energy        Delta E     RMS |[F,P]|
 
-   @DF-RHF iter SAD:   -99.27377095935084   -9.92738e+01   0.00000e+00 
-   @DF-RHF iter   1:   -99.77292039981756   -4.99149e-01   3.58792e-02 DIIS
-   @DF-RHF iter   2:   -99.82685767114233   -5.39373e-02   3.40175e-02 DIIS
-   @DF-RHF iter   3:   -99.87047224199580   -4.36146e-02   4.81154e-03 DIIS
-   @DF-RHF iter   4:   -99.87267238923208   -2.20015e-03   1.44616e-03 DIIS
-   @DF-RHF iter   5:   -99.87284816450241   -1.75775e-04   1.38877e-04 DIIS
-   @DF-RHF iter   6:   -99.87285074348226   -2.57898e-06   1.78380e-05 DIIS
-   @DF-RHF iter   7:   -99.87285077621594   -3.27337e-08   2.42160e-06 DIIS
-   @DF-RHF iter   8:   -99.87285077653873   -3.22785e-10   3.11253e-07 DIIS
-   @DF-RHF iter   9:   -99.87285077654636   -7.63123e-12   2.52388e-08 DIIS
-   @DF-RHF iter  10:   -99.87285077654646   -9.94760e-14   7.65775e-10 DIIS
-   @DF-RHF iter  11:   -99.87285077654633    1.27898e-13   1.08834e-10 DIIS
-   @DF-RHF iter  12:   -99.87285077654631    1.42109e-14   1.31927e-11 DIIS
+   @DF-RHF iter SAD:   -99.27377095935110   -9.92738e+01   0.00000e+00 
+   @DF-RHF iter   1:   -99.77292039981764   -4.99149e-01   3.58792e-02 DIIS
+   @DF-RHF iter   2:   -99.82685767114252   -5.39373e-02   3.40175e-02 DIIS
+   @DF-RHF iter   3:   -99.87047224199605   -4.36146e-02   4.81154e-03 DIIS
+   @DF-RHF iter   4:   -99.87267238923233   -2.20015e-03   1.44616e-03 DIIS
+   @DF-RHF iter   5:   -99.87284816450263   -1.75775e-04   1.38877e-04 DIIS
+   @DF-RHF iter   6:   -99.87285074348235   -2.57898e-06   1.78380e-05 DIIS
+   @DF-RHF iter   7:   -99.87285077621615   -3.27338e-08   2.42160e-06 DIIS
+   @DF-RHF iter   8:   -99.87285077653891   -3.22757e-10   3.11253e-07 DIIS
+   @DF-RHF iter   9:   -99.87285077654639   -7.47491e-12   2.52388e-08 DIIS
+   @DF-RHF iter  10:   -99.87285077654654   -1.56319e-13   7.65775e-10 DIIS
   Energy and wave function converged.
 
 
@@ -622,29 +629,29 @@ Scratch directory: /Users/york/scratch/psi4/
 
     Doubly Occupied:                                                      
 
-       1A1   -26.279410     2A1    -1.484572     1B1    -0.593968  
-       1B2    -0.593968     3A1    -0.565054  
+       1A1   -26.279410     2A1    -1.484572     1B2    -0.593968  
+       1B1    -0.593968     3A1    -0.565054  
 
     Virtual:                                                              
 
-       4A1     0.016631     5A1     0.576874     2B1     1.315550  
-       2B2     1.315550     6A1     1.464142     3B1     1.599468  
-       3B2     1.599468     7A1     1.633209     8A1     2.301112  
-       4B2     4.038915     4B1     4.038915     9A1     4.041504  
+       4A1     0.016631     5A1     0.576874     2B2     1.315550  
+       2B1     1.315550     6A1     1.464142     3B2     1.599468  
+       3B1     1.599468     7A1     1.633209     8A1     2.301112  
+       4B1     4.038915     4B2     4.038915     9A1     4.041504  
        1A2     4.041504    10A1     4.220351  
 
     Final Occupation by Irrep:
              A1    A2    B1    B2 
     DOCC [     3,    0,    1,    1 ]
 
-  @DF-RHF Final Energy:   -99.87285077654631
+  @DF-RHF Final Energy:   -99.87285077654654
 
    => Energetics <=
 
     Nuclear Repulsion Energy =              3.1750632640200003
-    One-Electron Energy =                -147.0618843459220102
-    Two-Electron Energy =                  44.0139703053556843
-    Total Energy =                        -99.8728507765463291
+    One-Electron Energy =                -147.0618843415278434
+    Two-Electron Energy =                  44.0139703009613115
+    Total Energy =                        -99.8728507765465281
 
 Computation Completed
 
@@ -666,15 +673,15 @@ Properties computed using the SCF density matrix
      X:     0.0000      Y:     0.0000      Z:     2.9585     Total:     2.9585
 
 
-*** tstop() called on Yorks-Mac.local at Mon Nov 23 08:22:57 2020
+*** tstop() called on Yorks-Mac.local at Tue Aug  3 23:58:21 2021
 Module time:
-	user time   =       0.24 seconds =       0.00 minutes
-	system time =       0.00 seconds =       0.00 minutes
-	total time  =          0 seconds =       0.00 minutes
-Total time:
-	user time   =       0.66 seconds =       0.01 minutes
+	user time   =       3.14 seconds =       0.05 minutes
 	system time =       0.05 seconds =       0.00 minutes
 	total time  =          1 seconds =       0.02 minutes
+Total time:
+	user time   =       9.23 seconds =       0.15 minutes
+	system time =       0.28 seconds =       0.00 minutes
+	total time  =          2 seconds =       0.03 minutes
 
   Read options for space FROZEN_DOCC
   Read options for space RESTRICTED_DOCC
@@ -700,14 +707,6 @@ Total time:
     Total              10     1     4     4    19
   -------------------------------------------------   => Loading Basis Set <=
 
-    Name: CC-PVDZ
-    Role: ORBITAL
-    Keyword: BASIS
-    atoms 1 entry F          line   228 file /Users/york/src/psi4new/psi4/share/psi4/basis/cc-pvdz.gbs 
-    atoms 2 entry H          line    22 file /Users/york/src/psi4new/psi4/share/psi4/basis/cc-pvdz.gbs 
-
-   => Loading Basis Set <=
-
     Name: (CC-PVDZ AUX)
     Role: RIFIT
     Keyword: DF_BASIS_MP2
@@ -730,25 +729,36 @@ Total time:
   Basis Set: CC-PVDZ
     Blend: CC-PVDZ
     Number of shells: 9
-    Number of basis function: 19
+    Number of basis functions: 19
     Number of Cartesian functions: 20
     Spherical Harmonics?: true
     Max angular momentum: 2
 
 
-  ==> Auxiliary Basis Set Summary <==
+  JK created using MemDF integrals
+  DFHelper Memory: AOs need 0.000 GiB; user supplied 0.373 GiB. Using in-core AOs.
+
+  ==> MemDFJK: Density-Fitted J/K Matrices <==
+
+    J tasked:                   Yes
+    K tasked:                   Yes
+    wK tasked:                   No
+    OpenMP threads:               8
+    Memory [MiB]:               381
+    Algorithm:                 Core
+    Schwarz Cutoff:           1E-12
+    Mask sparsity (%):       0.0000
+    Fitting Condition:        1E-10
+
+   => Auxiliary Basis Set <=
 
   Basis Set: CC-PVDZ-JKFIT
     Blend: CC-PVDZ-JKFIT
     Number of shells: 33
-    Number of basis function: 93
+    Number of basis functions: 93
     Number of Cartesian functions: 106
     Spherical Harmonics?: true
     Max angular momentum: 3
-
-
-  JK created using MemDF integrals
-  DFHelper Memory: AOs need 0.000 GiB; user supplied 0.396 GiB. Using in-core AOs.
 
 
 
@@ -768,7 +778,7 @@ Total time:
     Schwarz Cutoff:                1E-12
     Mask sparsity (%):                 0
     DFH Avail. Memory [GiB]:       0.419
-    OpenMP threads:                    1
+    OpenMP threads:                    8
     Algorithm:                     STORE
     AO Core:                        True
     MO Core:                       False
@@ -779,7 +789,7 @@ Total time:
 
 
 
-  Timing for computing density-fitted integrals:              0.030 s.
+  Timing for computing density-fitted integrals:              0.070 s.
 
                 -----------------------------------------------
                   Complete Active Space Self Consistent Field
@@ -805,11 +815,11 @@ Total time:
 
   ==> Energy Summary <==
 
-    Multi.(2ms)  Irrep.  No.               Energy
-    ---------------------------------------------
-       1  (  0)    A1     0      -99.910206879153
-    ---------------------------------------------
-    1 0.028966064893   -99.910206879153   -99.910206879153    0.0 s       ~
+    Multi.(2ms)  Irrep.  No.               Energy      <S^2>
+    --------------------------------------------------------
+       1  (  0)    A1     0      -99.910206879204  -0.000000
+    --------------------------------------------------------
+    1 0.028966064585   -99.910206879204   -99.910206879204    0.0 s       ~
 
   ==> Summary of Active Space Solver Input <==
 
@@ -825,11 +835,11 @@ Total time:
 
   ==> Energy Summary <==
 
-    Multi.(2ms)  Irrep.  No.               Energy
-    ---------------------------------------------
-       1  (  0)    A1     0      -99.936698723416
-    ---------------------------------------------
-    2 0.013920226594    -0.026491844262   -99.936698723416    0.0 s       ~
+    Multi.(2ms)  Irrep.  No.               Energy      <S^2>
+    --------------------------------------------------------
+       1  (  0)    A1     0      -99.935725826970  -0.000000
+    --------------------------------------------------------
+    2 0.014336009027    -0.025518947766   -99.935725826970    0.0 s       ~
 
   ==> Summary of Active Space Solver Input <==
 
@@ -845,11 +855,11 @@ Total time:
 
   ==> Energy Summary <==
 
-    Multi.(2ms)  Irrep.  No.               Energy
-    ---------------------------------------------
-       1  (  0)    A1     0      -99.938889208252
-    ---------------------------------------------
-    3 0.005112662959    -0.002190484836   -99.938889208252    0.0 s  DIIS ~
+    Multi.(2ms)  Irrep.  No.               Energy      <S^2>
+    --------------------------------------------------------
+       1  (  0)    A1     0      -99.938744879570   0.000000
+    --------------------------------------------------------
+    3 0.005796157155    -0.003019052600   -99.938744879570    0.0 s       ~
 
   ==> Summary of Active Space Solver Input <==
 
@@ -865,11 +875,11 @@ Total time:
 
   ==> Energy Summary <==
 
-    Multi.(2ms)  Irrep.  No.               Energy
-    ---------------------------------------------
-       1  (  0)    A1     0      -99.939294720456
-    ---------------------------------------------
-    4 0.000767904951    -0.000405512204   -99.939294720456    0.0 s  DIIS ~
+    Multi.(2ms)  Irrep.  No.               Energy      <S^2>
+    --------------------------------------------------------
+       1  (  0)    A1     0      -99.939199651622   0.000000
+    --------------------------------------------------------
+    4 0.002318105246    -0.000454772052   -99.939199651622    0.0 s       ~
 
   ==> Summary of Active Space Solver Input <==
 
@@ -885,11 +895,11 @@ Total time:
 
   ==> Energy Summary <==
 
-    Multi.(2ms)  Irrep.  No.               Energy
-    ---------------------------------------------
-       1  (  0)    A1     0      -99.939308498408
-    ---------------------------------------------
-    5 0.000304985775    -0.000013777952   -99.939308498408    0.0 s  DIIS ~
+    Multi.(2ms)  Irrep.  No.               Energy      <S^2>
+    --------------------------------------------------------
+       1  (  0)    A1     0      -99.939285350128   0.000000
+    --------------------------------------------------------
+    5 0.001033673998    -0.000085698506   -99.939285350128    0.0 s       ~
 
   ==> Summary of Active Space Solver Input <==
 
@@ -905,11 +915,11 @@ Total time:
 
   ==> Energy Summary <==
 
-    Multi.(2ms)  Irrep.  No.               Energy
-    ---------------------------------------------
-       1  (  0)    A1     0      -99.939309092588
-    ---------------------------------------------
-    6 0.000079987950    -0.000000594180   -99.939309092588    0.0 s  DIIS ~
+    Multi.(2ms)  Irrep.  No.               Energy      <S^2>
+    --------------------------------------------------------
+       1  (  0)    A1     0      -99.939303590727   0.000000
+    --------------------------------------------------------
+    6 0.000480612194    -0.000018240599   -99.939303590727    0.0 s  DIIS ~
 
   ==> Summary of Active Space Solver Input <==
 
@@ -925,11 +935,11 @@ Total time:
 
   ==> Energy Summary <==
 
-    Multi.(2ms)  Irrep.  No.               Energy
-    ---------------------------------------------
-       1  (  0)    A1     0      -99.939309238200
-    ---------------------------------------------
-    7 0.000023798434    -0.000000145612   -99.939309238200    0.0 s  DIIS ~
+    Multi.(2ms)  Irrep.  No.               Energy      <S^2>
+    --------------------------------------------------------
+       1  (  0)    A1     0      -99.939307808537  -0.000000
+    --------------------------------------------------------
+    7 0.000235160341    -0.000004217810   -99.939307808537    0.0 s  DIIS ~
 
   ==> Summary of Active Space Solver Input <==
 
@@ -945,11 +955,11 @@ Total time:
 
   ==> Energy Summary <==
 
-    Multi.(2ms)  Irrep.  No.               Energy
-    ---------------------------------------------
-       1  (  0)    A1     0      -99.939309243373
-    ---------------------------------------------
-    8 0.000004020645    -0.000000005173   -99.939309243373    0.0 s  DIIS ~
+    Multi.(2ms)  Irrep.  No.               Energy      <S^2>
+    --------------------------------------------------------
+       1  (  0)    A1     0      -99.939308854384   0.000000
+    --------------------------------------------------------
+    8 0.000119667835    -0.000001045848   -99.939308854384    0.0 s  DIIS ~
 
   ==> Summary of Active Space Solver Input <==
 
@@ -965,11 +975,11 @@ Total time:
 
   ==> Energy Summary <==
 
-    Multi.(2ms)  Irrep.  No.               Energy
-    ---------------------------------------------
-       1  (  0)    A1     0      -99.939309243513
-    ---------------------------------------------
-    9 0.000000834157    -0.000000000140   -99.939309243513    0.0 s  DIIS ~
+    Multi.(2ms)  Irrep.  No.               Energy      <S^2>
+    --------------------------------------------------------
+       1  (  0)    A1     0      -99.939309131475   0.000000
+    --------------------------------------------------------
+    9 0.000063133742    -0.000000277091   -99.939309131475    0.0 s  DIIS ~
 
   ==> Summary of Active Space Solver Input <==
 
@@ -985,11 +995,11 @@ Total time:
 
   ==> Energy Summary <==
 
-    Multi.(2ms)  Irrep.  No.               Energy
-    ---------------------------------------------
-       1  (  0)    A1     0      -99.939309243520
-    ---------------------------------------------
-   10 0.000000216652    -0.000000000007   -99.939309243520    0.0 s  DIIS ~
+    Multi.(2ms)  Irrep.  No.               Energy      <S^2>
+    --------------------------------------------------------
+       1  (  0)    A1     0      -99.939309209593  -0.000000
+    --------------------------------------------------------
+   10 0.000034337503    -0.000000078117   -99.939309209593    0.0 s  DIIS ~
 
   ==> Summary of Active Space Solver Input <==
 
@@ -1005,44 +1015,160 @@ Total time:
 
   ==> Energy Summary <==
 
-    Multi.(2ms)  Irrep.  No.               Energy
-    ---------------------------------------------
-       1  (  0)    A1     0      -99.939309243521
-    ---------------------------------------------
-    11   0.000000041590   -0.000000000000   -99.939309243521    0.001030 s
+    Multi.(2ms)  Irrep.  No.               Energy      <S^2>
+    --------------------------------------------------------
+       1  (  0)    A1     0      -99.939309232839   0.000000
+    --------------------------------------------------------
+   11 0.000019126984    -0.000000023247   -99.939309232839    0.0 s  DIIS ~
+
+  ==> Summary of Active Space Solver Input <==
+
+    Irrep.  Multi.(2ms)      N
+    --------------------------
+       A1      1  (  0)      1
+    --------------------------
+    N: number of roots
+    ms: spin z component
+    Total number of roots:   1
+    --------------------------
+
+
+  ==> Energy Summary <==
+
+    Multi.(2ms)  Irrep.  No.               Energy      <S^2>
+    --------------------------------------------------------
+       1  (  0)    A1     0      -99.939309240062   0.000000
+    --------------------------------------------------------
+   12 0.000010840458    -0.000000007223   -99.939309240062    0.0 s  DIIS ~
+
+  ==> Summary of Active Space Solver Input <==
+
+    Irrep.  Multi.(2ms)      N
+    --------------------------
+       A1      1  (  0)      1
+    --------------------------
+    N: number of roots
+    ms: spin z component
+    Total number of roots:   1
+    --------------------------
+
+
+  ==> Energy Summary <==
+
+    Multi.(2ms)  Irrep.  No.               Energy      <S^2>
+    --------------------------------------------------------
+       1  (  0)    A1     0      -99.939309242379   0.000000
+    --------------------------------------------------------
+   13 0.000006216448    -0.000000002317   -99.939309242379    0.0 s  DIIS ~
+
+  ==> Summary of Active Space Solver Input <==
+
+    Irrep.  Multi.(2ms)      N
+    --------------------------
+       A1      1  (  0)      1
+    --------------------------
+    N: number of roots
+    ms: spin z component
+    Total number of roots:   1
+    --------------------------
+
+
+  ==> Energy Summary <==
+
+    Multi.(2ms)  Irrep.  No.               Energy      <S^2>
+    --------------------------------------------------------
+       1  (  0)    A1     0      -99.939309243139   0.000000
+    --------------------------------------------------------
+   14 0.000003591902    -0.000000000760   -99.939309243139    0.0 s  DIIS ~
+
+  ==> Summary of Active Space Solver Input <==
+
+    Irrep.  Multi.(2ms)      N
+    --------------------------
+       A1      1  (  0)      1
+    --------------------------
+    N: number of roots
+    ms: spin z component
+    Total number of roots:   1
+    --------------------------
+
+
+  ==> Energy Summary <==
+
+    Multi.(2ms)  Irrep.  No.               Energy      <S^2>
+    --------------------------------------------------------
+       1  (  0)    A1     0      -99.939309243392  -0.000000
+    --------------------------------------------------------
+   15 0.000002085217    -0.000000000253   -99.939309243392    0.0 s  DIIS ~
+
+  ==> Summary of Active Space Solver Input <==
+
+    Irrep.  Multi.(2ms)      N
+    --------------------------
+       A1      1  (  0)      1
+    --------------------------
+    N: number of roots
+    ms: spin z component
+    Total number of roots:   1
+    --------------------------
+
+
+  ==> Energy Summary <==
+
+    Multi.(2ms)  Irrep.  No.               Energy      <S^2>
+    --------------------------------------------------------
+       1  (  0)    A1     0      -99.939309243477  -0.000000
+    --------------------------------------------------------
+   16 0.000001213993    -0.000000000085   -99.939309243477    0.0 s  DIIS ~
+
+  ==> Summary of Active Space Solver Input <==
+
+    Irrep.  Multi.(2ms)      N
+    --------------------------
+       A1      1  (  0)      1
+    --------------------------
+    N: number of roots
+    ms: spin z component
+    Total number of roots:   1
+    --------------------------
+
+
+  ==> Energy Summary <==
+
+    Multi.(2ms)  Irrep.  No.               Energy      <S^2>
+    --------------------------------------------------------
+       1  (  0)    A1     0      -99.939309243521  -0.000000
+    --------------------------------------------------------
+    17   0.000000001856   -0.000000000044   -99.939309243521    0.001924 s
 
   A miracle has come to pass: CASSCF iterations have converged.
 
- @ Final CASSCF Energy =  -99.939309243520526
+ @ Final CASSCF Energy =  -99.939309243520654
 
 
-       -----------------------------------------------------------------
-                            Semi-Canonical Orbitals
-         Chenyang Li, Jeffrey B. Schriber and Francesco A. Evangelista
-       -----------------------------------------------------------------
+  ==> Semicanonicalize Orbitals <==
 
-  Took 0.000339 s to build Fock matrix
-
-  ==> Checking Fock Matrix Diagonal Blocks <==
+    MIX INACTIVE ORBITALS   ...... FALSE
+    MIX GAS ACTIVE ORBITALS ...... FALSE
+    FROZEN_DOCC     ...  CANONICAL
+    FROZEN_UOCC     ...  CANONICAL
+    GAS1            ...  CANONICAL
+    RESTRICTED_DOCC ...  CANONICAL
+    RESTRICTED_UOCC ...  CANONICAL
 
     Off-Diag. Elements       Max           2-Norm
     ------------------------------------------------
     FROZEN_DOCC          0.0000000000   0.0000000000
-    FROZEN_UOCC          0.0000000000   0.0000000000
-    GAS1                 0.0070746784   0.0100051062
-    GAS2                 0.0000000000   0.0000000000
-    GAS3                 0.0000000000   0.0000000000
-    GAS4                 0.0000000000   0.0000000000
-    GAS5                 0.0000000000   0.0000000000
-    GAS6                 0.0000000000   0.0000000000
+    GAS1                 0.0070746712   0.0100050959
     RESTRICTED_DOCC      0.0000000000   0.0000000000
-    RESTRICTED_UOCC      0.0442449708   0.1404433425
+    RESTRICTED_UOCC      0.0442449791   0.1404433333
     ------------------------------------------------
-  Timing for semi-canonicalization:                           0.001 s.
+  Timing for orbital canonicalization:                        0.001 s.
 
-  Time to prepare integrals:        0.057 seconds
-  Time to run job          :        0.014 seconds
-  Total                    :        0.014 seconds    FORTE CASSCF energy @ 1.5.............................................................PASSED
+  Time to prepare integrals:        0.128 seconds
+  Time to run job          :        0.040 seconds
+  Total                    :        0.168 seconds
+    FORTE CASSCF energy @ 1.5.............................................................PASSED
 Molecule: Setting geometry variable R to 1.600000
 
 Scratch directory: /Users/york/scratch/psi4/
@@ -1051,7 +1177,7 @@ Scratch directory: /Users/york/scratch/psi4/
   ----------------------------------------------------------------------------
   A suite of quantum chemistry methods for strongly correlated electrons
 
-    git branch: cas_hessian - git commit: 8268bee1
+    git branch: mcscf_minor_change - git commit: 851de6c7
 
   Developed by:
     Francesco A. Evangelista, Chenyang Li, Kevin P. Hannon,
@@ -1059,8 +1185,9 @@ Scratch directory: /Users/york/scratch/psi4/
     Nan He, Nicholas Stair, Shuhe Wang, Renke Huang
   ----------------------------------------------------------------------------
 
-  Size of Determinant class: 256 bits
-  Preparing forte objects from a psi4 Wavefunction object
+  Size of Determinant class: 128 bits
+
+  Preparing forte objects from a Psi4 Wavefunction object
   Read options for space FROZEN_DOCC
   Read options for space RESTRICTED_DOCC
   Read options for space ACTIVE
@@ -1092,13 +1219,15 @@ Scratch directory: /Users/york/scratch/psi4/
     atoms 2 entry H          line    22 file /Users/york/src/psi4new/psi4/share/psi4/basis/cc-pvdz.gbs 
 
 
+  Checking orbital orthonormality against current geometry ...
 
-  Forte Warning: Orbitals of ref_wfn NOT from current geometry!!!
-  Max value of MO overlap: 0.090786848211700
+  Forte Warning: Input orbitals are NOT from the current geometry!
+  Max value of MO overlap: 0.111707365737454
+
   Perform new SCF at current geometry ...
 
 *** tstart() called on Yorks-Mac.local
-*** at Mon Nov 23 08:22:57 2020
+*** at Tue Aug  3 23:58:21 2021
 
    => Loading Basis Set <=
 
@@ -1114,7 +1243,7 @@ Scratch directory: /Users/york/scratch/psi4/
                by Justin Turney, Rob Parrish, Andy Simmonett
                           and Daniel G. A. Smith
                               RHF Reference
-                        1 Threads,    476 MiB Core
+                        8 Threads,    476 MiB Core
          ---------------------------------------------------------
 
   ==> Geometry <==
@@ -1148,16 +1277,16 @@ Scratch directory: /Users/york/scratch/psi4/
   MOM disabled.
   Fractional occupation disabled.
   Guess Type is SAD.
-  Energy threshold   = 1.00e-12
-  Density threshold  = 1.00e-10
-  Integral threshold = 0.00e+00
+  Energy threshold   = 1.00e-09
+  Density threshold  = 1.00e-08
+  Integral threshold = 1.00e-12
 
   ==> Primary Basis <==
 
   Basis Set: CC-PVDZ
     Blend: CC-PVDZ
     Number of shells: 9
-    Number of basis function: 19
+    Number of basis functions: 19
     Number of Cartesian functions: 20
     Spherical Harmonics?: true
     Max angular momentum: 2
@@ -1179,7 +1308,7 @@ Scratch directory: /Users/york/scratch/psi4/
     J tasked:                   Yes
     K tasked:                   Yes
     wK tasked:                   No
-    OpenMP threads:               1
+    OpenMP threads:               8
     Memory [MiB]:               357
     Algorithm:                 Core
     Schwarz Cutoff:           1E-12
@@ -1191,7 +1320,7 @@ Scratch directory: /Users/york/scratch/psi4/
   Basis Set: CC-PVDZ-JKFIT
     Blend: CC-PVDZ-JKFIT
     Number of shells: 33
-    Number of basis function: 93
+    Number of basis functions: 93
     Number of Cartesian functions: 106
     Spherical Harmonics?: true
     Max angular momentum: 3
@@ -1219,19 +1348,17 @@ Scratch directory: /Users/york/scratch/psi4/
 
                            Total Energy        Delta E     RMS |[F,P]|
 
-   @DF-RHF iter SAD:   -99.24363641485695   -9.92436e+01   0.00000e+00 
-   @DF-RHF iter   1:   -99.73277521450183   -4.89139e-01   3.75717e-02 DIIS
-   @DF-RHF iter   2:   -99.78601916803510   -5.32440e-02   3.88803e-02 DIIS
-   @DF-RHF iter   3:   -99.84376115606761   -5.77420e-02   5.50290e-03 DIIS
-   @DF-RHF iter   4:   -99.84638270844432   -2.62155e-03   1.80445e-03 DIIS
-   @DF-RHF iter   5:   -99.84662039957774   -2.37691e-04   1.49009e-04 DIIS
-   @DF-RHF iter   6:   -99.84662335839165   -2.95881e-06   1.81408e-05 DIIS
-   @DF-RHF iter   7:   -99.84662338773055   -2.93389e-08   2.64508e-06 DIIS
-   @DF-RHF iter   8:   -99.84662338810082   -3.70278e-10   2.78609e-07 DIIS
-   @DF-RHF iter   9:   -99.84662338810651   -5.68434e-12   2.94172e-08 DIIS
-   @DF-RHF iter  10:   -99.84662338810656   -5.68434e-14   1.30163e-09 DIIS
-   @DF-RHF iter  11:   -99.84662338810655    1.42109e-14   2.04904e-10 DIIS
-   @DF-RHF iter  12:   -99.84662338810656   -1.42109e-14   9.56959e-12 DIIS
+   @DF-RHF iter SAD:   -99.24363641485722   -9.92436e+01   0.00000e+00 
+   @DF-RHF iter   1:   -99.73277521450197   -4.89139e-01   3.75717e-02 DIIS
+   @DF-RHF iter   2:   -99.78601916803535   -5.32440e-02   3.88803e-02 DIIS
+   @DF-RHF iter   3:   -99.84376115606779   -5.77420e-02   5.50290e-03 DIIS
+   @DF-RHF iter   4:   -99.84638270844451   -2.62155e-03   1.80445e-03 DIIS
+   @DF-RHF iter   5:   -99.84662039957792   -2.37691e-04   1.49009e-04 DIIS
+   @DF-RHF iter   6:   -99.84662335839187   -2.95881e-06   1.81408e-05 DIIS
+   @DF-RHF iter   7:   -99.84662338773059   -2.93387e-08   2.64508e-06 DIIS
+   @DF-RHF iter   8:   -99.84662338810107   -3.70477e-10   2.78609e-07 DIIS
+   @DF-RHF iter   9:   -99.84662338810659   -5.52802e-12   2.94172e-08 DIIS
+   @DF-RHF iter  10:   -99.84662338810668   -8.52651e-14   1.30163e-09 DIIS
   Energy and wave function converged.
 
 
@@ -1257,14 +1384,14 @@ Scratch directory: /Users/york/scratch/psi4/
              A1    A2    B1    B2 
     DOCC [     3,    0,    1,    1 ]
 
-  @DF-RHF Final Energy:   -99.84662338810656
+  @DF-RHF Final Energy:   -99.84662338810668
 
    => Energetics <=
 
     Nuclear Repulsion Energy =              2.9766218100187500
-    One-Electron Energy =                -146.6831328074575254
-    Two-Electron Energy =                  43.8598876093322119
-    Total Energy =                        -99.8466233881065648
+    One-Electron Energy =                -146.6831327724731011
+    Two-Electron Energy =                  43.8598875743476810
+    Total Energy =                        -99.8466233881066785
 
 Computation Completed
 
@@ -1286,15 +1413,15 @@ Properties computed using the SCF density matrix
      X:     0.0000      Y:     0.0000      Z:     3.0983     Total:     3.0983
 
 
-*** tstop() called on Yorks-Mac.local at Mon Nov 23 08:22:57 2020
+*** tstop() called on Yorks-Mac.local at Tue Aug  3 23:58:21 2021
 Module time:
-	user time   =       0.22 seconds =       0.00 minutes
-	system time =       0.01 seconds =       0.00 minutes
+	user time   =       2.98 seconds =       0.05 minutes
+	system time =       0.04 seconds =       0.00 minutes
 	total time  =          0 seconds =       0.00 minutes
 Total time:
-	user time   =       1.04 seconds =       0.02 minutes
-	system time =       0.07 seconds =       0.00 minutes
-	total time  =          1 seconds =       0.02 minutes
+	user time   =      14.41 seconds =       0.24 minutes
+	system time =       0.36 seconds =       0.01 minutes
+	total time  =          2 seconds =       0.03 minutes
 
 
   ==> Orthogonalize Orbitals Between Different Geometries <==
@@ -1328,25 +1455,36 @@ Total time:
   Basis Set: CC-PVDZ
     Blend: CC-PVDZ
     Number of shells: 9
-    Number of basis function: 19
+    Number of basis functions: 19
     Number of Cartesian functions: 20
     Spherical Harmonics?: true
     Max angular momentum: 2
 
 
-  ==> Auxiliary Basis Set Summary <==
+  JK created using MemDF integrals
+  DFHelper Memory: AOs need 0.000 GiB; user supplied 0.373 GiB. Using in-core AOs.
+
+  ==> MemDFJK: Density-Fitted J/K Matrices <==
+
+    J tasked:                   Yes
+    K tasked:                   Yes
+    wK tasked:                   No
+    OpenMP threads:               8
+    Memory [MiB]:               381
+    Algorithm:                 Core
+    Schwarz Cutoff:           1E-12
+    Mask sparsity (%):       0.0000
+    Fitting Condition:        1E-10
+
+   => Auxiliary Basis Set <=
 
   Basis Set: CC-PVDZ-JKFIT
     Blend: CC-PVDZ-JKFIT
     Number of shells: 33
-    Number of basis function: 93
+    Number of basis functions: 93
     Number of Cartesian functions: 106
     Spherical Harmonics?: true
     Max angular momentum: 3
-
-
-  JK created using MemDF integrals
-  DFHelper Memory: AOs need 0.000 GiB; user supplied 0.396 GiB. Using in-core AOs.
 
 
 
@@ -1373,30 +1511,31 @@ Total time:
     Integral type                                         DF
     CI solver type                                       FCI
     Final orbital type                             CANONICAL
+    Derivative type                                     NONE
+    Optimize orbitals                                   TRUE
     Include internal rotations                         FALSE
     Debug printing                                     FALSE
     Energy convergence                             1.000e-07
     Gradient convergence                           1.000e-07
-    Max value for rotation                         5.000e-01
+    Max value for rotation                         2.000e-01
     Printing level                                         0
     Max number of macro iterations                        25
-    Max number of micro iterations                         3
-    Min number of micro iterations                         3
-    DIIS start                                             2
-    Min DIIS vectors                                       2
+    Max number of micro iterations                        40
+    Min number of micro iterations                         6
+    DIIS start                                            15
+    Min DIIS vectors                                       3
     Max DIIS vectors                                       8
     Frequency of DIIS extrapolation                        1
 
 
   ==> Independent Orbital Rotations <==
 
-    ORBITAL SPACES                       A1    A2    B1    B2
-    ---------------------------------------------------------
-             ACTIVE /          ACTIVE     0     0     0     0
-             ACTIVE / RESTRICTED_DOCC     2     0     0     0
-    RESTRICTED_UOCC /          ACTIVE    12     0     0     0
-    RESTRICTED_UOCC / RESTRICTED_DOCC     6     0     3     3
-    ---------------------------------------------------------
+    ORBITAL SPACES                        A1     A2     B1     B2
+    -------------------------------------------------------------
+             ACTIVE / RESTRICTED_DOCC      2      0      0      0
+    RESTRICTED_UOCC /          ACTIVE     12      0      0      0
+    RESTRICTED_UOCC / RESTRICTED_DOCC      6      0      3      3
+    -------------------------------------------------------------
 
   ==> Summary of Active Space Solver Input <==
 
@@ -1410,12 +1549,83 @@ Total time:
     --------------------------
 
 
+  ==> String Lists <==
+
+  Number of alpha electrons     = 1
+  Number of beta electrons      = 1
+  Number of alpha strings       = 2
+  Number of beta strings        = 2
+  Timing for strings        =      0.000 s
+  Timing for NN strings     =      0.000 s
+  Timing for VO strings     =      0.000 s
+  Timing for OO strings     =      0.000 s
+  Timing for VVOO strings   =      0.000 s
+  Timing for VOVO strings   =      0.000 s
+  Timing for 1-hole strings =      0.000 s
+  Timing for 2-hole strings =      0.000 s
+  Timing for 3-hole strings =      0.000 s
+  Total timing              =      0.000 s
+
+  ==> FCI Solver <==
+
+    Number of determinants                           4
+    Symmetry                                         0
+    Multiplicity                                     1
+    Number of roots                                  1
+    Target root                                      0
+    Trial vectors per root                          10
+
+  Allocating memory for the Hamiltonian algorithm. Size: 2 x 2 x 2.   Memory: 0.000000 GB
+
+  ==> FCI Initial Guess <==
+
+  ---------------------------------------------
+    Root            Energy     <S^2>   Spin
+  ---------------------------------------------
+      0      -99.923494838602  0.000  singlet
+      1      -99.800476730185  2.000  triplet
+      2      -99.400122626291  0.000  singlet
+      3      -99.059779194760  0.000  singlet
+  ---------------------------------------------
+  Timing for initial guess  =      0.000 s
+
+  Projecting out root 1
+
+  ==> Diagonalizing Hamiltonian <==
+
+  Energy   convergence: 1.00e-07
+  Residual convergence: 1.00e-06
+  -----------------------------------------------------
+    Iter.      Avg. Energy       Delta_E     Res. Norm
+  -----------------------------------------------------
+      1      -99.923494838602  -9.992e+01  +6.007e-14
+      2      -99.923494838602  +0.000e+00  +6.007e-14
+  -----------------------------------------------------
+  The Davidson-Liu algorithm converged in 3 iterations.
+
+  ==> Root No. 0 <==
+
+    20      0.93845247
+    02     -0.32987315
+
+    Total Energy:     -99.923494838602, <S^2>: -0.000000
+
   ==> Energy Summary <==
 
-    Multi.(2ms)  Irrep.  No.               Energy
-    ---------------------------------------------
-       1  (  0)    A1     0      -99.923494934626
-    ---------------------------------------------
+    Multi.(2ms)  Irrep.  No.               Energy      <S^2>
+    --------------------------------------------------------
+       1  (  0)    A1     0      -99.923494838602  -0.000000
+    --------------------------------------------------------
+
+  ==> Computing RDMs for Root No. 0 <==
+
+    Timing for 1-RDM: 0.000 s
+    Timing for 2-RDM: 0.000 s
+
+  ==> NATURAL ORBITALS <==
+
+        1A1     1.776894      2A1     0.223106  
+
 
   ==> Optimizing Orbitals for Current RDMs <==
 
@@ -1423,7 +1633,7 @@ Total time:
   ==> MCSCF Macro Iter. 1 <==
 
              Energy CI (  Delta E  )         Energy Opt. (  Delta E  )  E_OPT - E_CI   Orbital RMS  Micro  DIIS
-      -99.923494934626 (-9.9923e+01)    -99.923986659699 (-9.9924e+01)   -4.9173e-04    9.8652e-04    3/N
+      -99.923494838602 (-9.9923e+01)    -99.923987125065 (-9.9924e+01)   -4.9229e-04    1.2709e-02    6/N
 
   ==> Summary of Active Space Solver Input <==
 
@@ -1439,10 +1649,10 @@ Total time:
 
   ==> Energy Summary <==
 
-    Multi.(2ms)  Irrep.  No.               Energy
-    ---------------------------------------------
-       1  (  0)    A1     0      -99.924039563820
-    ---------------------------------------------
+    Multi.(2ms)  Irrep.  No.               Energy      <S^2>
+    --------------------------------------------------------
+       1  (  0)    A1     0      -99.924039579742   0.000000
+    --------------------------------------------------------
 
   ==> Optimizing Orbitals for Current RDMs <==
 
@@ -1450,7 +1660,7 @@ Total time:
   ==> MCSCF Macro Iter. 2 <==
 
              Energy CI (  Delta E  )         Energy Opt. (  Delta E  )  E_OPT - E_CI   Orbital RMS  Micro  DIIS
-      -99.924039563820 (-5.4463e-04)    -99.924056721743 (-7.0062e-05)   -1.7158e-05    9.3437e-04    3/N   S
+      -99.924039579742 (-5.4474e-04)    -99.924056604988 (-6.9480e-05)   -1.7025e-05    3.9244e-05    6/N
 
   ==> Summary of Active Space Solver Input <==
 
@@ -1466,10 +1676,10 @@ Total time:
 
   ==> Energy Summary <==
 
-    Multi.(2ms)  Irrep.  No.               Energy
-    ---------------------------------------------
-       1  (  0)    A1     0      -99.924062052715
-    ---------------------------------------------
+    Multi.(2ms)  Irrep.  No.               Energy      <S^2>
+    --------------------------------------------------------
+       1  (  0)    A1     0      -99.924062133073  -0.000000
+    --------------------------------------------------------
 
   ==> Optimizing Orbitals for Current RDMs <==
 
@@ -1477,7 +1687,7 @@ Total time:
   ==> MCSCF Macro Iter. 3 <==
 
              Energy CI (  Delta E  )         Energy Opt. (  Delta E  )  E_OPT - E_CI   Orbital RMS  Micro  DIIS
-      -99.924062052715 (-2.2489e-05)    -99.924063880996 (-7.1593e-06)   -1.8283e-06    1.3463e-04    3/N   S
+      -99.924062133073 (-2.2553e-05)    -99.924063900684 (-7.2957e-06)   -1.7676e-06    4.0638e-06    6/N
 
   ==> Summary of Active Space Solver Input <==
 
@@ -1493,10 +1703,10 @@ Total time:
 
   ==> Energy Summary <==
 
-    Multi.(2ms)  Irrep.  No.               Energy
-    ---------------------------------------------
-       1  (  0)    A1     0      -99.924064445982
-    ---------------------------------------------
+    Multi.(2ms)  Irrep.  No.               Energy      <S^2>
+    --------------------------------------------------------
+       1  (  0)    A1     0      -99.924064466590  -0.000000
+    --------------------------------------------------------
 
   ==> Optimizing Orbitals for Current RDMs <==
 
@@ -1504,7 +1714,7 @@ Total time:
   ==> MCSCF Macro Iter. 4 <==
 
              Energy CI (  Delta E  )         Energy Opt. (  Delta E  )  E_OPT - E_CI   Orbital RMS  Micro  DIIS
-      -99.924064445982 (-2.3933e-06)    -99.924064640750 (-7.5975e-07)   -1.9477e-07    4.0675e-05    3/N   S/E
+      -99.924064466590 (-2.3335e-06)    -99.924064646734 (-7.4605e-07)   -1.8014e-07    1.3164e-06    6/N
 
   ==> Summary of Active Space Solver Input <==
 
@@ -1520,10 +1730,10 @@ Total time:
 
   ==> Energy Summary <==
 
-    Multi.(2ms)  Irrep.  No.               Energy
-    ---------------------------------------------
-       1  (  0)    A1     0      -99.924064730910
-    ---------------------------------------------
+    Multi.(2ms)  Irrep.  No.               Energy      <S^2>
+    --------------------------------------------------------
+       1  (  0)    A1     0      -99.924064704147  -0.000000
+    --------------------------------------------------------
 
   ==> Optimizing Orbitals for Current RDMs <==
 
@@ -1531,7 +1741,7 @@ Total time:
   ==> MCSCF Macro Iter. 5 <==
 
              Energy CI (  Delta E  )         Energy Opt. (  Delta E  )  E_OPT - E_CI   Orbital RMS  Micro  DIIS
-      -99.924064730910 (-2.8493e-07)    -99.924064730911 (-9.0161e-08)   -1.0658e-12    1.9783e-05    3/N   S/E
+      -99.924064704147 (-2.3756e-07)    -99.924064722398 (-7.5664e-08)   -1.8250e-08    4.2093e-07    6/N
 
   ==> Summary of Active Space Solver Input <==
 
@@ -1547,10 +1757,10 @@ Total time:
 
   ==> Energy Summary <==
 
-    Multi.(2ms)  Irrep.  No.               Energy
-    ---------------------------------------------
-       1  (  0)    A1     0      -99.924064730911
-    ---------------------------------------------
+    Multi.(2ms)  Irrep.  No.               Energy      <S^2>
+    --------------------------------------------------------
+       1  (  0)    A1     0      -99.924064728206   0.000000
+    --------------------------------------------------------
 
   ==> Optimizing Orbitals for Current RDMs <==
 
@@ -1558,7 +1768,34 @@ Total time:
   ==> MCSCF Macro Iter. 6 <==
 
              Energy CI (  Delta E  )         Energy Opt. (  Delta E  )  E_OPT - E_CI   Orbital RMS  Micro  DIIS
-      -99.924064730911 (-1.4779e-12)    -99.924064730911 (-4.1211e-13)    0.0000e+00    5.2972e-08    2/Y
+      -99.924064728206 (-2.4058e-08)    -99.924064730051 (-7.6535e-09)   -1.8454e-09    1.3405e-07    6/N
+
+  ==> Summary of Active Space Solver Input <==
+
+    Irrep.  Multi.(2ms)      N
+    --------------------------
+       A1      1  (  0)      1
+    --------------------------
+    N: number of roots
+    ms: spin z component
+    Total number of roots:   1
+    --------------------------
+
+
+  ==> Energy Summary <==
+
+    Multi.(2ms)  Irrep.  No.               Energy      <S^2>
+    --------------------------------------------------------
+       1  (  0)    A1     0      -99.924064730638   0.000000
+    --------------------------------------------------------
+
+  ==> Optimizing Orbitals for Current RDMs <==
+
+
+  ==> MCSCF Macro Iter. 7 <==
+
+             Energy CI (  Delta E  )         Energy Opt. (  Delta E  )  E_OPT - E_CI   Orbital RMS  Micro  DIIS
+      -99.924064730638 (-2.4324e-09)    -99.924064730825 (-7.7353e-10)   -1.8652e-10    4.2635e-08    6/N
 
   A miracle has come to pass: MCSCF iterations have converged!
 
@@ -1568,36 +1805,33 @@ Total time:
            ------------------------------  ------------------------------
     Iter.        Total Energy       Delta        Total Energy       Delta  Orb. Grad.  Micro
     ----------------------------------------------------------------------------------------
-       1     -99.923494934626  0.0000e+00    -99.923986659699  0.0000e+00  9.8652e-04     3
-       2     -99.924039563820 -5.4463e-04    -99.924056721743 -7.0062e-05  9.3437e-04     3
-       3     -99.924062052715 -2.2489e-05    -99.924063880996 -7.1593e-06  1.3463e-04     3
-       4     -99.924064445982 -2.3933e-06    -99.924064640750 -7.5975e-07  4.0675e-05     3
-       5     -99.924064730910 -2.8493e-07    -99.924064730911 -9.0161e-08  1.9783e-05     3
-       6     -99.924064730911 -1.4779e-12    -99.924064730911 -4.1211e-13  5.2972e-08     2
+       1     -99.923494838602  0.0000e+00    -99.923987125065  0.0000e+00  1.2709e-02     6
+       2     -99.924039579742 -5.4474e-04    -99.924056604988 -6.9480e-05  3.9244e-05     6
+       3     -99.924062133073 -2.2553e-05    -99.924063900684 -7.2957e-06  4.0638e-06     6
+       4     -99.924064466590 -2.3335e-06    -99.924064646734 -7.4605e-07  1.3164e-06     6
+       5     -99.924064704147 -2.3756e-07    -99.924064722398 -7.5664e-08  4.2093e-07     6
+       6     -99.924064728206 -2.4058e-08    -99.924064730051 -7.6535e-09  1.3405e-07     6
+       7     -99.924064730638 -2.4324e-09    -99.924064730825 -7.7353e-10  4.2635e-08     6
     ----------------------------------------------------------------------------------------
 
-       -----------------------------------------------------------------
-                            Semi-Canonical Orbitals
-         Chenyang Li, Jeffrey B. Schriber and Francesco A. Evangelista
-       -----------------------------------------------------------------
+  ==> Semicanonicalize Orbitals <==
 
-
-  ==> Checking Fock Matrix Diagonal Blocks <==
+    MIX INACTIVE ORBITALS   ...... FALSE
+    MIX GAS ACTIVE ORBITALS ...... FALSE
+    FROZEN_DOCC     ...  CANONICAL
+    FROZEN_UOCC     ...  CANONICAL
+    GAS1            ...  CANONICAL
+    RESTRICTED_DOCC ...  CANONICAL
+    RESTRICTED_UOCC ...  CANONICAL
 
     Off-Diag. Elements       Max           2-Norm
     ------------------------------------------------
     FROZEN_DOCC          0.0000000000   0.0000000000
-    FROZEN_UOCC          0.0000000000   0.0000000000
-    GAS1                 0.0075801963   0.0107200164
-    GAS2                 0.0000000000   0.0000000000
-    GAS3                 0.0000000000   0.0000000000
-    GAS4                 0.0000000000   0.0000000000
-    GAS5                 0.0000000000   0.0000000000
-    GAS6                 0.0000000000   0.0000000000
+    GAS1                 0.0075804327   0.0107203507
     RESTRICTED_DOCC      0.0000000000   0.0000000000
-    RESTRICTED_UOCC      0.0504826855   0.1233349966
+    RESTRICTED_UOCC      0.0504790818   0.1233260393
     ------------------------------------------------
-  Timing for semi-canonicalization:                           0.000 s.
+  Timing for orbital canonicalization:                        0.000 s.
 
   ==> Summary of Active Space Solver Input <==
 
@@ -1613,16 +1847,17 @@ Total time:
 
   ==> Energy Summary <==
 
-    Multi.(2ms)  Irrep.  No.               Energy
-    ---------------------------------------------
-       1  (  0)    A1     0      -99.924064730911
-    ---------------------------------------------
+    Multi.(2ms)  Irrep.  No.               Energy      <S^2>
+    --------------------------------------------------------
+       1  (  0)    A1     0      -99.924064730884  -0.000000
+    --------------------------------------------------------
 
-  Time to prepare integrals:        0.029 seconds
-  Time to run job          :        0.028 seconds
-  Total                    :        0.028 seconds    FORTE 2-step MCSCF energy @ 1.6.......................................................PASSED
+  Time to prepare integrals:        0.063 seconds
+  Time to run job          :        0.224 seconds
+  Total                    :        0.287 seconds
+    FORTE 2-step MCSCF energy @ 1.6.......................................................PASSED
 
-    Psi4 stopped on: Monday, 23 November 2020 08:22AM
-    Psi4 wall time for execution: 0:00:01.22
+    Psi4 stopped on: Tuesday, 03 August 2021 11:58PM
+    Psi4 wall time for execution: 0:00:02.49
 
 *** Psi4 exiting successfully. Buy a developer a beer!
