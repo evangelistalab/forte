@@ -241,6 +241,7 @@ double MCSCF_2STEP::compute_energy() {
 
             print_h2("Optimizing Orbitals for Current RDMs");
             double e_o = lbfgs.minimize(cas_grad, R);
+            energy_ = e_o;
 
             // info for orbital optimization
             dG->subtract(lbfgs.g());

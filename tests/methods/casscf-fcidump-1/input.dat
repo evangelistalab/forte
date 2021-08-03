@@ -32,9 +32,6 @@ set forte {
   active             [2,0,2,2]
   e_convergence      8
   r_convergence      8
-  casscf_e_convergence 8
-  casscf_g_convergence 6
-  casscf_micro_maxiter 4
 }
 
 Eforte = energy('forte')
