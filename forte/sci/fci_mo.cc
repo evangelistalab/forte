@@ -939,6 +939,7 @@ void FCI_MO::Diagonalize_H(const vecdet& p_space, const int& multi, const int& n
         double value = evals->get(i);
         eigen.push_back(std::make_pair(evecs->get_column(0, i), value + energy_offset));
     }
+    spin2_ = sparse_solver.spin();
 
     if (!quiet_) {
         outfile->Printf("  Done. Timing %15.6f s", tdiagH.get());

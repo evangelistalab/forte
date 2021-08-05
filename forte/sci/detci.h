@@ -118,7 +118,7 @@ class DETCI : public ActiveSpaceMethod {
     int nsubspace_per_root_;
 
     /// Diagonalize the Hamiltonian
-    void diagoanlize_hamiltonian();
+    void diagonalize_hamiltonian();
     /// Prepare Davidson-Liu solver
     std::shared_ptr<SparseCISolver> prepare_ci_solver();
     /// Algorithm to build sigma vector

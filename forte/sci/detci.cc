@@ -83,7 +83,7 @@ double DETCI::compute_energy() {
     build_determinant_space();
 
     // diagonalize Hamiltonian
-    diagoanlize_hamiltonian();
+    diagonalize_hamiltonian();
 
     // compute 1RDMs
     compute_1rdms();
@@ -139,7 +139,7 @@ void DETCI::build_determinant_space() {
     p_space_ = DeterminantHashVec(dets);
 }
 
-void DETCI::diagoanlize_hamiltonian() {
+void DETCI::diagonalize_hamiltonian() {
     timer tdiag("Diagonalize CI Hamiltonian");
     energies_ = std::vector<double>(nroot_);
 
@@ -162,6 +162,9 @@ void DETCI::diagoanlize_hamiltonian() {
         evals_->add(i, energy_offset);
         energies_[i] = evals_->get(i);
     }
+
+    // spin
+    spin2_ = solver->spin();
 
     outfile->Printf("\n\n  Done diagonalizing Hamiltonian, %.3e seconds.", tdiag.stop());
 }
