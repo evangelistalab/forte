@@ -744,6 +744,9 @@ def register_dsrg_options(options):
 
     options.add_bool("DSRG_DUMP_AMPS", False, "Dump converged amplitudes to the current directory")
 
+    options.add_str("DSRG_T1_AMPS_GUESS", "PT2", ["PT2", "ZERO"],
+                    "The initial guess of T1 amplitudes for nonperturbative DSRG methods")
+
 
 def register_dwms_options(options):
     options.set_group("DWMS")

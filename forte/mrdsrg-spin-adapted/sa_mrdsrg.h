@@ -147,6 +147,8 @@ class SA_MRDSRG : public SADSRG {
     /// Signed max of T1
     double T1max_;
     /// Initial guess of T1
+    std::string t1_guess_;
+    /// Initial guess of T1
     void guess_t1(BlockedTensor& F, BlockedTensor& T2, BlockedTensor& T1);
     /// Update T1 in every iteration
     void update_t1();

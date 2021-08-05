@@ -77,10 +77,15 @@ void MRDSRG::guess_t(BlockedTensor& V, BlockedTensor& T2, BlockedTensor& F, Bloc
         ambit::load(T1, t1_file_chk_);
         outfile->Printf(" Done.");
     } else {
-        if (ccvv_source == "ZERO") {
-            guess_t1_nocv(F, T2, T1);
-        } else if (ccvv_source == "NORMAL") {
-            guess_t1_std(F, T2, T1);
+        if (foptions_->get_str("DSRG_T1_AMPS_GUESS") == "ZERO") {
+            outfile->Printf("\n    Use zero T1 amplitudes as requested!");
+            T1.zero();
+        } else {
+            if (ccvv_source == "ZERO") {
+                guess_t1_nocv(F, T2, T1);
+            } else if (ccvv_source == "NORMAL") {
+                guess_t1_std(F, T2, T1);
+            }
         }
     }
 
