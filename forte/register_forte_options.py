@@ -864,6 +864,9 @@ def register_casscf_options(options):
 
     options.add_double("CASSCF_MAX_ROTATION", 0.2, "Max value in orbital update vector")
 
+    options.add_str("CASSCF_ORB_ORTHO_TRANS", "CAYLEY", ["CAYLEY", "POWER", "PADE"],
+                    "Ways to compute the orthogonal transformation U from orbital rotation R")
+
     options.add_str(
         "ORB_ROTATION_ALGORITHM", "DIAGONAL", ["DIAGONAL", "AUGMENTED_HESSIAN"], "Orbital rotation algorithm"
     )

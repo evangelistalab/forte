@@ -181,8 +181,11 @@ class CASSCF_ORB_GRAD {
     /// Enable debug printing or not
     bool debug_print_;
 
-    /// Orbital gradient convergence criteria
-    double g_conv_;
+    /// Algorithm to compute the orbital transformation matrix from orbital rotations
+    /// 1. Cayley: U = (1 + R/2) * (1 - R/2)^-1
+    /// 2. Power: U = exp(R) ~ I + R + 1/2 * R^2 + 1/6 * R^3
+    /// 3. Pade: Psi4 implementation of U = exp(R)
+    std::string ortho_trans_algo_;
 
     /// Keep internal (GASn-GASn) rotations
     bool internal_rot_;
@@ -192,9 +195,6 @@ class CASSCF_ORB_GRAD {
     /// User specified zero rotations
     /// vector of irrep, map from index i to other indices uncoupled with index i
     std::vector<std::unordered_map<size_t, std::unordered_set<size_t>>> zero_rots_;
-
-    /// Orbital type for redundant pairs
-    std::string orb_type_redundant_;
 
     // => Tensors and matrices <=
 
@@ -227,7 +227,7 @@ class CASSCF_ORB_GRAD {
 
     /// The orbital rotation matrix
     psi::SharedMatrix R_;
-    /// The orthogonal transformation matrix U = exp(R)
+    /// The orthogonal transformation matrix
     psi::SharedMatrix U_;
 
     /// The orbital gradients
@@ -352,6 +352,9 @@ class CASSCF_ORB_GRAD {
 
     /// Compute the exponential of a skew-symmetric matrix
     psi::SharedMatrix matrix_exponential(const psi::SharedMatrix& A, int n);
+
+    /// Compute Cayley transformation from skew-symmetric matrix
+    psi::SharedMatrix  cayley_trans(const psi::SharedMatrix& A);
 
     /// Grab part of the orbital coefficients
     psi::SharedMatrix C_subset(const std::string& name, psi::SharedMatrix C,

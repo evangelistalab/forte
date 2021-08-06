@@ -163,11 +163,9 @@ void CASSCF_ORB_GRAD::read_options() {
     print_ = options_->get_int("PRINT");
     debug_print_ = options_->get_bool("CASSCF_DEBUG_PRINTING");
 
-    g_conv_ = options_->get_double("CASSCF_G_CONVERGENCE");
-
     internal_rot_ = options_->get_bool("CASSCF_INTERNAL_ROT");
 
-    orb_type_redundant_ = options_->get_str("CASSCF_FINAL_ORBITAL");
+    ortho_trans_algo_ = options_->get_str("CASSCF_ORB_ORTHO_TRANS");
 
     // zero rotations
     zero_rots_.resize(nirrep_);
@@ -702,8 +700,16 @@ bool CASSCF_ORB_GRAD::update_orbitals(psi::SharedVector x) {
     // officially save progress of dR
     R_->add(dR);
 
-    // compute exp(dR) and test against previous step
-    auto dU = matrix_exponential(dR, 3);
+    // compute incremental step dU and test against previous step
+    psi::SharedMatrix dU;
+    if (ortho_trans_algo_ == "PADE") {
+        dU = dR->clone();
+        dU->expm(3);
+    } else if(ortho_trans_algo_ == "POWER") {
+        dU = matrix_exponential(dR, 3);
+    } else {
+        dU = cayley_trans(dR);
+    }
     test_orbital_rotations(dU, "WARNING: Active Orbitals Different from the Previous Step");
 
     // U_new = U_old * exp(dR)
@@ -746,6 +752,25 @@ psi::SharedMatrix CASSCF_ORB_GRAD::matrix_exponential(const psi::SharedMatrix& A
 
     U->schmidt();
     return U;
+}
+
+psi::SharedMatrix CASSCF_ORB_GRAD::cayley_trans(const psi::SharedMatrix& A) {
+    auto n = std::make_shared<psi::Matrix>("I + A / 2", A->rowspi(), A->colspi());
+    n->identity();
+
+    auto d = n->clone();
+    d->set_name("(I - A / 2)^-1");
+
+    auto a = A->clone();
+    a->scale(0.5);
+
+    n->add(a);
+    d->subtract(a);
+    d->general_invert();
+
+    auto c = psi::linalg::doublet(n, d, false, false);
+    c->set_name("(I + A / 2) (I - A / 2)^-1");
+    return c;
 }
 
 std::vector<std::tuple<int, int, int>>
