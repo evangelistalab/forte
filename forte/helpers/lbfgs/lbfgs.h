@@ -70,10 +70,10 @@ class LBFGS {
     psi::SharedVector g() { return g_; }
 
     /// Return the final number of iterations
-    int iter() { return iter_; }
+    int iter() const { return iter_; }
 
     /// Return true if minimization converged
-    bool converged() { return converged_; }
+    bool converged() const { return converged_; }
 
   private:
     /// The dimension of x
