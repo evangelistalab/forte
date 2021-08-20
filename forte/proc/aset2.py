@@ -106,8 +106,8 @@ def aset2_driver(state_weights_map, scf_info, ref_wfn, mo_space_info, options):
     mo_space_info_active = forte.build_aset2_spaceinfo(ref_wfn, mo_space_info, options)
 
     # Build total (A+B) integrals first
-    update_environment_options(options, B_list, ref_wfn)
-    ints_e = forte.make_ints_from_psi4(ref_wfn, options, mo_space_info)
+    #update_environment_options(options, B_list, ref_wfn)
+    #ints_e = forte.make_ints_from_psi4(ref_wfn, options, mo_space_info)
 
     # Compute ASET(mf) higher-level with mo_space_info_active(inner) and methods in options, -> E_high(origin)
     energy_high = 0.0
@@ -118,7 +118,7 @@ def aset2_driver(state_weights_map, scf_info, ref_wfn, mo_space_info, options):
 
     # Compute envrionment (B) amplitudes T1, T2 and energy corrections E_c^B, dress fragment ints
     update_environment_options(options, B_list, ref_wfn)
-    energy_env, ints_dressed = forte_driver_environment(state_weights_map, scf_info, ref_wfn,  mo_space_info, mo_space_info_active, ints_e, options)
+    energy_env, ints_dressed, nre_env = forte_driver_environment(state_weights_map, scf_info, ref_wfn,  mo_space_info, mo_space_info_active, options)
 
     # Build dressed fragment integrals, starting from an ints object.
     update_fragment_options(options, A_list, ref_wfn)
@@ -142,7 +142,7 @@ def aset2_driver(state_weights_map, scf_info, ref_wfn, mo_space_info, options):
     dressed_scalar = ints_dressed.scalar_energy()
     scalar = dressed_scalar - frz1
     #if(int_type_frag != "CONVENTIONAL") or (int_type_frag == "CONVENTIONAL" and frag_do_fci):
-    scalar += ints_e.nuclear_repulsion_energy()
+    scalar += nre_env
     ints_f.set_scalar(scalar)
 
     # Build new ints for dressed computation
@@ -226,7 +226,7 @@ def forte_driver_fragment(state_weights_map, scf_info, options, ints, mo_space_i
 
     return return_en
 
-def forte_driver_environment(state_weights_map, scf_info, ref_wfn, mo_space_info, mo_space_info_active, ints_e, options):
+def forte_driver_environment(state_weights_map, scf_info, ref_wfn, mo_space_info, mo_space_info_active, options):
     """
     Driver to perform a Forte calculation for embedding environment and downfolding (A+B).
 
@@ -236,7 +236,6 @@ def forte_driver_environment(state_weights_map, scf_info, ref_wfn, mo_space_info
     :param options: a ForteOptions object of Forte
     :param mo_space_info: a MOSpaceInfo object for A + B
     :param mo_space_info_active: a MOSpaceInfo object for A
-    :param ints_e: a ForteIntegrals object of the whole system (size = A + B)
     :param options: a ForteOptions object of Forte
 
     :return: the computed environment energy E_corr, and dressed integrals ints_dressed
@@ -249,16 +248,21 @@ def forte_driver_environment(state_weights_map, scf_info, ref_wfn, mo_space_info
     density = forte.EMBEDDING_DENSITY(state_weights_map, scf_info, mo_space_info, ints_d, options)
 
     rdms = None
+    rdms_active = None
     rdms_level = 3
+    ints_e = None
     if options.get_str('THREEPDC') == 'ZERO':
         rdms_level = 2
 
     if options.get_str('fragment_density') == "RHF":
         rdms = density.rhf_rdms()
+        density_a = forte.EMBEDDING_DENSITY(state_weights_map, scf_info, mo_space_info_active, ints_d, options)
+        rdms_active = density_a.rhf_rdms()
     if options.get_str('fragment_density') == "CASSCF" or options.get_str('fragment_density') == "CASCI": # Default option
         rdms = density.cas_rdms(mo_space_info_active)
-
+        rdms_active = density.rdms_active_slice()
     if options.get_str('fragment_density') == "FULL": # Use active_space_solver to compute the whole fragment (A). Expensive, for benchmarking only
+        ints_e = forte.make_ints_from_psi4(ref_wfn, options, mo_space_info)
         state_map = forte.to_state_nroots_map(state_weights_map)
         as_ints_full = forte.make_active_space_ints(mo_space_info, ints_e, "ACTIVE", ["RESTRICTED_DOCC"])
         as_solver_full = forte.make_active_space_solver(options.get_str('ACTIVE_SPACE_SOLVER'),
@@ -267,6 +271,16 @@ def forte_driver_environment(state_weights_map, scf_info, ref_wfn, mo_space_info
                                                        options)
         state_energies_list = as_solver_full.compute_energy()
         rdms = as_solver_full.compute_average_rdms(state_weights_map, 3)
+
+    # Semi-canonicalize orbitals with respect to new rdms (TODO:testing how much results will be changing due to this modification)
+    if options.get_str('fragment_density') != "FULL":
+        semi = forte.SemiCanonical(mo_space_info_active, ints_d, options)
+        semi.semicanonicalize(rdms_active, rdms_level)
+        ints_e = forte.make_ints_from_psi4(ref_wfn, options, mo_space_info)
+
+    # Build A+B integrals (and wfn)
+    ints_e = forte.make_ints_from_psi4(ref_wfn, options, mo_space_info)
+    nre_env = ints_e.nuclear_repulsion_energy()
 
     # Compute MRDSRG (A+B)
     dsrg = forte.make_dsrg_method(rdms, scf_info, options, ints_e, mo_space_info)
@@ -280,7 +294,7 @@ def forte_driver_environment(state_weights_map, scf_info, ref_wfn, mo_space_info
     # Compute Hbar 1, 2, return the dressed integral
     ints_dressed = dsrg.compute_Heff_actv()
 
-    return E_corr, ints_dressed
+    return E_corr, ints_dressed, nre_env
 
 def update_fragment_options(options, A_list, ref_wfn):
 

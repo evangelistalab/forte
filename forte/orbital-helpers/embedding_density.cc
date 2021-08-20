@@ -141,7 +141,6 @@ RDMs EMBEDDING_DENSITY::rhf_rdms() {
 
 RDMs EMBEDDING_DENSITY::cas_rdms(std::shared_ptr<MOSpaceInfo> mo_space_info_active) {
     // Return RDM from a CASCI/CASSCF computation
-    RDMs ref_rdms;
     int print_level = 0;
     if (options_->get_str("FRAGMENT_DENSITY") == "CASCI") {
         std::string ci_type = options_->get_str("ACTIVE_SPACE_SOLVER");
@@ -161,7 +160,7 @@ RDMs EMBEDDING_DENSITY::cas_rdms(std::shared_ptr<MOSpaceInfo> mo_space_info_acti
         active_space_solver->set_print(print_level);
         active_space_solver->compute_energy();
 
-        ref_rdms = active_space_solver->compute_average_rdms(state_weights_map_, 2);
+        rdms_active_ = active_space_solver->compute_average_rdms(state_weights_map_, 2);
         psi::outfile->Printf(
             "\n CASCI(A) density will be written into the fragment (A) densiy blocks");
     } else if (options_->get_str("FRAGMENT_DENSITY") == "CASSCF") {
@@ -169,7 +168,7 @@ RDMs EMBEDDING_DENSITY::cas_rdms(std::shared_ptr<MOSpaceInfo> mo_space_info_acti
         cas_1.compute_energy();
         psi::outfile->Printf(
             "\n CASSCF(A) density will be written into the fragment (A) densiy blocks");
-        ref_rdms = cas_1.ref_rdms();
+        rdms_active_ = cas_1.ref_rdms();
     }
 
     // Build RDMs with mo_space_info size, fill the blocks
@@ -204,8 +203,8 @@ RDMs EMBEDDING_DENSITY::cas_rdms(std::shared_ptr<MOSpaceInfo> mo_space_info_acti
     auto& D1a_data = D1a.data();
     auto& D1b_data = D1b.data();
 
-    auto g1a_data = ref_rdms.g1a().data();
-    auto g1b_data = ref_rdms.g1b().data();
+    auto g1a_data = rdms_active_.g1a().data();
+    auto g1b_data = rdms_active_.g1b().data();
 
     for (auto i : mos_oa) {
         for (auto j : mos_oa) {
@@ -240,9 +239,9 @@ RDMs EMBEDDING_DENSITY::cas_rdms(std::shared_ptr<MOSpaceInfo> mo_space_info_acti
     auto& D2ab_data = D2ab.data();
     auto& D2bb_data = D2bb.data();
 
-    auto g2aa_data = ref_rdms.g2aa().data();
-    auto g2bb_data = ref_rdms.g2bb().data();
-    auto g2ab_data = ref_rdms.g2ab().data();
+    auto g2aa_data = rdms_active_.g2aa().data();
+    auto g2bb_data = rdms_active_.g2bb().data();
+    auto g2ab_data = rdms_active_.g2ab().data();
 
     for (auto p : mos_actv_in) {
         for (auto q : mos_actv_in) {

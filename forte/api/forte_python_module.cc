@@ -336,7 +336,8 @@ PYBIND11_MODULE(forte, m) {
                       std::shared_ptr<ForteIntegrals>, std::shared_ptr<ForteOptions> >(), 
                       "state_weights_map"_a, "scf_info"_a, "mo_space_info"_a, "ints"_a, "options"_a)
         .def("rhf_rdms", &EMBEDDING_DENSITY::rhf_rdms, "Return RHF RDMs object in the active space")
-        .def("cas_rdms", &EMBEDDING_DENSITY::cas_rdms, "Return CASCI/CASSCF RDMs object in the active space");
+        .def("cas_rdms", &EMBEDDING_DENSITY::cas_rdms, "Return CASCI/CASSCF RDMs object in the active space")
+        .def("rdms_active_slice", &EMBEDDING_DENSITY::rdms_active_slice, "Return the A_active slices of the CASCI/CASSCF RDMs object.");
 }
 
 } // namespace forte

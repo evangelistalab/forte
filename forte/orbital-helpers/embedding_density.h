@@ -44,10 +44,12 @@ class EMBEDDING_DENSITY {
 
     // ==> User's interface <==
 
-    /// Return RHF RDMs
+    /// Return constructed close-shell RDMs (Diag: ....11110000....)
     RDMs rhf_rdms();
-    /// Return CAS RDMs
+    /// Return the computed CAS RDMs
     RDMs cas_rdms(std::shared_ptr<MOSpaceInfo> mo_space_info_active);
+    /// return active slices of the computed RDMs
+    RDMs rdms_active_slice() const {return rdms_active_; }
 
   private:
     /// Set up options and inputs
@@ -64,6 +66,8 @@ class EMBEDDING_DENSITY {
     std::shared_ptr<ForteIntegrals> ints_;
     /// Input options
     std::shared_ptr<ForteOptions> options_;
+    /// Active slice of the RDMs
+    RDMs rdms_active_;
 };
 
 } // namespace forte
