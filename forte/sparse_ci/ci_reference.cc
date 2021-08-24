@@ -546,6 +546,33 @@ CI_Reference::build_occ_string(size_t norb, size_t nele, const std::vector<int>&
     return out;
 }
 
+std::vector<std::vector<std::vector<bool>>>
+CI_Reference::build_occ_string(size_t norb, size_t nele, const std::vector<int>& symmetry,
+                               size_t max_det) {
+    if (nele > norb) {
+        throw psi::PSIEXCEPTION("Invalid number of electron / orbital to build occ string.");
+    }
+
+    std::vector<std::vector<std::vector<bool>>> out(nirrep_, std::vector<std::vector<bool>>());
+
+    std::vector<bool> occ_tmp(norb, false);
+    for (size_t i = norb - nele; i < norb; ++i)
+        occ_tmp[i] = true;
+    size_t det_size = 0;
+    do {
+        int sym = 0;
+        for (size_t p = 0; p < norb; ++p) {
+            if (occ_tmp[p])
+                sym ^= symmetry[p];
+        }
+        out[sym].emplace_back(occ_tmp.begin(), occ_tmp.end());
+        ++det_size;
+    } while (
+        (std::next_permutation(occ_tmp.begin(), occ_tmp.begin() + norb) && (det_size <= max_det)));
+
+    return out;
+}
+
 void CI_Reference::build_doci_reference(std::vector<Determinant>& ref_space) {
     if (root_sym_ != 0) {
         outfile->Printf("\n  State must be totally symmetric for DOCI.");
@@ -742,15 +769,14 @@ void CI_Reference::build_gas_single(std::vector<Determinant>& ref_space) {
             auto norb = mo_space_info_->size(space_name);
             if (norb == 0)
                 continue;
-
             auto sym = mo_space_info_->symmetry(space_name);
 
             // alpha aufbau string of each irrep
-            auto strings = build_occ_string(norb, gas_electrons_[config][2 * gas], sym);
+            auto strings = build_occ_string(norb, gas_electrons_[config][2 * gas], sym, 2000);
             a_tmp.push_back(aufbau_gas_occ(strings, rel_gas_eps[2 * gas]));
 
             // beta aufbau string of each irrep
-            strings = build_occ_string(norb, gas_electrons_[config][2 * gas + 1], sym);
+            strings = build_occ_string(norb, gas_electrons_[config][2 * gas + 1], sym, 2000);
             b_tmp.push_back(aufbau_gas_occ(strings, rel_gas_eps[2 * gas + 1]));
         }
 

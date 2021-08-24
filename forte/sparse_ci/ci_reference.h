@@ -114,6 +114,9 @@ class CI_Reference {
     std::vector<std::vector<std::vector<bool>>> build_occ_string(size_t norb, size_t nele,
                                                                  const std::vector<int>& symmetry);
 
+    std::vector<std::vector<std::vector<bool>>>
+    build_occ_string(size_t norb, size_t nele, const std::vector<int>& symmetry, size_t max_det);
+
     /// Compute the cartesian product of occupation strings
     /// @arg vector of vector of occupation
     /// @return nirrep of vector of occupation
