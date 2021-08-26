@@ -1119,6 +1119,7 @@ void Build_CAS_AO_Fock(psi::SharedWavefunction ref_wfn, int nirrep, psi::Dimensi
     psi::SharedMatrix F_tot(F_inactive->clone());
     F_tot->add(F_active);
     ref_wfn->Fa()->copy(F_tot);
+    ref_wfn->Fb()->copy(F_tot);
 }
 
 // Utility function #3: Build the second MO_SPACE_INFO for ASET(2) inner layer computations

@@ -311,6 +311,10 @@ double CASSCF::compute_energy() {
     ints_->Ca()->copy(Ca);
     ints_->wfn()->Ca()->copy(Ca);
 
+    // Update Cb to avoid differences
+    ints_->Cb()->copy(Ca);
+    ints_->wfn()->Cb()->copy(Ca);
+
     // semicanonicalize
     if (options_->get_str("CASSCF_FINAL_ORBITAL") != "UNSPECIFIED" or
         options_->get_str("DERTYPE") == "FIRST") {
@@ -326,6 +330,9 @@ double CASSCF::compute_energy() {
 
         ints_->Ca()->copy(Ca);
         ints_->wfn()->Ca()->copy(Ca);
+
+        ints_->Cb()->copy(Ca);
+        ints_->wfn()->Cb()->copy(Ca);
 
         if (options_->get_str("DERTYPE") == "FIRST") {
             ints_->update_orbitals(Ca, Ca);

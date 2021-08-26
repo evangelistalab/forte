@@ -3,7 +3,7 @@ import forte
 # ASET2-[DSRG-MRPT3] with 3-PDC on
 
 refmcscf = -9.069030173956
-refaset2 = -9.088016822202
+refaset2 = -9.088016853203
 
 molecule {
 r1=1.65

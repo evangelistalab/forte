@@ -3,7 +3,7 @@ import forte
 # ASET2-[DSRG-MRPT2] with DF integrals
 
 refmcscf = -22.573190415609
-refaset2 = -22.600111797626
+refaset2 = -22.600111826317
 
 molecule {
 r1=1.595
