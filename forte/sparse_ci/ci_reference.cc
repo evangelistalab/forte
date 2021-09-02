@@ -576,7 +576,6 @@ CI_Reference::build_occ_string_subspace(size_t norb, size_t nele, const std::vec
         }
         out[sym].emplace_back(occ_eps_ordered.begin(), occ_eps_ordered.end());
     } while (std::prev_permutation(occ_tmp.begin() + start_index, occ_tmp.begin() + end_index));
-
     return out;
 }
 
@@ -788,6 +787,8 @@ void CI_Reference::build_gas_single(std::vector<Determinant>& ref_space) {
     print_h2("Building GAS Determinants");
     for (size_t config = 0, size = gas_electrons_.size(); config < size; ++config) {
         size_t max_sub_orb = 0;
+
+        // Make sure only one ref is selected.
         if (!ref_space.empty()) {
             break;
         }
