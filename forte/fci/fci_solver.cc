@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2021 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
+ * Copyright (c) 2012-2020 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
  *
  * The copyrights for code used from other parties are included in
  * the corresponding files.
@@ -45,7 +45,6 @@
 #include "string_lists.h"
 #include "helpers/helpers.h"
 #include "helpers/printing.h"
-#include "helpers/string_algorithms.h"
 
 #ifdef HAVE_GA
 #include <ga.h>
@@ -81,13 +80,10 @@ void FCISolver::set_collapse_per_root(int value) { collapse_per_root_ = value; }
 void FCISolver::set_subspace_per_root(int value) { subspace_per_root_ = value; }
 
 void FCISolver::startup() {
-    outfile->Printf("\n Debug #4.1\n");
-    outfile->Printf("\n Values check: %d, %d, %d, %d, %d. \n", active_dim_[0], core_mo_.size(), active_mo_.size(), na_, nb_);
     // Create the string lists
     lists_ = std::shared_ptr<StringLists>(
         new StringLists(twoSubstituitionVVOO, active_dim_, core_mo_, active_mo_, na_, nb_, print_));
 
-    outfile->Printf("\n Debug #4.2\n");
     size_t ndfci = 0;
     for (int h = 0; h < nirrep_; ++h) {
         size_t nastr = lists_->alfa_graph()->strpi(h);
@@ -95,7 +91,6 @@ void FCISolver::startup() {
         ndfci += nastr * nbstr;
     }
 
-    outfile->Printf("\n Debug #4.3\n");
     if (print_) {
         // Print a summary of options
         std::vector<std::pair<std::string, int>> calculation_info{
@@ -112,7 +107,6 @@ void FCISolver::startup() {
             outfile->Printf("    %-39s %10d\n", str_dim.first.c_str(), str_dim.second);
         }
     }
-    outfile->Printf("\n Debug #4.4\n");
 }
 
 void FCISolver::set_options(std::shared_ptr<ForteOptions> options) {
@@ -121,6 +115,7 @@ void FCISolver::set_options(std::shared_ptr<ForteOptions> options) {
     set_fci_iterations(options->get_int("FCI_MAXITER"));
     set_collapse_per_root(options->get_int("DL_COLLAPSE_PER_ROOT"));
     set_subspace_per_root(options->get_int("DL_SUBSPACE_PER_ROOT"));
+    set_print(options->get_int("PRINT"));
     set_ntrial_per_root(options->get_int("NTRIAL_PER_ROOT"));
     set_print(options->get_int("PRINT"));
     set_e_convergence(options->get_double("E_CONVERGENCE"));
@@ -132,10 +127,7 @@ void FCISolver::set_options(std::shared_ptr<ForteOptions> options) {
  */
 double FCISolver::compute_energy() {
     local_timer t;
-    outfile->Printf("\n Debug #4 \n");
     startup();
-
-    outfile->Printf("\n Debug #5 \n");
 
     FCIVector::allocate_temp_space(lists_, print_);
 
@@ -144,15 +136,11 @@ double FCISolver::compute_energy() {
     FCIVector HC(lists_, symmetry_);
     C_->set_print(print_);
 
-    outfile->Printf("\n Debug #6 \n");
-
     size_t fci_size = Hdiag.size();
     Hdiag.form_H_diagonal(as_ints_);
 
     psi::SharedVector b(new Vector("b", fci_size));
     psi::SharedVector sigma(new Vector("sigma", fci_size));
-
-    outfile->Printf("\n Debug #7 \n");
 
     Hdiag.copy_to(sigma);
 
@@ -163,8 +151,6 @@ double FCISolver::compute_energy() {
     dls.set_collapse_per_root(collapse_per_root_);
     dls.set_subspace_per_root(subspace_per_root_);
     dls.startup(sigma);
-
-    outfile->Printf("\n Debug #8 \n");
 
     size_t guess_size = dls.collapse_size();
     auto guess = initial_guess(Hdiag, guess_size, as_ints_);
@@ -189,8 +175,6 @@ double FCISolver::compute_energy() {
         dls.add_guess(sigma);
     }
 
-    outfile->Printf("\n Debug #9 \n");
-
     // Prepare a list of bad roots to project out and pass them to the solver
     std::vector<std::vector<std::pair<size_t, double>>> bad_roots;
     int gr = 0;
@@ -212,8 +196,6 @@ double FCISolver::compute_energy() {
         gr += 1;
     }
     dls.set_project_out(bad_roots);
-
-    outfile->Printf("\n Debug #10 \n");
 
     SolverStatus converged = SolverStatus::NotConverged;
 

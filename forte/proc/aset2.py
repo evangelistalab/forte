@@ -157,12 +157,13 @@ def aset2_driver(state_weights_map, scf_info, ref_wfn, mo_space_info, options):
 
     # Get the number of doccs we should set for the fragment compution   
     docc_B = mo_space_info.dimension("RESTRICTED_DOCC")
+    frz_AB = mo_space_info.dimension("FROZEN_DOCC")
 
     # Reduce na and nb of all states by docc_B
     state_info_list = list(state_weights_map.keys())
     for state_info in state_info_list:
-        na = state_info.na() - docc_B[0]
-        nb = state_info.nb() - docc_B[0]
+        na = state_info.na() - docc_B[0] - frz_AB[0]
+        nb = state_info.nb() - docc_B[0] - frz_AB[0]
         multiplicity = state_info.multiplicity()
         twice_ms = state_info.twice_ms()
         state_info_new = forte.StateInfo(na, nb, multiplicity, twice_ms, 0)
