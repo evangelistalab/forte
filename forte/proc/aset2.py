@@ -153,8 +153,6 @@ def aset2_driver(state_weights_map, scf_info, ref_wfn, mo_space_info, options):
         options.set_str('CORRELATION_SOLVER', "MRDSRG")
         options.set_str('CORR_LEVEL', "PT2")
 
-    psi4.core.print_out("\n    Integral dressing successed !  ")
-
     # Get the number of doccs we should set for the fragment compution   
     docc_B = mo_space_info.dimension("RESTRICTED_DOCC")
     frz_AB = mo_space_info.dimension("FROZEN_DOCC")
