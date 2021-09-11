@@ -119,6 +119,8 @@ class SparseOperator {
     std::vector<std::string> str() const;
     /// @return a latex representation of this operator
     std::string latex() const;
+    /// @return the sparse operator that is the adjoint of this operator
+    SparseOperator adjoint() const;
 
   private:
     /// is this an antihermitian operator?

@@ -202,7 +202,7 @@ BlockedTensorFactory::spin_cases_avoid(const std::vector<std::string>& in_str_ve
 
     std::vector<std::string> out_str_vec;
     if (how_many_active == 1) {
-        for (const std::string spin : in_str_vec) {
+        for (const std::string& spin : in_str_vec) {
             size_t spin_ind = spin.find('a');
             size_t spin_ind2 = spin.find('A');
             if (spin_ind != std::string::npos || spin_ind2 != std::string::npos) {
@@ -210,7 +210,7 @@ BlockedTensorFactory::spin_cases_avoid(const std::vector<std::string>& in_str_ve
             }
         }
     } else if (how_many_active > 1) {
-        for (const std::string spin : in_str_vec) {
+        for (const std::string& spin : in_str_vec) {
             std::string spin_transform = spin;
             std::transform(spin_transform.begin(), spin_transform.end(), spin_transform.begin(),
                            ::tolower);
