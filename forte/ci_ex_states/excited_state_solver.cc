@@ -379,7 +379,6 @@ void ExcitedStateSolver::compute_multistate(psi::SharedVector& PQ_evals) {
 }
 
 void ExcitedStateSolver::dump_wave_function(const std::string& filename) {
-    psi::outfile->Printf("\n Writing %s \n", filename.c_str());
     std::ofstream file(filename);
     file << "# sCI: " << state_.str() << std::endl;
     file << final_wfn_.size() << " " << nroot_ << std::endl;
