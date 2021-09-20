@@ -276,7 +276,11 @@ class DSRG_MRPT2 : public MASTER_DSRG {
      */
     void set_multiplier();
     /**
-     * Solve the Linear System Ax=b and yield Z.
+     * Solve the Linear System Ax=b and yield Z using iterative methods.
+     */
+    void solve_linear_iter();
+    /**
+     * Solve the Linear System Ax=b and yield Z using direct methods.
      */
     void solve_z();
     /**
@@ -319,9 +323,10 @@ class DSRG_MRPT2 : public MASTER_DSRG {
     void set_alpha();
     void set_CI();
     /**
-     * Initializing the b of the Linear System Ax=b.
+     * Setting the b of the Linear System Ax=b.
+     * Parameters: preidx, block_dim
      */
-    void set_b();
+    void set_b(int, std::map<string, int>, std::map<string, int>);
     /**
      * The core-core block of the OPDM Z.
      */
@@ -410,6 +415,7 @@ class DSRG_MRPT2 : public MASTER_DSRG {
     ambit::BlockedTensor T2OverDelta;
 
     // Lagrange multiplier
+    std::vector<double> b;
     ambit::BlockedTensor Z;
     ambit::BlockedTensor Z_b;
     ambit::BlockedTensor Tau1;

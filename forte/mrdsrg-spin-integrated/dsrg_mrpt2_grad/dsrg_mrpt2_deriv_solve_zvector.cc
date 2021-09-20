@@ -502,8 +502,16 @@ void DSRG_MRPT2::set_z_aa_diag() {
     }
 }
 
-void DSRG_MRPT2::set_b() {
+void DSRG_MRPT2::set_b(int dim, std::map<string, int> preidx, std::map<string, int> block_dim) {
     outfile->Printf("\n    Initializing b of the Linear System ............. ");
+    b.resize(dim);
+
+    /*-----------------------------------------------------------------------*
+     |                                                                       |
+     |  Adding the orbital contribution to the b of the Linear System Ax=b.  |
+     |                                                                       |
+     *-----------------------------------------------------------------------*/
+
     Z_b = BTF_->build(CoreTensor, "b(AX=b)", spin_cases({"gg"}));
     // NOTICE: constant b for z{core-virtual}
     BlockedTensor temp = BTF_->build(CoreTensor, "temporal tensor", spin_cases({"hhpp"}));
@@ -760,40 +768,11 @@ void DSRG_MRPT2::set_b() {
 
     Z_b["mw"] -= Z["e1,f"] * V["f,w,e1,m"];
     Z_b["mw"] -= Z["E1,F"] * V["w,F,m,E1"];
-}
 
-void DSRG_MRPT2::solve_z() {
-    set_b();
-
-    int dim_vc = nvirt * ncore, dim_ca = ncore * na, dim_va = nvirt * na,
-        dim_aa = na * (na - 1) / 2, dim_ci = ndets;
-    // dim_ci = 0;
-    int dim = dim_vc + dim_ca + dim_va + dim_aa + dim_ci;
-    int N = dim;
-    int NRHS = 1, LDA = N, LDB = N;
-    int n = N, nrhs = NRHS, lda = LDA, ldb = LDB;
-    std::vector<int> ipiv(N);
-
-    std::vector<double> A(dim * dim);
-    std::vector<double> b(dim);
-
-    std::map<string, int> preidx = {{"vc", 0},
-                                    {"VC", 0},
-                                    {"ca", dim_vc},
-                                    {"CA", dim_vc},
-                                    {"va", dim_vc + dim_ca},
-                                    {"VA", dim_vc + dim_ca},
-                                    {"aa", dim_vc + dim_ca + dim_va},
-                                    {"AA", dim_vc + dim_ca + dim_va},
-                                    {"ci", dim_vc + dim_ca + dim_va + dim_aa}};
-
-    std::map<string, int> block_dim = {{"vc", ncore}, {"VC", ncore}, {"ca", na}, {"CA", na},
-                                       {"va", na},    {"VA", na},    {"aa", 0},  {"AA", 0}};
-
-    // NOTICE:b
     BlockedTensor temp2 = BTF_->build(CoreTensor, "temporal tensor 2", {"gg"});
     BlockedTensor temp3 = BTF_->build(CoreTensor, "Z{active-active} diagonal components", {"aa", "AA"});
 
+    // ACTIVE-ACTIVE
     temp3["uv"] += Z["uv"] * I["uv"];
     temp3["UV"] += Z["UV"] * I["UV"];
 
@@ -835,361 +814,11 @@ void DSRG_MRPT2::solve_z() {
         });
     }
 
-    outfile->Printf("Done");
-    outfile->Printf("\n    Initializing A of the Linear System ............. ");
-
-    // NOTICE: Linear system A
-    BlockedTensor temp1 = BTF_->build(
-        CoreTensor, "temporal tensor 1",
-        {
-            "vcvc", "vcca", "vcva", "vcaa", "cavc", "caca", "cava", "caaa", "vavc", "vaca", "vava",
-            "vaaa", "aavc", "aaca", "aava", "aaaa", "vcVC", "vcCA", "vcVA", "vcAA", "caVC", "caCA",
-            "caVA", "caAA", "vaVC", "vaCA", "vaVA", "vaAA", "aaVC", "aaCA", "aaVA", "aaAA",
-        });
-
-    // VIRTUAL-CORE
-    temp1["e,m,e1,m1"] += Delta1["m1,e1"] * I["e1,e"] * I["m1,m"];
-
-    temp1["e,m,e1,m1"] -= V["e1,e,m1,m"];
-    temp1["e,m,E1,M1"] -= V["e,E1,m,M1"];
-    temp1["e,m,e1,m1"] -= V["m1,e,e1,m"];
-    temp1["e,m,E1,M1"] -= V["e,M1,m,E1"];
-
-    temp1["e,m,m1,u"] -= F["ue"] * I["m,m1"];
-
-    temp1["e,m,n1,u"] -= V["u,e,n1,m"];
-    temp1["e,m,N1,U"] -= V["e,U,m,N1"];
-    temp1["e,m,n1,u"] -= V["n1,e,u,m"];
-    temp1["e,m,N1,U"] -= V["e,N1,m,U"];
-
-    temp1["e,m,n1,u"] += Gamma1_["uv"] * V["v,e,n1,m"];
-    temp1["e,m,N1,U"] += Gamma1_["UV"] * V["e,V,m,N1"];
-    temp1["e,m,n1,u"] += Gamma1_["uv"] * V["n1,e,v,m"];
-    temp1["e,m,N1,U"] += Gamma1_["UV"] * V["e,N1,m,V"];
-
-    temp1["e,m,e1,u"] -= Gamma1_["uv"] * V["e1,e,v,m"];
-    temp1["e,m,E1,U"] -= Gamma1_["UV"] * V["e,E1,m,V"];
-    temp1["e,m,e1,u"] -= Gamma1_["uv"] * V["v,e,e1,m"];
-    temp1["e,m,E1,U"] -= Gamma1_["UV"] * V["e,V,m,E1"];
-
-    temp1["e,m,e1,u"] += F["um"] * I["e,e1"];
-
-    temp1["e,m,u,v"] -= V["veum"];
-    temp1["e,m,U,V"] -= V["eVmU"];
-
-    // CORE-ACTIVE
-    temp1["m,w,e1,m1"] += F["w,e1"] * I["m,m1"];
-    temp1["m,w,e1,m1"] += V["e1,w,m1,m"];
-    temp1["m,w,E1,M1"] += V["w,E1,m,M1"];
-    temp1["m,w,e1,m1"] += V["e1,m,m1,w"];
-    temp1["m,w,E1,M1"] += V["m,E1,w,M1"];
-
-    temp1["m,w,m1,u"] += F["uw"] * I["m1,m"];
-    temp1["m,w,m1,u"] -= H["vw"] * Gamma1_["uv"] * I["m1,m"];
-    temp1["m,w,m1,u"] -= V["v,n1,w,n"] * Gamma1_["uv"] * I["n,n1"] * I["m,m1"];
-    temp1["m,w,m1,u"] -= V["v,N1,w,N"] * Gamma1_["uv"] * I["N,N1"] * I["m,m1"];
-    temp1["m,w,m1,u"] -= 0.5 * V["xywv"] * Gamma2_["uvxy"] * I["m,m1"];
-    temp1["m,w,m1,u"] -= V["xYwV"] * Gamma2_["uVxY"] * I["m,m1"];
-
-    temp1["m,w,n1,u"] += V["u,w,n1,m"];
-    temp1["m,w,N1,U"] += V["w,U,m,N1"];
-    temp1["m,w,n1,u"] += V["u,m,n1,w"];
-    temp1["m,w,N1,U"] += V["m,U,w,N1"];
-
-    temp1["m,w,n1,u"] -= Gamma1_["uv"] * V["v,w,n1,m"];
-    temp1["m,w,N1,U"] -= Gamma1_["UV"] * V["w,V,m,N1"];
-    temp1["m,w,n1,u"] -= Gamma1_["uv"] * V["v,m,n1,w"];
-    temp1["m,w,N1,U"] -= Gamma1_["UV"] * V["m,V,w,N1"];
-
-    temp1["m,w,e1,u"] += Gamma1_["uv"] * V["e1,w,v,m"];
-    temp1["m,w,E1,U"] += Gamma1_["UV"] * V["w,E1,m,V"];
-    temp1["m,w,e1,u"] += Gamma1_["uv"] * V["e1,m,v,w"];
-    temp1["m,w,E1,U"] += Gamma1_["UV"] * V["m,E1,w,V"];
-
-    temp1["m,w,u,v"] += V["vwum"];
-    temp1["m,w,U,V"] += V["wVmU"];
-
-    temp1["m,w,e1,m1"] -= V["e1,u,m1,m"] * Gamma1_["uw"];
-    temp1["m,w,E1,M1"] -= V["u,E1,m,M1"] * Gamma1_["uw"];
-    temp1["m,w,e1,m1"] -= V["e1,m,m1,u"] * Gamma1_["uw"];
-    temp1["m,w,E1,M1"] -= V["m,E1,u,M1"] * Gamma1_["uw"];
-
-    temp1["m,w,n1,w1"] -= F["m,n1"] * I["w,w1"];
-
-    temp1["m,w,n1,u"] -= V["u,v,n1,m"] * Gamma1_["wv"];
-    temp1["m,w,N1,U"] -= V["v,U,m,N1"] * Gamma1_["wv"];
-    temp1["m,w,n1,u"] -= V["u,m,n1,v"] * Gamma1_["wv"];
-    temp1["m,w,N1,U"] -= V["m,U,v,N1"] * Gamma1_["wv"];
-
-    temp1["m,w,n1,u"] += H["m,n1"] * Gamma1_["uw"];
-    temp1["m,w,n1,u"] += V["m,m2,n1,n2"] * Gamma1_["uw"] * I["m2,n2"];
-    temp1["m,w,n1,u"] += V["m,M2,n1,N2"] * Gamma1_["uw"] * I["M2,N2"];
-    temp1["m,w,n1,u"] += 0.5 * V["x,y,n1,m"] * Gamma2_["u,w,x,y"];
-    temp1["m,w,N1,U"] += V["y,X,m,N1"] * Gamma2_["w,U,y,X"];
-    temp1["m,w,n1,u"] += V["m,y,n1,v"] * Gamma2_["u,v,w,y"];
-    temp1["m,w,n1,u"] += V["m,Y,n1,V"] * Gamma2_["u,V,w,Y"];
-    temp1["m,w,N1,U"] += V["m,Y,v,N1"] * Gamma2_["v,U,w,Y"];
-
-    temp1["m,w,e1,u"] -= H["m,e1"] * Gamma1_["uw"];
-    temp1["m,w,e1,u"] -= V["e1,n2,m,m2"] * Gamma1_["uw"] * I["m2,n2"];
-    temp1["m,w,e1,u"] -= V["e1,N2,m,M2"] * Gamma1_["uw"] * I["M2,N2"];
-    temp1["m,w,e1,u"] -= 0.5 * V["e1,m,x,y"] * Gamma2_["u,w,x,y"];
-    temp1["m,w,E1,U"] -= V["m,E1,y,X"] * Gamma2_["w,U,y,X"];
-    temp1["m,w,e1,u"] -= V["e1,v,m,y"] * Gamma2_["u,v,w,y"];
-    temp1["m,w,e1,u"] -= V["e1,V,m,Y"] * Gamma2_["u,V,w,Y"];
-    temp1["m,w,E1,U"] -= V["v,E1,m,Y"] * Gamma2_["v,U,w,Y"];
-
-    temp1["m,w,u1,a1"] -= V["a1,v,u1,m"] * Gamma1_["wv"];
-    temp1["m,w,U1,A1"] -= V["v,A1,m,U1"] * Gamma1_["wv"];
-
-    temp1["m,w,w1,v"] -= F["vm"] * I["w,w1"];
-
-    // VIRTUAL-ACTIVE
-    temp1["e,w,e1,m1"] += F["m1,w"] * I["e,e1"];
-
-    temp1["e,w,e1,u"] += H["vw"] * Gamma1_["uv"] * I["e,e1"];
-    temp1["e,w,e1,u"] += V["v,m,w,m1"] * Gamma1_["uv"] * I["m,m1"] * I["e,e1"];
-    temp1["e,w,e1,u"] += V["v,M,w,M1"] * Gamma1_["uv"] * I["M,M1"] * I["e,e1"];
-    temp1["e,w,e1,u"] += 0.5 * V["xywv"] * Gamma2_["uvxy"] * I["e,e1"];
-    temp1["e,w,e1,u"] += V["xYwV"] * Gamma2_["uVxY"] * I["e,e1"];
-
-    temp1["e,w,e1,m1"] -= V["e1,u,m1,e"] * Gamma1_["uw"];
-    temp1["e,w,E1,M1"] -= V["u,E1,e,M1"] * Gamma1_["uw"];
-    temp1["e,w,e1,m1"] -= V["e1,e,m1,u"] * Gamma1_["uw"];
-    temp1["e,w,E1,M1"] -= V["e,E1,u,M1"] * Gamma1_["uw"];
-
-    temp1["e,w,n1,u"] -= V["u,v,n1,e"] * Gamma1_["wv"];
-    temp1["e,w,N1,U"] -= V["v,U,e,N1"] * Gamma1_["wv"];
-    temp1["e,w,n1,u"] -= V["u,e,n1,v"] * Gamma1_["wv"];
-    temp1["e,w,N1,U"] -= V["e,U,v,N1"] * Gamma1_["wv"];
-
-    temp1["e,w,n1,u"] += H["e,n1"] * Gamma1_["uw"];
-    temp1["e,w,n1,u"] += V["e,m,n1,m1"] * Gamma1_["uw"] * I["m,m1"];
-    temp1["e,w,n1,u"] += V["e,M,n1,M1"] * Gamma1_["uw"] * I["M,M1"];
-    temp1["e,w,n1,u"] += 0.5 * V["x,y,n1,e"] * Gamma2_["u,w,x,y"];
-    temp1["e,w,N1,U"] += V["y,X,e,N1"] * Gamma2_["w,U,y,X"];
-    temp1["e,w,n1,u"] += V["e,y,n1,v"] * Gamma2_["u,v,w,y"];
-    temp1["e,w,n1,u"] += V["e,Y,n1,V"] * Gamma2_["u,V,w,Y"];
-    temp1["e,w,N1,U"] += V["e,Y,v,N1"] * Gamma2_["v,U,w,Y"];
-
-    temp1["e,w,u1,a1"] -= V["u1,e,a1,v"] * Gamma1_["wv"];
-    temp1["e,w,U1,A1"] -= V["e,U1,v,A1"] * Gamma1_["wv"];
-
-    temp1["e,w,w1,v"] -= F["ve"] * I["w,w1"];
-
-    temp1["e,w,e1,u"] -= H["e,e1"] * Gamma1_["uw"];
-    temp1["e,w,e1,u"] -= V["e,m,e1,m1"] * Gamma1_["uw"] * I["m,m1"];
-    temp1["e,w,e1,u"] -= V["e,M,e1,M1"] * Gamma1_["uw"] * I["M,M1"];
-    temp1["e,w,e1,u"] -= 0.5 * V["e1,e,x,y"] * Gamma2_["u,w,x,y"];
-    temp1["e,w,E1,U"] -= V["e,E1,y,X"] * Gamma2_["w,U,y,X"];
-    temp1["e,w,e1,u"] -= V["e,y,e1,v"] * Gamma2_["u,v,w,y"];
-    temp1["e,w,e1,u"] -= V["e,Y,e1,V"] * Gamma2_["u,V,w,Y"];
-    temp1["e,w,E1,U"] -= V["e,Y,v,E1"] * Gamma2_["v,U,w,Y"];
-
-    // ACTIVE-ACTIVE
-    temp1["w,z,w1,z1"] += Delta1["zw"] * I["w,w1"] * I["z,z1"];
-
-    temp1["w,z,e1,m1"] -= V["e1,u,m1,w"] * Gamma1_["uz"];
-    temp1["w,z,E1,M1"] -= V["u,E1,w,M1"] * Gamma1_["uz"];
-    temp1["w,z,e1,m1"] -= V["e1,w,m1,u"] * Gamma1_["uz"];
-    temp1["w,z,E1,M1"] -= V["w,E1,u,M1"] * Gamma1_["uz"];
-
-    temp1["w,z,e1,m1"] += V["e1,u,m1,z"] * Gamma1_["uw"];
-    temp1["w,z,E1,M1"] += V["u,E1,z,M1"] * Gamma1_["uw"];
-    temp1["w,z,e1,m1"] += V["e1,z,m1,u"] * Gamma1_["uw"];
-    temp1["w,z,E1,M1"] += V["z,E1,u,M1"] * Gamma1_["uw"];
-
-    temp1["w,z,n1,z1"] -= F["w,n1"] * I["z,z1"];
-    temp1["w,z,n1,w1"] += F["z,n1"] * I["w,w1"];
-
-    temp1["w,z,n1,u"] -= V["u,v,n1,w"] * Gamma1_["zv"];
-    temp1["w,z,N1,U"] -= V["v,U,w,N1"] * Gamma1_["zv"];
-    temp1["w,z,n1,u"] -= V["u,w,n1,v"] * Gamma1_["zv"];
-    temp1["w,z,N1,U"] -= V["w,U,v,N1"] * Gamma1_["zv"];
-
-    temp1["w,z,n1,u"] += V["u,v,n1,z"] * Gamma1_["wv"];
-    temp1["w,z,N1,U"] += V["v,U,z,N1"] * Gamma1_["wv"];
-    temp1["w,z,n1,u"] += V["u,z,n1,v"] * Gamma1_["wv"];
-    temp1["w,z,N1,U"] += V["z,U,v,N1"] * Gamma1_["wv"];
-
-    temp1["w,z,n1,u"] += H["w,n1"] * Gamma1_["uz"];
-    temp1["w,z,n1,u"] += V["w,m1,n1,m"] * Gamma1_["uz"] * I["m1,m"];
-    temp1["w,z,n1,u"] += V["w,M1,n1,M"] * Gamma1_["uz"] * I["M1,M"];
-    temp1["w,z,n1,u"] += 0.5 * V["x,y,n1,w"] * Gamma2_["u,z,x,y"];
-    temp1["w,z,N1,U"] += V["y,X,w,N1"] * Gamma2_["z,U,y,X"];
-    temp1["w,z,n1,u"] += V["w,y,n1,v"] * Gamma2_["u,v,z,y"];
-    temp1["w,z,n1,u"] += V["w,Y,n1,V"] * Gamma2_["u,V,z,Y"];
-    temp1["w,z,N1,U"] += V["w,Y,v,N1"] * Gamma2_["v,U,z,Y"];
-
-    temp1["w,z,n1,u"] -= H["z,n1"] * Gamma1_["uw"];
-    temp1["w,z,n1,u"] -= V["z,m1,n1,m"] * Gamma1_["uw"] * I["m1,m"];
-    temp1["w,z,n1,u"] -= V["z,M1,n1,M"] * Gamma1_["uw"] * I["M1,M"];
-    temp1["w,z,n1,u"] -= 0.5 * V["x,y,n1,z"] * Gamma2_["u,w,x,y"];
-    temp1["w,z,N1,U"] -= V["y,X,z,N1"] * Gamma2_["w,U,y,X"];
-    temp1["w,z,n1,u"] -= V["z,y,n1,v"] * Gamma2_["u,v,w,y"];
-    temp1["w,z,n1,u"] -= V["z,Y,n1,V"] * Gamma2_["u,V,w,Y"];
-    temp1["w,z,N1,U"] -= V["z,Y,v,N1"] * Gamma2_["v,U,w,Y"];
-
-    temp1["w,z,e1,u"] -= H["w,e1"] * Gamma1_["uz"];
-    temp1["w,z,e1,u"] -= V["e1,m,w,m1"] * Gamma1_["uz"] * I["m1,m"];
-    temp1["w,z,e1,u"] -= V["e1,M,w,M1"] * Gamma1_["uz"] * I["M1,M"];
-    temp1["w,z,e1,u"] -= 0.5 * V["e1,w,x,y"] * Gamma2_["u,z,x,y"];
-    temp1["w,z,E1,U"] -= V["w,E1,y,X"] * Gamma2_["z,U,y,X"];
-    temp1["w,z,e1,u"] -= V["e1,v,w,y"] * Gamma2_["u,v,z,y"];
-    temp1["w,z,e1,u"] -= V["e1,V,w,Y"] * Gamma2_["u,V,z,Y"];
-    temp1["w,z,E1,U"] -= V["v,E1,w,Y"] * Gamma2_["v,U,z,Y"];
-
-    temp1["w,z,e1,u"] += H["z,e1"] * Gamma1_["uw"];
-    temp1["w,z,e1,u"] += V["e1,m,z,m1"] * Gamma1_["uw"] * I["m1,m"];
-    temp1["w,z,e1,u"] += V["e1,M,z,M1"] * Gamma1_["uw"] * I["M1,M"];
-    temp1["w,z,e1,u"] += 0.5 * V["e1,z,x,y"] * Gamma2_["u,w,x,y"];
-    temp1["w,z,E1,U"] += V["z,E1,y,X"] * Gamma2_["w,U,y,X"];
-    temp1["w,z,e1,u"] += V["e1,v,z,y"] * Gamma2_["u,v,w,y"];
-    temp1["w,z,e1,u"] += V["e1,V,z,Y"] * Gamma2_["u,V,w,Y"];
-    temp1["w,z,E1,U"] += V["v,E1,z,Y"] * Gamma2_["v,U,w,Y"];
-
-    temp1["w,z,u1,a1"] -= V["a1,v,u1,w"] * Gamma1_["zv"];
-    temp1["w,z,U1,A1"] -= V["v,A1,w,U1"] * Gamma1_["zv"];
-
-    temp1["w,z,u1,a1"] += V["a1,v,u1,z"] * Gamma1_["wv"];
-    temp1["w,z,U1,A1"] += V["v,A1,z,U1"] * Gamma1_["wv"];
-
-    for (const std::string& row : {"vc", "ca", "va", "aa"}) {
-        int idx1 = block_dim[row];
-        int pre1 = preidx[row];
-
-        for (const std::string& col : {"vc", "VC", "ca", "CA", "va", "VA", "aa", "AA"}) {
-            int idx2 = block_dim[col];
-            int pre2 = preidx[col];
-            if (row != "aa" && col != "aa" && col != "AA") {
-                (temp1.block(row + col)).iterate([&](const std::vector<size_t>& i, double& value) {
-                    int index = (pre1 + i[0] * idx1 + i[1]) + dim * (pre2 + i[2] * idx2 + i[3]);
-                    A.at(index) += value;
-                });
-            } else if (row == "aa" && col != "aa" && col != "AA") {
-                (temp1.block(row + col)).iterate([&](const std::vector<size_t>& i, double& value) {
-                    if (i[0] > i[1]) {
-                        int index = (pre1 + i[0] * (i[0] - 1) / 2 + i[1]) +
-                                    dim * (pre2 + i[2] * idx2 + i[3]);
-                        A.at(index) += value;
-                    }
-                });
-            } else if (row != "aa" && (col == "aa" || col == "AA")) {
-                (temp1.block(row + col)).iterate([&](const std::vector<size_t>& i, double& value) {
-                    int i2 = i[2] > i[3] ? i[2] : i[3], i3 = i[2] > i[3] ? i[3] : i[2];
-                    if (i2 != i3) {
-                        int index =
-                            (pre1 + i[0] * idx1 + i[1]) + dim * (pre2 + i2 * (i2 - 1) / 2 + i3);
-                        A.at(index) += value;
-                    }
-                });
-            } else {
-                (temp1.block(row + col)).iterate([&](const std::vector<size_t>& i, double& value) {
-                    int i2 = i[2] > i[3] ? i[2] : i[3], i3 = i[2] > i[3] ? i[3] : i[2];
-                    if (i[0] > i[1] && i2 != i3) {
-                        int index = (pre1 + i[0] * (i[0] - 1) / 2 + i[1]) +
-                                    dim * (pre2 + i2 * (i2 - 1) / 2 + i3);
-                        A.at(index) += value;
-                    }
-                });
-            }
-        }
-    }
-
-    // CI contribution
-    auto ci_vc =
-        ambit::Tensor::build(ambit::CoreTensor, "ci contribution to z{vc}", {ndets, nvirt, ncore});
-    auto ci_ca =
-        ambit::Tensor::build(ambit::CoreTensor, "ci contribution to z{ca}", {ndets, ncore, na});
-    auto ci_va =
-        ambit::Tensor::build(ambit::CoreTensor, "ci contribution to z{va}", {ndets, nvirt, na});
-    auto ci_aa =
-        ambit::Tensor::build(ambit::CoreTensor, "ci contribution to z{aa}", {ndets, na, na});
-
-    // CI contribution to Z{VC}
-    ci_vc("Iem") -= H.block("vc")("em") * ci("I");
-    ci_vc("Iem") -= V_sumA_Alpha.block("cv")("me") * ci("I");
-    ci_vc("Iem") -= V_sumB_Alpha.block("cv")("me") * ci("I");
-    ci_vc("Iem") -= 0.5 * V.block("avac")("veum") * cc1a("Iuv");
-    ci_vc("Iem") -= 0.5 * V.block("vAcA")("eVmU") * cc1b("IUV");
-
-    // CI contribution to Z{CA}
-    ci_ca("Imw") -= 0.50 * H.block("ac")("vm") * cc1a("Iwv");
-    ci_ca("Imw") -= 0.25 * V_sumA_Alpha.block("ac")("um") * cc1a("Iuw");
-    ci_ca("Imw") -= 0.25 * V_sumB_Alpha.block("ac")("um") * cc1a("Iuw");
-    ci_ca("Imw") -= 0.25 * V_sumA_Alpha.block("ca")("mv") * cc1a("Iwv");
-    ci_ca("Imw") -= 0.25 * V_sumB_Alpha.block("ca")("mv") * cc1a("Iwv");
-    ci_ca("Imw") -= 0.125 * V.block("aaca")("xymv") * cc2aa("Iwvxy");
-    ci_ca("Imw") -= 0.250 * V.block("aAcA")("xYmV") * cc2ab("IwVxY");
-    ci_ca("Imw") -= 0.125 * V.block("aaac")("xyum") * cc2aa("Iuwxy");
-    ci_ca("Imw") -= 0.250 * V.block("aAcA")("xYmU") * cc2ab("IwUxY");
-
-    ci_ca("Imw") += H.block("ac")("wm") * ci("I");
-    ci_ca("Imw") += V_sumA_Alpha.block("ca")("mw") * ci("I");
-    ci_ca("Imw") += V_sumB_Alpha.block("ca")("mw") * ci("I");
-    ci_ca("Imw") += 0.5 * V.block("aaac")("vwum") * cc1a("Iuv");
-    ci_ca("Imw") += 0.5 * V.block("aAcA")("wVmU") * cc1b("IUV");
-
-    // CI contribution to Z{VA}
-    ci_va("Iew") -= 0.50 * H.block("av")("ve") * cc1a("Iwv");
-    ci_va("Iew") -= 0.25 * V_sumA_Alpha.block("av")("ue") * cc1a("Iuw");
-    ci_va("Iew") -= 0.25 * V_sumB_Alpha.block("av")("ue") * cc1a("Iuw");
-    ci_va("Iew") -= 0.25 * V_sumA_Alpha.block("va")("ev") * cc1a("Iwv");
-    ci_va("Iew") -= 0.25 * V_sumB_Alpha.block("va")("ev") * cc1a("Iwv");
-    ci_va("Iew") -= 0.125 * V.block("vaaa")("evxy") * cc2aa("Iwvxy");
-    ci_va("Iew") -= 0.250 * V.block("vAaA")("eVxY") * cc2ab("IwVxY");
-    ci_va("Iew") -= 0.125 * V.block("avaa")("uexy") * cc2aa("Iuwxy");
-    ci_va("Iew") -= 0.250 * V.block("vAaA")("eUxY") * cc2ab("IwUxY");
-
-    // CI contribution to Z{AA}
-    ci_aa("Iwz") -= 0.50 * H.block("aa")("vw") * cc1a("Izv");
-    ci_aa("Iwz") += 0.50 * H.block("aa")("vz") * cc1a("Iwv");
-    ci_aa("Iwz") -= 0.25 * V_sumA_Alpha.block("aa")("uw") * cc1a("Iuz");
-    ci_aa("Iwz") -= 0.25 * V_sumB_Alpha.block("aa")("uw") * cc1a("Iuz");
-    ci_aa("Iwz") -= 0.25 * V_sumA_Alpha.block("aa")("wv") * cc1a("Izv");
-    ci_aa("Iwz") -= 0.25 * V_sumB_Alpha.block("aa")("wv") * cc1a("Izv");
-    ci_aa("Iwz") += 0.25 * V_sumA_Alpha.block("aa")("uz") * cc1a("Iuw");
-    ci_aa("Iwz") += 0.25 * V_sumB_Alpha.block("aa")("uz") * cc1a("Iuw");
-    ci_aa("Iwz") += 0.25 * V_sumA_Alpha.block("aa")("zv") * cc1a("Iwv");
-    ci_aa("Iwz") += 0.25 * V_sumB_Alpha.block("aa")("zv") * cc1a("Iwv");
-
-    ci_aa("Iwz") -= 0.125 * V.block("aaaa")("wvxy") * cc2aa("Izvxy");
-    ci_aa("Iwz") -= 0.250 * V.block("aAaA")("wVxY") * cc2ab("IzVxY");
-    ci_aa("Iwz") -= 0.125 * V.block("aaaa")("uwxy") * cc2aa("Iuzxy");
-    ci_aa("Iwz") -= 0.250 * V.block("aAaA")("wUxY") * cc2ab("IzUxY");
-    ci_aa("Iwz") += 0.125 * V.block("aaaa")("zvxy") * cc2aa("Iwvxy");
-    ci_aa("Iwz") += 0.250 * V.block("aAaA")("zVxY") * cc2ab("IwVxY");
-    ci_aa("Iwz") += 0.125 * V.block("aaaa")("uzxy") * cc2aa("Iuwxy");
-    ci_aa("Iwz") += 0.250 * V.block("aAaA")("zUxY") * cc2ab("IwUxY");
-
-    for (const std::string& row : {"vc", "ca", "va", "aa"}) {
-        int idx1 = block_dim[row];
-        int pre1 = preidx[row];
-        auto temp_ci = ci_vc;
-        if (row == "ca")
-            temp_ci = ci_ca;
-        else if (row == "va")
-            temp_ci = ci_va;
-        else if (row == "aa")
-            temp_ci = ci_aa;
-
-        for (const std::string& col : {"ci"}) {
-            int pre2 = preidx[col];
-            if (row != "aa") {
-                (temp_ci).iterate([&](const std::vector<size_t>& i, double& value) {
-                    int index = (pre1 + i[1] * idx1 + i[2]) + dim * (pre2 + i[0]);
-                    A.at(index) += value;
-                });
-            } else if (row == "aa") {
-                (temp_ci).iterate([&](const std::vector<size_t>& i, double& value) {
-                    if (i[1] > i[2]) {
-                        int index = (pre1 + i[1] * (i[1] - 1) / 2 + i[2]) + dim * (pre2 + i[0]);
-                        A.at(index) += value;
-                    }
-                });
-            }
-        }
-    }
+    /*------------------------------------------------------------------*
+     |                                                                  |
+     |  Adding the CI contribution to the b of the Linear System Ax=b.  |
+     |                                                                  |
+     *------------------------------------------------------------------*/
 
     auto b_ck = ambit::Tensor::build(ambit::CoreTensor, "ci equations b part", {ndets});
     b_ck("K") -= H.block("aa")("vu") * cc1a("Kuv");
@@ -1205,7 +834,7 @@ void DSRG_MRPT2::solve_z() {
     b_ck("K") -= 0.25 * V.block("AAAA")("XYUV") * cc2bb("KUVXY");
     b_ck("K") -= V.block("aAaA")("xYuV") * cc2ab("KuVxY");
 
-    // Alpha
+    // Solving the multiplier Alpha (the CI normalization condition)
     Alpha = 0.0;
     Alpha += H["vu"] * Gamma1_["uv"];
     Alpha += H["VU"] * Gamma1_["UV"];
@@ -1217,8 +846,7 @@ void DSRG_MRPT2::solve_z() {
     Alpha += 0.25 * V["XYUV"] * Gamma2_["UVXY"];
     Alpha += V["xYuV"] * Gamma2_["uVxY"];
 
-    BlockedTensor temp = BTF_->build(CoreTensor, "temporal tensor", {"aa", "AA"});
-
+    temp = BTF_->build(CoreTensor, "temporal tensor", {"aa", "AA"});
     if (PT2_TERM) {
         temp["uv"] += 0.25 * T2_["vmef"] * V_["efum"];
         temp["uv"] += 0.25 * T2_["vmez"] * V_["ewum"] * Eta1_["zw"];
@@ -1912,6 +1540,393 @@ void DSRG_MRPT2::solve_z() {
             int index = preidx[block] + i[0];
             b.at(index) = value;
         });
+    }
+
+    outfile->Printf("Done");
+}
+
+// TODO
+// void solve_linear_iter() {
+//     set_b();
+// }
+
+void DSRG_MRPT2::solve_z() {
+
+    int dim_vc = nvirt * ncore, dim_ca = ncore * na, dim_va = nvirt * na,
+        dim_aa = na * (na - 1) / 2, dim_ci = ndets;
+    // dim_ci = 0;
+    int dim = dim_vc + dim_ca + dim_va + dim_aa + dim_ci;
+    int N = dim;
+    int NRHS = 1, LDA = N, LDB = N;
+    int n = N, nrhs = NRHS, lda = LDA, ldb = LDB;
+    std::vector<int> ipiv(N);
+    std::map<string, int> preidx = {{"vc", 0},
+                                    {"VC", 0},
+                                    {"ca", dim_vc},
+                                    {"CA", dim_vc},
+                                    {"va", dim_vc + dim_ca},
+                                    {"VA", dim_vc + dim_ca},
+                                    {"aa", dim_vc + dim_ca + dim_va},
+                                    {"AA", dim_vc + dim_ca + dim_va},
+                                    {"ci", dim_vc + dim_ca + dim_va + dim_aa}};
+
+    std::map<string, int> block_dim = {{"vc", ncore}, {"VC", ncore}, {"ca", na}, {"CA", na},
+                                       {"va", na},    {"VA", na},    {"aa", 0},  {"AA", 0}};
+    set_b(dim, preidx, block_dim);
+
+    outfile->Printf("\n    Initializing A of the Linear System ............. ");
+    std::vector<double> A(dim * dim);
+    // NOTICE: Linear system A
+    BlockedTensor temp1 = BTF_->build(
+        CoreTensor, "temporal tensor 1",
+        {
+            "vcvc", "vcca", "vcva", "vcaa", "cavc", "caca", "cava", "caaa", "vavc", "vaca", "vava",
+            "vaaa", "aavc", "aaca", "aava", "aaaa", "vcVC", "vcCA", "vcVA", "vcAA", "caVC", "caCA",
+            "caVA", "caAA", "vaVC", "vaCA", "vaVA", "vaAA", "aaVC", "aaCA", "aaVA", "aaAA",
+        });
+
+    // VIRTUAL-CORE
+    temp1["e,m,e1,m1"] += Delta1["m1,e1"] * I["e1,e"] * I["m1,m"];
+
+    temp1["e,m,e1,m1"] -= V["e1,e,m1,m"];
+    temp1["e,m,E1,M1"] -= V["e,E1,m,M1"];
+    temp1["e,m,e1,m1"] -= V["m1,e,e1,m"];
+    temp1["e,m,E1,M1"] -= V["e,M1,m,E1"];
+
+    temp1["e,m,m1,u"] -= F["ue"] * I["m,m1"];
+
+    temp1["e,m,n1,u"] -= V["u,e,n1,m"];
+    temp1["e,m,N1,U"] -= V["e,U,m,N1"];
+    temp1["e,m,n1,u"] -= V["n1,e,u,m"];
+    temp1["e,m,N1,U"] -= V["e,N1,m,U"];
+
+    temp1["e,m,n1,u"] += Gamma1_["uv"] * V["v,e,n1,m"];
+    temp1["e,m,N1,U"] += Gamma1_["UV"] * V["e,V,m,N1"];
+    temp1["e,m,n1,u"] += Gamma1_["uv"] * V["n1,e,v,m"];
+    temp1["e,m,N1,U"] += Gamma1_["UV"] * V["e,N1,m,V"];
+
+    temp1["e,m,e1,u"] -= Gamma1_["uv"] * V["e1,e,v,m"];
+    temp1["e,m,E1,U"] -= Gamma1_["UV"] * V["e,E1,m,V"];
+    temp1["e,m,e1,u"] -= Gamma1_["uv"] * V["v,e,e1,m"];
+    temp1["e,m,E1,U"] -= Gamma1_["UV"] * V["e,V,m,E1"];
+
+    temp1["e,m,e1,u"] += F["um"] * I["e,e1"];
+
+    temp1["e,m,u,v"] -= V["veum"];
+    temp1["e,m,U,V"] -= V["eVmU"];
+
+    // CORE-ACTIVE
+    temp1["m,w,e1,m1"] += F["w,e1"] * I["m,m1"];
+    temp1["m,w,e1,m1"] += V["e1,w,m1,m"];
+    temp1["m,w,E1,M1"] += V["w,E1,m,M1"];
+    temp1["m,w,e1,m1"] += V["e1,m,m1,w"];
+    temp1["m,w,E1,M1"] += V["m,E1,w,M1"];
+
+    temp1["m,w,m1,u"] += F["uw"] * I["m1,m"];
+    temp1["m,w,m1,u"] -= H["vw"] * Gamma1_["uv"] * I["m1,m"];
+    temp1["m,w,m1,u"] -= V["v,n1,w,n"] * Gamma1_["uv"] * I["n,n1"] * I["m,m1"];
+    temp1["m,w,m1,u"] -= V["v,N1,w,N"] * Gamma1_["uv"] * I["N,N1"] * I["m,m1"];
+    temp1["m,w,m1,u"] -= 0.5 * V["xywv"] * Gamma2_["uvxy"] * I["m,m1"];
+    temp1["m,w,m1,u"] -= V["xYwV"] * Gamma2_["uVxY"] * I["m,m1"];
+
+    temp1["m,w,n1,u"] += V["u,w,n1,m"];
+    temp1["m,w,N1,U"] += V["w,U,m,N1"];
+    temp1["m,w,n1,u"] += V["u,m,n1,w"];
+    temp1["m,w,N1,U"] += V["m,U,w,N1"];
+
+    temp1["m,w,n1,u"] -= Gamma1_["uv"] * V["v,w,n1,m"];
+    temp1["m,w,N1,U"] -= Gamma1_["UV"] * V["w,V,m,N1"];
+    temp1["m,w,n1,u"] -= Gamma1_["uv"] * V["v,m,n1,w"];
+    temp1["m,w,N1,U"] -= Gamma1_["UV"] * V["m,V,w,N1"];
+
+    temp1["m,w,e1,u"] += Gamma1_["uv"] * V["e1,w,v,m"];
+    temp1["m,w,E1,U"] += Gamma1_["UV"] * V["w,E1,m,V"];
+    temp1["m,w,e1,u"] += Gamma1_["uv"] * V["e1,m,v,w"];
+    temp1["m,w,E1,U"] += Gamma1_["UV"] * V["m,E1,w,V"];
+
+    temp1["m,w,u,v"] += V["vwum"];
+    temp1["m,w,U,V"] += V["wVmU"];
+
+    temp1["m,w,e1,m1"] -= V["e1,u,m1,m"] * Gamma1_["uw"];
+    temp1["m,w,E1,M1"] -= V["u,E1,m,M1"] * Gamma1_["uw"];
+    temp1["m,w,e1,m1"] -= V["e1,m,m1,u"] * Gamma1_["uw"];
+    temp1["m,w,E1,M1"] -= V["m,E1,u,M1"] * Gamma1_["uw"];
+
+    temp1["m,w,n1,w1"] -= F["m,n1"] * I["w,w1"];
+
+    temp1["m,w,n1,u"] -= V["u,v,n1,m"] * Gamma1_["wv"];
+    temp1["m,w,N1,U"] -= V["v,U,m,N1"] * Gamma1_["wv"];
+    temp1["m,w,n1,u"] -= V["u,m,n1,v"] * Gamma1_["wv"];
+    temp1["m,w,N1,U"] -= V["m,U,v,N1"] * Gamma1_["wv"];
+
+    temp1["m,w,n1,u"] += H["m,n1"] * Gamma1_["uw"];
+    temp1["m,w,n1,u"] += V["m,m2,n1,n2"] * Gamma1_["uw"] * I["m2,n2"];
+    temp1["m,w,n1,u"] += V["m,M2,n1,N2"] * Gamma1_["uw"] * I["M2,N2"];
+    temp1["m,w,n1,u"] += 0.5 * V["x,y,n1,m"] * Gamma2_["u,w,x,y"];
+    temp1["m,w,N1,U"] += V["y,X,m,N1"] * Gamma2_["w,U,y,X"];
+    temp1["m,w,n1,u"] += V["m,y,n1,v"] * Gamma2_["u,v,w,y"];
+    temp1["m,w,n1,u"] += V["m,Y,n1,V"] * Gamma2_["u,V,w,Y"];
+    temp1["m,w,N1,U"] += V["m,Y,v,N1"] * Gamma2_["v,U,w,Y"];
+
+    temp1["m,w,e1,u"] -= H["m,e1"] * Gamma1_["uw"];
+    temp1["m,w,e1,u"] -= V["e1,n2,m,m2"] * Gamma1_["uw"] * I["m2,n2"];
+    temp1["m,w,e1,u"] -= V["e1,N2,m,M2"] * Gamma1_["uw"] * I["M2,N2"];
+    temp1["m,w,e1,u"] -= 0.5 * V["e1,m,x,y"] * Gamma2_["u,w,x,y"];
+    temp1["m,w,E1,U"] -= V["m,E1,y,X"] * Gamma2_["w,U,y,X"];
+    temp1["m,w,e1,u"] -= V["e1,v,m,y"] * Gamma2_["u,v,w,y"];
+    temp1["m,w,e1,u"] -= V["e1,V,m,Y"] * Gamma2_["u,V,w,Y"];
+    temp1["m,w,E1,U"] -= V["v,E1,m,Y"] * Gamma2_["v,U,w,Y"];
+
+    temp1["m,w,u1,a1"] -= V["a1,v,u1,m"] * Gamma1_["wv"];
+    temp1["m,w,U1,A1"] -= V["v,A1,m,U1"] * Gamma1_["wv"];
+
+    temp1["m,w,w1,v"] -= F["vm"] * I["w,w1"];
+
+    // VIRTUAL-ACTIVE
+    temp1["e,w,e1,m1"] += F["m1,w"] * I["e,e1"];
+
+    temp1["e,w,e1,u"] += H["vw"] * Gamma1_["uv"] * I["e,e1"];
+    temp1["e,w,e1,u"] += V["v,m,w,m1"] * Gamma1_["uv"] * I["m,m1"] * I["e,e1"];
+    temp1["e,w,e1,u"] += V["v,M,w,M1"] * Gamma1_["uv"] * I["M,M1"] * I["e,e1"];
+    temp1["e,w,e1,u"] += 0.5 * V["xywv"] * Gamma2_["uvxy"] * I["e,e1"];
+    temp1["e,w,e1,u"] += V["xYwV"] * Gamma2_["uVxY"] * I["e,e1"];
+
+    temp1["e,w,e1,m1"] -= V["e1,u,m1,e"] * Gamma1_["uw"];
+    temp1["e,w,E1,M1"] -= V["u,E1,e,M1"] * Gamma1_["uw"];
+    temp1["e,w,e1,m1"] -= V["e1,e,m1,u"] * Gamma1_["uw"];
+    temp1["e,w,E1,M1"] -= V["e,E1,u,M1"] * Gamma1_["uw"];
+
+    temp1["e,w,n1,u"] -= V["u,v,n1,e"] * Gamma1_["wv"];
+    temp1["e,w,N1,U"] -= V["v,U,e,N1"] * Gamma1_["wv"];
+    temp1["e,w,n1,u"] -= V["u,e,n1,v"] * Gamma1_["wv"];
+    temp1["e,w,N1,U"] -= V["e,U,v,N1"] * Gamma1_["wv"];
+
+    temp1["e,w,n1,u"] += H["e,n1"] * Gamma1_["uw"];
+    temp1["e,w,n1,u"] += V["e,m,n1,m1"] * Gamma1_["uw"] * I["m,m1"];
+    temp1["e,w,n1,u"] += V["e,M,n1,M1"] * Gamma1_["uw"] * I["M,M1"];
+    temp1["e,w,n1,u"] += 0.5 * V["x,y,n1,e"] * Gamma2_["u,w,x,y"];
+    temp1["e,w,N1,U"] += V["y,X,e,N1"] * Gamma2_["w,U,y,X"];
+    temp1["e,w,n1,u"] += V["e,y,n1,v"] * Gamma2_["u,v,w,y"];
+    temp1["e,w,n1,u"] += V["e,Y,n1,V"] * Gamma2_["u,V,w,Y"];
+    temp1["e,w,N1,U"] += V["e,Y,v,N1"] * Gamma2_["v,U,w,Y"];
+
+    temp1["e,w,u1,a1"] -= V["u1,e,a1,v"] * Gamma1_["wv"];
+    temp1["e,w,U1,A1"] -= V["e,U1,v,A1"] * Gamma1_["wv"];
+
+    temp1["e,w,w1,v"] -= F["ve"] * I["w,w1"];
+
+    temp1["e,w,e1,u"] -= H["e,e1"] * Gamma1_["uw"];
+    temp1["e,w,e1,u"] -= V["e,m,e1,m1"] * Gamma1_["uw"] * I["m,m1"];
+    temp1["e,w,e1,u"] -= V["e,M,e1,M1"] * Gamma1_["uw"] * I["M,M1"];
+    temp1["e,w,e1,u"] -= 0.5 * V["e1,e,x,y"] * Gamma2_["u,w,x,y"];
+    temp1["e,w,E1,U"] -= V["e,E1,y,X"] * Gamma2_["w,U,y,X"];
+    temp1["e,w,e1,u"] -= V["e,y,e1,v"] * Gamma2_["u,v,w,y"];
+    temp1["e,w,e1,u"] -= V["e,Y,e1,V"] * Gamma2_["u,V,w,Y"];
+    temp1["e,w,E1,U"] -= V["e,Y,v,E1"] * Gamma2_["v,U,w,Y"];
+
+    // ACTIVE-ACTIVE
+    temp1["w,z,w1,z1"] += Delta1["zw"] * I["w,w1"] * I["z,z1"];
+
+    temp1["w,z,e1,m1"] -= V["e1,u,m1,w"] * Gamma1_["uz"];
+    temp1["w,z,E1,M1"] -= V["u,E1,w,M1"] * Gamma1_["uz"];
+    temp1["w,z,e1,m1"] -= V["e1,w,m1,u"] * Gamma1_["uz"];
+    temp1["w,z,E1,M1"] -= V["w,E1,u,M1"] * Gamma1_["uz"];
+
+    temp1["w,z,e1,m1"] += V["e1,u,m1,z"] * Gamma1_["uw"];
+    temp1["w,z,E1,M1"] += V["u,E1,z,M1"] * Gamma1_["uw"];
+    temp1["w,z,e1,m1"] += V["e1,z,m1,u"] * Gamma1_["uw"];
+    temp1["w,z,E1,M1"] += V["z,E1,u,M1"] * Gamma1_["uw"];
+
+    temp1["w,z,n1,z1"] -= F["w,n1"] * I["z,z1"];
+    temp1["w,z,n1,w1"] += F["z,n1"] * I["w,w1"];
+
+    temp1["w,z,n1,u"] -= V["u,v,n1,w"] * Gamma1_["zv"];
+    temp1["w,z,N1,U"] -= V["v,U,w,N1"] * Gamma1_["zv"];
+    temp1["w,z,n1,u"] -= V["u,w,n1,v"] * Gamma1_["zv"];
+    temp1["w,z,N1,U"] -= V["w,U,v,N1"] * Gamma1_["zv"];
+
+    temp1["w,z,n1,u"] += V["u,v,n1,z"] * Gamma1_["wv"];
+    temp1["w,z,N1,U"] += V["v,U,z,N1"] * Gamma1_["wv"];
+    temp1["w,z,n1,u"] += V["u,z,n1,v"] * Gamma1_["wv"];
+    temp1["w,z,N1,U"] += V["z,U,v,N1"] * Gamma1_["wv"];
+
+    temp1["w,z,n1,u"] += H["w,n1"] * Gamma1_["uz"];
+    temp1["w,z,n1,u"] += V["w,m1,n1,m"] * Gamma1_["uz"] * I["m1,m"];
+    temp1["w,z,n1,u"] += V["w,M1,n1,M"] * Gamma1_["uz"] * I["M1,M"];
+    temp1["w,z,n1,u"] += 0.5 * V["x,y,n1,w"] * Gamma2_["u,z,x,y"];
+    temp1["w,z,N1,U"] += V["y,X,w,N1"] * Gamma2_["z,U,y,X"];
+    temp1["w,z,n1,u"] += V["w,y,n1,v"] * Gamma2_["u,v,z,y"];
+    temp1["w,z,n1,u"] += V["w,Y,n1,V"] * Gamma2_["u,V,z,Y"];
+    temp1["w,z,N1,U"] += V["w,Y,v,N1"] * Gamma2_["v,U,z,Y"];
+
+    temp1["w,z,n1,u"] -= H["z,n1"] * Gamma1_["uw"];
+    temp1["w,z,n1,u"] -= V["z,m1,n1,m"] * Gamma1_["uw"] * I["m1,m"];
+    temp1["w,z,n1,u"] -= V["z,M1,n1,M"] * Gamma1_["uw"] * I["M1,M"];
+    temp1["w,z,n1,u"] -= 0.5 * V["x,y,n1,z"] * Gamma2_["u,w,x,y"];
+    temp1["w,z,N1,U"] -= V["y,X,z,N1"] * Gamma2_["w,U,y,X"];
+    temp1["w,z,n1,u"] -= V["z,y,n1,v"] * Gamma2_["u,v,w,y"];
+    temp1["w,z,n1,u"] -= V["z,Y,n1,V"] * Gamma2_["u,V,w,Y"];
+    temp1["w,z,N1,U"] -= V["z,Y,v,N1"] * Gamma2_["v,U,w,Y"];
+
+    temp1["w,z,e1,u"] -= H["w,e1"] * Gamma1_["uz"];
+    temp1["w,z,e1,u"] -= V["e1,m,w,m1"] * Gamma1_["uz"] * I["m1,m"];
+    temp1["w,z,e1,u"] -= V["e1,M,w,M1"] * Gamma1_["uz"] * I["M1,M"];
+    temp1["w,z,e1,u"] -= 0.5 * V["e1,w,x,y"] * Gamma2_["u,z,x,y"];
+    temp1["w,z,E1,U"] -= V["w,E1,y,X"] * Gamma2_["z,U,y,X"];
+    temp1["w,z,e1,u"] -= V["e1,v,w,y"] * Gamma2_["u,v,z,y"];
+    temp1["w,z,e1,u"] -= V["e1,V,w,Y"] * Gamma2_["u,V,z,Y"];
+    temp1["w,z,E1,U"] -= V["v,E1,w,Y"] * Gamma2_["v,U,z,Y"];
+
+    temp1["w,z,e1,u"] += H["z,e1"] * Gamma1_["uw"];
+    temp1["w,z,e1,u"] += V["e1,m,z,m1"] * Gamma1_["uw"] * I["m1,m"];
+    temp1["w,z,e1,u"] += V["e1,M,z,M1"] * Gamma1_["uw"] * I["M1,M"];
+    temp1["w,z,e1,u"] += 0.5 * V["e1,z,x,y"] * Gamma2_["u,w,x,y"];
+    temp1["w,z,E1,U"] += V["z,E1,y,X"] * Gamma2_["w,U,y,X"];
+    temp1["w,z,e1,u"] += V["e1,v,z,y"] * Gamma2_["u,v,w,y"];
+    temp1["w,z,e1,u"] += V["e1,V,z,Y"] * Gamma2_["u,V,w,Y"];
+    temp1["w,z,E1,U"] += V["v,E1,z,Y"] * Gamma2_["v,U,w,Y"];
+
+    temp1["w,z,u1,a1"] -= V["a1,v,u1,w"] * Gamma1_["zv"];
+    temp1["w,z,U1,A1"] -= V["v,A1,w,U1"] * Gamma1_["zv"];
+
+    temp1["w,z,u1,a1"] += V["a1,v,u1,z"] * Gamma1_["wv"];
+    temp1["w,z,U1,A1"] += V["v,A1,z,U1"] * Gamma1_["wv"];
+
+    for (const std::string& row : {"vc", "ca", "va", "aa"}) {
+        int idx1 = block_dim[row];
+        int pre1 = preidx[row];
+
+        for (const std::string& col : {"vc", "VC", "ca", "CA", "va", "VA", "aa", "AA"}) {
+            int idx2 = block_dim[col];
+            int pre2 = preidx[col];
+            if (row != "aa" && col != "aa" && col != "AA") {
+                (temp1.block(row + col)).iterate([&](const std::vector<size_t>& i, double& value) {
+                    int index = (pre1 + i[0] * idx1 + i[1]) + dim * (pre2 + i[2] * idx2 + i[3]);
+                    A.at(index) += value;
+                });
+            } else if (row == "aa" && col != "aa" && col != "AA") {
+                (temp1.block(row + col)).iterate([&](const std::vector<size_t>& i, double& value) {
+                    if (i[0] > i[1]) {
+                        int index = (pre1 + i[0] * (i[0] - 1) / 2 + i[1]) +
+                                    dim * (pre2 + i[2] * idx2 + i[3]);
+                        A.at(index) += value;
+                    }
+                });
+            } else if (row != "aa" && (col == "aa" || col == "AA")) {
+                (temp1.block(row + col)).iterate([&](const std::vector<size_t>& i, double& value) {
+                    int i2 = i[2] > i[3] ? i[2] : i[3], i3 = i[2] > i[3] ? i[3] : i[2];
+                    if (i2 != i3) {
+                        int index =
+                            (pre1 + i[0] * idx1 + i[1]) + dim * (pre2 + i2 * (i2 - 1) / 2 + i3);
+                        A.at(index) += value;
+                    }
+                });
+            } else {
+                (temp1.block(row + col)).iterate([&](const std::vector<size_t>& i, double& value) {
+                    int i2 = i[2] > i[3] ? i[2] : i[3], i3 = i[2] > i[3] ? i[3] : i[2];
+                    if (i[0] > i[1] && i2 != i3) {
+                        int index = (pre1 + i[0] * (i[0] - 1) / 2 + i[1]) +
+                                    dim * (pre2 + i2 * (i2 - 1) / 2 + i3);
+                        A.at(index) += value;
+                    }
+                });
+            }
+        }
+    }
+
+    // CI contribution
+    auto ci_vc =
+        ambit::Tensor::build(ambit::CoreTensor, "ci contribution to z{vc}", {ndets, nvirt, ncore});
+    auto ci_ca =
+        ambit::Tensor::build(ambit::CoreTensor, "ci contribution to z{ca}", {ndets, ncore, na});
+    auto ci_va =
+        ambit::Tensor::build(ambit::CoreTensor, "ci contribution to z{va}", {ndets, nvirt, na});
+    auto ci_aa =
+        ambit::Tensor::build(ambit::CoreTensor, "ci contribution to z{aa}", {ndets, na, na});
+
+    // CI contribution to Z{VC}
+    ci_vc("Iem") -= H.block("vc")("em") * ci("I");
+    ci_vc("Iem") -= V_sumA_Alpha.block("cv")("me") * ci("I");
+    ci_vc("Iem") -= V_sumB_Alpha.block("cv")("me") * ci("I");
+    ci_vc("Iem") -= 0.5 * V.block("avac")("veum") * cc1a("Iuv");
+    ci_vc("Iem") -= 0.5 * V.block("vAcA")("eVmU") * cc1b("IUV");
+
+    // CI contribution to Z{CA}
+    ci_ca("Imw") -= 0.50 * H.block("ac")("vm") * cc1a("Iwv");
+    ci_ca("Imw") -= 0.25 * V_sumA_Alpha.block("ac")("um") * cc1a("Iuw");
+    ci_ca("Imw") -= 0.25 * V_sumB_Alpha.block("ac")("um") * cc1a("Iuw");
+    ci_ca("Imw") -= 0.25 * V_sumA_Alpha.block("ca")("mv") * cc1a("Iwv");
+    ci_ca("Imw") -= 0.25 * V_sumB_Alpha.block("ca")("mv") * cc1a("Iwv");
+    ci_ca("Imw") -= 0.125 * V.block("aaca")("xymv") * cc2aa("Iwvxy");
+    ci_ca("Imw") -= 0.250 * V.block("aAcA")("xYmV") * cc2ab("IwVxY");
+    ci_ca("Imw") -= 0.125 * V.block("aaac")("xyum") * cc2aa("Iuwxy");
+    ci_ca("Imw") -= 0.250 * V.block("aAcA")("xYmU") * cc2ab("IwUxY");
+
+    ci_ca("Imw") += H.block("ac")("wm") * ci("I");
+    ci_ca("Imw") += V_sumA_Alpha.block("ca")("mw") * ci("I");
+    ci_ca("Imw") += V_sumB_Alpha.block("ca")("mw") * ci("I");
+    ci_ca("Imw") += 0.5 * V.block("aaac")("vwum") * cc1a("Iuv");
+    ci_ca("Imw") += 0.5 * V.block("aAcA")("wVmU") * cc1b("IUV");
+
+    // CI contribution to Z{VA}
+    ci_va("Iew") -= 0.50 * H.block("av")("ve") * cc1a("Iwv");
+    ci_va("Iew") -= 0.25 * V_sumA_Alpha.block("av")("ue") * cc1a("Iuw");
+    ci_va("Iew") -= 0.25 * V_sumB_Alpha.block("av")("ue") * cc1a("Iuw");
+    ci_va("Iew") -= 0.25 * V_sumA_Alpha.block("va")("ev") * cc1a("Iwv");
+    ci_va("Iew") -= 0.25 * V_sumB_Alpha.block("va")("ev") * cc1a("Iwv");
+    ci_va("Iew") -= 0.125 * V.block("vaaa")("evxy") * cc2aa("Iwvxy");
+    ci_va("Iew") -= 0.250 * V.block("vAaA")("eVxY") * cc2ab("IwVxY");
+    ci_va("Iew") -= 0.125 * V.block("avaa")("uexy") * cc2aa("Iuwxy");
+    ci_va("Iew") -= 0.250 * V.block("vAaA")("eUxY") * cc2ab("IwUxY");
+
+    // CI contribution to Z{AA}
+    ci_aa("Iwz") -= 0.50 * H.block("aa")("vw") * cc1a("Izv");
+    ci_aa("Iwz") += 0.50 * H.block("aa")("vz") * cc1a("Iwv");
+    ci_aa("Iwz") -= 0.25 * V_sumA_Alpha.block("aa")("uw") * cc1a("Iuz");
+    ci_aa("Iwz") -= 0.25 * V_sumB_Alpha.block("aa")("uw") * cc1a("Iuz");
+    ci_aa("Iwz") -= 0.25 * V_sumA_Alpha.block("aa")("wv") * cc1a("Izv");
+    ci_aa("Iwz") -= 0.25 * V_sumB_Alpha.block("aa")("wv") * cc1a("Izv");
+    ci_aa("Iwz") += 0.25 * V_sumA_Alpha.block("aa")("uz") * cc1a("Iuw");
+    ci_aa("Iwz") += 0.25 * V_sumB_Alpha.block("aa")("uz") * cc1a("Iuw");
+    ci_aa("Iwz") += 0.25 * V_sumA_Alpha.block("aa")("zv") * cc1a("Iwv");
+    ci_aa("Iwz") += 0.25 * V_sumB_Alpha.block("aa")("zv") * cc1a("Iwv");
+
+    ci_aa("Iwz") -= 0.125 * V.block("aaaa")("wvxy") * cc2aa("Izvxy");
+    ci_aa("Iwz") -= 0.250 * V.block("aAaA")("wVxY") * cc2ab("IzVxY");
+    ci_aa("Iwz") -= 0.125 * V.block("aaaa")("uwxy") * cc2aa("Iuzxy");
+    ci_aa("Iwz") -= 0.250 * V.block("aAaA")("wUxY") * cc2ab("IzUxY");
+    ci_aa("Iwz") += 0.125 * V.block("aaaa")("zvxy") * cc2aa("Iwvxy");
+    ci_aa("Iwz") += 0.250 * V.block("aAaA")("zVxY") * cc2ab("IwVxY");
+    ci_aa("Iwz") += 0.125 * V.block("aaaa")("uzxy") * cc2aa("Iuwxy");
+    ci_aa("Iwz") += 0.250 * V.block("aAaA")("zUxY") * cc2ab("IwUxY");
+
+    for (const std::string& row : {"vc", "ca", "va", "aa"}) {
+        int idx1 = block_dim[row];
+        int pre1 = preidx[row];
+        auto temp_ci = ci_vc;
+        if (row == "ca")
+            temp_ci = ci_ca;
+        else if (row == "va")
+            temp_ci = ci_va;
+        else if (row == "aa")
+            temp_ci = ci_aa;
+
+        for (const std::string& col : {"ci"}) {
+            int pre2 = preidx[col];
+            if (row != "aa") {
+                (temp_ci).iterate([&](const std::vector<size_t>& i, double& value) {
+                    int index = (pre1 + i[1] * idx1 + i[2]) + dim * (pre2 + i[0]);
+                    A.at(index) += value;
+                });
+            } else if (row == "aa") {
+                (temp_ci).iterate([&](const std::vector<size_t>& i, double& value) {
+                    if (i[1] > i[2]) {
+                        int index = (pre1 + i[1] * (i[1] - 1) / 2 + i[2]) + dim * (pre2 + i[0]);
+                        A.at(index) += value;
+                    }
+                });
+            }
+        }
     }
 
     auto ck_vc_a = ambit::Tensor::build(ambit::CoreTensor, "ci equations z{vc} alpha part",
