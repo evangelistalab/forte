@@ -208,9 +208,8 @@ double ExcitedStateSolver::compute_energy() {
     multistate_pt2_energy_correction_ = sci_->get_multistate_pt2_energy_correction();
 
     dim = PQ_space.size();
-    if ((ex_alg_ != "ROOT_COMBINE")) {
-        final_wfn_.copy(PQ_space);
-    }
+
+    final_wfn_.copy(PQ_space);
     PQ_space.clear();
 
     int froot = root_;
@@ -524,8 +523,8 @@ void ExcitedStateSolver::print_wfn(DeterminantHashVec& space, std::shared_ptr<ps
                                  str(tmp.get_det(I), nact_).c_str());
         }
         //        state_label = s2_labels[std::round(spins[n].first * 2.0)];
-        //        psi::outfile->Printf("\n\n  Spin state for root %zu: S^2 = %5.6f, S = %5.3f, %s",
-        //        n,
+        //        psi::outfile->Printf("\n\n  Spin state for root %zu: S^2 = %5.6f, S = %5.3f,
+        //        %s", n,
         //                             spins[n].first, spins[n].second, state_label.c_str());
     }
 }
