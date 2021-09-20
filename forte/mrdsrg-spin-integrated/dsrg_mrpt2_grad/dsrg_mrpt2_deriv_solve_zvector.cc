@@ -4,6 +4,7 @@
 #include "psi4/libpsi4util/PsiOutStream.h"
 #include "../dsrg_mrpt2.h"
 #include "helpers/timer.h"
+#include "psi4/libpsi4util/process.h"
 
 using namespace ambit;
 using namespace psi;
@@ -17,8 +18,10 @@ void DSRG_MRPT2::set_z() {
     set_z_vv();
     set_z_aa_diag();
     outfile->Printf("Done");
-    // LAPACK solver
+    // NOTICE: LAPACK solver (Deprecated in the future)
     solve_z();
+    // iterative solver
+    // solve_linear_iter();
 }
 
 void DSRG_MRPT2::set_w() {
@@ -1546,9 +1549,93 @@ void DSRG_MRPT2::set_b(int dim, std::map<string, int> preidx, std::map<string, i
 }
 
 // TODO
-// void solve_linear_iter() {
-//     set_b();
-// }
+void DSRG_MRPT2::compute_density_vc() {
+
+}
+// TODO
+void DSRG_MRPT2::compute_density_ca() {
+
+}
+// TODO
+void DSRG_MRPT2::compute_density_va() {
+
+}
+// TODO
+void DSRG_MRPT2::compute_density_aa() {
+
+}
+// TODO
+void DSRG_MRPT2::compute_x_ci() {
+
+}
+// TODO
+void DSRG_MRPT2::solve_linear_iter() {
+    int dim_vc = nvirt * ncore, dim_ca = ncore * na, dim_va = nvirt * na,
+        dim_aa = na * (na - 1) / 2, dim_ci = ndets;
+    // dim_ci = 0;
+    int dim = dim_vc + dim_ca + dim_va + dim_aa + dim_ci;
+    int N = dim;
+    int NRHS = 1, LDA = N, LDB = N;
+    int n = N, nrhs = NRHS, lda = LDA, ldb = LDB;
+    std::vector<int> ipiv(N);
+    std::map<string, int> preidx = {{"vc", 0},
+                                    {"VC", 0},
+                                    {"ca", dim_vc},
+                                    {"CA", dim_vc},
+                                    {"va", dim_vc + dim_ca},
+                                    {"VA", dim_vc + dim_ca},
+                                    {"aa", dim_vc + dim_ca + dim_va},
+                                    {"AA", dim_vc + dim_ca + dim_va},
+                                    {"ci", dim_vc + dim_ca + dim_va + dim_aa}};
+
+    std::map<string, int> block_dim = {{"vc", ncore}, {"VC", ncore}, {"ca", na}, {"CA", na},
+                                       {"va", na},    {"VA", na},    {"aa", 0},  {"AA", 0}};
+    set_b(dim, preidx, block_dim);
+
+    /*------------------------------------------------------------------*
+     |                                                                  |
+     |  //NOTICE:Iterative solver from here (avoiding directly form A)  |
+     |                                                                  |
+     *------------------------------------------------------------------*/
+
+    outfile->Printf("\n    Solving the linear system ....................... ");
+
+    bool converged = false;
+    int iter = 1;
+    // int maxiter = options_.get_int("CPHF_MAXITER");
+    int maxiter = 200;
+    BlockedTensor Z_old = BTF_->build(CoreTensor, "reference Z Matrix before iteration", spin_cases({"gg"}));
+    ambit::Tensor x_ci_old = ambit::Tensor::build(ambit::CoreTensor, "reference multiplier x before iteration", {ndets});
+
+    while (iter <= maxiter) {
+        Z_old["pq"] = Z["pq"];
+        x_ci_old("I") = x_ci("I");
+
+        compute_density_vc();
+        compute_density_ca();
+        compute_density_va();
+        compute_density_aa();
+        compute_x_ci();
+
+        Z_old["pq"] -= Z["pq"];
+        x_ci_old("I") -= x_ci("I");
+
+        double Z_norm = Z_old.norm();
+        double x_ci_norm = x_ci_old.norm();
+        outfile->Printf("\n    * %4d    %12.7e *", iter, Z_norm);
+        outfile->Printf("\n    * %4d    %12.7e *", iter, x_ci_norm);
+        // if (Z_norm < d_convergence_ && x_ci_norm < d_convergence_) {NOTICE where can I get the d_convergence_?
+        if (Z_norm < 1e-6 && x_ci_norm < 1e-6) {
+            converged = true;
+            break;
+        }
+        iter++;
+    }
+
+    if (!converged) {
+        throw PSIEXCEPTION("The DSRG Z vector equations did not converge.");       
+    }
+}
 
 void DSRG_MRPT2::solve_z() {
 

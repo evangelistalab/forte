@@ -279,6 +279,11 @@ class DSRG_MRPT2 : public MASTER_DSRG {
      * Solve the Linear System Ax=b and yield Z using iterative methods.
      */
     void solve_linear_iter();
+    void compute_density_vc();
+    void compute_density_ca();
+    void compute_density_va();
+    void compute_density_aa();
+    void compute_x_ci();
     /**
      * Solve the Linear System Ax=b and yield Z using direct methods.
      */
