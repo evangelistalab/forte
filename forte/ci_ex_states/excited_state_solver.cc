@@ -405,7 +405,7 @@ ExcitedStateSolver::read_wave_function(const std::string& filename) {
 
     // read first line
     std::getline(file, line);
-    if (line.find("SCI") == std::string::npos) {
+    if (line.find("sCI") == std::string::npos) {
         psi::outfile->Printf("\n  sCI Error: Wave function file not from a previous sCI!");
         std::runtime_error("Failed read wave function: file not generated from sCI.");
     }
@@ -563,7 +563,6 @@ ExcitedStateSolver::transition_rdms(const std::vector<std::pair<size_t, size_t>>
     }
 
     // read wave function from method2
-    psi::outfile->Printf("\n Reading file! ");
     size_t norbs2;
     std::vector<Determinant> dets2;
     psi::SharedMatrix evecs2;
@@ -789,10 +788,12 @@ void ExcitedStateSolver::save_old_root(DeterminantHashVec& dets, psi::SharedMatr
 }
 
 ExcitedStateSolver::~ExcitedStateSolver() {
-    // remove wave function file
-    if (std::remove(wfn_filename_.c_str()) != 0) {
-        psi::outfile->Printf("\n  sCI wave function %s not available.", state_.str().c_str());
-        std::perror("Error when deleting sCI wave function. See output file.");
+    // remove wave function file if calculated transition dipole
+    if (transition_dipole_) {
+        if (std::remove(wfn_filename_.c_str()) != 0) {
+            psi::outfile->Printf("\n  sCI wave function %s not available.", state_.str().c_str());
+            std::perror("Error when deleting sCI wave function. See output file.");
+        }
     }
 }
 
