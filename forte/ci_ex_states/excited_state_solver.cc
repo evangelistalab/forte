@@ -563,6 +563,7 @@ ExcitedStateSolver::transition_rdms(const std::vector<std::pair<size_t, size_t>>
     }
 
     // read wave function from method2
+    psi::outfile->Printf("\n Reading file! ");
     size_t norbs2;
     std::vector<Determinant> dets2;
     psi::SharedMatrix evecs2;

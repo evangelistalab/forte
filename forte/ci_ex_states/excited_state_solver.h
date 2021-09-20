@@ -81,10 +81,10 @@ class ExcitedStateSolver : public ActiveSpaceMethod {
     /// Set the printing level
     void set_quiet(bool quiet);
 
-    /// Dump binary wave function to disk
+    /// Dump temporary wave function to disk
     void dump_wave_function(const std::string& filename) override;
 
-    /// Read binary ave function from disk
+    /// Read temporary ave function from disk
     /// Return the number of active orbitals, set of determinants, CI coefficients
     std::tuple<size_t, std::vector<Determinant>, psi::SharedMatrix>
     read_wave_function(const std::string& filename) override;
