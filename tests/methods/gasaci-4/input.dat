@@ -40,7 +40,6 @@ set forte {
   GAS2 [5,0,2,2]
   AVG_STATE [[0,1,1],[2,3,1]]
   GAS1MAX [2,1]
-  aci_n_average 0
 }
 
 escf ,wfn = energy('scf',return_wfn = True)
