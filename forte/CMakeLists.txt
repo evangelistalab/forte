@@ -175,6 +175,7 @@ mrdsrg-spin-integrated/dsrg_mrpt2_grad/dsrg_mrpt2_deriv_write_rdms.cc
 mrdsrg-spin-integrated/dsrg_mrpt2_grad/dsrg_mrpt2_deriv_solve_zvector.cc
 mrdsrg-spin-integrated/dsrg_mrpt2_grad/dsrg_mrpt2_deriv_multipliers.cc
 mrdsrg-spin-integrated/dsrg_mrpt2_grad/dsrg_mrpt2_deriv_tensors.cc
+mrdsrg-spin-integrated/dsrg_mrpt2_grad/dsrg_mrpt2_deriv_setb.cc
 mrdsrg-spin-integrated/dsrg_mrpt2_ms.cc
 mrdsrg-spin-integrated/dsrg_mrpt3.cc
 mrdsrg-spin-integrated/dwms_mrpt2.cc
