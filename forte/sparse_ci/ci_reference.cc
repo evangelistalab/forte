@@ -196,6 +196,7 @@ CI_Reference::gas_double_criterion() {
         aa_criterion;
     std::map<std::vector<int>, std::vector<std::tuple<size_t, size_t, size_t, size_t>>>
         bb_criterion;
+        
     std::map<std::vector<int>, std::vector<std::tuple<size_t, size_t, size_t, size_t>>>
         ab_criterion;
     for (size_t gas_config = 0; gas_config < gas_config_number; ++gas_config) {
@@ -659,7 +660,7 @@ void CI_Reference::build_gas_single(std::vector<Determinant>& ref_space) {
     auto epsilon_b = scf_info_->epsilon_b();
 
     // Find the sorted_indexes of a vector
-    auto sort_indexes = [&](const std::vector<double>& v) {
+    auto argsort = [&](const std::vector<double>& v) {
         // initialize original index locations
         std::vector<size_t> idx(v.size());
         std::iota(idx.begin(), idx.end(), 0);
@@ -687,8 +688,8 @@ void CI_Reference::build_gas_single(std::vector<Determinant>& ref_space) {
         }
         rel_gas_eps[2 * gas] = a_eps;
         rel_gas_eps[2 * gas + 1] = b_eps;
-        gas_eps_idx[2 * gas] = sort_indexes(a_eps);
-        gas_eps_idx[2 * gas + 1] = sort_indexes(b_eps);
+        gas_eps_idx[2 * gas] = argsort(a_eps);
+        gas_eps_idx[2 * gas + 1] = argsort(b_eps);
 
         if (norbs == 0)
             continue;
