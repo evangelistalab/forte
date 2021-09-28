@@ -17,6 +17,8 @@ set {
   scf_type pk
   reference rohf
   e_convergence 12
+  docc [3,0,0,0]
+  socc [0,0,1,0]
 }
 
 energy('scf')
@@ -24,7 +26,7 @@ compare_values(refscf, variable("CURRENT ENERGY"),11, "SCF energy") #TEST
 
 set forte {
   active_space_solver fci
-  root_sym 3
+  root_sym 2
   ms = 0.5
 }
 
@@ -33,7 +35,7 @@ compare_values(reffci, variable("CURRENT ENERGY"),11, "FCI energy (M_S =  1/2)")
 
 set forte {
   active_space_solver fci
-  root_sym 3
+  root_sym 2
   ms = -0.5
 }
 

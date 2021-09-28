@@ -22,8 +22,8 @@ set globals{
    df_basis_scf            cc-pvdz-jkfit
    reference               rhf
    scf_type                df
-   d_convergence           12
-   e_convergence           15
+   d_convergence           10
+   e_convergence           12
    maxiter                 300
 }
 
@@ -37,7 +37,6 @@ set forte{
    int_type                df
    correlation_solver      three-dsrg-mrpt2
    active_space_solver     fci
-   
 }
 
 Escf, wfn = energy('scf', return_wfn=True)

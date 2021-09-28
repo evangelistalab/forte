@@ -1,0 +1,34 @@
+# Test read_orbitals keyword without a ref_wfn and
+# the orbitals on disk were generated at a different geometry.
+
+import forte
+
+psi4_casscf = -99.925009149448968
+
+memory 500 mb
+
+molecule HF{
+  0 1
+  F
+  H  1 1.6
+}
+
+set globals{
+  basis                   cc-pvdz
+  reference               rhf
+  scf_type                df
+  d_convergence           8
+  e_convergence           9
+  df_basis_scf            cc-pvdz-jkfit
+}
+
+set forte{
+  int_type                df
+  active_space_solver     fci
+  frozen_docc             [1,0,0,0]
+  restricted_docc         [1,0,1,1]
+  active                  [2,0,0,0]
+  read_orbitals           true  # generated @ 1.5
+}
+Ecas = energy('forte')
+compare_values(psi4_casscf, Ecas, 8, "FORTE 2-step MCSCF energy")

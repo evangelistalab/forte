@@ -20,8 +20,8 @@ set globals{
    reference    RHF
    scf_type     df
    basis        3-21g
-   d_convergence           12
-   e_convergence           15
+   d_convergence           10
+   e_convergence           12
    df_basis_mp2            cc-pvdz-ri
 }
 set forte{

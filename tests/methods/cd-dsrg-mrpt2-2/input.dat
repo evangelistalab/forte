@@ -18,9 +18,9 @@ set globals{
    basis                  cc-pvdz
    reference              twocon
    scf_type               pk
-   d_convergence          12
-   cholesky_tolerance     14
-   e_convergence          15
+   d_convergence          10
+   cholesky_tolerance     12
+   e_convergence          12
 }
 
 set mcscf{
@@ -41,7 +41,7 @@ set forte{
    dsrg_s                 1.0
    int_type               cholesky
    cholesky_tolerance     1e-14
-   PRINT_DENOM2            true
+   print_denom2           true
 }
 
 refmcscf, refwfn = energy('mcscf', return_wfn=True)

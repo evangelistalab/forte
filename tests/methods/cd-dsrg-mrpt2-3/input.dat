@@ -2,8 +2,8 @@
 
 import forte
 
-refrhf       = -2.1790777096871579 # cc-pVDZ
-refdsrgpt2   = -2.238666886378053 # cc-pVDZ
+refrhf     = -2.179077709687158
+refdsrgpt2 = -2.238546872898894
 
 memory 500 mb
 
@@ -19,8 +19,8 @@ set globals{
    basis                   cc-pvdz
    reference               rhf
    scf_type                pk
-   d_convergence           12
-   e_convergence           15
+   d_convergence           10
+   e_convergence           12
    maxiter                 300
 }
 
@@ -32,10 +32,10 @@ set forte{
    root_sym                0
    nroot                   1
    dsrg_s                  0.5
-   threepdc                mk
+   threepdc                zero
    int_type                cholesky
    cholesky_tolerance      1e-14
-   PRINT_DENOM2            true
+   print_denom2            true
 }
 
 Escf, wfn = energy('scf', return_wfn=True)

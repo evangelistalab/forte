@@ -39,7 +39,7 @@ def run_job(jobdir, psi4command, test_results, test_time):
     successful = True
     # Run Psi4
     try:
-        out = subprocess.check_output([psi4command])
+        out = subprocess.check_output([psi4command, "-n2"])
     except:
         # something went wrong
         successful = False
@@ -88,27 +88,24 @@ def setup_argument_parser():
     parser = argparse.ArgumentParser(description='Run Forte tests.')
     parser.add_argument('--psi4_exec',
                         help='the location of the psi4 executable')
-    parser.add_argument(
-        '--file',
-        help='the yaml file containing the list of tests (default: tests.yaml)',
-        default='tests.yaml')
-    parser.add_argument(
-        '--failed',
-        help='run only failed tests (listed in the file failed_tests)',
-        action='store_true')
-    parser.add_argument(
-        '--bw',
-        help='print the summary in black and white? (default: color)',
-        action='store_true')
+    parser.add_argument('--file',
+                        help='the yaml file containing the list of tests (default: tests.yaml)',
+                        default='tests.yaml')
+    parser.add_argument('--failed',
+                        help='run only failed tests (listed in the file failed_tests)',
+                        action='store_true')
+    parser.add_argument('--bw',
+                        help='print the summary in black and white? (default: color)',
+                        action='store_true')
     parser.add_argument('--failed_dump',
                         help='dump the output of the failed tests to stdout?',
                         action='store_true')
     parser.add_argument('--type',
-                        help='which type of test to run? (default: short)',
-                        choices={'short', 'medium','long','regular', 'all'},
+                        help='which type of test to run? (default: standard)',
+                        choices={'short', 'medium','long','standard', 'all'},
                         default='standard')
     parser.add_argument('--group',
-                        help='which group of tests to run? (default: all)',
+                        help='which group of tests to run? (default: None)',
                         default=None)
     return parser.parse_args()
 

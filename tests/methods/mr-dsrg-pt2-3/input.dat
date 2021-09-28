@@ -17,8 +17,8 @@ molecule {
 set globals{
    reference            twocon
    scf_type             pk
-   d_convergence        12
-   e_convergence        15
+   d_convergence        10
+   e_convergence        12
 }
 
 set mcscf{

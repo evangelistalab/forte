@@ -1,4 +1,4 @@
-#! Perform a DF-DSRG-MRPT2 on benzyne 
+#! Perform a DF-DSRG-MRPT2 on benzyne
 
 import forte
 
@@ -43,7 +43,7 @@ set forte {
    nroot                1
    multiplicity         1
    dsrg_s               0.5
-   int_type             DISKDF
+   int_type             diskdf
    correlation_solver   three-dsrg-mrpt2
    active_space_solver  fci
 }

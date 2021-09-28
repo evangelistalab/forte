@@ -28,14 +28,15 @@ set forte {
   diag_algorithm dynamic
   sigma 0.0005
   sci_enforce_spin_complete true
+  e_convergence 10
+  d_convergence 6
 }
 
 E, wfn = energy('scf', return_wfn=True)
 
-compare_values(refscf, variable("CURRENT ENERGY"),9,"SCF energy")
+compare_values(refscf, variable("CURRENT ENERGY"), 9, "SCF energy")
 
 energy('forte', ref_wfn=wfn)
 
-compare_values(refaci, variable("ACI ENERGY"),9,"ACI energy")
-compare_values(refacipt2, variable("ACI+PT2 ENERGY"),9,"ACI+PT2 energy")
-
+compare_values(refaci, variable("ACI ENERGY"), 9, "ACI energy")
+compare_values(refacipt2, variable("ACI+PT2 ENERGY"), 9, "ACI+PT2 energy")

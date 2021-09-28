@@ -20,9 +20,9 @@ set globals{
    df_basis_mp2            cc-pvdz-ri
    df_basis_scf            cc-pvdz-jkfit
    reference               twocon
-   scf_type                DF
-   d_convergence           12
-   e_convergence           15
+   scf_type                df
+   d_convergence           10
+   e_convergence           12
 }
 
 set mcscf{
@@ -33,18 +33,20 @@ set mcscf{
 }
 
 set forte {
-   int_type                df
-   correlation_solver      three-dsrg-mrpt2
-   active_space_solver     aci
-   active_guess_size       1
-   sigma                   0.0001
-   multiplicity            1
-   frozen_docc             [0,0,0,0]
-   restricted_docc         [0,0,0,0]
-   active                  [5,0,1,2]
-   dsrg_s                  1.0
-   root_sym                0
-   nroot                   1
+  int_type                df
+  correlation_solver      three-dsrg-mrpt2
+  active_space_solver     aci
+  active_guess_size       1
+  sigma                   0.0001
+  multiplicity            1
+  frozen_docc             [0,0,0,0]
+  restricted_docc         [0,0,0,0]
+  active                  [5,0,1,2]
+  dsrg_s                  1.0
+  root_sym                0
+  nroot                   1
+  sci_direct_rdms         true
+  aci_screen_alg          batch_hash
 }
 
 scf, wfn = energy('mcscf', return_wfn=True)

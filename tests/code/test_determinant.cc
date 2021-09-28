@@ -5,9 +5,9 @@
 
 #include "catch.hpp"
 
-#include "../../src/sparse_ci/determinant.h"
-#include "../../src/sparse_ci/determinant.hpp"
-#include "../../src/sparse_ci/bitarray.hpp"
+#include "forte/sparse_ci/determinant.h"
+#include "forte/sparse_ci/determinant.hpp"
+#include "forte/sparse_ci/bitarray.hpp"
 #include "test_determinant.hpp"
 
 using namespace forte;

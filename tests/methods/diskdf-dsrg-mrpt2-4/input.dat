@@ -21,8 +21,8 @@ set globals{
    df_basis_scf            cc-pvdz-jkfit
    reference               rhf
    scf_type                df
-   d_convergence           12
-   e_convergence           15
+   d_convergence           10
+   e_convergence           12
 }
 
 set forte {
