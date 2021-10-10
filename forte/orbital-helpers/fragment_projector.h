@@ -57,7 +57,7 @@ class FragmentProjector {
     // std::shared_ptr<BasisSet> minao_basis, 	std::shared_ptr<BasisSet> prime_basis);
 
     // Build projector and return AO basis matrix Pf_AO
-    psi::SharedMatrix build_f_projector(std::shared_ptr<psi::BasisSet> basis);
+    psi::SharedMatrix build_f_projector(std::shared_ptr<psi::BasisSet> basis, std::shared_ptr<ForteOptions> options);
 
     /// Return number of system (fragment) basis functions
     int get_nbf_A() { return nbf_A_; }

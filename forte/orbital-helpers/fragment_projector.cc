@@ -70,7 +70,7 @@ std::pair<psi::SharedMatrix, int> make_fragment_projector(SharedWavefunction wfn
     // IAO procedure FragmentProjector FP(molecule, prime_basis, minao_basis);
 
     // Compute and return the projector matrix
-    psi::SharedMatrix Pf = FP.build_f_projector(prime_basis);
+    psi::SharedMatrix Pf = FP.build_f_projector(prime_basis, options);
     int nbfA = FP.get_nbf_A();
     std::pair<psi::SharedMatrix, int> Projector = std::make_pair(Pf, nbfA);
 
@@ -110,28 +110,60 @@ void FragmentProjector::startup() {
     nbf_A_ = count_basis;
 }
 
-SharedMatrix FragmentProjector::build_f_projector(std::shared_ptr<psi::BasisSet> basis) {
+SharedMatrix FragmentProjector::build_f_projector(std::shared_ptr<psi::BasisSet> basis, std::shared_ptr<ForteOptions> options) {
 
+    /*
     std::vector<int> zeropi(1, 0);
     Dimension A_begin(zeropi);
     Dimension A_end(zeropi);
     A_begin[0] = 0;
     A_end[0] = nbf_A_;
+    */
 
     std::shared_ptr<IntegralFactory> integral_pp(new IntegralFactory(basis, basis, basis, basis));
     std::shared_ptr<OneBodyAOInt> S_int(integral_pp->ao_overlap());
     SharedMatrix S_nn = std::make_shared<psi::Matrix>("S_nn", nbf_, nbf_);
     S_int->compute(S_nn);
 
-    Slice fragA(A_begin, A_end);
+    //Slice fragA(A_begin, A_end);
 
+    std::vector<int> add_basis = options->get_int_list("DSRG_FOLD_T3");
+    std::vector<int> basis_vec;
+
+    for (int i = 0; i < nbf_A_; ++i) {
+        basis_vec.push_back(i);
+    }
+     outfile->Printf("\n Will add %d basis to the fragment.", add_basis.size());
+    for (int v : add_basis) {
+        if (v < nbf_A_ || v >= nbf_) {
+            outfile->Printf("\n Warning! Illegal basis number (%d) ! Check the input.", v);
+        }
+        else {
+            outfile->Printf("\n Add basis %d to the fragment projector", v);
+            basis_vec.push_back(v);
+        }
+    }
+
+    int nbf_new = basis_vec.size();
     // Construct the system portion of S (S_A)
-    SharedMatrix S_A = S_nn->get_block(fragA, fragA);
+    //SharedMatrix S_A = S_nn->get_block(fragA, fragA);
+    SharedMatrix S_A(new Matrix("S_A block", nbf_new, nbf_new));
+    for (int m = 0; m < nbf_new; ++m) {
+        for (int n = 0; n < nbf_new; ++n) {
+            S_A->set(m, n, S_nn->get(basis_vec[m], basis_vec[n]));
+        }
+    }
 
     // Construct S_A^-1 and store it in a matrix of size nbf x nbf
     S_A->general_invert();
+
     SharedMatrix S_A_nn(new Matrix("S system in fullsize", nbf_, nbf_));
-    S_A_nn->set_block(fragA, fragA, S_A);
+    //S_A_nn->set_block(fragA, fragA, S_A);
+    for (int p = 0; p < nbf_new; ++p) {
+        for (int q = 0; q < nbf_new; ++q) {
+            S_A_nn->set(basis_vec[p], basis_vec[q], S_A->get(p, q));
+        }
+    }
 
     // Evaluate AO basis projector  P = S^T (S_A)^{-1} S
     S_A_nn->transform(S_nn);

@@ -216,6 +216,9 @@ class THREE_DSRG_MRPT2 : public MASTER_DSRG {
     double E_VT2_4PH();
     double E_VT2_6();
 
+    void zero_t1_simple(BlockedTensor& T1);
+    void zero_t2_simple(BlockedTensor& T2);
+
     void de_normal_order();
 
     /// Form Hbar for reference relaxation

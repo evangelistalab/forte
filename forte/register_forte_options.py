@@ -239,6 +239,9 @@ def register_embedding_options(options):
         "embedding_disable_semi_check", True,
         "(Internal option, controlled by proc/aset2.py) Turn on/off semi-canonicalization check in DSRG code when computing ASET(2).")
     options.add_bool(
+        "skip_density", False,
+        "(Danger, for test only) Skip the density building for A.")
+    options.add_bool(
         "embedding_align_scalar", False,
         "(Internal option, controlled by proc/aset2.py) Turn on/off shifts to align the integral scalar "
         "(explanation: when we build a custom integrals for A only, it doesn't have the information of frozen orbitals and NRE)."
@@ -254,6 +257,11 @@ def register_embedding_options(options):
         "TRUNCATE_MO_SPACE", False,
         "(Internal option, controlled by proc/aset2.py) When building the mo_space_info object from the orbital_embedding.cc,"
         " this option control whether the size of resulting object is A or A+B.")
+    options.add_bool("DSRG_FOLD", False, "Turn on/off folding any blocks")
+    options.add_int_list("DSRG_FOLD_T1", "An array to assign which block(s) will be folded in T1")
+    options.add_int_list("DSRG_FOLD_T2", "An array to assign which block(s) will be folded in T2")
+    options.add_int_list("ADDITIONAL_BASIS", "An array to include additional basis into the fragment projector")
+    options.add_int_list("DSRG_FOLD_T3", "An array to assign which block(s) will be folded in T2")
 
 
 def register_mo_space_info_options(options):

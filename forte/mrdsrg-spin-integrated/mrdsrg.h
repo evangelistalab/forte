@@ -219,6 +219,8 @@ class MRDSRG : public MASTER_DSRG {
     void update_t2_pt();
     /// Compute T2 amplitudes norms
     void compute_t2_norm();
+    /// Zero amplitudes for downfolding
+    void zero_t2_simple(BlockedTensor& T2);
 
     /// RMS of T1
     double T1rms_ = 0.0;
@@ -238,6 +240,8 @@ class MRDSRG : public MASTER_DSRG {
     void update_t1_nocv();
     /// Compute T1 amplitudes norms
     void compute_t1_norm();
+    /// Zero amplitudes for downfolding
+    void zero_t1_simple(BlockedTensor& T1);
 
     /// List of large amplitudes
     std::vector<std::pair<std::vector<size_t>, double>> lt1a_;

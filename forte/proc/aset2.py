@@ -54,6 +54,8 @@ def aset2_driver(state_weights_map, scf_info, ref_wfn, mo_space_info, options):
     env_corr_level = options.get_str('ENV_CORR_LEVEL')
     relax = options.get_str('RELAX_REF')
     semi = options.get_bool('SEMI_CANONICAL')
+    fold = options.get_bool('DSRG_FOLD')
+    ccvv_env = options.get_str('CCVV_SOURCE')
     int_type_frag = options.get_str('INT_TYPE_FRAG')
     int_type_env = options.get_str('INT_TYPE_ENV')
     do_aset_mf = options.get_bool('EMBEDDING_ASET2_MF_REF')
@@ -64,7 +66,7 @@ def aset2_driver(state_weights_map, scf_info, ref_wfn, mo_space_info, options):
     
     # Build two option lists for fragment (A) and environment (B) solver
     A_list = [frag_corr_solver, frag_corr_level, int_type_frag, relax, semi]
-    B_list = [env_corr_solver, env_corr_level, int_type_env]
+    B_list = [env_corr_solver, env_corr_level, int_type_env, fold, ccvv_env]
 
     psi4.core.print_out("\n  ")
     psi4.core.print_out("\n  ")
@@ -240,6 +242,7 @@ def forte_driver_environment(state_weights_map, scf_info, ref_wfn, mo_space_info
     :return: the computed environment energy E_corr, and dressed integrals ints_dressed
     """
 
+    ints_d = None
     # Build integrals for fragment density approximation. Int type will be consistent with INT_TYPE_ENV
     ints_d = forte.make_ints_from_psi4(ref_wfn, options, mo_space_info_active)
 
@@ -273,12 +276,14 @@ def forte_driver_environment(state_weights_map, scf_info, ref_wfn, mo_space_info
 
     # Semi-canonicalize orbitals with respect to new rdms (TODO:testing how much results will be changing due to this modification)
     if options.get_str('fragment_density') != "FULL":
-        semi = forte.SemiCanonical(mo_space_info_active, ints_d, options)
-        semi.semicanonicalize(rdms_active, rdms_level)
+        if not options.get_bool('skip_density'): # The re-semi-canonicalize conditions should be: 1. when using RHF density. or 
+                                                 # 2. when using conventional environment ints
+            semi = forte.SemiCanonical(mo_space_info_active, ints_d, options)
+            semi.semicanonicalize(rdms_active, rdms_level)
         ints_e = forte.make_ints_from_psi4(ref_wfn, options, mo_space_info)
 
     # Build A+B integrals (and wfn)
-    ints_e = forte.make_ints_from_psi4(ref_wfn, options, mo_space_info)
+    #ints_e = forte.make_ints_from_psi4(ref_wfn, options, mo_space_info)
     nre_env = ints_e.nuclear_repulsion_energy()
 
     # Compute MRDSRG (A+B)
@@ -307,13 +312,14 @@ def update_fragment_options(options, A_list, ref_wfn):
     options.set_str('CORR_LEVEL', A_list[1])
     options.set_str('INT_TYPE', A_list[2])
     options.set_str('RELAX_REF', A_list[3])
-    options.set_bool('SEMI_CANONICAL', False)
+    options.set_bool('SEMI_CANONICAL', A_list[4])
     options.set_bool('EMBEDDING_DISABLE_SEMI_CHECK', False)
     options.set_bool('EMBEDDING_ALIGN_SCALAR', False)
+    options.set_str('CCVV_SOURCE', 'NORMAL')
     #forte.forte_options.update_psi_options(options) #TODO: check whether we still need this
 
     # Block folding functionality will be in another PR
-    #options.set_bool('DSRG_FOLD', False)
+    options.set_bool('DSRG_FOLD', False)
     #options.set_bool('EMBEDDING_ALIGN_FROZEN', False)
 
     return
@@ -330,8 +336,10 @@ def update_environment_options(options, B_list, ref_wfn):
     options.set_str('CORR_LEVEL', B_list[1])
     options.set_str('INT_TYPE', B_list[2])
     options.set_bool('EMBEDDING_DISABLE_SEMI_CHECK', True)
+    options.set_bool('SEMI_CANONICAL', False)
     options.set_str('RELAX_REF', "ONCE") # Setting it here to bypass many relax_ref checks in all DSRG codes
-    #options.set_bool('DSRG_FOLD', fold)
+    options.set_bool('DSRG_FOLD', B_list[3])
+    options.set_str('CCVV_SOURCE', B_list[4])
     options.set_bool('EMBEDDING_ALIGN_SCALAR', True)
 
     return
