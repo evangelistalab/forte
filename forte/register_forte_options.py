@@ -261,7 +261,7 @@ def register_embedding_options(options):
     options.add_int_list("DSRG_FOLD_T1", "An array to assign which block(s) will be folded in T1")
     options.add_int_list("DSRG_FOLD_T2", "An array to assign which block(s) will be folded in T2")
     options.add_int_list("ADDITIONAL_BASIS", "An array to include additional basis into the fragment projector")
-    options.add_int_list("DSRG_FOLD_T3", "An array to assign which block(s) will be folded in T2")
+    options.add_int_list("ADD_FRAG_BASIS", "An array to assign which block(s) will be folded in T2")
 
 
 def register_mo_space_info_options(options):

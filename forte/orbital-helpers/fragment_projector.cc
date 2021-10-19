@@ -127,7 +127,7 @@ SharedMatrix FragmentProjector::build_f_projector(std::shared_ptr<psi::BasisSet>
 
     //Slice fragA(A_begin, A_end);
 
-    std::vector<int> add_basis = options->get_int_list("DSRG_FOLD_T3");
+    std::vector<int> add_basis = options->get_int_list("ADD_FRAG_BASIS");
     std::vector<int> basis_vec;
 
     for (int i = 0; i < nbf_A_; ++i) {
