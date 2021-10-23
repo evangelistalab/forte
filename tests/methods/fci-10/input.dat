@@ -1,6 +1,7 @@
 import forte
 
-refe = -1261.65388210269
+refefci = -1261.65388210269
+refedsrg = -1261.96440221101
 
 molecule {
 2 5
@@ -22,7 +23,7 @@ set forte{
   int_type               df
   active_space_solver    fci
   spin_avg_density       true
-  #correlation_solver     sa-mrdsrg
+  correlation_solver     sa-mrdsrg
   frozen_docc            [5]
   restricted_docc        [4]
   active                 [5]
@@ -31,4 +32,4 @@ set forte{
 }
 
 energy('forte', ref_wfn=wfn)
-compare_values(refe, variable("CURRENT ENERGY"),9, "FCI energy") #TEST
+compare_values(refedsrg, variable("CURRENT ENERGY"),9, "DSRG energy") #TEST

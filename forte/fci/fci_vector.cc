@@ -54,7 +54,6 @@ double FCIVector::h2_aabb_timer = 0.0;
 double FCIVector::h2_bbbb_timer = 0.0;
 
 void FCIVector::allocate_temp_space(std::shared_ptr<StringLists> lists_, int print_) {
-    // TODO Avoid allocating and deallocating these temp
     size_t nirreps = lists_->nirrep();
 
     // if C1 is already allocated (e.g., because we computed several roots) make sure
