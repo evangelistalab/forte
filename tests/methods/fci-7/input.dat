@@ -56,6 +56,15 @@ H 1 1.0
 units bohr
 }
 
+set {
+  basis 6-31G
+  scf_type pk
+  reference rohf
+  e_convergence 12
+  docc [2,0,0,0]
+  socc [1,0,1,0]
+}
+
 scf_triplet = energy('scf')
 compare_values(refscf_triplet, variable("CURRENT ENERGY"),11, "SCF energy") #TEST
 
