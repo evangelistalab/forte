@@ -137,7 +137,7 @@ jobs:
       cd build
       echo "Now at directory: $PWD"
       git clone https://github.com/psi4/psi4.git psi4
-      git reset --hard d5bdfea
+      git reset --hard de731dbf19932092603c25a1e2a02cf813ab77ee
     displayName: 'Clone Psi4 Source'
 
   - bash: |
