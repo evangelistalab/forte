@@ -138,7 +138,7 @@ jobs:
       echo "Now at directory: $PWD"
       git clone https://github.com/psi4/psi4.git psi4
       git fetch origin d5bdfea
-      git checkout d5bdfea
+      git reset --hard FETCH_HEAD
     displayName: 'Clone Psi4 Source'
 
   - bash: |
