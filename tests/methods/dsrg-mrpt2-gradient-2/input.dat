@@ -1,6 +1,5 @@
 # DSRG-MRPT2 gradient on HF with c2v symmetry
 import forte
-
 ref_grad = psi4.Matrix.from_list([
       [0.000000000000,     0.000000000000,     0.016785069962],
       [0.000000000000,     0.000000000000,    -0.016785069962]

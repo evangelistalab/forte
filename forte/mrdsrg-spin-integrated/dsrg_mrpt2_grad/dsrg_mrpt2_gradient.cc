@@ -61,11 +61,18 @@ void DSRG_MRPT2::set_global_variables() {
 void DSRG_MRPT2::set_tensor() {
     outfile->Printf("\n    Initializing RDMs, DSRG Tensors and CI integrals. ");
     I = BTF_->build(CoreTensor, "identity matrix", {"cc", "CC", "aa", "AA", "vv", "VV"});
+    I_ci = ambit::Tensor::build(ambit::CoreTensor, "identity", {ndets, ndets});
+    one_vec = BTF_->build(CoreTensor, "vector with all components equal 1", {"c", "a", "v"});
+    x_ci = ambit::Tensor::build(ambit::CoreTensor, "solution of ci multipliers", {ndets});
+
     I.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>&, double& value) {
         value = (i[0] == i[1]) ? 1.0 : 0.0;
     });
-
-    x_ci = ambit::Tensor::build(ambit::CoreTensor, "solution of ci multipliers", {ndets});
+    one_vec.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>&, double& value) {
+        value = 1.0;
+    });
+    I_ci.iterate(
+        [&](const std::vector<size_t>& i, double& value) { value = (i[0] == i[1]) ? 1.0 : 0.0; });
 
     set_density();
     set_h();

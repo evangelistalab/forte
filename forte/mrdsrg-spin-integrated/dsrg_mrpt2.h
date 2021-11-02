@@ -278,12 +278,12 @@ class DSRG_MRPT2 : public MASTER_DSRG {
     /**
      * Solve the Linear System Ax=b and yield Z using iterative methods.
      */
+    void remove_rankdeficiency();
+    void set_preconditioner(std::vector<double>&);
+    void gmres_solver(std::vector<double>&);
+    void matvec_dot(double*, double*, double*, int);
     void solve_linear_iter();
-    void compute_density_vc();
-    void compute_density_ca();
-    void compute_density_va();
-    void compute_density_aa();
-    void compute_x_ci();
+    void z_vector_contraction(std::vector<double> &, std::vector<double> &);
     /**
      * Solve the Linear System Ax=b and yield Z using direct methods.
      */
@@ -351,6 +351,8 @@ class DSRG_MRPT2 : public MASTER_DSRG {
      * Solved directly after all other multipliers are solved.
      */
     void set_w();
+    // Set MO orbital partition info for solving the z-vector equation
+    void set_zvec_moinfo();
 
     /// Size of determinants
     size_t ndets;
@@ -366,6 +368,12 @@ class DSRG_MRPT2 : public MASTER_DSRG {
     /// List of active MOs (Absolute)
     std::vector<size_t> actv_all;
     std::vector<size_t> virt_all;
+
+    
+    // MO orbital partition info for solving the z-vector equation
+    int dim;
+    std::map<string, int> preidx;
+    std::map<string, int> block_dim;
 
     /// List of relative core MOs
     std::vector<std::pair<unsigned long, unsigned long>,
@@ -416,6 +424,10 @@ class DSRG_MRPT2 : public MASTER_DSRG {
     ambit::BlockedTensor DelEeps1;
     /// Identity matrix
     ambit::BlockedTensor I;
+    /// Identity matrix for the CI part
+    ambit::Tensor I_ci;
+    /// a vector with all entries equal 1
+    ambit::BlockedTensor one_vec;
     /// T2/Delta
     ambit::BlockedTensor T2OverDelta;
 
