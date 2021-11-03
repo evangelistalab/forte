@@ -18,7 +18,7 @@ using namespace psi;
 namespace forte {
 
 int ROW2DEL;
-int max_iter = 500;
+int max_iter = 200;
 double err = 1e-9;
 std::vector<double> A_ci;
 
@@ -1049,156 +1049,43 @@ void DSRG_MRPT2::set_preconditioner(std::vector<double> & D) {
     }
 }
 
-// void DSRG_MRPT2::gmres_solver(std::vector<double> & x_new) {
-//     outfile->Printf("\n    Solving the linear system ....................... ");
-//     const bool PRINT = true;
-//     max_iter = 5;
-//     std::vector<double> x_old(dim, 0.0);
-//     std::vector<double> D(dim, 1.0);
-//     set_preconditioner(D);
-
-//     while (diff_f_norm(x_old, x_new) > err) {
-
-//     std::vector<double> r(dim);
-//     std::vector<double> q(max_iter * dim, 0.0);
-//     std::vector<double> h((max_iter + 1) * max_iter, 0.0);
-
-//     std::vector<double> bh(max_iter + 1, 0.0);
-
-
-
-//     for (int i = 0; i < b.size(); ++i) {
-//         b[i] *= D[i];
-//     }
-
-//     z_vector_contraction(x_old, r);
-
-//     for (int i = 0; i < r.size(); ++i) {
-//         r[i] = b[i] - D[i] * r[i];
-//     }
-
-//     bh[0] = f_norm(r);
-
-//     for (int j = 0; j < dim; ++j) {
-//         // index here : i * dim + j, where i = 0
-//         q[j] = r[j] / bh[0];
-//     }
-
-//     std::vector<double> y_vec(dim, 0.0);
-
-//     std::cout << "n(A) = " << dim << "\n" ;
-
-//     for (int iter = 0; iter < max_iter; ++iter) {
-
-//         if (diff_f_norm(x_old, x_new) < err && iter > 2) {
-//             break;
-//         }
-
-//         if (PRINT) {  
-//             std::cout << "iter = " << iter << "   ";
-//         }
-
-//         x_old = x_new;
-
-//         std::vector<double> qk_vec(dim);
-//         for (int i = 0; i < dim; ++i) {
-//             qk_vec.at(i) = q[iter * dim + i];
-//         }
-
-//         z_vector_contraction(qk_vec, y_vec);
-
-//         for (int i = 0; i < y_vec.size(); ++i) {
-//             y_vec[i] *= D[i];
-//         }
-
-//         for (int i = 0; i < iter+1; ++i) {
-//             h[i + iter * (max_iter + 1)] = C_DDOT(dim, &q[i * dim], 1, &y_vec[0], 1);
-//             for (int j = 0; j < dim; ++j) {
-//                 y_vec[j] -= h[i + iter * (max_iter + 1)] * q[i * dim + j];
-//             }
-//         }
-
-
-//         h[(iter + 1) + iter * (max_iter + 1)] = f_norm(y_vec);
-//         bool condition = (std::fabs(h[(iter + 1) + iter * (max_iter + 1)]) < 1e-10) || (iter == max_iter - 1);
-
-//         std::vector<double> ck(max_iter + 1, 0.0);
-//         ck = bh;
-
-//         int lwork = 2 * max_iter;
-//         std::vector<double> work(lwork);
-
-
-//         std::vector<double> h_sub((iter + 2) * (iter + 1), 0.0);
-//         for (int i = 0; i < iter + 2; ++i) {
-//             for (int j = 0; j < iter + 1; ++j) {
-//                 h_sub[i + j * (iter + 2)] = h[i + j * (max_iter + 1)];
-//             }
-//         }
-
-//         C_DGELS('n', iter+2, iter+1, 1, &h_sub[0], iter+2, &ck[0], iter+2, &work[0], lwork);
-
-//         // Lapack may set non-zero values at ck[iter + 1] after calling the function C_DGELS(),
-//         // so it should manually be set to zero for algorithm robustness.
-//         // ck[iter + 1] = 0.0;
-
-//         if (!condition) {
-//             for (int j = 0; j < dim; ++j) {
-//                 q[(iter + 1) * dim + j] = y_vec[j] / h[(iter + 1) + iter * (max_iter + 1)];
-//             }
-//             C_DGEMV('t', iter+2, dim, 1.0, &(q[0]), dim, &(ck[0]), 1, 0, &(x_new[0]), 1);
-//             if (PRINT) {
-//                 std::cout << std::setprecision(9)<< std::fixed << "x = [ " << x_new[0] << " , " << x_new[1] << " ]"<< std::endl;
-//             }
-//         }
-//         else {
-//             C_DGEMV('t', max_iter, dim, 1.0, &(q[0]), dim, &(ck[0]), 1, 0, &(x_new[0]), 1);
-//             if (PRINT) {
-//                 std::cout << std::setprecision(9)<< std::fixed << "x = [ " << x_new[0] << " , " << x_new[1] << " ]"<< std::endl;
-//             }
-//             break;
-//         }
-//     }
-//     }
-//     outfile->Printf("Done");
-// }
-
 void DSRG_MRPT2::gmres_solver(std::vector<double> & x_new) {
     outfile->Printf("\n    Solving the linear system ....................... ");
-    const bool PRINT = true;
-    std::vector<double> x_old(dim, 0.0);
+    int iters;
+    std::vector<double> x_old(dim);
+    x_old = x_new;
+    std::vector<double> r(dim);
     std::vector<double> q(max_iter * dim, 0.0);
     std::vector<double> h((max_iter + 1) * max_iter, 0.0);
     std::vector<double> bh(max_iter + 1, 0.0);
     std::vector<double> D(dim, 1.0);
 
     set_preconditioner(D);
-    
+
     for (int i = 0; i < b.size(); ++i) {
         b[i] *= D[i];
     }
 
-    bh[0] = f_norm(b);
+    z_vector_contraction(x_old, r);
+
+    for (int i = 0; i < r.size(); ++i) {
+        r[i] = b[i] - D[i] * r[i];
+    }
+
+    bh[0] = f_norm(r);
 
     for (int j = 0; j < dim; ++j) {
         // index here : i * dim + j, where i = 0
-        q[j] = b[j] / bh[0];
+        q[j] = r[j] / bh[0];
     }
 
     std::vector<double> y_vec(dim, 0.0);
 
-    std::cout << "n(A) = " << dim << "\n" ;
-
     for (int iter = 0; iter < max_iter; ++iter) {
-
         if (diff_f_norm(x_old, x_new) < err && iter > 2) {
             break;
         }
-
-        if (PRINT) {  
-            std::cout << "iter = " << iter << "   ";
-        }
-
+        iters = iter + 1;
         x_old = x_new;
 
         std::vector<double> qk_vec(dim);
@@ -1219,7 +1106,6 @@ void DSRG_MRPT2::gmres_solver(std::vector<double> & x_new) {
             }
         }
 
-
         h[(iter + 1) + iter * (max_iter + 1)] = f_norm(y_vec);
         bool condition = (std::fabs(h[(iter + 1) + iter * (max_iter + 1)]) < 1e-10) || (iter == max_iter - 1);
 
@@ -1228,7 +1114,6 @@ void DSRG_MRPT2::gmres_solver(std::vector<double> & x_new) {
 
         int lwork = 2 * max_iter;
         std::vector<double> work(lwork);
-
 
         std::vector<double> h_sub((iter + 2) * (iter + 1), 0.0);
         for (int i = 0; i < iter + 2; ++i) {
@@ -1244,19 +1129,16 @@ void DSRG_MRPT2::gmres_solver(std::vector<double> & x_new) {
                 q[(iter + 1) * dim + j] = y_vec[j] / h[(iter + 1) + iter * (max_iter + 1)];
             }
             C_DGEMV('t', iter+2, dim, 1.0, &(q[0]), dim, &(ck[0]), 1, 0, &(x_new[0]), 1);
-            if (PRINT) {
-                std::cout << std::setprecision(9)<< std::fixed << "x = [ " << x_new[0] << " , " << x_new[1] << " ]"<< std::endl;
-            }
         }
-        else {
+        else if (iter == max_iter - 1){
+            throw PSIEXCEPTION("GMRES solution is not converged, please change max iteration or error threshold in GMRES.");
+        } else {
             C_DGEMV('t', max_iter, dim, 1.0, &(q[0]), dim, &(ck[0]), 1, 0, &(x_new[0]), 1);
-            if (PRINT) {
-                std::cout << std::setprecision(9)<< std::fixed << "x = [ " << x_new[0] << " , " << x_new[1] << " ]"<< std::endl;
-            }
             break;
         }
     }
     outfile->Printf("Done");
+    outfile->Printf("\n        Z vector equation was solved in %d iterations", iters);
 }
 
 void DSRG_MRPT2::remove_rankdeficiency() {
@@ -1312,7 +1194,7 @@ void DSRG_MRPT2::remove_rankdeficiency() {
         A_ci.at(index) = value;
     });
 
-    // change b here !!
+    // b has been changed here !!
     b.at(preidx["ci"] + ROW2DEL) = 0.0;
 }
 
@@ -1320,7 +1202,7 @@ void DSRG_MRPT2::solve_linear_iter() {
     set_zvec_moinfo();
     set_b(dim, preidx, block_dim);
     remove_rankdeficiency();
-    std::vector<double> solution(dim, 1.0);
+    std::vector<double> solution(dim, 0.0);
     gmres_solver(solution);
 
     // Write the solution of z-vector equations (stored in solution) into the Z matrix
