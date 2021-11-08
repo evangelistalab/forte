@@ -980,7 +980,7 @@ void DSRG_MRPT2::set_preconditioner(std::vector<double> & D) {
     D_mo["e,m"] -= V["e1,e,m1,m"] * I["e1,e"] * I["m1,m"];
     D_mo["e,m"] -= V["m1,e,e1,m"] * I["e1,e"] * I["m1,m"];
 
-    // // CORE-ACTIVE
+    // CORE-ACTIVE
     D_mo["m,w"] += F["uw"] * one_vec["m"] * I["uw"];
     D_mo["m,w"] -= H["vw"] * Gamma1_["wv"] * one_vec["m"];
     D_mo["m,w"] -= V_sumA_Alpha["v,w"] * Gamma1_["wv"] * one_vec["m"];
@@ -998,7 +998,7 @@ void DSRG_MRPT2::set_preconditioner(std::vector<double> & D) {
     D_mo["m,w"] += V_sumA_Alpha["m,n1"] * Gamma1_["uw"] * I["m,n1"] * I["wu"];
     D_mo["m,w"] += V_sumB_Alpha["m,n1"] * Gamma1_["uw"] * I["m,n1"] * I["wu"];
     D_mo["m,w"] += 0.5 * V["x,y,n1,m"] * Gamma2_["u,w,x,y"] * I["m,n1"] * I["wu"];
-    D_mo["m,w"] += V_sumA_Alpha["y,v"] * Gamma2_["u,v,w,y"] * one_vec["m"] * I["wu"];
+    D_mo["m,w"] += V["m,y,n1,v"] * Gamma2_["u,v,w,y"] * I["m,n1"] * I["wu"];
     D_mo["m,w"] += V["m,Y,n1,V"] * Gamma2_["u,V,w,Y"] * I["m,n1"] * I["wu"];
 
     // VIRTUAL-ACTIVE
@@ -1058,6 +1058,7 @@ void DSRG_MRPT2::gmres_solver(std::vector<double> & x_new) {
     std::vector<double> q(max_iter * dim, 0.0);
     std::vector<double> h((max_iter + 1) * max_iter, 0.0);
     std::vector<double> bh(max_iter + 1, 0.0);
+    // D is a Jacobi preconditioner
     std::vector<double> D(dim, 1.0);
 
     set_preconditioner(D);
@@ -1129,11 +1130,13 @@ void DSRG_MRPT2::gmres_solver(std::vector<double> & x_new) {
                 q[(iter + 1) * dim + j] = y_vec[j] / h[(iter + 1) + iter * (max_iter + 1)];
             }
             C_DGEMV('t', iter+2, dim, 1.0, &(q[0]), dim, &(ck[0]), 1, 0, &(x_new[0]), 1);
+            std::cout << std::setprecision(9)<< std::fixed << "x = [ " << x_new[0] << " , " << x_new[1] << " ]"<< std::endl;
         }
         else if (iter == max_iter - 1){
             throw PSIEXCEPTION("GMRES solution is not converged, please change max iteration or error threshold in GMRES.");
         } else {
             C_DGEMV('t', max_iter, dim, 1.0, &(q[0]), dim, &(ck[0]), 1, 0, &(x_new[0]), 1);
+            std::cout << std::setprecision(9)<< std::fixed << "x = [ " << x_new[0] << " , " << x_new[1] << " ]"<< std::endl;
             break;
         }
     }
@@ -1260,8 +1263,8 @@ void DSRG_MRPT2::solve_linear_iter() {
     Z["WE"] = Z["EW"];
 }
 
-void DSRG_MRPT2::solve_z() {
-    
+/// This is a direct solver, thus shall only be used when memory is sufficient.
+void DSRG_MRPT2::solve_z() { 
     int N = dim;
     int NRHS = 1, LDA = N, LDB = N;
     int n = N, nrhs = NRHS, lda = LDA, ldb = LDB;
