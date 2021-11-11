@@ -1149,8 +1149,6 @@ void DSRG_MRPT2::remove_rankdeficiency() {
     auto ck_ci =
         ambit::Tensor::build(ambit::CoreTensor, "ci equations ci multiplier part", {ndets, ndets});
 
-    outfile->Printf("\n    Solving the linear system ....................... ");
-
     ck_ci("KI") += H.block("cc")("mn") * I.block("cc")("mn") * I_ci("KI");
     ck_ci("KI") += H.block("CC")("MN") * I.block("CC")("MN") * I_ci("KI");
     ck_ci("KI") += cc.cc1a()("KIuv") * H.block("aa")("uv");
