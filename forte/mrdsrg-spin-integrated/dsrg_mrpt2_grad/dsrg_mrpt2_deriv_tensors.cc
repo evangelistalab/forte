@@ -16,13 +16,24 @@ void DSRG_MRPT2::set_ci_ints() {
 
     cc1a = ambit::Tensor::build(ambit::CoreTensor, "<K|p^+ q|0> + <0|p^+ q|K>", {ndets, na, na});
     cc1b = ambit::Tensor::build(ambit::CoreTensor, "<K|P^+ Q|0> + <0|P^+ Q|K>", {ndets, na, na});
-    cc2aa = ambit::Tensor::build(ambit::CoreTensor, "<K|p^+ q^+ r s|0> + <0|p^+ q^+ r s|K>", {ndets, na, na, na, na});
-    cc2bb = ambit::Tensor::build(ambit::CoreTensor, "<K|P^+ Q^+ R S|0> + <0|P^+ Q^+ R S|K>", {ndets, na, na, na, na});
-    cc2ab = ambit::Tensor::build(ambit::CoreTensor, "<K|p^+ Q^+ r S|0> + <0|p^+ Q^+ r S|K>", {ndets, na, na, na, na});
-    cc3aaa = ambit::Tensor::build(ambit::CoreTensor, "<K|o^+ p^+ q^+ r s t|0> + <0|o^+ p^+ q^+ r s t|K>", {ndets, na, na, na, na, na, na});
-    cc3bbb = ambit::Tensor::build(ambit::CoreTensor, "<K|O^+ P^+ Q^+ R S T|0> + <0|O^+ P^+ Q^+ R S T|K>", {ndets, na, na, na, na, na, na});
-    cc3aab = ambit::Tensor::build(ambit::CoreTensor, "<K|o^+ p^+ Q^+ r s T|0> + <0|o^+ p^+ Q^+ r s T|K>", {ndets, na, na, na, na, na, na});
-    cc3abb = ambit::Tensor::build(ambit::CoreTensor, "<K|o^+ P^+ Q^+ r S T|0> + <0|o^+ P^+ Q^+ r S T|K>", {ndets, na, na, na, na, na, na});
+    cc2aa = ambit::Tensor::build(ambit::CoreTensor, "<K|p^+ q^+ r s|0> + <0|p^+ q^+ r s|K>",
+                                 {ndets, na, na, na, na});
+    cc2bb = ambit::Tensor::build(ambit::CoreTensor, "<K|P^+ Q^+ R S|0> + <0|P^+ Q^+ R S|K>",
+                                 {ndets, na, na, na, na});
+    cc2ab = ambit::Tensor::build(ambit::CoreTensor, "<K|p^+ Q^+ r S|0> + <0|p^+ Q^+ r S|K>",
+                                 {ndets, na, na, na, na});
+    cc3aaa =
+        ambit::Tensor::build(ambit::CoreTensor, "<K|o^+ p^+ q^+ r s t|0> + <0|o^+ p^+ q^+ r s t|K>",
+                             {ndets, na, na, na, na, na, na});
+    cc3bbb =
+        ambit::Tensor::build(ambit::CoreTensor, "<K|O^+ P^+ Q^+ R S T|0> + <0|O^+ P^+ Q^+ R S T|K>",
+                             {ndets, na, na, na, na, na, na});
+    cc3aab =
+        ambit::Tensor::build(ambit::CoreTensor, "<K|o^+ p^+ Q^+ r s T|0> + <0|o^+ p^+ Q^+ r s T|K>",
+                             {ndets, na, na, na, na, na, na});
+    cc3abb =
+        ambit::Tensor::build(ambit::CoreTensor, "<K|o^+ P^+ Q^+ r S T|0> + <0|o^+ P^+ Q^+ r S T|K>",
+                             {ndets, na, na, na, na, na, na});
 
     cc1a("Kzw") += cc.cc1a()("KJzw") * ci("J");
     cc1a("Kzw") += cc.cc1a()("KJwz") * ci("J");
@@ -207,10 +218,10 @@ void DSRG_MRPT2::set_v() {
         }
     });
 
-    V_sumA_Alpha = BTF_->build(CoreTensor,
-                            "normal Dimension-reduced Electron Repulsion Integral alpha", {"gg"});
-    V_sumB_Alpha = BTF_->build(CoreTensor, "normal Dimension-reduced Electron Repulsion Integral beta",
-                           {"gg"});
+    V_sumA_Alpha = BTF_->build(
+        CoreTensor, "normal Dimension-reduced Electron Repulsion Integral alpha", {"gg"});
+    V_sumB_Alpha = BTF_->build(CoreTensor,
+                               "normal Dimension-reduced Electron Repulsion Integral beta", {"gg"});
     V_sumA_Beta = BTF_->build(
         CoreTensor, "index-reversed Dimension-reduced Electron Repulsion Integral beta", {"GG"});
     V_sumB_Beta = BTF_->build(

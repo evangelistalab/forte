@@ -26,7 +26,6 @@ class DynamicCorrelationSolver {
                              std::shared_ptr<ForteOptions> options,
                              std::shared_ptr<ForteIntegrals> ints,
                              std::shared_ptr<MOSpaceInfo> mo_space_info);
-
     /// Compute energy
     virtual double compute_energy() = 0;
 

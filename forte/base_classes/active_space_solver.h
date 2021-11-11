@@ -38,6 +38,10 @@
 #include "base_classes/state_info.h"
 #include "base_classes/coupling_coefficients.h"
 
+namespace ambit {
+class BlockedTensor;
+}
+
 namespace forte {
 
 class ActiveSpaceMethod;
@@ -97,6 +101,17 @@ class ActiveSpaceSolver {
     std::vector<RDMs> rdms(
         std::map<std::pair<StateInfo, StateInfo>, std::vector<std::pair<size_t, size_t>>>& elements,
         int max_rdm_level);
+
+    /// Compute a generalized RDM for a given state
+    /// This will compute the quantity
+    ///    R^{p1 p2 ..}_{q1 q2 ..} = X_I <Phi_I| a^+_p1 a^+_p2 .. a_q2 a_q1 |Phi_J> C_J (c_right =
+    ///    true)
+    /// or
+    ///    R^{p1 p2 ..}_{q1 q2 ..} = C_I <Phi_I| a^+_p1 a^+_p2 .. a_q2 a_q1 |Phi_J> X_J (c_right
+    ///    = false)
+    void generalized_rdms(const StateInfo& state, size_t root, const std::vector<double>& X,
+                          ambit::BlockedTensor& result, bool c_right, int rdm_level,
+                          std::vector<std::string> spin = {});
 
     /// Compute the state-averaged reference
     RDMs compute_average_rdms(const std::map<StateInfo, std::vector<double>>& state_weights_map,

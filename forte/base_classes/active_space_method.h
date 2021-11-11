@@ -38,6 +38,10 @@
 #include "psi4/libmints/vector.h"
 #include "base_classes/coupling_coefficients.h"
 
+namespace ambit {
+class BlockedTensor;
+}
+
 namespace forte {
 
 class ActiveSpaceIntegrals;
@@ -130,6 +134,13 @@ class ActiveSpaceMethod {
     transition_rdms(const std::vector<std::pair<size_t, size_t>>& root_list,
                     std::shared_ptr<ActiveSpaceMethod> method2, int max_rdm_level) = 0;
 
+    virtual void generalized_rdms(size_t root, const std::vector<double>& X,
+                                  ambit::BlockedTensor& result, bool c_right, int rdm_level,
+                                  std::vector<std::string> spin) {
+        throw std::runtime_error(
+            "The function generalized_rdms is not implemented for this ActiveSpaceMethod type ");
+    }
+
     /// Set options from an option object
     /// @param options the options passed in
     virtual void set_options(std::shared_ptr<ForteOptions> options) = 0;
@@ -142,7 +153,8 @@ class ActiveSpaceMethod {
 
     /// Return the eigen vectors
     virtual std::vector<ambit::Tensor> eigenvectors() {
-        throw std::runtime_error("ActiveSpaceMethod::eigenvectors(): Not Implemented for this class!");
+        throw std::runtime_error(
+            "ActiveSpaceMethod::eigenvectors(): Not Implemented for this class!");
     }
 
     /// Compute transition dipole moments assuming same orbitals

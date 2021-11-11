@@ -174,8 +174,7 @@ class ProcedureDSRG:
         e_dsrg = self.dsrg_solver.compute_energy()
         psi4.core.set_scalar_variable("UNRELAXED ENERGY", e_dsrg)
 
-        self.energies_environment[0] = {k: v for k, v in psi4.core.variables().items()
-                                        if 'ROOT' in k}
+        self.energies_environment[0] = {k: v for k, v in psi4.core.variables().items() if 'ROOT' in k}
 
         # Spit out energy if reference relaxation not implemented
         if not self.Heff_implemented:
@@ -210,8 +209,7 @@ class ProcedureDSRG:
                 self.dipoles.append((dm_u, dm_r))
 
             # Save energies that have been pushed to Psi4 environment
-            self.energies_environment[n + 1] = {k: v for k, v in psi4.core.variables().items()
-                                                if 'ROOT' in k}
+            self.energies_environment[n + 1] = {k: v for k, v in psi4.core.variables().items() if 'ROOT' in k}
             self.energies_environment[n + 1]["DSRG FIXED"] = e_dsrg
             self.energies_environment[n + 1]["DSRG RELAXED"] = e_relax
 

@@ -31,6 +31,8 @@
 #include <iomanip>
 #include <tuple>
 
+#include "ambit/blocked_tensor.h"
+
 #include "psi4/psi4-dec.h"
 #include "psi4/libpsi4util/PsiOutStream.h"
 #include "psi4/libmints/molecule.h"
@@ -271,6 +273,13 @@ std::vector<RDMs> ActiveSpaceSolver::rdms(
         }
     }
     return refs;
+}
+
+void ActiveSpaceSolver::generalized_rdms(const StateInfo& state, size_t root,
+                                         const std::vector<double>& X, ambit::BlockedTensor& result,
+                                         bool c_right, int rdm_level,
+                                         std::vector<std::string> spin) {
+    state_method_map_[state]->generalized_rdms(root, X, result, c_right, rdm_level, spin);
 }
 
 void ActiveSpaceSolver::print_options() {

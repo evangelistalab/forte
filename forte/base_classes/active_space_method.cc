@@ -26,6 +26,8 @@
  * @END LICENSE
  */
 
+#include "ambit/blocked_tensor.h"
+
 #include "psi4/libpsi4util/PsiOutStream.h"
 #include "psi4/libpsi4util/process.h"
 #include "psi4/libmints/wavefunction.h"
