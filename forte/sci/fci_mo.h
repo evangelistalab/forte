@@ -119,6 +119,11 @@ class FCI_MO : public ActiveSpaceMethod {
     std::vector<RDMs> rdms(const std::vector<std::pair<size_t, size_t>>& root_list,
                            int max_rdm_level) override;
 
+    /// Compute the generalized reduced density matrix of a given level
+    void generalized_rdms(size_t root, const std::vector<double>& X,
+                          ambit::BlockedTensor& grdms, bool c_right, int rdm_level,
+                          std::vector<std::string> spin) override;
+
     /// Returns the transition reduced density matrices between roots of different symmetry up to a
     /// given level (max_rdm_level)
     std::vector<RDMs> transition_rdms(const std::vector<std::pair<size_t, size_t>>& root_list,

@@ -1992,6 +1992,55 @@ std::vector<RDMs> FCI_MO::transition_rdms(const std::vector<std::pair<size_t, si
     return refs;
 }
 
+void FCI_MO::generalized_rdms(size_t root, const std::vector<double>& X,
+                              ambit::BlockedTensor& grdms, bool c_right, int rdm_level,
+                              std::vector<std::string>) {
+    // test rdm level
+    if (rdm_level > 3) {
+        throw std::runtime_error("RDM level too large!");
+    }
+
+    // test X size
+    auto ndets = determinant_.size();
+    if (X.size() != ndets) {
+        throw std::runtime_error("Incorrect dimension for the input vector X.");
+    }
+
+    // test consistency between grdms and rdm_level
+    auto blabels = grdms.block_labels();
+    if (blabels.size() != rdm_level + 1) {
+        throw std::runtime_error("Incorrect number of tensors in the result BlockedTensor.");
+    }
+
+    // test the dimension of the tensor
+    if (nactv_ != grdms.block(blabels[0]).dim(0)) {
+        throw std::runtime_error("Incorrect dimension for tensors in the result BlockedTensor.");
+    }
+
+    // prepare the expansion vectors to SharedMatrix format for CI_RDMs
+    auto evecs = std::make_shared<Matrix>("CI and Multiplier Vectors", ndets, 2);
+    int col_c = c_right ? 1 : 0;
+    int col_x = c_right ? 0 : 1;
+
+    evecs->set_column(0, col_c, (eigen_[root]).first);
+    for (size_t i = 0; i < ndets; ++i) {
+        evecs->set(0, i, col_x, X.at(i));
+    }
+
+    // use CI_RDMs to compute the "transition" RDMs
+    CI_RDMS ci_rdms(fci_ints_, determinant_, evecs, 0, 1);
+
+    if (rdm_level == 3) {
+        ci_rdms.compute_3rdm(grdms.block(blabels[0]).data(), grdms.block(blabels[1]).data(),
+                             grdms.block(blabels[2]).data(), grdms.block(blabels[3]).data());
+    } else if (rdm_level == 2) {
+        ci_rdms.compute_2rdm(grdms.block(blabels[0]).data(), grdms.block(blabels[1]).data(),
+                             grdms.block(blabels[2]).data());
+    } else {
+        ci_rdms.compute_1rdm(grdms.block(blabels[0]).data(), grdms.block(blabels[1]).data());
+    }
+}
+
 [[deprecated]] std::vector<RDMs>
 FCI_MO::reference(const std::vector<std::pair<size_t, size_t>>& root_list, int max_rdm_level) {
     std::vector<RDMs> refs;
