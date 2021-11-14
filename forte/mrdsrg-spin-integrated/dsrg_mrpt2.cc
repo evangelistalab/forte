@@ -320,24 +320,6 @@ double DSRG_MRPT2::compute_ref() {
 }
 
 double DSRG_MRPT2::compute_energy() {
-    // test generalized RDMs
-    Gamma1_.print();
-    for (const auto& pair : as_solver_->state_energies_map()) {
-        const auto& state = pair.first;
-        auto evecs = as_solver_->eigenvectors(state);
-        auto g1 = BTF_->build(tensor_type_, "1GRDMs", spin_cases({"aa"}));
-        for (int i = 0, nroots = evecs.size(); i < nroots; ++i) {
-            //            evecs.at(i).print();
-            as_solver_->generalized_rdms(state, 0, evecs.at(i).data(), g1, true, 1);
-
-            // need to transform these densities to semicanonical basis
-            auto g1T = ambit::BlockedTensor::build(tensor_type_, "grdms1", spin_cases({"aa"}));
-            g1T["pq"] = Uactv_["up"] * g1["uv"] * Uactv_["vq"];
-            g1T["PQ"] = Uactv_["UP"] * g1["UV"] * Uactv_["VQ"];
-            //            g1T.print();
-        }
-    }
-
     // check semi-canonical orbitals
     semi_canonical_ = check_semi_orbs();
     if (!semi_canonical_) {
