@@ -95,7 +95,7 @@ void export_ActiveSpaceMethod(py::module& m) {
 }
 
 void export_ActiveSpaceSolver(py::module& m) {
-    py::class_<ActiveSpaceSolver>(m, "ActiveSpaceSolver")
+    py::class_<ActiveSpaceSolver, std::shared_ptr<ActiveSpaceSolver>>(m, "ActiveSpaceSolver")
         .def("compute_energy", &ActiveSpaceSolver::compute_energy)
         .def("rdms", &ActiveSpaceSolver::rdms)
         .def("compute_contracted_energy", &ActiveSpaceSolver::compute_contracted_energy,
@@ -303,7 +303,9 @@ PYBIND11_MODULE(forte, m) {
         .def("set_coupling_coefficients", &MASTER_DSRG::set_coupling_coefficients,
              "Set the CI coupling coefficients for DSRG-MRPT2 analytic gradients")
         .def("set_ci_vectors", &MASTER_DSRG::set_ci_vectors,
-             "Set the CI eigenvector for DSRG-MRPT2 analytic gradients");
+             "Set the CI eigenvector for DSRG-MRPT2 analytic gradients")
+        .def("set_active_space_solver", &MASTER_DSRG::set_active_space_solver,
+             "Set the shared pointer for ActiveSpaceSolver");
 
     // export SADSRG
     py::class_<SADSRG>(m, "SADSRG")

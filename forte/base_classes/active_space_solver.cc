@@ -311,11 +311,11 @@ void ActiveSpaceSolver::print_options() {
     psi::outfile->Printf("\n    %s\n", dash.c_str());
 }
 
-std::unique_ptr<ActiveSpaceSolver> make_active_space_solver(
+std::shared_ptr<ActiveSpaceSolver> make_active_space_solver(
     const std::string& method, const std::map<StateInfo, size_t>& state_nroots_map,
     std::shared_ptr<SCFInfo> scf_info, std::shared_ptr<MOSpaceInfo> mo_space_info,
     std::shared_ptr<ActiveSpaceIntegrals> as_ints, std::shared_ptr<ForteOptions> options) {
-    return std::make_unique<ActiveSpaceSolver>(method, state_nroots_map, scf_info, mo_space_info,
+    return std::make_shared<ActiveSpaceSolver>(method, state_nroots_map, scf_info, mo_space_info,
                                                as_ints, options);
 }
 

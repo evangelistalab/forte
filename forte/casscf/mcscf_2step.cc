@@ -152,7 +152,7 @@ double MCSCF_2STEP::compute_energy() {
 
     // directly return if no orbital optimization
     double r_conv = options_->get_double("R_CONVERGENCE");
-    std::unique_ptr<ActiveSpaceSolver> as_solver;
+    std::shared_ptr<ActiveSpaceSolver> as_solver;
 
     if (not opt_orbs_ or nrot == 0) {
         std::tie(as_solver, energy_) = diagonalize_hamiltonian(
@@ -375,7 +375,7 @@ double MCSCF_2STEP::compute_energy() {
     return energy_;
 }
 
-std::tuple<std::unique_ptr<ActiveSpaceSolver>, double>
+std::tuple<std::shared_ptr<ActiveSpaceSolver>, double>
 MCSCF_2STEP::diagonalize_hamiltonian(std::shared_ptr<ActiveSpaceIntegrals> fci_ints,
                                      const std::tuple<int, double, double, bool, bool>& params) {
     auto state_map = to_state_nroots_map(state_weights_map_);
@@ -399,7 +399,7 @@ MCSCF_2STEP::diagonalize_hamiltonian(std::shared_ptr<ActiveSpaceIntegrals> fci_i
 
     double e = compute_average_state_energy(state_energies_map, state_weights_map_);
 
-    return {std::move(active_space_solver), e};
+    return {active_space_solver, e};
 }
 
 void MCSCF_2STEP::print_macro_iteration(std::vector<CASSCF_HISTORY>& history) {
