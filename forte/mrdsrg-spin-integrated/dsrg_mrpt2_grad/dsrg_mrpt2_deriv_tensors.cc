@@ -14,6 +14,11 @@ void DSRG_MRPT2::set_ci_ints() {
     cc = coupling_coefficients_;
     ci = ci_vectors_[0];
 
+    // X_K <K|p^+ q|0> + <0|p^+ q|K> X_K
+    Gamma1_tilde = BTF_->build(CoreTensor, "Gamma1_tilde", spin_cases({"aa"}));
+    // X_K <K|p^+ q^+ r s|0> + <0|p^+ q^+ r s|K> X_K
+    Gamma2_tilde = BTF_->build(CoreTensor, "Gamma2_tilde", spin_cases({"aaaa"}));
+
     cc1a = ambit::Tensor::build(ambit::CoreTensor, "<K|p^+ q|0> + <0|p^+ q|K>", {ndets, na, na});
     cc1b = ambit::Tensor::build(ambit::CoreTensor, "<K|P^+ Q|0> + <0|P^+ Q|K>", {ndets, na, na});
     cc2aa = ambit::Tensor::build(ambit::CoreTensor, "<K|p^+ q^+ r s|0> + <0|p^+ q^+ r s|K>",

@@ -462,6 +462,9 @@ class DSRG_MRPT2 : public MASTER_DSRG {
     CICouplingCoefficients cc;
     ambit::Tensor ci;
 
+    ambit::BlockedTensor Gamma1_tilde;
+    ambit::BlockedTensor Gamma2_tilde;
+
     ambit::Tensor cc1a;
     ambit::Tensor cc1b;
     ambit::Tensor cc2aa;

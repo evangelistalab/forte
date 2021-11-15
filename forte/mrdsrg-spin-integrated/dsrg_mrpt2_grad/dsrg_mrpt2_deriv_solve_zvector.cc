@@ -58,6 +58,26 @@ void DSRG_MRPT2::set_w() {
     W = BTF_->build(CoreTensor, "Energy weighted density matrix(Lagrangian)", spin_cases({"gg"}));
     BlockedTensor temp = BTF_->build(CoreTensor, "temporal tensor", spin_cases({"hhpp"}));
 
+    // Form Gamma_tilde
+    for (const auto& pair : as_solver_->state_energies_map()) {
+        const auto& state = pair.first;
+        auto evecs = as_solver_->eigenvectors(state);
+        auto g1r = BTF_->build(tensor_type_, "1GRDM_ket", spin_cases({"aa"}));
+        auto g2r = BTF_->build(tensor_type_, "2GRDM_ket", spin_cases({"aaaa"}));
+        for (int i = 0, nroots = evecs.size(); i < nroots; ++i) {
+            as_solver_->generalized_rdms(state, 0, x_ci.data(), Gamma1_tilde, false, 1);
+            as_solver_->generalized_rdms(state, 0, x_ci.data(), g1r, true, 1);
+            as_solver_->generalized_rdms(state, 0, x_ci.data(), Gamma2_tilde, false, 2);
+            as_solver_->generalized_rdms(state, 0, x_ci.data(), g2r, true, 2);
+        }    
+        Gamma1_tilde["uv"] += g1r["uv"];
+        Gamma1_tilde["UV"] += g1r["UV"];
+
+        Gamma2_tilde["uvxy"] += g2r["uvxy"];
+        Gamma2_tilde["UVXY"] += g2r["UVXY"];
+        Gamma2_tilde["uVxY"] += g2r["uVxY"];
+    }
+
     // NOTICE: w for {virtual-general}
     if (CORRELATION_TERM) {
         W["pe"] += 0.5 * Sigma3["ie"] * F["ip"];
@@ -144,12 +164,10 @@ void DSRG_MRPT2::set_w() {
     W["im"] += Z["e1,f"] * V["f,i,e1,m"];
     W["im"] += Z["E1,F"] * V["i,F,m,E1"];
 
-    // CI contribution
-    W.block("cc")("nm") += 0.5 * V.block("acac")("umvn") * x_ci("I") * cc1a("Iuv");
-    W.block("cc")("nm") += 0.5 * V.block("cAcA")("mUnV") * x_ci("I") * cc1b("IUV");
-
-    W.block("ac")("xm") += 0.5 * V.block("acaa")("umvx") * x_ci("I") * cc1a("Iuv");
-    W.block("ac")("xm") += 0.5 * V.block("cAaA")("mUxV") * x_ci("I") * cc1b("IUV");
+    W.block("cc")("nm") += 0.5 * V.block("acac")("umvn") * Gamma1_tilde.block("aa")("uv");
+    W.block("cc")("nm") += 0.5 * V.block("cAcA")("mUnV") * Gamma1_tilde.block("AA")("UV");
+    W.block("ac")("xm") += 0.5 * V.block("acaa")("umvx") * Gamma1_tilde.block("aa")("uv");
+    W.block("ac")("xm") += 0.5 * V.block("cAaA")("mUxV") * Gamma1_tilde.block("AA")("UV");
     W["mu"] = W["um"];
 
     // NOTICE: w for {active-active}
@@ -223,17 +241,17 @@ void DSRG_MRPT2::set_w() {
     W["zw"] += Z["U1,A1"] * V["v,A1,z,U1"] * Gamma1_["wv"];
     W["zw"] += Z["wv"] * F["vz"];
 
-    W.block("aa")("zw") += 0.50 * x_ci("I") * H.block("aa")("vz") * cc1a("Iwv");
+    W.block("aa")("zw") += 0.50 * H.block("aa")("vz") * Gamma1_tilde.block("aa")("wv");
 
-    W.block("aa")("zw") += 0.25 * V_sumA_Alpha.block("aa")("uz") * cc1a("Iuw") * x_ci("I");
-    W.block("aa")("zw") += 0.25 * V_sumB_Alpha.block("aa")("uz") * cc1a("Iuw") * x_ci("I");
-    W.block("aa")("zw") += 0.25 * V_sumA_Alpha.block("aa")("zv") * cc1a("Iwv") * x_ci("I");
-    W.block("aa")("zw") += 0.25 * V_sumB_Alpha.block("aa")("zv") * cc1a("Iwv") * x_ci("I");
+    W.block("aa")("zw") += 0.25 * V_sumA_Alpha.block("aa")("uz") * Gamma1_tilde.block("aa")("uw");
+    W.block("aa")("zw") += 0.25 * V_sumB_Alpha.block("aa")("uz") * Gamma1_tilde.block("aa")("uw");
+    W.block("aa")("zw") += 0.25 * V_sumA_Alpha.block("aa")("zv") * Gamma1_tilde.block("aa")("wv");
+    W.block("aa")("zw") += 0.25 * V_sumB_Alpha.block("aa")("zv") * Gamma1_tilde.block("aa")("wv");
 
-    W.block("aa")("zw") += 0.125 * x_ci("I") * V.block("aaaa")("zvxy") * cc2aa("Iwvxy");
-    W.block("aa")("zw") += 0.250 * x_ci("I") * V.block("aAaA")("zVxY") * cc2ab("IwVxY");
-    W.block("aa")("zw") += 0.125 * x_ci("I") * V.block("aaaa")("uzxy") * cc2aa("Iuwxy");
-    W.block("aa")("zw") += 0.250 * x_ci("I") * V.block("aAaA")("zUxY") * cc2ab("IwUxY");
+    W.block("aa")("zw") += 0.125 * V.block("aaaa")("zvxy") * Gamma2_tilde.block("aaaa")("wvxy");
+    W.block("aa")("zw") += 0.250 * V.block("aAaA")("zVxY") * Gamma2_tilde.block("aAaA")("wVxY");
+    W.block("aa")("zw") += 0.125 * V.block("aaaa")("uzxy") * Gamma2_tilde.block("aaaa")("uwxy");
+    W.block("aa")("zw") += 0.250 * V.block("aAaA")("zUxY") * Gamma2_tilde.block("aAaA")("wUxY");
 
     // CASSCF reference
     BlockedTensor temp1 = BTF_->build(CoreTensor, "temporal tensor 1", spin_cases({"gg"}));

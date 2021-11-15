@@ -185,7 +185,7 @@ void DSRG_MRPT2::write_1rdm_spin_dependent() {
     // CI contribution
     auto tp = ambit::Tensor::build(ambit::CoreTensor, "temporal tensor", {na, na});
 
-    tp("uv") = 0.5 * x_ci("I") * cc1a("Iuv");
+    tp("uv") = 0.5 * Gamma1_tilde.block("aa")("uv");
 
     (tp).iterate([&](const std::vector<size_t>& i, double& value) {
         if (actv_mos_relative[i[0]].first == actv_mos_relative[i[1]].first) {
@@ -329,8 +329,8 @@ void DSRG_MRPT2::write_2rdm_spin_dependent() {
         ambit::Tensor::build(ambit::CoreTensor, "effective alpha gamma tensor", {na, na});
     auto ci_g1_b = ambit::Tensor::build(ambit::CoreTensor, "effective beta gamma tensor", {na, na});
 
-    ci_g1_a("uv") += 0.5 * x_ci("I") * cc1a("Iuv");
-    ci_g1_b("UV") += 0.5 * x_ci("I") * cc1b("IUV");
+    ci_g1_a("uv") += 0.5 * Gamma1_tilde.block("aa")("uv");
+    ci_g1_b("UV") += 0.5 * Gamma1_tilde.block("AA")("UV");
 
     for (size_t i = 0, size_a = actv_all.size(); i < size_a; ++i) {
         auto v = actv_all[i];
@@ -455,9 +455,9 @@ void DSRG_MRPT2::write_2rdm_spin_dependent() {
     temp["xYuV"] += 0.25 * Gamma2_["uVxY"];
 
     // CI contribution
-    temp.block("aaaa")("xyuv") += 0.125 * cc2aa("Iuvxy") * x_ci("I");
-    temp.block("AAAA")("XYUV") += 0.125 * cc2bb("IUVXY") * x_ci("I");
-    temp.block("aAaA")("xYuV") += 0.125 * cc2ab("IuVxY") * x_ci("I");
+    temp.block("aaaa")("xyuv") += 0.125 * Gamma2_tilde.block("aaaa")("uvxy");
+    temp.block("AAAA")("XYUV") += 0.125 * Gamma2_tilde.block("AAAA")("UVXY");
+    temp.block("aAaA")("xYuV") += 0.125 * Gamma2_tilde.block("aAaA")("uVxY");
 
     // all-alpha and all-beta
     temp2["ckdl"] += temp["cdkl"];
