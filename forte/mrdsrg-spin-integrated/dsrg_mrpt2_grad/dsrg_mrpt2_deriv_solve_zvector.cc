@@ -47,7 +47,7 @@ void DSRG_MRPT2::set_z() {
     set_z_vv();
     set_z_aa_diag();
     outfile->Printf("Done");
-    // NOTICE: LAPACK direct solver (only use it when memory is not the bottleneck)
+    // NOTICE: LAPACK direct solver (only use it when memory is sufficient)
     // solve_z();
     // iterative solver
     solve_linear_iter();
@@ -61,18 +61,17 @@ void DSRG_MRPT2::set_w() {
     // Form Gamma_tilde
     for (const auto& pair : as_solver_->state_energies_map()) {
         const auto& state = pair.first;
-        auto evecs = as_solver_->eigenvectors(state);
         auto g1r = BTF_->build(tensor_type_, "1GRDM_ket", spin_cases({"aa"}));
         auto g2r = BTF_->build(tensor_type_, "2GRDM_ket", spin_cases({"aaaa"}));
-        for (int i = 0, nroots = evecs.size(); i < nroots; ++i) {
-            as_solver_->generalized_rdms(state, 0, x_ci.data(), Gamma1_tilde, false, 1);
-            as_solver_->generalized_rdms(state, 0, x_ci.data(), g1r, true, 1);
-            as_solver_->generalized_rdms(state, 0, x_ci.data(), Gamma2_tilde, false, 2);
-            as_solver_->generalized_rdms(state, 0, x_ci.data(), g2r, true, 2);
-        }    
+        auto vec_ptr = x_ci.data();
+
+        as_solver_->generalized_rdms(state, 0, vec_ptr, Gamma1_tilde, false, 1);
+        as_solver_->generalized_rdms(state, 0, vec_ptr, g1r, true, 1);
+        as_solver_->generalized_rdms(state, 0, vec_ptr, Gamma2_tilde, false, 2);
+        as_solver_->generalized_rdms(state, 0, vec_ptr, g2r, true, 2);
+
         Gamma1_tilde["uv"] += g1r["uv"];
         Gamma1_tilde["UV"] += g1r["UV"];
-
         Gamma2_tilde["uvxy"] += g2r["uvxy"];
         Gamma2_tilde["UVXY"] += g2r["UVXY"];
         Gamma2_tilde["uVxY"] += g2r["uVxY"];
@@ -782,61 +781,84 @@ void DSRG_MRPT2::z_vector_contraction(std::vector<double> & qk_vec, std::vector<
 
     /// MO RESPONSE -- CI EQUATION
     // !!!!!!! NOTICE we may need find a routine to contract qk_ci with ci, cc1, cc2 and cc3 beforehand !!!!!!!
+    // Form contraction between qk_ci and ci, cc1, cc2
+    auto cc1_qkci = BTF_->build(CoreTensor, "cc1 * qk_ci", spin_cases({"aa"}));
+    auto cc2_qkci = BTF_->build(CoreTensor, "cc2 * qk_ci", spin_cases({"aaaa"}));
+    for (const auto& pair : as_solver_->state_energies_map()) {
+        const auto& state = pair.first;
+        auto g1r = BTF_->build(tensor_type_, "1GRDM_ket", spin_cases({"aa"}));
+        auto g2r = BTF_->build(tensor_type_, "2GRDM_ket", spin_cases({"aaaa"}));
+        auto vec_ptr = qk_ci.data();
+        as_solver_->generalized_rdms(state, 0, vec_ptr, cc1_qkci, false, 1);
+        as_solver_->generalized_rdms(state, 0, vec_ptr, g1r, true, 1);
+        as_solver_->generalized_rdms(state, 0, vec_ptr, cc2_qkci, false, 2);
+        as_solver_->generalized_rdms(state, 0, vec_ptr, g2r, true, 2);
+
+        cc1_qkci["uv"] += g1r["uv"];
+        cc1_qkci["UV"] += g1r["UV"];
+        cc2_qkci["uvxy"] += g2r["uvxy"];
+        cc2_qkci["UVXY"] += g2r["UVXY"];
+        cc2_qkci["uVxY"] += g2r["uVxY"];
+    }
+
+    double ci_qk_dot;
+    ci_qk_dot = ci("I") * qk_ci("I");
+
     // VIRTUAL-CORE
-    y.block("vc")("em") -= H.block("vc")("em") * ci("I") * qk_ci("I");
-    y.block("vc")("em") -= V_sumA_Alpha.block("cv")("me") * ci("I") * qk_ci("I");
-    y.block("vc")("em") -= V_sumB_Alpha.block("cv")("me") * ci("I") * qk_ci("I");
-    y.block("vc")("em") -= 0.5 * V.block("avac")("veum") * cc1a("Iuv") * qk_ci("I");
-    y.block("vc")("em") -= 0.5 * V.block("vAcA")("eVmU") * cc1b("IUV") * qk_ci("I");
+    y.block("vc")("em") -= ci_qk_dot * H.block("vc")("em");
+    y.block("vc")("em") -= ci_qk_dot * V_sumA_Alpha.block("cv")("me");
+    y.block("vc")("em") -= ci_qk_dot * V_sumB_Alpha.block("cv")("me");
+    y.block("vc")("em") -= 0.5 * V.block("avac")("veum") * cc1_qkci.block("aa")("uv");
+    y.block("vc")("em") -= 0.5 * V.block("vAcA")("eVmU") * cc1_qkci.block("AA")("UV");
 
     // CORE-ACTIVE
-    y.block("ca")("mw") -= 0.50 * H.block("ac")("vm") * cc1a("Iwv") * qk_ci("I");
-    y.block("ca")("mw") -= 0.25 * V_sumA_Alpha.block("ac")("um") * cc1a("Iuw") * qk_ci("I");
-    y.block("ca")("mw") -= 0.25 * V_sumB_Alpha.block("ac")("um") * cc1a("Iuw") * qk_ci("I");
-    y.block("ca")("mw") -= 0.25 * V_sumA_Alpha.block("ca")("mv") * cc1a("Iwv") * qk_ci("I");
-    y.block("ca")("mw") -= 0.25 * V_sumB_Alpha.block("ca")("mv") * cc1a("Iwv") * qk_ci("I");
-    y.block("ca")("mw") -= 0.125 * V.block("aaca")("xymv") * cc2aa("Iwvxy") * qk_ci("I");
-    y.block("ca")("mw") -= 0.250 * V.block("aAcA")("xYmV") * cc2ab("IwVxY") * qk_ci("I");
-    y.block("ca")("mw") -= 0.125 * V.block("aaac")("xyum") * cc2aa("Iuwxy") * qk_ci("I");
-    y.block("ca")("mw") -= 0.250 * V.block("aAcA")("xYmU") * cc2ab("IwUxY") * qk_ci("I");
+    y.block("ca")("mw") -= 0.50 * H.block("ac")("vm") * cc1_qkci.block("aa")("wv");
+    y.block("ca")("mw") -= 0.25 * V_sumA_Alpha.block("ac")("um") * cc1_qkci.block("aa")("uw");
+    y.block("ca")("mw") -= 0.25 * V_sumB_Alpha.block("ac")("um") * cc1_qkci.block("aa")("uw");
+    y.block("ca")("mw") -= 0.25 * V_sumA_Alpha.block("ca")("mv") * cc1_qkci.block("aa")("wv");
+    y.block("ca")("mw") -= 0.25 * V_sumB_Alpha.block("ca")("mv") * cc1_qkci.block("aa")("wv");
+    y.block("ca")("mw") -= 0.125 * V.block("aaca")("xymv") * cc2_qkci.block("aaaa")("wvxy");
+    y.block("ca")("mw") -= 0.250 * V.block("aAcA")("xYmV") * cc2_qkci.block("aAaA")("wVxY");
+    y.block("ca")("mw") -= 0.125 * V.block("aaac")("xyum") * cc2_qkci.block("aaaa")("uwxy");
+    y.block("ca")("mw") -= 0.250 * V.block("aAcA")("xYmU") * cc2_qkci.block("aAaA")("wUxY");
 
-    y.block("ca")("mw") += H.block("ac")("wm") * ci("I") * qk_ci("I");
-    y.block("ca")("mw") += V_sumA_Alpha.block("ca")("mw") * ci("I") * qk_ci("I");
-    y.block("ca")("mw") += V_sumB_Alpha.block("ca")("mw") * ci("I") * qk_ci("I");
-    y.block("ca")("mw") += 0.5 * V.block("aaac")("vwum") * cc1a("Iuv") * qk_ci("I");
-    y.block("ca")("mw") += 0.5 * V.block("aAcA")("wVmU") * cc1b("IUV") * qk_ci("I");
+    y.block("ca")("mw") += ci_qk_dot * H.block("ac")("wm");
+    y.block("ca")("mw") += ci_qk_dot * V_sumA_Alpha.block("ca")("mw");
+    y.block("ca")("mw") += ci_qk_dot * V_sumB_Alpha.block("ca")("mw");
+    y.block("ca")("mw") += 0.5 * V.block("aaac")("vwum") * cc1_qkci.block("aa")("uv");
+    y.block("ca")("mw") += 0.5 * V.block("aAcA")("wVmU") * cc1_qkci.block("AA")("UV");
 
     // VIRTUAL-ACTIVE
-    y.block("va")("ew") -= 0.50 * H.block("av")("ve") * cc1a("Iwv") * qk_ci("I");
-    y.block("va")("ew") -= 0.25 * V_sumA_Alpha.block("av")("ue") * cc1a("Iuw") * qk_ci("I");
-    y.block("va")("ew") -= 0.25 * V_sumB_Alpha.block("av")("ue") * cc1a("Iuw") * qk_ci("I");
-    y.block("va")("ew") -= 0.25 * V_sumA_Alpha.block("va")("ev") * cc1a("Iwv") * qk_ci("I");
-    y.block("va")("ew") -= 0.25 * V_sumB_Alpha.block("va")("ev") * cc1a("Iwv") * qk_ci("I");
-    y.block("va")("ew") -= 0.125 * V.block("vaaa")("evxy") * cc2aa("Iwvxy") * qk_ci("I");
-    y.block("va")("ew") -= 0.250 * V.block("vAaA")("eVxY") * cc2ab("IwVxY") * qk_ci("I");
-    y.block("va")("ew") -= 0.125 * V.block("avaa")("uexy") * cc2aa("Iuwxy") * qk_ci("I");
-    y.block("va")("ew") -= 0.250 * V.block("vAaA")("eUxY") * cc2ab("IwUxY") * qk_ci("I");
+    y.block("va")("ew") -= 0.50 * H.block("av")("ve") * cc1_qkci.block("aa")("wv");
+    y.block("va")("ew") -= 0.25 * V_sumA_Alpha.block("av")("ue") * cc1_qkci.block("aa")("uw");
+    y.block("va")("ew") -= 0.25 * V_sumB_Alpha.block("av")("ue") * cc1_qkci.block("aa")("uw");
+    y.block("va")("ew") -= 0.25 * V_sumA_Alpha.block("va")("ev") * cc1_qkci.block("aa")("wv");
+    y.block("va")("ew") -= 0.25 * V_sumB_Alpha.block("va")("ev") * cc1_qkci.block("aa")("wv");
+    y.block("va")("ew") -= 0.125 * V.block("vaaa")("evxy") * cc2_qkci.block("aaaa")("wvxy");
+    y.block("va")("ew") -= 0.250 * V.block("vAaA")("eVxY") * cc2_qkci.block("aAaA")("wVxY");
+    y.block("va")("ew") -= 0.125 * V.block("avaa")("uexy") * cc2_qkci.block("aaaa")("uwxy");
+    y.block("va")("ew") -= 0.250 * V.block("vAaA")("eUxY") * cc2_qkci.block("aAaA")("wUxY");
 
     // ACTIVE-ACTIVE
-    y.block("aa")("wz") -= 0.50 * H.block("aa")("vw") * cc1a("Izv") * qk_ci("I");
-    y.block("aa")("wz") += 0.50 * H.block("aa")("vz") * cc1a("Iwv") * qk_ci("I");
-    y.block("aa")("wz") -= 0.25 * V_sumA_Alpha.block("aa")("uw") * cc1a("Iuz") * qk_ci("I");
-    y.block("aa")("wz") -= 0.25 * V_sumB_Alpha.block("aa")("uw") * cc1a("Iuz") * qk_ci("I");
-    y.block("aa")("wz") -= 0.25 * V_sumA_Alpha.block("aa")("wv") * cc1a("Izv") * qk_ci("I");
-    y.block("aa")("wz") -= 0.25 * V_sumB_Alpha.block("aa")("wv") * cc1a("Izv") * qk_ci("I");
-    y.block("aa")("wz") += 0.25 * V_sumA_Alpha.block("aa")("uz") * cc1a("Iuw") * qk_ci("I");
-    y.block("aa")("wz") += 0.25 * V_sumB_Alpha.block("aa")("uz") * cc1a("Iuw") * qk_ci("I");
-    y.block("aa")("wz") += 0.25 * V_sumA_Alpha.block("aa")("zv") * cc1a("Iwv") * qk_ci("I");
-    y.block("aa")("wz") += 0.25 * V_sumB_Alpha.block("aa")("zv") * cc1a("Iwv") * qk_ci("I");
+    y.block("aa")("wz") -= 0.50 * H.block("aa")("vw") * cc1_qkci.block("aa")("zv");
+    y.block("aa")("wz") += 0.50 * H.block("aa")("vz") * cc1_qkci.block("aa")("wv");
+    y.block("aa")("wz") -= 0.25 * V_sumA_Alpha.block("aa")("uw") * cc1_qkci.block("aa")("uz");
+    y.block("aa")("wz") -= 0.25 * V_sumB_Alpha.block("aa")("uw") * cc1_qkci.block("aa")("uz");
+    y.block("aa")("wz") -= 0.25 * V_sumA_Alpha.block("aa")("wv") * cc1_qkci.block("aa")("zv");
+    y.block("aa")("wz") -= 0.25 * V_sumB_Alpha.block("aa")("wv") * cc1_qkci.block("aa")("zv");
+    y.block("aa")("wz") += 0.25 * V_sumA_Alpha.block("aa")("uz") * cc1_qkci.block("aa")("uw");
+    y.block("aa")("wz") += 0.25 * V_sumB_Alpha.block("aa")("uz") * cc1_qkci.block("aa")("uw");
+    y.block("aa")("wz") += 0.25 * V_sumA_Alpha.block("aa")("zv") * cc1_qkci.block("aa")("wv");
+    y.block("aa")("wz") += 0.25 * V_sumB_Alpha.block("aa")("zv") * cc1_qkci.block("aa")("wv");
 
-    y.block("aa")("wz") -= 0.125 * V.block("aaaa")("wvxy") * cc2aa("Izvxy") * qk_ci("I");
-    y.block("aa")("wz") -= 0.250 * V.block("aAaA")("wVxY") * cc2ab("IzVxY") * qk_ci("I");
-    y.block("aa")("wz") -= 0.125 * V.block("aaaa")("uwxy") * cc2aa("Iuzxy") * qk_ci("I");
-    y.block("aa")("wz") -= 0.250 * V.block("aAaA")("wUxY") * cc2ab("IzUxY") * qk_ci("I");
-    y.block("aa")("wz") += 0.125 * V.block("aaaa")("zvxy") * cc2aa("Iwvxy") * qk_ci("I");
-    y.block("aa")("wz") += 0.250 * V.block("aAaA")("zVxY") * cc2ab("IwVxY") * qk_ci("I");
-    y.block("aa")("wz") += 0.125 * V.block("aaaa")("uzxy") * cc2aa("Iuwxy") * qk_ci("I");
-    y.block("aa")("wz") += 0.250 * V.block("aAaA")("zUxY") * cc2ab("IwUxY") * qk_ci("I");
+    y.block("aa")("wz") -= 0.125 * V.block("aaaa")("wvxy") * cc2_qkci.block("aaaa")("zvxy");
+    y.block("aa")("wz") -= 0.250 * V.block("aAaA")("wVxY") * cc2_qkci.block("aAaA")("zVxY");
+    y.block("aa")("wz") -= 0.125 * V.block("aaaa")("uwxy") * cc2_qkci.block("aaaa")("uzxy");
+    y.block("aa")("wz") -= 0.250 * V.block("aAaA")("wUxY") * cc2_qkci.block("aAaA")("zUxY");
+    y.block("aa")("wz") += 0.125 * V.block("aaaa")("zvxy") * cc2_qkci.block("aaaa")("wvxy");
+    y.block("aa")("wz") += 0.250 * V.block("aAaA")("zVxY") * cc2_qkci.block("aAaA")("wVxY");
+    y.block("aa")("wz") += 0.125 * V.block("aaaa")("uzxy") * cc2_qkci.block("aaaa")("uwxy");
+    y.block("aa")("wz") += 0.250 * V.block("aAaA")("zUxY") * cc2_qkci.block("aAaA")("wUxY");
 
     /// CI EQUATION -- MO RESPONSE
     // virtual-core
@@ -933,7 +955,6 @@ void DSRG_MRPT2::z_vector_contraction(std::vector<double> & qk_vec, std::vector<
     y_ci("K") += -2 * ci("K") * V.block("AAAA")("UYVX") * Gamma1_.block("AA")("XY") * qk.block("AA")("UV");
     y_ci("K") += -2 * ci("K") * V.block("aAaA")("yUxV") * Gamma1_.block("aa")("xy") * qk.block("AA")("UV");
 
-
     /// CI EQUATION -- CI 
     y_ci("K") += H.block("cc")("mn") * I.block("cc")("mn") * qk_ci("K");
     y_ci("K") += H.block("CC")("MN") * I.block("CC")("MN") * qk_ci("K");
@@ -983,8 +1004,7 @@ void DSRG_MRPT2::z_vector_contraction(std::vector<double> & qk_vec, std::vector<
             if (i[0] != ROW2DEL) {      
                 y_vec.at(index) = value;
             } else {
-                double product_ciqk = ci("I") * qk_ci("I");
-                y_vec.at(index) = product_ciqk;
+                y_vec.at(index) = ci_qk_dot;
             }
         });
     }
