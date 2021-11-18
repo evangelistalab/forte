@@ -113,6 +113,12 @@ class ActiveSpaceSolver {
                           ambit::BlockedTensor& result, bool c_right, int rdm_level,
                           std::vector<std::string> spin = {});
 
+    /// Compute sigma vector
+    ///    σ_I = h_{p1,p2,...}^{q1,q2,...} <Phi_I| a^+_p1 a^+_p2 .. a_q2 a_q1 |Phi_J> C_J
+    void generalized_sigma(const StateInfo& state, size_t root, ambit::BlockedTensor& h,
+                           const std::map<std::string, double>& block_label_to_factor,
+                           const std::vector<double>& sigma);
+
     /// Compute the state-averaged reference
     RDMs compute_average_rdms(const std::map<StateInfo, std::vector<double>>& state_weights_map,
                               int max_rdm_level);

@@ -282,6 +282,12 @@ void ActiveSpaceSolver::generalized_rdms(const StateInfo& state, size_t root,
     state_method_map_[state]->generalized_rdms(root, X, result, c_right, rdm_level, spin);
 }
 
+void ActiveSpaceSolver::generalized_sigma(
+    const StateInfo& state, size_t root, ambit::BlockedTensor& h,
+    const std::map<std::string, double>& block_label_to_factor, const std::vector<double>& sigma) {
+    state_method_map_[state]->generalized_sigma(root, h, block_label_to_factor, sigma);
+}
+
 void ActiveSpaceSolver::print_options() {
     print_h2("Summary of Active Space Solver Input");
 

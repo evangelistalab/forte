@@ -138,7 +138,14 @@ class ActiveSpaceMethod {
                                   ambit::BlockedTensor& result, bool c_right, int rdm_level,
                                   std::vector<std::string> spin) {
         throw std::runtime_error(
-            "The function generalized_rdms is not implemented for this ActiveSpaceMethod type ");
+            "The function generalized_rdms is not implemented for this ActiveSpaceMethod type!");
+    }
+
+    virtual void generalized_sigma(size_t root, ambit::BlockedTensor& h,
+                                   const std::map<std::string, double>& block_label_to_factor,
+                                   const std::vector<double>& sigma) {
+        throw std::runtime_error(
+            "The function generalized_sigma is not implemented for this ActiveSpaceMethod type!");
     }
 
     /// Set options from an option object
