@@ -278,10 +278,8 @@ class DSRG_MRPT2 : public MASTER_DSRG {
     /**
      * Solve the Linear System Ax=b and yield Z using iterative methods.
      */
-    void remove_rankdeficiency();
     void set_preconditioner(std::vector<double>&);
     void gmres_solver(std::vector<double>&);
-    void matvec_dot(double*, double*, double*, int);
     void solve_linear_iter();
     void z_vector_contraction(std::vector<double> &, std::vector<double> &);
     /**
@@ -325,8 +323,6 @@ class DSRG_MRPT2 : public MASTER_DSRG {
      * Through iterative approaches. Currently, we use LAPACK as the solver.
      */
     void set_z();
-    void set_alpha();
-    void set_CI();
     /**
      * Setting the b of the Linear System Ax=b.
      * Parameters: preidx, block_dim
@@ -449,10 +445,6 @@ class DSRG_MRPT2 : public MASTER_DSRG {
 
     double Alpha;
     ambit::Tensor x_ci;
-
-    // Tensors for solving CI equations
-    ambit::BlockedTensor CI_1;
-    ambit::BlockedTensor CI_2;
 
     ambit::BlockedTensor V_sumA_Alpha;
     ambit::BlockedTensor V_sumB_Alpha;
