@@ -29,6 +29,7 @@
 #ifndef _combinatorial_h_
 #define _combinatorial_h_
 
+#include <cstddef>
 #include <vector>
 
 namespace forte {
