@@ -1,4 +1,7 @@
 dsrg_mrpt2_energy = -380.704212919242991
+
+memory 1 gb
+
 import forte
 
 molecule mol{
@@ -46,20 +49,14 @@ set forte {
    frozen_docc              [10]
    restricted_docc          [19]
    active                   [7]
-   root_sym                0
-   nroot                   1
-   root                    0
    dsrg_s                  0.5
    int_type                DF
    multiplicity            1
    ccvv_algorithm          fly_ambit
    job_type                three-dsrg-mrpt2
-   FCI_ITERATIONS          50
    ROTATE_MOS              [1, 26, 30, 1, 29, 32, 1, 36, 37]
-
 }
 
-set_num_threads(1)
 no_symmetry = energy('forte')
 compare_values(no_symmetry, dsrg_mrpt2_energy, 6, "TESTED ROTATION")
 

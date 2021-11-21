@@ -336,7 +336,7 @@ void Psi4Integrals::rotate_mos() {
         outfile->Printf("   %d   %d   %d\n", rotate_mo_group[0], rotate_mo_group[1],
                         rotate_mo_group[2]);
     }
-    // std::shared_ptr<psi::Matrix> C_old = wfn_->Ca();
+
     std::shared_ptr<psi::Matrix> C_old = Ca_;
     std::shared_ptr<psi::Matrix> C_new(C_old->clone());
 
@@ -353,6 +353,9 @@ void Psi4Integrals::rotate_mos() {
         eps_a_new.set(mo_group[0], mo_group[2], epsilon_mo1);
         eps_a_new.set(mo_group[0], mo_group[1], epsilon_mo2);
     }
+    // Update local copy of the orbitals
+    Ca_->copy(C_new);
+    Cb_->copy(C_new);
 
     // Copy to psi::Wavefunction
     wfn_->Ca()->copy(C_new);
