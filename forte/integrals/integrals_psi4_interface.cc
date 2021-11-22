@@ -336,39 +336,32 @@ void Psi4Integrals::rotate_mos() {
         outfile->Printf("   %d   %d   %d\n", rotate_mo_group[0], rotate_mo_group[1],
                         rotate_mo_group[2]);
     }
-    // std::shared_ptr<psi::Matrix> C_old = wfn_->Ca();
+
     std::shared_ptr<psi::Matrix> C_old = Ca_;
     std::shared_ptr<psi::Matrix> C_new(C_old->clone());
 
-    psi::Vector* eps_a = wfn_->epsilon_a()->clone();
-    psi::Vector* eps_b = wfn_->epsilon_b()->clone();
-    psi::Vector* epsilon_old = eps_a;
-    psi::Vector* epsilon_new(epsilon_old->clone());
+    const auto& eps_a_old = *wfn_->epsilon_a();
+    auto eps_a_new = *eps_a_old.clone();
 
     for (auto mo_group : rotate_mo_list) {
-        psi::SharedVector C_mo1 = C_old->get_column(mo_group[0], mo_group[1]);
-        psi::SharedVector C_mo2 = C_old->get_column(mo_group[0], mo_group[2]);
-        double epsilon_mo1 = epsilon_old->get(mo_group[0], mo_group[1]);
-        double epsilon_mo2 = epsilon_old->get(mo_group[0], mo_group[2]);
+        auto C_mo1 = C_old->get_column(mo_group[0], mo_group[1]);
+        auto C_mo2 = C_old->get_column(mo_group[0], mo_group[2]);
+        auto epsilon_mo1 = eps_a_old.get(mo_group[0], mo_group[1]);
+        auto epsilon_mo2 = eps_a_old.get(mo_group[0], mo_group[2]);
         C_new->set_column(mo_group[0], mo_group[2], C_mo1);
         C_new->set_column(mo_group[0], mo_group[1], C_mo2);
-        epsilon_new->set(mo_group[0], mo_group[2], epsilon_mo1);
-        epsilon_new->set(mo_group[0], mo_group[1], epsilon_mo2);
+        eps_a_new.set(mo_group[0], mo_group[2], epsilon_mo1);
+        eps_a_new.set(mo_group[0], mo_group[1], epsilon_mo2);
     }
-    C_old->copy(C_new);
-    epsilon_old->copy(epsilon_new);
+    // Update local copy of the orbitals
+    Ca_->copy(C_new);
+    Cb_->copy(C_new);
 
-    // std::shared_ptr<psi::Matrix> Cb_old = wfn_->Cb();
-    std::shared_ptr<psi::Matrix> Cb_old = Cb_;
-    psi::Vector* epsilon_b_old = eps_b;
-    Cb_old->copy(C_new);
-    epsilon_b_old->copy(epsilon_new);
-
-    // Send a copy to psi::Wavefunction
-    wfn_->Ca()->copy(Ca_);
-    wfn_->Cb()->copy(Cb_);
-    wfn_->epsilon_a()->copy(eps_a);
-    wfn_->epsilon_b()->copy(eps_b);
+    // Copy to psi::Wavefunction
+    wfn_->Ca()->copy(C_new);
+    wfn_->Cb()->copy(C_new);
+    wfn_->epsilon_a()->copy(eps_a_new);
+    wfn_->epsilon_b()->copy(eps_a_new);
 }
 
 void Psi4Integrals::build_dipole_ints_ao() {

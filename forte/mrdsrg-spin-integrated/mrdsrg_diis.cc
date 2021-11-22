@@ -101,7 +101,7 @@ void MRDSRG::return_amp_diis(BlockedTensor& T1, const std::vector<std::string>& 
 
 void MRDSRG::diis_manager_init() {
     diis_manager_ = std::make_shared<DIISManager>(diis_max_vec_, "MRDSRG DIIS",
-                                                  DIISManager::LargestError, DIISManager::OnDisk);
+                                                  DIISManager::RemovalPolicy::LargestError, DIISManager::StoragePolicy::OnDisk);
 
     amp_ptrs_.clear();
     res_ptrs_.clear();
@@ -128,43 +128,43 @@ void MRDSRG::diis_manager_init() {
     }
 
     diis_manager_->set_error_vector_size(
-        51, DIISEntry::Pointer, sizes[0], DIISEntry::Pointer, sizes[1], DIISEntry::Pointer,
-        sizes[2], DIISEntry::Pointer, sizes[3], DIISEntry::Pointer, sizes[4], DIISEntry::Pointer,
-        sizes[5], DIISEntry::Pointer, sizes[6], DIISEntry::Pointer, sizes[7], DIISEntry::Pointer,
-        sizes[8], DIISEntry::Pointer, sizes[9], DIISEntry::Pointer, sizes[10], DIISEntry::Pointer,
-        sizes[11], DIISEntry::Pointer, sizes[12], DIISEntry::Pointer, sizes[13], DIISEntry::Pointer,
-        sizes[14], DIISEntry::Pointer, sizes[15], DIISEntry::Pointer, sizes[16], DIISEntry::Pointer,
-        sizes[17], DIISEntry::Pointer, sizes[18], DIISEntry::Pointer, sizes[19], DIISEntry::Pointer,
-        sizes[20], DIISEntry::Pointer, sizes[21], DIISEntry::Pointer, sizes[22], DIISEntry::Pointer,
-        sizes[23], DIISEntry::Pointer, sizes[24], DIISEntry::Pointer, sizes[25], DIISEntry::Pointer,
-        sizes[26], DIISEntry::Pointer, sizes[27], DIISEntry::Pointer, sizes[28], DIISEntry::Pointer,
-        sizes[29], DIISEntry::Pointer, sizes[30], DIISEntry::Pointer, sizes[31], DIISEntry::Pointer,
-        sizes[32], DIISEntry::Pointer, sizes[33], DIISEntry::Pointer, sizes[34], DIISEntry::Pointer,
-        sizes[35], DIISEntry::Pointer, sizes[36], DIISEntry::Pointer, sizes[37], DIISEntry::Pointer,
-        sizes[38], DIISEntry::Pointer, sizes[39], DIISEntry::Pointer, sizes[40], DIISEntry::Pointer,
-        sizes[41], DIISEntry::Pointer, sizes[42], DIISEntry::Pointer, sizes[43], DIISEntry::Pointer,
-        sizes[44], DIISEntry::Pointer, sizes[45], DIISEntry::Pointer, sizes[46], DIISEntry::Pointer,
-        sizes[47], DIISEntry::Pointer, sizes[48], DIISEntry::Pointer, sizes[49], DIISEntry::Pointer,
+        51, DIISEntry::InputType::Pointer, sizes[0], DIISEntry::InputType::Pointer, sizes[1], DIISEntry::InputType::Pointer,
+        sizes[2], DIISEntry::InputType::Pointer, sizes[3], DIISEntry::InputType::Pointer, sizes[4], DIISEntry::InputType::Pointer,
+        sizes[5], DIISEntry::InputType::Pointer, sizes[6], DIISEntry::InputType::Pointer, sizes[7], DIISEntry::InputType::Pointer,
+        sizes[8], DIISEntry::InputType::Pointer, sizes[9], DIISEntry::InputType::Pointer, sizes[10], DIISEntry::InputType::Pointer,
+        sizes[11], DIISEntry::InputType::Pointer, sizes[12], DIISEntry::InputType::Pointer, sizes[13], DIISEntry::InputType::Pointer,
+        sizes[14], DIISEntry::InputType::Pointer, sizes[15], DIISEntry::InputType::Pointer, sizes[16], DIISEntry::InputType::Pointer,
+        sizes[17], DIISEntry::InputType::Pointer, sizes[18], DIISEntry::InputType::Pointer, sizes[19], DIISEntry::InputType::Pointer,
+        sizes[20], DIISEntry::InputType::Pointer, sizes[21], DIISEntry::InputType::Pointer, sizes[22], DIISEntry::InputType::Pointer,
+        sizes[23], DIISEntry::InputType::Pointer, sizes[24], DIISEntry::InputType::Pointer, sizes[25], DIISEntry::InputType::Pointer,
+        sizes[26], DIISEntry::InputType::Pointer, sizes[27], DIISEntry::InputType::Pointer, sizes[28], DIISEntry::InputType::Pointer,
+        sizes[29], DIISEntry::InputType::Pointer, sizes[30], DIISEntry::InputType::Pointer, sizes[31], DIISEntry::InputType::Pointer,
+        sizes[32], DIISEntry::InputType::Pointer, sizes[33], DIISEntry::InputType::Pointer, sizes[34], DIISEntry::InputType::Pointer,
+        sizes[35], DIISEntry::InputType::Pointer, sizes[36], DIISEntry::InputType::Pointer, sizes[37], DIISEntry::InputType::Pointer,
+        sizes[38], DIISEntry::InputType::Pointer, sizes[39], DIISEntry::InputType::Pointer, sizes[40], DIISEntry::InputType::Pointer,
+        sizes[41], DIISEntry::InputType::Pointer, sizes[42], DIISEntry::InputType::Pointer, sizes[43], DIISEntry::InputType::Pointer,
+        sizes[44], DIISEntry::InputType::Pointer, sizes[45], DIISEntry::InputType::Pointer, sizes[46], DIISEntry::InputType::Pointer,
+        sizes[47], DIISEntry::InputType::Pointer, sizes[48], DIISEntry::InputType::Pointer, sizes[49], DIISEntry::InputType::Pointer,
         sizes[50]);
 
     diis_manager_->set_vector_size(
-        51, DIISEntry::Pointer, sizes[0], DIISEntry::Pointer, sizes[1], DIISEntry::Pointer,
-        sizes[2], DIISEntry::Pointer, sizes[3], DIISEntry::Pointer, sizes[4], DIISEntry::Pointer,
-        sizes[5], DIISEntry::Pointer, sizes[6], DIISEntry::Pointer, sizes[7], DIISEntry::Pointer,
-        sizes[8], DIISEntry::Pointer, sizes[9], DIISEntry::Pointer, sizes[10], DIISEntry::Pointer,
-        sizes[11], DIISEntry::Pointer, sizes[12], DIISEntry::Pointer, sizes[13], DIISEntry::Pointer,
-        sizes[14], DIISEntry::Pointer, sizes[15], DIISEntry::Pointer, sizes[16], DIISEntry::Pointer,
-        sizes[17], DIISEntry::Pointer, sizes[18], DIISEntry::Pointer, sizes[19], DIISEntry::Pointer,
-        sizes[20], DIISEntry::Pointer, sizes[21], DIISEntry::Pointer, sizes[22], DIISEntry::Pointer,
-        sizes[23], DIISEntry::Pointer, sizes[24], DIISEntry::Pointer, sizes[25], DIISEntry::Pointer,
-        sizes[26], DIISEntry::Pointer, sizes[27], DIISEntry::Pointer, sizes[28], DIISEntry::Pointer,
-        sizes[29], DIISEntry::Pointer, sizes[30], DIISEntry::Pointer, sizes[31], DIISEntry::Pointer,
-        sizes[32], DIISEntry::Pointer, sizes[33], DIISEntry::Pointer, sizes[34], DIISEntry::Pointer,
-        sizes[35], DIISEntry::Pointer, sizes[36], DIISEntry::Pointer, sizes[37], DIISEntry::Pointer,
-        sizes[38], DIISEntry::Pointer, sizes[39], DIISEntry::Pointer, sizes[40], DIISEntry::Pointer,
-        sizes[41], DIISEntry::Pointer, sizes[42], DIISEntry::Pointer, sizes[43], DIISEntry::Pointer,
-        sizes[44], DIISEntry::Pointer, sizes[45], DIISEntry::Pointer, sizes[46], DIISEntry::Pointer,
-        sizes[47], DIISEntry::Pointer, sizes[48], DIISEntry::Pointer, sizes[49], DIISEntry::Pointer,
+        51, DIISEntry::InputType::Pointer, sizes[0], DIISEntry::InputType::Pointer, sizes[1], DIISEntry::InputType::Pointer,
+        sizes[2], DIISEntry::InputType::Pointer, sizes[3], DIISEntry::InputType::Pointer, sizes[4], DIISEntry::InputType::Pointer,
+        sizes[5], DIISEntry::InputType::Pointer, sizes[6], DIISEntry::InputType::Pointer, sizes[7], DIISEntry::InputType::Pointer,
+        sizes[8], DIISEntry::InputType::Pointer, sizes[9], DIISEntry::InputType::Pointer, sizes[10], DIISEntry::InputType::Pointer,
+        sizes[11], DIISEntry::InputType::Pointer, sizes[12], DIISEntry::InputType::Pointer, sizes[13], DIISEntry::InputType::Pointer,
+        sizes[14], DIISEntry::InputType::Pointer, sizes[15], DIISEntry::InputType::Pointer, sizes[16], DIISEntry::InputType::Pointer,
+        sizes[17], DIISEntry::InputType::Pointer, sizes[18], DIISEntry::InputType::Pointer, sizes[19], DIISEntry::InputType::Pointer,
+        sizes[20], DIISEntry::InputType::Pointer, sizes[21], DIISEntry::InputType::Pointer, sizes[22], DIISEntry::InputType::Pointer,
+        sizes[23], DIISEntry::InputType::Pointer, sizes[24], DIISEntry::InputType::Pointer, sizes[25], DIISEntry::InputType::Pointer,
+        sizes[26], DIISEntry::InputType::Pointer, sizes[27], DIISEntry::InputType::Pointer, sizes[28], DIISEntry::InputType::Pointer,
+        sizes[29], DIISEntry::InputType::Pointer, sizes[30], DIISEntry::InputType::Pointer, sizes[31], DIISEntry::InputType::Pointer,
+        sizes[32], DIISEntry::InputType::Pointer, sizes[33], DIISEntry::InputType::Pointer, sizes[34], DIISEntry::InputType::Pointer,
+        sizes[35], DIISEntry::InputType::Pointer, sizes[36], DIISEntry::InputType::Pointer, sizes[37], DIISEntry::InputType::Pointer,
+        sizes[38], DIISEntry::InputType::Pointer, sizes[39], DIISEntry::InputType::Pointer, sizes[40], DIISEntry::InputType::Pointer,
+        sizes[41], DIISEntry::InputType::Pointer, sizes[42], DIISEntry::InputType::Pointer, sizes[43], DIISEntry::InputType::Pointer,
+        sizes[44], DIISEntry::InputType::Pointer, sizes[45], DIISEntry::InputType::Pointer, sizes[46], DIISEntry::InputType::Pointer,
+        sizes[47], DIISEntry::InputType::Pointer, sizes[48], DIISEntry::InputType::Pointer, sizes[49], DIISEntry::InputType::Pointer,
         sizes[50]);
 }
 

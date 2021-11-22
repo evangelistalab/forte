@@ -186,9 +186,9 @@ double CASSCF::compute_energy() {
 
     // Setup the DIIS manager
     auto diis_manager = std::make_shared<DIISManager>(
-        diis_max_vec, "MCSCF DIIS", DIISManager::OldestAdded, DIISManager::InCore);
-    diis_manager->set_error_vector_size(1, DIISEntry::Matrix, S.get());
-    diis_manager->set_vector_size(1, DIISEntry::Matrix, S.get());
+        diis_max_vec, "MCSCF DIIS", DIISManager::RemovalPolicy::OldestAdded, DIISManager::StoragePolicy::InCore);
+    diis_manager->set_error_vector_size(1, DIISEntry::InputType::Matrix, S.get());
+    diis_manager->set_vector_size(1, DIISEntry::InputType::Matrix, S.get());
 
     int diis_count = 0;
 
