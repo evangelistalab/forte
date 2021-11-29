@@ -130,15 +130,6 @@ void DeterminantSubstitutionLists::build_strings(const DeterminantHashVec& wfn) 
             alpha_a_strings_[a_add].emplace_back(ii, I);
         }
     }
-
-    outfile->Printf("Alpha A String");
-    for (int a = 0, asize = alpha_a_strings_.size(); a < asize;++a) {
-        for (int I = 0, Isize = alpha_a_strings_[a].size(); I < Isize; ++I) {
-            int ii = alpha_a_strings_[a][I].first;
-            size_t J = alpha_a_strings_[a][I].second;
-            outfile->Printf("\n  n = %3d, ii = %d, I = %3zu", a, ii, J);
-        }
-    }
 }
 
 void DeterminantSubstitutionLists::op_s_lists(const DeterminantHashVec& wfn) {
@@ -191,15 +182,6 @@ void DeterminantSubstitutionLists::lists_1a(const DeterminantHashVec& wfn) {
 
     if (!quiet_) {
         outfile->Printf("\n        α          %.3e seconds", ann.stop());
-    }
-
-    outfile->Printf("\n  a list size = %zu", a_list_.size());
-    for (int a = 0, asize = a_list_.size(); a < asize; ++a) {
-        for (int n = 0, size = a_list_[a].size(); n < size; ++n) {
-            size_t I = a_list_[a][n].first;
-            int ii = a_list_[a][n].second;
-            outfile->Printf("\n  a = %3d, I = %3zu, ii = %2d", a, I, ii);
-        }
     }
 }
 
@@ -507,9 +489,8 @@ void DeterminantSubstitutionLists::lists_3aab(const DeterminantHashVec& wfn) {
         // Grab mutable copy of determinant
         Determinant detI(wfn_map[I]);
         detI.zero_alfa();
-        std::vector<int> bocc = detI.get_beta_occ(ncmo_);
-        for (int i = 0, nbeta = bocc.size(); i < nbeta; ++i) {
-            int ii = bocc[i];
+        std::vector<int> bocc = detI.get_beta_occ(static_cast<int>(ncmo_));
+        for (int ii : bocc) {
             Determinant ann_det(detI);
             ann_det.set_beta_bit(ii, false);
 
@@ -527,10 +508,9 @@ void DeterminantSubstitutionLists::lists_3aab(const DeterminantHashVec& wfn) {
         }
     }
 
-    for (size_t b = 0, max_b = beta_string.size(); b < max_b; ++b) {
+    for (auto & c_dets : beta_string) {
         size_t naab_ann = 0;
         det_hash<int> aab_ann_map;
-        std::vector<std::pair<int, size_t>>& c_dets = beta_string[b];
         std::vector<std::vector<std::tuple<size_t, short, short, short>>> tmp;
         size_t max_I = c_dets.size();
         for (size_t I = 0; I < max_I; ++I) {
@@ -540,7 +520,7 @@ void DeterminantSubstitutionLists::lists_3aab(const DeterminantHashVec& wfn) {
             size_t kk = c_dets[I].first;
             detI.set_beta_bit(kk, false);
 
-            std::vector<int> aocc = detI.get_alfa_occ(ncmo_);
+            std::vector<int> aocc = detI.get_alfa_occ(static_cast<int>(ncmo_));
 
             for (size_t i = 0, noalfa = static_cast<int>(aocc.size()); i < noalfa; ++i) {
                 for (size_t j = i + 1; j < noalfa; ++j) {
@@ -587,10 +567,9 @@ void DeterminantSubstitutionLists::lists_3abb(const DeterminantHashVec& wfn) {
 
     const det_hashvec& dets = wfn.wfn_hash();
 
-    for (size_t a = 0, max_a = alpha_a_strings_.size(); a < max_a; ++a) {
+    for (auto & c_dets : alpha_a_strings_) {
         size_t nabb_ann = 0;
         det_hash<int> abb_ann_map;
-        std::vector<std::pair<int, size_t>>& c_dets = alpha_a_strings_[a];
         size_t max_I = c_dets.size();
         std::vector<std::vector<std::tuple<size_t, short, short, short>>> tmp;
 
@@ -601,7 +580,7 @@ void DeterminantSubstitutionLists::lists_3abb(const DeterminantHashVec& wfn) {
             int ii = c_dets[I].first;
             detI.set_alfa_bit(ii, false);
 
-            std::vector<int> bocc = detI.get_beta_occ(ncmo_);
+            std::vector<int> bocc = detI.get_beta_occ(static_cast<int>(ncmo_));
 
             for (int j = 0, nobeta = static_cast<int>(bocc.size()); j < nobeta; ++j) {
                 for (int k = j + 1; k < nobeta; ++k) {
