@@ -53,6 +53,40 @@ class SigmaVectorSparseList : public SigmaVector {
 
     std::vector<std::vector<std::pair<size_t, double>>> bad_states_;
 
+    /// Compute the contribution to sigma due to alpha 1-body operator
+    /// sigma_{I} <- factor * sum_{pq} h_{pq} sum_{J} b_{J} <I|p^+ q|J>
+    /// h_{pq} = h1a[p * nactv + q]
+    void add_generalized_sigma_1a(const std::vector<double>& h1a, psi::SharedVector b,
+                                  double factor, std::vector<double>& sigma) override;
+    /// Compute the contribution to sigma due to beta 1-body operator
+    void add_generalized_sigma_1b(const std::vector<double>& h1b, psi::SharedVector b,
+                                  double factor, std::vector<double>& sigma) override;
+    /// Compute the contribution to sigma due to alpha-alpha 2-body operator
+    /// sigma_{I} <- factor * sum_{pqrs} h_{pqrs} sum_{J} b_{J} <I|p^+ q^+ s r|J>
+    /// h_{pqrs} = h2aa[p * nactv^3 + q * nactv^2 + r * nactv + s]
+    void add_generalized_sigma_2aa(const std::vector<double>& h2aa, psi::SharedVector b,
+                                   double factor, std::vector<double>& sigma) override;
+    /// Compute the contribution to sigma due to alpha-beta 2-body operator
+    void add_generalized_sigma_2ab(const std::vector<double>& h2ab, psi::SharedVector b,
+                                   double factor, std::vector<double>& sigma) override;
+    /// Compute the contribution to sigma due to beta-beta 2-body operator
+    void add_generalized_sigma_2bb(const std::vector<double>& h2bb, psi::SharedVector b,
+                                   double factor, std::vector<double>& sigma) override;
+//    /// Compute the contribution to sigma due to alpha-alpha-alpha 3-body operator
+//    /// sigma_{I} <- factor * sum_{pqrstu} h_{pqrstu} sum_{J} b_{J} <I|p^+ q^+ r^+ u t s|J>
+//    /// h_{pqrstu} = h3aaa[p * nactv^5 + q * nactv^4 + r * nactv^3 + s * nactv^2 + t * nactv + u]
+//    void add_generalized_sigma_3aaa(const std::vector<double>& h3aaa, psi::SharedVector b,
+//                                    double factor, std::vector<double>& sigma) override;
+//    /// Compute the contribution to sigma due to alpha-alpha-beta 3-body operator
+//    void add_generalized_sigma_3aab(const std::vector<double>& h3aab, psi::SharedVector b,
+//                                    double factor, std::vector<double>& sigma) override;
+//    /// Compute the contribution to sigma due to alpha-beta-beta 3-body operator
+//    void add_generalized_sigma_3abb(const std::vector<double>& h3abb, psi::SharedVector b,
+//                                    double factor, std::vector<double>& sigma) override;
+//    /// Compute the contribution to sigma due to beta-beta-beta 3-body operator
+//    void add_generalized_sigma_3bbb(const std::vector<double>& h3bbb, psi::SharedVector b,
+//                                    double factor, std::vector<double>& sigma) override;
+
   protected:
     bool print_;
     bool use_disk_ = false;

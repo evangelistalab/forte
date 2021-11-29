@@ -72,6 +72,67 @@ class SigmaVector {
     virtual void add_bad_roots(std::vector<std::vector<std::pair<size_t, double>>>& bad_states) = 0;
     virtual double compute_spin(const std::vector<double>& c) = 0;
 
+    /// Compute the contribution to sigma due to alpha 1-body operator
+    /// sigma_{I} <- factor * sum_{pq} h_{pq} sum_{J} b_{J} <I|p^+ q|J>
+    /// h_{pq} = h1a[p * nactv + q]
+    virtual void add_generalized_sigma_1a(const std::vector<double>& h1a,
+                                          psi::SharedVector b, double factor,
+                                          std::vector<double>& sigma) {
+        throw_not_implemented_error();
+    }
+    /// Compute the contribution to sigma due to beta 1-body operator
+    virtual void add_generalized_sigma_1b(const std::vector<double>& h1a,
+                                          psi::SharedVector b, double factor,
+                                          std::vector<double>& sigma) {
+        throw_not_implemented_error();
+    }
+    /// Compute the contribution to sigma due to alpha-alpha 2-body operator
+    /// sigma_{I} <- factor * sum_{pqrs} h_{pqrs} sum_{J} b_{J} <I|p^+ q^+ s r|J>
+    /// h_{pqrs} = h2aa[p * nactv^3 + q * nactv^2 + r * nactv + s]
+    virtual void add_generalized_sigma_2aa(const std::vector<double>& h2aa,
+                                           psi::SharedVector b, double factor,
+                                           std::vector<double>& sigma) {
+        throw_not_implemented_error();
+    }
+    /// Compute the contribution to sigma due to alpha-beta 2-body operator
+    virtual void add_generalized_sigma_2ab(const std::vector<double>& h2ab,
+                                           psi::SharedVector b, double factor,
+                                           std::vector<double>& sigma) {
+        throw_not_implemented_error();
+    }
+    /// Compute the contribution to sigma due to beta-beta 2-body operator
+    virtual void add_generalized_sigma_2bb(const std::vector<double>& h2bb,
+                                           psi::SharedVector b, double factor,
+                                           std::vector<double>& sigma) {
+        throw_not_implemented_error();
+    }
+    /// Compute the contribution to sigma due to alpha-alpha-alpha 3-body operator
+    /// sigma_{I} <- factor * sum_{pqrstu} h_{pqrstu} sum_{J} b_{J} <I|p^+ q^+ r^+ u t s|J>
+    /// h_{pqrstu} = h3aaa[p * nactv^5 + q * nactv^4 + r * nactv^3 + s * nactv^2 + t * nactv + u]
+    virtual void add_generalized_sigma_3aaa(const std::vector<double>& h3aaa,
+                                            psi::SharedVector b, double factor,
+                                            std::vector<double>& sigma) {
+        throw_not_implemented_error();
+    }
+    /// Compute the contribution to sigma due to alpha-alpha-beta 3-body operator
+    virtual void add_generalized_sigma_3aab(const std::vector<double>& h3aab,
+                                            psi::SharedVector b, double factor,
+                                            std::vector<double>& sigma) {
+        throw_not_implemented_error();
+    }
+    /// Compute the contribution to sigma due to alpha-beta-beta 3-body operator
+    virtual void add_generalized_sigma_3abb(const std::vector<double>& h3abb,
+                                            psi::SharedVector b, double factor,
+                                            std::vector<double>& sigma) {
+        throw_not_implemented_error();
+    }
+    /// Compute the contribution to sigma due to beta-beta-beta 3-body operator
+    virtual void add_generalized_sigma_3bbb(const std::vector<double>& h3bbb,
+                                            psi::SharedVector b, double factor,
+                                            std::vector<double>& sigma) {
+        throw_not_implemented_error();
+    }
+
   protected:
     const DeterminantHashVec& space_;
     /// the active space integrals
@@ -83,6 +144,10 @@ class SigmaVector {
     const SigmaVectorType sigma_vector_type_;
     /// the type of sigma vector algorithm
     const std::string label_;
+    /// throw NotImplemented error
+    void throw_not_implemented_error() {
+        throw std::runtime_error("Not implemented for this SigmaVector type!");
+    }
 };
 
 class SigmaVectorFull : public SigmaVector {

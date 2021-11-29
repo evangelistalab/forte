@@ -284,7 +284,7 @@ void ActiveSpaceSolver::generalized_rdms(const StateInfo& state, size_t root,
 
 void ActiveSpaceSolver::generalized_sigma(
     const StateInfo& state, size_t root, ambit::BlockedTensor& h,
-    const std::map<std::string, double>& block_label_to_factor, const std::vector<double>& sigma) {
+    const std::map<std::string, double>& block_label_to_factor, std::vector<double>& sigma) {
     state_method_map_[state]->generalized_sigma(root, h, block_label_to_factor, sigma);
 }
 
@@ -840,6 +840,16 @@ compute_average_state_energy(const std::map<StateInfo, std::vector<double>>& sta
             std::inner_product(energies.begin(), energies.end(), weights.begin(), 0.0);
     }
     return average_energy;
+}
+
+std::map<StateInfo, size_t> ActiveSpaceSolver::state_space_size_map() const{
+    std::map<StateInfo, size_t> out;
+    for (const auto& state_method: state_method_map_) {
+        const auto& state = state_method.first;
+        const auto& method = state_method.second;
+        out[state] = method->space_size();
+    }
+    return out;
 }
 
 CICouplingCoefficients ActiveSpaceSolver::coupling_coefficients(const StateInfo& state,

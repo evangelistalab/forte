@@ -908,11 +908,11 @@ void FCI_MO::Diagonalize_H(const vecdet& p_space, const int& multi, const int& n
     sparse_solver.set_spin_project(options_->get_bool("SCI_PROJECT_OUT_SPIN_CONTAMINANTS"));
     sparse_solver.set_maxiter_davidson(options_->get_int("DL_MAXITER"));
     sparse_solver.set_guess_dimension(options_->get_int("DL_GUESS_SIZE"));
-    if (projected_roots_.size() != 0) {
+    if (!projected_roots_.empty()) {
         sparse_solver.set_root_project(true);
         sparse_solver.add_bad_states(projected_roots_);
     }
-    if (initial_guess_.size() != 0) {
+    if (!initial_guess_.empty()) {
         sparse_solver.set_initial_guess(initial_guess_);
     }
     if (!quiet_) {
@@ -940,7 +940,7 @@ void FCI_MO::Diagonalize_H(const vecdet& p_space, const int& multi, const int& n
     double energy_offset = fci_ints_->scalar_energy() + e_nuc_;
     for (int i = 0; i != nroot; ++i) {
         double value = evals->get(i);
-        eigen.push_back(std::make_pair(evecs->get_column(0, i), value + energy_offset));
+        eigen.emplace_back(evecs->get_column(0, i), value + energy_offset);
     }
 
     if (!quiet_) {
@@ -968,7 +968,7 @@ void FCI_MO::print_CI(const int& nroot, const double& CI_threshold,
         for (size_t j = 0, det_size = det.size(); j < det_size; ++j) {
             double value = (eigen[i].first)->get(j);
             if (std::fabs(value) > CI_threshold)
-                ci_select.push_back(std::make_tuple(value, j));
+                ci_select.emplace_back(value, j);
         }
         std::sort(ci_select.begin(), ci_select.end(),
                   [](const std::tuple<double, int>& lhs, const std::tuple<double, int>& rhs) {
@@ -978,10 +978,10 @@ void FCI_MO::print_CI(const int& nroot, const double& CI_threshold,
 
         if (!quiet_) {
             outfile->Printf("\n  ==> Root No. %d <==\n", i);
-            for (size_t j = 0, ci_select_size = ci_select.size(); j < ci_select_size; ++j) {
+            for (auto& j : ci_select) {
                 outfile->Printf("\n    ");
-                double ci = std::get<0>(ci_select[j]);
-                size_t index = std::get<1>(ci_select[j]);
+                double ci = std::get<0>(j);
+                size_t index = std::get<1>(j);
                 size_t ncmopi = 0;
                 for (int h = 0; h < nirrep_; ++h) {
                     for (int k = 0; k < actv_dim_[h]; ++k) {
@@ -2038,6 +2038,59 @@ void FCI_MO::generalized_rdms(size_t root, const std::vector<double>& X,
                              grdms.block(blabels[2]).data());
     } else {
         ci_rdms.compute_1rdm(grdms.block(blabels[0]).data(), grdms.block(blabels[1]).data());
+    }
+}
+
+void FCI_MO::generalized_sigma(size_t root, ambit::BlockedTensor& h,
+                               const std::map<std::string, double>& block_label_to_factor,
+                               std::vector<double>& sigma) {
+    auto sigma_vector_type = string_to_sigma_vector_type("SPARSE");
+    auto max_memory = options_->get_int("SIGMA_VECTOR_MAX_MEMORY");
+    auto sigma_vector = make_sigma_vector(det_hash_vec_, as_ints_, max_memory, sigma_vector_type);
+
+    const auto& evec = eigen_[root].first;
+
+    for (const auto& pair : block_label_to_factor) {
+        const auto factor = pair.second;
+        const auto block_label = pair.first;
+        if (not h.is_block(block_label)) {
+            throw std::runtime_error("Block " + block_label + " not available!");
+        }
+        const auto& data = h.block(block_label).data();
+
+        auto n_body = static_cast<int>(block_label.size() / 2);
+        if (n_body == 1) {
+            if (islower(block_label[1])) {
+                sigma_vector->add_generalized_sigma_1a(data, evec, factor, sigma);
+            } else {
+                sigma_vector->add_generalized_sigma_1b(data, evec, factor, sigma);
+            }
+        }
+        if (n_body == 2) {
+            if (islower(block_label[0]) and islower(block_label[1])) {
+                sigma_vector->add_generalized_sigma_2aa(data, evec, factor, sigma);
+            }
+            if (islower(block_label[0]) and isupper(block_label[1])) {
+                sigma_vector->add_generalized_sigma_2ab(data, evec, factor, sigma);
+            }
+            if (isupper(block_label[0]) and isupper(block_label[1])) {
+                sigma_vector->add_generalized_sigma_2bb(data, evec, factor, sigma);
+            }
+        }
+//        if (n_body == 3) {
+//            if (islower(block_label[0]) and islower(block_label[1]) and islower(block_label[2])) {
+//                sigma_vector->add_generalized_sigma_3aaa(data, evec, factor, sigma);
+//            }
+//            if (islower(block_label[0]) and islower(block_label[1]) and isupper(block_label[2])) {
+//                sigma_vector->add_generalized_sigma_3aab(data, evec, factor, sigma);
+//            }
+//            if (islower(block_label[0]) and isupper(block_label[1]) and isupper(block_label[2])) {
+//                sigma_vector->add_generalized_sigma_3abb(data, evec, factor, sigma);
+//            }
+//            if (isupper(block_label[0]) and isupper(block_label[1]) and isupper(block_label[2])) {
+//                sigma_vector->add_generalized_sigma_3bbb(data, evec, factor, sigma);
+//            }
+//        }
     }
 }
 

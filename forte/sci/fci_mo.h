@@ -120,9 +120,18 @@ class FCI_MO : public ActiveSpaceMethod {
                            int max_rdm_level) override;
 
     /// Compute the generalized reduced density matrix of a given level
-    void generalized_rdms(size_t root, const std::vector<double>& X,
-                          ambit::BlockedTensor& grdms, bool c_right, int rdm_level,
-                          std::vector<std::string> spin) override;
+    void generalized_rdms(size_t root, const std::vector<double>& X, ambit::BlockedTensor& grdms,
+                          bool c_right, int rdm_level, std::vector<std::string> spin) override;
+
+    /// Compute the generalized sigma vectors for given integrals
+    void generalized_sigma(size_t root, ambit::BlockedTensor& h,
+                           const std::map<std::string, double>& block_label_to_factor,
+                           std::vector<double>& sigma) override;
+
+    /// Return the number of determinants
+    size_t space_size() override {
+        return determinant_.size();
+    }
 
     /// Returns the transition reduced density matrices between roots of different symmetry up to a
     /// given level (max_rdm_level)

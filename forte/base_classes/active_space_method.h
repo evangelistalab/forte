@@ -143,9 +143,14 @@ class ActiveSpaceMethod {
 
     virtual void generalized_sigma(size_t root, ambit::BlockedTensor& h,
                                    const std::map<std::string, double>& block_label_to_factor,
-                                   const std::vector<double>& sigma) {
+                                   std::vector<double>& sigma) {
         throw std::runtime_error(
             "The function generalized_sigma is not implemented for this ActiveSpaceMethod type!");
+    }
+
+    virtual size_t space_size() {
+        throw std::runtime_error(
+            "The function space_size is not implemented for this ActiveSpaceMethod type!");
     }
 
     /// Set options from an option object
