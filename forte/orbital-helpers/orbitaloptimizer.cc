@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2020 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
+ * Copyright (c) 2012-2021 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
  *
  * The copyrights for code used from other parties are included in
  * the corresponding files.
@@ -357,7 +357,7 @@ void OrbitalOptimizer::orbital_gradient() {
             // Zero-out diagonal and one-block of the off-diagonal matrix
             relative_gas_mo_.push_back(relative_mo);
         }
-        auto active_frozen = options_->get_int_vec("CASSCF_ACTIVE_FROZEN_ORBITAL");
+        auto active_frozen = options_->get_int_list("CASSCF_ACTIVE_FROZEN_ORBITAL");
         std::vector<int> active;
         for (int i = 0; i < na_; i++) {
             active.push_back(i);

@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2020 by its authors (see COPYING, COPYING.LESSER,
+ * Copyright (c) 2012-2021 by its authors (see COPYING, COPYING.LESSER,
  * AUTHORS).
  *
  * The copyrights for code used from other parties are included in
@@ -31,11 +31,20 @@
 #define _make_integrals_h_
 
 namespace forte {
-std::shared_ptr<ForteIntegrals>
-make_forte_integrals_from_psi4(std::shared_ptr<psi::Wavefunction> ref_wfn,
-                               std::shared_ptr<forte::ForteOptions> options,
-                               std::shared_ptr<MOSpaceInfo> mo_space_info);
+/**
+ *  @brief Make a ForteIntegrals object with the help of psi4
+ *
+ *  This function reads the integral type from the option INT_TYPE,
+ *  but if the variable int_type is provided, its value will override
+ *  the value read from the options object.
+ */
+std::shared_ptr<ForteIntegrals> make_forte_integrals_from_psi4(
+    std::shared_ptr<psi::Wavefunction> ref_wfn, std::shared_ptr<ForteOptions> options,
+    std::shared_ptr<MOSpaceInfo> mo_space_info, std::string int_type = "");
 
+/**
+ *  @brief Make a ForteIntegrals object by passing integrals stored in vectors
+ */
 std::shared_ptr<ForteIntegrals>
 make_custom_forte_integrals(std::shared_ptr<ForteOptions> options,
                             std::shared_ptr<MOSpaceInfo> mo_space_info, double scalar,

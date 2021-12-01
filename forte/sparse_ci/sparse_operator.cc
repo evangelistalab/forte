@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2020 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
+ * Copyright (c) 2012-2021 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
  *
  * The copyrights for code used from other parties are included in
  * the corresponding files.
@@ -138,5 +138,13 @@ std::string SparseOperator::latex() const {
         }
     }
     return join(v, " ");
+}
+
+SparseOperator SparseOperator::adjoint() const {
+    auto adjoint_operator = SparseOperator(antihermitian_);
+    for (const SQOperator& sqop : op_list_) {
+        adjoint_operator.add_term(sqop.adjoint());
+    }
+    return adjoint_operator;
 }
 } // namespace forte

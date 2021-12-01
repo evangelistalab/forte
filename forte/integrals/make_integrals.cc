@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2020 by its authors (see COPYING, COPYING.LESSER,
+ * Copyright (c) 2012-2021 by its authors (see COPYING, COPYING.LESSER,
  * AUTHORS).
  *
  * The copyrights for code used from other parties are included in
@@ -31,7 +31,7 @@
 
 #include "base_classes/forte_options.h"
 #include "helpers/timer.h"
-
+#include "helpers/string_algorithms.h"
 #include "integrals/integrals.h"
 #include "integrals/cholesky_integrals.h"
 #include "integrals/custom_integrals.h"
@@ -46,22 +46,28 @@ namespace forte {
 std::shared_ptr<ForteIntegrals>
 make_forte_integrals_from_psi4(std::shared_ptr<psi::Wavefunction> ref_wfn,
                                std::shared_ptr<ForteOptions> options,
-                               std::shared_ptr<MOSpaceInfo> mo_space_info) {
+                               std::shared_ptr<MOSpaceInfo> mo_space_info, std::string int_type) {
     timer int_timer("Integrals");
     std::shared_ptr<ForteIntegrals> ints;
-    if (options->get_str("INT_TYPE") == "CHOLESKY") {
+    // passing int_type overrides the value of the option INT_TYPE
+    if (int_type != "") {
+        to_upper_string(int_type);
+    } else {
+        int_type = options->get_str("INT_TYPE");
+    }
+    if (int_type == "CHOLESKY") {
         ints = std::make_shared<CholeskyIntegrals>(options, ref_wfn, mo_space_info,
                                                    IntegralSpinRestriction::Restricted);
-    } else if (options->get_str("INT_TYPE") == "DF") {
+    } else if (int_type == "DF") {
         ints = std::make_shared<DFIntegrals>(options, ref_wfn, mo_space_info,
                                              IntegralSpinRestriction::Restricted);
-    } else if (options->get_str("INT_TYPE") == "DISKDF") {
+    } else if (int_type == "DISKDF") {
         ints = std::make_shared<DISKDFIntegrals>(options, ref_wfn, mo_space_info,
                                                  IntegralSpinRestriction::Restricted);
-    } else if (options->get_str("INT_TYPE") == "CONVENTIONAL") {
+    } else if (int_type == "CONVENTIONAL") {
         ints = std::make_shared<ConventionalIntegrals>(options, ref_wfn, mo_space_info,
                                                        IntegralSpinRestriction::Restricted);
-    } else if (options->get_str("INT_TYPE") == "DISTDF") {
+    } else if (int_type == "DISTDF") {
 #ifdef HAVE_GA
         ints = std::make_shared<DistDFIntegrals>(options, ref_wfn, mo_space_info,
                                                  IntegralSpinRestriction::Restricted);
@@ -72,9 +78,10 @@ make_forte_integrals_from_psi4(std::shared_ptr<psi::Wavefunction> ref_wfn,
         throw std::runtime_error("INT_TYPE is not correct.  Check options");
     }
 
-    if (options->get_bool("PRINT_INTS")) {
-        ints->print_ints();
-    }
+    if (options->exists("PRINT_INTS"))
+        if (options->get_bool("PRINT_INTS")) {
+            ints->print_ints();
+        }
 
     return ints;
 }

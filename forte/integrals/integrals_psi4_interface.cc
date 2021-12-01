@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2020 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
+ * Copyright (c) 2012-2021 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
  *
  * The copyrights for code used from other parties are included in
  * the corresponding files.
@@ -95,7 +95,7 @@ void Psi4Integrals::setup_psi4_ints() {
     /// If MO_ROTATE is set in option, call rotate_mos.
     /// Wasn't really sure where to put this function, but since, integrals is
     /// always called, this seems like a good spot.
-    auto rotate_mos_list = options_->get_int_vec("ROTATE_MOS");
+    auto rotate_mos_list = options_->get_int_list("ROTATE_MOS");
     if (rotate_mos_list.size() > 0) {
         rotate_mos();
     }
@@ -173,11 +173,12 @@ void Psi4Integrals::make_psi4_JK() {
             throw psi::PSIEXCEPTION("Unrestricted orbitals not supported for DF integrals");
         }
 
-        if (options_->get_str("SCF_TYPE").find("DF") == std::string::npos) {
-            print_h1("Vital Warning from Forte JK Builder (DF)");
-            outfile->Printf("\n  Inconsistent integrals used in Psi4 and Forte!");
-            outfile->Printf("\n  This can be fixed by setting SCF_TYPE to DF or DISK_DF.");
-        }
+        if (not options_->is_none("SCF_TYPE"))
+            if (options_->get_str("SCF_TYPE").find("DF") == std::string::npos) {
+                print_h1("Vital Warning from Forte JK Builder (DF)");
+                outfile->Printf("\n  Inconsistent integrals used in Psi4 and Forte!");
+                outfile->Printf("\n  This can be fixed by setting SCF_TYPE to DF or DISK_DF.");
+            }
 
         auto basis_aux = wfn_->get_basisset("DF_BASIS_MP2");
         auto job_type = options_->get_str("JOB_TYPE");
@@ -307,7 +308,7 @@ void Psi4Integrals::freeze_core_orbitals() {
 }
 
 void Psi4Integrals::rotate_mos() {
-    auto rotate_mos_list = options_->get_int_vec("ROTATE_MOS");
+    auto rotate_mos_list = options_->get_int_list("ROTATE_MOS");
     int size_mo_rotate = rotate_mos_list.size();
     outfile->Printf("\n\n\n  ==> ROTATING MOS <==");
     if (size_mo_rotate % 3 != 0) {
@@ -335,39 +336,32 @@ void Psi4Integrals::rotate_mos() {
         outfile->Printf("   %d   %d   %d\n", rotate_mo_group[0], rotate_mo_group[1],
                         rotate_mo_group[2]);
     }
-    // std::shared_ptr<psi::Matrix> C_old = wfn_->Ca();
+
     std::shared_ptr<psi::Matrix> C_old = Ca_;
     std::shared_ptr<psi::Matrix> C_new(C_old->clone());
 
-    psi::Vector* eps_a = wfn_->epsilon_a()->clone();
-    psi::Vector* eps_b = wfn_->epsilon_b()->clone();
-    psi::Vector* epsilon_old = eps_a;
-    psi::Vector* epsilon_new(epsilon_old->clone());
+    const auto& eps_a_old = *wfn_->epsilon_a();
+    auto eps_a_new = *eps_a_old.clone();
 
     for (auto mo_group : rotate_mo_list) {
-        psi::SharedVector C_mo1 = C_old->get_column(mo_group[0], mo_group[1]);
-        psi::SharedVector C_mo2 = C_old->get_column(mo_group[0], mo_group[2]);
-        double epsilon_mo1 = epsilon_old->get(mo_group[0], mo_group[1]);
-        double epsilon_mo2 = epsilon_old->get(mo_group[0], mo_group[2]);
+        auto C_mo1 = C_old->get_column(mo_group[0], mo_group[1]);
+        auto C_mo2 = C_old->get_column(mo_group[0], mo_group[2]);
+        auto epsilon_mo1 = eps_a_old.get(mo_group[0], mo_group[1]);
+        auto epsilon_mo2 = eps_a_old.get(mo_group[0], mo_group[2]);
         C_new->set_column(mo_group[0], mo_group[2], C_mo1);
         C_new->set_column(mo_group[0], mo_group[1], C_mo2);
-        epsilon_new->set(mo_group[0], mo_group[2], epsilon_mo1);
-        epsilon_new->set(mo_group[0], mo_group[1], epsilon_mo2);
+        eps_a_new.set(mo_group[0], mo_group[2], epsilon_mo1);
+        eps_a_new.set(mo_group[0], mo_group[1], epsilon_mo2);
     }
-    C_old->copy(C_new);
-    epsilon_old->copy(epsilon_new);
+    // Update local copy of the orbitals
+    Ca_->copy(C_new);
+    Cb_->copy(C_new);
 
-    // std::shared_ptr<psi::Matrix> Cb_old = wfn_->Cb();
-    std::shared_ptr<psi::Matrix> Cb_old = Cb_;
-    psi::Vector* epsilon_b_old = eps_b;
-    Cb_old->copy(C_new);
-    epsilon_b_old->copy(epsilon_new);
-
-    // Send a copy to psi::Wavefunction
-    wfn_->Ca()->copy(Ca_);
-    wfn_->Cb()->copy(Cb_);
-    wfn_->epsilon_a()->copy(eps_a);
-    wfn_->epsilon_b()->copy(eps_b);
+    // Copy to psi::Wavefunction
+    wfn_->Ca()->copy(C_new);
+    wfn_->Cb()->copy(C_new);
+    wfn_->epsilon_a()->copy(eps_a_new);
+    wfn_->epsilon_b()->copy(eps_a_new);
 }
 
 void Psi4Integrals::build_dipole_ints_ao() {

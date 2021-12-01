@@ -1,8 +1,11 @@
 from abc import ABC, abstractmethod
+
+from forte.core import flog
 from forte.molecule import Molecule
 from forte.basis import Basis
 from forte.forte import StateInfo
 from forte.forte import Symmetry
+from forte.forte import make_ints_from_psi4
 
 
 class Model(ABC):
@@ -19,12 +22,27 @@ class Model(ABC):
     def point_group(self) -> str:
         """The model point group"""
 
+    @abstractmethod
+    def ints(self, mo_space_info):
+        """Make a ForteIntegral object"""
+        pass
+
 
 class MolecularModel(Model):
     """
-    A class used to handle molecules.
+    A class used to handle molecules
+
+    This class knows the molecular structure and the basis,
+    and is responsible for providing integrals over molecular orbitals.
     """
-    def __init__(self, molecule: Molecule, basis: Basis, scf_aux_basis: Basis = None, corr_aux_basis: Basis = None):
+    def __init__(
+        self,
+        molecule: Molecule,
+        basis: Basis,
+        int_type: str = None,
+        scf_aux_basis: Basis = None,
+        corr_aux_basis: Basis = None
+    ):
         """
         Initialize a MolecularModel object
 
@@ -32,15 +50,18 @@ class MolecularModel(Model):
         ----------
         molecule: Molecule
             the molecule information
+        int_type: {'CONVENTIONAL', 'DF, 'CD', 'DISKDF'}
+            the type of integrals used
         basis: Basis
             the computational basis
         scf_aux_basis: Basis
             the auxiliary basis set used in density-fitted SCF computations
         corr_aux_basis: Basis
-            the auxiliary basis set used in density-fitted correlated computations        
+            the auxiliary basis set used in density-fitted correlated computations
         """
         self._molecule = molecule
         self._basis = basis
+        self._int_type = 'CONVENTIONAL' if int_type is None else int_type.upper()
         self._scf_aux_basis = scf_aux_basis
         self._corr_aux_basis = corr_aux_basis
         self.symmetry = Symmetry(molecule.molecule.point_group().symbol().capitalize())
@@ -49,7 +70,7 @@ class MolecularModel(Model):
         """
         return a string representation of this object
         """
-        return f"MolecularModel(\n{repr(self._molecule)},\n{repr(self._basis)})"
+        return f"MolecularModel(\n{repr(self._molecule)},\n{repr(self._basis)},\n{self._int_type})"
 
     def __str__(self):
         """
@@ -60,6 +81,10 @@ class MolecularModel(Model):
     @property
     def molecule(self):
         return self._molecule.molecule
+
+    @property
+    def int_type(self):
+        return self._int_type
 
     @property
     def basis(self):
@@ -81,7 +106,7 @@ class MolecularModel(Model):
     def point_group(self) -> str:
         return self.symmetry.point_group_label()
 
-    def state(self, charge: int, multiplicity: int, ms: float = None, sym: str = None):
+    def state(self, charge: int, multiplicity: int, ms: float = None, sym: str = None, gasmin=None, gasmax=None):
         """This function is used to create a StateInfo object.
         It checks for potential errors.
 
@@ -96,6 +121,10 @@ class MolecularModel(Model):
             (default = lowest value consistent with multiplicity)
         sym: str
             the state irrep label (e.g., 'C2v')
+        gasmin: list(int)
+            the minimum number of electrons in each GAS space
+        gasmax: list(int)
+            the maximum number of electrons in each GAS space
         """
         if ms is None:
             # If ms = None take the lowest value consistent with multiplicity
@@ -114,7 +143,7 @@ class MolecularModel(Model):
 
         if (nel - twice_ms) % 2 != 0:
             raise ValueError(
-                f'(MolecularModel) The value of M_S ({ms}) is incompatible with the number of electrons ({nel})'
+                f'(MolecularModel) The value of M_S ({twice_ms / 2.0}) is incompatible with the number of electrons ({nel})'
             )
 
         # compute the number of alpha/beta electrons
@@ -134,4 +163,20 @@ class MolecularModel(Model):
 
         # get the irrep index from the symbol
         irrep = self.symmetry.irrep_label_to_index(sym)
-        return StateInfo(na, nb, multiplicity, twice_ms, irrep, sym)
+
+        gasmin = [] if gasmin is None else gasmin
+        gasmax = [] if gasmax is None else gasmax
+        return StateInfo(na, nb, multiplicity, twice_ms, irrep, sym, gasmin, gasmax)
+
+    def ints(self, data, options):
+        flog('info', 'MolecularModel: preparing integrals from psi4')
+        # if we do DF, we need to make sure that psi4's wavefunction object
+        # has a DF_BASIS_MP2 basis registered
+        if self.int_type == 'DF':
+            import psi4
+            aux_basis = psi4.core.BasisSet.build(
+                self.molecule, 'DF_BASIS_MP2', self.corr_aux_basis, 'RIFIT', self.basis
+            )
+            data.psi_wfn.set_basisset('DF_BASIS_MP2', aux_basis)
+        # get the appropriate integral object
+        return make_ints_from_psi4(data.psi_wfn, options, data.mo_space_info, self._int_type)

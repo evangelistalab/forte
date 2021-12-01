@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2020 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
+ * Copyright (c) 2012-2021 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
  *
  * The copyrights for code used from other parties are included in
  * the corresponding files.
@@ -90,6 +90,7 @@ const std::map<StateInfo, std::vector<double>>& ActiveSpaceSolver::compute_energ
             psi::outfile->Printf("\n  Continue to the next symmetry block: No need to find the "
                                  "solution for ms = %d / 2 < 0.",
                                  twice_ms);
+            method->set_wfn_filename(""); // empty filename for ms < 0
             continue;
         }
 
@@ -209,6 +210,10 @@ void ActiveSpaceSolver::compute_fosc_same_orbs() {
             const auto& state2 = states[N];
             size_t nroot2 = state_nroots_map_[state2];
             const auto& method2 = state_method_map_[state2];
+
+            // skip negative ms if doing ms averaging
+            if (ms_avg_ and (state1.twice_ms() < 0 or state2.twice_ms() < 0))
+                continue;
 
             // skip different multiplicity (no spin-orbit coupling)
             if (state1.multiplicity() != state2.multiplicity()) {
@@ -359,8 +364,8 @@ make_state_weights_map(std::shared_ptr<ForteOptions> options,
         std::vector<double> weights(nroot, 0.0);
         weights[root] = 1.0;
         for (int gasn = 0; gasn < 6; gasn++) {
-            auto gas_space_min = options->get_int_vec("GAS" + std::to_string(gasn + 1) + "MIN");
-            auto gas_space_max = options->get_int_vec("GAS" + std::to_string(gasn + 1) + "MAX");
+            auto gas_space_min = options->get_int_list("GAS" + std::to_string(gasn + 1) + "MIN");
+            auto gas_space_max = options->get_int_list("GAS" + std::to_string(gasn + 1) + "MAX");
             if (gas_space_min.size() > 0) {
                 if (gas_space_min.size() > 1) {
                     std::string msg =
@@ -459,8 +464,10 @@ make_state_weights_map(std::shared_ptr<ForteOptions> options,
             sum_of_weights += std::accumulate(std::begin(weights), std::end(weights), 0.0);
 
             for (int gasn = 0; gasn < 6; gasn++) {
-                auto gas_space_min = options->get_int_vec("GAS" + std::to_string(gasn + 1) + "MIN");
-                auto gas_space_max = options->get_int_vec("GAS" + std::to_string(gasn + 1) + "MAX");
+                auto gas_space_min =
+                    options->get_int_list("GAS" + std::to_string(gasn + 1) + "MIN");
+                auto gas_space_max =
+                    options->get_int_list("GAS" + std::to_string(gasn + 1) + "MAX");
                 if (gas_space_min.size() > 0) {
                     if (i >= gas_space_min.size()) {
                         std::string msg = "\n  Error: GAS" + std::to_string(gasn + 1) +

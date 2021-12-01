@@ -30,10 +30,6 @@
 """
 
 import sys
-import logging
-
-logging.basicConfig(filename='forte.log', level=logging.INFO)
-logging.info('Starting the Forte logger')
 
 # Load Python modules
 from .molecule import Molecule
@@ -46,7 +42,7 @@ from .register_forte_options import *
 from .core import ForteManager, clean_options
 from .forte import *
 
-__version__ = '0.2.0'
+__version__ = '0.2.3'
 __author__ = 'Forte Developers'
 
 # Create a ForteOptions object (stores all options)

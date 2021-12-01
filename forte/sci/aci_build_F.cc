@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2020 by its authors (see COPYING, COPYING.LESSER,
+ * Copyright (c) 2012-2021 by its authors (see COPYING, COPYING.LESSER,
  * AUTHORS).
  *
  * The copyrights for code used from other parties are included in
@@ -1628,7 +1628,7 @@ std::vector<std::pair<int, Determinant>> AdaptiveCI::ras_masks() {
 
     // Get the number of masks;
     // Input => [ <irrep>, <min mo>, <max mo>, <ndiff>, ... ]
-    std::vector<int> ras_spaces = options_->get_int_vector("ACI_RAS_SPACES");
+    std::vector<int> ras_spaces = options_->get_int_list("ACI_RAS_SPACES");
     size_t total_size = ras_spaces.size();
 
     if( (total_size % 3) != 0 ){

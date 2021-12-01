@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2020 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
+ * Copyright (c) 2012-2021 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
  *
  * The copyrights for code used from other parties are included in
  * the corresponding files.
@@ -106,6 +106,8 @@ class SQOperator {
     std::string str() const;
     /// @return a latex representation of this operator
     std::string latex() const;
+    /// @return a sq_operator that is thea djoint of this operator
+    SQOperator adjoint() const;
 
   private:
     /// a numerical coefficient associated with this product of sq operators

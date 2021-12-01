@@ -5,7 +5,7 @@
  * t    hat implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2020 by its authors (see LICENSE, AUTHORS).
+ * Copyright (c) 2012-2021 by its authors (see LICENSE, AUTHORS).
  *
  * The copyrights for code used from other parties are included in
  * the corresponding files.
@@ -149,14 +149,17 @@ void export_Determinant(py::module& m) {
         .def("set_coefficient", &SparseOperator::set_coefficient)
         .def("op_list", &SparseOperator::op_list)
         .def("str", &SparseOperator::str)
-        .def("latex", &SparseOperator::latex);
+        .def("latex", &SparseOperator::latex)
+        .def("adjoint", &SparseOperator::adjoint);
 
     py::class_<SQOperator>(m, "SQOperator")
+        .def(py::init<double, const Determinant&, const Determinant&>())
         .def("coefficient", &SQOperator::coefficient)
         .def("cre", &SQOperator::cre)
         .def("ann", &SQOperator::ann)
         .def("str", &SQOperator::str)
-        .def("latex", &SQOperator::latex);
+        .def("latex", &SQOperator::latex)
+        .def("adjoint", &SQOperator::adjoint);
 
     py::class_<StateVector>(m, "StateVector")
         .def(py::init<const det_hash<double>&>())

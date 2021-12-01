@@ -32,6 +32,10 @@ cd tests/pytest
 pytest
 test4=$?
 
+cd ../../tests/pytest-methods
+pytest
+test5=$?
+
 cd ../..
 
 # Gather data
@@ -40,7 +44,7 @@ lcov --remove coverage.info '/usr/*' --output-file coverage.info # filter system
 lcov --list coverage.info #debug info
 bash <(curl -s https://codecov.io/bash) -f coverage.info || echo "Codecov did not collect coverage reports"
 
-if [ $test1 -eq 0 ] && [ $test2 -eq 0 ] && [ $test3 -eq 0 ] && [ $test4 -eq 0 ];
+if [ $test1 -eq 0 ] && [ $test2 -eq 0 ] && [ $test3 -eq 0 ] && [ $test4 -eq 0 ]  && [ $test5 -eq 0 ];
 then
   echo "All tests were successful"
 else
@@ -49,6 +53,7 @@ else
   echo "Forte determinants exit with $test2"
   echo "Forte speed benchmark exit with $test3"
   echo "Forte pytest exit with $test4"
+  echo "Forte pytest-methods exit with $test5"
   exit 1
 fi
 

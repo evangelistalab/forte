@@ -11,3 +11,4 @@ HOWTOs
    methods/embedding
    methods/avas
    utils/plotting
+   nb_api_intro

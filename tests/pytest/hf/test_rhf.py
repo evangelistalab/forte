@@ -1,5 +1,3 @@
-"""Test the HF solver."""
-
 import pytest
 
 from forte import Molecule, Basis
@@ -18,13 +16,13 @@ def test_rhf():
     """
 
     # create a molecular model
-    root = solver_factory(molecule=xyz, basis='cc-pVDZ')
+    input = solver_factory(molecule=xyz, basis='cc-pVDZ')
 
     # specify the electronic state
-    state = root.state(charge=0, multiplicity=1, sym='ag')
+    state = input.state(charge=0, multiplicity=1, sym='ag')
 
     # create a HF object and run
-    hf = HF(root, state=state)
+    hf = HF(input, state=state)
     hf.run()
 
     assert hf.value('hf energy') == pytest.approx(ref_energy, 1.0e-10)
@@ -46,12 +44,12 @@ def test_rhf_docc():
     basis = Basis('cc-pVDZ')
 
     # create a molecular model
-    root = solver_factory(molecule=mol, basis=basis)
+    input = solver_factory(molecule=mol, basis=basis)
 
     # specify the electronic state
-    state = root.state(charge=0, multiplicity=1, sym='a1')
+    state = input.state(charge=0, multiplicity=1, sym='a1')
 
-    hf = HF(root, state=state, docc=[1, 0, 1, 0])
+    hf = HF(input, state=state, docc=[1, 0, 1, 0])
     hf.run()
 
     assert hf.value('hf energy') == pytest.approx(ref_energy, 1.0e-10)
