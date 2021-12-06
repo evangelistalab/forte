@@ -2075,70 +2075,6 @@ void FCI_MO::generalized_sigma(size_t root, ambit::BlockedTensor& h,
             sigma_vector->add_generalized_sigma_3(data, evec, factor, sigma, spin);
         }
     }
-
-////    for (int i = 0; i < determinant_.size(); ++i) {
-////        outfile->Printf("\n  s[%3d] = %20.15f", i, sigma[i]);
-////    }
-//
-//    // check correctness
-//    auto sigma_copy = std::make_shared<psi::Vector>("Sigma Copy", sigma.size());
-//    auto fci_ints =
-//        make_active_space_ints(mo_space_info_, integral_, "ACTIVE", {"RESTRICTED_DOCC"});
-//
-//    std::vector<double> h1(nactv_ * nactv_);
-//    auto h2 = ambit::Tensor::build(ambit::CoreTensor, "H2zero", {nactv_, nactv_, nactv_, nactv_});
-//    fci_ints->set_restricted_one_body_operator(h1, h1);
-////    fci_ints->set_restricted_one_body_operator(h.block("aa").data(), h.block("AA").data());
-////    fci_ints->set_active_integrals(h.block("aaaa"), h.block("aAaA"), h.block("AAAA"));
-////    fci_ints->set_active_integrals(h2, h2, h2);
-//    fci_ints->set_active_integrals(h.block("aaaa"), h.block("aAaA"), h.block("AAAA"));
-//    auto sigma_vector1 = make_sigma_vector(det_hash_vec_, fci_ints, max_memory, sigma_vector_type);
-//    sigma_vector1->compute_sigma(sigma_copy, eigen_[root].first);
-//
-//    sigma_copy->scale(0.5);
-////    sigma_copy->print();
-//
-//    for (int i = 0; i < determinant_.size(); ++i) {
-//        sigma_copy->add(0, i, -sigma[i]);
-//    }
-////    sigma_copy->print();
-//    outfile->Printf("\n  Sigma Difference: %.15f", sigma_copy->norm());
-
-    auto ndets = determinant_.size();
-
-    // compute contracted value
-    double e = 0.0;
-    for (size_t i = 0; i < ndets; ++i) {
-        e += evec->get(0, i) * sigma[i];
-    }
-    outfile->Printf("\nComputed value = %20.15f", e);
-
-    // expected value
-    auto rdm = rdms({{root, root}}, 3)[0];
-//    double f = (1.0 / 4.0) * h.block("aaaa")("uvwx") * rdm.g2aa()("uvwx");
-    double f = (1.0 / 36.0) * h.block("aaaaaa")("uvwxyz") * rdm.g3aaa()("xyzuvw");
-    f += (1.0 / 4.0) * h.block("aaAaaA")("uvwxyz") * rdm.g3aab()("xyzuvw");
-    f += (1.0 / 4.0) * h.block("aAAaAA")("uvwxyz") * rdm.g3abb()("xyzuvw");
-    outfile->Printf("\nExpected value = %20.15f", f);
-
-//    auto cc3aab = coupling_coeffcients_3()[1];
-//    auto S = ambit::Tensor::build(ambit::CoreTensor, "S", {ndets});
-//    auto C = ambit::Tensor::build(ambit::CoreTensor, "C", {ndets});
-//    for (size_t i = 0; i < ndets; ++i) {
-//        C.data()[i] = evec->get(0, i);
-//    }
-//    S("I") = (1.0 / 4.0) * cc3aab("IJuvwxyz") * h.block("aaAaaA")("uvwxyz") * C("J");
-//    double g = S("I") * C("I");
-//    outfile->Printf("\nExpected value = %20.15f", g);
-//
-//    auto s = std::make_shared<psi::Vector>("SigmaX", ndets);
-//    auto ss = std::make_shared<psi::Vector>("SigmaXX", ndets);
-//    for (size_t i = 0; i < ndets; ++i) {
-//        s->set(0, i, sigma[i]);
-//        ss->set(0, i, S.data()[i]);
-//    }
-//    s->print();
-//    ss->print();
 }
 
 [[deprecated]] std::vector<RDMs>
@@ -3092,94 +3028,94 @@ std::vector<ambit::Tensor> FCI_MO::coupling_coeffcients_3() const {
         int naocc = aocc.size();
         int nbocc = bocc.size();
 
-//        // aaa
-//        for (int p = 0; p < naocc; ++p) {
-//            int pp = aocc[p];
-//            for (int q = p + 1; q < naocc; ++q) {
-//                int qq = aocc[q];
-//                for (int r = q + 1; r < naocc; ++r) {
-//                    int rr = aocc[r];
-//
-//                    cc3aaa_data[idx_I + pp * na5 + qq * na4 + rr * na3 + pp * na2 + qq * na1 + rr] =
-//                        1.0;
-//                    cc3aaa_data[idx_I + pp * na5 + qq * na4 + rr * na3 + pp * na2 + rr * na1 + qq] =
-//                        -1.0;
-//                    cc3aaa_data[idx_I + pp * na5 + qq * na4 + rr * na3 + rr * na2 + pp * na1 + qq] =
-//                        1.0;
-//                    cc3aaa_data[idx_I + pp * na5 + qq * na4 + rr * na3 + rr * na2 + qq * na1 + pp] =
-//                        -1.0;
-//                    cc3aaa_data[idx_I + pp * na5 + qq * na4 + rr * na3 + qq * na2 + rr * na1 + pp] =
-//                        1.0;
-//                    cc3aaa_data[idx_I + pp * na5 + qq * na4 + rr * na3 + qq * na2 + pp * na1 + rr] =
-//                        -1.0;
-//
-//                    cc3aaa_data[idx_I + pp * na5 + rr * na4 + qq * na3 + pp * na2 + qq * na1 + rr] =
-//                        -1.0;
-//                    cc3aaa_data[idx_I + pp * na5 + rr * na4 + qq * na3 + pp * na2 + rr * na1 + qq] =
-//                        1.0;
-//                    cc3aaa_data[idx_I + pp * na5 + rr * na4 + qq * na3 + rr * na2 + pp * na1 + qq] =
-//                        -1.0;
-//                    cc3aaa_data[idx_I + pp * na5 + rr * na4 + qq * na3 + rr * na2 + qq * na1 + pp] =
-//                        1.0;
-//                    cc3aaa_data[idx_I + pp * na5 + rr * na4 + qq * na3 + qq * na2 + rr * na1 + pp] =
-//                        -1.0;
-//                    cc3aaa_data[idx_I + pp * na5 + rr * na4 + qq * na3 + qq * na2 + pp * na1 + rr] =
-//                        1.0;
-//
-//                    cc3aaa_data[idx_I + rr * na5 + pp * na4 + qq * na3 + pp * na2 + qq * na1 + rr] =
-//                        1.0;
-//                    cc3aaa_data[idx_I + rr * na5 + pp * na4 + qq * na3 + pp * na2 + rr * na1 + qq] =
-//                        -1.0;
-//                    cc3aaa_data[idx_I + rr * na5 + pp * na4 + qq * na3 + rr * na2 + pp * na1 + qq] =
-//                        1.0;
-//                    cc3aaa_data[idx_I + rr * na5 + pp * na4 + qq * na3 + rr * na2 + qq * na1 + pp] =
-//                        -1.0;
-//                    cc3aaa_data[idx_I + rr * na5 + pp * na4 + qq * na3 + qq * na2 + rr * na1 + pp] =
-//                        1.0;
-//                    cc3aaa_data[idx_I + rr * na5 + pp * na4 + qq * na3 + qq * na2 + pp * na1 + rr] =
-//                        -1.0;
-//
-//                    cc3aaa_data[idx_I + rr * na5 + qq * na4 + pp * na3 + pp * na2 + qq * na1 + rr] =
-//                        -1.0;
-//                    cc3aaa_data[idx_I + rr * na5 + qq * na4 + pp * na3 + pp * na2 + rr * na1 + qq] =
-//                        1.0;
-//                    cc3aaa_data[idx_I + rr * na5 + qq * na4 + pp * na3 + rr * na2 + pp * na1 + qq] =
-//                        -1.0;
-//                    cc3aaa_data[idx_I + rr * na5 + qq * na4 + pp * na3 + rr * na2 + qq * na1 + pp] =
-//                        1.0;
-//                    cc3aaa_data[idx_I + rr * na5 + qq * na4 + pp * na3 + qq * na2 + rr * na1 + pp] =
-//                        -1.0;
-//                    cc3aaa_data[idx_I + rr * na5 + qq * na4 + pp * na3 + qq * na2 + pp * na1 + rr] =
-//                        1.0;
-//
-//                    cc3aaa_data[idx_I + qq * na5 + rr * na4 + pp * na3 + pp * na2 + qq * na1 + rr] =
-//                        1.0;
-//                    cc3aaa_data[idx_I + qq * na5 + rr * na4 + pp * na3 + pp * na2 + rr * na1 + qq] =
-//                        -1.0;
-//                    cc3aaa_data[idx_I + qq * na5 + rr * na4 + pp * na3 + rr * na2 + pp * na1 + qq] =
-//                        1.0;
-//                    cc3aaa_data[idx_I + qq * na5 + rr * na4 + pp * na3 + rr * na2 + qq * na1 + pp] =
-//                        -1.0;
-//                    cc3aaa_data[idx_I + qq * na5 + rr * na4 + pp * na3 + qq * na2 + rr * na1 + pp] =
-//                        1.0;
-//                    cc3aaa_data[idx_I + qq * na5 + rr * na4 + pp * na3 + qq * na2 + pp * na1 + rr] =
-//                        -1.0;
-//
-//                    cc3aaa_data[idx_I + qq * na5 + pp * na4 + rr * na3 + pp * na2 + qq * na1 + rr] =
-//                        -1.0;
-//                    cc3aaa_data[idx_I + qq * na5 + pp * na4 + rr * na3 + pp * na2 + rr * na1 + qq] =
-//                        1.0;
-//                    cc3aaa_data[idx_I + qq * na5 + pp * na4 + rr * na3 + rr * na2 + pp * na1 + qq] =
-//                        -1.0;
-//                    cc3aaa_data[idx_I + qq * na5 + pp * na4 + rr * na3 + rr * na2 + qq * na1 + pp] =
-//                        1.0;
-//                    cc3aaa_data[idx_I + qq * na5 + pp * na4 + rr * na3 + qq * na2 + rr * na1 + pp] =
-//                        -1.0;
-//                    cc3aaa_data[idx_I + qq * na5 + pp * na4 + rr * na3 + qq * na2 + pp * na1 + rr] =
-//                        1.0;
-//                }
-//            }
-//        }
+        // aaa
+        for (int p = 0; p < naocc; ++p) {
+            int pp = aocc[p];
+            for (int q = p + 1; q < naocc; ++q) {
+                int qq = aocc[q];
+                for (int r = q + 1; r < naocc; ++r) {
+                    int rr = aocc[r];
+
+                    cc3aaa_data[idx_I + pp * na5 + qq * na4 + rr * na3 + pp * na2 + qq * na1 + rr] =
+                        1.0;
+                    cc3aaa_data[idx_I + pp * na5 + qq * na4 + rr * na3 + pp * na2 + rr * na1 + qq] =
+                        -1.0;
+                    cc3aaa_data[idx_I + pp * na5 + qq * na4 + rr * na3 + rr * na2 + pp * na1 + qq] =
+                        1.0;
+                    cc3aaa_data[idx_I + pp * na5 + qq * na4 + rr * na3 + rr * na2 + qq * na1 + pp] =
+                        -1.0;
+                    cc3aaa_data[idx_I + pp * na5 + qq * na4 + rr * na3 + qq * na2 + rr * na1 + pp] =
+                        1.0;
+                    cc3aaa_data[idx_I + pp * na5 + qq * na4 + rr * na3 + qq * na2 + pp * na1 + rr] =
+                        -1.0;
+
+                    cc3aaa_data[idx_I + pp * na5 + rr * na4 + qq * na3 + pp * na2 + qq * na1 + rr] =
+                        -1.0;
+                    cc3aaa_data[idx_I + pp * na5 + rr * na4 + qq * na3 + pp * na2 + rr * na1 + qq] =
+                        1.0;
+                    cc3aaa_data[idx_I + pp * na5 + rr * na4 + qq * na3 + rr * na2 + pp * na1 + qq] =
+                        -1.0;
+                    cc3aaa_data[idx_I + pp * na5 + rr * na4 + qq * na3 + rr * na2 + qq * na1 + pp] =
+                        1.0;
+                    cc3aaa_data[idx_I + pp * na5 + rr * na4 + qq * na3 + qq * na2 + rr * na1 + pp] =
+                        -1.0;
+                    cc3aaa_data[idx_I + pp * na5 + rr * na4 + qq * na3 + qq * na2 + pp * na1 + rr] =
+                        1.0;
+
+                    cc3aaa_data[idx_I + rr * na5 + pp * na4 + qq * na3 + pp * na2 + qq * na1 + rr] =
+                        1.0;
+                    cc3aaa_data[idx_I + rr * na5 + pp * na4 + qq * na3 + pp * na2 + rr * na1 + qq] =
+                        -1.0;
+                    cc3aaa_data[idx_I + rr * na5 + pp * na4 + qq * na3 + rr * na2 + pp * na1 + qq] =
+                        1.0;
+                    cc3aaa_data[idx_I + rr * na5 + pp * na4 + qq * na3 + rr * na2 + qq * na1 + pp] =
+                        -1.0;
+                    cc3aaa_data[idx_I + rr * na5 + pp * na4 + qq * na3 + qq * na2 + rr * na1 + pp] =
+                        1.0;
+                    cc3aaa_data[idx_I + rr * na5 + pp * na4 + qq * na3 + qq * na2 + pp * na1 + rr] =
+                        -1.0;
+
+                    cc3aaa_data[idx_I + rr * na5 + qq * na4 + pp * na3 + pp * na2 + qq * na1 + rr] =
+                        -1.0;
+                    cc3aaa_data[idx_I + rr * na5 + qq * na4 + pp * na3 + pp * na2 + rr * na1 + qq] =
+                        1.0;
+                    cc3aaa_data[idx_I + rr * na5 + qq * na4 + pp * na3 + rr * na2 + pp * na1 + qq] =
+                        -1.0;
+                    cc3aaa_data[idx_I + rr * na5 + qq * na4 + pp * na3 + rr * na2 + qq * na1 + pp] =
+                        1.0;
+                    cc3aaa_data[idx_I + rr * na5 + qq * na4 + pp * na3 + qq * na2 + rr * na1 + pp] =
+                        -1.0;
+                    cc3aaa_data[idx_I + rr * na5 + qq * na4 + pp * na3 + qq * na2 + pp * na1 + rr] =
+                        1.0;
+
+                    cc3aaa_data[idx_I + qq * na5 + rr * na4 + pp * na3 + pp * na2 + qq * na1 + rr] =
+                        1.0;
+                    cc3aaa_data[idx_I + qq * na5 + rr * na4 + pp * na3 + pp * na2 + rr * na1 + qq] =
+                        -1.0;
+                    cc3aaa_data[idx_I + qq * na5 + rr * na4 + pp * na3 + rr * na2 + pp * na1 + qq] =
+                        1.0;
+                    cc3aaa_data[idx_I + qq * na5 + rr * na4 + pp * na3 + rr * na2 + qq * na1 + pp] =
+                        -1.0;
+                    cc3aaa_data[idx_I + qq * na5 + rr * na4 + pp * na3 + qq * na2 + rr * na1 + pp] =
+                        1.0;
+                    cc3aaa_data[idx_I + qq * na5 + rr * na4 + pp * na3 + qq * na2 + pp * na1 + rr] =
+                        -1.0;
+
+                    cc3aaa_data[idx_I + qq * na5 + pp * na4 + rr * na3 + pp * na2 + qq * na1 + rr] =
+                        -1.0;
+                    cc3aaa_data[idx_I + qq * na5 + pp * na4 + rr * na3 + pp * na2 + rr * na1 + qq] =
+                        1.0;
+                    cc3aaa_data[idx_I + qq * na5 + pp * na4 + rr * na3 + rr * na2 + pp * na1 + qq] =
+                        -1.0;
+                    cc3aaa_data[idx_I + qq * na5 + pp * na4 + rr * na3 + rr * na2 + qq * na1 + pp] =
+                        1.0;
+                    cc3aaa_data[idx_I + qq * na5 + pp * na4 + rr * na3 + qq * na2 + rr * na1 + pp] =
+                        -1.0;
+                    cc3aaa_data[idx_I + qq * na5 + pp * na4 + rr * na3 + qq * na2 + pp * na1 + rr] =
+                        1.0;
+                }
+            }
+        }
 
         // aab
         for (int p = 0; p < naocc; ++p) {
@@ -3201,303 +3137,303 @@ std::vector<ambit::Tensor> FCI_MO::coupling_coeffcients_3() const {
             }
         }
 
-//        // abb
-//        for (int p = 0; p < naocc; ++p) {
-//            int pp = aocc[p];
-//            for (int q = 0; q < nbocc; ++q) {
-//                int qq = bocc[q];
-//                for (int r = q + 1; r < nbocc; ++r) {
-//                    int rr = bocc[r];
-//
-//                    cc3abb_data[idx_I + pp * na5 + qq * na4 + rr * na3 + pp * na2 + qq * na1 + rr] =
-//                        1.0;
-//                    cc3abb_data[idx_I + pp * na5 + qq * na4 + rr * na3 + pp * na2 + rr * na1 + qq] =
-//                        -1.0;
-//                    cc3abb_data[idx_I + pp * na5 + rr * na4 + qq * na3 + pp * na2 + qq * na1 + rr] =
-//                        -1.0;
-//                    cc3abb_data[idx_I + pp * na5 + rr * na4 + qq * na3 + pp * na2 + rr * na1 + qq] =
-//                        1.0;
-//                }
-//            }
-//        }
-//
-//        // bbb
-//        for (int p = 0; p < nbocc; ++p) {
-//            int pp = bocc[p];
-//            for (int q = p + 1; q < nbocc; ++q) {
-//                int qq = bocc[q];
-//                for (int r = q + 1; r < nbocc; ++r) {
-//                    int rr = bocc[r];
-//
-//                    cc3bbb_data[idx_I + pp * na5 + qq * na4 + rr * na3 + pp * na2 + qq * na1 + rr] =
-//                        1.0;
-//                    cc3bbb_data[idx_I + pp * na5 + qq * na4 + rr * na3 + pp * na2 + rr * na1 + qq] =
-//                        -1.0;
-//                    cc3bbb_data[idx_I + pp * na5 + qq * na4 + rr * na3 + rr * na2 + pp * na1 + qq] =
-//                        1.0;
-//                    cc3bbb_data[idx_I + pp * na5 + qq * na4 + rr * na3 + rr * na2 + qq * na1 + pp] =
-//                        -1.0;
-//                    cc3bbb_data[idx_I + pp * na5 + qq * na4 + rr * na3 + qq * na2 + rr * na1 + pp] =
-//                        1.0;
-//                    cc3bbb_data[idx_I + pp * na5 + qq * na4 + rr * na3 + qq * na2 + pp * na1 + rr] =
-//                        -1.0;
-//
-//                    cc3bbb_data[idx_I + pp * na5 + rr * na4 + qq * na3 + pp * na2 + qq * na1 + rr] =
-//                        -1.0;
-//                    cc3bbb_data[idx_I + pp * na5 + rr * na4 + qq * na3 + pp * na2 + rr * na1 + qq] =
-//                        1.0;
-//                    cc3bbb_data[idx_I + pp * na5 + rr * na4 + qq * na3 + rr * na2 + pp * na1 + qq] =
-//                        -1.0;
-//                    cc3bbb_data[idx_I + pp * na5 + rr * na4 + qq * na3 + rr * na2 + qq * na1 + pp] =
-//                        1.0;
-//                    cc3bbb_data[idx_I + pp * na5 + rr * na4 + qq * na3 + qq * na2 + rr * na1 + pp] =
-//                        -1.0;
-//                    cc3bbb_data[idx_I + pp * na5 + rr * na4 + qq * na3 + qq * na2 + pp * na1 + rr] =
-//                        1.0;
-//
-//                    cc3bbb_data[idx_I + rr * na5 + pp * na4 + qq * na3 + pp * na2 + qq * na1 + rr] =
-//                        1.0;
-//                    cc3bbb_data[idx_I + rr * na5 + pp * na4 + qq * na3 + pp * na2 + rr * na1 + qq] =
-//                        -1.0;
-//                    cc3bbb_data[idx_I + rr * na5 + pp * na4 + qq * na3 + rr * na2 + pp * na1 + qq] =
-//                        1.0;
-//                    cc3bbb_data[idx_I + rr * na5 + pp * na4 + qq * na3 + rr * na2 + qq * na1 + pp] =
-//                        -1.0;
-//                    cc3bbb_data[idx_I + rr * na5 + pp * na4 + qq * na3 + qq * na2 + rr * na1 + pp] =
-//                        1.0;
-//                    cc3bbb_data[idx_I + rr * na5 + pp * na4 + qq * na3 + qq * na2 + pp * na1 + rr] =
-//                        -1.0;
-//
-//                    cc3bbb_data[idx_I + rr * na5 + qq * na4 + pp * na3 + pp * na2 + qq * na1 + rr] =
-//                        -1.0;
-//                    cc3bbb_data[idx_I + rr * na5 + qq * na4 + pp * na3 + pp * na2 + rr * na1 + qq] =
-//                        1.0;
-//                    cc3bbb_data[idx_I + rr * na5 + qq * na4 + pp * na3 + rr * na2 + pp * na1 + qq] =
-//                        -1.0;
-//                    cc3bbb_data[idx_I + rr * na5 + qq * na4 + pp * na3 + rr * na2 + qq * na1 + pp] =
-//                        1.0;
-//                    cc3bbb_data[idx_I + rr * na5 + qq * na4 + pp * na3 + qq * na2 + rr * na1 + pp] =
-//                        -1.0;
-//                    cc3bbb_data[idx_I + rr * na5 + qq * na4 + pp * na3 + qq * na2 + pp * na1 + rr] =
-//                        1.0;
-//
-//                    cc3bbb_data[idx_I + qq * na5 + rr * na4 + pp * na3 + pp * na2 + qq * na1 + rr] =
-//                        1.0;
-//                    cc3bbb_data[idx_I + qq * na5 + rr * na4 + pp * na3 + pp * na2 + rr * na1 + qq] =
-//                        -1.0;
-//                    cc3bbb_data[idx_I + qq * na5 + rr * na4 + pp * na3 + rr * na2 + pp * na1 + qq] =
-//                        1.0;
-//                    cc3bbb_data[idx_I + qq * na5 + rr * na4 + pp * na3 + rr * na2 + qq * na1 + pp] =
-//                        -1.0;
-//                    cc3bbb_data[idx_I + qq * na5 + rr * na4 + pp * na3 + qq * na2 + rr * na1 + pp] =
-//                        1.0;
-//                    cc3bbb_data[idx_I + qq * na5 + rr * na4 + pp * na3 + qq * na2 + pp * na1 + rr] =
-//                        -1.0;
-//
-//                    cc3bbb_data[idx_I + qq * na5 + pp * na4 + rr * na3 + pp * na2 + qq * na1 + rr] =
-//                        -1.0;
-//                    cc3bbb_data[idx_I + qq * na5 + pp * na4 + rr * na3 + pp * na2 + rr * na1 + qq] =
-//                        1.0;
-//                    cc3bbb_data[idx_I + qq * na5 + pp * na4 + rr * na3 + rr * na2 + pp * na1 + qq] =
-//                        -1.0;
-//                    cc3bbb_data[idx_I + qq * na5 + pp * na4 + rr * na3 + rr * na2 + qq * na1 + pp] =
-//                        1.0;
-//                    cc3bbb_data[idx_I + qq * na5 + pp * na4 + rr * na3 + qq * na2 + rr * na1 + pp] =
-//                        -1.0;
-//                    cc3bbb_data[idx_I + qq * na5 + pp * na4 + rr * na3 + qq * na2 + pp * na1 + rr] =
-//                        1.0;
-//                }
-//            }
-//        }
+        // abb
+        for (int p = 0; p < naocc; ++p) {
+            int pp = aocc[p];
+            for (int q = 0; q < nbocc; ++q) {
+                int qq = bocc[q];
+                for (int r = q + 1; r < nbocc; ++r) {
+                    int rr = bocc[r];
+
+                    cc3abb_data[idx_I + pp * na5 + qq * na4 + rr * na3 + pp * na2 + qq * na1 + rr] =
+                        1.0;
+                    cc3abb_data[idx_I + pp * na5 + qq * na4 + rr * na3 + pp * na2 + rr * na1 + qq] =
+                        -1.0;
+                    cc3abb_data[idx_I + pp * na5 + rr * na4 + qq * na3 + pp * na2 + qq * na1 + rr] =
+                        -1.0;
+                    cc3abb_data[idx_I + pp * na5 + rr * na4 + qq * na3 + pp * na2 + rr * na1 + qq] =
+                        1.0;
+                }
+            }
+        }
+
+        // bbb
+        for (int p = 0; p < nbocc; ++p) {
+            int pp = bocc[p];
+            for (int q = p + 1; q < nbocc; ++q) {
+                int qq = bocc[q];
+                for (int r = q + 1; r < nbocc; ++r) {
+                    int rr = bocc[r];
+
+                    cc3bbb_data[idx_I + pp * na5 + qq * na4 + rr * na3 + pp * na2 + qq * na1 + rr] =
+                        1.0;
+                    cc3bbb_data[idx_I + pp * na5 + qq * na4 + rr * na3 + pp * na2 + rr * na1 + qq] =
+                        -1.0;
+                    cc3bbb_data[idx_I + pp * na5 + qq * na4 + rr * na3 + rr * na2 + pp * na1 + qq] =
+                        1.0;
+                    cc3bbb_data[idx_I + pp * na5 + qq * na4 + rr * na3 + rr * na2 + qq * na1 + pp] =
+                        -1.0;
+                    cc3bbb_data[idx_I + pp * na5 + qq * na4 + rr * na3 + qq * na2 + rr * na1 + pp] =
+                        1.0;
+                    cc3bbb_data[idx_I + pp * na5 + qq * na4 + rr * na3 + qq * na2 + pp * na1 + rr] =
+                        -1.0;
+
+                    cc3bbb_data[idx_I + pp * na5 + rr * na4 + qq * na3 + pp * na2 + qq * na1 + rr] =
+                        -1.0;
+                    cc3bbb_data[idx_I + pp * na5 + rr * na4 + qq * na3 + pp * na2 + rr * na1 + qq] =
+                        1.0;
+                    cc3bbb_data[idx_I + pp * na5 + rr * na4 + qq * na3 + rr * na2 + pp * na1 + qq] =
+                        -1.0;
+                    cc3bbb_data[idx_I + pp * na5 + rr * na4 + qq * na3 + rr * na2 + qq * na1 + pp] =
+                        1.0;
+                    cc3bbb_data[idx_I + pp * na5 + rr * na4 + qq * na3 + qq * na2 + rr * na1 + pp] =
+                        -1.0;
+                    cc3bbb_data[idx_I + pp * na5 + rr * na4 + qq * na3 + qq * na2 + pp * na1 + rr] =
+                        1.0;
+
+                    cc3bbb_data[idx_I + rr * na5 + pp * na4 + qq * na3 + pp * na2 + qq * na1 + rr] =
+                        1.0;
+                    cc3bbb_data[idx_I + rr * na5 + pp * na4 + qq * na3 + pp * na2 + rr * na1 + qq] =
+                        -1.0;
+                    cc3bbb_data[idx_I + rr * na5 + pp * na4 + qq * na3 + rr * na2 + pp * na1 + qq] =
+                        1.0;
+                    cc3bbb_data[idx_I + rr * na5 + pp * na4 + qq * na3 + rr * na2 + qq * na1 + pp] =
+                        -1.0;
+                    cc3bbb_data[idx_I + rr * na5 + pp * na4 + qq * na3 + qq * na2 + rr * na1 + pp] =
+                        1.0;
+                    cc3bbb_data[idx_I + rr * na5 + pp * na4 + qq * na3 + qq * na2 + pp * na1 + rr] =
+                        -1.0;
+
+                    cc3bbb_data[idx_I + rr * na5 + qq * na4 + pp * na3 + pp * na2 + qq * na1 + rr] =
+                        -1.0;
+                    cc3bbb_data[idx_I + rr * na5 + qq * na4 + pp * na3 + pp * na2 + rr * na1 + qq] =
+                        1.0;
+                    cc3bbb_data[idx_I + rr * na5 + qq * na4 + pp * na3 + rr * na2 + pp * na1 + qq] =
+                        -1.0;
+                    cc3bbb_data[idx_I + rr * na5 + qq * na4 + pp * na3 + rr * na2 + qq * na1 + pp] =
+                        1.0;
+                    cc3bbb_data[idx_I + rr * na5 + qq * na4 + pp * na3 + qq * na2 + rr * na1 + pp] =
+                        -1.0;
+                    cc3bbb_data[idx_I + rr * na5 + qq * na4 + pp * na3 + qq * na2 + pp * na1 + rr] =
+                        1.0;
+
+                    cc3bbb_data[idx_I + qq * na5 + rr * na4 + pp * na3 + pp * na2 + qq * na1 + rr] =
+                        1.0;
+                    cc3bbb_data[idx_I + qq * na5 + rr * na4 + pp * na3 + pp * na2 + rr * na1 + qq] =
+                        -1.0;
+                    cc3bbb_data[idx_I + qq * na5 + rr * na4 + pp * na3 + rr * na2 + pp * na1 + qq] =
+                        1.0;
+                    cc3bbb_data[idx_I + qq * na5 + rr * na4 + pp * na3 + rr * na2 + qq * na1 + pp] =
+                        -1.0;
+                    cc3bbb_data[idx_I + qq * na5 + rr * na4 + pp * na3 + qq * na2 + rr * na1 + pp] =
+                        1.0;
+                    cc3bbb_data[idx_I + qq * na5 + rr * na4 + pp * na3 + qq * na2 + pp * na1 + rr] =
+                        -1.0;
+
+                    cc3bbb_data[idx_I + qq * na5 + pp * na4 + rr * na3 + pp * na2 + qq * na1 + rr] =
+                        -1.0;
+                    cc3bbb_data[idx_I + qq * na5 + pp * na4 + rr * na3 + pp * na2 + rr * na1 + qq] =
+                        1.0;
+                    cc3bbb_data[idx_I + qq * na5 + pp * na4 + rr * na3 + rr * na2 + pp * na1 + qq] =
+                        -1.0;
+                    cc3bbb_data[idx_I + qq * na5 + pp * na4 + rr * na3 + rr * na2 + qq * na1 + pp] =
+                        1.0;
+                    cc3bbb_data[idx_I + qq * na5 + pp * na4 + rr * na3 + qq * na2 + rr * na1 + pp] =
+                        -1.0;
+                    cc3bbb_data[idx_I + qq * na5 + pp * na4 + rr * na3 + qq * na2 + pp * na1 + rr] =
+                        1.0;
+                }
+            }
+        }
     }
 
     // general cases
 
     // aaa and bbb
-//    for (int spin : {0, 3}) {
-//        auto& list = (spin == 0) ? op->aaa_list_ : op->bbb_list_;
-//        auto& data = (spin == 0) ? cc3aaa_data : cc3bbb_data;
-//
-//        for (auto& coupled_dets : list) {
-//            for (size_t a = 0, max_a = coupled_dets.size(); a < max_a; ++a) {
-//                auto& detJ = coupled_dets[a];
-//
-//                const size_t& J = std::get<0>(detJ);
-//                const size_t& p = std::abs(std::get<1>(detJ)) - 1;
-//                const size_t& q = std::get<2>(detJ);
-//                const size_t& r = std::get<3>(detJ);
-//                const double& sign_pqr = std::get<1>(detJ) > 0.0 ? 1.0 : -1.0;
-//
-//                for (size_t b = a + 1, max_b = coupled_dets.size(); b < max_b; ++b) {
-//                    auto& detI = coupled_dets[b];
-//
-//                    const size_t& s = std::abs(std::get<1>(detI)) - 1;
-//                    const size_t& t = std::get<2>(detI);
-//                    const size_t& u = std::get<3>(detI);
-//                    const double& sign_stu = std::get<1>(detI) > 0.0 ? 1.0 : -1.0;
-//                    const size_t& I = std::get<0>(detI);
-//
-//                    double sign = sign_pqr * sign_stu;
-//
-//                    data[J * na7 + I * na6 + p * na5 + q * na4 + r * na3 + s * na2 + t * na1 + u] =
-//                        sign;
-//                    data[J * na7 + I * na6 + p * na5 + q * na4 + r * na3 + s * na2 + u * na1 + t] =
-//                        -sign;
-//                    data[J * na7 + I * na6 + p * na5 + q * na4 + r * na3 + u * na2 + t * na1 + s] =
-//                        -sign;
-//                    data[J * na7 + I * na6 + p * na5 + q * na4 + r * na3 + u * na2 + s * na1 + t] =
-//                        sign;
-//                    data[J * na7 + I * na6 + p * na5 + q * na4 + r * na3 + t * na2 + s * na1 + u] =
-//                        -sign;
-//                    data[J * na7 + I * na6 + p * na5 + q * na4 + r * na3 + t * na2 + u * na1 + s] =
-//                        sign;
-//
-//                    data[J * na7 + I * na6 + p * na5 + r * na4 + q * na3 + s * na2 + t * na1 + u] =
-//                        -sign;
-//                    data[J * na7 + I * na6 + p * na5 + r * na4 + q * na3 + s * na2 + u * na1 + t] =
-//                        sign;
-//                    data[J * na7 + I * na6 + p * na5 + r * na4 + q * na3 + u * na2 + t * na1 + s] =
-//                        sign;
-//                    data[J * na7 + I * na6 + p * na5 + r * na4 + q * na3 + u * na2 + s * na1 + t] =
-//                        -sign;
-//                    data[J * na7 + I * na6 + p * na5 + r * na4 + q * na3 + t * na2 + s * na1 + u] =
-//                        sign;
-//                    data[J * na7 + I * na6 + p * na5 + r * na4 + q * na3 + t * na2 + u * na1 + s] =
-//                        -sign;
-//
-//                    data[J * na7 + I * na6 + q * na5 + p * na4 + r * na3 + s * na2 + t * na1 + u] =
-//                        -sign;
-//                    data[J * na7 + I * na6 + q * na5 + p * na4 + r * na3 + s * na2 + u * na1 + t] =
-//                        sign;
-//                    data[J * na7 + I * na6 + q * na5 + p * na4 + r * na3 + u * na2 + t * na1 + s] =
-//                        sign;
-//                    data[J * na7 + I * na6 + q * na5 + p * na4 + r * na3 + u * na2 + s * na1 + t] =
-//                        -sign;
-//                    data[J * na7 + I * na6 + q * na5 + p * na4 + r * na3 + t * na2 + s * na1 + u] =
-//                        sign;
-//                    data[J * na7 + I * na6 + q * na5 + p * na4 + r * na3 + t * na2 + u * na1 + s] =
-//                        -sign;
-//
-//                    data[J * na7 + I * na6 + q * na5 + r * na4 + p * na3 + s * na2 + t * na1 + u] =
-//                        sign;
-//                    data[J * na7 + I * na6 + q * na5 + r * na4 + p * na3 + s * na2 + u * na1 + t] =
-//                        -sign;
-//                    data[J * na7 + I * na6 + q * na5 + r * na4 + p * na3 + u * na2 + t * na1 + s] =
-//                        -sign;
-//                    data[J * na7 + I * na6 + q * na5 + r * na4 + p * na3 + u * na2 + s * na1 + t] =
-//                        sign;
-//                    data[J * na7 + I * na6 + q * na5 + r * na4 + p * na3 + t * na2 + s * na1 + u] =
-//                        -sign;
-//                    data[J * na7 + I * na6 + q * na5 + r * na4 + p * na3 + t * na2 + u * na1 + s] =
-//                        sign;
-//
-//                    data[J * na7 + I * na6 + r * na5 + p * na4 + q * na3 + s * na2 + t * na1 + u] =
-//                        sign;
-//                    data[J * na7 + I * na6 + r * na5 + p * na4 + q * na3 + s * na2 + u * na1 + t] =
-//                        -sign;
-//                    data[J * na7 + I * na6 + r * na5 + p * na4 + q * na3 + u * na2 + t * na1 + s] =
-//                        -sign;
-//                    data[J * na7 + I * na6 + r * na5 + p * na4 + q * na3 + u * na2 + s * na1 + t] =
-//                        sign;
-//                    data[J * na7 + I * na6 + r * na5 + p * na4 + q * na3 + t * na2 + s * na1 + u] =
-//                        -sign;
-//                    data[J * na7 + I * na6 + r * na5 + p * na4 + q * na3 + t * na2 + u * na1 + s] =
-//                        sign;
-//
-//                    data[J * na7 + I * na6 + r * na5 + q * na4 + p * na3 + s * na2 + t * na1 + u] =
-//                        -sign;
-//                    data[J * na7 + I * na6 + r * na5 + q * na4 + p * na3 + s * na2 + u * na1 + t] =
-//                        sign;
-//                    data[J * na7 + I * na6 + r * na5 + q * na4 + p * na3 + u * na2 + t * na1 + s] =
-//                        sign;
-//                    data[J * na7 + I * na6 + r * na5 + q * na4 + p * na3 + u * na2 + s * na1 + t] =
-//                        -sign;
-//                    data[J * na7 + I * na6 + r * na5 + q * na4 + p * na3 + t * na2 + s * na1 + u] =
-//                        sign;
-//                    data[J * na7 + I * na6 + r * na5 + q * na4 + p * na3 + t * na2 + u * na1 + s] =
-//                        -sign;
-//
-//                    data[I * na7 + J * na6 + s * na5 + t * na4 + u * na3 + p * na2 + q * na1 + r] =
-//                        sign;
-//                    data[I * na7 + J * na6 + s * na5 + u * na4 + t * na3 + p * na2 + q * na1 + r] =
-//                        -sign;
-//                    data[I * na7 + J * na6 + u * na5 + t * na4 + s * na3 + p * na2 + q * na1 + r] =
-//                        -sign;
-//                    data[I * na7 + J * na6 + u * na5 + s * na4 + t * na3 + p * na2 + q * na1 + r] =
-//                        sign;
-//                    data[I * na7 + J * na6 + t * na5 + s * na4 + u * na3 + p * na2 + q * na1 + r] =
-//                        -sign;
-//                    data[I * na7 + J * na6 + t * na5 + u * na4 + s * na3 + p * na2 + q * na1 + r] =
-//                        sign;
-//
-//                    data[I * na7 + J * na6 + s * na5 + t * na4 + u * na3 + p * na2 + r * na1 + q] =
-//                        -sign;
-//                    data[I * na7 + J * na6 + s * na5 + u * na4 + t * na3 + p * na2 + r * na1 + q] =
-//                        sign;
-//                    data[I * na7 + J * na6 + u * na5 + t * na4 + s * na3 + p * na2 + r * na1 + q] =
-//                        sign;
-//                    data[I * na7 + J * na6 + u * na5 + s * na4 + t * na3 + p * na2 + r * na1 + q] =
-//                        -sign;
-//                    data[I * na7 + J * na6 + t * na5 + s * na4 + u * na3 + p * na2 + r * na1 + q] =
-//                        sign;
-//                    data[I * na7 + J * na6 + t * na5 + u * na4 + s * na3 + p * na2 + r * na1 + q] =
-//                        -sign;
-//
-//                    data[I * na7 + J * na6 + s * na5 + t * na4 + u * na3 + q * na2 + p * na1 + r] =
-//                        -sign;
-//                    data[I * na7 + J * na6 + s * na5 + u * na4 + t * na3 + q * na2 + p * na1 + r] =
-//                        sign;
-//                    data[I * na7 + J * na6 + u * na5 + t * na4 + s * na3 + q * na2 + p * na1 + r] =
-//                        sign;
-//                    data[I * na7 + J * na6 + u * na5 + s * na4 + t * na3 + q * na2 + p * na1 + r] =
-//                        -sign;
-//                    data[I * na7 + J * na6 + t * na5 + s * na4 + u * na3 + q * na2 + p * na1 + r] =
-//                        sign;
-//                    data[I * na7 + J * na6 + t * na5 + u * na4 + s * na3 + q * na2 + p * na1 + r] =
-//                        -sign;
-//
-//                    data[I * na7 + J * na6 + s * na5 + t * na4 + u * na3 + q * na2 + r * na1 + p] =
-//                        sign;
-//                    data[I * na7 + J * na6 + s * na5 + u * na4 + t * na3 + q * na2 + r * na1 + p] =
-//                        -sign;
-//                    data[I * na7 + J * na6 + u * na5 + t * na4 + s * na3 + q * na2 + r * na1 + p] =
-//                        -sign;
-//                    data[I * na7 + J * na6 + u * na5 + s * na4 + t * na3 + q * na2 + r * na1 + p] =
-//                        sign;
-//                    data[I * na7 + J * na6 + t * na5 + s * na4 + u * na3 + q * na2 + r * na1 + p] =
-//                        -sign;
-//                    data[I * na7 + J * na6 + t * na5 + u * na4 + s * na3 + q * na2 + r * na1 + p] =
-//                        sign;
-//
-//                    data[I * na7 + J * na6 + s * na5 + t * na4 + u * na3 + r * na2 + p * na1 + q] =
-//                        sign;
-//                    data[I * na7 + J * na6 + s * na5 + u * na4 + t * na3 + r * na2 + p * na1 + q] =
-//                        -sign;
-//                    data[I * na7 + J * na6 + u * na5 + t * na4 + s * na3 + r * na2 + p * na1 + q] =
-//                        -sign;
-//                    data[I * na7 + J * na6 + u * na5 + s * na4 + t * na3 + r * na2 + p * na1 + q] =
-//                        sign;
-//                    data[I * na7 + J * na6 + t * na5 + s * na4 + u * na3 + r * na2 + p * na1 + q] =
-//                        -sign;
-//                    data[I * na7 + J * na6 + t * na5 + u * na4 + s * na3 + r * na2 + p * na1 + q] =
-//                        sign;
-//
-//                    data[I * na7 + J * na6 + s * na5 + t * na4 + u * na3 + r * na2 + q * na1 + p] =
-//                        -sign;
-//                    data[I * na7 + J * na6 + s * na5 + u * na4 + t * na3 + r * na2 + q * na1 + p] =
-//                        sign;
-//                    data[I * na7 + J * na6 + u * na5 + t * na4 + s * na3 + r * na2 + q * na1 + p] =
-//                        sign;
-//                    data[I * na7 + J * na6 + u * na5 + s * na4 + t * na3 + r * na2 + q * na1 + p] =
-//                        -sign;
-//                    data[I * na7 + J * na6 + t * na5 + s * na4 + u * na3 + r * na2 + q * na1 + p] =
-//                        sign;
-//                    data[I * na7 + J * na6 + t * na5 + u * na4 + s * na3 + r * na2 + q * na1 + p] =
-//                        -sign;
-//                }
-//            }
-//        }
-//    }
+    for (int spin : {0, 3}) {
+        auto& list = (spin == 0) ? op->aaa_list_ : op->bbb_list_;
+        auto& data = (spin == 0) ? cc3aaa_data : cc3bbb_data;
+
+        for (auto& coupled_dets : list) {
+            for (size_t a = 0, max_a = coupled_dets.size(); a < max_a; ++a) {
+                auto& detJ = coupled_dets[a];
+
+                const size_t& J = std::get<0>(detJ);
+                const size_t& p = std::abs(std::get<1>(detJ)) - 1;
+                const size_t& q = std::get<2>(detJ);
+                const size_t& r = std::get<3>(detJ);
+                const double& sign_pqr = std::get<1>(detJ) > 0.0 ? 1.0 : -1.0;
+
+                for (size_t b = a + 1, max_b = coupled_dets.size(); b < max_b; ++b) {
+                    auto& detI = coupled_dets[b];
+
+                    const size_t& s = std::abs(std::get<1>(detI)) - 1;
+                    const size_t& t = std::get<2>(detI);
+                    const size_t& u = std::get<3>(detI);
+                    const double& sign_stu = std::get<1>(detI) > 0.0 ? 1.0 : -1.0;
+                    const size_t& I = std::get<0>(detI);
+
+                    double sign = sign_pqr * sign_stu;
+
+                    data[J * na7 + I * na6 + p * na5 + q * na4 + r * na3 + s * na2 + t * na1 + u] =
+                        sign;
+                    data[J * na7 + I * na6 + p * na5 + q * na4 + r * na3 + s * na2 + u * na1 + t] =
+                        -sign;
+                    data[J * na7 + I * na6 + p * na5 + q * na4 + r * na3 + u * na2 + t * na1 + s] =
+                        -sign;
+                    data[J * na7 + I * na6 + p * na5 + q * na4 + r * na3 + u * na2 + s * na1 + t] =
+                        sign;
+                    data[J * na7 + I * na6 + p * na5 + q * na4 + r * na3 + t * na2 + s * na1 + u] =
+                        -sign;
+                    data[J * na7 + I * na6 + p * na5 + q * na4 + r * na3 + t * na2 + u * na1 + s] =
+                        sign;
+
+                    data[J * na7 + I * na6 + p * na5 + r * na4 + q * na3 + s * na2 + t * na1 + u] =
+                        -sign;
+                    data[J * na7 + I * na6 + p * na5 + r * na4 + q * na3 + s * na2 + u * na1 + t] =
+                        sign;
+                    data[J * na7 + I * na6 + p * na5 + r * na4 + q * na3 + u * na2 + t * na1 + s] =
+                        sign;
+                    data[J * na7 + I * na6 + p * na5 + r * na4 + q * na3 + u * na2 + s * na1 + t] =
+                        -sign;
+                    data[J * na7 + I * na6 + p * na5 + r * na4 + q * na3 + t * na2 + s * na1 + u] =
+                        sign;
+                    data[J * na7 + I * na6 + p * na5 + r * na4 + q * na3 + t * na2 + u * na1 + s] =
+                        -sign;
+
+                    data[J * na7 + I * na6 + q * na5 + p * na4 + r * na3 + s * na2 + t * na1 + u] =
+                        -sign;
+                    data[J * na7 + I * na6 + q * na5 + p * na4 + r * na3 + s * na2 + u * na1 + t] =
+                        sign;
+                    data[J * na7 + I * na6 + q * na5 + p * na4 + r * na3 + u * na2 + t * na1 + s] =
+                        sign;
+                    data[J * na7 + I * na6 + q * na5 + p * na4 + r * na3 + u * na2 + s * na1 + t] =
+                        -sign;
+                    data[J * na7 + I * na6 + q * na5 + p * na4 + r * na3 + t * na2 + s * na1 + u] =
+                        sign;
+                    data[J * na7 + I * na6 + q * na5 + p * na4 + r * na3 + t * na2 + u * na1 + s] =
+                        -sign;
+
+                    data[J * na7 + I * na6 + q * na5 + r * na4 + p * na3 + s * na2 + t * na1 + u] =
+                        sign;
+                    data[J * na7 + I * na6 + q * na5 + r * na4 + p * na3 + s * na2 + u * na1 + t] =
+                        -sign;
+                    data[J * na7 + I * na6 + q * na5 + r * na4 + p * na3 + u * na2 + t * na1 + s] =
+                        -sign;
+                    data[J * na7 + I * na6 + q * na5 + r * na4 + p * na3 + u * na2 + s * na1 + t] =
+                        sign;
+                    data[J * na7 + I * na6 + q * na5 + r * na4 + p * na3 + t * na2 + s * na1 + u] =
+                        -sign;
+                    data[J * na7 + I * na6 + q * na5 + r * na4 + p * na3 + t * na2 + u * na1 + s] =
+                        sign;
+
+                    data[J * na7 + I * na6 + r * na5 + p * na4 + q * na3 + s * na2 + t * na1 + u] =
+                        sign;
+                    data[J * na7 + I * na6 + r * na5 + p * na4 + q * na3 + s * na2 + u * na1 + t] =
+                        -sign;
+                    data[J * na7 + I * na6 + r * na5 + p * na4 + q * na3 + u * na2 + t * na1 + s] =
+                        -sign;
+                    data[J * na7 + I * na6 + r * na5 + p * na4 + q * na3 + u * na2 + s * na1 + t] =
+                        sign;
+                    data[J * na7 + I * na6 + r * na5 + p * na4 + q * na3 + t * na2 + s * na1 + u] =
+                        -sign;
+                    data[J * na7 + I * na6 + r * na5 + p * na4 + q * na3 + t * na2 + u * na1 + s] =
+                        sign;
+
+                    data[J * na7 + I * na6 + r * na5 + q * na4 + p * na3 + s * na2 + t * na1 + u] =
+                        -sign;
+                    data[J * na7 + I * na6 + r * na5 + q * na4 + p * na3 + s * na2 + u * na1 + t] =
+                        sign;
+                    data[J * na7 + I * na6 + r * na5 + q * na4 + p * na3 + u * na2 + t * na1 + s] =
+                        sign;
+                    data[J * na7 + I * na6 + r * na5 + q * na4 + p * na3 + u * na2 + s * na1 + t] =
+                        -sign;
+                    data[J * na7 + I * na6 + r * na5 + q * na4 + p * na3 + t * na2 + s * na1 + u] =
+                        sign;
+                    data[J * na7 + I * na6 + r * na5 + q * na4 + p * na3 + t * na2 + u * na1 + s] =
+                        -sign;
+
+                    data[I * na7 + J * na6 + s * na5 + t * na4 + u * na3 + p * na2 + q * na1 + r] =
+                        sign;
+                    data[I * na7 + J * na6 + s * na5 + u * na4 + t * na3 + p * na2 + q * na1 + r] =
+                        -sign;
+                    data[I * na7 + J * na6 + u * na5 + t * na4 + s * na3 + p * na2 + q * na1 + r] =
+                        -sign;
+                    data[I * na7 + J * na6 + u * na5 + s * na4 + t * na3 + p * na2 + q * na1 + r] =
+                        sign;
+                    data[I * na7 + J * na6 + t * na5 + s * na4 + u * na3 + p * na2 + q * na1 + r] =
+                        -sign;
+                    data[I * na7 + J * na6 + t * na5 + u * na4 + s * na3 + p * na2 + q * na1 + r] =
+                        sign;
+
+                    data[I * na7 + J * na6 + s * na5 + t * na4 + u * na3 + p * na2 + r * na1 + q] =
+                        -sign;
+                    data[I * na7 + J * na6 + s * na5 + u * na4 + t * na3 + p * na2 + r * na1 + q] =
+                        sign;
+                    data[I * na7 + J * na6 + u * na5 + t * na4 + s * na3 + p * na2 + r * na1 + q] =
+                        sign;
+                    data[I * na7 + J * na6 + u * na5 + s * na4 + t * na3 + p * na2 + r * na1 + q] =
+                        -sign;
+                    data[I * na7 + J * na6 + t * na5 + s * na4 + u * na3 + p * na2 + r * na1 + q] =
+                        sign;
+                    data[I * na7 + J * na6 + t * na5 + u * na4 + s * na3 + p * na2 + r * na1 + q] =
+                        -sign;
+
+                    data[I * na7 + J * na6 + s * na5 + t * na4 + u * na3 + q * na2 + p * na1 + r] =
+                        -sign;
+                    data[I * na7 + J * na6 + s * na5 + u * na4 + t * na3 + q * na2 + p * na1 + r] =
+                        sign;
+                    data[I * na7 + J * na6 + u * na5 + t * na4 + s * na3 + q * na2 + p * na1 + r] =
+                        sign;
+                    data[I * na7 + J * na6 + u * na5 + s * na4 + t * na3 + q * na2 + p * na1 + r] =
+                        -sign;
+                    data[I * na7 + J * na6 + t * na5 + s * na4 + u * na3 + q * na2 + p * na1 + r] =
+                        sign;
+                    data[I * na7 + J * na6 + t * na5 + u * na4 + s * na3 + q * na2 + p * na1 + r] =
+                        -sign;
+
+                    data[I * na7 + J * na6 + s * na5 + t * na4 + u * na3 + q * na2 + r * na1 + p] =
+                        sign;
+                    data[I * na7 + J * na6 + s * na5 + u * na4 + t * na3 + q * na2 + r * na1 + p] =
+                        -sign;
+                    data[I * na7 + J * na6 + u * na5 + t * na4 + s * na3 + q * na2 + r * na1 + p] =
+                        -sign;
+                    data[I * na7 + J * na6 + u * na5 + s * na4 + t * na3 + q * na2 + r * na1 + p] =
+                        sign;
+                    data[I * na7 + J * na6 + t * na5 + s * na4 + u * na3 + q * na2 + r * na1 + p] =
+                        -sign;
+                    data[I * na7 + J * na6 + t * na5 + u * na4 + s * na3 + q * na2 + r * na1 + p] =
+                        sign;
+
+                    data[I * na7 + J * na6 + s * na5 + t * na4 + u * na3 + r * na2 + p * na1 + q] =
+                        sign;
+                    data[I * na7 + J * na6 + s * na5 + u * na4 + t * na3 + r * na2 + p * na1 + q] =
+                        -sign;
+                    data[I * na7 + J * na6 + u * na5 + t * na4 + s * na3 + r * na2 + p * na1 + q] =
+                        -sign;
+                    data[I * na7 + J * na6 + u * na5 + s * na4 + t * na3 + r * na2 + p * na1 + q] =
+                        sign;
+                    data[I * na7 + J * na6 + t * na5 + s * na4 + u * na3 + r * na2 + p * na1 + q] =
+                        -sign;
+                    data[I * na7 + J * na6 + t * na5 + u * na4 + s * na3 + r * na2 + p * na1 + q] =
+                        sign;
+
+                    data[I * na7 + J * na6 + s * na5 + t * na4 + u * na3 + r * na2 + q * na1 + p] =
+                        -sign;
+                    data[I * na7 + J * na6 + s * na5 + u * na4 + t * na3 + r * na2 + q * na1 + p] =
+                        sign;
+                    data[I * na7 + J * na6 + u * na5 + t * na4 + s * na3 + r * na2 + q * na1 + p] =
+                        sign;
+                    data[I * na7 + J * na6 + u * na5 + s * na4 + t * na3 + r * na2 + q * na1 + p] =
+                        -sign;
+                    data[I * na7 + J * na6 + t * na5 + s * na4 + u * na3 + r * na2 + q * na1 + p] =
+                        sign;
+                    data[I * na7 + J * na6 + t * na5 + u * na4 + s * na3 + r * na2 + q * na1 + p] =
+                        -sign;
+                }
+            }
+        }
+    }
 
     // aab
     std::vector<std::vector<std::tuple<size_t, short, short, short>>>& aab_list = op->aab_list_;
@@ -3543,49 +3479,49 @@ std::vector<ambit::Tensor> FCI_MO::coupling_coeffcients_3() const {
         }
     }
 
-//    // abb
-//    std::vector<std::vector<std::tuple<size_t, short, short, short>>>& abb_list = op->abb_list_;
-//    for (auto& coupled_dets : abb_list) {
-//        for (size_t a = 0, max_a = coupled_dets.size(); a < max_a; ++a) {
-//            auto& detJ = coupled_dets[a];
-//
-//            const size_t& J = std::get<0>(detJ);
-//            const size_t& p = std::abs(std::get<1>(detJ)) - 1;
-//            const size_t& q = std::get<2>(detJ);
-//            const size_t& r = std::get<3>(detJ);
-//            const double& sign_pqr = std::get<1>(detJ) > 0.0 ? 1.0 : -1.0;
-//
-//            for (size_t b = a + 1, max_b = coupled_dets.size(); b < max_b; ++b) {
-//                auto& detI = coupled_dets[b];
-//
-//                const size_t& s = std::abs(std::get<1>(detI)) - 1;
-//                const size_t& t = std::get<2>(detI);
-//                const size_t& u = std::get<3>(detI);
-//                const double& sign_stu = std::get<1>(detI) > 0.0 ? 1.0 : -1.0;
-//                const size_t& I = std::get<0>(detI);
-//
-//                double sign = sign_pqr * sign_stu;
-//
-//                cc3abb_data[J * na7 + I * na6 + p * na5 + q * na4 + r * na3 + s * na2 + t * na1 +
-//                            u] = sign;
-//                cc3abb_data[J * na7 + I * na6 + p * na5 + q * na4 + r * na3 + s * na2 + u * na1 +
-//                            t] = -sign;
-//                cc3abb_data[J * na7 + I * na6 + p * na5 + r * na4 + q * na3 + s * na2 + t * na1 +
-//                            u] = -sign;
-//                cc3abb_data[J * na7 + I * na6 + p * na5 + r * na4 + q * na3 + s * na2 + u * na1 +
-//                            t] = sign;
-//
-//                cc3abb_data[I * na7 + J * na6 + s * na5 + t * na4 + u * na3 + p * na2 + q * na1 +
-//                            r] = sign;
-//                cc3abb_data[I * na7 + J * na6 + s * na5 + u * na4 + t * na3 + p * na2 + q * na1 +
-//                            r] = -sign;
-//                cc3abb_data[I * na7 + J * na6 + s * na5 + t * na4 + u * na3 + p * na2 + r * na1 +
-//                            q] = -sign;
-//                cc3abb_data[I * na7 + J * na6 + s * na5 + u * na4 + t * na3 + p * na2 + r * na1 +
-//                            q] = sign;
-//            }
-//        }
-//    }
+    // abb
+    std::vector<std::vector<std::tuple<size_t, short, short, short>>>& abb_list = op->abb_list_;
+    for (auto& coupled_dets : abb_list) {
+        for (size_t a = 0, max_a = coupled_dets.size(); a < max_a; ++a) {
+            auto& detJ = coupled_dets[a];
+
+            const size_t& J = std::get<0>(detJ);
+            const size_t& p = std::abs(std::get<1>(detJ)) - 1;
+            const size_t& q = std::get<2>(detJ);
+            const size_t& r = std::get<3>(detJ);
+            const double& sign_pqr = std::get<1>(detJ) > 0.0 ? 1.0 : -1.0;
+
+            for (size_t b = a + 1, max_b = coupled_dets.size(); b < max_b; ++b) {
+                auto& detI = coupled_dets[b];
+
+                const size_t& s = std::abs(std::get<1>(detI)) - 1;
+                const size_t& t = std::get<2>(detI);
+                const size_t& u = std::get<3>(detI);
+                const double& sign_stu = std::get<1>(detI) > 0.0 ? 1.0 : -1.0;
+                const size_t& I = std::get<0>(detI);
+
+                double sign = sign_pqr * sign_stu;
+
+                cc3abb_data[J * na7 + I * na6 + p * na5 + q * na4 + r * na3 + s * na2 + t * na1 +
+                            u] = sign;
+                cc3abb_data[J * na7 + I * na6 + p * na5 + q * na4 + r * na3 + s * na2 + u * na1 +
+                            t] = -sign;
+                cc3abb_data[J * na7 + I * na6 + p * na5 + r * na4 + q * na3 + s * na2 + t * na1 +
+                            u] = -sign;
+                cc3abb_data[J * na7 + I * na6 + p * na5 + r * na4 + q * na3 + s * na2 + u * na1 +
+                            t] = sign;
+
+                cc3abb_data[I * na7 + J * na6 + s * na5 + t * na4 + u * na3 + p * na2 + q * na1 +
+                            r] = sign;
+                cc3abb_data[I * na7 + J * na6 + s * na5 + u * na4 + t * na3 + p * na2 + q * na1 +
+                            r] = -sign;
+                cc3abb_data[I * na7 + J * na6 + s * na5 + t * na4 + u * na3 + p * na2 + r * na1 +
+                            q] = -sign;
+                cc3abb_data[I * na7 + J * na6 + s * na5 + u * na4 + t * na3 + p * na2 + r * na1 +
+                            q] = sign;
+            }
+        }
+    }
 
     return out;
 }
