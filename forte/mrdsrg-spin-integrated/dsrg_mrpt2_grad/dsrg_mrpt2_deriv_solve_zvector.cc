@@ -876,8 +876,8 @@ void DSRG_MRPT2::z_vector_contraction(std::vector<double> & qk_vec, std::vector<
     // y_ci("K") -= 2 * H.block("ac")("vn") * cc1a("Kuv") * qk.block("ca")("nu");
     // y_ci("K") -= 2 * V_sumA_Alpha.block("ac")("vn") * cc1a("Kuv") * qk.block("ca")("nu");
     // y_ci("K") -= 2 * V_sumB_Alpha.block("ac")("vn") * cc1a("Kuv") * qk.block("ca")("nu");
-    y_ci("K") -= V.block("aaca")("xynv") * cc2aa("Kuvxy") * qk.block("ca")("nu");
-    y_ci("K") -= 2 * V.block("aAcA")("xYnV") * cc2ab("KuVxY") * qk.block("ca")("nu");
+    // y_ci("K") -= V.block("aaca")("xynv") * cc2aa("Kuvxy") * qk.block("ca")("nu");
+    // y_ci("K") -= 2 * V.block("aAcA")("xYnV") * cc2ab("KuVxY") * qk.block("ca")("nu");
 
     // beta
     // y_ci("K") += 2 * V.block("AACA")("UYNX") * cc1b("KXY") * qk.block("CA")("NU");
@@ -885,8 +885,8 @@ void DSRG_MRPT2::z_vector_contraction(std::vector<double> & qk_vec, std::vector<
     // y_ci("K") -= 2 * H.block("AC")("VN") * cc1b("KUV") * qk.block("CA")("NU");
     // y_ci("K") -= 2 * V_sumB_Beta.block("AC")("VN") * cc1b("KUV") * qk.block("CA")("NU");
     // y_ci("K") -= 2 * V_sumA_Beta.block("AC")("VN") * cc1b("KUV") * qk.block("CA")("NU");
-    y_ci("K") -= V.block("AACA")("XYNV") * cc2bb("KUVXY") * qk.block("CA")("NU");
-    y_ci("K") -= 2 * V.block("aAaC")("xYvN") * cc2ab("KvUxY") * qk.block("CA")("NU");
+    // y_ci("K") -= V.block("AACA")("XYNV") * cc2bb("KUVXY") * qk.block("CA")("NU");
+    // y_ci("K") -= 2 * V.block("aAaC")("xYvN") * cc2ab("KvUxY") * qk.block("CA")("NU");
 
     // contribution from the multiplier Alpha
     y_ci("K") += -4 * ci("K") * V.block("aaca")("uynx") * Gamma1_.block("aa")("xy") * qk.block("ca")("nu");
@@ -910,15 +910,15 @@ void DSRG_MRPT2::z_vector_contraction(std::vector<double> & qk_vec, std::vector<
     // y_ci("K") += 2 * H.block("av")("ve") * cc1a("Kuv") * qk.block("va")("eu");
     // y_ci("K") += 2 * V_sumA_Alpha.block("av")("ve") * cc1a("Kuv") * qk.block("va")("eu");
     // y_ci("K") += 2 * V_sumB_Alpha.block("av")("ve") * cc1a("Kuv") * qk.block("va")("eu");
-    y_ci("K") += V.block("vaaa")("evxy") * cc2aa("Kuvxy") * qk.block("va")("eu");
-    y_ci("K") += 2 * V.block("vAaA")("eVxY") * cc2ab("KuVxY") * qk.block("va")("eu");
+    // y_ci("K") += V.block("vaaa")("evxy") * cc2aa("Kuvxy") * qk.block("va")("eu");
+    // y_ci("K") += 2 * V.block("vAaA")("eVxY") * cc2ab("KuVxY") * qk.block("va")("eu");
 
     // beta
     // y_ci("K") += 2 * H.block("AV")("VE") * cc1b("KUV") * qk.block("VA")("EU");
     // y_ci("K") += 2 * V_sumB_Beta.block("AV")("VE") * cc1b("KUV") * qk.block("VA")("EU");
     // y_ci("K") += 2 * V_sumA_Beta.block("AV")("VE") * cc1b("KUV") * qk.block("VA")("EU");
-    y_ci("K") += V.block("VAAA")("EVXY") * cc2bb("KUVXY") * qk.block("VA")("EU");
-    y_ci("K") += 2 * V.block("aVaA")("vExY") * cc2ab("KvUxY") * qk.block("VA")("EU");
+    // y_ci("K") += V.block("VAAA")("EVXY") * cc2bb("KUVXY") * qk.block("VA")("EU");
+    // y_ci("K") += 2 * V.block("aVaA")("vExY") * cc2ab("KvUxY") * qk.block("VA")("EU");
 
     /// contribution from the multiplier Alpha
     y_ci("K") += -4 * ci("K") * H.block("av")("ve") * Gamma1_.block("aa")("uv") * qk.block("va")("eu");
@@ -976,12 +976,16 @@ void DSRG_MRPT2::z_vector_contraction(std::vector<double> & qk_vec, std::vector<
     /// Call the generalized sigma function to complete the contraction
     for (const auto& pair: as_solver_->state_space_size_map()) {
         const auto& state = pair.first;
-        std::map<std::string, double> block_factor;
-        block_factor["aa"] = 1.0;
-        block_factor["AA"] = 1.0;
-
+        std::map<std::string, double> block_factor1;
+        std::map<std::string, double> block_factor2;
+        block_factor1["aa"] = 1.0;
+        block_factor1["AA"] = 1.0;
+        block_factor2["aaaa"] = 1.0;
+        block_factor2["aAaA"] = 1.0;
+        block_factor2["AAAA"] = 1.0;
 
         auto antisym_1 = BTF_->build(CoreTensor, "antisymmetrized 1-body intermediate tensor", spin_cases({"aa"}));
+        auto antisym_2 = BTF_->build(CoreTensor, "antisymmetrized 2-body intermediate tensor", spin_cases({"aaaa"}));
         {
             auto temp_1 = BTF_->build(CoreTensor, "1-body intermediate tensor", spin_cases({"aa"}));
             // virtual-core
@@ -1017,26 +1021,43 @@ void DSRG_MRPT2::z_vector_contraction(std::vector<double> & qk_vec, std::vector<
             temp_1["XY"] += V["UYVX"] * qk["UV"];
             temp_1["xy"] += V["yUxV"] * qk["UV"];
 
- 
             /// Antisymmetrization
             antisym_1["uv"] += temp_1["uv"];
             antisym_1["uv"] += temp_1["vu"];
             antisym_1["UV"] += temp_1["UV"];
             antisym_1["UV"] += temp_1["VU"];
         }
+        {
+            auto temp_2 = BTF_->build(CoreTensor, "2-body intermediate tensor", spin_cases({"aaaa"}));
+            // core-active
+            temp_2["uvxy"] -= V["xynv"] * qk["nu"];
+            temp_2["uVxY"] -= 2 * V["xYnV"] * qk["nu"];
+            // beta
+            temp_2["UVXY"] -= V["XYNV"] * qk["NU"];
+            temp_2["vUxY"] -= 2 * V["xYvN"] * qk["NU"];
+            // virtual-active
+            temp_2["uvxy"] += V["evxy"] * qk["eu"];
+            temp_2["uVxY"] += 2 * V["eVxY"] * qk["eu"];
+            // beta
+            temp_2["UVXY"] += V["EVXY"] * qk["EU"];
+            temp_2["vUxY"] += 2 * V["vExY"] * qk["EU"];
 
+            /// Antisymmetrization
+            antisym_2["uvxy"] += temp_2["uvxy"];
+            antisym_2["uvxy"] += temp_2["uvyx"];
+            antisym_2["uvxy"] += temp_2["vuxy"];
+            antisym_2["uvxy"] += temp_2["vuyx"];
+            antisym_2["UVXY"] += temp_2["UVXY"];
+            antisym_2["UVXY"] += temp_2["UVYX"];
+            antisym_2["UVXY"] += temp_2["VUXY"];
+            antisym_2["UVXY"] += temp_2["VUYX"];
+            antisym_2["uVxY"] += temp_2["uVxY"];
+            antisym_2["uVxY"] += temp_2["xYuV"];
 
-
-
-        as_solver_->generalized_sigma(state, 0, antisym_1, block_factor, y_ci.data());
-
+        }
+        as_solver_->generalized_sigma(state, 0, antisym_1, block_factor1, y_ci.data());
+        as_solver_->generalized_sigma(state, 0, antisym_2, block_factor2, y_ci.data());
     }
-
-
-
-
-
-
 
     /// Fill the y (y = A * qk) and pass it to the GMRES solver
     for (const std::string& row : {"vc", "ca", "va", "aa"}) {
