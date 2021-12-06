@@ -145,6 +145,7 @@ void DeterminantSubstitutionLists::lists_1a(const DeterminantHashVec& wfn) {
     timer ann("A lists");
 
     const det_hashvec& dets = wfn.wfn_hash();
+    std::map<size_t, size_t> vec_size;
 
     for (auto& c_dets : beta_strings_) {
         size_t na_ann = 0;
@@ -174,10 +175,21 @@ void DeterminantSubstitutionLists::lists_1a(const DeterminantHashVec& wfn) {
         }
 
         for (const auto& vec : tmp) {
-            if (vec.size() > 1) {
+            if (!vec.empty()) {
                 a_list_.push_back(vec);
             }
+            auto s = vec.size();
+            if (vec_size.find(s) == vec_size.end()) {
+                vec_size[s] = 1;
+            } else {
+                vec_size[s] += 1;
+            }
         }
+    }
+    outfile->Printf("\n  (N-1) a lists size counts");
+    outfile->Printf("\n      Size      Count");
+    for (const auto& p: vec_size) {
+        outfile->Printf("\n  %8zu %10zu", p.first, p.second);
     }
 
     if (!quiet_) {
@@ -217,7 +229,7 @@ void DeterminantSubstitutionLists::lists_1b(const DeterminantHashVec& wfn) {
         }
 
         for (auto& vec : tmp) {
-            if (vec.size() > 1) {
+            if (!vec.empty()) {
                 b_list_.push_back(vec);
             }
         }
@@ -239,9 +251,10 @@ void DeterminantSubstitutionLists::tp_s_lists(const DeterminantHashVec& wfn) {
 }
 
 void DeterminantSubstitutionLists::lists_2aa(const DeterminantHashVec& wfn) {
-    timer aa("AA lists");
+    timer timer_aa("AA lists");
 
     const det_hashvec& dets = wfn.wfn_hash();
+    std::map<size_t, size_t> vec_size;
 
     for (const auto& c_dets : beta_strings_) {
         size_t naa_ann = 0;
@@ -280,21 +293,33 @@ void DeterminantSubstitutionLists::lists_2aa(const DeterminantHashVec& wfn) {
         }
 
         for (auto& vec : tmp) {
-            if (vec.size() > 1) {
+            if (!vec.empty()) {
                 aa_list_.push_back(vec);
+            }
+            auto s = vec.size();
+            if (vec_size.find(s) == vec_size.end()) {
+                vec_size[s] = 1;
+            } else {
+                vec_size[s] += 1;
             }
         }
     }
+    outfile->Printf("\n  (N-2) aa lists size counts");
+    outfile->Printf("\n      Size      Count");
+    for (const auto& p: vec_size) {
+        outfile->Printf("\n  %8zu %10zu", p.first, p.second);
+    }
 
     if (!quiet_) {
-        outfile->Printf("\n        αα         %.3e seconds", aa.stop());
+        outfile->Printf("\n        αα         %.3e seconds", timer_aa.stop());
     }
 }
 
 void DeterminantSubstitutionLists::lists_2ab(const DeterminantHashVec& wfn) {
-    timer ab("AB lists");
+    timer timer_ab("AB lists");
 
     const det_hashvec& dets = wfn.wfn_hash();
+    std::map<size_t, size_t> vec_size;
 
     for (auto& c_dets : alpha_a_strings_) {
         size_t nab_ann = 0;
@@ -329,19 +354,31 @@ void DeterminantSubstitutionLists::lists_2ab(const DeterminantHashVec& wfn) {
         }
 
         for (auto& vec : tmp) {
-            if (vec.size() > 1) {
+            if (!vec.empty()) {
                 ab_list_.push_back(vec);
+            }
+            auto s = vec.size();
+            if (vec_size.find(s) == vec_size.end()) {
+                vec_size[s] = 1;
+            } else {
+                vec_size[s] += 1;
             }
         }
     }
+    outfile->Printf("\n  (N-2) ab lists size counts");
+    outfile->Printf("\n      Size      Count");
+    for (const auto& p: vec_size) {
+        outfile->Printf("\n  %8zu %10zu", p.first, p.second);
+    }
+
 
     if (!quiet_) {
-        outfile->Printf("\n        αβ         %.3e seconds", ab.stop());
+        outfile->Printf("\n        αβ         %.3e seconds", timer_ab.stop());
     }
 }
 
 void DeterminantSubstitutionLists::lists_2bb(const DeterminantHashVec& wfn) {
-    timer bb("BB lists");
+    timer timer_bb("BB lists");
 
     const det_hashvec& dets = wfn.wfn_hash();
 
@@ -385,14 +422,14 @@ void DeterminantSubstitutionLists::lists_2bb(const DeterminantHashVec& wfn) {
         }
 
         for (auto& vec : tmp) {
-            if (vec.size() > 1) {
+            if (!vec.empty()) {
                 bb_list_.push_back(vec);
             }
         }
     }
 
     if (!quiet_) {
-        outfile->Printf("\n        ββ         %.3e seconds", bb.stop());
+        outfile->Printf("\n        ββ         %.3e seconds", timer_bb.stop());
     }
 }
 
@@ -405,6 +442,13 @@ void DeterminantSubstitutionLists::clear_tp_s_lists() {
     aa_list_.clear();
     bb_list_.clear();
     ab_list_.clear();
+}
+
+void DeterminantSubstitutionLists::clear_3p_s_lists() {
+    aaa_list_.clear();
+    aab_list_.clear();
+    abb_list_.clear();
+    bbb_list_.clear();
 }
 
 void DeterminantSubstitutionLists::three_s_lists(const DeterminantHashVec& wfn) {
@@ -422,6 +466,7 @@ void DeterminantSubstitutionLists::lists_3aaa(const DeterminantHashVec& wfn) {
     timer aaa("AAA lists");
 
     const det_hashvec& dets = wfn.wfn_hash();
+    std::map<size_t, size_t> vec_size;
 
     for (auto c_dets : beta_strings_) {
         size_t naa_ann = 0;
@@ -465,11 +510,23 @@ void DeterminantSubstitutionLists::lists_3aaa(const DeterminantHashVec& wfn) {
             }
         }
         for (auto& vec : tmp) {
-            if (vec.size() > 1) {
+            if (!vec.empty()) {
                 aaa_list_.push_back(vec);
+            }
+            auto s = vec.size();
+            if (vec_size.find(s) == vec_size.end()) {
+                vec_size[s] = 1;
+            } else {
+                vec_size[s] += 1;
             }
         }
     }
+    outfile->Printf("\n  (N-3) aaa lists size counts");
+    outfile->Printf("\n      Size      Count");
+    for (const auto& p: vec_size) {
+        outfile->Printf("\n  %8zu %10zu", p.first, p.second);
+    }
+
     if (!quiet_) {
         outfile->Printf("\n        ααα        %.3e seconds", aaa.stop());
     }
@@ -479,6 +536,7 @@ void DeterminantSubstitutionLists::lists_3aab(const DeterminantHashVec& wfn) {
     timer aab("AAB lists");
 
     const det_hashvec& dets = wfn.wfn_hash();
+    std::map<size_t, size_t> vec_size;
 
     // We need the beta-1 list:
     const det_hashvec& wfn_map = wfn.wfn_hash();
@@ -552,10 +610,21 @@ void DeterminantSubstitutionLists::lists_3aab(const DeterminantHashVec& wfn) {
         }
 
         for (auto& vec : tmp) {
-            if (vec.size() > 1) {
+            if (!vec.empty()) {
                 aab_list_.push_back(vec);
             }
+            auto s = vec.size();
+            if (vec_size.find(s) == vec_size.end()) {
+                vec_size[s] = 1;
+            } else {
+                vec_size[s] += 1;
+            }
         }
+    }
+    outfile->Printf("\n  (N-3) aab lists size counts");
+    outfile->Printf("\n      Size      Count");
+    for (const auto& p: vec_size) {
+        outfile->Printf("\n  %8zu %10zu", p.first, p.second);
     }
 
     if (!quiet_)
@@ -612,7 +681,7 @@ void DeterminantSubstitutionLists::lists_3abb(const DeterminantHashVec& wfn) {
         }
 
         for (auto& vec : tmp) {
-            if (vec.size() > 1) {
+            if (!vec.empty()) {
                 abb_list_.push_back(vec);
             }
         }
@@ -639,7 +708,6 @@ void DeterminantSubstitutionLists::lists_3bbb(const DeterminantHashVec& wfn) {
 
             std::vector<int> bocc = detI.get_beta_occ(static_cast<int>(ncmo_));
 
-            // bbb
             for (int i = 0, nobeta = static_cast<int>(bocc.size()); i < nobeta; ++i) {
                 for (int j = i + 1; j < nobeta; ++j) {
                     for (int k = j + 1; k < nobeta; ++k) {
@@ -675,7 +743,7 @@ void DeterminantSubstitutionLists::lists_3bbb(const DeterminantHashVec& wfn) {
         }
 
         for (auto& vec : tmp) {
-            if (vec.size() > 1) {
+            if (!vec.empty()) {
                 bbb_list_.push_back(vec);
             }
         }

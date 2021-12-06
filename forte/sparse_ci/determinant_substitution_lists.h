@@ -83,6 +83,8 @@ class DeterminantSubstitutionLists {
 
     void clear_op_s_lists();
     void clear_tp_s_lists();
+    void clear_3p_s_lists();
+
     /*- Operators -*/
 
     void build_strings(const DeterminantHashVec& wfn);
