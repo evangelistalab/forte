@@ -82,7 +82,9 @@ class SigmaVector {
     }
     /// Compute the contribution to sigma due to 2-body operator
     /// sigma_{I} <- (1/4) * factor * sum_{pqrs} h_{pqrs} sum_{J} b_{J} <I|p^+ q^+ s r|J>
+    /// sigma_{I} <- factor * sum_{pqrs} h_{pQrS} sum_{J} b_{J} <I|p^+ Q^+ S r|J>
     /// h_{pqrs} = h2[p * nactv^3 + q * nactv^2 + r * nactv + s]
+    /// Integrals must be antisymmetric wrt index permutations!
     virtual void add_generalized_sigma_2(const std::vector<double>& h2, psi::SharedVector b,
                                          double factor, std::vector<double>& sigma,
                                          const std::string& spin) {
@@ -90,7 +92,9 @@ class SigmaVector {
     }
     /// Compute the contribution to sigma due to 3-body operator
     /// sigma_{I} <- (1/36) * factor * sum_{pqrstu} h_{pqrstu} sum_{J} b_{J} <I|p^+ q^+ r^+ u t s|J>
+    /// sigma_{I} <- (1/4) * factor * sum_{pqRstU} h_{pqRstU} sum_{J} b_{J} <I|p^+ q^+ R^+ U t s|J>
     /// h_{pqrstu} = h3[p * nactv^5 + q * nactv^4 + r * nactv^3 + s * nactv^2 + t * nactv + u]
+    /// Integrals must be antisymmetric wrt index permutations!
     virtual void add_generalized_sigma_3(const std::vector<double>& h3, psi::SharedVector b,
                                          double factor, std::vector<double>& sigma,
                                          const std::string& spin) {

@@ -333,6 +333,66 @@ double DSRG_MRPT2::compute_energy() {
     local_timer DSRG_energy;
     print_h2("Computing DSRG-MRPT2 ...");
 
+    for (const auto& pair: as_solver_->state_space_size_map()) {
+        const auto& state = pair.first;
+        std::vector<double> sigma(pair.second);
+
+        std::map<std::string, double> block_factor;
+//        block_factor["aa"] = 0.5;
+//        block_factor["AA"] = 0.5;
+//        block_factor["aaaa"] = 1.0;
+//        block_factor["aAaA"] = 1.0;
+//        block_factor["AAAA"] = 1.0;
+        block_factor["aaaaaa"] = 1.0;
+        block_factor["aaAaaA"] = 1.0;
+        block_factor["aAAaAA"] = 1.0;
+//        block_factor["AAAAAA"] = 1.0;
+
+//        H = BTF_->build(tensor_type_, "OEI", spin_cases({"aa"}), true);
+//        H.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>& spin, double& value) {
+//            if (spin[0] == AlphaSpin) {
+//                value = ints_->oei_a(i[0], i[1]);
+//            } else {
+//                value = ints_->oei_b(i[0], i[1]);
+//            }
+//        });
+//        as_solver_->generalized_sigma(state, 0, H, block_factor, sigma);
+
+//        as_solver_->generalized_sigma(state, 0, V_, block_factor, sigma);
+
+        auto T = BTF_->build(tensor_type_, "3EI", spin_cases({"aaaaaa"}), true);
+        T["uvwxyz"] = (0.5/9.0) * V_["uvaz"] * V_["awxy"];
+        auto Tc = T.block("aaaaaa").clone();
+        T.block("aaaaaa")("uvwxyz") -= Tc("uvwzyx");
+        T.block("aaaaaa")("uvwxyz") -= Tc("uvwxzy");
+        T.block("aaaaaa")("uvwxyz") -= Tc("wvuxyz");
+        T.block("aaaaaa")("uvwxyz") += Tc("wvuzyx");
+        T.block("aaaaaa")("uvwxyz") += Tc("wvuxzy");
+        T.block("aaaaaa")("uvwxyz") -= Tc("uwvxyz");
+        T.block("aaaaaa")("uvwxyz") += Tc("uwvzyx");
+        T.block("aaaaaa")("uvwxyz") += Tc("uwvxzy");
+
+        T["uvWxyZ"] += (0.5/9.0) * V_["auxy"] * V_["vWaZ"];
+        T["uvWxyZ"] -= (0.5/9.0) * V_["avxy"] * V_["uWaZ"];
+        T["uvWxyZ"] += (0.5/9.0) * V_["aWyZ"] * V_["uvax"];
+        T["uvWxyZ"] += (0.5/9.0) * V_["uAyZ"] * V_["vWxA"];
+        T["uvWxyZ"] -= (0.5/9.0) * V_["vAyZ"] * V_["uWxA"];
+        T["uvWxyZ"] -= (0.5/9.0) * V_["aWxZ"] * V_["uvay"];
+        T["uvWxyZ"] -= (0.5/9.0) * V_["uAxZ"] * V_["vWyA"];
+        T["uvWxyZ"] += (0.5/9.0) * V_["vAxZ"] * V_["uWyA"];
+
+        T["uVWxYZ"] += (0.5/9.0) * V_["aWxY"] * V_["uVaZ"];
+        T["uVWxYZ"] += (0.5/9.0) * V_["uAxY"] * V_["WVAZ"];
+        T["uVWxYZ"] -= (0.5/9.0) * V_["aVxY"] * V_["uWaZ"];
+        T["uVWxYZ"] += (0.5/9.0) * V_["AWZY"] * V_["uVxA"];
+        T["uVWxYZ"] -= (0.5/9.0) * V_["AVZY"] * V_["uWxA"];
+        T["uVWxYZ"] -= (0.5/9.0) * V_["aWxZ"] * V_["uVaY"];
+        T["uVWxYZ"] -= (0.5/9.0) * V_["uAxZ"] * V_["WVAY"];
+        T["uVWxYZ"] += (0.5/9.0) * V_["aVxZ"] * V_["uWaY"];
+
+        as_solver_->generalized_sigma(state, 0, T, block_factor, sigma);
+    }
+
     // Compute T2 and T1
     T1_ = BTF_->build(tensor_type_, "T1 Amplitudes", spin_cases({"hp"}));
     T2_ = BTF_->build(tensor_type_, "T2 Amplitudes", spin_cases({"hhpp"}));
