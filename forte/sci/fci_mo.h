@@ -403,6 +403,9 @@ class FCI_MO : public ActiveSpaceMethod {
     /// Determinants in hash vector form
     DeterminantHashVec det_hash_vec_;
 
+    /// SigmaVector object
+    std::shared_ptr<SigmaVector> sigma_vector_;
+
     /// Size of Singles Determinants
     size_t singles_size_;
 

@@ -927,11 +927,12 @@ void FCI_MO::Diagonalize_H(const vecdet& p_space, const int& multi, const int& n
     det_hash_vec_ = DeterminantHashVec(p_space);
 
     // Here we use the SparseList algorithm to diagonalize the Hamiltonian
-    auto sigma_vector_type_ = string_to_sigma_vector_type(options_->get_str("DIAG_ALGORITHM"));
+    //    auto sigma_vector_type = string_to_sigma_vector_type(options_->get_str("DIAG_ALGORITHM"));
+    auto sigma_vector_type = string_to_sigma_vector_type("SPARSE");
     size_t max_memory = options_->get_int("SIGMA_VECTOR_MAX_MEMORY");
-    auto sigma_vector = make_sigma_vector(det_hash_vec_, as_ints_, max_memory, sigma_vector_type_);
+    sigma_vector_ = make_sigma_vector(det_hash_vec_, as_ints_, max_memory, sigma_vector_type);
     std::tie(evals, evecs) =
-        sparse_solver.diagonalize_hamiltonian(det_hash_vec_, sigma_vector, nroot, multi);
+        sparse_solver.diagonalize_hamiltonian(det_hash_vec_, sigma_vector_, nroot, multi);
 
     // fill in eigen (spin is purified in DL solver)
     double energy_offset = fci_ints_->scalar_energy() + e_nuc_;
@@ -2041,10 +2042,6 @@ void FCI_MO::generalized_rdms(size_t root, const std::vector<double>& X,
 void FCI_MO::add_sigma_kbody(size_t root, ambit::BlockedTensor& h,
                              const std::map<std::string, double>& block_label_to_factor,
                              std::vector<double>& sigma) {
-    auto sigma_vector_type = string_to_sigma_vector_type("SPARSE");
-    auto max_memory = options_->get_int("SIGMA_VECTOR_MAX_MEMORY");
-    auto sigma_vector = make_sigma_vector(det_hash_vec_, as_ints_, max_memory, sigma_vector_type);
-
     const auto& evec = eigen_[root].first;
 
     for (const auto& pair : block_label_to_factor) {
@@ -2058,27 +2055,24 @@ void FCI_MO::add_sigma_kbody(size_t root, ambit::BlockedTensor& h,
         auto h_rank = block_label.size();
         if (h_rank == 2) {
             std::string spin = islower(block_label[0]) ? "a" : "b";
-            sigma_vector->add_generalized_sigma_1(data, evec, factor, sigma, spin);
+            sigma_vector_->add_generalized_sigma_1(data, evec, factor, sigma, spin);
         }
         if (h_rank == 4) {
             std::string spin = islower(block_label[0]) ? "a" : "b";
             spin += islower(block_label[1]) ? "a" : "b";
-            sigma_vector->add_generalized_sigma_2(data, evec, factor, sigma, spin);
+            sigma_vector_->add_generalized_sigma_2(data, evec, factor, sigma, spin);
         }
         if (h_rank == 6) {
             std::string spin = islower(block_label[0]) ? "a" : "b";
             spin += islower(block_label[1]) ? "a" : "b";
             spin += islower(block_label[2]) ? "a" : "b";
-            sigma_vector->add_generalized_sigma_3(data, evec, factor, sigma, spin);
+            sigma_vector_->add_generalized_sigma_3(data, evec, factor, sigma, spin);
         }
     }
 }
 
 void FCI_MO::generalized_sigma(psi::SharedVector x, psi::SharedVector sigma) {
-    auto sigma_vector_type = string_to_sigma_vector_type(options_->get_str("DIAG_ALGORITHM"));
-    size_t max_memory = options_->get_int("SIGMA_VECTOR_MAX_MEMORY");
-    auto sigma_vector = make_sigma_vector(det_hash_vec_, as_ints_, max_memory, sigma_vector_type);
-    sigma_vector->compute_sigma(sigma, x);
+    sigma_vector_->compute_sigma(sigma, x);
 }
 
 [[deprecated]] std::vector<RDMs>
