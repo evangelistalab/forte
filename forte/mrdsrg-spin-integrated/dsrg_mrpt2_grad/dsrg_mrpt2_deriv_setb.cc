@@ -829,6 +829,20 @@ void DSRG_MRPT2::set_b(int dim, std::map<string, int> preidx, std::map<string, i
     }
 
     b_ck("K") -= temp4.block("aaaa")("uvxy") * dlamb_aa("Kxyuv");
+
+
+    // // alpha-alpha
+    // dlamb_aa( "Kxyuv") += cc2aa("Kxyuv");
+    // dlamb_aa("Kxyuv") -= cc1a("Kux") * Gamma1_.block("aa")("yv");
+    // dlamb_aa("Kxyuv") -= cc1a("Kvy") * Gamma1_.block("aa")("xu");
+    // dlamb_aa("Kxyuv") += cc1a("Kvx") * Gamma1_.block("aa")("yu");
+    // dlamb_aa("Kxyuv") += cc1a("Kuy") * Gamma1_.block("aa")("xv");
+
+
+
+
+
+
     b_ck("K") -= temp4.block("AAAA")("UVXY") * dlamb_bb("KXYUV");
     b_ck("K") -= temp4.block("aAaA")("uVxY") * dlamb_ab("KxYuV");
     Alpha += 2 * temp4["uvxy"] * Lambda2_["xyuv"];

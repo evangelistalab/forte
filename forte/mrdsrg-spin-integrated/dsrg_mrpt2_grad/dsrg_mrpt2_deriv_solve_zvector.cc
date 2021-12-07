@@ -984,7 +984,7 @@ void DSRG_MRPT2::z_vector_contraction(std::vector<double> & qk_vec, std::vector<
         block_factor2["aAaA"] = 1.0;
         block_factor2["AAAA"] = 1.0;
 
-        auto antisym_1 = BTF_->build(CoreTensor, "antisymmetrized 1-body intermediate tensor", spin_cases({"aa"}));
+        auto sym_1 = BTF_->build(CoreTensor, "symmetrized 1-body intermediate tensor", spin_cases({"aa"}));
         auto antisym_2 = BTF_->build(CoreTensor, "antisymmetrized 2-body intermediate tensor", spin_cases({"aaaa"}));
         {
             auto temp_1 = BTF_->build(CoreTensor, "1-body intermediate tensor", spin_cases({"aa"}));
@@ -1021,11 +1021,12 @@ void DSRG_MRPT2::z_vector_contraction(std::vector<double> & qk_vec, std::vector<
             temp_1["XY"] += V["UYVX"] * qk["UV"];
             temp_1["xy"] += V["yUxV"] * qk["UV"];
 
-            /// Antisymmetrization
-            antisym_1["uv"] += temp_1["uv"];
-            antisym_1["uv"] += temp_1["vu"];
-            antisym_1["UV"] += temp_1["UV"];
-            antisym_1["UV"] += temp_1["VU"];
+            /// Symmetrization (alpha, alpha)
+            sym_1["uv"] += temp_1["uv"];
+            sym_1["uv"] += temp_1["vu"];
+            /// Symmetrization (beta, beta)
+            sym_1["UV"] += temp_1["UV"];
+            sym_1["UV"] += temp_1["VU"];
         }
         {
             auto temp_2 = BTF_->build(CoreTensor, "2-body intermediate tensor", spin_cases({"aaaa"}));
@@ -1042,20 +1043,33 @@ void DSRG_MRPT2::z_vector_contraction(std::vector<double> & qk_vec, std::vector<
             temp_2["UVXY"] += V["EVXY"] * qk["EU"];
             temp_2["vUxY"] += 2 * V["vExY"] * qk["EU"];
 
-            /// Antisymmetrization
+            /// Symmetrization (alpha, alpha, alpha, alpha)
+            // Antisymmetrization
+            antisym_2["xyuv"] += temp_2["uvxy"];
+            antisym_2["xyuv"] -= temp_2["uvyx"];
+            antisym_2["xyuv"] -= temp_2["vuxy"];
+            antisym_2["xyuv"] += temp_2["vuyx"];
+            // Antisymmetrization
             antisym_2["uvxy"] += temp_2["uvxy"];
-            antisym_2["uvxy"] += temp_2["uvyx"];
-            antisym_2["uvxy"] += temp_2["vuxy"];
+            antisym_2["uvxy"] -= temp_2["uvyx"];
+            antisym_2["uvxy"] -= temp_2["vuxy"];
             antisym_2["uvxy"] += temp_2["vuyx"];
+            /// Symmetrization (beta, beta, beta, beta)
+            // Antisymmetrization
             antisym_2["UVXY"] += temp_2["UVXY"];
-            antisym_2["UVXY"] += temp_2["UVYX"];
-            antisym_2["UVXY"] += temp_2["VUXY"];
+            antisym_2["UVXY"] -= temp_2["UVYX"];
+            antisym_2["UVXY"] -= temp_2["VUXY"];
             antisym_2["UVXY"] += temp_2["VUYX"];
+            // Antisymmetrization
+            antisym_2["XYUV"] += temp_2["UVXY"];
+            antisym_2["XYUV"] -= temp_2["UVYX"];
+            antisym_2["XYUV"] -= temp_2["VUXY"];
+            antisym_2["XYUV"] += temp_2["VUYX"];
+            /// Symmetrization (alpha, beta, alpha, beta)
             antisym_2["uVxY"] += temp_2["uVxY"];
             antisym_2["uVxY"] += temp_2["xYuV"];
-
         }
-        as_solver_->generalized_sigma(state, 0, antisym_1, block_factor1, y_ci.data());
+        as_solver_->generalized_sigma(state, 0, sym_1, block_factor1, y_ci.data());
         as_solver_->generalized_sigma(state, 0, antisym_2, block_factor2, y_ci.data());
     }
 
