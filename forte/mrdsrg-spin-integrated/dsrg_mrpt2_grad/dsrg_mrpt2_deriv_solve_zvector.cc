@@ -1055,8 +1055,8 @@ void DSRG_MRPT2::z_vector_contraction(std::vector<double> & qk_vec, std::vector<
             antisym_2["uVxY"] += temp_2["xYuV"];
 
         }
-        as_solver_->generalized_sigma(state, 0, antisym_1, block_factor1, y_ci.data());
-        as_solver_->generalized_sigma(state, 0, antisym_2, block_factor2, y_ci.data());
+        as_solver_->add_sigma_kbody(state, 0, antisym_1, block_factor1, y_ci.data());
+        as_solver_->add_sigma_kbody(state, 0, antisym_2, block_factor2, y_ci.data());
     }
 
     /// Fill the y (y = A * qk) and pass it to the GMRES solver

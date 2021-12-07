@@ -141,9 +141,24 @@ class ActiveSpaceMethod {
             "The function generalized_rdms is not implemented for this ActiveSpaceMethod type!");
     }
 
-    virtual void generalized_sigma(size_t root, ambit::BlockedTensor& h,
-                                   const std::map<std::string, double>& block_label_to_factor,
-                                   std::vector<double>& sigma) {
+    /// Add k-body contributions to the sigma vector
+    ///    σ_I += h_{p1,p2,...}^{q1,q2,...} <Phi_I| a^+_p1 a^+_p2 .. a_q2 a_q1 |Phi_J> C_J
+    /// @param root: the root number of the state
+    /// @param h: the antisymmetrized k-body integrals
+    /// @param block_label_to_factor: map from the block labels of integrals to its factors
+    /// @param sigma: the sigma vector to be added
+    virtual void add_sigma_kbody(size_t root, ambit::BlockedTensor& h,
+                                 const std::map<std::string, double>& block_label_to_factor,
+                                 std::vector<double>& sigma) {
+        throw std::runtime_error(
+            "The function add_sigma_kbody is not implemented for this ActiveSpaceMethod type!");
+    }
+
+    /// Compute generalized sigma vector
+    ///     σ_I = <Phi_I| H |Phi_J> X_J where H is the active space Hamiltonian (fci_ints)
+    /// @param x: the X vector to be contracted with H_IJ
+    /// @param sigma: the sigma vector (will be zeroed first)
+    virtual void generalized_sigma(psi::SharedVector x, psi::SharedVector sigma) {
         throw std::runtime_error(
             "The function generalized_sigma is not implemented for this ActiveSpaceMethod type!");
     }

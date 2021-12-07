@@ -470,7 +470,7 @@ bool SigmaVectorSparseList::is_h2hs_antisymmetric(const std::vector<double>& h2)
     size_t nthreads = omp_get_num_threads();
     nthreads = nthreads > na4 ? na4 : nthreads;
 
-#pragma omp for num_threads(nthreads) reduction(+ : pass)
+#pragma omp parallel for default(none) shared(h2, na, na2, na3, na4, zero) num_threads(nthreads) reduction(+ : pass)
     for (size_t pqrs = 0; pqrs < na4; ++pqrs) {
         size_t p = pqrs / na3;
         size_t qrs = pqrs % na3;
@@ -614,7 +614,7 @@ bool SigmaVectorSparseList::is_h3hs_antisymmetric(const std::vector<double>& h3)
     size_t nthreads = omp_get_num_threads();
     nthreads = nthreads > na6 ? na6 : nthreads;
 
-#pragma omp for num_threads(nthreads) reduction(+ : pass)
+#pragma omp parallel for default(none) num_threads(nthreads) shared(h3, na, na2, na3, na4, na5, na6, zero) reduction(+ : pass)
     for (size_t pqrstu = 0; pqrstu < na6; ++pqrstu) {
         size_t p = pqrstu / na5;
         size_t qrstu = pqrstu % na5;
@@ -726,7 +726,7 @@ bool SigmaVectorSparseList::is_h3ls_antisymmetric(const std::vector<double>& h3,
     size_t nthreads = omp_get_num_threads();
     nthreads = nthreads > na6 ? na6 : nthreads;
 
-#pragma omp for num_threads(nthreads) reduction(+ : pass)
+#pragma omp parallel for default(none) num_threads(nthreads) shared(h3, na, na2, na3, na4, na5, na6, zero, actv) reduction(+ : pass)
     for (size_t pqrstu = 0; pqrstu < na6; ++pqrstu) {
         size_t p = pqrstu / na5;
         size_t qrstu = pqrstu % na5;
