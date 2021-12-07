@@ -984,8 +984,8 @@ void DSRG_MRPT2::z_vector_contraction(std::vector<double> & qk_vec, std::vector<
         block_factor2["aAaA"] = 1.0;
         block_factor2["AAAA"] = 1.0;
 
-        auto sym_1 = BTF_->build(CoreTensor, "symmetrized 1-body intermediate tensor", spin_cases({"aa"}));
-        auto antisym_2 = BTF_->build(CoreTensor, "antisymmetrized 2-body intermediate tensor", spin_cases({"aaaa"}));
+        auto sym_1 = BTF_->build(CoreTensor, "symmetrized 1-body tensor", spin_cases({"aa"}));
+        auto sym_2 = BTF_->build(CoreTensor, "symmetrized 2-body tensor", spin_cases({"aaaa"}));
         {
             auto temp_1 = BTF_->build(CoreTensor, "1-body intermediate tensor", spin_cases({"aa"}));
             // virtual-core
@@ -1045,32 +1045,32 @@ void DSRG_MRPT2::z_vector_contraction(std::vector<double> & qk_vec, std::vector<
 
             /// Symmetrization (alpha, alpha, alpha, alpha)
             // Antisymmetrization
-            antisym_2["xyuv"] += temp_2["uvxy"];
-            antisym_2["xyuv"] -= temp_2["uvyx"];
-            antisym_2["xyuv"] -= temp_2["vuxy"];
-            antisym_2["xyuv"] += temp_2["vuyx"];
+            sym_2["xyuv"] += temp_2["uvxy"];
+            sym_2["xyuv"] -= temp_2["uvyx"];
+            sym_2["xyuv"] -= temp_2["vuxy"];
+            sym_2["xyuv"] += temp_2["vuyx"];
             // Antisymmetrization
-            antisym_2["uvxy"] += temp_2["uvxy"];
-            antisym_2["uvxy"] -= temp_2["uvyx"];
-            antisym_2["uvxy"] -= temp_2["vuxy"];
-            antisym_2["uvxy"] += temp_2["vuyx"];
+            sym_2["uvxy"] += temp_2["uvxy"];
+            sym_2["uvxy"] -= temp_2["uvyx"];
+            sym_2["uvxy"] -= temp_2["vuxy"];
+            sym_2["uvxy"] += temp_2["vuyx"];
             /// Symmetrization (beta, beta, beta, beta)
             // Antisymmetrization
-            antisym_2["UVXY"] += temp_2["UVXY"];
-            antisym_2["UVXY"] -= temp_2["UVYX"];
-            antisym_2["UVXY"] -= temp_2["VUXY"];
-            antisym_2["UVXY"] += temp_2["VUYX"];
+            sym_2["UVXY"] += temp_2["UVXY"];
+            sym_2["UVXY"] -= temp_2["UVYX"];
+            sym_2["UVXY"] -= temp_2["VUXY"];
+            sym_2["UVXY"] += temp_2["VUYX"];
             // Antisymmetrization
-            antisym_2["XYUV"] += temp_2["UVXY"];
-            antisym_2["XYUV"] -= temp_2["UVYX"];
-            antisym_2["XYUV"] -= temp_2["VUXY"];
-            antisym_2["XYUV"] += temp_2["VUYX"];
+            sym_2["XYUV"] += temp_2["UVXY"];
+            sym_2["XYUV"] -= temp_2["UVYX"];
+            sym_2["XYUV"] -= temp_2["VUXY"];
+            sym_2["XYUV"] += temp_2["VUYX"];
             /// Symmetrization (alpha, beta, alpha, beta)
-            antisym_2["uVxY"] += temp_2["uVxY"];
-            antisym_2["uVxY"] += temp_2["xYuV"];
+            sym_2["uVxY"] += temp_2["uVxY"];
+            sym_2["uVxY"] += temp_2["xYuV"];
         }
-        as_solver_->generalized_sigma(state, 0, sym_1, block_factor1, y_ci.data());
-        as_solver_->generalized_sigma(state, 0, antisym_2, block_factor2, y_ci.data());
+        as_solver_->add_sigma_kbody(state, 0, sym_1, block_factor1, y_ci.data());
+        as_solver_->add_sigma_kbody(state, 0, sym_2, block_factor2, y_ci.data());
     }
 
     /// Fill the y (y = A * qk) and pass it to the GMRES solver
