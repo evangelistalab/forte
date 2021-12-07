@@ -467,9 +467,6 @@ class DSRG_MRPT2 : public MASTER_DSRG {
     ambit::Tensor cc3aab;
     ambit::Tensor cc3abb;
 
-    ambit::Tensor dlamb_aa;
-    ambit::Tensor dlamb_bb;
-    ambit::Tensor dlamb_ab;
     ambit::Tensor dlamb3_aaa;
     ambit::Tensor dlamb3_bbb;
     ambit::Tensor dlamb3_aab;

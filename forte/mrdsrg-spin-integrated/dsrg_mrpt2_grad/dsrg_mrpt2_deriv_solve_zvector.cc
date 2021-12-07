@@ -1021,10 +1021,12 @@ void DSRG_MRPT2::z_vector_contraction(std::vector<double> & qk_vec, std::vector<
             temp_1["XY"] += V["UYVX"] * qk["UV"];
             temp_1["xy"] += V["yUxV"] * qk["UV"];
 
-            /// Symmetrization (alpha, alpha)
+            /// Symmetrization
+            //  α α
             sym_1["uv"] += temp_1["uv"];
             sym_1["uv"] += temp_1["vu"];
-            /// Symmetrization (beta, beta)
+            /// Symmetrization
+            //  β β
             sym_1["UV"] += temp_1["UV"];
             sym_1["UV"] += temp_1["VU"];
         }
@@ -1043,29 +1045,32 @@ void DSRG_MRPT2::z_vector_contraction(std::vector<double> & qk_vec, std::vector<
             temp_2["UVXY"] += V["EVXY"] * qk["EU"];
             temp_2["vUxY"] += 2 * V["vExY"] * qk["EU"];
 
-            /// Symmetrization (alpha, alpha, alpha, alpha)
-            // Antisymmetrization
+            /// Symmetrization
+            //  α α α α
+            //  Antisymmetrization
             sym_2["xyuv"] += temp_2["uvxy"];
             sym_2["xyuv"] -= temp_2["uvyx"];
             sym_2["xyuv"] -= temp_2["vuxy"];
             sym_2["xyuv"] += temp_2["vuyx"];
-            // Antisymmetrization
+            //  Antisymmetrization
             sym_2["uvxy"] += temp_2["uvxy"];
             sym_2["uvxy"] -= temp_2["uvyx"];
             sym_2["uvxy"] -= temp_2["vuxy"];
             sym_2["uvxy"] += temp_2["vuyx"];
-            /// Symmetrization (beta, beta, beta, beta)
-            // Antisymmetrization
+            /// Symmetrization
+            //  β β β β
+            //  Antisymmetrization
             sym_2["UVXY"] += temp_2["UVXY"];
             sym_2["UVXY"] -= temp_2["UVYX"];
             sym_2["UVXY"] -= temp_2["VUXY"];
             sym_2["UVXY"] += temp_2["VUYX"];
-            // Antisymmetrization
+            //  Antisymmetrization
             sym_2["XYUV"] += temp_2["UVXY"];
             sym_2["XYUV"] -= temp_2["UVYX"];
             sym_2["XYUV"] -= temp_2["VUXY"];
             sym_2["XYUV"] += temp_2["VUYX"];
-            /// Symmetrization (alpha, beta, alpha, beta)
+            /// Symmetrization
+            //  α β α β
             sym_2["uVxY"] += temp_2["uVxY"];
             sym_2["uVxY"] += temp_2["xYuV"];
         }
