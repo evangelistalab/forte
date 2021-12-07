@@ -123,15 +123,24 @@ class FCI_MO : public ActiveSpaceMethod {
     void generalized_rdms(size_t root, const std::vector<double>& X, ambit::BlockedTensor& grdms,
                           bool c_right, int rdm_level, std::vector<std::string> spin) override;
 
-    /// Compute the generalized sigma vectors for given integrals
-    void generalized_sigma(size_t root, ambit::BlockedTensor& h,
-                           const std::map<std::string, double>& block_label_to_factor,
-                           std::vector<double>& sigma) override;
+    /// Add k-body contributions to the sigma vector
+    ///    σ_I += h_{p1,p2,...}^{q1,q2,...} <Phi_I| a^+_p1 a^+_p2 .. a_q2 a_q1 |Phi_J> C_J
+    /// @param root: the root number of the state
+    /// @param h: the antisymmetrized k-body integrals
+    /// @param block_label_to_factor: map from the block labels of integrals to its factors
+    /// @param sigma: the sigma vector to be added
+    void add_sigma_kbody(size_t root, ambit::BlockedTensor& h,
+                         const std::map<std::string, double>& block_label_to_factor,
+                         std::vector<double>& sigma) override;
+
+    /// Compute generalized sigma vector
+    ///     σ_I = <Phi_I| H |Phi_J> X_J where H is the active space Hamiltonian (fci_ints)
+    /// @param x: the X vector to be contracted with H_IJ
+    /// @param sigma: the sigma vector (will be zeroed first)
+    void generalized_sigma(psi::SharedVector x, psi::SharedVector sigma) override;
 
     /// Return the number of determinants
-    size_t space_size() override {
-        return determinant_.size();
-    }
+    size_t space_size() override { return determinant_.size(); }
 
     /// Returns the transition reduced density matrices between roots of different symmetry up to a
     /// given level (max_rdm_level)
@@ -393,6 +402,9 @@ class FCI_MO : public ActiveSpaceMethod {
 
     /// Determinants in hash vector form
     DeterminantHashVec det_hash_vec_;
+
+    /// SigmaVector object
+    std::shared_ptr<SigmaVector> sigma_vector_;
 
     /// Size of Singles Determinants
     size_t singles_size_;

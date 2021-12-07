@@ -287,10 +287,16 @@ void ActiveSpaceSolver::generalized_rdms(const StateInfo& state, size_t root,
     state_method_map_[state]->generalized_rdms(root, X, result, c_right, rdm_level, spin);
 }
 
-void ActiveSpaceSolver::generalized_sigma(
-    const StateInfo& state, size_t root, ambit::BlockedTensor& h,
-    const std::map<std::string, double>& block_label_to_factor, std::vector<double>& sigma) {
-    state_method_map_[state]->generalized_sigma(root, h, block_label_to_factor, sigma);
+void ActiveSpaceSolver::add_sigma_kbody(const StateInfo& state, size_t root,
+                                        ambit::BlockedTensor& h,
+                                        const std::map<std::string, double>& block_label_to_factor,
+                                        std::vector<double>& sigma) {
+    state_method_map_[state]->add_sigma_kbody(root, h, block_label_to_factor, sigma);
+}
+
+void ActiveSpaceSolver::generalized_sigma(const StateInfo& state, psi::SharedVector x,
+                                          psi::SharedVector sigma) {
+    state_method_map_[state]->generalized_sigma(x, sigma);
 }
 
 void ActiveSpaceSolver::print_options() {
@@ -849,9 +855,9 @@ compute_average_state_energy(const std::map<StateInfo, std::vector<double>>& sta
     return average_energy;
 }
 
-std::map<StateInfo, size_t> ActiveSpaceSolver::state_space_size_map() const{
+std::map<StateInfo, size_t> ActiveSpaceSolver::state_space_size_map() const {
     std::map<StateInfo, size_t> out;
-    for (const auto& state_method: state_method_map_) {
+    for (const auto& state_method : state_method_map_) {
         const auto& state = state_method.first;
         const auto& method = state_method.second;
         out[state] = method->space_size();
