@@ -467,11 +467,6 @@ class DSRG_MRPT2 : public MASTER_DSRG {
     ambit::Tensor cc3aab;
     ambit::Tensor cc3abb;
 
-    ambit::Tensor dlamb3_aaa;
-    ambit::Tensor dlamb3_bbb;
-    ambit::Tensor dlamb3_aab;
-    ambit::Tensor dlamb3_abb;
-
     // => Amplitude <= //
 
     /// Compute T2 amplitudes
