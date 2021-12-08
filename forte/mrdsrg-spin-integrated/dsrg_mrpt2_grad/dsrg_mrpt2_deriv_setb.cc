@@ -829,9 +829,9 @@ void DSRG_MRPT2::set_b(int dim, std::map<string, int> preidx, std::map<string, i
     }
 
     /// Call the generalized sigma function to complete the following contractions
-    //      b_ck("K") -= temp4.block("aaaa")("uvxy") * dlambda2_aaaa("Kxyuv")
-    //      b_ck("K") -= temp4.block("AAAA")("UVXY") * dlambda2_bbbb("KXYUV")
-    //      b_ck("K") -= temp4.block("aAaA")("uVxY") * dlambda2_abab("KxYuV")
+    //      temp4.block("aaaa")("uvxy") * dlambda2_aaaa("Kxyuv")
+    //      temp4.block("AAAA")("UVXY") * dlambda2_bbbb("KXYUV")
+    //      temp4.block("aAaA")("uVxY") * dlambda2_abab("KxYuV")
     for (const auto& pair: as_solver_->state_space_size_map()) {
         const auto& state = pair.first;
         std::map<std::string, double> block_factor1;

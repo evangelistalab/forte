@@ -5,6 +5,7 @@
 #include "../dsrg_mrpt2.h"
 #include "helpers/timer.h"
 #include "psi4/libpsi4util/process.h"
+#include "psi4/libmints/vector.h"
 
 #include <numeric>
 #include <vector>
@@ -953,27 +954,38 @@ void DSRG_MRPT2::z_vector_contraction(std::vector<double> & qk_vec, std::vector<
     /// CI EQUATION -- CI 
     y_ci("K") += H.block("cc")("mn") * I.block("cc")("mn") * qk_ci("K");
     y_ci("K") += H.block("CC")("MN") * I.block("CC")("MN") * qk_ci("K");
-    y_ci("K") += cc.cc1a()("KIuv") * H.block("aa")("uv") * qk_ci("I");
-    y_ci("K") += cc.cc1b()("KIUV") * H.block("AA")("UV") * qk_ci("I");
-
     y_ci("K") += 0.5 * V_sumA_Alpha["m,m1"] * I["m,m1"] * qk_ci("K");
     y_ci("K") += 0.5 * V_sumB_Beta["M,M1"] * I["M,M1"] * qk_ci("K");
     y_ci("K") += V_sumB_Alpha["m,m1"] * I["m,m1"] * qk_ci("K");
-
-    y_ci("K") += cc.cc1a()("KIuv") * V_sumA_Alpha.block("aa")("uv") * qk_ci("I");
-    y_ci("K") += cc.cc1b()("KIUV") * V_sumB_Beta.block("AA")("UV") * qk_ci("I");
-
-    y_ci("K") += cc.cc1a()("KIuv") * V_sumB_Alpha.block("aa")("uv") * qk_ci("I");
-    y_ci("K") += cc.cc1b()("KIUV") * V_sumA_Beta.block("AA")("UV") * qk_ci("I");
-
-    y_ci("K") += 0.25 * cc.cc2aa()("KIuvxy") * V.block("aaaa")("uvxy") * qk_ci("I");
-    y_ci("K") += 0.25 * cc.cc2bb()("KIUVXY") * V.block("AAAA")("UVXY") * qk_ci("I");
-    y_ci("K") += 0.50 * cc.cc2ab()("KIuVxY") * V.block("aAaA")("uVxY") * qk_ci("I");
-    y_ci("K") += 0.50 * cc.cc2ab()("IKuVxY") * V.block("aAaA")("uVxY") * qk_ci("I");
-
     y_ci("K") -= (Eref_ - Enuc_ - Efrzc_) * qk_ci("K");
 
-    /// Call the generalized sigma function to complete the contraction
+    //  Call the generalized sigma function to complete the contraction
+    //  sum_{J} <I| H |J> x_J where H is the active space Hamiltonian, which includes
+    //      cc1a("IJuv") * fa("uv") * x("J")
+    //      cc1b("IJuv") * fb("uv") * x("J")
+    //      0.25 * cc2aa("IJuvxy") * vaa("uvxy") * x("J")
+    //      cc2ab("IJuvxy") * vab("uvxy") * x("J")
+    //      0.25 * cc2bb("IJuvxy") * vbb("uvxy") * x("J")
+    //  where fa and fb are core Fock matrices
+    for (const auto& pair: as_solver_->state_space_size_map()) {
+        const auto& state = pair.first;
+
+        psi::SharedVector svq(new psi::Vector(ndets));
+        psi::SharedVector svy(new psi::Vector(ndets));
+        for (int i=0; i<ndets; ++i) {
+            svq->set(i, qk_ci.data()[i]);
+            svy->set(i, y_ci.data()[i]);
+        }
+
+        as_solver_->generalized_sigma(state, svq, svy);
+
+        for (int i=0; i<ndets; ++i) {
+            y_ci.data()[i] += svy->get(i);
+        }
+    }
+
+    /// CI EQUATION -- MO RESPONSE
+    //  Call the generalized sigma function to complete the contraction
     for (const auto& pair: as_solver_->state_space_size_map()) {
         const auto& state = pair.first;
         std::map<std::string, double> block_factor1;
