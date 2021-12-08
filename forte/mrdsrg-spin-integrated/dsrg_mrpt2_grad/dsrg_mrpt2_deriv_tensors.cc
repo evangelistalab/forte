@@ -19,8 +19,6 @@ void DSRG_MRPT2::set_ci_ints() {
     // X_K <K|p^+ q^+ r s|0> + <0|p^+ q^+ r s|K> X_K
     Gamma2_tilde = BTF_->build(CoreTensor, "Gamma2_tilde", spin_cases({"aaaa"}));
 
-    cc1a = ambit::Tensor::build(ambit::CoreTensor, "<K|p^+ q|0> + <0|p^+ q|K>", {ndets, na, na});
-    cc1b = ambit::Tensor::build(ambit::CoreTensor, "<K|P^+ Q|0> + <0|P^+ Q|K>", {ndets, na, na});
     cc2aa = ambit::Tensor::build(ambit::CoreTensor, "<K|p^+ q^+ r s|0> + <0|p^+ q^+ r s|K>",
                                  {ndets, na, na, na, na});
     cc2bb = ambit::Tensor::build(ambit::CoreTensor, "<K|P^+ Q^+ R S|0> + <0|P^+ Q^+ R S|K>",
@@ -40,10 +38,6 @@ void DSRG_MRPT2::set_ci_ints() {
         ambit::Tensor::build(ambit::CoreTensor, "<K|o^+ P^+ Q^+ r S T|0> + <0|o^+ P^+ Q^+ r S T|K>",
                              {ndets, na, na, na, na, na, na});
 
-    cc1a("Kzw") += cc.cc1a()("KJzw") * ci("J");
-    cc1a("Kzw") += cc.cc1a()("KJwz") * ci("J");
-    cc1b("KZW") += cc.cc1b()("KJZW") * ci("J");
-    cc1b("KZW") += cc.cc1b()("KJWZ") * ci("J");
     cc2aa("Kuvxy") += cc.cc2aa()("KJuvxy") * ci("J");
     cc2aa("Kuvxy") += cc.cc2aa()("KJxyuv") * ci("J");
     cc2bb("KUVXY") += cc.cc2bb()("KJUVXY") * ci("J");

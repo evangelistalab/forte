@@ -828,443 +828,148 @@ void DSRG_MRPT2::set_b(int dim, std::map<string, int> preidx, std::map<string, i
         /// b_ck("K") -= 0.25 * V_.block("aaca")("uvmz") * T2_.block("caaa")("mwxy") * dlamb3_aaa("Kxyzuvw");
 
         b_ck("K") -= 0.25 * V_.block("aaca")("uvmz") * T2_.block("caaa")("mwxy") * cc3aaa("Kxyzuvw");
-        // b_ck("K") += 0.50 * V_.block("aaca")("uvmz") * T2_.block("caaa")("mwxy") * cc1a("Kuz") * Gamma2_.block("aaaa")("xyvw");
         b_ck("K") += 0.50 * V_.block("aaca")("uvmz") * T2_.block("caaa")("mwxy") * cc2aa("Kxyvw") * Gamma1_.block("aa")("uz");
-        // b_ck("K") += 0.25 * V_.block("aaca")("uvmz") * T2_.block("caaa")("mwxy") * cc1a("Kwz") * Gamma2_.block("aaaa")("xyuv");
         b_ck("K") += 0.25 * V_.block("aaca")("uvmz") * T2_.block("caaa")("mwxy") * cc2aa("Kxyuv") * Gamma1_.block("aa")("wz");
-        // b_ck("K") -= 1.00 * V_.block("aaca")("uvmz") * T2_.block("caaa")("mwxy") * cc1a("Kxu") * Gamma2_.block("aaaa")("vwzy");
         b_ck("K") -= 1.00 * V_.block("aaca")("uvmz") * T2_.block("caaa")("mwxy") * cc2aa("Kvwzy") * Gamma1_.block("aa")("xu");
-        // b_ck("K") -= 0.50 * V_.block("aaca")("uvmz") * T2_.block("caaa")("mwxy") * cc1a("Kxw") * Gamma2_.block("aaaa")("uvzy");
         b_ck("K") -= 0.50 * V_.block("aaca")("uvmz") * T2_.block("caaa")("mwxy") * cc2aa("Kuvzy") * Gamma1_.block("aa")("xw");
-        // b_ck("K") -= 2.00 * V_.block("aaca")("uvmz") * T2_.block("caaa")("mwxy") * cc1a("Kuz") * Gamma1_.block("aa")("xv") * Gamma1_.block("aa")("yw");
-        // b_ck("K") -= 2.00 * V_.block("aaca")("uvmz") * T2_.block("caaa")("mwxy") * cc1a("Kxv") * Gamma1_.block("aa")("uz") * Gamma1_.block("aa")("yw");
-        // b_ck("K") -= 2.00 * V_.block("aaca")("uvmz") * T2_.block("caaa")("mwxy") * cc1a("Kyw") * Gamma1_.block("aa")("uz") * Gamma1_.block("aa")("xv");
-        // b_ck("K") -= 1.00 * V_.block("aaca")("uvmz") * T2_.block("caaa")("mwxy") * cc1a("Kwz") * Gamma1_.block("aa")("xu") * Gamma1_.block("aa")("yv");
-        // b_ck("K") -= 1.00 * V_.block("aaca")("uvmz") * T2_.block("caaa")("mwxy") * cc1a("Kxu") * Gamma1_.block("aa")("wz") * Gamma1_.block("aa")("yv");
-        // b_ck("K") -= 1.00 * V_.block("aaca")("uvmz") * T2_.block("caaa")("mwxy") * cc1a("Kyv") * Gamma1_.block("aa")("wz") * Gamma1_.block("aa")("xu");
-        
+    
+
         /// b_ck("K") -= 0.25 * V_.block("AACA")("UVMZ") * T2_.block("CAAA")("MWXY") * dlamb3_bbb("KXYZUVW");
+
         b_ck("K") -= 0.25 * V_.block("AACA")("UVMZ") * T2_.block("CAAA")("MWXY") * cc3bbb("KXYZUVW");
-        b_ck("K") += 0.50 * V_.block("AACA")("UVMZ") * T2_.block("CAAA")("MWXY") * cc1b("KUZ") * Gamma2_.block("AAAA")("XYVW");
         b_ck("K") += 0.50 * V_.block("AACA")("UVMZ") * T2_.block("CAAA")("MWXY") * cc2bb("KXYVW") * Gamma1_.block("AA")("UZ");
-        b_ck("K") += 0.25 * V_.block("AACA")("UVMZ") * T2_.block("CAAA")("MWXY") * cc1b("KWZ") * Gamma2_.block("AAAA")("XYUV");
         b_ck("K") += 0.25 * V_.block("AACA")("UVMZ") * T2_.block("CAAA")("MWXY") * cc2bb("KXYUV") * Gamma1_.block("AA")("WZ");
-        b_ck("K") -= 1.00 * V_.block("AACA")("UVMZ") * T2_.block("CAAA")("MWXY") * cc1b("KXU") * Gamma2_.block("AAAA")("VWZY");
         b_ck("K") -= 1.00 * V_.block("AACA")("UVMZ") * T2_.block("CAAA")("MWXY") * cc2bb("KVWZY") * Gamma1_.block("AA")("XU");
-        b_ck("K") -= 0.50 * V_.block("AACA")("UVMZ") * T2_.block("CAAA")("MWXY") * cc1b("KXW") * Gamma2_.block("AAAA")("UVZY");
         b_ck("K") -= 0.50 * V_.block("AACA")("UVMZ") * T2_.block("CAAA")("MWXY") * cc2bb("KUVZY") * Gamma1_.block("AA")("XW");
-        b_ck("K") -= 2.00 * V_.block("AACA")("UVMZ") * T2_.block("CAAA")("MWXY") * cc1b("KUZ") * Gamma1_.block("AA")("XV") * Gamma1_.block("AA")("YW");
-        b_ck("K") -= 2.00 * V_.block("AACA")("UVMZ") * T2_.block("CAAA")("MWXY") * cc1b("KXV") * Gamma1_.block("AA")("UZ") * Gamma1_.block("AA")("YW");
-        b_ck("K") -= 2.00 * V_.block("AACA")("UVMZ") * T2_.block("CAAA")("MWXY") * cc1b("KYW") * Gamma1_.block("AA")("UZ") * Gamma1_.block("AA")("XV");
-        b_ck("K") -= 1.00 * V_.block("AACA")("UVMZ") * T2_.block("CAAA")("MWXY") * cc1b("KWZ") * Gamma1_.block("AA")("XU") * Gamma1_.block("AA")("YV");
-        b_ck("K") -= 1.00 * V_.block("AACA")("UVMZ") * T2_.block("CAAA")("MWXY") * cc1b("KXU") * Gamma1_.block("AA")("WZ") * Gamma1_.block("AA")("YV");
-        b_ck("K") -= 1.00 * V_.block("AACA")("UVMZ") * T2_.block("CAAA")("MWXY") * cc1b("KYV") * Gamma1_.block("AA")("WZ") * Gamma1_.block("AA")("XU");
+
 
         /// b_ck("K") += 0.50 * V_.block("aaca")("uvmy") * T2_.block("cAaA")("mWxZ") * dlamb3_aab("KxyZuvW");
+
         b_ck("K") += 0.50 * V_.block("aaca")("uvmy") * T2_.block("cAaA")("mWxZ") * cc3aab("KxyZuvW");
-        b_ck("K") -= 0.50 * V_.block("aaca")("uvmy") * T2_.block("cAaA")("mWxZ") * cc1a("Kxu") * Lambda2_.block("aAaA")("yZvW");
         b_ck("K") -= 0.50 * V_.block("aaca")("uvmy") * T2_.block("cAaA")("mWxZ") * Gamma1_.block("aa")("xu") * cc2ab("KyZvW");
-        b_ck("K") += 0.50 * V_.block("aaca")("uvmy") * T2_.block("cAaA")("mWxZ") * Gamma1_.block("aa")("xu") * cc1a("Kvy") * Gamma1_.block("AA")("ZW");
-        b_ck("K") += 0.50 * V_.block("aaca")("uvmy") * T2_.block("cAaA")("mWxZ") * Gamma1_.block("aa")("xu") * cc1b("KZW") * Gamma1_.block("aa")("yv");
-        b_ck("K") += 0.50 * V_.block("aaca")("uvmy") * T2_.block("cAaA")("mWxZ") * cc1a("Kxv") * Lambda2_.block("aAaA")("yZuW");
         b_ck("K") += 0.50 * V_.block("aaca")("uvmy") * T2_.block("cAaA")("mWxZ") * Gamma1_.block("aa")("xv") * cc2ab("KyZuW");
-        b_ck("K") -= 0.50 * V_.block("aaca")("uvmy") * T2_.block("cAaA")("mWxZ") * Gamma1_.block("aa")("xv") * cc1a("Kuy") * Gamma1_.block("AA")("ZW");
-        b_ck("K") -= 0.50 * V_.block("aaca")("uvmy") * T2_.block("cAaA")("mWxZ") * Gamma1_.block("aa")("xv") * cc1b("KZW") * Gamma1_.block("aa")("yu");
-        b_ck("K") += 0.50 * V_.block("aaca")("uvmy") * T2_.block("cAaA")("mWxZ") * cc1a("Kyu") * Lambda2_.block("aAaA")("xZvW");
         b_ck("K") += 0.50 * V_.block("aaca")("uvmy") * T2_.block("cAaA")("mWxZ") * Gamma1_.block("aa")("yu") * cc2ab("KxZvW");
-        b_ck("K") -= 0.50 * V_.block("aaca")("uvmy") * T2_.block("cAaA")("mWxZ") * Gamma1_.block("aa")("yu") * cc1a("Kvx") * Gamma1_.block("AA")("ZW");
-        b_ck("K") -= 0.50 * V_.block("aaca")("uvmy") * T2_.block("cAaA")("mWxZ") * Gamma1_.block("aa")("yu") * cc1b("KZW") * Gamma1_.block("aa")("xv");
-        b_ck("K") -= 0.50 * V_.block("aaca")("uvmy") * T2_.block("cAaA")("mWxZ") * cc1a("Kyv") * Lambda2_.block("aAaA")("xZuW");
         b_ck("K") -= 0.50 * V_.block("aaca")("uvmy") * T2_.block("cAaA")("mWxZ") * Gamma1_.block("aa")("yv") * cc2ab("KxZuW");
-        b_ck("K") += 0.50 * V_.block("aaca")("uvmy") * T2_.block("cAaA")("mWxZ") * Gamma1_.block("aa")("yv") * cc1a("Kux") * Gamma1_.block("AA")("ZW");
-        b_ck("K") += 0.50 * V_.block("aaca")("uvmy") * T2_.block("cAaA")("mWxZ") * Gamma1_.block("aa")("yv") * cc1b("KZW") * Gamma1_.block("aa")("xu");
-        b_ck("K") -= 0.50 * V_.block("aaca")("uvmy") * T2_.block("cAaA")("mWxZ") * cc1b("KZW") * Lambda2_.block("aaaa")("xyuv");
         b_ck("K") -= 0.50 * V_.block("aaca")("uvmy") * T2_.block("cAaA")("mWxZ") * Gamma1_.block("AA")("ZW") * cc2aa("Kxyuv");
-        b_ck("K") += 0.50 * V_.block("aaca")("uvmy") * T2_.block("cAaA")("mWxZ") * Gamma1_.block("AA")("ZW") * cc1a("Kux") * Gamma1_.block("aa")("yv");
-        b_ck("K") += 0.50 * V_.block("aaca")("uvmy") * T2_.block("cAaA")("mWxZ") * Gamma1_.block("AA")("ZW") * cc1a("Kvy") * Gamma1_.block("aa")("xu");
-        b_ck("K") -= 0.50 * V_.block("aaca")("uvmy") * T2_.block("cAaA")("mWxZ") * Gamma1_.block("AA")("ZW") * cc1a("Kvx") * Gamma1_.block("aa")("yu");
-        b_ck("K") -= 0.50 * V_.block("aaca")("uvmy") * T2_.block("cAaA")("mWxZ") * Gamma1_.block("AA")("ZW") * cc1a("Kuy") * Gamma1_.block("aa")("xv");
-        b_ck("K") -= 0.50 * V_.block("aaca")("uvmy") * T2_.block("cAaA")("mWxZ") * cc1a("Kxu") * Gamma1_.block("aa")("yv") * Gamma1_.block("AA")("ZW");
-        b_ck("K") -= 0.50 * V_.block("aaca")("uvmy") * T2_.block("cAaA")("mWxZ") * cc1a("Kyv") * Gamma1_.block("aa")("xu") * Gamma1_.block("AA")("ZW");
-        b_ck("K") -= 0.50 * V_.block("aaca")("uvmy") * T2_.block("cAaA")("mWxZ") * cc1b("KZW") * Gamma1_.block("aa")("yv") * Gamma1_.block("aa")("xu");
-        b_ck("K") += 0.50 * V_.block("aaca")("uvmy") * T2_.block("cAaA")("mWxZ") * cc1a("Kxv") * Gamma1_.block("aa")("yu") * Gamma1_.block("AA")("ZW");
-        b_ck("K") += 0.50 * V_.block("aaca")("uvmy") * T2_.block("cAaA")("mWxZ") * cc1a("Kyu") * Gamma1_.block("aa")("xv") * Gamma1_.block("AA")("ZW");
-        b_ck("K") += 0.50 * V_.block("aaca")("uvmy") * T2_.block("cAaA")("mWxZ") * cc1b("KZW") * Gamma1_.block("aa")("yu") * Gamma1_.block("aa")("xv");
+
 
         /// b_ck("K") += 0.50 * V_.block("aAcA")("uWmZ") * T2_.block("caaa")("mvxy") * dlamb3_aab("KxyZuvW");
         b_ck("K") += 0.50 * V_.block("aAcA")("uWmZ") * T2_.block("caaa")("mvxy") * cc3aab("KxyZuvW");
-        b_ck("K") -= 0.50 * V_.block("aAcA")("uWmZ") * T2_.block("caaa")("mvxy") * cc1a("Kxu") * Lambda2_.block("aAaA")("yZvW");
         b_ck("K") -= 0.50 * V_.block("aAcA")("uWmZ") * T2_.block("caaa")("mvxy") * Gamma1_.block("aa")("xu") * cc2ab("KyZvW");
-        b_ck("K") += 0.50 * V_.block("aAcA")("uWmZ") * T2_.block("caaa")("mvxy") * Gamma1_.block("aa")("xu") * cc1a("Kvy") * Gamma1_.block("AA")("ZW");
-        b_ck("K") += 0.50 * V_.block("aAcA")("uWmZ") * T2_.block("caaa")("mvxy") * Gamma1_.block("aa")("xu") * cc1b("KZW") * Gamma1_.block("aa")("yv");
-        b_ck("K") += 0.50 * V_.block("aAcA")("uWmZ") * T2_.block("caaa")("mvxy") * cc1a("Kxv") * Lambda2_.block("aAaA")("yZuW");
         b_ck("K") += 0.50 * V_.block("aAcA")("uWmZ") * T2_.block("caaa")("mvxy") * Gamma1_.block("aa")("xv") * cc2ab("KyZuW");
-        b_ck("K") -= 0.50 * V_.block("aAcA")("uWmZ") * T2_.block("caaa")("mvxy") * Gamma1_.block("aa")("xv") * cc1a("Kuy") * Gamma1_.block("AA")("ZW");
-        b_ck("K") -= 0.50 * V_.block("aAcA")("uWmZ") * T2_.block("caaa")("mvxy") * Gamma1_.block("aa")("xv") * cc1b("KZW") * Gamma1_.block("aa")("yu");
-        b_ck("K") += 0.50 * V_.block("aAcA")("uWmZ") * T2_.block("caaa")("mvxy") * cc1a("Kyu") * Lambda2_.block("aAaA")("xZvW");
         b_ck("K") += 0.50 * V_.block("aAcA")("uWmZ") * T2_.block("caaa")("mvxy") * Gamma1_.block("aa")("yu") * cc2ab("KxZvW");
-        b_ck("K") -= 0.50 * V_.block("aAcA")("uWmZ") * T2_.block("caaa")("mvxy") * Gamma1_.block("aa")("yu") * cc1a("Kvx") * Gamma1_.block("AA")("ZW");
-        b_ck("K") -= 0.50 * V_.block("aAcA")("uWmZ") * T2_.block("caaa")("mvxy") * Gamma1_.block("aa")("yu") * cc1b("KZW") * Gamma1_.block("aa")("xv");
-        b_ck("K") -= 0.50 * V_.block("aAcA")("uWmZ") * T2_.block("caaa")("mvxy") * cc1a("Kyv") * Lambda2_.block("aAaA")("xZuW");
         b_ck("K") -= 0.50 * V_.block("aAcA")("uWmZ") * T2_.block("caaa")("mvxy") * Gamma1_.block("aa")("yv") * cc2ab("KxZuW");
-        b_ck("K") += 0.50 * V_.block("aAcA")("uWmZ") * T2_.block("caaa")("mvxy") * Gamma1_.block("aa")("yv") * cc1a("Kux") * Gamma1_.block("AA")("ZW");
-        b_ck("K") += 0.50 * V_.block("aAcA")("uWmZ") * T2_.block("caaa")("mvxy") * Gamma1_.block("aa")("yv") * cc1b("KZW") * Gamma1_.block("aa")("xu");
-        b_ck("K") -= 0.50 * V_.block("aAcA")("uWmZ") * T2_.block("caaa")("mvxy") * cc1b("KZW") * Lambda2_.block("aaaa")("xyuv");
         b_ck("K") -= 0.50 * V_.block("aAcA")("uWmZ") * T2_.block("caaa")("mvxy") * Gamma1_.block("AA")("ZW") * cc2aa("Kxyuv");
-        b_ck("K") += 0.50 * V_.block("aAcA")("uWmZ") * T2_.block("caaa")("mvxy") * Gamma1_.block("AA")("ZW") * cc1a("Kux") * Gamma1_.block("aa")("yv");
-        b_ck("K") += 0.50 * V_.block("aAcA")("uWmZ") * T2_.block("caaa")("mvxy") * Gamma1_.block("AA")("ZW") * cc1a("Kvy") * Gamma1_.block("aa")("xu");
-        b_ck("K") -= 0.50 * V_.block("aAcA")("uWmZ") * T2_.block("caaa")("mvxy") * Gamma1_.block("AA")("ZW") * cc1a("Kvx") * Gamma1_.block("aa")("yu");
-        b_ck("K") -= 0.50 * V_.block("aAcA")("uWmZ") * T2_.block("caaa")("mvxy") * Gamma1_.block("AA")("ZW") * cc1a("Kuy") * Gamma1_.block("aa")("xv");
-        b_ck("K") -= 0.50 * V_.block("aAcA")("uWmZ") * T2_.block("caaa")("mvxy") * cc1a("Kxu") * Gamma1_.block("aa")("yv") * Gamma1_.block("AA")("ZW");
-        b_ck("K") -= 0.50 * V_.block("aAcA")("uWmZ") * T2_.block("caaa")("mvxy") * cc1a("Kyv") * Gamma1_.block("aa")("xu") * Gamma1_.block("AA")("ZW");
-        b_ck("K") -= 0.50 * V_.block("aAcA")("uWmZ") * T2_.block("caaa")("mvxy") * cc1b("KZW") * Gamma1_.block("aa")("yv") * Gamma1_.block("aa")("xu");
-        b_ck("K") += 0.50 * V_.block("aAcA")("uWmZ") * T2_.block("caaa")("mvxy") * cc1a("Kxv") * Gamma1_.block("aa")("yu") * Gamma1_.block("AA")("ZW");
-        b_ck("K") += 0.50 * V_.block("aAcA")("uWmZ") * T2_.block("caaa")("mvxy") * cc1a("Kyu") * Gamma1_.block("aa")("xv") * Gamma1_.block("AA")("ZW");
-        b_ck("K") += 0.50 * V_.block("aAcA")("uWmZ") * T2_.block("caaa")("mvxy") * cc1b("KZW") * Gamma1_.block("aa")("yu") * Gamma1_.block("aa")("xv");
 
         /// b_ck("K") -= V_.block("aAaC")("uWyM") * T2_.block("aCaA")("vMxZ") * dlamb3_aab("KxyZuvW");
         b_ck("K") -= V_.block("aAaC")("uWyM") * T2_.block("aCaA")("vMxZ") * cc3aab("KxyZuvW");
-        b_ck("K") += V_.block("aAaC")("uWyM") * T2_.block("aCaA")("vMxZ") * cc1a("Kxu") * Lambda2_.block("aAaA")("yZvW");
         b_ck("K") += V_.block("aAaC")("uWyM") * T2_.block("aCaA")("vMxZ") * Gamma1_.block("aa")("xu") * cc2ab("KyZvW");
-        b_ck("K") -= V_.block("aAaC")("uWyM") * T2_.block("aCaA")("vMxZ") * Gamma1_.block("aa")("xu") * cc1a("Kvy") * Gamma1_.block("AA")("ZW");
-        b_ck("K") -= V_.block("aAaC")("uWyM") * T2_.block("aCaA")("vMxZ") * Gamma1_.block("aa")("xu") * cc1b("KZW") * Gamma1_.block("aa")("yv");
-        b_ck("K") -= V_.block("aAaC")("uWyM") * T2_.block("aCaA")("vMxZ") * cc1a("Kxv") * Lambda2_.block("aAaA")("yZuW");
         b_ck("K") -= V_.block("aAaC")("uWyM") * T2_.block("aCaA")("vMxZ") * Gamma1_.block("aa")("xv") * cc2ab("KyZuW");
-        b_ck("K") += V_.block("aAaC")("uWyM") * T2_.block("aCaA")("vMxZ") * Gamma1_.block("aa")("xv") * cc1a("Kuy") * Gamma1_.block("AA")("ZW");
-        b_ck("K") += V_.block("aAaC")("uWyM") * T2_.block("aCaA")("vMxZ") * Gamma1_.block("aa")("xv") * cc1b("KZW") * Gamma1_.block("aa")("yu");
-        b_ck("K") -= V_.block("aAaC")("uWyM") * T2_.block("aCaA")("vMxZ") * cc1a("Kyu") * Lambda2_.block("aAaA")("xZvW");
         b_ck("K") -= V_.block("aAaC")("uWyM") * T2_.block("aCaA")("vMxZ") * Gamma1_.block("aa")("yu") * cc2ab("KxZvW");
-        b_ck("K") += V_.block("aAaC")("uWyM") * T2_.block("aCaA")("vMxZ") * Gamma1_.block("aa")("yu") * cc1a("Kvx") * Gamma1_.block("AA")("ZW");
-        b_ck("K") += V_.block("aAaC")("uWyM") * T2_.block("aCaA")("vMxZ") * Gamma1_.block("aa")("yu") * cc1b("KZW") * Gamma1_.block("aa")("xv");
-        b_ck("K") += V_.block("aAaC")("uWyM") * T2_.block("aCaA")("vMxZ") * cc1a("Kyv") * Lambda2_.block("aAaA")("xZuW");
         b_ck("K") += V_.block("aAaC")("uWyM") * T2_.block("aCaA")("vMxZ") * Gamma1_.block("aa")("yv") * cc2ab("KxZuW");
-        b_ck("K") -= V_.block("aAaC")("uWyM") * T2_.block("aCaA")("vMxZ") * Gamma1_.block("aa")("yv") * cc1a("Kux") * Gamma1_.block("AA")("ZW");
-        b_ck("K") -= V_.block("aAaC")("uWyM") * T2_.block("aCaA")("vMxZ") * Gamma1_.block("aa")("yv") * cc1b("KZW") * Gamma1_.block("aa")("xu");
-        b_ck("K") += V_.block("aAaC")("uWyM") * T2_.block("aCaA")("vMxZ") * cc1b("KZW") * Lambda2_.block("aaaa")("xyuv");
         b_ck("K") += V_.block("aAaC")("uWyM") * T2_.block("aCaA")("vMxZ") * Gamma1_.block("AA")("ZW") * cc2aa("Kxyuv");
-        b_ck("K") -= V_.block("aAaC")("uWyM") * T2_.block("aCaA")("vMxZ") * Gamma1_.block("AA")("ZW") * cc1a("Kux") * Gamma1_.block("aa")("yv");
-        b_ck("K") -= V_.block("aAaC")("uWyM") * T2_.block("aCaA")("vMxZ") * Gamma1_.block("AA")("ZW") * cc1a("Kvy") * Gamma1_.block("aa")("xu");
-        b_ck("K") += V_.block("aAaC")("uWyM") * T2_.block("aCaA")("vMxZ") * Gamma1_.block("AA")("ZW") * cc1a("Kvx") * Gamma1_.block("aa")("yu");
-        b_ck("K") += V_.block("aAaC")("uWyM") * T2_.block("aCaA")("vMxZ") * Gamma1_.block("AA")("ZW") * cc1a("Kuy") * Gamma1_.block("aa")("xv");
-        b_ck("K") += V_.block("aAaC")("uWyM") * T2_.block("aCaA")("vMxZ") * cc1a("Kxu") * Gamma1_.block("aa")("yv") * Gamma1_.block("AA")("ZW");
-        b_ck("K") += V_.block("aAaC")("uWyM") * T2_.block("aCaA")("vMxZ") * cc1a("Kyv") * Gamma1_.block("aa")("xu") * Gamma1_.block("AA")("ZW");
-        b_ck("K") += V_.block("aAaC")("uWyM") * T2_.block("aCaA")("vMxZ") * cc1b("KZW") * Gamma1_.block("aa")("yv") * Gamma1_.block("aa")("xu");
-        b_ck("K") -= V_.block("aAaC")("uWyM") * T2_.block("aCaA")("vMxZ") * cc1a("Kxv") * Gamma1_.block("aa")("yu") * Gamma1_.block("AA")("ZW");
-        b_ck("K") -= V_.block("aAaC")("uWyM") * T2_.block("aCaA")("vMxZ") * cc1a("Kyu") * Gamma1_.block("aa")("xv") * Gamma1_.block("AA")("ZW");
-        b_ck("K") -= V_.block("aAaC")("uWyM") * T2_.block("aCaA")("vMxZ") * cc1b("KZW") * Gamma1_.block("aa")("yu") * Gamma1_.block("aa")("xv");
+
 
         /// b_ck("K") += 0.50 * V_.block("AACA")("VWMZ") * T2_.block("aCaA")("uMxY") * dlamb3_abb("KxYZuVW");
+
         b_ck("K") += 0.50 * V_.block("AACA")("VWMZ") * T2_.block("aCaA")("uMxY") * cc3abb("KxYZuVW");
-        b_ck("K") -= 0.50 * V_.block("AACA")("VWMZ") * T2_.block("aCaA")("uMxY") * cc1a("Kxu") * Lambda2_.block("AAAA")("YZVW");
         b_ck("K") -= 0.50 * V_.block("AACA")("VWMZ") * T2_.block("aCaA")("uMxY") * Gamma1_.block("aa")("xu") * cc2bb("KYZVW");
-        b_ck("K") += 0.50 * V_.block("AACA")("VWMZ") * T2_.block("aCaA")("uMxY") * Gamma1_.block("aa")("xu") * cc1b("KYV") * Gamma1_.block("AA")("ZW");
-        b_ck("K") += 0.50 * V_.block("AACA")("VWMZ") * T2_.block("aCaA")("uMxY") * Gamma1_.block("aa")("xu") * cc1b("KZW") * Gamma1_.block("AA")("YV");
-        b_ck("K") -= 0.50 * V_.block("AACA")("VWMZ") * T2_.block("aCaA")("uMxY") * Gamma1_.block("aa")("xu") * cc1b("KYW") * Gamma1_.block("AA")("ZV");
-        b_ck("K") -= 0.50 * V_.block("AACA")("VWMZ") * T2_.block("aCaA")("uMxY") * Gamma1_.block("aa")("xu") * cc1b("KZV") * Gamma1_.block("AA")("YW");
-        b_ck("K") -= 0.50 * V_.block("AACA")("VWMZ") * T2_.block("aCaA")("uMxY") * cc1b("KYV") * Lambda2_.block("aAaA")("xZuW");
         b_ck("K") -= 0.50 * V_.block("AACA")("VWMZ") * T2_.block("aCaA")("uMxY") * Gamma1_.block("AA")("YV") * cc2ab("KxZuW");
-        b_ck("K") += 0.50 * V_.block("AACA")("VWMZ") * T2_.block("aCaA")("uMxY") * Gamma1_.block("AA")("YV") * cc1a("Kux") * Gamma1_.block("AA")("ZW");
-        b_ck("K") += 0.50 * V_.block("AACA")("VWMZ") * T2_.block("aCaA")("uMxY") * Gamma1_.block("AA")("YV") * cc1b("KZW") * Gamma1_.block("aa")("xu");
-        b_ck("K") += 0.50 * V_.block("AACA")("VWMZ") * T2_.block("aCaA")("uMxY") * cc1b("KYW") * Lambda2_.block("aAaA")("xZuV");
         b_ck("K") += 0.50 * V_.block("AACA")("VWMZ") * T2_.block("aCaA")("uMxY") * Gamma1_.block("AA")("YW") * cc2ab("KxZuV");
-        b_ck("K") -= 0.50 * V_.block("AACA")("VWMZ") * T2_.block("aCaA")("uMxY") * Gamma1_.block("AA")("YW") * cc1a("Kux") * Gamma1_.block("AA")("ZV");
-        b_ck("K") -= 0.50 * V_.block("AACA")("VWMZ") * T2_.block("aCaA")("uMxY") * Gamma1_.block("AA")("YW") * cc1b("KZV") * Gamma1_.block("aa")("xu");
-        b_ck("K") += 0.50 * V_.block("AACA")("VWMZ") * T2_.block("aCaA")("uMxY") * cc1b("KZV") * Lambda2_.block("aAaA")("xYuW");
         b_ck("K") += 0.50 * V_.block("AACA")("VWMZ") * T2_.block("aCaA")("uMxY") * Gamma1_.block("AA")("ZV") * cc2ab("KxYuW");
-        b_ck("K") -= 0.50 * V_.block("AACA")("VWMZ") * T2_.block("aCaA")("uMxY") * Gamma1_.block("AA")("ZV") * cc1a("Kux") * Gamma1_.block("AA")("YW");
-        b_ck("K") -= 0.50 * V_.block("AACA")("VWMZ") * T2_.block("aCaA")("uMxY") * Gamma1_.block("AA")("ZV") * cc1b("KYW") * Gamma1_.block("aa")("xu");
-        b_ck("K") -= 0.50 * V_.block("AACA")("VWMZ") * T2_.block("aCaA")("uMxY") * cc1b("KZW") * Lambda2_.block("aAaA")("xYuV");
         b_ck("K") -= 0.50 * V_.block("AACA")("VWMZ") * T2_.block("aCaA")("uMxY") * Gamma1_.block("AA")("ZW") * cc2ab("KxYuV");
-        b_ck("K") += 0.50 * V_.block("AACA")("VWMZ") * T2_.block("aCaA")("uMxY") * Gamma1_.block("AA")("ZW") * cc1a("Kux") * Gamma1_.block("AA")("YV");
-        b_ck("K") += 0.50 * V_.block("AACA")("VWMZ") * T2_.block("aCaA")("uMxY") * Gamma1_.block("AA")("ZW") * cc1b("KYV") * Gamma1_.block("aa")("xu");
-        b_ck("K") -= 0.50 * V_.block("AACA")("VWMZ") * T2_.block("aCaA")("uMxY") * cc1a("Kxu") * Gamma1_.block("AA")("YV") * Gamma1_.block("AA")("ZW");
-        b_ck("K") -= 0.50 * V_.block("AACA")("VWMZ") * T2_.block("aCaA")("uMxY") * cc1b("KYV") * Gamma1_.block("aa")("xu") * Gamma1_.block("AA")("ZW");
-        b_ck("K") -= 0.50 * V_.block("AACA")("VWMZ") * T2_.block("aCaA")("uMxY") * cc1b("KZW") * Gamma1_.block("AA")("YV") * Gamma1_.block("aa")("xu");
-        b_ck("K") += 0.50 * V_.block("AACA")("VWMZ") * T2_.block("aCaA")("uMxY") * cc1a("Kxu") * Gamma1_.block("AA")("ZV") * Gamma1_.block("AA")("YW");
-        b_ck("K") += 0.50 * V_.block("AACA")("VWMZ") * T2_.block("aCaA")("uMxY") * cc1b("KZV") * Gamma1_.block("aa")("xu") * Gamma1_.block("AA")("YW");
-        b_ck("K") += 0.50 * V_.block("AACA")("VWMZ") * T2_.block("aCaA")("uMxY") * cc1b("KYW") * Gamma1_.block("AA")("ZV") * Gamma1_.block("aa")("xu");
+
 
         /// b_ck("K") += 0.50 * V_.block("aAaC")("uVxM") * T2_.block("CAAA")("MWYZ") * dlamb3_abb("KxYZuVW");
+
         b_ck("K") += 0.50 * V_.block("aAaC")("uVxM") * T2_.block("CAAA")("MWYZ") * cc3abb("KxYZuVW");
-        b_ck("K") -= 0.50 * V_.block("aAaC")("uVxM") * T2_.block("CAAA")("MWYZ") * cc1a("Kxu") * Lambda2_.block("AAAA")("YZVW");
         b_ck("K") -= 0.50 * V_.block("aAaC")("uVxM") * T2_.block("CAAA")("MWYZ") * Gamma1_.block("aa")("xu") * cc2bb("KYZVW");
-        b_ck("K") += 0.50 * V_.block("aAaC")("uVxM") * T2_.block("CAAA")("MWYZ") * Gamma1_.block("aa")("xu") * cc1b("KYV") * Gamma1_.block("AA")("ZW");
-        b_ck("K") += 0.50 * V_.block("aAaC")("uVxM") * T2_.block("CAAA")("MWYZ") * Gamma1_.block("aa")("xu") * cc1b("KZW") * Gamma1_.block("AA")("YV");
-        b_ck("K") -= 0.50 * V_.block("aAaC")("uVxM") * T2_.block("CAAA")("MWYZ") * Gamma1_.block("aa")("xu") * cc1b("KYW") * Gamma1_.block("AA")("ZV");
-        b_ck("K") -= 0.50 * V_.block("aAaC")("uVxM") * T2_.block("CAAA")("MWYZ") * Gamma1_.block("aa")("xu") * cc1b("KZV") * Gamma1_.block("AA")("YW");
-        b_ck("K") -= 0.50 * V_.block("aAaC")("uVxM") * T2_.block("CAAA")("MWYZ") * cc1b("KYV") * Lambda2_.block("aAaA")("xZuW");
         b_ck("K") -= 0.50 * V_.block("aAaC")("uVxM") * T2_.block("CAAA")("MWYZ") * Gamma1_.block("AA")("YV") * cc2ab("KxZuW");
-        b_ck("K") += 0.50 * V_.block("aAaC")("uVxM") * T2_.block("CAAA")("MWYZ") * Gamma1_.block("AA")("YV") * cc1a("Kux") * Gamma1_.block("AA")("ZW");
-        b_ck("K") += 0.50 * V_.block("aAaC")("uVxM") * T2_.block("CAAA")("MWYZ") * Gamma1_.block("AA")("YV") * cc1b("KZW") * Gamma1_.block("aa")("xu");
-        b_ck("K") += 0.50 * V_.block("aAaC")("uVxM") * T2_.block("CAAA")("MWYZ") * cc1b("KYW") * Lambda2_.block("aAaA")("xZuV");
         b_ck("K") += 0.50 * V_.block("aAaC")("uVxM") * T2_.block("CAAA")("MWYZ") * Gamma1_.block("AA")("YW") * cc2ab("KxZuV");
-        b_ck("K") -= 0.50 * V_.block("aAaC")("uVxM") * T2_.block("CAAA")("MWYZ") * Gamma1_.block("AA")("YW") * cc1a("Kux") * Gamma1_.block("AA")("ZV");
-        b_ck("K") -= 0.50 * V_.block("aAaC")("uVxM") * T2_.block("CAAA")("MWYZ") * Gamma1_.block("AA")("YW") * cc1b("KZV") * Gamma1_.block("aa")("xu");
-        b_ck("K") += 0.50 * V_.block("aAaC")("uVxM") * T2_.block("CAAA")("MWYZ") * cc1b("KZV") * Lambda2_.block("aAaA")("xYuW");
         b_ck("K") += 0.50 * V_.block("aAaC")("uVxM") * T2_.block("CAAA")("MWYZ") * Gamma1_.block("AA")("ZV") * cc2ab("KxYuW");
-        b_ck("K") -= 0.50 * V_.block("aAaC")("uVxM") * T2_.block("CAAA")("MWYZ") * Gamma1_.block("AA")("ZV") * cc1a("Kux") * Gamma1_.block("AA")("YW");
-        b_ck("K") -= 0.50 * V_.block("aAaC")("uVxM") * T2_.block("CAAA")("MWYZ") * Gamma1_.block("AA")("ZV") * cc1b("KYW") * Gamma1_.block("aa")("xu");
-        b_ck("K") -= 0.50 * V_.block("aAaC")("uVxM") * T2_.block("CAAA")("MWYZ") * cc1b("KZW") * Lambda2_.block("aAaA")("xYuV");
         b_ck("K") -= 0.50 * V_.block("aAaC")("uVxM") * T2_.block("CAAA")("MWYZ") * Gamma1_.block("AA")("ZW") * cc2ab("KxYuV");
-        b_ck("K") += 0.50 * V_.block("aAaC")("uVxM") * T2_.block("CAAA")("MWYZ") * Gamma1_.block("AA")("ZW") * cc1a("Kux") * Gamma1_.block("AA")("YV");
-        b_ck("K") += 0.50 * V_.block("aAaC")("uVxM") * T2_.block("CAAA")("MWYZ") * Gamma1_.block("AA")("ZW") * cc1b("KYV") * Gamma1_.block("aa")("xu");
-        b_ck("K") -= 0.50 * V_.block("aAaC")("uVxM") * T2_.block("CAAA")("MWYZ") * cc1a("Kxu") * Gamma1_.block("AA")("YV") * Gamma1_.block("AA")("ZW");
-        b_ck("K") -= 0.50 * V_.block("aAaC")("uVxM") * T2_.block("CAAA")("MWYZ") * cc1b("KYV") * Gamma1_.block("aa")("xu") * Gamma1_.block("AA")("ZW");
-        b_ck("K") -= 0.50 * V_.block("aAaC")("uVxM") * T2_.block("CAAA")("MWYZ") * cc1b("KZW") * Gamma1_.block("AA")("YV") * Gamma1_.block("aa")("xu");
-        b_ck("K") += 0.50 * V_.block("aAaC")("uVxM") * T2_.block("CAAA")("MWYZ") * cc1a("Kxu") * Gamma1_.block("AA")("ZV") * Gamma1_.block("AA")("YW");
-        b_ck("K") += 0.50 * V_.block("aAaC")("uVxM") * T2_.block("CAAA")("MWYZ") * cc1b("KZV") * Gamma1_.block("aa")("xu") * Gamma1_.block("AA")("YW");
-        b_ck("K") += 0.50 * V_.block("aAaC")("uVxM") * T2_.block("CAAA")("MWYZ") * cc1b("KYW") * Gamma1_.block("AA")("ZV") * Gamma1_.block("aa")("xu");
 
         /// b_ck("K") -= V_.block("aAcA")("uVmZ") * T2_.block("cAaA")("mWxY") * dlamb3_abb("KxYZuVW");
         b_ck("K") -= V_.block("aAcA")("uVmZ") * T2_.block("cAaA")("mWxY") * cc3abb("KxYZuVW");
-        b_ck("K") += V_.block("aAcA")("uVmZ") * T2_.block("cAaA")("mWxY") * cc1a("Kxu") * Lambda2_.block("AAAA")("YZVW");
         b_ck("K") += V_.block("aAcA")("uVmZ") * T2_.block("cAaA")("mWxY") * Gamma1_.block("aa")("xu") * cc2bb("KYZVW");
-        b_ck("K") -= V_.block("aAcA")("uVmZ") * T2_.block("cAaA")("mWxY") * Gamma1_.block("aa")("xu") * cc1b("KYV") * Gamma1_.block("AA")("ZW");
-        b_ck("K") -= V_.block("aAcA")("uVmZ") * T2_.block("cAaA")("mWxY") * Gamma1_.block("aa")("xu") * cc1b("KZW") * Gamma1_.block("AA")("YV");
-        b_ck("K") += V_.block("aAcA")("uVmZ") * T2_.block("cAaA")("mWxY") * Gamma1_.block("aa")("xu") * cc1b("KYW") * Gamma1_.block("AA")("ZV");
-        b_ck("K") += V_.block("aAcA")("uVmZ") * T2_.block("cAaA")("mWxY") * Gamma1_.block("aa")("xu") * cc1b("KZV") * Gamma1_.block("AA")("YW");
-        b_ck("K") += V_.block("aAcA")("uVmZ") * T2_.block("cAaA")("mWxY") * cc1b("KYV") * Lambda2_.block("aAaA")("xZuW");
         b_ck("K") += V_.block("aAcA")("uVmZ") * T2_.block("cAaA")("mWxY") * Gamma1_.block("AA")("YV") * cc2ab("KxZuW");
-        b_ck("K") -= V_.block("aAcA")("uVmZ") * T2_.block("cAaA")("mWxY") * Gamma1_.block("AA")("YV") * cc1a("Kux") * Gamma1_.block("AA")("ZW");
-        b_ck("K") -= V_.block("aAcA")("uVmZ") * T2_.block("cAaA")("mWxY") * Gamma1_.block("AA")("YV") * cc1b("KZW") * Gamma1_.block("aa")("xu");
-        b_ck("K") -= V_.block("aAcA")("uVmZ") * T2_.block("cAaA")("mWxY") * cc1b("KYW") * Lambda2_.block("aAaA")("xZuV");
         b_ck("K") -= V_.block("aAcA")("uVmZ") * T2_.block("cAaA")("mWxY") * Gamma1_.block("AA")("YW") * cc2ab("KxZuV");
-        b_ck("K") += V_.block("aAcA")("uVmZ") * T2_.block("cAaA")("mWxY") * Gamma1_.block("AA")("YW") * cc1a("Kux") * Gamma1_.block("AA")("ZV");
-        b_ck("K") += V_.block("aAcA")("uVmZ") * T2_.block("cAaA")("mWxY") * Gamma1_.block("AA")("YW") * cc1b("KZV") * Gamma1_.block("aa")("xu");
-        b_ck("K") -= V_.block("aAcA")("uVmZ") * T2_.block("cAaA")("mWxY") * cc1b("KZV") * Lambda2_.block("aAaA")("xYuW");
         b_ck("K") -= V_.block("aAcA")("uVmZ") * T2_.block("cAaA")("mWxY") * Gamma1_.block("AA")("ZV") * cc2ab("KxYuW");
-        b_ck("K") += V_.block("aAcA")("uVmZ") * T2_.block("cAaA")("mWxY") * Gamma1_.block("AA")("ZV") * cc1a("Kux") * Gamma1_.block("AA")("YW");
-        b_ck("K") += V_.block("aAcA")("uVmZ") * T2_.block("cAaA")("mWxY") * Gamma1_.block("AA")("ZV") * cc1b("KYW") * Gamma1_.block("aa")("xu");
-        b_ck("K") += V_.block("aAcA")("uVmZ") * T2_.block("cAaA")("mWxY") * cc1b("KZW") * Lambda2_.block("aAaA")("xYuV");
         b_ck("K") += V_.block("aAcA")("uVmZ") * T2_.block("cAaA")("mWxY") * Gamma1_.block("AA")("ZW") * cc2ab("KxYuV");
-        b_ck("K") -= V_.block("aAcA")("uVmZ") * T2_.block("cAaA")("mWxY") * Gamma1_.block("AA")("ZW") * cc1a("Kux") * Gamma1_.block("AA")("YV");
-        b_ck("K") -= V_.block("aAcA")("uVmZ") * T2_.block("cAaA")("mWxY") * Gamma1_.block("AA")("ZW") * cc1b("KYV") * Gamma1_.block("aa")("xu");
-        b_ck("K") += V_.block("aAcA")("uVmZ") * T2_.block("cAaA")("mWxY") * cc1a("Kxu") * Gamma1_.block("AA")("YV") * Gamma1_.block("AA")("ZW");
-        b_ck("K") += V_.block("aAcA")("uVmZ") * T2_.block("cAaA")("mWxY") * cc1b("KYV") * Gamma1_.block("aa")("xu") * Gamma1_.block("AA")("ZW");
-        b_ck("K") += V_.block("aAcA")("uVmZ") * T2_.block("cAaA")("mWxY") * cc1b("KZW") * Gamma1_.block("AA")("YV") * Gamma1_.block("aa")("xu");
-        b_ck("K") -= V_.block("aAcA")("uVmZ") * T2_.block("cAaA")("mWxY") * cc1a("Kxu") * Gamma1_.block("AA")("ZV") * Gamma1_.block("AA")("YW");
-        b_ck("K") -= V_.block("aAcA")("uVmZ") * T2_.block("cAaA")("mWxY") * cc1b("KZV") * Gamma1_.block("aa")("xu") * Gamma1_.block("AA")("YW");
-        b_ck("K") -= V_.block("aAcA")("uVmZ") * T2_.block("cAaA")("mWxY") * cc1b("KYW") * Gamma1_.block("AA")("ZV") * Gamma1_.block("aa")("xu");
+
 
         /// b_ck("K") += 0.25 * V_.block("vaaa")("ewxy") * T2_.block("aava")("uvez") * dlamb3_aaa("Kxyzuvw");
+
         b_ck("K") += 0.25 * V_.block("vaaa")("ewxy") * T2_.block("aava")("uvez") * cc3aaa("Kxyzuvw");
-        b_ck("K") -= 0.50 * V_.block("vaaa")("ewxy") * T2_.block("aava")("uvez") * cc1a("Kuz") * Gamma2_.block("aaaa")("xyvw");
         b_ck("K") -= 0.50 * V_.block("vaaa")("ewxy") * T2_.block("aava")("uvez") * cc2aa("Kxyvw") * Gamma1_.block("aa")("uz");
-        b_ck("K") -= 0.25 * V_.block("vaaa")("ewxy") * T2_.block("aava")("uvez") * cc1a("Kwz") * Gamma2_.block("aaaa")("xyuv");
         b_ck("K") -= 0.25 * V_.block("vaaa")("ewxy") * T2_.block("aava")("uvez") * cc2aa("Kxyuv") * Gamma1_.block("aa")("wz");
-        b_ck("K") += 1.00 * V_.block("vaaa")("ewxy") * T2_.block("aava")("uvez") * cc1a("Kxu") * Gamma2_.block("aaaa")("vwzy");
         b_ck("K") += 1.00 * V_.block("vaaa")("ewxy") * T2_.block("aava")("uvez") * cc2aa("Kvwzy") * Gamma1_.block("aa")("xu");
-        b_ck("K") += 0.50 * V_.block("vaaa")("ewxy") * T2_.block("aava")("uvez") * cc1a("Kxw") * Gamma2_.block("aaaa")("uvzy");
         b_ck("K") += 0.50 * V_.block("vaaa")("ewxy") * T2_.block("aava")("uvez") * cc2aa("Kuvzy") * Gamma1_.block("aa")("xw");
-        b_ck("K") += 2.00 * V_.block("vaaa")("ewxy") * T2_.block("aava")("uvez") * cc1a("Kuz") * Gamma1_.block("aa")("xv") * Gamma1_.block("aa")("yw");
-        b_ck("K") += 2.00 * V_.block("vaaa")("ewxy") * T2_.block("aava")("uvez") * cc1a("Kxv") * Gamma1_.block("aa")("uz") * Gamma1_.block("aa")("yw");
-        b_ck("K") += 2.00 * V_.block("vaaa")("ewxy") * T2_.block("aava")("uvez") * cc1a("Kyw") * Gamma1_.block("aa")("uz") * Gamma1_.block("aa")("xv");
-        b_ck("K") += 1.00 * V_.block("vaaa")("ewxy") * T2_.block("aava")("uvez") * cc1a("Kwz") * Gamma1_.block("aa")("xu") * Gamma1_.block("aa")("yv");
-        b_ck("K") += 1.00 * V_.block("vaaa")("ewxy") * T2_.block("aava")("uvez") * cc1a("Kxu") * Gamma1_.block("aa")("wz") * Gamma1_.block("aa")("yv");
-        b_ck("K") += 1.00 * V_.block("vaaa")("ewxy") * T2_.block("aava")("uvez") * cc1a("Kyv") * Gamma1_.block("aa")("wz") * Gamma1_.block("aa")("xu");
 
         /// b_ck("K") += 0.25 * V_.block("VAAA")("EWXY") * T2_.block("AAVA")("UVEZ") * dlamb3_bbb("KXYZUVW");
+
         b_ck("K") += 0.25 * V_.block("VAAA")("EWXY") * T2_.block("AAVA")("UVEZ") * cc3bbb("KXYZUVW");
-        b_ck("K") -= 0.50 * V_.block("VAAA")("EWXY") * T2_.block("AAVA")("UVEZ") * cc1b("KUZ") * Gamma2_.block("AAAA")("XYVW");
         b_ck("K") -= 0.50 * V_.block("VAAA")("EWXY") * T2_.block("AAVA")("UVEZ") * cc2bb("KXYVW") * Gamma1_.block("AA")("UZ");
-        b_ck("K") -= 0.25 * V_.block("VAAA")("EWXY") * T2_.block("AAVA")("UVEZ") * cc1b("KWZ") * Gamma2_.block("AAAA")("XYUV");
         b_ck("K") -= 0.25 * V_.block("VAAA")("EWXY") * T2_.block("AAVA")("UVEZ") * cc2bb("KXYUV") * Gamma1_.block("AA")("WZ");
-        b_ck("K") += 1.00 * V_.block("VAAA")("EWXY") * T2_.block("AAVA")("UVEZ") * cc1b("KXU") * Gamma2_.block("AAAA")("VWZY");
         b_ck("K") += 1.00 * V_.block("VAAA")("EWXY") * T2_.block("AAVA")("UVEZ") * cc2bb("KVWZY") * Gamma1_.block("AA")("XU");
-        b_ck("K") += 0.50 * V_.block("VAAA")("EWXY") * T2_.block("AAVA")("UVEZ") * cc1b("KXW") * Gamma2_.block("AAAA")("UVZY");
         b_ck("K") += 0.50 * V_.block("VAAA")("EWXY") * T2_.block("AAVA")("UVEZ") * cc2bb("KUVZY") * Gamma1_.block("AA")("XW");
-        b_ck("K") += 2.00 * V_.block("VAAA")("EWXY") * T2_.block("AAVA")("UVEZ") * cc1b("KUZ") * Gamma1_.block("AA")("XV") * Gamma1_.block("AA")("YW");
-        b_ck("K") += 2.00 * V_.block("VAAA")("EWXY") * T2_.block("AAVA")("UVEZ") * cc1b("KXV") * Gamma1_.block("AA")("UZ") * Gamma1_.block("AA")("YW");
-        b_ck("K") += 2.00 * V_.block("VAAA")("EWXY") * T2_.block("AAVA")("UVEZ") * cc1b("KYW") * Gamma1_.block("AA")("UZ") * Gamma1_.block("AA")("XV");
-        b_ck("K") += 1.00 * V_.block("VAAA")("EWXY") * T2_.block("AAVA")("UVEZ") * cc1b("KWZ") * Gamma1_.block("AA")("XU") * Gamma1_.block("AA")("YV");
-        b_ck("K") += 1.00 * V_.block("VAAA")("EWXY") * T2_.block("AAVA")("UVEZ") * cc1b("KXU") * Gamma1_.block("AA")("WZ") * Gamma1_.block("AA")("YV");
-        b_ck("K") += 1.00 * V_.block("VAAA")("EWXY") * T2_.block("AAVA")("UVEZ") * cc1b("KYV") * Gamma1_.block("AA")("WZ") * Gamma1_.block("AA")("XU");
+
 
         /// b_ck("K") -= 0.50 * V_.block("vAaA")("eWxZ") * T2_.block("aava")("uvey") * dlamb3_aab("KxyZuvW");
+
         b_ck("K") -= 0.50 * V_.block("vAaA")("eWxZ") * T2_.block("aava")("uvey") * cc3aab("KxyZuvW");
-        b_ck("K") += 0.50 * V_.block("vAaA")("eWxZ") * T2_.block("aava")("uvey") * cc1a("Kxu") * Lambda2_.block("aAaA")("yZvW");
         b_ck("K") += 0.50 * V_.block("vAaA")("eWxZ") * T2_.block("aava")("uvey") * Gamma1_.block("aa")("xu") * cc2ab("KyZvW");
-        b_ck("K") -= 0.50 * V_.block("vAaA")("eWxZ") * T2_.block("aava")("uvey") * Gamma1_.block("aa")("xu") * cc1a("Kvy") * Gamma1_.block("AA")("ZW");
-        b_ck("K") -= 0.50 * V_.block("vAaA")("eWxZ") * T2_.block("aava")("uvey") * Gamma1_.block("aa")("xu") * cc1b("KZW") * Gamma1_.block("aa")("yv");
-        b_ck("K") -= 0.50 * V_.block("vAaA")("eWxZ") * T2_.block("aava")("uvey") * cc1a("Kxv") * Lambda2_.block("aAaA")("yZuW");
         b_ck("K") -= 0.50 * V_.block("vAaA")("eWxZ") * T2_.block("aava")("uvey") * Gamma1_.block("aa")("xv") * cc2ab("KyZuW");
-        b_ck("K") += 0.50 * V_.block("vAaA")("eWxZ") * T2_.block("aava")("uvey") * Gamma1_.block("aa")("xv") * cc1a("Kuy") * Gamma1_.block("AA")("ZW");
-        b_ck("K") += 0.50 * V_.block("vAaA")("eWxZ") * T2_.block("aava")("uvey") * Gamma1_.block("aa")("xv") * cc1b("KZW") * Gamma1_.block("aa")("yu");
-        b_ck("K") -= 0.50 * V_.block("vAaA")("eWxZ") * T2_.block("aava")("uvey") * cc1a("Kyu") * Lambda2_.block("aAaA")("xZvW");
         b_ck("K") -= 0.50 * V_.block("vAaA")("eWxZ") * T2_.block("aava")("uvey") * Gamma1_.block("aa")("yu") * cc2ab("KxZvW");
-        b_ck("K") += 0.50 * V_.block("vAaA")("eWxZ") * T2_.block("aava")("uvey") * Gamma1_.block("aa")("yu") * cc1a("Kvx") * Gamma1_.block("AA")("ZW");
-        b_ck("K") += 0.50 * V_.block("vAaA")("eWxZ") * T2_.block("aava")("uvey") * Gamma1_.block("aa")("yu") * cc1b("KZW") * Gamma1_.block("aa")("xv");
-        b_ck("K") += 0.50 * V_.block("vAaA")("eWxZ") * T2_.block("aava")("uvey") * cc1a("Kyv") * Lambda2_.block("aAaA")("xZuW");
         b_ck("K") += 0.50 * V_.block("vAaA")("eWxZ") * T2_.block("aava")("uvey") * Gamma1_.block("aa")("yv") * cc2ab("KxZuW");
-        b_ck("K") -= 0.50 * V_.block("vAaA")("eWxZ") * T2_.block("aava")("uvey") * Gamma1_.block("aa")("yv") * cc1a("Kux") * Gamma1_.block("AA")("ZW");
-        b_ck("K") -= 0.50 * V_.block("vAaA")("eWxZ") * T2_.block("aava")("uvey") * Gamma1_.block("aa")("yv") * cc1b("KZW") * Gamma1_.block("aa")("xu");
-        b_ck("K") += 0.50 * V_.block("vAaA")("eWxZ") * T2_.block("aava")("uvey") * cc1b("KZW") * Lambda2_.block("aaaa")("xyuv");
         b_ck("K") += 0.50 * V_.block("vAaA")("eWxZ") * T2_.block("aava")("uvey") * Gamma1_.block("AA")("ZW") * cc2aa("Kxyuv");
-        b_ck("K") -= 0.50 * V_.block("vAaA")("eWxZ") * T2_.block("aava")("uvey") * Gamma1_.block("AA")("ZW") * cc1a("Kux") * Gamma1_.block("aa")("yv");
-        b_ck("K") -= 0.50 * V_.block("vAaA")("eWxZ") * T2_.block("aava")("uvey") * Gamma1_.block("AA")("ZW") * cc1a("Kvy") * Gamma1_.block("aa")("xu");
-        b_ck("K") += 0.50 * V_.block("vAaA")("eWxZ") * T2_.block("aava")("uvey") * Gamma1_.block("AA")("ZW") * cc1a("Kvx") * Gamma1_.block("aa")("yu");
-        b_ck("K") += 0.50 * V_.block("vAaA")("eWxZ") * T2_.block("aava")("uvey") * Gamma1_.block("AA")("ZW") * cc1a("Kuy") * Gamma1_.block("aa")("xv");
-        b_ck("K") += 0.50 * V_.block("vAaA")("eWxZ") * T2_.block("aava")("uvey") * cc1a("Kxu") * Gamma1_.block("aa")("yv") * Gamma1_.block("AA")("ZW");
-        b_ck("K") += 0.50 * V_.block("vAaA")("eWxZ") * T2_.block("aava")("uvey") * cc1a("Kyv") * Gamma1_.block("aa")("xu") * Gamma1_.block("AA")("ZW");
-        b_ck("K") += 0.50 * V_.block("vAaA")("eWxZ") * T2_.block("aava")("uvey") * cc1b("KZW") * Gamma1_.block("aa")("yv") * Gamma1_.block("aa")("xu");
-        b_ck("K") -= 0.50 * V_.block("vAaA")("eWxZ") * T2_.block("aava")("uvey") * cc1a("Kxv") * Gamma1_.block("aa")("yu") * Gamma1_.block("AA")("ZW");
-        b_ck("K") -= 0.50 * V_.block("vAaA")("eWxZ") * T2_.block("aava")("uvey") * cc1a("Kyu") * Gamma1_.block("aa")("xv") * Gamma1_.block("AA")("ZW");
-        b_ck("K") -= 0.50 * V_.block("vAaA")("eWxZ") * T2_.block("aava")("uvey") * cc1b("KZW") * Gamma1_.block("aa")("yu") * Gamma1_.block("aa")("xv");
+
 
         /// b_ck("K") += 0.50 * V_.block("avaa")("vexy") * T2_.block("aAvA")("uWeZ") * dlamb3_aab("KxyZuvW");
+
         b_ck("K") += 0.50 * V_.block("avaa")("vexy") * T2_.block("aAvA")("uWeZ") * cc3aab("KxyZuvW");
-        b_ck("K") -= 0.50 * V_.block("avaa")("vexy") * T2_.block("aAvA")("uWeZ") * cc1a("Kxu") * Lambda2_.block("aAaA")("yZvW");
         b_ck("K") -= 0.50 * V_.block("avaa")("vexy") * T2_.block("aAvA")("uWeZ") * Gamma1_.block("aa")("xu") * cc2ab("KyZvW");
-        b_ck("K") += 0.50 * V_.block("avaa")("vexy") * T2_.block("aAvA")("uWeZ") * Gamma1_.block("aa")("xu") * cc1a("Kvy") * Gamma1_.block("AA")("ZW");
-        b_ck("K") += 0.50 * V_.block("avaa")("vexy") * T2_.block("aAvA")("uWeZ") * Gamma1_.block("aa")("xu") * cc1b("KZW") * Gamma1_.block("aa")("yv");
-        b_ck("K") += 0.50 * V_.block("avaa")("vexy") * T2_.block("aAvA")("uWeZ") * cc1a("Kxv") * Lambda2_.block("aAaA")("yZuW");
         b_ck("K") += 0.50 * V_.block("avaa")("vexy") * T2_.block("aAvA")("uWeZ") * Gamma1_.block("aa")("xv") * cc2ab("KyZuW");
-        b_ck("K") -= 0.50 * V_.block("avaa")("vexy") * T2_.block("aAvA")("uWeZ") * Gamma1_.block("aa")("xv") * cc1a("Kuy") * Gamma1_.block("AA")("ZW");
-        b_ck("K") -= 0.50 * V_.block("avaa")("vexy") * T2_.block("aAvA")("uWeZ") * Gamma1_.block("aa")("xv") * cc1b("KZW") * Gamma1_.block("aa")("yu");
-        b_ck("K") += 0.50 * V_.block("avaa")("vexy") * T2_.block("aAvA")("uWeZ") * cc1a("Kyu") * Lambda2_.block("aAaA")("xZvW");
         b_ck("K") += 0.50 * V_.block("avaa")("vexy") * T2_.block("aAvA")("uWeZ") * Gamma1_.block("aa")("yu") * cc2ab("KxZvW");
-        b_ck("K") -= 0.50 * V_.block("avaa")("vexy") * T2_.block("aAvA")("uWeZ") * Gamma1_.block("aa")("yu") * cc1a("Kvx") * Gamma1_.block("AA")("ZW");
-        b_ck("K") -= 0.50 * V_.block("avaa")("vexy") * T2_.block("aAvA")("uWeZ") * Gamma1_.block("aa")("yu") * cc1b("KZW") * Gamma1_.block("aa")("xv");
-        b_ck("K") -= 0.50 * V_.block("avaa")("vexy") * T2_.block("aAvA")("uWeZ") * cc1a("Kyv") * Lambda2_.block("aAaA")("xZuW");
         b_ck("K") -= 0.50 * V_.block("avaa")("vexy") * T2_.block("aAvA")("uWeZ") * Gamma1_.block("aa")("yv") * cc2ab("KxZuW");
-        b_ck("K") += 0.50 * V_.block("avaa")("vexy") * T2_.block("aAvA")("uWeZ") * Gamma1_.block("aa")("yv") * cc1a("Kux") * Gamma1_.block("AA")("ZW");
-        b_ck("K") += 0.50 * V_.block("avaa")("vexy") * T2_.block("aAvA")("uWeZ") * Gamma1_.block("aa")("yv") * cc1b("KZW") * Gamma1_.block("aa")("xu");
-        b_ck("K") -= 0.50 * V_.block("avaa")("vexy") * T2_.block("aAvA")("uWeZ") * cc1b("KZW") * Lambda2_.block("aaaa")("xyuv");
         b_ck("K") -= 0.50 * V_.block("avaa")("vexy") * T2_.block("aAvA")("uWeZ") * Gamma1_.block("AA")("ZW") * cc2aa("Kxyuv");
-        b_ck("K") += 0.50 * V_.block("avaa")("vexy") * T2_.block("aAvA")("uWeZ") * Gamma1_.block("AA")("ZW") * cc1a("Kux") * Gamma1_.block("aa")("yv");
-        b_ck("K") += 0.50 * V_.block("avaa")("vexy") * T2_.block("aAvA")("uWeZ") * Gamma1_.block("AA")("ZW") * cc1a("Kvy") * Gamma1_.block("aa")("xu");
-        b_ck("K") -= 0.50 * V_.block("avaa")("vexy") * T2_.block("aAvA")("uWeZ") * Gamma1_.block("AA")("ZW") * cc1a("Kvx") * Gamma1_.block("aa")("yu");
-        b_ck("K") -= 0.50 * V_.block("avaa")("vexy") * T2_.block("aAvA")("uWeZ") * Gamma1_.block("AA")("ZW") * cc1a("Kuy") * Gamma1_.block("aa")("xv");
-        b_ck("K") -= 0.50 * V_.block("avaa")("vexy") * T2_.block("aAvA")("uWeZ") * cc1a("Kxu") * Gamma1_.block("aa")("yv") * Gamma1_.block("AA")("ZW");
-        b_ck("K") -= 0.50 * V_.block("avaa")("vexy") * T2_.block("aAvA")("uWeZ") * cc1a("Kyv") * Gamma1_.block("aa")("xu") * Gamma1_.block("AA")("ZW");
-        b_ck("K") -= 0.50 * V_.block("avaa")("vexy") * T2_.block("aAvA")("uWeZ") * cc1b("KZW") * Gamma1_.block("aa")("yv") * Gamma1_.block("aa")("xu");
-        b_ck("K") += 0.50 * V_.block("avaa")("vexy") * T2_.block("aAvA")("uWeZ") * cc1a("Kxv") * Gamma1_.block("aa")("yu") * Gamma1_.block("AA")("ZW");
-        b_ck("K") += 0.50 * V_.block("avaa")("vexy") * T2_.block("aAvA")("uWeZ") * cc1a("Kyu") * Gamma1_.block("aa")("xv") * Gamma1_.block("AA")("ZW");
-        b_ck("K") += 0.50 * V_.block("avaa")("vexy") * T2_.block("aAvA")("uWeZ") * cc1b("KZW") * Gamma1_.block("aa")("yu") * Gamma1_.block("aa")("xv");
+
 
         /// b_ck("K") += V_.block("aVaA")("vExZ") * T2_.block("aAaV")("uWyE") * dlamb3_aab("KxyZuvW");
+
         b_ck("K") += V_.block("aVaA")("vExZ") * T2_.block("aAaV")("uWyE") * cc3aab("KxyZuvW");
-        b_ck("K") -= V_.block("aVaA")("vExZ") * T2_.block("aAaV")("uWyE") * cc1a("Kxu") * Lambda2_.block("aAaA")("yZvW");
         b_ck("K") -= V_.block("aVaA")("vExZ") * T2_.block("aAaV")("uWyE") * Gamma1_.block("aa")("xu") * cc2ab("KyZvW");
-        b_ck("K") += V_.block("aVaA")("vExZ") * T2_.block("aAaV")("uWyE") * Gamma1_.block("aa")("xu") * cc1a("Kvy") * Gamma1_.block("AA")("ZW");
-        b_ck("K") += V_.block("aVaA")("vExZ") * T2_.block("aAaV")("uWyE") * Gamma1_.block("aa")("xu") * cc1b("KZW") * Gamma1_.block("aa")("yv");
-        b_ck("K") += V_.block("aVaA")("vExZ") * T2_.block("aAaV")("uWyE") * cc1a("Kxv") * Lambda2_.block("aAaA")("yZuW");
         b_ck("K") += V_.block("aVaA")("vExZ") * T2_.block("aAaV")("uWyE") * Gamma1_.block("aa")("xv") * cc2ab("KyZuW");
-        b_ck("K") -= V_.block("aVaA")("vExZ") * T2_.block("aAaV")("uWyE") * Gamma1_.block("aa")("xv") * cc1a("Kuy") * Gamma1_.block("AA")("ZW");
-        b_ck("K") -= V_.block("aVaA")("vExZ") * T2_.block("aAaV")("uWyE") * Gamma1_.block("aa")("xv") * cc1b("KZW") * Gamma1_.block("aa")("yu");
-        b_ck("K") += V_.block("aVaA")("vExZ") * T2_.block("aAaV")("uWyE") * cc1a("Kyu") * Lambda2_.block("aAaA")("xZvW");
         b_ck("K") += V_.block("aVaA")("vExZ") * T2_.block("aAaV")("uWyE") * Gamma1_.block("aa")("yu") * cc2ab("KxZvW");
-        b_ck("K") -= V_.block("aVaA")("vExZ") * T2_.block("aAaV")("uWyE") * Gamma1_.block("aa")("yu") * cc1a("Kvx") * Gamma1_.block("AA")("ZW");
-        b_ck("K") -= V_.block("aVaA")("vExZ") * T2_.block("aAaV")("uWyE") * Gamma1_.block("aa")("yu") * cc1b("KZW") * Gamma1_.block("aa")("xv");
-        b_ck("K") -= V_.block("aVaA")("vExZ") * T2_.block("aAaV")("uWyE") * cc1a("Kyv") * Lambda2_.block("aAaA")("xZuW");
         b_ck("K") -= V_.block("aVaA")("vExZ") * T2_.block("aAaV")("uWyE") * Gamma1_.block("aa")("yv") * cc2ab("KxZuW");
-        b_ck("K") += V_.block("aVaA")("vExZ") * T2_.block("aAaV")("uWyE") * Gamma1_.block("aa")("yv") * cc1a("Kux") * Gamma1_.block("AA")("ZW");
-        b_ck("K") += V_.block("aVaA")("vExZ") * T2_.block("aAaV")("uWyE") * Gamma1_.block("aa")("yv") * cc1b("KZW") * Gamma1_.block("aa")("xu");
-        b_ck("K") -= V_.block("aVaA")("vExZ") * T2_.block("aAaV")("uWyE") * cc1b("KZW") * Lambda2_.block("aaaa")("xyuv");
         b_ck("K") -= V_.block("aVaA")("vExZ") * T2_.block("aAaV")("uWyE") * Gamma1_.block("AA")("ZW") * cc2aa("Kxyuv");
-        b_ck("K") += V_.block("aVaA")("vExZ") * T2_.block("aAaV")("uWyE") * Gamma1_.block("AA")("ZW") * cc1a("Kux") * Gamma1_.block("aa")("yv");
-        b_ck("K") += V_.block("aVaA")("vExZ") * T2_.block("aAaV")("uWyE") * Gamma1_.block("AA")("ZW") * cc1a("Kvy") * Gamma1_.block("aa")("xu");
-        b_ck("K") -= V_.block("aVaA")("vExZ") * T2_.block("aAaV")("uWyE") * Gamma1_.block("AA")("ZW") * cc1a("Kvx") * Gamma1_.block("aa")("yu");
-        b_ck("K") -= V_.block("aVaA")("vExZ") * T2_.block("aAaV")("uWyE") * Gamma1_.block("AA")("ZW") * cc1a("Kuy") * Gamma1_.block("aa")("xv");
-        b_ck("K") -= V_.block("aVaA")("vExZ") * T2_.block("aAaV")("uWyE") * cc1a("Kxu") * Gamma1_.block("aa")("yv") * Gamma1_.block("AA")("ZW");
-        b_ck("K") -= V_.block("aVaA")("vExZ") * T2_.block("aAaV")("uWyE") * cc1a("Kyv") * Gamma1_.block("aa")("xu") * Gamma1_.block("AA")("ZW");
-        b_ck("K") -= V_.block("aVaA")("vExZ") * T2_.block("aAaV")("uWyE") * cc1b("KZW") * Gamma1_.block("aa")("yv") * Gamma1_.block("aa")("xu");
-        b_ck("K") += V_.block("aVaA")("vExZ") * T2_.block("aAaV")("uWyE") * cc1a("Kxv") * Gamma1_.block("aa")("yu") * Gamma1_.block("AA")("ZW");
-        b_ck("K") += V_.block("aVaA")("vExZ") * T2_.block("aAaV")("uWyE") * cc1a("Kyu") * Gamma1_.block("aa")("xv") * Gamma1_.block("AA")("ZW");
-        b_ck("K") += V_.block("aVaA")("vExZ") * T2_.block("aAaV")("uWyE") * cc1b("KZW") * Gamma1_.block("aa")("yu") * Gamma1_.block("aa")("xv");
 
         /// b_ck("K") -= 0.50 * V_.block("aVaA")("uExY") * T2_.block("AAVA")("VWEZ") * dlamb3_abb("KxYZuVW");
+
         b_ck("K") -= 0.50 * V_.block("aVaA")("uExY") * T2_.block("AAVA")("VWEZ") * cc3abb("KxYZuVW");
-        b_ck("K") += 0.50 * V_.block("aVaA")("uExY") * T2_.block("AAVA")("VWEZ") * cc1a("Kxu") * Lambda2_.block("AAAA")("YZVW");
         b_ck("K") += 0.50 * V_.block("aVaA")("uExY") * T2_.block("AAVA")("VWEZ") * Gamma1_.block("aa")("xu") * cc2bb("KYZVW");
-        b_ck("K") -= 0.50 * V_.block("aVaA")("uExY") * T2_.block("AAVA")("VWEZ") * Gamma1_.block("aa")("xu") * cc1b("KYV") * Gamma1_.block("AA")("ZW");
-        b_ck("K") -= 0.50 * V_.block("aVaA")("uExY") * T2_.block("AAVA")("VWEZ") * Gamma1_.block("aa")("xu") * cc1b("KZW") * Gamma1_.block("AA")("YV");
-        b_ck("K") += 0.50 * V_.block("aVaA")("uExY") * T2_.block("AAVA")("VWEZ") * Gamma1_.block("aa")("xu") * cc1b("KYW") * Gamma1_.block("AA")("ZV");
-        b_ck("K") += 0.50 * V_.block("aVaA")("uExY") * T2_.block("AAVA")("VWEZ") * Gamma1_.block("aa")("xu") * cc1b("KZV") * Gamma1_.block("AA")("YW");
-        b_ck("K") += 0.50 * V_.block("aVaA")("uExY") * T2_.block("AAVA")("VWEZ") * cc1b("KYV") * Lambda2_.block("aAaA")("xZuW");
         b_ck("K") += 0.50 * V_.block("aVaA")("uExY") * T2_.block("AAVA")("VWEZ") * Gamma1_.block("AA")("YV") * cc2ab("KxZuW");
-        b_ck("K") -= 0.50 * V_.block("aVaA")("uExY") * T2_.block("AAVA")("VWEZ") * Gamma1_.block("AA")("YV") * cc1a("Kux") * Gamma1_.block("AA")("ZW");
-        b_ck("K") -= 0.50 * V_.block("aVaA")("uExY") * T2_.block("AAVA")("VWEZ") * Gamma1_.block("AA")("YV") * cc1b("KZW") * Gamma1_.block("aa")("xu");
-        b_ck("K") -= 0.50 * V_.block("aVaA")("uExY") * T2_.block("AAVA")("VWEZ") * cc1b("KYW") * Lambda2_.block("aAaA")("xZuV");
         b_ck("K") -= 0.50 * V_.block("aVaA")("uExY") * T2_.block("AAVA")("VWEZ") * Gamma1_.block("AA")("YW") * cc2ab("KxZuV");
-        b_ck("K") += 0.50 * V_.block("aVaA")("uExY") * T2_.block("AAVA")("VWEZ") * Gamma1_.block("AA")("YW") * cc1a("Kux") * Gamma1_.block("AA")("ZV");
-        b_ck("K") += 0.50 * V_.block("aVaA")("uExY") * T2_.block("AAVA")("VWEZ") * Gamma1_.block("AA")("YW") * cc1b("KZV") * Gamma1_.block("aa")("xu");
-        b_ck("K") -= 0.50 * V_.block("aVaA")("uExY") * T2_.block("AAVA")("VWEZ") * cc1b("KZV") * Lambda2_.block("aAaA")("xYuW");
         b_ck("K") -= 0.50 * V_.block("aVaA")("uExY") * T2_.block("AAVA")("VWEZ") * Gamma1_.block("AA")("ZV") * cc2ab("KxYuW");
-        b_ck("K") += 0.50 * V_.block("aVaA")("uExY") * T2_.block("AAVA")("VWEZ") * Gamma1_.block("AA")("ZV") * cc1a("Kux") * Gamma1_.block("AA")("YW");
-        b_ck("K") += 0.50 * V_.block("aVaA")("uExY") * T2_.block("AAVA")("VWEZ") * Gamma1_.block("AA")("ZV") * cc1b("KYW") * Gamma1_.block("aa")("xu");
-        b_ck("K") += 0.50 * V_.block("aVaA")("uExY") * T2_.block("AAVA")("VWEZ") * cc1b("KZW") * Lambda2_.block("aAaA")("xYuV");
         b_ck("K") += 0.50 * V_.block("aVaA")("uExY") * T2_.block("AAVA")("VWEZ") * Gamma1_.block("AA")("ZW") * cc2ab("KxYuV");
-        b_ck("K") -= 0.50 * V_.block("aVaA")("uExY") * T2_.block("AAVA")("VWEZ") * Gamma1_.block("AA")("ZW") * cc1a("Kux") * Gamma1_.block("AA")("YV");
-        b_ck("K") -= 0.50 * V_.block("aVaA")("uExY") * T2_.block("AAVA")("VWEZ") * Gamma1_.block("AA")("ZW") * cc1b("KYV") * Gamma1_.block("aa")("xu");
-        b_ck("K") += 0.50 * V_.block("aVaA")("uExY") * T2_.block("AAVA")("VWEZ") * cc1a("Kxu") * Gamma1_.block("AA")("YV") * Gamma1_.block("AA")("ZW");
-        b_ck("K") += 0.50 * V_.block("aVaA")("uExY") * T2_.block("AAVA")("VWEZ") * cc1b("KYV") * Gamma1_.block("aa")("xu") * Gamma1_.block("AA")("ZW");
-        b_ck("K") += 0.50 * V_.block("aVaA")("uExY") * T2_.block("AAVA")("VWEZ") * cc1b("KZW") * Gamma1_.block("AA")("YV") * Gamma1_.block("aa")("xu");
-        b_ck("K") -= 0.50 * V_.block("aVaA")("uExY") * T2_.block("AAVA")("VWEZ") * cc1a("Kxu") * Gamma1_.block("AA")("ZV") * Gamma1_.block("AA")("YW");
-        b_ck("K") -= 0.50 * V_.block("aVaA")("uExY") * T2_.block("AAVA")("VWEZ") * cc1b("KZV") * Gamma1_.block("aa")("xu") * Gamma1_.block("AA")("YW");
-        b_ck("K") -= 0.50 * V_.block("aVaA")("uExY") * T2_.block("AAVA")("VWEZ") * cc1b("KYW") * Gamma1_.block("AA")("ZV") * Gamma1_.block("aa")("xu");
 
         /// b_ck("K") += 0.50 * V_.block("AVAA")("WEYZ") * T2_.block("aAaV")("uVxE") * dlamb3_abb("KxYZuVW");
+
         b_ck("K") += 0.50 * V_.block("AVAA")("WEYZ") * T2_.block("aAaV")("uVxE") * cc3abb("KxYZuVW");
-        b_ck("K") -= 0.50 * V_.block("AVAA")("WEYZ") * T2_.block("aAaV")("uVxE") * cc1a("Kxu") * Lambda2_.block("AAAA")("YZVW");
         b_ck("K") -= 0.50 * V_.block("AVAA")("WEYZ") * T2_.block("aAaV")("uVxE") * Gamma1_.block("aa")("xu") * cc2bb("KYZVW");
-        b_ck("K") += 0.50 * V_.block("AVAA")("WEYZ") * T2_.block("aAaV")("uVxE") * Gamma1_.block("aa")("xu") * cc1b("KYV") * Gamma1_.block("AA")("ZW");
-        b_ck("K") += 0.50 * V_.block("AVAA")("WEYZ") * T2_.block("aAaV")("uVxE") * Gamma1_.block("aa")("xu") * cc1b("KZW") * Gamma1_.block("AA")("YV");
-        b_ck("K") -= 0.50 * V_.block("AVAA")("WEYZ") * T2_.block("aAaV")("uVxE") * Gamma1_.block("aa")("xu") * cc1b("KYW") * Gamma1_.block("AA")("ZV");
-        b_ck("K") -= 0.50 * V_.block("AVAA")("WEYZ") * T2_.block("aAaV")("uVxE") * Gamma1_.block("aa")("xu") * cc1b("KZV") * Gamma1_.block("AA")("YW");
-        b_ck("K") -= 0.50 * V_.block("AVAA")("WEYZ") * T2_.block("aAaV")("uVxE") * cc1b("KYV") * Lambda2_.block("aAaA")("xZuW");
         b_ck("K") -= 0.50 * V_.block("AVAA")("WEYZ") * T2_.block("aAaV")("uVxE") * Gamma1_.block("AA")("YV") * cc2ab("KxZuW");
-        b_ck("K") += 0.50 * V_.block("AVAA")("WEYZ") * T2_.block("aAaV")("uVxE") * Gamma1_.block("AA")("YV") * cc1a("Kux") * Gamma1_.block("AA")("ZW");
-        b_ck("K") += 0.50 * V_.block("AVAA")("WEYZ") * T2_.block("aAaV")("uVxE") * Gamma1_.block("AA")("YV") * cc1b("KZW") * Gamma1_.block("aa")("xu");
-        b_ck("K") += 0.50 * V_.block("AVAA")("WEYZ") * T2_.block("aAaV")("uVxE") * cc1b("KYW") * Lambda2_.block("aAaA")("xZuV");
         b_ck("K") += 0.50 * V_.block("AVAA")("WEYZ") * T2_.block("aAaV")("uVxE") * Gamma1_.block("AA")("YW") * cc2ab("KxZuV");
-        b_ck("K") -= 0.50 * V_.block("AVAA")("WEYZ") * T2_.block("aAaV")("uVxE") * Gamma1_.block("AA")("YW") * cc1a("Kux") * Gamma1_.block("AA")("ZV");
-        b_ck("K") -= 0.50 * V_.block("AVAA")("WEYZ") * T2_.block("aAaV")("uVxE") * Gamma1_.block("AA")("YW") * cc1b("KZV") * Gamma1_.block("aa")("xu");
-        b_ck("K") += 0.50 * V_.block("AVAA")("WEYZ") * T2_.block("aAaV")("uVxE") * cc1b("KZV") * Lambda2_.block("aAaA")("xYuW");
         b_ck("K") += 0.50 * V_.block("AVAA")("WEYZ") * T2_.block("aAaV")("uVxE") * Gamma1_.block("AA")("ZV") * cc2ab("KxYuW");
-        b_ck("K") -= 0.50 * V_.block("AVAA")("WEYZ") * T2_.block("aAaV")("uVxE") * Gamma1_.block("AA")("ZV") * cc1a("Kux") * Gamma1_.block("AA")("YW");
-        b_ck("K") -= 0.50 * V_.block("AVAA")("WEYZ") * T2_.block("aAaV")("uVxE") * Gamma1_.block("AA")("ZV") * cc1b("KYW") * Gamma1_.block("aa")("xu");
-        b_ck("K") -= 0.50 * V_.block("AVAA")("WEYZ") * T2_.block("aAaV")("uVxE") * cc1b("KZW") * Lambda2_.block("aAaA")("xYuV");
         b_ck("K") -= 0.50 * V_.block("AVAA")("WEYZ") * T2_.block("aAaV")("uVxE") * Gamma1_.block("AA")("ZW") * cc2ab("KxYuV");
-        b_ck("K") += 0.50 * V_.block("AVAA")("WEYZ") * T2_.block("aAaV")("uVxE") * Gamma1_.block("AA")("ZW") * cc1a("Kux") * Gamma1_.block("AA")("YV");
-        b_ck("K") += 0.50 * V_.block("AVAA")("WEYZ") * T2_.block("aAaV")("uVxE") * Gamma1_.block("AA")("ZW") * cc1b("KYV") * Gamma1_.block("aa")("xu");
-        b_ck("K") -= 0.50 * V_.block("AVAA")("WEYZ") * T2_.block("aAaV")("uVxE") * cc1a("Kxu") * Gamma1_.block("AA")("YV") * Gamma1_.block("AA")("ZW");
-        b_ck("K") -= 0.50 * V_.block("AVAA")("WEYZ") * T2_.block("aAaV")("uVxE") * cc1b("KYV") * Gamma1_.block("aa")("xu") * Gamma1_.block("AA")("ZW");
-        b_ck("K") -= 0.50 * V_.block("AVAA")("WEYZ") * T2_.block("aAaV")("uVxE") * cc1b("KZW") * Gamma1_.block("AA")("YV") * Gamma1_.block("aa")("xu");
-        b_ck("K") += 0.50 * V_.block("AVAA")("WEYZ") * T2_.block("aAaV")("uVxE") * cc1a("Kxu") * Gamma1_.block("AA")("ZV") * Gamma1_.block("AA")("YW");
-        b_ck("K") += 0.50 * V_.block("AVAA")("WEYZ") * T2_.block("aAaV")("uVxE") * cc1b("KZV") * Gamma1_.block("aa")("xu") * Gamma1_.block("AA")("YW");
-        b_ck("K") += 0.50 * V_.block("AVAA")("WEYZ") * T2_.block("aAaV")("uVxE") * cc1b("KYW") * Gamma1_.block("AA")("ZV") * Gamma1_.block("aa")("xu");
 
         /// b_ck("K") += V_.block("vAaA")("eWxY") * T2_.block("aAvA")("uVeZ") * dlamb3_abb("KxYZuVW");
+
         b_ck("K") += V_.block("vAaA")("eWxY") * T2_.block("aAvA")("uVeZ") * cc3abb("KxYZuVW");
-        b_ck("K") -= V_.block("vAaA")("eWxY") * T2_.block("aAvA")("uVeZ") * cc1a("Kxu") * Lambda2_.block("AAAA")("YZVW");
         b_ck("K") -= V_.block("vAaA")("eWxY") * T2_.block("aAvA")("uVeZ") * Gamma1_.block("aa")("xu") * cc2bb("KYZVW");
-        b_ck("K") += V_.block("vAaA")("eWxY") * T2_.block("aAvA")("uVeZ") * Gamma1_.block("aa")("xu") * cc1b("KYV") * Gamma1_.block("AA")("ZW");
-        b_ck("K") += V_.block("vAaA")("eWxY") * T2_.block("aAvA")("uVeZ") * Gamma1_.block("aa")("xu") * cc1b("KZW") * Gamma1_.block("AA")("YV");
-        b_ck("K") -= V_.block("vAaA")("eWxY") * T2_.block("aAvA")("uVeZ") * Gamma1_.block("aa")("xu") * cc1b("KYW") * Gamma1_.block("AA")("ZV");
-        b_ck("K") -= V_.block("vAaA")("eWxY") * T2_.block("aAvA")("uVeZ") * Gamma1_.block("aa")("xu") * cc1b("KZV") * Gamma1_.block("AA")("YW");
-        b_ck("K") -= V_.block("vAaA")("eWxY") * T2_.block("aAvA")("uVeZ") * cc1b("KYV") * Lambda2_.block("aAaA")("xZuW");
         b_ck("K") -= V_.block("vAaA")("eWxY") * T2_.block("aAvA")("uVeZ") * Gamma1_.block("AA")("YV") * cc2ab("KxZuW");
-        b_ck("K") += V_.block("vAaA")("eWxY") * T2_.block("aAvA")("uVeZ") * Gamma1_.block("AA")("YV") * cc1a("Kux") * Gamma1_.block("AA")("ZW");
-        b_ck("K") += V_.block("vAaA")("eWxY") * T2_.block("aAvA")("uVeZ") * Gamma1_.block("AA")("YV") * cc1b("KZW") * Gamma1_.block("aa")("xu");
-        b_ck("K") += V_.block("vAaA")("eWxY") * T2_.block("aAvA")("uVeZ") * cc1b("KYW") * Lambda2_.block("aAaA")("xZuV");
         b_ck("K") += V_.block("vAaA")("eWxY") * T2_.block("aAvA")("uVeZ") * Gamma1_.block("AA")("YW") * cc2ab("KxZuV");
-        b_ck("K") -= V_.block("vAaA")("eWxY") * T2_.block("aAvA")("uVeZ") * Gamma1_.block("AA")("YW") * cc1a("Kux") * Gamma1_.block("AA")("ZV");
-        b_ck("K") -= V_.block("vAaA")("eWxY") * T2_.block("aAvA")("uVeZ") * Gamma1_.block("AA")("YW") * cc1b("KZV") * Gamma1_.block("aa")("xu");
-        b_ck("K") += V_.block("vAaA")("eWxY") * T2_.block("aAvA")("uVeZ") * cc1b("KZV") * Lambda2_.block("aAaA")("xYuW");
         b_ck("K") += V_.block("vAaA")("eWxY") * T2_.block("aAvA")("uVeZ") * Gamma1_.block("AA")("ZV") * cc2ab("KxYuW");
-        b_ck("K") -= V_.block("vAaA")("eWxY") * T2_.block("aAvA")("uVeZ") * Gamma1_.block("AA")("ZV") * cc1a("Kux") * Gamma1_.block("AA")("YW");
-        b_ck("K") -= V_.block("vAaA")("eWxY") * T2_.block("aAvA")("uVeZ") * Gamma1_.block("AA")("ZV") * cc1b("KYW") * Gamma1_.block("aa")("xu");
-        b_ck("K") -= V_.block("vAaA")("eWxY") * T2_.block("aAvA")("uVeZ") * cc1b("KZW") * Lambda2_.block("aAaA")("xYuV");
         b_ck("K") -= V_.block("vAaA")("eWxY") * T2_.block("aAvA")("uVeZ") * Gamma1_.block("AA")("ZW") * cc2ab("KxYuV");
-        b_ck("K") += V_.block("vAaA")("eWxY") * T2_.block("aAvA")("uVeZ") * Gamma1_.block("AA")("ZW") * cc1a("Kux") * Gamma1_.block("AA")("YV");
-        b_ck("K") += V_.block("vAaA")("eWxY") * T2_.block("aAvA")("uVeZ") * Gamma1_.block("AA")("ZW") * cc1b("KYV") * Gamma1_.block("aa")("xu");
-        b_ck("K") -= V_.block("vAaA")("eWxY") * T2_.block("aAvA")("uVeZ") * cc1a("Kxu") * Gamma1_.block("AA")("YV") * Gamma1_.block("AA")("ZW");
-        b_ck("K") -= V_.block("vAaA")("eWxY") * T2_.block("aAvA")("uVeZ") * cc1b("KYV") * Gamma1_.block("aa")("xu") * Gamma1_.block("AA")("ZW");
-        b_ck("K") -= V_.block("vAaA")("eWxY") * T2_.block("aAvA")("uVeZ") * cc1b("KZW") * Gamma1_.block("AA")("YV") * Gamma1_.block("aa")("xu");
-        b_ck("K") += V_.block("vAaA")("eWxY") * T2_.block("aAvA")("uVeZ") * cc1a("Kxu") * Gamma1_.block("AA")("ZV") * Gamma1_.block("AA")("YW");
-        b_ck("K") += V_.block("vAaA")("eWxY") * T2_.block("aAvA")("uVeZ") * cc1b("KZV") * Gamma1_.block("aa")("xu") * Gamma1_.block("AA")("YW");
-        b_ck("K") += V_.block("vAaA")("eWxY") * T2_.block("aAvA")("uVeZ") * cc1b("KYW") * Gamma1_.block("AA")("ZV") * Gamma1_.block("aa")("xu");
     }
 
     if (X4_TERM) {
@@ -1446,7 +1151,7 @@ void DSRG_MRPT2::set_b(int dim, std::map<string, int> preidx, std::map<string, i
             auto temp_1 = BTF_->build(CoreTensor, "1-body intermediate tensor", spin_cases({"aa"}));
 
             if (X4_TERM) {
-                // -0.25 * V_.block("aaca")("uvmz") * T2_.block("caaa")("mwxy") * dlamb3_aaa("Kxyzuvw");
+                // -0.25 * V_.block("aaca")("uvmz") * T2_.block("caaa")("mwxy") * dlamb3_aaa("Kxyzuvw")
                 temp_1["uz"] += 0.50 * V_["uvmz"] * T2_["mwxy"] * Gamma2_["xyvw"];
                 temp_1["wz"] += 0.25 * V_["uvmz"] * T2_["mwxy"] * Gamma2_["xyuv"];
                 temp_1["xu"] -= 1.00 * V_["uvmz"] * T2_["mwxy"] * Gamma2_["vwzy"];
@@ -1457,14 +1162,343 @@ void DSRG_MRPT2::set_b(int dim, std::map<string, int> preidx, std::map<string, i
                 temp_1["wz"] -= 1.00 * V_["uvmz"] * T2_["mwxy"] * Gamma1_["xu"] * Gamma1_["yv"];
                 temp_1["xu"] -= 1.00 * V_["uvmz"] * T2_["mwxy"] * Gamma1_["wz"] * Gamma1_["yv"];
                 temp_1["yv"] -= 1.00 * V_["uvmz"] * T2_["mwxy"] * Gamma1_["wz"] * Gamma1_["xu"];
+
+                // -0.25 * V_.block("AACA")("UVMZ") * T2_.block("CAAA")("MWXY") * dlamb3_bbb("KXYZUVW")
+                temp_1["UZ"] += 0.50 * V_["UVMZ"] * T2_["MWXY"] * Gamma2_["XYVW"];
+                temp_1["WZ"] += 0.25 * V_["UVMZ"] * T2_["MWXY"] * Gamma2_["XYUV"];
+                temp_1["XU"] -= 1.00 * V_["UVMZ"] * T2_["MWXY"] * Gamma2_["VWZY"];
+                temp_1["XW"] -= 0.50 * V_["UVMZ"] * T2_["MWXY"] * Gamma2_["UVZY"];
+                temp_1["UZ"] -= 2.00 * V_["UVMZ"] * T2_["MWXY"] * Gamma1_["XV"] * Gamma1_["YW"];
+                temp_1["XV"] -= 2.00 * V_["UVMZ"] * T2_["MWXY"] * Gamma1_["UZ"] * Gamma1_["YW"];
+                temp_1["YW"] -= 2.00 * V_["UVMZ"] * T2_["MWXY"] * Gamma1_["UZ"] * Gamma1_["XV"];
+                temp_1["WZ"] -= 1.00 * V_["UVMZ"] * T2_["MWXY"] * Gamma1_["XU"] * Gamma1_["YV"];
+                temp_1["XU"] -= 1.00 * V_["UVMZ"] * T2_["MWXY"] * Gamma1_["WZ"] * Gamma1_["YV"];
+                temp_1["YV"] -= 1.00 * V_["UVMZ"] * T2_["MWXY"] * Gamma1_["WZ"] * Gamma1_["XU"];
+
+                // 0.50 * V_.block("aaca")("uvmy") * T2_.block("cAaA")("mWxZ") * dlamb3_aab("KxyZuvW")
+                temp_1["xu"] -= 0.50 * V_["uvmy"] * T2_["mWxZ"] * Lambda2_["yZvW"];
+                temp_1["vy"] += 0.50 * V_["uvmy"] * T2_["mWxZ"] * Gamma1_["xu"] * Gamma1_["ZW"];
+                temp_1["ZW"] += 0.50 * V_["uvmy"] * T2_["mWxZ"] * Gamma1_["xu"] * Gamma1_["yv"];
+                temp_1["xv"] += 0.50 * V_["uvmy"] * T2_["mWxZ"] * Lambda2_["yZuW"];
+                temp_1["uy"] -= 0.50 * V_["uvmy"] * T2_["mWxZ"] * Gamma1_["xv"] * Gamma1_["ZW"];
+                temp_1["ZW"] -= 0.50 * V_["uvmy"] * T2_["mWxZ"] * Gamma1_["xv"] * Gamma1_["yu"];
+                temp_1["yu"] += 0.50 * V_["uvmy"] * T2_["mWxZ"] * Lambda2_["xZvW"];
+                temp_1["vx"] -= 0.50 * V_["uvmy"] * T2_["mWxZ"] * Gamma1_["yu"] * Gamma1_["ZW"];
+                temp_1["ZW"] -= 0.50 * V_["uvmy"] * T2_["mWxZ"] * Gamma1_["yu"] * Gamma1_["xv"];
+                temp_1["yv"] -= 0.50 * V_["uvmy"] * T2_["mWxZ"] * Lambda2_["xZuW"];
+                temp_1["ux"] += 0.50 * V_["uvmy"] * T2_["mWxZ"] * Gamma1_["yv"] * Gamma1_["ZW"];
+                temp_1["ZW"] += 0.50 * V_["uvmy"] * T2_["mWxZ"] * Gamma1_["yv"] * Gamma1_["xu"];
+                temp_1["ZW"] -= 0.50 * V_["uvmy"] * T2_["mWxZ"] * Lambda2_["xyuv"];
+                temp_1["ux"] += 0.50 * V_["uvmy"] * T2_["mWxZ"] * Gamma1_["ZW"] * Gamma1_["yv"];
+                temp_1["vy"] += 0.50 * V_["uvmy"] * T2_["mWxZ"] * Gamma1_["ZW"] * Gamma1_["xu"];
+                temp_1["vx"] -= 0.50 * V_["uvmy"] * T2_["mWxZ"] * Gamma1_["ZW"] * Gamma1_["yu"];
+                temp_1["uy"] -= 0.50 * V_["uvmy"] * T2_["mWxZ"] * Gamma1_["ZW"] * Gamma1_["xv"];
+                temp_1["xu"] -= 0.50 * V_["uvmy"] * T2_["mWxZ"] * Gamma1_["yv"] * Gamma1_["ZW"];
+                temp_1["yv"] -= 0.50 * V_["uvmy"] * T2_["mWxZ"] * Gamma1_["xu"] * Gamma1_["ZW"];
+                temp_1["ZW"] -= 0.50 * V_["uvmy"] * T2_["mWxZ"] * Gamma1_["yv"] * Gamma1_["xu"];
+                temp_1["xv"] += 0.50 * V_["uvmy"] * T2_["mWxZ"] * Gamma1_["yu"] * Gamma1_["ZW"];
+                temp_1["yu"] += 0.50 * V_["uvmy"] * T2_["mWxZ"] * Gamma1_["xv"] * Gamma1_["ZW"];
+                temp_1["ZW"] += 0.50 * V_["uvmy"] * T2_["mWxZ"] * Gamma1_["yu"] * Gamma1_["xv"];
+
+                // 0.50 * V_.block("aAcA")("uWmZ") * T2_.block("caaa")("mvxy") * dlamb3_aab("KxyZuvW")
+                temp_1["xu"] -= 0.50 * V_["uWmZ"] * T2_["mvxy"] * Lambda2_["yZvW"];
+                temp_1["vy"] += 0.50 * V_["uWmZ"] * T2_["mvxy"] * Gamma1_["xu"] * Gamma1_["ZW"];
+                temp_1["ZW"] += 0.50 * V_["uWmZ"] * T2_["mvxy"] * Gamma1_["xu"] * Gamma1_["yv"];
+                temp_1["xv"] += 0.50 * V_["uWmZ"] * T2_["mvxy"] * Lambda2_["yZuW"];
+                temp_1["uy"] -= 0.50 * V_["uWmZ"] * T2_["mvxy"] * Gamma1_["xv"] * Gamma1_["ZW"];
+                temp_1["ZW"] -= 0.50 * V_["uWmZ"] * T2_["mvxy"] * Gamma1_["xv"] * Gamma1_["yu"];
+                temp_1["yu"] += 0.50 * V_["uWmZ"] * T2_["mvxy"] * Lambda2_["xZvW"];
+                temp_1["vx"] -= 0.50 * V_["uWmZ"] * T2_["mvxy"] * Gamma1_["yu"] * Gamma1_["ZW"];
+                temp_1["ZW"] -= 0.50 * V_["uWmZ"] * T2_["mvxy"] * Gamma1_["yu"] * Gamma1_["xv"];
+                temp_1["yv"] -= 0.50 * V_["uWmZ"] * T2_["mvxy"] * Lambda2_["xZuW"];
+                temp_1["ux"] += 0.50 * V_["uWmZ"] * T2_["mvxy"] * Gamma1_["yv"] * Gamma1_["ZW"];
+                temp_1["ZW"] += 0.50 * V_["uWmZ"] * T2_["mvxy"] * Gamma1_["yv"] * Gamma1_["xu"];
+                temp_1["ZW"] -= 0.50 * V_["uWmZ"] * T2_["mvxy"] * Lambda2_["xyuv"];
+                temp_1["ux"] += 0.50 * V_["uWmZ"] * T2_["mvxy"] * Gamma1_["ZW"] * Gamma1_["yv"];
+                temp_1["vy"] += 0.50 * V_["uWmZ"] * T2_["mvxy"] * Gamma1_["ZW"] * Gamma1_["xu"];
+                temp_1["vx"] -= 0.50 * V_["uWmZ"] * T2_["mvxy"] * Gamma1_["ZW"] * Gamma1_["yu"];
+                temp_1["uy"] -= 0.50 * V_["uWmZ"] * T2_["mvxy"] * Gamma1_["ZW"] * Gamma1_["xv"];
+                temp_1["xu"] -= 0.50 * V_["uWmZ"] * T2_["mvxy"] * Gamma1_["yv"] * Gamma1_["ZW"];
+                temp_1["yv"] -= 0.50 * V_["uWmZ"] * T2_["mvxy"] * Gamma1_["xu"] * Gamma1_["ZW"];
+                temp_1["ZW"] -= 0.50 * V_["uWmZ"] * T2_["mvxy"] * Gamma1_["yv"] * Gamma1_["xu"];
+                temp_1["xv"] += 0.50 * V_["uWmZ"] * T2_["mvxy"] * Gamma1_["yu"] * Gamma1_["ZW"];
+                temp_1["yu"] += 0.50 * V_["uWmZ"] * T2_["mvxy"] * Gamma1_["xv"] * Gamma1_["ZW"];
+                temp_1["ZW"] += 0.50 * V_["uWmZ"] * T2_["mvxy"] * Gamma1_["yu"] * Gamma1_["xv"];
+
+                // - V_.block("aAaC")("uWyM") * T2_.block("aCaA")("vMxZ") * dlamb3_aab("KxyZuvW")
+                temp_1["xu"] += V_["uWyM"] * T2_["vMxZ"] * Lambda2_["yZvW"];
+                temp_1["vy"] -= V_["uWyM"] * T2_["vMxZ"] * Gamma1_["xu"] * Gamma1_["ZW"];
+                temp_1["ZW"] -= V_["uWyM"] * T2_["vMxZ"] * Gamma1_["xu"] * Gamma1_["yv"];
+                temp_1["xv"] -= V_["uWyM"] * T2_["vMxZ"] * Lambda2_["yZuW"];
+                temp_1["uy"] += V_["uWyM"] * T2_["vMxZ"] * Gamma1_["xv"] * Gamma1_["ZW"];
+                temp_1["ZW"] += V_["uWyM"] * T2_["vMxZ"] * Gamma1_["xv"] * Gamma1_["yu"];
+                temp_1["yu"] -= V_["uWyM"] * T2_["vMxZ"] * Lambda2_["xZvW"];
+                temp_1["vx"] += V_["uWyM"] * T2_["vMxZ"] * Gamma1_["yu"] * Gamma1_["ZW"];
+                temp_1["ZW"] += V_["uWyM"] * T2_["vMxZ"] * Gamma1_["yu"] * Gamma1_["xv"];
+                temp_1["yv"] += V_["uWyM"] * T2_["vMxZ"] * Lambda2_["xZuW"];
+                temp_1["ux"] -= V_["uWyM"] * T2_["vMxZ"] * Gamma1_["yv"] * Gamma1_["ZW"];
+                temp_1["ZW"] -= V_["uWyM"] * T2_["vMxZ"] * Gamma1_["yv"] * Gamma1_["xu"];
+                temp_1["ZW"] += V_["uWyM"] * T2_["vMxZ"] * Lambda2_["xyuv"];
+                temp_1["ux"] -= V_["uWyM"] * T2_["vMxZ"] * Gamma1_["ZW"] * Gamma1_["yv"];
+                temp_1["vy"] -= V_["uWyM"] * T2_["vMxZ"] * Gamma1_["ZW"] * Gamma1_["xu"];
+                temp_1["vx"] += V_["uWyM"] * T2_["vMxZ"] * Gamma1_["ZW"] * Gamma1_["yu"];
+                temp_1["uy"] += V_["uWyM"] * T2_["vMxZ"] * Gamma1_["ZW"] * Gamma1_["xv"];
+                temp_1["xu"] += V_["uWyM"] * T2_["vMxZ"] * Gamma1_["yv"] * Gamma1_["ZW"];
+                temp_1["yv"] += V_["uWyM"] * T2_["vMxZ"] * Gamma1_["xu"] * Gamma1_["ZW"];
+                temp_1["ZW"] += V_["uWyM"] * T2_["vMxZ"] * Gamma1_["yv"] * Gamma1_["xu"];
+                temp_1["xv"] -= V_["uWyM"] * T2_["vMxZ"] * Gamma1_["yu"] * Gamma1_["ZW"];
+                temp_1["yu"] -= V_["uWyM"] * T2_["vMxZ"] * Gamma1_["xv"] * Gamma1_["ZW"];
+                temp_1["ZW"] -= V_["uWyM"] * T2_["vMxZ"] * Gamma1_["yu"] * Gamma1_["xv"];
+
+                // 0.50 * V_.block("AACA")("VWMZ") * T2_.block("aCaA")("uMxY") * dlamb3_abb("KxYZuVW")
+                temp_1["xu"] -= 0.50 * V_["VWMZ"] * T2_["uMxY"] * Lambda2_["YZVW"];
+                temp_1["YV"] += 0.50 * V_["VWMZ"] * T2_["uMxY"] * Gamma1_["xu"] * Gamma1_["ZW"];
+                temp_1["ZW"] += 0.50 * V_["VWMZ"] * T2_["uMxY"] * Gamma1_["xu"] * Gamma1_["YV"];
+                temp_1["YW"] -= 0.50 * V_["VWMZ"] * T2_["uMxY"] * Gamma1_["xu"] * Gamma1_["ZV"];
+                temp_1["ZV"] -= 0.50 * V_["VWMZ"] * T2_["uMxY"] * Gamma1_["xu"] * Gamma1_["YW"];
+                temp_1["YV"] -= 0.50 * V_["VWMZ"] * T2_["uMxY"] * Lambda2_["xZuW"];
+                temp_1["ux"] += 0.50 * V_["VWMZ"] * T2_["uMxY"] * Gamma1_["YV"] * Gamma1_["ZW"];
+                temp_1["ZW"] += 0.50 * V_["VWMZ"] * T2_["uMxY"] * Gamma1_["YV"] * Gamma1_["xu"];
+                temp_1["YW"] += 0.50 * V_["VWMZ"] * T2_["uMxY"] * Lambda2_["xZuV"];
+                temp_1["ux"] -= 0.50 * V_["VWMZ"] * T2_["uMxY"] * Gamma1_["YW"] * Gamma1_["ZV"];
+                temp_1["ZV"] -= 0.50 * V_["VWMZ"] * T2_["uMxY"] * Gamma1_["YW"] * Gamma1_["xu"];
+                temp_1["ZV"] += 0.50 * V_["VWMZ"] * T2_["uMxY"] * Lambda2_["xYuW"];
+                temp_1["ux"] -= 0.50 * V_["VWMZ"] * T2_["uMxY"] * Gamma1_["ZV"] * Gamma1_["YW"];
+                temp_1["YW"] -= 0.50 * V_["VWMZ"] * T2_["uMxY"] * Gamma1_["ZV"] * Gamma1_["xu"];
+                temp_1["ZW"] -= 0.50 * V_["VWMZ"] * T2_["uMxY"] * Lambda2_["xYuV"];
+                temp_1["ux"] += 0.50 * V_["VWMZ"] * T2_["uMxY"] * Gamma1_["ZW"] * Gamma1_["YV"];
+                temp_1["YV"] += 0.50 * V_["VWMZ"] * T2_["uMxY"] * Gamma1_["ZW"] * Gamma1_["xu"];
+                temp_1["xu"] -= 0.50 * V_["VWMZ"] * T2_["uMxY"] * Gamma1_["YV"] * Gamma1_["ZW"];
+                temp_1["YV"] -= 0.50 * V_["VWMZ"] * T2_["uMxY"] * Gamma1_["xu"] * Gamma1_["ZW"];
+                temp_1["ZW"] -= 0.50 * V_["VWMZ"] * T2_["uMxY"] * Gamma1_["YV"] * Gamma1_["xu"];
+                temp_1["xu"] += 0.50 * V_["VWMZ"] * T2_["uMxY"] * Gamma1_["ZV"] * Gamma1_["YW"];
+                temp_1["ZV"] += 0.50 * V_["VWMZ"] * T2_["uMxY"] * Gamma1_["xu"] * Gamma1_["YW"];
+                temp_1["YW"] += 0.50 * V_["VWMZ"] * T2_["uMxY"] * Gamma1_["ZV"] * Gamma1_["xu"];
+
+                // 0.50 * V_.block("aAaC")("uVxM") * T2_.block("CAAA")("MWYZ") * dlamb3_abb("KxYZuVW")
+                temp_1["xu"] -= 0.50 * V_["uVxM"] * T2_["MWYZ"] * Lambda2_["YZVW"];
+                temp_1["YV"] += 0.50 * V_["uVxM"] * T2_["MWYZ"] * Gamma1_["xu"] * Gamma1_["ZW"];
+                temp_1["ZW"] += 0.50 * V_["uVxM"] * T2_["MWYZ"] * Gamma1_["xu"] * Gamma1_["YV"];
+                temp_1["YW"] -= 0.50 * V_["uVxM"] * T2_["MWYZ"] * Gamma1_["xu"] * Gamma1_["ZV"];
+                temp_1["ZV"] -= 0.50 * V_["uVxM"] * T2_["MWYZ"] * Gamma1_["xu"] * Gamma1_["YW"];
+                temp_1["YV"] -= 0.50 * V_["uVxM"] * T2_["MWYZ"] * Lambda2_["xZuW"];
+                temp_1["ux"] += 0.50 * V_["uVxM"] * T2_["MWYZ"] * Gamma1_["YV"] * Gamma1_["ZW"];
+                temp_1["ZW"] += 0.50 * V_["uVxM"] * T2_["MWYZ"] * Gamma1_["YV"] * Gamma1_["xu"];
+                temp_1["YW"] += 0.50 * V_["uVxM"] * T2_["MWYZ"] * Lambda2_["xZuV"];
+                temp_1["ux"] -= 0.50 * V_["uVxM"] * T2_["MWYZ"] * Gamma1_["YW"] * Gamma1_["ZV"];
+                temp_1["ZV"] -= 0.50 * V_["uVxM"] * T2_["MWYZ"] * Gamma1_["YW"] * Gamma1_["xu"];
+                temp_1["ZV"] += 0.50 * V_["uVxM"] * T2_["MWYZ"] * Lambda2_["xYuW"];
+                temp_1["ux"] -= 0.50 * V_["uVxM"] * T2_["MWYZ"] * Gamma1_["ZV"] * Gamma1_["YW"];
+                temp_1["YW"] -= 0.50 * V_["uVxM"] * T2_["MWYZ"] * Gamma1_["ZV"] * Gamma1_["xu"];
+                temp_1["ZW"] -= 0.50 * V_["uVxM"] * T2_["MWYZ"] * Lambda2_["xYuV"];
+                temp_1["ux"] += 0.50 * V_["uVxM"] * T2_["MWYZ"] * Gamma1_["ZW"] * Gamma1_["YV"];
+                temp_1["YV"] += 0.50 * V_["uVxM"] * T2_["MWYZ"] * Gamma1_["ZW"] * Gamma1_["xu"];
+                temp_1["xu"] -= 0.50 * V_["uVxM"] * T2_["MWYZ"] * Gamma1_["YV"] * Gamma1_["ZW"];
+                temp_1["YV"] -= 0.50 * V_["uVxM"] * T2_["MWYZ"] * Gamma1_["xu"] * Gamma1_["ZW"];
+                temp_1["ZW"] -= 0.50 * V_["uVxM"] * T2_["MWYZ"] * Gamma1_["YV"] * Gamma1_["xu"];
+                temp_1["xu"] += 0.50 * V_["uVxM"] * T2_["MWYZ"] * Gamma1_["ZV"] * Gamma1_["YW"];
+                temp_1["ZV"] += 0.50 * V_["uVxM"] * T2_["MWYZ"] * Gamma1_["xu"] * Gamma1_["YW"];
+                temp_1["YW"] += 0.50 * V_["uVxM"] * T2_["MWYZ"] * Gamma1_["ZV"] * Gamma1_["xu"];
+
+                // - V_.block("aAcA")("uVmZ") * T2_.block("cAaA")("mWxY") * dlamb3_abb("KxYZuVW")
+                temp_1["xu"] += V_["uVmZ"] * T2_["mWxY"] * Lambda2_["YZVW"];
+                temp_1["YV"] -= V_["uVmZ"] * T2_["mWxY"] * Gamma1_["xu"] * Gamma1_["ZW"];
+                temp_1["ZW"] -= V_["uVmZ"] * T2_["mWxY"] * Gamma1_["xu"] * Gamma1_["YV"];
+                temp_1["YW"] += V_["uVmZ"] * T2_["mWxY"] * Gamma1_["xu"] * Gamma1_["ZV"];
+                temp_1["ZV"] += V_["uVmZ"] * T2_["mWxY"] * Gamma1_["xu"] * Gamma1_["YW"];
+                temp_1["YV"] += V_["uVmZ"] * T2_["mWxY"] * Lambda2_["xZuW"];
+                temp_1["ux"] -= V_["uVmZ"] * T2_["mWxY"] * Gamma1_["YV"] * Gamma1_["ZW"];
+                temp_1["ZW"] -= V_["uVmZ"] * T2_["mWxY"] * Gamma1_["YV"] * Gamma1_["xu"];
+                temp_1["YW"] -= V_["uVmZ"] * T2_["mWxY"] * Lambda2_["xZuV"];
+                temp_1["ux"] += V_["uVmZ"] * T2_["mWxY"] * Gamma1_["YW"] * Gamma1_["ZV"];
+                temp_1["ZV"] += V_["uVmZ"] * T2_["mWxY"] * Gamma1_["YW"] * Gamma1_["xu"];
+                temp_1["ZV"] -= V_["uVmZ"] * T2_["mWxY"] * Lambda2_["xYuW"];
+                temp_1["ux"] += V_["uVmZ"] * T2_["mWxY"] * Gamma1_["ZV"] * Gamma1_["YW"];
+                temp_1["YW"] += V_["uVmZ"] * T2_["mWxY"] * Gamma1_["ZV"] * Gamma1_["xu"];
+                temp_1["ZW"] += V_["uVmZ"] * T2_["mWxY"] * Lambda2_["xYuV"];
+                temp_1["ux"] -= V_["uVmZ"] * T2_["mWxY"] * Gamma1_["ZW"] * Gamma1_["YV"];
+                temp_1["YV"] -= V_["uVmZ"] * T2_["mWxY"] * Gamma1_["ZW"] * Gamma1_["xu"];
+                temp_1["xu"] += V_["uVmZ"] * T2_["mWxY"] * Gamma1_["YV"] * Gamma1_["ZW"];
+                temp_1["YV"] += V_["uVmZ"] * T2_["mWxY"] * Gamma1_["xu"] * Gamma1_["ZW"];
+                temp_1["ZW"] += V_["uVmZ"] * T2_["mWxY"] * Gamma1_["YV"] * Gamma1_["xu"];
+                temp_1["xu"] -= V_["uVmZ"] * T2_["mWxY"] * Gamma1_["ZV"] * Gamma1_["YW"];
+                temp_1["ZV"] -= V_["uVmZ"] * T2_["mWxY"] * Gamma1_["xu"] * Gamma1_["YW"];
+                temp_1["YW"] -= V_["uVmZ"] * T2_["mWxY"] * Gamma1_["ZV"] * Gamma1_["xu"];
+
+                // 0.25 * V_.block("vaaa")("ewxy") * T2_.block("aava")("uvez") * dlamb3_aaa("Kxyzuvw")
+                temp_1["uz"] -= 0.50 * V_["ewxy"] * T2_["uvez"] * Gamma2_["xyvw"];
+                temp_1["wz"] -= 0.25 * V_["ewxy"] * T2_["uvez"] * Gamma2_["xyuv"];
+                temp_1["xu"] += 1.00 * V_["ewxy"] * T2_["uvez"] * Gamma2_["vwzy"];
+                temp_1["xw"] += 0.50 * V_["ewxy"] * T2_["uvez"] * Gamma2_["uvzy"];
+                temp_1["uz"] += 2.00 * V_["ewxy"] * T2_["uvez"] * Gamma1_["xv"] * Gamma1_["yw"];
+                temp_1["xv"] += 2.00 * V_["ewxy"] * T2_["uvez"] * Gamma1_["uz"] * Gamma1_["yw"];
+                temp_1["yw"] += 2.00 * V_["ewxy"] * T2_["uvez"] * Gamma1_["uz"] * Gamma1_["xv"];
+                temp_1["wz"] += 1.00 * V_["ewxy"] * T2_["uvez"] * Gamma1_["xu"] * Gamma1_["yv"];
+                temp_1["xu"] += 1.00 * V_["ewxy"] * T2_["uvez"] * Gamma1_["wz"] * Gamma1_["yv"];
+                temp_1["yv"] += 1.00 * V_["ewxy"] * T2_["uvez"] * Gamma1_["wz"] * Gamma1_["xu"];
+
+                // 0.25 * V_.block("VAAA")("EWXY") * T2_.block("AAVA")("UVEZ") * dlamb3_bbb("KXYZUVW")
+                temp_1["UZ"] -= 0.50 * V_["EWXY"] * T2_["UVEZ"] * Gamma2_["XYVW"];
+                temp_1["WZ"] -= 0.25 * V_["EWXY"] * T2_["UVEZ"] * Gamma2_["XYUV"];
+                temp_1["XU"] += 1.00 * V_["EWXY"] * T2_["UVEZ"] * Gamma2_["VWZY"];
+                temp_1["XW"] += 0.50 * V_["EWXY"] * T2_["UVEZ"] * Gamma2_["UVZY"];
+                temp_1["UZ"] += 2.00 * V_["EWXY"] * T2_["UVEZ"] * Gamma1_["XV"] * Gamma1_["YW"];
+                temp_1["XV"] += 2.00 * V_["EWXY"] * T2_["UVEZ"] * Gamma1_["UZ"] * Gamma1_["YW"];
+                temp_1["YW"] += 2.00 * V_["EWXY"] * T2_["UVEZ"] * Gamma1_["UZ"] * Gamma1_["XV"];
+                temp_1["WZ"] += 1.00 * V_["EWXY"] * T2_["UVEZ"] * Gamma1_["XU"] * Gamma1_["YV"];
+                temp_1["XU"] += 1.00 * V_["EWXY"] * T2_["UVEZ"] * Gamma1_["WZ"] * Gamma1_["YV"];
+                temp_1["YV"] += 1.00 * V_["EWXY"] * T2_["UVEZ"] * Gamma1_["WZ"] * Gamma1_["XU"];
+
+                // -0.50 * V_.block("vAaA")("eWxZ") * T2_.block("aava")("uvey") * dlamb3_aab("KxyZuvW")
+                temp_1["xu"] += 0.50 * V_["eWxZ"] * T2_["uvey"] * Lambda2_["yZvW"];
+                temp_1["vy"] -= 0.50 * V_["eWxZ"] * T2_["uvey"] * Gamma1_["xu"] * Gamma1_["ZW"];
+                temp_1["ZW"] -= 0.50 * V_["eWxZ"] * T2_["uvey"] * Gamma1_["xu"] * Gamma1_["yv"];
+                temp_1["xv"] -= 0.50 * V_["eWxZ"] * T2_["uvey"] * Lambda2_["yZuW"];
+                temp_1["uy"] += 0.50 * V_["eWxZ"] * T2_["uvey"] * Gamma1_["xv"] * Gamma1_["ZW"];
+                temp_1["ZW"] += 0.50 * V_["eWxZ"] * T2_["uvey"] * Gamma1_["xv"] * Gamma1_["yu"];
+                temp_1["yu"] -= 0.50 * V_["eWxZ"] * T2_["uvey"] * Lambda2_["xZvW"];
+                temp_1["vx"] += 0.50 * V_["eWxZ"] * T2_["uvey"] * Gamma1_["yu"] * Gamma1_["ZW"];
+                temp_1["ZW"] += 0.50 * V_["eWxZ"] * T2_["uvey"] * Gamma1_["yu"] * Gamma1_["xv"];
+                temp_1["yv"] += 0.50 * V_["eWxZ"] * T2_["uvey"] * Lambda2_["xZuW"];
+                temp_1["ux"] -= 0.50 * V_["eWxZ"] * T2_["uvey"] * Gamma1_["yv"] * Gamma1_["ZW"];
+                temp_1["ZW"] -= 0.50 * V_["eWxZ"] * T2_["uvey"] * Gamma1_["yv"] * Gamma1_["xu"];
+                temp_1["ZW"] += 0.50 * V_["eWxZ"] * T2_["uvey"] * Lambda2_["xyuv"];
+                temp_1["ux"] -= 0.50 * V_["eWxZ"] * T2_["uvey"] * Gamma1_["ZW"] * Gamma1_["yv"];
+                temp_1["vy"] -= 0.50 * V_["eWxZ"] * T2_["uvey"] * Gamma1_["ZW"] * Gamma1_["xu"];
+                temp_1["vx"] += 0.50 * V_["eWxZ"] * T2_["uvey"] * Gamma1_["ZW"] * Gamma1_["yu"];
+                temp_1["uy"] += 0.50 * V_["eWxZ"] * T2_["uvey"] * Gamma1_["ZW"] * Gamma1_["xv"];
+                temp_1["xu"] += 0.50 * V_["eWxZ"] * T2_["uvey"] * Gamma1_["yv"] * Gamma1_["ZW"];
+                temp_1["yv"] += 0.50 * V_["eWxZ"] * T2_["uvey"] * Gamma1_["xu"] * Gamma1_["ZW"];
+                temp_1["ZW"] += 0.50 * V_["eWxZ"] * T2_["uvey"] * Gamma1_["yv"] * Gamma1_["xu"];
+                temp_1["xv"] -= 0.50 * V_["eWxZ"] * T2_["uvey"] * Gamma1_["yu"] * Gamma1_["ZW"];
+                temp_1["yu"] -= 0.50 * V_["eWxZ"] * T2_["uvey"] * Gamma1_["xv"] * Gamma1_["ZW"];
+                temp_1["ZW"] -= 0.50 * V_["eWxZ"] * T2_["uvey"] * Gamma1_["yu"] * Gamma1_["xv"];
+
+                // 0.50 * V_.block("avaa")("vexy") * T2_.block("aAvA")("uWeZ") * dlamb3_aab("KxyZuvW")
+                temp_1["xu"] -= 0.50 * V_["vexy"] * T2_["uWeZ"] * Lambda2_["yZvW"];
+                temp_1["vy"] += 0.50 * V_["vexy"] * T2_["uWeZ"] * Gamma1_["xu"] * Gamma1_["ZW"];
+                temp_1["ZW"] += 0.50 * V_["vexy"] * T2_["uWeZ"] * Gamma1_["xu"] * Gamma1_["yv"];
+                temp_1["xv"] += 0.50 * V_["vexy"] * T2_["uWeZ"] * Lambda2_["yZuW"];
+                temp_1["uy"] -= 0.50 * V_["vexy"] * T2_["uWeZ"] * Gamma1_["xv"] * Gamma1_["ZW"];
+                temp_1["ZW"] -= 0.50 * V_["vexy"] * T2_["uWeZ"] * Gamma1_["xv"] * Gamma1_["yu"];
+                temp_1["yu"] += 0.50 * V_["vexy"] * T2_["uWeZ"] * Lambda2_["xZvW"];
+                temp_1["vx"] -= 0.50 * V_["vexy"] * T2_["uWeZ"] * Gamma1_["yu"] * Gamma1_["ZW"];
+                temp_1["ZW"] -= 0.50 * V_["vexy"] * T2_["uWeZ"] * Gamma1_["yu"] * Gamma1_["xv"];
+                temp_1["yv"] -= 0.50 * V_["vexy"] * T2_["uWeZ"] * Lambda2_["xZuW"];
+                temp_1["ux"] += 0.50 * V_["vexy"] * T2_["uWeZ"] * Gamma1_["yv"] * Gamma1_["ZW"];
+                temp_1["ZW"] += 0.50 * V_["vexy"] * T2_["uWeZ"] * Gamma1_["yv"] * Gamma1_["xu"];
+                temp_1["ZW"] -= 0.50 * V_["vexy"] * T2_["uWeZ"] * Lambda2_["xyuv"];
+                temp_1["ux"] += 0.50 * V_["vexy"] * T2_["uWeZ"] * Gamma1_["ZW"] * Gamma1_["yv"];
+                temp_1["vy"] += 0.50 * V_["vexy"] * T2_["uWeZ"] * Gamma1_["ZW"] * Gamma1_["xu"];
+                temp_1["vx"] -= 0.50 * V_["vexy"] * T2_["uWeZ"] * Gamma1_["ZW"] * Gamma1_["yu"];
+                temp_1["uy"] -= 0.50 * V_["vexy"] * T2_["uWeZ"] * Gamma1_["ZW"] * Gamma1_["xv"];
+                temp_1["xu"] -= 0.50 * V_["vexy"] * T2_["uWeZ"] * Gamma1_["yv"] * Gamma1_["ZW"];
+                temp_1["yv"] -= 0.50 * V_["vexy"] * T2_["uWeZ"] * Gamma1_["xu"] * Gamma1_["ZW"];
+                temp_1["ZW"] -= 0.50 * V_["vexy"] * T2_["uWeZ"] * Gamma1_["yv"] * Gamma1_["xu"];
+                temp_1["xv"] += 0.50 * V_["vexy"] * T2_["uWeZ"] * Gamma1_["yu"] * Gamma1_["ZW"];
+                temp_1["yu"] += 0.50 * V_["vexy"] * T2_["uWeZ"] * Gamma1_["xv"] * Gamma1_["ZW"];
+                temp_1["ZW"] += 0.50 * V_["vexy"] * T2_["uWeZ"] * Gamma1_["yu"] * Gamma1_["xv"];
+
+                // V_.block("aVaA")("vExZ") * T2_.block("aAaV")("uWyE") * dlamb3_aab("KxyZuvW")
+                temp_1["xu"] -= V_["vExZ"] * T2_["uWyE"] * Lambda2_["yZvW"];
+                temp_1["vy"] += V_["vExZ"] * T2_["uWyE"] * Gamma1_["xu"] * Gamma1_["ZW"];
+                temp_1["ZW"] += V_["vExZ"] * T2_["uWyE"] * Gamma1_["xu"] * Gamma1_["yv"];
+                temp_1["xv"] += V_["vExZ"] * T2_["uWyE"] * Lambda2_["yZuW"];
+                temp_1["uy"] -= V_["vExZ"] * T2_["uWyE"] * Gamma1_["xv"] * Gamma1_["ZW"];
+                temp_1["ZW"] -= V_["vExZ"] * T2_["uWyE"] * Gamma1_["xv"] * Gamma1_["yu"];
+                temp_1["yu"] += V_["vExZ"] * T2_["uWyE"] * Lambda2_["xZvW"];
+                temp_1["vx"] -= V_["vExZ"] * T2_["uWyE"] * Gamma1_["yu"] * Gamma1_["ZW"];
+                temp_1["ZW"] -= V_["vExZ"] * T2_["uWyE"] * Gamma1_["yu"] * Gamma1_["xv"];
+                temp_1["yv"] -= V_["vExZ"] * T2_["uWyE"] * Lambda2_["xZuW"];
+                temp_1["ux"] += V_["vExZ"] * T2_["uWyE"] * Gamma1_["yv"] * Gamma1_["ZW"];
+                temp_1["ZW"] += V_["vExZ"] * T2_["uWyE"] * Gamma1_["yv"] * Gamma1_["xu"];
+                temp_1["ZW"] -= V_["vExZ"] * T2_["uWyE"] * Lambda2_["xyuv"];
+                temp_1["ux"] += V_["vExZ"] * T2_["uWyE"] * Gamma1_["ZW"] * Gamma1_["yv"];
+                temp_1["vy"] += V_["vExZ"] * T2_["uWyE"] * Gamma1_["ZW"] * Gamma1_["xu"];
+                temp_1["vx"] -= V_["vExZ"] * T2_["uWyE"] * Gamma1_["ZW"] * Gamma1_["yu"];
+                temp_1["uy"] -= V_["vExZ"] * T2_["uWyE"] * Gamma1_["ZW"] * Gamma1_["xv"];
+                temp_1["xu"] -= V_["vExZ"] * T2_["uWyE"] * Gamma1_["yv"] * Gamma1_["ZW"];
+                temp_1["yv"] -= V_["vExZ"] * T2_["uWyE"] * Gamma1_["xu"] * Gamma1_["ZW"];
+                temp_1["ZW"] -= V_["vExZ"] * T2_["uWyE"] * Gamma1_["yv"] * Gamma1_["xu"];
+                temp_1["xv"] += V_["vExZ"] * T2_["uWyE"] * Gamma1_["yu"] * Gamma1_["ZW"];
+                temp_1["yu"] += V_["vExZ"] * T2_["uWyE"] * Gamma1_["xv"] * Gamma1_["ZW"];
+                temp_1["ZW"] += V_["vExZ"] * T2_["uWyE"] * Gamma1_["yu"] * Gamma1_["xv"];
+
+                // -0.50 * V_.block("aVaA")("uExY") * T2_.block("AAVA")("VWEZ") * dlamb3_abb("KxYZuVW")
+                temp_1["xu"] += 0.50 * V_["uExY"] * T2_["VWEZ"] * Lambda2_["YZVW"];
+                temp_1["YV"] -= 0.50 * V_["uExY"] * T2_["VWEZ"] * Gamma1_["xu"] * Gamma1_["ZW"];
+                temp_1["ZW"] -= 0.50 * V_["uExY"] * T2_["VWEZ"] * Gamma1_["xu"] * Gamma1_["YV"];
+                temp_1["YW"] += 0.50 * V_["uExY"] * T2_["VWEZ"] * Gamma1_["xu"] * Gamma1_["ZV"];
+                temp_1["ZV"] += 0.50 * V_["uExY"] * T2_["VWEZ"] * Gamma1_["xu"] * Gamma1_["YW"];
+                temp_1["YV"] += 0.50 * V_["uExY"] * T2_["VWEZ"] * Lambda2_["xZuW"];
+                temp_1["ux"] -= 0.50 * V_["uExY"] * T2_["VWEZ"] * Gamma1_["YV"] * Gamma1_["ZW"];
+                temp_1["ZW"] -= 0.50 * V_["uExY"] * T2_["VWEZ"] * Gamma1_["YV"] * Gamma1_["xu"];
+                temp_1["YW"] -= 0.50 * V_["uExY"] * T2_["VWEZ"] * Lambda2_["xZuV"];
+                temp_1["ux"] += 0.50 * V_["uExY"] * T2_["VWEZ"] * Gamma1_["YW"] * Gamma1_["ZV"];
+                temp_1["ZV"] += 0.50 * V_["uExY"] * T2_["VWEZ"] * Gamma1_["YW"] * Gamma1_["xu"];
+                temp_1["ZV"] -= 0.50 * V_["uExY"] * T2_["VWEZ"] * Lambda2_["xYuW"];
+                temp_1["ux"] += 0.50 * V_["uExY"] * T2_["VWEZ"] * Gamma1_["ZV"] * Gamma1_["YW"];
+                temp_1["YW"] += 0.50 * V_["uExY"] * T2_["VWEZ"] * Gamma1_["ZV"] * Gamma1_["xu"];
+                temp_1["ZW"] += 0.50 * V_["uExY"] * T2_["VWEZ"] * Lambda2_["xYuV"];
+                temp_1["ux"] -= 0.50 * V_["uExY"] * T2_["VWEZ"] * Gamma1_["ZW"] * Gamma1_["YV"];
+                temp_1["YV"] -= 0.50 * V_["uExY"] * T2_["VWEZ"] * Gamma1_["ZW"] * Gamma1_["xu"];
+                temp_1["xu"] += 0.50 * V_["uExY"] * T2_["VWEZ"] * Gamma1_["YV"] * Gamma1_["ZW"];
+                temp_1["YV"] += 0.50 * V_["uExY"] * T2_["VWEZ"] * Gamma1_["xu"] * Gamma1_["ZW"];
+                temp_1["ZW"] += 0.50 * V_["uExY"] * T2_["VWEZ"] * Gamma1_["YV"] * Gamma1_["xu"];
+                temp_1["xu"] -= 0.50 * V_["uExY"] * T2_["VWEZ"] * Gamma1_["ZV"] * Gamma1_["YW"];
+                temp_1["ZV"] -= 0.50 * V_["uExY"] * T2_["VWEZ"] * Gamma1_["xu"] * Gamma1_["YW"];
+                temp_1["YW"] -= 0.50 * V_["uExY"] * T2_["VWEZ"] * Gamma1_["ZV"] * Gamma1_["xu"];
+
+                // 0.50 * V_.block("AVAA")("WEYZ") * T2_.block("aAaV")("uVxE") * dlamb3_abb("KxYZuVW")
+                temp_1["xu"] -= 0.50 * V_["WEYZ"] * T2_["uVxE"] * Lambda2_["YZVW"];
+                temp_1["YV"] += 0.50 * V_["WEYZ"] * T2_["uVxE"] * Gamma1_["xu"] * Gamma1_["ZW"];
+                temp_1["ZW"] += 0.50 * V_["WEYZ"] * T2_["uVxE"] * Gamma1_["xu"] * Gamma1_["YV"];
+                temp_1["YW"] -= 0.50 * V_["WEYZ"] * T2_["uVxE"] * Gamma1_["xu"] * Gamma1_["ZV"];
+                temp_1["ZV"] -= 0.50 * V_["WEYZ"] * T2_["uVxE"] * Gamma1_["xu"] * Gamma1_["YW"];
+                temp_1["YV"] -= 0.50 * V_["WEYZ"] * T2_["uVxE"] * Lambda2_["xZuW"];
+                temp_1["ux"] += 0.50 * V_["WEYZ"] * T2_["uVxE"] * Gamma1_["YV"] * Gamma1_["ZW"];
+                temp_1["ZW"] += 0.50 * V_["WEYZ"] * T2_["uVxE"] * Gamma1_["YV"] * Gamma1_["xu"];
+                temp_1["YW"] += 0.50 * V_["WEYZ"] * T2_["uVxE"] * Lambda2_["xZuV"];
+                temp_1["ux"] -= 0.50 * V_["WEYZ"] * T2_["uVxE"] * Gamma1_["YW"] * Gamma1_["ZV"];
+                temp_1["ZV"] -= 0.50 * V_["WEYZ"] * T2_["uVxE"] * Gamma1_["YW"] * Gamma1_["xu"];
+                temp_1["ZV"] += 0.50 * V_["WEYZ"] * T2_["uVxE"] * Lambda2_["xYuW"];
+                temp_1["ux"] -= 0.50 * V_["WEYZ"] * T2_["uVxE"] * Gamma1_["ZV"] * Gamma1_["YW"];
+                temp_1["YW"] -= 0.50 * V_["WEYZ"] * T2_["uVxE"] * Gamma1_["ZV"] * Gamma1_["xu"];
+                temp_1["ZW"] -= 0.50 * V_["WEYZ"] * T2_["uVxE"] * Lambda2_["xYuV"];
+                temp_1["ux"] += 0.50 * V_["WEYZ"] * T2_["uVxE"] * Gamma1_["ZW"] * Gamma1_["YV"];
+                temp_1["YV"] += 0.50 * V_["WEYZ"] * T2_["uVxE"] * Gamma1_["ZW"] * Gamma1_["xu"];
+                temp_1["xu"] -= 0.50 * V_["WEYZ"] * T2_["uVxE"] * Gamma1_["YV"] * Gamma1_["ZW"];
+                temp_1["YV"] -= 0.50 * V_["WEYZ"] * T2_["uVxE"] * Gamma1_["xu"] * Gamma1_["ZW"];
+                temp_1["ZW"] -= 0.50 * V_["WEYZ"] * T2_["uVxE"] * Gamma1_["YV"] * Gamma1_["xu"];
+                temp_1["xu"] += 0.50 * V_["WEYZ"] * T2_["uVxE"] * Gamma1_["ZV"] * Gamma1_["YW"];
+                temp_1["ZV"] += 0.50 * V_["WEYZ"] * T2_["uVxE"] * Gamma1_["xu"] * Gamma1_["YW"];
+                temp_1["YW"] += 0.50 * V_["WEYZ"] * T2_["uVxE"] * Gamma1_["ZV"] * Gamma1_["xu"];
+
+                // V_.block("vAaA")("eWxY") * T2_.block("aAvA")("uVeZ") * dlamb3_abb("KxYZuVW")
+                temp_1["xu"] -= V_["eWxY"] * T2_["uVeZ"] * Lambda2_["YZVW"];
+                temp_1["YV"] += V_["eWxY"] * T2_["uVeZ"] * Gamma1_["xu"] * Gamma1_["ZW"];
+                temp_1["ZW"] += V_["eWxY"] * T2_["uVeZ"] * Gamma1_["xu"] * Gamma1_["YV"];
+                temp_1["YW"] -= V_["eWxY"] * T2_["uVeZ"] * Gamma1_["xu"] * Gamma1_["ZV"];
+                temp_1["ZV"] -= V_["eWxY"] * T2_["uVeZ"] * Gamma1_["xu"] * Gamma1_["YW"];
+                temp_1["YV"] -= V_["eWxY"] * T2_["uVeZ"] * Lambda2_["xZuW"];
+                temp_1["ux"] += V_["eWxY"] * T2_["uVeZ"] * Gamma1_["YV"] * Gamma1_["ZW"];
+                temp_1["ZW"] += V_["eWxY"] * T2_["uVeZ"] * Gamma1_["YV"] * Gamma1_["xu"];
+                temp_1["YW"] += V_["eWxY"] * T2_["uVeZ"] * Lambda2_["xZuV"];
+                temp_1["ux"] -= V_["eWxY"] * T2_["uVeZ"] * Gamma1_["YW"] * Gamma1_["ZV"];
+                temp_1["ZV"] -= V_["eWxY"] * T2_["uVeZ"] * Gamma1_["YW"] * Gamma1_["xu"];
+                temp_1["ZV"] += V_["eWxY"] * T2_["uVeZ"] * Lambda2_["xYuW"];
+                temp_1["ux"] -= V_["eWxY"] * T2_["uVeZ"] * Gamma1_["ZV"] * Gamma1_["YW"];
+                temp_1["YW"] -= V_["eWxY"] * T2_["uVeZ"] * Gamma1_["ZV"] * Gamma1_["xu"];
+                temp_1["ZW"] -= V_["eWxY"] * T2_["uVeZ"] * Lambda2_["xYuV"];
+                temp_1["ux"] += V_["eWxY"] * T2_["uVeZ"] * Gamma1_["ZW"] * Gamma1_["YV"];
+                temp_1["YV"] += V_["eWxY"] * T2_["uVeZ"] * Gamma1_["ZW"] * Gamma1_["xu"];
+                temp_1["xu"] -= V_["eWxY"] * T2_["uVeZ"] * Gamma1_["YV"] * Gamma1_["ZW"];
+                temp_1["YV"] -= V_["eWxY"] * T2_["uVeZ"] * Gamma1_["xu"] * Gamma1_["ZW"];
+                temp_1["ZW"] -= V_["eWxY"] * T2_["uVeZ"] * Gamma1_["YV"] * Gamma1_["xu"];
+                temp_1["xu"] += V_["eWxY"] * T2_["uVeZ"] * Gamma1_["ZV"] * Gamma1_["YW"];
+                temp_1["ZV"] += V_["eWxY"] * T2_["uVeZ"] * Gamma1_["xu"] * Gamma1_["YW"];
+                temp_1["YW"] += V_["eWxY"] * T2_["uVeZ"] * Gamma1_["ZV"] * Gamma1_["xu"];
             }
-
-
-
-
-
-
-
 
             // - H.block("aa")("vu") * cc1a("Kuv")
             // - H.block("AA")("VU") * cc1b("KUV")
