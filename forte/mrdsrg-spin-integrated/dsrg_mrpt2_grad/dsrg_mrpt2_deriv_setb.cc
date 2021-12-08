@@ -329,14 +329,6 @@ void DSRG_MRPT2::set_b(int dim, std::map<string, int> preidx, std::map<string, i
      *------------------------------------------------------------------*/
 
     auto b_ck = ambit::Tensor::build(ambit::CoreTensor, "ci equations b part", {ndets});
-    b_ck("K") -= H.block("aa")("vu") * cc1a("Kuv");
-    b_ck("K") -= H.block("AA")("VU") * cc1b("KUV");
-
-    b_ck("K") -= V_sumA_Alpha.block("aa")("vu") * cc1a("Kuv");
-    b_ck("K") -= V_sumB_Alpha.block("aa")("vu") * cc1a("Kuv");
-
-    b_ck("K") -= V_sumB_Beta.block("AA")("VU") * cc1b("KUV");
-    b_ck("K") -= V_sumA_Beta.block("AA")("VU") * cc1b("KUV");
 
     b_ck("K") -= 0.25 * V.block("aaaa")("xyuv") * cc2aa("Kuvxy");
     b_ck("K") -= 0.25 * V.block("AAAA")("XYUV") * cc2bb("KUVXY");
@@ -737,11 +729,8 @@ void DSRG_MRPT2::set_b(int dim, std::map<string, int> preidx, std::map<string, i
         temp["UV"] -= F_["UM"] * T1_["MV"];
     }
 
-    b_ck("K") -= 0.5 * temp.block("aa")("uv") * cc1a("Kuv");
-    b_ck("K") -= 0.5 * temp.block("AA")("UV") * cc1b("KUV");
     Alpha += 0.5 * temp["uv"] * Gamma1_["uv"];
     Alpha += 0.5 * temp["UV"] * Gamma1_["UV"];
-    temp.zero();
 
     BlockedTensor temp4 = BTF_->build(CoreTensor, "temporal tensor 4", {"aaaa", "AAAA", "aAaA"});
 
@@ -828,100 +817,12 @@ void DSRG_MRPT2::set_b(int dim, std::map<string, int> preidx, std::map<string, i
         temp4["yXuV"] -= T1_["MX"] * V_["uVyM"];
     }
 
-    /// Call the generalized sigma function to complete the following contractions
-    //      temp4.block("aaaa")("uvxy") * dlambda2_aaaa("Kxyuv")
-    //      temp4.block("AAAA")("UVXY") * dlambda2_bbbb("KXYUV")
-    //      temp4.block("aAaA")("uVxY") * dlambda2_abab("KxYuV")
-    for (const auto& pair: as_solver_->state_space_size_map()) {
-        const auto& state = pair.first;
-        std::map<std::string, double> block_factor1;
-        std::map<std::string, double> block_factor2;
-        block_factor1["aa"] = 1.0;
-        block_factor1["AA"] = 1.0;
-        block_factor2["aaaa"] = 1.0;
-        block_factor2["aAaA"] = 1.0;
-        block_factor2["AAAA"] = 1.0;
-
-        auto sym_1 = BTF_->build(CoreTensor, "symmetrized 1-body tensor", spin_cases({"aa"}));
-        auto sym_2 = BTF_->build(CoreTensor, "symmetrized 2-body tensor", spin_cases({"aaaa"}));
-        {
-            auto temp_1 = BTF_->build(CoreTensor, "1-body intermediate tensor", spin_cases({"aa"}));
-
-            /// temp4 * dlambda2
-            //  α α α α
-            temp_1["ux"] += temp4["uvxy"] * Gamma1_["yv"];
-            temp_1["vy"] += temp4["uvxy"] * Gamma1_["xu"];
-            temp_1["vx"] -= temp4["uvxy"] * Gamma1_["yu"];
-            temp_1["uy"] -= temp4["uvxy"] * Gamma1_["xv"];
-            //  β β β β
-            temp_1["XU"] += temp4["UVXY"] * Gamma1_["YV"];
-            temp_1["YV"] += temp4["UVXY"] * Gamma1_["XU"];
-            temp_1["XV"] -= temp4["UVXY"] * Gamma1_["YU"];
-            temp_1["YU"] -= temp4["UVXY"] * Gamma1_["XV"];
-            //  α β α β
-            temp_1["ux"] += temp4["uVxY"] * Gamma1_["YV"];
-            temp_1["YV"] += temp4["uVxY"] * Gamma1_["xu"];
-
-            /// Symmetrization
-            //  α α
-            sym_1["uv"] += temp_1["uv"];
-            sym_1["uv"] += temp_1["vu"];
-            /// Symmetrization 
-            //  β β
-            sym_1["UV"] += temp_1["UV"];
-            sym_1["UV"] += temp_1["VU"];
-        }
-        {
-            auto temp_2 = BTF_->build(CoreTensor, "2-body intermediate tensor", spin_cases({"aaaa"}));
-            
-            /// temp4 * dlambda2
-            //  α α α α
-            temp_2["uvxy"] -= temp4["uvxy"];
-            //  β β β β
-            temp_2["UVXY"] -= temp4["UVXY"];
-            //  α β α β
-            temp_2["uVxY"] -= temp4["uVxY"];
-
-            /// Symmetrization
-            //  α α α α
-            //  Antisymmetrization
-            sym_2["xyuv"] += temp_2["uvxy"];
-            sym_2["xyuv"] -= temp_2["uvyx"];
-            sym_2["xyuv"] -= temp_2["vuxy"];
-            sym_2["xyuv"] += temp_2["vuyx"];
-            //  Antisymmetrization
-            sym_2["uvxy"] += temp_2["uvxy"];
-            sym_2["uvxy"] -= temp_2["uvyx"];
-            sym_2["uvxy"] -= temp_2["vuxy"];
-            sym_2["uvxy"] += temp_2["vuyx"];
-            /// Symmetrization
-            //  β β β β
-            //  Antisymmetrization
-            sym_2["UVXY"] += temp_2["UVXY"];
-            sym_2["UVXY"] -= temp_2["UVYX"];
-            sym_2["UVXY"] -= temp_2["VUXY"];
-            sym_2["UVXY"] += temp_2["VUYX"];
-            //  Antisymmetrization
-            sym_2["XYUV"] += temp_2["UVXY"];
-            sym_2["XYUV"] -= temp_2["UVYX"];
-            sym_2["XYUV"] -= temp_2["VUXY"];
-            sym_2["XYUV"] += temp_2["VUYX"];
-            /// Symmetrization
-            //  α β α β
-            sym_2["uVxY"] += temp_2["uVxY"];
-            sym_2["uVxY"] += temp_2["xYuV"];
-        }
-        as_solver_->add_sigma_kbody(state, 0, sym_1, block_factor1, b_ck.data());
-        as_solver_->add_sigma_kbody(state, 0, sym_2, block_factor2, b_ck.data());
-    }
-
     Alpha += 2 * temp4["uvxy"] * Lambda2_["xyuv"];
     Alpha += 2 * temp4["UVXY"] * Lambda2_["XYUV"];
     Alpha += 2 * temp4["uVxY"] * Lambda2_["xYuV"];
     Alpha -= temp4["uvxy"] * Gamma2_["xyuv"];
     Alpha -= temp4["UVXY"] * Gamma2_["XYUV"];
     Alpha -= temp4["uVxY"] * Gamma2_["xYuV"];
-    temp4.zero();
 
     if (X4_TERM) {
         b_ck("K") -=
@@ -1110,22 +1011,130 @@ void DSRG_MRPT2::set_b(int dim, std::map<string, int> preidx, std::map<string, i
 
     b_ck("K") += 2 * Alpha * ci("K");
 
-    b_ck("K") -= temp3.block("aa")("xy") * V.block("aaaa")("xvyu") * cc1a("Kuv");
-    b_ck("K") -= temp3.block("aa")("xy") * V.block("aAaA")("xVyU") * cc1b("KUV");
-    b_ck("K") -= temp3.block("AA")("XY") * V.block("AAAA")("XVYU") * cc1b("KUV");
-    b_ck("K") -= temp3.block("AA")("XY") * V.block("aAaA")("vXuY") * cc1a("Kuv");
+    BlockedTensor temp5 = BTF_->build(CoreTensor, "temporal tensor", {"aa", "AA"});
+    temp5["uv"] += Z["mn"] * V["mvnu"];
+    temp5["uv"] += Z["MN"] * V["vMuN"];
+    temp5["uv"] += Z["ef"] * V["evfu"];
+    temp5["uv"] += Z["EF"] * V["vEuF"];
+    temp5["UV"] += Z["MN"] * V["MVNU"];
+    temp5["UV"] += Z["mn"] * V["mVnU"];
+    temp5["UV"] += Z["EF"] * V["EVFU"];
+    temp5["UV"] += Z["ef"] * V["eVfU"];
 
-    temp["uv"] += Z["mn"] * V["mvnu"];
-    temp["uv"] += Z["MN"] * V["vMuN"];
-    temp["uv"] += Z["ef"] * V["evfu"];
-    temp["uv"] += Z["EF"] * V["vEuF"];
-    temp["UV"] += Z["MN"] * V["MVNU"];
-    temp["UV"] += Z["mn"] * V["mVnU"];
-    temp["UV"] += Z["EF"] * V["EVFU"];
-    temp["UV"] += Z["ef"] * V["eVfU"];
+    /// Call the generalized sigma function to complete contractions
+    for (const auto& pair: as_solver_->state_space_size_map()) {
+        const auto& state = pair.first;
+        std::map<std::string, double> block_factor1;
+        std::map<std::string, double> block_factor2;
+        block_factor1["aa"] = 1.0;
+        block_factor1["AA"] = 1.0;
+        block_factor2["aaaa"] = 1.0;
+        block_factor2["aAaA"] = 1.0;
+        block_factor2["AAAA"] = 1.0;
 
-    b_ck("K") -= temp.block("aa")("uv") * cc1a("Kuv");
-    b_ck("K") -= temp.block("AA")("UV") * cc1b("KUV");
+        auto sym_1 = BTF_->build(CoreTensor, "symmetrized 1-body tensor", spin_cases({"aa"}));
+        auto sym_2 = BTF_->build(CoreTensor, "symmetrized 2-body tensor", spin_cases({"aaaa"}));
+        {
+            auto temp_1 = BTF_->build(CoreTensor, "1-body intermediate tensor", spin_cases({"aa"}));
+            // - H.block("aa")("vu") * cc1a("Kuv")
+            // - H.block("AA")("VU") * cc1b("KUV")
+            temp_1["uv"] -= H["vu"];
+            temp_1["UV"] -= H["VU"];
+
+            // - V_sumA_Alpha.block("aa")("vu") * cc1a("Kuv")
+            // - V_sumB_Alpha.block("aa")("vu") * cc1a("Kuv")
+            // - V_sumB_Beta.block("AA")("VU") * cc1b("KUV")
+            // - V_sumA_Beta.block("AA")("VU") * cc1b("KUV")
+            temp_1["uv"] -= V_sumA_Alpha["vu"];
+            temp_1["uv"] -= V_sumB_Alpha["vu"];
+            temp_1["UV"] -= V_sumB_Beta["VU"];
+            temp_1["UV"] -= V_sumA_Beta["VU"];
+
+            // - 0.5 * temp.block("aa")("uv") * cc1a("Kuv")
+            // - 0.5 * temp.block("AA")("UV") * cc1b("KUV")
+            temp_1["uv"] -= 0.5 * temp["vu"];
+            temp_1["UV"] -= 0.5 * temp["VU"];
+
+            /// temp4 * dlambda2
+            //      temp4.block("aaaa")("uvxy") * dlambda2_aaaa("Kxyuv")
+            //      temp4.block("AAAA")("UVXY") * dlambda2_bbbb("KXYUV")
+            //      temp4.block("aAaA")("uVxY") * dlambda2_abab("KxYuV")
+            temp_1["ux"] += temp4["uvxy"] * Gamma1_["yv"];
+            temp_1["vy"] += temp4["uvxy"] * Gamma1_["xu"];
+            temp_1["vx"] -= temp4["uvxy"] * Gamma1_["yu"];
+            temp_1["uy"] -= temp4["uvxy"] * Gamma1_["xv"];
+            temp_1["XU"] += temp4["UVXY"] * Gamma1_["YV"];
+            temp_1["YV"] += temp4["UVXY"] * Gamma1_["XU"];
+            temp_1["XV"] -= temp4["UVXY"] * Gamma1_["YU"];
+            temp_1["YU"] -= temp4["UVXY"] * Gamma1_["XV"];
+            temp_1["ux"] += temp4["uVxY"] * Gamma1_["YV"];
+            temp_1["YV"] += temp4["uVxY"] * Gamma1_["xu"];
+
+            // - temp3.block("aa")("xy") * V.block("aaaa")("xvyu") * cc1a("Kuv")
+            // - temp3.block("aa")("xy") * V.block("aAaA")("xVyU") * cc1b("KUV")
+            // - temp3.block("AA")("XY") * V.block("AAAA")("XVYU") * cc1b("KUV")
+            // - temp3.block("AA")("XY") * V.block("aAaA")("vXuY") * cc1a("Kuv")
+            temp_1["uv"] -= temp3["xy"] * V["xvyu"];
+            temp_1["UV"] -= temp3["xy"] * V["xVyU"];
+            temp_1["UV"] -= temp3["XY"] * V["XVYU"];
+            temp_1["uv"] -= temp3["XY"] * V["vXuY"];
+
+            // - temp5.block("aa")("uv") * cc1a("Kuv")
+            // - temp5.block("AA")("UV") * cc1b("KUV")
+            temp_1["uv"] -= temp5["uv"];
+            temp_1["UV"] -= temp5["UV"];
+
+            /// Symmetrization
+            //  α α
+            sym_1["uv"] += temp_1["uv"];
+            sym_1["uv"] += temp_1["vu"];
+            //  β β
+            sym_1["UV"] += temp_1["UV"];
+            sym_1["UV"] += temp_1["VU"];
+        }
+        {
+            auto temp_2 = BTF_->build(CoreTensor, "2-body intermediate tensor", spin_cases({"aaaa"}));
+            
+            /// temp4 * dlambda2
+            //      temp4.block("aaaa")("uvxy") * dlambda2_aaaa("Kxyuv")
+            //      temp4.block("AAAA")("UVXY") * dlambda2_bbbb("KXYUV")
+            //      temp4.block("aAaA")("uVxY") * dlambda2_abab("KxYuV")
+            temp_2["uvxy"] -= temp4["uvxy"];
+            temp_2["UVXY"] -= temp4["UVXY"];
+            temp_2["uVxY"] -= temp4["uVxY"];
+
+            /// Symmetrization
+            //  α α α α
+            //  Antisymmetrization
+            sym_2["xyuv"] += temp_2["uvxy"];
+            sym_2["xyuv"] -= temp_2["uvyx"];
+            sym_2["xyuv"] -= temp_2["vuxy"];
+            sym_2["xyuv"] += temp_2["vuyx"];
+            //  Antisymmetrization
+            sym_2["uvxy"] += temp_2["uvxy"];
+            sym_2["uvxy"] -= temp_2["uvyx"];
+            sym_2["uvxy"] -= temp_2["vuxy"];
+            sym_2["uvxy"] += temp_2["vuyx"];
+            /// Symmetrization
+            //  β β β β
+            //  Antisymmetrization
+            sym_2["UVXY"] += temp_2["UVXY"];
+            sym_2["UVXY"] -= temp_2["UVYX"];
+            sym_2["UVXY"] -= temp_2["VUXY"];
+            sym_2["UVXY"] += temp_2["VUYX"];
+            //  Antisymmetrization
+            sym_2["XYUV"] += temp_2["UVXY"];
+            sym_2["XYUV"] -= temp_2["UVYX"];
+            sym_2["XYUV"] -= temp_2["VUXY"];
+            sym_2["XYUV"] += temp_2["VUYX"];
+            /// Symmetrization
+            //  α β α β
+            sym_2["uVxY"] += temp_2["uVxY"];
+            sym_2["uVxY"] += temp_2["xYuV"];
+        }
+        as_solver_->add_sigma_kbody(state, 0, sym_1, block_factor1, b_ck.data());
+        as_solver_->add_sigma_kbody(state, 0, sym_2, block_factor2, b_ck.data());
+    }
 
     for (const std::string& block : {"ci"}) {
         (b_ck).iterate([&](const std::vector<size_t>& i, double& value) {
