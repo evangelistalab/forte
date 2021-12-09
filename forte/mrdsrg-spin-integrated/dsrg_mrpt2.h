@@ -457,9 +457,6 @@ class DSRG_MRPT2 : public MASTER_DSRG {
     ambit::BlockedTensor Gamma1_tilde;
     ambit::BlockedTensor Gamma2_tilde;
 
-    ambit::Tensor cc2aa;
-    ambit::Tensor cc2bb;
-    ambit::Tensor cc2ab;
     ambit::Tensor cc3aaa;
     ambit::Tensor cc3bbb;
     ambit::Tensor cc3aab;
