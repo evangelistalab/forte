@@ -773,7 +773,6 @@ void DSRG_MRPT2::z_vector_contraction(std::vector<double> & qk_vec, std::vector<
     y["wz"] += V["v,A1,z,U1"] * Gamma1_["wv"] * qk["U1,A1"];
 
     /// MO RESPONSE -- CI EQUATION
-    // !!!!!!! NOTICE we may need find a routine to contract qk_ci with ci, cc1, cc2 and cc3 beforehand !!!!!!!
     // Form contraction between qk_ci and ci, cc1, cc2
     auto cc1_qkci = BTF_->build(CoreTensor, "cc1 * qk_ci", spin_cases({"aa"}));
     auto cc2_qkci = BTF_->build(CoreTensor, "cc2 * qk_ci", spin_cases({"aaaa"}));
@@ -854,42 +853,15 @@ void DSRG_MRPT2::z_vector_contraction(std::vector<double> & qk_vec, std::vector<
     y.block("aa")("wz") += 0.250 * V.block("aAaA")("zUxY") * cc2_qkci.block("aAaA")("wUxY");
 
     /// CI EQUATION -- MO RESPONSE
-    /// NOTICE : Do not remove the commented equations. Although they are executed later using the generalized
-    //           sigma function, it is convenient for theory verification to retain equations here.
-
-    // virtual-core
-    // y_ci("K") += 2 * V.block("vaca")("eumv") * cc1a("Kuv") * qk.block("vc")("em");
-    // y_ci("K") += 2 * V.block("vAcA")("eUmV") * cc1b("KUV") * qk.block("vc")("em");
-
-    // beta
-    // y_ci("K") += 2 * V.block("VACA")("EUMV") * cc1b("KUV") * qk.block("VC")("EM");
-    // y_ci("K") += 2 * V.block("aVaC")("uEvM") * cc1a("Kuv") * qk.block("VC")("EM");
-
-    // contribution from the multiplier Alpha
+    //  virtual-core
+    //  contribution from the multiplier Alpha
     y_ci("K") += -4 * ci("K") * V.block("vaca")("exmy") * Gamma1_.block("aa")("xy") * qk.block("vc")("em");
     y_ci("K") += -4 * ci("K") * V.block("vAcA")("eXmY") * Gamma1_.block("AA")("XY") * qk.block("vc")("em");
     y_ci("K") += -4 * ci("K") * V.block("VACA")("EXMY") * Gamma1_.block("AA")("XY") * qk.block("VC")("EM");
     y_ci("K") += -4 * ci("K") * V.block("aVaC")("xEyM") * Gamma1_.block("aa")("xy") * qk.block("VC")("EM");
 
-    // core-active
-    // y_ci("K") += 2 * V.block("aaca")("uynx") * cc1a("Kxy") * qk.block("ca")("nu");
-    // y_ci("K") += 2 * V.block("aAcA")("uYnX") * cc1b("KXY") * qk.block("ca")("nu");
-    // y_ci("K") -= 2 * H.block("ac")("vn") * cc1a("Kuv") * qk.block("ca")("nu");
-    // y_ci("K") -= 2 * V_sumA_Alpha.block("ac")("vn") * cc1a("Kuv") * qk.block("ca")("nu");
-    // y_ci("K") -= 2 * V_sumB_Alpha.block("ac")("vn") * cc1a("Kuv") * qk.block("ca")("nu");
-    // y_ci("K") -= V.block("aaca")("xynv") * cc2aa("Kuvxy") * qk.block("ca")("nu");
-    // y_ci("K") -= 2 * V.block("aAcA")("xYnV") * cc2ab("KuVxY") * qk.block("ca")("nu");
-
-    // beta
-    // y_ci("K") += 2 * V.block("AACA")("UYNX") * cc1b("KXY") * qk.block("CA")("NU");
-    // y_ci("K") += 2 * V.block("aAaC")("yUxN") * cc1a("Kxy") * qk.block("CA")("NU");
-    // y_ci("K") -= 2 * H.block("AC")("VN") * cc1b("KUV") * qk.block("CA")("NU");
-    // y_ci("K") -= 2 * V_sumB_Beta.block("AC")("VN") * cc1b("KUV") * qk.block("CA")("NU");
-    // y_ci("K") -= 2 * V_sumA_Beta.block("AC")("VN") * cc1b("KUV") * qk.block("CA")("NU");
-    // y_ci("K") -= V.block("AACA")("XYNV") * cc2bb("KUVXY") * qk.block("CA")("NU");
-    // y_ci("K") -= 2 * V.block("aAaC")("xYvN") * cc2ab("KvUxY") * qk.block("CA")("NU");
-
-    // contribution from the multiplier Alpha
+    //  core-active
+    //  contribution from the multiplier Alpha
     y_ci("K") += -4 * ci("K") * V.block("aaca")("uynx") * Gamma1_.block("aa")("xy") * qk.block("ca")("nu");
     y_ci("K") += -4 * ci("K") * V.block("aAcA")("uYnX") * Gamma1_.block("AA")("XY") * qk.block("ca")("nu");
     y_ci("K") += 4 * ci("K") * H.block("ac")("vn") * Gamma1_.block("aa")("uv") * qk.block("ca")("nu");
@@ -898,7 +870,7 @@ void DSRG_MRPT2::z_vector_contraction(std::vector<double> & qk_vec, std::vector<
     y_ci("K") += 2 * ci("K") * V.block("aaca")("xynv") * Gamma2_.block("aaaa")("uvxy") * qk.block("ca")("nu");
     y_ci("K") += 4 * ci("K") * V.block("aAcA")("xYnV") * Gamma2_.block("aAaA")("uVxY") * qk.block("ca")("nu");
 
-    // beta
+    //  beta
     y_ci("K") += -4 * ci("K") * V.block("AACA")("UYNX") * Gamma1_.block("AA")("XY") * qk.block("CA")("NU");
     y_ci("K") += -4 * ci("K") * V.block("aAaC")("yUxN") * Gamma1_.block("aa")("xy") * qk.block("CA")("NU");
     y_ci("K") += 4 * ci("K") * H.block("AC")("VN") * Gamma1_.block("AA")("UV") * qk.block("CA")("NU");
@@ -907,21 +879,8 @@ void DSRG_MRPT2::z_vector_contraction(std::vector<double> & qk_vec, std::vector<
     y_ci("K") += 2 * ci("K") * V.block("AACA")("XYNV") * Gamma2_.block("AAAA")("UVXY") * qk.block("CA")("NU");
     y_ci("K") += 4 * ci("K") * V.block("aAaC")("xYvN") * Gamma2_.block("aAaA")("vUxY") * qk.block("CA")("NU");
 
-    // virtual-active
-    // y_ci("K") += 2 * H.block("av")("ve") * cc1a("Kuv") * qk.block("va")("eu");
-    // y_ci("K") += 2 * V_sumA_Alpha.block("av")("ve") * cc1a("Kuv") * qk.block("va")("eu");
-    // y_ci("K") += 2 * V_sumB_Alpha.block("av")("ve") * cc1a("Kuv") * qk.block("va")("eu");
-    // y_ci("K") += V.block("vaaa")("evxy") * cc2aa("Kuvxy") * qk.block("va")("eu");
-    // y_ci("K") += 2 * V.block("vAaA")("eVxY") * cc2ab("KuVxY") * qk.block("va")("eu");
-
-    // beta
-    // y_ci("K") += 2 * H.block("AV")("VE") * cc1b("KUV") * qk.block("VA")("EU");
-    // y_ci("K") += 2 * V_sumB_Beta.block("AV")("VE") * cc1b("KUV") * qk.block("VA")("EU");
-    // y_ci("K") += 2 * V_sumA_Beta.block("AV")("VE") * cc1b("KUV") * qk.block("VA")("EU");
-    // y_ci("K") += V.block("VAAA")("EVXY") * cc2bb("KUVXY") * qk.block("VA")("EU");
-    // y_ci("K") += 2 * V.block("aVaA")("vExY") * cc2ab("KvUxY") * qk.block("VA")("EU");
-
-    /// contribution from the multiplier Alpha
+    //  virtual-active
+    //  contribution from the multiplier Alpha
     y_ci("K") += -4 * ci("K") * H.block("av")("ve") * Gamma1_.block("aa")("uv") * qk.block("va")("eu");
     y_ci("K") += -4 * ci("K") * V_sumA_Alpha.block("av")("ve") * Gamma1_.block("aa")("uv") * qk.block("va")("eu");
     y_ci("K") += -4 * ci("K") * V_sumB_Alpha.block("av")("ve") * Gamma1_.block("aa")("uv") * qk.block("va")("eu");
@@ -935,54 +894,14 @@ void DSRG_MRPT2::z_vector_contraction(std::vector<double> & qk_vec, std::vector<
     y_ci("K") += -2 * ci("K") * V.block("VAAA")("EVXY") * Gamma2_.block("AAAA")("UVXY") * qk.block("VA")("EU");
     y_ci("K") += -4 * ci("K") * V.block("aVaA")("vExY") * Gamma2_.block("aAaA")("vUxY") * qk.block("VA")("EU");
 
-    // active-active
-    // y_ci("K") += V.block("aaaa")("uyvx") * cc1a("Kxy") * qk.block("aa")("uv");
-    // y_ci("K") += V.block("aAaA")("uYvX") * cc1b("KXY") * qk.block("aa")("uv");
-
-    // beta
-    // y_ci("K") += V.block("AAAA")("UYVX") * cc1b("KXY") * qk.block("AA")("UV");
-    // y_ci("K") += V.block("aAaA")("yUxV") * cc1a("Kxy") * qk.block("AA")("UV");
-
-    /// contribution from the multiplier Alpha
+    //  active-active
+    //  contribution from the multiplier Alpha
     y_ci("K") += -2 * ci("K") * V.block("aaaa")("uyvx") * Gamma1_.block("aa")("xy") * qk.block("aa")("uv");
     y_ci("K") += -2 * ci("K") * V.block("aAaA")("uYvX") * Gamma1_.block("AA")("XY") * qk.block("aa")("uv");
 
     // beta
     y_ci("K") += -2 * ci("K") * V.block("AAAA")("UYVX") * Gamma1_.block("AA")("XY") * qk.block("AA")("UV");
     y_ci("K") += -2 * ci("K") * V.block("aAaA")("yUxV") * Gamma1_.block("aa")("xy") * qk.block("AA")("UV");
-
-    /// CI EQUATION -- CI 
-    y_ci("K") += H.block("cc")("mn") * I.block("cc")("mn") * qk_ci("K");
-    y_ci("K") += H.block("CC")("MN") * I.block("CC")("MN") * qk_ci("K");
-    y_ci("K") += 0.5 * V_sumA_Alpha["m,m1"] * I["m,m1"] * qk_ci("K");
-    y_ci("K") += 0.5 * V_sumB_Beta["M,M1"] * I["M,M1"] * qk_ci("K");
-    y_ci("K") += V_sumB_Alpha["m,m1"] * I["m,m1"] * qk_ci("K");
-    y_ci("K") -= (Eref_ - Enuc_ - Efrzc_) * qk_ci("K");
-
-    //  Call the generalized sigma function to complete the contraction
-    //  sum_{J} <I| H |J> x_J where H is the active space Hamiltonian, which includes
-    //      cc1a("IJuv") * fa("uv") * x("J")
-    //      cc1b("IJuv") * fb("uv") * x("J")
-    //      0.25 * cc2aa("IJuvxy") * vaa("uvxy") * x("J")
-    //      cc2ab("IJuvxy") * vab("uvxy") * x("J")
-    //      0.25 * cc2bb("IJuvxy") * vbb("uvxy") * x("J")
-    //  where fa and fb are core Fock matrices
-    for (const auto& pair: as_solver_->state_space_size_map()) {
-        const auto& state = pair.first;
-
-        psi::SharedVector svq(new psi::Vector(ndets));
-        psi::SharedVector svy(new psi::Vector(ndets));
-        for (int i=0; i<ndets; ++i) {
-            svq->set(i, qk_ci.data()[i]);
-            svy->set(i, y_ci.data()[i]);
-        }
-
-        as_solver_->generalized_sigma(state, svq, svy);
-
-        for (int i=0; i<ndets; ++i) {
-            y_ci.data()[i] += svy->get(i);
-        }
-    }
 
     /// CI EQUATION -- MO RESPONSE
     //  Call the generalized sigma function to complete the contraction
@@ -1088,6 +1007,39 @@ void DSRG_MRPT2::z_vector_contraction(std::vector<double> & qk_vec, std::vector<
         }
         as_solver_->add_sigma_kbody(state, 0, sym_1, block_factor1, y_ci.data());
         as_solver_->add_sigma_kbody(state, 0, sym_2, block_factor2, y_ci.data());
+    }
+
+    /// CI EQUATION -- CI 
+    y_ci("K") += H.block("cc")("mn") * I.block("cc")("mn") * qk_ci("K");
+    y_ci("K") += H.block("CC")("MN") * I.block("CC")("MN") * qk_ci("K");
+    y_ci("K") += 0.5 * V_sumA_Alpha["m,m1"] * I["m,m1"] * qk_ci("K");
+    y_ci("K") += 0.5 * V_sumB_Beta["M,M1"] * I["M,M1"] * qk_ci("K");
+    y_ci("K") += V_sumB_Alpha["m,m1"] * I["m,m1"] * qk_ci("K");
+    y_ci("K") -= (Eref_ - Enuc_ - Efrzc_) * qk_ci("K");
+    // NOTICE : Efrzc_ is subtracted since it has been counted once in the generalized_sigma.
+    y_ci("K") -= Efrzc_ * qk_ci("K");
+
+    //  Call the generalized sigma function to complete the contraction
+    //  sum_{J} <I| H |J> x_J where H is the active space Hamiltonian, which includes
+    //      cc1a("IJuv") * fa("uv") * x("J")
+    //      cc1b("IJuv") * fb("uv") * x("J")
+    //      0.25 * cc2aa("IJuvxy") * vaa("uvxy") * x("J")
+    //      cc2ab("IJuvxy") * vab("uvxy") * x("J")
+    //      0.25 * cc2bb("IJuvxy") * vbb("uvxy") * x("J")
+    //  where fa and fb are core Fock matrices
+    for (const auto& pair: as_solver_->state_space_size_map()) {
+        const auto& state = pair.first;
+        psi::SharedVector svq(new psi::Vector(ndets));
+        psi::SharedVector svy(new psi::Vector(ndets));
+
+        for (int i = 0; i < ndets; ++i) {
+            svq->set(i, qk_ci.data()[i]);
+            svy->set(i, y_ci.data()[i]);
+        }
+        as_solver_->generalized_sigma(state, svq, svy);
+        for (int i = 0; i < ndets; ++i) {
+            y_ci.data()[i] += svy->get(i);
+        }
     }
 
     /// Fill the y (y = A * qk) and pass it to the GMRES solver
