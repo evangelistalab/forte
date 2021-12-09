@@ -451,16 +451,10 @@ class DSRG_MRPT2 : public MASTER_DSRG {
     ambit::BlockedTensor V_sumA_Beta;
     ambit::BlockedTensor V_sumB_Beta;
 
-    CICouplingCoefficients cc;
     ambit::Tensor ci;
 
     ambit::BlockedTensor Gamma1_tilde;
     ambit::BlockedTensor Gamma2_tilde;
-
-    ambit::Tensor cc3aaa;
-    ambit::Tensor cc3bbb;
-    ambit::Tensor cc3aab;
-    ambit::Tensor cc3abb;
 
     // => Amplitude <= //
 

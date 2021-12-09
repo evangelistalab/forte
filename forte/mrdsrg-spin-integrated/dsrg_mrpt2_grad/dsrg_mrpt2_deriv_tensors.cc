@@ -11,35 +11,12 @@ using namespace psi;
 namespace forte {
 
 void DSRG_MRPT2::set_ci_ints() {
-    cc = coupling_coefficients_;
     ci = ci_vectors_[0];
 
     // X_K <K|p^+ q|0> + <0|p^+ q|K> X_K
     Gamma1_tilde = BTF_->build(CoreTensor, "Gamma1_tilde", spin_cases({"aa"}));
     // X_K <K|p^+ q^+ r s|0> + <0|p^+ q^+ r s|K> X_K
     Gamma2_tilde = BTF_->build(CoreTensor, "Gamma2_tilde", spin_cases({"aaaa"}));
-
-    cc3aaa =
-        ambit::Tensor::build(ambit::CoreTensor, "<K|o^+ p^+ q^+ r s t|0> + <0|o^+ p^+ q^+ r s t|K>",
-                             {ndets, na, na, na, na, na, na});
-    cc3bbb =
-        ambit::Tensor::build(ambit::CoreTensor, "<K|O^+ P^+ Q^+ R S T|0> + <0|O^+ P^+ Q^+ R S T|K>",
-                             {ndets, na, na, na, na, na, na});
-    cc3aab =
-        ambit::Tensor::build(ambit::CoreTensor, "<K|o^+ p^+ Q^+ r s T|0> + <0|o^+ p^+ Q^+ r s T|K>",
-                             {ndets, na, na, na, na, na, na});
-    cc3abb =
-        ambit::Tensor::build(ambit::CoreTensor, "<K|o^+ P^+ Q^+ r S T|0> + <0|o^+ P^+ Q^+ r S T|K>",
-                             {ndets, na, na, na, na, na, na});
-
-    cc3aaa("Kuvwxyz") += cc.cc3aaa()("KJuvwxyz") * ci("J");
-    cc3aaa("Kuvwxyz") += cc.cc3aaa()("KJxyzuvw") * ci("J");
-    cc3bbb("KUVWXYZ") += cc.cc3bbb()("KJUVWXYZ") * ci("J");
-    cc3bbb("KUVWXYZ") += cc.cc3bbb()("KJXYZUVW") * ci("J");
-    cc3aab("KuvWxyZ") += cc.cc3aab()("KJuvWxyZ") * ci("J");
-    cc3aab("KuvWxyZ") += cc.cc3aab()("KJxyZuvW") * ci("J");
-    cc3abb("KuVWxYZ") += cc.cc3abb()("KJuVWxYZ") * ci("J");
-    cc3abb("KuVWxYZ") += cc.cc3abb()("KJxYZuVW") * ci("J");
 }
 
 void DSRG_MRPT2::set_density() {

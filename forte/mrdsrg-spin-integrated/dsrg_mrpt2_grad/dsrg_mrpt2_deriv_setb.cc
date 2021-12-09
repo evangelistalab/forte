@@ -821,56 +821,6 @@ void DSRG_MRPT2::set_b(int dim, std::map<string, int> preidx, std::map<string, i
     Alpha -= temp4["uVxY"] * Gamma2_["xYuV"];
 
     if (X4_TERM) {
-        // -0.25 * V_.block("aaca")("uvmz") * T2_.block("caaa")("mwxy") * dlamb3_aaa("Kxyzuvw")
-        b_ck("K") -= 0.25 * V_.block("aaca")("uvmz") * T2_.block("caaa")("mwxy") * cc3aaa("Kxyzuvw");
-    
-        // -0.25 * V_.block("AACA")("UVMZ") * T2_.block("CAAA")("MWXY") * dlamb3_bbb("KXYZUVW")
-        b_ck("K") -= 0.25 * V_.block("AACA")("UVMZ") * T2_.block("CAAA")("MWXY") * cc3bbb("KXYZUVW");
-
-        // 0.50 * V_.block("aaca")("uvmy") * T2_.block("cAaA")("mWxZ") * dlamb3_aab("KxyZuvW")
-        b_ck("K") += 0.50 * V_.block("aaca")("uvmy") * T2_.block("cAaA")("mWxZ") * cc3aab("KxyZuvW");
-
-        // 0.50 * V_.block("aAcA")("uWmZ") * T2_.block("caaa")("mvxy") * dlamb3_aab("KxyZuvW")
-        b_ck("K") += 0.50 * V_.block("aAcA")("uWmZ") * T2_.block("caaa")("mvxy") * cc3aab("KxyZuvW");
-
-        // - V_.block("aAaC")("uWyM") * T2_.block("aCaA")("vMxZ") * dlamb3_aab("KxyZuvW")
-        b_ck("K") -= V_.block("aAaC")("uWyM") * T2_.block("aCaA")("vMxZ") * cc3aab("KxyZuvW");
-
-        // 0.50 * V_.block("AACA")("VWMZ") * T2_.block("aCaA")("uMxY") * dlamb3_abb("KxYZuVW")
-        b_ck("K") += 0.50 * V_.block("AACA")("VWMZ") * T2_.block("aCaA")("uMxY") * cc3abb("KxYZuVW");
-
-        // 0.50 * V_.block("aAaC")("uVxM") * T2_.block("CAAA")("MWYZ") * dlamb3_abb("KxYZuVW")
-        b_ck("K") += 0.50 * V_.block("aAaC")("uVxM") * T2_.block("CAAA")("MWYZ") * cc3abb("KxYZuVW");
-
-        // - V_.block("aAcA")("uVmZ") * T2_.block("cAaA")("mWxY") * dlamb3_abb("KxYZuVW")
-        b_ck("K") -= V_.block("aAcA")("uVmZ") * T2_.block("cAaA")("mWxY") * cc3abb("KxYZuVW");
-
-        // 0.25 * V_.block("vaaa")("ewxy") * T2_.block("aava")("uvez") * dlamb3_aaa("Kxyzuvw")
-        b_ck("K") += 0.25 * V_.block("vaaa")("ewxy") * T2_.block("aava")("uvez") * cc3aaa("Kxyzuvw");
-
-        // 0.25 * V_.block("VAAA")("EWXY") * T2_.block("AAVA")("UVEZ") * dlamb3_bbb("KXYZUVW")
-        b_ck("K") += 0.25 * V_.block("VAAA")("EWXY") * T2_.block("AAVA")("UVEZ") * cc3bbb("KXYZUVW");
-
-        // -0.50 * V_.block("vAaA")("eWxZ") * T2_.block("aava")("uvey") * dlamb3_aab("KxyZuvW")
-        b_ck("K") -= 0.50 * V_.block("vAaA")("eWxZ") * T2_.block("aava")("uvey") * cc3aab("KxyZuvW");
-
-        // 0.50 * V_.block("avaa")("vexy") * T2_.block("aAvA")("uWeZ") * dlamb3_aab("KxyZuvW")
-        b_ck("K") += 0.50 * V_.block("avaa")("vexy") * T2_.block("aAvA")("uWeZ") * cc3aab("KxyZuvW");
-
-        // V_.block("aVaA")("vExZ") * T2_.block("aAaV")("uWyE") * dlamb3_aab("KxyZuvW")
-        b_ck("K") += V_.block("aVaA")("vExZ") * T2_.block("aAaV")("uWyE") * cc3aab("KxyZuvW");
-
-        // -0.50 * V_.block("aVaA")("uExY") * T2_.block("AAVA")("VWEZ") * dlamb3_abb("KxYZuVW")
-        b_ck("K") -= 0.50 * V_.block("aVaA")("uExY") * T2_.block("AAVA")("VWEZ") * cc3abb("KxYZuVW");
-
-        // 0.50 * V_.block("AVAA")("WEYZ") * T2_.block("aAaV")("uVxE") * dlamb3_abb("KxYZuVW")
-        b_ck("K") += 0.50 * V_.block("AVAA")("WEYZ") * T2_.block("aAaV")("uVxE") * cc3abb("KxYZuVW");
-
-        // V_.block("vAaA")("eWxY") * T2_.block("aAvA")("uVeZ") * dlamb3_abb("KxYZuVW")
-        b_ck("K") += V_.block("vAaA")("eWxY") * T2_.block("aAvA")("uVeZ") * cc3abb("KxYZuVW");
-    }
-
-    if (X4_TERM) {
         Alpha +=
             0.25 * V_.block("aaca")("uvmz") * T2_.block("caaa")("mwxy") * rdms_.g3aaa()("xyzuvw");
         Alpha +=
@@ -1037,14 +987,20 @@ void DSRG_MRPT2::set_b(int dim, std::map<string, int> preidx, std::map<string, i
         const auto& state = pair.first;
         std::map<std::string, double> block_factor1;
         std::map<std::string, double> block_factor2;
+        std::map<std::string, double> block_factor3;
         block_factor1["aa"] = 1.0;
         block_factor1["AA"] = 1.0;
         block_factor2["aaaa"] = 1.0;
         block_factor2["aAaA"] = 1.0;
         block_factor2["AAAA"] = 1.0;
+        block_factor3["aaaaaa"] = 1.0;
+        block_factor3["aaAaaA"] = 1.0;
+        block_factor3["aAAaAA"] = 1.0;
+        block_factor3["AAAAAA"] = 1.0;
 
         auto sym_1 = BTF_->build(CoreTensor, "symmetrized 1-body tensor", spin_cases({"aa"}));
         auto sym_2 = BTF_->build(CoreTensor, "symmetrized 2-body tensor", spin_cases({"aaaa"}));
+        auto sym_3 = BTF_->build(CoreTensor, "symmetrized 3-body tensor", spin_cases({"aaaaaa"}));
         {
             auto temp_1 = BTF_->build(CoreTensor, "1-body intermediate tensor", spin_cases({"aa"}));
 
@@ -1612,8 +1568,236 @@ void DSRG_MRPT2::set_b(int dim, std::map<string, int> preidx, std::map<string, i
             sym_2["uVxY"] += temp_2["uVxY"];
             sym_2["uVxY"] += temp_2["xYuV"];
         }
+        {
+            auto temp_3 = BTF_->build(CoreTensor, "3-body intermediate tensor", spin_cases({"aaaaaa"}));
+            if (X4_TERM) {
+
+                // -0.25 * V_.block("aaca")("uvmz") * T2_.block("caaa")("mwxy") * dlamb3_aaa("Kxyzuvw")
+                temp_3["xyzuvw"] -= 0.25 * V_["uvmz"] * T2_["mwxy"];
+            
+                // -0.25 * V_.block("AACA")("UVMZ") * T2_.block("CAAA")("MWXY") * dlamb3_bbb("KXYZUVW")
+                temp_3["XYZUVW"] -= 0.25 * V_["UVMZ"] * T2_["MWXY"];
+
+                // 0.50 * V_.block("aaca")("uvmy") * T2_.block("cAaA")("mWxZ") * dlamb3_aab("KxyZuvW")
+                temp_3["xyZuvW"] += 0.50 * V_["uvmy"] * T2_["mWxZ"];
+
+                // 0.50 * V_.block("aAcA")("uWmZ") * T2_.block("caaa")("mvxy") * dlamb3_aab("KxyZuvW")
+                temp_3["xyZuvW"] += 0.50 * V_["uWmZ"] * T2_["mvxy"];
+
+                // - V_.block("aAaC")("uWyM") * T2_.block("aCaA")("vMxZ") * dlamb3_aab("KxyZuvW")
+                temp_3["xyZuvW"] -= V_["uWyM"] * T2_["vMxZ"];
+
+                // 0.50 * V_.block("AACA")("VWMZ") * T2_.block("aCaA")("uMxY") * dlamb3_abb("KxYZuVW")
+                temp_3["xYZuVW"] += 0.50 * V_["VWMZ"] * T2_["uMxY"];
+
+                // 0.50 * V_.block("aAaC")("uVxM") * T2_.block("CAAA")("MWYZ") * dlamb3_abb("KxYZuVW")
+                temp_3["xYZuVW"] += 0.50 * V_["uVxM"] * T2_["MWYZ"];
+
+                // - V_.block("aAcA")("uVmZ") * T2_.block("cAaA")("mWxY") * dlamb3_abb("KxYZuVW")
+                temp_3["xYZuVW"] -= V_["uVmZ"] * T2_["mWxY"];
+
+                // 0.25 * V_.block("vaaa")("ewxy") * T2_.block("aava")("uvez") * dlamb3_aaa("Kxyzuvw")
+                temp_3["xyzuvw"] += 0.25 * V_["ewxy"] * T2_["uvez"];
+
+                // 0.25 * V_.block("VAAA")("EWXY") * T2_.block("AAVA")("UVEZ") * dlamb3_bbb("KXYZUVW")
+                temp_3["XYZUVW"] += 0.25 * V_["EWXY"] * T2_["UVEZ"];
+
+                // -0.50 * V_.block("vAaA")("eWxZ") * T2_.block("aava")("uvey") * dlamb3_aab("KxyZuvW")
+                temp_3["xyZuvW"] -= 0.50 * V_["eWxZ"] * T2_["uvey"];
+
+                // 0.50 * V_.block("avaa")("vexy") * T2_.block("aAvA")("uWeZ") * dlamb3_aab("KxyZuvW")
+                temp_3["xyZuvW"] += 0.50 * V_["vexy"] * T2_["uWeZ"];
+
+                // V_.block("aVaA")("vExZ") * T2_.block("aAaV")("uWyE") * dlamb3_aab("KxyZuvW")
+                temp_3["xyZuvW"] += V_["vExZ"] * T2_["uWyE"];
+
+                // -0.50 * V_.block("aVaA")("uExY") * T2_.block("AAVA")("VWEZ") * dlamb3_abb("KxYZuVW")
+                temp_3["xYZuVW"] -= 0.50 * V_["uExY"] * T2_["VWEZ"];
+
+                // 0.50 * V_.block("AVAA")("WEYZ") * T2_.block("aAaV")("uVxE") * dlamb3_abb("KxYZuVW")
+                temp_3["xYZuVW"] += 0.50 * V_["WEYZ"] * T2_["uVxE"];
+
+                // V_.block("vAaA")("eWxY") * T2_.block("aAvA")("uVeZ") * dlamb3_abb("KxYZuVW")
+                temp_3["xYZuVW"] += V_["eWxY"] * T2_["uVeZ"];
+            }
+            /// Symmetrization
+            //  α α α α α α
+            //  Antisymmetrization
+            sym_3["xyzuvw"] += temp_3["uvwxyz"];
+            sym_3["xyzuvw"] -= temp_3["uwvxyz"];
+            sym_3["xyzuvw"] -= temp_3["vuwxyz"];
+            sym_3["xyzuvw"] += temp_3["vwuxyz"];
+            sym_3["xyzuvw"] += temp_3["wuvxyz"];
+            sym_3["xyzuvw"] -= temp_3["wvuxyz"];
+            sym_3["xyzuvw"] -= temp_3["uvwxzy"];
+            sym_3["xyzuvw"] += temp_3["uwvxzy"];
+            sym_3["xyzuvw"] += temp_3["vuwxzy"];
+            sym_3["xyzuvw"] -= temp_3["vwuxzy"];
+            sym_3["xyzuvw"] -= temp_3["wuvxzy"];
+            sym_3["xyzuvw"] += temp_3["wvuxzy"];
+            sym_3["xyzuvw"] -= temp_3["uvwyxz"];
+            sym_3["xyzuvw"] += temp_3["uwvyxz"];
+            sym_3["xyzuvw"] += temp_3["vuwyxz"];
+            sym_3["xyzuvw"] -= temp_3["vwuyxz"];
+            sym_3["xyzuvw"] -= temp_3["wuvyxz"];
+            sym_3["xyzuvw"] += temp_3["wvuyxz"];
+            sym_3["xyzuvw"] += temp_3["uvwyzx"];
+            sym_3["xyzuvw"] -= temp_3["uwvyzx"];
+            sym_3["xyzuvw"] -= temp_3["vuwyzx"];
+            sym_3["xyzuvw"] += temp_3["vwuyzx"];
+            sym_3["xyzuvw"] += temp_3["wuvyzx"];
+            sym_3["xyzuvw"] -= temp_3["wvuyzx"];
+            sym_3["xyzuvw"] += temp_3["uvwzxy"];
+            sym_3["xyzuvw"] -= temp_3["uwvzxy"];
+            sym_3["xyzuvw"] -= temp_3["vuwzxy"];
+            sym_3["xyzuvw"] += temp_3["vwuzxy"];
+            sym_3["xyzuvw"] += temp_3["wuvzxy"];
+            sym_3["xyzuvw"] -= temp_3["wvuzxy"];
+            sym_3["xyzuvw"] -= temp_3["uvwzyx"];
+            sym_3["xyzuvw"] += temp_3["uwvzyx"];
+            sym_3["xyzuvw"] += temp_3["vuwzyx"];
+            sym_3["xyzuvw"] -= temp_3["vwuzyx"];
+            sym_3["xyzuvw"] -= temp_3["wuvzyx"];
+            sym_3["xyzuvw"] += temp_3["wvuzyx"];
+            //  Antisymmetrization
+            sym_3["uvwxyz"] += temp_3["uvwxyz"];
+            sym_3["uvwxyz"] -= temp_3["uwvxyz"];
+            sym_3["uvwxyz"] -= temp_3["vuwxyz"];
+            sym_3["uvwxyz"] += temp_3["vwuxyz"];
+            sym_3["uvwxyz"] += temp_3["wuvxyz"];
+            sym_3["uvwxyz"] -= temp_3["wvuxyz"];
+            sym_3["uvwxyz"] -= temp_3["uvwxzy"];
+            sym_3["uvwxyz"] += temp_3["uwvxzy"];
+            sym_3["uvwxyz"] += temp_3["vuwxzy"];
+            sym_3["uvwxyz"] -= temp_3["vwuxzy"];
+            sym_3["uvwxyz"] -= temp_3["wuvxzy"];
+            sym_3["uvwxyz"] += temp_3["wvuxzy"];
+            sym_3["uvwxyz"] -= temp_3["uvwyxz"];
+            sym_3["uvwxyz"] += temp_3["uwvyxz"];
+            sym_3["uvwxyz"] += temp_3["vuwyxz"];
+            sym_3["uvwxyz"] -= temp_3["vwuyxz"];
+            sym_3["uvwxyz"] -= temp_3["wuvyxz"];
+            sym_3["uvwxyz"] += temp_3["wvuyxz"];
+            sym_3["uvwxyz"] += temp_3["uvwyzx"];
+            sym_3["uvwxyz"] -= temp_3["uwvyzx"];
+            sym_3["uvwxyz"] -= temp_3["vuwyzx"];
+            sym_3["uvwxyz"] += temp_3["vwuyzx"];
+            sym_3["uvwxyz"] += temp_3["wuvyzx"];
+            sym_3["uvwxyz"] -= temp_3["wvuyzx"];
+            sym_3["uvwxyz"] += temp_3["uvwzxy"];
+            sym_3["uvwxyz"] -= temp_3["uwvzxy"];
+            sym_3["uvwxyz"] -= temp_3["vuwzxy"];
+            sym_3["uvwxyz"] += temp_3["vwuzxy"];
+            sym_3["uvwxyz"] += temp_3["wuvzxy"];
+            sym_3["uvwxyz"] -= temp_3["wvuzxy"];
+            sym_3["uvwxyz"] -= temp_3["uvwzyx"];
+            sym_3["uvwxyz"] += temp_3["uwvzyx"];
+            sym_3["uvwxyz"] += temp_3["vuwzyx"];
+            sym_3["uvwxyz"] -= temp_3["vwuzyx"];
+            sym_3["uvwxyz"] -= temp_3["wuvzyx"];
+            sym_3["uvwxyz"] += temp_3["wvuzyx"];
+            /// Symmetrization
+            //  β β β β β β
+            //  Antisymmetrization
+            sym_3["XYZUVW"] += temp_3["UVWXYZ"];
+            sym_3["XYZUVW"] -= temp_3["UWVXYZ"];
+            sym_3["XYZUVW"] -= temp_3["VUWXYZ"];
+            sym_3["XYZUVW"] += temp_3["VWUXYZ"];
+            sym_3["XYZUVW"] += temp_3["WUVXYZ"];
+            sym_3["XYZUVW"] -= temp_3["WVUXYZ"];
+            sym_3["XYZUVW"] -= temp_3["UVWXZY"];
+            sym_3["XYZUVW"] += temp_3["UWVXZY"];
+            sym_3["XYZUVW"] += temp_3["VUWXZY"];
+            sym_3["XYZUVW"] -= temp_3["VWUXZY"];
+            sym_3["XYZUVW"] -= temp_3["WUVXZY"];
+            sym_3["XYZUVW"] += temp_3["WVUXZY"];
+            sym_3["XYZUVW"] -= temp_3["UVWYXZ"];
+            sym_3["XYZUVW"] += temp_3["UWVYXZ"];
+            sym_3["XYZUVW"] += temp_3["VUWYXZ"];
+            sym_3["XYZUVW"] -= temp_3["VWUYXZ"];
+            sym_3["XYZUVW"] -= temp_3["WUVYXZ"];
+            sym_3["XYZUVW"] += temp_3["WVUYXZ"];
+            sym_3["XYZUVW"] += temp_3["UVWYZX"];
+            sym_3["XYZUVW"] -= temp_3["UWVYZX"];
+            sym_3["XYZUVW"] -= temp_3["VUWYZX"];
+            sym_3["XYZUVW"] += temp_3["VWUYZX"];
+            sym_3["XYZUVW"] += temp_3["WUVYZX"];
+            sym_3["XYZUVW"] -= temp_3["WVUYZX"];
+            sym_3["XYZUVW"] += temp_3["UVWZXY"];
+            sym_3["XYZUVW"] -= temp_3["UWVZXY"];
+            sym_3["XYZUVW"] -= temp_3["VUWZXY"];
+            sym_3["XYZUVW"] += temp_3["VWUZXY"];
+            sym_3["XYZUVW"] += temp_3["WUVZXY"];
+            sym_3["XYZUVW"] -= temp_3["WVUZXY"];
+            sym_3["XYZUVW"] -= temp_3["UVWZYX"];
+            sym_3["XYZUVW"] += temp_3["UWVZYX"];
+            sym_3["XYZUVW"] += temp_3["VUWZYX"];
+            sym_3["XYZUVW"] -= temp_3["VWUZYX"];
+            sym_3["XYZUVW"] -= temp_3["WUVZYX"];
+            sym_3["XYZUVW"] += temp_3["WVUZYX"];
+            //  Antisymmetrization
+            sym_3["UVWXYZ"] += temp_3["UVWXYZ"];
+            sym_3["UVWXYZ"] -= temp_3["UWVXYZ"];
+            sym_3["UVWXYZ"] -= temp_3["VUWXYZ"];
+            sym_3["UVWXYZ"] += temp_3["VWUXYZ"];
+            sym_3["UVWXYZ"] += temp_3["WUVXYZ"];
+            sym_3["UVWXYZ"] -= temp_3["WVUXYZ"];
+            sym_3["UVWXYZ"] -= temp_3["UVWXZY"];
+            sym_3["UVWXYZ"] += temp_3["UWVXZY"];
+            sym_3["UVWXYZ"] += temp_3["VUWXZY"];
+            sym_3["UVWXYZ"] -= temp_3["VWUXZY"];
+            sym_3["UVWXYZ"] -= temp_3["WUVXZY"];
+            sym_3["UVWXYZ"] += temp_3["WVUXZY"];
+            sym_3["UVWXYZ"] -= temp_3["UVWYXZ"];
+            sym_3["UVWXYZ"] += temp_3["UWVYXZ"];
+            sym_3["UVWXYZ"] += temp_3["VUWYXZ"];
+            sym_3["UVWXYZ"] -= temp_3["VWUYXZ"];
+            sym_3["UVWXYZ"] -= temp_3["WUVYXZ"];
+            sym_3["UVWXYZ"] += temp_3["WVUYXZ"];
+            sym_3["UVWXYZ"] += temp_3["UVWYZX"];
+            sym_3["UVWXYZ"] -= temp_3["UWVYZX"];
+            sym_3["UVWXYZ"] -= temp_3["VUWYZX"];
+            sym_3["UVWXYZ"] += temp_3["VWUYZX"];
+            sym_3["UVWXYZ"] += temp_3["WUVYZX"];
+            sym_3["UVWXYZ"] -= temp_3["WVUYZX"];
+            sym_3["UVWXYZ"] += temp_3["UVWZXY"];
+            sym_3["UVWXYZ"] -= temp_3["UWVZXY"];
+            sym_3["UVWXYZ"] -= temp_3["VUWZXY"];
+            sym_3["UVWXYZ"] += temp_3["VWUZXY"];
+            sym_3["UVWXYZ"] += temp_3["WUVZXY"];
+            sym_3["UVWXYZ"] -= temp_3["WVUZXY"];
+            sym_3["UVWXYZ"] -= temp_3["UVWZYX"];
+            sym_3["UVWXYZ"] += temp_3["UWVZYX"];
+            sym_3["UVWXYZ"] += temp_3["VUWZYX"];
+            sym_3["UVWXYZ"] -= temp_3["VWUZYX"];
+            sym_3["UVWXYZ"] -= temp_3["WUVZYX"];
+            sym_3["UVWXYZ"] += temp_3["WVUZYX"];
+            /// Symmetrization
+            //  α α β α α β
+            sym_3["xyZuvW"] += temp_3["uvWxyZ"];
+            sym_3["xyZuvW"] -= temp_3["vuWxyZ"];
+            sym_3["xyZuvW"] -= temp_3["uvWyxZ"];
+            sym_3["xyZuvW"] += temp_3["vuWyxZ"];
+            //  Antisymmetrization
+            sym_3["uvWxyZ"] += temp_3["uvWxyZ"];
+            sym_3["uvWxyZ"] -= temp_3["vuWxyZ"];
+            sym_3["uvWxyZ"] -= temp_3["uvWyxZ"];
+            sym_3["uvWxyZ"] += temp_3["vuWyxZ"];
+            /// Symmetrization
+            //  α β β α β β
+            sym_3["xYZuVW"] += temp_3["uVWxYZ"];
+            sym_3["xYZuVW"] -= temp_3["uWVxYZ"];
+            sym_3["xYZuVW"] -= temp_3["uVWxZY"];
+            sym_3["xYZuVW"] += temp_3["uWVxZY"];
+            //  Antisymmetrization
+            sym_3["uVWxYZ"] += temp_3["uVWxYZ"];
+            sym_3["uVWxYZ"] -= temp_3["uWVxYZ"];
+            sym_3["uVWxYZ"] -= temp_3["uVWxZY"];
+            sym_3["uVWxYZ"] += temp_3["uWVxZY"];
+        }
         as_solver_->add_sigma_kbody(state, 0, sym_1, block_factor1, b_ck.data());
         as_solver_->add_sigma_kbody(state, 0, sym_2, block_factor2, b_ck.data());
+        as_solver_->add_sigma_kbody(state, 0, sym_3, block_factor3, b_ck.data());
     }
 
     for (const std::string& block : {"ci"}) {
