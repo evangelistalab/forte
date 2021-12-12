@@ -1839,7 +1839,7 @@ double THREE_DSRG_MRPT2::E_VT2_2_ambit() {
                 }
                 double factor = (m < n) ? 2.0 : 1.0;
 
-                // alpha-aplha
+                // alpha-alpha
                 BefVec[thread].zero();
                 BefJKVec[thread].zero();
                 RDVec[thread].zero();

@@ -29,7 +29,6 @@
 #ifndef _mp2_nos_h_
 #define _mp2_nos_h_
 
-
 #include "psi4/libmints/wavefunction.h"
 
 #include "base_classes/mo_space_info.h"
@@ -58,6 +57,32 @@ class MP2_NOS : public OrbitalTransform {
     std::shared_ptr<ForteOptions> options_;
     psi::SharedMatrix Ua_;
     psi::SharedMatrix Ub_;
+
+    /// List of alpha occupied MOs
+    std::vector<size_t> a_occ_mos_;
+    /// List of beta occupied MOs
+    std::vector<size_t> b_occ_mos_;
+    /// List of alpha virtual MOs
+    std::vector<size_t> a_vir_mos_;
+    /// List of beta virtual MOs
+    std::vector<size_t> b_vir_mos_;
+    /// List of auxiliary MOs
+    std::vector<size_t> aux_mos_;
+
+    /// Fock matrix alpha
+    std::vector<double> Fa_;
+    /// Fock matrix beta
+    std::vector<double> Fb_;
+
+    /// Build MP2 1-RDM using conventional integrals
+    ambit::BlockedTensor build_1rdm_conv();
+
+    /// Build MP2 1-RDM using DF integrals
+    ambit::BlockedTensor build_1rdm_df();
+    /// Build OO part of DF-MP2 1-RDM
+    //    void compute_df_1rdm_oo(ambit::Tensor& Da, ambit::Tensor& Db);
+    /// Build VV part of DF-MP2 1-RDM
+    //    void compute_df_1rdm_vv(ambit::Tensor& Da, ambit::Tensor& Db);
 };
 } // namespace forte
 
