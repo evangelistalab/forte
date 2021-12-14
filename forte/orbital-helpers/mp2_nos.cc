@@ -154,13 +154,16 @@ void MP2_NOS::compute_transformation() {
             [&](const std::vector<size_t>& i, double& value) { value = i[0] == i[1] ? 1.0 : 0.0; });
 
         compute_df_ump2_1rdm_vv(D1pp);
+        compute_df_ump2_1rdm_oo(D1pp);
         auto D1t = build_1rdm_df();
         D1 = build_1rdm_conv();
 
-        D1pp.block("vv")("pq") -= D1.block("vv")("pq");
-        D1pp.block("VV")("pq") -= D1.block("VV")("pq");
+        D1pp["pq"] -= D1["pq"];
+        D1pp["PQ"] -= D1["PQ"];
         outfile->Printf("\n  Dvv diff = %20.15f, DVV diff = %20.15f", D1pp.block("vv").norm(0),
                         D1pp.block("VV").norm(0));
+        outfile->Printf("\n  Doo diff = %20.15f, DOO diff = %20.15f", D1pp.block("oo").norm(0),
+                        D1pp.block("OO").norm(0));
 
         D1t["pq"] -= D1["pq"];
         D1t["PQ"] -= D1["PQ"];
@@ -766,14 +769,14 @@ void MP2_NOS::compute_df_ump2_1rdm_vv(ambit::BlockedTensor& D1) {
     // test memory
     size_t memory_min = 4 * nthreads * nbvir_ * nbvir_;
     if ((memory_min + na_Qv + nb_Qv) * sizeof(double) > memory_) {
-        outfile->Printf("\n  Error: Not enough memory for DF-UMP.");
+        outfile->Printf("\n  Error: Not enough memory for DF-UMP (VV).");
         outfile->Printf(" Need at least %zu Bytes more!",
                         (memory_min + na_Qv + nb_Qv) * sizeof(double) - memory_);
         throw std::runtime_error("Not enough memory to run DF-MP2. Please check output.");
     } else {
         size_t max_occ = (memory_ / sizeof(double) - memory_min) / (na_Qv + nb_Qv);
         if (max_occ < naocc_) {
-            outfile->Printf("\n  -> DF-UMP2 VV to be run in batches: max occ size = %zu", max_occ);
+            outfile->Printf("\n -> DF-UMP2 VV to be run in batches: max occ size = %zu", max_occ);
         } else {
             max_occ = naocc_;
         }
@@ -791,10 +794,10 @@ void MP2_NOS::compute_df_ump2_1rdm_vv(ambit::BlockedTensor& D1) {
 
     // alpha-alpha spin
     for (int i = 0; i < nthreads; ++i) {
-        Da[i] = ambit::Tensor::build(CoreTensor, "Da", {navir_, navir_});
-        Db[i] = ambit::Tensor::build(CoreTensor, "Db", {nbvir_, nbvir_});
-        Jab[i] = ambit::Tensor::build(CoreTensor, "Jab", {navir_, navir_});
-        JKab[i] = ambit::Tensor::build(CoreTensor, "JKab", {navir_, navir_});
+        Da[i] = ambit::Tensor::build(CoreTensor, "Da vv", {navir_, navir_});
+        Db[i] = ambit::Tensor::build(CoreTensor, "Db vv", {nbvir_, nbvir_});
+        Jab[i] = ambit::Tensor::build(CoreTensor, "Jvv aa", {navir_, navir_});
+        JKab[i] = ambit::Tensor::build(CoreTensor, "JKvv aa", {navir_, navir_});
     }
 
     for (size_t i_batch = 0; i_batch < nbatches_alfa; ++i_batch) {
@@ -804,86 +807,71 @@ void MP2_NOS::compute_df_ump2_1rdm_vv(ambit::BlockedTensor& D1) {
         Bi("iag") = ints_->three_integral_block(aux_mos_, i_batch_occ_mos, a_vir_mos_)("gia");
         auto& Bi_vec = Bi.data();
 
-        // same batch
-        std::vector<std::pair<size_t, size_t>> ij_pairs;
-        for (size_t i = 0; i < i_naocc; ++i) {
-            for (size_t j = i; j < i_naocc; ++j) {
-                ij_pairs.emplace_back(i, j);
-            }
-        }
-        size_t ij_pairs_size = ij_pairs.size();
-
-#pragma omp parallel for default(none) shared(i_batch_occ_mos, ij_pairs_size, ij_pairs, Bi_vec, na_Qv, Jab, JKab, Da) reduction(+ : e_aa)
-        for (size_t p = 0; p < ij_pairs_size; ++p) {
-            int thread = omp_get_thread_num();
-
-            size_t i = ij_pairs[p].first;
-            size_t j = ij_pairs[p].second;
-
-            auto fock_i = Fa_[i_batch_occ_mos[i]];
-            auto fock_j = Fa_[i_batch_occ_mos[j]];
-
-            double* Bia_ptr = &Bi_vec[i * na_Qv];
-            double* Bjb_ptr = &Bi_vec[j * na_Qv];
-
-            // compute (ia|jb) for given indices i and j
-            C_DGEMM('N', 'T', navir_, navir_, naux_, 1.0, Bia_ptr, naux_, Bjb_ptr, naux_, 0.0,
-                    Jab[thread].data().data(), navir_);
-
-            JKab[thread]("pq") = Jab[thread]("pq") - Jab[thread]("qp");
-            Jab[thread].iterate([&](const std::vector<size_t>& i, double& value) {
-                value /= fock_i + fock_j - Fa_[a_vir_mos_[i[0]]] - Fa_[a_vir_mos_[i[1]]];
-            });
-
-            auto factor = (i == j) ? 0.5 : 1.0;
-            e_aa += factor * Jab[thread]("pq") * JKab[thread]("pq");
-
-            JKab[thread]("pq") = Jab[thread]("pq") - Jab[thread]("qp");
-            Da[thread]("ab") += Jab[thread]("ac") * JKab[thread]("bc");
-            Da[thread]("ab") += Jab[thread]("ca") * JKab[thread]("cb");
-        }
-
-        // different batch
-        for (size_t j_batch = i_batch + 1; j_batch < nbatches_alfa; ++j_batch) {
+        for (size_t j_batch = i_batch; j_batch < nbatches_alfa; ++j_batch) {
             const auto& j_batch_occ_mos = batch_aocc[j_batch];
             auto j_naocc = j_batch_occ_mos.size();
-            auto Bj = ambit::Tensor::build(ambit::CoreTensor, "Bb", {j_naocc, navir_, naux_});
-            Bj("iag") = ints_->three_integral_block(aux_mos_, j_batch_occ_mos, a_vir_mos_)("gia");
+            ambit::Tensor Bj;
+            if (j_batch == i_batch) {
+                Bj = Bi;
+            } else {
+                Bj = ambit::Tensor::build(ambit::CoreTensor, "Bb", {j_naocc, navir_, naux_});
+                Bj("iag") =
+                    ints_->three_integral_block(aux_mos_, j_batch_occ_mos, a_vir_mos_)("gia");
+            }
             auto& Bj_vec = Bj.data();
 
-#pragma omp parallel for collapse(2) default(none) shared(i_batch_occ_mos, i_naocc, Bi_vec, j_batch_occ_mos, j_naocc, Bj_vec, na_Qv, Jab, JKab, Da) reduction(+ : e_aa)
-            for (size_t i = 0; i < i_naocc; ++i) {
-                int thread = omp_get_thread_num();
-                auto fock_i = Fa_[i_batch_occ_mos[i]];
-                double* Bia_ptr = &Bi_vec[i * na_Qv];
-
-                for (size_t j = 0; j < j_naocc; ++j) {
-                    auto fock_j = Fa_[j_batch_occ_mos[j]];
-                    double* Bjb_ptr = &Bj_vec[j * na_Qv];
-
-                    // compute (ia|jb) for given indices i and j
-                    C_DGEMM('N', 'T', navir_, navir_, naux_, 1.0, Bia_ptr, naux_, Bjb_ptr, naux_,
-                            0.0, Jab[thread].data().data(), navir_);
-
-                    JKab[thread]("pq") = Jab[thread]("pq") - Jab[thread]("qp");
-                    Jab[thread].iterate([&](const std::vector<size_t>& i, double& value) {
-                        value /= fock_i + fock_j - Fa_[a_vir_mos_[i[0]]] - Fa_[a_vir_mos_[i[1]]];
-                    });
-
-                    e_aa += Jab[thread]("pq") * JKab[thread]("pq");
-
-                    JKab[thread]("pq") = Jab[thread]("pq") - Jab[thread]("qp");
-                    Da[thread]("ab") += Jab[thread]("ac") * JKab[thread]("bc");
-                    Da[thread]("ab") += Jab[thread]("ca") * JKab[thread]("cb");
+            // index pairs of i and j
+            std::vector<std::pair<size_t, size_t>> ij_pairs;
+            if (i_batch == j_batch) {
+                for (size_t i = 0; i < i_naocc; ++i) {
+                    for (size_t j = i + 1; j < j_naocc; ++j) {
+                        ij_pairs.emplace_back(i, j);
+                    }
                 }
+            } else {
+                for (size_t i = 0; i < i_naocc; ++i) {
+                    for (size_t j = 0; j < j_naocc; ++j) {
+                        ij_pairs.emplace_back(i, j);
+                    }
+                }
+            }
+            size_t ij_pairs_size = ij_pairs.size();
+
+#pragma omp parallel for default(none) shared(i_batch_occ_mos, j_batch_occ_mos, ij_pairs_size, ij_pairs, Bi_vec, Bj_vec, na_Qv, Jab, JKab, Da) reduction(+ : e_aa)
+            for (size_t p = 0; p < ij_pairs_size; ++p) {
+                int thread = omp_get_thread_num();
+
+                size_t i = ij_pairs[p].first;
+                size_t j = ij_pairs[p].second;
+
+                auto fock_i = Fa_[i_batch_occ_mos[i]];
+                auto fock_j = Fa_[j_batch_occ_mos[j]];
+
+                double* Bia_ptr = &Bi_vec[i * na_Qv];
+                double* Bjb_ptr = &Bj_vec[j * na_Qv];
+
+                // compute (ia|jb) for given indices i and j
+                C_DGEMM('N', 'T', navir_, navir_, naux_, 1.0, Bia_ptr, naux_, Bjb_ptr, naux_, 0.0,
+                        Jab[thread].data().data(), navir_);
+
+                JKab[thread]("pq") = Jab[thread]("pq") - Jab[thread]("qp");
+                Jab[thread].iterate([&](const std::vector<size_t>& i, double& value) {
+                    value /= fock_i + fock_j - Fa_[a_vir_mos_[i[0]]] - Fa_[a_vir_mos_[i[1]]];
+                });
+
+                e_aa += Jab[thread]("pq") * JKab[thread]("pq");
+
+                JKab[thread]("pq") = Jab[thread]("pq") - Jab[thread]("qp");
+                Da[thread]("ab") += Jab[thread]("ac") * JKab[thread]("bc");
+                Da[thread]("ab") += Jab[thread]("ca") * JKab[thread]("cb");
             }
         }
     }
 
     // alpha-beta spin
     for (int i = 0; i < nthreads; ++i) {
-        Jab[i] = ambit::Tensor::build(CoreTensor, "Jab", {navir_, nbvir_});
-        JKab[i] = ambit::Tensor::build(CoreTensor, "JKab", {navir_, nbvir_});
+        Jab[i] = ambit::Tensor::build(CoreTensor, "Jvv ab", {navir_, nbvir_});
+        JKab[i] = ambit::Tensor::build(CoreTensor, "JKvv ab", {navir_, nbvir_});
     }
 
     for (size_t i_batch = 0; i_batch < nbatches_alfa; ++i_batch) {
@@ -941,78 +929,63 @@ void MP2_NOS::compute_df_ump2_1rdm_vv(ambit::BlockedTensor& D1) {
         Bi("iag") = ints_->three_integral_block(aux_mos_, i_batch_occ_mos, b_vir_mos_)("gia");
         auto& Bi_vec = Bi.data();
 
-        // same batch
-        std::vector<std::pair<size_t, size_t>> ij_pairs;
-        for (size_t i = 0; i < i_nbocc; ++i) {
-            for (size_t j = i; j < i_nbocc; ++j) {
-                ij_pairs.emplace_back(i, j);
-            }
-        }
-        size_t ij_pairs_size = ij_pairs.size();
-
-#pragma omp parallel for default(none) shared(i_batch_occ_mos, ij_pairs_size, ij_pairs, Bi_vec, nb_Qv, Jab, JKab, Db) reduction(+ : e_bb)
-        for (size_t p = 0; p < ij_pairs_size; ++p) {
-            int thread = omp_get_thread_num();
-
-            size_t i = ij_pairs[p].first;
-            size_t j = ij_pairs[p].second;
-
-            auto fock_i = Fb_[i_batch_occ_mos[i]];
-            auto fock_j = Fb_[i_batch_occ_mos[j]];
-
-            double* Bia_ptr = &Bi_vec[i * nb_Qv];
-            double* Bjb_ptr = &Bi_vec[j * nb_Qv];
-
-            // compute (ia|jb) for given indices i and j
-            C_DGEMM('N', 'T', nbvir_, nbvir_, naux_, 1.0, Bia_ptr, naux_, Bjb_ptr, naux_, 0.0,
-                    Jab[thread].data().data(), nbvir_);
-
-            JKab[thread]("pq") = Jab[thread]("pq") - Jab[thread]("qp");
-            Jab[thread].iterate([&](const std::vector<size_t>& i, double& value) {
-                value /= fock_i + fock_j - Fb_[b_vir_mos_[i[0]]] - Fb_[b_vir_mos_[i[1]]];
-            });
-
-            auto factor = (i == j) ? 0.5 : 1.0;
-            e_bb += factor * Jab[thread]("pq") * JKab[thread]("pq");
-
-            JKab[thread]("pq") = Jab[thread]("pq") - Jab[thread]("qp");
-            Db[thread]("ab") += Jab[thread]("ac") * JKab[thread]("bc");
-            Db[thread]("ab") += Jab[thread]("ca") * JKab[thread]("cb");
-        }
-
-        // different batch
-        for (size_t j_batch = i_batch + 1; j_batch < nbatches_beta; ++j_batch) {
+        for (size_t j_batch = i_batch; j_batch < nbatches_beta; ++j_batch) {
             const auto& j_batch_occ_mos = batch_bocc[j_batch];
             auto j_nbocc = j_batch_occ_mos.size();
-            auto Bj = ambit::Tensor::build(ambit::CoreTensor, "Bb", {j_nbocc, nbvir_, naux_});
-            Bj("iag") = ints_->three_integral_block(aux_mos_, j_batch_occ_mos, b_vir_mos_)("gia");
+            ambit::Tensor Bj;
+            if (j_batch == i_batch) {
+                Bj = Bi;
+            } else {
+                Bj = ambit::Tensor::build(ambit::CoreTensor, "Bb", {j_nbocc, nbvir_, naux_});
+                Bj("iag") =
+                    ints_->three_integral_block(aux_mos_, j_batch_occ_mos, b_vir_mos_)("gia");
+            }
             auto& Bj_vec = Bj.data();
 
-#pragma omp parallel for collapse(2) default(none) shared(i_batch_occ_mos, i_nbocc, Bi_vec, j_batch_occ_mos, j_nbocc, Bj_vec, nb_Qv, Jab, JKab, Db) reduction(+ : e_bb)
-            for (size_t i = 0; i < i_nbocc; ++i) {
-                int thread = omp_get_thread_num();
-                auto fock_i = Fb_[i_batch_occ_mos[i]];
-                double* Bia_ptr = &Bi_vec[i * nb_Qv];
-
-                for (size_t j = 0; j < j_nbocc; ++j) {
-                    auto fock_j = Fb_[j_batch_occ_mos[j]];
-                    double* Bjb_ptr = &Bj_vec[j * nb_Qv];
-
-                    // compute (ia|jb) for given indices i and j
-                    C_DGEMM('N', 'T', nbvir_, nbvir_, naux_, 1.0, Bia_ptr, naux_, Bjb_ptr, naux_,
-                            0.0, Jab[thread].data().data(), nbvir_);
-
-                    JKab[thread]("pq") = Jab[thread]("pq") - Jab[thread]("qp");
-                    Jab[thread].iterate([&](const std::vector<size_t>& i, double& value) {
-                        value /= fock_i + fock_j - Fb_[b_vir_mos_[i[0]]] - Fb_[b_vir_mos_[i[1]]];
-                    });
-
-                    e_bb += Jab[thread]("pq") * JKab[thread]("pq");
-
-                    JKab[thread]("pq") = Jab[thread]("pq") - Jab[thread]("qp");
-                    Db[thread]("ab") += Jab[thread]("ac") * JKab[thread]("bc");
-                    Db[thread]("ab") += Jab[thread]("ca") * JKab[thread]("cb");
+            // index pairs of i and j
+            std::vector<std::pair<size_t, size_t>> ij_pairs;
+            if (j_batch == i_batch) {
+                for (size_t i = 0; i < i_nbocc; ++i) {
+                    for (size_t j = i + 1; j < j_nbocc; ++j) {
+                        ij_pairs.emplace_back(i, j);
+                    }
                 }
+            } else {
+                for (size_t i = 0; i < i_nbocc; ++i) {
+                    for (size_t j = 0; j < j_nbocc; ++j) {
+                        ij_pairs.emplace_back(i, j);
+                    }
+                }
+            }
+            size_t ij_pairs_size = ij_pairs.size();
+
+#pragma omp parallel for default(none) shared(i_batch_occ_mos, j_batch_occ_mos, ij_pairs_size, ij_pairs, Bi_vec, Bj_vec, nb_Qv, Jab, JKab, Db) reduction(+ : e_bb)
+            for (size_t p = 0; p < ij_pairs_size; ++p) {
+                int thread = omp_get_thread_num();
+
+                size_t i = ij_pairs[p].first;
+                size_t j = ij_pairs[p].second;
+
+                auto fock_i = Fb_[i_batch_occ_mos[i]];
+                auto fock_j = Fb_[j_batch_occ_mos[j]];
+
+                double* Bia_ptr = &Bi_vec[i * nb_Qv];
+                double* Bjb_ptr = &Bj_vec[j * nb_Qv];
+
+                // compute (ia|jb) for given indices i and j
+                C_DGEMM('N', 'T', nbvir_, nbvir_, naux_, 1.0, Bia_ptr, naux_, Bjb_ptr, naux_, 0.0,
+                        Jab[thread].data().data(), nbvir_);
+
+                JKab[thread]("pq") = Jab[thread]("pq") - Jab[thread]("qp");
+                Jab[thread].iterate([&](const std::vector<size_t>& i, double& value) {
+                    value /= fock_i + fock_j - Fb_[b_vir_mos_[i[0]]] - Fb_[b_vir_mos_[i[1]]];
+                });
+
+                e_bb += Jab[thread]("pq") * JKab[thread]("pq");
+
+                JKab[thread]("pq") = Jab[thread]("pq") - Jab[thread]("qp");
+                Db[thread]("ab") += Jab[thread]("ac") * JKab[thread]("bc");
+                Db[thread]("ab") += Jab[thread]("ca") * JKab[thread]("cb");
             }
         }
     }
@@ -1025,7 +998,7 @@ void MP2_NOS::compute_df_ump2_1rdm_vv(ambit::BlockedTensor& D1) {
     outfile->Printf("\n    MP2 correlation energy (ab)           = %20.15f", e_ab);
     outfile->Printf("\n    MP2 correlation energy (bb)           = %20.15f", e_bb);
     outfile->Printf("\n    MP2 correlation energy                = %20.15f", e_corr);
-    outfile->Printf("\n  * MP2 total energy                      = %20.15f\n\n", e_ref + e_corr);
+    outfile->Printf("\n  * MP2 total energy                      = %20.15f\n", e_ref + e_corr);
 
     // add Dvv contributions to D1
     for (int i = 0; i < nthreads; ++i) {
@@ -1034,7 +1007,232 @@ void MP2_NOS::compute_df_ump2_1rdm_vv(ambit::BlockedTensor& D1) {
     }
 }
 
-void MP2_NOS::compute_df_ump2_1rdm_oo(ambit::BlockedTensor& D1) {}
+void MP2_NOS::compute_df_ump2_1rdm_oo(ambit::BlockedTensor& D1) {
+    int nthreads = omp_get_max_threads();
+
+    auto na_Qo = naux_ * naocc_;
+    auto nb_Qo = naux_ * nbocc_;
+
+    // batches of virtual indices
+    std::vector<std::vector<size_t>> batch_avir, batch_bvir;
+
+    // test memory
+    size_t memory_min = 4 * nthreads * nbocc_ * nbocc_;
+    if ((memory_min + na_Qo + nb_Qo) * sizeof(double) > memory_) {
+        outfile->Printf("\n  Error: Not enough memory for DF-UMP (OO).");
+        outfile->Printf(" Need at least %zu Bytes more!",
+                        (memory_min + na_Qo + nb_Qo) * sizeof(double) - memory_);
+        throw std::runtime_error("Not enough memory to run DF-MP2. Please check output.");
+    } else {
+        size_t max_vir = (memory_ / sizeof(double) - memory_min) / (na_Qo + nb_Qo);
+        if (max_vir < navir_) {
+            outfile->Printf("\n  -> DF-UMP2 OO to be run in batches: max vir size = %zu", max_vir);
+        } else {
+            max_vir = navir_;
+        }
+
+        batch_avir = split_vector(a_vir_mos_, max_vir);
+        batch_bvir = split_vector(b_vir_mos_, max_vir > nbvir_ ? nbvir_ : max_vir);
+    }
+    auto nbatches_alfa = batch_avir.size();
+    auto nbatches_beta = batch_bvir.size();
+
+    // temp tensors for each thread
+    std::vector<ambit::Tensor> Da(nthreads), Db(nthreads);
+    std::vector<ambit::Tensor> Jmn(nthreads), JKmn(nthreads);
+
+    // alpha-alpha spin
+    for (int i = 0; i < nthreads; ++i) {
+        Da[i] = ambit::Tensor::build(CoreTensor, "Da oo", {naocc_, naocc_});
+        Db[i] = ambit::Tensor::build(CoreTensor, "Db oo", {nbocc_, nbocc_});
+        Jmn[i] = ambit::Tensor::build(CoreTensor, "Joo aa", {naocc_, naocc_});
+        JKmn[i] = ambit::Tensor::build(CoreTensor, "JKoo aa", {naocc_, naocc_});
+    }
+
+    for (size_t c_batch = 0; c_batch < nbatches_alfa; ++c_batch) {
+        const auto& c_batch_vir_mos = batch_avir[c_batch];
+        auto c_navir = c_batch_vir_mos.size();
+        auto Bc = ambit::Tensor::build(ambit::CoreTensor, "Bi", {c_navir, naocc_, naux_});
+        Bc("aig") = ints_->three_integral_block(aux_mos_, c_batch_vir_mos, a_occ_mos_)("gai");
+        auto& Bc_vec = Bc.data();
+
+        for (size_t d_batch = c_batch; d_batch < nbatches_alfa; ++d_batch) {
+            const auto& d_batch_vir_mos = batch_avir[d_batch];
+            auto d_navir = d_batch_vir_mos.size();
+            ambit::Tensor Bd;
+            if (d_batch == c_batch) {
+                Bd = Bc;
+            } else {
+                Bd = ambit::Tensor::build(ambit::CoreTensor, "Bj", {d_navir, naocc_, naux_});
+                Bd("aig") = ints_->three_integral_block(aux_mos_, d_batch_vir_mos, a_occ_mos_)("gai");
+            }
+            auto& Bd_vec = Bd.data();
+
+            // index pairs for c and d
+            std::vector<std::pair<size_t, size_t>> cd_pairs;
+            if (d_batch == c_batch) {
+                for (size_t c = 0; c < c_navir; ++c) {
+                    for (size_t d = c + 1; d < d_navir; ++d) {
+                        cd_pairs.emplace_back(c, d);
+                    }
+                }
+            } else {
+                for (size_t c = 0; c < c_navir; ++c) {
+                    for (size_t d = 0; d < d_navir; ++d) {
+                        cd_pairs.emplace_back(c, d);
+                    }
+                }
+            }
+            size_t cd_pairs_size = cd_pairs.size();
+
+#pragma omp parallel for default(none) shared(c_batch_vir_mos, d_batch_vir_mos, cd_pairs_size, cd_pairs, Bc_vec, Bd_vec, na_Qo, Jmn, JKmn, Da)
+            for (size_t p = 0; p < cd_pairs_size; ++p) {
+                int thread = omp_get_thread_num();
+
+                auto c = cd_pairs[p].first;
+                auto d = cd_pairs[p].second;
+
+                auto fock_c = Fa_[c_batch_vir_mos[c]];
+                auto fock_d = Fa_[d_batch_vir_mos[d]];
+
+                double* Bci_ptr = &Bc_vec[c * na_Qo];
+                double* Bdj_ptr = &Bd_vec[d * na_Qo];
+
+                // compute (ci|dj) for given indices c and d
+                C_DGEMM('N', 'T', naocc_, naocc_, naux_, 1.0, Bci_ptr, naux_, Bdj_ptr, naux_, 0.0,
+                        Jmn[thread].data().data(), naocc_);
+
+                Jmn[thread].iterate([&](const std::vector<size_t>& i, double& value) {
+                    value /= Fa_[a_occ_mos_[i[0]]] + Fa_[a_occ_mos_[i[1]]] - fock_c - fock_d;
+                });
+
+                JKmn[thread]("pq") = Jmn[thread]("pq") - Jmn[thread]("qp");
+                Da[thread]("ij") -= Jmn[thread]("ik") * JKmn[thread]("jk");
+                Da[thread]("ij") -= Jmn[thread]("ki") * JKmn[thread]("kj");
+            }
+        }
+    }
+
+    // alpha-beta spin
+    for (int i = 0; i < nthreads; ++i) {
+        Jmn[i] = ambit::Tensor::build(CoreTensor, "Joo ab", {naocc_, nbocc_});
+    }
+
+    for (size_t c_batch = 0; c_batch < nbatches_alfa; ++c_batch) {
+        const auto& c_batch_vir_mos = batch_avir[c_batch];
+        auto c_navir = c_batch_vir_mos.size();
+        auto Bc = ambit::Tensor::build(ambit::CoreTensor, "Bi", {c_navir, naocc_, naux_});
+        Bc("aig") = ints_->three_integral_block(aux_mos_, c_batch_vir_mos, a_occ_mos_)("gai");
+        auto& Bc_vec = Bc.data();
+
+        for (size_t d_batch = 0; d_batch < nbatches_beta; ++d_batch) {
+            const auto& d_batch_vir_mos = batch_bvir[d_batch];
+            auto d_nbvir = d_batch_vir_mos.size();
+            auto Bd = ambit::Tensor::build(ambit::CoreTensor, "Bj", {d_nbvir, nbocc_, naux_});
+            Bd("aig") = ints_->three_integral_block(aux_mos_, d_batch_vir_mos, b_occ_mos_)("gai");
+            auto& Bd_vec = Bd.data();
+
+#pragma omp parallel for collapse(2) default(none) shared(c_batch_vir_mos, c_navir, d_batch_vir_mos, d_nbvir, Bc_vec, Bd_vec, na_Qo, nb_Qo, Jmn, Da, Db)
+            for (size_t c = 0; c < c_navir; ++c) {
+                int thread = omp_get_thread_num();
+                auto fock_c = Fa_[c_batch_vir_mos[c]];
+                double* Bci_ptr = &Bc_vec[c * na_Qo];
+
+                for (size_t d = 0; d < d_nbvir; ++d) {
+                    auto fock_d = Fb_[d_batch_vir_mos[d]];
+                    double* Bdj_ptr = &Bd_vec[d * nb_Qo];
+
+                    // compute (ci|dj) for given indices c and d
+                    C_DGEMM('N', 'T', naocc_, nbocc_, naux_, 1.0, Bci_ptr, naux_, Bdj_ptr, naux_, 0.0,
+                            Jmn[thread].data().data(), naocc_);
+
+                    Jmn[thread].iterate([&](const std::vector<size_t>& i, double& value) {
+                        value /= Fa_[a_occ_mos_[i[0]]] + Fb_[b_occ_mos_[i[1]]] - fock_c - fock_d;
+                    });
+
+                    Da[thread]("ij") -= Jmn[thread]("ik") * Jmn[thread]("jk");
+                    Db[thread]("ij") -= Jmn[thread]("ki") * Jmn[thread]("kj");
+                }
+            }
+        }
+    }
+
+    // beta-beta spin
+    for (int i = 0; i < nthreads; ++i) {
+        Jmn[i] = ambit::Tensor::build(CoreTensor, "Joo bb", {nbocc_, nbocc_});
+        JKmn[i] = ambit::Tensor::build(CoreTensor, "JKoo bb", {nbocc_, nbocc_});
+    }
+
+    for (size_t c_batch = 0; c_batch < nbatches_beta; ++c_batch) {
+        const auto& c_batch_vir_mos = batch_bvir[c_batch];
+        auto c_nbvir = c_batch_vir_mos.size();
+        auto Bc = ambit::Tensor::build(ambit::CoreTensor, "Bi", {c_nbvir, nbocc_, naux_});
+        Bc("aig") = ints_->three_integral_block(aux_mos_, c_batch_vir_mos, b_occ_mos_)("gai");
+        auto& Bc_vec = Bc.data();
+
+        for (size_t d_batch = c_batch; d_batch < nbatches_beta; ++d_batch) {
+            const auto& d_batch_vir_mos = batch_bvir[d_batch];
+            auto d_nbvir = d_batch_vir_mos.size();
+            ambit::Tensor Bd;
+            if (d_batch == c_batch) {
+                Bd = Bc;
+            } else {
+                Bd = ambit::Tensor::build(ambit::CoreTensor, "Bj", {d_nbvir, nbocc_, naux_});
+                Bd("aig") = ints_->three_integral_block(aux_mos_, d_batch_vir_mos, b_occ_mos_)("gai");
+            }
+            auto& Bd_vec = Bd.data();
+
+            // index pairs for c and d
+            std::vector<std::pair<size_t, size_t>> cd_pairs;
+            if (d_batch == c_batch) {
+                for (size_t c = 0; c < c_nbvir; ++c) {
+                    for (size_t d = c + 1; d < d_nbvir; ++d) {
+                        cd_pairs.emplace_back(c, d);
+                    }
+                }
+            } else {
+                for (size_t c = 0; c < c_nbvir; ++c) {
+                    for (size_t d = 0; d < d_nbvir; ++d) {
+                        cd_pairs.emplace_back(c, d);
+                    }
+                }
+            }
+            size_t cd_pairs_size = cd_pairs.size();
+
+#pragma omp parallel for default(none) shared(c_batch_vir_mos, d_batch_vir_mos, cd_pairs_size, cd_pairs, Bc_vec, Bd_vec, nb_Qo, Jmn, JKmn, Db)
+            for (size_t p = 0; p < cd_pairs_size; ++p) {
+                int thread = omp_get_thread_num();
+
+                auto c = cd_pairs[p].first;
+                auto d = cd_pairs[p].second;
+
+                auto fock_c = Fb_[c_batch_vir_mos[c]];
+                auto fock_d = Fb_[d_batch_vir_mos[d]];
+
+                double* Bci_ptr = &Bc_vec[c * nb_Qo];
+                double* Bdj_ptr = &Bd_vec[d * nb_Qo];
+
+                // compute (ci|dj) for given indices c and d
+                C_DGEMM('N', 'T', nbocc_, nbocc_, naux_, 1.0, Bci_ptr, naux_, Bdj_ptr, naux_, 0.0,
+                        Jmn[thread].data().data(), nbocc_);
+
+                Jmn[thread].iterate([&](const std::vector<size_t>& i, double& value) {
+                    value /= Fb_[b_occ_mos_[i[0]]] + Fb_[b_occ_mos_[i[1]]] - fock_c - fock_d;
+                });
+
+                JKmn[thread]("pq") = Jmn[thread]("pq") - Jmn[thread]("qp");
+                Db[thread]("ij") -= Jmn[thread]("ik") * JKmn[thread]("jk");
+                Db[thread]("ij") -= Jmn[thread]("ki") * JKmn[thread]("kj");
+            }
+        }
+    }
+
+    // add Doo contributions to D1
+    for (int i = 0; i < nthreads; ++i) {
+        D1.block("oo")("pq") += Da[i]("pq");
+        D1.block("OO")("pq") += Db[i]("pq");
+    }
+}
 
 void MP2_NOS::compute_df_rmp2_1rdm_vv(ambit::BlockedTensor& D1) {}
 
