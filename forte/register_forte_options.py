@@ -892,6 +892,9 @@ def register_old_options(options):
 
     options.add_bool("NAT_ACT", False, "Use Natural Orbitals to suggest active space?")
 
+    options.add_double("MP2NO_OCC_THRESHOLD", 0.98, "Occupancy smaller than which is considered as active")
+    options.add_double("MP2NO_VIR_THRESHOLD", 0.02, "Occupancy greater than which is considered as active")
+
     options.add_bool("MEMORY_SUMMARY", False, "Print summary of memory")
 
     options.add_str("REFERENCE", "", "The SCF refernce type")

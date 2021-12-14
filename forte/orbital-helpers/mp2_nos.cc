@@ -174,27 +174,24 @@ void MP2_NOS::compute_transformation() {
     D1VV->diagonalize(D1VV_evecs, D1VV_evals);
 
     // Print natural orbitals
-    if (options_->get_bool("NAT_ORBS_PRINT"))
-
-    {
+    if (options_->get_bool("NAT_ORBS_PRINT")) {
         D1oo_evals.print();
         D1vv_evals.print();
         D1OO_evals.print();
         D1VV_evals.print();
     }
+
     // This will suggest a restricted_docc and an active
     // Does not take in account frozen_docc
     if (options_->get_bool("NAT_ACT")) {
         std::vector<size_t> restricted_docc(nirrep);
         std::vector<size_t> active(nirrep);
-        double occupied = options_->get_double("OCC_NATURAL");
-        double virtual_orb = options_->get_double("VIRT_NATURAL");
+        double occupied = options_->get_double("MP2NO_OCC_THRESHOLD");
+        double virtual_orb = options_->get_double("MP2NO_VIR_THRESHOLD");
         outfile->Printf("\n Suggested Active Space \n");
-        outfile->Printf("\n Occupied orbitals with an occupation less than "
-                        "%6.4f are active",
+        outfile->Printf("\n Occupied orbitals with an occupation less than %6.4f are active",
                         occupied);
-        outfile->Printf("\n Virtual orbitals with an occupation greater than "
-                        "%6.4f are active",
+        outfile->Printf("\n Virtual orbitals with an occupation greater than %6.4f are active",
                         virtual_orb);
         outfile->Printf("\n Remember, these are suggestions  :-)!\n");
         for (int h = 0; h < nirrep; ++h) {
@@ -203,13 +200,12 @@ void MP2_NOS::compute_transformation() {
             for (int i = 0; i < aoccpi[h]; ++i) {
                 if (D1oo_evals.get(h, i) < occupied) {
                     active_number++;
-                    outfile->Printf("\n In %u, orbital occupation %u = %8.6f "
-                                    "Active occupied",
+                    outfile->Printf("\n In irrep %u, orbital occupation %u = %8.6f Active occupied",
                                     h, i, D1oo_evals.get(h, i));
                     active[h] = active_number;
                 } else if (D1oo_evals.get(h, i) >= occupied) {
                     restricted_docc_number++;
-                    outfile->Printf("\n In %u, orbital occupation %u = %8.6f  RDOCC", h, i,
+                    outfile->Printf("\n In irrep %u, orbital occupation %u = %8.6f RDOCC", h, i,
                                     D1oo_evals.get(h, i));
                     restricted_docc[h] = restricted_docc_number;
                 }
@@ -218,22 +214,21 @@ void MP2_NOS::compute_transformation() {
                 if (D1vv_evals.get(h, a) > virtual_orb) {
                     active_number++;
                     active[h] = active_number;
-                    outfile->Printf("\n In %u, orbital occupation %u = %8.6f "
-                                    "Active virtual",
+                    outfile->Printf("\n In irrep %u, orbital occupation %u = %8.6f Active virtual",
                                     h, a, D1vv_evals.get(h, a));
                 }
             }
         }
-        outfile->Printf("\n By occupation analysis, your restricted docc should be\n");
-        outfile->Printf("\n Restricted_docc = [");
+        outfile->Printf("\n By occupation analysis, the restricted_docc should be\n");
+        outfile->Printf("\n Restricted_docc = [ ");
         for (auto& rocc : restricted_docc) {
-            outfile->Printf("%u, ", rocc);
+            outfile->Printf("%u ", rocc);
         }
         outfile->Printf("]\n");
-        outfile->Printf("\n By occupation analysis, active space should be \n");
-        outfile->Printf("\n Active = [");
+        outfile->Printf("\n By occupation analysis, the active orbitals should be\n");
+        outfile->Printf("\n Active = [ ");
         for (auto& ract : active) {
-            outfile->Printf("%u, ", ract);
+            outfile->Printf("%u ", ract);
         }
         outfile->Printf("]\n");
     }
@@ -583,30 +578,31 @@ void MP2_NOS::compute_df_ump2_1rdm_vv(ambit::BlockedTensor& D1) {
             Bj("iag") = ints_->three_integral_block(aux_mos_, j_batch_occ_mos, b_vir_mos_)("gia");
             auto& Bj_vec = Bj.data();
 
-#pragma omp parallel for collapse(2) default(none) shared(i_batch_occ_mos, i_naocc, Bi_vec, j_batch_occ_mos, j_nbocc, Bj_vec, na_Qv, nb_Qv, Jab, JKab, Da, Db) reduction(+ : e_ab)
-            for (size_t i = 0; i < i_naocc; ++i) {
+#pragma omp parallel for default(none) shared(i_batch_occ_mos, i_naocc, Bi_vec, j_batch_occ_mos, j_nbocc, Bj_vec, na_Qv, nb_Qv, Jab, JKab, Da, Db) reduction(+ : e_ab)
+            for (size_t p = 0; p < i_naocc * j_nbocc; ++p) {
                 int thread = omp_get_thread_num();
+                size_t i = p / j_nbocc;
+                size_t j = p % j_nbocc;
+
                 auto fock_i = Fa_[i_batch_occ_mos[i]];
+                auto fock_j = Fb_[j_batch_occ_mos[j]];
+
                 double* Bia_ptr = &Bi_vec[i * na_Qv];
+                double* Bjb_ptr = &Bj_vec[j * nb_Qv];
 
-                for (size_t j = 0; j < j_nbocc; ++j) {
-                    auto fock_j = Fb_[j_batch_occ_mos[j]];
-                    double* Bjb_ptr = &Bj_vec[j * nb_Qv];
+                // compute (ia|jb) for given indices i and j
+                C_DGEMM('N', 'T', navir_, nbvir_, naux_, 1.0, Bia_ptr, naux_, Bjb_ptr, naux_, 0.0,
+                        Jab[thread].data().data(), navir_);
 
-                    // compute (ia|jb) for given indices i and j
-                    C_DGEMM('N', 'T', navir_, nbvir_, naux_, 1.0, Bia_ptr, naux_, Bjb_ptr, naux_,
-                            0.0, Jab[thread].data().data(), navir_);
+                JKab[thread]("pq") = Jab[thread]("pq");
+                Jab[thread].iterate([&](const std::vector<size_t>& i, double& value) {
+                    value /= fock_i + fock_j - Fa_[a_vir_mos_[i[0]]] - Fb_[b_vir_mos_[i[1]]];
+                });
 
-                    JKab[thread]("pq") = Jab[thread]("pq");
-                    Jab[thread].iterate([&](const std::vector<size_t>& i, double& value) {
-                        value /= fock_i + fock_j - Fa_[a_vir_mos_[i[0]]] - Fb_[b_vir_mos_[i[1]]];
-                    });
+                e_ab += Jab[thread]("pq") * JKab[thread]("pq");
 
-                    e_ab += Jab[thread]("pq") * JKab[thread]("pq");
-
-                    Da[thread]("ab") += Jab[thread]("ac") * Jab[thread]("bc");
-                    Db[thread]("ab") += Jab[thread]("ca") * Jab[thread]("cb");
-                }
+                Da[thread]("ab") += Jab[thread]("ac") * Jab[thread]("bc");
+                Db[thread]("ab") += Jab[thread]("ca") * Jab[thread]("cb");
             }
         }
     }
@@ -829,28 +825,29 @@ void MP2_NOS::compute_df_ump2_1rdm_oo(ambit::BlockedTensor& D1) {
             Bd("aig") = ints_->three_integral_block(aux_mos_, d_batch_vir_mos, b_occ_mos_)("gai");
             auto& Bd_vec = Bd.data();
 
-#pragma omp parallel for collapse(2) default(none) shared(                                         \
-    c_batch_vir_mos, c_navir, d_batch_vir_mos, d_nbvir, Bc_vec, Bd_vec, na_Qo, nb_Qo, Jmn, Da, Db)
-            for (size_t c = 0; c < c_navir; ++c) {
+#pragma omp parallel for default(none) shared(c_batch_vir_mos, c_navir, d_batch_vir_mos, d_nbvir,  \
+                                              Bc_vec, Bd_vec, na_Qo, nb_Qo, Jmn, Da, Db)
+            for (size_t p = 0; p < c_navir * d_nbvir; ++p) {
                 int thread = omp_get_thread_num();
+                size_t c = p / d_nbvir;
+                size_t d = p % d_nbvir;
+
                 auto fock_c = Fa_[c_batch_vir_mos[c]];
+                auto fock_d = Fb_[d_batch_vir_mos[d]];
+
                 double* Bci_ptr = &Bc_vec[c * na_Qo];
+                double* Bdj_ptr = &Bd_vec[d * nb_Qo];
 
-                for (size_t d = 0; d < d_nbvir; ++d) {
-                    auto fock_d = Fb_[d_batch_vir_mos[d]];
-                    double* Bdj_ptr = &Bd_vec[d * nb_Qo];
+                // compute (ci|dj) for given indices c and d
+                C_DGEMM('N', 'T', naocc_, nbocc_, naux_, 1.0, Bci_ptr, naux_, Bdj_ptr, naux_, 0.0,
+                        Jmn[thread].data().data(), naocc_);
 
-                    // compute (ci|dj) for given indices c and d
-                    C_DGEMM('N', 'T', naocc_, nbocc_, naux_, 1.0, Bci_ptr, naux_, Bdj_ptr, naux_,
-                            0.0, Jmn[thread].data().data(), naocc_);
+                Jmn[thread].iterate([&](const std::vector<size_t>& i, double& value) {
+                    value /= Fa_[a_occ_mos_[i[0]]] + Fb_[b_occ_mos_[i[1]]] - fock_c - fock_d;
+                });
 
-                    Jmn[thread].iterate([&](const std::vector<size_t>& i, double& value) {
-                        value /= Fa_[a_occ_mos_[i[0]]] + Fb_[b_occ_mos_[i[1]]] - fock_c - fock_d;
-                    });
-
-                    Da[thread]("ij") -= Jmn[thread]("ik") * Jmn[thread]("jk");
-                    Db[thread]("ij") -= Jmn[thread]("ki") * Jmn[thread]("kj");
-                }
+                Da[thread]("ij") -= Jmn[thread]("ik") * Jmn[thread]("jk");
+                Db[thread]("ij") -= Jmn[thread]("ki") * Jmn[thread]("kj");
             }
         }
     }
