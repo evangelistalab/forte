@@ -44,7 +44,6 @@
 #ifdef _OPENMP
 #include <omp.h>
 #else
-bool MP2_NOS::have_omp_ = false;
 #define omp_get_max_threads() 1
 #define omp_get_thread_num() 0
 #define omp_get_num_threads() 1
@@ -760,7 +759,8 @@ void MP2_NOS::compute_df_ump2_1rdm_oo(ambit::BlockedTensor& D1) {
                 Bd = Bc;
             } else {
                 Bd = ambit::Tensor::build(ambit::CoreTensor, "Bj", {d_navir, naocc_, naux_});
-                Bd("aig") = ints_->three_integral_block(aux_mos_, d_batch_vir_mos, a_occ_mos_)("gai");
+                Bd("aig") =
+                    ints_->three_integral_block(aux_mos_, d_batch_vir_mos, a_occ_mos_)("gai");
             }
             auto& Bd_vec = Bd.data();
 
@@ -781,7 +781,8 @@ void MP2_NOS::compute_df_ump2_1rdm_oo(ambit::BlockedTensor& D1) {
             }
             size_t cd_pairs_size = cd_pairs.size();
 
-#pragma omp parallel for default(none) shared(c_batch_vir_mos, d_batch_vir_mos, cd_pairs_size, cd_pairs, Bc_vec, Bd_vec, na_Qo, Jmn, JKmn, Da)
+#pragma omp parallel for default(none) shared(c_batch_vir_mos, d_batch_vir_mos, cd_pairs_size,     \
+                                              cd_pairs, Bc_vec, Bd_vec, na_Qo, Jmn, JKmn, Da)
             for (size_t p = 0; p < cd_pairs_size; ++p) {
                 int thread = omp_get_thread_num();
 
@@ -828,7 +829,8 @@ void MP2_NOS::compute_df_ump2_1rdm_oo(ambit::BlockedTensor& D1) {
             Bd("aig") = ints_->three_integral_block(aux_mos_, d_batch_vir_mos, b_occ_mos_)("gai");
             auto& Bd_vec = Bd.data();
 
-#pragma omp parallel for collapse(2) default(none) shared(c_batch_vir_mos, c_navir, d_batch_vir_mos, d_nbvir, Bc_vec, Bd_vec, na_Qo, nb_Qo, Jmn, Da, Db)
+#pragma omp parallel for collapse(2) default(none) shared(                                         \
+    c_batch_vir_mos, c_navir, d_batch_vir_mos, d_nbvir, Bc_vec, Bd_vec, na_Qo, nb_Qo, Jmn, Da, Db)
             for (size_t c = 0; c < c_navir; ++c) {
                 int thread = omp_get_thread_num();
                 auto fock_c = Fa_[c_batch_vir_mos[c]];
@@ -839,8 +841,8 @@ void MP2_NOS::compute_df_ump2_1rdm_oo(ambit::BlockedTensor& D1) {
                     double* Bdj_ptr = &Bd_vec[d * nb_Qo];
 
                     // compute (ci|dj) for given indices c and d
-                    C_DGEMM('N', 'T', naocc_, nbocc_, naux_, 1.0, Bci_ptr, naux_, Bdj_ptr, naux_, 0.0,
-                            Jmn[thread].data().data(), naocc_);
+                    C_DGEMM('N', 'T', naocc_, nbocc_, naux_, 1.0, Bci_ptr, naux_, Bdj_ptr, naux_,
+                            0.0, Jmn[thread].data().data(), naocc_);
 
                     Jmn[thread].iterate([&](const std::vector<size_t>& i, double& value) {
                         value /= Fa_[a_occ_mos_[i[0]]] + Fb_[b_occ_mos_[i[1]]] - fock_c - fock_d;
@@ -874,7 +876,8 @@ void MP2_NOS::compute_df_ump2_1rdm_oo(ambit::BlockedTensor& D1) {
                 Bd = Bc;
             } else {
                 Bd = ambit::Tensor::build(ambit::CoreTensor, "Bj", {d_nbvir, nbocc_, naux_});
-                Bd("aig") = ints_->three_integral_block(aux_mos_, d_batch_vir_mos, b_occ_mos_)("gai");
+                Bd("aig") =
+                    ints_->three_integral_block(aux_mos_, d_batch_vir_mos, b_occ_mos_)("gai");
             }
             auto& Bd_vec = Bd.data();
 
@@ -895,7 +898,8 @@ void MP2_NOS::compute_df_ump2_1rdm_oo(ambit::BlockedTensor& D1) {
             }
             size_t cd_pairs_size = cd_pairs.size();
 
-#pragma omp parallel for default(none) shared(c_batch_vir_mos, d_batch_vir_mos, cd_pairs_size, cd_pairs, Bc_vec, Bd_vec, nb_Qo, Jmn, JKmn, Db)
+#pragma omp parallel for default(none) shared(c_batch_vir_mos, d_batch_vir_mos, cd_pairs_size,     \
+                                              cd_pairs, Bc_vec, Bd_vec, nb_Qo, Jmn, JKmn, Db)
             for (size_t p = 0; p < cd_pairs_size; ++p) {
                 int thread = omp_get_thread_num();
 
@@ -1119,7 +1123,8 @@ void MP2_NOS::compute_df_rmp2_1rdm_oo(ambit::BlockedTensor& D1) {
             }
             size_t cd_pairs_size = cd_pairs.size();
 
-#pragma omp parallel for default(none) shared(c_batch_vir_mos, d_batch_vir_mos, cd_pairs_size, cd_pairs, Bc_vec, Bd_vec, n_Qo, Jmn, JKmn, Da)
+#pragma omp parallel for default(none) shared(c_batch_vir_mos, d_batch_vir_mos, cd_pairs_size,     \
+                                              cd_pairs, Bc_vec, Bd_vec, n_Qo, Jmn, JKmn, Da)
             for (size_t p = 0; p < cd_pairs_size; ++p) {
                 int thread = omp_get_thread_num();
 
