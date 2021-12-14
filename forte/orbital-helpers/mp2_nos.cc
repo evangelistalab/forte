@@ -122,6 +122,7 @@ void MP2_NOS::compute_transformation() {
     outfile->Printf("\n    Number of α virtual orbitals  %8zu", navir_);
     outfile->Printf("\n    Number of β virtual orbitals  %8zu", nbvir_);
 
+    // directly read orbital energies from psi4
     Fa_.clear();
     Fb_.clear();
 
@@ -147,40 +148,7 @@ void MP2_NOS::compute_transformation() {
         std::iota(aux_mos_.begin(), aux_mos_.end(), 0);
         BlockedTensor::add_mo_space("L", "g", aux_mos_, NoSpin);
 
-        BlockedTensor D1pp = BlockedTensor::build(CoreTensor, "D1", spin_cases({"oo", "vv"}));
-        D1pp.block("oo").iterate(
-            [&](const std::vector<size_t>& i, double& value) { value = i[0] == i[1] ? 1.0 : 0.0; });
-        D1pp.block("OO").iterate(
-            [&](const std::vector<size_t>& i, double& value) { value = i[0] == i[1] ? 1.0 : 0.0; });
-
-        compute_df_ump2_1rdm_vv(D1pp);
-        compute_df_ump2_1rdm_oo(D1pp);
-
-        BlockedTensor D1t = BlockedTensor::build(CoreTensor, "D1", spin_cases({"oo", "vv"}));
-        D1t.block("oo").iterate(
-            [&](const std::vector<size_t>& i, double& value) { value = i[0] == i[1] ? 1.0 : 0.0; });
-        D1t.block("OO").iterate(
-            [&](const std::vector<size_t>& i, double& value) { value = i[0] == i[1] ? 1.0 : 0.0; });
-
-        compute_df_rmp2_1rdm_vv(D1t);
-        compute_df_rmp2_1rdm_oo(D1t);
-
-//        auto D1t = build_1rdm_df();
-        D1 = build_1rdm_conv();
-
-        D1pp["pq"] -= D1["pq"];
-        D1pp["PQ"] -= D1["PQ"];
-        outfile->Printf("\n  Dvv diff = %20.15f, DVV diff = %20.15f", D1pp.block("vv").norm(0),
-                        D1pp.block("VV").norm(0));
-        outfile->Printf("\n  Doo diff = %20.15f, DOO diff = %20.15f", D1pp.block("oo").norm(0),
-                        D1pp.block("OO").norm(0));
-
-        D1t["pq"] -= D1["pq"];
-        D1t["PQ"] -= D1["PQ"];
-        outfile->Printf("\n  Dvv diff = %20.15f, DVV diff = %20.15f", D1t.block("vv").norm(0),
-                        D1t.block("VV").norm(0));
-        outfile->Printf("\n  Doo diff = %20.15f, DOO diff = %20.15f", D1t.block("oo").norm(0),
-                        D1t.block("OO").norm(0));
+        D1 = build_1rdm_df();
     } else {
         D1 = build_1rdm_conv();
     }
@@ -474,294 +442,12 @@ ambit::BlockedTensor MP2_NOS::build_1rdm_df() {
     D1.block("OO").iterate(
         [&](const std::vector<size_t>& i, double& value) { value = i[0] == i[1] ? 1.0 : 0.0; });
 
-    // number of orbitals
-    auto naocc = a_occ_mos_.size();
-    auto nbocc = b_occ_mos_.size();
-    auto navir = a_vir_mos_.size();
-    auto nbvir = b_vir_mos_.size();
-    auto naux = aux_mos_.size();
-
-    auto na_Qv = naux * navir;
-    auto nb_Qv = naux * nbvir;
-    auto na_Qo = naux * naocc;
-    auto nb_Qo = naux * nbocc;
-
-    // memory in bytes
-    size_t memory = psi::Process::environment.get_memory() * 0.9;
-    outfile->Printf("\n  Memory:            %zu MB", memory / 1024 / 1024);
-
-    int nthreads = omp_get_max_threads();
-    outfile->Printf("\n  Number of threads: %d", nthreads);
-
-    // just assume we can store 3-index integrals in memory
-    auto Ba = ambit::Tensor::build(ambit::CoreTensor, "Ba", {naocc, navir, naux});
-    Ba("iag") = ints_->three_integral_block(aux_mos_, a_occ_mos_, a_vir_mos_)("gia");
-    auto& Ba_data = Ba.data();
-
-    auto Bb = ambit::Tensor::build(ambit::CoreTensor, "Bb", {nbocc, nbvir, naux});
-    Bb("iag") = ints_->three_integral_block(aux_mos_, b_occ_mos_, b_vir_mos_)("gia");
-    auto& Bb_data = Bb.data();
-
-    // compute MP2 energy
-    double e_aa = 0.0, e_ab = 0.0, e_bb = 0.0;
-    std::vector<ambit::Tensor> Jab(nthreads), JKab(nthreads);
-    std::vector<ambit::Tensor> Da(nthreads), Db(nthreads);
-
-    // aa
-    for (int i = 0; i < nthreads; ++i) {
-        Jab[i] = ambit::Tensor::build(CoreTensor, "Jab", {navir, navir});
-        JKab[i] = ambit::Tensor::build(CoreTensor, "JKab", {navir, navir});
-        Da[i] = ambit::Tensor::build(CoreTensor, "Da", {navir, navir});
-        Db[i] = ambit::Tensor::build(CoreTensor, "Db", {nbvir, nbvir});
-    }
-
-#pragma omp parallel for collapse(2) default(none) shared(Ba_data, naocc, navir, naux, na_Qv, Jab, JKab, Da) reduction(+ : e_aa)
-    for (size_t i = 0; i < naocc; ++i) {
-        double fock_i = Fa_[a_occ_mos_[i]];
-
-        // grab data for index i
-        double* Bia_ptr = &Ba_data[i * na_Qv];
-
-        int thread = omp_get_thread_num();
-
-        for (size_t j = 0; j < naocc; ++j) {
-            double fock_j = Fa_[a_occ_mos_[j]];
-
-            // grab data for index j
-            double* Bjb_ptr = &Ba_data[j * na_Qv];
-
-            // compute (ia|jb) for given indices i and j
-            double* Vab_ptr = Jab[thread].data().data();
-            C_DGEMM('N', 'T', navir, navir, naux, 1.0, Bia_ptr, naux, Bjb_ptr, naux, 0.0, Vab_ptr,
-                    navir);
-
-            JKab[thread]("pq") = Jab[thread]("pq") - Jab[thread]("qp");
-            Jab[thread].iterate([&](const std::vector<size_t>& i, double& value) {
-                value /= fock_i + fock_j - Fa_[a_vir_mos_[i[0]]] - Fa_[a_vir_mos_[i[1]]];
-            });
-
-            e_aa += 0.5 * Jab[thread]("pq") * JKab[thread]("pq");
-
-            JKab[thread]("pq") = Jab[thread]("pq") - Jab[thread]("qp");
-            Da[thread]("ab") += Jab[thread]("ac") * JKab[thread]("bc");
-        }
-    }
-
-    // ab
-    for (int i = 0; i < nthreads; ++i) {
-        Jab[i] = ambit::Tensor::build(CoreTensor, "Jab", {navir, nbvir});
-        JKab[i] = ambit::Tensor::build(CoreTensor, "JKab", {navir, nbvir});
-    }
-
-#pragma omp parallel for collapse(2) default(none) shared(Ba_data, Bb_data, naocc, navir, na_Qv, nbocc, nbvir, nb_Qv, naux, Jab, JKab, Da, Db) reduction(+ : e_ab)
-    for (size_t i = 0; i < naocc; ++i) {
-        double fock_i = Fa_[a_occ_mos_[i]];
-
-        // grab data for index i
-        double* Bia_ptr = &Ba_data[i * na_Qv];
-
-        int thread = omp_get_thread_num();
-
-        for (size_t j = 0; j < nbocc; ++j) {
-            double fock_j = Fb_[b_occ_mos_[j]];
-
-            // grab data for index j
-            double* Bjb_ptr = &Bb_data[j * nb_Qv];
-
-            // compute (ia|jb) = Bi(aQ) * Bj(bQ) for given indices i and j
-            double* Vab_ptr = Jab[thread].data().data();
-            C_DGEMM('N', 'T', navir, nbvir, naux, 1.0, Bia_ptr, naux, Bjb_ptr, naux, 0.0, Vab_ptr,
-                    navir);
-
-            JKab[thread]("pq") = Jab[thread]("pq");
-            Jab[thread].iterate([&](const std::vector<size_t>& i, double& value) {
-                value /= fock_i + fock_j - Fa_[a_vir_mos_[i[0]]] - Fb_[b_vir_mos_[i[1]]];
-            });
-
-            e_ab += Jab[thread]("pq") * JKab[thread]("pq");
-
-            Da[thread]("ab") += Jab[thread]("ac") * Jab[thread]("bc");
-            Db[thread]("ab") += Jab[thread]("ca") * Jab[thread]("cb");
-        }
-    }
-
-    // bb
-    for (int i = 0; i < nthreads; ++i) {
-        Jab[i] = ambit::Tensor::build(CoreTensor, "Jab", {nbvir, nbvir});
-        JKab[i] = ambit::Tensor::build(CoreTensor, "JKab", {nbvir, nbvir});
-    }
-
-#pragma omp parallel for collapse(2) default(none) shared(Bb_data, nbocc, nbvir, naux, nb_Qv, Jab, JKab, Db) reduction(+ : e_bb)
-    for (size_t i = 0; i < nbocc; ++i) {
-        double fock_i = Fb_[b_occ_mos_[i]];
-
-        // grab data for index i
-        double* Bia_ptr = &Bb_data[i * nb_Qv];
-
-        int thread = omp_get_thread_num();
-
-        for (size_t j = 0; j < nbocc; ++j) {
-            double fock_j = Fb_[b_occ_mos_[j]];
-
-            // grab data for index j
-            double* Bjb_ptr = &Bb_data[j * nb_Qv];
-
-            // compute (ia|jb) for given indices i and j
-            double* Vab_ptr = Jab[thread].data().data();
-            C_DGEMM('N', 'T', nbvir, nbvir, naux, 1.0, Bia_ptr, naux, Bjb_ptr, naux, 0.0, Vab_ptr,
-                    nbvir);
-
-            JKab[thread]("pq") = Jab[thread]("pq") - Jab[thread]("qp");
-            Jab[thread].iterate([&](const std::vector<size_t>& i, double& value) {
-                value /= fock_i + fock_j - Fb_[b_vir_mos_[i[0]]] - Fb_[b_vir_mos_[i[1]]];
-            });
-
-            e_bb += 0.5 * Jab[thread]("pq") * JKab[thread]("pq");
-
-            JKab[thread]("pq") = Jab[thread]("pq") - Jab[thread]("qp");
-            Db[thread]("ab") += Jab[thread]("ac") * JKab[thread]("bc");
-        }
-    }
-
-    // print energy
-    double e_corr = e_aa + e_ab + e_bb;
-    double e_ref = scf_info_->reference_energy();
-    outfile->Printf("\n\n    SCF energy                            = %20.15f", e_ref);
-    outfile->Printf("\n    MP2 correlation energy (aa)           = %20.15f", e_aa);
-    outfile->Printf("\n    MP2 correlation energy (ab)           = %20.15f", e_ab);
-    outfile->Printf("\n    MP2 correlation energy (bb)           = %20.15f", e_bb);
-    outfile->Printf("\n    MP2 correlation energy                = %20.15f", e_corr);
-    outfile->Printf("\n  * MP2 total energy                      = %20.15f\n\n", e_ref + e_corr);
-
-    // add Dvv contributions to D1
-    for (int i = 0; i < nthreads; ++i) {
-        D1.block("vv")("pq") += Da[i]("pq");
-        D1.block("VV")("pq") += Db[i]("pq");
-    }
-
-    // compute Doo contributions
-    Ba = ambit::Tensor::build(ambit::CoreTensor, "Ba", {navir, naocc, naux});
-    Ba("aig") = ints_->three_integral_block(aux_mos_, a_vir_mos_, a_occ_mos_)("gai");
-    Ba_data = Ba.data();
-
-    Bb = ambit::Tensor::build(ambit::CoreTensor, "Bb", {nbvir, nbocc, naux});
-    Bb("aig") = ints_->three_integral_block(aux_mos_, b_vir_mos_, b_occ_mos_)("gai");
-    Bb_data = Bb.data();
-
-    // aa
-    for (int i = 0; i < nthreads; ++i) {
-        Jab[i] = ambit::Tensor::build(CoreTensor, "J_ij", {naocc, naocc});
-        JKab[i] = ambit::Tensor::build(CoreTensor, "JK_ij", {naocc, naocc});
-        Da[i] = ambit::Tensor::build(CoreTensor, "Da", {naocc, naocc});
-        Db[i] = ambit::Tensor::build(CoreTensor, "Db", {naocc, naocc});
-    }
-
-#pragma omp parallel for collapse(2) default(none)                                                 \
-    shared(Ba_data, naocc, navir, naux, na_Qo, Jab, JKab, Da)
-    for (size_t a = 0; a < navir; ++a) {
-        double fock_a = Fa_[a_vir_mos_[a]];
-
-        // grab data for index a
-        double* Bai_ptr = &Ba_data[a * na_Qo];
-
-        int thread = omp_get_thread_num();
-
-        for (size_t b = 0; b < navir; ++b) {
-            double fock_b = Fa_[a_vir_mos_[b]];
-
-            // grab data for index b
-            double* Bbj_ptr = &Ba_data[b * na_Qo];
-
-            // compute (ia|jb) for given indices a and b
-            double* Vij_ptr = Jab[thread].data().data();
-            C_DGEMM('N', 'T', naocc, naocc, naux, 1.0, Bai_ptr, naux, Bbj_ptr, naux, 0.0, Vij_ptr,
-                    naocc);
-
-            Jab[thread].iterate([&](const std::vector<size_t>& i, double& value) {
-                value /= Fa_[a_occ_mos_[i[0]]] + Fa_[a_occ_mos_[i[1]]] - fock_a - fock_b;
-            });
-
-            JKab[thread]("pq") = Jab[thread]("pq") - Jab[thread]("qp");
-            Da[thread]("ij") -= Jab[thread]("ik") * JKab[thread]("jk");
-        }
-    }
-
-    // ab
-    for (int i = 0; i < nthreads; ++i) {
-        Jab[i] = ambit::Tensor::build(CoreTensor, "J_ij", {naocc, nbocc});
-        JKab[i] = ambit::Tensor::build(CoreTensor, "JKij", {naocc, nbocc});
-    }
-
-#pragma omp parallel for collapse(2) default(none)                                                 \
-    shared(Ba_data, Bb_data, naocc, navir, na_Qo, nbocc, nbvir, nb_Qo, naux, Jab, JKab, Da, Db)
-    for (size_t a = 0; a < navir; ++a) {
-        double fock_a = Fa_[a_vir_mos_[a]];
-
-        // grab data for index a
-        double* Bai_ptr = &Ba_data[a * na_Qo];
-
-        int thread = omp_get_thread_num();
-
-        for (size_t b = 0; b < nbvir; ++b) {
-            double fock_b = Fb_[b_vir_mos_[b]];
-
-            // grab data for index b
-            double* Bbj_ptr = &Bb_data[b * nb_Qo];
-
-            // compute (ia|jb) = Ba(iQ) * Bb(jQ) for given indices a and b
-            double* Vij_ptr = Jab[thread].data().data();
-            C_DGEMM('N', 'T', naocc, nbocc, naux, 1.0, Bai_ptr, naux, Bbj_ptr, naux, 0.0, Vij_ptr,
-                    naocc);
-
-            Jab[thread].iterate([&](const std::vector<size_t>& i, double& value) {
-                value /= Fa_[a_occ_mos_[i[0]]] + Fb_[b_occ_mos_[i[1]]] - fock_a - fock_b;
-            });
-
-            Da[thread]("ij") -= Jab[thread]("ik") * Jab[thread]("jk");
-            Db[thread]("ij") -= Jab[thread]("ki") * Jab[thread]("kj");
-        }
-    }
-
-    // bb
-    for (int i = 0; i < nthreads; ++i) {
-        Jab[i] = ambit::Tensor::build(CoreTensor, "Jab", {nbocc, nbocc});
-        JKab[i] = ambit::Tensor::build(CoreTensor, "JKab", {nbocc, nbocc});
-    }
-
-#pragma omp parallel for collapse(2) default(none)                                                 \
-    shared(Bb_data, nbocc, nbvir, naux, nb_Qo, Jab, JKab, Db)
-    for (size_t a = 0; a < nbvir; ++a) {
-        double fock_a = Fb_[b_vir_mos_[a]];
-
-        // grab data for index a
-        double* Bai_ptr = &Bb_data[a * nb_Qo];
-
-        int thread = omp_get_thread_num();
-
-        for (size_t b = 0; b < nbvir; ++b) {
-            double fock_b = Fb_[b_vir_mos_[b]];
-
-            // grab data for index b
-            double* Bbj_ptr = &Bb_data[b * nb_Qo];
-
-            // compute (ia|jb) for given indices a and b
-            double* Vij_ptr = Jab[thread].data().data();
-            C_DGEMM('N', 'T', nbocc, nbocc, naux, 1.0, Bai_ptr, naux, Bbj_ptr, naux, 0.0, Vij_ptr,
-                    nbocc);
-
-            Jab[thread].iterate([&](const std::vector<size_t>& i, double& value) {
-                value /= Fb_[b_occ_mos_[i[0]]] + Fb_[b_occ_mos_[i[1]]] - fock_a - fock_b;
-            });
-
-            JKab[thread]("pq") = Jab[thread]("pq") - Jab[thread]("qp");
-            Db[thread]("ij") -= Jab[thread]("ik") * JKab[thread]("jk");
-        }
-    }
-
-    // add Doo contributions to D1
-    for (int i = 0; i < nthreads; ++i) {
-        D1.block("oo")("pq") += Da[i]("pq");
-        D1.block("OO")("pq") += Db[i]("pq");
+    if (naocc_ == nbocc_) {
+        compute_df_rmp2_1rdm_vv(D1);
+        compute_df_rmp2_1rdm_oo(D1);
+    } else {
+        compute_df_ump2_1rdm_vv(D1);
+        compute_df_ump2_1rdm_oo(D1);
     }
 
     return D1;
@@ -1029,7 +715,7 @@ void MP2_NOS::compute_df_ump2_1rdm_oo(ambit::BlockedTensor& D1) {
     // test memory
     size_t memory_min = 4 * nthreads * naocc_ * naocc_;
     if ((memory_min + na_Qo + nb_Qo) * sizeof(double) > memory_) {
-        outfile->Printf("\n  Error: Not enough memory for DF-UMP (OO).");
+        outfile->Printf("\n  Error: Not enough memory for DF-UMP2 (OO).");
         outfile->Printf(" Need at least %zu Bytes more!",
                         (memory_min + na_Qo + nb_Qo) * sizeof(double) - memory_);
         throw std::runtime_error("Not enough memory to run DF-MP2. Please check output.");
