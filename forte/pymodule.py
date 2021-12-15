@@ -498,6 +498,8 @@ def run_forte(name, **kwargs):
 
     start = time.time()
 
+    job_type = options.get_str('JOB_TYPE')
+
     # Rotate orbitals before computation (e.g. localization, MP2 natural orbitals, etc.)
     orb_type = options.get_str("ORBITAL_TYPE")
     if orb_type != 'CANONICAL':
@@ -505,10 +507,9 @@ def run_forte(name, **kwargs):
         orb_t.compute_transformation()
         Ua = orb_t.get_Ua()
         Ub = orb_t.get_Ub()
-        ints.rotate_orbitals(Ua, Ub)
+        ints.rotate_orbitals(Ua, Ub, job_type != 'NONE')
 
     # Run a method
-    job_type = options.get_str('JOB_TYPE')
     if job_type == 'NONE':
         psi4.core.set_scalar_variable('CURRENT ENERGY', 0.0)
         # forte.cleanup()
