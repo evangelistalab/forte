@@ -485,14 +485,6 @@ def run_forte(name, **kwargs):
     forte_objects = prepare_forte_objects(options, name, **kwargs)
     ref_wfn, state_weights_map, mo_space_info, scf_info, fcidump = forte_objects
 
-    # Run a method
-    job_type = options.get_str('JOB_TYPE')
-
-    if job_type == 'NONE':
-        psi4.core.set_scalar_variable('CURRENT ENERGY', 0.0)
-        # forte.cleanup()
-        return ref_wfn
-
     start_pre_ints = time.time()
 
     if 'FCIDUMP' in options.get_str('INT_TYPE'):
@@ -516,6 +508,12 @@ def run_forte(name, **kwargs):
         ints.rotate_orbitals(Ua, Ub)
 
     # Run a method
+    job_type = options.get_str('JOB_TYPE')
+    if job_type == 'NONE':
+        psi4.core.set_scalar_variable('CURRENT ENERGY', 0.0)
+        # forte.cleanup()
+        return ref_wfn
+
     energy = 0.0
 
     if (options.get_bool("CASSCF_REFERENCE") or job_type == "CASSCF"):

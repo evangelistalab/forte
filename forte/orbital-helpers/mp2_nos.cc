@@ -39,6 +39,7 @@
 #include "helpers/helpers.h"
 #include "helpers/blockedtensorfactory.h"
 #include "helpers/printing.h"
+#include "helpers/timer.h"
 #include "mp2_nos.h"
 
 #ifdef _OPENMP
@@ -79,7 +80,7 @@ void MP2_NOS::compute_transformation() {
     a_vir_mos_.clear();
     b_vir_mos_.clear();
 
-    psi::Dimension ncmopi_ = mo_space_info_->dimension("CORRELATED");
+    psi::Dimension ncmopi = mo_space_info_->dimension("CORRELATED");
     psi::Dimension frzcpi = mo_space_info_->dimension("FROZEN_DOCC");
     psi::Dimension frzvpi = mo_space_info_->dimension("FROZEN_UOCC");
 
@@ -92,8 +93,8 @@ void MP2_NOS::compute_transformation() {
 
     psi::Dimension aoccpi = corr_docc + scf_info_->soccpi();
     psi::Dimension boccpi = corr_docc;
-    psi::Dimension avirpi = ncmopi_ - aoccpi;
-    psi::Dimension bvirpi = ncmopi_ - boccpi;
+    psi::Dimension avirpi = ncmopi - aoccpi;
+    psi::Dimension bvirpi = ncmopi - boccpi;
 
     int nirrep = ints_->nirrep();
 
@@ -106,7 +107,7 @@ void MP2_NOS::compute_transformation() {
             a_occ_mos_.push_back(p);
             b_vir_mos_.push_back(p);
         }
-        for (int a = 0; a < ncmopi_[h] - corr_docc[h] - soccpi[h]; ++a, ++p) {
+        for (int a = 0; a < ncmopi[h] - corr_docc[h] - soccpi[h]; ++a, ++p) {
             a_vir_mos_.push_back(p);
             b_vir_mos_.push_back(p);
         }
@@ -126,7 +127,7 @@ void MP2_NOS::compute_transformation() {
     Fb_.clear();
 
     for (int h = 0; h < nirrep; ++h) {
-        for (int i = 0; i < ncmopi_[h]; ++i) {
+        for (int i = 0; i < ncmopi[h]; ++i) {
             Fa_.push_back(scf_info_->epsilon_a()->get(h, i + frzcpi[h]));
             Fb_.push_back(scf_info_->epsilon_b()->get(h, i + frzcpi[h]));
         }
@@ -168,10 +169,10 @@ void MP2_NOS::compute_transformation() {
     Vector D1vv_evals("D1vv_evals", avirpi);
     Vector D1VV_evals("D1VV_evals", bvirpi);
 
-    D1oo->diagonalize(D1oo_evecs, D1oo_evals);
-    D1vv->diagonalize(D1vv_evecs, D1vv_evals);
-    D1OO->diagonalize(D1OO_evecs, D1OO_evals);
-    D1VV->diagonalize(D1VV_evecs, D1VV_evals);
+    D1oo->diagonalize(D1oo_evecs, D1oo_evals, descending);
+    D1vv->diagonalize(D1vv_evecs, D1vv_evals, descending);
+    D1OO->diagonalize(D1OO_evecs, D1OO_evals, descending);
+    D1VV->diagonalize(D1VV_evecs, D1VV_evals, descending);
 
     // Print natural orbitals
     if (options_->get_bool("NAT_ORBS_PRINT")) {
@@ -200,108 +201,53 @@ void MP2_NOS::compute_transformation() {
             for (int i = 0; i < aoccpi[h]; ++i) {
                 if (D1oo_evals.get(h, i) < occupied) {
                     active_number++;
-                    outfile->Printf("\n In irrep %u, orbital occupation %u = %8.6f Active occupied",
-                                    h, i, D1oo_evals.get(h, i));
-                    active[h] = active_number;
-                } else if (D1oo_evals.get(h, i) >= occupied) {
+                    outfile->Printf("\n Irrep %d orbital %4d occupation: %8.6f Active occupied", h,
+                                    i, D1oo_evals.get(h, i));
+                } else {
                     restricted_docc_number++;
-                    outfile->Printf("\n In irrep %u, orbital occupation %u = %8.6f RDOCC", h, i,
-                                    D1oo_evals.get(h, i));
-                    restricted_docc[h] = restricted_docc_number;
+                    //                    outfile->Printf("\n Irrep %d orbital %4d occupation: %8.6f
+                    //                    RDOCC", h, i, D1oo_evals.get(h, i));
                 }
             }
             for (int a = 0; a < avirpi[h]; ++a) {
                 if (D1vv_evals.get(h, a) > virtual_orb) {
                     active_number++;
-                    active[h] = active_number;
-                    outfile->Printf("\n In irrep %u, orbital occupation %u = %8.6f Active virtual",
-                                    h, a, D1vv_evals.get(h, a));
+                    outfile->Printf("\n Irrep %d orbital %4d occupation: %8.6f Active virtual", h,
+                                    a, D1vv_evals.get(h, a));
                 }
             }
+            active[h] = active_number;
+            restricted_docc[h] = restricted_docc_number;
         }
         outfile->Printf("\n By occupation analysis, the restricted_docc should be\n");
         outfile->Printf("\n Restricted_docc = [ ");
         for (auto& rocc : restricted_docc) {
-            outfile->Printf("%u ", rocc);
+            outfile->Printf("%zu ", rocc);
         }
         outfile->Printf("]\n");
         outfile->Printf("\n By occupation analysis, the active orbitals should be\n");
         outfile->Printf("\n Active = [ ");
         for (auto& ract : active) {
-            outfile->Printf("%u ", ract);
+            outfile->Printf("%zu ", ract);
         }
         outfile->Printf("]\n");
     }
 
-    std::shared_ptr<psi::Matrix> Ua = std::make_shared<psi::Matrix>("Ua", nmopi, nmopi);
-    // Patch together the transformation matrices
-    for (int h = 0; h < nirrep; ++h) {
-        size_t irrep_offset = 0;
+    auto Ua = std::make_shared<psi::Matrix>("Ua", nmopi, nmopi);
+    Ua->identity();
 
-        // Frozen core orbitals are unchanged
-        for (int p = 0; p < frzcpi[h]; ++p) {
-            Ua->set(h, p, p, 1.0);
-        }
-        irrep_offset += frzcpi[h];
+    Slice slice_occ_a(frzcpi, aoccpi + frzcpi);
+    Slice slice_vir_a(aoccpi + frzcpi, ncmopi + frzcpi);
+    Ua->set_block(slice_occ_a, D1oo_evecs);
+    Ua->set_block(slice_vir_a, D1vv_evecs);
 
-        // Occupied alpha
-        for (int p = 0; p < aoccpi[h]; ++p) {
-            for (int q = 0; q < aoccpi[h]; ++q) {
-                double value = D1oo_evecs.get(h, p, q);
-                Ua->set(h, p + irrep_offset, q + irrep_offset, value);
-            }
-        }
-        irrep_offset += aoccpi[h];
+    auto Ub = std::make_shared<psi::Matrix>("Ub", nmopi, nmopi);
+    Ub->identity();
 
-        // Virtual alpha
-        for (int p = 0; p < avirpi[h]; ++p) {
-            for (int q = 0; q < avirpi[h]; ++q) {
-                double value = D1vv_evecs.get(h, p, q);
-                Ua->set(h, p + irrep_offset, q + irrep_offset, value);
-            }
-        }
-        irrep_offset += avirpi[h];
-
-        // Frozen virtual orbitals are unchanged
-        for (int p = 0; p < frzvpi[h]; ++p) {
-            Ua->set(h, p + irrep_offset, p + irrep_offset, 1.0);
-        }
-    }
-
-    std::shared_ptr<psi::Matrix> Ub = std::make_shared<psi::Matrix>("Ub", nmopi, nmopi);
-    // Patch together the transformation matrices
-    for (int h = 0; h < nirrep; ++h) {
-        size_t irrep_offset = 0;
-
-        // Frozen core orbitals are unchanged
-        for (int p = 0; p < frzcpi[h]; ++p) {
-            Ub->set(h, p, p, 1.0);
-        }
-        irrep_offset += frzcpi[h];
-
-        // Occupied alpha
-        for (int p = 0; p < boccpi[h]; ++p) {
-            for (int q = 0; q < boccpi[h]; ++q) {
-                double value = D1OO_evecs.get(h, p, q);
-                Ub->set(h, p + irrep_offset, q + irrep_offset, value);
-            }
-        }
-        irrep_offset += boccpi[h];
-
-        // Virtual alpha
-        for (int p = 0; p < bvirpi[h]; ++p) {
-            for (int q = 0; q < bvirpi[h]; ++q) {
-                double value = D1VV_evecs.get(h, p, q);
-                Ub->set(h, p + irrep_offset, q + irrep_offset, value);
-            }
-        }
-        irrep_offset += bvirpi[h];
-
-        // Frozen virtual orbitals are unchanged
-        for (int p = 0; p < frzvpi[h]; ++p) {
-            Ub->set(h, p + irrep_offset, p + irrep_offset, 1.0);
-        }
-    }
+    Slice slice_occ_b(frzcpi, boccpi + frzcpi);
+    Slice slice_vir_b(boccpi + frzcpi, ncmopi + frzcpi);
+    Ub->set_block(slice_occ_b, D1OO_evecs);
+    Ub->set_block(slice_vir_b, D1VV_evecs);
 
     // Retransform the integrals in the new basis
     // TODO: this class should read this information (ints_->spin_restriction()) early and compute
@@ -448,6 +394,7 @@ ambit::BlockedTensor MP2_NOS::build_1rdm_df() {
 }
 
 void MP2_NOS::compute_df_ump2_1rdm_vv(ambit::BlockedTensor& D1) {
+    timer tvv("DF-UMP2 1RDM VV");
     int nthreads = omp_get_max_threads();
 
     auto na_Qv = naux_ * navir_;
@@ -699,6 +646,7 @@ void MP2_NOS::compute_df_ump2_1rdm_vv(ambit::BlockedTensor& D1) {
 }
 
 void MP2_NOS::compute_df_ump2_1rdm_oo(ambit::BlockedTensor& D1) {
+    timer tvv("DF-UMP2 1RDM OO");
     int nthreads = omp_get_max_threads();
 
     auto na_Qo = naux_ * naocc_;
@@ -932,6 +880,7 @@ void MP2_NOS::compute_df_ump2_1rdm_oo(ambit::BlockedTensor& D1) {
 }
 
 void MP2_NOS::compute_df_rmp2_1rdm_vv(ambit::BlockedTensor& D1) {
+    timer tvv("DF-RMP2 1RDM VV");
     int nthreads = omp_get_max_threads();
     auto n_Qv = naux_ * navir_;
 
@@ -1049,6 +998,7 @@ void MP2_NOS::compute_df_rmp2_1rdm_vv(ambit::BlockedTensor& D1) {
 }
 
 void MP2_NOS::compute_df_rmp2_1rdm_oo(ambit::BlockedTensor& D1) {
+    timer tvv("DF-RMP2 1RDM OO");
     int nthreads = omp_get_max_threads();
     auto n_Qo = naux_ * naocc_;
 

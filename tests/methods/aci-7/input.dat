@@ -34,7 +34,7 @@ set forte {
   aci_pq_function average
   aci_n_average 1 # this overrides the default value
   nroot 3
-  orbital_type mp2_nos
+  orbital_type mp2no
   aci_average_offset 0
   charge 0
   diag_algorithm dynamic
