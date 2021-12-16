@@ -39,23 +39,50 @@ void DSRG_MRPT2::set_h() {
 }
 
 void DSRG_MRPT2::set_v() {
-    V = BTF_->build(CoreTensor, "Electron Repulsion Integral",
-                    spin_cases({"gphh", "pghh", "ppgh", "pphg", "gchc", "pghc", "pcgc", "pchg",
-                                "gcpc", "hgpc", "hcgc", "hcpg", "gccc", "cgcc", "ccgc", "cccg",
-                                "gcvc", "vgvc", "vcgc", "vcvg", "cgch", "gpch", "cpcg", "cpgh",
-                                "cgcp", "ghcp", "chcg", "chgp", "cgcv", "gvcv", "cvcg", "cvgv"}));
+    
+    B = BTF_->build(tensor_type_, "B", {"Lgg", "LGG"});
+    if (eri_df_) {
+        V = BTF_->build(CoreTensor, "Electron Repulsion Integral", spin_cases({"gggg"}));
 
-    V.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>& spin, double& value) {
-        if (spin[0] == AlphaSpin) {
-            if (spin[1] == AlphaSpin) {
-                value = ints_->aptei_aa(i[0], i[1], i[2], i[3]);
-            } else {
-                value = ints_->aptei_ab(i[0], i[1], i[2], i[3]);
-            }
-        } else if (spin[1] == BetaSpin) {
-            value = ints_->aptei_bb(i[0], i[1], i[2], i[3]);
+        for (const std::string& block : B.block_labels()) {
+            std::vector<size_t> iaux = label_to_spacemo_[block[0]];
+            std::vector<size_t> ip   = label_to_spacemo_[block[1]];
+            std::vector<size_t> ih   = label_to_spacemo_[block[2]];
+
+            ambit::Tensor Bblock = ints_->three_integral_block(iaux, ip, ih);
+            B.block(block).copy(Bblock);
         }
-    });
+
+        V["pqrs"] =  B["gpr"] * B["gqs"];
+        V["pqrs"] -= B["gps"] * B["gqr"];
+        V["pQrS"] =  B["gpr"] * B["gQS"];
+        V["PQRS"] =  B["gPR"] * B["gQS"];
+        V["PQRS"] -= B["gPS"] * B["gQR"];
+
+        // V_["abij"] =  B["gai"] * B["gbj"];
+        // V_["abij"] -= B["gaj"] * B["gbi"];
+        // V_["aBiJ"] =  B["gai"] * B["gBJ"];
+        // V_["ABIJ"] =  B["gAI"] * B["gBJ"];
+        // V_["ABIJ"] -= B["gAJ"] * B["gBI"];
+    } else {
+        V = BTF_->build(CoreTensor, "Electron Repulsion Integral",
+                spin_cases({"gphh", "pghh", "ppgh", "pphg", "gchc", "pghc", "pcgc", "pchg",
+                            "gcpc", "hgpc", "hcgc", "hcpg", "gccc", "cgcc", "ccgc", "cccg",
+                            "gcvc", "vgvc", "vcgc", "vcvg", "cgch", "gpch", "cpcg", "cpgh",
+                            "cgcp", "ghcp", "chcg", "chgp", "cgcv", "gvcv", "cvcg", "cvgv"}));
+
+        V.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>& spin, double& value) {
+            if (spin[0] == AlphaSpin) {
+                if (spin[1] == AlphaSpin) {
+                    value = ints_->aptei_aa(i[0], i[1], i[2], i[3]);
+                } else {
+                    value = ints_->aptei_ab(i[0], i[1], i[2], i[3]);
+                }
+            } else if (spin[1] == BetaSpin) {
+                value = ints_->aptei_bb(i[0], i[1], i[2], i[3]);
+            }
+        });
+    }
 
     V_sumA_Alpha = BTF_->build(
         CoreTensor, "normal Dimension-reduced Electron Repulsion Integral alpha", {"gg"});
@@ -66,14 +93,27 @@ void DSRG_MRPT2::set_v() {
     V_sumB_Beta = BTF_->build(
         CoreTensor, "normal Dimension-reduced Electron Repulsion Integral all beta", {"GG"});
 
-    // Summation of V["pmqm"] over index "m" or V["mpmq"] over index "m"
-    V_sumA_Alpha["pq"] = V["pmqn"] * I["mn"];
-    // Summation of V["pMqM"] over index "M"
-    V_sumB_Alpha["pq"] = V["pMqN"] * I["MN"];
-    // Summation of V["mPmQ"] over index "m"
-    V_sumA_Beta["PQ"] = V["mPnQ"] * I["mn"];
-    // Summation of V["PMQM"] over index "M"
-    V_sumB_Beta["PQ"] = V["PMQN"] * I["MN"];
+    if (eri_df_) {
+        // Summation of V["pmqm"] over index "m" or V["mpmq"] over index "m"
+        V_sumA_Alpha["pq"]  = B["gpq"] * B["gmn"] * I["mn"];
+        V_sumA_Alpha["pq"] -= B["gpm"] * B["gmq"];
+        // Summation of V["pMqM"] over index "M"
+        V_sumB_Alpha["pq"] = B["gpq"] * B["gMN"] * I["MN"];
+        // Summation of V["mPmQ"] over index "m"
+        V_sumA_Beta["PQ"] =  B["gmn"] * B["gPQ"] * I["mn"];
+        // Summation of V["PMQM"] over index "M"
+        V_sumB_Beta["PQ"] =  B["gPQ"] * B["gMN"] * I["MN"];
+        V_sumB_Beta["PQ"] -= B["gPM"] * B["gMQ"];
+    } else {
+        // Summation of V["pmqm"] over index "m" or V["mpmq"] over index "m"
+        V_sumA_Alpha["pq"] = V["pmqn"] * I["mn"];
+        // Summation of V["pMqM"] over index "M"
+        V_sumB_Alpha["pq"] = V["pMqN"] * I["MN"];
+        // Summation of V["mPmQ"] over index "m"
+        V_sumA_Beta["PQ"] = V["mPnQ"] * I["mn"];
+        // Summation of V["PMQM"] over index "M"
+        V_sumB_Beta["PQ"] = V["PMQN"] * I["MN"];
+    }
 }
 
 void DSRG_MRPT2::set_active_fock() {

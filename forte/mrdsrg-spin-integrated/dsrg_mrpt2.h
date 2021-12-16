@@ -392,6 +392,8 @@ class DSRG_MRPT2 : public MASTER_DSRG {
     ambit::BlockedTensor W;
     // core Hamiltonian
     ambit::BlockedTensor H;
+    // df integrals
+    ambit::BlockedTensor B;
     // two-electron integrals
     ambit::BlockedTensor V;
     // Fock matrix
