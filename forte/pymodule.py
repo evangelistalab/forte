@@ -486,7 +486,7 @@ def run_forte(name, **kwargs):
     ref_wfn, state_weights_map, mo_space_info, scf_info, fcidump = forte_objects
 
     job_type = options.get_str('JOB_TYPE')
-    if job_type == 'NONE' and options.get_str("ORBITAL_TYPE") != 'CANONICAL':
+    if job_type == 'NONE' and options.get_str("ORBITAL_TYPE") == 'CANONICAL':
         psi4.core.set_scalar_variable('CURRENT ENERGY', 0.0)
         return ref_wfn
 
