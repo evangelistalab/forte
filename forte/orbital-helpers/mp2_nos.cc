@@ -159,6 +159,11 @@ void MP2_NOS::compute_transformation() {
     auto D1vv = tensor_to_matrix(D1.block("vv"), avirpi);
     auto D1VV = tensor_to_matrix(D1.block("VV"), bvirpi);
 
+    psi::Process::environment.arrays["MP2 1RDM OO ALPHA"] = D1oo;
+    psi::Process::environment.arrays["MP2 1RDM VV ALPHA"] = D1vv;
+    psi::Process::environment.arrays["MP2 1RDM OO BETA"] = D1OO;
+    psi::Process::environment.arrays["MP2 1RDM VV BETA"] = D1VV;
+
     Matrix D1oo_evecs("D1oo_evecs", aoccpi, aoccpi);
     Matrix D1OO_evecs("D1OO_evecs", boccpi, boccpi);
     Matrix D1vv_evecs("D1vv_evecs", avirpi, avirpi);
@@ -205,8 +210,6 @@ void MP2_NOS::compute_transformation() {
                                     i, D1oo_evals.get(h, i));
                 } else {
                     restricted_docc_number++;
-                    //                    outfile->Printf("\n Irrep %d orbital %4d occupation: %8.6f
-                    //                    RDOCC", h, i, D1oo_evals.get(h, i));
                 }
             }
             for (int a = 0; a < avirpi[h]; ++a) {
