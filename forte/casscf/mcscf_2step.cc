@@ -193,15 +193,6 @@ double MCSCF_2STEP::compute_energy() {
         return energy_;
     }
 
-    // DIIS extropolation for macro iteration
-    psi::DIISManager diis_manager(do_diis_ ? diis_max_vec_ : 0, "MCSCF DIIS",
-                                  psi::DIISManager::RemovalPolicy::OldestAdded, psi::DIISManager::StoragePolicy::OnDisk);
-    if (do_diis_) {
-        dR = std::make_shared<psi::Vector>("dR", nrot);
-        diis_manager.set_error_vector_size(1, psi::DIISEntry::InputType::Vector, dR.get());
-        diis_manager.set_vector_size(1, psi::DIISEntry::InputType::Vector, R.get());
-    }
-
     // set up L-BFGS solver and its parameters for micro iteration
     auto lbfgs_param = std::make_shared<LBFGS_PARAM>();
     lbfgs_param->epsilon = g_conv_;
@@ -229,10 +220,11 @@ double MCSCF_2STEP::compute_energy() {
     } else { // Case 3: multi-determinant SCF
         // DIIS extrapolation for macro iteration
         psi::DIISManager diis_manager(do_diis_ ? diis_max_vec_ : 0, "MCSCF DIIS",
-                                      psi::DIISManager::OldestAdded, psi::DIISManager::OnDisk);
+                                      psi::DIISManager::RemovalPolicy::OldestAdded,
+                                      psi::DIISManager::StoragePolicy::OnDisk);
         if (do_diis_) {
-            diis_manager.set_error_vector_size(1, psi::DIISEntry::Vector, dG.get());
-            diis_manager.set_vector_size(1, psi::DIISEntry::Vector, R.get());
+            diis_manager.set_error_vector_size(1, psi::DIISEntry::InputType::Vector, dG.get());
+            diis_manager.set_vector_size(1, psi::DIISEntry::InputType::Vector, R.get());
         }
 
         // CI convergence criteria along the way
