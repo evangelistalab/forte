@@ -1,0 +1,1095 @@
+
+    -----------------------------------------------------------------------
+          Psi4: An Open-Source Ab Initio Electronic Structure Package
+                               Psi4 undefined 
+
+                         Git: Rev {master} b771313 
+
+
+    D. G. A. Smith, L. A. Burns, A. C. Simmonett, R. M. Parrish,
+    M. C. Schieber, R. Galvelis, P. Kraus, H. Kruse, R. Di Remigio,
+    A. Alenaizan, A. M. James, S. Lehtola, J. P. Misiewicz, M. Scheurer,
+    R. A. Shaw, J. B. Schriber, Y. Xie, Z. L. Glick, D. A. Sirianni,
+    J. S. O'Brien, J. M. Waldrop, A. Kumar, E. G. Hohenstein,
+    B. P. Pritchard, B. R. Brooks, H. F. Schaefer III, A. Yu. Sokolov,
+    K. Patkowski, A. E. DePrince III, U. Bozkaya, R. A. King,
+    F. A. Evangelista, J. M. Turney, T. D. Crawford, C. D. Sherrill,
+    J. Chem. Phys. 152(18) 184108 (2020). https://doi.org/10.1063/5.0006002
+
+                            Additional Code Authors
+    E. T. Seidl, C. L. Janssen, E. F. Valeev, M. L. Leininger,
+    J. F. Gonthier, R. M. Richard, H. R. McAlexander, M. Saitow, X. Wang,
+    P. Verma, M. H. Lechner, and A. Jiang
+
+             Previous Authors, Complete List of Code Contributors,
+                       and Citations for Specific Modules
+    https://github.com/psi4/psi4/blob/master/codemeta.json
+    https://github.com/psi4/psi4/graphs/contributors
+    http://psicode.org/psi4manual/master/introduction.html#citing-psifour
+
+    -----------------------------------------------------------------------
+
+
+    Psi4 started on: Thursday, 16 December 2021 06:17PM
+
+    Process ID: 66412
+    Host:       Yorks-Mac
+    PSIDATADIR: /Users/york/src/psi4new/psi4/share/psi4
+    Memory:     500.0 MiB
+    Threads:    8
+    
+  ==> Input File <==
+
+--------------------------------------------------------------------------
+# Test RMP2 natural orbitals
+mp2_corr_ref = -1.802862266979274
+
+import forte
+memory 4 gb
+
+molecule anthracene{
+  C      3.6609      0.5848      0.0000
+  C      3.6110     -0.8397      0.0000
+  C      2.4165     -1.4895      0.0000
+  C      1.1870     -0.7528      0.0000
+  C      2.5148      1.3166      0.0000
+  C      1.2368      0.6679      0.0000
+  C     -0.0491     -1.4032      0.0000
+  C     -1.2369     -0.6678      0.0000
+  C      0.0492      1.4033      0.0000
+  C     -1.1871      0.7528      0.0000
+  C     -2.5148     -1.3167      0.0000
+  C     -3.6609     -0.5848      0.0000
+  C     -3.6110      0.8395      0.0000
+  C     -2.4165      1.4895      0.0000
+  H      4.6397      1.0755      0.0000
+  H      4.5529     -1.3980      0.0000
+  H      2.3680     -2.5843      0.0000
+  H      2.5432      2.4122      0.0000
+  H     -0.0876     -2.4995      0.0000
+  H      0.0876      2.4996      0.0000
+  H     -2.5431     -2.4122      0.0000
+  H     -4.6397     -1.0756      0.0000
+  H     -4.5531      1.3975      0.0000
+  H     -2.3682      2.5844      0.0000
+}
+
+set {
+scf_type df
+basis def2-svp
+maxiter 100
+docc [40,7]
+}
+
+set forte {
+job_type none
+int_type diskdf
+orbital_type mp2no
+nat_act true
+nat_orbs_print true
+mp2no_occ_threshold 0.98
+mp2no_vir_threshold 0.02
+frozen_docc [14,0]
+}
+
+Emp2, wfn = energy('forte', return_wfn=True)
+compare_values(mp2_corr_ref, variable("MP2 CORRELATION ENERGY"), 6, "MP2 correlation energy")
+
+# fix orbital phase
+Ca = wfn.Ca()
+for h in range(Ca.nirrep()):
+    for i in range(Ca.cols(h)):
+        if Ca.get(h, 0, i) < 0:
+            Ca.scale_column(h, i, -1.0)
+
+from forte.proc.orbital_helpers import dump_orbitals, read_orbitals
+
+# save to disk
+#dump_orbitals(wfn, 'Ca_mp2no_ref.npz')
+
+# read reference Ca values from disk
+Ca_ref = read_orbitals('Ca_mp2no_ref.npz')
+
+# compare computed values from the reference ones
+compare_matrices(Ca_ref, Ca, 6, "MP2 natural orbitals")
+--------------------------------------------------------------------------
+
+  Memory set to   3.725 GiB by Python driver.
+
+Scratch directory: /Users/york/scratch/psi4/
+
+  Forte
+  ----------------------------------------------------------------------------
+  A suite of quantum chemistry methods for strongly correlated electrons
+
+    git branch: dfmp2-nos - git commit: 8aa9a2e8
+
+  Developed by:
+    Francesco A. Evangelista, Chenyang Li, Kevin P. Hannon,
+    Jeffrey B. Schriber, Tianyuan Zhang, Chenxi Cai,
+    Nan He, Nicholas Stair, Shuhe Wang, Renke Huang
+  ----------------------------------------------------------------------------
+
+  Size of Determinant class: 128 bits
+
+  Preparing forte objects from a Psi4 Wavefunction object
+  No reference wave function provided for Forte. Computing SCF orbitals using Psi4 ...
+
+*** tstart() called on Yorks-Mac
+*** at Thu Dec 16 18:17:53 2021
+
+   => Loading Basis Set <=
+
+    Name: DEF2-SVP
+    Role: ORBITAL
+    Keyword: BASIS
+    atoms 1-14  entry C          line    90 file /Users/york/src/psi4new/psi4/share/psi4/basis/def2-svp.gbs 
+    atoms 15-24 entry H          line    15 file /Users/york/src/psi4new/psi4/share/psi4/basis/def2-svp.gbs 
+
+
+         ---------------------------------------------------------
+                                   SCF
+               by Justin Turney, Rob Parrish, Andy Simmonett
+                          and Daniel G. A. Smith
+                              RHF Reference
+                        8 Threads,   3814 MiB Core
+         ---------------------------------------------------------
+
+  ==> Geometry <==
+
+    Molecular point group: cs
+    Full point group: Cs
+
+    Geometry (in Angstrom), charge = 0, multiplicity = 1:
+
+       Center              X                  Y                   Z               Mass       
+    ------------   -----------------  -----------------  -----------------  -----------------
+         C            3.660908436446     0.584809002391     0.000000000000    12.000000000000
+         C            3.611008436446    -0.839690997609     0.000000000000    12.000000000000
+         C            2.416508436446    -1.489490997609     0.000000000000    12.000000000000
+         C            1.187008436446    -0.752790997609     0.000000000000    12.000000000000
+         C            2.514808436446     1.316609002391     0.000000000000    12.000000000000
+         C            1.236808436446     0.667909002391     0.000000000000    12.000000000000
+         C           -0.049091563554    -1.403190997609     0.000000000000    12.000000000000
+         C           -1.236891563554    -0.667790997609     0.000000000000    12.000000000000
+         C            0.049208436446     1.403309002391     0.000000000000    12.000000000000
+         C           -1.187091563554     0.752809002391     0.000000000000    12.000000000000
+         C           -2.514791563554    -1.316690997609     0.000000000000    12.000000000000
+         C           -3.660891563554    -0.584790997609     0.000000000000    12.000000000000
+         C           -3.610991563554     0.839509002391     0.000000000000    12.000000000000
+         C           -2.416491563554     1.489509002391     0.000000000000    12.000000000000
+         H            4.639708436446     1.075509002391     0.000000000000     1.007825032230
+         H            4.552908436446    -1.397990997609     0.000000000000     1.007825032230
+         H            2.368008436446    -2.584290997609     0.000000000000     1.007825032230
+         H            2.543208436446     2.412209002391     0.000000000000     1.007825032230
+         H           -0.087591563554    -2.499490997609     0.000000000000     1.007825032230
+         H            0.087608436446     2.499609002391     0.000000000000     1.007825032230
+         H           -2.543091563554    -2.412190997609     0.000000000000     1.007825032230
+         H           -4.639691563554    -1.075590997609     0.000000000000     1.007825032230
+         H           -4.553091563554     1.397509002391     0.000000000000     1.007825032230
+         H           -2.368191563554     2.584409002391     0.000000000000     1.007825032230
+
+  Running in cs symmetry.
+
+  Rotational constants: A =      0.07188  B =      0.01522  C =      0.01256 [cm^-1]
+  Rotational constants: A =   2154.90414  B =    456.23465  C =    376.51845 [MHz]
+  Nuclear repulsion =  768.248973020343556
+
+  Charge       = 0
+  Multiplicity = 1
+  Electrons    = 94
+  Nalpha       = 47
+  Nbeta        = 47
+
+  ==> Algorithm <==
+
+  SCF Algorithm Type is DF.
+  DIIS enabled.
+  MOM disabled.
+  Fractional occupation disabled.
+  Guess Type is SAD.
+  Energy threshold   = 1.00e-08
+  Density threshold  = 1.00e-08
+  Integral threshold = 1.00e-12
+
+  ==> Primary Basis <==
+
+  Basis Set: DEF2-SVP
+    Blend: DEF2-SVP
+    Number of shells: 114
+    Number of basis functions: 246
+    Number of Cartesian functions: 260
+    Spherical Harmonics?: true
+    Max angular momentum: 2
+
+   => Loading Basis Set <=
+
+    Name: (DEF2-SVP AUX)
+    Role: JKFIT
+    Keyword: DF_BASIS_SCF
+    atoms 1-14  entry C          line   198 file /Users/york/src/psi4new/psi4/share/psi4/basis/def2-universal-jkfit.gbs 
+    atoms 15-24 entry H          line    18 file /Users/york/src/psi4new/psi4/share/psi4/basis/def2-universal-jkfit.gbs 
+
+  ==> Integral Setup <==
+
+  DFHelper Memory: AOs need 0.495 GiB; user supplied 2.794 GiB. Using in-core AOs.
+
+  ==> MemDFJK: Density-Fitted J/K Matrices <==
+
+    J tasked:                   Yes
+    K tasked:                   Yes
+    wK tasked:                   No
+    OpenMP threads:               8
+    Memory [MiB]:              2861
+    Algorithm:                 Core
+    Schwarz Cutoff:           1E-12
+    Mask sparsity (%):      15.6653
+    Fitting Condition:        1E-10
+
+   => Auxiliary Basis Set <=
+
+  Basis Set: (DEF2-SVP AUX)
+    Blend: DEF2-UNIVERSAL-JKFIT
+    Number of shells: 410
+    Number of basis functions: 1230
+    Number of Cartesian functions: 1446
+    Spherical Harmonics?: true
+    Max angular momentum: 4
+
+  Minimum eigenvalue in the overlap matrix is 2.3791497271E-04.
+  Reciprocal condition number of the overlap matrix is 3.5241872809E-05.
+    Using symmetric orthogonalization.
+
+  ==> Pre-Iterations <==
+
+  SCF Guess: Superposition of Atomic Densities via on-the-fly atomic UHF (no occupation information).
+
+   -------------------------
+    Irrep   Nso     Nmo    
+   -------------------------
+     A'       180     180 
+     A"        66      66 
+   -------------------------
+    Total     246     246
+   -------------------------
+
+  ==> Iterations <==
+
+                           Total Energy        Delta E     RMS |[F,P]|
+
+   @DF-RHF iter SAD:  -535.45348774463832   -5.35453e+02   0.00000e+00 
+   @DF-RHF iter   1:  -535.38411547496889    6.93723e-02   2.79785e-03 DIIS
+   @DF-RHF iter   2:  -535.57758836781181   -1.93473e-01   1.02475e-03 DIIS
+   @DF-RHF iter   3:  -535.59973556702369   -2.21472e-02   2.86173e-04 DIIS
+   @DF-RHF iter   4:  -535.60215320076657   -2.41763e-03   7.76481e-05 DIIS
+   @DF-RHF iter   5:  -535.60231269436736   -1.59494e-04   1.93456e-05 DIIS
+   @DF-RHF iter   6:  -535.60234207151143   -2.93771e-05   7.34136e-06 DIIS
+   @DF-RHF iter   7:  -535.60234793347229   -5.86196e-06   3.73042e-06 DIIS
+   @DF-RHF iter   8:  -535.60234884304691   -9.09575e-07   9.25323e-07 DIIS
+   @DF-RHF iter   9:  -535.60234890190793   -5.88610e-08   1.09421e-07 DIIS
+   @DF-RHF iter  10:  -535.60234890226297   -3.55044e-10   4.29590e-08 DIIS
+   @DF-RHF iter  11:  -535.60234890230049   -3.75167e-11   6.53976e-09 DIIS
+  Energy and wave function converged.
+
+
+  ==> Post-Iterations <==
+
+    Orbital Energies [Eh]
+    ---------------------
+
+    Doubly Occupied:                                                      
+
+       1Ap   -11.246103     2Ap   -11.245921     3Ap   -11.245302  
+       4Ap   -11.244937     5Ap   -11.243076     6Ap   -11.243061  
+       7Ap   -11.242128     8Ap   -11.242118     9Ap   -11.242029  
+      10Ap   -11.242020    11Ap   -11.240443    12Ap   -11.240439  
+      13Ap   -11.239668    14Ap   -11.239662    15Ap    -1.181103  
+      16Ap    -1.140019    17Ap    -1.077983    18Ap    -1.055005  
+      19Ap    -1.013447    20Ap    -0.998366    21Ap    -0.952901  
+      22Ap    -0.871654    23Ap    -0.837229    24Ap    -0.815262  
+      25Ap    -0.804732    26Ap    -0.735485    27Ap    -0.712164  
+      28Ap    -0.688839    29Ap    -0.643690    30Ap    -0.640744  
+      31Ap    -0.625290    32Ap    -0.624567    33Ap    -0.592901  
+      34Ap    -0.581176    35Ap    -0.577305    36Ap    -0.550650  
+       1App   -0.550216    37Ap    -0.537747    38Ap    -0.499405  
+       2App   -0.497028    39Ap    -0.486911    40Ap    -0.478391  
+       3App   -0.416998     4App   -0.407386     5App   -0.349405  
+       6App   -0.314659     7App   -0.261906  
+
+    Virtual:                                                              
+
+       8App    0.056121     9App    0.110248    10App    0.145258  
+      11App    0.182524    41Ap     0.185535    42Ap     0.190757  
+      43Ap     0.192320    44Ap     0.221984    45Ap     0.223461  
+      12App    0.230195    46Ap     0.247453    47Ap     0.251451  
+      48Ap     0.267767    49Ap     0.284794    50Ap     0.317503  
+      13App    0.344247    51Ap     0.385877    14App    0.404681  
+      52Ap     0.428133    53Ap     0.434046    54Ap     0.438625  
+      55Ap     0.454089    56Ap     0.463883    57Ap     0.471763  
+      58Ap     0.483868    59Ap     0.485661    60Ap     0.498491  
+      61Ap     0.522834    62Ap     0.526661    63Ap     0.530666  
+      64Ap     0.548566    65Ap     0.552281    66Ap     0.556962  
+      67Ap     0.599851    68Ap     0.605906    69Ap     0.616767  
+      70Ap     0.645741    71Ap     0.664829    72Ap     0.665209  
+      15App    0.667077    73Ap     0.669439    16App    0.689726  
+      74Ap     0.699193    75Ap     0.699701    76Ap     0.713906  
+      77Ap     0.715474    17App    0.718757    78Ap     0.727535  
+      18App    0.730580    19App    0.756216    79Ap     0.791817  
+      20App    0.798671    21App    0.804749    22App    0.807895  
+      80Ap     0.851348    23App    0.861112    81Ap     0.863342  
+      24App    0.878020    82Ap     0.880091    83Ap     0.891188  
+      84Ap     0.896316    25App    0.905626    85Ap     0.913260  
+      86Ap     0.918997    26App    0.923261    87Ap     0.933794  
+      88Ap     0.941449    89Ap     0.952922    90Ap     0.955414  
+      91Ap     0.982007    92Ap     0.988905    27App    0.997972  
+      28App    1.012788    93Ap     1.038302    94Ap     1.043365  
+      95Ap     1.063778    96Ap     1.064105    97Ap     1.079072  
+      98Ap     1.108332    99Ap     1.120261   100Ap     1.130865  
+     101Ap     1.161963   102Ap     1.162612   103Ap     1.178716  
+     104Ap     1.285594   105Ap     1.304431   106Ap     1.374760  
+     107Ap     1.386542   108Ap     1.389262    29App    1.406303  
+      30App    1.425914   109Ap     1.447312   110Ap     1.457482  
+      31App    1.486121    32App    1.488549    33App    1.491026  
+      34App    1.506421   111Ap     1.511214    35App    1.520863  
+     112Ap     1.523257   113Ap     1.527524    36App    1.530649  
+     114Ap     1.542252    37App    1.551725    38App    1.560647  
+      39App    1.592642    40App    1.606810   115Ap     1.649829  
+     116Ap     1.737921   117Ap     1.745212   118Ap     1.781539  
+      41App    1.893846   119Ap     1.911469   120Ap     1.915917  
+      42App    1.947723   121Ap     1.949932   122Ap     1.952857  
+      43App    1.986882   123Ap     2.003189    44App    2.003637  
+     124Ap     2.016690   125Ap     2.027838   126Ap     2.030416  
+     127Ap     2.041980    45App    2.044310   128Ap     2.056336  
+      46App    2.063715   129Ap     2.069321   130Ap     2.074455  
+      47App    2.079857   131Ap     2.088489   132Ap     2.102751  
+     133Ap     2.113898   134Ap     2.162923    48App    2.205925  
+     135Ap     2.207840    49App    2.237414    50App    2.240906  
+     136Ap     2.258794   137Ap     2.273769   138Ap     2.284783  
+      51App    2.299270   139Ap     2.331977   140Ap     2.336557  
+     141Ap     2.351323    52App    2.362355   142Ap     2.388787  
+     143Ap     2.403790   144Ap     2.422284    53App    2.434474  
+     145Ap     2.445787   146Ap     2.457400   147Ap     2.464162  
+     148Ap     2.478481   149Ap     2.481846    54App    2.513976  
+     150Ap     2.558401    55App    2.567435    56App    2.577003  
+     151Ap     2.605438    57App    2.628100   152Ap     2.648315  
+      58App    2.672401    59App    2.693534    60App    2.729268  
+     153Ap     2.731573    61App    2.748307   154Ap     2.751264  
+      62App    2.773047   155Ap     2.857322    63App    2.883175  
+     156Ap     2.910634    64App    2.931550   157Ap     2.934331  
+     158Ap     2.937935   159Ap     2.992179   160Ap     2.998882  
+      65App    3.021465   161Ap     3.038447    66App    3.047322  
+     162Ap     3.062979   163Ap     3.072589   164Ap     3.089630  
+     165Ap     3.115265   166Ap     3.125712   167Ap     3.174393  
+     168Ap     3.253679   169Ap     3.260932   170Ap     3.268809  
+     171Ap     3.297406   172Ap     3.400064   173Ap     3.445696  
+     174Ap     3.477432   175Ap     3.510951   176Ap     3.530964  
+     177Ap     3.651524   178Ap     3.849579   179Ap     4.028757  
+     180Ap     4.046546  
+
+    Final Occupation by Irrep:
+             Ap   App 
+    DOCC [    40,    7 ]
+
+  @DF-RHF Final Energy:  -535.60234890230049
+
+   => Energetics <=
+
+    Nuclear Repulsion Energy =            768.2489730203435556
+    One-Electron Energy =               -2247.8677107183011685
+    Two-Electron Energy =                 944.0163887956571216
+    Total Energy =                       -535.6023489023004913
+
+Computation Completed
+
+
+Properties will be evaluated at   0.000000,   0.000000,   0.000000 [a0]
+
+Properties computed using the SCF density matrix
+
+  Nuclear Dipole Moment: [e a0]
+     X:    -0.0002      Y:    -0.0003      Z:     0.0000
+
+  Electronic Dipole Moment: [e a0]
+     X:     0.0001      Y:     0.0002      Z:     0.0000
+
+  Dipole Moment: [e a0]
+     X:    -0.0001      Y:    -0.0001      Z:     0.0000     Total:     0.0001
+
+  Dipole Moment: [D]
+     X:    -0.0002      Y:    -0.0003      Z:     0.0000     Total:     0.0004
+
+
+*** tstop() called on Yorks-Mac at Thu Dec 16 18:18:04 2021
+Module time:
+	user time   =      62.91 seconds =       1.05 minutes
+	system time =       6.72 seconds =       0.11 minutes
+	total time  =         11 seconds =       0.18 minutes
+Total time:
+	user time   =      62.91 seconds =       1.05 minutes
+	system time =       6.72 seconds =       0.11 minutes
+	total time  =         11 seconds =       0.18 minutes
+
+  Read options for space FROZEN_DOCC
+  Read options for space FROZEN_DOCC
+
+  ==> MO Space Information <==
+
+  -------------------------------------
+                       Ap   App   Sum
+  -------------------------------------
+    FROZEN_DOCC        14     0    14
+    RESTRICTED_DOCC     0     0     0
+    GAS1              166    66   232
+    GAS2                0     0     0
+    GAS3                0     0     0
+    GAS4                0     0     0
+    GAS5                0     0     0
+    GAS6                0     0     0
+    RESTRICTED_UOCC     0     0     0
+    FROZEN_UOCC         0     0     0
+    Total             180    66   246
+  -------------------------------------   => Loading Basis Set <=
+
+    Name: (DEF2-SVP AUX)
+    Role: RIFIT
+    Keyword: DF_BASIS_MP2
+    atoms 1-14  entry C          line   153 file /Users/york/src/psi4new/psi4/share/psi4/basis/def2-svp-ri.gbs 
+    atoms 15-24 entry H          line    22 file /Users/york/src/psi4new/psi4/share/psi4/basis/def2-svp-ri.gbs 
+
+   => Loading Basis Set <=
+
+    Name: STO-3G
+    Role: ORBITAL
+    Keyword: MINAO_BASIS
+    atoms 1-14  entry C          line    61 file /Users/york/src/psi4new/psi4/share/psi4/basis/sto-3g.gbs 
+    atoms 15-24 entry H          line    19 file /Users/york/src/psi4new/psi4/share/psi4/basis/sto-3g.gbs 
+
+
+  ==> List of Planes Requested <==
+
+  Forte will use psi4 integrals
+
+  ==> Primary Basis Set Summary <==
+
+  Basis Set: DEF2-SVP
+    Blend: DEF2-SVP
+    Number of shells: 114
+    Number of basis functions: 246
+    Number of Cartesian functions: 260
+    Spherical Harmonics?: true
+    Max angular momentum: 2
+
+
+  JK created using DiskDF integrals
+  ==> DiskDFJK: Density-Fitted J/K Matrices <==
+
+    J tasked:                  Yes
+    K tasked:                  Yes
+    wK tasked:                  No
+    OpenMP threads:              8
+    Integrals threads:           8
+    Memory [MiB]:             3051
+    Algorithm:                Core
+    Integral Cache:           NONE
+    Schwarz Cutoff:          1E-12
+    Fitting Condition:       1E-10
+
+   => Auxiliary Basis Set <=
+
+  Basis Set: (DEF2-SVP AUX)
+    Blend: DEF2-SVP-RI
+    Number of shells: 284
+    Number of basis functions: 812
+    Number of Cartesian functions: 920
+    Spherical Harmonics?: true
+    Max angular momentum: 3
+
+
+
+  ==> Integral Transformation <==
+
+  Number of molecular orbitals:                        246
+  Number of correlated molecular orbitals:             232
+  Number of frozen occupied orbitals:                   14
+  Number of frozen unoccupied orbitals:                  0
+  Two-electron integral type:              Disk-based density fitting
+
+
+ Computing density fitted integrals
+
+  Number of auxiliary basis functions:  812
+  Need 0.366114 GB to store DF integrals
+  DFHelper Memory: AOs need 0.327 GiB; user supplied 3.173 GiB. Using in-core AOs.
+
+  ==> DFHelper <==
+    NBF:                             246
+    NAux:                            812
+    Schwarz Cutoff:                1E-12
+    Mask sparsity (%):                16
+    DFH Avail. Memory [GiB]:       3.173
+    OpenMP threads:                    8
+    Algorithm:                     STORE
+    AO Core:                        True
+    MO Core:                       False
+    Hold Metric:                   False
+    Metric Power:                 -0.500
+    Fitting Condition:             1E-12
+    Q Shell Max:                       7
+
+
+
+  Computing DF Integrals
+  Timing for computing density-fitted integrals:              2.344 s.
+  Frozen-core energy        -846.543980059140267 a.u.
+  Timing for frozen one-body operator:                        0.282 s.
+  Resorting integrals after freezing core.
+  Timing for resorting integrals:                             0.000 s.
+  Timing for freezing core and virtual orbitals:              0.282 s.
+  Timing for disk-based density-fitted integrals:             5.955 s.
+
+                ------------------------------------------------
+                  Second-Order Moller-Plesset Natural Orbitals
+                      written by Francesco A. Evangelista
+                ------------------------------------------------
+
+    Memory in MB                    3433.2
+    Number of threads                    8
+    Number of α occupied orbitals       33
+    Number of β occupied orbitals       33
+    Number of α virtual orbitals       199
+    Number of β virtual orbitals       199
+
+    SCF energy                            = -535.602348902300491
+    MP2 correlation energy                =   -1.802862266979282
+  * MP2 total energy                      = -537.405211169279823
+
+ # D1oo_evals #
+ Irrep: 1
+      1:    0.992985111401144
+      2:    0.992407283215231
+      3:    0.991344810260609
+      4:    0.991109061205198
+      5:    0.990415628084739
+      6:    0.989618785731052
+      7:    0.989098072234569
+      8:    0.987196039613346
+      9:    0.986460330188337
+     10:    0.986232915327585
+     11:    0.986175378043321
+     12:    0.985189314492188
+     13:    0.983605918970036
+     14:    0.983348019093628
+     15:    0.982876617512949
+     16:    0.982739138096832
+     17:    0.980921257214963
+     18:    0.980707657050199
+     19:    0.980439657196778
+     20:    0.979220096484401
+     21:    0.978537415062254
+     22:    0.977589820553709
+     23:    0.977165692375149
+     24:    0.976836545142955
+     25:    0.976038983878988
+     26:    0.974059612959861
+
+ Irrep: 2
+      1:    0.976615033417966
+      2:    0.973319622264888
+      3:    0.966484667508918
+      4:    0.965132176233945
+      5:    0.959436576500401
+      6:    0.949387950662501
+      7:    0.946592448202376
+
+
+ # D1vv_evals #
+ Irrep: 1
+      1:    0.014771845503908
+      2:    0.014254675902002
+      3:    0.013614749417515
+      4:    0.013159076115085
+      5:    0.012916540202337
+      6:    0.012047815668632
+      7:    0.011902215358991
+      8:    0.011624365932468
+      9:    0.010989226677002
+     10:    0.010914976781439
+     11:    0.009995937317465
+     12:    0.009910541766379
+     13:    0.009595278630490
+     14:    0.009082857915844
+     15:    0.009005987075979
+     16:    0.008695514301036
+     17:    0.008652404392398
+     18:    0.008583890910336
+     19:    0.008430383217179
+     20:    0.008303100437079
+     21:    0.008262664698587
+     22:    0.007642841607630
+     23:    0.007631230469025
+     24:    0.007526398417732
+     25:    0.006928825488929
+     26:    0.006653293502666
+     27:    0.006625427224263
+     28:    0.006535233016867
+     29:    0.005813682098391
+     30:    0.005764163462180
+     31:    0.005309618401157
+     32:    0.004863076994917
+     33:    0.004768691138181
+     34:    0.004724351296863
+     35:    0.004404745380525
+     36:    0.004387648370638
+     37:    0.004384182136043
+     38:    0.004129407880750
+     39:    0.004105416259028
+     40:    0.003084196319784
+     41:    0.002962144613503
+     42:    0.002697432700127
+     43:    0.002496405242587
+     44:    0.002479580614487
+     45:    0.002374063804714
+     46:    0.002190376892875
+     47:    0.002188926270853
+     48:    0.001912714839406
+     49:    0.001763078847145
+     50:    0.001444990227099
+     51:    0.001430114997328
+     52:    0.001409414152242
+     53:    0.001352560812508
+     54:    0.001276599635723
+     55:    0.001274034946969
+     56:    0.001261601704932
+     57:    0.001208766106121
+     58:    0.001199681876985
+     59:    0.001066718537850
+     60:    0.001047171599802
+     61:    0.001001051706874
+     62:    0.000985816534632
+     63:    0.000947477689165
+     64:    0.000944733623912
+     65:    0.000929918635060
+     66:    0.000907814936577
+     67:    0.000899044134584
+     68:    0.000787034355155
+     69:    0.000786802632033
+     70:    0.000781922641799
+     71:    0.000744333291008
+     72:    0.000735824936157
+     73:    0.000728495438802
+     74:    0.000724353038235
+     75:    0.000708572775223
+     76:    0.000653594103049
+     77:    0.000621793830389
+     78:    0.000607910952596
+     79:    0.000576583915671
+     80:    0.000541735434599
+     81:    0.000539915369116
+     82:    0.000523183948464
+     83:    0.000510257756788
+     84:    0.000491099525829
+     85:    0.000488846237728
+     86:    0.000475571252901
+     87:    0.000457517851218
+     88:    0.000456884328499
+     89:    0.000449719006731
+     90:    0.000425848371616
+     91:    0.000403592222162
+     92:    0.000347950995493
+     93:    0.000346441919255
+     94:    0.000330899464953
+     95:    0.000325171189132
+     96:    0.000313846046666
+     97:    0.000309255865878
+     98:    0.000301756004029
+     99:    0.000300890483333
+    100:    0.000295230174364
+    101:    0.000273148914775
+    102:    0.000256562634735
+    103:    0.000251664349550
+    104:    0.000245317850336
+    105:    0.000228027956344
+    106:    0.000224974772175
+    107:    0.000219524753852
+    108:    0.000211579703971
+    109:    0.000187356506169
+    110:    0.000187249338842
+    111:    0.000186825011446
+    112:    0.000182145570011
+    113:    0.000168938563259
+    114:    0.000166983108695
+    115:    0.000154620372856
+    116:    0.000154074291452
+    117:    0.000153394178860
+    118:    0.000147842790242
+    119:    0.000134505235995
+    120:    0.000117900738712
+    121:    0.000113988740403
+    122:    0.000110415698892
+    123:    0.000104175314489
+    124:    0.000103433465675
+    125:    0.000095225901948
+    126:    0.000084549751955
+    127:    0.000084134309826
+    128:    0.000079039724867
+    129:    0.000078855220003
+    130:    0.000075581765568
+    131:    0.000074725662053
+    132:    0.000068053265773
+    133:    0.000066430076263
+    134:    0.000055215291016
+    135:    0.000054478906204
+    136:    0.000054136221571
+    137:    0.000048227265326
+    138:    0.000048068355266
+    139:    0.000040976311660
+    140:    0.000040680548894
+
+ Irrep: 2
+      1:    0.046083943083489
+      2:    0.041498569009485
+      3:    0.032130485216646
+      4:    0.025974058335983
+      5:    0.024749204340155
+      6:    0.017250867315912
+      7:    0.013440979817577
+      8:    0.004791098875625
+      9:    0.004779395256298
+     10:    0.004694882779908
+     11:    0.004462936617805
+     12:    0.004361396660071
+     13:    0.004092785946190
+     14:    0.003803587897293
+     15:    0.003728162940597
+     16:    0.003611583726226
+     17:    0.003157898923419
+     18:    0.002893669384968
+     19:    0.002782180834429
+     20:    0.002618032019120
+     21:    0.002497364934695
+     22:    0.002369401094924
+     23:    0.002249598987482
+     24:    0.002235881928446
+     25:    0.002017255970068
+     26:    0.001936398320101
+     27:    0.001930623276544
+     28:    0.001916815457629
+     29:    0.001815829354094
+     30:    0.001551802389358
+     31:    0.001525768334607
+     32:    0.001484524602802
+     33:    0.001443769848437
+     34:    0.000674097440353
+     35:    0.000671689570939
+     36:    0.000662999116523
+     37:    0.000626304864782
+     38:    0.000606948236885
+     39:    0.000603648065452
+     40:    0.000573161925260
+     41:    0.000520990510502
+     42:    0.000434899313101
+     43:    0.000425095276585
+     44:    0.000412398770705
+     45:    0.000403339159705
+     46:    0.000379555616941
+     47:    0.000362493063028
+     48:    0.000360181471998
+     49:    0.000359197081800
+     50:    0.000337098462089
+     51:    0.000328800187647
+     52:    0.000302103129629
+     53:    0.000288152330127
+     54:    0.000272916487676
+     55:    0.000272603750642
+     56:    0.000267019299330
+     57:    0.000234983171489
+     58:    0.000194470955355
+     59:    0.000181885909479
+
+
+ # D1OO_evals #
+ Irrep: 1
+      1:    0.992985111401144
+      2:    0.992407283215231
+      3:    0.991344810260609
+      4:    0.991109061205198
+      5:    0.990415628084739
+      6:    0.989618785731052
+      7:    0.989098072234569
+      8:    0.987196039613346
+      9:    0.986460330188337
+     10:    0.986232915327585
+     11:    0.986175378043321
+     12:    0.985189314492188
+     13:    0.983605918970036
+     14:    0.983348019093628
+     15:    0.982876617512949
+     16:    0.982739138096832
+     17:    0.980921257214963
+     18:    0.980707657050199
+     19:    0.980439657196778
+     20:    0.979220096484401
+     21:    0.978537415062254
+     22:    0.977589820553709
+     23:    0.977165692375149
+     24:    0.976836545142955
+     25:    0.976038983878988
+     26:    0.974059612959861
+
+ Irrep: 2
+      1:    0.976615033417966
+      2:    0.973319622264888
+      3:    0.966484667508918
+      4:    0.965132176233945
+      5:    0.959436576500401
+      6:    0.949387950662501
+      7:    0.946592448202376
+
+
+ # D1VV_evals #
+ Irrep: 1
+      1:    0.014771845503908
+      2:    0.014254675902002
+      3:    0.013614749417515
+      4:    0.013159076115085
+      5:    0.012916540202337
+      6:    0.012047815668632
+      7:    0.011902215358991
+      8:    0.011624365932468
+      9:    0.010989226677002
+     10:    0.010914976781439
+     11:    0.009995937317465
+     12:    0.009910541766379
+     13:    0.009595278630490
+     14:    0.009082857915844
+     15:    0.009005987075979
+     16:    0.008695514301036
+     17:    0.008652404392398
+     18:    0.008583890910336
+     19:    0.008430383217179
+     20:    0.008303100437079
+     21:    0.008262664698587
+     22:    0.007642841607630
+     23:    0.007631230469025
+     24:    0.007526398417732
+     25:    0.006928825488929
+     26:    0.006653293502666
+     27:    0.006625427224263
+     28:    0.006535233016867
+     29:    0.005813682098391
+     30:    0.005764163462180
+     31:    0.005309618401157
+     32:    0.004863076994917
+     33:    0.004768691138181
+     34:    0.004724351296863
+     35:    0.004404745380525
+     36:    0.004387648370638
+     37:    0.004384182136043
+     38:    0.004129407880750
+     39:    0.004105416259028
+     40:    0.003084196319784
+     41:    0.002962144613503
+     42:    0.002697432700127
+     43:    0.002496405242587
+     44:    0.002479580614487
+     45:    0.002374063804714
+     46:    0.002190376892875
+     47:    0.002188926270853
+     48:    0.001912714839406
+     49:    0.001763078847145
+     50:    0.001444990227099
+     51:    0.001430114997328
+     52:    0.001409414152242
+     53:    0.001352560812508
+     54:    0.001276599635723
+     55:    0.001274034946969
+     56:    0.001261601704932
+     57:    0.001208766106121
+     58:    0.001199681876985
+     59:    0.001066718537850
+     60:    0.001047171599802
+     61:    0.001001051706874
+     62:    0.000985816534632
+     63:    0.000947477689165
+     64:    0.000944733623912
+     65:    0.000929918635060
+     66:    0.000907814936577
+     67:    0.000899044134584
+     68:    0.000787034355155
+     69:    0.000786802632033
+     70:    0.000781922641799
+     71:    0.000744333291008
+     72:    0.000735824936157
+     73:    0.000728495438802
+     74:    0.000724353038235
+     75:    0.000708572775223
+     76:    0.000653594103049
+     77:    0.000621793830389
+     78:    0.000607910952596
+     79:    0.000576583915671
+     80:    0.000541735434599
+     81:    0.000539915369116
+     82:    0.000523183948464
+     83:    0.000510257756788
+     84:    0.000491099525829
+     85:    0.000488846237728
+     86:    0.000475571252901
+     87:    0.000457517851218
+     88:    0.000456884328499
+     89:    0.000449719006731
+     90:    0.000425848371616
+     91:    0.000403592222162
+     92:    0.000347950995493
+     93:    0.000346441919255
+     94:    0.000330899464953
+     95:    0.000325171189132
+     96:    0.000313846046666
+     97:    0.000309255865878
+     98:    0.000301756004029
+     99:    0.000300890483333
+    100:    0.000295230174364
+    101:    0.000273148914775
+    102:    0.000256562634735
+    103:    0.000251664349550
+    104:    0.000245317850336
+    105:    0.000228027956344
+    106:    0.000224974772175
+    107:    0.000219524753852
+    108:    0.000211579703971
+    109:    0.000187356506169
+    110:    0.000187249338842
+    111:    0.000186825011446
+    112:    0.000182145570011
+    113:    0.000168938563259
+    114:    0.000166983108695
+    115:    0.000154620372856
+    116:    0.000154074291452
+    117:    0.000153394178860
+    118:    0.000147842790242
+    119:    0.000134505235995
+    120:    0.000117900738712
+    121:    0.000113988740403
+    122:    0.000110415698892
+    123:    0.000104175314489
+    124:    0.000103433465675
+    125:    0.000095225901948
+    126:    0.000084549751955
+    127:    0.000084134309826
+    128:    0.000079039724867
+    129:    0.000078855220003
+    130:    0.000075581765568
+    131:    0.000074725662053
+    132:    0.000068053265773
+    133:    0.000066430076263
+    134:    0.000055215291016
+    135:    0.000054478906204
+    136:    0.000054136221571
+    137:    0.000048227265326
+    138:    0.000048068355266
+    139:    0.000040976311660
+    140:    0.000040680548894
+
+ Irrep: 2
+      1:    0.046083943083489
+      2:    0.041498569009485
+      3:    0.032130485216646
+      4:    0.025974058335983
+      5:    0.024749204340155
+      6:    0.017250867315912
+      7:    0.013440979817577
+      8:    0.004791098875625
+      9:    0.004779395256298
+     10:    0.004694882779908
+     11:    0.004462936617805
+     12:    0.004361396660071
+     13:    0.004092785946190
+     14:    0.003803587897293
+     15:    0.003728162940597
+     16:    0.003611583726226
+     17:    0.003157898923419
+     18:    0.002893669384968
+     19:    0.002782180834429
+     20:    0.002618032019120
+     21:    0.002497364934695
+     22:    0.002369401094924
+     23:    0.002249598987482
+     24:    0.002235881928446
+     25:    0.002017255970068
+     26:    0.001936398320101
+     27:    0.001930623276544
+     28:    0.001916815457629
+     29:    0.001815829354094
+     30:    0.001551802389358
+     31:    0.001525768334607
+     32:    0.001484524602802
+     33:    0.001443769848437
+     34:    0.000674097440353
+     35:    0.000671689570939
+     36:    0.000662999116523
+     37:    0.000626304864782
+     38:    0.000606948236885
+     39:    0.000603648065452
+     40:    0.000573161925260
+     41:    0.000520990510502
+     42:    0.000434899313101
+     43:    0.000425095276585
+     44:    0.000412398770705
+     45:    0.000403339159705
+     46:    0.000379555616941
+     47:    0.000362493063028
+     48:    0.000360181471998
+     49:    0.000359197081800
+     50:    0.000337098462089
+     51:    0.000328800187647
+     52:    0.000302103129629
+     53:    0.000288152330127
+     54:    0.000272916487676
+     55:    0.000272603750642
+     56:    0.000267019299330
+     57:    0.000234983171489
+     58:    0.000194470955355
+     59:    0.000181885909479
+
+
+ Suggested Active Space 
+
+ Occupied orbitals with an occupation less than 0.9800 are active
+ Virtual orbitals with an occupation greater than 0.0200 are active
+ Remember, these are suggestions  :-)!
+
+ Irrep 0 orbital   19 occupation: 0.979220 Active occupied
+ Irrep 0 orbital   20 occupation: 0.978537 Active occupied
+ Irrep 0 orbital   21 occupation: 0.977590 Active occupied
+ Irrep 0 orbital   22 occupation: 0.977166 Active occupied
+ Irrep 0 orbital   23 occupation: 0.976837 Active occupied
+ Irrep 0 orbital   24 occupation: 0.976039 Active occupied
+ Irrep 0 orbital   25 occupation: 0.974060 Active occupied
+ Irrep 1 orbital    0 occupation: 0.976615 Active occupied
+ Irrep 1 orbital    1 occupation: 0.973320 Active occupied
+ Irrep 1 orbital    2 occupation: 0.966485 Active occupied
+ Irrep 1 orbital    3 occupation: 0.965132 Active occupied
+ Irrep 1 orbital    4 occupation: 0.959437 Active occupied
+ Irrep 1 orbital    5 occupation: 0.949388 Active occupied
+ Irrep 1 orbital    6 occupation: 0.946592 Active occupied
+ Irrep 1 orbital    0 occupation: 0.046084 Active virtual
+ Irrep 1 orbital    1 occupation: 0.041499 Active virtual
+ Irrep 1 orbital    2 occupation: 0.032130 Active virtual
+ Irrep 1 orbital    3 occupation: 0.025974 Active virtual
+ Irrep 1 orbital    4 occupation: 0.024749 Active virtual
+ By occupation analysis, the restricted_docc should be
+
+ Restricted_docc = [ 19 0 ]
+
+ By occupation analysis, the active orbitals should be
+
+ Active = [ 7 12 ]
+    MP2 correlation energy................................................................PASSED
+
+
+  Forte: Read orbitals from file Ca_mp2no_ref.npz ... Done
+    MP2 natural orbitals..................................................................PASSED
+
+    Psi4 stopped on: Thursday, 16 December 2021 06:18PM
+    Psi4 wall time for execution: 0:00:23.30
+
+*** Psi4 exiting successfully. Buy a developer a beer!

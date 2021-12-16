@@ -351,6 +351,7 @@ ambit::BlockedTensor MP2_NOS::build_1rdm_conv() {
     outfile->Printf("\n    MP2 correlation energy                = %20.15f", mp2_corr_energy);
     outfile->Printf("\n  * MP2 total energy                      = %20.15f\n\n",
                     ref_energy + mp2_corr_energy);
+    psi::Process::environment.globals["MP2 CORRELATION ENERGY"] = mp2_corr_energy;
 
     // build 1RDM
     BlockedTensor D1 = BlockedTensor::build(CoreTensor, "D1", spin_cases({"oo", "vv"}));
@@ -382,7 +383,7 @@ ambit::BlockedTensor MP2_NOS::build_1rdm_df() {
     D1.block("OO").iterate(
         [&](const std::vector<size_t>& i, double& value) { value = i[0] == i[1] ? 1.0 : 0.0; });
 
-    if (naocc_ == nbocc_) {
+    if (ints_->spin_restriction() == IntegralSpinRestriction::Restricted) {
         compute_df_rmp2_1rdm_vv(D1);
         compute_df_rmp2_1rdm_oo(D1);
     } else {
@@ -637,6 +638,7 @@ void MP2_NOS::compute_df_ump2_1rdm_vv(ambit::BlockedTensor& D1) {
     outfile->Printf("\n    MP2 correlation energy (bb)           = %20.15f", e_bb);
     outfile->Printf("\n    MP2 correlation energy                = %20.15f", e_corr);
     outfile->Printf("\n  * MP2 total energy                      = %20.15f\n", e_ref + e_corr);
+    psi::Process::environment.globals["MP2 CORRELATION ENERGY"] = e_corr;
 
     // add Dvv contributions to D1
     for (int i = 0; i < nthreads; ++i) {
@@ -989,6 +991,7 @@ void MP2_NOS::compute_df_rmp2_1rdm_vv(ambit::BlockedTensor& D1) {
     outfile->Printf("\n\n    SCF energy                            = %20.15f", e_ref);
     outfile->Printf("\n    MP2 correlation energy                = %20.15f", e_corr);
     outfile->Printf("\n  * MP2 total energy                      = %20.15f\n", e_ref + e_corr);
+    psi::Process::environment.globals["MP2 CORRELATION ENERGY"] = e_corr;
 
     // add Dvv contributions to D1
     for (int i = 0; i < nthreads; ++i) {
