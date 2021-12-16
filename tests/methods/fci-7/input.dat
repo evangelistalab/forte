@@ -57,8 +57,21 @@ units bohr
 }
 
 set {
-docc [2,0,0,0]
-socc [1,0,1,0]
+  basis 6-31G
+  scf_type pk
+  reference rohf
+  e_convergence 12
+  docc [2,0,0,0]
+  socc [1,0,1,0]
+}
+
+scf_triplet = energy('scf')
+compare_values(refscf_triplet, variable("CURRENT ENERGY"),11, "SCF energy") #TEST
+
+set forte {
+  active_space_solver fci
+  root_sym 3
+  ms = 1.0
 }
 
 Escf_triplet, wfn1 = energy('scf', return_wfn=True)

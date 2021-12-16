@@ -22,6 +22,8 @@ Prior to the compilation of Forte you must first check to make sure you have the
 
 3. The tensor library Ambit (obtain it from https://github.com/jturney/ambit). Note that ambit is included in the conda distribution of psi4. So if you already have the latest version of psi4 installed there is no need to compile ambit.
 
+4. Pybind11
+
 
 Once you have the current versions of Psi4, CMake, and Ambit, follow the following instructions to install Forte.
 
