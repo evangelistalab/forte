@@ -31,20 +31,26 @@ void DSRG_MRPT2::set_b(int dim, std::map<string, int> preidx, std::map<string, i
         Z_b["em"] += 0.5 * Sigma3["ia"] * V["aeim"];
         Z_b["em"] += 0.5 * Sigma3["IA"] * V["eAmI"];
         Z_b["em"] -= 0.5 * Sigma3["ie"] * F["im"];
-    }
 
-    if (CORRELATION_TERM) {
         Z_b["em"] += 0.5 * Xi3["ma"] * F["ea"];
         Z_b["em"] += 0.5 * Xi3["ia"] * V["ieam"];
         Z_b["em"] += 0.5 * Xi3["IA"] * V["eImA"];
         Z_b["em"] += 0.5 * Xi3["ia"] * V["aeim"];
         Z_b["em"] += 0.5 * Xi3["IA"] * V["eAmI"];
         Z_b["em"] -= 0.5 * Xi3["ie"] * F["im"];
-    }
 
-    if (CORRELATION_TERM) {
         Z_b["em"] += Tau1["mjab"] * V["abej"];
         Z_b["em"] += 2.0 * Tau1["mJaB"] * V["aBeJ"];
+
+        // if (eri_df_) {
+
+        // } else {
+        //     Z_b["em"] += 0.5 * Sigma3["ia"] * V["ieam"];
+        //     Z_b["em"] += 0.5 * Sigma3["IA"] * V["eImA"];
+        // }
+
+
+
 
         temp["mlcd"] += Kappa["mlcd"] * Eeps2_p["mlcd"];
         temp["mLcD"] += Kappa["mLcD"] * Eeps2_p["mLcD"];
@@ -82,9 +88,7 @@ void DSRG_MRPT2::set_b(int dim, std::map<string, int> preidx, std::map<string, i
         Z_b["wz"] -= 0.5 * Sigma3["IA"] * V["zAvI"] * Gamma1_["wv"];
         Z_b["wz"] -= 0.5 * Sigma3["ia"] * V["auiz"] * Gamma1_["uw"];
         Z_b["wz"] -= 0.5 * Sigma3["IA"] * V["uAzI"] * Gamma1_["uw"];
-    }
 
-    if (CORRELATION_TERM) {
         Z_b["wz"] += 0.5 * Xi3["za"] * F["wa"];
         Z_b["wz"] += 0.5 * Xi3["iz"] * F["iw"];
         Z_b["wz"] += 0.5 * Xi3["ia"] * V["awiv"] * Gamma1_["zv"];
@@ -98,9 +102,7 @@ void DSRG_MRPT2::set_b(int dim, std::map<string, int> preidx, std::map<string, i
         Z_b["wz"] -= 0.5 * Xi3["IA"] * V["zAvI"] * Gamma1_["wv"];
         Z_b["wz"] -= 0.5 * Xi3["ia"] * V["auiz"] * Gamma1_["uw"];
         Z_b["wz"] -= 0.5 * Xi3["IA"] * V["uAzI"] * Gamma1_["uw"];
-    }
 
-    if (CORRELATION_TERM) {
         Z_b["wz"] += Tau1["ijzb"] * V["wbij"];
         Z_b["wz"] += 2.0 * Tau1["iJzB"] * V["wBiJ"];
 
@@ -158,9 +160,7 @@ void DSRG_MRPT2::set_b(int dim, std::map<string, int> preidx, std::map<string, i
         Z_b["ew"] += 0.5 * Sigma3["ia"] * V["auie"] * Gamma1_["uw"];
         Z_b["ew"] += 0.5 * Sigma3["IA"] * V["uAeI"] * Gamma1_["uw"];
         Z_b["ew"] -= 0.5 * Sigma3["ie"] * F["iw"];
-    }
 
-    if (CORRELATION_TERM) {
         Z_b["ew"] += 0.5 * Xi3["wa"] * F["ea"];
         Z_b["ew"] += 0.5 * Xi3["iw"] * F["ie"];
         Z_b["ew"] += 0.5 * Xi3["ia"] * V["aeiv"] * Gamma1_["wv"];
@@ -168,9 +168,7 @@ void DSRG_MRPT2::set_b(int dim, std::map<string, int> preidx, std::map<string, i
         Z_b["ew"] += 0.5 * Xi3["ia"] * V["auie"] * Gamma1_["uw"];
         Z_b["ew"] += 0.5 * Xi3["IA"] * V["uAeI"] * Gamma1_["uw"];
         Z_b["ew"] -= 0.5 * Xi3["ie"] * F["iw"];
-    }
 
-    if (CORRELATION_TERM) {
         Z_b["ew"] += Tau1["ijwb"] * V["ebij"];
         Z_b["ew"] += 2.0 * Tau1["iJwB"] * V["eBiJ"];
 
@@ -218,9 +216,7 @@ void DSRG_MRPT2::set_b(int dim, std::map<string, int> preidx, std::map<string, i
         Z_b["mw"] -= 0.5 * Sigma3["IA"] * V["mAwI"];
         Z_b["mw"] -= 0.5 * Sigma3["ia"] * V["awim"];
         Z_b["mw"] -= 0.5 * Sigma3["IA"] * V["wAmI"];
-    }
 
-    if (CORRELATION_TERM) {
         Z_b["mw"] += 0.5 * Xi3["wa"] * F["ma"];
         Z_b["mw"] += 0.5 * Xi3["iw"] * F["im"];
         Z_b["mw"] += 0.5 * Xi3["ia"] * V["amiv"] * Gamma1_["wv"];
@@ -233,9 +229,7 @@ void DSRG_MRPT2::set_b(int dim, std::map<string, int> preidx, std::map<string, i
         Z_b["mw"] -= 0.5 * Xi3["IA"] * V["mAwI"];
         Z_b["mw"] -= 0.5 * Xi3["ia"] * V["awim"];
         Z_b["mw"] -= 0.5 * Xi3["IA"] * V["wAmI"];
-    }
 
-    if (CORRELATION_TERM) {
         Z_b["mw"] += Tau1["ijwb"] * V["mbij"];
         Z_b["mw"] += 2.0 * Tau1["iJwB"] * V["mBiJ"];
 

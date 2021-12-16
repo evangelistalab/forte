@@ -111,52 +111,54 @@ void DSRG_MRPT2::set_tau() {
     }
     // <[V, T2]> C_4 (C_2)^2 PH
     if (X3_TERM) {
-        Tau2["muye"] -= 0.25 * V_["vemx"] * Lambda2_["xyuv"];
-        Tau2["muyz"] -= 0.25 * V_["vwmx"] * Eta1_["zw"] * Lambda2_["xyuv"];
-        Tau2["zuye"] -= 0.25 * V_["vewx"] * Gamma1_["zw"] * Lambda2_["xyuv"];
-        Tau2["z,u,y,u1"] -=
+        BlockedTensor temp1 = BTF_->build(CoreTensor, "temporal tensor 1", spin_cases({"hhpp"}));
+        BlockedTensor temp2 = BTF_->build(CoreTensor, "temporal tensor 2", spin_cases({"hhpp"}));
+
+        temp1["muye"] -= 0.25 * V_["vemx"] * Lambda2_["xyuv"];
+        temp1["muyz"] -= 0.25 * V_["vwmx"] * Eta1_["zw"] * Lambda2_["xyuv"];
+        temp1["zuye"] -= 0.25 * V_["vewx"] * Gamma1_["zw"] * Lambda2_["xyuv"];
+        temp1["z,u,y,u1"] -=
             0.25 * V_["v,a1,w,x"] * Gamma1_["zw"] * Eta1_["u1,a1"] * Lambda2_["xyuv"];
-        Tau2["muye"] -= 0.25 * V_["eVmX"] * Lambda2_["yXuV"];
-        Tau2["muyz"] -= 0.25 * V_["wVmX"] * Eta1_["zw"] * Lambda2_["yXuV"];
-        Tau2["zuye"] -= 0.25 * V_["eVwX"] * Gamma1_["zw"] * Lambda2_["yXuV"];
-        Tau2["z,u,y,u1"] -=
+        temp2["muye"] -= 0.25 * V_["eVmX"] * Lambda2_["yXuV"];
+        temp2["muyz"] -= 0.25 * V_["wVmX"] * Eta1_["zw"] * Lambda2_["yXuV"];
+        temp2["zuye"] -= 0.25 * V_["eVwX"] * Gamma1_["zw"] * Lambda2_["yXuV"];
+        temp2["z,u,y,u1"] -=
             0.25 * V_["a1,V,w,X"] * Gamma1_["zw"] * Eta1_["u1,a1"] * Lambda2_["yXuV"];
-        Tau2["MUYE"] -= 0.25 * V_["VEMX"] * Lambda2_["XYUV"];
-        Tau2["MUYZ"] -= 0.25 * V_["VWMX"] * Eta1_["ZW"] * Lambda2_["XYUV"];
-        Tau2["ZUYE"] -= 0.25 * V_["VEWX"] * Gamma1_["ZW"] * Lambda2_["XYUV"];
-        Tau2["Z,U,Y,U1"] -=
+        temp1["MUYE"] -= 0.25 * V_["VEMX"] * Lambda2_["XYUV"];
+        temp1["MUYZ"] -= 0.25 * V_["VWMX"] * Eta1_["ZW"] * Lambda2_["XYUV"];
+        temp1["ZUYE"] -= 0.25 * V_["VEWX"] * Gamma1_["ZW"] * Lambda2_["XYUV"];
+        temp1["Z,U,Y,U1"] -=
             0.25 * V_["V,A1,W,X"] * Gamma1_["ZW"] * Eta1_["U1,A1"] * Lambda2_["XYUV"];
-        Tau2["MUYE"] -= 0.25 * V_["vExM"] * Lambda2_["xYvU"];
-        Tau2["MUYZ"] -= 0.25 * V_["vWxM"] * Eta1_["ZW"] * Lambda2_["xYvU"];
-        Tau2["ZUYE"] -= 0.25 * V_["vExW"] * Gamma1_["ZW"] * Lambda2_["xYvU"];
-        Tau2["Z,U,Y,U1"] -=
+        temp2["MUYE"] -= 0.25 * V_["vExM"] * Lambda2_["xYvU"];
+        temp2["MUYZ"] -= 0.25 * V_["vWxM"] * Eta1_["ZW"] * Lambda2_["xYvU"];
+        temp2["ZUYE"] -= 0.25 * V_["vExW"] * Gamma1_["ZW"] * Lambda2_["xYvU"];
+        temp2["Z,U,Y,U1"] -=
             0.25 * V_["v,A1,x,W"] * Gamma1_["ZW"] * Eta1_["U1,A1"] * Lambda2_["xYvU"];
+
+        /************************************ Symmetrization **************************************/
+
         Tau2["mUyE"] -= 0.25 * V_["vEmX"] * Lambda2_["yXvU"];
         Tau2["mUyZ"] -= 0.25 * V_["vWmX"] * Eta1_["ZW"] * Lambda2_["yXvU"];
         Tau2["zUyE"] -= 0.25 * V_["vEwX"] * Gamma1_["zw"] * Lambda2_["yXvU"];
         Tau2["z,U,y,U1"] -=
             0.25 * V_["v,A1,w,X"] * Gamma1_["zw"] * Eta1_["U1,A1"] * Lambda2_["yXvU"];
+        Tau2["muye"]     += temp1["muye"];
+        Tau2["muyz"]     += temp1["muyz"];
+        Tau2["zuye"]     += temp1["zuye"];
+        Tau2["z,u,y,u1"] += temp1["z,u,y,u1"];
+        Tau2["MUYE"]     += temp1["MUYE"]; 
+        Tau2["MUYZ"]     += temp1["MUYZ"]; 
+        Tau2["ZUYE"]     += temp1["ZUYE"]; 
+        Tau2["Z,U,Y,U1"] += temp1["Z,U,Y,U1"];
+        Tau2["muye"]     += temp2["muye"];
+        Tau2["muyz"]     += temp2["muyz"];
+        Tau2["zuye"]     += temp2["zuye"];
+        Tau2["z,u,y,u1"] += temp2["z,u,y,u1"];
+        Tau2["MUYE"]     += temp2["MUYE"]; 
+        Tau2["MUYZ"]     += temp2["MUYZ"]; 
+        Tau2["ZUYE"]     += temp2["ZUYE"]; 
+        Tau2["Z,U,Y,U1"] += temp2["Z,U,Y,U1"];
 
-        Tau2["umye"] -= 0.25 * V_["vexm"] * Lambda2_["xyuv"];
-        Tau2["umyz"] -= 0.25 * V_["vwxm"] * Eta1_["zw"] * Lambda2_["xyuv"];
-        Tau2["uzye"] -= 0.25 * V_["vexw"] * Gamma1_["zw"] * Lambda2_["xyuv"];
-        Tau2["u,z,y,u1"] -=
-            0.25 * V_["v,a1,x,w"] * Gamma1_["zw"] * Eta1_["u1,a1"] * Lambda2_["xyuv"];
-        Tau2["umye"] += 0.25 * V_["eVmX"] * Lambda2_["yXuV"];
-        Tau2["umyz"] += 0.25 * V_["wVmX"] * Eta1_["zw"] * Lambda2_["yXuV"];
-        Tau2["uzye"] += 0.25 * V_["eVwX"] * Gamma1_["zw"] * Lambda2_["yXuV"];
-        Tau2["u,z,y,u1"] +=
-            0.25 * V_["a1,V,w,X"] * Gamma1_["zw"] * Eta1_["u1,a1"] * Lambda2_["yXuV"];
-        Tau2["UMYE"] -= 0.25 * V_["VEXM"] * Lambda2_["XYUV"];
-        Tau2["UMYZ"] -= 0.25 * V_["VWXM"] * Eta1_["ZW"] * Lambda2_["XYUV"];
-        Tau2["UZYE"] -= 0.25 * V_["VEXW"] * Gamma1_["ZW"] * Lambda2_["XYUV"];
-        Tau2["U,Z,Y,U1"] -=
-            0.25 * V_["V,A1,X,W"] * Gamma1_["ZW"] * Eta1_["U1,A1"] * Lambda2_["XYUV"];
-        Tau2["UMYE"] += 0.25 * V_["vExM"] * Lambda2_["xYvU"];
-        Tau2["UMYZ"] += 0.25 * V_["vWxM"] * Eta1_["ZW"] * Lambda2_["xYvU"];
-        Tau2["UZYE"] += 0.25 * V_["vExW"] * Gamma1_["ZW"] * Lambda2_["xYvU"];
-        Tau2["U,Z,Y,U1"] +=
-            0.25 * V_["v,A1,x,W"] * Gamma1_["ZW"] * Eta1_["U1,A1"] * Lambda2_["xYvU"];
         Tau2["uMyE"] -= 0.25 * V_["vExM"] * Lambda2_["xyuv"];
         Tau2["uMyZ"] -= 0.25 * V_["vWxM"] * Eta1_["ZW"] * Lambda2_["xyuv"];
         Tau2["uZyE"] -= 0.25 * V_["vExW"] * Gamma1_["ZW"] * Lambda2_["xyuv"];
@@ -167,53 +169,45 @@ void DSRG_MRPT2::set_tau() {
         Tau2["uZyE"] += 0.25 * V_["VEXW"] * Gamma1_["ZW"] * Lambda2_["yXuV"];
         Tau2["u,Z,y,U1"] +=
             0.25 * V_["V,A1,X,W"] * Gamma1_["ZW"] * Eta1_["U1,A1"] * Lambda2_["yXuV"];
+        Tau2["umye"]     -= temp1["muye"];
+        Tau2["umyz"]     -= temp1["muyz"];
+        Tau2["uzye"]     -= temp1["zuye"];
+        Tau2["u,z,y,u1"] -= temp1["z,u,y,u1"];
+        Tau2["UMYE"]     -= temp1["MUYE"]; 
+        Tau2["UMYZ"]     -= temp1["MUYZ"]; 
+        Tau2["UZYE"]     -= temp1["ZUYE"]; 
+        Tau2["U,Z,Y,U1"] -= temp1["Z,U,Y,U1"];
+        Tau2["umye"]     -= temp2["muye"];
+        Tau2["umyz"]     -= temp2["muyz"];
+        Tau2["uzye"]     -= temp2["zuye"];
+        Tau2["u,z,y,u1"] -= temp2["z,u,y,u1"];
+        Tau2["UMYE"]     -= temp2["MUYE"]; 
+        Tau2["UMYZ"]     -= temp2["MUYZ"]; 
+        Tau2["UZYE"]     -= temp2["ZUYE"]; 
+        Tau2["U,Z,Y,U1"] -= temp2["Z,U,Y,U1"];
 
-        Tau2["umey"] -= 0.25 * V_["evxm"] * Lambda2_["xyuv"];
-        Tau2["umzy"] -= 0.25 * V_["wvxm"] * Eta1_["zw"] * Lambda2_["xyuv"];
-        Tau2["uzey"] -= 0.25 * V_["evxw"] * Gamma1_["zw"] * Lambda2_["xyuv"];
-        Tau2["u,z,u1,y"] -=
-            0.25 * V_["a1,v,x,w"] * Gamma1_["zw"] * Eta1_["u1,a1"] * Lambda2_["xyuv"];
-        Tau2["umey"] -= 0.25 * V_["eVmX"] * Lambda2_["yXuV"];
-        Tau2["umzy"] -= 0.25 * V_["wVmX"] * Eta1_["zw"] * Lambda2_["yXuV"];
-        Tau2["uzey"] -= 0.25 * V_["eVwX"] * Gamma1_["zw"] * Lambda2_["yXuV"];
-        Tau2["u,z,u1,y"] -=
-            0.25 * V_["a1,V,w,X"] * Gamma1_["zw"] * Eta1_["u1,a1"] * Lambda2_["yXuV"];
-        Tau2["UMEY"] -= 0.25 * V_["EVXM"] * Lambda2_["XYUV"];
-        Tau2["UMZY"] -= 0.25 * V_["WVXM"] * Eta1_["ZW"] * Lambda2_["XYUV"];
-        Tau2["UZEY"] -= 0.25 * V_["EVXW"] * Gamma1_["ZW"] * Lambda2_["XYUV"];
-        Tau2["U,Z,U1,Y"] -=
-            0.25 * V_["A1,V,X,W"] * Gamma1_["ZW"] * Eta1_["U1,A1"] * Lambda2_["XYUV"];
-        Tau2["UMEY"] -= 0.25 * V_["vExM"] * Lambda2_["xYvU"];
-        Tau2["UMZY"] -= 0.25 * V_["vWxM"] * Eta1_["ZW"] * Lambda2_["xYvU"];
-        Tau2["UZEY"] -= 0.25 * V_["vExW"] * Gamma1_["ZW"] * Lambda2_["xYvU"];
-        Tau2["U,Z,U1,Y"] -=
-            0.25 * V_["v,A1,x,W"] * Gamma1_["ZW"] * Eta1_["U1,A1"] * Lambda2_["xYvU"];
         Tau2["uMeY"] -= 0.25 * V_["eVxM"] * Lambda2_["xYuV"];
         Tau2["uMzY"] -= 0.25 * V_["wVxM"] * Eta1_["zw"] * Lambda2_["xYuV"];
         Tau2["uZeY"] -= 0.25 * V_["eVxW"] * Gamma1_["ZW"] * Lambda2_["xYuV"];
         Tau2["u,Z,u1,Y"] -=
             0.25 * V_["a1,V,x,W"] * Gamma1_["ZW"] * Eta1_["u1,a1"] * Lambda2_["xYuV"];
+        Tau2["umey"]     += temp1["muye"];
+        Tau2["umzy"]     += temp1["muyz"];
+        Tau2["uzey"]     += temp1["zuye"];
+        Tau2["u,z,u1,y"] += temp1["z,u,y,u1"];
+        Tau2["UMEY"]     += temp1["MUYE"]; 
+        Tau2["UMZY"]     += temp1["MUYZ"]; 
+        Tau2["UZEY"]     += temp1["ZUYE"]; 
+        Tau2["U,Z,U1,Y"] += temp1["Z,U,Y,U1"];
+        Tau2["umey"]     += temp2["muye"];
+        Tau2["umzy"]     += temp2["muyz"];
+        Tau2["uzey"]     += temp2["zuye"];
+        Tau2["u,z,u1,y"] += temp2["z,u,y,u1"];
+        Tau2["UMEY"]     += temp2["MUYE"]; 
+        Tau2["UMZY"]     += temp2["MUYZ"]; 
+        Tau2["UZEY"]     += temp2["ZUYE"]; 
+        Tau2["U,Z,U1,Y"] += temp2["Z,U,Y,U1"];
 
-        Tau2["muey"] -= 0.25 * V_["evmx"] * Lambda2_["xyuv"];
-        Tau2["muzy"] -= 0.25 * V_["wvmx"] * Eta1_["zw"] * Lambda2_["xyuv"];
-        Tau2["zuey"] -= 0.25 * V_["evwx"] * Gamma1_["zw"] * Lambda2_["xyuv"];
-        Tau2["z,u,u1,y"] -=
-            0.25 * V_["a1,v,w,x"] * Gamma1_["zw"] * Eta1_["u1,a1"] * Lambda2_["xyuv"];
-        Tau2["muey"] += 0.25 * V_["eVmX"] * Lambda2_["yXuV"];
-        Tau2["muzy"] += 0.25 * V_["wVmX"] * Eta1_["zw"] * Lambda2_["yXuV"];
-        Tau2["zuey"] += 0.25 * V_["eVwX"] * Gamma1_["zw"] * Lambda2_["yXuV"];
-        Tau2["z,u,u1,y"] +=
-            0.25 * V_["a1,V,w,X"] * Gamma1_["zw"] * Eta1_["u1,a1"] * Lambda2_["yXuV"];
-        Tau2["MUEY"] -= 0.25 * V_["EVMX"] * Lambda2_["XYUV"];
-        Tau2["MUZY"] -= 0.25 * V_["WVMX"] * Eta1_["ZW"] * Lambda2_["XYUV"];
-        Tau2["ZUEY"] -= 0.25 * V_["EVWX"] * Gamma1_["ZW"] * Lambda2_["XYUV"];
-        Tau2["Z,U,U1,Y"] -=
-            0.25 * V_["A1,V,W,X"] * Gamma1_["ZW"] * Eta1_["U1,A1"] * Lambda2_["XYUV"];
-        Tau2["MUEY"] += 0.25 * V_["vExM"] * Lambda2_["xYvU"];
-        Tau2["MUZY"] += 0.25 * V_["vWxM"] * Eta1_["ZW"] * Lambda2_["xYvU"];
-        Tau2["ZUEY"] += 0.25 * V_["vExW"] * Gamma1_["ZW"] * Lambda2_["xYvU"];
-        Tau2["Z,U,U1,Y"] +=
-            0.25 * V_["v,A1,x,W"] * Gamma1_["ZW"] * Eta1_["U1,A1"] * Lambda2_["xYvU"];
         Tau2["mUeY"] -= 0.25 * V_["eVmX"] * Lambda2_["XYUV"];
         Tau2["mUzY"] -= 0.25 * V_["wVmX"] * Eta1_["zw"] * Lambda2_["XYUV"];
         Tau2["zUeY"] -= 0.25 * V_["eVwX"] * Gamma1_["zw"] * Lambda2_["XYUV"];
@@ -224,6 +218,22 @@ void DSRG_MRPT2::set_tau() {
         Tau2["zUeY"] += 0.25 * V_["evwx"] * Gamma1_["zw"] * Lambda2_["xYvU"];
         Tau2["z,U,u1,Y"] +=
             0.25 * V_["a1,v,w,x"] * Gamma1_["zw"] * Eta1_["u1,a1"] * Lambda2_["xYvU"];
+        Tau2["muey"]     -= temp1["muye"];
+        Tau2["muzy"]     -= temp1["muyz"];
+        Tau2["zuey"]     -= temp1["zuye"];
+        Tau2["z,u,u1,y"] -= temp1["z,u,y,u1"];
+        Tau2["MUEY"]     -= temp1["MUYE"]; 
+        Tau2["MUZY"]     -= temp1["MUYZ"]; 
+        Tau2["ZUEY"]     -= temp1["ZUYE"]; 
+        Tau2["Z,U,U1,Y"] -= temp1["Z,U,Y,U1"];
+        Tau2["muey"]     -= temp2["muye"];
+        Tau2["muzy"]     -= temp2["muyz"];
+        Tau2["zuey"]     -= temp2["zuye"];
+        Tau2["z,u,u1,y"] -= temp2["z,u,y,u1"];
+        Tau2["MUEY"]     -= temp2["MUYE"]; 
+        Tau2["MUZY"]     -= temp2["MUYZ"]; 
+        Tau2["ZUEY"]     -= temp2["ZUYE"]; 
+        Tau2["Z,U,U1,Y"] -= temp2["Z,U,Y,U1"];
     }
     // <[V, T2]> C_6 C_2
     if (X4_TERM) {
