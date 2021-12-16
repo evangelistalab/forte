@@ -485,6 +485,11 @@ def run_forte(name, **kwargs):
     forte_objects = prepare_forte_objects(options, name, **kwargs)
     ref_wfn, state_weights_map, mo_space_info, scf_info, fcidump = forte_objects
 
+    job_type = options.get_str('JOB_TYPE')
+    if job_type == 'NONE' and options.get_str("ORBITAL_TYPE") != 'CANONICAL':
+        psi4.core.set_scalar_variable('CURRENT ENERGY', 0.0)
+        return ref_wfn
+
     start_pre_ints = time.time()
 
     if 'FCIDUMP' in options.get_str('INT_TYPE'):
@@ -497,8 +502,6 @@ def run_forte(name, **kwargs):
         ints = forte.make_ints_from_psi4(ref_wfn, options, mo_space_info)
 
     start = time.time()
-
-    job_type = options.get_str('JOB_TYPE')
 
     # Rotate orbitals before computation (e.g. localization, MP2 natural orbitals, etc.)
     orb_type = options.get_str("ORBITAL_TYPE")
