@@ -272,7 +272,7 @@ double MCSCF_2STEP::compute_energy() {
                                  e_c, de_c, e_o, de_o, de, g_rms, n_micro, o_conv);
 
             // test convergence
-            if (macro == 1 and lbfgs.converged()) {
+            if (macro == 1 and lbfgs.converged() and std::fabs(de) < e_conv_) {
                 psi::outfile->Printf("\n\n  Initial orbitals are already converged!");
                 converged = true;
                 break;
