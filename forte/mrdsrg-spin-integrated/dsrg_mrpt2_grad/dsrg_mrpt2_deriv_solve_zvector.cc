@@ -634,61 +634,40 @@ void DSRG_MRPT2::z_vector_contraction(std::vector<double> & qk_vec, std::vector<
     y["ew"] -= V["e,Y,v,E1"] * Gamma2_["v,U,w,Y"] * qk["E1,U"];
 
     // ACTIVE-ACTIVE
-    y["wz"] += Delta1["zw"] * qk["w,z"];
-    y["wz"] -= V["e1,u,m1,w"] * Gamma1_["uz"] * qk["e1,m1"];
-    y["wz"] -= V["u,E1,w,M1"] * Gamma1_["uz"] * qk["E1,M1"];
-    y["wz"] -= V["e1,w,m1,u"] * Gamma1_["uz"] * qk["e1,m1"];
-    y["wz"] -= V["w,E1,u,M1"] * Gamma1_["uz"] * qk["E1,M1"];
-    y["wz"] += V["e1,u,m1,z"] * Gamma1_["uw"] * qk["e1,m1"];
-    y["wz"] += V["u,E1,z,M1"] * Gamma1_["uw"] * qk["E1,M1"];
-    y["wz"] += V["e1,z,m1,u"] * Gamma1_["uw"] * qk["e1,m1"];
-    y["wz"] += V["z,E1,u,M1"] * Gamma1_["uw"] * qk["E1,M1"];
-    y["wz"] -= F["w,n1"] * qk["n1,z"];
-    y["wz"] += F["z,n1"] * qk["n1,w"];
-    y["wz"] -= V["u,v,n1,w"] * Gamma1_["zv"] * qk["n1,u"];
-    y["wz"] -= V["v,U,w,N1"] * Gamma1_["zv"] * qk["N1,U"];
-    y["wz"] -= V["u,w,n1,v"] * Gamma1_["zv"] * qk["n1,u"];
-    y["wz"] -= V["w,U,v,N1"] * Gamma1_["zv"] * qk["N1,U"];
-    y["wz"] += V["u,v,n1,z"] * Gamma1_["wv"] * qk["n1,u"];
-    y["wz"] += V["v,U,z,N1"] * Gamma1_["wv"] * qk["N1,U"];
-    y["wz"] += V["u,z,n1,v"] * Gamma1_["wv"] * qk["n1,u"];
-    y["wz"] += V["z,U,v,N1"] * Gamma1_["wv"] * qk["N1,U"];
-    y["wz"] += H["w,n1"] * Gamma1_["uz"] * qk["n1,u"];
-    y["wz"] += V_sumA_Alpha["w,n1"] * Gamma1_["uz"] * qk["n1,u"];
-    y["wz"] += V_sumB_Alpha["w,n1"] * Gamma1_["uz"] * qk["n1,u"];
-    y["wz"] += 0.5 * V["x,y,n1,w"] * Gamma2_["u,z,x,y"] * qk["n1,u"];
-    y["wz"] += V["y,X,w,N1"] * Gamma2_["z,U,y,X"] * qk["N1,U"];
-    y["wz"] += V["w,y,n1,v"] * Gamma2_["u,v,z,y"] * qk["n1,u"];
-    y["wz"] += V["w,Y,n1,V"] * Gamma2_["u,V,z,Y"] * qk["n1,u"];
-    y["wz"] += V["w,Y,v,N1"] * Gamma2_["v,U,z,Y"] * qk["N1,U"];
-    y["wz"] -= H["z,n1"] * Gamma1_["uw"] * qk["n1,u"];
-    y["wz"] -= V_sumA_Alpha["z,n1"] * Gamma1_["uw"] * qk["n1,u"];
-    y["wz"] -= V_sumB_Alpha["z,n1"] * Gamma1_["uw"] * qk["n1,u"];
-    y["wz"] -= 0.5 * V["x,y,n1,z"] * Gamma2_["u,w,x,y"] * qk["n1,u"];
-    y["wz"] -= V["y,X,z,N1"] * Gamma2_["w,U,y,X"] * qk["N1,U"];
-    y["wz"] -= V["z,y,n1,v"] * Gamma2_["u,v,w,y"] * qk["n1,u"];
-    y["wz"] -= V["z,Y,n1,V"] * Gamma2_["u,V,w,Y"] * qk["n1,u"];
-    y["wz"] -= V["z,Y,v,N1"] * Gamma2_["v,U,w,Y"] * qk["N1,U"];
-    y["wz"] -= H["w,e1"] * Gamma1_["uz"] * qk["e1,u"];
-    y["wz"] -= V_sumA_Alpha["e1,w"] * Gamma1_["uz"] * qk["e1,u"];
-    y["wz"] -= V_sumB_Alpha["e1,w"] * Gamma1_["uz"] * qk["e1,u"];
-    y["wz"] -= 0.5 * V["e1,w,x,y"] * Gamma2_["u,z,x,y"] * qk["e1,u"];
-    y["wz"] -= V["w,E1,y,X"] * Gamma2_["z,U,y,X"] * qk["E1,U"];
-    y["wz"] -= V["e1,v,w,y"] * Gamma2_["u,v,z,y"] * qk["e1,u"];
-    y["wz"] -= V["e1,V,w,Y"] * Gamma2_["u,V,z,Y"] * qk["e1,u"];
-    y["wz"] -= V["v,E1,w,Y"] * Gamma2_["v,U,z,Y"] * qk["E1,U"];
-    y["wz"] += H["z,e1"] * Gamma1_["uw"] * qk["e1,u"];
-    y["wz"] += V_sumA_Alpha["e1,z"] * Gamma1_["uw"] * qk["e1,u"];
-    y["wz"] += V_sumB_Alpha["e1,z"] * Gamma1_["uw"] * qk["e1,u"];
-    y["wz"] += 0.5 * V["e1,z,x,y"] * Gamma2_["u,w,x,y"] * qk["e1,u"];
-    y["wz"] += V["z,E1,y,X"] * Gamma2_["w,U,y,X"] * qk["E1,U"];
-    y["wz"] += V["e1,v,z,y"] * Gamma2_["u,v,w,y"] * qk["e1,u"];
-    y["wz"] += V["e1,V,z,Y"] * Gamma2_["u,V,w,Y"] * qk["e1,u"];
-    y["wz"] += V["v,E1,z,Y"] * Gamma2_["v,U,w,Y"] * qk["E1,U"];
-    y["wz"] -= V["a1,v,u1,w"] * Gamma1_["zv"] * qk["u1,a1"];
-    y["wz"] -= V["v,A1,w,U1"] * Gamma1_["zv"] * qk["U1,A1"];
-    y["wz"] += V["a1,v,u1,z"] * Gamma1_["wv"] * qk["u1,a1"];
-    y["wz"] += V["v,A1,z,U1"] * Gamma1_["wv"] * qk["U1,A1"];
+    {
+        BlockedTensor temp_y = BTF_->build(CoreTensor, "temporal matrix for y{aa} symmetrization", spin_cases({"aa"}));
+        temp_y["wz"] -= V["e1,u,m1,w"] * Gamma1_["uz"] * qk["e1,m1"];
+        temp_y["wz"] -= V["u,E1,w,M1"] * Gamma1_["uz"] * qk["E1,M1"];
+        temp_y["wz"] -= V["e1,w,m1,u"] * Gamma1_["uz"] * qk["e1,m1"];
+        temp_y["wz"] -= V["w,E1,u,M1"] * Gamma1_["uz"] * qk["E1,M1"];
+        temp_y["wz"] -= F["w,n1"] * qk["n1,z"];
+        temp_y["wz"] -= V["u,v,n1,w"] * Gamma1_["zv"] * qk["n1,u"];
+        temp_y["wz"] -= V["v,U,w,N1"] * Gamma1_["zv"] * qk["N1,U"];
+        temp_y["wz"] -= V["u,w,n1,v"] * Gamma1_["zv"] * qk["n1,u"];
+        temp_y["wz"] -= V["w,U,v,N1"] * Gamma1_["zv"] * qk["N1,U"];
+        temp_y["wz"] += H["w,n1"] * Gamma1_["uz"] * qk["n1,u"];
+        temp_y["wz"] += V_sumA_Alpha["w,n1"] * Gamma1_["uz"] * qk["n1,u"];
+        temp_y["wz"] += V_sumB_Alpha["w,n1"] * Gamma1_["uz"] * qk["n1,u"];
+        temp_y["wz"] += 0.5 * V["x,y,n1,w"] * Gamma2_["u,z,x,y"] * qk["n1,u"];
+        temp_y["wz"] += V["y,X,w,N1"] * Gamma2_["z,U,y,X"] * qk["N1,U"];
+        temp_y["wz"] += V["w,y,n1,v"] * Gamma2_["u,v,z,y"] * qk["n1,u"];
+        temp_y["wz"] += V["w,Y,n1,V"] * Gamma2_["u,V,z,Y"] * qk["n1,u"];
+        temp_y["wz"] += V["w,Y,v,N1"] * Gamma2_["v,U,z,Y"] * qk["N1,U"];
+        temp_y["wz"] -= H["w,e1"] * Gamma1_["uz"] * qk["e1,u"];
+        temp_y["wz"] -= V_sumA_Alpha["e1,w"] * Gamma1_["uz"] * qk["e1,u"];
+        temp_y["wz"] -= V_sumB_Alpha["e1,w"] * Gamma1_["uz"] * qk["e1,u"];
+        temp_y["wz"] -= 0.5 * V["e1,w,x,y"] * Gamma2_["u,z,x,y"] * qk["e1,u"];
+        temp_y["wz"] -= V["w,E1,y,X"] * Gamma2_["z,U,y,X"] * qk["E1,U"];
+        temp_y["wz"] -= V["e1,v,w,y"] * Gamma2_["u,v,z,y"] * qk["e1,u"];
+        temp_y["wz"] -= V["e1,V,w,Y"] * Gamma2_["u,V,z,Y"] * qk["e1,u"];
+        temp_y["wz"] -= V["v,E1,w,Y"] * Gamma2_["v,U,z,Y"] * qk["E1,U"];
+        temp_y["wz"] -= V["a1,v,u1,w"] * Gamma1_["zv"] * qk["u1,a1"];
+        temp_y["wz"] -= V["v,A1,w,U1"] * Gamma1_["zv"] * qk["U1,A1"];
+
+        y["wz"] += temp_y["wz"];
+        y["zw"] -= temp_y["wz"];  
+        y["wz"] += Delta1["zw"] * qk["wz"];   
+    }
 
     /// MO RESPONSE -- CI EQUATION
     // Form contraction between qk_ci and ci, cc1, cc2
@@ -723,14 +702,10 @@ void DSRG_MRPT2::z_vector_contraction(std::vector<double> & qk_vec, std::vector<
 
     // CORE-ACTIVE
     y.block("ca")("mw") -= 0.50 * H.block("ac")("vm") * cc1_qkci.block("aa")("wv");
-    y.block("ca")("mw") -= 0.25 * V_sumA_Alpha.block("ac")("um") * cc1_qkci.block("aa")("uw");
-    y.block("ca")("mw") -= 0.25 * V_sumB_Alpha.block("ac")("um") * cc1_qkci.block("aa")("uw");
-    y.block("ca")("mw") -= 0.25 * V_sumA_Alpha.block("ca")("mv") * cc1_qkci.block("aa")("wv");
-    y.block("ca")("mw") -= 0.25 * V_sumB_Alpha.block("ca")("mv") * cc1_qkci.block("aa")("wv");
-    y.block("ca")("mw") -= 0.125 * V.block("aaca")("xymv") * cc2_qkci.block("aaaa")("wvxy");
-    y.block("ca")("mw") -= 0.250 * V.block("aAcA")("xYmV") * cc2_qkci.block("aAaA")("wVxY");
-    y.block("ca")("mw") -= 0.125 * V.block("aaac")("xyum") * cc2_qkci.block("aaaa")("uwxy");
-    y.block("ca")("mw") -= 0.250 * V.block("aAcA")("xYmU") * cc2_qkci.block("aAaA")("wUxY");
+    y.block("ca")("mw") -= 0.50 * V_sumA_Alpha.block("ac")("um") * cc1_qkci.block("aa")("uw");
+    y.block("ca")("mw") -= 0.50 * V_sumB_Alpha.block("ac")("um") * cc1_qkci.block("aa")("uw");
+    y.block("ca")("mw") -= 0.25 * V.block("aaca")("xymv") * cc2_qkci.block("aaaa")("wvxy");
+    y.block("ca")("mw") -= 0.50 * V.block("aAcA")("xYmV") * cc2_qkci.block("aAaA")("wVxY");
 
     y.block("ca")("mw") += ci_qk_dot * H.block("ac")("wm");
     y.block("ca")("mw") += ci_qk_dot * V_sumA_Alpha.block("ca")("mw");
@@ -740,35 +715,23 @@ void DSRG_MRPT2::z_vector_contraction(std::vector<double> & qk_vec, std::vector<
 
     // VIRTUAL-ACTIVE
     y.block("va")("ew") -= 0.50 * H.block("av")("ve") * cc1_qkci.block("aa")("wv");
-    y.block("va")("ew") -= 0.25 * V_sumA_Alpha.block("av")("ue") * cc1_qkci.block("aa")("uw");
-    y.block("va")("ew") -= 0.25 * V_sumB_Alpha.block("av")("ue") * cc1_qkci.block("aa")("uw");
-    y.block("va")("ew") -= 0.25 * V_sumA_Alpha.block("va")("ev") * cc1_qkci.block("aa")("wv");
-    y.block("va")("ew") -= 0.25 * V_sumB_Alpha.block("va")("ev") * cc1_qkci.block("aa")("wv");
-    y.block("va")("ew") -= 0.125 * V.block("vaaa")("evxy") * cc2_qkci.block("aaaa")("wvxy");
-    y.block("va")("ew") -= 0.250 * V.block("vAaA")("eVxY") * cc2_qkci.block("aAaA")("wVxY");
-    y.block("va")("ew") -= 0.125 * V.block("avaa")("uexy") * cc2_qkci.block("aaaa")("uwxy");
-    y.block("va")("ew") -= 0.250 * V.block("vAaA")("eUxY") * cc2_qkci.block("aAaA")("wUxY");
+    y.block("va")("ew") -= 0.50 * V_sumA_Alpha.block("av")("ue") * cc1_qkci.block("aa")("uw");
+    y.block("va")("ew") -= 0.50 * V_sumB_Alpha.block("av")("ue") * cc1_qkci.block("aa")("uw");
+    y.block("va")("ew") -= 0.25 * V.block("vaaa")("evxy") * cc2_qkci.block("aaaa")("wvxy");
+    y.block("va")("ew") -= 0.50 * V.block("vAaA")("eVxY") * cc2_qkci.block("aAaA")("wVxY");
 
     // ACTIVE-ACTIVE
-    y.block("aa")("wz") -= 0.50 * H.block("aa")("vw") * cc1_qkci.block("aa")("zv");
-    y.block("aa")("wz") += 0.50 * H.block("aa")("vz") * cc1_qkci.block("aa")("wv");
-    y.block("aa")("wz") -= 0.25 * V_sumA_Alpha.block("aa")("uw") * cc1_qkci.block("aa")("uz");
-    y.block("aa")("wz") -= 0.25 * V_sumB_Alpha.block("aa")("uw") * cc1_qkci.block("aa")("uz");
-    y.block("aa")("wz") -= 0.25 * V_sumA_Alpha.block("aa")("wv") * cc1_qkci.block("aa")("zv");
-    y.block("aa")("wz") -= 0.25 * V_sumB_Alpha.block("aa")("wv") * cc1_qkci.block("aa")("zv");
-    y.block("aa")("wz") += 0.25 * V_sumA_Alpha.block("aa")("uz") * cc1_qkci.block("aa")("uw");
-    y.block("aa")("wz") += 0.25 * V_sumB_Alpha.block("aa")("uz") * cc1_qkci.block("aa")("uw");
-    y.block("aa")("wz") += 0.25 * V_sumA_Alpha.block("aa")("zv") * cc1_qkci.block("aa")("wv");
-    y.block("aa")("wz") += 0.25 * V_sumB_Alpha.block("aa")("zv") * cc1_qkci.block("aa")("wv");
+    {
+        BlockedTensor temp_y = BTF_->build(CoreTensor, "temporal matrix for y{aa} symmetrization", spin_cases({"aa"}));
+        temp_y.block("aa")("wz") -= 0.50 * H.block("aa")("vw") * cc1_qkci.block("aa")("zv");
+        temp_y.block("aa")("wz") -= 0.50 * V_sumA_Alpha.block("aa")("uw") * cc1_qkci.block("aa")("uz");
+        temp_y.block("aa")("wz") -= 0.50 * V_sumB_Alpha.block("aa")("uw") * cc1_qkci.block("aa")("uz");
+        temp_y.block("aa")("wz") -= 0.25 * V.block("aaaa")("wvxy") * cc2_qkci.block("aaaa")("zvxy");
+        temp_y.block("aa")("wz") -= 0.50 * V.block("aAaA")("wVxY") * cc2_qkci.block("aAaA")("zVxY");
 
-    y.block("aa")("wz") -= 0.125 * V.block("aaaa")("wvxy") * cc2_qkci.block("aaaa")("zvxy");
-    y.block("aa")("wz") -= 0.250 * V.block("aAaA")("wVxY") * cc2_qkci.block("aAaA")("zVxY");
-    y.block("aa")("wz") -= 0.125 * V.block("aaaa")("uwxy") * cc2_qkci.block("aaaa")("uzxy");
-    y.block("aa")("wz") -= 0.250 * V.block("aAaA")("wUxY") * cc2_qkci.block("aAaA")("zUxY");
-    y.block("aa")("wz") += 0.125 * V.block("aaaa")("zvxy") * cc2_qkci.block("aaaa")("wvxy");
-    y.block("aa")("wz") += 0.250 * V.block("aAaA")("zVxY") * cc2_qkci.block("aAaA")("wVxY");
-    y.block("aa")("wz") += 0.125 * V.block("aaaa")("uzxy") * cc2_qkci.block("aaaa")("uwxy");
-    y.block("aa")("wz") += 0.250 * V.block("aAaA")("zUxY") * cc2_qkci.block("aAaA")("wUxY");
+        y["wz"] += temp_y["wz"];
+        y["zw"] -= temp_y["wz"];
+    }
 
     /// CI EQUATION -- MO RESPONSE
     //  virtual-core
@@ -927,7 +890,7 @@ void DSRG_MRPT2::z_vector_contraction(std::vector<double> & qk_vec, std::vector<
         as_solver_->add_sigma_kbody(state, 0, sym_2, block_factor2, y_ci.data());
     }
 
-    /// CI EQUATION -- CI 
+    /// CI EQUATION -- CI EQUATION
     y_ci("K") += H.block("cc")("mn") * I.block("cc")("mn") * qk_ci("K");
     y_ci("K") += H.block("CC")("MN") * I.block("CC")("MN") * qk_ci("K");
     y_ci("K") += 0.5 * V_sumA_Alpha["m,m1"] * I["m,m1"] * qk_ci("K");
@@ -1213,6 +1176,8 @@ void DSRG_MRPT2::solve_linear_iter() {
     Z["we"] = Z["ew"];
 
     // Beta part
+    // Caution: This is only valid when restricted orbitals are assumed 
+    //          i.e. MO coefficients (alpha) == MO coefficients (beta)
     for (const std::string& block : {"VC"}) {
         (Z.block(block)).iterate([&](const std::vector<size_t>& i, double& value) {
             value = Z.block("vc").data()[i[0] * ncore + i[1]];
