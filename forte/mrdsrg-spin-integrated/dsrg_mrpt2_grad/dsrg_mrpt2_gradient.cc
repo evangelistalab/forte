@@ -84,8 +84,7 @@ void DSRG_MRPT2::set_tensor() {
 }
 
 void DSRG_MRPT2::set_multiplier() {
-    set_sigma();
-    set_xi();
+    set_sigma_xi();
     set_tau();
     set_kappa();
     set_z();

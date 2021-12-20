@@ -287,19 +287,12 @@ class DSRG_MRPT2 : public MASTER_DSRG {
      */
     void solve_z();
     /**
-     * Initialize and solve the multiplier Sigma.
+     * Initialize and solve the multiplier Sigma and Xi.
      *
      * Sigma: constraint of the one-body DSRG amplitude (T1) definition.
      * Solved directly.
      */
-    void set_sigma();
-    /**
-     * Initialize and solve the multiplier Xi.
-     *
-     * Xi: constraint of the renormalized Fock matrix (F1) definition.
-     * Solved directly.
-     */
-    void set_xi();
+    void set_sigma_xi();
     /**
      * Initialize and solve the multiplier Tau.
      *
@@ -436,14 +429,9 @@ class DSRG_MRPT2 : public MASTER_DSRG {
     ambit::BlockedTensor Tau1;
     ambit::BlockedTensor Tau2;
     ambit::BlockedTensor Kappa;
-    ambit::BlockedTensor Sigma;
-    ambit::BlockedTensor Sigma1;
-    ambit::BlockedTensor Sigma2;
-    ambit::BlockedTensor Sigma3;
-    ambit::BlockedTensor Xi;
-    ambit::BlockedTensor Xi1;
-    ambit::BlockedTensor Xi2;
-    ambit::BlockedTensor Xi3;
+    ambit::BlockedTensor sigma3_xi3;
+    ambit::BlockedTensor sigma2_xi3;
+    ambit::BlockedTensor sigma1_xi1_xi2;
 
     double Alpha;
     ambit::Tensor x_ci;

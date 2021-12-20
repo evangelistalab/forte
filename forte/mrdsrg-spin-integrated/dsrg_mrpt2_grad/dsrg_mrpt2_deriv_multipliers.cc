@@ -188,14 +188,14 @@ void DSRG_MRPT2::set_tau() {
     }
     if (CORRELATION_TERM) {
         /******************** α α α α ********************/
-        temp["iuax"] += 0.25 * DelGam1["xu"] * Sigma2["ia"];
+        temp["iuax"] += 0.25 * DelGam1["xu"] * sigma2_xi3["ia"];
 
         /******************** β β β β ********************/
-        temp["IUAX"] += 0.25 * DelGam1["XU"] * Sigma2["IA"];
+        temp["IUAX"] += 0.25 * DelGam1["XU"] * sigma2_xi3["IA"];
 
         /******************** α β α β ********************/
-        Tau2["iUaX"] += 0.25 * DelGam1["XU"] * Sigma2["ia"];
-        Tau2["uIxA"] += 0.25 * DelGam1["xu"] * Sigma2["IA"];
+        Tau2["iUaX"] += 0.25 * DelGam1["XU"] * sigma2_xi3["ia"];
+        Tau2["uIxA"] += 0.25 * DelGam1["xu"] * sigma2_xi3["IA"];
     }
     // <[F, T2]>
     if (X5_TERM) {
@@ -216,17 +216,6 @@ void DSRG_MRPT2::set_tau() {
         Tau2["mUyX"] -= 0.125 * F_["vm"] * Lambda2_["yXvU"];
         Tau2["uMyX"] -= 0.125 * F_["VM"] * Lambda2_["yXuV"];
         Tau2["mUxY"] -= 0.125 * F_["vm"] * Lambda2_["xYvU"];
-    }
-    if (CORRELATION_TERM) {
-        /******************** α α α α ********************/
-        temp["iuax"] += 0.25 * DelGam1["xu"] * Xi3["ia"];
-
-        /******************** β β β β ********************/
-        temp["IUAX"] += 0.25 * DelGam1["XU"] * Xi3["IA"];
-
-        /******************** α β α β ********************/
-        Tau2["iUaX"] += 0.25 * DelGam1["XU"] * Xi3["ia"];
-        Tau2["uIxA"] += 0.25 * DelGam1["xu"] * Xi3["IA"];
     }
     /****** Symmetrization *****/
     Tau2["ijab"] += temp["ijab"];
@@ -251,12 +240,15 @@ void DSRG_MRPT2::set_tau() {
     outfile->Printf("Done");
 }
 
-void DSRG_MRPT2::set_sigma() {
+void DSRG_MRPT2::set_sigma_xi() {
     outfile->Printf("\n    Initializing multipliers for one-body amplitude.. ");
-    Sigma = BTF_->build(CoreTensor, "Sigma", spin_cases({"hp"}));
-    Sigma1 = BTF_->build(CoreTensor, "Sigma * DelEeps1", spin_cases({"hp"}));
-    Sigma2 = BTF_->build(CoreTensor, "Sigma * Eeps1", spin_cases({"hp"}));
-    Sigma3 = BTF_->build(CoreTensor, "Sigma * (1 + Eeps1)", spin_cases({"hp"}));
+    BlockedTensor Sigma = BTF_->build(CoreTensor, "Sigma", spin_cases({"hp"}));
+    BlockedTensor Sigma1 = BTF_->build(CoreTensor, "Sigma * DelEeps1", spin_cases({"hp"}));
+    BlockedTensor Sigma2 = BTF_->build(CoreTensor, "Sigma * Eeps1", spin_cases({"hp"}));
+    BlockedTensor Sigma3 = BTF_->build(CoreTensor, "Sigma * (1 + Eeps1)", spin_cases({"hp"}));
+    sigma3_xi3 = BTF_->build(CoreTensor, "Sigma3 + Xi3", spin_cases({"hp"}));
+    sigma2_xi3 = BTF_->build(CoreTensor, "Sigma2 + Xi3", spin_cases({"hp"}));
+    sigma1_xi1_xi2 = BTF_->build(CoreTensor, "2s * Sigma1 + Xi1 - 2s * Xi2", spin_cases({"hp"}));
 
     if (X5_TERM) {
         Sigma["xe"] += 0.5 * T2_["uvey"] * Lambda2_["xyuv"];
@@ -288,14 +280,12 @@ void DSRG_MRPT2::set_sigma() {
     Sigma3["IA"] += Sigma2["IA"];
 
     outfile->Printf("Done");
-}
 
-void DSRG_MRPT2::set_xi() {
     outfile->Printf("\n    Initializing multipliers for renormalize Fock ... ");
-    Xi = BTF_->build(CoreTensor, "Xi", spin_cases({"hp"}));
-    Xi1 = BTF_->build(CoreTensor, "Xi * Eeps1_m2", spin_cases({"hp"}));
-    Xi2 = BTF_->build(CoreTensor, "Xi * Eeps1", spin_cases({"hp"}));
-    Xi3 = BTF_->build(CoreTensor, "Xi * Eeps1_m1", spin_cases({"hp"}));
+    BlockedTensor Xi = BTF_->build(CoreTensor, "Xi", spin_cases({"hp"}));
+    BlockedTensor Xi1 = BTF_->build(CoreTensor, "Xi * Eeps1_m2", spin_cases({"hp"}));
+    BlockedTensor Xi2 = BTF_->build(CoreTensor, "Xi * Eeps1", spin_cases({"hp"}));
+    BlockedTensor Xi3 = BTF_->build(CoreTensor, "Xi * Eeps1_m1", spin_cases({"hp"}));
 
     if (X6_TERM) {
         Xi["ue"] += 0.5 * V_["evxy"] * Lambda2_["xyuv"];
@@ -323,6 +313,24 @@ void DSRG_MRPT2::set_xi() {
     Xi2["IA"] = Xi["IA"] * Eeps1["IA"];
     Xi3["ia"] = Xi["ia"] * Eeps1_m1["ia"];
     Xi3["IA"] = Xi["IA"] * Eeps1_m1["IA"];
+
+
+    sigma3_xi3["ia"] =  Sigma3["ia"];
+    sigma3_xi3["ia"] += Xi3["ia"];
+    sigma3_xi3["IA"] =  Sigma3["IA"];
+    sigma3_xi3["IA"] += Xi3["IA"];
+
+    sigma2_xi3["ia"] =  Sigma2["ia"];
+    sigma2_xi3["ia"] += Xi3["ia"];
+    sigma2_xi3["IA"] =  Sigma2["IA"];
+    sigma2_xi3["IA"] += Xi3["IA"];
+
+    sigma1_xi1_xi2["ia"] =  2 * s_ * Sigma1["ia"];
+    sigma1_xi1_xi2["ia"] += Xi1["ia"];
+    sigma1_xi1_xi2["ia"] -= 2 * s_ * Xi2["ia"];
+    sigma1_xi1_xi2["IA"] =  2 * s_ * Sigma1["IA"];
+    sigma1_xi1_xi2["IA"] += Xi1["IA"];
+    sigma1_xi1_xi2["IA"] -= 2 * s_ * Xi2["IA"];
 
     outfile->Printf("Done");
 }
