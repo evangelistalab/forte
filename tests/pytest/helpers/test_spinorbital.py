@@ -51,7 +51,7 @@ def test_spinorbital_mp2():
                     d[i][j][a][b] = 1. / (Fc[i] + Fc[j] - Fv[a] - Fv[b])
     T = {'ccvv': np.einsum("ijab,ijab->ijab", d, H['ccvv'])}
     E = 0.25 * np.einsum("ijab,ijab->", T['ccvv'], H['ccvv'])
-    assert math.isclose(E, -0.13305567213152, rel_tol=1e-08)
+    assert math.isclose(E, -0.13305567213152, abs_tol=1e-09)
 
 
 if __name__ == "__main__":

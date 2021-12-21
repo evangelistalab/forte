@@ -235,8 +235,8 @@ std::vector<ambit::Tensor> spinorbital_cumulants(RDMs& rdms) {
     if (max_rdm_level < 1)
         return sordms;
 
-    ambit::Tensor l1a = rdms.l1a();
-    ambit::Tensor l1b = rdms.l1b();
+    ambit::Tensor l1a = rdms.L1a();
+    ambit::Tensor l1b = rdms.L1b();
     size_t nso_actv = 2 * l1a.dim(0);
 
     ambit::Tensor l1 = ambit::Tensor::build(ambit::CoreTensor, "l1", {nso_actv, nso_actv});
