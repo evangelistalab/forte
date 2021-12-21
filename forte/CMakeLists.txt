@@ -132,6 +132,7 @@ helpers/lbfgs/lbfgs.cc
 helpers/lbfgs/lbfgs_param.cc
 helpers/lbfgs/rosenbrock.cc
 helpers/printing.cc
+helpers/spinorbital_helpers.cc
 helpers/string_algorithms.cc
 integrals/active_space_integrals.cc
 integrals/cholesky_integrals.cc

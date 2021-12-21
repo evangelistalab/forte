@@ -33,9 +33,11 @@
 #include "psi4/libpsi4util/process.h"
 #include "psi4/libmints/wavefunction.h"
 
+#include "helpers/helpers.h"
 #include "helpers/printing.h"
 #include "helpers/lbfgs/rosenbrock.h"
 #include "helpers/symmetry.h"
+#include "helpers/spinorbital_helpers.h"
 
 #include "base_classes/active_space_solver.h"
 #include "base_classes/orbital_transform.h"
@@ -193,6 +195,52 @@ PYBIND11_MODULE(forte, m) {
     m.def("make_casscf", &make_casscf, "Make a CASSCF object");
     m.def("make_mcscf_two_step", &make_mcscf_two_step, "Make a 2-step MCSCF object");
     m.def("test_lbfgs_rosenbrock", &test_lbfgs_rosenbrock, "Test L-BFGS on Rosenbrock function");
+
+    m.def(
+        "spinorbital_oei",
+        [](const std::shared_ptr<ForteIntegrals> ints, const std::vector<size_t>& p,
+           const std::vector<size_t>& q) { return ambit_to_np(spinorbital_oei(ints, p, q)); },
+        "Compute the one-electron integrals in a spinorbital basis. Spinorbitals follow the "
+        "ordering abab...");
+    m.def(
+        "spinorbital_tei",
+        [](const std::shared_ptr<ForteIntegrals> ints, const std::vector<size_t>& p,
+           const std::vector<size_t>& q, const std::vector<size_t>& r,
+           const std::vector<size_t>& s) { return ambit_to_np(spinorbital_tei(ints, p, q, r, s)); },
+        "Compute the two-electron integrals in a spinorbital basis. Spinorbitals follow the "
+        "ordering abab...");
+    m.def(
+        "spinorbital_fock",
+        [](const std::shared_ptr<ForteIntegrals> ints, const std::vector<size_t>& p,
+           const std::vector<size_t>& q, const std::vector<size_t>& occ) {
+            return ambit_to_np(spinorbital_fock(ints, p, q, occ));
+        },
+        "Compute the fock matrix in a spinorbital basis. Spinorbitals follow the ordering abab...");
+
+    m.def(
+        "spinorbital_rdms",
+        [](RDMs& rdms) {
+            auto sordms = spinorbital_rdms(rdms);
+            std::vector<py::array_t<double>> pysordms;
+            for (const auto& sordm : sordms) {
+                pysordms.push_back(ambit_to_np(sordm));
+            }
+            return pysordms;
+        },
+        "Return the RDMs in a spinorbital basis. Spinorbitals follow the ordering abab...");
+
+    m.def(
+        "spinorbital_cumulants",
+        [](RDMs& rdms) {
+            auto sordms = spinorbital_cumulants(rdms);
+            std::vector<py::array_t<double>> pysordms;
+            for (const auto& sordm : sordms) {
+                pysordms.push_back(ambit_to_np(sordm));
+            }
+            return pysordms;
+        },
+        "Return the cumulants of the RDMs in a spinorbital basis. Spinorbitals follow the ordering "
+        "abab...");
 
     export_ambit(m);
 

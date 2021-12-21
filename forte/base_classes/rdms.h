@@ -146,9 +146,9 @@ class RDMs {
 
     // class variables
 
-    size_t max_rdm_level() { return max_rdm_; }
+    size_t max_rdm_level() const { return max_rdm_; }
 
-    bool ms_avg() { return ms_avg_; }
+    bool ms_avg() const { return ms_avg_; }
 
   protected:
     // ==> Class Data <==
@@ -354,6 +354,7 @@ void make_cumulant_L3bbb_in_place(const ambit::Tensor& g1b, const ambit::Tensor&
  */
 double compute_Eref_from_rdms(RDMs& ref, std::shared_ptr<ForteIntegrals> ints,
                               std::shared_ptr<MOSpaceInfo> mo_space_info);
+
 } // namespace forte
 
 #endif // _reference_h_
