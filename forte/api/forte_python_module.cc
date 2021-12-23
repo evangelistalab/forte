@@ -111,8 +111,6 @@ void export_ActiveSpaceSolver(py::module& m) {
              "A map from StateInfo to file names (string)")
         .def("dump_wave_function", &ActiveSpaceSolver::dump_wave_function,
              "Dump the wave function to current directory")
-        .def("coupling_coefficients", &ActiveSpaceSolver::coupling_coefficients,
-             "Return the CI coupling coefficients")
         .def("eigenvectors", &ActiveSpaceSolver::eigenvectors,
              "Return the CI wave functions");
 
@@ -229,9 +227,6 @@ PYBIND11_MODULE(forte, m) {
 
     export_MOSpaceInfo(m);
 
-    // export CICouplingCoefficients
-    py::class_<CICouplingCoefficients>(m, "CICouplingCoefficients");
-
     // export SCFInfo
     py::class_<SCFInfo, std::shared_ptr<SCFInfo>>(m, "SCFInfo")
         .def(py::init<psi::SharedWavefunction>())
@@ -248,8 +243,6 @@ PYBIND11_MODULE(forte, m) {
     py::class_<DynamicCorrelationSolver, std::shared_ptr<DynamicCorrelationSolver>>(
         m, "DynamicCorrelationSolver")
         .def("compute_energy", &DynamicCorrelationSolver::compute_energy)
-        .def("set_coupling_coefficients", &DynamicCorrelationSolver::set_coupling_coefficients,
-             "Set the CI coupling coefficients for DSRG-MRPT2 analytic gradients")
         .def("set_ci_vectors", &DynamicCorrelationSolver::set_ci_vectors,
              "Set the CI eigenvectors for DSRG-MRPT2 analytic gradients");
 
@@ -301,8 +294,6 @@ PYBIND11_MODULE(forte, m) {
              "Set if reading amplitudes in the current directory or not")
         .def("clean_checkpoints", &MASTER_DSRG::clean_checkpoints,
              "Delete amplitudes checkpoint files")
-        .def("set_coupling_coefficients", &MASTER_DSRG::set_coupling_coefficients,
-             "Set the CI coupling coefficients for DSRG-MRPT2 analytic gradients")
         .def("set_ci_vectors", &MASTER_DSRG::set_ci_vectors,
              "Set the CI eigenvector for DSRG-MRPT2 analytic gradients")
         .def("set_active_space_solver", &MASTER_DSRG::set_active_space_solver,

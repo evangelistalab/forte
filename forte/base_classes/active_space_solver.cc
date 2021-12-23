@@ -41,7 +41,6 @@
 #include "base_classes/forte_options.h"
 #include "base_classes/rdms.h"
 #include "base_classes/mo_space_info.h"
-#include "base_classes/coupling_coefficients.h"
 #include "helpers/printing.h"
 #include "helpers/string_algorithms.h"
 #include "integrals/active_space_integrals.h"
@@ -863,11 +862,6 @@ std::map<StateInfo, size_t> ActiveSpaceSolver::state_space_size_map() const {
         out[state] = method->space_size();
     }
     return out;
-}
-
-CICouplingCoefficients ActiveSpaceSolver::coupling_coefficients(const StateInfo& state,
-                                                                int max_level) const {
-    return state_method_map_.at(state)->coupling_coefficients(max_level);
 }
 
 std::vector<ambit::Tensor> ActiveSpaceSolver::eigenvectors(const StateInfo& state) const {

@@ -465,9 +465,8 @@ def forte_driver(state_weights_map, scf_info, options, ints, mo_space_info):
             #       2. This is OK only when running ground-state calculations
             state = list(state_map.keys())[0]
             psi4.core.print_out(f"\n  ==> Coupling Coefficients for {state} <==")
-            coupling_coefficients = active_space_solver.coupling_coefficients(state, 3)
             ci_vectors = active_space_solver.eigenvectors(state)
-            dsrg_proc.compute_gradient(coupling_coefficients, ci_vectors)
+            dsrg_proc.compute_gradient(ci_vectors)
     else:
         average_energy = forte.compute_average_state_energy(state_energies_list, state_weights_map)
         return_en = average_energy
@@ -601,10 +600,6 @@ def gradient_forte(name, **kwargs):
     >>> gradient('forte')
         available for : CASSCF
     """
-
-    # # Start Forte, initialize ambit
-    # my_proc_n_nodes = forte.startup()
-    # my_proc, n_nodes = my_proc_n_nodes
 
     # Get the psi4 option object
     optstash = p4util.OptionsState(['GLOBALS', 'DERTYPE'])
