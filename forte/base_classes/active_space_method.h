@@ -31,6 +31,7 @@
 
 #include <vector>
 #include <unordered_set>
+#include <ambit/tensor.h>
 
 #include "base_classes/state_info.h"
 #include "sparse_ci/determinant.h"

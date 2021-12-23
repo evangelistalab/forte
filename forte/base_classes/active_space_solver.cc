@@ -32,6 +32,7 @@
 #include <tuple>
 
 #include "ambit/blocked_tensor.h"
+#include <ambit/tensor.h>
 
 #include "psi4/psi4-dec.h"
 #include "psi4/libpsi4util/PsiOutStream.h"

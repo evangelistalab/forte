@@ -36,6 +36,7 @@
 #include "psi4/libmints/matrix.h"
 
 #include "base_classes/state_info.h"
+#include <ambit/tensor.h>
 
 namespace ambit {
 class BlockedTensor;
