@@ -76,77 +76,142 @@ void DSRG_MRPT2::set_w() {
     // NOTICE: w for {virtual-general}
     if (CORRELATION_TERM) {
         W["pe"] += 0.5 * sigma3_xi3["ie"] * F["ip"];
-   
-        W["pe"] += Tau1["ijeb"] * V["pbij"];
-        W["pe"] += 2.0 * Tau1["iJeB"] * V["pBiJ"];
-
+        W["ae"] +=       Tau1["ijeb"] * V["abij"];
+        W["ae"] += 2.0 * Tau1["iJeB"] * V["aBiJ"];
+        if (eri_df_) {
+            W["me"] +=       Tau1["ijeb"] * B["gmi"] * B["gbj"];
+            W["me"] -=       Tau1["ijeb"] * B["gmj"] * B["gbi"];
+            W["me"] += 2.0 * Tau1["iJeB"] * B["gmi"] * B["gBJ"];
+        } else {
+            W["me"] +=       Tau1["ijeb"] * V["mbij"];
+            W["me"] += 2.0 * Tau1["iJeB"] * V["mBiJ"];
+        }
         temp["kled"] += Kappa["kled"] * Eeps2_p["kled"];
         temp["kLeD"] += Kappa["kLeD"] * Eeps2_p["kLeD"];
-        W["pe"] += temp["kled"] * V["pdkl"];
-        W["pe"] += 2.0 * temp["kLeD"] * V["pDkL"];
+        W["ce"] +=       temp["kled"] * V["cdkl"];
+        W["ce"] += 2.0 * temp["kLeD"] * V["cDkL"];
+        if (eri_df_) {
+            W["me"] +=       temp["kled"] * B["gmk"] * B["gdl"];
+            W["me"] -=       temp["kled"] * B["gml"] * B["gdk"];
+            W["me"] += 2.0 * temp["kLeD"] * B["gmk"] * B["gDL"];
+        } else {
+            W["me"] +=       temp["kled"] * V["mdkl"];
+            W["me"] += 2.0 * temp["kLeD"] * V["mDkL"];
+        }
         temp.zero();
     }
     W["pe"] += Z["e,m1"] * F["m1,p"];
     W["pe"] += Z["eu"] * H["vp"] * Gamma1_["uv"];
-    W["pe"] += Z["eu"] * V_sumA_Alpha["v,p"] * Gamma1_["uv"];
-    W["pe"] += Z["eu"] * V_sumB_Alpha["v,p"] * Gamma1_["uv"];
-    W["pe"] += 0.5 * Z["eu"] * V["xypv"] * Gamma2_["uvxy"];
-    W["pe"] += Z["eu"] * V["xYpV"] * Gamma2_["uVxY"];
+    W["pe"] += Z["eu"] * V_sumA_Alpha["vp"] * Gamma1_["uv"];
+    W["pe"] += Z["eu"] * V_sumB_Alpha["vp"] * Gamma1_["uv"];
+    W["ie"] += 0.5 * Z["eu"] * V["xyiv"] * Gamma2_["uvxy"];
+    W["fe"] += 0.5 * Z["eu"] * V["fvxy"] * Gamma2_["uvxy"];
+    W["ie"] += Z["eu"] * V["xYiV"] * Gamma2_["uVxY"];
+    W["fe"] += Z["eu"] * V["fVxY"] * Gamma2_["uVxY"];
     W["pe"] += Z["e,f1"] * F["f1,p"];
     W["ei"] = W["ie"];
 
     // NOTICE: w for {core-hole}
     if (CORRELATION_TERM) {
         W["jm"] += 0.5 * sigma3_xi3["ma"] * F["ja"];
-        W["jm"] += 0.5 * sigma3_xi3["ia"] * V["amij"];
-        W["jm"] += 0.5 * sigma3_xi3["IA"] * V["mAjI"];
-        W["jm"] += 0.5 * sigma3_xi3["ia"] * V["ajim"];
-        W["jm"] += 0.5 * sigma3_xi3["IA"] * V["jAmI"];
-
-        W["im"] += Tau1["mjab"] * V["abij"];
+        if (eri_df_) {
+            W["jm"] += 0.5 * sigma3_xi3["ia"] * B["gai"] * B["gmj"];
+            W["jm"] -= 0.5 * sigma3_xi3["ia"] * B["gaj"] * B["gmi"];
+            W["jm"] += 0.5 * sigma3_xi3["IA"] * B["gmj"] * B["gAI"];
+            W["jm"] += 0.5 * sigma3_xi3["ia"] * B["gai"] * B["gjm"];
+            W["jm"] -= 0.5 * sigma3_xi3["ia"] * B["gam"] * B["gji"];
+            W["jm"] += 0.5 * sigma3_xi3["IA"] * B["gjm"] * B["gAI"];
+        } else {
+            W["jm"] += 0.5 * sigma3_xi3["ia"] * V["amij"];
+            W["jm"] += 0.5 * sigma3_xi3["IA"] * V["mAjI"];
+            W["jm"] += 0.5 * sigma3_xi3["ia"] * V["ajim"];
+            W["jm"] += 0.5 * sigma3_xi3["IA"] * V["jAmI"];
+        }
+        W["im"] +=       Tau1["mjab"] * V["abij"];
         W["im"] += 2.0 * Tau1["mJaB"] * V["aBiJ"];
 
         temp["mlcd"] += Kappa["mlcd"] * Eeps2_p["mlcd"];
         temp["mLcD"] += Kappa["mLcD"] * Eeps2_p["mLcD"];
-        W["im"] += temp["mlcd"] * V["cdil"];
+        W["im"] +=       temp["mlcd"] * V["cdil"];
         W["im"] += 2.0 * temp["mLcD"] * V["cDiL"];
         temp.zero();
     }
     W["im"] += Z["e1,m"] * F["i,e1"];
-    W["im"] += Z["e1,m1"] * V["e1,i,m1,m"];
-    W["im"] += Z["E1,M1"] * V["i,E1,m,M1"];
-    W["im"] += Z["e1,m1"] * V["e1,m,m1,i"];
-    W["im"] += Z["E1,M1"] * V["m,E1,i,M1"];
+    if (eri_df_) {
+        W["im"] += Z["e1,m1"] * B["g,e1,m1"] * B["gim"];
+        W["im"] -= Z["e1,m1"] * B["g,e1,m"] * B["g,i,m1"];
+        W["im"] += Z["E1,M1"] * B["gim"] * B["g,E1,M1"];
+        W["im"] += Z["e1,m1"] * B["g,e1,m1"] * B["gmi"];
+        W["im"] -= Z["e1,m1"] * B["g,e1,i"] * B["g,m,m1"];
+        W["im"] += Z["E1,M1"] * B["gmi"] * B["g,E1,M1"];
+    } else {
+        W["im"] += Z["e1,m1"] * V["e1,i,m1,m"];
+        W["im"] += Z["E1,M1"] * V["i,E1,m,M1"];
+        W["im"] += Z["e1,m1"] * V["e1,m,m1,i"];
+        W["im"] += Z["E1,M1"] * V["m,E1,i,M1"];
+    }
+    W["im"] += Z["m,n1"] * F["n1,i"];
     W["im"] += Z["mu"] * F["ui"];
     W["im"] -= Z["mu"] * H["vi"] * Gamma1_["uv"];
     W["im"] -= Z["mu"] * V_sumA_Alpha["vi"] * Gamma1_["uv"];
     W["im"] -= Z["mu"] * V_sumB_Alpha["vi"] * Gamma1_["uv"];
     W["im"] -= 0.5 * Z["mu"] * V["xyiv"] * Gamma2_["uvxy"];
-    W["im"] -= Z["mu"] * V["xYiV"] * Gamma2_["uVxY"];
-    W["im"] += Z["n1,u"] * V["u,i,n1,m"];
-    W["im"] += Z["N1,U"] * V["i,U,m,N1"];
-    W["im"] += Z["n1,u"] * V["u,m,n1,i"];
-    W["im"] += Z["N1,U"] * V["m,U,i,N1"];
-    W["im"] -= Z["n1,u"] * Gamma1_["uv"] * V["v,i,n1,m"];
-    W["im"] -= Z["N1,U"] * Gamma1_["UV"] * V["i,V,m,N1"];
-    W["im"] -= Z["n1,u"] * Gamma1_["uv"] * V["v,m,n1,i"];
-    W["im"] -= Z["N1,U"] * Gamma1_["UV"] * V["m,V,i,N1"];
-    W["im"] += Z["e1,u"] * Gamma1_["uv"] * V["e1,i,v,m"];
-    W["im"] += Z["E1,U"] * Gamma1_["UV"] * V["i,E1,m,V"];
-    W["im"] += Z["e1,u"] * Gamma1_["uv"] * V["e1,m,v,i"];
-    W["im"] += Z["E1,U"] * Gamma1_["UV"] * V["m,E1,i,V"];
-    W["im"] += Z["m,n1"] * F["n1,i"];
-    W["im"] += Z["m1,n1"] * V["n1,i,m1,m"];
-    W["im"] += Z["M1,N1"] * V["i,N1,m,M1"];
-    W["im"] += Z["uv"] * V["vium"];
-    W["im"] += Z["UV"] * V["iVmU"];
-    W["im"] += Z["e1,f"] * V["f,i,e1,m"];
-    W["im"] += Z["E1,F"] * V["i,F,m,E1"];
-
-    W.block("cc")("nm") += 0.5 * V.block("acac")("umvn") * Gamma1_tilde.block("aa")("uv");
-    W.block("cc")("nm") += 0.5 * V.block("cAcA")("mUnV") * Gamma1_tilde.block("AA")("UV");
-    W.block("ac")("xm") += 0.5 * V.block("acaa")("umvx") * Gamma1_tilde.block("aa")("uv");
-    W.block("ac")("xm") += 0.5 * V.block("cAaA")("mUxV") * Gamma1_tilde.block("AA")("UV");
+    W["im"] -=       Z["mu"] * V["xYiV"] * Gamma2_["uVxY"];
+    if (eri_df_) {
+        W["im"] += Z["n1,u"] * B["g,u,n1"] * B["gim"];
+        W["im"] -= Z["n1,u"] * B["gum"] * B["g,i,n1"];
+        W["im"] += Z["N1,U"] * B["gim"] * B["g,U,N1"];
+        W["im"] += Z["n1,u"] * B["g,u,n1"] * B["gmi"];
+        W["im"] -= Z["n1,u"] * B["gui"] * B["g,m,n1"];
+        W["im"] += Z["N1,U"] * B["gmi"] * B["g,U,N1"];
+        W["im"] -= Z["n1,u"] * Gamma1_["uv"] * B["g,v,n1"] * B["gim"];
+        W["im"] += Z["n1,u"] * Gamma1_["uv"] * B["gvm"] * B["g,i,n1"];
+        W["im"] -= Z["N1,U"] * Gamma1_["UV"] * B["gim"] * B["g,V,N1"];
+        W["im"] -= Z["n1,u"] * Gamma1_["uv"] * B["g,v,n1"] * B["gmi"];
+        W["im"] += Z["n1,u"] * Gamma1_["uv"] * B["gvi"] * B["g,m,n1"];
+        W["im"] -= Z["N1,U"] * Gamma1_["UV"] * B["gmi"] * B["g,V,N1"];
+        W["im"] += Z["e1,u"] * Gamma1_["uv"] * B["g,e1,v"] * B["gim"];
+        W["im"] -= Z["e1,u"] * Gamma1_["uv"] * B["g,e1,m"] * B["giv"];
+        W["im"] += Z["E1,U"] * Gamma1_["UV"] * B["gim"] * B["g,E1,V"];
+        W["im"] += Z["e1,u"] * Gamma1_["uv"] * B["g,e1,v"] * B["gmi"];
+        W["im"] -= Z["e1,u"] * Gamma1_["uv"] * B["g,e1,i"] * B["gmv"];
+        W["im"] += Z["E1,U"] * Gamma1_["UV"] * B["gmi"] * B["g,E1,V"];
+        W["im"] += Z["m1,n1"] * B["g,n1,m1"] * B["gim"];
+        W["im"] -= Z["m1,n1"] * B["g,n1,m"] * B["g,i,m1"];
+        W["im"] += Z["M1,N1"] * B["gim"] * B["g,N1,M1"];
+        W["im"] += Z["uv"] * B["gvu"] * B["gim"];
+        W["im"] -= Z["uv"] * B["gvm"] * B["giu"];
+        W["im"] += Z["UV"] * B["gim"] * B["gVU"];
+        W["im"] += Z["e1,f"] * B["g,f,e1"] * B["gim"];
+        W["im"] -= Z["e1,f"] * B["gfm"] * B["g,i,e1"];
+        W["im"] += Z["E1,F"] * B["gim"] * B["g,F,E1"];
+        W["nm"] += 0.5 * Gamma1_tilde["uv"] * B["guv"] * B["gmn"];
+        W["nm"] -= 0.5 * Gamma1_tilde["uv"] * B["gun"] * B["gmv"];
+        W["nm"] += 0.5 * Gamma1_tilde["UV"] * B["gmn"] * B["gUV"];
+    } else {
+        W["im"] += Z["n1,u"] * V["u,i,n1,m"];
+        W["im"] += Z["N1,U"] * V["i,U,m,N1"];
+        W["im"] += Z["n1,u"] * V["u,m,n1,i"];
+        W["im"] += Z["N1,U"] * V["m,U,i,N1"];
+        W["im"] -= Z["n1,u"] * Gamma1_["uv"] * V["v,i,n1,m"];
+        W["im"] -= Z["N1,U"] * Gamma1_["UV"] * V["i,V,m,N1"];
+        W["im"] -= Z["n1,u"] * Gamma1_["uv"] * V["v,m,n1,i"];
+        W["im"] -= Z["N1,U"] * Gamma1_["UV"] * V["m,V,i,N1"];
+        W["im"] += Z["e1,u"] * Gamma1_["uv"] * V["e1,i,v,m"];
+        W["im"] += Z["E1,U"] * Gamma1_["UV"] * V["i,E1,m,V"];
+        W["im"] += Z["e1,u"] * Gamma1_["uv"] * V["e1,m,v,i"];
+        W["im"] += Z["E1,U"] * Gamma1_["UV"] * V["m,E1,i,V"];
+        W["im"] += Z["m1,n1"] * V["n1,i,m1,m"];
+        W["im"] += Z["M1,N1"] * V["i,N1,m,M1"];
+        W["im"] += Z["uv"] * V["vium"];
+        W["im"] += Z["UV"] * V["iVmU"];
+        W["im"] += Z["e1,f"] * V["f,i,e1,m"];
+        W["im"] += Z["E1,F"] * V["i,F,m,E1"];
+        W["nm"] += 0.5 * Gamma1_tilde["uv"] * V["umvn"];
+        W["nm"] += 0.5 * Gamma1_tilde["UV"] * V["mUnV"];
+    }
+    W["xm"] += 0.5 * Gamma1_tilde["uv"] * V["vxum"];
+    W["xm"] += 0.5 * Gamma1_tilde["UV"] * V["xVmU"];
     W["mu"] = W["um"];
 
     // NOTICE: w for {active-active}
@@ -201,25 +266,28 @@ void DSRG_MRPT2::set_w() {
     W["zw"] += Z["e1,u"] * V["e1,v,z,y"] * Gamma2_["u,v,w,y"];
     W["zw"] += Z["e1,u"] * V["e1,V,z,Y"] * Gamma2_["u,V,w,Y"];
     W["zw"] += Z["E1,U"] * V["v,E1,z,Y"] * Gamma2_["v,U,w,Y"];
-    W["zw"] += Z["m1,n1"] * V["n1,v,m1,z"] * Gamma1_["wv"];
-    W["zw"] += Z["M1,N1"] * V["v,N1,z,M1"] * Gamma1_["wv"];
-    W["zw"] += Z["e1,f1"] * V["f1,v,e1,z"] * Gamma1_["wv"];
-    W["zw"] += Z["E1,F1"] * V["v,F1,z,E1"] * Gamma1_["wv"];
+    if (eri_df_) {
+        W["zw"] += Z["m1,n1"] * Gamma1_["wv"] * B["g,n1,m1"] * B["gvz"];
+        W["zw"] -= Z["m1,n1"] * Gamma1_["wv"] * B["g,n1,z"] * B["g,v,m1"];
+        W["zw"] += Z["M1,N1"] * Gamma1_["wv"] * B["gvz"] * B["g,N1,M1"];
+        W["zw"] += Z["e1,f1"] * Gamma1_["wv"] * B["g,f1,e1"] * B["gvz"];
+        W["zw"] -= Z["e1,f1"] * Gamma1_["wv"] * B["g,f1,z"] * B["g,v,e1"];
+        W["zw"] += Z["E1,F1"] * Gamma1_["wv"] * B["gvz"] * B["g,F1,E1"];
+    } else {
+        W["zw"] += Z["m1,n1"] * V["n1,v,m1,z"] * Gamma1_["wv"];
+        W["zw"] += Z["M1,N1"] * V["v,N1,z,M1"] * Gamma1_["wv"];
+        W["zw"] += Z["e1,f1"] * V["f1,v,e1,z"] * Gamma1_["wv"];
+        W["zw"] += Z["E1,F1"] * V["v,F1,z,E1"] * Gamma1_["wv"];
+    }
     W["zw"] += Z["u1,a1"] * V["a1,v,u1,z"] * Gamma1_["wv"];
     W["zw"] += Z["U1,A1"] * V["v,A1,z,U1"] * Gamma1_["wv"];
     W["zw"] += Z["wv"] * F["vz"];
+    W["zw"] += 0.50 * H["vz"] * Gamma1_tilde["wv"];
+    W["zw"] += 0.50 * V_sumA_Alpha["uz"] * Gamma1_tilde["uw"];
+    W["zw"] += 0.50 * V_sumB_Alpha["uz"] * Gamma1_tilde["uw"];
+    W["zw"] += 0.25 * V["zvxy"] * Gamma2_tilde["wvxy"];
+    W["zw"] += 0.50 * V["zVxY"] * Gamma2_tilde["wVxY"];
 
-    W.block("aa")("zw") += 0.50 * H.block("aa")("vz") * Gamma1_tilde.block("aa")("wv");
-
-    W.block("aa")("zw") += 0.25 * V_sumA_Alpha.block("aa")("uz") * Gamma1_tilde.block("aa")("uw");
-    W.block("aa")("zw") += 0.25 * V_sumB_Alpha.block("aa")("uz") * Gamma1_tilde.block("aa")("uw");
-    W.block("aa")("zw") += 0.25 * V_sumA_Alpha.block("aa")("zv") * Gamma1_tilde.block("aa")("wv");
-    W.block("aa")("zw") += 0.25 * V_sumB_Alpha.block("aa")("zv") * Gamma1_tilde.block("aa")("wv");
-
-    W.block("aa")("zw") += 0.125 * V.block("aaaa")("zvxy") * Gamma2_tilde.block("aaaa")("wvxy");
-    W.block("aa")("zw") += 0.250 * V.block("aAaA")("zVxY") * Gamma2_tilde.block("aAaA")("wVxY");
-    W.block("aa")("zw") += 0.125 * V.block("aaaa")("uzxy") * Gamma2_tilde.block("aaaa")("uwxy");
-    W.block("aa")("zw") += 0.250 * V.block("aAaA")("zUxY") * Gamma2_tilde.block("aAaA")("wUxY");
 
     // CASSCF reference
     BlockedTensor temp1 = BTF_->build(CoreTensor, "temporal tensor 1", spin_cases({"gg"}));
@@ -229,8 +297,10 @@ void DSRG_MRPT2::set_w() {
     temp1["vp"] += V_sumA_Alpha["vp"];
     temp1["vp"] += V_sumB_Alpha["vp"];
     W["up"] += temp1["vp"] * Gamma1_["uv"];
-    W["up"] += 0.5 * V["xypv"] * Gamma2_["uvxy"];
-    W["up"] += V["xYpV"] * Gamma2_["uVxY"];
+    W["ui"] += 0.5 * V["xyiv"] * Gamma2_["uvxy"];
+    W["ue"] += 0.5 * V["evxy"] * Gamma2_["uvxy"];
+    W["ui"] +=       V["xYiV"] * Gamma2_["uVxY"];
+    W["ue"] +=       V["eVxY"] * Gamma2_["uVxY"];
 
     // Copy alpha-alpha to beta-beta
     (W.block("CC")).iterate([&](const std::vector<size_t>& i, double& value) {
@@ -298,21 +368,21 @@ void DSRG_MRPT2::set_z_cc() {
         zmn["mn"] += 0.5 * sigma3_xi3["na"] * F["ma"];
         zmn["mn"] -= 0.5 * sigma3_xi3["ma"] * F["na"];
 
-        zmn["mn"] += Tau1["njab"] * V["abmj"];
+        zmn["mn"] +=       Tau1["njab"] * V["abmj"];
         zmn["mn"] += 2.0 * Tau1["nJaB"] * V["aBmJ"];
 
         temp["nlcd"] += Kappa["nlcd"] * Eeps2_p["nlcd"];
         temp["nLcD"] += Kappa["nLcD"] * Eeps2_p["nLcD"];
-        zmn["mn"] += temp["nlcd"] * V["cdml"];
+        zmn["mn"] +=       temp["nlcd"] * V["cdml"];
         zmn["mn"] += 2.0 * temp["nLcD"] * V["cDmL"];
         temp.zero();
 
-        zmn["mn"] -= Tau1["mjab"] * V["abnj"];
+        zmn["mn"] -=       Tau1["mjab"] * V["abnj"];
         zmn["mn"] -= 2.0 * Tau1["mJaB"] * V["aBnJ"];
 
         temp["mlcd"] += Kappa["mlcd"] * Eeps2_p["mlcd"];
         temp["mLcD"] += Kappa["mLcD"] * Eeps2_p["mLcD"];
-        zmn["mn"] -= temp["mlcd"] * V["cdnl"];
+        zmn["mn"] -=       temp["mlcd"] * V["cdnl"];
         zmn["mn"] -= 2.0 * temp["mLcD"] * V["cDnL"];
         temp.zero();
     }
@@ -367,21 +437,21 @@ void DSRG_MRPT2::set_z_vv() {
         zef["ef"] += 0.5 * sigma3_xi3["if"] * F["ie"];
         zef["ef"] -= 0.5 * sigma3_xi3["ie"] * F["if"];
 
-        zef["ef"] += Tau1["ijfb"] * V["ebij"];
+        zef["ef"] +=       Tau1["ijfb"] * V["ebij"];
         zef["ef"] += 2.0 * Tau1["iJfB"] * V["eBiJ"];
 
         temp["klfd"] += Kappa["klfd"] * Eeps2_p["klfd"];
         temp["kLfD"] += Kappa["kLfD"] * Eeps2_p["kLfD"];
-        zef["ef"] += temp["klfd"] * V["edkl"];
+        zef["ef"] +=       temp["klfd"] * V["edkl"];
         zef["ef"] += 2.0 * temp["kLfD"] * V["eDkL"];
         temp.zero();
 
-        zef["ef"] -= Tau1["ijeb"] * V["fbij"];
+        zef["ef"] -=       Tau1["ijeb"] * V["fbij"];
         zef["ef"] -= 2.0 * Tau1["iJeB"] * V["fBiJ"];
 
         temp["kled"] += Kappa["kled"] * Eeps2_p["kled"];
         temp["kLeD"] += Kappa["kLeD"] * Eeps2_p["kLeD"];
-        zef["ef"] -= temp["kled"] * V["fdkl"];
+        zef["ef"] -=       temp["kled"] * V["fdkl"];
         zef["ef"] -= 2.0 * temp["kLeD"] * V["fDkL"];
         temp.zero();
     }
@@ -522,33 +592,47 @@ void DSRG_MRPT2::z_vector_contraction(std::vector<double> & qk_vec, std::vector<
     /// MO RESPONSE -- MO RESPONSE
     // VIRTUAL-CORE
     y["em"] += Delta1["me"] * qk["em"];
+    y["em"] -= F["ue"] * qk["mu"];
+    y["em"] += F["um"] * qk["eu"];
     y["em"] -= V["e1,e,m1,m"] * qk["e1,m1"];
     y["em"] -= V["e,E1,m,M1"] * qk["E1,M1"];
-    y["em"] -= V["m1,e,e1,m"] * qk["e1,m1"];
-    y["em"] -= V["e,M1,m,E1"] * qk["E1,M1"];
-    y["em"] -= F["ue"] * qk["mu"];
     y["em"] -= V["u,e,n1,m"] * qk["n1,u"];
     y["em"] -= V["e,U,m,N1"] * qk["N1,U"];
-    y["em"] -= V["n1,e,u,m"] * qk["n1,u"];
-    y["em"] -= V["e,N1,m,U"] * qk["N1,U"];
-    y["em"] += Gamma1_["uv"] * V["v,e,n1,m"] * qk["n1,u"];
-    y["em"] += Gamma1_["UV"] * V["e,V,m,N1"] * qk["N1,U"];
-    y["em"] += Gamma1_["uv"] * V["n1,e,v,m"] * qk["n1,u"];
-    y["em"] += Gamma1_["UV"] * V["e,N1,m,V"] * qk["N1,U"];
-    y["em"] -= Gamma1_["uv"] * V["e1,e,v,m"] * qk["e1,u"];
-    y["em"] -= Gamma1_["UV"] * V["e,E1,m,V"] * qk["E1,U"];
-    y["em"] -= Gamma1_["uv"] * V["v,e,e1,m"] * qk["e1,u"];
-    y["em"] -= Gamma1_["UV"] * V["e,V,m,E1"] * qk["E1,U"];
-    y["em"] += F["um"] * qk["eu"];
     y["em"] -= V["veum"] * qk["uv"];
     y["em"] -= V["eVmU"] * qk["UV"];
+    y["em"] += Gamma1_["uv"] * V["v,e,n1,m"] * qk["n1,u"];
+    y["em"] += Gamma1_["UV"] * V["e,V,m,N1"] * qk["N1,U"];
+    y["em"] -= Gamma1_["uv"] * V["e1,e,v,m"] * qk["e1,u"];
+    y["em"] -= Gamma1_["UV"] * V["e,E1,m,V"] * qk["E1,U"];
+    if (eri_df_) {
+        y["em"] -= qk["e1,m1"] * B["g,m1,e1"] * B["gem"];
+        y["em"] += qk["e1,m1"] * B["g,m1,m"] * B["g,e,e1"];
+        y["em"] -= qk["E1,M1"] * B["gem"] * B["g,M1,E1"];
+        y["em"] -= qk["n1,u"]  * B["g,n1,u"] * B["gem"];
+        y["em"] += qk["n1,u"]  * B["g,n1,m"] * B["geu"];
+        y["em"] -= qk["N1,U"]  * B["gem"] * B["g,N1,U"];
+        y["em"] += Gamma1_["uv"] * qk["n1,u"] * B["g,n1,v"] * B["gem"];
+        y["em"] -= Gamma1_["uv"] * qk["n1,u"] * B["g,n1,m"] * B["gev"];
+        y["em"] += Gamma1_["UV"] * qk["N1,U"] * B["gem"] * B["g,N1,V"];
+        y["em"] -= Gamma1_["uv"] * qk["e1,u"] * B["g,v,e1"] * B["gem"];
+        y["em"] += Gamma1_["uv"] * qk["e1,u"] * B["gvm"] * B["g,e,e1"];
+        y["em"] -= Gamma1_["UV"] * qk["E1,U"] * B["gem"] * B["g,V,E1"];
+    } else {
+        y["em"] -= V["m1,e,e1,m"] * qk["e1,m1"];
+        y["em"] -= V["e,M1,m,E1"] * qk["E1,M1"];
+        y["em"] -= V["n1,e,u,m"] * qk["n1,u"];
+        y["em"] -= V["e,N1,m,U"] * qk["N1,U"];
+        y["em"] += Gamma1_["uv"] * V["n1,e,v,m"] * qk["n1,u"];
+        y["em"] += Gamma1_["UV"] * V["e,N1,m,V"] * qk["N1,U"];
+        y["em"] -= Gamma1_["uv"] * V["v,e,e1,m"] * qk["e1,u"];
+        y["em"] -= Gamma1_["UV"] * V["e,V,m,E1"] * qk["E1,U"];
+    }
 
     // CORE-ACTIVE
     y["mw"] += F["we"] * qk["em"];
+    y["mw"] -= F["vm"] * qk["wv"];
     y["mw"] += V["e1,w,m1,m"] * qk["e1,m1"];
     y["mw"] += V["w,E1,m,M1"] * qk["E1,M1"];
-    y["mw"] += V["e1,m,m1,w"] * qk["e1,m1"];
-    y["mw"] += V["m,E1,w,M1"] * qk["E1,M1"];
     y["mw"] += F["uw"] * qk["mu"];
     y["mw"] -= H["vw"] * Gamma1_["uv"] * qk["mu"];
     y["mw"] -= V_sumA_Alpha["v,w"] * Gamma1_["uv"] * qk["mu"];
@@ -557,46 +641,75 @@ void DSRG_MRPT2::z_vector_contraction(std::vector<double> & qk_vec, std::vector<
     y["mw"] -= V["xYwV"] * Gamma2_["uVxY"] * qk["mu"];
     y["mw"] += V["u,w,n1,m"] * qk["n1,u"];
     y["mw"] += V["w,U,m,N1"] * qk["N1,U"];
-    y["mw"] += V["u,m,n1,w"] * qk["n1,u"];
-    y["mw"] += V["m,U,w,N1"] * qk["N1,U"];
     y["mw"] -= Gamma1_["uv"] * V["v,w,n1,m"] * qk["n1,u"];
     y["mw"] -= Gamma1_["UV"] * V["w,V,m,N1"] * qk["N1,U"];
-    y["mw"] -= Gamma1_["uv"] * V["v,m,n1,w"] * qk["n1,u"];
-    y["mw"] -= Gamma1_["UV"] * V["m,V,w,N1"] * qk["N1,U"];
     y["mw"] += Gamma1_["uv"] * V["e1,w,v,m"] * qk["e1,u"];
     y["mw"] += Gamma1_["UV"] * V["w,E1,m,V"] * qk["E1,U"];
-    y["mw"] += Gamma1_["uv"] * V["e1,m,v,w"] * qk["e1,u"];
-    y["mw"] += Gamma1_["UV"] * V["m,E1,w,V"] * qk["E1,U"];
     y["mw"] += V["vwum"] * qk["uv"];
     y["mw"] += V["wVmU"] * qk["UV"];
     y["mw"] -= V["e1,u,m1,m"] * Gamma1_["uw"] * qk["e1,m1"];
     y["mw"] -= V["u,E1,m,M1"] * Gamma1_["uw"] * qk["E1,M1"];
-    y["mw"] -= V["e1,m,m1,u"] * Gamma1_["uw"] * qk["e1,m1"];
-    y["mw"] -= V["m,E1,u,M1"] * Gamma1_["uw"] * qk["E1,M1"];
     y["mw"] -= F["m,n1"] * qk["n1,w"];
     y["mw"] -= V["u,v,n1,m"] * Gamma1_["wv"] * qk["n1,u"];
     y["mw"] -= V["v,U,m,N1"] * Gamma1_["wv"] * qk["N1,U"];
-    y["mw"] -= V["u,m,n1,v"] * Gamma1_["wv"] * qk["n1,u"];
-    y["mw"] -= V["m,U,v,N1"] * Gamma1_["wv"] * qk["N1,U"];
     y["mw"] += H["m,n1"] * Gamma1_["uw"] * qk["n1,u"];
     y["mw"] += V_sumA_Alpha["m,n1"] * Gamma1_["uw"] * qk["n1,u"];
     y["mw"] += V_sumB_Alpha["m,n1"] * Gamma1_["uw"] * qk["n1,u"];
     y["mw"] += 0.5 * V["x,y,n1,m"] * Gamma2_["u,w,x,y"] * qk["n1,u"];
-    y["mw"] += V["y,X,m,N1"] * Gamma2_["w,U,y,X"] * qk["N1,U"];
-    y["mw"] += V["m,y,n1,v"] * Gamma2_["u,v,w,y"] * qk["n1,u"];
-    y["mw"] += V["m,Y,n1,V"] * Gamma2_["u,V,w,Y"] * qk["n1,u"];
-    y["mw"] += V["m,Y,v,N1"] * Gamma2_["v,U,w,Y"] * qk["N1,U"];
+    y["mw"] +=       V["y,X,m,N1"] * Gamma2_["w,U,y,X"] * qk["N1,U"];
     y["mw"] -= H["m,e1"] * Gamma1_["uw"] * qk["e1,u"];
     y["mw"] -= V_sumA_Alpha["e1,m"] * Gamma1_["uw"] * qk["e1,u"];
     y["mw"] -= V_sumB_Alpha["e1,m"] * Gamma1_["uw"] * qk["e1,u"];
-    y["mw"] -= 0.5 * V["e1,m,x,y"] * Gamma2_["u,w,x,y"] * qk["e1,u"];
-    y["mw"] -= V["m,E1,y,X"] * Gamma2_["w,U,y,X"] * qk["E1,U"];
     y["mw"] -= V["e1,v,m,y"] * Gamma2_["u,v,w,y"] * qk["e1,u"];
     y["mw"] -= V["e1,V,m,Y"] * Gamma2_["u,V,w,Y"] * qk["e1,u"];
     y["mw"] -= V["v,E1,m,Y"] * Gamma2_["v,U,w,Y"] * qk["E1,U"];
     y["mw"] -= V["a1,v,u1,m"] * Gamma1_["wv"] * qk["u1,a1"];
     y["mw"] -= V["v,A1,m,U1"] * Gamma1_["wv"] * qk["U1,A1"];
-    y["mw"] -= F["vm"] * qk["wv"];
+    if (eri_df_) {
+        y["mw"] += qk["e1,m1"] * B["g,e1,m1"] * B["gmw"];
+        y["mw"] -= qk["e1,m1"] * B["g,e1,w"] * B["g,m,m1"];
+        y["mw"] += qk["E1,M1"] * B["gmw"] * B["g,E1,M1"];
+        y["mw"] += qk["n1,u"] * B["g,u,n1"] * B["gmw"];
+        y["mw"] -= qk["n1,u"] * B["guw"] * B["g,m,n1"];
+        y["mw"] += qk["N1,U"] * B["gmw"] * B["g,U,N1"];
+        y["mw"] -= Gamma1_["uv"] * qk["n1,u"] * B["g,v,n1"] * B["gmw"];
+        y["mw"] += Gamma1_["uv"] * qk["n1,u"] * B["gvw"] * B["g,m,n1"];
+        y["mw"] -= Gamma1_["UV"] * qk["N1,U"] * B["gmw"] * B["g,V,N1"];
+        y["mw"] += Gamma1_["uv"] * qk["e1,u"] * B["g,e1,v"] * B["gmw"];
+        y["mw"] -= Gamma1_["uv"] * qk["e1,u"] * B["g,e1,w"] * B["gmv"];
+        y["mw"] += Gamma1_["UV"] * qk["E1,U"] * B["gmw"] * B["g,E1,V"];
+        y["mw"] -= Gamma1_["uw"] * qk["e1,m1"] * B["g,e1,m1"] * B["gmu"];
+        y["mw"] += Gamma1_["uw"] * qk["e1,m1"] * B["g,e1,u"] * B["g,m,m1"];
+        y["mw"] -= Gamma1_["uw"] * qk["E1,M1"] * B["gmu"] * B["g,E1,M1"];
+        y["mw"] -= Gamma1_["wv"] * qk["n1,u"] * B["g,u,n1"] * B["gmv"];
+        y["mw"] += Gamma1_["wv"] * qk["n1,u"] * B["guv"] * B["g,m,n1"];
+        y["mw"] -= Gamma1_["wv"] * qk["N1,U"] * B["gmv"] * B["g,U,N1"];
+        y["mw"] += Gamma2_["u,v,w,y"] * qk["n1,u"] * B["g,m,n1"] * B["gyv"];
+        y["mw"] -= Gamma2_["u,v,w,y"] * qk["n1,u"] * B["gmv"] * B["g,y,n1"];
+        y["mw"] += Gamma2_["u,V,w,Y"] * qk["n1,u"] * B["g,m,n1"] * B["g,Y,V"];
+        y["mw"] += Gamma2_["v,U,w,Y"] * qk["N1,U"] * B["gmv"] * B["g,Y,N1"];
+        y["mw"] -= 0.5 * Gamma2_["u,w,x,y"] * qk["e1,u"] * B["g,e1,x"] * B["gmy"];
+        y["mw"] += 0.5 * Gamma2_["u,w,x,y"] * qk["e1,u"] * B["g,e1,y"] * B["gmx"];
+        y["mw"] -=       Gamma2_["w,U,y,X"] * qk["E1,U"] * B["gmy"] * B["g,E1,X"];
+    } else {
+        y["mw"] += V["e1,m,m1,w"] * qk["e1,m1"];
+        y["mw"] += V["m,E1,w,M1"] * qk["E1,M1"];
+        y["mw"] += V["u,m,n1,w"] * qk["n1,u"];
+        y["mw"] += V["m,U,w,N1"] * qk["N1,U"];
+        y["mw"] -= Gamma1_["uv"] * V["v,m,n1,w"] * qk["n1,u"];
+        y["mw"] -= Gamma1_["UV"] * V["m,V,w,N1"] * qk["N1,U"];
+        y["mw"] += Gamma1_["uv"] * V["e1,m,v,w"] * qk["e1,u"];
+        y["mw"] += Gamma1_["UV"] * V["m,E1,w,V"] * qk["E1,U"];
+        y["mw"] -= V["e1,m,m1,u"] * Gamma1_["uw"] * qk["e1,m1"];
+        y["mw"] -= V["m,E1,u,M1"] * Gamma1_["uw"] * qk["E1,M1"];
+        y["mw"] -= V["u,m,n1,v"] * Gamma1_["wv"] * qk["n1,u"];
+        y["mw"] -= V["m,U,v,N1"] * Gamma1_["wv"] * qk["N1,U"];
+        y["mw"] += V["m,y,n1,v"] * Gamma2_["u,v,w,y"] * qk["n1,u"];
+        y["mw"] += V["m,Y,n1,V"] * Gamma2_["u,V,w,Y"] * qk["n1,u"];
+        y["mw"] += V["m,Y,v,N1"] * Gamma2_["v,U,w,Y"] * qk["N1,U"];
+        y["mw"] -= 0.5 * V["e1,m,x,y"] * Gamma2_["u,w,x,y"] * qk["e1,u"];
+        y["mw"] -=       V["m,E1,y,X"] * Gamma2_["w,U,y,X"] * qk["E1,U"];
+    }
 
     // VIRTUAL-ACTIVE
     y["ew"] += F["m1,w"] * qk["e,m1"];
@@ -605,19 +718,13 @@ void DSRG_MRPT2::z_vector_contraction(std::vector<double> & qk_vec, std::vector<
     y["ew"] += V_sumB_Alpha["v,w"] * Gamma1_["uv"] * qk["eu"];
     y["ew"] += 0.5 * V["xywv"] * Gamma2_["uvxy"] * qk["eu"];
     y["ew"] += V["xYwV"] * Gamma2_["uVxY"] * qk["eu"];
-    y["ew"] -= V["e1,u,m1,e"] * Gamma1_["uw"] * qk["e1,m1"];
-    y["ew"] -= V["u,E1,e,M1"] * Gamma1_["uw"] * qk["E1,M1"];
     y["ew"] -= V["e1,e,m1,u"] * Gamma1_["uw"] * qk["e1,m1"];
-    y["ew"] -= V["e,E1,u,M1"] * Gamma1_["uw"] * qk["E1,M1"];
-    y["ew"] -= V["u,v,n1,e"] * Gamma1_["wv"] * qk["n1,u"];
-    y["ew"] -= V["v,U,e,N1"] * Gamma1_["wv"] * qk["N1,U"];
+    y["ew"] -= V["e,E1,u,M1"] * Gamma1_["uw"] * qk["E1,M1"]; 
     y["ew"] -= V["u,e,n1,v"] * Gamma1_["wv"] * qk["n1,u"];
     y["ew"] -= V["e,U,v,N1"] * Gamma1_["wv"] * qk["N1,U"];
     y["ew"] += H["e,n1"] * Gamma1_["uw"] * qk["n1,u"];
     y["ew"] += V_sumA_Alpha["e,n1"] * Gamma1_["uw"] * qk["n1,u"];
-    y["ew"] += V_sumB_Alpha["e,n1"] * Gamma1_["uw"] * qk["n1,u"];
-    y["ew"] += 0.5 * V["x,y,n1,e"] * Gamma2_["u,w,x,y"] * qk["n1,u"];
-    y["ew"] += V["y,X,e,N1"] * Gamma2_["w,U,y,X"] * qk["N1,U"];
+    y["ew"] += V_sumB_Alpha["e,n1"] * Gamma1_["uw"] * qk["n1,u"];    
     y["ew"] += V["e,y,n1,v"] * Gamma2_["u,v,w,y"] * qk["n1,u"];
     y["ew"] += V["e,Y,n1,V"] * Gamma2_["u,V,w,Y"] * qk["n1,u"];
     y["ew"] += V["e,Y,v,N1"] * Gamma2_["v,U,w,Y"] * qk["N1,U"];
@@ -629,9 +736,31 @@ void DSRG_MRPT2::z_vector_contraction(std::vector<double> & qk_vec, std::vector<
     y["ew"] -= V_sumB_Alpha["e,e1"] * Gamma1_["uw"] * qk["e1,u"];
     y["ew"] -= 0.5 * V["e1,e,x,y"] * Gamma2_["u,w,x,y"] * qk["e1,u"];
     y["ew"] -= V["e,E1,y,X"] * Gamma2_["w,U,y,X"] * qk["E1,U"];
-    y["ew"] -= V["e,y,e1,v"] * Gamma2_["u,v,w,y"] * qk["e1,u"];
-    y["ew"] -= V["e,Y,e1,V"] * Gamma2_["u,V,w,Y"] * qk["e1,u"];
-    y["ew"] -= V["e,Y,v,E1"] * Gamma2_["v,U,w,Y"] * qk["E1,U"];
+    if (eri_df_) {
+        y["ew"] -= Gamma1_["uw"] * qk["e1,m1"] * B["g,e1,m1"] * B["gue"];
+        y["ew"] += Gamma1_["uw"] * qk["e1,m1"] * B["g,e1,e"] * B["g,u,m1"];
+        y["ew"] -= Gamma1_["uw"] * qk["E1,M1"] * B["gue"] * B["g,E1,M1"];
+        y["ew"] -= Gamma1_["wv"] * qk["n1,u"] * B["g,u,n1"] * B["gve"];
+        y["ew"] += Gamma1_["wv"] * qk["n1,u"] * B["gue"] * B["g,v,n1"];
+        y["ew"] -= Gamma1_["wv"] * qk["N1,U"] * B["gve"] * B["g,U,N1"];
+        y["ew"] += 0.5 * Gamma2_["u,w,x,y"] * qk["n1,u"] * B["g,x,n1"] * B["gye"];
+        y["ew"] -= 0.5 * Gamma2_["u,w,x,y"] * qk["n1,u"] * B["gxe"] * B["g,y,n1"];
+        y["ew"] +=       Gamma2_["w,U,y,X"] * qk["N1,U"] * B["gye"] * B["g,X,N1"];
+        y["ew"] -= Gamma2_["u,v,w,y"] * qk["e1,u"] * B["g,e,e1"] * B["gyv"];
+        y["ew"] += Gamma2_["u,v,w,y"] * qk["e1,u"] * B["gev"] * B["g,y,e1"];
+        y["ew"] -= Gamma2_["u,V,w,Y"] * qk["e1,u"] * B["g,e,e1"] * B["gYV"];
+        y["ew"] -= Gamma2_["v,U,w,Y"] * qk["E1,U"] * B["gev"] * B["g,Y,E1"];
+    } else {
+        y["ew"] -= V["e1,u,m1,e"] * Gamma1_["uw"] * qk["e1,m1"];
+        y["ew"] -= V["u,E1,e,M1"] * Gamma1_["uw"] * qk["E1,M1"];
+        y["ew"] -= V["u,v,n1,e"] * Gamma1_["wv"] * qk["n1,u"];
+        y["ew"] -= V["v,U,e,N1"] * Gamma1_["wv"] * qk["N1,U"];
+        y["ew"] += 0.5 * V["x,y,n1,e"] * Gamma2_["u,w,x,y"] * qk["n1,u"];
+        y["ew"] +=       V["y,X,e,N1"] * Gamma2_["w,U,y,X"] * qk["N1,U"];
+        y["ew"] -= V["e,y,e1,v"] * Gamma2_["u,v,w,y"] * qk["e1,u"];
+        y["ew"] -= V["e,Y,e1,V"] * Gamma2_["u,V,w,Y"] * qk["e1,u"];
+        y["ew"] -= V["e,Y,v,E1"] * Gamma2_["v,U,w,Y"] * qk["E1,U"];
+    }
 
     // ACTIVE-ACTIVE
     {
@@ -694,40 +823,40 @@ void DSRG_MRPT2::z_vector_contraction(std::vector<double> & qk_vec, std::vector<
     ci_qk_dot = ci("I") * qk_ci("I");
 
     // VIRTUAL-CORE
-    y.block("vc")("em") -= ci_qk_dot * H.block("vc")("em");
-    y.block("vc")("em") -= ci_qk_dot * V_sumA_Alpha.block("cv")("me");
-    y.block("vc")("em") -= ci_qk_dot * V_sumB_Alpha.block("cv")("me");
-    y.block("vc")("em") -= 0.5 * V.block("avac")("veum") * cc1_qkci.block("aa")("uv");
-    y.block("vc")("em") -= 0.5 * V.block("vAcA")("eVmU") * cc1_qkci.block("AA")("UV");
+    y["em"] -= ci_qk_dot * H["em"];
+    y["em"] -= ci_qk_dot * V_sumA_Alpha["me"];
+    y["em"] -= ci_qk_dot * V_sumB_Alpha["me"];
+    y["em"] -= 0.5 * V["veum"] * cc1_qkci["uv"];
+    y["em"] -= 0.5 * V["eVmU"] * cc1_qkci["UV"];
 
     // CORE-ACTIVE
-    y.block("ca")("mw") -= 0.50 * H.block("ac")("vm") * cc1_qkci.block("aa")("wv");
-    y.block("ca")("mw") -= 0.50 * V_sumA_Alpha.block("ac")("um") * cc1_qkci.block("aa")("uw");
-    y.block("ca")("mw") -= 0.50 * V_sumB_Alpha.block("ac")("um") * cc1_qkci.block("aa")("uw");
-    y.block("ca")("mw") -= 0.25 * V.block("aaca")("xymv") * cc2_qkci.block("aaaa")("wvxy");
-    y.block("ca")("mw") -= 0.50 * V.block("aAcA")("xYmV") * cc2_qkci.block("aAaA")("wVxY");
+    y["mw"] -= 0.50 * H["vm"] * cc1_qkci["wv"];
+    y["mw"] -= 0.50 * V_sumA_Alpha["um"] * cc1_qkci["uw"];
+    y["mw"] -= 0.50 * V_sumB_Alpha["um"] * cc1_qkci["uw"];
+    y["mw"] -= 0.25 * V["xymv"] * cc2_qkci["wvxy"];
+    y["mw"] -= 0.50 * V["xYmV"] * cc2_qkci["wVxY"];
 
-    y.block("ca")("mw") += ci_qk_dot * H.block("ac")("wm");
-    y.block("ca")("mw") += ci_qk_dot * V_sumA_Alpha.block("ca")("mw");
-    y.block("ca")("mw") += ci_qk_dot * V_sumB_Alpha.block("ca")("mw");
-    y.block("ca")("mw") += 0.5 * V.block("aaac")("vwum") * cc1_qkci.block("aa")("uv");
-    y.block("ca")("mw") += 0.5 * V.block("aAcA")("wVmU") * cc1_qkci.block("AA")("UV");
+    y["mw"] += ci_qk_dot * H["wm"];
+    y["mw"] += ci_qk_dot * V_sumA_Alpha["mw"];
+    y["mw"] += ci_qk_dot * V_sumB_Alpha["mw"];
+    y["mw"] += 0.5 * V["vwum"] * cc1_qkci["uv"];
+    y["mw"] += 0.5 * V["wVmU"] * cc1_qkci["UV"];
 
     // VIRTUAL-ACTIVE
-    y.block("va")("ew") -= 0.50 * H.block("av")("ve") * cc1_qkci.block("aa")("wv");
-    y.block("va")("ew") -= 0.50 * V_sumA_Alpha.block("av")("ue") * cc1_qkci.block("aa")("uw");
-    y.block("va")("ew") -= 0.50 * V_sumB_Alpha.block("av")("ue") * cc1_qkci.block("aa")("uw");
-    y.block("va")("ew") -= 0.25 * V.block("vaaa")("evxy") * cc2_qkci.block("aaaa")("wvxy");
-    y.block("va")("ew") -= 0.50 * V.block("vAaA")("eVxY") * cc2_qkci.block("aAaA")("wVxY");
+    y["ew"] -= 0.50 * H["ve"] * cc1_qkci["wv"];
+    y["ew"] -= 0.50 * V_sumA_Alpha["ue"] * cc1_qkci["uw"];
+    y["ew"] -= 0.50 * V_sumB_Alpha["ue"] * cc1_qkci["uw"];
+    y["ew"] -= 0.25 * V["evxy"] * cc2_qkci["wvxy"];
+    y["ew"] -= 0.50 * V["eVxY"] * cc2_qkci["wVxY"];
 
     // ACTIVE-ACTIVE
     {
         BlockedTensor temp_y = BTF_->build(CoreTensor, "temporal matrix for y{aa} symmetrization", spin_cases({"aa"}));
-        temp_y.block("aa")("wz") -= 0.50 * H.block("aa")("vw") * cc1_qkci.block("aa")("zv");
-        temp_y.block("aa")("wz") -= 0.50 * V_sumA_Alpha.block("aa")("uw") * cc1_qkci.block("aa")("uz");
-        temp_y.block("aa")("wz") -= 0.50 * V_sumB_Alpha.block("aa")("uw") * cc1_qkci.block("aa")("uz");
-        temp_y.block("aa")("wz") -= 0.25 * V.block("aaaa")("wvxy") * cc2_qkci.block("aaaa")("zvxy");
-        temp_y.block("aa")("wz") -= 0.50 * V.block("aAaA")("wVxY") * cc2_qkci.block("aAaA")("zVxY");
+        temp_y["wz"] -= 0.50 * H["vw"] * cc1_qkci["zv"];
+        temp_y["wz"] -= 0.50 * V_sumA_Alpha["uw"] * cc1_qkci["uz"];
+        temp_y["wz"] -= 0.50 * V_sumB_Alpha["uw"] * cc1_qkci["uz"];
+        temp_y["wz"] -= 0.25 * V["wvxy"] * cc2_qkci["zvxy"];
+        temp_y["wz"] -= 0.50 * V["wVxY"] * cc2_qkci["zVxY"];
 
         y["wz"] += temp_y["wz"];
         y["zw"] -= temp_y["wz"];
@@ -952,50 +1081,73 @@ void DSRG_MRPT2::z_vector_contraction(std::vector<double> & qk_vec, std::vector<
 
 void DSRG_MRPT2::set_preconditioner(std::vector<double> & D) {
     BlockedTensor D_mo = BTF_->build(CoreTensor, "Preconditioner (orbital rotation) in GMRES", {"vc", "ca", "va", "aa"});
-    D_mo["e,m"] += Delta1["m,e"];
+    BlockedTensor temp_d = BTF_->build(CoreTensor, "temporal tensor", {"vc", "ca", "va", "aa"});
 
     // VIRTUAL-CORE
-    D_mo["e,m"] -= V["e1,e,m1,m"] * I["e1,e"] * I["m1,m"];
-    D_mo["e,m"] -= V["m1,e,e1,m"] * I["e1,e"] * I["m1,m"];
+    D_mo["em"] += Delta1["m,e"];
+    D_mo["em"] -= V["e1,e,m1,m"] * I["e1,e"] * I["m1,m"];
+    if (eri_df_) {
+        D_mo["em"] -= B["g,m1,e1"] * B["gem"] * I["e1,e"] * I["m1,m"];
+        D_mo["em"] += B["g,m1,m"] * B["g,e,e1"] * I["e1,e"] * I["m1,m"];
+    } else {
+        D_mo["em"] -= V["m1,e,e1,m"] * I["e1,e"] * I["m1,m"];
+    }
 
     // CORE-ACTIVE
-    D_mo["m,w"] += F["uw"] * one_vec["m"] * I["uw"];
-    D_mo["m,w"] -= H["vw"] * Gamma1_["wv"] * one_vec["m"];
-    D_mo["m,w"] -= V_sumA_Alpha["v,w"] * Gamma1_["wv"] * one_vec["m"];
-    D_mo["m,w"] -= V_sumB_Alpha["v,w"] * Gamma1_["wv"] * one_vec["m"];
-    D_mo["m,w"] -= 0.5 * V["xywv"] * Gamma2_["wvxy"] * one_vec["m"];
-    D_mo["m,w"] -= V["xYwV"] * Gamma2_["wVxY"] * one_vec["m"];
-    D_mo["m,w"] += V["u,w,n1,m"] * I["m,n1"] * I["wu"];
-    D_mo["m,w"] += V["u,m,n1,w"] * I["m,n1"] * I["wu"];
-    D_mo["m,w"] -= Gamma1_["wv"] * V["v,w,n1,m"] * I["m,n1"];
-    D_mo["m,w"] -= Gamma1_["wv"] * V["v,m,n1,w"] * I["m,n1"];
-    D_mo["m,w"] -= F["m,n1"] * one_vec["w"] * I["m,n1"];
-    D_mo["m,w"] -= V["w,v,n1,m"] * Gamma1_["wv"] * I["m,n1"];
-    D_mo["m,w"] -= V["w,m,n1,v"] * Gamma1_["wv"] * I["m,n1"];
-    D_mo["m,w"] += H["m,n1"] * Gamma1_["uw"] * I["wu"] * I["m,n1"];
-    D_mo["m,w"] += V_sumA_Alpha["m,n1"] * Gamma1_["uw"] * I["m,n1"] * I["wu"];
-    D_mo["m,w"] += V_sumB_Alpha["m,n1"] * Gamma1_["uw"] * I["m,n1"] * I["wu"];
-    D_mo["m,w"] += 0.5 * V["x,y,n1,m"] * Gamma2_["u,w,x,y"] * I["m,n1"] * I["wu"];
-    D_mo["m,w"] += V["m,y,n1,v"] * Gamma2_["u,v,w,y"] * I["m,n1"] * I["wu"];
-    D_mo["m,w"] += V["m,Y,n1,V"] * Gamma2_["u,V,w,Y"] * I["m,n1"] * I["wu"];
+    D_mo["mw"] += F["uw"] * one_vec["m"] * I["uw"];
+    D_mo["mw"] -= H["vw"] * Gamma1_["wv"] * one_vec["m"];
+    D_mo["mw"] -= V_sumA_Alpha["vw"] * Gamma1_["wv"] * one_vec["m"];
+    D_mo["mw"] -= V_sumB_Alpha["vw"] * Gamma1_["wv"] * one_vec["m"];
+    D_mo["mw"] -= 0.5 * V["xywv"] * Gamma2_["wvxy"] * one_vec["m"];
+    D_mo["mw"] -= V["xYwV"] * Gamma2_["wVxY"] * one_vec["m"];
+    D_mo["mw"] += V["u,w,n1,m"] * I["m,n1"] * I["wu"];  
+    D_mo["mw"] -= Gamma1_["wv"] * V["v,w,n1,m"] * I["m,n1"];   
+    D_mo["mw"] -= F["m,n1"] * one_vec["w"] * I["m,n1"];
+    D_mo["mw"] -= V["w,v,n1,m"] * Gamma1_["wv"] * I["m,n1"];  
+    D_mo["mw"] += H["m,n1"] * Gamma1_["uw"] * I["wu"] * I["m,n1"];
+    D_mo["mw"] += V_sumA_Alpha["m,n1"] * Gamma1_["uw"] * I["m,n1"] * I["wu"];
+    D_mo["mw"] += V_sumB_Alpha["m,n1"] * Gamma1_["uw"] * I["m,n1"] * I["wu"];
+    D_mo["mw"] += 0.5 * V["x,y,n1,m"] * Gamma2_["u,w,x,y"] * I["m,n1"] * I["wu"];
+    if (eri_df_) {
+        D_mo["mw"] += B["g,u,n1"] * B["gmw"] * I["m,n1"] * I["wu"];
+        D_mo["mw"] -= B["guw"] * B["g,m,n1"] * I["m,n1"] * I["wu"];
+        D_mo["mw"] -= Gamma1_["wv"] * B["g,v,n1"] * B["gmw"] * I["m,n1"];
+        D_mo["mw"] -= B["g,w,n1"] * B["gmv"] * Gamma1_["wv"] * I["m,n1"];
+        D_mo["mw"] += B["gwv"] * B["g,m,n1"] * Gamma1_["wv"] * I["m,n1"];
+        D_mo["mw"] += B["g,m,n1"] * B["gyv"] * Gamma2_["u,v,w,y"] * I["m,n1"] * I["wu"];
+        D_mo["mw"] -= B["gmv"] * B["g,y,n1"] * Gamma2_["u,v,w,y"] * I["m,n1"] * I["wu"];
+        D_mo["mw"] += B["g,m,n1"] * B["gYV"] * Gamma2_["u,V,w,Y"] * I["m,n1"] * I["wu"];
+    } else {
+        D_mo["mw"] += V["u,m,n1,w"] * I["m,n1"] * I["wu"];
+        D_mo["mw"] -= Gamma1_["wv"] * V["v,m,n1,w"] * I["m,n1"];
+        D_mo["mw"] -= V["w,m,n1,v"] * Gamma1_["wv"] * I["m,n1"];
+        D_mo["mw"] += V["m,y,n1,v"] * Gamma2_["u,v,w,y"] * I["m,n1"] * I["wu"];
+        D_mo["mw"] += V["m,Y,n1,V"] * Gamma2_["u,V,w,Y"] * I["m,n1"] * I["wu"];
+    }
 
     // VIRTUAL-ACTIVE
-    D_mo["e,w"] += H["vw"] * Gamma1_["wv"] * one_vec["e"];
-    D_mo["e,w"] += V_sumA_Alpha["v,w"] * Gamma1_["wv"] * one_vec["e"];
-    D_mo["e,w"] += V_sumB_Alpha["v,w"] * Gamma1_["wv"] * one_vec["e"];
-    D_mo["e,w"] += 0.5 * V["xywv"] * Gamma2_["wvxy"] * one_vec["e"];
-    D_mo["e,w"] += V["xYwV"] * Gamma2_["wVxY"] * one_vec["e"];
-    D_mo["e,w"] -= H["e,e1"] * Gamma1_["uw"] * I["e,e1"] * I["uw"];
-    D_mo["e,w"] -= V_sumA_Alpha["e,e1"] * Gamma1_["uw"] * I["e,e1"] * I["uw"];
-    D_mo["e,w"] -= V_sumB_Alpha["e,e1"] * Gamma1_["uw"] * I["e,e1"] * I["uw"];
-    D_mo["e,w"] -= 0.5 * V["e1,e,x,y"] * Gamma2_["u,w,x,y"] * I["e,e1"] * I["uw"];
-    D_mo["e,w"] -= V["e,y,e1,v"] * Gamma2_["u,v,w,y"] * I["e,e1"] * I["uw"];
-    D_mo["e,w"] -= V["e,Y,e1,V"] * Gamma2_["u,V,w,Y"] * I["e,e1"] * I["uw"];
+    D_mo["ew"] += H["vw"] * Gamma1_["wv"] * one_vec["e"];
+    D_mo["ew"] += V_sumA_Alpha["v,w"] * Gamma1_["wv"] * one_vec["e"];
+    D_mo["ew"] += V_sumB_Alpha["v,w"] * Gamma1_["wv"] * one_vec["e"];
+    D_mo["ew"] += 0.5 * V["xywv"] * Gamma2_["wvxy"] * one_vec["e"];
+    D_mo["ew"] += V["xYwV"] * Gamma2_["wVxY"] * one_vec["e"];
+    D_mo["ew"] -= H["e,e1"] * Gamma1_["uw"] * I["e,e1"] * I["uw"];
+    D_mo["ew"] -= V_sumA_Alpha["e,e1"] * Gamma1_["uw"] * I["e,e1"] * I["uw"];
+    D_mo["ew"] -= V_sumB_Alpha["e,e1"] * Gamma1_["uw"] * I["e,e1"] * I["uw"];
+    D_mo["ew"] -= 0.5 * V["e1,e,x,y"] * Gamma2_["u,w,x,y"] * I["e,e1"] * I["uw"];
+    if (eri_df_) {
+        D_mo["ew"] -= B["g,e,e1"] * B["gyv"] * Gamma2_["u,v,w,y"] * I["e,e1"] * I["uw"];
+        D_mo["ew"] += B["gev"] * B["g,y,e1"] * Gamma2_["u,v,w,y"] * I["e,e1"] * I["uw"];
+        D_mo["ew"] -= B["g,e,e1"] * B["gYV"] * Gamma2_["u,V,w,Y"] * I["e,e1"] * I["uw"];
+    } else {
+        D_mo["ew"] -= V["e,y,e1,v"] * Gamma2_["u,v,w,y"] * I["e,e1"] * I["uw"];
+        D_mo["ew"] -= V["e,Y,e1,V"] * Gamma2_["u,V,w,Y"] * I["e,e1"] * I["uw"];
+    }
 
     // ACTIVE-ACTIVE
-    D_mo["w,z"] += Delta1["zw"] * one_vec["w"];
-    D_mo["w,z"] -= V["z,v,u1,w"] * Gamma1_["zv"] * I["u1,w"];
-    D_mo["w,z"] += V["a1,v,w,z"] * Gamma1_["wv"] * I["z,a1"];
+    D_mo["wz"] += Delta1["zw"] * one_vec["w"];
+    D_mo["wz"] -= V["z,v,u1,w"] * Gamma1_["zv"] * I["u1,w"];
+    D_mo["wz"] += V["a1,v,w,z"] * Gamma1_["wv"] * I["z,a1"];
 
     for (const std::string& row : {"vc", "ca", "va", "aa"}) {
         int idx1 = block_dim[row];
@@ -1021,8 +1173,8 @@ void DSRG_MRPT2::set_preconditioner(std::vector<double> & D) {
 
     // Attention :  d_ci are the approximate preconditioner components for the CI part
     double d_ci = 0.0;
-    d_ci += H.block("cc")("mn") * I.block("cc")("mn");
-    d_ci += H.block("CC")("MN") * I.block("CC")("MN");
+    d_ci += H["mn"] * I["mn"];
+    d_ci += H["MN"] * I["MN"];
     d_ci += 0.5 * V_sumA_Alpha["m,m1"] * I["m,m1"];
     d_ci += 0.5 * V_sumB_Beta["M,M1"] * I["M,M1"];
     d_ci += V_sumB_Alpha["m,m1"] * I["m,m1"];
@@ -1177,7 +1329,7 @@ void DSRG_MRPT2::solve_linear_iter() {
 
     // Beta part
     // Caution: This is only valid when restricted orbitals are assumed 
-    //          i.e. MO coefficients (alpha) == MO coefficients (beta)
+    //          i.e. MO coefficients (alpha) equal MO coefficients (beta)
     for (const std::string& block : {"VC"}) {
         (Z.block(block)).iterate([&](const std::vector<size_t>& i, double& value) {
             value = Z.block("vc").data()[i[0] * ncore + i[1]];

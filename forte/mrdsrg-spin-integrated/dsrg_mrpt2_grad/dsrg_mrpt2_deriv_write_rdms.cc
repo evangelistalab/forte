@@ -418,9 +418,9 @@ void DSRG_MRPT2::write_2rdm_spin_dependent() {
     temp["xYuV"] += 0.25 * Gamma2_["uVxY"];
 
     // CI contribution
-    temp.block("aaaa")("xyuv") += 0.125 * Gamma2_tilde.block("aaaa")("uvxy");
-    temp.block("AAAA")("XYUV") += 0.125 * Gamma2_tilde.block("AAAA")("UVXY");
-    temp.block("aAaA")("xYuV") += 0.125 * Gamma2_tilde.block("aAaA")("uVxY");
+    temp["xyuv"] += 0.125 * Gamma2_tilde["uvxy"];
+    temp["XYUV"] += 0.125 * Gamma2_tilde["UVXY"];
+    temp["xYuV"] += 0.125 * Gamma2_tilde["uVxY"];
 
     // all-alpha and all-beta
     temp2["ckdl"] += temp["cdkl"];

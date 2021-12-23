@@ -29,7 +29,6 @@ void DSRG_MRPT2::set_b(int dim, std::map<string, int> preidx, std::map<string, i
         if (eri_df_) {
             Z_b["em"] += 0.5 * sigma3_xi3["ia"] * B["gia"] * B["gem"];
             Z_b["em"] -= 0.5 * sigma3_xi3["ia"] * B["gim"] * B["gea"];
-
             Z_b["em"] += 0.5 * sigma3_xi3["IA"] * B["gem"] * B["gIA"];
         } else {
             Z_b["em"] += 0.5 * sigma3_xi3["ia"] * V["ieam"];

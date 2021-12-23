@@ -38,32 +38,22 @@ void DSRG_MRPT2::set_h() {
     });
 }
 
-void DSRG_MRPT2::set_v() {
-    
-    B = BTF_->build(tensor_type_, "B", {"Lgg", "LGG"});
+void DSRG_MRPT2::set_v() {   
     if (eri_df_) {
-        V = BTF_->build(CoreTensor, "Electron Repulsion Integral", spin_cases({"gggg"}));
-
+        B = BTF_->build(tensor_type_, "B", {"Lgg", "LGG"});
+        V = BTF_->build(CoreTensor, "Electron Repulsion Integral", spin_cases({"pphh"}));
         for (const std::string& block : B.block_labels()) {
             std::vector<size_t> iaux = label_to_spacemo_[block[0]];
             std::vector<size_t> ip   = label_to_spacemo_[block[1]];
             std::vector<size_t> ih   = label_to_spacemo_[block[2]];
-
             ambit::Tensor Bblock = ints_->three_integral_block(iaux, ip, ih);
             B.block(block).copy(Bblock);
         }
-
-        V["pqrs"] =  B["gpr"] * B["gqs"];
-        V["pqrs"] -= B["gps"] * B["gqr"];
-        V["pQrS"] =  B["gpr"] * B["gQS"];
-        V["PQRS"] =  B["gPR"] * B["gQS"];
-        V["PQRS"] -= B["gPS"] * B["gQR"];
-
-        // V_["abij"] =  B["gai"] * B["gbj"];
-        // V_["abij"] -= B["gaj"] * B["gbi"];
-        // V_["aBiJ"] =  B["gai"] * B["gBJ"];
-        // V_["ABIJ"] =  B["gAI"] * B["gBJ"];
-        // V_["ABIJ"] -= B["gAJ"] * B["gBI"];
+        V["abij"] =  B["gai"] * B["gbj"];
+        V["abij"] -= B["gaj"] * B["gbi"];
+        V["aBiJ"] =  B["gai"] * B["gBJ"];
+        V["ABIJ"] =  B["gAI"] * B["gBJ"];
+        V["ABIJ"] -= B["gAJ"] * B["gBI"];
     } else {
         V = BTF_->build(CoreTensor, "Electron Repulsion Integral",
                 spin_cases({"gphh", "pghh", "ppgh", "pphg", "gchc", "pghc", "pcgc", "pchg",
