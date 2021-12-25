@@ -136,6 +136,9 @@ jobs:
       cd build
       echo "Now at directory: $PWD"
       git clone https://github.com/psi4/psi4.git psi4
+      cd psi4
+      git checkout 2feab68a2ce052ed74b75fa6749090cc467cd1d9
+      cd ..
     displayName: 'Clone Psi4 Source'
 
   - bash: |
