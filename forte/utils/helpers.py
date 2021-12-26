@@ -21,11 +21,15 @@ def psi4_scf(geom, basis, reference, functional='hf', options={}) -> (float, psi
     tuple(double, psi4::Wavefunction)
         a tuple containing the energy and the Wavefunction object
     """
+
+    # clean psi4
+    psi4.core.clean()
+
     # build the molecule object
     mol = psi4.geometry(geom)
 
     # add basis/reference/scf_type to options passed by the user
-    default_options = {'SCF_TYPE': 'pk', 'E_CONVERGENCE': 1.0e-11, 'D_CONVERGENCE': 1.0e-6}
+    default_options = {'SCF_TYPE': 'PK', 'E_CONVERGENCE': 1.0e-11, 'D_CONVERGENCE': 1.0e-6}
 
     # capitalize the options
     options = {k.upper(): v for k, v in options.items()}
@@ -45,7 +49,7 @@ def psi4_scf(geom, basis, reference, functional='hf', options={}) -> (float, psi
 
     # run scf and return the energy and a wavefunction object (will work only if pass return_wfn=True)
     E_scf, wfn = psi4.energy(functional, molecule=mol, return_wfn=True)
-    #     psi4.core.clean()
+
     return (E_scf, wfn)
 
 
@@ -94,9 +98,10 @@ def psi4_casscf(geom, basis, reference, restricted_docc, active, options={}) -> 
     # pipe output to the file output.dat
     psi4.core.set_output_file('output.dat', True)
 
+    # psi4.core.clean()
+
     # run scf and return the energy and a wavefunction object (will work only if pass return_wfn=True)
     E_scf, wfn = psi4.energy('casscf', molecule=mol, return_wfn=True)
-    #     psi4.core.clean()
     return (E_scf, wfn)
 
 
@@ -205,10 +210,7 @@ def prepare_forte_objects(
         a tuple containing the ForteIntegrals, SCFInfo, and MOSpaceInfo objects and a map of states and weights
     """
     # fill in the options object
-    psi4_options = psi4.core.get_options()
-    psi4_options.set_current_module('FORTE')
     options = forte.forte_options
-    options.get_options_from_psi4(psi4_options)
 
     if ('DF' in options.get_str('INT_TYPE')):
         aux_basis = psi4.core.BasisSet.build(
@@ -218,7 +220,7 @@ def prepare_forte_objects(
         wfn.set_basisset('DF_BASIS_MP2', aux_basis)
 
     if (options.get_str('MINAO_BASIS')):
-        minao_basis = psi4.core.BasisSet.build(wfn.molecule(), 'MINAO_BASIS', psi4_options.get_str('MINAO_BASIS'))
+        minao_basis = psi4.core.BasisSet.build(wfn.molecule(), 'MINAO_BASIS', options.get_str('MINAO_BASIS'))
         wfn.set_basisset('MINAO_BASIS', minao_basis)
 
     # Prepare base objects

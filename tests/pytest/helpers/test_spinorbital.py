@@ -2,8 +2,9 @@
 # -*- coding: utf-8 -*-
 
 import math
-import forte
 import pytest
+import psi4
+import forte
 
 
 def test_spinorbital_mp2():
@@ -52,6 +53,8 @@ def test_spinorbital_mp2():
     T = {'ccvv': np.einsum("ijab,ijab->ijab", d, H['ccvv'])}
     E = 0.25 * np.einsum("ijab,ijab->", T['ccvv'], H['ccvv'])
     assert math.isclose(E, -0.13305567213152, abs_tol=1e-09)
+
+    psi4.core.clean()
 
 
 if __name__ == "__main__":
