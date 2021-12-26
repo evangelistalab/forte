@@ -21,14 +21,13 @@ def test_spinorbital_mp2():
 
     basis = '6-31g'
     Escf, wfn = forte.utils.psi4_scf(geom, basis, 'rhf')
-    (ints, as_ints, scf_info, mo_space_info,
-     state_weights_map) = forte.utils.prepare_forte_objects(wfn, mo_spaces={
-         'RESTRICTED_DOCC': [5],
-         'ACTIVE': [0]
-     })
+    forte_objects = forte.utils.prepare_forte_objects(wfn, mo_spaces={'RESTRICTED_DOCC': [5], 'ACTIVE': [0]})
+
+    mo_space_info = forte_objects['mo_space_info']
     core = mo_space_info.corr_absolute_mo('RESTRICTED_DOCC')
     virt = mo_space_info.corr_absolute_mo('RESTRICTED_UOCC')
 
+    ints = forte_objects['ints']
     H = {
         'cc': forte.spinorbital_oei(ints, core, core),
         'cccc': forte.spinorbital_tei(ints, core, core, core, core),

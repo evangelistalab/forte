@@ -206,8 +206,8 @@ def prepare_forte_objects(
         A list of spaces to localize (default: [])
     Returns
     -------
-    tuple(ForteIntegrals, ActiveSpaceIntegrals, SCFInfo, MOSpaceInfo, map(StateInfo : list)
-        a tuple containing the ForteIntegrals, SCFInfo, and MOSpaceInfo objects and a map of states and weights
+    dict(ForteIntegrals, ActiveSpaceIntegrals, SCFInfo, MOSpaceInfo, map(StateInfo : list))
+        a dictionary containing the ForteIntegrals, SCFInfo, and MOSpaceInfo objects and a map of states and weights
     """
     # fill in the options object
     options = forte.forte_options
@@ -256,7 +256,13 @@ def prepare_forte_objects(
     # create active space integrals
     as_ints = forte.make_active_space_ints(mo_space_info, ints, active_space, core_spaces)
 
-    return (ints, as_ints, scf_info, mo_space_info, state_weights_map)
+    return {
+        'ints': ints,
+        'as_ints': as_ints,
+        'scf_info': scf_info,
+        'mo_space_info': mo_space_info,
+        'state_weights_map': state_weights_map
+    }
 
 
 def prepare_ints_rdms(wfn, mo_spaces, rdm_level=3):
