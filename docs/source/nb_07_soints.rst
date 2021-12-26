@@ -10,13 +10,16 @@ orbital integrals see the file
 ``tests/pytest/helpers/test_spinorbital.py`` in the forte directory.
 
 Forte assumes that the spin orbital basis :math:`\{ \psi_{p} \}` is
-organized as follows :raw-latex:`\begin{equation}
-\underbrace{\phi_{0,\alpha}}_{\psi_0},
-\underbrace{\phi_{0,\beta}}_{\psi_1},
-\underbrace{\phi_{1,\alpha}}_{\psi_2},
-\underbrace{\phi_{1,\beta}}_{\psi_3},
-\ldots
-\end{equation}`
+organized as follows
+
+.. math::
+
+
+   \underbrace{\phi_{0,\alpha}}_{\psi_0},
+   \underbrace{\phi_{0,\beta}}_{\psi_1},
+   \underbrace{\phi_{1,\alpha}}_{\psi_2},
+   \underbrace{\phi_{1,\beta}}_{\psi_3},
+   \ldots
 
 To read the one-electron integrals
 :math:`h_{pq} = \langle \psi_p | \hat{h} | \psi_q \rangle` we use the
@@ -92,7 +95,7 @@ default **this function uses conventional integrals**.
 
 .. parsed-literal::
 
-    The SCF energy is -75.98015792193442 [Eh]
+    The SCF energy is -75.98015792193438 [Eh]
     SCF doubly occupied orbitals per irrep: (3, 0, 1, 1)
     SCF singly occupied orbitals per irrep: (0, 0, 0, 0)
 

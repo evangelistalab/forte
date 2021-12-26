@@ -13,9 +13,10 @@ Charge and spin multiplicity
 The molecular charge (:math:`Q`), is defined as the sum of the charge of
 the nuclei (:math:`Z_A`) minus the number of electrons
 
-:raw-latex:`\begin{equation}
-Q = \sum_A Z_A - N_\text{el}.
-\end{equation}`
+.. math::
+
+
+   Q = \sum_A Z_A - N_\text{el}.
 
 Recall that, in the absence of an external field, an electronic state is
 an eigenfunction of the spin squared operator :math:`\hat{S}^2` and the
