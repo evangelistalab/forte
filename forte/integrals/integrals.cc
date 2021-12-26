@@ -547,4 +547,5 @@ void ForteIntegrals::_undefined_function(const std::string& method) const {
     throw std::runtime_error("ForteIntegrals::" + method + " not supported for integral type " +
                              std::to_string(integral_type()));
 }
+
 } // namespace forte
