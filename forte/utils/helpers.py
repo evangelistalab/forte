@@ -181,8 +181,6 @@ def psi4_cubeprop(wfn, path='.', orbs=[], nocc=0, nvir=0, density=False, frontie
 
     psi4.set_options({'CUBEPROP_TASKS': cubeprop_tasks, 'CUBEPROP_ORBITALS': orbs, 'CUBEPROP_FILEPATH': path})
     psi4.cubeprop(wfn)
-    if load:
-        return load_cubes(path)
 
 
 def prepare_forte_objects(
@@ -274,7 +272,13 @@ def prepare_ints_rdms(wfn, mo_spaces, rdm_level=3):
     :return: a tuple of (reference energy, MOSpaceInfo, ForteIntegrals, RDMs)
     """
 
-    (ints, as_ints, scf_info, mo_space_info, state_weights_map) = prepare_forte_objects(wfn, mo_spaces)
+    forte_objects = prepare_forte_objects(wfn, mo_spaces)
+
+    ints = forte_objects['ints']
+    as_ints = forte_objects['as_ints']
+    scf_info = forte_objects['scf_info']
+    mo_space_info = forte_objects['mo_space_info']
+    state_weights_map = forte_objects['state_weights_map']
 
     # build a map {StateInfo: a list of weights} for multi-state computations
     state_weights_map = forte.make_state_weights_map(forte.forte_options, mo_space_info)
@@ -300,4 +304,4 @@ def prepare_ints_rdms(wfn, mo_spaces, rdm_level=3):
     semi = forte.SemiCanonical(mo_space_info, ints, forte.forte_options)
     semi.semicanonicalize(rdms, rdm_level)
 
-    return Eref, mo_space_info, ints, rdms
+    return {'reference_energy': Eref, 'mo_space_info': mo_space_info, 'ints': ints, 'rdms': rdms}
