@@ -19,7 +19,12 @@ def test_duccsdtq():
     scf_energy, psi4_wfn = forte.utils.psi4_scf(geom, basis='cc-pVDZ', reference='RHF')
     forte_objs = forte.utils.prepare_forte_objects(psi4_wfn, mo_spaces={'FROZEN_DOCC': [1, 0, 0, 0, 0, 0, 0, 0]})
     calc_data = scc.run_cc(
-        forte_objs[1], forte_objs[2], forte_objs[3], cc_type='ducc', max_exc=4, e_convergence=1.0e-11
+        forte_objs['as_ints'],
+        forte_objs['scf_info'],
+        forte_objs['mo_space_info'],
+        cc_type='ducc',
+        max_exc=4,
+        e_convergence=1.0e-11
     )
 
     psi4.core.clean()

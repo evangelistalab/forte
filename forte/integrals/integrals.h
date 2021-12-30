@@ -595,7 +595,7 @@ class Psi4Integrals : public ForteIntegrals {
 
   protected:
     void freeze_core_orbitals() override;
-}; // namespace forte
+};
 
 } // namespace forte
 

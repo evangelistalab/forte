@@ -18,7 +18,7 @@ def test_sparse_operator2():
     scf_energy, psi4_wfn = forte.utils.psi4_scf(geom, basis='DZ', reference='RHF')
     forte_objs = forte.utils.prepare_forte_objects(psi4_wfn, mo_spaces={})
 
-    as_ints = forte_objs[1]
+    as_ints = forte_objs['as_ints']
 
     ham_op = forte.SparseHamiltonian(as_ints)
 

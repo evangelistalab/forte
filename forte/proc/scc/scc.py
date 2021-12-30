@@ -6,9 +6,9 @@ import copy
 
 import numpy as np
 
-import psi4
 import forte
 import forte.utils
+
 
 def run_cc(
     as_ints,
@@ -67,7 +67,6 @@ def run_cc(
     if cc_type == None:
         raise ValueError('No type of CC computation was selected. Specify a valid value for the cc_type option.')
 
-
     nmo = mo_space_info.size("CORRELATED")
     nmopi = mo_space_info.dimension("CORRELATED").to_tuple()
     nfrzdocc = mo_space_info.dimension("FROZEN_DOCC").to_tuple()
@@ -82,15 +81,13 @@ def run_cc(
     print(f"Number of beta electrons per irrep:      {nbelpi}")
 
     # if not provided, define the maximum excitation level to be FCI
-    if max_exc == None:
+    if max_exc is None:
         max_exc = min(naelpi + nbelpi, nmo - naelpi + nbelpi)
 
     antihermitian = (cc_type != 'cc') and (cc_type != 'dcc')
 
     # create the operator pool
-    op, denominators = make_cluster_operator(
-        antihermitian, max_exc, naelpi, mo_space_info, scf_info
-    )
+    op, denominators = make_cluster_operator(antihermitian, max_exc, naelpi, mo_space_info, scf_info)
     selected_op = forte.SparseOperator(antihermitian)
 
     # the list of operators selected from the full list
@@ -109,11 +106,11 @@ def run_cc(
     start = time.time()
 
     hfref = make_hfref(naelpi, nbelpi, nmopi)
-    eref = as_ints.slater_rules(hfref,hfref) + as_ints.nuclear_repulsion_energy()
+    eref = as_ints.slater_rules(hfref, hfref) + as_ints.nuclear_repulsion_energy()
     print(f"Reference determinant: {hfref.str(nmo)}")
     print(f"Energy of the reference determinant: {eref}")
 
-    ref = forte.StateVector({hfref : 1.0})
+    ref = forte.StateVector({hfref: 1.0})
 
     nops_old = 0
 
@@ -130,21 +127,8 @@ def run_cc(
 
         # solve the cc equations and update the amplitudes
         t, e, e_proj, micro_iter, timing = solve_cc_equations(
-            cc_type,
-            t,
-            op,
-            op,
-            op_pool,
-            denominators,
-            ref,
-            as_ints,
-            compute_threshold,
-            e_convergence,
-            r_convergence,
-            on_the_fly,
-            linked,
-            maxk,
-            diis_start
+            cc_type, t, op, op, op_pool, denominators, ref, as_ints, compute_threshold, e_convergence, r_convergence,
+            on_the_fly, linked, maxk, diis_start
         )
 
         print(
@@ -205,9 +189,7 @@ def make_hfref(naelpi, nbelpi, nmopi):
     return hfref
 
 
-def make_cluster_operator(
-    antihermitian, max_exc, naelpi, mo_space_info, psi4_wfn
-):
+def make_cluster_operator(antihermitian, max_exc, naelpi, mo_space_info, psi4_wfn):
     """Make the full cluster operator truncated to a given maximum excitation level (closed-shell case)
 
     Parameters
@@ -263,18 +245,10 @@ def make_cluster_operator(
                 for av in itertools.combinations(vir_orbs, na):
                     for bo in itertools.combinations(occ_orbs, nb):
                         for bv in itertools.combinations(vir_orbs, nb):
-                            aocc_sym = functools.reduce(
-                                lambda x, y: x ^ symmetry[y], ao, 0
-                            )
-                            avir_sym = functools.reduce(
-                                lambda x, y: x ^ symmetry[y], av, 0
-                            )
-                            bocc_sym = functools.reduce(
-                                lambda x, y: x ^ symmetry[y], bo, 0
-                            )
-                            bvir_sym = functools.reduce(
-                                lambda x, y: x ^ symmetry[y], bv, 0
-                            )
+                            aocc_sym = functools.reduce(lambda x, y: x ^ symmetry[y], ao, 0)
+                            avir_sym = functools.reduce(lambda x, y: x ^ symmetry[y], av, 0)
+                            bocc_sym = functools.reduce(lambda x, y: x ^ symmetry[y], bo, 0)
+                            bvir_sym = functools.reduce(lambda x, y: x ^ symmetry[y], bv, 0)
                             # make sure the operators are total symmetric
                             if (aocc_sym ^ avir_sym) ^ (bocc_sym ^ bvir_sym) == 0:
                                 # Create a list of tuples (creation, alpha, orb) where
@@ -293,23 +267,16 @@ def make_cluster_operator(
 
                                 sop.add_term(op, 0.0)
 
-                                e_aocc = functools.reduce(
-                                    lambda x, y: x + ea[y], ao, 0.0
-                                )
-                                e_avir = functools.reduce(
-                                    lambda x, y: x + ea[y], av, 0.0
-                                )
-                                e_bocc = functools.reduce(
-                                    lambda x, y: x + eb[y], bo, 0.0
-                                )
-                                e_bvir = functools.reduce(
-                                    lambda x, y: x + eb[y], bv, 0.0
-                                )
+                                e_aocc = functools.reduce(lambda x, y: x + ea[y], ao, 0.0)
+                                e_avir = functools.reduce(lambda x, y: x + ea[y], av, 0.0)
+                                e_bocc = functools.reduce(lambda x, y: x + eb[y], bo, 0.0)
+                                e_bvir = functools.reduce(lambda x, y: x + eb[y], bv, 0.0)
                                 den = e_bvir + e_avir - e_aocc - e_bocc
                                 denominators.append(den)
 
     print(f"Number of amplitudes: {sop.size()}")
     return (sop, denominators)
+
 
 def solve_cc_equations(
     cc_type,
@@ -364,7 +331,7 @@ def solve_cc_equations(
         Returns the a tuple containign the converged amplitudes, the energy, the projective energy,
         the number of iterations, and timings information
     """
-    diis = DIIS(t,diis_start)
+    diis = DIIS(t, diis_start)
     ham = forte.SparseHamiltonian(as_ints)
     if cc_type == "cc" or cc_type == "ucc":
         exp = forte.SparseExp()
@@ -377,13 +344,13 @@ def solve_cc_equations(
         micro_start = time.time()
         t_old = copy.deepcopy(t)
         residual, e, e_proj = residual_equations(
-            cc_type, t, op, selected_op, ref, ham, exp, compute_threshold,on_the_fly,linked,maxk
+            cc_type, t, op, selected_op, ref, ham, exp, compute_threshold, on_the_fly, linked, maxk
         )
 
         residual_norm = 0.0
         for l in range(selected_op.size()):
             t[l] -= residual[op_pool[l]] / denominators[op_pool[l]]
-            residual_norm += residual[op_pool[l]] ** 2
+            residual_norm += residual[op_pool[l]]**2
 
         residual_norm = math.sqrt(residual_norm)
 
@@ -396,20 +363,15 @@ def solve_cc_equations(
             flush=True,
         )
 
-        if (
-            micro_iter > 2
-            and (abs(delta_e_micro) < e_convergence)
-            and (residual_norm < r_convergence)
-        ):
+        if (micro_iter > 2 and (abs(delta_e_micro) < e_convergence) and (residual_norm < r_convergence)):
             break
 
         old_e_micro = e
 
     return (t, e, e_proj, micro_iter + 1, exp.timings())
 
-def residual_equations(
-    cc_type, t, op, sop, ref, ham, exp, compute_threshold, on_the_fly=False, linked=True,maxk=19
-):
+
+def residual_equations(cc_type, t, op, sop, ref, ham, exp, compute_threshold, on_the_fly=False, linked=True, maxk=19):
     """Evaluate the residual equations
 
     Parameters
@@ -439,24 +401,26 @@ def residual_equations(
     c0 = 0.0
     if on_the_fly:
         if cc_type == "cc" or cc_type == "ucc":
-            wfn = exp.compute(sop, ref,algorithm='onthefly',screen_thresh=compute_threshold,maxk=maxk)
+            wfn = exp.compute(sop, ref, algorithm='onthefly', screen_thresh=compute_threshold, maxk=maxk)
             Hwfn = ham.compute_on_the_fly(wfn, compute_threshold)
-            R = exp.compute(sop, Hwfn, scaling_factor=-1.0,algorithm='onthefly',screen_thresh=compute_threshold,maxk=maxk)
+            R = exp.compute(
+                sop, Hwfn, scaling_factor=-1.0, algorithm='onthefly', screen_thresh=compute_threshold, maxk=maxk
+            )
         elif cc_type == "dcc" or cc_type == "ducc":
-            wfn = exp.compute(sop, ref,algorithm='onthefly',screen_thresh=compute_threshold)
+            wfn = exp.compute(sop, ref, algorithm='onthefly', screen_thresh=compute_threshold)
             Hwfn = ham.compute_on_the_fly(wfn, compute_threshold)
-            R = exp.compute(sop, Hwfn, inverse=True,algorithm='onthefly',screen_thresh=compute_threshold)
+            R = exp.compute(sop, Hwfn, inverse=True, algorithm='onthefly', screen_thresh=compute_threshold)
         else:
             raise ValueError("Incorrect value for cc_type")
     else:
         if cc_type == "cc" or cc_type == "ucc":
-            wfn = exp.compute(sop, ref,screen_thresh=compute_threshold,maxk=maxk)
+            wfn = exp.compute(sop, ref, screen_thresh=compute_threshold, maxk=maxk)
             Hwfn = ham.compute(wfn, compute_threshold)
-            R = exp.compute(sop, Hwfn, scaling_factor=-1.0,screen_thresh=compute_threshold,maxk=maxk)
+            R = exp.compute(sop, Hwfn, scaling_factor=-1.0, screen_thresh=compute_threshold, maxk=maxk)
         elif cc_type == "dcc" or cc_type == "ducc":
-            wfn = exp.compute(sop, ref,screen_thresh=compute_threshold)
+            wfn = exp.compute(sop, ref, screen_thresh=compute_threshold)
             Hwfn = ham.compute(wfn, compute_threshold)
-            R = exp.compute(sop, Hwfn, inverse=True,screen_thresh=compute_threshold)
+            R = exp.compute(sop, Hwfn, inverse=True, screen_thresh=compute_threshold)
         else:
             raise ValueError("Incorrect value for cc_type")
 
@@ -469,7 +433,7 @@ def residual_equations(
         # compute Eavg = <Psi|H|Psi> = <ref|U^+ H U|ref>
         for d, c in ref.items():
             energy += c * R[d]
-        # compute Eproj = <ref|H|Psi> / <ref|Psi> = <ref|H U|ref> / <ref|U|ref> 
+        # compute Eproj = <ref|H|Psi> / <ref|Psi> = <ref|H U|ref> / <ref|U|ref>
         for d, c in ref.items():
             energy_proj += c * Hwfn[d] / c0
         # compute R = <exc|U^+ H U|ref>
@@ -486,10 +450,11 @@ def residual_equations(
             energy_proj += c * Hwfn[d] / c0
         # compute R = <exc|H U|ref> - E_proj <exc|U|ref>
         for d, c in wfn.items():
-            Hwfn[d] -= c * energy_proj  
+            Hwfn[d] -= c * energy_proj
         residual = forte.get_projection(op, ref, Hwfn)
 
     return (residual, energy, energy_proj)
+
 
 class DIIS:
     """A class that implements DIIS for CC theory 
@@ -498,7 +463,7 @@ class DIIS:
     ----------
     diis_start : int
         Start the iterations when the DIIS dimension is greather than this parameter (default = 3)
-    """  
+    """
     def __init__(self, t, diis_start=3):
         self.t_diis = [t]
         self.e_diis = []
