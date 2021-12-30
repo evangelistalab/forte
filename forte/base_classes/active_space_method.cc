@@ -262,7 +262,11 @@ std::unique_ptr<ActiveSpaceMethod> make_active_space_method(
             state, nroot, mo_space_info, as_ints,
             std::make_unique<ProjectorCI>(state, nroot, scf_info, options, mo_space_info, as_ints));
     } else {
-        throw psi::PSIEXCEPTION("make_active_space_method: type = " + type + " was not recognized");
+        std::string msg = "make_active_space_method: type = " + type + " was not recognized";
+        if (type == "") {
+            msg += "\nPlease specify the active space method via the appropriate option.";
+        }
+        throw psi::PSIEXCEPTION(msg);
     }
 
     // read options

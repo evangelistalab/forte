@@ -1,22 +1,12 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-import math
 import forte
 import pytest
 
 
 def det(s):
     return forte.det(s)
-    # for k, c in enumerate(s):
-    #     if c == '+':
-    #         d.create_alfa_bit(k)
-    #     elif c == '-':
-    #         d.create_beta_bit(k)
-    #     elif c == '2':
-    #         d.create_alfa_bit(k)
-    #         d.create_beta_bit(k)
-    # return d
 
 
 def test_det_constructors():

@@ -42,6 +42,12 @@ void export_ForteIntegrals(py::module& m) {
         .def("rotate_orbitals", &ForteIntegrals::rotate_orbitals, "Rotate MOs during contructor")
         .def("nmo", &ForteIntegrals::nmo, "Return the total number of moleuclar orbitals")
         .def("ncmo", &ForteIntegrals::ncmo, "Return the number of correlated orbitals")
+        .def("frozen_core_energy", &ForteIntegrals::frozen_core_energy,
+             "Return the frozen core energy")
+        .def("nuclear_repulsion_energy", &ForteIntegrals::nuclear_repulsion_energy,
+             "Return the nuclear repulsion energy")
+        .def("scalar", &ForteIntegrals::scalar, "Return the scalar component of the Hamiltonian")
+        .def("ncmo", &ForteIntegrals::ncmo, "Return the number of correlated orbitals")
         .def(
             "oei_a_block",
             [](ForteIntegrals& ints, const std::vector<size_t>& p, const std::vector<size_t>& q) {

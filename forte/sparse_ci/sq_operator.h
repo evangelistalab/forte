@@ -106,6 +106,8 @@ class SQOperator {
     std::string str() const;
     /// @return a latex representation of this operator
     std::string latex() const;
+    /// @return a sq_operator that is thea djoint of this operator
+    SQOperator adjoint() const;
 
   private:
     /// a numerical coefficient associated with this product of sq operators

@@ -54,9 +54,12 @@ double FCIVector::h2_aabb_timer = 0.0;
 double FCIVector::h2_bbbb_timer = 0.0;
 
 void FCIVector::allocate_temp_space(std::shared_ptr<StringLists> lists_, int print_) {
-    // TODO Avoid allocating and deallocating these temp
-
     size_t nirreps = lists_->nirrep();
+
+    // if C1 is already allocated (e.g., because we computed several roots) make sure
+    // we do not allocate a matrix of smaller size. So let's find out the size of the current C1
+    size_t current_maxC1 = C1 ? C1->rowdim() : 0;
+
     size_t maxC1 = 0;
     for (size_t Ia_sym = 0; Ia_sym < nirreps; ++Ia_sym) {
         maxC1 = std::max(maxC1, lists_->alfa_graph()->strpi(Ia_sym));
@@ -66,8 +69,10 @@ void FCIVector::allocate_temp_space(std::shared_ptr<StringLists> lists_, int pri
     }
 
     // Allocate the temporary arrays C1 and Y1 with the largest sizes
-    C1 = std::make_shared<psi::Matrix>("C1", maxC1, maxC1);
-    Y1 = std::make_shared<psi::Matrix>("Y1", maxC1, maxC1);
+    if (maxC1 > current_maxC1) {
+        C1 = std::make_shared<psi::Matrix>("C1", maxC1, maxC1);
+        Y1 = std::make_shared<psi::Matrix>("Y1", maxC1, maxC1);
+    }
 
     if (print_)
         outfile->Printf("\n  Allocating memory for the Hamiltonian algorithm. "

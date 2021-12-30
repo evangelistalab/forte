@@ -188,4 +188,8 @@ std::string SQOperator::latex() const {
     return s;
 }
 
+SQOperator SQOperator::adjoint() const {
+    return SQOperator(coefficient_, ann_, cre_);
+}
+
 } // namespace forte

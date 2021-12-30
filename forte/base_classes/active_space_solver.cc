@@ -92,6 +92,7 @@ const std::map<StateInfo, std::vector<double>>& ActiveSpaceSolver::compute_energ
             psi::outfile->Printf("\n  Continue to the next symmetry block: No need to find the "
                                  "solution for ms = %d / 2 < 0.",
                                  twice_ms);
+            method->set_wfn_filename(""); // empty filename for ms < 0
             continue;
         }
 
@@ -211,6 +212,10 @@ void ActiveSpaceSolver::compute_fosc_same_orbs() {
             const auto& state2 = states[N];
             size_t nroot2 = state_nroots_map_[state2];
             const auto& method2 = state_method_map_[state2];
+
+            // skip negative ms if doing ms averaging
+            if (ms_avg_ and (state1.twice_ms() < 0 or state2.twice_ms() < 0))
+                continue;
 
             // skip different multiplicity (no spin-orbit coupling)
             if (state1.multiplicity() != state2.multiplicity()) {

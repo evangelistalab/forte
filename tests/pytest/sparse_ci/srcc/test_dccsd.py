@@ -20,7 +20,13 @@ def test_ccsd():
     scf_energy, psi4_wfn = forte.utils.psi4_scf(geom, basis='DZ', reference='RHF')
     forte_objs = forte.utils.prepare_forte_objects(psi4_wfn, mo_spaces={})
     calc_data = scc.run_cc(
-        forte_objs[1], forte_objs[2], forte_objs[3], cc_type='dcc', max_exc=2, e_convergence=1.0e-11, on_the_fly=True
+        forte_objs['as_ints'],
+        forte_objs['scf_info'],
+        forte_objs['mo_space_info'],
+        cc_type='dcc',
+        max_exc=2,
+        e_convergence=1.0e-11,
+        on_the_fly=True
     )
 
     psi4.core.clean()

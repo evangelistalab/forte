@@ -36,7 +36,7 @@ namespace forte {
 
 void SA_MRDSRG::diis_manager_init() {
     diis_manager_ = std::make_shared<DIISManager>(diis_max_vec_, "SA_MRDSRG DIIS",
-                                                  DIISManager::LargestError, DIISManager::OnDisk);
+                                                  DIISManager::RemovalPolicy::LargestError, DIISManager::StoragePolicy::OnDisk);
 
     amp_ptrs_.clear();
     res_ptrs_.clear();
@@ -60,21 +60,21 @@ void SA_MRDSRG::diis_manager_init() {
     }
 
     diis_manager_->set_error_vector_size(
-        18, DIISEntry::Pointer, sizes[0], DIISEntry::Pointer, sizes[1], DIISEntry::Pointer,
-        sizes[2], DIISEntry::Pointer, sizes[3], DIISEntry::Pointer, sizes[4], DIISEntry::Pointer,
-        sizes[5], DIISEntry::Pointer, sizes[6], DIISEntry::Pointer, sizes[7], DIISEntry::Pointer,
-        sizes[8], DIISEntry::Pointer, sizes[9], DIISEntry::Pointer, sizes[10], DIISEntry::Pointer,
-        sizes[11], DIISEntry::Pointer, sizes[12], DIISEntry::Pointer, sizes[13], DIISEntry::Pointer,
-        sizes[14], DIISEntry::Pointer, sizes[15], DIISEntry::Pointer, sizes[16], DIISEntry::Pointer,
+        18, DIISEntry::InputType::Pointer, sizes[0], DIISEntry::InputType::Pointer, sizes[1], DIISEntry::InputType::Pointer,
+        sizes[2], DIISEntry::InputType::Pointer, sizes[3], DIISEntry::InputType::Pointer, sizes[4], DIISEntry::InputType::Pointer,
+        sizes[5], DIISEntry::InputType::Pointer, sizes[6], DIISEntry::InputType::Pointer, sizes[7], DIISEntry::InputType::Pointer,
+        sizes[8], DIISEntry::InputType::Pointer, sizes[9], DIISEntry::InputType::Pointer, sizes[10], DIISEntry::InputType::Pointer,
+        sizes[11], DIISEntry::InputType::Pointer, sizes[12], DIISEntry::InputType::Pointer, sizes[13], DIISEntry::InputType::Pointer,
+        sizes[14], DIISEntry::InputType::Pointer, sizes[15], DIISEntry::InputType::Pointer, sizes[16], DIISEntry::InputType::Pointer,
         sizes[17]);
 
     diis_manager_->set_vector_size(
-        18, DIISEntry::Pointer, sizes[0], DIISEntry::Pointer, sizes[1], DIISEntry::Pointer,
-        sizes[2], DIISEntry::Pointer, sizes[3], DIISEntry::Pointer, sizes[4], DIISEntry::Pointer,
-        sizes[5], DIISEntry::Pointer, sizes[6], DIISEntry::Pointer, sizes[7], DIISEntry::Pointer,
-        sizes[8], DIISEntry::Pointer, sizes[9], DIISEntry::Pointer, sizes[10], DIISEntry::Pointer,
-        sizes[11], DIISEntry::Pointer, sizes[12], DIISEntry::Pointer, sizes[13], DIISEntry::Pointer,
-        sizes[14], DIISEntry::Pointer, sizes[15], DIISEntry::Pointer, sizes[16], DIISEntry::Pointer,
+        18, DIISEntry::InputType::Pointer, sizes[0], DIISEntry::InputType::Pointer, sizes[1], DIISEntry::InputType::Pointer,
+        sizes[2], DIISEntry::InputType::Pointer, sizes[3], DIISEntry::InputType::Pointer, sizes[4], DIISEntry::InputType::Pointer,
+        sizes[5], DIISEntry::InputType::Pointer, sizes[6], DIISEntry::InputType::Pointer, sizes[7], DIISEntry::InputType::Pointer,
+        sizes[8], DIISEntry::InputType::Pointer, sizes[9], DIISEntry::InputType::Pointer, sizes[10], DIISEntry::InputType::Pointer,
+        sizes[11], DIISEntry::InputType::Pointer, sizes[12], DIISEntry::InputType::Pointer, sizes[13], DIISEntry::InputType::Pointer,
+        sizes[14], DIISEntry::InputType::Pointer, sizes[15], DIISEntry::InputType::Pointer, sizes[16], DIISEntry::InputType::Pointer,
         sizes[17]);
 }
 

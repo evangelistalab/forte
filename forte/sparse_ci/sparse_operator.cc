@@ -139,4 +139,12 @@ std::string SparseOperator::latex() const {
     }
     return join(v, " ");
 }
+
+SparseOperator SparseOperator::adjoint() const {
+    auto adjoint_operator = SparseOperator(antihermitian_);
+    for (const SQOperator& sqop : op_list_) {
+        adjoint_operator.add_term(sqop.adjoint());
+    }
+    return adjoint_operator;
+}
 } // namespace forte

@@ -357,6 +357,28 @@ def test_sparse_operator():
     wfn = forte.apply_operator(sop, ref)
     assert wfn[det("+20-")] == pytest.approx(-1.0, abs=1e-9)
 
+    ### Adjoint tests
+    # test adjoint of SqOperator is idempotent
+    sqop = forte.SQOperator(1, det("2+0"), det("002"))
+    sqopd = sqop.adjoint()
+    sqopdd = sqopd.adjoint()
+    assert sqop.str() == sqopdd.str()
+    # test adjoint of SqOperator
+    ref = forte.SQOperator(1, det("002"), det("2+0"))
+    assert sqopd.str() == ref.str()
+    # test adjoint of SparseOperator is idempotent
+    sop = forte.SparseOperator()
+    sop.add_term_from_str('[3a+ 0a-]', 1.0)
+    sop.add_term_from_str('[2b+ 1b-]', 1.0)
+    sopd = sop.adjoint()
+    sopdd = sopd.adjoint()
+    assert sop.str() == sopdd.str()
+    # test adjoint of SparseOperator
+    ref = forte.SparseOperator()
+    ref.add_term_from_str('[0a+ 3a-]', 1.0)
+    ref.add_term_from_str('[1b+ 2b-]', 1.0)
+    assert sopd.str() == ref.str()
+
 
 if __name__ == "__main__":
     test_sparse_operator()
