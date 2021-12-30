@@ -518,8 +518,8 @@ void RDMs::reset_built_flags() {
     }
 }
 
-double compute_Eref_from_rdms(RDMs& ref, const std::shared_ptr<ForteIntegrals>& ints,
-                              const std::shared_ptr<MOSpaceInfo>& mo_space_info) {
+double compute_Eref_from_rdms(RDMs& ref, std::shared_ptr<ForteIntegrals> ints,
+                              std::shared_ptr<MOSpaceInfo> mo_space_info) {
     // similar to MASTER_DSRG::compute_reference_energy_from_ints (use Fock and cumulants)
     // here I form two density and directly use bare Hamiltonian
     double E = ints->nuclear_repulsion_energy() + ints->frozen_core_energy();
