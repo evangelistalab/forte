@@ -75,6 +75,7 @@ void SA_MRDSRG::read_options() {
     r_conv_ = foptions_->get_double("R_CONVERGENCE");
 
     restart_amps_ = foptions_->get_bool("DSRG_RESTART_AMPS");
+    t1_guess_ = foptions_->get_str("DSRG_T1_AMPS_GUESS");
 }
 
 void SA_MRDSRG::startup() {
@@ -130,11 +131,12 @@ void SA_MRDSRG::print_options() {
         {"Integral type", ints_type_},
         {"Source operator", source_},
         {"Reference relaxation", relax_ref_},
-        {"Core-Virtual source type", ccvv_source_}};
+        {"Core-Virtual source type", ccvv_source_},
+        {"T1 amplitudes initial guess", t1_guess_}};
 
     if (internal_amp_ != "NONE") {
-        calculation_info_string.push_back({"Internal amplitudes levels", internal_amp_});
-        calculation_info_string.push_back({"Internal amplitudes selection", internal_amp_select_});
+        calculation_info_string.emplace_back("Internal amplitudes levels", internal_amp_);
+        calculation_info_string.emplace_back("Internal amplitudes selection", internal_amp_select_);
     }
 
     std::vector<std::pair<std::string, bool>> calculation_info_bool{

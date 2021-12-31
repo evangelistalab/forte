@@ -32,7 +32,7 @@
 namespace forte {
 
 LBFGS_PARAM::LBFGS_PARAM() {
-    // set dedfault values
+    // set default values
     print = 1;
     m = 6;
     epsilon = 1.0e-5;

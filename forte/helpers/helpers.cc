@@ -82,16 +82,29 @@ psi::SharedMatrix tensor_to_matrix(ambit::Tensor t) {
 }
 
 psi::SharedMatrix tensor_to_matrix(ambit::Tensor t, psi::Dimension dims) {
-    auto M = tensor_to_matrix(t);
+    if (t.dims().size() != 2) {
+        throw std::runtime_error("Unable to convert: Tensor rank is not 2!");
+    }
 
+    if (t.dim(0) != t.dim(1)) {
+        throw std::runtime_error("Unable to convert: Not square matrix!");
+    }
+
+    auto n = static_cast<size_t>(dims.sum());
+    if (n != t.dim(0) or n != t.dim(1)) {
+        throw std::runtime_error("Unable to convert: Dimension mismatch!");
+    }
+
+    auto& t_data = t.data();
     auto M_sym = std::make_shared<psi::Matrix>("M", dims, dims);
 
-    size_t offset = 0;
-    for (size_t h = 0; h < static_cast<size_t>(dims.n()); ++h) {
-        for (size_t p = 0; p < static_cast<size_t>(dims[h]); ++p) {
-            for (size_t q = 0; q < static_cast<size_t>(dims[h]); ++q) {
-                double value = M->get(p + offset, q + offset);
-                M_sym->set(h, p, q, value);
+    auto nirrep = static_cast<size_t>(dims.n());
+    for (size_t h = 0, offset = 0; h < nirrep; ++h) {
+        auto size = static_cast<size_t>(dims[h]);
+        for (size_t p = 0; p < size; ++p) {
+            auto np = p + offset;
+            for (size_t q = 0; q < size; ++q) {
+                M_sym->set(h, p, q, t_data[np * n + q + offset]);
             }
         }
         offset += dims[h];

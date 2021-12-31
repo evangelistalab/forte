@@ -80,6 +80,17 @@ void FCISolver::set_collapse_per_root(int value) { collapse_per_root_ = value; }
 
 void FCISolver::set_subspace_per_root(int value) { subspace_per_root_ = value; }
 
+psi::SharedMatrix FCISolver::ci_wave_functions() {
+    if (eigen_vecs_ == nullptr)
+        return std::make_shared<psi::Matrix>();
+
+    auto evecs = std::make_shared<psi::Matrix>("FCI Eigenvectors", eigen_vecs_->ncol(), nroot_);
+    for (int i = 0, size = static_cast<int>(nroot_); i < size; ++i) {
+        evecs->set_column(0, i, eigen_vecs_->get_row(0, i));
+    }
+    return evecs;
+}
+
 void FCISolver::startup() {
     // Create the string lists
     lists_ = std::shared_ptr<StringLists>(

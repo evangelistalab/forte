@@ -577,7 +577,7 @@ def mr_dsrg_pt2(job_type, forte_objects, ints, options):
 
     rdms = ci.compute_average_rdms(state_weights_map, max_rdm_level)
     semi = forte.SemiCanonical(mo_space_info, ints, options)
-    semi.semicanonicalize(rdms, max_rdm_level)
+    semi.semicanonicalize(rdms)
 
     mcsrgpt2_mo = forte.MCSRGPT2_MO(rdms, options, ints, mo_space_info)
     energy = mcsrgpt2_mo.compute_energy()

@@ -188,8 +188,32 @@ std::vector<std::pair<size_t, size_t>> MOSpaceInfo::relative_mo(const std::strin
     return result;
 }
 
+bool MOSpaceInfo::contained_in_space(const std::string& space, const std::string& composite_space) const {
+    if (composite_spaces_.count(space) * composite_spaces_.count(composite_space) == 0) {
+        std::string msg = "\n  MOSpaceInfo::contained_in_space - space " + space +
+                          " or composite space " + composite_space + " is not defined.";
+        throw psi::PSIEXCEPTION(msg);
+    }
+
+    std::unordered_set<std::string> composite_spaces(composite_spaces_.at(composite_space).begin(),
+                                                     composite_spaces_.at(composite_space).end());
+    for (const std::string& s : composite_spaces_.at(space)) {
+        if (composite_spaces.find(s) == composite_spaces.end()) {
+            return false;
+        }
+    }
+    return true;
+}
+
 std::vector<size_t> MOSpaceInfo::pos_in_space(const std::string& space,
                                               const std::string& composite_space) {
+    // make sure that space is contained in composite_space
+    if (not contained_in_space(space, composite_space)) {
+        std::string msg = "\n  MOSpaceInfo::pos_in_space - space " + space +
+                          " is not contained in composite space " + composite_space + " .";
+        throw psi::PSIEXCEPTION(msg);
+    }
+
     std::vector<size_t> result;
     if (composite_spaces_.count(space) * composite_spaces_.count(composite_space) == 0) {
         std::string msg = "\n  MOSpaceInfo::pos_in_space - space " + space +
@@ -228,7 +252,7 @@ psi::Slice MOSpaceInfo::range(const std::string& space) {
         throw psi::PSIEXCEPTION(msg.c_str());
     }
 
-    // make sure the elmentary spaces in composite space are consecutive
+    // make sure the elementary spaces in composite space are consecutive
     int start = std::find(elementary_spaces_.begin(), elementary_spaces_.end(),
                           composite_spaces_.at(space)[0]) -
                 elementary_spaces_.begin();
@@ -430,6 +454,19 @@ std::pair<SpaceInfo, bool> MOSpaceInfo::read_mo_space(const std::string& space,
     }
     SpaceInfo space_info(space_dim, vec_mo_info);
     return std::make_pair(space_info, read);
+}
+
+std::vector<std::string> MOSpaceInfo::nonzero_gas_spaces() const {
+    std::vector<std::string> nonzero_gas;
+
+    auto gas_spaces = composite_space_names()["ACTIVE"];
+    for (const std::string& gas_name : gas_spaces) {
+        if (size(gas_name) != 0) {
+            nonzero_gas.push_back(gas_name);
+        }
+    }
+
+    return nonzero_gas;
 }
 
 std::pair<SpaceInfo, bool> MOSpaceInfo::read_mo_space_from_map(

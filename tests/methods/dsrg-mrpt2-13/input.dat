@@ -1,4 +1,4 @@
-#! Generated using commit GITCOMMIT
+# test DSRG-MRPT2 size consistency on N2
 
 import forte
 

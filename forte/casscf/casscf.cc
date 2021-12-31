@@ -312,11 +312,11 @@ double CASSCF::compute_energy() {
     ints_->wfn()->Ca()->copy(Ca);
 
     // semicanonicalize
-    if (options_->get_str("CASSCF_FINAL_ORBITAL") != "UNSPECIFIED" or
-        options_->get_str("DERTYPE") == "FIRST") {
+    auto final_orbital_type = options_->get_str("CASSCF_FINAL_ORBITAL");
+    if (final_orbital_type != "UNSPECIFIED" or options_->get_str("DERTYPE") == "FIRST") {
 
         SemiCanonical semi(mo_space_info_, ints_, options_);
-        semi.semicanonicalize(cas_ref_, 1, true, false);
+        semi.semicanonicalize(cas_ref_, true, final_orbital_type == "NATURAL", false);
 
         auto U = semi.Ua();
 
@@ -359,7 +359,7 @@ void CASSCF::diagonalize_hamiltonian() {
     gamma1_("ij") += cas_ref_.g1b()("ij");
 
     // Compute 2-RDM
-    gamma2_ = cas_ref_.SFg2();
+    gamma2_ = cas_ref_.SF_G2();
 }
 
 std::shared_ptr<psi::Matrix> CASSCF::set_frozen_core_orbitals() {

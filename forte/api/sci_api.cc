@@ -129,6 +129,7 @@ void export_Determinant(py::module& m) {
         .def(py::init<const det_hashvec&>())
         .def("add", &DeterminantHashVec::add, "Add a determinant")
         .def("size", &DeterminantHashVec::size, "Get the size of the vector")
+        .def("determinants", &DeterminantHashVec::determinants, "Return a vector of Determinants")
         .def("get_det", &DeterminantHashVec::get_det, "Return a specific determinant by reference")
         .def("get_idx", &DeterminantHashVec::get_idx, " Return the index of a determinant");
 

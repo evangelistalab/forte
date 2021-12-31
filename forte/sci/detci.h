@@ -43,6 +43,9 @@ class DETCI : public ActiveSpaceMethod {
                                       std::shared_ptr<ActiveSpaceMethod> method2,
                                       int max_rdm_level) override;
 
+    /// Return the CI wave functions for current state symmetry
+    psi::SharedMatrix ci_wave_functions() override { return evecs_; }
+
     /// Set options override
     void set_options(std::shared_ptr<ForteOptions> options) override;
 
@@ -115,7 +118,7 @@ class DETCI : public ActiveSpaceMethod {
     int nsubspace_per_root_;
 
     /// Diagonalize the Hamiltonian
-    void diagoanlize_hamiltonian();
+    void diagonalize_hamiltonian();
     /// Prepare Davidson-Liu solver
     std::shared_ptr<SparseCISolver> prepare_ci_solver();
     /// Algorithm to build sigma vector

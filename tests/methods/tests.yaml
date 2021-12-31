@@ -67,6 +67,8 @@ casscf:
    short:
       - casscf-7
       - df-casscf-1
+      - df-casscf-2-rdm
+      - df-casscf-3-edge
       - casscf-fcidump-1
       - casscf-gradient-1
       - casscf-gradient-3

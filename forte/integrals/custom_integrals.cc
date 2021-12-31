@@ -328,7 +328,7 @@ CustomIntegrals::make_fock_inactive(psi::Dimension dim_start, psi::Dimension dim
     }
 
     return {Fock_a, Fock_b, e_closed};
-};
+}
 
 std::tuple<psi::SharedMatrix, psi::SharedMatrix>
 CustomIntegrals::make_fock_active(ambit::Tensor Da, ambit::Tensor Db) {
@@ -365,7 +365,7 @@ CustomIntegrals::make_fock_active(ambit::Tensor Da, ambit::Tensor Db) {
     }
 
     return make_fock_active_unrestricted(g1a, g1b);
-};
+}
 
 psi::SharedMatrix CustomIntegrals::make_fock_active_restricted(psi::SharedMatrix D) {
     auto g1a = D->clone();

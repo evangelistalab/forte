@@ -252,7 +252,7 @@ def register_active_space_solver_options(options):
 
     options.add_bool("READ_ACTIVE_WFN_GUESS", False, "Read CI wave function of ActiveSpaceSolver from disk")
 
-    options.add_bool("TRANSITION_DIPOLES", False, "Compute the transition dipole momemnts and oscillator strengths")
+    options.add_bool("TRANSITION_DIPOLES", False, "Compute the transition dipole moments and oscillator strengths")
 
 
 def register_pt2_options(options):
@@ -570,7 +570,6 @@ def register_integral_options(options):
         'The number of singly occupied orbitals assumed for a FCIDUMP file. This information is used to build orbital energies.'
     )
 
-    options.add_double("INTEGRAL_SCREENING", 1.0e-12, "The screening threshold for JK builds and DF libraries")
     options.add_double("CHOLESKY_TOLERANCE", 1.0e-6, "The tolerance for cholesky integrals")
     options.add_double("INTS_TOLERANCE", 1.0e-12, "The tolerance for cholesky integrals")
     options.add_bool("PRINT_INTS", False, "Print the one- and two-electron integrals?")
@@ -735,15 +734,18 @@ def register_dsrg_options(options):
 
     options.add_int("DSRG_DIIS_FREQ", 1, "Frequency of extrapolating error vectors for DSRG DIIS")
 
-    options.add_int("DSRG_DIIS_MIN_VEC", 2, "Minimum size of DIIS vectors")
+    options.add_int("DSRG_DIIS_MIN_VEC", 3, "Minimum size of DIIS vectors")
 
-    options.add_int("DSRG_DIIS_MAX_VEC", 6, "Maximum size of DIIS vectors")
+    options.add_int("DSRG_DIIS_MAX_VEC", 8, "Maximum size of DIIS vectors")
 
     options.add_bool("DSRG_RESTART_AMPS", True, "Restart DSRG amplitudes from a previous step")
 
     options.add_bool("DSRG_READ_AMPS", False, "Read initial amplitudes from the current directory")
 
     options.add_bool("DSRG_DUMP_AMPS", False, "Dump converged amplitudes to the current directory")
+
+    options.add_str("DSRG_T1_AMPS_GUESS", "PT2", ["PT2", "ZERO"],
+                    "The initial guess of T1 amplitudes for nonperturbative DSRG methods")
 
 
 def register_dwms_options(options):
@@ -808,9 +810,9 @@ def register_casscf_options(options):
 
     options.add_int("CASSCF_MAXITER", 100, "The maximum number of CASSCF macro iterations")
 
-    options.add_int("CASSCF_MICRO_MAXITER", 50, "The maximum number of CASSCF micro iterations")
+    options.add_int("CASSCF_MICRO_MAXITER", 40, "The maximum number of CASSCF micro iterations")
 
-    options.add_int("CASSCF_MICRO_MINITER", 15, "The minimum number of CASSCF micro iterations")
+    options.add_int("CASSCF_MICRO_MINITER", 6, "The minimum number of CASSCF micro iterations")
 
     options.add_int("CPSCF_MAXITER", 50, "Max iteration of solving coupled perturbed SCF equation")
 
@@ -860,16 +862,19 @@ def register_casscf_options(options):
 
     options.add_bool("RESTRICTED_DOCC_JK", True, "Use JK builder for restricted docc (EXPERT)?")
 
-    options.add_double("CASSCF_MAX_ROTATION", 0.5, "Max value in orbital update vector")
+    options.add_double("CASSCF_MAX_ROTATION", 0.2, "Max value in orbital update vector")
+
+    options.add_str("CASSCF_ORB_ORTHO_TRANS", "CAYLEY", ["CAYLEY", "POWER", "PADE"],
+                    "Ways to compute the orthogonal transformation U from orbital rotation R")
 
     options.add_str(
         "ORB_ROTATION_ALGORITHM", "DIAGONAL", ["DIAGONAL", "AUGMENTED_HESSIAN"], "Orbital rotation algorithm"
     )
 
     options.add_bool("CASSCF_DO_DIIS", True, "Use DIIS in CASSCF orbital optimization")
-    options.add_int("CASSCF_DIIS_MIN_VEC", 2, "Minimum size of DIIS vectors for orbital rotations")
+    options.add_int("CASSCF_DIIS_MIN_VEC", 3, "Minimum size of DIIS vectors for orbital rotations")
     options.add_int("CASSCF_DIIS_MAX_VEC", 8, "Maximum size of DIIS vectors for orbital rotations")
-    options.add_int("CASSCF_DIIS_START", 2, "Iteration number to start adding error vectors (< 1 will not do DIIS)")
+    options.add_int("CASSCF_DIIS_START", 15, "Iteration number to start adding error vectors (< 1 will not do DIIS)")
     options.add_int("CASSCF_DIIS_FREQ", 1, "How often to do DIIS extrapolation")
     options.add_double("CASSCF_DIIS_NORM", 1e-3, "Do DIIS when the orbital gradient norm is below this value")
 
@@ -881,9 +886,11 @@ def register_casscf_options(options):
 
     options.add_int_list(
         "CASSCF_ACTIVE_FROZEN_ORBITAL",
-        "A list of active orbitals to be frozen in the casscf optimization (in Pitzer order,"
+        "A list of active orbitals to be frozen in the MCSCF optimization (in Pitzer order,"
         " zero based). Useful when doing core-excited state computations."
     )
+
+    options.add_bool("CASSCF_DIE_IF_NOT_CONVERGED", True, "Stop Forte if MCSCF is not converged")
 
 
 def register_old_options(options):
@@ -906,7 +913,13 @@ def register_old_options(options):
     options.add_bool("USE_DMRGSCF", False, "Use the older DMRGSCF algorithm?")
 
     #    /*- Semicanonicalize orbitals -*/
-    options.add_bool("SEMI_CANONICAL", True, "Semicanonicalize orbitals")
+    options.add_bool("SEMI_CANONICAL", True,
+                     "Semicanonicalize orbitals for each elementary orbital space")
+    options.add_bool("SEMI_CANONICAL_MIX_INACTIVE", False,
+                     "Treat frozen and restricted orbitals together for semi-canonicalization")
+    options.add_bool("SEMI_CANONICAL_MIX_ACTIVE", False,
+                     "Treat all GAS orbitals together for semi-canonicalization")
+
     #    /*- Two-particle density cumulant -*/
     options.add_str("TWOPDC", "MK", ["MK", "ZERO"], "The form of the two-particle density cumulant")
     options.add_str("THREEPDC", "MK", ["MK", "MK_DECOMP", "ZERO"], "The form of the three-particle density cumulant")

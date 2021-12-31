@@ -69,15 +69,16 @@ def orbital_projection(ref_wfn, options, mo_space_info):
 
     Return a Forte MOSpaceInfo object
     """
-    # parse the subspace planes for pi orbitals
-    from .aosubspace import parse_subspace_pi_planes
-    pi_planes = parse_subspace_pi_planes(ref_wfn.molecule(), options.get_list("SUBSPACE_PI_PLANES"))
-
-    # Create the AO subspace projector
-    ps = forte.make_aosubspace_projector(ref_wfn, options, pi_planes)
-
-    # Apply the projector to rotate orbitals
     if options.get_bool("AVAS"):
+        # Find the subspace projector
+        # - Parse the subspace planes for pi orbitals
+        from .aosubspace import parse_subspace_pi_planes
+        pi_planes = parse_subspace_pi_planes(ref_wfn.molecule(), options.get_list("SUBSPACE_PI_PLANES"))
+
+        # - Create the AO subspace projector
+        ps = forte.make_aosubspace_projector(ref_wfn, options, pi_planes)
+
+        # Apply the projector to rotate orbitals
         forte.make_avas(ref_wfn, options, ps)
 
     # Create the fragment(embedding) projector and apply to rotate orbitals

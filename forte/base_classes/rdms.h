@@ -31,6 +31,7 @@
 
 #include <vector>
 #include <ambit/tensor.h>
+#include "psi4/libmints/matrix.h"
 
 namespace forte {
 
@@ -113,10 +114,17 @@ class RDMs {
 
     // Spin-free (spin-summed) RDMs
 
+    /// @return the spin-free 1-RDM (see SF_G1_ below)
+    ambit::Tensor SF_G1();
     /// @return the spin-free 2-RDM
-    /// If ms is NOT averaged, G2 will be computed using the definition (see SF_g2_ below).
+    /// If ms is NOT averaged, G2 will be computed using the definition (see SF_G2_ below).
     /// If ms is averaged, G2 will be computed using only g2ab to avoid computing g2aa and g2bb.
-    ambit::Tensor SFg2();
+    ambit::Tensor SF_G2();
+
+    /// @return the spin-free 1-RDM in Psi4 Matrix format (nactv * nactv)
+    std::shared_ptr<psi::Matrix> SF_G1mat();
+    /// @return the spin-free 1-RDM in Psi4 Matrix format (nactvpi * nactvpi)
+    std::shared_ptr<psi::Matrix> SF_G1mat(const psi::Dimension& dim);
 
     // Reduced density cumulants
 
@@ -146,9 +154,16 @@ class RDMs {
 
     // class variables
 
+    /// @return the max RDM level
     size_t max_rdm_level() const { return max_rdm_; }
 
+    /// @return true if averaging over spin Ms
     bool ms_avg() const { return ms_avg_; }
+
+    // class methods
+
+    /// Rotate the current RDMs using the input unitary matrices
+    void rotate(const ambit::Tensor& Ua, const ambit::Tensor& Ub);
 
   protected:
     // ==> Class Data <==
@@ -193,9 +208,12 @@ class RDMs {
     /// The beta-beta-beta 3-RDM
     ambit::Tensor g3bbb_;
 
+    /// Spin-free (spin-summed) 1-RDM defined as
+    /// G1[pq] = g1a[pq] + g1b[pq]
+    ambit::Tensor SF_G1_;
     /// Spin-free (spin-summed) 2-RDM defined as
     /// G2[pqrs] = g2aa[pqrs] + g2ab[pqrs] + g2ab[qpsr] + g2bb[pqrs]
-    ambit::Tensor SF_g2_;
+    ambit::Tensor SF_G2_;
 
     // Reduced density cumulants
 
@@ -214,8 +232,6 @@ class RDMs {
     /// The beta-beta-beta 3-RDC
     ambit::Tensor L3bbb_;
 
-    /// Spin-free (spin-summed) 1-cumulant
-    ambit::Tensor SF_L1_;
     /// Spin-free (spin-summed) 2-cumulant
     ambit::Tensor SF_L2_;
     /// Spin-free (spin-summed) 3-cumulant
@@ -236,15 +252,27 @@ class RDMs {
     /// Was L3bbb built?
     bool have_L3bbb_ = false;
 
-    /// Was SF_L1_ built?
-    bool have_SF_L1_ = false;
+    /// Was SF_G1_ built?
+    bool have_SF_G1_ = false;
+    /// Was SF_G2_ built?
+    bool have_SF_G2_ = false;
+
     /// Was SF_L2_ built?
     bool have_SF_L2_ = false;
     /// Was SF_L3_ built?
     bool have_SF_L3_ = false;
 
-    /// Was SF_g2_ built?
-    bool have_SF_g2_ = false;
+    /// Test if a function is asked for the correct level of RDMs
+    void validate(const size_t& level, const std::string& name,
+                  const bool& must_ms_avg = false) const;
+
+    /// Rotate the current RDMs based on Ms-averaged formalism
+    void rotate_restricted(const ambit::Tensor& Ua);
+    /// Rotate the current RDMs for all spin cases
+    void rotate_unrestricted(const ambit::Tensor& Ua, const ambit::Tensor& Ub);
+
+    /// Reset built cumulants or RDMs
+    void reset_built_flags();
 };
 
 /**
@@ -354,7 +382,6 @@ void make_cumulant_L3bbb_in_place(const ambit::Tensor& g1b, const ambit::Tensor&
  */
 double compute_Eref_from_rdms(RDMs& ref, std::shared_ptr<ForteIntegrals> ints,
                               std::shared_ptr<MOSpaceInfo> mo_space_info);
-
 } // namespace forte
 
-#endif // _reference_h_
+#endif // _rdms_h_

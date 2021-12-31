@@ -171,10 +171,11 @@ void MRDSRG::print_options() {
         {"Adaptive DSRG flow type", foptions_->get_str("SMART_DSRG_S")},
         {"Reference relaxation", relax_ref_},
         {"DSRG transformation type", dsrg_trans_type_},
-        {"Core-Virtual source type", foptions_->get_str("CCVV_SOURCE")}};
+        {"Core-Virtual source type", foptions_->get_str("CCVV_SOURCE")},
+        {"T1 amplitudes initial guess", foptions_->get_str("DSRG_T1_AMPS_GUESS")}};
 
     if (corrlv_string_ == "PT2") {
-        calculation_info_string.push_back({"PT2 0-order Hamiltonian", pt2_h0th_});
+        calculation_info_string.emplace_back("PT2 0-order Hamiltonian", pt2_h0th_);
     }
 
     std::vector<std::pair<std::string, bool>> calculation_info_bool{

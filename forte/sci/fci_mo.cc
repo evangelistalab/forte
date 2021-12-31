@@ -939,6 +939,7 @@ void FCI_MO::Diagonalize_H(const vecdet& p_space, const int& multi, const int& n
         double value = evals->get(i);
         eigen.push_back(std::make_pair(evecs->get_column(0, i), value + energy_offset));
     }
+    spin2_ = sparse_solver.spin();
 
     if (!quiet_) {
         outfile->Printf("  Done. Timing %15.6f s", tdiagH.get());
@@ -2677,6 +2678,16 @@ RDMs FCI_MO::transition_reference(int root1, int root2, bool multi_state, int en
     } else {
         throw psi::PSIEXCEPTION("Max RDM level > 3 or < 1 is not available.");
     }
+}
+
+psi::SharedMatrix FCI_MO::ci_wave_functions() {
+    int nroots = static_cast<int>(eigen_.size());
+    int ndets = static_cast<int>(determinant_.size());
+    auto evecs = std::make_shared<psi::Matrix>("evecs", ndets, nroots);
+    for (int i = 0; i < nroots; ++i) {
+        evecs->set_column(0, i, (eigen_[i]).first);
+    }
+    return evecs;
 }
 
 void FCI_MO::print_det(const vecdet& dets) {

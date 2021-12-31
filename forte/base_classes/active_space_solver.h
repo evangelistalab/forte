@@ -36,6 +36,7 @@
 #include "psi4/libmints/matrix.h"
 
 #include "base_classes/state_info.h"
+#include "sparse_ci/determinant_hashvector.h"
 
 namespace forte {
 
@@ -108,6 +109,9 @@ class ActiveSpaceSolver {
     const std::map<StateInfo, std::vector<double>>& state_energies_map() const {
         return state_energies_map_;
     }
+
+    /// Return a map of StateInfo to the CI wave functions (deterministic determinant space)
+    std::map<StateInfo, psi::SharedMatrix> state_ci_wfn_map() const;
 
     /// Pass a set of ActiveSpaceIntegrals to the solver (e.g. an effective Hamiltonian)
     /// @param as_ints the pointer to a set of acitve-space integrals

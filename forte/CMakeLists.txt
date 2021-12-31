@@ -168,7 +168,6 @@ mrdsrg-spin-adapted/sa_mrdsrg_amps.cc
 mrdsrg-spin-adapted/sa_mrdsrg_diis.cc
 mrdsrg-spin-adapted/sa_mrpt2.cc
 mrdsrg-spin-adapted/sa_mrpt3.cc
-mrdsrg-spin-integrated/active_dsrgpt2.cc
 mrdsrg-spin-integrated/dsrg_mrpt2.cc
 mrdsrg-spin-integrated/dsrg_mrpt2_ms.cc
 mrdsrg-spin-integrated/dsrg_mrpt3.cc
