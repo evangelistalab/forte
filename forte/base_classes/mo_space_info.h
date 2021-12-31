@@ -189,7 +189,7 @@ class MOSpaceInfo {
         return composite_spaces_;
     }
     /// @return The names of nonzero GAS spaces
-    std::vector<std::string> nonzero_gas_spaces();
+    std::vector<std::string> nonzero_gas_spaces() const;
     /// @return The number of orbitals in a space
     size_t size(const std::string& space) const;
     /// @return The psi::Dimension object for space

@@ -456,7 +456,7 @@ std::pair<SpaceInfo, bool> MOSpaceInfo::read_mo_space(const std::string& space,
     return std::make_pair(space_info, read);
 }
 
-std::vector<std::string> MOSpaceInfo::nonzero_gas_spaces() {
+std::vector<std::string> MOSpaceInfo::nonzero_gas_spaces() const {
     std::vector<std::string> nonzero_gas;
 
     auto gas_spaces = composite_space_names()["ACTIVE"];
