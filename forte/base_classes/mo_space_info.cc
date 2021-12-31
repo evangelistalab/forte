@@ -188,16 +188,16 @@ std::vector<std::pair<size_t, size_t>> MOSpaceInfo::relative_mo(const std::strin
     return result;
 }
 
-bool MOSpaceInfo::contained_in_space(const std::string& space, const std::string& composite_space) {
+bool MOSpaceInfo::contained_in_space(const std::string& space, const std::string& composite_space) const {
     if (composite_spaces_.count(space) * composite_spaces_.count(composite_space) == 0) {
         std::string msg = "\n  MOSpaceInfo::contained_in_space - space " + space +
                           " or composite space " + composite_space + " is not defined.";
         throw psi::PSIEXCEPTION(msg);
     }
 
-    std::unordered_set<std::string> composite_spaces(composite_spaces_[composite_space].begin(),
-                                                     composite_spaces_[composite_space].end());
-    for (const std::string& s : composite_spaces_[space]) {
+    std::unordered_set<std::string> composite_spaces(composite_spaces_.at(composite_space).begin(),
+                                                     composite_spaces_.at(composite_space).end());
+    for (const std::string& s : composite_spaces_.at(space)) {
         if (composite_spaces.find(s) == composite_spaces.end()) {
             return false;
         }

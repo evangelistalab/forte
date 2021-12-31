@@ -205,7 +205,7 @@ class MOSpaceInfo {
     /// orbitals in space
     std::vector<std::pair<size_t, size_t>> relative_mo(const std::string& space) const;
     /// @return True if the space is contained in a larger composite space
-    bool contained_in_space(const std::string& space, const std::string& composite_space);
+    bool contained_in_space(const std::string& space, const std::string& composite_space) const;
     /// @return The position of the orbitals in a space in a larger composite space
     std::vector<size_t> pos_in_space(const std::string& space, const std::string& composite_space);
     /// @return The psi::Slice for a space counting started at absolute zero
