@@ -126,7 +126,8 @@ class CustomIntegrals : public ForteIntegrals {
                aptei_idx_ * r + s;
     }
 
-    void update_orbitals(std::shared_ptr<psi::Matrix> Ca, std::shared_ptr<psi::Matrix> Cb) override;
+    void update_orbitals(std::shared_ptr<psi::Matrix> Ca, std::shared_ptr<psi::Matrix> Cb,
+                         bool re_transform = true) override;
 
     // ==> Class private virtual functions <==
     void gather_integrals() override;

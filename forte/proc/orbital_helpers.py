@@ -31,29 +31,29 @@ import forte
 import numpy as np
 
 
-def read_orbitals():
+def read_orbitals(filename='forte_Ca.npz'):
     """ Read orbitals from file. """
-    psi4.core.print_out("\n\n  Forte: Read orbitals from file forte_Ca.npz ...")
+    psi4.core.print_out(f"\n\n  Forte: Read orbitals from file {filename} ...")
     try:
-        Ca_loaded = np.load('forte_Ca.npz')
+        Ca_loaded = np.load(filename)
         nirrep = len(Ca_loaded.files)
         Ca_list = [Ca_loaded[f'arr_{i}'] for i in range(nirrep)]  # to list
         Ca_mat = psi4.core.Matrix.from_array(Ca_list)
         psi4.core.print_out(" Done\n")
         return Ca_mat
     except FileNotFoundError:
-        psi4.core.print_out(f" File NOT found!\n")
+        psi4.core.print_out(f" File {filename} NOT found!\n")
         return None
 
 
-def dump_orbitals(wfn):
+def dump_orbitals(wfn, filename='forte_Ca.npz'):
     """ Dump orbitals to file. """
-    psi4.core.print_out("\n\n  Forte: Dump orbitals to file forte_Ca.npz ...")
+    psi4.core.print_out(f"\n\n  Forte: Dump orbitals to file filename ...")
 
     Ca = wfn.Ca()
     Ca = [Ca.to_array()] if wfn.nirrep() == 1 else Ca.to_array()
 
-    with open('forte_Ca.npz', 'wb') as f:
+    with open(filename, 'wb') as f:
         np.savez_compressed(f, *Ca)
 
     psi4.core.print_out(" Done\n")

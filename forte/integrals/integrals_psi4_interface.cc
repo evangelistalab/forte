@@ -259,7 +259,7 @@ void Psi4Integrals::compute_frozen_one_body_operator() {
 }
 
 void Psi4Integrals::update_orbitals(std::shared_ptr<psi::Matrix> Ca,
-                                    std::shared_ptr<psi::Matrix> Cb) {
+                                    std::shared_ptr<psi::Matrix> Cb, bool re_transform) {
 
     // 1. Copy orbitals and, if necessary, test they meet the spin restriction condition
     Ca_->copy(Ca);
@@ -280,18 +280,20 @@ void Psi4Integrals::update_orbitals(std::shared_ptr<psi::Matrix> Ca,
     wfn_->Cb()->copy(Cb_);
 
     // 3. Re-transform the integrals
-    aptei_idx_ = nmo_;
-    transform_one_electron_integrals();
-    int my_proc = 0;
+    if (re_transform) {
+        aptei_idx_ = nmo_;
+        transform_one_electron_integrals();
+        int my_proc = 0;
 #ifdef HAVE_GA
-    my_proc = GA_Nodeid();
+        my_proc = GA_Nodeid();
 #endif
-    if (my_proc == 0) {
-        local_timer int_timer;
-        outfile->Printf("\n  Integrals are about to be updated.");
-        gather_integrals();
-        freeze_core_orbitals();
-        outfile->Printf("\n  Integrals update took %9.3f s.", int_timer.get());
+        if (my_proc == 0) {
+            local_timer int_timer;
+            outfile->Printf("\n  Integrals are about to be updated.");
+            gather_integrals();
+            freeze_core_orbitals();
+            outfile->Printf("\n  Integrals update took %9.3f s.", int_timer.get());
+        }
     }
 }
 

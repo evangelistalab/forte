@@ -576,7 +576,7 @@ ambit::Tensor DISKDFIntegrals::three_integral_block_two_index(const std::vector<
             });
         }
     } else {
-        outfile->Printf("\n Not implemened for variable size in A");
+        outfile->Printf("\n Not implemented for variable size in A");
         throw psi::PSIEXCEPTION("Can only use if 2nd parameter is a size_t and A.size==nthree_");
     }
     return ReturnTensor;

@@ -329,13 +329,17 @@ class ForteIntegrals {
     /// Rotate the MO coefficients, update psi::Wavefunction, and re-transform integrals
     /// @param Ua the alpha unitary transformation matrix
     /// @param Ub the beta unitary transformation matrix
-    void rotate_orbitals(std::shared_ptr<psi::Matrix> Ua, std::shared_ptr<psi::Matrix> Ub);
+    /// @param re_transform re-transform integrals if true
+    void rotate_orbitals(std::shared_ptr<psi::Matrix> Ua, std::shared_ptr<psi::Matrix> Ub,
+                         bool re_transform = true);
 
     /// Copy these MO coeffs to class variables, update psi::Wavefunction, and re-transform
     /// integrals
     /// @param Ca the alpha MO coefficients
     /// @param Cb the beta MO coefficients
-    virtual void update_orbitals(std::shared_ptr<psi::Matrix> Ca, std::shared_ptr<psi::Matrix> Cb);
+    /// @param re_transform re-transform integrals if true
+    virtual void update_orbitals(std::shared_ptr<psi::Matrix> Ca, std::shared_ptr<psi::Matrix> Cb,
+                                 bool re_transform = true);
 
     /// Make the orbital phase consistent when updating orbitals
     /// @param U the unitary transformation matrix so that C_new = C_old * U
@@ -575,7 +579,8 @@ class Psi4Integrals : public ForteIntegrals {
     void compute_frozen_one_body_operator() override;
     //    void rotate_orbitals(std::shared_ptr<psi::Matrix> Ua, std::shared_ptr<psi::Matrix> Ub)
     //    override;
-    void update_orbitals(std::shared_ptr<psi::Matrix> Ca, std::shared_ptr<psi::Matrix> Cb) override;
+    void update_orbitals(std::shared_ptr<psi::Matrix> Ca, std::shared_ptr<psi::Matrix> Cb,
+                         bool re_transform = true) override;
     void rotate_mos() override;
     std::vector<std::shared_ptr<psi::Matrix>> mo_dipole_ints(const bool& alpha,
                                                              const bool& resort) override;

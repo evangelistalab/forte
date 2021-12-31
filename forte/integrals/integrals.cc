@@ -492,17 +492,17 @@ ForteIntegrals::dipole_ints_mo_helper(std::shared_ptr<psi::Matrix>, psi::SharedV
 }
 
 void ForteIntegrals::rotate_orbitals(std::shared_ptr<psi::Matrix> Ua,
-                                     std::shared_ptr<psi::Matrix> Ub) {
+                                     std::shared_ptr<psi::Matrix> Ub, bool re_transform) {
     // 1. Rotate the orbital coefficients and store them in the ForteIntegral object
     auto Ca_rotated = psi::linalg::doublet(Ca_, Ua);
     auto Cb_rotated = psi::linalg::doublet(Cb_, Ub);
 
-    update_orbitals(Ca_rotated, Cb_rotated);
+    update_orbitals(Ca_rotated, Cb_rotated, re_transform);
 }
 
 // The following functions throw an error by default
 
-void ForteIntegrals::update_orbitals(std::shared_ptr<psi::Matrix>, std::shared_ptr<psi::Matrix>) {
+void ForteIntegrals::update_orbitals(std::shared_ptr<psi::Matrix>, std::shared_ptr<psi::Matrix>, bool) {
     _undefined_function("update_orbitals");
 }
 
