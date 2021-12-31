@@ -48,8 +48,8 @@ class ExcitedStateSolver : public ActiveSpaceMethod {
                        std::shared_ptr<ActiveSpaceIntegrals> as_ints,
                        std::unique_ptr<SelectedCIMethod> sci);
 
-    /// Virtual destructor to enable deletion of a Derived* through a Base*
-    virtual ~ExcitedStateSolver() = default;
+    /// Define a destructor to remove wfn
+    ~ExcitedStateSolver();
 
     // ==> Class Interface <==
 
@@ -81,6 +81,14 @@ class ExcitedStateSolver : public ActiveSpaceMethod {
     /// Set the printing level
     void set_quiet(bool quiet);
 
+    /// Dump temporary wave function to disk
+    void dump_wave_function(const std::string& filename) override;
+
+    /// Read temporary ave function from disk
+    /// Return the number of active orbitals, set of determinants, CI coefficients
+    std::tuple<size_t, std::vector<Determinant>, psi::SharedMatrix>
+    read_wave_function(const std::string& filename) override;
+
   protected:
     DeterminantHashVec final_wfn_;
 
@@ -110,6 +118,8 @@ class ExcitedStateSolver : public ActiveSpaceMethod {
     bool first_iter_roots_ = false;
     /// Do full EN-MRPT2 correction?
     bool full_pt2_ = false;
+    /// Calculate transition dipole?
+    bool transition_dipole_ = false;
 
   private:
     /// Print information about this calculation

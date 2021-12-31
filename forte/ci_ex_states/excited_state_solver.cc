@@ -29,6 +29,7 @@
 #include <fstream>
 #include <iomanip>
 #include <cmath>
+#include <sstream>
 
 #include "psi4/libpsi4util/process.h"
 #include "psi4/libpsi4util/PsiOutStream.h"
@@ -82,6 +83,7 @@ void ExcitedStateSolver::set_options(std::shared_ptr<ForteOptions> options) {
     test_rdms_ = options->get_bool("SCI_TEST_RDMS");
     save_final_wfn_ = options->get_bool("SCI_SAVE_FINAL_WFN");
     first_iter_roots_ = options->get_bool("SCI_FIRST_ITER_ROOTS");
+    transition_dipole_ = options->get_bool("TRANSITION_DIPOLES");
     sparse_solver_ = std::make_shared<SparseCISolver>();
     sparse_solver_->set_parallel(true);
     sparse_solver_->set_force_diag(options->get_bool("FORCE_DIAG_METHOD"));
@@ -206,6 +208,7 @@ double ExcitedStateSolver::compute_energy() {
     multistate_pt2_energy_correction_ = sci_->get_multistate_pt2_energy_correction();
 
     dim = PQ_space.size();
+
     final_wfn_.copy(PQ_space);
     PQ_space.clear();
 
@@ -259,6 +262,11 @@ double ExcitedStateSolver::compute_energy() {
     psi::Process::environment.globals["CURRENT ENERGY"] = root_energy;
     psi::Process::environment.globals["ACI ENERGY"] = root_energy;
     psi::Process::environment.globals["ACI+PT2 ENERGY"] = root_energy_pt2;
+
+    // Dump wavefunction when transition dipole is calculated
+    if (transition_dipole_) {
+        dump_wave_function(wfn_filename_);
+    }
 
     // Save final wave function to a file
     if (save_final_wfn_) {
@@ -369,6 +377,86 @@ void ExcitedStateSolver::compute_multistate(psi::SharedVector& PQ_evals) {
     //    PQ_evals->print();
 }
 
+void ExcitedStateSolver::dump_wave_function(const std::string& filename) {
+    std::ofstream file(filename);
+    file << "# sCI: " << state_.str() << std::endl;
+    file << final_wfn_.size() << " " << nroot_ << std::endl;
+    for (size_t I = 0, Isize = final_wfn_.size(); I < Isize; ++I) {
+        std::string det_str = str(final_wfn_.get_det(I), nact_);
+        file << det_str;
+        for (size_t n = 0; n < nroot_; ++n) {
+            file << ", " << std::scientific << std::setprecision(12) << evecs_->get(I, n);
+        }
+        file << std::endl;
+    }
+    file.close();
+}
+
+std::tuple<size_t, std::vector<Determinant>, psi::SharedMatrix>
+ExcitedStateSolver::read_wave_function(const std::string& filename) {
+    std::string line;
+    std::ifstream file(filename);
+
+    if (not file.is_open()) {
+        psi::outfile->Printf("\n  sCI Error: Failed to open wave function file!");
+        return {0, std::vector<Determinant>(), std::make_shared<psi::Matrix>()};
+    }
+
+    // read first line
+    std::getline(file, line);
+    if (line.find("sCI") == std::string::npos) {
+        psi::outfile->Printf("\n  sCI Error: Wave function file not from a previous sCI!");
+        std::runtime_error("Failed read wave function: file not generated from sCI.");
+    }
+
+    // read second line for number of determinants and number of roots
+    std::getline(file, line);
+    size_t ndets, nroots;
+    std::stringstream ss;
+    ss << line;
+    ss >> ndets >> nroots;
+
+    std::vector<Determinant> det_space;
+    det_space.reserve(ndets);
+    auto evecs = std::make_shared<psi::Matrix>("evecs " + filename, ndets, nroots);
+
+    size_t norbs = 0; // number of active orbitals
+    size_t I = 0;     // index to keep track of determinant
+    std::string delimiter = ", ";
+
+    while (std::getline(file, line)) {
+        // get the determinant, format in file: e.g., |220ab002>
+        size_t next = line.find(delimiter);
+        auto det_str = line.substr(0, next);
+        norbs = det_str.size() - 2;
+
+        // form determinant
+        std::vector<bool> alpha(norbs, false), beta(norbs, false);
+        for (size_t i = 0; i < norbs; ++i) {
+            char x = det_str[i + 1];
+            if (x == '2' or x == '+') {
+                alpha[i] = true;
+            }
+            if (x == '2' or x == '-') {
+                beta[i] = true;
+            }
+        }
+        det_space.emplace_back(alpha, beta);
+
+        size_t last = next + 1, n = 0;
+        while ((next = line.find(delimiter, last)) != std::string::npos) {
+            evecs->set(I, n, std::stod(line.substr(last, next - last)));
+            n++;
+            last = next + 1;
+        }
+        evecs->set(I, n, std::stod(line.substr(last)));
+
+        I++;
+    }
+
+    return {norbs, det_space, evecs};
+}
+
 void ExcitedStateSolver::print_final(DeterminantHashVec& dets, psi::SharedMatrix& PQ_evecs,
                                      psi::SharedVector& PQ_evals, size_t cycle) {
     size_t dim = dets.size();
@@ -435,8 +523,8 @@ void ExcitedStateSolver::print_wfn(DeterminantHashVec& space, std::shared_ptr<ps
                                  str(tmp.get_det(I), nact_).c_str());
         }
         //        state_label = s2_labels[std::round(spins[n].first * 2.0)];
-        //        psi::outfile->Printf("\n\n  Spin state for root %zu: S^2 = %5.6f, S = %5.3f, %s",
-        //        n,
+        //        psi::outfile->Printf("\n\n  Spin state for root %zu: S^2 = %5.6f, S = %5.3f,
+        //        %s", n,
         //                             spins[n].first, spins[n].second, state_label.c_str());
     }
 }
@@ -467,12 +555,104 @@ std::vector<RDMs> ExcitedStateSolver::rdms(const std::vector<std::pair<size_t, s
 }
 
 std::vector<RDMs>
-ExcitedStateSolver::transition_rdms(const std::vector<std::pair<size_t, size_t>>& /*root_list*/,
-                                    std::shared_ptr<ActiveSpaceMethod> /*method2*/,
-                                    int /*max_rdm_level*/) {
-    std::vector<RDMs> refs;
-    throw std::runtime_error("ExcitedStateSolver::transition_rdms is not implemented!");
-    return refs;
+ExcitedStateSolver::transition_rdms(const std::vector<std::pair<size_t, size_t>>& root_list,
+                                    std::shared_ptr<ActiveSpaceMethod> method2, int max_rdm_level) {
+    if (max_rdm_level > 3 || max_rdm_level < 1) {
+        throw std::runtime_error("Invalid max_rdm_level, required 1 <= max_rdm_level <= 3.");
+    }
+
+    // read wave function from method2
+    size_t norbs2;
+    std::vector<Determinant> dets2;
+    psi::SharedMatrix evecs2;
+    std::tie(norbs2, dets2, evecs2) = method2->read_wave_function(method2->wfn_filename());
+
+    if (norbs2 != size_t(nact_)) {
+        throw std::runtime_error("sCI Error: Inconsistent number of active orbitals");
+    }
+
+    size_t nroot2 = evecs2->coldim();
+
+    // combine with current set of determinants
+    DeterminantHashVec dets(dets2);
+    for (const auto& det : final_wfn_) {
+        if (not dets.has_det(det))
+            dets.add(det);
+    }
+
+    // fill in eigen vectors
+    size_t ndets = dets.size();
+    size_t nroots = nroot_ + nroot2;
+    auto evecs = std::make_shared<psi::Matrix>("evecs combined", ndets, nroots);
+
+    for (const auto& det : final_wfn_) {
+        for (size_t n = 0; n < nroot_; ++n) {
+            evecs->set(dets[det], n, evecs_->get(final_wfn_[det], n));
+        }
+    }
+
+    for (size_t I = 0, size = dets2.size(); I < size; ++I) {
+        const auto& det = dets2[I];
+        for (size_t n = 0; n < nroot2; ++n) {
+            evecs->set(dets[det], n + nroot_, evecs2->get(I, n));
+        }
+    }
+
+    // loop over roots and compute the transition RDMs
+    std::vector<RDMs> rdms;
+    for (const auto& roots_pair : root_list) {
+        size_t root1 = roots_pair.first;
+        size_t root2 = roots_pair.second + nroot_;
+
+        CI_RDMS ci_rdms(dets, as_ints_, evecs, root1, root2);
+        ci_rdms.set_print(false);
+
+        // compute 1-RDM
+        auto a = ambit::Tensor::build(ambit::CoreTensor, "TD1a", std::vector<size_t>(2, nact_));
+        auto b = ambit::Tensor::build(ambit::CoreTensor, "TD1b", std::vector<size_t>(2, nact_));
+        auto& a_data = a.data();
+        auto& b_data = b.data();
+
+        ci_rdms.compute_1rdm_op(a_data, b_data);
+
+        if (max_rdm_level == 1) {
+            rdms.emplace_back(a, b);
+        } else {
+            ci_rdms.set_print(true);
+
+            // compute 2-RDM
+            std::vector<size_t> dim4(4, nact_);
+            auto aa = ambit::Tensor::build(ambit::CoreTensor, "TD2aa", dim4);
+            auto ab = ambit::Tensor::build(ambit::CoreTensor, "TD2ab", dim4);
+            auto bb = ambit::Tensor::build(ambit::CoreTensor, "TD2bb", dim4);
+            auto& aa_data = aa.data();
+            auto& ab_data = ab.data();
+            auto& bb_data = bb.data();
+
+            ci_rdms.compute_2rdm_op(aa_data, ab_data, bb_data);
+
+            if (max_rdm_level == 2) {
+                rdms.emplace_back(a, b, aa, ab, bb);
+            } else {
+                // compute 3-RDM
+                std::vector<size_t> dim6(6, nact_);
+                auto aaa = ambit::Tensor::build(ambit::CoreTensor, "TD3aaa", dim6);
+                auto aab = ambit::Tensor::build(ambit::CoreTensor, "TD3aab", dim6);
+                auto abb = ambit::Tensor::build(ambit::CoreTensor, "TD3abb", dim6);
+                auto bbb = ambit::Tensor::build(ambit::CoreTensor, "TD3bbb", dim6);
+                auto& aaa_data = aaa.data();
+                auto& aab_data = aab.data();
+                auto& abb_data = abb.data();
+                auto& bbb_data = bbb.data();
+
+                ci_rdms.compute_3rdm_op(aaa_data, aab_data, abb_data, bbb_data);
+
+                rdms.emplace_back(a, b, aa, ab, bb, aaa, aab, abb, bbb);
+            }
+        }
+    }
+
+    return rdms;
 }
 
 RDMs ExcitedStateSolver::compute_rdms(std::shared_ptr<ActiveSpaceIntegrals> fci_ints,
@@ -603,6 +783,16 @@ void ExcitedStateSolver::save_old_root(DeterminantHashVec& dets, psi::SharedMatr
     old_roots_.push_back(vec);
     if (!quiet_mode_ and nroot_ > 0) {
         psi::outfile->Printf("\n  Number of old roots: %zu", old_roots_.size());
+    }
+}
+
+ExcitedStateSolver::~ExcitedStateSolver() {
+    // remove wave function file if calculated transition dipole
+    if (transition_dipole_) {
+        if (std::remove(wfn_filename_.c_str()) != 0) {
+            psi::outfile->Printf("\n  sCI wave function %s not available.", state_.str().c_str());
+            std::perror("Error when deleting sCI wave function. See output file.");
+        }
     }
 }
 

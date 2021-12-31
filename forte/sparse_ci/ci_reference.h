@@ -114,6 +114,13 @@ class CI_Reference {
     std::vector<std::vector<std::vector<bool>>> build_occ_string(size_t norb, size_t nele,
                                                                  const std::vector<int>& symmetry);
 
+    /// Compute the occupation string for a given number of electrons and orbitals
+    /// Only compute the FCI determinants in a subspace from LUMO-sub_orb to HOMO+sub_orb
+    /// @return nirrep of vector of occupation
+    std::vector<std::vector<std::vector<bool>>>
+    build_occ_string_subspace(size_t norb, size_t nele, const std::vector<int>& symmetry,
+                              size_t sub_orb, std::vector<size_t> eps_idx);
+
     /// Compute the cartesian product of occupation strings
     /// @arg vector of vector of occupation
     /// @return nirrep of vector of occupation

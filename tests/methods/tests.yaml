@@ -16,6 +16,7 @@ aci:
       - aci-18
       - aci_scf-1
       - aci-full-pt2-1
+      - aci-20
    medium:
       - aci-6
       - aci-10
@@ -238,6 +239,8 @@ gasci:
       - gasci-3
       - gasaci-2
       - gasaci-3
+   long:
+      - gasaci-5
 gasscf:
    short:
       - gasscf-1
