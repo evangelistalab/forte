@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2021 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
+ * Copyright (c) 2012-2022 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
  *
  * The copyrights for code used from other parties are included in
  * the corresponding files.
@@ -118,8 +118,8 @@ void DSRG_MEM::print(const std::string& name) {
         throw psi::PSIEXCEPTION(error);
     } else {
         auto avai_xb_pair = to_xb(mem_avai_, 1);
-        psi::outfile->Printf("\n    %-45s %7.2f %2s", "Memory currently available", avai_xb_pair.first,
-                             avai_xb_pair.second.c_str());
+        psi::outfile->Printf("\n    %-45s %7.2f %2s", "Memory currently available",
+                             avai_xb_pair.first, avai_xb_pair.second.c_str());
     }
     psi::outfile->Printf("\n");
 }

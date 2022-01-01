@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2021 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
+ * Copyright (c) 2012-2022 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
  *
  * The copyrights for code used from other parties are included in
  * the corresponding files.
@@ -177,8 +177,8 @@ class ASCI : public SelectedCIMethod {
 
     /// Compute the RDMs
     void compute_rdms(std::shared_ptr<ActiveSpaceIntegrals> fci_ints, DeterminantHashVec& dets,
-                      DeterminantSubstitutionLists& op, psi::SharedMatrix& PQ_evecs, int root1, int root2,
-                      int max_level);
+                      DeterminantSubstitutionLists& op, psi::SharedMatrix& PQ_evecs, int root1,
+                      int root2, int max_level);
 
     void add_bad_roots(DeterminantHashVec& dets);
 

@@ -16,7 +16,6 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 set(TargetOpenMP_FIND_COMPONENTS "CXX")
 
-# cmake_minimum_required(VERSION 3.15 FATAL_ERROR)
 list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)
 
 include(psi4OptionsTools)
@@ -74,7 +73,7 @@ endif()
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-c++1z-extensions") # avoid warnings for C++17
 
 # List of CC files
-pybind11_add_module(forte
+pybind11_add_module(_forte
 api/ambit_api.cc
 api/cube_file_api.cc
 api/integrals_api.cc

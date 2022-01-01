@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2021 by its authors (see COPYING, COPYING.LESSER,
+ * Copyright (c) 2012-2022 by its authors (see COPYING, COPYING.LESSER,
  * AUTHORS).
  *
  * The copyrights for code used from other parties are included in
@@ -96,7 +96,6 @@ void SA_MRPT3::build_ints() {
 
     print_done(t.stop());
 }
-
 
 void SA_MRPT3::init_amps() {
     timer t("Initialize T1 and T2");

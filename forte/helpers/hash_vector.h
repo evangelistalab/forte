@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2021 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
+ * Copyright (c) 2012-2022 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
  *
  * The copyrights for code used from other parties are included in
  * the corresponding files.
@@ -109,7 +109,7 @@ template <class Key, class Hash = std::hash<Key>> class HashVector {
 
     /*- Convertors -*/
     std::vector<Key> toVector() const;
-    std::vector<std::pair<Key,size_t>> toKeyIndex() const;
+    std::vector<std::pair<Key, size_t>> toKeyIndex() const;
     std::unordered_set<Key, Hash> toUnordered_set() const;
 
     class iterator : public std::vector<CINode<Key>>::const_iterator {
@@ -133,7 +133,7 @@ namespace std {
 template <class Key, class Hash> void swap(HashVector<Key, Hash>& a, HashVector<Key, Hash>& b) {
     a.swap(b);
 }
-}
+} // namespace std
 
 template <class Key, class Hash> HashVector<Key, Hash>::HashVector() { this->clear(); }
 
@@ -575,7 +575,8 @@ void HashVector<Key, Hash>::merge(const std::unordered_set<Key, Hash_2>& source)
 
 template <class Key, class Hash>
 void HashVector<Key, Hash>::map_order(const std::vector<size_t>& index_map) {
-    if (current_size == 0) return;
+    if (current_size == 0)
+        return;
     std::vector<CINode<Key>> new_vec;
     new_vec.reserve(this->vec.capacity());
     new_vec.resize(current_size, vec[0]);
@@ -690,12 +691,13 @@ template <class Key, class Hash> std::vector<Key> HashVector<Key, Hash>::toVecto
     return keys;
 }
 
-template <class Key, class Hash> std::vector<std::pair<Key,size_t>> HashVector<Key, Hash>::toKeyIndex() const {
-    std::vector<std::pair<Key,size_t>> key_index_pairs;
+template <class Key, class Hash>
+std::vector<std::pair<Key, size_t>> HashVector<Key, Hash>::toKeyIndex() const {
+    std::vector<std::pair<Key, size_t>> key_index_pairs;
     key_index_pairs.reserve(current_size);
     size_t n = 0;
     for (const Key& k : (*this)) {
-        key_index_pairs.push_back(std::make_pair(k,n));
+        key_index_pairs.push_back(std::make_pair(k, n));
         n++;
     }
     return key_index_pairs;

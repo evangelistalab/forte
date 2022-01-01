@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2021 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
+ * Copyright (c) 2012-2022 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
  *
  * The copyrights for code used from other parties are included in
  * the corresponding files.
@@ -48,13 +48,13 @@ class ActiveSpaceIntegrals;
  * For example:
  *   0.1 * [2a+ 0a-] - 0.5 * [2a+ 0a-] + ...
  *       Term 0            Term 1
- *  
+ *
  *        This class stores operators in each term in the following canonical form
  *            a+_p1 a+_p2 ...  a+_P1 a+_P2 ...   ... a-_Q2 a-_Q1   ... a-_q2 a-_q1
  *            alpha creation   beta creation    beta annihilation  alpha annihilation
- * 
+ *
  *        with indices sorted as
- * 
+ *
  *            (p1 < p2 < ...) (P1 < P2 < ...)  (... > Q2 > Q1) (... > q2 > q1)
  */
 class SparseOperator {
@@ -74,9 +74,9 @@ class SparseOperator {
     ///     creation_i  : bool (true = creation, false = annihilation)
     ///     alpha_i     : bool (true = alpha, false = beta)
     ///     orb_i       : int  (the index of the mo)
-    /// 
-    void add_term(const std::vector<std::tuple<bool, bool, int>>& op_list,
-                  double coefficient = 0.0, bool allow_reordering = false);
+    ///
+    void add_term(const std::vector<std::tuple<bool, bool, int>>& op_list, double coefficient = 0.0,
+                  bool allow_reordering = false);
     /// add a term to this operator
     void add_term(const SQOperator& sqop);
     /// add a term to this operator of the form

@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2021 by its authors (see COPYING, COPYING.LESSER,
+ * Copyright (c) 2012-2022 by its authors (see COPYING, COPYING.LESSER,
  * AUTHORS).
  *
  * The copyrights for code used from other parties are included in
@@ -188,7 +188,8 @@ std::vector<std::pair<size_t, size_t>> MOSpaceInfo::relative_mo(const std::strin
     return result;
 }
 
-bool MOSpaceInfo::contained_in_space(const std::string& space, const std::string& composite_space) const {
+bool MOSpaceInfo::contained_in_space(const std::string& space,
+                                     const std::string& composite_space) const {
     if (composite_spaces_.count(space) * composite_spaces_.count(composite_space) == 0) {
         std::string msg = "\n  MOSpaceInfo::contained_in_space - space " + space +
                           " or composite space " + composite_space + " is not defined.";
