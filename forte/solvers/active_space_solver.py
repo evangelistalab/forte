@@ -1,11 +1,10 @@
 from forte.core import flog
 
 from forte.solvers.solver import Feature, Solver
-
-from forte.forte import ForteOptions
+from forte import ForteOptions
 from forte import to_state_nroots_map
 from forte import forte_options
-from forte.forte import make_active_space_ints, make_active_space_solver
+from forte import make_active_space_ints, make_active_space_solver
 
 
 class ActiveSpaceSolver(Solver):
