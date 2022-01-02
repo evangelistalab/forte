@@ -11,9 +11,6 @@ set(forte_AUTHORS      "Francesco A. Evangelista and Group")
 set(forte_DESCRIPTION  "Quantum Chemistry Methods for Strongly Correlated Electrons plugin to Psi4")
 set(forte_URL          "https://github.com/evangelistalab/forte")
 set(forte_LICENSE      "GPL-3.0+")
-#set(CMAKE_CXX_STANDARD 17)
-#set(CMAKE_CXX_STANDARD_REQUIRED ON)
-#set(CMAKE_CXX_EXTENSIONS OFF)
 set(TargetOpenMP_FIND_COMPONENTS "CXX")
 
 list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)
@@ -234,13 +231,6 @@ if(TARGET CheMPS2::chemps2)
 endif()
 
 target_include_directories(_forte PRIVATE .)
-
-# 64bit implementation
-#if(MAX_DET_ORB)
-#    add_definitions(-DMAX_DET_ORB=${MAX_DET_ORB})
-#else()
-#    add_definitions(-DMAX_DET_ORB=64)
-#endif()
 
 if(ENABLE_MPI)
     target_link_libraries(_forte PRIVATE ${MPI_CXX_LIBRARIES})  # MPI option A
