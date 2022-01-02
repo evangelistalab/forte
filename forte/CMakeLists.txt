@@ -103,7 +103,6 @@ casscf/mcscf_2step.cc
 ci_ex_states/excited_state_solver.cc
 ci_rdm/ci_rdms.cc
 ci_rdm/ci_rdms_dynamic.cc
-dmrg/dmrgscf.cc
 dmrg/dmrgsolver.cc
 fci/binary_graph.cc
 fci/fci_solver.cc

@@ -39,8 +39,6 @@ void DETCI::startup() {
 
     state_label_ = state_.multiplicity_label() + " (Ms = " + get_ms_string(twice_ms_) + ") " +
                    state_.irrep_label();
-
-    set_options(options_);
 }
 
 void DETCI::set_options(std::shared_ptr<ForteOptions> options) {

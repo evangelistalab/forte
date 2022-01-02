@@ -45,7 +45,7 @@ def register_driver_options(options):
     options.add_double("D_CONVERGENCE", 1.0e-6, "The density convergence criterion")
 
     options.add_str(
-        'ACTIVE_SPACE_SOLVER', '', ['FCI', 'ACI', 'PCI', 'DETCI', 'CAS'], 'Active space solver type'
+        'ACTIVE_SPACE_SOLVER', '', ['FCI', 'ACI', 'PCI', 'DETCI', 'CAS', 'DMRG'], 'Active space solver type'
     )  # TODO: why is PCI running even if it is not in this list (Francesco)
     options.add_str(
         'CORRELATION_SOLVER', 'NONE', ['DSRG-MRPT2', 'THREE-DSRG-MRPT2', 'DSRG-MRPT3', 'MRDSRG', 'SA-MRDSRG'],
