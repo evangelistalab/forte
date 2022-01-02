@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2021 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
+ * Copyright (c) 2012-2022 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
  *
  * The copyrights for code used from other parties are included in
  * the corresponding files.
@@ -29,7 +29,6 @@
 #ifndef DMRGSOLVER_H
 #define DMRGSOLVER_H
 
-
 #include "psi4/libmints/wavefunction.h"
 #include "psi4/libfock/jk.h"
 #include "base_classes/rdms.h"
@@ -45,18 +44,15 @@
 #include "chemps2/Initialize.h"
 #include "chemps2/EdmistonRuedenberg.h"
 
-
 namespace forte {
 
 class DMRGSolver {
   public:
-    DMRGSolver(StateInfo state,
-               std::shared_ptr<SCFInfo> scf_info,
-               std::shared_ptr<ForteOptions> options,
-               std::shared_ptr<ForteIntegrals> ints,
+    DMRGSolver(StateInfo state, std::shared_ptr<SCFInfo> scf_info,
+               std::shared_ptr<ForteOptions> options, std::shared_ptr<ForteIntegrals> ints,
                std::shared_ptr<MOSpaceInfo> mo_space_info);
-//    DMRGSolver(psi::SharedWavefunction ref_wfn, psi::Options& options,
-//               std::shared_ptr<MOSpaceInfo> mo_space_info);
+    //    DMRGSolver(psi::SharedWavefunction ref_wfn, psi::Options& options,
+    //               std::shared_ptr<MOSpaceInfo> mo_space_info);
     void compute_energy();
 
     RDMs rdms() { return dmrg_rdms_; }
@@ -98,5 +94,5 @@ class DMRGSolver {
     bool use_user_integrals_ = false;
     void print_natural_orbitals(double* one_rdm);
 };
-}
+} // namespace forte
 #endif // DMRG_H

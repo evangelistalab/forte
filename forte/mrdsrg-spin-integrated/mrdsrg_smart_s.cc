@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2021 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
+ * Copyright (c) 2012-2022 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
  *
  * The copyrights for code used from other parties are included in
  * the corresponding files.
@@ -32,7 +32,6 @@
 
 #include "base_classes/mo_space_info.h"
 #include "mrdsrg.h"
-
 
 namespace forte {
 
@@ -187,4 +186,4 @@ double MRDSRG::smart_s_davg_max_delta1() {
 
     return Edelta;
 }
-}
+} // namespace forte

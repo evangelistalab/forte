@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2021 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
+ * Copyright (c) 2012-2022 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
  *
  * The copyrights for code used from other parties are included in
  * the corresponding files.
@@ -941,15 +941,13 @@ double FCIVector::compute_spin2() {
                 int s_sym = rs_sym ^ r_sym;
 
                 for (int r_rel = 0; r_rel < cmopi_[r_sym]; ++r_rel) {
-                        const int r_abs = r_rel + cmopi_offset_[r_sym];
+                    const int r_abs = r_rel + cmopi_offset_[r_sym];
                     for (int s_rel = 0; s_rel < cmopi_[s_sym]; ++s_rel) {
                         const int s_abs = s_rel + cmopi_offset_[s_sym];
 
                         // Grab list (r,s,Ib_sym)
-                        const auto& vo_alfa =
-                            lists_->get_alfa_vo_list(s_abs, r_abs, Ia_sym);
-                        const auto& vo_beta =
-                            lists_->get_beta_vo_list(r_abs, s_abs, Ib_sym);
+                        const auto& vo_alfa = lists_->get_alfa_vo_list(s_abs, r_abs, Ia_sym);
+                        const auto& vo_beta = lists_->get_beta_vo_list(r_abs, s_abs, Ib_sym);
 
                         const size_t maxSSa = vo_alfa.size();
                         const size_t maxSSb = vo_beta.size();
@@ -957,7 +955,8 @@ double FCIVector::compute_spin2() {
                         for (size_t SSa = 0; SSa < maxSSa; ++SSa) {
                             for (size_t SSb = 0; SSb < maxSSb; ++SSb) {
                                 spin2 += Y[vo_alfa[SSa].J][vo_beta[SSb].J] *
-                                         C[vo_alfa[SSa].I][vo_beta[SSb].I] * static_cast<double>(vo_alfa[SSa].sign * vo_beta[SSb].sign);
+                                         C[vo_alfa[SSa].I][vo_beta[SSb].I] *
+                                         static_cast<double>(vo_alfa[SSa].sign * vo_beta[SSb].sign);
                             }
                         }
                     }

@@ -239,9 +239,9 @@ jobs:
       source activate p4env
       cd build/forte
       make -j2 VERBOSE=1
-      file forte/forte*.so
-      ldd forte/forte*.so
-      readelf -d forte/forte*.so
+      file forte/_forte*.so
+      ldd forte/_forte*.so
+      readelf -d forte/_forte*.so
     displayName: 'Build Forte'
 
   - bash: |

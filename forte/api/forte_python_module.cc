@@ -5,7 +5,7 @@
  * t    hat implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2021 by its authors (see LICENSE, AUTHORS).
+ * Copyright (c) 2012-2022 by its authors (see LICENSE, AUTHORS).
  *
  * The copyrights for code used from other parties are included in
  * the corresponding files.
@@ -152,7 +152,7 @@ void export_Symmetry(py::module& m) {
 }
 
 // TODO: export more classes using the function above
-PYBIND11_MODULE(forte, m) {
+PYBIND11_MODULE(_forte, m) {
     m.doc() = "pybind11 Forte module"; // module docstring
     m.def("startup", &startup);
     m.def("cleanup", &cleanup);
