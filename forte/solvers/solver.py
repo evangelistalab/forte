@@ -1,7 +1,7 @@
 from abc import abstractmethod
 from enum import Enum, auto
 
-from forte.forte import StateInfo
+from forte import StateInfo
 from forte.core import flog, increase_log_depth
 from forte.solvers.callback_handler import CallbackHandler
 from forte.data import Data

@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2021 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
+ * Copyright (c) 2012-2022 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
  *
  * The copyrights for code used from other parties are included in
  * the corresponding files.
@@ -40,7 +40,6 @@
 #include "psi4/psi4-dec.h"
 
 #include "string_lists.h"
-
 
 namespace forte {
 
@@ -166,11 +165,11 @@ std::vector<H3StringSubstitution>& StringLists::get_beta_3h_list(int h_I, size_t
 }
 
 /**
-                               * Generate all the pairs of strings I,J connected
+ * Generate all the pairs of strings I,J connected
  * by a^{+}_p a_q
-                               * that is: J = ± a^{+}_p a_q I. p and q are
+ * that is: J = ± a^{+}_p a_q I. p and q are
  * absolute indices and I belongs to the irrep h.
-                               */
+ */
 void StringLists::make_3h_list(GraphPtr graph, GraphPtr graph_3h, H3List& list) {
     int n = graph->nbits();
     int k = graph->nones();
@@ -230,4 +229,4 @@ void StringLists::make_3h_list(GraphPtr graph, GraphPtr graph_3h, H3List& list) 
     delete[] J;
     delete[] I;
 }
-}
+} // namespace forte

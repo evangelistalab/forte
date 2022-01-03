@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2021 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
+ * Copyright (c) 2012-2022 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
  *
  * The copyrights for code used from other parties are included in
  * the corresponding files.
@@ -121,7 +121,8 @@ StateVector apply_operator(SparseOperator& sop, const StateVector& state, double
             if (std::fabs(sqop.coefficient() * c) > screen_thresh) {
                 // check if this operator can be applied
                 if (d.fast_a_and_b_equal_b(sqop.ann()) and d.fast_a_and_b_eq_zero(ucre)) {
-                    double value = apply_op_safe(d, sqop.cre(), sqop.ann()) * sqop.coefficient() * c;
+                    double value =
+                        apply_op_safe(d, sqop.cre(), sqop.ann()) * sqop.coefficient() * c;
                     new_terms[d] += value;
                 }
             } else {
@@ -146,7 +147,8 @@ StateVector apply_operator(SparseOperator& sop, const StateVector& state, double
                 if (std::fabs(sqop.coefficient() * c) > screen_thresh) {
                     // check if this operator can be applied
                     if (d.fast_a_and_b_equal_b(sqop.cre()) and d.fast_a_and_b_eq_zero(ucre)) {
-                        double value = apply_op_safe(d, sqop.ann(), sqop.cre()) * sqop.coefficient() * c;
+                        double value =
+                            apply_op_safe(d, sqop.ann(), sqop.cre()) * sqop.coefficient() * c;
                         new_terms[d] -= value;
                     }
                 } else {

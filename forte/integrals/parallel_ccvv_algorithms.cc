@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2021 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
+ * Copyright (c) 2012-2022 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
  *
  * The copyrights for code used from other parties are included in
  * the corresponding files.
@@ -52,7 +52,6 @@
 #include "omp.h"
 #endif
 using namespace ambit;
-
 
 namespace forte {
 
@@ -154,7 +153,7 @@ double THREE_DSRG_MRPT2::E_VT2_2_batch_core_ga() {
         printf("\n Number of blocks can not be larger than core_ on P%d", my_proc);
         printf("\n num_block: %d core_: %d on P%d", num_block, core_, my_proc);
         throw psi::PSIEXCEPTION("Number of blocks is larger than core.  Fix "
-                           "num_block or check source code");
+                                "num_block or check source code");
     }
     if (num_block < num_proc) {
         outfile->Printf("\n Set number of processors larger");
@@ -643,7 +642,7 @@ double THREE_DSRG_MRPT2::E_VT2_2_batch_core_rep() {
         printf("\n P%d says that num_block is %d", my_proc, num_block);
         outfile->Printf("\n Number of blocks can not be larger than core_");
         throw psi::PSIEXCEPTION("Number of blocks is larger than core.  Fix "
-                           "num_block or check source code");
+                                "num_block or check source code");
     }
 
     if (num_block < num_proc) {
@@ -968,7 +967,7 @@ double THREE_DSRG_MRPT2::E_VT2_2_batch_virtual_ga() {
     if (num_block > virtual_) {
         outfile->Printf("\n Number of blocks can not be larger than core_");
         throw psi::PSIEXCEPTION("Number of blocks is larger than core.  Fix "
-                           "num_block or check source code");
+                                "num_block or check source code");
     }
 
     if (num_block >= 1) {
@@ -1150,6 +1149,5 @@ double THREE_DSRG_MRPT2::E_VT2_2_batch_virtual_ga() {
 }
 #endif
 } // namespace forte
-
 
 #endif

@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2021 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
+ * Copyright (c) 2012-2022 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
  *
  * The copyrights for code used from other parties are included in
  * the corresponding files.
@@ -36,7 +36,8 @@ namespace forte {
 
 void SA_MRDSRG::diis_manager_init() {
     diis_manager_ = std::make_shared<DIISManager>(diis_max_vec_, "SA_MRDSRG DIIS",
-                                                  DIISManager::RemovalPolicy::LargestError, DIISManager::StoragePolicy::OnDisk);
+                                                  DIISManager::RemovalPolicy::LargestError,
+                                                  DIISManager::StoragePolicy::OnDisk);
 
     amp_ptrs_.clear();
     res_ptrs_.clear();
@@ -60,22 +61,26 @@ void SA_MRDSRG::diis_manager_init() {
     }
 
     diis_manager_->set_error_vector_size(
-        18, DIISEntry::InputType::Pointer, sizes[0], DIISEntry::InputType::Pointer, sizes[1], DIISEntry::InputType::Pointer,
-        sizes[2], DIISEntry::InputType::Pointer, sizes[3], DIISEntry::InputType::Pointer, sizes[4], DIISEntry::InputType::Pointer,
-        sizes[5], DIISEntry::InputType::Pointer, sizes[6], DIISEntry::InputType::Pointer, sizes[7], DIISEntry::InputType::Pointer,
-        sizes[8], DIISEntry::InputType::Pointer, sizes[9], DIISEntry::InputType::Pointer, sizes[10], DIISEntry::InputType::Pointer,
-        sizes[11], DIISEntry::InputType::Pointer, sizes[12], DIISEntry::InputType::Pointer, sizes[13], DIISEntry::InputType::Pointer,
-        sizes[14], DIISEntry::InputType::Pointer, sizes[15], DIISEntry::InputType::Pointer, sizes[16], DIISEntry::InputType::Pointer,
-        sizes[17]);
+        18, DIISEntry::InputType::Pointer, sizes[0], DIISEntry::InputType::Pointer, sizes[1],
+        DIISEntry::InputType::Pointer, sizes[2], DIISEntry::InputType::Pointer, sizes[3],
+        DIISEntry::InputType::Pointer, sizes[4], DIISEntry::InputType::Pointer, sizes[5],
+        DIISEntry::InputType::Pointer, sizes[6], DIISEntry::InputType::Pointer, sizes[7],
+        DIISEntry::InputType::Pointer, sizes[8], DIISEntry::InputType::Pointer, sizes[9],
+        DIISEntry::InputType::Pointer, sizes[10], DIISEntry::InputType::Pointer, sizes[11],
+        DIISEntry::InputType::Pointer, sizes[12], DIISEntry::InputType::Pointer, sizes[13],
+        DIISEntry::InputType::Pointer, sizes[14], DIISEntry::InputType::Pointer, sizes[15],
+        DIISEntry::InputType::Pointer, sizes[16], DIISEntry::InputType::Pointer, sizes[17]);
 
     diis_manager_->set_vector_size(
-        18, DIISEntry::InputType::Pointer, sizes[0], DIISEntry::InputType::Pointer, sizes[1], DIISEntry::InputType::Pointer,
-        sizes[2], DIISEntry::InputType::Pointer, sizes[3], DIISEntry::InputType::Pointer, sizes[4], DIISEntry::InputType::Pointer,
-        sizes[5], DIISEntry::InputType::Pointer, sizes[6], DIISEntry::InputType::Pointer, sizes[7], DIISEntry::InputType::Pointer,
-        sizes[8], DIISEntry::InputType::Pointer, sizes[9], DIISEntry::InputType::Pointer, sizes[10], DIISEntry::InputType::Pointer,
-        sizes[11], DIISEntry::InputType::Pointer, sizes[12], DIISEntry::InputType::Pointer, sizes[13], DIISEntry::InputType::Pointer,
-        sizes[14], DIISEntry::InputType::Pointer, sizes[15], DIISEntry::InputType::Pointer, sizes[16], DIISEntry::InputType::Pointer,
-        sizes[17]);
+        18, DIISEntry::InputType::Pointer, sizes[0], DIISEntry::InputType::Pointer, sizes[1],
+        DIISEntry::InputType::Pointer, sizes[2], DIISEntry::InputType::Pointer, sizes[3],
+        DIISEntry::InputType::Pointer, sizes[4], DIISEntry::InputType::Pointer, sizes[5],
+        DIISEntry::InputType::Pointer, sizes[6], DIISEntry::InputType::Pointer, sizes[7],
+        DIISEntry::InputType::Pointer, sizes[8], DIISEntry::InputType::Pointer, sizes[9],
+        DIISEntry::InputType::Pointer, sizes[10], DIISEntry::InputType::Pointer, sizes[11],
+        DIISEntry::InputType::Pointer, sizes[12], DIISEntry::InputType::Pointer, sizes[13],
+        DIISEntry::InputType::Pointer, sizes[14], DIISEntry::InputType::Pointer, sizes[15],
+        DIISEntry::InputType::Pointer, sizes[16], DIISEntry::InputType::Pointer, sizes[17]);
 }
 
 void SA_MRDSRG::diis_manager_add_entry() {

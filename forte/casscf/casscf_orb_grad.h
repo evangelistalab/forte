@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2021 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
+ * Copyright (c) 2012-2022 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
  *
  * The copyrights for code used from other parties are included in
  * the corresponding files.
@@ -354,7 +354,7 @@ class CASSCF_ORB_GRAD {
     psi::SharedMatrix matrix_exponential(const psi::SharedMatrix& A, int n);
 
     /// Compute Cayley transformation from skew-symmetric matrix
-    psi::SharedMatrix  cayley_trans(const psi::SharedMatrix& A);
+    psi::SharedMatrix cayley_trans(const psi::SharedMatrix& A);
 
     /// Grab part of the orbital coefficients
     psi::SharedMatrix C_subset(const std::string& name, psi::SharedMatrix C,

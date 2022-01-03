@@ -5,7 +5,7 @@
  * that implements a variety of quantum chemistry methods for strongly
  * correlated electrons.
  *
- * Copyright (c) 2012-2021 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
+ * Copyright (c) 2012-2022 by its authors (see COPYING, COPYING.LESSER, AUTHORS).
  *
  * The copyrights for code used from other parties are included in
  * the corresponding files.
@@ -125,8 +125,8 @@ AOSubspace::AOSubspace(std::vector<std::string> subspace_str,
                        std::shared_ptr<psi::Molecule> molecule,
                        std::shared_ptr<psi::BasisSet> minao_basis,
                        std::map<std::pair<int, int>, psi::Vector3> atom_normals, bool debug_mode)
-    : subspace_str_(subspace_str), molecule_(molecule), min_basis_(minao_basis), subspace_counter_(0),
-      atom_normals_(atom_normals), debug_(debug_mode) {
+    : subspace_str_(subspace_str), molecule_(molecule), min_basis_(minao_basis),
+      subspace_counter_(0), atom_normals_(atom_normals), debug_(debug_mode) {
     startup();
 }
 
