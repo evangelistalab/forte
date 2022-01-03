@@ -29,6 +29,9 @@
 #ifdef HAVE_CHEMPS2
 
 #include <cstdlib>
+#include <sys/stat.h>
+#include <iostream>
+#include <fstream>
 
 #include "psi4/libdpd/dpd.h"
 #include "psi4/libmints/factory.h"
@@ -127,6 +130,12 @@ void DMRGSolver::set_options(std::shared_ptr<ForteOptions> options) {
 }
 
 double DMRGSolver::compute_energy() {
+    std::ofstream capturing;
+    std::streambuf* cout_buffer;
+    std::string chemps2filename = "output.chemps2.tmp";
+    capturing.open(chemps2filename.c_str(), std::ios::trunc); // truncate
+    cout_buffer = std::cout.rdbuf(capturing.rdbuf());
+
     auto n_sweep_states = static_cast<int>(dmrg_sweep_states_.size());
 
     // Create a CheMPS2::ConvergenceSchem
@@ -183,9 +192,48 @@ double DMRGSolver::compute_energy() {
         }
     }
 
+    std::cout.rdbuf(cout_buffer);
+    capturing.close();
+    std::ifstream copying;
+    copying.open(chemps2filename, std::ios::in); // read only
+    if (copying.is_open()) {
+        std::string line;
+        while (getline(copying, line)) {
+            (*outfile->stream()) << line << std::endl;
+        }
+        copying.close();
+    }
+    system(("rm " + chemps2filename).c_str());
+
     // After DMRG sweeps
     if (dmrg_print_corr_) {
+        // need 2RDMs
+        std::vector<std::pair<size_t, size_t>> roots;
+        for (size_t i = 0; i < nroot_; ++i) {
+            roots.emplace_back(i, i);
+        }
+        rdms(roots, 2);
+
+        std::ofstream capturing;
+        std::streambuf* cout_buffer;
+        std::string chemps2filename = "output.chemps2.corr.tmp";
+        capturing.open(chemps2filename.c_str(), std::ios::trunc); // truncate
+        cout_buffer = std::cout.rdbuf(capturing.rdbuf());
+
         solver_->getCorrelations()->Print();
+
+        std::cout.rdbuf(cout_buffer);
+        capturing.close();
+        std::ifstream copying;
+        copying.open(chemps2filename, std::ios::in); // read only
+        if (copying.is_open()) {
+            std::string line;
+            while (getline(copying, line)) {
+                (*outfile->stream()) << line << std::endl;
+            }
+            copying.close();
+        }
+        system(("rm " + chemps2filename).c_str());
     }
 
     // Push to psi4 environment
@@ -219,10 +267,16 @@ std::vector<RDMs> DMRGSolver::rdms(const std::vector<std::pair<size_t, size_t>>&
     bool do_3rdm = max_rdm_level > 2;
     bool disk_3rdm = mo_space_info_->size("ACTIVE") >= 30;
 
+    std::ofstream capturing;
+    std::streambuf* cout_buffer;
+    std::string chemps2filename = "output.chemps2.rdms.tmp";
+    capturing.open(chemps2filename.c_str(), std::ios::trunc); // truncate
+    cout_buffer = std::cout.rdbuf(capturing.rdbuf());
+
     for (size_t root = 0; root < nroot_; ++root) {
         if (root > 0)
             solver_->newExcitation(std::fabs(energies_[root - 1]));
-        solver_->Solve();
+        //        solver_->Solve(); // TODO: need to test excited states
         if (roots.find(root) != roots.end()) {
             solver_->calc_rdms_and_correlations(do_3rdm, disk_3rdm);
             rdms.push_back(fill_current_rdms(do_3rdm));
@@ -231,6 +285,19 @@ std::vector<RDMs> DMRGSolver::rdms(const std::vector<std::pair<size_t, size_t>>&
             solver_->activateExcitations(static_cast<int>(nroot_ - 1));
         }
     }
+
+    std::cout.rdbuf(cout_buffer);
+    capturing.close();
+    std::ifstream copying;
+    copying.open(chemps2filename, std::ios::in); // read only
+    if (copying.is_open()) {
+        std::string line;
+        while (getline(copying, line)) {
+            (*outfile->stream()) << line << std::endl;
+        }
+        copying.close();
+    }
+    system(("rm " + chemps2filename).c_str());
 
     return rdms;
 }

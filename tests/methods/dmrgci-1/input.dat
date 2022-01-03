@@ -10,7 +10,6 @@ molecule H2O {
  units angstrom
 }
 
-
 set basis          cc-pVDZ
 set reference      rhf
 set scf_type       direct
@@ -19,22 +18,20 @@ set d_convergence  1e-13
 set ints_tolerance 0.0
 
 set forte{
-    root_sym            0
-    multiplicity        1
-    restricted_docc      [ 1 , 0 , 0 , 0 ]
-    active               [ 5 , 0 , 4 , 2 ]
-    dmrg_states          [  200,  500, 1000, 1000 ]
-    dmrg_econv           [ 1e-8, 1e-8, 1e-8, 1e-8 ]
-    dmrg_maxsweeps       [    5,    5,    5,  100 ]
-    dmrg_noiseprefactors [ 0.03, 0.03, 0.03,  0.0 ]
-    dmrg_print_corr      true
-    mps_chkpt            false
-    int_type             conventional
-    job_type             DMRG
- }
+active_space_solver dmrg
+root_sym            0
+multiplicity        1
+restricted_docc     [1,0,0,0]
+active              [5,0,4,2]
+dmrg_sweep_states         [  200,  500, 1000, 1000 ]
+dmrg_sweep_energy_conv    [ 1e-8, 1e-8, 1e-8, 1e-8 ]
+dmrg_sweep_max_sweeps     [    5,    5,    5,  100 ]
+dmrg_sweep_noise_prefac   [ 0.03, 0.03, 0.03,  0.0 ]
+dmrg_sweep_dvdson_rtol    [ 1e-6, 1e-6, 1e-6, 1e-6 ]
+dmrg_print_corr      true
+dmrg_mps_write       false
+}
 
-energy('scf')
 dmrgscf = energy('forte')
 
 compare_values(dmrg_ref, dmrgscf, 6,"DMRG CI Energy")
-
