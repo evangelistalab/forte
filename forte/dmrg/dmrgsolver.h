@@ -102,9 +102,10 @@ class DMRGSolver : public ActiveSpaceMethod {
     //    void set_scalar(double energy) { scalar_energy_ = energy; }
 
   private:
-    RDMs dmrg_rdms_;
-
-    bool disk_3_rdm_ = false;
+    /// SCFInfo object
+    std::shared_ptr<SCFInfo> scf_info_;
+    /// ForteOptions
+    std::shared_ptr<ForteOptions> options_;
 
     /// Point group number in CheMPS2
     int pg_number_;
@@ -114,6 +115,10 @@ class DMRGSolver : public ActiveSpaceMethod {
     int wfn_irrep_;
     /// Multiplicity
     int multiplicity_;
+    /// Number of active electrons
+    int nelecs_actv_;
+    /// Number of active orbitals
+    int nactv_;
 
     /// Number of reduced renormalized basis states kept during successive DMRG instructions
     std::vector<int> dmrg_sweep_states_;
@@ -131,21 +136,26 @@ class DMRGSolver : public ActiveSpaceMethod {
     /// The DMRG solver
     std::unique_ptr<CheMPS2::DMRG> solver_;
 
-    void compute_reference(double* one_rdm, double* two_rdm, double* three_rdm,
-                           CheMPS2::DMRGSCFindices* iHandler);
-    /// Ported over codes from DMRGSCF plugin
+    /// Setup some internal variable
     void startup();
-    /// By default, compute the second rdm.  If you are doing MRPT2, may need to
-    /// change this.
-    int max_rdm_ = 3;
-    bool spin_free_rdm_ = false;
-    int chemps2_groupnumber(const string SymmLabel);
-    ambit::Tensor active_integrals_;
-    std::vector<double> one_body_integrals_;
-    double scalar_energy_ = 0.0;
-    std::vector<double> one_body_operator();
-    bool use_user_integrals_ = false;
-    void print_natural_orbitals(double* one_rdm);
+    /// Return the RDMs for the current state
+    RDMs fill_current_rdms(const bool do_3rdm);
+
+    //    RDMs dmrg_rdms_;
+    //    bool disk_3_rdm_ = false;
+    //    void compute_reference(double* one_rdm, double* two_rdm, double* three_rdm,
+    //                           CheMPS2::DMRGSCFindices* iHandler);
+    //    /// By default, compute the second rdm.  If you are doing MRPT2, may need to
+    //    /// change this.
+    //    int max_rdm_ = 3;
+    //    bool spin_free_rdm_ = false;
+    //    int chemps2_groupnumber(const string SymmLabel);
+    //    ambit::Tensor active_integrals_;
+    //    std::vector<double> one_body_integrals_;
+    //    double scalar_energy_ = 0.0;
+    //    std::vector<double> one_body_operator();
+    //    bool use_user_integrals_ = false;
+    //    void print_natural_orbitals(double* one_rdm);
 };
 } // namespace forte
 #endif // _dmrgsolver_h_

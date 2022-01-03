@@ -28,7 +28,7 @@
 
 #ifdef HAVE_CHEMPS2
 
-#include <stdlib.h>
+#include <cstdlib>
 
 #include "psi4/libdpd/dpd.h"
 #include "psi4/libmints/factory.h"
@@ -47,9 +47,6 @@
 
 #include "dmrgsolver.h"
 
-// This allows us to be lazy in getting the spaces in DPD calls
-#define ID(x) ints->DPD_ID(x)
-
 using namespace psi;
 
 namespace forte {
@@ -58,7 +55,8 @@ DMRGSolver::DMRGSolver(StateInfo state, size_t nroot, std::shared_ptr<SCFInfo> s
                        std::shared_ptr<ForteOptions> options,
                        std::shared_ptr<MOSpaceInfo> mo_space_info,
                        std::shared_ptr<ActiveSpaceIntegrals> as_ints)
-    : ActiveSpaceMethod(state, nroot, mo_space_info, as_ints) {
+    : ActiveSpaceMethod(state, nroot, mo_space_info, as_ints), scf_info_(scf_info),
+      options_(options) {
     print_method_banner({"Density Matrix Renormalization Group", "Sebastian Wouters"});
     startup();
 }
@@ -67,6 +65,10 @@ void DMRGSolver::startup() {
     nirrep_ = static_cast<int>(mo_space_info_->nirrep());
     multiplicity_ = state_.multiplicity();
     wfn_irrep_ = state_.irrep();
+
+    nactv_ = static_cast<int>(mo_space_info_->size("ACTIVE"));
+    auto nelecs = state_.na() + state_.nb();
+    nelecs_actv_ = static_cast<int>(nelecs - 2 * mo_space_info_->size("INACTIVE_DOCC"));
 
     pg_number_ = 0; // C1 symmetry by default
     auto pg = mo_space_info_->point_group_label();
@@ -136,19 +138,14 @@ double DMRGSolver::compute_energy() {
                                      dmrg_davidson_rtol_[cnt]);
     }
 
-    // Number of electrons
-    auto nelecs = state_.na() + state_.nb();
-    auto nelecs_actv = nelecs - 2 * mo_space_info_->size("INACTIVE_DOCC");
-
     // Create the CheMPS2::Hamiltonian --> fill later
-    auto nactv = mo_space_info_->size("ACTIVE");
     auto actv_irreps = mo_space_info_->symmetry("ACTIVE");
     auto Hamiltonian =
-        std::make_unique<CheMPS2::Hamiltonian>(nactv, pg_number_, actv_irreps.data());
+        std::make_unique<CheMPS2::Hamiltonian>(nactv_, pg_number_, actv_irreps.data());
 
     // Create the CheMPS2::Problem
     auto problem = std::make_unique<CheMPS2::Problem>(Hamiltonian.get(), multiplicity_ - 1,
-                                                      nelecs_actv, wfn_irrep_);
+                                                      nelecs_actv_, wfn_irrep_);
     if (!(problem->checkConsistency())) {
         throw std::runtime_error("No Hilbert state vector compatible with all symmetry sectors!");
     }
@@ -157,13 +154,13 @@ double DMRGSolver::compute_energy() {
     // Fill Hamiltonian
     Hamiltonian->setEconst(as_ints_->scalar_energy() + as_ints_->nuclear_repulsion_energy());
 
-    for (size_t p = 0; p < nactv; ++p) {
-        for (size_t q = 0; q < nactv; ++q) {
+    for (int p = 0; p < nactv_; ++p) {
+        for (int q = 0; q < nactv_; ++q) {
             if (actv_irreps[p] == actv_irreps[q]) {
                 Hamiltonian->setTmat(p, q, as_ints_->oei_a(p, q));
             }
-            for (size_t r = 0; r < nactv; ++r) {
-                for (size_t s = 0; s < nactv; ++s) {
+            for (int r = 0; r < nactv_; ++r) {
+                for (int s = 0; s < nactv_; ++s) {
                     if ((actv_irreps[p] ^ actv_irreps[q]) == (actv_irreps[r] ^ actv_irreps[s])) {
                         Hamiltonian->setVmat(p, q, r, s, as_ints_->tei_ab(p, q, r, s));
                     }
@@ -173,15 +170,16 @@ double DMRGSolver::compute_energy() {
     }
 
     // Start DMRG sweeps
-    solver_ = std::make_unique<CheMPS2::DMRG>(problem.get(), conv_scheme.get(), true);
+    const std::string psi_tmp_path = PSIOManager::shared_object()->get_default_path();
+    solver_ = std::make_unique<CheMPS2::DMRG>(problem.get(), conv_scheme.get(), true, psi_tmp_path);
     energies_.clear();
 
-    for (int root = 0; root < nroot_; ++root) {
+    for (size_t root = 0; root < nroot_; ++root) {
         if (root > 0)
             solver_->newExcitation(std::fabs(energies_[root - 1]));
         energies_.push_back(solver_->Solve());
         if (root == 0 and nroot_ > 1) {
-            solver_->activateExcitations(nroot_ - 1);
+            solver_->activateExcitations(static_cast<int>(nroot_ - 1));
         }
     }
 
@@ -199,12 +197,74 @@ double DMRGSolver::compute_energy() {
 
 std::vector<RDMs> DMRGSolver::rdms(const std::vector<std::pair<size_t, size_t>>& root_list,
                                    int max_rdm_level) {
-    return {RDMs()};
+    if (solver_ == nullptr) {
+        throw std::runtime_error("Please first run DSRGSolver::compute_energy!");
+    }
+
+    // test root list
+    std::unordered_set<size_t> roots;
+    for (const auto& pair : root_list) {
+        auto root1 = pair.first;
+        if (root1 != pair.second) {
+            throw std::runtime_error(
+                "Different roots for bra and ket! Transition RDMs not available in DMRG!");
+        }
+        if (root1 >= nroot_) {
+            throw std::runtime_error("Root number out of range!");
+        }
+        roots.insert(root1);
+    }
+
+    std::vector<RDMs> rdms;
+    bool do_3rdm = max_rdm_level > 2;
+    bool disk_3rdm = mo_space_info_->size("ACTIVE") >= 30;
+
+    for (size_t root = 0; root < nroot_; ++root) {
+        if (root > 0)
+            solver_->newExcitation(std::fabs(energies_[root - 1]));
+        solver_->Solve();
+        if (roots.find(root) != roots.end()) {
+            solver_->calc_rdms_and_correlations(do_3rdm, disk_3rdm);
+            rdms.push_back(fill_current_rdms(do_3rdm));
+        }
+        if (root == 0 and nroot_ > 1) {
+            solver_->activateExcitations(static_cast<int>(nroot_ - 1));
+        }
+    }
+
+    return rdms;
 }
 
-std::vector<RDMs>
-DMRGSolver::transition_rdms(const std::vector<std::pair<size_t, size_t>>& root_list,
-                            std::shared_ptr<ActiveSpaceMethod> method2, int max_rdm_level) {
+RDMs DMRGSolver::fill_current_rdms(const bool do_3rdm) {
+    std::vector<size_t> dim2(2, nactv_);
+    std::vector<size_t> dim4(4, nactv_);
+    auto g1 = ambit::Tensor::build(ambit::CoreTensor, "DMRG G1", dim2);
+    auto g2 = ambit::Tensor::build(ambit::CoreTensor, "DMRG G2", dim4);
+
+    CheMPS2::CASSCF::copy2DMover(solver_->get2DM(), nactv_, g2.data().data());
+    CheMPS2::CASSCF::setDMRG1DM(nelecs_actv_, nactv_, g1.data().data(), g2.data().data());
+
+    g1.scale(0.5);
+    auto g2ab = g2.clone();
+    g2ab("pqrs") += g2("pqrs") - g2("pqsr");
+    g2ab.scale(1.0 / 6.0);
+
+    if (do_3rdm) {
+        std::vector<size_t> dim6(6, nactv_);
+        auto g3 = ambit::Tensor::build(ambit::CoreTensor, "DMRG G3", dim6);
+        solver_->get3DM()->fill_ham_index(1.0, false, g3.data().data(), 0, nactv_);
+
+        auto g3aab = g3.clone();
+        g3aab("pqrstu") -= g3("pqrtus") + g3("pqrust") + 2.0 * g3("pqrtsu");
+        g3aab.scale(1.0 / 12.0);
+        return {true, g1, g2ab, g3aab};
+    }
+
+    return {true, g1, g2ab};
+}
+
+std::vector<RDMs> DMRGSolver::transition_rdms(const std::vector<std::pair<size_t, size_t>>&,
+                                              std::shared_ptr<ActiveSpaceMethod>, int) {
     throw std::runtime_error("DMRGSolver::transition_rdms is not available in CheMPS2!");
 }
 
