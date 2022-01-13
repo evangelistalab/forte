@@ -119,6 +119,15 @@ class DMRGSolver : public ActiveSpaceMethod {
     int nelecs_actv_;
     /// Number of active orbitals
     int nactv_;
+    /// State label
+    std::string state_label_;
+
+    /// Vector of spin-free 1RDMs
+    std::vector<ambit::Tensor> opdms_;
+    /// Vector of spin-free 2RDMs
+    std::vector<ambit::Tensor> tpdms_;
+    /// Fill the spin-free 1- and 2-RDMs to the vector of ambit Tensor
+    void push_back_rdms();
 
     /// Number of reduced renormalized basis states kept during successive DMRG instructions
     std::vector<int> dmrg_sweep_states_;
@@ -136,8 +145,12 @@ class DMRGSolver : public ActiveSpaceMethod {
     /// The DMRG solver
     std::unique_ptr<CheMPS2::DMRG> solver_;
 
+    /// Vector of file names
+    std::vector<std::string> mps_files_;
+
     /// Setup some internal variable
     void startup();
+
     /// Return the RDMs for the current state
     RDMs fill_current_rdms(const bool do_3rdm);
 

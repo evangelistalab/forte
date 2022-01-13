@@ -371,7 +371,7 @@ class SADSRG : public DynamicCorrelationSolver {
     /// Print done and timing
     void print_done(double t);
 
-    // ==> common aplitudes analysis and printing <==
+    // ==> common amplitudes analysis and printing <==
 
     /// Prune internal amplitudes for T1
     void internal_amps_T1(BlockedTensor& T1);
