@@ -66,6 +66,15 @@ DMRGSolver::DMRGSolver(StateInfo state, size_t nroot, std::shared_ptr<SCFInfo> s
     startup();
 }
 
+DMRGSolver::~DMRGSolver() {
+    // move MPS files to mps_files_path_
+    for (const std::string& name : mps_files_) {
+        auto pf = fs::path(name);
+        if (fs::exists(pf))
+            fs::rename(pf, mps_files_path_ / pf);
+    }
+}
+
 void DMRGSolver::startup() {
     nirrep_ = static_cast<int>(mo_space_info_->nirrep());
     multiplicity_ = state_.multiplicity();
@@ -89,11 +98,22 @@ void DMRGSolver::startup() {
     std::stringstream ss;
     ss << multiplicity_ << state_.irrep_label() << "_CAS" << nactv_;
     state_label_ = ss.str();
+
+    // Save CheMPS2 default MPS file names
+    for (size_t root = 0; root < nroot_; ++root) {
+        std::stringstream ss;
+        ss << CheMPS2::DMRG_MPS_storage_prefix << root << ".h5"; // default name by CheMPS2
+        mps_files_.emplace_back(ss.str());
+    }
+
+    auto cwd = fs::current_path();
+    mps_files_path_ = cwd / fs::path(state_label_);
 }
 
 void DMRGSolver::set_options(std::shared_ptr<ForteOptions> options) {
     read_wfn_guess_ = options_->get_bool("READ_ACTIVE_WFN_GUESS");
-    dump_wfn_ = options_->get_bool("DUMP_ACTIVE_WFN");
+    dump_wfn_ = true; // always dump MPS to disk
+    //    dump_wfn_ = options_->get_bool("DUMP_ACTIVE_WFN");
 
     dmrg_sweep_states_ = options->get_int_list("DMRG_SWEEP_STATES");
     dmrg_sweep_e_convergence_ = options->get_double_list("DMRG_SWEEP_ENERGY_CONV");
@@ -149,105 +169,74 @@ double DMRGSolver::compute_energy() {
 
     // Create a CheMPS2::ConvergenceSchem
     CheMPS2::Initialize::Init();
-    auto conv_scheme = std::make_unique<CheMPS2::ConvergenceScheme>(n_sweep_states);
+    conv_scheme_ = std::make_unique<CheMPS2::ConvergenceScheme>(n_sweep_states);
     for (int cnt = 0; cnt < n_sweep_states; cnt++) {
-        conv_scheme->set_instruction(cnt, dmrg_sweep_states_[cnt], dmrg_sweep_e_convergence_[cnt],
-                                     dmrg_sweep_max_sweeps_[cnt], dmrg_noise_prefactors_[cnt],
-                                     dmrg_davidson_rtol_[cnt]);
+        conv_scheme_->set_instruction(cnt, dmrg_sweep_states_[cnt], dmrg_sweep_e_convergence_[cnt],
+                                      dmrg_sweep_max_sweeps_[cnt], dmrg_noise_prefactors_[cnt],
+                                      dmrg_davidson_rtol_[cnt]);
     }
 
-    // Create the CheMPS2::Hamiltonian --> fill later
+    // Create the CheMPS2::hamiltonian_
     auto actv_irreps = mo_space_info_->symmetry("ACTIVE");
-    auto Hamiltonian =
-        std::make_unique<CheMPS2::Hamiltonian>(nactv_, pg_number_, actv_irreps.data());
+    hamiltonian_ = std::make_unique<CheMPS2::Hamiltonian>(nactv_, pg_number_, actv_irreps.data());
 
-    // Create the CheMPS2::Problem
-    auto prob = std::make_unique<CheMPS2::Problem>(Hamiltonian.get(), multiplicity_ - 1,
-                                                   nelecs_actv_, wfn_irrep_);
-    if (not prob->checkConsistency()) {
-        throw std::runtime_error("No Hilbert state vector compatible with all symmetry sectors!");
-    }
-    prob->SetupReorderD2h();
-
-    // Fill Hamiltonian
-    Hamiltonian->setEconst(as_ints_->scalar_energy() + as_ints_->nuclear_repulsion_energy());
+    hamiltonian_->setEconst(as_ints_->scalar_energy() + as_ints_->nuclear_repulsion_energy());
 
     for (int p = 0; p < nactv_; ++p) {
         for (int q = 0; q < nactv_; ++q) {
             if (actv_irreps[p] == actv_irreps[q]) {
-                Hamiltonian->setTmat(p, q, as_ints_->oei_a(p, q));
+                hamiltonian_->setTmat(p, q, as_ints_->oei_a(p, q));
             }
             for (int r = 0; r < nactv_; ++r) {
                 for (int s = 0; s < nactv_; ++s) {
                     if ((actv_irreps[p] ^ actv_irreps[q]) == (actv_irreps[r] ^ actv_irreps[s])) {
-                        Hamiltonian->setVmat(p, q, r, s, as_ints_->tei_ab(p, q, r, s));
+                        hamiltonian_->setVmat(p, q, r, s, as_ints_->tei_ab(p, q, r, s));
                     }
                 }
             }
         }
     }
 
-    // Save CheMPS2 default MPS file names
-    mps_files_.clear();
-    for (size_t root = 0; root < nroot_; ++root) {
-        std::stringstream ss;
-        ss << CheMPS2::DMRG_MPS_storage_prefix << root << ".h5"; // default name by CheMPS2
-        mps_files_.emplace_back(ss.str());
+    // Create the CheMPS2::Problem
+    auto prob = std::make_unique<CheMPS2::Problem>(hamiltonian_.get(), multiplicity_ - 1,
+                                                   nelecs_actv_, wfn_irrep_);
+    if (not prob->checkConsistency()) {
+        throw std::runtime_error("No Hilbert state vector compatible with all symmetry sectors!");
     }
+    prob->SetupReorderD2h();
 
     // Path for MPS files
     auto cwd = fs::current_path();
-    auto dump_path = cwd / fs::path(state_label_);
     if (dump_wfn_) {
-        if (not fs::exists(dump_path))
-            fs::create_directory(dump_path);
-        std::cout << "MPS files will be dumped to " << dump_path << '\n';
+        if (not fs::exists(mps_files_path_))
+            fs::create_directory(mps_files_path_);
+        std::cout << "MPS files will be dumped to " << mps_files_path_ << '\n';
     }
     if (read_wfn_guess_) {
-        if (fs::exists(dump_path)) {
-            for (const std::string& name : mps_files_) {
-                auto pf = fs::path(name);
-                if (fs::exists(dump_path / pf))
-                    fs::copy_file(dump_path / pf, cwd / pf);
-            }
+        // try to read current path, then try to read mps_files_path_ (i.e., copy to cwd)
+        for (const std::string& name : mps_files_) {
+            auto pf = fs::path(name);
+            if ((not fs::exists(cwd / pf)) and fs::exists(mps_files_path_ / pf))
+                fs::copy_file(mps_files_path_ / pf, cwd / pf);
         }
     }
 
     // Start DMRG sweeps
     const std::string tmp_path = PSIOManager::shared_object()->get_default_path();
-    solver_ = std::make_unique<CheMPS2::DMRG>(prob.get(), conv_scheme.get(), dump_wfn_ or read_wfn_guess_, tmp_path);
-
+    auto solver = std::make_shared<CheMPS2::DMRG>(prob.get(), conv_scheme_.get(), true, tmp_path);
     energies_.clear();
-    opdms_.clear();
-    tpdms_.clear();
 
     for (size_t root = 0; root < nroot_; ++root) {
         if (root > 0)
-            solver_->newExcitation(std::fabs(energies_[root - 1]));
+            solver->newExcitation(std::fabs(energies_[root - 1]));
         std::cout << "\n  ==> Computing Energy for " << state_.str_minimum() << " <==\n\n";
-        energies_.push_back(solver_->Solve());
-        if (dump_wfn_) {
-            auto pf = fs::path(mps_files_[root]);
-            if (fs::exists(pf)) {
-                fs::rename(pf, dump_path / pf);
-            }
-        }
-        solver_->calc_rdms_and_correlations(false, false); // compute 2RDM by default
-        push_back_rdms();
+        energies_.push_back(solver->Solve());
         if (dmrg_print_corr_) {
-            solver_->getCorrelations()->Print();
+            solver->calc_rdms_and_correlations(false, false); // need RDMs
+            solver->getCorrelations()->Print();
         }
         if (root == 0 and nroot_ > 1) {
-            solver_->activateExcitations(static_cast<int>(nroot_ - 1));
-        }
-    }
-
-    // clean up copied MPS files
-    if (read_wfn_guess_) {
-        for (const std::string& name : mps_files_) {
-            auto pf = fs::path(name);
-            if (fs::exists(pf))
-                fs::remove(pf);
+            solver->activateExcitations(static_cast<int>(nroot_ - 1));
         }
     }
 
@@ -273,11 +262,19 @@ double DMRGSolver::compute_energy() {
 
 std::vector<RDMs> DMRGSolver::rdms(const std::vector<std::pair<size_t, size_t>>& root_list,
                                    int max_rdm_level) {
-    if (solver_ == nullptr) {
-        throw std::runtime_error("Please first run DSRGSolver::compute_energy!");
+    if (max_rdm_level < 1)
+        return std::vector<RDMs>(root_list.size());
+
+    // make sure the MPS files are available
+    for (const std::string& name : mps_files_) {
+        if (not fs::exists(name)) {
+            outfile->Printf("\n  File does not exist: %s", name.c_str());
+            outfile->Printf("\n  Please first run DMRGSolver::compute_energy!");
+            throw std::runtime_error("Please first run DMRGSolver::compute_energy!");
+        }
     }
 
-    // test root list
+    // check root list
     std::unordered_set<size_t> roots;
     for (const auto& pair : root_list) {
         auto root1 = pair.first;
@@ -301,16 +298,22 @@ std::vector<RDMs> DMRGSolver::rdms(const std::vector<std::pair<size_t, size_t>>&
     capturing.open(chemps2filename.c_str(), std::ios::trunc); // truncate
     cout_buffer = std::cout.rdbuf(capturing.rdbuf());
 
+    // need a new solver to read the MPS files in CWD
+    const std::string tmp_path = PSIOManager::shared_object()->get_default_path();
+    auto prob = std::make_unique<CheMPS2::Problem>(hamiltonian_.get(), multiplicity_ - 1,
+                                                   nelecs_actv_, wfn_irrep_);
+    prob->SetupReorderD2h();
+    auto solver = std::make_shared<CheMPS2::DMRG>(prob.get(), conv_scheme_.get(), true, tmp_path);
+
     for (size_t root = 0; root < nroot_; ++root) {
         if (root > 0)
-            solver_->newExcitation(std::fabs(energies_[root - 1]));
-        //        solver_->Solve(); // TODO: need to test excited states
+            solver->newExcitation(std::fabs(energies_[root - 1]));
         if (roots.find(root) != roots.end()) {
-            solver_->calc_rdms_and_correlations(do_3rdm, disk_3rdm);
-            rdms.push_back(fill_current_rdms(do_3rdm));
+            solver->calc_rdms_and_correlations(do_3rdm, disk_3rdm);
+            rdms.push_back(fill_current_rdms(solver, do_3rdm));
         }
         if (root == 0 and nroot_ > 1) {
-            solver_->activateExcitations(static_cast<int>(nroot_ - 1));
+            solver->activateExcitations(static_cast<int>(nroot_ - 1));
         }
     }
 
@@ -330,35 +333,24 @@ std::vector<RDMs> DMRGSolver::rdms(const std::vector<std::pair<size_t, size_t>>&
     return rdms;
 }
 
-void DMRGSolver::push_back_rdms() {
-    std::vector<size_t> dim2(2, nactv_);
-    std::vector<size_t> dim4(4, nactv_);
-    auto g1 = ambit::Tensor::build(ambit::CoreTensor, "DMRG G1", dim2);
-    auto g2 = ambit::Tensor::build(ambit::CoreTensor, "DMRG G2", dim4);
-    CheMPS2::CASSCF::copy2DMover(solver_->get2DM(), nactv_, g2.data().data());
-    CheMPS2::CASSCF::setDMRG1DM(nelecs_actv_, nactv_, g1.data().data(), g2.data().data());
-    opdms_.push_back(g1);
-    tpdms_.push_back(g2);
-}
-
-RDMs DMRGSolver::fill_current_rdms(const bool do_3rdm) {
+RDMs DMRGSolver::fill_current_rdms(std::shared_ptr<CheMPS2::DMRG> solver, const bool do_3rdm) {
     std::vector<size_t> dim2(2, nactv_);
     std::vector<size_t> dim4(4, nactv_);
     auto g1 = ambit::Tensor::build(ambit::CoreTensor, "DMRG G1", dim2);
     auto g2 = ambit::Tensor::build(ambit::CoreTensor, "DMRG G2", dim4);
 
-    CheMPS2::CASSCF::copy2DMover(solver_->get2DM(), nactv_, g2.data().data());
+    CheMPS2::CASSCF::copy2DMover(solver->get2DM(), nactv_, g2.data().data());
     CheMPS2::CASSCF::setDMRG1DM(nelecs_actv_, nactv_, g1.data().data(), g2.data().data());
 
     g1.scale(0.5);
     auto g2ab = g2.clone();
-    g2ab("pqrs") += g2("pqrs") - g2("pqsr");
+    g2ab("pqrs") += g2("pqrs") + g2("pqsr");
     g2ab.scale(1.0 / 6.0);
 
     if (do_3rdm) {
         std::vector<size_t> dim6(6, nactv_);
         auto g3 = ambit::Tensor::build(ambit::CoreTensor, "DMRG G3", dim6);
-        solver_->get3DM()->fill_ham_index(1.0, false, g3.data().data(), 0, nactv_);
+        solver->get3DM()->fill_ham_index(1.0, false, g3.data().data(), 0, nactv_);
 
         auto g3aab = g3.clone();
         g3aab("pqrstu") -= g3("pqrtus") + g3("pqrust") + 2.0 * g3("pqrtsu");

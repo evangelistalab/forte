@@ -29,7 +29,6 @@ dmrg_sweep_max_sweeps     [    5,    5,    5,  100 ]
 dmrg_sweep_noise_prefac   [ 0.03, 0.03, 0.03,  0.0 ]
 dmrg_sweep_dvdson_rtol    [ 1e-6, 1e-6, 1e-6, 1e-6 ]
 dmrg_print_corr      true
-dmrg_mps_write       false
 }
 
 dmrgscf = energy('forte')

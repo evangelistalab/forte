@@ -29,6 +29,8 @@
 #ifndef _dmrgsolver_h_
 #define _dmrgsolver_h_
 
+#include <filesystem>
+
 #include "psi4/libmints/wavefunction.h"
 #include "psi4/libfock/jk.h"
 
@@ -62,6 +64,9 @@ class DMRGSolver : public ActiveSpaceMethod {
     DMRGSolver(StateInfo state, size_t nroot, std::shared_ptr<SCFInfo> scf_info,
                std::shared_ptr<ForteOptions> options, std::shared_ptr<MOSpaceInfo> mo_space_info,
                std::shared_ptr<ActiveSpaceIntegrals> as_ints);
+
+    /// DMRGSolver Destructor
+    ~DMRGSolver();
 
     /// Compute the energy
     double compute_energy() override;
@@ -122,13 +127,6 @@ class DMRGSolver : public ActiveSpaceMethod {
     /// State label
     std::string state_label_;
 
-    /// Vector of spin-free 1RDMs
-    std::vector<ambit::Tensor> opdms_;
-    /// Vector of spin-free 2RDMs
-    std::vector<ambit::Tensor> tpdms_;
-    /// Fill the spin-free 1- and 2-RDMs to the vector of ambit Tensor
-    void push_back_rdms();
-
     /// Number of reduced renormalized basis states kept during successive DMRG instructions
     std::vector<int> dmrg_sweep_states_;
     /// Energy convergence to stop an instruction during successive DMRG instructions
@@ -142,17 +140,21 @@ class DMRGSolver : public ActiveSpaceMethod {
     /// Whether or not to print the correlation functions after the DMRG calculation
     bool dmrg_print_corr_;
 
-    /// The DMRG solver
-    std::unique_ptr<CheMPS2::DMRG> solver_;
+    /// The convergence scheme of CheMPS2
+    std::unique_ptr<CheMPS2::ConvergenceScheme> conv_scheme_;
+    /// The active-space Hamiltonian of CheMPS2
+    std::unique_ptr<CheMPS2::Hamiltonian> hamiltonian_;
 
     /// Vector of file names
     std::vector<std::string> mps_files_;
+    /// Directory to save MPS files
+    std::filesystem::path mps_files_path_;
 
     /// Setup some internal variable
     void startup();
 
     /// Return the RDMs for the current state
-    RDMs fill_current_rdms(const bool do_3rdm);
+    RDMs fill_current_rdms(std::shared_ptr<CheMPS2::DMRG> solver, const bool do_3rdm);
 
     //    RDMs dmrg_rdms_;
     //    bool disk_3_rdm_ = false;

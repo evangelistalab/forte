@@ -3,44 +3,28 @@ import forte
 molecule LiH {
 Li
 H  1 1.4
-
 }
 
 set basis cc-pvdz
-set scf_type  out_of_core
-energy('scf')
+set scf_type  pk
+Escf, wfn = energy('scf', return_wfn=True)
 
 set forte {
-    frozen_docc               [0, 0, 0, 0]
-    active                    [3, 0, 0, 0]
-    int_type                  cholesky
-    cholesky_tolerance        1e-14
-    job_type                  FCI
-    PRINT_NO                  true
-    job_type                  three-dsrg-mrpt2
-    dsrg_s                    0.5
-    #casscf_reference         true
-    #casscf_iterations        1
+  frozen_docc               [0,0,0,0]
+  active                    [3,0,0,0]
+  active_space_solver       fci
+  correlation_solver        dsrg-mrpt2
 }
-dsrg_fci = energy('forte')
-#print( dsrg_fci)
-
-energy('scf')
+dsrg_ref = energy('forte', ref_wfn=wfn)
 
 set forte {
-    active      [3, 0, 0, 0]
-    root_sym    0
-    multiplicity    1
-    dmrg_states       [200, 500, 1000, 1000]
-    dmrg_econv        [1e-8, 1e-8, 1e-8, 1e-8]
-    dmrg_maxsweeps    [5, 5, 5, 100]
-    dmrg_noiseprefactors    [0.03, 0.03, 0.03, 0.0]
-    dmrgscf_max_iter  1
-    int_type          cholesky
-    cholesky_tolerance 1e-14
-    job_type           three-dsrg-mrpt2
-    active_space_solver           DMRG
-#    THREEPDC           ZERO
+  dmrg_sweep_states         [  200,  500, 1000, 1000 ]
+  dmrg_sweep_energy_conv    [ 1e-8, 1e-8, 1e-8, 1e-8 ]
+  dmrg_sweep_max_sweeps     [    5,    5,    5,  100 ]
+  dmrg_sweep_noise_prefac   [ 0.03, 0.03, 0.03,  0.0 ]
+  dmrg_sweep_dvdson_rtol    [ 1e-6, 1e-6, 1e-6, 1e-6 ]
+  active_space_solver       dmrg
+  correlation_solver        dsrg-mrpt2
 }
-dsrg_dmrg = energy('forte')
-compare_values(dsrg_fci - dsrg_dmrg, 0.000000000, 8, "DSRG(CAS-CI) - DSRG(DMRG)")
+dsrg_dmrg = energy('forte', ref_wfn=wfn)
+compare_values(dsrg_ref - dsrg_dmrg, 0.0, 8, "DSRG(CASCI) - DSRG(DMRG)")
