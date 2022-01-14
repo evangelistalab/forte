@@ -1,42 +1,42 @@
 import forte
 
-fci_ref = -75.882960895972374
+rohf_ref = -75.69984142985933
+dsrg_ref = -75.882960895972374
 
 molecule H2O {
- 0 3
-   O   0.000000000   0.00   0.000000000
-   H   0.790689766   0.00   0.612217330
-   H  -0.790689766   0.00   0.612217330
- units angstrom
+0 3
+O   0.000000000   0.00   0.000000000
+H   0.790689766   0.00   0.612217330
+H  -0.790689766   0.00   0.612217330
+units angstrom
 }
 
-
-set basis          cc-pVDZ
+set basis          cc-pvdz
 set reference      rohf
-set scf_type       direct
-set e_convergence  1e-13
-set d_convergence  1e-13
+set scf_type       pk
+set e_convergence  1e-12
+set d_convergence  1e-8
 set ints_tolerance 0.0
+set docc           [2,0,1,1]  # not the lowest triplet
+set socc           [2,0,0,0]  # not the lowest triplet
 
 set forte{
-    root_sym            0
-    multiplicity        3
-    restricted_docc      [ 1 , 0 , 0 , 0 ]
-    active               [ 5 , 0 , 4 , 2 ]
-    dmrg_states          [  200,  500, 1000, 1000 ]
-    dmrg_econv           [ 1e-8, 1e-8, 1e-8, 1e-8 ]
-    dmrg_maxsweeps       [    5,    5,    5,  100 ]
-    dmrg_noiseprefactors [ 0.03, 0.03, 0.03,  0.0 ]
-    dmrg_print_corr      true
-    mps_chkpt            false
-    int_type             conventional
-    active_space_solver             dmrg
-    job_type             dsrg-mrpt2
-    dsrg_s               0.5
- }
+multiplicity         3
+active_space_solver  dmrg
+correlation_solver   dsrg-mrpt2
+dsrg_s               0.5
+restricted_docc           [    1,    0,    0,    0 ]
+active                    [    5,    0,    4,    2 ]
+dmrg_sweep_states         [  200,  500, 1000, 1000 ]
+dmrg_sweep_energy_conv    [ 1e-8, 1e-8, 1e-8, 1e-8 ]
+dmrg_sweep_max_sweeps     [    5,    5,    5,  100 ]
+dmrg_sweep_noise_prefac   [ 0.03, 0.03, 0.03,  0.0 ]
+dmrg_sweep_dvdson_rtol    [ 1e-6, 1e-6, 1e-6, 1e-6 ]
+dmrg_print_corr           true
+}
 
-refscf, refwfn = energy('scf', return_wfn=True)
+escf, refwfn = energy('scf', return_wfn=True)
+compare_values(rohf_ref, escf, 8, "ROHF Energy")
+
 dmrg_dsrg = energy('forte', ref_wfn=refwfn)
-
-compare_values(dmrg_dsrg, fci_ref, 8,"DMRG CI Energy")
-
+compare_values(dsrg_ref, dmrg_dsrg, 8, "DMRG-DSRG-MRPT2 Energy")
