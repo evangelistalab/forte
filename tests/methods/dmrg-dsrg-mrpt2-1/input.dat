@@ -1,3 +1,5 @@
+# DMRG-DSRG-MRPT2 on ground-state LiH
+
 import forte
 
 molecule LiH {

@@ -1,3 +1,5 @@
+# DMRGSCF-DSRG-MRPT2 on ground-state N2
+
 import forte
 refdmrg = -109.103502335253
 refdsrg = -109.259741806057

@@ -1,3 +1,5 @@
+# DMRG-DSRG-MRPT2 on triplet water
+
 import forte
 
 rohf_ref = -75.69984142985933

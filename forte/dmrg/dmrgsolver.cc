@@ -180,7 +180,8 @@ double DMRGSolver::compute_energy() {
     auto actv_irreps = mo_space_info_->symmetry("ACTIVE");
     hamiltonian_ = std::make_unique<CheMPS2::Hamiltonian>(nactv_, pg_number_, actv_irreps.data());
 
-    hamiltonian_->setEconst(as_ints_->scalar_energy() + as_ints_->nuclear_repulsion_energy());
+    double energy_core = as_ints_->frozen_core_energy() + as_ints_->scalar_energy();
+    hamiltonian_->setEconst(energy_core + as_ints_->nuclear_repulsion_energy());
 
     for (int p = 0; p < nactv_; ++p) {
         for (int q = 0; q < nactv_; ++q) {

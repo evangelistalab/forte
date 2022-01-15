@@ -1,3 +1,5 @@
+# DMRG-SCF(6,6) on ground-state N2 using Kevin's CASSCF
+
 import forte
 refcasscf = -109.090695044539
 
@@ -17,8 +19,7 @@ cholesky_tolerance 1e-10
 }
 
 set forte{
-#job_type                  casscf
-job_type                  mcscf_two_step
+job_type                  casscf
 int_type                  cholesky
 cholesky_tolerance        1e-10
 casscf_g_convergence      1e-7

@@ -1,5 +1,10 @@
+# SA-DMRG-SCF(8e,9o) on water
+
 import forte
-dmrg_ref = -76.1265895352437
+ref_1A1 = -76.093220338666
+ref_2A1 = -75.709001355141
+ref_1A2 = -75.741268753755
+ref_1B1 = -75.655824601687
 
 molecule H2O {
 0 1
@@ -21,6 +26,7 @@ ints_tolerance 0.0
 set forte{
 job_type                  mcscf_two_step
 casscf_ci_solver          dmrg
+avg_state                 [[0,1,2], [1,1,1], [2,1,1]]
 restricted_docc           [    1,    0,    0,    0 ]
 active                    [    3,    0,    4,    2 ]
 dmrg_sweep_states         [  200,  500, 1000, 1000 ]
@@ -31,4 +37,8 @@ dmrg_sweep_dvdson_rtol    [ 1e-6, 1e-6, 1e-6, 1e-6 ]
 }
 
 dmrgscf = energy('forte')
-compare_values(dmrg_ref, dmrgscf, 6, "DMRG-SCF Energy")
+#psi4.core.print_variables()
+compare_values(ref_1A1, variable("ENERGY ROOT 0 1A1"), 7, "DMRG-SCF Energy on Root 0 of Singlet A1 State")
+compare_values(ref_2A1, variable("ENERGY ROOT 1 1A1"), 7, "DMRG-SCF Energy on Root 1 of Singlet A1 State")
+compare_values(ref_1A2, variable("ENERGY ROOT 0 1A2"), 7, "DMRG-SCF Energy on Root 0 of Singlet A2 State")
+compare_values(ref_1B1, variable("ENERGY ROOT 0 1B1"), 7, "DMRG-SCF Energy on Root 0 of Singlet B1 State")
