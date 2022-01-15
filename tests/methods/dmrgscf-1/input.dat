@@ -1,48 +1,37 @@
 import forte
-
 refcasscf = -109.090695044539
+
 molecule N2 {
-  N       0.0000   0.0000   0.0000
-  N       0.0000   0.0000   2.1180
+N  0.0000  0.0000  0.0000
+N  0.0000  0.0000  2.1180
 units au
 }
 
-set basis          cc-pVDZ
-set reference      rhf
-set e_convergence  1e-12
-set d_convergence  1e-12
-set scf_type       direct
-set cholesky_tolerance 1e-10
+set {
+basis              cc-pvdz
+reference          rhf
+e_convergence      1e-12
+d_convergence      1e-12
+scf_type           cd
+cholesky_tolerance 1e-10
+}
 
 set forte{
-    root_sym                  0
-    multiplicity              1
-    root_sym                  0
-    restricted_docc           [ 2 , 0 , 0 , 0 , 0 , 2 , 0 , 0 ]
-    active                    [ 1 , 0 , 1 , 1 , 0 , 1 , 1 , 1 ]
-    dmrg_states          [   500,  1000,  2000 ]
-    dmrg_econv           [ 1e-8, 1e-8, 1e-8 ]
-    dmrg_maxsweeps       [     5,     5,    10 ]
-    dmrg_noiseprefactors [  0.03,  0.03,   0.0 ]
-    dmrg_davidson_rtol   [1e-6, 1e-6, 1e-8]
-    dmrg_print_corr      false
-    mps_chkpt            false
-    dmrgscf_max_iter     1
-    int_type             conventional
-    active_space_solver             dmrg
-    job_type              casscf
-    casscf_g_convergence  1e-7
-    casscf_e_convergence  1e-12
-    cholesky_tolerance   1e-10
-    CASSCF_MAXITER    50
-    casscf_debug_printing false
-} 
+#job_type                  casscf
+job_type                  mcscf_two_step
+int_type                  cholesky
+cholesky_tolerance        1e-10
+casscf_g_convergence      1e-7
+casscf_e_convergence      1e-8
+casscf_ci_solver          dmrg
+restricted_docc           [2,0,0,0,0,2,0,0]
+active                    [1,0,1,1,0,1,1,1]
+dmrg_sweep_states         [   500,  1000,  2000 ]
+dmrg_sweep_energy_conv    [  1e-8,  1e-8,  1e-8 ]
+dmrg_sweep_max_sweeps     [     5,     5,    10 ]
+dmrg_sweep_noise_prefac   [  0.03,  0.03,   0.0 ]
+dmrg_sweep_dvdson_rtol    [  1e-6,  1e-6,  1e-8 ]
+}
 
-energy('scf')
 dmrgscf = energy('forte')
-
-compare_values(dmrgscf, refcasscf, 6, "DMRGSCF Energy")
-
-
-
-
+compare_values(refcasscf, dmrgscf, 6, "DMRG-SCF Energy")
