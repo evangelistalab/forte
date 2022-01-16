@@ -20,6 +20,15 @@ if [ "$1" -ge "128" ]; then
   fi
 fi
 
+if [ "$2" -ge "ON" ]; then
+  cd ../chemps2
+  python run_forte_tests.py --type short --bw --failed_dump
+  testdmrg=$?
+  if [ $testdmrg -ne 0 ]; then
+    test1=$testdmrg
+  fi
+fi
+
 cd ../..
 
 ./forte_tests
