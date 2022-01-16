@@ -34,8 +34,10 @@ find_package(Python COMPONENTS Interpreter Development REQUIRED)
 find_package(TargetLAPACK REQUIRED)
 find_package(ambit 0.5 REQUIRED)
 
+set(DMRG_SOLVER "")
 if(ENABLE_CheMPS2)
     find_package(CheMPS2 1.8.3 CONFIG REQUIRED)
+    set(DMRG_SOLVER "dmrg/dmrgsolver.cc")
 endif()
 
 set(Boost_USE_STATIC_LIBS OFF)
@@ -99,7 +101,6 @@ casscf/mcscf_2step.cc
 ci_ex_states/excited_state_solver.cc
 ci_rdm/ci_rdms.cc
 ci_rdm/ci_rdms_dynamic.cc
-dmrg/dmrgsolver.cc
 fci/binary_graph.cc
 fci/fci_solver.cc
 fci/fci_vector.cc
@@ -218,6 +219,7 @@ sparse_ci/sparse_hamiltonian.cc
 sparse_ci/sq_operator.cc
 sparse_ci/sparse_state_vector.cc
 v2rdm/v2rdm.cc
+${DMRG_SOLVER}
 )
 
 target_link_libraries(_forte PRIVATE psi4::core)
