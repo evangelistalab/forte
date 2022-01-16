@@ -68,10 +68,25 @@ DMRGSolver::DMRGSolver(StateInfo state, size_t nroot, std::shared_ptr<SCFInfo> s
 
 DMRGSolver::~DMRGSolver() {
     // move MPS files to mps_files_path_
-    for (const std::string& name : mps_files_) {
-        auto pf = fs::path(name);
-        if (fs::exists(pf))
-            fs::rename(pf, mps_files_path_ / pf);
+    move_mps_files(true);
+    // delete directory for checkpoint files
+    fs::remove_all(tmp_path_);
+}
+
+void DMRGSolver::move_mps_files(bool from_cwd_to_folder) {
+    if (from_cwd_to_folder) {
+        for (const std::string& name : mps_files_) {
+            auto pf = fs::path(name);
+            if (fs::exists(pf))
+                fs::rename(pf, mps_files_path_ / pf);
+        }
+    } else {
+        auto cwd = fs::current_path();
+        for (const std::string& name : mps_files_) {
+            auto pf = mps_files_path_ / fs::path(name);
+            if (fs::exists(pf))
+                fs::rename(pf, cwd / fs::path(name));
+        }
     }
 }
 
@@ -108,6 +123,10 @@ void DMRGSolver::startup() {
 
     auto cwd = fs::current_path();
     mps_files_path_ = cwd / fs::path(state_label_);
+
+    tmp_path_ = fs::path(PSIOManager::shared_object()->get_default_path()) / fs::path(state_label_);
+    if (not fs::exists(tmp_path_))
+        fs::create_directory(tmp_path_);
 }
 
 void DMRGSolver::set_options(std::shared_ptr<ForteOptions> options) {
@@ -223,8 +242,7 @@ double DMRGSolver::compute_energy() {
     }
 
     // Start DMRG sweeps
-    const std::string tmp_path = PSIOManager::shared_object()->get_default_path();
-    auto solver = std::make_shared<CheMPS2::DMRG>(prob.get(), conv_scheme_.get(), true, tmp_path);
+    auto solver = std::make_shared<CheMPS2::DMRG>(prob.get(), conv_scheme_.get(), true, tmp_path_);
     energies_.clear();
 
     for (size_t root = 0; root < nroot_; ++root) {
@@ -254,6 +272,9 @@ double DMRGSolver::compute_energy() {
     }
     system(("rm " + chemps2filename).c_str());
 
+    // move MPS files from CWD to the folder (to prevent load problems of CheMPS2)
+    move_mps_files(true);
+
     // Push to psi4 environment
     double energy = energies_[root_];
     psi::Process::environment.globals["CURRENT ENERGY"] = energy;
@@ -267,6 +288,7 @@ std::vector<RDMs> DMRGSolver::rdms(const std::vector<std::pair<size_t, size_t>>&
         return std::vector<RDMs>(root_list.size());
 
     // make sure the MPS files are available
+    move_mps_files(false);
     for (const std::string& name : mps_files_) {
         if (not fs::exists(name)) {
             outfile->Printf("\n  File does not exist: %s", name.c_str());
@@ -330,6 +352,9 @@ std::vector<RDMs> DMRGSolver::rdms(const std::vector<std::pair<size_t, size_t>>&
         copying.close();
     }
     system(("rm " + chemps2filename).c_str());
+
+    // move MPS files from CWD to the folder
+    move_mps_files(true);
 
     return rdms;
 }

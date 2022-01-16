@@ -87,7 +87,7 @@ class DMRGSolver : public ActiveSpaceMethod {
     //    psi::SharedMatrix ci_wave_functions() override { return evecs_; }
 
     /// Dump wave function to disk (already dumped when computing energies)
-    void dump_wave_function(const std::string& filename) override {};
+    void dump_wave_function(const std::string&) override{};
 
     /// Read wave function from disk
     /// Return the number of active orbitals, set of determinants, CI coefficients
@@ -133,10 +133,14 @@ class DMRGSolver : public ActiveSpaceMethod {
     /// The active-space Hamiltonian of CheMPS2
     std::unique_ptr<CheMPS2::Hamiltonian> hamiltonian_;
 
-    /// Vector of file names
-    std::vector<std::string> mps_files_;
+    /// Checkpoint files path
+    std::filesystem::path tmp_path_;
     /// Directory to save MPS files
     std::filesystem::path mps_files_path_;
+    /// Vector of file names
+    std::vector<std::string> mps_files_;
+    /// Move MPS files around
+    void move_mps_files(bool from_cwd_to_folder);
 
     /// Setup some internal variable
     void startup();
