@@ -31,14 +31,9 @@
 
 #include <filesystem>
 
-#include "psi4/libmints/wavefunction.h"
-#include "psi4/libfock/jk.h"
-
-#include "chemps2/Irreps.h"
-#include "chemps2/Problem.h"
-#include "chemps2/CASSCF.h"
-#include "chemps2/Initialize.h"
-#include "chemps2/EdmistonRuedenberg.h"
+#include "chemps2/ConvergenceScheme.h"
+#include "chemps2/Hamiltonian.h"
+#include "chemps2/DMRG.h"
 
 #include "base_classes/active_space_method.h"
 #include "base_classes/rdms.h"
