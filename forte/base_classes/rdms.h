@@ -65,6 +65,9 @@ class MOSpaceInfo;
  *
  * @note Once passed in, the RDMs are assumed to be fixed and immutable.
  *
+ * Spin-free RDMs are computed in the usual spin-summed sense:
+ * G^{p,...,q}_{r,...,s} = spin_sum(στ...) <A| a+(pσ) ... a+(qτ) a(sτ) ... a(rσ) |B>
+ *
  */
 class RDMs {
   public:
@@ -82,31 +85,37 @@ class RDMs {
          ambit::Tensor g2bb, ambit::Tensor g3aaa, ambit::Tensor g3aab, ambit::Tensor g3abb,
          ambit::Tensor g3bbb);
 
-    /// @brief Construct a RDMs object with the 1-rdm assuming ms averaging
-    RDMs(bool ms_avg, ambit::Tensor g1a);
-    /// @brief Construct a RDMs object with the 1- and 2-rdms ms averaging
-    RDMs(bool ms_avg, ambit::Tensor g1a, ambit::Tensor g2ab);
-    /// @brief Construct a RDMs object with the 1-, 2-, and 3-rdms assuming ms averaging
-    RDMs(bool ms_avg, ambit::Tensor g1a, ambit::Tensor g2ab, ambit::Tensor g3aab);
+//    /// @brief Construct a RDMs object with the spin-free 1-rdm
+//    RDMs(bool spin_free, ambit::Tensor sf_g1);
+//    /// @brief Construct a RDMs object with the spin-free 1- and 2-rdms
+//    RDMs(bool spin_free, ambit::Tensor sf_g1, ambit::Tensor sf_g2);
+//    /// @brief Construct a RDMs object with the spin-free 1-, 2-, and 3-rdms
+//    RDMs(bool spin_free, ambit::Tensor sf_g1, ambit::Tensor sf_g2, ambit::Tensor sf_g3);
+
+    /// Compute spin-free RDMs
+    void make_rdms_spin_free();
 
     // ==> Class Interface <==
 
     // Reduced density matrices (RDMs)
 
     /// @return the alpha 1-RDM
-    ambit::Tensor g1a() const { return g1a_; }
+//    ambit::Tensor g1a() const { return g1a_; }
+    ambit::Tensor g1a();
     /// @return the beta 1-RDM
     ambit::Tensor g1b();
     /// @return the alpha-alpha 2-RDM
     ambit::Tensor g2aa();
     /// @return the alpha-beta 2-RDM
-    ambit::Tensor g2ab() const { return g2ab_; }
+//    ambit::Tensor g2ab() const { return g2ab_; }
+    ambit::Tensor g2ab();
     /// @return the beta-beta 2-RDM
     ambit::Tensor g2bb();
     /// @return the alpha-alpha-alpha 3-RDM
     ambit::Tensor g3aaa();
     /// @return the alpha-alpha-beta 3-RDM
-    ambit::Tensor g3aab() const { return g3aab_; }
+//    ambit::Tensor g3aab() const { return g3aab_; }
+    ambit::Tensor g3aab();
     /// @return the alpha-beta-beta 3-RDM
     ambit::Tensor g3abb();
     /// @return the beta-beta-beta 3-RDM
@@ -120,6 +129,8 @@ class RDMs {
     /// If ms is NOT averaged, G2 will be computed using the definition (see SF_G2_ below).
     /// If ms is averaged, G2 will be computed using only g2ab to avoid computing g2aa and g2bb.
     ambit::Tensor SF_G2();
+
+    ambit::Tensor SF_G3() {return SF_G3_;}
 
     /// @return the spin-free 1-RDM in Psi4 Matrix format (nactv * nactv)
     std::shared_ptr<psi::Matrix> SF_G1mat();
@@ -171,19 +182,30 @@ class RDMs {
     /// Assume averaging over spin multiplets
     bool ms_avg_ = false;
 
+    /// Only spin-free RDMs are available
+    bool spin_free_ = false;
+
+    /// Convert spin-free 1-RDM to spin-dependent 1-RDM subject to singlet constraint
+
     /// Maximum RDM/RDC rank stored by this object
     size_t max_rdm_ = 0;
 
     // Reduced density matrices
 
+    /// Was g1a built?
+    bool have_g1a_ = false;
     /// Was g1b built?
     bool have_g1b_ = false;
     /// Was g2aa built?
     bool have_g2aa_ = false;
+    /// Was g2ab built?
+    bool have_g2ab_ = false;
     /// Was g2bb built?
     bool have_g2bb_ = false;
     /// Was g3aaa built?
     bool have_g3aaa_ = false;
+    /// Was g3aab built?
+    bool have_g3aab_ = false;
     /// Was g3abb built?
     bool have_g3abb_ = false;
     /// Was g3bbb built?
@@ -208,12 +230,14 @@ class RDMs {
     /// The beta-beta-beta 3-RDM
     ambit::Tensor g3bbb_;
 
-    /// Spin-free (spin-summed) 1-RDM defined as
-    /// G1[pq] = g1a[pq] + g1b[pq]
+    /// Spin-free (spin-summed) 1-RDM defined as G1[pq] = g1a[pq] + g1b[pq]
     ambit::Tensor SF_G1_;
     /// Spin-free (spin-summed) 2-RDM defined as
     /// G2[pqrs] = g2aa[pqrs] + g2ab[pqrs] + g2ab[qpsr] + g2bb[pqrs]
     ambit::Tensor SF_G2_;
+    /// Spin-free (spin-summed) 3-RDMs defined as G3[pqrstu] = g3aaa[pqrstu] + g3aab[pqrstu] +
+    /// g3aab[prqsut] + g3aab[qrptus] + g3abb[pqrstu] + g3abb[qprtsu] + g3abb[rpqust]
+    ambit::Tensor SF_G3_;
 
     // Reduced density cumulants
 
@@ -256,6 +280,8 @@ class RDMs {
     bool have_SF_G1_ = false;
     /// Was SF_G2_ built?
     bool have_SF_G2_ = false;
+    /// Was SF_G2_ built?
+    bool have_SF_G3_ = false;
 
     /// Was SF_L2_ built?
     bool have_SF_L2_ = false;

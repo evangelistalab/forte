@@ -40,28 +40,96 @@ namespace forte {
 
 RDMs::RDMs() : max_rdm_(0) {}
 
+// RDMs::RDMs(ambit::Tensor g1a, ambit::Tensor g1b)
+//     : max_rdm_(1), have_g1b_(true), g1a_(g1a), g1b_(g1b) {}
+//
+// RDMs::RDMs(ambit::Tensor g1a, ambit::Tensor g1b, ambit::Tensor g2aa, ambit::Tensor g2ab,
+//            ambit::Tensor g2bb)
+//     : max_rdm_(2), have_g1b_(true), have_g2aa_(true), have_g2bb_(true), g1a_(g1a), g1b_(g1b),
+//       g2aa_(g2aa), g2ab_(g2ab), g2bb_(g2bb) {}
+//
+// RDMs::RDMs(ambit::Tensor g1a, ambit::Tensor g1b, ambit::Tensor g2aa, ambit::Tensor g2ab,
+//            ambit::Tensor g2bb, ambit::Tensor g3aaa, ambit::Tensor g3aab, ambit::Tensor g3abb,
+//            ambit::Tensor g3bbb)
+//     : max_rdm_(3), have_g1b_(true), have_g2aa_(true), have_g2bb_(true), have_g3aaa_(true),
+//       have_g3abb_(true), have_g3bbb_(true), g1a_(g1a), g1b_(g1b), g2aa_(g2aa), g2ab_(g2ab),
+//       g2bb_(g2bb), g3aaa_(g3aaa), g3aab_(g3aab), g3abb_(g3abb), g3bbb_(g3bbb) {}
+
 RDMs::RDMs(ambit::Tensor g1a, ambit::Tensor g1b)
-    : max_rdm_(1), have_g1b_(true), g1a_(g1a), g1b_(g1b) {}
+    : max_rdm_(1), have_g1a_(true), have_g1b_(true), g1a_(g1a), g1b_(g1b) {}
 
 RDMs::RDMs(ambit::Tensor g1a, ambit::Tensor g1b, ambit::Tensor g2aa, ambit::Tensor g2ab,
            ambit::Tensor g2bb)
-    : max_rdm_(2), have_g1b_(true), have_g2aa_(true), have_g2bb_(true), g1a_(g1a), g1b_(g1b),
-      g2aa_(g2aa), g2ab_(g2ab), g2bb_(g2bb) {}
+    : max_rdm_(2), have_g1a_(true), have_g1b_(true), have_g2aa_(true), have_g2ab_(true),
+      have_g2bb_(true), g1a_(g1a), g1b_(g1b), g2aa_(g2aa), g2ab_(g2ab), g2bb_(g2bb) {}
 
 RDMs::RDMs(ambit::Tensor g1a, ambit::Tensor g1b, ambit::Tensor g2aa, ambit::Tensor g2ab,
            ambit::Tensor g2bb, ambit::Tensor g3aaa, ambit::Tensor g3aab, ambit::Tensor g3abb,
            ambit::Tensor g3bbb)
-    : max_rdm_(3), have_g1b_(true), have_g2aa_(true), have_g2bb_(true), have_g3aaa_(true),
-      have_g3abb_(true), have_g3bbb_(true), g1a_(g1a), g1b_(g1b), g2aa_(g2aa), g2ab_(g2ab),
-      g2bb_(g2bb), g3aaa_(g3aaa), g3aab_(g3aab), g3abb_(g3abb), g3bbb_(g3bbb) {}
+    : max_rdm_(3), have_g1a_(true), have_g1b_(true), have_g2aa_(true), have_g2ab_(true),
+      have_g2bb_(true), have_g3aaa_(true), have_g3aab_(true), have_g3abb_(true), have_g3bbb_(true),
+      g1a_(g1a), g1b_(g1b), g2aa_(g2aa), g2ab_(g2ab), g2bb_(g2bb), g3aaa_(g3aaa), g3aab_(g3aab),
+      g3abb_(g3abb), g3bbb_(g3bbb) {}
 
-RDMs::RDMs(bool ms_avg, ambit::Tensor g1a) : ms_avg_(ms_avg), max_rdm_(1), g1a_(g1a) {}
+void RDMs::make_rdms_spin_free() {
+    if (max_rdm_ > 0) {
+        g1a_("pq") += g1b_("pq");
+        SF_G1_ = g1a_;
+        SF_G1_.set_name("SF_G1");
+        have_SF_G1_ = true;
+        have_g1a_ = false;
+        have_g1b_ = false;
+//        g1a_ = ambit::Tensor();
+        g1b_.reset();
+    }
+    if (max_rdm_ > 1) {
+        g2aa_("pqrs") += g2bb_("pqrs");
+        g2aa_("pqrs") += g2ab_("pqrs");
+        g2aa_("pqrs") += g2ab_("qpsr");
+        SF_G2_ = g2aa_;
+        SF_G2_.set_name("SF_G2");
+        have_SF_G2_ = true;
+        have_g2aa_ = false;
+        have_g2ab_ = false;
+        have_g2bb_ = false;
+//        g2aa_ = ambit::Tensor();
+        g2ab_.reset();
+        g2bb_.reset();
+    }
+    if (max_rdm_ > 2) {
+        g3aaa_("pqrstu") += g3bbb_("pqrstu");
+        g3bbb_.reset();
 
-RDMs::RDMs(bool ms_avg, ambit::Tensor g1a, ambit::Tensor g2ab)
-    : ms_avg_(ms_avg), max_rdm_(2), g1a_(g1a), g2ab_(g2ab) {}
+        g3aaa_("pqrstu") += g3aab_("pqrstu");
+        g3aaa_("pqrstu") += g3aab_("prqsut");
+        g3aaa_("pqrstu") += g3aab_("qrptus");
+        g3aab_.reset();
 
-RDMs::RDMs(bool ms_avg, ambit::Tensor g1a, ambit::Tensor g2ab, ambit::Tensor g3aab)
-    : ms_avg_(ms_avg), max_rdm_(3), g1a_(g1a), g2ab_(g2ab), g3aab_(g3aab) {}
+        g3aaa_("pqrstu") += g3abb_("pqrstu");
+        g3aaa_("pqrstu") += g3abb_("qprtsu");
+        g3aaa_("pqrstu") += g3abb_("rpqust");
+        g3abb_.reset();
+
+        SF_G3_ = g3aaa_;
+        SF_G3_.set_name("SF_G3");
+//        g3aaa_ = ambit::Tensor();
+        have_SF_G3_ = true;
+
+        have_g3aaa_ = false;
+        have_g3aab_ = false;
+        have_g3abb_ = false;
+        have_g3bbb_ = false;
+    }
+    spin_free_ = true;
+}
+
+// RDMs::RDMs(bool ms_avg, ambit::Tensor g1a) : ms_avg_(ms_avg), max_rdm_(1), g1a_(g1a) {}
+//
+// RDMs::RDMs(bool ms_avg, ambit::Tensor g1a, ambit::Tensor g2ab)
+//     : ms_avg_(ms_avg), max_rdm_(2), g1a_(g1a), g2ab_(g2ab) {}
+//
+// RDMs::RDMs(bool ms_avg, ambit::Tensor g1a, ambit::Tensor g2ab, ambit::Tensor g3aab)
+//     : ms_avg_(ms_avg), max_rdm_(3), g1a_(g1a), g2ab_(g2ab), g3aab_(g3aab) {}
 
 void RDMs::validate(const size_t& level, const std::string& name, const bool& must_ms_avg) const {
     if (level > max_rdm_) {
@@ -74,60 +142,162 @@ void RDMs::validate(const size_t& level, const std::string& name, const bool& mu
     }
 }
 
+ambit::Tensor RDMs::g1a() {
+    validate(1, "g1a");
+    if (spin_free_) {
+        auto g1a = SF_G1_.clone();
+        g1a.scale(0.5);
+        g1a.set_name("g1a");
+        return g1a;
+    }
+    return g1a_;
+}
+
 ambit::Tensor RDMs::g1b() {
     validate(1, "g1b");
-    if (ms_avg_ and (not have_g1b_)) {
-        g1b_ = g1a_.clone();
-        have_g1b_ = true;
+    if (spin_free_) {
+        auto g1b = SF_G1_.clone();
+        g1b.scale(0.5);
+        g1b.set_name("g1b");
+        return g1b;
     }
     return g1b_;
 }
 
+// ambit::Tensor RDMs::g1b() {
+//     validate(1, "g1b");
+//     if (ms_avg_ and (not have_g1b_)) {
+//         g1b_ = g1a_.clone();
+//         have_g1b_ = true;
+//     }
+//     return g1b_;
+// }
+
+ambit::Tensor RDMs::g2ab() {
+    validate(2, "g2ab");
+    if (spin_free_) {
+        auto g2ab = SF_G2_.clone();
+        g2ab.scale(1.0 / 3.0);
+        g2ab("pqrs") += (1.0 / 6.0) * SF_G2_("pqsr");
+        g2ab.set_name("g2ab");
+        return g2ab;
+    }
+    return g2ab_;
+}
+
 ambit::Tensor RDMs::g2aa() {
     validate(2, "g2aa");
-    if (ms_avg_ and (not have_g2aa_)) {
-        g2aa_ = make_g2_high_spin_case(g2ab_);
-        have_g2aa_ = true;
+    if (spin_free_) {
+        auto g2aa = SF_G2_.clone();
+        g2aa("pqrs") -= SF_G2_("pqsr");
+        g2aa.scale(1.0 / 6.0);
+        g2aa.set_name("g2aa");
+        return g2aa;
     }
     return g2aa_;
 }
 
 ambit::Tensor RDMs::g2bb() {
     validate(2, "g2bb");
-    if (ms_avg_ and (not have_g2bb_)) {
-        g2bb_ = make_g2_high_spin_case(g2ab_);
-        have_g2bb_ = true;
+    if (spin_free_) {
+        auto g2bb = g2aa();
+        g2bb.set_name("g2bb");
+        return g2bb;
     }
     return g2bb_;
 }
 
-ambit::Tensor RDMs::g3aaa() {
-    validate(3, "g3aaa");
-    if (ms_avg_ and (not have_g3aaa_)) {
-        g3aaa_ = make_g3_high_spin_case(g3aab_);
-        have_g3aaa_ = true;
+// ambit::Tensor RDMs::g2aa() {
+//     validate(2, "g2aa");
+//     if (ms_avg_ and (not have_g2aa_)) {
+//         g2aa_ = make_g2_high_spin_case(g2ab_);
+//         have_g2aa_ = true;
+//     }
+//     return g2aa_;
+// }
+//
+// ambit::Tensor RDMs::g2bb() {
+//     validate(2, "g2bb");
+//     if (ms_avg_ and (not have_g2bb_)) {
+//         g2bb_ = make_g2_high_spin_case(g2ab_);
+//         have_g2bb_ = true;
+//     }
+//     return g2bb_;
+// }
+
+ambit::Tensor RDMs::g3aab() {
+    validate(3, "g3aab");
+    if (spin_free_) {
+        auto g3aab = SF_G3_.clone();
+        g3aab("pqrstu") -= SF_G3_("pqrtus") + SF_G3_("pqrust") + 2.0 * SF_G3_("pqrtsu");
+        g3aab.scale(1.0 / 12.0);
+        g3aab.set_name("g3aab");
+        return g3aab;
     }
-    return g3aaa_;
+    return g3aab_;
 }
 
 ambit::Tensor RDMs::g3abb() {
     validate(3, "g3abb");
-    if (ms_avg_ and (not have_g3abb_)) {
-        g3abb_ = g3aab_.clone();
-        g3abb_("rpqust") = g3aab_("pqrstu");
-        have_g3abb_ = true;
+    if (spin_free_) {
+        auto g3abb = SF_G3_.clone();
+        g3abb("pqrstu") -= SF_G3_("pqrtus") + SF_G3_("pqrust") + 2.0 * SF_G3_("pqrsut");
+        g3abb.scale(1.0 / 12.0);
+        g3abb.set_name("g3abb");
+        return g3abb;
     }
     return g3abb_;
 }
 
+ambit::Tensor RDMs::g3aaa() {
+    validate(3, "g3aaa");
+    if (spin_free_) {
+        auto g3aaa = SF_G3_.clone();
+        g3aaa("pqrstu") += SF_G3_("pqrtus") + SF_G3_("pqrust");
+        g3aaa.scale(1.0 / 12.0);
+        g3aaa.set_name("g3aaa");
+        return g3aaa;
+    }
+    return g3aaa_;
+}
+
 ambit::Tensor RDMs::g3bbb() {
     validate(3, "g3bbb");
-    if (ms_avg_ and (not have_g3bbb_)) {
-        g3bbb_ = make_g3_high_spin_case(g3aab_);
-        have_g3bbb_ = true;
+    if (spin_free_) {
+        auto g3bbb = g3aaa();
+        g3bbb.set_name("g3bbb");
+        return g3bbb;
     }
     return g3bbb_;
 }
+
+//ambit::Tensor RDMs::g3aaa() {
+//    validate(3, "g3aaa");
+//    if (ms_avg_ and (not have_g3aaa_)) {
+//        g3aaa_ = make_g3_high_spin_case(g3aab_);
+//        have_g3aaa_ = true;
+//    }
+//    return g3aaa_;
+//}
+//
+//ambit::Tensor RDMs::g3abb() {
+//    validate(3, "g3abb");
+//    if (ms_avg_ and (not have_g3abb_)) {
+//        g3abb_ = g3aab_.clone();
+//        g3abb_("rpqust") = g3aab_("pqrstu");
+//        have_g3abb_ = true;
+//    }
+//    return g3abb_;
+//}
+//
+//ambit::Tensor RDMs::g3bbb() {
+//    validate(3, "g3bbb");
+//    if (ms_avg_ and (not have_g3bbb_)) {
+//        g3bbb_ = make_g3_high_spin_case(g3aab_);
+//        have_g3bbb_ = true;
+//    }
+//    return g3bbb_;
+//}
 
 ambit::Tensor RDMs::L2aa() {
     validate(2, "L2aa");
@@ -243,31 +413,74 @@ ambit::Tensor RDMs::SF_G2() {
     return SF_G2_;
 }
 
-ambit::Tensor RDMs::SF_L1() { return SF_G1(); }
+ambit::Tensor RDMs::SF_L1() { return SF_G1_; }
 
 ambit::Tensor RDMs::SF_L2() {
-    validate(2, "SF_L2", true);
+    validate(2, "SF_L2", false);
     if (not have_SF_L2_) {
-        SF_L2_ = L2ab().clone();
-        SF_L2_.scale(4.0);
-        SF_L2_("pqrs") -= 2.0 * L2ab()("pqsr");
+        SF_L2_ = SF_G2_.clone();
+        SF_L2_("pqrs") -= SF_G1_("pr") * SF_G1_("qs");
+        SF_L2_("pqrs") += 0.5 * SF_G1_("ps") * SF_G1_("qr");
         have_SF_L2_ = true;
     }
     return SF_L2_;
 }
 
 ambit::Tensor RDMs::SF_L3() {
-    validate(3, "SF_L3", true);
+    validate(3, "SF_L3", false);
     if (not have_SF_L3_) {
-        SF_L3_ = make_g3_high_spin_case(L3aab());
-        SF_L3_("pqrstu") += L3aab()("pqrstu");
-        SF_L3_("pqrstu") += L3aab()("prqsut");
-        SF_L3_("pqrstu") += L3aab()("qrptus");
-        SF_L3_.scale(2.0);
+        SF_L3_ = SF_G3_.clone();
+
+        SF_L3_("pqrstu") -= SF_G1_("ps") * SF_L2_("qrtu");
+        SF_L3_("pqrstu") -= SF_G1_("qt") * SF_L2_("prsu");
+        SF_L3_("pqrstu") -= SF_G1_("ru") * SF_L2_("pqst");
+
+        SF_L3_("pqrstu") += 0.5 * SF_G1_("pt") * SF_L2_("qrsu");
+        SF_L3_("pqrstu") += 0.5 * SF_G1_("pu") * SF_L2_("qrts");
+
+        SF_L3_("pqrstu") += 0.5 * SF_G1_("qs") * SF_L2_("prtu");
+        SF_L3_("pqrstu") += 0.5 * SF_G1_("qu") * SF_L2_("prst");
+
+        SF_L3_("pqrstu") += 0.5 * SF_G1_("rs") * SF_L2_("pqut");
+        SF_L3_("pqrstu") += 0.5 * SF_G1_("rt") * SF_L2_("pqsu");
+
+        SF_L3_("pqrstu") -= SF_G1_("ps") * SF_G1_("qt") * SF_G1_("ru");
+
+        SF_L3_("pqrstu") += 0.5 * SF_G1_("ps") * SF_G1_("qu") * SF_G1_("rt");
+        SF_L3_("pqrstu") += 0.5 * SF_G1_("pu") * SF_G1_("qt") * SF_G1_("rs");
+        SF_L3_("pqrstu") += 0.5 * SF_G1_("pt") * SF_G1_("qs") * SF_G1_("ru");
+
+        SF_L3_("pqrstu") -= 0.25 * SF_G1_("pt") * SF_G1_("qu") * SF_G1_("rs");
+        SF_L3_("pqrstu") -= 0.25 * SF_G1_("pu") * SF_G1_("qs") * SF_G1_("rt");
+
         have_SF_L3_ = true;
     }
     return SF_L3_;
 }
+
+//ambit::Tensor RDMs::SF_L2() {
+//    validate(2, "SF_L2", true);
+//    if (not have_SF_L2_) {
+//        SF_L2_ = L2ab().clone();
+//        SF_L2_.scale(4.0);
+//        SF_L2_("pqrs") -= 2.0 * L2ab()("pqsr");
+//        have_SF_L2_ = true;
+//    }
+//    return SF_L2_;
+//}
+//
+//ambit::Tensor RDMs::SF_L3() {
+//    validate(3, "SF_L3", true);
+//    if (not have_SF_L3_) {
+//        SF_L3_ = make_g3_high_spin_case(L3aab());
+//        SF_L3_("pqrstu") += L3aab()("pqrstu");
+//        SF_L3_("pqrstu") += L3aab()("prqsut");
+//        SF_L3_("pqrstu") += L3aab()("qrptus");
+//        SF_L3_.scale(2.0);
+//        have_SF_L3_ = true;
+//    }
+//    return SF_L3_;
+//}
 
 ambit::Tensor make_g2_high_spin_case(const ambit::Tensor& g2ab) {
     auto g2hs = g2ab.clone();
@@ -389,7 +602,8 @@ void make_cumulant_L3bbb_in_place(const ambit::Tensor& g1b, const ambit::Tensor&
 }
 
 void RDMs::rotate(const ambit::Tensor& Ua, const ambit::Tensor& Ub) {
-    if (ms_avg_) {
+//    if (ms_avg_) {
+    if (spin_free_) {
         rotate_restricted(Ua);
     } else {
         rotate_unrestricted(Ua, Ub);
@@ -405,28 +619,41 @@ void RDMs::rotate_restricted(const ambit::Tensor& Ua) {
     reset_built_flags();
 
     // transform 1-RDM
-    auto g1T = ambit::Tensor::build(ambit::CoreTensor, "g1aT", g1a_.dims());
-    g1T("pq") = Ua("ap") * g1a_("ab") * Ua("bq");
-    g1a_("pq") = g1T("pq");
+    auto g1T = ambit::Tensor::build(ambit::CoreTensor, "g1aT", SF_G1_.dims());
+    g1T("pq") = Ua("ap") * SF_G1_("ab") * Ua("bq");
+    SF_G1_("pq") = g1T("pq");
+    have_SF_G1_ = true;
+//    auto g1T = ambit::Tensor::build(ambit::CoreTensor, "g1aT", g1a_.dims());
+//    g1T("pq") = Ua("ap") * g1a_("ab") * Ua("bq");
+//    g1a_("pq") = g1T("pq");
     g1T.reset();
     psi::outfile->Printf("\n    Transformed 1 RDM.");
     if (max_rdm_ == 1)
         return;
 
     // transform 2-RDM
-    auto g2T = ambit::Tensor::build(ambit::CoreTensor, "g2abT", g2ab_.dims());
-    g2T("pQrS") = Ua("ap") * Ua("BQ") * g2ab_("aBcD") * Ua("cr") * Ua("DS");
-    g2ab_("pqrs") = g2T("pqrs");
+    auto g2T = ambit::Tensor::build(ambit::CoreTensor, "g2abT", SF_G2_.dims());
+    g2T("pQrS") = Ua("ap") * Ua("BQ") * SF_G2_("aBcD") * Ua("cr") * Ua("DS");
+    SF_G2_("pqrs") = g2T("pqrs");
+    have_SF_G2_ = true;
+//    auto g2T = ambit::Tensor::build(ambit::CoreTensor, "g2abT", g2ab_.dims());
+//    g2T("pQrS") = Ua("ap") * Ua("BQ") * g2ab_("aBcD") * Ua("cr") * Ua("DS");
+//    g2ab_("pqrs") = g2T("pqrs");
     g2T.reset();
     psi::outfile->Printf("\n    Transformed 2 RDM.");
     if (max_rdm_ == 2)
         return;
 
     // transform 3-RDM
-    auto g3T = ambit::Tensor::build(ambit::CoreTensor, "g3aabT", g3aab_.dims());
+    auto g3T = ambit::Tensor::build(ambit::CoreTensor, "g3aabT", SF_G3_.dims());
     g3T("pqRstU") =
-        Ua("ap") * Ua("bq") * Ua("CR") * g3aab_("abCijK") * Ua("is") * Ua("jt") * Ua("KU");
-    g3aab_("abcijk") = g3T("abcijk");
+        Ua("ap") * Ua("bq") * Ua("CR") * SF_G3_("abCijK") * Ua("is") * Ua("jt") * Ua("KU");
+    SF_G3_("abcijk") = g3T("abcijk");
+    have_SF_G3_ = true;
+//    auto g3T = ambit::Tensor::build(ambit::CoreTensor, "g3aabT", g3aab_.dims());
+//    g3T("pqRstU") =
+//        Ua("ap") * Ua("bq") * Ua("CR") * g3aab_("abCijK") * Ua("is") * Ua("jt") * Ua("KU");
+//    g3aab_("abcijk") = g3T("abcijk");
     g3T.reset();
     psi::outfile->Printf("\n    Transformed 3 RDM.");
 }

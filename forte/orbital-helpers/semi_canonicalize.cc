@@ -54,12 +54,6 @@ SemiCanonical::SemiCanonical(std::shared_ptr<MOSpaceInfo> mo_space_info,
                              std::shared_ptr<ForteOptions> foptions, bool quiet)
     : mo_space_info_(mo_space_info), ints_(ints), print_(not quiet), fix_orbital_success_(true) {
     read_options(foptions);
-
-    print_h2("Semicanonicalize Orbitals");
-    auto true_or_false = [](bool x) { return x ? "TRUE" : "FALSE"; };
-    outfile->Printf("\n    MIX INACTIVE ORBITALS   ...... %5s", true_or_false(inactive_mix_));
-    outfile->Printf("\n    MIX GAS ACTIVE ORBITALS ...... %5s", true_or_false(active_mix_));
-
     // initialize the dimension objects
     startup();
 }
@@ -137,6 +131,11 @@ void SemiCanonical::set_U_to_identity() {
 void SemiCanonical::semicanonicalize(RDMs& rdms, const bool& build_fock, const bool& nat_orb,
                                      const bool& transform) {
     timer t_semi("semicanonicalize orbitals");
+
+    print_h2("Semicanonicalize Orbitals");
+    auto true_or_false = [](bool x) { return x ? "TRUE" : "FALSE"; };
+    outfile->Printf("\n    MIX INACTIVE ORBITALS   ...... %5s", true_or_false(inactive_mix_));
+    outfile->Printf("\n    MIX GAS ACTIVE ORBITALS ...... %5s", true_or_false(active_mix_));
 
     // build Fock matrix
     if (build_fock) {
