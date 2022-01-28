@@ -52,6 +52,7 @@ void DSRG_MRPT2::set_global_variables() {
     na = mo_space_info_->size("ACTIVE");
     ncore = mo_space_info_->size("RESTRICTED_DOCC");
     nvirt = mo_space_info_->size("RESTRICTED_UOCC");
+    naux = aux_mos_.size();
     nirrep = mo_space_info_->nirrep();
     ndets = ci_vectors_[0].dims()[0];
     Alpha = 0.0;
@@ -77,6 +78,7 @@ void DSRG_MRPT2::set_tensor() {
     set_density();
     set_h();
     set_v();
+    if (eri_df_) { set_j();}
     set_active_fock();
     set_dsrg_tensor();
     set_ci_ints();

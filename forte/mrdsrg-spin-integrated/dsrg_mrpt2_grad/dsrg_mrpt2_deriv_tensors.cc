@@ -5,6 +5,55 @@
 #include "../dsrg_mrpt2.h"
 #include "helpers/timer.h"
 
+
+
+// #include "corr_grad.h"
+
+#include "psi4/libqt/qt.h"
+#include "psi4/lib3index/3index.h"
+#include "psi4/libpsio/psio.hpp"
+#include "psi4/libpsio/psio.h"
+#include "psi4/psifiles.h"
+#include "psi4/libpsi4util/PsiOutStream.h"
+#include "psi4/libpsi4util/process.h"
+#include "psi4/liboptions/liboptions.h"
+
+#include "psi4/libmints/basisset.h"
+#include "psi4/libmints/matrix.h"
+#include "psi4/libmints/mintshelper.h"
+#include "psi4/libmints/molecule.h"
+#include "psi4/libmints/twobody.h"
+#include "psi4/libmints/integral.h"
+#include "psi4/libmints/vector.h"
+
+#include "/Users/shuhe.wang/src/psi4/psi4/src/psi4/dfmp2/corr_grad.h"
+
+#include "psi4/lib3index/dftensor.h"
+#include "psi4/psi4-dec.h"
+#include "psi4/physconst.h"
+#include "psi4/psifiles.h"
+
+#include "psi4/lib3index/3index.h"
+#include "psi4/libfock/apps.h"
+#include "psi4/libfock/jk.h"
+#include "psi4/libmints/basisset.h"
+#include "psi4/libmints/extern.h"
+#include "psi4/libmints/integral.h"
+#include "psi4/libmints/matrix.h"
+#include "psi4/libmints/mintshelper.h"
+#include "psi4/libmints/molecule.h"
+#include "psi4/libmints/oeprop.h"
+#include "psi4/libmints/twobody.h"
+#include "psi4/libmints/vector.h"
+#include "psi4/libpsi4util/PsiOutStream.h"
+#include "psi4/libpsi4util/process.h"
+#include "psi4/libpsio/psio.h"
+#include "psi4/libpsio/psio.hpp"
+#include "psi4/libqt/qt.h"
+
+#include "psi4/libmints/wavefunction.h"
+#include <map>
+
 using namespace ambit;
 using namespace psi;
 
@@ -35,6 +84,19 @@ void DSRG_MRPT2::set_h() {
         } else {
             value = ints_->oei_b(i[0], i[1]);
         }
+    });
+}
+
+void DSRG_MRPT2::set_j() {  
+    Jm12 = BTF_->build(tensor_type_, "Jm12", {"LL"});
+    std::shared_ptr<BasisSet> auxiliary_ = ints_->wfn()->get_basisset("DF_BASIS_MP2");
+    auto metric = std::make_shared<FittingMetric>(auxiliary_, true);
+    // "form_eig_inverse()" genererates J^(-1/2); "form_full_eig_inverse()" genererates J^(-1)
+    metric->form_eig_inverse(Process::environment.options.get_double("DF_FITTING_CONDITION"));
+    SharedMatrix J = metric->get_metric();
+
+    (Jm12.block("LL")).iterate([&](const std::vector<size_t>& i, double& value) {
+        value = J->get(i[0], i[1]);
     });
 }
 

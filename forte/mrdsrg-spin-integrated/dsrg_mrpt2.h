@@ -191,27 +191,31 @@ class DSRG_MRPT2 : public MASTER_DSRG {
     /**
      * Initializing the two-body density Gamma2_.
      *
-     * NOTICE: this function shall be deprecated in the future.
+     * NOTICE: this function shall be revoked in the future.
      */
     void set_density();
     /**
      * Initializing the Fock F.
      *
-     * NOTICE: this function shall be deprecated in the future.
+     * NOTICE: this function shall be revoked in the future.
      */
     void set_active_fock();
     /**
      * Initializing the one-electron integral H.
      *
-     * NOTICE: this function shall be deprecated in the future.
+     * NOTICE: this function shall be revoked in the future.
      */
     void set_h();
     /**
      * Initializing the ERIs V.
      *
-     * NOTICE: this function shall be deprecated in the future.
+     * NOTICE: this function shall be revoked in the future.
      */
     void set_v();
+    /**
+     * Initializing the DF metric J^(-1/2).
+     */
+    void set_j();
     /// Set CI-relevant integrals
     void set_ci_ints();
     /**
@@ -224,6 +228,7 @@ class DSRG_MRPT2 : public MASTER_DSRG {
     size_t ncore;
     size_t nvirt;
     size_t na;
+    size_t naux;
     size_t nirrep;
 
     const bool PT2_TERM = true;
@@ -385,8 +390,10 @@ class DSRG_MRPT2 : public MASTER_DSRG {
     ambit::BlockedTensor W;
     // core Hamiltonian
     ambit::BlockedTensor H;
-    // df integrals
+    // DF integrals
     ambit::BlockedTensor B;
+    // DF metric J^(-1/2)
+    ambit::BlockedTensor Jm12;
     // two-electron integrals
     ambit::BlockedTensor V;
     // Fock matrix

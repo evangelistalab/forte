@@ -48,7 +48,6 @@
 #include "dsrg_mrpt2.h"
 
 using namespace ambit;
-
 using namespace psi;
 
 namespace forte {
