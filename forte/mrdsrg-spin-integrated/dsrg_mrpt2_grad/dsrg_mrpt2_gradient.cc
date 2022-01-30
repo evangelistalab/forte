@@ -30,6 +30,9 @@ SharedMatrix DSRG_MRPT2::compute_gradient() {
     write_lagrangian();
     write_1rdm_spin_dependent();
     write_2rdm_spin_dependent();
+    if (eri_df_) {
+        write_df_rdm();
+    }
     tpdm_backtransform();
 
     outfile->Printf("\n    Computing Gradient .............................. Done\n");

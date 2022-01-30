@@ -266,6 +266,10 @@ class DSRG_MRPT2 : public MASTER_DSRG {
      */
     void write_2rdm_spin_dependent();
     /**
+     * Write density terms of (P|Q)^x and (pq|Q)^x, where P and Q are auxiliary basis.
+     */
+    void write_df_rdm();
+    /**
      * Backtransform the TPDM.
      */
     void tpdm_backtransform();

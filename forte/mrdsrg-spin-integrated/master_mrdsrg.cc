@@ -215,7 +215,7 @@ void MASTER_DSRG::set_ambit_MOSpace() {
     // if DF/CD
     if (eri_df_) {
         aux_label_ = "L";
-        BTF_->add_mo_space(aux_label_, "g,g!,g@", aux_mos_, NoSpin);
+        BTF_->add_mo_space(aux_label_, "g,g!,g@,P!,Q!,A!,B!,R!,S!", aux_mos_, NoSpin);
         label_to_spacemo_[aux_label_[0]] = aux_mos_;
     }
 
