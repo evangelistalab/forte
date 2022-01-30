@@ -160,15 +160,16 @@ void export_Determinant(py::module& m) {
         .def("ann", &SQOperator::ann)
         .def("str", &SQOperator::str)
         .def("latex", &SQOperator::latex)
-        .def("adjoint", &SQOperator::adjoint);
+        .def("adjoint", &SQOperator::adjoint)
+        .def("__repr__", [](const SQOperator& sqop) { return sqop.str(); })
+        .def("__str__", [](const SQOperator& sqop) { return sqop.str(); });
 
     py::class_<StateVector>(m, "StateVector")
         .def(py::init<const det_hash<double>&>())
-        // .def("map", &StateVector::map)
+        .def(py::init<const StateVector&>())
         .def(
             "items", [](const StateVector& v) { return py::make_iterator(v.begin(), v.end()); },
             py::keep_alive<0, 1>()) // Essential: keep object alive while iterator exists
-        // .def("items",  [](StateVector& v) { return v.map(); })
         .def("str", &StateVector::str)
         .def("__eq__", &StateVector::operator==)
         .def("__repr__", [](const StateVector& v) { return v.str(); })

@@ -192,6 +192,9 @@ StateVector SparseFactExp::compute_exp(const SparseOperator& sop, const StateVec
         for (const auto& coupling : d_couplings) {
             const size_t d_idx = std::get<0>(coupling);
             const size_t new_d_idx = std::get<1>(coupling);
+            // special case of number operator
+            if (d_idx == new_d_idx)
+                continue;
             const double f = amp * std::get<2>(coupling);
             const double c = state_c[d_idx];
             // do not apply this operator to this determinant if we expect the new determinant
