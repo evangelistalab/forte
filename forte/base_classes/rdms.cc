@@ -745,6 +745,66 @@ void RDMs::reset_built_flags() {
     }
 }
 
+std::shared_ptr<RDMs_NEW> RDMs_NEW::build(size_t max_rdm_level, size_t n_orbs, RDMsType type) {
+    std::vector<size_t> dims1(2, n_orbs);
+    std::vector<size_t> dims2(4, n_orbs);
+    std::vector<size_t> dims3(6, n_orbs);
+
+    std::shared_ptr<RDMs_NEW> rdms;
+
+    if (type == spin_dependent) {
+        ambit::Tensor g1a, g1b, g2aa, g2ab, g2bb, g3aaa, g3aab, g3abb, g3bbb;
+        if (max_rdm_level > 0) {
+            g1a = ambit::Tensor::build(ambit::CoreTensor, "g1a", dims1);
+            g1b = ambit::Tensor::build(ambit::CoreTensor, "g1b", dims1);
+        }
+        if (max_rdm_level > 1) {
+            g2aa = ambit::Tensor::build(ambit::CoreTensor, "g2aa", dims2);
+            g2ab = ambit::Tensor::build(ambit::CoreTensor, "g2ab", dims2);
+            g2bb = ambit::Tensor::build(ambit::CoreTensor, "g2bb", dims2);
+        }
+        if (max_rdm_level > 2) {
+            g3aaa = ambit::Tensor::build(ambit::CoreTensor, "g3aaa", dims3);
+            g3aab = ambit::Tensor::build(ambit::CoreTensor, "g3aab", dims3);
+            g3abb = ambit::Tensor::build(ambit::CoreTensor, "g3abb", dims3);
+            g3bbb = ambit::Tensor::build(ambit::CoreTensor, "g3bbb", dims3);
+        }
+
+        if (max_rdm_level < 1) {
+            rdms = std::make_shared<SD_RDMs>();
+        } else if (max_rdm_level == 1) {
+            rdms = std::make_shared<SD_RDMs>(g1a, g1b);
+        } else if (max_rdm_level == 2) {
+            rdms = std::make_shared<SD_RDMs>(g1a, g1b, g2aa, g2ab, g2bb);
+        } else {
+            rdms =
+                std::make_shared<SD_RDMs>(g1a, g1b, g2aa, g2ab, g2bb, g3aaa, g3aab, g3abb, g3bbb);
+        }
+    } else {
+        ambit::Tensor g1, g2, g3;
+        if (max_rdm_level > 0) {
+            g1 = ambit::Tensor::build(ambit::CoreTensor, "SF_G1", dims1);
+        }
+        if (max_rdm_level > 1) {
+            g2 = ambit::Tensor::build(ambit::CoreTensor, "SF_G2", dims2);
+        }
+        if (max_rdm_level > 2) {
+            g3 = ambit::Tensor::build(ambit::CoreTensor, "SF_G3", dims3);
+        }
+
+        if (max_rdm_level < 1) {
+            rdms = std::make_shared<SF_RDMs>();
+        } else if (max_rdm_level == 1) {
+            rdms = std::make_shared<SF_RDMs>(g1);
+        } else if (max_rdm_level == 2) {
+            rdms = std::make_shared<SF_RDMs>(g1, g2);
+        } else {
+            rdms = std::make_shared<SF_RDMs>(g1, g2, g3);
+        }
+    }
+    return rdms;
+}
+
 std::shared_ptr<psi::Matrix> RDMs_NEW::SF_G1mat() {
     auto G1 = SF_G1();
     auto M = tensor_to_matrix(G1);
@@ -767,6 +827,7 @@ ambit::Tensor RDMs_NEW::SF_L1() const {
 
 ambit::Tensor RDMs_NEW::SF_L2() const {
     _test_rdm_level(2, "L2");
+    timer t("make_cumulant_L2");
     auto G1 = SF_G1();
     auto L2 = SF_G2().clone();
     L2("pqrs") -= G1("pr") * G1("qs");
@@ -777,6 +838,8 @@ ambit::Tensor RDMs_NEW::SF_L2() const {
 
 ambit::Tensor RDMs_NEW::SF_L3() const {
     _test_rdm_level(3, "SF_L3");
+    timer t("make_cumulant_L3");
+
     auto G1 = SF_G1();
     auto G2 = SF_G2();
     auto L3 = SF_G3().clone();
@@ -808,7 +871,7 @@ ambit::Tensor RDMs_NEW::SF_L3() const {
 }
 
 ambit::Tensor RDMs_NEW::make_cumulant_L2aa(const ambit::Tensor& g1a, const ambit::Tensor& g2aa) {
-    timer t("make_cumulant_L2aa_in_place");
+    timer t("make_cumulant_L2aa");
     auto L2aa = g2aa.clone();
     L2aa("pqrs") -= g1a("pr") * g1a("qs");
     L2aa("pqrs") += g1a("ps") * g1a("qr");
@@ -817,7 +880,7 @@ ambit::Tensor RDMs_NEW::make_cumulant_L2aa(const ambit::Tensor& g1a, const ambit
 
 ambit::Tensor RDMs_NEW::make_cumulant_L2ab(const ambit::Tensor& g1a, const ambit::Tensor& g1b,
                                            const ambit::Tensor& g2ab) {
-    timer t("make_cumulant_L2ab_in_place");
+    timer t("make_cumulant_L2ab");
     auto L2ab = g2ab.clone();
     L2ab("pqrs") -= g1a("pr") * g1b("qs");
     return L2ab;
@@ -825,7 +888,7 @@ ambit::Tensor RDMs_NEW::make_cumulant_L2ab(const ambit::Tensor& g1a, const ambit
 
 ambit::Tensor RDMs_NEW::make_cumulant_L3aaa(const ambit::Tensor& g1a, const ambit::Tensor& g2aa,
                                             const ambit::Tensor& g3aaa) {
-    timer t("make_cumulant_L3aaa_in_place");
+    timer t("make_cumulant_L3aaa");
 
     auto L3aaa = g3aaa.clone();
 
@@ -855,7 +918,7 @@ ambit::Tensor RDMs_NEW::make_cumulant_L3aaa(const ambit::Tensor& g1a, const ambi
 ambit::Tensor RDMs_NEW::make_cumulant_L3aab(const ambit::Tensor& g1a, const ambit::Tensor& g1b,
                                             const ambit::Tensor& g2aa, const ambit::Tensor& g2ab,
                                             const ambit::Tensor& g3aab) {
-    timer t("make_cumulant_L3aab_in_place");
+    timer t("make_cumulant_L3aab");
 
     auto L3aab = g3aab.clone();
     L3aab("pqRstU") -= g1b("RU") * g2aa("pqst");
@@ -875,7 +938,7 @@ ambit::Tensor RDMs_NEW::make_cumulant_L3aab(const ambit::Tensor& g1a, const ambi
 ambit::Tensor RDMs_NEW::make_cumulant_L3abb(const ambit::Tensor& g1a, const ambit::Tensor& g1b,
                                             const ambit::Tensor& g2ab, const ambit::Tensor& g2bb,
                                             const ambit::Tensor& g3abb) {
-    timer t("make_cumulant_L3abb_in_place");
+    timer t("make_cumulant_L3abb");
 
     auto L3abb = g3abb.clone();
     L3abb("pQRsTU") -= g1a("ps") * g2bb("QRTU");
@@ -941,12 +1004,51 @@ void RDMs_NEW::_test_rdm_level(const size_t& level, const std::string& name) con
     }
 }
 
-SD_RDMs::SD_RDMs(ambit::Tensor g1a, ambit::Tensor g1b) : g1a_(g1a), g1b_(g1b) { max_rdm_ = 1; }
+void RDMs_NEW::_test_rdm_dims(const ambit::Tensor& T, const std::string& name) const {
+    const auto& dims = T.dims();
+    if (dims.size() < 2) {
+        throw std::runtime_error("Invalid dimension (too small) for " + name);
+    }
+    if (std::find_if(dims.begin(), dims.end(), [&](size_t i) { return i != n_orbs_; }) !=
+        dims.end()) {
+        std::stringstream ss;
+        ss << "Invalid dimensions for " << name << ": " << dims[0];
+        for (size_t i = 0, size = dims.size() - 1; i < size; ++i) {
+            ss << " x " << dims[i + 1];
+        }
+        ss << "; Expect: " << n_orbs_;
+        for (size_t i = 0, size = dims.size() - 1; i < size; ++i) {
+            ss << " x " << n_orbs_;
+        }
+        throw std::runtime_error(ss.str());
+    }
+}
+
+SD_RDMs::SD_RDMs() {
+    max_rdm_ = 0;
+    type_ = spin_dependent;
+    n_orbs_ = 0;
+}
+
+SD_RDMs::SD_RDMs(ambit::Tensor g1a, ambit::Tensor g1b) : g1a_(g1a), g1b_(g1b) {
+    max_rdm_ = 1;
+    type_ = spin_dependent;
+    n_orbs_ = g1a.dim(0);
+    _test_rdm_dims(g1a, "g1a");
+    _test_rdm_dims(g1b, "g1b");
+}
 
 SD_RDMs::SD_RDMs(ambit::Tensor g1a, ambit::Tensor g1b, ambit::Tensor g2aa, ambit::Tensor g2ab,
                  ambit::Tensor g2bb)
     : g1a_(g1a), g1b_(g1b), g2aa_(g2aa), g2ab_(g2ab), g2bb_(g2bb) {
     max_rdm_ = 2;
+    type_ = spin_dependent;
+    n_orbs_ = g1a.dim(0);
+    _test_rdm_dims(g1a, "g1a");
+    _test_rdm_dims(g1b, "g1b");
+    _test_rdm_dims(g2aa, "g2aa");
+    _test_rdm_dims(g2ab, "g2ab");
+    _test_rdm_dims(g2bb, "g2bb");
 }
 
 SD_RDMs::SD_RDMs(ambit::Tensor g1a, ambit::Tensor g1b, ambit::Tensor g2aa, ambit::Tensor g2ab,
@@ -955,6 +1057,17 @@ SD_RDMs::SD_RDMs(ambit::Tensor g1a, ambit::Tensor g1b, ambit::Tensor g2aa, ambit
     : g1a_(g1a), g1b_(g1b), g2aa_(g2aa), g2ab_(g2ab), g2bb_(g2bb), g3aaa_(g3aaa), g3aab_(g3aab),
       g3abb_(g3abb), g3bbb_(g3bbb) {
     max_rdm_ = 3;
+    type_ = spin_dependent;
+    n_orbs_ = g1a.dim(0);
+    _test_rdm_dims(g1a, "g1a");
+    _test_rdm_dims(g1b, "g1b");
+    _test_rdm_dims(g2aa, "g2aa");
+    _test_rdm_dims(g2ab, "g2ab");
+    _test_rdm_dims(g2bb, "g2bb");
+    _test_rdm_dims(g3aaa, "g3aaa");
+    _test_rdm_dims(g3aab, "g3aab");
+    _test_rdm_dims(g3abb, "g3abb");
+    _test_rdm_dims(g3bbb, "g3bbb");
 }
 
 ambit::Tensor SD_RDMs::g1a() const {
@@ -1078,6 +1191,81 @@ ambit::Tensor SD_RDMs::L3bbb() const {
     return L3bbb;
 }
 
+std::shared_ptr<RDMs_NEW> SD_RDMs::clone() {
+    ambit::Tensor g1a, g1b, g2aa, g2ab, g2bb, g3aaa, g3aab, g3abb, g3bbb;
+    if (max_rdm_ > 0) {
+        g1a = g1a_.clone();
+        g1b = g1b_.clone();
+    }
+    if (max_rdm_ > 1) {
+        g2aa = g2aa_.clone();
+        g2ab = g2ab_.clone();
+        g2bb = g2bb_.clone();
+    }
+    if (max_rdm_ > 2) {
+        g3aaa = g3aaa_.clone();
+        g3aab = g3aab_.clone();
+        g3abb = g3abb_.clone();
+        g3bbb = g3bbb_.clone();
+    }
+
+    std::shared_ptr<RDMs_NEW> rdms;
+
+    if (max_rdm_ < 1)
+        rdms = std::make_shared<SD_RDMs>();
+    else if (max_rdm_ == 1)
+        rdms = std::make_shared<SD_RDMs>(g1a, g1b);
+    else if (max_rdm_ == 2)
+        rdms = std::make_shared<SD_RDMs>(g1a, g1b, g2aa, g2ab, g2bb);
+    else
+        rdms = std::make_shared<SD_RDMs>(g1a, g1b, g2aa, g2ab, g2bb, g3aaa, g3aab, g3abb, g3bbb);
+
+    return rdms;
+}
+
+void SD_RDMs::scale(double factor) {
+    if (max_rdm_ > 0) {
+        g1a_.scale(factor);
+        g1b_.scale(factor);
+    }
+    if (max_rdm_ > 1) {
+        g2aa_.scale(factor);
+        g2ab_.scale(factor);
+        g2bb_.scale(factor);
+    }
+    if (max_rdm_ > 2) {
+        g3aaa_.scale(factor);
+        g3aab_.scale(factor);
+        g3abb_.scale(factor);
+        g3bbb_.scale(factor);
+    }
+}
+
+void SD_RDMs::axpy(std::shared_ptr<RDMs_NEW> rhs, double a) {
+    if (max_rdm_ != rhs->max_rdm_level())
+        throw std::runtime_error("RDMs AXPY Error: Inconsistent RDMs levels!");
+    if (type_ != rhs->rdm_type())
+        throw std::runtime_error("RDMs AXPY Error: Inconsistent RDMs types!");
+    if (n_orbs_ != rhs->dim())
+        throw std::runtime_error("RDMs AXPY Error: Inconsistent number of orbitals!");
+
+    if (max_rdm_ > 0) {
+        g1a_("pq") += a * rhs->g1a()("pq");
+        g1b_("pq") += a * rhs->g1b()("pq");
+    }
+    if (max_rdm_ > 1) {
+        g2aa_("pqrs") += a * rhs->g2aa()("pqrs");
+        g2ab_("pqrs") += a * rhs->g2ab()("pqrs");
+        g2bb_("pqrs") += a * rhs->g2bb()("pqrs");
+    }
+    if (max_rdm_ > 2) {
+        g3aaa_("pqrstu") += a * rhs->g3aaa()("pqrstu");
+        g3aab_("pqrstu") += a * rhs->g3aab()("pqrstu");
+        g3abb_("pqrstu") += a * rhs->g3abb()("pqrstu");
+        g3bbb_("pqrstu") += a * rhs->g3bbb()("pqrstu");
+    }
+}
+
 void SD_RDMs::rotate(const ambit::Tensor& Ua, const ambit::Tensor& Ub) {
     if (max_rdm_ < 1)
         return;
@@ -1139,13 +1327,35 @@ void SD_RDMs::rotate(const ambit::Tensor& Ua, const ambit::Tensor& Ub) {
     psi::outfile->Printf("\n    Transformed 3 RDMs.");
 }
 
-SF_RDMs::SF_RDMs(ambit::Tensor G1) : SF_G1_(G1) { max_rdm_ = 1; }
+SF_RDMs::SF_RDMs() {
+    max_rdm_ = 0;
+    type_ = spin_free;
+    n_orbs_ = 0;
+}
 
-SF_RDMs::SF_RDMs(ambit::Tensor G1, ambit::Tensor G2) : SF_G1_(G1), SF_G2_(G2) { max_rdm_ = 2; }
+SF_RDMs::SF_RDMs(ambit::Tensor G1) : SF_G1_(G1) {
+    max_rdm_ = 1;
+    type_ = spin_free;
+    n_orbs_ = G1.dim(0);
+    _test_rdm_dims(G1, "G1");
+}
+
+SF_RDMs::SF_RDMs(ambit::Tensor G1, ambit::Tensor G2) : SF_G1_(G1), SF_G2_(G2) {
+    max_rdm_ = 2;
+    type_ = spin_free;
+    n_orbs_ = G1.dim(0);
+    _test_rdm_dims(G1, "G1");
+    _test_rdm_dims(G2, "G2");
+}
 
 SF_RDMs::SF_RDMs(ambit::Tensor G1, ambit::Tensor G2, ambit::Tensor G3)
     : SF_G1_(G1), SF_G2_(G2), SF_G3_(G3) {
     max_rdm_ = 3;
+    type_ = spin_free;
+    n_orbs_ = G1.dim(0);
+    _test_rdm_dims(G1, "G1");
+    _test_rdm_dims(G2, "G2");
+    _test_rdm_dims(G3, "G3");
 }
 
 ambit::Tensor SF_RDMs::SF_G1() const {
@@ -1267,6 +1477,54 @@ ambit::Tensor SF_RDMs::L3bbb() const {
     auto L3bbb = sf3_to_sd3aaa(SF_L3());
     L3bbb.set_name("L3bbb");
     return L3bbb;
+}
+
+std::shared_ptr<RDMs_NEW> SF_RDMs::clone() {
+    ambit::Tensor g1, g2, g3;
+    if (max_rdm_ > 0)
+        g1 = SF_G1_.clone();
+    if (max_rdm_ > 1)
+        g2 = SF_G2_.clone();
+    if (max_rdm_ > 2)
+        g3 = SF_G3_.clone();
+
+    std::shared_ptr<RDMs_NEW> rdms;
+
+    if (max_rdm_ < 1)
+        rdms = std::make_shared<SF_RDMs>();
+    else if (max_rdm_ == 1)
+        rdms = std::make_shared<SF_RDMs>(g1);
+    else if (max_rdm_ == 2)
+        rdms = std::make_shared<SF_RDMs>(g1, g2);
+    else
+        rdms = std::make_shared<SF_RDMs>(g1, g2, g3);
+
+    return rdms;
+}
+
+void SF_RDMs::scale(double factor) {
+    if (max_rdm_ > 0)
+        SF_G1_.scale(factor);
+    if (max_rdm_ > 1)
+        SF_G2_.scale(factor);
+    if (max_rdm_ > 2)
+        SF_G3_.scale(factor);
+}
+
+void SF_RDMs::axpy(std::shared_ptr<RDMs_NEW> rhs, double a) {
+    if (max_rdm_ != rhs->max_rdm_level())
+        throw std::runtime_error("RDMs AXPY Error: Inconsistent RDMs levels!");
+    if (type_ != rhs->rdm_type())
+        throw std::runtime_error("RDMs AXPY Error: Inconsistent RDMs types!");
+    if (n_orbs_ != rhs->dim())
+        throw std::runtime_error("RDMs AXPY Error: Inconsistent number of orbitals!");
+
+    if (max_rdm_ > 0)
+        SF_G1_("pq") += a * rhs->SF_G1()("pq");
+    if (max_rdm_ > 1)
+        SF_G2_("pqrs") += a * rhs->SF_G2()("pqrs");
+    if (max_rdm_ > 2)
+        SF_G3_("pqrstu") += a * rhs->SF_G3()("pqrstu");
 }
 
 void SF_RDMs::rotate(const ambit::Tensor& Ua, const ambit::Tensor& Ub) {

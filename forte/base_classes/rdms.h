@@ -301,9 +301,62 @@ class RDMs {
     void reset_built_flags();
 };
 
+enum RDMsType { spin_dependent, spin_free };
+
 class RDMs_NEW {
   public:
-    // ==> Class Interface <==
+    /// Build a zero-valued RDMs object
+    static std::shared_ptr<RDMs_NEW> build(size_t max_rdm_level, size_t n_orbs, RDMsType type);
+
+    /// @return the max RDM level
+    size_t max_rdm_level() const { return max_rdm_; }
+
+    /// @return RDM type
+    RDMsType rdm_type() const { return type_; }
+
+    /// @return dimension of each index
+    size_t dim() const { return n_orbs_; }
+
+    /// Clone the current RDMs
+    virtual std::shared_ptr<RDMs_NEW> clone() = 0;
+
+    /// Scale the current RDMs with a factor
+    virtual void scale(double factor) = 0;
+
+    /// AXPY: this += a * rhs + this
+    virtual void axpy(std::shared_ptr<RDMs_NEW> rhs, double a) = 0;
+
+    /// Rotate the current RDMs using the input unitary matrices
+    virtual void rotate(const ambit::Tensor& Ua, const ambit::Tensor& Ub) = 0;
+
+    // static methods
+
+    /// Make alpha-alpha or beta-beta 2-RDC from 2-RDMs
+    static ambit::Tensor make_cumulant_L2aa(const ambit::Tensor& g1a, const ambit::Tensor& g2aa);
+    /// Make alpha-beta 2-RDC from 2-RDMs
+    static ambit::Tensor make_cumulant_L2ab(const ambit::Tensor& g1a, const ambit::Tensor& g1b,
+                                            const ambit::Tensor& g2ab);
+    /// Make alpha-alpha-alpha or beta-beta-beta 3-RDC from 3-RDMs
+    static ambit::Tensor make_cumulant_L3aaa(const ambit::Tensor& g1a, const ambit::Tensor& g2aa,
+                                             const ambit::Tensor& g3aaa);
+    /// Make alpha-alpha-beta 3-RDC from 3-RDMs
+    static ambit::Tensor make_cumulant_L3aab(const ambit::Tensor& g1a, const ambit::Tensor& g1b,
+                                             const ambit::Tensor& g2aa, const ambit::Tensor& g2ab,
+                                             const ambit::Tensor& g3aab);
+    /// Make alpha-beta-beta 3-RDC from 3-RDMs
+    static ambit::Tensor make_cumulant_L3abb(const ambit::Tensor& g1a, const ambit::Tensor& g1b,
+                                             const ambit::Tensor& g2ab, const ambit::Tensor& g2bb,
+                                             const ambit::Tensor& g3abb);
+
+    /// Spin-free 1-body to spin-dependent 1-body subject to Ms averaging
+    static ambit::Tensor sf1_to_sd1(const ambit::Tensor& G1);
+    /// Spin-free 2-body to spin-dependent 2-body subject to Ms averaging
+    static ambit::Tensor sf2_to_sd2aa(const ambit::Tensor& G2);
+    static ambit::Tensor sf2_to_sd2ab(const ambit::Tensor& G2);
+    /// Spin-free 3-body to spin-dependent 3-body subject to Ms averaging
+    static ambit::Tensor sf3_to_sd3aaa(const ambit::Tensor& G3);
+    static ambit::Tensor sf3_to_sd3aab(const ambit::Tensor& G3);
+    static ambit::Tensor sf3_to_sd3abb(const ambit::Tensor& G3);
 
     // Spin-dependent reduced density matrices (RDMs)
 
@@ -370,57 +423,28 @@ class RDMs_NEW {
     /// @return the spin-free 3-cumulant
     ambit::Tensor SF_L3() const;
 
-    // class variables
-
-    /// @return the max RDM level
-    size_t max_rdm_level() const { return max_rdm_; }
-
-    // class methods
-
-    /// Rotate the current RDMs using the input unitary matrices
-    virtual void rotate(const ambit::Tensor& Ua, const ambit::Tensor& Ub) = 0;
-
-    // static methods
-
-    /// Make alpha-alpha or beta-beta 2-RDC from 2-RDMs
-    static ambit::Tensor make_cumulant_L2aa(const ambit::Tensor& g1a, const ambit::Tensor& g2aa);
-    /// Make alpha-beta 2-RDC from 2-RDMs
-    static ambit::Tensor make_cumulant_L2ab(const ambit::Tensor& g1a, const ambit::Tensor& g1b,
-                                            const ambit::Tensor& g2ab);
-    /// Make alpha-alpha-alpha or beta-beta-beta 3-RDC from 3-RDMs
-    static ambit::Tensor make_cumulant_L3aaa(const ambit::Tensor& g1a, const ambit::Tensor& g2aa,
-                                             const ambit::Tensor& g3aaa);
-    /// Make alpha-alpha-beta 3-RDC from 3-RDMs
-    static ambit::Tensor make_cumulant_L3aab(const ambit::Tensor& g1a, const ambit::Tensor& g1b,
-                                             const ambit::Tensor& g2aa, const ambit::Tensor& g2ab,
-                                             const ambit::Tensor& g3aab);
-    /// Make alpha-beta-beta 3-RDC from 3-RDMs
-    static ambit::Tensor make_cumulant_L3abb(const ambit::Tensor& g1a, const ambit::Tensor& g1b,
-                                             const ambit::Tensor& g2ab, const ambit::Tensor& g2bb,
-                                             const ambit::Tensor& g3abb);
-
-    /// Spin-free 1-body to spin-dependent 1-body subject to Ms averaging
-    static ambit::Tensor sf1_to_sd1(const ambit::Tensor& G1);
-    /// Spin-free 2-body to spin-dependent 2-body subject to Ms averaging
-    static ambit::Tensor sf2_to_sd2aa(const ambit::Tensor& G2);
-    static ambit::Tensor sf2_to_sd2ab(const ambit::Tensor& G2);
-    /// Spin-free 3-body to spin-dependent 3-body subject to Ms averaging
-    static ambit::Tensor sf3_to_sd3aaa(const ambit::Tensor& G3);
-    static ambit::Tensor sf3_to_sd3aab(const ambit::Tensor& G3);
-    static ambit::Tensor sf3_to_sd3abb(const ambit::Tensor& G3);
-
   protected:
     // ==> Class Data <==
 
     /// Maximum RDM/RDC rank stored by this object
     size_t max_rdm_ = 0;
 
+    /// RDM type
+    RDMsType type_;
+
+    /// Number of orbitals for each dimension
+    size_t n_orbs_ = 0;
+
+    /// Test if the RDM dimensions are valid
+    void _test_rdm_dims(const ambit::Tensor& T, const std::string& name) const;
     /// Test if a function is asked for the correct level of RDMs
     void _test_rdm_level(const size_t& level, const std::string& name) const;
 };
 
 class SD_RDMs : public RDMs_NEW {
   public:
+    /// @brief Default constructor
+    SD_RDMs();
     /// @brief Construct a SD_RDMs object with the 1-rdm
     SD_RDMs(ambit::Tensor g1a, ambit::Tensor g1b);
     /// @brief Construct a SD_RDMs object with the 1- and 2-rdms
@@ -481,6 +505,15 @@ class SD_RDMs : public RDMs_NEW {
 
     // class methods
 
+    /// Clone the current RDMs
+    std::shared_ptr<RDMs_NEW> clone() override;
+
+    /// Scale the current RDMs with a factor
+    void scale(double factor) override;
+
+    /// AXPY: this += a * rhs + this
+    void axpy(std::shared_ptr<RDMs_NEW> rhs, double a) override;
+
     /// Rotate the current RDMs using the input unitary matrices
     void rotate(const ambit::Tensor& Ua, const ambit::Tensor& Ub) override;
 
@@ -507,6 +540,8 @@ class SD_RDMs : public RDMs_NEW {
 
 class SF_RDMs : public RDMs_NEW {
   public:
+    /// @brief Default constructor
+    SF_RDMs();
     /// @brief Construct a SF_RDMs object with the 1-rdm
     SF_RDMs(ambit::Tensor G1);
     /// @brief Construct a SF_RDMs object with the 1- and 2-rdms
@@ -563,6 +598,15 @@ class SF_RDMs : public RDMs_NEW {
     ambit::Tensor L3bbb() const override;
 
     // class methods
+
+    /// Clone the current RDMs
+    std::shared_ptr<RDMs_NEW> clone() override;
+
+    /// Scale the current RDMs with a factor
+    void scale(double factor) override;
+
+    /// AXPY: this += a * rhs + this
+    void axpy(std::shared_ptr<RDMs_NEW> rhs, double a) override;
 
     /// Rotate the current RDMs using the input unitary matrices
     void rotate(const ambit::Tensor& Ua, const ambit::Tensor& Ub) override;
