@@ -628,15 +628,69 @@ void DSRG_MRPT2::write_df_rdm() {
     /******************************* Backtransform (P|pq) to (P|\mu \nu) *******************************/
 
 
+
+    std::map<string, std::vector<std::pair<unsigned long, unsigned long>,
+                std::allocator<std::pair<unsigned long, unsigned long>>>> idxmap;
+    std::map<string, std::pair<SharedMatrix, SharedMatrix>> slicemap;
+
+
+    idxmap = {{"c", core_mos_relative},
+              {"a", actv_mos_relative},
+              {"v", virt_mos_relative}};
+
+    auto wfn = ints_->wfn();
+
+    slicemap = {{"ca", std::make_pair(wfn->Ca_subset("AO", "OCC"),    wfn->Ca_subset("AO", "ACTIVE"))}, 
+                {"ac", std::make_pair(wfn->Ca_subset("AO", "ACTIVE"), wfn->Ca_subset("AO", "OCC"))   }, 
+                {"cv", std::make_pair(wfn->Ca_subset("AO", "OCC"),    wfn->Ca_subset("AO", "VIR"))   },
+                {"vc", std::make_pair(wfn->Ca_subset("AO", "VIR"),    wfn->Ca_subset("AO", "OCC"))   },
+                {"av", std::make_pair(wfn->Ca_subset("AO", "ACTIVE"), wfn->Ca_subset("AO", "VIR"))   },
+                {"va", std::make_pair(wfn->Ca_subset("AO", "VIR"),    wfn->Ca_subset("AO", "ACTIVE"))},
+                {"cc", std::make_pair(wfn->Ca_subset("AO", "OCC"),    wfn->Ca_subset("AO", "OCC"))   },
+                {"aa", std::make_pair(wfn->Ca_subset("AO", "ACTIVE"), wfn->Ca_subset("AO", "ACTIVE"))},
+                {"vv", std::make_pair(wfn->Ca_subset("AO", "VIR"),    wfn->Ca_subset("AO", "VIR"))   },
+                {"CA", std::make_pair(wfn->Cb_subset("AO", "OCC"),    wfn->Cb_subset("AO", "ACTIVE"))}, 
+                {"AC", std::make_pair(wfn->Cb_subset("AO", "ACTIVE"), wfn->Cb_subset("AO", "OCC"))   }, 
+                {"CV", std::make_pair(wfn->Cb_subset("AO", "OCC"),    wfn->Cb_subset("AO", "VIR"))   },
+                {"VC", std::make_pair(wfn->Cb_subset("AO", "VIR"),    wfn->Cb_subset("AO", "OCC"))   },
+                {"AV", std::make_pair(wfn->Cb_subset("AO", "ACTIVE"), wfn->Cb_subset("AO", "VIR"))   },
+                {"VA", std::make_pair(wfn->Cb_subset("AO", "VIR"),    wfn->Cb_subset("AO", "ACTIVE"))},
+                {"CC", std::make_pair(wfn->Cb_subset("AO", "OCC"),    wfn->Cb_subset("AO", "OCC"))   },
+                {"AA", std::make_pair(wfn->Cb_subset("AO", "ACTIVE"), wfn->Cb_subset("AO", "ACTIVE"))},
+                {"VV", std::make_pair(wfn->Cb_subset("AO", "VIR"),    wfn->Cb_subset("AO", "VIR"))   }};
+
+    auto blocklabels = {"cc", "CC", "aa", "AA", "ca", "ac", "CA", "AC", "vv", "VV",
+                        "av", "cv", "va", "vc", "AV", "CV", "VA", "VC"};
+
+
+
+    for (const std::string& block : blocklabels) {
+    
+        
+    }
+
+
+
+
+
+
+
+
+
+
     int ao_dim = ints_->Ca()->rowdim();
     int nmo_matsize = nmo * nmo;
     int ao_matsize  = ao_dim * ao_dim;
 
-    std::vector<double> Pmunu;
+    std::vector<double> Pmunu(ao_matsize * naux);
+
+    SharedMatrix temp_mat(new Matrix("temp_mat", nirrep, irrep_vec, irrep_vec));
+    auto temp_mat_AO = std::make_shared<Matrix>("AO basis temp matrix", ints_->wfn()->nso(), ints_->wfn()->nso());
 
     for(int aux = 0; aux < naux; ++aux) {
-        SharedMatrix temp_mat(new Matrix("temp_mat", nirrep, irrep_vec, irrep_vec));
-
+        temp_mat->zero();
+        temp_mat_AO->zero();
+        
         // copy the df_3rdm (pq) matrices to temp_mat
         (df_3rdm.block("Lvc")).iterate([&](const std::vector<size_t>& i, double& value) {
             if (i[0] == aux) {
@@ -698,15 +752,13 @@ void DSRG_MRPT2::write_df_rdm() {
             }
         });
 
-        
-        auto temp_mat_AO = std::make_shared<Matrix>("AO basis temp matrix", ints_->wfn()->nso(), ints_->wfn()->nso());
         temp_mat_AO->remove_symmetry(temp_mat, ints_->wfn()->aotoso()->transpose());
         temp_mat_AO->back_transform(ints_->wfn()->Ca_subset("AO"));
 
         for(int i = 0; i < ao_dim; ++i) {
             for (int j = 0; j < ao_dim; ++j) {
                 auto val = temp_mat->get(i, j);
-                Pmunu.push_back(val);
+                Pmunu[aux * ao_matsize + i * ao_dim + j] = val;
             }
         }
     }
