@@ -624,6 +624,92 @@ void DSRG_MRPT2::write_df_rdm() {
     df_3rdm["Q!,e,f"] += Jm12["Q!,R!"] * B["R!,U,V"] * Z["ef"] * Gamma1_["UV"];
     df_3rdm["Q!,E,F"] += Jm12["Q!,R!"] * B["R!,u,v"] * Z["EF"] * Gamma1_["uv"];
     df_3rdm["Q!,E,F"] += Jm12["Q!,R!"] * B["R!,U,V"] * Z["EF"] * Gamma1_["UV"];
+
+    /******************************* Backtransform (P|pq) to (P|\mu \nu) *******************************/
+
+
+    int ao_dim = ints_->Ca()->rowdim();
+    int nmo_matsize = nmo * nmo;
+    int ao_matsize  = ao_dim * ao_dim;
+
+    std::vector<double> Pmunu;
+
+    for(int aux = 0; aux < naux; ++aux) {
+        SharedMatrix temp_mat(new Matrix("temp_mat", nirrep, irrep_vec, irrep_vec));
+
+        // copy the df_3rdm (pq) matrices to temp_mat
+        (df_3rdm.block("Lvc")).iterate([&](const std::vector<size_t>& i, double& value) {
+            if (i[0] == aux) {
+                if (virt_mos_relative[i[1]].first == core_mos_relative[i[2]].first) {
+                    temp_mat->set(virt_mos_relative[i[1]].first, virt_mos_relative[i[1]].second,
+                                  core_mos_relative[i[2]].second, value);
+                    temp_mat->set(virt_mos_relative[i[1]].first, core_mos_relative[i[2]].second,
+                                  virt_mos_relative[i[1]].second, value);
+                }
+            }
+        });
+
+        (df_3rdm.block("Lca")).iterate([&](const std::vector<size_t>& i, double& value) {
+            if (i[0] == aux) {
+                if (core_mos_relative[i[1]].first == actv_mos_relative[i[2]].first) {
+                    temp_mat->set(core_mos_relative[i[1]].first, core_mos_relative[i[1]].second,
+                            actv_mos_relative[i[2]].second, value);
+                    temp_mat->set(core_mos_relative[i[1]].first, actv_mos_relative[i[2]].second,
+                            core_mos_relative[i[1]].second, value);
+                }
+            }
+        });
+
+        (df_3rdm.block("Lva")).iterate([&](const std::vector<size_t>& i, double& value) {
+            if (i[0] == aux) {
+                if (virt_mos_relative[i[1]].first == actv_mos_relative[i[2]].first) {
+                    temp_mat->set(virt_mos_relative[i[1]].first, virt_mos_relative[i[1]].second,
+                            actv_mos_relative[i[2]].second, value);
+                    temp_mat->set(virt_mos_relative[i[1]].first, actv_mos_relative[i[2]].second,
+                            virt_mos_relative[i[1]].second, value);
+                }
+            }
+        });
+
+        (df_3rdm.block("Lcc")).iterate([&](const std::vector<size_t>& i, double& value) {
+            if (i[0] == aux) {
+                if (core_mos_relative[i[1]].first == core_mos_relative[i[2]].first) {
+                    temp_mat->set(core_mos_relative[i[1]].first, core_mos_relative[i[1]].second,
+                            core_mos_relative[i[2]].second, value);
+                }
+            }
+        });
+
+        (df_3rdm.block("Laa")).iterate([&](const std::vector<size_t>& i, double& value) {
+            if (i[0] == aux) {
+                if (actv_mos_relative[i[1]].first == actv_mos_relative[i[2]].first) {
+                    temp_mat->set(actv_mos_relative[i[1]].first, actv_mos_relative[i[1]].second,
+                            actv_mos_relative[i[2]].second, value);
+                }
+            }
+        });
+
+        (df_3rdm.block("Lvv")).iterate([&](const std::vector<size_t>& i, double& value) {
+            if (i[0] == aux) {
+                if (virt_mos_relative[i[1]].first == virt_mos_relative[i[2]].first) {
+                    temp_mat->set(virt_mos_relative[i[1]].first, virt_mos_relative[i[1]].second,
+                            virt_mos_relative[i[2]].second, value);
+                }
+            }
+        });
+
+        temp_mat->back_transform(ints_->Ca());
+
+        for(int i = 0; i < ao_dim; ++i) {
+            for (int j = 0; j < ao_dim; ++j) {
+                auto val = temp_mat->get(i, j);
+                Pmunu.push_back(val);
+            }
+        }
+    }
+
+    std::cout << "ao = " << ao_dim << " nmo = " << nmo << "aux = " << naux << " size = " << Pmunu.size() << std::endl;
+
 }
 
 void DSRG_MRPT2::tpdm_backtransform() {
