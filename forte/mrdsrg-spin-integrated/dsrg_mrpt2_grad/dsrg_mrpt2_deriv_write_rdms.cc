@@ -698,7 +698,10 @@ void DSRG_MRPT2::write_df_rdm() {
             }
         });
 
-        temp_mat->back_transform(ints_->Ca());
+        
+        auto temp_mat_AO = std::make_shared<Matrix>("AO basis temp matrix", ints_->wfn()->nso(), ints_->wfn()->nso());
+        temp_mat_AO->remove_symmetry(temp_mat, ints_->wfn()->aotoso()->transpose());
+        temp_mat_AO->back_transform(ints_->wfn()->Ca_subset("AO"));
 
         for(int i = 0; i < ao_dim; ++i) {
             for (int j = 0; j < ao_dim; ++j) {
@@ -708,7 +711,7 @@ void DSRG_MRPT2::write_df_rdm() {
         }
     }
 
-    std::cout << "ao = " << ao_dim << " nmo = " << nmo << "aux = " << naux << " size = " << Pmunu.size() << std::endl;
+    std::cout << "nso = " << ints_->wfn()->nso() << " ao = " << ao_dim << " nmo = " << nmo << "aux = " << naux << " size = " << Pmunu.size() << std::endl;
 
 }
 
