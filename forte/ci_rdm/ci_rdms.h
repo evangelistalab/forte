@@ -31,8 +31,8 @@
 
 #include "psi4/libmints/matrix.h"
 
+#include "helpers/helpers.h"
 #include "integrals/active_space_integrals.h"
-
 #include "sparse_ci/determinant_hashvector.h"
 #include "sparse_ci/sorted_string_list.h"
 
@@ -76,8 +76,18 @@ class CI_RDMS {
 
     // Compute rdms
     void compute_1rdm(std::vector<double>& oprdm_a, std::vector<double>& oprdm_b);
+    void compute_1rdm_sf(std::vector<double>& opdm);
+
+    void _add_1rdm(std::vector<double>& opdm,
+                   const std::vector<std::vector<std::pair<size_t, short>>>& ann_list,
+                   const std::vector<std::vector<std::pair<size_t, short>>>& cre_list);
 
     void compute_1rdm_op(std::vector<double>& oprdm_a, std::vector<double>& oprdm_b);
+    void compute_1rdm_sf_op(std::vector<double>& opdm);
+
+    void _add_1rdm_op_II(std::vector<double>& oprdm, Spin1 spin);
+    void _add_1rdm_op_IJ(std::vector<double>& opdm,
+                         const std::vector<std::vector<std::pair<size_t, short>>>& list);
 
     void compute_2rdm(std::vector<double>& tprdm_aa, std::vector<double>& tprdm_ab,
                       std::vector<double>& tprdm_bb);

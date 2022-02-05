@@ -35,13 +35,13 @@ class DETCI : public ActiveSpaceMethod {
     double compute_energy() override;
 
     /// RDMs override
-    std::vector<RDMs> rdms(const std::vector<std::pair<size_t, size_t>>& root_list,
-                           int max_rdm_level) override;
+    std::vector<std::shared_ptr<RDMs>> rdms(const std::vector<std::pair<size_t, size_t>>& root_list,
+                                            int max_rdm_level, RDMsType rdm_type) override;
 
     /// Transition RDMs override
-    std::vector<RDMs> transition_rdms(const std::vector<std::pair<size_t, size_t>>& root_list,
-                                      std::shared_ptr<ActiveSpaceMethod> method2,
-                                      int max_rdm_level) override;
+    std::vector<std::shared_ptr<RDMs>>
+    transition_rdms(const std::vector<std::pair<size_t, size_t>>& root_list,
+                    std::shared_ptr<ActiveSpaceMethod> method2, int max_rdm_level, RDMsType rdm_type) override;
 
     /// Return the CI wave functions for current state symmetry
     psi::SharedMatrix ci_wave_functions() override { return evecs_; }

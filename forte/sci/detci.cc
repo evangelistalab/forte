@@ -10,6 +10,7 @@
 #include "psi4/libmints/basisset.h"
 #include "psi4/libpsio/psio.hpp"
 
+#include "base_classes/rdms.h"
 #include "helpers/timer.h"
 #include "helpers/printing.h"
 #include "helpers/string_algorithms.h"
@@ -460,31 +461,38 @@ bool DETCI::read_initial_guess(const std::string& filename) {
     return true;
 }
 
-std::vector<RDMs> DETCI::rdms(const std::vector<std::pair<size_t, size_t>>& root_list,
-                              int max_rdm_level) {
+std::vector<std::shared_ptr<RDMs>>
+DETCI::rdms(const std::vector<std::pair<size_t, size_t>>& root_list, int max_rdm_level,
+            RDMsType rdm_type) {
     if (max_rdm_level > 3 || max_rdm_level < 1) {
         throw std::runtime_error("Invalid max_rdm_level, required 1 <= max_rdm_level <= 3.");
     }
 
-    std::vector<RDMs> rdms;
+    std::vector<std::shared_ptr<RDMs>> rdms;
 
     for (auto& root_pair : root_list) {
         auto root1 = root_pair.first;
         auto root2 = root_pair.second;
 
-        auto D1 = compute_trans_1rdms_sosd(root1, root2);
+        if (rdm_type == RDMsType::spin_dependent) {
+            auto D1 = compute_trans_1rdms_sosd(root1, root2);
+            std::vector<ambit::Tensor> D2, D3;
+            if (max_rdm_level > 1)
+                D2 = compute_trans_2rdms_sosd(root1, root2);
+            if (max_rdm_level > 2)
+                D3 = compute_trans_3rdms_sosd(root1, root2);
 
-        if (max_rdm_level == 1) {
-            rdms.emplace_back(D1[0], D1[1]);
-        } else {
-            auto D2 = compute_trans_2rdms_sosd(root1, root2);
-
-            if (max_rdm_level == 2) {
-                rdms.emplace_back(D1[0], D1[1], D2[0], D2[1], D2[2]);
+            if (max_rdm_level == 1) {
+                rdms.emplace_back(std::make_shared<RDMsSpinDependent>(D1[0], D1[1]));
+            } else if (max_rdm_level == 2) {
+                rdms.emplace_back(
+                    std::make_shared<RDMsSpinDependent>(D1[0], D1[1], D2[0], D2[1], D2[2]));
             } else {
-                auto D3 = compute_trans_3rdms_sosd(root1, root2);
-                rdms.emplace_back(D1[0], D1[1], D2[0], D2[1], D2[2], D3[0], D3[1], D3[2], D3[3]);
+                rdms.emplace_back(std::make_shared<RDMsSpinDependent>(
+                    D1[0], D1[1], D2[0], D2[1], D2[2], D3[0], D3[1], D3[2], D3[3]));
             }
+        } else {
+            // TODO: add spin free part
         }
     }
 
@@ -657,9 +665,10 @@ void DETCI::compute_permanent_dipole() {
     }
 }
 
-std::vector<RDMs> DETCI::transition_rdms(const std::vector<std::pair<size_t, size_t>>& root_list,
-                                         std::shared_ptr<ActiveSpaceMethod> method2,
-                                         int max_rdm_level) {
+std::vector<std::shared_ptr<RDMs>>
+DETCI::transition_rdms(const std::vector<std::pair<size_t, size_t>>& root_list,
+                       std::shared_ptr<ActiveSpaceMethod> method2, int max_rdm_level,
+                       RDMsType rdm_type) {
     if (max_rdm_level > 3 || max_rdm_level < 1) {
         throw std::runtime_error("Invalid max_rdm_level, required 1 <= max_rdm_level <= 3.");
     }
@@ -702,7 +711,7 @@ std::vector<RDMs> DETCI::transition_rdms(const std::vector<std::pair<size_t, siz
     }
 
     // loop over roots and compute the transition RDMs
-    std::vector<RDMs> rdms;
+    std::vector<std::shared_ptr<RDMs>> rdms;
     for (const auto& roots_pair : root_list) {
         size_t root1 = roots_pair.first;
         size_t root2 = roots_pair.second + nroot_;
@@ -719,7 +728,7 @@ std::vector<RDMs> DETCI::transition_rdms(const std::vector<std::pair<size_t, siz
         ci_rdms.compute_1rdm_op(a_data, b_data);
 
         if (max_rdm_level == 1) {
-            rdms.emplace_back(a, b);
+            rdms.emplace_back(std::make_shared<RDMsSpinDependent>(a, b));
         } else {
             ci_rdms.set_print(true);
 
@@ -735,7 +744,7 @@ std::vector<RDMs> DETCI::transition_rdms(const std::vector<std::pair<size_t, siz
             ci_rdms.compute_2rdm_op(aa_data, ab_data, bb_data);
 
             if (max_rdm_level == 2) {
-                rdms.emplace_back(a, b, aa, ab, bb);
+                rdms.emplace_back(std::make_shared<RDMsSpinDependent>(a, b, aa, ab, bb));
             } else {
                 // compute 3-RDM
                 std::vector<size_t> dim6(6, nactv_);
@@ -750,7 +759,8 @@ std::vector<RDMs> DETCI::transition_rdms(const std::vector<std::pair<size_t, siz
 
                 ci_rdms.compute_3rdm_op(aaa_data, aab_data, abb_data, bbb_data);
 
-                rdms.emplace_back(a, b, aa, ab, bb, aaa, aab, abb, bbb);
+                rdms.emplace_back(
+                    std::make_shared<RDMsSpinDependent>(a, b, aa, ab, bb, aaa, aab, abb, bbb));
             }
         }
     }

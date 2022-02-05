@@ -301,7 +301,7 @@ class MOSpaceInfo;
 //     void reset_built_flags();
 // };
 
-enum RDMsType { spin_dependent, spin_free };
+enum class RDMsType { spin_dependent, spin_free };
 
 class RDMs {
   public:

@@ -53,6 +53,11 @@ class Options;
 
 namespace forte {
 
+/// Spin cases for 1-, 2-, and 3-body tensors
+enum class Spin1 {a, b};
+enum class Spin2 {aa, ab, bb};
+enum class Spin3 {aaa, aab, abb, bbb};
+
 /**
  * @brief Convert an ambit tensor to a numpy ndarray.
  *        The returned tensor is stored according to the C storage convention.

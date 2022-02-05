@@ -753,7 +753,7 @@ std::shared_ptr<RDMs> RDMs::build(size_t max_rdm_level, size_t n_orbs, RDMsType 
 
     std::shared_ptr<RDMs> rdms;
 
-    if (type == spin_dependent) {
+    if (type == RDMsType::spin_dependent) {
         ambit::Tensor g1a, g1b, g2aa, g2ab, g2bb, g3aaa, g3aab, g3abb, g3bbb;
         if (max_rdm_level > 0) {
             g1a = ambit::Tensor::build(ambit::CoreTensor, "g1a", dims1);
@@ -1027,13 +1027,13 @@ void RDMs::_test_rdm_dims(const ambit::Tensor& T, const std::string& name) const
 
 RDMsSpinDependent::RDMsSpinDependent() {
     max_rdm_ = 0;
-    type_ = spin_dependent;
+    type_ = RDMsType::spin_dependent;
     n_orbs_ = 0;
 }
 
 RDMsSpinDependent::RDMsSpinDependent(ambit::Tensor g1a, ambit::Tensor g1b) : g1a_(g1a), g1b_(g1b) {
     max_rdm_ = 1;
-    type_ = spin_dependent;
+    type_ = RDMsType::spin_dependent;
     n_orbs_ = g1a.dim(0);
     _test_rdm_dims(g1a, "g1a");
     _test_rdm_dims(g1b, "g1b");
@@ -1043,7 +1043,7 @@ RDMsSpinDependent::RDMsSpinDependent(ambit::Tensor g1a, ambit::Tensor g1b, ambit
                                      ambit::Tensor g2ab, ambit::Tensor g2bb)
     : g1a_(g1a), g1b_(g1b), g2aa_(g2aa), g2ab_(g2ab), g2bb_(g2bb) {
     max_rdm_ = 2;
-    type_ = spin_dependent;
+    type_ = RDMsType::spin_dependent;
     n_orbs_ = g1a.dim(0);
     _test_rdm_dims(g1a, "g1a");
     _test_rdm_dims(g1b, "g1b");
@@ -1058,7 +1058,7 @@ RDMsSpinDependent::RDMsSpinDependent(ambit::Tensor g1a, ambit::Tensor g1b, ambit
     : g1a_(g1a), g1b_(g1b), g2aa_(g2aa), g2ab_(g2ab), g2bb_(g2bb), g3aaa_(g3aaa), g3aab_(g3aab),
       g3abb_(g3abb), g3bbb_(g3bbb) {
     max_rdm_ = 3;
-    type_ = spin_dependent;
+    type_ = RDMsType::spin_dependent;
     n_orbs_ = g1a.dim(0);
     _test_rdm_dims(g1a, "g1a");
     _test_rdm_dims(g1b, "g1b");
@@ -1331,20 +1331,20 @@ void RDMsSpinDependent::rotate(const ambit::Tensor& Ua, const ambit::Tensor& Ub)
 
 RDMsSpinFree::RDMsSpinFree() {
     max_rdm_ = 0;
-    type_ = spin_free;
+    type_ = RDMsType::spin_free;
     n_orbs_ = 0;
 }
 
 RDMsSpinFree::RDMsSpinFree(ambit::Tensor G1) : SF_G1_(G1) {
     max_rdm_ = 1;
-    type_ = spin_free;
+    type_ = RDMsType::spin_free;
     n_orbs_ = G1.dim(0);
     _test_rdm_dims(G1, "G1");
 }
 
 RDMsSpinFree::RDMsSpinFree(ambit::Tensor G1, ambit::Tensor G2) : SF_G1_(G1), SF_G2_(G2) {
     max_rdm_ = 2;
-    type_ = spin_free;
+    type_ = RDMsType::spin_free;
     n_orbs_ = G1.dim(0);
     _test_rdm_dims(G1, "G1");
     _test_rdm_dims(G2, "G2");
@@ -1353,7 +1353,7 @@ RDMsSpinFree::RDMsSpinFree(ambit::Tensor G1, ambit::Tensor G2) : SF_G1_(G1), SF_
 RDMsSpinFree::RDMsSpinFree(ambit::Tensor G1, ambit::Tensor G2, ambit::Tensor G3)
     : SF_G1_(G1), SF_G2_(G2), SF_G3_(G3) {
     max_rdm_ = 3;
-    type_ = spin_free;
+    type_ = RDMsType::spin_free;
     n_orbs_ = G1.dim(0);
     _test_rdm_dims(G1, "G1");
     _test_rdm_dims(G2, "G2");

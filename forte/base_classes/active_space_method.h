@@ -45,6 +45,7 @@ class ForteIntegrals;
 class ForteOptions;
 class MOSpaceInfo;
 class RDMs;
+class RDMsType;
 class SCFInfo;
 
 /**
@@ -123,12 +124,12 @@ class ActiveSpaceMethod {
      * @param max_rdm_level the maximum RDM rank
      * @return
      */
-    virtual std::vector<RDMs> rdms(const std::vector<std::pair<size_t, size_t>>& root_list,
-                                   int max_rdm_level) = 0;
+    virtual std::vector<std::shared_ptr<RDMs>>
+    rdms(const std::vector<std::pair<size_t, size_t>>& root_list, int max_rdm_level, RDMsType rdm_type) = 0;
 
-    virtual std::vector<RDMs>
+    virtual std::vector<std::shared_ptr<RDMs>>
     transition_rdms(const std::vector<std::pair<size_t, size_t>>& root_list,
-                    std::shared_ptr<ActiveSpaceMethod> method2, int max_rdm_level) = 0;
+                    std::shared_ptr<ActiveSpaceMethod> method2, int max_rdm_level, RDMsType) = 0;
 
     /// Set options from an option object
     /// @param options the options passed in
