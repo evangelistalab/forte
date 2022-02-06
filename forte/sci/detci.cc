@@ -492,7 +492,29 @@ DETCI::rdms(const std::vector<std::pair<size_t, size_t>>& root_list, int max_rdm
                     D1[0], D1[1], D2[0], D2[1], D2[2], D3[0], D3[1], D3[2], D3[3]));
             }
         } else {
-            // TODO: add spin free part
+            CI_RDMS ci_rdms(p_space_, as_ints_, evecs_, root1, root2);
+            ci_rdms.set_print(print_ci_rdms_);
+
+            auto D1 = ambit::Tensor::build(CoreTensor, "D1", std::vector<size_t>(2, nactv_));
+            ci_rdms.compute_1rdm_sf_op(D1.data());
+
+            ambit::Tensor D2, D3;
+            if (max_rdm_level > 1) {
+                D2 = ambit::Tensor::build(CoreTensor, "D2", std::vector<size_t>(4, nactv_));
+                ci_rdms.compute_2rdm_sf_op(D2.data());
+            }
+            if (max_rdm_level > 2) {
+                D3 = ambit::Tensor::build(CoreTensor, "D3", std::vector<size_t>(6, nactv_));
+                ci_rdms.compute_3rdm_sf_op(D3.data());
+            }
+
+            if (max_rdm_level == 1) {
+                rdms.emplace_back(std::make_shared<RDMsSpinFree>(D1));
+            } else if (max_rdm_level == 2) {
+                rdms.emplace_back(std::make_shared<RDMsSpinFree>(D1, D2));
+            } else {
+                rdms.emplace_back(std::make_shared<RDMsSpinFree>(D1, D2, D3));
+            }
         }
     }
 
@@ -518,8 +540,8 @@ std::vector<ambit::Tensor> DETCI::compute_trans_1rdms_sosd(int root1, int root2)
         }
     } else {
         CI_RDMS ci_rdms(p_space_, as_ints_, evecs_, root1, root2);
-        ci_rdms.compute_1rdm_op(a_data, b_data);
         ci_rdms.set_print(print_ci_rdms_);
+        ci_rdms.compute_1rdm_op(a_data, b_data);
     }
 
     return {a, b};
@@ -719,48 +741,76 @@ DETCI::transition_rdms(const std::vector<std::pair<size_t, size_t>>& root_list,
         CI_RDMS ci_rdms(dets, as_ints_, evecs, root1, root2);
         ci_rdms.set_print(false);
 
-        // compute 1-RDM
-        auto a = ambit::Tensor::build(CoreTensor, "TD1a", std::vector<size_t>(2, nactv_));
-        auto b = ambit::Tensor::build(CoreTensor, "TD1b", std::vector<size_t>(2, nactv_));
-        auto& a_data = a.data();
-        auto& b_data = b.data();
+        if (rdm_type == RDMsType::spin_dependent) {
+            // compute 1-RDM
+            auto a = ambit::Tensor::build(CoreTensor, "TD1a", std::vector<size_t>(2, nactv_));
+            auto b = ambit::Tensor::build(CoreTensor, "TD1b", std::vector<size_t>(2, nactv_));
+            auto& a_data = a.data();
+            auto& b_data = b.data();
 
-        ci_rdms.compute_1rdm_op(a_data, b_data);
+            ci_rdms.compute_1rdm_op(a_data, b_data);
 
-        if (max_rdm_level == 1) {
-            rdms.emplace_back(std::make_shared<RDMsSpinDependent>(a, b));
-        } else {
-            ci_rdms.set_print(true);
-
-            // compute 2-RDM
-            std::vector<size_t> dim4(4, nactv_);
-            auto aa = ambit::Tensor::build(CoreTensor, "TD2aa", dim4);
-            auto ab = ambit::Tensor::build(CoreTensor, "TD2ab", dim4);
-            auto bb = ambit::Tensor::build(CoreTensor, "TD2bb", dim4);
-            auto& aa_data = aa.data();
-            auto& ab_data = ab.data();
-            auto& bb_data = bb.data();
-
-            ci_rdms.compute_2rdm_op(aa_data, ab_data, bb_data);
-
-            if (max_rdm_level == 2) {
-                rdms.emplace_back(std::make_shared<RDMsSpinDependent>(a, b, aa, ab, bb));
+            if (max_rdm_level == 1) {
+                rdms.emplace_back(std::make_shared<RDMsSpinDependent>(a, b));
             } else {
-                // compute 3-RDM
-                std::vector<size_t> dim6(6, nactv_);
-                auto aaa = ambit::Tensor::build(CoreTensor, "TD3aaa", dim6);
-                auto aab = ambit::Tensor::build(CoreTensor, "TD3aab", dim6);
-                auto abb = ambit::Tensor::build(CoreTensor, "TD3abb", dim6);
-                auto bbb = ambit::Tensor::build(CoreTensor, "TD3bbb", dim6);
-                auto& aaa_data = aaa.data();
-                auto& aab_data = aab.data();
-                auto& abb_data = abb.data();
-                auto& bbb_data = bbb.data();
+                ci_rdms.set_print(true);
 
-                ci_rdms.compute_3rdm_op(aaa_data, aab_data, abb_data, bbb_data);
+                // compute 2-RDM
+                std::vector<size_t> dim4(4, nactv_);
+                auto aa = ambit::Tensor::build(CoreTensor, "TD2aa", dim4);
+                auto ab = ambit::Tensor::build(CoreTensor, "TD2ab", dim4);
+                auto bb = ambit::Tensor::build(CoreTensor, "TD2bb", dim4);
+                auto& aa_data = aa.data();
+                auto& ab_data = ab.data();
+                auto& bb_data = bb.data();
 
-                rdms.emplace_back(
-                    std::make_shared<RDMsSpinDependent>(a, b, aa, ab, bb, aaa, aab, abb, bbb));
+                ci_rdms.compute_2rdm_op(aa_data, ab_data, bb_data);
+
+                if (max_rdm_level == 2) {
+                    rdms.emplace_back(std::make_shared<RDMsSpinDependent>(a, b, aa, ab, bb));
+                } else {
+                    // compute 3-RDM
+                    std::vector<size_t> dim6(6, nactv_);
+                    auto aaa = ambit::Tensor::build(CoreTensor, "TD3aaa", dim6);
+                    auto aab = ambit::Tensor::build(CoreTensor, "TD3aab", dim6);
+                    auto abb = ambit::Tensor::build(CoreTensor, "TD3abb", dim6);
+                    auto bbb = ambit::Tensor::build(CoreTensor, "TD3bbb", dim6);
+                    auto& aaa_data = aaa.data();
+                    auto& aab_data = aab.data();
+                    auto& abb_data = abb.data();
+                    auto& bbb_data = bbb.data();
+
+                    ci_rdms.compute_3rdm_op(aaa_data, aab_data, abb_data, bbb_data);
+
+                    rdms.emplace_back(
+                        std::make_shared<RDMsSpinDependent>(a, b, aa, ab, bb, aaa, aab, abb, bbb));
+                }
+            }
+        } else {
+            // compute 1-RDM
+            auto D1 = ambit::Tensor::build(CoreTensor, "TD1", std::vector<size_t>(2, nactv_));
+            ci_rdms.compute_1rdm_sf_op(D1.data());
+
+            if (max_rdm_level == 1) {
+                rdms.emplace_back(std::make_shared<RDMsSpinFree>(D1));
+            } else {
+                ci_rdms.set_print(true);
+
+                // compute 2-RDM
+                std::vector<size_t> dim4(4, nactv_);
+                auto D2 = ambit::Tensor::build(CoreTensor, "TD2", dim4);
+                ci_rdms.compute_2rdm_sf_op(D2.data());
+
+                if (max_rdm_level == 2) {
+                    rdms.emplace_back(std::make_shared<RDMsSpinFree>(D1, D2));
+                } else {
+                    // compute 3-RDM
+                    std::vector<size_t> dim6(6, nactv_);
+                    auto D3 = ambit::Tensor::build(CoreTensor, "TD3", dim6);
+                    ci_rdms.compute_3rdm_sf_op(D3.data());
+
+                    rdms.emplace_back(std::make_shared<RDMsSpinFree>(D1, D2, D3));
+                }
             }
         }
     }

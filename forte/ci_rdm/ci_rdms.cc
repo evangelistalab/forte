@@ -53,8 +53,6 @@ CI_RDMS::CI_RDMS(std::shared_ptr<ActiveSpaceIntegrals> fci_ints,
 CI_RDMS::CI_RDMS(DeterminantHashVec& wfn, std::shared_ptr<ActiveSpaceIntegrals> fci_ints,
                  psi::SharedMatrix evecs, int root1, int root2)
     : wfn_(wfn), fci_ints_(fci_ints), evecs_(evecs), root1_(root1), root2_(root2) {
-
-    Determinant det(wfn_.get_det(0));
     no_ = fci_ints_->nmo();
     no2_ = no_ * no_;
     no3_ = no2_ * no_;
@@ -65,6 +63,7 @@ CI_RDMS::CI_RDMS(DeterminantHashVec& wfn, std::shared_ptr<ActiveSpaceIntegrals> 
     print_ = false;
     dim_space_ = wfn.size();
 
+    Determinant det(wfn_.get_det(0));
     na_ = det.count_alfa();
     nb_ = det.count_beta();
 }
