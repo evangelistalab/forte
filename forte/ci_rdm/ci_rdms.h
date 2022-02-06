@@ -29,6 +29,8 @@
 #ifndef _ci_rdms_h_
 #define _ci_rdms_h_
 
+#include <functional>
+
 #include "psi4/libmints/matrix.h"
 
 #include "helpers/helpers.h"
@@ -85,21 +87,53 @@ class CI_RDMS {
     void compute_1rdm_op(std::vector<double>& oprdm_a, std::vector<double>& oprdm_b);
     void compute_1rdm_sf_op(std::vector<double>& opdm);
 
-    void _add_1rdm_op_II(std::vector<double>& oprdm, Spin1 spin);
     void _add_1rdm_op_IJ(std::vector<double>& opdm,
                          const std::vector<std::vector<std::pair<size_t, short>>>& list);
 
     void compute_2rdm(std::vector<double>& tprdm_aa, std::vector<double>& tprdm_ab,
                       std::vector<double>& tprdm_bb);
+    void compute_2rdm_sf(std::vector<double>& tpdm);
 
-    void compute_2rdm_op(std::vector<double>& tprdm_aa, std::vector<double>& tprdm_ab,
+    void _add_2rdm(const std::vector<std::vector<std::tuple<size_t, short, short>>>& ann_list,
+                   const std::vector<std::vector<std::tuple<size_t, short, short>>>& cre_list,
+                   const std::function<void(const std::vector<size_t>&, const double&)>& func);
+
+    void compute_2rdm_op(std::vector<double>& tprdm_aa, std::vector<double>& value,
                          std::vector<double>& tprdm_bb);
+    void compute_2rdm_sf_op(std::vector<double>& tpdm);
+
+    void
+    _add_2rdm_op_II(const std::function<void(const std::vector<size_t>&, const double&)>& func_aa,
+                    const std::function<void(const std::vector<size_t>&, const double&)>& func_ab,
+                    const std::function<void(const std::vector<size_t>&, const double&)>& func_bb);
+    void
+    _add_2rdm_op_IJ(const std::vector<std::vector<std::tuple<size_t, short, short>>>& list,
+                    const std::function<void(const std::vector<size_t>&, const double&)>& func);
 
     void compute_3rdm(std::vector<double>& tprdm_aaa, std::vector<double>& tprdm_aab,
                       std::vector<double>& tprdm_abb, std::vector<double>& tprdm_bbb);
+    void compute_3rdm_sf(std::vector<double>& tpdm3);
 
-    void compute_3rdm_op(std::vector<double>& tprdm_aaa, std::vector<double>& tprdm_aab,
+    void
+    _add_3rdm(const std::vector<std::vector<std::tuple<size_t, short, short, short>>>& ann_list,
+              const std::vector<std::vector<std::tuple<size_t, short, short, short>>>& cre_list,
+              const std::function<void(const std::vector<size_t>&, const double&)>& func);
+
+    void compute_3rdm_op(std::vector<double>& tprdm_aaa, std::vector<double>& value,
                          std::vector<double>& tprdm_abb, std::vector<double>& tprdm_bbb);
+    void compute_3rdm_sf_op(std::vector<double>& tpdm3);
+
+    void _add_3rdm_aaa(std::vector<double>& tpdm_aaa, const std::vector<size_t>& i,
+                          const double& value);
+
+    void
+    _add_3rdm_op_II(const std::function<void(const std::vector<size_t>&, const double&)>& func_aaa,
+                    const std::function<void(const std::vector<size_t>&, const double&)>& func_aab,
+                    const std::function<void(const std::vector<size_t>&, const double&)>& func_abb,
+                    const std::function<void(const std::vector<size_t>&, const double&)>& func_bbb);
+    void
+    _add_3rdm_op_IJ(const std::vector<std::vector<std::tuple<size_t, short, short, short>>>& list,
+                    const std::function<void(const std::vector<size_t>&, const double&)>& func);
 
     void compute_rdms_dynamic(std::vector<double>& oprdm_a, std::vector<double>& oprdm_b,
                               std::vector<double>& tprdm_aa, std::vector<double>& tprdm_ab,
@@ -151,12 +185,13 @@ class CI_RDMS {
     int root1_;
     int root2_;
 
-    // The number of correlated mos
-    size_t ncmo_;
-    size_t ncmo2_;
-    size_t ncmo3_;
-    size_t ncmo4_;
-    size_t ncmo5_;
+    // The number of orbitals
+    size_t no_;
+    size_t no2_;
+    size_t no3_;
+    size_t no4_;
+    size_t no5_;
+    size_t no6_;
 
     // The correlated mos per irrep
     psi::Dimension active_dim_;

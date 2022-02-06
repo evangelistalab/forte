@@ -55,11 +55,13 @@ CI_RDMS::CI_RDMS(DeterminantHashVec& wfn, std::shared_ptr<ActiveSpaceIntegrals> 
     : wfn_(wfn), fci_ints_(fci_ints), evecs_(evecs), root1_(root1), root2_(root2) {
 
     Determinant det(wfn_.get_det(0));
-    ncmo_ = fci_ints_->nmo();
-    ncmo2_ = ncmo_ * ncmo_;
-    ncmo3_ = ncmo2_ * ncmo_;
-    ncmo4_ = ncmo3_ * ncmo_;
-    ncmo5_ = ncmo3_ * ncmo2_;
+    no_ = fci_ints_->nmo();
+    no2_ = no_ * no_;
+    no3_ = no2_ * no_;
+    no4_ = no3_ * no_;
+    no5_ = no4_ * no_;
+    no6_ = no5_ * no_;
+
     print_ = false;
     dim_space_ = wfn.size();
 
@@ -74,11 +76,12 @@ void CI_RDMS::startup() {
      * StringList*/
 
     // The number of correlated molecular orbitals
-    ncmo_ = fci_ints_->nmo();
-    ncmo2_ = ncmo_ * ncmo_;
-    ncmo3_ = ncmo2_ * ncmo_;
-    ncmo4_ = ncmo3_ * ncmo_;
-    ncmo5_ = ncmo3_ * ncmo2_;
+    no_ = fci_ints_->nmo();
+    no2_ = no_ * no_;
+    no3_ = no2_ * no_;
+    no4_ = no3_ * no_;
+    no5_ = no4_ * no_;
+    no6_ = no5_ * no_;
 
     na_ = det_space_[0].count_alfa();
     nb_ = det_space_[0].count_beta();
@@ -94,7 +97,7 @@ void CI_RDMS::startup() {
         outfile->Printf("\n  Computing RDMS");
         outfile->Printf("\n  Number of active alpha electrons: %zu", na_);
         outfile->Printf("\n  Number of active beta electrons: %zu", nb_);
-        outfile->Printf("\n  Number of correlated orbitals: %zu", ncmo_);
+        outfile->Printf("\n  Number of correlated orbitals: %zu", no_);
     }
 }
 
@@ -108,25 +111,25 @@ double CI_RDMS::get_energy(std::vector<double>& oprdm_a, std::vector<double>& op
     double energy_1rdm = 0.0;
     double energy_2rdm = 0.0;
 
-    for (size_t p = 0; p < ncmo_; ++p) {
-        for (size_t q = 0; q < ncmo_; ++q) {
-            energy_1rdm += oprdm_a[ncmo_ * p + q] * fci_ints_->oei_a(p, q);
-            energy_1rdm += oprdm_b[ncmo_ * p + q] * fci_ints_->oei_b(p, q);
+    for (size_t p = 0; p < no_; ++p) {
+        for (size_t q = 0; q < no_; ++q) {
+            energy_1rdm += oprdm_a[no_ * p + q] * fci_ints_->oei_a(p, q);
+            energy_1rdm += oprdm_b[no_ * p + q] * fci_ints_->oei_b(p, q);
         }
     }
 
-    for (size_t p = 0; p < ncmo_; ++p) {
-        for (size_t q = 0; q < ncmo_; ++q) {
-            for (size_t r = 0; r < ncmo_; ++r) {
-                for (size_t s = 0; s < ncmo_; ++s) {
+    for (size_t p = 0; p < no_; ++p) {
+        for (size_t q = 0; q < no_; ++q) {
+            for (size_t r = 0; r < no_; ++r) {
+                for (size_t s = 0; s < no_; ++s) {
                     if (na_ >= 2)
-                        energy_2rdm += 0.25 * tprdm_aa[p * ncmo3_ + q * ncmo2_ + r * ncmo_ + s] *
+                        energy_2rdm += 0.25 * tprdm_aa[p * no3_ + q * no2_ + r * no_ + s] *
                                        fci_ints_->tei_aa(p, q, r, s);
                     if ((na_ >= 1) and (nb_ >= 1))
-                        energy_2rdm += tprdm_ab[p * ncmo3_ + q * ncmo2_ + r * ncmo_ + s] *
+                        energy_2rdm += tprdm_ab[p * no3_ + q * no2_ + r * no_ + s] *
                                        fci_ints_->tei_ab(p, q, r, s);
                     if (nb_ >= 2)
-                        energy_2rdm += 0.25 * tprdm_bb[p * ncmo3_ + q * ncmo2_ + r * ncmo_ + s] *
+                        energy_2rdm += 0.25 * tprdm_bb[p * no3_ + q * no2_ + r * no_ + s] *
                                        fci_ints_->tei_bb(p, q, r, s);
                 }
             }
@@ -152,8 +155,8 @@ void CI_RDMS::compute_1rdm(std::vector<double>& oprdm_a, std::vector<double>& op
         outfile->Printf("\n  Time spent forming 1-map:   %1.6f", one.get());
 
     local_timer build;
-    oprdm_a.assign(ncmo2_, 0.0);
-    oprdm_b.assign(ncmo2_, 0.0);
+    oprdm_a.assign(no2_, 0.0);
+    oprdm_b.assign(no2_, 0.0);
 
     _add_1rdm(oprdm_a, a_ann_list_, a_cre_list_);
     _add_1rdm(oprdm_b, b_ann_list_, b_cre_list_);
@@ -167,7 +170,7 @@ void CI_RDMS::compute_1rdm(std::vector<double>& oprdm_a, std::vector<double>& op
     //                size_t q = std::abs(aaJ_mo_sign.second) - 1;
     //                const double sign_q = aaJ_mo_sign.second > 0 ? 1.0 : -1.0;
     //                const size_t I = aaJ_mo_sign.first;
-    //                oprdm_a[q * ncmo_ + p] +=
+    //                oprdm_a[q * no_ + p] +=
     //                    evecs_->get(I, root1_) * evecs_->get(J, root2_) * sign_p * sign_q;
     //            }
     //        }
@@ -179,7 +182,7 @@ void CI_RDMS::compute_1rdm(std::vector<double>& oprdm_a, std::vector<double>& op
     //                const size_t q = std::abs(bbJ_mo_sign.second) - 1;
     //                const double sign_q = bbJ_mo_sign.second > 0 ? 1.0 : -1.0;
     //                const size_t I = bbJ_mo_sign.first;
-    //                oprdm_b[q * ncmo_ + p] +=
+    //                oprdm_b[q * no_ + p] +=
     //                    evecs_->get(I, root1_) * evecs_->get(J, root2_) * sign_p * sign_q;
     //            }
     //        }
@@ -195,7 +198,7 @@ void CI_RDMS::compute_1rdm_sf(std::vector<double>& opdm) {
         outfile->Printf("\n  Time spent forming 1-map:   %1.6f", one.stop());
 
     timer build("Build SF 1-RDM");
-    opdm.assign(ncmo2_, 0.0);
+    opdm.assign(no2_, 0.0);
     _add_1rdm(opdm, a_ann_list_, a_cre_list_);
     _add_1rdm(opdm, b_ann_list_, b_cre_list_);
     if (print_)
@@ -214,7 +217,7 @@ void CI_RDMS::_add_1rdm(std::vector<double>& opdm,
                 size_t q = std::abs(aaJ_mo_sign.second) - 1;
                 const double sign_q = aaJ_mo_sign.second > 0 ? 1.0 : -1.0;
                 const size_t I = aaJ_mo_sign.first;
-                opdm[q * ncmo_ + p] +=
+                opdm[q * no_ + p] +=
                     evecs_->get(I, root1_) * evecs_->get(J, root2_) * sign_p * sign_q;
             }
         }
@@ -233,30 +236,24 @@ void CI_RDMS::compute_1rdm_op(std::vector<double>& oprdm_a, std::vector<double>&
     //    const std::vector<std::vector<std::pair<size_t, short>>>& b_list = op->b_list_;
 
     local_timer build;
-    oprdm_a.assign(ncmo2_, 0.0);
-    oprdm_b.assign(ncmo2_, 0.0);
+    oprdm_a.assign(no2_, 0.0);
+    oprdm_b.assign(no2_, 0.0);
 
     //// Do something about diagonal
-    _add_1rdm_op_II(oprdm_a, Spin1::a);
-    _add_1rdm_op_II(oprdm_b, Spin1::b);
-    //    const det_hashvec& dets = wfn_.wfn_hash();
-    //    for (size_t J = 0; J < dim_space_; ++J) {
-    //        double cJ_sq = evecs_->get(J, root1_) * evecs_->get(J, root2_);
-    //        std::vector<int> aocc = dets[J].get_alfa_occ(ncmo_);
-    //        std::vector<int> bocc = dets[J].get_beta_occ(ncmo_);
-    //        std::vector<int> avir = dets[J].get_alfa_vir(ncmo_);
-    //        std::vector<int> bvir = dets[J].get_beta_vir(ncmo_);
-    //
-    //        for (int p = 0, max_p = aocc.size(); p < max_p; ++p) {
-    //            int pp = aocc[p];
-    //            oprdm_a[pp * ncmo_ + pp] += cJ_sq;
-    //        }
-    //
-    //        for (int p = 0, max_p = bocc.size(); p < max_p; ++p) {
-    //            int pp = bocc[p];
-    //            oprdm_b[pp * ncmo_ + pp] += cJ_sq;
-    //        }
-    //    }
+    const det_hashvec& dets = wfn_.wfn_hash();
+    for (size_t J = 0; J < dim_space_; ++J) {
+        double cJ_sq = evecs_->get(J, root1_) * evecs_->get(J, root2_);
+        std::vector<int> aocc = dets[J].get_alfa_occ(no_);
+        for (int p = 0, max_p = aocc.size(); p < max_p; ++p) {
+            int pp = aocc[p];
+            oprdm_a[pp * no_ + pp] += cJ_sq;
+        }
+        std::vector<int> bocc = dets[J].get_beta_occ(no_);
+        for (int p = 0, max_p = bocc.size(); p < max_p; ++p) {
+            int pp = bocc[p];
+            oprdm_b[pp * no_ + pp] += cJ_sq;
+        }
+    }
 
     _add_1rdm_op_IJ(oprdm_a, op->a_list_);
     _add_1rdm_op_IJ(oprdm_b, op->b_list_);
@@ -272,9 +269,9 @@ void CI_RDMS::compute_1rdm_op(std::vector<double>& oprdm_a, std::vector<double>&
     //                const size_t& q = std::abs(detJ.second) - 1;
     //                const double& sign_q = detJ.second > 0 ? 1.0 : -1.0;
     //                const size_t& J = detJ.first;
-    //                oprdm_a[p * ncmo_ + q] +=
+    //                oprdm_a[p * no_ + q] +=
     //                    evecs_->get(I, root1_) * evecs_->get(J, root2_) * sign_p * sign_q;
-    //                oprdm_a[q * ncmo_ + p] +=
+    //                oprdm_a[q * no_ + p] +=
     //                    evecs_->get(J, root1_) * evecs_->get(I, root2_) * sign_p * sign_q;
     //            }
     //        }
@@ -291,9 +288,9 @@ void CI_RDMS::compute_1rdm_op(std::vector<double>& oprdm_a, std::vector<double>&
     //                const size_t& q = std::abs(detJ.second) - 1;
     //                const double& sign_q = detJ.second > 0 ? 1.0 : -1.0;
     //                const size_t& J = detJ.first;
-    //                oprdm_b[p * ncmo_ + q] +=
+    //                oprdm_b[p * no_ + q] +=
     //                    evecs_->get(I, root1_) * evecs_->get(J, root2_) * sign_p * sign_q;
-    //                oprdm_b[q * ncmo_ + p] +=
+    //                oprdm_b[q * no_ + p] +=
     //                    evecs_->get(J, root1_) * evecs_->get(I, root2_) * sign_p * sign_q;
     //            }
     //        }
@@ -311,29 +308,29 @@ void CI_RDMS::compute_1rdm_sf_op(std::vector<double>& opdm) {
     op->op_s_lists(wfn_);
 
     timer build("Build SF 1-RDM");
-    opdm.assign(ncmo2_, 0.0);
-    opdm.assign(ncmo2_, 0.0);
+    opdm.assign(no2_, 0.0);
+    opdm.assign(no2_, 0.0);
 
-    _add_1rdm_op_II(opdm, Spin1::a);
-    _add_1rdm_op_II(opdm, Spin1::b);
+    const det_hashvec& dets = wfn_.wfn_hash();
+    for (size_t J = 0; J < dim_space_; ++J) {
+        double cJ_sq = evecs_->get(J, root1_) * evecs_->get(J, root2_);
+        std::vector<int> aocc = dets[J].get_alfa_occ(no_);
+        for (int p = 0, max_p = aocc.size(); p < max_p; ++p) {
+            int pp = aocc[p];
+            opdm[pp * no_ + pp] += cJ_sq;
+        }
+        std::vector<int> bocc = dets[J].get_beta_occ(no_);
+        for (int p = 0, max_p = bocc.size(); p < max_p; ++p) {
+            int pp = bocc[p];
+            opdm[pp * no_ + pp] += cJ_sq;
+        }
+    }
 
     _add_1rdm_op_IJ(opdm, op->a_list_);
     _add_1rdm_op_IJ(opdm, op->b_list_);
 
     if (print_) {
         outfile->Printf("\n  Time spent building 1-rdm: %.3e seconds", build.stop());
-    }
-}
-
-void CI_RDMS::_add_1rdm_op_II(std::vector<double>& opdm, Spin1 spin) {
-    const det_hashvec& dets = wfn_.wfn_hash();
-    for (size_t J = 0; J < dim_space_; ++J) {
-        double cJ_sq = evecs_->get(J, root1_) * evecs_->get(J, root2_);
-        std::vector<int> occ =
-            (spin == Spin1::a) ? dets[J].get_alfa_occ(ncmo_) : dets[J].get_beta_occ(ncmo_);
-        for (int pp : occ) {
-            opdm[pp * ncmo_ + pp] += cJ_sq;
-        }
     }
 }
 
@@ -352,9 +349,9 @@ void CI_RDMS::_add_1rdm_op_IJ(std::vector<double>& opdm,
                 const double& sign_q = detJ.second > 0 ? 1.0 : -1.0;
                 const size_t& J = detJ.first;
 
-                opdm[p * ncmo_ + q] +=
+                opdm[p * no_ + q] +=
                     evecs_->get(I, root1_) * evecs_->get(J, root2_) * sign_p * sign_q;
-                opdm[q * ncmo_ + p] +=
+                opdm[q * no_ + p] +=
                     evecs_->get(J, root1_) * evecs_->get(I, root2_) * sign_p * sign_q;
             }
         }
@@ -363,9 +360,9 @@ void CI_RDMS::_add_1rdm_op_IJ(std::vector<double>& opdm,
 
 void CI_RDMS::compute_2rdm(std::vector<double>& tprdm_aa, std::vector<double>& tprdm_ab,
                            std::vector<double>& tprdm_bb) {
-    tprdm_aa.assign(ncmo4_, 0.0);
-    tprdm_ab.assign(ncmo4_, 0.0);
-    tprdm_bb.assign(ncmo4_, 0.0);
+    tprdm_aa.assign(no4_, 0.0);
+    tprdm_ab.assign(no4_, 0.0);
+    tprdm_bb.assign(no4_, 0.0);
 
     local_timer two;
     get_two_map();
@@ -373,74 +370,152 @@ void CI_RDMS::compute_2rdm(std::vector<double>& tprdm_aa, std::vector<double>& t
         outfile->Printf("\n  Time spent forming 2-map:   %1.6f", two.get());
 
     local_timer build;
+
+    _add_2rdm(aa_ann_list_, aa_cre_list_, [&](const std::vector<size_t>& i, const double& value) {
+        tprdm_aa[i[0] * no3_ + i[1] * no2_ + i[2] * no_ + i[3]] += value;
+        tprdm_aa[i[0] * no3_ + i[1] * no2_ + i[3] * no_ + i[2]] -= value;
+        tprdm_aa[i[1] * no3_ + i[0] * no2_ + i[2] * no_ + i[3]] -= value;
+        tprdm_aa[i[1] * no3_ + i[0] * no2_ + i[3] * no_ + i[2]] += value;
+    });
+
+    _add_2rdm(ab_ann_list_, ab_cre_list_, [&](const std::vector<size_t>& i, const double& value) {
+        tprdm_ab[i[0] * no3_ + i[1] * no2_ + i[2] * no_ + i[3]] += value;
+    });
+
+    _add_2rdm(bb_ann_list_, bb_cre_list_, [&](const std::vector<size_t>& i, const double& value) {
+        tprdm_bb[i[0] * no3_ + i[1] * no2_ + i[2] * no_ + i[3]] += value;
+        tprdm_bb[i[0] * no3_ + i[1] * no2_ + i[3] * no_ + i[2]] -= value;
+        tprdm_bb[i[1] * no3_ + i[0] * no2_ + i[2] * no_ + i[3]] -= value;
+        tprdm_bb[i[1] * no3_ + i[0] * no2_ + i[3] * no_ + i[2]] += value;
+    });
+
+    //    for (size_t J = 0; J < dim_space_; ++J) {
+    //        // aaaa
+    //        for (auto& aaJ_mo_sign : aa_ann_list_[J]) {
+    //            const size_t aaJ_add = std::get<0>(aaJ_mo_sign);
+    //
+    //            const size_t p = std::abs(std::get<1>(aaJ_mo_sign)) - 1;
+    //            const size_t q = std::get<2>(aaJ_mo_sign);
+    //            const double sign_pq = std::get<1>(aaJ_mo_sign) > 0.0 ? 1.0 : -1.0;
+    //
+    //            for (auto& aaaaJ_mo_sign : aa_cre_list_[aaJ_add]) {
+    //                const size_t r = std::abs(std::get<1>(aaaaJ_mo_sign)) - 1;
+    //                const size_t s = std::get<2>(aaaaJ_mo_sign);
+    //                const double sign_rs = std::get<1>(aaaaJ_mo_sign) > 0.0 ? 1.0 : -1.0;
+    //                const size_t I = std::get<0>(aaaaJ_mo_sign);
+    //                double rdm_element =
+    //                    evecs_->get(I, root1_) * evecs_->get(J, root2_) * sign_pq * sign_rs;
+    //
+    //                tprdm_aa[p * no3_ + q * no2_ + r * no_ + s] += rdm_element;
+    //                tprdm_aa[p * no3_ + q * no2_ + s * no_ + r] -= rdm_element;
+    //                tprdm_aa[q * no3_ + p * no2_ + r * no_ + s] -= rdm_element;
+    //                tprdm_aa[q * no3_ + p * no2_ + s * no_ + r] += rdm_element;
+    //            }
+    //        }
+    //
+    //        // bbbb
+    //        for (auto& bbJ_mo_sign : bb_ann_list_[J]) {
+    //            const size_t bbJ_add = std::get<0>(bbJ_mo_sign);
+    //
+    //            const size_t p = std::abs(std::get<1>(bbJ_mo_sign)) - 1;
+    //            const size_t q = std::get<2>(bbJ_mo_sign);
+    //            const double sign_pq = std::get<1>(bbJ_mo_sign) > 0.0 ? 1.0 : -1.0;
+    //
+    //            for (auto& bbbbJ_mo_sign : bb_cre_list_[bbJ_add]) {
+    //                const size_t r = std::abs(std::get<1>(bbbbJ_mo_sign)) - 1;
+    //                const size_t s = std::get<2>(bbbbJ_mo_sign);
+    //                const double sign_rs = std::get<1>(bbbbJ_mo_sign) > 0.0 ? 1.0 : -1.0;
+    //                const size_t I = std::get<0>(bbbbJ_mo_sign);
+    //                double rdm_element =
+    //                    evecs_->get(I, root1_) * evecs_->get(J, root2_) * sign_pq * sign_rs;
+    //
+    //                tprdm_bb[p * no3_ + q * no2_ + r * no_ + s] += rdm_element;
+    //                tprdm_bb[p * no3_ + q * no2_ + s * no_ + r] -= rdm_element;
+    //                tprdm_bb[q * no3_ + p * no2_ + r * no_ + s] -= rdm_element;
+    //                tprdm_bb[q * no3_ + p * no2_ + s * no_ + r] += rdm_element;
+    //            }
+    //        }
+    //        // aabb
+    //        for (auto& abJ_mo_sign : ab_ann_list_[J]) {
+    //            const size_t abJ_add = std::get<0>(abJ_mo_sign);
+    //
+    //            const size_t p = std::abs(std::get<1>(abJ_mo_sign)) - 1;
+    //            const size_t q = std::get<2>(abJ_mo_sign);
+    //            const double sign_pq = std::get<1>(abJ_mo_sign) > 0.0 ? 1.0 : -1.0;
+    //
+    //            for (auto& aabbJ_mo_sign : ab_cre_list_[abJ_add]) {
+    //                const size_t r = std::abs(std::get<1>(aabbJ_mo_sign)) - 1;
+    //                const size_t s = std::get<2>(aabbJ_mo_sign);
+    //                const double sign_rs = std::get<1>(aabbJ_mo_sign) > 0.0 ? 1.0 : -1.0;
+    //                const size_t I = std::get<0>(aabbJ_mo_sign);
+    //                double rdm_element =
+    //                    evecs_->get(I, root1_) * evecs_->get(J, root2_) * sign_pq * sign_rs;
+    //
+    //                tprdm_ab[p * no3_ + q * no2_ + r * no_ + s] += rdm_element;
+    //            }
+    //        }
+    //    }
+    if (print_)
+        outfile->Printf("\n  Time spent building 2-rdm:   %1.6f", build.get());
+}
+
+void CI_RDMS::compute_2rdm_sf(std::vector<double>& tpdm) {
+    tpdm.assign(no4_, 0.0);
+
+    timer two("Build 2 Substitution Lists");
+    get_two_map();
+    if (print_)
+        outfile->Printf("\n  Time spent forming 2-map:   %1.6f", two.stop());
+
+    timer build("Build SF 2-RDM");
+
+    _add_2rdm(aa_ann_list_, aa_cre_list_, [&](const std::vector<size_t>& i, const double& value) {
+        tpdm[i[0] * no3_ + i[1] * no2_ + i[2] * no_ + i[3]] += value;
+        tpdm[i[0] * no3_ + i[1] * no2_ + i[3] * no_ + i[2]] -= value;
+        tpdm[i[1] * no3_ + i[0] * no2_ + i[2] * no_ + i[3]] -= value;
+        tpdm[i[1] * no3_ + i[0] * no2_ + i[3] * no_ + i[2]] += value;
+    });
+
+    _add_2rdm(ab_ann_list_, ab_cre_list_, [&](const std::vector<size_t>& i, const double& value) {
+        tpdm[i[0] * no3_ + i[1] * no2_ + i[2] * no_ + i[3]] += value;
+        tpdm[i[1] * no3_ + i[0] * no2_ + i[3] * no_ + i[2]] += value;
+    });
+
+    _add_2rdm(bb_ann_list_, bb_cre_list_, [&](const std::vector<size_t>& i, const double& value) {
+        tpdm[i[0] * no3_ + i[1] * no2_ + i[2] * no_ + i[3]] += value;
+        tpdm[i[0] * no3_ + i[1] * no2_ + i[3] * no_ + i[2]] -= value;
+        tpdm[i[1] * no3_ + i[0] * no2_ + i[2] * no_ + i[3]] -= value;
+        tpdm[i[1] * no3_ + i[0] * no2_ + i[3] * no_ + i[2]] += value;
+    });
+
+    if (print_)
+        outfile->Printf("\n  Time spent building 2-rdm:   %1.6f", build.stop());
+}
+
+void CI_RDMS::_add_2rdm(
+    const std::vector<std::vector<std::tuple<size_t, short, short>>>& ann_list,
+    const std::vector<std::vector<std::tuple<size_t, short, short>>>& cre_list,
+    const std::function<void(const std::vector<size_t>&, const double&)>& func) {
     for (size_t J = 0; J < dim_space_; ++J) {
-        // aaaa
-        for (auto& aaJ_mo_sign : aa_ann_list_[J]) {
+        for (auto& aaJ_mo_sign : ann_list[J]) {
             const size_t aaJ_add = std::get<0>(aaJ_mo_sign);
 
             const size_t p = std::abs(std::get<1>(aaJ_mo_sign)) - 1;
             const size_t q = std::get<2>(aaJ_mo_sign);
             const double sign_pq = std::get<1>(aaJ_mo_sign) > 0.0 ? 1.0 : -1.0;
 
-            for (auto& aaaaJ_mo_sign : aa_cre_list_[aaJ_add]) {
+            for (auto& aaaaJ_mo_sign : cre_list[aaJ_add]) {
                 const size_t r = std::abs(std::get<1>(aaaaJ_mo_sign)) - 1;
                 const size_t s = std::get<2>(aaaaJ_mo_sign);
                 const double sign_rs = std::get<1>(aaaaJ_mo_sign) > 0.0 ? 1.0 : -1.0;
+
                 const size_t I = std::get<0>(aaaaJ_mo_sign);
-                double rdm_element =
-                    evecs_->get(I, root1_) * evecs_->get(J, root2_) * sign_pq * sign_rs;
+                double rdm = evecs_->get(I, root1_) * evecs_->get(J, root2_) * sign_pq * sign_rs;
 
-                tprdm_aa[p * ncmo3_ + q * ncmo2_ + r * ncmo_ + s] += rdm_element;
-                tprdm_aa[p * ncmo3_ + q * ncmo2_ + s * ncmo_ + r] -= rdm_element;
-                tprdm_aa[q * ncmo3_ + p * ncmo2_ + r * ncmo_ + s] -= rdm_element;
-                tprdm_aa[q * ncmo3_ + p * ncmo2_ + s * ncmo_ + r] += rdm_element;
-            }
-        }
-
-        // bbbb
-        for (auto& bbJ_mo_sign : bb_ann_list_[J]) {
-            const size_t bbJ_add = std::get<0>(bbJ_mo_sign);
-
-            const size_t p = std::abs(std::get<1>(bbJ_mo_sign)) - 1;
-            const size_t q = std::get<2>(bbJ_mo_sign);
-            const double sign_pq = std::get<1>(bbJ_mo_sign) > 0.0 ? 1.0 : -1.0;
-
-            for (auto& bbbbJ_mo_sign : bb_cre_list_[bbJ_add]) {
-                const size_t r = std::abs(std::get<1>(bbbbJ_mo_sign)) - 1;
-                const size_t s = std::get<2>(bbbbJ_mo_sign);
-                const double sign_rs = std::get<1>(bbbbJ_mo_sign) > 0.0 ? 1.0 : -1.0;
-                const size_t I = std::get<0>(bbbbJ_mo_sign);
-                double rdm_element =
-                    evecs_->get(I, root1_) * evecs_->get(J, root2_) * sign_pq * sign_rs;
-
-                tprdm_bb[p * ncmo3_ + q * ncmo2_ + r * ncmo_ + s] += rdm_element;
-                tprdm_bb[p * ncmo3_ + q * ncmo2_ + s * ncmo_ + r] -= rdm_element;
-                tprdm_bb[q * ncmo3_ + p * ncmo2_ + r * ncmo_ + s] -= rdm_element;
-                tprdm_bb[q * ncmo3_ + p * ncmo2_ + s * ncmo_ + r] += rdm_element;
-            }
-        }
-        // aabb
-        for (auto& abJ_mo_sign : ab_ann_list_[J]) {
-            const size_t abJ_add = std::get<0>(abJ_mo_sign);
-
-            const size_t p = std::abs(std::get<1>(abJ_mo_sign)) - 1;
-            const size_t q = std::get<2>(abJ_mo_sign);
-            const double sign_pq = std::get<1>(abJ_mo_sign) > 0.0 ? 1.0 : -1.0;
-
-            for (auto& aabbJ_mo_sign : ab_cre_list_[abJ_add]) {
-                const size_t r = std::abs(std::get<1>(aabbJ_mo_sign)) - 1;
-                const size_t s = std::get<2>(aabbJ_mo_sign);
-                const double sign_rs = std::get<1>(aabbJ_mo_sign) > 0.0 ? 1.0 : -1.0;
-                const size_t I = std::get<0>(aabbJ_mo_sign);
-                double rdm_element =
-                    evecs_->get(I, root1_) * evecs_->get(J, root2_) * sign_pq * sign_rs;
-
-                tprdm_ab[p * ncmo3_ + q * ncmo2_ + r * ncmo_ + s] += rdm_element;
+                func({r, s, p, q}, rdm);
             }
         }
     }
-    if (print_)
-        outfile->Printf("\n  Time spent building 2-rdm:   %1.6f", build.get());
 }
 
 void CI_RDMS::compute_2rdm_op(std::vector<double>& tprdm_aa, std::vector<double>& tprdm_ab,
@@ -451,177 +526,329 @@ void CI_RDMS::compute_2rdm_op(std::vector<double>& tprdm_aa, std::vector<double>
     op->tp_s_lists(wfn_);
 
     local_timer build;
-    const det_hashvec& dets = wfn_.wfn_hash();
 
-    tprdm_aa.assign(ncmo4_, 0.0);
-    tprdm_ab.assign(ncmo4_, 0.0);
-    tprdm_bb.assign(ncmo4_, 0.0);
+    tprdm_aa.assign(no4_, 0.0);
+    tprdm_ab.assign(no4_, 0.0);
+    tprdm_bb.assign(no4_, 0.0);
 
-    std::vector<std::vector<std::tuple<size_t, short, short>>>& aa_list = op->aa_list_;
-    std::vector<std::vector<std::tuple<size_t, short, short>>>& ab_list = op->ab_list_;
-    std::vector<std::vector<std::tuple<size_t, short, short>>>& bb_list = op->bb_list_;
+    _add_2rdm_op_II(
+        [&](const std::vector<size_t>& i, const double& value) {
+            tprdm_aa[i[0] * no3_ + i[1] * no2_ + i[0] * no_ + i[1]] += value;
+            tprdm_aa[i[1] * no3_ + i[0] * no2_ + i[0] * no_ + i[1]] -= value;
+            tprdm_aa[i[1] * no3_ + i[0] * no2_ + i[1] * no_ + i[0]] += value;
+            tprdm_aa[i[0] * no3_ + i[1] * no2_ + i[1] * no_ + i[0]] -= value;
+        },
+        [&](const std::vector<size_t>& i, const double& value) {
+            tprdm_ab[i[0] * no3_ + i[1] * no2_ + i[0] * no_ + i[1]] += value;
+        },
+        [&](const std::vector<size_t>& i, const double& value) {
+            tprdm_bb[i[0] * no3_ + i[1] * no2_ + i[0] * no_ + i[1]] += value;
+            tprdm_bb[i[1] * no3_ + i[0] * no2_ + i[0] * no_ + i[1]] -= value;
+            tprdm_bb[i[1] * no3_ + i[0] * no2_ + i[1] * no_ + i[0]] += value;
+            tprdm_bb[i[0] * no3_ + i[1] * no2_ + i[1] * no_ + i[0]] -= value;
+        });
+    //    const det_hashvec& dets = wfn_.wfn_hash();
+    //    for (size_t J = 0; J < dim_space_; ++J) {
+    //        double cJ_sq = evecs_->get(J, root1_) * evecs_->get(J, root2_);
+    //        std::vector<int> aocc = dets[J].get_alfa_occ(no_);
+    //        std::vector<int> bocc = dets[J].get_beta_occ(no_);
+    //
+    //        int naocc = aocc.size();
+    //        int nbocc = bocc.size();
+    //
+    //        for (int p = 0; p < naocc; ++p) {
+    //            int pp = aocc[p];
+    //            for (int q = p + 1; q < naocc; ++q) {
+    //                int qq = aocc[q];
+    //                tprdm_aa[pp * no3_ + qq * no2_ + pp * no_ + qq] += cJ_sq;
+    //                tprdm_aa[qq * no3_ + pp * no2_ + pp * no_ + qq] -= cJ_sq;
+    //
+    //                tprdm_aa[qq * no3_ + pp * no2_ + qq * no_ + pp] += cJ_sq;
+    //                tprdm_aa[pp * no3_ + qq * no2_ + qq * no_ + pp] -= cJ_sq;
+    //            }
+    //        }
+    //
+    //        for (int p = 0; p < nbocc; ++p) {
+    //            int pp = bocc[p];
+    //            for (int q = p + 1; q < nbocc; ++q) {
+    //                int qq = bocc[q];
+    //                tprdm_bb[pp * no3_ + qq * no2_ + pp * no_ + qq] += cJ_sq;
+    //                tprdm_bb[qq * no3_ + pp * no2_ + pp * no_ + qq] -= cJ_sq;
+    //
+    //                tprdm_bb[qq * no3_ + pp * no2_ + qq * no_ + pp] += cJ_sq;
+    //                tprdm_bb[pp * no3_ + qq * no2_ + qq * no_ + pp] -= cJ_sq;
+    //            }
+    //        }
+    //
+    //        for (int p = 0; p < naocc; ++p) {
+    //            int pp = aocc[p];
+    //            for (int q = 0; q < nbocc; ++q) {
+    //                int qq = bocc[q];
+    //                tprdm_ab[pp * no3_ + qq * no2_ + pp * no_ + qq] += cJ_sq;
+    //            }
+    //        }
+    //    }
 
-    for (size_t J = 0; J < dim_space_; ++J) {
-        double cJ_sq = evecs_->get(J, root1_) * evecs_->get(J, root2_);
-        std::vector<int> aocc = dets[J].get_alfa_occ(ncmo_);
-        std::vector<int> bocc = dets[J].get_beta_occ(ncmo_);
+    _add_2rdm_op_IJ(op->aa_list_, [&](const std::vector<size_t>& i, const double& value) {
+        tprdm_aa[i[0] * no3_ + i[1] * no2_ + i[2] * no_ + i[3]] += value;
+        tprdm_aa[i[0] * no3_ + i[1] * no2_ + i[3] * no_ + i[2]] -= value;
+        tprdm_aa[i[1] * no3_ + i[0] * no2_ + i[2] * no_ + i[3]] -= value;
+        tprdm_aa[i[1] * no3_ + i[0] * no2_ + i[3] * no_ + i[2]] += value;
+    });
 
-        int naocc = aocc.size();
-        int nbocc = bocc.size();
+    _add_2rdm_op_IJ(op->ab_list_, [&](const std::vector<size_t>& i, const double& value) {
+        tprdm_ab[i[0] * no3_ + i[1] * no2_ + i[2] * no_ + i[3]] += value;
+    });
 
-        for (int p = 0; p < naocc; ++p) {
-            int pp = aocc[p];
-            for (int q = p + 1; q < naocc; ++q) {
-                int qq = aocc[q];
-                tprdm_aa[pp * ncmo3_ + qq * ncmo2_ + pp * ncmo_ + qq] += cJ_sq;
-                tprdm_aa[qq * ncmo3_ + pp * ncmo2_ + pp * ncmo_ + qq] -= cJ_sq;
+    _add_2rdm_op_IJ(op->bb_list_, [&](const std::vector<size_t>& i, const double& value) {
+        tprdm_bb[i[0] * no3_ + i[1] * no2_ + i[2] * no_ + i[3]] += value;
+        tprdm_bb[i[0] * no3_ + i[1] * no2_ + i[3] * no_ + i[2]] -= value;
+        tprdm_bb[i[1] * no3_ + i[0] * no2_ + i[2] * no_ + i[3]] -= value;
+        tprdm_bb[i[1] * no3_ + i[0] * no2_ + i[3] * no_ + i[2]] += value;
+    });
 
-                tprdm_aa[qq * ncmo3_ + pp * ncmo2_ + qq * ncmo_ + pp] += cJ_sq;
-                tprdm_aa[pp * ncmo3_ + qq * ncmo2_ + qq * ncmo_ + pp] -= cJ_sq;
-            }
-        }
-
-        for (int p = 0; p < nbocc; ++p) {
-            int pp = bocc[p];
-            for (int q = p + 1; q < nbocc; ++q) {
-                int qq = bocc[q];
-                tprdm_bb[pp * ncmo3_ + qq * ncmo2_ + pp * ncmo_ + qq] += cJ_sq;
-                tprdm_bb[qq * ncmo3_ + pp * ncmo2_ + pp * ncmo_ + qq] -= cJ_sq;
-
-                tprdm_bb[qq * ncmo3_ + pp * ncmo2_ + qq * ncmo_ + pp] += cJ_sq;
-                tprdm_bb[pp * ncmo3_ + qq * ncmo2_ + qq * ncmo_ + pp] -= cJ_sq;
-            }
-        }
-
-        for (int p = 0; p < naocc; ++p) {
-            int pp = aocc[p];
-            for (int q = 0; q < nbocc; ++q) {
-                int qq = bocc[q];
-                tprdm_ab[pp * ncmo3_ + qq * ncmo2_ + pp * ncmo_ + qq] += cJ_sq;
-            }
-        }
-    }
-
-    // aaaa
-    for (size_t K = 0, max_K = aa_list.size(); K < max_K; ++K) {
-        std::vector<std::tuple<size_t, short, short>>& coupled_dets = aa_list[K];
-        for (size_t a = 0, max_a = coupled_dets.size(); a < max_a; ++a) {
-
-            auto& detJ = coupled_dets[a];
-
-            const size_t& J = std::get<0>(detJ);
-            const size_t& p = std::abs(std::get<1>(detJ)) - 1;
-            const size_t& q = std::get<2>(detJ);
-            const double& sign_pq = std::get<1>(detJ) > 0.0 ? 1.0 : -1.0;
-
-            for (size_t b = a + 1, max_b = coupled_dets.size(); b < max_b; ++b) {
-
-                auto& detI = coupled_dets[b];
-
-                const size_t& r = std::abs(std::get<1>(detI)) - 1;
-                const size_t& s = std::get<2>(detI);
-                const double& sign_rs = std::get<1>(detI) > 0.0 ? 1.0 : -1.0;
-                const size_t& I = std::get<0>(detI);
-                double rdm_element =
-                    evecs_->get(J, root1_) * evecs_->get(I, root2_) * sign_pq * sign_rs;
-
-                tprdm_aa[p * ncmo3_ + q * ncmo2_ + r * ncmo_ + s] += rdm_element;
-                tprdm_aa[p * ncmo3_ + q * ncmo2_ + s * ncmo_ + r] -= rdm_element;
-                tprdm_aa[q * ncmo3_ + p * ncmo2_ + r * ncmo_ + s] -= rdm_element;
-                tprdm_aa[q * ncmo3_ + p * ncmo2_ + s * ncmo_ + r] += rdm_element;
-
-                rdm_element = evecs_->get(I, root1_) * evecs_->get(J, root2_) * sign_pq * sign_rs;
-
-                tprdm_aa[r * ncmo3_ + s * ncmo2_ + p * ncmo_ + q] += rdm_element;
-                tprdm_aa[s * ncmo3_ + r * ncmo2_ + p * ncmo_ + q] -= rdm_element;
-                tprdm_aa[r * ncmo3_ + s * ncmo2_ + q * ncmo_ + p] -= rdm_element;
-                tprdm_aa[s * ncmo3_ + r * ncmo2_ + q * ncmo_ + p] += rdm_element;
-            }
-        }
-    }
-
-    // bbbb
-    for (size_t K = 0, max_K = bb_list.size(); K < max_K; ++K) {
-        std::vector<std::tuple<size_t, short, short>>& coupled_dets = bb_list[K];
-        for (size_t a = 0, max_a = coupled_dets.size(); a < max_a; ++a) {
-
-            auto& detJ = coupled_dets[a];
-
-            const size_t& J = std::get<0>(detJ);
-            const size_t& p = std::abs(std::get<1>(detJ)) - 1;
-            const size_t& q = std::get<2>(detJ);
-            const double& sign_pq = std::get<1>(detJ) > 0.0 ? 1.0 : -1.0;
-
-            for (size_t b = a + 1, max_b = coupled_dets.size(); b < max_b; ++b) {
-
-                auto& detI = coupled_dets[b];
-
-                const size_t& r = std::abs(std::get<1>(detI)) - 1;
-                const size_t& s = std::get<2>(detI);
-                const double& sign_rs = std::get<1>(detI) > 0.0 ? 1.0 : -1.0;
-                const size_t& I = std::get<0>(detI);
-                double rdm_element =
-                    evecs_->get(J, root1_) * evecs_->get(I, root2_) * sign_pq * sign_rs;
-
-                tprdm_bb[p * ncmo3_ + q * ncmo2_ + r * ncmo_ + s] += rdm_element;
-                tprdm_bb[p * ncmo3_ + q * ncmo2_ + s * ncmo_ + r] -= rdm_element;
-                tprdm_bb[q * ncmo3_ + p * ncmo2_ + r * ncmo_ + s] -= rdm_element;
-                tprdm_bb[q * ncmo3_ + p * ncmo2_ + s * ncmo_ + r] += rdm_element;
-
-                rdm_element = evecs_->get(I, root1_) * evecs_->get(J, root2_) * sign_pq * sign_rs;
-
-                tprdm_bb[r * ncmo3_ + s * ncmo2_ + p * ncmo_ + q] += rdm_element;
-                tprdm_bb[s * ncmo3_ + r * ncmo2_ + p * ncmo_ + q] -= rdm_element;
-                tprdm_bb[r * ncmo3_ + s * ncmo2_ + q * ncmo_ + p] -= rdm_element;
-                tprdm_bb[s * ncmo3_ + r * ncmo2_ + q * ncmo_ + p] += rdm_element;
-            }
-        }
-    }
-    // aabb
-    for (size_t K = 0, max_K = ab_list.size(); K < max_K; ++K) {
-        std::vector<std::tuple<size_t, short, short>>& coupled_dets = ab_list[K];
-        for (size_t a = 0, max_a = coupled_dets.size(); a < max_a; ++a) {
-
-            auto& detJ = coupled_dets[a];
-
-            const size_t& J = std::get<0>(detJ);
-            const size_t& p = std::abs(std::get<1>(detJ)) - 1;
-            const size_t& q = std::get<2>(detJ);
-            const double& sign_pq = std::get<1>(detJ) > 0.0 ? 1.0 : -1.0;
-
-            for (size_t b = a + 1, max_b = coupled_dets.size(); b < max_b; ++b) {
-
-                auto& detI = coupled_dets[b];
-
-                const size_t& r = std::abs(std::get<1>(detI)) - 1;
-                const size_t& s = std::get<2>(detI);
-                const double& sign_rs = std::get<1>(detI) > 0.0 ? 1.0 : -1.0;
-                const size_t& I = std::get<0>(detI);
-
-                double rdm_element =
-                    evecs_->get(J, root1_) * evecs_->get(I, root2_) * sign_pq * sign_rs;
-                tprdm_ab[p * ncmo3_ + q * ncmo2_ + r * ncmo_ + s] += rdm_element;
-
-                rdm_element = evecs_->get(I, root1_) * evecs_->get(J, root2_) * sign_pq * sign_rs;
-                tprdm_ab[r * ncmo3_ + s * ncmo2_ + p * ncmo_ + q] += rdm_element;
-            }
-        }
-    }
+    //    std::vector<std::vector<std::tuple<size_t, short, short>>>& aa_list = op->aa_list_;
+    //    std::vector<std::vector<std::tuple<size_t, short, short>>>& ab_list = op->ab_list_;
+    //    std::vector<std::vector<std::tuple<size_t, short, short>>>& bb_list = op->bb_list_;
+    //
+    //    // aaaa
+    //    for (size_t K = 0, max_K = aa_list.size(); K < max_K; ++K) {
+    //        std::vector<std::tuple<size_t, short, short>>& coupled_dets = aa_list[K];
+    //        for (size_t a = 0, max_a = coupled_dets.size(); a < max_a; ++a) {
+    //
+    //            auto& detJ = coupled_dets[a];
+    //
+    //            const size_t& J = std::get<0>(detJ);
+    //            const size_t& p = std::abs(std::get<1>(detJ)) - 1;
+    //            const size_t& q = std::get<2>(detJ);
+    //            const double& sign_pq = std::get<1>(detJ) > 0.0 ? 1.0 : -1.0;
+    //
+    //            for (size_t b = a + 1, max_b = coupled_dets.size(); b < max_b; ++b) {
+    //
+    //                auto& detI = coupled_dets[b];
+    //
+    //                const size_t& r = std::abs(std::get<1>(detI)) - 1;
+    //                const size_t& s = std::get<2>(detI);
+    //                const double& sign_rs = std::get<1>(detI) > 0.0 ? 1.0 : -1.0;
+    //                const size_t& I = std::get<0>(detI);
+    //                double rdm_element =
+    //                    evecs_->get(J, root1_) * evecs_->get(I, root2_) * sign_pq * sign_rs;
+    //
+    //                tprdm_aa[p * no3_ + q * no2_ + r * no_ + s] += rdm_element;
+    //                tprdm_aa[p * no3_ + q * no2_ + s * no_ + r] -= rdm_element;
+    //                tprdm_aa[q * no3_ + p * no2_ + r * no_ + s] -= rdm_element;
+    //                tprdm_aa[q * no3_ + p * no2_ + s * no_ + r] += rdm_element;
+    //
+    //                rdm_element = evecs_->get(I, root1_) * evecs_->get(J, root2_) * sign_pq *
+    //                sign_rs;
+    //
+    //                tprdm_aa[r * no3_ + s * no2_ + p * no_ + q] += rdm_element;
+    //                tprdm_aa[s * no3_ + r * no2_ + p * no_ + q] -= rdm_element;
+    //                tprdm_aa[r * no3_ + s * no2_ + q * no_ + p] -= rdm_element;
+    //                tprdm_aa[s * no3_ + r * no2_ + q * no_ + p] += rdm_element;
+    //            }
+    //        }
+    //    }
+    //
+    //    // bbbb
+    //    for (size_t K = 0, max_K = bb_list.size(); K < max_K; ++K) {
+    //        std::vector<std::tuple<size_t, short, short>>& coupled_dets = bb_list[K];
+    //        for (size_t a = 0, max_a = coupled_dets.size(); a < max_a; ++a) {
+    //
+    //            auto& detJ = coupled_dets[a];
+    //
+    //            const size_t& J = std::get<0>(detJ);
+    //            const size_t& p = std::abs(std::get<1>(detJ)) - 1;
+    //            const size_t& q = std::get<2>(detJ);
+    //            const double& sign_pq = std::get<1>(detJ) > 0.0 ? 1.0 : -1.0;
+    //
+    //            for (size_t b = a + 1, max_b = coupled_dets.size(); b < max_b; ++b) {
+    //
+    //                auto& detI = coupled_dets[b];
+    //
+    //                const size_t& r = std::abs(std::get<1>(detI)) - 1;
+    //                const size_t& s = std::get<2>(detI);
+    //                const double& sign_rs = std::get<1>(detI) > 0.0 ? 1.0 : -1.0;
+    //                const size_t& I = std::get<0>(detI);
+    //                double rdm_element =
+    //                    evecs_->get(J, root1_) * evecs_->get(I, root2_) * sign_pq * sign_rs;
+    //
+    //                tprdm_bb[p * no3_ + q * no2_ + r * no_ + s] += rdm_element;
+    //                tprdm_bb[p * no3_ + q * no2_ + s * no_ + r] -= rdm_element;
+    //                tprdm_bb[q * no3_ + p * no2_ + r * no_ + s] -= rdm_element;
+    //                tprdm_bb[q * no3_ + p * no2_ + s * no_ + r] += rdm_element;
+    //
+    //                rdm_element = evecs_->get(I, root1_) * evecs_->get(J, root2_) * sign_pq *
+    //                sign_rs;
+    //
+    //                tprdm_bb[r * no3_ + s * no2_ + p * no_ + q] += rdm_element;
+    //                tprdm_bb[s * no3_ + r * no2_ + p * no_ + q] -= rdm_element;
+    //                tprdm_bb[r * no3_ + s * no2_ + q * no_ + p] -= rdm_element;
+    //                tprdm_bb[s * no3_ + r * no2_ + q * no_ + p] += rdm_element;
+    //            }
+    //        }
+    //    }
+    //    // aabb
+    //    for (size_t K = 0, max_K = ab_list.size(); K < max_K; ++K) {
+    //        std::vector<std::tuple<size_t, short, short>>& coupled_dets = ab_list[K];
+    //        for (size_t a = 0, max_a = coupled_dets.size(); a < max_a; ++a) {
+    //
+    //            auto& detJ = coupled_dets[a];
+    //
+    //            const size_t& J = std::get<0>(detJ);
+    //            const size_t& p = std::abs(std::get<1>(detJ)) - 1;
+    //            const size_t& q = std::get<2>(detJ);
+    //            const double& sign_pq = std::get<1>(detJ) > 0.0 ? 1.0 : -1.0;
+    //
+    //            for (size_t b = a + 1, max_b = coupled_dets.size(); b < max_b; ++b) {
+    //
+    //                auto& detI = coupled_dets[b];
+    //
+    //                const size_t& r = std::abs(std::get<1>(detI)) - 1;
+    //                const size_t& s = std::get<2>(detI);
+    //                const double& sign_rs = std::get<1>(detI) > 0.0 ? 1.0 : -1.0;
+    //                const size_t& I = std::get<0>(detI);
+    //
+    //                double rdm_element =
+    //                    evecs_->get(J, root1_) * evecs_->get(I, root2_) * sign_pq * sign_rs;
+    //                tprdm_ab[p * no3_ + q * no2_ + r * no_ + s] += rdm_element;
+    //
+    //                rdm_element = evecs_->get(I, root1_) * evecs_->get(J, root2_) * sign_pq *
+    //                sign_rs; tprdm_ab[r * no3_ + s * no2_ + p * no_ + q] += rdm_element;
+    //            }
+    //        }
+    //    }
 
     if (print_) {
         outfile->Printf("\n  Time spent building 2-rdm: %.3e seconds", build.get());
     }
 }
 
+void CI_RDMS::compute_2rdm_sf_op(std::vector<double>& tpdm) {
+    auto op = std::make_shared<DeterminantSubstitutionLists>(fci_ints_);
+    op->set_quiet_mode(not print_);
+    op->build_strings(wfn_);
+    op->tp_s_lists(wfn_);
+
+    tpdm.assign(no4_, 0.0);
+    timer build("Build SF 2-RDM");
+
+    _add_2rdm_op_II(
+        [&](const std::vector<size_t>& i, const double& value) {
+            tpdm[i[0] * no3_ + i[1] * no2_ + i[0] * no_ + i[1]] += value;
+            tpdm[i[1] * no3_ + i[0] * no2_ + i[0] * no_ + i[1]] -= value;
+            tpdm[i[1] * no3_ + i[0] * no2_ + i[1] * no_ + i[0]] += value;
+            tpdm[i[0] * no3_ + i[1] * no2_ + i[1] * no_ + i[0]] -= value;
+        },
+        [&](const std::vector<size_t>& i, const double& value) {
+            tpdm[i[0] * no3_ + i[1] * no2_ + i[0] * no_ + i[1]] += value;
+            tpdm[i[1] * no3_ + i[0] * no2_ + i[1] * no_ + i[0]] += value;
+        },
+        [&](const std::vector<size_t>& i, const double& value) {
+            tpdm[i[0] * no3_ + i[1] * no2_ + i[0] * no_ + i[1]] += value;
+            tpdm[i[1] * no3_ + i[0] * no2_ + i[0] * no_ + i[1]] -= value;
+            tpdm[i[1] * no3_ + i[0] * no2_ + i[1] * no_ + i[0]] += value;
+            tpdm[i[0] * no3_ + i[1] * no2_ + i[1] * no_ + i[0]] -= value;
+        });
+
+    _add_2rdm_op_IJ(op->aa_list_, [&](const std::vector<size_t>& i, const double& value) {
+        tpdm[i[0] * no3_ + i[1] * no2_ + i[2] * no_ + i[3]] += value;
+        tpdm[i[0] * no3_ + i[1] * no2_ + i[3] * no_ + i[2]] -= value;
+        tpdm[i[1] * no3_ + i[0] * no2_ + i[2] * no_ + i[3]] -= value;
+        tpdm[i[1] * no3_ + i[0] * no2_ + i[3] * no_ + i[2]] += value;
+    });
+
+    _add_2rdm_op_IJ(op->ab_list_, [&](const std::vector<size_t>& i, const double& value) {
+        tpdm[i[0] * no3_ + i[1] * no2_ + i[2] * no_ + i[3]] += value;
+        tpdm[i[1] * no3_ + i[0] * no2_ + i[3] * no_ + i[2]] += value;
+    });
+
+    _add_2rdm_op_IJ(op->bb_list_, [&](const std::vector<size_t>& i, const double& value) {
+        tpdm[i[0] * no3_ + i[1] * no2_ + i[2] * no_ + i[3]] += value;
+        tpdm[i[0] * no3_ + i[1] * no2_ + i[3] * no_ + i[2]] -= value;
+        tpdm[i[1] * no3_ + i[0] * no2_ + i[2] * no_ + i[3]] -= value;
+        tpdm[i[1] * no3_ + i[0] * no2_ + i[3] * no_ + i[2]] += value;
+    });
+
+    if (print_) {
+        outfile->Printf("\n  Time spent building 2-rdm: %.3e seconds", build.stop());
+    }
+}
+
+void CI_RDMS::_add_2rdm_op_II(
+    const std::function<void(const std::vector<size_t>&, const double&)>& func_aa,
+    const std::function<void(const std::vector<size_t>&, const double&)>& func_ab,
+    const std::function<void(const std::vector<size_t>&, const double&)>& func_bb) {
+    const det_hashvec& dets = wfn_.wfn_hash();
+    for (size_t J = 0; J < dim_space_; ++J) {
+        double cJ_sq = evecs_->get(J, root1_) * evecs_->get(J, root2_);
+
+        std::vector<int> aocc = dets[J].get_alfa_occ(no_);
+        std::vector<int> bocc = dets[J].get_beta_occ(no_);
+        auto naocc = aocc.size();
+        auto nbocc = bocc.size();
+
+        for (size_t p = 0; p < naocc; ++p) {
+            size_t pp = aocc[p];
+            for (size_t q = p + 1; q < naocc; ++q) {
+                size_t qq = aocc[q];
+                func_aa({pp, qq}, cJ_sq);
+            }
+        }
+        for (size_t p = 0; p < nbocc; ++p) {
+            size_t pp = bocc[p];
+            for (size_t q = p + 1; q < nbocc; ++q) {
+                size_t qq = bocc[q];
+                func_bb({pp, qq}, cJ_sq);
+            }
+        }
+        for (size_t p = 0; p < naocc; ++p) {
+            size_t pp = aocc[p];
+            for (size_t q = 0; q < nbocc; ++q) {
+                size_t qq = bocc[q];
+                func_ab({pp, qq}, cJ_sq);
+            }
+        }
+    }
+}
+
+void CI_RDMS::_add_2rdm_op_IJ(
+    const std::vector<std::vector<std::tuple<size_t, short, short>>>& list,
+    const std::function<void(const std::vector<size_t>&, const double&)>& func) {
+    for (const auto& coupled_dets : list) {
+
+        for (size_t a = 0, max_a = coupled_dets.size(); a < max_a; ++a) {
+            auto& detJ = coupled_dets[a];
+
+            const size_t& J = std::get<0>(detJ);
+            const size_t& p = std::abs(std::get<1>(detJ)) - 1;
+            const size_t& q = std::get<2>(detJ);
+            const double& sign_pq = std::get<1>(detJ) > 0.0 ? 1.0 : -1.0;
+
+            for (size_t b = a + 1, max_b = coupled_dets.size(); b < max_b; ++b) {
+                auto& detI = coupled_dets[b];
+
+                const size_t& I = std::get<0>(detI);
+                const size_t& r = std::abs(std::get<1>(detI)) - 1;
+                const size_t& s = std::get<2>(detI);
+                const double& sign_rs = std::get<1>(detI) > 0.0 ? 1.0 : -1.0;
+
+                double rdmJI = evecs_->get(J, root1_) * evecs_->get(I, root2_) * sign_pq * sign_rs;
+                func({p, q, r, s}, rdmJI);
+
+                double rdmIJ = evecs_->get(I, root1_) * evecs_->get(J, root2_) * sign_pq * sign_rs;
+                func({r, s, p, q}, rdmIJ);
+            }
+        }
+    }
+}
+
 void CI_RDMS::compute_3rdm(std::vector<double>& tprdm_aaa, std::vector<double>& tprdm_aab,
                            std::vector<double>& tprdm_abb, std::vector<double>& tprdm_bbb) {
-    size_t ncmo5 = ncmo4_ * ncmo_;
-    size_t ncmo6 = ncmo3_ * ncmo3_;
-
-    tprdm_aaa.assign(ncmo6, 0.0);
-    tprdm_aab.assign(ncmo6, 0.0);
-    tprdm_abb.assign(ncmo6, 0.0);
-    tprdm_bbb.assign(ncmo6, 0.0);
+    tprdm_aaa.assign(no6_, 0.0);
+    tprdm_aab.assign(no6_, 0.0);
+    tprdm_abb.assign(no6_, 0.0);
+    tprdm_bbb.assign(no6_, 0.0);
 
     local_timer three;
     get_three_map();
@@ -629,9 +856,294 @@ void CI_RDMS::compute_3rdm(std::vector<double>& tprdm_aaa, std::vector<double>& 
         outfile->Printf("\n  Time spent forming 3-map:   %1.6f", three.get());
 
     local_timer build;
+
+    _add_3rdm(aaa_ann_list_, aaa_cre_list_, [&](const std::vector<size_t>& i, const double& value) {
+        _add_3rdm_aaa(tprdm_aaa, i, value);
+    });
+
+    _add_3rdm(aab_ann_list_, aab_cre_list_, [&](const std::vector<size_t>& i, const double& value) {
+        tprdm_aab[i[0] * no5_ + i[1] * no4_ + i[2] * no3_ + i[3] * no2_ + i[4] * no_ + i[5]] +=
+            value;
+        tprdm_aab[i[0] * no5_ + i[1] * no4_ + i[2] * no3_ + i[4] * no2_ + i[3] * no_ + i[5]] -=
+            value;
+        tprdm_aab[i[1] * no5_ + i[0] * no4_ + i[2] * no3_ + i[3] * no2_ + i[4] * no_ + i[5]] -=
+            value;
+        tprdm_aab[i[1] * no5_ + i[0] * no4_ + i[2] * no3_ + i[4] * no2_ + i[3] * no_ + i[5]] +=
+            value;
+    });
+
+    _add_3rdm(abb_ann_list_, abb_cre_list_, [&](const std::vector<size_t>& i, const double& value) {
+        tprdm_abb[i[0] * no5_ + i[1] * no4_ + i[2] * no3_ + i[3] * no2_ + i[4] * no_ + i[5]] +=
+            value;
+        tprdm_abb[i[0] * no5_ + i[1] * no4_ + i[2] * no3_ + i[3] * no2_ + i[5] * no_ + i[4]] -=
+            value;
+        tprdm_abb[i[0] * no5_ + i[2] * no4_ + i[1] * no3_ + i[3] * no2_ + i[4] * no_ + i[5]] -=
+            value;
+        tprdm_abb[i[0] * no5_ + i[2] * no4_ + i[1] * no3_ + i[3] * no2_ + i[5] * no_ + i[4]] +=
+            value;
+    });
+
+    _add_3rdm(bbb_ann_list_, bbb_cre_list_, [&](const std::vector<size_t>& i, const double& value) {
+        _add_3rdm_aaa(tprdm_bbb, i, value);
+    });
+
+    //    for (size_t J = 0; J < dim_space_; ++J) {
+    //        // aaa aaa
+    //        for (auto& aaaJ_mo_sign : aaa_ann_list_[J]) {
+    //            const size_t aaaJ_add = std::get<0>(aaaJ_mo_sign);
+    //
+    //            const size_t p = std::abs(std::get<1>(aaaJ_mo_sign)) - 1;
+    //            const size_t q = std::get<2>(aaaJ_mo_sign);
+    //            const size_t r = std::get<3>(aaaJ_mo_sign);
+    //            const double sign_pqr = std::get<1>(aaaJ_mo_sign) > 0.0 ? 1.0 : -1.0;
+    //
+    //            for (auto& a6J : aaa_cre_list_[aaaJ_add]) {
+    //                const size_t s = std::abs(std::get<1>(a6J)) - 1;
+    //                const size_t t = std::get<2>(a6J);
+    //                const size_t u = std::get<3>(a6J);
+    //                const double sign_stu = std::get<1>(a6J) > 0.0 ? 1.0 : -1.0;
+    //                const size_t I = std::get<0>(a6J);
+    //
+    //                double el = evecs_->get(I, root1_) * evecs_->get(J, root2_) * sign_pqr *
+    //                sign_stu;
+    //
+    //                tprdm_aaa[p * no5_ + q * no4_ + r * no3_ + s * no2_ + t * no_ + u] +=
+    //                el; tprdm_aaa[p * no5_ + q * no4_ + r * no3_ + s * no2_ + u * no_ +
+    //                t] -= el; tprdm_aaa[p * no5_ + q * no4_ + r * no3_ + u * no2_ + t *
+    //                no_ + s] -= el; tprdm_aaa[p * no5_ + q * no4_ + r * no3_ + u * no2_ +
+    //                s * no_ + t] += el; tprdm_aaa[p * no5_ + q * no4_ + r * no3_ + t *
+    //                no2_ + s * no_ + u] -= el; tprdm_aaa[p * no5_ + q * no4_ + r * no3_ +
+    //                t * no2_ + u * no_ + s] += el;
+    //
+    //                tprdm_aaa[p * no5_ + r * no4_ + q * no3_ + s * no2_ + t * no_ + u] -=
+    //                el; tprdm_aaa[p * no5_ + r * no4_ + q * no3_ + s * no2_ + u * no_ +
+    //                t] += el; tprdm_aaa[p * no5_ + r * no4_ + q * no3_ + u * no2_ + t *
+    //                no_ + s] += el; tprdm_aaa[p * no5_ + r * no4_ + q * no3_ + u * no2_ +
+    //                s * no_ + t] -= el; tprdm_aaa[p * no5_ + r * no4_ + q * no3_ + t *
+    //                no2_ + s * no_ + u] += el; tprdm_aaa[p * no5_ + r * no4_ + q * no3_ +
+    //                t * no2_ + u * no_ + s] -= el;
+    //
+    //                tprdm_aaa[q * no5_ + p * no4_ + r * no3_ + s * no2_ + t * no_ + u] -=
+    //                el; tprdm_aaa[q * no5_ + p * no4_ + r * no3_ + s * no2_ + u * no_ +
+    //                t] += el; tprdm_aaa[q * no5_ + p * no4_ + r * no3_ + u * no2_ + t *
+    //                no_ + s] += el; tprdm_aaa[q * no5_ + p * no4_ + r * no3_ + u * no2_ +
+    //                s * no_ + t] -= el; tprdm_aaa[q * no5_ + p * no4_ + r * no3_ + t *
+    //                no2_ + s * no_ + u] += el; tprdm_aaa[q * no5_ + p * no4_ + r * no3_ +
+    //                t * no2_ + u * no_ + s] -= el;
+    //
+    //                tprdm_aaa[q * no5_ + r * no4_ + p * no3_ + s * no2_ + t * no_ + u] +=
+    //                el; tprdm_aaa[q * no5_ + r * no4_ + p * no3_ + s * no2_ + u * no_ +
+    //                t] -= el; tprdm_aaa[q * no5_ + r * no4_ + p * no3_ + u * no2_ + t *
+    //                no_ + s] -= el; tprdm_aaa[q * no5_ + r * no4_ + p * no3_ + u * no2_ +
+    //                s * no_ + t] += el; tprdm_aaa[q * no5_ + r * no4_ + p * no3_ + t *
+    //                no2_ + s * no_ + u] -= el; tprdm_aaa[q * no5_ + r * no4_ + p * no3_ +
+    //                t * no2_ + u * no_ + s] += el;
+    //
+    //                tprdm_aaa[r * no5_ + p * no4_ + q * no3_ + s * no2_ + t * no_ + u] +=
+    //                el; tprdm_aaa[r * no5_ + p * no4_ + q * no3_ + s * no2_ + u * no_ +
+    //                t] -= el; tprdm_aaa[r * no5_ + p * no4_ + q * no3_ + u * no2_ + t *
+    //                no_ + s] -= el; tprdm_aaa[r * no5_ + p * no4_ + q * no3_ + u * no2_ +
+    //                s * no_ + t] += el; tprdm_aaa[r * no5_ + p * no4_ + q * no3_ + t *
+    //                no2_ + s * no_ + u] -= el; tprdm_aaa[r * no5_ + p * no4_ + q * no3_ +
+    //                t * no2_ + u * no_ + s] += el;
+    //
+    //                tprdm_aaa[r * no5_ + q * no4_ + p * no3_ + s * no2_ + t * no_ + u] -=
+    //                el; tprdm_aaa[r * no5_ + q * no4_ + p * no3_ + s * no2_ + u * no_ +
+    //                t] += el; tprdm_aaa[r * no5_ + q * no4_ + p * no3_ + u * no2_ + t *
+    //                no_ + s] += el; tprdm_aaa[r * no5_ + q * no4_ + p * no3_ + u * no2_ +
+    //                s * no_ + t] -= el; tprdm_aaa[r * no5_ + q * no4_ + p * no3_ + t *
+    //                no2_ + s * no_ + u] += el; tprdm_aaa[r * no5_ + q * no4_ + p * no3_ +
+    //                t * no2_ + u * no_ + s] -= el;
+    //            }
+    //        }
+    //        // aab aab
+    //        for (auto& aabJ_mo_sign : aab_ann_list_[J]) {
+    //            const size_t aabJ_add = std::get<0>(aabJ_mo_sign);
+    //
+    //            const size_t p = std::abs(std::get<1>(aabJ_mo_sign)) - 1;
+    //            const size_t q = std::get<2>(aabJ_mo_sign);
+    //            const size_t r = std::get<3>(aabJ_mo_sign);
+    //            const double sign_pqr = std::get<1>(aabJ_mo_sign) > 0.0 ? 1.0 : -1.0;
+    //
+    //            for (auto& aabJ : aab_cre_list_[aabJ_add]) {
+    //                const size_t s = std::abs(std::get<1>(aabJ)) - 1;
+    //                const size_t t = std::get<2>(aabJ);
+    //                const size_t u = std::get<3>(aabJ);
+    //                const double sign_stu = std::get<1>(aabJ) > 0.0 ? 1.0 : -1.0;
+    //                const size_t I = std::get<0>(aabJ);
+    //
+    //                double el = evecs_->get(I, root1_) * evecs_->get(J, root2_) * sign_pqr *
+    //                sign_stu;
+    //
+    //                tprdm_aab[p * no5_ + q * no4_ + r * no3_ + s * no2_ + t * no_ + u] +=
+    //                el; tprdm_aab[p * no5_ + q * no4_ + r * no3_ + t * no2_ + s * no_ +
+    //                u] -= el; tprdm_aab[q * no5_ + p * no4_ + r * no3_ + s * no2_ + t *
+    //                no_ + u] -= el; tprdm_aab[q * no5_ + p * no4_ + r * no3_ + t * no2_ +
+    //                s * no_ + u] += el;
+    //            }
+    //        }
+    //        // abb abb
+    //        for (auto& abbJ_mo_sign : abb_ann_list_[J]) {
+    //            const size_t abbJ_add = std::get<0>(abbJ_mo_sign);
+    //
+    //            const size_t p = std::abs(std::get<1>(abbJ_mo_sign)) - 1;
+    //            const size_t q = std::get<2>(abbJ_mo_sign);
+    //            const size_t r = std::get<3>(abbJ_mo_sign);
+    //            const double sign_pqr = std::get<1>(abbJ_mo_sign) > 0.0 ? 1.0 : -1.0;
+    //
+    //            for (auto& abbJ : abb_cre_list_[abbJ_add]) {
+    //                const size_t s = std::abs(std::get<1>(abbJ)) - 1;
+    //                const size_t t = std::get<2>(abbJ);
+    //                const size_t u = std::get<3>(abbJ);
+    //                const double sign_stu = std::get<1>(abbJ) > 0.0 ? 1.0 : -1.0;
+    //                const size_t I = std::get<0>(abbJ);
+    //
+    //                double el = evecs_->get(I, root1_) * evecs_->get(J, root2_) * sign_pqr *
+    //                sign_stu;
+    //
+    //                tprdm_abb[p * no5_ + q * no4_ + r * no3_ + s * no2_ + t * no_ + u] +=
+    //                el; tprdm_abb[p * no5_ + q * no4_ + r * no3_ + s * no2_ + u * no_ +
+    //                t] -= el; tprdm_abb[p * no5_ + r * no4_ + q * no3_ + s * no2_ + t *
+    //                no_ + u] -= el; tprdm_abb[p * no5_ + r * no4_ + q * no3_ + s * no2_ +
+    //                u * no_ + t] += el;
+    //            }
+    //        }
+    //        // bbb bbb
+    //        for (auto& bbbJ_mo_sign : bbb_ann_list_[J]) {
+    //            const size_t bbbJ_add = std::get<0>(bbbJ_mo_sign);
+    //
+    //            const size_t p = std::abs(std::get<1>(bbbJ_mo_sign)) - 1;
+    //            const size_t q = std::get<2>(bbbJ_mo_sign);
+    //            const size_t r = std::get<3>(bbbJ_mo_sign);
+    //            const double sign_pqr = std::get<1>(bbbJ_mo_sign) > 0.0 ? 1.0 : -1.0;
+    //
+    //            for (auto& b6J : bbb_cre_list_[bbbJ_add]) {
+    //                const size_t s = std::abs(std::get<1>(b6J)) - 1;
+    //                const size_t t = std::get<2>(b6J);
+    //                const size_t u = std::get<3>(b6J);
+    //                const double sign_stu = std::get<1>(b6J) > 0.0 ? 1.0 : -1.0;
+    //                const size_t I = std::get<0>(b6J);
+    //
+    //                double el = evecs_->get(I, root1_) * evecs_->get(J, root2_) * sign_pqr *
+    //                sign_stu;
+    //
+    //                tprdm_bbb[p * no5_ + q * no4_ + r * no3_ + s * no2_ + t * no_ + u] +=
+    //                el; tprdm_bbb[p * no5_ + q * no4_ + r * no3_ + s * no2_ + u * no_ +
+    //                t] -= el; tprdm_bbb[p * no5_ + q * no4_ + r * no3_ + u * no2_ + t *
+    //                no_ + s] -= el; tprdm_bbb[p * no5_ + q * no4_ + r * no3_ + u * no2_ +
+    //                s * no_ + t] += el; tprdm_bbb[p * no5_ + q * no4_ + r * no3_ + t *
+    //                no2_ + s * no_ + u] -= el; tprdm_bbb[p * no5_ + q * no4_ + r * no3_ +
+    //                t * no2_ + u * no_ + s] += el;
+    //
+    //                tprdm_bbb[p * no5_ + r * no4_ + q * no3_ + s * no2_ + t * no_ + u] -=
+    //                el; tprdm_bbb[p * no5_ + r * no4_ + q * no3_ + s * no2_ + u * no_ +
+    //                t] += el; tprdm_bbb[p * no5_ + r * no4_ + q * no3_ + u * no2_ + t *
+    //                no_ + s] += el; tprdm_bbb[p * no5_ + r * no4_ + q * no3_ + u * no2_ +
+    //                s * no_ + t] -= el; tprdm_bbb[p * no5_ + r * no4_ + q * no3_ + t *
+    //                no2_ + s * no_ + u] += el; tprdm_bbb[p * no5_ + r * no4_ + q * no3_ +
+    //                t * no2_ + u * no_ + s] -= el;
+    //
+    //                tprdm_bbb[q * no5_ + p * no4_ + r * no3_ + s * no2_ + t * no_ + u] -=
+    //                el; tprdm_bbb[q * no5_ + p * no4_ + r * no3_ + s * no2_ + u * no_ +
+    //                t] += el; tprdm_bbb[q * no5_ + p * no4_ + r * no3_ + u * no2_ + t *
+    //                no_ + s] += el; tprdm_bbb[q * no5_ + p * no4_ + r * no3_ + u * no2_ +
+    //                s * no_ + t] -= el; tprdm_bbb[q * no5_ + p * no4_ + r * no3_ + t *
+    //                no2_ + s * no_ + u] += el; tprdm_bbb[q * no5_ + p * no4_ + r * no3_ +
+    //                t * no2_ + u * no_ + s] -= el;
+    //
+    //                tprdm_bbb[q * no5_ + r * no4_ + p * no3_ + s * no2_ + t * no_ + u] +=
+    //                el; tprdm_bbb[q * no5_ + r * no4_ + p * no3_ + s * no2_ + u * no_ +
+    //                t] -= el; tprdm_bbb[q * no5_ + r * no4_ + p * no3_ + u * no2_ + t *
+    //                no_ + s] -= el; tprdm_bbb[q * no5_ + r * no4_ + p * no3_ + u * no2_ +
+    //                s * no_ + t] += el; tprdm_bbb[q * no5_ + r * no4_ + p * no3_ + t *
+    //                no2_ + s * no_ + u] -= el; tprdm_bbb[q * no5_ + r * no4_ + p * no3_ +
+    //                t * no2_ + u * no_ + s] += el;
+    //
+    //                tprdm_bbb[r * no5_ + p * no4_ + q * no3_ + s * no2_ + t * no_ + u] +=
+    //                el; tprdm_bbb[r * no5_ + p * no4_ + q * no3_ + s * no2_ + u * no_ +
+    //                t] -= el; tprdm_bbb[r * no5_ + p * no4_ + q * no3_ + u * no2_ + t *
+    //                no_ + s] -= el; tprdm_bbb[r * no5_ + p * no4_ + q * no3_ + u * no2_ +
+    //                s * no_ + t] += el; tprdm_bbb[r * no5_ + p * no4_ + q * no3_ + t *
+    //                no2_ + s * no_ + u] -= el; tprdm_bbb[r * no5_ + p * no4_ + q * no3_ +
+    //                t * no2_ + u * no_ + s] += el;
+    //
+    //                tprdm_bbb[r * no5_ + q * no4_ + p * no3_ + s * no2_ + t * no_ + u] -=
+    //                el; tprdm_bbb[r * no5_ + q * no4_ + p * no3_ + s * no2_ + u * no_ +
+    //                t] += el; tprdm_bbb[r * no5_ + q * no4_ + p * no3_ + u * no2_ + t *
+    //                no_ + s] += el; tprdm_bbb[r * no5_ + q * no4_ + p * no3_ + u * no2_ +
+    //                s * no_ + t] -= el; tprdm_bbb[r * no5_ + q * no4_ + p * no3_ + t *
+    //                no2_ + s * no_ + u] += el; tprdm_bbb[r * no5_ + q * no4_ + p * no3_ +
+    //                t * no2_ + u * no_ + s] -= el;
+    //            }
+    //        }
+    //    }
+
+    if (print_)
+        outfile->Printf("\n  Time spent building 3-rdm:   %1.6f", build.get());
+}
+
+void CI_RDMS::compute_3rdm_sf(std::vector<double>& tpdm3) {
+    tpdm3.assign(no6_, 0.0);
+
+    timer three("Build 3 Substitution Lists");
+    get_three_map();
+    if (print_)
+        outfile->Printf("\n  Time spent forming 3-map:   %1.6f", three.stop());
+
+    timer build("Build SF 3-RDM");
+
+    _add_3rdm(aaa_ann_list_, aaa_cre_list_, [&](const std::vector<size_t>& i, const double& value) {
+        _add_3rdm_aaa(tpdm3, i, value);
+    });
+
+    _add_3rdm(aab_ann_list_, aab_cre_list_, [&](const std::vector<size_t>& i, const double& value) {
+        tpdm3[i[0] * no5_ + i[1] * no4_ + i[2] * no3_ + i[3] * no2_ + i[4] * no_ + i[5]] += value;
+        tpdm3[i[0] * no5_ + i[1] * no4_ + i[2] * no3_ + i[4] * no2_ + i[3] * no_ + i[5]] -= value;
+        tpdm3[i[1] * no5_ + i[0] * no4_ + i[2] * no3_ + i[3] * no2_ + i[4] * no_ + i[5]] -= value;
+        tpdm3[i[1] * no5_ + i[0] * no4_ + i[2] * no3_ + i[4] * no2_ + i[3] * no_ + i[5]] += value;
+
+        tpdm3[i[0] * no5_ + i[2] * no4_ + i[1] * no3_ + i[3] * no2_ + i[5] * no_ + i[4]] += value;
+        tpdm3[i[0] * no5_ + i[2] * no4_ + i[1] * no3_ + i[4] * no2_ + i[5] * no_ + i[3]] -= value;
+        tpdm3[i[1] * no5_ + i[2] * no4_ + i[0] * no3_ + i[3] * no2_ + i[5] * no_ + i[4]] -= value;
+        tpdm3[i[1] * no5_ + i[2] * no4_ + i[0] * no3_ + i[4] * no2_ + i[5] * no_ + i[3]] += value;
+
+        tpdm3[i[2] * no5_ + i[1] * no4_ + i[0] * no3_ + i[5] * no2_ + i[4] * no_ + i[3]] += value;
+        tpdm3[i[2] * no5_ + i[1] * no4_ + i[0] * no3_ + i[5] * no2_ + i[3] * no_ + i[4]] -= value;
+        tpdm3[i[2] * no5_ + i[0] * no4_ + i[1] * no3_ + i[5] * no2_ + i[4] * no_ + i[3]] -= value;
+        tpdm3[i[2] * no5_ + i[0] * no4_ + i[1] * no3_ + i[5] * no2_ + i[3] * no_ + i[4]] += value;
+    });
+
+    _add_3rdm(abb_ann_list_, abb_cre_list_, [&](const std::vector<size_t>& i, const double& value) {
+        tpdm3[i[0] * no5_ + i[1] * no4_ + i[2] * no3_ + i[3] * no2_ + i[4] * no_ + i[5]] += value;
+        tpdm3[i[0] * no5_ + i[1] * no4_ + i[2] * no3_ + i[3] * no2_ + i[5] * no_ + i[4]] -= value;
+        tpdm3[i[0] * no5_ + i[2] * no4_ + i[1] * no3_ + i[3] * no2_ + i[4] * no_ + i[5]] -= value;
+        tpdm3[i[0] * no5_ + i[2] * no4_ + i[1] * no3_ + i[3] * no2_ + i[5] * no_ + i[4]] += value;
+
+        tpdm3[i[1] * no5_ + i[0] * no4_ + i[2] * no3_ + i[4] * no2_ + i[3] * no_ + i[5]] += value;
+        tpdm3[i[1] * no5_ + i[0] * no4_ + i[2] * no3_ + i[5] * no2_ + i[3] * no_ + i[4]] -= value;
+        tpdm3[i[2] * no5_ + i[0] * no4_ + i[1] * no3_ + i[4] * no2_ + i[3] * no_ + i[5]] -= value;
+        tpdm3[i[2] * no5_ + i[0] * no4_ + i[1] * no3_ + i[5] * no2_ + i[3] * no_ + i[4]] += value;
+
+        tpdm3[i[2] * no5_ + i[1] * no4_ + i[0] * no3_ + i[5] * no2_ + i[4] * no_ + i[3]] += value;
+        tpdm3[i[2] * no5_ + i[1] * no4_ + i[0] * no3_ + i[4] * no2_ + i[5] * no_ + i[3]] -= value;
+        tpdm3[i[1] * no5_ + i[2] * no4_ + i[0] * no3_ + i[5] * no2_ + i[4] * no_ + i[3]] -= value;
+        tpdm3[i[1] * no5_ + i[2] * no4_ + i[0] * no3_ + i[4] * no2_ + i[5] * no_ + i[3]] += value;
+    });
+
+    _add_3rdm(bbb_ann_list_, bbb_cre_list_, [&](const std::vector<size_t>& i, const double& value) {
+        _add_3rdm_aaa(tpdm3, i, value);
+    });
+
+    if (print_)
+        outfile->Printf("\n  Time spent building 3-rdm:   %1.6f", build.stop());
+}
+
+void CI_RDMS::_add_3rdm(
+    const std::vector<std::vector<std::tuple<size_t, short, short, short>>>& ann_list,
+    const std::vector<std::vector<std::tuple<size_t, short, short, short>>>& cre_list,
+    const std::function<void(const std::vector<size_t>&, const double&)>& func) {
     for (size_t J = 0; J < dim_space_; ++J) {
-        // aaa aaa
-        for (auto& aaaJ_mo_sign : aaa_ann_list_[J]) {
+        for (const auto& aaaJ_mo_sign : ann_list[J]) {
             const size_t aaaJ_add = std::get<0>(aaaJ_mo_sign);
 
             const size_t p = std::abs(std::get<1>(aaaJ_mo_sign)) - 1;
@@ -639,171 +1151,64 @@ void CI_RDMS::compute_3rdm(std::vector<double>& tprdm_aaa, std::vector<double>& 
             const size_t r = std::get<3>(aaaJ_mo_sign);
             const double sign_pqr = std::get<1>(aaaJ_mo_sign) > 0.0 ? 1.0 : -1.0;
 
-            for (auto& a6J : aaa_cre_list_[aaaJ_add]) {
+            for (const auto& a6J : cre_list[aaaJ_add]) {
                 const size_t s = std::abs(std::get<1>(a6J)) - 1;
                 const size_t t = std::get<2>(a6J);
                 const size_t u = std::get<3>(a6J);
                 const double sign_stu = std::get<1>(a6J) > 0.0 ? 1.0 : -1.0;
+
                 const size_t I = std::get<0>(a6J);
-
                 double el = evecs_->get(I, root1_) * evecs_->get(J, root2_) * sign_pqr * sign_stu;
 
-                tprdm_aaa[p * ncmo5 + q * ncmo4_ + r * ncmo3_ + s * ncmo2_ + t * ncmo_ + u] += el;
-                tprdm_aaa[p * ncmo5 + q * ncmo4_ + r * ncmo3_ + s * ncmo2_ + u * ncmo_ + t] -= el;
-                tprdm_aaa[p * ncmo5 + q * ncmo4_ + r * ncmo3_ + u * ncmo2_ + t * ncmo_ + s] -= el;
-                tprdm_aaa[p * ncmo5 + q * ncmo4_ + r * ncmo3_ + u * ncmo2_ + s * ncmo_ + t] += el;
-                tprdm_aaa[p * ncmo5 + q * ncmo4_ + r * ncmo3_ + t * ncmo2_ + s * ncmo_ + u] -= el;
-                tprdm_aaa[p * ncmo5 + q * ncmo4_ + r * ncmo3_ + t * ncmo2_ + u * ncmo_ + s] += el;
-
-                tprdm_aaa[p * ncmo5 + r * ncmo4_ + q * ncmo3_ + s * ncmo2_ + t * ncmo_ + u] -= el;
-                tprdm_aaa[p * ncmo5 + r * ncmo4_ + q * ncmo3_ + s * ncmo2_ + u * ncmo_ + t] += el;
-                tprdm_aaa[p * ncmo5 + r * ncmo4_ + q * ncmo3_ + u * ncmo2_ + t * ncmo_ + s] += el;
-                tprdm_aaa[p * ncmo5 + r * ncmo4_ + q * ncmo3_ + u * ncmo2_ + s * ncmo_ + t] -= el;
-                tprdm_aaa[p * ncmo5 + r * ncmo4_ + q * ncmo3_ + t * ncmo2_ + s * ncmo_ + u] += el;
-                tprdm_aaa[p * ncmo5 + r * ncmo4_ + q * ncmo3_ + t * ncmo2_ + u * ncmo_ + s] -= el;
-
-                tprdm_aaa[q * ncmo5 + p * ncmo4_ + r * ncmo3_ + s * ncmo2_ + t * ncmo_ + u] -= el;
-                tprdm_aaa[q * ncmo5 + p * ncmo4_ + r * ncmo3_ + s * ncmo2_ + u * ncmo_ + t] += el;
-                tprdm_aaa[q * ncmo5 + p * ncmo4_ + r * ncmo3_ + u * ncmo2_ + t * ncmo_ + s] += el;
-                tprdm_aaa[q * ncmo5 + p * ncmo4_ + r * ncmo3_ + u * ncmo2_ + s * ncmo_ + t] -= el;
-                tprdm_aaa[q * ncmo5 + p * ncmo4_ + r * ncmo3_ + t * ncmo2_ + s * ncmo_ + u] += el;
-                tprdm_aaa[q * ncmo5 + p * ncmo4_ + r * ncmo3_ + t * ncmo2_ + u * ncmo_ + s] -= el;
-
-                tprdm_aaa[q * ncmo5 + r * ncmo4_ + p * ncmo3_ + s * ncmo2_ + t * ncmo_ + u] += el;
-                tprdm_aaa[q * ncmo5 + r * ncmo4_ + p * ncmo3_ + s * ncmo2_ + u * ncmo_ + t] -= el;
-                tprdm_aaa[q * ncmo5 + r * ncmo4_ + p * ncmo3_ + u * ncmo2_ + t * ncmo_ + s] -= el;
-                tprdm_aaa[q * ncmo5 + r * ncmo4_ + p * ncmo3_ + u * ncmo2_ + s * ncmo_ + t] += el;
-                tprdm_aaa[q * ncmo5 + r * ncmo4_ + p * ncmo3_ + t * ncmo2_ + s * ncmo_ + u] -= el;
-                tprdm_aaa[q * ncmo5 + r * ncmo4_ + p * ncmo3_ + t * ncmo2_ + u * ncmo_ + s] += el;
-
-                tprdm_aaa[r * ncmo5 + p * ncmo4_ + q * ncmo3_ + s * ncmo2_ + t * ncmo_ + u] += el;
-                tprdm_aaa[r * ncmo5 + p * ncmo4_ + q * ncmo3_ + s * ncmo2_ + u * ncmo_ + t] -= el;
-                tprdm_aaa[r * ncmo5 + p * ncmo4_ + q * ncmo3_ + u * ncmo2_ + t * ncmo_ + s] -= el;
-                tprdm_aaa[r * ncmo5 + p * ncmo4_ + q * ncmo3_ + u * ncmo2_ + s * ncmo_ + t] += el;
-                tprdm_aaa[r * ncmo5 + p * ncmo4_ + q * ncmo3_ + t * ncmo2_ + s * ncmo_ + u] -= el;
-                tprdm_aaa[r * ncmo5 + p * ncmo4_ + q * ncmo3_ + t * ncmo2_ + u * ncmo_ + s] += el;
-
-                tprdm_aaa[r * ncmo5 + q * ncmo4_ + p * ncmo3_ + s * ncmo2_ + t * ncmo_ + u] -= el;
-                tprdm_aaa[r * ncmo5 + q * ncmo4_ + p * ncmo3_ + s * ncmo2_ + u * ncmo_ + t] += el;
-                tprdm_aaa[r * ncmo5 + q * ncmo4_ + p * ncmo3_ + u * ncmo2_ + t * ncmo_ + s] += el;
-                tprdm_aaa[r * ncmo5 + q * ncmo4_ + p * ncmo3_ + u * ncmo2_ + s * ncmo_ + t] -= el;
-                tprdm_aaa[r * ncmo5 + q * ncmo4_ + p * ncmo3_ + t * ncmo2_ + s * ncmo_ + u] += el;
-                tprdm_aaa[r * ncmo5 + q * ncmo4_ + p * ncmo3_ + t * ncmo2_ + u * ncmo_ + s] -= el;
-            }
-        }
-        // aab aab
-        for (auto& aabJ_mo_sign : aab_ann_list_[J]) {
-            const size_t aabJ_add = std::get<0>(aabJ_mo_sign);
-
-            const size_t p = std::abs(std::get<1>(aabJ_mo_sign)) - 1;
-            const size_t q = std::get<2>(aabJ_mo_sign);
-            const size_t r = std::get<3>(aabJ_mo_sign);
-            const double sign_pqr = std::get<1>(aabJ_mo_sign) > 0.0 ? 1.0 : -1.0;
-
-            for (auto& aabJ : aab_cre_list_[aabJ_add]) {
-                const size_t s = std::abs(std::get<1>(aabJ)) - 1;
-                const size_t t = std::get<2>(aabJ);
-                const size_t u = std::get<3>(aabJ);
-                const double sign_stu = std::get<1>(aabJ) > 0.0 ? 1.0 : -1.0;
-                const size_t I = std::get<0>(aabJ);
-
-                double el = evecs_->get(I, root1_) * evecs_->get(J, root2_) * sign_pqr * sign_stu;
-
-                tprdm_aab[p * ncmo5 + q * ncmo4_ + r * ncmo3_ + s * ncmo2_ + t * ncmo_ + u] += el;
-                tprdm_aab[p * ncmo5 + q * ncmo4_ + r * ncmo3_ + t * ncmo2_ + s * ncmo_ + u] -= el;
-                tprdm_aab[q * ncmo5 + p * ncmo4_ + r * ncmo3_ + s * ncmo2_ + t * ncmo_ + u] -= el;
-                tprdm_aab[q * ncmo5 + p * ncmo4_ + r * ncmo3_ + t * ncmo2_ + s * ncmo_ + u] += el;
-            }
-        }
-        // abb abb
-        for (auto& abbJ_mo_sign : abb_ann_list_[J]) {
-            const size_t abbJ_add = std::get<0>(abbJ_mo_sign);
-
-            const size_t p = std::abs(std::get<1>(abbJ_mo_sign)) - 1;
-            const size_t q = std::get<2>(abbJ_mo_sign);
-            const size_t r = std::get<3>(abbJ_mo_sign);
-            const double sign_pqr = std::get<1>(abbJ_mo_sign) > 0.0 ? 1.0 : -1.0;
-
-            for (auto& abbJ : abb_cre_list_[abbJ_add]) {
-                const size_t s = std::abs(std::get<1>(abbJ)) - 1;
-                const size_t t = std::get<2>(abbJ);
-                const size_t u = std::get<3>(abbJ);
-                const double sign_stu = std::get<1>(abbJ) > 0.0 ? 1.0 : -1.0;
-                const size_t I = std::get<0>(abbJ);
-
-                double el = evecs_->get(I, root1_) * evecs_->get(J, root2_) * sign_pqr * sign_stu;
-
-                tprdm_abb[p * ncmo5 + q * ncmo4_ + r * ncmo3_ + s * ncmo2_ + t * ncmo_ + u] += el;
-                tprdm_abb[p * ncmo5 + q * ncmo4_ + r * ncmo3_ + s * ncmo2_ + u * ncmo_ + t] -= el;
-                tprdm_abb[p * ncmo5 + r * ncmo4_ + q * ncmo3_ + s * ncmo2_ + t * ncmo_ + u] -= el;
-                tprdm_abb[p * ncmo5 + r * ncmo4_ + q * ncmo3_ + s * ncmo2_ + u * ncmo_ + t] += el;
-            }
-        }
-        // bbb bbb
-        for (auto& bbbJ_mo_sign : bbb_ann_list_[J]) {
-            const size_t bbbJ_add = std::get<0>(bbbJ_mo_sign);
-
-            const size_t p = std::abs(std::get<1>(bbbJ_mo_sign)) - 1;
-            const size_t q = std::get<2>(bbbJ_mo_sign);
-            const size_t r = std::get<3>(bbbJ_mo_sign);
-            const double sign_pqr = std::get<1>(bbbJ_mo_sign) > 0.0 ? 1.0 : -1.0;
-
-            for (auto& b6J : bbb_cre_list_[bbbJ_add]) {
-                const size_t s = std::abs(std::get<1>(b6J)) - 1;
-                const size_t t = std::get<2>(b6J);
-                const size_t u = std::get<3>(b6J);
-                const double sign_stu = std::get<1>(b6J) > 0.0 ? 1.0 : -1.0;
-                const size_t I = std::get<0>(b6J);
-
-                double el = evecs_->get(I, root1_) * evecs_->get(J, root2_) * sign_pqr * sign_stu;
-
-                tprdm_bbb[p * ncmo5 + q * ncmo4_ + r * ncmo3_ + s * ncmo2_ + t * ncmo_ + u] += el;
-                tprdm_bbb[p * ncmo5 + q * ncmo4_ + r * ncmo3_ + s * ncmo2_ + u * ncmo_ + t] -= el;
-                tprdm_bbb[p * ncmo5 + q * ncmo4_ + r * ncmo3_ + u * ncmo2_ + t * ncmo_ + s] -= el;
-                tprdm_bbb[p * ncmo5 + q * ncmo4_ + r * ncmo3_ + u * ncmo2_ + s * ncmo_ + t] += el;
-                tprdm_bbb[p * ncmo5 + q * ncmo4_ + r * ncmo3_ + t * ncmo2_ + s * ncmo_ + u] -= el;
-                tprdm_bbb[p * ncmo5 + q * ncmo4_ + r * ncmo3_ + t * ncmo2_ + u * ncmo_ + s] += el;
-
-                tprdm_bbb[p * ncmo5 + r * ncmo4_ + q * ncmo3_ + s * ncmo2_ + t * ncmo_ + u] -= el;
-                tprdm_bbb[p * ncmo5 + r * ncmo4_ + q * ncmo3_ + s * ncmo2_ + u * ncmo_ + t] += el;
-                tprdm_bbb[p * ncmo5 + r * ncmo4_ + q * ncmo3_ + u * ncmo2_ + t * ncmo_ + s] += el;
-                tprdm_bbb[p * ncmo5 + r * ncmo4_ + q * ncmo3_ + u * ncmo2_ + s * ncmo_ + t] -= el;
-                tprdm_bbb[p * ncmo5 + r * ncmo4_ + q * ncmo3_ + t * ncmo2_ + s * ncmo_ + u] += el;
-                tprdm_bbb[p * ncmo5 + r * ncmo4_ + q * ncmo3_ + t * ncmo2_ + u * ncmo_ + s] -= el;
-
-                tprdm_bbb[q * ncmo5 + p * ncmo4_ + r * ncmo3_ + s * ncmo2_ + t * ncmo_ + u] -= el;
-                tprdm_bbb[q * ncmo5 + p * ncmo4_ + r * ncmo3_ + s * ncmo2_ + u * ncmo_ + t] += el;
-                tprdm_bbb[q * ncmo5 + p * ncmo4_ + r * ncmo3_ + u * ncmo2_ + t * ncmo_ + s] += el;
-                tprdm_bbb[q * ncmo5 + p * ncmo4_ + r * ncmo3_ + u * ncmo2_ + s * ncmo_ + t] -= el;
-                tprdm_bbb[q * ncmo5 + p * ncmo4_ + r * ncmo3_ + t * ncmo2_ + s * ncmo_ + u] += el;
-                tprdm_bbb[q * ncmo5 + p * ncmo4_ + r * ncmo3_ + t * ncmo2_ + u * ncmo_ + s] -= el;
-
-                tprdm_bbb[q * ncmo5 + r * ncmo4_ + p * ncmo3_ + s * ncmo2_ + t * ncmo_ + u] += el;
-                tprdm_bbb[q * ncmo5 + r * ncmo4_ + p * ncmo3_ + s * ncmo2_ + u * ncmo_ + t] -= el;
-                tprdm_bbb[q * ncmo5 + r * ncmo4_ + p * ncmo3_ + u * ncmo2_ + t * ncmo_ + s] -= el;
-                tprdm_bbb[q * ncmo5 + r * ncmo4_ + p * ncmo3_ + u * ncmo2_ + s * ncmo_ + t] += el;
-                tprdm_bbb[q * ncmo5 + r * ncmo4_ + p * ncmo3_ + t * ncmo2_ + s * ncmo_ + u] -= el;
-                tprdm_bbb[q * ncmo5 + r * ncmo4_ + p * ncmo3_ + t * ncmo2_ + u * ncmo_ + s] += el;
-
-                tprdm_bbb[r * ncmo5 + p * ncmo4_ + q * ncmo3_ + s * ncmo2_ + t * ncmo_ + u] += el;
-                tprdm_bbb[r * ncmo5 + p * ncmo4_ + q * ncmo3_ + s * ncmo2_ + u * ncmo_ + t] -= el;
-                tprdm_bbb[r * ncmo5 + p * ncmo4_ + q * ncmo3_ + u * ncmo2_ + t * ncmo_ + s] -= el;
-                tprdm_bbb[r * ncmo5 + p * ncmo4_ + q * ncmo3_ + u * ncmo2_ + s * ncmo_ + t] += el;
-                tprdm_bbb[r * ncmo5 + p * ncmo4_ + q * ncmo3_ + t * ncmo2_ + s * ncmo_ + u] -= el;
-                tprdm_bbb[r * ncmo5 + p * ncmo4_ + q * ncmo3_ + t * ncmo2_ + u * ncmo_ + s] += el;
-
-                tprdm_bbb[r * ncmo5 + q * ncmo4_ + p * ncmo3_ + s * ncmo2_ + t * ncmo_ + u] -= el;
-                tprdm_bbb[r * ncmo5 + q * ncmo4_ + p * ncmo3_ + s * ncmo2_ + u * ncmo_ + t] += el;
-                tprdm_bbb[r * ncmo5 + q * ncmo4_ + p * ncmo3_ + u * ncmo2_ + t * ncmo_ + s] += el;
-                tprdm_bbb[r * ncmo5 + q * ncmo4_ + p * ncmo3_ + u * ncmo2_ + s * ncmo_ + t] -= el;
-                tprdm_bbb[r * ncmo5 + q * ncmo4_ + p * ncmo3_ + t * ncmo2_ + s * ncmo_ + u] += el;
-                tprdm_bbb[r * ncmo5 + q * ncmo4_ + p * ncmo3_ + t * ncmo2_ + u * ncmo_ + s] -= el;
+                func({s, t, u, p, q, r}, el);
             }
         }
     }
+}
 
-    if (print_)
-        outfile->Printf("\n  Time spent building 3-rdm:   %1.6f", build.get());
+void CI_RDMS::_add_3rdm_aaa(std::vector<double>& tpdm_aaa, const std::vector<size_t>& i,
+                            const double& value) {
+    tpdm_aaa[i[0] * no5_ + i[1] * no4_ + i[2] * no3_ + i[3] * no2_ + i[4] * no_ + i[5]] += value;
+    tpdm_aaa[i[0] * no5_ + i[1] * no4_ + i[2] * no3_ + i[3] * no2_ + i[5] * no_ + i[4]] -= value;
+    tpdm_aaa[i[0] * no5_ + i[1] * no4_ + i[2] * no3_ + i[5] * no2_ + i[4] * no_ + i[3]] -= value;
+    tpdm_aaa[i[0] * no5_ + i[1] * no4_ + i[2] * no3_ + i[5] * no2_ + i[3] * no_ + i[4]] += value;
+    tpdm_aaa[i[0] * no5_ + i[1] * no4_ + i[2] * no3_ + i[4] * no2_ + i[3] * no_ + i[5]] -= value;
+    tpdm_aaa[i[0] * no5_ + i[1] * no4_ + i[2] * no3_ + i[4] * no2_ + i[5] * no_ + i[3]] += value;
+
+    tpdm_aaa[i[0] * no5_ + i[2] * no4_ + i[1] * no3_ + i[3] * no2_ + i[4] * no_ + i[5]] -= value;
+    tpdm_aaa[i[0] * no5_ + i[2] * no4_ + i[1] * no3_ + i[3] * no2_ + i[5] * no_ + i[4]] += value;
+    tpdm_aaa[i[0] * no5_ + i[2] * no4_ + i[1] * no3_ + i[5] * no2_ + i[4] * no_ + i[3]] += value;
+    tpdm_aaa[i[0] * no5_ + i[2] * no4_ + i[1] * no3_ + i[5] * no2_ + i[3] * no_ + i[4]] -= value;
+    tpdm_aaa[i[0] * no5_ + i[2] * no4_ + i[1] * no3_ + i[4] * no2_ + i[3] * no_ + i[5]] += value;
+    tpdm_aaa[i[0] * no5_ + i[2] * no4_ + i[1] * no3_ + i[4] * no2_ + i[5] * no_ + i[3]] -= value;
+
+    tpdm_aaa[i[1] * no5_ + i[0] * no4_ + i[2] * no3_ + i[3] * no2_ + i[4] * no_ + i[5]] -= value;
+    tpdm_aaa[i[1] * no5_ + i[0] * no4_ + i[2] * no3_ + i[3] * no2_ + i[5] * no_ + i[4]] += value;
+    tpdm_aaa[i[1] * no5_ + i[0] * no4_ + i[2] * no3_ + i[5] * no2_ + i[4] * no_ + i[3]] += value;
+    tpdm_aaa[i[1] * no5_ + i[0] * no4_ + i[2] * no3_ + i[5] * no2_ + i[3] * no_ + i[4]] -= value;
+    tpdm_aaa[i[1] * no5_ + i[0] * no4_ + i[2] * no3_ + i[4] * no2_ + i[3] * no_ + i[5]] += value;
+    tpdm_aaa[i[1] * no5_ + i[0] * no4_ + i[2] * no3_ + i[4] * no2_ + i[5] * no_ + i[3]] -= value;
+
+    tpdm_aaa[i[1] * no5_ + i[2] * no4_ + i[0] * no3_ + i[3] * no2_ + i[4] * no_ + i[5]] += value;
+    tpdm_aaa[i[1] * no5_ + i[2] * no4_ + i[0] * no3_ + i[3] * no2_ + i[5] * no_ + i[4]] -= value;
+    tpdm_aaa[i[1] * no5_ + i[2] * no4_ + i[0] * no3_ + i[5] * no2_ + i[4] * no_ + i[3]] -= value;
+    tpdm_aaa[i[1] * no5_ + i[2] * no4_ + i[0] * no3_ + i[5] * no2_ + i[3] * no_ + i[4]] += value;
+    tpdm_aaa[i[1] * no5_ + i[2] * no4_ + i[0] * no3_ + i[4] * no2_ + i[3] * no_ + i[5]] -= value;
+    tpdm_aaa[i[1] * no5_ + i[2] * no4_ + i[0] * no3_ + i[4] * no2_ + i[5] * no_ + i[3]] += value;
+
+    tpdm_aaa[i[2] * no5_ + i[0] * no4_ + i[1] * no3_ + i[3] * no2_ + i[4] * no_ + i[5]] += value;
+    tpdm_aaa[i[2] * no5_ + i[0] * no4_ + i[1] * no3_ + i[3] * no2_ + i[5] * no_ + i[4]] -= value;
+    tpdm_aaa[i[2] * no5_ + i[0] * no4_ + i[1] * no3_ + i[5] * no2_ + i[4] * no_ + i[3]] -= value;
+    tpdm_aaa[i[2] * no5_ + i[0] * no4_ + i[1] * no3_ + i[5] * no2_ + i[3] * no_ + i[4]] += value;
+    tpdm_aaa[i[2] * no5_ + i[0] * no4_ + i[1] * no3_ + i[4] * no2_ + i[3] * no_ + i[5]] -= value;
+    tpdm_aaa[i[2] * no5_ + i[0] * no4_ + i[1] * no3_ + i[4] * no2_ + i[5] * no_ + i[3]] += value;
+
+    tpdm_aaa[i[2] * no5_ + i[1] * no4_ + i[0] * no3_ + i[3] * no2_ + i[4] * no_ + i[5]] -= value;
+    tpdm_aaa[i[2] * no5_ + i[1] * no4_ + i[0] * no3_ + i[3] * no2_ + i[5] * no_ + i[4]] += value;
+    tpdm_aaa[i[2] * no5_ + i[1] * no4_ + i[0] * no3_ + i[5] * no2_ + i[4] * no_ + i[3]] += value;
+    tpdm_aaa[i[2] * no5_ + i[1] * no4_ + i[0] * no3_ + i[5] * no2_ + i[3] * no_ + i[4]] -= value;
+    tpdm_aaa[i[2] * no5_ + i[1] * no4_ + i[0] * no3_ + i[4] * no2_ + i[3] * no_ + i[5]] += value;
+    tpdm_aaa[i[2] * no5_ + i[1] * no4_ + i[0] * no3_ + i[4] * no2_ + i[5] * no_ + i[3]] -= value;
 }
 
 void CI_RDMS::compute_3rdm_op(std::vector<double>& tprdm_aaa, std::vector<double>& tprdm_aab,
@@ -815,551 +1220,855 @@ void CI_RDMS::compute_3rdm_op(std::vector<double>& tprdm_aaa, std::vector<double
     op->three_s_lists(wfn_);
 
     local_timer build;
-    size_t ncmo5 = ncmo4_ * ncmo_;
-    size_t ncmo6 = ncmo3_ * ncmo3_;
 
-    tprdm_aaa.assign(ncmo6, 0.0);
-    tprdm_aab.assign(ncmo6, 0.0);
-    tprdm_abb.assign(ncmo6, 0.0);
-    tprdm_bbb.assign(ncmo6, 0.0);
+    tprdm_aaa.assign(no6_, 0.0);
+    tprdm_aab.assign(no6_, 0.0);
+    tprdm_abb.assign(no6_, 0.0);
+    tprdm_bbb.assign(no6_, 0.0);
 
-    std::vector<std::vector<std::tuple<size_t, short, short, short>>>& aaa_list = op->aaa_list_;
-    std::vector<std::vector<std::tuple<size_t, short, short, short>>>& aab_list = op->aab_list_;
-    std::vector<std::vector<std::tuple<size_t, short, short, short>>>& abb_list = op->abb_list_;
-    std::vector<std::vector<std::tuple<size_t, short, short, short>>>& bbb_list = op->bbb_list_;
+    auto _add_aab = [&](const std::vector<size_t>& i, const double& value) {
+        tprdm_aab[i[0] * no5_ + i[1] * no4_ + i[2] * no3_ + i[3] * no2_ + i[4] * no_ + i[5]] +=
+            value;
+        tprdm_aab[i[0] * no5_ + i[1] * no4_ + i[2] * no3_ + i[4] * no2_ + i[3] * no_ + i[5]] -=
+            value;
+        tprdm_aab[i[1] * no5_ + i[0] * no4_ + i[2] * no3_ + i[3] * no2_ + i[4] * no_ + i[5]] -=
+            value;
+        tprdm_aab[i[1] * no5_ + i[0] * no4_ + i[2] * no3_ + i[4] * no2_ + i[3] * no_ + i[5]] +=
+            value;
+    };
+
+    auto _add_abb = [&](const std::vector<size_t>& i, const double& value) {
+        tprdm_abb[i[0] * no5_ + i[1] * no4_ + i[2] * no3_ + i[3] * no2_ + i[4] * no_ + i[5]] +=
+            value;
+        tprdm_abb[i[0] * no5_ + i[1] * no4_ + i[2] * no3_ + i[3] * no2_ + i[5] * no_ + i[4]] -=
+            value;
+        tprdm_abb[i[0] * no5_ + i[2] * no4_ + i[1] * no3_ + i[3] * no2_ + i[4] * no_ + i[5]] -=
+            value;
+        tprdm_abb[i[0] * no5_ + i[2] * no4_ + i[1] * no3_ + i[3] * no2_ + i[5] * no_ + i[4]] +=
+            value;
+    };
 
     // Build the diagonal part
-    const det_hashvec& dets = wfn_.wfn_hash();
-    for (size_t I = 0; I < dim_space_; ++I) {
-        double cI_sq = evecs_->get(I, root1_) * evecs_->get(I, root2_);
-        Determinant detI(dets[I]);
-
-        std::vector<int> aocc = detI.get_alfa_occ(ncmo_);
-        std::vector<int> bocc = detI.get_beta_occ(ncmo_);
-        int na = aocc.size();
-        int nb = bocc.size();
-
-        for (int p = 0; p < na; ++p) {
-            int pp = aocc[p];
-            for (int q = p + 1; q < na; ++q) {
-                int qq = aocc[q];
-                for (int r = q + 1; r < na; ++r) {
-                    int rr = aocc[r];
-
-                    tprdm_aaa[pp * ncmo5 + qq * ncmo4_ + rr * ncmo3_ + pp * ncmo2_ + qq * ncmo_ +
-                              rr] += cI_sq;
-                    tprdm_aaa[pp * ncmo5 + qq * ncmo4_ + rr * ncmo3_ + pp * ncmo2_ + rr * ncmo_ +
-                              qq] -= cI_sq;
-                    tprdm_aaa[pp * ncmo5 + qq * ncmo4_ + rr * ncmo3_ + rr * ncmo2_ + pp * ncmo_ +
-                              qq] += cI_sq;
-                    tprdm_aaa[pp * ncmo5 + qq * ncmo4_ + rr * ncmo3_ + rr * ncmo2_ + qq * ncmo_ +
-                              pp] -= cI_sq;
-                    tprdm_aaa[pp * ncmo5 + qq * ncmo4_ + rr * ncmo3_ + qq * ncmo2_ + rr * ncmo_ +
-                              pp] += cI_sq;
-                    tprdm_aaa[pp * ncmo5 + qq * ncmo4_ + rr * ncmo3_ + qq * ncmo2_ + pp * ncmo_ +
-                              rr] -= cI_sq;
-
-                    tprdm_aaa[pp * ncmo5 + rr * ncmo4_ + qq * ncmo3_ + pp * ncmo2_ + qq * ncmo_ +
-                              rr] -= cI_sq;
-                    tprdm_aaa[pp * ncmo5 + rr * ncmo4_ + qq * ncmo3_ + pp * ncmo2_ + rr * ncmo_ +
-                              qq] += cI_sq;
-                    tprdm_aaa[pp * ncmo5 + rr * ncmo4_ + qq * ncmo3_ + rr * ncmo2_ + pp * ncmo_ +
-                              qq] -= cI_sq;
-                    tprdm_aaa[pp * ncmo5 + rr * ncmo4_ + qq * ncmo3_ + rr * ncmo2_ + qq * ncmo_ +
-                              pp] += cI_sq;
-                    tprdm_aaa[pp * ncmo5 + rr * ncmo4_ + qq * ncmo3_ + qq * ncmo2_ + rr * ncmo_ +
-                              pp] -= cI_sq;
-                    tprdm_aaa[pp * ncmo5 + rr * ncmo4_ + qq * ncmo3_ + qq * ncmo2_ + pp * ncmo_ +
-                              rr] += cI_sq;
-
-                    tprdm_aaa[rr * ncmo5 + pp * ncmo4_ + qq * ncmo3_ + pp * ncmo2_ + qq * ncmo_ +
-                              rr] += cI_sq;
-                    tprdm_aaa[rr * ncmo5 + pp * ncmo4_ + qq * ncmo3_ + pp * ncmo2_ + rr * ncmo_ +
-                              qq] -= cI_sq;
-                    tprdm_aaa[rr * ncmo5 + pp * ncmo4_ + qq * ncmo3_ + rr * ncmo2_ + pp * ncmo_ +
-                              qq] += cI_sq;
-                    tprdm_aaa[rr * ncmo5 + pp * ncmo4_ + qq * ncmo3_ + rr * ncmo2_ + qq * ncmo_ +
-                              pp] -= cI_sq;
-                    tprdm_aaa[rr * ncmo5 + pp * ncmo4_ + qq * ncmo3_ + qq * ncmo2_ + rr * ncmo_ +
-                              pp] += cI_sq;
-                    tprdm_aaa[rr * ncmo5 + pp * ncmo4_ + qq * ncmo3_ + qq * ncmo2_ + pp * ncmo_ +
-                              rr] -= cI_sq;
-
-                    tprdm_aaa[rr * ncmo5 + qq * ncmo4_ + pp * ncmo3_ + pp * ncmo2_ + qq * ncmo_ +
-                              rr] -= cI_sq;
-                    tprdm_aaa[rr * ncmo5 + qq * ncmo4_ + pp * ncmo3_ + pp * ncmo2_ + rr * ncmo_ +
-                              qq] += cI_sq;
-                    tprdm_aaa[rr * ncmo5 + qq * ncmo4_ + pp * ncmo3_ + rr * ncmo2_ + pp * ncmo_ +
-                              qq] -= cI_sq;
-                    tprdm_aaa[rr * ncmo5 + qq * ncmo4_ + pp * ncmo3_ + rr * ncmo2_ + qq * ncmo_ +
-                              pp] += cI_sq;
-                    tprdm_aaa[rr * ncmo5 + qq * ncmo4_ + pp * ncmo3_ + qq * ncmo2_ + rr * ncmo_ +
-                              pp] -= cI_sq;
-                    tprdm_aaa[rr * ncmo5 + qq * ncmo4_ + pp * ncmo3_ + qq * ncmo2_ + pp * ncmo_ +
-                              rr] += cI_sq;
-
-                    tprdm_aaa[qq * ncmo5 + rr * ncmo4_ + pp * ncmo3_ + pp * ncmo2_ + qq * ncmo_ +
-                              rr] += cI_sq;
-                    tprdm_aaa[qq * ncmo5 + rr * ncmo4_ + pp * ncmo3_ + pp * ncmo2_ + rr * ncmo_ +
-                              qq] -= cI_sq;
-                    tprdm_aaa[qq * ncmo5 + rr * ncmo4_ + pp * ncmo3_ + rr * ncmo2_ + pp * ncmo_ +
-                              qq] += cI_sq;
-                    tprdm_aaa[qq * ncmo5 + rr * ncmo4_ + pp * ncmo3_ + rr * ncmo2_ + qq * ncmo_ +
-                              pp] -= cI_sq;
-                    tprdm_aaa[qq * ncmo5 + rr * ncmo4_ + pp * ncmo3_ + qq * ncmo2_ + rr * ncmo_ +
-                              pp] += cI_sq;
-                    tprdm_aaa[qq * ncmo5 + rr * ncmo4_ + pp * ncmo3_ + qq * ncmo2_ + pp * ncmo_ +
-                              rr] -= cI_sq;
-
-                    tprdm_aaa[qq * ncmo5 + pp * ncmo4_ + rr * ncmo3_ + pp * ncmo2_ + qq * ncmo_ +
-                              rr] -= cI_sq;
-                    tprdm_aaa[qq * ncmo5 + pp * ncmo4_ + rr * ncmo3_ + pp * ncmo2_ + rr * ncmo_ +
-                              qq] += cI_sq;
-                    tprdm_aaa[qq * ncmo5 + pp * ncmo4_ + rr * ncmo3_ + rr * ncmo2_ + pp * ncmo_ +
-                              qq] -= cI_sq;
-                    tprdm_aaa[qq * ncmo5 + pp * ncmo4_ + rr * ncmo3_ + rr * ncmo2_ + qq * ncmo_ +
-                              pp] += cI_sq;
-                    tprdm_aaa[qq * ncmo5 + pp * ncmo4_ + rr * ncmo3_ + qq * ncmo2_ + rr * ncmo_ +
-                              pp] -= cI_sq;
-                    tprdm_aaa[qq * ncmo5 + pp * ncmo4_ + rr * ncmo3_ + qq * ncmo2_ + pp * ncmo_ +
-                              rr] += cI_sq;
-                }
-            }
-        }
-
-        for (int p = 0; p < na; ++p) {
-            int pp = aocc[p];
-            for (int q = p + 1; q < na; ++q) {
-                int qq = aocc[q];
-                for (int r = 0; r < nb; ++r) {
-                    int rr = bocc[r];
-
-                    tprdm_aab[pp * ncmo5 + qq * ncmo4_ + rr * ncmo3_ + pp * ncmo2_ + qq * ncmo_ +
-                              rr] += cI_sq;
-                    tprdm_aab[pp * ncmo5 + qq * ncmo4_ + rr * ncmo3_ + qq * ncmo2_ + pp * ncmo_ +
-                              rr] -= cI_sq;
-                    tprdm_aab[qq * ncmo5 + pp * ncmo4_ + rr * ncmo3_ + pp * ncmo2_ + qq * ncmo_ +
-                              rr] -= cI_sq;
-                    tprdm_aab[qq * ncmo5 + pp * ncmo4_ + rr * ncmo3_ + qq * ncmo2_ + pp * ncmo_ +
-                              rr] += cI_sq;
-                }
-            }
-        }
-
-        for (int p = 0; p < na; ++p) {
-            int pp = aocc[p];
-            for (int q = 0; q < nb; ++q) {
-                int qq = bocc[q];
-                for (int r = q + 1; r < nb; ++r) {
-                    int rr = bocc[r];
-
-                    tprdm_abb[pp * ncmo5 + qq * ncmo4_ + rr * ncmo3_ + pp * ncmo2_ + qq * ncmo_ +
-                              rr] += cI_sq;
-                    tprdm_abb[pp * ncmo5 + qq * ncmo4_ + rr * ncmo3_ + pp * ncmo2_ + rr * ncmo_ +
-                              qq] -= cI_sq;
-                    tprdm_abb[pp * ncmo5 + rr * ncmo4_ + qq * ncmo3_ + pp * ncmo2_ + qq * ncmo_ +
-                              rr] -= cI_sq;
-                    tprdm_abb[pp * ncmo5 + rr * ncmo4_ + qq * ncmo3_ + pp * ncmo2_ + rr * ncmo_ +
-                              qq] += cI_sq;
-                }
-            }
-        }
-
-        for (int p = 0; p < nb; ++p) {
-            int pp = bocc[p];
-            for (int q = p + 1; q < nb; ++q) {
-                int qq = bocc[q];
-                for (int r = q + 1; r < nb; ++r) {
-                    int rr = bocc[r];
-
-                    tprdm_bbb[pp * ncmo5 + qq * ncmo4_ + rr * ncmo3_ + pp * ncmo2_ + qq * ncmo_ +
-                              rr] += cI_sq;
-                    tprdm_bbb[pp * ncmo5 + qq * ncmo4_ + rr * ncmo3_ + pp * ncmo2_ + rr * ncmo_ +
-                              qq] -= cI_sq;
-                    tprdm_bbb[pp * ncmo5 + qq * ncmo4_ + rr * ncmo3_ + rr * ncmo2_ + pp * ncmo_ +
-                              qq] += cI_sq;
-                    tprdm_bbb[pp * ncmo5 + qq * ncmo4_ + rr * ncmo3_ + rr * ncmo2_ + qq * ncmo_ +
-                              pp] -= cI_sq;
-                    tprdm_bbb[pp * ncmo5 + qq * ncmo4_ + rr * ncmo3_ + qq * ncmo2_ + rr * ncmo_ +
-                              pp] += cI_sq;
-                    tprdm_bbb[pp * ncmo5 + qq * ncmo4_ + rr * ncmo3_ + qq * ncmo2_ + pp * ncmo_ +
-                              rr] -= cI_sq;
-
-                    tprdm_bbb[pp * ncmo5 + rr * ncmo4_ + qq * ncmo3_ + pp * ncmo2_ + qq * ncmo_ +
-                              rr] -= cI_sq;
-                    tprdm_bbb[pp * ncmo5 + rr * ncmo4_ + qq * ncmo3_ + pp * ncmo2_ + rr * ncmo_ +
-                              qq] += cI_sq;
-                    tprdm_bbb[pp * ncmo5 + rr * ncmo4_ + qq * ncmo3_ + rr * ncmo2_ + pp * ncmo_ +
-                              qq] -= cI_sq;
-                    tprdm_bbb[pp * ncmo5 + rr * ncmo4_ + qq * ncmo3_ + rr * ncmo2_ + qq * ncmo_ +
-                              pp] += cI_sq;
-                    tprdm_bbb[pp * ncmo5 + rr * ncmo4_ + qq * ncmo3_ + qq * ncmo2_ + rr * ncmo_ +
-                              pp] -= cI_sq;
-                    tprdm_bbb[pp * ncmo5 + rr * ncmo4_ + qq * ncmo3_ + qq * ncmo2_ + pp * ncmo_ +
-                              rr] += cI_sq;
-
-                    tprdm_bbb[rr * ncmo5 + pp * ncmo4_ + qq * ncmo3_ + pp * ncmo2_ + qq * ncmo_ +
-                              rr] += cI_sq;
-                    tprdm_bbb[rr * ncmo5 + pp * ncmo4_ + qq * ncmo3_ + pp * ncmo2_ + rr * ncmo_ +
-                              qq] -= cI_sq;
-                    tprdm_bbb[rr * ncmo5 + pp * ncmo4_ + qq * ncmo3_ + rr * ncmo2_ + pp * ncmo_ +
-                              qq] += cI_sq;
-                    tprdm_bbb[rr * ncmo5 + pp * ncmo4_ + qq * ncmo3_ + rr * ncmo2_ + qq * ncmo_ +
-                              pp] -= cI_sq;
-                    tprdm_bbb[rr * ncmo5 + pp * ncmo4_ + qq * ncmo3_ + qq * ncmo2_ + rr * ncmo_ +
-                              pp] += cI_sq;
-                    tprdm_bbb[rr * ncmo5 + pp * ncmo4_ + qq * ncmo3_ + qq * ncmo2_ + pp * ncmo_ +
-                              rr] -= cI_sq;
-
-                    tprdm_bbb[rr * ncmo5 + qq * ncmo4_ + pp * ncmo3_ + pp * ncmo2_ + qq * ncmo_ +
-                              rr] -= cI_sq;
-                    tprdm_bbb[rr * ncmo5 + qq * ncmo4_ + pp * ncmo3_ + pp * ncmo2_ + rr * ncmo_ +
-                              qq] += cI_sq;
-                    tprdm_bbb[rr * ncmo5 + qq * ncmo4_ + pp * ncmo3_ + rr * ncmo2_ + pp * ncmo_ +
-                              qq] -= cI_sq;
-                    tprdm_bbb[rr * ncmo5 + qq * ncmo4_ + pp * ncmo3_ + rr * ncmo2_ + qq * ncmo_ +
-                              pp] += cI_sq;
-                    tprdm_bbb[rr * ncmo5 + qq * ncmo4_ + pp * ncmo3_ + qq * ncmo2_ + rr * ncmo_ +
-                              pp] -= cI_sq;
-                    tprdm_bbb[rr * ncmo5 + qq * ncmo4_ + pp * ncmo3_ + qq * ncmo2_ + pp * ncmo_ +
-                              rr] += cI_sq;
-
-                    tprdm_bbb[qq * ncmo5 + rr * ncmo4_ + pp * ncmo3_ + pp * ncmo2_ + qq * ncmo_ +
-                              rr] += cI_sq;
-                    tprdm_bbb[qq * ncmo5 + rr * ncmo4_ + pp * ncmo3_ + pp * ncmo2_ + rr * ncmo_ +
-                              qq] -= cI_sq;
-                    tprdm_bbb[qq * ncmo5 + rr * ncmo4_ + pp * ncmo3_ + rr * ncmo2_ + pp * ncmo_ +
-                              qq] += cI_sq;
-                    tprdm_bbb[qq * ncmo5 + rr * ncmo4_ + pp * ncmo3_ + rr * ncmo2_ + qq * ncmo_ +
-                              pp] -= cI_sq;
-                    tprdm_bbb[qq * ncmo5 + rr * ncmo4_ + pp * ncmo3_ + qq * ncmo2_ + rr * ncmo_ +
-                              pp] += cI_sq;
-                    tprdm_bbb[qq * ncmo5 + rr * ncmo4_ + pp * ncmo3_ + qq * ncmo2_ + pp * ncmo_ +
-                              rr] -= cI_sq;
-
-                    tprdm_bbb[qq * ncmo5 + pp * ncmo4_ + rr * ncmo3_ + pp * ncmo2_ + qq * ncmo_ +
-                              rr] -= cI_sq;
-                    tprdm_bbb[qq * ncmo5 + pp * ncmo4_ + rr * ncmo3_ + pp * ncmo2_ + rr * ncmo_ +
-                              qq] += cI_sq;
-                    tprdm_bbb[qq * ncmo5 + pp * ncmo4_ + rr * ncmo3_ + rr * ncmo2_ + pp * ncmo_ +
-                              qq] -= cI_sq;
-                    tprdm_bbb[qq * ncmo5 + pp * ncmo4_ + rr * ncmo3_ + rr * ncmo2_ + qq * ncmo_ +
-                              pp] += cI_sq;
-                    tprdm_bbb[qq * ncmo5 + pp * ncmo4_ + rr * ncmo3_ + qq * ncmo2_ + rr * ncmo_ +
-                              pp] -= cI_sq;
-                    tprdm_bbb[qq * ncmo5 + pp * ncmo4_ + rr * ncmo3_ + qq * ncmo2_ + pp * ncmo_ +
-                              rr] += cI_sq;
-                }
-            }
-        }
-    }
-
-    for (size_t K = 0, max_K = aaa_list.size(); K < max_K; ++K) {
-        // aaa aaa
-        std::vector<std::tuple<size_t, short, short, short>>& coupled_dets = aaa_list[K];
-        for (size_t a = 0, max_a = coupled_dets.size(); a < max_a; ++a) {
-
-            auto& detJ = coupled_dets[a];
-
-            const size_t& J = std::get<0>(detJ);
-            const size_t& p = std::abs(std::get<1>(detJ)) - 1;
-            const size_t& q = std::get<2>(detJ);
-            const size_t& r = std::get<3>(detJ);
-            const double& sign_pqr = std::get<1>(detJ) > 0.0 ? 1.0 : -1.0;
-
-            for (size_t b = a + 1, max_b = coupled_dets.size(); b < max_b; ++b) {
-
-                auto& detI = coupled_dets[b];
-
-                const size_t& s = std::abs(std::get<1>(detI)) - 1;
-                const size_t& t = std::get<2>(detI);
-                const size_t& u = std::get<3>(detI);
-                const double& sign_stu = std::get<1>(detI) > 0.0 ? 1.0 : -1.0;
-                const size_t& I = std::get<0>(detI);
-
-                double el = evecs_->get(J, root1_) * evecs_->get(I, root2_) * sign_pqr * sign_stu;
-
-                tprdm_aaa[p * ncmo5 + q * ncmo4_ + r * ncmo3_ + s * ncmo2_ + t * ncmo_ + u] += el;
-                tprdm_aaa[p * ncmo5 + q * ncmo4_ + r * ncmo3_ + s * ncmo2_ + u * ncmo_ + t] -= el;
-                tprdm_aaa[p * ncmo5 + q * ncmo4_ + r * ncmo3_ + u * ncmo2_ + t * ncmo_ + s] -= el;
-                tprdm_aaa[p * ncmo5 + q * ncmo4_ + r * ncmo3_ + u * ncmo2_ + s * ncmo_ + t] += el;
-                tprdm_aaa[p * ncmo5 + q * ncmo4_ + r * ncmo3_ + t * ncmo2_ + s * ncmo_ + u] -= el;
-                tprdm_aaa[p * ncmo5 + q * ncmo4_ + r * ncmo3_ + t * ncmo2_ + u * ncmo_ + s] += el;
-
-                tprdm_aaa[p * ncmo5 + r * ncmo4_ + q * ncmo3_ + s * ncmo2_ + t * ncmo_ + u] -= el;
-                tprdm_aaa[p * ncmo5 + r * ncmo4_ + q * ncmo3_ + s * ncmo2_ + u * ncmo_ + t] += el;
-                tprdm_aaa[p * ncmo5 + r * ncmo4_ + q * ncmo3_ + u * ncmo2_ + t * ncmo_ + s] += el;
-                tprdm_aaa[p * ncmo5 + r * ncmo4_ + q * ncmo3_ + u * ncmo2_ + s * ncmo_ + t] -= el;
-                tprdm_aaa[p * ncmo5 + r * ncmo4_ + q * ncmo3_ + t * ncmo2_ + s * ncmo_ + u] += el;
-                tprdm_aaa[p * ncmo5 + r * ncmo4_ + q * ncmo3_ + t * ncmo2_ + u * ncmo_ + s] -= el;
-
-                tprdm_aaa[q * ncmo5 + p * ncmo4_ + r * ncmo3_ + s * ncmo2_ + t * ncmo_ + u] -= el;
-                tprdm_aaa[q * ncmo5 + p * ncmo4_ + r * ncmo3_ + s * ncmo2_ + u * ncmo_ + t] += el;
-                tprdm_aaa[q * ncmo5 + p * ncmo4_ + r * ncmo3_ + u * ncmo2_ + t * ncmo_ + s] += el;
-                tprdm_aaa[q * ncmo5 + p * ncmo4_ + r * ncmo3_ + u * ncmo2_ + s * ncmo_ + t] -= el;
-                tprdm_aaa[q * ncmo5 + p * ncmo4_ + r * ncmo3_ + t * ncmo2_ + s * ncmo_ + u] += el;
-                tprdm_aaa[q * ncmo5 + p * ncmo4_ + r * ncmo3_ + t * ncmo2_ + u * ncmo_ + s] -= el;
-
-                tprdm_aaa[q * ncmo5 + r * ncmo4_ + p * ncmo3_ + s * ncmo2_ + t * ncmo_ + u] += el;
-                tprdm_aaa[q * ncmo5 + r * ncmo4_ + p * ncmo3_ + s * ncmo2_ + u * ncmo_ + t] -= el;
-                tprdm_aaa[q * ncmo5 + r * ncmo4_ + p * ncmo3_ + u * ncmo2_ + t * ncmo_ + s] -= el;
-                tprdm_aaa[q * ncmo5 + r * ncmo4_ + p * ncmo3_ + u * ncmo2_ + s * ncmo_ + t] += el;
-                tprdm_aaa[q * ncmo5 + r * ncmo4_ + p * ncmo3_ + t * ncmo2_ + s * ncmo_ + u] -= el;
-                tprdm_aaa[q * ncmo5 + r * ncmo4_ + p * ncmo3_ + t * ncmo2_ + u * ncmo_ + s] += el;
-
-                tprdm_aaa[r * ncmo5 + p * ncmo4_ + q * ncmo3_ + s * ncmo2_ + t * ncmo_ + u] += el;
-                tprdm_aaa[r * ncmo5 + p * ncmo4_ + q * ncmo3_ + s * ncmo2_ + u * ncmo_ + t] -= el;
-                tprdm_aaa[r * ncmo5 + p * ncmo4_ + q * ncmo3_ + u * ncmo2_ + t * ncmo_ + s] -= el;
-                tprdm_aaa[r * ncmo5 + p * ncmo4_ + q * ncmo3_ + u * ncmo2_ + s * ncmo_ + t] += el;
-                tprdm_aaa[r * ncmo5 + p * ncmo4_ + q * ncmo3_ + t * ncmo2_ + s * ncmo_ + u] -= el;
-                tprdm_aaa[r * ncmo5 + p * ncmo4_ + q * ncmo3_ + t * ncmo2_ + u * ncmo_ + s] += el;
-
-                tprdm_aaa[r * ncmo5 + q * ncmo4_ + p * ncmo3_ + s * ncmo2_ + t * ncmo_ + u] -= el;
-                tprdm_aaa[r * ncmo5 + q * ncmo4_ + p * ncmo3_ + s * ncmo2_ + u * ncmo_ + t] += el;
-                tprdm_aaa[r * ncmo5 + q * ncmo4_ + p * ncmo3_ + u * ncmo2_ + t * ncmo_ + s] += el;
-                tprdm_aaa[r * ncmo5 + q * ncmo4_ + p * ncmo3_ + u * ncmo2_ + s * ncmo_ + t] -= el;
-                tprdm_aaa[r * ncmo5 + q * ncmo4_ + p * ncmo3_ + t * ncmo2_ + s * ncmo_ + u] += el;
-                tprdm_aaa[r * ncmo5 + q * ncmo4_ + p * ncmo3_ + t * ncmo2_ + u * ncmo_ + s] -= el;
-
-                el = evecs_->get(I, root1_) * evecs_->get(J, root2_) * sign_pqr * sign_stu;
-
-                tprdm_aaa[s * ncmo5 + t * ncmo4_ + u * ncmo3_ + p * ncmo2_ + q * ncmo_ + r] += el;
-                tprdm_aaa[s * ncmo5 + u * ncmo4_ + t * ncmo3_ + p * ncmo2_ + q * ncmo_ + r] -= el;
-                tprdm_aaa[u * ncmo5 + t * ncmo4_ + s * ncmo3_ + p * ncmo2_ + q * ncmo_ + r] -= el;
-                tprdm_aaa[u * ncmo5 + s * ncmo4_ + t * ncmo3_ + p * ncmo2_ + q * ncmo_ + r] += el;
-                tprdm_aaa[t * ncmo5 + s * ncmo4_ + u * ncmo3_ + p * ncmo2_ + q * ncmo_ + r] -= el;
-                tprdm_aaa[t * ncmo5 + u * ncmo4_ + s * ncmo3_ + p * ncmo2_ + q * ncmo_ + r] += el;
-
-                tprdm_aaa[s * ncmo5 + t * ncmo4_ + u * ncmo3_ + p * ncmo2_ + r * ncmo_ + q] -= el;
-                tprdm_aaa[s * ncmo5 + u * ncmo4_ + t * ncmo3_ + p * ncmo2_ + r * ncmo_ + q] += el;
-                tprdm_aaa[u * ncmo5 + t * ncmo4_ + s * ncmo3_ + p * ncmo2_ + r * ncmo_ + q] += el;
-                tprdm_aaa[u * ncmo5 + s * ncmo4_ + t * ncmo3_ + p * ncmo2_ + r * ncmo_ + q] -= el;
-                tprdm_aaa[t * ncmo5 + s * ncmo4_ + u * ncmo3_ + p * ncmo2_ + r * ncmo_ + q] += el;
-                tprdm_aaa[t * ncmo5 + u * ncmo4_ + s * ncmo3_ + p * ncmo2_ + r * ncmo_ + q] -= el;
-
-                tprdm_aaa[s * ncmo5 + t * ncmo4_ + u * ncmo3_ + q * ncmo2_ + p * ncmo_ + r] -= el;
-                tprdm_aaa[s * ncmo5 + u * ncmo4_ + t * ncmo3_ + q * ncmo2_ + p * ncmo_ + r] += el;
-                tprdm_aaa[u * ncmo5 + t * ncmo4_ + s * ncmo3_ + q * ncmo2_ + p * ncmo_ + r] += el;
-                tprdm_aaa[u * ncmo5 + s * ncmo4_ + t * ncmo3_ + q * ncmo2_ + p * ncmo_ + r] -= el;
-                tprdm_aaa[t * ncmo5 + s * ncmo4_ + u * ncmo3_ + q * ncmo2_ + p * ncmo_ + r] += el;
-                tprdm_aaa[t * ncmo5 + u * ncmo4_ + s * ncmo3_ + q * ncmo2_ + p * ncmo_ + r] -= el;
-
-                tprdm_aaa[s * ncmo5 + t * ncmo4_ + u * ncmo3_ + q * ncmo2_ + r * ncmo_ + p] += el;
-                tprdm_aaa[s * ncmo5 + u * ncmo4_ + t * ncmo3_ + q * ncmo2_ + r * ncmo_ + p] -= el;
-                tprdm_aaa[u * ncmo5 + t * ncmo4_ + s * ncmo3_ + q * ncmo2_ + r * ncmo_ + p] -= el;
-                tprdm_aaa[u * ncmo5 + s * ncmo4_ + t * ncmo3_ + q * ncmo2_ + r * ncmo_ + p] += el;
-                tprdm_aaa[t * ncmo5 + s * ncmo4_ + u * ncmo3_ + q * ncmo2_ + r * ncmo_ + p] -= el;
-                tprdm_aaa[t * ncmo5 + u * ncmo4_ + s * ncmo3_ + q * ncmo2_ + r * ncmo_ + p] += el;
-
-                tprdm_aaa[s * ncmo5 + t * ncmo4_ + u * ncmo3_ + r * ncmo2_ + p * ncmo_ + q] += el;
-                tprdm_aaa[s * ncmo5 + u * ncmo4_ + t * ncmo3_ + r * ncmo2_ + p * ncmo_ + q] -= el;
-                tprdm_aaa[u * ncmo5 + t * ncmo4_ + s * ncmo3_ + r * ncmo2_ + p * ncmo_ + q] -= el;
-                tprdm_aaa[u * ncmo5 + s * ncmo4_ + t * ncmo3_ + r * ncmo2_ + p * ncmo_ + q] += el;
-                tprdm_aaa[t * ncmo5 + s * ncmo4_ + u * ncmo3_ + r * ncmo2_ + p * ncmo_ + q] -= el;
-                tprdm_aaa[t * ncmo5 + u * ncmo4_ + s * ncmo3_ + r * ncmo2_ + p * ncmo_ + q] += el;
-
-                tprdm_aaa[s * ncmo5 + t * ncmo4_ + u * ncmo3_ + r * ncmo2_ + q * ncmo_ + p] -= el;
-                tprdm_aaa[s * ncmo5 + u * ncmo4_ + t * ncmo3_ + r * ncmo2_ + q * ncmo_ + p] += el;
-                tprdm_aaa[u * ncmo5 + t * ncmo4_ + s * ncmo3_ + r * ncmo2_ + q * ncmo_ + p] += el;
-                tprdm_aaa[u * ncmo5 + s * ncmo4_ + t * ncmo3_ + r * ncmo2_ + q * ncmo_ + p] -= el;
-                tprdm_aaa[t * ncmo5 + s * ncmo4_ + u * ncmo3_ + r * ncmo2_ + q * ncmo_ + p] += el;
-                tprdm_aaa[t * ncmo5 + u * ncmo4_ + s * ncmo3_ + r * ncmo2_ + q * ncmo_ + p] -= el;
-            }
-        }
-    }
-
-    for (size_t K = 0, max_K = aab_list.size(); K < max_K; ++K) {
-        // aab aab
-        std::vector<std::tuple<size_t, short, short, short>>& coupled_dets = aab_list[K];
-        for (size_t a = 0, max_a = coupled_dets.size(); a < max_a; ++a) {
-
-            auto& detJ = coupled_dets[a];
-
-            const size_t& J = std::get<0>(detJ);
-            const size_t& p = std::abs(std::get<1>(detJ)) - 1;
-            const size_t& q = std::get<2>(detJ);
-            const size_t& r = std::get<3>(detJ);
-            const double& sign_pqr = std::get<1>(detJ) > 0.0 ? 1.0 : -1.0;
-
-            for (size_t b = a + 1, max_b = coupled_dets.size(); b < max_b; ++b) {
-
-                auto& detI = coupled_dets[b];
-
-                const size_t& s = std::abs(std::get<1>(detI)) - 1;
-                const size_t& t = std::get<2>(detI);
-                const size_t& u = std::get<3>(detI);
-                const double& sign_stu = std::get<1>(detI) > 0.0 ? 1.0 : -1.0;
-                const size_t& I = std::get<0>(detI);
-
-                double el = evecs_->get(J, root1_) * evecs_->get(I, root2_) * sign_pqr * sign_stu;
-                tprdm_aab[p * ncmo5 + q * ncmo4_ + r * ncmo3_ + s * ncmo2_ + t * ncmo_ + u] += el;
-                tprdm_aab[p * ncmo5 + q * ncmo4_ + r * ncmo3_ + t * ncmo2_ + s * ncmo_ + u] -= el;
-                tprdm_aab[q * ncmo5 + p * ncmo4_ + r * ncmo3_ + s * ncmo2_ + t * ncmo_ + u] -= el;
-                tprdm_aab[q * ncmo5 + p * ncmo4_ + r * ncmo3_ + t * ncmo2_ + s * ncmo_ + u] += el;
-
-                el = evecs_->get(I, root1_) * evecs_->get(J, root2_) * sign_pqr * sign_stu;
-                tprdm_aab[s * ncmo5 + t * ncmo4_ + u * ncmo3_ + p * ncmo2_ + q * ncmo_ + r] += el;
-                tprdm_aab[t * ncmo5 + s * ncmo4_ + u * ncmo3_ + p * ncmo2_ + q * ncmo_ + r] -= el;
-                tprdm_aab[s * ncmo5 + t * ncmo4_ + u * ncmo3_ + q * ncmo2_ + p * ncmo_ + r] -= el;
-                tprdm_aab[t * ncmo5 + s * ncmo4_ + u * ncmo3_ + q * ncmo2_ + p * ncmo_ + r] += el;
-            }
-        }
-    }
-
-    // abb abb
-    for (size_t K = 0, max_K = abb_list.size(); K < max_K; ++K) {
-        std::vector<std::tuple<size_t, short, short, short>>& coupled_dets = abb_list[K];
-        for (size_t a = 0, max_a = coupled_dets.size(); a < max_a; ++a) {
-
-            auto& detJ = coupled_dets[a];
-
-            const size_t& J = std::get<0>(detJ);
-            const size_t& p = std::abs(std::get<1>(detJ)) - 1;
-            const size_t& q = std::get<2>(detJ);
-            const size_t& r = std::get<3>(detJ);
-            const double& sign_pqr = std::get<1>(detJ) > 0.0 ? 1.0 : -1.0;
-
-            for (size_t b = a + 1, max_b = coupled_dets.size(); b < max_b; ++b) {
-
-                auto& detI = coupled_dets[b];
-
-                const size_t& s = std::abs(std::get<1>(detI)) - 1;
-                const size_t& t = std::get<2>(detI);
-                const size_t& u = std::get<3>(detI);
-                const double& sign_stu = std::get<1>(detI) > 0.0 ? 1.0 : -1.0;
-                const size_t& I = std::get<0>(detI);
-
-                double el = evecs_->get(J, root1_) * evecs_->get(I, root2_) * sign_pqr * sign_stu;
-                tprdm_abb[p * ncmo5 + q * ncmo4_ + r * ncmo3_ + s * ncmo2_ + t * ncmo_ + u] += el;
-                tprdm_abb[p * ncmo5 + q * ncmo4_ + r * ncmo3_ + s * ncmo2_ + u * ncmo_ + t] -= el;
-                tprdm_abb[p * ncmo5 + r * ncmo4_ + q * ncmo3_ + s * ncmo2_ + t * ncmo_ + u] -= el;
-                tprdm_abb[p * ncmo5 + r * ncmo4_ + q * ncmo3_ + s * ncmo2_ + u * ncmo_ + t] += el;
-
-                el = evecs_->get(I, root1_) * evecs_->get(J, root2_) * sign_pqr * sign_stu;
-                tprdm_abb[s * ncmo5 + t * ncmo4_ + u * ncmo3_ + p * ncmo2_ + q * ncmo_ + r] += el;
-                tprdm_abb[s * ncmo5 + u * ncmo4_ + t * ncmo3_ + p * ncmo2_ + q * ncmo_ + r] -= el;
-                tprdm_abb[s * ncmo5 + t * ncmo4_ + u * ncmo3_ + p * ncmo2_ + r * ncmo_ + q] -= el;
-                tprdm_abb[s * ncmo5 + u * ncmo4_ + t * ncmo3_ + p * ncmo2_ + r * ncmo_ + q] += el;
-            }
-        }
-    }
-
-    for (size_t K = 0, max_K = bbb_list.size(); K < max_K; ++K) {
-        // bbb bbb
-        std::vector<std::tuple<size_t, short, short, short>>& coupled_dets = bbb_list[K];
-        for (size_t a = 0, max_a = coupled_dets.size(); a < max_a; ++a) {
-
-            auto& detJ = coupled_dets[a];
-
-            const size_t& J = std::get<0>(detJ);
-            const size_t& p = std::abs(std::get<1>(detJ)) - 1;
-            const size_t& q = std::get<2>(detJ);
-            const size_t& r = std::get<3>(detJ);
-            const double& sign_pqr = std::get<1>(detJ) > 0.0 ? 1.0 : -1.0;
-
-            for (size_t b = a + 1, max_b = coupled_dets.size(); b < max_b; ++b) {
-
-                auto& detI = coupled_dets[b];
-
-                const size_t& s = std::abs(std::get<1>(detI)) - 1;
-                const size_t& t = std::get<2>(detI);
-                const size_t& u = std::get<3>(detI);
-                const double& sign_stu = std::get<1>(detI) > 0.0 ? 1.0 : -1.0;
-                const size_t& I = std::get<0>(detI);
-
-                double el = evecs_->get(J, root1_) * evecs_->get(I, root2_) * sign_pqr * sign_stu;
-
-                tprdm_bbb[p * ncmo5 + q * ncmo4_ + r * ncmo3_ + s * ncmo2_ + t * ncmo_ + u] += el;
-                tprdm_bbb[p * ncmo5 + q * ncmo4_ + r * ncmo3_ + s * ncmo2_ + u * ncmo_ + t] -= el;
-                tprdm_bbb[p * ncmo5 + q * ncmo4_ + r * ncmo3_ + u * ncmo2_ + t * ncmo_ + s] -= el;
-                tprdm_bbb[p * ncmo5 + q * ncmo4_ + r * ncmo3_ + u * ncmo2_ + s * ncmo_ + t] += el;
-                tprdm_bbb[p * ncmo5 + q * ncmo4_ + r * ncmo3_ + t * ncmo2_ + s * ncmo_ + u] -= el;
-                tprdm_bbb[p * ncmo5 + q * ncmo4_ + r * ncmo3_ + t * ncmo2_ + u * ncmo_ + s] += el;
-
-                tprdm_bbb[p * ncmo5 + r * ncmo4_ + q * ncmo3_ + s * ncmo2_ + t * ncmo_ + u] -= el;
-                tprdm_bbb[p * ncmo5 + r * ncmo4_ + q * ncmo3_ + s * ncmo2_ + u * ncmo_ + t] += el;
-                tprdm_bbb[p * ncmo5 + r * ncmo4_ + q * ncmo3_ + u * ncmo2_ + t * ncmo_ + s] += el;
-                tprdm_bbb[p * ncmo5 + r * ncmo4_ + q * ncmo3_ + u * ncmo2_ + s * ncmo_ + t] -= el;
-                tprdm_bbb[p * ncmo5 + r * ncmo4_ + q * ncmo3_ + t * ncmo2_ + s * ncmo_ + u] += el;
-                tprdm_bbb[p * ncmo5 + r * ncmo4_ + q * ncmo3_ + t * ncmo2_ + u * ncmo_ + s] -= el;
-
-                tprdm_bbb[q * ncmo5 + p * ncmo4_ + r * ncmo3_ + s * ncmo2_ + t * ncmo_ + u] -= el;
-                tprdm_bbb[q * ncmo5 + p * ncmo4_ + r * ncmo3_ + s * ncmo2_ + u * ncmo_ + t] += el;
-                tprdm_bbb[q * ncmo5 + p * ncmo4_ + r * ncmo3_ + u * ncmo2_ + t * ncmo_ + s] += el;
-                tprdm_bbb[q * ncmo5 + p * ncmo4_ + r * ncmo3_ + u * ncmo2_ + s * ncmo_ + t] -= el;
-                tprdm_bbb[q * ncmo5 + p * ncmo4_ + r * ncmo3_ + t * ncmo2_ + s * ncmo_ + u] += el;
-                tprdm_bbb[q * ncmo5 + p * ncmo4_ + r * ncmo3_ + t * ncmo2_ + u * ncmo_ + s] -= el;
-
-                tprdm_bbb[q * ncmo5 + r * ncmo4_ + p * ncmo3_ + s * ncmo2_ + t * ncmo_ + u] += el;
-                tprdm_bbb[q * ncmo5 + r * ncmo4_ + p * ncmo3_ + s * ncmo2_ + u * ncmo_ + t] -= el;
-                tprdm_bbb[q * ncmo5 + r * ncmo4_ + p * ncmo3_ + u * ncmo2_ + t * ncmo_ + s] -= el;
-                tprdm_bbb[q * ncmo5 + r * ncmo4_ + p * ncmo3_ + u * ncmo2_ + s * ncmo_ + t] += el;
-                tprdm_bbb[q * ncmo5 + r * ncmo4_ + p * ncmo3_ + t * ncmo2_ + s * ncmo_ + u] -= el;
-                tprdm_bbb[q * ncmo5 + r * ncmo4_ + p * ncmo3_ + t * ncmo2_ + u * ncmo_ + s] += el;
-
-                tprdm_bbb[r * ncmo5 + p * ncmo4_ + q * ncmo3_ + s * ncmo2_ + t * ncmo_ + u] += el;
-                tprdm_bbb[r * ncmo5 + p * ncmo4_ + q * ncmo3_ + s * ncmo2_ + u * ncmo_ + t] -= el;
-                tprdm_bbb[r * ncmo5 + p * ncmo4_ + q * ncmo3_ + u * ncmo2_ + t * ncmo_ + s] -= el;
-                tprdm_bbb[r * ncmo5 + p * ncmo4_ + q * ncmo3_ + u * ncmo2_ + s * ncmo_ + t] += el;
-                tprdm_bbb[r * ncmo5 + p * ncmo4_ + q * ncmo3_ + t * ncmo2_ + s * ncmo_ + u] -= el;
-                tprdm_bbb[r * ncmo5 + p * ncmo4_ + q * ncmo3_ + t * ncmo2_ + u * ncmo_ + s] += el;
-
-                tprdm_bbb[r * ncmo5 + q * ncmo4_ + p * ncmo3_ + s * ncmo2_ + t * ncmo_ + u] -= el;
-                tprdm_bbb[r * ncmo5 + q * ncmo4_ + p * ncmo3_ + s * ncmo2_ + u * ncmo_ + t] += el;
-                tprdm_bbb[r * ncmo5 + q * ncmo4_ + p * ncmo3_ + u * ncmo2_ + t * ncmo_ + s] += el;
-                tprdm_bbb[r * ncmo5 + q * ncmo4_ + p * ncmo3_ + u * ncmo2_ + s * ncmo_ + t] -= el;
-                tprdm_bbb[r * ncmo5 + q * ncmo4_ + p * ncmo3_ + t * ncmo2_ + s * ncmo_ + u] += el;
-                tprdm_bbb[r * ncmo5 + q * ncmo4_ + p * ncmo3_ + t * ncmo2_ + u * ncmo_ + s] -= el;
-
-                el = evecs_->get(I, root1_) * evecs_->get(J, root2_) * sign_pqr * sign_stu;
-
-                tprdm_bbb[s * ncmo5 + t * ncmo4_ + u * ncmo3_ + p * ncmo2_ + q * ncmo_ + r] += el;
-                tprdm_bbb[s * ncmo5 + u * ncmo4_ + t * ncmo3_ + p * ncmo2_ + q * ncmo_ + r] -= el;
-                tprdm_bbb[u * ncmo5 + t * ncmo4_ + s * ncmo3_ + p * ncmo2_ + q * ncmo_ + r] -= el;
-                tprdm_bbb[u * ncmo5 + s * ncmo4_ + t * ncmo3_ + p * ncmo2_ + q * ncmo_ + r] += el;
-                tprdm_bbb[t * ncmo5 + s * ncmo4_ + u * ncmo3_ + p * ncmo2_ + q * ncmo_ + r] -= el;
-                tprdm_bbb[t * ncmo5 + u * ncmo4_ + s * ncmo3_ + p * ncmo2_ + q * ncmo_ + r] += el;
-
-                tprdm_bbb[s * ncmo5 + t * ncmo4_ + u * ncmo3_ + p * ncmo2_ + r * ncmo_ + q] -= el;
-                tprdm_bbb[s * ncmo5 + u * ncmo4_ + t * ncmo3_ + p * ncmo2_ + r * ncmo_ + q] += el;
-                tprdm_bbb[u * ncmo5 + t * ncmo4_ + s * ncmo3_ + p * ncmo2_ + r * ncmo_ + q] += el;
-                tprdm_bbb[u * ncmo5 + s * ncmo4_ + t * ncmo3_ + p * ncmo2_ + r * ncmo_ + q] -= el;
-                tprdm_bbb[t * ncmo5 + s * ncmo4_ + u * ncmo3_ + p * ncmo2_ + r * ncmo_ + q] += el;
-                tprdm_bbb[t * ncmo5 + u * ncmo4_ + s * ncmo3_ + p * ncmo2_ + r * ncmo_ + q] -= el;
-
-                tprdm_bbb[s * ncmo5 + t * ncmo4_ + u * ncmo3_ + q * ncmo2_ + p * ncmo_ + r] -= el;
-                tprdm_bbb[s * ncmo5 + u * ncmo4_ + t * ncmo3_ + q * ncmo2_ + p * ncmo_ + r] += el;
-                tprdm_bbb[u * ncmo5 + t * ncmo4_ + s * ncmo3_ + q * ncmo2_ + p * ncmo_ + r] += el;
-                tprdm_bbb[u * ncmo5 + s * ncmo4_ + t * ncmo3_ + q * ncmo2_ + p * ncmo_ + r] -= el;
-                tprdm_bbb[t * ncmo5 + s * ncmo4_ + u * ncmo3_ + q * ncmo2_ + p * ncmo_ + r] += el;
-                tprdm_bbb[t * ncmo5 + u * ncmo4_ + s * ncmo3_ + q * ncmo2_ + p * ncmo_ + r] -= el;
-
-                tprdm_bbb[s * ncmo5 + t * ncmo4_ + u * ncmo3_ + q * ncmo2_ + r * ncmo_ + p] += el;
-                tprdm_bbb[s * ncmo5 + u * ncmo4_ + t * ncmo3_ + q * ncmo2_ + r * ncmo_ + p] -= el;
-                tprdm_bbb[u * ncmo5 + t * ncmo4_ + s * ncmo3_ + q * ncmo2_ + r * ncmo_ + p] -= el;
-                tprdm_bbb[u * ncmo5 + s * ncmo4_ + t * ncmo3_ + q * ncmo2_ + r * ncmo_ + p] += el;
-                tprdm_bbb[t * ncmo5 + s * ncmo4_ + u * ncmo3_ + q * ncmo2_ + r * ncmo_ + p] -= el;
-                tprdm_bbb[t * ncmo5 + u * ncmo4_ + s * ncmo3_ + q * ncmo2_ + r * ncmo_ + p] += el;
-
-                tprdm_bbb[s * ncmo5 + t * ncmo4_ + u * ncmo3_ + r * ncmo2_ + p * ncmo_ + q] += el;
-                tprdm_bbb[s * ncmo5 + u * ncmo4_ + t * ncmo3_ + r * ncmo2_ + p * ncmo_ + q] -= el;
-                tprdm_bbb[u * ncmo5 + t * ncmo4_ + s * ncmo3_ + r * ncmo2_ + p * ncmo_ + q] -= el;
-                tprdm_bbb[u * ncmo5 + s * ncmo4_ + t * ncmo3_ + r * ncmo2_ + p * ncmo_ + q] += el;
-                tprdm_bbb[t * ncmo5 + s * ncmo4_ + u * ncmo3_ + r * ncmo2_ + p * ncmo_ + q] -= el;
-                tprdm_bbb[t * ncmo5 + u * ncmo4_ + s * ncmo3_ + r * ncmo2_ + p * ncmo_ + q] += el;
-
-                tprdm_bbb[s * ncmo5 + t * ncmo4_ + u * ncmo3_ + r * ncmo2_ + q * ncmo_ + p] -= el;
-                tprdm_bbb[s * ncmo5 + u * ncmo4_ + t * ncmo3_ + r * ncmo2_ + q * ncmo_ + p] += el;
-                tprdm_bbb[u * ncmo5 + t * ncmo4_ + s * ncmo3_ + r * ncmo2_ + q * ncmo_ + p] += el;
-                tprdm_bbb[u * ncmo5 + s * ncmo4_ + t * ncmo3_ + r * ncmo2_ + q * ncmo_ + p] -= el;
-                tprdm_bbb[t * ncmo5 + s * ncmo4_ + u * ncmo3_ + r * ncmo2_ + q * ncmo_ + p] += el;
-                tprdm_bbb[t * ncmo5 + u * ncmo4_ + s * ncmo3_ + r * ncmo2_ + q * ncmo_ + p] -= el;
-            }
-        }
-    }
+    _add_3rdm_op_II([&](const std::vector<size_t>& i,
+                        const double& value) { _add_3rdm_aaa(tprdm_aaa, i, value); },
+                    _add_aab, _add_abb,
+                    [&](const std::vector<size_t>& i, const double& value) {
+                        _add_3rdm_aaa(tprdm_bbb, i, value);
+                    });
+
+    //    const det_hashvec& dets = wfn_.wfn_hash();
+    //    for (size_t I = 0; I < dim_space_; ++I) {
+    //        double cI_sq = evecs_->get(I, root1_) * evecs_->get(I, root2_);
+    //        Determinant detI(dets[I]);
+    //
+    //        std::vector<int> aocc = detI.get_alfa_occ(no_);
+    //        std::vector<int> bocc = detI.get_beta_occ(no_);
+    //        int na = aocc.size();
+    //        int nb = bocc.size();
+    //
+    //        for (int p = 0; p < na; ++p) {
+    //            int pp = aocc[p];
+    //            for (int q = p + 1; q < na; ++q) {
+    //                int qq = aocc[q];
+    //                for (int r = q + 1; r < na; ++r) {
+    //                    int rr = aocc[r];
+    //
+    //                    tprdm_aaa[pp * no5_ + qq * no4_ + rr * no3_ + pp * no2_ + qq *
+    //                    no_ +
+    //                              rr] += cI_sq;
+    //                    tprdm_aaa[pp * no5_ + qq * no4_ + rr * no3_ + pp * no2_ + rr *
+    //                    no_ +
+    //                              qq] -= cI_sq;
+    //                    tprdm_aaa[pp * no5_ + qq * no4_ + rr * no3_ + rr * no2_ + pp *
+    //                    no_ +
+    //                              qq] += cI_sq;
+    //                    tprdm_aaa[pp * no5_ + qq * no4_ + rr * no3_ + rr * no2_ + qq *
+    //                    no_ +
+    //                              pp] -= cI_sq;
+    //                    tprdm_aaa[pp * no5_ + qq * no4_ + rr * no3_ + qq * no2_ + rr *
+    //                    no_ +
+    //                              pp] += cI_sq;
+    //                    tprdm_aaa[pp * no5_ + qq * no4_ + rr * no3_ + qq * no2_ + pp *
+    //                    no_ +
+    //                              rr] -= cI_sq;
+    //
+    //                    tprdm_aaa[pp * no5_ + rr * no4_ + qq * no3_ + pp * no2_ + qq *
+    //                    no_ +
+    //                              rr] -= cI_sq;
+    //                    tprdm_aaa[pp * no5_ + rr * no4_ + qq * no3_ + pp * no2_ + rr *
+    //                    no_ +
+    //                              qq] += cI_sq;
+    //                    tprdm_aaa[pp * no5_ + rr * no4_ + qq * no3_ + rr * no2_ + pp *
+    //                    no_ +
+    //                              qq] -= cI_sq;
+    //                    tprdm_aaa[pp * no5_ + rr * no4_ + qq * no3_ + rr * no2_ + qq *
+    //                    no_ +
+    //                              pp] += cI_sq;
+    //                    tprdm_aaa[pp * no5_ + rr * no4_ + qq * no3_ + qq * no2_ + rr *
+    //                    no_ +
+    //                              pp] -= cI_sq;
+    //                    tprdm_aaa[pp * no5_ + rr * no4_ + qq * no3_ + qq * no2_ + pp *
+    //                    no_ +
+    //                              rr] += cI_sq;
+    //
+    //                    tprdm_aaa[rr * no5_ + pp * no4_ + qq * no3_ + pp * no2_ + qq *
+    //                    no_ +
+    //                              rr] += cI_sq;
+    //                    tprdm_aaa[rr * no5_ + pp * no4_ + qq * no3_ + pp * no2_ + rr *
+    //                    no_ +
+    //                              qq] -= cI_sq;
+    //                    tprdm_aaa[rr * no5_ + pp * no4_ + qq * no3_ + rr * no2_ + pp *
+    //                    no_ +
+    //                              qq] += cI_sq;
+    //                    tprdm_aaa[rr * no5_ + pp * no4_ + qq * no3_ + rr * no2_ + qq *
+    //                    no_ +
+    //                              pp] -= cI_sq;
+    //                    tprdm_aaa[rr * no5_ + pp * no4_ + qq * no3_ + qq * no2_ + rr *
+    //                    no_ +
+    //                              pp] += cI_sq;
+    //                    tprdm_aaa[rr * no5_ + pp * no4_ + qq * no3_ + qq * no2_ + pp *
+    //                    no_ +
+    //                              rr] -= cI_sq;
+    //
+    //                    tprdm_aaa[rr * no5_ + qq * no4_ + pp * no3_ + pp * no2_ + qq *
+    //                    no_ +
+    //                              rr] -= cI_sq;
+    //                    tprdm_aaa[rr * no5_ + qq * no4_ + pp * no3_ + pp * no2_ + rr *
+    //                    no_ +
+    //                              qq] += cI_sq;
+    //                    tprdm_aaa[rr * no5_ + qq * no4_ + pp * no3_ + rr * no2_ + pp *
+    //                    no_ +
+    //                              qq] -= cI_sq;
+    //                    tprdm_aaa[rr * no5_ + qq * no4_ + pp * no3_ + rr * no2_ + qq *
+    //                    no_ +
+    //                              pp] += cI_sq;
+    //                    tprdm_aaa[rr * no5_ + qq * no4_ + pp * no3_ + qq * no2_ + rr *
+    //                    no_ +
+    //                              pp] -= cI_sq;
+    //                    tprdm_aaa[rr * no5_ + qq * no4_ + pp * no3_ + qq * no2_ + pp *
+    //                    no_ +
+    //                              rr] += cI_sq;
+    //
+    //                    tprdm_aaa[qq * no5_ + rr * no4_ + pp * no3_ + pp * no2_ + qq *
+    //                    no_ +
+    //                              rr] += cI_sq;
+    //                    tprdm_aaa[qq * no5_ + rr * no4_ + pp * no3_ + pp * no2_ + rr *
+    //                    no_ +
+    //                              qq] -= cI_sq;
+    //                    tprdm_aaa[qq * no5_ + rr * no4_ + pp * no3_ + rr * no2_ + pp *
+    //                    no_ +
+    //                              qq] += cI_sq;
+    //                    tprdm_aaa[qq * no5_ + rr * no4_ + pp * no3_ + rr * no2_ + qq *
+    //                    no_ +
+    //                              pp] -= cI_sq;
+    //                    tprdm_aaa[qq * no5_ + rr * no4_ + pp * no3_ + qq * no2_ + rr *
+    //                    no_ +
+    //                              pp] += cI_sq;
+    //                    tprdm_aaa[qq * no5_ + rr * no4_ + pp * no3_ + qq * no2_ + pp *
+    //                    no_ +
+    //                              rr] -= cI_sq;
+    //
+    //                    tprdm_aaa[qq * no5_ + pp * no4_ + rr * no3_ + pp * no2_ + qq *
+    //                    no_ +
+    //                              rr] -= cI_sq;
+    //                    tprdm_aaa[qq * no5_ + pp * no4_ + rr * no3_ + pp * no2_ + rr *
+    //                    no_ +
+    //                              qq] += cI_sq;
+    //                    tprdm_aaa[qq * no5_ + pp * no4_ + rr * no3_ + rr * no2_ + pp *
+    //                    no_ +
+    //                              qq] -= cI_sq;
+    //                    tprdm_aaa[qq * no5_ + pp * no4_ + rr * no3_ + rr * no2_ + qq *
+    //                    no_ +
+    //                              pp] += cI_sq;
+    //                    tprdm_aaa[qq * no5_ + pp * no4_ + rr * no3_ + qq * no2_ + rr *
+    //                    no_ +
+    //                              pp] -= cI_sq;
+    //                    tprdm_aaa[qq * no5_ + pp * no4_ + rr * no3_ + qq * no2_ + pp *
+    //                    no_ +
+    //                              rr] += cI_sq;
+    //                }
+    //            }
+    //        }
+    //
+    //        for (int p = 0; p < na; ++p) {
+    //            int pp = aocc[p];
+    //            for (int q = p + 1; q < na; ++q) {
+    //                int qq = aocc[q];
+    //                for (int r = 0; r < nb; ++r) {
+    //                    int rr = bocc[r];
+    //
+    //                    tprdm_aab[pp * no5_ + qq * no4_ + rr * no3_ + pp * no2_ + qq *
+    //                    no_ +
+    //                              rr] += cI_sq;
+    //                    tprdm_aab[pp * no5_ + qq * no4_ + rr * no3_ + qq * no2_ + pp *
+    //                    no_ +
+    //                              rr] -= cI_sq;
+    //                    tprdm_aab[qq * no5_ + pp * no4_ + rr * no3_ + pp * no2_ + qq *
+    //                    no_ +
+    //                              rr] -= cI_sq;
+    //                    tprdm_aab[qq * no5_ + pp * no4_ + rr * no3_ + qq * no2_ + pp *
+    //                    no_ +
+    //                              rr] += cI_sq;
+    //                }
+    //            }
+    //        }
+    //
+    //        for (int p = 0; p < na; ++p) {
+    //            int pp = aocc[p];
+    //            for (int q = 0; q < nb; ++q) {
+    //                int qq = bocc[q];
+    //                for (int r = q + 1; r < nb; ++r) {
+    //                    int rr = bocc[r];
+    //
+    //                    tprdm_abb[pp * no5_ + qq * no4_ + rr * no3_ + pp * no2_ + qq *
+    //                    no_ +
+    //                              rr] += cI_sq;
+    //                    tprdm_abb[pp * no5_ + qq * no4_ + rr * no3_ + pp * no2_ + rr *
+    //                    no_ +
+    //                              qq] -= cI_sq;
+    //                    tprdm_abb[pp * no5_ + rr * no4_ + qq * no3_ + pp * no2_ + qq *
+    //                    no_ +
+    //                              rr] -= cI_sq;
+    //                    tprdm_abb[pp * no5_ + rr * no4_ + qq * no3_ + pp * no2_ + rr *
+    //                    no_ +
+    //                              qq] += cI_sq;
+    //                }
+    //            }
+    //        }
+    //
+    //        for (int p = 0; p < nb; ++p) {
+    //            int pp = bocc[p];
+    //            for (int q = p + 1; q < nb; ++q) {
+    //                int qq = bocc[q];
+    //                for (int r = q + 1; r < nb; ++r) {
+    //                    int rr = bocc[r];
+    //
+    //                    tprdm_bbb[pp * no5_ + qq * no4_ + rr * no3_ + pp * no2_ + qq *
+    //                    no_ +
+    //                              rr] += cI_sq;
+    //                    tprdm_bbb[pp * no5_ + qq * no4_ + rr * no3_ + pp * no2_ + rr *
+    //                    no_ +
+    //                              qq] -= cI_sq;
+    //                    tprdm_bbb[pp * no5_ + qq * no4_ + rr * no3_ + rr * no2_ + pp *
+    //                    no_ +
+    //                              qq] += cI_sq;
+    //                    tprdm_bbb[pp * no5_ + qq * no4_ + rr * no3_ + rr * no2_ + qq *
+    //                    no_ +
+    //                              pp] -= cI_sq;
+    //                    tprdm_bbb[pp * no5_ + qq * no4_ + rr * no3_ + qq * no2_ + rr *
+    //                    no_ +
+    //                              pp] += cI_sq;
+    //                    tprdm_bbb[pp * no5_ + qq * no4_ + rr * no3_ + qq * no2_ + pp *
+    //                    no_ +
+    //                              rr] -= cI_sq;
+    //
+    //                    tprdm_bbb[pp * no5_ + rr * no4_ + qq * no3_ + pp * no2_ + qq *
+    //                    no_ +
+    //                              rr] -= cI_sq;
+    //                    tprdm_bbb[pp * no5_ + rr * no4_ + qq * no3_ + pp * no2_ + rr *
+    //                    no_ +
+    //                              qq] += cI_sq;
+    //                    tprdm_bbb[pp * no5_ + rr * no4_ + qq * no3_ + rr * no2_ + pp *
+    //                    no_ +
+    //                              qq] -= cI_sq;
+    //                    tprdm_bbb[pp * no5_ + rr * no4_ + qq * no3_ + rr * no2_ + qq *
+    //                    no_ +
+    //                              pp] += cI_sq;
+    //                    tprdm_bbb[pp * no5_ + rr * no4_ + qq * no3_ + qq * no2_ + rr *
+    //                    no_ +
+    //                              pp] -= cI_sq;
+    //                    tprdm_bbb[pp * no5_ + rr * no4_ + qq * no3_ + qq * no2_ + pp *
+    //                    no_ +
+    //                              rr] += cI_sq;
+    //
+    //                    tprdm_bbb[rr * no5_ + pp * no4_ + qq * no3_ + pp * no2_ + qq *
+    //                    no_ +
+    //                              rr] += cI_sq;
+    //                    tprdm_bbb[rr * no5_ + pp * no4_ + qq * no3_ + pp * no2_ + rr *
+    //                    no_ +
+    //                              qq] -= cI_sq;
+    //                    tprdm_bbb[rr * no5_ + pp * no4_ + qq * no3_ + rr * no2_ + pp *
+    //                    no_ +
+    //                              qq] += cI_sq;
+    //                    tprdm_bbb[rr * no5_ + pp * no4_ + qq * no3_ + rr * no2_ + qq *
+    //                    no_ +
+    //                              pp] -= cI_sq;
+    //                    tprdm_bbb[rr * no5_ + pp * no4_ + qq * no3_ + qq * no2_ + rr *
+    //                    no_ +
+    //                              pp] += cI_sq;
+    //                    tprdm_bbb[rr * no5_ + pp * no4_ + qq * no3_ + qq * no2_ + pp *
+    //                    no_ +
+    //                              rr] -= cI_sq;
+    //
+    //                    tprdm_bbb[rr * no5_ + qq * no4_ + pp * no3_ + pp * no2_ + qq *
+    //                    no_ +
+    //                              rr] -= cI_sq;
+    //                    tprdm_bbb[rr * no5_ + qq * no4_ + pp * no3_ + pp * no2_ + rr *
+    //                    no_ +
+    //                              qq] += cI_sq;
+    //                    tprdm_bbb[rr * no5_ + qq * no4_ + pp * no3_ + rr * no2_ + pp *
+    //                    no_ +
+    //                              qq] -= cI_sq;
+    //                    tprdm_bbb[rr * no5_ + qq * no4_ + pp * no3_ + rr * no2_ + qq *
+    //                    no_ +
+    //                              pp] += cI_sq;
+    //                    tprdm_bbb[rr * no5_ + qq * no4_ + pp * no3_ + qq * no2_ + rr *
+    //                    no_ +
+    //                              pp] -= cI_sq;
+    //                    tprdm_bbb[rr * no5_ + qq * no4_ + pp * no3_ + qq * no2_ + pp *
+    //                    no_ +
+    //                              rr] += cI_sq;
+    //
+    //                    tprdm_bbb[qq * no5_ + rr * no4_ + pp * no3_ + pp * no2_ + qq *
+    //                    no_ +
+    //                              rr] += cI_sq;
+    //                    tprdm_bbb[qq * no5_ + rr * no4_ + pp * no3_ + pp * no2_ + rr *
+    //                    no_ +
+    //                              qq] -= cI_sq;
+    //                    tprdm_bbb[qq * no5_ + rr * no4_ + pp * no3_ + rr * no2_ + pp *
+    //                    no_ +
+    //                              qq] += cI_sq;
+    //                    tprdm_bbb[qq * no5_ + rr * no4_ + pp * no3_ + rr * no2_ + qq *
+    //                    no_ +
+    //                              pp] -= cI_sq;
+    //                    tprdm_bbb[qq * no5_ + rr * no4_ + pp * no3_ + qq * no2_ + rr *
+    //                    no_ +
+    //                              pp] += cI_sq;
+    //                    tprdm_bbb[qq * no5_ + rr * no4_ + pp * no3_ + qq * no2_ + pp *
+    //                    no_ +
+    //                              rr] -= cI_sq;
+    //
+    //                    tprdm_bbb[qq * no5_ + pp * no4_ + rr * no3_ + pp * no2_ + qq *
+    //                    no_ +
+    //                              rr] -= cI_sq;
+    //                    tprdm_bbb[qq * no5_ + pp * no4_ + rr * no3_ + pp * no2_ + rr *
+    //                    no_ +
+    //                              qq] += cI_sq;
+    //                    tprdm_bbb[qq * no5_ + pp * no4_ + rr * no3_ + rr * no2_ + pp *
+    //                    no_ +
+    //                              qq] -= cI_sq;
+    //                    tprdm_bbb[qq * no5_ + pp * no4_ + rr * no3_ + rr * no2_ + qq *
+    //                    no_ +
+    //                              pp] += cI_sq;
+    //                    tprdm_bbb[qq * no5_ + pp * no4_ + rr * no3_ + qq * no2_ + rr *
+    //                    no_ +
+    //                              pp] -= cI_sq;
+    //                    tprdm_bbb[qq * no5_ + pp * no4_ + rr * no3_ + qq * no2_ + pp *
+    //                    no_ +
+    //                              rr] += cI_sq;
+    //                }
+    //            }
+    //        }
+    //    }
+
+    _add_3rdm_op_IJ(op->aaa_list_, [&](const std::vector<size_t>& i, const double& value) {
+        _add_3rdm_aaa(tprdm_aaa, i, value);
+    });
+
+    _add_3rdm_op_IJ(op->aab_list_, _add_aab);
+
+    _add_3rdm_op_IJ(op->abb_list_, _add_abb);
+
+    _add_3rdm_op_IJ(op->bbb_list_, [&](const std::vector<size_t>& i, const double& value) {
+        _add_3rdm_aaa(tprdm_bbb, i, value);
+    });
+
+    //    for (size_t K = 0, max_K = aaa_list.size(); K < max_K; ++K) {
+    //        // aaa aaa
+    //        std::vector<std::tuple<size_t, short, short, short>>& coupled_dets = aaa_list[K];
+    //        for (size_t a = 0, max_a = coupled_dets.size(); a < max_a; ++a) {
+    //
+    //            auto& detJ = coupled_dets[a];
+    //
+    //            const size_t& J = std::get<0>(detJ);
+    //            const size_t& p = std::abs(std::get<1>(detJ)) - 1;
+    //            const size_t& q = std::get<2>(detJ);
+    //            const size_t& r = std::get<3>(detJ);
+    //            const double& sign_pqr = std::get<1>(detJ) > 0.0 ? 1.0 : -1.0;
+    //
+    //            for (size_t b = a + 1, max_b = coupled_dets.size(); b < max_b; ++b) {
+    //
+    //                auto& detI = coupled_dets[b];
+    //
+    //                const size_t& s = std::abs(std::get<1>(detI)) - 1;
+    //                const size_t& t = std::get<2>(detI);
+    //                const size_t& u = std::get<3>(detI);
+    //                const double& sign_stu = std::get<1>(detI) > 0.0 ? 1.0 : -1.0;
+    //                const size_t& I = std::get<0>(detI);
+    //
+    //                double el = evecs_->get(J, root1_) * evecs_->get(I, root2_) * sign_pqr *
+    //                sign_stu;
+    //
+    //                tprdm_aaa[p * no5_ + q * no4_ + r * no3_ + s * no2_ + t * no_ + u] +=
+    //                el; tprdm_aaa[p * no5_ + q * no4_ + r * no3_ + s * no2_ + u * no_ +
+    //                t] -= el; tprdm_aaa[p * no5_ + q * no4_ + r * no3_ + u * no2_ + t *
+    //                no_ + s] -= el; tprdm_aaa[p * no5_ + q * no4_ + r * no3_ + u * no2_ +
+    //                s * no_ + t] += el; tprdm_aaa[p * no5_ + q * no4_ + r * no3_ + t *
+    //                no2_ + s * no_ + u] -= el; tprdm_aaa[p * no5_ + q * no4_ + r * no3_ +
+    //                t * no2_ + u * no_ + s] += el;
+    //
+    //                tprdm_aaa[p * no5_ + r * no4_ + q * no3_ + s * no2_ + t * no_ + u] -=
+    //                el; tprdm_aaa[p * no5_ + r * no4_ + q * no3_ + s * no2_ + u * no_ +
+    //                t] += el; tprdm_aaa[p * no5_ + r * no4_ + q * no3_ + u * no2_ + t *
+    //                no_ + s] += el; tprdm_aaa[p * no5_ + r * no4_ + q * no3_ + u * no2_ +
+    //                s * no_ + t] -= el; tprdm_aaa[p * no5_ + r * no4_ + q * no3_ + t *
+    //                no2_ + s * no_ + u] += el; tprdm_aaa[p * no5_ + r * no4_ + q * no3_ +
+    //                t * no2_ + u * no_ + s] -= el;
+    //
+    //                tprdm_aaa[q * no5_ + p * no4_ + r * no3_ + s * no2_ + t * no_ + u] -=
+    //                el; tprdm_aaa[q * no5_ + p * no4_ + r * no3_ + s * no2_ + u * no_ +
+    //                t] += el; tprdm_aaa[q * no5_ + p * no4_ + r * no3_ + u * no2_ + t *
+    //                no_ + s] += el; tprdm_aaa[q * no5_ + p * no4_ + r * no3_ + u * no2_ +
+    //                s * no_ + t] -= el; tprdm_aaa[q * no5_ + p * no4_ + r * no3_ + t *
+    //                no2_ + s * no_ + u] += el; tprdm_aaa[q * no5_ + p * no4_ + r * no3_ +
+    //                t * no2_ + u * no_ + s] -= el;
+    //
+    //                tprdm_aaa[q * no5_ + r * no4_ + p * no3_ + s * no2_ + t * no_ + u] +=
+    //                el; tprdm_aaa[q * no5_ + r * no4_ + p * no3_ + s * no2_ + u * no_ +
+    //                t] -= el; tprdm_aaa[q * no5_ + r * no4_ + p * no3_ + u * no2_ + t *
+    //                no_ + s] -= el; tprdm_aaa[q * no5_ + r * no4_ + p * no3_ + u * no2_ +
+    //                s * no_ + t] += el; tprdm_aaa[q * no5_ + r * no4_ + p * no3_ + t *
+    //                no2_ + s * no_ + u] -= el; tprdm_aaa[q * no5_ + r * no4_ + p * no3_ +
+    //                t * no2_ + u * no_ + s] += el;
+    //
+    //                tprdm_aaa[r * no5_ + p * no4_ + q * no3_ + s * no2_ + t * no_ + u] +=
+    //                el; tprdm_aaa[r * no5_ + p * no4_ + q * no3_ + s * no2_ + u * no_ +
+    //                t] -= el; tprdm_aaa[r * no5_ + p * no4_ + q * no3_ + u * no2_ + t *
+    //                no_ + s] -= el; tprdm_aaa[r * no5_ + p * no4_ + q * no3_ + u * no2_ +
+    //                s * no_ + t] += el; tprdm_aaa[r * no5_ + p * no4_ + q * no3_ + t *
+    //                no2_ + s * no_ + u] -= el; tprdm_aaa[r * no5_ + p * no4_ + q * no3_ +
+    //                t * no2_ + u * no_ + s] += el;
+    //
+    //                tprdm_aaa[r * no5_ + q * no4_ + p * no3_ + s * no2_ + t * no_ + u] -=
+    //                el; tprdm_aaa[r * no5_ + q * no4_ + p * no3_ + s * no2_ + u * no_ +
+    //                t] += el; tprdm_aaa[r * no5_ + q * no4_ + p * no3_ + u * no2_ + t *
+    //                no_ + s] += el; tprdm_aaa[r * no5_ + q * no4_ + p * no3_ + u * no2_ +
+    //                s * no_ + t] -= el; tprdm_aaa[r * no5_ + q * no4_ + p * no3_ + t *
+    //                no2_ + s * no_ + u] += el; tprdm_aaa[r * no5_ + q * no4_ + p * no3_ +
+    //                t * no2_ + u * no_ + s] -= el;
+    //
+    //                el = evecs_->get(I, root1_) * evecs_->get(J, root2_) * sign_pqr * sign_stu;
+    //
+    //                tprdm_aaa[s * no5_ + t * no4_ + u * no3_ + p * no2_ + q * no_ + r] +=
+    //                el; tprdm_aaa[s * no5_ + u * no4_ + t * no3_ + p * no2_ + q * no_ +
+    //                r] -= el; tprdm_aaa[u * no5_ + t * no4_ + s * no3_ + p * no2_ + q *
+    //                no_ + r] -= el; tprdm_aaa[u * no5_ + s * no4_ + t * no3_ + p * no2_ +
+    //                q * no_ + r] += el; tprdm_aaa[t * no5_ + s * no4_ + u * no3_ + p *
+    //                no2_ + q * no_ + r] -= el; tprdm_aaa[t * no5_ + u * no4_ + s * no3_ +
+    //                p * no2_ + q * no_ + r] += el;
+    //
+    //                tprdm_aaa[s * no5_ + t * no4_ + u * no3_ + p * no2_ + r * no_ + q] -=
+    //                el; tprdm_aaa[s * no5_ + u * no4_ + t * no3_ + p * no2_ + r * no_ +
+    //                q] += el; tprdm_aaa[u * no5_ + t * no4_ + s * no3_ + p * no2_ + r *
+    //                no_ + q] += el; tprdm_aaa[u * no5_ + s * no4_ + t * no3_ + p * no2_ +
+    //                r * no_ + q] -= el; tprdm_aaa[t * no5_ + s * no4_ + u * no3_ + p *
+    //                no2_ + r * no_ + q] += el; tprdm_aaa[t * no5_ + u * no4_ + s * no3_ +
+    //                p * no2_ + r * no_ + q] -= el;
+    //
+    //                tprdm_aaa[s * no5_ + t * no4_ + u * no3_ + q * no2_ + p * no_ + r] -=
+    //                el; tprdm_aaa[s * no5_ + u * no4_ + t * no3_ + q * no2_ + p * no_ +
+    //                r] += el; tprdm_aaa[u * no5_ + t * no4_ + s * no3_ + q * no2_ + p *
+    //                no_ + r] += el; tprdm_aaa[u * no5_ + s * no4_ + t * no3_ + q * no2_ +
+    //                p * no_ + r] -= el; tprdm_aaa[t * no5_ + s * no4_ + u * no3_ + q *
+    //                no2_ + p * no_ + r] += el; tprdm_aaa[t * no5_ + u * no4_ + s * no3_ +
+    //                q * no2_ + p * no_ + r] -= el;
+    //
+    //                tprdm_aaa[s * no5_ + t * no4_ + u * no3_ + q * no2_ + r * no_ + p] +=
+    //                el; tprdm_aaa[s * no5_ + u * no4_ + t * no3_ + q * no2_ + r * no_ +
+    //                p] -= el; tprdm_aaa[u * no5_ + t * no4_ + s * no3_ + q * no2_ + r *
+    //                no_ + p] -= el; tprdm_aaa[u * no5_ + s * no4_ + t * no3_ + q * no2_ +
+    //                r * no_ + p] += el; tprdm_aaa[t * no5_ + s * no4_ + u * no3_ + q *
+    //                no2_ + r * no_ + p] -= el; tprdm_aaa[t * no5_ + u * no4_ + s * no3_ +
+    //                q * no2_ + r * no_ + p] += el;
+    //
+    //                tprdm_aaa[s * no5_ + t * no4_ + u * no3_ + r * no2_ + p * no_ + q] +=
+    //                el; tprdm_aaa[s * no5_ + u * no4_ + t * no3_ + r * no2_ + p * no_ +
+    //                q] -= el; tprdm_aaa[u * no5_ + t * no4_ + s * no3_ + r * no2_ + p *
+    //                no_ + q] -= el; tprdm_aaa[u * no5_ + s * no4_ + t * no3_ + r * no2_ +
+    //                p * no_ + q] += el; tprdm_aaa[t * no5_ + s * no4_ + u * no3_ + r *
+    //                no2_ + p * no_ + q] -= el; tprdm_aaa[t * no5_ + u * no4_ + s * no3_ +
+    //                r * no2_ + p * no_ + q] += el;
+    //
+    //                tprdm_aaa[s * no5_ + t * no4_ + u * no3_ + r * no2_ + q * no_ + p] -=
+    //                el; tprdm_aaa[s * no5_ + u * no4_ + t * no3_ + r * no2_ + q * no_ +
+    //                p] += el; tprdm_aaa[u * no5_ + t * no4_ + s * no3_ + r * no2_ + q *
+    //                no_ + p] += el; tprdm_aaa[u * no5_ + s * no4_ + t * no3_ + r * no2_ +
+    //                q * no_ + p] -= el; tprdm_aaa[t * no5_ + s * no4_ + u * no3_ + r *
+    //                no2_ + q * no_ + p] += el; tprdm_aaa[t * no5_ + u * no4_ + s * no3_ +
+    //                r * no2_ + q * no_ + p] -= el;
+    //            }
+    //        }
+    //    }
+    //
+    //    for (size_t K = 0, max_K = aab_list.size(); K < max_K; ++K) {
+    //        // aab aab
+    //        std::vector<std::tuple<size_t, short, short, short>>& coupled_dets = aab_list[K];
+    //        for (size_t a = 0, max_a = coupled_dets.size(); a < max_a; ++a) {
+    //
+    //            auto& detJ = coupled_dets[a];
+    //
+    //            const size_t& J = std::get<0>(detJ);
+    //            const size_t& p = std::abs(std::get<1>(detJ)) - 1;
+    //            const size_t& q = std::get<2>(detJ);
+    //            const size_t& r = std::get<3>(detJ);
+    //            const double& sign_pqr = std::get<1>(detJ) > 0.0 ? 1.0 : -1.0;
+    //
+    //            for (size_t b = a + 1, max_b = coupled_dets.size(); b < max_b; ++b) {
+    //
+    //                auto& detI = coupled_dets[b];
+    //
+    //                const size_t& s = std::abs(std::get<1>(detI)) - 1;
+    //                const size_t& t = std::get<2>(detI);
+    //                const size_t& u = std::get<3>(detI);
+    //                const double& sign_stu = std::get<1>(detI) > 0.0 ? 1.0 : -1.0;
+    //                const size_t& I = std::get<0>(detI);
+    //
+    //                double el = evecs_->get(J, root1_) * evecs_->get(I, root2_) * sign_pqr *
+    //                sign_stu; tprdm_aab[p * no5_ + q * no4_ + r * no3_ + s * no2_ + t *
+    //                no_ + u] += el; tprdm_aab[p * no5_ + q * no4_ + r * no3_ + t * no2_ +
+    //                s * no_ + u] -= el; tprdm_aab[q * no5_ + p * no4_ + r * no3_ + s *
+    //                no2_ + t * no_ + u] -= el; tprdm_aab[q * no5_ + p * no4_ + r * no3_ +
+    //                t * no2_ + s * no_ + u] += el;
+    //
+    //                el = evecs_->get(I, root1_) * evecs_->get(J, root2_) * sign_pqr * sign_stu;
+    //                tprdm_aab[s * no5_ + t * no4_ + u * no3_ + p * no2_ + q * no_ + r] +=
+    //                el; tprdm_aab[t * no5_ + s * no4_ + u * no3_ + p * no2_ + q * no_ +
+    //                r] -= el; tprdm_aab[s * no5_ + t * no4_ + u * no3_ + q * no2_ + p *
+    //                no_ + r] -= el; tprdm_aab[t * no5_ + s * no4_ + u * no3_ + q * no2_ +
+    //                p * no_ + r] += el;
+    //            }
+    //        }
+    //    }
+    //
+    //    // abb abb
+    //    for (size_t K = 0, max_K = abb_list.size(); K < max_K; ++K) {
+    //        std::vector<std::tuple<size_t, short, short, short>>& coupled_dets = abb_list[K];
+    //        for (size_t a = 0, max_a = coupled_dets.size(); a < max_a; ++a) {
+    //
+    //            auto& detJ = coupled_dets[a];
+    //
+    //            const size_t& J = std::get<0>(detJ);
+    //            const size_t& p = std::abs(std::get<1>(detJ)) - 1;
+    //            const size_t& q = std::get<2>(detJ);
+    //            const size_t& r = std::get<3>(detJ);
+    //            const double& sign_pqr = std::get<1>(detJ) > 0.0 ? 1.0 : -1.0;
+    //
+    //            for (size_t b = a + 1, max_b = coupled_dets.size(); b < max_b; ++b) {
+    //
+    //                auto& detI = coupled_dets[b];
+    //
+    //                const size_t& s = std::abs(std::get<1>(detI)) - 1;
+    //                const size_t& t = std::get<2>(detI);
+    //                const size_t& u = std::get<3>(detI);
+    //                const double& sign_stu = std::get<1>(detI) > 0.0 ? 1.0 : -1.0;
+    //                const size_t& I = std::get<0>(detI);
+    //
+    //                double el = evecs_->get(J, root1_) * evecs_->get(I, root2_) * sign_pqr *
+    //                sign_stu; tprdm_abb[p * no5_ + q * no4_ + r * no3_ + s * no2_ + t *
+    //                no_ + u] += el; tprdm_abb[p * no5_ + q * no4_ + r * no3_ + s * no2_ +
+    //                u * no_ + t] -= el; tprdm_abb[p * no5_ + r * no4_ + q * no3_ + s *
+    //                no2_ + t * no_ + u] -= el; tprdm_abb[p * no5_ + r * no4_ + q * no3_ +
+    //                s * no2_ + u * no_ + t] += el;
+    //
+    //                el = evecs_->get(I, root1_) * evecs_->get(J, root2_) * sign_pqr * sign_stu;
+    //                tprdm_abb[s * no5_ + t * no4_ + u * no3_ + p * no2_ + q * no_ + r] +=
+    //                el; tprdm_abb[s * no5_ + u * no4_ + t * no3_ + p * no2_ + q * no_ +
+    //                r] -= el; tprdm_abb[s * no5_ + t * no4_ + u * no3_ + p * no2_ + r *
+    //                no_ + q] -= el; tprdm_abb[s * no5_ + u * no4_ + t * no3_ + p * no2_ +
+    //                r * no_ + q] += el;
+    //            }
+    //        }
+    //    }
+    //
+    //    for (size_t K = 0, max_K = bbb_list.size(); K < max_K; ++K) {
+    //        // bbb bbb
+    //        std::vector<std::tuple<size_t, short, short, short>>& coupled_dets = bbb_list[K];
+    //        for (size_t a = 0, max_a = coupled_dets.size(); a < max_a; ++a) {
+    //
+    //            auto& detJ = coupled_dets[a];
+    //
+    //            const size_t& J = std::get<0>(detJ);
+    //            const size_t& p = std::abs(std::get<1>(detJ)) - 1;
+    //            const size_t& q = std::get<2>(detJ);
+    //            const size_t& r = std::get<3>(detJ);
+    //            const double& sign_pqr = std::get<1>(detJ) > 0.0 ? 1.0 : -1.0;
+    //
+    //            for (size_t b = a + 1, max_b = coupled_dets.size(); b < max_b; ++b) {
+    //
+    //                auto& detI = coupled_dets[b];
+    //
+    //                const size_t& s = std::abs(std::get<1>(detI)) - 1;
+    //                const size_t& t = std::get<2>(detI);
+    //                const size_t& u = std::get<3>(detI);
+    //                const double& sign_stu = std::get<1>(detI) > 0.0 ? 1.0 : -1.0;
+    //                const size_t& I = std::get<0>(detI);
+    //
+    //                double el = evecs_->get(J, root1_) * evecs_->get(I, root2_) * sign_pqr *
+    //                sign_stu;
+    //
+    //                tprdm_bbb[p * no5_ + q * no4_ + r * no3_ + s * no2_ + t * no_ + u] +=
+    //                el; tprdm_bbb[p * no5_ + q * no4_ + r * no3_ + s * no2_ + u * no_ +
+    //                t] -= el; tprdm_bbb[p * no5_ + q * no4_ + r * no3_ + u * no2_ + t *
+    //                no_ + s] -= el; tprdm_bbb[p * no5_ + q * no4_ + r * no3_ + u * no2_ +
+    //                s * no_ + t] += el; tprdm_bbb[p * no5_ + q * no4_ + r * no3_ + t *
+    //                no2_ + s * no_ + u] -= el; tprdm_bbb[p * no5_ + q * no4_ + r * no3_ +
+    //                t * no2_ + u * no_ + s] += el;
+    //
+    //                tprdm_bbb[p * no5_ + r * no4_ + q * no3_ + s * no2_ + t * no_ + u] -=
+    //                el; tprdm_bbb[p * no5_ + r * no4_ + q * no3_ + s * no2_ + u * no_ +
+    //                t] += el; tprdm_bbb[p * no5_ + r * no4_ + q * no3_ + u * no2_ + t *
+    //                no_ + s] += el; tprdm_bbb[p * no5_ + r * no4_ + q * no3_ + u * no2_ +
+    //                s * no_ + t] -= el; tprdm_bbb[p * no5_ + r * no4_ + q * no3_ + t *
+    //                no2_ + s * no_ + u] += el; tprdm_bbb[p * no5_ + r * no4_ + q * no3_ +
+    //                t * no2_ + u * no_ + s] -= el;
+    //
+    //                tprdm_bbb[q * no5_ + p * no4_ + r * no3_ + s * no2_ + t * no_ + u] -=
+    //                el; tprdm_bbb[q * no5_ + p * no4_ + r * no3_ + s * no2_ + u * no_ +
+    //                t] += el; tprdm_bbb[q * no5_ + p * no4_ + r * no3_ + u * no2_ + t *
+    //                no_ + s] += el; tprdm_bbb[q * no5_ + p * no4_ + r * no3_ + u * no2_ +
+    //                s * no_ + t] -= el; tprdm_bbb[q * no5_ + p * no4_ + r * no3_ + t *
+    //                no2_ + s * no_ + u] += el; tprdm_bbb[q * no5_ + p * no4_ + r * no3_ +
+    //                t * no2_ + u * no_ + s] -= el;
+    //
+    //                tprdm_bbb[q * no5_ + r * no4_ + p * no3_ + s * no2_ + t * no_ + u] +=
+    //                el; tprdm_bbb[q * no5_ + r * no4_ + p * no3_ + s * no2_ + u * no_ +
+    //                t] -= el; tprdm_bbb[q * no5_ + r * no4_ + p * no3_ + u * no2_ + t *
+    //                no_ + s] -= el; tprdm_bbb[q * no5_ + r * no4_ + p * no3_ + u * no2_ +
+    //                s * no_ + t] += el; tprdm_bbb[q * no5_ + r * no4_ + p * no3_ + t *
+    //                no2_ + s * no_ + u] -= el; tprdm_bbb[q * no5_ + r * no4_ + p * no3_ +
+    //                t * no2_ + u * no_ + s] += el;
+    //
+    //                tprdm_bbb[r * no5_ + p * no4_ + q * no3_ + s * no2_ + t * no_ + u] +=
+    //                el; tprdm_bbb[r * no5_ + p * no4_ + q * no3_ + s * no2_ + u * no_ +
+    //                t] -= el; tprdm_bbb[r * no5_ + p * no4_ + q * no3_ + u * no2_ + t *
+    //                no_ + s] -= el; tprdm_bbb[r * no5_ + p * no4_ + q * no3_ + u * no2_ +
+    //                s * no_ + t] += el; tprdm_bbb[r * no5_ + p * no4_ + q * no3_ + t *
+    //                no2_ + s * no_ + u] -= el; tprdm_bbb[r * no5_ + p * no4_ + q * no3_ +
+    //                t * no2_ + u * no_ + s] += el;
+    //
+    //                tprdm_bbb[r * no5_ + q * no4_ + p * no3_ + s * no2_ + t * no_ + u] -=
+    //                el; tprdm_bbb[r * no5_ + q * no4_ + p * no3_ + s * no2_ + u * no_ +
+    //                t] += el; tprdm_bbb[r * no5_ + q * no4_ + p * no3_ + u * no2_ + t *
+    //                no_ + s] += el; tprdm_bbb[r * no5_ + q * no4_ + p * no3_ + u * no2_ +
+    //                s * no_ + t] -= el; tprdm_bbb[r * no5_ + q * no4_ + p * no3_ + t *
+    //                no2_ + s * no_ + u] += el; tprdm_bbb[r * no5_ + q * no4_ + p * no3_ +
+    //                t * no2_ + u * no_ + s] -= el;
+    //
+    //                el = evecs_->get(I, root1_) * evecs_->get(J, root2_) * sign_pqr * sign_stu;
+    //
+    //                tprdm_bbb[s * no5_ + t * no4_ + u * no3_ + p * no2_ + q * no_ + r] +=
+    //                el; tprdm_bbb[s * no5_ + u * no4_ + t * no3_ + p * no2_ + q * no_ +
+    //                r] -= el; tprdm_bbb[u * no5_ + t * no4_ + s * no3_ + p * no2_ + q *
+    //                no_ + r] -= el; tprdm_bbb[u * no5_ + s * no4_ + t * no3_ + p * no2_ +
+    //                q * no_ + r] += el; tprdm_bbb[t * no5_ + s * no4_ + u * no3_ + p *
+    //                no2_ + q * no_ + r] -= el; tprdm_bbb[t * no5_ + u * no4_ + s * no3_ +
+    //                p * no2_ + q * no_ + r] += el;
+    //
+    //                tprdm_bbb[s * no5_ + t * no4_ + u * no3_ + p * no2_ + r * no_ + q] -=
+    //                el; tprdm_bbb[s * no5_ + u * no4_ + t * no3_ + p * no2_ + r * no_ +
+    //                q] += el; tprdm_bbb[u * no5_ + t * no4_ + s * no3_ + p * no2_ + r *
+    //                no_ + q] += el; tprdm_bbb[u * no5_ + s * no4_ + t * no3_ + p * no2_ +
+    //                r * no_ + q] -= el; tprdm_bbb[t * no5_ + s * no4_ + u * no3_ + p *
+    //                no2_ + r * no_ + q] += el; tprdm_bbb[t * no5_ + u * no4_ + s * no3_ +
+    //                p * no2_ + r * no_ + q] -= el;
+    //
+    //                tprdm_bbb[s * no5_ + t * no4_ + u * no3_ + q * no2_ + p * no_ + r] -=
+    //                el; tprdm_bbb[s * no5_ + u * no4_ + t * no3_ + q * no2_ + p * no_ +
+    //                r] += el; tprdm_bbb[u * no5_ + t * no4_ + s * no3_ + q * no2_ + p *
+    //                no_ + r] += el; tprdm_bbb[u * no5_ + s * no4_ + t * no3_ + q * no2_ +
+    //                p * no_ + r] -= el; tprdm_bbb[t * no5_ + s * no4_ + u * no3_ + q *
+    //                no2_ + p * no_ + r] += el; tprdm_bbb[t * no5_ + u * no4_ + s * no3_ +
+    //                q * no2_ + p * no_ + r] -= el;
+    //
+    //                tprdm_bbb[s * no5_ + t * no4_ + u * no3_ + q * no2_ + r * no_ + p] +=
+    //                el; tprdm_bbb[s * no5_ + u * no4_ + t * no3_ + q * no2_ + r * no_ +
+    //                p] -= el; tprdm_bbb[u * no5_ + t * no4_ + s * no3_ + q * no2_ + r *
+    //                no_ + p] -= el; tprdm_bbb[u * no5_ + s * no4_ + t * no3_ + q * no2_ +
+    //                r * no_ + p] += el; tprdm_bbb[t * no5_ + s * no4_ + u * no3_ + q *
+    //                no2_ + r * no_ + p] -= el; tprdm_bbb[t * no5_ + u * no4_ + s * no3_ +
+    //                q * no2_ + r * no_ + p] += el;
+    //
+    //                tprdm_bbb[s * no5_ + t * no4_ + u * no3_ + r * no2_ + p * no_ + q] +=
+    //                el; tprdm_bbb[s * no5_ + u * no4_ + t * no3_ + r * no2_ + p * no_ +
+    //                q] -= el; tprdm_bbb[u * no5_ + t * no4_ + s * no3_ + r * no2_ + p *
+    //                no_ + q] -= el; tprdm_bbb[u * no5_ + s * no4_ + t * no3_ + r * no2_ +
+    //                p * no_ + q] += el; tprdm_bbb[t * no5_ + s * no4_ + u * no3_ + r *
+    //                no2_ + p * no_ + q] -= el; tprdm_bbb[t * no5_ + u * no4_ + s * no3_ +
+    //                r * no2_ + p * no_ + q] += el;
+    //
+    //                tprdm_bbb[s * no5_ + t * no4_ + u * no3_ + r * no2_ + q * no_ + p] -=
+    //                el; tprdm_bbb[s * no5_ + u * no4_ + t * no3_ + r * no2_ + q * no_ +
+    //                p] += el; tprdm_bbb[u * no5_ + t * no4_ + s * no3_ + r * no2_ + q *
+    //                no_ + p] += el; tprdm_bbb[u * no5_ + s * no4_ + t * no3_ + r * no2_ +
+    //                q * no_ + p] -= el; tprdm_bbb[t * no5_ + s * no4_ + u * no3_ + r *
+    //                no2_ + q * no_ + p] += el; tprdm_bbb[t * no5_ + u * no4_ + s * no3_ +
+    //                r * no2_ + q * no_ + p] -= el;
+    //            }
+    //        }
+    //    }
 
     if (print_) {
         outfile->Printf("\n  Time spent building 3-rdm: %.3e seconds", build.get());
+    }
+}
+
+void CI_RDMS::compute_3rdm_sf_op(std::vector<double>& tpdm3) {
+    auto op = std::make_shared<DeterminantSubstitutionLists>(fci_ints_);
+    op->set_quiet_mode(not print_);
+    op->build_strings(wfn_);
+    op->three_s_lists(wfn_);
+
+    timer build("Build SF 3-RDM");
+
+    tpdm3.assign(no6_, 0.0);
+
+    auto _add_aab = [&](const std::vector<size_t>& i, const double& value) {
+        tpdm3[i[0] * no5_ + i[1] * no4_ + i[2] * no3_ + i[3] * no2_ + i[4] * no_ + i[5]] += value;
+        tpdm3[i[0] * no5_ + i[1] * no4_ + i[2] * no3_ + i[4] * no2_ + i[3] * no_ + i[5]] -= value;
+        tpdm3[i[1] * no5_ + i[0] * no4_ + i[2] * no3_ + i[3] * no2_ + i[4] * no_ + i[5]] -= value;
+        tpdm3[i[1] * no5_ + i[0] * no4_ + i[2] * no3_ + i[4] * no2_ + i[3] * no_ + i[5]] += value;
+
+        tpdm3[i[2] * no5_ + i[1] * no4_ + i[0] * no3_ + i[5] * no2_ + i[4] * no_ + i[3]] += value;
+        tpdm3[i[2] * no5_ + i[1] * no4_ + i[0] * no3_ + i[5] * no2_ + i[3] * no_ + i[4]] -= value;
+        tpdm3[i[2] * no5_ + i[0] * no4_ + i[1] * no3_ + i[5] * no2_ + i[4] * no_ + i[3]] -= value;
+        tpdm3[i[2] * no5_ + i[0] * no4_ + i[1] * no3_ + i[5] * no2_ + i[3] * no_ + i[4]] += value;
+
+        tpdm3[i[0] * no5_ + i[2] * no4_ + i[1] * no3_ + i[3] * no2_ + i[5] * no_ + i[4]] += value;
+        tpdm3[i[0] * no5_ + i[2] * no4_ + i[1] * no3_ + i[4] * no2_ + i[5] * no_ + i[3]] -= value;
+        tpdm3[i[1] * no5_ + i[2] * no4_ + i[0] * no3_ + i[3] * no2_ + i[5] * no_ + i[4]] -= value;
+        tpdm3[i[1] * no5_ + i[2] * no4_ + i[0] * no3_ + i[4] * no2_ + i[5] * no_ + i[3]] += value;
+    };
+
+    auto _add_abb = [&](const std::vector<size_t>& i, const double& value) {
+        tpdm3[i[0] * no5_ + i[1] * no4_ + i[2] * no3_ + i[3] * no2_ + i[4] * no_ + i[5]] += value;
+        tpdm3[i[0] * no5_ + i[1] * no4_ + i[2] * no3_ + i[3] * no2_ + i[5] * no_ + i[4]] -= value;
+        tpdm3[i[0] * no5_ + i[2] * no4_ + i[1] * no3_ + i[3] * no2_ + i[4] * no_ + i[5]] -= value;
+        tpdm3[i[0] * no5_ + i[2] * no4_ + i[1] * no3_ + i[3] * no2_ + i[5] * no_ + i[4]] += value;
+
+        tpdm3[i[1] * no5_ + i[0] * no4_ + i[2] * no3_ + i[4] * no2_ + i[3] * no_ + i[5]] += value;
+        tpdm3[i[1] * no5_ + i[0] * no4_ + i[2] * no3_ + i[5] * no2_ + i[3] * no_ + i[4]] -= value;
+        tpdm3[i[2] * no5_ + i[0] * no4_ + i[1] * no3_ + i[4] * no2_ + i[3] * no_ + i[5]] -= value;
+        tpdm3[i[2] * no5_ + i[0] * no4_ + i[1] * no3_ + i[5] * no2_ + i[3] * no_ + i[4]] += value;
+
+        tpdm3[i[2] * no5_ + i[1] * no4_ + i[0] * no3_ + i[5] * no2_ + i[4] * no_ + i[3]] += value;
+        tpdm3[i[2] * no5_ + i[1] * no4_ + i[0] * no3_ + i[4] * no2_ + i[5] * no_ + i[3]] -= value;
+        tpdm3[i[1] * no5_ + i[2] * no4_ + i[0] * no3_ + i[5] * no2_ + i[4] * no_ + i[3]] -= value;
+        tpdm3[i[1] * no5_ + i[2] * no4_ + i[0] * no3_ + i[4] * no2_ + i[5] * no_ + i[3]] += value;
+    };
+
+    // Build the diagonal part
+    _add_3rdm_op_II(
+        [&](const std::vector<size_t>& i, const double& value) { _add_3rdm_aaa(tpdm3, i, value); },
+        _add_aab, _add_abb,
+        [&](const std::vector<size_t>& i, const double& value) { _add_3rdm_aaa(tpdm3, i, value); });
+
+    _add_3rdm_op_IJ(op->aaa_list_, [&](const std::vector<size_t>& i, const double& value) {
+        _add_3rdm_aaa(tpdm3, i, value);
+    });
+
+    _add_3rdm_op_IJ(op->aab_list_, _add_aab);
+
+    _add_3rdm_op_IJ(op->abb_list_, _add_abb);
+
+    _add_3rdm_op_IJ(op->bbb_list_, [&](const std::vector<size_t>& i, const double& value) {
+        _add_3rdm_aaa(tpdm3, i, value);
+    });
+
+    if (print_) {
+        outfile->Printf("\n  Time spent building 3-rdm: %.3e seconds", build.stop());
+    }
+}
+
+void CI_RDMS::_add_3rdm_op_II(
+    const std::function<void(const std::vector<size_t>&, const double&)>& func_aaa,
+    const std::function<void(const std::vector<size_t>&, const double&)>& func_aab,
+    const std::function<void(const std::vector<size_t>&, const double&)>& func_abb,
+    const std::function<void(const std::vector<size_t>&, const double&)>& func_bbb) {
+    const det_hashvec& dets = wfn_.wfn_hash();
+    for (size_t I = 0; I < dim_space_; ++I) {
+        double cI_sq = evecs_->get(I, root1_) * evecs_->get(I, root2_);
+
+        std::vector<int> aocc = dets[I].get_alfa_occ(no_);
+        std::vector<int> bocc = dets[I].get_beta_occ(no_);
+        auto na = aocc.size();
+        auto nb = bocc.size();
+
+        for (size_t p = 0; p < na; ++p) {
+            size_t pp = aocc[p];
+            for (size_t q = p + 1; q < na; ++q) {
+                size_t qq = aocc[q];
+                for (size_t r = q + 1; r < na; ++r) {
+                    size_t rr = aocc[r];
+
+                    func_aaa({pp, qq, rr, pp, qq, rr}, cI_sq);
+                }
+            }
+        }
+        for (size_t p = 0; p < na; ++p) {
+            size_t pp = aocc[p];
+            for (size_t q = p + 1; q < na; ++q) {
+                size_t qq = aocc[q];
+                for (size_t r = 0; r < nb; ++r) {
+                    size_t rr = bocc[r];
+
+                    func_aab({pp, qq, rr, pp, qq, rr}, cI_sq);
+                }
+            }
+        }
+        for (size_t p = 0; p < na; ++p) {
+            size_t pp = aocc[p];
+            for (size_t q = 0; q < nb; ++q) {
+                size_t qq = bocc[q];
+                for (size_t r = q + 1; r < nb; ++r) {
+                    size_t rr = bocc[r];
+
+                    func_abb({pp, qq, rr, pp, qq, rr}, cI_sq);
+                }
+            }
+        }
+        for (size_t p = 0; p < nb; ++p) {
+            size_t pp = bocc[p];
+            for (size_t q = p + 1; q < nb; ++q) {
+                size_t qq = bocc[q];
+                for (size_t r = q + 1; r < nb; ++r) {
+                    size_t rr = bocc[r];
+
+                    func_bbb({pp, qq, rr, pp, qq, rr}, cI_sq);
+                }
+            }
+        }
+    }
+}
+
+void CI_RDMS::_add_3rdm_op_IJ(
+    const std::vector<std::vector<std::tuple<size_t, short, short, short>>>& list,
+    const std::function<void(const std::vector<size_t>&, const double&)>& func) {
+    for (const auto& coupled_dets : list) {
+        for (size_t a = 0, max_a = coupled_dets.size(); a < max_a; ++a) {
+            auto& detJ = coupled_dets[a];
+
+            const size_t& J = std::get<0>(detJ);
+            const size_t& p = std::abs(std::get<1>(detJ)) - 1;
+            const size_t& q = std::get<2>(detJ);
+            const size_t& r = std::get<3>(detJ);
+            const double& sign_pqr = std::get<1>(detJ) > 0.0 ? 1.0 : -1.0;
+
+            for (size_t b = a + 1, max_b = coupled_dets.size(); b < max_b; ++b) {
+                auto& detI = coupled_dets[b];
+
+                const size_t& s = std::abs(std::get<1>(detI)) - 1;
+                const size_t& t = std::get<2>(detI);
+                const size_t& u = std::get<3>(detI);
+                const double& sign_stu = std::get<1>(detI) > 0.0 ? 1.0 : -1.0;
+                const size_t& I = std::get<0>(detI);
+
+                double eJI = evecs_->get(J, root1_) * evecs_->get(I, root2_) * sign_pqr * sign_stu;
+                func({p, q, r, s, t, u}, eJI);
+
+                double eIJ = evecs_->get(I, root1_) * evecs_->get(J, root2_) * sign_pqr * sign_stu;
+                func({s, t, u, p, q, r}, eJI);
+            }
+        }
     }
 }
 
@@ -1383,8 +2092,8 @@ void CI_RDMS::get_one_map() {
         Determinant detI(det_space_[I]);
 
         // Alpha and beta occupation vectors
-        std::vector<int> aocc = detI.get_alfa_occ(ncmo_);
-        std::vector<int> bocc = detI.get_beta_occ(ncmo_);
+        std::vector<int> aocc = detI.get_alfa_occ(no_);
+        std::vector<int> bocc = detI.get_beta_occ(no_);
 
         int noalfa = aocc.size();
         int nobeta = bocc.size();
@@ -1477,8 +2186,8 @@ void CI_RDMS::get_two_map() {
     for (size_t I = 0; I < dim_space_; ++I) {
         Determinant detI(det_space_[I]);
 
-        std::vector<int> aocc = detI.get_alfa_occ(ncmo_);
-        std::vector<int> bocc = detI.get_beta_occ(ncmo_);
+        std::vector<int> aocc = detI.get_alfa_occ(no_);
+        std::vector<int> bocc = detI.get_beta_occ(no_);
 
         int noalfa = aocc.size();
         int nobeta = bocc.size();
@@ -1620,8 +2329,8 @@ void CI_RDMS::get_three_map() {
     for (size_t I = 0; I < dim_space_; ++I) {
         Determinant detI(det_space_[I]);
 
-        const std::vector<int>& aocc = detI.get_alfa_occ(ncmo_);
-        const std::vector<int>& bocc = detI.get_beta_occ(ncmo_);
+        const std::vector<int>& aocc = detI.get_alfa_occ(no_);
+        const std::vector<int>& bocc = detI.get_beta_occ(no_);
 
         int noalfa = aocc.size();
         int nobeta = bocc.size();
@@ -1825,8 +2534,8 @@ void CI_RDMS::rdm_test(std::vector<double>& oprdm_a, std::vector<double>& oprdm_
 
     const det_hashvec& det_space = wfn_.wfn_hash();
     double error_1rdm_a = 0.0;
-    for (size_t p = 0; p < ncmo_; ++p) {
-        for (size_t q = 0; q < ncmo_; ++q) {
+    for (size_t p = 0; p < no_; ++p) {
+        for (size_t q = 0; q < no_; ++q) {
             double rdm = 0.0;
             for (size_t i = 0; i < dim_space_; ++i) {
                 Determinant I(det_space[i]);
@@ -1840,17 +2549,17 @@ void CI_RDMS::rdm_test(std::vector<double>& oprdm_a, std::vector<double>& oprdm_
                 }
             }
             if (std::fabs(rdm) > 1.0e-12) {
-                error_1rdm_a += std::fabs(rdm - oprdm_a[q * ncmo_ + p]);
+                error_1rdm_a += std::fabs(rdm - oprdm_a[q * no_ + p]);
                 //     outfile->Printf("\n  D1(a)[%3lu][%3lu] = %18.12lf
                 //     (%18.12lf,%18.12lf)", p,q,
-                //     rdm-oprdm_a[p*ncmo_+q],rdm,oprdm_a[p*ncmo_+q]);
+                //     rdm-oprdm_a[p*no_+q],rdm,oprdm_a[p*no_+q]);
             }
         }
     }
     outfile->Printf("\n    A 1-RDM Error :   %2.15f", error_1rdm_a);
     double error_1rdm_b = 0.0;
-    for (size_t p = 0; p < ncmo_; ++p) {
-        for (size_t q = 0; q < ncmo_; ++q) {
+    for (size_t p = 0; p < no_; ++p) {
+        for (size_t q = 0; q < no_; ++q) {
             double rdm = 0.0;
             for (size_t i = 0; i < dim_space_; ++i) {
                 Determinant I(det_space[i]);
@@ -1864,20 +2573,20 @@ void CI_RDMS::rdm_test(std::vector<double>& oprdm_a, std::vector<double>& oprdm_
                 }
             }
             if (std::fabs(rdm) > 1.0e-12) {
-                error_1rdm_b += std::fabs(rdm - oprdm_b[p * ncmo_ + q]);
+                error_1rdm_b += std::fabs(rdm - oprdm_b[p * no_ + q]);
                 // outfile->Printf("\n  D1(b)[%3lu][%3lu] = %18.12lf
                 // (%18.12lf,%18.12lf)", p,q,
-                // rdm-oprdm_b[p*ncmo_+q],rdm,oprdm_b[p*ncmo_+q]);
+                // rdm-oprdm_b[p*no_+q],rdm,oprdm_b[p*no_+q]);
             }
         }
     }
     outfile->Printf("\n    B 1-RDM Error :   %2.15f", error_1rdm_b);
 
     double error_2rdm_aa = 0.0;
-    for (size_t p = 0; p < ncmo_; ++p) {
-        for (size_t q = 0; q < ncmo_; ++q) {
-            for (size_t r = 0; r < ncmo_; ++r) {
-                for (size_t s = 0; s < ncmo_; ++s) {
+    for (size_t p = 0; p < no_; ++p) {
+        for (size_t q = 0; q < no_; ++q) {
+            for (size_t r = 0; r < no_; ++r) {
+                for (size_t s = 0; s < no_; ++s) {
                     double rdm = 0.0;
                     for (size_t i = 0; i < dim_space_; ++i) {
                         Determinant I(det_space[i]);
@@ -1894,14 +2603,14 @@ void CI_RDMS::rdm_test(std::vector<double>& oprdm_a, std::vector<double>& oprdm_
                     }
                     if (std::fabs(rdm) > 1.0e-12) {
                         error_2rdm_aa +=
-                            std::fabs(rdm - tprdm_aa[p * ncmo3_ + q * ncmo2_ + r * ncmo_ + s]);
-                        if (std::fabs(rdm - tprdm_aa[p * ncmo3_ + q * ncmo2_ + r * ncmo_ + s]) >
+                            std::fabs(rdm - tprdm_aa[p * no3_ + q * no2_ + r * no_ + s]);
+                        if (std::fabs(rdm - tprdm_aa[p * no3_ + q * no2_ + r * no_ + s]) >
                             1.0e-12) {
                             outfile->Printf("\n  D2(aaaa)[%3lu][%3lu][%3lu][%3lu] = %18.12lf "
                                             "(%18.12lf,%18.12lf)",
                                             p, q, r, s,
-                                            rdm - tprdm_aa[p * ncmo3_ + q * ncmo2_ + r * ncmo_ + s],
-                                            rdm, tprdm_aa[p * ncmo3_ + q * ncmo2_ + r * ncmo_ + s]);
+                                            rdm - tprdm_aa[p * no3_ + q * no2_ + r * no_ + s], rdm,
+                                            tprdm_aa[p * no3_ + q * no2_ + r * no_ + s]);
                         }
                     }
                 }
@@ -1910,10 +2619,10 @@ void CI_RDMS::rdm_test(std::vector<double>& oprdm_a, std::vector<double>& oprdm_
     }
     outfile->Printf("\n    AAAA 2-RDM Error :   %2.15f", error_2rdm_aa);
     double error_2rdm_bb = 0.0;
-    for (size_t p = 0; p < ncmo_; ++p) {
-        for (size_t q = 0; q < ncmo_; ++q) {
-            for (size_t r = 0; r < ncmo_; ++r) {
-                for (size_t s = 0; s < ncmo_; ++s) {
+    for (size_t p = 0; p < no_; ++p) {
+        for (size_t q = 0; q < no_; ++q) {
+            for (size_t r = 0; r < no_; ++r) {
+                for (size_t s = 0; s < no_; ++s) {
                     double rdm = 0.0;
                     for (size_t i = 0; i < dim_space_; ++i) {
                         Determinant I(det_space[i]);
@@ -1930,14 +2639,14 @@ void CI_RDMS::rdm_test(std::vector<double>& oprdm_a, std::vector<double>& oprdm_
                     }
                     if (std::fabs(rdm) > 1.0e-12) {
                         error_2rdm_bb +=
-                            std::fabs(rdm - tprdm_bb[p * ncmo3_ + q * ncmo2_ + r * ncmo_ + s]);
-                        if (std::fabs(rdm - tprdm_bb[p * ncmo3_ + q * ncmo2_ + r * ncmo_ + s]) >
+                            std::fabs(rdm - tprdm_bb[p * no3_ + q * no2_ + r * no_ + s]);
+                        if (std::fabs(rdm - tprdm_bb[p * no3_ + q * no2_ + r * no_ + s]) >
                             1.0e-12) {
                             outfile->Printf("\n  D2(bbbb)[%3lu][%3lu][%3lu][%3lu] = %18.12lf "
                                             "(%18.12lf,%18.12lf)",
                                             p, q, r, s,
-                                            rdm - tprdm_bb[p * ncmo3_ + q * ncmo2_ + r * ncmo_ + s],
-                                            rdm, tprdm_bb[p * ncmo3_ + q * ncmo2_ + r * ncmo_ + s]);
+                                            rdm - tprdm_bb[p * no3_ + q * no2_ + r * no_ + s], rdm,
+                                            tprdm_bb[p * no3_ + q * no2_ + r * no_ + s]);
                         }
                     }
                 }
@@ -1946,10 +2655,10 @@ void CI_RDMS::rdm_test(std::vector<double>& oprdm_a, std::vector<double>& oprdm_
     }
     outfile->Printf("\n    BBBB 2-RDM Error :   %2.15f", error_2rdm_bb);
     double error_2rdm_ab = 0.0;
-    for (size_t p = 0; p < ncmo_; ++p) {
-        for (size_t q = 0; q < ncmo_; ++q) {
-            for (size_t r = 0; r < ncmo_; ++r) {
-                for (size_t s = 0; s < ncmo_; ++s) {
+    for (size_t p = 0; p < no_; ++p) {
+        for (size_t q = 0; q < no_; ++q) {
+            for (size_t r = 0; r < no_; ++r) {
+                for (size_t s = 0; s < no_; ++s) {
                     double rdm = 0.0;
                     for (size_t i = 0; i < dim_space_; ++i) {
                         Determinant I(det_space[i]);
@@ -1966,14 +2675,14 @@ void CI_RDMS::rdm_test(std::vector<double>& oprdm_a, std::vector<double>& oprdm_
                     }
                     if (std::fabs(rdm) > 1.0e-12) {
                         error_2rdm_ab +=
-                            std::fabs(rdm - tprdm_ab[p * ncmo3_ + q * ncmo2_ + r * ncmo_ + s]);
-                        if (std::fabs(rdm - tprdm_ab[p * ncmo3_ + q * ncmo2_ + r * ncmo_ + s]) >
+                            std::fabs(rdm - tprdm_ab[p * no3_ + q * no2_ + r * no_ + s]);
+                        if (std::fabs(rdm - tprdm_ab[p * no3_ + q * no2_ + r * no_ + s]) >
                             1.0e-12) {
                             outfile->Printf("\n  D2(abab)[%3lu][%3lu][%3lu][%3lu] = %18.12lf "
                                             "(%18.12lf,%18.12lf)",
                                             p, q, r, s,
-                                            rdm - tprdm_ab[p * ncmo3_ + q * ncmo2_ + r * ncmo_ + s],
-                                            rdm, tprdm_ab[p * ncmo3_ + q * ncmo2_ + r * ncmo_ + s]);
+                                            rdm - tprdm_ab[p * no3_ + q * no2_ + r * no_ + s], rdm,
+                                            tprdm_ab[p * no3_ + q * no2_ + r * no_ + s]);
                         }
                     }
                 }
@@ -1985,13 +2694,13 @@ void CI_RDMS::rdm_test(std::vector<double>& oprdm_a, std::vector<double>& oprdm_
     // psi::SharedMatrix three_rdm(new psi::Matrix("three", dim_space_, dim_space_));
     // three_rdm->zero();
     double error_3rdm_aaa = 0.0;
-    for (size_t p = 0; p < ncmo_; ++p) {
+    for (size_t p = 0; p < no_; ++p) {
         // for (size_t p = 0; p < 1; ++p){
-        for (size_t q = 0; q < ncmo_; ++q) {
-            for (size_t r = 0; r < ncmo_; ++r) {
-                for (size_t s = 0; s < ncmo_; ++s) {
-                    for (size_t t = 0; t < ncmo_; ++t) {
-                        for (size_t a = 0; a < ncmo_; ++a) {
+        for (size_t q = 0; q < no_; ++q) {
+            for (size_t r = 0; r < no_; ++r) {
+                for (size_t s = 0; s < no_; ++s) {
+                    for (size_t t = 0; t < no_; ++t) {
+                        for (size_t a = 0; a < no_; ++a) {
                             double rdm = 0.0;
                             for (size_t i = 0; i < dim_space_; ++i) {
                                 Determinant I(det_space[i]);
@@ -2012,9 +2721,8 @@ void CI_RDMS::rdm_test(std::vector<double>& oprdm_a, std::vector<double>& oprdm_
                                 }
                             }
                             if (std::fabs(rdm) > 1.0e-12) {
-                                double rdm_comp =
-                                    tprdm_aaa[p * ncmo4_ * ncmo_ + q * ncmo4_ + r * ncmo3_ +
-                                              s * ncmo2_ + t * ncmo_ + a];
+                                double rdm_comp = tprdm_aaa[p * no4_ * no_ + q * no4_ + r * no3_ +
+                                                            s * no2_ + t * no_ + a];
                                 if (rdm - rdm_comp > 1.0e-12) {
                                     outfile->Printf("\nD3(aaaaaa)[%3lu][%3lu][%3lu][%3lu][%3lu][%"
                                                     "3lu] = %18.12lf    (%18.12lf,%18.12lf)",
@@ -2033,13 +2741,13 @@ void CI_RDMS::rdm_test(std::vector<double>& oprdm_a, std::vector<double>& oprdm_
     outfile->Printf("\n    AAAAAA 3-RDM Error : %2.15f", error_3rdm_aaa);
     // aab aab
     double error_3rdm_aab = 0.0;
-    for (size_t p = 0; p < ncmo_; ++p) {
+    for (size_t p = 0; p < no_; ++p) {
         // for (size_t p = 0; p < 1; ++p){
-        for (size_t q = 0; q < ncmo_; ++q) {
-            for (size_t r = 0; r < ncmo_; ++r) {
-                for (size_t s = 0; s < ncmo_; ++s) {
-                    for (size_t t = 0; t < ncmo_; ++t) {
-                        for (size_t a = 0; a < ncmo_; ++a) {
+        for (size_t q = 0; q < no_; ++q) {
+            for (size_t r = 0; r < no_; ++r) {
+                for (size_t s = 0; s < no_; ++s) {
+                    for (size_t t = 0; t < no_; ++t) {
+                        for (size_t a = 0; a < no_; ++a) {
                             double rdm = 0.0;
                             for (size_t i = 0; i < dim_space_; ++i) {
                                 Determinant I(det_space[i]);
@@ -2060,9 +2768,8 @@ void CI_RDMS::rdm_test(std::vector<double>& oprdm_a, std::vector<double>& oprdm_
                                 }
                             }
                             if (std::fabs(rdm) > 1.0e-12) {
-                                double rdm_comp =
-                                    tprdm_aab[p * ncmo4_ * ncmo_ + q * ncmo4_ + r * ncmo3_ +
-                                              s * ncmo2_ + t * ncmo_ + a];
+                                double rdm_comp = tprdm_aab[p * no4_ * no_ + q * no4_ + r * no3_ +
+                                                            s * no2_ + t * no_ + a];
                                 if (rdm - rdm_comp > 1.0e-12) {
                                     outfile->Printf(
                                         "\n D3(aabaab)[%3lu][%3lu][%3lu][%3lu][%3lu][%3lu] = "
@@ -2082,13 +2789,13 @@ void CI_RDMS::rdm_test(std::vector<double>& oprdm_a, std::vector<double>& oprdm_
 
     // abb abb
     double error_3rdm_abb = 0.0;
-    for (size_t p = 0; p < ncmo_; ++p) {
+    for (size_t p = 0; p < no_; ++p) {
         // for (size_t p = 0; p < 1; ++p){
-        for (size_t q = 0; q < ncmo_; ++q) {
-            for (size_t r = 0; r < ncmo_; ++r) {
-                for (size_t s = 0; s < ncmo_; ++s) {
-                    for (size_t t = 0; t < ncmo_; ++t) {
-                        for (size_t a = 0; a < ncmo_; ++a) {
+        for (size_t q = 0; q < no_; ++q) {
+            for (size_t r = 0; r < no_; ++r) {
+                for (size_t s = 0; s < no_; ++s) {
+                    for (size_t t = 0; t < no_; ++t) {
+                        for (size_t a = 0; a < no_; ++a) {
                             double rdm = 0.0;
                             for (size_t i = 0; i < dim_space_; ++i) {
                                 Determinant I(det_space[i]);
@@ -2109,9 +2816,8 @@ void CI_RDMS::rdm_test(std::vector<double>& oprdm_a, std::vector<double>& oprdm_
                                 }
                             }
                             if (std::fabs(rdm) > 1.0e-12) {
-                                double rdm_comp =
-                                    tprdm_abb[p * ncmo4_ * ncmo_ + q * ncmo4_ + r * ncmo3_ +
-                                              s * ncmo2_ + t * ncmo_ + a];
+                                double rdm_comp = tprdm_abb[p * no4_ * no_ + q * no4_ + r * no3_ +
+                                                            s * no2_ + t * no_ + a];
                                 if (rdm - rdm_comp > 1.0e-12) {
                                     outfile->Printf("\nD3(abbabb)[%3lu][%3lu][%3lu][%3lu][%3lu][%"
                                                     "3lu] = %18.12lf (%18.12lf,%18.12lf)",
@@ -2131,13 +2837,13 @@ void CI_RDMS::rdm_test(std::vector<double>& oprdm_a, std::vector<double>& oprdm_
 
     // bbb bbb
     double error_3rdm_bbb = 0.0;
-    for (size_t p = 0; p < ncmo_; ++p) {
+    for (size_t p = 0; p < no_; ++p) {
         // for (size_t p = 0; p < 1; ++p){
-        for (size_t q = 0; q < ncmo_; ++q) {
-            for (size_t r = 0; r < ncmo_; ++r) {
-                for (size_t s = 0; s < ncmo_; ++s) {
-                    for (size_t t = 0; t < ncmo_; ++t) {
-                        for (size_t a = 0; a < ncmo_; ++a) {
+        for (size_t q = 0; q < no_; ++q) {
+            for (size_t r = 0; r < no_; ++r) {
+                for (size_t s = 0; s < no_; ++s) {
+                    for (size_t t = 0; t < no_; ++t) {
+                        for (size_t a = 0; a < no_; ++a) {
                             double rdm = 0.0;
                             for (size_t i = 0; i < dim_space_; ++i) {
                                 Determinant I(det_space[i]);
@@ -2158,9 +2864,8 @@ void CI_RDMS::rdm_test(std::vector<double>& oprdm_a, std::vector<double>& oprdm_
                                 }
                             }
                             if (std::fabs(rdm) > 1.0e-12) {
-                                double rdm_comp =
-                                    tprdm_bbb[p * ncmo4_ * ncmo_ + q * ncmo4_ + r * ncmo3_ +
-                                              s * ncmo2_ + t * ncmo_ + a];
+                                double rdm_comp = tprdm_bbb[p * no4_ * no_ + q * no4_ + r * no3_ +
+                                                            s * no2_ + t * no_ + a];
                                 if (rdm - rdm_comp > 1.0e-12) {
                                     outfile->Printf(
                                         "\n D3(bbbbbb)[%3lu][%3lu][%3lu][%3lu][%3lu][%3lu] = "

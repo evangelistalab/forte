@@ -353,7 +353,7 @@ ambit::Tensor DistDFIntegrals::three_integral_block(const std::vector<size_t>& A
     std::vector<double>& ReturnTensorV = ReturnTensor.data();
     bool frozen_core = false;
 
-    if (frzcpi_.sum() && aptei_idx_ == ncmo_)
+    if (frzcpi_.sum() && aptei_idx_ == no_)
         frozen_core = true;
 
     size_t pn, qn;
