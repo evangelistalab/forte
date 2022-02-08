@@ -489,281 +489,434 @@ void DSRG_MRPT2::write_df_rdm() {
     // density terms contracted with V["abij"]
     BlockedTensor dvabij = BTF_->build(CoreTensor, "density of V['abij']", {"pphh", "PPHH", "pPhH"});
 
-    if (CORRELATION_TERM) {
-        dvabij["abij"] += Tau1["ijab"];
-        dvabij["ABIJ"] += Tau1["IJAB"];
-        dvabij["aBiJ"] += Tau1["iJaB"];
+    // if (CORRELATION_TERM) {
+    //     dvabij["abij"] += Tau1["ijab"];
+    //     dvabij["ABIJ"] += Tau1["IJAB"];
+    //     dvabij["aBiJ"] += Tau1["iJaB"];
 
-        dvabij["cdkl"] += Kappa["klcd"] * Eeps2_p["klcd"];
-        dvabij["CDKL"] += Kappa["KLCD"] * Eeps2_p["KLCD"];
-        dvabij["cDkL"] += Kappa["kLcD"] * Eeps2_p["kLcD"];
-    }
+    //     dvabij["cdkl"] += Kappa["klcd"] * Eeps2_p["klcd"];
+    //     dvabij["CDKL"] += Kappa["KLCD"] * Eeps2_p["KLCD"];
+    //     dvabij["cDkL"] += Kappa["kLcD"] * Eeps2_p["kLcD"];
+    // }
 
-    dvabij["xynv"] -= Z["un"] * Gamma2_["uvxy"];
-    dvabij["XYNV"] -= Z["UN"] * Gamma2_["UVXY"];
-    dvabij["xYnV"] -= Z["un"] * Gamma2_["uVxY"];
+    // dvabij["xynv"] -= Z["un"] * Gamma2_["uvxy"];
+    // dvabij["XYNV"] -= Z["UN"] * Gamma2_["UVXY"];
+    // dvabij["xYnV"] -= Z["un"] * Gamma2_["uVxY"];
 
-    dvabij["evxy"] += Z["eu"] * Gamma2_["uvxy"];
-    dvabij["EVXY"] += Z["EU"] * Gamma2_["UVXY"];
-    dvabij["eVxY"] += Z["eu"] * Gamma2_["uVxY"];
+    // dvabij["evxy"] += Z["eu"] * Gamma2_["uvxy"];
+    // dvabij["EVXY"] += Z["EU"] * Gamma2_["UVXY"];
+    // dvabij["eVxY"] += Z["eu"] * Gamma2_["uVxY"];
 
-    // CASSCF reference
-    dvabij["xyuv"] += 0.25 * Gamma2_["uvxy"];
-    dvabij["XYUV"] += 0.25 * Gamma2_["UVXY"];
-    dvabij["xYuV"] += 0.25 * Gamma2_["uVxY"];
+    // // CASSCF reference
+    // dvabij["xyuv"] += 0.25 * Gamma2_["uvxy"];
+    // dvabij["XYUV"] += 0.25 * Gamma2_["UVXY"];
+    // dvabij["xYuV"] += 0.25 * Gamma2_["uVxY"];
 
-    // CI contribution
-    dvabij["xyuv"] += 0.125 * Gamma2_tilde["uvxy"];
-    dvabij["XYUV"] += 0.125 * Gamma2_tilde["UVXY"];
-    dvabij["xYuV"] += 0.125 * Gamma2_tilde["uVxY"];
+    // // CI contribution
+    // dvabij["xyuv"] += 0.125 * Gamma2_tilde["uvxy"];
+    // dvabij["XYUV"] += 0.125 * Gamma2_tilde["UVXY"];
+    // dvabij["xYuV"] += 0.125 * Gamma2_tilde["uVxY"];
 
-    dvabij["eumv"] += 2.0 * Z["em"] * Gamma1_["uv"];
-    dvabij["EUMV"] += 2.0 * Z["EM"] * Gamma1_["UV"];
-    dvabij["eUmV"] += 2.0 * Z["em"] * Gamma1_["UV"];
+    // dvabij["eumv"] += 2.0 * Z["em"] * Gamma1_["uv"];
+    // dvabij["EUMV"] += 2.0 * Z["EM"] * Gamma1_["UV"];
+    // dvabij["eUmV"] += 2.0 * Z["em"] * Gamma1_["UV"];
 
-    dvabij["u,a1,n,u1"] += 2.0 * Z["un"] * Gamma1_["u1,a1"];
-    dvabij["U,A1,N,U1"] += 2.0 * Z["UN"] * Gamma1_["U1,A1"];
-    dvabij["u,A1,n,U1"] += 2.0 * Z["un"] * Gamma1_["U1,A1"];
+    // dvabij["u,a1,n,u1"] += 2.0 * Z["un"] * Gamma1_["u1,a1"];
+    // dvabij["U,A1,N,U1"] += 2.0 * Z["UN"] * Gamma1_["U1,A1"];
+    // dvabij["u,A1,n,U1"] += 2.0 * Z["un"] * Gamma1_["U1,A1"];
 
-    dvabij["v,a1,u,u1"] += Z["uv"] * Gamma1_["u1,a1"];
-    dvabij["V,A1,U,U1"] += Z["UV"] * Gamma1_["U1,A1"];
-    dvabij["v,A1,u,U1"] += Z["uv"] * Gamma1_["U1,A1"];
+    // dvabij["v,a1,u,u1"] += Z["uv"] * Gamma1_["u1,a1"];
+    // dvabij["V,A1,U,U1"] += Z["UV"] * Gamma1_["U1,A1"];
+    // dvabij["v,A1,u,U1"] += Z["uv"] * Gamma1_["U1,A1"];
 
-    // <[F, T2]> and <[V, T1]>
-    if (X5_TERM || X6_TERM || X7_TERM) {
-        dvabij["aviu"] += sigma3_xi3["ia"] * Gamma1_["uv"];
-        dvabij["AVIU"] += sigma3_xi3["IA"] * Gamma1_["UV"];
-        dvabij["aViU"] += sigma3_xi3["ia"] * Gamma1_["UV"];
-    }
+    // // <[F, T2]> and <[V, T1]>
+    // if (X5_TERM || X6_TERM || X7_TERM) {
+    //     dvabij["aviu"] += sigma3_xi3["ia"] * Gamma1_["uv"];
+    //     dvabij["AVIU"] += sigma3_xi3["IA"] * Gamma1_["UV"];
+    //     dvabij["aViU"] += sigma3_xi3["ia"] * Gamma1_["UV"];
+    // }
 
-    df_2rdm["R!,S!"] += B["A!,i,a"] * Jm12["A!,R!"] * B["B!,j,b"] * Jm12["B!,S!"] * dvabij["abij"];
-    df_2rdm["R!,S!"] += B["A!,I,A"] * Jm12["A!,R!"] * B["B!,J,B"] * Jm12["B!,S!"] * dvabij["ABIJ"];
-    df_2rdm["R!,S!"] += B["A!,i,a"] * Jm12["A!,R!"] * B["B!,J,B"] * Jm12["B!,S!"] * dvabij["aBiJ"];
-    // ! this line can be optimized as "df_2rdm_ab["S!,R!"] += df_2rdm_ab["R!,S!"]" in the future
-    df_2rdm["R!,S!"] += B["A!,I,A"] * Jm12["A!,R!"] * B["B!,j,b"] * Jm12["B!,S!"] * dvabij["bAjI"];
+    // df_2rdm["R!,S!"] +=       B["A!,i,a"] * Jm12["A!,R!"] * B["B!,j,b"] * Jm12["B!,S!"] * dvabij["abij"];
+    // df_2rdm["R!,S!"] +=       B["A!,I,A"] * Jm12["A!,R!"] * B["B!,J,B"] * Jm12["B!,S!"] * dvabij["ABIJ"];
+    // df_2rdm["R!,S!"] += 4.0 * B["A!,i,a"] * Jm12["A!,R!"] * B["B!,J,B"] * Jm12["B!,S!"] * dvabij["aBiJ"];
+    // ! this line can be optimized as "df_2rdm_ab["S!,R!"] -= df_2rdm_ab["R!,S!"]" in the future
+    // df_2rdm["R!,S!"] += 2.0 * B["A!,I,A"] * Jm12["A!,R!"] * B["B!,j,b"] * Jm12["B!,S!"] * dvabij["bAjI"];
 
-    df_3rdm["Q!,i,a"] += Jm12["Q!,R!"] * B["R!,j,b"] * dvabij["abij"];
-    df_3rdm["Q!,i,a"] += Jm12["Q!,R!"] * B["R!,J,B"] * dvabij["aBiJ"];
-    df_3rdm["Q!,I,A"] += Jm12["Q!,R!"] * B["R!,j,b"] * dvabij["bAjI"];
-    df_3rdm["Q!,I,A"] += Jm12["Q!,R!"] * B["R!,J,B"] * dvabij["ABIJ"];
+
+
+    // df_3rdm["Q!,a,i"] += Jm12["Q!,R!"] * B["R!,b,j"] * dvabij["abij"];
+    // df_3rdm["Q!,a,i"] += 2.0 * Jm12["Q!,R!"] * B["R!,B,J"] * dvabij["aBiJ"];
+    // df_3rdm["Q!,A,I"] += 2.0 * Jm12["Q!,R!"] * B["R!,b,j"] * dvabij["bAjI"];
+    // df_3rdm["Q!,A,I"] += Jm12["Q!,R!"] * B["R!,B,J"] * dvabij["ABIJ"];
+
+    // df_3rdm["Q!,i,a"] += Jm12["Q!,R!"] * B["R!,j,b"] * dvabij["abij"];
+    // df_3rdm["Q!,i,a"] += 2.0 * Jm12["Q!,R!"] * B["R!,J,B"] * dvabij["aBiJ"];
+    // df_3rdm["Q!,I,A"] += 2.0 * Jm12["Q!,R!"] * B["R!,j,b"] * dvabij["bAjI"];
+    // df_3rdm["Q!,I,A"] += Jm12["Q!,R!"] * B["R!,J,B"] * dvabij["ABIJ"];
+
+
+
+
+
+
+
+
+
+
+
+    // df_3rdm["Q!,a,i"] += Jm12["Q!,R!"] * B["R!,b,j"] * dvabij["abij"];
+    // df_3rdm["Q!,a,i"] += Jm12["Q!,R!"] * B["R!,B,J"] * dvabij["aBiJ"];
+    // df_3rdm["Q!,A,I"] += Jm12["Q!,R!"] * B["R!,b,j"] * dvabij["bAjI"];
+    // df_3rdm["Q!,A,I"] += Jm12["Q!,R!"] * B["R!,B,J"] * dvabij["ABIJ"];
+
+    // df_3rdm["R!,b,j"] += Jm12["Q!,R!"] * B["Q!,a,i"] * dvabij["abij"];
+    // df_3rdm["R!,B,J"] += Jm12["Q!,R!"] * B["Q!,a,i"] * dvabij["aBiJ"];
+    // df_3rdm["R!,b,j"] += Jm12["Q!,R!"] * B["Q!,A,I"] * dvabij["bAjI"];
+    // df_3rdm["R!,B,J"] += Jm12["Q!,R!"] * B["Q!,A,I"] * dvabij["ABIJ"];
+
+
 
     /************************************************************************************************/
 
-    BlockedTensor temp = BTF_->build(CoreTensor, "temporal tensor", {"gg", "GG"});
-    // <[F, T2]> and <[V, T1]>
-    temp["em"] += sigma3_xi3["me"];
-    temp["em"] += 2.0 * Z["em"];
-    temp["EM"] += sigma3_xi3["ME"]; 
-    temp["EM"] += 2.0 * Z["EM"];  
+    // BlockedTensor temp = BTF_->build(CoreTensor, "temporal tensor", {"gg", "GG"});
+    // // <[F, T2]> and <[V, T1]>
+    // temp["em"] += sigma3_xi3["me"];
+    // temp["em"] += 2.0 * Z["em"];
+    // temp["EM"] += sigma3_xi3["ME"]; 
+    // temp["EM"] += 2.0 * Z["EM"];  
 
-    temp["un"] += 2.0 * Z["un"];
-    temp["un"] -= 2.0 * Z["vn"] * Gamma1_["uv"];
-    temp["UN"] += 2.0 * Z["UN"];
-    temp["UN"] -= 2.0 * Z["VN"] * Gamma1_["UV"];
-    // <[F, T2]> and <[V, T1]>
-    temp["un"] += sigma3_xi3["nu"];
-    temp["UN"] += sigma3_xi3["NU"];
+    // temp["un"] += 2.0 * Z["un"];
+    // temp["un"] -= 2.0 * Z["vn"] * Gamma1_["uv"];
+    // temp["UN"] += 2.0 * Z["UN"];
+    // temp["UN"] -= 2.0 * Z["VN"] * Gamma1_["UV"];
+    // // <[F, T2]> and <[V, T1]>
+    // temp["un"] += sigma3_xi3["nu"];
+    // temp["UN"] += sigma3_xi3["NU"];
 
-    temp["ev"] += 2.0 * Z["eu"] * Gamma1_["uv"];
-    temp["EV"] += 2.0 * Z["EU"] * Gamma1_["UV"];
-    // <[F, T2]> and <[V, T1]>
-    temp["ev"] += sigma3_xi3["ve"];
-    temp["EV"] += sigma3_xi3["VE"];
+    // temp["ev"] += 2.0 * Z["eu"] * Gamma1_["uv"];
+    // temp["EV"] += 2.0 * Z["EU"] * Gamma1_["UV"];
+    // // <[F, T2]> and <[V, T1]>
+    // temp["ev"] += sigma3_xi3["ve"];
+    // temp["EV"] += sigma3_xi3["VE"];
 
-    temp["mn"] += Z["mn"];
-    temp["MN"] += Z["MN"];
+    // temp["mn"] += Z["mn"];
+    // temp["MN"] += Z["MN"];
 
-    temp["uv"] += Z["uv"];
-    temp["uv"] += Gamma1_["uv"];
-    temp["uv"] += 0.5 * Gamma1_tilde["uv"];
-    temp["UV"] += Z["UV"];
-    temp["UV"] += Gamma1_["UV"];
-    temp["UV"] += 0.5 * Gamma1_tilde["UV"];
+    // temp["uv"] += Z["uv"];
+    // temp["uv"] += Gamma1_["uv"];
+    // temp["uv"] += 0.5 * Gamma1_tilde["uv"];
+    // temp["UV"] += Z["UV"];
+    // temp["UV"] += Gamma1_["UV"];
+    // temp["UV"] += 0.5 * Gamma1_tilde["UV"];
 
-    temp["ef"] += Z["ef"];
-    temp["EF"] += Z["EF"];
+    // temp["ef"] += Z["ef"];
+    // temp["EF"] += Z["EF"];
 
-    df_2rdm["R!,S!"] += B["A!,p,q"] * Jm12["A!,R!"] * B["B!,m,n"] * I["mn"] * Jm12["B!,S!"] * temp["pq"];
-    df_2rdm["R!,S!"] += B["A!,P,Q"] * Jm12["A!,R!"] * B["B!,M,N"] * I["MN"] * Jm12["B!,S!"] * temp["PQ"];
-    df_2rdm["R!,S!"] += B["A!,p,q"] * Jm12["A!,R!"] * B["B!,M,N"] * I["MN"] * Jm12["B!,S!"] * temp["pq"];
-    df_2rdm["R!,S!"] += B["A!,P,Q"] * Jm12["A!,R!"] * B["B!,m,n"] * I["mn"] * Jm12["B!,S!"] * temp["PQ"];
+    // df_2rdm["R!,S!"] += B["A!,p,q"] * Jm12["A!,R!"] * B["B!,m,n"] * I["mn"] * Jm12["B!,S!"] * temp["pq"];
+    // df_2rdm["R!,S!"] += B["A!,P,Q"] * Jm12["A!,R!"] * B["B!,M,N"] * I["MN"] * Jm12["B!,S!"] * temp["PQ"];
+    // df_2rdm["R!,S!"] += B["A!,p,q"] * Jm12["A!,R!"] * B["B!,M,N"] * I["MN"] * Jm12["B!,S!"] * temp["pq"];
+    // df_2rdm["R!,S!"] += B["A!,P,Q"] * Jm12["A!,R!"] * B["B!,m,n"] * I["mn"] * Jm12["B!,S!"] * temp["PQ"];
 
-    df_3rdm["Q!,p,r"] += Jm12["Q!,R!"] * B["R!,m,n"] * I["mn"] * temp["pr"];
-    df_3rdm["Q!,p,r"] += Jm12["Q!,R!"] * B["R!,M,N"] * I["MN"] * temp["pr"];
-    df_3rdm["Q!,P,R"] += Jm12["Q!,R!"] * B["R!,m,n"] * I["mn"] * temp["PR"];
-    df_3rdm["Q!,P,R"] += Jm12["Q!,R!"] * B["R!,M,N"] * I["MN"] * temp["PR"];
+
+
+    // df_3rdm["Q!,p,r"] += Jm12["Q!,R!"] * B["R!,m,n"] * I["mn"] * temp["pr"];
+    // df_3rdm["Q!,p,r"] += Jm12["Q!,R!"] * B["R!,M,N"] * I["MN"] * temp["pr"];
+    // df_3rdm["Q!,P,R"] += Jm12["Q!,R!"] * B["R!,m,n"] * I["mn"] * temp["PR"];
+    // df_3rdm["Q!,P,R"] += Jm12["Q!,R!"] * B["R!,M,N"] * I["MN"] * temp["PR"];
+
+    // df_3rdm["R!,m,n"] += Jm12["Q!,R!"] * B["Q!,p,r"] * I["mn"] * temp["pr"];
+    // df_3rdm["R!,M,N"] += Jm12["Q!,R!"] * B["Q!,p,r"] * I["MN"] * temp["pr"];
+    // df_3rdm["R!,m,n"] += Jm12["Q!,R!"] * B["Q!,P,R"] * I["mn"] * temp["PR"];
+    // df_3rdm["R!,M,N"] += Jm12["Q!,R!"] * B["Q!,P,R"] * I["MN"] * temp["PR"];
+
+
 
     // CASSCF reference
+    // df_2rdm["R!,S!"] += 0.5 * B["A!,m1,n1"] * I["m1,n1"] * Jm12["A!,R!"] * B["B!,m,n"] * I["mn"] * Jm12["B!,S!"];
+    // df_2rdm["R!,S!"] += 0.5 * B["A!,M1,N1"] * I["M1,N1"] * Jm12["A!,R!"] * B["B!,M,N"] * I["MN"] * Jm12["B!,S!"];
+    // df_2rdm["R!,S!"] += 0.5 * B["A!,m1,n1"] * I["m1,n1"] * Jm12["A!,R!"] * B["B!,M,N"] * I["MN"] * Jm12["B!,S!"];
+    // df_2rdm["R!,S!"] += 0.5 * B["A!,M1,N1"] * I["M1,N1"] * Jm12["A!,R!"] * B["B!,m,n"] * I["mn"] * Jm12["B!,S!"];
+
     df_2rdm["R!,S!"] += 0.5 * B["A!,m1,n1"] * I["m1,n1"] * Jm12["A!,R!"] * B["B!,m,n"] * I["mn"] * Jm12["B!,S!"];
     df_2rdm["R!,S!"] += 0.5 * B["A!,M1,N1"] * I["M1,N1"] * Jm12["A!,R!"] * B["B!,M,N"] * I["MN"] * Jm12["B!,S!"];
     df_2rdm["R!,S!"] += 0.5 * B["A!,m1,n1"] * I["m1,n1"] * Jm12["A!,R!"] * B["B!,M,N"] * I["MN"] * Jm12["B!,S!"];
     df_2rdm["R!,S!"] += 0.5 * B["A!,M1,N1"] * I["M1,N1"] * Jm12["A!,R!"] * B["B!,m,n"] * I["mn"] * Jm12["B!,S!"];
 
-    df_3rdm["Q!,m1,n1"] += 0.5 * Jm12["Q!,R!"] * B["R!,m,n"] * I["mn"] * I["m1,n1"];
-    df_3rdm["Q!,m1,n1"] += 0.5 * Jm12["Q!,R!"] * B["R!,M,N"] * I["MN"] * I["m1,n1"];
-    df_3rdm["Q!,M1,N1"] += 0.5 * Jm12["Q!,R!"] * B["R!,m,n"] * I["mn"] * I["M1,N1"];
-    df_3rdm["Q!,M1,N1"] += 0.5 * Jm12["Q!,R!"] * B["R!,M,N"] * I["MN"] * I["M1,N1"];
+    df_2rdm["R!,S!"] -= 0.5 * B["A!,m1,n1"] * I["m,n1"] * Jm12["A!,R!"] * B["B!,m,n"] * I["m1,n"] * Jm12["B!,S!"];
+    df_2rdm["R!,S!"] -= 0.5 * B["A!,M1,N1"] * I["M,N1"] * Jm12["A!,R!"] * B["B!,M,N"] * I["M1,N"] * Jm12["B!,S!"];
 
-    // residue terms
-    df_2rdm["R!,S!"] += B["A!,m,n"] * Jm12["A!,R!"] * B["B!,u,v"] * Jm12["B!,S!"] * Z["mn"] * Gamma1_["uv"];
-    df_2rdm["R!,S!"] += B["A!,M,N"] * Jm12["A!,R!"] * B["B!,U,V"] * Jm12["B!,S!"] * Z["MN"] * Gamma1_["UV"];
-    df_2rdm["R!,S!"] += B["A!,m,n"] * Jm12["A!,R!"] * B["B!,U,V"] * Jm12["B!,S!"] * Z["mn"] * Gamma1_["UV"];
-    df_2rdm["R!,S!"] += B["A!,M,N"] * Jm12["A!,R!"] * B["B!,u,v"] * Jm12["B!,S!"] * Z["MN"] * Gamma1_["uv"];
 
-    df_2rdm["R!,S!"] += B["A!,e,f"] * Jm12["A!,R!"] * B["B!,u,v"] * Jm12["B!,S!"] * Z["ef"] * Gamma1_["uv"];
-    df_2rdm["R!,S!"] += B["A!,E,F"] * Jm12["A!,R!"] * B["B!,U,V"] * Jm12["B!,S!"] * Z["EF"] * Gamma1_["UV"];
-    df_2rdm["R!,S!"] += B["A!,e,f"] * Jm12["A!,R!"] * B["B!,U,V"] * Jm12["B!,S!"] * Z["ef"] * Gamma1_["UV"];
-    df_2rdm["R!,S!"] += B["A!,E,F"] * Jm12["A!,R!"] * B["B!,u,v"] * Jm12["B!,S!"] * Z["EF"] * Gamma1_["uv"];
+    // 0.5 V["mnmn"] = 2(mm|nn) - (mn|nm)
 
-    df_3rdm["Q!,m,n"] += Jm12["Q!,R!"] * B["R!,u,v"] * Z["mn"] * Gamma1_["uv"];
-    df_3rdm["Q!,m,n"] += Jm12["Q!,R!"] * B["R!,U,V"] * Z["mn"] * Gamma1_["UV"];
-    df_3rdm["Q!,M,N"] += Jm12["Q!,R!"] * B["R!,u,v"] * Z["MN"] * Gamma1_["uv"];
-    df_3rdm["Q!,M,N"] += Jm12["Q!,R!"] * B["R!,U,V"] * Z["MN"] * Gamma1_["UV"];
 
-    df_3rdm["Q!,e,f"] += Jm12["Q!,R!"] * B["R!,u,v"] * Z["ef"] * Gamma1_["uv"];
-    df_3rdm["Q!,e,f"] += Jm12["Q!,R!"] * B["R!,U,V"] * Z["ef"] * Gamma1_["UV"];
-    df_3rdm["Q!,E,F"] += Jm12["Q!,R!"] * B["R!,u,v"] * Z["EF"] * Gamma1_["uv"];
-    df_3rdm["Q!,E,F"] += Jm12["Q!,R!"] * B["R!,U,V"] * Z["EF"] * Gamma1_["UV"];
+
+    df_3rdm["Q!,m1,n1"] += Jm12["Q!,R!"] * B["R!,m,n"] * I["mn"] * I["m1,n1"];
+    df_3rdm["Q!,m1,n1"] += Jm12["Q!,R!"] * B["R!,M,N"] * I["MN"] * I["m1,n1"];
+    df_3rdm["Q!,M1,N1"] += Jm12["Q!,R!"] * B["R!,m,n"] * I["mn"] * I["M1,N1"];
+    df_3rdm["Q!,M1,N1"] += Jm12["Q!,R!"] * B["R!,M,N"] * I["MN"] * I["M1,N1"];
+
+    df_3rdm["Q!,m1,n1"] -= Jm12["Q!,R!"] * B["R!,m,n"] * I["m1,n"] * I["m,n1"];
+    df_3rdm["Q!,M1,N1"] -= Jm12["Q!,R!"] * B["R!,M,N"] * I["M1,N"] * I["M,N1"];
+
+    // // residue terms
+    // df_2rdm["R!,S!"] += B["A!,m,n"] * Jm12["A!,R!"] * B["B!,u,v"] * Jm12["B!,S!"] * Z["mn"] * Gamma1_["uv"];
+    // df_2rdm["R!,S!"] += B["A!,M,N"] * Jm12["A!,R!"] * B["B!,U,V"] * Jm12["B!,S!"] * Z["MN"] * Gamma1_["UV"];
+    // df_2rdm["R!,S!"] += B["A!,m,n"] * Jm12["A!,R!"] * B["B!,U,V"] * Jm12["B!,S!"] * Z["mn"] * Gamma1_["UV"];
+    // df_2rdm["R!,S!"] += B["A!,M,N"] * Jm12["A!,R!"] * B["B!,u,v"] * Jm12["B!,S!"] * Z["MN"] * Gamma1_["uv"];
+
+    // df_2rdm["R!,S!"] += B["A!,e,f"] * Jm12["A!,R!"] * B["B!,u,v"] * Jm12["B!,S!"] * Z["ef"] * Gamma1_["uv"];
+    // df_2rdm["R!,S!"] += B["A!,E,F"] * Jm12["A!,R!"] * B["B!,U,V"] * Jm12["B!,S!"] * Z["EF"] * Gamma1_["UV"];
+    // df_2rdm["R!,S!"] += B["A!,e,f"] * Jm12["A!,R!"] * B["B!,U,V"] * Jm12["B!,S!"] * Z["ef"] * Gamma1_["UV"];
+    // df_2rdm["R!,S!"] += B["A!,E,F"] * Jm12["A!,R!"] * B["B!,u,v"] * Jm12["B!,S!"] * Z["EF"] * Gamma1_["uv"];
+
+
+
+    // df_3rdm["Q!,m,n"] += Jm12["Q!,R!"] * B["R!,u,v"] * Z["mn"] * Gamma1_["uv"];
+    // df_3rdm["Q!,m,n"] += Jm12["Q!,R!"] * B["R!,U,V"] * Z["mn"] * Gamma1_["UV"];
+    // df_3rdm["Q!,M,N"] += Jm12["Q!,R!"] * B["R!,u,v"] * Z["MN"] * Gamma1_["uv"];
+    // df_3rdm["Q!,M,N"] += Jm12["Q!,R!"] * B["R!,U,V"] * Z["MN"] * Gamma1_["UV"];
+
+    // df_3rdm["R!,u,v"] += Jm12["Q!,R!"] * B["Q!,m,n"] * Z["mn"] * Gamma1_["uv"];
+    // df_3rdm["R!,U,V"] += Jm12["Q!,R!"] * B["Q!,m,n"] * Z["mn"] * Gamma1_["UV"];
+    // df_3rdm["R!,u,v"] += Jm12["Q!,R!"] * B["Q!,M,N"] * Z["MN"] * Gamma1_["uv"];
+    // df_3rdm["R!,U,V"] += Jm12["Q!,R!"] * B["Q!,M,N"] * Z["MN"] * Gamma1_["UV"];
+
+    // df_3rdm["Q!,e,f"] += Jm12["Q!,R!"] * B["R!,u,v"] * Z["ef"] * Gamma1_["uv"];
+    // df_3rdm["Q!,e,f"] += Jm12["Q!,R!"] * B["R!,U,V"] * Z["ef"] * Gamma1_["UV"];
+    // df_3rdm["Q!,E,F"] += Jm12["Q!,R!"] * B["R!,u,v"] * Z["EF"] * Gamma1_["uv"];
+    // df_3rdm["Q!,E,F"] += Jm12["Q!,R!"] * B["R!,U,V"] * Z["EF"] * Gamma1_["UV"];
+
+    // df_3rdm["R!,u,v"] += Jm12["Q!,R!"] * B["Q!,e,f"] * Z["ef"] * Gamma1_["uv"];
+    // df_3rdm["R!,U,V"] += Jm12["Q!,R!"] * B["Q!,e,f"] * Z["ef"] * Gamma1_["UV"];
+    // df_3rdm["R!,u,v"] += Jm12["Q!,R!"] * B["Q!,E,F"] * Z["EF"] * Gamma1_["uv"];
+    // df_3rdm["R!,U,V"] += Jm12["Q!,R!"] * B["Q!,E,F"] * Z["EF"] * Gamma1_["UV"];
 
     /******************************* Backtransform (P|pq) to (P|\mu \nu) *******************************/
 
 
+    int ao_dim = ints_->wfn()->nso();
+    int nmo_matsize = nmo * nmo;
+    int ao_matsize  = ao_dim * ao_dim;
+    // check if these variables are removable later
 
-    std::map<string, std::vector<std::pair<unsigned long, unsigned long>,
+
+    std::map<char, std::vector<std::pair<unsigned long, unsigned long>,
                 std::allocator<std::pair<unsigned long, unsigned long>>>> idxmap;
     std::map<string, std::pair<SharedMatrix, SharedMatrix>> slicemap;
+    std::map<string, int> stride_size;
+    std::map<char, int> orbital_size;
 
+    SharedMatrix M(new Matrix("backtransformed df_3rdm", naux, ao_matsize));
 
-    idxmap = {{"c", core_mos_relative},
-              {"a", actv_mos_relative},
-              {"v", virt_mos_relative}};
+    // idxmap = {{'c', core_mos_relative},
+    //           {'a', actv_mos_relative},
+    //           {'v', virt_mos_relative}};
+
+    // stride_size = {{"ca", ncore * na},    {"ac", na * ncore},
+    //                {"cv", ncore * nvirt}, {"vc", nvirt * ncore},
+    //                {"av", na * nvirt},    {"va", nvirt * na},
+    //                {"cc", ncore * ncore}, {"vv", nvirt * nvirt}, {"aa", na * na}};
+
+    // orbital_size = {{'c', ncore}, {'a', na}, {'v', nvirt}};
+
 
     auto wfn = ints_->wfn();
 
-    slicemap = {{"ca", std::make_pair(wfn->Ca_subset("AO", "OCC"),    wfn->Ca_subset("AO", "ACTIVE"))}, 
-                {"ac", std::make_pair(wfn->Ca_subset("AO", "ACTIVE"), wfn->Ca_subset("AO", "OCC"))   }, 
-                {"cv", std::make_pair(wfn->Ca_subset("AO", "OCC"),    wfn->Ca_subset("AO", "VIR"))   },
-                {"vc", std::make_pair(wfn->Ca_subset("AO", "VIR"),    wfn->Ca_subset("AO", "OCC"))   },
-                {"av", std::make_pair(wfn->Ca_subset("AO", "ACTIVE"), wfn->Ca_subset("AO", "VIR"))   },
-                {"va", std::make_pair(wfn->Ca_subset("AO", "VIR"),    wfn->Ca_subset("AO", "ACTIVE"))},
-                {"cc", std::make_pair(wfn->Ca_subset("AO", "OCC"),    wfn->Ca_subset("AO", "OCC"))   },
-                {"aa", std::make_pair(wfn->Ca_subset("AO", "ACTIVE"), wfn->Ca_subset("AO", "ACTIVE"))},
-                {"vv", std::make_pair(wfn->Ca_subset("AO", "VIR"),    wfn->Ca_subset("AO", "VIR"))   },
-                {"CA", std::make_pair(wfn->Cb_subset("AO", "OCC"),    wfn->Cb_subset("AO", "ACTIVE"))}, 
-                {"AC", std::make_pair(wfn->Cb_subset("AO", "ACTIVE"), wfn->Cb_subset("AO", "OCC"))   }, 
-                {"CV", std::make_pair(wfn->Cb_subset("AO", "OCC"),    wfn->Cb_subset("AO", "VIR"))   },
-                {"VC", std::make_pair(wfn->Cb_subset("AO", "VIR"),    wfn->Cb_subset("AO", "OCC"))   },
-                {"AV", std::make_pair(wfn->Cb_subset("AO", "ACTIVE"), wfn->Cb_subset("AO", "VIR"))   },
-                {"VA", std::make_pair(wfn->Cb_subset("AO", "VIR"),    wfn->Cb_subset("AO", "ACTIVE"))},
-                {"CC", std::make_pair(wfn->Cb_subset("AO", "OCC"),    wfn->Cb_subset("AO", "OCC"))   },
-                {"AA", std::make_pair(wfn->Cb_subset("AO", "ACTIVE"), wfn->Cb_subset("AO", "ACTIVE"))},
-                {"VV", std::make_pair(wfn->Cb_subset("AO", "VIR"),    wfn->Cb_subset("AO", "VIR"))   }};
 
-    auto blocklabels = {"cc", "CC", "aa", "AA", "ca", "ac", "CA", "AC", "vv", "VV",
-                        "av", "cv", "va", "vc", "AV", "CV", "VA", "VC"};
+    auto blocklabelsa = {"cc", "aa", "vv", "ac", "va", "vc"};
+    auto blocklabelsb = {"CC", "AA", "VV", "AC", "VA", "VC"};
+    // auto blocklabels = {"cc", "aa", "ca", "ac", "vv", "av", "cv", "va", "vc"};
 
 
+    idxmap = {{'c', core_mos_relative},
+              {'a', actv_mos_relative},
+              {'v', virt_mos_relative},
+              {'C', core_mos_relative},
+              {'A', actv_mos_relative},
+              {'V', virt_mos_relative}};
 
-    for (const std::string& block : blocklabels) {
-    
-        
-    }
+    stride_size = {{"ca", ncore * na},    {"ac", na * ncore},    {"CA", ncore * na},    {"AC", na * ncore},
+                   {"cv", ncore * nvirt}, {"vc", nvirt * ncore}, {"CV", ncore * nvirt}, {"VC", nvirt * ncore},
+                   {"av", na * nvirt},    {"va", nvirt * na},    {"AV", na * nvirt},    {"VA", nvirt * na},
+                   {"cc", ncore * ncore}, {"CC", ncore * ncore}, {"vv", nvirt * nvirt}, {"VV", nvirt * nvirt},
+                   {"aa", na * na},       {"AA", na * na}};
+
+    orbital_size = {{'c', ncore}, {'C', ncore}, {'a', na}, {'A', na}, {'v', nvirt}, {'V', nvirt}};
 
 
-
-
-
-
-
-
-
-
-    int ao_dim = ints_->Ca()->rowdim();
-    int nmo_matsize = nmo * nmo;
-    int ao_matsize  = ao_dim * ao_dim;
-
-    std::vector<double> Pmunu(ao_matsize * naux);
 
     SharedMatrix temp_mat(new Matrix("temp_mat", nirrep, irrep_vec, irrep_vec));
     auto temp_mat_AO = std::make_shared<Matrix>("AO basis temp matrix", ints_->wfn()->nso(), ints_->wfn()->nso());
 
-    for(int aux = 0; aux < naux; ++aux) {
+    for(int aux_idx = 0; aux_idx < naux; ++aux_idx) {
         temp_mat->zero();
         temp_mat_AO->zero();
-        
-        // copy the df_3rdm (pq) matrices to temp_mat
-        (df_3rdm.block("Lvc")).iterate([&](const std::vector<size_t>& i, double& value) {
-            if (i[0] == aux) {
-                if (virt_mos_relative[i[1]].first == core_mos_relative[i[2]].first) {
-                    temp_mat->set(virt_mos_relative[i[1]].first, virt_mos_relative[i[1]].second,
-                                  core_mos_relative[i[2]].second, value);
-                    temp_mat->set(virt_mos_relative[i[1]].first, core_mos_relative[i[2]].second,
-                                  virt_mos_relative[i[1]].second, value);
+
+        for (const std::string& block : blocklabelsa) {
+            auto dfblk = "L" + block;
+            auto stride = stride_size[block];
+
+            const auto& block_data = df_3rdm.block(dfblk).data();
+
+
+            auto label1 = block[0];
+            auto label2 = block[1];
+
+            int rowsize = orbital_size[label1];
+            int colsize = orbital_size[label2];
+ 
+            for (int i = 0; i < rowsize; ++i) {
+                for (int j = 0; j < colsize; ++j) {
+                    if ((idxmap[label1][i]).first == (idxmap[label2][j]).first) {
+                        auto val = block_data[aux_idx * stride + i * colsize + j];
+                        
+                        temp_mat->set(idxmap[label1][i].first, idxmap[label2][j].second,
+                                          idxmap[label1][i].second, val);
+
+                        temp_mat->set(idxmap[label1][i].first, idxmap[label1][i].second,
+                                      idxmap[label2][j].second, val);
+                    }
                 }
             }
-        });
+        }
 
-        (df_3rdm.block("Lca")).iterate([&](const std::vector<size_t>& i, double& value) {
-            if (i[0] == aux) {
-                if (core_mos_relative[i[1]].first == actv_mos_relative[i[2]].first) {
-                    temp_mat->set(core_mos_relative[i[1]].first, core_mos_relative[i[1]].second,
-                            actv_mos_relative[i[2]].second, value);
-                    temp_mat->set(core_mos_relative[i[1]].first, actv_mos_relative[i[2]].second,
-                            core_mos_relative[i[1]].second, value);
-                }
-            }
-        });
-
-        (df_3rdm.block("Lva")).iterate([&](const std::vector<size_t>& i, double& value) {
-            if (i[0] == aux) {
-                if (virt_mos_relative[i[1]].first == actv_mos_relative[i[2]].first) {
-                    temp_mat->set(virt_mos_relative[i[1]].first, virt_mos_relative[i[1]].second,
-                            actv_mos_relative[i[2]].second, value);
-                    temp_mat->set(virt_mos_relative[i[1]].first, actv_mos_relative[i[2]].second,
-                            virt_mos_relative[i[1]].second, value);
-                }
-            }
-        });
-
-        (df_3rdm.block("Lcc")).iterate([&](const std::vector<size_t>& i, double& value) {
-            if (i[0] == aux) {
-                if (core_mos_relative[i[1]].first == core_mos_relative[i[2]].first) {
-                    temp_mat->set(core_mos_relative[i[1]].first, core_mos_relative[i[1]].second,
-                            core_mos_relative[i[2]].second, value);
-                }
-            }
-        });
-
-        (df_3rdm.block("Laa")).iterate([&](const std::vector<size_t>& i, double& value) {
-            if (i[0] == aux) {
-                if (actv_mos_relative[i[1]].first == actv_mos_relative[i[2]].first) {
-                    temp_mat->set(actv_mos_relative[i[1]].first, actv_mos_relative[i[1]].second,
-                            actv_mos_relative[i[2]].second, value);
-                }
-            }
-        });
-
-        (df_3rdm.block("Lvv")).iterate([&](const std::vector<size_t>& i, double& value) {
-            if (i[0] == aux) {
-                if (virt_mos_relative[i[1]].first == virt_mos_relative[i[2]].first) {
-                    temp_mat->set(virt_mos_relative[i[1]].first, virt_mos_relative[i[1]].second,
-                            virt_mos_relative[i[2]].second, value);
-                }
-            }
-        });
-
+        temp_mat->back_transform(ints_->wfn()->Ca());
         temp_mat_AO->remove_symmetry(temp_mat, ints_->wfn()->aotoso()->transpose());
-        temp_mat_AO->back_transform(ints_->wfn()->Ca_subset("AO"));
+
+        // temp_mat_AO->remove_symmetry(temp_mat, ints_->wfn()->aotoso()->transpose());
+        // temp_mat_AO->back_transform(ints_->wfn()->Ca_subset("AO"));
 
         for(int i = 0; i < ao_dim; ++i) {
             for (int j = 0; j < ao_dim; ++j) {
-                auto val = temp_mat->get(i, j);
-                Pmunu[aux * ao_matsize + i * ao_dim + j] = val;
+                auto val = temp_mat_AO->get(i, j);
+                M->add(aux_idx, i * ao_dim + j, val);
             }
         }
     }
 
-    std::cout << "nso = " << ints_->wfn()->nso() << " ao = " << ao_dim << " nmo = " << nmo << "aux = " << naux << " size = " << Pmunu.size() << std::endl;
+    // assume "alpha == beta"
+    M->scale(2.0);
+
+    auto psio_ = _default_psio_lib_;
+
+
+    M->set_name("3-Center Reference Density");
+    M->save(psio_, PSIF_AO_TPDM, Matrix::SaveType::ThreeIndexLowerTriangle);
+    M->zero();
+    M->set_name("3-Center Correlation Density");
+    M->save(psio_, PSIF_AO_TPDM, Matrix::SaveType::ThreeIndexLowerTriangle);
+
+
+    SharedMatrix N(new Matrix("metric derivative density", naux, naux));
+
+    (df_2rdm.block("LL")).iterate([&](const std::vector<size_t>& i, double& value) {
+        N->set(i[0], i[1], value);
+    });
+
+    N->set_name("Metric Reference Density");
+    N->save(psio_, PSIF_AO_TPDM, Matrix::SaveType::LowerTriangle);
+    N->zero();
+    N->set_name("Metric Correlation Density");
+    N->save(psio_, PSIF_AO_TPDM, Matrix::SaveType::LowerTriangle);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    // std::vector<double> Pmunu(ao_matsize * naux);
+
+    // SharedMatrix temp_mat(new Matrix("temp_mat", nirrep, irrep_vec, irrep_vec));
+    // auto temp_mat_AO = std::make_shared<Matrix>("AO basis temp matrix", ints_->wfn()->nso(), ints_->wfn()->nso());
+
+    // for(int aux = 0; aux < naux; ++aux) {
+    //     temp_mat->zero();
+    //     temp_mat_AO->zero();
+        
+    //     // copy the df_3rdm (pq) matrices to temp_mat
+    //     (df_3rdm.block("Lvc")).iterate([&](const std::vector<size_t>& i, double& value) {
+    //         if (i[0] == aux) {
+    //             if (virt_mos_relative[i[1]].first == core_mos_relative[i[2]].first) {
+    //                 temp_mat->set(virt_mos_relative[i[1]].first, virt_mos_relative[i[1]].second,
+    //                               core_mos_relative[i[2]].second, value);
+    //                 temp_mat->set(virt_mos_relative[i[1]].first, core_mos_relative[i[2]].second,
+    //                               virt_mos_relative[i[1]].second, value);
+    //             }
+    //         }
+    //     });
+
+    //     (df_3rdm.block("Lca")).iterate([&](const std::vector<size_t>& i, double& value) {
+    //         if (i[0] == aux) {
+    //             if (core_mos_relative[i[1]].first == actv_mos_relative[i[2]].first) {
+    //                 temp_mat->set(core_mos_relative[i[1]].first, core_mos_relative[i[1]].second,
+    //                         actv_mos_relative[i[2]].second, value);
+    //                 temp_mat->set(core_mos_relative[i[1]].first, actv_mos_relative[i[2]].second,
+    //                         core_mos_relative[i[1]].second, value);
+    //             }
+    //         }
+    //     });
+
+    //     (df_3rdm.block("Lva")).iterate([&](const std::vector<size_t>& i, double& value) {
+    //         if (i[0] == aux) {
+    //             if (virt_mos_relative[i[1]].first == actv_mos_relative[i[2]].first) {
+    //                 temp_mat->set(virt_mos_relative[i[1]].first, virt_mos_relative[i[1]].second,
+    //                         actv_mos_relative[i[2]].second, value);
+    //                 temp_mat->set(virt_mos_relative[i[1]].first, actv_mos_relative[i[2]].second,
+    //                         virt_mos_relative[i[1]].second, value);
+    //             }
+    //         }
+    //     });
+
+    //     (df_3rdm.block("Lcc")).iterate([&](const std::vector<size_t>& i, double& value) {
+    //         if (i[0] == aux) {
+    //             if (core_mos_relative[i[1]].first == core_mos_relative[i[2]].first) {
+    //                 temp_mat->set(core_mos_relative[i[1]].first, core_mos_relative[i[1]].second,
+    //                         core_mos_relative[i[2]].second, value);
+    //             }
+    //         }
+    //     });
+
+    //     (df_3rdm.block("Laa")).iterate([&](const std::vector<size_t>& i, double& value) {
+    //         if (i[0] == aux) {
+    //             if (actv_mos_relative[i[1]].first == actv_mos_relative[i[2]].first) {
+    //                 temp_mat->set(actv_mos_relative[i[1]].first, actv_mos_relative[i[1]].second,
+    //                         actv_mos_relative[i[2]].second, value);
+    //             }
+    //         }
+    //     });
+
+    //     (df_3rdm.block("Lvv")).iterate([&](const std::vector<size_t>& i, double& value) {
+    //         if (i[0] == aux) {
+    //             if (virt_mos_relative[i[1]].first == virt_mos_relative[i[2]].first) {
+    //                 temp_mat->set(virt_mos_relative[i[1]].first, virt_mos_relative[i[1]].second,
+    //                         virt_mos_relative[i[2]].second, value);
+    //             }
+    //         }
+    //     });
+
+    //     temp_mat_AO->remove_symmetry(temp_mat, ints_->wfn()->aotoso()->transpose());
+    //     temp_mat_AO->back_transform(ints_->wfn()->Ca_subset("AO"));
+
+    //     for(int i = 0; i < ao_dim; ++i) {
+    //         for (int j = 0; j < ao_dim; ++j) {
+    //             auto val = temp_mat->get(i, j);
+    //             Pmunu[aux * ao_matsize + i * ao_dim + j] = val;
+    //         }
+    //     }
+    // }
+
+    // std::cout << "nso = " << ints_->wfn()->nso() << " ao = " << ao_dim << " nmo = " << nmo << "aux = " << naux << " size = " << Pmunu.size() << std::endl;
 
 }
 

@@ -231,15 +231,15 @@ class DSRG_MRPT2 : public MASTER_DSRG {
     size_t naux;
     size_t nirrep;
 
-    const bool PT2_TERM = true;
-    const bool X1_TERM = true;
-    const bool X2_TERM = true;
-    const bool X3_TERM = true;
-    const bool X4_TERM = true;
-    const bool X5_TERM = true;
-    const bool X6_TERM = true;
-    const bool X7_TERM = true;
-    const bool CORRELATION_TERM = true;
+    const bool PT2_TERM = false;
+    const bool X1_TERM  = false;
+    const bool X2_TERM  = false;
+    const bool X3_TERM  = false;
+    const bool X4_TERM  = false;
+    const bool X5_TERM  = false;
+    const bool X6_TERM  = false;
+    const bool X7_TERM  = false;
+    const bool CORRELATION_TERM = false;
     /**
      * Initializing the DSRG-related auxiliary tensors.
      */

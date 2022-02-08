@@ -29,11 +29,12 @@ SharedMatrix DSRG_MRPT2::compute_gradient() {
     set_multiplier();
     write_lagrangian();
     write_1rdm_spin_dependent();
-    write_2rdm_spin_dependent();
     if (eri_df_) {
         write_df_rdm();
+    } else {
+        write_2rdm_spin_dependent();
+        tpdm_backtransform();
     }
-    tpdm_backtransform();
 
     outfile->Printf("\n    Computing Gradient .............................. Done\n");
     return std::make_shared<Matrix>("nullptr", 0, 0);

@@ -12,7 +12,7 @@ F 1 0.9
 }
 
 set {
-  basis                cc-pvdz-jkfit
+  basis                cc-pvdz
   reference            rhf
   scf_type             df
   e_convergence        10
@@ -54,5 +54,5 @@ set findif{
   DISP_SIZE 0.1
 }
 
-grad = gradient('forte')
-# grad = optimize('forte',dertype="energy")
+# grad = gradient('forte')
+grad = gradient('forte',dertype="energy")
