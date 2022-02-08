@@ -44,7 +44,6 @@
 #include "psi4/psi4-dec.h"
 
 #ifdef HAVE_CHEMPS2
-#include "dmrg/dmrgscf.h"
 #include "dmrg/dmrgsolver.h"
 #endif
 

@@ -176,9 +176,8 @@ double MCSCF_2STEP::compute_energy() {
     std::unique_ptr<ActiveSpaceSolver> as_solver;
 
     // perform a perfect initial CI
-    double e_c;
-    std::tie(as_solver, e_c) = diagonalize_hamiltonian(
-        cas_grad.active_space_ints(), {print_ ? print_ : 1, e_conv_, r_conv, false, false});
+    double e_c = diagonalize_hamiltonian(as_solver, cas_grad.active_space_ints(),
+                                         {print_ ? print_ : 1, e_conv_, r_conv, false, false});
     auto rdms = as_solver->compute_average_rdms(state_weights_map_, 2);
     cas_grad.set_rdms(rdms);
     cas_grad.evaluate(R, dG);
@@ -345,8 +344,8 @@ double MCSCF_2STEP::compute_energy() {
             // solve the CI problem
             auto fci_ints = cas_grad.active_space_ints();
             auto print_level = debug_print_ ? 5 : print_;
-            std::tie(as_solver, e_c) = diagonalize_hamiltonian(
-                fci_ints, {print_level, dl_e_conv, dl_r_conv, true, dump_wfn});
+            e_c = diagonalize_hamiltonian(as_solver, fci_ints,
+                                          {print_level, dl_e_conv, dl_r_conv, true, dump_wfn});
             rdms = as_solver->compute_average_rdms(state_weights_map_, 2);
         }
 
@@ -373,9 +372,9 @@ double MCSCF_2STEP::compute_energy() {
             // re-diagonalize Hamiltonian
             if (not is_single_reference()) {
                 auto fci_ints = cas_grad.active_space_ints();
-                std::tie(as_solver, energy_) =
-                    diagonalize_hamiltonian(fci_ints, {print_, e_conv_, r_conv, false,
-                                                       options_->get_bool("DUMP_ACTIVE_WFN")});
+                energy_ = diagonalize_hamiltonian(
+                    as_solver, fci_ints,
+                    {print_, e_conv_, r_conv, false, options_->get_bool("DUMP_ACTIVE_WFN")});
             }
         }
 
@@ -434,31 +433,30 @@ bool MCSCF_2STEP::is_single_reference() {
     return false;
 }
 
-std::tuple<std::unique_ptr<ActiveSpaceSolver>, double>
-MCSCF_2STEP::diagonalize_hamiltonian(std::shared_ptr<ActiveSpaceIntegrals> fci_ints,
+double
+MCSCF_2STEP::diagonalize_hamiltonian(std::unique_ptr<ActiveSpaceSolver>& as_solver,
+                                     std::shared_ptr<ActiveSpaceIntegrals> fci_ints,
                                      const std::tuple<int, double, double, bool, bool>& params) {
-    auto state_map = to_state_nroots_map(state_weights_map_);
-    auto active_space_solver = make_active_space_solver(ci_type_, state_map, scf_info_,
-                                                        mo_space_info_, fci_ints, options_);
+    auto state_nroots_map = to_state_nroots_map(state_weights_map_);
+    as_solver = make_active_space_solver(ci_type_, state_nroots_map, scf_info_, mo_space_info_,
+                                         fci_ints, options_);
 
     int print;
     double e_conv, r_conv;
     bool read_wfn_guess, dump_wfn;
     std::tie(print, e_conv, r_conv, read_wfn_guess, dump_wfn) = params;
 
-    active_space_solver->set_print(print);
-    active_space_solver->set_e_convergence(e_conv);
-    active_space_solver->set_r_convergence(r_conv);
-    active_space_solver->set_read_initial_guess(read_wfn_guess);
+    as_solver->set_print(print);
+    as_solver->set_e_convergence(e_conv);
+    as_solver->set_r_convergence(r_conv);
+    as_solver->set_read_initial_guess(read_wfn_guess);
 
-    const auto state_energies_map = active_space_solver->compute_energy();
+    const auto state_energies_map = as_solver->compute_energy();
 
     if (dump_wfn)
-        active_space_solver->dump_wave_function();
+        as_solver->dump_wave_function();
 
-    double e = compute_average_state_energy(state_energies_map, state_weights_map_);
-
-    return {std::move(active_space_solver), e};
+    return compute_average_state_energy(state_energies_map, state_weights_map_);
 }
 
 bool MCSCF_2STEP::test_history(const std::vector<CASSCF_HISTORY>& history, const int& n_samples) {
