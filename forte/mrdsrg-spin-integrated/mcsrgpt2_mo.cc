@@ -52,7 +52,7 @@ using namespace psi;
 
 namespace forte {
 
-MCSRGPT2_MO::MCSRGPT2_MO(RDMs rdms, std::shared_ptr<ForteOptions> options,
+MCSRGPT2_MO::MCSRGPT2_MO(std::shared_ptr<RDMs> rdms, std::shared_ptr<ForteOptions> options,
                          std::shared_ptr<ForteIntegrals> ints,
                          std::shared_ptr<MOSpaceInfo> mo_space_info)
     : integral_(ints), reference_(rdms), mo_space_info_(mo_space_info), options_(options) {
@@ -3390,15 +3390,15 @@ void MCSRGPT2_MO::compute_Fock_ints() {
     local_timer tfock;
     outfile->Printf("\n  %-35s ...", "Forming generalized Fock matrix");
 
-    integral_->make_fock_matrix(reference_.g1a(), reference_.g1b());
+    integral_->make_fock_matrix(reference_->g1a(), reference_->g1b());
 
     outfile->Printf("  Done. Timing %15.6f s", tfock.get());
 }
 
-void MCSRGPT2_MO::fill_naive_cumulants(RDMs ref, const int level) {
+void MCSRGPT2_MO::fill_naive_cumulants(std::shared_ptr<RDMs> ref, const int level) {
     // fill in 1-cumulant (same as 1-RDM) to D1a_, D1b_
-    ambit::Tensor L1a = ref.g1a();
-    ambit::Tensor L1b = ref.g1b();
+    ambit::Tensor L1a = ref->g1a();
+    ambit::Tensor L1b = ref->g1b();
     fill_one_cumulant(L1a, L1b);
     if (print_ > 1) {
         print_density("Alpha", Da_);
@@ -3407,9 +3407,9 @@ void MCSRGPT2_MO::fill_naive_cumulants(RDMs ref, const int level) {
 
     // fill in 2-cumulant to L2aa_, L2ab_, L2bb_
     if (level >= 2) {
-        ambit::Tensor L2aa = ref.L2aa();
-        ambit::Tensor L2ab = ref.L2ab();
-        ambit::Tensor L2bb = ref.L2bb();
+        ambit::Tensor L2aa = ref->L2aa();
+        ambit::Tensor L2ab = ref->L2ab();
+        ambit::Tensor L2bb = ref->L2bb();
         fill_two_cumulant(L2aa, L2ab, L2bb);
         if (print_ > 2) {
             print2PDC("L2aa", L2aa_, print_);
@@ -3420,10 +3420,10 @@ void MCSRGPT2_MO::fill_naive_cumulants(RDMs ref, const int level) {
 
     // fill in 3-cumulant to L3aaa_, L3aab_, L3abb_, L3bbb_
     if (level >= 3) {
-        ambit::Tensor L3aaa = ref.L3aaa();
-        ambit::Tensor L3aab = ref.L3aab();
-        ambit::Tensor L3abb = ref.L3abb();
-        ambit::Tensor L3bbb = ref.L3bbb();
+        ambit::Tensor L3aaa = ref->L3aaa();
+        ambit::Tensor L3aab = ref->L3aab();
+        ambit::Tensor L3abb = ref->L3abb();
+        ambit::Tensor L3bbb = ref->L3bbb();
         fill_three_cumulant(L3aaa, L3aab, L3abb, L3bbb);
         if (print_ > 3) {
             print3PDC("L3aaa", L3aaa_, print_);

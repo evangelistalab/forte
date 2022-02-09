@@ -522,11 +522,20 @@ FCISolver::initial_guess(FCIVector& diag, size_t n,
     return guess;
 }
 
-std::vector<RDMs> FCISolver::rdms(const std::vector<std::pair<size_t, size_t>>& root_list,
-                                  int max_rdm_level) {
-    std::vector<RDMs> refs;
-    if (max_rdm_level <= 0)
-        return refs;
+std::vector<std::shared_ptr<RDMs>>
+FCISolver::rdms(const std::vector<std::pair<size_t, size_t>>& root_list, int max_rdm_level,
+                RDMsType type) {
+    if (max_rdm_level <= 0) {
+        auto nroots = root_list.size();
+        if (type == RDMsType::spin_dependent) {
+            return std::vector<std::shared_ptr<RDMs>>(nroots,
+                                                      std::make_shared<RDMsSpinDependent>());
+        } else {
+            return std::vector<std::shared_ptr<RDMs>>(nroots, std::make_shared<RDMsSpinFree>());
+        }
+    }
+
+    std::vector<std::shared_ptr<RDMs>> refs;
 
     // loop over all the pairs of references
     for (auto& roots : root_list) {
@@ -547,6 +556,9 @@ std::vector<RDMs> FCISolver::rdms(const std::vector<std::pair<size_t, size_t>>& 
         ambit::Tensor g1a, g1b;
         ambit::Tensor g2aa, g2ab, g2bb;
         ambit::Tensor g3aaa, g3aab, g3abb, g3bbb;
+
+        // TODO: the following needs clean-up/optimization for spin-free RDMs
+        // TODO: put RDMs directly as ambit Tensor in FCIVector?
 
         if (max_rdm_level >= 1) {
             // One-particle density matrices in the active space
@@ -631,14 +643,35 @@ std::vector<RDMs> FCISolver::rdms(const std::vector<std::pair<size_t, size_t>>& 
                 });
             }
         }
-        if (max_rdm_level == 1) {
-            refs.emplace_back(g1a, g1b);
-        }
-        if (max_rdm_level == 2) {
-            refs.emplace_back(g1a, g1b, g2aa, g2ab, g2bb);
-        }
-        if (max_rdm_level == 3) {
-            refs.emplace_back(g1a, g1b, g2aa, g2ab, g2bb, g3aaa, g3aab, g3abb, g3bbb);
+
+        if (type == RDMsType::spin_dependent) {
+            if (max_rdm_level == 1) {
+                refs.emplace_back(std::make_shared<RDMsSpinDependent>(g1a, g1b));
+            }
+            if (max_rdm_level == 2) {
+                refs.emplace_back(std::make_shared<RDMsSpinDependent>(g1a, g1b, g2aa, g2ab, g2bb));
+            }
+            if (max_rdm_level == 3) {
+                refs.emplace_back(std::make_shared<RDMsSpinDependent>(g1a, g1b, g2aa, g2ab, g2bb,
+                                                                      g3aaa, g3aab, g3abb, g3bbb));
+            }
+        } else {
+            g1a("pq") += g1b("pq");
+            if (max_rdm_level > 1) {
+                g2aa("pqrs") += g2ab("pqrs") + g2ab("qpsr");
+                g2aa("pqrs") += g2bb("pqrs");
+            }
+            if (max_rdm_level > 2) {
+                g3aaa("pqrstu") += g3aab("pqrstu") + g3aab("prqsut") + g3aab("qrptus");
+                g3aaa("pqrstu") += g3abb("pqrstu") + g3abb("qprtsu") + g3abb("rpqust");
+                g3aaa("pqrstu") += g3bbb("pqrstu");
+            }
+            if (max_rdm_level == 1)
+                refs.emplace_back(std::make_shared<RDMsSpinFree>(g1a));
+            if (max_rdm_level == 2)
+                refs.emplace_back(std::make_shared<RDMsSpinFree>(g1a, g2aa));
+            if (max_rdm_level == 3)
+                refs.emplace_back(std::make_shared<RDMsSpinFree>(g1a, g2aa, g3aaa));
         }
     }
     return refs;

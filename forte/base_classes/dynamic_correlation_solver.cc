@@ -1,7 +1,7 @@
 #include "base_classes/dynamic_correlation_solver.h"
 
 namespace forte {
-DynamicCorrelationSolver::DynamicCorrelationSolver(RDMs rdms,
+DynamicCorrelationSolver::DynamicCorrelationSolver(std::shared_ptr<RDMs> rdms,
                                                    std::shared_ptr<SCFInfo> scf_info,
                                                    std::shared_ptr<ForteOptions> options,
                                                    std::shared_ptr<ForteIntegrals> ints,

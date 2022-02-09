@@ -39,9 +39,14 @@ namespace forte {
 
 /// Export the RDMs class
 void export_RDMs(py::module& m) {
+    py::enum_<RDMsType>(m, "RDMsType")
+        .value("spin_dependent", RDMsType::spin_dependent)
+        .value("spin_free", RDMsType::spin_free);
+
     py::class_<RDMs>(m, "RDMs")
         .def("max_rdm_level", &RDMs::max_rdm_level, "Return the max RDM level")
-        .def("ms_avg", &RDMs::ms_avg, "Return if RDMs setup is Ms-averaged")
+        .def("dim", &RDMs::dim, "Return the dimension of each index")
+        .def("type", &RDMs::rdm_type, "Return RDM spin type")
         .def(
             "g1a", [](RDMs& rdm) { return ambit_to_np(rdm.g1a()); },
             "Return the alpha 1RDM as a numpy array")
@@ -69,6 +74,12 @@ void export_RDMs(py::module& m) {
         .def(
             "g3bbb", [](RDMs& rdm) { return ambit_to_np(rdm.g3bbb()); },
             "Return the beta-beta-beta 3RDM as a numpy array")
+        .def(
+            "L1a", [](RDMs& rdm) { return ambit_to_np(rdm.L1a()); },
+            "Return the alpha 1-cumulant as a numpy array")
+        .def(
+            "L1b", [](RDMs& rdm) { return ambit_to_np(rdm.L1b()); },
+            "Return the beta 1-cumulant as a numpy array")
         .def(
             "L2aa", [](RDMs& rdm) { return ambit_to_np(rdm.L2aa()); },
             "Return the alpha-alpha 2-cumulant as a numpy array")
@@ -100,6 +111,9 @@ void export_RDMs(py::module& m) {
         .def(
             "SF_G2", [](RDMs& rdm) { return ambit_to_np(rdm.SF_G2()); },
             "Return the spin-free 2RDM as a numpy array")
+        .def(
+            "SF_G3", [](RDMs& rdm) { return ambit_to_np(rdm.SF_G3()); },
+            "Return the spin-free 3RDM as a numpy array")
         .def(
             "SF_L1", [](RDMs& rdm) { return ambit_to_np(rdm.SF_L1()); },
             "Return the spin-free 1RDM as a numpy array")

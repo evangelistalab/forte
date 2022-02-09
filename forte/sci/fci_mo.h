@@ -113,19 +113,20 @@ class FCI_MO : public ActiveSpaceMethod {
     std::vector<double> compute_ss_energies();
 
     /// Compute the reduced density matrices up to a given particle rank (max_rdm_level)
-    std::vector<RDMs> rdms(const std::vector<std::pair<size_t, size_t>>& root_list,
-                           int max_rdm_level) override;
+    std::vector<std::shared_ptr<RDMs>> rdms(const std::vector<std::pair<size_t, size_t>>& root_list,
+                                            int max_rdm_level, RDMsType rdm_type) override;
 
     /// Returns the transition reduced density matrices between roots of different symmetry up to a
     /// given level (max_rdm_level)
-    std::vector<RDMs> transition_rdms(const std::vector<std::pair<size_t, size_t>>& root_list,
-                                      std::shared_ptr<ActiveSpaceMethod> method2,
-                                      int max_rdm_level) override;
+    std::vector<std::shared_ptr<RDMs>>
+    transition_rdms(const std::vector<std::pair<size_t, size_t>>& root_list,
+                    std::shared_ptr<ActiveSpaceMethod> method2, int max_rdm_level,
+                    RDMsType rdm_type) override;
 
-    [[deprecated]] std::vector<RDMs>
+    [[deprecated]] std::vector<std::shared_ptr<RDMs>>
     reference(const std::vector<std::pair<size_t, size_t>>& root_list, int max_rdm_level);
 
-    RDMs reference(int max_rdm_level) {
+    std::shared_ptr<RDMs> reference(int max_rdm_level) {
         std::vector<std::pair<size_t, size_t>> roots;
         roots.push_back(std::make_pair(0, 0));
         return reference(roots, max_rdm_level)[0];
@@ -142,8 +143,9 @@ class FCI_MO : public ActiveSpaceMethod {
     /// entry -- symmetry entry of p_spaces_ and eigens_ (same entry as sa_info_)
     /// max_level -- max RDM level to be computed
     /// do_cumulant -- returned RDMs is filled by cumulants (not RDMs) if true
-    RDMs transition_reference(int root1, int root2, bool multi_state, int entry = 0,
-                              int max_level = 3, bool do_cumulant = false, bool disk = true);
+    std::shared_ptr<RDMs> transition_reference(int root1, int root2, bool multi_state,
+                                               int entry = 0, int max_level = 3,
+                                               bool do_cumulant = false, bool disk = true);
 
     /// Density files
     std::vector<std::string> density_filenames_generator(int rdm_level, int irrep, int multi,

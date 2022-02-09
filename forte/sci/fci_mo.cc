@@ -1909,13 +1909,13 @@ d3 FCI_MO::compute_orbital_extents() {
     return orb_extents;
 }
 
-std::vector<RDMs> FCI_MO::rdms(const std::vector<std::pair<size_t, size_t>>& root_list,
-                               int max_rdm_level) {
+std::vector<std::shared_ptr<RDMs>> FCI_MO::rdms(const std::vector<std::pair<size_t, size_t>>& root_list,
+                               int max_rdm_level, RDMsType rdm_type) {
     if (max_rdm_level > 3 || max_rdm_level < 1) {
         throw psi::PSIEXCEPTION("Invalid max_rdm_level, required 1 <= max_rdm_level <= 3.");
     }
 
-    std::vector<RDMs> refs;
+    std::vector<std::shared_ptr<RDMs>> refs;
 
     // TODO: change this when other methods support disk
     bool disk = false;
@@ -1954,7 +1954,7 @@ std::vector<RDMs> FCI_MO::rdms(const std::vector<std::pair<size_t, size_t>>& roo
     return refs;
 }
 
-std::vector<RDMs> FCI_MO::transition_rdms(const std::vector<std::pair<size_t, size_t>>& root_list,
+std::vector<std::shared_ptr<RDMs>> FCI_MO::transition_rdms(const std::vector<std::pair<size_t, size_t>>& root_list,
                                           std::shared_ptr<ActiveSpaceMethod> method2,
                                           int max_rdm_level) {
     if (max_rdm_level > 3 || max_rdm_level < 1) {
@@ -1964,7 +1964,7 @@ std::vector<RDMs> FCI_MO::transition_rdms(const std::vector<std::pair<size_t, si
     // TODO: change this when other methods support disk
     bool disk = false;
 
-    std::vector<RDMs> refs;
+    std::vector<std::shared_ptr<RDMs>> refs;
 
     std::pair<std::shared_ptr<vecdet>, psi::SharedMatrix> det_evec_pair =
         prepare_for_trans_rdm(std::dynamic_pointer_cast<FCI_MO>(method2));
@@ -1990,9 +1990,9 @@ std::vector<RDMs> FCI_MO::transition_rdms(const std::vector<std::pair<size_t, si
     return refs;
 }
 
-[[deprecated]] std::vector<RDMs>
+[[deprecated]] std::vector<std::shared_ptr<RDMs>>
 FCI_MO::reference(const std::vector<std::pair<size_t, size_t>>& root_list, int max_rdm_level) {
-    std::vector<RDMs> refs;
+    std::vector<std::shared_ptr<RDMs>> refs;
     // if ((options_->psi_options())["AVG_STATE"].size() != 0) {
     //     Reference ref;
     //     compute_sa_ref(max_rdm_);
@@ -2624,7 +2624,7 @@ std::vector<ambit::Tensor> FCI_MO::compute_n_rdm(const vecdet& p_space, psi::Sha
     return out;
 }
 
-RDMs FCI_MO::transition_reference(int root1, int root2, bool multi_state, int entry, int max_level,
+std::shared_ptr<RDMs> FCI_MO::transition_reference(int root1, int root2, bool multi_state, int entry, int max_level,
                                   bool do_cumulant, bool disk) {
     if (max_level > 3 || max_level < 1) {
         throw psi::PSIEXCEPTION("Max RDM level > 3 or < 1 is not available.");

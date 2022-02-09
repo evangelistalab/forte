@@ -48,7 +48,7 @@ namespace forte {
 class SpinCorr {
 
   public:
-    SpinCorr(RDMs rdms, std::shared_ptr<ForteOptions> options,
+    SpinCorr(std::shared_ptr<RDMs> rdms, std::shared_ptr<ForteOptions> options,
              std::shared_ptr<MOSpaceInfo> mo_space_info,
              std::shared_ptr<ActiveSpaceIntegrals> as_ints);
 
@@ -57,7 +57,7 @@ class SpinCorr {
     void spin_analysis();
 
   private:
-    RDMs rdms_;
+    std::shared_ptr<RDMs> rdms_;
 
     std::shared_ptr<ForteOptions> options_;
 
@@ -72,7 +72,7 @@ class SpinCorr {
     psi::Dimension nactpi_;
 };
 
-void perform_spin_analysis(RDMs rdms, std::shared_ptr<ForteOptions> options,
+void perform_spin_analysis(std::shared_ptr<RDMs> rdms, std::shared_ptr<ForteOptions> options,
                            std::shared_ptr<MOSpaceInfo> mo_space_info,
                            std::shared_ptr<ActiveSpaceIntegrals> as_ints);
 

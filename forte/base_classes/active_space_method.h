@@ -32,6 +32,7 @@
 #include <vector>
 #include <unordered_set>
 
+#include "base_classes/rdms.h"
 #include "base_classes/state_info.h"
 #include "sparse_ci/determinant.h"
 #include "sparse_ci/determinant_hashvector.h"
@@ -44,8 +45,6 @@ class ActiveSpaceIntegrals;
 class ForteIntegrals;
 class ForteOptions;
 class MOSpaceInfo;
-class RDMs;
-class RDMsType;
 class SCFInfo;
 
 /**
@@ -125,11 +124,13 @@ class ActiveSpaceMethod {
      * @return
      */
     virtual std::vector<std::shared_ptr<RDMs>>
-    rdms(const std::vector<std::pair<size_t, size_t>>& root_list, int max_rdm_level, RDMsType rdm_type) = 0;
+    rdms(const std::vector<std::pair<size_t, size_t>>& root_list, int max_rdm_level,
+         RDMsType type) = 0;
 
     virtual std::vector<std::shared_ptr<RDMs>>
     transition_rdms(const std::vector<std::pair<size_t, size_t>>& root_list,
-                    std::shared_ptr<ActiveSpaceMethod> method2, int max_rdm_level, RDMsType) = 0;
+                    std::shared_ptr<ActiveSpaceMethod> method2, int max_rdm_level,
+                    RDMsType type) = 0;
 
     /// Set options from an option object
     /// @param options the options passed in
@@ -296,9 +297,10 @@ std::unique_ptr<ActiveSpaceMethod> make_active_space_method(
     std::shared_ptr<MOSpaceInfo> mo_space_info, std::shared_ptr<ActiveSpaceIntegrals> as_ints,
     std::shared_ptr<ForteOptions> options);
 
-std::vector<RDMs> transition_rdms(std::shared_ptr<ActiveSpaceMethod> m1,
-                                  std::shared_ptr<ActiveSpaceMethod> m2,
-                                  std::vector<std::pair<size_t, size_t>>, int max_rdm_level);
+// std::vector<std::shared_ptr<RDMs>> transition_rdms(std::shared_ptr<ActiveSpaceMethod> m1,
+//                                                    std::shared_ptr<ActiveSpaceMethod> m2,
+//                                                    std::vector<std::pair<size_t, size_t>>,
+//                                                    int max_rdm_level);
 
 } // namespace forte
 
