@@ -769,9 +769,11 @@ void DSRG_MRPT2::write_df_rdm() {
 
 
 
-    auto blocklabelsa = {"cc", "aa", "vv", "ac", "va", "vc"};
-    auto blocklabelsb = {"CC", "AA", "VV", "AC", "VA", "VC"};
+    // auto blocklabelsa = {"cc", "aa", "vv", "ac", "va", "vc"};
+    // auto blocklabelsb = {"CC", "AA", "VV", "AC", "VA", "VC"};
     auto blocklabels = {"cc", "aa", "ca", "ac", "vv", "av", "cv", "va", "vc"};
+    // auto blocklabels = {"cc", "aa", "ca", "ac", "vv", "av", "cv", "va", "vc",
+    //                     "CC", "AA", "CA", "AC", "VV", "AV", "CV", "VA", "VC"};
 
 
     idxmap = {{'c', core_mos_relative},
@@ -796,6 +798,15 @@ void DSRG_MRPT2::write_df_rdm() {
                {'C', 0},
                {'A', ncore},
                {'V', ncore + na}};
+
+    std::map<char, std::vector<size_t>> pre_idx1;
+    pre_idx1 = {{'c', core_all},
+                {'a', actv_all},
+                {'v', virt_all},
+                {'C', core_all},
+                {'A', actv_all},
+                {'V', virt_all}};
+
 
 
 
@@ -822,16 +833,25 @@ void DSRG_MRPT2::write_df_rdm() {
  
     //         for (int i = 0; i < rowsize; ++i) {
     //             for (int j = 0; j < colsize; ++j) {
-    //                 if ((idxmap[label1][i]).first == (idxmap[label2][j]).first) {
-    //                     auto val = block_data[aux_idx * stride + i * colsize + j];
-                        
-    //                     temp_mat->set(idxmap[label1][i].first, idxmap[label2][j].second,
-    //                                       idxmap[label1][i].second, val);
+    //                 auto val = block_data[aux_idx * stride + i * colsize + j];
 
-    //                 }
+    //                 auto irrep = (idxmap[label1][i]).first ^ (idxmap[label2][j]).first;
+    //                 temp_mat->set(irrep, idxmap[label1][i].second, 
+    //                                      idxmap[label2][j].second, val);
+
+
+
+    //                 // if ((idxmap[label1][i]).first == (idxmap[label2][j]).first) {
+    //                 //     temp_mat->set(idxmap[label1][i].first, idxmap[label1][i].second, 
+    //                 //                   idxmap[label2][j].second, val);
+    //                 // } else {
+
+    //                 // }
     //             }
     //         }
     //     }
+
+    //     temp_mat->print();
 
     //     temp_mat->back_transform(ints_->Ca());
     //     temp_mat_AO->remove_symmetry(temp_mat, ints_->wfn()->aotoso()->transpose());
@@ -850,6 +870,7 @@ void DSRG_MRPT2::write_df_rdm() {
 
     for(int aux_idx = 0; aux_idx < naux; ++aux_idx) {
         temp_mat_MO->zero();
+        temp_mat_AO->zero();
 
         for (const std::string& block : blocklabels) {
             auto dfblk = "L" + block;
@@ -867,23 +888,88 @@ void DSRG_MRPT2::write_df_rdm() {
 
             for (int i = 0; i < rowsize; ++i) {
                 for (int j = 0; j < colsize; ++j) {
-                    auto val = block_data[aux_idx * stride + i * colsize + j];
-                    auto idx1 = i + pre_idx[label1];
-                    auto idx2 = j + pre_idx[label2];      
-                    temp_mat_MO->set(idx1, idx2, val);
+                    auto val  = block_data[aux_idx * stride + i * colsize + j];
+                    // auto idx1 = pre_idx1[label1][i];
+                    // auto idx2 = pre_idx1[label2][j];    
+                    auto idx1 = pre_idx[label1] + i;
+                    auto idx2 = pre_idx[label2] + j;     
+                    temp_mat_MO->add(idx1, idx2, val);
                 }
             }
         }
 
-        temp_mat_MO->back_transform(ints_->wfn()->Ca_subset("AO"));
+
+        auto Ca = ints_->Ca();
+        // Copy Ca to a matrix without symmetry blocking
+        auto Cat = std::make_shared<Matrix>("Ca temp matrix", ao_dim, nmo);
+
+        int offset = 0;
+        std::vector<int> sum_nmopi(nirrep, 0);
+        for (int irp = 1; irp < nirrep; ++irp) {
+            sum_nmopi[irp] = sum_nmopi[irp-1] + ints_->wfn()->nmopi()[irp-1];
+        }
+
+        for (const char& label : {'c', 'a', 'v'}) {
+            auto space = idxmap[label];
+            for (auto irp_i : space) {
+                auto irp = irp_i.first;
+                auto index = irp_i.second;
+                auto nsopi = ints_->wfn()->nsopi()[irp];
+                auto nmopi = ints_->wfn()->nmopi()[irp];
+                for (int i = 0; i < nsopi; ++i) { 
+                    auto val = Ca->get(irp, i, index);
+                    Cat->set(sum_nmopi[irp] + i, offset, val);
+                }
+                offset += 1;
+            }
+        }
+
+        temp_mat_MO->back_transform(Cat);
+
+        auto aotoso = std::make_shared<Matrix>("aotoso", ao_dim, ao_dim);
+
+        int offset_col = 0;
+        for(int irp = 0; irp < nirrep; ++irp) {
+            auto nmopi = ints_->wfn()->nmopi()[irp];
+            for(int i = 0; i < ao_dim; ++i) {
+                for(int j = 0; j < nmopi; ++j) {
+                    aotoso->set(i, offset_col+j, ints_->wfn()->aotoso()->get(irp, i, j));
+                }   
+            }
+            offset_col += nmopi;
+        }
+
+
+
+
+
+
+
+
+
+        // temp_mat_AO->remove_symmetry(temp_mat_MO, ints_->wfn()->aotoso()->transpose());
+        temp_mat_AO->remove_symmetry(temp_mat_MO, aotoso->transpose());
+        // temp_mat_MO->transform(aotoso->transpose());
+
+
+        // temp_mat_MO->back_transform(caao); 
+
+        // temp_mat_MO = psi::linalg::triplet(caao, temp_mat_MO, caao, false, false, true);
 
         for(int i = 0; i < ao_dim; ++i) {
             for (int j = 0; j < ao_dim; ++j) {
-                auto val = temp_mat_MO->get(i, j);
+                auto val = temp_mat_AO->get(i, j);
                 M->set(aux_idx, i * ao_dim + j, val);
             }
         }
     }
+    
+
+    // ints_->wfn()->Ca()->print();
+    // ints_->wfn()->Ca_subset("AO")->print();
+
+
+
 
 
 
