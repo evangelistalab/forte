@@ -398,6 +398,8 @@ class DSRG_MRPT2 : public MASTER_DSRG {
     ambit::BlockedTensor B;
     // DF metric J^(-1/2)
     ambit::BlockedTensor Jm12;
+    // DF 3 Integral Ppq
+    ambit::BlockedTensor Ppq;
     // two-electron integrals
     ambit::BlockedTensor V;
     // Fock matrix

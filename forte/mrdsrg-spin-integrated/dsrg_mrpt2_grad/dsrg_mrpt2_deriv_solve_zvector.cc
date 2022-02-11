@@ -46,7 +46,7 @@ void DSRG_MRPT2::set_z() {
     set_z_vv();
     set_z_aa_diag();
     outfile->Printf("Done");
-    solve_linear_iter();
+    // solve_linear_iter();
 }
 
 void DSRG_MRPT2::set_w() {

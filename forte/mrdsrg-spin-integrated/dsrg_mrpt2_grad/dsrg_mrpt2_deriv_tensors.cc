@@ -92,12 +92,88 @@ void DSRG_MRPT2::set_j() {
     std::shared_ptr<BasisSet> auxiliary_ = ints_->wfn()->get_basisset("DF_BASIS_MP2");
     auto metric = std::make_shared<FittingMetric>(auxiliary_, true);
     // "form_eig_inverse()" genererates J^(-1/2); "form_full_eig_inverse()" genererates J^(-1)
-    metric->form_eig_inverse(Process::environment.options.get_double("DF_FITTING_CONDITION"));
-    SharedMatrix J = metric->get_metric();
+    metric->form_full_eig_inverse(Process::environment.options.get_double("DF_FITTING_CONDITION"));
+    auto J = metric->get_metric();
 
     (Jm12.block("LL")).iterate([&](const std::vector<size_t>& i, double& value) {
         value = J->get(i[0], i[1]);
     });
+
+
+
+    Ppq = BTF_->build(tensor_type_, "Ppq", {"Lgg", "LGG"});
+    auto blocklabels = {"cc", "aa", "vv", "ac", "ca", "va", "av", "vc", "cv",
+                        "CC", "AA", "VV", "AC", "CA", "VA", "AV", "VC", "CV"};
+
+    std::map<char, int> pre_idx;
+    pre_idx = {{'c', 0},
+               {'a', ncore},
+               {'v', ncore + na},
+               {'C', 0},
+               {'A', ncore},
+               {'V', ncore + na}};
+
+
+    auto primary = ints_->wfn()->basisset();
+    std::shared_ptr<BasisSet> zero_bas(BasisSet::zero_ao_basis_set());
+    auto mints = std::make_shared<MintsHelper>(primary, Process::environment.options);
+
+    auto Pmn = mints->ao_eri(auxiliary_, zero_bas, primary, primary);
+    int ao_dim = ints_->wfn()->nso();
+
+    auto Pmn_mn = std::make_shared<Matrix>("Pmn mn block", ao_dim, ao_dim);
+ 
+    auto Ppq_mat = std::make_shared<Matrix>("Ppq Matrix", naux, nmo * nmo);
+
+    for(int aux_idx = 0; aux_idx < naux; ++aux_idx) {
+        Pmn_mn->zero();
+
+        for (int i = 0; i < ao_dim; ++i) {
+            for (int j = 0; j < ao_dim; ++j) {
+                auto val = Pmn->get(aux_idx, i * ao_dim + j);
+                Pmn_mn->set(i, j, val);
+            }
+        }
+
+        Pmn_mn->transform(ints_->wfn()->Ca_subset("AO"));
+
+        for (int i = 0; i < nmo; ++i) {
+            for (int j = 0; j < nmo; ++j) {
+                auto val = Pmn_mn->get(i, j);
+                Ppq_mat->set(aux_idx, i * nmo + j, val);
+            }
+        }
+    }
+
+
+    for (const std::string& block : blocklabels) {
+        auto dfblk = "L" + block;
+
+        auto label1 = block[0];
+        auto label2 = block[1];
+
+        (Ppq.block(dfblk)).iterate([&](const std::vector<size_t>& i, double& value) {
+            auto val = Ppq_mat->get(i[0], (i[1] + pre_idx[label1]) * nmo + i[2] + pre_idx[label2]);
+            value = val;
+        });
+    }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 }
 
 void DSRG_MRPT2::set_v() {   
