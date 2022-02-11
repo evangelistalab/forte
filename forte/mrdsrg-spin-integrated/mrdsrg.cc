@@ -50,8 +50,9 @@ using namespace psi;
 
 namespace forte {
 
-MRDSRG::MRDSRG(RDMs rdms, std::shared_ptr<SCFInfo> scf_info, std::shared_ptr<ForteOptions> options,
-               std::shared_ptr<ForteIntegrals> ints, std::shared_ptr<MOSpaceInfo> mo_space_info)
+MRDSRG::MRDSRG(std::shared_ptr<RDMs> rdms, std::shared_ptr<SCFInfo> scf_info,
+               std::shared_ptr<ForteOptions> options, std::shared_ptr<ForteIntegrals> ints,
+               std::shared_ptr<MOSpaceInfo> mo_space_info)
     : MASTER_DSRG(rdms, scf_info, options, ints, mo_space_info) {
 
     print_method_banner({"Multireference Driven Similarity Renormalization Group",
@@ -389,16 +390,16 @@ void MRDSRG::print_cumulant_summary() {
 
     // 3-body
     maxes.clear();
-    maxes.push_back(rdms_.L3aaa().norm(0));
-    maxes.push_back(rdms_.L3aab().norm(0));
-    maxes.push_back(rdms_.L3abb().norm(0));
-    maxes.push_back(rdms_.L3bbb().norm(0));
+    maxes.push_back(rdms_->L3aaa().norm(0));
+    maxes.push_back(rdms_->L3aab().norm(0));
+    maxes.push_back(rdms_->L3abb().norm(0));
+    maxes.push_back(rdms_->L3bbb().norm(0));
 
     norms.clear();
-    norms.push_back(rdms_.L3aaa().norm(2));
-    norms.push_back(rdms_.L3aab().norm(2));
-    norms.push_back(rdms_.L3abb().norm(2));
-    norms.push_back(rdms_.L3bbb().norm(2));
+    norms.push_back(rdms_->L3aaa().norm(2));
+    norms.push_back(rdms_->L3aab().norm(2));
+    norms.push_back(rdms_->L3abb().norm(2));
+    norms.push_back(rdms_->L3bbb().norm(2));
 
     dash = std::string(8 + 13 * 4, '-');
     outfile->Printf("\n    %-8s %12s %12s %12s %12s", "3-body", "AAA", "AAB", "ABB", "BBB");

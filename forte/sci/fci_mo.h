@@ -447,6 +447,9 @@ class FCI_MO : public ActiveSpaceMethod {
                                              int rdm_level, int root1, int root2,
                                              const StateInfo& state2, bool disk);
 
+    ambit::Tensor compute_n_rdm_sf(const vecdet& p_space, psi::SharedMatrix evecs, int rdm_level,
+                                   int root1, int root2, const StateInfo& state2);
+
     /// Add wedge product of L1 to L2
     void add_wedge_cu2(const ambit::Tensor& L1a, const ambit::Tensor& L1b, ambit::Tensor& L2aa,
                        ambit::Tensor& L2ab, ambit::Tensor& L2bb);

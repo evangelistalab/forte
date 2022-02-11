@@ -223,7 +223,7 @@ PYBIND11_MODULE(_forte, m) {
 
     m.def(
         "spinorbital_rdms",
-        [](RDMs& rdms) {
+        [](std::shared_ptr<RDMs> rdms) {
             auto sordms = spinorbital_rdms(rdms);
             std::vector<py::array_t<double>> pysordms;
             for (const auto& sordm : sordms) {
@@ -235,7 +235,7 @@ PYBIND11_MODULE(_forte, m) {
 
     m.def(
         "spinorbital_cumulants",
-        [](RDMs& rdms) {
+        [](std::shared_ptr<RDMs> rdms) {
             auto sordms = spinorbital_cumulants(rdms);
             std::vector<py::array_t<double>> pysordms;
             for (const auto& sordm : sordms) {
@@ -357,8 +357,8 @@ PYBIND11_MODULE(_forte, m) {
              "Return the DSRG dressed ActiveSpaceIntegrals");
 
     py::class_<MCSRGPT2_MO>(m, "MCSRGPT2_MO")
-        .def(py::init<std::shared_ptr<RDMs>, std::shared_ptr<ForteOptions>, std::shared_ptr<ForteIntegrals>,
-                      std::shared_ptr<MOSpaceInfo>>())
+        .def(py::init<std::shared_ptr<RDMs>, std::shared_ptr<ForteOptions>,
+                      std::shared_ptr<ForteIntegrals>, std::shared_ptr<MOSpaceInfo>>())
         .def("compute_energy", &MCSRGPT2_MO::compute_energy, "Compute DSRG energy");
 
     // export DressedQuantity for dipole moments

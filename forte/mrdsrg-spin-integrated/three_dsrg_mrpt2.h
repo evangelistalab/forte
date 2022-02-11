@@ -43,7 +43,7 @@ class THREE_DSRG_MRPT2 : public MASTER_DSRG {
      * @param ints          integrals
      * @param mo_space_info information about orbital spaces
      */
-    THREE_DSRG_MRPT2(RDMs rdms, std::shared_ptr<SCFInfo> scf_info,
+    THREE_DSRG_MRPT2(std::shared_ptr<RDMs> rdms, std::shared_ptr<SCFInfo> scf_info,
                      std::shared_ptr<ForteOptions> options, std::shared_ptr<ForteIntegrals> ints,
                      std::shared_ptr<MOSpaceInfo> mo_space_info);
 

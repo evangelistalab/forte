@@ -37,7 +37,7 @@ using namespace psi;
 
 namespace forte {
 
-SA_MRPT3::SA_MRPT3(RDMs rdms, std::shared_ptr<SCFInfo> scf_info,
+SA_MRPT3::SA_MRPT3(std::shared_ptr<RDMs> rdms, std::shared_ptr<SCFInfo> scf_info,
                    std::shared_ptr<ForteOptions> options, std::shared_ptr<ForteIntegrals> ints,
                    std::shared_ptr<MOSpaceInfo> mo_space_info)
     : SA_DSRGPT(rdms, scf_info, options, ints, mo_space_info) {

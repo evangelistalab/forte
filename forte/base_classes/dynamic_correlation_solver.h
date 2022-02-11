@@ -1,3 +1,32 @@
+/*
+* @BEGIN LICENSE
+*
+* Forte: an open-source plugin to Psi4 (https://github.com/psi4/psi4)
+* that implements a variety of quantum chemistry methods for strongly
+* correlated electrons.
+*
+* Copyright (c) 2012-2022 by its authors (see COPYING, COPYING.LESSER,
+* AUTHORS).
+*
+* The copyrights for code used from other parties are included in
+* the corresponding files.
+*
+* This program is free software: you can redistribute it and/or modify
+* it under the terms of the GNU Lesser General Public License as published by
+* the Free Software Foundation, either version 3 of the License, or
+* (at your option) any later version.
+*
+* This program is distributed in the hope that it will be useful,
+* but WITHOUT ANY WARRANTY; without even the implied warranty of
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+* GNU Lesser General Public License for more details.
+*
+* You should have received a copy of the GNU Lesser General Public License
+* along with this program.  If not, see http://www.gnu.org/licenses/.
+*
+* @END LICENSE
+*/
+
 #ifndef _dynamic_correlation_solver_h_
 #define _dynamic_correlation_solver_h_
 
@@ -21,7 +50,7 @@ class DynamicCorrelationSolver {
      * @param ints A pointer to an allocated integral object
      * @param mo_space_info The MOSpaceInfo object
      */
-    DynamicCorrelationSolver(RDMs rdms, std::shared_ptr<SCFInfo> scf_info,
+    DynamicCorrelationSolver(std::shared_ptr<RDMs> rdms, std::shared_ptr<SCFInfo> scf_info,
                              std::shared_ptr<ForteOptions> options,
                              std::shared_ptr<ForteIntegrals> ints,
                              std::shared_ptr<MOSpaceInfo> mo_space_info);
@@ -65,6 +94,9 @@ class DynamicCorrelationSolver {
 
     /// Frozen core energy
     double Efrzc_;
+
+    /// Compute the reference energy
+    double compute_reference_energy();
 
     /// Printing level
     int print_;

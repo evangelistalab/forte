@@ -43,7 +43,7 @@ void export_RDMs(py::module& m) {
         .value("spin_dependent", RDMsType::spin_dependent)
         .value("spin_free", RDMsType::spin_free);
 
-    py::class_<RDMs>(m, "RDMs")
+    py::class_<RDMs, std::shared_ptr<RDMs>>(m, "RDMs")
         .def("max_rdm_level", &RDMs::max_rdm_level, "Return the max RDM level")
         .def("dim", &RDMs::dim, "Return the dimension of each index")
         .def("type", &RDMs::rdm_type, "Return RDM spin type")
@@ -101,10 +101,6 @@ void export_RDMs(py::module& m) {
         .def(
             "L3bbb", [](RDMs& rdm) { return ambit_to_np(rdm.L3bbb()); },
             "Return the beta-beta-beta 3-cumulant as a numpy array")
-        .def("SF_G1mat", py::overload_cast<>(&RDMs::SF_G1mat),
-             "Return the spin-free 1RDM as a Psi4 Matrix without symmetry")
-        .def("SF_G1mat", py::overload_cast<const psi::Dimension&>(&RDMs::SF_G1mat),
-             "Return the spin-free 1RDM as a Psi4 Matrix with symmetry given by input")
         .def(
             "SF_G1", [](RDMs& rdm) { return ambit_to_np(rdm.SF_G1()); },
             "Return the spin-free 1RDM as a numpy array")
@@ -114,6 +110,10 @@ void export_RDMs(py::module& m) {
         .def(
             "SF_G3", [](RDMs& rdm) { return ambit_to_np(rdm.SF_G3()); },
             "Return the spin-free 3RDM as a numpy array")
+        .def("SF_G1mat", py::overload_cast<>(&RDMs::SF_G1mat),
+             "Return the spin-free 1RDM as a Psi4 Matrix without symmetry")
+        .def("SF_G1mat", py::overload_cast<const psi::Dimension&>(&RDMs::SF_G1mat),
+             "Return the spin-free 1RDM as a Psi4 Matrix with symmetry given by input")
         .def(
             "SF_L1", [](RDMs& rdm) { return ambit_to_np(rdm.SF_L1()); },
             "Return the spin-free 1RDM as a numpy array")

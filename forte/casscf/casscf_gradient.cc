@@ -88,13 +88,13 @@ void CASSCF::set_density() {
     outfile->Printf("\n    Setting One- and Two-Body Density ............... ");
 
     // 1-body density
-    Gamma1_.block("aa")("pq") = cas_ref_.g1a()("pq");
-    Gamma1_.block("AA")("pq") = cas_ref_.g1b()("pq");
+    Gamma1_.block("aa")("pq") = cas_ref_->g1a()("pq");
+    Gamma1_.block("AA")("pq") = cas_ref_->g1b()("pq");
 
     // 2-body density
-    Gamma2_.block("aaaa")("pqrs") = cas_ref_.g2aa()("pqrs");
-    Gamma2_.block("aAaA")("pqrs") = cas_ref_.g2ab()("pqrs");
-    Gamma2_.block("AAAA")("pqrs") = cas_ref_.g2bb()("pqrs");
+    Gamma2_.block("aaaa")("pqrs") = cas_ref_->g2aa()("pqrs");
+    Gamma2_.block("aAaA")("pqrs") = cas_ref_->g2ab()("pqrs");
+    Gamma2_.block("AAAA")("pqrs") = cas_ref_->g2bb()("pqrs");
 
     outfile->Printf("Done");
 }

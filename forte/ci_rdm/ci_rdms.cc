@@ -371,21 +371,13 @@ void CI_RDMS::compute_2rdm(std::vector<double>& tprdm_aa, std::vector<double>& t
     local_timer build;
 
     _add_2rdm(aa_ann_list_, aa_cre_list_, [&](const std::vector<size_t>& i, const double& value) {
-        tprdm_aa[i[0] * no3_ + i[1] * no2_ + i[2] * no_ + i[3]] += value;
-        tprdm_aa[i[0] * no3_ + i[1] * no2_ + i[3] * no_ + i[2]] -= value;
-        tprdm_aa[i[1] * no3_ + i[0] * no2_ + i[2] * no_ + i[3]] -= value;
-        tprdm_aa[i[1] * no3_ + i[0] * no2_ + i[3] * no_ + i[2]] += value;
+        _add_2rdm_aa(tprdm_aa, i, value);
     });
-
     _add_2rdm(ab_ann_list_, ab_cre_list_, [&](const std::vector<size_t>& i, const double& value) {
         tprdm_ab[i[0] * no3_ + i[1] * no2_ + i[2] * no_ + i[3]] += value;
     });
-
     _add_2rdm(bb_ann_list_, bb_cre_list_, [&](const std::vector<size_t>& i, const double& value) {
-        tprdm_bb[i[0] * no3_ + i[1] * no2_ + i[2] * no_ + i[3]] += value;
-        tprdm_bb[i[0] * no3_ + i[1] * no2_ + i[3] * no_ + i[2]] -= value;
-        tprdm_bb[i[1] * no3_ + i[0] * no2_ + i[2] * no_ + i[3]] -= value;
-        tprdm_bb[i[1] * no3_ + i[0] * no2_ + i[3] * no_ + i[2]] += value;
+        _add_2rdm_aa(tprdm_bb, i, value);
     });
 
     //    for (size_t J = 0; J < dim_space_; ++J) {
@@ -469,22 +461,13 @@ void CI_RDMS::compute_2rdm_sf(std::vector<double>& tpdm) {
     timer build("Build SF 2-RDM");
 
     _add_2rdm(aa_ann_list_, aa_cre_list_, [&](const std::vector<size_t>& i, const double& value) {
-        tpdm[i[0] * no3_ + i[1] * no2_ + i[2] * no_ + i[3]] += value;
-        tpdm[i[0] * no3_ + i[1] * no2_ + i[3] * no_ + i[2]] -= value;
-        tpdm[i[1] * no3_ + i[0] * no2_ + i[2] * no_ + i[3]] -= value;
-        tpdm[i[1] * no3_ + i[0] * no2_ + i[3] * no_ + i[2]] += value;
+        _add_2rdm_aa(tpdm, i, value);
     });
-
     _add_2rdm(ab_ann_list_, ab_cre_list_, [&](const std::vector<size_t>& i, const double& value) {
-        tpdm[i[0] * no3_ + i[1] * no2_ + i[2] * no_ + i[3]] += value;
-        tpdm[i[1] * no3_ + i[0] * no2_ + i[3] * no_ + i[2]] += value;
+        _add_2rdm_ab(tpdm, i, value, true);
     });
-
     _add_2rdm(bb_ann_list_, bb_cre_list_, [&](const std::vector<size_t>& i, const double& value) {
-        tpdm[i[0] * no3_ + i[1] * no2_ + i[2] * no_ + i[3]] += value;
-        tpdm[i[0] * no3_ + i[1] * no2_ + i[3] * no_ + i[2]] -= value;
-        tpdm[i[1] * no3_ + i[0] * no2_ + i[2] * no_ + i[3]] -= value;
-        tpdm[i[1] * no3_ + i[0] * no2_ + i[3] * no_ + i[2]] += value;
+        _add_2rdm_aa(tpdm, i, value);
     });
 
     if (print_)
@@ -517,6 +500,21 @@ void CI_RDMS::_add_2rdm(
     }
 }
 
+void CI_RDMS::_add_2rdm_aa(std::vector<double>& tpdm_aa, const std::vector<size_t>& i,
+                           const double& value) {
+    tpdm_aa[i[0] * no3_ + i[1] * no2_ + i[2] * no_ + i[3]] += value;
+    tpdm_aa[i[0] * no3_ + i[1] * no2_ + i[3] * no_ + i[2]] -= value;
+    tpdm_aa[i[1] * no3_ + i[0] * no2_ + i[2] * no_ + i[3]] -= value;
+    tpdm_aa[i[1] * no3_ + i[0] * no2_ + i[3] * no_ + i[2]] += value;
+}
+
+void CI_RDMS::_add_2rdm_ab(std::vector<double>& tpdm_ab, const std::vector<size_t>& i,
+                           const double& value, const bool& spin_free) {
+    tpdm_ab[i[0] * no3_ + i[1] * no2_ + i[2] * no_ + i[3]] += value;
+    if (spin_free)
+        tpdm_ab[i[1] * no3_ + i[0] * no2_ + i[3] * no_ + i[2]] += value;
+}
+
 void CI_RDMS::compute_2rdm_op(std::vector<double>& tprdm_aa, std::vector<double>& tprdm_ab,
                               std::vector<double>& tprdm_bb) {
     auto op = std::make_shared<DeterminantSubstitutionLists>(fci_ints_);
@@ -530,22 +528,14 @@ void CI_RDMS::compute_2rdm_op(std::vector<double>& tprdm_aa, std::vector<double>
     tprdm_ab.assign(no4_, 0.0);
     tprdm_bb.assign(no4_, 0.0);
 
-    _add_2rdm_op_II(
-        [&](const std::vector<size_t>& i, const double& value) {
-            tprdm_aa[i[0] * no3_ + i[1] * no2_ + i[0] * no_ + i[1]] += value;
-            tprdm_aa[i[1] * no3_ + i[0] * no2_ + i[0] * no_ + i[1]] -= value;
-            tprdm_aa[i[1] * no3_ + i[0] * no2_ + i[1] * no_ + i[0]] += value;
-            tprdm_aa[i[0] * no3_ + i[1] * no2_ + i[1] * no_ + i[0]] -= value;
-        },
-        [&](const std::vector<size_t>& i, const double& value) {
-            tprdm_ab[i[0] * no3_ + i[1] * no2_ + i[0] * no_ + i[1]] += value;
-        },
-        [&](const std::vector<size_t>& i, const double& value) {
-            tprdm_bb[i[0] * no3_ + i[1] * no2_ + i[0] * no_ + i[1]] += value;
-            tprdm_bb[i[1] * no3_ + i[0] * no2_ + i[0] * no_ + i[1]] -= value;
-            tprdm_bb[i[1] * no3_ + i[0] * no2_ + i[1] * no_ + i[0]] += value;
-            tprdm_bb[i[0] * no3_ + i[1] * no2_ + i[1] * no_ + i[0]] -= value;
-        });
+    _add_2rdm_op_II([&](const std::vector<size_t>& i,
+                        const double& value) { _add_2rdm_aa(tprdm_aa, i, value); },
+                    [&](const std::vector<size_t>& i, const double& value) {
+                        tprdm_ab[i[0] * no3_ + i[1] * no2_ + i[0] * no_ + i[1]] += value;
+                    },
+                    [&](const std::vector<size_t>& i, const double& value) {
+                        _add_2rdm_aa(tprdm_bb, i, value);
+                    });
     //    const det_hashvec& dets = wfn_.wfn_hash();
     //    for (size_t J = 0; J < dim_space_; ++J) {
     //        double cJ_sq = evecs_->get(J, root1_) * evecs_->get(J, root2_);
@@ -589,21 +579,13 @@ void CI_RDMS::compute_2rdm_op(std::vector<double>& tprdm_aa, std::vector<double>
     //    }
 
     _add_2rdm_op_IJ(op->aa_list_, [&](const std::vector<size_t>& i, const double& value) {
-        tprdm_aa[i[0] * no3_ + i[1] * no2_ + i[2] * no_ + i[3]] += value;
-        tprdm_aa[i[0] * no3_ + i[1] * no2_ + i[3] * no_ + i[2]] -= value;
-        tprdm_aa[i[1] * no3_ + i[0] * no2_ + i[2] * no_ + i[3]] -= value;
-        tprdm_aa[i[1] * no3_ + i[0] * no2_ + i[3] * no_ + i[2]] += value;
+        _add_2rdm_aa(tprdm_aa, i, value);
     });
-
     _add_2rdm_op_IJ(op->ab_list_, [&](const std::vector<size_t>& i, const double& value) {
         tprdm_ab[i[0] * no3_ + i[1] * no2_ + i[2] * no_ + i[3]] += value;
     });
-
     _add_2rdm_op_IJ(op->bb_list_, [&](const std::vector<size_t>& i, const double& value) {
-        tprdm_bb[i[0] * no3_ + i[1] * no2_ + i[2] * no_ + i[3]] += value;
-        tprdm_bb[i[0] * no3_ + i[1] * no2_ + i[3] * no_ + i[2]] -= value;
-        tprdm_bb[i[1] * no3_ + i[0] * no2_ + i[2] * no_ + i[3]] -= value;
-        tprdm_bb[i[1] * no3_ + i[0] * no2_ + i[3] * no_ + i[2]] += value;
+        _add_2rdm_aa(tprdm_bb, i, value);
     });
 
     //    std::vector<std::vector<std::tuple<size_t, short, short>>>& aa_list = op->aa_list_;
@@ -733,40 +715,20 @@ void CI_RDMS::compute_2rdm_sf_op(std::vector<double>& tpdm) {
     timer build("Build SF 2-RDM");
 
     _add_2rdm_op_II(
+        [&](const std::vector<size_t>& i, const double& value) { _add_2rdm_aa(tpdm, i, value); },
         [&](const std::vector<size_t>& i, const double& value) {
-            tpdm[i[0] * no3_ + i[1] * no2_ + i[0] * no_ + i[1]] += value;
-            tpdm[i[1] * no3_ + i[0] * no2_ + i[0] * no_ + i[1]] -= value;
-            tpdm[i[1] * no3_ + i[0] * no2_ + i[1] * no_ + i[0]] += value;
-            tpdm[i[0] * no3_ + i[1] * no2_ + i[1] * no_ + i[0]] -= value;
+            _add_2rdm_ab(tpdm, i, value, true);
         },
-        [&](const std::vector<size_t>& i, const double& value) {
-            tpdm[i[0] * no3_ + i[1] * no2_ + i[0] * no_ + i[1]] += value;
-            tpdm[i[1] * no3_ + i[0] * no2_ + i[1] * no_ + i[0]] += value;
-        },
-        [&](const std::vector<size_t>& i, const double& value) {
-            tpdm[i[0] * no3_ + i[1] * no2_ + i[0] * no_ + i[1]] += value;
-            tpdm[i[1] * no3_ + i[0] * no2_ + i[0] * no_ + i[1]] -= value;
-            tpdm[i[1] * no3_ + i[0] * no2_ + i[1] * no_ + i[0]] += value;
-            tpdm[i[0] * no3_ + i[1] * no2_ + i[1] * no_ + i[0]] -= value;
-        });
+        [&](const std::vector<size_t>& i, const double& value) { _add_2rdm_aa(tpdm, i, value); });
 
     _add_2rdm_op_IJ(op->aa_list_, [&](const std::vector<size_t>& i, const double& value) {
-        tpdm[i[0] * no3_ + i[1] * no2_ + i[2] * no_ + i[3]] += value;
-        tpdm[i[0] * no3_ + i[1] * no2_ + i[3] * no_ + i[2]] -= value;
-        tpdm[i[1] * no3_ + i[0] * no2_ + i[2] * no_ + i[3]] -= value;
-        tpdm[i[1] * no3_ + i[0] * no2_ + i[3] * no_ + i[2]] += value;
+        _add_2rdm_aa(tpdm, i, value);
     });
-
     _add_2rdm_op_IJ(op->ab_list_, [&](const std::vector<size_t>& i, const double& value) {
-        tpdm[i[0] * no3_ + i[1] * no2_ + i[2] * no_ + i[3]] += value;
-        tpdm[i[1] * no3_ + i[0] * no2_ + i[3] * no_ + i[2]] += value;
+        _add_2rdm_ab(tpdm, i, value, true);
     });
-
     _add_2rdm_op_IJ(op->bb_list_, [&](const std::vector<size_t>& i, const double& value) {
-        tpdm[i[0] * no3_ + i[1] * no2_ + i[2] * no_ + i[3]] += value;
-        tpdm[i[0] * no3_ + i[1] * no2_ + i[3] * no_ + i[2]] -= value;
-        tpdm[i[1] * no3_ + i[0] * no2_ + i[2] * no_ + i[3]] -= value;
-        tpdm[i[1] * no3_ + i[0] * no2_ + i[3] * no_ + i[2]] += value;
+        _add_2rdm_aa(tpdm, i, value);
     });
 
     if (print_) {
@@ -791,21 +753,21 @@ void CI_RDMS::_add_2rdm_op_II(
             size_t pp = aocc[p];
             for (size_t q = p + 1; q < naocc; ++q) {
                 size_t qq = aocc[q];
-                func_aa({pp, qq}, cJ_sq);
+                func_aa({pp, qq, pp, qq}, cJ_sq);
             }
         }
         for (size_t p = 0; p < nbocc; ++p) {
             size_t pp = bocc[p];
             for (size_t q = p + 1; q < nbocc; ++q) {
                 size_t qq = bocc[q];
-                func_bb({pp, qq}, cJ_sq);
+                func_bb({pp, qq, pp, qq}, cJ_sq);
             }
         }
         for (size_t p = 0; p < naocc; ++p) {
             size_t pp = aocc[p];
             for (size_t q = 0; q < nbocc; ++q) {
                 size_t qq = bocc[q];
-                func_ab({pp, qq}, cJ_sq);
+                func_ab({pp, qq, pp, qq}, cJ_sq);
             }
         }
     }
@@ -859,29 +821,12 @@ void CI_RDMS::compute_3rdm(std::vector<double>& tprdm_aaa, std::vector<double>& 
     _add_3rdm(aaa_ann_list_, aaa_cre_list_, [&](const std::vector<size_t>& i, const double& value) {
         _add_3rdm_aaa(tprdm_aaa, i, value);
     });
-
     _add_3rdm(aab_ann_list_, aab_cre_list_, [&](const std::vector<size_t>& i, const double& value) {
-        tprdm_aab[i[0] * no5_ + i[1] * no4_ + i[2] * no3_ + i[3] * no2_ + i[4] * no_ + i[5]] +=
-            value;
-        tprdm_aab[i[0] * no5_ + i[1] * no4_ + i[2] * no3_ + i[4] * no2_ + i[3] * no_ + i[5]] -=
-            value;
-        tprdm_aab[i[1] * no5_ + i[0] * no4_ + i[2] * no3_ + i[3] * no2_ + i[4] * no_ + i[5]] -=
-            value;
-        tprdm_aab[i[1] * no5_ + i[0] * no4_ + i[2] * no3_ + i[4] * no2_ + i[3] * no_ + i[5]] +=
-            value;
+        _add_3rdm_aab(tprdm_aab, i, value, false);
     });
-
     _add_3rdm(abb_ann_list_, abb_cre_list_, [&](const std::vector<size_t>& i, const double& value) {
-        tprdm_abb[i[0] * no5_ + i[1] * no4_ + i[2] * no3_ + i[3] * no2_ + i[4] * no_ + i[5]] +=
-            value;
-        tprdm_abb[i[0] * no5_ + i[1] * no4_ + i[2] * no3_ + i[3] * no2_ + i[5] * no_ + i[4]] -=
-            value;
-        tprdm_abb[i[0] * no5_ + i[2] * no4_ + i[1] * no3_ + i[3] * no2_ + i[4] * no_ + i[5]] -=
-            value;
-        tprdm_abb[i[0] * no5_ + i[2] * no4_ + i[1] * no3_ + i[3] * no2_ + i[5] * no_ + i[4]] +=
-            value;
+        _add_3rdm_abb(tprdm_abb, i, value, false);
     });
-
     _add_3rdm(bbb_ann_list_, bbb_cre_list_, [&](const std::vector<size_t>& i, const double& value) {
         _add_3rdm_aaa(tprdm_bbb, i, value);
     });
@@ -1094,41 +1039,12 @@ void CI_RDMS::compute_3rdm_sf(std::vector<double>& tpdm3) {
     _add_3rdm(aaa_ann_list_, aaa_cre_list_, [&](const std::vector<size_t>& i, const double& value) {
         _add_3rdm_aaa(tpdm3, i, value);
     });
-
     _add_3rdm(aab_ann_list_, aab_cre_list_, [&](const std::vector<size_t>& i, const double& value) {
-        tpdm3[i[0] * no5_ + i[1] * no4_ + i[2] * no3_ + i[3] * no2_ + i[4] * no_ + i[5]] += value;
-        tpdm3[i[0] * no5_ + i[1] * no4_ + i[2] * no3_ + i[4] * no2_ + i[3] * no_ + i[5]] -= value;
-        tpdm3[i[1] * no5_ + i[0] * no4_ + i[2] * no3_ + i[3] * no2_ + i[4] * no_ + i[5]] -= value;
-        tpdm3[i[1] * no5_ + i[0] * no4_ + i[2] * no3_ + i[4] * no2_ + i[3] * no_ + i[5]] += value;
-
-        tpdm3[i[0] * no5_ + i[2] * no4_ + i[1] * no3_ + i[3] * no2_ + i[5] * no_ + i[4]] += value;
-        tpdm3[i[0] * no5_ + i[2] * no4_ + i[1] * no3_ + i[4] * no2_ + i[5] * no_ + i[3]] -= value;
-        tpdm3[i[1] * no5_ + i[2] * no4_ + i[0] * no3_ + i[3] * no2_ + i[5] * no_ + i[4]] -= value;
-        tpdm3[i[1] * no5_ + i[2] * no4_ + i[0] * no3_ + i[4] * no2_ + i[5] * no_ + i[3]] += value;
-
-        tpdm3[i[2] * no5_ + i[1] * no4_ + i[0] * no3_ + i[5] * no2_ + i[4] * no_ + i[3]] += value;
-        tpdm3[i[2] * no5_ + i[1] * no4_ + i[0] * no3_ + i[5] * no2_ + i[3] * no_ + i[4]] -= value;
-        tpdm3[i[2] * no5_ + i[0] * no4_ + i[1] * no3_ + i[5] * no2_ + i[4] * no_ + i[3]] -= value;
-        tpdm3[i[2] * no5_ + i[0] * no4_ + i[1] * no3_ + i[5] * no2_ + i[3] * no_ + i[4]] += value;
+        _add_3rdm_aab(tpdm3, i, value, true);
     });
-
     _add_3rdm(abb_ann_list_, abb_cre_list_, [&](const std::vector<size_t>& i, const double& value) {
-        tpdm3[i[0] * no5_ + i[1] * no4_ + i[2] * no3_ + i[3] * no2_ + i[4] * no_ + i[5]] += value;
-        tpdm3[i[0] * no5_ + i[1] * no4_ + i[2] * no3_ + i[3] * no2_ + i[5] * no_ + i[4]] -= value;
-        tpdm3[i[0] * no5_ + i[2] * no4_ + i[1] * no3_ + i[3] * no2_ + i[4] * no_ + i[5]] -= value;
-        tpdm3[i[0] * no5_ + i[2] * no4_ + i[1] * no3_ + i[3] * no2_ + i[5] * no_ + i[4]] += value;
-
-        tpdm3[i[1] * no5_ + i[0] * no4_ + i[2] * no3_ + i[4] * no2_ + i[3] * no_ + i[5]] += value;
-        tpdm3[i[1] * no5_ + i[0] * no4_ + i[2] * no3_ + i[5] * no2_ + i[3] * no_ + i[4]] -= value;
-        tpdm3[i[2] * no5_ + i[0] * no4_ + i[1] * no3_ + i[4] * no2_ + i[3] * no_ + i[5]] -= value;
-        tpdm3[i[2] * no5_ + i[0] * no4_ + i[1] * no3_ + i[5] * no2_ + i[3] * no_ + i[4]] += value;
-
-        tpdm3[i[2] * no5_ + i[1] * no4_ + i[0] * no3_ + i[5] * no2_ + i[4] * no_ + i[3]] += value;
-        tpdm3[i[2] * no5_ + i[1] * no4_ + i[0] * no3_ + i[4] * no2_ + i[5] * no_ + i[3]] -= value;
-        tpdm3[i[1] * no5_ + i[2] * no4_ + i[0] * no3_ + i[5] * no2_ + i[4] * no_ + i[3]] -= value;
-        tpdm3[i[1] * no5_ + i[2] * no4_ + i[0] * no3_ + i[4] * no2_ + i[5] * no_ + i[3]] += value;
+        _add_3rdm_abb(tpdm3, i, value, true);
     });
-
     _add_3rdm(bbb_ann_list_, bbb_cre_list_, [&](const std::vector<size_t>& i, const double& value) {
         _add_3rdm_aaa(tpdm3, i, value);
     });
@@ -1210,6 +1126,46 @@ void CI_RDMS::_add_3rdm_aaa(std::vector<double>& tpdm_aaa, const std::vector<siz
     tpdm_aaa[i[2] * no5_ + i[1] * no4_ + i[0] * no3_ + i[4] * no2_ + i[5] * no_ + i[3]] -= value;
 }
 
+void CI_RDMS::_add_3rdm_aab(std::vector<double>& aab, const std::vector<size_t>& i,
+                            const double& value, const bool& spin_free) {
+    aab[i[0] * no5_ + i[1] * no4_ + i[2] * no3_ + i[3] * no2_ + i[4] * no_ + i[5]] += value;
+    aab[i[0] * no5_ + i[1] * no4_ + i[2] * no3_ + i[4] * no2_ + i[3] * no_ + i[5]] -= value;
+    aab[i[1] * no5_ + i[0] * no4_ + i[2] * no3_ + i[3] * no2_ + i[4] * no_ + i[5]] -= value;
+    aab[i[1] * no5_ + i[0] * no4_ + i[2] * no3_ + i[4] * no2_ + i[3] * no_ + i[5]] += value;
+
+    if (spin_free) {
+        aab[i[0] * no5_ + i[2] * no4_ + i[1] * no3_ + i[3] * no2_ + i[5] * no_ + i[4]] += value;
+        aab[i[0] * no5_ + i[2] * no4_ + i[1] * no3_ + i[4] * no2_ + i[5] * no_ + i[3]] -= value;
+        aab[i[1] * no5_ + i[2] * no4_ + i[0] * no3_ + i[3] * no2_ + i[5] * no_ + i[4]] -= value;
+        aab[i[1] * no5_ + i[2] * no4_ + i[0] * no3_ + i[4] * no2_ + i[5] * no_ + i[3]] += value;
+
+        aab[i[2] * no5_ + i[1] * no4_ + i[0] * no3_ + i[5] * no2_ + i[4] * no_ + i[3]] += value;
+        aab[i[2] * no5_ + i[1] * no4_ + i[0] * no3_ + i[5] * no2_ + i[3] * no_ + i[4]] -= value;
+        aab[i[2] * no5_ + i[0] * no4_ + i[1] * no3_ + i[5] * no2_ + i[4] * no_ + i[3]] -= value;
+        aab[i[2] * no5_ + i[0] * no4_ + i[1] * no3_ + i[5] * no2_ + i[3] * no_ + i[4]] += value;
+    }
+}
+
+void CI_RDMS::_add_3rdm_abb(std::vector<double>& abb, const std::vector<size_t>& i,
+                            const double& value, const bool& spin_free) {
+    abb[i[0] * no5_ + i[1] * no4_ + i[2] * no3_ + i[3] * no2_ + i[4] * no_ + i[5]] += value;
+    abb[i[0] * no5_ + i[1] * no4_ + i[2] * no3_ + i[3] * no2_ + i[5] * no_ + i[4]] -= value;
+    abb[i[0] * no5_ + i[2] * no4_ + i[1] * no3_ + i[3] * no2_ + i[4] * no_ + i[5]] -= value;
+    abb[i[0] * no5_ + i[2] * no4_ + i[1] * no3_ + i[3] * no2_ + i[5] * no_ + i[4]] += value;
+
+    if (spin_free) {
+        abb[i[1] * no5_ + i[0] * no4_ + i[2] * no3_ + i[4] * no2_ + i[3] * no_ + i[5]] += value;
+        abb[i[1] * no5_ + i[0] * no4_ + i[2] * no3_ + i[5] * no2_ + i[3] * no_ + i[4]] -= value;
+        abb[i[2] * no5_ + i[0] * no4_ + i[1] * no3_ + i[4] * no2_ + i[3] * no_ + i[5]] -= value;
+        abb[i[2] * no5_ + i[0] * no4_ + i[1] * no3_ + i[5] * no2_ + i[3] * no_ + i[4]] += value;
+
+        abb[i[2] * no5_ + i[1] * no4_ + i[0] * no3_ + i[5] * no2_ + i[4] * no_ + i[3]] += value;
+        abb[i[2] * no5_ + i[1] * no4_ + i[0] * no3_ + i[4] * no2_ + i[5] * no_ + i[3]] -= value;
+        abb[i[1] * no5_ + i[2] * no4_ + i[0] * no3_ + i[5] * no2_ + i[4] * no_ + i[3]] -= value;
+        abb[i[1] * no5_ + i[2] * no4_ + i[0] * no3_ + i[4] * no2_ + i[5] * no_ + i[3]] += value;
+    }
+}
+
 void CI_RDMS::compute_3rdm_op(std::vector<double>& tprdm_aaa, std::vector<double>& tprdm_aab,
                               std::vector<double>& tprdm_abb, std::vector<double>& tprdm_bbb) {
 
@@ -1225,32 +1181,15 @@ void CI_RDMS::compute_3rdm_op(std::vector<double>& tprdm_aaa, std::vector<double
     tprdm_abb.assign(no6_, 0.0);
     tprdm_bbb.assign(no6_, 0.0);
 
-    auto _add_aab = [&](const std::vector<size_t>& i, const double& value) {
-        tprdm_aab[i[0] * no5_ + i[1] * no4_ + i[2] * no3_ + i[3] * no2_ + i[4] * no_ + i[5]] +=
-            value;
-        tprdm_aab[i[0] * no5_ + i[1] * no4_ + i[2] * no3_ + i[4] * no2_ + i[3] * no_ + i[5]] -=
-            value;
-        tprdm_aab[i[1] * no5_ + i[0] * no4_ + i[2] * no3_ + i[3] * no2_ + i[4] * no_ + i[5]] -=
-            value;
-        tprdm_aab[i[1] * no5_ + i[0] * no4_ + i[2] * no3_ + i[4] * no2_ + i[3] * no_ + i[5]] +=
-            value;
-    };
-
-    auto _add_abb = [&](const std::vector<size_t>& i, const double& value) {
-        tprdm_abb[i[0] * no5_ + i[1] * no4_ + i[2] * no3_ + i[3] * no2_ + i[4] * no_ + i[5]] +=
-            value;
-        tprdm_abb[i[0] * no5_ + i[1] * no4_ + i[2] * no3_ + i[3] * no2_ + i[5] * no_ + i[4]] -=
-            value;
-        tprdm_abb[i[0] * no5_ + i[2] * no4_ + i[1] * no3_ + i[3] * no2_ + i[4] * no_ + i[5]] -=
-            value;
-        tprdm_abb[i[0] * no5_ + i[2] * no4_ + i[1] * no3_ + i[3] * no2_ + i[5] * no_ + i[4]] +=
-            value;
-    };
-
     // Build the diagonal part
     _add_3rdm_op_II([&](const std::vector<size_t>& i,
                         const double& value) { _add_3rdm_aaa(tprdm_aaa, i, value); },
-                    _add_aab, _add_abb,
+                    [&](const std::vector<size_t>& i, const double& value) {
+                        _add_3rdm_aab(tprdm_aab, i, value, false);
+                    },
+                    [&](const std::vector<size_t>& i, const double& value) {
+                        _add_3rdm_abb(tprdm_abb, i, value, false);
+                    },
                     [&](const std::vector<size_t>& i, const double& value) {
                         _add_3rdm_aaa(tprdm_bbb, i, value);
                     });
@@ -1563,11 +1502,12 @@ void CI_RDMS::compute_3rdm_op(std::vector<double>& tprdm_aaa, std::vector<double
     _add_3rdm_op_IJ(op->aaa_list_, [&](const std::vector<size_t>& i, const double& value) {
         _add_3rdm_aaa(tprdm_aaa, i, value);
     });
-
-    _add_3rdm_op_IJ(op->aab_list_, _add_aab);
-
-    _add_3rdm_op_IJ(op->abb_list_, _add_abb);
-
+    _add_3rdm_op_IJ(op->aab_list_, [&](const std::vector<size_t>& i, const double& value) {
+        _add_3rdm_aab(tprdm_aab, i, value, false);
+    });
+    _add_3rdm_op_IJ(op->abb_list_, [&](const std::vector<size_t>& i, const double& value) {
+        _add_3rdm_abb(tprdm_abb, i, value, false);
+    });
     _add_3rdm_op_IJ(op->bbb_list_, [&](const std::vector<size_t>& i, const double& value) {
         _add_3rdm_aaa(tprdm_bbb, i, value);
     });
@@ -1921,54 +1861,26 @@ void CI_RDMS::compute_3rdm_sf_op(std::vector<double>& tpdm3) {
 
     tpdm3.assign(no6_, 0.0);
 
-    auto _add_aab = [&](const std::vector<size_t>& i, const double& value) {
-        tpdm3[i[0] * no5_ + i[1] * no4_ + i[2] * no3_ + i[3] * no2_ + i[4] * no_ + i[5]] += value;
-        tpdm3[i[0] * no5_ + i[1] * no4_ + i[2] * no3_ + i[4] * no2_ + i[3] * no_ + i[5]] -= value;
-        tpdm3[i[1] * no5_ + i[0] * no4_ + i[2] * no3_ + i[3] * no2_ + i[4] * no_ + i[5]] -= value;
-        tpdm3[i[1] * no5_ + i[0] * no4_ + i[2] * no3_ + i[4] * no2_ + i[3] * no_ + i[5]] += value;
-
-        tpdm3[i[2] * no5_ + i[1] * no4_ + i[0] * no3_ + i[5] * no2_ + i[4] * no_ + i[3]] += value;
-        tpdm3[i[2] * no5_ + i[1] * no4_ + i[0] * no3_ + i[5] * no2_ + i[3] * no_ + i[4]] -= value;
-        tpdm3[i[2] * no5_ + i[0] * no4_ + i[1] * no3_ + i[5] * no2_ + i[4] * no_ + i[3]] -= value;
-        tpdm3[i[2] * no5_ + i[0] * no4_ + i[1] * no3_ + i[5] * no2_ + i[3] * no_ + i[4]] += value;
-
-        tpdm3[i[0] * no5_ + i[2] * no4_ + i[1] * no3_ + i[3] * no2_ + i[5] * no_ + i[4]] += value;
-        tpdm3[i[0] * no5_ + i[2] * no4_ + i[1] * no3_ + i[4] * no2_ + i[5] * no_ + i[3]] -= value;
-        tpdm3[i[1] * no5_ + i[2] * no4_ + i[0] * no3_ + i[3] * no2_ + i[5] * no_ + i[4]] -= value;
-        tpdm3[i[1] * no5_ + i[2] * no4_ + i[0] * no3_ + i[4] * no2_ + i[5] * no_ + i[3]] += value;
-    };
-
-    auto _add_abb = [&](const std::vector<size_t>& i, const double& value) {
-        tpdm3[i[0] * no5_ + i[1] * no4_ + i[2] * no3_ + i[3] * no2_ + i[4] * no_ + i[5]] += value;
-        tpdm3[i[0] * no5_ + i[1] * no4_ + i[2] * no3_ + i[3] * no2_ + i[5] * no_ + i[4]] -= value;
-        tpdm3[i[0] * no5_ + i[2] * no4_ + i[1] * no3_ + i[3] * no2_ + i[4] * no_ + i[5]] -= value;
-        tpdm3[i[0] * no5_ + i[2] * no4_ + i[1] * no3_ + i[3] * no2_ + i[5] * no_ + i[4]] += value;
-
-        tpdm3[i[1] * no5_ + i[0] * no4_ + i[2] * no3_ + i[4] * no2_ + i[3] * no_ + i[5]] += value;
-        tpdm3[i[1] * no5_ + i[0] * no4_ + i[2] * no3_ + i[5] * no2_ + i[3] * no_ + i[4]] -= value;
-        tpdm3[i[2] * no5_ + i[0] * no4_ + i[1] * no3_ + i[4] * no2_ + i[3] * no_ + i[5]] -= value;
-        tpdm3[i[2] * no5_ + i[0] * no4_ + i[1] * no3_ + i[5] * no2_ + i[3] * no_ + i[4]] += value;
-
-        tpdm3[i[2] * no5_ + i[1] * no4_ + i[0] * no3_ + i[5] * no2_ + i[4] * no_ + i[3]] += value;
-        tpdm3[i[2] * no5_ + i[1] * no4_ + i[0] * no3_ + i[4] * no2_ + i[5] * no_ + i[3]] -= value;
-        tpdm3[i[1] * no5_ + i[2] * no4_ + i[0] * no3_ + i[5] * no2_ + i[4] * no_ + i[3]] -= value;
-        tpdm3[i[1] * no5_ + i[2] * no4_ + i[0] * no3_ + i[4] * no2_ + i[5] * no_ + i[3]] += value;
-    };
-
     // Build the diagonal part
     _add_3rdm_op_II(
         [&](const std::vector<size_t>& i, const double& value) { _add_3rdm_aaa(tpdm3, i, value); },
-        _add_aab, _add_abb,
+        [&](const std::vector<size_t>& i, const double& value) {
+            _add_3rdm_aab(tpdm3, i, value, true);
+        },
+        [&](const std::vector<size_t>& i, const double& value) {
+            _add_3rdm_abb(tpdm3, i, value, true);
+        },
         [&](const std::vector<size_t>& i, const double& value) { _add_3rdm_aaa(tpdm3, i, value); });
 
     _add_3rdm_op_IJ(op->aaa_list_, [&](const std::vector<size_t>& i, const double& value) {
         _add_3rdm_aaa(tpdm3, i, value);
     });
-
-    _add_3rdm_op_IJ(op->aab_list_, _add_aab);
-
-    _add_3rdm_op_IJ(op->abb_list_, _add_abb);
-
+    _add_3rdm_op_IJ(op->aab_list_, [&](const std::vector<size_t>& i, const double& value) {
+        _add_3rdm_aab(tpdm3, i, value, true);
+    });
+    _add_3rdm_op_IJ(op->abb_list_, [&](const std::vector<size_t>& i, const double& value) {
+        _add_3rdm_abb(tpdm3, i, value, true);
+    });
     _add_3rdm_op_IJ(op->bbb_list_, [&](const std::vector<size_t>& i, const double& value) {
         _add_3rdm_aaa(tpdm3, i, value);
     });

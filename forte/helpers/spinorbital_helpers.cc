@@ -115,18 +115,18 @@ ambit::Tensor spinorbital_fock(const std::shared_ptr<ForteIntegrals> ints,
     return h;
 }
 
-std::vector<ambit::Tensor> spinorbital_rdms(RDMs& rdms) {
-    auto max_rdm_level = rdms.max_rdm_level();
+std::vector<ambit::Tensor> spinorbital_rdms(std::shared_ptr<RDMs> rdms) {
+    auto max_rdm_level = rdms->max_rdm_level();
 
     std::vector<ambit::Tensor> sordms;
     if (max_rdm_level < 1)
         return sordms;
 
-    ambit::Tensor g1a = rdms.g1a();
-    ambit::Tensor g1b = rdms.g1b();
+    ambit::Tensor g1a = rdms->g1a();
+    ambit::Tensor g1b = rdms->g1b();
     size_t nso_actv = 2 * g1a.dim(0);
 
-    ambit::Tensor g1 = ambit::Tensor::build(ambit::CoreTensor, "g1", {nso_actv, nso_actv});
+    auto g1 = ambit::Tensor::build(ambit::CoreTensor, "g1", {nso_actv, nso_actv});
 
     g1a.iterate([&](const std::vector<size_t>& i, double& value) {
         g1.at({2 * i[0], 2 * i[1]}) = value;
@@ -139,21 +139,19 @@ std::vector<ambit::Tensor> spinorbital_rdms(RDMs& rdms) {
     if (max_rdm_level < 2)
         return sordms;
 
-    ambit::Tensor g2aa = rdms.g2aa();
-    ambit::Tensor g2ab = rdms.g2ab();
-    ambit::Tensor g2bb = rdms.g2bb();
+    ambit::Tensor g2aa = rdms->g2aa();
+    ambit::Tensor g2ab = rdms->g2ab();
+    ambit::Tensor g2bb = rdms->g2bb();
 
-    ambit::Tensor g2 =
-        ambit::Tensor::build(ambit::CoreTensor, "g2", {nso_actv, nso_actv, nso_actv, nso_actv});
+    std::vector<size_t> dim4(4, nso_actv);
+    auto g2 = ambit::Tensor::build(ambit::CoreTensor, "g2", dim4);
 
     g2aa.iterate([&](const std::vector<size_t>& i, double& value) {
         g2.at({2 * i[0], 2 * i[1], 2 * i[2], 2 * i[3]}) = value;
     });
-
     g2bb.iterate([&](const std::vector<size_t>& i, double& value) {
         g2.at({2 * i[0] + 1, 2 * i[1] + 1, 2 * i[2] + 1, 2 * i[3] + 1}) = value;
     });
-
     g2ab.iterate([&](const std::vector<size_t>& i, double& value) {
         const auto a = 2 * i[0];
         const auto B = 2 * i[1] + 1;
@@ -164,29 +162,26 @@ std::vector<ambit::Tensor> spinorbital_rdms(RDMs& rdms) {
         g2.at({B, a, r, S}) = -value;
         g2.at({B, a, S, r}) = value;
     });
-
     sordms.push_back(g2);
 
     if (max_rdm_level < 3)
         return sordms;
 
-    ambit::Tensor g3aaa = rdms.g3aaa();
-    ambit::Tensor g3aab = rdms.g3aab();
-    ambit::Tensor g3abb = rdms.g3abb();
-    ambit::Tensor g3bbb = rdms.g3bbb();
+    ambit::Tensor g3aaa = rdms->g3aaa();
+    ambit::Tensor g3aab = rdms->g3aab();
+    ambit::Tensor g3abb = rdms->g3abb();
+    ambit::Tensor g3bbb = rdms->g3bbb();
 
-    ambit::Tensor g3 = ambit::Tensor::build(
-        ambit::CoreTensor, "g3", {nso_actv, nso_actv, nso_actv, nso_actv, nso_actv, nso_actv});
+    std::vector<size_t> dim6(6, nso_actv);
+    auto g3 = ambit::Tensor::build(ambit::CoreTensor, "g3", dim6);
 
     g3aaa.iterate([&](const std::vector<size_t>& i, double& value) {
         g3.at({2 * i[0], 2 * i[1], 2 * i[2], 2 * i[3], 2 * i[4], 2 * i[5]}) = value;
     });
-
     g3bbb.iterate([&](const std::vector<size_t>& i, double& value) {
         g3.at({2 * i[0] + 1, 2 * i[1] + 1, 2 * i[2] + 1, 2 * i[3] + 1, 2 * i[4] + 1,
                2 * i[5] + 1}) = value;
     });
-
     g3aab.iterate([&](const std::vector<size_t>& i, double& value) {
         const auto a = 2 * i[0];
         const auto b = 2 * i[1];
@@ -204,7 +199,6 @@ std::vector<ambit::Tensor> spinorbital_rdms(RDMs& rdms) {
         g3.at({a, C, b, T, s, r}) = +value;
         g3.at({C, b, a, T, s, r}) = +value;
     });
-
     g3abb.iterate([&](const std::vector<size_t>& i, double& value) {
         const auto a = 2 * i[0];
         const auto B = 2 * i[1] + 1;
@@ -222,24 +216,23 @@ std::vector<ambit::Tensor> spinorbital_rdms(RDMs& rdms) {
         g3.at({B, a, C, T, S, r}) = +value;
         g3.at({C, B, a, T, S, r}) = +value;
     });
-
     sordms.push_back(g3);
 
     return sordms;
 }
 
-std::vector<ambit::Tensor> spinorbital_cumulants(RDMs& rdms) {
-    auto max_rdm_level = rdms.max_rdm_level();
+std::vector<ambit::Tensor> spinorbital_cumulants(std::shared_ptr<RDMs> rdms) {
+    auto max_rdm_level = rdms->max_rdm_level();
 
     std::vector<ambit::Tensor> sordms;
     if (max_rdm_level < 1)
         return sordms;
 
-    ambit::Tensor l1a = rdms.g1a();
-    ambit::Tensor l1b = rdms.g1b();
+    ambit::Tensor l1a = rdms->g1a();
+    ambit::Tensor l1b = rdms->g1b();
     size_t nso_actv = 2 * l1a.dim(0);
 
-    ambit::Tensor l1 = ambit::Tensor::build(ambit::CoreTensor, "l1", {nso_actv, nso_actv});
+    auto l1 = ambit::Tensor::build(ambit::CoreTensor, "l1", {nso_actv, nso_actv});
 
     l1a.iterate([&](const std::vector<size_t>& i, double& value) {
         l1.at({2 * i[0], 2 * i[1]}) = value;
@@ -252,21 +245,19 @@ std::vector<ambit::Tensor> spinorbital_cumulants(RDMs& rdms) {
     if (max_rdm_level < 2)
         return sordms;
 
-    ambit::Tensor l2aa = rdms.L2aa();
-    ambit::Tensor l2ab = rdms.L2ab();
-    ambit::Tensor l2bb = rdms.L2bb();
+    ambit::Tensor l2aa = rdms->L2aa();
+    ambit::Tensor l2ab = rdms->L2ab();
+    ambit::Tensor l2bb = rdms->L2bb();
 
-    ambit::Tensor l2 =
-        ambit::Tensor::build(ambit::CoreTensor, "l2", {nso_actv, nso_actv, nso_actv, nso_actv});
+    std::vector<size_t> dim4(4, nso_actv);
+    auto l2 = ambit::Tensor::build(ambit::CoreTensor, "l2", dim4);
 
     l2aa.iterate([&](const std::vector<size_t>& i, double& value) {
         l2.at({2 * i[0], 2 * i[1], 2 * i[2], 2 * i[3]}) = value;
     });
-
     l2bb.iterate([&](const std::vector<size_t>& i, double& value) {
         l2.at({2 * i[0] + 1, 2 * i[1] + 1, 2 * i[2] + 1, 2 * i[3] + 1}) = value;
     });
-
     l2ab.iterate([&](const std::vector<size_t>& i, double& value) {
         const auto a = 2 * i[0];
         const auto B = 2 * i[1] + 1;
@@ -277,29 +268,26 @@ std::vector<ambit::Tensor> spinorbital_cumulants(RDMs& rdms) {
         l2.at({B, a, r, S}) = -value;
         l2.at({B, a, S, r}) = value;
     });
-
     sordms.push_back(l2);
 
     if (max_rdm_level < 3)
         return sordms;
 
-    ambit::Tensor l3aaa = rdms.L3aaa();
-    ambit::Tensor l3aab = rdms.L3aab();
-    ambit::Tensor l3abb = rdms.L3abb();
-    ambit::Tensor l3bbb = rdms.L3bbb();
+    ambit::Tensor l3aaa = rdms->L3aaa();
+    ambit::Tensor l3aab = rdms->L3aab();
+    ambit::Tensor l3abb = rdms->L3abb();
+    ambit::Tensor l3bbb = rdms->L3bbb();
 
-    ambit::Tensor l3 = ambit::Tensor::build(
-        ambit::CoreTensor, "l3", {nso_actv, nso_actv, nso_actv, nso_actv, nso_actv, nso_actv});
+    std::vector<size_t> dim6(6, nso_actv);
+    auto l3 = ambit::Tensor::build(ambit::CoreTensor, "l3", dim6);
 
     l3aaa.iterate([&](const std::vector<size_t>& i, double& value) {
         l3.at({2 * i[0], 2 * i[1], 2 * i[2], 2 * i[3], 2 * i[4], 2 * i[5]}) = value;
     });
-
     l3bbb.iterate([&](const std::vector<size_t>& i, double& value) {
         l3.at({2 * i[0] + 1, 2 * i[1] + 1, 2 * i[2] + 1, 2 * i[3] + 1, 2 * i[4] + 1,
                2 * i[5] + 1}) = value;
     });
-
     l3aab.iterate([&](const std::vector<size_t>& i, double& value) {
         const auto a = 2 * i[0];
         const auto b = 2 * i[1];
@@ -317,7 +305,6 @@ std::vector<ambit::Tensor> spinorbital_cumulants(RDMs& rdms) {
         l3.at({a, C, b, T, s, r}) = +value;
         l3.at({C, b, a, T, s, r}) = +value;
     });
-
     l3abb.iterate([&](const std::vector<size_t>& i, double& value) {
         const auto a = 2 * i[0];
         const auto B = 2 * i[1] + 1;
@@ -335,7 +322,6 @@ std::vector<ambit::Tensor> spinorbital_cumulants(RDMs& rdms) {
         l3.at({B, a, C, T, S, r}) = +value;
         l3.at({C, B, a, T, S, r}) = +value;
     });
-
     sordms.push_back(l3);
 
     return sordms;

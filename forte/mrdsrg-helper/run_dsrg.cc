@@ -42,7 +42,8 @@
 
 namespace forte {
 
-std::unique_ptr<MASTER_DSRG> make_dsrg_method(RDMs rdms, std::shared_ptr<SCFInfo> scf_info,
+std::unique_ptr<MASTER_DSRG> make_dsrg_method(std::shared_ptr<RDMs> rdms,
+                                              std::shared_ptr<SCFInfo> scf_info,
                                               std::shared_ptr<ForteOptions> options,
                                               std::shared_ptr<ForteIntegrals> ints,
                                               std::shared_ptr<MOSpaceInfo> mo_space_info) {
@@ -63,7 +64,8 @@ std::unique_ptr<MASTER_DSRG> make_dsrg_method(RDMs rdms, std::shared_ptr<SCFInfo
     return dsrg_method;
 }
 
-std::unique_ptr<SADSRG> make_sadsrg_method(RDMs rdms, std::shared_ptr<SCFInfo> scf_info,
+std::unique_ptr<SADSRG> make_sadsrg_method(std::shared_ptr<RDMs> rdms,
+                                           std::shared_ptr<SCFInfo> scf_info,
                                            std::shared_ptr<ForteOptions> options,
                                            std::shared_ptr<ForteIntegrals> ints,
                                            std::shared_ptr<MOSpaceInfo> mo_space_info) {
@@ -79,21 +81,24 @@ std::unique_ptr<SADSRG> make_sadsrg_method(RDMs rdms, std::shared_ptr<SCFInfo> s
     return dsrg_method;
 }
 
-std::unique_ptr<MRDSRG_SO> make_dsrg_so_y(RDMs rdms, std::shared_ptr<SCFInfo> scf_info,
+std::unique_ptr<MRDSRG_SO> make_dsrg_so_y(std::shared_ptr<RDMs> rdms,
+                                          std::shared_ptr<SCFInfo> scf_info,
                                           std::shared_ptr<ForteOptions> options,
                                           std::shared_ptr<ForteIntegrals> ints,
                                           std::shared_ptr<MOSpaceInfo> mo_space_info) {
     return std::make_unique<MRDSRG_SO>(rdms, scf_info, options, ints, mo_space_info);
 }
 
-std::unique_ptr<SOMRDSRG> make_dsrg_so_f(RDMs rdms, std::shared_ptr<SCFInfo> scf_info,
+std::unique_ptr<SOMRDSRG> make_dsrg_so_f(std::shared_ptr<RDMs> rdms,
+                                         std::shared_ptr<SCFInfo> scf_info,
                                          std::shared_ptr<ForteOptions> options,
                                          std::shared_ptr<ForteIntegrals> ints,
                                          std::shared_ptr<MOSpaceInfo> mo_space_info) {
     return std::make_unique<SOMRDSRG>(rdms, scf_info, options, ints, mo_space_info);
 }
 
-std::unique_ptr<DSRG_MRPT> make_dsrg_spin_adapted(RDMs rdms, std::shared_ptr<SCFInfo> scf_info,
+std::unique_ptr<DSRG_MRPT> make_dsrg_spin_adapted(std::shared_ptr<RDMs> rdms,
+                                                  std::shared_ptr<SCFInfo> scf_info,
                                                   std::shared_ptr<ForteOptions> options,
                                                   std::shared_ptr<ForteIntegrals> ints,
                                                   std::shared_ptr<MOSpaceInfo> mo_space_info) {

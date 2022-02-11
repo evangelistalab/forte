@@ -179,7 +179,7 @@ double MCSCF_2STEP::compute_energy() {
     double e_c;
     std::tie(as_solver, e_c) = diagonalize_hamiltonian(
         cas_grad.active_space_ints(), {print_ ? print_ : 1, e_conv_, r_conv, false, false});
-    auto rdms = as_solver->compute_average_rdms(state_weights_map_, 2);
+    auto rdms = as_solver->compute_average_rdms(state_weights_map_, 2, RDMsType::spin_free);
     cas_grad.set_rdms(rdms);
     cas_grad.evaluate(R, dG);
 
@@ -347,7 +347,7 @@ double MCSCF_2STEP::compute_energy() {
             auto print_level = debug_print_ ? 5 : print_;
             std::tie(as_solver, e_c) = diagonalize_hamiltonian(
                 fci_ints, {print_level, dl_e_conv, dl_r_conv, true, dump_wfn});
-            rdms = as_solver->compute_average_rdms(state_weights_map_, 2);
+            rdms = as_solver->compute_average_rdms(state_weights_map_, 2, RDMsType::spin_free);
         }
 
         diis_manager.reset_subspace();
@@ -391,7 +391,7 @@ double MCSCF_2STEP::compute_energy() {
         // for nuclear gradient
         if (der_type_ == "FIRST") {
             // recompute gradient due to canonicalization
-            rdms = as_solver->compute_average_rdms(state_weights_map_, 2);
+            rdms = as_solver->compute_average_rdms(state_weights_map_, 2, RDMsType::spin_free);
             cas_grad.set_rdms(rdms);
             cas_grad.evaluate(R, dG);
 

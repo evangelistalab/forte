@@ -46,7 +46,6 @@ void CI_RDMS::compute_rdms_dynamic(std::vector<double>& oprdm_a, std::vector<dou
                                    std::vector<double>& tprdm_bb, std::vector<double>& tprdm_aaa,
                                    std::vector<double>& tprdm_aab, std::vector<double>& tprdm_abb,
                                    std::vector<double>& tprdm_bbb) {
-
     oprdm_a.resize(no2_, 0.0);
     oprdm_b.resize(no2_, 0.0);
 
@@ -74,25 +73,27 @@ void CI_RDMS::compute_rdms_dynamic(std::vector<double>& oprdm_a, std::vector<dou
         String det_b = sorted_b_dets[I].get_beta_bits();
 
         for (size_t nda = 0; nda < na_; ++nda) {
-            int p = det_a.find_first_one();
+            size_t p = det_a.find_first_one();
             oprdm_a[p * no_ + p] += CIa;
 
             String det_ac(det_a);
             det_a.clear_first_one();
             for (size_t ndaa = nda; ndaa < na_; ++ndaa) {
-                int q = det_ac.find_first_one();
+                size_t q = det_ac.find_first_one();
                 // aa 2-rdm
-                tprdm_aa[p * no3_ + q * no2_ + p * no_ + q] += CIa;
-                tprdm_aa[q * no3_ + p * no2_ + q * no_ + p] += CIa;
-                tprdm_aa[p * no3_ + q * no2_ + q * no_ + p] -= CIa;
-                tprdm_aa[q * no3_ + p * no2_ + p * no_ + q] -= CIa;
+                _add_2rdm_aa(tprdm_aa, {p, q, p, q}, CIa);
+                //                tprdm_aa[p * no3_ + q * no2_ + p * no_ + q] += CIa;
+                //                tprdm_aa[q * no3_ + p * no2_ + q * no_ + p] += CIa;
+                //                tprdm_aa[p * no3_ + q * no2_ + q * no_ + p] -= CIa;
+                //                tprdm_aa[q * no3_ + p * no2_ + p * no_ + q] -= CIa;
 
                 det_ac.clear_first_one();
                 // aaa 3rdm
                 String det_acc(det_ac);
                 for (size_t ndaaa = ndaa + 1; ndaaa < na_; ++ndaaa) {
                     size_t r = det_acc.find_first_one();
-                    fill_3rdm(tprdm_aaa, CIa, p, q, r, p, q, r, true);
+                    _add_3rdm_aaa(tprdm_aaa, {p, q, r, p, q, r}, 2.0 * CIa);
+                    //                    fill_3rdm(tprdm_aaa, CIa, p, q, r, p, q, r, true);
                     det_acc.clear_first_one();
                 }
 
@@ -100,10 +101,13 @@ void CI_RDMS::compute_rdms_dynamic(std::vector<double>& oprdm_a, std::vector<dou
                 String det_bc(det_b);
                 for (size_t n = 0; n < nb_; ++n) {
                     size_t r = det_bc.find_first_one();
-                    tprdm_aab[p * no5_ + q * no4_ + r * no3_ + p * no2_ + q * no_ + r] += CIa;
-                    tprdm_aab[p * no5_ + q * no4_ + r * no3_ + q * no2_ + p * no_ + r] -= CIa;
-                    tprdm_aab[q * no5_ + p * no4_ + r * no3_ + p * no2_ + q * no_ + r] -= CIa;
-                    tprdm_aab[q * no5_ + p * no4_ + r * no3_ + q * no2_ + p * no_ + r] += CIa;
+                    _add_3rdm_aab(tprdm_aab, {p, q, r, p, q, r}, CIa, false);
+                    //                    tprdm_aab[p * no5_ + q * no4_ + r * no3_ + p * no2_ + q *
+                    //                    no_ + r] += CIa; tprdm_aab[p * no5_ + q * no4_ + r * no3_
+                    //                    + q * no2_ + p * no_ + r] -= CIa; tprdm_aab[q * no5_ + p *
+                    //                    no4_ + r * no3_ + p * no2_ + q * no_ + r] -= CIa;
+                    //                    tprdm_aab[q * no5_ + p * no4_ + r * no3_ + q * no2_ + p *
+                    //                    no_ + r] += CIa;
 
                     det_bc.clear_first_one();
                 }
@@ -121,7 +125,7 @@ void CI_RDMS::compute_rdms_dynamic(std::vector<double>& oprdm_a, std::vector<dou
         size_t Ib = a_sorted_string_list_.add(I);
         double CIb = evecs_->get(Ib, root1_) * evecs_->get(Ib, root2_);
         for (size_t ndb = 0; ndb < nb_; ++ndb) {
-            int p = det_b.find_first_one();
+            size_t p = det_b.find_first_one();
 
             // b -1rdm
             oprdm_b[p * no_ + p] += CIb;
@@ -129,17 +133,19 @@ void CI_RDMS::compute_rdms_dynamic(std::vector<double>& oprdm_a, std::vector<dou
             for (size_t ndbb = ndb; ndbb < nb_; ++ndbb) {
                 size_t q = det_bc.find_first_one();
                 // bb-2rdm
-                tprdm_bb[p * no3_ + q * no2_ + p * no_ + q] += CIb;
-                tprdm_bb[q * no3_ + p * no2_ + q * no_ + p] += CIb;
-                tprdm_bb[p * no3_ + q * no2_ + q * no_ + p] -= CIb;
-                tprdm_bb[q * no3_ + p * no2_ + p * no_ + q] -= CIb;
+                _add_2rdm_aa(tprdm_bb, {p, q, p, q}, CIb);
+                //                tprdm_bb[p * no3_ + q * no2_ + p * no_ + q] += CIb;
+                //                tprdm_bb[q * no3_ + p * no2_ + q * no_ + p] += CIb;
+                //                tprdm_bb[p * no3_ + q * no2_ + q * no_ + p] -= CIb;
+                //                tprdm_bb[q * no3_ + p * no2_ + p * no_ + q] -= CIb;
                 det_bc.clear_first_one();
 
                 // bbb-3rdm
                 String det_bcc(det_bc);
                 for (size_t ndbbb = ndbb + 1; ndbbb < nb_; ++ndbbb) {
                     size_t r = det_bcc.find_first_one();
-                    fill_3rdm(tprdm_bbb, CIa, p, q, r, p, q, r, true);
+                    _add_3rdm_aaa(tprdm_bbb, {p, q, r, p, q, r}, 2.0 * CIb);
+                    //                    fill_3rdm(tprdm_bbb, CIa, p, q, r, p, q, r, true);
                     det_bcc.clear_first_one();
                 }
 
@@ -147,10 +153,13 @@ void CI_RDMS::compute_rdms_dynamic(std::vector<double>& oprdm_a, std::vector<dou
                 String det_ac(det_a);
                 for (size_t n = 0; n < na_; ++n) {
                     size_t r = det_ac.find_first_one();
-                    tprdm_abb[r * no5_ + p * no4_ + q * no3_ + r * no2_ + p * no_ + q] += CIb;
-                    tprdm_abb[r * no5_ + p * no4_ + q * no3_ + r * no2_ + q * no_ + p] -= CIb;
-                    tprdm_abb[r * no5_ + q * no4_ + p * no3_ + r * no2_ + p * no_ + q] -= CIb;
-                    tprdm_abb[r * no5_ + q * no4_ + p * no3_ + r * no2_ + q * no_ + p] += CIb;
+                    _add_3rdm_abb(tprdm_abb, {r, p, q, r, p, q}, CIb, false);
+                    //                    tprdm_abb[r * no5_ + p * no4_ + q * no3_ + r * no2_ + p *
+                    //                    no_ + q] += CIb; tprdm_abb[r * no5_ + p * no4_ + q * no3_
+                    //                    + r * no2_ + q * no_ + p] -= CIb; tprdm_abb[r * no5_ + q *
+                    //                    no4_ + p * no3_ + r * no2_ + p * no_ + q] -= CIb;
+                    //                    tprdm_abb[r * no5_ + q * no4_ + p * no3_ + r * no2_ + q *
+                    //                    no_ + p] += CIb;
 
                     det_ac.clear_first_one();
                 }
@@ -200,38 +209,54 @@ void CI_RDMS::compute_rdms_dynamic(std::vector<double>& oprdm_a, std::vector<dou
                     Iac ^= Ia_sub;
                     for (size_t nbit_a = 1; nbit_a < na_; nbit_a++) {
                         uint64_t m = Iac.find_first_one();
-                        tprdm_aa[p * no3_ + m * no2_ + q * no_ + m] += value;
-                        tprdm_aa[m * no3_ + p * no2_ + q * no_ + m] -= value;
-                        tprdm_aa[m * no3_ + p * no2_ + m * no_ + q] += value;
-                        tprdm_aa[p * no3_ + m * no2_ + m * no_ + q] -= value;
-
-                        tprdm_aa[q * no3_ + m * no2_ + p * no_ + m] += value;
-                        tprdm_aa[m * no3_ + q * no2_ + p * no_ + m] -= value;
-                        tprdm_aa[m * no3_ + q * no2_ + m * no_ + p] += value;
-                        tprdm_aa[q * no3_ + m * no2_ + m * no_ + p] -= value;
+                        _add_2rdm_aa(tprdm_aa, {p, m, q, m}, value);
+                        _add_2rdm_aa(tprdm_aa, {q, m, p, m}, value);
+                        //
+                        //                        tprdm_aa[p * no3_ + m * no2_ + q * no_ + m] +=
+                        //                        value; tprdm_aa[m * no3_ + p * no2_ + q * no_ + m]
+                        //                        -= value; tprdm_aa[m * no3_ + p * no2_ + m * no_ +
+                        //                        q] += value; tprdm_aa[p * no3_ + m * no2_ + m *
+                        //                        no_ + q] -= value;
+                        //
+                        //                        tprdm_aa[q * no3_ + m * no2_ + p * no_ + m] +=
+                        //                        value; tprdm_aa[m * no3_ + q * no2_ + p * no_ + m]
+                        //                        -= value; tprdm_aa[m * no3_ + q * no2_ + m * no_ +
+                        //                        p] += value; tprdm_aa[q * no3_ + m * no2_ + m *
+                        //                        no_ + p] -= value;
 
                         Iac.clear_first_one();
 
                         auto Ibc = Ib;
                         for (size_t idx = 0; idx < nb_; ++idx) {
                             uint64_t n = Ibc.find_first_one();
-                            tprdm_aab[p * no5_ + m * no4_ + n * no3_ + q * no2_ + m * no_ + n] +=
-                                value;
-                            tprdm_aab[p * no5_ + m * no4_ + n * no3_ + m * no2_ + q * no_ + n] -=
-                                value;
-                            tprdm_aab[m * no5_ + p * no4_ + n * no3_ + m * no2_ + q * no_ + n] +=
-                                value;
-                            tprdm_aab[m * no5_ + p * no4_ + n * no3_ + q * no2_ + m * no_ + n] -=
-                                value;
+                            _add_3rdm_aab(tprdm_aab, {p, m, n, q, m, n}, value, false);
+                            _add_3rdm_aab(tprdm_aab, {q, m, n, p, m, n}, value, false);
 
-                            tprdm_aab[q * no5_ + m * no4_ + n * no3_ + p * no2_ + m * no_ + n] +=
-                                value;
-                            tprdm_aab[q * no5_ + m * no4_ + n * no3_ + m * no2_ + p * no_ + n] -=
-                                value;
-                            tprdm_aab[m * no5_ + q * no4_ + n * no3_ + m * no2_ + p * no_ + n] +=
-                                value;
-                            tprdm_aab[m * no5_ + q * no4_ + n * no3_ + p * no2_ + m * no_ + n] -=
-                                value;
+                            //                            tprdm_aab[p * no5_ + m * no4_ + n * no3_ +
+                            //                            q * no2_ + m * no_ + n] +=
+                            //                                value;
+                            //                            tprdm_aab[p * no5_ + m * no4_ + n * no3_ +
+                            //                            m * no2_ + q * no_ + n] -=
+                            //                                value;
+                            //                            tprdm_aab[m * no5_ + p * no4_ + n * no3_ +
+                            //                            m * no2_ + q * no_ + n] +=
+                            //                                value;
+                            //                            tprdm_aab[m * no5_ + p * no4_ + n * no3_ +
+                            //                            q * no2_ + m * no_ + n] -=
+                            //                                value;
+                            //
+                            //                            tprdm_aab[q * no5_ + m * no4_ + n * no3_ +
+                            //                            p * no2_ + m * no_ + n] +=
+                            //                                value;
+                            //                            tprdm_aab[q * no5_ + m * no4_ + n * no3_ +
+                            //                            m * no2_ + p * no_ + n] -=
+                            //                                value;
+                            //                            tprdm_aab[m * no5_ + q * no4_ + n * no3_ +
+                            //                            m * no2_ + p * no_ + n] +=
+                            //                                value;
+                            //                            tprdm_aab[m * no5_ + q * no4_ + n * no3_ +
+                            //                            p * no2_ + m * no_ + n] -=
+                            //                                value;
                             Ibc.clear_first_one();
                         }
                     }
@@ -245,23 +270,34 @@ void CI_RDMS::compute_rdms_dynamic(std::vector<double>& oprdm_a, std::vector<dou
                         String Ibcc = Ibc;
                         for (size_t idx = nidx + 1; idx < nb_; ++idx) {
                             uint64_t m = Ibcc.find_first_one();
-                            tprdm_abb[p * no5_ + m * no4_ + n * no3_ + q * no2_ + m * no_ + n] +=
-                                value;
-                            tprdm_abb[p * no5_ + m * no4_ + n * no3_ + q * no2_ + n * no_ + m] -=
-                                value;
-                            tprdm_abb[p * no5_ + n * no4_ + m * no3_ + q * no2_ + n * no_ + m] +=
-                                value;
-                            tprdm_abb[p * no5_ + n * no4_ + m * no3_ + q * no2_ + m * no_ + n] -=
-                                value;
+                            _add_3rdm_abb(tprdm_abb, {p, m, n, q, m, n}, value, false);
+                            _add_3rdm_abb(tprdm_abb, {q, m, n, p, m, n}, value, false);
 
-                            tprdm_abb[q * no5_ + m * no4_ + n * no3_ + p * no2_ + m * no_ + n] +=
-                                value;
-                            tprdm_abb[q * no5_ + m * no4_ + n * no3_ + p * no2_ + n * no_ + m] -=
-                                value;
-                            tprdm_abb[q * no5_ + n * no4_ + m * no3_ + p * no2_ + n * no_ + m] +=
-                                value;
-                            tprdm_abb[q * no5_ + n * no4_ + m * no3_ + p * no2_ + m * no_ + n] -=
-                                value;
+                            //                            tprdm_abb[p * no5_ + m * no4_ + n * no3_ +
+                            //                            q * no2_ + m * no_ + n] +=
+                            //                                value;
+                            //                            tprdm_abb[p * no5_ + m * no4_ + n * no3_ +
+                            //                            q * no2_ + n * no_ + m] -=
+                            //                                value;
+                            //                            tprdm_abb[p * no5_ + n * no4_ + m * no3_ +
+                            //                            q * no2_ + n * no_ + m] +=
+                            //                                value;
+                            //                            tprdm_abb[p * no5_ + n * no4_ + m * no3_ +
+                            //                            q * no2_ + m * no_ + n] -=
+                            //                                value;
+                            //
+                            //                            tprdm_abb[q * no5_ + m * no4_ + n * no3_ +
+                            //                            p * no2_ + m * no_ + n] +=
+                            //                                value;
+                            //                            tprdm_abb[q * no5_ + m * no4_ + n * no3_ +
+                            //                            p * no2_ + n * no_ + m] -=
+                            //                                value;
+                            //                            tprdm_abb[q * no5_ + n * no4_ + m * no3_ +
+                            //                            p * no2_ + n * no_ + m] +=
+                            //                                value;
+                            //                            tprdm_abb[q * no5_ + n * no4_ + m * no3_ +
+                            //                            p * no2_ + m * no_ + n] -=
+                            //                                value;
                             Ibcc.clear_first_one();
                         }
                     }
@@ -274,7 +310,9 @@ void CI_RDMS::compute_rdms_dynamic(std::vector<double>& oprdm_a, std::vector<dou
                         for (size_t idd = id + 1; idd < na_; ++idd) {
                             // while( I_n > 0 ){
                             uint64_t m = I_n.find_first_one();
-                            fill_3rdm(tprdm_aaa, value, p, n, m, q, n, m, false);
+                            _add_3rdm_aaa(tprdm_aaa, {p, n, m, q, n, m}, value);
+                            //                            fill_3rdm(tprdm_aaa, value, p, n, m, q, n,
+                            //                            m, false);
                             I_n.clear_first_one();
                         }
                         Iacc.clear_first_one();
@@ -295,37 +333,50 @@ void CI_RDMS::compute_rdms_dynamic(std::vector<double>& oprdm_a, std::vector<dou
                     double Csq = CI * evecs_->get(b_sorted_string_list_.add(J), root2_);
                     double value = Csq * Ia.slater_sign(p, q) * Ja.slater_sign(r, s);
 
-                    tprdm_aa[p * no3_ + q * no2_ + r * no_ + s] += value;
-                    tprdm_aa[p * no3_ + q * no2_ + s * no_ + r] -= value;
-                    tprdm_aa[q * no3_ + p * no2_ + r * no_ + s] -= value;
-                    tprdm_aa[q * no3_ + p * no2_ + s * no_ + r] += value;
-
-                    tprdm_aa[r * no3_ + s * no2_ + p * no_ + q] += value;
-                    tprdm_aa[s * no3_ + r * no2_ + p * no_ + q] -= value;
-                    tprdm_aa[r * no3_ + s * no2_ + q * no_ + p] -= value;
-                    tprdm_aa[s * no3_ + r * no2_ + q * no_ + p] += value;
+                    _add_2rdm_aa(tprdm_aa, {p, q, r, s}, value);
+                    _add_2rdm_aa(tprdm_aa, {r, s, p, q}, value);
+                    //                    tprdm_aa[p * no3_ + q * no2_ + r * no_ + s] += value;
+                    //                    tprdm_aa[p * no3_ + q * no2_ + s * no_ + r] -= value;
+                    //                    tprdm_aa[q * no3_ + p * no2_ + r * no_ + s] -= value;
+                    //                    tprdm_aa[q * no3_ + p * no2_ + s * no_ + r] += value;
+                    //
+                    //                    tprdm_aa[r * no3_ + s * no2_ + p * no_ + q] += value;
+                    //                    tprdm_aa[s * no3_ + r * no2_ + p * no_ + q] -= value;
+                    //                    tprdm_aa[r * no3_ + s * no2_ + q * no_ + p] -= value;
+                    //                    tprdm_aa[s * no3_ + r * no2_ + q * no_ + p] += value;
 
                     // 3-rdm
                     String Iac(Ia);
                     Iac ^= Ia_sub;
                     for (size_t nda = 1; nda < na_; ++nda) {
                         uint64_t n = Iac.find_first_one();
-                        fill_3rdm(tprdm_aaa, value, p, q, n, r, s, n, false);
+                        _add_3rdm_aaa(tprdm_aaa, {p, q, n, r, s, n}, value);
+                        //                        fill_3rdm(tprdm_aaa, value, p, q, n, r, s, n,
+                        //                        false);
                         Iac.clear_first_one();
                     }
 
                     String Ibc = Ib;
                     for (size_t ndb = 0; ndb < nb_; ++ndb) {
                         uint64_t n = Ibc.find_first_one();
-                        tprdm_aab[p * no5_ + q * no4_ + n * no3_ + r * no2_ + s * no_ + n] += value;
-                        tprdm_aab[p * no5_ + q * no4_ + n * no3_ + s * no2_ + r * no_ + n] -= value;
-                        tprdm_aab[q * no5_ + p * no4_ + n * no3_ + s * no2_ + r * no_ + n] += value;
-                        tprdm_aab[q * no5_ + p * no4_ + n * no3_ + r * no2_ + s * no_ + n] -= value;
-
-                        tprdm_aab[r * no5_ + s * no4_ + n * no3_ + p * no2_ + q * no_ + n] += value;
-                        tprdm_aab[s * no5_ + r * no4_ + n * no3_ + p * no2_ + q * no_ + n] -= value;
-                        tprdm_aab[s * no5_ + r * no4_ + n * no3_ + q * no2_ + p * no_ + n] += value;
-                        tprdm_aab[r * no5_ + s * no4_ + n * no3_ + q * no2_ + p * no_ + n] -= value;
+                        _add_3rdm_aab(tprdm_aab, {p, q, n, r, s, n}, value, false);
+                        _add_3rdm_aab(tprdm_aab, {r, s, n, p, q, n}, value, false);
+                        //
+                        //                        tprdm_aab[p * no5_ + q * no4_ + n * no3_ + r *
+                        //                        no2_ + s * no_ + n] += value; tprdm_aab[p * no5_ +
+                        //                        q * no4_ + n * no3_ + s * no2_ + r * no_ + n] -=
+                        //                        value; tprdm_aab[q * no5_ + p * no4_ + n * no3_ +
+                        //                        s * no2_ + r * no_ + n] += value; tprdm_aab[q *
+                        //                        no5_ + p * no4_ + n * no3_ + r * no2_ + s * no_ +
+                        //                        n] -= value;
+                        //
+                        //                        tprdm_aab[r * no5_ + s * no4_ + n * no3_ + p *
+                        //                        no2_ + q * no_ + n] += value; tprdm_aab[s * no5_ +
+                        //                        r * no4_ + n * no3_ + p * no2_ + q * no_ + n] -=
+                        //                        value; tprdm_aab[s * no5_ + r * no4_ + n * no3_ +
+                        //                        q * no2_ + p * no_ + n] += value; tprdm_aab[r *
+                        //                        no5_ + s * no4_ + n * no3_ + q * no2_ + p * no_ +
+                        //                        n] -= value;
                         Ibc.clear_first_one();
                     }
 
@@ -346,7 +397,8 @@ void CI_RDMS::compute_rdms_dynamic(std::vector<double>& oprdm_a, std::vector<dou
                     double Csq = CI * evecs_->get(b_sorted_string_list_.add(J), root2_);
                     double el = Csq * Ia.slater_sign(p, q) * Ia.slater_sign(r) *
                                 Ja.slater_sign(s, t) * Ja.slater_sign(u);
-                    fill_3rdm(tprdm_aaa, el, p, q, r, s, t, u, false);
+                    _add_3rdm_aaa(tprdm_aaa, {p, q, r, s, t, u}, el);
+                    //                    fill_3rdm(tprdm_aaa, el, p, q, r, s, t, u, false);
                 }
             }
         }
@@ -391,38 +443,54 @@ void CI_RDMS::compute_rdms_dynamic(std::vector<double>& oprdm_a, std::vector<dou
                     Ibc ^= Ib_sub;
                     for (size_t ndb = 1; ndb < nb_; ++ndb) {
                         uint64_t m = Ibc.find_first_one();
-                        tprdm_bb[p * no3_ + m * no2_ + q * no_ + m] += value;
-                        tprdm_bb[m * no3_ + p * no2_ + q * no_ + m] -= value;
-                        tprdm_bb[m * no3_ + p * no2_ + m * no_ + q] += value;
-                        tprdm_bb[p * no3_ + m * no2_ + m * no_ + q] -= value;
+                        _add_2rdm_aa(tprdm_bb, {p, m, q, m}, value);
+                        _add_2rdm_aa(tprdm_bb, {q, m, p, m}, value);
 
-                        tprdm_bb[q * no3_ + m * no2_ + p * no_ + m] += value;
-                        tprdm_bb[m * no3_ + q * no2_ + p * no_ + m] -= value;
-                        tprdm_bb[m * no3_ + q * no2_ + m * no_ + p] += value;
-                        tprdm_bb[q * no3_ + m * no2_ + m * no_ + p] -= value;
+                        //                        tprdm_bb[p * no3_ + m * no2_ + q * no_ + m] +=
+                        //                        value; tprdm_bb[m * no3_ + p * no2_ + q * no_ + m]
+                        //                        -= value; tprdm_bb[m * no3_ + p * no2_ + m * no_ +
+                        //                        q] += value; tprdm_bb[p * no3_ + m * no2_ + m *
+                        //                        no_ + q] -= value;
+                        //
+                        //                        tprdm_bb[q * no3_ + m * no2_ + p * no_ + m] +=
+                        //                        value; tprdm_bb[m * no3_ + q * no2_ + p * no_ + m]
+                        //                        -= value; tprdm_bb[m * no3_ + q * no2_ + m * no_ +
+                        //                        p] += value; tprdm_bb[q * no3_ + m * no2_ + m *
+                        //                        no_ + p] -= value;
 
                         Ibc.clear_first_one();
 
                         String Iac = Ia;
                         for (size_t idx = 0; idx < na_; ++idx) {
                             uint64_t n = Iac.find_first_one();
-                            tprdm_abb[n * no5_ + p * no4_ + m * no3_ + n * no2_ + q * no_ + m] +=
-                                value;
-                            tprdm_abb[n * no5_ + p * no4_ + m * no3_ + n * no2_ + m * no_ + q] -=
-                                value;
-                            tprdm_abb[n * no5_ + m * no4_ + p * no3_ + n * no2_ + m * no_ + q] +=
-                                value;
-                            tprdm_abb[n * no5_ + m * no4_ + p * no3_ + n * no2_ + q * no_ + m] -=
-                                value;
+                            _add_3rdm_abb(tprdm_abb, {n, p, m, n, q, m}, value, false);
+                            _add_3rdm_abb(tprdm_abb, {n, q, m, n, p, m}, value, false);
 
-                            tprdm_abb[n * no5_ + q * no4_ + m * no3_ + n * no2_ + p * no_ + m] +=
-                                value;
-                            tprdm_abb[n * no5_ + q * no4_ + m * no3_ + n * no2_ + m * no_ + p] -=
-                                value;
-                            tprdm_abb[n * no5_ + m * no4_ + q * no3_ + n * no2_ + m * no_ + p] +=
-                                value;
-                            tprdm_abb[n * no5_ + m * no4_ + q * no3_ + n * no2_ + p * no_ + m] -=
-                                value;
+                            //                            tprdm_abb[n * no5_ + p * no4_ + m * no3_ +
+                            //                            n * no2_ + q * no_ + m] +=
+                            //                                value;
+                            //                            tprdm_abb[n * no5_ + p * no4_ + m * no3_ +
+                            //                            n * no2_ + m * no_ + q] -=
+                            //                                value;
+                            //                            tprdm_abb[n * no5_ + m * no4_ + p * no3_ +
+                            //                            n * no2_ + m * no_ + q] +=
+                            //                                value;
+                            //                            tprdm_abb[n * no5_ + m * no4_ + p * no3_ +
+                            //                            n * no2_ + q * no_ + m] -=
+                            //                                value;
+                            //
+                            //                            tprdm_abb[n * no5_ + q * no4_ + m * no3_ +
+                            //                            n * no2_ + p * no_ + m] +=
+                            //                                value;
+                            //                            tprdm_abb[n * no5_ + q * no4_ + m * no3_ +
+                            //                            n * no2_ + m * no_ + p] -=
+                            //                                value;
+                            //                            tprdm_abb[n * no5_ + m * no4_ + q * no3_ +
+                            //                            n * no2_ + m * no_ + p] +=
+                            //                                value;
+                            //                            tprdm_abb[n * no5_ + m * no4_ + q * no3_ +
+                            //                            n * no2_ + p * no_ + m] -=
+                            //                                value;
                             Iac.clear_first_one();
                         }
                     }
@@ -436,23 +504,34 @@ void CI_RDMS::compute_rdms_dynamic(std::vector<double>& oprdm_a, std::vector<dou
                         auto Iacc = Iac;
                         for (size_t midx = nidx + 1; midx < na_; ++midx) {
                             uint64_t m = Iacc.find_first_one();
-                            tprdm_aab[n * no5_ + m * no4_ + p * no3_ + n * no2_ + m * no_ + q] +=
-                                value;
-                            tprdm_aab[n * no5_ + m * no4_ + p * no3_ + m * no2_ + n * no_ + q] -=
-                                value;
-                            tprdm_aab[m * no5_ + n * no4_ + p * no3_ + m * no2_ + n * no_ + q] +=
-                                value;
-                            tprdm_aab[m * no5_ + n * no4_ + p * no3_ + n * no2_ + m * no_ + q] -=
-                                value;
-
-                            tprdm_aab[n * no5_ + m * no4_ + q * no3_ + n * no2_ + m * no_ + p] +=
-                                value;
-                            tprdm_aab[n * no5_ + m * no4_ + q * no3_ + m * no2_ + n * no_ + p] -=
-                                value;
-                            tprdm_aab[m * no5_ + n * no4_ + q * no3_ + m * no2_ + n * no_ + p] +=
-                                value;
-                            tprdm_aab[m * no5_ + n * no4_ + q * no3_ + n * no2_ + m * no_ + p] -=
-                                value;
+                            _add_3rdm_aab(tprdm_aab, {n, m, p, n, m, q}, value, false);
+                            _add_3rdm_aab(tprdm_aab, {n, m, q, n, m, p}, value, false);
+                            //
+                            //                            tprdm_aab[n * no5_ + m * no4_ + p * no3_ +
+                            //                            n * no2_ + m * no_ + q] +=
+                            //                                value;
+                            //                            tprdm_aab[n * no5_ + m * no4_ + p * no3_ +
+                            //                            m * no2_ + n * no_ + q] -=
+                            //                                value;
+                            //                            tprdm_aab[m * no5_ + n * no4_ + p * no3_ +
+                            //                            m * no2_ + n * no_ + q] +=
+                            //                                value;
+                            //                            tprdm_aab[m * no5_ + n * no4_ + p * no3_ +
+                            //                            n * no2_ + m * no_ + q] -=
+                            //                                value;
+                            //
+                            //                            tprdm_aab[n * no5_ + m * no4_ + q * no3_ +
+                            //                            n * no2_ + m * no_ + p] +=
+                            //                                value;
+                            //                            tprdm_aab[n * no5_ + m * no4_ + q * no3_ +
+                            //                            m * no2_ + n * no_ + p] -=
+                            //                                value;
+                            //                            tprdm_aab[m * no5_ + n * no4_ + q * no3_ +
+                            //                            m * no2_ + n * no_ + p] +=
+                            //                                value;
+                            //                            tprdm_aab[m * no5_ + n * no4_ + q * no3_ +
+                            //                            n * no2_ + m * no_ + p] -=
+                            //                                value;
                             Iacc.clear_first_one();
                         }
                     }
@@ -467,7 +546,9 @@ void CI_RDMS::compute_rdms_dynamic(std::vector<double>& oprdm_a, std::vector<dou
                         for (size_t ndbb = ndb + 1; ndbb < nb_; ++ndbb) {
                             // while( I_n > 0){
                             uint64_t m = I_n.find_first_one();
-                            fill_3rdm(tprdm_bbb, value, p, m, n, q, m, n, false);
+                            _add_3rdm_aaa(tprdm_bbb, {p, m, n, q, m, n}, value);
+                            //                            fill_3rdm(tprdm_bbb, value, p, m, n, q, m,
+                            //                            n, false);
                             I_n.clear_first_one();
                         }
                     }
@@ -484,36 +565,50 @@ void CI_RDMS::compute_rdms_dynamic(std::vector<double>& oprdm_a, std::vector<dou
 
                     double Csq = CI * evecs_->get(a_sorted_string_list_.add(J), root2_);
                     double value = Csq * Ib.slater_sign(p, q) * Jb.slater_sign(r, s);
-                    tprdm_bb[p * no3_ + q * no2_ + r * no_ + s] += value;
-                    tprdm_bb[p * no3_ + q * no2_ + s * no_ + r] -= value;
-                    tprdm_bb[q * no3_ + p * no2_ + r * no_ + s] -= value;
-                    tprdm_bb[q * no3_ + p * no2_ + s * no_ + r] += value;
-
-                    tprdm_bb[r * no3_ + s * no2_ + p * no_ + q] += value;
-                    tprdm_bb[s * no3_ + r * no2_ + p * no_ + q] -= value;
-                    tprdm_bb[r * no3_ + s * no2_ + q * no_ + p] -= value;
-                    tprdm_bb[s * no3_ + r * no2_ + q * no_ + p] += value;
+                    _add_2rdm_aa(tprdm_bb, {p, q, r, s}, value);
+                    _add_2rdm_aa(tprdm_bb, {r, s, p, q}, value);
+                    //
+                    //                    tprdm_bb[p * no3_ + q * no2_ + r * no_ + s] += value;
+                    //                    tprdm_bb[p * no3_ + q * no2_ + s * no_ + r] -= value;
+                    //                    tprdm_bb[q * no3_ + p * no2_ + r * no_ + s] -= value;
+                    //                    tprdm_bb[q * no3_ + p * no2_ + s * no_ + r] += value;
+                    //
+                    //                    tprdm_bb[r * no3_ + s * no2_ + p * no_ + q] += value;
+                    //                    tprdm_bb[s * no3_ + r * no2_ + p * no_ + q] -= value;
+                    //                    tprdm_bb[r * no3_ + s * no2_ + q * no_ + p] -= value;
+                    //                    tprdm_bb[s * no3_ + r * no2_ + q * no_ + p] += value;
 
                     // 3-rdm
                     auto Ibc = Ib;
                     Ibc ^= Ib_sub;
                     for (size_t ndb = 1; ndb < nb_; ++ndb) {
                         uint64_t n = Ibc.find_first_one();
-                        fill_3rdm(tprdm_bbb, value, p, q, n, r, s, n, false);
+                        _add_3rdm_aaa(tprdm_bbb, {p, q, n, r, s, n}, value);
+                        //                        fill_3rdm(tprdm_bbb, value, p, q, n, r, s, n,
+                        //                        false);
                         Ibc.clear_first_one();
                     }
                     auto Iac = Ia;
                     for (size_t nda = 0; nda < na_; ++nda) {
                         uint64_t n = Iac.find_first_one();
-                        tprdm_abb[n * no5_ + p * no4_ + q * no3_ + n * no2_ + r * no_ + s] += value;
-                        tprdm_abb[n * no5_ + p * no4_ + q * no3_ + n * no2_ + s * no_ + r] -= value;
-                        tprdm_abb[n * no5_ + q * no4_ + p * no3_ + n * no2_ + s * no_ + r] += value;
-                        tprdm_abb[n * no5_ + q * no4_ + p * no3_ + n * no2_ + r * no_ + s] -= value;
+                        _add_3rdm_abb(tprdm_abb, {n, p, q, n, r, s}, value, false);
+                        _add_3rdm_abb(tprdm_abb, {n, r, s, n, p, q}, value, false);
 
-                        tprdm_abb[n * no5_ + r * no4_ + s * no3_ + n * no2_ + p * no_ + q] += value;
-                        tprdm_abb[n * no5_ + r * no4_ + s * no3_ + n * no2_ + q * no_ + p] -= value;
-                        tprdm_abb[n * no5_ + s * no4_ + r * no3_ + n * no2_ + q * no_ + p] += value;
-                        tprdm_abb[n * no5_ + s * no4_ + r * no3_ + n * no2_ + p * no_ + q] -= value;
+                        //                        tprdm_abb[n * no5_ + p * no4_ + q * no3_ + n *
+                        //                        no2_ + r * no_ + s] += value; tprdm_abb[n * no5_ +
+                        //                        p * no4_ + q * no3_ + n * no2_ + s * no_ + r] -=
+                        //                        value; tprdm_abb[n * no5_ + q * no4_ + p * no3_ +
+                        //                        n * no2_ + s * no_ + r] += value; tprdm_abb[n *
+                        //                        no5_ + q * no4_ + p * no3_ + n * no2_ + r * no_ +
+                        //                        s] -= value;
+                        //
+                        //                        tprdm_abb[n * no5_ + r * no4_ + s * no3_ + n *
+                        //                        no2_ + p * no_ + q] += value; tprdm_abb[n * no5_ +
+                        //                        r * no4_ + s * no3_ + n * no2_ + q * no_ + p] -=
+                        //                        value; tprdm_abb[n * no5_ + s * no4_ + r * no3_ +
+                        //                        n * no2_ + q * no_ + p] += value; tprdm_abb[n *
+                        //                        no5_ + s * no4_ + r * no3_ + n * no2_ + p * no_ +
+                        //                        q] -= value;
 
                         Iac.clear_first_one();
                     }
@@ -534,7 +629,8 @@ void CI_RDMS::compute_rdms_dynamic(std::vector<double>& oprdm_a, std::vector<dou
                     double Csq = CI * evecs_->get(a_sorted_string_list_.add(J), root2_);
                     double el = Csq * Ib.slater_sign(p, q) * Ib.slater_sign(r) *
                                 Jb.slater_sign(s, t) * Jb.slater_sign(u);
-                    fill_3rdm(tprdm_bbb, el, p, q, r, s, t, u, false);
+                    _add_3rdm_aaa(tprdm_bbb, {p, q, r, s, t, u}, el);
+                    //                    fill_3rdm(tprdm_bbb, el, p, q, r, s, t, u, false);
                 }
             }
         }
@@ -595,14 +691,19 @@ void CI_RDMS::make_ab(SortedStringList a_sorted_string_list_,
                             Iac ^= Ia_d;
                             for (size_t d = 1; d < na_; ++d) {
                                 uint64_t n = Iac.find_first_one();
-                                tprdm_aab[p * no5_ + n * no4_ + q * no3_ + s * no2_ + n * no_ +
-                                          r] += value;
-                                tprdm_aab[n * no5_ + p * no4_ + q * no3_ + s * no2_ + n * no_ +
-                                          r] -= value;
-                                tprdm_aab[n * no5_ + p * no4_ + q * no3_ + n * no2_ + s * no_ +
-                                          r] += value;
-                                tprdm_aab[p * no5_ + n * no4_ + q * no3_ + n * no2_ + s * no_ +
-                                          r] -= value;
+                                _add_3rdm_aab(tprdm_aab, {p, n, q, s, n, r}, value, false);
+                                //                                tprdm_aab[p * no5_ + n * no4_ + q
+                                //                                * no3_ + s * no2_ + n * no_ +
+                                //                                          r] += value;
+                                //                                tprdm_aab[n * no5_ + p * no4_ + q
+                                //                                * no3_ + s * no2_ + n * no_ +
+                                //                                          r] -= value;
+                                //                                tprdm_aab[n * no5_ + p * no4_ + q
+                                //                                * no3_ + n * no2_ + s * no_ +
+                                //                                          r] += value;
+                                //                                tprdm_aab[p * no5_ + n * no4_ + q
+                                //                                * no3_ + n * no2_ + s * no_ +
+                                //                                          r] -= value;
 
                                 Iac.clear_first_one();
                             }
@@ -610,14 +711,19 @@ void CI_RDMS::make_ab(SortedStringList a_sorted_string_list_,
                             Ibc ^= Ib_sub;
                             for (size_t d = 1; d < nb_; ++d) {
                                 uint64_t n = Ibc.find_first_one();
-                                tprdm_abb[p * no5_ + q * no4_ + n * no3_ + s * no2_ + r * no_ +
-                                          n] += value;
-                                tprdm_abb[p * no5_ + q * no4_ + n * no3_ + s * no2_ + n * no_ +
-                                          r] -= value;
-                                tprdm_abb[p * no5_ + n * no4_ + q * no3_ + s * no2_ + n * no_ +
-                                          r] += value;
-                                tprdm_abb[p * no5_ + n * no4_ + q * no3_ + s * no2_ + r * no_ +
-                                          n] -= value;
+                                _add_3rdm_abb(tprdm_abb, {p, q, n, s, r, n}, value, false);
+                                //                                tprdm_abb[p * no5_ + q * no4_ + n
+                                //                                * no3_ + s * no2_ + r * no_ +
+                                //                                          n] += value;
+                                //                                tprdm_abb[p * no5_ + q * no4_ + n
+                                //                                * no3_ + s * no2_ + n * no_ +
+                                //                                          r] -= value;
+                                //                                tprdm_abb[p * no5_ + n * no4_ + q
+                                //                                * no3_ + s * no2_ + n * no_ +
+                                //                                          r] += value;
+                                //                                tprdm_abb[p * no5_ + n * no4_ + q
+                                //                                * no3_ + s * no2_ + r * no_ +
+                                //                                          n] -= value;
 
                                 Ibc.clear_first_one();
                             }
@@ -636,14 +742,19 @@ void CI_RDMS::make_ab(SortedStringList a_sorted_string_list_,
                             double value = Csq * sign_IJ *
                                            Ib.slater_sign(q, r) * // ui64_slater_sign(Ib,r) *
                                            Jb.slater_sign(t, u);  // * ui64_slater_sign(Jb,u);
-                            tprdm_abb[p * no5_ + q * no4_ + r * no3_ + s * no2_ + t * no_ + u] +=
-                                value;
-                            tprdm_abb[p * no5_ + q * no4_ + r * no3_ + s * no2_ + u * no_ + t] -=
-                                value;
-                            tprdm_abb[p * no5_ + r * no4_ + q * no3_ + s * no2_ + u * no_ + t] +=
-                                value;
-                            tprdm_abb[p * no5_ + r * no4_ + q * no3_ + s * no2_ + t * no_ + u] -=
-                                value;
+                            _add_3rdm_abb(tprdm_abb, {p, q, r, s, t, u}, value, false);
+                            //                            tprdm_abb[p * no5_ + q * no4_ + r * no3_ +
+                            //                            s * no2_ + t * no_ + u] +=
+                            //                                value;
+                            //                            tprdm_abb[p * no5_ + q * no4_ + r * no3_ +
+                            //                            s * no2_ + u * no_ + t] -=
+                            //                                value;
+                            //                            tprdm_abb[p * no5_ + r * no4_ + q * no3_ +
+                            //                            s * no2_ + u * no_ + t] +=
+                            //                                value;
+                            //                            tprdm_abb[p * no5_ + r * no4_ + q * no3_ +
+                            //                            s * no2_ + t * no_ + u] -=
+                            //                                value;
                         }
                     }
                 }
@@ -687,14 +798,19 @@ void CI_RDMS::make_ab(SortedStringList a_sorted_string_list_,
                             uint64_t u = Jb_sub.find_first_one();
                             double el = Csq * sign * Ib.slater_sign(r) * Jb.slater_sign(u);
 
-                            tprdm_aab[p * no5_ + q * no4_ + r * no3_ + s * no2_ + t * no_ + u] +=
-                                el;
-                            tprdm_aab[p * no5_ + q * no4_ + r * no3_ + t * no2_ + s * no_ + u] -=
-                                el;
-                            tprdm_aab[q * no5_ + p * no4_ + r * no3_ + s * no2_ + t * no_ + u] -=
-                                el;
-                            tprdm_aab[q * no5_ + p * no4_ + r * no3_ + t * no2_ + s * no_ + u] +=
-                                el;
+                            _add_3rdm_aab(tprdm_aab, {p, q, r, s, t, u}, el, false);
+                            //                            tprdm_aab[p * no5_ + q * no4_ + r * no3_ +
+                            //                            s * no2_ + t * no_ + u] +=
+                            //                                el;
+                            //                            tprdm_aab[p * no5_ + q * no4_ + r * no3_ +
+                            //                            t * no2_ + s * no_ + u] -=
+                            //                                el;
+                            //                            tprdm_aab[q * no5_ + p * no4_ + r * no3_ +
+                            //                            s * no2_ + t * no_ + u] -=
+                            //                                el;
+                            //                            tprdm_aab[q * no5_ + p * no4_ + r * no3_ +
+                            //                            t * no2_ + s * no_ + u] +=
+                            //                                el;
                         }
                     }
                 }
@@ -794,6 +910,505 @@ void CI_RDMS::fill_3rdm(std::vector<double>& tprdm, double el, int p, int q, int
         tprdm[t * no5_ + s * no4_ + u * no3_ + r * no2_ + q * no_ + p] += el;
         tprdm[t * no5_ + u * no4_ + s * no3_ + r * no2_ + q * no_ + p] -= el;
     }
+}
+
+void CI_RDMS::compute_rdms_dynamic_sf(std::vector<double>& rdm1, std::vector<double>& rdm2,
+                                      std::vector<double>& rdm3) {
+    rdm1.resize(no2_, 0.0);
+    rdm2.resize(no4_, 0.0);
+    rdm3.resize(no6_, 0.0);
+
+    SortedStringList a_sorted_string_list_(wfn_, fci_ints_, DetSpinType::Alpha);
+    SortedStringList b_sorted_string_list_(wfn_, fci_ints_, DetSpinType::Beta);
+    const std::vector<String>& sorted_bstr = b_sorted_string_list_.sorted_half_dets();
+    size_t num_bstr = sorted_bstr.size();
+    const auto& sorted_b_dets = b_sorted_string_list_.sorted_dets();
+    const auto& sorted_a_dets = a_sorted_string_list_.sorted_dets();
+    local_timer diag;
+    //*-  Diagonal Contributions  -*//
+    for (size_t I = 0; I < dim_space_; ++I) {
+        size_t Ia = b_sorted_string_list_.add(I);
+        double CIa = evecs_->get(Ia, root1_) * evecs_->get(Ia, root2_);
+        String det_a = sorted_b_dets[I].get_alfa_bits();
+        String det_b = sorted_b_dets[I].get_beta_bits();
+
+        for (size_t nda = 0; nda < na_; ++nda) {
+            size_t p = det_a.find_first_one();
+            rdm1[p * no_ + p] += CIa;
+
+            String det_ac(det_a);
+            det_a.clear_first_one();
+            for (size_t ndaa = nda; ndaa < na_; ++ndaa) {
+                size_t q = det_ac.find_first_one();
+                // aa 2-rdm
+                _add_2rdm_aa(rdm2, {p, q, p, q}, CIa);
+                det_ac.clear_first_one();
+
+                // aaa 3rdm
+                String det_acc(det_ac);
+                for (size_t ndaaa = ndaa + 1; ndaaa < na_; ++ndaaa) {
+                    size_t r = det_acc.find_first_one();
+                    _add_3rdm_aaa(rdm3, {p, q, r, p, q, r}, 2.0 * CIa);
+                    det_acc.clear_first_one();
+                }
+
+                // aab 3rdm
+                String det_bc(det_b);
+                for (size_t n = 0; n < nb_; ++n) {
+                    size_t r = det_bc.find_first_one();
+                    _add_3rdm_aab(rdm3, {p, q, r, p, q, r}, CIa, true);
+                    det_bc.clear_first_one();
+                }
+            }
+
+            String det_bc(det_b);
+            for (size_t n = 0; n < nb_; ++n) {
+                size_t q = det_bc.find_first_one();
+                _add_2rdm_ab(rdm2, {p, q, p, q}, CIa, true);
+                det_bc.clear_first_one();
+            }
+        }
+        det_a = sorted_b_dets[I].get_alfa_bits();
+        det_b = sorted_b_dets[I].get_beta_bits();
+        size_t Ib = a_sorted_string_list_.add(I);
+        double CIb = evecs_->get(Ib, root1_) * evecs_->get(Ib, root2_);
+        for (size_t ndb = 0; ndb < nb_; ++ndb) {
+            size_t p = det_b.find_first_one();
+
+            // b -1rdm
+            rdm1[p * no_ + p] += CIb;
+            String det_bc(det_b);
+            for (size_t ndbb = ndb; ndbb < nb_; ++ndbb) {
+                size_t q = det_bc.find_first_one();
+                // bb-2rdm
+                _add_2rdm_aa(rdm2, {p, q, p, q}, CIb);
+                det_bc.clear_first_one();
+
+                // bbb-3rdm
+                String det_bcc(det_bc);
+                for (size_t ndbbb = ndbb + 1; ndbbb < nb_; ++ndbbb) {
+                    size_t r = det_bcc.find_first_one();
+                    _add_3rdm_aaa(rdm3, {p, q, r, p, q, r}, 2.0 * CIb);
+                    det_bcc.clear_first_one();
+                }
+
+                // abb - 3rdm
+                String det_ac(det_a);
+                for (size_t n = 0; n < na_; ++n) {
+                    size_t r = det_ac.find_first_one();
+                    _add_3rdm_abb(rdm3, {r, p, q, r, p, q}, CIb, true);
+                    det_ac.clear_first_one();
+                }
+            }
+            det_b.clear_first_one();
+        }
+    }
+    outfile->Printf("\n  Diag takes %1.6f", diag.get());
+
+    local_timer aaa;
+    //-* All Alpha RDMs *-//
+
+    // loop through all beta strings
+    for (size_t bstr = 0; bstr < num_bstr; ++bstr) {
+        const String& Ib = sorted_bstr[bstr];
+        const auto& range_I = b_sorted_string_list_.range(Ib);
+
+        String Ia;
+        String Ja;
+        size_t first_I = range_I.first;
+        size_t last_I = range_I.second;
+
+        // Double loop through determinants with same beta string
+        for (size_t I = first_I; I < last_I; ++I) {
+            Ia = sorted_b_dets[I].get_alfa_bits();
+            double CI = evecs_->get(b_sorted_string_list_.add(I), root1_);
+            for (size_t J = I + 1; J < last_I; ++J) {
+                Ja = sorted_b_dets[J].get_alfa_bits();
+                String IJa = Ia ^ Ja;
+
+                int ndiff = IJa.count();
+
+                if (ndiff == 2) {
+                    // 1-rdm
+                    String Ia_sub = Ia & IJa;
+                    u_int64_t p = Ia_sub.find_first_one();
+                    String Ja_sub = Ja & IJa;
+                    u_int64_t q = Ja_sub.find_first_one();
+
+                    double Csq = CI * evecs_->get(b_sorted_string_list_.add(J), root2_);
+                    double value = Csq * Ia.slater_sign(p, q);
+                    rdm1[p * no_ + q] += value;
+                    rdm1[q * no_ + p] += value;
+
+                    // 2-rdm
+                    auto Iac = Ia;
+                    Iac ^= Ia_sub;
+                    for (size_t nbit_a = 1; nbit_a < na_; nbit_a++) {
+                        uint64_t m = Iac.find_first_one();
+                        _add_2rdm_aa(rdm2, {p, m, q, m}, value);
+                        _add_2rdm_aa(rdm2, {q, m, p, m}, value);
+                        Iac.clear_first_one();
+
+                        auto Ibc = Ib;
+                        for (size_t idx = 0; idx < nb_; ++idx) {
+                            uint64_t n = Ibc.find_first_one();
+                            _add_3rdm_aab(rdm3, {p, m, n, q, m, n}, value, true);
+                            _add_3rdm_aab(rdm3, {q, m, n, p, m, n}, value, true);
+                            Ibc.clear_first_one();
+                        }
+                    }
+                    auto Ibc = Ib;
+                    for (size_t nidx = 0; nidx < nb_; ++nidx) {
+                        uint64_t n = Ibc.find_first_one();
+                        _add_2rdm_ab(rdm2, {p, n, q, n}, value, true);
+                        _add_2rdm_ab(rdm2, {q, n, p, n}, value, true);
+                        Ibc.clear_first_one();
+
+                        String Ibcc = Ibc;
+                        for (size_t idx = nidx + 1; idx < nb_; ++idx) {
+                            uint64_t m = Ibcc.find_first_one();
+                            _add_3rdm_abb(rdm3, {p, m, n, q, m, n}, value, true);
+                            _add_3rdm_abb(rdm3, {q, m, n, p, m, n}, value, true);
+                            Ibcc.clear_first_one();
+                        }
+                    }
+                    // 3-rdm
+                    String Iacc = Ia ^ Ia_sub;
+                    for (size_t id = 1; id < na_; ++id) {
+                        uint64_t n = Iacc.find_first_one();
+                        String I_n(Iacc);
+                        I_n.clear_first_one(); // TODO: not clear what is going on here (Francesco)
+                        for (size_t idd = id + 1; idd < na_; ++idd) {
+                            // while( I_n > 0 ){
+                            uint64_t m = I_n.find_first_one();
+                            _add_3rdm_aaa(rdm3, {p, n, m, q, n, m}, value);
+                            I_n.clear_first_one();
+                        }
+                        Iacc.clear_first_one();
+                    }
+
+                } else if (ndiff == 4) {
+                    // 2-rdm
+                    auto Ia_sub = Ia & IJa;
+                    uint64_t p = Ia_sub.find_first_one();
+                    Ia_sub.clear_first_one();
+                    uint64_t q = Ia_sub.find_first_one();
+
+                    auto Ja_sub = Ja & IJa;
+                    uint64_t r = Ja_sub.find_first_one();
+                    Ja_sub.clear_first_one();
+                    uint64_t s = Ja_sub.find_first_one();
+
+                    double Csq = CI * evecs_->get(b_sorted_string_list_.add(J), root2_);
+                    double value = Csq * Ia.slater_sign(p, q) * Ja.slater_sign(r, s);
+
+                    _add_2rdm_aa(rdm2, {p, q, r, s}, value);
+                    _add_2rdm_aa(rdm2, {r, s, p, q}, value);
+
+                    // 3-rdm
+                    String Iac(Ia);
+                    Iac ^= Ia_sub;
+                    for (size_t nda = 1; nda < na_; ++nda) {
+                        uint64_t n = Iac.find_first_one();
+                        _add_3rdm_aaa(rdm3, {p, q, n, r, s, n}, value);
+                        Iac.clear_first_one();
+                    }
+
+                    String Ibc = Ib;
+                    for (size_t ndb = 0; ndb < nb_; ++ndb) {
+                        uint64_t n = Ibc.find_first_one();
+                        _add_3rdm_aab(rdm3, {p, q, n, r, s, n}, value, true);
+                        _add_3rdm_aab(rdm3, {r, s, n, p, q, n}, value, true);
+                        Ibc.clear_first_one();
+                    }
+
+                } else if (ndiff == 6) {
+                    auto Ia_sub = Ia & IJa;
+                    uint64_t p = Ia_sub.find_first_one();
+                    Ia_sub.clear_first_one();
+                    uint64_t q = Ia_sub.find_first_one();
+                    Ia_sub.clear_first_one();
+                    uint64_t r = Ia_sub.find_first_one();
+
+                    auto Ja_sub = Ja & IJa;
+                    uint64_t s = Ja_sub.find_first_one();
+                    Ja_sub.clear_first_one();
+                    uint64_t t = Ja_sub.find_first_one();
+                    Ja_sub.clear_first_one();
+                    uint64_t u = Ja_sub.find_first_one();
+                    double Csq = CI * evecs_->get(b_sorted_string_list_.add(J), root2_);
+                    double el = Csq * Ia.slater_sign(p, q) * Ia.slater_sign(r) *
+                                Ja.slater_sign(s, t) * Ja.slater_sign(u);
+                    _add_3rdm_aaa(rdm3, {p, q, r, s, t, u}, el);
+                }
+            }
+        }
+    }
+    outfile->Printf("\n all alpha takes %1.6f", aaa.get());
+
+    //- All beta RDMs -//
+    local_timer bbb;
+    // loop through all alpha strings
+    const std::vector<String>& sorted_astr = a_sorted_string_list_.sorted_half_dets();
+    size_t num_astr = sorted_astr.size();
+    for (size_t astr = 0; astr < num_astr; ++astr) {
+        const String& Ia = sorted_astr[astr];
+        const auto& range_I = a_sorted_string_list_.range(Ia);
+
+        String Ib;
+        String Jb;
+        String IJb;
+        size_t first_I = range_I.first;
+        size_t last_I = range_I.second;
+
+        // Double loop through determinants with same alpha string
+        for (size_t I = first_I; I < last_I; ++I) {
+            Ib = sorted_a_dets[I].get_beta_bits();
+            double CI = evecs_->get(a_sorted_string_list_.add(I), root1_);
+            for (size_t J = I + 1; J < last_I; ++J) {
+                Jb = sorted_a_dets[J].get_beta_bits();
+                IJb = Ib ^ Jb;
+                int ndiff = IJb.count();
+
+                if (ndiff == 2) {
+                    auto Ib_sub = Ib & IJb;
+                    uint64_t p = Ib_sub.find_first_one();
+                    auto Jb_sub = Jb & IJb;
+                    uint64_t q = Jb_sub.find_first_one();
+                    double Csq = CI * evecs_->get(a_sorted_string_list_.add(J), root2_);
+
+                    double value = Csq * Ib.slater_sign(p, q);
+                    rdm1[p * no_ + q] += value;
+                    rdm1[q * no_ + p] += value;
+                    auto Ibc = Ib;
+                    Ibc ^= Ib_sub;
+                    for (size_t ndb = 1; ndb < nb_; ++ndb) {
+                        uint64_t m = Ibc.find_first_one();
+                        _add_2rdm_aa(rdm2, {p, m, q, m}, value);
+                        _add_2rdm_aa(rdm2, {q, m, p, m}, value);
+                        Ibc.clear_first_one();
+
+                        String Iac = Ia;
+                        for (size_t idx = 0; idx < na_; ++idx) {
+                            uint64_t n = Iac.find_first_one();
+                            _add_3rdm_abb(rdm3, {n, p, m, n, q, m}, value, true);
+                            _add_3rdm_abb(rdm3, {n, q, m, n, p, m}, value, true);
+                            Iac.clear_first_one();
+                        }
+                    }
+                    auto Iac = Ia;
+                    for (size_t nidx = 0; nidx < na_; ++nidx) {
+                        uint64_t n = Iac.find_first_one();
+                        _add_2rdm_ab(rdm2, {n, p, n, q}, value, true);
+                        _add_2rdm_ab(rdm2, {n, q, n, p}, value, true);
+                        Iac.clear_first_one();
+
+                        auto Iacc = Iac;
+                        for (size_t midx = nidx + 1; midx < na_; ++midx) {
+                            uint64_t m = Iacc.find_first_one();
+                            _add_3rdm_aab(rdm3, {n, m, p, n, m, q}, value, true);
+                            _add_3rdm_aab(rdm3, {n, m, q, n, m, p}, value, true);
+                            Iacc.clear_first_one();
+                        }
+                    }
+                    // 3-rdm
+                    String Ibcc(Ib);
+                    Ibcc ^= Ib_sub;
+                    for (size_t ndb = 1; ndb < nb_; ++ndb) {
+                        // while(Ibcc >0){
+                        uint64_t n = Ibcc.find_first_one();
+                        Ibcc.clear_first_one();
+                        String I_n = Ibcc;
+                        for (size_t ndbb = ndb + 1; ndbb < nb_; ++ndbb) {
+                            // while( I_n > 0){
+                            uint64_t m = I_n.find_first_one();
+                            _add_3rdm_aaa(rdm3, {p, m, n, q, m, n}, value);
+                            I_n.clear_first_one();
+                        }
+                    }
+                } else if (ndiff == 4) {
+                    auto Ib_sub = Ib & IJb;
+                    uint64_t p = Ib_sub.find_first_one();
+                    Ib_sub.clear_first_one();
+                    uint64_t q = Ib_sub.find_first_one();
+
+                    auto Jb_sub = Jb & IJb;
+                    uint64_t r = Jb_sub.find_first_one();
+                    Jb_sub.clear_first_one();
+                    uint64_t s = Jb_sub.find_first_one();
+
+                    double Csq = CI * evecs_->get(a_sorted_string_list_.add(J), root2_);
+                    double value = Csq * Ib.slater_sign(p, q) * Jb.slater_sign(r, s);
+                    _add_2rdm_aa(rdm2, {p, q, r, s}, value);
+                    _add_2rdm_aa(rdm2, {r, s, p, q}, value);
+
+                    // 3-rdm
+                    auto Ibc = Ib;
+                    Ibc ^= Ib_sub;
+                    for (size_t ndb = 1; ndb < nb_; ++ndb) {
+                        uint64_t n = Ibc.find_first_one();
+                        _add_3rdm_aaa(rdm3, {p, q, n, r, s, n}, value);
+                        Ibc.clear_first_one();
+                    }
+                    auto Iac = Ia;
+                    for (size_t nda = 0; nda < na_; ++nda) {
+                        uint64_t n = Iac.find_first_one();
+                        _add_3rdm_abb(rdm3, {n, p, q, n, r, s}, value, true);
+                        _add_3rdm_abb(rdm3, {n, r, s, n, p, q}, value, true);
+                        Iac.clear_first_one();
+                    }
+                } else if (ndiff == 6) {
+                    auto Ib_sub = Ib & IJb;
+                    uint64_t p = Ib_sub.find_first_one();
+                    Ib_sub.clear_first_one();
+                    uint64_t q = Ib_sub.find_first_one();
+                    Ib_sub.clear_first_one();
+                    uint64_t r = Ib_sub.find_first_one();
+
+                    auto Jb_sub = Jb & IJb;
+                    uint64_t s = Jb_sub.find_first_one();
+                    Jb_sub.clear_first_one();
+                    uint64_t t = Jb_sub.find_first_one();
+                    Jb_sub.clear_first_one();
+                    uint64_t u = Jb_sub.find_first_one();
+                    double Csq = CI * evecs_->get(a_sorted_string_list_.add(J), root2_);
+                    double el = Csq * Ib.slater_sign(p, q) * Ib.slater_sign(r) *
+                                Jb.slater_sign(s, t) * Jb.slater_sign(u);
+                    _add_3rdm_aaa(rdm3, {p, q, r, s, t, u}, el);
+                }
+            }
+        }
+    }
+    outfile->Printf("\n all beta takes %1.6f", bbb.get());
+
+    //- Alpha-Beta RDMs -//
+    local_timer mix;
+    double d2 = 0.0;
+    double d4 = 0.0;
+    for (auto& detIa : sorted_astr) {
+        const auto& range_I = a_sorted_string_list_.range(detIa);
+        String detIJa_common;
+        String Ib;
+        String Jb;
+        String IJb;
+        for (auto& detJa : sorted_astr) {
+            detIJa_common = detIa ^ detJa;
+            int ndiff = detIJa_common.count();
+            if (ndiff == 2) {
+                local_timer t2;
+                auto Ia_d = detIa & detIJa_common;
+                uint64_t p = Ia_d.find_first_one();
+                auto Ja_d = detJa & detIJa_common;
+                uint64_t s = Ja_d.find_first_one();
+
+                const auto& range_J = a_sorted_string_list_.range(detJa);
+                size_t first_I = range_I.first;
+                size_t last_I = range_I.second;
+                size_t first_J = range_J.first;
+                size_t last_J = range_J.second;
+                double sign_Ips = detIa.slater_sign(p, s);
+                double sign_IJ = detIa.slater_sign(p) * detJa.slater_sign(s);
+                for (size_t I = first_I; I < last_I; ++I) {
+                    Ib = sorted_a_dets[I].get_beta_bits();
+                    double CI = evecs_->get(a_sorted_string_list_.add(I), root1_);
+                    for (size_t J = first_J; J < last_J; ++J) {
+                        Jb = sorted_a_dets[J].get_beta_bits();
+                        IJb = Ib ^ Jb;
+                        int nbdiff = IJb.count();
+                        if (nbdiff == 2) {
+                            double Csq = CI * evecs_->get(a_sorted_string_list_.add(J), root2_);
+                            auto Ib_sub = Ib & IJb;
+                            uint64_t q = Ib_sub.find_first_one();
+                            auto Jb_sub = Jb & IJb;
+                            uint64_t r = Jb_sub.find_first_one();
+
+                            double value =
+                                Csq * sign_Ips * Ib.slater_sign(q, r); // * ui64_slater_sign(Jb,r);
+                            _add_2rdm_ab(rdm2, {p, q, s, r}, value, true);
+
+                            auto Iac(detIa);
+                            Iac ^= Ia_d;
+                            for (size_t d = 1; d < na_; ++d) {
+                                uint64_t n = Iac.find_first_one();
+                                _add_3rdm_aab(rdm3, {p, n, q, s, n, r}, value, true);
+                                Iac.clear_first_one();
+                            }
+                            auto Ibc(Ib);
+                            Ibc ^= Ib_sub;
+                            for (size_t d = 1; d < nb_; ++d) {
+                                uint64_t n = Ibc.find_first_one();
+                                _add_3rdm_abb(rdm3, {p, q, n, s, r, n}, value, true);
+                                Ibc.clear_first_one();
+                            }
+                        } else if (nbdiff == 4) {
+                            double Csq = CI * evecs_->get(a_sorted_string_list_.add(J), root2_);
+                            auto Ib_sub = Ib & IJb;
+                            uint64_t q = Ib_sub.find_first_one();
+                            Ib_sub.clear_first_one();
+                            uint64_t r = Ib_sub.find_first_one();
+
+                            auto Jb_sub = Jb & IJb;
+                            uint64_t t = Jb_sub.find_first_one();
+                            Jb_sub.clear_first_one();
+                            uint64_t u = Jb_sub.find_first_one();
+
+                            double value = Csq * sign_IJ *
+                                           Ib.slater_sign(q, r) * // ui64_slater_sign(Ib,r) *
+                                           Jb.slater_sign(t, u);  // * ui64_slater_sign(Jb,u);
+                            _add_3rdm_abb(rdm3, {p, q, r, s, t, u}, value, true);
+                        }
+                    }
+                }
+                d2 += t2.get();
+            } else if (ndiff == 4) {
+                local_timer t4;
+                // Get aa-aa part of aab 3rdm
+                auto Ia_sub = detIa & detIJa_common;
+                uint64_t p = Ia_sub.find_first_one();
+                Ia_sub.clear_first_one();
+                uint64_t q = Ia_sub.find_first_one();
+
+                auto Ja_sub = detJa & detIJa_common;
+                uint64_t s = Ja_sub.find_first_one();
+                Ja_sub.clear_first_one();
+                uint64_t t = Ja_sub.find_first_one();
+
+                const auto& range_J = a_sorted_string_list_.range(detJa);
+                size_t first_I = range_I.first;
+                size_t last_I = range_I.second;
+                size_t first_J = range_J.first;
+                size_t last_J = range_J.second;
+
+                // double sign = ui64_slater_sign(detIa,p,q) * ui64_slater_sign(detJa,s,t);
+                double sign = detIa.slater_sign(p, q) * // ui64_slater_sign(detIa,q) *
+                              detJa.slater_sign(s, t);  // ui64_slater_sign(detJa,t);
+
+                // Now the b-b part
+                for (size_t I = first_I; I < last_I; ++I) {
+                    Ib = sorted_a_dets[I].get_beta_bits();
+                    double CI = evecs_->get(a_sorted_string_list_.add(I), root1_);
+                    for (size_t J = first_J; J < last_J; ++J) {
+                        Jb = sorted_a_dets[J].get_beta_bits();
+                        IJb = Ib ^ Jb;
+                        int nbdiff = IJb.count();
+                        if (nbdiff == 2) {
+                            double Csq = CI * evecs_->get(a_sorted_string_list_.add(J), root2_);
+                            auto Ib_sub = Ib & IJb;
+                            uint64_t r = Ib_sub.find_first_one();
+                            auto Jb_sub = Jb & IJb;
+                            uint64_t u = Jb_sub.find_first_one();
+                            double el = Csq * sign * Ib.slater_sign(r) * Jb.slater_sign(u);
+
+                            _add_3rdm_aab(rdm3, {p, q, r, s, t, u}, el, true);
+                        }
+                    }
+                }
+                d4 += t4.get();
+            }
+        }
+    }
+    outfile->Printf("\n  2dif: %1.6f  \n  4dif: %1.6f", d2, d4);
+    outfile->Printf("\n all alpha/beta takes %1.6f", mix.get());
 }
 
 // void CI_RDMS::compute_2rdm_dynamic(std::vector<double>& tprdm_aa,

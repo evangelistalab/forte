@@ -36,6 +36,7 @@
 #include "psi4/libmints/matrix.h"
 
 #include "base_classes/state_info.h"
+#include "base_classes/rdms.h"
 #include "sparse_ci/determinant_hashvector.h"
 
 namespace forte {
@@ -45,7 +46,6 @@ class ActiveSpaceIntegrals;
 class ForteIntegrals;
 class ForteOptions;
 class MOSpaceInfo;
-class RDMs;
 class SCFInfo;
 
 /**

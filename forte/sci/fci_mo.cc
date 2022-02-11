@@ -1909,8 +1909,9 @@ d3 FCI_MO::compute_orbital_extents() {
     return orb_extents;
 }
 
-std::vector<std::shared_ptr<RDMs>> FCI_MO::rdms(const std::vector<std::pair<size_t, size_t>>& root_list,
-                               int max_rdm_level, RDMsType rdm_type) {
+std::vector<std::shared_ptr<RDMs>>
+FCI_MO::rdms(const std::vector<std::pair<size_t, size_t>>& root_list, int max_rdm_level,
+             RDMsType rdm_type) {
     if (max_rdm_level > 3 || max_rdm_level < 1) {
         throw psi::PSIEXCEPTION("Invalid max_rdm_level, required 1 <= max_rdm_level <= 3.");
     }
@@ -1923,40 +1924,63 @@ std::vector<std::shared_ptr<RDMs>> FCI_MO::rdms(const std::vector<std::pair<size
     // TODO: remove this when removing eigen_
     psi::SharedMatrix evecs = prepare_for_rdm();
 
+    std::vector<size_t> dim6(6, nactv_);
+    bool do_3rdm = (max_rdm_level == 3) and (options_->get_str("THREEPDC") != "ZERO");
+
     for (auto& roots : root_list) {
-        auto D1 = compute_n_rdm(determinant_, evecs, 1, roots.first, roots.second, state_, disk);
-        if (max_rdm_level == 1) {
-            refs.emplace_back(D1[0], D1[1]);
-        } else {
-            auto D2 =
-                compute_n_rdm(determinant_, evecs, 2, roots.first, roots.second, state_, disk);
+        int root1 = roots.first;
+        int root2 = roots.second;
 
-            bool do_3rdm = (max_rdm_level == 3) and (options_->get_str("THREEPDC") != "ZERO");
-
-            if (do_3rdm) {
-                std::vector<ambit::Tensor> D3;
-                D3.reserve(4);
-                if (options_->get_str("THREEPDC") == "MK") {
-                    D3 = compute_n_rdm(determinant_, evecs, 3, roots.first, roots.second, state_,
-                                       disk);
-                } else {
+        if (rdm_type == RDMsType::spin_dependent) {
+            auto D1 = compute_n_rdm(determinant_, evecs, 1, root1, root2, state_, disk);
+            std::vector<ambit::Tensor> D2, D3;
+            if (max_rdm_level > 1)
+                D2 = compute_n_rdm(determinant_, evecs, 2, root1, root2, state_, disk);
+            if (max_rdm_level > 2) {
+                if (options_->get_str("THREEPDC") == "MK")
+                    D3 = compute_n_rdm(determinant_, evecs, 3, root1, root2, state_, disk);
+                else {
                     for (const std::string& name : {"D3aaa", "D3aab", "D3abb", "D3bbb"}) {
-                        D3.push_back(ambit::Tensor::build(ambit::CoreTensor, name,
-                                                          std::vector<size_t>(6, nactv_)));
+                        D3.push_back(ambit::Tensor::build(ambit::CoreTensor, name, dim6));
                     }
                 }
-                refs.emplace_back(D1[0], D1[1], D2[0], D2[1], D2[2], D3[0], D3[1], D3[2], D3[3]);
-            } else {
-                refs.emplace_back(D1[0], D1[1], D2[0], D2[1], D2[2]);
             }
+
+            if (max_rdm_level == 1)
+                refs.emplace_back(std::make_shared<RDMsSpinDependent>(D1[0], D1[1]));
+            else if (max_rdm_level == 2)
+                refs.emplace_back(
+                    std::make_shared<RDMsSpinDependent>(D1[0], D1[1], D2[0], D2[1], D2[2]));
+            else
+                refs.emplace_back(std::make_shared<RDMsSpinDependent>(
+                    D1[0], D1[1], D2[0], D2[1], D2[2], D3[0], D3[1], D3[2], D3[3]));
+        } else {
+            auto D1 = compute_n_rdm_sf(determinant_, evecs, 1, root1, root2, state_);
+            ambit::Tensor D2, D3;
+            if (max_rdm_level > 1)
+                D2 = compute_n_rdm_sf(determinant_, evecs, 2, root1, root2, state_);
+            if (max_rdm_level > 2) {
+                if (options_->get_str("THREEPDC") == "MK")
+                    D3 = compute_n_rdm_sf(determinant_, evecs, 3, root1, root2, state_);
+                else
+                    D3 = ambit::Tensor::build(ambit::CoreTensor, "SF D3", dim6);
+            }
+
+            if (max_rdm_level == 1)
+                refs.emplace_back(std::make_shared<RDMsSpinFree>(D1));
+            else if (max_rdm_level == 2)
+                refs.emplace_back(std::make_shared<RDMsSpinFree>(D1, D2));
+            else
+                refs.emplace_back(std::make_shared<RDMsSpinFree>(D1, D2, D3));
         }
     }
     return refs;
 }
 
-std::vector<std::shared_ptr<RDMs>> FCI_MO::transition_rdms(const std::vector<std::pair<size_t, size_t>>& root_list,
-                                          std::shared_ptr<ActiveSpaceMethod> method2,
-                                          int max_rdm_level) {
+std::vector<std::shared_ptr<RDMs>>
+FCI_MO::transition_rdms(const std::vector<std::pair<size_t, size_t>>& root_list,
+                        std::shared_ptr<ActiveSpaceMethod> method2, int max_rdm_level,
+                        RDMsType rdm_type) {
     if (max_rdm_level > 3 || max_rdm_level < 1) {
         throw psi::PSIEXCEPTION("Invalid max_rdm_level, required 1 <= max_rdm_level <= 3.");
     }
@@ -1966,23 +1990,42 @@ std::vector<std::shared_ptr<RDMs>> FCI_MO::transition_rdms(const std::vector<std
 
     std::vector<std::shared_ptr<RDMs>> refs;
 
-    std::pair<std::shared_ptr<vecdet>, psi::SharedMatrix> det_evec_pair =
-        prepare_for_trans_rdm(std::dynamic_pointer_cast<FCI_MO>(method2));
+    auto det_evec_pair = prepare_for_trans_rdm(std::dynamic_pointer_cast<FCI_MO>(method2));
+    const auto& dets = det_evec_pair.first;
+    const auto& evecs = det_evec_pair.second;
+    const auto& state2 = method2->state();
 
     for (auto& roots : root_list) {
-        auto D1 = compute_n_rdm(*det_evec_pair.first, det_evec_pair.second, 1, roots.first,
-                                roots.second, method2->state(), disk);
-        if (max_rdm_level == 1) {
-            refs.emplace_back(D1[0], D1[1]);
-        } else {
-            auto D2 = compute_n_rdm(*det_evec_pair.first, det_evec_pair.second, 2, roots.first,
-                                    roots.second, method2->state(), disk);
-            if (max_rdm_level == 2) {
-                refs.emplace_back(D1[0], D1[1], D2[0], D2[1], D2[2]);
+        int root1 = roots.first;
+        int root2 = roots.second;
+
+        if (rdm_type == RDMsType::spin_dependent) {
+            auto D1 = compute_n_rdm(*dets, evecs, 1, root1, root2, state2, disk);
+            if (max_rdm_level == 1) {
+                refs.emplace_back(std::make_shared<RDMsSpinDependent>(D1[0], D1[1]));
             } else {
-                auto D3 = compute_n_rdm(*det_evec_pair.first, det_evec_pair.second, 3, roots.first,
-                                        roots.second, method2->state(), disk);
-                refs.emplace_back(D1[0], D1[1], D2[0], D2[1], D2[2], D3[0], D3[1], D3[2], D3[3]);
+                auto D2 = compute_n_rdm(*dets, evecs, 2, root1, root2, state2, disk);
+                if (max_rdm_level == 2) {
+                    refs.emplace_back(
+                        std::make_shared<RDMsSpinDependent>(D1[0], D1[1], D2[0], D2[1], D2[2]));
+                } else {
+                    auto D3 = compute_n_rdm(*dets, evecs, 3, root1, root2, state2, disk);
+                    refs.emplace_back(std::make_shared<RDMsSpinDependent>(
+                        D1[0], D1[1], D2[0], D2[1], D2[2], D3[0], D3[1], D3[2], D3[3]));
+                }
+            }
+        } else {
+            auto D1 = compute_n_rdm_sf(*dets, evecs, 1, root1, root2, state2);
+            if (max_rdm_level == 1) {
+                refs.emplace_back(std::make_shared<RDMsSpinFree>(D1));
+            } else {
+                auto D2 = compute_n_rdm_sf(*dets, evecs, 2, root1, root2, state2);
+                if (max_rdm_level == 2) {
+                    refs.emplace_back(std::make_shared<RDMsSpinFree>(D1, D2));
+                } else {
+                    auto D3 = compute_n_rdm_sf(*dets, evecs, 3, root1, root2, state2);
+                    refs.emplace_back(std::make_shared<RDMsSpinFree>(D1, D2, D3));
+                }
             }
         }
     }
@@ -2022,15 +2065,16 @@ FCI_MO::reference(const std::vector<std::pair<size_t, size_t>>& root_list, int m
         compute_ref(max_rdm_level, roots.first, roots.second);
 
         if (max_rdm_level == 1) {
-            refs.emplace_back(L1a_, L1b_);
+            refs.emplace_back(std::make_shared<RDMsSpinDependent>(L1a_, L1b_));
         }
 
         if (max_rdm_level == 2) {
-            refs.emplace_back(L1a_, L1b_, L2aa_, L2ab_, L2bb_);
+            refs.emplace_back(std::make_shared<RDMsSpinDependent>(L1a_, L1b_, L2aa_, L2ab_, L2bb_));
         }
 
         if (max_rdm_level == 3 && (options_->get_str("THREEPDC") != "ZERO")) {
-            refs.emplace_back(L1a_, L1b_, L2aa_, L2ab_, L2bb_, L3aaa_, L3aab_, L3abb_, L3bbb_);
+            refs.emplace_back(std::make_shared<RDMsSpinDependent>(L1a_, L1b_, L2aa_, L2ab_, L2bb_,
+                                                                  L3aaa_, L3aab_, L3abb_, L3bbb_));
         }
     }
     //}
@@ -2555,6 +2599,52 @@ std::vector<ambit::Tensor> FCI_MO::compute_n_rdm(const vecdet& p_space, psi::Sha
     return out;
 }
 
+ambit::Tensor FCI_MO::compute_n_rdm_sf(const vecdet& p_space, psi::SharedMatrix evecs,
+                                       int rdm_level, int root1, int root2,
+                                       const StateInfo& state2) {
+    if (rdm_level > 3 || rdm_level < 1) {
+        throw psi::PSIEXCEPTION("Incorrect RDM_LEVEL. Check your code!");
+    }
+
+    local_timer timer;
+    std::string job_name = (root1 == root2 and state_ == state2) ? "RDMs" : "TrDMs";
+    job_name = std::to_string(rdm_level) + job_name;
+    timer_on(job_name);
+
+    psi::outfile->Printf("\n Computing %6s (%d %s %s - %d %s %s) ... ", job_name.c_str(), root1,
+                         state_.multiplicity_label().c_str(), state_.irrep_label().c_str(), root2,
+                         state2.multiplicity_label().c_str(), state2.irrep_label().c_str());
+
+    std::string name;
+    if (rdm_level == 1) {
+        name = "D1 SF";
+    } else if (rdm_level == 2) {
+        name = "D2 SF";
+    } else if (rdm_level == 3) {
+        name = "D3 SF";
+    }
+
+    std::vector<size_t> dim(2 * rdm_level, nactv_);
+    auto out = ambit::Tensor::build(ambit::CoreTensor, name, dim);
+
+    // Important! need to shift root2 when two states are different
+    int root2_shifted = (state2 == state_) ? root2 : nroot_ + root2;
+
+    CI_RDMS ci_rdms(fci_ints_, p_space, evecs, root1, root2_shifted);
+
+    if (rdm_level == 1) {
+        ci_rdms.compute_1rdm_sf(out.data());
+    } else if (rdm_level == 2) {
+        ci_rdms.compute_2rdm_sf(out.data());
+    } else if (rdm_level == 3) {
+        ci_rdms.compute_3rdm_sf(out.data());
+    }
+
+    outfile->Printf("Done. Timing %15.6f s", timer.get());
+    timer_off(job_name);
+    return out;
+}
+
 std::vector<ambit::Tensor> FCI_MO::compute_n_rdm(const vecdet& p_space, psi::SharedMatrix evecs,
                                                  int rdm_level, int root1, int root2, int irrep,
                                                  int multi, bool disk) {
@@ -2624,8 +2714,9 @@ std::vector<ambit::Tensor> FCI_MO::compute_n_rdm(const vecdet& p_space, psi::Sha
     return out;
 }
 
-std::shared_ptr<RDMs> FCI_MO::transition_reference(int root1, int root2, bool multi_state, int entry, int max_level,
-                                  bool do_cumulant, bool disk) {
+std::shared_ptr<RDMs> FCI_MO::transition_reference(int root1, int root2, bool multi_state,
+                                                   int entry, int max_level, bool do_cumulant,
+                                                   bool disk) {
     if (max_level > 3 || max_level < 1) {
         throw psi::PSIEXCEPTION("Max RDM level > 3 or < 1 is not available.");
     }
@@ -2662,21 +2753,17 @@ std::shared_ptr<RDMs> FCI_MO::transition_reference(int root1, int root2, bool mu
 
     if (max_level == 1) {
         auto D1 = compute_n_rdm(p_space, evecs, 1, root1, root2, irrep, multi, disk);
-        RDMs ref(D1[0], D1[1]);
-        return ref;
+        return std::make_shared<RDMsSpinDependent>(D1[0], D1[1]);
     } else if (max_level == 2) {
         auto D1 = compute_n_rdm(p_space, evecs, 1, root1, root2, irrep, multi, disk);
         auto D2 = compute_n_rdm(p_space, evecs, 2, root1, root2, irrep, multi, disk);
-        RDMs ref(D1[0], D1[1], D2[0], D2[1], D2[2]);
-        return ref;
-    } else if (max_level == 3) {
+        return std::make_shared<RDMsSpinDependent>(D1[0], D1[1], D2[0], D2[1], D2[2]);
+    } else {
         auto D1 = compute_n_rdm(p_space, evecs, 1, root1, root2, irrep, multi, disk);
         auto D2 = compute_n_rdm(p_space, evecs, 2, root1, root2, irrep, multi, disk);
         auto D3 = compute_n_rdm(p_space, evecs, 3, root1, root2, irrep, multi, disk);
-        RDMs ref(D1[0], D1[1], D2[0], D2[1], D2[2], D3[0], D3[1], D3[2], D3[3]);
-        return ref;
-    } else {
-        throw psi::PSIEXCEPTION("Max RDM level > 3 or < 1 is not available.");
+        return std::make_shared<RDMsSpinDependent>(D1[0], D1[1], D2[0], D2[1], D2[2], D3[0], D3[1],
+                                                   D3[2], D3[3]);
     }
 }
 

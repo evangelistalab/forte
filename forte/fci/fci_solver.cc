@@ -677,10 +677,11 @@ FCISolver::rdms(const std::vector<std::pair<size_t, size_t>>& root_list, int max
     return refs;
 }
 
-std::vector<RDMs>
+std::vector<std::shared_ptr<RDMs>>
 FCISolver::transition_rdms(const std::vector<std::pair<size_t, size_t>>& /*root_list*/,
-                           std::shared_ptr<ActiveSpaceMethod> /*method2*/, int /*max_rdm_level*/) {
-    std::vector<RDMs> refs;
+                           std::shared_ptr<ActiveSpaceMethod> /*method2*/, int /*max_rdm_level*/,
+                           RDMsType /*rdm_type*/) {
+    std::vector<std::shared_ptr<RDMs>> refs;
     throw std::runtime_error("FCISolver::transition_rdms is not implemented!");
     return refs;
 }

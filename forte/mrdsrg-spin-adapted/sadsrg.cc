@@ -46,8 +46,9 @@ using namespace psi;
 
 namespace forte {
 
-SADSRG::SADSRG(RDMs rdms, std::shared_ptr<SCFInfo> scf_info, std::shared_ptr<ForteOptions> options,
-               std::shared_ptr<ForteIntegrals> ints, std::shared_ptr<MOSpaceInfo> mo_space_info)
+SADSRG::SADSRG(std::shared_ptr<RDMs> rdms, std::shared_ptr<SCFInfo> scf_info,
+               std::shared_ptr<ForteOptions> options, std::shared_ptr<ForteIntegrals> ints,
+               std::shared_ptr<MOSpaceInfo> mo_space_info)
     : DynamicCorrelationSolver(rdms, scf_info, options, ints, mo_space_info),
       BTF_(new BlockedTensorFactory()), tensor_type_(ambit::CoreTensor) {
     n_threads_ = omp_get_max_threads();
@@ -127,7 +128,7 @@ void SADSRG::startup() {
 void SADSRG::build_fock_from_ints() {
     local_timer lt;
     print_contents("Computing Fock matrix and cleaning JK");
-    ints_->make_fock_matrix(rdms_.g1a(), rdms_.g1b());
+    ints_->make_fock_matrix(rdms_->g1a(), rdms_->g1b());
     ints_->jk_finalize();
     print_done(lt.get());
 }
@@ -314,7 +315,7 @@ void SADSRG::init_density() {
 void SADSRG::fill_density() {
     // 1-particle density (make a copy)
     ambit::Tensor L1a = L1_.block("aa");
-    L1a("pq") = rdms_.SF_L1()("pq");
+    L1a("pq") = rdms_->SF_L1()("pq");
 
     // 1-hole density
     ambit::Tensor E1a = Eta1_.block("aa");
@@ -324,7 +325,7 @@ void SADSRG::fill_density() {
 
     // 2-body density cumulants (make a copy)
     ambit::Tensor L2aa = L2_.block("aaaa");
-    L2aa("pqrs") = rdms_.SF_L2()("pqrs");
+    L2aa("pqrs") = rdms_->SF_L2()("pqrs");
 }
 
 void SADSRG::init_fock() {
@@ -495,10 +496,10 @@ void SADSRG::deGNO_ints(const std::string& name, double& H0, BlockedTensor& H1, 
      * where A = L3["stupqr"], B = L3["stuqrp"], C = L3["sturpq"], D = L3["stuqpr"].
      */
     double scalar3 = 0.0;
-    //    scalar3 -= (1.0 / 36.0) * H3.block("aaaaaa")("xyzuvw") * rdms_.L3aaa()("xyzuvw");
-    //    scalar3 -= (1.0 / 36.0) * H3.block("AAAAAA")("XYZUVW") * rdms_.L3bbb()("XYZUVW");
-    //    scalar3 -= 0.25 * H3.block("aaAaaA")("xyZuvW") * rdms_.L3aab()("xyZuvW");
-    //    scalar3 -= 0.25 * H3.block("aAAaAA")("xYZuVW") * rdms_.L3abb()("xYZuVW");
+    //    scalar3 -= (1.0 / 36.0) * H3.block("aaaaaa")("xyzuvw") * rdms_->L3aaa()("xyzuvw");
+    //    scalar3 -= (1.0 / 36.0) * H3.block("AAAAAA")("XYZUVW") * rdms_->L3bbb()("XYZUVW");
+    //    scalar3 -= 0.25 * H3.block("aaAaaA")("xyZuvW") * rdms_->L3aab()("xyZuvW");
+    //    scalar3 -= 0.25 * H3.block("aAAaAA")("xYZuVW") * rdms_->L3abb()("xYZuVW");
 
     //    // TODO: form one-body intermediate for scalar and 1-body
     //    scalar3 += 0.25 * H3["xyzuvw"] * Lambda2_["uvxy"] * Gamma1_["wz"];
@@ -709,8 +710,8 @@ void SADSRG::print_cumulant_summary() {
     norms[0] = L2_.norm(2);
 
     if (do_cu3_) {
-        maxes[1] = rdms_.SF_L3().norm(0);
-        norms[1] = rdms_.SF_L3().norm(2);
+        maxes[1] = rdms_->SF_L3().norm(0);
+        norms[1] = rdms_->SF_L3().norm(2);
     } else {
         maxes[1] = 0.0;
         norms[1] = 0.0;

@@ -542,21 +542,23 @@ void ExcitedStateSolver::wfn_to_file(DeterminantHashVec& det_space, psi::SharedM
     final_wfn.close();
 }
 
-std::vector<RDMs> ExcitedStateSolver::rdms(const std::vector<std::pair<size_t, size_t>>& root_list,
-                                           int max_rdm_level) {
+std::vector<std::shared_ptr<RDMs>>
+ExcitedStateSolver::rdms(const std::vector<std::pair<size_t, size_t>>& root_list, int max_rdm_level,
+                         RDMsType rdm_type) {
 
-    std::vector<RDMs> refs;
+    std::vector<std::shared_ptr<RDMs>> refs;
 
     for (const auto& root_pair : root_list) {
         refs.push_back(compute_rdms(as_ints_, final_wfn_, evecs_, root_pair.first, root_pair.second,
-                                    max_rdm_level));
+                                    max_rdm_level, rdm_type));
     }
     return refs;
 }
 
-std::vector<RDMs>
+std::vector<std::shared_ptr<RDMs>>
 ExcitedStateSolver::transition_rdms(const std::vector<std::pair<size_t, size_t>>& root_list,
-                                    std::shared_ptr<ActiveSpaceMethod> method2, int max_rdm_level) {
+                                    std::shared_ptr<ActiveSpaceMethod> method2, int max_rdm_level,
+                                    RDMsType rdm_type) {
     if (max_rdm_level > 3 || max_rdm_level < 1) {
         throw std::runtime_error("Invalid max_rdm_level, required 1 <= max_rdm_level <= 3.");
     }
@@ -598,8 +600,12 @@ ExcitedStateSolver::transition_rdms(const std::vector<std::pair<size_t, size_t>>
         }
     }
 
+    std::vector<size_t> dim2(2, nact_);
+    std::vector<size_t> dim4(4, nact_);
+    std::vector<size_t> dim6(6, nact_);
+
     // loop over roots and compute the transition RDMs
-    std::vector<RDMs> rdms;
+    std::vector<std::shared_ptr<RDMs>> rdms;
     for (const auto& roots_pair : root_list) {
         size_t root1 = roots_pair.first;
         size_t root2 = roots_pair.second + nroot_;
@@ -607,47 +613,63 @@ ExcitedStateSolver::transition_rdms(const std::vector<std::pair<size_t, size_t>>
         CI_RDMS ci_rdms(dets, as_ints_, evecs, root1, root2);
         ci_rdms.set_print(false);
 
-        // compute 1-RDM
-        auto a = ambit::Tensor::build(ambit::CoreTensor, "TD1a", std::vector<size_t>(2, nact_));
-        auto b = ambit::Tensor::build(ambit::CoreTensor, "TD1b", std::vector<size_t>(2, nact_));
-        auto& a_data = a.data();
-        auto& b_data = b.data();
+        ambit::Tensor a, b, aa, ab, bb, aaa, aab, abb, bbb;
+        ambit::Tensor d1, d2, d3;
 
-        ci_rdms.compute_1rdm_op(a_data, b_data);
+        if (rdm_type == RDMsType::spin_dependent) {
+            // compute 1-RDM
+            a = ambit::Tensor::build(ambit::CoreTensor, "TD1a", dim2);
+            b = ambit::Tensor::build(ambit::CoreTensor, "TD1b", dim2);
+            ci_rdms.compute_1rdm_op(a.data(), b.data());
 
-        if (max_rdm_level == 1) {
-            rdms.emplace_back(a, b);
-        } else {
-            ci_rdms.set_print(true);
-
-            // compute 2-RDM
-            std::vector<size_t> dim4(4, nact_);
-            auto aa = ambit::Tensor::build(ambit::CoreTensor, "TD2aa", dim4);
-            auto ab = ambit::Tensor::build(ambit::CoreTensor, "TD2ab", dim4);
-            auto bb = ambit::Tensor::build(ambit::CoreTensor, "TD2bb", dim4);
-            auto& aa_data = aa.data();
-            auto& ab_data = ab.data();
-            auto& bb_data = bb.data();
-
-            ci_rdms.compute_2rdm_op(aa_data, ab_data, bb_data);
-
-            if (max_rdm_level == 2) {
-                rdms.emplace_back(a, b, aa, ab, bb);
-            } else {
+            if (max_rdm_level > 1) {
+                // compute 2-RDM
+                ci_rdms.set_print(true);
+                aa = ambit::Tensor::build(ambit::CoreTensor, "TD2aa", dim4);
+                ab = ambit::Tensor::build(ambit::CoreTensor, "TD2ab", dim4);
+                bb = ambit::Tensor::build(ambit::CoreTensor, "TD2bb", dim4);
+                ci_rdms.compute_2rdm_op(aa.data(), ab.data(), bb.data());
+            }
+            if (max_rdm_level > 2) {
                 // compute 3-RDM
-                std::vector<size_t> dim6(6, nact_);
-                auto aaa = ambit::Tensor::build(ambit::CoreTensor, "TD3aaa", dim6);
-                auto aab = ambit::Tensor::build(ambit::CoreTensor, "TD3aab", dim6);
-                auto abb = ambit::Tensor::build(ambit::CoreTensor, "TD3abb", dim6);
-                auto bbb = ambit::Tensor::build(ambit::CoreTensor, "TD3bbb", dim6);
-                auto& aaa_data = aaa.data();
-                auto& aab_data = aab.data();
-                auto& abb_data = abb.data();
-                auto& bbb_data = bbb.data();
+                aaa = ambit::Tensor::build(ambit::CoreTensor, "TD3aaa", dim6);
+                aab = ambit::Tensor::build(ambit::CoreTensor, "TD3aab", dim6);
+                abb = ambit::Tensor::build(ambit::CoreTensor, "TD3abb", dim6);
+                bbb = ambit::Tensor::build(ambit::CoreTensor, "TD3bbb", dim6);
+                ci_rdms.compute_3rdm_op(aaa.data(), aab.data(), abb.data(), bbb.data());
+            }
 
-                ci_rdms.compute_3rdm_op(aaa_data, aab_data, abb_data, bbb_data);
+            if (max_rdm_level == 1) {
+                rdms.emplace_back(std::make_shared<RDMsSpinDependent>(a, b));
+            } else if (max_rdm_level == 2) {
+                rdms.emplace_back(std::make_shared<RDMsSpinDependent>(a, b, aa, ab, bb));
+            } else {
+                rdms.emplace_back(
+                    std::make_shared<RDMsSpinDependent>(a, b, aa, ab, bb, aaa, aab, abb, bbb));
+            }
+        } else {
+            // compute 1-RDM
+            d1 = ambit::Tensor::build(ambit::CoreTensor, "TD1", dim2);
+            ci_rdms.compute_1rdm_sf_op(d1.data());
 
-                rdms.emplace_back(a, b, aa, ab, bb, aaa, aab, abb, bbb);
+            if (max_rdm_level > 1) {
+                // compute 2-RDM
+                ci_rdms.set_print(true);
+                d2 = ambit::Tensor::build(ambit::CoreTensor, "TD2", dim4);
+                ci_rdms.compute_2rdm_sf_op(d2.data());
+            }
+            if (max_rdm_level > 2) {
+                // compute 3-RDM
+                d3 = ambit::Tensor::build(ambit::CoreTensor, "TD3", dim6);
+                ci_rdms.compute_3rdm_sf_op(d3.data());
+            }
+
+            if (max_rdm_level == 1) {
+                rdms.emplace_back(std::make_shared<RDMsSpinFree>(d1));
+            } else if (max_rdm_level == 2) {
+                rdms.emplace_back(std::make_shared<RDMsSpinFree>(d1, d2));
+            } else {
+                rdms.emplace_back(std::make_shared<RDMsSpinFree>(d1, d2, d3));
             }
         }
     }
@@ -655,9 +677,10 @@ ExcitedStateSolver::transition_rdms(const std::vector<std::pair<size_t, size_t>>
     return rdms;
 }
 
-RDMs ExcitedStateSolver::compute_rdms(std::shared_ptr<ActiveSpaceIntegrals> fci_ints,
-                                      DeterminantHashVec& dets, psi::SharedMatrix& PQ_evecs,
-                                      int root1, int root2, int max_rdm_level) {
+std::shared_ptr<RDMs>
+ExcitedStateSolver::compute_rdms(std::shared_ptr<ActiveSpaceIntegrals> fci_ints,
+                                 DeterminantHashVec& dets, psi::SharedMatrix& PQ_evecs, int root1,
+                                 int root2, int max_rdm_level, RDMsType rdm_type) {
 
     // TODO: this code might be OBSOLETE (Francesco)
     if (!direct_rdms_) {
@@ -683,90 +706,120 @@ RDMs ExcitedStateSolver::compute_rdms(std::shared_ptr<ActiveSpaceIntegrals> fci_
 
     ci_rdms.set_max_rdm(max_rdm_level);
 
-    ambit::Tensor ordm_a;
-    ambit::Tensor ordm_b;
-    ambit::Tensor trdm_aa;
-    ambit::Tensor trdm_ab;
-    ambit::Tensor trdm_bb;
-    ambit::Tensor trdm_aaa;
-    ambit::Tensor trdm_aab;
-    ambit::Tensor trdm_abb;
-    ambit::Tensor trdm_bbb;
+    ambit::Tensor ordm_a, ordm_b;
+    ambit::Tensor trdm_aa, trdm_ab, trdm_bb;
+    ambit::Tensor trdm_aaa, trdm_aab, trdm_abb, trdm_bbb;
+    ambit::Tensor G1, G2, G3;
+
+    std::vector<size_t> dim2{nact_, nact_};
+    std::vector<size_t> dim4{nact_, nact_, nact_, nact_};
+    std::vector<size_t> dim6{nact_, nact_, nact_, nact_, nact_, nact_};
 
     if (direct_rdms_) {
-        // TODO: Implemente order-by-order version of direct algorithm
-        ordm_a = ambit::Tensor::build(ambit::CoreTensor, "g1a", {nact_, nact_});
-        ordm_b = ambit::Tensor::build(ambit::CoreTensor, "g1b", {nact_, nact_});
+        // TODO: Implement order-by-order version of direct algorithm
+        if (rdm_type == RDMsType::spin_dependent) {
+            ordm_a = ambit::Tensor::build(ambit::CoreTensor, "g1a", dim2);
+            ordm_b = ambit::Tensor::build(ambit::CoreTensor, "g1b", dim2);
 
-        trdm_aa = ambit::Tensor::build(ambit::CoreTensor, "g2aa", {nact_, nact_, nact_, nact_});
-        trdm_ab = ambit::Tensor::build(ambit::CoreTensor, "g2ab", {nact_, nact_, nact_, nact_});
-        trdm_bb = ambit::Tensor::build(ambit::CoreTensor, "g2bb", {nact_, nact_, nact_, nact_});
+            trdm_aa = ambit::Tensor::build(ambit::CoreTensor, "g2aa", dim4);
+            trdm_ab = ambit::Tensor::build(ambit::CoreTensor, "g2ab", dim4);
+            trdm_bb = ambit::Tensor::build(ambit::CoreTensor, "g2bb", dim4);
 
-        trdm_aaa = ambit::Tensor::build(ambit::CoreTensor, "g2aaa",
-                                        {nact_, nact_, nact_, nact_, nact_, nact_});
-        trdm_aab = ambit::Tensor::build(ambit::CoreTensor, "g2aab",
-                                        {nact_, nact_, nact_, nact_, nact_, nact_});
-        trdm_abb = ambit::Tensor::build(ambit::CoreTensor, "g2abb",
-                                        {nact_, nact_, nact_, nact_, nact_, nact_});
-        trdm_bbb = ambit::Tensor::build(ambit::CoreTensor, "g2bbb",
-                                        {nact_, nact_, nact_, nact_, nact_, nact_});
+            trdm_aaa = ambit::Tensor::build(ambit::CoreTensor, "g3aaa", dim6);
+            trdm_aab = ambit::Tensor::build(ambit::CoreTensor, "g3aab", dim6);
+            trdm_abb = ambit::Tensor::build(ambit::CoreTensor, "g3abb", dim6);
+            trdm_bbb = ambit::Tensor::build(ambit::CoreTensor, "g3bbb", dim6);
 
-        ci_rdms.compute_rdms_dynamic(ordm_a.data(), ordm_b.data(), trdm_aa.data(), trdm_ab.data(),
-                                     trdm_bb.data(), trdm_aaa.data(), trdm_aab.data(),
-                                     trdm_abb.data(), trdm_bbb.data());
-        //        print_nos();
+            ci_rdms.compute_rdms_dynamic(ordm_a.data(), ordm_b.data(), trdm_aa.data(),
+                                         trdm_ab.data(), trdm_bb.data(), trdm_aaa.data(),
+                                         trdm_aab.data(), trdm_abb.data(), trdm_bbb.data());
+            //        print_nos();
+        } else {
+            G1 = ambit::Tensor::build(ambit::CoreTensor, "G1", dim2);
+            G2 = ambit::Tensor::build(ambit::CoreTensor, "G2", dim4);
+            G3 = ambit::Tensor::build(ambit::CoreTensor, "G3", dim6);
+            ci_rdms.compute_rdms_dynamic_sf(G1.data(), G2.data(), G3.data());
+        }
     } else {
-        if (max_rdm_level >= 1) {
-            local_timer one_r;
-            ordm_a = ambit::Tensor::build(ambit::CoreTensor, "g1a", {nact_, nact_});
-            ordm_b = ambit::Tensor::build(ambit::CoreTensor, "g1b", {nact_, nact_});
+        if (rdm_type == RDMsType::spin_dependent) {
+            if (max_rdm_level >= 1) {
+                local_timer one_r;
+                ordm_a = ambit::Tensor::build(ambit::CoreTensor, "g1a", dim2);
+                ordm_b = ambit::Tensor::build(ambit::CoreTensor, "g1b", dim2);
 
-            ci_rdms.compute_1rdm_op(ordm_a.data(), ordm_b.data());
-            psi::outfile->Printf("\n  1-RDM  took %2.6f s (determinant)", one_r.get());
+                ci_rdms.compute_1rdm_op(ordm_a.data(), ordm_b.data());
+                psi::outfile->Printf("\n  1-RDM  took %2.6f s (determinant)", one_r.get());
 
-            //            if (options_->get_bool("ACI_PRINT_NO")) {
-            //                print_nos();
-            //            }
-        }
-        if (max_rdm_level >= 2) {
-            local_timer two_r;
-            trdm_aa = ambit::Tensor::build(ambit::CoreTensor, "g2aa", {nact_, nact_, nact_, nact_});
-            trdm_ab = ambit::Tensor::build(ambit::CoreTensor, "g2ab", {nact_, nact_, nact_, nact_});
-            trdm_bb = ambit::Tensor::build(ambit::CoreTensor, "g2bb", {nact_, nact_, nact_, nact_});
+                //            if (options_->get_bool("ACI_PRINT_NO")) {
+                //                print_nos();
+                //            }
+            }
+            if (max_rdm_level >= 2) {
+                local_timer two_r;
+                trdm_aa = ambit::Tensor::build(ambit::CoreTensor, "g2aa", dim4);
+                trdm_ab = ambit::Tensor::build(ambit::CoreTensor, "g2ab", dim4);
+                trdm_bb = ambit::Tensor::build(ambit::CoreTensor, "g2bb", dim4);
 
-            ci_rdms.compute_2rdm_op(trdm_aa.data(), trdm_ab.data(), trdm_bb.data());
-            psi::outfile->Printf("\n  2-RDMS took %2.6f s (determinant)", two_r.get());
-        }
-        if (max_rdm_level >= 3) {
-            local_timer tr;
-            trdm_aaa = ambit::Tensor::build(ambit::CoreTensor, "g2aaa",
-                                            {nact_, nact_, nact_, nact_, nact_, nact_});
-            trdm_aab = ambit::Tensor::build(ambit::CoreTensor, "g2aab",
-                                            {nact_, nact_, nact_, nact_, nact_, nact_});
-            trdm_abb = ambit::Tensor::build(ambit::CoreTensor, "g2abb",
-                                            {nact_, nact_, nact_, nact_, nact_, nact_});
-            trdm_bbb = ambit::Tensor::build(ambit::CoreTensor, "g2bbb",
-                                            {nact_, nact_, nact_, nact_, nact_, nact_});
+                ci_rdms.compute_2rdm_op(trdm_aa.data(), trdm_ab.data(), trdm_bb.data());
+                psi::outfile->Printf("\n  2-RDMS took %2.6f s (determinant)", two_r.get());
+            }
+            if (max_rdm_level >= 3) {
+                local_timer tr;
+                trdm_aaa = ambit::Tensor::build(ambit::CoreTensor, "g3aaa", dim6);
+                trdm_aab = ambit::Tensor::build(ambit::CoreTensor, "g3aab", dim6);
+                trdm_abb = ambit::Tensor::build(ambit::CoreTensor, "g3abb", dim6);
+                trdm_bbb = ambit::Tensor::build(ambit::CoreTensor, "g3bbb", dim6);
 
-            ci_rdms.compute_3rdm_op(trdm_aaa.data(), trdm_aab.data(), trdm_abb.data(),
-                                    trdm_bbb.data());
-            psi::outfile->Printf("\n  3-RDMs took %2.6f s (determinant)", tr.get());
+                ci_rdms.compute_3rdm_op(trdm_aaa.data(), trdm_aab.data(), trdm_abb.data(),
+                                        trdm_bbb.data());
+                psi::outfile->Printf("\n  3-RDMs took %2.6f s (determinant)", tr.get());
+            }
+        } else {
+            if (max_rdm_level >= 1) {
+                local_timer one_r;
+                G1 = ambit::Tensor::build(ambit::CoreTensor, "G1", dim2);
+                ci_rdms.compute_1rdm_sf_op(G1.data());
+                psi::outfile->Printf("\n  1-RDM  took %2.6f s (determinant)", one_r.get());
+            }
+            if (max_rdm_level >= 2) {
+                local_timer two_r;
+                G2 = ambit::Tensor::build(ambit::CoreTensor, "G2", dim4);
+                ci_rdms.compute_2rdm_sf_op(G2.data());
+                psi::outfile->Printf("\n  2-RDMS took %2.6f s (determinant)", two_r.get());
+            }
+            if (max_rdm_level >= 3) {
+                local_timer three_r;
+                G3 = ambit::Tensor::build(ambit::CoreTensor, "G3", dim6);
+                ci_rdms.compute_3rdm_sf_op(G3.data());
+                psi::outfile->Printf("\n  3-RDMS took %2.6f s (determinant)", three_r.get());
+            }
         }
     }
-    if (test_rdms_) {
+    if (test_rdms_ and rdm_type == RDMsType::spin_dependent) {
         ci_rdms.rdm_test(ordm_a.data(), ordm_b.data(), trdm_aa.data(), trdm_bb.data(),
                          trdm_ab.data(), trdm_aaa.data(), trdm_aab.data(), trdm_abb.data(),
                          trdm_bbb.data());
     }
 
+    std::shared_ptr<RDMs> out;
     if (max_rdm_level == 1) {
-        return RDMs(ordm_a, ordm_b);
+        if (rdm_type == RDMsType::spin_dependent)
+            out = std::make_shared<RDMsSpinDependent>(ordm_a, ordm_b);
+        else
+            out = std::make_shared<RDMsSpinFree>(G1);
+    } else if (max_rdm_level == 2) {
+        if (rdm_type == RDMsType::spin_dependent)
+            out = std::make_shared<RDMsSpinDependent>(ordm_a, ordm_b, trdm_aa, trdm_ab, trdm_bb);
+        else
+            out = std::make_shared<RDMsSpinFree>(G1, G2);
+    } else {
+        if (rdm_type == RDMsType::spin_dependent)
+            out = std::make_shared<RDMsSpinDependent>(ordm_a, ordm_b, trdm_aa, trdm_ab, trdm_bb,
+                                                      trdm_aaa, trdm_aab, trdm_abb, trdm_bbb);
+        else
+            out = std::make_shared<RDMsSpinFree>(G1, G2, G3);
     }
-    if (max_rdm_level == 2) {
-        return RDMs(ordm_a, ordm_b, trdm_aa, trdm_ab, trdm_bb);
-    }
-
-    return RDMs(ordm_a, ordm_b, trdm_aa, trdm_ab, trdm_bb, trdm_aaa, trdm_aab, trdm_abb, trdm_bbb);
+    return out;
 }
 
 void ExcitedStateSolver::save_old_root(DeterminantHashVec& dets, psi::SharedMatrix& PQ_evecs,

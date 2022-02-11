@@ -198,8 +198,8 @@ std::vector<double> SADSRG::H2_T2_C0_T2small(BlockedTensor& H2, BlockedTensor& T
 
     // <[Hbar2, T2]> C_6 C_2
     if (do_cu3_) {
-        E3 += H2.block("vaaa")("ewxy") * T2.block("aava")("uvez") * rdms_.SF_L3()("xyzuwv");
-        E3 -= H2.block("aaca")("uvmz") * T2.block("caaa")("mwxy") * rdms_.SF_L3()("xyzuwv");
+        E3 += H2.block("vaaa")("ewxy") * T2.block("aava")("uvez") * rdms_->SF_L3()("xyzuwv");
+        E3 -= H2.block("aaca")("uvmz") * T2.block("caaa")("mwxy") * rdms_->SF_L3()("xyzuwv");
     }
 
     return {E1, E2, E3};

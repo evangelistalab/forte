@@ -984,15 +984,14 @@ void CASSCF_ORB_GRAD::reshape_rot_ambit(ambit::BlockedTensor bt, const psi::Shar
     }
 }
 
-void CASSCF_ORB_GRAD::set_rdms(RDMs& rdms) {
+void CASSCF_ORB_GRAD::set_rdms(std::shared_ptr<RDMs> rdms) {
     // form spin-summed densities
-    D1_.block("aa").copy(rdms.g1a());
-    D1_.block("aa")("pq") += rdms.g1b()("pq");
+    D1_.block("aa").copy(rdms->SF_G1());
     format_1rdm();
 
     // change to chemists' notation
-    D2_.block("aaaa")("pqrs") = rdms.SF_G2()("prqs");
-    D2_.block("aaaa")("pqrs") += rdms.SF_G2()("qrps");
+    D2_.block("aaaa")("pqrs") = rdms->SF_G2()("prqs");
+    D2_.block("aaaa")("pqrs") += rdms->SF_G2()("qrps");
     D2_.scale(0.5);
 }
 

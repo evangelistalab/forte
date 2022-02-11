@@ -169,7 +169,7 @@ std::vector<std::vector<double>> ActiveSpaceMethod::compute_transition_dipole_sa
     }
 
     // compute transition 1-RDMs
-    auto rdms = transition_rdms(root_list, method2, 1);
+    auto rdms = transition_rdms(root_list, method2, 1, RDMsType::spin_free);
 
     psi::outfile->Printf("\n    %6s %6s %14s %14s %14s %14s", "Bra", "Ket", "DM_X", "DM_Y", "DM_Z",
                          "|DM|");
@@ -183,8 +183,7 @@ std::vector<std::vector<double>> ActiveSpaceMethod::compute_transition_dipole_sa
         auto root2 = root_list[i].second;
 
         std::string name = std::to_string(root1) + " -> " + std::to_string(root2);
-        auto Dt = rdms[i].g1a().clone();
-        Dt("pq") += rdms[i].g1b()("pq");
+        auto Dt = rdms[i]->SF_G1();
 
         std::vector<double> dipole(4, 0.0);
         for (int z = 0; z < 3; ++z) {

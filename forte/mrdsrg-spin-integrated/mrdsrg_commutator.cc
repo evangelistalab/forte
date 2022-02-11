@@ -551,14 +551,14 @@ void MRDSRG::H2_T2_C0_DF(BlockedTensor& B, BlockedTensor& T2, const double& alph
         temp["uvwxyz"] -= B["guz"] * B["gvi"] * T2["iwxy"]; //  aaaaaa from hole
         temp["uvwxyz"] += B["gwx"] * B["gay"] * T2["uvaz"]; //  aaaaaa from particle
         temp["uvwxyz"] -= B["gwy"] * B["gax"] * T2["uvaz"]; //  aaaaaa from particle
-        E += 0.25 * temp.block("aaaaaa")("uvwxyz") * rdms_.L3aaa()("xyzuvw");
+        E += 0.25 * temp.block("aaaaaa")("uvwxyz") * rdms_->L3aaa()("xyzuvw");
 
         temp = ambit::BlockedTensor::build(tensor_type_, "temp", {"AAAAAA"});
         temp["UVWXYZ"] += B["gUI"] * B["gVZ"] * T2["IWXY"]; //  AAAAAA from hole
         temp["UVWXYZ"] -= B["gUZ"] * B["gVI"] * T2["IWXY"]; //  AAAAAA from hole
         temp["UVWXYZ"] += B["gWX"] * B["gAY"] * T2["UVAZ"]; //  AAAAAA from particle
         temp["UVWXYZ"] -= B["gWY"] * B["gAX"] * T2["UVAZ"]; //  AAAAAA from particle
-        E += 0.25 * temp.block("AAAAAA")("UVWXYZ") * rdms_.L3bbb()("XYZUVW");
+        E += 0.25 * temp.block("AAAAAA")("UVWXYZ") * rdms_->L3bbb()("XYZUVW");
 
         temp = ambit::BlockedTensor::build(tensor_type_, "temp", {"aaAaaA"});
         temp["uvWxyZ"] -= B["gui"] * B["gvy"] * T2["iWxZ"];       //  aaAaaA from hole
@@ -570,7 +570,7 @@ void MRDSRG::H2_T2_C0_DF(BlockedTensor& B, BlockedTensor& T2, const double& alph
         temp["uvWxyZ"] -= B["gvx"] * B["gay"] * T2["uWaZ"];       //  aaAaaA from particle
         temp["uvWxyZ"] += B["gvy"] * B["gax"] * T2["uWaZ"];       //  aaAaaA from particle
         temp["uvWxyZ"] -= 2.0 * B["gvx"] * B["gAZ"] * T2["uWyA"]; //  aaAaaA from particle
-        E += 0.5 * temp.block("aaAaaA")("uvWxyZ") * rdms_.L3aab()("xyZuvW");
+        E += 0.5 * temp.block("aaAaaA")("uvWxyZ") * rdms_->L3aab()("xyZuvW");
 
         temp = ambit::BlockedTensor::build(tensor_type_, "temp", {"aAAaAA"});
         temp["uVWxYZ"] -= B["gVI"] * B["gWZ"] * T2["uIxY"];       //  aAAaAA from hole
@@ -582,7 +582,7 @@ void MRDSRG::H2_T2_C0_DF(BlockedTensor& B, BlockedTensor& T2, const double& alph
         temp["uVWxYZ"] -= B["gWY"] * B["gAZ"] * T2["uVxA"];       //  aAAaAA from particle
         temp["uVWxYZ"] += B["gWZ"] * B["gAY"] * T2["uVxA"];       //  aAAaAA from particle
         temp["uVWxYZ"] -= 2.0 * B["gax"] * B["gWY"] * T2["uVaZ"]; //  aAAaAA from particle
-        E += 0.5 * temp.block("aAAaAA")("uVWxYZ") * rdms_.L3abb()("xYZuVW");
+        E += 0.5 * temp.block("aAAaAA")("uVWxYZ") * rdms_->L3abb()("xYZuVW");
     }
 
     // multiply prefactor and copy to C0
@@ -903,12 +903,12 @@ void MRDSRG::H2_G2_C0(BlockedTensor& H2, BlockedTensor& G2, const double& alpha,
         temp = ambit::BlockedTensor::build(tensor_type_, "temp", {"aaaaaa"});
         temp["xyzuvw"] += H2["yzpu"] * G2["pxvw"];
         temp["xyzuvw"] -= H2["zpuv"] * G2["xywp"];
-        E += 0.25 * temp.block("aaaaaa")("uvwxyz") * rdms_.L3aaa()("xyzuvw");
+        E += 0.25 * temp.block("aaaaaa")("uvwxyz") * rdms_->L3aaa()("xyzuvw");
 
         temp = ambit::BlockedTensor::build(tensor_type_, "temp", {"AAAAAA"});
         temp["XYZUVW"] += H2["YZPU"] * G2["PXVW"];
         temp["XYZUVW"] -= H2["ZPUV"] * G2["XYWP"];
-        E += 0.25 * temp.block("AAAAAA")("UVWXYZ") * rdms_.L3bbb()("XYZUVW");
+        E += 0.25 * temp.block("AAAAAA")("UVWXYZ") * rdms_->L3bbb()("XYZUVW");
 
         temp = ambit::BlockedTensor::build(tensor_type_, "temp", {"aaAaaA"});
         temp["xyZuvW"] += 2.0 * H2["yZuP"] * G2["xPvW"];
@@ -918,7 +918,7 @@ void MRDSRG::H2_G2_C0(BlockedTensor& H2, BlockedTensor& G2, const double& alpha,
         temp["xyZuvW"] -= 2.0 * H2["yPuW"] * G2["xZvP"];
         temp["xyZuvW"] -= H2["pZuW"] * G2["xyvp"];
         temp["xyZuvW"] -= H2["ypuv"] * G2["xZpW"];
-        E += 0.5 * temp.block("aaAaaA")("uvWxyZ") * rdms_.L3aab()("xyZuvW");
+        E += 0.5 * temp.block("aaAaaA")("uvWxyZ") * rdms_->L3aab()("xyZuvW");
 
         temp = ambit::BlockedTensor::build(tensor_type_, "temp", {"aAAaAA"});
         temp["xYZuVW"] += 2.0 * H2["xZpV"] * G2["pYuW"];
@@ -928,7 +928,7 @@ void MRDSRG::H2_G2_C0(BlockedTensor& H2, BlockedTensor& G2, const double& alpha,
         temp["xYZuVW"] -= 2.0 * H2["pZuV"] * G2["xYpW"];
         temp["xYZuVW"] -= H2["xPuV"] * G2["YZWP"];
         temp["xYZuVW"] -= H2["ZPVW"] * G2["xYuP"];
-        E += 0.5 * temp.block("aAAaAA")("uVWxYZ") * rdms_.L3abb()("xYZuVW");
+        E += 0.5 * temp.block("aAAaAA")("uVWxYZ") * rdms_->L3abb()("xYZuVW");
     }
 
     // multiply prefactor and copy to C0

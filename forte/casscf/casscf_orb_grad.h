@@ -70,7 +70,7 @@ class CASSCF_ORB_GRAD {
     void hess_diag(psi::SharedVector x, const psi::SharedVector& h0);
 
     /// Set RDMs used for orbital optimization
-    void set_rdms(RDMs& rdms);
+    void set_rdms(std::shared_ptr<RDMs> rdms);
 
     /// Return active space integrals for CI
     std::shared_ptr<ActiveSpaceIntegrals> active_space_ints();

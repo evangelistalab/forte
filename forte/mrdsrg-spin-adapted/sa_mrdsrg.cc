@@ -41,7 +41,7 @@ using namespace psi;
 
 namespace forte {
 
-SA_MRDSRG::SA_MRDSRG(RDMs rdms, std::shared_ptr<SCFInfo> scf_info,
+SA_MRDSRG::SA_MRDSRG(std::shared_ptr<RDMs> rdms, std::shared_ptr<SCFInfo> scf_info,
                      std::shared_ptr<ForteOptions> options, std::shared_ptr<ForteIntegrals> ints,
                      std::shared_ptr<MOSpaceInfo> mo_space_info)
     : SADSRG(rdms, scf_info, options, ints, mo_space_info) {

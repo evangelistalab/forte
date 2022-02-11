@@ -780,10 +780,10 @@ double DSRG_MRPT2::compute_ms_2nd_coupling(const std::string& name) {
     BlockedTensor H3 = BTF_->build(tensor_type_, "Heff3_2nd", spin_cases({"aaaaaa"}));
     H2_T2_C3(V_, T2_, 1.0, H3, true);
 
-    coupling += 1.0 / 36.0 * H3.block("aaaaaa")("uvwxyz") * rdms_.L3aaa()("xyzuvw");
-    coupling += 1.0 / 36.0 * H3.block("AAAAAA")("UVWXYZ") * rdms_.L3bbb()("XYZUVW");
-    coupling += 0.25 * H3.block("aaAaaA")("uvWxyZ") * rdms_.L3aab()("xyZuvW");
-    coupling += 0.25 * H3.block("aAAaAA")("uVWxYZ") * rdms_.L3abb()("xYZuVW");
+    coupling += 1.0 / 36.0 * H3.block("aaaaaa")("uvwxyz") * rdms_->L3aaa()("xyzuvw");
+    coupling += 1.0 / 36.0 * H3.block("AAAAAA")("UVWXYZ") * rdms_->L3bbb()("XYZUVW");
+    coupling += 0.25 * H3.block("aaAaaA")("uvWxyZ") * rdms_->L3aab()("xyZuvW");
+    coupling += 0.25 * H3.block("aAAaAA")("uVWxYZ") * rdms_->L3abb()("xYZuVW");
 
     outfile->Printf("  Done. Timing %15.6f s", timer.get());
     return coupling;
@@ -882,10 +882,10 @@ void DSRG_MRPT2::compute_cumulants(std::shared_ptr<ActiveSpaceIntegrals> fci_int
 
     // 3 cumulant
     if (foptions_->get_str("THREEPDC") != "ZERO") {
-        ambit::Tensor L3aaa = rdms_.L3aaa();
-        ambit::Tensor L3aab = rdms_.L3aab();
-        ambit::Tensor L3abb = rdms_.L3abb();
-        ambit::Tensor L3bbb = rdms_.L3bbb();
+        ambit::Tensor L3aaa = rdms_->L3aaa();
+        ambit::Tensor L3aab = rdms_->L3aab();
+        ambit::Tensor L3abb = rdms_->L3abb();
+        ambit::Tensor L3bbb = rdms_->L3bbb();
         ci_rdms.compute_3rdm(L3aaa.data(), L3aab.data(), L3abb.data(), L3bbb.data());
         rotate_3rdm(L3aaa, L3aab, L3abb, L3bbb);
 
@@ -976,10 +976,10 @@ void DSRG_MRPT2::compute_rdms(std::shared_ptr<ActiveSpaceIntegrals> fci_ints,
     rotate_2rdm(L2aa, L2ab, L2bb);
 
     // 3 density
-    ambit::Tensor L3aaa = rdms_.L3aaa();
-    ambit::Tensor L3aab = rdms_.L3aab();
-    ambit::Tensor L3abb = rdms_.L3abb();
-    ambit::Tensor L3bbb = rdms_.L3bbb();
+    ambit::Tensor L3aaa = rdms_->L3aaa();
+    ambit::Tensor L3aab = rdms_->L3aab();
+    ambit::Tensor L3abb = rdms_->L3abb();
+    ambit::Tensor L3bbb = rdms_->L3bbb();
     ci_rdms.compute_3rdm(L3aaa.data(), L3aab.data(), L3abb.data(), L3bbb.data());
     rotate_3rdm(L3aaa, L3aab, L3abb, L3bbb);
 }
