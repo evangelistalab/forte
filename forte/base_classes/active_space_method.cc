@@ -44,6 +44,9 @@
 #include "sci/detci.h"
 #include "pci/pci.h"
 #include "ci_ex_states/excited_state_solver.h"
+#ifdef HAVE_CHEMPS2
+#include "dmrg/dmrgsolver.h"
+#endif
 
 namespace forte {
 
@@ -263,6 +266,12 @@ std::unique_ptr<ActiveSpaceMethod> make_active_space_method(
         method = std::make_unique<ExcitedStateSolver>(
             state, nroot, mo_space_info, as_ints,
             std::make_unique<ProjectorCI>(state, nroot, scf_info, options, mo_space_info, as_ints));
+    } else if (type == "DMRG") {
+#ifdef HAVE_CHEMPS2
+        method = std::make_unique<DMRGSolver>(state, nroot, scf_info, options, mo_space_info, as_ints);
+#else
+        throw std::runtime_error("DMRG is not available! Please compile with ENABLE_CHEMPS2=ON.");
+#endif
     } else {
         std::string msg = "make_active_space_method: type = " + type + " was not recognized";
         if (type == "") {

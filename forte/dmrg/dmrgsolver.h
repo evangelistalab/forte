@@ -26,11 +26,16 @@
  * @END LICENSE
  */
 
-#ifndef DMRGSOLVER_H
-#define DMRGSOLVER_H
+#ifndef _dmrgsolver_h_
+#define _dmrgsolver_h_
 
-#include "psi4/libmints/wavefunction.h"
-#include "psi4/libfock/jk.h"
+#include <filesystem>
+
+#include "chemps2/ConvergenceScheme.h"
+#include "chemps2/Hamiltonian.h"
+#include "chemps2/DMRG.h"
+
+#include "base_classes/active_space_method.h"
 #include "base_classes/rdms.h"
 #include "integrals/integrals.h"
 #include "base_classes/mo_space_info.h"
@@ -38,61 +43,107 @@
 #include "base_classes/scf_info.h"
 #include "base_classes/forte_options.h"
 
-#include "chemps2/Irreps.h"
-#include "chemps2/Problem.h"
-#include "chemps2/CASSCF.h"
-#include "chemps2/Initialize.h"
-#include "chemps2/EdmistonRuedenberg.h"
-
 namespace forte {
 
-class DMRGSolver {
+class DMRGSolver : public ActiveSpaceMethod {
   public:
-    DMRGSolver(StateInfo state, std::shared_ptr<SCFInfo> scf_info,
-               std::shared_ptr<ForteOptions> options, std::shared_ptr<ForteIntegrals> ints,
-               std::shared_ptr<MOSpaceInfo> mo_space_info);
-    //    DMRGSolver(psi::SharedWavefunction ref_wfn, psi::Options& options,
-    //               std::shared_ptr<MOSpaceInfo> mo_space_info);
-    void compute_energy();
+    /**
+     * @brief DMRGSolver Constructor
+     * @param state The state info (symmetry, multiplicity, na, nb, etc.)
+     * @param nroot Number of roots of interests
+     * @param scf_info SCF information
+     * @param options Forte options
+     * @param mo_space_info MOSpaceInfo
+     * @param as_ints Active space integrals
+     */
+    DMRGSolver(StateInfo state, size_t nroot, std::shared_ptr<SCFInfo> scf_info,
+               std::shared_ptr<ForteOptions> options, std::shared_ptr<MOSpaceInfo> mo_space_info,
+               std::shared_ptr<ActiveSpaceIntegrals> as_ints);
 
-    RDMs rdms() { return dmrg_rdms_; }
-    void set_max_rdm(int max_rdm) { max_rdm_ = max_rdm; }
-    void spin_free_rdm(bool spin_free) { spin_free_rdm_ = spin_free; }
-    void disk_3_rdm(bool use_disk_for_3rdm) { disk_3_rdm_ = use_disk_for_3rdm; }
-    void set_up_integrals(const ambit::Tensor& active_integrals,
-                          const std::vector<double>& one_body) {
-        active_integrals_ = active_integrals;
-        one_body_integrals_ = one_body;
-        use_user_integrals_ = true;
-    }
-    void set_scalar(double energy) { scalar_energy_ = energy; }
+    /// DMRGSolver Destructor
+    ~DMRGSolver();
+
+    /// Compute the energy
+    double compute_energy() override;
+
+    /// RDMs override
+    std::vector<std::shared_ptr<RDMs>> rdms(const std::vector<std::pair<size_t, size_t>>& root_list,
+                                            int max_rdm_level, RDMsType rdm_type) override;
+
+    /// Transition RDMs override
+    std::vector<std::shared_ptr<RDMs>>
+    transition_rdms(const std::vector<std::pair<size_t, size_t>>& root_list,
+                    std::shared_ptr<ActiveSpaceMethod> method2, int max_rdm_level,
+                    RDMsType rdm_type) override;
+
+    /// Set options override
+    void set_options(std::shared_ptr<ForteOptions> options) override;
+
+    /// Return the CI wave functions for current state symmetry
+    //    psi::SharedMatrix ci_wave_functions() override { return evecs_; }
+
+    /// Dump wave function to disk (already dumped when computing energies)
+    void dump_wave_function(const std::string&) override{};
+
+    /// Read wave function from disk
+    /// Return the number of active orbitals, set of determinants, CI coefficients
+    //    std::tuple<size_t, std::vector<Determinant>, psi::SharedMatrix>
+    //    read_wave_function(const std::string& filename) override;
 
   private:
-    RDMs dmrg_rdms_;
-
-    StateInfo state_;
+    /// SCFInfo object
     std::shared_ptr<SCFInfo> scf_info_;
+    /// ForteOptions
     std::shared_ptr<ForteOptions> options_;
-    std::shared_ptr<ForteIntegrals> ints_;
-    std::shared_ptr<MOSpaceInfo> mo_space_info_;
-    bool disk_3_rdm_ = false;
-    /// Form CAS-CI Hamiltonian stuff
 
-    void compute_reference(double* one_rdm, double* two_rdm, double* three_rdm,
-                           CheMPS2::DMRGSCFindices* iHandler);
-    /// Ported over codes from DMRGSCF plugin
+    /// Point group number in CheMPS2
+    int pg_number_;
+    /// Number of irreps
+    int nirrep_;
+    /// Wave function symmetry
+    int wfn_irrep_;
+    /// Multiplicity
+    int multiplicity_;
+    /// Number of active electrons
+    int nelecs_actv_;
+    /// Number of active orbitals
+    int nactv_;
+    /// State label
+    std::string state_label_;
+
+    /// Number of reduced renormalized basis states kept during successive DMRG instructions
+    std::vector<int> dmrg_sweep_states_;
+    /// Energy convergence to stop an instruction during successive DMRG instructions
+    std::vector<double> dmrg_sweep_e_convergence_;
+    /// Max number of sweeps to stop an instruction during successive DMRG instructions
+    std::vector<int> dmrg_sweep_max_sweeps_;
+    /// The noise prefactors for successive DMRG instructions
+    std::vector<double> dmrg_noise_prefactors_;
+    /// The residual tolerances for the Davidson diagonalization during DMRG instructions
+    std::vector<double> dmrg_davidson_rtol_;
+    /// Whether or not to print the correlation functions after the DMRG calculation
+    bool dmrg_print_corr_;
+
+    /// The convergence scheme of CheMPS2
+    std::unique_ptr<CheMPS2::ConvergenceScheme> conv_scheme_;
+    /// The active-space Hamiltonian of CheMPS2
+    std::unique_ptr<CheMPS2::Hamiltonian> hamiltonian_;
+
+    /// Checkpoint files path
+    std::filesystem::path tmp_path_;
+    /// Directory to save MPS files
+    std::filesystem::path mps_files_path_;
+    /// Vector of file names
+    std::vector<std::string> mps_files_;
+    /// Move MPS files around
+    void move_mps_files(bool from_cwd_to_folder);
+
+    /// Setup some internal variable
     void startup();
-    /// By default, compute the second rdm.  If you are doing MRPT2, may need to
-    /// change this.
-    int max_rdm_ = 3;
-    bool spin_free_rdm_ = false;
-    int chemps2_groupnumber(const string SymmLabel);
-    ambit::Tensor active_integrals_;
-    std::vector<double> one_body_integrals_;
-    double scalar_energy_ = 0.0;
-    std::vector<double> one_body_operator();
-    bool use_user_integrals_ = false;
-    void print_natural_orbitals(double* one_rdm);
+
+    /// Return the RDMs for the current state
+    std::shared_ptr<RDMs> fill_current_rdms(std::shared_ptr<CheMPS2::DMRG> solver,
+                                            const bool do_3rdm);
 };
 } // namespace forte
-#endif // DMRG_H
+#endif // _dmrgsolver_h_

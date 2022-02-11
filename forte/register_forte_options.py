@@ -26,6 +26,7 @@ def register_forte_options(options):
     register_old_options(options)
     register_psi_options(options)
     register_gas_options(options)
+    register_dmrg_options(options)
 
 
 def register_driver_options(options):
@@ -45,7 +46,7 @@ def register_driver_options(options):
     options.add_double("D_CONVERGENCE", 1.0e-6, "The density convergence criterion")
 
     options.add_str(
-        'ACTIVE_SPACE_SOLVER', '', ['FCI', 'ACI', 'PCI', 'DETCI', 'CAS'], 'Active space solver type'
+        'ACTIVE_SPACE_SOLVER', '', ['FCI', 'ACI', 'PCI', 'DETCI', 'CAS', 'DMRG'], 'Active space solver type'
     )  # TODO: why is PCI running even if it is not in this list (Francesco)
     options.add_str(
         'CORRELATION_SOLVER', 'NONE', ['DSRG-MRPT2', 'THREE-DSRG-MRPT2', 'DSRG-MRPT3', 'MRDSRG', 'SA-MRDSRG'],
@@ -965,6 +966,22 @@ def register_gas_options(options):
     options.add_int_list("GAS5MIN", "The minimum number of electrons in GAS5 for different states")
     options.add_int_list("GAS6MAX", "The maximum number of electrons in GAS6 for different states")
     options.add_int_list("GAS6MIN", "The minimum number of electrons in GAS6 for different states")
+
+
+def register_dmrg_options(options):
+    options.set_group("DMRG")
+    options.add_int_list("DMRG_SWEEP_STATES",
+                         "Number of reduced renormalized basis states kept during successive DMRG instructions")
+    options.add_int_list("DMRG_SWEEP_MAX_SWEEPS",
+                         "Max number of sweeps to stop an instruction during successive DMRG instructions")
+    options.add_double_list("DMRG_SWEEP_ENERGY_CONV",
+                            "Energy convergence to stop an instruction during successive DMRG instructions")
+    options.add_double_list("DMRG_SWEEP_NOISE_PREFAC",
+                            "The noise prefactors for successive DMRG instructions")
+    options.add_double_list("DMRG_SWEEP_DVDSON_RTOL",
+                            "The residual tolerances for the Davidson diagonalization during DMRG instructions")
+    options.add_bool("DMRG_PRINT_CORR", False,
+                     "Whether or not to print the correlation functions after the DMRG calculation")
 
     #    /*- The minimum excitation level (Default value: 0) -*/
     #    options.add_int("MIN_EXC_LEVEL", 0)

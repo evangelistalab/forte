@@ -1,0 +1,34 @@
+# DMRG-CI(10e,12o) on ground-state N2
+
+import forte
+ref_dmrg = -109.099687575433
+ref_scf  = -108.949377879018
+
+molecule N2 {
+N       0.0000   0.0000   0.0000
+N       0.0000   0.0000   2.1180
+units au
+}
+
+set {
+basis          cc-pvdz
+reference      rhf
+e_convergence  1e-12
+d_convergence  1e-8
+scf_type       pk
+}
+escf, wfn = energy('scf', return_wfn=True)
+compare_values(ref_scf, escf, 8, "RHF Energy")
+
+set forte{
+active_space_solver       dmrg
+restricted_docc           [1,0,0,0,0,1,0,0]
+active                    [4,0,1,1,0,4,1,1]
+dmrg_sweep_states         [  500, 1000,  1000 ]
+dmrg_sweep_energy_conv    [ 1e-8, 1e-8, 1e-10 ]
+dmrg_sweep_max_sweeps     [    5,    5,   100 ]
+dmrg_sweep_noise_prefac   [ 0.05, 0.03,   0.0 ]
+dmrg_sweep_dvdson_rtol    [ 1e-6, 1e-6,  1e-8 ]
+}
+edmrg = energy('forte', ref_wfn=wfn)
+compare_values(ref_dmrg, edmrg, 8, "DMRG(10e,12o) Energy")

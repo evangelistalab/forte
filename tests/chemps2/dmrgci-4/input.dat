@@ -1,0 +1,51 @@
+# DMRG-CI on different states
+
+import forte
+memory 1 gb
+
+ref_scf  = -78.039759099903
+ref_1ag  = -78.058304540078
+ref_2ag  = -77.482848474321
+ref_1b1u = -77.686428219044
+
+molecule C2H4 {
+0 1
+H  0.000000  0.923274  1.238289
+H  0.000000 -0.923274  1.238289
+H  0.000000  0.923274 -1.238289
+H  0.000000 -0.923274 -1.238289
+C  0.000000  0.000000  0.668188
+C  0.000000  0.000000 -0.668188
+}
+
+set {
+reference     rhf
+scf_type      df
+basis         cc-pvdz
+df_basis_scf  cc-pvdz-jkfit
+df_basis_mp2  cc-pvdz-jkfit
+docc          [3,0,0,1,0,2,1,1]
+e_convergence 10
+d_convergence 8
+maxiter       100
+}
+Escf, wfn = energy('scf', return_wfn=True)
+compare_values(ref_scf, Escf, 8, "DF-RHF/cc-pVDZ Energy")
+
+set forte{
+int_type                df
+active_space_solver     dmrg
+frozen_docc             [1,0,0,0,0,1,0,0]
+restricted_docc         [1,0,0,1,0,1,1,0]
+active                  [1,0,1,1,0,1,1,1]
+avg_state               [[0,1,2], [5,1,1]]
+dmrg_sweep_states       [  500, 1000, 2000 ]
+dmrg_sweep_energy_conv  [ 1e-8, 1e-8, 1e-8 ]
+dmrg_sweep_max_sweeps   [    5,    5,  100 ]
+dmrg_sweep_noise_prefac [ 0.03, 0.03,  0.0 ]
+dmrg_sweep_dvdson_rtol  [ 1e-6, 1e-6, 1e-6 ]
+}
+energy('forte', ref_wfn=wfn)
+compare_values(ref_1ag, variable("ENERGY ROOT 0 1AG"), "DMRG Energy on Root 0 of Singlet Ag")
+compare_values(ref_2ag, variable("ENERGY ROOT 1 1AG"), "DMRG Energy on Root 1 of Singlet Ag")
+compare_values(ref_1b1u, variable("ENERGY ROOT 0 1B1U"), "DMRG Energy on Root 0 of Singlet B1u")

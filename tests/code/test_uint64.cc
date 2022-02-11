@@ -1,7 +1,7 @@
 #include <algorithm>
 #include <numeric>
 
-#include "catch.hpp"
+#include "catch_amalgamated.hpp"
 
 #include "forte/sparse_ci/bitwise_operations.hpp"
 

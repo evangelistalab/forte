@@ -1,4 +1,4 @@
-#! usr/bin/env bash
+#!/usr/bin/env bash
 
 export KMP_DUPLICATE_LIB_OK=TRUE
 export CODECOV_TOKEN="f2ca5872-66d7-48dc-8464-e286452dd05b"
@@ -17,6 +17,15 @@ if [ "$1" -ge "128" ]; then
   testlarge=$?
   if [ $testlarge -ne 0 ]; then
     test1=$testlarge
+  fi
+fi
+
+if [ "$2" = "ON" ]; then
+  cd ../chemps2
+  python run_forte_tests.py --type short --bw --failed_dump
+  testdmrg=$?
+  if [ $testdmrg -ne 0 ]; then
+    test1=$testdmrg
   fi
 fi
 

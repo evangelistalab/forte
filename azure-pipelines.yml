@@ -12,7 +12,7 @@ jobs:
   strategy:
     maxParallel: 4
     matrix:
-      gcc_py39_orb64:
+      gcc_py39_orb64_dmrg:
         F_COMPILER: 'gfortran'
         C_COMPILER: 'gcc'
         CXX_COMPILER: 'g++'
@@ -21,6 +21,7 @@ jobs:
         PSI_BUILD_TYPE: 'Debug'
         MAX_DET_ORB: 64
         APT_INSTALL: 'gfortran'
+        ENABLE_CHEMPS2: 'ON'
 
       gcc_py37_orb128:
         F_COMPILER: 'gfortran'
@@ -28,9 +29,10 @@ jobs:
         CXX_COMPILER: 'g++'
         PYTHON_VER: '3.7'
         BUILD_TYPE: 'RelWithDebInfo'
-        PSI_BUILD_TYPE: 'Debug'        
+        PSI_BUILD_TYPE: 'Debug'
         MAX_DET_ORB: 128
         APT_INSTALL: 'gfortran'
+        ENABLE_CHEMPS2: 'OFF'
 
   steps:
   - bash: |
@@ -162,6 +164,7 @@ jobs:
         -Dpsi4_CXX_STANDARD=17 \
         -DCMAKE_CXX_FLAGS=-DPYBIND11_CPP17 \
         -DCMAKE_CXX_STANDARD=17 \
+        -DENABLE_CheMPS2=$ENABLE_CHEMPS2 \
         $(Build.SourcesDirectory)/build/psi4
     displayName: 'Configure Psi4 Build'
 
@@ -231,6 +234,7 @@ jobs:
         -DCMAKE_CXX_STANDARD=17 \
         -DCMAKE_BUILD_TYPE=${BUILD_TYPE} \
         -DCMAKE_CXX_FLAGS=-DPYBIND11_CPP17 \
+        -DENABLE_CheMPS2=$ENABLE_CHEMPS2 \
         -DENABLE_CODECOV=ON \
         -DMAX_DET_ORB=${MAX_DET_ORB}
     displayName: 'Configure Forte Build'
@@ -257,5 +261,5 @@ jobs:
       python -c "import forte; forte.banner()"
 
       cd forte
-      bash tools/forte_codecov $MAX_DET_ORB
+      bash tools/forte_codecov $MAX_DET_ORB $ENABLE_CHEMPS2
     displayName: 'Run Forte tests'

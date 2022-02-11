@@ -120,7 +120,7 @@ class ProcedureDSRG:
         try:
             self.state_ci_wfn_map = active_space_solver.state_ci_wfn_map()
         except RuntimeError as err:
-            print(err)
+            print("Warning DSRG Python driver:", err)
             self.state_ci_wfn_map = None
 
         # Semi-canonicalize orbitals and rotation matrices

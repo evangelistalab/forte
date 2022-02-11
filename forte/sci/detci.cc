@@ -40,8 +40,6 @@ void DETCI::startup() {
 
     state_label_ = state_.multiplicity_label() + " (Ms = " + get_ms_string(twice_ms_) + ") " +
                    state_.irrep_label();
-
-    set_options(options_);
 }
 
 void DETCI::set_options(std::shared_ptr<ForteOptions> options) {
@@ -328,22 +326,24 @@ void DETCI::print_ci_wfn() {
 }
 
 void DETCI::dump_wave_function(const std::string& filename) {
+    timer t_dump("Dump DETCI WFN");
     std::ofstream file(filename);
-    file << "# DETCI: " << state_.str() << std::endl;
-    file << p_space_.size() << " " << nroot_ << std::endl;
+    file << "# DETCI: " << state_.str() << '\n';
+    file << p_space_.size() << " " << nroot_ << '\n';
+    file << std::scientific << std::setprecision(10);
     for (size_t I = 0, Isize = p_space_.size(); I < Isize; ++I) {
-        std::string det_str = str(p_space_.get_det(I), nactv_);
-        file << det_str;
+        file << str(p_space_.get_det(I), nactv_);
         for (size_t n = 0; n < nroot_; ++n) {
-            file << ", " << std::scientific << std::setprecision(12) << evecs_->get(I, n);
+            file << "," << std::setw(18) << evecs_->get(I, n);
         }
-        file << std::endl;
+        file << '\n';
     }
     file.close();
 }
 
 std::tuple<size_t, std::vector<Determinant>, psi::SharedMatrix>
 DETCI::read_wave_function(const std::string& filename) {
+    timer t_read("Read DETCI WFN");
     std::string line;
     std::ifstream file(filename);
 
