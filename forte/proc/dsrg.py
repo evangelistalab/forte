@@ -48,6 +48,10 @@ class ProcedureDSRG:
 
         # Read options
         self.solver_type = options.get_str('CORRELATION_SOLVER')
+        if self.solver_type in ["SA-MRDSRG", "SA_MRDSRG", "DSRG_MRPT", "DSRG-MRPT"]:
+            self.rdm_type = forte.RDMsType.spin_free
+        else:
+            self.rdm_type = forte.RDMsType.spin_dependent
 
         self.do_semicanonical = options.get_bool("SEMI_CANONICAL")
 
@@ -114,7 +118,7 @@ class ProcedureDSRG:
         self.energies_environment = {}  # energies pushed to Psi4 environment globals
 
         # Compute RDMs from initial ActiveSpaceSolver
-        self.rdms = active_space_solver.compute_average_rdms(state_weights_map, self.max_rdm_level)
+        self.rdms = active_space_solver.compute_average_rdms(state_weights_map, self.max_rdm_level, self.rdm_type)
 
         # Save a copy CI vectors
         try:
@@ -215,7 +219,8 @@ class ProcedureDSRG:
 
             # Compute relaxed dipole
             if self.do_dipole:
-                self.rdms = self.active_space_solver.compute_average_rdms(self.state_weights_map, self.max_rdm_level)
+                self.rdms = self.active_space_solver.compute_average_rdms(self.state_weights_map, self.max_rdm_level,
+                                                                          self.rdm_type)
                 dm_u = ProcedureDSRG.grab_dipole_unrelaxed()
                 dm_r = self.compute_dipole_relaxed()
                 self.dipoles.append((dm_u, dm_r))
@@ -234,7 +239,8 @@ class ProcedureDSRG:
 
             # - Compute RDMs (RDMs available if done relaxed dipole)
             if self.do_multi_state or (not self.do_dipole):
-                self.rdms = self.active_space_solver.compute_average_rdms(self.state_weights_map, self.max_rdm_level)
+                self.rdms = self.active_space_solver.compute_average_rdms(self.state_weights_map, self.max_rdm_level,
+                                                                          self.rdm_type)
 
             # - Transform RDMs to the semi-canonical orbitals of last step
             self.rdms.rotate(self.Ua, self.Ub)
