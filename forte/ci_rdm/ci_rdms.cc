@@ -190,34 +190,20 @@ void CI_RDMS::compute_1rdm(std::vector<double>& oprdm_a, std::vector<double>& op
         outfile->Printf("\n  Time spent building 1-rdm:   %1.6f", build.get());
 }
 
-void CI_RDMS::compute_1rdm_sf(std::vector<double>& opdm) {
-    timer one("Build 1 Substitution Lists");
-    get_one_map();
-    if (print_)
-        outfile->Printf("\n  Time spent forming 1-map:   %1.6f", one.stop());
-
-    timer build("Build SF 1-RDM");
-    opdm.assign(no2_, 0.0);
-    _add_1rdm(opdm, a_ann_list_, a_cre_list_);
-    _add_1rdm(opdm, b_ann_list_, b_cre_list_);
-    if (print_)
-        outfile->Printf("\n  Time spent building 1-rdm:   %1.6f", build.stop());
-}
-
 void CI_RDMS::_add_1rdm(std::vector<double>& opdm,
                         const std::vector<std::vector<std::pair<size_t, short>>>& ann_list,
                         const std::vector<std::vector<std::pair<size_t, short>>>& cre_list) {
     for (size_t J = 0; J < dim_space_; ++J) {
-        for (auto& aJ_mo_sign : ann_list[J]) {
-            const size_t aJ_add = aJ_mo_sign.first;
-            size_t p = std::abs(aJ_mo_sign.second) - 1;
-            const double sign_p = aJ_mo_sign.second > 0 ? 1.0 : -1.0;
+        auto vJ = evecs_->get(J, root2_);
+        for (const auto& aJ_mo_sign : ann_list[J]) {
+            const auto [aJ_add, _p] = aJ_mo_sign;
+            auto p = std::abs(_p) - 1;
+            auto sign_p = _p < 0;
             for (auto& aaJ_mo_sign : cre_list[aJ_add]) {
-                size_t q = std::abs(aaJ_mo_sign.second) - 1;
-                const double sign_q = aaJ_mo_sign.second > 0 ? 1.0 : -1.0;
-                const size_t I = aaJ_mo_sign.first;
-                opdm[q * no_ + p] +=
-                    evecs_->get(I, root1_) * evecs_->get(J, root2_) * sign_p * sign_q;
+                const auto [I, _q] = aaJ_mo_sign;
+                auto q = std::abs(_q) - 1;
+                auto sign = ((_q < 0) == sign_p) ? 1 : -1;
+                opdm[q * no_ + p] += evecs_->get(I, root1_) * vJ * sign;
             }
         }
     }
@@ -230,128 +216,48 @@ void CI_RDMS::compute_1rdm_op(std::vector<double>& oprdm_a, std::vector<double>&
     op->build_strings(wfn_);
     op->op_s_lists(wfn_);
 
-    //    // Get the references to the coupling lists
-    //    const std::vector<std::vector<std::pair<size_t, short>>>& a_list = op->a_list_;
-    //    const std::vector<std::vector<std::pair<size_t, short>>>& b_list = op->b_list_;
-
     local_timer build;
     oprdm_a.assign(no2_, 0.0);
     oprdm_b.assign(no2_, 0.0);
 
-    //// Do something about diagonal
+    // Do something about diagonal
     const det_hashvec& dets = wfn_.wfn_hash();
     for (size_t J = 0; J < dim_space_; ++J) {
         double cJ_sq = evecs_->get(J, root1_) * evecs_->get(J, root2_);
-        std::vector<int> aocc = dets[J].get_alfa_occ(no_);
-        for (int p = 0, max_p = aocc.size(); p < max_p; ++p) {
-            int pp = aocc[p];
+        for (int pp : dets[J].get_alfa_occ(no_)) {
             oprdm_a[pp * no_ + pp] += cJ_sq;
         }
-        std::vector<int> bocc = dets[J].get_beta_occ(no_);
-        for (int p = 0, max_p = bocc.size(); p < max_p; ++p) {
-            int pp = bocc[p];
+        for (int pp : dets[J].get_beta_occ(no_)) {
             oprdm_b[pp * no_ + pp] += cJ_sq;
         }
     }
 
     _add_1rdm_op_IJ(oprdm_a, op->a_list_);
     _add_1rdm_op_IJ(oprdm_b, op->b_list_);
-    //    for (size_t K = 0, max_K = a_list.size(); K < max_K; ++K) {
-    //        std::vector<std::pair<size_t, short>>& coupled_dets = a_list[K];
-    //        for (size_t a = 0, max_a = coupled_dets.size(); a < max_a; ++a) {
-    //            auto& detI = coupled_dets[a];
-    //            const size_t& I = detI.first;
-    //            const size_t& p = std::abs(detI.second) - 1;
-    //            const double& sign_p = detI.second > 0 ? 1.0 : -1.0;
-    //            for (size_t b = a + 1, max_b = coupled_dets.size(); b < max_b; ++b) {
-    //                auto& detJ = coupled_dets[b];
-    //                const size_t& q = std::abs(detJ.second) - 1;
-    //                const double& sign_q = detJ.second > 0 ? 1.0 : -1.0;
-    //                const size_t& J = detJ.first;
-    //                oprdm_a[p * no_ + q] +=
-    //                    evecs_->get(I, root1_) * evecs_->get(J, root2_) * sign_p * sign_q;
-    //                oprdm_a[q * no_ + p] +=
-    //                    evecs_->get(J, root1_) * evecs_->get(I, root2_) * sign_p * sign_q;
-    //            }
-    //        }
-    //    }
-    //    for (size_t K = 0, max_K = b_list.size(); K < max_K; ++K) {
-    //        std::vector<std::pair<size_t, short>>& coupled_dets = b_list[K];
-    //        for (size_t a = 0, max_a = coupled_dets.size(); a < max_a; ++a) {
-    //            auto& detI = coupled_dets[a];
-    //            const size_t& I = detI.first;
-    //            const size_t& p = std::abs(detI.second) - 1;
-    //            const double& sign_p = detI.second > 0 ? 1.0 : -1.0;
-    //            for (size_t b = a + 1, max_b = coupled_dets.size(); b < max_b; ++b) {
-    //                auto& detJ = coupled_dets[b];
-    //                const size_t& q = std::abs(detJ.second) - 1;
-    //                const double& sign_q = detJ.second > 0 ? 1.0 : -1.0;
-    //                const size_t& J = detJ.first;
-    //                oprdm_b[p * no_ + q] +=
-    //                    evecs_->get(I, root1_) * evecs_->get(J, root2_) * sign_p * sign_q;
-    //                oprdm_b[q * no_ + p] +=
-    //                    evecs_->get(J, root1_) * evecs_->get(I, root2_) * sign_p * sign_q;
-    //            }
-    //        }
-    //    }
 
     if (print_) {
         outfile->Printf("\n  Time spent building 1-rdm: %.3e seconds", build.get());
     }
 }
 
-void CI_RDMS::compute_1rdm_sf_op(std::vector<double>& opdm) {
-    auto op = std::make_shared<DeterminantSubstitutionLists>(fci_ints_);
-    op->set_quiet_mode(not print_);
-    op->build_strings(wfn_);
-    op->op_s_lists(wfn_);
-
-    timer build("Build SF 1-RDM");
-    opdm.assign(no2_, 0.0);
-    opdm.assign(no2_, 0.0);
-
-    const det_hashvec& dets = wfn_.wfn_hash();
-    for (size_t J = 0; J < dim_space_; ++J) {
-        double cJ_sq = evecs_->get(J, root1_) * evecs_->get(J, root2_);
-        std::vector<int> aocc = dets[J].get_alfa_occ(no_);
-        for (int p = 0, max_p = aocc.size(); p < max_p; ++p) {
-            int pp = aocc[p];
-            opdm[pp * no_ + pp] += cJ_sq;
-        }
-        std::vector<int> bocc = dets[J].get_beta_occ(no_);
-        for (int p = 0, max_p = bocc.size(); p < max_p; ++p) {
-            int pp = bocc[p];
-            opdm[pp * no_ + pp] += cJ_sq;
-        }
-    }
-
-    _add_1rdm_op_IJ(opdm, op->a_list_);
-    _add_1rdm_op_IJ(opdm, op->b_list_);
-
-    if (print_) {
-        outfile->Printf("\n  Time spent building 1-rdm: %.3e seconds", build.stop());
-    }
-}
-
 void CI_RDMS::_add_1rdm_op_IJ(std::vector<double>& opdm,
                               const std::vector<std::vector<std::pair<size_t, short>>>& list) {
     for (const auto& coupled_dets : list) {
-        for (size_t a = 0, max_a = coupled_dets.size(); a < max_a; ++a) {
-            auto& detI = coupled_dets[a];
-            const size_t& I = detI.first;
-            const size_t& p = std::abs(detI.second) - 1;
-            const double& sign_p = detI.second > 0 ? 1.0 : -1.0;
+        for (size_t a = 0, coupled_dets_size = coupled_dets.size(); a < coupled_dets_size; ++a) {
+            const auto [I, _p] = coupled_dets[a];
+            auto p = std::abs(_p) - 1;
+            auto sign_p = _p < 0;
 
-            for (size_t b = a + 1, max_b = coupled_dets.size(); b < max_b; ++b) {
-                auto& detJ = coupled_dets[b];
-                const size_t& q = std::abs(detJ.second) - 1;
-                const double& sign_q = detJ.second > 0 ? 1.0 : -1.0;
-                const size_t& J = detJ.first;
+            auto vI1 = evecs_->get(I, root1_);
+            auto vI2 = evecs_->get(I, root2_);
 
-                opdm[p * no_ + q] +=
-                    evecs_->get(I, root1_) * evecs_->get(J, root2_) * sign_p * sign_q;
-                opdm[q * no_ + p] +=
-                    evecs_->get(J, root1_) * evecs_->get(I, root2_) * sign_p * sign_q;
+            for (size_t b = a + 1; b < coupled_dets_size; ++b) {
+                const auto [J, _q] = coupled_dets[b];
+                auto q = std::abs(_q) - 1;
+                auto sign = ((_q < 0) == sign_p) ? 1 : -1;
+
+                opdm[p * no_ + q] += vI1 * evecs_->get(J, root2_) * sign;
+                opdm[q * no_ + p] += evecs_->get(J, root1_) * vI2 * sign;
             }
         }
     }
@@ -450,51 +356,26 @@ void CI_RDMS::compute_2rdm(std::vector<double>& tprdm_aa, std::vector<double>& t
         outfile->Printf("\n  Time spent building 2-rdm:   %1.6f", build.get());
 }
 
-void CI_RDMS::compute_2rdm_sf(std::vector<double>& tpdm) {
-    tpdm.assign(no4_, 0.0);
-
-    timer two("Build 2 Substitution Lists");
-    get_two_map();
-    if (print_)
-        outfile->Printf("\n  Time spent forming 2-map:   %1.6f", two.stop());
-
-    timer build("Build SF 2-RDM");
-
-    _add_2rdm(aa_ann_list_, aa_cre_list_, [&](const std::vector<size_t>& i, const double& value) {
-        _add_2rdm_aa(tpdm, i, value);
-    });
-    _add_2rdm(ab_ann_list_, ab_cre_list_, [&](const std::vector<size_t>& i, const double& value) {
-        _add_2rdm_ab(tpdm, i, value, true);
-    });
-    _add_2rdm(bb_ann_list_, bb_cre_list_, [&](const std::vector<size_t>& i, const double& value) {
-        _add_2rdm_aa(tpdm, i, value);
-    });
-
-    if (print_)
-        outfile->Printf("\n  Time spent building 2-rdm:   %1.6f", build.stop());
-}
-
 void CI_RDMS::_add_2rdm(
     const std::vector<std::vector<std::tuple<size_t, short, short>>>& ann_list,
     const std::vector<std::vector<std::tuple<size_t, short, short>>>& cre_list,
     const std::function<void(const std::vector<size_t>&, const double&)>& func) {
     for (size_t J = 0; J < dim_space_; ++J) {
-        for (auto& aaJ_mo_sign : ann_list[J]) {
-            const size_t aaJ_add = std::get<0>(aaJ_mo_sign);
+        auto vJ = evecs_->get(J, root2_);
 
-            const size_t p = std::abs(std::get<1>(aaJ_mo_sign)) - 1;
-            const size_t q = std::get<2>(aaJ_mo_sign);
-            const double sign_pq = std::get<1>(aaJ_mo_sign) > 0.0 ? 1.0 : -1.0;
+        for (auto& aaJ_mo_sign : ann_list[J]) {
+            const auto [aaJ_add, _p, q] = aaJ_mo_sign;
+            auto p = std::abs(_p) - 1;
+            auto sign_pq = _p < 0;
 
             for (auto& aaaaJ_mo_sign : cre_list[aaJ_add]) {
-                const size_t r = std::abs(std::get<1>(aaaaJ_mo_sign)) - 1;
-                const size_t s = std::get<2>(aaaaJ_mo_sign);
-                const double sign_rs = std::get<1>(aaaaJ_mo_sign) > 0.0 ? 1.0 : -1.0;
+                const auto [I, _r, s] = aaaaJ_mo_sign;
+                auto r = std::abs(_r) - 1;
 
-                const size_t I = std::get<0>(aaaaJ_mo_sign);
-                double rdm = evecs_->get(I, root1_) * evecs_->get(J, root2_) * sign_pq * sign_rs;
+                auto sign = ((_r < 0) == sign_pq) ? 1 : -1;
+                auto value = evecs_->get(I, root1_) * vJ * sign;
 
-                func({r, s, p, q}, rdm);
+                func({r, s, p, q}, value);
             }
         }
     }
@@ -705,37 +586,6 @@ void CI_RDMS::compute_2rdm_op(std::vector<double>& tprdm_aa, std::vector<double>
     }
 }
 
-void CI_RDMS::compute_2rdm_sf_op(std::vector<double>& tpdm) {
-    auto op = std::make_shared<DeterminantSubstitutionLists>(fci_ints_);
-    op->set_quiet_mode(not print_);
-    op->build_strings(wfn_);
-    op->tp_s_lists(wfn_);
-
-    tpdm.assign(no4_, 0.0);
-    timer build("Build SF 2-RDM");
-
-    _add_2rdm_op_II(
-        [&](const std::vector<size_t>& i, const double& value) { _add_2rdm_aa(tpdm, i, value); },
-        [&](const std::vector<size_t>& i, const double& value) {
-            _add_2rdm_ab(tpdm, i, value, true);
-        },
-        [&](const std::vector<size_t>& i, const double& value) { _add_2rdm_aa(tpdm, i, value); });
-
-    _add_2rdm_op_IJ(op->aa_list_, [&](const std::vector<size_t>& i, const double& value) {
-        _add_2rdm_aa(tpdm, i, value);
-    });
-    _add_2rdm_op_IJ(op->ab_list_, [&](const std::vector<size_t>& i, const double& value) {
-        _add_2rdm_ab(tpdm, i, value, true);
-    });
-    _add_2rdm_op_IJ(op->bb_list_, [&](const std::vector<size_t>& i, const double& value) {
-        _add_2rdm_aa(tpdm, i, value);
-    });
-
-    if (print_) {
-        outfile->Printf("\n  Time spent building 2-rdm: %.3e seconds", build.stop());
-    }
-}
-
 void CI_RDMS::_add_2rdm_op_II(
     const std::function<void(const std::vector<size_t>&, const double&)>& func_aa,
     const std::function<void(const std::vector<size_t>&, const double&)>& func_ab,
@@ -778,26 +628,23 @@ void CI_RDMS::_add_2rdm_op_IJ(
     const std::function<void(const std::vector<size_t>&, const double&)>& func) {
     for (const auto& coupled_dets : list) {
 
-        for (size_t a = 0, max_a = coupled_dets.size(); a < max_a; ++a) {
-            auto& detJ = coupled_dets[a];
+        for (size_t a = 0, coupled_dets_size = coupled_dets.size(); a < coupled_dets_size; ++a) {
+            const auto [J, _p, q] = coupled_dets[a];
+            auto p = std::abs(_p) - 1;
+            auto sign_pq = _p < 0;
 
-            const size_t& J = std::get<0>(detJ);
-            const size_t& p = std::abs(std::get<1>(detJ)) - 1;
-            const size_t& q = std::get<2>(detJ);
-            const double& sign_pq = std::get<1>(detJ) > 0.0 ? 1.0 : -1.0;
+            auto vJ1 = evecs_->get(J, root1_);
+            auto vJ2 = evecs_->get(J, root2_);
 
-            for (size_t b = a + 1, max_b = coupled_dets.size(); b < max_b; ++b) {
-                auto& detI = coupled_dets[b];
+            for (size_t b = a + 1; b < coupled_dets_size; ++b) {
+                const auto [I, _r, s] = coupled_dets[b];
+                auto r = std::abs(_r) - 1;
+                auto sign = ((_r < 0) == sign_pq) ? 1 : -1;
 
-                const size_t& I = std::get<0>(detI);
-                const size_t& r = std::abs(std::get<1>(detI)) - 1;
-                const size_t& s = std::get<2>(detI);
-                const double& sign_rs = std::get<1>(detI) > 0.0 ? 1.0 : -1.0;
-
-                double rdmJI = evecs_->get(J, root1_) * evecs_->get(I, root2_) * sign_pq * sign_rs;
+                auto rdmJI = vJ1 * evecs_->get(I, root2_) * sign;
                 func({p, q, r, s}, rdmJI);
 
-                double rdmIJ = evecs_->get(I, root1_) * evecs_->get(J, root2_) * sign_pq * sign_rs;
+                auto rdmIJ = evecs_->get(I, root1_) * vJ2 * sign;
                 func({r, s, p, q}, rdmIJ);
             }
         }
@@ -1026,56 +873,25 @@ void CI_RDMS::compute_3rdm(std::vector<double>& tprdm_aaa, std::vector<double>& 
         outfile->Printf("\n  Time spent building 3-rdm:   %1.6f", build.get());
 }
 
-void CI_RDMS::compute_3rdm_sf(std::vector<double>& tpdm3) {
-    tpdm3.assign(no6_, 0.0);
-
-    timer three("Build 3 Substitution Lists");
-    get_three_map();
-    if (print_)
-        outfile->Printf("\n  Time spent forming 3-map:   %1.6f", three.stop());
-
-    timer build("Build SF 3-RDM");
-
-    _add_3rdm(aaa_ann_list_, aaa_cre_list_, [&](const std::vector<size_t>& i, const double& value) {
-        _add_3rdm_aaa(tpdm3, i, value);
-    });
-    _add_3rdm(aab_ann_list_, aab_cre_list_, [&](const std::vector<size_t>& i, const double& value) {
-        _add_3rdm_aab(tpdm3, i, value, true);
-    });
-    _add_3rdm(abb_ann_list_, abb_cre_list_, [&](const std::vector<size_t>& i, const double& value) {
-        _add_3rdm_abb(tpdm3, i, value, true);
-    });
-    _add_3rdm(bbb_ann_list_, bbb_cre_list_, [&](const std::vector<size_t>& i, const double& value) {
-        _add_3rdm_aaa(tpdm3, i, value);
-    });
-
-    if (print_)
-        outfile->Printf("\n  Time spent building 3-rdm:   %1.6f", build.stop());
-}
-
 void CI_RDMS::_add_3rdm(
     const std::vector<std::vector<std::tuple<size_t, short, short, short>>>& ann_list,
     const std::vector<std::vector<std::tuple<size_t, short, short, short>>>& cre_list,
     const std::function<void(const std::vector<size_t>&, const double&)>& func) {
     for (size_t J = 0; J < dim_space_; ++J) {
-        for (const auto& aaaJ_mo_sign : ann_list[J]) {
-            const size_t aaaJ_add = std::get<0>(aaaJ_mo_sign);
+        auto vJ = evecs_->get(J, root2_);
 
-            const size_t p = std::abs(std::get<1>(aaaJ_mo_sign)) - 1;
-            const size_t q = std::get<2>(aaaJ_mo_sign);
-            const size_t r = std::get<3>(aaaJ_mo_sign);
-            const double sign_pqr = std::get<1>(aaaJ_mo_sign) > 0.0 ? 1.0 : -1.0;
+        for (const auto& aaaJ_mo_sign : ann_list[J]) {
+            const auto [aaaJ_add, _p, q, r] = aaaJ_mo_sign;
+            auto p = std::abs(_p) - 1;
+            auto sign_pqr = _p < 0;
 
             for (const auto& a6J : cre_list[aaaJ_add]) {
-                const size_t s = std::abs(std::get<1>(a6J)) - 1;
-                const size_t t = std::get<2>(a6J);
-                const size_t u = std::get<3>(a6J);
-                const double sign_stu = std::get<1>(a6J) > 0.0 ? 1.0 : -1.0;
+                const auto [I, _s, t, u] = a6J;
+                auto s = std::abs(_s) - 1;
+                auto sign = ((_s < 0) == sign_pqr) ? 1 : -1;
 
-                const size_t I = std::get<0>(a6J);
-                double el = evecs_->get(I, root1_) * evecs_->get(J, root2_) * sign_pqr * sign_stu;
-
-                func({s, t, u, p, q, r}, el);
+                auto value = evecs_->get(I, root1_) * vJ * sign;
+                func({s, t, u, p, q, r}, value);
             }
         }
     }
@@ -1851,45 +1667,6 @@ void CI_RDMS::compute_3rdm_op(std::vector<double>& tprdm_aaa, std::vector<double
     }
 }
 
-void CI_RDMS::compute_3rdm_sf_op(std::vector<double>& tpdm3) {
-    auto op = std::make_shared<DeterminantSubstitutionLists>(fci_ints_);
-    op->set_quiet_mode(not print_);
-    op->build_strings(wfn_);
-    op->three_s_lists(wfn_);
-
-    timer build("Build SF 3-RDM");
-
-    tpdm3.assign(no6_, 0.0);
-
-    // Build the diagonal part
-    _add_3rdm_op_II(
-        [&](const std::vector<size_t>& i, const double& value) { _add_3rdm_aaa(tpdm3, i, value); },
-        [&](const std::vector<size_t>& i, const double& value) {
-            _add_3rdm_aab(tpdm3, i, value, true);
-        },
-        [&](const std::vector<size_t>& i, const double& value) {
-            _add_3rdm_abb(tpdm3, i, value, true);
-        },
-        [&](const std::vector<size_t>& i, const double& value) { _add_3rdm_aaa(tpdm3, i, value); });
-
-    _add_3rdm_op_IJ(op->aaa_list_, [&](const std::vector<size_t>& i, const double& value) {
-        _add_3rdm_aaa(tpdm3, i, value);
-    });
-    _add_3rdm_op_IJ(op->aab_list_, [&](const std::vector<size_t>& i, const double& value) {
-        _add_3rdm_aab(tpdm3, i, value, true);
-    });
-    _add_3rdm_op_IJ(op->abb_list_, [&](const std::vector<size_t>& i, const double& value) {
-        _add_3rdm_abb(tpdm3, i, value, true);
-    });
-    _add_3rdm_op_IJ(op->bbb_list_, [&](const std::vector<size_t>& i, const double& value) {
-        _add_3rdm_aaa(tpdm3, i, value);
-    });
-
-    if (print_) {
-        outfile->Printf("\n  Time spent building 3-rdm: %.3e seconds", build.stop());
-    }
-}
-
 void CI_RDMS::_add_3rdm_op_II(
     const std::function<void(const std::vector<size_t>&, const double&)>& func_aaa,
     const std::function<void(const std::vector<size_t>&, const double&)>& func_aab,
@@ -1955,28 +1732,23 @@ void CI_RDMS::_add_3rdm_op_IJ(
     const std::vector<std::vector<std::tuple<size_t, short, short, short>>>& list,
     const std::function<void(const std::vector<size_t>&, const double&)>& func) {
     for (const auto& coupled_dets : list) {
-        for (size_t a = 0, max_a = coupled_dets.size(); a < max_a; ++a) {
-            auto& detJ = coupled_dets[a];
+        for (size_t a = 0, coupled_dets_size = coupled_dets.size(); a < coupled_dets_size; ++a) {
+            const auto [J, _p, q, r] = coupled_dets[a];
+            auto p = std::abs(_p) - 1;
+            auto sign_pqr = _p < 0;
 
-            const size_t& J = std::get<0>(detJ);
-            const size_t& p = std::abs(std::get<1>(detJ)) - 1;
-            const size_t& q = std::get<2>(detJ);
-            const size_t& r = std::get<3>(detJ);
-            const double& sign_pqr = std::get<1>(detJ) > 0.0 ? 1.0 : -1.0;
+            auto vJ1 = evecs_->get(J, root1_);
+            auto vJ2 = evecs_->get(J, root2_);
 
-            for (size_t b = a + 1, max_b = coupled_dets.size(); b < max_b; ++b) {
-                auto& detI = coupled_dets[b];
+            for (size_t b = a + 1; b < coupled_dets_size; ++b) {
+                const auto [I, _s, t, u] = coupled_dets[b];
+                auto s = std::abs(_s) - 1;
+                auto sign = ((_s < 0) == sign_pqr) ? 1 : -1;
 
-                const size_t& s = std::abs(std::get<1>(detI)) - 1;
-                const size_t& t = std::get<2>(detI);
-                const size_t& u = std::get<3>(detI);
-                const double& sign_stu = std::get<1>(detI) > 0.0 ? 1.0 : -1.0;
-                const size_t& I = std::get<0>(detI);
-
-                double eJI = evecs_->get(J, root1_) * evecs_->get(I, root2_) * sign_pqr * sign_stu;
+                auto eJI = vJ1 * evecs_->get(I, root2_) * sign;
                 func({p, q, r, s, t, u}, eJI);
 
-                double eIJ = evecs_->get(I, root1_) * evecs_->get(J, root2_) * sign_pqr * sign_stu;
+                auto eIJ = evecs_->get(I, root1_) * vJ2 * sign;
                 func({s, t, u, p, q, r}, eJI);
             }
         }
