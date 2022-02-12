@@ -672,22 +672,22 @@ void DSRG_MRPT2::write_df_rdm() {
 
     /**************************** CASSCF reference ****************************/
     // Coulomb part
-    df_2rdm["R!,S!"] += 0.5 * Ppq["A!,m1,n1"] * I["m1,n1"] * Jm12["A!,R!"] * Ppq["B!,m,n"] * I["mn"] * Jm12["B!,S!"];
-    df_2rdm["R!,S!"] += 0.5 * Ppq["A!,M1,N1"] * I["M1,N1"] * Jm12["A!,R!"] * Ppq["B!,M,N"] * I["MN"] * Jm12["B!,S!"];
-    df_2rdm["R!,S!"] += 0.5 * Ppq["A!,m1,n1"] * I["m1,n1"] * Jm12["A!,R!"] * Ppq["B!,M,N"] * I["MN"] * Jm12["B!,S!"];
-    df_2rdm["R!,S!"] += 0.5 * Ppq["A!,M1,N1"] * I["M1,N1"] * Jm12["A!,R!"] * Ppq["B!,m,n"] * I["mn"] * Jm12["B!,S!"];
+    df_2rdm["R!,S!"] += 0.5 * B["A!,m1,n1"] * I["m1,n1"] * Jm12["A!,R!"] * B["B!,m,n"] * I["mn"] * Jm12["B!,S!"];
+    df_2rdm["R!,S!"] += 0.5 * B["A!,M1,N1"] * I["M1,N1"] * Jm12["A!,R!"] * B["B!,M,N"] * I["MN"] * Jm12["B!,S!"];
+    df_2rdm["R!,S!"] += 0.5 * B["A!,m1,n1"] * I["m1,n1"] * Jm12["A!,R!"] * B["B!,M,N"] * I["MN"] * Jm12["B!,S!"];
+    df_2rdm["R!,S!"] += 0.5 * B["A!,M1,N1"] * I["M1,N1"] * Jm12["A!,R!"] * B["B!,m,n"] * I["mn"] * Jm12["B!,S!"];
     // Exchange part
-    df_2rdm["R!,S!"] -= 0.5 * Ppq["A!,m1,n1"] * I["m,n1"] * Jm12["A!,R!"] * Ppq["B!,m,n"] * I["m1,n"] * Jm12["B!,S!"];
-    df_2rdm["R!,S!"] -= 0.5 * Ppq["A!,M1,N1"] * I["M,N1"] * Jm12["A!,R!"] * Ppq["B!,M,N"] * I["M1,N"] * Jm12["B!,S!"];
+    df_2rdm["R!,S!"] -= 0.5 * B["A!,m1,n1"] * I["m,n1"] * Jm12["A!,R!"] * B["B!,m,n"] * I["m1,n"] * Jm12["B!,S!"];
+    df_2rdm["R!,S!"] -= 0.5 * B["A!,M1,N1"] * I["M,N1"] * Jm12["A!,R!"] * B["B!,M,N"] * I["M1,N"] * Jm12["B!,S!"];
 
     // Coulomb part
-    df_3rdm["Q!,m1,n1"] += Jm12["Q!,P!"] * Ppq["P!,m,n"] * I["mn"] * I["m1,n1"];
-    df_3rdm["Q!,m1,n1"] += Jm12["Q!,P!"] * Ppq["P!,M,N"] * I["MN"] * I["m1,n1"];
-    df_3rdm["Q!,M1,N1"] += Jm12["Q!,P!"] * Ppq["P!,m,n"] * I["mn"] * I["M1,N1"];
-    df_3rdm["Q!,M1,N1"] += Jm12["Q!,P!"] * Ppq["P!,M,N"] * I["MN"] * I["M1,N1"];
+    df_3rdm["Q!,m1,n1"] += Jm12["Q!,P!"] * B["P!,m,n"] * I["mn"] * I["m1,n1"];
+    df_3rdm["Q!,m1,n1"] += Jm12["Q!,P!"] * B["P!,M,N"] * I["MN"] * I["m1,n1"];
+    df_3rdm["Q!,M1,N1"] += Jm12["Q!,P!"] * B["P!,m,n"] * I["mn"] * I["M1,N1"];
+    df_3rdm["Q!,M1,N1"] += Jm12["Q!,P!"] * B["P!,M,N"] * I["MN"] * I["M1,N1"];
     // Exchange part
-    df_3rdm["Q!,m,n"]   -= Jm12["Q!,P!"] * Ppq["P!,n,m"];
-    df_3rdm["Q!,M,N"]   -= Jm12["Q!,P!"] * Ppq["P!,N,M"];
+    df_3rdm["Q!,m,n"]   -= Jm12["Q!,P!"] * B["P!,n,m"];
+    df_3rdm["Q!,M,N"]   -= Jm12["Q!,P!"] * B["P!,N,M"];
 
 
 
@@ -741,156 +741,51 @@ void DSRG_MRPT2::write_df_rdm() {
 
     /******************************* Backtransform (P|pq) to (P|\mu \nu) *******************************/
 
-
-    int ao_dim = ints_->wfn()->nso();
+    int nso = ints_->wfn()->nso();
     int nmo_matsize = nmo * nmo;
-    int ao_matsize  = ao_dim * ao_dim;
-    // check if these variables are removable later
-
-
+    int ao_matsize  = nso * nso;
     std::map<char, std::vector<std::pair<unsigned long, unsigned long>,
                 std::allocator<std::pair<unsigned long, unsigned long>>>> idxmap;
     std::map<string, std::pair<SharedMatrix, SharedMatrix>> slicemap;
     std::map<string, int> stride_size;
     std::map<char, int> orbital_size;
-
     SharedMatrix M(new Matrix("backtransformed df_3rdm", naux, ao_matsize));
-
-    // idxmap = {{'c', core_mos_relative},
-    //           {'a', actv_mos_relative},
-    //           {'v', virt_mos_relative}};
-
-    // stride_size = {{"ca", ncore * na},    {"ac", na * ncore},
-    //                {"cv", ncore * nvirt}, {"vc", nvirt * ncore},
-    //                {"av", na * nvirt},    {"va", nvirt * na},
-    //                {"cc", ncore * ncore}, {"vv", nvirt * nvirt}, {"aa", na * na}};
-
-    // orbital_size = {{'c', ncore}, {'a', na}, {'v', nvirt}};
-
-
-
-    // auto blocklabelsa = {"cc", "aa", "vv", "ac", "va", "vc"};
-    // auto blocklabelsb = {"CC", "AA", "VV", "AC", "VA", "VC"};
-    auto blocklabels = {"cc", "aa", "ca", "ac", "vv", "av", "cv", "va", "vc"};
-    // auto blocklabels = {"cc", "aa", "ca", "ac", "vv", "av", "cv", "va", "vc",
-    //                     "CC", "AA", "CA", "AC", "VV", "AV", "CV", "VA", "VC"};
-
-
     idxmap = {{'c', core_mos_relative},
               {'a', actv_mos_relative},
-              {'v', virt_mos_relative},
-              {'C', core_mos_relative},
-              {'A', actv_mos_relative},
-              {'V', virt_mos_relative}};
+              {'v', virt_mos_relative}};
 
-    stride_size = {{"ca", ncore * na},    {"ac", na * ncore},    {"CA", ncore * na},    {"AC", na * ncore},
-                   {"cv", ncore * nvirt}, {"vc", nvirt * ncore}, {"CV", ncore * nvirt}, {"VC", nvirt * ncore},
-                   {"av", na * nvirt},    {"va", nvirt * na},    {"AV", na * nvirt},    {"VA", nvirt * na},
-                   {"cc", ncore * ncore}, {"CC", ncore * ncore}, {"vv", nvirt * nvirt}, {"VV", nvirt * nvirt},
-                   {"aa", na * na},       {"AA", na * na}};
+    stride_size = {{"ca", ncore * na},    {"ac", na * ncore},
+                   {"cv", ncore * nvirt}, {"vc", nvirt * ncore},
+                   {"av", na * nvirt},    {"va", nvirt * na},
+                   {"cc", ncore * ncore}, {"vv", nvirt * nvirt}, {"aa", na * na}};
 
-    orbital_size = {{'c', ncore}, {'C', ncore}, {'a', na}, {'A', na}, {'v', nvirt}, {'V', nvirt}};
+    orbital_size = {{'c', ncore}, {'a', na}, {'v', nvirt}};
+    auto blocklabels = {"cc", "aa", "ca", "ac", "vv", "av", "cv", "va", "vc"};
 
     std::map<char, int> pre_idx;
     pre_idx = {{'c', 0},
                {'a', ncore},
-               {'v', ncore + na},
-               {'C', 0},
-               {'A', ncore},
-               {'V', ncore + na}};
-
-    std::map<char, std::vector<size_t>> pre_idx1;
-    pre_idx1 = {{'c', core_all},
-                {'a', actv_all},
-                {'v', virt_all},
-                {'C', core_all},
-                {'A', actv_all},
-                {'V', virt_all}};
-
-
-
+               {'v', ncore + na}};
 
     SharedMatrix temp_mat(new Matrix("temp_mat", nirrep, irrep_vec, irrep_vec));
-    auto temp_mat_AO = std::make_shared<Matrix>("AO temp matrix", ints_->wfn()->nso(), ints_->wfn()->nso());
+
     auto temp_mat_MO = std::make_shared<Matrix>("MO temp matrix", nmo, nmo);
-
-    // for(int aux_idx = 0; aux_idx < naux; ++aux_idx) {
-    //     temp_mat->zero();
-    //     temp_mat_AO->zero();
-
-    //     for (const std::string& block : blocklabels) {
-    //         auto dfblk = "L" + block;
-    //         auto stride = stride_size[block];
-
-    //         const auto& block_data = df_3rdm.block(dfblk).data();
-
-
-    //         auto label1 = block[0];
-    //         auto label2 = block[1];
-
-    //         int rowsize = orbital_size[label1];
-    //         int colsize = orbital_size[label2];
- 
-    //         for (int i = 0; i < rowsize; ++i) {
-    //             for (int j = 0; j < colsize; ++j) {
-    //                 auto val = block_data[aux_idx * stride + i * colsize + j];
-
-    //                 auto irrep = (idxmap[label1][i]).first ^ (idxmap[label2][j]).first;
-    //                 temp_mat->set(irrep, idxmap[label1][i].second, 
-    //                                      idxmap[label2][j].second, val);
-
-
-
-    //                 // if ((idxmap[label1][i]).first == (idxmap[label2][j]).first) {
-    //                 //     temp_mat->set(idxmap[label1][i].first, idxmap[label1][i].second, 
-    //                 //                   idxmap[label2][j].second, val);
-    //                 // } else {
-
-    //                 // }
-    //             }
-    //         }
-    //     }
-
-    //     temp_mat->print();
-
-    //     temp_mat->back_transform(ints_->Ca());
-    //     temp_mat_AO->remove_symmetry(temp_mat, ints_->wfn()->aotoso()->transpose());
-
-    //     // temp_mat_AO->remove_symmetry(temp_mat, ints_->wfn()->aotoso()->transpose());
-    //     // temp_mat_AO->back_transform(ints_->wfn()->Ca_subset("AO"));
-
-    //     for(int i = 0; i < ao_dim; ++i) {
-    //         for (int j = 0; j < ao_dim; ++j) {
-    //             auto val = temp_mat_AO->get(i, j);
-    //             M->add(aux_idx, i * ao_dim + j, val);
-    //         }
-    //     }
-    // }
-
 
     for(int aux_idx = 0; aux_idx < naux; ++aux_idx) {
         temp_mat_MO->zero();
-        temp_mat_AO->zero();
 
         for (const std::string& block : blocklabels) {
             auto dfblk = "L" + block;
             auto stride = stride_size[block];
-
             const auto& block_data = df_3rdm.block(dfblk).data();
-
-
             auto label1 = block[0];
             auto label2 = block[1];
-
             int rowsize = orbital_size[label1];
             int colsize = orbital_size[label2];
 
-
             for (int i = 0; i < rowsize; ++i) {
                 for (int j = 0; j < colsize; ++j) {
-                    auto val  = block_data[aux_idx * stride + i * colsize + j];
-                    // auto idx1 = pre_idx1[label1][i];
-                    // auto idx2 = pre_idx1[label2][j];    
+                    auto val  = block_data[aux_idx * stride + i * colsize + j];   
                     auto idx1 = pre_idx[label1] + i;
                     auto idx2 = pre_idx[label2] + j;     
                     temp_mat_MO->add(idx1, idx2, val);
@@ -898,10 +793,9 @@ void DSRG_MRPT2::write_df_rdm() {
             }
         }
 
-
         auto Ca = ints_->Ca();
         // Copy Ca to a matrix without symmetry blocking
-        auto Cat = std::make_shared<Matrix>("Ca temp matrix", ao_dim, nmo);
+        auto Cat = std::make_shared<Matrix>("Ca temp matrix", nso, nmo);
 
         int offset = 0;
         std::vector<int> sum_nmopi(nirrep, 0);
@@ -926,12 +820,12 @@ void DSRG_MRPT2::write_df_rdm() {
 
         temp_mat_MO->back_transform(Cat);
 
-        auto aotoso = std::make_shared<Matrix>("aotoso", ao_dim, ao_dim);
+        auto aotoso = std::make_shared<Matrix>("aotoso", nso, nso);
 
         int offset_col = 0;
         for(int irp = 0; irp < nirrep; ++irp) {
             auto nmopi = ints_->wfn()->nmopi()[irp];
-            for(int i = 0; i < ao_dim; ++i) {
+            for(int i = 0; i < nso; ++i) {
                 for(int j = 0; j < nmopi; ++j) {
                     aotoso->set(i, offset_col+j, ints_->wfn()->aotoso()->get(irp, i, j));
                 }   
@@ -939,39 +833,15 @@ void DSRG_MRPT2::write_df_rdm() {
             offset_col += nmopi;
         }
 
+        temp_mat_MO->transform(aotoso->transpose());
 
-
-
-
-
-
-
-
-        // temp_mat_AO->remove_symmetry(temp_mat_MO, ints_->wfn()->aotoso()->transpose());
-        temp_mat_AO->remove_symmetry(temp_mat_MO, aotoso->transpose());
-        // temp_mat_MO->transform(aotoso->transpose());
-
-
-        // temp_mat_MO->back_transform(caao); 
-
-        // temp_mat_MO = psi::linalg::triplet(caao, temp_mat_MO, caao, false, false, true);
-
-        for(int i = 0; i < ao_dim; ++i) {
-            for (int j = 0; j < ao_dim; ++j) {
-                auto val = temp_mat_AO->get(i, j);
-                M->set(aux_idx, i * ao_dim + j, val);
+        for(int i = 0; i < nso; ++i) {
+            for (int j = 0; j < nso; ++j) {
+                auto val = temp_mat_MO->get(i, j);
+                M->set(aux_idx, i * nso + j, val);
             }
         }
     }
-    
-
-    // ints_->wfn()->Ca()->print();
-    // ints_->wfn()->Ca_subset("AO")->print();
-
-
-
-
-
 
     // assume "alpha == beta"
     M->scale(2.0);
@@ -984,7 +854,6 @@ void DSRG_MRPT2::write_df_rdm() {
     M->set_name("3-Center Correlation Density");
     M->save(psio_, PSIF_AO_TPDM, Matrix::SaveType::ThreeIndexLowerTriangle);
 
-
     SharedMatrix N(new Matrix("metric derivative density", naux, naux));
 
     (df_2rdm.block("LL")).iterate([&](const std::vector<size_t>& i, double& value) {
@@ -995,106 +864,6 @@ void DSRG_MRPT2::write_df_rdm() {
     N->zero();
     N->set_name("Metric Correlation Density");
     N->save(psio_, PSIF_AO_TPDM, Matrix::SaveType::LowerTriangle);
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    // std::vector<double> Pmunu(ao_matsize * naux);
-
-    // SharedMatrix temp_mat(new Matrix("temp_mat", nirrep, irrep_vec, irrep_vec));
-    // auto temp_mat_AO = std::make_shared<Matrix>("AO basis temp matrix", ints_->wfn()->nso(), ints_->wfn()->nso());
-
-    // for(int aux = 0; aux < naux; ++aux) {
-    //     temp_mat->zero();
-    //     temp_mat_AO->zero();
-        
-    //     // copy the df_3rdm (pq) matrices to temp_mat
-    //     (df_3rdm.block("Lvc")).iterate([&](const std::vector<size_t>& i, double& value) {
-    //         if (i[0] == aux) {
-    //             if (virt_mos_relative[i[1]].first == core_mos_relative[i[2]].first) {
-    //                 temp_mat->set(virt_mos_relative[i[1]].first, virt_mos_relative[i[1]].second,
-    //                               core_mos_relative[i[2]].second, value);
-    //                 temp_mat->set(virt_mos_relative[i[1]].first, core_mos_relative[i[2]].second,
-    //                               virt_mos_relative[i[1]].second, value);
-    //             }
-    //         }
-    //     });
-
-    //     (df_3rdm.block("Lca")).iterate([&](const std::vector<size_t>& i, double& value) {
-    //         if (i[0] == aux) {
-    //             if (core_mos_relative[i[1]].first == actv_mos_relative[i[2]].first) {
-    //                 temp_mat->set(core_mos_relative[i[1]].first, core_mos_relative[i[1]].second,
-    //                         actv_mos_relative[i[2]].second, value);
-    //                 temp_mat->set(core_mos_relative[i[1]].first, actv_mos_relative[i[2]].second,
-    //                         core_mos_relative[i[1]].second, value);
-    //             }
-    //         }
-    //     });
-
-    //     (df_3rdm.block("Lva")).iterate([&](const std::vector<size_t>& i, double& value) {
-    //         if (i[0] == aux) {
-    //             if (virt_mos_relative[i[1]].first == actv_mos_relative[i[2]].first) {
-    //                 temp_mat->set(virt_mos_relative[i[1]].first, virt_mos_relative[i[1]].second,
-    //                         actv_mos_relative[i[2]].second, value);
-    //                 temp_mat->set(virt_mos_relative[i[1]].first, actv_mos_relative[i[2]].second,
-    //                         virt_mos_relative[i[1]].second, value);
-    //             }
-    //         }
-    //     });
-
-    //     (df_3rdm.block("Lcc")).iterate([&](const std::vector<size_t>& i, double& value) {
-    //         if (i[0] == aux) {
-    //             if (core_mos_relative[i[1]].first == core_mos_relative[i[2]].first) {
-    //                 temp_mat->set(core_mos_relative[i[1]].first, core_mos_relative[i[1]].second,
-    //                         core_mos_relative[i[2]].second, value);
-    //             }
-    //         }
-    //     });
-
-    //     (df_3rdm.block("Laa")).iterate([&](const std::vector<size_t>& i, double& value) {
-    //         if (i[0] == aux) {
-    //             if (actv_mos_relative[i[1]].first == actv_mos_relative[i[2]].first) {
-    //                 temp_mat->set(actv_mos_relative[i[1]].first, actv_mos_relative[i[1]].second,
-    //                         actv_mos_relative[i[2]].second, value);
-    //             }
-    //         }
-    //     });
-
-    //     (df_3rdm.block("Lvv")).iterate([&](const std::vector<size_t>& i, double& value) {
-    //         if (i[0] == aux) {
-    //             if (virt_mos_relative[i[1]].first == virt_mos_relative[i[2]].first) {
-    //                 temp_mat->set(virt_mos_relative[i[1]].first, virt_mos_relative[i[1]].second,
-    //                         virt_mos_relative[i[2]].second, value);
-    //             }
-    //         }
-    //     });
-
-    //     temp_mat_AO->remove_symmetry(temp_mat, ints_->wfn()->aotoso()->transpose());
-    //     temp_mat_AO->back_transform(ints_->wfn()->Ca_subset("AO"));
-
-    //     for(int i = 0; i < ao_dim; ++i) {
-    //         for (int j = 0; j < ao_dim; ++j) {
-    //             auto val = temp_mat->get(i, j);
-    //             Pmunu[aux * ao_matsize + i * ao_dim + j] = val;
-    //         }
-    //     }
-    // }
-
-    // std::cout << "nso = " << ints_->wfn()->nso() << " ao = " << ao_dim << " nmo = " << nmo << "aux = " << naux << " size = " << Pmunu.size() << std::endl;
-
 }
 
 void DSRG_MRPT2::tpdm_backtransform() {

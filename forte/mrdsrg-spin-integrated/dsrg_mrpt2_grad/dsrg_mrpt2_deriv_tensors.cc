@@ -92,7 +92,7 @@ void DSRG_MRPT2::set_j() {
     std::shared_ptr<BasisSet> auxiliary_ = ints_->wfn()->get_basisset("DF_BASIS_MP2");
     auto metric = std::make_shared<FittingMetric>(auxiliary_, true);
     // "form_eig_inverse()" genererates J^(-1/2); "form_full_eig_inverse()" genererates J^(-1)
-    metric->form_full_eig_inverse(Process::environment.options.get_double("DF_FITTING_CONDITION"));
+    metric->form_eig_inverse(Process::environment.options.get_double("DF_FITTING_CONDITION"));
     auto J = metric->get_metric();
 
     (Jm12.block("LL")).iterate([&](const std::vector<size_t>& i, double& value) {
