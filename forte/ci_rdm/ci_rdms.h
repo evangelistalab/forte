@@ -243,46 +243,6 @@ class CI_RDMS {
     void make_ab(SortedStringList a_sorted_string_list_, const std::vector<String>& sorted_astr,
                  const std::vector<Determinant>& sorted_a_dets, std::vector<double>& tprdm_ab,
                  std::vector<double>& tprdm_aab, std::vector<double>& tprdm_abb);
-
-    void _add_1rdm(std::vector<double>& opdm,
-                   const std::vector<std::vector<std::pair<size_t, short>>>& ann_list,
-                   const std::vector<std::vector<std::pair<size_t, short>>>& cre_list);
-    void _add_1rdm_op_IJ(std::vector<double>& opdm,
-                         const std::vector<std::vector<std::pair<size_t, short>>>& list);
-
-    void _add_2rdm(const std::vector<std::vector<std::tuple<size_t, short, short>>>& ann_list,
-                   const std::vector<std::vector<std::tuple<size_t, short, short>>>& cre_list,
-                   const std::function<void(const std::vector<size_t>&, const double&)>& func);
-    void _add_2rdm_aa(std::vector<double>& tpdm_aa, const std::vector<size_t>& i,
-                       const double& value);
-    void _add_2rdm_ab(std::vector<double>& tpdm_ab, const std::vector<size_t>& i,
-                       const double& value, const bool& spin_free);
-    void
-    _add_2rdm_op_II(const std::function<void(const std::vector<size_t>&, const double&)>& func_aa,
-                    const std::function<void(const std::vector<size_t>&, const double&)>& func_ab,
-                    const std::function<void(const std::vector<size_t>&, const double&)>& func_bb);
-    void
-    _add_2rdm_op_IJ(const std::vector<std::vector<std::tuple<size_t, short, short>>>& list,
-                    const std::function<void(const std::vector<size_t>&, const double&)>& func);
-
-    void
-    _add_3rdm(const std::vector<std::vector<std::tuple<size_t, short, short, short>>>& ann_list,
-              const std::vector<std::vector<std::tuple<size_t, short, short, short>>>& cre_list,
-              const std::function<void(const std::vector<size_t>&, const double&)>& func);
-    void _add_3rdm_aaa(std::vector<double>& tpdm_aaa, const std::vector<size_t>& i,
-                       const double& value);
-    void _add_3rdm_aab(std::vector<double>& aab, const std::vector<size_t>& i,
-                       const double& value, const bool& spin_free);
-    void _add_3rdm_abb(std::vector<double>& abb, const std::vector<size_t>& i,
-                       const double& value, const bool& spin_free);
-    void
-    _add_3rdm_op_II(const std::function<void(const std::vector<size_t>&, const double&)>& func_aaa,
-                    const std::function<void(const std::vector<size_t>&, const double&)>& func_aab,
-                    const std::function<void(const std::vector<size_t>&, const double&)>& func_abb,
-                    const std::function<void(const std::vector<size_t>&, const double&)>& func_bbb);
-    void
-    _add_3rdm_op_IJ(const std::vector<std::vector<std::tuple<size_t, short, short, short>>>& list,
-                    const std::function<void(const std::vector<size_t>&, const double&)>& func);
 };
 } // namespace forte
 

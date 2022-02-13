@@ -46,31 +46,31 @@ void CI_RDMS::compute_1rdm_sf(std::vector<double>& opdm) {
     if (print_)
         outfile->Printf("\n  Time spent forming 1-map:   %1.6f", one.stop());
 
-    timer build("Build SF 1-RDM");
     opdm.assign(no2_, 0.0);
+    timer build("Build SF 1-RDM");
+
     for (size_t J = 0; J < dim_space_; ++J) {
+        auto vJ = evecs_->get(J, root2_);
         for (auto& aJ_mo_sign : a_ann_list_[J]) {
-            const auto aJ_add = aJ_mo_sign.first;
-            const auto p = std::abs(aJ_mo_sign.second) - 1;
-            const auto sign_p = aJ_mo_sign.second > 0 ? 1 : -1;
+            const auto [aJ_add, _p] = aJ_mo_sign;
+            auto p = std::abs(_p) - 1;
+            auto sign_p = _p < 0;
             for (auto& aaJ_mo_sign : a_cre_list_[aJ_add]) {
-                const auto q = std::abs(aaJ_mo_sign.second) - 1;
-                const auto sign_q = aaJ_mo_sign.second > 0 ? 1 : -1;
-                const auto I = aaJ_mo_sign.first;
-                opdm[q * no_ + p] +=
-                    evecs_->get(I, root1_) * evecs_->get(J, root2_) * sign_p * sign_q;
+                const auto [I, _q] = aaJ_mo_sign;
+                auto q = std::abs(_q) - 1;
+                auto sign = ((_q < 0) == sign_p) ? 1 : -1;
+                opdm[q * no_ + p] += evecs_->get(I, root1_) * vJ * sign;
             }
         }
         for (auto& bJ_mo_sign : b_ann_list_[J]) {
-            const auto bJ_add = bJ_mo_sign.first;
-            const auto p = std::abs(bJ_mo_sign.second) - 1;
-            const auto sign_p = bJ_mo_sign.second > 0 ? 1 : -1;
+            const auto [bJ_add, _p] = bJ_mo_sign;
+            auto p = std::abs(_p) - 1;
+            auto sign_p = _p < 0;
             for (auto& bbJ_mo_sign : b_cre_list_[bJ_add]) {
-                const auto q = std::abs(bbJ_mo_sign.second) - 1;
-                const auto sign_q = bbJ_mo_sign.second > 0 ? 1 : -1;
-                const auto I = bbJ_mo_sign.first;
-                opdm[q * no_ + p] +=
-                    evecs_->get(I, root1_) * evecs_->get(J, root2_) * sign_p * sign_q;
+                const auto [I, _q] = bbJ_mo_sign;
+                auto q = std::abs(_q) - 1;
+                auto sign = ((_q < 0) == sign_p) ? 1 : -1;
+                opdm[q * no_ + p] += evecs_->get(I, root1_) * vJ * sign;
             }
         }
     }
@@ -84,9 +84,8 @@ void CI_RDMS::compute_1rdm_sf_op(std::vector<double>& opdm) {
     op->build_strings(wfn_);
     op->op_s_lists(wfn_);
 
+    opdm.assign(no2_, 0.0);
     timer build("Build SF 1-RDM");
-    opdm.assign(no2_, 0.0);
-    opdm.assign(no2_, 0.0);
 
     const det_hashvec& dets = wfn_.wfn_hash();
     for (size_t J = 0; J < dim_space_; ++J) {
@@ -99,46 +98,44 @@ void CI_RDMS::compute_1rdm_sf_op(std::vector<double>& opdm) {
         }
     }
 
-    _add_1rdm_op_IJ(opdm, op->a_list_);
-    _add_1rdm_op_IJ(opdm, op->b_list_);
-//    for (const auto& coupled_dets : op->a_list_) {
-//        for (size_t a = 0, coupled_dets_size = coupled_dets.size(); a < coupled_dets_size; ++a) {
-//            const auto [I, _p] = coupled_dets[a];
-//            auto p = std::abs(_p) - 1;
-//            auto sign_p = _p < 0;
-//
-//            auto vI1 = evecs_->get(I, root1_);
-//            auto vI2 = evecs_->get(I, root2_);
-//
-//            for (size_t b = a + 1; b < coupled_dets_size; ++b) {
-//                const auto [J, _q] = coupled_dets[b];
-//                auto q = std::abs(_q) - 1;
-//                auto sign = ((_q < 0) == sign_p) ? 1 : -1;
-//
-//                opdm[p * no_ + q] += vI1 * evecs_->get(J, root2_) * sign;
-//                opdm[q * no_ + p] += evecs_->get(J, root1_) * vI2 * sign;
-//            }
-//        }
-//    }
-//    for (const auto& coupled_dets : op->b_list_) {
-//        for (size_t a = 0, coupled_dets_size = coupled_dets.size(); a < coupled_dets_size; ++a) {
-//            const auto [I, _p] = coupled_dets[a];
-//            auto p = std::abs(_p) - 1;
-//            auto sign_p = _p < 0;
-//
-//            auto vI1 = evecs_->get(I, root1_);
-//            auto vI2 = evecs_->get(I, root2_);
-//
-//            for (size_t b = a + 1; b < coupled_dets_size; ++b) {
-//                const auto [J, _q] = coupled_dets[b];
-//                auto q = std::abs(_q) - 1;
-//                auto sign = ((_q < 0) == sign_p) ? 1 : -1;
-//
-//                opdm[p * no_ + q] += vI1 * evecs_->get(J, root2_) * sign;
-//                opdm[q * no_ + p] += evecs_->get(J, root1_) * vI2 * sign;
-//            }
-//        }
-//    }
+    for (const auto& coupled_dets : op->a_list_) {
+        for (size_t a = 0, coupled_dets_size = coupled_dets.size(); a < coupled_dets_size; ++a) {
+            const auto [I, _p] = coupled_dets[a];
+            auto p = std::abs(_p) - 1;
+            auto sign_p = _p < 0;
+
+            auto vI1 = evecs_->get(I, root1_);
+            auto vI2 = evecs_->get(I, root2_);
+
+            for (size_t b = a + 1; b < coupled_dets_size; ++b) {
+                const auto [J, _q] = coupled_dets[b];
+                auto q = std::abs(_q) - 1;
+                auto sign = ((_q < 0) == sign_p) ? 1 : -1;
+
+                opdm[p * no_ + q] += vI1 * evecs_->get(J, root2_) * sign;
+                opdm[q * no_ + p] += evecs_->get(J, root1_) * vI2 * sign;
+            }
+        }
+    }
+    for (const auto& coupled_dets : op->b_list_) {
+        for (size_t a = 0, coupled_dets_size = coupled_dets.size(); a < coupled_dets_size; ++a) {
+            const auto [I, _p] = coupled_dets[a];
+            auto p = std::abs(_p) - 1;
+            auto sign_p = _p < 0;
+
+            auto vI1 = evecs_->get(I, root1_);
+            auto vI2 = evecs_->get(I, root2_);
+
+            for (size_t b = a + 1; b < coupled_dets_size; ++b) {
+                const auto [J, _q] = coupled_dets[b];
+                auto q = std::abs(_q) - 1;
+                auto sign = ((_q < 0) == sign_p) ? 1 : -1;
+
+                opdm[p * no_ + q] += vI1 * evecs_->get(J, root2_) * sign;
+                opdm[q * no_ + p] += evecs_->get(J, root1_) * vI2 * sign;
+            }
+        }
+    }
 
     if (print_) {
         outfile->Printf("\n  Time spent building 1-rdm: %.3e seconds", build.stop());
@@ -146,13 +143,13 @@ void CI_RDMS::compute_1rdm_sf_op(std::vector<double>& opdm) {
 }
 
 void CI_RDMS::compute_2rdm_sf(std::vector<double>& tpdm) {
-    tpdm.assign(no4_, 0.0);
-
     timer two("Build 2 Substitution Lists");
     get_two_map();
-    if (print_)
+    if (print_) {
         outfile->Printf("\n  Time spent forming 2-map:   %1.6f", two.stop());
+    }
 
+    tpdm.assign(no4_, 0.0);
     timer build("Build SF 2-RDM");
 
     for (size_t J = 0; J < dim_space_; ++J) {
@@ -368,14 +365,14 @@ void CI_RDMS::compute_2rdm_sf_op(std::vector<double>& tpdm) {
 }
 
 void CI_RDMS::compute_3rdm_sf(std::vector<double>& tpdm3) {
-    tpdm3.assign(no6_, 0.0);
-
     timer three("Build 3 Substitution Lists");
     get_three_map();
-    if (print_)
+    if (print_) {
         outfile->Printf("\n  Time spent forming 3-map:   %1.6f", three.stop());
+    }
 
     timer build("Build SF 3-RDM");
+    tpdm3.assign(no6_, 0.0);
 
     for (size_t J = 0; J < dim_space_; ++J) {
         auto vJ = evecs_->get(J, root1_);
@@ -565,525 +562,1306 @@ void CI_RDMS::compute_3rdm_sf_op(std::vector<double>& tpdm3) {
     op->build_strings(wfn_);
     op->three_s_lists(wfn_);
 
+    tpdm3.assign(no6_, 0.0);
     timer build("Build SF 3-RDM");
 
-    tpdm3.assign(no6_, 0.0);
+    // Build the diagonal part
+    const det_hashvec& dets = wfn_.wfn_hash();
+    for (size_t I = 0; I < dim_space_; ++I) {
+        double cI_sq = evecs_->get(I, root1_) * evecs_->get(I, root2_);
 
-    _add_3rdm_op_II([&](const std::vector<size_t>& i,
-                        const double& value) { _add_3rdm_aaa(tpdm3, i, value); },
-                    [&](const std::vector<size_t>& i, const double& value) {
-                        _add_3rdm_aab(tpdm3, i, value, true);
-                    },
-                    [&](const std::vector<size_t>& i, const double& value) {
-                        _add_3rdm_abb(tpdm3, i, value, true);
-                    },
-                    [&](const std::vector<size_t>& i, const double& value) {
-                        _add_3rdm_aaa(tpdm3, i, value);
-                    });
+        auto aocc = dets[I].get_alfa_occ(no_);
+        auto bocc = dets[I].get_beta_occ(no_);
+        auto na = aocc.size();
+        auto nb = bocc.size();
 
-    _add_3rdm_op_IJ(op->aaa_list_, [&](const std::vector<size_t>& i, const double& value) {
-        _add_3rdm_aaa(tpdm3, i, value);
-    });
-    _add_3rdm_op_IJ(op->aab_list_, [&](const std::vector<size_t>& i, const double& value) {
-        _add_3rdm_aab(tpdm3, i, value, true);
-    });
-    _add_3rdm_op_IJ(op->abb_list_, [&](const std::vector<size_t>& i, const double& value) {
-        _add_3rdm_abb(tpdm3, i, value, true);
-    });
-    _add_3rdm_op_IJ(op->bbb_list_, [&](const std::vector<size_t>& i, const double& value) {
-        _add_3rdm_aaa(tpdm3, i, value);
-    });
+        for (size_t p = 0; p < na; ++p) {
+            auto pp = aocc[p];
+            for (size_t q = p + 1; q < na; ++q) {
+                auto qq = aocc[q];
+                for (size_t r = q + 1; r < na; ++r) {
+                    auto rr = aocc[r];
 
-//    // Build the diagonal part
-//    const det_hashvec& dets = wfn_.wfn_hash();
-//    for (size_t I = 0; I < dim_space_; ++I) {
-//        double cI_sq = evecs_->get(I, root1_) * evecs_->get(I, root2_);
-//
-//        auto aocc = dets[I].get_alfa_occ(no_);
-//        auto bocc = dets[I].get_beta_occ(no_);
-//        auto na = aocc.size();
-//        auto nb = bocc.size();
-//
-//        for (size_t p = 0; p < na; ++p) {
-//            auto pp = aocc[p];
-//            for (size_t q = p + 1; q < na; ++q) {
-//                auto qq = aocc[q];
-//                for (size_t r = q + 1; r < na; ++r) {
-//                    auto rr = aocc[r];
-//
-//                    tpdm3[pp * no5_ + qq * no4_ + rr * no3_ + pp * no2_ + qq * no_ + rr] += cI_sq;
-//                    tpdm3[pp * no5_ + qq * no4_ + rr * no3_ + pp * no2_ + rr * no_ + qq] -= cI_sq;
-//                    tpdm3[pp * no5_ + qq * no4_ + rr * no3_ + rr * no2_ + pp * no_ + qq] += cI_sq;
-//                    tpdm3[pp * no5_ + qq * no4_ + rr * no3_ + rr * no2_ + qq * no_ + pp] -= cI_sq;
-//                    tpdm3[pp * no5_ + qq * no4_ + rr * no3_ + qq * no2_ + rr * no_ + pp] += cI_sq;
-//                    tpdm3[pp * no5_ + qq * no4_ + rr * no3_ + qq * no2_ + pp * no_ + rr] -= cI_sq;
-//
-//                    tpdm3[pp * no5_ + rr * no4_ + qq * no3_ + pp * no2_ + qq * no_ + rr] -= cI_sq;
-//                    tpdm3[pp * no5_ + rr * no4_ + qq * no3_ + pp * no2_ + rr * no_ + qq] += cI_sq;
-//                    tpdm3[pp * no5_ + rr * no4_ + qq * no3_ + rr * no2_ + pp * no_ + qq] -= cI_sq;
-//                    tpdm3[pp * no5_ + rr * no4_ + qq * no3_ + rr * no2_ + qq * no_ + pp] += cI_sq;
-//                    tpdm3[pp * no5_ + rr * no4_ + qq * no3_ + qq * no2_ + rr * no_ + pp] -= cI_sq;
-//                    tpdm3[pp * no5_ + rr * no4_ + qq * no3_ + qq * no2_ + pp * no_ + rr] += cI_sq;
-//
-//                    tpdm3[rr * no5_ + pp * no4_ + qq * no3_ + pp * no2_ + qq * no_ + rr] += cI_sq;
-//                    tpdm3[rr * no5_ + pp * no4_ + qq * no3_ + pp * no2_ + rr * no_ + qq] -= cI_sq;
-//                    tpdm3[rr * no5_ + pp * no4_ + qq * no3_ + rr * no2_ + pp * no_ + qq] += cI_sq;
-//                    tpdm3[rr * no5_ + pp * no4_ + qq * no3_ + rr * no2_ + qq * no_ + pp] -= cI_sq;
-//                    tpdm3[rr * no5_ + pp * no4_ + qq * no3_ + qq * no2_ + rr * no_ + pp] += cI_sq;
-//                    tpdm3[rr * no5_ + pp * no4_ + qq * no3_ + qq * no2_ + pp * no_ + rr] -= cI_sq;
-//
-//                    tpdm3[rr * no5_ + qq * no4_ + pp * no3_ + pp * no2_ + qq * no_ + rr] -= cI_sq;
-//                    tpdm3[rr * no5_ + qq * no4_ + pp * no3_ + pp * no2_ + rr * no_ + qq] += cI_sq;
-//                    tpdm3[rr * no5_ + qq * no4_ + pp * no3_ + rr * no2_ + pp * no_ + qq] -= cI_sq;
-//                    tpdm3[rr * no5_ + qq * no4_ + pp * no3_ + rr * no2_ + qq * no_ + pp] += cI_sq;
-//                    tpdm3[rr * no5_ + qq * no4_ + pp * no3_ + qq * no2_ + rr * no_ + pp] -= cI_sq;
-//                    tpdm3[rr * no5_ + qq * no4_ + pp * no3_ + qq * no2_ + pp * no_ + rr] += cI_sq;
-//
-//                    tpdm3[qq * no5_ + rr * no4_ + pp * no3_ + pp * no2_ + qq * no_ + rr] += cI_sq;
-//                    tpdm3[qq * no5_ + rr * no4_ + pp * no3_ + pp * no2_ + rr * no_ + qq] -= cI_sq;
-//                    tpdm3[qq * no5_ + rr * no4_ + pp * no3_ + rr * no2_ + pp * no_ + qq] += cI_sq;
-//                    tpdm3[qq * no5_ + rr * no4_ + pp * no3_ + rr * no2_ + qq * no_ + pp] -= cI_sq;
-//                    tpdm3[qq * no5_ + rr * no4_ + pp * no3_ + qq * no2_ + rr * no_ + pp] += cI_sq;
-//                    tpdm3[qq * no5_ + rr * no4_ + pp * no3_ + qq * no2_ + pp * no_ + rr] -= cI_sq;
-//
-//                    tpdm3[qq * no5_ + pp * no4_ + rr * no3_ + pp * no2_ + qq * no_ + rr] -= cI_sq;
-//                    tpdm3[qq * no5_ + pp * no4_ + rr * no3_ + pp * no2_ + rr * no_ + qq] += cI_sq;
-//                    tpdm3[qq * no5_ + pp * no4_ + rr * no3_ + rr * no2_ + pp * no_ + qq] -= cI_sq;
-//                    tpdm3[qq * no5_ + pp * no4_ + rr * no3_ + rr * no2_ + qq * no_ + pp] += cI_sq;
-//                    tpdm3[qq * no5_ + pp * no4_ + rr * no3_ + qq * no2_ + rr * no_ + pp] -= cI_sq;
-//                    tpdm3[qq * no5_ + pp * no4_ + rr * no3_ + qq * no2_ + pp * no_ + rr] += cI_sq;
-//                }
-//            }
-//        }
-//
-//        for (size_t p = 0; p < na; ++p) {
-//            auto pp = aocc[p];
-//            for (size_t q = p + 1; q < na; ++q) {
-//                auto qq = aocc[q];
-//                for (size_t r = 0; r < nb; ++r) {
-//                    auto rr = bocc[r];
-//
-//                    tpdm3[pp * no5_ + qq * no4_ + rr * no3_ + pp * no2_ + qq * no_ + rr] += cI_sq;
-//                    tpdm3[pp * no5_ + qq * no4_ + rr * no3_ + qq * no2_ + pp * no_ + rr] -= cI_sq;
-//                    tpdm3[qq * no5_ + pp * no4_ + rr * no3_ + pp * no2_ + qq * no_ + rr] -= cI_sq;
-//                    tpdm3[qq * no5_ + pp * no4_ + rr * no3_ + qq * no2_ + pp * no_ + rr] += cI_sq;
-//
-//                    tpdm3[rr * no5_ + qq * no4_ + pp * no3_ + rr * no2_ + qq * no_ + pp] += cI_sq;
-//                    tpdm3[rr * no5_ + qq * no4_ + pp * no3_ + rr * no2_ + pp * no_ + qq] -= cI_sq;
-//                    tpdm3[rr * no5_ + pp * no4_ + qq * no3_ + rr * no2_ + qq * no_ + pp] -= cI_sq;
-//                    tpdm3[rr * no5_ + pp * no4_ + qq * no3_ + rr * no2_ + pp * no_ + qq] += cI_sq;
-//
-//                    tpdm3[pp * no5_ + rr * no4_ + qq * no3_ + pp * no2_ + rr * no_ + qq] += cI_sq;
-//                    tpdm3[pp * no5_ + rr * no4_ + qq * no3_ + qq * no2_ + rr * no_ + pp] -= cI_sq;
-//                    tpdm3[qq * no5_ + rr * no4_ + pp * no3_ + pp * no2_ + rr * no_ + qq] -= cI_sq;
-//                    tpdm3[qq * no5_ + rr * no4_ + pp * no3_ + qq * no2_ + rr * no_ + pp] += cI_sq;
-//                }
-//            }
-//        }
-//
-//        for (size_t p = 0; p < na; ++p) {
-//            auto pp = aocc[p];
-//            for (size_t q = 0; q < nb; ++q) {
-//                auto qq = bocc[q];
-//                for (size_t r = q + 1; r < nb; ++r) {
-//                    auto rr = bocc[r];
-//
-//                    tpdm3[pp * no5_ + qq * no4_ + rr * no3_ + pp * no2_ + qq * no_ + rr] += cI_sq;
-//                    tpdm3[pp * no5_ + qq * no4_ + rr * no3_ + pp * no2_ + rr * no_ + qq] -= cI_sq;
-//                    tpdm3[pp * no5_ + rr * no4_ + qq * no3_ + pp * no2_ + qq * no_ + rr] -= cI_sq;
-//                    tpdm3[pp * no5_ + rr * no4_ + qq * no3_ + pp * no2_ + rr * no_ + qq] += cI_sq;
-//
-//                    tpdm3[qq * no5_ + pp * no4_ + rr * no3_ + qq * no2_ + pp * no_ + rr] += cI_sq;
-//                    tpdm3[qq * no5_ + pp * no4_ + rr * no3_ + rr * no2_ + pp * no_ + qq] -= cI_sq;
-//                    tpdm3[rr * no5_ + pp * no4_ + qq * no3_ + qq * no2_ + pp * no_ + rr] -= cI_sq;
-//                    tpdm3[rr * no5_ + pp * no4_ + qq * no3_ + rr * no2_ + pp * no_ + qq] += cI_sq;
-//
-//                    tpdm3[rr * no5_ + qq * no4_ + pp * no3_ + rr * no2_ + qq * no_ + pp] += cI_sq;
-//                    tpdm3[rr * no5_ + qq * no4_ + pp * no3_ + qq * no2_ + rr * no_ + pp] -= cI_sq;
-//                    tpdm3[qq * no5_ + rr * no4_ + pp * no3_ + rr * no2_ + qq * no_ + pp] -= cI_sq;
-//                    tpdm3[qq * no5_ + rr * no4_ + pp * no3_ + qq * no2_ + rr * no_ + pp] += cI_sq;
-//                }
-//            }
-//        }
-//
-//        for (size_t p = 0; p < nb; ++p) {
-//            auto pp = bocc[p];
-//            for (size_t q = p + 1; q < nb; ++q) {
-//                auto qq = bocc[q];
-//                for (size_t r = q + 1; r < nb; ++r) {
-//                    auto rr = bocc[r];
-//
-//                    tpdm3[pp * no5_ + qq * no4_ + rr * no3_ + pp * no2_ + qq * no_ + rr] += cI_sq;
-//                    tpdm3[pp * no5_ + qq * no4_ + rr * no3_ + pp * no2_ + rr * no_ + qq] -= cI_sq;
-//                    tpdm3[pp * no5_ + qq * no4_ + rr * no3_ + rr * no2_ + pp * no_ + qq] += cI_sq;
-//                    tpdm3[pp * no5_ + qq * no4_ + rr * no3_ + rr * no2_ + qq * no_ + pp] -= cI_sq;
-//                    tpdm3[pp * no5_ + qq * no4_ + rr * no3_ + qq * no2_ + rr * no_ + pp] += cI_sq;
-//                    tpdm3[pp * no5_ + qq * no4_ + rr * no3_ + qq * no2_ + pp * no_ + rr] -= cI_sq;
-//
-//                    tpdm3[pp * no5_ + rr * no4_ + qq * no3_ + pp * no2_ + qq * no_ + rr] -= cI_sq;
-//                    tpdm3[pp * no5_ + rr * no4_ + qq * no3_ + pp * no2_ + rr * no_ + qq] += cI_sq;
-//                    tpdm3[pp * no5_ + rr * no4_ + qq * no3_ + rr * no2_ + pp * no_ + qq] -= cI_sq;
-//                    tpdm3[pp * no5_ + rr * no4_ + qq * no3_ + rr * no2_ + qq * no_ + pp] += cI_sq;
-//                    tpdm3[pp * no5_ + rr * no4_ + qq * no3_ + qq * no2_ + rr * no_ + pp] -= cI_sq;
-//                    tpdm3[pp * no5_ + rr * no4_ + qq * no3_ + qq * no2_ + pp * no_ + rr] += cI_sq;
-//
-//                    tpdm3[rr * no5_ + pp * no4_ + qq * no3_ + pp * no2_ + qq * no_ + rr] += cI_sq;
-//                    tpdm3[rr * no5_ + pp * no4_ + qq * no3_ + pp * no2_ + rr * no_ + qq] -= cI_sq;
-//                    tpdm3[rr * no5_ + pp * no4_ + qq * no3_ + rr * no2_ + pp * no_ + qq] += cI_sq;
-//                    tpdm3[rr * no5_ + pp * no4_ + qq * no3_ + rr * no2_ + qq * no_ + pp] -= cI_sq;
-//                    tpdm3[rr * no5_ + pp * no4_ + qq * no3_ + qq * no2_ + rr * no_ + pp] += cI_sq;
-//                    tpdm3[rr * no5_ + pp * no4_ + qq * no3_ + qq * no2_ + pp * no_ + rr] -= cI_sq;
-//
-//                    tpdm3[rr * no5_ + qq * no4_ + pp * no3_ + pp * no2_ + qq * no_ + rr] -= cI_sq;
-//                    tpdm3[rr * no5_ + qq * no4_ + pp * no3_ + pp * no2_ + rr * no_ + qq] += cI_sq;
-//                    tpdm3[rr * no5_ + qq * no4_ + pp * no3_ + rr * no2_ + pp * no_ + qq] -= cI_sq;
-//                    tpdm3[rr * no5_ + qq * no4_ + pp * no3_ + rr * no2_ + qq * no_ + pp] += cI_sq;
-//                    tpdm3[rr * no5_ + qq * no4_ + pp * no3_ + qq * no2_ + rr * no_ + pp] -= cI_sq;
-//                    tpdm3[rr * no5_ + qq * no4_ + pp * no3_ + qq * no2_ + pp * no_ + rr] += cI_sq;
-//
-//                    tpdm3[qq * no5_ + rr * no4_ + pp * no3_ + pp * no2_ + qq * no_ + rr] += cI_sq;
-//                    tpdm3[qq * no5_ + rr * no4_ + pp * no3_ + pp * no2_ + rr * no_ + qq] -= cI_sq;
-//                    tpdm3[qq * no5_ + rr * no4_ + pp * no3_ + rr * no2_ + pp * no_ + qq] += cI_sq;
-//                    tpdm3[qq * no5_ + rr * no4_ + pp * no3_ + rr * no2_ + qq * no_ + pp] -= cI_sq;
-//                    tpdm3[qq * no5_ + rr * no4_ + pp * no3_ + qq * no2_ + rr * no_ + pp] += cI_sq;
-//                    tpdm3[qq * no5_ + rr * no4_ + pp * no3_ + qq * no2_ + pp * no_ + rr] -= cI_sq;
-//
-//                    tpdm3[qq * no5_ + pp * no4_ + rr * no3_ + pp * no2_ + qq * no_ + rr] -= cI_sq;
-//                    tpdm3[qq * no5_ + pp * no4_ + rr * no3_ + pp * no2_ + rr * no_ + qq] += cI_sq;
-//                    tpdm3[qq * no5_ + pp * no4_ + rr * no3_ + rr * no2_ + pp * no_ + qq] -= cI_sq;
-//                    tpdm3[qq * no5_ + pp * no4_ + rr * no3_ + rr * no2_ + qq * no_ + pp] += cI_sq;
-//                    tpdm3[qq * no5_ + pp * no4_ + rr * no3_ + qq * no2_ + rr * no_ + pp] -= cI_sq;
-//                    tpdm3[qq * no5_ + pp * no4_ + rr * no3_ + qq * no2_ + pp * no_ + rr] += cI_sq;
-//                }
-//            }
-//        }
-//    }
-//
-//    // Build the off-diagonal part
-//
-//    // aaa aaa
-//    for (const auto& coupled_dets : op->aaa_list_) {
-//        auto coupled_dets_size = coupled_dets.size();
-//
-//        for (size_t a = 0; a < coupled_dets_size; ++a) {
-//            const auto [J, _p, q, r] = coupled_dets[a];
-//            auto p = std::abs(_p) - 1;
-//            auto sign_pqr = _p < 0;
-//
-//            auto vJ1 = evecs_->get(J, root1_);
-//            auto vJ2 = evecs_->get(J, root2_);
-//
-//            for (size_t b = a + 1; b < coupled_dets_size; ++b) {
-//                const auto [I, _s, t, u] = coupled_dets[b];
-//                auto s = std::abs(_s) - 1;
-//                auto sign = ((_s < 0) == sign_pqr) ? 1 : -1;
-//
-//                auto value = vJ1 * evecs_->get(I, root2_) * sign;
-//
-//                tpdm3[p * no5_ + q * no4_ + r * no3_ + s * no2_ + t * no_ + u] += value;
-//                tpdm3[p * no5_ + q * no4_ + r * no3_ + s * no2_ + u * no_ + t] -= value;
-//                tpdm3[p * no5_ + q * no4_ + r * no3_ + u * no2_ + t * no_ + s] -= value;
-//                tpdm3[p * no5_ + q * no4_ + r * no3_ + u * no2_ + s * no_ + t] += value;
-//                tpdm3[p * no5_ + q * no4_ + r * no3_ + t * no2_ + s * no_ + u] -= value;
-//                tpdm3[p * no5_ + q * no4_ + r * no3_ + t * no2_ + u * no_ + s] += value;
-//
-//                tpdm3[p * no5_ + r * no4_ + q * no3_ + s * no2_ + t * no_ + u] -= value;
-//                tpdm3[p * no5_ + r * no4_ + q * no3_ + s * no2_ + u * no_ + t] += value;
-//                tpdm3[p * no5_ + r * no4_ + q * no3_ + u * no2_ + t * no_ + s] += value;
-//                tpdm3[p * no5_ + r * no4_ + q * no3_ + u * no2_ + s * no_ + t] -= value;
-//                tpdm3[p * no5_ + r * no4_ + q * no3_ + t * no2_ + s * no_ + u] += value;
-//                tpdm3[p * no5_ + r * no4_ + q * no3_ + t * no2_ + u * no_ + s] -= value;
-//
-//                tpdm3[q * no5_ + p * no4_ + r * no3_ + s * no2_ + t * no_ + u] -= value;
-//                tpdm3[q * no5_ + p * no4_ + r * no3_ + s * no2_ + u * no_ + t] += value;
-//                tpdm3[q * no5_ + p * no4_ + r * no3_ + u * no2_ + t * no_ + s] += value;
-//                tpdm3[q * no5_ + p * no4_ + r * no3_ + u * no2_ + s * no_ + t] -= value;
-//                tpdm3[q * no5_ + p * no4_ + r * no3_ + t * no2_ + s * no_ + u] += value;
-//                tpdm3[q * no5_ + p * no4_ + r * no3_ + t * no2_ + u * no_ + s] -= value;
-//
-//                tpdm3[q * no5_ + r * no4_ + p * no3_ + s * no2_ + t * no_ + u] += value;
-//                tpdm3[q * no5_ + r * no4_ + p * no3_ + s * no2_ + u * no_ + t] -= value;
-//                tpdm3[q * no5_ + r * no4_ + p * no3_ + u * no2_ + t * no_ + s] -= value;
-//                tpdm3[q * no5_ + r * no4_ + p * no3_ + u * no2_ + s * no_ + t] += value;
-//                tpdm3[q * no5_ + r * no4_ + p * no3_ + t * no2_ + s * no_ + u] -= value;
-//                tpdm3[q * no5_ + r * no4_ + p * no3_ + t * no2_ + u * no_ + s] += value;
-//
-//                tpdm3[r * no5_ + p * no4_ + q * no3_ + s * no2_ + t * no_ + u] += value;
-//                tpdm3[r * no5_ + p * no4_ + q * no3_ + s * no2_ + u * no_ + t] -= value;
-//                tpdm3[r * no5_ + p * no4_ + q * no3_ + u * no2_ + t * no_ + s] -= value;
-//                tpdm3[r * no5_ + p * no4_ + q * no3_ + u * no2_ + s * no_ + t] += value;
-//                tpdm3[r * no5_ + p * no4_ + q * no3_ + t * no2_ + s * no_ + u] -= value;
-//                tpdm3[r * no5_ + p * no4_ + q * no3_ + t * no2_ + u * no_ + s] += value;
-//
-//                tpdm3[r * no5_ + q * no4_ + p * no3_ + s * no2_ + t * no_ + u] -= value;
-//                tpdm3[r * no5_ + q * no4_ + p * no3_ + s * no2_ + u * no_ + t] += value;
-//                tpdm3[r * no5_ + q * no4_ + p * no3_ + u * no2_ + t * no_ + s] += value;
-//                tpdm3[r * no5_ + q * no4_ + p * no3_ + u * no2_ + s * no_ + t] -= value;
-//                tpdm3[r * no5_ + q * no4_ + p * no3_ + t * no2_ + s * no_ + u] += value;
-//                tpdm3[r * no5_ + q * no4_ + p * no3_ + t * no2_ + u * no_ + s] -= value;
-//
-//                value = evecs_->get(I, root1_) * vJ2 * sign;
-//
-//                tpdm3[s * no5_ + t * no4_ + u * no3_ + p * no2_ + q * no_ + r] += value;
-//                tpdm3[s * no5_ + u * no4_ + t * no3_ + p * no2_ + q * no_ + r] -= value;
-//                tpdm3[u * no5_ + t * no4_ + s * no3_ + p * no2_ + q * no_ + r] -= value;
-//                tpdm3[u * no5_ + s * no4_ + t * no3_ + p * no2_ + q * no_ + r] += value;
-//                tpdm3[t * no5_ + s * no4_ + u * no3_ + p * no2_ + q * no_ + r] -= value;
-//                tpdm3[t * no5_ + u * no4_ + s * no3_ + p * no2_ + q * no_ + r] += value;
-//
-//                tpdm3[s * no5_ + t * no4_ + u * no3_ + p * no2_ + r * no_ + q] -= value;
-//                tpdm3[s * no5_ + u * no4_ + t * no3_ + p * no2_ + r * no_ + q] += value;
-//                tpdm3[u * no5_ + t * no4_ + s * no3_ + p * no2_ + r * no_ + q] += value;
-//                tpdm3[u * no5_ + s * no4_ + t * no3_ + p * no2_ + r * no_ + q] -= value;
-//                tpdm3[t * no5_ + s * no4_ + u * no3_ + p * no2_ + r * no_ + q] += value;
-//                tpdm3[t * no5_ + u * no4_ + s * no3_ + p * no2_ + r * no_ + q] -= value;
-//
-//                tpdm3[s * no5_ + t * no4_ + u * no3_ + q * no2_ + p * no_ + r] -= value;
-//                tpdm3[s * no5_ + u * no4_ + t * no3_ + q * no2_ + p * no_ + r] += value;
-//                tpdm3[u * no5_ + t * no4_ + s * no3_ + q * no2_ + p * no_ + r] += value;
-//                tpdm3[u * no5_ + s * no4_ + t * no3_ + q * no2_ + p * no_ + r] -= value;
-//                tpdm3[t * no5_ + s * no4_ + u * no3_ + q * no2_ + p * no_ + r] += value;
-//                tpdm3[t * no5_ + u * no4_ + s * no3_ + q * no2_ + p * no_ + r] -= value;
-//
-//                tpdm3[s * no5_ + t * no4_ + u * no3_ + q * no2_ + r * no_ + p] += value;
-//                tpdm3[s * no5_ + u * no4_ + t * no3_ + q * no2_ + r * no_ + p] -= value;
-//                tpdm3[u * no5_ + t * no4_ + s * no3_ + q * no2_ + r * no_ + p] -= value;
-//                tpdm3[u * no5_ + s * no4_ + t * no3_ + q * no2_ + r * no_ + p] += value;
-//                tpdm3[t * no5_ + s * no4_ + u * no3_ + q * no2_ + r * no_ + p] -= value;
-//                tpdm3[t * no5_ + u * no4_ + s * no3_ + q * no2_ + r * no_ + p] += value;
-//
-//                tpdm3[s * no5_ + t * no4_ + u * no3_ + r * no2_ + p * no_ + q] += value;
-//                tpdm3[s * no5_ + u * no4_ + t * no3_ + r * no2_ + p * no_ + q] -= value;
-//                tpdm3[u * no5_ + t * no4_ + s * no3_ + r * no2_ + p * no_ + q] -= value;
-//                tpdm3[u * no5_ + s * no4_ + t * no3_ + r * no2_ + p * no_ + q] += value;
-//                tpdm3[t * no5_ + s * no4_ + u * no3_ + r * no2_ + p * no_ + q] -= value;
-//                tpdm3[t * no5_ + u * no4_ + s * no3_ + r * no2_ + p * no_ + q] += value;
-//
-//                tpdm3[s * no5_ + t * no4_ + u * no3_ + r * no2_ + q * no_ + p] -= value;
-//                tpdm3[s * no5_ + u * no4_ + t * no3_ + r * no2_ + q * no_ + p] += value;
-//                tpdm3[u * no5_ + t * no4_ + s * no3_ + r * no2_ + q * no_ + p] += value;
-//                tpdm3[u * no5_ + s * no4_ + t * no3_ + r * no2_ + q * no_ + p] -= value;
-//                tpdm3[t * no5_ + s * no4_ + u * no3_ + r * no2_ + q * no_ + p] += value;
-//                tpdm3[t * no5_ + u * no4_ + s * no3_ + r * no2_ + q * no_ + p] -= value;
-//            }
-//        }
-//    }
-//
-//    // aab aab
-//    for (const auto& coupled_dets : op->aab_list_) {
-//        auto coupled_dets_size = coupled_dets.size();
-//
-//        for (size_t a = 0; a < coupled_dets_size; ++a) {
-//            const auto [J, _p, q, r] = coupled_dets[a];
-//            auto p = std::abs(_p) - 1;
-//            auto sign_pqr = _p < 0;
-//
-//            auto vJ1 = evecs_->get(J, root1_);
-//            auto vJ2 = evecs_->get(J, root2_);
-//
-//            for (size_t b = a + 1; b < coupled_dets_size; ++b) {
-//                const auto [I, _s, t, u] = coupled_dets[b];
-//                auto s = std::abs(_s) - 1;
-//                auto sign = ((_s < 0) == sign_pqr) ? 1 : -1;
-//
-//                auto value = vJ1 * evecs_->get(I, root2_) * sign;
-//                tpdm3[p * no5_ + q * no4_ + r * no3_ + s * no2_ + t * no_ + u] += value;
-//                tpdm3[p * no5_ + q * no4_ + r * no3_ + t * no2_ + s * no_ + u] -= value;
-//                tpdm3[q * no5_ + p * no4_ + r * no3_ + s * no2_ + t * no_ + u] -= value;
-//                tpdm3[q * no5_ + p * no4_ + r * no3_ + t * no2_ + s * no_ + u] += value;
-//
-//                tpdm3[r * no5_ + q * no4_ + p * no3_ + u * no2_ + t * no_ + s] += value;
-//                tpdm3[r * no5_ + q * no4_ + p * no3_ + u * no2_ + s * no_ + t] -= value;
-//                tpdm3[r * no5_ + p * no4_ + q * no3_ + u * no2_ + t * no_ + s] -= value;
-//                tpdm3[r * no5_ + p * no4_ + q * no3_ + u * no2_ + s * no_ + t] += value;
-//
-//                tpdm3[p * no5_ + r * no4_ + q * no3_ + s * no2_ + u * no_ + t] += value;
-//                tpdm3[p * no5_ + r * no4_ + q * no3_ + t * no2_ + u * no_ + s] -= value;
-//                tpdm3[q * no5_ + r * no4_ + p * no3_ + s * no2_ + u * no_ + t] -= value;
-//                tpdm3[q * no5_ + r * no4_ + p * no3_ + t * no2_ + u * no_ + s] += value;
-//
-//                value = evecs_->get(I, root1_) * vJ2 * sign;
-//                tpdm3[s * no5_ + t * no4_ + u * no3_ + p * no2_ + q * no_ + r] += value;
-//                tpdm3[t * no5_ + s * no4_ + u * no3_ + p * no2_ + q * no_ + r] -= value;
-//                tpdm3[s * no5_ + t * no4_ + u * no3_ + q * no2_ + p * no_ + r] -= value;
-//                tpdm3[t * no5_ + s * no4_ + u * no3_ + q * no2_ + p * no_ + r] += value;
-//
-//                tpdm3[u * no5_ + t * no4_ + s * no3_ + r * no2_ + q * no_ + p] += value;
-//                tpdm3[u * no5_ + s * no4_ + t * no3_ + r * no2_ + q * no_ + p] -= value;
-//                tpdm3[u * no5_ + t * no4_ + s * no3_ + r * no2_ + p * no_ + q] -= value;
-//                tpdm3[u * no5_ + s * no4_ + t * no3_ + r * no2_ + p * no_ + q] += value;
-//
-//                tpdm3[s * no5_ + u * no4_ + t * no3_ + p * no2_ + r * no_ + q] += value;
-//                tpdm3[t * no5_ + u * no4_ + s * no3_ + p * no2_ + r * no_ + q] -= value;
-//                tpdm3[s * no5_ + u * no4_ + t * no3_ + q * no2_ + r * no_ + p] -= value;
-//                tpdm3[t * no5_ + u * no4_ + s * no3_ + q * no2_ + r * no_ + p] += value;
-//            }
-//        }
-//    }
-//
-//    // abb abb
-//    for (const auto& coupled_dets : op->abb_list_) {
-//        auto coupled_dets_size = coupled_dets.size();
-//
-//        for (size_t a = 0; a < coupled_dets_size; ++a) {
-//            const auto [J, _p, q, r] = coupled_dets[a];
-//            auto p = std::abs(_p) - 1;
-//            auto sign_pqr = _p < 0;
-//
-//            auto vJ1 = evecs_->get(J, root1_);
-//            auto vJ2 = evecs_->get(J, root2_);
-//
-//            for (size_t b = a + 1; b < coupled_dets_size; ++b) {
-//                const auto [I, _s, t, u] = coupled_dets[b];
-//                auto s = std::abs(_s) - 1;
-//                auto sign = ((_s < 0) == sign_pqr) ? 1 : -1;
-//
-//                auto value = vJ1 * evecs_->get(I, root2_) * sign;
-//                tpdm3[p * no5_ + q * no4_ + r * no3_ + s * no2_ + t * no_ + u] += value;
-//                tpdm3[p * no5_ + q * no4_ + r * no3_ + s * no2_ + u * no_ + t] -= value;
-//                tpdm3[p * no5_ + r * no4_ + q * no3_ + s * no2_ + t * no_ + u] -= value;
-//                tpdm3[p * no5_ + r * no4_ + q * no3_ + s * no2_ + u * no_ + t] += value;
-//
-//                tpdm3[q * no5_ + p * no4_ + r * no3_ + t * no2_ + s * no_ + u] += value;
-//                tpdm3[q * no5_ + p * no4_ + r * no3_ + u * no2_ + s * no_ + t] -= value;
-//                tpdm3[r * no5_ + p * no4_ + q * no3_ + t * no2_ + s * no_ + u] -= value;
-//                tpdm3[r * no5_ + p * no4_ + q * no3_ + u * no2_ + s * no_ + t] += value;
-//
-//                tpdm3[r * no5_ + q * no4_ + p * no3_ + u * no2_ + t * no_ + s] += value;
-//                tpdm3[r * no5_ + q * no4_ + p * no3_ + t * no2_ + u * no_ + s] -= value;
-//                tpdm3[q * no5_ + r * no4_ + p * no3_ + u * no2_ + t * no_ + s] -= value;
-//                tpdm3[q * no5_ + r * no4_ + p * no3_ + t * no2_ + u * no_ + s] += value;
-//
-//                value = evecs_->get(I, root1_) * vJ2 * sign;
-//                tpdm3[s * no5_ + t * no4_ + u * no3_ + p * no2_ + q * no_ + r] += value;
-//                tpdm3[s * no5_ + u * no4_ + t * no3_ + p * no2_ + q * no_ + r] -= value;
-//                tpdm3[s * no5_ + t * no4_ + u * no3_ + p * no2_ + r * no_ + q] -= value;
-//                tpdm3[s * no5_ + u * no4_ + t * no3_ + p * no2_ + r * no_ + q] += value;
-//
-//                tpdm3[t * no5_ + s * no4_ + u * no3_ + q * no2_ + p * no_ + r] += value;
-//                tpdm3[u * no5_ + s * no4_ + t * no3_ + q * no2_ + p * no_ + r] -= value;
-//                tpdm3[t * no5_ + s * no4_ + u * no3_ + r * no2_ + p * no_ + q] -= value;
-//                tpdm3[u * no5_ + s * no4_ + t * no3_ + r * no2_ + p * no_ + q] += value;
-//
-//                tpdm3[u * no5_ + t * no4_ + s * no3_ + r * no2_ + q * no_ + p] += value;
-//                tpdm3[t * no5_ + u * no4_ + s * no3_ + r * no2_ + q * no_ + p] -= value;
-//                tpdm3[u * no5_ + t * no4_ + s * no3_ + q * no2_ + r * no_ + p] -= value;
-//                tpdm3[t * no5_ + u * no4_ + s * no3_ + q * no2_ + r * no_ + p] += value;
-//            }
-//        }
-//    }
-//
-//    // bbb bbb
-//    for (const auto& coupled_dets : op->bbb_list_) {
-//        auto coupled_dets_size = coupled_dets.size();
-//
-//        for (size_t a = 0; a < coupled_dets_size; ++a) {
-//            const auto [J, _p, q, r] = coupled_dets[a];
-//            auto p = std::abs(_p) - 1;
-//            auto sign_pqr = _p < 0;
-//
-//            auto vJ1 = evecs_->get(J, root1_);
-//            auto vJ2 = evecs_->get(J, root2_);
-//
-//            for (size_t b = a + 1; b < coupled_dets_size; ++b) {
-//                const auto [I, _s, t, u] = coupled_dets[b];
-//                auto s = std::abs(_s) - 1;
-//                auto sign = ((_s < 0) == sign_pqr) ? 1 : -1;
-//
-//                auto value = vJ1 * evecs_->get(I, root2_) * sign;
-//
-//                tpdm3[p * no5_ + q * no4_ + r * no3_ + s * no2_ + t * no_ + u] += value;
-//                tpdm3[p * no5_ + q * no4_ + r * no3_ + s * no2_ + u * no_ + t] -= value;
-//                tpdm3[p * no5_ + q * no4_ + r * no3_ + u * no2_ + t * no_ + s] -= value;
-//                tpdm3[p * no5_ + q * no4_ + r * no3_ + u * no2_ + s * no_ + t] += value;
-//                tpdm3[p * no5_ + q * no4_ + r * no3_ + t * no2_ + s * no_ + u] -= value;
-//                tpdm3[p * no5_ + q * no4_ + r * no3_ + t * no2_ + u * no_ + s] += value;
-//
-//                tpdm3[p * no5_ + r * no4_ + q * no3_ + s * no2_ + t * no_ + u] -= value;
-//                tpdm3[p * no5_ + r * no4_ + q * no3_ + s * no2_ + u * no_ + t] += value;
-//                tpdm3[p * no5_ + r * no4_ + q * no3_ + u * no2_ + t * no_ + s] += value;
-//                tpdm3[p * no5_ + r * no4_ + q * no3_ + u * no2_ + s * no_ + t] -= value;
-//                tpdm3[p * no5_ + r * no4_ + q * no3_ + t * no2_ + s * no_ + u] += value;
-//                tpdm3[p * no5_ + r * no4_ + q * no3_ + t * no2_ + u * no_ + s] -= value;
-//
-//                tpdm3[q * no5_ + p * no4_ + r * no3_ + s * no2_ + t * no_ + u] -= value;
-//                tpdm3[q * no5_ + p * no4_ + r * no3_ + s * no2_ + u * no_ + t] += value;
-//                tpdm3[q * no5_ + p * no4_ + r * no3_ + u * no2_ + t * no_ + s] += value;
-//                tpdm3[q * no5_ + p * no4_ + r * no3_ + u * no2_ + s * no_ + t] -= value;
-//                tpdm3[q * no5_ + p * no4_ + r * no3_ + t * no2_ + s * no_ + u] += value;
-//                tpdm3[q * no5_ + p * no4_ + r * no3_ + t * no2_ + u * no_ + s] -= value;
-//
-//                tpdm3[q * no5_ + r * no4_ + p * no3_ + s * no2_ + t * no_ + u] += value;
-//                tpdm3[q * no5_ + r * no4_ + p * no3_ + s * no2_ + u * no_ + t] -= value;
-//                tpdm3[q * no5_ + r * no4_ + p * no3_ + u * no2_ + t * no_ + s] -= value;
-//                tpdm3[q * no5_ + r * no4_ + p * no3_ + u * no2_ + s * no_ + t] += value;
-//                tpdm3[q * no5_ + r * no4_ + p * no3_ + t * no2_ + s * no_ + u] -= value;
-//                tpdm3[q * no5_ + r * no4_ + p * no3_ + t * no2_ + u * no_ + s] += value;
-//
-//                tpdm3[r * no5_ + p * no4_ + q * no3_ + s * no2_ + t * no_ + u] += value;
-//                tpdm3[r * no5_ + p * no4_ + q * no3_ + s * no2_ + u * no_ + t] -= value;
-//                tpdm3[r * no5_ + p * no4_ + q * no3_ + u * no2_ + t * no_ + s] -= value;
-//                tpdm3[r * no5_ + p * no4_ + q * no3_ + u * no2_ + s * no_ + t] += value;
-//                tpdm3[r * no5_ + p * no4_ + q * no3_ + t * no2_ + s * no_ + u] -= value;
-//                tpdm3[r * no5_ + p * no4_ + q * no3_ + t * no2_ + u * no_ + s] += value;
-//
-//                tpdm3[r * no5_ + q * no4_ + p * no3_ + s * no2_ + t * no_ + u] -= value;
-//                tpdm3[r * no5_ + q * no4_ + p * no3_ + s * no2_ + u * no_ + t] += value;
-//                tpdm3[r * no5_ + q * no4_ + p * no3_ + u * no2_ + t * no_ + s] += value;
-//                tpdm3[r * no5_ + q * no4_ + p * no3_ + u * no2_ + s * no_ + t] -= value;
-//                tpdm3[r * no5_ + q * no4_ + p * no3_ + t * no2_ + s * no_ + u] += value;
-//                tpdm3[r * no5_ + q * no4_ + p * no3_ + t * no2_ + u * no_ + s] -= value;
-//
-//                value = evecs_->get(I, root1_) * vJ2 * sign;
-//
-//                tpdm3[s * no5_ + t * no4_ + u * no3_ + p * no2_ + q * no_ + r] += value;
-//                tpdm3[s * no5_ + u * no4_ + t * no3_ + p * no2_ + q * no_ + r] -= value;
-//                tpdm3[u * no5_ + t * no4_ + s * no3_ + p * no2_ + q * no_ + r] -= value;
-//                tpdm3[u * no5_ + s * no4_ + t * no3_ + p * no2_ + q * no_ + r] += value;
-//                tpdm3[t * no5_ + s * no4_ + u * no3_ + p * no2_ + q * no_ + r] -= value;
-//                tpdm3[t * no5_ + u * no4_ + s * no3_ + p * no2_ + q * no_ + r] += value;
-//
-//                tpdm3[s * no5_ + t * no4_ + u * no3_ + p * no2_ + r * no_ + q] -= value;
-//                tpdm3[s * no5_ + u * no4_ + t * no3_ + p * no2_ + r * no_ + q] += value;
-//                tpdm3[u * no5_ + t * no4_ + s * no3_ + p * no2_ + r * no_ + q] += value;
-//                tpdm3[u * no5_ + s * no4_ + t * no3_ + p * no2_ + r * no_ + q] -= value;
-//                tpdm3[t * no5_ + s * no4_ + u * no3_ + p * no2_ + r * no_ + q] += value;
-//                tpdm3[t * no5_ + u * no4_ + s * no3_ + p * no2_ + r * no_ + q] -= value;
-//
-//                tpdm3[s * no5_ + t * no4_ + u * no3_ + q * no2_ + p * no_ + r] -= value;
-//                tpdm3[s * no5_ + u * no4_ + t * no3_ + q * no2_ + p * no_ + r] += value;
-//                tpdm3[u * no5_ + t * no4_ + s * no3_ + q * no2_ + p * no_ + r] += value;
-//                tpdm3[u * no5_ + s * no4_ + t * no3_ + q * no2_ + p * no_ + r] -= value;
-//                tpdm3[t * no5_ + s * no4_ + u * no3_ + q * no2_ + p * no_ + r] += value;
-//                tpdm3[t * no5_ + u * no4_ + s * no3_ + q * no2_ + p * no_ + r] -= value;
-//
-//                tpdm3[s * no5_ + t * no4_ + u * no3_ + q * no2_ + r * no_ + p] += value;
-//                tpdm3[s * no5_ + u * no4_ + t * no3_ + q * no2_ + r * no_ + p] -= value;
-//                tpdm3[u * no5_ + t * no4_ + s * no3_ + q * no2_ + r * no_ + p] -= value;
-//                tpdm3[u * no5_ + s * no4_ + t * no3_ + q * no2_ + r * no_ + p] += value;
-//                tpdm3[t * no5_ + s * no4_ + u * no3_ + q * no2_ + r * no_ + p] -= value;
-//                tpdm3[t * no5_ + u * no4_ + s * no3_ + q * no2_ + r * no_ + p] += value;
-//
-//                tpdm3[s * no5_ + t * no4_ + u * no3_ + r * no2_ + p * no_ + q] += value;
-//                tpdm3[s * no5_ + u * no4_ + t * no3_ + r * no2_ + p * no_ + q] -= value;
-//                tpdm3[u * no5_ + t * no4_ + s * no3_ + r * no2_ + p * no_ + q] -= value;
-//                tpdm3[u * no5_ + s * no4_ + t * no3_ + r * no2_ + p * no_ + q] += value;
-//                tpdm3[t * no5_ + s * no4_ + u * no3_ + r * no2_ + p * no_ + q] -= value;
-//                tpdm3[t * no5_ + u * no4_ + s * no3_ + r * no2_ + p * no_ + q] += value;
-//
-//                tpdm3[s * no5_ + t * no4_ + u * no3_ + r * no2_ + q * no_ + p] -= value;
-//                tpdm3[s * no5_ + u * no4_ + t * no3_ + r * no2_ + q * no_ + p] += value;
-//                tpdm3[u * no5_ + t * no4_ + s * no3_ + r * no2_ + q * no_ + p] += value;
-//                tpdm3[u * no5_ + s * no4_ + t * no3_ + r * no2_ + q * no_ + p] -= value;
-//                tpdm3[t * no5_ + s * no4_ + u * no3_ + r * no2_ + q * no_ + p] += value;
-//                tpdm3[t * no5_ + u * no4_ + s * no3_ + r * no2_ + q * no_ + p] -= value;
-//            }
-//        }
-//    }
+                    tpdm3[pp * no5_ + qq * no4_ + rr * no3_ + pp * no2_ + qq * no_ + rr] += cI_sq;
+                    tpdm3[pp * no5_ + qq * no4_ + rr * no3_ + pp * no2_ + rr * no_ + qq] -= cI_sq;
+                    tpdm3[pp * no5_ + qq * no4_ + rr * no3_ + rr * no2_ + pp * no_ + qq] += cI_sq;
+                    tpdm3[pp * no5_ + qq * no4_ + rr * no3_ + rr * no2_ + qq * no_ + pp] -= cI_sq;
+                    tpdm3[pp * no5_ + qq * no4_ + rr * no3_ + qq * no2_ + rr * no_ + pp] += cI_sq;
+                    tpdm3[pp * no5_ + qq * no4_ + rr * no3_ + qq * no2_ + pp * no_ + rr] -= cI_sq;
+
+                    tpdm3[pp * no5_ + rr * no4_ + qq * no3_ + pp * no2_ + qq * no_ + rr] -= cI_sq;
+                    tpdm3[pp * no5_ + rr * no4_ + qq * no3_ + pp * no2_ + rr * no_ + qq] += cI_sq;
+                    tpdm3[pp * no5_ + rr * no4_ + qq * no3_ + rr * no2_ + pp * no_ + qq] -= cI_sq;
+                    tpdm3[pp * no5_ + rr * no4_ + qq * no3_ + rr * no2_ + qq * no_ + pp] += cI_sq;
+                    tpdm3[pp * no5_ + rr * no4_ + qq * no3_ + qq * no2_ + rr * no_ + pp] -= cI_sq;
+                    tpdm3[pp * no5_ + rr * no4_ + qq * no3_ + qq * no2_ + pp * no_ + rr] += cI_sq;
+
+                    tpdm3[rr * no5_ + pp * no4_ + qq * no3_ + pp * no2_ + qq * no_ + rr] += cI_sq;
+                    tpdm3[rr * no5_ + pp * no4_ + qq * no3_ + pp * no2_ + rr * no_ + qq] -= cI_sq;
+                    tpdm3[rr * no5_ + pp * no4_ + qq * no3_ + rr * no2_ + pp * no_ + qq] += cI_sq;
+                    tpdm3[rr * no5_ + pp * no4_ + qq * no3_ + rr * no2_ + qq * no_ + pp] -= cI_sq;
+                    tpdm3[rr * no5_ + pp * no4_ + qq * no3_ + qq * no2_ + rr * no_ + pp] += cI_sq;
+                    tpdm3[rr * no5_ + pp * no4_ + qq * no3_ + qq * no2_ + pp * no_ + rr] -= cI_sq;
+
+                    tpdm3[rr * no5_ + qq * no4_ + pp * no3_ + pp * no2_ + qq * no_ + rr] -= cI_sq;
+                    tpdm3[rr * no5_ + qq * no4_ + pp * no3_ + pp * no2_ + rr * no_ + qq] += cI_sq;
+                    tpdm3[rr * no5_ + qq * no4_ + pp * no3_ + rr * no2_ + pp * no_ + qq] -= cI_sq;
+                    tpdm3[rr * no5_ + qq * no4_ + pp * no3_ + rr * no2_ + qq * no_ + pp] += cI_sq;
+                    tpdm3[rr * no5_ + qq * no4_ + pp * no3_ + qq * no2_ + rr * no_ + pp] -= cI_sq;
+                    tpdm3[rr * no5_ + qq * no4_ + pp * no3_ + qq * no2_ + pp * no_ + rr] += cI_sq;
+
+                    tpdm3[qq * no5_ + rr * no4_ + pp * no3_ + pp * no2_ + qq * no_ + rr] += cI_sq;
+                    tpdm3[qq * no5_ + rr * no4_ + pp * no3_ + pp * no2_ + rr * no_ + qq] -= cI_sq;
+                    tpdm3[qq * no5_ + rr * no4_ + pp * no3_ + rr * no2_ + pp * no_ + qq] += cI_sq;
+                    tpdm3[qq * no5_ + rr * no4_ + pp * no3_ + rr * no2_ + qq * no_ + pp] -= cI_sq;
+                    tpdm3[qq * no5_ + rr * no4_ + pp * no3_ + qq * no2_ + rr * no_ + pp] += cI_sq;
+                    tpdm3[qq * no5_ + rr * no4_ + pp * no3_ + qq * no2_ + pp * no_ + rr] -= cI_sq;
+
+                    tpdm3[qq * no5_ + pp * no4_ + rr * no3_ + pp * no2_ + qq * no_ + rr] -= cI_sq;
+                    tpdm3[qq * no5_ + pp * no4_ + rr * no3_ + pp * no2_ + rr * no_ + qq] += cI_sq;
+                    tpdm3[qq * no5_ + pp * no4_ + rr * no3_ + rr * no2_ + pp * no_ + qq] -= cI_sq;
+                    tpdm3[qq * no5_ + pp * no4_ + rr * no3_ + rr * no2_ + qq * no_ + pp] += cI_sq;
+                    tpdm3[qq * no5_ + pp * no4_ + rr * no3_ + qq * no2_ + rr * no_ + pp] -= cI_sq;
+                    tpdm3[qq * no5_ + pp * no4_ + rr * no3_ + qq * no2_ + pp * no_ + rr] += cI_sq;
+                }
+            }
+        }
+
+        for (size_t p = 0; p < na; ++p) {
+            auto pp = aocc[p];
+            for (size_t q = p + 1; q < na; ++q) {
+                auto qq = aocc[q];
+                for (size_t r = 0; r < nb; ++r) {
+                    auto rr = bocc[r];
+
+                    tpdm3[pp * no5_ + qq * no4_ + rr * no3_ + pp * no2_ + qq * no_ + rr] += cI_sq;
+                    tpdm3[pp * no5_ + qq * no4_ + rr * no3_ + qq * no2_ + pp * no_ + rr] -= cI_sq;
+                    tpdm3[qq * no5_ + pp * no4_ + rr * no3_ + pp * no2_ + qq * no_ + rr] -= cI_sq;
+                    tpdm3[qq * no5_ + pp * no4_ + rr * no3_ + qq * no2_ + pp * no_ + rr] += cI_sq;
+
+                    tpdm3[rr * no5_ + qq * no4_ + pp * no3_ + rr * no2_ + qq * no_ + pp] += cI_sq;
+                    tpdm3[rr * no5_ + qq * no4_ + pp * no3_ + rr * no2_ + pp * no_ + qq] -= cI_sq;
+                    tpdm3[rr * no5_ + pp * no4_ + qq * no3_ + rr * no2_ + qq * no_ + pp] -= cI_sq;
+                    tpdm3[rr * no5_ + pp * no4_ + qq * no3_ + rr * no2_ + pp * no_ + qq] += cI_sq;
+
+                    tpdm3[pp * no5_ + rr * no4_ + qq * no3_ + pp * no2_ + rr * no_ + qq] += cI_sq;
+                    tpdm3[pp * no5_ + rr * no4_ + qq * no3_ + qq * no2_ + rr * no_ + pp] -= cI_sq;
+                    tpdm3[qq * no5_ + rr * no4_ + pp * no3_ + pp * no2_ + rr * no_ + qq] -= cI_sq;
+                    tpdm3[qq * no5_ + rr * no4_ + pp * no3_ + qq * no2_ + rr * no_ + pp] += cI_sq;
+                }
+            }
+        }
+
+        for (size_t p = 0; p < na; ++p) {
+            auto pp = aocc[p];
+            for (size_t q = 0; q < nb; ++q) {
+                auto qq = bocc[q];
+                for (size_t r = q + 1; r < nb; ++r) {
+                    auto rr = bocc[r];
+
+                    tpdm3[pp * no5_ + qq * no4_ + rr * no3_ + pp * no2_ + qq * no_ + rr] += cI_sq;
+                    tpdm3[pp * no5_ + qq * no4_ + rr * no3_ + pp * no2_ + rr * no_ + qq] -= cI_sq;
+                    tpdm3[pp * no5_ + rr * no4_ + qq * no3_ + pp * no2_ + qq * no_ + rr] -= cI_sq;
+                    tpdm3[pp * no5_ + rr * no4_ + qq * no3_ + pp * no2_ + rr * no_ + qq] += cI_sq;
+
+                    tpdm3[qq * no5_ + pp * no4_ + rr * no3_ + qq * no2_ + pp * no_ + rr] += cI_sq;
+                    tpdm3[qq * no5_ + pp * no4_ + rr * no3_ + rr * no2_ + pp * no_ + qq] -= cI_sq;
+                    tpdm3[rr * no5_ + pp * no4_ + qq * no3_ + qq * no2_ + pp * no_ + rr] -= cI_sq;
+                    tpdm3[rr * no5_ + pp * no4_ + qq * no3_ + rr * no2_ + pp * no_ + qq] += cI_sq;
+
+                    tpdm3[rr * no5_ + qq * no4_ + pp * no3_ + rr * no2_ + qq * no_ + pp] += cI_sq;
+                    tpdm3[rr * no5_ + qq * no4_ + pp * no3_ + qq * no2_ + rr * no_ + pp] -= cI_sq;
+                    tpdm3[qq * no5_ + rr * no4_ + pp * no3_ + rr * no2_ + qq * no_ + pp] -= cI_sq;
+                    tpdm3[qq * no5_ + rr * no4_ + pp * no3_ + qq * no2_ + rr * no_ + pp] += cI_sq;
+                }
+            }
+        }
+
+        for (size_t p = 0; p < nb; ++p) {
+            auto pp = bocc[p];
+            for (size_t q = p + 1; q < nb; ++q) {
+                auto qq = bocc[q];
+                for (size_t r = q + 1; r < nb; ++r) {
+                    auto rr = bocc[r];
+
+                    tpdm3[pp * no5_ + qq * no4_ + rr * no3_ + pp * no2_ + qq * no_ + rr] += cI_sq;
+                    tpdm3[pp * no5_ + qq * no4_ + rr * no3_ + pp * no2_ + rr * no_ + qq] -= cI_sq;
+                    tpdm3[pp * no5_ + qq * no4_ + rr * no3_ + rr * no2_ + pp * no_ + qq] += cI_sq;
+                    tpdm3[pp * no5_ + qq * no4_ + rr * no3_ + rr * no2_ + qq * no_ + pp] -= cI_sq;
+                    tpdm3[pp * no5_ + qq * no4_ + rr * no3_ + qq * no2_ + rr * no_ + pp] += cI_sq;
+                    tpdm3[pp * no5_ + qq * no4_ + rr * no3_ + qq * no2_ + pp * no_ + rr] -= cI_sq;
+
+                    tpdm3[pp * no5_ + rr * no4_ + qq * no3_ + pp * no2_ + qq * no_ + rr] -= cI_sq;
+                    tpdm3[pp * no5_ + rr * no4_ + qq * no3_ + pp * no2_ + rr * no_ + qq] += cI_sq;
+                    tpdm3[pp * no5_ + rr * no4_ + qq * no3_ + rr * no2_ + pp * no_ + qq] -= cI_sq;
+                    tpdm3[pp * no5_ + rr * no4_ + qq * no3_ + rr * no2_ + qq * no_ + pp] += cI_sq;
+                    tpdm3[pp * no5_ + rr * no4_ + qq * no3_ + qq * no2_ + rr * no_ + pp] -= cI_sq;
+                    tpdm3[pp * no5_ + rr * no4_ + qq * no3_ + qq * no2_ + pp * no_ + rr] += cI_sq;
+
+                    tpdm3[rr * no5_ + pp * no4_ + qq * no3_ + pp * no2_ + qq * no_ + rr] += cI_sq;
+                    tpdm3[rr * no5_ + pp * no4_ + qq * no3_ + pp * no2_ + rr * no_ + qq] -= cI_sq;
+                    tpdm3[rr * no5_ + pp * no4_ + qq * no3_ + rr * no2_ + pp * no_ + qq] += cI_sq;
+                    tpdm3[rr * no5_ + pp * no4_ + qq * no3_ + rr * no2_ + qq * no_ + pp] -= cI_sq;
+                    tpdm3[rr * no5_ + pp * no4_ + qq * no3_ + qq * no2_ + rr * no_ + pp] += cI_sq;
+                    tpdm3[rr * no5_ + pp * no4_ + qq * no3_ + qq * no2_ + pp * no_ + rr] -= cI_sq;
+
+                    tpdm3[rr * no5_ + qq * no4_ + pp * no3_ + pp * no2_ + qq * no_ + rr] -= cI_sq;
+                    tpdm3[rr * no5_ + qq * no4_ + pp * no3_ + pp * no2_ + rr * no_ + qq] += cI_sq;
+                    tpdm3[rr * no5_ + qq * no4_ + pp * no3_ + rr * no2_ + pp * no_ + qq] -= cI_sq;
+                    tpdm3[rr * no5_ + qq * no4_ + pp * no3_ + rr * no2_ + qq * no_ + pp] += cI_sq;
+                    tpdm3[rr * no5_ + qq * no4_ + pp * no3_ + qq * no2_ + rr * no_ + pp] -= cI_sq;
+                    tpdm3[rr * no5_ + qq * no4_ + pp * no3_ + qq * no2_ + pp * no_ + rr] += cI_sq;
+
+                    tpdm3[qq * no5_ + rr * no4_ + pp * no3_ + pp * no2_ + qq * no_ + rr] += cI_sq;
+                    tpdm3[qq * no5_ + rr * no4_ + pp * no3_ + pp * no2_ + rr * no_ + qq] -= cI_sq;
+                    tpdm3[qq * no5_ + rr * no4_ + pp * no3_ + rr * no2_ + pp * no_ + qq] += cI_sq;
+                    tpdm3[qq * no5_ + rr * no4_ + pp * no3_ + rr * no2_ + qq * no_ + pp] -= cI_sq;
+                    tpdm3[qq * no5_ + rr * no4_ + pp * no3_ + qq * no2_ + rr * no_ + pp] += cI_sq;
+                    tpdm3[qq * no5_ + rr * no4_ + pp * no3_ + qq * no2_ + pp * no_ + rr] -= cI_sq;
+
+                    tpdm3[qq * no5_ + pp * no4_ + rr * no3_ + pp * no2_ + qq * no_ + rr] -= cI_sq;
+                    tpdm3[qq * no5_ + pp * no4_ + rr * no3_ + pp * no2_ + rr * no_ + qq] += cI_sq;
+                    tpdm3[qq * no5_ + pp * no4_ + rr * no3_ + rr * no2_ + pp * no_ + qq] -= cI_sq;
+                    tpdm3[qq * no5_ + pp * no4_ + rr * no3_ + rr * no2_ + qq * no_ + pp] += cI_sq;
+                    tpdm3[qq * no5_ + pp * no4_ + rr * no3_ + qq * no2_ + rr * no_ + pp] -= cI_sq;
+                    tpdm3[qq * no5_ + pp * no4_ + rr * no3_ + qq * no2_ + pp * no_ + rr] += cI_sq;
+                }
+            }
+        }
+    }
+
+    // Build the off-diagonal part
+
+    // aaa aaa
+    for (const auto& coupled_dets : op->aaa_list_) {
+        auto coupled_dets_size = coupled_dets.size();
+
+        for (size_t a = 0; a < coupled_dets_size; ++a) {
+            const auto [J, _p, q, r] = coupled_dets[a];
+            auto p = std::abs(_p) - 1;
+            auto sign_pqr = _p < 0;
+
+            auto vJ1 = evecs_->get(J, root1_);
+            auto vJ2 = evecs_->get(J, root2_);
+
+            for (size_t b = a + 1; b < coupled_dets_size; ++b) {
+                const auto [I, _s, t, u] = coupled_dets[b];
+                auto s = std::abs(_s) - 1;
+                auto sign = ((_s < 0) == sign_pqr) ? 1 : -1;
+
+                auto value = vJ1 * evecs_->get(I, root2_) * sign;
+
+                tpdm3[p * no5_ + q * no4_ + r * no3_ + s * no2_ + t * no_ + u] += value;
+                tpdm3[p * no5_ + q * no4_ + r * no3_ + s * no2_ + u * no_ + t] -= value;
+                tpdm3[p * no5_ + q * no4_ + r * no3_ + u * no2_ + t * no_ + s] -= value;
+                tpdm3[p * no5_ + q * no4_ + r * no3_ + u * no2_ + s * no_ + t] += value;
+                tpdm3[p * no5_ + q * no4_ + r * no3_ + t * no2_ + s * no_ + u] -= value;
+                tpdm3[p * no5_ + q * no4_ + r * no3_ + t * no2_ + u * no_ + s] += value;
+
+                tpdm3[p * no5_ + r * no4_ + q * no3_ + s * no2_ + t * no_ + u] -= value;
+                tpdm3[p * no5_ + r * no4_ + q * no3_ + s * no2_ + u * no_ + t] += value;
+                tpdm3[p * no5_ + r * no4_ + q * no3_ + u * no2_ + t * no_ + s] += value;
+                tpdm3[p * no5_ + r * no4_ + q * no3_ + u * no2_ + s * no_ + t] -= value;
+                tpdm3[p * no5_ + r * no4_ + q * no3_ + t * no2_ + s * no_ + u] += value;
+                tpdm3[p * no5_ + r * no4_ + q * no3_ + t * no2_ + u * no_ + s] -= value;
+
+                tpdm3[q * no5_ + p * no4_ + r * no3_ + s * no2_ + t * no_ + u] -= value;
+                tpdm3[q * no5_ + p * no4_ + r * no3_ + s * no2_ + u * no_ + t] += value;
+                tpdm3[q * no5_ + p * no4_ + r * no3_ + u * no2_ + t * no_ + s] += value;
+                tpdm3[q * no5_ + p * no4_ + r * no3_ + u * no2_ + s * no_ + t] -= value;
+                tpdm3[q * no5_ + p * no4_ + r * no3_ + t * no2_ + s * no_ + u] += value;
+                tpdm3[q * no5_ + p * no4_ + r * no3_ + t * no2_ + u * no_ + s] -= value;
+
+                tpdm3[q * no5_ + r * no4_ + p * no3_ + s * no2_ + t * no_ + u] += value;
+                tpdm3[q * no5_ + r * no4_ + p * no3_ + s * no2_ + u * no_ + t] -= value;
+                tpdm3[q * no5_ + r * no4_ + p * no3_ + u * no2_ + t * no_ + s] -= value;
+                tpdm3[q * no5_ + r * no4_ + p * no3_ + u * no2_ + s * no_ + t] += value;
+                tpdm3[q * no5_ + r * no4_ + p * no3_ + t * no2_ + s * no_ + u] -= value;
+                tpdm3[q * no5_ + r * no4_ + p * no3_ + t * no2_ + u * no_ + s] += value;
+
+                tpdm3[r * no5_ + p * no4_ + q * no3_ + s * no2_ + t * no_ + u] += value;
+                tpdm3[r * no5_ + p * no4_ + q * no3_ + s * no2_ + u * no_ + t] -= value;
+                tpdm3[r * no5_ + p * no4_ + q * no3_ + u * no2_ + t * no_ + s] -= value;
+                tpdm3[r * no5_ + p * no4_ + q * no3_ + u * no2_ + s * no_ + t] += value;
+                tpdm3[r * no5_ + p * no4_ + q * no3_ + t * no2_ + s * no_ + u] -= value;
+                tpdm3[r * no5_ + p * no4_ + q * no3_ + t * no2_ + u * no_ + s] += value;
+
+                tpdm3[r * no5_ + q * no4_ + p * no3_ + s * no2_ + t * no_ + u] -= value;
+                tpdm3[r * no5_ + q * no4_ + p * no3_ + s * no2_ + u * no_ + t] += value;
+                tpdm3[r * no5_ + q * no4_ + p * no3_ + u * no2_ + t * no_ + s] += value;
+                tpdm3[r * no5_ + q * no4_ + p * no3_ + u * no2_ + s * no_ + t] -= value;
+                tpdm3[r * no5_ + q * no4_ + p * no3_ + t * no2_ + s * no_ + u] += value;
+                tpdm3[r * no5_ + q * no4_ + p * no3_ + t * no2_ + u * no_ + s] -= value;
+
+                value = evecs_->get(I, root1_) * vJ2 * sign;
+
+                tpdm3[s * no5_ + t * no4_ + u * no3_ + p * no2_ + q * no_ + r] += value;
+                tpdm3[s * no5_ + u * no4_ + t * no3_ + p * no2_ + q * no_ + r] -= value;
+                tpdm3[u * no5_ + t * no4_ + s * no3_ + p * no2_ + q * no_ + r] -= value;
+                tpdm3[u * no5_ + s * no4_ + t * no3_ + p * no2_ + q * no_ + r] += value;
+                tpdm3[t * no5_ + s * no4_ + u * no3_ + p * no2_ + q * no_ + r] -= value;
+                tpdm3[t * no5_ + u * no4_ + s * no3_ + p * no2_ + q * no_ + r] += value;
+
+                tpdm3[s * no5_ + t * no4_ + u * no3_ + p * no2_ + r * no_ + q] -= value;
+                tpdm3[s * no5_ + u * no4_ + t * no3_ + p * no2_ + r * no_ + q] += value;
+                tpdm3[u * no5_ + t * no4_ + s * no3_ + p * no2_ + r * no_ + q] += value;
+                tpdm3[u * no5_ + s * no4_ + t * no3_ + p * no2_ + r * no_ + q] -= value;
+                tpdm3[t * no5_ + s * no4_ + u * no3_ + p * no2_ + r * no_ + q] += value;
+                tpdm3[t * no5_ + u * no4_ + s * no3_ + p * no2_ + r * no_ + q] -= value;
+
+                tpdm3[s * no5_ + t * no4_ + u * no3_ + q * no2_ + p * no_ + r] -= value;
+                tpdm3[s * no5_ + u * no4_ + t * no3_ + q * no2_ + p * no_ + r] += value;
+                tpdm3[u * no5_ + t * no4_ + s * no3_ + q * no2_ + p * no_ + r] += value;
+                tpdm3[u * no5_ + s * no4_ + t * no3_ + q * no2_ + p * no_ + r] -= value;
+                tpdm3[t * no5_ + s * no4_ + u * no3_ + q * no2_ + p * no_ + r] += value;
+                tpdm3[t * no5_ + u * no4_ + s * no3_ + q * no2_ + p * no_ + r] -= value;
+
+                tpdm3[s * no5_ + t * no4_ + u * no3_ + q * no2_ + r * no_ + p] += value;
+                tpdm3[s * no5_ + u * no4_ + t * no3_ + q * no2_ + r * no_ + p] -= value;
+                tpdm3[u * no5_ + t * no4_ + s * no3_ + q * no2_ + r * no_ + p] -= value;
+                tpdm3[u * no5_ + s * no4_ + t * no3_ + q * no2_ + r * no_ + p] += value;
+                tpdm3[t * no5_ + s * no4_ + u * no3_ + q * no2_ + r * no_ + p] -= value;
+                tpdm3[t * no5_ + u * no4_ + s * no3_ + q * no2_ + r * no_ + p] += value;
+
+                tpdm3[s * no5_ + t * no4_ + u * no3_ + r * no2_ + p * no_ + q] += value;
+                tpdm3[s * no5_ + u * no4_ + t * no3_ + r * no2_ + p * no_ + q] -= value;
+                tpdm3[u * no5_ + t * no4_ + s * no3_ + r * no2_ + p * no_ + q] -= value;
+                tpdm3[u * no5_ + s * no4_ + t * no3_ + r * no2_ + p * no_ + q] += value;
+                tpdm3[t * no5_ + s * no4_ + u * no3_ + r * no2_ + p * no_ + q] -= value;
+                tpdm3[t * no5_ + u * no4_ + s * no3_ + r * no2_ + p * no_ + q] += value;
+
+                tpdm3[s * no5_ + t * no4_ + u * no3_ + r * no2_ + q * no_ + p] -= value;
+                tpdm3[s * no5_ + u * no4_ + t * no3_ + r * no2_ + q * no_ + p] += value;
+                tpdm3[u * no5_ + t * no4_ + s * no3_ + r * no2_ + q * no_ + p] += value;
+                tpdm3[u * no5_ + s * no4_ + t * no3_ + r * no2_ + q * no_ + p] -= value;
+                tpdm3[t * no5_ + s * no4_ + u * no3_ + r * no2_ + q * no_ + p] += value;
+                tpdm3[t * no5_ + u * no4_ + s * no3_ + r * no2_ + q * no_ + p] -= value;
+            }
+        }
+    }
+
+    // aab aab
+    for (const auto& coupled_dets : op->aab_list_) {
+        auto coupled_dets_size = coupled_dets.size();
+
+        for (size_t a = 0; a < coupled_dets_size; ++a) {
+            const auto [J, _p, q, r] = coupled_dets[a];
+            auto p = std::abs(_p) - 1;
+            auto sign_pqr = _p < 0;
+
+            auto vJ1 = evecs_->get(J, root1_);
+            auto vJ2 = evecs_->get(J, root2_);
+
+            for (size_t b = a + 1; b < coupled_dets_size; ++b) {
+                const auto [I, _s, t, u] = coupled_dets[b];
+                auto s = std::abs(_s) - 1;
+                auto sign = ((_s < 0) == sign_pqr) ? 1 : -1;
+
+                auto value = vJ1 * evecs_->get(I, root2_) * sign;
+                tpdm3[p * no5_ + q * no4_ + r * no3_ + s * no2_ + t * no_ + u] += value;
+                tpdm3[p * no5_ + q * no4_ + r * no3_ + t * no2_ + s * no_ + u] -= value;
+                tpdm3[q * no5_ + p * no4_ + r * no3_ + s * no2_ + t * no_ + u] -= value;
+                tpdm3[q * no5_ + p * no4_ + r * no3_ + t * no2_ + s * no_ + u] += value;
+
+                tpdm3[r * no5_ + q * no4_ + p * no3_ + u * no2_ + t * no_ + s] += value;
+                tpdm3[r * no5_ + q * no4_ + p * no3_ + u * no2_ + s * no_ + t] -= value;
+                tpdm3[r * no5_ + p * no4_ + q * no3_ + u * no2_ + t * no_ + s] -= value;
+                tpdm3[r * no5_ + p * no4_ + q * no3_ + u * no2_ + s * no_ + t] += value;
+
+                tpdm3[p * no5_ + r * no4_ + q * no3_ + s * no2_ + u * no_ + t] += value;
+                tpdm3[p * no5_ + r * no4_ + q * no3_ + t * no2_ + u * no_ + s] -= value;
+                tpdm3[q * no5_ + r * no4_ + p * no3_ + s * no2_ + u * no_ + t] -= value;
+                tpdm3[q * no5_ + r * no4_ + p * no3_ + t * no2_ + u * no_ + s] += value;
+
+                value = evecs_->get(I, root1_) * vJ2 * sign;
+                tpdm3[s * no5_ + t * no4_ + u * no3_ + p * no2_ + q * no_ + r] += value;
+                tpdm3[t * no5_ + s * no4_ + u * no3_ + p * no2_ + q * no_ + r] -= value;
+                tpdm3[s * no5_ + t * no4_ + u * no3_ + q * no2_ + p * no_ + r] -= value;
+                tpdm3[t * no5_ + s * no4_ + u * no3_ + q * no2_ + p * no_ + r] += value;
+
+                tpdm3[u * no5_ + t * no4_ + s * no3_ + r * no2_ + q * no_ + p] += value;
+                tpdm3[u * no5_ + s * no4_ + t * no3_ + r * no2_ + q * no_ + p] -= value;
+                tpdm3[u * no5_ + t * no4_ + s * no3_ + r * no2_ + p * no_ + q] -= value;
+                tpdm3[u * no5_ + s * no4_ + t * no3_ + r * no2_ + p * no_ + q] += value;
+
+                tpdm3[s * no5_ + u * no4_ + t * no3_ + p * no2_ + r * no_ + q] += value;
+                tpdm3[t * no5_ + u * no4_ + s * no3_ + p * no2_ + r * no_ + q] -= value;
+                tpdm3[s * no5_ + u * no4_ + t * no3_ + q * no2_ + r * no_ + p] -= value;
+                tpdm3[t * no5_ + u * no4_ + s * no3_ + q * no2_ + r * no_ + p] += value;
+            }
+        }
+    }
+
+    // abb abb
+    for (const auto& coupled_dets : op->abb_list_) {
+        auto coupled_dets_size = coupled_dets.size();
+
+        for (size_t a = 0; a < coupled_dets_size; ++a) {
+            const auto [J, _p, q, r] = coupled_dets[a];
+            auto p = std::abs(_p) - 1;
+            auto sign_pqr = _p < 0;
+
+            auto vJ1 = evecs_->get(J, root1_);
+            auto vJ2 = evecs_->get(J, root2_);
+
+            for (size_t b = a + 1; b < coupled_dets_size; ++b) {
+                const auto [I, _s, t, u] = coupled_dets[b];
+                auto s = std::abs(_s) - 1;
+                auto sign = ((_s < 0) == sign_pqr) ? 1 : -1;
+
+                auto value = vJ1 * evecs_->get(I, root2_) * sign;
+                tpdm3[p * no5_ + q * no4_ + r * no3_ + s * no2_ + t * no_ + u] += value;
+                tpdm3[p * no5_ + q * no4_ + r * no3_ + s * no2_ + u * no_ + t] -= value;
+                tpdm3[p * no5_ + r * no4_ + q * no3_ + s * no2_ + t * no_ + u] -= value;
+                tpdm3[p * no5_ + r * no4_ + q * no3_ + s * no2_ + u * no_ + t] += value;
+
+                tpdm3[q * no5_ + p * no4_ + r * no3_ + t * no2_ + s * no_ + u] += value;
+                tpdm3[q * no5_ + p * no4_ + r * no3_ + u * no2_ + s * no_ + t] -= value;
+                tpdm3[r * no5_ + p * no4_ + q * no3_ + t * no2_ + s * no_ + u] -= value;
+                tpdm3[r * no5_ + p * no4_ + q * no3_ + u * no2_ + s * no_ + t] += value;
+
+                tpdm3[r * no5_ + q * no4_ + p * no3_ + u * no2_ + t * no_ + s] += value;
+                tpdm3[r * no5_ + q * no4_ + p * no3_ + t * no2_ + u * no_ + s] -= value;
+                tpdm3[q * no5_ + r * no4_ + p * no3_ + u * no2_ + t * no_ + s] -= value;
+                tpdm3[q * no5_ + r * no4_ + p * no3_ + t * no2_ + u * no_ + s] += value;
+
+                value = evecs_->get(I, root1_) * vJ2 * sign;
+                tpdm3[s * no5_ + t * no4_ + u * no3_ + p * no2_ + q * no_ + r] += value;
+                tpdm3[s * no5_ + u * no4_ + t * no3_ + p * no2_ + q * no_ + r] -= value;
+                tpdm3[s * no5_ + t * no4_ + u * no3_ + p * no2_ + r * no_ + q] -= value;
+                tpdm3[s * no5_ + u * no4_ + t * no3_ + p * no2_ + r * no_ + q] += value;
+
+                tpdm3[t * no5_ + s * no4_ + u * no3_ + q * no2_ + p * no_ + r] += value;
+                tpdm3[u * no5_ + s * no4_ + t * no3_ + q * no2_ + p * no_ + r] -= value;
+                tpdm3[t * no5_ + s * no4_ + u * no3_ + r * no2_ + p * no_ + q] -= value;
+                tpdm3[u * no5_ + s * no4_ + t * no3_ + r * no2_ + p * no_ + q] += value;
+
+                tpdm3[u * no5_ + t * no4_ + s * no3_ + r * no2_ + q * no_ + p] += value;
+                tpdm3[t * no5_ + u * no4_ + s * no3_ + r * no2_ + q * no_ + p] -= value;
+                tpdm3[u * no5_ + t * no4_ + s * no3_ + q * no2_ + r * no_ + p] -= value;
+                tpdm3[t * no5_ + u * no4_ + s * no3_ + q * no2_ + r * no_ + p] += value;
+            }
+        }
+    }
+
+    // bbb bbb
+    for (const auto& coupled_dets : op->bbb_list_) {
+        auto coupled_dets_size = coupled_dets.size();
+
+        for (size_t a = 0; a < coupled_dets_size; ++a) {
+            const auto [J, _p, q, r] = coupled_dets[a];
+            auto p = std::abs(_p) - 1;
+            auto sign_pqr = _p < 0;
+
+            auto vJ1 = evecs_->get(J, root1_);
+            auto vJ2 = evecs_->get(J, root2_);
+
+            for (size_t b = a + 1; b < coupled_dets_size; ++b) {
+                const auto [I, _s, t, u] = coupled_dets[b];
+                auto s = std::abs(_s) - 1;
+                auto sign = ((_s < 0) == sign_pqr) ? 1 : -1;
+
+                auto value = vJ1 * evecs_->get(I, root2_) * sign;
+
+                tpdm3[p * no5_ + q * no4_ + r * no3_ + s * no2_ + t * no_ + u] += value;
+                tpdm3[p * no5_ + q * no4_ + r * no3_ + s * no2_ + u * no_ + t] -= value;
+                tpdm3[p * no5_ + q * no4_ + r * no3_ + u * no2_ + t * no_ + s] -= value;
+                tpdm3[p * no5_ + q * no4_ + r * no3_ + u * no2_ + s * no_ + t] += value;
+                tpdm3[p * no5_ + q * no4_ + r * no3_ + t * no2_ + s * no_ + u] -= value;
+                tpdm3[p * no5_ + q * no4_ + r * no3_ + t * no2_ + u * no_ + s] += value;
+
+                tpdm3[p * no5_ + r * no4_ + q * no3_ + s * no2_ + t * no_ + u] -= value;
+                tpdm3[p * no5_ + r * no4_ + q * no3_ + s * no2_ + u * no_ + t] += value;
+                tpdm3[p * no5_ + r * no4_ + q * no3_ + u * no2_ + t * no_ + s] += value;
+                tpdm3[p * no5_ + r * no4_ + q * no3_ + u * no2_ + s * no_ + t] -= value;
+                tpdm3[p * no5_ + r * no4_ + q * no3_ + t * no2_ + s * no_ + u] += value;
+                tpdm3[p * no5_ + r * no4_ + q * no3_ + t * no2_ + u * no_ + s] -= value;
+
+                tpdm3[q * no5_ + p * no4_ + r * no3_ + s * no2_ + t * no_ + u] -= value;
+                tpdm3[q * no5_ + p * no4_ + r * no3_ + s * no2_ + u * no_ + t] += value;
+                tpdm3[q * no5_ + p * no4_ + r * no3_ + u * no2_ + t * no_ + s] += value;
+                tpdm3[q * no5_ + p * no4_ + r * no3_ + u * no2_ + s * no_ + t] -= value;
+                tpdm3[q * no5_ + p * no4_ + r * no3_ + t * no2_ + s * no_ + u] += value;
+                tpdm3[q * no5_ + p * no4_ + r * no3_ + t * no2_ + u * no_ + s] -= value;
+
+                tpdm3[q * no5_ + r * no4_ + p * no3_ + s * no2_ + t * no_ + u] += value;
+                tpdm3[q * no5_ + r * no4_ + p * no3_ + s * no2_ + u * no_ + t] -= value;
+                tpdm3[q * no5_ + r * no4_ + p * no3_ + u * no2_ + t * no_ + s] -= value;
+                tpdm3[q * no5_ + r * no4_ + p * no3_ + u * no2_ + s * no_ + t] += value;
+                tpdm3[q * no5_ + r * no4_ + p * no3_ + t * no2_ + s * no_ + u] -= value;
+                tpdm3[q * no5_ + r * no4_ + p * no3_ + t * no2_ + u * no_ + s] += value;
+
+                tpdm3[r * no5_ + p * no4_ + q * no3_ + s * no2_ + t * no_ + u] += value;
+                tpdm3[r * no5_ + p * no4_ + q * no3_ + s * no2_ + u * no_ + t] -= value;
+                tpdm3[r * no5_ + p * no4_ + q * no3_ + u * no2_ + t * no_ + s] -= value;
+                tpdm3[r * no5_ + p * no4_ + q * no3_ + u * no2_ + s * no_ + t] += value;
+                tpdm3[r * no5_ + p * no4_ + q * no3_ + t * no2_ + s * no_ + u] -= value;
+                tpdm3[r * no5_ + p * no4_ + q * no3_ + t * no2_ + u * no_ + s] += value;
+
+                tpdm3[r * no5_ + q * no4_ + p * no3_ + s * no2_ + t * no_ + u] -= value;
+                tpdm3[r * no5_ + q * no4_ + p * no3_ + s * no2_ + u * no_ + t] += value;
+                tpdm3[r * no5_ + q * no4_ + p * no3_ + u * no2_ + t * no_ + s] += value;
+                tpdm3[r * no5_ + q * no4_ + p * no3_ + u * no2_ + s * no_ + t] -= value;
+                tpdm3[r * no5_ + q * no4_ + p * no3_ + t * no2_ + s * no_ + u] += value;
+                tpdm3[r * no5_ + q * no4_ + p * no3_ + t * no2_ + u * no_ + s] -= value;
+
+                value = evecs_->get(I, root1_) * vJ2 * sign;
+
+                tpdm3[s * no5_ + t * no4_ + u * no3_ + p * no2_ + q * no_ + r] += value;
+                tpdm3[s * no5_ + u * no4_ + t * no3_ + p * no2_ + q * no_ + r] -= value;
+                tpdm3[u * no5_ + t * no4_ + s * no3_ + p * no2_ + q * no_ + r] -= value;
+                tpdm3[u * no5_ + s * no4_ + t * no3_ + p * no2_ + q * no_ + r] += value;
+                tpdm3[t * no5_ + s * no4_ + u * no3_ + p * no2_ + q * no_ + r] -= value;
+                tpdm3[t * no5_ + u * no4_ + s * no3_ + p * no2_ + q * no_ + r] += value;
+
+                tpdm3[s * no5_ + t * no4_ + u * no3_ + p * no2_ + r * no_ + q] -= value;
+                tpdm3[s * no5_ + u * no4_ + t * no3_ + p * no2_ + r * no_ + q] += value;
+                tpdm3[u * no5_ + t * no4_ + s * no3_ + p * no2_ + r * no_ + q] += value;
+                tpdm3[u * no5_ + s * no4_ + t * no3_ + p * no2_ + r * no_ + q] -= value;
+                tpdm3[t * no5_ + s * no4_ + u * no3_ + p * no2_ + r * no_ + q] += value;
+                tpdm3[t * no5_ + u * no4_ + s * no3_ + p * no2_ + r * no_ + q] -= value;
+
+                tpdm3[s * no5_ + t * no4_ + u * no3_ + q * no2_ + p * no_ + r] -= value;
+                tpdm3[s * no5_ + u * no4_ + t * no3_ + q * no2_ + p * no_ + r] += value;
+                tpdm3[u * no5_ + t * no4_ + s * no3_ + q * no2_ + p * no_ + r] += value;
+                tpdm3[u * no5_ + s * no4_ + t * no3_ + q * no2_ + p * no_ + r] -= value;
+                tpdm3[t * no5_ + s * no4_ + u * no3_ + q * no2_ + p * no_ + r] += value;
+                tpdm3[t * no5_ + u * no4_ + s * no3_ + q * no2_ + p * no_ + r] -= value;
+
+                tpdm3[s * no5_ + t * no4_ + u * no3_ + q * no2_ + r * no_ + p] += value;
+                tpdm3[s * no5_ + u * no4_ + t * no3_ + q * no2_ + r * no_ + p] -= value;
+                tpdm3[u * no5_ + t * no4_ + s * no3_ + q * no2_ + r * no_ + p] -= value;
+                tpdm3[u * no5_ + s * no4_ + t * no3_ + q * no2_ + r * no_ + p] += value;
+                tpdm3[t * no5_ + s * no4_ + u * no3_ + q * no2_ + r * no_ + p] -= value;
+                tpdm3[t * no5_ + u * no4_ + s * no3_ + q * no2_ + r * no_ + p] += value;
+
+                tpdm3[s * no5_ + t * no4_ + u * no3_ + r * no2_ + p * no_ + q] += value;
+                tpdm3[s * no5_ + u * no4_ + t * no3_ + r * no2_ + p * no_ + q] -= value;
+                tpdm3[u * no5_ + t * no4_ + s * no3_ + r * no2_ + p * no_ + q] -= value;
+                tpdm3[u * no5_ + s * no4_ + t * no3_ + r * no2_ + p * no_ + q] += value;
+                tpdm3[t * no5_ + s * no4_ + u * no3_ + r * no2_ + p * no_ + q] -= value;
+                tpdm3[t * no5_ + u * no4_ + s * no3_ + r * no2_ + p * no_ + q] += value;
+
+                tpdm3[s * no5_ + t * no4_ + u * no3_ + r * no2_ + q * no_ + p] -= value;
+                tpdm3[s * no5_ + u * no4_ + t * no3_ + r * no2_ + q * no_ + p] += value;
+                tpdm3[u * no5_ + t * no4_ + s * no3_ + r * no2_ + q * no_ + p] += value;
+                tpdm3[u * no5_ + s * no4_ + t * no3_ + r * no2_ + q * no_ + p] -= value;
+                tpdm3[t * no5_ + s * no4_ + u * no3_ + r * no2_ + q * no_ + p] += value;
+                tpdm3[t * no5_ + u * no4_ + s * no3_ + r * no2_ + q * no_ + p] -= value;
+            }
+        }
+    }
 
     if (print_) {
         outfile->Printf("\n  Time spent building 3-rdm: %.3e seconds", build.stop());
     }
 }
 
+void CI_RDMS::compute_rdms_dynamic_sf(std::vector<double>& rdm1, std::vector<double>& rdm2,
+                                      std::vector<double>& rdm3) {
+    rdm1.resize(no2_, 0.0);
+    rdm2.resize(no4_, 0.0);
+    rdm3.resize(no6_, 0.0);
+
+    SortedStringList a_sorted_string_list_(wfn_, fci_ints_, DetSpinType::Alpha);
+    SortedStringList b_sorted_string_list_(wfn_, fci_ints_, DetSpinType::Beta);
+    const std::vector<String>& sorted_bstr = b_sorted_string_list_.sorted_half_dets();
+    size_t num_bstr = sorted_bstr.size();
+    const auto& sorted_b_dets = b_sorted_string_list_.sorted_dets();
+    const auto& sorted_a_dets = a_sorted_string_list_.sorted_dets();
+    local_timer diag;
+    //*-  Diagonal Contributions  -*//
+    for (size_t I = 0; I < dim_space_; ++I) {
+        size_t Ia = b_sorted_string_list_.add(I);
+        double CIa = evecs_->get(Ia, root1_) * evecs_->get(Ia, root2_);
+        String det_a = sorted_b_dets[I].get_alfa_bits();
+        String det_b = sorted_b_dets[I].get_beta_bits();
+
+        for (size_t nda = 0; nda < na_; ++nda) {
+            size_t p = det_a.find_first_one();
+            rdm1[p * no_ + p] += CIa;
+
+            String det_ac(det_a);
+            det_a.clear_first_one();
+            for (size_t ndaa = nda; ndaa < na_; ++ndaa) {
+                size_t q = det_ac.find_first_one();
+                // aa 2-rdm
+                rdm2[p * no3_ + q * no2_ + p * no_ + q] += CIa;
+                rdm2[q * no3_ + p * no2_ + q * no_ + p] += CIa;
+                rdm2[p * no3_ + q * no2_ + q * no_ + p] -= CIa;
+                rdm2[q * no3_ + p * no2_ + p * no_ + q] -= CIa;
+                det_ac.clear_first_one();
+
+                // aaa 3rdm
+                String det_acc(det_ac);
+                for (size_t ndaaa = ndaa + 1; ndaaa < na_; ++ndaaa) {
+                    size_t r = det_acc.find_first_one();
+                    fill_3rdm(rdm3, CIa, p, q, r, p, q, r, true);
+                    det_acc.clear_first_one();
+                }
+
+                // aab 3rdm
+                String det_bc(det_b);
+                for (size_t n = 0; n < nb_; ++n) {
+                    size_t r = det_bc.find_first_one();
+
+                    rdm3[p * no5_ + q * no4_ + r * no3_ + p * no2_ + q * no_ + r] += CIa;
+                    rdm3[p * no5_ + q * no4_ + r * no3_ + q * no2_ + p * no_ + r] -= CIa;
+                    rdm3[q * no5_ + p * no4_ + r * no3_ + p * no2_ + q * no_ + r] -= CIa;
+                    rdm3[q * no5_ + p * no4_ + r * no3_ + q * no2_ + p * no_ + r] += CIa;
+
+                    rdm3[r * no5_ + q * no4_ + p * no3_ + r * no2_ + q * no_ + p] += CIa;
+                    rdm3[r * no5_ + q * no4_ + p * no3_ + r * no2_ + p * no_ + q] -= CIa;
+                    rdm3[r * no5_ + p * no4_ + q * no3_ + r * no2_ + q * no_ + p] -= CIa;
+                    rdm3[r * no5_ + p * no4_ + q * no3_ + r * no2_ + p * no_ + q] += CIa;
+
+                    rdm3[p * no5_ + r * no4_ + q * no3_ + p * no2_ + r * no_ + q] += CIa;
+                    rdm3[p * no5_ + r * no4_ + q * no3_ + q * no2_ + r * no_ + p] -= CIa;
+                    rdm3[q * no5_ + r * no4_ + p * no3_ + p * no2_ + r * no_ + q] -= CIa;
+                    rdm3[q * no5_ + r * no4_ + p * no3_ + q * no2_ + r * no_ + p] += CIa;
+
+                    det_bc.clear_first_one();
+                }
+            }
+
+            String det_bc(det_b);
+            for (size_t n = 0; n < nb_; ++n) {
+                size_t q = det_bc.find_first_one();
+                rdm2[p * no3_ + q * no2_ + p * no_ + q] += CIa;
+                rdm2[q * no3_ + p * no2_ + q * no_ + p] += CIa;
+                det_bc.clear_first_one();
+            }
+        }
+        det_a = sorted_b_dets[I].get_alfa_bits();
+        det_b = sorted_b_dets[I].get_beta_bits();
+        size_t Ib = a_sorted_string_list_.add(I);
+        double CIb = evecs_->get(Ib, root1_) * evecs_->get(Ib, root2_);
+        for (size_t ndb = 0; ndb < nb_; ++ndb) {
+            size_t p = det_b.find_first_one();
+
+            // b -1rdm
+            rdm1[p * no_ + p] += CIb;
+            String det_bc(det_b);
+            for (size_t ndbb = ndb; ndbb < nb_; ++ndbb) {
+                size_t q = det_bc.find_first_one();
+                // bb-2rdm
+                rdm2[p * no3_ + q * no2_ + p * no_ + q] += CIb;
+                rdm2[q * no3_ + p * no2_ + q * no_ + p] += CIb;
+                rdm2[p * no3_ + q * no2_ + q * no_ + p] -= CIb;
+                rdm2[q * no3_ + p * no2_ + p * no_ + q] -= CIb;
+                det_bc.clear_first_one();
+
+                // bbb-3rdm
+                String det_bcc(det_bc);
+                for (size_t ndbbb = ndbb + 1; ndbbb < nb_; ++ndbbb) {
+                    size_t r = det_bcc.find_first_one();
+                    fill_3rdm(rdm3, CIa, p, q, r, p, q, r, true);
+                    det_bcc.clear_first_one();
+                }
+
+                // abb - 3rdm
+                String det_ac(det_a);
+                for (size_t n = 0; n < na_; ++n) {
+                    size_t r = det_ac.find_first_one();
+
+                    rdm3[r * no5_ + p * no4_ + q * no3_ + r * no2_ + p * no_ + q] += CIb;
+                    rdm3[r * no5_ + p * no4_ + q * no3_ + r * no2_ + q * no_ + p] -= CIb;
+                    rdm3[r * no5_ + q * no4_ + p * no3_ + r * no2_ + p * no_ + q] -= CIb;
+                    rdm3[r * no5_ + q * no4_ + p * no3_ + r * no2_ + q * no_ + p] += CIb;
+
+                    rdm3[p * no5_ + r * no4_ + q * no3_ + p * no2_ + r * no_ + q] += CIb;
+                    rdm3[p * no5_ + r * no4_ + q * no3_ + q * no2_ + r * no_ + p] -= CIb;
+                    rdm3[q * no5_ + r * no4_ + p * no3_ + p * no2_ + r * no_ + q] -= CIb;
+                    rdm3[q * no5_ + r * no4_ + p * no3_ + q * no2_ + r * no_ + p] += CIb;
+
+                    rdm3[q * no5_ + p * no4_ + r * no3_ + q * no2_ + p * no_ + r] += CIb;
+                    rdm3[q * no5_ + p * no4_ + r * no3_ + p * no2_ + q * no_ + r] -= CIb;
+                    rdm3[p * no5_ + q * no4_ + r * no3_ + q * no2_ + p * no_ + r] -= CIb;
+                    rdm3[p * no5_ + q * no4_ + r * no3_ + p * no2_ + q * no_ + r] += CIb;
+
+                    det_ac.clear_first_one();
+                }
+            }
+            det_b.clear_first_one();
+        }
+    }
+    outfile->Printf("\n  Diag takes %1.6f", diag.get());
+
+    local_timer aaa;
+    //-* All Alpha RDMs *-//
+
+    // loop through all beta strings
+    for (size_t bstr = 0; bstr < num_bstr; ++bstr) {
+        const String& Ib = sorted_bstr[bstr];
+        const auto& range_I = b_sorted_string_list_.range(Ib);
+
+        String Ia;
+        String Ja;
+        size_t first_I = range_I.first;
+        size_t last_I = range_I.second;
+
+        // Double loop through determinants with same beta string
+        for (size_t I = first_I; I < last_I; ++I) {
+            Ia = sorted_b_dets[I].get_alfa_bits();
+            double CI = evecs_->get(b_sorted_string_list_.add(I), root1_);
+            for (size_t J = I + 1; J < last_I; ++J) {
+                Ja = sorted_b_dets[J].get_alfa_bits();
+                String IJa = Ia ^ Ja;
+
+                int ndiff = IJa.count();
+
+                if (ndiff == 2) {
+                    // 1-rdm
+                    String Ia_sub = Ia & IJa;
+                    u_int64_t p = Ia_sub.find_first_one();
+                    String Ja_sub = Ja & IJa;
+                    u_int64_t q = Ja_sub.find_first_one();
+
+                    double Csq = CI * evecs_->get(b_sorted_string_list_.add(J), root2_);
+                    double value = Csq * Ia.slater_sign(p, q);
+                    rdm1[p * no_ + q] += value;
+                    rdm1[q * no_ + p] += value;
+
+                    // 2-rdm
+                    auto Iac = Ia;
+                    Iac ^= Ia_sub;
+                    for (size_t nbit_a = 1; nbit_a < na_; nbit_a++) {
+                        uint64_t m = Iac.find_first_one();
+                        rdm2[p * no3_ + m * no2_ + q * no_ + m] += value;
+                        rdm2[m * no3_ + p * no2_ + q * no_ + m] -= value;
+                        rdm2[m * no3_ + p * no2_ + m * no_ + q] += value;
+                        rdm2[p * no3_ + m * no2_ + m * no_ + q] -= value;
+
+                        rdm2[q * no3_ + m * no2_ + p * no_ + m] += value;
+                        rdm2[m * no3_ + q * no2_ + p * no_ + m] -= value;
+                        rdm2[m * no3_ + q * no2_ + m * no_ + p] += value;
+                        rdm2[q * no3_ + m * no2_ + m * no_ + p] -= value;
+                        Iac.clear_first_one();
+
+                        auto Ibc = Ib;
+                        for (size_t idx = 0; idx < nb_; ++idx) {
+                            uint64_t n = Ibc.find_first_one();
+                            rdm3[p * no5_ + m * no4_ + n * no3_ + q * no2_ + m * no_ + n] += value;
+                            rdm3[p * no5_ + m * no4_ + n * no3_ + m * no2_ + q * no_ + n] -= value;
+                            rdm3[m * no5_ + p * no4_ + n * no3_ + m * no2_ + q * no_ + n] += value;
+                            rdm3[m * no5_ + p * no4_ + n * no3_ + q * no2_ + m * no_ + n] -= value;
+
+                            rdm3[n * no5_ + m * no4_ + p * no3_ + n * no2_ + m * no_ + q] += value;
+                            rdm3[n * no5_ + m * no4_ + p * no3_ + n * no2_ + q * no_ + m] -= value;
+                            rdm3[n * no5_ + p * no4_ + m * no3_ + n * no2_ + q * no_ + m] += value;
+                            rdm3[n * no5_ + p * no4_ + m * no3_ + n * no2_ + m * no_ + q] -= value;
+
+                            rdm3[p * no5_ + n * no4_ + m * no3_ + q * no2_ + n * no_ + m] += value;
+                            rdm3[p * no5_ + n * no4_ + m * no3_ + m * no2_ + n * no_ + q] -= value;
+                            rdm3[m * no5_ + n * no4_ + p * no3_ + m * no2_ + n * no_ + q] += value;
+                            rdm3[m * no5_ + n * no4_ + p * no3_ + q * no2_ + n * no_ + m] -= value;
+
+                            rdm3[q * no5_ + m * no4_ + n * no3_ + p * no2_ + m * no_ + n] += value;
+                            rdm3[q * no5_ + m * no4_ + n * no3_ + m * no2_ + p * no_ + n] -= value;
+                            rdm3[m * no5_ + q * no4_ + n * no3_ + m * no2_ + p * no_ + n] += value;
+                            rdm3[m * no5_ + q * no4_ + n * no3_ + p * no2_ + m * no_ + n] -= value;
+
+                            rdm3[n * no5_ + m * no4_ + q * no3_ + n * no2_ + m * no_ + p] += value;
+                            rdm3[n * no5_ + m * no4_ + q * no3_ + n * no2_ + p * no_ + m] -= value;
+                            rdm3[n * no5_ + q * no4_ + m * no3_ + n * no2_ + p * no_ + m] += value;
+                            rdm3[n * no5_ + q * no4_ + m * no3_ + n * no2_ + m * no_ + p] -= value;
+
+                            rdm3[q * no5_ + n * no4_ + m * no3_ + p * no2_ + n * no_ + m] += value;
+                            rdm3[q * no5_ + n * no4_ + m * no3_ + m * no2_ + n * no_ + p] -= value;
+                            rdm3[m * no5_ + n * no4_ + q * no3_ + m * no2_ + n * no_ + p] += value;
+                            rdm3[m * no5_ + n * no4_ + q * no3_ + p * no2_ + n * no_ + m] -= value;
+                            Ibc.clear_first_one();
+                        }
+                    }
+                    auto Ibc = Ib;
+                    for (size_t nidx = 0; nidx < nb_; ++nidx) {
+                        uint64_t n = Ibc.find_first_one();
+                        rdm2[p * no3_ + n * no2_ + q * no_ + n] += value;
+                        rdm2[q * no3_ + n * no2_ + p * no_ + n] += value;
+                        rdm2[n * no3_ + p * no2_ + n * no_ + q] += value;
+                        rdm2[n * no3_ + q * no2_ + n * no_ + p] += value;
+                        Ibc.clear_first_one();
+
+                        String Ibcc = Ibc;
+                        for (size_t idx = nidx + 1; idx < nb_; ++idx) {
+                            uint64_t m = Ibcc.find_first_one();
+                            rdm3[p * no5_ + m * no4_ + n * no3_ + q * no2_ + m * no_ + n] += value;
+                            rdm3[p * no5_ + m * no4_ + n * no3_ + q * no2_ + n * no_ + m] -= value;
+                            rdm3[p * no5_ + n * no4_ + m * no3_ + q * no2_ + n * no_ + m] += value;
+                            rdm3[p * no5_ + n * no4_ + m * no3_ + q * no2_ + m * no_ + n] -= value;
+
+                            rdm3[m * no5_ + p * no4_ + n * no3_ + m * no2_ + q * no_ + n] += value;
+                            rdm3[m * no5_ + p * no4_ + n * no3_ + n * no2_ + q * no_ + m] -= value;
+                            rdm3[n * no5_ + p * no4_ + m * no3_ + n * no2_ + q * no_ + m] += value;
+                            rdm3[n * no5_ + p * no4_ + m * no3_ + m * no2_ + q * no_ + n] -= value;
+
+                            rdm3[n * no5_ + m * no4_ + p * no3_ + n * no2_ + m * no_ + q] += value;
+                            rdm3[n * no5_ + m * no4_ + p * no3_ + m * no2_ + n * no_ + q] -= value;
+                            rdm3[m * no5_ + n * no4_ + p * no3_ + m * no2_ + n * no_ + q] += value;
+                            rdm3[m * no5_ + n * no4_ + p * no3_ + n * no2_ + m * no_ + q] -= value;
+
+                            rdm3[q * no5_ + m * no4_ + n * no3_ + p * no2_ + m * no_ + n] += value;
+                            rdm3[q * no5_ + m * no4_ + n * no3_ + p * no2_ + n * no_ + m] -= value;
+                            rdm3[q * no5_ + n * no4_ + m * no3_ + p * no2_ + n * no_ + m] += value;
+                            rdm3[q * no5_ + n * no4_ + m * no3_ + p * no2_ + m * no_ + n] -= value;
+
+                            rdm3[m * no5_ + q * no4_ + n * no3_ + m * no2_ + p * no_ + n] += value;
+                            rdm3[m * no5_ + q * no4_ + n * no3_ + n * no2_ + p * no_ + m] -= value;
+                            rdm3[n * no5_ + q * no4_ + m * no3_ + n * no2_ + p * no_ + m] += value;
+                            rdm3[n * no5_ + q * no4_ + m * no3_ + m * no2_ + p * no_ + n] -= value;
+
+                            rdm3[n * no5_ + m * no4_ + q * no3_ + n * no2_ + m * no_ + p] += value;
+                            rdm3[n * no5_ + m * no4_ + q * no3_ + m * no2_ + n * no_ + p] -= value;
+                            rdm3[m * no5_ + n * no4_ + q * no3_ + m * no2_ + n * no_ + p] += value;
+                            rdm3[m * no5_ + n * no4_ + q * no3_ + n * no2_ + m * no_ + p] -= value;
+                            Ibcc.clear_first_one();
+                        }
+                    }
+                    // 3-rdm
+                    String Iacc = Ia ^ Ia_sub;
+                    for (size_t id = 1; id < na_; ++id) {
+                        uint64_t n = Iacc.find_first_one();
+                        String I_n(Iacc);
+                        I_n.clear_first_one(); // TODO: not clear what is going on here (Francesco)
+                        for (size_t idd = id + 1; idd < na_; ++idd) {
+                            // while( I_n > 0 ){
+                            uint64_t m = I_n.find_first_one();
+                            fill_3rdm(rdm3, value, p, n, m, q, n, m, false);
+                            I_n.clear_first_one();
+                        }
+                        Iacc.clear_first_one();
+                    }
+
+                } else if (ndiff == 4) {
+                    // 2-rdm
+                    auto Ia_sub = Ia & IJa;
+                    uint64_t p = Ia_sub.find_first_one();
+                    Ia_sub.clear_first_one();
+                    uint64_t q = Ia_sub.find_first_one();
+
+                    auto Ja_sub = Ja & IJa;
+                    uint64_t r = Ja_sub.find_first_one();
+                    Ja_sub.clear_first_one();
+                    uint64_t s = Ja_sub.find_first_one();
+
+                    double Csq = CI * evecs_->get(b_sorted_string_list_.add(J), root2_);
+                    double value = Csq * Ia.slater_sign(p, q) * Ja.slater_sign(r, s);
+
+                    rdm2[p * no3_ + q * no2_ + r * no_ + s] += value;
+                    rdm2[p * no3_ + q * no2_ + s * no_ + r] -= value;
+                    rdm2[q * no3_ + p * no2_ + r * no_ + s] -= value;
+                    rdm2[q * no3_ + p * no2_ + s * no_ + r] += value;
+
+                    rdm2[r * no3_ + s * no2_ + p * no_ + q] += value;
+                    rdm2[s * no3_ + r * no2_ + p * no_ + q] -= value;
+                    rdm2[r * no3_ + s * no2_ + q * no_ + p] -= value;
+                    rdm2[s * no3_ + r * no2_ + q * no_ + p] += value;
+
+                    // 3-rdm
+                    String Iac(Ia);
+                    Iac ^= Ia_sub;
+                    for (size_t nda = 1; nda < na_; ++nda) {
+                        uint64_t n = Iac.find_first_one();
+                        fill_3rdm(rdm3, value, p, q, n, r, s, n, false);
+                        Iac.clear_first_one();
+                    }
+
+                    String Ibc = Ib;
+                    for (size_t ndb = 0; ndb < nb_; ++ndb) {
+                        uint64_t n = Ibc.find_first_one();
+                        rdm3[p * no5_ + q * no4_ + n * no3_ + r * no2_ + s * no_ + n] += value;
+                        rdm3[p * no5_ + q * no4_ + n * no3_ + s * no2_ + r * no_ + n] -= value;
+                        rdm3[q * no5_ + p * no4_ + n * no3_ + s * no2_ + r * no_ + n] += value;
+                        rdm3[q * no5_ + p * no4_ + n * no3_ + r * no2_ + s * no_ + n] -= value;
+
+                        rdm3[n * no5_ + q * no4_ + p * no3_ + n * no2_ + s * no_ + r] += value;
+                        rdm3[n * no5_ + q * no4_ + p * no3_ + n * no2_ + r * no_ + s] -= value;
+                        rdm3[n * no5_ + p * no4_ + q * no3_ + n * no2_ + r * no_ + s] += value;
+                        rdm3[n * no5_ + p * no4_ + q * no3_ + n * no2_ + s * no_ + r] -= value;
+
+                        rdm3[p * no5_ + n * no4_ + q * no3_ + r * no2_ + n * no_ + s] += value;
+                        rdm3[p * no5_ + n * no4_ + q * no3_ + s * no2_ + n * no_ + r] -= value;
+                        rdm3[q * no5_ + n * no4_ + p * no3_ + s * no2_ + n * no_ + r] += value;
+                        rdm3[q * no5_ + n * no4_ + p * no3_ + r * no2_ + n * no_ + s] -= value;
+
+                        rdm3[r * no5_ + s * no4_ + n * no3_ + p * no2_ + q * no_ + n] += value;
+                        rdm3[s * no5_ + r * no4_ + n * no3_ + p * no2_ + q * no_ + n] -= value;
+                        rdm3[s * no5_ + r * no4_ + n * no3_ + q * no2_ + p * no_ + n] += value;
+                        rdm3[r * no5_ + s * no4_ + n * no3_ + q * no2_ + p * no_ + n] -= value;
+
+                        rdm3[n * no5_ + s * no4_ + r * no3_ + n * no2_ + q * no_ + p] += value;
+                        rdm3[n * no5_ + r * no4_ + s * no3_ + n * no2_ + q * no_ + p] -= value;
+                        rdm3[n * no5_ + r * no4_ + s * no3_ + n * no2_ + p * no_ + q] += value;
+                        rdm3[n * no5_ + s * no4_ + r * no3_ + n * no2_ + p * no_ + q] -= value;
+
+                        rdm3[r * no5_ + n * no4_ + s * no3_ + p * no2_ + n * no_ + q] += value;
+                        rdm3[s * no5_ + n * no4_ + r * no3_ + p * no2_ + n * no_ + q] -= value;
+                        rdm3[s * no5_ + n * no4_ + r * no3_ + q * no2_ + n * no_ + p] += value;
+                        rdm3[r * no5_ + n * no4_ + s * no3_ + q * no2_ + n * no_ + p] -= value;
+                        Ibc.clear_first_one();
+                    }
+
+                } else if (ndiff == 6) {
+                    auto Ia_sub = Ia & IJa;
+                    uint64_t p = Ia_sub.find_first_one();
+                    Ia_sub.clear_first_one();
+                    uint64_t q = Ia_sub.find_first_one();
+                    Ia_sub.clear_first_one();
+                    uint64_t r = Ia_sub.find_first_one();
+
+                    auto Ja_sub = Ja & IJa;
+                    uint64_t s = Ja_sub.find_first_one();
+                    Ja_sub.clear_first_one();
+                    uint64_t t = Ja_sub.find_first_one();
+                    Ja_sub.clear_first_one();
+                    uint64_t u = Ja_sub.find_first_one();
+                    double Csq = CI * evecs_->get(b_sorted_string_list_.add(J), root2_);
+                    double el = Csq * Ia.slater_sign(p, q) * Ia.slater_sign(r) *
+                                Ja.slater_sign(s, t) * Ja.slater_sign(u);
+                    fill_3rdm(rdm3, el, p, q, r, s, t, u, false);
+                }
+            }
+        }
+    }
+    outfile->Printf("\n all alpha takes %1.6f", aaa.get());
+
+    //- All beta RDMs -//
+    local_timer bbb;
+    // loop through all alpha strings
+    const std::vector<String>& sorted_astr = a_sorted_string_list_.sorted_half_dets();
+    size_t num_astr = sorted_astr.size();
+    for (size_t astr = 0; astr < num_astr; ++astr) {
+        const String& Ia = sorted_astr[astr];
+        const auto& range_I = a_sorted_string_list_.range(Ia);
+
+        String Ib;
+        String Jb;
+        String IJb;
+        size_t first_I = range_I.first;
+        size_t last_I = range_I.second;
+
+        // Double loop through determinants with same alpha string
+        for (size_t I = first_I; I < last_I; ++I) {
+            Ib = sorted_a_dets[I].get_beta_bits();
+            double CI = evecs_->get(a_sorted_string_list_.add(I), root1_);
+            for (size_t J = I + 1; J < last_I; ++J) {
+                Jb = sorted_a_dets[J].get_beta_bits();
+                IJb = Ib ^ Jb;
+                int ndiff = IJb.count();
+
+                if (ndiff == 2) {
+                    auto Ib_sub = Ib & IJb;
+                    uint64_t p = Ib_sub.find_first_one();
+                    auto Jb_sub = Jb & IJb;
+                    uint64_t q = Jb_sub.find_first_one();
+                    double Csq = CI * evecs_->get(a_sorted_string_list_.add(J), root2_);
+
+                    double value = Csq * Ib.slater_sign(p, q);
+                    rdm1[p * no_ + q] += value;
+                    rdm1[q * no_ + p] += value;
+                    auto Ibc = Ib;
+                    Ibc ^= Ib_sub;
+                    for (size_t ndb = 1; ndb < nb_; ++ndb) {
+                        uint64_t m = Ibc.find_first_one();
+                        rdm2[p * no3_ + m * no2_ + q * no_ + m] += value;
+                        rdm2[m * no3_ + p * no2_ + q * no_ + m] -= value;
+                        rdm2[m * no3_ + p * no2_ + m * no_ + q] += value;
+                        rdm2[p * no3_ + m * no2_ + m * no_ + q] -= value;
+
+                        rdm2[q * no3_ + m * no2_ + p * no_ + m] += value;
+                        rdm2[m * no3_ + q * no2_ + p * no_ + m] -= value;
+                        rdm2[m * no3_ + q * no2_ + m * no_ + p] += value;
+                        rdm2[q * no3_ + m * no2_ + m * no_ + p] -= value;
+                        Ibc.clear_first_one();
+
+                        String Iac = Ia;
+                        for (size_t idx = 0; idx < na_; ++idx) {
+                            uint64_t n = Iac.find_first_one();
+                            rdm3[n * no5_ + p * no4_ + m * no3_ + n * no2_ + q * no_ + m] += value;
+                            rdm3[n * no5_ + p * no4_ + m * no3_ + n * no2_ + m * no_ + q] -= value;
+                            rdm3[n * no5_ + m * no4_ + p * no3_ + n * no2_ + m * no_ + q] += value;
+                            rdm3[n * no5_ + m * no4_ + p * no3_ + n * no2_ + q * no_ + m] -= value;
+
+                            rdm3[p * no5_ + n * no4_ + m * no3_ + q * no2_ + n * no_ + m] += value;
+                            rdm3[p * no5_ + n * no4_ + m * no3_ + m * no2_ + n * no_ + q] -= value;
+                            rdm3[m * no5_ + n * no4_ + p * no3_ + m * no2_ + n * no_ + q] += value;
+                            rdm3[m * no5_ + n * no4_ + p * no3_ + q * no2_ + n * no_ + m] -= value;
+
+                            rdm3[m * no5_ + p * no4_ + n * no3_ + m * no2_ + q * no_ + n] += value;
+                            rdm3[m * no5_ + p * no4_ + n * no3_ + q * no2_ + m * no_ + n] -= value;
+                            rdm3[p * no5_ + m * no4_ + n * no3_ + q * no2_ + m * no_ + n] += value;
+                            rdm3[p * no5_ + m * no4_ + n * no3_ + m * no2_ + q * no_ + n] -= value;
+
+                            rdm3[n * no5_ + q * no4_ + m * no3_ + n * no2_ + p * no_ + m] += value;
+                            rdm3[n * no5_ + q * no4_ + m * no3_ + n * no2_ + m * no_ + p] -= value;
+                            rdm3[n * no5_ + m * no4_ + q * no3_ + n * no2_ + m * no_ + p] += value;
+                            rdm3[n * no5_ + m * no4_ + q * no3_ + n * no2_ + p * no_ + m] -= value;
+
+                            rdm3[q * no5_ + n * no4_ + m * no3_ + p * no2_ + n * no_ + m] += value;
+                            rdm3[q * no5_ + n * no4_ + m * no3_ + m * no2_ + n * no_ + p] -= value;
+                            rdm3[m * no5_ + n * no4_ + q * no3_ + m * no2_ + n * no_ + p] += value;
+                            rdm3[m * no5_ + n * no4_ + q * no3_ + p * no2_ + n * no_ + m] -= value;
+
+                            rdm3[m * no5_ + q * no4_ + n * no3_ + m * no2_ + p * no_ + n] += value;
+                            rdm3[m * no5_ + q * no4_ + n * no3_ + p * no2_ + m * no_ + n] -= value;
+                            rdm3[q * no5_ + m * no4_ + n * no3_ + p * no2_ + m * no_ + n] += value;
+                            rdm3[q * no5_ + m * no4_ + n * no3_ + m * no2_ + p * no_ + n] -= value;
+                            Iac.clear_first_one();
+                        }
+                    }
+                    auto Iac = Ia;
+                    for (size_t nidx = 0; nidx < na_; ++nidx) {
+                        uint64_t n = Iac.find_first_one();
+                        rdm2[n * no3_ + p * no2_ + n * no_ + q] += value;
+                        rdm2[n * no3_ + q * no2_ + n * no_ + p] += value;
+                        rdm2[p * no3_ + n * no2_ + q * no_ + n] += value;
+                        rdm2[q * no3_ + n * no2_ + p * no_ + n] += value;
+                        Iac.clear_first_one();
+
+                        auto Iacc = Iac;
+                        for (size_t midx = nidx + 1; midx < na_; ++midx) {
+                            uint64_t m = Iacc.find_first_one();
+                            rdm3[n * no5_ + m * no4_ + p * no3_ + n * no2_ + m * no_ + q] += value;
+                            rdm3[n * no5_ + m * no4_ + p * no3_ + m * no2_ + n * no_ + q] -= value;
+                            rdm3[m * no5_ + n * no4_ + p * no3_ + m * no2_ + n * no_ + q] += value;
+                            rdm3[m * no5_ + n * no4_ + p * no3_ + n * no2_ + m * no_ + q] -= value;
+
+                            rdm3[p * no5_ + m * no4_ + n * no3_ + q * no2_ + m * no_ + n] += value;
+                            rdm3[p * no5_ + m * no4_ + n * no3_ + q * no2_ + n * no_ + m] -= value;
+                            rdm3[p * no5_ + n * no4_ + m * no3_ + q * no2_ + n * no_ + m] += value;
+                            rdm3[p * no5_ + n * no4_ + m * no3_ + q * no2_ + m * no_ + n] -= value;
+
+                            rdm3[n * no5_ + p * no4_ + m * no3_ + n * no2_ + q * no_ + m] += value;
+                            rdm3[n * no5_ + p * no4_ + m * no3_ + m * no2_ + q * no_ + n] -= value;
+                            rdm3[m * no5_ + p * no4_ + n * no3_ + m * no2_ + q * no_ + n] += value;
+                            rdm3[m * no5_ + p * no4_ + n * no3_ + n * no2_ + q * no_ + m] -= value;
+
+                            rdm3[n * no5_ + m * no4_ + q * no3_ + n * no2_ + m * no_ + p] += value;
+                            rdm3[n * no5_ + m * no4_ + q * no3_ + m * no2_ + n * no_ + p] -= value;
+                            rdm3[m * no5_ + n * no4_ + q * no3_ + m * no2_ + n * no_ + p] += value;
+                            rdm3[m * no5_ + n * no4_ + q * no3_ + n * no2_ + m * no_ + p] -= value;
+
+                            rdm3[q * no5_ + m * no4_ + n * no3_ + p * no2_ + m * no_ + n] += value;
+                            rdm3[q * no5_ + m * no4_ + n * no3_ + p * no2_ + n * no_ + m] -= value;
+                            rdm3[q * no5_ + n * no4_ + m * no3_ + p * no2_ + n * no_ + m] += value;
+                            rdm3[q * no5_ + n * no4_ + m * no3_ + p * no2_ + m * no_ + n] -= value;
+
+                            rdm3[n * no5_ + q * no4_ + m * no3_ + n * no2_ + p * no_ + m] += value;
+                            rdm3[n * no5_ + q * no4_ + m * no3_ + m * no2_ + p * no_ + n] -= value;
+                            rdm3[m * no5_ + q * no4_ + n * no3_ + m * no2_ + p * no_ + n] += value;
+                            rdm3[m * no5_ + q * no4_ + n * no3_ + n * no2_ + p * no_ + m] -= value;
+
+                            Iacc.clear_first_one();
+                        }
+                    }
+                    // 3-rdm
+                    String Ibcc(Ib);
+                    Ibcc ^= Ib_sub;
+                    for (size_t ndb = 1; ndb < nb_; ++ndb) {
+                        // while(Ibcc >0){
+                        uint64_t n = Ibcc.find_first_one();
+                        Ibcc.clear_first_one();
+                        String I_n = Ibcc;
+                        for (size_t ndbb = ndb + 1; ndbb < nb_; ++ndbb) {
+                            // while( I_n > 0){
+                            uint64_t m = I_n.find_first_one();
+                            fill_3rdm(rdm3, value, p, m, n, q, m, n, false);
+                            I_n.clear_first_one();
+                        }
+                    }
+                } else if (ndiff == 4) {
+                    auto Ib_sub = Ib & IJb;
+                    uint64_t p = Ib_sub.find_first_one();
+                    Ib_sub.clear_first_one();
+                    uint64_t q = Ib_sub.find_first_one();
+
+                    auto Jb_sub = Jb & IJb;
+                    uint64_t r = Jb_sub.find_first_one();
+                    Jb_sub.clear_first_one();
+                    uint64_t s = Jb_sub.find_first_one();
+
+                    double Csq = CI * evecs_->get(a_sorted_string_list_.add(J), root2_);
+                    double value = Csq * Ib.slater_sign(p, q) * Jb.slater_sign(r, s);
+                    rdm2[p * no3_ + q * no2_ + r * no_ + s] += value;
+                    rdm2[p * no3_ + q * no2_ + s * no_ + r] -= value;
+                    rdm2[q * no3_ + p * no2_ + r * no_ + s] -= value;
+                    rdm2[q * no3_ + p * no2_ + s * no_ + r] += value;
+
+                    rdm2[r * no3_ + s * no2_ + p * no_ + q] += value;
+                    rdm2[s * no3_ + r * no2_ + p * no_ + q] -= value;
+                    rdm2[r * no3_ + s * no2_ + q * no_ + p] -= value;
+                    rdm2[s * no3_ + r * no2_ + q * no_ + p] += value;
+
+                    // 3-rdm
+                    auto Ibc = Ib;
+                    Ibc ^= Ib_sub;
+                    for (size_t ndb = 1; ndb < nb_; ++ndb) {
+                        uint64_t n = Ibc.find_first_one();
+                        fill_3rdm(rdm3, value, p, q, n, r, s, n, false);
+                        Ibc.clear_first_one();
+                    }
+                    auto Iac = Ia;
+                    for (size_t nda = 0; nda < na_; ++nda) {
+                        uint64_t n = Iac.find_first_one();
+                        rdm3[n * no5_ + p * no4_ + q * no3_ + n * no2_ + r * no_ + s] += value;
+                        rdm3[n * no5_ + p * no4_ + q * no3_ + n * no2_ + s * no_ + r] -= value;
+                        rdm3[n * no5_ + q * no4_ + p * no3_ + n * no2_ + s * no_ + r] += value;
+                        rdm3[n * no5_ + q * no4_ + p * no3_ + n * no2_ + r * no_ + s] -= value;
+
+                        rdm3[p * no5_ + n * no4_ + q * no3_ + r * no2_ + n * no_ + s] += value;
+                        rdm3[p * no5_ + n * no4_ + q * no3_ + s * no2_ + n * no_ + r] -= value;
+                        rdm3[q * no5_ + n * no4_ + p * no3_ + s * no2_ + n * no_ + r] += value;
+                        rdm3[q * no5_ + n * no4_ + p * no3_ + r * no2_ + n * no_ + s] -= value;
+
+                        rdm3[q * no5_ + p * no4_ + n * no3_ + s * no2_ + r * no_ + n] += value;
+                        rdm3[q * no5_ + p * no4_ + n * no3_ + r * no2_ + s * no_ + n] -= value;
+                        rdm3[p * no5_ + q * no4_ + n * no3_ + r * no2_ + s * no_ + n] += value;
+                        rdm3[p * no5_ + q * no4_ + n * no3_ + s * no2_ + r * no_ + n] -= value;
+
+                        rdm3[n * no5_ + r * no4_ + s * no3_ + n * no2_ + p * no_ + q] += value;
+                        rdm3[n * no5_ + r * no4_ + s * no3_ + n * no2_ + q * no_ + p] -= value;
+                        rdm3[n * no5_ + s * no4_ + r * no3_ + n * no2_ + q * no_ + p] += value;
+                        rdm3[n * no5_ + s * no4_ + r * no3_ + n * no2_ + p * no_ + q] -= value;
+
+                        rdm3[r * no5_ + n * no4_ + s * no3_ + p * no2_ + n * no_ + q] += value;
+                        rdm3[r * no5_ + n * no4_ + s * no3_ + q * no2_ + n * no_ + p] -= value;
+                        rdm3[s * no5_ + n * no4_ + r * no3_ + q * no2_ + n * no_ + p] += value;
+                        rdm3[s * no5_ + n * no4_ + r * no3_ + p * no2_ + n * no_ + q] -= value;
+
+                        rdm3[s * no5_ + r * no4_ + n * no3_ + q * no2_ + p * no_ + n] += value;
+                        rdm3[s * no5_ + r * no4_ + n * no3_ + p * no2_ + q * no_ + n] -= value;
+                        rdm3[r * no5_ + s * no4_ + n * no3_ + p * no2_ + q * no_ + n] += value;
+                        rdm3[r * no5_ + s * no4_ + n * no3_ + q * no2_ + p * no_ + n] -= value;
+                        Iac.clear_first_one();
+                    }
+                } else if (ndiff == 6) {
+                    auto Ib_sub = Ib & IJb;
+                    uint64_t p = Ib_sub.find_first_one();
+                    Ib_sub.clear_first_one();
+                    uint64_t q = Ib_sub.find_first_one();
+                    Ib_sub.clear_first_one();
+                    uint64_t r = Ib_sub.find_first_one();
+
+                    auto Jb_sub = Jb & IJb;
+                    uint64_t s = Jb_sub.find_first_one();
+                    Jb_sub.clear_first_one();
+                    uint64_t t = Jb_sub.find_first_one();
+                    Jb_sub.clear_first_one();
+                    uint64_t u = Jb_sub.find_first_one();
+                    double Csq = CI * evecs_->get(a_sorted_string_list_.add(J), root2_);
+                    double el = Csq * Ib.slater_sign(p, q) * Ib.slater_sign(r) *
+                                Jb.slater_sign(s, t) * Jb.slater_sign(u);
+                    fill_3rdm(rdm3, el, p, q, r, s, t, u, false);
+                }
+            }
+        }
+    }
+    outfile->Printf("\n all beta takes %1.6f", bbb.get());
+
+    //- Alpha-Beta RDMs -//
+    local_timer mix;
+    double d2 = 0.0;
+    double d4 = 0.0;
+    for (auto& detIa : sorted_astr) {
+        const auto& range_I = a_sorted_string_list_.range(detIa);
+        String detIJa_common;
+        String Ib;
+        String Jb;
+        String IJb;
+        for (auto& detJa : sorted_astr) {
+            detIJa_common = detIa ^ detJa;
+            int ndiff = detIJa_common.count();
+            if (ndiff == 2) {
+                local_timer t2;
+                auto Ia_d = detIa & detIJa_common;
+                uint64_t p = Ia_d.find_first_one();
+                auto Ja_d = detJa & detIJa_common;
+                uint64_t s = Ja_d.find_first_one();
+
+                const auto& range_J = a_sorted_string_list_.range(detJa);
+                size_t first_I = range_I.first;
+                size_t last_I = range_I.second;
+                size_t first_J = range_J.first;
+                size_t last_J = range_J.second;
+                double sign_Ips = detIa.slater_sign(p, s);
+                double sign_IJ = detIa.slater_sign(p) * detJa.slater_sign(s);
+                for (size_t I = first_I; I < last_I; ++I) {
+                    Ib = sorted_a_dets[I].get_beta_bits();
+                    double CI = evecs_->get(a_sorted_string_list_.add(I), root1_);
+                    for (size_t J = first_J; J < last_J; ++J) {
+                        Jb = sorted_a_dets[J].get_beta_bits();
+                        IJb = Ib ^ Jb;
+                        int nbdiff = IJb.count();
+                        if (nbdiff == 2) {
+                            double Csq = CI * evecs_->get(a_sorted_string_list_.add(J), root2_);
+                            auto Ib_sub = Ib & IJb;
+                            uint64_t q = Ib_sub.find_first_one();
+                            auto Jb_sub = Jb & IJb;
+                            uint64_t r = Jb_sub.find_first_one();
+
+                            double value =
+                                Csq * sign_Ips * Ib.slater_sign(q, r); // * ui64_slater_sign(Jb,r);
+                            rdm2[p * no3_ + q * no2_ + s * no_ + r] += value;
+                            rdm2[q * no3_ + p * no2_ + r * no_ + s] += value;
+
+                            auto Iac(detIa);
+                            Iac ^= Ia_d;
+                            for (size_t d = 1; d < na_; ++d) {
+                                uint64_t n = Iac.find_first_one();
+                                rdm3[p * no5_ + n * no4_ + q * no3_ + s * no2_ + n * no_ + r] +=
+                                    value;
+                                rdm3[n * no5_ + p * no4_ + q * no3_ + s * no2_ + n * no_ + r] -=
+                                    value;
+                                rdm3[n * no5_ + p * no4_ + q * no3_ + n * no2_ + s * no_ + r] +=
+                                    value;
+                                rdm3[p * no5_ + n * no4_ + q * no3_ + n * no2_ + s * no_ + r] -=
+                                    value;
+
+                                rdm3[q * no5_ + n * no4_ + p * no3_ + r * no2_ + n * no_ + s] +=
+                                    value;
+                                rdm3[q * no5_ + p * no4_ + n * no3_ + r * no2_ + n * no_ + s] -=
+                                    value;
+                                rdm3[q * no5_ + p * no4_ + n * no3_ + r * no2_ + s * no_ + n] +=
+                                    value;
+                                rdm3[q * no5_ + n * no4_ + p * no3_ + r * no2_ + s * no_ + n] -=
+                                    value;
+
+                                rdm3[p * no5_ + q * no4_ + n * no3_ + s * no2_ + r * no_ + n] +=
+                                    value;
+                                rdm3[n * no5_ + q * no4_ + p * no3_ + s * no2_ + r * no_ + n] -=
+                                    value;
+                                rdm3[n * no5_ + q * no4_ + p * no3_ + n * no2_ + r * no_ + s] +=
+                                    value;
+                                rdm3[p * no5_ + q * no4_ + n * no3_ + n * no2_ + r * no_ + s] -=
+                                    value;
+                                Iac.clear_first_one();
+                            }
+                            auto Ibc(Ib);
+                            Ibc ^= Ib_sub;
+                            for (size_t d = 1; d < nb_; ++d) {
+                                uint64_t n = Ibc.find_first_one();
+                                rdm3[p * no5_ + q * no4_ + n * no3_ + s * no2_ + r * no_ + n] +=
+                                    value;
+                                rdm3[p * no5_ + q * no4_ + n * no3_ + s * no2_ + n * no_ + r] -=
+                                    value;
+                                rdm3[p * no5_ + n * no4_ + q * no3_ + s * no2_ + n * no_ + r] +=
+                                    value;
+                                rdm3[p * no5_ + n * no4_ + q * no3_ + s * no2_ + r * no_ + n] -=
+                                    value;
+
+                                rdm3[q * no5_ + p * no4_ + n * no3_ + r * no2_ + s * no_ + n] +=
+                                    value;
+                                rdm3[q * no5_ + p * no4_ + n * no3_ + n * no2_ + s * no_ + r] -=
+                                    value;
+                                rdm3[n * no5_ + p * no4_ + q * no3_ + n * no2_ + s * no_ + r] +=
+                                    value;
+                                rdm3[n * no5_ + p * no4_ + q * no3_ + r * no2_ + s * no_ + n] -=
+                                    value;
+
+                                rdm3[n * no5_ + q * no4_ + p * no3_ + n * no2_ + r * no_ + s] +=
+                                    value;
+                                rdm3[n * no5_ + q * no4_ + p * no3_ + r * no2_ + n * no_ + s] -=
+                                    value;
+                                rdm3[q * no5_ + n * no4_ + p * no3_ + r * no2_ + n * no_ + s] +=
+                                    value;
+                                rdm3[q * no5_ + n * no4_ + p * no3_ + n * no2_ + r * no_ + s] -=
+                                    value;
+                                Ibc.clear_first_one();
+                            }
+                        } else if (nbdiff == 4) {
+                            double Csq = CI * evecs_->get(a_sorted_string_list_.add(J), root2_);
+                            auto Ib_sub = Ib & IJb;
+                            uint64_t q = Ib_sub.find_first_one();
+                            Ib_sub.clear_first_one();
+                            uint64_t r = Ib_sub.find_first_one();
+
+                            auto Jb_sub = Jb & IJb;
+                            uint64_t t = Jb_sub.find_first_one();
+                            Jb_sub.clear_first_one();
+                            uint64_t u = Jb_sub.find_first_one();
+
+                            double value = Csq * sign_IJ *
+                                           Ib.slater_sign(q, r) * // ui64_slater_sign(Ib,r) *
+                                           Jb.slater_sign(t, u);  // * ui64_slater_sign(Jb,u);
+                            rdm3[p * no5_ + q * no4_ + r * no3_ + s * no2_ + t * no_ + u] += value;
+                            rdm3[p * no5_ + q * no4_ + r * no3_ + s * no2_ + u * no_ + t] -= value;
+                            rdm3[p * no5_ + r * no4_ + q * no3_ + s * no2_ + u * no_ + t] += value;
+                            rdm3[p * no5_ + r * no4_ + q * no3_ + s * no2_ + t * no_ + u] -= value;
+
+                            rdm3[q * no5_ + p * no4_ + r * no3_ + t * no2_ + s * no_ + u] += value;
+                            rdm3[q * no5_ + p * no4_ + r * no3_ + u * no2_ + s * no_ + t] -= value;
+                            rdm3[r * no5_ + p * no4_ + q * no3_ + u * no2_ + s * no_ + t] += value;
+                            rdm3[r * no5_ + p * no4_ + q * no3_ + t * no2_ + s * no_ + u] -= value;
+
+                            rdm3[r * no5_ + q * no4_ + p * no3_ + u * no2_ + t * no_ + s] += value;
+                            rdm3[r * no5_ + q * no4_ + p * no3_ + t * no2_ + u * no_ + s] -= value;
+                            rdm3[q * no5_ + r * no4_ + p * no3_ + t * no2_ + u * no_ + s] += value;
+                            rdm3[q * no5_ + r * no4_ + p * no3_ + u * no2_ + t * no_ + s] -= value;
+                        }
+                    }
+                }
+                d2 += t2.get();
+            } else if (ndiff == 4) {
+                local_timer t4;
+                // Get aa-aa part of aab 3rdm
+                auto Ia_sub = detIa & detIJa_common;
+                uint64_t p = Ia_sub.find_first_one();
+                Ia_sub.clear_first_one();
+                uint64_t q = Ia_sub.find_first_one();
+
+                auto Ja_sub = detJa & detIJa_common;
+                uint64_t s = Ja_sub.find_first_one();
+                Ja_sub.clear_first_one();
+                uint64_t t = Ja_sub.find_first_one();
+
+                const auto& range_J = a_sorted_string_list_.range(detJa);
+                size_t first_I = range_I.first;
+                size_t last_I = range_I.second;
+                size_t first_J = range_J.first;
+                size_t last_J = range_J.second;
+
+                // double sign = ui64_slater_sign(detIa,p,q) * ui64_slater_sign(detJa,s,t);
+                double sign = detIa.slater_sign(p, q) * // ui64_slater_sign(detIa,q) *
+                              detJa.slater_sign(s, t);  // ui64_slater_sign(detJa,t);
+
+                // Now the b-b part
+                for (size_t I = first_I; I < last_I; ++I) {
+                    Ib = sorted_a_dets[I].get_beta_bits();
+                    double CI = evecs_->get(a_sorted_string_list_.add(I), root1_);
+                    for (size_t J = first_J; J < last_J; ++J) {
+                        Jb = sorted_a_dets[J].get_beta_bits();
+                        IJb = Ib ^ Jb;
+                        int nbdiff = IJb.count();
+                        if (nbdiff == 2) {
+                            double Csq = CI * evecs_->get(a_sorted_string_list_.add(J), root2_);
+                            auto Ib_sub = Ib & IJb;
+                            uint64_t r = Ib_sub.find_first_one();
+                            auto Jb_sub = Jb & IJb;
+                            uint64_t u = Jb_sub.find_first_one();
+                            double el = Csq * sign * Ib.slater_sign(r) * Jb.slater_sign(u);
+
+                            rdm3[p * no5_ + q * no4_ + r * no3_ + s * no2_ + t * no_ + u] += el;
+                            rdm3[p * no5_ + q * no4_ + r * no3_ + t * no2_ + s * no_ + u] -= el;
+                            rdm3[q * no5_ + p * no4_ + r * no3_ + s * no2_ + t * no_ + u] -= el;
+                            rdm3[q * no5_ + p * no4_ + r * no3_ + t * no2_ + s * no_ + u] += el;
+
+                            rdm3[r * no5_ + q * no4_ + p * no3_ + u * no2_ + t * no_ + s] += el;
+                            rdm3[r * no5_ + q * no4_ + p * no3_ + u * no2_ + s * no_ + t] -= el;
+                            rdm3[r * no5_ + p * no4_ + q * no3_ + u * no2_ + t * no_ + s] -= el;
+                            rdm3[r * no5_ + p * no4_ + q * no3_ + u * no2_ + s * no_ + t] += el;
+
+                            rdm3[p * no5_ + r * no4_ + q * no3_ + s * no2_ + u * no_ + t] += el;
+                            rdm3[p * no5_ + r * no4_ + q * no3_ + t * no2_ + u * no_ + s] -= el;
+                            rdm3[q * no5_ + r * no4_ + p * no3_ + s * no2_ + u * no_ + t] -= el;
+                            rdm3[q * no5_ + r * no4_ + p * no3_ + t * no2_ + u * no_ + s] += el;
+                        }
+                    }
+                }
+                d4 += t4.get();
+            }
+        }
+    }
+    outfile->Printf("\n  2dif: %1.6f  \n  4dif: %1.6f", d2, d4);
+    outfile->Printf("\n all alpha/beta takes %1.6f", mix.get());
+}
 } // namespace forte
