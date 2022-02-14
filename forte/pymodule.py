@@ -446,7 +446,7 @@ def forte_driver(state_weights_map, scf_info, options, ints, mo_space_info):
     state_energies_list = active_space_solver.compute_energy()
 
     if options.get_bool('SPIN_ANALYSIS'):
-        rdms = active_space_solver.compute_average_rdms(state_weights_map, 2)
+        rdms = active_space_solver.compute_average_rdms(state_weights_map, 2, forte.RDMsType.spin_dependent)
         forte.perform_spin_analysis(rdms, options, mo_space_info, as_ints)
 
     # solver for dynamical correlation from DSRG
@@ -575,7 +575,7 @@ def mr_dsrg_pt2(job_type, forte_objects, ints, options):
     ci = forte.make_active_space_solver(cas_type, state_map, scf_info, mo_space_info, as_ints, options)
     ci.compute_energy()
 
-    rdms = ci.compute_average_rdms(state_weights_map, max_rdm_level)
+    rdms = ci.compute_average_rdms(state_weights_map, max_rdm_level, forte.RDMsType.spin_dependent)
     semi = forte.SemiCanonical(mo_space_info, ints, options)
     semi.semicanonicalize(rdms)
 

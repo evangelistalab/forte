@@ -57,7 +57,8 @@ class SpinAnalysis(Solver):
         local_options.set_from_dict(self._options)
 
         flog('info', f'{__class__.__name__}: preparing the 1- and 2-body reduced density matrices')
-        rdms = self.input_nodes[0]._active_space_solver.compute_average_rdms(self.input_nodes[0]._states, 2)
+        rdms = self.input_nodes[0]._active_space_solver.compute_average_rdms(self.input_nodes[0]._states, 2,
+                                                                             forte.RDMsType.spin_dependent)
         perform_spin_analysis(rdms, local_options, self.mo_space_info, self.as_ints)
 
         return self
