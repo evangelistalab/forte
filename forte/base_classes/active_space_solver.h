@@ -103,6 +103,15 @@ class ActiveSpaceSolver {
     compute_average_rdms(const std::map<StateInfo, std::vector<double>>& state_weights_map,
                          int max_rdm_level, RDMsType rdm_type);
 
+    /// Compute the complementary operator acting on the reference h_{pσ} (t) |0>
+    /// Return a tuple of (h_{pα} (t) |0>, h_{pβ} (t) |0>)
+    /// Complimentary operator: h_{pσ} (t) = \sum_{uvw} t^{uv}_{pw} \sum_{σ1} w^+_{σ1} v_{σ1} u_{σ}
+    /// Reference: |0> = \sum_{n} w_n |0_n> = \sum_{n} w_n \sum_{I} c^n_I |I>
+    /// spin: σ, σ1; active indices: u, v, w; state weights: w_n; CI coefficients: c^n_I
+    /// If transpose = true, the tensor t assume the order of t^{pw}_{uv}
+    std::map<StateInfo, std::vector<std::tuple<ambit::Tensor, ambit::Tensor>>>
+    compute_complimentary(ambit::Tensor tensor, bool transpose = false);
+
     /// Print a summary of the computation information
     void print_options();
 
@@ -183,13 +192,15 @@ class ActiveSpaceSolver {
     /// Moreover, all its ms components will be computed by the solver.
     bool ms_avg_;
 
-//    /// Compute the state-averaged reference when spin multiplets are also averaged
-//    RDMs compute_avg_rdms_ms_avg(const std::map<StateInfo, std::vector<double>>& state_weights_map,
-//                                 int max_rdm_level);
+    //    /// Compute the state-averaged reference when spin multiplets are also averaged
+    //    RDMs compute_avg_rdms_ms_avg(const std::map<StateInfo, std::vector<double>>&
+    //    state_weights_map,
+    //                                 int max_rdm_level);
 
-//    /// Compute the state-averaged reference when spin multiplets are also averaged
-//    std::shared_ptr<RDMs> compute_avg_rdms(const std::map<StateInfo, std::vector<double>>& state_weights_map,
-//                          int max_rdm_level, RDMsType rdm_type);
+    //    /// Compute the state-averaged reference when spin multiplets are also averaged
+    //    std::shared_ptr<RDMs> compute_avg_rdms(const std::map<StateInfo, std::vector<double>>&
+    //    state_weights_map,
+    //                          int max_rdm_level, RDMsType rdm_type);
 
     /// A variable to control printing information
     int print_ = 1;

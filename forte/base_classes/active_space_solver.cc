@@ -553,16 +553,17 @@ make_state_weights_map(std::shared_ptr<ForteOptions> options,
 }
 
 std::shared_ptr<RDMs> ActiveSpaceSolver::compute_average_rdms(
-    const std::map<StateInfo, std::vector<double>>& state_weights_map, int max_rdm_level, RDMsType rdm_type) {
+    const std::map<StateInfo, std::vector<double>>& state_weights_map, int max_rdm_level,
+    RDMsType rdm_type) {
 
-//    if (ms_avg_) {
-//        //        return compute_avg_rdms_ms_avg(state_weights_map, max_rdm_level);
-//        auto sf_rdms = compute_avg_rdms(state_weights_map, max_rdm_level);
-//        sf_rdms.make_rdms_spin_free();
-//        return sf_rdms;
-//    }
-//
-//    return compute_avg_rdms(state_weights_map, max_rdm_level);
+    //    if (ms_avg_) {
+    //        //        return compute_avg_rdms_ms_avg(state_weights_map, max_rdm_level);
+    //        auto sf_rdms = compute_avg_rdms(state_weights_map, max_rdm_level);
+    //        sf_rdms.make_rdms_spin_free();
+    //        return sf_rdms;
+    //    }
+    //
+    //    return compute_avg_rdms(state_weights_map, max_rdm_level);
 
     auto rdms = RDMs::build(max_rdm_level, mo_space_info_->size("ACTIVE"), rdm_type);
 
@@ -594,85 +595,113 @@ std::shared_ptr<RDMs> ActiveSpaceSolver::compute_average_rdms(
     return rdms;
 }
 
-//std::shared_ptr<RDMs> ActiveSpaceSolver::compute_avg_rdms(
-//    const std::map<StateInfo, std::vector<double>>& state_weights_map, int max_rdm_level) {
-//    if (max_rdm_level <= 0) {
-//        return RDMs();
-//    }
+std::map<StateInfo, std::vector<std::tuple<ambit::Tensor, ambit::Tensor>>>
+ActiveSpaceSolver::compute_complimentary(ambit::Tensor tensor, bool transpose) {
+    // check tensor
+    auto nactv = mo_space_info_->size("ACTIVE");
+    const auto& dims = tensor.dims();
+    if (dims.size() != 4)
+        throw std::runtime_error("Invalid Tensor: Dimension must be 4!");
+
+    bool indices_ok = transpose ? (dims[1] == nactv) and (dims[2] == nactv) and (dims[3] == nactv)
+                                : (dims[0] == nactv) and (dims[1] == nactv) and (dims[3] == nactv);
+    if (not indices_ok)
+        throw std::runtime_error("Invalid Tensor: Too many non-active indices");
+
+    std::map<StateInfo, std::vector<std::tuple<ambit::Tensor, ambit::Tensor>>> out;
+
+    for (const auto& state_nroots : state_nroots_map_) {
+        const auto& state = state_nroots.first;
+
+        std::vector<size_t> roots(state_nroots.second);
+        std::iota(roots.begin(), roots.end(), 0);
+
+        const auto method = state_method_map_.at(state);
+        out[state] = method->compute_complimentary(roots, tensor, transpose);
+    }
+
+    return out;
+}
+
+// std::shared_ptr<RDMs> ActiveSpaceSolver::compute_avg_rdms(
+//     const std::map<StateInfo, std::vector<double>>& state_weights_map, int max_rdm_level) {
+//     if (max_rdm_level <= 0) {
+//         return RDMs();
+//     }
 //
-//    size_t na = mo_space_info_->size("ACTIVE");
+//     size_t na = mo_space_info_->size("ACTIVE");
 //
-//    auto g1a = ambit::Tensor::build(ambit::CoreTensor, "g1a", {na, na});
-//    auto g1b = ambit::Tensor::build(ambit::CoreTensor, "g1b", {na, na});
+//     auto g1a = ambit::Tensor::build(ambit::CoreTensor, "g1a", {na, na});
+//     auto g1b = ambit::Tensor::build(ambit::CoreTensor, "g1b", {na, na});
 //
-//    ambit::Tensor g2aa, g2ab, g2bb, g3aaa, g3aab, g3abb, g3bbb;
+//     ambit::Tensor g2aa, g2ab, g2bb, g3aaa, g3aab, g3abb, g3bbb;
 //
-//    if (max_rdm_level >= 2) {
-//        g2aa = ambit::Tensor::build(ambit::CoreTensor, "g2aa", std::vector<size_t>(4, na));
-//        g2ab = ambit::Tensor::build(ambit::CoreTensor, "g2ab", std::vector<size_t>(4, na));
-//        g2bb = ambit::Tensor::build(ambit::CoreTensor, "g2bb", std::vector<size_t>(4, na));
-//    }
+//     if (max_rdm_level >= 2) {
+//         g2aa = ambit::Tensor::build(ambit::CoreTensor, "g2aa", std::vector<size_t>(4, na));
+//         g2ab = ambit::Tensor::build(ambit::CoreTensor, "g2ab", std::vector<size_t>(4, na));
+//         g2bb = ambit::Tensor::build(ambit::CoreTensor, "g2bb", std::vector<size_t>(4, na));
+//     }
 //
-//    if (max_rdm_level >= 3) {
-//        g3aaa = ambit::Tensor::build(ambit::CoreTensor, "g3aaa", std::vector<size_t>(6, na));
-//        g3aab = ambit::Tensor::build(ambit::CoreTensor, "g3aab", std::vector<size_t>(6, na));
-//        g3abb = ambit::Tensor::build(ambit::CoreTensor, "g3abb", std::vector<size_t>(6, na));
-//        g3bbb = ambit::Tensor::build(ambit::CoreTensor, "g3bbb", std::vector<size_t>(6, na));
-//    }
+//     if (max_rdm_level >= 3) {
+//         g3aaa = ambit::Tensor::build(ambit::CoreTensor, "g3aaa", std::vector<size_t>(6, na));
+//         g3aab = ambit::Tensor::build(ambit::CoreTensor, "g3aab", std::vector<size_t>(6, na));
+//         g3abb = ambit::Tensor::build(ambit::CoreTensor, "g3abb", std::vector<size_t>(6, na));
+//         g3bbb = ambit::Tensor::build(ambit::CoreTensor, "g3bbb", std::vector<size_t>(6, na));
+//     }
 //
-//    // Loop through references, add to master ref
-//    for (const auto& state_nroot : state_nroots_map_) {
-//        const auto& state = state_nroot.first;
-//        size_t nroot = state_nroot.second;
-//        const auto& weights = state_weights_map.at(state);
+//     // Loop through references, add to master ref
+//     for (const auto& state_nroot : state_nroots_map_) {
+//         const auto& state = state_nroot.first;
+//         size_t nroot = state_nroot.second;
+//         const auto& weights = state_weights_map.at(state);
 //
-//        // Get the already-run method
-//        const auto& method = state_method_map_.at(state);
+//         // Get the already-run method
+//         const auto& method = state_method_map_.at(state);
 //
-//        // Loop through roots in the method
-//        for (size_t r = 0; r < nroot; r++) {
+//         // Loop through roots in the method
+//         for (size_t r = 0; r < nroot; r++) {
 //
-//            // Get the weight
-//            double weight = weights[r];
+//             // Get the weight
+//             double weight = weights[r];
 //
-//            // Don't bother if the weight is zero
-//            if (weight <= 1e-15)
-//                continue;
+//             // Don't bother if the weight is zero
+//             if (weight <= 1e-15)
+//                 continue;
 //
-//            // Get the RDMs
-//            std::vector<std::pair<size_t, size_t>> state_ids;
-//            state_ids.emplace_back(r, r);
-//            RDMs method_rdms = method->rdms(state_ids, max_rdm_level)[0];
+//             // Get the RDMs
+//             std::vector<std::pair<size_t, size_t>> state_ids;
+//             state_ids.emplace_back(r, r);
+//             RDMs method_rdms = method->rdms(state_ids, max_rdm_level)[0];
 //
-//            // Average the RDMs
-//            g1a("pq") += weight * method_rdms.g1a()("pq");
-//            g1b("pq") += weight * method_rdms.g1b()("pq");
+//             // Average the RDMs
+//             g1a("pq") += weight * method_rdms.g1a()("pq");
+//             g1b("pq") += weight * method_rdms.g1b()("pq");
 //
-//            if (max_rdm_level >= 2) {
-//                g2aa("pqrs") += weight * method_rdms.g2aa()("pqrs");
-//                g2ab("pqrs") += weight * method_rdms.g2ab()("pqrs");
-//                g2bb("pqrs") += weight * method_rdms.g2bb()("pqrs");
-//            }
+//             if (max_rdm_level >= 2) {
+//                 g2aa("pqrs") += weight * method_rdms.g2aa()("pqrs");
+//                 g2ab("pqrs") += weight * method_rdms.g2ab()("pqrs");
+//                 g2bb("pqrs") += weight * method_rdms.g2bb()("pqrs");
+//             }
 //
-//            if (max_rdm_level >= 3) {
-//                g3aaa("pqrstu") += weight * method_rdms.g3aaa()("pqrstu");
-//                g3aab("pqrstu") += weight * method_rdms.g3aab()("pqrstu");
-//                g3abb("pqrstu") += weight * method_rdms.g3abb()("pqrstu");
-//                g3bbb("pqrstu") += weight * method_rdms.g3bbb()("pqrstu");
-//            }
-//        }
-//    }
+//             if (max_rdm_level >= 3) {
+//                 g3aaa("pqrstu") += weight * method_rdms.g3aaa()("pqrstu");
+//                 g3aab("pqrstu") += weight * method_rdms.g3aab()("pqrstu");
+//                 g3abb("pqrstu") += weight * method_rdms.g3abb()("pqrstu");
+//                 g3bbb("pqrstu") += weight * method_rdms.g3bbb()("pqrstu");
+//             }
+//         }
+//     }
 //
-//    if (max_rdm_level == 1) {
-//        return RDMs(g1a, g1b);
-//    }
+//     if (max_rdm_level == 1) {
+//         return RDMs(g1a, g1b);
+//     }
 //
-//    if (max_rdm_level == 2) {
-//        return RDMs(g1a, g1b, g2aa, g2ab, g2bb);
-//    }
+//     if (max_rdm_level == 2) {
+//         return RDMs(g1a, g1b, g2aa, g2ab, g2bb);
+//     }
 //
-//    return RDMs(g1a, g1b, g2aa, g2ab, g2bb, g3aaa, g3aab, g3abb, g3bbb);
-//}
+//     return RDMs(g1a, g1b, g2aa, g2ab, g2bb, g3aaa, g3aab, g3abb, g3bbb);
+// }
 
 // RDMs ActiveSpaceSolver::compute_avg_rdms_ms_avg(
 //     const std::map<StateInfo, std::vector<double>>& state_weights_map, int max_rdm_level) {
@@ -826,7 +855,8 @@ ActiveSpaceSolver::compute_contracted_energy(std::shared_ptr<ActiveSpaceIntegral
             for (size_t B = A; B < nroots; ++B) {
                 // just compute transition rdms of <A|sqop|B>
                 std::vector<std::pair<size_t, size_t>> root_list{std::make_pair(A, B)};
-                std::shared_ptr<RDMs> rdms = method->rdms(root_list, max_rdm_level, RDMsType::spin_dependent)[0];
+                std::shared_ptr<RDMs> rdms =
+                    method->rdms(root_list, max_rdm_level, RDMsType::spin_dependent)[0];
 
                 double H_AB = ints.contract_with_rdms(rdms);
                 if (A == B) {
