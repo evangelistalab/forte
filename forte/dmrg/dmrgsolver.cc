@@ -346,7 +346,7 @@ DMRGSolver::rdms(const std::vector<std::pair<size_t, size_t>>& root_list, int ma
         if (roots.find(root) != roots.end()) {
             timer t_root("DMRG RDMs Root " + std::to_string(root));
             solver->calc_rdms_and_correlations(do_3rdm, disk_3rdm);
-            rdms.push_back(fill_current_rdms(solver, do_3rdm));
+            rdms.push_back(fill_current_rdms(solver, do_3rdm, rdm_type));
         }
         if (root == 0 and nroot_ > 1) {
             solver->activateExcitations(static_cast<int>(nroot_ - 1));
@@ -374,7 +374,7 @@ DMRGSolver::rdms(const std::vector<std::pair<size_t, size_t>>& root_list, int ma
 }
 
 std::shared_ptr<RDMs> DMRGSolver::fill_current_rdms(std::shared_ptr<CheMPS2::DMRG> solver,
-                                                    const bool do_3rdm) {
+                                                    const bool do_3rdm, RDMsType rdm_type) {
     std::vector<size_t> dim2(2, nactv_);
     std::vector<size_t> dim4(4, nactv_);
     auto g1 = ambit::Tensor::build(ambit::CoreTensor, "DMRG G1", dim2);
@@ -383,14 +383,31 @@ std::shared_ptr<RDMs> DMRGSolver::fill_current_rdms(std::shared_ptr<CheMPS2::DMR
     CheMPS2::CASSCF::copy2DMover(solver->get2DM(), nactv_, g2.data().data());
     CheMPS2::CASSCF::setDMRG1DM(nelecs_actv_, nactv_, g1.data().data(), g2.data().data());
 
+    ambit::Tensor g3;
     if (do_3rdm) {
         std::vector<size_t> dim6(6, nactv_);
-        auto g3 = ambit::Tensor::build(ambit::CoreTensor, "DMRG G3", dim6);
+        g3 = ambit::Tensor::build(ambit::CoreTensor, "DMRG G3", dim6);
         solver->get3DM()->fill_ham_index(1.0, false, g3.data().data(), 0, nactv_);
-        return std::make_shared<RDMsSpinFree>(g1, g2, g3);
     }
 
-    return std::make_shared<RDMsSpinFree>(g1, g2);
+    if (rdm_type == RDMsType::spin_free) {
+        if (do_3rdm)
+            return std::make_shared<RDMsSpinFree>(g1, g2, g3);
+        else
+            return std::make_shared<RDMsSpinFree>(g1, g2);
+    }
+
+    auto g1a = RDMs::sf1_to_sd1(g1);
+    auto g2aa = RDMs::sf2_to_sd2aa(g2);
+    auto g2ab = RDMs::sf2_to_sd2ab(g2);
+    if (not do_3rdm)
+        return std::make_shared<RDMsSpinDependent>(g1a, g1a, g2aa, g2ab, g2aa);
+
+    auto g3aaa = RDMs::sf3_to_sd3aaa(g3);
+    auto g3aab = RDMs::sf3_to_sd3aab(g3);
+    auto g3abb = RDMs::sf3_to_sd3abb(g3);
+    return std::make_shared<RDMsSpinDependent>(g1a, g1a, g2aa, g2ab, g2aa, g3aaa, g3aab, g3abb,
+                                               g3aaa);
 }
 
 std::vector<std::shared_ptr<RDMs>>
