@@ -159,7 +159,6 @@ jobs:
         -DOpenMP_LIBRARY_DIRS=${CONDA_PREFIX}/lib \
         -DCMAKE_BUILD_TYPE=${PSI_BUILD_TYPE} \
         -Dpsi4_CXX_STANDARD=17 \
-        -DCMAKE_CXX_FLAGS=-DPYBIND11_CPP17 \
         -DCMAKE_CXX_STANDARD=17 \
         -DENABLE_CheMPS2=$ENABLE_CHEMPS2 \
         $(Build.SourcesDirectory)/build/psi4
