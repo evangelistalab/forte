@@ -509,10 +509,10 @@ void DSRG_MRPT2::write_df_rdm() {
     // dvabij["EVXY"] += Z["EU"] * Gamma2_["UVXY"];
     // dvabij["eVxY"] += Z["eu"] * Gamma2_["uVxY"];
 
-    // // CASSCF reference
-    // dvabij["xyuv"] += 0.25 * Gamma2_["uvxy"];
-    // dvabij["XYUV"] += 0.25 * Gamma2_["UVXY"];
-    // dvabij["xYuV"] += 0.25 * Gamma2_["uVxY"];
+    // CASSCF reference
+    dvabij["xyuv"] += 0.25 * Gamma2_["uvxy"];
+    dvabij["XYUV"] += 0.25 * Gamma2_["UVXY"];
+    dvabij["xYuV"] += 0.25 * Gamma2_["uVxY"];
 
     // // CI contribution
     // dvabij["xyuv"] += 0.125 * Gamma2_tilde["uvxy"];
@@ -538,49 +538,26 @@ void DSRG_MRPT2::write_df_rdm() {
     //     dvabij["aViU"] += sigma3_xi3["ia"] * Gamma1_["UV"];
     // }
 
-    // df_2rdm["R!,S!"] +=       B["A!,i,a"] * Jm12["A!,R!"] * B["B!,j,b"] * Jm12["B!,S!"] * dvabij["abij"];
-    // df_2rdm["R!,S!"] +=       B["A!,I,A"] * Jm12["A!,R!"] * B["B!,J,B"] * Jm12["B!,S!"] * dvabij["ABIJ"];
-    // df_2rdm["R!,S!"] += 4.0 * B["A!,i,a"] * Jm12["A!,R!"] * B["B!,J,B"] * Jm12["B!,S!"] * dvabij["aBiJ"];
-    // ! this line can be optimized as "df_2rdm_ab["S!,R!"] -= df_2rdm_ab["R!,S!"]" in the future
-    // df_2rdm["R!,S!"] += 2.0 * B["A!,I,A"] * Jm12["A!,R!"] * B["B!,j,b"] * Jm12["B!,S!"] * dvabij["bAjI"];
+
+    // Coulomb part
+    df_3rdm["Q!,a,i"] += Jm12["Q!,R!"] * B["R!,b,j"] * dvabij["abij"];
+    df_3rdm["Q!,a,i"] += Jm12["Q!,R!"] * B["R!,B,J"] * dvabij["aBiJ"];
+    df_3rdm["Q!,i,a"] += Jm12["Q!,R!"] * B["R!,j,b"] * dvabij["abij"];
+    df_3rdm["Q!,i,a"] += Jm12["Q!,R!"] * B["R!,J,B"] * dvabij["aBiJ"];
+
+    // Exchange part
+    df_3rdm["Q!,b,i"] -= Jm12["Q!,R!"] * B["R!,a,j"] * dvabij["abij"];
+    df_3rdm["Q!,b,i"] += Jm12["Q!,R!"] * B["R!,A,J"] * dvabij["bAiJ"];
+    df_3rdm["Q!,i,b"] -= Jm12["Q!,R!"] * B["R!,j,a"] * dvabij["abij"];
+    df_3rdm["Q!,i,b"] += Jm12["Q!,R!"] * B["R!,J,A"] * dvabij["bAiJ"];
 
 
-
-    // df_3rdm["Q!,a,i"] += Jm12["Q!,R!"] * B["R!,b,j"] * dvabij["abij"];
-    // df_3rdm["Q!,a,i"] += 2.0 * Jm12["Q!,R!"] * B["R!,B,J"] * dvabij["aBiJ"];
-    // df_3rdm["Q!,A,I"] += 2.0 * Jm12["Q!,R!"] * B["R!,b,j"] * dvabij["bAjI"];
-    // df_3rdm["Q!,A,I"] += Jm12["Q!,R!"] * B["R!,B,J"] * dvabij["ABIJ"];
-
-    // df_3rdm["Q!,i,a"] += Jm12["Q!,R!"] * B["R!,j,b"] * dvabij["abij"];
-    // df_3rdm["Q!,i,a"] += 2.0 * Jm12["Q!,R!"] * B["R!,J,B"] * dvabij["aBiJ"];
-    // df_3rdm["Q!,I,A"] += 2.0 * Jm12["Q!,R!"] * B["R!,j,b"] * dvabij["bAjI"];
-    // df_3rdm["Q!,I,A"] += Jm12["Q!,R!"] * B["R!,J,B"] * dvabij["ABIJ"];
-
-
-
-
-
-
-
-
-
-
-
-    // df_3rdm["Q!,a,i"] += Jm12["Q!,R!"] * B["R!,b,j"] * dvabij["abij"];
-    // df_3rdm["Q!,a,i"] += Jm12["Q!,R!"] * B["R!,B,J"] * dvabij["aBiJ"];
-    // df_3rdm["Q!,A,I"] += Jm12["Q!,R!"] * B["R!,b,j"] * dvabij["bAjI"];
-    // df_3rdm["Q!,A,I"] += Jm12["Q!,R!"] * B["R!,B,J"] * dvabij["ABIJ"];
-
-    // df_3rdm["R!,b,j"] += Jm12["Q!,R!"] * B["Q!,a,i"] * dvabij["abij"];
-    // df_3rdm["R!,B,J"] += Jm12["Q!,R!"] * B["Q!,a,i"] * dvabij["aBiJ"];
-    // df_3rdm["R!,b,j"] += Jm12["Q!,R!"] * B["Q!,A,I"] * dvabij["bAjI"];
-    // df_3rdm["R!,B,J"] += Jm12["Q!,R!"] * B["Q!,A,I"] * dvabij["ABIJ"];
 
 
 
     /************************************************************************************************/
 
-    // BlockedTensor temp = BTF_->build(CoreTensor, "temporal tensor", {"gg", "GG"});
+    BlockedTensor temp = BTF_->build(CoreTensor, "temporal tensor", {"gg", "GG"});
     // // <[F, T2]> and <[V, T1]>
     // temp["em"] += sigma3_xi3["me"];
     // temp["em"] += 2.0 * Z["em"];
@@ -605,81 +582,42 @@ void DSRG_MRPT2::write_df_rdm() {
     // temp["MN"] += Z["MN"];
 
     // temp["uv"] += Z["uv"];
-    // temp["uv"] += Gamma1_["uv"];
+    temp["uv"] += Gamma1_["uv"];
     // temp["uv"] += 0.5 * Gamma1_tilde["uv"];
     // temp["UV"] += Z["UV"];
-    // temp["UV"] += Gamma1_["UV"];
+    temp["UV"] += Gamma1_["UV"];
     // temp["UV"] += 0.5 * Gamma1_tilde["UV"];
 
     // temp["ef"] += Z["ef"];
     // temp["EF"] += Z["EF"];
 
-    // df_2rdm["R!,S!"] += B["A!,p,q"] * Jm12["A!,R!"] * B["B!,m,n"] * I["mn"] * Jm12["B!,S!"] * temp["pq"];
-    // df_2rdm["R!,S!"] += B["A!,P,Q"] * Jm12["A!,R!"] * B["B!,M,N"] * I["MN"] * Jm12["B!,S!"] * temp["PQ"];
-    // df_2rdm["R!,S!"] += B["A!,p,q"] * Jm12["A!,R!"] * B["B!,M,N"] * I["MN"] * Jm12["B!,S!"] * temp["pq"];
-    // df_2rdm["R!,S!"] += B["A!,P,Q"] * Jm12["A!,R!"] * B["B!,m,n"] * I["mn"] * Jm12["B!,S!"] * temp["PQ"];
 
-
-
-    // df_3rdm["Q!,p,r"] += Jm12["Q!,R!"] * B["R!,m,n"] * I["mn"] * temp["pr"];
-    // df_3rdm["Q!,p,r"] += Jm12["Q!,R!"] * B["R!,M,N"] * I["MN"] * temp["pr"];
-    // df_3rdm["Q!,P,R"] += Jm12["Q!,R!"] * B["R!,m,n"] * I["mn"] * temp["PR"];
-    // df_3rdm["Q!,P,R"] += Jm12["Q!,R!"] * B["R!,M,N"] * I["MN"] * temp["PR"];
-
-    // df_3rdm["R!,m,n"] += Jm12["Q!,R!"] * B["Q!,p,r"] * I["mn"] * temp["pr"];
-    // df_3rdm["R!,M,N"] += Jm12["Q!,R!"] * B["Q!,p,r"] * I["MN"] * temp["pr"];
-    // df_3rdm["R!,m,n"] += Jm12["Q!,R!"] * B["Q!,P,R"] * I["mn"] * temp["PR"];
-    // df_3rdm["R!,M,N"] += Jm12["Q!,R!"] * B["Q!,P,R"] * I["MN"] * temp["PR"];
-
-
-
-    /*************** NOTICE remember to remove ***************/
-
-    // df_2rdm["R!,S!"] += B["A!,u,v"] * Jm12["A!,R!"] * B["B!,m,n"] * I["mn"] * Jm12["B!,S!"] * Gamma1_["uv"];
-    // df_2rdm["R!,S!"] += B["A!,U,V"] * Jm12["A!,R!"] * B["B!,M,N"] * I["MN"] * Jm12["B!,S!"] * Gamma1_["UV"];
-    // df_2rdm["R!,S!"] += B["A!,u,v"] * Jm12["A!,R!"] * B["B!,M,N"] * I["MN"] * Jm12["B!,S!"] * Gamma1_["uv"];
-    // df_2rdm["R!,S!"] += B["A!,U,V"] * Jm12["A!,R!"] * B["B!,m,n"] * I["mn"] * Jm12["B!,S!"] * Gamma1_["UV"];
-    // df_2rdm["R!,S!"] -= B["A!,u,m"] * Jm12["A!,R!"] * B["B!,m,v"] * Jm12["B!,S!"] * Gamma1_["uv"];
-    // df_2rdm["R!,S!"] -= B["A!,U,M"] * Jm12["A!,R!"] * B["B!,M,V"] * Jm12["B!,S!"] * Gamma1_["UV"];
-
-
-    // df_3rdm["Q!,u,v"] += Jm12["Q!,R!"] * B["R!,m,n"] * I["mn"] * Gamma1_["uv"];
-    // df_3rdm["Q!,u,v"] += Jm12["Q!,R!"] * B["R!,M,N"] * I["MN"] * Gamma1_["uv"];
-    // df_3rdm["Q!,U,V"] += Jm12["Q!,R!"] * B["R!,m,n"] * I["mn"] * Gamma1_["UV"];
-    // df_3rdm["Q!,U,V"] += Jm12["Q!,R!"] * B["R!,M,N"] * I["MN"] * Gamma1_["UV"];
-    // df_3rdm["Q!,u,m"] -= Jm12["Q!,R!"] * B["R!,m,v"] * Gamma1_["uv"];
-    // df_3rdm["Q!,U,M"] -= Jm12["Q!,R!"] * B["R!,M,V"] * Gamma1_["UV"];
-
-
-
-    // df_3rdm["R!,m,n"] += Jm12["Q!,R!"] * B["Q!,u,v"] * I["mn"] * Gamma1_["uv"];
-    // df_3rdm["R!,M,N"] += Jm12["Q!,R!"] * B["Q!,u,v"] * I["MN"] * Gamma1_["uv"];
-    // df_3rdm["R!,m,n"] += Jm12["Q!,R!"] * B["Q!,U,V"] * I["mn"] * Gamma1_["UV"];
-    // df_3rdm["R!,M,N"] += Jm12["Q!,R!"] * B["Q!,U,V"] * I["MN"] * Gamma1_["UV"];
-    // df_3rdm["R!,m,v"] -= Jm12["Q!,R!"] * B["Q!,u,m"] * Gamma1_["uv"];
-    // df_3rdm["R!,M,V"] -= Jm12["Q!,R!"] * B["Q!,U,M"] * Gamma1_["UV"];
-
-
-
-
-
-
-
-
-    /***************NOTICE remember to remove***************/
-
-
-
-    /**************************** CASSCF reference ****************************/
     // Coulomb part
-    df_2rdm["R!,S!"] += 0.5 * B["A!,m1,n1"] * I["m1,n1"] * Jm12["A!,R!"] * B["B!,m,n"] * I["mn"] * Jm12["B!,S!"];
-    df_2rdm["R!,S!"] += 0.5 * B["A!,M1,N1"] * I["M1,N1"] * Jm12["A!,R!"] * B["B!,M,N"] * I["MN"] * Jm12["B!,S!"];
-    df_2rdm["R!,S!"] += 0.5 * B["A!,m1,n1"] * I["m1,n1"] * Jm12["A!,R!"] * B["B!,M,N"] * I["MN"] * Jm12["B!,S!"];
-    df_2rdm["R!,S!"] += 0.5 * B["A!,M1,N1"] * I["M1,N1"] * Jm12["A!,R!"] * B["B!,m,n"] * I["mn"] * Jm12["B!,S!"];
-    // Exchange part
-    df_2rdm["R!,S!"] -= 0.5 * B["A!,m1,n1"] * I["m,n1"] * Jm12["A!,R!"] * B["B!,m,n"] * I["m1,n"] * Jm12["B!,S!"];
-    df_2rdm["R!,S!"] -= 0.5 * B["A!,M1,N1"] * I["M,N1"] * Jm12["A!,R!"] * B["B!,M,N"] * I["M1,N"] * Jm12["B!,S!"];
+    df_3rdm["Q!,p,r"] += Jm12["Q!,R!"] * B["R!,m,n"] * I["mn"] * temp["pr"];
+    df_3rdm["Q!,p,r"] += Jm12["Q!,R!"] * B["R!,M,N"] * I["MN"] * temp["pr"];
+    df_3rdm["Q!,P,R"] += Jm12["Q!,R!"] * B["R!,m,n"] * I["mn"] * temp["PR"];
+    df_3rdm["Q!,P,R"] += Jm12["Q!,R!"] * B["R!,M,N"] * I["MN"] * temp["PR"];
 
+    df_3rdm["R!,m,n"] += Jm12["Q!,R!"] * B["Q!,p,r"] * I["mn"] * temp["pr"];
+    df_3rdm["R!,M,N"] += Jm12["Q!,R!"] * B["Q!,p,r"] * I["MN"] * temp["pr"];
+    df_3rdm["R!,m,n"] += Jm12["Q!,R!"] * B["Q!,P,R"] * I["mn"] * temp["PR"];
+    df_3rdm["R!,M,N"] += Jm12["Q!,R!"] * B["Q!,P,R"] * I["MN"] * temp["PR"];
+    
+    // Exchange part
+    df_3rdm["Q!,p,m"] -= Jm12["Q!,R!"] * B["R!,m,r"] * temp["pr"];
+    df_3rdm["Q!,P,M"] -= Jm12["Q!,R!"] * B["R!,M,R"] * temp["PR"];
+
+    df_3rdm["R!,m,r"] -= Jm12["Q!,R!"] * B["Q!,p,m"] * temp["pr"];
+    df_3rdm["R!,M,R"] -= Jm12["Q!,R!"] * B["Q!,P,M"] * temp["PR"];
+
+
+
+
+
+
+
+
+    /**************************** CASSCF energy term : 0.5 * V["mnmn"] ****************************/
     // Coulomb part
     df_3rdm["Q!,m1,n1"] += Jm12["Q!,P!"] * B["P!,m,n"] * I["mn"] * I["m1,n1"];
     df_3rdm["Q!,m1,n1"] += Jm12["Q!,P!"] * B["P!,M,N"] * I["MN"] * I["m1,n1"];
@@ -692,18 +630,16 @@ void DSRG_MRPT2::write_df_rdm() {
 
 
 
-    // // CASSCF reference
-    // df_2rdm["R!,S!"] += Ppq["A!,m1,n1"] * I["m1,n1"] * Jm12["A!,R!"] * Ppq["B!,m,n"] * I["mn"] * Jm12["B!,S!"];
-    // df_2rdm["R!,S!"] += Ppq["A!,M1,N1"] * I["M1,N1"] * Jm12["A!,R!"] * Ppq["B!,M,N"] * I["MN"] * Jm12["B!,S!"];
-    // df_2rdm["R!,S!"] += Ppq["A!,m1,n1"] * I["m1,n1"] * Jm12["A!,R!"] * Ppq["B!,M,N"] * I["MN"] * Jm12["B!,S!"];
-    // df_2rdm["R!,S!"] += Ppq["A!,M1,N1"] * I["M1,N1"] * Jm12["A!,R!"] * Ppq["B!,m,n"] * I["mn"] * Jm12["B!,S!"];
 
-    // // 0.5 V["mnmn"] = 2(mm|nn) - (mn|nm)
 
-    // df_3rdm["Q!,m1,n1"] += 2.0 * Jm12["Q!,R!"] * Ppq["R!,m,n"] * I["mn"] * I["m1,n1"];
-    // df_3rdm["Q!,m1,n1"] += 2.0 * Jm12["Q!,R!"] * Ppq["R!,M,N"] * I["MN"] * I["m1,n1"];
-    // df_3rdm["Q!,M1,N1"] += 2.0 * Jm12["Q!,R!"] * Ppq["R!,m,n"] * I["mn"] * I["M1,N1"];
-    // df_3rdm["Q!,M1,N1"] += 2.0 * Jm12["Q!,R!"] * Ppq["R!,M,N"] * I["MN"] * I["M1,N1"];
+
+
+
+
+
+
+
+
 
 
     // // residue terms
@@ -767,9 +703,51 @@ void DSRG_MRPT2::write_df_rdm() {
                {'a', ncore},
                {'v', ncore + na}};
 
-    SharedMatrix temp_mat(new Matrix("temp_mat", nirrep, irrep_vec, irrep_vec));
-
     auto temp_mat_MO = std::make_shared<Matrix>("MO temp matrix", nmo, nmo);
+
+    auto aotoso = std::make_shared<Matrix>("aotoso", nso, nso);
+
+    int offset_col = 0;
+    for(int irp = 0; irp < nirrep; ++irp) {
+        auto nmopi = ints_->wfn()->nmopi()[irp];
+        for(int i = 0; i < nso; ++i) {
+            for(int j = 0; j < nmopi; ++j) {
+                aotoso->set(i, offset_col+j, ints_->wfn()->aotoso()->get(irp, i, j));
+            }   
+        }
+        offset_col += nmopi;
+    }
+
+    auto Ca = ints_->Ca();
+    // Copy Ca to a matrix without symmetry blocking
+    auto Cat = std::make_shared<Matrix>("Ca temp matrix", nso, nmo);
+
+    std::vector<int> sum_nmopi(nirrep, 0);
+    for (int irp = 1; irp < nirrep; ++irp) {
+        sum_nmopi[irp] = sum_nmopi[irp-1] + ints_->wfn()->nmopi()[irp-1];
+    }
+
+    std::vector<int> sum_nsopi(nirrep, 0);
+    for (int irp = 1; irp < nirrep; ++irp) {
+        sum_nsopi[irp] = sum_nsopi[irp-1] + ints_->wfn()->nsopi()[irp-1];
+    }
+
+    int offset = 0;
+    for (const char& label : {'c', 'a', 'v'}) {
+        auto space = idxmap[label];
+        for (auto irp_i : space) {
+            auto irp = irp_i.first;
+            auto index = irp_i.second;
+            auto nsopi = ints_->wfn()->nsopi()[irp];
+            auto nmopi = ints_->wfn()->nmopi()[irp];
+            for (int i = 0; i < nsopi; ++i) { 
+                auto val = Ca->get(irp, i, index);
+                // Cat->set(sum_nmopi[irp] + i, offset, val);
+                Cat->set(sum_nsopi[irp] + i, offset, val);
+            }
+            offset += 1;
+        }
+    }
 
     for(int aux_idx = 0; aux_idx < naux; ++aux_idx) {
         temp_mat_MO->zero();
@@ -788,51 +766,12 @@ void DSRG_MRPT2::write_df_rdm() {
                     auto val  = block_data[aux_idx * stride + i * colsize + j];   
                     auto idx1 = pre_idx[label1] + i;
                     auto idx2 = pre_idx[label2] + j;     
-                    temp_mat_MO->add(idx1, idx2, val);
+                    temp_mat_MO->set(idx1, idx2, val);
                 }
-            }
-        }
-
-        auto Ca = ints_->Ca();
-        // Copy Ca to a matrix without symmetry blocking
-        auto Cat = std::make_shared<Matrix>("Ca temp matrix", nso, nmo);
-
-        int offset = 0;
-        std::vector<int> sum_nmopi(nirrep, 0);
-        for (int irp = 1; irp < nirrep; ++irp) {
-            sum_nmopi[irp] = sum_nmopi[irp-1] + ints_->wfn()->nmopi()[irp-1];
-        }
-
-        for (const char& label : {'c', 'a', 'v'}) {
-            auto space = idxmap[label];
-            for (auto irp_i : space) {
-                auto irp = irp_i.first;
-                auto index = irp_i.second;
-                auto nsopi = ints_->wfn()->nsopi()[irp];
-                auto nmopi = ints_->wfn()->nmopi()[irp];
-                for (int i = 0; i < nsopi; ++i) { 
-                    auto val = Ca->get(irp, i, index);
-                    Cat->set(sum_nmopi[irp] + i, offset, val);
-                }
-                offset += 1;
             }
         }
 
         temp_mat_MO->back_transform(Cat);
-
-        auto aotoso = std::make_shared<Matrix>("aotoso", nso, nso);
-
-        int offset_col = 0;
-        for(int irp = 0; irp < nirrep; ++irp) {
-            auto nmopi = ints_->wfn()->nmopi()[irp];
-            for(int i = 0; i < nso; ++i) {
-                for(int j = 0; j < nmopi; ++j) {
-                    aotoso->set(i, offset_col+j, ints_->wfn()->aotoso()->get(irp, i, j));
-                }   
-            }
-            offset_col += nmopi;
-        }
-
         temp_mat_MO->transform(aotoso->transpose());
 
         for(int i = 0; i < nso; ++i) {
@@ -855,6 +794,10 @@ void DSRG_MRPT2::write_df_rdm() {
     M->save(psio_, PSIF_AO_TPDM, Matrix::SaveType::ThreeIndexLowerTriangle);
 
     SharedMatrix N(new Matrix("metric derivative density", naux, naux));
+
+    // Using restricted orbitals, thus B["A!,P,Q"] * Jm12["A!,R!"] * df_3rdm["S!,P,Q"]
+    // equals B["A!,p,q"] * Jm12["A!,R!"] * df_3rdm["S!,p,q"], yielding a factor 2
+    df_2rdm["R!,S!"] += B["A!,p,q"] * Jm12["A!,R!"] * df_3rdm["S!,p,q"];
 
     (df_2rdm.block("LL")).iterate([&](const std::vector<size_t>& i, double& value) {
         N->set(i[0], i[1], value);

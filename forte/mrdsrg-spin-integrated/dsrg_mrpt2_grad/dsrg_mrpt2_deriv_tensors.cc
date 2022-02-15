@@ -113,6 +113,52 @@ void DSRG_MRPT2::set_j() {
                {'A', ncore},
                {'V', ncore + na}};
 
+    std::map<char, std::vector<std::pair<unsigned long, unsigned long>,
+                std::allocator<std::pair<unsigned long, unsigned long>>>> idxmap;
+    idxmap = {{'c', core_mos_relative},
+              {'a', actv_mos_relative},
+              {'v', virt_mos_relative}};
+
+
+    int nso = ints_->wfn()->nso();
+    auto Ca = ints_->Ca();
+    // Copy Ca to a matrix without symmetry blocking
+    auto Cat = std::make_shared<Matrix>("Ca temp matrix", nso, nmo);
+
+    int offset = 0;
+    std::vector<int> sum_nmopi(nirrep, 0);
+    for (int irp = 1; irp < nirrep; ++irp) {
+        sum_nmopi[irp] = sum_nmopi[irp-1] + ints_->wfn()->nmopi()[irp-1];
+    }
+
+    for (const char& label : {'c', 'a', 'v'}) {
+        auto space = idxmap[label];
+        for (auto irp_i : space) {
+            auto irp = irp_i.first;
+            auto index = irp_i.second;
+            auto nsopi = ints_->wfn()->nsopi()[irp];
+            auto nmopi = ints_->wfn()->nmopi()[irp];
+            for (int i = 0; i < nsopi; ++i) { 
+                auto val = Ca->get(irp, i, index);
+                Cat->set(sum_nmopi[irp] + i, offset, val);
+            }
+            offset += 1;
+        }
+    }
+
+    auto aotoso = std::make_shared<Matrix>("aotoso", nso, nso);
+
+    int offset_col = 0;
+    for(int irp = 0; irp < nirrep; ++irp) {
+        auto nmopi = ints_->wfn()->nmopi()[irp];
+        for(int i = 0; i < nso; ++i) {
+            for(int j = 0; j < nmopi; ++j) {
+                aotoso->set(i, offset_col+j, ints_->wfn()->aotoso()->get(irp, i, j));
+            }   
+        }
+        offset_col += nmopi;
+    }
+
 
     auto primary = ints_->wfn()->basisset();
     std::shared_ptr<BasisSet> zero_bas(BasisSet::zero_ao_basis_set());
@@ -135,7 +181,9 @@ void DSRG_MRPT2::set_j() {
             }
         }
 
-        Pmn_mn->transform(ints_->wfn()->Ca_subset("AO"));
+        Pmn_mn->transform(aotoso);
+
+        Pmn_mn->transform(Cat);
 
         for (int i = 0; i < nmo; ++i) {
             for (int j = 0; j < nmo; ++j) {
