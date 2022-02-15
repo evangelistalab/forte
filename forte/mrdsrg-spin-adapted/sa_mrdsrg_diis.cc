@@ -61,26 +61,14 @@ void SA_MRDSRG::diis_manager_init() {
     }
 
     diis_manager_->set_error_vector_size(
-        18, DIISEntry::InputType::Pointer, sizes[0], DIISEntry::InputType::Pointer, sizes[1],
-        DIISEntry::InputType::Pointer, sizes[2], DIISEntry::InputType::Pointer, sizes[3],
-        DIISEntry::InputType::Pointer, sizes[4], DIISEntry::InputType::Pointer, sizes[5],
-        DIISEntry::InputType::Pointer, sizes[6], DIISEntry::InputType::Pointer, sizes[7],
-        DIISEntry::InputType::Pointer, sizes[8], DIISEntry::InputType::Pointer, sizes[9],
-        DIISEntry::InputType::Pointer, sizes[10], DIISEntry::InputType::Pointer, sizes[11],
-        DIISEntry::InputType::Pointer, sizes[12], DIISEntry::InputType::Pointer, sizes[13],
-        DIISEntry::InputType::Pointer, sizes[14], DIISEntry::InputType::Pointer, sizes[15],
-        DIISEntry::InputType::Pointer, sizes[16], DIISEntry::InputType::Pointer, sizes[17]);
+        sizes[0], sizes[1], sizes[2], sizes[3], sizes[4], sizes[5],
+        sizes[6], sizes[7], sizes[8], sizes[9], sizes[10], sizes[11],
+        sizes[12], sizes[13], sizes[14], sizes[15], sizes[16], sizes[17]);
 
     diis_manager_->set_vector_size(
-        18, DIISEntry::InputType::Pointer, sizes[0], DIISEntry::InputType::Pointer, sizes[1],
-        DIISEntry::InputType::Pointer, sizes[2], DIISEntry::InputType::Pointer, sizes[3],
-        DIISEntry::InputType::Pointer, sizes[4], DIISEntry::InputType::Pointer, sizes[5],
-        DIISEntry::InputType::Pointer, sizes[6], DIISEntry::InputType::Pointer, sizes[7],
-        DIISEntry::InputType::Pointer, sizes[8], DIISEntry::InputType::Pointer, sizes[9],
-        DIISEntry::InputType::Pointer, sizes[10], DIISEntry::InputType::Pointer, sizes[11],
-        DIISEntry::InputType::Pointer, sizes[12], DIISEntry::InputType::Pointer, sizes[13],
-        DIISEntry::InputType::Pointer, sizes[14], DIISEntry::InputType::Pointer, sizes[15],
-        DIISEntry::InputType::Pointer, sizes[16], DIISEntry::InputType::Pointer, sizes[17]);
+        sizes[0], sizes[1], sizes[2], sizes[3], sizes[4], sizes[5],
+        sizes[6], sizes[7], sizes[8], sizes[9], sizes[10], sizes[11],
+        sizes[12], sizes[13], sizes[14], sizes[15], sizes[16], sizes[17]);
 }
 
 void SA_MRDSRG::diis_manager_add_entry() {

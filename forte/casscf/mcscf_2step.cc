@@ -32,7 +32,6 @@
 #include "psi4/libqt/qt.h"
 #include "psi4/libmints/vector.h"
 #include "psi4/libmints/wavefunction.h"
-#include "psi4/libdiis/diisentry.h"
 #include "psi4/libdiis/diismanager.h"
 
 #include "base_classes/rdms.h"
@@ -222,8 +221,8 @@ double MCSCF_2STEP::compute_energy() {
                                       psi::DIISManager::RemovalPolicy::OldestAdded,
                                       psi::DIISManager::StoragePolicy::OnDisk);
         if (do_diis_) {
-            diis_manager.set_error_vector_size(1, psi::DIISEntry::InputType::Vector, dG.get());
-            diis_manager.set_vector_size(1, psi::DIISEntry::InputType::Vector, R.get());
+            diis_manager.set_error_vector_size(dG.get());
+            diis_manager.set_vector_size(R.get());
         }
 
         // CI convergence criteria along the way

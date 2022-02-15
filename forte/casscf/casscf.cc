@@ -55,7 +55,6 @@
 #ifdef HAVE_CHEMPS2
 #include "dmrg/dmrgsolver.h"
 #endif
-#include "psi4/libdiis/diisentry.h"
 #include "psi4/libdiis/diismanager.h"
 #include "psi4/libmints/factory.h"
 
@@ -188,8 +187,8 @@ double CASSCF::compute_energy() {
     auto diis_manager = std::make_shared<DIISManager>(diis_max_vec, "MCSCF DIIS",
                                                       DIISManager::RemovalPolicy::OldestAdded,
                                                       DIISManager::StoragePolicy::InCore);
-    diis_manager->set_error_vector_size(1, DIISEntry::InputType::Matrix, S.get());
-    diis_manager->set_vector_size(1, DIISEntry::InputType::Matrix, S.get());
+    diis_manager->set_error_vector_size(S.get());
+    diis_manager->set_vector_size(S.get());
 
     int diis_count = 0;
 
