@@ -361,36 +361,36 @@ double DSRG_MRPT2::compute_energy() {
     std::vector<std::pair<std::string, double>> energy;
     energy.emplace_back("E0 (reference)", Eref_);
 
-    // Etemp = E_FT1();
+    Etemp = E_FT1();
     Ecorr += Etemp;
     energy.emplace_back("<[F, T1]>", Etemp);
 
-    // Etemp = E_FT2();
+    Etemp = E_FT2();
     Ecorr += Etemp;
     energy.emplace_back("<[F, T2]>", Etemp);
 
-    // Etemp = E_VT1();
+    Etemp = E_VT1();
     Ecorr += Etemp;
     energy.emplace_back("<[V, T1]>", Etemp);
 
-    // Etemp = E_VT2_2();
+    Etemp = E_VT2_2();
     EVT2 += Etemp;
     energy.emplace_back("<[V, T2]> (C_2)^4", Etemp);
 
-    // Etemp = E_VT2_4HH();
+    Etemp = E_VT2_4HH();
     EVT2 += Etemp;
     energy.emplace_back("<[V, T2]> C_4 (C_2)^2 HH", Etemp);
 
-    // Etemp = E_VT2_4PP();
+    Etemp = E_VT2_4PP();
     EVT2 += Etemp;
     energy.emplace_back("<[V, T2]> C_4 (C_2)^2 PP", Etemp);
 
-    // Etemp = E_VT2_4PH();
+    Etemp = E_VT2_4PH();
     EVT2 += Etemp;
     energy.emplace_back("<[V, T2]> C_4 (C_2)^2 PH", Etemp);
 
     if (foptions_->get_str("THREEPDC") != "ZERO") {
-        // Etemp = E_VT2_6();
+        Etemp = E_VT2_6();
     } else {
         Etemp = 0.0;
     }
