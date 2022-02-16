@@ -153,7 +153,7 @@ void MRDSRG::diis_manager_init() {
 
 void MRDSRG::diis_manager_add_entry() {
     diis_manager_->add_entry(
-        102, res_ptrs_[0], res_ptrs_[1], res_ptrs_[2], res_ptrs_[3], res_ptrs_[4], res_ptrs_[5],
+        res_ptrs_[0], res_ptrs_[1], res_ptrs_[2], res_ptrs_[3], res_ptrs_[4], res_ptrs_[5],
         res_ptrs_[6], res_ptrs_[7], res_ptrs_[8], res_ptrs_[9], res_ptrs_[10], res_ptrs_[11],
         res_ptrs_[12], res_ptrs_[13], res_ptrs_[14], res_ptrs_[15], res_ptrs_[16], res_ptrs_[17],
         res_ptrs_[18], res_ptrs_[19], res_ptrs_[20], res_ptrs_[21], res_ptrs_[22], res_ptrs_[23],
@@ -174,7 +174,7 @@ void MRDSRG::diis_manager_add_entry() {
 
 void MRDSRG::diis_manager_extrapolate() {
     diis_manager_->extrapolate(
-        51, amp_ptrs_[0], amp_ptrs_[1], amp_ptrs_[2], amp_ptrs_[3], amp_ptrs_[4], amp_ptrs_[5],
+        amp_ptrs_[0], amp_ptrs_[1], amp_ptrs_[2], amp_ptrs_[3], amp_ptrs_[4], amp_ptrs_[5],
         amp_ptrs_[6], amp_ptrs_[7], amp_ptrs_[8], amp_ptrs_[9], amp_ptrs_[10], amp_ptrs_[11],
         amp_ptrs_[12], amp_ptrs_[13], amp_ptrs_[14], amp_ptrs_[15], amp_ptrs_[16], amp_ptrs_[17],
         amp_ptrs_[18], amp_ptrs_[19], amp_ptrs_[20], amp_ptrs_[21], amp_ptrs_[22], amp_ptrs_[23],

@@ -322,13 +322,13 @@ double MCSCF_2STEP::compute_energy() {
                         psi::outfile->Printf("   ");
                     }
 
-                    diis_manager.add_entry(2, dG.get(), R.get());
+                    diis_manager.add_entry(dG.get(), R.get());
                     psi::outfile->Printf("S");
                 }
 
                 if ((macro - diis_start_) % diis_freq_ == 0 and
                     diis_manager.subspace_size() > diis_min_vec_) {
-                    diis_manager.extrapolate(1, R.get());
+                    diis_manager.extrapolate(R.get());
                     psi::outfile->Printf("/E");
 
                     // update the actual integrals for CI, skip gradient computation

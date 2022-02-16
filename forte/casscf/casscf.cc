@@ -270,12 +270,12 @@ double CASSCF::compute_energy() {
 
         // TODO:  Add options controlled.  Iteration and g_norm
         if (do_diis and (iter >= diis_start or g_norm < diis_gradient_norm)) {
-            diis_manager->add_entry(2, Sstep.get(), S.get());
+            diis_manager->add_entry(Sstep.get(), S.get());
             diis_count++;
         }
 
         if (do_diis and iter > diis_start and (diis_count % diis_freq == 0)) {
-            diis_manager->extrapolate(1, S.get());
+            diis_manager->extrapolate(S.get());
         }
         psi::SharedMatrix Cp = orbital_optimizer.rotate_orbitals(C_start, S);
 
