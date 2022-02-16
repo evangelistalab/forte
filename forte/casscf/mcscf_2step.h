@@ -146,7 +146,7 @@ class MCSCF_2STEP {
     /// @param fci_ints the pointer of ActiveSpaceIntegrals
     /// @param params the parameters <print level, e_conv, r_conv, read_wfn_guess, dump_wfn>
     /// @return averaged energy
-    double diagonalize_hamiltonian(std::unique_ptr<ActiveSpaceSolver>& as_solver,
+    double diagonalize_hamiltonian(std::shared_ptr<ActiveSpaceSolver>& as_solver,
                                    std::shared_ptr<ActiveSpaceIntegrals> fci_ints,
                                    const std::tuple<int, double, double, bool, bool>& params);
 

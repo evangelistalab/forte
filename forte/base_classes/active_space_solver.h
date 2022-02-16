@@ -227,9 +227,9 @@ class ActiveSpaceSolver {
  * @param mo_space_info orbital space information
  * @param ints an integral object
  * @param options user-provided options
- * @return a unique pointer for the base class ActiveSpaceMethod
+ * @return a shared pointer for the base class ActiveSpaceMethod
  */
-std::unique_ptr<ActiveSpaceSolver> make_active_space_solver(
+std::shared_ptr<ActiveSpaceSolver> make_active_space_solver(
     const std::string& method, const std::map<StateInfo, size_t>& state_nroots_map,
     std::shared_ptr<SCFInfo> scf_info, std::shared_ptr<MOSpaceInfo> mo_space_info,
     std::shared_ptr<ActiveSpaceIntegrals> as_ints, std::shared_ptr<ForteOptions> options);

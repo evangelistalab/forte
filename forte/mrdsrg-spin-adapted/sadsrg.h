@@ -31,6 +31,7 @@
 
 #include "ambit/blocked_tensor.h"
 
+#include "base_classes/active_space_solver.h"
 #include "base_classes/dynamic_correlation_solver.h"
 
 #include "helpers/blockedtensorfactory.h"

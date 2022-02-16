@@ -173,7 +173,7 @@ double MCSCF_2STEP::compute_energy() {
 
     // convergence for final CI
     double r_conv = options_->get_double("R_CONVERGENCE");
-    std::unique_ptr<ActiveSpaceSolver> as_solver;
+    std::shared_ptr<ActiveSpaceSolver> as_solver;
 
     // perform a perfect initial CI
     double e_c = diagonalize_hamiltonian(as_solver, cas_grad.active_space_ints(),
@@ -434,7 +434,7 @@ bool MCSCF_2STEP::is_single_reference() {
 }
 
 double
-MCSCF_2STEP::diagonalize_hamiltonian(std::unique_ptr<ActiveSpaceSolver>& as_solver,
+MCSCF_2STEP::diagonalize_hamiltonian(std::shared_ptr<ActiveSpaceSolver>& as_solver,
                                      std::shared_ptr<ActiveSpaceIntegrals> fci_ints,
                                      const std::tuple<int, double, double, bool, bool>& params) {
     auto state_nroots_map = to_state_nroots_map(state_weights_map_);

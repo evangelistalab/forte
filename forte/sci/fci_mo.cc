@@ -2033,6 +2033,693 @@ FCI_MO::transition_rdms(const std::vector<std::pair<size_t, size_t>>& root_list,
     return refs;
 }
 
+std::vector<std::tuple<ambit::Tensor, ambit::Tensor>>
+FCI_MO::compute_complementary(const std::vector<size_t>& roots, ambit::Tensor tensor,
+                              bool transpose) {
+    const auto& dims = tensor.dims();
+
+    // check passed in tensor
+    if (dims.size() != 4)
+        throw std::runtime_error("Invalid Tensor: Dimension must be 4!");
+
+    bool indices_ok = transpose
+                          ? (dims[1] == nactv_) and (dims[2] == nactv_) and (dims[3] == nactv_)
+                          : (dims[0] == nactv_) and (dims[1] == nactv_) and (dims[3] == nactv_);
+    if (not indices_ok)
+        throw std::runtime_error("Invalid Tensor: Too many non-active indices");
+
+    // preparation
+    auto non_actv = transpose ? dims[0] : dims[2];
+    auto nroots = roots.size();
+
+    const auto& data = tensor.data();
+    auto dim1 = nactv_;
+    auto dim2 = transpose ? nactv_ * dim1 : non_actv * dim1;
+    auto dim3 = nactv_ * dim2;
+    auto idx = [&](size_t u, size_t v, size_t p, size_t w) {
+        if (transpose)
+            return p * dim3 + w * dim2 + u * dim1 + v;
+        return u * dim3 + v * dim2 + p * dim1 + w;
+    };
+
+    // prepare 1 lists for (N - 1) electron determinants
+    det_hash a_map, b_map;
+    size_t na = 0, nb = 0;
+    for (const auto& detI : determinant_) {
+        const auto& aocc = detI.get_alfa_occ(nactv_);
+        const auto& bocc = detI.get_beta_occ(nactv_);
+
+        // aaa: z_α^+ v_α u_α |I>
+        for (size_t _u = 0, _umax = aocc.size(); _u < _umax; ++_u) {
+            auto u = aocc[_u];
+            for (size_t _v = _u + 1; _v < _umax; ++_v) {
+                auto v = aocc[_v];
+
+                for (size_t z = 0; z < nactv_; ++z) {
+                    Determinant detI_uvz(detI);
+                    detI_uvz.destroy_alfa_bit(u);
+                    detI_uvz.destroy_alfa_bit(v);
+
+                    if (detI_uvz.create_alfa_bit(z) != 0.0 and a_map.find(detI_uvz) == a_map.end())
+                        a_map[detI_uvz] = na++;
+                }
+            }
+        }
+
+        // abb: z_β^+ v_β u_α |I> and baa: z_α^+ v_α u_β |I>
+        for (int u : aocc) {
+            for (int v : bocc) {
+                for (size_t z = 0; z < nactv_; ++z) {
+                    Determinant detI_uvz(detI);
+                    detI_uvz.destroy_alfa_bit(u);
+                    detI_uvz.destroy_beta_bit(v);
+                    if (detI_uvz.create_beta_bit(z) != 0.0 and a_map.find(detI_uvz) == a_map.end())
+                        a_map[detI_uvz] = na++;
+
+                    detI_uvz = Determinant(detI);
+                    detI_uvz.destroy_alfa_bit(u);
+                    detI_uvz.destroy_beta_bit(v);
+                    if (detI_uvz.create_alfa_bit(z) != 0.0 and b_map.find(detI_uvz) == b_map.end())
+                        b_map[detI_uvz] = nb++;
+                }
+            }
+        }
+
+        // bbb: z_β^+ v_β u_β |I>
+        for (size_t _u = 0, _umax = bocc.size(); _u < _umax; ++_u) {
+            auto u = bocc[_u];
+            for (size_t _v = _u + 1; _v < _umax; ++_v) {
+                auto v = bocc[_v];
+
+                for (size_t z = 0; z < nactv_; ++z) {
+                    Determinant detI_uvz(detI);
+                    detI_uvz.destroy_beta_bit(u);
+                    detI_uvz.destroy_beta_bit(v);
+
+                    if (detI_uvz.create_beta_bit(z) != 0.0 and b_map.find(detI_uvz) == b_map.end())
+                        b_map[detI_uvz] = nb++;
+                }
+            }
+        }
+    }
+
+    // prepare results
+    std::string state_label = state_.multiplicity_label() + " " + state_.irrep_label();
+    std::vector<ambit::Tensor> out_a, out_b;
+    for (size_t n = 0; n < nroots; ++n) {
+        std::string name_a = "Comp. A for " + std::to_string(roots[n]) + " of " + state_label;
+        std::string name_b = "Comp. B for " + std::to_string(roots[n]) + " of " + state_label;
+        out_a.push_back(ambit::Tensor::build(ambit::CoreTensor, name_a, {na, non_actv}));
+        out_b.push_back(ambit::Tensor::build(ambit::CoreTensor, name_b, {nb, non_actv}));
+
+//        out_b.push_back(ambit::Tensor::build(ambit::CoreTensor, "D3x",
+//                                             {nactv_, nactv_, nactv_, nactv_, nactv_, nactv_}));
+    }
+
+    // compute resulting tensors
+    for (size_t n = 0; n < nroots; ++n) {
+        auto& a_data = out_a[n].data();
+        auto& b_data = out_b[n].data();
+        auto evec = eigen_[roots[n]].first;
+
+        for (size_t I = 0, ndets = determinant_.size(); I < ndets; ++I) {
+            auto cI = evec->get(I);
+            const auto& detI = determinant_[I];
+
+            // u_α |I>
+            for (const auto& u : detI.get_alfa_occ(nactv_)) {
+                Determinant detI_u(detI);
+                auto sign_u = detI_u.destroy_alfa_bit(u);
+
+                // z_α^+ v_α u_α |I>
+                for (size_t v = 0; v < nactv_; ++v) {
+                    Determinant detI_uv(detI_u);
+                    auto sign_v = detI_uv.destroy_alfa_bit(v);
+                    if (sign_v == 0.0)
+                        continue;
+
+                    for (size_t z = 0; z < nactv_; ++z) {
+                        Determinant detI_uvz(detI_uv);
+                        auto sign_z = detI_uvz.create_alfa_bit(z);
+                        if (sign_z == 0.0)
+                            continue;
+
+                        auto sign = sign_u * sign_v * sign_z;
+                        auto detJ = a_map.find(detI_uvz)->second;
+                        for (size_t p = 0; p < non_actv; ++p) {
+                            a_data[detJ * non_actv + p] += cI * sign * data[idx(u, v, p, z)];
+                        }
+                    }
+                }
+
+                // z_β^+ v_β u_α |I>
+                for (size_t v = 0; v < nactv_; ++v) {
+                    Determinant detI_uv(detI_u);
+                    auto sign_v = detI_uv.destroy_beta_bit(v);
+                    if (sign_v == 0.0)
+                        continue;
+
+                    for (size_t z = 0; z < nactv_; ++z) {
+                        Determinant detI_uvz(detI_uv);
+                        auto sign_z = detI_uvz.create_beta_bit(z);
+                        if (sign_z == 0.0)
+                            continue;
+
+                        auto sign = sign_u * sign_v * sign_z;
+                        auto detJ = a_map.find(detI_uvz)->second;
+                        for (size_t p = 0; p < non_actv; ++p) {
+                            a_data[detJ * non_actv + p] += cI * sign * data[idx(u, v, p, z)];
+                        }
+                    }
+                }
+            }
+
+            // u_β |I>
+            for (const auto& u : detI.get_beta_occ(nactv_)) {
+                Determinant detI_u(detI);
+                auto sign_u = detI_u.destroy_beta_bit(u);
+
+                // z_α^+ v_α u_β |I>
+                for (size_t v = 0; v < nactv_; ++v) {
+                    Determinant detI_uv(detI_u);
+                    auto sign_v = detI_uv.destroy_alfa_bit(v);
+                    if (sign_v == 0.0)
+                        continue;
+
+                    for (size_t z = 0; z < nactv_; ++z) {
+                        Determinant detI_uvz(detI_uv);
+                        auto sign_z = detI_uvz.create_alfa_bit(z);
+                        if (sign_z == 0.0)
+                            continue;
+
+                        auto sign = sign_u * sign_v * sign_z;
+                        auto detJ = b_map.find(detI_uvz)->second;
+                        for (size_t p = 0; p < non_actv; ++p) {
+                            b_data[detJ * non_actv + p] += cI * sign * data[idx(u, v, p, z)];
+                        }
+                    }
+                }
+
+                // z_β^+ v_β u_β |I>
+                for (size_t v = 0; v < nactv_; ++v) {
+                    Determinant detI_uv(detI_u);
+                    auto sign_v = detI_uv.destroy_beta_bit(v);
+                    if (sign_v == 0.0)
+                        continue;
+
+                    for (size_t z = 0; z < nactv_; ++z) {
+                        Determinant detI_uvz(detI_uv);
+                        auto sign_z = detI_uvz.create_beta_bit(z);
+                        if (sign_z == 0.0)
+                            continue;
+
+                        auto sign = sign_u * sign_v * sign_z;
+                        auto detJ = b_map.find(detI_uvz)->second;
+                        for (size_t p = 0; p < non_actv; ++p) {
+                            b_data[detJ * non_actv + p] += cI * sign * data[idx(u, v, p, z)];
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+//    // compute sum_{uvz} t^{uv}_{pz} sum_{I} c_I (z^+ v u |I>)
+//    det_hash aaa_map;
+//    size_t naaa = 0;
+//    for (size_t I = 0, ndets = determinant_.size(); I < ndets; ++I) {
+//        const auto& detI = determinant_[I];
+//
+//        for (size_t u = 0; u < nactv_; ++u) {
+//            Determinant detI_u(determinant_[I]);
+//            auto sign_u = detI_u.destroy_alfa_bit(u);
+//            if (sign_u == 0.0)
+//                continue;
+//
+//            for (size_t v = 0; v < nactv_; ++v) {
+//                Determinant detI_uv(detI_u);
+//                auto sign_v = detI_uv.destroy_alfa_bit(v);
+//                if (sign_v == 0.0)
+//                    continue;
+//
+//                for (size_t z = 0; z < nactv_; ++z) {
+//                    Determinant detI_uvz(detI_uv);
+//                    auto sign_z = detI_uvz.create_alfa_bit(z);
+//                    if (sign_z == 0.0)
+//                        continue;
+//
+//                    det_hash_it hash_it = aaa_map.find(detI_uvz);
+//
+//                    if (hash_it == aaa_map.end()) {
+//                        aaa_map[detI_uvz] = naaa++;
+//                    }
+//                }
+//            }
+//        }
+//    }
+//
+//    outfile->Printf("\n  number of (N - 1)-electron determinants: %zu", aaa_map.size());
+//
+//    for (size_t n = 0; n < nroots; ++n) {
+//        std::string name_a = "Comp. A for " + std::to_string(roots[n]) + " of " + state_label;
+//        //        std::string name_b = "Comp. B for " + std::to_string(roots[n]) + " of " +
+//        //        state_label;
+//        out_a.push_back(ambit::Tensor::build(ambit::CoreTensor, "XX", {aaa_map.size(), non_actv}));
+//        //        out_b.push_back(ambit::Tensor::build(ambit::CoreTensor, name_b, {non_actv}));
+//
+//        out_b.push_back(ambit::Tensor::build(ambit::CoreTensor, "D3x",
+//                                             {nactv_, nactv_, nactv_, nactv_, nactv_, nactv_}));
+//    }
+
+//    for (size_t n = 0; n < nroots; ++n) {
+//        auto& result_data = out_a[n].data();
+//        eigen_[roots[n]].first->print();
+//
+//        for (size_t I = 0, ndets = determinant_.size(); I < ndets; ++I) {
+//            auto cI = eigen_[roots[n]].first->get(I);
+//            const auto& detI = determinant_[I];
+//
+//            for (size_t u = 0; u < nactv_; ++u) {
+//                Determinant detI_u(determinant_[I]);
+//                auto sign_u = detI_u.destroy_alfa_bit(u);
+//                if (sign_u == 0.0)
+//                    continue;
+//
+//                for (size_t v = 0; v < nactv_; ++v) {
+//                    Determinant detI_uv(detI_u);
+//                    auto sign_v = detI_uv.destroy_alfa_bit(v);
+//                    if (sign_v == 0.0)
+//                        continue;
+//
+//                    for (size_t z = 0; z < nactv_; ++z) {
+//                        Determinant detI_uvz(detI_uv);
+//                        auto sign_z = detI_uvz.create_alfa_bit(z);
+//                        if (sign_z == 0.0)
+//                            continue;
+//
+//                        auto sign = sign_u * sign_v * sign_z;
+//                        auto detJ = aaa_map.find(detI_uvz)->second;
+//                        for (size_t p = 0; p < non_actv; ++p) {
+//                            result_data[detJ * non_actv + p] += cI * sign * data[idx(u, v, p, z)];
+//                        }
+//                    }
+//                }
+//            }
+//        }
+//    }
+
+
+//    // actual computation
+//    for (size_t p = 0; p < non_actv; ++p) {
+//        for (size_t I = 0, ndets = determinant_.size(); I < ndets; ++I) {
+//            const auto& detI = determinant_[I];
+//            auto aocc = detI.get_alfa_occ(nactv_);
+//            auto bocc = detI.get_beta_occ(nactv_);
+//            auto noalfa = aocc.size();
+//            auto nobeta = bocc.size();
+//
+//            auto avir = detI.get_alfa_vir(nactv_);
+//            auto bvir = detI.get_beta_vir(nactv_);
+//            auto nvalfa = avir.size();
+//            auto nvbeta = bvir.size();
+//
+////            outfile->Printf("\n  DET %6zu: %s", I, str(detI, nactv_).c_str());
+//
+//            // w^+_alpha v_alpha u_alpha acting on reference
+//            for (size_t u = 0; u < nactv_; ++u) {
+//                Determinant det_u(detI);
+//                auto sign_u = det_u.destroy_alfa_bit(u);
+//                if (sign_u == 0.0)
+//                    continue;
+//
+//                for (size_t v = 0; v < nactv_; ++v) {
+//                    Determinant det_uv(det_u);
+//                    auto sign_v = det_uv.destroy_alfa_bit(v);
+//                    if (sign_v == 0.0)
+//                        continue;
+//
+//                    for (size_t w = 0; w < nactv_; ++w) {
+//                        Determinant det_w(det_uv);
+//                        auto sign_w = det_w.create_alfa_bit(w);
+//                        if (sign_w == 0.0)
+//                            continue;
+//
+//                        auto sign = sign_u * sign_v * sign_w;
+//                        auto value = data[idx(u, v, p, w)] * sign;
+//
+////                        if (std::fabs(value) > 1.0e-10) {
+////                            outfile->Printf(
+////                                "\n  p = %2zu, u = %2zu, v = %2zu, w = %2zu, w^+ v u |I>: %s", p, u,
+////                                v, w, str(det_w, nactv_).c_str());
+////                            outfile->Printf(", sign = %4.1f, value = %20.15f", sign, value);
+////                        }
+//
+//                        for (size_t n = 0; n < nroots; ++n) {
+//                            (out_a[n]).data()[p] += evecs->get(I, roots[n]) * value;
+//                        }
+//                    }
+//                }
+//            }
+//            //            for (size_t _u = 0; _u < noalfa; ++_u) {
+//            //                auto u = aocc[_u];
+//            //                for (size_t _v = _u + 1; _v < noalfa; ++_v) {
+//            //                    auto v = aocc[_v];
+//            //
+//            //                    // w = u
+//            //                    auto value_uw =
+//            //                        (data[idx(v, u, p, u)] - data[idx(u, v, p, u)]) *
+//            //                        detI.slater_sign_a(v);
+//            //                    // w = v
+//            //                    auto value_vw =
+//            //                        (data[idx(u, v, p, v)] - data[idx(v, u, p, v)]) *
+//            //                        detI.slater_sign_a(u);
+//            //                    for (size_t n = 0; n < nroots; ++n) {
+//            //                        (out_a[n]).data()[p] += evecs->get(I, n) * (value_uw +
+//            //                        value_vw);
+//            //                    }
+//            //
+//            //                    auto sign_uv = detI.slater_sign_aa(u, v);
+//            //
+//            //                    // w != u and w != v
+//            //                    for (size_t _w = 0; _w < nvalfa; ++_w) {
+//            //                        auto w = avir[_w];
+//            //
+//            //                        // w < u < v or u < v < w: OK to directly use slater_sign_a
+//            //                        // u < w < v: counted u which is now zero
+//            //                        auto sign_w =
+//            //                            (u < w and w < v) ? -detI.slater_sign_a(w) :
+//            //                            detI.slater_sign_a(w);
+//            //
+//            //                        auto value =
+//            //                            (data[idx(u, v, p, w)] - data[idx(v, u, p, w)]) * sign_uv
+//            //                            * sign_w;
+//            //                        for (size_t n = 0; n < nroots; ++n) {
+//            //                            (out_a[n]).data()[p] += evecs->get(I, n) * value;
+//            //                        }
+//            //                    }
+//            //                }
+//            //            }
+//
+//            //            // w^+_beta v_beta u_alpha acting on reference
+//            //            for (size_t u = 0; u < nactv_; ++u) {
+//            //                Determinant det_u(detI);
+//            //                auto sign_u = det_u.destroy_alfa_bit(u);
+//            //                for (size_t v = 0; v < nactv_; ++v) {
+//            //                    Determinant det_v(det_u);
+//            //                    auto sign_v = det_v.destroy_beta_bit(v);
+//            //                    for (size_t w = 0; w < nactv_; ++w) {
+//            //                        Determinant det_w(det_v);
+//            //                        auto sign_w = det_w.create_beta_bit(w);
+//            //
+//            //                        auto value = data[idx(u, v, p, w)] * sign_u * sign_v * sign_w;
+//            //                        for (size_t n = 0; n < nroots; ++n) {
+//            //                            (out_a[n]).data()[p] += evecs->get(I, n) * value;
+//            //                        }
+//            //                    }
+//            //                }
+//            //            }
+//            //            for (size_t _u = 0; _u < noalfa; ++_u) {
+//            //                auto u = aocc[_u];
+//            //                for (size_t _v = 0; _v < nobeta; ++_v) {
+//            //                    auto v = bocc[_v];
+//            //                    auto sign_uv = detI.slater_sign_a(u) * detI.slater_sign_b(v);
+//            //
+//            //                    // w = v
+//            //                    auto value_vw = data[idx(u, v, p, v)] * detI.slater_sign_a(u);
+//            //                    for (size_t n = 0; n < nroots; ++n) {
+//            //                        (out_a[n]).data()[p] += evecs->get(I, n) * value_vw;
+//            //                    }
+//            //
+//            //                    // w != v
+//            //                    for (size_t _w = 0; _w < nvbeta; ++_w) {
+//            //                        auto w = bvir[_w];
+//            //                        auto sign_w = (v < w) ? -detI.slater_sign_b(w) :
+//            //                        detI.slater_sign_b(w); auto value = data[idx(u, v, p, w)] *
+//            //                        sign_w * sign_uv; for (size_t n = 0; n < nroots; ++n) {
+//            //                            (out_a[n]).data()[p] += evecs->get(I, n) * value;
+//            //                        }
+//            //                    }
+//            //                }
+//            //            }
+//
+//            //            // w^+_alpha v_beta u_alpha acting on reference
+//            //            for (size_t u = 0; u < nactv_; ++u) {
+//            //                Determinant det_u(detI);
+//            //                auto sign_u = det_u.destroy_beta_bit(u);
+//            //                for (size_t v = 0; v < nactv_; ++v) {
+//            //                    Determinant det_v(det_u);
+//            //                    auto sign_v = det_v.destroy_alfa_bit(v);
+//            //                    for (size_t w = 0; w < nactv_; ++w) {
+//            //                        Determinant det_w(det_v);
+//            //                        auto sign_w = det_w.create_alfa_bit(w);
+//            //
+//            //                        auto value = data[idx(u, v, p, w)] * sign_u * sign_v * sign_w;
+//            //                        for (size_t n = 0; n < nroots; ++n) {
+//            //                            (out_b[n]).data()[p] += evecs->get(I, n) * value;
+//            //                        }
+//            //                    }
+//            //                }
+//            //            }
+//            //            for (size_t _u = 0; _u < nobeta; ++_u) {
+//            //                auto u = bocc[_u];
+//            //                for (size_t _v = 0; _v < noalfa; ++_v) {
+//            //                    auto v = aocc[_v];
+//            //                    auto sign_uv = detI.slater_sign_b(u) * detI.slater_sign_a(v);
+//            //
+//            //                    // w = v
+//            //                    auto value_vw = data[idx(u, v, p, v)] * detI.slater_sign_b(u);
+//            //                    for (size_t n = 0; n < nroots; ++n) {
+//            //                        (out_b[n]).data()[p] += evecs->get(I, n) * value_vw;
+//            //                    }
+//            //
+//            //                    // w != v
+//            //                    for (size_t _w = 0; _w < nvalfa; ++_w) {
+//            //                        auto w = avir[_w];
+//            //                        auto sign_w = (v < w) ? -detI.slater_sign_a(w) :
+//            //                        detI.slater_sign_a(w); auto value = data[idx(u, v, p, w)] *
+//            //                        sign_w * sign_uv; for (size_t n = 0; n < nroots; ++n) {
+//            //                            (out_b[n]).data()[p] += evecs->get(I, n) * value;
+//            //                        }
+//            //                    }
+//            //                }
+//            //            }
+//
+//            //            // w^+_beta v_beta u_beta acting on reference
+//            //            for (size_t u = 0; u < nactv_; ++u) {
+//            //                Determinant det_u(detI);
+//            //                auto sign_u = det_u.destroy_beta_bit(u);
+//            //                for (size_t v = 0; v < nactv_; ++v) {
+//            //                    Determinant det_v(det_u);
+//            //                    auto sign_v = det_v.destroy_beta_bit(v);
+//            //                    for (size_t w = 0; w < nactv_; ++w) {
+//            //                        Determinant det_w(det_v);
+//            //                        auto sign_w = det_w.create_beta_bit(w);
+//            //
+//            //                        auto value = data[idx(u, v, p, w)] * sign_u * sign_v * sign_w;
+//            //                        for (size_t n = 0; n < nroots; ++n) {
+//            //                            (out_b[n]).data()[p] += evecs->get(I, n) * value;
+//            //                        }
+//            //                    }
+//            //                }
+//            //            }
+//            //            for (size_t _u = 0; _u < nobeta; ++_u) {
+//            //                auto u = bocc[_u];
+//            //                for (size_t _v = _u + 1; _v < nobeta; ++_v) {
+//            //                    auto v = bocc[_v];
+//            //
+//            //                    // w = u
+//            //                    auto value_uw =
+//            //                        (data[idx(v, u, p, u)] - data[idx(u, v, p, u)]) *
+//            //                        detI.slater_sign_b(v);
+//            //                    // w = v
+//            //                    auto value_vw =
+//            //                        (data[idx(u, v, p, v)] - data[idx(v, u, p, v)]) *
+//            //                        detI.slater_sign_b(u);
+//            //                    for (size_t n = 0; n < nroots; ++n) {
+//            //                        (out_b[n]).data()[p] += evecs->get(I, n) * (value_uw +
+//            //                        value_vw);
+//            //                    }
+//            //
+//            //                    auto sign_uv = detI.slater_sign_bb(u, v);
+//            //
+//            //                    // w != u and w != v
+//            //                    for (size_t _w = 0; _w < nvbeta; ++_w) {
+//            //                        auto w = bvir[_w];
+//            //
+//            //                        // w < u < v or u < v < w: OK to directly use slater_sign_a
+//            //                        // u < w < v: counted u which is now zero
+//            //                        auto sign_w =
+//            //                            (u < w and w < v) ? -detI.slater_sign_b(w) :
+//            //                            detI.slater_sign_b(w);
+//            //
+//            //                        auto value =
+//            //                            (data[idx(u, v, p, w)] - data[idx(v, u, p, w)]) * sign_uv
+//            //                            * sign_w;
+//            //                        for (size_t n = 0; n < nroots; ++n) {
+//            //                            (out_b[n]).data()[p] += evecs->get(I, n) * value;
+//            //                        }
+//            //                    }
+//            //                }
+//            //            }
+//        }
+//    }
+
+//    auto ndets = determinant_.size();
+//    dim1 = nactv_;
+//    dim2 = dim1 * nactv_;
+//    dim3 = dim2 * nactv_;
+//    auto dim4 = dim3 * nactv_;
+//    auto dim5 = dim4 * nactv_;
+//
+//    // compute <0| x^+ y^+ w z^+ v u |0>
+//    for (size_t n = 0; n < nroots; ++n) {
+//        auto& tensor_data = (out_b[n]).data();
+//        auto evec = eigen_[roots[n]].first;
+//
+//        for (size_t I = 0; I < ndets; ++I) {
+//            auto cI = evec->get(I);
+//            for (size_t J = 0; J < ndets; ++J) {
+//                auto cIJ = cI * evec->get(J);
+//
+//                for (size_t u = 0; u < nactv_; ++u) {
+//                    Determinant detI_u(determinant_[I]);
+//                    auto sign_u = detI_u.destroy_alfa_bit(u);
+//                    if (sign_u == 0.0)
+//                        continue;
+//
+//                    for (size_t v = 0; v < nactv_; ++v) {
+//                        Determinant detI_uv(detI_u);
+//                        auto sign_v = detI_uv.destroy_alfa_bit(v);
+//                        if (sign_v == 0.0)
+//                            continue;
+//
+//                        for (size_t z = 0; z < nactv_; ++z) {
+//                            Determinant detI_uvz(detI_uv);
+//                            auto sign_z = detI_uvz.create_alfa_bit(z);
+//                            if (sign_z == 0.0)
+//                                continue;
+//
+//                            auto sym_uvz = sym_actv_[u] ^ sym_actv_[v] ^ sym_actv_[z];
+//
+//                            for (size_t w = 0; w < nactv_; ++w) {
+//                                Determinant detI_uvzw(detI_uvz);
+//                                auto sign_w = detI_uvzw.destroy_alfa_bit(w);
+//                                if (sign_w == 0.0)
+//                                    continue;
+//
+//                                for (size_t y = 0; y < nactv_; ++y) {
+//                                    Determinant detI_uvzwy(detI_uvzw);
+//                                    auto sign_y = detI_uvzwy.create_alfa_bit(y);
+//                                    if (sign_y == 0.0)
+//                                        continue;
+//
+//                                    for (size_t x = 0; x < nactv_; ++x) {
+//                                        Determinant  detI_uvzwyx(detI_uvzwy);
+//                                        auto sign_x = detI_uvzwyx.create_alfa_bit(x);
+//                                        if (sign_x == 0.0)
+//                                            continue;
+//
+//                                        auto sym_xyw = sym_actv_[x] ^ sym_actv_[y] ^ sym_actv_[w];
+//                                        auto sign = sign_u * sign_v * sign_z * sign_w * sign_y * sign_x;
+//
+//                                        if (determinant_[J] == detI_uvzwyx)
+//                                            tensor_data[x * dim5 + y * dim4 + w * dim3 + u * dim2 + v * dim1 + z] += sign * cIJ;
+//                                    }
+//                                }
+//                            }
+//                        }
+//                    }
+//                }
+//            }
+//        }
+////
+////        auto d123 = rdms({{n, n}}, 3, RDMsType::spin_dependent)[0];
+////        auto g3aaa = d123->g3aaa();
+////        g3aaa("pqrstu") -= (out_b[n])("pqrstu");
+////        outfile->Printf("\n  diff norm = %20.15f", g3aaa.norm());
+//    }
+
+//    // compute sum_{uvz} t^{uv}_{pz} sum_{I} c_I (z^+ v u |I>)
+//    det_hash aaa_map;
+//    size_t naaa = 0;
+//    for (size_t I = 0; I < ndets; ++I) {
+//        const auto& detI = determinant_[I];
+//
+//        for (size_t u = 0; u < nactv_; ++u) {
+//            Determinant detI_u(determinant_[I]);
+//            auto sign_u = detI_u.destroy_alfa_bit(u);
+//            if (sign_u == 0.0)
+//                continue;
+//
+//            for (size_t v = 0; v < nactv_; ++v) {
+//                Determinant detI_uv(detI_u);
+//                auto sign_v = detI_uv.destroy_alfa_bit(v);
+//                if (sign_v == 0.0)
+//                    continue;
+//
+//                for (size_t z = 0; z < nactv_; ++z) {
+//                    Determinant detI_uvz(detI_uv);
+//                    auto sign_z = detI_uvz.create_alfa_bit(z);
+//                    if (sign_z == 0.0)
+//                        continue;
+//
+//                    det_hash_it hash_it = aaa_map.find(detI_uvz);
+//
+//                    if (hash_it == aaa_map.end()) {
+//                        aaa_map[detI_uvz] = naaa++;
+//                    }
+//                }
+//            }
+//        }
+//    }
+//
+//    outfile->Printf("\n  number of (N - 1)-electron determinants: %zu", aaa_map.size());
+//    std::vector<ambit::Tensor> results(nroots, ambit::Tensor::build(ambit::CoreTensor, "XX", {aaa_map.size(), non_actv}));
+//    for (size_t n = 0; n < nroots; ++n) {
+//        auto& result_data = results[n].data();
+//        eigen_[roots[n]].first->print();
+//
+//        for (size_t I = 0; I < ndets; ++I) {
+//            auto cI = eigen_[roots[n]].first->get(I);
+//            const auto& detI = determinant_[I];
+//
+//            for (size_t u = 0; u < nactv_; ++u) {
+//                Determinant detI_u(determinant_[I]);
+//                auto sign_u = detI_u.destroy_alfa_bit(u);
+//                if (sign_u == 0.0)
+//                    continue;
+//
+//                for (size_t v = 0; v < nactv_; ++v) {
+//                    Determinant detI_uv(detI_u);
+//                    auto sign_v = detI_uv.destroy_alfa_bit(v);
+//                    if (sign_v == 0.0)
+//                        continue;
+//
+//                    for (size_t z = 0; z < nactv_; ++z) {
+//                        Determinant detI_uvz(detI_uv);
+//                        auto sign_z = detI_uvz.create_alfa_bit(z);
+//                        if (sign_z == 0.0)
+//                            continue;
+//
+//                        auto sign = sign_u * sign_v * sign_z;
+//                        auto detJ = aaa_map.find(detI_uvz)->second;
+//                        for (size_t p = 0; p < non_actv; ++p) {
+//                            result_data[detJ * non_actv + p] += cI * sign * data[idx(u, v, p, z)];
+//                        }
+//                    }
+//                }
+//            }
+//        }
+//    }
+
+    std::vector<std::tuple<ambit::Tensor, ambit::Tensor>> out;
+    for (size_t n = 0; n < nroots; ++n) {
+        out.emplace_back(out_a[n], out_b[n]);
+    }
+
+    return out;
+}
+
 [[deprecated]] std::vector<std::shared_ptr<RDMs>>
 FCI_MO::reference(const std::vector<std::pair<size_t, size_t>>& root_list, int max_rdm_level) {
     std::vector<std::shared_ptr<RDMs>> refs;

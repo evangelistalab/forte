@@ -139,9 +139,9 @@ class ActiveSpaceMethod {
     /// spin: σ, σ1; active indices: u, v, w; state weights: w_n; CI coefficients: c^n_I
     /// If transpose = true, the tensor t assume the order of t^{pw}_{uv}
     virtual std::vector<std::tuple<ambit::Tensor, ambit::Tensor>>
-    compute_complimentary(const std::vector<size_t>& roots, ambit::Tensor tensor,
+    compute_complementary(const std::vector<size_t>& roots, ambit::Tensor tensor,
                           bool transpose = false) {
-        throw std::runtime_error("ActiveSpaceMethod::compute_complimentary: Not yet implemented!");
+        throw std::runtime_error("ActiveSpaceMethod::compute_complementary: Not yet implemented!");
     }
 
     /// Set options from an option object

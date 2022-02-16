@@ -143,6 +143,8 @@ class ProcedureDSRG:
             self.Heff_implemented = True
         elif self.solver_type in ["SA-MRDSRG", "SA_MRDSRG"]:
             self.dsrg_solver = forte.make_sadsrg_method(*args)
+            self.dsrg_solver.set_state_weights_map(self.state_weights_map)
+            self.dsrg_solver.set_active_space_solver(self.active_space_solver)
             self.Heff_implemented = True
         elif self.solver_type in ["MRDSRG_SO", "MRDSRG-SO"]:
             self.dsrg_solver = forte.make_dsrg_so_y(*args)

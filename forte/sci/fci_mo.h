@@ -67,6 +67,8 @@ void set_FCI_MO_options(ForteOptions& foptions);
 class FCI_MO : public ActiveSpaceMethod {
 
   public:
+    using det_hash = std::unordered_map<Determinant, size_t, Determinant::Hash>;
+    using det_hash_it = det_hash::iterator;
     /**
      * @brief FCI_MO Constructor
      * @param ref_wfn The reference wavefunction object
@@ -122,6 +124,16 @@ class FCI_MO : public ActiveSpaceMethod {
     transition_rdms(const std::vector<std::pair<size_t, size_t>>& root_list,
                     std::shared_ptr<ActiveSpaceMethod> method2, int max_rdm_level,
                     RDMsType rdm_type) override;
+
+    /// Compute the complementary operator acting on the reference h_{pσ} (t) |0_n>
+    /// Return a tuple of (h_{pα} (t) |0>, h_{pβ} (t) |0_n>)
+    /// Complimentary operator: h_{pσ} (t) = \sum_{uvw} t^{uv}_{pw} \sum_{σ1} w^+_{σ1} v_{σ1} u_{σ}
+    /// The n-th state: |0_n> = \sum_{I} c^n_I |I>
+    /// spin: σ, σ1; active indices: u, v, w; state weights: w_n; CI coefficients: c^n_I
+    /// If transpose = true, the tensor t assume the order of t^{pw}_{uv}
+    std::vector<std::tuple<ambit::Tensor, ambit::Tensor>>
+    compute_complementary(const std::vector<size_t>& roots, ambit::Tensor tensor,
+                          bool transpose = false) override;
 
     [[deprecated]] std::vector<std::shared_ptr<RDMs>>
     reference(const std::vector<std::pair<size_t, size_t>>& root_list, int max_rdm_level);

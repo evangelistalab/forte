@@ -198,6 +198,138 @@ std::vector<double> SADSRG::H2_T2_C0_T2small(BlockedTensor& H2, BlockedTensor& T
 
     // <[Hbar2, T2]> C_6 C_2
     if (do_cu3_) {
+        double E3v_ref = H2.block("vaaa")("ewxy") * T2.block("aava")("uvez") * rdms_->SF_L3()("xyzuwv");
+        outfile->Printf("\n  E3v reference = %20.15f", E3v_ref);
+
+        double E3v_d3 = H2.block("vaaa")("ewxy") * T2.block("aava")("uvez") * rdms_->SF_G3()("xyzuwv");
+//        double E3v_compt = E3v_d3;
+//
+//        E3v_compt -= H2["ewxy"] * T2["uvez"] * L1_["xu"] * L2_["yzwv"];
+//        E3v_compt -= H2["ewxy"] * T2["uvez"] * L1_["yw"] * L2_["xzuv"];
+//        E3v_compt -= H2["ewxy"] * T2["uvez"] * L1_["zv"] * L2_["xyuw"];
+//
+//        E3v_compt += 0.5 * H2["ewxy"] * T2["uvez"] * L1_["xw"] * L2_["yzuv"];
+//        E3v_compt += 0.5 * H2["ewxy"] * T2["uvez"] * L1_["xv"] * L2_["yzwu"];
+//        E3v_compt += 0.5 * H2["ewxy"] * T2["uvez"] * L1_["yu"] * L2_["xzwv"];
+//        E3v_compt += 0.5 * H2["ewxy"] * T2["uvez"] * L1_["yv"] * L2_["xzuw"];
+//        E3v_compt += 0.5 * H2["ewxy"] * T2["uvez"] * L1_["zu"] * L2_["xyvw"];
+//        E3v_compt += 0.5 * H2["ewxy"] * T2["uvez"] * L1_["zw"] * L2_["xyuv"];
+//
+//        E3v_compt -= H2["ewxy"] * T2["uvez"] * L1_["zv"] * L1_["xu"] * L1_["yw"];
+//
+//        E3v_compt += 0.5 * H2["ewxy"] * T2["uvez"] * L1_["zv"] * L1_["xw"] * L1_["yu"];
+//        E3v_compt += 0.5 * H2["ewxy"] * T2["uvez"] * L1_["zw"] * L1_["xu"] * L1_["yv"];
+//        E3v_compt += 0.5 * H2["ewxy"] * T2["uvez"] * L1_["zu"] * L1_["xv"] * L1_["yw"];
+//
+//        E3v_compt -= 0.25 * H2["ewxy"] * T2["uvez"] * L1_["zu"] * L1_["xw"] * L1_["yv"];
+//        E3v_compt -= 0.25 * H2["ewxy"] * T2["uvez"] * L1_["zw"] * L1_["xv"] * L1_["yu"];
+
+        auto G2 = ambit::BlockedTensor::build(tensor_type_, "G2", {"aaaa"});
+        G2.block("aaaa")("pqrs") = rdms_->SF_G2()("pqrs");
+//
+//        auto temp1 = ambit::BlockedTensor::build(tensor_type_, "temp1", {"va"});
+//        auto temp2 = ambit::BlockedTensor::build(tensor_type_, "temp2", {"av"});
+//
+//        temp1["ex"] = H2["ewxy"] * L1_["yw"];
+//        temp2["xe"] = T2["uvez"] * G2["xzuv"];
+//        E3v_compt -= temp1["ex"] * temp2["xe"];
+//
+//        temp2["ue"] = T2["uvez"] * L1_["zv"];
+//        temp1["eu"] = H2["ewxy"] * L2_["xyuw"];
+//        E3v_compt -= temp1["eu"] * temp2["ue"];
+//
+//        temp1["ey"] = H2["ewxy"] * L1_["xw"];
+//        temp2["ye"] = T2["uvez"] * G2["yzuv"];
+//        E3v_compt += 0.5 * temp1["ey"] * temp2["ye"];
+//
+//        temp2["ve"] = T2["uvez"] * L1_["zu"];
+//        temp1["ev"] = H2["ewxy"] * L2_["xyvw"];
+//        E3v_compt += 0.5 * temp1["ev"] * temp2["ve"];
+//
+//        temp1 = ambit::BlockedTensor::build(tensor_type_, "temp1", {"vaaa"});
+//        temp1["ewuy"] = H2["ewxy"] * L1_["xu"];
+//        E3v_compt -= temp1["ewuy"] * T2["uvez"] * L2_["yzvw"];
+//        E3v_compt += 0.5 * temp1["ewvy"] * T2["uvez"] * L2_["yzwu"];
+//
+//        temp1["ewxu"] = H2["ewxy"] * L1_["yu"];
+//        E3v_compt += 0.5 * temp1["ewxu"] * T2["uvez"] * L2_["xzwv"];
+//        E3v_compt += 0.5 * temp1["ewxv"] * T2["uvez"] * L2_["xzuw"];
+//
+//        temp1["ezxy"] = H2["ewxy"] * L1_["zw"];
+//        E3v_compt += 0.5 * temp1["ezxy"] * T2["uvez"] * G2["xyuv"];
+
+//        outfile->Printf("\n  E3v computed  = %20.15f", E3v_compt);
+
+        outfile->Printf("\n  E3v D3 reference = %20.15f", E3v_d3);
+
+        double E3v_d3_comput_d2 = -1.0 * H2.block("vaaa")("ezxy") * T2.block("aava")("uvez") * rdms_->SF_G2()("xyuv");
+        outfile->Printf("\n  E3v D3 (D2 contribution) contracted = %20.15f", E3v_d3_comput_d2);
+
+        double E3v_d3_comput_d3_1 = 0.0;
+        outfile->Printf("\nhp |0>");
+        auto ht_ket = as_solver_->compute_complimentary(T2.block("aava"), false);
+        outfile->Printf("\nhp^+ |0>");
+        auto hv_bra = as_solver_->compute_complimentary(H2.block("vaaa"), true);
+        for (const auto& state_weights: state_to_weights_) {
+            const auto& state = state_weights.first;
+            const auto& weights = state_weights.second;
+
+            const auto& kets = ht_ket.at(state);
+            const auto& bras = hv_bra.at(state);
+
+//            for (size_t i = 0, nroots = weights.size(); i < nroots; ++i) {
+//                if (weights[i] < 1.0e-15)
+//                    continue;
+//                auto [ann_a, ann_b] = kets[i];
+//                auto [cre_a, cre_b] = bras[i];
+//                E3v_d3_comput_d3_1 += weights[i] * cre_a("Ip") * ann_a("Ip");
+//                outfile->Printf("\n  weight = %.10f", weights[i]);
+//            }
+
+            for (size_t i = 0, nroots = weights.size(); i < nroots; ++i) {
+                if (weights[i] < 1.0e-15)
+                    continue;
+                auto [ann_a, ann_b] = kets[i];
+                auto [cre_a, cre_b] = bras[i];
+                E3v_d3_comput_d3_1 += weights[i] * cre_a("Ip") * ann_a("Ip");
+                E3v_d3_comput_d3_1 += weights[i] * cre_b("Ip") * ann_b("Ip");
+            }
+        }
+        outfile->Printf("\n  E3v D3 (D3 contribution) contracted = %20.15f", E3v_d3_comput_d3_1);
+        outfile->Printf("\n  E3v D3 contracted = %20.15f", E3v_d3_comput_d3_1 + E3v_d3_comput_d2);
+
+//        ambit::Tensor d3;
+//        double E3v_d3_comput_d3_2 = 0.0;
+//        for (const auto& state_weights: state_to_weights_) {
+//            const auto& state = state_weights.first;
+//            const auto& weights = state_weights.second;
+//
+//            const auto& d3_vecs = ht_ket.at(state);
+//
+//            for (size_t i = 0, nroots = weights.size(); i < nroots; ++i) {
+//                if (weights[i] < 1.0e-15)
+//                    continue;
+//                d3 = std::get<1>(d3_vecs[i]);
+//                E3v_d3_comput_d3_2 += weights[i] * d3("xywuvz") * H2.block("vaaa")("ewxy") * T2.block("aava")("uvez");
+//            }
+//        }
+//        outfile->Printf("\n  E3v D3 (D3 contribution) naive      = %20.15f", E3v_d3_comput_d3_2);
+//
+//        auto I = ambit::BlockedTensor::build(tensor_type_, "I", {"aa"});
+//        I.block("aa").iterate([&](const std::vector<size_t>& i, double& value){
+//            if (i[0] == i[1])
+//                value = 1.0;
+//        });
+//        auto x3 = rdms_->g3aaa().clone();
+//        x3.set_name("X3");
+//        x3("xywuvz") = I.block("aa")("wz") * rdms_->g2aa()("xyuv");
+//        x3("xywuvz") -= rdms_->g3aaa()("xyzuvw");
+////        x3.print();
+//        x3("uvwxyz") -= d3("uvwxyz");
+//        x3.set_name("Delta X3");
+////        x3.print();
+//        outfile->Printf("\nD3 diff norm = %20.15f", x3.norm());
+
         E3 += H2.block("vaaa")("ewxy") * T2.block("aava")("uvez") * rdms_->SF_L3()("xyzuwv");
         E3 -= H2.block("aaca")("uvmz") * T2.block("caaa")("mwxy") * rdms_->SF_L3()("xyzuwv");
     }
@@ -679,7 +811,7 @@ void SADSRG::V_T2_C2_DF_PH_X(BlockedTensor& B, BlockedTensor& T2, const double& 
     C2["jqsb"] += temp["jqsb"];
     C2["qjbs"] += temp["jqsb"];
 
-    if (qjsb_large.size() != 0) {
+    if (!qjsb_large.empty()) {
         C2["e,j,f,v0"] -= batched("e", alpha * B["g,a,f"] * B["g,e,m"] * T2["m,j,a,v0"]);
         C2["j,e,v0,f"] -= batched("e", alpha * B["g,a,f"] * B["g,e,m"] * T2["m,j,a,v0"]);
 
@@ -694,7 +826,7 @@ void SADSRG::V_T2_C2_DF_PH_X(BlockedTensor& B, BlockedTensor& T2, const double& 
         C2["j,e,v0,f"] += batched("e", 0.5 * alpha * temp["i,j,y,v0"] * B["g,y,f"] * B["g,e,i"]);
     }
 
-    if (jqsb_large.size() != 0) {
+    if (!jqsb_large.empty()) {
         C2["j,e,f,v0"] -= batched("e", alpha * B["g,a,f"] * B["g,e,m"] * T2["m,j,v0,a"]);
         C2["e,j,v0,f"] -= batched("e", alpha * B["g,a,f"] * B["g,e,m"] * T2["m,j,v0,a"]);
 
