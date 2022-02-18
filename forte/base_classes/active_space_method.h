@@ -144,6 +144,12 @@ class ActiveSpaceMethod {
         throw std::runtime_error("ActiveSpaceMethod::compute_complementary: Not yet implemented!");
     }
 
+    virtual std::vector<std::tuple<ambit::Tensor, ambit::Tensor, ambit::Tensor, ambit::Tensor>>
+    compute_complementary_spin_cases(const std::vector<size_t>& roots, ambit::Tensor tensor,
+                                     bool transpose = false) {
+        throw std::runtime_error("Not yet implemented!");
+    }
+
     /// Set options from an option object
     /// @param options the options passed in
     virtual void set_options(std::shared_ptr<ForteOptions> options) = 0;

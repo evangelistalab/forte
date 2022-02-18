@@ -135,6 +135,10 @@ class FCI_MO : public ActiveSpaceMethod {
     compute_complementary(const std::vector<size_t>& roots, ambit::Tensor tensor,
                           bool transpose = false) override;
 
+    std::vector<std::tuple<ambit::Tensor, ambit::Tensor, ambit::Tensor, ambit::Tensor>>
+    compute_complementary_spin_cases(const std::vector<size_t>& roots, ambit::Tensor tensor,
+                                     bool transpose = false) override;
+
     [[deprecated]] std::vector<std::shared_ptr<RDMs>>
     reference(const std::vector<std::pair<size_t, size_t>>& root_list, int max_rdm_level);
 
@@ -215,9 +219,6 @@ class FCI_MO : public ActiveSpaceMethod {
 
     /// Set number of roots
     void set_nroots(int nroot) { nroot_ = nroot; }
-
-    /// Quiet mode (no printing, for use with CASSCF)
-    void set_quite_mode(bool quiet) { quiet_ = quiet; }
 
     /// Set if localize orbitals
     void set_localize_actv(bool localize) { localize_actv_ = localize; }
@@ -307,8 +308,6 @@ class FCI_MO : public ActiveSpaceMethod {
 
     /// Print Levels
     int print_;
-    /// Quiet mode (Do not print anything in FCI)
-    bool quiet_ = false;
 
     /// Nucear Repulsion Energy
     double e_nuc_;
@@ -462,15 +461,6 @@ class FCI_MO : public ActiveSpaceMethod {
     ambit::Tensor compute_n_rdm_sf(const vecdet& p_space, psi::SharedMatrix evecs, int rdm_level,
                                    int root1, int root2, const StateInfo& state2);
 
-    /// Add wedge product of L1 to L2
-    void add_wedge_cu2(const ambit::Tensor& L1a, const ambit::Tensor& L1b, ambit::Tensor& L2aa,
-                       ambit::Tensor& L2ab, ambit::Tensor& L2bb);
-    /// Add wedge product of L1 and L2 to L3
-    void add_wedge_cu3(const ambit::Tensor& L1a, const ambit::Tensor& L1b,
-                       const ambit::Tensor& L2aa, const ambit::Tensor& L2ab,
-                       const ambit::Tensor& L2bb, ambit::Tensor& L3aaa, ambit::Tensor& L3aab,
-                       ambit::Tensor& L3abb, ambit::Tensor& L3bbb);
-
     /// Rotate the given CI vectors by XMS
     psi::SharedMatrix xms_rotate_this_civecs(const det_vec& p_space, psi::SharedMatrix civecs,
                                              ambit::Tensor Fa, ambit::Tensor Fb);
@@ -480,6 +470,27 @@ class FCI_MO : public ActiveSpaceMethod {
 
     /// Compute 2- and 3-cumulants
     void compute_ref(const int& level, size_t root1, size_t root2);
+
+    /// 3 to 1 lists: z^+ v u |I>
+    det_hash dets321_;
+    det_hash dets321_a_; // u: alpha
+    det_hash dets321_b_; // u: beta
+    std::vector<std::vector<std::tuple<size_t, short, short, short, double>>> list_aaa_;
+    std::vector<std::vector<std::tuple<size_t, short, short, short, double>>> list_abb_;
+    std::vector<std::vector<std::tuple<size_t, short, short, short, double>>> list_baa_;
+    std::vector<std::vector<std::tuple<size_t, short, short, short, double>>> list_bbb_;
+    std::vector<std::vector<std::tuple<size_t, short, short, short, double>>> list_aaa_r_;
+    std::vector<std::vector<std::tuple<size_t, short, short, short, double>>> list_abb_r_;
+    std::vector<std::vector<std::tuple<size_t, short, short, short, double>>> list_baa_r_;
+    std::vector<std::vector<std::tuple<size_t, short, short, short, double>>> list_bbb_r_;
+    det_hash dets321_aaa_; // u: alpha; v, z: alpha
+    det_hash dets321_abb_; // u: alpha; v, z: beta
+    det_hash dets321_baa_; // u: beta; v, z: alpha
+    det_hash dets321_bbb_; // u: beta; v, z: beta
+
+    /// Build 3 to 1 lists: z^+ v u |I>
+    void build_dets321();
+    bool built_dets321_ = false;
 
     /// Orbital Extents
     /// returns a vector of irrep by # active orbitals in current irrep
@@ -502,11 +513,6 @@ class FCI_MO : public ActiveSpaceMethod {
     /// Compute oscillator strength of same symmetry
     void compute_oscillator_strength();
 
-    /// Compute transition dipole when doing state averaging
-    void compute_transition_dipole_sa();
-    /// Compute oscillator strength when doing state averaging
-    void compute_oscillator_strength_sa();
-
     /// Compute dipole (or transition dipole) using DSRG transformed MO dipole integrals (dm)
     /// and densities (or transition densities, D)
     double ref_relaxed_dm_helper(const double& dm0, ambit::BlockedTensor& dm1,
@@ -522,7 +528,6 @@ class FCI_MO : public ActiveSpaceMethod {
 
     /// Localize active orbitals
     bool localize_actv_;
-    void localize_actv_orbs();
 
     /// Print Determinants
     void print_det(const vecdet& dets);

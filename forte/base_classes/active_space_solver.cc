@@ -623,6 +623,23 @@ ActiveSpaceSolver::compute_complimentary(ambit::Tensor tensor, bool transpose) {
     return out;
 }
 
+std::map<StateInfo, std::vector<std::tuple<ambit::Tensor, ambit::Tensor, ambit::Tensor, ambit::Tensor>>>
+ActiveSpaceSolver::compute_complimentary_spin_cases(ambit::Tensor tensor, bool transpose) {
+    std::map<StateInfo, std::vector<std::tuple<ambit::Tensor, ambit::Tensor, ambit::Tensor, ambit::Tensor>>> out;
+
+    for (const auto& state_nroots : state_nroots_map_) {
+        const auto& state = state_nroots.first;
+
+        std::vector<size_t> roots(state_nroots.second);
+        std::iota(roots.begin(), roots.end(), 0);
+
+        const auto method = state_method_map_.at(state);
+        out[state] = method->compute_complementary_spin_cases(roots, tensor, transpose);
+    }
+
+    return out;
+}
+
 // std::shared_ptr<RDMs> ActiveSpaceSolver::compute_avg_rdms(
 //     const std::map<StateInfo, std::vector<double>>& state_weights_map, int max_rdm_level) {
 //     if (max_rdm_level <= 0) {
