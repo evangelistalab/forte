@@ -198,9 +198,10 @@ std::vector<double> SADSRG::H2_T2_C0_T2small(BlockedTensor& H2, BlockedTensor& T
 
     // <[Hbar2, T2]> C_6 C_2
     if (do_cu3_) {
-//        double E3v_ref =
-//            H2.block("vaaa")("ewxy") * T2.block("aava")("uvez") * rdms_->SF_L3()("xyzuwv");
-//        outfile->Printf("\n  E3v reference = %20.15f", E3v_ref);
+        //        double E3v_ref =
+        //            H2.block("vaaa")("ewxy") * T2.block("aava")("uvez") *
+        //            rdms_->SF_L3()("xyzuwv");
+        //        outfile->Printf("\n  E3v reference = %20.15f", E3v_ref);
 
         local_timer tnew;
 
@@ -223,7 +224,7 @@ std::vector<double> SADSRG::H2_T2_C0_T2small(BlockedTensor& H2, BlockedTensor& T
         auto state_kets_map_v = as_solver_->compute_complimentary(Tket, false);
         auto state_bras_map_v = as_solver_->compute_complimentary(Tbra, true);
 
-        double E3v = -H2.block("vaaa")("ezxy") * T2.block("aava")("uvez") * G2.block("aaaa")("xyuv");
+        double E3v = -H2["ezxy"] * T2["uvez"] * G2["xyuv"];
         for (const auto& state_weights : state_to_weights_) {
             const auto& state = state_weights.first;
             const auto& weights = state_weights.second;
@@ -238,8 +239,8 @@ std::vector<double> SADSRG::H2_T2_C0_T2small(BlockedTensor& H2, BlockedTensor& T
                 auto [ket_a, ket_b] = kets[i];
                 auto [bra_a, bra_b] = bras[i];
 
-                E3v += ket_a("Ip") * bra_a("Ip");
-                E3v += ket_b("Ip") * bra_b("Ip");
+                E3v += weights[i] * ket_a("Ip") * bra_a("Ip");
+                E3v += weights[i] * ket_b("Ip") * bra_b("Ip");
             }
         }
 
@@ -253,7 +254,7 @@ std::vector<double> SADSRG::H2_T2_C0_T2small(BlockedTensor& H2, BlockedTensor& T
         E3v -= H2["ewxy"] * temp["eu"] * L2_["xyuw"];
 
         temp = ambit::BlockedTensor::build(tensor_type_, "temp_vaaa", {"vaaa"});
-        temp["ewuy"] = H2["ewxy"] *  L1_["xu"];
+        temp["ewuy"] = H2["ewxy"] * L1_["xu"];
         E3v -= 0.5 * temp["ewuy"] * S2["uvez"] * L2_["yzwv"];
 
         temp["ewxu"] = H2["ewxy"] * L1_["yu"];
@@ -266,9 +267,9 @@ std::vector<double> SADSRG::H2_T2_C0_T2small(BlockedTensor& H2, BlockedTensor& T
         outfile->Printf("\n  E3v computed value = %20.15f", E3v);
 
         // => core contraction <=
-//
-//        double E3c_ref = -H2.block("aaca")("uvmz") * T2.block("caaa")("mwxy") * rdms_->SF_L3()("xyzuwv");
-//        outfile->Printf("\n  E3c reference = %20.15f", E3c_ref);
+
+        //        double E3c_ref = -H2.block("aaca")("uvmz") * T2.block("caaa")("mwxy") *
+        //        rdms_->SF_L3()("xyzuwv"); outfile->Printf("\n  E3c reference = %20.15f", E3c_ref);
 
         // - spin-free 3-RDMs contributions
         Tbra = T2.block("caaa").clone();
