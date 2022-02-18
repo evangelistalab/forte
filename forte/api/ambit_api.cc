@@ -27,6 +27,7 @@
  */
 
 #include <pybind11/pybind11.h>
+#include <pybind11/stl.h>
 
 #include "helpers/helpers.h"
 
@@ -37,6 +38,32 @@ namespace forte {
 void export_ambit(py::module& m) {
     // export ambit::Tensor
     py::class_<ambit::Tensor>(m, "ambitTensor");
+
+    m.def("ambit_doublet",
+          [](ambit::Tensor A, ambit::Tensor B, const std::vector<std::string>& pattern) {
+            if (pattern.size() != 3)
+                throw std::runtime_error("Invalid pattern for contractions between two tensors");
+            auto dims_a = A.dims();
+            auto dims_b = B.dims();
+            std::vector<size_t> dims_c;
+            for (auto ic: pattern[2]) {
+                auto found_a = pattern[0].find(ic);
+                auto found_b = pattern[1].find(ic);
+                if (found_a != std::string::npos and found_b == std::string::npos)
+                    dims_c.push_back(dims_a[found_a]);
+                else if (found_a == std::string::npos and found_b != std::string::npos)
+                    dims_c.push_back(dims_b[found_b]);
+                else {
+                    std::stringstream ss;
+                    ss << "Invalid contraction pattern: ";
+                    ss << pattern[0] << "," << pattern[1] << "->" << pattern[2];
+                    throw std::runtime_error(ss.str());
+                }
+            }
+            auto C = ambit::Tensor::build(A.type(), "C", dims_c);
+            C(pattern[2]) = A(pattern[0]) * B(pattern[1]);
+            return C;
+          });
 
     m.def(
         "test_ambit_3d",

@@ -135,10 +135,6 @@ class FCI_MO : public ActiveSpaceMethod {
     compute_complementary(const std::vector<size_t>& roots, ambit::Tensor tensor,
                           bool transpose = false) override;
 
-    std::vector<std::tuple<ambit::Tensor, ambit::Tensor, ambit::Tensor, ambit::Tensor>>
-    compute_complementary_spin_cases(const std::vector<size_t>& roots, ambit::Tensor tensor,
-                                     bool transpose = false) override;
-
     [[deprecated]] std::vector<std::shared_ptr<RDMs>>
     reference(const std::vector<std::pair<size_t, size_t>>& root_list, int max_rdm_level);
 
@@ -472,21 +468,8 @@ class FCI_MO : public ActiveSpaceMethod {
     void compute_ref(const int& level, size_t root1, size_t root2);
 
     /// 3 to 1 lists: z^+ v u |I>
-    det_hash dets321_;
     det_hash dets321_a_; // u: alpha
     det_hash dets321_b_; // u: beta
-    std::vector<std::vector<std::tuple<size_t, short, short, short, double>>> list_aaa_;
-    std::vector<std::vector<std::tuple<size_t, short, short, short, double>>> list_abb_;
-    std::vector<std::vector<std::tuple<size_t, short, short, short, double>>> list_baa_;
-    std::vector<std::vector<std::tuple<size_t, short, short, short, double>>> list_bbb_;
-    std::vector<std::vector<std::tuple<size_t, short, short, short, double>>> list_aaa_r_;
-    std::vector<std::vector<std::tuple<size_t, short, short, short, double>>> list_abb_r_;
-    std::vector<std::vector<std::tuple<size_t, short, short, short, double>>> list_baa_r_;
-    std::vector<std::vector<std::tuple<size_t, short, short, short, double>>> list_bbb_r_;
-    det_hash dets321_aaa_; // u: alpha; v, z: alpha
-    det_hash dets321_abb_; // u: alpha; v, z: beta
-    det_hash dets321_baa_; // u: beta; v, z: alpha
-    det_hash dets321_bbb_; // u: beta; v, z: beta
 
     /// Build 3 to 1 lists: z^+ v u |I>
     void build_dets321();

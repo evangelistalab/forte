@@ -61,10 +61,10 @@ void export_Localize(py::module& m) {
         .def("compute_transformation", &Localize::compute_transformation,
              "Compute the transformation")
         .def("set_orbital_space",
-             (void (Localize::*)(std::vector<int>&)) & Localize::set_orbital_space,
+             (void(Localize::*)(std::vector<int>&)) & Localize::set_orbital_space,
              "Compute the transformation")
         .def("set_orbital_space",
-             (void (Localize::*)(std::vector<std::string>&)) & Localize::set_orbital_space,
+             (void(Localize::*)(std::vector<std::string>&)) & Localize::set_orbital_space,
              "Compute the transformation")
         .def("get_Ua", &Localize::get_Ua, "Get Ua rotation")
         .def("get_Ub", &Localize::get_Ub, "Get Ub rotation");

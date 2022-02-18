@@ -112,9 +112,6 @@ class ActiveSpaceSolver {
     std::map<StateInfo, std::vector<std::tuple<ambit::Tensor, ambit::Tensor>>>
     compute_complimentary(ambit::Tensor tensor, bool transpose = false);
 
-    std::map<StateInfo, std::vector<std::tuple<ambit::Tensor, ambit::Tensor, ambit::Tensor, ambit::Tensor>>>
-    compute_complimentary_spin_cases(ambit::Tensor tensor, bool transpose = false);
-
     /// Print a summary of the computation information
     void print_options();
 

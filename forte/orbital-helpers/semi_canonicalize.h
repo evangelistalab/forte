@@ -69,10 +69,10 @@ class SemiCanonical {
     psi::SharedMatrix Ub() { return Ub_; }
 
     /// Return the alpha rotation matrix in the active space
-    ambit::Tensor Ua_t() { return Ua_t_; }
+    ambit::Tensor Ua_t() const { return Ua_t_.clone(); }
 
     /// Return the beta rotation matrix in the active space
-    ambit::Tensor Ub_t() { return Ub_t_; }
+    ambit::Tensor Ub_t() const { return Ub_t_.clone(); }
 
     /// Return if the orbital ordering and phases are fixed successfully
     bool fix_orbital_success() const { return fix_orbital_success_; }

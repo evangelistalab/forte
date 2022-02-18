@@ -198,9 +198,11 @@ std::vector<double> SADSRG::H2_T2_C0_T2small(BlockedTensor& H2, BlockedTensor& T
 
     // <[Hbar2, T2]> C_6 C_2
     if (do_cu3_) {
-        double E3v_ref =
-            H2.block("vaaa")("ewxy") * T2.block("aava")("uvez") * rdms_->SF_L3()("xyzuwv");
-        outfile->Printf("\n  E3v reference = %20.15f", E3v_ref);
+//        double E3v_ref =
+//            H2.block("vaaa")("ewxy") * T2.block("aava")("uvez") * rdms_->SF_L3()("xyzuwv");
+//        outfile->Printf("\n  E3v reference = %20.15f", E3v_ref);
+
+        local_timer tnew;
 
         auto G2 = ambit::BlockedTensor::build(ambit::CoreTensor, "G2", {"aaaa"});
         G2.block("aaaa")("pqrs") = rdms_->SF_G2()("pqrs");
@@ -264,9 +266,9 @@ std::vector<double> SADSRG::H2_T2_C0_T2small(BlockedTensor& H2, BlockedTensor& T
         outfile->Printf("\n  E3v computed value = %20.15f", E3v);
 
         // => core contraction <=
-
-        double E3c_ref = -H2.block("aaca")("uvmz") * T2.block("caaa")("mwxy") * rdms_->SF_L3()("xyzuwv");
-        outfile->Printf("\n  E3c reference = %20.15f", E3c_ref);
+//
+//        double E3c_ref = -H2.block("aaca")("uvmz") * T2.block("caaa")("mwxy") * rdms_->SF_L3()("xyzuwv");
+//        outfile->Printf("\n  E3c reference = %20.15f", E3c_ref);
 
         // - spin-free 3-RDMs contributions
         Tbra = T2.block("caaa").clone();
@@ -318,176 +320,12 @@ std::vector<double> SADSRG::H2_T2_C0_T2small(BlockedTensor& H2, BlockedTensor& T
         E3c -= 0.5 * temp["mwuv"] * T2["mwxy"] * G2["xyuv"];
 
         outfile->Printf("\n  E3c computed value = %20.15f", E3c);
-        
-        //        E3c += H2["uvmz"] * T2["mwxy"] * L1_["xu"] * L2_["yzwv"];
-        //        E3c -= 0.5 * H2["uvmz"] * T2["mwxy"] * L1_["yu"] * L2_["xzwv"];
-        
-        //        E3c += H2["uvmz"] * T2["mwxy"] * L1_["yw"] * L2_["xzuv"];
-        //        E3c += H2["uvmz"] * T2["mwxy"] * L1_["zv"] * L1_["xu"] * L1_["yw"];
-        //        E3c -= 0.5 * H2["uvmz"] * T2["mwxy"] * L1_["zu"] * L1_["xv"] * L1_["yw"];
+        outfile->Printf("\n  Alex's algorithm: %.3f s", tnew.get());
 
-        //        E3c -= 0.5 * H2["uvmz"] * T2["mwxy"] * L1_["xw"] * L2_["yzuv"];
-        //        E3c -= 0.5 * H2["uvmz"] * T2["mwxy"] * L1_["zv"] * L1_["xw"] * L1_["yu"];
-        //        E3c += 0.25 * H2["uvmz"] * T2["mwxy"] * L1_["zu"] * L1_["xw"] * L1_["yv"];
-
-        //        E3c -= 0.5 * H2["uvmz"] * T2["mwxy"] * L1_["zw"] * L2_["xyuv"];
-        //        E3c -= 0.5 * H2["uvmz"] * T2["mwxy"] * L1_["zw"] * L1_["xu"] * L1_["yv"];
-        //        E3c += 0.25 * H2["uvmz"] * T2["mwxy"] * L1_["zw"] * L1_["xv"] * L1_["yu"];
-
-        //        E3c += H2["uvmz"] * T2["mwxy"] * L1_["zv"] * L2_["xyuw"];
-        //        E3c -= 0.5 * H2["uvmz"] * T2["mwxy"] * L1_["zu"] * L2_["xyvw"];
-        //
-        //        E3c -= 0.5 * H2["uvmz"] * T2["mwxy"] * L1_["yv"] * L2_["xzuw"];
-        //        E3c -= 0.5 * H2["uvmz"] * T2["mwxy"] * L1_["xv"] * L2_["yzwu"];
-
-
-//        auto Ibt = ambit::BlockedTensor::build(tensor_type_, "Ibt", {"aa"});
-//        auto I = Ibt.block("aa");
-//        I.iterate([&](const std::vector<size_t>& i, double& value) {
-//            if (i[0] == i[1])
-//                value = 1.0;
-//        });
-//
-//        auto rdm_sd =
-//            as_solver_->compute_average_rdms(state_to_weights_, 3, RDMsType::spin_dependent);
-//        auto rdm_sf = as_solver_->compute_average_rdms(state_to_weights_, 3, RDMsType::spin_free);
-//        auto g2 = rdm_sd->SF_G2().clone();
-//        g2("pqrs") -= rdm_sf->SF_G2()("pqrs");
-//        auto g3 = rdm_sd->SF_G3().clone();
-//        g3("pqrstu") -= rdm_sf->SF_G3()("pqrstu");
-//        outfile->Printf("\n  SF G2 diff SD - SF: %20.15f", g2.norm());
-//        outfile->Printf("\n  SF G3 diff SD - SF: %20.15f", g3.norm());
-//
-//        double E3v_g3aaa = Tbra("ewxy") * Tket("uvez") * rdm_sd->g3aaa()("xyzuwv");
-//        outfile->Printf("\n  E3v g3aaa = %20.15f", E3v_g3aaa);
-//
-//        double E3v_g3aab = Tbra("ewxy") * Tket("uvez") * rdm_sd->g3aab()("xyzuwv");
-//        E3v_g3aab += Tbra("ewxy") * Tket("uvez") * rdm_sd->g3aab()("xzyuvw");
-//        E3v_g3aab += Tbra("ewxy") * Tket("uvez") * rdm_sd->g3aab()("zyxvwu");
-//        outfile->Printf("\n  E3v g3aab = %20.15f", E3v_g3aab);
-//
-//        double E3v_g3abb = Tbra("ewxy") * Tket("uvez") * rdm_sd->g3abb()("xyzuwv");
-//        E3v_g3abb += Tbra("ewxy") * Tket("uvez") * rdm_sd->g3abb()("yxzwuv");
-//        E3v_g3abb += Tbra("ewxy") * Tket("uvez") * rdm_sd->g3abb()("zyxvwu");
-//        outfile->Printf("\n  E3v g3abb = %20.15f", E3v_g3abb);
-//
-//        double E3v_g3bbb = Tbra("ewxy") * Tket("uvez") * rdm_sd->g3bbb()("xyzuwv");
-//        outfile->Printf("\n  E3v g3bbb = %20.15f", E3v_g3bbb);
-//
-//        outfile->Printf("\n  E3v G3 reference (SD) = %20.15f",
-//                        E3v_g3aaa + E3v_g3aab + E3v_g3abb + E3v_g3bbb);
-//
-//        double E3v_G3_sf =
-//            H2.block("vaaa")("ewxy") * T2.block("aava")("uvez") * rdms_->SF_G3()("xyzuwv");
-//        outfile->Printf("\n  E3v G3 reference (SF) = %20.15f", E3v_G3_sf);
-//        E3v_G3_sf = Tbra("ewxy") * Tket("uvez") * rdm_sd->SF_G3()("xyzuwv");
-//        outfile->Printf("\n  E3v G3 reference (SF from SD) = %20.15f", E3v_G3_sf);
-//
-//        double E3v_G3_G2 =
-//            -1.0 * H2.block("vaaa")("ezxy") * T2.block("aava")("uvez") * rdms_->SF_G2()("xyuv");
-//        outfile->Printf("\n  E3v G3 (G2 contribution) contracted = %20.15f", E3v_G3_G2);
-//        outfile->Printf("\n  E3v D3 (D3 contribution SF) contracted expected = %20.15f",
-//                        E3v_G3_sf - E3v_G3_G2);
-//
-//        outfile->Printf("\n hp(t) |0>");
-//        auto state_kets_map_sd = as_solver_->compute_complimentary_spin_cases(Tket, false);
-//        auto state_kets_map_sf = as_solver_->compute_complimentary(Tket, false);
-//
-//        outfile->Printf("\n <0| hp^+(v)");
-//        auto state_bras_map_sd = as_solver_->compute_complimentary_spin_cases(Tbra, true);
-//        auto state_bras_map_sf = as_solver_->compute_complimentary(Tbra, true);
-//
-//        double E3v_g3aaa_c = 0.0, E3v_g3aab_c = 0.0, E3v_g3abb_c = 0.0, E3v_g3bbb_c = 0.0;
-//        for (const auto& state_weights : state_to_weights_) {
-//            const auto& state = state_weights.first;
-//            const auto& weights = state_weights.second;
-//
-//            const auto& kets_sd = state_kets_map_sd.at(state);
-//            const auto& bras_sd = state_bras_map_sd.at(state);
-//
-//            const auto& kets_sf = state_kets_map_sf.at(state);
-//            const auto& bras_sf = state_bras_map_sf.at(state);
-//
-//            for (size_t i = 0, nroots = weights.size(); i < nroots; ++i) {
-//                if (weights[i] < 1.0e-15)
-//                    continue;
-//                auto [ket_aaa, ket_abb, ket_baa, ket_bbb] = kets_sd[i];
-//                auto [bra_aaa, bra_abb, bra_baa, bra_bbb] = bras_sd[i];
-//
-//                E3v_g3aaa_c += weights[i] * ket_aaa("Ip") * bra_aaa("Ip");
-//
-//                E3v_g3aab_c += weights[i] * ket_abb("Ip") * bra_aaa("Ip");
-//                E3v_g3aab_c += weights[i] * ket_aaa("Ip") * bra_abb("Ip");
-//                E3v_g3aab_c += weights[i] * ket_baa("Ip") * bra_baa("Ip");
-//
-//                E3v_g3abb_c += weights[i] * ket_abb("Ip") * bra_abb("Ip");
-//                E3v_g3abb_c += weights[i] * ket_baa("Ip") * bra_bbb("Ip");
-//                E3v_g3abb_c += weights[i] * ket_bbb("Ip") * bra_baa("Ip");
-//
-//                E3v_g3bbb_c += weights[i] * ket_bbb("Ip") * bra_bbb("Ip");
-//
-//                auto [ket_a, ket_b] = kets_sf[i];
-//                auto [bra_a, bra_b] = bras_sf[i];
-//
-//                double diff_a = ket_a("Ip") * bra_a("Ip");
-//                diff_a -= ket_aaa("Ip") * bra_aaa("Ip");
-//                diff_a -= ket_abb("Ip") * bra_aaa("Ip");
-//                diff_a -= ket_aaa("Ip") * bra_abb("Ip");
-//                diff_a -= ket_abb("Ip") * bra_abb("Ip");
-//                outfile->Printf("\n  diff a: %20.15f", diff_a);
-//
-//                double diff_b = ket_b("Ip") * bra_b("Ip");
-//                diff_b -= ket_baa("Ip") * bra_baa("Ip");
-//                diff_b -= ket_bbb("Ip") * bra_baa("Ip");
-//                diff_b -= ket_baa("Ip") * bra_bbb("Ip");
-//                diff_b -= ket_bbb("Ip") * bra_bbb("Ip");
-//                outfile->Printf("\n  diff b: %20.15f", diff_b);
-//            }
-//        }
-//
-//        double E3v_g2aa_c = -1.0 * Tbra("ezxy") * Tket("uvez") * rdm_sd->g2aa()("xyuv");
-//        double E3v_g2ab_c = -1.0 * Tbra("ezxy") * Tket("uvez") * rdm_sd->g2ab()("xyuv");
-//        double E3v_g2ba_c = -1.0 * Tbra("ezxy") * Tket("uvez") * rdm_sd->g2ab()("yxvu");
-//        double E3v_g2bb_c = -1.0 * Tbra("ezxy") * Tket("uvez") * rdm_sd->g2bb()("xyuv");
-//
-//        outfile->Printf("\n  E3v g3aaa contracted = %20.15f", E3v_g3aaa_c + E3v_g2aa_c);
-//        outfile->Printf("\n  E3v g3aab contracted = %20.15f", E3v_g3aab_c + E3v_g2ba_c);
-//        outfile->Printf("\n  E3v g3abb contracted = %20.15f", E3v_g3abb_c + E3v_g2ab_c);
-//        outfile->Printf("\n  E3v g3bbb contracted = %20.15f", E3v_g3bbb_c + E3v_g2bb_c);
-//
-//        //        ambit::Tensor d3;
-//        //        double E3v_d3_comput_d3_2 = 0.0, ediff = 0.0;
-//        //
-//        //        for (const auto& state_weights: state_to_weights_) {
-//        //            const auto& state = state_weights.first;
-//        //            const auto& weights = state_weights.second;
-//        //
-//        //            const auto& d3_vecs = state_kets_map_sd.at(state);
-//        //
-//        //            for (size_t i = 0, nroots = weights.size(); i < nroots; ++i) {
-//        //                if (weights[i] < 1.0e-15)
-//        //                    continue;
-//        //                d3 = std::get<1>(d3_vecs[i]);
-//        //                E3v_d3_comput_d3_2 += weights[i] * d3("xywuvz") * H2.block("vaaa")("ewxy")
-//        //                * T2.block("aava")("uvez");
-//        //
-//        //
-//        //                auto diff3 = rdms_->g3aaa().clone();
-//        //                diff3("xyzuvw") += d3("xywuvz");
-//        //                diff3("xyzuvw") -= Ibt.block("aa")("wz") * rdms_->g2aa()("xyuv");
-//        //                outfile->Printf("\n diff norm (sf) = %20.15f", diff3.norm());
-//        //
-//        //                diff3 = rdm_sd->g3aaa().clone();
-//        //                diff3("xyzuvw") += d3("xywuvz");
-//        //                diff3("xyzuvw") -= Ibt.block("aa")("wz") * rdms_->g2aa()("xyuv");
-//        //                outfile->Printf("\n diff norm (sd) = %20.15f", diff3.norm());
-//        //            }
-//        //        }
-//        //        outfile->Printf("\n  E3v D3 (D3 contribution) naive      = %20.15f",
-//        //        E3v_d3_comput_d3_2); outfile->Printf("\n  Ediff      = %20.15f", ediff);
-
+        local_timer told;
         E3 += H2.block("vaaa")("ewxy") * T2.block("aava")("uvez") * rdms_->SF_L3()("xyzuwv");
         E3 -= H2.block("aaca")("uvmz") * T2.block("caaa")("mwxy") * rdms_->SF_L3()("xyzuwv");
+        outfile->Printf("\n  direct contraction: %.3f s", told.get());
     }
 
     return {E1, E2, E3};

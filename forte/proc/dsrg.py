@@ -245,7 +245,7 @@ class ProcedureDSRG:
                 self.rdms = self.active_space_solver.compute_average_rdms(self.state_weights_map, self.max_rdm_level,
                                                                           self.rdm_type)
 
-            # - Transform RDMs to the semi-canonical orbitals of last step
+            # - Transform RDMs to the semi-canonical orbitals of last step (because of integrals)
             self.rdms.rotate(self.Ua, self.Ub)
 
             # - Semi-canonicalize RDMs and orbitals
@@ -256,7 +256,8 @@ class ProcedureDSRG:
                     psi4.core.print_out("\n  DSRG checkpoint files removed due to the unsuccessful"
                                         " attempt to fix orbital phase and order.")
                     self.dsrg_solver.clean_checkpoints()
-            self.Ua, self.Ub = self.semi.Ua_t(), self.semi.Ub_t()
+            self.Ua = forte.ambit_doublet(self.Ua, self.semi.Ua_t(), ["ij", "jk", "ik"])
+            self.Ub = forte.ambit_doublet(self.Ub, self.semi.Ub_t(), ["ij", "jk", "ik"])
 
             # - Compute DSRG energy
             self.make_dsrg_solver()
