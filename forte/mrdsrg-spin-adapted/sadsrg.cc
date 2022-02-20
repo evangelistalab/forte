@@ -185,6 +185,8 @@ void SADSRG::read_options() {
     multi_state_ = foptions_->get_gen_list("AVG_STATE").size() != 0;
     multi_state_algorithm_ = foptions_->get_str("DSRG_MULTI_STATE");
 
+    L3_algorithm_ = foptions_->get_str("DSRG_3RDM_ALGORITHM");
+
     print_done(lt.get());
 }
 
@@ -261,7 +263,8 @@ void SADSRG::check_init_memory() {
     // densities already stored by RDMs
     auto na = actv_mos_.size();
     n_ele += na * na + na * na * na * na;
-    if (do_cu3_) {
+    bool stored_cu3 = do_cu3_ and (L3_algorithm_ == "EXPLICIT"); // TODO: need to fix the logic, FCI_MO only, spin-adapted code only
+    if (stored_cu3) {
         n_ele += na * na * na * na * na * na;
     }
 
@@ -295,7 +298,7 @@ void SADSRG::check_init_memory() {
     dsrg_mem_.add_print_entry("Memory assigned by the user", mem_sys_);
     dsrg_mem_.add_print_entry("Memory available for MR-DSRG", mem_left);
     dsrg_mem_.add_entry("Generalized Fock matrix", {"g", "gg"});
-    if (do_cu3_) {
+    if (stored_cu3) {
         dsrg_mem_.add_entry("1-, 2-, and 3-density cumulants", {"aa", "aa", "aaaa", "aaaaaa"});
     } else {
         dsrg_mem_.add_entry("1- and 2-density cumulants", {"aa", "aa", "aaaa"});
@@ -709,7 +712,8 @@ void SADSRG::print_cumulant_summary() {
     maxes[0] = L2_.norm(0);
     norms[0] = L2_.norm(2);
 
-    if (do_cu3_) {
+    // TODO: need to fix the logic, FCI_MO only, spin-adapted code only
+    if (do_cu3_ and L3_algorithm_ == "EXPLICIT") {
         maxes[1] = rdms_->SF_L3().norm(0);
         norms[1] = rdms_->SF_L3().norm(2);
     } else {

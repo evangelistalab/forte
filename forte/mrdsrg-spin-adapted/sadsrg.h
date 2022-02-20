@@ -219,8 +219,10 @@ class SADSRG : public DynamicCorrelationSolver {
     ambit::BlockedTensor L1_;
     /// One-hole density matrix
     ambit::BlockedTensor Eta1_;
-    /// Two-body denisty cumulant
+    /// Two-body density cumulant
     ambit::BlockedTensor L2_;
+    /// Three-body density cumulant algorithm
+    std::string L3_algorithm_;
 
     // ==> Fock matrix related <==
 

@@ -483,13 +483,28 @@ class FCI_MO : public ActiveSpaceMethod {
     /// Compute 2- and 3-cumulants
     void compute_ref(const int& level, size_t root1, size_t root2);
 
-    /// 3 to 1 lists: z^+ v u |I>
+    /// 3 to 1 determinants: z^+ v u |I>
     det_hash dets321_a_; // u: alpha
     det_hash dets321_b_; // u: beta
 
     /// Build 3 to 1 lists: z^+ v u |I>
     void build_dets321();
     bool built_dets321_ = false;
+
+    /// 3 to 1 lists: |J> = z^+ v u |I>
+    /// J to vector of tuples (I, u, v, z, sign)
+    std::vector<std::vector<std::tuple<size_t, unsigned char, unsigned char, unsigned char, bool>>>
+        list321_aaa_;
+    std::vector<std::vector<std::tuple<size_t, unsigned char, unsigned char, unsigned char, bool>>>
+        list321_abb_;
+    std::vector<std::vector<std::tuple<size_t, unsigned char, unsigned char, unsigned char, bool>>>
+        list321_baa_;
+    std::vector<std::vector<std::tuple<size_t, unsigned char, unsigned char, unsigned char, bool>>>
+        list321_bbb_;
+
+    /// Build 3 to 1 lists: |J> = z^+ v u |I>
+    void build_lists321();
+    bool built_lists321_ = false;
 
     /// Orbital Extents
     /// returns a vector of irrep by # active orbitals in current irrep

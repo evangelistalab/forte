@@ -322,6 +322,10 @@ PYBIND11_MODULE(_forte, m) {
              "Return nuclear components of dipole moments")
         .def("set_Uactv", &MASTER_DSRG::set_Uactv, "Ua"_a, "Ub"_a,
              "Set active part orbital rotation matrix (from original to semicanonical)")
+        .def("set_active_space_solver", &MASTER_DSRG::set_active_space_solver,
+             "Set the pointer of ActiveSpaceSolver")
+        .def("set_state_weights_map", &MASTER_DSRG::set_state_weights_map,
+             "Set the map from state to the weights of all computed roots")
         .def("set_read_cwd_amps", &MASTER_DSRG::set_read_amps_cwd,
              "Set if reading amplitudes in the current directory or not")
         .def("clean_checkpoints", &MASTER_DSRG::clean_checkpoints,

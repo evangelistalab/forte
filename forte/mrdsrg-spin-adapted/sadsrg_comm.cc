@@ -198,176 +198,99 @@ std::vector<double> SADSRG::H2_T2_C0_T2small(BlockedTensor& H2, BlockedTensor& T
 
     // <[Hbar2, T2]> C_6 C_2
     if (do_cu3_) {
-        //        double E3v_ref =
-        //            H2.block("vaaa")("ewxy") * T2.block("aava")("uvez") *
-        //            rdms_->SF_L3()("xyzuwv");
-        //        outfile->Printf("\n  E3v reference = %20.15f", E3v_ref);
+        if (L3_algorithm_ == "EXPLICIT") { // TODO: need to fix the logic, FCI_MO only, spin-adapted code only
+            timer t("DSRG [H2, T2] L3");
+            E3 += H2.block("vaaa")("ewxy") * T2.block("aava")("uvez") * rdms_->SF_L3()("xyzuwv");
+            E3 -= H2.block("aaca")("uvmz") * T2.block("caaa")("mwxy") * rdms_->SF_L3()("xyzuwv");
+        } else {
+            // direct algorithm for 3RDM: Alex's trick JCTC 16, 6343–6357 (2020)
+            // t_{uvez} v_{ewxy} D_{xyzuwv} = - t_{uvez} v_{ezxy} D_{uvxy}
+            //                                + t_{uvez} v_{ewxy} < x^+ y^+ w z^+ v u >
 
-        local_timer tnew;
+            // - need to transform the integrals to the same orbital basis as active space solver
+            // - TODO: maybe we (York) should make the CI vectors consistent at the first place
+            ambit::Tensor Tbra, Tket;
+            ambit::Tensor Ua = Uactv_.block("aa");
 
-        auto G2 = ambit::BlockedTensor::build(ambit::CoreTensor, "G2", {"aaaa"});
-        G2.block("aaaa")("pqrs") = rdms_->SF_G2()("pqrs");
+            timer timer_v("DSRG [H2, T2] D3V direct");
+            Tbra = H2.block("vaaa").clone();
+            Tbra("ewuv") = H2.block("vaaa")("ezxy") * Ua("wz") * Ua("ux") * Ua("vy");
+            Tket = T2.block("aava").clone();
+            Tket("uvew") = T2.block("aava")("xyez") * Ua("wz") * Ua("ux") * Ua("vy");
+            auto E3v_map = as_solver_->compute_complementary_H2caa_overlap(Tbra, Tket);
+            timer_v.stop();
 
-        // need to transform the integrals to the same orbital basis as active space solver
-        // TODO: maybe we (York) should make the CI vectors consistent at the first place
-        ambit::Tensor Tbra, Tket;
-        ambit::Tensor Ua = Uactv_.block("aa");
+            timer timer_c("DSRG [H2, T2] D3C direct");
+            Tbra = T2.block("caaa").clone();
+            Tbra("mwuv") = T2.block("caaa")("mzxy") * Ua("wz") * Ua("ux") * Ua("vy");
+            Tket = H2.block("aaca").clone();
+            Tket("uvmw") = H2.block("aaca")("xymz") * Ua("wz") * Ua("ux") * Ua("vy");
+            auto E3c_map = as_solver_->compute_complementary_H2caa_overlap(Tbra, Tket);
+            timer_c.stop();
 
-        // => virtual contraction <=
+            // - 2-RDM contributions
+            auto G2 = ambit::BlockedTensor::build(ambit::CoreTensor, "G2", {"aaaa"});
+            G2.block("aaaa")("pqrs") = rdms_->SF_G2()("pqrs");
 
-        // - spin-free 3-RDMs contribution
-        Tbra = H2.block("vaaa").clone();
-        Tbra("ewuv") = H2.block("vaaa")("ezxy") * Ua("wz") * Ua("ux") * Ua("vy");
-        Tket = T2.block("aava").clone();
-        Tket("uvew") = T2.block("aava")("xyez") * Ua("wz") * Ua("ux") * Ua("vy");
+            double E3v = -H2["ezxy"] * T2["uvez"] * G2["xyuv"];
+            double E3c = T2["mzxy"] * H2["uvmz"] * G2["xyuv"];
 
-        auto state_kets_map_v = as_solver_->compute_complementary_H2caa(Tket, false);
-        auto state_bras_map_v = as_solver_->compute_complementary_H2caa(Tbra, true);
-
-        double E3v = -H2["ezxy"] * T2["uvez"] * G2["xyuv"];
-        double E3v_d3 = 0.0;
-        for (const auto& state_weights : state_to_weights_) {
-            const auto& state = state_weights.first;
-            const auto& weights = state_weights.second;
-
-            const auto& kets = state_kets_map_v.at(state);
-            const auto& bras = state_bras_map_v.at(state);
-
-            for (size_t i = 0, nroots = weights.size(); i < nroots; ++i) {
-                if (weights[i] < 1.0e-15)
-                    continue;
-
-                auto [ket_a, ket_b] = kets[i];
-                auto [bra_a, bra_b] = bras[i];
-
-                E3v_d3 += weights[i] * ket_a("Ip") * bra_a("Ip");
-                E3v_d3 += weights[i] * ket_b("Ip") * bra_b("Ip");
-
-                E3v += E3v_d3;
+            // - add together
+            for (const auto& state_weights : state_to_weights_) {
+                const auto& state = state_weights.first;
+                const auto& weights = state_weights.second;
+                for (size_t i = 0, nroots = weights.size(); i < nroots; ++i) {
+                    if (weights[i] < 1.0e-15)
+                        continue;
+                    E3v += weights[i] * E3v_map[state][i];
+                    E3c -= weights[i] * E3c_map[state][i];
+                }
             }
+
+            // => spin-free 1- and 2-cumulant contributions <=
+
+            // - virtual contraction
+            temp = ambit::BlockedTensor::build(tensor_type_, "temp_va", {"va"});
+            temp["ex"] = H2["ewxy"] * L1_["yw"];
+            temp["ex"] -= 0.5 * H2["ewyx"] * L1_["yw"];
+            E3v -= temp["ex"] * T2["uvez"] * G2["xzuv"];
+
+            temp["eu"] = 0.5 * S2["uvez"] * L1_["zv"];
+            E3v -= H2["ewxy"] * temp["eu"] * L2_["xyuw"];
+
+            temp = ambit::BlockedTensor::build(tensor_type_, "temp_vaaa", {"vaaa"});
+            temp["ewuy"] = H2["ewxy"] * L1_["xu"];
+            E3v -= 0.5 * temp["ewuy"] * S2["uvez"] * L2_["yzwv"];
+
+            temp["ewxu"] = H2["ewxy"] * L1_["yu"];
+            E3v += 0.5 * temp["ewxu"] * T2["uvez"] * L2_["xzwv"];
+            E3v += 0.5 * temp["ewxv"] * T2["uvez"] * L2_["xzuw"];
+
+            temp["ezxy"] = H2["ewxy"] * L1_["zw"];
+            E3v += 0.5 * temp["ezxy"] * T2["uvez"] * G2["xyuv"];
+
+            // - core contraction
+            temp = ambit::BlockedTensor::build(tensor_type_, "temp_ac", {"ac"});
+            temp["um"] = H2["uvmz"] * L1_["zv"];
+            temp["um"] -= 0.5 * H2["vumz"] * L1_["zv"];
+            E3c += temp["um"] * T2["mwxy"] * L2_["xyuw"];
+
+            temp["xm"] = S2["mwxy"] * L1_["yw"];
+            E3c += 0.5 * H2["uvmz"] * temp["xm"] * G2["xzuv"];
+
+            temp = ambit::BlockedTensor::build(tensor_type_, "temp_caaa", {"caaa"});
+            temp["mzxv"] = H2["uvmz"] * L1_["xu"];
+            E3c += 0.5 * temp["mzxv"] * S2["mwxy"] * L2_["yzwv"];
+
+            temp["mzuy"] = H2["uvmz"] * L1_["yv"];
+            E3c -= 0.5 * temp["mzuy"] * T2["mwxy"] * L2_["xzuw"];
+            E3c -= 0.5 * temp["mzux"] * T2["mwxy"] * L2_["yzwu"];
+
+            temp["mwuv"] = H2["uvmz"] * L1_["zw"];
+            E3c -= 0.5 * temp["mwuv"] * T2["mwxy"] * G2["xyuv"];
+
+            E3 += E3c + E3v;
         }
-
-        // - spin-free 1- and 2-body cumulants contributions
-        temp = ambit::BlockedTensor::build(tensor_type_, "temp_va", {"va"});
-        temp["ex"] = H2["ewxy"] * L1_["yw"];
-        temp["ex"] -= 0.5 * H2["ewyx"] * L1_["yw"];
-        E3v -= temp["ex"] * T2["uvez"] * G2["xzuv"];
-
-        temp["eu"] = 0.5 * S2["uvez"] * L1_["zv"];
-        E3v -= H2["ewxy"] * temp["eu"] * L2_["xyuw"];
-
-        temp = ambit::BlockedTensor::build(tensor_type_, "temp_vaaa", {"vaaa"});
-        temp["ewuy"] = H2["ewxy"] * L1_["xu"];
-        E3v -= 0.5 * temp["ewuy"] * S2["uvez"] * L2_["yzwv"];
-
-        temp["ewxu"] = H2["ewxy"] * L1_["yu"];
-        E3v += 0.5 * temp["ewxu"] * T2["uvez"] * L2_["xzwv"];
-        E3v += 0.5 * temp["ewxv"] * T2["uvez"] * L2_["xzuw"];
-
-        temp["ezxy"] = H2["ewxy"] * L1_["zw"];
-        E3v += 0.5 * temp["ezxy"] * T2["uvez"] * G2["xyuv"];
-
-        outfile->Printf("\n  E3v computed value = %20.15f", E3v);
-
-        // => core contraction <=
-
-        //        double E3c_ref = -H2.block("aaca")("uvmz") * T2.block("caaa")("mwxy") *
-        //        rdms_->SF_L3()("xyzuwv"); outfile->Printf("\n  E3c reference = %20.15f", E3c_ref);
-
-        // - spin-free 3-RDMs contributions
-        Tbra = T2.block("caaa").clone();
-        Tbra("mwuv") = T2.block("caaa")("mzxy") * Ua("wz") * Ua("ux") * Ua("vy");
-        Tket = H2.block("aaca").clone();
-        Tket("uvmw") = H2.block("aaca")("xymz") * Ua("wz") * Ua("ux") * Ua("vy");
-
-        auto state_kets_map_c = as_solver_->compute_complementary_H2caa(Tket, false);
-        auto state_bras_map_c = as_solver_->compute_complementary_H2caa(Tbra, true);
-
-        double E3c = T2.block("caaa")("mzxy") * H2.block("aaca")("uvmz") * G2.block("aaaa")("xyuv");
-        double E3c_d3 = 0.0;
-        for (const auto& state_weights : state_to_weights_) {
-            const auto& state = state_weights.first;
-            const auto& weights = state_weights.second;
-
-            const auto& kets = state_kets_map_c.at(state);
-            const auto& bras = state_bras_map_c.at(state);
-
-            for (size_t i = 0, nroots = weights.size(); i < nroots; ++i) {
-                if (weights[i] < 1.0e-15)
-                    continue;
-
-                auto [ket_a, ket_b] = kets[i];
-                auto [bra_a, bra_b] = bras[i];
-
-                E3c_d3 -= weights[i] * ket_a("Ip") * bra_a("Ip");
-                E3c_d3 -= weights[i] * ket_b("Ip") * bra_b("Ip");
-
-                E3c += E3c_d3;
-            }
-        }
-
-        // - spin-free 1- and 2-body cumulants contributions
-        temp = ambit::BlockedTensor::build(tensor_type_, "temp_ac", {"ac"});
-        temp["um"] = H2["uvmz"] * L1_["zv"];
-        temp["um"] -= 0.5 * H2["vumz"] * L1_["zv"];
-        E3c += temp["um"] * T2["mwxy"] * L2_["xyuw"];
-
-        temp["xm"] = S2["mwxy"] * L1_["yw"];
-        E3c += 0.5 * H2["uvmz"] * temp["xm"] * G2["xzuv"];
-
-        temp = ambit::BlockedTensor::build(tensor_type_, "temp_caaa", {"caaa"});
-        temp["mzxv"] = H2["uvmz"] * L1_["xu"];
-        E3c += 0.5 * temp["mzxv"] * S2["mwxy"] * L2_["yzwv"];
-
-        temp["mzuy"] = H2["uvmz"] * L1_["yv"];
-        E3c -= 0.5 * temp["mzuy"] * T2["mwxy"] * L2_["xzuw"];
-        E3c -= 0.5 * temp["mzux"] * T2["mwxy"] * L2_["yzwu"];
-
-        temp["mwuv"] = H2["uvmz"] * L1_["zw"];
-        E3c -= 0.5 * temp["mwuv"] * T2["mwxy"] * G2["xyuv"];
-
-        outfile->Printf("\n  E3c computed value = %20.15f", E3c);
-        outfile->Printf("\n  Alex's algorithm: %.3f s", tnew.get());
-
-        local_timer tnew2;
-
-        Tbra = H2.block("vaaa").clone();
-        Tbra("ewuv") = H2.block("vaaa")("ezxy") * Ua("wz") * Ua("ux") * Ua("vy");
-        Tket = T2.block("aava").clone();
-        Tket("uvew") = T2.block("aava")("xyez") * Ua("wz") * Ua("ux") * Ua("vy");
-        auto E3v_map = as_solver_->compute_complementary_H2caa_overlap(Tbra, Tket);
-
-        Tbra = T2.block("caaa").clone();
-        Tbra("mwuv") = T2.block("caaa")("mzxy") * Ua("wz") * Ua("ux") * Ua("vy");
-        Tket = H2.block("aaca").clone();
-        Tket("uvmw") = H2.block("aaca")("xymz") * Ua("wz") * Ua("ux") * Ua("vy");
-        auto E3c_map = as_solver_->compute_complementary_H2caa_overlap(Tbra, Tket);
-
-        E3v = 0.0;
-        E3c = 0.0;
-        for (const auto& state_weights : state_to_weights_) {
-            const auto& state = state_weights.first;
-            const auto& weights = state_weights.second;
-
-            for (size_t i = 0, nroots = weights.size(); i < nroots; ++i) {
-                if (weights[i] < 1.0e-15)
-                    continue;
-
-                E3v += weights[i] * E3v_map[state][i];
-                E3c -= weights[i] * E3c_map[state][i];
-            }
-        }
-
-        outfile->Printf("\n  E3v computed value old = %20.15f", E3v_d3);
-        outfile->Printf("\n  E3v computed value new = %20.15f", E3v);
-        outfile->Printf("\n  E3c computed value old = %20.15f", E3c_d3);
-        outfile->Printf("\n  E3c computed value new = %20.15f", E3c);
-        outfile->Printf("\n  Alex's algorithm new: %.3f s", tnew2.get());
-
-        local_timer told;
-        E3 += H2.block("vaaa")("ewxy") * T2.block("aava")("uvez") * rdms_->SF_L3()("xyzuwv");
-        E3 -= H2.block("aaca")("uvmz") * T2.block("caaa")("mwxy") * rdms_->SF_L3()("xyzuwv");
-        outfile->Printf("\n  direct contraction: %.3f s", told.get());
     }
 
     return {E1, E2, E3};

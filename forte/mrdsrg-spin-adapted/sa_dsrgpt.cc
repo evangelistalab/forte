@@ -67,6 +67,7 @@ void SA_DSRGPT::print_options() {
         {"Source operator", source_},
         {"Core-Virtual source type", ccvv_source_},
         {"Reference relaxation", relax_ref_},
+        {"3RDM algorithm", L3_algorithm_},
         {"Internal amplitudes", internal_amp_}};
 
     if (multi_state_) {

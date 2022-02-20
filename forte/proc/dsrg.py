@@ -63,6 +63,9 @@ class ProcedureDSRG:
             self.relax_ref = "ONCE"
 
         self.max_rdm_level = 3 if options.get_str("THREEPDC") != "ZERO" else 2
+        # TODO: need to fix the logic, FCI_MO only, spin-adapted code only
+        if options.get_str("DSRG_3RDM_ALGORITHM") == "DIRECT":
+            self.max_rdm_level = 2
 
         self.relax_convergence = float('inf')
         self.e_convergence = options.get_double("E_CONVERGENCE")
@@ -140,6 +143,8 @@ class ProcedureDSRG:
 
         if self.solver_type in ["MRDSRG", "DSRG-MRPT2", "DSRG-MRPT3", "THREE-DSRG-MRPT2"]:
             self.dsrg_solver = forte.make_dsrg_method(*args)
+            self.dsrg_solver.set_state_weights_map(self.state_weights_map)
+            self.dsrg_solver.set_active_space_solver(self.active_space_solver)
             self.Heff_implemented = True
         elif self.solver_type in ["SA-MRDSRG", "SA_MRDSRG"]:
             self.dsrg_solver = forte.make_sadsrg_method(*args)

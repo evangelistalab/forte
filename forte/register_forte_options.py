@@ -748,6 +748,9 @@ def register_dsrg_options(options):
     options.add_str("DSRG_T1_AMPS_GUESS", "PT2", ["PT2", "ZERO"],
                     "The initial guess of T1 amplitudes for nonperturbative DSRG methods")
 
+    options.add_str("DSRG_3RDM_ALGORITHM", "EXPLICIT", ["EXPLICIT", "DIRECT"],
+                    "Algorithm to compute 3-RDM contributions in fully contracted [H2, T2]")
+
 
 def register_dwms_options(options):
     options.set_group("DWMS")

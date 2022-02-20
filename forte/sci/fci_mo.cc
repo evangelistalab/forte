@@ -2042,6 +2042,8 @@ void FCI_MO::build_dets321() {
     if (built_dets321_)
         return;
 
+    timer timer_lists("Build z^+ v u |I> determinants");
+
     dets321_a_.clear();
     dets321_b_.clear();
     size_t na = 0, nb = 0;
@@ -2135,6 +2137,108 @@ void FCI_MO::build_dets321() {
     }
 
     built_dets321_ = true;
+}
+
+void FCI_MO::build_lists321() {
+    if (built_lists321_)
+        return;
+
+    timer timer_lists("Build z^+ v u |0> sub. lists");
+
+    build_dets321();
+
+    auto Ja_size = dets321_a_.size();
+    auto Jb_size = dets321_b_.size();
+
+    list321_aaa_.resize(Ja_size);
+    list321_abb_.resize(Ja_size);
+    list321_baa_.resize(Jb_size);
+    list321_bbb_.resize(Jb_size);
+
+    for (size_t Ja = 0; Ja < Ja_size; ++Ja) {
+        list321_aaa_[Ja].clear();
+        list321_abb_[Ja].clear();
+    }
+    for (size_t Jb = 0; Jb < Jb_size; ++Jb) {
+        list321_baa_[Jb].clear();
+        list321_bbb_[Jb].clear();
+    }
+
+    for (size_t I = 0, ndets = determinant_.size(); I < ndets; ++I) {
+        const auto& detI = determinant_[I];
+
+        // u_α |I>
+        for (const auto& u : detI.get_alfa_occ(nactv_)) {
+            Determinant detI_u(detI);
+            auto sign_u = detI_u.destroy_alfa_bit(u) > 0.0;
+            auto Iu = dets321_a_.find(detI_u)->second;
+
+            // z_α^+ v_α u_α |I>
+            for (auto v : detI_u.get_alfa_occ(nactv_)) {
+                // z == v
+                list321_aaa_[Iu].emplace_back(I, u, v, v, sign_u);
+
+                // z != v
+                for (auto z : detI_u.get_alfa_vir(nactv_)) {
+                    Determinant detJ(detI_u);
+                    auto sign = (detJ.single_excitation_a(v, z) > 0.0) == sign_u;
+                    auto J = dets321_a_.find(detJ)->second;
+                    list321_aaa_[J].emplace_back(I, u, v, z, sign);
+                }
+            }
+
+            // z_β^+ v_β u_α |I>
+            for (auto v : detI_u.get_beta_occ(nactv_)) {
+                // z == v
+                list321_abb_[Iu].emplace_back(I, u, v, v, sign_u);
+
+                // z != v
+                for (auto z : detI_u.get_beta_vir(nactv_)) {
+                    Determinant detJ(detI_u);
+                    auto sign = (detJ.single_excitation_b(v, z) > 0.0) == sign_u;
+                    auto J = dets321_a_.find(detJ)->second;
+                    list321_abb_[J].emplace_back(I, u, v, z, sign);
+                }
+            }
+        }
+
+        // u_β |I>
+        for (const auto& u : detI.get_beta_occ(nactv_)) {
+            Determinant detI_u(detI);
+            auto sign_u = detI_u.destroy_beta_bit(u) > 0.0;
+            auto Iu = dets321_b_.find(detI_u)->second;
+
+            // z_α^+ v_α u_β |I>
+            for (auto v : detI_u.get_alfa_occ(nactv_)) {
+                // z == v
+                list321_baa_[Iu].emplace_back(I, u, v, v, sign_u);
+
+                // z != v
+                for (auto z : detI_u.get_alfa_vir(nactv_)) {
+                    Determinant detJ(detI_u);
+                    auto sign = (detJ.single_excitation_a(v, z) > 0.0) == sign_u;
+                    auto J = dets321_b_.find(detJ)->second;
+                    list321_baa_[J].emplace_back(I, u, v, z, sign);
+                }
+            }
+
+            // z_β^+ v_β u_β |I>
+            for (auto v : detI_u.get_beta_occ(nactv_)) {
+                // z == v
+                list321_bbb_[Iu].emplace_back(I, u, v, v, sign_u);
+
+                // z != v
+                for (auto z : detI_u.get_beta_vir(nactv_)) {
+                    Determinant detJ(detI_u);
+                    auto sign = (detJ.single_excitation_b(v, z) > 0.0) == sign_u;
+                    auto J = dets321_b_.find(detJ)->second;
+                    list321_bbb_[J].emplace_back(I, u, v, z, sign);
+                }
+            }
+        }
+    }
+
+    built_lists321_ = true;
 }
 
 std::vector<std::tuple<ambit::Tensor, ambit::Tensor>>
@@ -2299,17 +2403,13 @@ std::vector<double> FCI_MO::compute_complementary_H2caa_overlap(const std::vecto
     if (dims_bra[0] != dims_ket[2])
         throw std::runtime_error("Invalid contracted index for bra and ket Tensors");
 
-    // build maps for (N-1)-electron determinants
-    build_dets321();
+    // decide what to do
+    // - by default, we batch and parallelize over the (N-1)-electron determinants
+    // - if the number of non-active orbitals is small, we batch over MO indices
+    if (omp_get_num_threads() != 1 or dims_bra[0] < 15)
+        return compute_complementary_H2caa_overlap_mo_driven(roots, Tbra, Tket);
 
-    // parallelize MO indices if CI space is small
-//    if (std::max(dets321_a_.size(), dets321_b_.size()) < dims_bra[0]) {
-//        return compute_complementary_H2caa_overlap_mo_driven(roots, Tbra, Tket);
-//    }
-    return compute_complementary_H2caa_overlap_mo_driven(roots, Tbra, Tket);
-
-    // parallelize CI space by default
-//    return compute_complementary_H2caa_overlap_ci_driven(roots, Tbra, Tket);
+    return compute_complementary_H2caa_overlap_ci_driven(roots, Tbra, Tket);
 }
 
 std::vector<double>
@@ -2332,7 +2432,13 @@ FCI_MO::compute_complementary_H2caa_overlap_mo_driven(const std::vector<size_t>&
     auto nroots = roots.size();
     auto non_actv = dims_bra[0];
 
-    build_dets321();
+    std::vector<double> out(nroots, 0.0);
+    if (non_actv == 0)
+        return out;
+
+    build_lists321();
+
+    timer timer_mo("Compute complementary MO driven");
 
     const auto& data_bra = Tbra.data();
     const auto& data_ket = Tket.data();
@@ -2341,8 +2447,6 @@ FCI_MO::compute_complementary_H2caa_overlap_mo_driven(const std::vector<size_t>&
     auto dim3k = nactv_ * dim2k;
     auto dim2b = nactv_ * dim1;
     auto dim3b = nactv_ * dim2b;
-
-    std::vector<double> out(nroots, 0.0);
 
     // prepare for OpenMP
     size_t nthreads = omp_get_max_threads();
@@ -2364,7 +2468,7 @@ FCI_MO::compute_complementary_H2caa_overlap_mo_driven(const std::vector<size_t>&
 
 #pragma omp parallel for default(none) num_threads(nthreads)                                       \
     shared(non_actv, data_bra, data_ket, dim1, dim2k, dim3k, dim2b, dim3b, bra_Ja, bra_Jb, ket_Ja, \
-           ket_Jb, evec, results)
+           ket_Jb, evec, results, ndets_a, ndets_b)
         for (size_t p = 0; p < non_actv; ++p) {
             int thread = omp_get_thread_num();
 
@@ -2378,102 +2482,33 @@ FCI_MO::compute_complementary_H2caa_overlap_mo_driven(const std::vector<size_t>&
             auto& ket_Ja_data = (ket_Ja[thread]).data();
             auto& ket_Jb_data = (ket_Jb[thread]).data();
 
-            for (size_t I = 0, ndets = determinant_.size(); I < ndets; ++I) {
-                auto cI = evec->get(I);
-                const auto& detI = determinant_[I];
-
-                // u_α |I>
-                for (const auto& u : detI.get_alfa_occ(nactv_)) {
-                    Determinant detI_u(detI);
-                    auto sign_u = detI_u.destroy_alfa_bit(u);
-                    auto Iu = dets321_a_.find(detI_u)->second;
-
-                    // z_α^+ v_α u_α |I>
-                    for (auto v : detI_u.get_alfa_occ(nactv_)) {
-                        // z == v
-                        ket_Ja_data[Iu] +=
-                            cI * sign_u * data_ket[u * dim3k + v * dim2k + p * dim1 + v];
-                        bra_Ja_data[Iu] +=
-                            cI * sign_u * data_bra[p * dim3b + v * dim2b + u * dim1 + v];
-
-                        // z != v
-                        for (auto z : detI_u.get_alfa_vir(nactv_)) {
-                            Determinant detJ(detI_u);
-                            auto sign = detJ.single_excitation_a(v, z) * sign_u;
-                            auto J = dets321_a_.find(detJ)->second;
-                            ket_Ja_data[J] +=
-                                cI * sign * data_ket[u * dim3k + v * dim2k + p * dim1 + z];
-                            bra_Ja_data[J] +=
-                                cI * sign * data_bra[p * dim3b + z * dim2b + u * dim1 + v];
-                        }
-                    }
-
-                    // z_β^+ v_β u_α |I>
-                    for (auto v : detI_u.get_beta_occ(nactv_)) {
-                        // z == v
-                        ket_Ja_data[Iu] +=
-                            cI * sign_u * data_ket[u * dim3k + v * dim2k + p * dim1 + v];
-                        bra_Ja_data[Iu] +=
-                            cI * sign_u * data_bra[p * dim3b + v * dim2b + u * dim1 + v];
-
-                        // z != v
-                        for (auto z : detI_u.get_beta_vir(nactv_)) {
-                            Determinant detJ(detI_u);
-                            auto sign = detJ.single_excitation_b(v, z) * sign_u;
-                            auto J = dets321_a_.find(detJ)->second;
-                            ket_Ja_data[J] +=
-                                cI * sign * data_ket[u * dim3k + v * dim2k + p * dim1 + z];
-                            bra_Ja_data[J] +=
-                                cI * sign * data_bra[p * dim3b + z * dim2b + u * dim1 + v];
-                        }
-                    }
+            for (size_t J = 0; J < ndets_a; ++J) {
+                for (const auto& coupled_dets: list321_aaa_[J]) {
+                    const auto [I, u, v, z, sign] = coupled_dets;
+                    auto cI = evec->get(I) * (sign ? 1.0 : -1.0);
+                    ket_Ja_data[J] += cI * data_ket[u * dim3k + v * dim2k + p * dim1 + z];
+                    bra_Ja_data[J] += cI * data_bra[p * dim3b + z * dim2b + u * dim1 + v];
                 }
+                for (const auto& coupled_dets: list321_abb_[J]) {
+                    const auto [I, u, v, z, sign] = coupled_dets;
+                    auto cI = evec->get(I) * (sign ? 1.0 : -1.0);
+                    ket_Ja_data[J] += cI * data_ket[u * dim3k + v * dim2k + p * dim1 + z];
+                    bra_Ja_data[J] += cI * data_bra[p * dim3b + z * dim2b + u * dim1 + v];
+                }
+            }
 
-                // u_β |I>
-                for (const auto& u : detI.get_beta_occ(nactv_)) {
-                    Determinant detI_u(detI);
-                    auto sign_u = detI_u.destroy_beta_bit(u);
-                    auto Iu = dets321_b_.find(detI_u)->second;
-
-                    // z_α^+ v_α u_β |I>
-                    for (auto v : detI_u.get_alfa_occ(nactv_)) {
-                        // z == v
-                        ket_Jb_data[Iu] +=
-                            cI * sign_u * data_ket[u * dim3k + v * dim2k + p * dim1 + v];
-                        bra_Jb_data[Iu] +=
-                            cI * sign_u * data_bra[p * dim3b + v * dim2b + u * dim1 + v];
-
-                        // z != v
-                        for (auto z : detI_u.get_alfa_vir(nactv_)) {
-                            Determinant detJ(detI_u);
-                            auto sign = detJ.single_excitation_a(v, z) * sign_u;
-                            auto J = dets321_b_.find(detJ)->second;
-                            ket_Jb_data[J] +=
-                                cI * sign * data_ket[u * dim3k + v * dim2k + p * dim1 + z];
-                            bra_Jb_data[J] +=
-                                cI * sign * data_bra[p * dim3b + z * dim2b + u * dim1 + v];
-                        }
-                    }
-
-                    // z_β^+ v_β u_β |I>
-                    for (auto v : detI_u.get_beta_occ(nactv_)) {
-                        // z == v
-                        ket_Jb_data[Iu] +=
-                            cI * sign_u * data_ket[u * dim3k + v * dim2k + p * dim1 + v];
-                        bra_Jb_data[Iu] +=
-                            cI * sign_u * data_bra[p * dim3b + v * dim2b + u * dim1 + v];
-
-                        // z != v
-                        for (auto z : detI_u.get_beta_vir(nactv_)) {
-                            Determinant detJ(detI_u);
-                            auto sign = detJ.single_excitation_b(v, z) * sign_u;
-                            auto J = dets321_b_.find(detJ)->second;
-                            ket_Jb_data[J] +=
-                                cI * sign * data_ket[u * dim3k + v * dim2k + p * dim1 + z];
-                            bra_Jb_data[J] +=
-                                cI * sign * data_bra[p * dim3b + z * dim2b + u * dim1 + v];
-                        }
-                    }
+            for (size_t J = 0; J < ndets_b; ++J) {
+                for (const auto& coupled_dets: list321_baa_[J]) {
+                    const auto [I, u, v, z, sign] = coupled_dets;
+                    auto cI = evec->get(I) * (sign ? 1.0 : -1.0);
+                    ket_Jb_data[J] += cI * data_ket[u * dim3k + v * dim2k + p * dim1 + z];
+                    bra_Jb_data[J] += cI * data_bra[p * dim3b + z * dim2b + u * dim1 + v];
+                }
+                for (const auto& coupled_dets: list321_bbb_[J]) {
+                    const auto [I, u, v, z, sign] = coupled_dets;
+                    auto cI = evec->get(I) * (sign ? 1.0 : -1.0);
+                    ket_Jb_data[J] += cI * data_ket[u * dim3k + v * dim2k + p * dim1 + z];
+                    bra_Jb_data[J] += cI * data_bra[p * dim3b + z * dim2b + u * dim1 + v];
                 }
             }
 
@@ -2508,93 +2543,18 @@ FCI_MO::compute_complementary_H2caa_overlap_ci_driven(const std::vector<size_t>&
 
     auto nroots = roots.size();
     auto non_actv = dims_bra[0];
+
     std::vector<double> out(nroots, 0.0);
     if (non_actv == 0)
         return out;
 
-    // build 3 coupling lists
-    build_dets321();
+    build_lists321();
+
+    timer timer_mo("Compute complementary CI driven");
 
     auto Ja_size = dets321_a_.size();
     auto Jb_size = dets321_b_.size();
-    std::vector<std::vector<std::tuple<size_t, unsigned char, unsigned char, unsigned char, bool>>>
-        aaa_Nm1_to_N(Ja_size), abb_Nm1_to_N(Ja_size), baa_Nm1_to_N(Jb_size), bbb_Nm1_to_N(Jb_size);
 
-    for (size_t I = 0, ndets = determinant_.size(); I < ndets; ++I) {
-        const auto& detI = determinant_[I];
-
-        // u_α |I>
-        for (const auto& u : detI.get_alfa_occ(nactv_)) {
-            Determinant detI_u(detI);
-            auto sign_u = detI_u.destroy_alfa_bit(u) > 0.0;
-            auto Iu = dets321_a_.find(detI_u)->second;
-
-            // z_α^+ v_α u_α |I>
-            for (auto v : detI_u.get_alfa_occ(nactv_)) {
-                // z == v
-                aaa_Nm1_to_N[Iu].emplace_back(I, u, v, v, sign_u);
-
-                // z != v
-                for (auto z : detI_u.get_alfa_vir(nactv_)) {
-                    Determinant detJ(detI_u);
-                    auto sign = (detJ.single_excitation_a(v, z) > 0.0) == sign_u;
-                    auto J = dets321_a_.find(detJ)->second;
-                    aaa_Nm1_to_N[J].emplace_back(I, u, v, z, sign);
-                }
-            }
-
-            // z_β^+ v_β u_α |I>
-            for (auto v : detI_u.get_beta_occ(nactv_)) {
-                // z == v
-                abb_Nm1_to_N[Iu].emplace_back(I, u, v, v, sign_u);
-
-                // z != v
-                for (auto z : detI_u.get_beta_vir(nactv_)) {
-                    Determinant detJ(detI_u);
-                    auto sign = (detJ.single_excitation_b(v, z) > 0.0) == sign_u;
-                    auto J = dets321_a_.find(detJ)->second;
-                    abb_Nm1_to_N[J].emplace_back(I, u, v, z, sign);
-                }
-            }
-        }
-
-        // u_β |I>
-        for (const auto& u : detI.get_beta_occ(nactv_)) {
-            Determinant detI_u(detI);
-            auto sign_u = detI_u.destroy_beta_bit(u) > 0.0;
-            auto Iu = dets321_b_.find(detI_u)->second;
-
-            // z_α^+ v_α u_β |I>
-            for (auto v : detI_u.get_alfa_occ(nactv_)) {
-                // z == v
-                baa_Nm1_to_N[Iu].emplace_back(I, u, v, v, sign_u);
-
-                // z != v
-                for (auto z : detI_u.get_alfa_vir(nactv_)) {
-                    Determinant detJ(detI_u);
-                    auto sign = (detJ.single_excitation_a(v, z) > 0.0) == sign_u;
-                    auto J = dets321_b_.find(detJ)->second;
-                    baa_Nm1_to_N[J].emplace_back(I, u, v, z, sign);
-                }
-            }
-
-            // z_β^+ v_β u_β |I>
-            for (auto v : detI_u.get_beta_occ(nactv_)) {
-                // z == v
-                bbb_Nm1_to_N[Iu].emplace_back(I, u, v, v, sign_u);
-
-                // z != v
-                for (auto z : detI_u.get_beta_vir(nactv_)) {
-                    Determinant detJ(detI_u);
-                    auto sign = (detJ.single_excitation_b(v, z) > 0.0) == sign_u;
-                    auto J = dets321_b_.find(detJ)->second;
-                    bbb_Nm1_to_N[J].emplace_back(I, u, v, z, sign);
-                }
-            }
-        }
-    }
-
-    // preparation for computations
     const auto& data_bra = Tbra.data();
     const auto& data_ket = Tket.data();
     auto dim1 = nactv_;
@@ -2613,6 +2573,21 @@ FCI_MO::compute_complementary_H2caa_overlap_ci_driven(const std::vector<size_t>&
         pket.push_back(ambit::Tensor::build(ambit::CoreTensor, "p ket", {non_actv}));
     }
 
+    // core function for loop
+    auto p_add =
+        [&](const std::vector<
+                std::tuple<size_t, unsigned char, unsigned char, unsigned char, bool>>& J2I_lists,
+            SharedVector evec, std::vector<double>& pbra_data, std::vector<double>& pket_data) {
+            for (const auto& coupled_dets : J2I_lists) {
+                const auto [I, u, v, z, sign] = coupled_dets;
+                auto cI = evec->get(I) * (sign ? 1.0 : -1.0);
+                for (size_t p = 0; p < non_actv; ++p) {
+                    pbra_data[p] += cI * data_bra[p * dim3b + z * dim2b + u * dim1 + v];
+                    pket_data[p] += cI * data_ket[u * dim3k + v * dim2k + p * dim1 + z];
+                }
+            }
+        };
+
     // actual computation: parallel (N-1)-electron determinants
     for (size_t n = 0; n < nroots; ++n) {
         auto evec = eigen_[roots[n]].first;
@@ -2620,73 +2595,33 @@ FCI_MO::compute_complementary_H2caa_overlap_ci_driven(const std::vector<size_t>&
 
         // alpha (N-1)-electron determinants
 #pragma omp parallel for default(none) num_threads(nthreads)                                       \
-    shared(non_actv, data_bra, data_ket, dim1, dim2k, dim3k, dim2b, dim3b, Ja_size, aaa_Nm1_to_N,  \
-           abb_Nm1_to_N, pbra, pket, evec, results)
+    shared(non_actv, dim1, dim2k, dim3k, dim2b, dim3b, Ja_size, pbra, pket, p_add, evec, results)
         for (size_t J = 0; J < Ja_size; ++J) {
             auto thread = omp_get_thread_num();
 
             pbra[thread].zero();
             pket[thread].zero();
-
             auto& pbra_data = pbra[thread].data();
             auto& pket_data = pket[thread].data();
 
-            // z_α^+ v_α u_α |I>
-            for (const auto& coupled_dets : aaa_Nm1_to_N[J]) {
-                const auto [I, u, v, z, sign] = coupled_dets;
-                auto cI = evec->get(I) * (sign ? 1.0 : -1.0);
-                for (size_t p = 0; p < non_actv; ++p) {
-                    pbra_data[p] += cI * data_bra[p * dim3b + z * dim2b + u * dim1 + v];
-                    pket_data[p] += cI * data_ket[u * dim3k + v * dim2k + p * dim1 + z];
-                }
-            }
-
-            // z_β^+ v_β u_α |I>
-            for (const auto& coupled_dets : abb_Nm1_to_N[J]) {
-                const auto [I, u, v, z, sign] = coupled_dets;
-                auto cI = evec->get(I) * (sign ? 1.0 : -1.0);
-                for (size_t p = 0; p < non_actv; ++p) {
-                    pbra_data[p] += cI * data_bra[p * dim3b + z * dim2b + u * dim1 + v];
-                    pket_data[p] += cI * data_ket[u * dim3k + v * dim2k + p * dim1 + z];
-                }
-            }
-
+            p_add(list321_aaa_[J], evec, pbra_data, pket_data); // z_α^+ v_α u_α |I>
+            p_add(list321_abb_[J], evec, pbra_data, pket_data); // z_β^+ v_β u_α |I>
             results[thread] += pbra[thread]("p") * pket[thread]("p");
         }
 
         // beta (N-1)-electron determinants
 #pragma omp parallel for default(none) num_threads(nthreads)                                       \
-    shared(non_actv, data_bra, data_ket, dim1, dim2k, dim3k, dim2b, dim3b, Jb_size, baa_Nm1_to_N,  \
-           bbb_Nm1_to_N, pbra, pket, evec, results)
+    shared(non_actv, dim1, dim2k, dim3k, dim2b, dim3b, Jb_size, pbra, pket, p_add, evec, results)
         for (size_t J = 0; J < Jb_size; ++J) {
             auto thread = omp_get_thread_num();
 
             pbra[thread].zero();
             pket[thread].zero();
-
             auto& pbra_data = pbra[thread].data();
             auto& pket_data = pket[thread].data();
 
-            // z_α^+ v_α u_β |I>
-            for (const auto& coupled_dets : baa_Nm1_to_N[J]) {
-                const auto [I, u, v, z, sign] = coupled_dets;
-                auto cI = evec->get(I) * (sign ? 1.0 : -1.0);
-                for (size_t p = 0; p < non_actv; ++p) {
-                    pbra_data[p] += cI * data_bra[p * dim3b + z * dim2b + u * dim1 + v];
-                    pket_data[p] += cI * data_ket[u * dim3k + v * dim2k + p * dim1 + z];
-                }
-            }
-
-            // z_β^+ v_β u_β |I>
-            for (const auto& coupled_dets : bbb_Nm1_to_N[J]) {
-                const auto [I, u, v, z, sign] = coupled_dets;
-                auto cI = evec->get(I) * (sign ? 1.0 : -1.0);
-                for (size_t p = 0; p < non_actv; ++p) {
-                    pbra_data[p] += cI * data_bra[p * dim3b + z * dim2b + u * dim1 + v];
-                    pket_data[p] += cI * data_ket[u * dim3k + v * dim2k + p * dim1 + z];
-                }
-            }
-
+            p_add(list321_baa_[J], evec, pbra_data, pket_data); // z_α^+ v_α u_β |I>
+            p_add(list321_bbb_[J], evec, pbra_data, pket_data); // z_β^+ v_β u_β |I>
             results[thread] += pbra[thread]("p") * pket[thread]("p");
         }
 
