@@ -221,10 +221,11 @@ std::vector<double> SADSRG::H2_T2_C0_T2small(BlockedTensor& H2, BlockedTensor& T
         Tket = T2.block("aava").clone();
         Tket("uvew") = T2.block("aava")("xyez") * Ua("wz") * Ua("ux") * Ua("vy");
 
-        auto state_kets_map_v = as_solver_->compute_complimentary(Tket, false);
-        auto state_bras_map_v = as_solver_->compute_complimentary(Tbra, true);
+        auto state_kets_map_v = as_solver_->compute_complementary_H2caa(Tket, false);
+        auto state_bras_map_v = as_solver_->compute_complementary_H2caa(Tbra, true);
 
         double E3v = -H2["ezxy"] * T2["uvez"] * G2["xyuv"];
+        double E3v_d3 = 0.0;
         for (const auto& state_weights : state_to_weights_) {
             const auto& state = state_weights.first;
             const auto& weights = state_weights.second;
@@ -239,8 +240,10 @@ std::vector<double> SADSRG::H2_T2_C0_T2small(BlockedTensor& H2, BlockedTensor& T
                 auto [ket_a, ket_b] = kets[i];
                 auto [bra_a, bra_b] = bras[i];
 
-                E3v += weights[i] * ket_a("Ip") * bra_a("Ip");
-                E3v += weights[i] * ket_b("Ip") * bra_b("Ip");
+                E3v_d3 += weights[i] * ket_a("Ip") * bra_a("Ip");
+                E3v_d3 += weights[i] * ket_b("Ip") * bra_b("Ip");
+
+                E3v += E3v_d3;
             }
         }
 
@@ -277,10 +280,11 @@ std::vector<double> SADSRG::H2_T2_C0_T2small(BlockedTensor& H2, BlockedTensor& T
         Tket = H2.block("aaca").clone();
         Tket("uvmw") = H2.block("aaca")("xymz") * Ua("wz") * Ua("ux") * Ua("vy");
 
-        auto state_kets_map_c = as_solver_->compute_complimentary(Tket, false);
-        auto state_bras_map_c = as_solver_->compute_complimentary(Tbra, true);
+        auto state_kets_map_c = as_solver_->compute_complementary_H2caa(Tket, false);
+        auto state_bras_map_c = as_solver_->compute_complementary_H2caa(Tbra, true);
 
         double E3c = T2.block("caaa")("mzxy") * H2.block("aaca")("uvmz") * G2.block("aaaa")("xyuv");
+        double E3c_d3 = 0.0;
         for (const auto& state_weights : state_to_weights_) {
             const auto& state = state_weights.first;
             const auto& weights = state_weights.second;
@@ -295,8 +299,10 @@ std::vector<double> SADSRG::H2_T2_C0_T2small(BlockedTensor& H2, BlockedTensor& T
                 auto [ket_a, ket_b] = kets[i];
                 auto [bra_a, bra_b] = bras[i];
 
-                E3c -= ket_a("Ip") * bra_a("Ip");
-                E3c -= ket_b("Ip") * bra_b("Ip");
+                E3c_d3 -= weights[i] * ket_a("Ip") * bra_a("Ip");
+                E3c_d3 -= weights[i] * ket_b("Ip") * bra_b("Ip");
+
+                E3c += E3c_d3;
             }
         }
 
@@ -322,6 +328,41 @@ std::vector<double> SADSRG::H2_T2_C0_T2small(BlockedTensor& H2, BlockedTensor& T
 
         outfile->Printf("\n  E3c computed value = %20.15f", E3c);
         outfile->Printf("\n  Alex's algorithm: %.3f s", tnew.get());
+
+        local_timer tnew2;
+
+        Tbra = H2.block("vaaa").clone();
+        Tbra("ewuv") = H2.block("vaaa")("ezxy") * Ua("wz") * Ua("ux") * Ua("vy");
+        Tket = T2.block("aava").clone();
+        Tket("uvew") = T2.block("aava")("xyez") * Ua("wz") * Ua("ux") * Ua("vy");
+        auto E3v_map = as_solver_->compute_complementary_H2caa_overlap(Tbra, Tket);
+
+        Tbra = T2.block("caaa").clone();
+        Tbra("mwuv") = T2.block("caaa")("mzxy") * Ua("wz") * Ua("ux") * Ua("vy");
+        Tket = H2.block("aaca").clone();
+        Tket("uvmw") = H2.block("aaca")("xymz") * Ua("wz") * Ua("ux") * Ua("vy");
+        auto E3c_map = as_solver_->compute_complementary_H2caa_overlap(Tbra, Tket);
+
+        E3v = 0.0;
+        E3c = 0.0;
+        for (const auto& state_weights : state_to_weights_) {
+            const auto& state = state_weights.first;
+            const auto& weights = state_weights.second;
+
+            for (size_t i = 0, nroots = weights.size(); i < nroots; ++i) {
+                if (weights[i] < 1.0e-15)
+                    continue;
+
+                E3v += weights[i] * E3v_map[state][i];
+                E3c -= weights[i] * E3c_map[state][i];
+            }
+        }
+
+        outfile->Printf("\n  E3v computed value old = %20.15f", E3v_d3);
+        outfile->Printf("\n  E3v computed value new = %20.15f", E3v);
+        outfile->Printf("\n  E3c computed value old = %20.15f", E3c_d3);
+        outfile->Printf("\n  E3c computed value new = %20.15f", E3c);
+        outfile->Printf("\n  Alex's algorithm new: %.3f s", tnew2.get());
 
         local_timer told;
         E3 += H2.block("vaaa")("ewxy") * T2.block("aava")("uvez") * rdms_->SF_L3()("xyzuwv");

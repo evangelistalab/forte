@@ -103,14 +103,23 @@ class ActiveSpaceSolver {
     compute_average_rdms(const std::map<StateInfo, std::vector<double>>& state_weights_map,
                          int max_rdm_level, RDMsType rdm_type);
 
-    /// Compute the complementary operator acting on the reference h_{pσ} (t) |0>
-    /// Return a tuple of (h_{pα} (t) |0>, h_{pβ} (t) |0>)
-    /// Complimentary operator: h_{pσ} (t) = \sum_{uvw} t^{uv}_{pw} \sum_{σ1} w^+_{σ1} v_{σ1} u_{σ}
-    /// Reference: |0> = \sum_{n} w_n |0_n> = \sum_{n} w_n \sum_{I} c^n_I |I>
-    /// spin: σ, σ1; active indices: u, v, w; state weights: w_n; CI coefficients: c^n_I
+    /// Compute the complementary operator acting on the reference h_{pσ} (t) |Ψ>
+    /// Return a map from state to roots of tuples (h_{pα} (t) |0>, h_{pβ} (t) |Ψ>)
+    /// Complementary operator: h_{pσ} (t) = \sum_{uvw} t^{uv}_{pw} \sum_{σ1} w^+_{σ1} v_{σ1} u_{σ}
+    /// Reference: |Ψ> = \sum_{I} c_I |I>
+    /// spin: σ, σ1; active indices: u, v, w; CI coefficients: c_I for determinant I
     /// If transpose = true, the tensor t assume the order of t^{pw}_{uv}
     std::map<StateInfo, std::vector<std::tuple<ambit::Tensor, ambit::Tensor>>>
-    compute_complimentary(ambit::Tensor tensor, bool transpose = false);
+    compute_complementary_H2caa(ambit::Tensor tensor, bool transpose = false);
+
+    /// Compute the overlap of two wave functions acted by complementary operators
+    /// Return a map from state to roots of values
+    /// Computes the overlap <Ψ(N-1)|Ψ'(N-1)>, where the (N-1)-electron wave function is given by
+    /// Ψ(N-1) = h_{pσ} (t) |Ψ (N)> = \sum_{uvw} t^{uv}_{pw} \sum_{σ1} w^+_{σ1} v_{σ1} u_{σ} |Ψ(N)>.
+    /// Useful to get the 3-RDM contribution of fully contracted term of two 2-body operators:
+    /// \sum_{puvwxyzστθ} v_{pwxy} t_{uvpz} <Ψ(N)| xσ^+ yτ^+ wτ zθ^+ vθ uσ |Ψ(N)>
+    std::map<StateInfo, std::vector<double>>
+    compute_complementary_H2caa_overlap(ambit::Tensor Tbra, ambit::Tensor Tket);
 
     /// Print a summary of the computation information
     void print_options();

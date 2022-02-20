@@ -26,15 +26,12 @@
  * @END LICENSE
  */
 
-#include <algorithm>
 #include <cmath>
 #include <functional>
 #include <iomanip>
 #include <numeric>
 #include <sstream>
 #include <string>
-
-#include "boost/algorithm/string/predicate.hpp"
 
 #include "psi4/libpsi4util/PsiOutStream.h"
 #include "psi4/libpsi4util/process.h"
@@ -58,6 +55,14 @@
 #include "fci/fci_vector.h"
 
 #include "fci_mo.h"
+
+#ifdef _OPENMP
+#include <omp.h>
+#else
+#define omp_get_max_threads() 1
+#define omp_get_thread_num() 0
+#define omp_get_num_threads() 1
+#endif
 
 using namespace psi;
 using namespace ambit;
@@ -2133,8 +2138,8 @@ void FCI_MO::build_dets321() {
 }
 
 std::vector<std::tuple<ambit::Tensor, ambit::Tensor>>
-FCI_MO::compute_complementary(const std::vector<size_t>& roots, ambit::Tensor tensor,
-                              bool transpose) {
+FCI_MO::compute_complementary_H2caa(const std::vector<size_t>& roots, ambit::Tensor tensor,
+                                    bool transpose) {
     const auto& dims = tensor.dims();
 
     // check passed in tensor
@@ -2276,6 +2281,423 @@ FCI_MO::compute_complementary(const std::vector<size_t>& roots, ambit::Tensor te
     return out;
 }
 
+std::vector<double> FCI_MO::compute_complementary_H2caa_overlap(const std::vector<size_t>& roots,
+                                                                ambit::Tensor Tbra,
+                                                                ambit::Tensor Tket) {
+    // check tensors
+    auto dims_bra = Tbra.dims();
+    auto dims_ket = Tket.dims();
+
+    if (dims_bra.size() != 4)
+        throw std::runtime_error("Invalid Tensor for bra: Dimension must be 4!");
+    if (dims_ket.size() != 4)
+        throw std::runtime_error("Invalid Tensor for ket: Dimension must be 4!");
+    if ((dims_bra[1] != nactv_) or (dims_bra[2] != nactv_) or (dims_bra[3] != nactv_))
+        throw std::runtime_error("Invalid Tensor for bra: Too many non-active indices");
+    if ((dims_ket[0] != nactv_) or (dims_ket[1] != nactv_) or (dims_ket[3] != nactv_))
+        throw std::runtime_error("Invalid Tensor for ket: Too many non-active indices");
+    if (dims_bra[0] != dims_ket[2])
+        throw std::runtime_error("Invalid contracted index for bra and ket Tensors");
+
+    // build maps for (N-1)-electron determinants
+    build_dets321();
+
+    // parallelize MO indices if CI space is small
+//    if (std::max(dets321_a_.size(), dets321_b_.size()) < dims_bra[0]) {
+//        return compute_complementary_H2caa_overlap_mo_driven(roots, Tbra, Tket);
+//    }
+    return compute_complementary_H2caa_overlap_mo_driven(roots, Tbra, Tket);
+
+    // parallelize CI space by default
+//    return compute_complementary_H2caa_overlap_ci_driven(roots, Tbra, Tket);
+}
+
+std::vector<double>
+FCI_MO::compute_complementary_H2caa_overlap_mo_driven(const std::vector<size_t>& roots,
+                                                      ambit::Tensor Tbra, ambit::Tensor Tket) {
+    auto dims_bra = Tbra.dims();
+    auto dims_ket = Tket.dims();
+
+    if (dims_bra.size() != 4)
+        throw std::runtime_error("Invalid Tensor for bra: Dimension must be 4!");
+    if (dims_ket.size() != 4)
+        throw std::runtime_error("Invalid Tensor for ket: Dimension must be 4!");
+    if ((dims_bra[1] != nactv_) or (dims_bra[2] != nactv_) or (dims_bra[3] != nactv_))
+        throw std::runtime_error("Invalid Tensor for bra: Too many non-active indices");
+    if ((dims_ket[0] != nactv_) or (dims_ket[1] != nactv_) or (dims_ket[3] != nactv_))
+        throw std::runtime_error("Invalid Tensor for ket: Too many non-active indices");
+    if (dims_bra[0] != dims_ket[2])
+        throw std::runtime_error("Invalid contracted index for bra and ket Tensors");
+
+    auto nroots = roots.size();
+    auto non_actv = dims_bra[0];
+
+    build_dets321();
+
+    const auto& data_bra = Tbra.data();
+    const auto& data_ket = Tket.data();
+    auto dim1 = nactv_;
+    auto dim2k = non_actv * dim1;
+    auto dim3k = nactv_ * dim2k;
+    auto dim2b = nactv_ * dim1;
+    auto dim3b = nactv_ * dim2b;
+
+    std::vector<double> out(nroots, 0.0);
+
+    // prepare for OpenMP
+    size_t nthreads = omp_get_max_threads();
+    nthreads = (non_actv < nthreads) ? non_actv : nthreads;
+
+    size_t ndets_a = dets321_a_.size();
+    size_t ndets_b = dets321_b_.size();
+    std::vector<ambit::Tensor> bra_Ja, ket_Ja, bra_Jb, ket_Jb;
+    for (size_t i = 0; i < nthreads; ++i) {
+        bra_Ja.push_back(ambit::Tensor::build(ambit::CoreTensor, "Ja bra", {ndets_a}));
+        ket_Ja.push_back(ambit::Tensor::build(ambit::CoreTensor, "Ja ket", {ndets_a}));
+        bra_Jb.push_back(ambit::Tensor::build(ambit::CoreTensor, "Jb bra", {ndets_b}));
+        ket_Jb.push_back(ambit::Tensor::build(ambit::CoreTensor, "Jb ket", {ndets_b}));
+    }
+
+    for (size_t n = 0; n < nroots; ++n) {
+        auto evec = eigen_[roots[n]].first;
+        std::vector<double> results(nthreads);
+
+#pragma omp parallel for default(none) num_threads(nthreads)                                       \
+    shared(non_actv, data_bra, data_ket, dim1, dim2k, dim3k, dim2b, dim3b, bra_Ja, bra_Jb, ket_Ja, \
+           ket_Jb, evec, results)
+        for (size_t p = 0; p < non_actv; ++p) {
+            int thread = omp_get_thread_num();
+
+            bra_Ja[thread].zero();
+            bra_Jb[thread].zero();
+            ket_Ja[thread].zero();
+            ket_Jb[thread].zero();
+
+            auto& bra_Ja_data = (bra_Ja[thread]).data();
+            auto& bra_Jb_data = (bra_Jb[thread]).data();
+            auto& ket_Ja_data = (ket_Ja[thread]).data();
+            auto& ket_Jb_data = (ket_Jb[thread]).data();
+
+            for (size_t I = 0, ndets = determinant_.size(); I < ndets; ++I) {
+                auto cI = evec->get(I);
+                const auto& detI = determinant_[I];
+
+                // u_α |I>
+                for (const auto& u : detI.get_alfa_occ(nactv_)) {
+                    Determinant detI_u(detI);
+                    auto sign_u = detI_u.destroy_alfa_bit(u);
+                    auto Iu = dets321_a_.find(detI_u)->second;
+
+                    // z_α^+ v_α u_α |I>
+                    for (auto v : detI_u.get_alfa_occ(nactv_)) {
+                        // z == v
+                        ket_Ja_data[Iu] +=
+                            cI * sign_u * data_ket[u * dim3k + v * dim2k + p * dim1 + v];
+                        bra_Ja_data[Iu] +=
+                            cI * sign_u * data_bra[p * dim3b + v * dim2b + u * dim1 + v];
+
+                        // z != v
+                        for (auto z : detI_u.get_alfa_vir(nactv_)) {
+                            Determinant detJ(detI_u);
+                            auto sign = detJ.single_excitation_a(v, z) * sign_u;
+                            auto J = dets321_a_.find(detJ)->second;
+                            ket_Ja_data[J] +=
+                                cI * sign * data_ket[u * dim3k + v * dim2k + p * dim1 + z];
+                            bra_Ja_data[J] +=
+                                cI * sign * data_bra[p * dim3b + z * dim2b + u * dim1 + v];
+                        }
+                    }
+
+                    // z_β^+ v_β u_α |I>
+                    for (auto v : detI_u.get_beta_occ(nactv_)) {
+                        // z == v
+                        ket_Ja_data[Iu] +=
+                            cI * sign_u * data_ket[u * dim3k + v * dim2k + p * dim1 + v];
+                        bra_Ja_data[Iu] +=
+                            cI * sign_u * data_bra[p * dim3b + v * dim2b + u * dim1 + v];
+
+                        // z != v
+                        for (auto z : detI_u.get_beta_vir(nactv_)) {
+                            Determinant detJ(detI_u);
+                            auto sign = detJ.single_excitation_b(v, z) * sign_u;
+                            auto J = dets321_a_.find(detJ)->second;
+                            ket_Ja_data[J] +=
+                                cI * sign * data_ket[u * dim3k + v * dim2k + p * dim1 + z];
+                            bra_Ja_data[J] +=
+                                cI * sign * data_bra[p * dim3b + z * dim2b + u * dim1 + v];
+                        }
+                    }
+                }
+
+                // u_β |I>
+                for (const auto& u : detI.get_beta_occ(nactv_)) {
+                    Determinant detI_u(detI);
+                    auto sign_u = detI_u.destroy_beta_bit(u);
+                    auto Iu = dets321_b_.find(detI_u)->second;
+
+                    // z_α^+ v_α u_β |I>
+                    for (auto v : detI_u.get_alfa_occ(nactv_)) {
+                        // z == v
+                        ket_Jb_data[Iu] +=
+                            cI * sign_u * data_ket[u * dim3k + v * dim2k + p * dim1 + v];
+                        bra_Jb_data[Iu] +=
+                            cI * sign_u * data_bra[p * dim3b + v * dim2b + u * dim1 + v];
+
+                        // z != v
+                        for (auto z : detI_u.get_alfa_vir(nactv_)) {
+                            Determinant detJ(detI_u);
+                            auto sign = detJ.single_excitation_a(v, z) * sign_u;
+                            auto J = dets321_b_.find(detJ)->second;
+                            ket_Jb_data[J] +=
+                                cI * sign * data_ket[u * dim3k + v * dim2k + p * dim1 + z];
+                            bra_Jb_data[J] +=
+                                cI * sign * data_bra[p * dim3b + z * dim2b + u * dim1 + v];
+                        }
+                    }
+
+                    // z_β^+ v_β u_β |I>
+                    for (auto v : detI_u.get_beta_occ(nactv_)) {
+                        // z == v
+                        ket_Jb_data[Iu] +=
+                            cI * sign_u * data_ket[u * dim3k + v * dim2k + p * dim1 + v];
+                        bra_Jb_data[Iu] +=
+                            cI * sign_u * data_bra[p * dim3b + v * dim2b + u * dim1 + v];
+
+                        // z != v
+                        for (auto z : detI_u.get_beta_vir(nactv_)) {
+                            Determinant detJ(detI_u);
+                            auto sign = detJ.single_excitation_b(v, z) * sign_u;
+                            auto J = dets321_b_.find(detJ)->second;
+                            ket_Jb_data[J] +=
+                                cI * sign * data_ket[u * dim3k + v * dim2k + p * dim1 + z];
+                            bra_Jb_data[J] +=
+                                cI * sign * data_bra[p * dim3b + z * dim2b + u * dim1 + v];
+                        }
+                    }
+                }
+            }
+
+            results[thread] += bra_Ja[thread]("I") * ket_Ja[thread]("I");
+            results[thread] += bra_Jb[thread]("I") * ket_Jb[thread]("I");
+        }
+
+        for (size_t i = 0; i < nthreads; ++i) {
+            out[n] += results[i];
+        }
+    }
+
+    return out;
+}
+
+std::vector<double>
+FCI_MO::compute_complementary_H2caa_overlap_ci_driven(const std::vector<size_t>& roots,
+                                                      ambit::Tensor Tbra, ambit::Tensor Tket) {
+    auto dims_bra = Tbra.dims();
+    auto dims_ket = Tket.dims();
+
+    if (dims_bra.size() != 4)
+        throw std::runtime_error("Invalid Tensor for bra: Dimension must be 4!");
+    if (dims_ket.size() != 4)
+        throw std::runtime_error("Invalid Tensor for ket: Dimension must be 4!");
+    if ((dims_bra[1] != nactv_) or (dims_bra[2] != nactv_) or (dims_bra[3] != nactv_))
+        throw std::runtime_error("Invalid Tensor for bra: Too many non-active indices");
+    if ((dims_ket[0] != nactv_) or (dims_ket[1] != nactv_) or (dims_ket[3] != nactv_))
+        throw std::runtime_error("Invalid Tensor for ket: Too many non-active indices");
+    if (dims_bra[0] != dims_ket[2])
+        throw std::runtime_error("Invalid contracted index for bra and ket Tensors");
+
+    auto nroots = roots.size();
+    auto non_actv = dims_bra[0];
+    std::vector<double> out(nroots, 0.0);
+    if (non_actv == 0)
+        return out;
+
+    // build 3 coupling lists
+    build_dets321();
+
+    auto Ja_size = dets321_a_.size();
+    auto Jb_size = dets321_b_.size();
+    std::vector<std::vector<std::tuple<size_t, unsigned char, unsigned char, unsigned char, bool>>>
+        aaa_Nm1_to_N(Ja_size), abb_Nm1_to_N(Ja_size), baa_Nm1_to_N(Jb_size), bbb_Nm1_to_N(Jb_size);
+
+    for (size_t I = 0, ndets = determinant_.size(); I < ndets; ++I) {
+        const auto& detI = determinant_[I];
+
+        // u_α |I>
+        for (const auto& u : detI.get_alfa_occ(nactv_)) {
+            Determinant detI_u(detI);
+            auto sign_u = detI_u.destroy_alfa_bit(u) > 0.0;
+            auto Iu = dets321_a_.find(detI_u)->second;
+
+            // z_α^+ v_α u_α |I>
+            for (auto v : detI_u.get_alfa_occ(nactv_)) {
+                // z == v
+                aaa_Nm1_to_N[Iu].emplace_back(I, u, v, v, sign_u);
+
+                // z != v
+                for (auto z : detI_u.get_alfa_vir(nactv_)) {
+                    Determinant detJ(detI_u);
+                    auto sign = (detJ.single_excitation_a(v, z) > 0.0) == sign_u;
+                    auto J = dets321_a_.find(detJ)->second;
+                    aaa_Nm1_to_N[J].emplace_back(I, u, v, z, sign);
+                }
+            }
+
+            // z_β^+ v_β u_α |I>
+            for (auto v : detI_u.get_beta_occ(nactv_)) {
+                // z == v
+                abb_Nm1_to_N[Iu].emplace_back(I, u, v, v, sign_u);
+
+                // z != v
+                for (auto z : detI_u.get_beta_vir(nactv_)) {
+                    Determinant detJ(detI_u);
+                    auto sign = (detJ.single_excitation_b(v, z) > 0.0) == sign_u;
+                    auto J = dets321_a_.find(detJ)->second;
+                    abb_Nm1_to_N[J].emplace_back(I, u, v, z, sign);
+                }
+            }
+        }
+
+        // u_β |I>
+        for (const auto& u : detI.get_beta_occ(nactv_)) {
+            Determinant detI_u(detI);
+            auto sign_u = detI_u.destroy_beta_bit(u) > 0.0;
+            auto Iu = dets321_b_.find(detI_u)->second;
+
+            // z_α^+ v_α u_β |I>
+            for (auto v : detI_u.get_alfa_occ(nactv_)) {
+                // z == v
+                baa_Nm1_to_N[Iu].emplace_back(I, u, v, v, sign_u);
+
+                // z != v
+                for (auto z : detI_u.get_alfa_vir(nactv_)) {
+                    Determinant detJ(detI_u);
+                    auto sign = (detJ.single_excitation_a(v, z) > 0.0) == sign_u;
+                    auto J = dets321_b_.find(detJ)->second;
+                    baa_Nm1_to_N[J].emplace_back(I, u, v, z, sign);
+                }
+            }
+
+            // z_β^+ v_β u_β |I>
+            for (auto v : detI_u.get_beta_occ(nactv_)) {
+                // z == v
+                bbb_Nm1_to_N[Iu].emplace_back(I, u, v, v, sign_u);
+
+                // z != v
+                for (auto z : detI_u.get_beta_vir(nactv_)) {
+                    Determinant detJ(detI_u);
+                    auto sign = (detJ.single_excitation_b(v, z) > 0.0) == sign_u;
+                    auto J = dets321_b_.find(detJ)->second;
+                    bbb_Nm1_to_N[J].emplace_back(I, u, v, z, sign);
+                }
+            }
+        }
+    }
+
+    // preparation for computations
+    const auto& data_bra = Tbra.data();
+    const auto& data_ket = Tket.data();
+    auto dim1 = nactv_;
+    auto dim2k = non_actv * dim1;
+    auto dim3k = nactv_ * dim2k;
+    auto dim2b = nactv_ * dim1;
+    auto dim3b = nactv_ * dim2b;
+
+    // prepare for OpenMP
+    size_t nthreads = omp_get_max_threads();
+    nthreads = (non_actv < nthreads) ? non_actv : nthreads;
+
+    std::vector<ambit::Tensor> pbra, pket;
+    for (size_t i = 0; i < nthreads; ++i) {
+        pbra.push_back(ambit::Tensor::build(ambit::CoreTensor, "p bra", {non_actv}));
+        pket.push_back(ambit::Tensor::build(ambit::CoreTensor, "p ket", {non_actv}));
+    }
+
+    // actual computation: parallel (N-1)-electron determinants
+    for (size_t n = 0; n < nroots; ++n) {
+        auto evec = eigen_[roots[n]].first;
+        std::vector<double> results(nthreads, 0.0);
+
+        // alpha (N-1)-electron determinants
+#pragma omp parallel for default(none) num_threads(nthreads)                                       \
+    shared(non_actv, data_bra, data_ket, dim1, dim2k, dim3k, dim2b, dim3b, Ja_size, aaa_Nm1_to_N,  \
+           abb_Nm1_to_N, pbra, pket, evec, results)
+        for (size_t J = 0; J < Ja_size; ++J) {
+            auto thread = omp_get_thread_num();
+
+            pbra[thread].zero();
+            pket[thread].zero();
+
+            auto& pbra_data = pbra[thread].data();
+            auto& pket_data = pket[thread].data();
+
+            // z_α^+ v_α u_α |I>
+            for (const auto& coupled_dets : aaa_Nm1_to_N[J]) {
+                const auto [I, u, v, z, sign] = coupled_dets;
+                auto cI = evec->get(I) * (sign ? 1.0 : -1.0);
+                for (size_t p = 0; p < non_actv; ++p) {
+                    pbra_data[p] += cI * data_bra[p * dim3b + z * dim2b + u * dim1 + v];
+                    pket_data[p] += cI * data_ket[u * dim3k + v * dim2k + p * dim1 + z];
+                }
+            }
+
+            // z_β^+ v_β u_α |I>
+            for (const auto& coupled_dets : abb_Nm1_to_N[J]) {
+                const auto [I, u, v, z, sign] = coupled_dets;
+                auto cI = evec->get(I) * (sign ? 1.0 : -1.0);
+                for (size_t p = 0; p < non_actv; ++p) {
+                    pbra_data[p] += cI * data_bra[p * dim3b + z * dim2b + u * dim1 + v];
+                    pket_data[p] += cI * data_ket[u * dim3k + v * dim2k + p * dim1 + z];
+                }
+            }
+
+            results[thread] += pbra[thread]("p") * pket[thread]("p");
+        }
+
+        // beta (N-1)-electron determinants
+#pragma omp parallel for default(none) num_threads(nthreads)                                       \
+    shared(non_actv, data_bra, data_ket, dim1, dim2k, dim3k, dim2b, dim3b, Jb_size, baa_Nm1_to_N,  \
+           bbb_Nm1_to_N, pbra, pket, evec, results)
+        for (size_t J = 0; J < Jb_size; ++J) {
+            auto thread = omp_get_thread_num();
+
+            pbra[thread].zero();
+            pket[thread].zero();
+
+            auto& pbra_data = pbra[thread].data();
+            auto& pket_data = pket[thread].data();
+
+            // z_α^+ v_α u_β |I>
+            for (const auto& coupled_dets : baa_Nm1_to_N[J]) {
+                const auto [I, u, v, z, sign] = coupled_dets;
+                auto cI = evec->get(I) * (sign ? 1.0 : -1.0);
+                for (size_t p = 0; p < non_actv; ++p) {
+                    pbra_data[p] += cI * data_bra[p * dim3b + z * dim2b + u * dim1 + v];
+                    pket_data[p] += cI * data_ket[u * dim3k + v * dim2k + p * dim1 + z];
+                }
+            }
+
+            // z_β^+ v_β u_β |I>
+            for (const auto& coupled_dets : bbb_Nm1_to_N[J]) {
+                const auto [I, u, v, z, sign] = coupled_dets;
+                auto cI = evec->get(I) * (sign ? 1.0 : -1.0);
+                for (size_t p = 0; p < non_actv; ++p) {
+                    pbra_data[p] += cI * data_bra[p * dim3b + z * dim2b + u * dim1 + v];
+                    pket_data[p] += cI * data_ket[u * dim3k + v * dim2k + p * dim1 + z];
+                }
+            }
+
+            results[thread] += pbra[thread]("p") * pket[thread]("p");
+        }
+
+        for (size_t i = 0; i < nthreads; ++i) {
+            out[n] += results[i];
+        }
+    }
+
+    return out;
+}
+
 [[deprecated]] std::vector<std::shared_ptr<RDMs>>
 FCI_MO::reference(const std::vector<std::pair<size_t, size_t>>& root_list, int max_rdm_level) {
     std::vector<std::shared_ptr<RDMs>> refs;
@@ -2363,7 +2785,8 @@ void FCI_MO::compute_ref(const int& level, size_t root1, size_t root2) {
             L3bbb_ =
                 ambit::Tensor::build(ambit::CoreTensor, "L3bbb", std::vector<size_t>(6, nactv_));
         }
-        //        add_wedge_cu3(L1a_, L1b_, L2aa_, L2ab_, L2bb_, L3aaa_, L3aab_, L3abb_, L3bbb_);
+        //        add_wedge_cu3(L1a_, L1b_, L2aa_, L2ab_, L2bb_, L3aaa_, L3aab_, L3abb_,
+        //        L3bbb_);
     }
 
     timer_off("Compute Ref");

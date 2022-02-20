@@ -134,14 +134,28 @@ class ActiveSpaceMethod {
 
     /// Compute the complementary operator acting on the reference h_{pσ} (t) |0_n>
     /// Return a tuple of (h_{pα} (t) |0>, h_{pβ} (t) |0_n>)
-    /// Complimentary operator: h_{pσ} (t) = \sum_{uvw} t^{uv}_{pw} \sum_{σ1} w^+_{σ1} v_{σ1} u_{σ}
+    /// Complementary operator: h_{pσ} (t) = \sum_{uvw} t^{uv}_{pw} \sum_{σ1} w^+_{σ1} v_{σ1} u_{σ}
     /// The n-th state: |0_n> = \sum_{I} c^n_I |I>
     /// spin: σ, σ1; active indices: u, v, w; state weights: w_n; CI coefficients: c^n_I
     /// If transpose = true, the tensor t assume the order of t^{pw}_{uv}
     virtual std::vector<std::tuple<ambit::Tensor, ambit::Tensor>>
-    compute_complementary(const std::vector<size_t>& roots, ambit::Tensor tensor,
-                          bool transpose = false) {
-        throw std::runtime_error("ActiveSpaceMethod::compute_complementary: Not yet implemented!");
+    compute_complementary_H2caa(const std::vector<size_t>& roots, ambit::Tensor tensor,
+                                bool transpose = false) {
+        throw std::runtime_error(
+            "ActiveSpaceMethod::compute_complementary_H2caa: Not yet implemented!");
+    }
+
+    /// Compute the overlap of two wave functions acted by complementary operators
+    /// Return a map from state to roots of values
+    /// Computes the overlap of \sum_{p} \sum_{σ} <Ψ| h^+_{pσ} (v) h_{pσ} (t) |Ψ>, where
+    /// h_{pσ} (t) = \sum_{uvw} t^{uv}_{pw} \sum_{τ} w^+_{τ} v_{τ} u_{σ}
+    /// Useful to get the 3-RDM contribution of fully contracted term of two 2-body operators:
+    /// \sum_{puvwxyzστθ} v_{pwxy} t_{uvpz} <Ψ| xσ^+ yτ^+ wτ zθ^+ vθ uσ |Ψ>
+    virtual std::vector<double>
+    compute_complementary_H2caa_overlap(const std::vector<size_t>& roots, ambit::Tensor Tbra,
+                                        ambit::Tensor Tket) {
+        throw std::runtime_error(
+            "ActiveSpaceMethod::compute_complementary_H2caa_overlap: Not yet implemented!");
     }
 
     /// Set options from an option object

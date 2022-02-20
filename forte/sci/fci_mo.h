@@ -132,8 +132,24 @@ class FCI_MO : public ActiveSpaceMethod {
     /// spin: σ, σ1; active indices: u, v, w; state weights: w_n; CI coefficients: c^n_I
     /// If transpose = true, the tensor t assume the order of t^{pw}_{uv}
     std::vector<std::tuple<ambit::Tensor, ambit::Tensor>>
-    compute_complementary(const std::vector<size_t>& roots, ambit::Tensor tensor,
-                          bool transpose = false) override;
+    compute_complementary_H2caa(const std::vector<size_t>& roots, ambit::Tensor tensor,
+                                bool transpose = false) override;
+
+    /// Compute the overlap of two wave functions acted by complementary operators
+    /// Return a map from state to roots of values
+    /// Computes the overlap of \sum_{p} \sum_{σ} <Ψ| h^+_{pσ} (v) h_{pσ} (t) |Ψ>, where
+    /// h_{pσ} (t) = \sum_{uvw} t^{uv}_{pw} \sum_{τ} w^+_{τ} v_{τ} u_{σ}
+    /// Useful to get the 3-RDM contribution of fully contracted term of two 2-body operators:
+    /// \sum_{puvwxyzστθ} v_{pwxy} t_{uvpz} <Ψ| xσ^+ yτ^+ wτ zθ^+ vθ uσ |Ψ>
+    std::vector<double> compute_complementary_H2caa_overlap(const std::vector<size_t>& roots,
+                                                            ambit::Tensor Tbra,
+                                                            ambit::Tensor Tket) override;
+    std::vector<double>
+    compute_complementary_H2caa_overlap_mo_driven(const std::vector<size_t>& roots,
+                                                  ambit::Tensor Tbra, ambit::Tensor Tket);
+    std::vector<double>
+    compute_complementary_H2caa_overlap_ci_driven(const std::vector<size_t>& roots,
+                                                  ambit::Tensor Tbra, ambit::Tensor Tket);
 
     [[deprecated]] std::vector<std::shared_ptr<RDMs>>
     reference(const std::vector<std::pair<size_t, size_t>>& root_list, int max_rdm_level);

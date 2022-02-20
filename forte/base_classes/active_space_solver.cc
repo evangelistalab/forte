@@ -596,20 +596,8 @@ std::shared_ptr<RDMs> ActiveSpaceSolver::compute_average_rdms(
 }
 
 std::map<StateInfo, std::vector<std::tuple<ambit::Tensor, ambit::Tensor>>>
-ActiveSpaceSolver::compute_complimentary(ambit::Tensor tensor, bool transpose) {
-    // check tensor
-    auto nactv = mo_space_info_->size("ACTIVE");
-    const auto& dims = tensor.dims();
-    if (dims.size() != 4)
-        throw std::runtime_error("Invalid Tensor: Dimension must be 4!");
-
-    bool indices_ok = transpose ? (dims[1] == nactv) and (dims[2] == nactv) and (dims[3] == nactv)
-                                : (dims[0] == nactv) and (dims[1] == nactv) and (dims[3] == nactv);
-    if (not indices_ok)
-        throw std::runtime_error("Invalid Tensor: Too many non-active indices");
-
+ActiveSpaceSolver::compute_complementary_H2caa(ambit::Tensor tensor, bool transpose) {
     std::map<StateInfo, std::vector<std::tuple<ambit::Tensor, ambit::Tensor>>> out;
-
     for (const auto& state_nroots : state_nroots_map_) {
         const auto& state = state_nroots.first;
 
@@ -617,7 +605,22 @@ ActiveSpaceSolver::compute_complimentary(ambit::Tensor tensor, bool transpose) {
         std::iota(roots.begin(), roots.end(), 0);
 
         const auto method = state_method_map_.at(state);
-        out[state] = method->compute_complementary(roots, tensor, transpose);
+        out[state] = method->compute_complementary_H2caa(roots, tensor, transpose);
+    }
+    return out;
+}
+
+std::map<StateInfo, std::vector<double>>
+ActiveSpaceSolver::compute_complementary_H2caa_overlap(ambit::Tensor Tbra, ambit::Tensor Tket) {
+    std::map<StateInfo, std::vector<double>> out;
+    for (const auto& state_nroots : state_nroots_map_) {
+        const auto& state = state_nroots.first;
+
+        std::vector<size_t> roots(state_nroots.second);
+        std::iota(roots.begin(), roots.end(), 0);
+
+        const auto method = state_method_map_.at(state);
+        out[state] = method->compute_complementary_H2caa_overlap(roots, Tbra, Tket);
     }
 
     return out;
