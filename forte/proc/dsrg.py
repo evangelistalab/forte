@@ -51,7 +51,7 @@ class ProcedureDSRG:
         if self.solver_type in ["SA-MRDSRG", "SA_MRDSRG", "DSRG_MRPT", "DSRG-MRPT"]:
             self.rdm_type = forte.RDMsType.spin_free
         else:
-            self.rdm_type = forte.RDMsType.spin_free if options.get_bool('SPIN_AVG_DENSITY') \
+            self.rdm_type = forte.RDMsType.spin_free if options.get_bool('DSRG_RDM_MS_AVG') \
                 else forte.RDMsType.spin_dependent
 
         self.do_semicanonical = options.get_bool("SEMI_CANONICAL")

@@ -298,10 +298,6 @@ def prepare_forte_objects_from_fcidump(options, path='.'):
     # Call methods that project the orbitals (AVAS, embedding)
     # skipped due to lack of functionality
 
-    # Averaging spin multiplets if doing spin-adapted computation
-    if options.get_str('CORRELATION_SOLVER') == 'SA-MRDSRG':
-        options.set_bool('SPIN_AVG_DENSITY', True)
-
     # manufacture a SCFInfo object from the FCIDUMP file (this assumes C1 symmetry)
     nel = fcidump['nelec']
     ms2 = fcidump['ms2']
@@ -386,10 +382,6 @@ def prepare_forte_options():
     # Get the forte option object
     options = forte.forte_options
     options.get_options_from_psi4(psi4_options)
-
-    # Averaging spin multiplets if doing spin-adapted computation
-    if options.get_str('CORRELATION_SOLVER') in ('SA-MRDSRG', 'SA_MRDSRG'):
-        options.set_bool('SPIN_AVG_DENSITY', True)
 
     return options
 

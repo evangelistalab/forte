@@ -196,21 +196,6 @@ class ActiveSpaceSolver {
     /// A map of state symmetries to the file name of wave function stored on disk
     std::map<StateInfo, std::string> state_filename_map_;
 
-    /// Average spin multiplets for RDMs
-    /// If true, the weight of a state will be averaged by its multiplicity.
-    /// Moreover, all its ms components will be computed by the solver.
-    bool ms_avg_;
-
-    //    /// Compute the state-averaged reference when spin multiplets are also averaged
-    //    RDMs compute_avg_rdms_ms_avg(const std::map<StateInfo, std::vector<double>>&
-    //    state_weights_map,
-    //                                 int max_rdm_level);
-
-    //    /// Compute the state-averaged reference when spin multiplets are also averaged
-    //    std::shared_ptr<RDMs> compute_avg_rdms(const std::map<StateInfo, std::vector<double>>&
-    //    state_weights_map,
-    //                          int max_rdm_level, RDMsType rdm_type);
-
     /// A variable to control printing information
     int print_ = 1;
 
