@@ -147,6 +147,7 @@ dsrg-mrpt2:
    - dsrg-mrpt2-fcidump-1
    - dsrg-mrpt2-grad-findiff-1
    - dsrg-mrpt2-gradient-1
+   - dsrg-mrpt2-gradient-df-1
   medium:
    - dsrg-mrpt2-1
    - dsrg-mrpt2-2
@@ -162,7 +163,6 @@ dsrg-mrpt2:
    - dsrg-mrpt2-opt-findiff-1
    - dsrg-mrpt2-gradient-2
    - dsrg-mrpt2-gradient-df-2
-   - dsrg-mrpt2-gradient-df-4
   long:
    - dsrg-mrpt2-3
    - dsrg-mrpt2-4
@@ -171,7 +171,6 @@ dsrg-mrpt2:
    - dsrg-mrpt2-opt-findiff-2
    - dsrg-mrpt2-gradient-3
    - dsrg-mrpt2-gradient-df-3
-   - dsrg-mrpt2-gradient-df-5
   unused:
    - dsrg-mrpt2-uno
 dsrg-mrpt3:

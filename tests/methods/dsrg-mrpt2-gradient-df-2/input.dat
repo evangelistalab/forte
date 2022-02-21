@@ -1,9 +1,9 @@
-# DSRG-MRPT2 gradient on HF with c2v symmetry
+# DF-DSRG-MRPT2 gradient on HF with c2v symmetry
 import forte
 ref_grad = psi4.Matrix.from_list([
-      [0.000000000000,     0.000000000000,     0.016785069962],
-      [0.000000000000,     0.000000000000,    -0.016785069962]
-      ])
+       [0.000000000000,     0.000000000000,     0.016772937469],
+       [0.000000000000,     0.000000000000,    -0.016772937469]
+       ])
 
 molecule {
 0 1
@@ -19,13 +19,12 @@ set {
   d_convergence        10
   restricted_docc      [2,0,1,1]
   active               [2,0,0,0]
-  # mcscf_type           conv
+  mcscf_type           df
   mcscf_maxiter        100
   mcscf_diis_start     20
   mcscf_e_convergence  10
   mcscf_r_convergence  8
   g_convergence        gau_verytight
-#  cholesky_tolerance   1e-12
 }
 
 set forte {
@@ -35,24 +34,13 @@ set forte {
   active_space_solver  cas
   correlation_solver   dsrg-mrpt2
   dsrg_s               1.0
-# int_type             cholesky
   int_type              df
   df_basis_scf          cc-pvdz-jkfit
   df_basis_mp2          cc-pvdz-jkfit
 }
 
-set scf_type df
-set mcscf_type df
 set df_basis_scf cc-pvdz-jkfit
 set df_basis_mp2 cc-pvdz-jkfit
 
-# grad = gradient('forte')
-# compare_matrices(ref_grad, grad, 6, "DSRG-MRPT2/CAS(2,2) gradient on HF")
-
-set findif{ 
-  points 5
-  DISP_SIZE 0.1
-}
-
-# grad = gradient('forte')
-grad = gradient('forte',dertype="energy")
+grad = gradient('forte')
+compare_matrices(ref_grad, grad, 6, "DF-DSRG-MRPT2 gradient on HF with c2v symmetry")
