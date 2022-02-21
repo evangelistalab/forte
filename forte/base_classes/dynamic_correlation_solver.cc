@@ -75,7 +75,6 @@ double DynamicCorrelationSolver::compute_reference_energy() {
     // Eref = Enuc + Eclosed + Fclosed["uv"] * D1["uv"] + 0.5 * (uv|xy) * D2["uxvy"]
     double Eref = Enuc_;
 
-    // TODO: not sure if the following is correct!!!
     psi::SharedMatrix Fclosed;
     double Eclosed;
     auto dim_start = psi::Dimension(mo_space_info_->nirrep());
