@@ -613,6 +613,7 @@ def gradient_forte(name, **kwargs):
 
     # Run a method
     job_type = options.get_str('JOB_TYPE')
+    int_type = options.get_str('INT_TYPE')
     correlation_solver = options.get_str('CORRELATION_SOLVER')
 
     if job_type not in {"CASSCF", "MCSCF_TWO_STEP"} and correlation_solver != 'DSRG-MRPT2':
@@ -657,8 +658,10 @@ def gradient_forte(name, **kwargs):
     derivobj = psi4.core.Deriv(ref_wfn)
     derivobj.set_deriv_density_backtransformed(True)
     derivobj.set_ignore_reference(True)
-    # grad = derivobj.compute(psi4.core.DerivCalcType.Correlated)
-    grad = derivobj.compute_df("DF_BASIS_SCF", "DF_BASIS_MP2")
+    if int_type == 'DF':
+        grad = derivobj.compute_df("DF_BASIS_SCF", "DF_BASIS_MP2")
+    else:
+        grad = derivobj.compute(psi4.core.DerivCalcType.Correlated)
     ref_wfn.set_gradient(grad)
     optstash.restore()
 
