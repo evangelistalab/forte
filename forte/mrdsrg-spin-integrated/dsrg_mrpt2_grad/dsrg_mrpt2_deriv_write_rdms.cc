@@ -398,12 +398,10 @@ void DSRG_MRPT2::write_2rdm_spin_dependent() {
 
     if (CORRELATION_TERM) {
         temp["abij"] += Tau1["ijab"];
-        temp["ABIJ"] += Tau1["IJAB"];
         temp["aBiJ"] += Tau1["iJaB"];
 
-        temp["cdkl"] += Kappa["klcd"] * Eeps2_p["klcd"];
-        temp["CDKL"] += Kappa["KLCD"] * Eeps2_p["KLCD"];
-        temp["cDkL"] += Kappa["kLcD"] * Eeps2_p["kLcD"];
+        temp["cdkl"] += Kappa_tilde["klcd"];
+        temp["cDkL"] += Kappa_tilde["kLcD"];
     }
 
     temp["xynv"] -= Z["un"] * Gamma2_["uvxy"];
@@ -489,26 +487,22 @@ void DSRG_MRPT2::write_df_rdm() {
     BlockedTensor df_3rdm = BTF_->build(tensor_type_, "df_3rdm", {"Lgg", "LGG"});
 
     // density terms contracted with V["abij"]
-    BlockedTensor dvabij = BTF_->build(CoreTensor, "density of V['abij']", {"pphh", "PPHH", "pPhH"});
+    BlockedTensor dvabij = BTF_->build(CoreTensor, "density of V['abij']", {"pphh", "pPhH"});
 
     if (CORRELATION_TERM) {
         dvabij["abij"] += Tau1["ijab"];
-        dvabij["ABIJ"] += Tau1["IJAB"];
         dvabij["aBiJ"] += Tau1["iJaB"];
 
-        dvabij["cdkl"] += Kappa["klcd"] * Eeps2_p["klcd"];
-        dvabij["CDKL"] += Kappa["KLCD"] * Eeps2_p["KLCD"];
-        dvabij["cDkL"] += Kappa["kLcD"] * Eeps2_p["kLcD"];
+        dvabij["cdkl"] += Kappa_tilde["klcd"];
+        dvabij["cDkL"] += Kappa_tilde["kLcD"];
     }
 
     // CASSCF reference
     dvabij["xyuv"] += 0.25 * Gamma2_["uvxy"];
-    dvabij["XYUV"] += 0.25 * Gamma2_["UVXY"];
     dvabij["xYuV"] += 0.25 * Gamma2_["uVxY"];
 
     // CI contribution
     dvabij["xyuv"] += 0.125 * Gamma2_tilde["uvxy"];
-    dvabij["XYUV"] += 0.125 * Gamma2_tilde["UVXY"];
     dvabij["xYuV"] += 0.125 * Gamma2_tilde["uVxY"];
 
     // Coulomb part

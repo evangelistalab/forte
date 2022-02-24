@@ -351,6 +351,7 @@ class DSRG_MRPT2 : public MASTER_DSRG {
     void set_w();
     // Set MO orbital partition info for solving the z-vector equation
     void set_zvec_moinfo();
+    void contract_tensor(ambit::BlockedTensor&, std::string, std::string);
 
     /// Size of determinants
     size_t ndets;
@@ -410,12 +411,6 @@ class DSRG_MRPT2 : public MASTER_DSRG {
     ambit::BlockedTensor Eeps1_m2;
     /// e^[-s*(Delta2)^2]
     ambit::BlockedTensor Eeps2;
-    /// 1+e^[-s*(Delta2)^2]
-    ambit::BlockedTensor Eeps2_p;
-    /// {1-e^[-s*(Delta2)^2]}/(Delta2)
-    ambit::BlockedTensor Eeps2_m1;
-    /// {1-e^[-s*(Delta2)^2]}/(Delta2)^2
-    ambit::BlockedTensor Eeps2_m2;
     /// Delta1_a^i = \varepsilon_i - \varepsilon_a
     ambit::BlockedTensor Delta1;
     /// Delta2_{ab}^{ij} = \varepsilon_i + \varepsilon_j - \varepsilon_a - \varepsilon_b
@@ -435,10 +430,12 @@ class DSRG_MRPT2 : public MASTER_DSRG {
 
     // Lagrange multiplier
     std::vector<double> b;
+    ambit::BlockedTensor fdiag;
     ambit::BlockedTensor Z;
     ambit::BlockedTensor Z_b;
     ambit::BlockedTensor Tau1;
     ambit::BlockedTensor Tau2;
+    ambit::BlockedTensor Kappa_tilde;
     ambit::BlockedTensor Kappa;
     ambit::BlockedTensor sigma3_xi3;
     ambit::BlockedTensor sigma2_xi3;

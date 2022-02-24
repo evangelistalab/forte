@@ -86,8 +86,8 @@ void DSRG_MRPT2::set_w() {
             W["me"] +=       Tau1["ijeb"] * V["mbij"];
             W["me"] += 2.0 * Tau1["iJeB"] * V["mBiJ"];
         }
-        temp["kled"] += Kappa["kled"] * Eeps2_p["kled"];
-        temp["kLeD"] += Kappa["kLeD"] * Eeps2_p["kLeD"];
+        temp["kled"] += Kappa_tilde["kled"];
+        temp["kLeD"] += Kappa_tilde["kLeD"];
         W["ce"] +=       temp["kled"] * V["cdkl"];
         W["ce"] += 2.0 * temp["kLeD"] * V["cDkL"];
         if (eri_df_) {
@@ -130,8 +130,8 @@ void DSRG_MRPT2::set_w() {
         W["im"] +=       Tau1["mjab"] * V["abij"];
         W["im"] += 2.0 * Tau1["mJaB"] * V["aBiJ"];
 
-        temp["mlcd"] += Kappa["mlcd"] * Eeps2_p["mlcd"];
-        temp["mLcD"] += Kappa["mLcD"] * Eeps2_p["mLcD"];
+        temp["mlcd"] += Kappa_tilde["mlcd"];
+        temp["mLcD"] += Kappa_tilde["mLcD"];
         W["im"] +=       temp["mlcd"] * V["cdil"];
         W["im"] += 2.0 * temp["mLcD"] * V["cDiL"];
         temp.zero();
@@ -226,8 +226,8 @@ void DSRG_MRPT2::set_w() {
         W["zw"] += Tau1["ijwb"] * V["zbij"];
         W["zw"] += 2.0 * Tau1["iJwB"] * V["zBiJ"];
 
-        temp["klwd"] += Kappa["klwd"] * Eeps2_p["klwd"];
-        temp["kLwD"] += Kappa["kLwD"] * Eeps2_p["kLwD"];
+        temp["klwd"] += Kappa_tilde["klwd"];
+        temp["kLwD"] += Kappa_tilde["kLwD"];
         W["zw"] += temp["klwd"] * V["zdkl"];
         W["zw"] += 2.0 * temp["kLwD"] * V["zDkL"];
         temp.zero();
@@ -235,8 +235,8 @@ void DSRG_MRPT2::set_w() {
         W["zw"] += Tau1["wjab"] * V["abzj"];
         W["zw"] += 2.0 * Tau1["wJaB"] * V["aBzJ"];
 
-        temp["wlcd"] += Kappa["wlcd"] * Eeps2_p["wlcd"];
-        temp["wLcD"] += Kappa["wLcD"] * Eeps2_p["wLcD"];
+        temp["wlcd"] += Kappa_tilde["wlcd"];
+        temp["wLcD"] += Kappa_tilde["wLcD"];
         W["zw"] += temp["wlcd"] * V["cdzl"];
         W["zw"] += 2.0 * temp["wLcD"] * V["cDzL"];
         temp.zero();
@@ -333,6 +333,40 @@ void DSRG_MRPT2::set_w() {
     outfile->Printf("Done");
 }
 
+void DSRG_MRPT2::contract_tensor(BlockedTensor& temp, std::string s, std::string option) {
+
+    std::map<char, std::vector<string>> orb_label;
+    orb_label = {{'c', {"c"}},
+                 {'a', {"a"}},
+                 {'v', {"v"}},
+                 {'p', {"a", "v"}},
+                 {'h', {"c", "a"}}};
+    std::map<string, int> orb_size = {{"c", ncore}, {"a", na}, {"v", nvirt}};
+
+    for (const std::string& h1 : orb_label[s[0]]) {
+        for (const std::string& h2 : orb_label[s[1]]) {
+            for (const std::string& p1 : orb_label[s[2]]) {
+                for (const std::string& p2 : orb_label[s[3]]) {
+                    auto block     = h1 + h2 + p1 + p2;
+                    auto block_inv = p1 + p2 + h1 + h2;
+                    auto data1 = V.block(block_inv).data();
+
+                    (temp.block(block)).iterate([&](const std::vector<size_t>& i, double& value) {
+                        auto idx_val1  = i[2] * orb_size[p2] * orb_size[h1] * orb_size[h2] + i[3] * orb_size[h1] * orb_size[h2] + i[0] * orb_size[h2] + i[1];
+                        auto val1 = data1[idx_val1];
+                        auto val2 = 0.0;
+                        if (option == "Eeps2") {  
+                            auto mpdenom = fdiag.block(h1).data()[i[0]] + fdiag.block(h2).data()[i[1]] - fdiag.block(p1).data()[i[2]] - fdiag.block(p2).data()[i[3]];
+                            val2 = dsrg_source_->compute_renormalized(mpdenom);
+                        }
+                        value += val1 * val2;
+                    });
+                }
+            }
+        }
+    }
+}
+
 void DSRG_MRPT2::set_z_cc() {
     BlockedTensor val1 = BTF_->build(CoreTensor, "val1", {"c"});
     BlockedTensor temp = BTF_->build(CoreTensor, "temporal tensor", spin_cases({"hhpp"}));
@@ -344,7 +378,9 @@ void DSRG_MRPT2::set_z_cc() {
         val1["m"] -= DelGam1["xu"] * T2_["muax"] * sigma1_xi1_xi2["ma"];
         val1["m"] -= DelGam1["XU"] * T2_["mUaX"] * sigma1_xi1_xi2["ma"];
 
-        temp["mjab"] += V["abmj"] * Eeps2["mjab"];
+        // V["abmj"] * Eeps2["mjab"]
+        contract_tensor(temp, "chpp", "Eeps2");
+
         temp["mJaB"] += V["aBmJ"] * Eeps2["mJaB"];
         val1["m"] += 4.0 * s_ * Tau2["mjab"] * temp["mjab"];
         val1["m"] += 8.0 * s_ * Tau2["mJaB"] * temp["mJaB"];
@@ -353,10 +389,10 @@ void DSRG_MRPT2::set_z_cc() {
         val1["m"] -= 2.0 * T2OverDelta["mjab"] * Tau2["mjab"];
         val1["m"] -= 4.0 * T2OverDelta["mJaB"] * Tau2["mJaB"];
 
-        temp["mlcd"] += V["cdml"] * Eeps2["mlcd"];
-        temp["mLcD"] += V["cDmL"] * Eeps2["mLcD"];
-        temp_1["mlcd"] += Kappa["mlcd"] * Delta2["mlcd"];
-        temp_1["mLcD"] += Kappa["mLcD"] * Delta2["mLcD"];
+        temp["mlcd"] += V["cdml"] * Eeps2["mlcd"] * Delta2["mlcd"];
+        temp["mLcD"] += V["cDmL"] * Eeps2["mLcD"] * Delta2["mLcD"];
+        temp_1["mlcd"] += Kappa["mlcd"];
+        temp_1["mLcD"] += Kappa["mLcD"];
         val1["m"] -= 4.0 * s_ * temp["mlcd"] * temp_1["mlcd"];
         val1["m"] -= 8.0 * s_ * temp["mLcD"] * temp_1["mLcD"];
         temp.zero();
@@ -371,8 +407,8 @@ void DSRG_MRPT2::set_z_cc() {
         zmn["mn"] +=       Tau1["njab"] * V["abmj"];
         zmn["mn"] += 2.0 * Tau1["nJaB"] * V["aBmJ"];
 
-        temp["nlcd"] += Kappa["nlcd"] * Eeps2_p["nlcd"];
-        temp["nLcD"] += Kappa["nLcD"] * Eeps2_p["nLcD"];
+        temp["nlcd"] += Kappa_tilde["nlcd"];
+        temp["nLcD"] += Kappa_tilde["nLcD"];
         zmn["mn"] +=       temp["nlcd"] * V["cdml"];
         zmn["mn"] += 2.0 * temp["nLcD"] * V["cDmL"];
         temp.zero();
@@ -380,8 +416,8 @@ void DSRG_MRPT2::set_z_cc() {
         zmn["mn"] -=       Tau1["mjab"] * V["abnj"];
         zmn["mn"] -= 2.0 * Tau1["mJaB"] * V["aBnJ"];
 
-        temp["mlcd"] += Kappa["mlcd"] * Eeps2_p["mlcd"];
-        temp["mLcD"] += Kappa["mLcD"] * Eeps2_p["mLcD"];
+        temp["mlcd"] += Kappa_tilde["mlcd"];
+        temp["mLcD"] += Kappa_tilde["mLcD"];
         zmn["mn"] -=       temp["mlcd"] * V["cdnl"];
         zmn["mn"] -= 2.0 * temp["mLcD"] * V["cDnL"];
         temp.zero();
@@ -412,7 +448,9 @@ void DSRG_MRPT2::set_z_vv() {
         val2["e"] += DelGam1["xu"] * T2_["iuex"] * sigma1_xi1_xi2["ie"];
         val2["e"] += DelGam1["XU"] * T2_["iUeX"] * sigma1_xi1_xi2["ie"];
 
-        temp["ijeb"] += V["ebij"] * Eeps2["ijeb"];
+        // V["ebij"] * Eeps2["ijeb"]
+        contract_tensor(temp, "hhvp", "Eeps2");
+
         temp["iJeB"] += V["eBiJ"] * Eeps2["iJeB"];
         val2["e"] -= 4.0 * s_ * Tau2["ijeb"] * temp["ijeb"];
         val2["e"] -= 8.0 * s_ * Tau2["iJeB"] * temp["iJeB"];
@@ -421,7 +459,7 @@ void DSRG_MRPT2::set_z_vv() {
         val2["e"] += 2.0 * T2OverDelta["ijeb"] * Tau2["ijeb"];
         val2["e"] += 4.0 * T2OverDelta["iJeB"] * Tau2["iJeB"];
 
-        temp["kled"] += V["edkl"] * Eeps2["kled"];
+        contract_tensor(temp, "hhvp", "Eeps2");
         temp["kLeD"] += V["eDkL"] * Eeps2["kLeD"];
         temp_1["kled"] += Kappa["kled"] * Delta2["kled"];
         temp_1["kLeD"] += Kappa["kLeD"] * Delta2["kLeD"];
@@ -440,8 +478,8 @@ void DSRG_MRPT2::set_z_vv() {
         zef["ef"] +=       Tau1["ijfb"] * V["ebij"];
         zef["ef"] += 2.0 * Tau1["iJfB"] * V["eBiJ"];
 
-        temp["klfd"] += Kappa["klfd"] * Eeps2_p["klfd"];
-        temp["kLfD"] += Kappa["kLfD"] * Eeps2_p["kLfD"];
+        temp["klfd"] += Kappa_tilde["klfd"];
+        temp["kLfD"] += Kappa_tilde["kLfD"];
         zef["ef"] +=       temp["klfd"] * V["edkl"];
         zef["ef"] += 2.0 * temp["kLfD"] * V["eDkL"];
         temp.zero();
@@ -449,8 +487,8 @@ void DSRG_MRPT2::set_z_vv() {
         zef["ef"] -=       Tau1["ijeb"] * V["fbij"];
         zef["ef"] -= 2.0 * Tau1["iJeB"] * V["fBiJ"];
 
-        temp["kled"] += Kappa["kled"] * Eeps2_p["kled"];
-        temp["kLeD"] += Kappa["kLeD"] * Eeps2_p["kLeD"];
+        temp["kled"] += Kappa_tilde["kled"];
+        temp["kLeD"] += Kappa_tilde["kLeD"];
         zef["ef"] -=       temp["kled"] * V["fdkl"];
         zef["ef"] -= 2.0 * temp["kLeD"] * V["fDkL"];
         temp.zero();
