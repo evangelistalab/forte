@@ -43,8 +43,9 @@ namespace forte {
 void CI_RDMS::compute_1rdm_sf(std::vector<double>& opdm) {
     timer one("Build 1 Substitution Lists");
     get_one_map();
+    auto t_one = one.stop();
     if (print_)
-        outfile->Printf("\n  Time spent forming 1-map:   %1.6f", one.stop());
+        outfile->Printf("\n  Time spent forming 1-map:   %1.6f", t_one);
 
     opdm.assign(no2_, 0.0);
     timer build("Build SF 1-RDM");
@@ -74,8 +75,10 @@ void CI_RDMS::compute_1rdm_sf(std::vector<double>& opdm) {
             }
         }
     }
+
+    auto t_build = build.stop();
     if (print_)
-        outfile->Printf("\n  Time spent building 1-rdm:   %1.6f", build.stop());
+        outfile->Printf("\n  Time spent building 1-rdm:   %1.6f", t_build);
 }
 
 void CI_RDMS::compute_1rdm_sf_op(std::vector<double>& opdm) {
@@ -137,16 +140,18 @@ void CI_RDMS::compute_1rdm_sf_op(std::vector<double>& opdm) {
         }
     }
 
+    auto t_build = build.stop();
     if (print_) {
-        outfile->Printf("\n  Time spent building 1-rdm: %.3e seconds", build.stop());
+        outfile->Printf("\n  Time spent building 1-rdm: %.3e seconds", t_build);
     }
 }
 
 void CI_RDMS::compute_2rdm_sf(std::vector<double>& tpdm) {
     timer two("Build 2 Substitution Lists");
     get_two_map();
+    auto t_two = two.stop();
     if (print_) {
-        outfile->Printf("\n  Time spent forming 2-map:   %1.6f", two.stop());
+        outfile->Printf("\n  Time spent forming 2-map:   %1.6f", t_two);
     }
 
     tpdm.assign(no4_, 0.0);
@@ -214,8 +219,9 @@ void CI_RDMS::compute_2rdm_sf(std::vector<double>& tpdm) {
         }
     }
 
+    auto t_build = build.stop();
     if (print_)
-        outfile->Printf("\n  Time spent building 2-rdm:   %1.6f", build.stop());
+        outfile->Printf("\n  Time spent building 2-rdm:   %1.6f", t_build);
 }
 
 void CI_RDMS::compute_2rdm_sf_op(std::vector<double>& tpdm) {
@@ -359,16 +365,18 @@ void CI_RDMS::compute_2rdm_sf_op(std::vector<double>& tpdm) {
         }
     }
 
+    auto t_build = build.stop();
     if (print_) {
-        outfile->Printf("\n  Time spent building 2-rdm: %.3e seconds", build.stop());
+        outfile->Printf("\n  Time spent building 2-rdm: %.3e seconds", t_build);
     }
 }
 
 void CI_RDMS::compute_3rdm_sf(std::vector<double>& tpdm3) {
     timer three("Build 3 Substitution Lists");
     get_three_map();
+    auto t_three_lists = three.stop();
     if (print_) {
-        outfile->Printf("\n  Time spent forming 3-map:   %1.6f", three.stop());
+        outfile->Printf("\n  Time spent forming 3-map:   %1.6f", t_three_lists);
     }
 
     timer build("Build SF 3-RDM");
@@ -552,8 +560,9 @@ void CI_RDMS::compute_3rdm_sf(std::vector<double>& tpdm3) {
         }
     }
 
+    auto t_build = build.stop();
     if (print_)
-        outfile->Printf("\n  Time spent building 3-rdm:   %1.6f", build.stop());
+        outfile->Printf("\n  Time spent building 3-rdm:   %1.6f", t_build);
 }
 
 void CI_RDMS::compute_3rdm_sf_op(std::vector<double>& tpdm3) {
@@ -1052,8 +1061,9 @@ void CI_RDMS::compute_3rdm_sf_op(std::vector<double>& tpdm3) {
         }
     }
 
+    auto t_build = build.stop();
     if (print_) {
-        outfile->Printf("\n  Time spent building 3-rdm: %.3e seconds", build.stop());
+        outfile->Printf("\n  Time spent building 3-rdm: %.3e seconds", t_build);
     }
 }
 

@@ -59,7 +59,7 @@ void DeterminantSubstitutionLists::build_strings(const DeterminantHashVec& wfn) 
     alpha_strings_.clear();
     alpha_a_strings_.clear();
 
-    // First build a map from beta strings to determinants
+    // Build a map from beta strings to determinants
     const det_hashvec& wfn_map = wfn.wfn_hash();
     {
         det_hash<size_t> beta_str_hash;
@@ -83,6 +83,7 @@ void DeterminantSubstitutionLists::build_strings(const DeterminantHashVec& wfn) 
         }
     }
 
+    // Build a map from alpha strings to determinants
     {
         det_hash<size_t> alfa_str_hash;
         size_t nalfa = 0;
@@ -104,7 +105,8 @@ void DeterminantSubstitutionLists::build_strings(const DeterminantHashVec& wfn) 
             alpha_strings_[a_add].push_back(I);
         }
     }
-    // Next build a map from annihilated alpha strings to determinants
+
+    // Build a map from annihilated alpha strings to determinants
     det_hash<size_t> alfa_str_hash;
     size_t naalpha = 0;
     for (size_t I = 0, max_I = wfn_map.size(); I < max_I; ++I) {
@@ -466,8 +468,9 @@ void DeterminantSubstitutionLists::three_s_lists(const DeterminantHashVec& wfn) 
                 }
             }
         }
+        auto t_aaa = aaa.stop();
         if (!quiet_) {
-            outfile->Printf("\n        ααα        %.3e seconds", aaa.stop());
+            outfile->Printf("\n        ααα        %.3e seconds", t_aaa);
         }
     }
 
@@ -554,8 +557,9 @@ void DeterminantSubstitutionLists::three_s_lists(const DeterminantHashVec& wfn) 
                 }
             }
         }
+        auto t_aab = aab.stop();
         if (!quiet_)
-            outfile->Printf("\n        ααβ        %.3e seconds", aab.stop());
+            outfile->Printf("\n        ααβ        %.3e seconds", t_aab);
     }
 
     /// ABB coupling
@@ -614,8 +618,9 @@ void DeterminantSubstitutionLists::three_s_lists(const DeterminantHashVec& wfn) 
                 }
             }
         }
+        auto t_abb = abb.stop();
         if (!quiet_)
-            outfile->Printf("\n        αββ        %.3e seconds", abb.stop());
+            outfile->Printf("\n        αββ        %.3e seconds", t_abb);
     }
 
     /// BBB coupling
@@ -676,8 +681,9 @@ void DeterminantSubstitutionLists::three_s_lists(const DeterminantHashVec& wfn) 
                 }
             }
         }
+        auto t_bbb = bbb.stop();
         if (not quiet_)
-            outfile->Printf("\n        βββ        %.3e seconds", bbb.stop());
+            outfile->Printf("\n        βββ        %.3e seconds", t_bbb);
     }
 }
 

@@ -2048,8 +2048,8 @@ void FCI_MO::build_dets321() {
     dets321_b_.clear();
     size_t na = 0, nb = 0;
 
-    // regular (N-1)-electron
     for (const auto& detI : determinant_) {
+        // regular (N-1)-electron
         for (auto u : detI.get_alfa_occ(nactv_)) {
             Determinant detI_u(detI);
             detI_u.set_alfa_bit(u, false);
@@ -2062,10 +2062,8 @@ void FCI_MO::build_dets321() {
             if (dets321_b_.find(detI_u) == dets321_b_.end())
                 dets321_b_[detI_u] = nb++;
         }
-    }
 
-    // (N-2)-electron -> (N-1)-electron
-    for (const auto& detI : determinant_) {
+        // (N-2)-electron -> (N-1)-electron
         const auto& aocc = detI.get_alfa_occ(nactv_);
         const auto& bocc = detI.get_beta_occ(nactv_);
         const auto& avir = detI.get_alfa_vir(nactv_);
@@ -2142,6 +2140,9 @@ void FCI_MO::build_dets321() {
 void FCI_MO::build_lists321() {
     if (built_lists321_)
         return;
+
+    // TODO: need optimization
+    // TODO directly work on a/b strings
 
     timer timer_lists("Build z^+ v u |0> sub. lists");
 
@@ -2483,13 +2484,13 @@ FCI_MO::compute_complementary_H2caa_overlap_mo_driven(const std::vector<size_t>&
             auto& ket_Jb_data = (ket_Jb[thread]).data();
 
             for (size_t J = 0; J < ndets_a; ++J) {
-                for (const auto& coupled_dets: list321_aaa_[J]) {
+                for (const auto& coupled_dets : list321_aaa_[J]) {
                     const auto [I, u, v, z, sign] = coupled_dets;
                     auto cI = evec->get(I) * (sign ? 1.0 : -1.0);
                     ket_Ja_data[J] += cI * data_ket[u * dim3k + v * dim2k + p * dim1 + z];
                     bra_Ja_data[J] += cI * data_bra[p * dim3b + z * dim2b + u * dim1 + v];
                 }
-                for (const auto& coupled_dets: list321_abb_[J]) {
+                for (const auto& coupled_dets : list321_abb_[J]) {
                     const auto [I, u, v, z, sign] = coupled_dets;
                     auto cI = evec->get(I) * (sign ? 1.0 : -1.0);
                     ket_Ja_data[J] += cI * data_ket[u * dim3k + v * dim2k + p * dim1 + z];
@@ -2498,13 +2499,13 @@ FCI_MO::compute_complementary_H2caa_overlap_mo_driven(const std::vector<size_t>&
             }
 
             for (size_t J = 0; J < ndets_b; ++J) {
-                for (const auto& coupled_dets: list321_baa_[J]) {
+                for (const auto& coupled_dets : list321_baa_[J]) {
                     const auto [I, u, v, z, sign] = coupled_dets;
                     auto cI = evec->get(I) * (sign ? 1.0 : -1.0);
                     ket_Jb_data[J] += cI * data_ket[u * dim3k + v * dim2k + p * dim1 + z];
                     bra_Jb_data[J] += cI * data_bra[p * dim3b + z * dim2b + u * dim1 + v];
                 }
-                for (const auto& coupled_dets: list321_bbb_[J]) {
+                for (const auto& coupled_dets : list321_bbb_[J]) {
                     const auto [I, u, v, z, sign] = coupled_dets;
                     auto cI = evec->get(I) * (sign ? 1.0 : -1.0);
                     ket_Jb_data[J] += cI * data_ket[u * dim3k + v * dim2k + p * dim1 + z];
