@@ -397,8 +397,6 @@ void DSRG_MRPT2::contract_tensor(ambit::BlockedTensor& temp, ambit::BlockedTenso
 
 void DSRG_MRPT2::set_z_cc() {
     BlockedTensor val1 = BTF_->build(CoreTensor, "val1", {"c"});
-    BlockedTensor temp = BTF_->build(CoreTensor, "temporal tensor", spin_cases({"hhpp"}));
-    BlockedTensor temp_1 = BTF_->build(CoreTensor, "temporal tensor_1", spin_cases({"hhpp"}));
 
     // core-core diagonal entries
     if (CORRELATION_TERM) {
@@ -406,52 +404,45 @@ void DSRG_MRPT2::set_z_cc() {
         val1["m"] -= DelGam1["xu"] * T2_["muax"] * sigma1_xi1_xi2["ma"];
         val1["m"] -= DelGam1["XU"] * T2_["mUaX"] * sigma1_xi1_xi2["ma"];
 
-        contract_tensor(temp, V, "chpp", "Eeps2", true, 1.0);
-        contract_tensor(temp, V, "cHpP", "Eeps2", true, 1.0);
-        val1["m"] += 4.0 * s_ * Tau2["mjab"] * temp["mjab"];
-        val1["m"] += 8.0 * s_ * Tau2["mJaB"] * temp["mJaB"];
-        temp.zero();
-
         {
-            auto T2OverDelta = BTF_->build(CoreTensor, "T2/Delta", {"chpp","cHpP"});
+            auto temp = BTF_->build(CoreTensor, "temporal tensor", {"chpp", "cHpP"});
+            contract_tensor(temp, V, "chpp", "Eeps2", true, 1.0);
+            contract_tensor(temp, V, "cHpP", "Eeps2", true, 1.0);
+            val1["m"] += 4.0 * s_ * Tau2["mjab"] * temp["mjab"];
+            val1["m"] += 8.0 * s_ * Tau2["mJaB"] * temp["mJaB"];
+            temp.zero();
+            contract_tensor(temp, V, "chpp", "Eeps2Delta2", true, 1.0);
+            contract_tensor(temp, V, "cHpP", "Eeps2Delta2", true, 1.0);
+            val1["m"] -= 4.0 * s_ * temp["mlcd"] * Kappa["mlcd"];
+            val1["m"] -= 8.0 * s_ * temp["mLcD"] * Kappa["mLcD"];
+        }
+        {
+            auto T2OverDelta = BTF_->build(CoreTensor, "T2/Delta", {"chpp", "cHpP"});
             contract_tensor(T2OverDelta, V, "chpp", "Eeps2_m2", true, 1.0);
             contract_tensor(T2OverDelta, V, "cHpP", "Eeps2_m2", true, 1.0);
             val1["m"] -= 2.0 * T2OverDelta["mjab"] * Tau2["mjab"];
             val1["m"] -= 4.0 * T2OverDelta["mJaB"] * Tau2["mJaB"];
         }
-
-        contract_tensor(temp, V, "chpp", "Eeps2Delta2", true, 1.0);
-        contract_tensor(temp, V, "cHpP", "Eeps2Delta2", true, 1.0);
-        temp_1["mlcd"] += Kappa["mlcd"];
-        temp_1["mLcD"] += Kappa["mLcD"];
-        val1["m"] -= 4.0 * s_ * temp["mlcd"] * temp_1["mlcd"];
-        val1["m"] -= 8.0 * s_ * temp["mLcD"] * temp_1["mLcD"];
-        temp.zero();
-        temp_1.zero();
     }
     BlockedTensor zmn = BTF_->build(CoreTensor, "z{mn} normal", {"cc"});
     // core-core block entries within normal conditions
     if (CORRELATION_TERM) {
         zmn["mn"] += 0.5 * sigma3_xi3["na"] * F["ma"];
         zmn["mn"] -= 0.5 * sigma3_xi3["ma"] * F["na"];
-
         zmn["mn"] +=       Tau1["njab"] * V["abmj"];
         zmn["mn"] += 2.0 * Tau1["nJaB"] * V["aBmJ"];
-
-        contract_tensor(temp, Kappa, "chpp", "Eeps2_p", false, 1.0);
-        contract_tensor(temp, Kappa, "cHpP", "Eeps2_p", false, 1.0);
-        zmn["mn"] +=       temp["nlcd"] * V["cdml"];
-        zmn["mn"] += 2.0 * temp["nLcD"] * V["cDmL"];
-        temp.zero();
-
+        {
+            auto temp = BTF_->build(CoreTensor, "temporal tensor", {"chpp", "cHpP"});
+            auto temp1 = BTF_->build(CoreTensor, "temporal tensor1", {"cc"});
+            contract_tensor(temp, Kappa, "chpp", "Eeps2_p", false, 1.0);
+            contract_tensor(temp, Kappa, "cHpP", "Eeps2_p", false, 1.0);
+            temp1["mn"] +=       temp["nlcd"] * V["cdml"];
+            temp1["mn"] += 2.0 * temp["nLcD"] * V["cDmL"];
+            zmn["mn"] += temp1["mn"];
+            zmn["nm"] -= temp1["mn"];
+        }
         zmn["mn"] -=       Tau1["mjab"] * V["abnj"];
         zmn["mn"] -= 2.0 * Tau1["mJaB"] * V["aBnJ"];
-
-        contract_tensor(temp, Kappa, "chpp", "Eeps2_p", false, 1.0);
-        contract_tensor(temp, Kappa, "cHpP", "Eeps2_p", false, 1.0);
-        zmn["mn"] -=       temp["mlcd"] * V["cdnl"];
-        zmn["mn"] -= 2.0 * temp["mLcD"] * V["cDnL"];
-        temp.zero();
     }
 
     for (const std::string& block : {"cc", "CC"}) {
@@ -470,61 +461,52 @@ void DSRG_MRPT2::set_z_cc() {
 
 void DSRG_MRPT2::set_z_vv() {
     BlockedTensor val2 = BTF_->build(CoreTensor, "val2", {"v"});
-    BlockedTensor temp = BTF_->build(CoreTensor, "temporal tensor", spin_cases({"hhpp"}));
-    BlockedTensor temp_1 = BTF_->build(CoreTensor, "temporal tensor_1", spin_cases({"hhpp"}));
 
     // virtual-virtual diagonal entries
     if (CORRELATION_TERM) {
         val2["e"] += sigma1_xi1_xi2["ie"] * F["ie"];
         val2["e"] += DelGam1["xu"] * T2_["iuex"] * sigma1_xi1_xi2["ie"];
         val2["e"] += DelGam1["XU"] * T2_["iUeX"] * sigma1_xi1_xi2["ie"];
-
-        contract_tensor(temp, V, "hhvp", "Eeps2", true, 1.0);
-        contract_tensor(temp, V, "hHvP", "Eeps2", true, 1.0);
-        val2["e"] -= 4.0 * s_ * Tau2["ijeb"] * temp["ijeb"];
-        val2["e"] -= 8.0 * s_ * Tau2["iJeB"] * temp["iJeB"];
-
         {
-            auto T2OverDelta = BTF_->build(CoreTensor, "T2/Delta", {"hhvp","hHvP"});
+            auto temp = BTF_->build(CoreTensor, "temporal tensor", {"hhvp", "hHvP"});
+            contract_tensor(temp, V, "hhvp", "Eeps2", true, 1.0);
+            contract_tensor(temp, V, "hHvP", "Eeps2", true, 1.0);
+            val2["e"] -= 4.0 * s_ * Tau2["ijeb"] * temp["ijeb"];
+            val2["e"] -= 8.0 * s_ * Tau2["iJeB"] * temp["iJeB"];
+            temp.zero();
+            contract_tensor(temp, V, "hhvp", "Eeps2Delta2", true, 1.0);
+            contract_tensor(temp, V, "hHvP", "Eeps2Delta2", true, 1.0);
+            val2["e"] += 4.0 * s_ * temp["kled"] * Kappa["kled"];
+            val2["e"] += 8.0 * s_ * temp["kLeD"] * Kappa["kLeD"];
+        }
+        {
+            auto T2OverDelta = BTF_->build(CoreTensor, "T2/Delta", {"hhvp", "hHvP"});
             contract_tensor(T2OverDelta, V, "hhvp", "Eeps2_m2", true, 1.0);
             contract_tensor(T2OverDelta, V, "hHvP", "Eeps2_m2", true, 1.0);
             val2["e"] += 2.0 * T2OverDelta["ijeb"] * Tau2["ijeb"];
             val2["e"] += 4.0 * T2OverDelta["iJeB"] * Tau2["iJeB"];
         }
- 
-        contract_tensor(temp_1, Kappa, "hhvp", "Delta2", false, 1.0);
-        contract_tensor(temp_1, Kappa, "hHvP", "Delta2", false, 1.0);
-        val2["e"] += 4.0 * s_ * temp["kled"] * temp_1["kled"];
-        val2["e"] += 8.0 * s_ * temp["kLeD"] * temp_1["kLeD"];
-        temp.zero();
-        temp_1.zero();
     }
-
     BlockedTensor zef = BTF_->build(CoreTensor, "z{ef} normal", {"vv"});
     // virtual-virtual block entries within normal conditions
     if (CORRELATION_TERM) {
         zef["ef"] += 0.5 * sigma3_xi3["if"] * F["ie"];
         zef["ef"] -= 0.5 * sigma3_xi3["ie"] * F["if"];
-
         zef["ef"] +=       Tau1["ijfb"] * V["ebij"];
         zef["ef"] += 2.0 * Tau1["iJfB"] * V["eBiJ"];
-
-        contract_tensor(temp, Kappa, "hhvp", "Eeps2_p", false, 1.0);
-        contract_tensor(temp, Kappa, "hHvP", "Eeps2_p", false, 1.0);
-        zef["ef"] +=       temp["klfd"] * V["edkl"];
-        zef["ef"] += 2.0 * temp["kLfD"] * V["eDkL"];
-        temp.zero();
-
+        {
+            auto temp = BTF_->build(CoreTensor, "temporal tensor", {"hhvp", "hHvP"});
+            auto temp1 = BTF_->build(CoreTensor, "temporal tensor1", {"vv"});
+            contract_tensor(temp, Kappa, "hhvp", "Eeps2_p", false, 1.0);
+            contract_tensor(temp, Kappa, "hHvP", "Eeps2_p", false, 1.0);
+            temp1["ef"] +=       temp["klfd"] * V["edkl"];
+            temp1["ef"] += 2.0 * temp["kLfD"] * V["eDkL"];
+            zef["ef"] += temp1["ef"]; 
+            zef["fe"] -= temp1["ef"]; 
+        }
         zef["ef"] -=       Tau1["ijeb"] * V["fbij"];
         zef["ef"] -= 2.0 * Tau1["iJeB"] * V["fBiJ"];
-
-        contract_tensor(temp, Kappa, "hhvp", "Eeps2_p", false, 1.0);
-        contract_tensor(temp, Kappa, "hHvP", "Eeps2_p", false, 1.0);
-        zef["ef"] -=       temp["kled"] * V["fdkl"];
-        zef["ef"] -= 2.0 * temp["kLeD"] * V["fDkL"];
-        temp.zero();
     }
-
     for (const std::string& block : {"vv", "VV"}) {
         (Z.block(block)).iterate([&](const std::vector<size_t>& i, double& value) {
             if (i[0] == i[1]) {
@@ -541,8 +523,6 @@ void DSRG_MRPT2::set_z_vv() {
 
 void DSRG_MRPT2::set_z_aa_diag() {
     BlockedTensor val3 = BTF_->build(CoreTensor, "val3", {"a"});
-    BlockedTensor temp = BTF_->build(CoreTensor, "temporal tensor", spin_cases({"hhpp"}));
-    BlockedTensor temp_1 = BTF_->build(CoreTensor, "temporal tensor_1", spin_cases({"hhpp"}));
 
     // active-active diagonal entries
     if (CORRELATION_TERM) {
@@ -552,38 +532,41 @@ void DSRG_MRPT2::set_z_aa_diag() {
         val3["w"] +=  sigma1_xi1_xi2["iw"] * F["iw"];
         val3["w"] +=  DelGam1["xu"] * T2_["iuwx"] * sigma1_xi1_xi2["iw"];
         val3["w"] +=  DelGam1["XU"] * T2_["iUwX"] * sigma1_xi1_xi2["iw"];
- 
         val3["w"] += sigma2_xi3["ia"] * T2_["iuaw"] * Gamma1_["wu"];
         val3["w"] += sigma2_xi3["IA"] * T2_["uIwA"] * Gamma1_["wu"];
         val3["w"] -= sigma2_xi3["ia"] * T2_["iwax"] * Gamma1_["xw"];
         val3["w"] -= sigma2_xi3["IA"] * T2_["wIxA"] * Gamma1_["xw"];
-
-        contract_tensor(temp, V, "ahpp", "Eeps2", true, 1.0);
-        contract_tensor(temp, V, "aHpP", "Eeps2", true, 1.0);
-        val3["u"] += 4.0 * s_ * Tau2["ujab"] * temp["ujab"];
-        val3["u"] += 8.0 * s_ * Tau2["uJaB"] * temp["uJaB"];
-
         {
-            auto T2OverDelta = BTF_->build(CoreTensor, "T2/Delta", {"ahpp","aHpP"});
+            auto temp = BTF_->build(CoreTensor, "temporal tensor", {"ahpp", "aHpP"});
+            contract_tensor(temp, V, "ahpp", "Eeps2", true, 1.0);
+            contract_tensor(temp, V, "aHpP", "Eeps2", true, 1.0);
+            val3["u"] += 4.0 * s_ * Tau2["ujab"] * temp["ujab"];
+            val3["u"] += 8.0 * s_ * Tau2["uJaB"] * temp["uJaB"];
+            temp.zero();
+            contract_tensor(temp, V, "ahpp", "Eeps2Delta2", true, 1.0);
+            contract_tensor(temp, V, "aHpP", "Eeps2Delta2", true, 1.0);
+            val3["u"] -= 4.0 * s_ * temp["ulcd"] * Kappa["ulcd"];
+            val3["u"] -= 8.0 * s_ * temp["uLcD"] * Kappa["uLcD"];
+        }
+        {
+            auto T2OverDelta = BTF_->build(CoreTensor, "T2/Delta", {"ahpp", "aHpP"});
             contract_tensor(T2OverDelta, V, "ahpp", "Eeps2_m2", true, 1.0);
             contract_tensor(T2OverDelta, V, "aHpP", "Eeps2_m2", true, 1.0);
             val3["u"] -= 2.0 * T2OverDelta["ujab"] * Tau2["ujab"];
             val3["u"] -= 4.0 * T2OverDelta["uJaB"] * Tau2["uJaB"];
         }
-
-        contract_tensor(temp_1, Kappa, "ahpp", "Delta2", false, 1.0);
-        contract_tensor(temp_1, Kappa, "aHpP", "Delta2", false, 1.0);
-        val3["u"] -= 4.0 * s_ * temp["ulcd"] * temp_1["ulcd"];
-        val3["u"] -= 8.0 * s_ * temp["uLcD"] * temp_1["uLcD"];
-        temp.zero();
-        temp_1.zero();
-
-        contract_tensor(temp, V, "hhap", "Eeps2", true, 1.0);
-        contract_tensor(temp, V, "hHaP", "Eeps2", true, 1.0);
-        val3["u"] -= 4.0 * s_ * Tau2["ijub"] * temp["ijub"];
-        val3["u"] -= 8.0 * s_ * Tau2["iJuB"] * temp["iJuB"];
-        // temp.zero();
-
+        {
+            auto temp = BTF_->build(CoreTensor, "temporal tensor", {"hhap", "hHaP"});
+            contract_tensor(temp, V, "hhap", "Eeps2", true, 1.0);
+            contract_tensor(temp, V, "hHaP", "Eeps2", true, 1.0);
+            val3["u"] -= 4.0 * s_ * Tau2["ijub"] * temp["ijub"];
+            val3["u"] -= 8.0 * s_ * Tau2["iJuB"] * temp["iJuB"];
+            temp.zero();
+            contract_tensor(temp, V, "hhap", "Eeps2Delta2", true, 1.0);
+            contract_tensor(temp, V, "hHaP", "Eeps2Delta2", true, 1.0);
+            val3["u"] += 4.0 * s_ * temp["klud"] * Kappa["klud"];
+            val3["u"] += 8.0 * s_ * temp["kLuD"] * Kappa["kLuD"];
+        }
         {
             auto T2OverDelta = BTF_->build(CoreTensor, "T2/Delta", {"hhap","hHaP"});
             contract_tensor(T2OverDelta, V, "hhap", "Eeps2_m2", true, 1.0);
@@ -591,15 +574,7 @@ void DSRG_MRPT2::set_z_aa_diag() {
             val3["u"] += 2.0 * T2OverDelta["ijub"] * Tau2["ijub"];
             val3["u"] += 4.0 * T2OverDelta["iJuB"] * Tau2["iJuB"];
         }
-
-        contract_tensor(temp_1, Kappa, "hhap", "Delta2", false, 1.0);
-        contract_tensor(temp_1, Kappa, "hHaP", "Delta2", false, 1.0);
-        val3["u"] += 4.0 * s_ * temp["klud"] * temp_1["klud"];
-        val3["u"] += 8.0 * s_ * temp["kLuD"] * temp_1["kLuD"];
-        temp.zero();
-        temp_1.zero();
     }
-
     for (const std::string& block : {"aa", "AA"}) {
         (Z.block(block)).iterate([&](const std::vector<size_t>& i, double& value) {
             if (i[0] == i[1]) {
