@@ -52,7 +52,6 @@ void DSRG_MRPT2::set_z() {
 void DSRG_MRPT2::set_w() {
     outfile->Printf("\n    Solving Entries of the EWDM W.................... ");
     W = BTF_->build(CoreTensor, "Energy weighted density matrix(Lagrangian)", spin_cases({"gg"}));
-    BlockedTensor temp = BTF_->build(CoreTensor, "temporal tensor", spin_cases({"hhpp"}));
 
     // Form Gamma_tilde
     for (const auto& pair : as_solver_->state_energies_map()) {
@@ -86,19 +85,21 @@ void DSRG_MRPT2::set_w() {
             W["me"] +=       Tau1["ijeb"] * V["mbij"];
             W["me"] += 2.0 * Tau1["iJeB"] * V["mBiJ"];
         }
-        contract_tensor(temp, Kappa, "hhvp", "Eeps2_p", false, 1.0);
-        contract_tensor(temp, Kappa, "hHvP", "Eeps2_p", false, 1.0);
-        W["ce"] +=       temp["kled"] * V["cdkl"];
-        W["ce"] += 2.0 * temp["kLeD"] * V["cDkL"];
-        if (eri_df_) {
-            W["me"] +=       temp["kled"] * B["gmk"] * B["gdl"];
-            W["me"] -=       temp["kled"] * B["gml"] * B["gdk"];
-            W["me"] += 2.0 * temp["kLeD"] * B["gmk"] * B["gDL"];
-        } else {
-            W["me"] +=       temp["kled"] * V["mdkl"];
-            W["me"] += 2.0 * temp["kLeD"] * V["mDkL"];
+        {
+            auto temp = BTF_->build(CoreTensor, "temporal tensor", {"hhvp", "hHvP"});
+            contract_tensor(temp, Kappa, "hhvp", "Eeps2_p", false, 1.0);
+            contract_tensor(temp, Kappa, "hHvP", "Eeps2_p", false, 1.0);
+            W["ce"] +=       temp["kled"] * V["cdkl"];
+            W["ce"] += 2.0 * temp["kLeD"] * V["cDkL"];
+            if (eri_df_) {
+                W["me"] +=       temp["kled"] * B["gmk"] * B["gdl"];
+                W["me"] -=       temp["kled"] * B["gml"] * B["gdk"];
+                W["me"] += 2.0 * temp["kLeD"] * B["gmk"] * B["gDL"];
+            } else {
+                W["me"] +=       temp["kled"] * V["mdkl"];
+                W["me"] += 2.0 * temp["kLeD"] * V["mDkL"];
+            }
         }
-        temp.zero();
     }
     W["pe"] += Z["e,m1"] * F["m1,p"];
     W["pe"] += Z["eu"] * H["vp"] * Gamma1_["uv"];
@@ -130,11 +131,13 @@ void DSRG_MRPT2::set_w() {
         W["im"] +=       Tau1["mjab"] * V["abij"];
         W["im"] += 2.0 * Tau1["mJaB"] * V["aBiJ"];
 
-        contract_tensor(temp, Kappa, "chpp", "Eeps2_p", false, 1.0);
-        contract_tensor(temp, Kappa, "cHpP", "Eeps2_p", false, 1.0);
-        W["im"] +=       temp["mlcd"] * V["cdil"];
-        W["im"] += 2.0 * temp["mLcD"] * V["cDiL"];
-        temp.zero();
+        {
+            auto temp = BTF_->build(CoreTensor, "temporal tensor", {"chpp", "cHpP"});
+            contract_tensor(temp, Kappa, "chpp", "Eeps2_p", false, 1.0);
+            contract_tensor(temp, Kappa, "cHpP", "Eeps2_p", false, 1.0);
+            W["im"] +=       temp["mlcd"] * V["cdil"];
+            W["im"] += 2.0 * temp["mLcD"] * V["cDiL"];
+        }
     }
     W["im"] += Z["e1,m"] * F["i,e1"];
     if (eri_df_) {
@@ -222,24 +225,24 @@ void DSRG_MRPT2::set_w() {
         W["zw"] += 0.5 * sigma3_xi3["IA"] * V["zAvI"] * Gamma1_["wv"];
         W["zw"] += 0.5 * sigma3_xi3["ia"] * V["auiz"] * Gamma1_["uw"];
         W["zw"] += 0.5 * sigma3_xi3["IA"] * V["uAzI"] * Gamma1_["uw"];
-
         W["zw"] += Tau1["ijwb"] * V["zbij"];
         W["zw"] += 2.0 * Tau1["iJwB"] * V["zBiJ"];
-
-        contract_tensor(temp, Kappa, "hhap", "Eeps2_p", false, 1.0);
-        contract_tensor(temp, Kappa, "hHaP", "Eeps2_p", false, 1.0);
-        W["zw"] += temp["klwd"] * V["zdkl"];
-        W["zw"] += 2.0 * temp["kLwD"] * V["zDkL"];
-        temp.zero();
-
+        {
+            auto temp = BTF_->build(CoreTensor, "temporal tensor", {"hhap", "hHaP"});
+            contract_tensor(temp, Kappa, "hhap", "Eeps2_p", false, 1.0);
+            contract_tensor(temp, Kappa, "hHaP", "Eeps2_p", false, 1.0);
+            W["zw"] += temp["klwd"] * V["zdkl"];
+            W["zw"] += 2.0 * temp["kLwD"] * V["zDkL"];
+        }
         W["zw"] += Tau1["wjab"] * V["abzj"];
         W["zw"] += 2.0 * Tau1["wJaB"] * V["aBzJ"];
-
-        contract_tensor(temp, Kappa, "ahpp", "Eeps2_p", false, 1.0);
-        contract_tensor(temp, Kappa, "aHpP", "Eeps2_p", false, 1.0);
-        W["zw"] += temp["wlcd"] * V["cdzl"];
-        W["zw"] += 2.0 * temp["wLcD"] * V["cDzL"];
-        temp.zero();
+        {
+            auto temp = BTF_->build(CoreTensor, "temporal tensor", {"ahpp", "aHpP"});
+            contract_tensor(temp, Kappa, "ahpp", "Eeps2_p", false, 1.0);
+            contract_tensor(temp, Kappa, "aHpP", "Eeps2_p", false, 1.0);
+            W["zw"] += temp["wlcd"] * V["cdzl"];
+            W["zw"] += 2.0 * temp["wLcD"] * V["cDzL"];
+        }
     }
     W["zw"] += Z["e1,m1"] * V["e1,u,m1,z"] * Gamma1_["uw"];
     W["zw"] += Z["E1,M1"] * V["u,E1,z,M1"] * Gamma1_["uw"];
@@ -288,10 +291,8 @@ void DSRG_MRPT2::set_w() {
     W["zw"] += 0.25 * V["zvxy"] * Gamma2_tilde["wvxy"];
     W["zw"] += 0.50 * V["zVxY"] * Gamma2_tilde["wVxY"];
 
-
     // CASSCF reference
     BlockedTensor temp1 = BTF_->build(CoreTensor, "temporal tensor 1", spin_cases({"gg"}));
-
     W["mp"] += F["mp"];
     temp1["vp"] = H["vp"];
     temp1["vp"] += V_sumA_Alpha["vp"];
