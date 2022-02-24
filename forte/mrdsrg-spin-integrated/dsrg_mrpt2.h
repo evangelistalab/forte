@@ -409,8 +409,6 @@ class DSRG_MRPT2 : public MASTER_DSRG {
     ambit::BlockedTensor Eeps1_m1;
     /// {1-e^[-s*(Delta1)^2]}/(Delta1)^2
     ambit::BlockedTensor Eeps1_m2;
-    /// e^[-s*(Delta2)^2]
-    ambit::BlockedTensor Eeps2;
     /// Delta1_a^i = \varepsilon_i - \varepsilon_a
     ambit::BlockedTensor Delta1;
     /// Delta2_{ab}^{ij} = \varepsilon_i + \varepsilon_j - \varepsilon_a - \varepsilon_b
