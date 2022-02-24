@@ -421,8 +421,6 @@ class DSRG_MRPT2 : public MASTER_DSRG {
     ambit::Tensor I_ci;
     /// a vector with all entries equal 1
     ambit::BlockedTensor one_vec;
-    /// T2/Delta
-    ambit::BlockedTensor T2OverDelta;
 
     // Lagrange multiplier
     std::vector<double> b;

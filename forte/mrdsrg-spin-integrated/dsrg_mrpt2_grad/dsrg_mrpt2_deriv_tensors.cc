@@ -143,7 +143,6 @@ void DSRG_MRPT2::set_dsrg_tensor() {
     Delta1 = BTF_->build(CoreTensor, "Delta1", spin_cases({"gg"}));
     DelGam1 = BTF_->build(CoreTensor, "Delta1 * Gamma1_", spin_cases({"aa"}));
     DelEeps1 = BTF_->build(CoreTensor, "Delta1 * Eeps1", spin_cases({"hp"}));
-    T2OverDelta = BTF_->build(CoreTensor, "T2/Delta", {"hhpp","hHpP"});
 
     Eeps1.iterate(
         [&](const std::vector<size_t>& i, const std::vector<SpinType>& spin, double& value) {
@@ -182,25 +181,6 @@ void DSRG_MRPT2::set_dsrg_tensor() {
                 value = dsrg_source_->compute_regularized_denominator_derivR(Fb_[i[0]] - Fb_[i[1]]);
             }
         });
-
-    {
-        auto Eeps2_m2 = BTF_->build(CoreTensor, "{1-e^[-s*(Delta2)^2]}/(Delta2)^2", {"hhpp", "hHpP"});
-        Eeps2_m2.iterate(
-            [&](const std::vector<size_t>& i, const std::vector<SpinType>& spin, double& value) {
-                if (spin[0] == AlphaSpin) {
-                    if(spin[1] == AlphaSpin) {
-                        value = dsrg_source_->compute_regularized_denominator_derivR(Fa_[i[0]] + Fa_[i[1]] -
-                                                                                     Fa_[i[2]] - Fa_[i[3]]);
-                    } else {
-                        value = dsrg_source_->compute_regularized_denominator_derivR(Fa_[i[0]] + Fb_[i[1]] -
-                                                                                     Fa_[i[2]] - Fb_[i[3]]);
-                    }
-                }
-            });
-        // An intermediate tensor : T2 / Delta
-        T2OverDelta["ijab"] += V["abij"] * Eeps2_m2["ijab"];
-        T2OverDelta["iJaB"] += V["aBiJ"] * Eeps2_m2["iJaB"];
-    }
 
     // Delta1 * Gamma1_
     DelGam1["xu"] = Delta1["xu"] * Gamma1_["xu"];
