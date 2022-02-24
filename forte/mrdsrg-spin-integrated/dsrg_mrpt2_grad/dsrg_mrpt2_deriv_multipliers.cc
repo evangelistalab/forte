@@ -297,7 +297,6 @@ void DSRG_MRPT2::set_sigma_xi() {
 
 void DSRG_MRPT2::set_kappa() {
     outfile->Printf("\n    Initializing multipliers for renormalize ERIs ... ");
-    Kappa_tilde = BTF_->build(CoreTensor, "Kappa * {1+e^[-s*(Delta2)^2]}", {"hhpp", "hHpP"});
     Kappa  = BTF_->build(CoreTensor, "Kappa", {"hhpp", "hHpP"});
     {
         auto temp   = BTF_->build(CoreTensor, "temporal tensor", {"hhpp", "hHpP"});
@@ -417,23 +416,6 @@ void DSRG_MRPT2::set_kappa() {
         Kappa["ijba"] -= temp["ijab"];
         Kappa["jiab"] -= temp["ijab"];
         Kappa["jiba"] += temp["ijab"];
-    }
-    {
-        auto Eeps2_p = BTF_->build(CoreTensor, "1+e^[-s*(Delta2)^2]", {"hhpp", "hHpP"});
-        Eeps2_p.iterate(
-        [&](const std::vector<size_t>& i, const std::vector<SpinType>& spin, double& value) {
-            if (spin[0] == AlphaSpin) {
-                if (spin[1] == AlphaSpin) {
-                    value = 1.0 + dsrg_source_->compute_renormalized(Fa_[i[0]] + Fa_[i[1]] - Fa_[i[2]] -
-                                                                     Fa_[i[3]]);
-                } else {
-                    value = 1.0 + dsrg_source_->compute_renormalized(Fa_[i[0]] + Fb_[i[1]] - Fa_[i[2]] -
-                                                                     Fb_[i[3]]);
-                }
-            }
-        });
-        Kappa_tilde["ijab"] += Kappa["ijab"] * Eeps2_p["ijab"];
-        Kappa_tilde["iJaB"] += Kappa["iJaB"] * Eeps2_p["iJaB"];
     }
     outfile->Printf("Done");
 }

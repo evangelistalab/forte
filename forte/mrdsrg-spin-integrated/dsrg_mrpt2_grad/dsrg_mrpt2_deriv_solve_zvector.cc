@@ -86,8 +86,8 @@ void DSRG_MRPT2::set_w() {
             W["me"] +=       Tau1["ijeb"] * V["mbij"];
             W["me"] += 2.0 * Tau1["iJeB"] * V["mBiJ"];
         }
-        temp["kled"] += Kappa_tilde["kled"];
-        temp["kLeD"] += Kappa_tilde["kLeD"];
+        contract_tensor(temp, Kappa, "hhvp", "Eeps2_p", false, 1.0);
+        contract_tensor(temp, Kappa, "hHvP", "Eeps2_p", false, 1.0);
         W["ce"] +=       temp["kled"] * V["cdkl"];
         W["ce"] += 2.0 * temp["kLeD"] * V["cDkL"];
         if (eri_df_) {
@@ -130,8 +130,8 @@ void DSRG_MRPT2::set_w() {
         W["im"] +=       Tau1["mjab"] * V["abij"];
         W["im"] += 2.0 * Tau1["mJaB"] * V["aBiJ"];
 
-        temp["mlcd"] += Kappa_tilde["mlcd"];
-        temp["mLcD"] += Kappa_tilde["mLcD"];
+        contract_tensor(temp, Kappa, "chpp", "Eeps2_p", false, 1.0);
+        contract_tensor(temp, Kappa, "cHpP", "Eeps2_p", false, 1.0);
         W["im"] +=       temp["mlcd"] * V["cdil"];
         W["im"] += 2.0 * temp["mLcD"] * V["cDiL"];
         temp.zero();
@@ -226,8 +226,8 @@ void DSRG_MRPT2::set_w() {
         W["zw"] += Tau1["ijwb"] * V["zbij"];
         W["zw"] += 2.0 * Tau1["iJwB"] * V["zBiJ"];
 
-        temp["klwd"] += Kappa_tilde["klwd"];
-        temp["kLwD"] += Kappa_tilde["kLwD"];
+        contract_tensor(temp, Kappa, "hhap", "Eeps2_p", false, 1.0);
+        contract_tensor(temp, Kappa, "hHaP", "Eeps2_p", false, 1.0);
         W["zw"] += temp["klwd"] * V["zdkl"];
         W["zw"] += 2.0 * temp["kLwD"] * V["zDkL"];
         temp.zero();
@@ -235,8 +235,8 @@ void DSRG_MRPT2::set_w() {
         W["zw"] += Tau1["wjab"] * V["abzj"];
         W["zw"] += 2.0 * Tau1["wJaB"] * V["aBzJ"];
 
-        temp["wlcd"] += Kappa_tilde["wlcd"];
-        temp["wLcD"] += Kappa_tilde["wLcD"];
+        contract_tensor(temp, Kappa, "ahpp", "Eeps2_p", false, 1.0);
+        contract_tensor(temp, Kappa, "aHpP", "Eeps2_p", false, 1.0);
         W["zw"] += temp["wlcd"] * V["cdzl"];
         W["zw"] += 2.0 * temp["wLcD"] * V["cDzL"];
         temp.zero();
@@ -333,34 +333,60 @@ void DSRG_MRPT2::set_w() {
     outfile->Printf("Done");
 }
 
-void DSRG_MRPT2::contract_tensor(BlockedTensor& temp, std::string s, std::string option) {
+void DSRG_MRPT2::contract_tensor(BlockedTensor& temp, BlockedTensor& tensor, std::string s, std::string option, bool invert_label = true, double scale = 1.0) {
 
     std::map<char, std::vector<string>> orb_label;
     orb_label = {{'c', {"c"}},
+                 {'C', {"C"}},
                  {'a', {"a"}},
+                 {'A', {"A"}},
                  {'v', {"v"}},
+                 {'V', {"V"}},
                  {'p', {"a", "v"}},
-                 {'h', {"c", "a"}}};
-    std::map<string, int> orb_size = {{"c", ncore}, {"a", na}, {"v", nvirt}};
+                 {'P', {"A", "V"}},
+                 {'h', {"c", "a"}},
+                 {'H', {"C", "A"}}};
+    std::map<string, int> orb_size = {{"c", ncore}, {"a", na}, {"v", nvirt}, {"C", ncore}, {"A", na}, {"V", nvirt}};
 
     for (const std::string& h1 : orb_label[s[0]]) {
         for (const std::string& h2 : orb_label[s[1]]) {
             for (const std::string& p1 : orb_label[s[2]]) {
                 for (const std::string& p2 : orb_label[s[3]]) {
                     auto block     = h1 + h2 + p1 + p2;
-                    auto block_inv = p1 + p2 + h1 + h2;
-                    auto data1 = V.block(block_inv).data();
+                    std::string block_val1;
+                    if (invert_label) {
+                        block_val1 = p1 + p2 + h1 + h2;
+                    } else {
+                        block_val1 = block;
+                    }
+                    auto data1 = tensor.block(block_val1).data();
 
                     (temp.block(block)).iterate([&](const std::vector<size_t>& i, double& value) {
-                        auto idx_val1  = i[2] * orb_size[p2] * orb_size[h1] * orb_size[h2] + i[3] * orb_size[h1] * orb_size[h2] + i[0] * orb_size[h2] + i[1];
+                        int idx_val1;
+                        if (invert_label) {     
+                            idx_val1  = i[2] * orb_size[p2] * orb_size[h1] * orb_size[h2] + i[3] * orb_size[h1] * orb_size[h2] + i[0] * orb_size[h2] + i[1];
+                        } else {
+                            idx_val1  = i[0] * orb_size[h2] * orb_size[p1] * orb_size[p2] + i[1] * orb_size[p1] * orb_size[p2] + i[2] * orb_size[p2] + i[3];
+                        }
                         auto val1 = data1[idx_val1];
-                        auto val2 = 0.0;
+                        auto val2 = 1.0;
                         if (option == "Eeps2") {  
                             auto mpdenom = fdiag.block(h1).data()[i[0]] + fdiag.block(h2).data()[i[1]] - fdiag.block(p1).data()[i[2]] - fdiag.block(p2).data()[i[3]];
-                            val2 = dsrg_source_->compute_renormalized(mpdenom);
+                            val2 *= dsrg_source_->compute_renormalized(mpdenom);
+                        } else if (option == "Eeps2Delta2") {
+                            auto mpdenom = fdiag.block(h1).data()[i[0]] + fdiag.block(h2).data()[i[1]] - fdiag.block(p1).data()[i[2]] - fdiag.block(p2).data()[i[3]];
+                            val2 *= dsrg_source_->compute_renormalized(mpdenom);
+                            val2 *= mpdenom;
+                        } else if (option == "Delta2") {
+                            auto mpdenom = fdiag.block(h1).data()[i[0]] + fdiag.block(h2).data()[i[1]] - fdiag.block(p1).data()[i[2]] - fdiag.block(p2).data()[i[3]];
+                            val2 *= mpdenom;
+                        } else if (option == "Eeps2_p") {
+                            auto mpdenom = fdiag.block(h1).data()[i[0]] + fdiag.block(h2).data()[i[1]] - fdiag.block(p1).data()[i[2]] - fdiag.block(p2).data()[i[3]];
+                            val2 *= (1.0 + dsrg_source_->compute_renormalized(mpdenom));
                         }
-                        value += val1 * val2;
+                        value += scale * val1 * val2;
                     });
+
                 }
             }
         }
@@ -378,10 +404,8 @@ void DSRG_MRPT2::set_z_cc() {
         val1["m"] -= DelGam1["xu"] * T2_["muax"] * sigma1_xi1_xi2["ma"];
         val1["m"] -= DelGam1["XU"] * T2_["mUaX"] * sigma1_xi1_xi2["ma"];
 
-        // V["abmj"] * Eeps2["mjab"]
-        contract_tensor(temp, "chpp", "Eeps2");
-
-        temp["mJaB"] += V["aBmJ"] * Eeps2["mJaB"];
+        contract_tensor(temp, V, "chpp", "Eeps2");
+        contract_tensor(temp, V, "cHpP", "Eeps2");
         val1["m"] += 4.0 * s_ * Tau2["mjab"] * temp["mjab"];
         val1["m"] += 8.0 * s_ * Tau2["mJaB"] * temp["mJaB"];
         temp.zero();
@@ -389,8 +413,8 @@ void DSRG_MRPT2::set_z_cc() {
         val1["m"] -= 2.0 * T2OverDelta["mjab"] * Tau2["mjab"];
         val1["m"] -= 4.0 * T2OverDelta["mJaB"] * Tau2["mJaB"];
 
-        temp["mlcd"] += V["cdml"] * Eeps2["mlcd"] * Delta2["mlcd"];
-        temp["mLcD"] += V["cDmL"] * Eeps2["mLcD"] * Delta2["mLcD"];
+        contract_tensor(temp, V, "chpp", "Eeps2Delta2");
+        contract_tensor(temp, V, "cHpP", "Eeps2Delta2");
         temp_1["mlcd"] += Kappa["mlcd"];
         temp_1["mLcD"] += Kappa["mLcD"];
         val1["m"] -= 4.0 * s_ * temp["mlcd"] * temp_1["mlcd"];
@@ -407,8 +431,8 @@ void DSRG_MRPT2::set_z_cc() {
         zmn["mn"] +=       Tau1["njab"] * V["abmj"];
         zmn["mn"] += 2.0 * Tau1["nJaB"] * V["aBmJ"];
 
-        temp["nlcd"] += Kappa_tilde["nlcd"];
-        temp["nLcD"] += Kappa_tilde["nLcD"];
+        contract_tensor(temp, Kappa, "chpp", "Eeps2_p", false, 1.0);
+        contract_tensor(temp, Kappa, "cHpP", "Eeps2_p", false, 1.0);
         zmn["mn"] +=       temp["nlcd"] * V["cdml"];
         zmn["mn"] += 2.0 * temp["nLcD"] * V["cDmL"];
         temp.zero();
@@ -416,8 +440,8 @@ void DSRG_MRPT2::set_z_cc() {
         zmn["mn"] -=       Tau1["mjab"] * V["abnj"];
         zmn["mn"] -= 2.0 * Tau1["mJaB"] * V["aBnJ"];
 
-        temp["mlcd"] += Kappa_tilde["mlcd"];
-        temp["mLcD"] += Kappa_tilde["mLcD"];
+        contract_tensor(temp, Kappa, "chpp", "Eeps2_p", false, 1.0);
+        contract_tensor(temp, Kappa, "cHpP", "Eeps2_p", false, 1.0);
         zmn["mn"] -=       temp["mlcd"] * V["cdnl"];
         zmn["mn"] -= 2.0 * temp["mLcD"] * V["cDnL"];
         temp.zero();
@@ -448,21 +472,16 @@ void DSRG_MRPT2::set_z_vv() {
         val2["e"] += DelGam1["xu"] * T2_["iuex"] * sigma1_xi1_xi2["ie"];
         val2["e"] += DelGam1["XU"] * T2_["iUeX"] * sigma1_xi1_xi2["ie"];
 
-        // V["ebij"] * Eeps2["ijeb"]
-        contract_tensor(temp, "hhvp", "Eeps2");
-
-        temp["iJeB"] += V["eBiJ"] * Eeps2["iJeB"];
+        contract_tensor(temp, V, "hhvp", "Eeps2");
+        contract_tensor(temp, V, "hHvP", "Eeps2");
         val2["e"] -= 4.0 * s_ * Tau2["ijeb"] * temp["ijeb"];
         val2["e"] -= 8.0 * s_ * Tau2["iJeB"] * temp["iJeB"];
-        temp.zero();
 
         val2["e"] += 2.0 * T2OverDelta["ijeb"] * Tau2["ijeb"];
         val2["e"] += 4.0 * T2OverDelta["iJeB"] * Tau2["iJeB"];
-
-        contract_tensor(temp, "hhvp", "Eeps2");
-        temp["kLeD"] += V["eDkL"] * Eeps2["kLeD"];
-        temp_1["kled"] += Kappa["kled"] * Delta2["kled"];
-        temp_1["kLeD"] += Kappa["kLeD"] * Delta2["kLeD"];
+ 
+        contract_tensor(temp_1, Kappa, "hhvp", "Delta2", false, 1.0);
+        contract_tensor(temp_1, Kappa, "hHvP", "Delta2", false, 1.0);
         val2["e"] += 4.0 * s_ * temp["kled"] * temp_1["kled"];
         val2["e"] += 8.0 * s_ * temp["kLeD"] * temp_1["kLeD"];
         temp.zero();
@@ -478,8 +497,8 @@ void DSRG_MRPT2::set_z_vv() {
         zef["ef"] +=       Tau1["ijfb"] * V["ebij"];
         zef["ef"] += 2.0 * Tau1["iJfB"] * V["eBiJ"];
 
-        temp["klfd"] += Kappa_tilde["klfd"];
-        temp["kLfD"] += Kappa_tilde["kLfD"];
+        contract_tensor(temp, Kappa, "hhvp", "Eeps2_p", false, 1.0);
+        contract_tensor(temp, Kappa, "hHvP", "Eeps2_p", false, 1.0);
         zef["ef"] +=       temp["klfd"] * V["edkl"];
         zef["ef"] += 2.0 * temp["kLfD"] * V["eDkL"];
         temp.zero();
@@ -487,8 +506,8 @@ void DSRG_MRPT2::set_z_vv() {
         zef["ef"] -=       Tau1["ijeb"] * V["fbij"];
         zef["ef"] -= 2.0 * Tau1["iJeB"] * V["fBiJ"];
 
-        temp["kled"] += Kappa_tilde["kled"];
-        temp["kLeD"] += Kappa_tilde["kLeD"];
+        contract_tensor(temp, Kappa, "hhvp", "Eeps2_p", false, 1.0);
+        contract_tensor(temp, Kappa, "hHvP", "Eeps2_p", false, 1.0);
         zef["ef"] -=       temp["kled"] * V["fdkl"];
         zef["ef"] -= 2.0 * temp["kLeD"] * V["fDkL"];
         temp.zero();
@@ -521,43 +540,38 @@ void DSRG_MRPT2::set_z_aa_diag() {
         val3["w"] +=  sigma1_xi1_xi2["iw"] * F["iw"];
         val3["w"] +=  DelGam1["xu"] * T2_["iuwx"] * sigma1_xi1_xi2["iw"];
         val3["w"] +=  DelGam1["XU"] * T2_["iUwX"] * sigma1_xi1_xi2["iw"];
-
+ 
         val3["w"] += sigma2_xi3["ia"] * T2_["iuaw"] * Gamma1_["wu"];
         val3["w"] += sigma2_xi3["IA"] * T2_["uIwA"] * Gamma1_["wu"];
         val3["w"] -= sigma2_xi3["ia"] * T2_["iwax"] * Gamma1_["xw"];
         val3["w"] -= sigma2_xi3["IA"] * T2_["wIxA"] * Gamma1_["xw"];
 
-        temp["ujab"] += V["abuj"] * Eeps2["ujab"];
-        temp["uJaB"] += V["aBuJ"] * Eeps2["uJaB"];
+        contract_tensor(temp, V, "ahpp", "Eeps2");
+        contract_tensor(temp, V, "aHpP", "Eeps2");
         val3["u"] += 4.0 * s_ * Tau2["ujab"] * temp["ujab"];
         val3["u"] += 8.0 * s_ * Tau2["uJaB"] * temp["uJaB"];
-        temp.zero();
 
         val3["u"] -= 2.0 * T2OverDelta["ujab"] * Tau2["ujab"];
         val3["u"] -= 4.0 * T2OverDelta["uJaB"] * Tau2["uJaB"];
 
-        temp["ulcd"] += V["cdul"] * Eeps2["ulcd"];
-        temp["uLcD"] += V["cDuL"] * Eeps2["uLcD"];
-        temp_1["ulcd"] += Kappa["ulcd"] * Delta2["ulcd"];
-        temp_1["uLcD"] += Kappa["uLcD"] * Delta2["uLcD"];
+        contract_tensor(temp_1, Kappa, "ahpp", "Delta2", false, 1.0);
+        contract_tensor(temp_1, Kappa, "aHpP", "Delta2", false, 1.0);
         val3["u"] -= 4.0 * s_ * temp["ulcd"] * temp_1["ulcd"];
         val3["u"] -= 8.0 * s_ * temp["uLcD"] * temp_1["uLcD"];
         temp.zero();
         temp_1.zero();
 
-        temp["ijub"] += V["ubij"] * Eeps2["ijub"];
-        temp["iJuB"] += V["uBiJ"] * Eeps2["iJuB"];
+        contract_tensor(temp, V, "hhap", "Eeps2");
+        contract_tensor(temp, V, "hHaP", "Eeps2");
         val3["u"] -= 4.0 * s_ * Tau2["ijub"] * temp["ijub"];
         val3["u"] -= 8.0 * s_ * Tau2["iJuB"] * temp["iJuB"];
-        temp.zero();
+        // temp.zero();
 
         val3["u"] += 2.0 * T2OverDelta["ijub"] * Tau2["ijub"];
         val3["u"] += 4.0 * T2OverDelta["iJuB"] * Tau2["iJuB"];
 
-        temp["klud"] += V["udkl"] * Eeps2["klud"];
-        temp["kLuD"] += V["uDkL"] * Eeps2["kLuD"];
-        temp_1["klud"] += Kappa["klud"] * Delta2["klud"];
-        temp_1["kLuD"] += Kappa["kLuD"] * Delta2["kLuD"];
+        contract_tensor(temp_1, Kappa, "hhap", "Delta2", false, 1.0);
+        contract_tensor(temp_1, Kappa, "hHaP", "Delta2", false, 1.0);
         val3["u"] += 4.0 * s_ * temp["klud"] * temp_1["klud"];
         val3["u"] += 8.0 * s_ * temp["kLuD"] * temp_1["kLuD"];
         temp.zero();

@@ -52,8 +52,8 @@ void DSRG_MRPT2::set_b(int dim, std::map<string, int> preidx, std::map<string, i
             Z_b["em"] -= 2.0 * Tau1["iJeB"] * V["mBiJ"];     
         }
         
-        temp["mlcd"] += Kappa_tilde["mlcd"];
-        temp["mLcD"] += Kappa_tilde["mLcD"];
+        contract_tensor(temp, Kappa, "chpp", "Eeps2_p", false, 1.0);
+        contract_tensor(temp, Kappa, "cHpP", "Eeps2_p", false, 1.0);
         if (eri_df_) {
             Z_b["em"] += temp["mlcd"] * B["gce"] * B["gdl"];
             Z_b["em"] -= temp["mlcd"] * B["gcl"] * B["gde"];
@@ -63,8 +63,8 @@ void DSRG_MRPT2::set_b(int dim, std::map<string, int> preidx, std::map<string, i
             Z_b["em"] += 2.0 * temp["mLcD"] * V["cDeL"];
         }
         temp.zero();
-        temp["kled"] += Kappa_tilde["kled"];
-        temp["kLeD"] += Kappa_tilde["kLeD"];
+        contract_tensor(temp, Kappa, "hhvp", "Eeps2_p", false, 1.0);
+        contract_tensor(temp, Kappa, "hHvP", "Eeps2_p", false, 1.0);
         if (eri_df_) {
             Z_b["em"] -= temp["kled"] * B["gmk"] * B["gdl"];
             Z_b["em"] += temp["kled"] * B["gml"] * B["gdk"];
@@ -105,14 +105,14 @@ void DSRG_MRPT2::set_b(int dim, std::map<string, int> preidx, std::map<string, i
             temp_z["wz"] +=       Tau1["zjab"] * V["abwj"];
             temp_z["wz"] += 2.0 * Tau1["zJaB"] * V["aBwJ"];
 
-            temp["klzd"] += Kappa_tilde["klzd"];
-            temp["kLzD"] += Kappa_tilde["kLzD"];
+            contract_tensor(temp, Kappa, "hhap", "Eeps2_p", false, 1.0);
+            contract_tensor(temp, Kappa, "hHaP", "Eeps2_p", false, 1.0);
             temp_z["wz"] += temp["klzd"] * V["wdkl"];
             temp_z["wz"] += 2.0 * temp["kLzD"] * V["wDkL"];
             temp.zero();
 
-            temp["zlcd"] += Kappa_tilde["zlcd"];
-            temp["zLcD"] += Kappa_tilde["zLcD"];
+            contract_tensor(temp, Kappa, "ahpp", "Eeps2_p", false, 1.0);
+            contract_tensor(temp, Kappa, "aHpP", "Eeps2_p", false, 1.0);
             temp_z["wz"] += temp["zlcd"] * V["cdwl"];
             temp_z["wz"] += 2.0 * temp["zLcD"] * V["cDwL"];
             temp.zero();
@@ -162,14 +162,14 @@ void DSRG_MRPT2::set_b(int dim, std::map<string, int> preidx, std::map<string, i
         Z_b["ew"] -=       Tau1["ijeb"] * V["wbij"];
         Z_b["ew"] -= 2.0 * Tau1["iJeB"] * V["wBiJ"];
 
-        temp["klwd"] += Kappa_tilde["klwd"];
-        temp["kLwD"] += Kappa_tilde["kLwD"];
+        contract_tensor(temp, Kappa, "hhap", "Eeps2_p", false, 1.0);
+        contract_tensor(temp, Kappa, "hHaP", "Eeps2_p", false, 1.0);
         Z_b["ew"] += temp["klwd"] * V["edkl"];
         Z_b["ew"] += 2.0 * temp["kLwD"] * V["eDkL"];
         temp.zero();
 
-        temp["wlcd"] += Kappa_tilde["wlcd"];
-        temp["wLcD"] += Kappa_tilde["wLcD"];
+        contract_tensor(temp, Kappa, "ahpp", "Eeps2_p", false, 1.0);
+        contract_tensor(temp, Kappa, "aHpP", "Eeps2_p", false, 1.0);
         if (eri_df_) {
             Z_b["ew"] += temp["wlcd"] * B["gce"] * B["gdl"];
             Z_b["ew"] -= temp["wlcd"] * B["gcl"] * B["gde"];
@@ -180,8 +180,8 @@ void DSRG_MRPT2::set_b(int dim, std::map<string, int> preidx, std::map<string, i
         }
         temp.zero();
 
-        temp["kled"] += Kappa_tilde["kled"];
-        temp["kLeD"] += Kappa_tilde["kLeD"];
+        contract_tensor(temp, Kappa, "hhvp", "Eeps2_p", false, 1.0);
+        contract_tensor(temp, Kappa, "hHvP", "Eeps2_p", false, 1.0);
         Z_b["ew"] -= temp["kled"] * V["wdkl"];
         Z_b["ew"] -= 2.0 * temp["kLeD"] * V["wDkL"];
         temp.zero();
@@ -236,8 +236,8 @@ void DSRG_MRPT2::set_b(int dim, std::map<string, int> preidx, std::map<string, i
             Z_b["mw"] += 2.0 * Tau1["iJwB"] * V["mBiJ"];
         }
 
-        temp["klwd"] += Kappa_tilde["klwd"];
-        temp["kLwD"] += Kappa_tilde["kLwD"];
+        contract_tensor(temp, Kappa, "hhap", "Eeps2_p", false, 1.0);
+        contract_tensor(temp, Kappa, "hHaP", "Eeps2_p", false, 1.0);
         if (eri_df_) {
             Z_b["mw"] +=       temp["klwd"] * B["gmk"] * B["gdl"];
             Z_b["mw"] -=       temp["klwd"] * B["gml"] * B["gdk"];
@@ -251,8 +251,8 @@ void DSRG_MRPT2::set_b(int dim, std::map<string, int> preidx, std::map<string, i
         Z_b["mw"] +=       Tau1["wjab"] * V["abmj"];
         Z_b["mw"] += 2.0 * Tau1["wJaB"] * V["aBmJ"];
 
-        temp["wlcd"] += Kappa_tilde["wlcd"];
-        temp["wLcD"] += Kappa_tilde["wLcD"];
+        contract_tensor(temp, Kappa, "ahpp", "Eeps2_p", false, 1.0);
+        contract_tensor(temp, Kappa, "aHpP", "Eeps2_p", false, 1.0);
         Z_b["mw"] +=       temp["wlcd"] * V["cdml"];
         Z_b["mw"] += 2.0 * temp["wLcD"] * V["cDmL"];
         temp.zero();
@@ -260,8 +260,8 @@ void DSRG_MRPT2::set_b(int dim, std::map<string, int> preidx, std::map<string, i
         Z_b["mw"] -=       Tau1["mjab"] * V["abwj"];
         Z_b["mw"] -= 2.0 * Tau1["mJaB"] * V["aBwJ"];
 
-        temp["mlcd"] += Kappa_tilde["mlcd"];
-        temp["mLcD"] += Kappa_tilde["mLcD"];
+        contract_tensor(temp, Kappa, "chpp", "Eeps2_p", false, 1.0);
+        contract_tensor(temp, Kappa, "cHpP", "Eeps2_p", false, 1.0);
         Z_b["mw"] -=       temp["mlcd"] * V["cdwl"];
         Z_b["mw"] -= 2.0 * temp["mLcD"] * V["cDwL"];
         temp.zero();

@@ -136,7 +136,7 @@ void DSRG_MRPT2::set_active_fock() {
 }
 
 void DSRG_MRPT2::set_dsrg_tensor() {
-    fdiag = BTF_->build(CoreTensor, "fock_diag", {"g"});
+    fdiag = BTF_->build(CoreTensor, "fock_diag", {"g","G"});
     Eeps1 = BTF_->build(CoreTensor, "e^[-s*(Delta1)^2]", spin_cases({"hp"}));
     Eeps1_m1 = BTF_->build(CoreTensor, "{1-e^[-s*(Delta1)^2]}/(Delta1)", spin_cases({"hp"}));
     Eeps1_m2 = BTF_->build(CoreTensor, "{1-e^[-s*(Delta1)^2]}/(Delta1)^2", spin_cases({"hp"}));
@@ -157,6 +157,7 @@ void DSRG_MRPT2::set_dsrg_tensor() {
         });
     fdiag.iterate(
         [&](const std::vector<size_t>& i, const std::vector<SpinType>& spin, double& value) {
+            // we assume restricted orbitals
             value = Fa_[i[0]];
         });
     Delta1.iterate(
