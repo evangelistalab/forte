@@ -452,7 +452,7 @@ void DSRG_MRPT2::set_z_cc() {
             contract_tensor(tau_tilde, Tau2, "cHpP", "Eeps2_m1", false, 1.0);
             temp1["mn"] +=       tau_tilde["njab"] * V["abmj"];
             temp1["mn"] += 2.0 * tau_tilde["nJaB"] * V["aBmJ"];
-            zmn["mn"] -= temp1["mn"];
+            zmn["mn"] += temp1["mn"];
             zmn["nm"] -= temp1["mn"];
         }
         {
