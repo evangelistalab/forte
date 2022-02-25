@@ -60,6 +60,17 @@ void DSRG_MRPT2::set_global_variables() {
     nirrep = mo_space_info_->nirrep();
     ndets = ci_vectors_[0].dims()[0];
     Alpha = 0.0;
+    orb_label = {{'c', {"c"}},
+                 {'C', {"C"}},
+                 {'a', {"a"}},
+                 {'A', {"A"}},
+                 {'v', {"v"}},
+                 {'V', {"V"}},
+                 {'p', {"a", "v"}},
+                 {'P', {"A", "V"}},
+                 {'h', {"c", "a"}},
+                 {'H', {"C", "A"}}};
+    orb_size = {{"c", ncore}, {"a", na}, {"v", nvirt}, {"C", ncore}, {"A", na}, {"V", nvirt}};
     outfile->Printf("Done");
 }
 

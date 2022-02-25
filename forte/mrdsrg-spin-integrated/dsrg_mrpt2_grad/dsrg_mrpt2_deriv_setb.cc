@@ -37,54 +37,68 @@ void DSRG_MRPT2::set_b(int dim, std::map<string, int> preidx, std::map<string, i
         Z_b["em"] -= 0.5 * sigma3_xi3["ie"] * F["im"];
         {
             if (eri_df_) {
-                auto tau_tilde = BTF_->build(CoreTensor, "Tau * [1 - e^(-s * Delta^2)]", {"chpp", "cHpP"});
+                auto tau_tilde = BTF_->build(CoreTensor, "Tau * [1 - e^(-s * Delta^2)]", {"chpp"});
                 contract_tensor(tau_tilde, Tau2, "chpp", "Eeps2_m1", false, 1.0);
-                contract_tensor(tau_tilde, Tau2, "cHpP", "Eeps2_m1", false, 1.0);
                 Z_b["em"] +=       tau_tilde["mjab"] * B["gae"] * B["gbj"];
                 Z_b["em"] -=       tau_tilde["mjab"] * B["gaj"] * B["gbe"];
+                tau_tilde = BTF_->build(CoreTensor, "Tau * [1 - e^(-s * Delta^2)]", {"cHpP"});
+                contract_tensor(tau_tilde, Tau2, "cHpP", "Eeps2_m1", false, 1.0);
                 Z_b["em"] += 2.0 * tau_tilde["mJaB"] * B["gae"] * B["gBJ"];
-                tau_tilde = BTF_->build(CoreTensor, "Tau * [1 - e^(-s * Delta^2)]", {"hhvp", "hHvP"});
+                tau_tilde = BTF_->build(CoreTensor, "Tau * [1 - e^(-s * Delta^2)]", {"hhvp"});
                 contract_tensor(tau_tilde, Tau2, "hhvp", "Eeps2_m1", false, 1.0);
-                contract_tensor(tau_tilde, Tau2, "hHvP", "Eeps2_m1", false, 1.0);
                 Z_b["em"] -=       tau_tilde["ijeb"] * B["gmi"] * B["gbj"];
                 Z_b["em"] +=       tau_tilde["ijeb"] * B["gmj"] * B["gbi"];
+                tau_tilde = BTF_->build(CoreTensor, "Tau * [1 - e^(-s * Delta^2)]", {"hHvP"});
+                contract_tensor(tau_tilde, Tau2, "hHvP", "Eeps2_m1", false, 1.0);
                 Z_b["em"] -= 2.0 * tau_tilde["iJeB"] * B["gmi"] * B["gBJ"];  
             } else {
-                auto tau_tilde = BTF_->build(CoreTensor, "Tau * [1 - e^(-s * Delta^2)]", {"chpp", "cHpP"});
+                auto tau_tilde = BTF_->build(CoreTensor, "Tau * [1 - e^(-s * Delta^2)]", {"chpp"});
                 contract_tensor(tau_tilde, Tau2, "chpp", "Eeps2_m1", false, 1.0);
-                contract_tensor(tau_tilde, Tau2, "cHpP", "Eeps2_m1", false, 1.0);
                 Z_b["em"] +=       tau_tilde["mjab"] * V["abej"];
+                tau_tilde = BTF_->build(CoreTensor, "Tau * [1 - e^(-s * Delta^2)]", {"cHpP"});
+                contract_tensor(tau_tilde, Tau2, "cHpP", "Eeps2_m1", false, 1.0);
                 Z_b["em"] += 2.0 * tau_tilde["mJaB"] * V["aBeJ"];
-                tau_tilde = BTF_->build(CoreTensor, "Tau * [1 - e^(-s * Delta^2)]", {"hhvp", "hHvP"});
+                tau_tilde = BTF_->build(CoreTensor, "Tau * [1 - e^(-s * Delta^2)]", {"hhvp"});
                 contract_tensor(tau_tilde, Tau2, "hhvp", "Eeps2_m1", false, 1.0);
-                contract_tensor(tau_tilde, Tau2, "hHvP", "Eeps2_m1", false, 1.0);
                 Z_b["em"] -=       tau_tilde["ijeb"] * V["mbij"];
+                tau_tilde = BTF_->build(CoreTensor, "Tau * [1 - e^(-s * Delta^2)]", {"hHvP"});
+                contract_tensor(tau_tilde, Tau2, "hHvP", "Eeps2_m1", false, 1.0);
                 Z_b["em"] -= 2.0 * tau_tilde["iJeB"] * V["mBiJ"];     
             }
         }
         {
-            auto temp = BTF_->build(CoreTensor, "temporal tensor", {"chpp", "cHpP"});
-            contract_tensor(temp, Kappa, "chpp", "Eeps2_p", false, 1.0);
-            contract_tensor(temp, Kappa, "cHpP", "Eeps2_p", false, 1.0);
             if (eri_df_) {
+                auto temp = BTF_->build(CoreTensor, "temporal tensor", {"chpp"});
+                contract_tensor(temp, Kappa, "chpp", "Eeps2_p", false, 1.0);
                 Z_b["em"] += temp["mlcd"] * B["gce"] * B["gdl"];
                 Z_b["em"] -= temp["mlcd"] * B["gcl"] * B["gde"];
+                temp = BTF_->build(CoreTensor, "temporal tensor", {"cHpP"});
+                contract_tensor(temp, Kappa, "cHpP", "Eeps2_p", false, 1.0);
                 Z_b["em"] += 2.0 * temp["mLcD"] * B["gce"] * B["gDL"];
             } else {
+                auto temp = BTF_->build(CoreTensor, "temporal tensor", {"chpp"});
+                contract_tensor(temp, Kappa, "chpp", "Eeps2_p", false, 1.0);
                 Z_b["em"] += temp["mlcd"] * V["cdel"];
+                temp = BTF_->build(CoreTensor, "temporal tensor", {"cHpP"});
+                contract_tensor(temp, Kappa, "cHpP", "Eeps2_p", false, 1.0);
                 Z_b["em"] += 2.0 * temp["mLcD"] * V["cDeL"];
             }
         }
         {
-            auto temp = BTF_->build(CoreTensor, "temporal tensor", {"hhvp", "hHvP"});
-            contract_tensor(temp, Kappa, "hhvp", "Eeps2_p", false, 1.0);
-            contract_tensor(temp, Kappa, "hHvP", "Eeps2_p", false, 1.0);
             if (eri_df_) {
+                auto temp = BTF_->build(CoreTensor, "temporal tensor", {"hhvp"});
+                contract_tensor(temp, Kappa, "hhvp", "Eeps2_p", false, 1.0);
                 Z_b["em"] -= temp["kled"] * B["gmk"] * B["gdl"];
                 Z_b["em"] += temp["kled"] * B["gml"] * B["gdk"];
+                temp = BTF_->build(CoreTensor, "temporal tensor", {"hHvP"});
+                contract_tensor(temp, Kappa, "hHvP", "Eeps2_p", false, 1.0);
                 Z_b["em"] -= 2.0 * temp["kLeD"] * B["gmk"] * B["gDL"];
             } else {
+                auto temp = BTF_->build(CoreTensor, "temporal tensor", {"hhvp"});
+                contract_tensor(temp, Kappa, "hhvp", "Eeps2_p", false, 1.0);
                 Z_b["em"] -= temp["kled"] * V["mdkl"];
+                temp = BTF_->build(CoreTensor, "temporal tensor", {"hHvP"});
+                contract_tensor(temp, Kappa, "hHvP", "Eeps2_p", false, 1.0);
                 Z_b["em"] -= 2.0 * temp["kLeD"] * V["mDkL"];
             }
         }
@@ -114,29 +128,33 @@ void DSRG_MRPT2::set_b(int dim, std::map<string, int> preidx, std::map<string, i
             temp_z["wz"] += 0.5 * sigma3_xi3["ia"] * V["auiw"] * Gamma1_["uz"];
             temp_z["wz"] += 0.5 * sigma3_xi3["IA"] * V["uAwI"] * Gamma1_["uz"];
             {
-                auto tau_tilde = BTF_->build(CoreTensor, "Tau * [1 - e^(-s * Delta^2)]", {"hhap", "hHaP"});
+                auto tau_tilde = BTF_->build(CoreTensor, "Tau * [1 - e^(-s * Delta^2)]", {"hhap"});
                 contract_tensor(tau_tilde, Tau2, "hhap", "Eeps2_m1", false, 1.0);
-                contract_tensor(tau_tilde, Tau2, "hHaP", "Eeps2_m1", false, 1.0);
                 temp_z["wz"] +=       tau_tilde["ijzb"] * V["wbij"];
+                tau_tilde = BTF_->build(CoreTensor, "Tau * [1 - e^(-s * Delta^2)]", {"hHaP"});
+                contract_tensor(tau_tilde, Tau2, "hHaP", "Eeps2_m1", false, 1.0);
                 temp_z["wz"] += 2.0 * tau_tilde["iJzB"] * V["wBiJ"];
-                tau_tilde = BTF_->build(CoreTensor, "Tau * [1 - e^(-s * Delta^2)]", {"ahpp", "aHpP"});
+                tau_tilde = BTF_->build(CoreTensor, "Tau * [1 - e^(-s * Delta^2)]", {"ahpp"});
                 contract_tensor(tau_tilde, Tau2, "ahpp", "Eeps2_m1", false, 1.0);
-                contract_tensor(tau_tilde, Tau2, "aHpP", "Eeps2_m1", false, 1.0);
                 temp_z["wz"] +=       tau_tilde["zjab"] * V["abwj"];
+                tau_tilde = BTF_->build(CoreTensor, "Tau * [1 - e^(-s * Delta^2)]", {"aHpP"});
+                contract_tensor(tau_tilde, Tau2, "aHpP", "Eeps2_m1", false, 1.0);
                 temp_z["wz"] += 2.0 * tau_tilde["zJaB"] * V["aBwJ"];
             }
             {
-                auto temp = BTF_->build(CoreTensor, "temporal tensor", {"hhap", "hHaP"});
+                auto temp = BTF_->build(CoreTensor, "temporal tensor", {"hhap"});
                 contract_tensor(temp, Kappa, "hhap", "Eeps2_p", false, 1.0);
-                contract_tensor(temp, Kappa, "hHaP", "Eeps2_p", false, 1.0);
                 temp_z["wz"] += temp["klzd"] * V["wdkl"];
+                temp = BTF_->build(CoreTensor, "temporal tensor", {"hHaP"});
+                contract_tensor(temp, Kappa, "hHaP", "Eeps2_p", false, 1.0);
                 temp_z["wz"] += 2.0 * temp["kLzD"] * V["wDkL"];
             }
             {
-                auto temp = BTF_->build(CoreTensor, "temporal tensor", {"ahpp", "aHpP"});
+                auto temp = BTF_->build(CoreTensor, "temporal tensor", {"ahpp"});
                 contract_tensor(temp, Kappa, "ahpp", "Eeps2_p", false, 1.0);
-                contract_tensor(temp, Kappa, "aHpP", "Eeps2_p", false, 1.0);
                 temp_z["wz"] += temp["zlcd"] * V["cdwl"];
+                temp = BTF_->build(CoreTensor, "temporal tensor", {"aHpP"});
+                contract_tensor(temp, Kappa, "aHpP", "Eeps2_p", false, 1.0);
                 temp_z["wz"] += 2.0 * temp["zLcD"] * V["cDwL"];
             }
         }
@@ -173,53 +191,67 @@ void DSRG_MRPT2::set_b(int dim, std::map<string, int> preidx, std::map<string, i
         }
         Z_b["ew"] -= 0.5 * sigma3_xi3["ie"] * F["iw"];
         {
-            auto tau_tilde = BTF_->build(CoreTensor, "Tau * [1 - e^(-s * Delta^2)]", {"hhap", "hHaP"});
+            auto tau_tilde = BTF_->build(CoreTensor, "Tau * [1 - e^(-s * Delta^2)]", {"hhap"});
             contract_tensor(tau_tilde, Tau2, "hhap", "Eeps2_m1", false, 1.0);
-            contract_tensor(tau_tilde, Tau2, "hHaP", "Eeps2_m1", false, 1.0);
             Z_b["ew"] +=       tau_tilde["ijwb"] * V["ebij"];
+            tau_tilde = BTF_->build(CoreTensor, "Tau * [1 - e^(-s * Delta^2)]", {"hHaP"});
+            contract_tensor(tau_tilde, Tau2, "hHaP", "Eeps2_m1", false, 1.0);
             Z_b["ew"] += 2.0 * tau_tilde["iJwB"] * V["eBiJ"];
-            tau_tilde = BTF_->build(CoreTensor, "Tau * [1 - e^(-s * Delta^2)]", {"hhvp", "hHvP"});
+            tau_tilde = BTF_->build(CoreTensor, "Tau * [1 - e^(-s * Delta^2)]", {"hhvp"});
             contract_tensor(tau_tilde, Tau2, "hhvp", "Eeps2_m1", false, 1.0);
-            contract_tensor(tau_tilde, Tau2, "hHvP", "Eeps2_m1", false, 1.0);
             Z_b["ew"] -=       tau_tilde["ijeb"] * V["wbij"];
+            tau_tilde = BTF_->build(CoreTensor, "Tau * [1 - e^(-s * Delta^2)]", {"hHvP"});
+            contract_tensor(tau_tilde, Tau2, "hHvP", "Eeps2_m1", false, 1.0);
             Z_b["ew"] -= 2.0 * tau_tilde["iJeB"] * V["wBiJ"];
-            tau_tilde = BTF_->build(CoreTensor, "Tau * [1 - e^(-s * Delta^2)]", {"ahpp", "aHpP"});
-            contract_tensor(tau_tilde, Tau2, "ahpp", "Eeps2_m1", false, 1.0);
-            contract_tensor(tau_tilde, Tau2, "aHpP", "Eeps2_m1", false, 1.0);
             if (eri_df_) {
+                tau_tilde = BTF_->build(CoreTensor, "Tau * [1 - e^(-s * Delta^2)]", {"ahpp"});
+                contract_tensor(tau_tilde, Tau2, "ahpp", "Eeps2_m1", false, 1.0);
                 Z_b["ew"] +=       tau_tilde["wjab"] * B["gae"] * B["gbj"];
                 Z_b["ew"] -=       tau_tilde["wjab"] * B["gaj"] * B["gbe"];
+                tau_tilde = BTF_->build(CoreTensor, "Tau * [1 - e^(-s * Delta^2)]", {"aHpP"});
+                contract_tensor(tau_tilde, Tau2, "aHpP", "Eeps2_m1", false, 1.0);
                 Z_b["ew"] += 2.0 * tau_tilde["wJaB"] * B["gae"] * B["gBJ"];
             } else {
+                tau_tilde = BTF_->build(CoreTensor, "Tau * [1 - e^(-s * Delta^2)]", {"ahpp"});
+                contract_tensor(tau_tilde, Tau2, "ahpp", "Eeps2_m1", false, 1.0);
                 Z_b["ew"] +=       tau_tilde["wjab"] * V["abej"];
+                tau_tilde = BTF_->build(CoreTensor, "Tau * [1 - e^(-s * Delta^2)]", {"aHpP"});
+                contract_tensor(tau_tilde, Tau2, "aHpP", "Eeps2_m1", false, 1.0);
                 Z_b["ew"] += 2.0 * tau_tilde["wJaB"] * V["aBeJ"];
             }
         }
         {
-            auto temp = BTF_->build(CoreTensor, "temporal tensor", {"hhap", "hHaP"});
+            auto temp = BTF_->build(CoreTensor, "temporal tensor", {"hhap"});
             contract_tensor(temp, Kappa, "hhap", "Eeps2_p", false, 1.0);
-            contract_tensor(temp, Kappa, "hHaP", "Eeps2_p", false, 1.0);
             Z_b["ew"] += temp["klwd"] * V["edkl"];
+            temp = BTF_->build(CoreTensor, "temporal tensor", {"hHaP"});
+            contract_tensor(temp, Kappa, "hHaP", "Eeps2_p", false, 1.0);
             Z_b["ew"] += 2.0 * temp["kLwD"] * V["eDkL"];
         }
         {
-            auto temp = BTF_->build(CoreTensor, "temporal tensor", {"ahpp", "aHpP"});
-            contract_tensor(temp, Kappa, "ahpp", "Eeps2_p", false, 1.0);
-            contract_tensor(temp, Kappa, "aHpP", "Eeps2_p", false, 1.0);
             if (eri_df_) {
+                auto temp = BTF_->build(CoreTensor, "temporal tensor", {"ahpp"});
+                contract_tensor(temp, Kappa, "ahpp", "Eeps2_p", false, 1.0);
                 Z_b["ew"] += temp["wlcd"] * B["gce"] * B["gdl"];
                 Z_b["ew"] -= temp["wlcd"] * B["gcl"] * B["gde"];
+                temp = BTF_->build(CoreTensor, "temporal tensor", {"aHpP"});
+                contract_tensor(temp, Kappa, "aHpP", "Eeps2_p", false, 1.0);
                 Z_b["ew"] += 2.0 * temp["wLcD"] * B["gce"] * B["gDL"];
             } else {
+                auto temp = BTF_->build(CoreTensor, "temporal tensor", {"ahpp"});
+                contract_tensor(temp, Kappa, "ahpp", "Eeps2_p", false, 1.0);
                 Z_b["ew"] += temp["wlcd"] * V["cdel"];
+                temp = BTF_->build(CoreTensor, "temporal tensor", {"aHpP"});
+                contract_tensor(temp, Kappa, "aHpP", "Eeps2_p", false, 1.0);
                 Z_b["ew"] += 2.0 * temp["wLcD"] * V["cDeL"];
             }
         }
         {
-            auto temp = BTF_->build(CoreTensor, "temporal tensor", {"hhvp", "hHvP"});
+            auto temp = BTF_->build(CoreTensor, "temporal tensor", {"hhvp"});
             contract_tensor(temp, Kappa, "hhvp", "Eeps2_p", false, 1.0);
-            contract_tensor(temp, Kappa, "hHvP", "Eeps2_p", false, 1.0);
             Z_b["ew"] -= temp["kled"] * V["wdkl"];
+            temp = BTF_->build(CoreTensor, "temporal tensor", {"hHvP"});
+            contract_tensor(temp, Kappa, "hHvP", "Eeps2_p", false, 1.0);
             Z_b["ew"] -= 2.0 * temp["kLeD"] * V["wDkL"];
         }
     }
@@ -244,9 +276,6 @@ void DSRG_MRPT2::set_b(int dim, std::map<string, int> preidx, std::map<string, i
         Z_b["mw"] += 0.5 * sigma3_xi3["iw"] * F["im"];
         Z_b["mw"] -= 0.5 * sigma3_xi3["ma"] * F["wa"];
         {
-            auto tau_tilde = BTF_->build(CoreTensor, "Tau * [1 - e^(-s * Delta^2)]", {"hhap", "hHaP"});
-            contract_tensor(tau_tilde, Tau2, "hhap", "Eeps2_m1", false, 1.0);
-            contract_tensor(tau_tilde, Tau2, "hHaP", "Eeps2_m1", false, 1.0);
             if (eri_df_) {
                 Z_b["mw"] += 0.5 * sigma3_xi3["ia"] * Gamma1_["wv"] * B["gai"] * B["gmv"];
                 Z_b["mw"] -= 0.5 * sigma3_xi3["ia"] * Gamma1_["wv"] * B["gav"] * B["gmi"];
@@ -260,8 +289,12 @@ void DSRG_MRPT2::set_b(int dim, std::map<string, int> preidx, std::map<string, i
                 Z_b["mw"] -= 0.5 * sigma3_xi3["ia"] * B["gai"] * B["gwm"];
                 Z_b["mw"] += 0.5 * sigma3_xi3["ia"] * B["gam"] * B["gwi"];
                 Z_b["mw"] -= 0.5 * sigma3_xi3["IA"] * B["gwm"] * B["gAI"];
+                auto tau_tilde = BTF_->build(CoreTensor, "Tau * [1 - e^(-s * Delta^2)]", {"hhap"});
+                contract_tensor(tau_tilde, Tau2, "hhap", "Eeps2_m1", false, 1.0);
                 Z_b["mw"] +=       tau_tilde["ijwb"] * B["gmi"] * B["gbj"];
                 Z_b["mw"] -=       tau_tilde["ijwb"] * B["gmj"] * B["gbi"];
+                tau_tilde = BTF_->build(CoreTensor, "Tau * [1 - e^(-s * Delta^2)]", {"hHaP"});
+                contract_tensor(tau_tilde, Tau2, "hHaP", "Eeps2_m1", false, 1.0);
                 Z_b["mw"] += 2.0 * tau_tilde["iJwB"] * B["gmi"] * B["gBJ"];
             } else {
                 Z_b["mw"] += 0.5 * sigma3_xi3["ia"] * V["amiv"] * Gamma1_["wv"];
@@ -272,47 +305,60 @@ void DSRG_MRPT2::set_b(int dim, std::map<string, int> preidx, std::map<string, i
                 Z_b["mw"] -= 0.5 * sigma3_xi3["IA"] * V["mAwI"];
                 Z_b["mw"] -= 0.5 * sigma3_xi3["ia"] * V["awim"];
                 Z_b["mw"] -= 0.5 * sigma3_xi3["IA"] * V["wAmI"];
+                auto tau_tilde = BTF_->build(CoreTensor, "Tau * [1 - e^(-s * Delta^2)]", {"hhap"});
+                contract_tensor(tau_tilde, Tau2, "hhap", "Eeps2_m1", false, 1.0);
                 Z_b["mw"] +=       tau_tilde["ijwb"] * V["mbij"];
+                tau_tilde = BTF_->build(CoreTensor, "Tau * [1 - e^(-s * Delta^2)]", {"hHaP"});
+                contract_tensor(tau_tilde, Tau2, "hHaP", "Eeps2_m1", false, 1.0);
                 Z_b["mw"] += 2.0 * tau_tilde["iJwB"] * V["mBiJ"];
             }
         }
         {
-            auto temp = BTF_->build(CoreTensor, "temporal tensor", {"hhap", "hHaP"});
-            contract_tensor(temp, Kappa, "hhap", "Eeps2_p", false, 1.0);
-            contract_tensor(temp, Kappa, "hHaP", "Eeps2_p", false, 1.0);
             if (eri_df_) {
+                auto temp = BTF_->build(CoreTensor, "temporal tensor", {"hhap"});
+                contract_tensor(temp, Kappa, "hhap", "Eeps2_p", false, 1.0);
                 Z_b["mw"] +=       temp["klwd"] * B["gmk"] * B["gdl"];
                 Z_b["mw"] -=       temp["klwd"] * B["gml"] * B["gdk"];
+                temp = BTF_->build(CoreTensor, "temporal tensor", {"hHaP"});
+                contract_tensor(temp, Kappa, "hHaP", "Eeps2_p", false, 1.0);
                 Z_b["mw"] += 2.0 * temp["kLwD"] * B["gmk"] * B["gDL"];
             } else {
+                auto temp = BTF_->build(CoreTensor, "temporal tensor", {"hhap"});
+                contract_tensor(temp, Kappa, "hhap", "Eeps2_p", false, 1.0);
                 Z_b["mw"] +=       temp["klwd"] * V["mdkl"];
+                temp = BTF_->build(CoreTensor, "temporal tensor", {"hHaP"});
+                contract_tensor(temp, Kappa, "hHaP", "Eeps2_p", false, 1.0);
                 Z_b["mw"] += 2.0 * temp["kLwD"] * V["mDkL"];
             }
         }
         {
-            auto tau_tilde = BTF_->build(CoreTensor, "Tau * [1 - e^(-s * Delta^2)]", {"ahpp", "aHpP"});
+            auto tau_tilde = BTF_->build(CoreTensor, "Tau * [1 - e^(-s * Delta^2)]", {"ahpp"});
             contract_tensor(tau_tilde, Tau2, "ahpp", "Eeps2_m1", false, 1.0);
-            contract_tensor(tau_tilde, Tau2, "aHpP", "Eeps2_m1", false, 1.0);
             Z_b["mw"] +=       tau_tilde["wjab"] * V["abmj"];
+            tau_tilde = BTF_->build(CoreTensor, "Tau * [1 - e^(-s * Delta^2)]", {"aHpP"});
+            contract_tensor(tau_tilde, Tau2, "aHpP", "Eeps2_m1", false, 1.0);
             Z_b["mw"] += 2.0 * tau_tilde["wJaB"] * V["aBmJ"];
-            tau_tilde = BTF_->build(CoreTensor, "Tau * [1 - e^(-s * Delta^2)]", {"chpp", "cHpP"});
+            tau_tilde = BTF_->build(CoreTensor, "Tau * [1 - e^(-s * Delta^2)]", {"chpp"});
             contract_tensor(tau_tilde, Tau2, "chpp", "Eeps2_m1", false, 1.0);
-            contract_tensor(tau_tilde, Tau2, "cHpP", "Eeps2_m1", false, 1.0);
             Z_b["mw"] -=       tau_tilde["mjab"] * V["abwj"];
+            tau_tilde = BTF_->build(CoreTensor, "Tau * [1 - e^(-s * Delta^2)]", {"cHpP"});
+            contract_tensor(tau_tilde, Tau2, "cHpP", "Eeps2_m1", false, 1.0);
             Z_b["mw"] -= 2.0 * tau_tilde["mJaB"] * V["aBwJ"];
         }
         {
-            auto temp = BTF_->build(CoreTensor, "temporal tensor", {"ahpp", "aHpP"});
+            auto temp = BTF_->build(CoreTensor, "temporal tensor", {"ahpp"});
             contract_tensor(temp, Kappa, "ahpp", "Eeps2_p", false, 1.0);
-            contract_tensor(temp, Kappa, "aHpP", "Eeps2_p", false, 1.0);
             Z_b["mw"] +=       temp["wlcd"] * V["cdml"];
+            temp = BTF_->build(CoreTensor, "temporal tensor", {"aHpP"});
+            contract_tensor(temp, Kappa, "aHpP", "Eeps2_p", false, 1.0);
             Z_b["mw"] += 2.0 * temp["wLcD"] * V["cDmL"];
         }
         {
-            auto temp = BTF_->build(CoreTensor, "temporal tensor", {"chpp", "cHpP"});
+            auto temp = BTF_->build(CoreTensor, "temporal tensor", {"chpp"});
             contract_tensor(temp, Kappa, "chpp", "Eeps2_p", false, 1.0);
-            contract_tensor(temp, Kappa, "cHpP", "Eeps2_p", false, 1.0);
             Z_b["mw"] -=       temp["mlcd"] * V["cdwl"];
+            temp = BTF_->build(CoreTensor, "temporal tensor", {"cHpP"});
+            contract_tensor(temp, Kappa, "cHpP", "Eeps2_p", false, 1.0);
             Z_b["mw"] -= 2.0 * temp["mLcD"] * V["cDwL"];
         }
     }

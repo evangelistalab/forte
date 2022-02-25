@@ -368,6 +368,9 @@ class DSRG_MRPT2 : public MASTER_DSRG {
     std::vector<size_t> actv_all;
     std::vector<size_t> virt_all;
 
+    std::map<char, std::vector<string>> orb_label;
+    std::map<string, int> orb_size;
+
     
     // MO orbital partition info for solving the z-vector equation
     int dim;

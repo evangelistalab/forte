@@ -482,39 +482,41 @@ void DSRG_MRPT2::write_df_rdm() {
     BlockedTensor df_3rdm = BTF_->build(tensor_type_, "df_3rdm", {"Lgg", "LGG"});
 
     // density terms contracted with V["abij"]
-    BlockedTensor dvabij = BTF_->build(CoreTensor, "density of V['abij']", {"hhpp", "hHpP"});
-
+    BlockedTensor dvabij = BTF_->build(CoreTensor, "density of V['abij']", {"hhpp"});
     if (CORRELATION_TERM) {
-        auto tau_tilde = BTF_->build(CoreTensor, "Tau * [1 - e^(-s * Delta^2)]", {"hhpp", "hHpP"});
+        auto tau_tilde = BTF_->build(CoreTensor, "Tau * [1 - e^(-s * Delta^2)]", {"hhpp"});
         contract_tensor(tau_tilde, Tau2, "hhpp", "Eeps2_m1", false, 1.0);
-        contract_tensor(tau_tilde, Tau2, "hHpP", "Eeps2_m1", false, 1.0);
         dvabij["ijab"] += tau_tilde["ijab"];
-        dvabij["iJaB"] += tau_tilde["iJaB"];
-
         contract_tensor(dvabij, Kappa, "hhpp", "Eeps2_p", false, 1.0);
-        contract_tensor(dvabij, Kappa, "hHpP", "Eeps2_p", false, 1.0);
     }
-
     // CASSCF reference
     dvabij["uvxy"] += 0.25 * Gamma2_["uvxy"];
-    dvabij["uVxY"] += 0.25 * Gamma2_["uVxY"];
-
     // CI contribution
     dvabij["uvxy"] += 0.125 * Gamma2_tilde["uvxy"];
-    dvabij["uVxY"] += 0.125 * Gamma2_tilde["uVxY"];
-
     // Coulomb part
     df_3rdm["Q!,a,i"] += Jm12["Q!,R!"] * B["R!,b,j"] * dvabij["ijab"];
-    df_3rdm["Q!,a,i"] += Jm12["Q!,R!"] * B["R!,B,J"] * dvabij["iJaB"];
     df_3rdm["Q!,i,a"] += Jm12["Q!,R!"] * B["R!,j,b"] * dvabij["ijab"];
-    df_3rdm["Q!,i,a"] += Jm12["Q!,R!"] * B["R!,J,B"] * dvabij["iJaB"];
-
     // Exchange part
     df_3rdm["Q!,b,i"] -= Jm12["Q!,R!"] * B["R!,a,j"] * dvabij["ijab"];
-    df_3rdm["Q!,b,i"] += Jm12["Q!,R!"] * B["R!,A,J"] * dvabij["iJbA"];
     df_3rdm["Q!,i,b"] -= Jm12["Q!,R!"] * B["R!,j,a"] * dvabij["ijab"];
-    df_3rdm["Q!,i,b"] += Jm12["Q!,R!"] * B["R!,J,A"] * dvabij["iJbA"];
 
+    dvabij = BTF_->build(CoreTensor, "density of V['abij']", {"hHpP"});
+    if (CORRELATION_TERM) {
+        auto tau_tilde = BTF_->build(CoreTensor, "Tau * [1 - e^(-s * Delta^2)]", {"hHpP"});
+        contract_tensor(tau_tilde, Tau2, "hHpP", "Eeps2_m1", false, 1.0);
+        dvabij["iJaB"] += tau_tilde["iJaB"];
+        contract_tensor(dvabij, Kappa, "hHpP", "Eeps2_p", false, 1.0);
+    }
+    // CASSCF reference
+    dvabij["uVxY"] += 0.25 * Gamma2_["uVxY"];
+    // CI contribution
+    dvabij["uVxY"] += 0.125 * Gamma2_tilde["uVxY"];
+    // Coulomb part
+    df_3rdm["Q!,a,i"] += Jm12["Q!,R!"] * B["R!,B,J"] * dvabij["iJaB"];
+    df_3rdm["Q!,i,a"] += Jm12["Q!,R!"] * B["R!,J,B"] * dvabij["iJaB"];
+    // Exchange part
+    df_3rdm["Q!,b,i"] += Jm12["Q!,R!"] * B["R!,A,J"] * dvabij["iJbA"];
+    df_3rdm["Q!,i,b"] += Jm12["Q!,R!"] * B["R!,J,A"] * dvabij["iJbA"];
 
     // - Z["un"] * Gamma2_["uvxy"]
     // - Z["UN"] * Gamma2_["UVXY"]
