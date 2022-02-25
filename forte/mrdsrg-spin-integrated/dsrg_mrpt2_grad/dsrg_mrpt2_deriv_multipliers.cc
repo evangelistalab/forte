@@ -13,7 +13,7 @@ namespace forte {
 void DSRG_MRPT2::set_tau() {
     outfile->Printf("\n    Initializing multipliers for two-body amplitude.. ");
     Tau2 = BTF_->build(CoreTensor, "Tau2", {"hhpp", "hHpP"});
-    BlockedTensor temp = BTF_->build(CoreTensor, "temporal tensor", {"hhpp", "hHpP"});
+    BlockedTensor temp = BTF_->build(CoreTensor, "temporal tensor", {"hhpp"});
 
     // Tau * Delta
     // <[V, T2]> (C_2)^4
@@ -278,7 +278,7 @@ void DSRG_MRPT2::set_kappa() {
     outfile->Printf("\n    Initializing multipliers for renormalize ERIs ... ");
     Kappa  = BTF_->build(CoreTensor, "Kappa", {"hhpp", "hHpP"});
     {
-        auto temp   = BTF_->build(CoreTensor, "temporal tensor", {"hhpp", "hHpP"});
+        auto temp   = BTF_->build(CoreTensor, "temporal tensor", {"hhpp"});
         // <[V, T2]> (C_2)^4
         if (PT2_TERM) {
             /************************************ α α α α ************************************/
