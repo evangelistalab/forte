@@ -393,7 +393,7 @@ void DSRG_MRPT2::write_2rdm_spin_dependent() {
     }
 
     // terms contracted with V["abij"]
-    temp = BTF_->build(CoreTensor, "temporal tensor", {"hhpp", "HHPP", "hHpP"});
+    temp = BTF_->build(CoreTensor, "temporal tensor", {"hhpp", "hHpP"});
     BlockedTensor temp2 = BTF_->build(CoreTensor, "temporal tensor 2", {"phph", "phPH"});
 
     if (CORRELATION_TERM) {
@@ -408,21 +408,17 @@ void DSRG_MRPT2::write_2rdm_spin_dependent() {
     }
 
     temp["nvxy"] -= Z["un"] * Gamma2_["uvxy"];
-    temp["NVXY"] -= Z["UN"] * Gamma2_["UVXY"];
     temp["nVxY"] -= Z["un"] * Gamma2_["uVxY"];
 
     temp["xyev"] += Z["eu"] * Gamma2_["uvxy"];
-    temp["XYEV"] += Z["EU"] * Gamma2_["UVXY"];
     temp["xYeV"] += Z["eu"] * Gamma2_["uVxY"];
 
     // CASSCF reference
     temp["uvxy"] += 0.25 * Gamma2_["uvxy"];
-    temp["UVXY"] += 0.25 * Gamma2_["UVXY"];
     temp["uVxY"] += 0.25 * Gamma2_["uVxY"];
 
     // CI contribution
     temp["uvxy"] += 0.125 * Gamma2_tilde["uvxy"];
-    temp["UVXY"] += 0.125 * Gamma2_tilde["UVXY"];
     temp["uVxY"] += 0.125 * Gamma2_tilde["uVxY"];
 
     // all-alpha and all-beta
@@ -434,21 +430,17 @@ void DSRG_MRPT2::write_2rdm_spin_dependent() {
     temp.zero();
 
     temp["mveu"] += 2.0 * Z["em"] * Gamma1_["uv"];
-    temp["MVEU"] += 2.0 * Z["EM"] * Gamma1_["UV"];
     temp["mVeU"] += 2.0 * Z["em"] * Gamma1_["UV"];
 
     temp["n,u1,u,a1"] += 2.0 * Z["un"] * Gamma1_["u1,a1"];
-    temp["N,U1,U,A1"] += 2.0 * Z["UN"] * Gamma1_["U1,A1"];
     temp["n,U1,u,A1"] += 2.0 * Z["un"] * Gamma1_["U1,A1"];
 
     temp["u,u1,v,a1"] += Z["uv"] * Gamma1_["u1,a1"];
-    temp["U,U1,V,A1"] += Z["UV"] * Gamma1_["U1,A1"];
     temp["u,U1,v,A1"] += Z["uv"] * Gamma1_["U1,A1"];
 
     // <[F, T2]> and <[V, T1]>
     if (X5_TERM || X6_TERM || X7_TERM) {
         temp["iuav"] += sigma3_xi3["ia"] * Gamma1_["uv"];
-        temp["IUAV"] += sigma3_xi3["IA"] * Gamma1_["UV"];
         temp["iUaV"] += sigma3_xi3["ia"] * Gamma1_["UV"];
     }
 
