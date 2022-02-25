@@ -427,7 +427,6 @@ class DSRG_MRPT2 : public MASTER_DSRG {
     ambit::BlockedTensor fdiag;
     ambit::BlockedTensor Z;
     ambit::BlockedTensor Z_b;
-    ambit::BlockedTensor Tau1;
     ambit::BlockedTensor Tau2;
     ambit::BlockedTensor Kappa;
     ambit::BlockedTensor sigma3_xi3;

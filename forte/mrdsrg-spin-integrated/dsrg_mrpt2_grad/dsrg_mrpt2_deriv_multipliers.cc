@@ -12,7 +12,6 @@ namespace forte {
 
 void DSRG_MRPT2::set_tau() {
     outfile->Printf("\n    Initializing multipliers for two-body amplitude.. ");
-    Tau1 = BTF_->build(CoreTensor, "Tau1", {"hhpp", "hHpP"});
     Tau2 = BTF_->build(CoreTensor, "Tau2", {"hhpp", "hHpP"});
     BlockedTensor temp = BTF_->build(CoreTensor, "temporal tensor", {"hhpp", "hHpP"});
 
@@ -177,26 +176,6 @@ void DSRG_MRPT2::set_tau() {
     // Remove the internal terms based on the DSRG formalism
     Tau2.block("aaaa").zero();
     Tau2.block("aAaA").zero();
-
-    {
-        auto Eeps2_m1 = BTF_->build(CoreTensor, "{1-e^[-s*(Delta2)^2]}/(Delta2)", spin_cases({"hhpp"}));
-        Eeps2_m1.iterate(
-            [&](const std::vector<size_t>& i, const std::vector<SpinType>& spin, double& value) {
-                if (spin[0] == AlphaSpin) {
-                    if (spin[1] == AlphaSpin) {
-                        value = dsrg_source_->compute_renormalized_denominator(Fa_[i[0]] + Fa_[i[1]] -
-                                                                               Fa_[i[2]] - Fa_[i[3]]);
-                    } else {
-                        value = dsrg_source_->compute_renormalized_denominator(Fa_[i[0]] + Fb_[i[1]] -
-                                                                               Fa_[i[2]] - Fb_[i[3]]);
-                    }
-                }
-            });
-        // Tau * [1 - e^(-s * Delta^2)]
-        Tau1["ijab"] = Tau2["ijab"] * Eeps2_m1["ijab"];
-        Tau1["iJaB"] = Tau2["iJaB"] * Eeps2_m1["iJaB"];
-    }
-
     outfile->Printf("Done");
 }
 

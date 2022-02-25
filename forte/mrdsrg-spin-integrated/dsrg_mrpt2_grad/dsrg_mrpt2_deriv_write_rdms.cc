@@ -397,8 +397,11 @@ void DSRG_MRPT2::write_2rdm_spin_dependent() {
     BlockedTensor temp2 = BTF_->build(CoreTensor, "temporal tensor 2", {"phph", "phPH"});
 
     if (CORRELATION_TERM) {
-        temp["ijab"] += Tau1["ijab"];
-        temp["iJaB"] += Tau1["iJaB"];
+        auto tau_tilde = BTF_->build(CoreTensor, "Tau * [1 - e^(-s * Delta^2)]", {"hhpp", "hHpP"});
+        contract_tensor(tau_tilde, Tau2, "hhpp", "Eeps2_m1", false, 1.0);
+        contract_tensor(tau_tilde, Tau2, "hHpP", "Eeps2_m1", false, 1.0);
+        temp["ijab"] += tau_tilde["ijab"];
+        temp["iJaB"] += tau_tilde["iJaB"];
 
         contract_tensor(temp, Kappa, "hhpp", "Eeps2_p", false, 1.0);
         contract_tensor(temp, Kappa, "hHpP", "Eeps2_p", false, 1.0);
@@ -490,8 +493,11 @@ void DSRG_MRPT2::write_df_rdm() {
     BlockedTensor dvabij = BTF_->build(CoreTensor, "density of V['abij']", {"hhpp", "hHpP"});
 
     if (CORRELATION_TERM) {
-        dvabij["ijab"] += Tau1["ijab"];
-        dvabij["iJaB"] += Tau1["iJaB"];
+        auto tau_tilde = BTF_->build(CoreTensor, "Tau * [1 - e^(-s * Delta^2)]", {"hhpp", "hHpP"});
+        contract_tensor(tau_tilde, Tau2, "hhpp", "Eeps2_m1", false, 1.0);
+        contract_tensor(tau_tilde, Tau2, "hHpP", "Eeps2_m1", false, 1.0);
+        dvabij["ijab"] += tau_tilde["ijab"];
+        dvabij["iJaB"] += tau_tilde["iJaB"];
 
         contract_tensor(dvabij, Kappa, "hhpp", "Eeps2_p", false, 1.0);
         contract_tensor(dvabij, Kappa, "hHpP", "Eeps2_p", false, 1.0);
