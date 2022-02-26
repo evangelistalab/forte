@@ -43,8 +43,11 @@ void DSRG_MRPT2::set_z() {
     Z = BTF_->build(CoreTensor, "Z Matrix", spin_cases({"gg"}));
     outfile->Printf("\n    Initializing Diagonal Entries of the OPDM Z ..... ");
     set_z_cc();
+    outfile->Printf("\n    cc finished ..... ");
     set_z_vv();
+    outfile->Printf("\n    vv finished ..... ");
     set_z_aa_diag();
+    outfile->Printf("\n    aa finished ..... ");
     outfile->Printf("Done");
     solve_linear_iter();
 }
@@ -397,6 +400,8 @@ void DSRG_MRPT2::contract_tensor(ambit::BlockedTensor& temp, ambit::BlockedTenso
 void DSRG_MRPT2::set_z_cc() {
     BlockedTensor val1 = BTF_->build(CoreTensor, "val1", {"c"});
 
+    outfile->Printf("\n    1 finished ..... ");
+
     // core-core diagonal entries
     if (CORRELATION_TERM) {
         val1["m"] -= sigma1_xi1_xi2["ma"] * F["ma"];
@@ -426,6 +431,9 @@ void DSRG_MRPT2::set_z_cc() {
             val1["m"] -= 4.0 * T2OverDelta["mJaB"] * Tau2["mJaB"];
         }
     }
+
+    outfile->Printf("\n    2 finished ..... ");
+
     BlockedTensor zmn = BTF_->build(CoreTensor, "z{mn} normal", {"cc"});
     // core-core block entries within normal conditions
     if (CORRELATION_TERM) {
@@ -451,6 +459,8 @@ void DSRG_MRPT2::set_z_cc() {
         zmn["nm"] -= temp1["mn"];
     }
 
+    outfile->Printf("\n    3 finished ..... ");
+
     for (const std::string& block : {"cc", "CC"}) {
         (Z.block(block)).iterate([&](const std::vector<size_t>& i, double& value) {
             if (i[0] == i[1]) {
@@ -463,10 +473,14 @@ void DSRG_MRPT2::set_z_cc() {
             }
         });
     }
+
+    outfile->Printf("\n    4 finished ..... ");
 }
 
 void DSRG_MRPT2::set_z_vv() {
     BlockedTensor val2 = BTF_->build(CoreTensor, "val2", {"v"});
+
+    outfile->Printf("\n    5 finished ..... ");
 
     // virtual-virtual diagonal entries
     if (CORRELATION_TERM) {
@@ -497,6 +511,9 @@ void DSRG_MRPT2::set_z_vv() {
             val2["e"] += 4.0 * T2OverDelta["iJeB"] * Tau2["iJeB"];
         }
     }
+
+    outfile->Printf("\n    6 finished ..... ");
+
     BlockedTensor zef = BTF_->build(CoreTensor, "z{ef} normal", {"vv"});
     // virtual-virtual block entries within normal conditions
     if (CORRELATION_TERM) {
@@ -521,6 +538,7 @@ void DSRG_MRPT2::set_z_vv() {
         zef["ef"] += temp1["ef"]; 
         zef["fe"] -= temp1["ef"]; 
     }
+    outfile->Printf("\n    7 finished ..... ");
     for (const std::string& block : {"vv", "VV"}) {
         (Z.block(block)).iterate([&](const std::vector<size_t>& i, double& value) {
             if (i[0] == i[1]) {
