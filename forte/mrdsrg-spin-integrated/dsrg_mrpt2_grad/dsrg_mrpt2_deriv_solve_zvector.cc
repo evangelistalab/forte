@@ -405,29 +405,50 @@ void DSRG_MRPT2::set_z_cc() {
     // core-core diagonal entries
     if (CORRELATION_TERM) {
         val1["m"] -= sigma1_xi1_xi2["ma"] * F["ma"];
+        outfile->Printf("\n    1.1 finished ..... ");
         val1["m"] -= DelGam1["xu"] * T2_["muax"] * sigma1_xi1_xi2["ma"];
+        outfile->Printf("\n    1.2 finished ..... ");
         val1["m"] -= DelGam1["XU"] * T2_["mUaX"] * sigma1_xi1_xi2["ma"];
+        outfile->Printf("\n    1.3 finished ..... ");
         {
+            outfile->Printf("\n    1.4 finished ..... ");
             auto temp = BTF_->build(CoreTensor, "temporal tensor", {"chpp"});
+            outfile->Printf("\n    1.5 finished ..... ");
             contract_tensor(temp, V, "chpp", "Eeps2", true, 1.0);
+            outfile->Printf("\n    1.6 finished ..... ");
             val1["m"] += 4.0 * s_ * Tau2["mjab"] * temp["mjab"];
+            outfile->Printf("\n    1.7 finished ..... ");
             temp.zero();
+            outfile->Printf("\n    1.8 finished ..... ");
             contract_tensor(temp, V, "chpp", "Eeps2Delta2", true, 1.0);
+            outfile->Printf("\n    1.9 finished ..... ");
             val1["m"] -= 4.0 * s_ * temp["mlcd"] * Kappa["mlcd"];
+            outfile->Printf("\n    2.0 finished ..... ");
 
             temp = BTF_->build(CoreTensor, "temporal tensor", {"cHpP"});
+            outfile->Printf("\n    2.1 finished ..... ");
             contract_tensor(temp, V, "cHpP", "Eeps2", true, 1.0);
+            outfile->Printf("\n    2.2 finished ..... ");
             val1["m"] += 8.0 * s_ * Tau2["mJaB"] * temp["mJaB"];
+            outfile->Printf("\n    2.3 finished ..... ");
             temp.zero();
+            outfile->Printf("\n    2.4 finished ..... ");
             contract_tensor(temp, V, "cHpP", "Eeps2Delta2", true, 1.0);
+            outfile->Printf("\n    2.5 finished ..... ");
             val1["m"] -= 8.0 * s_ * temp["mLcD"] * Kappa["mLcD"];
+            outfile->Printf("\n    2.6 finished ..... ");
         }
         {
             auto T2OverDelta = BTF_->build(CoreTensor, "T2/Delta", {"chpp"});
+            outfile->Printf("\n    2.7 finished ..... ");
             contract_tensor(T2OverDelta, V, "chpp", "Eeps2_m2", true, 1.0);
+            outfile->Printf("\n    2.8 finished ..... ");
             val1["m"] -= 2.0 * T2OverDelta["mjab"] * Tau2["mjab"];
+            outfile->Printf("\n    2.9 finished ..... ");
             T2OverDelta = BTF_->build(CoreTensor, "T2/Delta", {"cHpP"});
+            outfile->Printf("\n    3.0 finished ..... ");
             contract_tensor(T2OverDelta, V, "cHpP", "Eeps2_m2", true, 1.0);
+            outfile->Printf("\n    3.1 finished ..... ");
             val1["m"] -= 4.0 * T2OverDelta["mJaB"] * Tau2["mJaB"];
         }
     }
