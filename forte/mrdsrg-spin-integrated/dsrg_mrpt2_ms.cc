@@ -881,7 +881,7 @@ void DSRG_MRPT2::compute_cumulants(std::shared_ptr<ActiveSpaceIntegrals> fci_int
     L2ab("pqrs") -= L1a("pr") * L1b("qs");
 
     // 3 cumulant
-    if (foptions_->get_str("THREEPDC") != "ZERO") {
+    if (do_cu3_) {
         ambit::Tensor L3aaa = rdms_->L3aaa();
         ambit::Tensor L3aab = rdms_->L3aab();
         ambit::Tensor L3abb = rdms_->L3abb();

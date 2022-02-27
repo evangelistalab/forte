@@ -675,7 +675,7 @@ double MRDSRG::compute_energy_ldsrg2() {
 
     timer ldsrg2("Energy_ldsrg2");
 
-    if (foptions_->get_str("THREEPDC") == "ZERO") {
+    if (not do_cu3_) {
         outfile->Printf("\n    Skip Lambda3 contributions in [Hbar2, T2].");
     }
 

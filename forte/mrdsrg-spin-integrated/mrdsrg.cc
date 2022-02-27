@@ -390,16 +390,16 @@ void MRDSRG::print_cumulant_summary() {
 
     // 3-body
     maxes.clear();
-    maxes.push_back(rdms_->L3aaa().norm(0));
-    maxes.push_back(rdms_->L3aab().norm(0));
-    maxes.push_back(rdms_->L3abb().norm(0));
-    maxes.push_back(rdms_->L3bbb().norm(0));
+    maxes.push_back(L3aaa_.norm(0));
+    maxes.push_back(L3aab_.norm(0));
+    maxes.push_back(L3abb_.norm(0));
+    maxes.push_back(L3bbb_.norm(0));
 
     norms.clear();
-    norms.push_back(rdms_->L3aaa().norm(2));
-    norms.push_back(rdms_->L3aab().norm(2));
-    norms.push_back(rdms_->L3abb().norm(2));
-    norms.push_back(rdms_->L3bbb().norm(2));
+    norms.push_back(L3aaa_.norm(2));
+    norms.push_back(L3aab_.norm(2));
+    norms.push_back(L3abb_.norm(2));
+    norms.push_back(L3bbb_.norm(2));
 
     dash = std::string(8 + 13 * 4, '-');
     outfile->Printf("\n    %-8s %12s %12s %12s %12s", "3-body", "AAA", "AAB", "ABB", "BBB");

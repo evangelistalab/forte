@@ -111,11 +111,11 @@ void DSRG_MRPT2::startup() {
         V_.print(stdout);
         Lambda2_.print(stdout);
     }
-    if (print_ > 3) {
-        rdms_->L3aaa().print();
-        rdms_->L3aab().print();
-        rdms_->L3abb().print();
-        rdms_->L3bbb().print();
+    if (print_ > 3 and do_cu3_) {
+        L3aaa_.print();
+        L3aab_.print();
+        L3abb_.print();
+        L3bbb_.print();
     }
 }
 
@@ -390,7 +390,7 @@ double DSRG_MRPT2::compute_energy() {
     EVT2 += Etemp;
     energy.push_back({"<[V, T2]> C_4 (C_2)^2 PH", Etemp});
 
-    if (foptions_->get_str("THREEPDC") != "ZERO") {
+    if (do_cu3_) {
         Etemp = E_VT2_6();
     } else {
         Etemp = 0.0;
@@ -1347,7 +1347,7 @@ double DSRG_MRPT2::E_VT2_6() {
         temp["uvwxyz"] += V_["uv1z"] * T2_["1wxy"];
         temp["uvwxyz"] += V_["w1xy"] * T2_["uv1z"];
     }
-    E += 0.25 * temp.block("aaaaaa")("uvwxyz") * rdms_->L3aaa()("xyzuvw");
+    E += 0.25 * temp.block("aaaaaa")("uvwxyz") * L3aaa_("xyzuvw");
 
     // bbb
     temp = ambit::BlockedTensor::build(tensor_type_, "temp", {"AAAAAA"});
@@ -1358,7 +1358,7 @@ double DSRG_MRPT2::E_VT2_6() {
         temp["UVWXYZ"] += V_["UV!Z"] * T2_["!WXY"];
         temp["UVWXYZ"] += V_["W!XY"] * T2_["UV!Z"];
     }
-    E += 0.25 * temp.block("AAAAAA")("UVWXYZ") * rdms_->L3bbb()("XYZUVW");
+    E += 0.25 * temp.block("AAAAAA")("UVWXYZ") * L3bbb_("XYZUVW");
 
     // aab
     temp = ambit::BlockedTensor::build(tensor_type_, "temp", {"aaAaaA"});
@@ -1379,7 +1379,7 @@ double DSRG_MRPT2::E_VT2_6() {
         temp["uvWxyZ"] -= V_["v1xy"] * T2_["uW1Z"];
         temp["uvWxyZ"] -= 2.0 * V_["v!xZ"] * T2_["uWy!"];
     }
-    E += 0.5 * temp.block("aaAaaA")("uvWxyZ") * rdms_->L3aab()("xyZuvW");
+    E += 0.5 * temp.block("aaAaaA")("uvWxyZ") * L3aab_("xyZuvW");
 
     // abb
     temp = ambit::BlockedTensor::build(tensor_type_, "temp", {"aAAaAA"});
@@ -1400,7 +1400,7 @@ double DSRG_MRPT2::E_VT2_6() {
         temp["uVWxYZ"] -= V_["W!YZ"] * T2_["uVx!"];
         temp["uVWxYZ"] -= 2.0 * V_["1WxY"] * T2_["uV1Z"];
     }
-    E += 0.5 * temp.block("aAAaAA")("uVWxYZ") * rdms_->L3abb()("xYZuVW");
+    E += 0.5 * temp.block("aAAaAA")("uVWxYZ") * L3abb_("xYZuVW");
 
     outfile->Printf("  Done. Timing %15.6f s", timer.get());
     dsrg_time_.add("220", timer.get());
@@ -1970,10 +1970,10 @@ void DSRG_MRPT2::compute_dm1d_pt2(BlockedTensor& M, double& Mbar0, BlockedTensor
 //    bool form_hbar3 = foptions_->get_bool("FORM_HBAR3");
 //    double scalar3 = 0.0;
 //    if (form_hbar3) {
-//        scalar3 -= (1.0 / 36) * Hbar3_.block("aaaaaa")("xyzuvw") * rdms_->L3aaa()("xyzuvw");
-//        scalar3 -= (1.0 / 36) * Hbar3_.block("AAAAAA")("XYZUVW") * rdms_->L3bbb()("XYZUVW");
-//        scalar3 -= 0.25 * Hbar3_.block("aaAaaA")("xyZuvW") * rdms_->L3aab()("xyZuvW");
-//        scalar3 -= 0.25 * Hbar3_.block("aAAaAA")("xYZuVW") * rdms_->L3abb()("xYZuVW");
+//        scalar3 -= (1.0 / 36) * Hbar3_.block("aaaaaa")("xyzuvw") * L3aaa_("xyzuvw");
+//        scalar3 -= (1.0 / 36) * Hbar3_.block("AAAAAA")("XYZUVW") * L3bbb_("XYZUVW");
+//        scalar3 -= 0.25 * Hbar3_.block("aaAaaA")("xyZuvW") * L3aab_("xyZuvW");
+//        scalar3 -= 0.25 * Hbar3_.block("aAAaAA")("xYZuVW") * L3abb_("xYZuVW");
 
 //        scalar3 += 0.25 * Hbar3_["xyzuvw"] * Gamma1_["wz"] * Lambda2_["uvxy"];
 //        scalar3 += 0.25 * Hbar3_["XYZUVW"] * Gamma1_["WZ"] * Lambda2_["UVXY"];
@@ -2166,10 +2166,10 @@ void DSRG_MRPT2::compute_dm1d_pt2(BlockedTensor& M, double& Mbar0, BlockedTensor
 //        Etest3 += 0.5 * Hbar3_["xyZuvW"] * Gamma1_["ux"] * Gamma1_["vy"] * Gamma1_["WZ"];
 //        Etest3 += 0.5 * Hbar3_["xYZuVW"] * Gamma1_["ux"] * Gamma1_["VY"] * Gamma1_["WZ"];
 
-//        Etest3 += (1.0 / 36) * Hbar3_.block("aaaaaa")("xyzuvw") * rdms_->L3aaa()("xyzuvw");
-//        Etest3 += (1.0 / 36) * Hbar3_.block("AAAAAA")("XYZUVW") * rdms_->L3bbb()("XYZUVW");
-//        Etest3 += 0.25 * Hbar3_.block("aaAaaA")("xyZuvW") * rdms_->L3aab()("xyZuvW");
-//        Etest3 += 0.25 * Hbar3_.block("aAAaAA")("xYZuVW") * rdms_->L3abb()("xYZuVW");
+//        Etest3 += (1.0 / 36) * Hbar3_.block("aaaaaa")("xyzuvw") * L3aaa_("xyzuvw");
+//        Etest3 += (1.0 / 36) * Hbar3_.block("AAAAAA")("XYZUVW") * L3bbb_("XYZUVW");
+//        Etest3 += 0.25 * Hbar3_.block("aaAaaA")("xyZuvW") * L3aab_("xyZuvW");
+//        Etest3 += 0.25 * Hbar3_.block("aAAaAA")("xYZuVW") * L3abb_("xYZuVW");
 
 //        outfile->Printf("\n    %-30s = %22.15f", "Three-Body Energy (after)", Etest3);
 //        Etest += Etest3;

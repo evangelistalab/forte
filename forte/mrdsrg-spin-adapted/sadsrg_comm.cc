@@ -200,8 +200,8 @@ std::vector<double> SADSRG::H2_T2_C0_T2small(BlockedTensor& H2, BlockedTensor& T
     if (do_cu3_) {
         if (store_cu3_) {
             timer t("DSRG [H2, T2] L3");
-            E3 += H2["ewxy"] * T2["uvez"] * L3_["xyzuwv"];
-            E3 -= H2["uvmz"] * T2["mwxy"] * L3_["xyzuwv"];
+            E3 += H2.block("vaaa")("ewxy") * T2.block("aava")("uvez") * L3_("xyzuwv");
+            E3 -= H2.block("aaca")("uvmz") * T2.block("caaa")("mwxy") * L3_("xyzuwv");
         } else {
             // direct algorithm for 3RDM: Alex's trick JCTC 16, 6343–6357 (2020)
             // t_{uvez} v_{ewxy} D_{xyzuwv} = - t_{uvez} v_{ezxy} D_{uvxy}

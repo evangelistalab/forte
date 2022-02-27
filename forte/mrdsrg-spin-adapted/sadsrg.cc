@@ -310,8 +310,6 @@ void SADSRG::init_density() {
     Eta1_ = BTF_->build(tensor_type_, "Eta1", {"aa"});
     L1_ = BTF_->build(tensor_type_, "L1", {"aa"});
     L2_ = BTF_->build(tensor_type_, "L2", {"aaaa"});
-    if (store_cu3_)
-        L3_ = BTF_->build(tensor_type_, "L3", {"aaaaaa"});
     fill_density();
     print_done(lt.get());
 }
@@ -332,7 +330,7 @@ void SADSRG::fill_density() {
 
     // 3-body density cumulants
     if (store_cu3_)
-        L3_.block("aaaaaa")("pqrstu") = rdms_->SF_L3()("pqrstu");
+        L3_ = rdms_->SF_L3();
 }
 
 void SADSRG::init_fock() {

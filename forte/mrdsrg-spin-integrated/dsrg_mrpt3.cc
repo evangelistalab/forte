@@ -101,7 +101,7 @@ void DSRG_MRPT3::startup() {
 
     // number of elements stored in memory
     size_t nelement = 6 * sh * sh * sh * sh + 6 * sa * sa * sa * sa;
-    if (foptions_->get_str("THREEPDC") != "ZERO") {
+    if (do_cu3_) {
         nelement += 4 * sa * sa * sa * sa * sa * sa;
     }
 

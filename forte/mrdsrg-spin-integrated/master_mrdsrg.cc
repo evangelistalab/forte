@@ -148,6 +148,8 @@ void MASTER_DSRG::read_options() {
         }
     }
 
+    do_cu3_ = (foptions_->get_str("THREEPDC") != "ZERO");
+
     outfile->Printf("Done");
 }
 
@@ -245,6 +247,14 @@ void MASTER_DSRG::fill_density() {
     Lambda2_.block("aaaa")("pqrs") = rdms_->L2aa()("pqrs");
     Lambda2_.block("aAaA")("pqrs") = rdms_->L2ab()("pqrs");
     Lambda2_.block("AAAA")("pqrs") = rdms_->L2bb()("pqrs");
+
+    // 3-body density cumulants
+    if (do_cu3_) {
+        L3aaa_ = rdms_->L3aaa();
+        L3aab_ = rdms_->L3aab();
+        L3abb_ = rdms_->L3abb();
+        L3bbb_ = rdms_->L3bbb();
+    }
 }
 
 void MASTER_DSRG::init_fock() {
@@ -602,10 +612,10 @@ void MASTER_DSRG::deGNO_ints(const std::string& name, double& H0, BlockedTensor&
 
     // scalar from H3
     double scalar3 = 0.0;
-    scalar3 -= (1.0 / 36.0) * H3.block("aaaaaa")("xyzuvw") * rdms_->L3aaa()("xyzuvw");
-    scalar3 -= (1.0 / 36.0) * H3.block("AAAAAA")("XYZUVW") * rdms_->L3bbb()("XYZUVW");
-    scalar3 -= 0.25 * H3.block("aaAaaA")("xyZuvW") * rdms_->L3aab()("xyZuvW");
-    scalar3 -= 0.25 * H3.block("aAAaAA")("xYZuVW") * rdms_->L3abb()("xYZuVW");
+    scalar3 -= (1.0 / 36.0) * H3.block("aaaaaa")("xyzuvw") * L3aaa_("xyzuvw");
+    scalar3 -= (1.0 / 36.0) * H3.block("AAAAAA")("XYZUVW") * L3bbb_("XYZUVW");
+    scalar3 -= 0.25 * H3.block("aaAaaA")("xyZuvW") * L3aab_("xyZuvW");
+    scalar3 -= 0.25 * H3.block("aAAaAA")("xYZuVW") * L3abb_("xYZuVW");
 
     // TODO: form one-body intermediate for scalar and 1-body
     scalar3 += 0.25 * H3["xyzuvw"] * Lambda2_["uvxy"] * Gamma1_["wz"];
@@ -1022,16 +1032,16 @@ void MASTER_DSRG::H2_T2_C0(BlockedTensor& H2, BlockedTensor& T2, const double& a
     E += temp["uVxY"] * Lambda2_["xYuV"];
 
     // <[Hbar2, T2]> C_6 C_2
-    if (foptions_->get_str("THREEPDC") != "ZERO") {
+    if (do_cu3_) {
         temp = ambit::BlockedTensor::build(tensor_type_, "temp", {"aaaaaa"});
         temp["uvwxyz"] += H2["uviz"] * T2["iwxy"];
         temp["uvwxyz"] += H2["waxy"] * T2["uvaz"];
-        E += 0.25 * temp.block("aaaaaa")("uvwxyz") * rdms_->L3aaa()("xyzuvw");
+        E += 0.25 * temp.block("aaaaaa")("uvwxyz") * L3aaa_("xyzuvw");
 
         temp = ambit::BlockedTensor::build(tensor_type_, "temp", {"AAAAAA"});
         temp["UVWXYZ"] += H2["UVIZ"] * T2["IWXY"];
         temp["UVWXYZ"] += H2["WAXY"] * T2["UVAZ"];
-        E += 0.25 * temp.block("AAAAAA")("UVWXYZ") * rdms_->L3bbb()("XYZUVW");
+        E += 0.25 * temp.block("AAAAAA")("UVWXYZ") * L3bbb_("XYZUVW");
 
         temp = ambit::BlockedTensor::build(tensor_type_, "temp", {"aaAaaA"});
         temp["uvWxyZ"] -= H2["uviy"] * T2["iWxZ"];
@@ -1041,7 +1051,7 @@ void MASTER_DSRG::H2_T2_C0(BlockedTensor& H2, BlockedTensor& T2, const double& a
         temp["uvWxyZ"] += H2["aWxZ"] * T2["uvay"];
         temp["uvWxyZ"] -= H2["vaxy"] * T2["uWaZ"];
         temp["uvWxyZ"] -= 2.0 * H2["vAxZ"] * T2["uWyA"];
-        E += 0.5 * temp.block("aaAaaA")("uvWxyZ") * rdms_->L3aab()("xyZuvW");
+        E += 0.5 * temp.block("aaAaaA")("uvWxyZ") * L3aab_("xyZuvW");
 
         temp = ambit::BlockedTensor::build(tensor_type_, "temp", {"aAAaAA"});
         temp["uVWxYZ"] -= H2["VWIZ"] * T2["uIxY"];
@@ -1051,7 +1061,7 @@ void MASTER_DSRG::H2_T2_C0(BlockedTensor& H2, BlockedTensor& T2, const double& a
         temp["uVWxYZ"] += H2["uAxY"] * T2["VWAZ"];
         temp["uVWxYZ"] -= H2["WAYZ"] * T2["uVxA"];
         temp["uVWxYZ"] -= 2.0 * H2["aWxY"] * T2["uVaZ"];
-        E += 0.5 * temp.block("aAAaAA")("uVWxYZ") * rdms_->L3abb()("xYZuVW");
+        E += 0.5 * temp.block("aAAaAA")("uVWxYZ") * L3abb_("xYZuVW");
     }
 
     // multiply prefactor and copy to C0

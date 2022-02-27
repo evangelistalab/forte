@@ -254,6 +254,13 @@ class MASTER_DSRG : public DynamicCorrelationSolver {
     ambit::BlockedTensor Eta1_;
     /// Two-body density cumulant
     ambit::BlockedTensor Lambda2_;
+    /// Three-body density cumulants
+    ambit::Tensor L3aaa_;
+    ambit::Tensor L3aab_;
+    ambit::Tensor L3abb_;
+    ambit::Tensor L3bbb_;
+    /// Whether to compute 3-cumulant contributions
+    bool do_cu3_;
 
     // ==> Fock matrix related <==
 
