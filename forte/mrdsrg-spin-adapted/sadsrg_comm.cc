@@ -198,7 +198,7 @@ std::vector<double> SADSRG::H2_T2_C0_T2small(BlockedTensor& H2, BlockedTensor& T
 
     // <[Hbar2, T2]> C_6 C_2
     if (do_cu3_) {
-        if (L3_algorithm_ == "EXPLICIT") { // TODO: need to fix the logic, FCI_MO only, spin-adapted code only
+        if (L3_algorithm_ == "EXPLICIT") {
             timer t("DSRG [H2, T2] L3");
             E3 += H2.block("vaaa")("ewxy") * T2.block("aava")("uvez") * rdms_->SF_L3()("xyzuwv");
             E3 -= H2.block("aaca")("uvmz") * T2.block("caaa")("mwxy") * rdms_->SF_L3()("xyzuwv");
@@ -672,7 +672,6 @@ void SADSRG::V_T2_C2_DF(BlockedTensor& B, BlockedTensor& T2, BlockedTensor& S2, 
     local_timer timer;
 
     // particle-particle contractions
-    // TODO: need to investigate why using "r" fails when C2 does not contain all "rs"
     C2["ijes"] += batched("e", alpha * B["gae"] * B["gbs"] * T2["ijab"]);
     C2["ijus"] += batched("u", alpha * B["gau"] * B["gbs"] * T2["ijab"]);
     C2["ijms"] += batched("m", alpha * B["gam"] * B["gbs"] * T2["ijab"]);

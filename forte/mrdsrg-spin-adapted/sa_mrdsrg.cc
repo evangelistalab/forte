@@ -131,7 +131,7 @@ void SA_MRDSRG::print_options() {
         {"Integral type", ints_type_},
         {"Source operator", source_},
         {"Reference relaxation", relax_ref_},
-        {"3RDM algorithm", L3_algorithm_}, // TODO: need to fix the logic, FCI_MO only, spin-adapted code only
+        {"3RDM algorithm", L3_algorithm_},
         {"Core-Virtual source type", ccvv_source_},
         {"T1 amplitudes initial guess", t1_guess_}};
 

@@ -63,9 +63,14 @@ class ProcedureDSRG:
             self.relax_ref = "ONCE"
 
         self.max_rdm_level = 3 if options.get_str("THREEPDC") != "ZERO" else 2
-        # TODO: need to fix the logic, FCI_MO only, spin-adapted code only
         if options.get_str("DSRG_3RDM_ALGORITHM") == "DIRECT":
-            self.max_rdm_level = 2
+            as_type = options.get_str("ACTIVE_SPACE_SOLVER")
+            if as_type == "CAS" and self.solver_type in ["SA-MRDSRG", "SA_MRDSRG"]:
+                self.max_rdm_level = 2
+            else:
+                psi4.core.print_out(f"\n  DSRG 3RDM direct algorithm only available for CAS/SA-MRDSRG")
+                psi4.core.print_out(f"\n  Set DSRG_3RDM_ALGORITHM to 'EXPLICIT' (default)")
+                options.set_str("DSRG_3RDM_ALGORITHM", "EXPLICIT")
 
         self.relax_convergence = float('inf')
         self.e_convergence = options.get_double("E_CONVERGENCE")
