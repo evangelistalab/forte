@@ -356,13 +356,16 @@ void DSRG_MRPT2::contract_tensor(ambit::BlockedTensor& temp, ambit::BlockedTenso
             for (const std::string& p1 : orb_label[s[2]]) {
                 for (const std::string& p2 : orb_label[s[3]]) {
                     auto block     = h1 + h2 + p1 + p2;
+                    outfile->Printf("\n    x.1 finished ..... "+block);
                     std::string block_val1;
                     if (invert_label) {
                         block_val1 = p1 + p2 + h1 + h2;
                     } else {
                         block_val1 = block;
                     }
+                    outfile->Printf("\n    x.2 finished ..... ");
                     auto data1 = tensor.block(block_val1).data();
+                    outfile->Printf("\n    x.3 finished ..... ");
 
                     (temp.block(block)).iterate([&](const std::vector<size_t>& i, double& value) {
                         int idx_val1;
@@ -390,6 +393,7 @@ void DSRG_MRPT2::contract_tensor(ambit::BlockedTensor& temp, ambit::BlockedTenso
                         }
                         value += val1 * val2;
                     });
+                    outfile->Printf("\n    x.4 finished ..... ");
 
                 }
             }
