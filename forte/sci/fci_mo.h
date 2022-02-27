@@ -483,6 +483,11 @@ class FCI_MO : public ActiveSpaceMethod {
     /// Compute 2- and 3-cumulants
     void compute_ref(const int& level, size_t root1, size_t root2);
 
+    /// Build a map from (N-1)-electron string to determinants
+    std::vector<std::vector<std::pair<int, size_t>>> am1_string_to_dets_;
+    std::vector<std::vector<std::pair<int, size_t>>> bm1_string_to_dets_;
+    void build_nm1_string_dets_map();
+
     /// 3 to 1 determinants: z^+ v u |I>
     det_hash dets321_a_; // u: alpha
     det_hash dets321_b_; // u: beta

@@ -198,7 +198,7 @@ void CI_RDMS::compute_1rdm_op(std::vector<double>& oprdm_a, std::vector<double>&
     oprdm_a.assign(no2_, 0.0);
     oprdm_b.assign(no2_, 0.0);
 
-    // Do something about diagonal
+    // Build the diagonal part
     const det_hashvec& dets = wfn_.wfn_hash();
     for (size_t J = 0; J < dim_space_; ++J) {
         double cJ_sq = evecs_->get(J, root1_) * evecs_->get(J, root2_);
@@ -345,6 +345,7 @@ void CI_RDMS::compute_2rdm_op(std::vector<double>& tprdm_aa, std::vector<double>
     tprdm_ab.assign(no4_, 0.0);
     tprdm_bb.assign(no4_, 0.0);
 
+    // Build the diagonal part
     const det_hashvec& dets = wfn_.wfn_hash();
     for (size_t J = 0; J < dim_space_; ++J) {
         auto cJ_sq = evecs_->get(J, root1_) * evecs_->get(J, root2_);

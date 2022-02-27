@@ -87,7 +87,7 @@ class CI_RDMS {
                       std::vector<double>& tprdm_bb);
     void compute_2rdm_sf(std::vector<double>& tpdm);
 
-    void compute_2rdm_op(std::vector<double>& tprdm_aa, std::vector<double>& value,
+    void compute_2rdm_op(std::vector<double>& tprdm_aa, std::vector<double>& tprdm_ab,
                          std::vector<double>& tprdm_bb);
     void compute_2rdm_sf_op(std::vector<double>& tpdm);
 

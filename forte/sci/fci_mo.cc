@@ -2042,7 +2042,7 @@ void FCI_MO::build_dets321() {
     if (built_dets321_)
         return;
 
-    timer timer_lists("Build z^+ v u |I> determinants");
+    timer timer_dets("Build z^+ v u |I> determinants");
 
     dets321_a_.clear();
     dets321_b_.clear();
@@ -2133,110 +2133,180 @@ void FCI_MO::build_dets321() {
             }
         }
     }
+    if (print_ > 2)
+        outfile->Printf("\n  dets321 sizes: a = %zu, b = %zu", dets321_a_.size(),
+                        dets321_b_.size());
 
     built_dets321_ = true;
+}
+
+void FCI_MO::build_nm1_string_dets_map() {
+    am1_string_to_dets_.clear();
+    bm1_string_to_dets_.clear();
+
+    auto ndets = determinant_.size();
+    det_hash a_hash, b_hash;
+    size_t na = 0, nb = 0;
+
+    timer timer("Build (N-1)-e string map");
+
+    for (size_t I = 0; I < ndets; ++I) {
+        // (N-1)-electron alpha string
+        Determinant detIa(determinant_[I]);
+        detIa.zero_beta();
+        for (const auto& i : detIa.get_alfa_occ(nactv_)) {
+            Determinant detJ(detIa);
+            detJ.set_alfa_bit(i, false);
+
+            size_t address = 0;
+            auto iter = a_hash.find(detJ);
+            if (iter == a_hash.end()) {
+                address = na;
+                a_hash[detJ] = na++;
+            } else {
+                address = iter->second;
+            }
+            am1_string_to_dets_.resize(na);
+            am1_string_to_dets_[address].emplace_back(i, I);
+        }
+
+        // (N-1)-electron beta string
+        Determinant detIb(determinant_[I]);
+        detIb.zero_alfa();
+        for (const auto& i : detIb.get_beta_occ(nactv_)) {
+            Determinant detJ(detIb);
+            detJ.set_beta_bit(i, false);
+
+            size_t address = 0;
+            auto iter = b_hash.find(detJ);
+            if (iter == b_hash.end()) {
+                address = nb;
+                b_hash[detJ] = nb++;
+            } else {
+                address = iter->second;
+            }
+            bm1_string_to_dets_.resize(nb);
+            bm1_string_to_dets_[address].emplace_back(i, I);
+        }
+    }
 }
 
 void FCI_MO::build_lists321() {
     if (built_lists321_)
         return;
 
-    // TODO: need optimization
-    // TODO directly work on a/b strings
-
-    timer timer_lists("Build z^+ v u |0> sub. lists");
-
     build_dets321();
 
     auto Ja_size = dets321_a_.size();
     auto Jb_size = dets321_b_.size();
+
+    list321_aaa_.clear();
+    list321_abb_.clear();
+    list321_baa_.clear();
+    list321_bbb_.clear();
 
     list321_aaa_.resize(Ja_size);
     list321_abb_.resize(Ja_size);
     list321_baa_.resize(Jb_size);
     list321_bbb_.resize(Jb_size);
 
-    for (size_t Ja = 0; Ja < Ja_size; ++Ja) {
-        list321_aaa_[Ja].clear();
-        list321_abb_[Ja].clear();
-    }
-    for (size_t Jb = 0; Jb < Jb_size; ++Jb) {
-        list321_baa_[Jb].clear();
-        list321_bbb_[Jb].clear();
-    }
+    timer timer_lists("Build z^+ v u |0> sub. lists new");
 
-    for (size_t I = 0, ndets = determinant_.size(); I < ndets; ++I) {
-        const auto& detI = determinant_[I];
+    // build (N-1)-electron lists
+    build_nm1_string_dets_map();
 
-        // u_α |I>
-        for (const auto& u : detI.get_alfa_occ(nactv_)) {
-            Determinant detI_u(detI);
-            auto sign_u = detI_u.destroy_alfa_bit(u) > 0.0;
-            auto Iu = dets321_a_.find(detI_u)->second;
+    // build three lists
+    for (const auto& vec_string_to_dets : am1_string_to_dets_) {
+        for (const auto& idx_pair : vec_string_to_dets) {
+            const auto [i, I] = idx_pair;
+            Determinant detIa(determinant_[I]);
+            detIa.set_alfa_bit(i, false);
+            auto sign_i = detIa.slater_sign_a(i);
 
-            // z_α^+ v_α u_α |I>
-            for (auto v : detI_u.get_alfa_occ(nactv_)) {
-                // z == v
-                list321_aaa_[Iu].emplace_back(I, u, v, v, sign_u);
+            // aa
+            for (const auto j : detIa.get_alfa_occ(nactv_)) {
+                // j = k
+                auto address_Ia = dets321_a_.find(detIa)->second;
+                list321_aaa_[address_Ia].emplace_back(I, i, j, j, sign_i > 0.0);
 
-                // z != v
-                for (auto z : detI_u.get_alfa_vir(nactv_)) {
-                    Determinant detJ(detI_u);
-                    auto sign = (detJ.single_excitation_a(v, z) > 0.0) == sign_u;
-                    auto J = dets321_a_.find(detJ)->second;
-                    list321_aaa_[J].emplace_back(I, u, v, z, sign);
+                // j != k
+                for (const auto k : detIa.get_alfa_vir(nactv_)) {
+                    Determinant detIaac(detIa);
+                    detIaac.set_alfa_bit(j, false);
+                    detIaac.set_alfa_bit(k, true);
+                    auto sign_jk = detIaac.slater_sign_aa(j, k);
+                    auto address_Iaac = dets321_a_.find(detIaac)->second;
+                    list321_aaa_[address_Iaac].emplace_back(I, i, j, k, sign_i == sign_jk);
                 }
             }
 
-            // z_β^+ v_β u_α |I>
-            for (auto v : detI_u.get_beta_occ(nactv_)) {
-                // z == v
-                list321_abb_[Iu].emplace_back(I, u, v, v, sign_u);
+            // bb
+            for (const auto j : detIa.get_beta_occ(nactv_)) {
+                // j = k
+                auto address_Ia = dets321_a_.find(detIa)->second;
+                list321_abb_[address_Ia].emplace_back(I, i, j, j, sign_i > 0.0);
 
-                // z != v
-                for (auto z : detI_u.get_beta_vir(nactv_)) {
-                    Determinant detJ(detI_u);
-                    auto sign = (detJ.single_excitation_b(v, z) > 0.0) == sign_u;
-                    auto J = dets321_a_.find(detJ)->second;
-                    list321_abb_[J].emplace_back(I, u, v, z, sign);
-                }
-            }
-        }
-
-        // u_β |I>
-        for (const auto& u : detI.get_beta_occ(nactv_)) {
-            Determinant detI_u(detI);
-            auto sign_u = detI_u.destroy_beta_bit(u) > 0.0;
-            auto Iu = dets321_b_.find(detI_u)->second;
-
-            // z_α^+ v_α u_β |I>
-            for (auto v : detI_u.get_alfa_occ(nactv_)) {
-                // z == v
-                list321_baa_[Iu].emplace_back(I, u, v, v, sign_u);
-
-                // z != v
-                for (auto z : detI_u.get_alfa_vir(nactv_)) {
-                    Determinant detJ(detI_u);
-                    auto sign = (detJ.single_excitation_a(v, z) > 0.0) == sign_u;
-                    auto J = dets321_b_.find(detJ)->second;
-                    list321_baa_[J].emplace_back(I, u, v, z, sign);
-                }
-            }
-
-            // z_β^+ v_β u_β |I>
-            for (auto v : detI_u.get_beta_occ(nactv_)) {
-                // z == v
-                list321_bbb_[Iu].emplace_back(I, u, v, v, sign_u);
-
-                // z != v
-                for (auto z : detI_u.get_beta_vir(nactv_)) {
-                    Determinant detJ(detI_u);
-                    auto sign = (detJ.single_excitation_b(v, z) > 0.0) == sign_u;
-                    auto J = dets321_b_.find(detJ)->second;
-                    list321_bbb_[J].emplace_back(I, u, v, z, sign);
+                // j != k
+                for (const auto k : detIa.get_beta_vir(nactv_)) {
+                    Determinant detIaac(detIa);
+                    detIaac.set_beta_bit(j, false);
+                    detIaac.set_beta_bit(k, true);
+                    auto sign_jk = detIaac.slater_sign_bb(j, k);
+                    auto address_Iaac = dets321_a_.find(detIaac)->second;
+                    list321_abb_[address_Iaac].emplace_back(I, i, j, k, sign_i == sign_jk);
                 }
             }
         }
+    }
+
+    for (const auto& vec_string_to_dets : bm1_string_to_dets_) {
+        for (const auto& idx_pair : vec_string_to_dets) {
+            const auto [i, I] = idx_pair;
+            Determinant detIa(determinant_[I]);
+            detIa.set_beta_bit(i, false);
+            auto sign_i = detIa.slater_sign_b(i);
+
+            // aa
+            for (const auto j : detIa.get_alfa_occ(nactv_)) {
+                // j = k
+                auto address_Ia = dets321_b_.find(detIa)->second;
+                list321_baa_[address_Ia].emplace_back(I, i, j, j, sign_i > 0.0);
+
+                // j != k
+                for (const auto k : detIa.get_alfa_vir(nactv_)) {
+                    Determinant detIaac(detIa);
+                    detIaac.set_alfa_bit(j, false);
+                    detIaac.set_alfa_bit(k, true);
+                    auto sign_jk = detIaac.slater_sign_aa(j, k);
+                    auto address_Iaac = dets321_b_.find(detIaac)->second;
+                    list321_baa_[address_Iaac].emplace_back(I, i, j, k, sign_i == sign_jk);
+                }
+            }
+
+            // bb
+            for (const auto j : detIa.get_beta_occ(nactv_)) {
+                // j = k
+                auto address_Ia = dets321_b_.find(detIa)->second;
+                list321_bbb_[address_Ia].emplace_back(I, i, j, j, sign_i > 0.0);
+
+                // j != k
+                for (const auto k : detIa.get_beta_vir(nactv_)) {
+                    Determinant detIaac(detIa);
+                    detIaac.set_beta_bit(j, false);
+                    detIaac.set_beta_bit(k, true);
+                    auto sign_jk = detIaac.slater_sign_bb(j, k);
+                    auto address_Iaac = dets321_b_.find(detIaac)->second;
+                    list321_bbb_[address_Iaac].emplace_back(I, i, j, k, sign_i == sign_jk);
+                }
+            }
+        }
+    }
+
+    if (print_ > 2) {
+        outfile->Printf("\n  list aaa size = %zu", list321_aaa_.size());
+        outfile->Printf("\n  list abb size = %zu", list321_abb_.size());
+        outfile->Printf("\n  list baa size = %zu", list321_baa_.size());
+        outfile->Printf("\n  list bbb size = %zu", list321_bbb_.size());
     }
 
     built_lists321_ = true;
@@ -2409,7 +2479,6 @@ std::vector<double> FCI_MO::compute_complementary_H2caa_overlap(const std::vecto
     // - if the number of non-active orbitals is small, we batch over MO indices
     if (omp_get_num_threads() != 1 or dims_bra[0] < 15)
         return compute_complementary_H2caa_overlap_mo_driven(roots, Tbra, Tket);
-
     return compute_complementary_H2caa_overlap_ci_driven(roots, Tbra, Tket);
 }
 

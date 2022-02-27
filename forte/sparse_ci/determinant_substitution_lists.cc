@@ -177,6 +177,7 @@ void DeterminantSubstitutionLists::op_s_lists(const DeterminantHashVec& wfn) {
         }
         // size_t idx = 0;
         for (auto& vec : tmp) {
+            // ignore (N-1)-electron det. only coupled to itself
             if (vec.size() > 1) {
                 a_list_.push_back(vec);
                 //  a_list_[idx] = vec;
@@ -219,6 +220,7 @@ void DeterminantSubstitutionLists::op_s_lists(const DeterminantHashVec& wfn) {
             }
         }
         for (auto& vec : tmp) {
+            // ignore (N-1)-electron det. only coupled to itself
             if (vec.size() > 1) {
                 b_list_.push_back(vec);
             }
@@ -280,6 +282,7 @@ void DeterminantSubstitutionLists::tp_s_lists(const DeterminantHashVec& wfn) {
                 }
             }
             for (auto& vec : tmp) {
+                // ignore (N-2)-electron det. only coupled to itself
                 if (vec.size() > 1) {
                     aa_list_.push_back(vec);
                 }
@@ -335,6 +338,7 @@ void DeterminantSubstitutionLists::tp_s_lists(const DeterminantHashVec& wfn) {
                 }
             }
             for (auto& vec : tmp) {
+                // ignore (N-2)-electron det. only coupled to itself
                 if (vec.size() > 1) {
                     bb_list_.push_back(vec);
                 }
@@ -385,6 +389,7 @@ void DeterminantSubstitutionLists::tp_s_lists(const DeterminantHashVec& wfn) {
                 }
             }
             for (auto& vec : tmp) {
+                // ignore (N-2)-electron det. only coupled to itself
                 if (vec.size() > 1) {
                     ab_list_.push_back(vec);
                 }
@@ -463,6 +468,7 @@ void DeterminantSubstitutionLists::three_s_lists(const DeterminantHashVec& wfn) 
                 }
             }
             for (auto& vec : tmp) {
+                // ignore (N-3)-electron det. only coupled to itself
                 if (vec.size() > 1) {
                     aaa_list_.push_back(vec);
                 }
@@ -552,6 +558,7 @@ void DeterminantSubstitutionLists::three_s_lists(const DeterminantHashVec& wfn) 
                 }
             }
             for (auto& vec : tmp) {
+                // ignore (N-3)-electron det. only coupled to itself
                 if (vec.size() > 1) {
                     aab_list_.push_back(vec);
                 }
@@ -613,6 +620,7 @@ void DeterminantSubstitutionLists::three_s_lists(const DeterminantHashVec& wfn) 
                 }
             }
             for (auto& vec : tmp) {
+                // ignore (N-3)-electron det. only coupled to itself
                 if (vec.size() > 1) {
                     abb_list_.push_back(vec);
                 }
@@ -676,6 +684,7 @@ void DeterminantSubstitutionLists::three_s_lists(const DeterminantHashVec& wfn) 
                 }
             }
             for (auto& vec : tmp) {
+                // ignore (N-3)-electron det. only coupled to itself
                 if (vec.size() > 1) {
                     bbb_list_.push_back(vec);
                 }
