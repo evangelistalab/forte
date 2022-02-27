@@ -252,7 +252,7 @@ class MASTER_DSRG : public DynamicCorrelationSolver {
     ambit::BlockedTensor Gamma1_;
     /// One-hole density matrix
     ambit::BlockedTensor Eta1_;
-    /// Two-body denisty cumulant
+    /// Two-body density cumulant
     ambit::BlockedTensor Lambda2_;
 
     // ==> Fock matrix related <==

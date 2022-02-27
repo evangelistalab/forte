@@ -92,6 +92,10 @@ class SADSRG : public DynamicCorrelationSolver {
 
     /// Compute contributions from 3 cumulant
     bool do_cu3_;
+    /// Explicitly store 3 cumulants
+    bool store_cu3_;
+    /// Three-body density cumulant algorithm
+    std::string L3_algorithm_;
 
     /// Multi-state computation if true
     bool multi_state_;
@@ -221,8 +225,8 @@ class SADSRG : public DynamicCorrelationSolver {
     ambit::BlockedTensor Eta1_;
     /// Two-body density cumulant
     ambit::BlockedTensor L2_;
-    /// Three-body density cumulant algorithm
-    std::string L3_algorithm_;
+    /// Two-body density cumulant
+    ambit::BlockedTensor L3_;
 
     // ==> Fock matrix related <==
 

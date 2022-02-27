@@ -113,7 +113,7 @@ std::shared_ptr<psi::Matrix> RDMs::SF_G1mat(const psi::Dimension& dim) {
 }
 
 ambit::Tensor RDMs::SF_L1() const {
-    auto L1 = SF_G1();
+    auto L1 = SF_G1().clone();
     L1.set_name("SF_L1");
     return L1;
 }
