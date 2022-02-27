@@ -2312,150 +2312,6 @@ void FCI_MO::build_lists321() {
     built_lists321_ = true;
 }
 
-std::vector<std::tuple<ambit::Tensor, ambit::Tensor>>
-FCI_MO::compute_complementary_H2caa(const std::vector<size_t>& roots, ambit::Tensor tensor,
-                                    bool transpose) {
-    const auto& dims = tensor.dims();
-
-    // check passed in tensor
-    if (dims.size() != 4)
-        throw std::runtime_error("Invalid Tensor: Dimension must be 4!");
-
-    bool indices_ok = transpose
-                          ? (dims[1] == nactv_) and (dims[2] == nactv_) and (dims[3] == nactv_)
-                          : (dims[0] == nactv_) and (dims[1] == nactv_) and (dims[3] == nactv_);
-    if (not indices_ok)
-        throw std::runtime_error("Invalid Tensor: Too many non-active indices");
-
-    // preparation
-    auto non_actv = transpose ? dims[0] : dims[2];
-    auto nroots = roots.size();
-
-    const auto& data = tensor.data();
-    auto dim1 = nactv_;
-    auto dim2 = transpose ? nactv_ * dim1 : non_actv * dim1;
-    auto dim3 = nactv_ * dim2;
-    auto idx = [&](size_t u, size_t v, size_t p, size_t w) {
-        if (transpose)
-            return p * dim3 + w * dim2 + u * dim1 + v;
-        return u * dim3 + v * dim2 + p * dim1 + w;
-    };
-
-    // build maps for (N-1)-electron determinants
-    build_dets321();
-
-    // prepare results
-    std::string state_label = state_.multiplicity_label() + " " + state_.irrep_label();
-    std::vector<ambit::Tensor> out_a(nroots), out_b(nroots);
-    for (size_t n = 0; n < nroots; ++n) {
-        std::string name_a = "Comp. A for " + std::to_string(roots[n]) + " of " + state_label;
-        std::string name_b = "Comp. B for " + std::to_string(roots[n]) + " of " + state_label;
-        out_a[n] = ambit::Tensor::build(ambit::CoreTensor, name_a, {dets321_a_.size(), non_actv});
-        out_b[n] = ambit::Tensor::build(ambit::CoreTensor, name_b, {dets321_b_.size(), non_actv});
-    }
-
-    // compute resulting tensors
-    for (size_t n = 0; n < nroots; ++n) {
-        auto& a_data = out_a[n].data();
-        auto& b_data = out_b[n].data();
-        auto evec = eigen_[roots[n]].first;
-
-        for (size_t I = 0, ndets = determinant_.size(); I < ndets; ++I) {
-            auto cI = evec->get(I);
-            const auto& detI = determinant_[I];
-
-            // u_α |I>
-            for (const auto& u : detI.get_alfa_occ(nactv_)) {
-                Determinant detI_u(detI);
-                auto sign_u = detI_u.destroy_alfa_bit(u);
-                auto Iu = dets321_a_.find(detI_u)->second;
-
-                // z_α^+ v_α u_α |I>
-                for (auto v : detI_u.get_alfa_occ(nactv_)) {
-                    // z == v
-                    for (size_t p = 0; p < non_actv; ++p) {
-                        a_data[Iu * non_actv + p] += cI * sign_u * data[idx(u, v, p, v)];
-                    }
-                    // z != v
-                    for (auto z : detI_u.get_alfa_vir(nactv_)) {
-                        Determinant detJ(detI_u);
-                        auto sign = detJ.single_excitation_a(v, z) * sign_u;
-                        auto J = dets321_a_.find(detJ)->second;
-                        for (size_t p = 0; p < non_actv; ++p) {
-                            a_data[J * non_actv + p] += cI * sign * data[idx(u, v, p, z)];
-                        }
-                    }
-                }
-
-                // z_β^+ v_β u_α |I>
-                for (auto v : detI_u.get_beta_occ(nactv_)) {
-                    // z == v
-                    for (size_t p = 0; p < non_actv; ++p) {
-                        a_data[Iu * non_actv + p] += cI * sign_u * data[idx(u, v, p, v)];
-                    }
-                    // z != v
-                    for (auto z : detI_u.get_beta_vir(nactv_)) {
-                        Determinant detJ(detI_u);
-                        auto sign = detJ.single_excitation_b(v, z) * sign_u;
-                        auto J = dets321_a_.find(detJ)->second;
-                        for (size_t p = 0; p < non_actv; ++p) {
-                            a_data[J * non_actv + p] += cI * sign * data[idx(u, v, p, z)];
-                        }
-                    }
-                }
-            }
-
-            // u_β |I>
-            for (const auto& u : detI.get_beta_occ(nactv_)) {
-                Determinant detI_u(detI);
-                auto sign_u = detI_u.destroy_beta_bit(u);
-                auto Iu = dets321_b_.find(detI_u)->second;
-
-                // z_α^+ v_α u_β |I>
-                for (auto v : detI_u.get_alfa_occ(nactv_)) {
-                    // z == v
-                    for (size_t p = 0; p < non_actv; ++p) {
-                        b_data[Iu * non_actv + p] += cI * sign_u * data[idx(u, v, p, v)];
-                    }
-                    // z != v
-                    for (auto z : detI_u.get_alfa_vir(nactv_)) {
-                        Determinant detJ(detI_u);
-                        auto sign = detJ.single_excitation_a(v, z) * sign_u;
-                        auto J = dets321_b_.find(detJ)->second;
-                        for (size_t p = 0; p < non_actv; ++p) {
-                            b_data[J * non_actv + p] += cI * sign * data[idx(u, v, p, z)];
-                        }
-                    }
-                }
-
-                // z_β^+ v_β u_β |I>
-                for (auto v : detI_u.get_beta_occ(nactv_)) {
-                    // z == v
-                    for (size_t p = 0; p < non_actv; ++p) {
-                        b_data[Iu * non_actv + p] += cI * sign_u * data[idx(u, v, p, v)];
-                    }
-                    // z != v
-                    for (auto z : detI_u.get_beta_vir(nactv_)) {
-                        Determinant detJ(detI_u);
-                        auto sign = detJ.single_excitation_b(v, z) * sign_u;
-                        auto J = dets321_b_.find(detJ)->second;
-                        for (size_t p = 0; p < non_actv; ++p) {
-                            b_data[J * non_actv + p] += cI * sign * data[idx(u, v, p, z)];
-                        }
-                    }
-                }
-            }
-        }
-    }
-
-    std::vector<std::tuple<ambit::Tensor, ambit::Tensor>> out;
-    for (size_t n = 0; n < nroots; ++n) {
-        out.emplace_back(out_a[n], out_b[n]);
-    }
-
-    return out;
-}
-
 std::vector<double> FCI_MO::compute_complementary_H2caa_overlap(const std::vector<size_t>& roots,
                                                                 ambit::Tensor Tbra,
                                                                 ambit::Tensor Tket) {
@@ -2706,31 +2562,6 @@ FCI_MO::compute_complementary_H2caa_overlap_ci_driven(const std::vector<size_t>&
 [[deprecated]] std::vector<std::shared_ptr<RDMs>>
 FCI_MO::reference(const std::vector<std::pair<size_t, size_t>>& root_list, int max_rdm_level) {
     std::vector<std::shared_ptr<RDMs>> refs;
-    // if ((options_->psi_options())["AVG_STATE"].size() != 0) {
-    //     Reference ref;
-    //     compute_sa_ref(max_rdm_);
-    //     ref.set_Eref(Eref_);
-
-    //     if (max_rdm_ > 0) {
-    //         ref.set_L1a(L1a_);
-    //         ref.set_L1b(L1b_);
-    //     }
-
-    //     if (max_rdm_ > 1) {
-    //         ref.set_L2aa(L2aa_);
-    //         ref.set_L2ab(L2ab_);
-    //         ref.set_L2bb(L2bb_);
-    //     }
-
-    //     if (max_rdm_ > 2 && (options_->get_str("THREEPDC") != "ZERO")) {
-    //         ref.set_L3aaa(L3aaa_);
-    //         ref.set_L3aab(L3aab_);
-    //         ref.set_L3abb(L3abb_);
-    //         ref.set_L3bbb(L3bbb_);
-    //     }
-    //     refs.push_back(ref);
-    // } else {
-
     for (auto& roots : root_list) {
         compute_ref(max_rdm_level, roots.first, roots.second);
 
@@ -2747,7 +2578,6 @@ FCI_MO::reference(const std::vector<std::pair<size_t, size_t>>& root_list, int m
                                                                   L3aaa_, L3aab_, L3abb_, L3bbb_));
         }
     }
-    //}
     return refs;
 }
 
@@ -2790,8 +2620,7 @@ void FCI_MO::compute_ref(const int& level, size_t root1, size_t root2) {
             L3bbb_ =
                 ambit::Tensor::build(ambit::CoreTensor, "L3bbb", std::vector<size_t>(6, nactv_));
         }
-        //        add_wedge_cu3(L1a_, L1b_, L2aa_, L2ab_, L2bb_, L3aaa_, L3aab_, L3abb_,
-        //        L3bbb_);
+        //        add_wedge_cu3(L1a_, L1b_, L2aa_, L2ab_, L2bb_, L3aaa_, L3aab_, L3abb_, L3bbb_);
     }
 
     timer_off("Compute Ref");

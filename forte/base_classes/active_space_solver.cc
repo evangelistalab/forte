@@ -499,21 +499,6 @@ std::shared_ptr<RDMs> ActiveSpaceSolver::compute_average_rdms(
     return rdms;
 }
 
-std::map<StateInfo, std::vector<std::tuple<ambit::Tensor, ambit::Tensor>>>
-ActiveSpaceSolver::compute_complementary_H2caa(ambit::Tensor tensor, bool transpose) {
-    std::map<StateInfo, std::vector<std::tuple<ambit::Tensor, ambit::Tensor>>> out;
-    for (const auto& state_nroots : state_nroots_map_) {
-        const auto& state = state_nroots.first;
-
-        std::vector<size_t> roots(state_nroots.second);
-        std::iota(roots.begin(), roots.end(), 0);
-
-        const auto method = state_method_map_.at(state);
-        out[state] = method->compute_complementary_H2caa(roots, tensor, transpose);
-    }
-    return out;
-}
-
 std::map<StateInfo, std::vector<double>>
 ActiveSpaceSolver::compute_complementary_H2caa_overlap(ambit::Tensor Tbra, ambit::Tensor Tket) {
     std::map<StateInfo, std::vector<double>> out;
