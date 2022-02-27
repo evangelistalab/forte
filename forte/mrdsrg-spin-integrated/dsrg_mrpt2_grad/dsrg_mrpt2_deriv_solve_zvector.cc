@@ -356,17 +356,13 @@ void DSRG_MRPT2::contract_tensor(ambit::BlockedTensor& temp, ambit::BlockedTenso
             for (const std::string& p1 : orb_label[s[2]]) {
                 for (const std::string& p2 : orb_label[s[3]]) {
                     auto block     = h1 + h2 + p1 + p2;
-                    outfile->Printf("\n    x.1 finished ..... "+block);
                     std::string block_val1;
                     if (invert_label) {
                         block_val1 = p1 + p2 + h1 + h2;
                     } else {
                         block_val1 = block;
                     }
-                    outfile->Printf("\n    x.2 finished ..... ");
                     auto data1 = tensor.block(block_val1).data();
-                    outfile->Printf("\n    x.3 finished ..... ");
-
                     (temp.block(block)).iterate([&](const std::vector<size_t>& i, double& value) {
                         int idx_val1;
                         if (invert_label) {     
@@ -393,8 +389,6 @@ void DSRG_MRPT2::contract_tensor(ambit::BlockedTensor& temp, ambit::BlockedTenso
                         }
                         value += val1 * val2;
                     });
-                    outfile->Printf("\n    x.4 finished ..... ");
-
                 }
             }
         }
@@ -415,10 +409,19 @@ void DSRG_MRPT2::set_z_cc() {
         val1["m"] -= DelGam1["XU"] * T2_["mUaX"] * sigma1_xi1_xi2["ma"];
         outfile->Printf("\n    1.3 finished ..... ");
         {
+
+            auto Eeps2 = BTF_->build(CoreTensor, "e^[-s*(Delta2)^2]", {"hhpp"});
+
+            Eeps2.iterate([&](const std::vector<size_t>& i, const std::vector<SpinType>& spin, double& value) {
+                value = dsrg_source_->compute_renormalized(Fa_[i[0]] + Fa_[i[1]] - Fa_[i[2]] - Fa_[i[3]]);
+            });
+
+
             outfile->Printf("\n    1.4 finished ..... ");
             auto temp = BTF_->build(CoreTensor, "temporal tensor", {"chpp"});
             outfile->Printf("\n    1.5 finished ..... ");
-            contract_tensor(temp, V, "chpp", "Eeps2", true, 1.0);
+            // contract_tensor(temp, V, "chpp", "Eeps2", true, 1.0);
+            temp["mjab"] += V["abmj"] * Eeps2["mjab"];
             outfile->Printf("\n    1.6 finished ..... ");
             val1["m"] += 4.0 * s_ * Tau2["mjab"] * temp["mjab"];
             outfile->Printf("\n    1.7 finished ..... ");
@@ -428,8 +431,9 @@ void DSRG_MRPT2::set_z_cc() {
             outfile->Printf("\n    1.9 finished ..... ");
             val1["m"] -= 4.0 * s_ * temp["mlcd"] * Kappa["mlcd"];
             outfile->Printf("\n    2.0 finished ..... ");
-
-            temp = BTF_->build(CoreTensor, "temporal tensor", {"cHpP"});
+        }
+        {
+            auto temp = BTF_->build(CoreTensor, "temporal tensor", {"cHpP"});
             outfile->Printf("\n    2.1 finished ..... ");
             contract_tensor(temp, V, "cHpP", "Eeps2", true, 1.0);
             outfile->Printf("\n    2.2 finished ..... ");
